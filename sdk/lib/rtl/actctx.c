@@ -23,6 +23,8 @@
 
 #include <wine/unicode.h>
 
+#define GetProcessHeap() RtlGetProcessHeap()
+
 BOOLEAN RtlpNotAllowingMultipleActivation;
 
 #define ACTCTX_FLAGS_ALL (\
@@ -769,7 +771,7 @@ static WCHAR *strdupW(const WCHAR* str)
 {
     WCHAR*      ptr;
 
-    if (!(ptr = RtlAllocateHeap(RtlGetProcessHeap(), 0, (strlenW(str) + 1) * sizeof(WCHAR))))
+    if (!(ptr = RtlAllocateHeap(GetProcessHeap(), 0, (strlenW(str) + 1) * sizeof(WCHAR))))
         return NULL;
     return strcpyW(ptr, str);
 }
@@ -778,7 +780,7 @@ static WCHAR *xmlstrdupW(const xmlstr_t* str)
 {
     WCHAR *strW;
 
-    if ((strW = RtlAllocateHeap(RtlGetProcessHeap(), 0, (str->len + 1) * sizeof(WCHAR))))
+    if ((strW = RtlAllocateHeap(GetProcessHeap(), 0, (str->len + 1) * sizeof(WCHAR))))
     {
         memcpy( strW, str->ptr, str->len * sizeof(WCHAR) );
         strW[str->len] = 0;
@@ -849,13 +851,13 @@ static struct assembly *add_assembly(ACTIVATION_CONTEXT *actctx, enum assembly_t
         if (actctx->assemblies)
         {
             new_count = actctx->allocated_assemblies * 2;
-            ptr = RtlReAllocateHeap( RtlGetProcessHeap(), HEAP_ZERO_MEMORY,
+            ptr = RtlReAllocateHeap( GetProcessHeap(), HEAP_ZERO_MEMORY,
                                      actctx->assemblies, new_count * sizeof(*assembly) );
         }
         else
         {
             new_count = 4;
-            ptr = RtlAllocateHeap( RtlGetProcessHeap(), HEAP_ZERO_MEMORY, new_count * sizeof(*assembly) );
+            ptr = RtlAllocateHeap( GetProcessHeap(), HEAP_ZERO_MEMORY, new_count * sizeof(*assembly) );
         }
         if (!ptr) return NULL;
         actctx->assemblies = ptr;
@@ -878,13 +880,13 @@ static struct dll_redirect* add_dll_redirect(struct assembly* assembly)
         if (assembly->dlls)
         {
             new_count = assembly->allocated_dlls * 2;
-            ptr = RtlReAllocateHeap( RtlGetProcessHeap(), HEAP_ZERO_MEMORY,
+            ptr = RtlReAllocateHeap( GetProcessHeap(), HEAP_ZERO_MEMORY,
                                      assembly->dlls, new_count * sizeof(*assembly->dlls) );
         }
         else
         {
             new_count = 4;
-            ptr = RtlAllocateHeap( RtlGetProcessHeap(), HEAP_ZERO_MEMORY, new_count * sizeof(*assembly->dlls) );
+            ptr = RtlAllocateHeap( GetProcessHeap(), HEAP_ZERO_MEMORY, new_count * sizeof(*assembly->dlls) );
         }
         if (!ptr) return NULL;
         assembly->dlls = ptr;
@@ -899,13 +901,13 @@ static PCOMPATIBILITY_CONTEXT_ELEMENT add_compat_context(struct assembly* assemb
     if (assembly->num_compat_contexts)
     {
         unsigned int new_count = assembly->num_compat_contexts + 1;
-        ptr = RtlReAllocateHeap( RtlGetProcessHeap(), HEAP_ZERO_MEMORY,
+        ptr = RtlReAllocateHeap( GetProcessHeap(), HEAP_ZERO_MEMORY,
                                  assembly->compat_contexts,
                                  new_count * sizeof(COMPATIBILITY_CONTEXT_ELEMENT) );
     }
     else
     {
-        ptr = RtlAllocateHeap( RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(COMPATIBILITY_CONTEXT_ELEMENT) );
+        ptr = RtlAllocateHeap( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(COMPATIBILITY_CONTEXT_ELEMENT) );
     }
     if (!ptr) return NULL;
     assembly->compat_contexts = ptr;
@@ -914,11 +916,11 @@ static PCOMPATIBILITY_CONTEXT_ELEMENT add_compat_context(struct assembly* assemb
 
 static void free_assembly_identity(struct assembly_identity *ai)
 {
-    RtlFreeHeap( RtlGetProcessHeap(), 0, ai->name );
-    RtlFreeHeap( RtlGetProcessHeap(), 0, ai->arch );
-    RtlFreeHeap( RtlGetProcessHeap(), 0, ai->public_key );
-    RtlFreeHeap( RtlGetProcessHeap(), 0, ai->language );
-    RtlFreeHeap( RtlGetProcessHeap(), 0, ai->type );
+    RtlFreeHeap( GetProcessHeap(), 0, ai->name );
+    RtlFreeHeap( GetProcessHeap(), 0, ai->arch );
+    RtlFreeHeap( GetProcessHeap(), 0, ai->public_key );
+    RtlFreeHeap( GetProcessHeap(), 0, ai->language );
+    RtlFreeHeap( GetProcessHeap(), 0, ai->type );
 }
 
 static struct entity* add_entity(struct entity_array *array, DWORD kind)
@@ -932,13 +934,13 @@ static struct entity* add_entity(struct entity_array *array, DWORD kind)
         if (array->base)
         {
             new_count = array->allocated * 2;
-            ptr = RtlReAllocateHeap( RtlGetProcessHeap(), HEAP_ZERO_MEMORY,
+            ptr = RtlReAllocateHeap( GetProcessHeap(), HEAP_ZERO_MEMORY,
                                      array->base, new_count * sizeof(*array->base) );
         }
         else
         {
             new_count = 4;
-            ptr = RtlAllocateHeap( RtlGetProcessHeap(), HEAP_ZERO_MEMORY, new_count * sizeof(*array->base) );
+            ptr = RtlAllocateHeap( GetProcessHeap(), HEAP_ZERO_MEMORY, new_count * sizeof(*array->base) );
         }
         if (!ptr) return NULL;
         array->base = ptr;
@@ -958,39 +960,39 @@ static void free_entity_array(struct entity_array *array)
         switch (entity->kind)
         {
         case ACTIVATION_CONTEXT_SECTION_COM_SERVER_REDIRECTION:
-            RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.comclass.clsid);
-            RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.comclass.tlbid);
-            RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.comclass.progid);
-            RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.comclass.name);
-            RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.comclass.version);
+            RtlFreeHeap(GetProcessHeap(), 0, entity->u.comclass.clsid);
+            RtlFreeHeap(GetProcessHeap(), 0, entity->u.comclass.tlbid);
+            RtlFreeHeap(GetProcessHeap(), 0, entity->u.comclass.progid);
+            RtlFreeHeap(GetProcessHeap(), 0, entity->u.comclass.name);
+            RtlFreeHeap(GetProcessHeap(), 0, entity->u.comclass.version);
             for (j = 0; j < entity->u.comclass.progids.num; j++)
-                RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.comclass.progids.progids[j]);
-            RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.comclass.progids.progids);
+                RtlFreeHeap(GetProcessHeap(), 0, entity->u.comclass.progids.progids[j]);
+            RtlFreeHeap(GetProcessHeap(), 0, entity->u.comclass.progids.progids);
             break;
         case ACTIVATION_CONTEXT_SECTION_COM_INTERFACE_REDIRECTION:
-            RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.ifaceps.iid);
-            RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.ifaceps.base);
-            RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.ifaceps.ps32);
-            RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.ifaceps.name);
-            RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.ifaceps.tlib);
+            RtlFreeHeap(GetProcessHeap(), 0, entity->u.ifaceps.iid);
+            RtlFreeHeap(GetProcessHeap(), 0, entity->u.ifaceps.base);
+            RtlFreeHeap(GetProcessHeap(), 0, entity->u.ifaceps.ps32);
+            RtlFreeHeap(GetProcessHeap(), 0, entity->u.ifaceps.name);
+            RtlFreeHeap(GetProcessHeap(), 0, entity->u.ifaceps.tlib);
             break;
         case ACTIVATION_CONTEXT_SECTION_COM_TYPE_LIBRARY_REDIRECTION:
-            RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.typelib.tlbid);
-            RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.typelib.helpdir);
+            RtlFreeHeap(GetProcessHeap(), 0, entity->u.typelib.tlbid);
+            RtlFreeHeap(GetProcessHeap(), 0, entity->u.typelib.helpdir);
             break;
         case ACTIVATION_CONTEXT_SECTION_WINDOW_CLASS_REDIRECTION:
-            RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.class.name);
+            RtlFreeHeap(GetProcessHeap(), 0, entity->u.class.name);
             break;
         case ACTIVATION_CONTEXT_SECTION_CLR_SURROGATES:
-            RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.clrsurrogate.name);
-            RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.clrsurrogate.clsid);
-            RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.clrsurrogate.version);
+            RtlFreeHeap(GetProcessHeap(), 0, entity->u.clrsurrogate.name);
+            RtlFreeHeap(GetProcessHeap(), 0, entity->u.clrsurrogate.clsid);
+            RtlFreeHeap(GetProcessHeap(), 0, entity->u.clrsurrogate.version);
             break;
         default:
             DPRINT1("Unknown entity kind %u\n", entity->kind);
         }
     }
-    RtlFreeHeap( RtlGetProcessHeap(), 0, array->base );
+    RtlFreeHeap( GetProcessHeap(), 0, array->base );
 }
 
 static BOOL is_matching_string( const WCHAR *str1, const WCHAR *str2 )
@@ -1051,13 +1053,13 @@ static BOOL add_dependent_assembly_id(struct actctx_loader* acl,
         if (acl->dependencies)
         {
             new_count = acl->allocated_dependencies * 2;
-            ptr = RtlReAllocateHeap(RtlGetProcessHeap(), 0, acl->dependencies,
+            ptr = RtlReAllocateHeap(GetProcessHeap(), 0, acl->dependencies,
                                     new_count * sizeof(acl->dependencies[0]));
         }
         else
         {
             new_count = 4;
-            ptr = RtlAllocateHeap(RtlGetProcessHeap(), 0, new_count * sizeof(acl->dependencies[0]));
+            ptr = RtlAllocateHeap(GetProcessHeap(), 0, new_count * sizeof(acl->dependencies[0]));
         }
         if (!ptr) return FALSE;
         acl->dependencies = ptr;
@@ -1073,7 +1075,7 @@ static void free_depend_manifests(struct actctx_loader* acl)
     unsigned int i;
     for (i = 0; i < acl->num_dependencies; i++)
         free_assembly_identity(&acl->dependencies[i]);
-    RtlFreeHeap(RtlGetProcessHeap(), 0, acl->dependencies);
+    RtlFreeHeap(GetProcessHeap(), 0, acl->dependencies);
 }
 
 static WCHAR *build_assembly_dir(struct assembly_identity* ai)
@@ -1090,7 +1092,7 @@ static WCHAR *build_assembly_dir(struct assembly_identity* ai)
 		    strlenW(lang) + 1) * sizeof(WCHAR) + sizeof(mskeyW);
     WCHAR *ret;
 
-    if (!(ret = RtlAllocateHeap( RtlGetProcessHeap(), 0, size ))) return NULL;
+    if (!(ret = RtlAllocateHeap( GetProcessHeap(), 0, size ))) return NULL;
 
     strcpyW( ret, arch );
     strcatW( ret, undW );
@@ -1143,7 +1145,7 @@ static WCHAR *build_assembly_id( const struct assembly_identity *ai )
     if (ai->type) size += strlenW(typeW2) + strlenW(ai->type) + 2;
     size += strlenW(versionW2) + strlenW(version) + 2;
 
-    if (!(ret = RtlAllocateHeap( RtlGetProcessHeap(), 0, (size + 1) * sizeof(WCHAR) )))
+    if (!(ret = RtlAllocateHeap( GetProcessHeap(), 0, (size + 1) * sizeof(WCHAR) )))
         return NULL;
 
     if (ai->name) strcpyW( ret, ai->name );
@@ -1197,30 +1199,30 @@ static void actctx_release( ACTIVATION_CONTEXT *actctx )
             {
                 struct dll_redirect *dll = &assembly->dlls[j];
                 free_entity_array( &dll->entities );
-                RtlFreeHeap( RtlGetProcessHeap(), 0, dll->name );
-                RtlFreeHeap( RtlGetProcessHeap(), 0, dll->hash );
+                RtlFreeHeap( GetProcessHeap(), 0, dll->name );
+                RtlFreeHeap( GetProcessHeap(), 0, dll->hash );
             }
-            RtlFreeHeap( RtlGetProcessHeap(), 0, assembly->dlls );
-            RtlFreeHeap( RtlGetProcessHeap(), 0, assembly->manifest.info );
-            RtlFreeHeap( RtlGetProcessHeap(), 0, assembly->directory );
-            RtlFreeHeap( RtlGetProcessHeap(), 0, assembly->compat_contexts );
+            RtlFreeHeap( GetProcessHeap(), 0, assembly->dlls );
+            RtlFreeHeap( GetProcessHeap(), 0, assembly->manifest.info );
+            RtlFreeHeap( GetProcessHeap(), 0, assembly->directory );
+            RtlFreeHeap( GetProcessHeap(), 0, assembly->compat_contexts );
             free_entity_array( &assembly->entities );
             free_assembly_identity(&assembly->id);
         }
-        RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->config.info );
-        RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->appdir.info );
-        RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->assemblies );
-        RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->dllredirect_section );
-        RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->wndclass_section );
-        RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->tlib_section );
-        RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->comserver_section );
-        RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->ifaceps_section );
-        RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->clrsurrogate_section );
-        RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->progid_section );
+        RtlFreeHeap( GetProcessHeap(), 0, actctx->config.info );
+        RtlFreeHeap( GetProcessHeap(), 0, actctx->appdir.info );
+        RtlFreeHeap( GetProcessHeap(), 0, actctx->assemblies );
+        RtlFreeHeap( GetProcessHeap(), 0, actctx->dllredirect_section );
+        RtlFreeHeap( GetProcessHeap(), 0, actctx->wndclass_section );
+        RtlFreeHeap( GetProcessHeap(), 0, actctx->tlib_section );
+        RtlFreeHeap( GetProcessHeap(), 0, actctx->comserver_section );
+        RtlFreeHeap( GetProcessHeap(), 0, actctx->ifaceps_section );
+        RtlFreeHeap( GetProcessHeap(), 0, actctx->clrsurrogate_section );
+        RtlFreeHeap( GetProcessHeap(), 0, actctx->progid_section );
 
         pActual = CONTAINING_RECORD(actctx, ACTIVATION_CONTEXT_WRAPPED, ActivationContext);
         pActual->MagicMarker = 0;
-        RtlFreeHeap(RtlGetProcessHeap(), 0, pActual);
+        RtlFreeHeap(GetProcessHeap(), 0, pActual);
     }
 }
 
@@ -1639,12 +1641,12 @@ static BOOL com_class_add_progid(const xmlstr_t *progid, struct entity *entity)
     if (progids->allocated == 0)
     {
         progids->allocated = 4;
-        if (!(progids->progids = RtlAllocateHeap(RtlGetProcessHeap(), 0, progids->allocated * sizeof(WCHAR*)))) return FALSE;
+        if (!(progids->progids = RtlAllocateHeap(GetProcessHeap(), 0, progids->allocated * sizeof(WCHAR*)))) return FALSE;
     }
 
     if (progids->allocated == progids->num)
     {
-        WCHAR **new_progids = RtlReAllocateHeap(RtlGetProcessHeap(), 0, progids->progids,
+        WCHAR **new_progids = RtlReAllocateHeap(GetProcessHeap(), 0, progids->progids,
                                                 2 * progids->allocated * sizeof(WCHAR*));
         if (!new_progids) return FALSE;
         progids->allocated *= 2;
@@ -1786,7 +1788,7 @@ static void parse_add_interface_class( xmlbuf_t *xmlbuf, struct entity_array *en
 
     if (!(entity = add_entity(entities, ACTIVATION_CONTEXT_SECTION_COM_SERVER_REDIRECTION)))
     {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, str);
+        RtlFreeHeap(GetProcessHeap(), 0, str);
         set_error( xmlbuf );
         return;
     }
@@ -1850,7 +1852,7 @@ static void parse_cominterface_proxy_stub_elem( xmlbuf_t *xmlbuf, struct dll_red
 
     parse_add_interface_class(xmlbuf, &dll->entities, acl, psclsid ? psclsid : entity->u.ifaceps.iid);
 
-    RtlFreeHeap(RtlGetProcessHeap(), 0, psclsid);
+    RtlFreeHeap(GetProcessHeap(), 0, psclsid);
 }
 
 static BOOL parse_typelib_flags(const xmlstr_t *value, struct entity *entity)
@@ -2777,14 +2779,14 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
         WCHAR *new_buff;
         unsigned int i;
 
-        if (!(new_buff = RtlAllocateHeap( RtlGetProcessHeap(), 0, size )))
+        if (!(new_buff = RtlAllocateHeap( GetProcessHeap(), 0, size )))
             return STATUS_NO_MEMORY;
         for (i = 0; i < size / sizeof(WCHAR); i++)
             new_buff[i] = RtlUshortByteSwap( buf[i] );
         xmlbuf.ptr = new_buff;
         xmlbuf.end = xmlbuf.ptr + size / sizeof(WCHAR);
         status = parse_manifest_buffer( acl, assembly, ai, &xmlbuf );
-        RtlFreeHeap( RtlGetProcessHeap(), 0, new_buff );
+        RtlFreeHeap( GetProcessHeap(), 0, new_buff );
     }
     else
     {
@@ -2799,7 +2801,7 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
             return STATUS_SXS_CANT_GEN_ACTCTX;
         }
 
-        new_buff = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeU);
+        new_buff = RtlAllocateHeap(GetProcessHeap(), 0, sizeU);
         if (!new_buff)
             return STATUS_NO_MEMORY;
 
@@ -2813,7 +2815,7 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
         xmlbuf.ptr = new_buff;
         xmlbuf.end = xmlbuf.ptr + sizeU / sizeof(WCHAR);
         status = parse_manifest_buffer(acl, assembly, ai, &xmlbuf);
-        RtlFreeHeap(RtlGetProcessHeap(), 0, new_buff);
+        RtlFreeHeap(GetProcessHeap(), 0, new_buff);
     }
     return status;
 }
@@ -2842,7 +2844,7 @@ static NTSTATUS get_module_filename( HMODULE module, UNICODE_STRING *str, USHORT
     status = LdrFindEntryForAddress( module, &pldr );
     if (status == STATUS_SUCCESS)
     {
-        if ((str->Buffer = RtlAllocateHeap( RtlGetProcessHeap(), 0,
+        if ((str->Buffer = RtlAllocateHeap( GetProcessHeap(), 0,
                                             pldr->FullDllName.Length + extra_len + sizeof(WCHAR) )))
         {
             memcpy( str->Buffer, pldr->FullDllName.Buffer, pldr->FullDllName.Length + sizeof(WCHAR) );
@@ -3109,7 +3111,7 @@ static NTSTATUS get_manifest_in_associated_manifest( struct actctx_loader* acl, 
     }
     else
     {
-        if (!(buffer = RtlAllocateHeap( RtlGetProcessHeap(), 0,
+        if (!(buffer = RtlAllocateHeap( GetProcessHeap(), 0,
                                         (strlenW(filename) + 10) * sizeof(WCHAR) + sizeof(dotManifestW) )))
             return STATUS_NO_MEMORY;
         strcpyW( buffer, filename );
@@ -3142,7 +3144,7 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
     unsigned int data_pos = 0, data_len;
     char buffer[8192];
 
-    if (!(lookup = RtlAllocateHeap( RtlGetProcessHeap(), 0,
+    if (!(lookup = RtlAllocateHeap( GetProcessHeap(), 0,
                                     (strlenW(ai->arch) + strlenW(ai->name)
                                      + strlenW(ai->public_key) + 20) * sizeof(WCHAR)
                                     + sizeof(lookup_fmtW) )))
@@ -3200,8 +3202,8 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
             }
             ai->version.build = build;
             ai->version.revision = revision;
-            RtlFreeHeap( RtlGetProcessHeap(), 0, ret );
-            if ((ret = RtlAllocateHeap( RtlGetProcessHeap(), 0, dir_info->FileNameLength + sizeof(WCHAR) )))
+            RtlFreeHeap( GetProcessHeap(), 0, ret );
+            if ((ret = RtlAllocateHeap( GetProcessHeap(), 0, dir_info->FileNameLength + sizeof(WCHAR) )))
             {
                 memcpy( ret, dir_info->FileName, dir_info->FileNameLength );
                 ret[dir_info->FileNameLength/sizeof(WCHAR)] = 0;
@@ -3209,7 +3211,7 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
         }
     }
     else DPRINT1("no matching file for %S\n", lookup);
-    RtlFreeHeap( RtlGetProcessHeap(), 0, lookup );
+    RtlFreeHeap( GetProcessHeap(), 0, lookup );
     return ret;
 }
 
@@ -3227,7 +3229,7 @@ static NTSTATUS lookup_winsxs(struct actctx_loader* acl, struct assembly_identit
 
     if (!ai->arch || !ai->name || !ai->public_key) return STATUS_NO_SUCH_FILE;
 
-    if (!(path = RtlAllocateHeap( RtlGetProcessHeap(), 0,
+    if (!(path = RtlAllocateHeap( GetProcessHeap(), 0,
                                   ((strlenW(SharedUserData->NtSystemRoot) + 1) *sizeof(WCHAR)) + sizeof(manifest_dirW) )))
         return STATUS_NO_MEMORY;
 
@@ -3236,10 +3238,10 @@ static NTSTATUS lookup_winsxs(struct actctx_loader* acl, struct assembly_identit
 
     if (!RtlDosPathNameToNtPathName_U( path, &path_us, NULL, NULL ))
     {
-        RtlFreeHeap( RtlGetProcessHeap(), 0, path );
+        RtlFreeHeap( GetProcessHeap(), 0, path );
         return STATUS_NO_SUCH_FILE;
     }
-    RtlFreeHeap( RtlGetProcessHeap(), 0, path );
+    RtlFreeHeap( GetProcessHeap(), 0, path );
 
     attr.Length = sizeof(attr);
     attr.RootDirectory = 0;
@@ -3262,10 +3264,10 @@ static NTSTATUS lookup_winsxs(struct actctx_loader* acl, struct assembly_identit
     }
 
     /* append file name to directory path */
-    if (!(path = RtlReAllocateHeap( RtlGetProcessHeap(), 0, path_us.Buffer,
+    if (!(path = RtlReAllocateHeap( GetProcessHeap(), 0, path_us.Buffer,
                                     path_us.Length + (strlenW(file) + 2) * sizeof(WCHAR) )))
     {
-        RtlFreeHeap( RtlGetProcessHeap(), 0, file );
+        RtlFreeHeap( GetProcessHeap(), 0, file );
         RtlFreeUnicodeString( &path_us );
         return STATUS_NO_MEMORY;
     }
@@ -3282,7 +3284,7 @@ static NTSTATUS lookup_winsxs(struct actctx_loader* acl, struct assembly_identit
     }
     else io.Status = STATUS_NO_SUCH_FILE;
 
-    RtlFreeHeap( RtlGetProcessHeap(), 0, file );
+    RtlFreeHeap( GetProcessHeap(), 0, file );
     RtlFreeUnicodeString( &path_us );
     return io.Status;
 }
@@ -3309,13 +3311,13 @@ static NTSTATUS lookup_assembly(struct actctx_loader* acl,
         strlenW(acl->actctx->appdir.info));
 
     nameW.Buffer = NULL;
-    if (!(buffer = RtlAllocateHeap( RtlGetProcessHeap(), 0,
+    if (!(buffer = RtlAllocateHeap( GetProcessHeap(), 0,
                                     (len + 2 * strlenW(ai->name) + 2) * sizeof(WCHAR) + sizeof(dotManifestW) )))
         return STATUS_NO_MEMORY;
 
     if (!(directory = build_assembly_dir( ai )))
     {
-        RtlFreeHeap( RtlGetProcessHeap(), 0, buffer );
+        RtlFreeHeap( GetProcessHeap(), 0, buffer );
         return STATUS_NO_MEMORY;
     }
 
@@ -3370,8 +3372,8 @@ static NTSTATUS lookup_assembly(struct actctx_loader* acl,
         status = STATUS_SXS_ASSEMBLY_NOT_FOUND;
     }
     RtlFreeUnicodeString( &nameW );
-    RtlFreeHeap( RtlGetProcessHeap(), 0, directory );
-    RtlFreeHeap( RtlGetProcessHeap(), 0, buffer );
+    RtlFreeHeap( GetProcessHeap(), 0, directory );
+    RtlFreeHeap( GetProcessHeap(), 0, buffer );
     return status;
 }
 
@@ -3466,7 +3468,7 @@ static NTSTATUS build_dllredirect_section(ACTIVATION_CONTEXT* actctx, struct str
 
     total_len += sizeof(*header);
 
-    header = RtlAllocateHeap(RtlGetProcessHeap(), 0, total_len);
+    header = RtlAllocateHeap(GetProcessHeap(), 0, total_len);
     if (!header) return STATUS_NO_MEMORY;
 
     memset(header, 0, sizeof(*header));
@@ -3600,7 +3602,7 @@ static NTSTATUS find_dll_redirection(ACTIVATION_CONTEXT* actctx, const UNICODE_S
         if (status) return status;
 
         if (InterlockedCompareExchangePointer((void**)&actctx->dllredirect_section, section, NULL))
-            RtlFreeHeap(RtlGetProcessHeap(), 0, section);
+            RtlFreeHeap(GetProcessHeap(), 0, section);
     }
 
     index = find_string_index(actctx->dllredirect_section, name);
@@ -3617,7 +3619,7 @@ static NTSTATUS find_dll_redirection(ACTIVATION_CONTEXT* actctx, const UNICODE_S
         data->lpSectionGlobalData = NULL;
         data->ulSectionGlobalDataLength = 0;
         data->lpSectionBase = actctx->dllredirect_section;
-        data->ulSectionTotalLength = RtlSizeHeap( RtlGetProcessHeap(), 0, actctx->dllredirect_section );
+        data->ulSectionTotalLength = RtlSizeHeap( GetProcessHeap(), 0, actctx->dllredirect_section );
         data->hActCtx = NULL;
 
         if (data->cbSize >= FIELD_OFFSET(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex) + sizeof(ULONG))
@@ -3681,7 +3683,7 @@ static NTSTATUS build_wndclass_section(ACTIVATION_CONTEXT* actctx, struct strsec
 
     total_len += sizeof(*header);
 
-    header = RtlAllocateHeap(RtlGetProcessHeap(), 0, total_len);
+    header = RtlAllocateHeap(GetProcessHeap(), 0, total_len);
     if (!header) return STATUS_NO_MEMORY;
 
     memset(header, 0, sizeof(*header));
@@ -3793,7 +3795,7 @@ static NTSTATUS find_window_class(ACTIVATION_CONTEXT* actctx, const UNICODE_STRI
         if (status) return status;
 
         if (InterlockedCompareExchangePointer((void**)&actctx->wndclass_section, section, NULL))
-            RtlFreeHeap(RtlGetProcessHeap(), 0, section);
+            RtlFreeHeap(GetProcessHeap(), 0, section);
     }
 
     hash = 0;
@@ -3830,7 +3832,7 @@ static NTSTATUS find_window_class(ACTIVATION_CONTEXT* actctx, const UNICODE_STRI
         data->lpSectionGlobalData = NULL;
         data->ulSectionGlobalDataLength = 0;
         data->lpSectionBase = actctx->wndclass_section;
-        data->ulSectionTotalLength = RtlSizeHeap( RtlGetProcessHeap(), 0, actctx->wndclass_section );
+        data->ulSectionTotalLength = RtlSizeHeap( GetProcessHeap(), 0, actctx->wndclass_section );
         data->hActCtx = NULL;
 
         if (data->cbSize >= FIELD_OFFSET(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex) + sizeof(ULONG))
@@ -3882,7 +3884,7 @@ build_tlib_section(ACTIVATION_CONTEXT* actctx, struct guidsection_header **secti
     total_len += aligned_string_len(names_len);
     total_len += sizeof(*header);
 
-    header = RtlAllocateHeap(RtlGetProcessHeap(), 0, total_len);
+    header = RtlAllocateHeap(GetProcessHeap(), 0, total_len);
     if (!header) return STATUS_NO_MEMORY;
 
     memset(header, 0, sizeof(*header));
@@ -3922,7 +3924,7 @@ build_tlib_section(ACTIVATION_CONTEXT* actctx, struct guidsection_header **secti
                     Status = RtlGUIDFromString(&str, &index->guid);
                     if (!NT_SUCCESS(Status))
                     {
-                        RtlFreeHeap(RtlGetProcessHeap(), 0, header);
+                        RtlFreeHeap(GetProcessHeap(), 0, header);
                         return Status;
                     }
                     index->data_offset = data_offset;
@@ -3993,7 +3995,7 @@ static NTSTATUS find_tlib_redirection(ACTIVATION_CONTEXT* actctx, const GUID *gu
         if (status) return status;
 
         if (InterlockedCompareExchangePointer((void**)&actctx->tlib_section, section, NULL))
-            RtlFreeHeap(RtlGetProcessHeap(), 0, section);
+            RtlFreeHeap(GetProcessHeap(), 0, section);
     }
 
     index = find_guid_index(actctx->tlib_section, guid);
@@ -4008,7 +4010,7 @@ static NTSTATUS find_tlib_redirection(ACTIVATION_CONTEXT* actctx, const GUID *gu
     data->lpSectionGlobalData = (BYTE*)actctx->tlib_section + actctx->tlib_section->names_offset;
     data->ulSectionGlobalDataLength = actctx->tlib_section->names_len;
     data->lpSectionBase = actctx->tlib_section;
-    data->ulSectionTotalLength = RtlSizeHeap( RtlGetProcessHeap(), 0, actctx->tlib_section );
+    data->ulSectionTotalLength = RtlSizeHeap( GetProcessHeap(), 0, actctx->tlib_section );
     data->hActCtx = NULL;
 
     if (data->cbSize >= FIELD_OFFSET(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex) + sizeof(ULONG))
@@ -4293,7 +4295,7 @@ build_comserver_section(ACTIVATION_CONTEXT* actctx, struct guidsection_header **
     total_len += aligned_string_len(names_len);
     total_len += sizeof(*header);
 
-    header = RtlAllocateHeap(RtlGetProcessHeap(), 0, total_len);
+    header = RtlAllocateHeap(GetProcessHeap(), 0, total_len);
     if (!header) return STATUS_NO_MEMORY;
 
     memset(header, 0, sizeof(*header));
@@ -4312,7 +4314,7 @@ build_comserver_section(ACTIVATION_CONTEXT* actctx, struct guidsection_header **
         Status = add_comserver_record(header, &assembly->entities, NULL, &index, &data_offset, &module_offset, &seed, i+1);
         if (!NT_SUCCESS(Status))
         {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, header);
+            RtlFreeHeap(GetProcessHeap(), 0, header);
             return Status;
         }
         for (j = 0; j < assembly->num_dlls; j++)
@@ -4321,7 +4323,7 @@ build_comserver_section(ACTIVATION_CONTEXT* actctx, struct guidsection_header **
             Status = add_comserver_record(header, &dll->entities, dll, &index, &data_offset, &module_offset, &seed, i+1);
             if (!NT_SUCCESS(Status))
             {
-                RtlFreeHeap(RtlGetProcessHeap(), 0, header);
+                RtlFreeHeap(GetProcessHeap(), 0, header);
                 return Status;
             }
         }
@@ -4355,7 +4357,7 @@ find_comserver_redirection(ACTIVATION_CONTEXT* actctx, const GUID *guid, ACTCTX_
         if (status) return status;
 
         if (InterlockedCompareExchangePointer((void**)&actctx->comserver_section, section, NULL))
-            RtlFreeHeap(RtlGetProcessHeap(), 0, section);
+            RtlFreeHeap(GetProcessHeap(), 0, section);
     }
 
     index = find_guid_index(actctx->comserver_section, guid);
@@ -4371,7 +4373,7 @@ find_comserver_redirection(ACTIVATION_CONTEXT* actctx, const GUID *guid, ACTCTX_
     data->lpSectionGlobalData = (BYTE*)actctx->comserver_section + actctx->comserver_section->names_offset;
     data->ulSectionGlobalDataLength = actctx->comserver_section->names_len;
     data->lpSectionBase = actctx->comserver_section;
-    data->ulSectionTotalLength = RtlSizeHeap( RtlGetProcessHeap(), 0, actctx->comserver_section );
+    data->ulSectionTotalLength = RtlSizeHeap( GetProcessHeap(), 0, actctx->comserver_section );
     data->hActCtx = NULL;
 
     if (data->cbSize >= FIELD_OFFSET(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex) + sizeof(ULONG))
@@ -4514,7 +4516,7 @@ build_ifaceps_section(ACTIVATION_CONTEXT* actctx, struct guidsection_header **se
 
     total_len += sizeof(*header);
 
-    header = RtlAllocateHeap(RtlGetProcessHeap(), 0, total_len);
+    header = RtlAllocateHeap(GetProcessHeap(), 0, total_len);
     if (!header) return STATUS_NO_MEMORY;
 
     memset(header, 0, sizeof(*header));
@@ -4533,7 +4535,7 @@ build_ifaceps_section(ACTIVATION_CONTEXT* actctx, struct guidsection_header **se
         Status = add_ifaceps_record(header, &assembly->entities, &index, &data_offset, i + 1);
         if (!NT_SUCCESS(Status))
         {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, header);
+            RtlFreeHeap(GetProcessHeap(), 0, header);
             return Status;
         }
 
@@ -4543,7 +4545,7 @@ build_ifaceps_section(ACTIVATION_CONTEXT* actctx, struct guidsection_header **se
             Status = add_ifaceps_record(header, &dll->entities, &index, &data_offset, i + 1);
             if (!NT_SUCCESS(Status))
             {
-                RtlFreeHeap(RtlGetProcessHeap(), 0, header);
+                RtlFreeHeap(GetProcessHeap(), 0, header);
                 return Status;
             }
         }
@@ -4577,7 +4579,7 @@ find_cominterface_redirection(ACTIVATION_CONTEXT* actctx, const GUID *guid, ACTC
         if (status) return status;
 
         if (InterlockedCompareExchangePointer((void**)&actctx->ifaceps_section, section, NULL))
-            RtlFreeHeap(RtlGetProcessHeap(), 0, section);
+            RtlFreeHeap(GetProcessHeap(), 0, section);
     }
 
     index = find_guid_index(actctx->ifaceps_section, guid);
@@ -4591,7 +4593,7 @@ find_cominterface_redirection(ACTIVATION_CONTEXT* actctx, const GUID *guid, ACTC
     data->lpSectionGlobalData = NULL;
     data->ulSectionGlobalDataLength = 0;
     data->lpSectionBase = actctx->ifaceps_section;
-    data->ulSectionTotalLength = RtlSizeHeap( RtlGetProcessHeap(), 0, actctx->ifaceps_section );
+    data->ulSectionTotalLength = RtlSizeHeap( GetProcessHeap(), 0, actctx->ifaceps_section );
     data->hActCtx = NULL;
 
     if (data->cbSize >= FIELD_OFFSET(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex) + sizeof(ULONG))
@@ -4635,7 +4637,7 @@ build_clr_surrogate_section(ACTIVATION_CONTEXT* actctx, struct guidsection_heade
 
     total_len += sizeof(*header);
 
-    header = RtlAllocateHeap(RtlGetProcessHeap(), 0, total_len);
+    header = RtlAllocateHeap(GetProcessHeap(), 0, total_len);
     if (!header) return STATUS_NO_MEMORY;
 
     memset(header, 0, sizeof(*header));
@@ -4670,7 +4672,7 @@ build_clr_surrogate_section(ACTIVATION_CONTEXT* actctx, struct guidsection_heade
                 Status = RtlGUIDFromString(&str, &index->guid);
                 if (!NT_SUCCESS(Status))
                 {
-                    RtlFreeHeap(RtlGetProcessHeap(), 0, header);
+                    RtlFreeHeap(GetProcessHeap(), 0, header);
                     return Status;
                 }
 
@@ -4737,7 +4739,7 @@ find_clr_surrogate(ACTIVATION_CONTEXT* actctx, const GUID *guid, ACTCTX_SECTION_
         if (status) return status;
 
         if (InterlockedCompareExchangePointer((void**)&actctx->clrsurrogate_section, section, NULL))
-            RtlFreeHeap(RtlGetProcessHeap(), 0, section);
+            RtlFreeHeap(GetProcessHeap(), 0, section);
     }
 
     index = find_guid_index(actctx->clrsurrogate_section, guid);
@@ -4755,7 +4757,7 @@ find_clr_surrogate(ACTIVATION_CONTEXT* actctx, const GUID *guid, ACTCTX_SECTION_
     data->lpSectionGlobalData = NULL;
     data->ulSectionGlobalDataLength = 0;
     data->lpSectionBase = actctx->clrsurrogate_section;
-    data->ulSectionTotalLength = RtlSizeHeap( RtlGetProcessHeap(), 0, actctx->clrsurrogate_section );
+    data->ulSectionTotalLength = RtlSizeHeap( GetProcessHeap(), 0, actctx->clrsurrogate_section );
     data->hActCtx = NULL;
 
     if (data->cbSize >= FIELD_OFFSET(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex) + sizeof(ULONG))
@@ -4898,7 +4900,7 @@ build_progid_section(ACTIVATION_CONTEXT* actctx, struct strsection_header **sect
 
     total_len += sizeof(*header);
 
-    header = RtlAllocateHeap(RtlGetProcessHeap(), 0, total_len);
+    header = RtlAllocateHeap(GetProcessHeap(), 0, total_len);
     if (!header) return STATUS_NO_MEMORY;
 
     memset(header, 0, sizeof(*header));
@@ -4920,7 +4922,7 @@ build_progid_section(ACTIVATION_CONTEXT* actctx, struct strsection_header **sect
         Status = add_progid_record(actctx, header, &assembly->entities, &index, &data_offset, &global_offset, i + 1);
         if (!NT_SUCCESS(Status))
         {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, header);
+            RtlFreeHeap(GetProcessHeap(), 0, header);
             return Status;
         }
 
@@ -4930,7 +4932,7 @@ build_progid_section(ACTIVATION_CONTEXT* actctx, struct strsection_header **sect
             Status = add_progid_record(actctx, header, &dll->entities, &index, &data_offset, &global_offset, i + 1);
             if (!NT_SUCCESS(Status))
             {
-                RtlFreeHeap(RtlGetProcessHeap(), 0, header);
+                RtlFreeHeap(GetProcessHeap(), 0, header);
                 return Status;
             }
         }
@@ -4962,7 +4964,7 @@ static NTSTATUS find_progid_redirection(ACTIVATION_CONTEXT* actctx, const UNICOD
         if (status) return status;
 
         if (InterlockedCompareExchangePointer((void**)&actctx->comserver_section, section, NULL))
-            RtlFreeHeap(RtlGetProcessHeap(), 0, section);
+            RtlFreeHeap(GetProcessHeap(), 0, section);
     }
 
     if (!actctx->progid_section)
@@ -4973,7 +4975,7 @@ static NTSTATUS find_progid_redirection(ACTIVATION_CONTEXT* actctx, const UNICOD
         if (status) return status;
 
         if (InterlockedCompareExchangePointer((void**)&actctx->progid_section, section, NULL))
-            RtlFreeHeap(RtlGetProcessHeap(), 0, section);
+            RtlFreeHeap(GetProcessHeap(), 0, section);
     }
 
     index = find_string_index(actctx->progid_section, name);
@@ -4989,7 +4991,7 @@ static NTSTATUS find_progid_redirection(ACTIVATION_CONTEXT* actctx, const UNICOD
         data->lpSectionGlobalData = (BYTE*)actctx->progid_section + actctx->progid_section->global_offset;
         data->ulSectionGlobalDataLength = actctx->progid_section->global_len;
         data->lpSectionBase = actctx->progid_section;
-        data->ulSectionTotalLength = RtlSizeHeap( RtlGetProcessHeap(), 0, actctx->progid_section );
+        data->ulSectionTotalLength = RtlSizeHeap( GetProcessHeap(), 0, actctx->progid_section );
         data->hActCtx = NULL;
 
         if (data->cbSize >= FIELD_OFFSET(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex) + sizeof(ULONG))
@@ -5154,7 +5156,7 @@ RtlCreateActivationContext(IN ULONG Flags,
         return STATUS_INVALID_PARAMETER;
 
 
-    if (!(ActualActCtx = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*ActualActCtx))))
+    if (!(ActualActCtx = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*ActualActCtx))))
         return STATUS_NO_MEMORY;
 
     ActualActCtx->MagicMarker = ACTCTX_MAGIC_MARKER;
@@ -5199,7 +5201,7 @@ RtlCreateActivationContext(IN ULONG Flags,
 
             dir_len = strlenW(pActCtx->lpAssemblyDirectory);
             source_len = strlenW(pActCtx->lpSource);
-            if (!(source = RtlAllocateHeap( RtlGetProcessHeap(), 0, (dir_len+source_len+2)*sizeof(WCHAR))))
+            if (!(source = RtlAllocateHeap( GetProcessHeap(), 0, (dir_len+source_len+2)*sizeof(WCHAR))))
             {
                 status = STATUS_NO_MEMORY;
                 goto error;
@@ -5211,7 +5213,7 @@ RtlCreateActivationContext(IN ULONG Flags,
         }
 
         ret = RtlDosPathNameToNtPathName_U(source ? source : pActCtx->lpSource, &nameW, NULL, NULL);
-        RtlFreeHeap( RtlGetProcessHeap(), 0, source );
+        RtlFreeHeap( GetProcessHeap(), 0, source );
         if (!ret)
         {
             status = STATUS_NO_SUCH_FILE;
@@ -5369,7 +5371,7 @@ NTAPI RtlActivateActivationContextEx( ULONG flags, PTEB tebAddress, HANDLE handl
 {
     RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame;
 
-    if (!(frame = RtlAllocateHeap( RtlGetProcessHeap(), 0, sizeof(*frame) )))
+    if (!(frame = RtlAllocateHeap( GetProcessHeap(), 0, sizeof(*frame) )))
         return STATUS_NO_MEMORY;
 
     frame->Previous = tebAddress->ActivationContextStackPointer->ActiveFrame;
@@ -5428,7 +5430,7 @@ NTSTATUS NTAPI RtlDeactivateActivationContext( ULONG flags, ULONG_PTR cookie )
     {
         frame = top->Previous;
         RtlReleaseActivationContext( top->ActivationContext );
-        RtlFreeHeap( RtlGetProcessHeap(), 0, top );
+        RtlFreeHeap( GetProcessHeap(), 0, top );
         top = frame;
     }
 
@@ -5452,7 +5454,7 @@ RtlFreeActivationContextStack(IN PACTIVATION_CONTEXT_STACK Stack)
     {
         PrevFrame = ActiveFrame->Previous;
         RtlReleaseActivationContext(ActiveFrame->ActivationContext);
-        RtlFreeHeap(RtlGetProcessHeap(), 0, ActiveFrame);
+        RtlFreeHeap(GetProcessHeap(), 0, ActiveFrame);
         ActiveFrame = PrevFrame;
     }
 
@@ -5463,7 +5465,7 @@ RtlFreeActivationContextStack(IN PACTIVATION_CONTEXT_STACK Stack)
     ASSERT(IsListEmpty(&Stack->FrameListCache));
 
     /* Free activation stack memory */
-    RtlFreeHeap(RtlGetProcessHeap(), 0, Stack);
+    RtlFreeHeap(GetProcessHeap(), 0, Stack);
 }
 
 /******************************************************************
@@ -5623,7 +5625,7 @@ NTSTATUS NTAPI RtlQueryInformationActivationContext( ULONG flags, HANDLE handle,
             if (retlen) *retlen = len;
             if (!buffer || bufsize < len)
             {
-                RtlFreeHeap( RtlGetProcessHeap(), 0, assembly_id );
+                RtlFreeHeap( GetProcessHeap(), 0, assembly_id );
                 return STATUS_BUFFER_TOO_SMALL;
             }
 
@@ -5658,7 +5660,7 @@ NTSTATUS NTAPI RtlQueryInformationActivationContext( ULONG flags, HANDLE handle,
                 memcpy(ptr, assembly->directory, ad_len * sizeof(WCHAR));
             }
             else afdi->lpAssemblyDirectoryName = NULL;
-            RtlFreeHeap( RtlGetProcessHeap(), 0, assembly_id );
+            RtlFreeHeap( GetProcessHeap(), 0, assembly_id );
         }
         break;
 
@@ -5911,7 +5913,7 @@ RtlAllocateActivationContextStack(IN PACTIVATION_CONTEXT_STACK *Stack)
     if (*Stack) return STATUS_SUCCESS;
 
     /* Allocate space for the context stack */
-    ContextStack = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ACTIVATION_CONTEXT_STACK));
+    ContextStack = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ACTIVATION_CONTEXT_STACK));
     if (!ContextStack)
     {
         return STATUS_NO_MEMORY;
