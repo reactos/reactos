@@ -81,10 +81,10 @@ typedef struct
     INT         wheel_remain;   /* Left over scroll amount */
     BOOL        caret_on;       /* Is caret on? */
     BOOL        captured;       /* Is mouse captured? */
-    BOOL	in_focus;
+    BOOL        in_focus;
     HFONT       font;           /* Current font */
-    LCID          locale;       /* Current locale for string comparisons */
-    LPHEADCOMBO   lphc;		/* ComboLBox */
+    LCID        locale;         /* Current locale for string comparisons */
+    HEADCOMBO  *lphc;           /* ComboLBox */
     LONG        UIState;        // REACTOS
 } LB_DESCR;
 
@@ -567,7 +567,7 @@ static INT LISTBOX_GetItemFromPoint( const LB_DESCR *descr, INT x, INT y )
  *
  * Paint an item.
  */
-static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc, const RECT *rect, 
+static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc, const RECT *rect,
 			       INT index, UINT action, BOOL ignoreFocus )
 {
     BOOL selected = FALSE, focused;
@@ -2965,10 +2965,10 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
         if(!unicode && HAS_STRINGS(descr))
             HeapFree(GetProcessHeap(), 0, textW);
         if (index != LB_ERR)
-	{
+        {
             LISTBOX_MoveCaret( descr, index, TRUE );
             LISTBOX_SetSelection( descr, index, TRUE, FALSE );
-	}
+        }
         return index;
     }
 
@@ -3179,7 +3179,7 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
             LISTBOX_HandleMouseMove( descr, mousePos.x, mousePos.y);
 
             descr->captured = captured;
-        } 
+        }
         else if (GetCapture() == descr->self)
         {
             LISTBOX_HandleMouseMove( descr, (INT16)LOWORD(lParam),
