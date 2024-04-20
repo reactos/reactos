@@ -32,6 +32,7 @@ list(APPEND SOURCE
 add_library(ip OBJECT ${SOURCE} ${ip_asm})
 
 target_link_libraries(ip lwipcore)
+add_importlibs(lwipcore ntoskrnl)
 
 target_include_directories(ip BEFORE
     PRIVATE ${LWIP_INCLUDE_DIRS}

@@ -4,7 +4,8 @@ set(LWIP_INCLUDE_DIRS
     ${LWIP_DIR}/src/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include/lwip
 )
-add_subdirectory(lwip)
+include(${LWIP_DIR}/src/Filelists.cmake)
+add_dependencies(lwipcore xdk)
 add_subdirectory(ip)
 
 add_definitions(

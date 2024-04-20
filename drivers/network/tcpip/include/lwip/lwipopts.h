@@ -11,6 +11,7 @@
 /* Define LWIP_COMPAT_MUTEX if the port has no mutexes and binary semaphores
  should be used instead */
 #define LWIP_COMPAT_MUTEX               1
+#define LWIP_COMPAT_MUTEX_ALLOWED       1
 
 #define MEM_ALIGNMENT                   4
 

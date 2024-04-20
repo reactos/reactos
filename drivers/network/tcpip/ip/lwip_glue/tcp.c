@@ -36,7 +36,7 @@ void
 LibTCPDumpPcb(PVOID SocketContext)
 {
     struct tcp_pcb *pcb = (struct tcp_pcb*)SocketContext;
-    unsigned int addr = ntohl(pcb->remote_ip.addr);
+    unsigned int addr = lwip_ntohl(pcb->remote_ip.addr);
 
     DbgPrint("\tState: %s\n", tcp_state_str[pcb->state]);
     DbgPrint("\tRemote: (%d.%d.%d.%d, %d)\n",
@@ -405,7 +405,7 @@ LibTCPBindCallback(void *arg)
 
     msg->Output.Bind.Error = tcp_bind(pcb,
                                       msg->Input.Bind.IpAddress,
-                                      ntohs(msg->Input.Bind.Port));
+                                      lwip_ntohs(msg->Input.Bind.Port));
 
 done:
     KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
@@ -609,7 +609,7 @@ LibTCPConnectCallback(void *arg)
     tcp_sent((PTCP_PCB)msg->Input.Connect.Connection->SocketContext, InternalSendEventHandler);
 
     Error = tcp_connect((PTCP_PCB)msg->Input.Connect.Connection->SocketContext,
-                        msg->Input.Connect.IpAddress, ntohs(msg->Input.Connect.Port),
+                        msg->Input.Connect.IpAddress, lwip_ntohs(msg->Input.Connect.Port),
                         InternalConnectEventHandler);
 
     msg->Output.Connect.Error = Error == ERR_OK ? ERR_INPROGRESS : Error;

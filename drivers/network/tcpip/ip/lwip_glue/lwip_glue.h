@@ -13,7 +13,6 @@
 #endif
 
 typedef struct tcp_pcb* PTCP_PCB;
-typedef struct ip_addr ip4_addr_t;
 
 typedef struct _QUEUE_ENTRY
 {
