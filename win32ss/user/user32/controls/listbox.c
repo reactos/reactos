@@ -179,6 +179,20 @@ static void set_item_selected_state(LB_DESCR *descr, UINT index, BOOL state)
         descr->items[index].selected = state;
 }
 
+static void insert_item_data(LB_DESCR *descr, UINT index, WCHAR *str, ULONG_PTR data)
+{
+    LB_ITEMDATA *item;
+
+    item = descr->items + index;
+    if (index < descr->nb_items)
+        memmove(item + 1, item, (descr->nb_items - index) * sizeof(LB_ITEMDATA));
+
+    item->str      = str;
+    item->data     = HAS_STRINGS(descr) ? 0 : data;
+    item->height   = 0;
+    item->selected = FALSE;
+}
+
 /*********************************************************************
  * listbox class descriptor
  */
@@ -1592,23 +1606,13 @@ static void LISTBOX_MoveCaret( LB_DESCR *descr, INT index, BOOL fully_visible )
 static LRESULT LISTBOX_InsertItem( LB_DESCR *descr, INT index,
                                    LPWSTR str, ULONG_PTR data )
 {
-    LB_ITEMDATA *item;
     INT oldfocus = descr->focus_item;
 
     if (index == -1) index = descr->nb_items;
     else if ((index < 0) || (index > descr->nb_items)) return LB_ERR;
     if (!resize_storage(descr, descr->nb_items + 1)) return LB_ERR;
 
-    /* Insert the item structure */
-
-    item = &descr->items[index];
-    if (index < descr->nb_items)
-        RtlMoveMemory( item + 1, item,
-                       (descr->nb_items - index) * sizeof(LB_ITEMDATA) );
-    item->str      = str;
-    item->data     = HAS_STRINGS(descr) ? 0 : data;
-    item->height   = 0;
-    item->selected = FALSE;
+    insert_item_data(descr, index, str, data);
     descr->nb_items++;
 
     /* Get item height */
