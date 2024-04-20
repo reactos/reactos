@@ -1,36 +1,10 @@
 diff a/win32ss/user/user32/controls/listbox.c b/win32ss/user/user32/controls/listbox.c	(rejected hunks)
-@@ -300,28 +300,27 @@ static LRESULT LISTBOX_SetTopItem( LB_DESCR *descr, INT index, BOOL scroll )
-     if (descr->top_item == index) return LB_OKAY;
-     if (scroll)
-     {
--        INT diff;
-+        INT dx = 0, dy = 0;
-         if (descr->style & LBS_MULTICOLUMN)
--            diff = (descr->top_item - index) / descr->page_size * descr->column_width;
-+            dx = (descr->top_item - index) / descr->page_size * descr->column_width;
-         else if (descr->style & LBS_OWNERDRAWVARIABLE)
-         {
-             INT i;
--            diff = 0;
-             if (index > descr->top_item)
-             {
-                 for (i = index - 1; i >= descr->top_item; i--)
--                    diff -= descr->items[i].height;
-+                    dy -= descr->items[i].height;
-             }
-             else
-             {
-                 for (i = index; i < descr->top_item; i++)
--                    diff += descr->items[i].height;
-+                    dy += descr->items[i].height;
-             }
-         }
-         else
--            diff = (descr->top_item - index) * descr->item_height;
-+            dy = (descr->top_item - index) * descr->item_height;
+@@ -2521,6 +2521,8 @@ static BOOL LISTBOX_Create( HWND hwnd, LPHEADCOMBO lphc )
+     if (descr->style & LBS_EXTENDEDSEL) descr->style |= LBS_MULTIPLESEL;
+     if (descr->style & LBS_MULTICOLUMN) descr->style &= ~LBS_OWNERDRAWVARIABLE;
+     if (descr->style & LBS_OWNERDRAWVARIABLE) descr->style |= LBS_NOINTEGRALHEIGHT;
++    if ((descr->style & (LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_SORT)) != LBS_OWNERDRAWFIXED)
++        descr->style &= ~LBS_NODATA;
+     descr->item_height = LISTBOX_SetFont( descr, 0 );
  
--        ScrollWindowEx( descr->self, 0, diff, NULL, NULL, 0, NULL,
-+        ScrollWindowEx( descr->self, dx, dy, NULL, NULL, 0, NULL,
-                         SW_INVALIDATE | SW_ERASE | SW_SCROLLCHILDREN );
-     }
-     else
+     if (descr->style & LBS_OWNERDRAWFIXED)
