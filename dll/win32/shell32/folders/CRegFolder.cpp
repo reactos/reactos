@@ -30,7 +30,7 @@ HRESULT CALLBACK RegFolderContextMenuCallback(IShellFolder *psf,
                                               LPARAM       lParam)
 {
     if (uMsg != DFM_INVOKECOMMAND || wParam != DFM_CMD_PROPERTIES)
-        return S_OK;
+        return SHELL32_DefaultContextMenuCallBack(psf, pdtobj, uMsg);
 
     PIDLIST_ABSOLUTE pidlFolder;
     PUITEMID_CHILD *apidl;
@@ -41,24 +41,14 @@ HRESULT CALLBACK RegFolderContextMenuCallback(IShellFolder *psf,
 
     if (_ILIsMyComputer(apidl[0]))
     {
-        if (32 >= (UINT_PTR)ShellExecuteW(hwnd,
-                                          L"open",
-                                          L"rundll32.exe",
-                                          L"shell32.dll,Control_RunDLL sysdm.cpl",
-                                          NULL,
-                                          SW_SHOWNORMAL))
+        if (!SHELL_ExecuteControlPanelCPL(hwnd, L"sysdm.cpl"))
         {
             hr = E_FAIL;
         }
     }
     else if (_ILIsDesktop(apidl[0]))
     {
-        if (32 >= (UINT_PTR)ShellExecuteW(hwnd,
-                                          L"open",
-                                          L"rundll32.exe",
-                                          L"shell32.dll,Control_RunDLL desk.cpl",
-                                          NULL,
-                                          SW_SHOWNORMAL))
+        if (!SHELL_ExecuteControlPanelCPL(hwnd, L"desk.cpl"))
         {
             hr = E_FAIL;
         }
