@@ -148,6 +148,8 @@ static BOOL resize_storage(LB_DESCR *descr, UINT items_size)
 
 static BOOL is_item_selected( const LB_DESCR *descr, UINT index )
 {
+    if (!(descr->style & (LBS_MULTIPLESEL | LBS_EXTENDEDSEL)))
+        return index == descr->selected_item;
     return descr->items[index].selected;
 }
 
