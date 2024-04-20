@@ -1495,8 +1495,8 @@ static LRESULT LISTBOX_SetSelection( LB_DESCR *descr, INT index,
         if (index == oldsel) return LB_OKAY;
         if (oldsel != -1) descr->items[oldsel].selected = FALSE;
         if (index != -1) descr->items[index].selected = TRUE;
-        if (oldsel != -1) LISTBOX_RepaintItem( descr, oldsel, ODA_SELECT );
         descr->selected_item = index;
+        if (oldsel != -1) LISTBOX_RepaintItem( descr, oldsel, ODA_SELECT );
         if (index != -1) LISTBOX_RepaintItem( descr, index, ODA_SELECT );
         if (send_notify && descr->nb_items) SEND_NOTIFICATION( descr,
                                (index != -1) ? LBN_SELCHANGE : LBN_SELCANCEL );
