@@ -156,6 +156,11 @@ static WCHAR *get_item_string( const LB_DESCR *descr, UINT index )
     return HAS_STRINGS(descr) ? descr->items[index].str : NULL;
 }
 
+static UINT get_item_height( const LB_DESCR *descr, UINT index )
+{
+    return (descr->style & LBS_NODATA) ? 0 : descr->items[index].height;
+}
+
 static BOOL is_item_selected( const LB_DESCR *descr, UINT index )
 {
     if (!(descr->style & (LBS_MULTIPLESEL | LBS_EXTENDEDSEL)))
@@ -212,7 +217,7 @@ static INT LISTBOX_GetCurrentPageSize( const LB_DESCR *descr )
     if (!(descr->style & LBS_OWNERDRAWVARIABLE)) return descr->page_size;
     for (i = descr->top_item, height = 0; i < descr->nb_items; i++)
     {
-        if ((height += descr->items[i].height) > descr->height) break;
+        if ((height += get_item_height(descr, i)) > descr->height) break;
     }
     if (i == descr->top_item) return 1;
     else return i - descr->top_item;
@@ -232,7 +237,7 @@ static INT LISTBOX_GetMaxTopIndex( const LB_DESCR *descr )
     {
         page = descr->height;
         for (max = descr->nb_items - 1; max >= 0; max--)
-            if ((page -= descr->items[max].height) < 0) break;
+            if ((page -= get_item_height(descr, max)) < 0) break;
         if (max < descr->nb_items - 1) max++;
     }
     else if (descr->style & LBS_MULTICOLUMN)
@@ -360,12 +365,12 @@ static LRESULT LISTBOX_SetTopItem( LB_DESCR *descr, INT index, BOOL scroll )
             if (index > descr->top_item)
             {
                 for (i = index - 1; i >= descr->top_item; i--)
-                    dy -= descr->items[i].height;
+                    dy -= get_item_height(descr, i);
             }
             else
             {
                 for (i = index; i < descr->top_item; i++)
-                    dy += descr->items[i].height;
+                    dy += get_item_height(descr, i);
             }
         }
         else
@@ -490,14 +495,14 @@ static LRESULT LISTBOX_GetItemRect( const LB_DESCR *descr, INT index, RECT *rect
             if (index < descr->top_item)
             {
                 for (i = descr->top_item-1; i >= index; i--)
-                    rect->top -= descr->items[i].height;
+                    rect->top -= get_item_height(descr, i);
             }
             else
             {
                 for (i = descr->top_item; i < index; i++)
-                    rect->top += descr->items[i].height;
+                    rect->top += get_item_height(descr, i);
             }
-            rect->bottom = rect->top + descr->items[index].height;
+            rect->bottom = rect->top + get_item_height(descr, index);
 
         }
     }
@@ -532,7 +537,7 @@ static INT LISTBOX_GetItemFromPoint( const LB_DESCR *descr, INT x, INT y )
         {
             while (index < descr->nb_items)
             {
-                if ((pos += descr->items[index].height) > y) break;
+                if ((pos += get_item_height(descr, index)) > y) break;
                 index++;
             }
         }
@@ -541,7 +546,7 @@ static INT LISTBOX_GetItemFromPoint( const LB_DESCR *descr, INT x, INT y )
             while (index > 0)
             {
                 index--;
-                if ((pos -= descr->items[index].height) <= y) break;
+                if ((pos -= get_item_height(descr, index)) <= y) break;
             }
         }
     }
@@ -1118,7 +1123,7 @@ static LRESULT LISTBOX_Paint( LB_DESCR *descr, HDC hdc )
         if (!(descr->style & LBS_OWNERDRAWVARIABLE))
             rect.bottom = rect.top + descr->item_height;
         else
-            rect.bottom = rect.top + descr->items[i].height;
+            rect.bottom = rect.top + get_item_height(descr, i);
 
         /* keep the focus rect, to paint the focus item after */
         if (i == descr->focus_item)
@@ -1233,7 +1238,7 @@ static LRESULT LISTBOX_GetItemHeight( const LB_DESCR *descr, INT index )
             SetLastError(ERROR_INVALID_INDEX);
             return LB_ERR;
         }
-        return descr->items[index].height;
+        return get_item_height(descr, index);
     }
     else return descr->item_height;
 }
@@ -1403,9 +1408,9 @@ static void LISTBOX_MakeItemVisible( LB_DESCR *descr, INT index, BOOL fully )
     }
     else if (descr->style & LBS_OWNERDRAWVARIABLE)
     {
-        INT height = fully ? descr->items[index].height : 1;
+        INT height = fully ? get_item_height(descr, index) : 1;
         for (top = index; top > descr->top_item; top--)
-            if ((height += descr->items[top-1].height) > descr->height) break;
+            if ((height += get_item_height(descr, top - 1)) > descr->height) break;
     }
     else
     {
@@ -1616,7 +1621,7 @@ static LRESULT LISTBOX_InsertItem( LB_DESCR *descr, INT index,
         SendMessageW( descr->owner, WM_MEASUREITEM, id, (LPARAM)&mis );
         item->height = mis.itemHeight ? mis.itemHeight : 1;
         TRACE("[%p]: measure item %d (%s) = %d\n",
-              descr->self, index, str ? debugstr_w(str) : "", item->height );
+              descr->self, index, str ? debugstr_w(str) : "", get_item_height(descr, index));
     }
 
     /* Repaint the items */
