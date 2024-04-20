@@ -42,12 +42,12 @@ class CDesktopBrowser :
 private:
     HACCEL m_hAccel;
     HWND m_hWndShellView;
-    DWORD m_dwDrives;
     CComPtr<IShellDesktopTray> m_Tray;
     CComPtr<IShellView>        m_ShellView;
 
     CComPtr<IOleWindow>        m_ChangeNotifyServer;
     HWND                       m_hwndChangeNotifyServer;
+    DWORD m_dwDrives;
 
     LRESULT _NotifyTray(UINT uMsg, WPARAM wParam, LPARAM lParam);
     HRESULT _Resize();
@@ -117,9 +117,9 @@ END_COM_MAP()
 CDesktopBrowser::CDesktopBrowser():
     m_hAccel(NULL),
     m_hWndShellView(NULL),
-    m_hwndChangeNotifyServer(NULL)
+    m_hwndChangeNotifyServer(NULL),
+    m_dwDrives(::GetLogicalDrives())
 {
-    m_dwDrives = ::GetLogicalDrives();
 }
 
 CDesktopBrowser::~CDesktopBrowser()
@@ -466,7 +466,7 @@ LRESULT CDesktopBrowser::OnGetChangeNotifyServer(UINT uMsg, WPARAM wParam, LPARA
     return (LRESULT)m_hwndChangeNotifyServer;
 }
 
-// Detect SHCNE_DRIVEADD and SHCNE_DRIVEREMOVED
+// Detect DBT_DEVICEARRIVAL and DBT_DEVICEREMOVECOMPLETE
 LRESULT CDesktopBrowser::OnDeviceChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     if (wParam == DBT_DEVICEARRIVAL || wParam == DBT_DEVICEREMOVECOMPLETE)
