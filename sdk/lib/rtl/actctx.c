@@ -29,6 +29,8 @@
 #define FIXME DPRINT1
 #define WARN DPRINT1
 #define TRACE DPRINT
+#define FILE_END_OF_FILE_INFORMATION FILE_STANDARD_INFORMATION
+#define FileEndOfFileInformation FileStandardInformation
 
 BOOLEAN RtlpNotAllowingMultipleActivation;
 
@@ -3032,7 +3034,7 @@ static NTSTATUS get_manifest_in_pe_file( struct actctx_loader* acl, struct assem
 static NTSTATUS get_manifest_in_manifest_file( struct actctx_loader* acl, struct assembly_identity* ai,
                                                LPCWSTR filename, LPCWSTR directory, BOOL shared, HANDLE file )
 {
-    FILE_STANDARD_INFORMATION info;
+    FILE_END_OF_FILE_INFORMATION info;
     IO_STATUS_BLOCK io;
     HANDLE              mapping;
     OBJECT_ATTRIBUTES   attr;
@@ -3064,9 +3066,7 @@ static NTSTATUS get_manifest_in_manifest_file( struct actctx_loader* acl, struct
     NtClose( mapping );
     if (status != STATUS_SUCCESS) return status;
 
-    /* Fixme: WINE uses FileEndOfFileInformation with NtQueryInformationFile. */
-    status = NtQueryInformationFile( file, &io, &info, sizeof(info), FileStandardInformation);
-
+    status = NtQueryInformationFile( file, &io, &info, sizeof(info), FileEndOfFileInformation );
     if (status == STATUS_SUCCESS)
         status = parse_manifest(acl, ai, filename, directory, shared, base, info.EndOfFile.QuadPart);
 
