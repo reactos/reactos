@@ -2963,26 +2963,10 @@ static void EDIT_EM_SetLimitText(EDITSTATE *es, UINT limit)
  * action wParam despite what the docs say. EC_USEFONTINFO calculates the
  * margin according to the textmetrics of the current font.
  *
- * When EC_USEFONTINFO is used in the non_cjk case the margins only
- * change if the edit control is equal to or larger than a certain
- * size.  Though there is an exception for the empty client rect case
- * with small font sizes.
+ * When EC_USEFONTINFO is used, the margins only change if the edit control is
+ * equal to or larger than a certain size. The empty client rect is treated as
+ * 80 pixels width.
  */
-static BOOL is_cjk(UINT charset)
-{
-    switch(charset)
-    {
-    case SHIFTJIS_CHARSET:
-    case HANGUL_CHARSET:
-    case GB2312_CHARSET:
-    case CHINESEBIG5_CHARSET:
-        return TRUE;
-    }
-    /* HANGUL_CHARSET is strange, though treated as CJK by Win 8, it is
-     * not by other versions including Win 10. */
-    return FALSE;
-}
-
 static void EDIT_EM_SetMargins(EDITSTATE *es, INT action,
 			       WORD left, WORD right, BOOL repaint)
 {
@@ -2994,25 +2978,20 @@ static void EDIT_EM_SetMargins(EDITSTATE *es, INT action,
         if (es->font && (left == EC_USEFONTINFO || right == EC_USEFONTINFO)) {
             HDC dc = GetDC(es->hwndSelf);
             HFONT old_font = SelectObject(dc, es->font);
-            LONG width = GdiGetCharDimensions(dc, &tm, NULL);
+            LONG width = GdiGetCharDimensions(dc, &tm, NULL), rc_width;
             RECT rc;
 
             /* The default margins are only non zero for TrueType or Vector fonts */
             if (tm.tmPitchAndFamily & ( TMPF_VECTOR | TMPF_TRUETYPE )) {
-                if (!is_cjk(tm.tmCharSet)) {
-                    default_left_margin = width / 2;
-                    default_right_margin = width / 2;
+                /* FIXME: figure out the CJK values. */
+                default_left_margin = width / 2;
+                default_right_margin = width / 2;
 
-                    GetClientRect(es->hwndSelf, &rc);
-                    if (rc.right - rc.left < (width / 2 + width) * 2 &&
-                        (width >= 28 || !IsRectEmpty(&rc)) ) {
-                        default_left_margin = es->left_margin;
-                        default_right_margin = es->right_margin;
-                    }
-                } else {
-                    /* FIXME: figure out the CJK values. They are not affected by the client rect. */
-                    default_left_margin = width / 2;
-                    default_right_margin = width / 2;
+                GetClientRect(es->hwndSelf, &rc);
+                rc_width = !IsRectEmpty(&rc) ? rc.right - rc.left : 80;
+                if (rc_width < default_left_margin + default_right_margin + width * 2) {
+                    default_left_margin = es->left_margin;
+                    default_right_margin = es->right_margin;
                 }
             }
             SelectObject(dc, old_font);
