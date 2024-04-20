@@ -242,10 +242,10 @@ ULONG ReleaseCComPtrExpectZeroHelper(CComPtr<T>& cptr, BOOL forceRelease = FALSE
     return r;
 }
 #define ReleaseCComPtrExpectZero(...) \
-    if (ULONG r = ReleaseCComPtrExpectZeroHelper(__VA_ARGS__)) \
-        DbgPrint("WARNING: Unexpected RefCount > 0 (%d)!\n", r); \
-    else \
-        (void)0
+    do { \
+        if (ULONG r = ReleaseCComPtrExpectZeroHelper(__VA_ARGS__)) \
+            DbgPrint("WARNING: Unexpected RefCount > 0 (%d)!\n", r); \
+    } while (0)
 
 template<class T, class R>
 HRESULT inline ShellDebugObjectCreator(REFIID riid, R ** ppv)
