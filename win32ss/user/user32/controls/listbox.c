@@ -183,6 +183,8 @@ static void insert_item_data(LB_DESCR *descr, UINT index, WCHAR *str, ULONG_PTR 
 {
     LB_ITEMDATA *item;
 
+    if (!descr->items) return;
+
     item = descr->items + index;
     if (index < descr->nb_items)
         memmove(item + 1, item, (descr->nb_items - index) * sizeof(LB_ITEMDATA));
@@ -196,6 +198,8 @@ static void insert_item_data(LB_DESCR *descr, UINT index, WCHAR *str, ULONG_PTR 
 static void remove_item_data(LB_DESCR *descr, UINT index)
 {
     LB_ITEMDATA *item;
+
+    if (!descr->items) return;
 
     item = descr->items + index;
     if (index < descr->nb_items)
@@ -1791,7 +1795,8 @@ static void LISTBOX_ResetContent( LB_DESCR *descr )
 {
     INT i;
 
-    for(i = descr->nb_items - 1; i>=0; i--) LISTBOX_DeleteItem( descr, i);
+    if (!(descr->style & LBS_NODATA))
+        for (i = descr->nb_items - 1; i >= 0; i--) LISTBOX_DeleteItem(descr, i);
     HeapFree( GetProcessHeap(), 0, descr->items );
     descr->nb_items      = 0;
     descr->top_item      = 0;
