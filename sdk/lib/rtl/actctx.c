@@ -5432,36 +5432,38 @@ NTSTATUS WINAPI RtlZombifyActivationContext( HANDLE handle )
     return STATUS_NOT_IMPLEMENTED;
 }
 
-NTSTATUS
-NTAPI RtlActivateActivationContextEx( ULONG flags, PTEB tebAddress, HANDLE handle, PULONG_PTR cookie )
+/******************************************************************
+ *		RtlActivateActivationContext (NTDLL.@)
+ */
+NTSTATUS WINAPI RtlActivateActivationContext( ULONG unknown, HANDLE handle, PULONG_PTR cookie )
+{
+    return RtlActivateActivationContextEx( 0, NtCurrentTeb(), handle, cookie );
+}
+
+/******************************************************************
+ *		RtlActivateActivationContextEx (NTDLL.@)
+ */
+NTSTATUS WINAPI RtlActivateActivationContextEx( ULONG flags, TEB *teb, HANDLE handle, ULONG_PTR *cookie )
 {
     RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame;
 
     if (!(frame = RtlAllocateHeap( GetProcessHeap(), 0, sizeof(*frame) )))
         return STATUS_NO_MEMORY;
 
-    frame->Previous = tebAddress->ActivationContextStackPointer->ActiveFrame;
+    frame->Previous = teb->ActivationContextStackPointer->ActiveFrame;
     frame->ActivationContext = handle;
     frame->Flags = 0;
 
     DPRINT("ActiveSP %p: ACTIVATE (ActiveFrame %p -> NewFrame %p, Context %p)\n",
-        tebAddress->ActivationContextStackPointer, tebAddress->ActivationContextStackPointer->ActiveFrame,
+        teb->ActivationContextStackPointer, teb->ActivationContextStackPointer->ActiveFrame,
         frame, handle);
 
-    tebAddress->ActivationContextStackPointer->ActiveFrame = frame;
+    teb->ActivationContextStackPointer->ActiveFrame = frame;
     RtlAddRefActivationContext( handle );
 
     *cookie = (ULONG_PTR)frame;
     TRACE( "%p cookie=%lx\n", handle, *cookie );
     return STATUS_SUCCESS;
-}
-
-/******************************************************************
- *		RtlActivateActivationContext (NTDLL.@)
- */
-NTSTATUS NTAPI RtlActivateActivationContext( ULONG flags, HANDLE handle, PULONG_PTR cookie )
-{
-    return RtlActivateActivationContextEx(flags, NtCurrentTeb(), handle, cookie);
 }
 
 /***********************************************************************
