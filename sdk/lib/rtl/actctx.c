@@ -839,7 +839,7 @@ static WCHAR *strdupW(const WCHAR* str)
 
     if (!(ptr = RtlAllocateHeap(GetProcessHeap(), 0, (strlenW(str) + 1) * sizeof(WCHAR))))
         return NULL;
-    return strcpyW(ptr, str);
+    return wcscpy(ptr, str);
 }
 
 static WCHAR *xmlstrdupW(const xmlstr_t* str)
@@ -1194,7 +1194,7 @@ static WCHAR *build_assembly_dir(struct assembly_identity* ai)
 
     if (!(ret = RtlAllocateHeap( GetProcessHeap(), 0, size ))) return NULL;
 
-    strcpyW( ret, arch );
+    wcscpy( ret, arch );
     strcatW( ret, undW );
     strcatW( ret, name );
     strcatW( ret, undW );
@@ -1217,7 +1217,7 @@ static inline void append_string( WCHAR *buffer, const WCHAR *prefix, const WCHA
     strcatW( buffer, prefix );
     p += strlenW(p);
     *p++ = '"';
-    strcpyW( p, str );
+    wcscpy( p, str );
     p += strlenW(p);
     *p++ = '"';
     *p = 0;
@@ -1248,7 +1248,7 @@ static WCHAR *build_assembly_id( const struct assembly_identity *ai )
     if (!(ret = RtlAllocateHeap( GetProcessHeap(), 0, (size + 1) * sizeof(WCHAR) )))
         return NULL;
 
-    if (ai->name) strcpyW( ret, ai->name );
+    if (ai->name) wcscpy( ret, ai->name );
     else *ret = 0;
     append_string( ret, archW, ai->arch );
     append_string( ret, public_keyW, ai->public_key );
@@ -3196,7 +3196,7 @@ static NTSTATUS get_manifest_in_associated_manifest( struct actctx_loader* acl, 
         if (!(buffer = RtlAllocateHeap( GetProcessHeap(), 0,
                                         (strlenW(filename) + 10) * sizeof(WCHAR) + sizeof(dotManifestW) )))
             return STATUS_NO_MEMORY;
-        strcpyW( buffer, filename );
+        wcscpy( buffer, filename );
         if (resid != 1) NTDLL_swprintf( buffer + strlenW(buffer), fmtW, resid );
         strcatW( buffer, dotManifestW );
         RtlInitUnicodeString( &nameW, buffer );
@@ -3315,7 +3315,7 @@ static NTSTATUS lookup_winsxs(struct actctx_loader* acl, struct assembly_identit
                                   strlenW(user_shared_data->NtSystemRoot) * sizeof(WCHAR) )))
         return STATUS_NO_MEMORY;
 
-    strcpyW( path, user_shared_data->NtSystemRoot );
+    wcscpy( path, user_shared_data->NtSystemRoot );
     memcpy( path + strlenW(path), manifest_dirW, sizeof(manifest_dirW) );
 
     if (!RtlDosPathNameToNtPathName_U( path, &path_us, NULL, NULL ))
@@ -3355,7 +3355,7 @@ static NTSTATUS lookup_winsxs(struct actctx_loader* acl, struct assembly_identit
     }
 
     path[path_us.Length/sizeof(WCHAR)] = '\\';
-    strcpyW( path + path_us.Length/sizeof(WCHAR) + 1, file );
+    wcscpy( path + path_us.Length/sizeof(WCHAR) + 1, file );
     RtlInitUnicodeString( &path_us, path );
     *strrchrW(file, '.') = 0;  /* remove .manifest extension */
 
@@ -3411,7 +3411,7 @@ static NTSTATUS lookup_assembly(struct actctx_loader* acl,
      * First 'appdir' is used as <dir>, if that failed
      * it tries application manifest file path.
      */
-    strcpyW( buffer, acl->actctx->appdir.info );
+    wcscpy( buffer, acl->actctx->appdir.info );
     p = buffer + strlenW(buffer);
     for (i = 0; i < 4; i++)
     {
@@ -3422,10 +3422,10 @@ static NTSTATUS lookup_assembly(struct actctx_loader* acl,
         }
         else *p++ = '\\';
 
-        strcpyW( p, ai->name );
+        wcscpy( p, ai->name );
         p += strlenW(p);
 
-        strcpyW( p, dotDllW );
+        wcscpy( p, dotDllW );
         if (RtlDosPathNameToNtPathName_U( buffer, &nameW, NULL, NULL ))
         {
             status = open_nt_file( &file, &nameW );
@@ -3440,7 +3440,7 @@ static NTSTATUS lookup_assembly(struct actctx_loader* acl,
             RtlFreeUnicodeString( &nameW );
         }
 
-        strcpyW( p, dotManifestW );
+        wcscpy( p, dotManifestW );
         if (RtlDosPathNameToNtPathName_U( buffer, &nameW, NULL, NULL ))
         {
             status = open_nt_file( &file, &nameW );
@@ -6023,7 +6023,7 @@ NTSTATUS WINAPI RtlQueryActivationContextApplicationSettings( DWORD flags, HANDL
 
     if (written) *written = strlenW(res) + 1;
     if (size < strlenW(res)) return STATUS_BUFFER_TOO_SMALL;
-    strcpyW( buffer, res );
+    wcscpy( buffer, res );
     return STATUS_SUCCESS;
 }
 
