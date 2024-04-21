@@ -3223,7 +3223,7 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
     unsigned int data_pos = 0, data_len;
     char buffer[8192];
 
-    if (!lang || !strcmpiW( lang, neutralW )) lang = wildcardW;
+    if (!lang || !wcsicmp( lang, neutralW )) lang = wildcardW;
 
     if (!(lookup = RtlAllocateHeap( GetProcessHeap(), 0,
                                     (strlenW(ai->arch) + strlenW(ai->name)
