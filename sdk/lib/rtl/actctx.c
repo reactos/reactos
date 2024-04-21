@@ -35,6 +35,7 @@
 #define RELATIVE_PATH RtlPathTypeRelative
 #define user_shared_data SharedUserData
 #define ARRAY_SIZE(a) (sizeof(a)/sizeof((a)[0]))
+#define wcsnicmp _wcsnicmp
 
 #undef RT_MANIFEST
 #undef CREATEPROCESS_MANIFEST_RESOURCE_ID
@@ -859,7 +860,7 @@ static inline BOOL xmlstr_cmp(const xmlstr_t* xmlstr, const WCHAR *str)
 
 static inline BOOL xmlstr_cmpi(const xmlstr_t* xmlstr, const WCHAR *str)
 {
-    return !strncmpiW(xmlstr->ptr, str, xmlstr->len) && !str[xmlstr->len];
+    return !wcsnicmp(xmlstr->ptr, str, xmlstr->len) && !str[xmlstr->len];
 }
 
 static BOOL xml_attr_cmp( const struct xml_attr *attr, const WCHAR *str )
@@ -1969,13 +1970,13 @@ static BOOL parse_typelib_flags(const xmlstr_t *value, struct entity *entity)
         start = str;
         while (*str != ',' && (i++ < value->len)) str++;
 
-        if (!strncmpiW(start, restrictedW, str-start))
+        if (!wcsnicmp(start, restrictedW, str-start))
             *flags |= LIBFLAG_FRESTRICTED;
-        else if (!strncmpiW(start, controlW, str-start))
+        else if (!wcsnicmp(start, controlW, str-start))
             *flags |= LIBFLAG_FCONTROL;
-        else if (!strncmpiW(start, hiddenW, str-start))
+        else if (!wcsnicmp(start, hiddenW, str-start))
             *flags |= LIBFLAG_FHIDDEN;
-        else if (!strncmpiW(start, hasdiskimageW, str-start))
+        else if (!wcsnicmp(start, hasdiskimageW, str-start))
             *flags |= LIBFLAG_FHASDISKIMAGE;
         else
         {
@@ -3268,7 +3269,7 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
             tmp = strchrW(tmp, '_') + 1;
             tmp = strchrW(tmp, '_') + 1;
             if (dir_info->FileNameLength - (tmp - dir_info->FileName) * sizeof(WCHAR) == sizeof(wine_trailerW) &&
-                !strncmpiW( tmp, wine_trailerW, ARRAY_SIZE( wine_trailerW )))
+                !wcsnicmp( tmp, wine_trailerW, ARRAY_SIZE( wine_trailerW )))
             {
                 /* prefer a non-Wine manifest if we already have one */
                 /* we'll still load the builtin dll if specified through DllOverrides */
