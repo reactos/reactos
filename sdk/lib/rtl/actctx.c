@@ -31,6 +31,7 @@
 #define TRACE DPRINT
 #define FILE_END_OF_FILE_INFORMATION FILE_STANDARD_INFORMATION
 #define FileEndOfFileInformation FileStandardInformation
+#define RELATIVE_PATH RtlPathTypeRelative
 
 BOOLEAN RtlpNotAllowingMultipleActivation;
 
@@ -5147,7 +5148,7 @@ RtlCreateActivationContext(IN ULONG Flags,
         BOOLEAN ret;
 
         if (pActCtx->dwFlags & ACTCTX_FLAG_ASSEMBLY_DIRECTORY_VALID &&
-            RtlDetermineDosPathNameType_U(pActCtx->lpSource) == RtlPathTypeRelative)
+            RtlDetermineDosPathNameType_U(pActCtx->lpSource) == RELATIVE_PATH)
         {
             DWORD dir_len, source_len;
 
