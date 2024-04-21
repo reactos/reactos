@@ -255,9 +255,7 @@ enum comclass_miscfields
 struct comclassredirect_data
 {
     ULONG size;
-    BYTE  res;
-    BYTE  miscmask;
-    BYTE  res1[2];
+    ULONG flags;
     DWORD model;
     GUID  clsid;
     GUID  alias;
@@ -4175,7 +4173,7 @@ static NTSTATUS add_comserver_record(const struct guidsection_header *section, c
         struct entity *entity = &entities->base[i];
         if (entity->kind == ACTIVATION_CONTEXT_SECTION_COM_SERVER_REDIRECTION)
         {
-            ULONG module_len, progid_len, str_len = 0;
+            ULONG module_len, progid_len, str_len = 0, miscmask;
             struct comclassredirect_data *data;
             struct guid_index *alias_index;
             struct clrclass_data *clrdata;
@@ -4211,9 +4209,6 @@ static NTSTATUS add_comserver_record(const struct guidsection_header *section, c
             /* setup data */
             data = (struct comclassredirect_data*)((BYTE*)section + (*index)->data_offset);
             data->size = sizeof(*data);
-            data->res = 0;
-            data->res1[0] = 0;
-            data->res1[1] = 0;
             data->model = entity->u.comclass.model;
             data->clsid = (*index)->guid;
             data->alias = alias_index->guid;
@@ -4240,17 +4235,18 @@ static NTSTATUS add_comserver_record(const struct guidsection_header *section, c
             data->miscstatusdocprint = entity->u.comclass.miscstatusdocprint;
 
             /* mask describes which misc* data is available */
-            data->miscmask = 0;
+            miscmask = 0;
             if (data->miscstatus)
-                data->miscmask |= MiscStatus;
+                miscmask |= MiscStatus;
             if (data->miscstatuscontent)
-                data->miscmask |= MiscStatusContent;
+                miscmask |= MiscStatusContent;
             if (data->miscstatusthumbnail)
-                data->miscmask |= MiscStatusThumbnail;
+                miscmask |= MiscStatusThumbnail;
             if (data->miscstatusicon)
-                data->miscmask |= MiscStatusIcon;
+                miscmask |= MiscStatusIcon;
             if (data->miscstatusdocprint)
-                data->miscmask |= MiscStatusDocPrint;
+                miscmask |= MiscStatusDocPrint;
+            data->flags = miscmask << 8;
 
             if (data->clrdata_offset)
             {
