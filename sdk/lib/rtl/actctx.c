@@ -1946,6 +1946,9 @@ static void parse_cominterface_proxy_stub_elem( xmlbuf_t *xmlbuf, struct dll_red
         else if (xml_attr_cmp(&attr, threadingmodelW))
         {
         }
+        else if (!is_xmlns_attr( &attr ))
+        {
+        }
     }
 
     acl->actctx->sections |= IFACEREDIRECT_SECTION;
