@@ -3219,13 +3219,13 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
     unsigned int data_pos = 0, data_len;
     char buffer[8192];
 
+    if (!lang || !strcmpiW( lang, neutralW )) lang = wildcardW;
+
     if (!(lookup = RtlAllocateHeap( GetProcessHeap(), 0,
                                     (strlenW(ai->arch) + strlenW(ai->name)
-                                     + strlenW(ai->public_key) + 20) * sizeof(WCHAR)
+                                     + strlenW(ai->public_key) + strlenW(lang) + 20) * sizeof(WCHAR)
                                     + sizeof(lookup_fmtW) )))
         return NULL;
-
-    if (!lang || !strcmpiW( lang, neutralW )) lang = wildcardW;
     sprintfW( lookup, lookup_fmtW, ai->arch, ai->name, ai->public_key,
               ai->version.major, ai->version.minor, lang );
     RtlInitUnicodeString( &lookup_us, lookup );
