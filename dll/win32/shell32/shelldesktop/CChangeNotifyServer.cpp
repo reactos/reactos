@@ -390,7 +390,7 @@ BOOL CChangeNotifyServer::DeliverNotification(HANDLE hTicket, DWORD dwOwnerPID)
             // do notify
             TRACE("Notifying: %p, 0x%x, %p, %lu\n",
                   pRegEntry->hwnd, pRegEntry->uMsg, hTicket, dwOwnerPID);
-            ::PostMessageW(pRegEntry->hwnd, pRegEntry->uMsg, (WPARAM)hTicket, dwOwnerPID);
+            ::SendMessageW(pRegEntry->hwnd, pRegEntry->uMsg, (WPARAM)hTicket, dwOwnerPID);
             TRACE("GetLastError(): %ld\n", ::GetLastError());
         }
     }
