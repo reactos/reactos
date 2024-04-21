@@ -36,6 +36,7 @@
 #define user_shared_data SharedUserData
 #define ARRAY_SIZE(a) (sizeof(a)/sizeof((a)[0]))
 #define wcsnicmp _wcsnicmp
+#define NTDLL_swprintf swprintf
 
 #undef RT_MANIFEST
 #undef CREATEPROCESS_MANIFEST_RESOURCE_ID
@@ -1199,7 +1200,7 @@ static WCHAR *build_assembly_dir(struct assembly_identity* ai)
     strcatW( ret, undW );
     strcatW( ret, key );
     strcatW( ret, undW );
-    sprintfW( ret + strlenW(ret), version_formatW,
+    NTDLL_swprintf( ret + strlenW(ret), version_formatW,
               ai->version.major, ai->version.minor, ai->version.build, ai->version.revision );
     strcatW( ret, undW );
     strcatW( ret, lang );
@@ -1236,7 +1237,7 @@ static WCHAR *build_assembly_id( const struct assembly_identity *ai )
     WCHAR version[64], *ret;
     SIZE_T size = 0;
 
-    sprintfW( version, version_formatW,
+    NTDLL_swprintf( version, version_formatW,
               ai->version.major, ai->version.minor, ai->version.build, ai->version.revision );
     if (ai->name) size += strlenW(ai->name) * sizeof(WCHAR);
     if (ai->arch) size += strlenW(archW) + strlenW(ai->arch) + 2;
@@ -2071,7 +2072,7 @@ static int get_assembly_version(struct assembly *assembly, WCHAR *ret)
     WCHAR buff[25];
 
     if (!ret) ret = buff;
-    return sprintfW(ret, fmtW, ver->major, ver->minor, ver->build, ver->revision);
+    return NTDLL_swprintf(ret, fmtW, ver->major, ver->minor, ver->build, ver->revision);
 }
 
 static void parse_window_class_elem( xmlbuf_t *xmlbuf, struct dll_redirect *dll,
@@ -3182,7 +3183,7 @@ static NTSTATUS get_manifest_in_associated_manifest( struct actctx_loader* acl, 
 
         if (!(status = get_module_filename( module, &name, sizeof(dotManifestW) + 10*sizeof(WCHAR) )))
         {
-            if (resid != 1) sprintfW( name.Buffer + strlenW(name.Buffer), fmtW, resid );
+            if (resid != 1) NTDLL_swprintf( name.Buffer + strlenW(name.Buffer), fmtW, resid );
             strcatW( name.Buffer, dotManifestW );
             if (!RtlDosPathNameToNtPathName_U( name.Buffer, &nameW, NULL, NULL ))
                 status = STATUS_RESOURCE_DATA_NOT_FOUND;
@@ -3196,7 +3197,7 @@ static NTSTATUS get_manifest_in_associated_manifest( struct actctx_loader* acl, 
                                         (strlenW(filename) + 10) * sizeof(WCHAR) + sizeof(dotManifestW) )))
             return STATUS_NO_MEMORY;
         strcpyW( buffer, filename );
-        if (resid != 1) sprintfW( buffer + strlenW(buffer), fmtW, resid );
+        if (resid != 1) NTDLL_swprintf( buffer + strlenW(buffer), fmtW, resid );
         strcatW( buffer, dotManifestW );
         RtlInitUnicodeString( &nameW, buffer );
     }
@@ -3232,7 +3233,7 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
                                      + strlenW(ai->public_key) + strlenW(lang) + 20) * sizeof(WCHAR)
                                     + sizeof(lookup_fmtW) )))
         return NULL;
-    sprintfW( lookup, lookup_fmtW, ai->arch, ai->name, ai->public_key,
+    NTDLL_swprintf( lookup, lookup_fmtW, ai->arch, ai->name, ai->public_key,
               ai->version.major, ai->version.minor, lang );
     RtlInitUnicodeString( &lookup_us, lookup );
 
