@@ -13,6 +13,7 @@
  */
 
 /* Based on Wine 3.2-37c98396 */
+#ifdef __REACTOS__
 
 #include <rtl.h>
 #include <ntstrsafe.h>
@@ -37,6 +38,8 @@
 #undef CREATEPROCESS_MANIFEST_RESOURCE_ID
 
 BOOLEAN RtlpNotAllowingMultipleActivation;
+
+#endif // __REACTOS__
 
 #define ACTCTX_FLAGS_ALL (\
  ACTCTX_FLAG_PROCESSOR_ARCHITECTURE_VALID |\
@@ -545,6 +548,7 @@ enum context_sections
     PROGIDREDIRECT_SECTION = 64
 };
 
+#ifdef __REACTOS__
 typedef struct _ASSEMBLY_STORAGE_MAP_ENTRY
 {
     ULONG Flags;
@@ -558,9 +562,11 @@ typedef struct _ASSEMBLY_STORAGE_MAP
     ULONG AssemblyCount;
     PASSEMBLY_STORAGE_MAP_ENTRY *AssemblyArray;
 } ASSEMBLY_STORAGE_MAP, *PASSEMBLY_STORAGE_MAP;
+#endif // __REACTOS__
 
 typedef struct _ACTIVATION_CONTEXT
 {
+#ifdef __REACTOS__
     LONG RefCount;
     ULONG Flags;
     LIST_ENTRY Links;
@@ -573,11 +579,15 @@ typedef struct _ACTIVATION_CONTEXT
     PASSEMBLY_STORAGE_MAP_ENTRY InlineStorageMapEntries;
     ULONG StackTraceIndex;
     PVOID StackTraces[4][4];
-    struct file_info config;
-    struct file_info appdir;
-    struct assembly *assemblies;
-    unsigned int num_assemblies;
-    unsigned int allocated_assemblies;
+#else
+    ULONG               magic;
+    int                 ref_count;
+#endif // __REACTOS__
+    struct file_info    config;
+    struct file_info    appdir;
+    struct assembly    *assemblies;
+    unsigned int        num_assemblies;
+    unsigned int        allocated_assemblies;
     /* section data */
     DWORD               sections;
     struct strsection_header  *wndclass_section;
@@ -615,6 +625,7 @@ static const WCHAR asmv1W[] = {'u','r','n',':','s','c','h','e','m','a','s','-','
 static const WCHAR asmv2W[] = {'u','r','n',':','s','c','h','e','m','a','s','-','m','i','c','r','o','s','o','f','t','-','c','o','m',':','a','s','m','.','v','2',0};
 static const WCHAR asmv3W[] = {'u','r','n',':','s','c','h','e','m','a','s','-','m','i','c','r','o','s','o','f','t','-','c','o','m',':','a','s','m','.','v','3',0};
 
+#ifdef __REACTOS__
 typedef struct _ACTIVATION_CONTEXT_WRAPPED
 {
     PVOID MagicMarker;
@@ -668,6 +679,7 @@ RtlpValidateActCtx(IN PACTIVATION_CONTEXT ActCtx)
         RtlpSxsBreakOnInvalidMarker(ActCtx, 1);
     }
 }
+#endif // __REACTOS__
 
 static const WCHAR assemblyW[] = {'a','s','s','e','m','b','l','y',0};
 static const WCHAR assemblyIdentityW[] = {'a','s','s','e','m','b','l','y','I','d','e','n','t','i','t','y',0};
@@ -2975,6 +2987,7 @@ static NTSTATUS get_manifest_in_module( struct actctx_loader* acl, struct assemb
     return status;
 }
 
+#ifdef __REACTOS__
 IMAGE_RESOURCE_DIRECTORY *find_entry_by_name( IMAGE_RESOURCE_DIRECTORY *dir,
                                              LPCWSTR name, void *root,
                                              int want_dir );
@@ -3032,6 +3045,7 @@ static NTSTATUS search_manifest_in_module( struct actctx_loader* acl, struct ass
 
     return status;
 }
+#endif // __REACTOS__
 
 static NTSTATUS get_manifest_in_pe_file( struct actctx_loader* acl, struct assembly_identity* ai,
                                          LPCWSTR filename, LPCWSTR directory, BOOL shared,
@@ -5028,9 +5042,11 @@ static NTSTATUS find_string(ACTIVATION_CONTEXT* actctx, ULONG section_kind,
 
     switch (section_kind)
     {
+#ifdef __REACTOS__
     case ACTIVATION_CONTEXT_SECTION_ASSEMBLY_INFORMATION:
         DPRINT1("Unsupported yet section_kind %x\n", section_kind);
         return STATUS_SXS_KEY_NOT_FOUND;
+#endif // __REACTOS__
     case ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION:
         status = find_dll_redirection(actctx, section_name, data);
         break;
@@ -5448,6 +5464,7 @@ NTSTATUS WINAPI RtlDeactivateActivationContext( ULONG flags, ULONG_PTR cookie )
     return STATUS_SUCCESS;
 }
 
+#ifdef __REACTOS__
 VOID
 NTAPI
 RtlFreeActivationContextStack(IN PACTIVATION_CONTEXT_STACK Stack)
@@ -5478,14 +5495,29 @@ RtlFreeActivationContextStack(IN PACTIVATION_CONTEXT_STACK Stack)
     /* Free activation stack memory */
     RtlFreeHeap(GetProcessHeap(), 0, Stack);
 }
+#endif // __REACTOS__
 
 /******************************************************************
  *		RtlFreeThreadActivationContextStack (NTDLL.@)
  */
 void WINAPI RtlFreeThreadActivationContextStack(void)
 {
+#ifdef __REACTOS__
     RtlFreeActivationContextStack(NtCurrentTeb()->ActivationContextStackPointer);
     NtCurrentTeb()->ActivationContextStackPointer = NULL;
+#else
+    RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame;
+
+    frame = NtCurrentTeb()->ActivationContextStack.ActiveFrame;
+    while (frame)
+    {
+        RTL_ACTIVATION_CONTEXT_STACK_FRAME *prev = frame->Previous;
+        RtlReleaseActivationContext( frame->ActivationContext );
+        RtlFreeHeap( GetProcessHeap(), 0, frame );
+        frame = prev;
+    }
+    NtCurrentTeb()->ActivationContextStack.ActiveFrame = NULL;
+#endif // __REACTOS__
 }
 
 
@@ -5773,6 +5805,7 @@ NTSTATUS WINAPI RtlQueryInformationActivationContext( ULONG flags, HANDLE handle
     return STATUS_SUCCESS;
 }
 
+#ifdef __REACTOS__
 NTSTATUS
 NTAPI
 RtlQueryInformationActiveActivationContext(ULONG ulInfoClass,
@@ -5818,6 +5851,7 @@ RtlpFindActivationContextSection_CheckParameters( ULONG flags, const GUID *guid,
 
     return STATUS_SUCCESS;
 }
+#endif // __REACTOS__
 
 /***********************************************************************
  *		RtlFindActivationContextSectionString (NTDLL.@)
@@ -5912,6 +5946,7 @@ NTSTATUS WINAPI RtlFindActivationContextSectionGuid( ULONG flags, const GUID *ex
     return status;
 }
 
+#ifdef __REACTOS__
 /* Stubs */
 
 NTSTATUS
@@ -6073,3 +6108,4 @@ RtlDeactivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CON
     Frame->Frame.Flags |= RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_DEACTIVATED;
     return NewFrame->Previous;
 }
+#endif // __REACTOS__
