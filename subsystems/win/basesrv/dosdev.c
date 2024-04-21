@@ -359,7 +359,9 @@ BaseSrvBSMThread(PVOID StartupContext)
     --BaseSrvpBSMThreadCount;
     RtlLeaveCriticalSection(&BaseSrvDDDBSMCritSec);
 
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     NtCurrentTeb()->FreeStackOnTermination = TRUE;
+#endif
     NtTerminateThread(NtCurrentThread(), ExitStatus);
 
     return ExitStatus;

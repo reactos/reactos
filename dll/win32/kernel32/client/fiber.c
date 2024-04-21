@@ -69,7 +69,11 @@ ConvertFiberToThread(VOID)
 
     /* Check if the thread is already not a fiber */
     Teb = NtCurrentTeb();
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     if (!Teb->HasFiberData)
+#else
+    if (!Teb->DbgHasFiberData)
+#endif
     {
         /* Fail */
         SetLastError(ERROR_ALREADY_THREAD);
@@ -77,7 +81,11 @@ ConvertFiberToThread(VOID)
     }
 
     /* This thread won't run a fiber anymore */
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     Teb->HasFiberData = FALSE;
+#else
+    Teb->DbgHasFiberData = FALSE;
+#endif
     FiberData = Teb->NtTib.FiberData;
     Teb->NtTib.FiberData = NULL;
 
@@ -113,7 +121,11 @@ ConvertThreadToFiberEx(_In_opt_ LPVOID lpParameter,
 
     /* Are we already a fiber? */
     Teb = NtCurrentTeb();
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     if (Teb->HasFiberData)
+#else
+    if (Teb->DbgHasFiberData)
+#endif
     {
         /* Fail */
         SetLastError(ERROR_ALREADY_FIBER);
@@ -148,7 +160,11 @@ ConvertThreadToFiberEx(_In_opt_ LPVOID lpParameter,
 
     /* Associate the fiber to the current thread */
     Teb->NtTib.FiberData = Fiber;
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     Teb->HasFiberData = TRUE;
+#else
+    Teb->DbgHasFiberData = TRUE;
+#endif
 
     /* Return opaque fiber data */
     return (LPVOID)Fiber;
@@ -296,8 +312,14 @@ DeleteFiber(_In_ LPVOID lpFiber)
     /* Are we deleting ourselves? */
     Teb = NtCurrentTeb();
     Fiber = (PFIBER)lpFiber;
-    if ((Teb->HasFiberData) &&
+
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
+    if ((!Teb->HasFiberData) &&
         (Teb->NtTib.FiberData == Fiber))
+#else
+    if ((!Teb->DbgHasFiberData) &&
+        (Teb->NtTib.FiberData == Fiber))
+#endif
     {
         /* Just exit */
         ExitThread(1);
@@ -330,7 +352,11 @@ WINAPI
 IsThreadAFiber(VOID)
 {
     /* Return flag in the TEB */
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     return NtCurrentTeb()->HasFiberData;
+#else
+    return NtCurrentTeb()->DbgHasFiberData;
+#endif
 }
 
 /*
