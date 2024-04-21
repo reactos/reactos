@@ -363,6 +363,13 @@ BOOL CChangeNotifyServer::DeliverNotification(HANDLE hTicket, DWORD dwOwnerPID)
         return FALSE;
     }
 
+    // Use ReplyMessage for quick response
+    if ((pTicket->uFlags & (SHCNF_FLUSH | SHCNF_FLUSHNOWAIT)) != SHCNF_FLUSH)
+    {
+        if (::InSendMessage())
+            ::ReplyMessage(TRUE);
+    }
+
     // for all items
     for (INT i = 0; i < m_items.GetSize(); ++i)
     {
