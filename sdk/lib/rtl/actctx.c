@@ -856,7 +856,7 @@ static WCHAR *xmlstrdupW(const xmlstr_t* str)
 
 static inline BOOL xmlstr_cmp(const xmlstr_t* xmlstr, const WCHAR *str)
 {
-    return !strncmpW(xmlstr->ptr, str, xmlstr->len) && !str[xmlstr->len];
+    return !wcsncmp(xmlstr->ptr, str, xmlstr->len) && !str[xmlstr->len];
 }
 
 static inline BOOL xmlstr_cmpi(const xmlstr_t* xmlstr, const WCHAR *str)
@@ -1701,7 +1701,7 @@ static OLEMISC get_olemisc_value(const WCHAR *str, int len)
 
         n = (min+max)/2;
 
-        c = strncmpW(olemisc_values[n].name, str, len);
+        c = wcsncmp(olemisc_values[n].name, str, len);
         if (!c && !olemisc_values[n].name[len])
             return olemisc_values[n].value;
 
