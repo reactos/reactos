@@ -371,7 +371,7 @@ BOOL CChangeNotifyServer::DeliverNotification(HANDLE hTicket, DWORD dwOwnerPID)
     }
 
     // Protect CChangeNotifyServer by using mutex
-    HANDLE hMutex = ::CreateMutex(NULL, FALSE, L"CChangeNotifyServer::DeliverNotification");
+    HANDLE hMutex = ::CreateMutexW(NULL, FALSE, L"CChangeNotifyServer::DeliverNotification");
     ::WaitForSingleObject(hMutex, INFINITE);
 
     // for all items
