@@ -1554,7 +1554,8 @@ static BOOL parse_text_content(xmlbuf_t* xmlbuf, xmlstr_t* content)
 
     if (xmlbuf->error) return FALSE;
 
-    if (!(ptr = memchrW(xmlbuf->ptr, '<', xmlbuf->end - xmlbuf->ptr))) return set_error( xmlbuf );
+    for (ptr = xmlbuf->ptr; ptr < xmlbuf->end; ptr++) if (*ptr == '<') break;
+    if (ptr == xmlbuf->end) return set_error( xmlbuf );
 
     content->ptr = xmlbuf->ptr;
     content->len = ptr - xmlbuf->ptr;
