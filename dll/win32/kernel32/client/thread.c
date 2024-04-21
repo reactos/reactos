@@ -385,9 +385,10 @@ ExitThread(IN DWORD uExitCode)
 
     /* Notify DLLs and TLS Callbacks of termination */
     LdrShutdownThread();
-
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     /* Tell the Kernel to free the Stack */
     NtCurrentTeb()->FreeStackOnTermination = TRUE;
+#endif
     NtTerminateThread(NULL, uExitCode);
 
     /* We should never reach this place */
