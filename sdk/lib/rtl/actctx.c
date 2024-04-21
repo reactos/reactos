@@ -3067,7 +3067,7 @@ static NTSTATUS get_manifest_in_manifest_file( struct actctx_loader* acl, struct
     status = NtQueryInformationFile( file, &io, &info, sizeof(info), FileStandardInformation);
 
     if (status == STATUS_SUCCESS)
-        status = parse_manifest(acl, ai, filename, directory, shared, base, (SIZE_T)info.EndOfFile.QuadPart);
+        status = parse_manifest(acl, ai, filename, directory, shared, base, info.EndOfFile.QuadPart);
 
     NtUnmapViewOfSection( GetCurrentProcess(), base );
     return status;
@@ -3156,7 +3156,7 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
         WCHAR *tmp;
         ULONG build, revision;
 
-        data_len = (ULONG)io.Information;
+        data_len = io.Information;
 
         for (;;)
         {
@@ -3165,7 +3165,7 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
                 if (NtQueryDirectoryFile( dir, 0, NULL, NULL, &io, buffer, sizeof(buffer),
                                           FileBothDirectoryInformation, FALSE, &lookup_us, FALSE ))
                     break;
-                data_len = (ULONG)io.Information;
+                data_len = io.Information;
                 data_pos = 0;
             }
             dir_info = (FILE_BOTH_DIR_INFORMATION*)(buffer + data_pos);
@@ -3487,7 +3487,7 @@ static NTSTATUS build_dllredirect_section(ACTIVATION_CONTEXT* actctx, struct str
             DPRINT("%d: dll name %S\n", j, dll->name);
             /* setup new index entry */
             str.Buffer = dll->name;
-            str.Length = (USHORT)strlenW(dll->name)*sizeof(WCHAR);
+            str.Length = strlenW(dll->name)*sizeof(WCHAR);
             str.MaximumLength = str.Length + sizeof(WCHAR);
             /* hash original class name */
             RtlHashUnicodeString(&str, TRUE, HASH_STRING_ALGORITHM_X65599, &index->hash);
@@ -3705,7 +3705,7 @@ static NTSTATUS build_wndclass_section(ACTIVATION_CONTEXT* actctx, struct strsec
 
                     /* setup new index entry */
                     str.Buffer = entity->u.class.name;
-                    str.Length = (USHORT)strlenW(entity->u.class.name)*sizeof(WCHAR);
+                    str.Length = strlenW(entity->u.class.name)*sizeof(WCHAR);
                     str.MaximumLength = str.Length + sizeof(WCHAR);
                     /* hash original class name */
                     RtlHashUnicodeString(&str, TRUE, HASH_STRING_ALGORITHM_X65599, &index->hash);
@@ -5518,11 +5518,11 @@ NTSTATUS WINAPI RtlQueryInformationActivationContext( ULONG flags, HANDLE handle
             acdi->ulFormatVersion = assembly ? 1 : 0; /* FIXME */
             acdi->ulAssemblyCount = actctx->num_assemblies;
             acdi->ulRootManifestPathType = assembly ? assembly->manifest.type : 0 /* FIXME */;
-            acdi->ulRootManifestPathChars = assembly && assembly->manifest.info ? (DWORD)manifest_len - 1 : 0;
+            acdi->ulRootManifestPathChars = assembly && assembly->manifest.info ? manifest_len - 1 : 0;
             acdi->ulRootConfigurationPathType = actctx->config.type;
-            acdi->ulRootConfigurationPathChars = actctx->config.info ? (DWORD)config_len - 1 : 0;
+            acdi->ulRootConfigurationPathChars = actctx->config.info ? config_len - 1 : 0;
             acdi->ulAppDirPathType = actctx->appdir.type;
-            acdi->ulAppDirPathChars = actctx->appdir.info ? (DWORD)appdir_len - 1 : 0;
+            acdi->ulAppDirPathChars = actctx->appdir.info ? appdir_len - 1 : 0;
             ptr = (LPWSTR)(acdi + 1);
             if (manifest_len)
             {
@@ -5582,9 +5582,9 @@ NTSTATUS WINAPI RtlQueryInformationActivationContext( ULONG flags, HANDLE handle
             }
 
             afdi->ulFlags = 0;  /* FIXME */
-            afdi->ulEncodedAssemblyIdentityLength = (DWORD)(id_len - 1) * sizeof(WCHAR);
+            afdi->ulEncodedAssemblyIdentityLength = (id_len - 1) * sizeof(WCHAR);
             afdi->ulManifestPathType = assembly->manifest.type;
-            afdi->ulManifestPathLength = assembly->manifest.info ? (DWORD)(path_len - 1) * sizeof(WCHAR) : 0;
+            afdi->ulManifestPathLength = assembly->manifest.info ? (path_len - 1) * sizeof(WCHAR) : 0;
             /* FIXME afdi->liManifestLastWriteTime = 0; */
             afdi->ulPolicyPathType = ACTIVATION_CONTEXT_PATH_TYPE_NONE; /* FIXME */
             afdi->ulPolicyPathLength = 0;
@@ -5594,7 +5594,7 @@ NTSTATUS WINAPI RtlQueryInformationActivationContext( ULONG flags, HANDLE handle
             afdi->ulManifestVersionMinor = 0;
             afdi->ulPolicyVersionMajor = 0; /* FIXME */
             afdi->ulPolicyVersionMinor = 0; /* FIXME */
-            afdi->ulAssemblyDirectoryNameLength = ad_len ? (DWORD)(ad_len - 1) * sizeof(WCHAR) : 0;
+            afdi->ulAssemblyDirectoryNameLength = ad_len ? (ad_len - 1) * sizeof(WCHAR) : 0;
             ptr = (LPWSTR)(afdi + 1);
             afdi->lpAssemblyEncodedAssemblyIdentity = ptr;
             memcpy( ptr, assembly_id, id_len * sizeof(WCHAR) );
@@ -5646,7 +5646,7 @@ NTSTATUS WINAPI RtlQueryInformationActivationContext( ULONG flags, HANDLE handle
             }
             if (retlen) *retlen = 0; /* yes that's what native does !! */
             afdi->ulFlags = ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION;
-            afdi->ulFilenameLength = dll_len ? (DWORD)(dll_len - 1) * sizeof(WCHAR) : 0;
+            afdi->ulFilenameLength = dll_len ? (dll_len - 1) * sizeof(WCHAR) : 0;
             afdi->ulPathLength = 0; /* FIXME */
             ptr = (LPWSTR)(afdi + 1);
             if (dll_len)
