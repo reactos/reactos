@@ -469,26 +469,27 @@ LRESULT CDesktopBrowser::OnGetChangeNotifyServer(UINT uMsg, WPARAM wParam, LPARA
 // Detect DBT_DEVICEARRIVAL and DBT_DEVICEREMOVECOMPLETE
 LRESULT CDesktopBrowser::OnDeviceChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    if (wParam == DBT_DEVICEARRIVAL || wParam == DBT_DEVICEREMOVECOMPLETE)
+    if (wParam != DBT_DEVICEARRIVAL && wParam != DBT_DEVICEREMOVECOMPLETE)
+        return 0;
+
+    DWORD dwDrives = ::GetLogicalDrives();
+    for (INT iDrive = 0; iDrive <= 'Z' - 'A'; ++iDrive)
     {
-        DWORD dwDrives = ::GetLogicalDrives();
-        for (DWORD iDrive = 0; iDrive <= 'Z' - 'A'; ++iDrive)
+        WCHAR szPath[MAX_PATH];
+        DWORD dwBit = (1 << iDrive);
+        if (!(m_dwDrives & dwBit) && (dwDrives & dwBit)) // The drive is added
         {
-            WCHAR szPath[MAX_PATH];
-            DWORD dwBit = (1 << iDrive);
-            if (!(m_dwDrives & dwBit) && (dwDrives & dwBit)) // The drive is added
-            {
-                PathBuildRootW(szPath, iDrive);
-                SHChangeNotify(SHCNE_DRIVEADD, SHCNF_PATHW, szPath, NULL);
-            }
-            else if ((m_dwDrives & dwBit) && !(dwDrives & dwBit)) // The drive is removed
-            {
-                PathBuildRootW(szPath, iDrive);
-                SHChangeNotify(SHCNE_DRIVEREMOVED, SHCNF_PATHW, szPath, NULL);
-            }
+            PathBuildRootW(szPath, iDrive);
+            SHChangeNotify(SHCNE_DRIVEADD, SHCNF_PATHW, szPath, NULL);
         }
-        m_dwDrives = dwDrives;
+        else if ((m_dwDrives & dwBit) && !(dwDrives & dwBit)) // The drive is removed
+        {
+            PathBuildRootW(szPath, iDrive);
+            SHChangeNotify(SHCNE_DRIVEREMOVED, SHCNF_PATHW, szPath, NULL);
+        }
     }
+
+    m_dwDrives = dwDrives;
     return 0;
 }
 
