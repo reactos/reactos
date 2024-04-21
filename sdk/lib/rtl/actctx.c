@@ -33,6 +33,9 @@
 #define FileEndOfFileInformation FileStandardInformation
 #define RELATIVE_PATH RtlPathTypeRelative
 
+#undef RT_MANIFEST
+#undef CREATEPROCESS_MANIFEST_RESOURCE_ID
+
 BOOLEAN RtlpNotAllowingMultipleActivation;
 
 #define ACTCTX_FLAGS_ALL (\
@@ -45,6 +48,7 @@ BOOLEAN RtlpNotAllowingMultipleActivation;
  ACTCTX_FLAG_SOURCE_IS_ASSEMBLYREF |\
  ACTCTX_FLAG_HMODULE_VALID )
 
+#define ACTCTX_MAGIC       0xC07E3E11
 #define STRSECTION_MAGIC   0x64487353 /* dHsS */
 #define GUIDSECTION_MAGIC  0x64487347 /* dHsG */
 
@@ -52,6 +56,47 @@ BOOLEAN RtlpNotAllowingMultipleActivation;
 
 #define ACTCTX_FAKE_HANDLE ((HANDLE) 0xf00baa)
 #define ACTCTX_FAKE_COOKIE ((ULONG_PTR) 0xf00bad)
+
+/* we don't want to include winuser.h */
+#define RT_MANIFEST                        ((ULONG_PTR)24)
+#define CREATEPROCESS_MANIFEST_RESOURCE_ID ((ULONG_PTR)1)
+
+#ifndef __REACTOS__ // defined in oaidl.h
+/* from oaidl.h */
+typedef enum tagLIBFLAGS {
+    LIBFLAG_FRESTRICTED   = 0x1,
+    LIBFLAG_FCONTROL      = 0x2,
+    LIBFLAG_FHIDDEN       = 0x4,
+    LIBFLAG_FHASDISKIMAGE = 0x8
+} LIBFLAGS;
+
+/* from oleidl.idl */
+typedef enum tagOLEMISC
+{
+    OLEMISC_RECOMPOSEONRESIZE            = 0x1,
+    OLEMISC_ONLYICONIC                   = 0x2,
+    OLEMISC_INSERTNOTREPLACE             = 0x4,
+    OLEMISC_STATIC                       = 0x8,
+    OLEMISC_CANTLINKINSIDE               = 0x10,
+    OLEMISC_CANLINKBYOLE1                = 0x20,
+    OLEMISC_ISLINKOBJECT                 = 0x40,
+    OLEMISC_INSIDEOUT                    = 0x80,
+    OLEMISC_ACTIVATEWHENVISIBLE          = 0x100,
+    OLEMISC_RENDERINGISDEVICEINDEPENDENT = 0x200,
+    OLEMISC_INVISIBLEATRUNTIME           = 0x400,
+    OLEMISC_ALWAYSRUN                    = 0x800,
+    OLEMISC_ACTSLIKEBUTTON               = 0x1000,
+    OLEMISC_ACTSLIKELABEL                = 0x2000,
+    OLEMISC_NOUIACTIVATE                 = 0x4000,
+    OLEMISC_ALIGNABLE                    = 0x8000,
+    OLEMISC_SIMPLEFRAME                  = 0x10000,
+    OLEMISC_SETCLIENTSITEFIRST           = 0x20000,
+    OLEMISC_IMEMODE                      = 0x40000,
+    OLEMISC_IGNOREACTIVATEWHENVISIBLE    = 0x80000,
+    OLEMISC_WANTSTOMENUMERGE             = 0x100000,
+    OLEMISC_SUPPORTSMULTILEVELUNDO       = 0x200000
+} OLEMISC;
+#endif // !__REACTOS__
 
 #define MAX_NAMESPACES 64
 
@@ -803,7 +848,7 @@ static inline BOOL xmlstr_cmpi(const xmlstr_t* xmlstr, const WCHAR *str)
     return !strncmpiW(xmlstr->ptr, str, xmlstr->len) && !str[xmlstr->len];
 }
 
-static inline BOOL xml_attr_cmp(const struct xml_attr* attr, const WCHAR *str)
+static BOOL xml_attr_cmp( const struct xml_attr *attr, const WCHAR *str )
 {
     return xmlstr_cmp( &attr->name, str );
 }
@@ -836,6 +881,18 @@ static inline BOOL isxmlspace( WCHAR ch )
 {
     return (ch == ' ' || ch == '\r' || ch == '\n' || ch == '\t');
 }
+
+#ifndef __REACTOS__
+static inline const char* debugstr_xmlstr(const xmlstr_t* str)
+{
+    return debugstr_wn(str->ptr, str->len);
+}
+
+static inline const char* debugstr_version(const struct assembly_version *ver)
+{
+    return wine_dbg_sprintf("%u.%u.%u.%u", ver->major, ver->minor, ver->build, ver->revision);
+}
+#endif // !__REACTOS__
 
 static struct assembly *add_assembly(ACTIVATION_CONTEXT *actctx, enum assembly_type at)
 {
@@ -2886,7 +2943,7 @@ static NTSTATUS get_manifest_in_module( struct actctx_loader* acl, struct assemb
 
     if (!resname) return STATUS_INVALID_PARAMETER;
 
-    info.Type = (ULONG_PTR)RT_MANIFEST;
+    info.Type = RT_MANIFEST;
     info.Language = lang;
     if (!((ULONG_PTR)resname >> 16))
     {
@@ -3084,7 +3141,7 @@ static NTSTATUS get_manifest_in_associated_manifest( struct actctx_loader* acl, 
     NTSTATUS status;
     UNICODE_STRING nameW;
     HANDLE file;
-    ULONG_PTR resid = (ULONG_PTR)CREATEPROCESS_MANIFEST_RESOURCE_ID;
+    ULONG_PTR resid = CREATEPROCESS_MANIFEST_RESOURCE_ID;
 
     if (!((ULONG_PTR)resname >> 16)) resid = (ULONG_PTR)resname & 0xffff;
 
@@ -3345,7 +3402,7 @@ static NTSTATUS lookup_assembly(struct actctx_loader* acl,
             if (!status)
             {
                 status = get_manifest_in_pe_file( acl, ai, nameW.Buffer, directory, FALSE, file,
-                                                  (LPCWSTR)0, 0 );
+                                                  (LPCWSTR)CREATEPROCESS_MANIFEST_RESOURCE_ID, 0 );
                 NtClose( file );
                 break;
             }
@@ -5110,7 +5167,7 @@ RtlCreateActivationContext(IN ULONG Flags,
     HANDLE file = 0;
     struct actctx_loader acl;
 
-    TRACE("RtlCreateActivationContext %p %08x, Image Base: %p\n", pActCtx, pActCtx ? pActCtx->dwFlags : 0, ((ACTCTXW*)ActivationContextData)->hModule);
+    TRACE("%p %08x\n", pActCtx, pActCtx ? pActCtx->dwFlags : 0);
 
     if (!pActCtx || pActCtx->cbSize < sizeof(*pActCtx) ||
         (pActCtx->dwFlags & ~ACTCTX_FLAGS_ALL))
