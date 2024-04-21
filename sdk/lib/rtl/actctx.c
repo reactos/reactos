@@ -3262,10 +3262,10 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
             else data_pos = data_len;
 
             tmp = (WCHAR *)dir_info->FileName + (strchrW(lookup, '*') - lookup);
-            build = atoiW(tmp);
+            build = wcstoul( tmp, NULL, 10 );
             if (build < min_build) continue;
             tmp = strchrW(tmp, '.') + 1;
-            revision = atoiW(tmp);
+            revision = wcstoul( tmp, NULL, 10 );
             if (build == min_build && revision < min_revision) continue;
             tmp = strchrW(tmp, '_') + 1;
             tmp = strchrW(tmp, '_') + 1;
