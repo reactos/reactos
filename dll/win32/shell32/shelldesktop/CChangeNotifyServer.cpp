@@ -370,10 +370,6 @@ BOOL CChangeNotifyServer::DeliverNotification(HANDLE hTicket, DWORD dwOwnerPID)
             ::ReplyMessage(TRUE);
     }
 
-    // Protect CChangeNotifyServer by using mutex
-    HANDLE hMutex = ::CreateMutexW(NULL, FALSE, L"CChangeNotifyServer::DeliverNotification");
-    ::WaitForSingleObject(hMutex, INFINITE);
-
     // for all items
     for (INT i = 0; i < m_items.GetSize(); ++i)
     {
@@ -398,10 +394,6 @@ BOOL CChangeNotifyServer::DeliverNotification(HANDLE hTicket, DWORD dwOwnerPID)
             TRACE("GetLastError(): %ld\n", ::GetLastError());
         }
     }
-
-    // Release mutex
-    ::ReleaseMutex(hMutex);
-    ::CloseHandle(hMutex);
 
     // unlock the ticket
     SHUnlockShared(pTicket);
