@@ -502,7 +502,7 @@ HvSyncHive(
     /* Update hive header modification time */
     KeQuerySystemTime(&RegistryHive->BaseBlock->TimeStamp);
 #endif
-
+#if (NTDDI_VERSION < NTDDI_VISTA)
     /* Update the hive log file if present */
     if (RegistryHive->Log)
     {
@@ -515,7 +515,7 @@ HvSyncHive(
             return FALSE;
         }
     }
-
+#endif
     /* Update the primary hive file */
     if (!HvpWriteHive(RegistryHive, TRUE, HFILE_TYPE_PRIMARY))
     {
@@ -526,6 +526,7 @@ HvSyncHive(
         return FALSE;
     }
 
+#if (NTDDI_VERSION < NTDDI_VISTA)
     /* Update the alternate hive file if present */
     if (RegistryHive->Alternate)
     {
@@ -538,6 +539,7 @@ HvSyncHive(
             return FALSE;
         }
     }
+#endif
 
     /* Clear dirty bitmap. */
     RtlClearAllBits(&RegistryHive->DirtyVector);
@@ -636,7 +638,9 @@ HvWriteAlternateHive(
 {
     ASSERT(!RegistryHive->ReadOnly);
     ASSERT(RegistryHive->Signature == HV_HHIVE_SIGNATURE);
+#if (NTDDI_VERSION < NTDDI_VISTA)
     ASSERT(RegistryHive->Alternate);
+#endif
 
 #if !defined(_BLDR_)
     /* Update hive header modification time */
