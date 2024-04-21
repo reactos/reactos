@@ -22,6 +22,7 @@
 #include <debug.h>
 
 #include <wine/unicode.h>
+#include "wine/exception.h"
 
 #define GetProcessHeap() RtlGetProcessHeap()
 #define GetCurrentProcess() NtCurrentProcess()
@@ -1158,7 +1159,7 @@ static ACTIVATION_CONTEXT *check_actctx( HANDLE h )
     PACTIVATION_CONTEXT_WRAPPED pActual;
 
     if (!h || h == INVALID_HANDLE_VALUE) return NULL;
-    _SEH2_TRY
+    __TRY
     {
         if (actctx)
         {
@@ -1166,11 +1167,11 @@ static ACTIVATION_CONTEXT *check_actctx( HANDLE h )
             if (pActual->MagicMarker == ACTCTX_MAGIC_MARKER) ret = &pActual->ActivationContext;
         }
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    __EXCEPT_PAGE_FAULT
     {
         DPRINT1("Invalid activation context handle!\n");
     }
-    _SEH2_END;
+    __ENDTRY
     return ret;
 }
 
