@@ -5181,6 +5181,12 @@ void actctx_init(PVOID* pOldShimData)
     {
         DPRINT1("Failed to create the implicit act ctx. Status: 0x%x!!!\n", Status);
     }
+
+#ifdef __REACTOS__
+    NtCurrentTeb()->ProcessEnvironmentBlock->ActivationContextData = process_actctx->ActivationContextData;
+#else
+    NtCurrentTeb()->Peb->ActivationContextData = process_actctx;
+#endif // __REACTOS__
 }
 
 
