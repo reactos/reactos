@@ -24,6 +24,7 @@
 #include <wine/unicode.h>
 
 #define GetProcessHeap() RtlGetProcessHeap()
+#define GetCurrentProcess() NtCurrentProcess()
 
 BOOLEAN RtlpNotAllowingMultipleActivation;
 
@@ -3015,7 +3016,7 @@ static NTSTATUS get_manifest_in_pe_file( struct actctx_loader* acl, struct assem
     offset.QuadPart = 0;
     count = 0;
     base = NULL;
-    status = NtMapViewOfSection( mapping, NtCurrentProcess(), &base, 0, 0, &offset,
+    status = NtMapViewOfSection( mapping, GetCurrentProcess(), &base, 0, 0, &offset,
                                  &count, ViewShare, 0, PAGE_READONLY );
     NtClose( mapping );
     if (status != STATUS_SUCCESS) return status;
@@ -3030,7 +3031,7 @@ static NTSTATUS get_manifest_in_pe_file( struct actctx_loader* acl, struct assem
     }
     else status = STATUS_INVALID_IMAGE_FORMAT;
 
-    NtUnmapViewOfSection( NtCurrentProcess(), base );
+    NtUnmapViewOfSection( GetCurrentProcess(), base );
     return status;
 }
 
@@ -3065,7 +3066,7 @@ static NTSTATUS get_manifest_in_manifest_file( struct actctx_loader* acl, struct
     offset.QuadPart = 0;
     count = 0;
     base = NULL;
-    status = NtMapViewOfSection( mapping, NtCurrentProcess(), &base, 0, 0, &offset,
+    status = NtMapViewOfSection( mapping, GetCurrentProcess(), &base, 0, 0, &offset,
                                  &count, ViewShare, 0, PAGE_READONLY );
     NtClose( mapping );
     if (status != STATUS_SUCCESS) return status;
@@ -3076,7 +3077,7 @@ static NTSTATUS get_manifest_in_manifest_file( struct actctx_loader* acl, struct
     if (status == STATUS_SUCCESS)
         status = parse_manifest(acl, ai, filename, directory, shared, base, (SIZE_T)info.EndOfFile.QuadPart);
 
-    NtUnmapViewOfSection( NtCurrentProcess(), base );
+    NtUnmapViewOfSection( GetCurrentProcess(), base );
     return status;
 }
 
