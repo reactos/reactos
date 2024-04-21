@@ -1195,17 +1195,17 @@ static WCHAR *build_assembly_dir(struct assembly_identity* ai)
     if (!(ret = RtlAllocateHeap( GetProcessHeap(), 0, size ))) return NULL;
 
     wcscpy( ret, arch );
-    strcatW( ret, undW );
-    strcatW( ret, name );
-    strcatW( ret, undW );
-    strcatW( ret, key );
-    strcatW( ret, undW );
+    wcscat( ret, undW );
+    wcscat( ret, name );
+    wcscat( ret, undW );
+    wcscat( ret, key );
+    wcscat( ret, undW );
     NTDLL_swprintf( ret + strlenW(ret), version_formatW,
               ai->version.major, ai->version.minor, ai->version.build, ai->version.revision );
-    strcatW( ret, undW );
-    strcatW( ret, lang );
-    strcatW( ret, undW );
-    strcatW( ret, mskeyW );
+    wcscat( ret, undW );
+    wcscat( ret, lang );
+    wcscat( ret, undW );
+    wcscat( ret, mskeyW );
     return ret;
 }
 
@@ -1214,7 +1214,7 @@ static inline void append_string( WCHAR *buffer, const WCHAR *prefix, const WCHA
     WCHAR *p = buffer;
 
     if (!str) return;
-    strcatW( buffer, prefix );
+    wcscat( buffer, prefix );
     p += strlenW(p);
     *p++ = '"';
     wcscpy( p, str );
@@ -3184,7 +3184,7 @@ static NTSTATUS get_manifest_in_associated_manifest( struct actctx_loader* acl, 
         if (!(status = get_module_filename( module, &name, sizeof(dotManifestW) + 10*sizeof(WCHAR) )))
         {
             if (resid != 1) NTDLL_swprintf( name.Buffer + strlenW(name.Buffer), fmtW, resid );
-            strcatW( name.Buffer, dotManifestW );
+            wcscat( name.Buffer, dotManifestW );
             if (!RtlDosPathNameToNtPathName_U( name.Buffer, &nameW, NULL, NULL ))
                 status = STATUS_RESOURCE_DATA_NOT_FOUND;
             RtlFreeUnicodeString( &name );
@@ -3198,7 +3198,7 @@ static NTSTATUS get_manifest_in_associated_manifest( struct actctx_loader* acl, 
             return STATUS_NO_MEMORY;
         wcscpy( buffer, filename );
         if (resid != 1) NTDLL_swprintf( buffer + strlenW(buffer), fmtW, resid );
-        strcatW( buffer, dotManifestW );
+        wcscat( buffer, dotManifestW );
         RtlInitUnicodeString( &nameW, buffer );
     }
 
@@ -3837,8 +3837,8 @@ static NTSTATUS build_wndclass_section(ACTIVATION_CONTEXT* actctx, struct strsec
                     if (entity->u.class.versioned)
                     {
                         get_assembly_version(assembly, ptrW);
-                        strcatW(ptrW, exclW);
-                        strcatW(ptrW, entity->u.class.name);
+                        wcscat(ptrW, exclW);
+                        wcscat(ptrW, entity->u.class.name);
                     }
                     else
                     {
