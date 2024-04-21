@@ -908,6 +908,29 @@ static inline const char* debugstr_version(const struct assembly_version *ver)
 }
 #endif // !__REACTOS__
 
+static NTSTATUS get_module_filename( HMODULE module, UNICODE_STRING *str, unsigned int extra_len )
+{
+    NTSTATUS status;
+    ULONG_PTR magic;
+    LDR_DATA_TABLE_ENTRY *pldr;
+
+    LdrLockLoaderLock(0, NULL, &magic);
+    status = LdrFindEntryForAddress( module, &pldr );
+    if (status == STATUS_SUCCESS)
+    {
+        if ((str->Buffer = RtlAllocateHeap( GetProcessHeap(), 0,
+                                            pldr->FullDllName.Length + extra_len + sizeof(WCHAR) )))
+        {
+            memcpy( str->Buffer, pldr->FullDllName.Buffer, pldr->FullDllName.Length + sizeof(WCHAR) );
+            str->Length = pldr->FullDllName.Length;
+            str->MaximumLength = pldr->FullDllName.Length + extra_len + sizeof(WCHAR);
+        }
+        else status = STATUS_NO_MEMORY;
+    }
+    LdrUnlockLoaderLock(0, magic);
+    return status;
+}
+
 static struct assembly *add_assembly(ACTIVATION_CONTEXT *actctx, enum assembly_type at)
 {
     struct assembly *assembly;
@@ -2823,7 +2846,7 @@ static NTSTATUS parse_manifest_buffer( struct actctx_loader* acl, struct assembl
 }
 
 static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_identity* ai,
-                                LPCWSTR filename, LPCWSTR directory, BOOL shared,
+                                LPCWSTR filename, HANDLE module, LPCWSTR directory, BOOL shared,
                                 const void *buffer, SIZE_T size )
 {
     xmlbuf_t xmlbuf;
@@ -2839,7 +2862,14 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
     if (directory && !(assembly->directory = strdupW(directory)))
         return STATUS_NO_MEMORY;
 
-    if (filename) assembly->manifest.info = strdupW( filename + 4 /* skip \??\ prefix */ );
+    if (!filename)
+    {
+        UNICODE_STRING module_path;
+        if ((status = get_module_filename( module, &module_path, 0 ))) return status;
+        assembly->manifest.info = module_path.Buffer;
+    }
+    else if(!(assembly->manifest.info = strdupW( filename + 4 /* skip \??\ prefix */ ))) return STATUS_NO_MEMORY;
+
     assembly->manifest.type = assembly->manifest.info ? ACTIVATION_CONTEXT_PATH_TYPE_WIN32_FILE
                                                       : ACTIVATION_CONTEXT_PATH_TYPE_NONE;
 
@@ -2908,29 +2938,6 @@ static NTSTATUS open_nt_file( HANDLE *handle, UNICODE_STRING *name )
     return NtOpenFile( handle, GENERIC_READ | SYNCHRONIZE, &attr, &io, FILE_SHARE_READ, FILE_SYNCHRONOUS_IO_ALERT );
 }
 
-static NTSTATUS get_module_filename( HMODULE module, UNICODE_STRING *str, unsigned int extra_len )
-{
-    NTSTATUS status;
-    ULONG_PTR magic;
-    LDR_DATA_TABLE_ENTRY *pldr;
-
-    LdrLockLoaderLock(0, NULL, &magic);
-    status = LdrFindEntryForAddress( module, &pldr );
-    if (status == STATUS_SUCCESS)
-    {
-        if ((str->Buffer = RtlAllocateHeap( GetProcessHeap(), 0,
-                                            pldr->FullDllName.Length + extra_len + sizeof(WCHAR) )))
-        {
-            memcpy( str->Buffer, pldr->FullDllName.Buffer, pldr->FullDllName.Length + sizeof(WCHAR) );
-            str->Length = pldr->FullDllName.Length;
-            str->MaximumLength = pldr->FullDllName.Length + extra_len + sizeof(WCHAR);
-        }
-        else status = STATUS_NO_MEMORY;
-    }
-    LdrUnlockLoaderLock(0, magic);
-    return status;
-}
-
 static NTSTATUS get_manifest_in_module( struct actctx_loader* acl, struct assembly_identity* ai,
                                         LPCWSTR filename, LPCWSTR directory, BOOL shared,
                                         HANDLE hModule, LPCWSTR resname, ULONG lang )
@@ -2988,7 +2995,7 @@ static NTSTATUS get_manifest_in_module( struct actctx_loader* acl, struct assemb
     if (status == STATUS_SUCCESS) status = LdrAccessResource(hModule, entry, &ptr, NULL);
 
     if (status == STATUS_SUCCESS)
-        status = parse_manifest(acl, ai, filename, directory, shared, ptr, entry->Size);
+        status = parse_manifest(acl, ai, filename, hModule, directory, shared, ptr, entry->Size);
 
     return status;
 }
@@ -3047,7 +3054,7 @@ static NTSTATUS search_manifest_in_module( struct actctx_loader* acl, struct ass
     status = LdrAccessResource(hModule, entry, &ptr, NULL);
 
     if (status == STATUS_SUCCESS)
-        status = parse_manifest(acl, ai, filename, directory, shared, ptr, entry->Size);
+        status = parse_manifest(acl, ai, filename, hModule, directory, shared, ptr, entry->Size);
 
     return status;
 }
@@ -3146,7 +3153,7 @@ static NTSTATUS get_manifest_in_manifest_file( struct actctx_loader* acl, struct
 
     status = NtQueryInformationFile( file, &io, &info, sizeof(info), FileEndOfFileInformation );
     if (status == STATUS_SUCCESS)
-        status = parse_manifest(acl, ai, filename, directory, shared, base, info.EndOfFile.QuadPart);
+        status = parse_manifest(acl, ai, filename, NULL, directory, shared, base, info.EndOfFile.QuadPart);
 
     NtUnmapViewOfSection( GetCurrentProcess(), base );
     return status;
