@@ -3427,7 +3427,8 @@ static NTSTATUS lookup_assembly(struct actctx_loader* acl,
                 status = get_manifest_in_pe_file( acl, ai, nameW.Buffer, directory, FALSE, file,
                                                   (LPCWSTR)CREATEPROCESS_MANIFEST_RESOURCE_ID, 0 );
                 NtClose( file );
-                break;
+                if (status == STATUS_SUCCESS)
+                    break;
             }
             RtlFreeUnicodeString( &nameW );
         }
