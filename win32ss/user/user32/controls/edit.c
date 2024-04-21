@@ -2440,7 +2440,7 @@ static void EDIT_AdjustFormatRect(EDITSTATE *es)
 
 	if ((es->style & ES_MULTILINE) && !(es->style & ES_AUTOHSCROLL))
 		EDIT_BuildLineDefs_ML(es, 0, get_text_length(es), 0, NULL);
-	
+
 	EDIT_SetCaretPos(es, es->selection_end, es->flags & EF_AFTER_WRAP);
 }
 
@@ -2458,13 +2458,13 @@ static void EDIT_SetRectNP(EDITSTATE *es, const RECT *rc)
 	LONG_PTR ExStyle;
 	INT bw, bh;
 	ExStyle = GetWindowLongPtrW(es->hwndSelf, GWL_EXSTYLE);
-	
+
 	CopyRect(&es->format_rect, rc);
-	
+
 	if (ExStyle & WS_EX_CLIENTEDGE) {
 		es->format_rect.left++;
 		es->format_rect.right--;
-		
+
 		if (es->format_rect.bottom - es->format_rect.top
 		    >= es->line_height + 2)
 		{
@@ -2484,7 +2484,7 @@ static void EDIT_SetRectNP(EDITSTATE *es, const RECT *rc)
 		    es->format_rect.bottom -= bh;
 		}
 	}
-	
+
 	es->format_rect.left += es->left_margin;
 	es->format_rect.right -= es->right_margin;
 	EDIT_AdjustFormatRect(es);
@@ -2776,7 +2776,7 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, const WCHAR *lpsz_r
 			if (!notify_parent(es, EN_MAXTEXT)) return;
 		}
 	}
-	
+
 	if (e != s) {
 		if (can_undo) {
 			utl = strlenW(es->undo_text);
@@ -3060,17 +3060,17 @@ static void EDIT_EM_SetMargins(EDITSTATE *es, INT action,
 	if (action & EC_RIGHTMARGIN) {
 		es->format_rect.right += es->right_margin;
 		if (right != EC_USEFONTINFO)
- 			es->right_margin = right;
+           es->right_margin = right;
 		else
 			es->right_margin = default_right_margin;
 		es->format_rect.right -= es->right_margin;
 	}
-	
+
 	if (action & (EC_LEFTMARGIN | EC_RIGHTMARGIN)) {
 		EDIT_AdjustFormatRect(es);
 		if (repaint) EDIT_UpdateText(es, NULL, TRUE);
 	}
-	
+
 	TRACE("left=%d, right=%d\n", es->left_margin, es->right_margin);
 }
 
@@ -3898,7 +3898,7 @@ static void EDIT_WM_Paint(EDITSTATE *es, HDC hdc)
 
 	/* paint the border and the background */
 	IntersectClipRect(dc, rcClient.left, rcClient.top, rcClient.right, rcClient.bottom);
-	
+
 	if(es->style & WS_BORDER) {
 		bw = GetSystemMetrics(SM_CXBORDER);
 		bh = GetSystemMetrics(SM_CYBORDER);
@@ -3994,32 +3994,32 @@ static void EDIT_WM_SetFocus(EDITSTATE *es)
 
 static DWORD get_font_margins(HDC hdc, const TEXTMETRICW *tm, BOOL unicode)
 {
-	ABC abc[256];
-	SHORT left, right;
-	UINT i;
+    ABC abc[256];
+    SHORT left, right;
+    UINT i;
 
-	if (!(tm->tmPitchAndFamily & (TMPF_VECTOR | TMPF_TRUETYPE)))
-		return MAKELONG(EC_USEFONTINFO, EC_USEFONTINFO);
+    if (!(tm->tmPitchAndFamily & (TMPF_VECTOR | TMPF_TRUETYPE)))
+        return MAKELONG(EC_USEFONTINFO, EC_USEFONTINFO);
 
-	if (unicode) {
-		if (!is_cjk_charset(hdc) && !is_cjk_font(hdc))
-			return MAKELONG(EC_USEFONTINFO, EC_USEFONTINFO);
-		if (!GetCharABCWidthsW(hdc, 0, 255, abc))
-			return 0;
-	}
-	else if (is_cjk_charset(hdc)) {
-		if (!GetCharABCWidthsA(hdc, 0, 255, abc))
-			return 0;
-	}
-	else
-		return MAKELONG(EC_USEFONTINFO, EC_USEFONTINFO);
+    if (unicode) {
+        if (!is_cjk_charset(hdc) && !is_cjk_font(hdc))
+            return MAKELONG(EC_USEFONTINFO, EC_USEFONTINFO);
+        if (!GetCharABCWidthsW(hdc, 0, 255, abc))
+            return 0;
+    }
+    else if (is_cjk_charset(hdc)) {
+        if (!GetCharABCWidthsA(hdc, 0, 255, abc))
+            return 0;
+    }
+    else
+        return MAKELONG(EC_USEFONTINFO, EC_USEFONTINFO);
 
-	left = right = 0;
-	for (i = 0; i < ARRAY_SIZE(abc); i++) {
-		if (-abc[i].abcA > right) right = -abc[i].abcA;
-		if (-abc[i].abcC > left ) left  = -abc[i].abcC;
-	}
-	return MAKELONG(left, right);
+    left = right = 0;
+    for (i = 0; i < ARRAY_SIZE(abc); i++) {
+        if (-abc[i].abcA > right) right = -abc[i].abcA;
+        if (-abc[i].abcC > left ) left  = -abc[i].abcC;
+    }
+    return MAKELONG(left, right);
 }
 
 /*********************************************************************
@@ -4051,7 +4051,7 @@ static void EDIT_WM_SetFont(EDITSTATE *es, HFONT font, BOOL redraw)
 	if (font)
 		SelectObject(dc, old_font);
 	ReleaseDC(es->hwndSelf, dc);
-	
+
 	/* Reset the format rect and the margins */
 	GetClientRect(es->hwndSelf, &clientRect);
 	EDIT_SetRectNP(es, &clientRect);
@@ -4529,7 +4529,7 @@ static LRESULT EDIT_EM_GetThumb(EDITSTATE *es)
 
 
 /********************************************************************
- * 
+ *
  * The Following code is to handle inline editing from IMEs
  */
 
@@ -4559,7 +4559,7 @@ static void EDIT_GetCompositionStr(HIMC hIMC, LPARAM CompFlag, EDITSTATE *es)
 
     if (CompFlag & GCS_COMPATTR)
     {
-        /* 
+        /*
          * We do not use the attributes yet. it would tell us what characters
          * are in transition and which are converted or decided upon
          */
@@ -4584,7 +4584,7 @@ static void EDIT_GetCompositionStr(HIMC hIMC, LPARAM CompFlag, EDITSTATE *es)
     /* check for change in composition start */
     if (es->selection_end < es->composition_start)
         es->composition_start = es->selection_end;
-    
+
     /* replace existing selection string */
     es->selection_start = es->composition_start;
 
