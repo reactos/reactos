@@ -3262,14 +3262,14 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
             if (dir_info->NextEntryOffset) data_pos += dir_info->NextEntryOffset;
             else data_pos = data_len;
 
-            tmp = (WCHAR *)dir_info->FileName + (strchrW(lookup, '*') - lookup);
+            tmp = (WCHAR *)dir_info->FileName + (wcschr(lookup, '*') - lookup);
             build = wcstoul( tmp, NULL, 10 );
             if (build < min_build) continue;
-            tmp = strchrW(tmp, '.') + 1;
+            tmp = wcschr(tmp, '.') + 1;
             revision = wcstoul( tmp, NULL, 10 );
             if (build == min_build && revision < min_revision) continue;
-            tmp = strchrW(tmp, '_') + 1;
-            tmp = strchrW(tmp, '_') + 1;
+            tmp = wcschr(tmp, '_') + 1;
+            tmp = wcschr(tmp, '_') + 1;
             if (dir_info->FileNameLength - (tmp - dir_info->FileName) * sizeof(WCHAR) == sizeof(wine_trailerW) &&
                 !wcsnicmp( tmp, wine_trailerW, ARRAY_SIZE( wine_trailerW )))
             {
