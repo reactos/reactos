@@ -2176,19 +2176,23 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     /* Check if this is buffered I/O */
     if (DeviceObject->Flags & DO_BUFFERED_IO)
     {
-        /* Allocate a buffer */
-        Irp->AssociatedIrp.SystemBuffer = ExAllocatePoolWithTag(NonPagedPool,
-                                                                Length,
-                                                                TAG_SYSB);
-        if (!Irp->AssociatedIrp.SystemBuffer)
+        /* Enter SEH (ExAllocatePoolWithQuotaTag raises on failure!) */
+        _SEH2_TRY
+        {
+            /* Allocate a buffer */
+            Irp->AssociatedIrp.SystemBuffer =
+                ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_SYSB);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Allocating failed, clean up and return the exception code */
             IopCleanupAfterException(FileObject, Irp, Event, NULL);
             if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_SYSB);
 
             /* Return the exception code */
-            return STATUS_INSUFFICIENT_RESOURCES;
+            return _SEH2_GetExceptionCode();
         }
+        _SEH2_END;
 
         /* Set the buffer and flags */
         Irp->UserBuffer = FileInformation;
@@ -2508,14 +2512,12 @@ NtQueryInformationFile(IN HANDLE FileHandle,
     StackPtr->MajorFunction = IRP_MJ_QUERY_INFORMATION;
     StackPtr->FileObject = FileObject;
 
-    /* Enter SEH */
+    /* Enter SEH (ExAllocatePoolWithQuotaTag raises on failure!) */
     _SEH2_TRY
     {
         /* Allocate a buffer */
         Irp->AssociatedIrp.SystemBuffer =
-            ExAllocatePoolWithTag(NonPagedPool,
-                                  Length,
-                                  TAG_SYSB);
+            ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_SYSB);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -2978,14 +2980,12 @@ NtReadFile(IN HANDLE FileHandle,
         /* Check if we have a buffer length */
         if (Length)
         {
-            /* Enter SEH */
+            /* Enter SEH (ExAllocatePoolWithQuotaTag raises on failure!) */
             _SEH2_TRY
             {
                 /* Allocate a buffer */
                 Irp->AssociatedIrp.SystemBuffer =
-                    ExAllocatePoolWithTag(NonPagedPool,
-                                          Length,
-                                          TAG_SYSB);
+                    ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_SYSB);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -3281,14 +3281,12 @@ NtSetInformationFile(IN HANDLE FileHandle,
     StackPtr->MajorFunction = IRP_MJ_SET_INFORMATION;
     StackPtr->FileObject = FileObject;
 
-    /* Enter SEH */
+    /* Enter SEH (ExAllocatePoolWithQuotaTag raises on failure!) */
     _SEH2_TRY
     {
         /* Allocate a buffer */
         Irp->AssociatedIrp.SystemBuffer =
-            ExAllocatePoolWithTag(NonPagedPool,
-                                  Length,
-                                  TAG_SYSB);
+            ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_SYSB);
 
         /* Copy the data into it */
         RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
@@ -3704,13 +3702,13 @@ NtUnlockFile(IN HANDLE FileHandle,
     StackPtr->MinorFunction = IRP_MN_UNLOCK_SINGLE;
     StackPtr->FileObject = FileObject;
 
-    /* Enter SEH */
+    /* Enter SEH (ExAllocatePoolWithQuotaTag raises on failure!) */
     _SEH2_TRY
     {
         /* Allocate a buffer */
-        LocalLength = ExAllocatePoolWithTag(NonPagedPool,
-                                            sizeof(LARGE_INTEGER),
-                                            TAG_LOCK);
+        LocalLength = ExAllocatePoolWithQuotaTag(NonPagedPool,
+                                                 sizeof(LARGE_INTEGER),
+                                                 TAG_LOCK);
 
         /* Set the length */
         *LocalLength = CapturedLength;
@@ -4055,14 +4053,12 @@ NtWriteFile(IN HANDLE FileHandle,
         /* Check if we have a buffer length */
         if (Length)
         {
-            /* Enter SEH */
+            /* Enter SEH (ExAllocatePoolWithQuotaTag raises on failure!) */
             _SEH2_TRY
             {
                 /* Allocate a buffer */
                 Irp->AssociatedIrp.SystemBuffer =
-                    ExAllocatePoolWithTag(NonPagedPool,
-                                          Length,
-                                          TAG_SYSB);
+                    ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_SYSB);
 
                 /* Copy the data into it */
                 RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, Buffer, Length);
@@ -4293,6 +4289,7 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
     {
         _SEH2_VOLATILE PFILE_FS_DRIVER_PATH_INFORMATION DriverPathInfo = NULL;
 
+        /* Enter SEH (ExAllocatePoolWithQuotaTag raises on failure!) */
         _SEH2_TRY
         {
             /* Allocate our local structure */
@@ -4383,14 +4380,12 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
     StackPtr->MajorFunction = IRP_MJ_QUERY_VOLUME_INFORMATION;
     StackPtr->FileObject = FileObject;
 
-    /* Enter SEH */
+    /* Enter SEH (ExAllocatePoolWithQuotaTag raises on failure!) */
     _SEH2_TRY
     {
         /* Allocate a buffer */
         Irp->AssociatedIrp.SystemBuffer =
-            ExAllocatePoolWithTag(NonPagedPool,
-                                  Length,
-                                  TAG_SYSB);
+            ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_SYSB);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -4566,14 +4561,12 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
     StackPtr->MajorFunction = IRP_MJ_SET_VOLUME_INFORMATION;
     StackPtr->FileObject = FileObject;
 
-    /* Enter SEH */
+    /* Enter SEH (ExAllocatePoolWithQuotaTag raises on failure!) */
     _SEH2_TRY
     {
         /* Allocate a buffer */
         Irp->AssociatedIrp.SystemBuffer =
-            ExAllocatePoolWithTag(NonPagedPool,
-                                  Length,
-                                  TAG_SYSB);
+            ExAllocatePoolWithQuotaTag(NonPagedPool, Length, TAG_SYSB);
 
         /* Copy the data into it */
         RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, FsInformation, Length);
