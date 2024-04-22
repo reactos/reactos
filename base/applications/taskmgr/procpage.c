@@ -1248,8 +1248,11 @@ void ProcessPage_OnOpenFileLocation(void)
 
     StringCchPrintfW(pszCmdLine, dwLength, szCmdFormat, pszExePath);
 
-    /* Call the shell to open the file location and select it */
-    ShellExecuteW(NULL, L"open", L"explorer.exe", pszCmdLine, NULL, SW_SHOWNORMAL);
+    /* Call the shell to open the file location and select it. If Explorer shell
+     * is not available, use ReactOS's alternative file browser instead. */
+    ShellExecuteW(NULL, L"open",
+                  GetShellWindow() ? L"explorer.exe" : L"filebrowser.exe",
+                  pszCmdLine, NULL, SW_SHOWNORMAL);
 
 Cleanup:
     HeapFree(GetProcessHeap(), 0, pszCmdLine);
