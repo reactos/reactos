@@ -26,6 +26,8 @@
 #include <atlcoll.h>
 #endif
 
+#include <dbt.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(desktop);
 
 static const WCHAR szProgmanClassName[]  = L"Progman";
@@ -45,6 +47,7 @@ private:
 
     CComPtr<IOleWindow>        m_ChangeNotifyServer;
     HWND                       m_hwndChangeNotifyServer;
+    DWORD m_dwDrives;
 
     LRESULT _NotifyTray(UINT uMsg, WPARAM wParam, LPARAM lParam);
     HRESULT _Resize();
@@ -85,6 +88,7 @@ public:
     LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnGetChangeNotifyServer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnDeviceChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnShowOptionsDlg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
 DECLARE_WND_CLASS_EX(szProgmanClassName, CS_DBLCLKS, COLOR_DESKTOP)
@@ -99,6 +103,7 @@ BEGIN_MSG_MAP(CBaseBar)
     MESSAGE_HANDLER(WM_COMMAND, OnCommand)
     MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
     MESSAGE_HANDLER(WM_DESKTOP_GET_CNOTIFY_SERVER, OnGetChangeNotifyServer)
+    MESSAGE_HANDLER(WM_DEVICECHANGE, OnDeviceChange)
     MESSAGE_HANDLER(WM_PROGMAN_OPENSHELLSETTINGS, OnShowOptionsDlg)
 END_MSG_MAP()
 
@@ -112,7 +117,8 @@ END_COM_MAP()
 CDesktopBrowser::CDesktopBrowser():
     m_hAccel(NULL),
     m_hWndShellView(NULL),
-    m_hwndChangeNotifyServer(NULL)
+    m_hwndChangeNotifyServer(NULL),
+    m_dwDrives(::GetLogicalDrives())
 {
 }
 
@@ -458,6 +464,33 @@ LRESULT CDesktopBrowser::OnGetChangeNotifyServer(UINT uMsg, WPARAM wParam, LPARA
             return NULL;
     }
     return (LRESULT)m_hwndChangeNotifyServer;
+}
+
+// Detect DBT_DEVICEARRIVAL and DBT_DEVICEREMOVECOMPLETE
+LRESULT CDesktopBrowser::OnDeviceChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    if (wParam != DBT_DEVICEARRIVAL && wParam != DBT_DEVICEREMOVECOMPLETE)
+        return 0;
+
+    DWORD dwDrives = ::GetLogicalDrives();
+    for (INT iDrive = 0; iDrive <= 'Z' - 'A'; ++iDrive)
+    {
+        WCHAR szPath[MAX_PATH];
+        DWORD dwBit = (1 << iDrive);
+        if (!(m_dwDrives & dwBit) && (dwDrives & dwBit)) // The drive is added
+        {
+            PathBuildRootW(szPath, iDrive);
+            SHChangeNotify(SHCNE_DRIVEADD, SHCNF_PATHW, szPath, NULL);
+        }
+        else if ((m_dwDrives & dwBit) && !(dwDrives & dwBit)) // The drive is removed
+        {
+            PathBuildRootW(szPath, iDrive);
+            SHChangeNotify(SHCNE_DRIVEREMOVED, SHCNF_PATHW, szPath, NULL);
+        }
+    }
+
+    m_dwDrives = dwDrives;
+    return 0;
 }
 
 extern VOID WINAPI ShowFolderOptionsDialog(UINT Page, BOOL Async);

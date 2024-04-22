@@ -2287,6 +2287,7 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     {
         case SHCNE_MKDIR:
         case SHCNE_CREATE:
+        case SHCNE_DRIVEADD:
             if (bParent0)
             {
                 if (LV_FindItemByPidl(ILFindLastID(Pidls[0])) == -1)
@@ -2297,6 +2298,7 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
             break;
         case SHCNE_RMDIR:
         case SHCNE_DELETE:
+        case SHCNE_DRIVEREMOVED:
             if (bParent0)
                 LV_DeleteItem(ILFindLastID(Pidls[0]));
             break;
