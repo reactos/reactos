@@ -9,9 +9,6 @@
 #include "shell32_apitest_sub.h"
 #include <assert.h>
 
-static HWND s_hMainWnd = NULL;
-static HWND s_hSubWnd = NULL;
-
 typedef enum DIRTYPE
 {
     DIRTYPE_DESKTOP = 0,
@@ -20,6 +17,7 @@ typedef enum DIRTYPE
     DIRTYPE_MAX
 } DIRTYPE;
 
+static HWND s_hMainWnd = NULL, s_hSubWnd = NULL;
 static LPITEMIDLIST s_pidl[DIRTYPE_MAX];
 static UINT s_uRegID = 0;
 static INT s_iStage = -1;
@@ -139,16 +137,8 @@ OnCommand(HWND hwnd, UINT id)
 {
     switch (id)
     {
-        case IDOK:
-        case IDCANCEL:
-        case IDNO:
-            // Quit
-            s_iStage = -1;
-            UninitHook(hwnd);
-            ::DestroyWindow(hwnd);
-            break;
-
         case IDYES: // Start testing
+        {
             s_hMainWnd = ::FindWindow(MAIN_CLASSNAME, MAIN_CLASSNAME);
             if (!s_hMainWnd)
             {
@@ -159,13 +149,22 @@ OnCommand(HWND hwnd, UINT id)
             InitHook(hwnd);
             ::PostMessageW(s_hMainWnd, WM_COMMAND, IDYES, 0);
             break;
-
+        }
         case IDRETRY: // New stage
+        {
             UninitHook(hwnd);
             ++s_iStage;
             InitHook(hwnd);
             ::PostMessageW(s_hMainWnd, WM_COMMAND, IDRETRY, 0);
             break;
+        }
+        case IDNO: // Quit
+        {
+            s_iStage = -1;
+            UninitHook(hwnd);
+            ::DestroyWindow(hwnd);
+            break;
+        }
     }
 }
 
@@ -179,6 +178,8 @@ OnDestroy(HWND hwnd)
         CoTaskMemFree(pidl);
         pidl = NULL;
     }
+
+    ::PostMessageW(s_hMainWnd, WM_COMMAND, IDNO, 0);
 
     PostQuitMessage(0);
 }
