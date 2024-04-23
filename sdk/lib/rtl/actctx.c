@@ -2902,7 +2902,7 @@ static NTSTATUS open_nt_file( HANDLE *handle, UNICODE_STRING *name )
     return NtOpenFile( handle, GENERIC_READ | SYNCHRONIZE, &attr, &io, FILE_SHARE_READ, FILE_SYNCHRONOUS_IO_ALERT );
 }
 
-static NTSTATUS get_module_filename( HMODULE module, UNICODE_STRING *str, USHORT extra_len )
+static NTSTATUS get_module_filename( HMODULE module, UNICODE_STRING *str, unsigned int extra_len )
 {
     NTSTATUS status;
     ULONG_PTR magic;
