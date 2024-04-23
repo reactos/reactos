@@ -214,10 +214,8 @@ CreateCommonFreeLdrSections(
      * Cache the "FREELOADER" section for our future usage.
      */
 
-    /* Get or create the "FREELOADER" section */
-    IniSection = IniGetSection(BootStore->IniCache, L"FREELOADER");
-    if (!IniSection)
-        IniSection = IniAddSection(BootStore->IniCache, L"FREELOADER");
+    /* Create the "FREELOADER" section */
+    IniSection = IniAddSection(BootStore->IniCache, L"FREELOADER");
     if (!IniSection)
         DPRINT1("CreateCommonFreeLdrSections: Failed to create 'FREELOADER' section!\n");
 
@@ -237,10 +235,8 @@ CreateCommonFreeLdrSections(
      * Cache the "Operating Systems" section for our future usage.
      */
 
-    /* Get or create the "Operating Systems" section */
-    IniSection = IniGetSection(BootStore->IniCache, L"Operating Systems");
-    if (!IniSection)
-        IniSection = IniAddSection(BootStore->IniCache, L"Operating Systems");
+    /* Create the "Operating Systems" section */
+    IniSection = IniAddSection(BootStore->IniCache, L"Operating Systems");
     if (!IniSection)
         DPRINT1("CreateCommonFreeLdrSections: Failed to create 'Operating Systems' section!\n");
 

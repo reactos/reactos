@@ -73,27 +73,35 @@ IniCacheFreeSection(
 }
 
 static
+PINI_SECTION
+IniCacheFindSection(
+    _In_ PINICACHE Cache,
+    _In_ PCWSTR Name)
+{
+    PINI_SECTION Section;
+
+    for (Section = Cache->FirstSection; Section; Section = Section->Next)
+    {
+        if (_wcsicmp(Section->Name, Name) == 0)
+            return Section;
+    }
+    return NULL;
+}
+
+static
 PINI_KEYWORD
 IniCacheFindKey(
-    PINI_SECTION Section,
-    PWCHAR Name,
-    ULONG NameLength)
+    _In_ PINI_SECTION Section,
+    _In_ PCWSTR Name)
 {
     PINI_KEYWORD Key;
 
-    Key = Section->FirstKey;
-    while (Key != NULL)
+    for (Key = Section->FirstKey; Key; Key = Key->Next)
     {
-        if (NameLength == wcslen(Key->Name))
-        {
-            if (_wcsnicmp(Key->Name, Name, NameLength) == 0)
-                break;
-        }
-
-        Key = Key->Next;
+        if (_wcsicmp(Key->Name, Name) == 0)
+            return Key;
     }
-
-    return Key;
+    return NULL;
 }
 
 static
@@ -108,66 +116,98 @@ IniCacheAddKeyAorW(
     _In_ ULONG DataLength,
     _In_ BOOLEAN IsUnicode)
 {
-    PINI_KEYWORD Key = NULL;
+    PINI_KEYWORD Key;
+    PWSTR NameU, DataU;
 
-    if (Section == NULL ||
-        Name == NULL ||
-        NameLength == 0 ||
-        Data == NULL ||
-        DataLength == 0)
+    if (!Section || !Name || NameLength == 0 || !Data || DataLength == 0)
     {
         DPRINT("Invalid parameter\n");
         return NULL;
     }
 
-    /* Allocate key buffer */
+    /* Allocate the UNICODE key name */
+    NameU = (PWSTR)RtlAllocateHeap(ProcessHeap,
+                                   0,
+                                   (NameLength + 1) * sizeof(WCHAR));
+    if (!NameU)
+    {
+        DPRINT("RtlAllocateHeap() failed\n");
+        return NULL;
+    }
+    /* Copy the value name (ANSI or UNICODE) */
+    if (IsUnicode)
+        wcsncpy(NameU, (PCWCH)Name, NameLength);
+    else
+        _snwprintf(NameU, NameLength, L"%.*S", NameLength, (PCCH)Name);
+    NameU[NameLength] = UNICODE_NULL;
+
+    /*
+     * Find whether a key with the given name already exists in the section.
+     * If so, modify the data and return it; otherwise create a new one.
+     */
+    Key = IniCacheFindKey(Section, NameU);
+    if (Key)
+    {
+        RtlFreeHeap(ProcessHeap, 0, NameU);
+
+        /* Modify the existing data */
+
+        /* Allocate the UNICODE data buffer */
+        DataU = (PWSTR)RtlAllocateHeap(ProcessHeap,
+                                       0,
+                                       (DataLength + 1) * sizeof(WCHAR));
+        if (!DataU)
+        {
+            DPRINT("RtlAllocateHeap() failed\n");
+            return NULL; // We failed, don't modify the original key.
+        }
+        /* Copy the data (ANSI or UNICODE) */
+        if (IsUnicode)
+            wcsncpy(DataU, (PCWCH)Data, DataLength);
+        else
+            _snwprintf(DataU, DataLength, L"%.*S", DataLength, (PCCH)Data);
+        DataU[DataLength] = UNICODE_NULL;
+
+        /* Swap the old key data with the new one */
+        RtlFreeHeap(ProcessHeap, 0, Key->Data);
+        Key->Data = DataU;
+
+        /* Return the modified key */
+        return Key;
+    }
+
+    /* Allocate the key buffer and name */
     Key = (PINI_KEYWORD)RtlAllocateHeap(ProcessHeap,
                                         HEAP_ZERO_MEMORY,
                                         sizeof(INI_KEYWORD));
-    if (Key == NULL)
+    if (!Key)
     {
         DPRINT("RtlAllocateHeap() failed\n");
+        RtlFreeHeap(ProcessHeap, 0, NameU);
         return NULL;
     }
+    Key->Name = NameU;
 
-    /* Allocate name buffer */
-    Key->Name = (PWCHAR)RtlAllocateHeap(ProcessHeap,
-                                        0,
-                                        (NameLength + 1) * sizeof(WCHAR));
-    if (Key->Name == NULL)
+    /* Allocate the UNICODE data buffer */
+    DataU = (PWSTR)RtlAllocateHeap(ProcessHeap,
+                                   0,
+                                   (DataLength + 1) * sizeof(WCHAR));
+    if (!DataU)
     {
         DPRINT("RtlAllocateHeap() failed\n");
+        RtlFreeHeap(ProcessHeap, 0, NameU);
         RtlFreeHeap(ProcessHeap, 0, Key);
         return NULL;
     }
-
-    /* Copy value name (ANSI or UNICODE) */
+    /* Copy the data (ANSI or UNICODE) */
     if (IsUnicode)
-        wcsncpy(Key->Name, (PCWCH)Name, NameLength);
+        wcsncpy(DataU, (PCWCH)Data, DataLength);
     else
-        _snwprintf(Key->Name, NameLength, L"%.*S", NameLength, (PCCH)Name);
-    Key->Name[NameLength] = UNICODE_NULL;
+        _snwprintf(DataU, DataLength, L"%.*S", DataLength, (PCCH)Data);
+    DataU[DataLength] = UNICODE_NULL;
+    Key->Data = DataU;
 
-    /* Allocate data buffer */
-    Key->Data = (PWCHAR)RtlAllocateHeap(ProcessHeap,
-                                        0,
-                                        (DataLength + 1) * sizeof(WCHAR));
-    if (Key->Data == NULL)
-    {
-        DPRINT("RtlAllocateHeap() failed\n");
-        RtlFreeHeap(ProcessHeap, 0, Key->Name);
-        RtlFreeHeap(ProcessHeap, 0, Key);
-        return NULL;
-    }
-
-    /* Copy value data (ANSI or UNICODE) */
-    if (IsUnicode)
-        wcsncpy(Key->Data, (PCWCH)Data, DataLength);
-    else
-        _snwprintf(Key->Data, DataLength, L"%.*S", DataLength, (PCCH)Data);
-    Key->Data[DataLength] = UNICODE_NULL;
-
-    /* Insert key into section */
+    /* Insert the key into section */
     if (Section->FirstKey == NULL)
     {
         Section->FirstKey = Key;
@@ -218,42 +258,55 @@ IniCacheAddSectionAorW(
     _In_ ULONG NameLength,
     _In_ BOOLEAN IsUnicode)
 {
-    PINI_SECTION Section = NULL;
+    PINI_SECTION Section;
+    PWSTR NameU;
 
-    if (Cache == NULL || Name == NULL || NameLength == 0)
+    if (!Cache || !Name || NameLength == 0)
     {
         DPRINT("Invalid parameter\n");
         return NULL;
     }
 
+    /* Allocate the UNICODE section name */
+    NameU = (PWSTR)RtlAllocateHeap(ProcessHeap,
+                                   0,
+                                   (NameLength + 1) * sizeof(WCHAR));
+    if (!NameU)
+    {
+        DPRINT("RtlAllocateHeap() failed\n");
+        return NULL;
+    }
+    /* Copy the section name (ANSI or UNICODE) */
+    if (IsUnicode)
+        wcsncpy(NameU, (PCWCH)Name, NameLength);
+    else
+        _snwprintf(NameU, NameLength, L"%.*S", NameLength, (PCCH)Name);
+    NameU[NameLength] = UNICODE_NULL;
+
+    /*
+     * Find whether a section with the given name already exists.
+     * If so, just return it; otherwise create a new one.
+     */
+    Section = IniCacheFindSection(Cache, NameU);
+    if (Section)
+    {
+        RtlFreeHeap(ProcessHeap, 0, NameU);
+        return Section;
+    }
+
+    /* Allocate the section buffer and name */
     Section = (PINI_SECTION)RtlAllocateHeap(ProcessHeap,
                                             HEAP_ZERO_MEMORY,
                                             sizeof(INI_SECTION));
-    if (Section == NULL)
+    if (!Section)
     {
         DPRINT("RtlAllocateHeap() failed\n");
+        RtlFreeHeap(ProcessHeap, 0, NameU);
         return NULL;
     }
+    Section->Name = NameU;
 
-    /* Allocate and initialize section name */
-    Section->Name = (PWCHAR)RtlAllocateHeap(ProcessHeap,
-                                            0,
-                                            (NameLength + 1) * sizeof(WCHAR));
-    if (Section->Name == NULL)
-    {
-        DPRINT("RtlAllocateHeap() failed\n");
-        RtlFreeHeap(ProcessHeap, 0, Section);
-        return NULL;
-    }
-
-    /* Copy section name (ANSI or UNICODE) */
-    if (IsUnicode)
-        wcsncpy(Section->Name, (PCWCH)Name, NameLength);
-    else
-        _snwprintf(Section->Name, NameLength, L"%.*S", NameLength, (PCCH)Name);
-    Section->Name[NameLength] = UNICODE_NULL;
-
-    /* Append section */
+    /* Append the section */
     if (Cache->FirstSection == NULL)
     {
         Cache->FirstSection = Section;
@@ -701,34 +754,15 @@ IniCacheDestroy(
 
 PINI_SECTION
 IniGetSection(
-    PINICACHE Cache,
-    PWCHAR Name)
+    _In_ PINICACHE Cache,
+    _In_ PCWSTR Name)
 {
-    PINI_SECTION Section = NULL;
-
-    if (Cache == NULL || Name == NULL)
+    if (!Cache || !Name)
     {
         DPRINT("Invalid parameter\n");
         return NULL;
     }
-
-    /* Iterate through list of sections */
-    Section = Cache->FirstSection;
-    while (Section != NULL)
-    {
-        DPRINT("Comparing '%S' and '%S'\n", Section->Name, Name);
-
-        /* Are the section names the same? */
-        if (_wcsicmp(Section->Name, Name) == 0)
-            return Section;
-
-        /* Get the next section */
-        Section = Section->Next;
-    }
-
-    DPRINT("Section not found\n");
-
-    return NULL;
+    return IniCacheFindSection(Cache, Name);
 }
 
 NTSTATUS
@@ -747,7 +781,7 @@ IniGetKey(
 
     *KeyData = NULL;
 
-    Key = IniCacheFindKey(Section, KeyName, wcslen(KeyName));
+    Key = IniCacheFindKey(Section, KeyName);
     if (Key == NULL)
     {
         return STATUS_INVALID_PARAMETER;

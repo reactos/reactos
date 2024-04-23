@@ -9,8 +9,8 @@
 
 typedef struct _INI_KEYWORD
 {
-    PWCHAR Name;
-    PWCHAR Data;
+    PWSTR Name;
+    PWSTR Data;
 
     struct _INI_KEYWORD *Next;
     struct _INI_KEYWORD *Prev;
@@ -18,7 +18,7 @@ typedef struct _INI_KEYWORD
 
 typedef struct _INI_SECTION
 {
-    PWCHAR Name;
+    PWSTR Name;
 
     PINI_KEYWORD FirstKey;
     PINI_KEYWORD LastKey;
@@ -74,8 +74,8 @@ IniCacheDestroy(
 
 PINI_SECTION
 IniGetSection(
-    PINICACHE Cache,
-    PWCHAR Name);
+    _In_ PINICACHE Cache,
+    _In_ PCWSTR Name);
 
 NTSTATUS
 IniGetKey(
