@@ -79,8 +79,8 @@ typedef struct _BOOT_STORE_INI_CONTEXT
     PVOID ViewBase;
 
     PINICACHE IniCache;
-    PINICACHESECTION OptionsIniSection;
-    PINICACHESECTION OsIniSection;
+    PINI_SECTION OptionsIniSection;
+    PINI_SECTION OsIniSection;
 } BOOT_STORE_INI_CONTEXT, *PBOOT_STORE_INI_CONTEXT;
 
 // TODO!
@@ -208,56 +208,41 @@ static VOID
 CreateCommonFreeLdrSections(
     IN OUT PBOOT_STORE_INI_CONTEXT BootStore)
 {
-    PINICACHESECTION IniSection;
+    PINI_SECTION IniSection;
 
     /*
      * Cache the "FREELOADER" section for our future usage.
      */
 
-    /* Get the "FREELOADER" section */
-    IniSection = IniCacheGetSection(BootStore->IniCache, L"FREELOADER");
+    /* Get or create the "FREELOADER" section */
+    IniSection = IniGetSection(BootStore->IniCache, L"FREELOADER");
     if (!IniSection)
-    {
-        /* It does not exist yet, so create it */
-        IniSection = IniCacheAppendSection(BootStore->IniCache, L"FREELOADER");
-        if (!IniSection)
-        {
-            DPRINT1("CreateCommonFreeLdrSections: Failed to create 'FREELOADER' section!\n");
-        }
-    }
+        IniSection = IniAddSection(BootStore->IniCache, L"FREELOADER");
+    if (!IniSection)
+        DPRINT1("CreateCommonFreeLdrSections: Failed to create 'FREELOADER' section!\n");
 
     BootStore->OptionsIniSection = IniSection;
 
     /* TimeOut */
-    IniCacheInsertKey(BootStore->OptionsIniSection, NULL, INSERT_LAST,
-                      L"TimeOut", L"0");
+    IniAddKey(BootStore->OptionsIniSection, L"TimeOut", L"0");
 
     /* Create "Display" section */
-    IniSection = IniCacheAppendSection(BootStore->IniCache, L"Display");
+    IniSection = IniAddSection(BootStore->IniCache, L"Display");
 
-    /* TitleText */
-    IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                      L"TitleText", L"ReactOS Boot Manager");
-
-    /* MinimalUI */
-    IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                      L"MinimalUI", L"Yes");
+    /* TitleText and MinimalUI */
+    IniAddKey(IniSection, L"TitleText", L"ReactOS Boot Manager");
+    IniAddKey(IniSection, L"MinimalUI", L"Yes");
 
     /*
      * Cache the "Operating Systems" section for our future usage.
      */
 
-    /* Get the "Operating Systems" section */
-    IniSection = IniCacheGetSection(BootStore->IniCache, L"Operating Systems");
+    /* Get or create the "Operating Systems" section */
+    IniSection = IniGetSection(BootStore->IniCache, L"Operating Systems");
     if (!IniSection)
-    {
-        /* It does not exist yet, so create it */
-        IniSection = IniCacheAppendSection(BootStore->IniCache, L"Operating Systems");
-        if (!IniSection)
-        {
-            DPRINT1("CreateCommonFreeLdrSections: Failed to create 'Operating Systems' section!\n");
-        }
-    }
+        IniSection = IniAddSection(BootStore->IniCache, L"Operating Systems");
+    if (!IniSection)
+        DPRINT1("CreateCommonFreeLdrSections: Failed to create 'Operating Systems' section!\n");
 
     BootStore->OsIniSection = IniSection;
 }
@@ -352,7 +337,7 @@ OpenIniBootLoaderStore(
     }
     else
     {
-        PINICACHESECTION IniSection;
+        PINI_SECTION IniSection;
 
         /*
          * Check whether the loader configuration INI file exists,
@@ -401,17 +386,12 @@ OpenIniBootLoaderStore(
              * Cache the "FREELOADER" section for our future usage.
              */
 
-            /* Get the "FREELOADER" section */
-            IniSection = IniCacheGetSection(BootStore->IniCache, L"FREELOADER");
+            /* Get or create the "FREELOADER" section */
+            IniSection = IniGetSection(BootStore->IniCache, L"FREELOADER");
             if (!IniSection)
-            {
-                /* It does not exist yet, so create it */
-                IniSection = IniCacheAppendSection(BootStore->IniCache, L"FREELOADER");
-                if (!IniSection)
-                {
-                    DPRINT1("OpenIniBootLoaderStore: Failed to retrieve 'FREELOADER' section!\n");
-                }
-            }
+                IniSection = IniAddSection(BootStore->IniCache, L"FREELOADER");
+            if (!IniSection)
+                DPRINT1("OpenIniBootLoaderStore: Failed to retrieve 'FREELOADER' section!\n");
 
             BootStore->OptionsIniSection = IniSection;
 
@@ -419,17 +399,12 @@ OpenIniBootLoaderStore(
              * Cache the "Operating Systems" section for our future usage.
              */
 
-            /* Get the "Operating Systems" section */
-            IniSection = IniCacheGetSection(BootStore->IniCache, L"Operating Systems");
+            /* Get or create the "Operating Systems" section */
+            IniSection = IniGetSection(BootStore->IniCache, L"Operating Systems");
             if (!IniSection)
-            {
-                /* It does not exist yet, so create it */
-                IniSection = IniCacheAppendSection(BootStore->IniCache, L"Operating Systems");
-                if (!IniSection)
-                {
-                    DPRINT1("OpenIniBootLoaderStore: Failed to retrieve 'Operating Systems' section!\n");
-                }
-            }
+                IniSection = IniAddSection(BootStore->IniCache, L"Operating Systems");
+            if (!IniSection)
+                DPRINT1("OpenIniBootLoaderStore: Failed to retrieve 'Operating Systems' section!\n");
 
             BootStore->OsIniSection = IniSection;
         }
@@ -476,28 +451,26 @@ OpenIniBootLoaderStore(
              */
 
             /* Get the "boot loader" section */
-            IniSection = IniCacheGetSection(BootStore->IniCache, L"boot loader");
+            IniSection = IniGetSection(BootStore->IniCache, L"boot loader");
             if (!IniSection)
             {
                 /* Fall back to "flexboot" */
-                IniSection = IniCacheGetSection(BootStore->IniCache, L"flexboot");
+                IniSection = IniGetSection(BootStore->IniCache, L"flexboot");
                 if (!IniSection)
                 {
                     /* Fall back to "multiboot" */
-                    IniSection = IniCacheGetSection(BootStore->IniCache, L"multiboot");
+                    IniSection = IniGetSection(BootStore->IniCache, L"multiboot");
                 }
             }
 #if 0
             if (!IniSection)
             {
                 /* It does not exist yet, so create it */
-                IniSection = IniCacheAppendSection(BootStore->IniCache, L"boot loader");
-                if (!IniSection)
-                {
-                    DPRINT1("OpenIniBootLoaderStore: Failed to retrieve 'boot loader' section!\n");
-                }
+                IniSection = IniAddSection(BootStore->IniCache, L"boot loader");
             }
 #endif
+            if (!IniSection)
+                DPRINT1("OpenIniBootLoaderStore: Failed to retrieve 'boot loader' section!\n");
 
             BootStore->OptionsIniSection = IniSection;
 
@@ -506,18 +479,16 @@ OpenIniBootLoaderStore(
              */
 
             /* Get the "Operating Systems" section */
-            IniSection = IniCacheGetSection(BootStore->IniCache, L"operating systems");
+            IniSection = IniGetSection(BootStore->IniCache, L"operating systems");
+#if 0
             if (!IniSection)
             {
-#if 0
                 /* It does not exist yet, so create it */
-                IniSection = IniCacheAppendSection(BootStore->IniCache, L"operating systems");
-                if (!IniSection)
-                {
-                    DPRINT1("OpenIniBootLoaderStore: Failed to retrieve 'operating systems' section!\n");
-                }
-#endif
+                IniSection = IniAddSection(BootStore->IniCache, L"operating systems");
             }
+#endif
+            if (!IniSection)
+                DPRINT1("OpenIniBootLoaderStore: Failed to retrieve 'operating systems' section!\n");
 
             BootStore->OsIniSection = IniSection;
         }
@@ -785,15 +756,14 @@ CreateNTOSEntry(
     IN ULONG_PTR BootEntryKey,
     IN PBOOT_STORE_ENTRY BootEntry)
 {
-    PINICACHESECTION IniSection;
-    PWCHAR Section = (PWCHAR)BootEntryKey;
+    PINI_SECTION IniSection;
+    PCWSTR Section = (PCWSTR)BootEntryKey;
 
     /* Insert the entry into the "Operating Systems" section */
-    IniCacheInsertKey(BootStore->OsIniSection, NULL, INSERT_LAST,
-                      Section, (PWSTR)BootEntry->FriendlyName);
+    IniAddKey(BootStore->OsIniSection, Section, BootEntry->FriendlyName);
 
     /* Create a new section */
-    IniSection = IniCacheAppendSection(BootStore->IniCache, Section);
+    IniSection = IniAddSection(BootStore->IniCache, Section);
 
     if (BootEntry->OsOptionsLength >= sizeof(NTOS_OPTIONS) &&
         RtlCompareMemory(&BootEntry->OsOptions /* Signature */,
@@ -803,17 +773,10 @@ CreateNTOSEntry(
     {
         PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
 
-        /* BootType */
-        IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                          L"BootType", L"Windows2003");
-
-        /* SystemPath */
-        IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                          L"SystemPath", (PWSTR)Options->OsLoadPath);
-
-        /* Options */
-        IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                          L"Options", (PWSTR)Options->OsLoadOptions);
+        /* BootType, SystemPath and Options */
+        IniAddKey(IniSection, L"BootType", L"Windows2003");
+        IniAddKey(IniSection, L"SystemPath", Options->OsLoadPath);
+        IniAddKey(IniSection, L"Options", Options->OsLoadOptions);
     }
     else
     if (BootEntry->OsOptionsLength >= sizeof(BOOT_SECTOR_OPTIONS) &&
@@ -824,21 +787,11 @@ CreateNTOSEntry(
     {
         PBOOT_SECTOR_OPTIONS Options = (PBOOT_SECTOR_OPTIONS)&BootEntry->OsOptions;
 
-        /* BootType */
-        IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                          L"BootType", L"BootSector");
-
-        /* BootDrive */
-        IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                          L"BootDrive", (PWSTR)Options->Drive);
-
-        /* BootPartition */
-        IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                          L"BootPartition", (PWSTR)Options->Partition);
-
-        /* BootSector */
-        IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                          L"BootSectorFile", (PWSTR)Options->BootSectorFileName);
+        /* BootType, BootDrive, BootPartition and BootSector */
+        IniAddKey(IniSection, L"BootType", L"BootSector");
+        IniAddKey(IniSection, L"BootDrive", Options->Drive);
+        IniAddKey(IniSection, L"BootPartition", Options->Partition);
+        IniAddKey(IniSection, L"BootSectorFile", Options->BootSectorFileName);
     }
     else
     {
@@ -935,8 +888,8 @@ AddBootStoreEntry(
         }
 
         /* Insert the entry into the "Operating Systems" section */
-        IniCacheInsertKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OsIniSection, NULL, INSERT_LAST,
-                          (PWSTR)Options->OsLoadPath, Buffer);
+        IniAddKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OsIniSection,
+                  Options->OsLoadPath, Buffer);
 
         RtlFreeHeap(ProcessHeap, 0, Buffer);
         return STATUS_SUCCESS;
@@ -1087,13 +1040,13 @@ QueryBootStoreOptions(
     {
         BootOptions->Version = FreeLdr;
 
-        Status = IniCacheGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
-                                L"DefaultOS", (PWCHAR*)&BootOptions->CurrentBootEntryKey);
+        Status = IniGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
+                           L"DefaultOS", (PWCHAR*)&BootOptions->CurrentBootEntryKey);
         if (!NT_SUCCESS(Status))
             BootOptions->CurrentBootEntryKey = 0;
 
-        Status = IniCacheGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
-                                L"TimeOut", &TimeoutStr);
+        Status = IniGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
+                           L"TimeOut", &TimeoutStr);
         if (NT_SUCCESS(Status) && TimeoutStr)
             BootOptions->Timeout = _wtoi(TimeoutStr);
         else
@@ -1103,13 +1056,13 @@ QueryBootStoreOptions(
     {
         BootOptions->Version = NtLdr;
 
-        Status = IniCacheGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
-                                L"default", (PWCHAR*)&BootOptions->CurrentBootEntryKey);
+        Status = IniGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
+                           L"default", (PWCHAR*)&BootOptions->CurrentBootEntryKey);
         if (!NT_SUCCESS(Status))
             BootOptions->CurrentBootEntryKey = 0;
 
-        Status = IniCacheGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
-                                L"timeout", &TimeoutStr);
+        Status = IniGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
+                           L"timeout", &TimeoutStr);
         if (NT_SUCCESS(Status) && TimeoutStr)
             BootOptions->Timeout = _wtoi(TimeoutStr);
         else
@@ -1157,14 +1110,13 @@ SetBootStoreOptions(
     // TODO: Depending on the flags set in 'FieldsToChange',
     // change either one or both these bootloader options.
     //
-    IniCacheInsertKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
-                      NULL, INSERT_LAST,
-                      L"DefaultOS", (PWCHAR)BootOptions->CurrentBootEntryKey);
+    IniAddKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
+              L"DefaultOS", (PCWSTR)BootOptions->CurrentBootEntryKey);
 
     RtlStringCchPrintfW(TimeoutStr, ARRAYSIZE(TimeoutStr), L"%d", BootOptions->Timeout);
-    IniCacheInsertKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
-                      NULL, INSERT_FIRST, // INSERT_LAST, // FIXME!! There is a bug in the INI parser where a given key can be inserted twice in the same section...
-                      L"TimeOut", TimeoutStr);
+    IniInsertKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
+                 NULL, INSERT_FIRST, // INSERT_LAST, // FIXME!! There is a bug in the INI parser where a given key can be inserted twice in the same section...
+                 L"TimeOut", TimeoutStr);
 
     return STATUS_SUCCESS;
 }
@@ -1180,7 +1132,7 @@ FreeLdrEnumerateBootEntries(
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PINICACHEITERATOR Iterator;
-    PINICACHESECTION OsIniSection;
+    PINI_SECTION OsIniSection;
     PWCHAR SectionName, KeyData;
     UCHAR xxBootEntry[FIELD_OFFSET(BOOT_STORE_ENTRY, OsOptions) +
                       max(sizeof(NTOS_OPTIONS), sizeof(BOOT_SECTOR_OPTIONS))];
@@ -1188,7 +1140,7 @@ FreeLdrEnumerateBootEntries(
     PWCHAR Buffer;
 
     /* Enumerate all the valid installations listed in the "Operating Systems" section */
-    Iterator = IniCacheFindFirstValue(BootStore->OsIniSection, &SectionName, &KeyData);
+    Iterator = IniFindFirstValue(BootStore->OsIniSection, &SectionName, &KeyData);
     if (!Iterator) return STATUS_SUCCESS;
     do
     {
@@ -1243,13 +1195,13 @@ FreeLdrEnumerateBootEntries(
         BootEntry->OsOptionsLength = 0;
 
         /* Search for an existing boot entry section */
-        OsIniSection = IniCacheGetSection(BootStore->IniCache, SectionName);
+        OsIniSection = IniGetSection(BootStore->IniCache, SectionName);
         if (!OsIniSection)
             goto DoEnum;
 
         /* Check for supported boot type "Windows2003" */
-        Status = IniCacheGetKey(OsIniSection, L"BootType", &KeyData);
-        if (!NT_SUCCESS(Status) || (KeyData == NULL))
+        Status = IniGetKey(OsIniSection, L"BootType", &KeyData);
+        if (!NT_SUCCESS(Status) || !KeyData)
         {
             /* Certainly not a ReactOS installation */
             DPRINT1("No BootType value present!\n");
@@ -1273,18 +1225,16 @@ FreeLdrEnumerateBootEntries(
             // BootEntry->BootFilePath = NULL;
 
             /* Check its SystemPath */
-            Status = IniCacheGetKey(OsIniSection, L"SystemPath", &KeyData);
-            if (!NT_SUCCESS(Status))
-                Options->OsLoadPath = NULL;
-            else
+            Options->OsLoadPath = NULL;
+            Status = IniGetKey(OsIniSection, L"SystemPath", &KeyData);
+            if (NT_SUCCESS(Status))
                 Options->OsLoadPath = KeyData;
             // KeyData == SystemRoot;
 
             /* Check the optional Options */
-            Status = IniCacheGetKey(OsIniSection, L"Options", &KeyData);
-            if (!NT_SUCCESS(Status))
-                Options->OsLoadOptions = NULL;
-            else
+            Options->OsLoadOptions = NULL;
+            Status = IniGetKey(OsIniSection, L"Options", &KeyData);
+            if (NT_SUCCESS(Status))
                 Options->OsLoadOptions = KeyData;
         }
         else
@@ -1304,24 +1254,21 @@ FreeLdrEnumerateBootEntries(
             // BootEntry->BootFilePath = NULL;
 
             /* Check its BootDrive */
-            Status = IniCacheGetKey(OsIniSection, L"BootDrive", &KeyData);
-            if (!NT_SUCCESS(Status))
-                Options->Drive = NULL;
-            else
+            Options->Drive = NULL;
+            Status = IniGetKey(OsIniSection, L"BootDrive", &KeyData);
+            if (NT_SUCCESS(Status))
                 Options->Drive = KeyData;
 
             /* Check its BootPartition */
-            Status = IniCacheGetKey(OsIniSection, L"BootPartition", &KeyData);
-            if (!NT_SUCCESS(Status))
-                Options->Partition = NULL;
-            else
+            Options->Partition = NULL;
+            Status = IniGetKey(OsIniSection, L"BootPartition", &KeyData);
+            if (NT_SUCCESS(Status))
                 Options->Partition = KeyData;
 
             /* Check its BootSector */
-            Status = IniCacheGetKey(OsIniSection, L"BootSectorFile", &KeyData);
-            if (!NT_SUCCESS(Status))
-                Options->BootSectorFileName = NULL;
-            else
+            Options->BootSectorFileName = NULL;
+            Status = IniGetKey(OsIniSection, L"BootSectorFile", &KeyData);
+            if (NT_SUCCESS(Status))
                 Options->BootSectorFileName = KeyData;
         }
         else
@@ -1342,9 +1289,9 @@ DoEnum:
         if (!NT_SUCCESS(Status))
             break;
     }
-    while (IniCacheFindNextValue(Iterator, &SectionName, &KeyData));
+    while (IniFindNextValue(Iterator, &SectionName, &KeyData));
 
-    IniCacheFindClose(Iterator);
+    IniFindClose(Iterator);
     return Status;
 }
 
@@ -1365,7 +1312,7 @@ NtLdrEnumerateBootEntries(
     ULONG BufferLength;
 
     /* Enumerate all the valid installations */
-    Iterator = IniCacheFindFirstValue(BootStore->OsIniSection, &SectionName, &KeyData);
+    Iterator = IniFindFirstValue(BootStore->OsIniSection, &SectionName, &KeyData);
     if (!Iterator) return STATUS_SUCCESS;
     do
     {
@@ -1476,9 +1423,9 @@ NtLdrEnumerateBootEntries(
         if (!NT_SUCCESS(Status))
             break;
     }
-    while (IniCacheFindNextValue(Iterator, &SectionName, &KeyData));
+    while (IniFindNextValue(Iterator, &SectionName, &KeyData));
 
-    IniCacheFindClose(Iterator);
+    IniFindClose(Iterator);
     return Status;
 }
 
