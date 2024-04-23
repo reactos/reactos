@@ -102,17 +102,16 @@ typedef struct _NTOS_OPTIONS
 #define NTOS_OPTIONS_SIGNATURE "NTOS_5\0\0"
 
 /* Options for boot-sector boot entries */
-typedef struct _BOOT_SECTOR_OPTIONS
+typedef struct _BOOTSECTOR_OPTIONS
 {
     UCHAR Signature[8];     // "BootSect"
     // ULONG Version;
     // ULONG Length;
-    PCWSTR Drive;
-    PCWSTR Partition;
-    PCWSTR BootSectorFileName;
-} BOOT_SECTOR_OPTIONS, *PBOOT_SECTOR_OPTIONS;
+    PCWSTR BootPath;
+    PCWSTR FileName;
+} BOOTSECTOR_OPTIONS, *PBOOTSECTOR_OPTIONS;
 
-#define BOOT_SECTOR_OPTIONS_SIGNATURE "BootSect"
+#define BOOTSECTOR_OPTIONS_SIGNATURE "BootSect"
 
 
 typedef NTSTATUS

@@ -211,6 +211,163 @@ FindBootStore( // By handle
 }
 
 
+//
+// TEMPORARY functions to migrate the DEPRECATED BootDrive and BootPartition
+// values of BootSector boot entries in FREELDR.INI to the newer BootPath value.
+//
+// REMOVE THEM once they won't be necessary anymore,
+// after the removal of their support in FreeLoader!
+//
+static VOID
+FreeLdrMigrateBootDrivePartWorker(
+    _In_ PINI_SECTION OsIniSection)
+{
+    PCWSTR KeyData;
+    PINI_KEYWORD OldKey;
+
+    /*
+     * Check whether we have a "BootPath" value (takes precedence
+     * over both "BootDrive" and "BootPartition").
+     */
+    if (IniGetKey(OsIniSection, L"BootPath", &KeyData) && KeyData && *KeyData)
+    {
+        /* We already have a BootPath value, do nothing more */
+        return;
+    }
+
+    /* We don't have one: retrieve the BIOS drive and
+     * partition and convert them to a valid ARC path */
+
+    /* Retrieve the boot drive */
+    OldKey = IniGetKey(OsIniSection, L"BootDrive", &KeyData);
+    if (OldKey)
+    {
+        PCWSTR OldDrive = KeyData;
+        ULONG DriveNumber = 0;
+        ULONG PartitionNumber = 0;
+        UCHAR DriveType = 0;
+        WCHAR BufferBootPath[80]; // 80 chars is enough for "multi(0)disk(0)rdisk(x)partition(y)", with (x,y) == MAXULONG
+
+        /* If a number string is given, then just
+         * convert it to decimal (BIOS HW only) */
+        PCWCH p = KeyData;
+        if (p[0] >= L'0' && p[0] <= L'9')
+        {
+            DriveNumber = wcstoul(p, (PWCHAR*)&p, 0);
+            if (DriveNumber >= 0x80)
+            {
+                /* It's quite probably a hard disk */
+                DriveNumber -= 0x80;
+                DriveType = L'h';
+            }
+            else
+            {
+                /* It's quite probably a floppy */
+                DriveType = L'f';
+            }
+        }
+        else if (p[0] && towlower(p[1]) == L'd')
+        {
+            /* Convert the drive number string into a number: 'hd1' = 1 */
+            DriveType = tolower(p[0]);
+            DriveNumber = _wtoi(&p[2]);
+        }
+
+        /* Retrieve the boot partition (optional, fall back to zero otherwise) */
+        if (IniGetKey(OsIniSection, L"BootPartition", &KeyData))
+            PartitionNumber = _wtoi(KeyData);
+
+        if (DriveType == L'f')
+        {
+            /* Floppy disk path: multi(0)disk(0)fdisk(x) */
+            RtlStringCchPrintfW(BufferBootPath, _countof(BufferBootPath),
+                                L"multi(0)disk(0)fdisk(%lu)", DriveNumber);
+        }
+        else if (DriveType == L'h')
+        {
+            /* Hard disk path: multi(0)disk(0)rdisk(x)partition(y) */
+            RtlStringCchPrintfW(BufferBootPath, _countof(BufferBootPath),
+                                L"multi(0)disk(0)rdisk(%lu)partition(%lu)",
+                                DriveNumber, PartitionNumber);
+        }
+        else if (DriveType == L'c')
+        {
+            /* CD-ROM disk path: multi(0)disk(0)cdrom(x) */
+            RtlStringCchPrintfW(BufferBootPath, _countof(BufferBootPath),
+                                L"multi(0)disk(0)cdrom(%lu)", DriveNumber);
+        }
+        else
+        {
+            /* This case should rarely happen, if ever */
+            DPRINT1("Unrecognized BootDrive type '%C'\n", DriveType ? DriveType : L'?');
+
+            /* Build the boot path in the form: hdX,Y */
+            RtlStringCchCopyW(BufferBootPath, _countof(BufferBootPath), OldDrive);
+            if (KeyData && *KeyData)
+            {
+                RtlStringCchCatW(BufferBootPath, _countof(BufferBootPath), L",");
+                RtlStringCchCatW(BufferBootPath, _countof(BufferBootPath), KeyData);
+            }
+        }
+
+        /* Add the new BootPath value */
+        IniInsertKey(OsIniSection, OldKey, INSERT_BEFORE, L"BootPath", BufferBootPath);
+    }
+
+    /* Delete the deprecated BootDrive and BootPartition values */
+    IniRemoveKeyByName(OsIniSection, L"BootDrive");
+    IniRemoveKeyByName(OsIniSection, L"BootPartition");
+}
+
+static VOID
+FreeLdrMigrateBootDrivePart(
+    _In_ PBOOT_STORE_INI_CONTEXT BootStore)
+{
+    PINICACHEITERATOR Iterator;
+    PINI_SECTION OsIniSection;
+    PCWSTR SectionName, KeyData;
+
+    /* Enumerate all the valid entries in the "Operating Systems" section */
+    Iterator = IniFindFirstValue(BootStore->OsIniSection, &SectionName, &KeyData);
+    if (!Iterator) return;
+    do
+    {
+        /* Search for an existing boot entry section */
+        OsIniSection = IniGetSection(BootStore->IniCache, SectionName);
+        if (!OsIniSection)
+            continue;
+
+        /* Check for boot type to migrate */
+        if (!IniGetKey(OsIniSection, L"BootType", &KeyData) || !KeyData)
+        {
+            /* Certainly not a ReactOS installation */
+            DPRINT1("No BootType value present\n");
+            continue;
+        }
+        if ((_wcsicmp(KeyData, L"Drive")     == 0) ||
+            (_wcsicmp(KeyData, L"\"Drive\"") == 0) ||
+            (_wcsicmp(KeyData, L"Partition")     == 0) ||
+            (_wcsicmp(KeyData, L"\"Partition\"") == 0))
+        {
+            /* Modify the BootPath value */
+            IniAddKey(OsIniSection, L"BootType", L"BootSector");
+            goto migrate_drivepart;
+        }
+        if ((_wcsicmp(KeyData, L"BootSector")     == 0) ||
+            (_wcsicmp(KeyData, L"\"BootSector\"") == 0))
+        {
+migrate_drivepart:
+            DPRINT("This is a '%S' boot entry\n", KeyData);
+            FreeLdrMigrateBootDrivePartWorker(OsIniSection);
+        }
+    }
+    while (IniFindNextValue(Iterator, &SectionName, &KeyData));
+
+    IniFindClose(Iterator);
+}
+//////////////
+
+
 static VOID
 CreateCommonFreeLdrSections(
     IN OUT PBOOT_STORE_INI_CONTEXT BootStore)
@@ -514,6 +671,12 @@ OpenIniBootLoaderStore(
                 DPRINT1("OpenIniBootLoaderStore: Failed to retrieve 'Operating Systems' section!\n");
 
             BootStore->OsIniSection = IniSection;
+
+            //
+            // TEMPORARY: Migrate the DEPRECATED BootDrive and BootPartition
+            // values of BootSector boot entries to the newer BootPath value.
+            //
+            FreeLdrMigrateBootDrivePart(BootStore);
         }
         else
         if (Type == NtLdr)
@@ -868,7 +1031,6 @@ CloseBootStore(
 }
 
 
-
 static
 NTSTATUS
 CreateNTOSEntry(
@@ -899,19 +1061,18 @@ CreateNTOSEntry(
         IniAddKey(IniSection, L"Options", Options->OsLoadOptions);
     }
     else
-    if (BootEntry->OsOptionsLength >= sizeof(BOOT_SECTOR_OPTIONS) &&
+    if (BootEntry->OsOptionsLength >= sizeof(BOOTSECTOR_OPTIONS) &&
         RtlCompareMemory(&BootEntry->OsOptions /* Signature */,
-                         BOOT_SECTOR_OPTIONS_SIGNATURE,
-                         RTL_FIELD_SIZE(BOOT_SECTOR_OPTIONS, Signature)) ==
-                         RTL_FIELD_SIZE(BOOT_SECTOR_OPTIONS, Signature))
+                         BOOTSECTOR_OPTIONS_SIGNATURE,
+                         RTL_FIELD_SIZE(BOOTSECTOR_OPTIONS, Signature)) ==
+                         RTL_FIELD_SIZE(BOOTSECTOR_OPTIONS, Signature))
     {
-        PBOOT_SECTOR_OPTIONS Options = (PBOOT_SECTOR_OPTIONS)&BootEntry->OsOptions;
+        PBOOTSECTOR_OPTIONS Options = (PBOOTSECTOR_OPTIONS)&BootEntry->OsOptions;
 
-        /* BootType, BootDrive, BootPartition and BootSector */
+        /* BootType, BootPath and BootSector */
         IniAddKey(IniSection, L"BootType", L"BootSector");
-        IniAddKey(IniSection, L"BootDrive", Options->Drive);
-        IniAddKey(IniSection, L"BootPartition", Options->Partition);
-        IniAddKey(IniSection, L"BootSectorFile", Options->BootSectorFileName);
+        IniAddKey(IniSection, L"BootPath", Options->BootPath);
+        IniAddKey(IniSection, L"BootSectorFile", Options->FileName);
     }
     else
     {
@@ -1237,7 +1398,6 @@ SetBootStoreOptions(
 }
 
 
-
 static NTSTATUS
 FreeLdrEnumerateBootEntries(
     IN PBOOT_STORE_INI_CONTEXT BootStore,
@@ -1250,7 +1410,7 @@ FreeLdrEnumerateBootEntries(
     PINI_SECTION OsIniSection;
     PCWSTR SectionName, KeyData;
     UCHAR xxBootEntry[FIELD_OFFSET(BOOT_STORE_ENTRY, OsOptions) +
-                      max(sizeof(NTOS_OPTIONS), sizeof(BOOT_SECTOR_OPTIONS))];
+                      max(sizeof(NTOS_OPTIONS), sizeof(BOOTSECTOR_OPTIONS))];
     PBOOT_STORE_ENTRY BootEntry = (PBOOT_STORE_ENTRY)&xxBootEntry;
     PWCHAR Buffer;
 
@@ -1318,7 +1478,7 @@ FreeLdrEnumerateBootEntries(
         if (!IniGetKey(OsIniSection, L"BootType", &KeyData) || !KeyData)
         {
             /* Certainly not a ReactOS installation */
-            DPRINT1("No BootType value present!\n");
+            DPRINT1("No BootType value present\n");
             goto DoEnum;
         }
 
@@ -1354,31 +1514,26 @@ FreeLdrEnumerateBootEntries(
             (_wcsicmp(KeyData, L"\"BootSector\"") == 0))
         {
             /* BootType is BootSector */
-            PBOOT_SECTOR_OPTIONS Options = (PBOOT_SECTOR_OPTIONS)&BootEntry->OsOptions;
+            PBOOTSECTOR_OPTIONS Options = (PBOOTSECTOR_OPTIONS)&BootEntry->OsOptions;
 
             DPRINT("This is a '%S' boot entry\n", KeyData);
 
-            BootEntry->OsOptionsLength = sizeof(BOOT_SECTOR_OPTIONS);
+            BootEntry->OsOptionsLength = sizeof(BOOTSECTOR_OPTIONS);
             RtlCopyMemory(Options->Signature,
-                          BOOT_SECTOR_OPTIONS_SIGNATURE,
-                          RTL_FIELD_SIZE(BOOT_SECTOR_OPTIONS, Signature));
+                          BOOTSECTOR_OPTIONS_SIGNATURE,
+                          RTL_FIELD_SIZE(BOOTSECTOR_OPTIONS, Signature));
 
             // BootEntry->BootFilePath = NULL;
 
-            /* Check its BootDrive */
-            Options->Drive = NULL;
-            if (IniGetKey(OsIniSection, L"BootDrive", &KeyData))
-                Options->Drive = KeyData;
-
-            /* Check its BootPartition */
-            Options->Partition = NULL;
-            if (IniGetKey(OsIniSection, L"BootPartition", &KeyData))
-                Options->Partition = KeyData;
+            /* Check its BootPath */
+            Options->BootPath = NULL;
+            if (IniGetKey(OsIniSection, L"BootPath", &KeyData))
+                Options->BootPath = KeyData;
 
             /* Check its BootSector */
-            Options->BootSectorFileName = NULL;
+            Options->FileName = NULL;
             if (IniGetKey(OsIniSection, L"BootSectorFile", &KeyData))
-                Options->BootSectorFileName = KeyData;
+                Options->FileName = KeyData;
         }
         else
         {
