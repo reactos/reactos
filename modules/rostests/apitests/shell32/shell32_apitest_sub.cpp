@@ -53,6 +53,7 @@ inline LPITEMIDLIST DoGetPidl(INT iDir)
         }
         default:
         {
+            assert(0);
             break;
         }
     }
