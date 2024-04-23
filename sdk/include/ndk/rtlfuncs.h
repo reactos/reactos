@@ -36,9 +36,44 @@ extern "C" {
 
 #ifdef NTOS_MODE_USER
 
+DECLSPEC_NORETURN
+FORCEINLINE
+VOID
+RtlFailFast(
+    _In_ ULONG Code)
+{
+    __fastfail(Code);
+}
+
 //
 // List Functions
 //
+
+#define RTL_STATIC_LIST_HEAD(x) LIST_ENTRY x = { &x, &x }
+
+FORCEINLINE
+VOID
+FatalListEntryError(
+    _In_ PVOID P1,
+    _In_ PVOID P2,
+    _In_ PVOID P3)
+{
+    UNREFERENCED_PARAMETER(P1);
+    UNREFERENCED_PARAMETER(P2);
+    UNREFERENCED_PARAMETER(P3);
+
+    RtlFailFast(FAST_FAIL_CORRUPT_LIST_ENTRY);
+}
+
+FORCEINLINE
+VOID
+RtlpCheckListEntry(
+    _In_ PLIST_ENTRY Entry)
+{
+    if (Entry->Flink->Blink != Entry || Entry->Blink->Flink != Entry)
+        FatalListEntryError(Entry->Blink, Entry, Entry->Flink);
+}
+
 FORCEINLINE
 VOID
 InitializeListHead(
