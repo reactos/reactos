@@ -257,8 +257,8 @@ static void DoStepCheck(INT iStage, INT iStep, LPCSTR checks)
                 { __LINE__, "0000000000080000000000" }, // 3
                 { __LINE__, "0000000001010000000000" }, // 4
                 { __LINE__, "0000000002020000000000" }, // 5
-                { __LINE__, "0000000000100000000000" }, // 6
-                { __LINE__, "0000000000100000000000" }, // 7
+                { __LINE__, "0000000000000020000000" }, // 6
+                { __LINE__, "0010000000100000000000" }, // 7
             };
             C_ASSERT(_countof(c_answers) == NUM_STEP);
             lineno = c_answers[iStep].lineno;
@@ -275,8 +275,8 @@ static void DoStepCheck(INT iStage, INT iStep, LPCSTR checks)
                 { __LINE__, "0000000000080000000000" }, // 3
                 { __LINE__, "0000000001010000000000" }, // 4
                 { __LINE__, "0000000002020000000000" }, // 5
-                { __LINE__, "0000000000100000000000" }, // 6
-                { __LINE__, "0000000000100000000000" }, // 7
+                { __LINE__, "0000000000000020000000" }, // 6
+                { __LINE__, "0010000000100000000000" }, // 7
             };
             C_ASSERT(_countof(c_answers) == NUM_STEP);
             lineno = c_answers[iStep].lineno;
@@ -293,8 +293,8 @@ static void DoStepCheck(INT iStage, INT iStep, LPCSTR checks)
                 { __LINE__, "0000000000080000000000" }, // 3
                 { __LINE__, "0000000001010000000000" }, // 4 // Recursive
                 { __LINE__, "0000000002020000000000" }, // 5 // Recursive
-                { __LINE__, "0000000000100000000000" }, // 6
-                { __LINE__, "0000000000100000000000" }, // 7
+                { __LINE__, "0000000000000020000000" }, // 6
+                { __LINE__, "0010000000100000000000" }, // 7
             };
             C_ASSERT(_countof(c_answers) == NUM_STEP);
             lineno = c_answers[iStep].lineno;
@@ -318,8 +318,8 @@ static void DoStepCheck(INT iStage, INT iStep, LPCSTR checks)
                 { __LINE__, "0000000000080000000000" }, // 3
                 { __LINE__, "0000000001010000000000" }, // 4 // Recursive
                 { __LINE__, "0000000002020000000000" }, // 5 // Recursive
-                { __LINE__, "0000000000100000000000" }, // 6
-                { __LINE__, "0000000000100000000000" }, // 7
+                { __LINE__, "0000000000000020000000" }, // 6
+                { __LINE__, "0010000000100000000000" }, // 7
             };
             C_ASSERT(_countof(c_answers) == NUM_STEP);
             lineno = c_answers[iStep].lineno;
@@ -346,7 +346,7 @@ static DWORD WINAPI StageThreadFunc(LPVOID arg)
     // 0: Create file1 in dir1
     s_iStep = 0;
     trace("Step %d\n", s_iStep);
-    ::Sleep(2000); // Extra wait
+    ::Sleep(1000); // Extra wait
     ZeroMemory(s_abChecks, sizeof(s_abChecks));
     ret = DoCreateFile(s_szFile1InDir1);
     ok_int(ret, TRUE);
@@ -410,7 +410,7 @@ static DWORD WINAPI StageThreadFunc(LPVOID arg)
     ZeroMemory(s_abChecks, sizeof(s_abChecks));
     ret = ::MoveFileW(s_szDir1InDir1, s_szDir2InDir1);
     ok_int(ret, TRUE);
-    SHChangeNotify(SHCNE_RMDIR, SHCNF_PATHW | SHCNF_FLUSH | SHCNF_FLUSHNOWAIT, s_szDir1InDir1, NULL);
+    SHChangeNotify(SHCNE_RENAMEFOLDER, SHCNF_PATHW | SHCNF_FLUSH | SHCNF_FLUSHNOWAIT, s_szDir1InDir1, s_szDir2InDir1);
     ::Sleep(INTERVAL);
     DoStepCheck(s_iStage, s_iStep, StringFromChecks());
 
@@ -420,7 +420,7 @@ static DWORD WINAPI StageThreadFunc(LPVOID arg)
     ZeroMemory(s_abChecks, sizeof(s_abChecks));
     ret = RemoveDirectoryW(s_szDir2InDir1);
     ok_int(ret, TRUE);
-    SHChangeNotify(SHCNE_RMDIR, SHCNF_PATHW | SHCNF_FLUSH | SHCNF_FLUSHNOWAIT, s_szDir1InDir1, NULL);
+    SHChangeNotify(SHCNE_RMDIR, SHCNF_PATHW | SHCNF_FLUSH | SHCNF_FLUSHNOWAIT, s_szDir2InDir1, NULL);
     ::Sleep(INTERVAL);
     DoStepCheck(s_iStage, s_iStep, StringFromChecks());
 
