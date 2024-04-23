@@ -1057,6 +1057,10 @@ static void free_entity_array(struct entity_array *array)
             RtlFreeHeap(GetProcessHeap(), 0, entity->u.clrsurrogate.clsid);
             RtlFreeHeap(GetProcessHeap(), 0, entity->u.clrsurrogate.version);
             break;
+        case ACTIVATION_CONTEXT_SECTION_APPLICATION_SETTINGS:
+            RtlFreeHeap(GetProcessHeap(), 0, entity->u.settings.name);
+            RtlFreeHeap(GetProcessHeap(), 0, entity->u.settings.value);
+            break;
         default:
             FIXME("Unknown entity kind %d\n", entity->kind);
         }
