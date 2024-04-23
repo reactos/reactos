@@ -5,6 +5,8 @@
  * COPYRIGHT:   Copyright 2020-2024 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
+// This program is used in SHChangeNotify and ShellExecCmdLine testcases.
+
 #include "shelltest.h"
 #include "shell32_apitest_sub.h"
 #include <assert.h>
@@ -61,8 +63,7 @@ inline LPITEMIDLIST DoGetPidl(INT iDir)
     return ret;
 }
 
-static BOOL
-OnCreate(HWND hwnd)
+static BOOL OnCreate(HWND hwnd)
 {
     s_hSubWnd = hwnd;
 
@@ -72,7 +73,7 @@ OnCreate(HWND hwnd)
     return TRUE;
 }
 
-static BOOL InitHook(HWND hwnd)
+static BOOL InitSHCN(HWND hwnd)
 {
     assert(0 <= s_iStage);
     assert(s_iStage < NUM_STAGE);
@@ -115,6 +116,11 @@ static BOOL InitHook(HWND hwnd)
             events = EVENTS;
             break;
         }
+        default:
+        {
+            assert(0);
+            break;
+        }
     }
 
     s_uRegID = SHChangeNotifyRegister(hwnd, sources, events, WM_SHELL_NOTIFY, 1, &entry);
@@ -124,7 +130,7 @@ static BOOL InitHook(HWND hwnd)
     return TRUE;
 }
 
-static void UninitHook(HWND hwnd)
+static void UnInitSHCN(HWND hwnd)
 {
     if (s_uRegID)
     {
@@ -133,8 +139,7 @@ static void UninitHook(HWND hwnd)
     }
 }
 
-static void
-OnCommand(HWND hwnd, UINT id)
+static void OnCommand(HWND hwnd, UINT id)
 {
     switch (id)
     {
@@ -147,32 +152,31 @@ OnCommand(HWND hwnd, UINT id)
                 break;
             }
             s_iStage = 0;
-            InitHook(hwnd);
+            InitSHCN(hwnd);
             ::PostMessageW(s_hMainWnd, WM_COMMAND, IDYES, 0);
             break;
         }
         case IDRETRY: // New stage
         {
-            UninitHook(hwnd);
+            UnInitSHCN(hwnd);
             ++s_iStage;
-            InitHook(hwnd);
+            InitSHCN(hwnd);
             ::PostMessageW(s_hMainWnd, WM_COMMAND, IDRETRY, 0);
             break;
         }
         case IDNO: // Quit
         {
             s_iStage = -1;
-            UninitHook(hwnd);
+            UnInitSHCN(hwnd);
             ::DestroyWindow(hwnd);
             break;
         }
     }
 }
 
-static void
-OnDestroy(HWND hwnd)
+static void OnDestroy(HWND hwnd)
 {
-    UninitHook(hwnd);
+    UnInitSHCN(hwnd);
 
     for (auto& pidl : s_pidl)
     {
@@ -185,8 +189,7 @@ OnDestroy(HWND hwnd)
     PostQuitMessage(0);
 }
 
-static BOOL
-DoSendData(LONG lEvent, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+static BOOL DoSendData(LONG lEvent, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 {
     DWORD cbPidl1 = ILGetSize(pidl1), cbPidl2 = ILGetSize(pidl2);
     DWORD cbTotal = sizeof(lEvent) + sizeof(cbPidl1) + sizeof(cbPidl2) + cbPidl1 + cbPidl2;
@@ -223,8 +226,7 @@ DoSendData(LONG lEvent, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
     return ret;
 }
 
-static void
-DoShellNotify(HWND hwnd, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2, LONG lEvent)
+static void DoShellNotify(HWND hwnd, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2, LONG lEvent)
 {
     if (s_iStage < 0)
         return;
@@ -232,8 +234,7 @@ DoShellNotify(HWND hwnd, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2, LONG lE
     DoSendData(lEvent, pidl1, pidl2);
 }
 
-static INT_PTR
-OnShellNotify(HWND hwnd, WPARAM wParam, LPARAM lParam)
+static INT_PTR OnShellNotify(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     LONG lEvent;
     PIDLIST_ABSOLUTE *pidlAbsolute;
@@ -251,8 +252,7 @@ OnShellNotify(HWND hwnd, WPARAM wParam, LPARAM lParam)
     return TRUE;
 }
 
-static LRESULT CALLBACK
-SubWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK SubWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
@@ -277,15 +277,14 @@ SubWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 INT APIENTRY
-wWinMain(HINSTANCE hInstance,
-         HINSTANCE hPrevInstance,
-         LPWSTR    lpCmdLine,
-         INT       nCmdShow)
+wWinMain(
+    HINSTANCE hInstance,
+    HINSTANCE hPrevInstance,
+    LPWSTR    lpCmdLine,
+    INT       nCmdShow)
 {
     if (lstrcmpiW(lpCmdLine, L"") == 0 || lstrcmpiW(lpCmdLine, L"TEST") == 0)
-    {
         return 0;
-    }
 
     WNDCLASSW wc = { 0, SubWindowProc };
     wc.hInstance = hInstance;
@@ -294,17 +293,13 @@ wWinMain(HINSTANCE hInstance,
     wc.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
     wc.lpszClassName = SUB_CLASSNAME;
     if (!RegisterClassW(&wc))
-    {
         return -1;
-    }
 
     HWND hwnd = CreateWindowW(SUB_CLASSNAME, SUB_CLASSNAME, WS_OVERLAPPEDWINDOW,
-                              CW_USEDEFAULT, CW_USEDEFAULT, 400, 120,
+                              CW_USEDEFAULT, CW_USEDEFAULT, 400, 100,
                               NULL, NULL, hInstance, NULL);
     if (!hwnd)
-    {
         return -2;
-    }
 
     ShowWindow(hwnd, SW_SHOWNORMAL);
     UpdateWindow(hwnd);

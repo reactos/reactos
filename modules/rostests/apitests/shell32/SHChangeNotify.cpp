@@ -5,28 +5,24 @@
  * COPYRIGHT:   Copyright 2020-2024 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
-// NOTE: This testcase needs shell32_apitest_sub.exe .
-// NOTE: SHChangeNotify behavior is unstable even on Windows.
-//       The results of this testcase may vary depending on conditions.
+// NOTE: This testcase requires shell32_apitest_sub.exe.
 
 #include "shelltest.h"
 #include "shell32_apitest_sub.h"
 #include <assert.h>
 
-#define ID_TEST_START   777
-#define NUM_CHECKS      12
 #define NUM_STAGE       4
 #define NUM_STEP        8
+#define NUM_CHECKS      12
 #define INTERVAL        600
 #define MAX_EVENT_TYPE  6
 
 static HWND s_hMainWnd = NULL, s_hSubWnd = NULL;
-static WCHAR s_szSubProgram[MAX_PATH];
+static WCHAR s_szSubProgram[MAX_PATH]; // shell32_apitest_sub.exe
 static HANDLE s_hThread = NULL;
-
 static INT s_iStage = -1, s_iStep = -1;
-static BYTE s_abChecks[NUM_CHECKS] = { 0 };
-static BOOL s_bGotUpdateDir = FALSE;
+static BYTE s_abChecks[NUM_CHECKS] = { 0 }; // Flags for testing
+static BOOL s_bGotUpdateDir = FALSE; // Got SHCNE_UPDATEDIR?
 
 static BOOL DoCreateFile(LPCWSTR pszFileName)
 {
@@ -87,14 +83,13 @@ static void TEST_Quit(void)
     CloseHandle(s_hThread);
     s_hThread = NULL;
 
-    PostMessageW(s_hSubWnd, WM_COMMAND, IDNO, 0);
-    DoWaitForWindow(SUB_CLASSNAME, SUB_CLASSNAME, TRUE, TRUE);
+    PostMessageW(s_hSubWnd, WM_COMMAND, IDNO, 0); // Finish
+    DoWaitForWindow(SUB_CLASSNAME, SUB_CLASSNAME, TRUE, TRUE); // Close sub-windows
 
     DoDeleteFilesAndDirs();
 }
 
-static BOOL
-FindSubProgram(void)
+static BOOL FindSubProgram(void)
 {
     GetModuleFileNameW(NULL, s_szSubProgram, _countof(s_szSubProgram));
     PathRemoveFileSpecW(s_szSubProgram);
@@ -158,8 +153,7 @@ static void DoBuildFilesAndDirs(void)
     ok_int(!PathIsDirectoryW(s_szDir1InDir1), TRUE);
 }
 
-static void
-DoTestEntry(LONG lEvent, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+static void DoTestEntry(LONG lEvent, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 {
     WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
 
@@ -198,7 +192,7 @@ DoTestEntry(LONG lEvent, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
     assert(i == NUM_CHECKS);
 }
 
-LPSTR StringFromChecks(void)
+static LPCSTR StringFromChecks(void)
 {
     static char s_sz[2 * NUM_CHECKS + 1];
 
@@ -216,13 +210,6 @@ LPSTR StringFromChecks(void)
     *pch = 0;
     return s_sz;
 }
-
-struct TEST_DATA
-{
-    INT lineno;
-    LPCSTR vista_data;
-    LPCSTR xp_data;
-};
 
 struct TEST_ANSWER
 {
@@ -433,10 +420,11 @@ static DWORD WINAPI StageThreadFunc(LPVOID arg)
     ZeroMemory(s_abChecks, sizeof(s_abChecks));
     if (s_iStage + 1 < NUM_STAGE)
     {
-        ::PostMessage(s_hSubWnd, WM_COMMAND, IDRETRY, 0);
+        ::PostMessage(s_hSubWnd, WM_COMMAND, IDRETRY, 0); // Next stage
     }
     else
     {
+        // Finish
         ::PostMessage(s_hSubWnd, WM_COMMAND, IDNO, 0);
         ::PostMessage(s_hMainWnd, WM_COMMAND, IDNO, 0);
     }
@@ -446,6 +434,7 @@ static DWORD WINAPI StageThreadFunc(LPVOID arg)
     return 0;
 }
 
+// WM_COPYDATA
 static BOOL OnCopyData(HWND hwnd, HWND hwndSender, COPYDATASTRUCT *pCopyData)
 {
     if (pCopyData->dwData != 0xBEEFCAFE)
@@ -599,7 +588,7 @@ static BOOL TEST_Init(void)
         return FALSE;
     }
 
-    // Create the main window
+    // Create main window
     HWND hwnd = CreateWindowW(MAIN_CLASSNAME, MAIN_CLASSNAME, WS_OVERLAPPEDWINDOW,
                               CW_USEDEFAULT, CW_USEDEFAULT, 400, 100,
                               NULL, NULL, GetModuleHandleW(NULL), NULL);
@@ -629,11 +618,12 @@ static void TEST_Main(void)
 {
     if (!TEST_Init())
     {
-        skip("Unable to initialize.\n");
+        skip("Unable to start testing.\n");
         TEST_Quit();
         return;
     }
 
+    // Message loop
     MSG msg;
     while (GetMessageW(&msg, NULL, 0, 0))
     {
