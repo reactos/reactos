@@ -170,7 +170,7 @@
 @ stdcall LdrQueryImageFileKeyOption(ptr ptr long ptr long ptr)
 @ stdcall -stub -version=0x600+ LdrQueryModuleServiceTags(ptr ptr ptr)
 @ stdcall LdrQueryProcessModuleInformation(ptr long ptr)
-@ stdcall -stub -version=0x600+ LdrRegisterDllNotification(long ptr ptr ptr)
+@ stdcall -version=0x600+ LdrRegisterDllNotification(long ptr ptr ptr)
 @ stdcall -stub -version=0x600+ LdrRemoveLoadAsDataTable(ptr ptr ptr long)
 @ stub -version=0x600+ LdrResFindResource
 @ stub -version=0x600+ LdrResFindResourceDirectory
@@ -185,7 +185,7 @@
 @ stub -version=0x600+ LdrUnloadAlternateResourceModuleEx
 @ stdcall LdrUnloadDll(ptr)
 @ stdcall LdrUnlockLoaderLock(long ptr)
-@ stdcall -stub -version=0x600+ LdrUnregisterDllNotification(ptr)
+@ stdcall -version=0x600+ LdrUnregisterDllNotification(ptr)
 @ stdcall LdrVerifyImageMatchesChecksum(ptr long long long)
 @ stdcall -stub -version=0x600+ LdrVerifyImageMatchesChecksumEx(ptr ptr)
 @ stub -version=0x600+ LdrpResGetMappingSize
