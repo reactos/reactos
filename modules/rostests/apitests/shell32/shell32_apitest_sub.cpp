@@ -174,18 +174,15 @@ OnDestroy(HWND hwnd)
 }
 
 static BOOL
-DoSendData(UINT uMsg, LONG lEvent, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+DoSendData(LONG lEvent, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 {
     DWORD cbPidl1 = ILGetSize(pidl1), cbPidl2 = ILGetSize(pidl2);
-    DWORD cbTotal = sizeof(uMsg) + sizeof(lEvent) + sizeof(cbPidl1) + cbPidl1 + sizeof(cbPidl2) + cbPidl2;
+    DWORD cbTotal = sizeof(lEvent) + sizeof(cbPidl1) + sizeof(cbPidl2) + cbPidl1 + cbPidl2;
     LPBYTE pbData = (LPBYTE)::LocalAlloc(LPTR, cbTotal);
     if (!pbData)
         return FALSE;
 
     LPBYTE pb = pbData;
-
-    *(UINT*)pb = uMsg;
-    pb += sizeof(uMsg);
 
     *(LONG*)pb = lEvent;
     pb += sizeof(lEvent);
@@ -193,14 +190,15 @@ DoSendData(UINT uMsg, LONG lEvent, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
     *(DWORD*)pb = cbPidl1;
     pb += sizeof(cbPidl1);
 
-    CopyMemory(pb, pidl1, cbPidl1);
-    pb += cbPidl1;
-
     *(DWORD*)pb = cbPidl2;
     pb += sizeof(cbPidl2);
 
+    CopyMemory(pb, pidl1, cbPidl1);
+    pb += cbPidl1;
+
     CopyMemory(pb, pidl2, cbPidl2);
     pb += cbPidl2;
+
     assert(INT(pb - pbData) == INT(cbTotal));
 
     COPYDATASTRUCT CopyData;
@@ -214,29 +212,29 @@ DoSendData(UINT uMsg, LONG lEvent, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 }
 
 static void
-DoShellNotify(HWND hwnd, UINT uMsg, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2, LONG lEvent)
+DoShellNotify(HWND hwnd, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2, LONG lEvent)
 {
     if (s_iStage < 0)
         return;
 
-    DoSendData(uMsg, lEvent, pidl1, pidl2);
+    DoSendData(lEvent, pidl1, pidl2);
 }
 
 static INT_PTR
-OnShellNotify(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+OnShellNotify(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     LONG lEvent;
     PIDLIST_ABSOLUTE *pidlAbsolute;
     HANDLE hLock = SHChangeNotification_Lock((HANDLE)wParam, (DWORD)lParam, &pidlAbsolute, &lEvent);
     if (hLock)
     {
-        DoShellNotify(hwnd, uMsg, pidlAbsolute[0], pidlAbsolute[1], lEvent);
+        DoShellNotify(hwnd, pidlAbsolute[0], pidlAbsolute[1], lEvent);
         SHChangeNotification_Unlock(hLock);
     }
     else
     {
         pidlAbsolute = (PIDLIST_ABSOLUTE *)wParam;
-        DoShellNotify(hwnd, uMsg, pidlAbsolute[0], pidlAbsolute[1], lParam);
+        DoShellNotify(hwnd, pidlAbsolute[0], pidlAbsolute[1], lParam);
     }
     return TRUE;
 }
@@ -254,7 +252,7 @@ SubWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_SHELL_NOTIFY:
-            return OnShellNotify(hwnd, uMsg, wParam, lParam);
+            return OnShellNotify(hwnd, wParam, lParam);
 
         case WM_DESTROY:
             OnDestroy(hwnd);

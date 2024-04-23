@@ -154,7 +154,7 @@ static void DoBuildFilesAndDirs(void)
 }
 
 static void
-DoTestEntry(UINT uMsg, LONG lEvent, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+DoTestEntry(LONG lEvent, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 {
     WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
 
@@ -426,7 +426,7 @@ static BOOL OnCopyData(HWND hwnd, HWND hwndSender, COPYDATASTRUCT *pCopyData)
     LPBYTE pbData = (LPBYTE)pCopyData->lpData;
 
     LONG cbTotal = pCopyData->cbData;
-    if (cbTotal < LONG(sizeof(UINT) + sizeof(DWORD) + sizeof(DWORD)))
+    if (cbTotal < LONG(sizeof(LONG) + sizeof(DWORD) + sizeof(DWORD)))
     {
         trace("\n");
         return FALSE;
@@ -434,14 +434,14 @@ static BOOL OnCopyData(HWND hwnd, HWND hwndSender, COPYDATASTRUCT *pCopyData)
 
     LPBYTE pb = pbData;
 
-    UINT uMsg = *(UINT*)pb;
-    pb += sizeof(uMsg);
-
     LONG lEvent = *(LONG*)pb;
     pb += sizeof(lEvent);
 
     DWORD cbPidl1 = *(DWORD*)pb;
     pb += sizeof(cbPidl1);
+
+    DWORD cbPidl2 = *(DWORD*)pb;
+    pb += sizeof(cbPidl2);
 
     LPITEMIDLIST pidl1 = NULL;
     if (cbPidl1)
@@ -450,9 +450,6 @@ static BOOL OnCopyData(HWND hwnd, HWND hwndSender, COPYDATASTRUCT *pCopyData)
         CopyMemory(pidl1, pb, cbPidl1);
         pb += cbPidl1;
     }
-
-    DWORD cbPidl2 = *(DWORD*)pb;
-    pb += sizeof(cbPidl2);
 
     LPITEMIDLIST pidl2 = NULL;
     if (cbPidl2)
@@ -468,7 +465,7 @@ static BOOL OnCopyData(HWND hwnd, HWND hwndSender, COPYDATASTRUCT *pCopyData)
         return FALSE;
     }
 
-    DoTestEntry(uMsg, lEvent, pidl1, pidl2);
+    DoTestEntry(lEvent, pidl1, pidl2);
 
     CoTaskMemFree(pidl1);
     CoTaskMemFree(pidl2);
