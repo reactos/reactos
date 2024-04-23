@@ -33,6 +33,7 @@
 #define FILE_END_OF_FILE_INFORMATION FILE_STANDARD_INFORMATION
 #define FileEndOfFileInformation FileStandardInformation
 #define RELATIVE_PATH RtlPathTypeRelative
+#define user_shared_data SharedUserData
 
 #undef RT_MANIFEST
 #undef CREATEPROCESS_MANIFEST_RESOURCE_ID
@@ -3295,12 +3296,12 @@ static NTSTATUS lookup_winsxs(struct actctx_loader* acl, struct assembly_identit
 
     if (!ai->arch || !ai->name || !ai->public_key) return STATUS_NO_SUCH_FILE;
 
-    if (!(path = RtlAllocateHeap( GetProcessHeap(), 0,
-                                  ((strlenW(SharedUserData->NtSystemRoot) + 1) *sizeof(WCHAR)) + sizeof(manifest_dirW) )))
+    if (!(path = RtlAllocateHeap( GetProcessHeap(), 0, sizeof(manifest_dirW) +
+                                  strlenW(user_shared_data->NtSystemRoot) * sizeof(WCHAR) )))
         return STATUS_NO_MEMORY;
 
-    memcpy( path, SharedUserData->NtSystemRoot, strlenW(SharedUserData->NtSystemRoot) * sizeof(WCHAR) );
-    memcpy( path + strlenW(SharedUserData->NtSystemRoot), manifest_dirW, sizeof(manifest_dirW) );
+    strcpyW( path, user_shared_data->NtSystemRoot );
+    memcpy( path + strlenW(path), manifest_dirW, sizeof(manifest_dirW) );
 
     if (!RtlDosPathNameToNtPathName_U( path, &path_us, NULL, NULL ))
     {
