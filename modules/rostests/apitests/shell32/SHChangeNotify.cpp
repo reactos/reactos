@@ -14,19 +14,17 @@
 #include <assert.h>
 
 #define ID_TEST_START   777
-#define NUM_CHECKS      10
+#define NUM_CHECKS      11
 #define NUM_STAGE       4
-#define NUM_STEP        7
-#define INTERVAL        800
+#define NUM_STEP        8
+#define INTERVAL        600
 #define MAX_EVENT_TYPE  6
 
-static HWND s_hMainWnd = NULL;
-static HWND s_hSubWnd = NULL;
+static HWND s_hMainWnd = NULL, s_hSubWnd = NULL;
 static WCHAR s_szSubProgram[MAX_PATH];
 static HANDLE s_hThread = NULL;
 
-static INT s_iStage = -1;
-static INT s_iStep = -1;
+static INT s_iStage = -1, s_iStep = -1;
 static BYTE s_abChecks[NUM_CHECKS] = { 0 };
 static BOOL s_bGotUpdateDir = FALSE;
 
@@ -65,9 +63,11 @@ static INT GetEventType(LONG lEvent)
 #define FILE_1  L"_TESTFILE_1_.txt"
 #define FILE_2  L"_TESTFILE_2_.txt"
 #define DIR_1   L"_TESTDIR_1_"
+#define DIR_2   L"_TESTDIR_2_"
 
 static WCHAR s_szDir1[MAX_PATH];
 static WCHAR s_szDir1InDir1[MAX_PATH];
+static WCHAR s_szDir2InDir1[MAX_PATH];
 static WCHAR s_szFile1InDir1InDir1[MAX_PATH];
 static WCHAR s_szFile1InDir1[MAX_PATH];
 static WCHAR s_szFile2InDir1[MAX_PATH];
@@ -77,7 +77,8 @@ static void DoDeleteFilesAndDirs(void)
     ::DeleteFileW(s_szFile1InDir1);
     ::DeleteFileW(s_szFile2InDir1);
     ::DeleteFileW(s_szFile1InDir1InDir1);
-    ::RemoveDirectoryW(s_szDir1InDir1);
+    DoDeleteDirectory(s_szDir1InDir1);
+    DoDeleteDirectory(s_szDir2InDir1);
     DoDeleteDirectory(s_szDir1);
 }
 
@@ -120,6 +121,10 @@ static void DoBuildFilesAndDirs(void)
 
     PathAppendW(szPath1, DIR_1);
     StringCchCopyW(s_szDir1InDir1, _countof(s_szDir1InDir1), szPath1);
+    PathRemoveFileSpecW(szPath1);
+
+    PathAppendW(szPath1, DIR_2);
+    StringCchCopyW(s_szDir2InDir1, _countof(s_szDir2InDir1), szPath1);
     PathRemoveFileSpecW(szPath1);
 
     PathAppendW(szPath1, DIR_1);
@@ -178,13 +183,14 @@ DoTestEntry(LONG lEvent, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
     assert(iEventType < MAX_EVENT_TYPE);
 
     INT i = 0;
-    s_abChecks[i++] |= (lstrcmpiW(szPath1, L"") == 0) << iEventType;
     s_abChecks[i++] |= (lstrcmpiW(szPath1, s_szDir1) == 0) << iEventType;
+    s_abChecks[i++] |= (lstrcmpiW(szPath1, s_szDir2InDir1) == 0) << iEventType;
     s_abChecks[i++] |= (lstrcmpiW(szPath1, s_szFile1InDir1) == 0) << iEventType;
     s_abChecks[i++] |= (lstrcmpiW(szPath1, s_szFile2InDir1) == 0) << iEventType;
     s_abChecks[i++] |= (lstrcmpiW(szPath1, s_szFile1InDir1InDir1) == 0) << iEventType;
     s_abChecks[i++] |= (lstrcmpiW(szPath2, L"") == 0) << iEventType;
     s_abChecks[i++] |= (lstrcmpiW(szPath2, s_szDir1) == 0) << iEventType;
+    s_abChecks[i++] |= (lstrcmpiW(szPath2, s_szDir2InDir1) == 0) << iEventType;
     s_abChecks[i++] |= (lstrcmpiW(szPath2, s_szFile1InDir1) == 0) << iEventType;
     s_abChecks[i++] |= (lstrcmpiW(szPath2, s_szFile2InDir1) == 0) << iEventType;
     s_abChecks[i++] |= (lstrcmpiW(szPath2, s_szFile1InDir1InDir1) == 0) << iEventType;
@@ -245,13 +251,14 @@ static void DoStepCheck(INT iStage, INT iStep, LPCSTR checks)
         {
             static const TEST_ANSWER c_answers[] =
             {
-                { __LINE__, "00000100000100000000" },
-                { __LINE__, "00000400000000000400" },
-                { __LINE__, "00000002000200000000" },
-                { __LINE__, "00000000000800000000" },
-                { __LINE__, "00000000010100000000" },
-                { __LINE__, "00000000020200000000" },
-                { __LINE__, "00000000001000000000" },
+                { __LINE__, "0000010000010000000000" }, // 0
+                { __LINE__, "0000040000000000000400" }, // 1
+                { __LINE__, "0000000200020000000000" }, // 2
+                { __LINE__, "0000000000080000000000" }, // 3
+                { __LINE__, "0000000001010000000000" }, // 4
+                { __LINE__, "0000000002020000000000" }, // 5
+                { __LINE__, "0000000000100000000000" }, // 6
+                { __LINE__, "0000000000100000000000" }, // 7
             };
             C_ASSERT(_countof(c_answers) == NUM_STEP);
             lineno = c_answers[iStep].lineno;
@@ -262,13 +269,14 @@ static void DoStepCheck(INT iStage, INT iStep, LPCSTR checks)
         {
             static const TEST_ANSWER c_answers[] =
             {
-                { __LINE__, "00000100000100000000" },
-                { __LINE__, "00000400000000000400" },
-                { __LINE__, "00000002000200000000" },
-                { __LINE__, "00000000000800000000" },
-                { __LINE__, "00000000010100000000" },
-                { __LINE__, "00000000020200000000" },
-                { __LINE__, "00000000001000000000" },
+                { __LINE__, "0000010000010000000000" }, // 0
+                { __LINE__, "0000040000000000000400" }, // 1
+                { __LINE__, "0000000200020000000000" }, // 2
+                { __LINE__, "0000000000080000000000" }, // 3
+                { __LINE__, "0000000001010000000000" }, // 4
+                { __LINE__, "0000000002020000000000" }, // 5
+                { __LINE__, "0000000000100000000000" }, // 6
+                { __LINE__, "0000000000100000000000" }, // 7
             };
             C_ASSERT(_countof(c_answers) == NUM_STEP);
             lineno = c_answers[iStep].lineno;
@@ -279,30 +287,39 @@ static void DoStepCheck(INT iStage, INT iStep, LPCSTR checks)
         {
             static const TEST_ANSWER c_answers[] =
             {
-                { __LINE__, "00000100000100000000" },
-                { __LINE__, "00000400000000000400" },
-                { __LINE__, "00000002000200000000" },
-                { __LINE__, "00000000000800000000" },
-                { __LINE__, "00000000010100000000" },
-                { __LINE__, "00000000020200000000" },
-                { __LINE__, "00000000001000000000" },
+                { __LINE__, "0000010000010000000000" }, // 0
+                { __LINE__, "0000040000000000000400" }, // 1
+                { __LINE__, "0000000200020000000000" }, // 2
+                { __LINE__, "0000000000080000000000" }, // 3
+                { __LINE__, "0000000001010000000000" }, // 4 // Recursive
+                { __LINE__, "0000000002020000000000" }, // 5 // Recursive
+                { __LINE__, "0000000000100000000000" }, // 6
+                { __LINE__, "0000000000100000000000" }, // 7
             };
             C_ASSERT(_countof(c_answers) == NUM_STEP);
             lineno = c_answers[iStep].lineno;
             answer = c_answers[iStep].answer;
+            if (iStep == 4 || iStep == 5) // Recursive cases
+            {
+                if (lstrcmpA(checks, "0000000000000000000000") == 0)
+                    answer = "0000000000000000000000";
+                else
+                    trace("Warning\n");
+            }
             break;
         }
         case 3:
         {
             static const TEST_ANSWER c_answers[] =
             {
-                { __LINE__, "00000100000100000000" },
-                { __LINE__, "00000400000000000400" },
-                { __LINE__, "00000002000200000000" },
-                { __LINE__, "00000000000800000000" },
-                { __LINE__, "00000000010100000000" },
-                { __LINE__, "00000000020200000000" },
-                { __LINE__, "00000000001000000000" },
+                { __LINE__, "0000010000010000000000" }, // 0
+                { __LINE__, "0000040000000000000400" }, // 1
+                { __LINE__, "0000000200020000000000" }, // 2
+                { __LINE__, "0000000000080000000000" }, // 3
+                { __LINE__, "0000000001010000000000" }, // 4 // Recursive
+                { __LINE__, "0000000002020000000000" }, // 5 // Recursive
+                { __LINE__, "0000000000100000000000" }, // 6
+                { __LINE__, "0000000000100000000000" }, // 7
             };
             C_ASSERT(_countof(c_answers) == NUM_STEP);
             lineno = c_answers[iStep].lineno;
@@ -387,21 +404,31 @@ static DWORD WINAPI StageThreadFunc(LPVOID arg)
     ::Sleep(INTERVAL);
     DoStepCheck(s_iStage, s_iStep, StringFromChecks());
 
-    // 6: Remove dir1 in dir1
+    // 6: Rename dir1 as dir2 in dir1
     ++s_iStep;
     trace("Step %d\n", s_iStep);
     ZeroMemory(s_abChecks, sizeof(s_abChecks));
-    ret = RemoveDirectoryW(s_szDir1InDir1);
+    ret = ::MoveFileW(s_szDir1InDir1, s_szDir2InDir1);
     ok_int(ret, TRUE);
     SHChangeNotify(SHCNE_RMDIR, SHCNF_PATHW | SHCNF_FLUSH | SHCNF_FLUSHNOWAIT, s_szDir1InDir1, NULL);
     ::Sleep(INTERVAL);
     DoStepCheck(s_iStage, s_iStep, StringFromChecks());
 
-    // 7: Finish
+    // 7: Remove dir2 in dir1
+    ++s_iStep;
+    trace("Step %d\n", s_iStep);
+    ZeroMemory(s_abChecks, sizeof(s_abChecks));
+    ret = RemoveDirectoryW(s_szDir2InDir1);
+    ok_int(ret, TRUE);
+    SHChangeNotify(SHCNE_RMDIR, SHCNF_PATHW | SHCNF_FLUSH | SHCNF_FLUSHNOWAIT, s_szDir1InDir1, NULL);
+    ::Sleep(INTERVAL);
+    DoStepCheck(s_iStage, s_iStep, StringFromChecks());
+
+    // 8: Finish
     ++s_iStep;
     trace("Step %d\n", s_iStep);
     assert(s_iStep == NUM_STEP);
-    C_ASSERT(NUM_STEP == 7);
+    C_ASSERT(NUM_STEP == 8);
     ZeroMemory(s_abChecks, sizeof(s_abChecks));
     if (s_iStage + 1 < NUM_STAGE)
     {
@@ -485,42 +512,45 @@ MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
-            case IDYES:
-                s_iStage = 0;
-                s_bGotUpdateDir = FALSE;
-                s_hThread = ::CreateThread(NULL, 0, StageThreadFunc, hwnd, 0, NULL);
-                if (!s_hThread)
+                case IDYES: // Start testing
                 {
-                    skip("!s_hThread\n");
-                    DestroyWindow(hwnd);
+                    s_iStage = 0;
+                    s_bGotUpdateDir = FALSE;
+                    s_hThread = ::CreateThread(NULL, 0, StageThreadFunc, hwnd, 0, NULL);
+                    if (!s_hThread)
+                    {
+                        skip("!s_hThread\n");
+                        DestroyWindow(hwnd);
+                    }
+                    break;
                 }
-                break;
-            case IDNO:
-                s_iStage = -1;
-                DestroyWindow(hwnd);
-                break;
-            case IDRETRY:
-                ::CloseHandle(s_hThread);
-                ++s_iStage;
-                s_bGotUpdateDir = FALSE;
-                s_hThread = ::CreateThread(NULL, 0, StageThreadFunc, hwnd, 0, NULL);
-                if (!s_hThread)
+                case IDRETRY: // New stage
                 {
-                    skip("!s_hThread\n");
-                    DestroyWindow(hwnd);
+                    ::CloseHandle(s_hThread);
+                    ++s_iStage;
+                    s_bGotUpdateDir = FALSE;
+                    s_hThread = ::CreateThread(NULL, 0, StageThreadFunc, hwnd, 0, NULL);
+                    if (!s_hThread)
+                    {
+                        skip("!s_hThread\n");
+                        DestroyWindow(hwnd);
+                    }
+                    break;
                 }
-                break;
+                case IDNO: // Finish
+                {
+                    s_iStage = -1;
+                    DestroyWindow(hwnd);
+                    break;
+                }
             }
             break;
 
         case WM_COPYDATA:
             if (s_iStage < 0 || s_iStep < 0)
                 break;
-            if (!OnCopyData(hwnd, (HWND)wParam, (COPYDATASTRUCT*)lParam))
-            {
-                trace("Calm down...\n");
-                ::Sleep(1000);
-            }
+
+            OnCopyData(hwnd, (HWND)wParam, (COPYDATASTRUCT*)lParam);
             break;
 
         case WM_DESTROY:
@@ -555,7 +585,7 @@ static BOOL TEST_Init(void)
     // prepare for files and dirs
     DoBuildFilesAndDirs();
 
-    // Create the window
+    // Register main window
     WNDCLASSW wc = { 0, MainWndProc };
     wc.hInstance = GetModuleHandleW(NULL);
     wc.hIcon = LoadIconW(NULL, IDI_APPLICATION);
@@ -568,6 +598,7 @@ static BOOL TEST_Init(void)
         return FALSE;
     }
 
+    // Create the main window
     HWND hwnd = CreateWindowW(MAIN_CLASSNAME, MAIN_CLASSNAME, WS_OVERLAPPEDWINDOW,
                               CW_USEDEFAULT, CW_USEDEFAULT, 400, 100,
                               NULL, NULL, GetModuleHandleW(NULL), NULL);
@@ -576,10 +607,10 @@ static BOOL TEST_Init(void)
         skip("CreateWindowW failed\n");
         return FALSE;
     }
-
     ::ShowWindow(hwnd, SW_SHOWNORMAL);
     ::UpdateWindow(hwnd);
 
+    // Find sub-window
     s_hSubWnd = DoWaitForWindow(SUB_CLASSNAME, SUB_CLASSNAME, FALSE, FALSE);
     if (!s_hSubWnd)
     {
@@ -587,6 +618,7 @@ static BOOL TEST_Init(void)
         return FALSE;
     }
 
+    // Start testing
     SendMessageW(s_hSubWnd, WM_COMMAND, IDYES, 0);
 
     return TRUE;

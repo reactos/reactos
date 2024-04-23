@@ -83,30 +83,39 @@ static BOOL InitHook(HWND hwnd)
     LONG events;
     switch (s_iStage)
     {
-    case 0:
-        entry.fRecursive = TRUE;
-        entry.pidl = s_pidl[DIRTYPE_DESKTOP];
-        sources = SHCNRF_NewDelivery | SHCNRF_InterruptLevel | SHCNRF_ShellLevel | SHCNRF_RecursiveInterrupt;
-        events = EVENTS;
-        break;
-    case 1:
-        entry.fRecursive = TRUE;
-        entry.pidl = s_pidl[DIRTYPE_DRIVES];
-        sources = SHCNRF_NewDelivery | SHCNRF_InterruptLevel | SHCNRF_ShellLevel | SHCNRF_RecursiveInterrupt;
-        events = EVENTS;
-        break;
-    case 2:
-        entry.fRecursive = FALSE;
-        entry.pidl = s_pidl[DIRTYPE_DIR1];
-        sources = SHCNRF_NewDelivery | SHCNRF_InterruptLevel | SHCNRF_ShellLevel;
-        events = EVENTS;
-        break;
-    case 3:
-        entry.fRecursive = TRUE;
-        entry.pidl = s_pidl[DIRTYPE_DIR1];
-        sources = SHCNRF_NewDelivery | SHCNRF_InterruptLevel | SHCNRF_ShellLevel | SHCNRF_RecursiveInterrupt;
-        events = EVENTS;
-        break;
+        case 0:
+        {
+            entry.fRecursive = TRUE;
+            entry.pidl = s_pidl[DIRTYPE_DESKTOP];
+            sources = SHCNRF_NewDelivery | SHCNRF_ShellLevel;
+            events = EVENTS;
+            break;
+        }
+        case 1:
+        {
+            entry.fRecursive = TRUE;
+            entry.pidl = s_pidl[DIRTYPE_DRIVES];
+            sources = SHCNRF_NewDelivery | SHCNRF_ShellLevel;
+            events = EVENTS;
+            break;
+        }
+        case 2:
+        {
+            entry.fRecursive = FALSE;
+            entry.pidl = s_pidl[DIRTYPE_DIR1];
+            sources = SHCNRF_NewDelivery | SHCNRF_ShellLevel;
+            events = EVENTS;
+            break;
+        }
+        case 3:
+        {
+            entry.fRecursive = TRUE;
+            entry.pidl = s_pidl[DIRTYPE_DIR1];
+            sources = SHCNRF_NewDelivery | SHCNRF_ShellLevel | SHCNRF_InterruptLevel |
+                      SHCNRF_RecursiveInterrupt;
+            events = EVENTS;
+            break;
+        }
     }
 
     s_uRegID = SHChangeNotifyRegister(hwnd, sources, events, WM_SHELL_NOTIFY, 1, &entry);
@@ -133,12 +142,13 @@ OnCommand(HWND hwnd, UINT id)
         case IDOK:
         case IDCANCEL:
         case IDNO:
+            // Quit
             s_iStage = -1;
             UninitHook(hwnd);
             ::DestroyWindow(hwnd);
             break;
 
-        case IDYES:
+        case IDYES: // Start testing
             s_hMainWnd = ::FindWindow(MAIN_CLASSNAME, MAIN_CLASSNAME);
             if (!s_hMainWnd)
             {
@@ -150,7 +160,7 @@ OnCommand(HWND hwnd, UINT id)
             ::PostMessageW(s_hMainWnd, WM_COMMAND, IDYES, 0);
             break;
 
-        case IDRETRY:
+        case IDRETRY: // New stage
             UninitHook(hwnd);
             ++s_iStage;
             InitHook(hwnd);
