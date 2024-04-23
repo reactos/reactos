@@ -1524,9 +1524,11 @@ static BOOL parse_xml_header(xmlbuf_t* xmlbuf)
 
 static BOOL parse_text_content(xmlbuf_t* xmlbuf, xmlstr_t* content)
 {
-    const WCHAR *ptr = memchrW(xmlbuf->ptr, '<', xmlbuf->end - xmlbuf->ptr);
+    const WCHAR *ptr;
 
-    if (!ptr) return FALSE;
+    if (xmlbuf->error) return FALSE;
+
+    if (!(ptr = memchrW(xmlbuf->ptr, '<', xmlbuf->end - xmlbuf->ptr))) return set_error( xmlbuf );
 
     content->ptr = xmlbuf->ptr;
     content->len = ptr - xmlbuf->ptr;
