@@ -28,7 +28,7 @@ static INT s_iStage = -1, s_iStep = -1;
 static BYTE s_abChecks[NUM_CHECKS] = { 0 };
 static BOOL s_bGotUpdateDir = FALSE;
 
-static BOOL DoCreateEmptyFile(LPCWSTR pszFileName)
+static BOOL DoCreateFile(LPCWSTR pszFileName)
 {
     HANDLE hFile = ::CreateFileW(pszFileName, GENERIC_WRITE, FILE_SHARE_READ, NULL,
                                  CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -348,7 +348,7 @@ static DWORD WINAPI StageThreadFunc(LPVOID arg)
     trace("Step %d\n", s_iStep);
     ::Sleep(2000); // Extra wait
     ZeroMemory(s_abChecks, sizeof(s_abChecks));
-    ret = DoCreateEmptyFile(s_szFile1InDir1);
+    ret = DoCreateFile(s_szFile1InDir1);
     ok_int(ret, TRUE);
     SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW | SHCNF_FLUSH | SHCNF_FLUSHNOWAIT, s_szFile1InDir1, 0);
     ::Sleep(INTERVAL);
@@ -388,7 +388,7 @@ static DWORD WINAPI StageThreadFunc(LPVOID arg)
     ++s_iStep;
     trace("Step %d\n", s_iStep);
     ZeroMemory(s_abChecks, sizeof(s_abChecks));
-    ret = DoCreateEmptyFile(s_szFile1InDir1InDir1);
+    ret = DoCreateFile(s_szFile1InDir1InDir1);
     ok_int(ret, TRUE);
     SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW | SHCNF_FLUSH | SHCNF_FLUSHNOWAIT, s_szFile1InDir1InDir1, NULL);
     ::Sleep(INTERVAL);
