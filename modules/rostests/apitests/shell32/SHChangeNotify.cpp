@@ -616,9 +616,6 @@ START_TEST(SHChangeNotify)
     trace("Please close all Explorer windows before testing.\n");
     trace("Please don't operate your PC while testing.\n");
 
-    trace("Calm down... 3 seconds\n");
-    ::Sleep(3000);
-
     DWORD dwOldTick = GetTickCount();
     TEST_Main();
     DWORD dwNewTick = GetTickCount();
