@@ -1948,13 +1948,14 @@ HEADER_MouseMove (HEADER_INFO *infoPtr, LPARAM lParam)
                     
                     if (nWidth < 0) nWidth = 0;
                     infoPtr->items[infoPtr->iMoveItem].cxy = nWidth;
+                    InvalidateRect(infoPtr->hwndSelf, &lpItem->rect, FALSE);
                     HEADER_SetItemBounds(infoPtr);
                     
                     GetClientRect(infoPtr->hwndSelf, &rcClient);
                     rcScroll = rcClient;
                     rcScroll.left = lpItem->rect.left + nOldWidth;
-                    ScrollWindowEx(infoPtr->hwndSelf, nWidth - nOldWidth, 0, &rcScroll, &rcClient, NULL, NULL, 0);
-                    InvalidateRect(infoPtr->hwndSelf, &lpItem->rect, FALSE);
+                    ScrollWindowEx(infoPtr->hwndSelf, nWidth - nOldWidth, 0, &rcScroll, &rcClient,
+                        NULL, NULL, SW_INVALIDATE);
                     UpdateWindow(infoPtr->hwndSelf);
                     
                     HEADER_SendNotifyWithIntFieldT(infoPtr, HDN_ITEMCHANGEDW, infoPtr->iMoveItem, HDI_WIDTH, nWidth);
