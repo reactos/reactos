@@ -112,6 +112,7 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
                 }
 
                 /* And fail */
+                *InterruptObject = NULL;
                 return STATUS_INVALID_PARAMETER;
             }
 

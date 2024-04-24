@@ -17,6 +17,8 @@ IDI_APP_ICON ICON "res/main.ico"
 IDI_BMP_ICON ICON "res/bmp.ico"
 IDI_PNG_ICON ICON "res/png.ico"
 
+IDC_HANDDRAG CURSOR "res/handdrag.cur"
+
 IDB_PREV_PIC   BITMAP "res/prev.bmp"
 IDB_NEXT_PIC   BITMAP "res/next.bmp"
 IDB_BEST_FIT   BITMAP "res/best_fit.bmp"
@@ -26,6 +28,8 @@ IDB_ZOOM_IN    BITMAP "res/zoomp.bmp"
 IDB_ZOOM_OUT   BITMAP "res/zoomm.bmp"
 IDB_ROT_CLOCKW BITMAP "res/rot1.bmp"
 IDB_ROT_COUNCW BITMAP "res/rot2.bmp"
+IDB_ROT_CWSAVE  BITMAP "res/rot1save.bmp"
+IDB_ROT_CCWSAVE BITMAP "res/rot2save.bmp"
 IDB_DELETE     BITMAP "res/delete.bmp"
 IDB_PRINT      BITMAP "res/print.bmp"
 IDB_SAVEAS     BITMAP "res/save.bmp"
@@ -41,6 +45,8 @@ BEGIN
     VK_F11,      IDC_SLIDE_SHOW, VIRTKEY
     VK_ADD,      IDC_ZOOM_IN,    VIRTKEY
     VK_SUBTRACT, IDC_ZOOM_OUT,   VIRTKEY
+    VK_OEM_PLUS, IDC_ZOOM_IN,    VIRTKEY, SHIFT
+    VK_OEM_MINUS,IDC_ZOOM_OUT,   VIRTKEY
     "K",         IDC_ROT_CLOCKW, VIRTKEY, CONTROL
     "L",         IDC_ROT_COUNCW, VIRTKEY, CONTROL
     VK_DELETE,   IDC_DELETE,     VIRTKEY
@@ -48,6 +54,7 @@ BEGIN
     "S",         IDC_SAVEAS,     VIRTKEY, CONTROL
     "E",         IDC_MODIFY,     VIRTKEY, CONTROL
     VK_F1,       IDC_HELP_TOC,   VIRTKEY
+    VK_ESCAPE,   IDC_ENDSLIDESHOW, VIRTKEY
 END
 
 /* UTF-8 */

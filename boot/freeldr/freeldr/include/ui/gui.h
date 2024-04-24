@@ -21,11 +21,8 @@
 
 #define TITLE_BOX_CHAR_HEIGHT        5
 
-///////////////////////////////////////////////////////////////////////////////////////
-//
-// Graphical User Interface Functions
-//
-///////////////////////////////////////////////////////////////////////////////////////
+/* Graphical User Interface Functions ****************************************/
+
 VOID    GuiDrawBackdrop(VOID);                                    // Fills the entire screen with a backdrop
 VOID    GuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR FillChar, UCHAR Attr /* Color Attributes */);    // Fills the area specified with FillChar and Attr
 VOID    GuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom);    // Draws a shadow on the bottom and right sides of the area specified
@@ -34,20 +31,34 @@ VOID    GuiDrawText(ULONG X, ULONG Y, PUCHAR Text, UCHAR Attr);    // Draws text
 VOID    GuiDrawText2(ULONG X, ULONG Y, ULONG MaxNumChars, PUCHAR Text, UCHAR Attr);    // Draws text at coordinates specified
 VOID    GuiDrawStatusText(PCSTR StatusText);                    // Draws text at the very bottom line on the screen
 VOID    GuiUpdateDateTime(VOID);                                // Updates the date and time
-VOID    GuiSaveScreen(PUCHAR Buffer);                            // Saves the screen so that it can be restored later
-VOID    GuiRestoreScreen(PUCHAR Buffer);                        // Restores the screen from a previous save
-VOID    GuiMessageBox(PCSTR MessageText);                        // Displays a message box on the screen with an ok button
-VOID    GuiMessageBoxCritical(PCSTR MessageText);                // Displays a message box on the screen with an ok button using no system resources
+
+/* Saves the screen so that it can be restored later */
+_Ret_maybenull_
+__drv_allocatesMem(Mem)
+PUCHAR
+GuiSaveScreen(VOID);
+
+/* Restores the screen from a previous save */
+VOID
+GuiRestoreScreen(
+    _In_opt_ __drv_freesMem(Mem) PUCHAR Buffer);
+
+/* Displays a message box on the screen with an ok button */
+VOID
+GuiMessageBox(
+    _In_ PCSTR MessageText);
+
+/* Displays a message box on the screen with an ok button using no system resources */
+VOID
+GuiMessageBoxCritical(
+    _In_ PCSTR MessageText);
+
 VOID    GuiDrawProgressBar(ULONG Position, ULONG Range);        // Draws the progress bar showing nPos percent filled
 
 UCHAR    GuiTextToColor(PCSTR ColorText);                        // Converts the text color into it's equivalent color value
 UCHAR    GuiTextToFillStyle(PCSTR FillStyleText);                // Converts the text fill into it's equivalent fill value
 
-///////////////////////////////////////////////////////////////////////////////////////
-//
-// Menu Functions
-//
-///////////////////////////////////////////////////////////////////////////////////////
+/* Menu Functions ************************************************************/
 
 BOOLEAN
 GuiDisplayMenu(

@@ -156,7 +156,7 @@ PartitionDescription(
     PCSTR Unit;
 
     /* Get the partition size */
-    PartSize = PartEntry->SectorCount.QuadPart * PartEntry->DiskEntry->BytesPerSector;
+    PartSize = GetPartEntrySizeInBytes(PartEntry);
     PrettifySize2(&PartSize, &Unit);
 
     if (PartEntry->IsPartitioned == FALSE)
@@ -307,7 +307,7 @@ DiskDescription(
     PCSTR Unit;
 
     /* Get the disk size */
-    DiskSize = DiskEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
+    DiskSize = GetDiskSizeInBytes(DiskEntry);
     PrettifySize1(&DiskSize, &Unit);
 
     //
@@ -316,7 +316,7 @@ DiskDescription(
     if (DiskEntry->DriverName.Length > 0)
     {
         RtlStringCchPrintfA(strBuffer, cchBuffer,
-                            MUIGetString(STRING_HDDINFO_1),
+                            MUIGetString(STRING_HDDINFO1),
                             DiskSize,
                             Unit,
                             DiskEntry->DiskNumber,
@@ -331,7 +331,7 @@ DiskDescription(
     else
     {
         RtlStringCchPrintfA(strBuffer, cchBuffer,
-                            MUIGetString(STRING_HDDINFO_2),
+                            MUIGetString(STRING_HDDINFO2),
                             DiskSize,
                             Unit,
                             DiskEntry->DiskNumber,

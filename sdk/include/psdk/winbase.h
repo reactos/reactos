@@ -985,6 +985,7 @@ typedef struct _FILE_ID_DESCRIPTOR {
     } DUMMYUNIONNAME;
 } FILE_ID_DESCRIPTOR, *LPFILE_ID_DESCRIPTOR;
 
+#if (NTDDI_VERSION >= NTDDI_LONGHORN) || defined(__REACTOS__)
 typedef enum _FILE_INFO_BY_HANDLE_CLASS {
     FileBasicInfo,
     FileStandardInfo,
@@ -1002,13 +1003,24 @@ typedef enum _FILE_INFO_BY_HANDLE_CLASS {
     FileRemoteProtocolInfo,
     FileFullDirectoryInfo,
     FileFullDirectoryRestartInfo,
+#if (NTDDI_VERSION >= NTDDI_WIN8) || defined(__REACTOS__)
     FileStorageInfo,
     FileAlignmentInfo,
     FileIdInfo,
     FileIdExtdDirectoryInfo,
     FileIdExtdDirectoryRestartInfo,
-    MaximumFileInfoByHandlesClass
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS1) || defined(__REACTOS__)
+    FileDispositionInfoEx,
+    FileRenameInfoEx,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_19H1) || defined(__REACTOS__)
+    FileCaseSensitiveInfo,
+    FileNormalizedNameInfo,
+#endif
+    MaximumFileInfoByHandleClass
 } FILE_INFO_BY_HANDLE_CLASS, *PFILE_INFO_BY_HANDLE_CLASS;
+#endif
 
 typedef struct _FILE_ID_BOTH_DIR_INFO {
     DWORD         NextEntryOffset;
@@ -2020,9 +2032,7 @@ BOOL WINAPI FreeLibrary(HMODULE);
 DECLSPEC_NORETURN void WINAPI FreeLibraryAndExitThread(HMODULE,DWORD);
 #define FreeModule(m) FreeLibrary(m)
 #define FreeProcInstance(p) (void)(p)
-#ifndef XFree86Server
 BOOL WINAPI FreeResource(HGLOBAL);
-#endif /* ndef XFree86Server */
 PVOID WINAPI FreeSid(PSID);
 BOOL WINAPI GetAce(PACL,DWORD,LPVOID*);
 BOOL WINAPI GetAclInformation(PACL,PVOID,DWORD,ACL_INFORMATION_CLASS);
@@ -3211,6 +3221,71 @@ SetFirmwareEnvironmentVariableW(
 #endif
 
 #endif /* _WIN32_WINNT >= 0x0502 */
+
+#if (_WIN32_WINNT >= 0x0602)
+
+_Success_(return > 0)
+WINBASEAPI
+DWORD
+WINAPI
+GetFirmwareEnvironmentVariableExW(
+    _In_ LPCWSTR lpName,
+    _In_ LPCWSTR lpGuid,
+    _Out_writes_bytes_to_opt_(nSize, return) PVOID pBuffer,
+    _In_ DWORD nSize,
+    _Out_opt_ PDWORD pdwAttribubutes);
+
+_Success_(return > 0)
+WINBASEAPI
+DWORD
+WINAPI
+GetFirmwareEnvironmentVariableExA(
+    _In_ LPCSTR lpName,
+    _In_ LPCSTR lpGuid,
+    _Out_writes_bytes_to_opt_(nSize, return) PVOID pBuffer,
+    _In_ DWORD nSize,
+    _Out_opt_ PDWORD pdwAttribubutes);
+
+#ifdef UNICODE
+#define GetFirmwareEnvironmentVariableEx GetFirmwareEnvironmentVariableExW
+#else
+#define GetFirmwareEnvironmentVariableEx GetFirmwareEnvironmentVariableExA
+#endif
+
+WINBASEAPI
+BOOL
+WINAPI
+SetFirmwareEnvironmentVariableExW(
+    _In_ LPCWSTR lpName,
+    _In_ LPCWSTR lpGuid,
+    _In_reads_bytes_opt_(nSize) PVOID pValue,
+    _In_ DWORD nSize,
+    _In_ DWORD dwAttributes);
+
+WINBASEAPI
+BOOL
+WINAPI
+SetFirmwareEnvironmentVariableExA(
+    _In_ LPCSTR lpName,
+    _In_ LPCSTR lpGuid,
+    _In_reads_bytes_opt_(nSize) PVOID pValue,
+    _In_ DWORD nSize,
+    _In_ DWORD dwAttributes);
+
+#ifdef UNICODE
+#define SetFirmwareEnvironmentVariableEx SetFirmwareEnvironmentVariableExW
+#else
+#define SetFirmwareEnvironmentVariableEx SetFirmwareEnvironmentVariableExA
+#endif
+
+_Success_(return)
+WINBASEAPI
+BOOL
+WINAPI
+GetFirmwareType(
+    _Out_ PFIRMWARE_TYPE FirmwareType);
+
+#endif /* _WIN32_WINNT >= 0x0602 */
 
 UINT WINAPI SetHandleCount(UINT);
 BOOL WINAPI SetHandleInformation(HANDLE,DWORD,DWORD);

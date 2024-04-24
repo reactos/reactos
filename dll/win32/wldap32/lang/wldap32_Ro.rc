@@ -2,6 +2,7 @@
  * Copyright 2005 Hans Leidekker
  * Copyright 2010 Claudia Cotună
  *                Michael Stefaniuc
+ * Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -115,11 +116,11 @@ STRINGTABLE
     88 "Anulat de utilizator"
     89 "Eroare de parametri"
     90 "Memorie insuficientă"
-    91 "Conectarea la serverul LDAP nu a putut fi realizată"
+    91 "Conectarea la serverul LDAP nu s-a putut realiza"
     92 "Operațiune nesuportată de această versiune a protocolului LDAP"
     93 "Controlul specificat nu a fost găsit în mesaj"
     94 "Nici un rezultat în mesaj"
     95 "Mai multe rezultate returnate"
     96 "Buclă la gestionarea referenților"
-    97 "Limită număr referenți depășită"
+    97 "Limita numărului de referenți a fost depășită"
 }

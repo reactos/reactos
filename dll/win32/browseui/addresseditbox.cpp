@@ -130,18 +130,12 @@ HRESULT CAddressEditBox::RefreshAddress()
 
     /* Set the path if filesystem; otherwise use the name */
     WCHAR szPathOrName[MAX_PATH];
-    if (!SHGetPathFromIDListW(absolutePIDL, szPathOrName))
-    {
-        STRRET ret;
-        hr = pShellFolder->GetDisplayNameOf(pidlChild, SHGDN_FORADDRESSBAR | SHGDN_FORPARSING, &ret);
-        if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
+    SHGDNF flags = SHGDN_FORADDRESSBAR;
+    if (gCabinetState.fFullPathAddress)
+        flags |= SHGDN_FORPARSING;
 
-        hr = StrRetToBufW(&ret, pidlChild, szPathOrName, _countof(szPathOrName));
-        if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
-    }
-    item.pszText = szPathOrName;
+    if (SUCCEEDED(IEGetNameAndFlags(absolutePIDL, flags, szPathOrName, _countof(szPathOrName), NULL)))
+        item.pszText = szPathOrName;
 
     /* Ownership of absolutePIDL will be moved to fCombobox. See CBEN_DELETEITEM */
     item.lParam = reinterpret_cast<LPARAM>(absolutePIDL.Detach());
@@ -324,8 +318,16 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
     hr = psf->CompareIDs(0, pidl, pidlLastParsed);
 
     SHFree(pidl);
+
     if (hr == 0)
+    {
+        if (pidlLastParsed)
+        {
+            ILFree(pidlLastParsed);
+            pidlLastParsed = NULL;
+        }
         return S_OK;
+    }
 
     /*
      * Attempt to browse to the parsed pidl
@@ -643,4 +645,10 @@ LPITEMIDLIST CAddressEditBox::GetItemData(int index)
     item.iItem = index;
     SendMessageW(hComboBoxEx, CBEM_GETITEMW, 0, (LPARAM)&item);
     return (LPITEMIDLIST)item.lParam;
+}
+
+LRESULT CAddressEditBox::OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    RefreshAddress();
+    return NO_ERROR;
 }

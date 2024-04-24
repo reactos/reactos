@@ -385,6 +385,7 @@ InputList_Process(VOID)
     DWORD dwNumber;
     BOOL bRet = FALSE;
     HKEY hPreloadKey, hSubstKey;
+    HKL hDefaultKL = NULL;
 
     if (!InputList_PrepareUserRegistry(&hPreloadKey, &hSubstKey))
     {
@@ -395,12 +396,28 @@ InputList_Process(VOID)
         return FALSE;
     }
 
+    /* Find change in the IME HKLs */
+    for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
+    {
+        if (!IS_IME_HKL(pCurrent->hkl))
+            continue;
+
+        if ((pCurrent->wFlags & INPUT_LIST_NODE_FLAG_ADDED) ||
+            (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_EDITED) ||
+            (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DELETED))
+        {
+            bRet = TRUE; /* Reboot is needed */
+            break;
+        }
+    }
+
     /* Process DELETED and EDITED entries */
     for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
     {
         if ((pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DELETED) ||
             (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_EDITED))
         {
+
             /* Only unload the DELETED and EDITED entries */
             if (UnloadKeyboardLayout(pCurrent->hkl))
             {
@@ -426,6 +443,9 @@ InputList_Process(VOID)
 
             /* Activate the DEFAULT entry */
             ActivateKeyboardLayout(pCurrent->hkl, KLF_RESET);
+
+            /* Save it */
+            hDefaultKL = pCurrent->hkl;
             break;
         }
     }
@@ -451,7 +471,7 @@ InputList_Process(VOID)
     }
 
     /* Change the default keyboard language */
-    if (SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &pCurrent->hkl, 0))
+    if (SystemParametersInfoW(SPI_SETDEFAULTINPUTLANG, 0, &hDefaultKL, 0))
     {
         DWORD dwRecipients = BSM_ALLDESKTOPS | BSM_APPLICATIONS;
 
@@ -459,7 +479,7 @@ InputList_Process(VOID)
                                 &dwRecipients,
                                 WM_INPUTLANGCHANGEREQUEST,
                                 INPUTLANGCHANGE_SYSCHARSET,
-                                (LPARAM)pCurrent->hkl);
+                                (LPARAM)hDefaultKL);
     }
 
     /* Retry to delete (in case of failure to delete the default keyboard) */

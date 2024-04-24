@@ -923,59 +923,6 @@ static MUI_ENTRY deDESuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY deDEBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Der Bootsektor konnte nicht auf der",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "Festplatte Ihres Computers installiert werden.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Bitte legen Sie eine formatierte Diskette in Laufwerk A: ein und",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "dr\201cken Sie ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = Fortsetzen   F3 = Installation abbrechen",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY deDESelectPartitionEntries[] =
 {
     {
@@ -1016,7 +963,7 @@ static MUI_ENTRY deDESelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  P erstellt eine prim\204re Partition.",
+        "\x07  C erstellt eine prim\204re/logische Partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1030,13 +977,6 @@ static MUI_ENTRY deDESelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  L erstellt eine logische Partition.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  D l\224scht eine vorhandene Partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1304,7 +1244,7 @@ static MUI_ENTRY deDEFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Die gew\201nschte Partition wird nun formatiert.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1466,7 +1406,7 @@ static MUI_ENTRY deDEFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY deDEBootLoaderEntries[] =
+static MUI_ENTRY deDEBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1478,7 +1418,7 @@ static MUI_ENTRY deDEBootLoaderEntries[] =
     {
         6,
         8,
-        "Bestimmen Sie, wo der Bootloader installiert werden soll:",
+        "Bestimmen Sie, wo Setup den Bootloader installieren soll:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1535,6 +1475,13 @@ static MUI_ENTRY deDEBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Setup installiert den Bootloader.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Bootloader wird installiert. Bitte warten...",
@@ -1547,6 +1494,59 @@ static MUI_ENTRY deDEBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY deDEBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Der Bootsektor konnte nicht auf der Festplatte Ihres Computers",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "installiert werden.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Bitte legen Sie eine formatierte Diskette in Laufwerk A: ein",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "und dr\201cken Sie ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = Fortsetzen   F3 = Installation abbrechen",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY deDEKeyboardSettingsEntries[] =
@@ -1938,13 +1938,6 @@ MUI_ERROR deDEErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Sie k\224nnen unpartitionierten Speicher nicht l\224schen!\n"
-        "\n"
-        "  * Eine beliebige Taste zum Fortsetzen dr\201cken.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Der %S-Bootcode konnte nicht auf der Partition installiert werden.",
         "ENTER = Computer neu starten"
@@ -2185,8 +2178,8 @@ MUI_PAGE deDEPages[] =
         deDEKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        deDEBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        deDEBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2201,12 +2194,12 @@ MUI_PAGE deDEPages[] =
         deDESuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         deDEBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        deDEBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        deDEBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,
@@ -2223,25 +2216,27 @@ MUI_STRING deDEStrings[] =
     {STRING_PLEASEWAIT,
      "   Bitte warten..."},
     {STRING_INSTALLCREATEPARTITION,
-     "  ENTER = Installieren   P = Prim\204re   E = Erweiterte   F3 = Installation abbr."},
+     "  ENTER = Installieren   C = Prim\204re   E = Erweiterte   F3 = Installation abbr."},
     {STRING_INSTALLCREATELOGICAL,
-     "  ENTER = Installieren   L = Logisches Laufwerk   F3 = Installation abbrechen"},
+     "  ENTER = Installieren   C = Logische Partition   F3 = Installation abbrechen"},
     {STRING_INSTALLDELETEPARTITION,
      "  ENTER = Installieren   D = Partition l\224schen   F3 = Installation abbrechen"},
     {STRING_DELETEPARTITION,
      "   D = Partition l\224schen   F3 = Installation abbrechen"},
     {STRING_PARTITIONSIZE,
      "Gr\224\341e der neuen Partition:"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
      "Eine prim\204re Partition soll hier erstellt werden:"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "Eine erweiterte Partition soll hier erstellt werden:"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
-     "Ein logisches Laufwerk soll hier erstellt werden:"},
-    {STRING_HDDSIZE,
+     "Eine logische Partition soll hier erstellt werden:"},
+    {STRING_HDPARTSIZE,
     "Bitte geben Sie die Gr\224\341e der neuen Partition in Megabyte ein."},
     {STRING_CREATEPARTITION,
      "  ENTER = Partition erstellen   ESC = Abbrechen   F3 = Installation abbrechen"},
+    {STRING_NEWPARTITION,
+    "Setup erstellte eine neue Partition auf"},
     {STRING_PARTFORMAT,
     "Diese Partition wird als n\204chstes formatiert."},
     {STRING_NONFORMATTEDPART,
@@ -2292,30 +2287,28 @@ MUI_STRING deDEStrings[] =
     "Der h\204ufigste Grund hierf\201r ist die Verwendung einer USB-Tastatur\r\n"},
     {STRING_CONSOLEFAIL3,
     "USB-Tastaturen werden noch nicht vollst\204ndig unterst\201tzt\r\n"},
-    {STRING_FORMATTINGDISK,
-    "Ihre Festplatte wird formatiert"},
+    {STRING_FORMATTINGPART,
+    "Die Partition wird formatiert..."},
     {STRING_CHECKINGDISK,
-    "Ihre Festplatte wird \201berpr\201ft"},
+    "Die Festplatte wird \201berpr\201ft..."},
     {STRING_FORMATDISK1,
     " Partition mit dem %S-Dateisystem formatieren (Schnell) "},
     {STRING_FORMATDISK2,
     " Partition mit dem %S-Dateisystem formatieren "},
     {STRING_KEEPFORMAT,
     " Dateisystem beibehalten (Keine Ver\204nderungen) "},
-    {STRING_HDINFOPARTCREATE_1,
+    {STRING_HDDISK1,
     "%s."},
-    {STRING_HDINFOPARTDELETE_1,
+    {STRING_HDDISK2,
     "auf %s."},
     {STRING_PARTTYPE,
     "Typ 0x%02x"},
-    {STRING_HDDINFO_1,
+    {STRING_HDDINFO1,
     // "Festplatte %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
     "%I64u %s Festplatte %lu (Port=%hu, Bus=%hu, Id=%hu) auf %wZ [%s]"},
-    {STRING_HDDINFO_2,
+    {STRING_HDDINFO2,
     // "Festplatte %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]"
     "%I64u %s Festplatte %lu (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "Setup erstellte eine neue Partition auf"},
     {STRING_UNPSPACE,
     "Unpartitionierter Speicher"},
     {STRING_MAXSIZE,

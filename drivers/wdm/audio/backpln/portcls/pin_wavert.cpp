@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 class CPortPinWaveRT : public CUnknownImpl<IPortPinWaveRT>
@@ -60,7 +57,6 @@ protected:
 
 };
 
-
 typedef struct
 {
     CPortPinWaveRT *Pin;
@@ -68,8 +64,8 @@ typedef struct
     KSSTATE State;
 }SETSTREAM_CONTEXT, *PSETSTREAM_CONTEXT;
 
-
 //==================================================================================================================================
+
 NTSTATUS
 NTAPI
 CPortPinWaveRT::QueryInterface(
@@ -285,7 +281,6 @@ CPortPinWaveRT::DeviceIoControl(
     PIO_STACK_LOCATION IoStack;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-
 
     switch (IoStack->Parameters.DeviceIoControl.IoControlCode)
     {
@@ -670,7 +665,6 @@ cleanup:
     }
     return Status;
 }
-
 
 NTSTATUS
 NewPortPinWaveRT(

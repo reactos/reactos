@@ -1,4 +1,10 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+/*
+ * PROJECT:     ReactOS AT utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -33,7 +39,7 @@ timp               Specifică timpul de lansare a comenzii.\n\
     IDS_JOBS_LIST "ID stare    Zi                      Oră           Comanda\n"
     IDS_NO_ENTRIES "Nu există comenzi planificate.\n"
 
-    IDS_CONFIRM_QUESTION "Sigur doriți continuarea acestei operații? (D|N) [N]: "
+    IDS_CONFIRM_QUESTION "Sigur doriți continuarea acestei operații? (D/N) [N]: "
     IDS_CONFIRM_INVALID "\nAcesta nu este un răspuns valid.\n"
     IDS_CONFIRM_YES "D"
     IDS_CONFIRM_NO "N"

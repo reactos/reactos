@@ -7,7 +7,11 @@
  *                  Code based on MSDN samples regarding CPoint, CSize, CRect
  */
 
-#include <apitest.h>
+#ifdef HAVE_APITEST
+    #include <apitest.h>
+#else
+    #include "atltest.h"
+#endif
 #include <windows.h>
 #include <atltypes.h>
 
@@ -527,6 +531,46 @@ static void test_CRect()
     rect2 = rect1 - sz;
     rectResult = CRect(-100, -50, 200, 250);
     ok_rect(rectResult, rect2);
+
+    SetRect(&rect2, 10, 20, 300, 120);
+    rect2.MoveToX(30);
+    rectResult = CRect(30, 20, 320, 120);
+    ok_rect(rectResult, rect2);
+
+    SetRect(&rect2, 10, 20, 300, 120);
+    rect2.MoveToY(40);
+    rectResult = CRect(10, 40, 300, 140);
+    ok_rect(rectResult, rect2);
+
+    SetRect(&rect2, 10, 20, 300, 120);
+    rect2.MoveToXY(30, 40);
+    rectResult = CRect(30, 40, 320, 140);
+    ok_rect(rectResult, rect2);
+
+    SetRect(&rect2, 100, 80, -100, -50);
+    rectResult = CRect(-100, -50, 100, 80);
+    rect2.NormalizeRect();
+    ok_rect(rectResult, rect2);
+
+    rect2.SetRectEmpty();
+    rectResult = CRect(0, 0, 0, 0);
+    ok_rect(rectResult, rect2);
+
+    BOOL ret;
+
+    rect1 = CRect(5, 40, 40, 120);
+    rect2 = CRect(10, 30, 80, 100);
+    ret = rect.SubtractRect(rect1, rect2);
+    rectResult = CRect(10, 30, 80, 100);
+    ok_int(ret, TRUE);
+    ok_rect(rectResult, rect2);
+
+    rect1 = CRect(10, 40, 70, 110);
+    rect2 = CRect(8, 20, 40, 130);
+    ret = rect.SubtractRect(rect1, rect2);
+    rectResult = CRect(8, 20, 40, 130);
+    ok_int(ret, TRUE);
+    ok_rect(rect2, rectResult);
 }
 
 

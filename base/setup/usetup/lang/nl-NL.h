@@ -260,7 +260,7 @@ static MUI_ENTRY nlNLIntroPageEntries[] =
     {
         0,
         0,
-        "ENTER = Continue   F3 = Quit",
+        "ENTER = Doorgaan   F3 = Afsluiten",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -942,59 +942,6 @@ static MUI_ENTRY nlNLSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY nlNLBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Setup kan de bootloader niet op de vaste schijf van uw computer",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "installeren",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Voer een geformatteerde diskette in station A: in en",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "druk op ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = Doorgaan   F3 = Afsluiten",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY nlNLSelectPartitionEntries[] =
 {
     {
@@ -1035,7 +982,7 @@ static MUI_ENTRY nlNLSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Press P to create a primary partition.",
+        "\x07  Druk op C om een primaire/logische partitie aan te maken.",
 //        "\x07  Druk op C om een nieuwe partitie aan te maken.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1043,20 +990,13 @@ static MUI_ENTRY nlNLSelectPartitionEntries[] =
     {
         8,
         17,
-        "\x07  Press E to create an extended partition.",
+        "\x07  Druk op E om een uitgebreide partitie aan te maken.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "\x07  Press L to create a logical partition.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Druk op D om een bestaande partitie te verwijderen.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1324,7 +1264,7 @@ static MUI_ENTRY nlNLFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Setup gaat nu de partitie formatteren. Druk op ENTER om door te gaan.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1479,7 +1419,7 @@ static MUI_ENTRY nlNLFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY nlNLBootLoaderEntries[] =
+static MUI_ENTRY nlNLBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1491,7 +1431,7 @@ static MUI_ENTRY nlNLBootLoaderEntries[] =
     {
         6,
         8,
-        "Setup installeert de bootloader.",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1548,6 +1488,13 @@ static MUI_ENTRY nlNLBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Setup installeert de bootloader.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Installing the bootloader onto the media, please wait...",
@@ -1560,6 +1507,59 @@ static MUI_ENTRY nlNLBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY nlNLBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup kan de bootloader niet op de vaste schijf van uw computer",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "installeren.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Voer een geformatteerde diskette in station A: in",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "en druk op ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = Doorgaan   F3 = Afsluiten",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY nlNLkeyboardSettingsEntries[] =
@@ -1958,13 +1958,6 @@ MUI_ERROR nlNLErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "U kunt ongebruikte schijfruimte voor partities niet verwijderen!\n"
-        "\n"
-        "  * Druk op een willekeurige toets om door te gaan.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Setup kan de %S bootcode op de systeempartitie niet installeren.",
         "ENTER = Computer opnieuw opstarten"
@@ -2205,8 +2198,8 @@ MUI_PAGE nlNLPages[] =
         nlNLkeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        nlNLBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        nlNLBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2221,12 +2214,12 @@ MUI_PAGE nlNLPages[] =
         nlNLSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         nlNLBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        nlNLBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        nlNLBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,
@@ -2243,27 +2236,29 @@ MUI_STRING nlNLStrings[] =
     {STRING_PLEASEWAIT,
      "   Een ogenblik geduld..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+     "   ENTER = Installeren   C = Primaire aanmaken   E = Uitgebreide aanmaken   F3 = Afsluiten"},
 //     "   ENTER = Installeren   C = Partitie aanmaken   F3 = Afsluiten"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
+     "   ENTER = Installeren   C = Logische Partitie aanmaken   F3 = Afsluiten"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Installeren   D = Partitie verwijderen   F3 = Afsluiten"},
     {STRING_DELETEPARTITION,
-     "   D = Delete Partition   F3 = Quit"},
+     "   D = Delete Partition   F3 = Afsluiten"},
     {STRING_PARTITIONSIZE,
      "Grootte nieuwe partitie:"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
      "You have chosen to create a primary partition on"},
 //     "U wilt een nieuwe partitie aanmaken op"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "You have chosen to create an extended partition on"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "You have chosen to create a logical partition on"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     "Voert u de grootte van de nieuwe partitie in in megabytes."},
     {STRING_CREATEPARTITION,
      "   ENTER = Partitie Aanmaken   ESC = Annuleren   F3 = Afsluiten"},
+    {STRING_NEWPARTITION,
+    "Setup heeft een nieuwe partitie aangemaakt op"},
     {STRING_PARTFORMAT,
     "Deze partitie zal vervolgens geformatteerd worden."},
     {STRING_NONFORMATTEDPART,
@@ -2314,30 +2309,28 @@ MUI_STRING nlNLStrings[] =
     "De meest voorkomende oorzaak is het gebruik van een USB toetsenbord.\r\n"},
     {STRING_CONSOLEFAIL3,
     "USB toetsenborden worden nog niet volledig ondersteund.\r\n"},
-    {STRING_FORMATTINGDISK,
-    "Setup is de vaste schijf aan het formatteren."},
+    {STRING_FORMATTINGPART,
+    "Setup is de partitie aan het formatteren..."},
     {STRING_CHECKINGDISK,
-    "Setup is de vaste schijf aan het controleren."},
+    "Setup is de vaste schijf aan het controleren..."},
     {STRING_FORMATDISK1,
     " Formatteer partitie als %S bestandssysteem (snel) "},
     {STRING_FORMATDISK2,
     " Formatteer partitie als %S bestandssysteem "},
     {STRING_KEEPFORMAT,
     " Behoud huidig bestandssysteem (geen wijzigingen) "},
-    {STRING_HDINFOPARTCREATE_1,
+    {STRING_HDDISK1,
     "%s."},
-    {STRING_HDINFOPARTDELETE_1,
+    {STRING_HDDISK2,
     "op %s."},
     {STRING_PARTTYPE,
     "Type 0x%02x"},
-    {STRING_HDDINFO_1,
+    {STRING_HDDINFO1,
     // "Schijf %lu (%I64u %s), Poort=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
     "%I64u %s Schijf %lu (Poort=%hu, Bus=%hu, Id=%hu) op %wZ [%s]"},
-    {STRING_HDDINFO_2,
+    {STRING_HDDINFO2,
     // "Schijf %lu (%I64u %s), Poort=%hu, Bus=%hu, Id=%hu [%s]"
     "%I64u %s Schijf %lu (Poort=%hu, Bus=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "Setup heeft een nieuwe partitie aangemaakt op"},
     {STRING_UNPSPACE,
     "Niet gepartitioneerde ruimte"},
     {STRING_MAXSIZE,

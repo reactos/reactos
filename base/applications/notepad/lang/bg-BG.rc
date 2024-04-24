@@ -154,7 +154,7 @@ BEGIN
     STRING_TEXT_FILES_TXT "Словесни файлове (*.txt)"
     STRING_TOOLARGE "Файлът '%s' е твърде голям за бележника.\n\
 Използвайте друг обработчик."
-    STRING_NOTEXT "Не сте въвел текст. \
+    STRING_NOTEXT "Не сте въвел текст.\
 \nНапишете нещо и опитайте пак."
     STRING_DOESNOTEXIST "Файлът '%s'\nне съществува\n\n\
 Искате ли да създадете нов файл?"
@@ -180,7 +180,7 @@ BEGIN
     STRING_PRINTCANCELING "The print job is being canceled..."
     STRING_PRINTCOMPLETE "Printing is successfully done."
     STRING_PRINTCANCELED "Printing has been canceled."
-    STRING_PRINTFAILED "Printing is failed."
+    STRING_PRINTFAILED "Printing failed."
 
     STRING_TEXT_DOCUMENT "Text Document"
     STRING_NOTEPAD_AUTHORS "Възпроизводствено право 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"

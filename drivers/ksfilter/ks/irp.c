@@ -150,6 +150,7 @@ KsReadFile(
     IN  KPROCESSOR_MODE RequestorMode)
 {
     PDEVICE_OBJECT DeviceObject;
+    PIO_STACK_LOCATION IoStack;
     PIRP Irp;
     NTSTATUS Status;
     BOOLEAN Result;
@@ -216,6 +217,16 @@ KsReadFile(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    /* setup the rest of irp */
+    Irp->RequestorMode = RequestorMode;
+    Irp->Overlay.AsynchronousParameters.UserApcContext = PortContext;
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
+
+    /* setup irp stack */
+    IoStack = IoGetNextIrpStackLocation(Irp);
+    IoStack->FileObject = FileObject;
+    IoStack->Parameters.Read.Key = Key;
+
     /* send the packet */
     Status = IoCallDriver(DeviceObject, Irp);
 
@@ -250,6 +261,7 @@ KsWriteFile(
     IN  KPROCESSOR_MODE RequestorMode)
 {
     PDEVICE_OBJECT DeviceObject;
+    PIO_STACK_LOCATION IoStack;
     PIRP Irp;
     NTSTATUS Status;
     BOOLEAN Result;
@@ -315,6 +327,16 @@ KsWriteFile(
         /* not enough resources */
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+
+    /* setup the rest of irp */
+    Irp->RequestorMode = RequestorMode;
+    Irp->Overlay.AsynchronousParameters.UserApcContext = PortContext;
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
+
+    /* setup irp stack */
+    IoStack = IoGetNextIrpStackLocation(Irp);
+    IoStack->FileObject = FileObject;
+    IoStack->Parameters.Write.Key = Key;
 
     /* send the packet */
     Status = IoCallDriver(DeviceObject, Irp);
@@ -634,8 +656,7 @@ KsStreamIo(
     IoStack = IoGetNextIrpStackLocation(Irp);
     /* setup stack parameters */
     IoStack->FileObject = FileObject;
-    IoStack->Parameters.DeviceIoControl.InputBufferLength = Length;
-    IoStack->Parameters.DeviceIoControl.Type3InputBuffer = StreamHeaders;
+    IoStack->Parameters.DeviceIoControl.OutputBufferLength = Length;
     IoStack->Parameters.DeviceIoControl.IoControlCode = (Flags == KSSTREAM_READ ? IOCTL_KS_READ_STREAM : IOCTL_KS_WRITE_STREAM);
 
     if (CompletionRoutine)

@@ -937,59 +937,6 @@ static MUI_ENTRY huHUSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY huHUBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Nem siker\201lt telep\241teni a rendszerbet\224lt\213t",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "a sz\240m\241t\242g\202p merevlemez\202re.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "K\202rj\201k helyezzen be egy megform\240zott floppy lemezt",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "az A: meghajt\242ba, majd nyomjon ENTER-t.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = Folytat\240s   F3 = Kil\202p\202s",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY huHUSelectPartitionEntries[] =
 {
     {
@@ -1030,7 +977,7 @@ static MUI_ENTRY huHUSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Nyomjon P-t egy els\213dleges part\241ci\242 l\202trehoz\240s\240hoz.",
+        "\x07  Nyomjon C-t egy els\213dleges/logikai part\241ci\242 l\202trehoz\240s\240hoz.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1044,13 +991,6 @@ static MUI_ENTRY huHUSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Nyomjon L-t egy logikai part\241ci\242 l\202trehoz\240s\240hoz.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Nyomjon D-t egy megl\202v\213 part\241ci\242 t\224rl\202s\202hez.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1203,7 +1143,7 @@ static MUI_ENTRY huHUFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "A telep\241t\213 form\240zni fogja a part\241ci\242t. Nyomjon ENTER-t a folytat\240shoz.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1358,7 +1298,7 @@ static MUI_ENTRY huHUFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY huHUBootLoaderEntries[] =
+static MUI_ENTRY huHUBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1370,7 +1310,7 @@ static MUI_ENTRY huHUBootLoaderEntries[] =
     {
         6,
         8,
-        "Boot loader telep\241t\202se",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1427,6 +1367,13 @@ static MUI_ENTRY huHUBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Bootloader telep\241t\202se.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Bootloader telep\241t\202se az eszk\224zre, k\202rem v\240rjon...",
@@ -1439,6 +1386,59 @@ static MUI_ENTRY huHUBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY huHUBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " telep\241t\213 ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Nem siker\201lt telep\241teni a rendszerbet\224lt\213t",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "a sz\240m\241t\242g\202p merevlemez\202re.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "K\202rj\201k helyezzen be egy megform\240zott floppy lemezt",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "az A: meghajt\242ba, majd nyomjon ENTER-t.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = Folytat\240s   F3 = Kil\202p\202s",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY huHUKeyboardSettingsEntries[] =
@@ -1830,13 +1830,6 @@ MUI_ERROR huHUErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Nem tud t\224r\224lni particion\240latlan lemezter\201letet!\n"
-        "\n"
-        "  * Nyomjon meg egy gombot a folytat\240shoz.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Nem siker\201lt a %S bootcode telep\241t\202se a rendszerpart\241ci\242ra.",
         "ENTER = Sz\240m\241t\242g\202p \243jraind\241t\240sa"
@@ -2071,8 +2064,8 @@ MUI_PAGE huHUPages[] =
         huHUKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        huHUBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        huHUBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2087,12 +2080,12 @@ MUI_PAGE huHUPages[] =
         huHUSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         huHUBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        huHUBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        huHUBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,
@@ -2109,25 +2102,27 @@ MUI_STRING huHUStrings[] =
     {STRING_PLEASEWAIT,
      "   K\202rem v\240rjon..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Telep\241t\202s   P = \351j els\213dleges   E = \351j kiterjesztett   F3 = Kil\202p\202s"},
+     "   ENTER = Telep\241t\202s   C = \351j els\213dleges   E = \351j kiterjesztett   F3 = Kil\202p\202s"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Telep\241t\202s   L = Logikai part\241ci\242 l\202trehoz\240sa   F3 = Kil\202p\202s"},
+     "   ENTER = Telep\241t\202s   C = Logikai part\241ci\242 l\202trehoz\240sa   F3 = Kil\202p\202s"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Telep\241t\202s   D = Part\241ci\242 t\224rl\202se   F3 = Kil\202p\202s"},
     {STRING_DELETEPARTITION,
      "   D = Part\241ci\242 t\224rl\202se   F3 = Kil\202p\202s"},
     {STRING_PARTITIONSIZE,
      "Az \243j part\241ci\242 m\202rete:"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
      "Egy els\213dleges part\241ci\242 l\202trehoz\240s\240t v\240lasztotta itt:"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "Egy kiterjesztett part\241ci\242 l\202trehoz\240s\240t v\240lasztotta itt:"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "Egy logikai part\241ci\242 l\202trehoz\240s\240t v\240lasztotta itt:"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     "K\202rem \241rja be az \243j part\241ci\242 m\202ret\202t megab\240jtban."},
     {STRING_CREATEPARTITION,
      "   ENTER = Part\241ci\242 l\202trehoz\240sa   ESC = M\202gse   F3 = Kil\202p\202s"},
+    {STRING_NEWPARTITION,
+    "A telep\241t\213 egy \243j part\241ci\242t hozott l\202tre itt:"},
     {STRING_PARTFORMAT,
     "K\224vetkez\213 l\202p\202sk\202nt ez a part\241ci\242 form\240zva lesz."},
     {STRING_NONFORMATTEDPART,
@@ -2178,30 +2173,28 @@ MUI_STRING huHUStrings[] =
     "Ennek leggyakoribb oka az USB-s billenty\373zet haszn\240lata\r\n"},
     {STRING_CONSOLEFAIL3,
     "Az USB-s billenty\373zetek m\202g nincsenek teljesen t\240mogatva\r\n"},
-    {STRING_FORMATTINGDISK,
-    "A telep\241t\213 form\240zza a merevlemezt"},
+    {STRING_FORMATTINGPART,
+    "A telep\241t\213 form\240zza a part\241ci\242t..."},
     {STRING_CHECKINGDISK,
-    "A telep\241t\213 ellen\213rzi a merevlemezt"},
+    "A telep\241t\213 ellen\213rzi a merevlemezt..."},
     {STRING_FORMATDISK1,
     " Part\241ci\242 form\240z\240sa %S f\240jlrendszerrel (gyorsform\240z\240s) "},
     {STRING_FORMATDISK2,
     " Part\241ci\242 form\240z\240sa %S f\240jlrendszerrel "},
     {STRING_KEEPFORMAT,
     " Jelenlegi f\240jlrendszer megtart\240sa (nincs v\240ltoztat\240s) "},
-    {STRING_HDINFOPARTCREATE_1,
+    {STRING_HDDISK1,
     "%s."},
-    {STRING_HDINFOPARTDELETE_1,
+    {STRING_HDDISK2,
     "itt: %s."},
     {STRING_PARTTYPE,
     "T\241pus 0x%02x"},
-    {STRING_HDDINFO_1,
+    {STRING_HDDINFO1,
     // "%lu. merevlemez (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
     "%I64u %s %lu. merevlemez (Port=%hu, Bus=%hu, Id=%hu) itt: %wZ [%s]"},
-    {STRING_HDDINFO_2,
+    {STRING_HDDINFO2,
     // "%lu. merevlemez (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]"
     "%I64u %s %lu. merevlemez (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "A telep\241t\213 egy \243j part\241ci\242t hozott l\202tre itt:"},
     {STRING_UNPSPACE,
     "Nem particion\240lt ter\201let"},
     {STRING_MAXSIZE,

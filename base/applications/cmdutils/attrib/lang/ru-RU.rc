@@ -26,6 +26,6 @@ ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] файл ...\n\
   /D  Обработка и файлов, и папок.\n\n\
 Команда ATTRIB без параметров выводит атрибуты всех файлов.\n"
     STRING_CONSOLE_ERROR "Неизвестная ошибка: %d\n"
-    STRING_FILE_NOT_FOUND "File not found - '%s'\n"
+    STRING_FILE_NOT_FOUND "Файл не найден - '%s'\n"
     STRING_ERROR_INVALID_PARAM_FORMAT "Неверный формат параметра - %s\n"
 END

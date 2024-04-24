@@ -20,11 +20,11 @@ public:
     ~CQueryAssociations();
 
     // *** IQueryAssociations methods ***
-    virtual HRESULT STDMETHODCALLTYPE Init(ASSOCF flags, LPCWSTR pwszAssoc, HKEY hkProgid, HWND hwnd);
-    virtual HRESULT STDMETHODCALLTYPE GetString(ASSOCF flags, ASSOCSTR str, LPCWSTR pwszExtra, LPWSTR pwszOut, DWORD *pcchOut);
-    virtual HRESULT STDMETHODCALLTYPE GetKey(ASSOCF flags, ASSOCKEY key, LPCWSTR pwszExtra, HKEY *phkeyOut);
-    virtual HRESULT STDMETHODCALLTYPE GetData(ASSOCF flags, ASSOCDATA data, LPCWSTR pwszExtra, void *pvOut, DWORD *pcbOut);
-    virtual HRESULT STDMETHODCALLTYPE GetEnum(ASSOCF cfFlags, ASSOCENUM assocenum, LPCWSTR pszExtra, REFIID riid, LPVOID *ppvOut);
+    STDMETHOD(Init)(ASSOCF flags, LPCWSTR pwszAssoc, HKEY hkProgid, HWND hwnd) override;
+    STDMETHOD(GetString)(ASSOCF flags, ASSOCSTR str, LPCWSTR pwszExtra, LPWSTR pwszOut, DWORD *pcchOut) override;
+    STDMETHOD(GetKey)(ASSOCF flags, ASSOCKEY key, LPCWSTR pwszExtra, HKEY *phkeyOut) override;
+    STDMETHOD(GetData)(ASSOCF flags, ASSOCDATA data, LPCWSTR pwszExtra, void *pvOut, DWORD *pcbOut) override;
+    STDMETHOD(GetEnum)(ASSOCF cfFlags, ASSOCENUM assocenum, LPCWSTR pszExtra, REFIID riid, LPVOID *ppvOut) override;
 
 DECLARE_REGISTRY_RESOURCEID(IDR_QUERYASSOCIATIONS)
 DECLARE_NOT_AGGREGATABLE(CQueryAssociations)

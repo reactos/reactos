@@ -598,7 +598,7 @@ MmCreatePageFileMapping(PEPROCESS Process,
     /* And we don't support creating for other process */
     ASSERT(Process == PsGetCurrentProcess());
 
-    if (SwapEntry & (1 << (sizeof(SWAPENTRY) - 1)))
+    if (SwapEntry & ((ULONG_PTR)1 << (RTL_BITS_OF(SWAPENTRY) - 1)))
     {
         KeBugCheck(MEMORY_MANAGEMENT);
     }
@@ -904,7 +904,7 @@ MmSetDirtyBit(PEPROCESS Process, PVOID Address, BOOLEAN Bit)
     MiMakePdeExistAndMakeValid(MiAddressToPde(Address), Process, MM_NOIRQL);
 
     PointerPte = MiAddressToPte(Address);
-    // We shouldnl't set dirty bit on non-mapped adresses
+    // We shouldnl't set dirty bit on non-mapped addresses
     if (!PointerPte->u.Hard.Valid && (FlagOn(PointerPte->u.Long, 0x800) || (PointerPte->u.Hard.PageFrameNumber == 0)))
     {
         DPRINT1("Invalid Pte %lx\n", PointerPte->u.Long);

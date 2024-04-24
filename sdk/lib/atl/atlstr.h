@@ -61,7 +61,7 @@ public:
     virtual _Ret_maybenull_ _Post_writable_byte_size_(sizeof(CStringData) + nChars*nCharSize) CStringData* Reallocate(
         _Inout_ _Post_readable_byte_size_(sizeof(CStringData)) CStringData* StrData,
         _In_ int nChars,
-        _In_ int nCharSize) throw()
+        _In_ int nCharSize) noexcept
     {
         ATLASSERT(StrData->pStringMgr == this);
 
@@ -79,12 +79,12 @@ public:
         pNewData->nAllocLength = nChars - 1;
         return pNewData;
     }
-    virtual CStringData* GetNilString() throw()
+    virtual CStringData* GetNilString() noexcept
     {
         m_NilStrData.AddRef();
         return &m_NilStrData;
     }
-    virtual IAtlStringMgr* Clone() throw()
+    virtual IAtlStringMgr* Clone() noexcept
     {
         return this;
     }
@@ -111,12 +111,12 @@ class StrTraitATL :
     public StringIterator
 {
 public:
-    static HINSTANCE FindStringResourceInstance(_In_ UINT nID) throw()
+    static HINSTANCE FindStringResourceInstance(_In_ UINT nID) noexcept
     {
         return AtlFindStringResourceInstance(nID);
     }
 
-    static IAtlStringMgr* GetDefaultManager() throw()
+    static IAtlStringMgr* GetDefaultManager() noexcept
     {
         return CAtlStringMgr::GetInstance();
     }

@@ -272,7 +272,7 @@ inline const ATLSTRINGRESOURCEIMAGE* _AtlGetStringResourceImage(
 
 inline const ATLSTRINGRESOURCEIMAGE* AtlGetStringResourceImage(
     _In_ HINSTANCE hInstance,
-    _In_ UINT id) throw()
+    _In_ UINT id) noexcept
 {
     HRSRC hResource;
     hResource = ::FindResourceW(hInstance, MAKEINTRESOURCEW((((id >> 4) + 1) & static_cast<WORD>(~0))), (LPWSTR)RT_STRING);

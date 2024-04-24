@@ -127,3 +127,32 @@ RtlInitializeHeapManager(VOID)
     RtlInitializeCriticalSection(&RtlpProcessHeapsListLock);
 }
 
+ULONG NTAPI
+RtlGetProcessHeaps(_In_ ULONG HeapCount, _Out_cap_(HeapCount) HANDLE *HeapArray)
+{
+    PPEB Peb = RtlGetCurrentPeb();
+
+    RtlEnterCriticalSection(&RtlpProcessHeapsListLock);
+    ULONG nHeaps = Peb->NumberOfHeaps;
+
+    _SEH2_TRY
+    {
+        if (HeapArray)
+        {
+            for (ULONG n = 0; n < min(nHeaps, HeapCount); ++n)
+            {
+                HeapArray[n] = Peb->ProcessHeaps[n];
+            }
+        }
+    }
+    _SEH2_FINALLY
+    {
+        RtlLeaveCriticalSection(&RtlpProcessHeapsListLock);
+    }
+    _SEH2_END;
+
+    /* TODO: Add RtlpDphPageHeapList here */
+
+    return nHeaps;
+}
+

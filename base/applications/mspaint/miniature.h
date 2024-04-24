@@ -11,7 +11,7 @@
 class CMiniatureWindow : public CWindowImpl<CMiniatureWindow>
 {
 public:
-    DECLARE_WND_CLASS_EX(_T("MiniatureWindow"), CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW,
+    DECLARE_WND_CLASS_EX(L"MiniatureWindow", CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW,
                          COLOR_BTNFACE)
 
     BEGIN_MSG_MAP(CMiniatureWindow)

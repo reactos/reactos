@@ -162,58 +162,22 @@ GetComputerNames(
 static BOOL
 IsUserAdmin(VOID)
 {
+    BOOL bIsAdmin;
     SID_IDENTIFIER_AUTHORITY Authority = {SECURITY_NT_AUTHORITY};
-    PSID pAdminsSid = NULL;
-    HANDLE hToken = NULL;
-    PTOKEN_GROUPS pGroups = NULL;
-    BOOL bIsAdmin = FALSE;
-    DWORD dwSize, i;
+    PSID pAdminsSid;
 
-    if (!AllocateAndInitializeSid(&Authority, 2, SECURITY_BUILTIN_DOMAIN_RID,
-                                  DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0,
+    if (!AllocateAndInitializeSid(&Authority, 2,
+                                  SECURITY_BUILTIN_DOMAIN_RID,
+                                  DOMAIN_ALIAS_RID_ADMINS,
+                                  0, 0, 0, 0, 0, 0,
                                   &pAdminsSid))
+    {
         return FALSE;
-
-    if (!OpenProcessToken(GetCurrentProcess(),
-                          TOKEN_QUERY,
-                          &hToken))
-        goto done;
-
-    if (GetTokenInformation(hToken, TokenGroups, NULL, 0, &dwSize) ||
-        GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-    {
-        goto done;
     }
 
-    pGroups = HeapAlloc(GetProcessHeap(), 0, dwSize);
-    if (pGroups == NULL)
-        goto done;
-
-    if (!GetTokenInformation(hToken,
-                             TokenGroups,
-                             pGroups,
-                             dwSize,
-                             &dwSize))
-        goto done;
-
-    for (i = 0; i < pGroups->GroupCount; i++)
-    {
-        if (EqualSid(pGroups->Groups[i].Sid, pAdminsSid))
-        {
-            bIsAdmin = TRUE;
-            break;
-        }
-    }
-
-done:
-    if (pGroups != NULL)
-        HeapFree(GetProcessHeap(), 0, pGroups);
-
-    if (hToken != NULL)
-        CloseHandle(hToken);
-
-    if (pAdminsSid != NULL)
-        FreeSid(pAdminsSid);
+    if (!CheckTokenMembership(NULL, pAdminsSid, &bIsAdmin))
+        bIsAdmin = FALSE;
+    FreeSid(pAdminsSid);
 
     return bIsAdmin;
 }

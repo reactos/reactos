@@ -52,7 +52,7 @@ typedef struct LAN_ADAPTER {
     UCHAR BCastCheck;                       /* Value to check against */
     UCHAR BCastOffset;                      /* Offset in frame to check against */
     UCHAR HeaderSize;                       /* Size of link-level header */
-    USHORT MTU;                             /* Maximum Transfer Unit */
+    UINT MTU;                               /* Maximum Transfer Unit */
     UINT MinFrameSize;                      /* Minimum frame size in bytes */
     UINT MaxPacketSize;                     /* Maximum packet size when sending */
     UINT MaxSendPackets;                    /* Maximum number of packets per send */

@@ -1058,6 +1058,34 @@ SepAccessCheckWorker(
         goto ReturnCommonStatus;
     }
 
+    /*
+     * HACK: Temporary hack that checks if the caller passed an empty
+     * generic mapping. In such cases we cannot mask out the remaining
+     * access rights without a proper mapping so the only option we
+     * can do is to check if the client is an administrator,
+     * since they are powerful users.
+     *
+     * See CORE-18576 for information.
+     */
+    if (GenericMapping->GenericRead == 0 &&
+        GenericMapping->GenericWrite == 0 &&
+        GenericMapping->GenericExecute == 0 &&
+        GenericMapping->GenericAll == 0)
+    {
+        if (SeTokenIsAdmin(Token))
+        {
+            /* Grant him access */
+            PreviouslyGrantedAccess |= RemainingAccess;
+            Status = STATUS_SUCCESS;
+            goto ReturnCommonStatus;
+        }
+
+        /* It's not an admin so bail out */
+        PreviouslyGrantedAccess = 0;
+        Status = STATUS_ACCESS_DENIED;
+        goto ReturnCommonStatus;
+    }
+
     /* Get the DACL */
     Status = RtlGetDaclSecurityDescriptor(SecurityDescriptor,
                                           &Present,
@@ -1146,7 +1174,7 @@ SepAccessCheckWorker(
             RemainingAccess &= ~(MAXIMUM_ALLOWED | AccessCheckRights.GrantedAccessRights);
             if (RemainingAccess != 0)
             {
-                DPRINT1("Failed to grant access rights. RemainingAccess = 0x%08lx  DesiredAccess = 0x%08lx\n", RemainingAccess, DesiredAccess);
+                DPRINT("Failed to grant access rights, access denied. RemainingAccess = 0x%08lx  DesiredAccess = 0x%08lx\n", RemainingAccess, DesiredAccess);
                 PreviouslyGrantedAccess = 0;
                 Status = STATUS_ACCESS_DENIED;
                 goto ReturnCommonStatus;
@@ -1160,7 +1188,7 @@ SepAccessCheckWorker(
             }
             else
             {
-                DPRINT1("Failed to grant access rights. PreviouslyGrantedAccess == 0  DesiredAccess = %08lx\n", DesiredAccess);
+                DPRINT("Failed to grant access rights, access denied. PreviouslyGrantedAccess == 0  DesiredAccess = %08lx\n", DesiredAccess);
                 Status = STATUS_ACCESS_DENIED;
             }
 
@@ -1189,7 +1217,7 @@ SepAccessCheckWorker(
             RemainingAccess &= ~(MAXIMUM_ALLOWED | GrantedRights);
             if (RemainingAccess != 0)
             {
-                DPRINT1("Failed to grant access rights to the whole object hierarchy list. RemainingAccess = 0x%08lx  DesiredAccess = 0x%08lx\n",
+                DPRINT("Failed to grant access rights to the whole object hierarchy list, access denied. RemainingAccess = 0x%08lx  DesiredAccess = 0x%08lx\n",
                     RemainingAccess, DesiredAccess);
                 PreviouslyGrantedAccess = 0;
                 Status = STATUS_ACCESS_DENIED;
@@ -1204,7 +1232,7 @@ SepAccessCheckWorker(
             }
             else
             {
-                DPRINT1("Failed to grant access rights to the whole object hierarchy list. PreviouslyGrantedAccess == 0  DesiredAccess = %08lx\n",
+                DPRINT("Failed to grant access rights to the whole object hierarchy list, access denied. PreviouslyGrantedAccess == 0  DesiredAccess = %08lx\n",
                     DesiredAccess);
                 Status = STATUS_ACCESS_DENIED;
             }
@@ -1234,7 +1262,7 @@ SepAccessCheckWorker(
                     RemainingAccess = (~GrantedRights & WantedRights);
                     if (RemainingAccess != 0)
                     {
-                        DPRINT1("Failed to grant access rights at specific object at index %lu. RemainingAccess = 0x%08lx  DesiredAccess = 0x%08lx\n",
+                        DPRINT("Failed to grant access rights at specific object at index %lu, access denied. RemainingAccess = 0x%08lx  DesiredAccess = 0x%08lx\n",
                             ObjectTypeIndex, RemainingAccess, DesiredAccess);
                         AccessStatusList[ObjectTypeIndex] = STATUS_ACCESS_DENIED;
                     }
@@ -1246,7 +1274,7 @@ SepAccessCheckWorker(
                 else
                 {
                     /* No access is given */
-                    DPRINT1("Failed to grant access rights at specific object at index %lu. No access is given\n", ObjectTypeIndex);
+                    DPRINT("Failed to grant access rights at specific object at index %lu. No access is given\n", ObjectTypeIndex);
                     AccessStatusList[ObjectTypeIndex] = STATUS_ACCESS_DENIED;
                 }
 
@@ -1296,7 +1324,7 @@ SepAccessCheckWorker(
         /* Fail if some rights have not been granted */
         if (AccessCheckRights.RemainingAccessRights != 0)
         {
-            DPRINT1("Failed to grant access rights. RemainingAccess = 0x%08lx  DesiredAccess = 0x%08lx\n", AccessCheckRights.RemainingAccessRights, DesiredAccess);
+            DPRINT("Failed to grant access rights, access denied. RemainingAccess = 0x%08lx  DesiredAccess = 0x%08lx\n", AccessCheckRights.RemainingAccessRights, DesiredAccess);
             PreviouslyGrantedAccess = 0;
             Status = STATUS_ACCESS_DENIED;
             goto ReturnCommonStatus;
@@ -1321,7 +1349,7 @@ SepAccessCheckWorker(
 
         if (!AccessIsGranted)
         {
-            DPRINT1("Failed to grant access rights to the whole object hierarchy list. DesiredAccess = 0x%08lx\n", DesiredAccess);
+            DPRINT("Failed to grant access rights to the whole object hierarchy list, access denied. DesiredAccess = 0x%08lx\n", DesiredAccess);
             PreviouslyGrantedAccess = 0;
             Status = STATUS_ACCESS_DENIED;
             goto ReturnCommonStatus;
@@ -1353,7 +1381,7 @@ SepAccessCheckWorker(
             /* Fail if some rights have not been granted */
             if (AccessCheckRights.RemainingAccessRights != 0)
             {
-                DPRINT1("Failed to grant access rights. RemainingAccess = 0x%08lx  DesiredAccess = 0x%08lx\n", AccessCheckRights.RemainingAccessRights, DesiredAccess);
+                DPRINT("Failed to grant access rights, access denied. RemainingAccess = 0x%08lx  DesiredAccess = 0x%08lx\n", AccessCheckRights.RemainingAccessRights, DesiredAccess);
                 PreviouslyGrantedAccess = 0;
                 Status = STATUS_ACCESS_DENIED;
                 goto ReturnCommonStatus;
@@ -1382,7 +1410,7 @@ SepAccessCheckWorker(
 
             if (!AccessIsGranted)
             {
-                DPRINT1("Failed to grant access rights to the whole object hierarchy list. DesiredAccess = 0x%08lx\n", DesiredAccess);
+                DPRINT("Failed to grant access rights to the whole object hierarchy list, access denied. DesiredAccess = 0x%08lx\n", DesiredAccess);
                 PreviouslyGrantedAccess = 0;
                 Status = STATUS_ACCESS_DENIED;
                 goto ReturnCommonStatus;
@@ -1396,7 +1424,7 @@ SepAccessCheckWorker(
     /* Fail if no rights have been granted */
     if (PreviouslyGrantedAccess == 0)
     {
-        DPRINT1("Failed to grant access rights. PreviouslyGrantedAccess == 0  DesiredAccess = %08lx\n", DesiredAccess);
+        DPRINT("Failed to grant access rights, access denied. PreviouslyGrantedAccess == 0  DesiredAccess = %08lx\n", DesiredAccess);
         Status = STATUS_ACCESS_DENIED;
         goto ReturnCommonStatus;
     }

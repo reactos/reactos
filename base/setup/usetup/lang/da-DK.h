@@ -937,59 +937,6 @@ static MUI_ENTRY daDKSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY daDKBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " installationen ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Installationen kan ikke installere opstartsl\221seren p\206",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "din computers hardisk",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "S\221t en formateret diskette i drev A: og",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "tryk p\206 ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = Forts\221t   F3 = Afslut",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY daDKSelectPartitionEntries[] =
 {
     {
@@ -1030,7 +977,7 @@ static MUI_ENTRY daDKSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Tryk p\206 P for at lave en ny prim\221r partition.",
+        "\x07  Tryk p\206 C for at lave en ny prim\221r/logisk partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1044,13 +991,6 @@ static MUI_ENTRY daDKSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Tryk p\206 L for at lave en ny logisk partition.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Tryk p\206 D for at slette en eksisterende partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1311,7 +1251,7 @@ static MUI_ENTRY daDKFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Installationen vil nu formatere partitionen. Tryk p\206 ENTER for at forts\221tte.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1466,7 +1406,7 @@ static MUI_ENTRY daDKFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY daDKBootLoaderEntries[] =
+static MUI_ENTRY daDKBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1478,7 +1418,7 @@ static MUI_ENTRY daDKBootLoaderEntries[] =
     {
         6,
         8,
-        "Installatione af opstartsl\221ser",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1535,6 +1475,13 @@ static MUI_ENTRY daDKBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Installatione af opstartsl\221ser.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Installing the bootloader onto the media, please wait...",
@@ -1547,6 +1494,59 @@ static MUI_ENTRY daDKBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY daDKBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " installationen ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Installationen kan ikke installere opstartsl\221seren p\206",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "din computers harddisk.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "S\221t en formateret diskette i drev A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "og tryk p\206 ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = Forts\221t   F3 = Afslut",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY daDKKeyboardSettingsEntries[] =
@@ -1938,13 +1938,6 @@ MUI_ERROR daDKErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Du kan ikke slette upartitionernet diskplads!\n"
-        "\n"
-        "  * Tryk p\206 en vilk\206rligtast for at forts\221tte.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Installationen kunne ikke installere %S-startkode p\206 systempartitionen.",
         "ENTER = Genstart"
@@ -2183,8 +2176,8 @@ MUI_PAGE daDKPages[] =
         daDKKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        daDKBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        daDKBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2199,12 +2192,12 @@ MUI_PAGE daDKPages[] =
         daDKSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         daDKBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        daDKBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        daDKBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,
@@ -2221,25 +2214,27 @@ MUI_STRING daDKStrings[] =
     {STRING_PLEASEWAIT,
      "   Vent..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = installer   P = Lav prim\221r   E = Lav udviddet   F3 = Afslut"},
+     "   ENTER = installer   C = Lav prim\221r   E = Lav udviddet   F3 = Afslut"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = installer   L = Lav logisk partition   F3 = Afslut"},
+     "   ENTER = installer   C = Lav logisk partition   F3 = Afslut"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = installer   D = Slet partition   F3 = Afslut"},
     {STRING_DELETEPARTITION,
      "   D = Slet partition   F3 = Afslut"},
     {STRING_PARTITIONSIZE,
      "St\233rrelse p\206 den nye partition:"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
      "Du har valge at lave en ny prim\221r partition p\206"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "Du har valgt at lave en ny udviddet partition p\206"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "Du har valge at lave en ny logisk partition p\206"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     "Indtast st\233rrelsen p\206 den nye partition i megabytes."},
     {STRING_CREATEPARTITION,
      "   ENTER = Lav partition   ESC = Annuller   F3 = Afslut"},
+    {STRING_NEWPARTITION,
+    "Installationen har lavet en ny partition p\206"},
     {STRING_PARTFORMAT,
     "Denne partition vil blive formateret som det n\221ste."},
     {STRING_NONFORMATTEDPART,
@@ -2290,30 +2285,28 @@ MUI_STRING daDKStrings[] =
     "Dette skykdes ofte at du bruger et USB-tastatur\r\n"},
     {STRING_CONSOLEFAIL3,
     "USB-tastatuere er endnu ikke fuldt underst\233ttet\r\n"},
-    {STRING_FORMATTINGDISK,
-    "Installationen formatere din disk"},
+    {STRING_FORMATTINGPART,
+    "Installationen formaterer partitionen..."},
     {STRING_CHECKINGDISK,
-    "Installationen tjekker din disk"},
+    "Installationen tjekker disken..."},
     {STRING_FORMATDISK1,
     " Formater partitionen som %S-filesystemet (hurtigformatering) "},
     {STRING_FORMATDISK2,
     " Formater partitionen som %S-filesystemet "},
     {STRING_KEEPFORMAT,
     " Behold nuv\221rende filsystem (ingen \221ndringer) "},
-    {STRING_HDINFOPARTCREATE_1,
+    {STRING_HDDISK1,
     "%s."},
-    {STRING_HDINFOPARTDELETE_1,
+    {STRING_HDDISK2,
     "p\206 %s."},
     {STRING_PARTTYPE,
     "Type 0x%02x"},
-    {STRING_HDDINFO_1,
+    {STRING_HDDINFO1,
     // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
     "%I64u %s Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu) p\206 %wZ [%s]"},
-    {STRING_HDDINFO_2,
+    {STRING_HDDINFO2,
     // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]"
     "%I64u %s Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "Installationen har lavet en ny partition p\206"},
     {STRING_UNPSPACE,
     "Upartitioneret plads"},
     {STRING_MAXSIZE,

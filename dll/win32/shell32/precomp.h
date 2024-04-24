@@ -95,7 +95,7 @@
 #include "COpenWithMenu.h"
 #include "CNewMenu.h"
 #include "CSendToMenu.h"
-#include "CCopyToMoveToMenu.h"
+#include "CCopyMoveToMenu.h"
 #include "dialogs/filedefext.h"
 #include "dialogs/drvdefext.h"
 #include "CQueryAssociations.h"
@@ -152,5 +152,69 @@ public:
     BEGIN_MSG_MAP(CStubWindow32)
     END_MSG_MAP()
 };
+
+HRESULT
+Shell_TranslateIDListAlias(
+    _In_ LPCITEMIDLIST pidl,
+    _In_ HANDLE hToken,
+    _Out_ LPITEMIDLIST *ppidlAlias,
+    _In_ DWORD dwFlags);
+
+BOOL BindCtx_ContainsObject(_In_ IBindCtx *pBindCtx, _In_ LPCWSTR pszName);
+DWORD BindCtx_GetMode(_In_ IBindCtx *pbc, _In_ DWORD dwDefault);
+BOOL SHSkipJunctionBinding(_In_ IBindCtx *pbc, _In_ CLSID *pclsid);
+HRESULT SHIsFileSysBindCtx(_In_ IBindCtx *pBindCtx, _Out_opt_ WIN32_FIND_DATAW *pFindData);
+BOOL Shell_FailForceReturn(_In_ HRESULT hr);
+
+EXTERN_C INT
+Shell_ParseSpecialFolder(_In_ LPCWSTR pszStart, _Out_ LPWSTR *ppch, _Out_ INT *pcch);
+
+HRESULT
+Shell_DisplayNameOf(
+    _In_ IShellFolder *psf,
+    _In_ LPCITEMIDLIST pidl,
+    _In_ DWORD dwFlags,
+    _Out_ LPWSTR pszBuf,
+    _In_ UINT cchBuf);
+
+HRESULT SHBindToObject(
+    _In_opt_ IShellFolder *psf,
+    _In_ LPCITEMIDLIST pidl,
+    _In_ REFIID riid,
+    _Out_ void **ppvObj);
+
+HRESULT
+SHBindToObjectEx(
+    _In_opt_ IShellFolder *pShellFolder,
+    _In_ LPCITEMIDLIST pidl,
+    _In_opt_ IBindCtx *pBindCtx,
+    _In_ REFIID riid,
+    _Out_ void **ppvObj);
+
+DWORD
+SHGetAttributes(_In_ IShellFolder *psf, _In_ LPCITEMIDLIST pidl, _In_ DWORD dwAttributes);
+HRESULT SHCoInitializeAnyApartment(VOID);
+
+HRESULT
+SHGetNameAndFlagsW(
+    _In_ LPCITEMIDLIST pidl,
+    _In_ DWORD dwFlags,
+    _Out_opt_ LPWSTR pszText,
+    _In_ UINT cchBuf,
+    _Inout_opt_ DWORD *pdwAttributes);
+
+EXTERN_C HWND BindCtx_GetUIWindow(_In_ IBindCtx *pBindCtx);
+
+EXTERN_C HRESULT
+BindCtx_RegisterObjectParam(
+    _In_ IBindCtx *pBindCtx,
+    _In_ LPOLESTR pszKey,
+    _In_opt_ IUnknown *punk,
+    _Out_ LPBC *ppbc);
+
+BOOL PathIsDotOrDotDotW(_In_ LPCWSTR pszPath);
+BOOL PathIsValidElement(_In_ LPCWSTR pszPath);
+BOOL PathIsDosDevice(_In_ LPCWSTR pszName);
+HRESULT SHILAppend(_Inout_ LPITEMIDLIST pidl, _Inout_ LPITEMIDLIST *ppidl);
 
 #endif /* _PRECOMP_H__ */

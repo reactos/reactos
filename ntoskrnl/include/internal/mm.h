@@ -1690,6 +1690,12 @@ FORCEINLINE
 VOID
 MmLockAddressSpace(PMMSUPPORT AddressSpace)
 {
+    ASSERT(!PsGetCurrentThread()->OwnsProcessWorkingSetExclusive);
+    ASSERT(!PsGetCurrentThread()->OwnsProcessWorkingSetShared);
+    ASSERT(!PsGetCurrentThread()->OwnsSystemWorkingSetExclusive);
+    ASSERT(!PsGetCurrentThread()->OwnsSystemWorkingSetShared);
+    ASSERT(!PsGetCurrentThread()->OwnsSessionWorkingSetExclusive);
+    ASSERT(!PsGetCurrentThread()->OwnsSessionWorkingSetShared);
     KeAcquireGuardedMutex(&CONTAINING_RECORD(AddressSpace, EPROCESS, Vm)->AddressCreationLock);
 }
 

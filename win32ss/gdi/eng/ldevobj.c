@@ -226,7 +226,7 @@ LDEVOBJ_pvFindImageProcAddress(
 {
     PVOID pvImageBase;
     PIMAGE_EXPORT_DIRECTORY pExportDir;
-    PVOID pvProcAdress = NULL;
+    PVOID pvProcAddress = NULL;
     PUSHORT pOrdinals;
     PULONG pNames, pAddresses;
     ULONG i;
@@ -255,13 +255,13 @@ LDEVOBJ_pvFindImageProcAddress(
         if (_stricmp(pszProcName, RVA_TO_ADDR(pvImageBase, pNames[i])) == 0)
         {
             /* Found! Calculate the procedure address */
-            pvProcAdress = RVA_TO_ADDR(pvImageBase, pAddresses[pOrdinals[i]]);
+            pvProcAddress = RVA_TO_ADDR(pvImageBase, pAddresses[pOrdinals[i]]);
             break;
         }
     }
 
     /* Return the address */
-    return pvProcAdress;
+    return pvProcAddress;
 }
 
 static

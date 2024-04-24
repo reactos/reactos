@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2010
- * Jérôme Gardou
+ * JÃ©rÃ´me Gardou
  *
  *
  * This material is provided "as is", with absolutely no warranty expressed
@@ -301,6 +301,9 @@
 
 // Calling convention
 #define _STLP_CALL __cdecl
+
+// Always build multithreaded code
+#define _STLP_THREADS
 
 #if 0
 

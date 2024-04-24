@@ -31,7 +31,7 @@ Do you want to create file?"
 Do you want to replace it?"
     IDS_INVALID_FILENAME_TITLE "Invalid character(s) in path"
     IDS_INVALID_FILENAME    "A filename cannot contain any of the following characters:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "Path does not exist"
     IDS_FILENOTEXISTING     "File does not exist"
     IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
@@ -481,7 +481,7 @@ FONT 8, "MS Shell Dlg"
     COMBOBOX IDC_LOOKIN, 64, 3, 150, 100, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
 
     LTEXT "" , IDC_TOOLBARSTATIC, 209, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE
-    CONTROL "", IDC_TOOLBARPLACES, "ToolbarWindow32", 0x800 | CCS_NORESIZE | CCS_TOP | CCS_NOPARENTALIGN | CCS_NODIVIDER, 4, 20, 55, 208
+    CONTROL "", IDC_TOOLBARPLACES, "ToolbarWindow32", 0x800 | CCS_NORESIZE | CCS_TOP | CCS_NOPARENTALIGN | CCS_NODIVIDER, 4, 20, 56, 192
     LISTBOX IDC_SHELLSTATIC, 64, 20, 300, 155, LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_HSCROLL | NOT WS_VISIBLE
 
     LTEXT "File &name:", IDC_FILENAMESTATIC, 65, 182, 56, 16, SS_NOTIFY

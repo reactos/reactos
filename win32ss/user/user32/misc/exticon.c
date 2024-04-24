@@ -743,9 +743,78 @@ static UINT ICO_ExtractIconExW(
 	    xresdir = find_entry_by_id(iconresdir, LOWORD(pIconId[i]), rootresdir);
             if( !xresdir )
             {
+#ifdef __REACTOS__
+              /* XP/2K3 can decode icons this way. Vista/7 cannot. This handles
+               * damaged Resources in 'Icon Group' by falling back to 'Icon' resources.
+               * Older Watcom C/C++ compilers can generate such a case */
+              const IMAGE_RESOURCE_DIRECTORY *resdir;
+              WARN("icon entry %d not found\n", LOWORD(pIconId[i]));
+
+              /* Try to get an icon by walking the files Resource Section */
+              if (iconresdir->NumberOfIdEntries > 0)
+              {
+                  xresent = (const IMAGE_RESOURCE_DIRECTORY_ENTRY*)
+                      (ULONG_PTR)(iconresdir + 1);
+              }
+              else
+              {
+                  RetPtr[i] = 0;
+                  continue;
+              }
+
+              /* Get the Resource Directory */
+              resdir = (const IMAGE_RESOURCE_DIRECTORY *)
+                       ((const char *)rootresdir + xresent->OffsetToDirectory);
+
+              if (resdir->NumberOfIdEntries > 0) // Do we have entries
+              {
+                  xresent = (const IMAGE_RESOURCE_DIRECTORY_ENTRY*)
+                      (ULONG_PTR)(resdir + 1);
+              }
+              else
+              {
+                  RetPtr[i] = 0;
+                  continue;
+              }
+
+              /* Retrieve the data entry and find its address */
+              igdataent = (const IMAGE_RESOURCE_DATA_ENTRY*)
+                  ((const char *)rootresdir + xresent->OffsetToData);
+              idata = RtlImageRvaToVa(RtlImageNtHeader((HMODULE)peimage),
+                  (HMODULE)peimage, igdataent->OffsetToData, NULL);
+              if (!idata)
+              {
+                  RetPtr[i] = 0;
+                  continue;
+              }
+
+              /* Check to see if this looks like an icon bitmap */
+              if (idata[0] == sizeof(BITMAPINFOHEADER))
+              {
+                  BITMAPINFOHEADER bmih;
+                  RtlCopyMemory(&bmih, idata, sizeof(BITMAPINFOHEADER));
+                  /* Do the Width and Height look correct for an icon */
+                  if ((bmih.biWidth * 2) == bmih.biHeight)
+                  {
+                      RetPtr[0] = CreateIconFromResourceEx(idata, igdataent->Size,
+                          TRUE, 0x00030000, cx1, cy1, flags);
+                      if (cx2 && cy2)
+                          RetPtr[1] = CreateIconFromResourceEx(idata, idataent->Size,
+                              TRUE, 0x00030000, cx2, cy2, flags);
+                      ret = 1;  // Set number of icons found
+                      goto end; // Success so Exit
+                  }
+              }
+              else
+              {
+                  RetPtr[i] = 0;
+                  continue;
+              }
+#else
               WARN("icon entry %d not found\n", LOWORD(pIconId[i]));
 	      RetPtr[i]=0;
 	      continue;
+#endif
             }
 	    xresdir = find_entry_default(xresdir, rootresdir);
 	    idataent = (const IMAGE_RESOURCE_DATA_ENTRY*)xresdir;

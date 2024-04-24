@@ -929,59 +929,6 @@ static MUI_ENTRY euESSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY euESBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Instalazio ez du ahalmenik bootloader-a instalatu zure ordenagailuaren",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "disko gogorra",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Mesedez sartu diskete bat formateatuta A: unitaten barnean",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "eta sakatu SARTU.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "SARTU = Jarraitu   F3 = Irten",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY euESSelectPartitionEntries[] =
 {
     {
@@ -1022,7 +969,7 @@ static MUI_ENTRY euESSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Sakatu P partizio nagusi bat sortzeko.",
+        "\x07  Sakatu C partizio nagusi/logika bat sortzeko.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1036,13 +983,6 @@ static MUI_ENTRY euESSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Sakatu L partizio logika bat sortzeko.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Sakatu D dagoen partizio kentzeko.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1310,7 +1250,7 @@ static MUI_ENTRY euESFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Orain instalazioa formatuko du partizioa. Sakatu SARTU jarraitzeko.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1465,7 +1405,7 @@ static MUI_ENTRY euESFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY euESBootLoaderEntries[] =
+static MUI_ENTRY euESBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1477,7 +1417,7 @@ static MUI_ENTRY euESBootLoaderEntries[] =
     {
         6,
         8,
-        "Instalazioak bootloader-a sartzen ari du",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1534,6 +1474,13 @@ static MUI_ENTRY euESBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Instalazioak bootloader-a sartzen ari du.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Instalatzen ari du bootloader unitatean, itxaron mezedez...",
@@ -1546,6 +1493,59 @@ static MUI_ENTRY euESBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY euESBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Instalazio ez du ahalmenik bootloader-a instalatu zure ordenagailuaren",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "disko gogorra.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Mesedez sartu diskete bat formateatuta A: unitaten barnean",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "eta sakatu SARTU.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "SARTU = Jarraitu   F3 = Irten",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY euESKeyboardSettingsEntries[] =
@@ -1937,13 +1937,6 @@ MUI_ERROR euESErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Ez ahal duzu diskoaren ez-partiziotatu ezpazioa ezabatzeko!\n"
-        "\n"
-        "  * Sakatu tekla bat jarraitzeko.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Instalazioa huts egin du bootcode instalatzeko %S sistemaren partizioan.",
         "SARTU = Berrabiarazi"
@@ -2181,8 +2174,8 @@ MUI_PAGE euESPages[] =
         euESKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        euESBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        euESBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2197,12 +2190,12 @@ MUI_PAGE euESPages[] =
         euESSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         euESBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        euESBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        euESBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,
@@ -2219,25 +2212,27 @@ MUI_STRING euESStrings[] =
     {STRING_PLEASEWAIT,
      "   Itxaron mesedez..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   SARTU = Instalatu   P = Sortu Nagusia   E = Sortu Luzatuta   F3 = Irten"},
+     "   SARTU = Instalatu   C = Sortu Nagusia   E = Sortu Luzatuta   F3 = Irten"},
     {STRING_INSTALLCREATELOGICAL,
-     "   SARTU = Instalatu   L = Sortu Partizio Logika   F3 = Irten"},
+     "   SARTU = Instalatu   C = Sortu Partizio Logika   F3 = Irten"},
     {STRING_INSTALLDELETEPARTITION,
      "   SARTU = Instalatu   D = Ezabatu Partitioa   F3 = Irten"},
     {STRING_DELETEPARTITION,
      "   D = Ezabatu Partitioa   F3 = Irten"},
     {STRING_PARTITIONSIZE,
      "Partizio berriaren tamainu:"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
      "Zu aukeratu duzu partizio nagusia sortu barruan"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "Zu aukeratu duzu partizio luzatuta sortu barruan"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "Zu aukeratu duzu partizio logika sortu barruan"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     "Mezedez osatu tamainua megabytes-en."},
     {STRING_CREATEPARTITION,
      "   SARTU = Sortu Partizioa   ESC = Utzi   F3 = Irten"},
+    {STRING_NEWPARTITION,
+    "Instalazioa sortu du partizio berria barruan"},
     {STRING_PARTFORMAT,
     "Partizio hau izango da formatuta gero."},
     {STRING_NONFORMATTEDPART,
@@ -2288,30 +2283,28 @@ MUI_STRING euESStrings[] =
     "Kausa arruntak da USB teklatua erabili\r\n"},
     {STRING_CONSOLEFAIL3,
     "USB teklatua ez dago oraindik osoan euskarri\r\n"},
-    {STRING_FORMATTINGDISK,
-    "Instalazioa zure disko formateatzen ari da"},
+    {STRING_FORMATTINGPART,
+    "Instalazioa partizioa formateatzen ari da..."},
     {STRING_CHECKINGDISK,
-    "Instalazioa zure disko ikusten ari da"},
+    "Instalazioa diskoa ikusten ari da..."},
     {STRING_FORMATDISK1,
     " Formatu partizioa %S sistemaren fitxategia (format azkar) "},
     {STRING_FORMATDISK2,
     " Formatu partizioa %S sistemaren fitxategia "},
     {STRING_KEEPFORMAT,
     " Mantendu sistemaren fitxategia (aldaketarik ez) "},
-    {STRING_HDINFOPARTCREATE_1,
+    {STRING_HDDISK1,
     "%s."},
-    {STRING_HDINFOPARTDELETE_1,
+    {STRING_HDDISK2,
     "%s."},
     {STRING_PARTTYPE,
     "Mota 0x%02x"},
-    {STRING_HDDINFO_1,
+    {STRING_HDDINFO1,
     // "Disko gogor %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
     "%I64u %s Disko gogor %lu (Port=%hu, Bus=%hu, Id=%hu) %wZn [%s]"},
-    {STRING_HDDINFO_2,
+    {STRING_HDDINFO2,
     // "Disko gogor %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]"
     "%I64u %s Disko gogor %lu (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "Instalazioa sortu du partizio berria barruan"},
     {STRING_UNPSPACE,
     "Ezpartizionatu espazio"},
     {STRING_MAXSIZE,

@@ -115,7 +115,7 @@ NTSTATUS
 NTAPI
 LdrGetDllHandle(
     _In_opt_ PWSTR DllPath,
-    _In_ PULONG DllCharacteristics,
+    _In_opt_ PULONG DllCharacteristics,
     _In_ PUNICODE_STRING DllName,
     _Out_ PVOID *DllHandle
 );
@@ -140,8 +140,8 @@ NTSTATUS
 NTAPI
 LdrGetProcedureAddress(
     _In_ PVOID BaseAddress,
-    _In_ PANSI_STRING Name,
-    _In_ ULONG Ordinal,
+    _In_opt_ _When_(Ordinal == 0, _Notnull_) PANSI_STRING Name,
+    _In_opt_ _When_(Name == NULL, _In_range_(>, 0)) ULONG Ordinal,
     _Out_ PVOID *ProcedureAddress
 );
 
@@ -158,9 +158,9 @@ NTSTATUS
 NTAPI
 LdrLoadDll(
     _In_opt_ PWSTR SearchPath,
-    _In_opt_ PULONG LoadFlags,
-    _In_ PUNICODE_STRING Name,
-    _Out_opt_ PVOID *BaseAddress
+    _In_opt_ PULONG DllCharacteristics,
+    _In_ PUNICODE_STRING DllName,
+    _Out_ PVOID *BaseAddress
 );
 
 PIMAGE_BASE_RELOCATION
@@ -177,18 +177,18 @@ NTAPI
 LdrQueryImageFileExecutionOptions(
     _In_ PUNICODE_STRING SubKey,
     _In_ PCWSTR ValueName,
-    _In_ ULONG ValueSize,
+    _In_ ULONG Type,
     _Out_ PVOID Buffer,
     _In_ ULONG BufferSize,
-    _Out_opt_ PULONG RetunedLength
+    _Out_opt_ PULONG ReturnedLength
 );
 
 NTSTATUS
 NTAPI
 LdrQueryProcessModuleInformation(
-    _In_opt_ PRTL_PROCESS_MODULES ModuleInformation,
-    _In_opt_ ULONG Size,
-    _Out_ PULONG ReturnedSize
+    _Out_writes_bytes_to_(Size, *ReturnedSize) PRTL_PROCESS_MODULES ModuleInformation,
+    _In_ ULONG Size,
+    _Out_opt_ PULONG ReturnedSize
 );
 
 VOID
@@ -221,7 +221,7 @@ LdrVerifyImageMatchesChecksum(
     _In_ HANDLE FileHandle,
     _In_ PLDR_CALLBACK Callback,
     _In_ PVOID CallbackContext,
-    _Out_ PUSHORT ImageCharacterstics
+    _Out_ PUSHORT ImageCharacteristics
 );
 
 NTSTATUS

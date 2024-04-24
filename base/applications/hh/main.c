@@ -15,11 +15,14 @@ WinMain(HINSTANCE hInst,
     int ret = -1;
 
     hModule = LoadLibraryA("hhctrl.ocx");
-    doWinMain = (DOWINMAIN*) GetProcAddress(hModule, "doWinMain");
+    if (hModule)
+    {
+        doWinMain = (DOWINMAIN*)GetProcAddress(hModule, "doWinMain");
+        if (doWinMain)
+            ret = doWinMain(hInst, cmdline);
 
-    ret = doWinMain(hInst, cmdline);
-
-    FreeLibrary(hModule);
+        FreeLibrary(hModule);
+    }
 
     return ret;
 }

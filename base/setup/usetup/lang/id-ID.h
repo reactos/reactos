@@ -928,59 +928,6 @@ static MUI_ENTRY idIDSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY idIDBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " Penyetelan ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Penyetelan tidak dapat menasang bootloader pada komputer Anda",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "hardisk",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Mohon masukkan cakram disket yang terformat di drive A:",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "dan tekan ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = Lanjut   F3 = Keluar",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY idIDSelectPartitionEntries[] =
 {
     {
@@ -1021,7 +968,7 @@ static MUI_ENTRY idIDSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Tekan P untuk membuat partisi primary.",
+        "\x07  Tekan C untuk membuat partisi primary/logical.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1035,13 +982,6 @@ static MUI_ENTRY idIDSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Tekan L untuk membuat partisi logical.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Tekan D untuk menghapus partisi yang tersedia.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1309,7 +1249,7 @@ static MUI_ENTRY idIDFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Penyetelan akan memformat partisi. Tekan ENTER untuk lanjut.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1464,7 +1404,7 @@ static MUI_ENTRY idIDFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY idIDBootLoaderEntries[] =
+static MUI_ENTRY idIDBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1476,7 +1416,7 @@ static MUI_ENTRY idIDBootLoaderEntries[] =
     {
         6,
         8,
-        "Penyetelan sedang memasang the boot loader",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1533,6 +1473,13 @@ static MUI_ENTRY idIDBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Penyetelan sedang memasang the bootloader.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Memasang bootloader pada media, harap tunggu...",
@@ -1545,6 +1492,59 @@ static MUI_ENTRY idIDBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY idIDBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " Penyetelan ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Penyetelan tidak dapat menasang bootloader pada komputer Anda",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "harddisk.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Mohon masukkan cakram disket yang terformat di drive A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "dan tekan ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = Lanjut   F3 = Keluar",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY idIDKeyboardSettingsEntries[] =
@@ -1936,13 +1936,6 @@ MUI_ERROR idIDErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Anda tidak dapat menghapus ukuran cakram yang belum dipartisi!\n"
-        "\n"
-        "  * Tekan tombol apapun untuk lanjut.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Penyetelan gagal memasang bootcode %S pada partisi sistem.",
         "ENTER = Mulai ulang komputer"
@@ -2180,8 +2173,8 @@ MUI_PAGE idIDPages[] =
         idIDKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        idIDBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        idIDBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2196,12 +2189,12 @@ MUI_PAGE idIDPages[] =
         idIDSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         idIDBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        idIDBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        idIDBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,
@@ -2218,25 +2211,27 @@ MUI_STRING idIDStrings[] =
     {STRING_PLEASEWAIT,
      "   Mohon tunggu..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Pasang   P = Buat Primary   E = Buat Extended   F3 = Keluar"},
+     "   ENTER = Pasang   C = Buat Primary   E = Buat Extended   F3 = Keluar"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Pasang   L = Buat Partisi Logical   F3 = Keluar"},
+     "   ENTER = Pasang   C = Buat Partisi Logical   F3 = Keluar"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Pasang   D = Hapus Partisi   F3 = Keluar"},
     {STRING_DELETEPARTITION,
      "   D = Hapus Partisi   F3 = Keluar"},
     {STRING_PARTITIONSIZE,
      "Ukuran partisi baru:"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
      "Anda telah memilih untuk membuat partisi primary pada"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "Anda telah memilih untuk membuat partisi extended pada"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "Anda telah memilih untuk membuat partisi logical pada"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     "Mohon masukkan ukuran pada partisi baru dalam bentuk megabyte."},
     {STRING_CREATEPARTITION,
      "   ENTER = Buat Partisi   ESC = Batal   F3 = Keluar"},
+    {STRING_NEWPARTITION,
+    "Penyetelan membuat partisi baru pada"},
     {STRING_PARTFORMAT,
     "Partisi ini selanjutnya akan diformat."},
     {STRING_NONFORMATTEDPART,
@@ -2287,30 +2282,28 @@ MUI_STRING idIDStrings[] =
     "Secara umum penyebab dari ini adalah menggunakan papan ketik USB\r\n"},
     {STRING_CONSOLEFAIL3,
     "Papan ketik USB belum didukung sepenuhnya\r\n"},
-    {STRING_FORMATTINGDISK,
-    "Penyetelan sedang memformat cakram anda"},
+    {STRING_FORMATTINGPART,
+    "Penyetelan sedang memformat partisi..."},
     {STRING_CHECKINGDISK,
-    "Penyetelan sedang memeriksa cakram anda"},
+    "Penyetelan sedang memeriksa cakram..."},
     {STRING_FORMATDISK1,
     " Format partisi sebagai sistem berkas %S (format cepat) "},
     {STRING_FORMATDISK2,
     " Format partisi sebagai sistem berkas %S  "},
     {STRING_KEEPFORMAT,
     " Tetapkan sistem berkas seperti ini (tanpa perubahan) "},
-    {STRING_HDINFOPARTCREATE_1,
+    {STRING_HDDISK1,
     "%s."},
-    {STRING_HDINFOPARTDELETE_1,
+    {STRING_HDDISK2,
     "pada %s."},
     {STRING_PARTTYPE,
     "Jenis 0x%02x"},
-    {STRING_HDDINFO_1,
+    {STRING_HDDINFO1,
     // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
     "%I64u %s Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu) pada %wZ [%s]"},
-    {STRING_HDDINFO_2,
+    {STRING_HDDINFO2,
     // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]"
     "%I64u %s Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "Penyetelan membuat partisi baru pada"},
     {STRING_UNPSPACE,
     "Ukuran yang belum dipartisi"},
     {STRING_MAXSIZE,

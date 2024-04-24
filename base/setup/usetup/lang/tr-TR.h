@@ -926,52 +926,6 @@ static MUI_ENTRY trTRSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY trTRBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " Kur ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Kur, bilgisayar\215n\215z\215n sabit diskine \224ny\201kleyiciyi kuramad\215.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        12,
-        "L\201tfen A: s\201r\201c\201s\201ne bi\207imlendirilmi\237 bir disket tak\215n\215z",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "ve ENTER'e bas\215n\215z.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = S\201rd\201r   F3 = \200\215k",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY trTRSelectPartitionEntries[] =
 {
     {
@@ -1012,27 +966,20 @@ static MUI_ENTRY trTRSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Bir ana b\224l\201m olu\237turmak i\207in P'ye bas\215n\215z.",
+        "\x07  Press C to create a primary/logical partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         17,
-        "\x07  Bir geni\237letilmi\237 b\224l\201m olu\237turmak i\207in E'ye bas\215n\215z.",
+        "\x07  Press E to create an extended partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "\x07  Mant\215ksal bir b\224l\201m olu\237turmak i\207in L'ye bas\215n\215z.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Var olan bir b\224l\201m\224 silmek i\207in D'ye bas\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1293,7 +1240,7 @@ static MUI_ENTRY trTRFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Kur, \237imdi b\224l\201m\201 bi\207imlendirecek. Devam etmek i\207in ENTER'e bas\215n\215z.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1441,7 +1388,7 @@ static MUI_ENTRY trTRFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY trTRBootLoaderEntries[] =
+static MUI_ENTRY trTRBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1453,7 +1400,7 @@ static MUI_ENTRY trTRBootLoaderEntries[] =
     {
         6,
         8,
-        "Kur, \224ny\201kleyiciyi kuruyor.",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1510,6 +1457,13 @@ static MUI_ENTRY trTRBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Kur, \224ny\201kleyiciyi kuruyor.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "\231ny\201kleyici diske kuruluyor, l\201tfen bekleyiniz...",
@@ -1522,6 +1476,52 @@ static MUI_ENTRY trTRBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY trTRBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Kur, bilgisayar\215n\215z\215n sabit diskine \224ny\201kleyiciyi kuramad\215.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        12,
+        "L\201tfen A: s\201r\201c\201s\201ne bi\207imlendirilmi\237 bir disket tak\215n\215z",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "ve ENTER'e bas\215n\215z.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = S\201rd\201r   F3 = \200\215k",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY trTRKeyboardSettingsEntries[] =
@@ -1913,13 +1913,6 @@ MUI_ERROR trTRErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "B\224l\201mlenmemi\237 disk alan\215n\215 silemezsiniz!\n"
-        "\n"
-        "  * Devam etmek i\207in bir tu\237a bas\215n\215z.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Kur, sistem b\224l\201m\201 \201zerinde %S \224ny\201kleme kodunu kurmada ba\237ar\215s\215z oldu.",
         "ENTER = Bilgisayar\215 Yeniden Ba\237lat"
@@ -2157,8 +2150,8 @@ MUI_PAGE trTRPages[] =
         trTRKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        trTRBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        trTRBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2173,12 +2166,12 @@ MUI_PAGE trTRPages[] =
         trTRSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         trTRBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        trTRBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        trTRBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,
@@ -2195,25 +2188,27 @@ MUI_STRING trTRStrings[] =
     {STRING_PLEASEWAIT,
     "   L\201tfen bekleyiniz..."},
     {STRING_INSTALLCREATEPARTITION,
-    "   ENTER = Kur  P = Ana B\224l\201m Olu\237tur  E = Geni\237letilmi\237 B\224l\201m Olu\237tur  F3 = \200\215k"},
+    "   ENTER = Kur  C = Ana B\224l\201m Olu\237tur  E = Geni\237letilmi\237 B\224l\201m Olu\237tur  F3 = \200\215k"},
     {STRING_INSTALLCREATELOGICAL,
-    "   ENTER = Kur   L = Mant\215ksal B\224l\201m Olu\237tur   F3 = \200\215k"},
+    "   ENTER = Kur   C = Mant\215ksal B\224l\201m Olu\237tur   F3 = \200\215k"},
     {STRING_INSTALLDELETEPARTITION,
     "   ENTER = Kur   D = B\224l\201m\201 Sil   F3 = \200\215k"},
     {STRING_DELETEPARTITION,
     "   D = B\224l\201m\201 Sil   F3 = \200\215k"},
     {STRING_PARTITIONSIZE,
     "Yeni b\224l\201m\201n b\201y\201kl\201\247\201:"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
     "\232zerinde bir ana b\224l\201m olu\237turmay\215 se\207tiniz:"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
     "\232zerinde bir geni\237letilmi\237 b\224l\201m olu\237turmay\215 se\207tiniz:"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
     "\232zerinde bir mant\215ksal b\224l\201m olu\237turmay\215 se\207tiniz:"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     "L\201tfen yeni b\224l\201m\201n b\201y\201kl\201\247\201n\201 megabayt olarak giriniz."},
     {STRING_CREATEPARTITION,
     "   ENTER = B\224l\201m Olu\237tur   ESC = \230ptal   F3 = \200\215k"},
+    {STRING_NEWPARTITION,
+    "Kur, \201zerinde bir yeni b\224l\201m olu\237turdu:"},
     {STRING_PARTFORMAT,
     "Bu b\224l\201m ileride bi\207imlendirilecektir."},
     {STRING_NONFORMATTEDPART,
@@ -2264,30 +2259,28 @@ MUI_STRING trTRStrings[] =
     "Bunun en bilinen nedeni, bir USB klavye kullan\215lmas\215d\215r.\r\n"},
     {STRING_CONSOLEFAIL3,
     "USB klavye daha t\201m\201yle desteklenmemektedir.\r\n"},
-    {STRING_FORMATTINGDISK,
-    "Kur, diskinizi bi\207imlendiriyor."},
+    {STRING_FORMATTINGPART,
+    "Kur, b\224l\201m\201 bi\207imlendiriyor..."},
     {STRING_CHECKINGDISK,
-    "Kur, diskinizi g\224zden ge\207iriyor."},
+    "Kur, diski g\224zden ge\207iriyor..."},
     {STRING_FORMATDISK1,
     " B\224l\201m\201 %S dosya sistemiyle h\215zl\215 bi\207imlendir. "},
     {STRING_FORMATDISK2,
     " B\224l\201m\201 %S dosya sistemiyle bi\207imlendir. "},
     {STRING_KEEPFORMAT,
     " \236imdiki dosya sistemini koru. (De\247i\237iklik yok.) "},
-    {STRING_HDINFOPARTCREATE_1,
+    {STRING_HDDISK1,
     "%s."},
-    {STRING_HDINFOPARTDELETE_1,
+    {STRING_HDDISK2,
     "\232zerinde: %s."},
     {STRING_PARTTYPE,
     "T\201r 0x%02x"},
-    {STRING_HDDINFO_1,
+    {STRING_HDDINFO1,
     // "Sabit Disk %lu (%I64u %s), Giri\237=%hu, Veriyolu=%hu, Kimlik=%hu (%wZ) [%s]"
     "%I64u %s Disk %lu (Giri\237=%hu, VYolu=%hu, Kimlik=%hu), (%wZ) [%s]"},
-    {STRING_HDDINFO_2,
+    {STRING_HDDINFO2,
     // "Sabit Disk %lu (%I64u %s), Giri\237=%hu, Veriyolu=%hu, Kimlik=%hu [%s]"
     "%I64u %s Disk %lu (Giri\237=%hu, VYolu=%hu, Kimlik=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "Kur, \201zerinde bir yeni b\224l\201m olu\237turdu:"},
     {STRING_UNPSPACE,
     "Kullan\215lmayan Alan"},
     {STRING_MAXSIZE,

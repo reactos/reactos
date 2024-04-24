@@ -14,7 +14,6 @@ DBG_DEFAULT_CHANNEL(WARNING);
 
 extern EFI_SYSTEM_TABLE* GlobalSystemTable;
 extern EFI_HANDLE GlobalImageHandle;
-BOOLEAN AcpiPresent = FALSE;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -53,7 +52,7 @@ MachInit(const char *CmdLine)
     MachVtbl.HwIdle = UefiHwIdle;
 
     /* Setup GOP */
-    if (UefiInitalizeVideo() != EFI_SUCCESS)
+    if (UefiInitializeVideo() != EFI_SUCCESS)
     {
         ERR("Failed to setup GOP\n");
     }

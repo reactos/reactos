@@ -1,5 +1,5 @@
 ;// Romanian translation by 2011-2019 Ștefan Fulea (stefan.fulea@mail.com)
-;// Romanian translation by 2023 Andrei Miloiu (miloiuandrei@gmail.com)
+;// Romanian translation by 2023-2024 Andrei Miloiu (miloiuandrei@gmail.com)
 ;// Russian translation by Kudratov Olimjon (olim98@bk.ru)
 ;// Spanish translation by Ismael Ferreras Morezuelas <2014-11-07>
 ;// Turkish translation by 2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
@@ -177,8 +177,9 @@ parole, limitări de autentificare, și informații de domeniu.
 Sunt necesare două condiții pentru ca opțiunile utilizate cu
 NET ACCOUNTS să aibă efect.
 
-- Cerințele de autentificare și parolele au sens doar când conturile
-  sunt instituite (cu Gestionarul de Utilizatori sau comanda NET USER).
+- Cerințele de parolă și de conectare sunt efective numai dacă au fost
+  configurate conturi de utilizator (cu Managerul de Utilizatori sau comanda
+  NET USER).
 
 - Este necesar ca serviciul Net Logon să fie activ în toate servele din
   domeniul de autentificare. Serviciul Net Logon este lansat automat la
@@ -485,7 +486,7 @@ To polecenie jest dostępne tylko na serwerowych systemach opoeracyjnych.
 Language=Romanian
 NET COMPUTER adaugă sau șterge calculatoare dintr-o bază de date a unui
 domeniu. Această comandă este disponibilă numai pentru sistemele de operare
-pentru servitoare.
+pentru servere.
 
 \\numele calculatorului   
                  Specifică ce calculator trebuie adăugat sau șters din
@@ -600,12 +601,12 @@ NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
 NET CONFIG afișează informații de configurații ale serviciului stației de lucru
-sau a servitorului. Când este folosit fără comutatorul stației de lucru sau
-servitorului, se afișează a listă a serviciilor configurabile. Pentru a obține
+sau a serverului. Când este folosit fără comutatorul stației de lucru sau
+serverului, se afișează a listă a serviciilor configurabile. Pentru a obține
 ajutor legat de configurarea unui serviciu, tastați serviciul NET HELP CONFIG.
 
 SERVER        Afișează informații despre configurarea
-              serviciului servitorului.
+              serviciului serverului.
 WORKSTATION   Afișează informații despre configurarea
               serviciului stației de lucru.
 
@@ -763,20 +764,20 @@ NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
 NET CONFIG SERVER       afișează sau schimbă configurații pentru serviciul
-                        servitorului.
+                        serverului.
 /AUTODISCONNECT:timp    Setează numărul maxim de minute ale unei sesiuni a
                         utilizatorului ce poate fi inactivă înainte de a fi
 						deconectată. Puteți specifica -1 pentru a nu o deconecta niciodată.
 						Intervalul este de -1-65535 (de) minute; valoare implicită este 15.
-/SRVCOMMENT:"text"      Adaugă un comentariu pentru servitor ce este afișat pe
+/SRVCOMMENT:"text"      Adaugă un comentariu pentru server ce este afișat pe
                         ecran și cu comanda NET VIEW. Introduceți textul între
 						ghilimele.
-/HIDDEN:{YES | NO}      Specifică dacă numele calculatorului servitorului apare
-                        în listările de servitoare de pe ecran. Rețineți că
-						listările de servitoare de pe ecran nu modifică permisiunile din acel
-						servitor. Valoarea implicită este NO (NU).
+/HIDDEN:{YES | NO}      Specifică dacă numele calculatorului serverului apare
+                        în listările de servere de pe ecran. Rețineți că
+						listările de servere de pe ecran nu modifică permisiunile din acel
+						server. Valoarea implicită este NO (NU).
 
-Pentru a afișa configurația actuală pentru serviciul servitorului, tastați
+Pentru a afișa configurația actuală pentru serviciul serverului, tastați
 NET CONFIG SERVER fără parametri.
 
 NET HELP comandă | MORE (pentru afișare paginată).
@@ -1182,8 +1183,8 @@ NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
 Comanda NET GROUP adaugă, afișează sau modifică grupurile globale ale
-servitoarelor. Când e folosită fără parametrii, se afișează numele de grup pe
-servitoare.
+serverelor. Când e folosită fără parametrii, se afișează numele de grup pe
+servere.
 
 numele grupului  Este numele grupului de adăugat, de extins sau de șters.
                  Furnizează doar un nume de grup pentru a vedea o listă de
@@ -2159,7 +2160,7 @@ nazwa_urządzenia
 NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Romanian
-Comanda NET SHARE face resursele servitorului valabile utilizatorilor rețelei.
+Comanda NET SHARE face resursele serverului valabile utilizatorilor rețelei.
 Când e folosită fără opțiuni, se listează informațiile despre toate resursele
 ce sunt partajate la calculator. Pentru fiecare resursă Windows raportează
 numele dispozitivului(elor) sau numele căii(ilor) și un comentariu descriptiv
@@ -2543,10 +2544,10 @@ NET HELP polecenie | MORE wyświetla informacje na jednym ekranie na raz.
 .
 Language=Romanian
 Comanda NET STATISTICS afișează jurnalul de statistici pentru serviciul stației
-de lucru locale sau pentru servitor. Folosită fără parametri, comanda NET
+de lucru locale sau pentru server. Folosită fără parametri, comanda NET
 STATISTICS afișează serviciile pentru care sunt disponibile statistici.
 
-SERVER        Afișează statisticile serviciului servitorului.
+SERVER        Afișează statisticile serviciului serverului.
 WORKSTATION   Afișează statisticile serviciului stației de lucru.
 
 NET HELP comandă | MORE (pentru afișare paginată).
@@ -3115,7 +3116,7 @@ Opțiuni      Sunt după cum urmează:
    Opțiuni                    Descriere
    --------------------------------------------------------------------
    /ACTIVE:{YES | NO}         Activează sau dezactivează contul. Dacă contul nu
-                              e activ, utilizatorul nu poate accesa servitorul.
+                              e activ, utilizatorul nu poate accesa serverul.
 							  Implicit este DA (YES).
    /COMMENT:"text"            Furnizează un comentariu descriptiv despre contul
                               utilizatorului. Introduceți textul între

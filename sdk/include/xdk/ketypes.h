@@ -120,9 +120,6 @@ typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX {
   } DUMMYUNIONNAME;
 } SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX, *PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX;
 
-$endif(_WDMDDK_ || _WINNT_)
-$if(_WDMDDK_)
-
 /* Processor features */
 #define PF_FLOATING_POINT_PRECISION_ERRATA       0
 #define PF_FLOATING_POINT_EMULATED               1
@@ -156,6 +153,21 @@ $if(_WDMDDK_)
 #define PF_ARM_V8_INSTRUCTIONS_AVAILABLE        29
 #define PF_ARM_V8_CRYPTO_INSTRUCTIONS_AVAILABLE 30
 #define PF_ARM_V8_CRC32_INSTRUCTIONS_AVAILABLE  31
+#define PF_RDTSCP_INSTRUCTION_AVAILABLE         32
+#define PF_RDPID_INSTRUCTION_AVAILABLE          33
+#define PF_ARM_V81_ATOMIC_INSTRUCTIONS_AVAILABLE 34
+#define PF_SSSE3_INSTRUCTIONS_AVAILABLE         36
+#define PF_SSE4_1_INSTRUCTIONS_AVAILABLE        37
+#define PF_SSE4_2_INSTRUCTIONS_AVAILABLE        38
+#define PF_AVX_INSTRUCTIONS_AVAILABLE           39
+#define PF_AVX2_INSTRUCTIONS_AVAILABLE          40
+#define PF_AVX512F_INSTRUCTIONS_AVAILABLE       41
+#define PF_ARM_V82_DP_INSTRUCTIONS_AVAILABLE    43
+#define PF_ARM_V83_JSCVT_INSTRUCTIONS_AVAILABLE 44
+#define PF_ARM_V83_LRCPC_INSTRUCTIONS_AVAILABLE 45
+
+$endif(_WDMDDK_ || _WINNT_)
+$if(_WDMDDK_)
 
 #define MAXIMUM_WAIT_OBJECTS              64
 
@@ -1120,11 +1132,84 @@ typedef struct _TIMER_SET_COALESCABLE_TIMER_INFO {
 #define XSTATE_LEGACY_FLOATING_POINT        0
 #define XSTATE_LEGACY_SSE                   1
 #define XSTATE_GSSE                         2
+#define XSTATE_AVX                          XSTATE_GSSE
+#define XSTATE_MPX_BNDREGS                  3
+#define XSTATE_MPX_BNDCSR                   4
+#define XSTATE_AVX512_KMASK                 5
+#define XSTATE_AVX512_ZMM_H                 6
+#define XSTATE_AVX512_ZMM                   7
+#define XSTATE_IPT                          8
+#define XSTATE_PASID                        10
+#define XSTATE_CET_U                        11
+#define XSTATE_CET_S                        12
+#define XSTATE_AMX_TILE_CONFIG              17
+#define XSTATE_AMX_TILE_DATA                18
+#define XSTATE_LWP                          62
+#define MAXIMUM_XSTATE_FEATURES             64
 
 #define XSTATE_MASK_LEGACY_FLOATING_POINT   (1LL << (XSTATE_LEGACY_FLOATING_POINT))
 #define XSTATE_MASK_LEGACY_SSE              (1LL << (XSTATE_LEGACY_SSE))
 #define XSTATE_MASK_LEGACY                  (XSTATE_MASK_LEGACY_FLOATING_POINT | XSTATE_MASK_LEGACY_SSE)
 #define XSTATE_MASK_GSSE                    (1LL << (XSTATE_GSSE))
+#define XSTATE_MASK_AVX                     XSTATE_MASK_GSSE
+#define XSTATE_MASK_MPX                     ((1LL << (XSTATE_MPX_BNDREGS)) | (1LL << (XSTATE_MPX_BNDCSR)))
+#define XSTATE_MASK_AVX512                  ((1LL << (XSTATE_AVX512_KMASK)) | (1LL << (XSTATE_AVX512_ZMM_H)) |  (1LL << (XSTATE_AVX512_ZMM)))
+#define XSTATE_MASK_IPT                     (1LL << (XSTATE_IPT))
+#define XSTATE_MASK_PASID                   (1LL << (XSTATE_PASID))
+#define XSTATE_MASK_CET_U                   (1LL << (XSTATE_CET_U))
+#define XSTATE_MASK_CET_S                   (1LL << (XSTATE_CET_S))
+#define XSTATE_MASK_AMX_TILE_CONFIG         (1LL << (XSTATE_AMX_TILE_CONFIG))
+#define XSTATE_MASK_AMX_TILE_DATA           (1LL << (XSTATE_AMX_TILE_DATA))
+#define XSTATE_MASK_LWP                     (1LL << (XSTATE_LWP))
+
+#if defined(_AMD64_)
+#define XSTATE_MASK_ALLOWED \
+    (XSTATE_MASK_LEGACY | \
+     XSTATE_MASK_AVX | \
+     XSTATE_MASK_MPX | \
+     XSTATE_MASK_AVX512 | \
+     XSTATE_MASK_IPT | \
+     XSTATE_MASK_PASID | \
+     XSTATE_MASK_CET_U | \
+     XSTATE_MASK_AMX_TILE_CONFIG | \
+     XSTATE_MASK_AMX_TILE_DATA | \
+     XSTATE_MASK_LWP)
+#elif defined(_X86_)
+#define XSTATE_MASK_ALLOWED \
+    (XSTATE_MASK_LEGACY | \
+     XSTATE_MASK_AVX | \
+     XSTATE_MASK_MPX | \
+     XSTATE_MASK_AVX512 | \
+     XSTATE_MASK_IPT | \
+     XSTATE_MASK_CET_U | \
+     XSTATE_MASK_LWP)
+#endif
+
+#define XSTATE_MASK_PERSISTENT              ((1LL << (XSTATE_MPX_BNDCSR)) | XSTATE_MASK_LWP)
+#define XSTATE_MASK_USER_VISIBLE_SUPERVISOR (XSTATE_MASK_CET_U)
+#define XSTATE_MASK_LARGE_FEATURES          (XSTATE_MASK_AMX_TILE_DATA)
+
+#if defined(_X86_)
+#if !defined(__midl) && !defined(MIDL_PASS)
+C_ASSERT((XSTATE_MASK_ALLOWED & XSTATE_MASK_LARGE_FEATURES) == 0);
+#endif
+#endif
+
+#define XSTATE_COMPACTION_ENABLE            63
+#define XSTATE_COMPACTION_ENABLE_MASK       (1LL << (XSTATE_COMPACTION_ENABLE))
+#define XSTATE_ALIGN_BIT                    1
+#define XSTATE_ALIGN_MASK                   (1LL << (XSTATE_ALIGN_BIT))
+
+#define XSTATE_XFD_BIT                      2
+#define XSTATE_XFD_MASK                     (1LL << (XSTATE_XFD_BIT))
+
+#define XSTATE_CONTROLFLAG_XSAVEOPT_MASK    1
+#define XSTATE_CONTROLFLAG_XSAVEC_MASK      2
+#define XSTATE_CONTROLFLAG_XFD_MASK         4
+#define XSTATE_CONTROLFLAG_VALID_MASK \
+    (XSTATE_CONTROLFLAG_XSAVEOPT_MASK | \
+     XSTATE_CONTROLFLAG_XSAVEC_MASK | \
+     XSTATE_CONTROLFLAG_XFD_MASK)
 
 #define MAXIMUM_XSTATE_FEATURES             64
 
@@ -1133,11 +1218,37 @@ typedef struct _XSTATE_FEATURE {
   ULONG Size;
 } XSTATE_FEATURE, *PXSTATE_FEATURE;
 
-typedef struct _XSTATE_CONFIGURATION {
-  ULONG64 EnabledFeatures;
-  ULONG Size;
-  ULONG OptimizedSave:1;
-  XSTATE_FEATURE Features[MAXIMUM_XSTATE_FEATURES];
+typedef struct _XSTATE_CONFIGURATION
+{
+    ULONG64 EnabledFeatures;
+#if (NTDDI_VERSION >= NTDDI_WINBLUE)
+    ULONG64 EnabledVolatileFeatures;
+#endif
+    ULONG Size;
+    union
+    {
+        ULONG ControlFlags;
+        struct
+        {
+            ULONG OptimizedSave:1;
+            ULONG CompactionEnabled:1; // WIN10+
+        };
+    };
+    XSTATE_FEATURE Features[MAXIMUM_XSTATE_FEATURES];
+#if (NTDDI_VERSION >= NTDDI_WIN10)
+    ULONG64 EnabledSupervisorFeatures;
+    ULONG64 AlignedFeatures;
+    ULONG AllFeatureSize;
+    ULONG AllFeatures[MAXIMUM_XSTATE_FEATURES];
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS5)
+    ULONG64 EnabledUserVisibleSupervisorFeatures;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN11)
+    ULONG64 ExtendedFeatureDisableFeatures;
+    ULONG AllNonLargeFeatureSize;
+    ULONG Spare;
+#endif
 } XSTATE_CONFIGURATION, *PXSTATE_CONFIGURATION;
 
 #define MAX_WOW64_SHARED_ENTRIES 16
@@ -1152,117 +1263,130 @@ typedef struct _XSTATE_CONFIGURATION {
 #define NX_SUPPORT_POLICY_OPTOUT    3
 #endif
 
-typedef struct _KUSER_SHARED_DATA {
-  ULONG TickCountLowDeprecated;
-  ULONG TickCountMultiplier;
-  volatile KSYSTEM_TIME InterruptTime;
-  volatile KSYSTEM_TIME SystemTime;
-  volatile KSYSTEM_TIME TimeZoneBias;
-  USHORT ImageNumberLow;
-  USHORT ImageNumberHigh;
-  WCHAR NtSystemRoot[260];
-  ULONG MaxStackTraceDepth;
-  ULONG CryptoExponent;
-  ULONG TimeZoneId;
-  ULONG LargePageMinimum;
-  ULONG Reserved2[7];
-  NT_PRODUCT_TYPE NtProductType;
-  BOOLEAN ProductTypeIsValid;
-  ULONG NtMajorVersion;
-  ULONG NtMinorVersion;
-  BOOLEAN ProcessorFeatures[PROCESSOR_FEATURE_MAX];
-  ULONG Reserved1;
-  ULONG Reserved3;
-  volatile ULONG TimeSlip;
-  ALTERNATIVE_ARCHITECTURE_TYPE AlternativeArchitecture;
-  ULONG AltArchitecturePad[1];
-  LARGE_INTEGER SystemExpirationDate;
-  ULONG SuiteMask;
-  BOOLEAN KdDebuggerEnabled;
+//
+// Shared Kernel User Data
+// Keep in sync with sdk/include/ndk/ketypes.h
+//
+typedef struct _KUSER_SHARED_DATA
+{
+    ULONG TickCountLowDeprecated;                           // 0x0
+    ULONG TickCountMultiplier;                              // 0x4
+    volatile KSYSTEM_TIME InterruptTime;                    // 0x8
+    volatile KSYSTEM_TIME SystemTime;                       // 0x14
+    volatile KSYSTEM_TIME TimeZoneBias;                     // 0x20
+    USHORT ImageNumberLow;                                  // 0x2c
+    USHORT ImageNumberHigh;                                 // 0x2e
+    WCHAR NtSystemRoot[260];                                // 0x30
+    ULONG MaxStackTraceDepth;                               // 0x238
+    ULONG CryptoExponent;                                   // 0x23c
+    ULONG TimeZoneId;                                       // 0x240
+    ULONG LargePageMinimum;                                 // 0x244
+    ULONG Reserved2[7];                                     // 0x248
+    NT_PRODUCT_TYPE NtProductType;                          // 0x264
+    BOOLEAN ProductTypeIsValid;                             // 0x268
+    ULONG NtMajorVersion;                                   // 0x26c
+    ULONG NtMinorVersion;                                   // 0x270
+    BOOLEAN ProcessorFeatures[PROCESSOR_FEATURE_MAX];       // 0x274
+    ULONG Reserved1;                                        // 0x2b4
+    ULONG Reserved3;                                        // 0x2b8
+    volatile ULONG TimeSlip;                                // 0x2bc
+    ALTERNATIVE_ARCHITECTURE_TYPE AlternativeArchitecture;  // 0x2c0
+    ULONG AltArchitecturePad[1];                            // 0x2c4
+    LARGE_INTEGER SystemExpirationDate;                     // 0x2c8
+    ULONG SuiteMask;                                        // 0x2d0
+    BOOLEAN KdDebuggerEnabled;                              // 0x2d4
 #if (NTDDI_VERSION >= NTDDI_WINXPSP2)
-  UCHAR NXSupportPolicy;
+    UCHAR NXSupportPolicy;                                  // 0x2d5
 #endif
-  volatile ULONG ActiveConsoleId;
-  volatile ULONG DismountCount;
-  ULONG ComPlusPackage;
-  ULONG LastSystemRITEventTickCount;
-  ULONG NumberOfPhysicalPages;
-  BOOLEAN SafeBootMode;
+    volatile ULONG ActiveConsoleId;                         // 0x2d8
+    volatile ULONG DismountCount;                           // 0x2dc
+    ULONG ComPlusPackage;                                   // 0x2e0
+    ULONG LastSystemRITEventTickCount;                      // 0x2e4
+    ULONG NumberOfPhysicalPages;                            // 0x2e8
+    BOOLEAN SafeBootMode;                                   // 0x2ec
 #if (NTDDI_VERSION >= NTDDI_WIN7)
-  _ANONYMOUS_UNION union {
-    UCHAR TscQpcData;
-    _ANONYMOUS_STRUCT struct {
-      UCHAR TscQpcEnabled:1;
-      UCHAR TscQpcSpareFlag:1;
-      UCHAR TscQpcShift:6;
-    } DUMMYSTRUCTNAME;
-  } DUMMYUNIONNAME;
-  UCHAR TscQpcPad[2];
+    union
+    {
+        UCHAR TscQpcData;                                   // 0x2ed
+        struct
+        {
+            UCHAR TscQpcEnabled:1;                          // 0x2ed
+            UCHAR TscQpcSpareFlag:1;                        // 0x2ed
+            UCHAR TscQpcShift:6;                            // 0x2ed
+        } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME;
+    UCHAR TscQpcPad[2];                                     // 0x2ee
 #endif
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-  _ANONYMOUS_UNION union {
-    ULONG SharedDataFlags;
-    _ANONYMOUS_STRUCT struct {
-      ULONG DbgErrorPortPresent:1;
-      ULONG DbgElevationEnabled:1;
-      ULONG DbgVirtEnabled:1;
-      ULONG DbgInstallerDetectEnabled:1;
-      ULONG DbgSystemDllRelocated:1;
-      ULONG DbgDynProcessorEnabled:1;
-      ULONG DbgSEHValidationEnabled:1;
-      ULONG SpareBits:25;
-    } DUMMYSTRUCTNAME2;
-  } DUMMYUNIONNAME2;
+    union
+    {
+        ULONG SharedDataFlags;                              // 0x2f0
+        struct
+        {
+            ULONG DbgErrorPortPresent:1;                    // 0x2f0
+            ULONG DbgElevationEnabled:1;                    // 0x2f0
+            ULONG DbgVirtEnabled:1;                         // 0x2f0
+            ULONG DbgInstallerDetectEnabled:1;              // 0x2f0
+            ULONG DbgSystemDllRelocated:1;                  // 0x2f0
+            ULONG DbgDynProcessorEnabled:1;                 // 0x2f0
+            ULONG DbgSEHValidationEnabled:1;                // 0x2f0
+            ULONG SpareBits:25;                             // 0x2f0
+        } DUMMYSTRUCTNAME2;
+    } DUMMYUNIONNAME2;
 #else
-  ULONG TraceLogging;
+    ULONG TraceLogging;
 #endif
-  ULONG DataFlagsPad[1];
-  ULONGLONG TestRetInstruction;
-  ULONG SystemCall;
-  ULONG SystemCallReturn;
-  ULONGLONG SystemCallPad[3];
-  _ANONYMOUS_UNION union {
-    volatile KSYSTEM_TIME TickCount;
-    volatile ULONG64 TickCountQuad;
-    _ANONYMOUS_STRUCT struct {
-      ULONG ReservedTickCountOverlay[3];
-      ULONG TickCountPad[1];
-    } DUMMYSTRUCTNAME;
-  } DUMMYUNIONNAME3;
-  ULONG Cookie;
-  ULONG CookiePad[1];
+    ULONG DataFlagsPad[1];                                  // 0x2f4
+    ULONGLONG TestRetInstruction;                           // 0x2f8
+    ULONG SystemCall;                                       // 0x300
+    ULONG SystemCallReturn;                                 // 0x304
+    ULONGLONG SystemCallPad[3];                             // 0x308
+    union
+    {
+        volatile KSYSTEM_TIME TickCount;                    // 0x320
+        volatile ULONG64 TickCountQuad;                     // 0x320
+        struct
+        {
+            ULONG ReservedTickCountOverlay[3];              // 0x320
+            ULONG TickCountPad[1];                          // 0x32c
+        } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME3;
+    ULONG Cookie;                                           // 0x330
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+    ULONG CookiePad[1];                                     // 0x334
+    LONGLONG ConsoleSessionForegroundProcessId;             // 0x338
+#endif
 #if (NTDDI_VERSION >= NTDDI_WS03)
-  LONGLONG ConsoleSessionForegroundProcessId;
-  ULONG Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES];
+    ULONG Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES]; // 2K3: 0x334 / Vista+: 0x340
 #endif
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 #if (NTDDI_VERSION >= NTDDI_WIN7)
-  USHORT UserModeGlobalLogger[16];
+    USHORT UserModeGlobalLogger[16];                        // 0x380
 #else
-  USHORT UserModeGlobalLogger[8];
-  ULONG HeapTracingPid[2];
-  ULONG CritSecTracingPid[2];
+    USHORT UserModeGlobalLogger[8];                         // 0x380
+    ULONG HeapTracingPid[2];                                // 0x390
+    ULONG CritSecTracingPid[2];                             // 0x398
 #endif
-  ULONG ImageFileExecutionOptions;
+    ULONG ImageFileExecutionOptions;                        // 0x3a0
 #if (NTDDI_VERSION >= NTDDI_VISTASP1)
-  ULONG LangGenerationCount;
+    ULONG LangGenerationCount;                              // 0x3a4
 #else
   /* 4 bytes padding */
 #endif
-  ULONGLONG Reserved5;
-  volatile ULONG64 InterruptTimeBias;
-#endif
+    ULONGLONG Reserved5;                                    // 0x3a8
+    volatile ULONG64 InterruptTimeBias;                     // 0x3b0
+#endif // NTDDI_VERSION >= NTDDI_VISTA
 #if (NTDDI_VERSION >= NTDDI_WIN7)
-  volatile ULONG64 TscQpcBias;
-  volatile ULONG ActiveProcessorCount;
-  volatile USHORT ActiveGroupCount;
-  USHORT Reserved4;
-  volatile ULONG AitSamplingValue;
-  volatile ULONG AppCompatFlag;
-  ULONGLONG SystemDllNativeRelocation;
-  ULONG SystemDllWowRelocation;
-  ULONG XStatePad[1];
-  XSTATE_CONFIGURATION XState;
+    volatile ULONG64 TscQpcBias;                            // 0x3b8
+    volatile ULONG ActiveProcessorCount;                    // 0x3c0
+    volatile USHORT ActiveGroupCount;                       // 0x3c4
+    USHORT Reserved4;                                       // 0x3c6
+    volatile ULONG AitSamplingValue;                        // 0x3c8
+    volatile ULONG AppCompatFlag;                           // 0x3cc
+    ULONGLONG SystemDllNativeRelocation;                    // 0x3d0
+    ULONG SystemDllWowRelocation;                           // 0x3d8
+    ULONG XStatePad[1];                                     // 0x3dc
+    XSTATE_CONFIGURATION XState;                            // 0x3e0
 #endif
 } KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 

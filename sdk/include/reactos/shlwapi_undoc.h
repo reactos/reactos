@@ -25,6 +25,27 @@
 extern "C" {
 #endif /* defined(__cplusplus) */
 
+#define SHELL_NO_POLICY ((DWORD)-1)
+
+typedef struct tagPOLICYDATA
+{
+    DWORD policy;    /* flags value passed to SHRestricted */
+    LPCWSTR appstr;  /* application str such as "Explorer" */
+    LPCWSTR keystr;  /* name of the actual registry key / policy */
+} POLICYDATA, *LPPOLICYDATA;
+
+HANDLE WINAPI SHGlobalCounterCreate(REFGUID guid);
+PVOID WINAPI SHInterlockedCompareExchange(PVOID *dest, PVOID xchg, PVOID compare);
+LONG WINAPI SHGlobalCounterGetValue(HANDLE hGlobalCounter);
+LONG WINAPI SHGlobalCounterIncrement(HANDLE hGlobalCounter);
+
+DWORD WINAPI
+SHRestrictionLookup(
+    _In_ DWORD policy,
+    _In_ LPCWSTR key,
+    _In_ const POLICYDATA *polTable,
+    _Inout_ LPDWORD polArr);
+
 BOOL WINAPI SHAboutInfoA(LPSTR lpszDest, DWORD dwDestLen);
 BOOL WINAPI SHAboutInfoW(LPWSTR lpszDest, DWORD dwDestLen);
 #ifdef UNICODE
@@ -59,6 +80,7 @@ HRESULT WINAPI MayExecForward(IUnknown* lpUnknown, INT iUnk, REFGUID pguidCmdGro
 HRESULT WINAPI IsQSForward(REFGUID pguidCmdGroup,ULONG cCmds, OLECMD *prgCmds);
 BOOL WINAPI SHIsChildOrSelf(HWND hParent, HWND hChild);
 HRESULT WINAPI SHForwardContextMenuMsg(IUnknown* pUnk, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT* pResult, BOOL useIContextMenu2);
+VOID WINAPI SHSetDefaultDialogFont(HWND hWnd, INT id);
 
 HRESULT WINAPI SHRegGetCLSIDKeyW(REFGUID guid, LPCWSTR lpszValue, BOOL bUseHKCU, BOOL bCreate, PHKEY phKey);
 
@@ -272,11 +294,35 @@ ShellMessageBoxWrapW(
 
 #define WHICH_DEFAULT   (WHICH_PIF | WHICH_COM | WHICH_EXE | WHICH_BAT | WHICH_LNK | WHICH_CMD)
 
+/* dwClass flags for PathIsValidCharA and PathIsValidCharW */
+#define PATH_CHAR_CLASS_LETTER      0x00000001
+#define PATH_CHAR_CLASS_ASTERIX     0x00000002
+#define PATH_CHAR_CLASS_DOT         0x00000004
+#define PATH_CHAR_CLASS_BACKSLASH   0x00000008
+#define PATH_CHAR_CLASS_COLON       0x00000010
+#define PATH_CHAR_CLASS_SEMICOLON   0x00000020
+#define PATH_CHAR_CLASS_COMMA       0x00000040
+#define PATH_CHAR_CLASS_SPACE       0x00000080
+#define PATH_CHAR_CLASS_OTHER_VALID 0x00000100
+#define PATH_CHAR_CLASS_DOUBLEQUOTE 0x00000200
+#define PATH_CHAR_CLASS_INVALID     0x00000000
+#define PATH_CHAR_CLASS_ANY         0xffffffff
+
 BOOL WINAPI PathFileExistsDefExtW(LPWSTR lpszPath, DWORD dwWhich);
 BOOL WINAPI PathFindOnPathExW(LPWSTR lpszFile, LPCWSTR *lppszOtherDirs, DWORD dwWhich);
 VOID WINAPI FixSlashesAndColonW(LPWSTR);
+BOOL WINAPI PathIsValidCharA(char c, DWORD dwClass);
 BOOL WINAPI PathIsValidCharW(WCHAR c, DWORD dwClass);
 BOOL WINAPI SHGetPathFromIDListWrapW(LPCITEMIDLIST pidl, LPWSTR pszPath);
+
+BOOL WINAPI
+IContextMenu_Invoke(
+    _In_ IContextMenu *pContextMenu,
+    _In_ HWND hwnd,
+    _In_ LPCSTR lpVerb,
+    _In_ UINT uFlags);
+
+DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid);
 
 #ifdef __cplusplus
 } /* extern "C" */

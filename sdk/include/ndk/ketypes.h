@@ -138,39 +138,6 @@ Author:
 #define CLOCK_QUANTUM_DECREMENT         3
 
 //
-// Kernel Feature Bits
-//
-#define KF_V86_VIS                      0x00000001
-#define KF_RDTSC                        0x00000002
-#define KF_CR4                          0x00000004
-#define KF_CMOV                         0x00000008
-#define KF_GLOBAL_PAGE                  0x00000010
-#define KF_LARGE_PAGE                   0x00000020
-#define KF_MTRR                         0x00000040
-#define KF_CMPXCHG8B                    0x00000080
-#define KF_MMX                          0x00000100
-#define KF_WORKING_PTE                  0x00000200
-#define KF_PAT                          0x00000400
-#define KF_FXSR                         0x00000800
-#define KF_FAST_SYSCALL                 0x00001000
-#define KF_XMMI                         0x00002000
-#define KF_3DNOW                        0x00004000
-#define KF_AMDK6MTRR                    0x00008000
-#define KF_XMMI64                       0x00010000
-#define KF_DTS                          0x00020000
-#define KF_BRANCH                       0x00020000 // from ksamd64.inc
-#define KF_SSE3                         0x00080000
-#define KF_CMPXCHG16B                   0x00100000
-#define KF_XSTATE                       0x00800000 // from ks386.inc, ksamd64.inc
-#define KF_NX_BIT                       0x20000000
-#define KF_NX_DISABLED                  0x40000000
-#define KF_NX_ENABLED                   0x80000000
-
-#define KF_XSAVEOPT_BIT                 15
-#define KF_XSTATE_BIT                   23
-#define KF_RDWRFSGSBASE_BIT             28
-
-//
 // Internal Exception Codes
 //
 #define KI_EXCEPTION_INTERNAL           0x10000000
@@ -551,78 +518,171 @@ typedef struct _KSYSTEM_TIME
     LONG High2Time;
 } KSYSTEM_TIME, *PKSYSTEM_TIME;
 
+#define MAXIMUM_XSTATE_FEATURES             64
+
+typedef struct _XSTATE_FEATURE
+{
+    ULONG Offset;
+    ULONG Size;
+} XSTATE_FEATURE, *PXSTATE_FEATURE;
+
+typedef struct _XSTATE_CONFIGURATION
+{
+    ULONG64 EnabledFeatures;
+#if (NTDDI_VERSION >= NTDDI_WINBLUE)
+    ULONG64 EnabledVolatileFeatures;
+#endif
+    ULONG Size;
+    union
+    {
+        ULONG ControlFlags;
+        struct
+        {
+            ULONG OptimizedSave:1;
+            ULONG CompactionEnabled:1; // WIN10+
+        };
+    };
+    XSTATE_FEATURE Features[MAXIMUM_XSTATE_FEATURES];
+#if (NTDDI_VERSION >= NTDDI_WIN10)
+    ULONG64 EnabledSupervisorFeatures;
+    ULONG64 AlignedFeatures;
+    ULONG AllFeatureSize;
+    ULONG AllFeatures[MAXIMUM_XSTATE_FEATURES];
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS5)
+    ULONG64 EnabledUserVisibleSupervisorFeatures;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN11)
+    ULONG64 ExtendedFeatureDisableFeatures;
+    ULONG AllNonLargeFeatureSize;
+    ULONG Spare;
+#endif
+} XSTATE_CONFIGURATION, *PXSTATE_CONFIGURATION;
+
 //
 // Shared Kernel User Data
+// Keep in sync with sdk/include/xdk/ketypes.h
 //
 typedef struct _KUSER_SHARED_DATA
 {
-    ULONG TickCountLowDeprecated;
-    ULONG TickCountMultiplier;
-    volatile KSYSTEM_TIME InterruptTime;
-    volatile KSYSTEM_TIME SystemTime;
-    volatile KSYSTEM_TIME TimeZoneBias;
-    USHORT ImageNumberLow;
-    USHORT ImageNumberHigh;
-    WCHAR NtSystemRoot[260];
-    ULONG MaxStackTraceDepth;
-    ULONG CryptoExponent;
-    ULONG TimeZoneId;
-    ULONG LargePageMinimum;
-    ULONG Reserved2[7];
-    NT_PRODUCT_TYPE NtProductType;
-    BOOLEAN ProductTypeIsValid;
-    ULONG NtMajorVersion;
-    ULONG NtMinorVersion;
-    BOOLEAN ProcessorFeatures[PROCESSOR_FEATURE_MAX];
-    ULONG Reserved1;
-    ULONG Reserved3;
-    volatile ULONG TimeSlip;
-    ALTERNATIVE_ARCHITECTURE_TYPE AlternativeArchitecture;
-    LARGE_INTEGER SystemExpirationDate;
-    ULONG SuiteMask;
-    BOOLEAN KdDebuggerEnabled;
+    ULONG TickCountLowDeprecated;                           // 0x0
+    ULONG TickCountMultiplier;                              // 0x4
+    volatile KSYSTEM_TIME InterruptTime;                    // 0x8
+    volatile KSYSTEM_TIME SystemTime;                       // 0x14
+    volatile KSYSTEM_TIME TimeZoneBias;                     // 0x20
+    USHORT ImageNumberLow;                                  // 0x2c
+    USHORT ImageNumberHigh;                                 // 0x2e
+    WCHAR NtSystemRoot[260];                                // 0x30
+    ULONG MaxStackTraceDepth;                               // 0x238
+    ULONG CryptoExponent;                                   // 0x23c
+    ULONG TimeZoneId;                                       // 0x240
+    ULONG LargePageMinimum;                                 // 0x244
+    ULONG Reserved2[7];                                     // 0x248
+    NT_PRODUCT_TYPE NtProductType;                          // 0x264
+    BOOLEAN ProductTypeIsValid;                             // 0x268
+    ULONG NtMajorVersion;                                   // 0x26c
+    ULONG NtMinorVersion;                                   // 0x270
+    BOOLEAN ProcessorFeatures[PROCESSOR_FEATURE_MAX];       // 0x274
+    ULONG Reserved1;                                        // 0x2b4
+    ULONG Reserved3;                                        // 0x2b8
+    volatile ULONG TimeSlip;                                // 0x2bc
+    ALTERNATIVE_ARCHITECTURE_TYPE AlternativeArchitecture;  // 0x2c0
+    ULONG AltArchitecturePad[1];                            // 0x2c4
+    LARGE_INTEGER SystemExpirationDate;                     // 0x2c8
+    ULONG SuiteMask;                                        // 0x2d0
+    BOOLEAN KdDebuggerEnabled;                              // 0x2d4
 #if (NTDDI_VERSION >= NTDDI_WINXPSP2)
-    UCHAR NXSupportPolicy;
+    UCHAR NXSupportPolicy;                                  // 0x2d5
 #endif
-    volatile ULONG ActiveConsoleId;
-    volatile ULONG DismountCount;
-    ULONG ComPlusPackage;
-    ULONG LastSystemRITEventTickCount;
-    ULONG NumberOfPhysicalPages;
-    BOOLEAN SafeBootMode;
-    ULONG TraceLogging;
-    ULONG Fill0;
-    ULONGLONG TestRetInstruction;
-    ULONG SystemCall;
-    ULONG SystemCallReturn;
-    ULONGLONG SystemCallPad[3];
-    union {
-        volatile KSYSTEM_TIME TickCount;
-        volatile ULONG64 TickCountQuad;
-    };
-    ULONG Cookie;
-#if (NTDDI_VERSION >= NTDDI_WS03)
-    LONGLONG ConsoleSessionForegroundProcessId;
-    ULONG Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES];
-#endif
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    USHORT UserModeGlobalLogger[8];
-    ULONG HeapTracingPid[2];
-    ULONG CritSecTracingPid[2];
+    volatile ULONG ActiveConsoleId;                         // 0x2d8
+    volatile ULONG DismountCount;                           // 0x2dc
+    ULONG ComPlusPackage;                                   // 0x2e0
+    ULONG LastSystemRITEventTickCount;                      // 0x2e4
+    ULONG NumberOfPhysicalPages;                            // 0x2e8
+    BOOLEAN SafeBootMode;                                   // 0x2ec
+#if (NTDDI_VERSION >= NTDDI_WIN7)
     union
     {
-        ULONG SharedDataFlags;
+        UCHAR TscQpcData;                                   // 0x2ed
         struct
         {
-            ULONG DbgErrorPortPresent:1;
-            ULONG DbgElevationEnabled:1;
-            ULONG DbgVirtEnabled:1;
-            ULONG DbgInstallerDetectEnabled:1;
-            ULONG SpareBits:28;
-        };
-    };
-    ULONG ImageFileExecutionOptions;
-    KAFFINITY ActiveProcessorAffinity;
+            UCHAR TscQpcEnabled:1;                          // 0x2ed
+            UCHAR TscQpcSpareFlag:1;                        // 0x2ed
+            UCHAR TscQpcShift:6;                            // 0x2ed
+        } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME;
+    UCHAR TscQpcPad[2];                                     // 0x2ee
+#endif
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+    union
+    {
+        ULONG SharedDataFlags;                              // 0x2f0
+        struct
+        {
+            ULONG DbgErrorPortPresent:1;                    // 0x2f0
+            ULONG DbgElevationEnabled:1;                    // 0x2f0
+            ULONG DbgVirtEnabled:1;                         // 0x2f0
+            ULONG DbgInstallerDetectEnabled:1;              // 0x2f0
+            ULONG DbgSystemDllRelocated:1;                  // 0x2f0
+            ULONG DbgDynProcessorEnabled:1;                 // 0x2f0
+            ULONG DbgSEHValidationEnabled:1;                // 0x2f0
+            ULONG SpareBits:25;                             // 0x2f0
+        } DUMMYSTRUCTNAME2;
+    } DUMMYUNIONNAME2;
+#else
+    ULONG TraceLogging;
+#endif
+    ULONG DataFlagsPad[1];                                  // 0x2f4
+    ULONGLONG TestRetInstruction;                           // 0x2f8
+    ULONG SystemCall;                                       // 0x300
+    ULONG SystemCallReturn;                                 // 0x304
+    ULONGLONG SystemCallPad[3];                             // 0x308
+    union
+    {
+        volatile KSYSTEM_TIME TickCount;                    // 0x320
+        volatile ULONG64 TickCountQuad;                     // 0x320
+        struct
+        {
+            ULONG ReservedTickCountOverlay[3];              // 0x320
+            ULONG TickCountPad[1];                          // 0x32c
+        } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME3;
+    ULONG Cookie;                                           // 0x330
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+    ULONG CookiePad[1];                                     // 0x334
+    LONGLONG ConsoleSessionForegroundProcessId;             // 0x338
+#endif
+#if (NTDDI_VERSION >= NTDDI_WS03)
+    ULONG Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES]; // 2K3: 0x334 / Vista+: 0x340
+#endif
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    USHORT UserModeGlobalLogger[16];                        // 0x380
+#else
+    USHORT UserModeGlobalLogger[8];                         // 0x380
+    ULONG HeapTracingPid[2];                                // 0x390
+    ULONG CritSecTracingPid[2];                             // 0x398
+#endif
+    ULONG ImageFileExecutionOptions;                        // 0x3a0
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+    ULONG LangGenerationCount;                              // 0x3a4
+#else
+  /* 4 bytes padding */
+#endif
+    ULONGLONG Reserved5;                                    // 0x3a8
+    volatile ULONG64 InterruptTimeBias;                     // 0x3b0
+#endif // NTDDI_VERSION >= NTDDI_VISTA
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    volatile ULONG64 TscQpcBias;                            // 0x3b8
+    volatile ULONG ActiveProcessorCount;                    // 0x3c0
+    volatile USHORT ActiveGroupCount;                       // 0x3c4
+    USHORT Reserved4;                                       // 0x3c6
+    volatile ULONG AitSamplingValue;                        // 0x3c8
+    volatile ULONG AppCompatFlag;                           // 0x3cc
+    ULONGLONG SystemDllNativeRelocation;                    // 0x3d0
+    ULONG SystemDllWowRelocation;                           // 0x3d8
+    ULONG XStatePad[1];                                     // 0x3dc
+    XSTATE_CONFIGURATION XState;                            // 0x3e0
 #endif
 } KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 

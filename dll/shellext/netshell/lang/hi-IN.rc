@@ -1,32 +1,31 @@
 /*
  * PROJECT:     NETSHELL Hindi Translation
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Hindi translation of NETSHELL
- * COPYRIGHT:   Copyright 2019 Arnav Bhatt (arnavbhatt2004@gmail.com)
+ * COPYRIGHT:   Copyright 2019 Arnav Bhatt <arnavbhatt2004@gmail.com>
 */
 
 LANGUAGE LANG_HINDI, SUBLANG_HINDI_INDIA
 
-IDD_NETPROPERTIES DIALOGEX 0, 0, 246, 246
+IDD_NETPROPERTIES DIALOGEX 0, 0, 246, 216
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "सामान्य"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
+    CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 51, 230, 52
     LTEXT "का उपयोग कर कनेक्ट करें:", -1, 9, 9, 217, 8
-    EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
-    PUSHBUTTON "&कॉन्फ़िगर", IDC_CONFIGURE, 189, 38, 50, 14
-    LTEXT "चेक किए गए घटक इस कनेक्शन द्वारा उपयोग किए जाते हैं:", -1, 9, 59, 217, 8
-    PUSHBUTTON "&इंस्टॉल", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "&अनइंस्टॉल", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "&गुण", IDC_PROPERTIES, 174, 130, 65, 14
-    GROUPBOX "विवरण", -1, 9, 153, 230, 46, BS_GROUPBOX
-    LTEXT "कम्पोनन्ट विवरण यहाँ जाता है...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-    AUTOCHECKBOX "कनेक्ट होने पर टास्कबार में आइकन &दिखाएं", IDC_SHOWTASKBAR, 9, 206, 230, 12, WS_TABSTOP
-    AUTOCHECKBOX "मुझे &सूचित करें जब यह कनेक्शन सीमित है या कोई कनेक्टिविटी नहीं है", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
+    EDITTEXT IDC_NETCARDNAME, 9, 21, 165, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
+    PUSHBUTTON "&कॉन्फ़िगर", IDC_CONFIGURE, 179, 20, 60, 14
+    LTEXT "चेक किए गए घटक इस कनेक्शन द्वारा उपयोग किए जाते हैं:", -1, 9, 39, 217, 8
+    PUSHBUTTON "&इंस्टॉल", IDC_INSTALL, 9, 105, 65, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&अनइंस्टॉल", IDC_UNINSTALL, 90, 105, 65, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&गुण", IDC_PROPERTIES, 174, 105, 65, 14
+    GROUPBOX "विवरण", -1, 9, 128, 230, 46, BS_GROUPBOX
+    LTEXT "", IDC_DESCRIPTION, 15, 140, 217, 28, WS_GROUP
+    AUTOCHECKBOX "कनेक्ट होने पर टास्कबार में आइकन &दिखाएं", IDC_SHOWTASKBAR, 9, 181, 230, 12, WS_TABSTOP
+    AUTOCHECKBOX "मुझे &सूचित करें जब यह कनेक्शन सीमित है या कोई कनेक्टिविटी नहीं है", IDC_NOTIFYNOCONNECTION, 9, 195, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
 
-IDD_STATUS DIALOGEX 0, 0, 200, 280
+IDD_STATUS DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
 CAPTION "सामान्य"
 FONT 8, "MS Shell Dlg"

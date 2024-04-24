@@ -164,7 +164,7 @@ INT cmd_start (LPTSTR Rest)
             }
             else
             {
-                ConErrResPrintf(STRING_TYPE_ERROR1, option);
+                ConErrResPrintf(STRING_TYPE_ERROR, option);
                 return 0;
             }
         }

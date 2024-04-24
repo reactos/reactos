@@ -50,8 +50,6 @@ if(ARCH STREQUAL "i386")
     list(APPEND PCATLDR_ARC_SOURCE
         # disk/scsiport.c
         lib/fs/pxe.c
-        # arch/i386/halstub.c
-        # arch/i386/ntoskrnl.c
         arch/i386/drivemap.c
         arch/i386/hwacpi.c
         arch/i386/hwapm.c
@@ -120,7 +118,6 @@ elseif(ARCH STREQUAL "amd64")
 
     list(APPEND PCATLDR_ARC_SOURCE
         lib/fs/pxe.c
-        # arch/i386/ntoskrnl.c
         arch/i386/drivemap.c
         arch/i386/hwacpi.c
         arch/i386/hwapm.c

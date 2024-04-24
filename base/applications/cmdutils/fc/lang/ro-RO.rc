@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS FC Command
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
- * TRANSLATORS: Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ * TRANSLATORS: Copyright 2022-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -39,7 +39,7 @@ FC /B [discul1:][calea1]numele fișierului1 [drive2:][path2]numele fișierului2\
     IDS_OUT_OF_MEMORY "FC: Fără memorie\n"
     IDS_CANNOT_READ "FC: nu poate fi citit din %ls\n"
     IDS_INVALID_SWITCH "FC: Comutator nevalidh\n"
-    IDS_CANNOT_OPEN "FC: nu poate fi deschis %ls - Nu există un astfel de fișier sau dosar\n"
+    IDS_CANNOT_OPEN "FC: nu poate fi deschis %ls - Nu există un astfel de fișier sau folder\n"
     IDS_NEEDS_FILES "FC: Număr insuficient de specificații pentru fișiere\n"
     IDS_CANT_USE_WILDCARD "Semnele speciale ('*' și '?') nu sunt acceptate deocamdată\n"
     IDS_DIFFERENT "FC: Fișierele %ls și %ls sunt diferite\n"

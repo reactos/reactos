@@ -1360,7 +1360,7 @@ Sintaxă:  CREATE PARTITION LOGICAL [SIZE=<N>] [OFFSET=<N>] [ALIGN=<N>] [NOERR]
                 spațiu liber pe partiția extinsă.
 
     OFFSET=<N>  Decalajul, în kiloocteți (Ko), la care partiția e creată.
-                Dacă nu este dat niciun decalaj, partiția e plasată pe prima
+                Dacă nu este dat niciun decalaj, partiția e situată pe prima
                 expansiune a discului ce e suficient de mare ca să o țină.
 
     ALIGN=<N>   Folosită de obicei cu Numărul unității logice (LUN) RAID
@@ -2053,7 +2053,7 @@ Sintaxă:  CREATE PARTITION PRIMARY [SIZE=<N>] [OFFSET=<N>] [ID={<BYTE> | <GUID>
                 în regiunea curentă.
 
     OFFSET=<N>  Decalajul, în kiloocteți (Ko), la care partiția este creată.
-                Dacă nu e dat niciun decalaj, partiția este plasată pe prima
+                Dacă nu e dat niciun decalaj, partiția este situată pe prima
                 expansiune de disc ce e suficient de mare ca să o țină.
 
     ID={<BYTE> | <GUID>}
@@ -6722,12 +6722,12 @@ Sintaxă:  SELECT VOLUME={<N> | <D>}
 
     VOLUME=<N>  Numărul volumului care urmează să primească marcajul.
 
-    VOLUME=<D>  Litera discului sau calea dosarului montat al volumului
+    VOLUME=<D>  Litera discului sau calea folderului montat al volumului
                 ce urmează să primească marcajul.
 
     Dacă niciun volum nu e specificat, comanda SELECT listează volumul actual
     cu marcaj. Puteți specifica volumul după număr, după litera discului sau
-    după calea dosarului montat. Pe un disc de bază, selectarea unui volum
+    după calea folderului montat. Pe un disc de bază, selectarea unui volum
     oferă de asemenea, marcajul corespunzător pe partiție. Puteți
     vizualiza numărul tuturor volumelor din calculator folosind comanda
     LIST VOLUME.

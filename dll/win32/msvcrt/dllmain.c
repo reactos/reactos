@@ -30,6 +30,7 @@ extern char** _environ;      /* pointer to environment block */
 extern char** __initenv;     /* pointer to initial environment block */
 extern wchar_t** _wenviron;  /* pointer to environment block */
 extern wchar_t** __winitenv; /* pointer to initial environment block */
+extern void msvcrt_init_exception(void*) DECLSPEC_HIDDEN;
 
 /* LIBRARY ENTRY POINT ********************************************************/
 
@@ -42,6 +43,8 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
     case DLL_PROCESS_ATTACH:
 
         TRACE("Process Attach\n");
+
+        msvcrt_init_exception(hinstDll);
 
         if (!crt_process_init())
         {

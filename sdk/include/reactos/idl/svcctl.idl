@@ -882,8 +882,10 @@ interface svcctl
     /* Function 53 */
     DWORD
     __stdcall
-    RValidatePnPService(
-        [in] handle_t BindingHandle); /* FIXME */
+    RI_ScValidatePnPService(
+        [in] SC_RPC_HANDLE hService,
+        [in, string] LPWSTR pszServiceName,
+        [out] RPC_SERVICE_STATUS_HANDLE *phServiceStatus);
 
     /* Function 54 */
     DWORD

@@ -20,7 +20,7 @@ BEGIN
     EDITTEXT IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Grup de lucru:", IDC_WORKGROUPDOMAIN, 7, 84, 64, 9
     EDITTEXT IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Utilizați asistentul de identificare al rețelei (apăsând „ID de rețea”) pentru a crea un utilizator și a deveni membru al unui domeniu de rețea.", IDC_STATIC, 7, 113, 172, 24
+    LTEXT "Utilizați expertul de identificare al rețelei (apăsând „ID de rețea”) pentru a crea un utilizator și a deveni membru al unui domeniu de rețea.", IDC_STATIC, 7, 113, 172, 24
     PUSHBUTTON  "I&D de rețea…", IDC_NETWORK_ID, 190, 114, 58, 15
     LTEXT "Pentru a schimba identitatea calculatorului sau a intra într-un domeniu, apăsați „Schimbare”.", IDC_STATIC, 7, 149, 170, 17
     PUSHBUTTON  "S&chimbare…", IDC_NETWORK_PROPERTY, 190, 149, 58, 15
@@ -31,7 +31,7 @@ END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Schimbare identitate calculator"
+CAPTION "Schimbarea identității calculatorului"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", 1017, 7, 5, 218, 30
@@ -69,7 +69,7 @@ STRINGTABLE
 BEGIN
     1 "* Necunoscut *"
     2 "GRUPDELUCRU"
-    3 "La citirea domeniului de apartenență a survenit următoarea eroare:"
+    3 "La citirea domeniului de apartenență a apărut următoarea eroare:"
     4 "Schimbarea identității calculatorului"
     5 "Grup de lucru:"
     6 "Domeniu:"

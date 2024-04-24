@@ -161,12 +161,12 @@ BEGIN
     STRING_TEXT_FILES_TXT "Tekstne datoteke (*.txt)"
     STRING_TOOLARGE "Datoteka '%s' je prevelik za program Blok za pisanje.\n\
 Molimo Vas da koristite drugu aplikaciju."
-    STRING_NOTEXT "Niste unijeli tekst. \
+    STRING_NOTEXT "Niste unijeli tekst.\
 \nMolimo Vas da nešto unesete i ponovo pokušate."
     STRING_DOESNOTEXIST "Datoteka '%s'\nne postoji\n\n\
-Želite li stvoriti novu datoteku ?"
+Želite li stvoriti novu datoteku?"
     STRING_NOTSAVED "Datoteka '%s'\nje bila promijenjena\n\n\
-Želite li spremiti te promjene ?"
+Želite li spremiti te promjene?"
     STRING_NOTFOUND "'%s' ne može biti pronađena."
     STRING_OUT_OF_MEMORY "Nema dovoljno memorije da se dovrši \
 zadatak.\nZatvorite jednu ili više aplikacija da povećate\nslobodnu memoriju."
@@ -187,7 +187,7 @@ zadatak.\nZatvorite jednu ili više aplikacija da povećate\nslobodnu memoriju."
     STRING_PRINTCANCELING "The print job is being canceled..."
     STRING_PRINTCOMPLETE "Printing is successfully done."
     STRING_PRINTCANCELED "Printing has been canceled."
-    STRING_PRINTFAILED "Printing is failed."
+    STRING_PRINTFAILED "Printing failed."
 
     STRING_TEXT_DOCUMENT "Tekstni dokument"
     STRING_NOTEPAD_AUTHORS "Copyright 1997, 98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"

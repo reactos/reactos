@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Task Manager
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Performance Page.
+ * PURPOSE:     Performance Page
  * COPYRIGHT:   Copyright 1999-2001 Brian Palmer <brianp@reactos.org>
  */
 
@@ -320,9 +320,9 @@ DWORD WINAPI PerformancePageRefreshThread(PVOID Parameter)
     WCHAR Text[260];
     WCHAR szMemUsage[256], szCpuUsage[256], szProcesses[256];
 
-    LoadStringW(hInst, IDS_STATUS_CPUUSAGE, szCpuUsage, ARRAYSIZE(szCpuUsage));
-    LoadStringW(hInst, IDS_STATUS_MEMUSAGE, szMemUsage, ARRAYSIZE(szMemUsage));
-    LoadStringW(hInst, IDS_STATUS_PROCESSES, szProcesses, ARRAYSIZE(szProcesses));
+    LoadStringW(hInst, IDS_STATUS_CPUUSAGE, szCpuUsage, _countof(szCpuUsage));
+    LoadStringW(hInst, IDS_STATUS_MEMUSAGE, szMemUsage, _countof(szMemUsage));
+    LoadStringW(hInst, IDS_STATUS_PROCESSES, szProcesses, _countof(szProcesses));
 
     while (1)
     {
@@ -355,11 +355,11 @@ DWORD WINAPI PerformancePageRefreshThread(PVOID Parameter)
 
             StrFormatByteSizeW(CommitChargeTotal * 1024,
                                szChargeTotalFormat,
-                               ARRAYSIZE(szChargeTotalFormat));
+                               _countof(szChargeTotalFormat));
 
             StrFormatByteSizeW(CommitChargeLimit * 1024,
                                szChargeLimitFormat,
-                               ARRAYSIZE(szChargeLimitFormat));
+                               _countof(szChargeLimitFormat));
 
             if (!bTrackMenu)
             {

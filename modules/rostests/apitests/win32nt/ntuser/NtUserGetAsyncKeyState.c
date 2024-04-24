@@ -5,7 +5,7 @@
  * COPYRIGHT:   Copyright 2022 Thomas Faber (thomas.faber@reactos.org)
  */
 
-#include <win32nt.h>
+#include "../win32nt.h"
 
 START_TEST(NtUserGetAsyncKeyState)
 {

@@ -27,6 +27,7 @@ AddMemoryDescriptor(
 
 /* GLOBALS *******************************************************************/
 
+extern ULONG LoaderPagesSpanned;
 extern EFI_SYSTEM_TABLE* GlobalSystemTable;
 extern EFI_HANDLE GlobalImageHandle;
 extern REACTOS_INTERNAL_BGCONTEXT framebufferData;
@@ -38,6 +39,8 @@ SIZE_T OsLoaderSize;
 EFI_HANDLE PublicBootHandle;
 PVOID ExitStack;
 PVOID EndofExitStack;
+
+void _exituefi(VOID);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -85,56 +88,13 @@ VOID
 UefiSetMemory(
     _Inout_ PFREELDR_MEMORY_DESCRIPTOR MemoryMap,
     _In_ ULONG_PTR BaseAddress,
-    _In_ PFN_COUNT Size,
+    _In_ PFN_COUNT SizeInPages,
     _In_ TYPE_OF_MEMORY MemoryType)
 {
     ULONG_PTR BasePage, PageCount;
 
     BasePage = BaseAddress / EFI_PAGE_SIZE;
-    PageCount = Size;
-
-    /* Add the memory descriptor */
-    FreeldrDescCount = AddMemoryDescriptor(MemoryMap,
-                                           UNUSED_MAX_DESCRIPTOR_COUNT,
-                                           BasePage,
-                                           PageCount,
-                                           MemoryType);
-}
-
-VOID
-ReserveMemory(
-    _Inout_ PFREELDR_MEMORY_DESCRIPTOR MemoryMap,
-    _In_ ULONG_PTR BaseAddress,
-    _In_ PFN_NUMBER Size,
-    _In_ TYPE_OF_MEMORY MemoryType,
-    _In_ PCHAR Usage)
-{
-    ULONG_PTR BasePage, PageCount;
-    ULONG i;
-
-    BasePage = BaseAddress / PAGE_SIZE;
-    PageCount = ADDRESS_AND_SIZE_TO_SPAN_PAGES(BaseAddress, Size);
-
-    for (i = 0; i < FreeldrDescCount; i++)
-    {
-        /* Check for conflicting descriptor */
-        if ((MemoryMap[i].BasePage < BasePage + PageCount) &&
-            (MemoryMap[i].BasePage + MemoryMap[i].PageCount > BasePage))
-        {
-            /* Check if the memory is free */
-            if (MemoryMap[i].MemoryType != LoaderFree)
-            {
-                FrLdrBugCheckWithMessage(
-                    MEMORY_INIT_FAILURE,
-                    __FILE__,
-                    __LINE__,
-                    "Failed to reserve memory in the range 0x%Ix - 0x%Ix for %s",
-                    BaseAddress,
-                    Size,
-                    Usage);
-            }
-        }
-    }
+    PageCount = SizeInPages;
 
     /* Add the memory descriptor */
     FreeldrDescCount = AddMemoryDescriptor(MemoryMap,
@@ -256,19 +216,36 @@ UefiMemGetMemoryMap(ULONG *MemoryMapSize)
             }
         }
 
-        UefiSetMemory(FreeldrMem,
-                      MapEntry->PhysicalStart,
-                      MapEntry->NumberOfPages,
-                      MemoryType);
+        /* Sometimes our loader can be loaded into higher memory than we ever allocate */
+        if (MemoryType == LoaderLoadedProgram)
+        {
+            if (((MapEntry->PhysicalStart + (MapEntry->NumberOfPages * PAGE_SIZE)) >> EFI_PAGE_SHIFT) > LoaderPagesSpanned)
+            {
+                /* This value needs to be adjusted if this occurs */
+                LoaderPagesSpanned = ((MapEntry->PhysicalStart + (MapEntry->NumberOfPages * PAGE_SIZE)) >> EFI_PAGE_SHIFT);
+            }
+        }
+
+        /* We really don't want to touch these reserved spots at all */
+        if (MemoryType != LoaderReserve)
+        {
+            UefiSetMemory(FreeldrMem,
+                          MapEntry->PhysicalStart,
+                          MapEntry->NumberOfPages,
+                          MemoryType);
+        }
 
         MapEntry = NEXT_MEMORY_DESCRIPTOR(MapEntry, DescriptorSize);
     }
 
+    /* Windows expects the first page to be reserved, otherwise it asserts.
+     * However it can be just a free page on some UEFI systems. */
+    UefiSetMemory(FreeldrMem, 0x000000, 1, LoaderFirmwarePermanent);
     *MemoryMapSize = FreeldrDescCount;
     return FreeldrMem;
 }
 
-static VOID
+VOID
 UefiExitBootServices(VOID)
 {
     UINTN MapKey;
@@ -306,7 +283,5 @@ UefiExitBootServices(VOID)
 VOID
 UefiPrepareForReactOS(VOID)
 {
-    UefiExitBootServices();
-    ExitStack = MmAllocateMemoryWithType(EXIT_STACK_SIZE, LoaderOsloaderStack);
-    EndofExitStack = (PVOID)((ULONG_PTR)ExitStack + EXIT_STACK_SIZE);
+    _exituefi();
 }

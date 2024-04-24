@@ -792,7 +792,7 @@ void test_create_db_imp(const WCHAR* name, int win10)
     }
 }
 
-static DWORD g_WinVersion;
+DWORD g_WinVersion;
 DWORD get_host_winver(void)
 {
     if (!g_WinVersion)

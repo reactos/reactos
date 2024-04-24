@@ -4,7 +4,8 @@
  * Copyright 1999 Bertho Stultiens
  * Copyright 1999 Eric Kohl
  * Copyright 2008 Michael Stefaniuc
- *           2012 Ștefan Fulea
+ * Copyright 2012 Ștefan Fulea <stefan.fulea@mail.com>
+ * Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -69,7 +70,7 @@ END
 
 IDD_WIZARD DIALOG 0, 0, 290, 159
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
-CAPTION "Asistent"
+CAPTION "Expert"
 FONT 8, "MS Shell Dlg"
 BEGIN
   PUSHBUTTON    "< Înap&oi",     IDC_BACK_BUTTON,56,138,55,14
@@ -89,7 +90,7 @@ CAPTION "Personalizare panou de instrumente"
 FONT 8, "MS Shell Dlg"
 BEGIN
   DEFPUSHBUTTON "Î&nchide",      IDCANCEL,320,6,70,14
-  PUSHBUTTON    "&Reinițiere",   IDC_RESET_BTN,320,23,70,14
+  PUSHBUTTON    "&Resetare",   IDC_RESET_BTN,320,23,70,14
   PUSHBUTTON    "&Manual…",      IDC_HELP_BTN,320,40,70,14
   PUSHBUTTON    "În s&us",       IDC_MOVEUP_BTN,320,74,70,14
   PUSHBUTTON    "În j&os",       IDC_MOVEDN_BTN,320,91,70,14

@@ -24,25 +24,24 @@ public:
 
     HRESULT Initialize(Folder* folder, LPITEMIDLIST idlist);
 
-
     // *** FolderItem methods ***
-    virtual HRESULT STDMETHODCALLTYPE get_Application(IDispatch **ppid);
-    virtual HRESULT STDMETHODCALLTYPE get_Parent(IDispatch **ppid);
-    virtual HRESULT STDMETHODCALLTYPE get_Name(BSTR *pbs);
-    virtual HRESULT STDMETHODCALLTYPE put_Name(BSTR bs);
-    virtual HRESULT STDMETHODCALLTYPE get_Path(BSTR *pbs);
-    virtual HRESULT STDMETHODCALLTYPE get_GetLink(IDispatch **ppid);
-    virtual HRESULT STDMETHODCALLTYPE get_GetFolder(IDispatch **ppid);
-    virtual HRESULT STDMETHODCALLTYPE get_IsLink(VARIANT_BOOL *pb);
-    virtual HRESULT STDMETHODCALLTYPE get_IsFolder(VARIANT_BOOL *pb);
-    virtual HRESULT STDMETHODCALLTYPE get_IsFileSystem(VARIANT_BOOL *pb);
-    virtual HRESULT STDMETHODCALLTYPE get_IsBrowsable(VARIANT_BOOL *pb);
-    virtual HRESULT STDMETHODCALLTYPE get_ModifyDate(DATE *pdt);
-    virtual HRESULT STDMETHODCALLTYPE put_ModifyDate(DATE dt);
-    virtual HRESULT STDMETHODCALLTYPE get_Size(LONG *pul);
-    virtual HRESULT STDMETHODCALLTYPE get_Type(BSTR *pbs);
-    virtual HRESULT STDMETHODCALLTYPE Verbs(FolderItemVerbs **ppfic);
-    virtual HRESULT STDMETHODCALLTYPE InvokeVerb(VARIANT vVerb);
+    STDMETHOD(get_Application)(IDispatch **ppid) override;
+    STDMETHOD(get_Parent)(IDispatch **ppid) override;
+    STDMETHOD(get_Name)(BSTR *pbs) override;
+    STDMETHOD(put_Name)(BSTR bs) override;
+    STDMETHOD(get_Path)(BSTR *pbs) override;
+    STDMETHOD(get_GetLink)(IDispatch **ppid) override;
+    STDMETHOD(get_GetFolder)(IDispatch **ppid) override;
+    STDMETHOD(get_IsLink)(VARIANT_BOOL *pb) override;
+    STDMETHOD(get_IsFolder)(VARIANT_BOOL *pb) override;
+    STDMETHOD(get_IsFileSystem)(VARIANT_BOOL *pb) override;
+    STDMETHOD(get_IsBrowsable)(VARIANT_BOOL *pb) override;
+    STDMETHOD(get_ModifyDate)(DATE *pdt) override;
+    STDMETHOD(put_ModifyDate)(DATE dt) override;
+    STDMETHOD(get_Size)(LONG *pul) override;
+    STDMETHOD(get_Type)(BSTR *pbs) override;
+    STDMETHOD(Verbs)(FolderItemVerbs **ppfic) override;
+    STDMETHOD(InvokeVerb)(VARIANT vVerb) override;
 
 
 DECLARE_NOT_AGGREGATABLE(CFolderItem)
@@ -73,11 +72,11 @@ public:
     HRESULT Initialize(LPITEMIDLIST idlist, Folder* parent);
 
     // *** FolderItems methods ***
-    virtual HRESULT STDMETHODCALLTYPE get_Count(long *plCount);
-    virtual HRESULT STDMETHODCALLTYPE get_Application(IDispatch **ppid);
-    virtual HRESULT STDMETHODCALLTYPE get_Parent(IDispatch **ppid);
-    virtual HRESULT STDMETHODCALLTYPE Item(VARIANT index, FolderItem **ppid);
-    virtual HRESULT STDMETHODCALLTYPE _NewEnum(IUnknown **ppunk);
+    STDMETHOD(get_Count)(long *plCount) override;
+    STDMETHOD(get_Application)(IDispatch **ppid) override;
+    STDMETHOD(get_Parent)(IDispatch **ppid) override;
+    STDMETHOD(Item)(VARIANT index, FolderItem **ppid) override;
+    STDMETHOD(_NewEnum)(IUnknown **ppunk) override;
 
 DECLARE_NOT_AGGREGATABLE(CFolderItems)
 DECLARE_PROTECT_FINAL_CONSTRUCT()

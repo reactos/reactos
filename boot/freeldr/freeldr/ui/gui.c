@@ -51,19 +51,29 @@ VOID GuiUpdateDateTime(VOID)
 {
 }
 
-VOID GuiSaveScreen(PUCHAR Buffer)
+_Ret_maybenull_
+__drv_allocatesMem(Mem)
+PUCHAR
+GuiSaveScreen(VOID)
+{
+    return NULL;
+}
+
+VOID
+GuiRestoreScreen(
+    _In_opt_ __drv_freesMem(Mem) PUCHAR Buffer)
 {
 }
 
-VOID GuiRestoreScreen(PUCHAR Buffer)
+VOID
+GuiMessageBox(
+    _In_ PCSTR MessageText)
 {
 }
 
-VOID GuiMessageBox(PCSTR MessageText)
-{
-}
-
-VOID GuiMessageBoxCritical(PCSTR MessageText)
+VOID
+GuiMessageBoxCritical(
+    _In_ PCSTR MessageText)
 {
 }
 

@@ -9,7 +9,72 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-static BOOL OpenEffectiveToken(DWORD DesiredAccess, HANDLE *phToken)
+BOOL PathIsDotOrDotDotW(_In_ LPCWSTR pszPath)
+{
+    if (pszPath[0] != L'.')
+        return FALSE;
+    return !pszPath[1] || (pszPath[1] == L'.' && !pszPath[2]);
+}
+
+#define PATH_VALID_ELEMENT ( \
+    PATH_CHAR_CLASS_DOT | PATH_CHAR_CLASS_SEMICOLON | PATH_CHAR_CLASS_COMMA | \
+    PATH_CHAR_CLASS_SPACE | PATH_CHAR_CLASS_OTHER_VALID \
+)
+
+BOOL PathIsValidElement(_In_ LPCWSTR pszPath)
+{
+    if (!*pszPath || PathIsDotOrDotDotW(pszPath))
+        return FALSE;
+
+    for (LPCWSTR pch = pszPath; *pch; ++pch)
+    {
+        if (!PathIsValidCharW(*pch, PATH_VALID_ELEMENT))
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+BOOL PathIsDosDevice(_In_ LPCWSTR pszName)
+{
+    WCHAR szPath[MAX_PATH];
+    StringCchCopyW(szPath, _countof(szPath), pszName);
+    PathRemoveExtensionW(szPath);
+
+    if (lstrcmpiW(szPath, L"NUL") == 0 || lstrcmpiW(szPath, L"PRN") == 0 ||
+        lstrcmpiW(szPath, L"CON") == 0 || lstrcmpiW(szPath, L"AUX") == 0)
+    {
+        return TRUE;
+    }
+
+    if (_wcsnicmp(szPath, L"LPT", 3) == 0 || _wcsnicmp(szPath, L"COM", 3) == 0)
+    {
+        if ((L'0' <= szPath[3] && szPath[3] <= L'9') && szPath[4] == UNICODE_NULL)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+HRESULT SHILAppend(_Inout_ LPITEMIDLIST pidl, _Inout_ LPITEMIDLIST *ppidl)
+{
+    LPITEMIDLIST pidlOld = *ppidl;
+    if (!pidlOld)
+    {
+        *ppidl = pidl;
+        return S_OK;
+    }
+
+    HRESULT hr = SHILCombine(*ppidl, pidl, ppidl);
+    ILFree(pidlOld);
+    ILFree(pidl);
+    return hr;
+}
+
+static BOOL
+OpenEffectiveToken(
+    _In_ DWORD DesiredAccess,
+    _Out_ HANDLE *phToken)
 {
     BOOL ret;
 
@@ -26,6 +91,390 @@ static BOOL OpenEffectiveToken(DWORD DesiredAccess, HANDLE *phToken)
         ret = OpenProcessToken(GetCurrentProcess(), DesiredAccess, phToken);
 
     return ret;
+}
+
+HRESULT
+Shell_TranslateIDListAlias(
+    _In_ LPCITEMIDLIST pidl,
+    _In_ HANDLE hToken,
+    _Out_ LPITEMIDLIST *ppidlAlias,
+    _In_ DWORD dwFlags)
+{
+    return E_FAIL; //FIXME
+}
+
+BOOL BindCtx_ContainsObject(_In_ IBindCtx *pBindCtx, _In_ LPCWSTR pszName)
+{
+    CComPtr<IUnknown> punk;
+    if (!pBindCtx || FAILED(pBindCtx->GetObjectParam(const_cast<LPWSTR>(pszName), &punk)))
+        return FALSE;
+    return TRUE;
+}
+
+DWORD BindCtx_GetMode(_In_ IBindCtx *pbc, _In_ DWORD dwDefault)
+{
+    if (!pbc)
+        return dwDefault;
+
+    BIND_OPTS BindOpts = { sizeof(BindOpts) };
+    HRESULT hr = pbc->GetBindOptions(&BindOpts);
+    if (FAILED(hr))
+        return dwDefault;
+
+    return BindOpts.grfMode;
+}
+
+BOOL SHSkipJunctionBinding(_In_ IBindCtx *pbc, _In_ CLSID *pclsid)
+{
+    if (!pbc)
+        return FALSE;
+
+    BIND_OPTS BindOps = { sizeof(BindOps) };
+    if (SUCCEEDED(pbc->GetBindOptions(&BindOps)) && BindOps.grfFlags == OLECONTF_LINKS)
+        return TRUE;
+
+    return pclsid && SHSkipJunction(pbc, pclsid);
+}
+
+HRESULT SHIsFileSysBindCtx(_In_ IBindCtx *pBindCtx, _Out_opt_ WIN32_FIND_DATAW *pFindData)
+{
+    CComPtr<IUnknown> punk;
+    CComPtr<IFileSystemBindData> pBindData;
+
+    if (!pBindCtx || FAILED(pBindCtx->GetObjectParam((LPWSTR)STR_FILE_SYS_BIND_DATA, &punk)))
+        return S_FALSE;
+
+    if (FAILED(punk->QueryInterface(IID_PPV_ARG(IFileSystemBindData, &pBindData))))
+        return S_FALSE;
+
+    if (pFindData)
+        pBindData->GetFindData(pFindData);
+
+    return S_OK;
+}
+
+BOOL Shell_FailForceReturn(_In_ HRESULT hr)
+{
+    DWORD code = HRESULT_CODE(hr);
+
+    switch (code)
+    {
+        case ERROR_BAD_NETPATH:
+        case ERROR_BAD_NET_NAME:
+        case ERROR_CANCELLED:
+            return TRUE;
+
+        default:
+            return (ERROR_FILE_NOT_FOUND <= code && code <= ERROR_PATH_NOT_FOUND);
+    }
+}
+
+HRESULT
+SHBindToObjectEx(
+    _In_opt_ IShellFolder *pShellFolder,
+    _In_ LPCITEMIDLIST pidl,
+    _In_opt_ IBindCtx *pBindCtx,
+    _In_ REFIID riid,
+    _Out_ void **ppvObj)
+{
+    CComPtr<IShellFolder> psfDesktop;
+
+    *ppvObj = NULL;
+
+    if (!pShellFolder)
+    {
+        SHGetDesktopFolder(&psfDesktop);
+        if (!psfDesktop)
+            return E_FAIL;
+
+        pShellFolder = psfDesktop;
+    }
+
+    HRESULT hr;
+    if (_ILIsDesktop(pidl))
+        hr = pShellFolder->QueryInterface(riid, ppvObj);
+    else
+        hr = pShellFolder->BindToObject(pidl, pBindCtx, riid, ppvObj);
+
+    if (SUCCEEDED(hr) && !*ppvObj)
+        hr = E_FAIL;
+
+    return hr;
+}
+
+HRESULT SHBindToObject(
+    _In_opt_ IShellFolder *psf,
+    _In_ LPCITEMIDLIST pidl,
+    _In_ REFIID riid,
+    _Out_ void **ppvObj)
+{
+    return SHBindToObjectEx(psf, pidl, NULL, riid, ppvObj);
+}
+
+HRESULT
+Shell_DisplayNameOf(
+    _In_ IShellFolder *psf,
+    _In_ LPCITEMIDLIST pidl,
+    _In_ DWORD dwFlags,
+    _Out_ LPWSTR pszBuf,
+    _In_ UINT cchBuf)
+{
+    *pszBuf = UNICODE_NULL;
+    STRRET sr;
+    HRESULT hr = psf->GetDisplayNameOf(pidl, dwFlags, &sr);
+    if (FAILED(hr))
+        return hr;
+    return StrRetToBufW(&sr, pidl, pszBuf, cchBuf);
+}
+
+DWORD
+SHGetAttributes(_In_ IShellFolder *psf, _In_ LPCITEMIDLIST pidl, _In_ DWORD dwAttributes)
+{
+    LPCITEMIDLIST pidlLast;
+
+    if (psf)
+    {
+        psf->AddRef();
+        pidlLast = pidl;
+    }
+    else
+    {
+        SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psf), &pidlLast);
+    }
+
+    if (!psf)
+        return 0;
+
+    DWORD oldAttrs = dwAttributes;
+    if (FAILED(psf->GetAttributesOf(1, &pidlLast, &dwAttributes)))
+        dwAttributes = 0;
+    else
+        dwAttributes &= oldAttrs;
+
+    if ((dwAttributes & SFGAO_FOLDER) &&
+        (dwAttributes & SFGAO_STREAM) &&
+        !(dwAttributes & SFGAO_STORAGEANCESTOR) &&
+        (oldAttrs & SFGAO_STORAGEANCESTOR) &&
+        (SHGetObjectCompatFlags(psf, NULL) & 0x200))
+    {
+        dwAttributes &= ~(SFGAO_STREAM | SFGAO_STORAGEANCESTOR);
+        dwAttributes |= SFGAO_STORAGEANCESTOR;
+    }
+
+    if (psf)
+        psf->Release();
+
+    return dwAttributes;
+}
+
+HRESULT SHCoInitializeAnyApartment(VOID)
+{
+    HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    if (FAILED(hr))
+        hr = CoInitializeEx(NULL, COINIT_DISABLE_OLE1DDE);
+    return hr;
+}
+
+HRESULT
+SHGetNameAndFlagsW(
+    _In_ LPCITEMIDLIST pidl,
+    _In_ DWORD dwFlags,
+    _Out_opt_ LPWSTR pszText,
+    _In_ UINT cchBuf,
+    _Inout_opt_ DWORD *pdwAttributes)
+{
+    if (pszText)
+        *pszText = UNICODE_NULL;
+
+    HRESULT hrCoInit = SHCoInitializeAnyApartment();
+
+    CComPtr<IShellFolder> psfFolder;
+    LPCITEMIDLIST ppidlLast;
+    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psfFolder), &ppidlLast);
+    if (SUCCEEDED(hr))
+    {
+        if (pszText)
+            hr = Shell_DisplayNameOf(psfFolder, ppidlLast, dwFlags, pszText, cchBuf);
+
+        if (SUCCEEDED(hr))
+        {
+            if (pdwAttributes)
+                *pdwAttributes = SHGetAttributes(psfFolder, ppidlLast, *pdwAttributes);
+        }
+    }
+
+    if (SUCCEEDED(hrCoInit))
+        CoUninitialize();
+
+    return hr;
+}
+
+EXTERN_C HWND
+BindCtx_GetUIWindow(_In_ IBindCtx *pBindCtx)
+{
+    HWND hWnd = NULL;
+
+    CComPtr<IUnknown> punk;
+    if (pBindCtx && SUCCEEDED(pBindCtx->GetObjectParam((LPWSTR)L"UI During Binding", &punk)))
+        IUnknown_GetWindow(punk, &hWnd);
+
+    return hWnd;
+}
+
+class CDummyOleWindow : public IOleWindow
+{
+protected:
+    LONG m_cRefs;
+    HWND m_hWnd;
+
+public:
+    CDummyOleWindow() : m_cRefs(1), m_hWnd(NULL) { }
+    virtual ~CDummyOleWindow() { }
+
+    // IUnknown methods
+    STDMETHODIMP QueryInterface(REFIID riid, LPVOID *ppvObj) override
+    {
+        static const QITAB c_tab[] =
+        {
+            QITABENT(CDummyOleWindow, IOleWindow),
+            { NULL }
+        };
+        return ::QISearch(this, c_tab, riid, ppvObj);
+    }
+    STDMETHODIMP_(ULONG) AddRef() override
+    {
+        return ++m_cRefs;
+    }
+    STDMETHODIMP_(ULONG) Release() override
+    {
+        if (--m_cRefs == 0)
+        {
+            delete this;
+            return 0;
+        }
+        return m_cRefs;
+    }
+
+    // IOleWindow methods
+    STDMETHODIMP GetWindow(HWND *phWnd) override
+    {
+        *phWnd = m_hWnd;
+        if (!m_hWnd)
+            return E_NOTIMPL;
+        return S_OK;
+    }
+    STDMETHODIMP ContextSensitiveHelp(BOOL fEnterMode) override
+    {
+        return E_NOTIMPL;
+    }
+};
+
+EXTERN_C HRESULT
+BindCtx_RegisterObjectParam(
+    _In_ IBindCtx *pBindCtx,
+    _In_ LPOLESTR pszKey,
+    _In_opt_ IUnknown *punk,
+    _Out_ LPBC *ppbc)
+{
+    HRESULT hr = S_OK;
+    CDummyOleWindow *pUnknown = NULL;
+
+    *ppbc = pBindCtx;
+
+    if (pBindCtx)
+    {
+        pBindCtx->AddRef();
+    }
+    else
+    {
+        hr = CreateBindCtx(0, ppbc);
+        if (FAILED(hr))
+            return hr;
+    }
+
+    if (!punk)
+        punk = pUnknown = new CDummyOleWindow();
+
+    hr = (*ppbc)->RegisterObjectParam(pszKey, punk);
+
+    if (pUnknown)
+        pUnknown->Release();
+
+    if (FAILED(hr))
+    {
+        (*ppbc)->Release();
+        *ppbc = NULL;
+    }
+
+    return hr;
+}
+
+/*************************************************************************
+ *                SHSetFolderPathA (SHELL32.231)
+ *
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/nf-shlobj_core-shsetfolderpatha
+ */
+EXTERN_C
+HRESULT WINAPI
+SHSetFolderPathA(
+    _In_ INT csidl,
+    _In_ HANDLE hToken,
+    _In_ DWORD dwFlags,
+    _In_ LPCSTR pszPath)
+{
+    TRACE("(%d, %p, 0x%X, %s)\n", csidl, hToken, dwFlags, debugstr_a(pszPath));
+    CStringW strPathW(pszPath);
+    return SHSetFolderPathW(csidl, hToken, dwFlags, strPathW);
+}
+
+/*************************************************************************
+ *                PathIsSlowA (SHELL32.240)
+ *
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/shlobj/nf-shlobj-pathisslowa
+ */
+EXTERN_C
+BOOL WINAPI
+PathIsSlowA(
+    _In_ LPCSTR pszFile,
+    _In_ DWORD dwAttr)
+{
+    TRACE("(%s, 0x%X)\n", debugstr_a(pszFile), dwAttr);
+    CStringW strFileW(pszFile);
+    return PathIsSlowW(strFileW, dwAttr);
+}
+
+/*************************************************************************
+ *                ExtractIconResInfoA (SHELL32.221)
+ */
+EXTERN_C
+WORD WINAPI
+ExtractIconResInfoA(
+    _In_ HANDLE hHandle,
+    _In_ LPCSTR lpFileName,
+    _In_ WORD wIndex,
+    _Out_ LPWORD lpSize,
+    _Out_ LPHANDLE lpIcon)
+{
+    TRACE("(%p, %s, %u, %p, %p)\n", hHandle, debugstr_a(lpFileName), wIndex, lpSize, lpIcon);
+
+    if (!lpFileName)
+        return 0;
+
+    CStringW strFileNameW(lpFileName);
+    return ExtractIconResInfoW(hHandle, strFileNameW, wIndex, lpSize, lpIcon);
+}
+
+/*************************************************************************
+ *                ShortSizeFormatW (SHELL32.204)
+ */
+EXTERN_C
+LPWSTR WINAPI
+ShortSizeFormatW(
+    _In_ DWORD dwNumber,
+    _Out_writes_(0x8FFF) LPWSTR pszBuffer)
+{
+    TRACE("(%lu, %p)\n", dwNumber, pszBuffer);
+    return StrFormatByteSizeW(dwNumber, pszBuffer, 0x8FFF);
 }
 
 /*************************************************************************
@@ -68,7 +517,7 @@ EXTERN_C DWORD WINAPI SHGetUserSessionId(_In_opt_ HANDLE hToken)
 EXTERN_C
 HRESULT WINAPI
 SHInvokePrivilegedFunctionW(
-    _In_z_ LPCWSTR pszName,
+    _In_ LPCWSTR pszName,
     _In_ PRIVILEGED_FUNCTION fn,
     _In_opt_ LPARAM lParam)
 {
@@ -110,7 +559,9 @@ SHInvokePrivilegedFunctionW(
  */
 EXTERN_C
 BOOL WINAPI
-SHTestTokenPrivilegeW(_In_opt_ HANDLE hToken, _In_z_ LPCWSTR lpName)
+SHTestTokenPrivilegeW(
+    _In_opt_ HANDLE hToken,
+    _In_ LPCWSTR lpName)
 {
     LUID Luid;
     DWORD dwLength;
@@ -162,6 +613,20 @@ Quit:
         CloseHandle(hNewToken);
 
     return ret;
+}
+
+BOOL IsShutdownAllowed(VOID)
+{
+    return SHTestTokenPrivilegeW(NULL, SE_SHUTDOWN_NAME);
+}
+
+/*************************************************************************
+ *                IsSuspendAllowed (SHELL32.53)
+ */
+BOOL WINAPI IsSuspendAllowed(VOID)
+{
+    TRACE("()\n");
+    return IsShutdownAllowed() && IsPwrSuspendAllowed();
 }
 
 /*************************************************************************
@@ -300,7 +765,7 @@ SHFindComputer(LPCITEMIDLIST pidlRoot, LPCITEMIDLIST pidlSavedSearch)
 static HRESULT
 Int64ToStr(
     _In_ LONGLONG llValue,
-    _Out_writes_z_(cchValue) LPWSTR pszValue,
+    _Out_writes_(cchValue) LPWSTR pszValue,
     _In_ UINT cchValue)
 {
     WCHAR szBuff[40];
@@ -347,9 +812,9 @@ Int64GetNumFormat(
     _Out_ NUMBERFMTW *pDest,
     _In_opt_ const NUMBERFMTW *pSrc,
     _In_ DWORD dwNumberFlags,
-    _Out_writes_z_(cchDecimal) LPWSTR pszDecimal,
+    _Out_writes_(cchDecimal) LPWSTR pszDecimal,
     _In_ INT cchDecimal,
-    _Out_writes_z_(cchThousand) LPWSTR pszThousand,
+    _Out_writes_(cchThousand) LPWSTR pszThousand,
     _In_ INT cchThousand)
 {
     WCHAR szBuff[20];
@@ -405,7 +870,7 @@ EXTERN_C
 INT WINAPI
 Int64ToString(
     _In_ LONGLONG llValue,
-    _Out_writes_z_(cchOut) LPWSTR pszOut,
+    _Out_writes_(cchOut) LPWSTR pszOut,
     _In_ UINT cchOut,
     _In_ BOOL bUseFormat,
     _In_opt_ const NUMBERFMTW *pNumberFormat,
@@ -443,7 +908,7 @@ EXTERN_C
 INT WINAPI
 LargeIntegerToString(
     _In_ const LARGE_INTEGER *pLargeInt,
-    _Out_writes_z_(cchOut) LPWSTR pszOut,
+    _Out_writes_(cchOut) LPWSTR pszOut,
     _In_ UINT cchOut,
     _In_ BOOL bUseFormat,
     _In_opt_ const NUMBERFMTW *pNumberFormat,
@@ -451,4 +916,328 @@ LargeIntegerToString(
 {
     return Int64ToString(pLargeInt->QuadPart, pszOut, cchOut, bUseFormat,
                          pNumberFormat, dwNumberFlags);
+}
+
+/*************************************************************************
+ *  CopyStreamUI [SHELL32.726]
+ *
+ * Copy a stream to another stream with optional progress display.
+ */
+EXTERN_C
+HRESULT WINAPI
+CopyStreamUI(
+    _In_ IStream *pSrc,
+    _Out_ IStream *pDst,
+    _Inout_opt_ IProgressDialog *pProgress,
+    _In_opt_ DWORDLONG dwlSize)
+{
+    HRESULT hr = E_FAIL;
+    DWORD cbBuff, cbRead, dwSizeToWrite;
+    DWORDLONG cbDone;
+    LPVOID pBuff;
+    CComHeapPtr<BYTE> pHeapPtr;
+    STATSTG Stat;
+    BYTE abBuff[1024];
+
+    TRACE("(%p, %p, %p, %I64u)\n", pSrc, pDst, pProgress, dwlSize);
+
+    if (dwlSize == 0) // Invalid size?
+    {
+        // Get the stream size
+        ZeroMemory(&Stat, sizeof(Stat));
+        if (FAILED(pSrc->Stat(&Stat, STATFLAG_NONAME)))
+            pProgress = NULL; // No size info. Disable progress
+        else
+            dwlSize = Stat.cbSize.QuadPart;
+    }
+
+    if (!pProgress) // Progress is disabled?
+    {
+        ULARGE_INTEGER uliSize;
+
+        if (dwlSize > 0)
+            uliSize.QuadPart = dwlSize;
+        else
+            uliSize.HighPart = uliSize.LowPart = INVALID_FILE_SIZE;
+
+        return pSrc->CopyTo(pDst, uliSize, NULL, NULL); // One punch
+    }
+
+    // Allocate the buffer if necessary
+    if (dwlSize > 0 && dwlSize <= sizeof(abBuff))
+    {
+        cbBuff = sizeof(abBuff);
+        pBuff = abBuff;
+    }
+    else
+    {
+#define COPY_STREAM_DEFAULT_BUFFER_SIZE 0x4000
+        cbBuff = COPY_STREAM_DEFAULT_BUFFER_SIZE;
+        if (pHeapPtr.AllocateBytes(cbBuff))
+        {
+            pBuff = pHeapPtr;
+        }
+        else // Low memory?
+        {
+            cbBuff = sizeof(abBuff);
+            pBuff = abBuff;
+        }
+#undef COPY_STREAM_DEFAULT_BUFFER_SIZE
+    }
+
+    // Start reading
+    LARGE_INTEGER zero;
+    zero.QuadPart = 0;
+    pSrc->Seek(zero, 0, NULL);
+    pDst->Seek(zero, 0, NULL);
+    cbDone = 0;
+    pProgress->SetProgress64(cbDone, dwlSize);
+
+    // Repeat reading and writing until goal
+    for (;;)
+    {
+        hr = pSrc->Read(pBuff, cbBuff, &cbRead);
+        if (FAILED(hr))
+            break;
+
+        // Calculate the size to write
+        if (dwlSize > 0)
+            dwSizeToWrite = (DWORD)min((DWORDLONG)(dwlSize - cbDone), (DWORDLONG)cbRead);
+        else
+            dwSizeToWrite = cbRead;
+
+        if (dwSizeToWrite == 0) // No need to write?
+        {
+            hr = S_OK;
+            break;
+        }
+
+        hr = pDst->Write(pBuff, dwSizeToWrite, NULL);
+        if (hr != S_OK)
+            break;
+
+        cbDone += dwSizeToWrite;
+
+        if (pProgress->HasUserCancelled()) // Cancelled?
+        {
+            hr = HRESULT_FROM_WIN32(ERROR_CANCELLED);
+            break;
+        }
+        pProgress->SetProgress64(cbDone, dwlSize);
+
+        if (dwlSize > 0 && cbDone >= dwlSize) // Reached the goal?
+        {
+            hr = S_OK;
+            break;
+        }
+    }
+
+    return hr;
+}
+
+/*************************************************************************
+ *  SHOpenPropSheetA [SHELL32.707]
+ *
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/shlobj/nf-shlobj-shopenpropsheeta
+ */
+EXTERN_C
+BOOL WINAPI
+SHOpenPropSheetA(
+    _In_opt_ LPCSTR pszCaption,
+    _In_opt_ HKEY *ahKeys,
+    _In_ UINT cKeys,
+    _In_ const CLSID *pclsidDefault,
+    _In_ IDataObject *pDataObject,
+    _In_opt_ IShellBrowser *pShellBrowser,
+    _In_opt_ LPCSTR pszStartPage)
+{
+    CStringW strStartPageW, strCaptionW;
+    LPCWSTR pszCaptionW = NULL, pszStartPageW = NULL;
+
+    TRACE("(%s, %p, %u, %p, %p, %p, %s)", debugstr_a(pszCaption), ahKeys, cKeys, pclsidDefault,
+          pDataObject, pShellBrowser, debugstr_a(pszStartPage));
+
+    if (pszCaption)
+    {
+        strStartPageW = pszCaption;
+        pszCaptionW = strCaptionW;
+    }
+
+    if (pszStartPage)
+    {
+        strStartPageW = pszStartPage;
+        pszStartPageW = strStartPageW;
+    }
+
+    return SHOpenPropSheetW(pszCaptionW, ahKeys, cKeys, pclsidDefault,
+                            pDataObject, pShellBrowser, pszStartPageW);
+}
+
+/*************************************************************************
+ *  Activate_RunDLL [SHELL32.105]
+ *
+ * Unlocks the foreground window and allows the shell window to become the
+ * foreground window. Every parameter is unused.
+ */
+EXTERN_C
+BOOL WINAPI
+Activate_RunDLL(
+    _In_ HWND hwnd,
+    _In_ HINSTANCE hinst,
+    _In_ LPCWSTR cmdline,
+    _In_ INT cmdshow)
+{
+    DWORD dwProcessID;
+
+    UNREFERENCED_PARAMETER(hwnd);
+    UNREFERENCED_PARAMETER(hinst);
+    UNREFERENCED_PARAMETER(cmdline);
+    UNREFERENCED_PARAMETER(cmdshow);
+
+    TRACE("(%p, %p, %s, %d)\n", hwnd, hinst, debugstr_w(cmdline), cmdline);
+
+    GetWindowThreadProcessId(GetShellWindow(), &dwProcessID);
+    return AllowSetForegroundWindow(dwProcessID);
+}
+
+/*************************************************************************
+ *                SHStartNetConnectionDialogA (SHELL32.12)
+ *
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/nf-shlobj_core-shstartnetconnectiondialoga
+ */
+EXTERN_C
+HRESULT WINAPI
+SHStartNetConnectionDialogA(
+    _In_ HWND hwnd,
+    _In_ LPCSTR pszRemoteName,
+    _In_ DWORD dwType)
+{
+    LPCWSTR pszRemoteNameW = NULL;
+    CStringW strRemoteNameW;
+
+    TRACE("(%p, %s, %lu)\n", hwnd, debugstr_a(pszRemoteName), dwType);
+
+    if (pszRemoteName)
+    {
+        strRemoteNameW = pszRemoteName;
+        pszRemoteNameW = strRemoteNameW;
+    }
+
+    return SHStartNetConnectionDialogW(hwnd, pszRemoteNameW, dwType);
+}
+
+/*************************************************************************
+ * Helper functions for PathIsEqualOrSubFolder
+ */
+
+static INT
+DynamicPathCommonPrefixW(
+    _In_ LPCWSTR lpszPath1,
+    _In_ LPCWSTR lpszPath2,
+    _Out_ CStringW& strPath)
+{
+    SIZE_T cchPath1 = wcslen(lpszPath1);
+    SIZE_T cchPath2 = wcslen(lpszPath2);
+    LPWSTR lpszPath = strPath.GetBuffer((INT)max(cchPath1, cchPath2) + 16);
+    INT ret = PathCommonPrefixW(lpszPath1, lpszPath2, lpszPath);
+    strPath.ReleaseBuffer();
+    return ret;
+}
+
+EXTERN_C HRESULT WINAPI
+SHGetPathCchFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath, SIZE_T cchPathMax);
+
+static HRESULT
+DynamicSHGetPathFromIDListW(
+    _In_ LPCITEMIDLIST pidl,
+    _Out_ CStringW& strPath)
+{
+    HRESULT hr;
+
+    for (UINT cchPath = MAX_PATH;; cchPath *= 2)
+    {
+        LPWSTR lpszPath = strPath.GetBuffer(cchPath);
+        if (!lpszPath)
+            return E_OUTOFMEMORY;
+
+        hr = SHGetPathCchFromIDListW(pidl, lpszPath, cchPath);
+        strPath.ReleaseBuffer();
+
+        if (hr != E_NOT_SUFFICIENT_BUFFER)
+            break;
+
+        if (cchPath >= MAXUINT / 2)
+        {
+            hr = E_FAIL;
+            break;
+        }
+    }
+
+    if (FAILED(hr))
+        strPath.Empty();
+
+    return hr;
+}
+
+static HRESULT
+DynamicSHGetSpecialFolderPathW(
+    _In_ HWND hwndOwner,
+    _Out_ CStringW& strPath,
+    _In_ INT nCSIDL,
+    _In_ BOOL bCreate)
+{
+    LPITEMIDLIST pidl;
+    HRESULT hr = SHGetSpecialFolderLocation(hwndOwner, nCSIDL, &pidl);
+    if (SUCCEEDED(hr))
+    {
+        hr = DynamicSHGetPathFromIDListW(pidl, strPath);
+        CoTaskMemFree(pidl);
+    }
+
+    if (FAILED(hr))
+        strPath.Empty();
+    else if (bCreate)
+        CreateDirectoryW(strPath, NULL);
+
+    return hr;
+}
+
+static VOID
+DynamicPathRemoveBackslashW(
+    _Out_ CStringW& strPath)
+{
+    INT nLength = strPath.GetLength();
+    if (nLength > 0 && strPath[nLength - 1] == L'\\')
+        strPath = strPath.Left(nLength - 1);
+}
+
+/*************************************************************************
+ *                PathIsEqualOrSubFolder (SHELL32.755)
+ */
+EXTERN_C
+BOOL WINAPI
+PathIsEqualOrSubFolder(
+    _In_ LPCWSTR pszPath1OrCSIDL,
+    _In_ LPCWSTR pszPath2)
+{
+    CStringW strCommon, strPath1;
+
+    TRACE("(%s %s)\n", debugstr_w(pszPath1OrCSIDL), debugstr_w(pszPath2));
+
+    if (IS_INTRESOURCE(pszPath1OrCSIDL))
+    {
+        DynamicSHGetSpecialFolderPathW(
+            NULL, strPath1, LOWORD(pszPath1OrCSIDL) | CSIDL_FLAG_DONT_VERIFY, FALSE);
+    }
+    else
+    {
+        strPath1 = pszPath1OrCSIDL;
+    }
+
+    DynamicPathRemoveBackslashW(strPath1);
+
+    if (!DynamicPathCommonPrefixW(strPath1, pszPath2, strCommon))
+        return FALSE;
+
+    return strPath1.CompareNoCase(strCommon) == 0;
 }

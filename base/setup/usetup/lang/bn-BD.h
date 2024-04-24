@@ -928,83 +928,6 @@ static MUI_ENTRY bnBDSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Setup cannot install the bootloader on your computers",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "hardisk",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Please insert a formatted floppy disk in drive A: and",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "press ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = Continue   F3 = Quit",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
-static MUI_ENTRY bnBDBootLoaderInstallPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "Installing the bootloader onto the media, please wait...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-};
-
 static MUI_ENTRY bnBDSelectPartitionEntries[] =
 {
     {
@@ -1045,7 +968,7 @@ static MUI_ENTRY bnBDSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Press P to create a primary partition.",
+        "\x07  Press C to create a primary/logical partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1059,13 +982,6 @@ static MUI_ENTRY bnBDSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Press L to create a logical partition.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Press D to delete an existing partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1333,7 +1249,7 @@ static MUI_ENTRY bnBDFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Setup will now format the partition. Press ENTER to continue.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1488,7 +1404,7 @@ static MUI_ENTRY bnBDFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY bnBDBootLoaderEntries[] =
+static MUI_ENTRY bnBDBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1500,7 +1416,7 @@ static MUI_ENTRY bnBDBootLoaderEntries[] =
     {
         6,
         8,
-        "Setup is installing the boot loader",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1528,7 +1444,7 @@ static MUI_ENTRY bnBDBootLoaderEntries[] =
     {
         8,
         15,
-        "Skip install bootloader.",
+        "Skip bootloader installation.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1545,6 +1461,83 @@ static MUI_ENTRY bnBDBootLoaderEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY bnBDBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup is installing the bootloader.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY bnBDBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup cannot install the bootloader on your computer's harddisk.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Please insert a formatted floppy disk in drive A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "and press ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = Continue   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY bnBDKeyboardSettingsEntries[] =
@@ -1936,13 +1929,6 @@ MUI_ERROR bnBDErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "You cannot delete unpartitioned disk space!\n"
-        "\n"
-        "  * Press any key to continue.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Setup failed to install the %S bootcode on the system partition.",
         "ENTER = Reboot computer"
@@ -2180,8 +2166,8 @@ MUI_PAGE bnBDPages[] =
         bnBDKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        bnBDBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        bnBDBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2196,12 +2182,12 @@ MUI_PAGE bnBDPages[] =
         bnBDSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         bnBDBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        bnBDBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        bnBDBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,
@@ -2218,25 +2204,27 @@ MUI_STRING bnBDStrings[] =
     {STRING_PLEASEWAIT,
      "   Please wait..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
+     "   ENTER = Install   C = Create Primary   E = Create Extended   F3 = Quit"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
+     "   ENTER = Install   C = Create Logical Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Install   D = Delete Partition   F3 = Quit"},
     {STRING_DELETEPARTITION,
      "   D = Delete Partition   F3 = Quit"},
     {STRING_PARTITIONSIZE,
      "Size of new partition:"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
      "You have chosen to create a primary partition on"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "You have chosen to create an extended partition on"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "You have chosen to create a logical partition on"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     "Please enter the size of the new partition in megabytes."},
     {STRING_CREATEPARTITION,
      "   ENTER = Create Partition   ESC = Cancel   F3 = Quit"},
+    {STRING_NEWPARTITION,
+    "Setup created a new partition on"},
     {STRING_PARTFORMAT,
     "This Partition will be formatted next."},
     {STRING_NONFORMATTEDPART,
@@ -2287,30 +2275,28 @@ MUI_STRING bnBDStrings[] =
     "The most common cause of this is using an USB keyboard\r\n"},
     {STRING_CONSOLEFAIL3,
     "USB keyboards are not fully supported yet\r\n"},
-    {STRING_FORMATTINGDISK,
-    "Setup is formatting your disk"},
+    {STRING_FORMATTINGPART,
+    "Setup is formatting the partition..."},
     {STRING_CHECKINGDISK,
-    "Setup is checking your disk"},
+    "Setup is checking the disk..."},
     {STRING_FORMATDISK1,
     " Format partition as %S file system (quick format) "},
     {STRING_FORMATDISK2,
     " Format partition as %S file system "},
     {STRING_KEEPFORMAT,
     " Keep current file system (no changes) "},
-    {STRING_HDINFOPARTCREATE_1,
+    {STRING_HDDISK1,
     "%s."},
-    {STRING_HDINFOPARTDELETE_1,
+    {STRING_HDDISK2,
     "on %s."},
     {STRING_PARTTYPE,
     "Type 0x%02x"},
-    {STRING_HDDINFO_1,
+    {STRING_HDDINFO1,
     // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
     "%I64u %s Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu) on %wZ [%s]"},
-    {STRING_HDDINFO_2,
+    {STRING_HDDINFO2,
     // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]"
     "%I64u %s Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "Setup created a new partition on"},
     {STRING_UNPSPACE,
     "Unpartitioned space"},
     {STRING_MAXSIZE,

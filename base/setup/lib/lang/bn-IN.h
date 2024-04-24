@@ -2,6 +2,6 @@
 
 MUI_LAYOUTS bnINLayouts[] =
 {
-    { L"0445", L"00000445" },
-    { NULL, NULL }
+    { 0x0445, 0x00000445 },
+    { 0, 0 }
 };

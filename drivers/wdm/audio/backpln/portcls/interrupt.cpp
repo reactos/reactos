@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 typedef struct
@@ -47,12 +44,9 @@ public:
     friend BOOLEAN NTAPI IInterruptServiceRoutine(IN PKINTERRUPT  Interrupt, IN PVOID  ServiceContext);
 };
 
-
 //---------------------------------------------------------------
 // IUnknown methods
 //
-
-
 
 NTSTATUS
 NTAPI
@@ -72,7 +66,6 @@ CInterruptSync::QueryInterface(
         return STATUS_SUCCESS;
     }
 
-
     if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
     {
         DPRINT1("CInterruptSync::QueryInterface: no interface!!! iface %S\n", GuidString.Buffer);
@@ -85,7 +78,6 @@ CInterruptSync::QueryInterface(
 //---------------------------------------------------------------
 // CInterruptSync methods
 //
-
 
 BOOLEAN
 NTAPI
@@ -219,7 +211,6 @@ IInterruptServiceRoutine(
     }
 }
 
-
 NTSTATUS
 NTAPI
 CInterruptSync::Connect()
@@ -254,7 +245,6 @@ CInterruptSync::Connect()
     DPRINT1("CInterruptSync::Connect result %x\n", Status);
     return Status;
 }
-
 
 VOID
 NTAPI

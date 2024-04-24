@@ -5,8 +5,6 @@
  * COPYRIGHT:  Copyright 2015 Benedikt Freisen <b.freisen@gmx.net>
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
 
 /* FUNCTIONS ********************************************************/
@@ -17,6 +15,7 @@ Line(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, int thickness)
     HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, thickness, color));
     MoveToEx(hdc, x1, y1, NULL);
     LineTo(hdc, x2, y2);
+    SetPixelV(hdc, x2, y2, color);
     DeleteObject(SelectObject(hdc, oldPen));
 }
 
@@ -164,73 +163,66 @@ Airbrush(HDC hdc, LONG x, LONG y, COLORREF color, LONG r)
 }
 
 void
-Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG style)
+Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG style, INT thickness)
 {
     HPEN oldPen = (HPEN) SelectObject(hdc, CreatePen(PS_SOLID, 1, color));
     HBRUSH oldBrush = (HBRUSH) SelectObject(hdc, CreateSolidBrush(color));
-    LONG a, b;
-    b = max(1, max(labs(x2 - x1), labs(y2 - y1)));
-    switch (style)
+
+    if (thickness <= 1)
     {
-        case 0:
-            for(a = 0; a <= b; a++)
-                Ellipse(hdc, (x1 * (b - a) + x2 * a) / b - 3, (y1 * (b - a) + y2 * a) / b - 3,
-                        (x1 * (b - a) + x2 * a) / b + 4, (y1 * (b - a) + y2 * a) / b + 4);
-            break;
-        case 1:
-            for(a = 0; a <= b; a++)
-                Ellipse(hdc,
-                        (x1 * (b - a) + x2 * a) / b - 2,
-                        (y1 * (b - a) + y2 * a) / b - 2,
-                        (x1 * (b - a) + x2 * a) / b + 2,
-                        (y1 * (b - a) + y2 * a) / b + 2);
-            break;
-        case 2:
-            MoveToEx(hdc, x1, y1, NULL);
-            LineTo(hdc, x2, y2);
-            ::SetPixelV(hdc, x2, y2, color);
-            break;
-        case 3:
-            for(a = 0; a <= b; a++)
-                Rectangle(hdc,
-                          (x1 * (b - a) + x2 * a) / b - 4,
-                          (y1 * (b - a) + y2 * a) / b - 4,
-                          (x1 * (b - a) + x2 * a) / b + 4,
-                          (y1 * (b - a) + y2 * a) / b + 4);
-            break;
-        case 4:
-            for(a = 0; a <= b; a++)
-                Rectangle(hdc, (x1 * (b - a) + x2 * a) / b - 2, (y1 * (b - a) + y2 * a) / b - 2,
-                          (x1 * (b - a) + x2 * a) / b + 3, (y1 * (b - a) + y2 * a) / b + 3);
-            break;
-        case 5:
-            for(a = 0; a <= b; a++)
-                Rectangle(hdc, (x1 * (b - a) + x2 * a) / b - 1, (y1 * (b - a) + y2 * a) / b - 1,
-                          (x1 * (b - a) + x2 * a) / b + 1, (y1 * (b - a) + y2 * a) / b + 1);
-            break;
-        case 6:
-        case 7:
-        case 8:
-        case 9:
-        case 10:
-        case 11:
+        Line(hdc, x1, y1, x2, y2, color, thickness);
+    }
+    else
+    {
+        LONG a, b = max(1, max(labs(x2 - x1), labs(y2 - y1)));
+        switch ((BrushStyle)style)
         {
-            POINT offsTop[] = {{3, -3}, {2, -2}, {0, 0},
-                               {-4, -4}, {-2, -2}, {-1, 0}};
-            POINT offsBtm[] = {{-3, 3}, {-2, 2}, {-1, 1},
-                               {3, 3}, {2, 2}, {0, 1}};
-            LONG idx = style - 6;
-            POINT pts[4];
-            pts[0].x = x1 + offsTop[idx].x;
-            pts[0].y = y1 + offsTop[idx].y;
-            pts[1].x = x1 + offsBtm[idx].x;
-            pts[1].y = y1 + offsBtm[idx].y;
-            pts[2].x = x2 + offsBtm[idx].x;
-            pts[2].y = y2 + offsBtm[idx].y;
-            pts[3].x = x2 + offsTop[idx].x;
-            pts[3].y = y2 + offsTop[idx].y;
-            Polygon(hdc, pts, 4);
-            break;
+            case BrushStyleRound:
+                for (a = 0; a <= b; a++)
+                {
+                    Ellipse(hdc,
+                            (x1 * (b - a) + x2 * a) / b - (thickness / 2),
+                            (y1 * (b - a) + y2 * a) / b - (thickness / 2),
+                            (x1 * (b - a) + x2 * a) / b + (thickness / 2),
+                            (y1 * (b - a) + y2 * a) / b + (thickness / 2));
+                }
+                break;
+
+            case BrushStyleSquare:
+                for (a = 0; a <= b; a++)
+                {
+                    Rectangle(hdc,
+                              (x1 * (b - a) + x2 * a) / b - (thickness / 2),
+                              (y1 * (b - a) + y2 * a) / b - (thickness / 2),
+                              (x1 * (b - a) + x2 * a) / b + (thickness / 2),
+                              (y1 * (b - a) + y2 * a) / b + (thickness / 2));
+                }
+                break;
+
+            case BrushStyleForeSlash:
+            case BrushStyleBackSlash:
+            {
+                POINT offsetTop, offsetBottom;
+                if ((BrushStyle)style == BrushStyleForeSlash)
+                {
+                    offsetTop    = { (thickness - 1) / 2, -(thickness - 1) / 2 };
+                    offsetBottom = { -thickness      / 2,   thickness      / 2 };
+                }
+                else
+                {
+                    offsetTop =    { -thickness      / 2, -thickness      / 2 };
+                    offsetBottom = { (thickness - 1) / 2, (thickness - 1) / 2 };
+                }
+                POINT points[4] =
+                {
+                    { x1 + offsetTop.x,    y1 + offsetTop.y    },
+                    { x1 + offsetBottom.x, y1 + offsetBottom.y },
+                    { x2 + offsetBottom.x, y2 + offsetBottom.y },
+                    { x2 + offsetTop.x,    y2 + offsetTop.y    },
+                };
+                Polygon(hdc, points, _countof(points));
+                break;
+            }
         }
     }
     DeleteObject(SelectObject(hdc, oldBrush));
@@ -259,38 +251,36 @@ RectSel(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2)
 }
 
 void
-Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LPCTSTR lpchText, HFONT font, LONG style)
+Text(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, LPCWSTR lpchText, HFONT font, LONG style)
 {
-    INT iSaveDC = SaveDC(hdc); // We will modify the clipping region. Save now.
+    INT iSaveDC = ::SaveDC(hdc); // We will modify the clipping region. Save now.
 
-    RECT rc;
-    SetRect(&rc, x1, y1, x2, y2);
+    CRect rc = { x1, y1, x2, y2 };
 
     if (style == 0) // Transparent
     {
-        SetBkMode(hdc, TRANSPARENT);
-        GetBkColor(hdc);
+        ::SetBkMode(hdc, TRANSPARENT);
     }
     else // Opaque
     {
-        SetBkMode(hdc, OPAQUE);
-        SetBkColor(hdc, bg);
+        ::SetBkMode(hdc, OPAQUE);
+        ::SetBkColor(hdc, bg);
 
-        HBRUSH hbr = CreateSolidBrush(bg);
-        FillRect(hdc, &rc, hbr); // Fill the background
-        DeleteObject(hbr);
+        HBRUSH hbr = ::CreateSolidBrush(bg);
+        ::FillRect(hdc, &rc, hbr); // Fill the background
+        ::DeleteObject(hbr);
     }
 
     IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
 
-    HGDIOBJ hFontOld = SelectObject(hdc, font);
-    SetTextColor(hdc, fg);
+    HGDIOBJ hFontOld = ::SelectObject(hdc, font);
+    ::SetTextColor(hdc, fg);
     const UINT uFormat = DT_LEFT | DT_TOP | DT_EDITCONTROL | DT_NOPREFIX | DT_NOCLIP |
                          DT_EXPANDTABS | DT_WORDBREAK;
-    DrawText(hdc, lpchText, -1, &rc, uFormat);
-    SelectObject(hdc, hFontOld);
+    ::DrawTextW(hdc, lpchText, -1, &rc, uFormat);
+    ::SelectObject(hdc, hFontOld);
 
-    RestoreDC(hdc, iSaveDC); // Restore
+    ::RestoreDC(hdc, iSaveDC); // Restore
 }
 
 BOOL

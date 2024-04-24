@@ -1,4 +1,4 @@
-﻿/*
+/*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/mm/mminit.c
@@ -68,6 +68,8 @@ MiInitSystemMemoryAreas(VOID)
     // Create all the static memory areas.
     //
 
+    MmLockAddressSpace(MmGetKernelAddressSpace());
+
 #ifdef _M_AMD64
     // Reserved range FFFF800000000000 - FFFFF68000000000
     MiCreateArm3StaticMemoryArea((PVOID)MI_REAL_SYSTEM_RANGE_START, PTE_BASE - MI_REAL_SYSTEM_RANGE_START, FALSE);
@@ -118,6 +120,8 @@ MiInitSystemMemoryAreas(VOID)
     // KUSER_SHARED_DATA
     MiCreateArm3StaticMemoryArea((PVOID)KI_USER_SHARED_DATA, PAGE_SIZE, FALSE);
 #endif /* _X86_ */
+
+    MmUnlockAddressSpace(MmGetKernelAddressSpace());
 }
 
 CODE_SEG("INIT")

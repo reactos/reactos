@@ -878,7 +878,7 @@ interface pnp
     __stdcall
     PNP_RegisterNotification(
         [in] handle_t hBinding,
-        [in] DWORD ulUnknown2,
+        [in] DWORD_PTR hRecipient,
         [in, string, ref] LPWSTR pszName,
         [in, size_is(ulNotificationFilterSize)] BYTE *pNotificationFilter,
         [in] DWORD ulNotificationFilterSize,

@@ -2,6 +2,6 @@
 
 MUI_LAYOUTS daDKLayouts[] =
 {
-    { L"0406", L"00000406" },
-    { NULL, NULL }
+    { 0x0406, 0x00000406 },
+    { 0, 0 }
 };

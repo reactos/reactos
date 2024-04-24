@@ -7,7 +7,7 @@
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
-//IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-de-DE.bmp"
+//IDB_FONTSTOOLBAR BITMAP "img/fontstoolbar-de-DE.bmp"
 
 ID_MENU MENU
 BEGIN
@@ -42,6 +42,8 @@ BEGIN
         MENUITEM "&Ausschneiden\tStrg+X", IDM_EDITCUT
         MENUITEM "&Kopieren\tStrg+C", IDM_EDITCOPY
         MENUITEM "&Einfügen\tStrg+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "Auswahl &löschen\tEntf", IDM_EDITDELETESELECTION
         MENUITEM "Markierung &umkehren", IDM_EDITINVERTSELECTION
         MENUITEM "Alles &markieren\tStrg+A", IDM_EDITSELECTALL
@@ -106,6 +108,8 @@ BEGIN
         MENUITEM "&Ausschneiden\tStrg+X", IDM_EDITCUT
         MENUITEM "&Kopieren\tStrg+C", IDM_EDITCOPY
         MENUITEM "&Einfügen\tStrg+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "Auswahl &löschen\tEntf", IDM_EDITDELETESELECTION
         MENUITEM "Alles &markieren\tStrg+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR

@@ -83,8 +83,9 @@ LpcpCreatePort(OUT PHANDLE PortHandle,
     }
     else
     {
-        if (ObjectAttributes->ObjectName)
-            CapturedObjectName = *(ObjectAttributes->ObjectName);
+        ObjectName = ObjectAttributes->ObjectName;
+        if (ObjectName)
+            CapturedObjectName = *ObjectName;
     }
 
     /* Normalize the buffer pointer in case we don't have
@@ -96,7 +97,7 @@ LpcpCreatePort(OUT PHANDLE PortHandle,
     /* Capture the port name for DPRINT only - ObCreateObject does its
      * own capture. As it is used only for debugging, ignore any failure;
      * the string is zeroed out in such case. */
-    ProbeAndCaptureUnicodeString(&CapturedPortName, PreviousMode, &CapturedObjectName);
+    ProbeAndCaptureUnicodeString(&CapturedPortName, PreviousMode, ObjectName);
     LPCTRACE(LPC_CREATE_DEBUG, "Name: %wZ\n", &CapturedPortName);
     ReleaseCapturedUnicodeString(&CapturedPortName, PreviousMode);
 #endif

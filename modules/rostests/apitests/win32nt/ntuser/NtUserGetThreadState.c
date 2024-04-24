@@ -5,7 +5,7 @@
  * COPYRIGHT:   Copyright 2021-2022 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include <win32nt.h>
+#include "../win32nt.h"
 #include <pseh/pseh2.h>
 
 #define MAX_COUNT 8

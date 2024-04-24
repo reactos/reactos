@@ -701,7 +701,7 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
 
             TRACE("Shutdown initiated\n");
 
-            if (ThreadInformationLength != sizeof(ULONG))
+            if (ThreadInformationLength != sizeof(CapturedFlags))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
@@ -711,7 +711,7 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
             Status = STATUS_SUCCESS;
             _SEH2_TRY
             {
-                ProbeForWrite(ThreadInformation, sizeof(CapturedFlags), sizeof(PVOID));
+                ProbeForWrite(ThreadInformation, sizeof(CapturedFlags), __alignof(CapturedFlags));
                 CapturedFlags = *(PULONG)ThreadInformation;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -753,7 +753,7 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
             Status = STATUS_SUCCESS;
             _SEH2_TRY
             {
-                ProbeForRead(ThreadInformation, sizeof(ShutdownStatus), sizeof(PVOID));
+                ProbeForRead(ThreadInformation, sizeof(ShutdownStatus), __alignof(ShutdownStatus));
                 ShutdownStatus = *(NTSTATUS*)ThreadInformation;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -783,7 +783,7 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
             Status = STATUS_SUCCESS;
             _SEH2_TRY
             {
-                ProbeForRead(ThreadInformation, sizeof(CsrPortHandle), sizeof(PVOID));
+                ProbeForRead(ThreadInformation, sizeof(CsrPortHandle), __alignof(CsrPortHandle));
                 CsrPortHandle = *(PHANDLE)ThreadInformation;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)

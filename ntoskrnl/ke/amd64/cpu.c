@@ -10,6 +10,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+#include <x86x64/Cpuid.h>
+#include <x86x64/Msr.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -145,56 +147,74 @@ KiSetProcessorType(VOID)
     KeGetCurrentPrcb()->CpuStep = (USHORT)Stepping;
 }
 
-ULONG
+/*!
+    \brief Evaluates the KeFeatureFlag bits for the current CPU.
+
+    \return The feature flags for this CPU.
+
+    \see https://www.geoffchappell.com/studies/windows/km/ntoskrnl/structs/kprcb/featurebits.htm
+
+    \todo
+     - KF_VIRT_FIRMWARE_ENABLED 0x08000000 (see notes from Geoff Chappell)
+     - KF_FPU_LEAKAGE 0x0000020000000000ULL
+     - KF_CAT 0x0000100000000000ULL
+     - KF_CET_SS 0x0000400000000000ULL
+*/
+ULONG64
 NTAPI
 KiGetFeatureBits(VOID)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
     ULONG Vendor;
-    ULONG FeatureBits = KF_WORKING_PTE;
-    CPU_INFO CpuInfo;
+    ULONG64 FeatureBits = 0;
+    CPUID_SIGNATURE_REGS signature;
+    CPUID_VERSION_INFO_REGS VersionInfo;
+    CPUID_EXTENDED_FUNCTION_REGS extendedFunction;
 
     /* Get the Vendor ID */
     Vendor = Prcb->CpuVendor;
 
     /* Make sure we got a valid vendor ID at least. */
-    if (!Vendor) return FeatureBits;
+    if (Vendor == CPU_UNKNOWN) return FeatureBits;
+
+    /* Get signature CPUID for the maximum function */
+    __cpuid(signature.AsInt32, CPUID_SIGNATURE);
 
     /* Get the CPUID Info. */
-    KiCpuId(&CpuInfo, 1);
+    __cpuid(VersionInfo.AsInt32, CPUID_VERSION_INFO);
 
     /* Set the initial APIC ID */
-    Prcb->InitialApicId = (UCHAR)(CpuInfo.Ebx >> 24);
+    Prcb->InitialApicId = (UCHAR)VersionInfo.Ebx.Bits.InitialLocalApicId;
 
     /* Convert all CPUID Feature bits into our format */
-    if (CpuInfo.Edx & X86_FEATURE_VME) FeatureBits |= KF_V86_VIS | KF_CR4;
-    if (CpuInfo.Edx & X86_FEATURE_PSE) FeatureBits |= KF_LARGE_PAGE | KF_CR4;
-    if (CpuInfo.Edx & X86_FEATURE_TSC) FeatureBits |= KF_RDTSC;
-    if (CpuInfo.Edx & X86_FEATURE_CX8) FeatureBits |= KF_CMPXCHG8B;
-    if (CpuInfo.Edx & X86_FEATURE_SYSCALL) FeatureBits |= KF_FAST_SYSCALL;
-    if (CpuInfo.Edx & X86_FEATURE_MTTR) FeatureBits |= KF_MTRR;
-    if (CpuInfo.Edx & X86_FEATURE_PGE) FeatureBits |= KF_GLOBAL_PAGE | KF_CR4;
-    if (CpuInfo.Edx & X86_FEATURE_CMOV) FeatureBits |= KF_CMOV;
-    if (CpuInfo.Edx & X86_FEATURE_PAT) FeatureBits |= KF_PAT;
-    if (CpuInfo.Edx & X86_FEATURE_DS) FeatureBits |= KF_DTS;
-    if (CpuInfo.Edx & X86_FEATURE_MMX) FeatureBits |= KF_MMX;
-    if (CpuInfo.Edx & X86_FEATURE_FXSR) FeatureBits |= KF_FXSR;
-    if (CpuInfo.Edx & X86_FEATURE_SSE) FeatureBits |= KF_XMMI;
-    if (CpuInfo.Edx & X86_FEATURE_SSE2) FeatureBits |= KF_XMMI64;
+    if (VersionInfo.Edx.Bits.VME) FeatureBits |= KF_CR4;
+    if (VersionInfo.Edx.Bits.PSE) FeatureBits |= KF_LARGE_PAGE | KF_CR4;
+    if (VersionInfo.Edx.Bits.TSC) FeatureBits |= KF_RDTSC;
+    if (VersionInfo.Edx.Bits.CX8) FeatureBits |= KF_CMPXCHG8B;
+    if (VersionInfo.Edx.Bits.SEP) FeatureBits |= KF_FAST_SYSCALL;
+    if (VersionInfo.Edx.Bits.MTRR) FeatureBits |= KF_MTRR;
+    if (VersionInfo.Edx.Bits.PGE) FeatureBits |= KF_GLOBAL_PAGE | KF_CR4;
+    if (VersionInfo.Edx.Bits.CMOV) FeatureBits |= KF_CMOV;
+    if (VersionInfo.Edx.Bits.PAT) FeatureBits |= KF_PAT;
+    if (VersionInfo.Edx.Bits.DS) FeatureBits |= KF_DTS;
+    if (VersionInfo.Edx.Bits.MMX) FeatureBits |= KF_MMX;
+    if (VersionInfo.Edx.Bits.FXSR) FeatureBits |= KF_FXSR;
+    if (VersionInfo.Edx.Bits.SSE) FeatureBits |= KF_XMMI;
+    if (VersionInfo.Edx.Bits.SSE2) FeatureBits |= KF_XMMI64;
 
-    if (CpuInfo.Ecx & X86_FEATURE_SSE3) FeatureBits |= KF_SSE3;
-    //if (CpuInfo.Ecx & X86_FEATURE_MONITOR) FeatureBits |= KF_MONITOR;
-    //if (CpuInfo.Ecx & X86_FEATURE_SSSE3) FeatureBits |= KF_SSE3SUP;
-    if (CpuInfo.Ecx & X86_FEATURE_CX16) FeatureBits |= KF_CMPXCHG16B;
-    //if (CpuInfo.Ecx & X86_FEATURE_SSE41) FeatureBits |= KF_SSE41;
-    //if (CpuInfo.Ecx & X86_FEATURE_POPCNT) FeatureBits |= KF_POPCNT;
-    if (CpuInfo.Ecx & X86_FEATURE_XSAVE) FeatureBits |= KF_XSTATE;
+    if (VersionInfo.Ecx.Bits.SSE3) FeatureBits |= KF_SSE3;
+    if (VersionInfo.Ecx.Bits.SSSE3) FeatureBits |= KF_SSSE3;
+    if (VersionInfo.Ecx.Bits.CMPXCHG16B) FeatureBits |= KF_CMPXCHG16B;
+    if (VersionInfo.Ecx.Bits.SSE4_1) FeatureBits |= KF_SSE4_1;
+    if (VersionInfo.Ecx.Bits.XSAVE) FeatureBits |= KF_XSTATE;
+    if (VersionInfo.Ecx.Bits.RDRAND) FeatureBits |= KF_RDRAND;
 
     /* Check if the CPU has hyper-threading */
-    if (CpuInfo.Edx & X86_FEATURE_HT)
+    if (VersionInfo.Edx.Bits.HTT)
     {
         /* Set the number of logical CPUs */
-        Prcb->LogicalProcessorsPerPhysicalProcessor = (UCHAR)(CpuInfo.Ebx >> 16);
+        Prcb->LogicalProcessorsPerPhysicalProcessor =
+            VersionInfo.Ebx.Bits.MaximumAddressableIdsForLogicalProcessors;
         if (Prcb->LogicalProcessorsPerPhysicalProcessor > 1)
         {
             /* We're on dual-core */
@@ -207,25 +227,115 @@ KiGetFeatureBits(VOID)
         Prcb->LogicalProcessorsPerPhysicalProcessor = 1;
     }
 
-    /* Check extended cpuid features */
-    KiCpuId(&CpuInfo, 0x80000000);
-    if ((CpuInfo.Eax & 0xffffff00) == 0x80000000)
+    /* Check if CPUID_THERMAL_POWER_MANAGEMENT (0x06) is supported */
+    if (signature.MaxLeaf >= CPUID_THERMAL_POWER_MANAGEMENT)
     {
-        /* Check if CPUID 0x80000001 is supported */
-        if (CpuInfo.Eax >= 0x80000001)
+        /* Read CPUID_THERMAL_POWER_MANAGEMENT */
+        CPUID_THERMAL_POWER_MANAGEMENT_REGS PowerInfo;
+        __cpuid(PowerInfo.AsInt32, CPUID_THERMAL_POWER_MANAGEMENT);
+
+        if (PowerInfo.Undoc.Ecx.ACNT2) FeatureBits |= KF_ACNT2;
+    }
+
+    /* Check if CPUID_STRUCTURED_EXTENDED_FEATURE_FLAGS (0x07) is supported */
+    if (signature.MaxLeaf >= CPUID_STRUCTURED_EXTENDED_FEATURE_FLAGS)
+    {
+        /* Read CPUID_STRUCTURED_EXTENDED_FEATURE_FLAGS */
+        CPUID_STRUCTURED_EXTENDED_FEATURE_FLAGS_REGS ExtFlags;
+        __cpuidex(ExtFlags.AsInt32,
+            CPUID_STRUCTURED_EXTENDED_FEATURE_FLAGS,
+            CPUID_STRUCTURED_EXTENDED_FEATURE_FLAGS_SUB_LEAF_INFO);
+
+        if (ExtFlags.Ebx.Bits.SMEP) FeatureBits |= KF_SMEP;
+        if (ExtFlags.Ebx.Bits.FSGSBASE) FeatureBits |= KF_RDWRFSGSBASE;
+        if (ExtFlags.Ebx.Bits.SMAP) FeatureBits |= KF_SMAP;
+    }
+
+    /* Check if CPUID_EXTENDED_STATE (0x0D) is supported */
+    if (signature.MaxLeaf >= CPUID_EXTENDED_STATE)
+    {
+        /* Read CPUID_EXTENDED_STATE */
+        CPUID_EXTENDED_STATE_SUB_LEAF_EAX_REGS ExtStateSub;
+        __cpuidex(ExtStateSub.AsInt32,
+            CPUID_EXTENDED_STATE,
+            CPUID_EXTENDED_STATE_SUB_LEAF);
+
+        if (ExtStateSub.Eax.Bits.XSAVEOPT) FeatureBits |= KF_XSAVEOPT;
+        if (ExtStateSub.Eax.Bits.XSAVES)  FeatureBits |= KF_XSAVES;
+    }
+
+    /* Check extended cpuid features */
+    __cpuid(extendedFunction.AsInt32, CPUID_EXTENDED_FUNCTION);
+    if ((extendedFunction.MaxLeaf & 0xffffff00) == 0x80000000)
+    {
+        /* Check if CPUID_EXTENDED_CPU_SIG (0x80000001) is supported */
+        if (extendedFunction.MaxLeaf >= CPUID_EXTENDED_CPU_SIG)
         {
-            /* Check which extended features are available. */
-            KiCpuId(&CpuInfo, 0x80000001);
+            /* Read CPUID_EXTENDED_CPU_SIG */
+            CPUID_EXTENDED_CPU_SIG_REGS ExtSig;
+            __cpuid(ExtSig.AsInt32, CPUID_EXTENDED_CPU_SIG);
 
             /* Check if NX-bit is supported */
-            if (CpuInfo.Edx & X86_FEATURE_NX) FeatureBits |= KF_NX_BIT;
+            if (ExtSig.Intel.Edx.Bits.NX) FeatureBits |= KF_NX_BIT;
+            if (ExtSig.Intel.Edx.Bits.Page1GB) FeatureBits |= KF_HUGEPAGE;
+            if (ExtSig.Intel.Edx.Bits.RDTSCP) FeatureBits |= KF_RDTSCP;
 
-            /* Now handle each features for each CPU Vendor */
-            switch (Vendor)
+            /* AMD specific */
+            if (Vendor == CPU_AMD)
             {
-                case CPU_AMD:
-                    if (CpuInfo.Edx & 0x80000000) FeatureBits |= KF_3DNOW;
-                    break;
+                if (ExtSig.Amd.Edx.Bits.ThreeDNow) FeatureBits |= KF_3DNOW;
+            }
+        }
+    }
+
+    /* Vendor specific */
+    if (Vendor == CPU_INTEL)
+    {
+        FeatureBits |= KF_GENUINE_INTEL;
+
+        /* Check for models that support LBR */
+        if (VersionInfo.Eax.Bits.FamilyId == 6)
+        {
+            if ((VersionInfo.Eax.Bits.Model == 15) ||
+                (VersionInfo.Eax.Bits.Model == 22) ||
+                (VersionInfo.Eax.Bits.Model == 23) ||
+                (VersionInfo.Eax.Bits.Model == 26))
+            {
+                FeatureBits |= KF_BRANCH;
+            }
+        }
+
+        /* Check if VMX is available */
+        if (VersionInfo.Ecx.Bits.VMX)
+        {
+            /* Read PROCBASED ctls and check if secondary are allowed */
+            MSR_IA32_VMX_PROCBASED_CTLS_REGISTER ProcBasedCtls;
+            ProcBasedCtls.Uint64 = __readmsr(MSR_IA32_VMX_PROCBASED_CTLS);
+            if (ProcBasedCtls.Bits.Allowed1.ActivateSecondaryControls)
+            {
+                /* Read secondary controls and check if EPT is allowed */
+                MSR_IA32_VMX_PROCBASED_CTLS2_REGISTER ProcBasedCtls2;
+                ProcBasedCtls2.Uint64 = __readmsr(MSR_IA32_VMX_PROCBASED_CTLS2);
+                if (ProcBasedCtls2.Bits.Allowed1.EPT)
+                    FeatureBits |= KF_SLAT;
+            }
+        }
+    }
+    else if (Vendor == CPU_AMD)
+    {
+        FeatureBits |= KF_AUTHENTICAMD;
+        FeatureBits |= KF_BRANCH;
+
+        /* Check extended cpuid features */
+        if ((extendedFunction.MaxLeaf & 0xffffff00) == 0x80000000)
+        {
+            /* Check if CPUID_AMD_SVM_FEATURES (0x8000000A) is supported */
+            if (extendedFunction.MaxLeaf >= CPUID_AMD_SVM_FEATURES)
+            {
+                /* Read CPUID_AMD_SVM_FEATURES and check if Nested Paging is available */
+                CPUID_AMD_SVM_FEATURES_REGS SvmFeatures;
+                __cpuid(SvmFeatures.AsInt32, CPUID_AMD_SVM_FEATURES);
+                if (SvmFeatures.Edx.Bits.NP) FeatureBits |= KF_SLAT;
             }
         }
     }
@@ -250,7 +360,7 @@ KiReportCpuFeatures(IN PKPRCB Prcb)
     DPRINT1("Supported CPU features: ");
 
 #define print_kf_bit(kf_value) if (Prcb->FeatureBits & kf_value) DbgPrint(#kf_value " ")
-    print_kf_bit(KF_V86_VIS);
+    print_kf_bit(KF_SMEP);
     print_kf_bit(KF_RDTSC);
     print_kf_bit(KF_CR4);
     print_kf_bit(KF_CMOV);
@@ -258,25 +368,40 @@ KiReportCpuFeatures(IN PKPRCB Prcb)
     print_kf_bit(KF_LARGE_PAGE);
     print_kf_bit(KF_MTRR);
     print_kf_bit(KF_CMPXCHG8B);
-    print_kf_bit(KF_CMPXCHG16B);
     print_kf_bit(KF_MMX);
-    print_kf_bit(KF_WORKING_PTE);
+    print_kf_bit(KF_DTS);
     print_kf_bit(KF_PAT);
     print_kf_bit(KF_FXSR);
     print_kf_bit(KF_FAST_SYSCALL);
     print_kf_bit(KF_XMMI);
     print_kf_bit(KF_3DNOW);
+    print_kf_bit(KF_XSAVEOPT);
     print_kf_bit(KF_XMMI64);
-    print_kf_bit(KF_DTS);
+    print_kf_bit(KF_BRANCH);
+    print_kf_bit(KF_00040000);
+    print_kf_bit(KF_SSE3);
+    print_kf_bit(KF_CMPXCHG16B);
+    print_kf_bit(KF_AUTHENTICAMD);
+    print_kf_bit(KF_ACNT2);
+    print_kf_bit(KF_XSTATE);
+    print_kf_bit(KF_GENUINE_INTEL);
+    print_kf_bit(KF_SLAT);
+    print_kf_bit(KF_VIRT_FIRMWARE_ENABLED);
+    print_kf_bit(KF_RDWRFSGSBASE);
     print_kf_bit(KF_NX_BIT);
     print_kf_bit(KF_NX_DISABLED);
     print_kf_bit(KF_NX_ENABLED);
-    print_kf_bit(KF_SSE3);
-    //print_kf_bit(KF_SSE3SUP);
-    //print_kf_bit(KF_SSE41);
-    //print_kf_bit(KF_MONITOR);
-    //print_kf_bit(KF_POPCNT);
-    print_kf_bit(KF_XSTATE);
+    print_kf_bit(KF_RDRAND);
+    print_kf_bit(KF_SMAP);
+    print_kf_bit(KF_RDTSCP);
+    print_kf_bit(KF_HUGEPAGE);
+    print_kf_bit(KF_XSAVES);
+    print_kf_bit(KF_FPU_LEAKAGE);
+    print_kf_bit(KF_CAT);
+    print_kf_bit(KF_CET_SS);
+    print_kf_bit(KF_SSSE3);
+    print_kf_bit(KF_SSE4_1);
+    print_kf_bit(KF_SSE4_2);
 #undef print_kf_bit
 
 #define print_cf(cpu_flag) if (CpuFeatures & cpu_flag) DbgPrint(#cpu_flag " ")
@@ -485,6 +610,41 @@ KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState)
     ProcessorState->SpecialRegisters.MsrLStar = __readmsr(X86_MSR_LSTAR);
     ProcessorState->SpecialRegisters.MsrCStar = __readmsr(X86_MSR_CSTAR);
     ProcessorState->SpecialRegisters.MsrSyscallMask = __readmsr(X86_MSR_SFMASK);
+}
+
+VOID
+NTAPI
+KiSaveProcessorState(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ PKEXCEPTION_FRAME ExceptionFrame)
+{
+    PKPRCB Prcb = KeGetCurrentPrcb();
+
+    /* Save all context */
+    Prcb->ProcessorState.ContextFrame.ContextFlags = CONTEXT_ALL;
+    KeTrapFrameToContext(TrapFrame, ExceptionFrame, &Prcb->ProcessorState.ContextFrame);
+
+    /* Save control registers */
+    KiSaveProcessorControlState(&Prcb->ProcessorState);
+}
+
+VOID
+NTAPI
+KiRestoreProcessorState(
+    _Out_ PKTRAP_FRAME TrapFrame,
+    _Out_ PKEXCEPTION_FRAME ExceptionFrame)
+{
+    PKPRCB Prcb = KeGetCurrentPrcb();
+
+    /* Restore all context */
+    KeContextToTrapFrame(&Prcb->ProcessorState.ContextFrame,
+                         ExceptionFrame,
+                         TrapFrame,
+                         CONTEXT_ALL,
+                         TrapFrame->PreviousMode);
+
+    /* Restore control registers */
+    KiRestoreProcessorControlState(&Prcb->ProcessorState);
 }
 
 VOID

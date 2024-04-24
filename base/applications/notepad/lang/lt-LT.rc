@@ -154,14 +154,14 @@ BEGIN
     STRING_TEXT_FILES_TXT "Tekstinės bylos (*.txt)"
     STRING_TOOLARGE "Byla '%s' yra perdidelė.\n\
 Prašome naudotis kitu redaktoriumi."
-    STRING_NOTEXT "Jūs neivedėte jokio teksto. \
+    STRING_NOTEXT "Jūs neivedėte jokio teksto.\
 \nPrašome parašyti ką nors ir bandyti dar kartą"
     STRING_DOESNOTEXIST "Byla '%s'\nneegzistuoja\n\n\
 Ar norite sukurti naują bylą?"
     STRING_NOTSAVED "Byla '%s'\nbuvo pakeista\n\n\
 Ar norite išsaugoti pakeitimus?"
     STRING_NOTFOUND "'%s' nerastas."
-    STRING_OUT_OF_MEMORY "Nepakanka atminties užduoties užbaigimui. \
+    STRING_OUT_OF_MEMORY "Nepakanka atminties užduoties užbaigimui.\
 \nUžverkite vieną ar kelias programas, kad padidintumėte\nlaisvos atminties kiekį."
     STRING_CANNOTFIND "Nepavyko rasti '%s'"
     STRING_ANSI "ANSI"
@@ -180,7 +180,7 @@ Ar norite išsaugoti pakeitimus?"
     STRING_PRINTCANCELING "The print job is being canceled..."
     STRING_PRINTCOMPLETE "Printing is successfully done."
     STRING_PRINTCANCELED "Printing has been canceled."
-    STRING_PRINTFAILED "Printing is failed."
+    STRING_PRINTFAILED "Printing failed."
 
     STRING_TEXT_DOCUMENT "Text Document"
     STRING_NOTEPAD_AUTHORS "(C) 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"

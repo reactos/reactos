@@ -1,0 +1,19 @@
+/* Bitmap IDs */
+#define IDB_T1_BACKSPACE    100
+#define IDB_T1_TAB          101
+#define IDB_T1_CAPS         102
+#define IDB_T1_ENTER        103
+#define IDB_T1_SHIFT        104
+#define IDB_T1_CTRL         105
+#define IDB_T1_ESCAPE       106
+#define IDB_T1_ALT          107
+#define IDB_T1_CHARS        108
+#define IDB_C1_BACKSPACE    201
+#define IDB_C1_TAB          202
+#define IDB_C1_CAPS         203
+#define IDB_C1_ENTER        204
+#define IDB_C1_SHIFT        205
+#define IDB_C1_INS          206
+#define IDB_C1_DEL          207
+#define IDB_C1_ESCAPE       208
+#define IDB_C1_CHARS        209

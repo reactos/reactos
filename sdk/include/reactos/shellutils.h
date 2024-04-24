@@ -67,6 +67,12 @@ Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
 #   define IID_NULL_PPV_ARG(Itype, ppType) IID_##Itype, NULL, (void**)(ppType)
 #endif
 
+inline HRESULT HResultFromWin32(DWORD hr)
+{
+     // HRESULT_FROM_WIN32 will evaluate its parameter twice, this function will not.
+    return HRESULT_FROM_WIN32(hr);
+}
+
 #if 1
 
 inline BOOL _ROS_FAILED_HELPER(HRESULT hr, const char* expr, const char* filename, int line)
@@ -410,6 +416,18 @@ HRESULT inline ShellObjectCreatorInit(T1 initArg1, T2 initArg2, T3 initArg3, T4 
     return hResult;
 }
 
+template<class P, class R> static HRESULT SHILClone(P pidl, R *ppOut)
+{
+    R r = *ppOut = (R)ILClone((PIDLIST_RELATIVE)pidl);
+    return r ? S_OK : E_OUTOFMEMORY;
+}
+
+template<class B, class R> static HRESULT SHILCombine(B base, PCUIDLIST_RELATIVE sub, R *ppOut)
+{
+    R r = *ppOut = (R)ILCombine((PCIDLIST_ABSOLUTE)base, sub);
+    return r ? S_OK : E_OUTOFMEMORY;
+}
+
 HRESULT inline SHSetStrRet(LPSTRRET pStrRet, LPCSTR pstrValue)
 {
     pStrRet->uType = STRRET_CSTR;
@@ -560,6 +578,10 @@ struct CCoInit
 #define S_GREATERTHAN S_FALSE
 #define MAKE_COMPARE_HRESULT(x) ((x)>0 ? S_GREATERTHAN : ((x)<0 ? S_LESSTHAN : S_EQUAL))
 
+static inline BOOL ILIsSingle(LPCITEMIDLIST pidl)
+{
+    return pidl == ILFindLastID(pidl);
+}
 
 static inline PCUIDLIST_ABSOLUTE HIDA_GetPIDLFolder(CIDA const* pida)
 {

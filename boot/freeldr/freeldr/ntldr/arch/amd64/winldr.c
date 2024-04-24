@@ -10,6 +10,7 @@
 
 #include <freeldr.h>
 #include <ndk/asm.h>
+#include <internal/amd64/intrin_i.h>
 #include "../../winldr.h"
 
 #include <debug.h>
@@ -345,7 +346,8 @@ Amd64SetupIdt(PVOID IdtBase)
 }
 
 VOID
-WinLdrSetProcessorContext(void)
+WinLdrSetProcessorContext(
+    _In_ USHORT OperatingSystemVersion)
 {
     TRACE("WinLdrSetProcessorContext\n");
 

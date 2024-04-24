@@ -12,7 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-
 IO_COMPLETION_ROUTINE SyncForwardIrpCompletionRoutine;
 
 NTSTATUS
@@ -126,14 +125,7 @@ AllocateItem(
     IN POOL_TYPE PoolType,
     IN ULONG ItemSize)
 {
-    PVOID Item = ExAllocatePoolWithTag(PoolType, ItemSize, USB_STOR_TAG);
-
-    if (Item)
-    {
-        RtlZeroMemory(Item, ItemSize);
-    }
-
-    return Item;
+    return ExAllocatePoolZero(PoolType, ItemSize, USB_STOR_TAG);
 }
 
 VOID

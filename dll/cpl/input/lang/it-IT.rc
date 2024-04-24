@@ -110,7 +110,7 @@ BEGIN
     IDS_CTRL_SHIFT "Ctrl+Shift"
     IDS_LEFT_ALT_SHIFT "Alt sinistro+Shift"
     IDS_SWITCH_BET_INLANG "Cambia lingua di digitazione"
-    IDS_REBOOT_NOW, "Reboot now?"
+    IDS_REBOOT_NOW "You have to restart the system for the settings to take effect. Reboot now?"
 END
 
 STRINGTABLE

@@ -28,51 +28,47 @@
  * from the old shell.exe
  */
 
-#define WIN32_LEAN_AND_MEAN	/* Exclude rarely-used stuff from Windows headers */
+#define WIN32_LEAN_AND_MEAN /* Exclude rarely-used stuff from Windows headers */
 #include <windows.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 
 int
-ExecuteKill(char * lpPid)
+ExecuteKill(const char *lpPid)
 {
-	HANDLE	hProcess;
-	DWORD	dwProcessId;
+    HANDLE hProcess;
+    DWORD dwProcessId;
 
-	dwProcessId = (DWORD) atol(lpPid);
-		fprintf( stderr, "Killing PID %ld...\n",dwProcessId);
-	hProcess = OpenProcess(
-			PROCESS_TERMINATE,
-			FALSE,
-			dwProcessId
-			);
-	if (NULL == hProcess)
-	{
-		fprintf( stderr, "Could not open the process with PID = %ld\n", dwProcessId);
-		return 0;
-	}
-	if (FALSE == TerminateProcess(
-			hProcess,
-			0
-			)
-	) {
-		fprintf( stderr, "Could not terminate the process with PID = %ld\n",	dwProcessId);
-		return 0;
-	}
-	CloseHandle(hProcess);
-	return 0;
+    dwProcessId = strtoul(lpPid, NULL, 10);
+    fprintf(stderr, "Killing the process with PID %lu...\n", dwProcessId);
+
+    hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, dwProcessId);
+    if (hProcess == NULL)
+    {
+        fprintf(stderr, "Could not open the process with PID %lu\n", dwProcessId);
+        return 1;
+    }
+
+    if (!TerminateProcess(hProcess, 0))
+    {
+        fprintf(stderr, "Could not terminate the process with PID %lu\n", dwProcessId);
+        CloseHandle(hProcess);
+        return 1;
+    }
+
+    CloseHandle(hProcess);
+    return 0;
 }
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
-  char tail;
-  DBG_UNREFERENCED_LOCAL_VARIABLE(tail);
+    if (argc != 2)
+    {
+        fprintf(stderr, "Usage: %s PID (Process ID)\n", argv[0]);
+        return 1;
+    }
 
-  if (argc < 2)
-  {
-      fprintf( stderr, "Usage: %s PID (Process ID) \n", argv[0] );
-      return 1;
-  }
-  tail = ExecuteKill(argv[1]);
-  return 0;
+    return ExecuteKill(argv[1]);
 }

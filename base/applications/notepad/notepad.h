@@ -25,10 +25,6 @@
 #include <tchar.h>
 #include <stdlib.h>
 #include <malloc.h>
-#ifdef _DEBUG
-    #define _CRTDBG_MAP_ALLOC
-    #include <crtdbg.h>
-#endif
 
 #include "dialog.h"
 #include "notepad_res.h"

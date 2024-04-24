@@ -7,8 +7,6 @@
  *             Copyright 2021-2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-/* INCLUDES *********************************************************/
-
 #include "precomp.h"
 
 #define X_TOOLSETTINGS  0
@@ -20,6 +18,10 @@
 #define CY_TRANS_ICON 30
 #define MARGIN1 3
 #define MARGIN2 2
+
+#define MAX_ZOOM_TRACK 6
+#define MIN_ZOOM_TRACK 0
+#define DEFAULT_ZOOM_TRACK 3
 
 static const BYTE s_AirRadius[4] = { 5, 8, 3, 12 };
 
@@ -112,23 +114,43 @@ static inline INT getBrushRects(RECT rects[12], LPCRECT prc, LPPOINT ppt = NULL)
     return getSplitRects(rects, 3, 4, prc, ppt);
 }
 
+struct BrushStyleAndWidth
+{
+    BrushStyle style;
+    INT width;
+};
+
+static const BrushStyleAndWidth c_BrushPresets[] =
+{
+    { BrushStyleRound,     7 }, { BrushStyleRound,     4 }, { BrushStyleRound,     1 },
+    { BrushStyleSquare,    8 }, { BrushStyleSquare,    5 }, { BrushStyleSquare,    2 },
+    { BrushStyleForeSlash, 8 }, { BrushStyleForeSlash, 5 }, { BrushStyleForeSlash, 2 },
+    { BrushStyleBackSlash, 8 }, { BrushStyleBackSlash, 5 }, { BrushStyleBackSlash, 2 },
+};
+
 VOID CToolSettingsWindow::drawBrush(HDC hdc, LPCRECT prc)
 {
     RECT rects[12];
     getBrushRects(rects, prc);
 
-    ::FillRect(hdc, &rects[toolsModel.GetBrushStyle()], (HBRUSH)(COLOR_HIGHLIGHT + 1));
-
     for (INT i = 0; i < 12; i++)
     {
         RECT rcItem = rects[i];
         INT x = (rcItem.left + rcItem.right) / 2, y = (rcItem.top + rcItem.bottom) / 2;
+
         INT iColor;
-        if (i == toolsModel.GetBrushStyle())
+        const BrushStyleAndWidth& data = c_BrushPresets[i];
+        if (data.width == toolsModel.GetBrushWidth() && data.style == toolsModel.GetBrushStyle())
+        {
             iColor = COLOR_HIGHLIGHTTEXT;
+            ::FillRect(hdc, &rcItem, (HBRUSH)(COLOR_HIGHLIGHT + 1));
+        }
         else
+        {
             iColor = COLOR_WINDOWTEXT;
-        Brush(hdc, x, y, x, y, ::GetSysColor(iColor), i);
+        }
+
+        Brush(hdc, x, y, x, y, ::GetSysColor(iColor), data.style, data.width);
     }
 }
 
@@ -145,8 +167,8 @@ VOID CToolSettingsWindow::drawLine(HDC hdc, LPCRECT prc)
     for (INT i = 0; i < 5; i++)
     {
         INT penWidth = i + 1;
-        RECT rcLine = rects[i];
-        ::InflateRect(&rcLine, -2, 0);
+        CRect rcLine = rects[i];
+        rcLine.InflateRect(-2, 0);
         rcLine.top = (rcLine.top + rcLine.bottom - penWidth) / 2;
         rcLine.bottom = rcLine.top + penWidth;
         if (toolsModel.GetLineWidth() == penWidth)
@@ -195,7 +217,7 @@ VOID CToolSettingsWindow::drawAirBrush(HDC hdc, LPCRECT prc)
         RECT& rc = rects[i];
         INT x = (rc.left + rc.right) / 2;
         INT y = (rc.top + rc.bottom) / 2;
-        BOOL bHigh = (s_AirRadius[i] == toolsModel.GetAirBrushWidth());
+        BOOL bHigh = (s_AirRadius[i] == toolsModel.GetAirBrushRadius());
         if (bHigh)
         {
             ::FillRect(hdc, &rc, ::GetSysColorBrush(COLOR_HIGHLIGHT));
@@ -218,17 +240,17 @@ static inline INT getBoxRects(RECT rects[3], LPCRECT prc, LPPOINT ppt = NULL)
 
 VOID CToolSettingsWindow::drawBox(HDC hdc, LPCRECT prc)
 {
-    RECT rects[3];
+    CRect rects[3];
     getBoxRects(rects, prc);
 
     for (INT iItem = 0; iItem < 3; ++iItem)
     {
-        RECT& rcItem = rects[iItem];
+        CRect& rcItem = rects[iItem];
 
         if (toolsModel.GetShapeStyle() == iItem)
             ::FillRect(hdc, &rcItem, ::GetSysColorBrush(COLOR_HIGHLIGHT));
 
-        ::InflateRect(&rcItem, -5, -5);
+        rcItem.InflateRect(-5, -5);
 
         if (iItem <= 1)
         {
@@ -257,18 +279,21 @@ VOID CToolSettingsWindow::drawBox(HDC hdc, LPCRECT prc)
     }
 }
 
-LRESULT CToolSettingsWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, WINBOOL& bHandled)
+LRESULT CToolSettingsWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     /* preloading the draw transparent/nontransparent icons for later use */
-    m_hNontranspIcon = (HICON)LoadImage(g_hinstExe, MAKEINTRESOURCE(IDI_NONTRANSPARENT),
-                                        IMAGE_ICON, CX_TRANS_ICON, CY_TRANS_ICON, LR_DEFAULTCOLOR);
-    m_hTranspIcon = (HICON)LoadImage(g_hinstExe, MAKEINTRESOURCE(IDI_TRANSPARENT),
-                                     IMAGE_ICON, CX_TRANS_ICON, CY_TRANS_ICON, LR_DEFAULTCOLOR);
+    m_hNontranspIcon = (HICON)LoadImageW(g_hinstExe, MAKEINTRESOURCEW(IDI_NONTRANSPARENT),
+                                         IMAGE_ICON, CX_TRANS_ICON, CY_TRANS_ICON, LR_DEFAULTCOLOR);
+    m_hTranspIcon = (HICON)LoadImageW(g_hinstExe, MAKEINTRESOURCEW(IDI_TRANSPARENT),
+                                      IMAGE_ICON, CX_TRANS_ICON, CY_TRANS_ICON, LR_DEFAULTCOLOR);
 
-    RECT trackbarZoomPos = {1, 1, 1 + 40, 1 + 64};
+    CRect trackbarZoomPos, rect2;
+    calculateTwoBoxes(trackbarZoomPos, rect2);
+    trackbarZoomPos.InflateRect(-1, -1);
+
     trackbarZoom.Create(TRACKBAR_CLASS, m_hWnd, trackbarZoomPos, NULL, WS_CHILD | TBS_VERT | TBS_AUTOTICKS);
-    trackbarZoom.SendMessage(TBM_SETRANGE, (WPARAM) TRUE, MAKELPARAM(0, 6));
-    trackbarZoom.SendMessage(TBM_SETPOS, (WPARAM) TRUE, (LPARAM) 3);
+    trackbarZoom.SendMessage(TBM_SETRANGE, TRUE, MAKELPARAM(MIN_ZOOM_TRACK, MAX_ZOOM_TRACK));
+    trackbarZoom.SendMessage(TBM_SETPOS, TRUE, DEFAULT_ZOOM_TRACK);
     return 0;
 }
 
@@ -281,45 +306,64 @@ LRESULT CToolSettingsWindow::OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, 
 
 LRESULT CToolSettingsWindow::OnVScroll(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (!zoomTo(125 << trackbarZoom.SendMessage(TBM_GETPOS, 0, 0), 0, 0))
+    INT trackPos = MAX_ZOOM_TRACK - (INT)trackbarZoom.SendMessage(TBM_GETPOS, 0, 0);
+    canvasWindow.zoomTo(MIN_ZOOM << trackPos);
+
+    INT zoomRate = toolsModel.GetZoom();
+
+    CStringW strZoom;
+    if (zoomRate % 10 == 0)
+        strZoom.Format(L"%d%%", zoomRate / 10);
+    else
+        strZoom.Format(L"%d.%d%%", zoomRate / 10, zoomRate % 10);
+
+    ::SendMessageW(g_hStatusBar, SB_SETTEXT, 1, (LPARAM)(LPCWSTR)strZoom);
+
+    OnToolsModelZoomChanged(nMsg, wParam, lParam, bHandled);
+    return 0;
+}
+
+LRESULT CToolSettingsWindow::OnNotify(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    NMHDR *pnmhdr = (NMHDR*)lParam;
+    if (pnmhdr->code == NM_CUSTOMDRAW)
     {
-        OnToolsModelZoomChanged(nMsg, wParam, lParam, bHandled);
+        NMCUSTOMDRAW *pCustomDraw = (NMCUSTOMDRAW*)pnmhdr;
+        pCustomDraw->uItemState &= ~CDIS_FOCUS; // Do not draw the focus
     }
     return 0;
 }
 
-VOID CToolSettingsWindow::calculateTwoBoxes(RECT& rect1, RECT& rect2)
+VOID CToolSettingsWindow::calculateTwoBoxes(CRect& rect1, CRect& rect2)
 {
-    RECT rcClient;
+    CRect rcClient;
     GetClientRect(&rcClient);
-    ::InflateRect(&rcClient, -MARGIN1, -MARGIN1);
+    rcClient.InflateRect(-MARGIN1, -MARGIN1);
 
     INT yCenter = (rcClient.top + rcClient.bottom) / 2;
-    ::SetRect(&rect1, rcClient.left, rcClient.top, rcClient.right, yCenter);
-    ::SetRect(&rect2, rcClient.left, yCenter, rcClient.right, rcClient.bottom);
+    rect1.SetRect(rcClient.left, rcClient.top, rcClient.right, yCenter);
+    rect2.SetRect(rcClient.left, yCenter, rcClient.right, rcClient.bottom);
 
-    ::InflateRect(&rect1, -MARGIN2, -MARGIN2);
-    ::InflateRect(&rect2, -MARGIN2, -MARGIN2);
+    rect1.InflateRect(-MARGIN2, -MARGIN2);
+    rect2.InflateRect(-MARGIN2, -MARGIN2);
 }
 
 LRESULT CToolSettingsWindow::OnPaint(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    RECT rect1, rect2;
+    CRect rect1, rect2;
     calculateTwoBoxes(rect1, rect2);
 
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(&ps);
 
-    if (toolsModel.GetActiveTool() == TOOL_ZOOM)
-        ::DrawEdge(hdc, &rect1, BDR_SUNKENOUTER, BF_RECT);
-    else
+    if (toolsModel.GetActiveTool() != TOOL_ZOOM)
         ::DrawEdge(hdc, &rect1, BDR_SUNKENOUTER, BF_RECT | BF_MIDDLE);
 
     if (toolsModel.GetActiveTool() >= TOOL_RECT)
         ::DrawEdge(hdc, &rect2, BDR_SUNKENOUTER, BF_RECT | BF_MIDDLE);
 
-    ::InflateRect(&rect1, -MARGIN2, -MARGIN2);
-    ::InflateRect(&rect2, -MARGIN2, -MARGIN2);
+    rect1.InflateRect(-MARGIN2, -MARGIN2);
+    rect2.InflateRect(-MARGIN2, -MARGIN2);
     switch (toolsModel.GetActiveTool())
     {
         case TOOL_FREESEL:
@@ -361,7 +405,7 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
 {
     POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 
-    RECT rect1, rect2;
+    CRect rect1, rect2;
     calculateTwoBoxes(rect1, rect2);
     RECT rects[12];
 
@@ -383,12 +427,16 @@ LRESULT CToolSettingsWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lPar
         case TOOL_BRUSH:
             iItem = getBrushRects(rects, &rect1, &pt);
             if (iItem != -1)
-                toolsModel.SetBrushStyle(iItem);
+            {
+                const BrushStyleAndWidth& data = c_BrushPresets[iItem];
+                toolsModel.SetBrushStyle(data.style);
+                toolsModel.SetBrushWidth(data.width);
+            }
             break;
         case TOOL_AIRBRUSH:
             iItem = getAirBrushRects(rects, &rect1, &pt);
             if (iItem != -1)
-                toolsModel.SetAirBrushWidth(s_AirRadius[iItem]);
+                toolsModel.SetAirBrushRadius(s_AirRadius[iItem]);
             break;
         case TOOL_LINE:
         case TOOL_BEZIER:
@@ -434,7 +482,7 @@ LRESULT CToolSettingsWindow::OnToolsModelSettingsChanged(UINT nMsg, WPARAM wPara
 
 LRESULT CToolSettingsWindow::OnToolsModelZoomChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    int tbPos = 0;
+    int tbPos = MIN_ZOOM_TRACK;
     int tempZoom = toolsModel.GetZoom();
 
     while (tempZoom > MIN_ZOOM)
@@ -442,6 +490,7 @@ LRESULT CToolSettingsWindow::OnToolsModelZoomChanged(UINT nMsg, WPARAM wParam, L
         tbPos++;
         tempZoom = tempZoom >> 1;
     }
-    trackbarZoom.SendMessage(TBM_SETPOS, (WPARAM) TRUE, (LPARAM) tbPos);
+
+    trackbarZoom.SendMessage(TBM_SETPOS, TRUE, MAX_ZOOM_TRACK - tbPos);
     return 0;
 }

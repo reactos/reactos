@@ -693,30 +693,6 @@ NvNetAddWakeUpPattern(
 }
 
 static
-BOOLEAN
-NvEqualMemory(
-    _In_reads_bytes_(Length) PVOID Destination,
-    _In_reads_bytes_(Length) PVOID Source,
-    _In_ ULONG Length)
-{
-    ULONG i;
-    PUCHAR Src, Dest;
-
-    Src = Source;
-    Dest = Destination;
-    for (i = 0; i < Length; ++i)
-    {
-        if (Src[i] != Dest[i])
-            return FALSE;
-    }
-
-    return TRUE;
-}
-/* 'memcmp' is unavailable for some reason */
-#undef NdisEqualMemory
-#define NdisEqualMemory NvEqualMemory
-
-static
 NDIS_STATUS
 NvNetRemoveWakeUpPattern(
     _In_ PNVNET_ADAPTER Adapter,

@@ -795,14 +795,14 @@ NtUserValidateHandleSecure(
    UINT uType;
    PPROCESSINFO ppi;
    PUSER_HANDLE_ENTRY entry;
+   BOOL Ret = FALSE;
 
-   DECLARE_RETURN(BOOL);
    UserEnterExclusive();
 
    if (!(entry = handle_to_entry(gHandleTable, handle )))
    {
       EngSetLastError(ERROR_INVALID_HANDLE);
-      RETURN( FALSE);
+      goto Exit; // Return FALSE
    }
    uType = entry->type;
    switch (uType)
@@ -824,16 +824,15 @@ NtUserValidateHandleSecure(
           break;
    }
 
-   if (!ppi) RETURN( FALSE);
+   if (!ppi)
+       goto Exit; // Return FALSE
 
    // Same process job returns TRUE.
-   if (gptiCurrent->ppi->pW32Job == ppi->pW32Job) RETURN( TRUE);
+   if (gptiCurrent->ppi->pW32Job == ppi->pW32Job) Ret = TRUE;
 
-   RETURN( FALSE);
-
-CLEANUP:
+Exit:
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 // Win: HMAssignmentLock

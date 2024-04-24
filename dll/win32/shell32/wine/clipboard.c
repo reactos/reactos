@@ -44,6 +44,8 @@
 #include <wine/debug.h>
 #include <wine/unicode.h>
 
+#include "shell32_main.h"
+
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 /**************************************************************************

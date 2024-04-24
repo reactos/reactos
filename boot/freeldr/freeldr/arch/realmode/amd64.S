@@ -322,9 +322,8 @@ ExitToLongMode:
     mov word ptr ds:[stack16], sp
 
     /* Set PAE and PGE: 10100000b */
-    // mov eax, cr4
-    // or eax, HEX(00A0)
-    mov eax, HEX(00A0)
+    mov eax, cr4
+    or eax, HEX(00A0)
     mov cr4, eax
 
     /* Point cr3 at the PML4 */

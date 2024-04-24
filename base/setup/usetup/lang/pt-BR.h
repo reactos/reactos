@@ -937,59 +937,6 @@ static MUI_ENTRY ptBRSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY ptBRBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " Instala\207\306o do ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "O instalador n\306o p\223de instalar o ger\210nciador de inicializa\207\306o no disco",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "r\241gido do computador.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Por favor insira um disquete formatado na unidade A: e",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "pressione ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER=Continuar  F3=Sair",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY ptBRSelectPartitionEntries[] =
 {
     {
@@ -1037,28 +984,20 @@ static MUI_ENTRY ptBRSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Press P to create a primary partition.",
-//        "\x07  Para criar uma partiá∆o no espaáo n∆o particionado, pressione C.",
+        "\x07  Para criar uma parti\207\306o prim\240ria/l\242gica, pressione C.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         17,
-        "\x07  Press E to create an extended partition.",
+        "\x07  Para criar uma parti\207\306o estendida, pressione E.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "\x07  Press L to create a logical partition.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Para excluir a parti\207\306o selecionada, pressione D.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1326,7 +1265,7 @@ static MUI_ENTRY ptBRFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "O instalador ir\240 formatar a parti\207\306o. Para continuar, pressione ENTER.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1481,7 +1420,7 @@ static MUI_ENTRY ptBRFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY ptBRBootLoaderEntries[] =
+static MUI_ENTRY ptBRBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1493,7 +1432,7 @@ static MUI_ENTRY ptBRBootLoaderEntries[] =
     {
         6,
         8,
-        "O instalador ir\240 configurar o ger\210nciador de inicializa\207\306o",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1550,6 +1489,13 @@ static MUI_ENTRY ptBRBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "O instalador ir\240 configurar o ger\210nciador de inicializa\207\306o.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Installing the bootloader onto the media, please wait...",
@@ -1562,6 +1508,59 @@ static MUI_ENTRY ptBRBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY ptBRBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " Instala\207\306o do ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "O instalador n\306o p\223de instalar o ger\210nciador de inicializa\207\306o no disco",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "r\241gido do computador.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Por favor insira um disquete formatado na unidade A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "e pressione ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER=Continuar  F3=Sair",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY ptBRKeyboardSettingsEntries[] =
@@ -1974,13 +1973,6 @@ MUI_ERROR ptBRErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Voc\210 n\306o pode excluir um espa\207o n\306o-particionado!\n"
-        "\n"
-        "  * Pressione qualquer tecla para continuar.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Erro ao instalar o c\242digo de inicializa\207\306o %S na parti\207\306o do sistema.",
         "ENTER=Reiniciar"
@@ -2218,8 +2210,8 @@ MUI_PAGE ptBRPages[] =
         ptBRKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        ptBRBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        ptBRBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2234,12 +2226,12 @@ MUI_PAGE ptBRPages[] =
         ptBRSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         ptBRBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        ptBRBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        ptBRBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,
@@ -2256,27 +2248,27 @@ MUI_STRING ptBRStrings[] =
     {STRING_PLEASEWAIT,
     "   Por favor, aguarde..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
-//    "   ENTER=Instalar  C=Criar partiá∆o  F3=Sair"},
+     "   ENTER = Instalar  C = Criar Prim\240ria  E = Criar Estendida  F3 = Sair"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
+     "   ENTER = Instalar  C = Criar parti\207\306o L\242gica  F3 = Sair"},
     {STRING_INSTALLDELETEPARTITION,
-    "   ENTER=Instalar  D=Apagar parti\207\306o  F3=Sair"},
+    "   ENTER = Instalar  D = Apagar parti\207\306o  F3 = Sair"},
     {STRING_DELETEPARTITION,
-     "   D = Delete Partition   F3 = Quit"},
+     "   D = Apagar parti\207\306o   F3 = Quit"},
     {STRING_PARTITIONSIZE,
     "Tamanho da nova parti\207\306o:"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
      "You have chosen to create a primary partition on"},
-//    "Vocà solicitou a criaá∆o de uma nova partiá∆o em"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "You have chosen to create an extended partition on"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "You have chosen to create a logical partition on"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     "Por favor, insira o tamanho da nova parti\207\306o em megabytes (MB)."},
     {STRING_CREATEPARTITION,
     "   ENTER=Criar parti\207\306o  ESC=Cancelar  F3=Sair"},
+    {STRING_NEWPARTITION,
+    "O instalador criou uma nova parti\207\306o em"},
     {STRING_PARTFORMAT,
     "Esta parti\207\306o ser\240 formatada logo em seguida."},
     {STRING_NONFORMATTEDPART,
@@ -2327,30 +2319,28 @@ MUI_STRING ptBRStrings[] =
     "A causa mais com\243m \202 a utiliza\207\306o de um teclado USB\r\n"},
     {STRING_CONSOLEFAIL3,
     "Os teclados USB ainda n\306o s\306o completamente suportados\r\n"},
-    {STRING_FORMATTINGDISK,
-    "O instalador est\240 formatando o disco"},
+    {STRING_FORMATTINGPART,
+    "O instalador est\240 formatando a parti\207\306o..."},
     {STRING_CHECKINGDISK,
-    "O instalador est\240 verificando o disco"},
+    "O instalador est\240 verificando o disco..."},
     {STRING_FORMATDISK1,
     " Formatar a parti\207\306o utilizando o sistema de arquivos %S (R\240pido) "},
     {STRING_FORMATDISK2,
     " Formatar a parti\207\306o utilizando o sistema de arquivos %S "},
     {STRING_KEEPFORMAT,
     " Manter o sistema de arquivos atual (sem altera\207\344es) "},
-    {STRING_HDINFOPARTCREATE_1,
+    {STRING_HDDISK1,
     "%s."},
-    {STRING_HDINFOPARTDELETE_1,
+    {STRING_HDDISK2,
     "em %s."},
     {STRING_PARTTYPE,
     "Tipo 0x%02x"},
-    {STRING_HDDINFO_1,
+    {STRING_HDDINFO1,
     // "Disco %lu (%I64u %s), Porta=%hu, Barramento=%hu, Id=%hu (%wZ) [%s]"
     "%I64u %s Disco %lu (Porta=%hu, Barramento=%hu, Id=%hu) em %wZ [%s]"},
-    {STRING_HDDINFO_2,
+    {STRING_HDDINFO2,
     // "Disco %lu (%I64u %s), Porta=%hu, Barramento=%hu, Id=%hu [%s]"
     "%I64u %s Disco %lu (Porta=%hu, Barramento=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "O instalador criou uma nova parti\207\306o em"},
     {STRING_UNPSPACE,
     "Espa\207o n\306o particionado"},
     {STRING_MAXSIZE,

@@ -1,7 +1,7 @@
 // This file is converted by code7bit.
 // code7bit: https://github.com/katahiromz/code7bit
 // To revert conversion, please execute "code7bit -r <file>".
-/* TRANSLATOR:  M rio KaŸm r /Mario Kacmar/ aka Kario (kario@szm.sk)
+/* TRANSLATOR:  Mario Kacmar /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  22-01-2008
  * Encoding  :  Latin II (852)
  * LastChange:  22-05-2011
@@ -936,59 +936,6 @@ static MUI_ENTRY skSKSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY skSKBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "In\347tal\240tor nem\223\247e nain\347talova\234 zav\240dza\237 syst\202mu na pevn\354 disk V\240\347ho", //bootloader = zav dzaŸ syst‚mu
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "po\237\241ta\237a",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Vlo\247te pros\241m, naform\240tovan\243 disketu do mechaniky A:",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "a stla\237te ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = Pokra\237ova\234   F3 = Skon\237i\234",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY skSKSelectPartitionEntries[] =
 {
     {
@@ -1029,8 +976,8 @@ static MUI_ENTRY skSKSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Press P to create a primary partition.",
-//        "\x07  StlaŸte C pre vytvorenie novej oblasti.",
+        "\x07  Press C to create a primary/logical partition.",
+//        "\x07  Stla\237te C pre vytvorenie novej oblasti.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1044,13 +991,6 @@ static MUI_ENTRY skSKSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Press L to create a logical partition.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Stla\237te D pre vymazanie existuj\243cej oblasti.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1318,7 +1258,7 @@ static MUI_ENTRY skSKFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "In\347tal\240tor teraz naform\240tuje oblas\234. Stla\237te ENTER pre pokra\237ovanie.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1473,7 +1413,7 @@ static MUI_ENTRY skSKFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY skSKBootLoaderEntries[] =
+static MUI_ENTRY skSKBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1485,7 +1425,7 @@ static MUI_ENTRY skSKBootLoaderEntries[] =
     {
         6,
         8,
-        "In\347tal\240tor je pripraven\354 nain\347talova\234 zav\240dza\237 opera\237n\202ho syst\202mu",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1542,6 +1482,13 @@ static MUI_ENTRY skSKBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "In\347tal\240tor je pripraven\354 nain\347talova\234 zav\240dza\237 opera\237n\202ho syst\202mu.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Installing the bootloader onto the media, please wait...",
@@ -1554,6 +1501,59 @@ static MUI_ENTRY skSKBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY skSKBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "In\347tal\240tor nem\223\247e nain\347talova\234 zav\240dza\237 syst\202mu na pevn\354 disk V\240\347ho", //bootloader = zav dza\237 syst‚mu
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "po\237\241ta\237a.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Vlo\247te pros\241m, naform\240tovan\243 disketu do mechaniky A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "a stla\237te ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = Pokra\237ova\234   F3 = Skon\237i\234",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY skSKKeyboardSettingsEntries[] =
@@ -1892,7 +1892,7 @@ MUI_ERROR skSKErrorEntries[] =
     },
     {
         // ERROR_SIGNATURE_TXTSETUPSIF,
-        "Setup found an invalid signature in TXTSETUP.SIF.\n", //chybnì (neplatnì) podpis (znak, znaŸka, çifra)
+        "Setup found an invalid signature in TXTSETUP.SIF.\n", //chybnì (neplatnì) podpis (znak, zna\237ka, \347ifra)
         "ENTER = Re\347tart po\237\241ta\237a"
     },
     {
@@ -1928,7 +1928,7 @@ MUI_ERROR skSKErrorEntries[] =
     },
     {
         // ERROR_WARN_PARTITION,
-//          "Inçtal tor zistil, §e najmenej jeden pevnì disk obsahuje nekompatibiln£\n"
+//          "In\347tal tor zistil, §e najmenej jeden pevnì disk obsahuje nekompatibiln£\n"
           "In\347tal\240tor na\347iel najmenej na jednom pevnom disku nekompatibiln\243\n"
           "tabu\226ku oblast\241, s ktorou sa ned\240 spr\240vne zaobch\240dza\234!\n"
           "\n"
@@ -1942,13 +1942,6 @@ MUI_ERROR skSKErrorEntries[] =
         // ERROR_NEW_PARTITION,
         "Nem\223\247ete vytvori\234 nov\243 oblas\234\n"
         "vo vn\243tri u\247 existuj\243cej oblasti!\n"
-        "\n"
-        "  * Pokra\237ujte stla\237en\241m \226ubovo\226n\202ho kl\240vesu.",
-        NULL
-    },
-    {
-        // ERROR_DELETE_SPACE,
-        "Nem\223\247ete odstr\240ni\234 miesto na disku, ktor\202 nie je oblas\234ou!\n"
         "\n"
         "  * Pokra\237ujte stla\237en\241m \226ubovo\226n\202ho kl\240vesu.",
         NULL
@@ -2192,8 +2185,8 @@ MUI_PAGE skSKPages[] =
         skSKKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        skSKBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        skSKBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2208,12 +2201,12 @@ MUI_PAGE skSKPages[] =
         skSKSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         skSKBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        skSKBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        skSKBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,
@@ -2230,27 +2223,29 @@ MUI_STRING skSKStrings[] =
     {STRING_PLEASEWAIT,
      "   Po\237kajte, pros\241m ..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
-//     "   ENTER = Inçtalovaœ   C = Vytvoriœ oblasœ   F3 = SkonŸiœ"},
+     "   ENTER = In\347talova\234   C = Create Primary   E = Create Extended   F3 = Skon\237i\234"},
+//     "   ENTER = In\347talova\234   C = Vytvori\234 oblas\234   F3 = Skon\237i\234"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
+     "   ENTER = In\347talova\234   C = Create Logical Partition   F3 = Skon\237i\234"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = In\347talova\234   D = Odstr\240ni\234 oblas\234   F3 = Skon\237i\234"},
     {STRING_DELETEPARTITION,
-     "   D = Delete Partition   F3 = Quit"},
+     "   D = Odstr\240ni\234 oblas\234   F3 = Skon\237i\234"},
     {STRING_PARTITIONSIZE,
      "Ve\226kos\234 novej oblasti:"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
      "You have chosen to create a primary partition on"},
 //     "Zvolili ste vytvorenie novej oblasti na"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "You have chosen to create an extended partition on"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "You have chosen to create a logical partition on"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     "Zadajte, pros\241m, ve\226kos\234 novej oblasti v megabajtoch."},
     {STRING_CREATEPARTITION,
      "   ENTER = Vytvori\234 oblas\234   ESC = Zru\347i\234   F3 = Skon\237i\234"},
+    {STRING_NEWPARTITION,
+    "In\347tal\240tor vytvoril nov\243 oblas\234 na"},
     {STRING_PARTFORMAT,
     "T\240to oblas\234 sa bude form\240tova\234 ako \324al\347ia."},
     {STRING_NONFORMATTEDPART,
@@ -2301,30 +2296,28 @@ MUI_STRING skSKStrings[] =
     "Najbe\247nej\347ou pr\241\237inou tohto je pou\247itie USB kl\240vesnice\r\n"},
     {STRING_CONSOLEFAIL3,
     "USB kl\240vesnica e\347te nie je plne podporovan\240\r\n"},
-    {STRING_FORMATTINGDISK,
-    "In\347tal\240tor form\240tuje V\240\347 disk"},
+    {STRING_FORMATTINGPART,
+    "In\347tal\240tor form\240tuje oblas\234..."},
     {STRING_CHECKINGDISK,
-    "In\347tal\240tor kontroluje V\240\347 disk"},
+    "In\347tal\240tor kontroluje disk..."},
     {STRING_FORMATDISK1,
     " Naform\240tova\234 oblas\234 ako syst\202m s\243borov %S (r\354chly form\240t) "},
     {STRING_FORMATDISK2,
     " Naform\240tova\234 oblas\234 ako syst\202m s\243borov %S "},
     {STRING_KEEPFORMAT,
     " Ponecha\234 s\243\237asn\354 syst\202m s\243borov (bez zmeny) "},
-    {STRING_HDINFOPARTCREATE_1,
+    {STRING_HDDISK1,
     "%s."},
-    {STRING_HDINFOPARTDELETE_1,
+    {STRING_HDDISK2,
     "na: %s."},
     {STRING_PARTTYPE,
     "Typ 0x%02x"},
-    {STRING_HDDINFO_1,
+    {STRING_HDDINFO1,
     // "pevn\354 disk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
     "%I64u %s pevn\354 disk %lu (Port=%hu, Bus=%hu, Id=%hu) na %wZ [%s]"},
-    {STRING_HDDINFO_2,
+    {STRING_HDDINFO2,
     // "pevn\354 disk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]"
     "%I64u %s pevn\354 disk %lu (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "In\347tal\240tor vytvoril nov\243 oblas\234 na"},
     {STRING_UNPSPACE,
     "Miesto bez oblast\241"},
     {STRING_MAXSIZE,

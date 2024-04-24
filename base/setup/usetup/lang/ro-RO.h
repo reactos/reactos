@@ -7,7 +7,7 @@
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
  *              Copyright 2018 George Bișoc <george.bisoc@reactos.org>
- *              Copyright 2022 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 #pragma once
@@ -975,59 +975,6 @@ static MUI_ENTRY roROSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY roROBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " Instalare ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Programul de instalare nu poate instala modulul de",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "ini\376ializare a calculatorului pe discul local.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Introduce\376i un disc flexibil formatat \356n",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "unitatea A: apoi s\343 ap\343sa\376i ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = Continuare   F3 = Ie\272ire",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY roROSelectPartitionEntries[] =
 {
     {
@@ -1068,7 +1015,7 @@ static MUI_ENTRY roROSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Tasta\376i P pentru a crea o parti\376ie primar\343.",
+        "\x07  Tasta\376i C pentru a crea o parti\376ie primar\343/logic\343.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1082,13 +1029,6 @@ static MUI_ENTRY roROSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Tasta\376i L pentru a crea o parti\376ie logic\343.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Tasta\376i D pentru a \272terge o parti\376ie existent\343.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1350,6 +1290,13 @@ static MUI_ENTRY roROFormatPartitionEntries[] =
     {
         6,
         8,
+        "Urmeaz\343 formatarea parti\376iei.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        16,
         "Urmeaz\343 formatarea parti\376iei. Tasta\376i ENTER pentru a continua.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1419,7 +1366,7 @@ static MUI_ENTRY roROInstallDirectoryEntries[] =
     {
         6,
         9,
-        "Aici vor fi amplasate fi\272ierele sistemului ReactOS:",
+        "Alege\376i un director \356n care va fi instalat ReactOS:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1497,7 +1444,7 @@ static MUI_ENTRY roROFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY roROBootLoaderEntries[] =
+static MUI_ENTRY roROBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1509,7 +1456,7 @@ static MUI_ENTRY roROBootLoaderEntries[] =
     {
         6,
         8,
-        "Instalare modul de ini\376ializare al calculatorului",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1566,6 +1513,13 @@ static MUI_ENTRY roROBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Instalare modul de ini\376ializare al calculatorului.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Instalarea programului de pornire pe suport, v\343 rug\343m s\343 a\272tepta\376i...",
@@ -1578,6 +1532,59 @@ static MUI_ENTRY roROBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY roROBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalare ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Programul de instalare nu poate instala modulul de",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "ini\376ializare a calculatorului pe discul local.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Introduce\376i un disc flexibil formatat \356n unitatea A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "apoi s\343 ap\343sa\376i ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = Continuare   F3 = Ie\272ire",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY roROKeyboardSettingsEntries[] =
@@ -1982,14 +1989,6 @@ MUI_ERROR roROErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "A\376i \356ncercat \272tergerea de spa\376iu neparti\376ionat,\n"
-        "\356ns\343 doar spa\376iul parti\376ionat poate fi \272ters!\n"
-        "\n"
-        "  * Tasta\376i pentru a continua.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "E\272ec la instalarea codului %S de ini\376ializare\n"
         "pe parti\376ia de sistem.",
@@ -2089,7 +2088,7 @@ MUI_ERROR roROErrorEntries[] =
     },
     {
         // ERROR_UPDATE_LOCALESETTINGS,
-        "E\272ec la instituirea sistemului de localizare.\n",
+        "Instalatoprul nu a putut seta loca\376ia sistemului.\n",
         "ENTER = Repornire calculator"
     },
     {
@@ -2100,7 +2099,7 @@ MUI_ERROR roROErrorEntries[] =
     },
     {
         // ERROR_UPDATE_GEOID,
-        "E\272ec la instituirea de geo id.",
+        "Instalatorul nu a putut seta geo id.",
         "ENTER = Repornire calculator"
     },
     {
@@ -2234,8 +2233,8 @@ MUI_PAGE roROPages[] =
         roROKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        roROBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        roROBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2250,12 +2249,12 @@ MUI_PAGE roROPages[] =
         roROSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         roROBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        roROBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        roROBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,
@@ -2272,25 +2271,27 @@ MUI_STRING roROStrings[] =
     {STRING_PLEASEWAIT,
      "   A\272tepta\376i..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Instalare   P/E = Creare parti\376ie Primar\343/Extins\343   F3 = Ie\272ire"},
+     "   ENTER = Instalare   C/E = Creare parti\376ie Primar\343/Extins\343   F3 = Ie\272ire"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Instalare   L = Creare parti\376ie Logic\343   F3 = Ie\272ire"},
+     "   ENTER = Instalare   C = Creare parti\376ie Logic\343   F3 = Ie\272ire"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Instalare   D = \252tergere parti\376ie   F3 = Ie\272ire"},
     {STRING_DELETEPARTITION,
      "   D = \252tergere parti\376ie   F3 = Ie\272ire"},
     {STRING_PARTITIONSIZE,
      "M\343rimea noii parti\376ii:"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
      "A\376i ales crearea unei parti\376ii primare pe"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "A\376i ales crearea unei parti\376ii extinse pe"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "A\376i ales crearea unei parti\376ii logice pe"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     "Introduce\376i m\343rimea noii parti\376ii \356n megaocte\376i."},
     {STRING_CREATEPARTITION,
      "   ENTER = Creare parti\376ie   ESC = Anulare   F3 = Ie\272ire"},
+    {STRING_NEWPARTITION,
+    "O nou\343 parti\376ie a fost creat\343 \356n"},
     {STRING_PARTFORMAT,
     "Aceast\343 parti\376ie urmeaz\343 s\343 fie formatat\343."},
     {STRING_NONFORMATTEDPART,
@@ -2341,8 +2342,8 @@ MUI_STRING roROStrings[] =
     "Cea mai frecvent\343 cauz\343 pentru asta este utilizarea unei tastaturi USB\r\n"},
     {STRING_CONSOLEFAIL3,
     "Tastaturile USB nu sunt \356nc\343 toate acceptate\r\n"},
-    {STRING_FORMATTINGDISK,
-    "Disc \356n curs de formatare..."},
+    {STRING_FORMATTINGPART,
+    "Parti\376ia \356n curs de formatare..."},
     {STRING_CHECKINGDISK,
     "Disc \356n curs de verificare..."},
     {STRING_FORMATDISK1,
@@ -2351,20 +2352,18 @@ MUI_STRING roROStrings[] =
     " Formateaz\343 parti\376ia ca sistem de fi\272iere %S "},
     {STRING_KEEPFORMAT,
     " P\343streaz\343 sistemul de fi\272iere actual (f\343r\343 schimb\343ri) "},
-    {STRING_HDINFOPARTCREATE_1,
+    {STRING_HDDISK1,
     "%s."},
-    {STRING_HDINFOPARTDELETE_1,
+    {STRING_HDDISK2,
     "de pe %s."},
     {STRING_PARTTYPE,
     "Tip 0x%02x"},
-    {STRING_HDDINFO_1,
+    {STRING_HDDINFO1,
     // "Discul %lu (%I64u %s), Port=%hu, Magistrala=%hu, Id=%hu (%wZ) [%s]"
     "%I64u %s Discul %lu (Port=%hu, Magistrala=%hu, Id=%hu) de tip %wZ [%s]"},
-    {STRING_HDDINFO_2,
+    {STRING_HDDINFO2,
     // "Discul %lu (%I64u %s), Port=%hu, Magistrala=%hu, Id=%hu [%s]"
     "%I64u %s Discul %lu (Port=%hu, Magistrala=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "O nou\343 parti\376ie a fost creat\343 \356n"},
     {STRING_UNPSPACE,
     "Spa\376iu neparti\376ionat"},
     {STRING_MAXSIZE,

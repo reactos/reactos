@@ -4,7 +4,7 @@
  * FILE:        base/system/services/database.c
  * PURPOSE:     Database control interface
  * COPYRIGHT:   Copyright 2002-2006 Eric Kohl
- *              Copyright 2006 Hervé Poussineau <hpoussin@reactos.org>
+ *              Copyright 2006 HervÃ© Poussineau <hpoussin@reactos.org>
  *              Copyright 2007 Ged Murphy <gedmurphy@reactos.org>
  *                             Gregor Brunmar <gregor.brunmar@home.se>
  *
@@ -201,7 +201,7 @@ ScmGetServiceNameFromTag(IN PTAG_INFO_NAME_FROM_TAG_IN_PARAMS InParams,
                                            ServiceListEntry);
 
         /* We must match the tag */
-        if (CurrentService->dwTag == InParams->dwTag &&
+        if (CurrentService->dwServiceTag == InParams->dwTag &&
             CurrentService->lpImage != NULL)
         {
             CurrentImage = CurrentService->lpImage;
@@ -757,7 +757,7 @@ ScmGenerateServiceTag(PSERVICE lpServiceRecord)
 
     /* Increment the tag counter and set it */
     ServiceTag = ServiceTag % 0xFFFFFFFF + 1;
-    lpServiceRecord->dwTag = ServiceTag;
+    lpServiceRecord->dwServiceTag = ServiceTag;
 
     return ERROR_SUCCESS;
 }
@@ -1536,7 +1536,7 @@ ScmSendStartCommand(PSERVICE Service,
                                ? SERVICE_CONTROL_START_OWN
                                : SERVICE_CONTROL_START_SHARE;
     ControlPacket->hServiceStatus = (SERVICE_STATUS_HANDLE)Service;
-    ControlPacket->dwServiceTag = Service->dwTag;
+    ControlPacket->dwServiceTag = Service->dwServiceTag;
 
     /* Copy the start command line */
     ControlPacket->dwServiceNameOffset = sizeof(SCM_CONTROL_PACKET);
@@ -2273,7 +2273,7 @@ ScmAutoStartServices(VOID)
             }
             else
             {
-                DPRINT1("WARNING: Could not open the associated Safe Boot key");
+                DPRINT1("WARNING: Could not open the associated Safe Boot key\n");
                 CurrentService->ServiceVisited = FALSE;
             }
         }

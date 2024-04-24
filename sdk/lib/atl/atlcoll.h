@@ -9,8 +9,8 @@
 // would also need to set the option 'WITH_STL'..
 // For now we just copy the definition here, under a guard..
 #ifndef _NEW
-inline void* operator new (size_t size, void* ptr) throw() { return ptr; }
-inline void operator delete (void* ptr, void* voidptr2) throw() { }
+inline void* operator new (size_t size, void* ptr) noexcept { return ptr; }
+inline void operator delete (void* ptr, void* voidptr2) noexcept { }
 #endif
 
 

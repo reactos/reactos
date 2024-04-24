@@ -11,7 +11,7 @@
 namespace ATL
 {
 
-inline UINT WINAPI _AtlGetConversionACP() throw()
+inline UINT WINAPI _AtlGetConversionACP() noexcept
 {
 #ifdef _CONVERSION_DONT_USE_THREAD_LOCALE
     return CP_ACP;
@@ -26,13 +26,13 @@ class ChTraitsCRT : public ChTraitsBase<_CharType>
 {
 public:
 
-    static int __cdecl GetBaseTypeLength(_In_z_ LPCWSTR pszSource) throw()
+    static int __cdecl GetBaseTypeLength(_In_z_ LPCWSTR pszSource) noexcept
     {
         if (pszSource == NULL) return -1;
         return static_cast<int>(wcslen(pszSource));
     }
 
-    static int __cdecl GetBaseTypeLength(_In_z_ LPCSTR pszSource) throw()
+    static int __cdecl GetBaseTypeLength(_In_z_ LPCSTR pszSource) noexcept
     {
         if (pszSource == NULL) return 0;
         return ::MultiByteToWideChar(_AtlGetConversionACP(), 0, pszSource, -1, NULL, 0) - 1;
@@ -40,14 +40,14 @@ public:
 
     static int __cdecl GetBaseTypeLength(
         _In_reads_(nLength) LPCWSTR pszSource,
-        _In_ int nLength) throw()
+        _In_ int nLength) noexcept
     {
         return nLength;
     }
 
     static int __cdecl GetBaseTypeLength(
         _In_reads_(nLength) LPCSTR pszSource,
-        _In_ int nLength) throw()
+        _In_ int nLength) noexcept
     {
         return ::MultiByteToWideChar(_AtlGetConversionACP(), 0, pszSource, nLength, NULL, 0);
     }
@@ -214,12 +214,12 @@ class ChTraitsCRT<char> : public ChTraitsBase<char>
 {
 public:
 
-    static int __cdecl GetBaseTypeLength(_In_z_ LPCWSTR pszSource) throw()
+    static int __cdecl GetBaseTypeLength(_In_z_ LPCWSTR pszSource) noexcept
     {
         return ::WideCharToMultiByte(_AtlGetConversionACP(), 0, pszSource, -1, NULL, 0, NULL, NULL) - 1;
     }
 
-    static int __cdecl GetBaseTypeLength(_In_z_ LPCSTR pszSource) throw()
+    static int __cdecl GetBaseTypeLength(_In_z_ LPCSTR pszSource) noexcept
     {
         if (pszSource == NULL) return 0;
         return static_cast<int>(strlen(pszSource));
@@ -227,14 +227,14 @@ public:
 
     static int __cdecl GetBaseTypeLength(
         _In_reads_(nLength) LPCWSTR pszSource,
-        _In_ int nLength) throw()
+        _In_ int nLength) noexcept
     {
         return ::WideCharToMultiByte(_AtlGetConversionACP(), 0, pszSource, nLength, NULL, 0, NULL, NULL);
     }
 
     static int __cdecl GetBaseTypeLength(
         _In_reads_(nLength) LPCSTR pszSource,
-        _In_ int nLength) throw()
+        _In_ int nLength) noexcept
     {
         return nLength;
     }
@@ -428,12 +428,12 @@ public:
     typedef typename CThisSimpleString::PCYSTR PCYSTR;
 
 public:
-    CStringT() throw() :
+    CStringT() noexcept :
         CThisSimpleString(StringTraits::GetDefaultManager())
     {
     }
 
-    explicit CStringT( _In_ IAtlStringMgr* pStringMgr) throw() :
+    explicit CStringT( _In_ IAtlStringMgr* pStringMgr) noexcept :
         CThisSimpleString(pStringMgr)
     {
     }
@@ -544,76 +544,76 @@ public:
         return *this;
     }
 
-    friend bool operator==(const CStringT& str1, const CStringT& str2) throw()
+    friend bool operator==(const CStringT& str1, const CStringT& str2) noexcept
     {
         return str1.Compare(str2) == 0;
     }
 
-    friend bool operator==(const CStringT& str1, PCXSTR psz2) throw()
+    friend bool operator==(const CStringT& str1, PCXSTR psz2) noexcept
     {
         return str1.Compare(psz2) == 0;
     }
 
-    friend bool operator==(const CStringT& str1, PCYSTR psz2) throw()
+    friend bool operator==(const CStringT& str1, PCYSTR psz2) noexcept
     {
         CStringT tmp(psz2, str1.GetManager());
         return tmp.Compare(str1) == 0;
     }
 
-    friend bool operator==(const CStringT& str1, XCHAR ch2) throw()
+    friend bool operator==(const CStringT& str1, XCHAR ch2) noexcept
     {
         return str1.GetLength() == 1 && str1[0] == ch2;
     }
 
-    friend bool operator==(PCXSTR psz1, const CStringT& str2) throw()
+    friend bool operator==(PCXSTR psz1, const CStringT& str2) noexcept
     {
         return str2.Compare(psz1) == 0;
     }
 
-    friend bool operator==(PCYSTR psz1, const CStringT& str2) throw()
+    friend bool operator==(PCYSTR psz1, const CStringT& str2) noexcept
     {
         CStringT tmp(psz1, str2.GetManager());
         return tmp.Compare(str2) == 0;
     }
 
-    friend bool operator==(XCHAR ch1, const CStringT& str2) throw()
+    friend bool operator==(XCHAR ch1, const CStringT& str2) noexcept
     {
         return str2.GetLength() == 1 && str2[0] == ch1;
     }
 
-    friend bool operator!=(const CStringT& str1, const CStringT& str2) throw()
+    friend bool operator!=(const CStringT& str1, const CStringT& str2) noexcept
     {
         return str1.Compare(str2) != 0;
     }
 
-    friend bool operator!=(const CStringT& str1, PCXSTR psz2) throw()
+    friend bool operator!=(const CStringT& str1, PCXSTR psz2) noexcept
     {
         return str1.Compare(psz2) != 0;
     }
 
-    friend bool operator!=(const CStringT& str1, PCYSTR psz2) throw()
+    friend bool operator!=(const CStringT& str1, PCYSTR psz2) noexcept
     {
         CStringT tmp(psz2, str1.GetManager());
         return tmp.Compare(str1) != 0;
     }
 
-    friend bool operator!=(const CStringT& str1, XCHAR ch2) throw()
+    friend bool operator!=(const CStringT& str1, XCHAR ch2) noexcept
     {
         return str1.GetLength() != 1 || str1[0] != ch2;
     }
 
-    friend bool operator!=(PCXSTR psz1, const CStringT& str2) throw()
+    friend bool operator!=(PCXSTR psz1, const CStringT& str2) noexcept
     {
         return str2.Compare(psz1) != 0;
     }
 
-    friend bool operator!=(PCYSTR psz1, const CStringT& str2) throw()
+    friend bool operator!=(PCYSTR psz1, const CStringT& str2) noexcept
     {
         CStringT tmp(psz1, str2.GetManager());
         return tmp.Compare(str2) != 0;
     }
 
-    friend bool operator!=(XCHAR ch1, const CStringT& str2) throw()
+    friend bool operator!=(XCHAR ch1, const CStringT& str2) noexcept
     {
         return str2.GetLength() != 1 || str2[0] != ch1;
     }
@@ -693,7 +693,7 @@ public:
         return *this;
     }
 
-    int Find(_In_ PCXSTR pszSub, _In_opt_ int iStart = 0) const throw()
+    int Find(_In_ PCXSTR pszSub, _In_opt_ int iStart = 0) const noexcept
     {
         int nLength = CThisSimpleString::GetLength();
 
@@ -706,7 +706,7 @@ public:
         return pszResult ? ((int)(pszResult - pszString)) : -1;
     }
 
-    int Find(_In_ XCHAR ch, _In_opt_ int iStart = 0) const throw()
+    int Find(_In_ XCHAR ch, _In_opt_ int iStart = 0) const noexcept
     {
         int nLength = CThisSimpleString::GetLength();
 
@@ -719,7 +719,7 @@ public:
         return pszResult ? ((int)(pszResult - pszString)) : -1;
     }
 
-    int FindOneOf(_In_ PCXSTR pszCharSet) const throw()
+    int FindOneOf(_In_ PCXSTR pszCharSet) const noexcept
     {
         PCXSTR pszString = CThisSimpleString::GetString();
         PCXSTR pszResult = StringTraits::FindOneOf(pszString, pszCharSet);
@@ -727,7 +727,7 @@ public:
         return pszResult ? ((int)(pszResult - pszString)) : -1;
     }
 
-    int ReverseFind(_In_ XCHAR ch) const throw()
+    int ReverseFind(_In_ XCHAR ch) const noexcept
     {
         PCXSTR pszString = CThisSimpleString::GetString();
         PCXSTR pszResult = StringTraits::FindCharReverse(pszString, ch);

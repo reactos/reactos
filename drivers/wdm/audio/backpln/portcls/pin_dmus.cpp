@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 class CPortPinDMus : public CUnknownImpl<IPortPinDMus>
@@ -45,7 +42,6 @@ protected:
 
     PMINIPORTMIDI m_MidiMiniport;
     PMINIPORTMIDISTREAM m_MidiStream;
-
 
     KSSTATE m_State;
     PKSDATAFORMAT m_Format;
@@ -124,7 +120,6 @@ CPortPinDMus::GetBuffer(
     return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
 NTAPI
 CPortPinDMus::PutBuffer(
@@ -147,7 +142,6 @@ CPortPinDMus::SetState(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-
 NTSTATUS
 NTAPI
 CPortPinDMus::PutMessage(
@@ -157,7 +151,6 @@ CPortPinDMus::PutMessage(
     return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
 NTAPI
 CPortPinDMus::ConnectOutput(
@@ -166,7 +159,6 @@ CPortPinDMus::ConnectOutput(
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
-
 
 NTSTATUS
 NTAPI
@@ -255,7 +247,6 @@ CPortPinDMus::TransferMidiDataToDMus()
         Event->Event.cbEvent = (USHORT)BufferSize;
         Event->Event.uData.pbData = (PBYTE)Buffer;
 
-
         if (!Root)
             Root = Event;
         else
@@ -276,8 +267,6 @@ CPortPinDMus::TransferMidiDataToDMus()
     DPRINT("Status %x\n", Status);
 }
 
-
-
 VOID
 NTAPI
 CPortPinDMus::RequestService()
@@ -295,6 +284,7 @@ CPortPinDMus::RequestService()
 }
 
 //==================================================================================================================================
+
 NTSTATUS
 NTAPI
 CPortPinDMus::QueryInterface(
@@ -629,4 +619,3 @@ NewPortPinDMus(
 
     return STATUS_SUCCESS;
 }
-

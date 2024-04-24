@@ -782,8 +782,7 @@ CRegKeySecurity_fnConstructor(LPWSTR lpRegKey,
         obj->ObjectInfo = *ObjectInfo;
         obj->Btn = Btn;
         obj->hRootKey = hRootKey;
-        wcscpy(obj->szRegKey,
-                lpRegKey);
+        StringCbCopyW(obj->szRegKey, sizeof(obj->szRegKey), lpRegKey);
     }
     else
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);

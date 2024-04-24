@@ -1898,6 +1898,58 @@ I_ScGetCurrentGroupStateW(SC_HANDLE hSCManager,
 
 
 /**********************************************************************
+ *  I_ScValidatePnpService
+ *
+ * Undocumented
+ *
+ * @implemented
+ */
+DWORD
+WINAPI
+I_ScValidatePnpService(
+    _In_ LPCWSTR pszMachineName,
+    _In_ LPCWSTR pszServiceName,
+    _Out_ SERVICE_STATUS_HANDLE *phServiceStatus)
+{
+    SC_RPC_HANDLE hSCManager = NULL;
+    SERVICE_STATUS_HANDLE hServiceStatus = NULL;
+    DWORD dwError;
+
+    TRACE("I_ScValidatePnpService(%S %S %p)\n",
+         pszMachineName, pszServiceName, phServiceStatus);
+
+    hSCManager = OpenSCManagerW(pszMachineName,
+                                SERVICES_ACTIVE_DATABASEW,
+                                SC_MANAGER_CONNECT);
+    if (hSCManager == NULL)
+    {
+        dwError = GetLastError();
+        goto done;
+    }
+
+    RpcTryExcept
+    {
+        dwError = RI_ScValidatePnPService(hSCManager,
+                                          (LPWSTR)pszServiceName,
+                                          (RPC_SERVICE_STATUS_HANDLE *)&hServiceStatus);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    RpcEndExcept
+
+    *phServiceStatus = hServiceStatus;
+
+done:
+    if (hSCManager != NULL)
+        CloseServiceHandle(hSCManager);
+
+    return dwError;
+}
+
+
+/**********************************************************************
  *  LockServiceDatabase
  *
  * @implemented

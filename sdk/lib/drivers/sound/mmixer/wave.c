@@ -8,7 +8,7 @@
 
 #include "precomp.h"
 
-#define YDEBUG
+// #define NDEBUG
 #include <debug.h>
 
 const GUID KSPROPSETID_Connection               = {0x1D58C920L, 0xAC9B, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
@@ -111,32 +111,47 @@ MMixerGetWaveInfoByIndexAndType(
     return MM_STATUS_INVALID_PARAMETER;
 }
 
-
-
-
 VOID
 MMixerInitializeDataFormat(
-    IN PKSDATAFORMAT_WAVEFORMATEX DataFormat,
-    LPWAVEFORMATEX WaveFormatEx)
+    _Inout_ PKSDATAFORMAT_WAVEFORMATEX DataFormat,
+    _In_ LPWAVEFORMATEX WaveFormatEx,
+    _In_ DWORD cbSize)
 {
-
     DataFormat->WaveFormatEx.wFormatTag = WaveFormatEx->wFormatTag;
     DataFormat->WaveFormatEx.nChannels = WaveFormatEx->nChannels;
     DataFormat->WaveFormatEx.nSamplesPerSec = WaveFormatEx->nSamplesPerSec;
     DataFormat->WaveFormatEx.nBlockAlign = WaveFormatEx->nBlockAlign;
     DataFormat->WaveFormatEx.nAvgBytesPerSec = WaveFormatEx->nAvgBytesPerSec;
     DataFormat->WaveFormatEx.wBitsPerSample = WaveFormatEx->wBitsPerSample;
-    DataFormat->WaveFormatEx.cbSize = 0;
-    DataFormat->DataFormat.FormatSize = sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX);
+    DataFormat->WaveFormatEx.cbSize = cbSize;
+    DataFormat->DataFormat.FormatSize = sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX) + cbSize;
     DataFormat->DataFormat.Flags = 0;
     DataFormat->DataFormat.Reserved = 0;
     DataFormat->DataFormat.MajorFormat = KSDATAFORMAT_TYPE_AUDIO;
-
     DataFormat->DataFormat.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
     DataFormat->DataFormat.Specifier = KSDATAFORMAT_SPECIFIER_WAVEFORMATEX;
     DataFormat->DataFormat.SampleSize = 4;
-}
 
+    /* Write additional fields for Extensible audio format */
+    if (WaveFormatEx->wFormatTag == WAVE_FORMAT_EXTENSIBLE)
+    {
+        PWAVEFORMATEXTENSIBLE WaveFormatExt = (PWAVEFORMATEXTENSIBLE)&DataFormat->WaveFormatEx;
+        WaveFormatExt->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+        WaveFormatExt->Samples.wValidBitsPerSample = WaveFormatEx->wBitsPerSample;
+        if (WaveFormatEx->nChannels == 0)
+            WaveFormatExt->dwChannelMask = KSAUDIO_SPEAKER_DIRECTOUT;
+        else if (WaveFormatEx->nChannels == 1)
+            WaveFormatExt->dwChannelMask = KSAUDIO_SPEAKER_MONO;
+        else if (WaveFormatEx->nChannels == 2)
+            WaveFormatExt->dwChannelMask = KSAUDIO_SPEAKER_STEREO;
+        else if (WaveFormatEx->nChannels == 4)
+            WaveFormatExt->dwChannelMask = KSAUDIO_SPEAKER_QUAD;
+        else if (WaveFormatEx->nChannels == 5)
+            WaveFormatExt->dwChannelMask = KSAUDIO_SPEAKER_5POINT1;
+        else if (WaveFormatEx->nChannels == 7)
+            WaveFormatExt->dwChannelMask = KSAUDIO_SPEAKER_7POINT1;
+    }
+}
 
 MIXER_STATUS
 MMixerGetAudioPinDataRanges(
@@ -230,13 +245,17 @@ MMixerOpenWavePin(
     LPMIXER_DATA MixerData;
     NTSTATUS Status;
     MIXER_STATUS MixerStatus;
+    DWORD cbSize;
 
     MixerData = MMixerGetDataByDeviceId(MixerList, DeviceId);
     if (!MixerData)
         return MM_STATUS_INVALID_PARAMETER;
 
+    /* Enforce 0 for WAVE_FORMAT_PCM, which ignores extra information size */
+    cbSize = WaveFormatEx->wFormatTag == WAVE_FORMAT_PCM ? 0 : WaveFormatEx->cbSize;
+
     /* allocate pin connect */
-    PinConnect = MMixerAllocatePinConnect(MixerContext, sizeof(KSDATAFORMAT_WAVEFORMATEX));
+    PinConnect = MMixerAllocatePinConnect(MixerContext, sizeof(KSDATAFORMAT_WAVEFORMATEX) + cbSize);
     if (!PinConnect)
     {
         /* no memory */
@@ -249,7 +268,7 @@ MMixerOpenWavePin(
     /* get offset to dataformat */
     DataFormat = (PKSDATAFORMAT_WAVEFORMATEX) (PinConnect + 1);
     /* initialize with requested wave format */
-    MMixerInitializeDataFormat(DataFormat, WaveFormatEx);
+    MMixerInitializeDataFormat(DataFormat, WaveFormatEx, cbSize);
 
     if (CreateCallback)
     {
@@ -307,7 +326,6 @@ MMixerCheckFormat(
                 /* check if pin supports the sample rate in 16-Bit Mono */
                 Result |= TestRange[Index].Bit16Mono;
 
-
                 if (DataRangeAudio->MaximumChannels > 1)
                 {
                     /* check if pin supports the sample rate in 16-Bit Stereo */
@@ -316,7 +334,6 @@ MMixerCheckFormat(
             }
         }
     }
-
 
     if (bInput)
         WaveInfo->u.InCaps.dwFormats = Result;
@@ -458,12 +475,6 @@ MMixerOpenWave(
 
     /* grab mixer list */
     MixerList = (PMIXER_LIST)MixerContext->MixerContext;
-
-    if (WaveFormat->wFormatTag != WAVE_FORMAT_PCM)
-    {
-        /* not implemented */
-        return MM_STATUS_NOT_IMPLEMENTED;
-    }
 
     /* find destination wave */
     Status = MMixerGetWaveInfoByIndexAndType(MixerList, DeviceIndex, bWaveIn, &WaveInfo);

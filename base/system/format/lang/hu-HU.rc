@@ -1,4 +1,10 @@
-/* Hungarian translation by Peter Nagy <nagylakas@gmail.com> */
+/*
+ * PROJECT:     Disk Format Utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Hungarian resource file
+ * TRANSLATORS: Copyright 2005 Peter Nagy <nagylakas@gmail.com>
+ *              Copyright 2022 Tibor Lajos Füzi <tibor.fuzi@gmail.com>
+ */
 
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 

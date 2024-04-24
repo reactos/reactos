@@ -130,111 +130,96 @@ public:
 
         /* Remove menu items that don't apply */
 
-        dwLogoff = SHRestricted(REST_STARTMENULOGOFF);
-        bWantLogoff = (dwLogoff == 2 ||
-                       SHRestricted(REST_FORCESTARTMENULOGOFF) ||
-                       GetExplorerRegValueSet(HKEY_CURRENT_USER,
-                                              L"Advanced",
-                                              L"StartMenuLogoff"));
-
         /* Favorites */
-        if (!GetExplorerRegValueSet(HKEY_CURRENT_USER,
-                                    L"Advanced",
-                                    L"StartMenuFavorites"))
+        if (SHRestricted(REST_NOFAVORITESMENU) ||
+            !GetAdvancedBool(L"StartMenuFavorites", FALSE))
         {
-            DeleteMenu(hMenu,
-                       IDM_FAVORITES,
-                       MF_BYCOMMAND);
+            DeleteMenu(hMenu, IDM_FAVORITES, MF_BYCOMMAND);
         }
 
         /* Documents */
-        if (SHRestricted(REST_NORECENTDOCSMENU))
+        if (SHRestricted(REST_NORECENTDOCSMENU) ||
+            !GetAdvancedBool(L"Start_ShowRecentDocs", TRUE))
         {
-            DeleteMenu(hMenu,
-                       IDM_DOCUMENTS,
-                       MF_BYCOMMAND);
+            DeleteMenu(hMenu, IDM_DOCUMENTS, MF_BYCOMMAND);
         }
 
         /* Settings */
-        hSettingsMenu = FindSubMenu(hMenu,
-                                    IDM_SETTINGS,
-                                    FALSE);
-        if (hSettingsMenu != NULL)
+        hSettingsMenu = FindSubMenu(hMenu, IDM_SETTINGS, FALSE);
+
+        /* Control Panel */
+        if (SHRestricted(REST_NOSETFOLDERS) ||
+            SHRestricted(REST_NOCONTROLPANEL) ||
+            !GetAdvancedBool(L"Start_ShowControlPanel", TRUE))
         {
-            if (SHRestricted(REST_NOSETFOLDERS))
-            {
-                /* Control Panel */
-                if (SHRestricted(REST_NOCONTROLPANEL))
-                {
-                    DeleteMenu(hSettingsMenu,
-                               IDM_CONTROLPANEL,
-                               MF_BYCOMMAND);
+            DeleteMenu(hSettingsMenu, IDM_CONTROLPANEL, MF_BYCOMMAND);
 
-                    /* Delete the separator below it */
-                    DeleteMenu(hSettingsMenu,
-                               0,
-                               MF_BYPOSITION);
-                }
+            /* Delete the separator below it */
+            DeleteMenu(hSettingsMenu, 0, MF_BYPOSITION);
+        }
 
-                /* Network Connections */
-                if (SHRestricted(REST_NONETWORKCONNECTIONS))
-                {
-                    DeleteMenu(hSettingsMenu,
-                               IDM_NETWORKCONNECTIONS,
-                               MF_BYCOMMAND);
-                }
+        /* Network Connections */
+        if (SHRestricted(REST_NOSETFOLDERS) ||
+            SHRestricted(REST_NONETWORKCONNECTIONS) ||
+            !GetAdvancedBool(L"Start_ShowNetConn", TRUE))
+        {
+            DeleteMenu(hSettingsMenu, IDM_NETWORKCONNECTIONS, MF_BYCOMMAND);
+        }
 
-                /* Printers and Faxes */
-                DeleteMenu(hSettingsMenu,
-                           IDM_PRINTERSANDFAXES,
-                           MF_BYCOMMAND);
-            }
+        /* Printers and Faxes */
+        if (SHRestricted(REST_NOSETFOLDERS) ||
+            !GetAdvancedBool(L"Start_ShowPrinters", TRUE))
+        {
+            DeleteMenu(hSettingsMenu, IDM_PRINTERSANDFAXES, MF_BYCOMMAND);
+        }
 
-            /* Security */
-            if (GetSystemMetrics(SM_REMOTECONTROL) == 0 ||
-                SHRestricted(REST_NOSECURITY))
-            {
-                DeleteMenu(hSettingsMenu,
-                           IDM_SECURITY,
-                           MF_BYCOMMAND);
-            }
+        /* Security */
+        if (SHRestricted(REST_NOSETFOLDERS) ||
+            GetSystemMetrics(SM_REMOTECONTROL) == 0 ||
+            SHRestricted(REST_NOSECURITY))
+        {
+            DeleteMenu(hSettingsMenu, IDM_SECURITY, MF_BYCOMMAND);
+        }
 
-            if (GetMenuItemCount(hSettingsMenu) == 0)
-            {
-                DeleteMenu(hMenu,
-                           IDM_SETTINGS,
-                           MF_BYCOMMAND);
-            }
+        /* Delete Settings menu if it was empty */
+        if (GetMenuItemCount(hSettingsMenu) == 0)
+        {
+            DeleteMenu(hMenu, IDM_SETTINGS, MF_BYCOMMAND);
         }
 
         /* Search */
-        if (SHRestricted(REST_NOFIND))
+        if (SHRestricted(REST_NOFIND) ||
+            !GetAdvancedBool(L"Start_ShowSearch", TRUE))
         {
-            DeleteMenu(hMenu,
-                       IDM_SEARCH,
-                       MF_BYCOMMAND);
+            DeleteMenu(hMenu, IDM_SEARCH, MF_BYCOMMAND);
         }
 
-        /* FIXME: Help */
+        /* Help */
+        if (SHRestricted(REST_NOSMHELP) ||
+            !GetAdvancedBool(L"Start_ShowHelp", TRUE))
+        {
+            DeleteMenu(hMenu, IDM_HELPANDSUPPORT, MF_BYCOMMAND);
+        }
 
         /* Run */
-        if (SHRestricted(REST_NORUN))
+        if (SHRestricted(REST_NORUN) ||
+            !GetAdvancedBool(L"StartMenuRun", TRUE))
         {
-            DeleteMenu(hMenu,
-                       IDM_RUN,
-                       MF_BYCOMMAND);
+            DeleteMenu(hMenu, IDM_RUN, MF_BYCOMMAND);
         }
 
         /* Synchronize */
         if (!ShowSynchronizeMenuItem())
         {
-            DeleteMenu(hMenu,
-                       IDM_SYNCHRONIZE,
-                       MF_BYCOMMAND);
+            DeleteMenu(hMenu, IDM_SYNCHRONIZE, MF_BYCOMMAND);
             uLastItemsCount--;
         }
 
         /* Log off */
+        dwLogoff = SHRestricted(REST_STARTMENULOGOFF);
+        bWantLogoff = (dwLogoff == 2 ||
+                       SHRestricted(REST_FORCESTARTMENULOGOFF) ||
+                       GetAdvancedBool(L"StartMenuLogoff", FALSE));
         if (dwLogoff != 1 && bWantLogoff)
         {
             /* FIXME: We need a more sophisticated way to determine whether to show
@@ -252,53 +237,41 @@ public:
                 szUser))
             {
                 /* We couldn't update the menu item, delete it... */
-                DeleteMenu(hMenu,
-                           IDM_LOGOFF,
-                           MF_BYCOMMAND);
+                DeleteMenu(hMenu, IDM_LOGOFF, MF_BYCOMMAND);
             }
         }
         else
         {
-            DeleteMenu(hMenu,
-                       IDM_LOGOFF,
-                       MF_BYCOMMAND);
+            DeleteMenu(hMenu, IDM_LOGOFF, MF_BYCOMMAND);
             uLastItemsCount--;
         }
 
-
         /* Disconnect */
-        if (GetSystemMetrics(SM_REMOTECONTROL) == 0)
+        if (SHRestricted(REST_NODISCONNECT) ||
+            GetSystemMetrics(SM_REMOTECONTROL) == 0)
         {
-            DeleteMenu(hMenu,
-                       IDM_DISCONNECT,
-                       MF_BYCOMMAND);
+            DeleteMenu(hMenu, IDM_DISCONNECT, MF_BYCOMMAND);
             uLastItemsCount--;
         }
 
         /* Undock computer */
         if (!ShowUndockMenuItem())
         {
-            DeleteMenu(hMenu,
-                       IDM_UNDOCKCOMPUTER,
-                       MF_BYCOMMAND);
+            DeleteMenu(hMenu, IDM_UNDOCKCOMPUTER, MF_BYCOMMAND);
             uLastItemsCount--;
         }
 
         /* Shut down */
         if (SHRestricted(REST_NOCLOSE))
         {
-            DeleteMenu(hMenu,
-                       IDM_SHUTDOWN,
-                       MF_BYCOMMAND);
+            DeleteMenu(hMenu, IDM_SHUTDOWN, MF_BYCOMMAND);
             uLastItemsCount--;
         }
 
         if (uLastItemsCount == 0)
         {
             /* Remove the separator at the end of the menu */
-            DeleteMenu(hMenu,
-                       IDM_LASTSTARTMENU_SEPARATOR,
-                       MF_BYCOMMAND);
+            DeleteMenu(hMenu, IDM_LASTSTARTMENU_SEPARATOR, MF_BYCOMMAND);
         }
 
         return S_OK;

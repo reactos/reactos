@@ -1,6 +1,6 @@
 # msvcrt.dll - MS VC++ Run Time Library
 
-@ cdecl -arch=x86_64 -version=0x502 $I10_OUTPUT() MSVCRT_I10_OUTPUT
+@ cdecl -arch=x86_64 -version=0x502 $I10_OUTPUT() I10_OUTPUT
 
 # **************** x86 C++ functions ****************
 @ cdecl -arch=i386 -norelay ??0__non_rtti_object@@QAE@ABV0@@Z(ptr) MSVCRT___non_rtti_object_copy_ctor # public: __thiscall __non_rtti_object::__non_rtti_object(class __non_rtti_object const &)
@@ -180,7 +180,7 @@
 
 
 # **************** Common functions ****************
-@ cdecl -arch=i386 $I10_OUTPUT() MSVCRT_I10_OUTPUT
+@ cdecl -arch=i386 $I10_OUTPUT() I10_OUTPUT
 @ cdecl -arch=i386 _CIacos()
 @ cdecl -arch=i386 _CIasin()
 @ cdecl -arch=i386 _CIatan()
@@ -200,9 +200,9 @@
 @ stub -version=0x600+ _CrtCheckMemory
 @ stub -version=0x600+ _CrtDbgBreak
 @ cdecl -version=0x600+ _CrtDbgReport(long str long str str)
-@ stub -version=0x600+ _CrtDbgReportV
+@ cdecl -version=0x600+ _CrtDbgReportV(long str long str str ptr)
 @ cdecl -version=0x600+ _CrtDbgReportW(long wstr long wstr wstr)
-@ stub -version=0x600+ _CrtDbgReportWV
+@ cdecl -version=0x600+ _CrtDbgReportWV(long wstr long wstr wstr ptr)
 @ stub -version=0x600+ _CrtDoForAllClientObjects
 @ stub -version=0x600+ _CrtDumpMemoryLeaks
 @ stub -version=0x600+ _CrtIsMemoryBlock
@@ -549,7 +549,7 @@
 @ stub -version=0x600+ _fwscanf_l
 @ stub -version=0x600+ _fwscanf_s_l
 @ cdecl _gcvt(double long str)
-@ stub -version=0x600+ _gcvt_s
+@ cdecl -version=0x600+ _gcvt_s(ptr ptr double long)
 @ cdecl -version=0x600+ _get_doserrno(ptr)
 @ stub -version=0x600+ _get_environ
 @ cdecl -version=0x600+ _get_errno(ptr)
@@ -934,7 +934,7 @@
 @ stub -version=0x600+ _scwprintf_p_l
 @ cdecl _searchenv(str str ptr)
 @ cdecl -version=0x600+ _searchenv_s(str str ptr long)
-@ stub -version=0x600+ -arch=i386 _seh_longjmp_unwind4
+@ stdcall -version=0x600+ -arch=i386 _seh_longjmp_unwind4(ptr)
 @ stdcall -arch=i386 _seh_longjmp_unwind(ptr)
 @ stub -arch=i386 _set_SSE2_enable
 @ stub -version=0x600+ _set_controlfp

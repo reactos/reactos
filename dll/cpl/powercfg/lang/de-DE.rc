@@ -1,128 +1,124 @@
-/* German translation by Lohnegrim Lohnegrim at gmx dot net */
+// COPYRIGHT: Lohnegrim <Lohnegrim@gmx.net>
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
-IDD_POWERSCHEMESPAGE_ACDC DIALOGEX 0, 0, 252, 218
+IDD_POWERSCHEMESPAGE_ACDC DIALOGEX 0, 0, 252, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Energieschemata"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
-    LTEXT "Wählen Sie das Energieschema mit den am besten zu diesem Computer passenden Einstellungen. Bedenken Sie, dass die Einstellungen das unten ausgewählte Schema modifizieren.", -1, 45, 13, 194, 36
-    GROUPBOX "&Energieschemata", -1, 7, 57, 240, 46
-    COMBOBOX IDC_ENERGYLIST, 14, 70, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Speichern &unter...", IDC_SAVEAS_BTN, 100, 85, 75, 15, WS_DISABLED
-    PUSHBUTTON "&Löschen", IDC_DELETE_BTN, 180, 85, 55, 15, WS_DISABLED
-    GROUPBOX "Unbekannt", IDC_GRPDETAIL, 7, 108, 240, 105
-    LTEXT "Bei:", IDC_SAT, 15, 120, 60, 10
-    LTEXT "Netzbetrieb", IDC_SAC, 100, 120, 45, 15
-    ICON IDI_AC, IDC_IAC, 75, 115, 25, 15
-    LTEXT "Batteriebetrieb", IDC_SDC, 190, 120, 50, 15
-    ICON IDI_DC, IDC_IDC, 165, 115, 25, 15
-    LTEXT "&Monitor ausschalten:", IDC_MONITOR, 15, 145, 80, 10
-    COMBOBOX IDC_MONITORACLIST, 100, 140, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX IDC_MONITORDCLIST, 175, 140, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&Festplatten ausschalten:", IDC_DISK, 15, 160, 80, 10
-    COMBOBOX IDC_DISKACLIST, 100, 155, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX IDC_DISKDCLIST, 175, 155, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&Standby:", IDC_STANDBY, 15, 180, 55, 10
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
+    LTEXT "Wählen Sie das Energieschema mit den am besten zu diesem Computer passenden Einstellungen. Bedenken Sie, dass die Einstellungen das unten ausgewählte Schema modifizieren.", -1, 37, 6, 208, 36
+    GROUPBOX "&Energieschemata", -1, 6, 43, 240, 50
+    COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON "Speichern &unter...", IDC_SAVEAS_BTN, 85, 72, 80, 14, WS_DISABLED
+    PUSHBUTTON "&Löschen", IDC_DELETE_BTN, 173, 72, 64, 14, WS_DISABLED
+    GROUPBOX "", IDC_GRPDETAIL, 6, 95, 240, 119
+    LTEXT "Bei:", IDC_SAT, 12, 110, 60, 15
+    LTEXT "Netzbetrieb", IDC_SAC, 100, 110, 50, 15
+    ICON IDI_AC, IDC_IAC, 141, 122, 0, 0
+    LTEXT "Batteriebetrieb", IDC_SDC, 173, 110, 50, 15
+    ICON IDI_DC, IDC_IDC, 218, 122, 0, 0
+    LTEXT "&Monitor ausschalten:", IDC_MONITOR, 13, 148, 85, 10
+    COMBOBOX IDC_MONITORACLIST, 100, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_MONITORDCLIST, 173, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "&Festplatten ausschalten:", IDC_DISK, 13, 163, 85, 10
+    COMBOBOX IDC_DISKACLIST, 100, 160, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_DISKDCLIST, 173, 160, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "&Standby:", IDC_STANDBY, 13, 178, 85, 10
     COMBOBOX IDC_STANDBYACLIST, 100, 175, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX IDC_STANDBYDCLIST, 175, 175, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&Ruhezustand:", IDC_HIBERNATE, 15, 195, 55, 10
+    COMBOBOX IDC_STANDBYDCLIST, 173, 175, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "&Ruhezustand:", IDC_HIBERNATE, 13, 193, 85, 10
     COMBOBOX IDC_HIBERNATEACLIST, 100, 190, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX IDC_HIBERNATEDCLIST, 175, 190, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX IDC_HIBERNATEDCLIST, 173, 190, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
-IDD_POWERSCHEMESPAGE_AC DIALOGEX 0, 0, 252, 218
+IDD_POWERSCHEMESPAGE_AC DIALOGEX 0, 0, 252, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Energieschemata"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
-    LTEXT "Wählen Sie das Energieschema mit den am besten zu diesem Computer passenden Einstellungen. Bedenken Sie, dass die Einstellungen das unten ausgewählte Schema modifizieren.", -1, 45, 13, 194, 36
-    GROUPBOX "&Energieschemata", -1, 7, 57, 240, 46
-    COMBOBOX IDC_ENERGYLIST, 14, 70, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
-    PUSHBUTTON "Speichern &unter...", IDC_SAVEAS_BTN, 100, 85, 75, 15, WS_DISABLED
-    PUSHBUTTON "&Löschen", IDC_DELETE_BTN, 180, 85, 55, 15, WS_DISABLED
-    GROUPBOX "Unbekannt", IDC_GRPDETAIL, 7, 108, 240, 105
-    LTEXT "&Monitor ausschalten:", IDC_MONITOR, 15, 145, 80, 10
-    COMBOBOX IDC_MONITORACLIST, 100, 140, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&Festplatten ausschalten:", IDC_DISK, 15, 160, 80, 10
-    COMBOBOX IDC_DISKACLIST, 100, 155, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&Standby:", IDC_STANDBY, 15, 180, 55, 10
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
+    LTEXT "Wählen Sie das Energieschema mit den am besten zu diesem Computer passenden Einstellungen. Bedenken Sie, dass die Einstellungen das unten ausgewählte Schema modifizieren.", -1, 37, 6, 208, 36
+    GROUPBOX "&Energieschemata", -1, 6, 43, 240, 50
+    COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
+    PUSHBUTTON "Speichern &unter...", IDC_SAVEAS_BTN, 85, 72, 80, 14, WS_DISABLED
+    PUSHBUTTON "&Löschen", IDC_DELETE_BTN, 173, 72, 64, 14, WS_DISABLED
+    GROUPBOX "", IDC_GRPDETAIL, 6, 95, 240, 119
+    LTEXT "&Monitor ausschalten:", IDC_MONITOR, 13, 148, 85, 10
+    COMBOBOX IDC_MONITORACLIST, 100, 145, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "&Festplatten ausschalten:", IDC_DISK, 13, 163, 85, 10
+    COMBOBOX IDC_DISKACLIST, 100, 160, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "&Standby:", IDC_STANDBY, 13, 178, 85, 10
     COMBOBOX IDC_STANDBYACLIST, 100, 175, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&Ruhezustand:", IDC_HIBERNATE, 15, 195, 55, 10
+    LTEXT "&Ruhezustand:", IDC_HIBERNATE, 13, 193, 85, 10
     COMBOBOX IDC_HIBERNATEACLIST, 100, 190, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
-IDD_PROPPAGEALARMS DIALOGEX 0, 0, 250, 220
+IDD_PROPPAGEALARMS DIALOGEX 0, 0, 252, 220
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Alarme"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Alarm bei niedrigem Batteriestand", -1, 10, 15, 235, 95
-    AUTOCHECKBOX "Alarm bei folgendem &Energiestand auslösen:", IDC_ALARM1, 15, 25, 180, 15, WS_TABSTOP
-    LTEXT "Unbekannt", IDC_ALARMVALUE1, 200, 25, 40, 10
-    LTEXT "0%", -1, 20, 40, 15, 15
-    CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 30, 40, 170, 15
-    LTEXT "100%", -1, 215, 40, 25, 10
-    PUSHBUTTON "Alar&maktion...", -1, 20, 70, 70, 15, WS_DISABLED
-    LTEXT "Benachrichtigung:", -1, 95, 70, 60, 10
-    LTEXT "Unbekannt", IDC_ALARMMSG1, 155, 70, 95, 10
-    LTEXT "Aktion:", -1, 95, 80, 45, 10
-    LTEXT "Unbekannt", IDC_ALARMAKTION1, 155, 80, 95, 10
-    LTEXT "Ausführen:", -1, 95, 90, 50, 10
-    LTEXT "Unbekannt", IDC_ALARMPROG1, 155, 90, 40, 10
-    GROUPBOX "Alarm bei kritischem Batteriestand", -1, 10, 115, 235, 95
-    AUTOCHECKBOX "Alarm bei folgendem &Energiestand auslösen:", IDC_ALARM2, 15, 125, 180, 15, WS_TABSTOP
-    LTEXT "Unbekannt", IDC_ALARMVALUE2, 200, 125, 40, 10
-    LTEXT "0%", -1, 20, 140, 15, 15
-    CONTROL "Slider1", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 30, 140, 170, 15
-    LTEXT "100%", -1, 215, 140, 25, 10
-    PUSHBUTTON "Alar&maktion...", -1, 20, 170, 70, 15, WS_DISABLED
-    LTEXT "Benachrichtigung:", -1, 95, 170, 60, 10
-    LTEXT "Unbekannt", IDC_ALARMMSG2, 155, 170, 95, 10
-    LTEXT "Aktion:", -1, 95, 180, 45, 10
-    LTEXT "Unbekannt", IDC_ALARMAKTION2, 155, 180, 95, 10
-    LTEXT "Ausführen:", -1, 95, 190, 50, 10
-    LTEXT "Unbekannt", IDC_ALARMPROG2, 155, 190, 40, 10
+    GROUPBOX "Alarm bei niedrigem Batteriestand", -1, 6, 7, 239, 99
+    AUTOCHECKBOX "&Alarm bei folgendem Energiestand auslösen:", IDC_ALARM1, 15, 17, 225, 10, WS_TABSTOP
+    LTEXT "xxx%", IDC_ALARMVALUE1, 28, 32, 20, 10
+    CONTROL "", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 47, 32, 194, 15
+    PUSHBUTTON "Alar&maktion...", -1, 148, 50, 88, 14, WS_DISABLED //FIXME: accelerator collision &m
+    LTEXT "Benachrichtigung:", -1, 28, 67, 89, 10
+    LTEXT "?", IDC_ALARMMSG1, 118, 67, 125, 10
+    LTEXT "Aktion:", -1, 28, 79, 89, 10
+    LTEXT "?", IDC_ALARMAKTION1, 118, 79, 125, 10
+    LTEXT "Ausführen:", -1, 28, 91, 89, 10
+    LTEXT "?", IDC_ALARMPROG1, 118, 91, 125, 10
+    GROUPBOX "Alarm bei kritischem Batteriestand", -1, 6, 115, 239, 99
+    AUTOCHECKBOX "Alarm bei folgendem &Energiestand auslösen:", IDC_ALARM2, 15, 125, 225, 10, WS_TABSTOP
+    LTEXT "xxx%", IDC_ALARMVALUE2, 28, 140, 20, 10
+    CONTROL "", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 47, 140, 194, 15
+    PUSHBUTTON "Alar&maktion...", -1, 148, 158, 88, 14, WS_DISABLED //FIXME: accelerator collision &m
+    LTEXT "Benachrichtigung:", -1, 28, 175, 89, 10
+    LTEXT "?", IDC_ALARMMSG2, 118, 175, 125, 10
+    LTEXT "Aktion:", -1, 28, 187, 89, 10
+    LTEXT "?", IDC_ALARMAKTION2, 118, 187, 125, 10
+    LTEXT "Ausführen:", -1, 28, 199, 89, 10
+    LTEXT "?", IDC_ALARMPROG2, 118, 199, 125, 10
 END
 
-IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 250, 220
+IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 252, 220
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Erweitert"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_ACDC, IDI_ACDC, 5, 5, 20, 20
-    LTEXT "Wählen Sie die Energiesparoptionen aus, die Sie verwenden möchten.", -1, 30, 5, 205, 20
-    GROUPBOX "Optionen", -1, 5, 35, 240, 55
-    AUTOCHECKBOX "&Symbol in der Taskleiste anzeigen", IDC_SYSTRAYBATTERYMETER, 15, 45, 200, 10, WS_TABSTOP
-    AUTOCHECKBOX "&Kennwort beim Reaktivieren aus dem Standbymodus anfordern", IDC_PASSWORDLOGON, 15, 55, 220, 10, WS_TABSTOP
-    AUTOCHECKBOX "&Helligkeit der Anzeige beim Batteriebetrieb verringern", IDC_VIDEODIMDISPLAY, 15, 65, 200, 10, WS_TABSTOP
-    GROUPBOX "Netzschaltervorgänge", -1, 5, 100, 240, 105
-    LTEXT "Beim Schließen des &Laptops:", IDC_SLIDCLOSE, 10, 110, 210, 10
-    COMBOBOX IDC_LIDCLOSE, 10, 120, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Beim Drücken des &Netzschalters am Computer:", IDC_SPOWERBUTTON, 10, 135, 210, 10
-    COMBOBOX IDC_POWERBUTTON, 10, 150, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Beim Drücken des Schalters für den &Ruhezustand am Computer:", IDC_SSLEEPBUTTON, 10, 165, 210, 10
-    COMBOBOX IDC_SLEEPBUTTON, 10, 180, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
+    LTEXT "Wählen Sie die Energiesparoptionen aus, die Sie verwenden möchten.", -1, 37, 6, 208, 20
+    GROUPBOX "Optionen", -1, 6, 30, 240, 65
+    AUTOCHECKBOX "&Symbol in der Taskleiste anzeigen", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Kennwort beim Reaktivieren aus dem Standbymodus anfordern", IDC_PASSWORDLOGON, 17, 60, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Helligkeit der Anzeige beim Batteriebetrieb verringern", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10, WS_TABSTOP
+    GROUPBOX "Netzschaltervorgänge", -1, 6, 101, 240, 110
+    LTEXT "Beim Schließen des &Laptops:", IDC_SLIDCLOSE, 15, 115, 222, 10
+    COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Beim Drücken des &Netzschalters am Computer:", IDC_SPOWERBUTTON, 15, 145, 222, 10
+    COMBOBOX IDC_POWERBUTTON, 15, 157, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Beim Drücken des Schalters für den &Ruhezustand am Computer:", IDC_SSLEEPBUTTON, 15, 175, 222, 10
+    COMBOBOX IDC_SLEEPBUTTON, 15, 187, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
-IDD_PROPPAGEHIBERNATE DIALOGEX 0, 0, 250, 220
+IDD_PROPPAGEHIBERNATE DIALOGEX 0, 0, 252, 220
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Ruhezustand"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_HIBERNATE, IDI_HIBERNATE, 5, 5, 20, 20
-    LTEXT "Wenn der Computer in den Ruhezustand wechselt, wird der Inhalt des Arbeitsspeichers gespeichert und der Computer heruntergefahren. Wenn er wieder gestartet wird, kehrt er zum vorherigen Zustand zurück.", -1, 35, 5, 195, 35
-    GROUPBOX "Ruhezustand", -1, 5, 45, 240, 25
-    AUTOCHECKBOX "&Ruhezustand aktivieren", IDC_HIBERNATEFILE, 10, 55, 210, 10, WS_TABSTOP
-    GROUPBOX "Speicherplatz für den Ruhezustand", -1, 5, 80, 240, 60
-    LTEXT "Freier Speicherplatz:", -1, 10, 90, 100, 10
-    LTEXT "Unbekannt", IDC_FREESPACE, 120, 90, 70, 10
-    LTEXT "Für Ruhezustand benötigt:", -1, 10, 100, 115, 10
-    LTEXT "Unbekannt", IDC_SPACEFORHIBERNATEFILE, 120, 100, 55, 10
-    LTEXT "Geben Sie Speicherplatz frei, bevor Sie den Computer in den Ruhezustand versetzen.", IDC_TOLESSFREESPACE, 10, 115, 220, 20
+    ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 0, 0
+    LTEXT "Wenn der Computer in den Ruhezustand wechselt, wird der Inhalt des Arbeitsspeichers gespeichert und der Computer heruntergefahren. Wenn er wieder gestartet wird, kehrt er zum vorherigen Zustand zurück.", -1, 37, 6, 208, 35
+    GROUPBOX "Ruhezustand", -1, 6, 41, 240, 32
+    AUTOCHECKBOX "&Ruhezustand aktivieren", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP
+    GROUPBOX "Speicherplatz für den Ruhezustand", -1, 6, 80, 240, 76
+    LTEXT "Freier Speicherplatz:", -1, 15, 95, 150, 10
+    LTEXT "?", IDC_FREESPACE, 170, 95, 70, 10
+    LTEXT "Für Ruhezustand benötigt:", -1, 15, 115, 150, 10
+    LTEXT "?", IDC_SPACEFORHIBERNATEFILE, 170, 115, 70, 10
+    LTEXT "Geben Sie Speicherplatz frei, bevor Sie den Computer in den Ruhezustand versetzen.", IDC_TOLESSFREESPACE, 15, 135, 224, 20
 END
 
 IDD_SAVEPOWERSCHEME DIALOGEX 0, 0, 190, 62
@@ -130,12 +126,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Schema speichern"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Energieschema speichern unter:", -1, 7, 7, 104, 8
+    LTEXT "Energieschema speichern unter:", -1, 7, 7, 180, 8
     EDITTEXT IDC_SCHEMENAME, 7, 18, 176, 14, ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 79, 40, 50, 14
     PUSHBUTTON "Abbrechen", IDCANCEL, 133, 40, 50, 14
 END
-
 
 STRINGTABLE
 BEGIN

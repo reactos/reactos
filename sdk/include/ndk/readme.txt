@@ -172,7 +172,7 @@ remain anonymous, simply do not include this statement.
 
     *  User Mode Application requiring Native Types: 
 
-       #define WIN32_NO_STATUS   /* Tell Windows headers you'll use ntstatus.s from NDK */
+       #define WIN32_NO_STATUS   /* Tell Windows headers you'll use ntstatus.h from PSDK */
        #include "windows.h"      /* Declare Windows Headers like you normally would */
        #include "ntndk.h"        /* Declare the NDK Headers */
 
@@ -188,7 +188,7 @@ remain anonymous, simply do not include this statement.
 
     * You may also include only the files you need (example for User-Mode application):
 
-       #define WIN32_NO_STATUS   /* Tell Windows headers you'll use ntstatus.s from NDK */
+       #define WIN32_NO_STATUS   /* Tell Windows headers you'll use ntstatus.h from PSDK */
        #include "windows.h"      /* Declare Windows Headers like you normally would */
        #include "rtlfuncs.h"     /* Declare the Rtl* Functions */
 

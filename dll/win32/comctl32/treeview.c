@@ -2334,8 +2334,18 @@ TREEVIEW_GetCount(const TREEVIEW_INFO *infoPtr)
     return (LRESULT)infoPtr->uNumItems;
 }
 
+#ifdef __REACTOS__
+static LRESULT
+TREEVIEW_SelectItem(TREEVIEW_INFO *infoPtr, INT wParam, HTREEITEM item);
+#endif
+
+#ifdef __REACTOS__
+static VOID
+TREEVIEW_ToggleItemState(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item)
+#else
 static VOID
 TREEVIEW_ToggleItemState(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item)
+#endif
 {
     if (infoPtr->dwStyle & TVS_CHECKBOXES)
     {
@@ -2353,6 +2363,9 @@ TREEVIEW_ToggleItemState(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item)
 	item->state |= INDEXTOSTATEIMAGEMASK(state);
 
 	TRACE("state: 0x%x\n", state);
+#ifdef __REACTOS__
+	TREEVIEW_SelectItem(infoPtr, TVGN_CARET, item);
+#endif
 	TREEVIEW_Invalidate(infoPtr, item);
     }
 }
@@ -5482,6 +5495,7 @@ static BOOL TREEVIEW_NCPaint (const TREEVIEW_INFO *infoPtr, HRGN region, LPARAM 
 
     /* Call default proc to get the scrollbars etc. painted */
     DefWindowProcW (infoPtr->hwnd, WM_NCPAINT, (WPARAM)cliprgn, 0);
+    DeleteObject(cliprgn);
 
     return TRUE;
 }

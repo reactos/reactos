@@ -26,58 +26,57 @@ public:
     HRESULT Initialize();
 
     // *** IShellDispatch methods ***
-    virtual HRESULT STDMETHODCALLTYPE get_Application(IDispatch **ppid);
-    virtual HRESULT STDMETHODCALLTYPE get_Parent(IDispatch **ppid);
-    virtual HRESULT STDMETHODCALLTYPE NameSpace(VARIANT vDir, Folder **ppsdf);
-    virtual HRESULT STDMETHODCALLTYPE BrowseForFolder(LONG Hwnd, BSTR Title, LONG Options, VARIANT RootFolder, Folder **ppsdf);
-    virtual HRESULT STDMETHODCALLTYPE Windows(IDispatch **ppid);
-    virtual HRESULT STDMETHODCALLTYPE Open(VARIANT vDir);
-    virtual HRESULT STDMETHODCALLTYPE Explore(VARIANT vDir);
-    virtual HRESULT STDMETHODCALLTYPE MinimizeAll();
-    virtual HRESULT STDMETHODCALLTYPE UndoMinimizeALL();
-    virtual HRESULT STDMETHODCALLTYPE FileRun();
-    virtual HRESULT STDMETHODCALLTYPE CascadeWindows();
-    virtual HRESULT STDMETHODCALLTYPE TileVertically();
-    virtual HRESULT STDMETHODCALLTYPE TileHorizontally();
-    virtual HRESULT STDMETHODCALLTYPE ShutdownWindows();
-    virtual HRESULT STDMETHODCALLTYPE Suspend();
-    virtual HRESULT STDMETHODCALLTYPE EjectPC();
-    virtual HRESULT STDMETHODCALLTYPE SetTime();
-    virtual HRESULT STDMETHODCALLTYPE TrayProperties();
-    virtual HRESULT STDMETHODCALLTYPE Help();
-    virtual HRESULT STDMETHODCALLTYPE FindFiles();
-    virtual HRESULT STDMETHODCALLTYPE FindComputer();
-    virtual HRESULT STDMETHODCALLTYPE RefreshMenu();
-    virtual HRESULT STDMETHODCALLTYPE ControlPanelItem(BSTR szDir);
+    STDMETHOD(get_Application)(IDispatch **ppid) override;
+    STDMETHOD(get_Parent)(IDispatch **ppid) override;
+    STDMETHOD(NameSpace)(VARIANT vDir, Folder **ppsdf) override;
+    STDMETHOD(BrowseForFolder)(LONG Hwnd, BSTR Title, LONG Options, VARIANT RootFolder, Folder **ppsdf) override;
+    STDMETHOD(Windows)(IDispatch **ppid) override;
+    STDMETHOD(Open)(VARIANT vDir) override;
+    STDMETHOD(Explore)(VARIANT vDir) override;
+    STDMETHOD(MinimizeAll)() override;
+    STDMETHOD(UndoMinimizeALL)() override;
+    STDMETHOD(FileRun)() override;
+    STDMETHOD(CascadeWindows)() override;
+    STDMETHOD(TileVertically)() override;
+    STDMETHOD(TileHorizontally)() override;
+    STDMETHOD(ShutdownWindows)() override;
+    STDMETHOD(Suspend)() override;
+    STDMETHOD(EjectPC)() override;
+    STDMETHOD(SetTime)() override;
+    STDMETHOD(TrayProperties)() override;
+    STDMETHOD(Help)() override;
+    STDMETHOD(FindFiles)() override;
+    STDMETHOD(FindComputer)() override;
+    STDMETHOD(RefreshMenu)() override;
+    STDMETHOD(ControlPanelItem)(BSTR szDir) override;
 
     // *** IShellDispatch2 methods ***
-    virtual HRESULT STDMETHODCALLTYPE IsRestricted(BSTR group, BSTR restriction, LONG *value);
-    virtual HRESULT STDMETHODCALLTYPE ShellExecute(BSTR file, VARIANT args, VARIANT dir, VARIANT op, VARIANT show);
-    virtual HRESULT STDMETHODCALLTYPE FindPrinter(BSTR name, BSTR location, BSTR model);
-    virtual HRESULT STDMETHODCALLTYPE GetSystemInformation(BSTR name, VARIANT *ret);
-    virtual HRESULT STDMETHODCALLTYPE ServiceStart(BSTR service, VARIANT persistent, VARIANT *ret);
-    virtual HRESULT STDMETHODCALLTYPE ServiceStop(BSTR service, VARIANT persistent, VARIANT *ret);
-    virtual HRESULT STDMETHODCALLTYPE IsServiceRunning(BSTR service, VARIANT *running);
-    virtual HRESULT STDMETHODCALLTYPE CanStartStopService(BSTR service, VARIANT *ret);
-    virtual HRESULT STDMETHODCALLTYPE ShowBrowserBar(BSTR clsid, VARIANT show, VARIANT *ret);
+    STDMETHOD(IsRestricted)(BSTR group, BSTR restriction, LONG *value) override;
+    STDMETHOD(ShellExecute)(BSTR file, VARIANT args, VARIANT dir, VARIANT op, VARIANT show) override;
+    STDMETHOD(FindPrinter)(BSTR name, BSTR location, BSTR model) override;
+    STDMETHOD(GetSystemInformation)(BSTR name, VARIANT *ret) override;
+    STDMETHOD(ServiceStart)(BSTR service, VARIANT persistent, VARIANT *ret) override;
+    STDMETHOD(ServiceStop)(BSTR service, VARIANT persistent, VARIANT *ret) override;
+    STDMETHOD(IsServiceRunning)(BSTR service, VARIANT *running) override;
+    STDMETHOD(CanStartStopService)(BSTR service, VARIANT *ret) override;
+    STDMETHOD(ShowBrowserBar)(BSTR clsid, VARIANT show, VARIANT *ret) override;
 
     // *** IShellDispatch3 methods ***
-    virtual HRESULT STDMETHODCALLTYPE AddToRecent(VARIANT file, BSTR category);
+    STDMETHOD(AddToRecent)(VARIANT file, BSTR category) override;
 
     // *** IShellDispatch4 methods ***
-    virtual HRESULT STDMETHODCALLTYPE WindowsSecurity();
-    virtual HRESULT STDMETHODCALLTYPE ToggleDesktop();
-    virtual HRESULT STDMETHODCALLTYPE ExplorerPolicy(BSTR policy, VARIANT *value);
-    virtual HRESULT STDMETHODCALLTYPE GetSetting(LONG setting, VARIANT_BOOL *result);
+    STDMETHOD(WindowsSecurity)() override;
+    STDMETHOD(ToggleDesktop)() override;
+    STDMETHOD(ExplorerPolicy)(BSTR policy, VARIANT *value) override;
+    STDMETHOD(GetSetting)(LONG setting, VARIANT_BOOL *result) override;
 
     // *** IObjectSafety methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetInterfaceSafetyOptions(REFIID riid, DWORD *pdwSupportedOptions, DWORD *pdwEnabledOptions);
-    virtual HRESULT STDMETHODCALLTYPE SetInterfaceSafetyOptions(REFIID riid, DWORD dwOptionSetMask, DWORD dwEnabledOptions);
+    STDMETHOD(GetInterfaceSafetyOptions)(REFIID riid, DWORD *pdwSupportedOptions, DWORD *pdwEnabledOptions) override;
+    STDMETHOD(SetInterfaceSafetyOptions)(REFIID riid, DWORD dwOptionSetMask, DWORD dwEnabledOptions) override;
 
     // *** IObjectWithSite methods ***
-    virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite);
-    virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID riid, PVOID *ppvSite);
-
+    STDMETHOD(SetSite)(IUnknown *pUnkSite) override;
+    STDMETHOD(GetSite)(REFIID riid, PVOID *ppvSite) override;
 
 DECLARE_REGISTRY_RESOURCEID(IDR_SHELL)
 DECLARE_NOT_AGGREGATABLE(CShellDispatch)

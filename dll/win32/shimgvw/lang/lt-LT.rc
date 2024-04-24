@@ -18,6 +18,8 @@ BEGIN
     IDS_TOOLTIP_ZOOM_OUT "Mažinti (-)"
     IDS_TOOLTIP_ROT_CLOCKW "Pasukti pagal laikrodžio rodyklę (Ctrl+K)"
     IDS_TOOLTIP_ROT_COUNCW "Pasukti prieš laikrodžio rodyklę (Ctrl+L)"
+    IDS_TOOLTIP_ROT_CWSAVE "Rotate Clockwise and Save (Lossy)"
+    IDS_TOOLTIP_ROT_CCWSAVE "Rotate Counterclockwise and Save (Lossy)"
     IDS_TOOLTIP_DELETE "Delete (DEL)"
     IDS_TOOLTIP_PRINT "Spausdinti (Ctrl+P)"
     IDS_TOOLTIP_SAVEAS "Įrašyti kaip... (Ctrl+S)"

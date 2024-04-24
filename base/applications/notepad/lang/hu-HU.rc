@@ -154,7 +154,7 @@ BEGIN
     STRING_TEXT_FILES_TXT "Szövegfájlok (*.txt)"
     STRING_TOOLARGE "'%s' fájl túl nagy méretű.\n\
 Kérem használjon másik szövegszerkesztő programot."
-    STRING_NOTEXT "A szöveg nem tartalmaz karaktert! \
+    STRING_NOTEXT "A szöveg nem tartalmaz karaktert!\
 \nKérem gépeljen be néhány karaktert és próbálja újra!"
     STRING_DOESNOTEXIST "A megadott '%s'\nfájl nem létezik!\n\n\
 Kíván létrehozni új fájlt?"

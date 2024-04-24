@@ -4314,6 +4314,7 @@ HRESULT WINAPI SHGetWebFolderFilePathW(LPCWSTR lpszFile, LPWSTR lpszPath, DWORD 
   return E_FAIL;
 }
 
+#ifndef __REACTOS__ /* Defined in <shlwapi_undoc.h> */
 #define PATH_CHAR_CLASS_LETTER      0x00000001
 #define PATH_CHAR_CLASS_ASTERIX     0x00000002
 #define PATH_CHAR_CLASS_DOT         0x00000004
@@ -4327,6 +4328,7 @@ HRESULT WINAPI SHGetWebFolderFilePathW(LPCWSTR lpszFile, LPWSTR lpszPath, DWORD 
 
 #define PATH_CHAR_CLASS_INVALID     0x00000000
 #define PATH_CHAR_CLASS_ANY         0xffffffff
+#endif
 
 static const DWORD SHELL_charclass[] =
 {

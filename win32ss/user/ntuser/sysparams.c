@@ -355,7 +355,8 @@ SpiUpdatePerUserSystemParameters(VOID)
        if (SPITESTPREF(UPM_COMBOBOXANIMATION)) gpsi->PUSIFlags |= PUSIF_COMBOBOXANIMATION;
        if (SPITESTPREF(UPM_LISTBOXSMOOTHSCROLLING)) gpsi->PUSIFlags |= PUSIF_LISTBOXSMOOTHSCROLLING;
     }
-    gdwLanguageToggleKey = UserGetLanguageToggle();
+    gdwLanguageToggleKey = UserGetLanguageToggle(L"Language Hotkey", 1);
+    gdwLayoutToggleKey = UserGetLanguageToggle(L"Layout Hotkey", 2);
 
     g_bWindowSnapEnabled = IntIsWindowSnapEnabled();
 }
@@ -1470,9 +1471,9 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
         }
 
         case SPI_SETLANGTOGGLE:
-            gdwLanguageToggleKey = UserGetLanguageToggle();
+            gdwLayoutToggleKey = UserGetLanguageToggle(L"Layout Hotkey", 2);
+            gdwLanguageToggleKey = UserGetLanguageToggle(L"Language Hotkey", 1);
             return gdwLanguageToggleKey;
-            break;
 
         case SPI_GETWINDOWSEXTENSION:
             ERR("SPI_GETWINDOWSEXTENSION is unimplemented\n");

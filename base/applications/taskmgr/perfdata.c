@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Task Manager
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     Performance Counters.
+ * PURPOSE:     Performance Counters
  * COPYRIGHT:   Copyright 1999-2001 Brian Palmer <brianp@reactos.org>
  *              Copyright 2014 Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
  */
@@ -100,7 +100,7 @@ void PerfDataUninitialize(void)
 static void SidToUserName(PSID Sid, LPWSTR szBuffer, DWORD BufferSize)
 {
     static WCHAR szDomainNameUnused[255];
-    DWORD DomainNameLen = sizeof(szDomainNameUnused) / sizeof(szDomainNameUnused[0]);
+    DWORD DomainNameLen = _countof(szDomainNameUnused);
     SID_NAME_USE Use;
 
     if (Sid != NULL)
@@ -153,8 +153,6 @@ CachedGetUserFromSid(
     pEntry->List.Blink = SidToUserNameHead.Blink;
     SidToUserNameHead.Blink->Flink = &pEntry->List;
     SidToUserNameHead.Blink = &pEntry->List;
-
-    return;
 }
 
 void PerfDataRefresh(void)
@@ -324,7 +322,7 @@ void PerfDataRefresh(void)
             wcsncpy(pPerfData[Idx].ImageName, pSPI->ImageName.Buffer, len);
         } else {
             LoadStringW(hInst, IDS_IDLE_PROCESS, pPerfData[Idx].ImageName,
-                       sizeof(pPerfData[Idx].ImageName) / sizeof(pPerfData[Idx].ImageName[0]));
+                       _countof(pPerfData[Idx].ImageName));
         }
 
         pPerfData[Idx].ProcessId = pSPI->UniqueProcessId;
@@ -402,7 +400,7 @@ ClearInfo:
             ZeroMemory(&pPerfData[Idx].IOCounters, sizeof(IO_COUNTERS));
         }
 
-        cwcUserName = sizeof(pPerfData[0].UserName) / sizeof(pPerfData[0].UserName[0]);
+        cwcUserName = _countof(pPerfData[0].UserName);
         CachedGetUserFromSid(ProcessUser, pPerfData[Idx].UserName, &cwcUserName);
 
         if (ProcessSD != NULL)

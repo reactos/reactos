@@ -8,17 +8,17 @@
 enum LicenseType
 {
     LICENSE_NONE,
-    LICENSE_OPENSOURCE,
-    LICENSE_FREEWARE,
-    LICENSE_TRIAL,
+    LICENSE_OPENSOURCE = 1,
+    LICENSE_FREEWARE = 2,
+    LICENSE_TRIAL = 3,
     LICENSE_MIN = LICENSE_NONE,
     LICENSE_MAX = LICENSE_TRIAL
 };
 
 inline BOOL
-IsLicenseType(INT x)
+IsKnownLicenseType(INT x)
 {
-    return (x >= LICENSE_MIN && x <= LICENSE_MAX);
+    return (x > LICENSE_NONE && x <= LICENSE_MAX);
 }
 
 enum AppsCategories

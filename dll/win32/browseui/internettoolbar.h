@@ -110,76 +110,76 @@ public:
 
 public:
     // *** IInputObject specific methods ***
-    virtual HRESULT STDMETHODCALLTYPE UIActivateIO(BOOL fActivate, LPMSG lpMsg);
-    virtual HRESULT STDMETHODCALLTYPE HasFocusIO();
-    virtual HRESULT STDMETHODCALLTYPE TranslateAcceleratorIO(LPMSG lpMsg);
+    STDMETHOD(UIActivateIO)(BOOL fActivate, LPMSG lpMsg) override;
+    STDMETHOD(HasFocusIO)() override;
+    STDMETHOD(TranslateAcceleratorIO)(LPMSG lpMsg) override;
 
     // *** IOleWindow methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND *lphwnd);
-    virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode);
+    STDMETHOD(GetWindow)(HWND *lphwnd) override;
+    STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode) override;
 
     // *** IDockingWindow methods ***
-    virtual HRESULT STDMETHODCALLTYPE ShowDW(BOOL fShow);
-    virtual HRESULT STDMETHODCALLTYPE CloseDW(DWORD dwReserved);
-    virtual HRESULT STDMETHODCALLTYPE ResizeBorderDW(LPCRECT prcBorder, IUnknown *punkToolbarSite, BOOL fReserved);
+    STDMETHOD(ShowDW)(BOOL fShow) override;
+    STDMETHOD(CloseDW)(DWORD dwReserved) override;
+    STDMETHOD(ResizeBorderDW)(LPCRECT prcBorder, IUnknown *punkToolbarSite, BOOL fReserved) override;
 
     // *** IPersist methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *pClassID);
+    STDMETHOD(GetClassID)(CLSID *pClassID) override;
 
     // *** IPersistStreamInit methods ***
-    virtual HRESULT STDMETHODCALLTYPE IsDirty();
-    virtual HRESULT STDMETHODCALLTYPE Load(IStream *pStm);
-    virtual HRESULT STDMETHODCALLTYPE Save(IStream *pStm, BOOL fClearDirty);
-    virtual HRESULT STDMETHODCALLTYPE GetSizeMax(ULARGE_INTEGER *pcbSize);
-    virtual HRESULT STDMETHODCALLTYPE InitNew();
+    STDMETHOD(IsDirty)() override;
+    STDMETHOD(Load)(IStream *pStm) override;
+    STDMETHOD(Save)(IStream *pStm, BOOL fClearDirty) override;
+    STDMETHOD(GetSizeMax)(ULARGE_INTEGER *pcbSize) override;
+    STDMETHOD(InitNew)() override;
 
     // *** IOleCommandTarget methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[  ], OLECMDTEXT *pCmdText);
-    virtual HRESULT STDMETHODCALLTYPE Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
+    STDMETHOD(QueryStatus)(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[  ], OLECMDTEXT *pCmdText) override;
+    STDMETHOD(Exec)(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut) override;
 
     // *** IDispatch methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(UINT *pctinfo);
-    virtual HRESULT STDMETHODCALLTYPE GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo);
-    virtual HRESULT STDMETHODCALLTYPE GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId);
-    virtual HRESULT STDMETHODCALLTYPE Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
+    STDMETHOD(GetTypeInfoCount)(UINT *pctinfo) override;
+    STDMETHOD(GetTypeInfo)(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo) override;
+    STDMETHOD(GetIDsOfNames)(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId) override;
+    STDMETHOD(Invoke)(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr) override;
 
     // *** IExplorerToolbar methods ***
-    virtual HRESULT STDMETHODCALLTYPE SetCommandTarget(IUnknown *theTarget, GUID *category, long param14);
-    virtual HRESULT STDMETHODCALLTYPE Unknown1();
-    virtual HRESULT STDMETHODCALLTYPE AddButtons(const GUID *pguidCmdGroup, long buttonCount, TBBUTTON *buttons);
-    virtual HRESULT STDMETHODCALLTYPE AddString(const GUID *pguidCmdGroup, HINSTANCE param10, LPCTSTR param14, long *param18);
-    virtual HRESULT STDMETHODCALLTYPE GetButton(const GUID *pguidCmdGroup, long param10, long param14);
-    virtual HRESULT STDMETHODCALLTYPE GetState(const GUID *pguidCmdGroup, long commandID, long *theState);
-    virtual HRESULT STDMETHODCALLTYPE SetState(const GUID *pguidCmdGroup, long commandID, long theState);
-    virtual HRESULT STDMETHODCALLTYPE AddBitmap(const GUID *pguidCmdGroup, long param10, long buttonCount, TBADDBITMAP *lParam, long *newIndex, COLORREF param20);
-    virtual HRESULT STDMETHODCALLTYPE GetBitmapSize(long *paramC);
-    virtual HRESULT STDMETHODCALLTYPE SendToolbarMsg(const GUID *pguidCmdGroup, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *result);
-    virtual HRESULT STDMETHODCALLTYPE SetImageList(const GUID *pguidCmdGroup, HIMAGELIST param10, HIMAGELIST param14, HIMAGELIST param18);
-    virtual HRESULT STDMETHODCALLTYPE ModifyButton(const GUID *pguidCmdGroup, long param10, long param14);
+    STDMETHOD(SetCommandTarget)(IUnknown *theTarget, GUID *category, long param14) override;
+    STDMETHOD(Unknown1)() override;
+    STDMETHOD(AddButtons)(const GUID *pguidCmdGroup, long buttonCount, TBBUTTON *buttons) override;
+    STDMETHOD(AddString)(const GUID *pguidCmdGroup, HINSTANCE param10, LPCTSTR param14, long *param18) override;
+    STDMETHOD(GetButton)(const GUID *pguidCmdGroup, long param10, long param14) override;
+    STDMETHOD(GetState)(const GUID *pguidCmdGroup, long commandID, long *theState) override;
+    STDMETHOD(SetState)(const GUID *pguidCmdGroup, long commandID, long theState) override;
+    STDMETHOD(AddBitmap)(const GUID *pguidCmdGroup, long param10, long buttonCount, TBADDBITMAP *lParam, long *newIndex, COLORREF param20) override;
+    STDMETHOD(GetBitmapSize)(long *paramC) override;
+    STDMETHOD(SendToolbarMsg)(const GUID *pguidCmdGroup, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *result) override;
+    STDMETHOD(SetImageList)(const GUID *pguidCmdGroup, HIMAGELIST param10, HIMAGELIST param14, HIMAGELIST param18) override;
+    STDMETHOD(ModifyButton)(const GUID *pguidCmdGroup, long param10, long param14) override;
 
     // *** IShellChangeNotify methods ***
-    virtual HRESULT STDMETHODCALLTYPE OnChange(LONG lEvent, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
+    STDMETHOD(OnChange)(LONG lEvent, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2) override;
 
     // *** IObjectWithSite methods ***
-    virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite);
-    virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID riid, void **ppvSite);
+    STDMETHOD(SetSite)(IUnknown *pUnkSite) override;
+    STDMETHOD(GetSite)(REFIID riid, void **ppvSite) override;
 
     // *** IServiceProvider methods ***
-    virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, REFIID riid, void **ppvObject);
+    STDMETHOD(QueryService)(REFGUID guidService, REFIID riid, void **ppvObject) override;
 
     // *** IWinEventHandler methods ***
-    virtual HRESULT STDMETHODCALLTYPE OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult);
-    virtual HRESULT STDMETHODCALLTYPE IsWindowOwner(HWND hWnd);
+    STDMETHOD(OnWinEvent)(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult) override;
+    STDMETHOD(IsWindowOwner)(HWND hWnd) override;
 
     // *** IBandSite specific methods ***
-    virtual HRESULT STDMETHODCALLTYPE AddBand(IUnknown *punk);
-    virtual HRESULT STDMETHODCALLTYPE EnumBands(UINT uBand, DWORD *pdwBandID);
-    virtual HRESULT STDMETHODCALLTYPE QueryBand(DWORD dwBandID, IDeskBand **ppstb, DWORD *pdwState, LPWSTR pszName, int cchName);
-    virtual HRESULT STDMETHODCALLTYPE SetBandState(DWORD dwBandID, DWORD dwMask, DWORD dwState);
-    virtual HRESULT STDMETHODCALLTYPE RemoveBand(DWORD dwBandID);
-    virtual HRESULT STDMETHODCALLTYPE GetBandObject(DWORD dwBandID, REFIID riid, void **ppv);
-    virtual HRESULT STDMETHODCALLTYPE SetBandSiteInfo(const BANDSITEINFO *pbsinfo);
-    virtual HRESULT STDMETHODCALLTYPE GetBandSiteInfo(BANDSITEINFO *pbsinfo);
+    STDMETHOD(AddBand)(IUnknown *punk) override;
+    STDMETHOD(EnumBands)(UINT uBand, DWORD *pdwBandID) override;
+    STDMETHOD(QueryBand)(DWORD dwBandID, IDeskBand **ppstb, DWORD *pdwState, LPWSTR pszName, int cchName) override;
+    STDMETHOD(SetBandState)(DWORD dwBandID, DWORD dwMask, DWORD dwState) override;
+    STDMETHOD(RemoveBand)(DWORD dwBandID) override;
+    STDMETHOD(GetBandObject)(DWORD dwBandID, REFIID riid, void **ppv) override;
+    STDMETHOD(SetBandSiteInfo)(const BANDSITEINFO *pbsinfo) override;
+    STDMETHOD(GetBandSiteInfo)(BANDSITEINFO *pbsinfo) override;
 
     // message handlers
     LRESULT OnTravelBack(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);

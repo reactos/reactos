@@ -49,7 +49,7 @@ OpenRomFile(IN  PCSTR  RomFileName,
     if (ulRomSize > 0x40000)
     {
         /* We failed, bail out */
-        DPRINT1("ROM image size 0x%lx too large, expected at most 0x40000 (256kB)", ulRomSize);
+        DPRINT1("ROM image size 0x%lx too large, expected at most 0x40000 (256kB)\n", ulRomSize);
         FileClose(hRomFile);
         return NULL;
     }
@@ -72,7 +72,7 @@ LoadRomFileByHandle(IN  HANDLE RomFileHandle,
      */
     if (RomSize > 0x40000)
     {
-        DPRINT1("ROM image size 0x%lx too large, expected at most 0x40000 (256kB)", RomSize);
+        DPRINT1("ROM image size 0x%lx too large, expected at most 0x40000 (256kB)\n", RomSize);
         return FALSE;
     }
 

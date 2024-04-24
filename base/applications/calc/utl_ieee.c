@@ -27,7 +27,7 @@ void prepare_rpn_result_2(calc_number_t *rpn, TCHAR *buffer, int size, int base)
 
     switch (base) {
     case IDC_RADIO_HEX:
-        _stprintf(buffer, _T("%I64X"), rpn->i);
+        StringCchPrintf(buffer, size, _T("%I64X"), rpn->i);
         break;
     case IDC_RADIO_DEC:
 /*
@@ -40,11 +40,11 @@ void prepare_rpn_result_2(calc_number_t *rpn, TCHAR *buffer, int size, int base)
         /* calculate the width of integer number */
         width = (rpn->f==0) ? 1 : (int)log10(fabs(rpn->f))+1;
         if (calc.sci_out == TRUE || width > MAX_LD_WIDTH || width < -MAX_LD_WIDTH)
-            _stprintf(buffer, _T("%#.*e"), MAX_LD_WIDTH-1, rpn->f);
+            StringCchPrintf(buffer, size, _T("%#.*e"), MAX_LD_WIDTH-1, rpn->f);
         else {
             TCHAR *ptr, *dst;
 
-            ptr = buffer + _stprintf(buffer, _T("%#*.*f"), width, ((MAX_LD_WIDTH-width-1)>=0) ? MAX_LD_WIDTH-width-1 : 0, rpn->f);
+            StringCchPrintfEx(buffer, size, &ptr, NULL, 0, _T("%#*.*f"), width, ((MAX_LD_WIDTH-width-1)>=0) ? MAX_LD_WIDTH-width-1 : 0, rpn->f);
             /* format string ensures there is a '.': */
             dst = _tcschr(buffer, _T('.'));
             while (--ptr > dst)
@@ -61,7 +61,7 @@ void prepare_rpn_result_2(calc_number_t *rpn, TCHAR *buffer, int size, int base)
 #undef MAX_LD_WIDTH
         break;
     case IDC_RADIO_OCT:
-        _stprintf(buffer, _T("%I64o"), rpn->i);
+        StringCchPrintf(buffer, size, _T("%I64o"), rpn->i);
         break;
     case IDC_RADIO_BIN:
         if (rpn->i == 0) {

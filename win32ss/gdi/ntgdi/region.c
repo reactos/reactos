@@ -120,7 +120,6 @@ SOFTWARE.
 //
 //
 
-
 #include <win32k.h>
 #include <suppress.h>
 
@@ -252,15 +251,12 @@ typedef struct
     INT incr1, incr2; /* Error increments */
 } BRESINFO;
 
-
 #define BRESINITPGONSTRUCT(dmaj, min1, min2, bres) \
     BRESINITPGON(dmaj, min1, min2, bres.minor_axis, bres.d, \
                      bres.m, bres.m1, bres.incr1, bres.incr2)
 
 #define BRESINCRPGONSTRUCT(bres) \
         BRESINCRPGON(bres.d, bres.minor_axis, bres.m, bres.m1, bres.incr1, bres.incr2)
-
-
 
 /*
  *     These are the data structures needed to scan
@@ -324,7 +320,6 @@ typedef struct _EDGE_TABLE_ENTRY
     INT ClockWise;        /* Flag for winding number rule       */
 } EDGE_TABLE_ENTRY;
 
-
 typedef struct _SCANLINE_LIST
 {
     INT scanline;                /* The scanline represented */
@@ -332,14 +327,12 @@ typedef struct _SCANLINE_LIST
     struct _SCANLINE_LIST *next;  /* Next in the list       */
 } SCANLINE_LIST;
 
-
 typedef struct
 {
     INT ymax;                 /* ymax for the polygon     */
     INT ymin;                 /* ymin for the polygon     */
     SCANLINE_LIST scanlines;   /* Header node              */
 } EDGE_TABLE;
-
 
 /*
  * Here is a struct to help with storage allocation
@@ -353,7 +346,6 @@ typedef struct _SCANLINE_LISTBLOCK
     SCANLINE_LIST SLLs[SLLSPERBLOCK];
     struct _SCANLINE_LISTBLOCK *next;
 } SCANLINE_LISTBLOCK;
-
 
 /*
  *     A few macros for the inner loops of the fill code where
@@ -381,7 +373,6 @@ typedef struct _SCANLINE_LISTBLOCK
       pAET = pAET->next; \
    } \
 }
-
 
 /*
  *     Evaluate the given edge at the given scanline.
@@ -561,7 +552,6 @@ IntDumpRegion(HRGN hRgn)
 }
 #endif /* Not NDEBUG */
 
-
 INT
 FASTCALL
 REGION_Complexity(PREGION prgn)
@@ -569,7 +559,7 @@ REGION_Complexity(PREGION prgn)
     if (prgn == NULL)
         return NULLREGION;
 
-    DPRINT("Region Complexity -> %lu", prgn->rdh.nCount);
+    DPRINT("Region Complexity: %lu\n", prgn->rdh.nCount);
     switch (prgn->rdh.nCount)
     {
         case 0:
@@ -800,7 +790,6 @@ empty:
     EMPTY_REGION(rgnDst);
     return NULLREGION;
 }
-
 
 /*!
  *      Attempt to merge the rects in the current band with those in the
@@ -1597,7 +1586,6 @@ REGION_SubtractNonO1(
     return TRUE;
 }
 
-
 /*!
  *      Overlapping band subtraction. x1 is the left-most point not yet
  *      checked.
@@ -1802,7 +1790,6 @@ REGION_XorRegion(
     GreDeleteObject(htrb);
     return ret;
 }
-
 
 /*!
  * Adds a rectangle to a REGION
@@ -2210,9 +2197,7 @@ REGION_bXformRgn(
 
         return bResult;
     }
-
 }
-
 
 PREGION
 FASTCALL
@@ -2303,7 +2288,6 @@ REGION_bAllocRgnAttr(
 
     return TRUE;
 }
-
 
 //
 // Allocate User Space Region Handle.
@@ -2595,7 +2579,6 @@ IntGdiGetRgnBox(
 
     return ret;
 }
-
 
 BOOL
 FASTCALL
@@ -3050,7 +3033,6 @@ REGION_FreeStorage(
         pSLLBlock = tmpSLLBlock;
     }
 }
-
 
 /***********************************************************************
  *     REGION_PtsToRegion
@@ -3523,7 +3505,6 @@ IntRectInRegion(
     REGION_UnlockRgn(Rgn);
     return Ret;
 }
-
 
 //
 // NtGdi Exported Functions

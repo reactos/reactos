@@ -2276,7 +2276,11 @@ static void LISTVIEW_InvalidateSelectedItems(const LISTVIEW_INFO *infoPtr)
     iterator_frameditems(&i, infoPtr, &infoPtr->rcList); 
     while(iterator_next(&i))
     {
+#ifdef __REACTOS__
+	if (LISTVIEW_GetItemState(infoPtr, i.nItem, LVIS_SELECTED | LVIS_CUT))
+#else
 	if (LISTVIEW_GetItemState(infoPtr, i.nItem, LVIS_SELECTED))
+#endif
 	    LISTVIEW_InvalidateItem(infoPtr, i.nItem);
     }
     iterator_destroy(&i);
@@ -10813,6 +10817,7 @@ static BOOL LISTVIEW_NCPaint(const LISTVIEW_INFO *infoPtr, HRGN region)
 
     /* Call default proc to get the scrollbars etc. painted */
     DefWindowProcW (infoPtr->hwndSelf, WM_NCPAINT, (WPARAM)cliprgn, 0);
+    DeleteObject(cliprgn);
 
     return FALSE;
 }

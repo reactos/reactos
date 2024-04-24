@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS api tests
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Testing
- * COPYRIGHT:   Copyright 2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * COPYRIGHT:   Copyright 2019-2023 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #ifndef ATLTEST_H_
@@ -134,5 +134,45 @@ char *wine_dbgstr_w(const wchar_t *wstr)
 #define ok_int(expression, result) ok_dec(expression, result)
 #define ok_ntstatus(status, expected) ok_hex(status, expected)
 #define ok_hdl ok_ptr
+
+static inline const char *wine_dbgstr_point(const POINT *ppt)
+{
+    static char s_asz[4][40]; /* Ring buffer */
+    static int s_i = 0;
+    char *buf;
+
+    if (!ppt)
+        return "(null)";
+    if (IS_INTRESOURCE(ppt))
+        return "(invalid ptr)";
+
+    buf = s_asz[s_i];
+    s_i = (s_i + 1) % _countof(s_asz);
+    sprintf_s(buf, _countof(s_asz[0]), "(%ld, %ld)", ppt->x, ppt->y);
+    return buf;
+}
+
+static inline const char *wine_dbgstr_size(const SIZE *psize)
+{
+    return wine_dbgstr_point((const POINT *)psize);
+}
+
+static inline const char *wine_dbgstr_rect(const RECT *prc)
+{
+    static char s_asz[4][80]; /* Ring buffer */
+    static int s_i = 0;
+    char *buf;
+
+    if (!prc)
+        return "(null)";
+    if (IS_INTRESOURCE(prc))
+        return "(invalid ptr)";
+
+    buf = s_asz[s_i];
+    s_i = (s_i + 1) % _countof(s_asz);
+    sprintf_s(buf, _countof(s_asz[0]), "(%ld, %ld) - (%ld, %ld)",
+              prc->left, prc->top, prc->right, prc->bottom);
+    return buf;
+}
 
 #endif  /* ndef ATLTEST_H_ */

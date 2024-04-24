@@ -154,15 +154,15 @@ BEGIN
     STRING_TEXT_FILES_TXT "Text files (*.txt)"
     STRING_TOOLARGE "File '%s' is too large for notepad.\n\
 Please use a different editor."
-    STRING_NOTEXT "You didn't enter any text. \
-\nPlease type something and try again"
+    STRING_NOTEXT "You didn't enter any text.\n\
+Please type something and try again"
     STRING_DOESNOTEXIST "File '%s'\ndoes not exist\n\n\
-Do you want to create a new file ?"
+Do you want to create a new file?"
     STRING_NOTSAVED "File '%s'\nhas been modified\n\n\
-Would you like to save the changes ?"
+Would you like to save the changes?"
     STRING_NOTFOUND "'%s' can not be found."
-    STRING_OUT_OF_MEMORY "Not enough memory to complete this \
-task.\nClose one or more applications to increase the amount of\nfree memory."
+    STRING_OUT_OF_MEMORY "Not enough memory to complete this task.\n\
+Close one or more applications to increase the amount of\nfree memory."
     STRING_CANNOTFIND "Cannot find '%s'"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"
@@ -180,7 +180,7 @@ task.\nClose one or more applications to increase the amount of\nfree memory."
     STRING_PRINTCANCELING "The print job is being canceled..."
     STRING_PRINTCOMPLETE "Printing is successfully done."
     STRING_PRINTCANCELED "Printing has been canceled."
-    STRING_PRINTFAILED "Printing is failed."
+    STRING_PRINTFAILED "Printing failed."
 
     STRING_TEXT_DOCUMENT "Text Document"
     STRING_NOTEPAD_AUTHORS "Copyright 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"

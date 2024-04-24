@@ -39,7 +39,7 @@ CmpGetNextName(IN OUT PUNICODE_STRING RemainingName,
     }
 
     /* Check if we have a path separator */
-    while ((RemainingName->Length) &&
+    while (RemainingName->Length &&
            (*RemainingName->Buffer == OBJ_NAME_PATH_SEPARATOR))
     {
         /* Skip it */
@@ -50,7 +50,7 @@ CmpGetNextName(IN OUT PUNICODE_STRING RemainingName,
 
     /* Start loop at where the current buffer is */
     NextName->Buffer = RemainingName->Buffer;
-    while ((RemainingName->Length) &&
+    while (RemainingName->Length &&
            (*RemainingName->Buffer != OBJ_NAME_PATH_SEPARATOR))
     {
         /* Move to the next character */
@@ -284,6 +284,7 @@ CmpDoCreateChild(IN PHHIVE Hive,
     KeyBody = (PCM_KEY_BODY)(*Object);
     KeyBody->Type = CM_KEY_BODY_TYPE;
     KeyBody->KeyControlBlock = NULL;
+    KeyBody->KcbLocked = FALSE;
 
     /* Check if we had a class */
     if (ParseContext->Class.Length > 0)
@@ -335,7 +336,7 @@ CmpDoCreateChild(IN PHHIVE Hive,
                                    *KeyCell,
                                    KeyNode,
                                    ParentKcb,
-                                   0, // CMP_LOCK_HASHES_FOR_KCB,
+                                   CMP_LOCK_HASHES_FOR_KCB,
                                    Name);
     if (!Kcb)
     {
@@ -354,7 +355,7 @@ CmpDoCreateChild(IN PHHIVE Hive,
     KeyBody->KeyControlBlock = Kcb;
 
     /* Link it with the KCB */
-    EnlistKeyBodyWithKCB(KeyBody, 0);
+    EnlistKeyBodyWithKCB(KeyBody, CMP_ENLIST_KCB_LOCKED_EXCLUSIVE);
 
     /* Assign security */
     Status = SeAssignSecurity(ParentDescriptor,
@@ -366,14 +367,14 @@ CmpDoCreateChild(IN PHHIVE Hive,
                               CmpKeyObjectType->TypeInfo.PoolType);
     if (NT_SUCCESS(Status))
     {
-        Status = CmpSecurityMethod(*Object,
-                                   AssignSecurityDescriptor,
-                                   NULL,
-                                   NewDescriptor,
-                                   NULL,
-                                   NULL,
-                                   CmpKeyObjectType->TypeInfo.PoolType,
-                                   &CmpKeyObjectType->TypeInfo.GenericMapping);
+        /*
+         * FIXME: We must acquire a security lock when assigning
+         * a security descriptor to this hive but since the
+         * CmpAssignSecurityDescriptor function does nothing
+         * (we lack the necessary security management implementations
+         * anyway), do not do anything for now.
+         */
+        Status = CmpAssignSecurityDescriptor(Kcb, NewDescriptor);
     }
 
     /* Now that the security descriptor is copied in the hive, we can free the original */
@@ -417,6 +418,17 @@ CmpDoCreate(IN PHHIVE Hive,
     PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
     LARGE_INTEGER TimeStamp;
     PCM_KEY_NODE KeyNode;
+
+    /* Make sure the KCB is locked and lock the flusher */
+    CMP_ASSERT_KCB_LOCK(ParentKcb);
+    CmpLockHiveFlusherShared((PCMHIVE)Hive);
+
+    /* Bail out on read-only KCBs */
+    if (ParentKcb->ExtFlags & CM_KCB_READ_ONLY_KEY)
+    {
+        Status = STATUS_ACCESS_DENIED;
+        goto Exit;
+    }
 
     /* Check if the parent is being deleted */
     if (ParentKcb->Delete)
@@ -492,8 +504,17 @@ CmpDoCreate(IN PHHIVE Hive,
         /* Now add the subkey */
         if (!CmpAddSubKey(Hive, Cell, KeyCell))
         {
-            /* Failure! We don't handle this yet! */
-            ASSERT(FALSE);
+            /* Free the created child */
+            CmpFreeKeyByCell(Hive, KeyCell, FALSE);
+
+            /* Purge out this KCB */
+            KeyBody->KeyControlBlock->Delete = TRUE;
+            CmpRemoveKeyControlBlock(KeyBody->KeyControlBlock);
+
+            /* And cleanup the key body object */
+            ObDereferenceObjectDeferDelete(*Object);
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto Exit;
         }
 
         /* Get the key node */
@@ -501,8 +522,20 @@ CmpDoCreate(IN PHHIVE Hive,
         if (!KeyNode)
         {
             /* Fail, this shouldn't happen */
-            ASSERT(FALSE);
+            CmpFreeKeyByCell(Hive, KeyCell, TRUE); // Subkey linked above
+
+            /* Purge out this KCB */
+            KeyBody->KeyControlBlock->Delete = TRUE;
+            CmpRemoveKeyControlBlock(KeyBody->KeyControlBlock);
+
+            /* And cleanup the key body object */
+            ObDereferenceObjectDeferDelete(*Object);
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto Exit;
         }
+
+        /* Clean up information on this subkey */
+        CmpCleanUpSubKeyInfo(KeyBody->KeyControlBlock->ParentKcb);
 
         /* Sanity checks */
         ASSERT(KeyBody->KeyControlBlock->ParentKcb->KeyCell == Cell);
@@ -538,7 +571,16 @@ CmpDoCreate(IN PHHIVE Hive,
             if (!CellData)
             {
                 /* This shouldn't happen */
-                ASSERT(FALSE);
+                CmpFreeKeyByCell(Hive, KeyCell, TRUE); // Subkey linked above
+
+                /* Purge out this KCB */
+                KeyBody->KeyControlBlock->Delete = TRUE;
+                CmpRemoveKeyControlBlock(KeyBody->KeyControlBlock);
+
+                /* And cleanup the key body object */
+                ObDereferenceObjectDeferDelete(*Object);
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto Exit;
             }
 
             /* Update the flags */
@@ -550,6 +592,7 @@ CmpDoCreate(IN PHHIVE Hive,
 
 Exit:
     /* Release the flusher lock and return status */
+    CmpUnlockHiveFlusher((PCMHIVE)Hive);
     return Status;
 }
 
@@ -564,10 +607,13 @@ CmpDoOpen(IN PHHIVE Hive,
           IN PCM_PARSE_CONTEXT Context OPTIONAL,
           IN ULONG ControlFlags,
           IN OUT PCM_KEY_CONTROL_BLOCK *CachedKcb,
+          IN PULONG KcbsLocked,
           IN PUNICODE_STRING KeyName,
           OUT PVOID *Object)
 {
     NTSTATUS Status;
+    BOOLEAN LockKcb = FALSE;
+    BOOLEAN IsLockShared = FALSE;
     PCM_KEY_BODY KeyBody = NULL;
     PCM_KEY_CONTROL_BLOCK Kcb = NULL;
 
@@ -599,37 +645,87 @@ CmpDoOpen(IN PHHIVE Hive,
         Context->Disposition = REG_OPENED_EXISTING_KEY;
     }
 
-    /* Do this in the registry lock */
-    CmpLockRegistry();
-
-    /* If we have a KCB, make sure it's locked */
-    //ASSERT(CmpIsKcbLockedExclusive(*CachedKcb));
+    /* Lock the KCB on creation if asked */
+    if (ControlFlags & CMP_CREATE_KCB_KCB_LOCKED)
+    {
+        LockKcb = TRUE;
+    }
 
     /* Check if caller doesn't want to create a KCB */
     if (ControlFlags & CMP_OPEN_KCB_NO_CREATE)
     {
+        /*
+         * The caller doesn't want to create a KCB. This means the KCB
+         * is already in cache and other threads may take use of it
+         * so it has to be locked in share mode.
+         */
+        IsLockShared = TRUE;
+
         /* Check if this is a symlink */
-        if ((Node->Flags & KEY_SYM_LINK) && !(Attributes & OBJ_OPENLINK))
+        if (((*CachedKcb)->Flags & KEY_SYM_LINK) && !(Attributes & OBJ_OPENLINK))
         {
-            /* This case for a cached KCB is not implemented yet */
-            ASSERT(FALSE);
+            /* Is this symlink found? */
+            if ((*CachedKcb)->ExtFlags & CM_KCB_SYM_LINK_FOUND)
+            {
+                /* Get the real KCB, is this deleted? */
+                Kcb = (*CachedKcb)->ValueCache.RealKcb;
+                if (Kcb->Delete)
+                {
+                    /*
+                     * The real KCB is gone, do a reparse. We used to lock the KCB in
+                     * shared mode as others may have taken use of it but since we
+                     * must do a reparse of the key the only thing that matter is us.
+                     * Lock the KCB exclusively so nobody is going to mess with the KCB.
+                     */
+                    DPRINT1("The real KCB is deleted, attempt a reparse\n");
+                    CmpUnLockKcbArray(KcbsLocked);
+                    CmpAcquireKcbLockExclusiveByIndex(GET_HASH_INDEX((*CachedKcb)->ConvKey));
+                    CmpCleanUpKcbValueCache(*CachedKcb);
+                    KcbsLocked[0] = 1;
+                    KcbsLocked[1] = GET_HASH_INDEX((*CachedKcb)->ConvKey);
+                    return STATUS_REPARSE;
+                }
+
+                /*
+                 * The symlink has been found. As in the similar case above,
+                 * the KCB of the symlink exclusively, we don't want anybody
+                 * to mess it up.
+                 */
+                CmpUnLockKcbArray(KcbsLocked);
+                CmpAcquireKcbLockExclusiveByIndex(GET_HASH_INDEX((*CachedKcb)->ConvKey));
+                KcbsLocked[0] = 1;
+                KcbsLocked[1] = GET_HASH_INDEX((*CachedKcb)->ConvKey);
+            }
+            else
+            {
+                /* We must do a reparse */
+                DPRINT("The symlink is not found, attempt a reparse\n");
+                return STATUS_REPARSE;
+            }
+        }
+        else
+        {
+            /* This is not a symlink, just give the cached KCB already */
+            Kcb = *CachedKcb;
         }
 
         /* The caller wants to open a cached KCB */
-        if (!CmpReferenceKeyControlBlock(*CachedKcb))
+        if (!CmpReferenceKeyControlBlock(Kcb))
         {
-            /* Release the registry lock */
-            CmpUnlockRegistry();
-
             /* Return failure code */
             return STATUS_INSUFFICIENT_RESOURCES;
         }
-
-        /* Our kcb is that one */
-        Kcb = *CachedKcb;
     }
     else
     {
+        /*
+         * The caller wants to create a new KCB. Unlike the code path above, here
+         * we must check if the lock is exclusively held because in the scenario
+         * where the caller doesn't want to create a KCB is because it is already
+         * in the cache and it must have a shared lock instead.
+         */
+        ASSERT(CmpIsKcbLockedExclusive(*CachedKcb));
+
         /* Check if this is a symlink */
         if ((Node->Flags & KEY_SYM_LINK) && !(Attributes & OBJ_OPENLINK))
         {
@@ -638,47 +734,39 @@ CmpDoOpen(IN PHHIVE Hive,
                                            Cell,
                                            Node,
                                            *CachedKcb,
-                                           0,
+                                           LockKcb ? CMP_LOCK_HASHES_FOR_KCB : 0,
                                            KeyName);
             if (!Kcb)
             {
-                /* Release registry lock and return failure */
-                CmpUnlockRegistry();
+                /* Return failure */
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
 
             /* Make sure it's also locked, and set the pointer */
-            //ASSERT(CmpIsKcbLockedExclusive(Kcb));
+            ASSERT(CmpIsKcbLockedExclusive(Kcb));
             *CachedKcb = Kcb;
-
-            /* Release the registry lock */
-            CmpUnlockRegistry();
 
             /* Return reparse required */
             return STATUS_REPARSE;
         }
 
-        /* Create the KCB. FIXME: Use lock flag */
+        /* Create the KCB */
         Kcb = CmpCreateKeyControlBlock(Hive,
                                        Cell,
                                        Node,
                                        *CachedKcb,
-                                       0,
+                                       LockKcb ? CMP_LOCK_HASHES_FOR_KCB : 0,
                                        KeyName);
         if (!Kcb)
         {
-            /* Release registry lock and return failure */
-            CmpUnlockRegistry();
+            /* Return failure */
             return STATUS_INSUFFICIENT_RESOURCES;
         }
+
+        /* Make sure it's also locked, and set the pointer */
+        ASSERT(CmpIsKcbLockedExclusive(Kcb));
+        *CachedKcb = Kcb;
     }
-
-    /* Make sure it's also locked, and set the pointer */
-    //ASSERT(CmpIsKcbLockedExclusive(Kcb));
-    *CachedKcb = Kcb;
-
-    /* Release the registry lock */
-    CmpUnlockRegistry();
 
     /* Allocate the key object */
     Status = ObCreateObject(AccessMode,
@@ -700,7 +788,16 @@ CmpDoOpen(IN PHHIVE Hive,
         KeyBody->NotifyBlock = NULL;
 
         /* Link to the KCB */
-        EnlistKeyBodyWithKCB(KeyBody, 0);
+        EnlistKeyBodyWithKCB(KeyBody, IsLockShared ? CMP_ENLIST_KCB_LOCKED_SHARED : CMP_ENLIST_KCB_LOCKED_EXCLUSIVE);
+
+        /*
+         * We are already holding a lock against the KCB that is assigned
+         * to this key body. This is to prevent a potential deadlock on
+         * CmpSecurityMethod as ObCheckObjectAccess will invoke the Object
+         * Manager to call that method, of which CmpSecurityMethod would
+         * attempt to acquire a lock again.
+         */
+        KeyBody->KcbLocked = TRUE;
 
         if (!ObCheckObjectAccess(*Object,
                                  AccessState,
@@ -711,6 +808,12 @@ CmpDoOpen(IN PHHIVE Hive,
             /* Access check failed */
             ObDereferenceObject(*Object);
         }
+
+        /*
+         * We are done, the lock we are holding will be released
+         * once the registry parsing is done.
+         */
+        KeyBody->KcbLocked = FALSE;
     }
     else
     {
@@ -732,6 +835,7 @@ CmpCreateLinkNode(IN PHHIVE Hive,
                   IN ULONG CreateOptions,
                   IN PCM_PARSE_CONTEXT Context,
                   IN PCM_KEY_CONTROL_BLOCK ParentKcb,
+                  IN PULONG KcbsLocked,
                   OUT PVOID *Object)
 {
     NTSTATUS Status;
@@ -747,6 +851,18 @@ CmpCreateLinkNode(IN PHHIVE Hive,
         /* Fail */
         DPRINT1("Invalid link node attempt\n");
         return STATUS_ACCESS_DENIED;
+    }
+
+    /* Make sure the KCB is locked and lock the flusher */
+    CMP_ASSERT_KCB_LOCK(ParentKcb);
+    CmpLockHiveFlusherShared((PCMHIVE)Hive);
+    CmpLockHiveFlusherShared((PCMHIVE)Context->ChildHive.KeyHive);
+
+    /* Bail out on read-only KCBs */
+    if (ParentKcb->ExtFlags & CM_KCB_READ_ONLY_KEY)
+    {
+        Status = STATUS_ACCESS_DENIED;
+        goto Exit;
     }
 
     /* Check if the parent is being deleted */
@@ -811,8 +927,9 @@ CmpCreateLinkNode(IN PHHIVE Hive,
                            AccessMode,
                            CreateOptions,
                            NULL,
-                           0,
+                           CMP_CREATE_KCB_KCB_LOCKED,
                            &Kcb,
+                           KcbsLocked,
                            &Name,
                            Object);
         HvReleaseCell(Context->ChildHive.KeyHive, KeyCell);
@@ -914,6 +1031,9 @@ CmpCreateLinkNode(IN PHHIVE Hive,
         /* Get the key body */
         KeyBody = (PCM_KEY_BODY)*Object;
 
+        /* Clean up information on this subkey */
+        CmpCleanUpSubKeyInfo(KeyBody->KeyControlBlock->ParentKcb);
+
         /* Sanity checks */
         ASSERT(KeyBody->KeyControlBlock->ParentKcb->KeyCell == Cell);
         ASSERT(KeyBody->KeyControlBlock->ParentKcb->KeyHive == Hive);
@@ -950,6 +1070,8 @@ CmpCreateLinkNode(IN PHHIVE Hive,
 
 Exit:
     /* Release the flusher locks and return status */
+    CmpUnlockHiveFlusher((PCMHIVE)Context->ChildHive.KeyHive);
+    CmpUnlockHiveFlusher((PCMHIVE)Hive);
     return Status;
 }
 
@@ -989,40 +1111,736 @@ CmpHandleExitNode(IN OUT PHHIVE *Hive,
     }
 }
 
+/**
+ * @brief
+ * Computes the hashes of each subkey in key path name
+ * and stores them in a hash stack for cache lookup.
+ *
+ * @param[in] RemainingName
+ * A Unicode string structure consisting of the remaining
+ * registry key path name.
+ *
+ * @param[in] ConvKey
+ * The hash convkey of the current KCB to be supplied.
+ *
+ * @param[in,out] HashCacheStack
+ * An array stack. This function uses this array to store
+ * all the computed hashes of a key pathname.
+ *
+ * @param[out] TotalSubKeys
+ * The number of total subkeys that have been found, returned
+ * by this function to the caller. If no subkey levels are found
+ * the function returns 0.
+ *
+ * @return
+ * Returns the number of remaining subkey levels to caller.
+ * If no subkey levels are found then this function returns 0.
+ */
+static
+ULONG
+CmpComputeHashValue(
+    _In_ PUNICODE_STRING RemainingName,
+    _In_ ULONG ConvKey,
+    _Inout_ PCM_HASH_CACHE_STACK HashCacheStack,
+    _Out_ PULONG TotalSubKeys)
+{
+    ULONG CopyConvKey;
+    ULONG SubkeysInTotal;
+    ULONG RemainingSubkeysInTotal;
+    PWCHAR RemainingNameBuffer;
+    USHORT RemainingNameLength;
+    USHORT KeyNameLength;
+
+    /* Don't compute the hashes on a NULL remaining name */
+    RemainingNameBuffer = RemainingName->Buffer;
+    RemainingNameLength = RemainingName->Length;
+    if (RemainingNameLength == 0)
+    {
+        *TotalSubKeys = 0;
+        return 0;
+    }
+
+    /* Skip any leading separator */
+    while (RemainingNameLength >= sizeof(WCHAR) &&
+           *RemainingNameBuffer == OBJ_NAME_PATH_SEPARATOR)
+    {
+        RemainingNameBuffer++;
+        RemainingNameLength -= sizeof(WCHAR);
+    }
+
+    /* Now set up the hash stack entries and compute the hashes */
+    SubkeysInTotal = 0;
+    RemainingSubkeysInTotal = 0;
+    KeyNameLength = 0;
+    CopyConvKey = ConvKey;
+    HashCacheStack[RemainingSubkeysInTotal].NameOfKey.Buffer = RemainingNameBuffer;
+    while (RemainingNameLength > 0)
+    {
+        /* Is this character a separator? */
+        if (*RemainingNameBuffer != OBJ_NAME_PATH_SEPARATOR)
+        {
+            /* It's not, add it to the hash */
+            CopyConvKey = COMPUTE_HASH_CHAR(CopyConvKey, *RemainingNameBuffer);
+
+            /* Go to the next character (add up the length of the character as well) */
+            RemainingNameBuffer++;
+            KeyNameLength += sizeof(WCHAR);
+            RemainingNameLength -= sizeof(WCHAR);
+
+            /*
+             * We are at the end of the key name path. Take into account
+             * the last character and if we still have space in the hash
+             * stack, add it up in the remaining list.
+             */
+            if (RemainingNameLength == 0)
+            {
+                if (RemainingSubkeysInTotal < CMP_SUBKEY_LEVELS_DEPTH_LIMIT)
+                {
+                    HashCacheStack[RemainingSubkeysInTotal].NameOfKey.Length = KeyNameLength;
+                    HashCacheStack[RemainingSubkeysInTotal].NameOfKey.MaximumLength = KeyNameLength;
+                    HashCacheStack[RemainingSubkeysInTotal].ConvKey = CopyConvKey;
+                    RemainingSubkeysInTotal++;
+                }
+
+                SubkeysInTotal++;
+            }
+        }
+        else
+        {
+            /* Skip any leading separator */
+            while (RemainingNameLength >= sizeof(WCHAR) &&
+                   *RemainingNameBuffer == OBJ_NAME_PATH_SEPARATOR)
+            {
+                RemainingNameBuffer++;
+                RemainingNameLength -= sizeof(WCHAR);
+            }
+
+            /*
+             * It would be possible that a malformed key pathname may be passed
+             * to the registry parser such as a path with only separators like
+             * "\\\\" for example. This would trick the function into believing
+             * the key path has subkeys albeit that is not the case.
+             */
+            ASSERT(RemainingNameLength != 0);
+
+            /* Take into account this subkey */
+            SubkeysInTotal++;
+
+            /* And add it up to the hash stack */
+            if (RemainingSubkeysInTotal < CMP_SUBKEY_LEVELS_DEPTH_LIMIT)
+            {
+                HashCacheStack[RemainingSubkeysInTotal].NameOfKey.Length = KeyNameLength;
+                HashCacheStack[RemainingSubkeysInTotal].NameOfKey.MaximumLength = KeyNameLength;
+                HashCacheStack[RemainingSubkeysInTotal].ConvKey = CopyConvKey;
+
+                RemainingSubkeysInTotal++;
+                KeyNameLength = 0;
+
+                /*
+                 * Precaution check -- we have added up a remaining
+                 * subkey above but we must ensure we still have space
+                 * to hold up the new subkey for which we will compute
+                 * the hashes, so that we don't blow up the hash stack.
+                 */
+                if (RemainingSubkeysInTotal < CMP_SUBKEY_LEVELS_DEPTH_LIMIT)
+                {
+                    HashCacheStack[RemainingSubkeysInTotal].NameOfKey.Buffer = RemainingNameBuffer;
+                }
+            }
+        }
+    }
+
+    *TotalSubKeys = SubkeysInTotal;
+    return RemainingSubkeysInTotal;
+}
+
+/**
+ * @brief
+ * Compares each subkey's hash and name with those
+ * captured in the hash cache stack.
+ *
+ * @param[in] HashCacheStack
+ * A pointer to a hash cache stack array filled with
+ * subkey hashes and names for comparison.
+ *
+ * @param[in] CurrentKcb
+ * A pointer to the currently given KCB.
+ *
+ * @param[in] RemainingSubkeys
+ * The remaining subkey levels to be supplied.
+ *
+ * @param[out] ParentKcb
+ * A pointer to the parent KCB returned to the caller.
+ * This parameter points to the parent of the current
+ * KCB if all the subkeys match, otherwise it points
+ * to the actual current KCB.
+ *
+ * @return
+ * Returns TRUE if all the subkey levels match, otherwise
+ * FALSE is returned.
+ */
+static
+BOOLEAN
+CmpCompareSubkeys(
+    _In_ PCM_HASH_CACHE_STACK HashCacheStack,
+    _In_ PCM_KEY_CONTROL_BLOCK CurrentKcb,
+    _In_ ULONG RemainingSubkeys,
+    _Out_ PCM_KEY_CONTROL_BLOCK *ParentKcb)
+{
+    LONG HashStackIndex;
+    LONG Result;
+    PCM_NAME_CONTROL_BLOCK NameBlock;
+    UNICODE_STRING CurrentNameBlock;
+
+    ASSERT(CurrentKcb != NULL);
+
+    /* Loop each hash and check that they match */
+    HashStackIndex = RemainingSubkeys;
+    while (HashStackIndex >= 0)
+    {
+        /* Does the subkey hash match? */
+        if (CurrentKcb->ConvKey != HashCacheStack[HashStackIndex].ConvKey)
+        {
+            *ParentKcb = CurrentKcb;
+            return FALSE;
+        }
+
+        /* Compare the subkey string, is the name compressed? */
+        NameBlock = CurrentKcb->NameBlock;
+        if (NameBlock->Compressed)
+        {
+            Result = CmpCompareCompressedName(&HashCacheStack[HashStackIndex].NameOfKey,
+                                              NameBlock->Name,
+                                              NameBlock->NameLength);
+        }
+        else
+        {
+            CurrentNameBlock.Buffer = NameBlock->Name;
+            CurrentNameBlock.Length = NameBlock->NameLength;
+            CurrentNameBlock.MaximumLength = NameBlock->NameLength;
+
+            Result = RtlCompareUnicodeString(&HashCacheStack[HashStackIndex].NameOfKey,
+                                             &CurrentNameBlock,
+                                             TRUE);
+        }
+
+        /* Do the subkey names match? */
+        if (Result)
+        {
+            *ParentKcb = CurrentKcb;
+            return FALSE;
+        }
+
+        /* Go to the next subkey hash */
+        HashStackIndex--;
+    }
+
+    /* All the subkeys match */
+    *ParentKcb = CurrentKcb->ParentKcb;
+    return TRUE;
+}
+
+/**
+ * @brief
+ * Removes the subkeys on a remaining key pathname.
+ *
+ * @param[in] HashCacheStack
+ * A pointer to a hash cache stack array filled with
+ * subkey hashes and names.
+ *
+ * @param[in] RemainingSubkeys
+ * The remaining subkey levels to be supplied.
+ *
+ * @param[in,out] RemainingName
+ * A Unicode string structure consisting of the remaining
+ * registry key path name, where the subkeys of such path
+ * are to be removed.
+ */
+static
+VOID
+CmpRemoveSubkeysInRemainingName(
+    _In_ PCM_HASH_CACHE_STACK HashCacheStack,
+    _In_ ULONG RemainingSubkeys,
+    _Inout_ PUNICODE_STRING RemainingName)
+{
+    ULONG HashStackIndex = 0;
+
+    /* Skip any leading separator on matching name */
+    while (RemainingName->Length >= sizeof(WCHAR) &&
+           RemainingName->Buffer[0] == OBJ_NAME_PATH_SEPARATOR)
+    {
+        RemainingName->Buffer++;
+        RemainingName->Length -= sizeof(WCHAR);
+    }
+
+    /* Skip the subkeys as well */
+    while (HashStackIndex <= RemainingSubkeys)
+    {
+        RemainingName->Buffer += HashCacheStack[HashStackIndex].NameOfKey.Length / sizeof(WCHAR);
+        RemainingName->Length -= HashCacheStack[HashStackIndex].NameOfKey.Length;
+
+        /* Skip any leading separator */
+        while (RemainingName->Length >= sizeof(WCHAR) &&
+               RemainingName->Buffer[0] == OBJ_NAME_PATH_SEPARATOR)
+        {
+            RemainingName->Buffer++;
+            RemainingName->Length -= sizeof(WCHAR);
+        }
+
+        /* Go to the next hash */
+        HashStackIndex++;
+    }
+}
+
+/**
+ * @brief
+ * Looks up in the pool cache for key pathname that matches
+ * with one in the said cache and returns a KCB pointing
+ * to that name. This function performs locking of KCBs
+ * during cache lookup.
+ *
+ * @param[in] HashCacheStack
+ * A pointer to a hash cache stack array filled with
+ * subkey hashes and names.
+ *
+ * @param[in] LockKcbsExclusive
+ * If set to TRUE, the KCBs are locked exclusively by the
+ * calling thread, otherwise they are locked in shared mode.
+ * See Remarks for further information.
+ *
+ * @param[in] TotalRemainingSubkeys
+ * The total remaining subkey levels to be supplied.
+ *
+ * @param[in,out] RemainingName
+ * A Unicode string structure consisting of the remaining
+ * registry key path name. The remaining name is updated
+ * by the function if a key pathname is found in cache.
+ *
+ * @param[in,out] OuterStackArray
+ * A pointer to an array that lives on the caller's stack.
+ * The expected size of the array is up to 32 elements,
+ * which is the imposed limit by CMP_HASH_STACK_LIMIT.
+ * This limit also corresponds to the maximum depth of
+ * subkey levels.
+ *
+ * @param[in,out] Kcb
+ * A pointer to a KCB, this KCB is changed if the key pathname
+ * is found in cache.
+ *
+ * @param[out] Hive
+ * A pointer to a hive, this hive is changed if the key pathname
+ * is found in cache.
+ *
+ * @param[out] Cell
+ * A pointer to a cell, this cell is changed if the key pathname
+ * is found in cache.
+ *
+ * @param[out] MatchRemainSubkeyLevel
+ * A pointer to match subkey levels returned by the function.
+ * If no match levels are found, this is 0.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if cache lookup has completed successfully.
+ * STATUS_OBJECT_NAME_NOT_FOUND is returned if the current KCB of
+ * the key pathname has been deleted. STATUS_RETRY is returned if
+ * at least the current KCB or its parent have been deleted
+ * and a cache lookup must be retried again. STATUS_UNSUCCESSFUL is
+ * returned if a KCB is referenced too many times.
+ *
+ * @remarks
+ * The function attempts to do a cache lookup with a shared lock
+ * on KCBs so that other threads can simultaneously get access
+ * to these KCBs. When the captured KCB is being deleted on us
+ * we have to retry a lookup with exclusive look so that no other
+ * threads will mess with the KCBs and perform appropriate actions
+ * if a KCB is deleted.
+ */
+static
+NTSTATUS
+CmpLookInCache(
+    _In_ PCM_HASH_CACHE_STACK HashCacheStack,
+    _In_ BOOLEAN LockKcbsExclusive,
+    _In_ ULONG TotalRemainingSubkeys,
+    _Inout_ PUNICODE_STRING RemainingName,
+    _Inout_ PULONG OuterStackArray,
+    _Inout_ PCM_KEY_CONTROL_BLOCK *Kcb,
+    _Out_ PHHIVE *Hive,
+    _Out_ PHCELL_INDEX Cell,
+    _Out_ PULONG MatchRemainSubkeyLevel)
+{
+    LONG RemainingSubkeys;
+    ULONG TotalLevels;
+    BOOLEAN SubkeysMatch;
+    PCM_KEY_CONTROL_BLOCK CurrentKcb, ParentKcb;
+    PCM_KEY_HASH HashEntry = NULL;
+    BOOLEAN KeyFoundInCache = FALSE;
+    PULONG LockedKcbs = NULL;
+
+    /* Reference the KCB */
+    if (!CmpReferenceKeyControlBlock(*Kcb))
+    {
+        /* This key is opened too many times, bail out */
+        DPRINT1("Could not reference the KCB, too many references (KCB 0x%p)\n", Kcb);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Prepare to lock the KCBs */
+    LockedKcbs = CmpBuildAndLockKcbArray(HashCacheStack,
+                                         LockKcbsExclusive ? CMP_LOCK_KCB_ARRAY_EXCLUSIVE : CMP_LOCK_KCB_ARRAY_SHARED,
+                                         *Kcb,
+                                         OuterStackArray,
+                                         TotalRemainingSubkeys,
+                                         0);
+    NT_ASSERT(LockedKcbs);
+
+    /* Lookup in the cache */
+    RemainingSubkeys = TotalRemainingSubkeys - 1;
+    TotalLevels = TotalRemainingSubkeys + (*Kcb)->TotalLevels + 1;
+    while (RemainingSubkeys >= 0)
+    {
+        /* Get the hash entry from the cache */
+        HashEntry = GET_HASH_ENTRY(CmpCacheTable, HashCacheStack[RemainingSubkeys].ConvKey)->Entry;
+
+        /* Take one level down as we are processing this hash entry */
+        TotalLevels--;
+
+        while (HashEntry != NULL)
+        {
+            /* Validate this hash and obtain the current KCB */
+            ASSERT_VALID_HASH(HashEntry);
+            CurrentKcb = CONTAINING_RECORD(HashEntry, CM_KEY_CONTROL_BLOCK, KeyHash);
+
+            /* Does this KCB have matching levels? */
+            if (TotalLevels == CurrentKcb->TotalLevels)
+            {
+                /*
+                 * We have matching subkey levels but don't directly assume we have
+                 * a matching key path in cache. Start comparing each subkey.
+                 */
+                SubkeysMatch = CmpCompareSubkeys(HashCacheStack,
+                                                 CurrentKcb,
+                                                 RemainingSubkeys,
+                                                 &ParentKcb);
+                if (SubkeysMatch)
+                {
+                    /* All subkeys match, now check if the base KCB matches with parent */
+                    if (*Kcb == ParentKcb)
+                    {
+                        /* Is the KCB marked as deleted? */
+                        if (CurrentKcb->Delete ||
+                            CurrentKcb->ParentKcb->Delete)
+                        {
+                            /*
+                             * Either the current or its parent KCB is marked
+                             * but we had a shared lock so probably a naughty
+                             * thread was deleting it. Retry doing a cache
+                             * lookup again with exclusive lock.
+                             */
+                            if (!LockKcbsExclusive)
+                            {
+                                CmpUnLockKcbArray(LockedKcbs);
+                                CmpDereferenceKeyControlBlock(*Kcb);
+                                DPRINT1("The current KCB or its parent is deleted, retrying looking in the cache\n");
+                                return STATUS_RETRY;
+                            }
+
+                            /* We're under an exclusive lock, is the KCB deleted yet? */
+                            if (CurrentKcb->Delete)
+                            {
+                                /* The KCB is gone, the key should no longer belong in the cache */
+                                CmpRemoveKeyControlBlock(CurrentKcb);
+                                CmpUnLockKcbArray(LockedKcbs);
+                                CmpDereferenceKeyControlBlock(*Kcb);
+                                DPRINT1("The current KCB is deleted (KCB 0x%p)\n", CurrentKcb);
+                                return STATUS_OBJECT_NAME_NOT_FOUND;
+                            }
+
+                            /*
+                             * The parent is deleted so it must be that somebody created
+                             * a fake key. Assert ourselves that is the case.
+                             */
+                            ASSERT(CurrentKcb->ExtFlags & CM_KCB_KEY_NON_EXIST);
+
+                            /* Remove this KCB out of cache if someone still uses it */
+                            if (CurrentKcb->RefCount != 0)
+                            {
+                                CurrentKcb->Delete = TRUE;
+                                CmpRemoveKeyControlBlock(CurrentKcb);
+                            }
+                            else
+                            {
+                                /* Otherwise expunge it */
+                                CmpRemoveFromDelayedClose(CurrentKcb);
+                                CmpCleanUpKcbCacheWithLock(CurrentKcb, FALSE);
+                            }
+
+                            /* Stop looking for next hashes as the KCB is kaput */
+                            break;
+                        }
+
+                        /* We finally found the key in cache, acknowledge it */
+                        KeyFoundInCache = TRUE;
+
+                        /* Remove the subkeys in the remaining name and stop looking in the cache */
+                        CmpRemoveSubkeysInRemainingName(HashCacheStack, RemainingSubkeys, RemainingName);
+                        break;
+                    }
+                }
+            }
+
+            /* Go to the next hash */
+            HashEntry = HashEntry->NextHash;
+        }
+
+        /* Stop looking in cache if we found the matching key */
+        if (KeyFoundInCache)
+        {
+            DPRINT("Key found in cache, stop looking\n");
+            break;
+        }
+
+        /* Keep looking in the cache until we run out of remaining subkeys */
+        RemainingSubkeys--;
+    }
+
+    /* Return the matching subkey levels */
+    *MatchRemainSubkeyLevel = RemainingSubkeys + 1;
+
+    /* We have to update the KCB if the key was found in cache */
+    if (KeyFoundInCache)
+    {
+        /*
+         * Before we change the KCB we must dereference the prior
+         * KCB that we no longer need it.
+         */
+        CmpDereferenceKeyControlBlock(*Kcb);
+        *Kcb = CurrentKcb;
+
+        /* Reference the new KCB now */
+        if (!CmpReferenceKeyControlBlock(*Kcb))
+        {
+            /* This key is opened too many times, bail out */
+            DPRINT1("Could not reference the KCB, too many references (KCB 0x%p)\n", Kcb);
+            return STATUS_UNSUCCESSFUL;
+        }
+
+        /* Update hive and cell data from current KCB */
+        *Hive = CurrentKcb->KeyHive;
+        *Cell = CurrentKcb->KeyCell;
+    }
+
+    /* Unlock the KCBs */
+    CmpUnLockKcbArray(LockedKcbs);
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief
+ * Builds a hash stack cache and looks up in the
+ * pool cache for a matching key pathname.
+ *
+ * @param[in] ParseObject
+ * A pointer to a parse object, acting as a key
+ * body. This parameter is unused.
+ *
+ * @param[in,out] Kcb
+ * A pointer to a KCB. This KCB is used by the
+ * registry parser after hash stack and cache
+ * lookup are done. This KCB might change if the
+ * key is found to be cached in the cache pool.
+ *
+ * @param[in] Current
+ * The current remaining key pathname.
+ *
+ * @param[out] Hive
+ * A pointer to a registry hive, returned by the caller.
+ *
+ * @param[out] Cell
+ * A pointer to a hive cell, returned by the caller.
+ *
+ * @param[out] TotalRemainingSubkeys
+ * A pointer to a number of total remaining subkey levels,
+ * returned by the caller. This can be 0 if no subkey levels
+ * have been found.
+ *
+ * @param[out] MatchRemainSubkeyLevel
+ * A pointer to a number of remaining subkey levels that match,
+ * returned by the caller. This can be 0 if no matching levels
+ * are found.
+ *
+ * @param[out] TotalSubkeys
+ * A pointer to a number of total subkeys. This can be 0 if no
+ * subkey levels are found. By definition, both MatchRemainSubkeyLevel
+ * and TotalRemainingSubkeys are 0 as well.
+ *
+ * @param[in,out] OuterStackArray
+ * A pointer to an array that lives on the caller's stack.
+ * The expected size of the array is up to 32 elements,
+ * which is the imposed limit by CMP_HASH_STACK_LIMIT.
+ * This limit also corresponds to the maximum depth of
+ * subkey levels.
+ *
+ * @param[out] LockedKcbs
+ * A pointer to an array of locked KCBs, returned by the caller.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if all the operations have succeeded without
+ * problems. STATUS_NAME_TOO_LONG is returned if the key pathname has
+ * too many subkey levels (more than 32 levels deep). A failure NTSTATUS
+ * code is returned otherwise. Refer to CmpLookInCache documentation
+ * for more information about other returned status codes.
+ * STATUS_UNSUCCESSFUL is returned if a KCB is referenced too many times.
+ */
 NTSTATUS
 NTAPI
-CmpBuildHashStackAndLookupCache(IN PCM_KEY_BODY ParseObject,
-                                IN OUT PCM_KEY_CONTROL_BLOCK *Kcb,
-                                IN PUNICODE_STRING Current,
-                                OUT PHHIVE *Hive,
-                                OUT HCELL_INDEX *Cell,
-                                OUT PULONG TotalRemainingSubkeys,
-                                OUT PULONG MatchRemainSubkeyLevel,
-                                OUT PULONG TotalSubkeys,
-                                OUT PULONG OuterStackArray,
-                                OUT PULONG *LockedKcbs)
+CmpBuildHashStackAndLookupCache(
+    _In_ PCM_KEY_BODY ParseObject,
+    _Inout_ PCM_KEY_CONTROL_BLOCK *Kcb,
+    _In_ PUNICODE_STRING Current,
+    _Out_ PHHIVE *Hive,
+    _Out_ PHCELL_INDEX Cell,
+    _Out_ PULONG TotalRemainingSubkeys,
+    _Out_ PULONG MatchRemainSubkeyLevel,
+    _Out_ PULONG TotalSubkeys,
+    _Inout_ PULONG OuterStackArray,
+    _Out_ PULONG *LockedKcbs)
 {
-    /* We don't lock anything for now */
-    *LockedKcbs = NULL;
+    NTSTATUS Status;
+    ULONG ConvKey;
+    ULONG SubkeysInTotal, RemainingSubkeysInTotal, MatchRemainingSubkeys;
+    CM_HASH_CACHE_STACK HashCacheStack[CMP_SUBKEY_LEVELS_DEPTH_LIMIT];
 
-    /* Calculate hash values */
-    *TotalRemainingSubkeys = 0xBAADF00D;
+    /* Make sure it's not a dead KCB */
+    ASSERT((*Kcb)->RefCount > 0);
 
     /* Lock the registry */
     CmpLockRegistry();
+
+    /* Calculate hash values for every subkey this key path has */
+    ConvKey = (*Kcb)->ConvKey;
+    RemainingSubkeysInTotal = CmpComputeHashValue(Current,
+                                                  ConvKey,
+                                                  HashCacheStack,
+                                                  &SubkeysInTotal);
+
+    /* This key path has too many subkeys */
+    if (SubkeysInTotal > CMP_SUBKEY_LEVELS_DEPTH_LIMIT)
+    {
+        DPRINT1("The key path has too many subkeys - %lu\n", SubkeysInTotal);
+        *LockedKcbs = NULL;
+        return STATUS_NAME_TOO_LONG;
+    }
 
     /* Return hive and cell data */
     *Hive = (*Kcb)->KeyHive;
     *Cell = (*Kcb)->KeyCell;
 
-    /* Make sure it's not a dead KCB */
-    ASSERT((*Kcb)->RefCount > 0);
+    /* Do we have any subkeys? */
+    if (!RemainingSubkeysInTotal && !SubkeysInTotal)
+    {
+        /*
+         * We don't have any subkeys nor remaining levels, the
+         * KCB points to the actual key. Lock it.
+         */
+        if (!CmpReferenceKeyControlBlock(*Kcb))
+        {
+            /* This key is opened too many times, bail out */
+            DPRINT1("Could not reference the KCB, too many references (KCB 0x%p)\n", Kcb);
+            return STATUS_UNSUCCESSFUL;
+        }
 
-    /* Reference it */
-    (VOID)CmpReferenceKeyControlBlock(*Kcb);
+        CmpAcquireKcbLockSharedByIndex(GET_HASH_INDEX(ConvKey));
 
-    /* Return success for now */
-    return STATUS_SUCCESS;
+        /* Add this KCB in the array of locked KCBs */
+        OuterStackArray[0] = 1;
+        OuterStackArray[1] = GET_HASH_INDEX(ConvKey);
+        *LockedKcbs = OuterStackArray;
+
+        /* And return all the subkey level counters */
+        *TotalRemainingSubkeys = RemainingSubkeysInTotal;
+        *MatchRemainSubkeyLevel = 0;
+        *TotalSubkeys = SubkeysInTotal;
+        return STATUS_SUCCESS;
+    }
+
+    /* Lookup in the cache */
+    Status = CmpLookInCache(HashCacheStack,
+                            FALSE,
+                            RemainingSubkeysInTotal,
+                            Current,
+                            OuterStackArray,
+                            Kcb,
+                            Hive,
+                            Cell,
+                            &MatchRemainingSubkeys);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Bail out if cache lookup failed for other reasons */
+        if (Status != STATUS_RETRY)
+        {
+            DPRINT1("CmpLookInCache() failed (Status 0x%lx)\n", Status);
+            *LockedKcbs = NULL;
+            return Status;
+        }
+
+        /* Retry looking in the cache but with KCBs locked exclusively */
+        Status = CmpLookInCache(HashCacheStack,
+                                TRUE,
+                                RemainingSubkeysInTotal,
+                                Current,
+                                OuterStackArray,
+                                Kcb,
+                                Hive,
+                                Cell,
+                                &MatchRemainingSubkeys);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("CmpLookInCache() failed after retry (Status 0x%lx)\n", Status);
+            *LockedKcbs = NULL;
+            return Status;
+        }
+    }
+
+    /*
+     * Check if we have a full match of remaining levels.
+     *
+     * FIXME: It is possible we can catch a fake key from the cache
+     * when we did the lookup, in such case we should not do any
+     * locking as such KCB does not point to any real information.
+     * Currently ReactOS doesn't create fake KCBs so we are good
+     * for now.
+     */
+    if (RemainingSubkeysInTotal == MatchRemainingSubkeys)
+    {
+        /*
+         * Just simply lock this KCB as it points to the full
+         * subkey levels in cache.
+         */
+        CmpAcquireKcbLockSharedByIndex(GET_HASH_INDEX((*Kcb)->ConvKey));
+        OuterStackArray[0] = 1;
+        OuterStackArray[1] = GET_HASH_INDEX((*Kcb)->ConvKey);
+        *LockedKcbs = OuterStackArray;
+    }
+    else
+    {
+        /*
+         * We only have a partial match so other subkey levels
+         * have each KCB. Simply just lock them.
+         */
+        *LockedKcbs = CmpBuildAndLockKcbArray(HashCacheStack,
+                                              CMP_LOCK_KCB_ARRAY_EXCLUSIVE,
+                                              *Kcb,
+                                              OuterStackArray,
+                                              RemainingSubkeysInTotal,
+                                              MatchRemainingSubkeys);
+        NT_ASSERT(*LockedKcbs);
+    }
+
+    /* Return all the subkey level counters */
+    *TotalRemainingSubkeys = RemainingSubkeysInTotal;
+    *MatchRemainSubkeyLevel = MatchRemainingSubkeys;
+    *TotalSubkeys = SubkeysInTotal;
+    return Status;
 }
 
 NTSTATUS
@@ -1048,12 +1866,14 @@ CmpParseKey(IN PVOID ParseObject,
     UNICODE_STRING Current, NextName;
     PCM_PARSE_CONTEXT ParseContext = Context;
     ULONG TotalRemainingSubkeys = 0, MatchRemainSubkeyLevel = 0, TotalSubkeys = 0;
-    PULONG LockedKcbs = NULL;
+    ULONG LockedKcbArray[CMP_KCBS_IN_ARRAY_LIMIT];
+    PULONG LockedKcbs;
+    BOOLEAN IsKeyCached = FALSE;
     BOOLEAN Result, Last;
     PAGED_CODE();
 
     /* Loop path separators at the end */
-    while ((RemainingName->Length) &&
+    while (RemainingName->Length &&
            (RemainingName->Buffer[(RemainingName->Length / sizeof(WCHAR)) - 1] ==
             OBJ_NAME_PATH_SEPARATOR))
     {
@@ -1068,7 +1888,7 @@ CmpParseKey(IN PVOID ParseObject,
     Current = *RemainingName;
 
     /* Check if this is a create */
-    if (!(ParseContext) || !(ParseContext->CreateOperation))
+    if (!ParseContext || !ParseContext->CreateOperation)
     {
         /* It isn't, so no context */
         ParseContext = NULL;
@@ -1093,8 +1913,15 @@ CmpParseKey(IN PVOID ParseObject,
                                              &TotalRemainingSubkeys,
                                              &MatchRemainSubkeyLevel,
                                              &TotalSubkeys,
-                                             NULL,
+                                             LockedKcbArray,
                                              &LockedKcbs);
+    CMP_ASSERT_REGISTRY_LOCK();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to look in cache, stop parsing (Status 0x%lx)\n", Status);
+        ParentKcb = NULL;
+        goto Quickie;
+    }
 
     /* This is now the parent */
     ParentKcb = Kcb;
@@ -1102,16 +1929,57 @@ CmpParseKey(IN PVOID ParseObject,
     /* Sanity check */
     ASSERT(ParentKcb != NULL);
 
-    /* Check if everything was found cached */
-    if (!TotalRemainingSubkeys)
-        ASSERTMSG("Caching not implemented\n", FALSE);
-
     /* Don't do anything if we're being deleted */
     if (Kcb->Delete)
     {
         Status = STATUS_OBJECT_NAME_NOT_FOUND;
         goto Quickie;
     }
+
+    /* Check if everything was found cached */
+    if (!TotalRemainingSubkeys)
+    {
+        /*
+         * We don't have any remaining subkey levels so we're good
+         * that we have an already perfect candidate for a KCB, just
+         * do the open directly.
+         */
+        DPRINT("No remaining subkeys, the KCB points to the actual key\n");
+        IsKeyCached = TRUE;
+        goto KeyCachedOpenNow;
+    }
+
+    /* Check if we have a matching level */
+    if (MatchRemainSubkeyLevel)
+    {
+        /*
+         * We have a matching level, check if that matches
+         * with the total levels of subkeys. Do the open directly
+         * if that is the case, because the whole subkeys levels
+         * is cached.
+         */
+        if (MatchRemainSubkeyLevel == TotalSubkeys)
+        {
+            DPRINT("We have a full matching level, open the key now\n");
+            IsKeyCached = TRUE;
+            goto KeyCachedOpenNow;
+        }
+
+        /*
+         * We only have a partial match, make sure we did not
+         * get mismatched hive data.
+         */
+        ASSERT(Hive == Kcb->KeyHive);
+        ASSERT(Cell == Kcb->KeyCell);
+    }
+
+    /*
+     * FIXME: Currently the registry parser doesn't check for fake
+     * KCBs. CmpCreateKeyControlBlock does have the necessary implementation
+     * to create such fake keys but we don't create these fake keys anywhere.
+     * When we will do, we must improve the registry parser routine to handle
+     * fake keys a bit differently here.
+     */
 
     /* Check if this is a symlink */
     if (Kcb->Flags & KEY_SYM_LINK)
@@ -1137,6 +2005,10 @@ CmpParseKey(IN PVOID ParseObject,
             goto Quickie;
         }
         Current.MaximumLength += NextName.MaximumLength;
+
+        /* CmpGetSymbolicLink doesn't want a lock */
+        CmpUnLockKcbArray(LockedKcbs);
+        LockedKcbs = NULL;
 
         /* Parse the symlink */
         if (CmpGetSymbolicLink(Hive,
@@ -1171,7 +2043,7 @@ CmpParseKey(IN PVOID ParseObject,
     {
         /* Get the next component */
         Result = CmpGetNextName(&Current, &NextName, &Last);
-        if ((Result) && (NextName.Length))
+        if (Result && NextName.Length)
         {
             /* See if this is a sym link */
             if (!(Kcb->Flags & KEY_SYM_LINK))
@@ -1205,6 +2077,7 @@ CmpParseKey(IN PVOID ParseObject,
                             }
                         }
 
+KeyCachedOpenNow:
                         /* Do the open */
                         Status = CmpDoOpen(Hive,
                                            Cell,
@@ -1213,12 +2086,17 @@ CmpParseKey(IN PVOID ParseObject,
                                            AccessMode,
                                            Attributes,
                                            ParseContext,
-                                           0,
+                                           IsKeyCached ? CMP_OPEN_KCB_NO_CREATE : CMP_CREATE_KCB_KCB_LOCKED,
                                            &Kcb,
+                                           LockedKcbs,
                                            &NextName,
                                            Object);
                         if (Status == STATUS_REPARSE)
                         {
+                            /* CmpGetSymbolicLink doesn't want a lock */
+                            CmpUnLockKcbArray(LockedKcbs);
+                            LockedKcbs = NULL;
+
                             /* Parse the symlink */
                             if (!CmpGetSymbolicLink(Hive,
                                                     CompleteName,
@@ -1256,7 +2134,7 @@ CmpParseKey(IN PVOID ParseObject,
                                                    Cell,
                                                    Node,
                                                    ParentKcb,
-                                                   0,
+                                                   CMP_LOCK_HASHES_FOR_KCB,
                                                    &NextName);
                     if (!Kcb)
                     {
@@ -1266,13 +2144,13 @@ CmpParseKey(IN PVOID ParseObject,
                     }
 
                     /* Dereference the parent and set the new one */
-                    CmpDereferenceKeyControlBlock(ParentKcb);
+                    CmpDereferenceKeyControlBlockWithLock(ParentKcb, FALSE);
                     ParentKcb = Kcb;
                 }
                 else
                 {
                     /* Check if this was the last key for a create */
-                    if ((Last) && (ParseContext))
+                    if (Last && ParseContext)
                     {
                         /* Check if we're doing a link node */
                         if (ParseContext->CreateLink)
@@ -1286,6 +2164,7 @@ CmpParseKey(IN PVOID ParseObject,
                                                        Attributes,
                                                        ParseContext,
                                                        ParentKcb,
+                                                       LockedKcbs,
                                                        Object);
                         }
                         else if (Hive == &CmiVolatileHive->Hive && CmpNoVolatileCreates)
@@ -1344,6 +2223,10 @@ CmpParseKey(IN PVOID ParseObject,
                 }
                 Current.MaximumLength += NextName.MaximumLength;
 
+                /* CmpGetSymbolicLink doesn't want a lock */
+                CmpUnLockKcbArray(LockedKcbs);
+                LockedKcbs = NULL;
+
                 /* Parse the symlink */
                 if (CmpGetSymbolicLink(Hive,
                                        CompleteName,
@@ -1363,7 +2246,7 @@ CmpParseKey(IN PVOID ParseObject,
                 break;
             }
         }
-        else if ((Result) && (Last))
+        else if (Result && Last)
         {
             /* Opening the root. Is this an exit node? */
             if (Node->Flags & KEY_HIVE_EXIT)
@@ -1390,8 +2273,9 @@ CmpParseKey(IN PVOID ParseObject,
                                AccessMode,
                                Attributes,
                                ParseContext,
-                               CMP_OPEN_KCB_NO_CREATE /* | CMP_CREATE_KCB_KCB_LOCKED */,
+                               CMP_OPEN_KCB_NO_CREATE,
                                &Kcb,
+                               LockedKcbs,
                                &NextName,
                                Object);
             if (Status == STATUS_REPARSE)
@@ -1410,8 +2294,14 @@ CmpParseKey(IN PVOID ParseObject,
         }
     }
 
-    /* Dereference the parent if it exists */
 Quickie:
+    /* Unlock all the KCBs */
+    if (LockedKcbs != NULL)
+    {
+        CmpUnLockKcbArray(LockedKcbs);
+    }
+
+    /* Dereference the parent if it exists */
     if (ParentKcb)
         CmpDereferenceKeyControlBlock(ParentKcb);
 

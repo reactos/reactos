@@ -179,6 +179,12 @@ static int bitmap_info_size( const BITMAPINFO * info, WORD coloruse )
 static int DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, LONG *width,
                               LONG *height, WORD *bpp, DWORD *compr )
 {
+    #define CR 13
+    #define LF 10
+    #define EOFM 26 // DOS End Of File Marker
+    #define HighBitDetect 0x89 // Byte with high bit set to test if not 7-bit
+    /* wine's definition */
+    static const BYTE png_sig_pattern[] = { HighBitDetect, 'P', 'N', 'G', CR, LF, EOFM, LF };
     if (header->biSize == sizeof(BITMAPCOREHEADER))
     {
         const BITMAPCOREHEADER *core = (const BITMAPCOREHEADER *)header;
@@ -198,7 +204,15 @@ static int DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, LONG *width,
         *compr  = header->biCompression;
         return 1;
     }
-    ERR("(%d): unknown/wrong size for header\n", header->biSize );
+    if (memcmp(&header->biSize, png_sig_pattern, sizeof(png_sig_pattern)) == 0)
+    {
+        ERR("Cannot yet display PNG icons\n");
+        /* for PNG format details see https://en.wikipedia.org/wiki/PNG */
+    }
+    else
+    {
+        ERR("Unknown/wrong size for header of 0x%x\n", header->biSize );
+    }
     return -1;
 }
 
@@ -1377,7 +1391,10 @@ CURSORICON_LoadFromFileW(
 
     /* Do the dance */
     if(!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO*)(&bits[entry->dwDIBOffset])))
-        goto end;
+        {
+            ERR("Failing File is \n    '%S'.\n", lpszName);
+            goto end;
+        }
 
     hCurIcon = NtUserxCreateEmptyCurObject(FALSE);
     if(!hCurIcon)
@@ -1454,7 +1471,21 @@ CURSORICON_LoadImageW(
             RtlInitUnicodeString(&ustrRsrc, lpszName);
     }
 
-    if(hinst)
+    if(LDR_IS_RESOURCE(hinst))
+    {
+        /* We don't have a real module for GetModuleFileName, construct a fake name instead.
+         * GetIconInfoEx reveals the name used by Windows. */
+        LPCWSTR fakeNameFmt = sizeof(void*) > 4 ? L"\x01%016IX" : L"\x01%08IX";
+        ustrModule.MaximumLength = 18 * sizeof(WCHAR);
+        ustrModule.Buffer = HeapAlloc(GetProcessHeap(), 0, ustrModule.MaximumLength);
+        if (!ustrModule.Buffer)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return NULL;
+        }
+        ustrModule.Length = wsprintfW(ustrModule.Buffer, fakeNameFmt, hinst) * sizeof(WCHAR);
+    }
+    else if(hinst)
     {
         DWORD size = MAX_PATH;
         /* Get the module name string */

@@ -84,27 +84,27 @@ IsLanguageAvailable(
 }
 
 
-PCWSTR
+KLID
 MUIDefaultKeyboardLayout(
     IN PCWSTR LanguageId)
 {
-    ULONG lngIndex = max(FindLanguageIndex(LanguageId), 0);
+    ULONG lngIndex = FindLanguageIndex(LanguageId);
     return MUILanguageList[lngIndex].MuiLayouts[0].LayoutID;
 }
 
-PCWSTR
+UINT
 MUIGetOEMCodePage(
     IN PCWSTR LanguageId)
 {
-    ULONG lngIndex = max(FindLanguageIndex(LanguageId), 0);
+    ULONG lngIndex = FindLanguageIndex(LanguageId);
     return MUILanguageList[lngIndex].OEMCPage;
 }
 
-PCWSTR
+GEOID
 MUIGetGeoID(
     IN PCWSTR LanguageId)
 {
-    ULONG lngIndex = max(FindLanguageIndex(LanguageId), 0);
+    ULONG lngIndex = FindLanguageIndex(LanguageId);
     return MUILanguageList[lngIndex].GeoID;
 }
 
@@ -112,7 +112,7 @@ const MUI_LAYOUTS*
 MUIGetLayoutsList(
     IN PCWSTR LanguageId)
 {
-    ULONG lngIndex = max(FindLanguageIndex(LanguageId), 0);
+    ULONG lngIndex = FindLanguageIndex(LanguageId);
     return MUILanguageList[lngIndex].MuiLayouts;
 }
 
@@ -206,7 +206,7 @@ AddHotkeySettings(
 
 BOOLEAN
 AddKbLayoutsToRegistry(
-    IN const MUI_LAYOUTS *MuiLayouts)
+    _In_ const MUI_LAYOUTS* MuiLayouts)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
@@ -215,13 +215,14 @@ AddKbLayoutsToRegistry(
     HANDLE SubKeyHandle;
     NTSTATUS Status;
     ULONG Disposition;
-    ULONG uIndex = 0;
-    ULONG uCount = 0;
+    ULONG uIndex;
+    ULONG uCount;
     WCHAR szKeyName[48] = L".DEFAULT\\Keyboard Layout";
     WCHAR szValueName[3 + 1];
-    WCHAR szLangID[8 + 1];
+    WCHAR szSubstID[8 + 1];
+    WCHAR szLayoutID[8 + 1];
 
-    // Open the keyboard layout key
+    /* Open the keyboard layout key */
     RtlInitUnicodeString(&KeyName, szKeyName);
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
@@ -246,11 +247,9 @@ AddKbLayoutsToRegistry(
 
     KeyName.MaximumLength = sizeof(szKeyName);
     Status = RtlAppendUnicodeToString(&KeyName, L"\\Preload");
-
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("RtlAppend failed! (%lx)\n", Status);
-        DPRINT1("String is %wZ\n", &KeyName);
+        DPRINT1("RtlAppend() failed (%lx), string is '%wZ'\n", Status, &KeyName);
         return FALSE;
     }
 
@@ -290,83 +289,73 @@ AddKbLayoutsToRegistry(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
-        NtClose(SubKeyHandle);
-        NtClose(KeyHandle);
-        return FALSE;
+        goto Quit;
     }
 
-    while (MuiLayouts[uIndex].LangID != NULL)
+    uCount = 0;
+    for (uIndex = 0; (uIndex <= 19) && (MuiLayouts[uIndex].LangID != 0); ++uIndex)
     {
-        if (uIndex > 19) break;
-
-        RtlStringCchPrintfW(szValueName, ARRAYSIZE(szValueName), L"%u", uIndex + 1);
+        RtlStringCchPrintfW(szValueName, _countof(szValueName), L"%u", uIndex + 1);
         RtlInitUnicodeString(&ValueName, szValueName);
 
-        RtlStringCchPrintfW(szLangID, ARRAYSIZE(szLangID), L"0000%s", MuiLayouts[uIndex].LangID);
+        RtlStringCchPrintfW(szLayoutID, _countof(szLayoutID), L"%08lx", MuiLayouts[uIndex].LayoutID);
 
-        if (_wcsicmp(szLangID, MuiLayouts[uIndex].LayoutID) == 0)
+        if ((KLID)MuiLayouts[uIndex].LangID == MuiLayouts[uIndex].LayoutID)
         {
+            /* Main keyboard layout */
             Status = NtSetValueKey(KeyHandle,
                                    &ValueName,
                                    0,
                                    REG_SZ,
-                                   (PVOID)MuiLayouts[uIndex].LayoutID,
-                                   (wcslen(MuiLayouts[uIndex].LayoutID)+1) * sizeof(WCHAR));
+                                   (PVOID)szLayoutID,
+                                   (wcslen(szLayoutID)+1) * sizeof(WCHAR));
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %d)\n", Status, uIndex);
-                NtClose(SubKeyHandle);
-                NtClose(KeyHandle);
-                return FALSE;
+                DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %u)\n", Status, uIndex);
+                goto Quit;
             }
         }
         else
         {
-            RtlStringCchPrintfW(szLangID, ARRAYSIZE(szLangID), L"d%03lu%s", uCount, MuiLayouts[uIndex].LangID);
+            /* Generate a substitute keyboard layout ID */
+            RtlStringCchPrintfW(szSubstID, _countof(szSubstID), L"%08lx",
+                                (0xD0000000/*SUBST_MASK*/ | ((USHORT)uCount << 4) | MuiLayouts[uIndex].LangID));
             Status = NtSetValueKey(KeyHandle,
                                    &ValueName,
                                    0,
                                    REG_SZ,
-                                   (PVOID)szLangID,
-                                   (wcslen(szLangID)+1) * sizeof(WCHAR));
+                                   (PVOID)szSubstID,
+                                   (wcslen(szSubstID)+1) * sizeof(WCHAR));
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %d)\n", Status, uIndex);
-                NtClose(SubKeyHandle);
-                NtClose(KeyHandle);
-                return FALSE;
+                DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %u)\n", Status, uIndex);
+                goto Quit;
             }
 
-            RtlInitUnicodeString(&ValueName, szLangID);
-
+            /* Link the substitute layout with the original one */
+            RtlInitUnicodeString(&ValueName, szSubstID);
             Status = NtSetValueKey(SubKeyHandle,
                                    &ValueName,
                                    0,
                                    REG_SZ,
-                                   (PVOID)MuiLayouts[uIndex].LayoutID,
-                                   (wcslen(MuiLayouts[uIndex].LayoutID)+1) * sizeof(WCHAR));
+                                   (PVOID)szLayoutID,
+                                   (wcslen(szLayoutID)+1) * sizeof(WCHAR));
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %u)\n", Status, uIndex);
-                NtClose(SubKeyHandle);
-                NtClose(KeyHandle);
-                return FALSE;
+                goto Quit;
             }
 
-            uCount++;
+            ++uCount;
         }
-
-        uIndex++;
     }
 
-    if (uIndex > 1)
-        AddHotkeySettings(L"2", L"2", L"1");
-    else
-        AddHotkeySettings(L"3", L"3", L"3");
+    AddHotkeySettings(L"1", L"1", L"2");
 
+Quit:
     NtClose(SubKeyHandle);
     NtClose(KeyHandle);
-    return TRUE;
+    return NT_SUCCESS(Status);
 }
 
 BOOLEAN
@@ -391,21 +380,25 @@ AddKeyboardLayouts(
 static
 BOOLEAN
 AddCodepageToRegistry(
-    IN PCWSTR ACPage,
-    IN PCWSTR OEMCPage,
-    IN PCWSTR MACCPage)
+    _In_ UINT ACPage,
+    _In_ UINT OEMCPage,
+    _In_ UINT MACCPage)
 {
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING KeyName;
-    UNICODE_STRING ValueName;
-    HANDLE KeyHandle;
     NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING Name;
+    HANDLE KeyHandle;
+    /*
+     * Buffer big enough to hold the NULL-terminated string L"4294967295",
+     * corresponding to the literal 0xFFFFFFFF (MAXULONG) in decimal.
+     */
+    WCHAR Value[sizeof("4294967295")];
 
-    // Open the nls codepage key
-    RtlInitUnicodeString(&KeyName,
+    /* Open the NLS CodePage key */
+    RtlInitUnicodeString(&Name,
                          L"SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage");
     InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
+                               &Name,
                                OBJ_CASE_INSENSITIVE,
                                GetRootKeyByPredefKey(HKEY_LOCAL_MACHINE, NULL),
                                NULL);
@@ -418,54 +411,60 @@ AddCodepageToRegistry(
         return FALSE;
     }
 
-    // Set ANSI codepage
-    RtlInitUnicodeString(&ValueName, L"ACP");
+    /* Set ANSI codepage */
+    Status = RtlStringCchPrintfW(Value, _countof(Value), L"%lu", ACPage);
+    ASSERT(NT_SUCCESS(Status));
+
+    RtlInitUnicodeString(&Name, L"ACP");
     Status = NtSetValueKey(KeyHandle,
-                           &ValueName,
+                           &Name,
                            0,
                            REG_SZ,
-                           (PVOID)ACPage,
-                           (wcslen(ACPage)+1) * sizeof(WCHAR));
+                           (PVOID)Value,
+                           (wcslen(Value)+1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
-        NtClose(KeyHandle);
-        return FALSE;
+        goto Quit;
     }
 
-    // Set OEM codepage
-    RtlInitUnicodeString(&ValueName, L"OEMCP");
+    /* Set OEM codepage */
+    Status = RtlStringCchPrintfW(Value, _countof(Value), L"%lu", OEMCPage);
+    ASSERT(NT_SUCCESS(Status));
+
+    RtlInitUnicodeString(&Name, L"OEMCP");
     Status = NtSetValueKey(KeyHandle,
-                           &ValueName,
+                           &Name,
                            0,
                            REG_SZ,
-                           (PVOID)OEMCPage,
-                           (wcslen(OEMCPage)+1) * sizeof(WCHAR));
+                           (PVOID)Value,
+                           (wcslen(Value)+1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
-        NtClose(KeyHandle);
-        return FALSE;
+        goto Quit;
     }
 
-    // Set MAC codepage
-    RtlInitUnicodeString(&ValueName, L"MACCP");
+    /* Set MAC codepage */
+    Status = RtlStringCchPrintfW(Value, _countof(Value), L"%lu", MACCPage);
+    ASSERT(NT_SUCCESS(Status));
+
+    RtlInitUnicodeString(&Name, L"MACCP");
     Status = NtSetValueKey(KeyHandle,
-                           &ValueName,
+                           &Name,
                            0,
                            REG_SZ,
-                           (PVOID)MACCPage,
-                           (wcslen(MACCPage)+1) * sizeof(WCHAR));
+                           (PVOID)Value,
+                           (wcslen(Value)+1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
-        NtClose(KeyHandle);
-        return FALSE;
+        goto Quit;
     }
 
+Quit:
     NtClose(KeyHandle);
-
-    return TRUE;
+    return NT_SUCCESS(Status);
 }
 
 static

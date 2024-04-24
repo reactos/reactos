@@ -927,83 +927,6 @@ static MUI_ENTRY itITSuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY itITBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Il Setup non ha potuto installare il bootloader nel disco",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "del vostro computer",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Inserire un disco floppy formattato nell'unit\x85 A: e",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "premere INVIO.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "   INVIO = Continua   F3 = Termina",
-        TEXT_TYPE_STATUS,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
-static MUI_ENTRY itITBootLoaderInstallPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "Installing the bootloader onto the media, please wait...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-};
-
 static MUI_ENTRY itITSelectPartitionEntries[] =
 {
     {
@@ -1044,7 +967,8 @@ static MUI_ENTRY itITSelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Premere P per creare una nuova partizione.",
+        "\x07  Premere C per creare una partizione primaria/logica.",
+//        "\x07  Premere C per creare una nuova partizione.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1058,13 +982,6 @@ static MUI_ENTRY itITSelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Premere L per creare una partizione logica.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Premere D per cancellare una partizione esistente.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1339,7 +1256,7 @@ static MUI_ENTRY itITFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "Setup formatter\x85 la partizione. Premere INVIO per continuare.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1494,7 +1411,7 @@ static MUI_ENTRY itITFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY itITBootLoaderEntries[] =
+static MUI_ENTRY itITBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1506,7 +1423,7 @@ static MUI_ENTRY itITBootLoaderEntries[] =
     {
         6,
         8,
-        "Setup sta installando il bootloader",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1551,6 +1468,90 @@ static MUI_ENTRY itITBootLoaderEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY itITBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup sta installando il bootloader.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY itITBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Il Setup non ha potuto installare il bootloader nel disco",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        9,
+        "del vostro computer.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Inserire un disco floppy formattato nell'unit\x85 A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "e premere INVIO.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "   INVIO = Continua   F3 = Termina",
+        TEXT_TYPE_STATUS,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY itITKeyboardSettingsEntries[] =
@@ -1942,13 +1943,6 @@ MUI_ERROR itITErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Non si pu\x95 cancellare spazio in un disco non partizionato!\n"
-        "\n"
-        "  * Premere un tasto qualsiasi per continuare.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "Impossibile installare il bootcode %S nella partizione di sistema.",
         "INVIO = Riavviare il computer"
@@ -2186,8 +2180,8 @@ MUI_PAGE itITPages[] =
         itITKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        itITBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        itITBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2202,12 +2196,12 @@ MUI_PAGE itITPages[] =
         itITSuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         itITBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        itITBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        itITBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,
@@ -2224,25 +2218,27 @@ MUI_STRING itITStrings[] =
     {STRING_PLEASEWAIT,
      "   Attendere..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   INVIO = Installa   P = Crea Partizione   E = Crea Partizione Estesa   F3 = Esci"},
+     "   INVIO = Installa   C = Crea Partizione   E = Crea Partizione Estesa   F3 = Esci"},
     {STRING_INSTALLCREATELOGICAL,
-     "   INVIO = Installa   L = Crea Partizione Lgica  F3 = Esci"},
+     "   INVIO = Installa   C = Crea Partizione Lgica  F3 = Esci"},
     {STRING_INSTALLDELETEPARTITION,
      "   INVIO = Installa   D = Rimuovi Partizione   F3 = Esci"},
     {STRING_DELETEPARTITION,
      "   D = Elimina Partizione   F3 = Esci"},
     {STRING_PARTITIONSIZE,
      "Dimensione nuova partizione:"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
      "Si \x8A scelto di creare una nuova partizione primaria su"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "Si \x8A scelto di creare una nuova partizione estesa su"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "Si \x8A scelto di creare una nuova partizione logica su"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     "Indicare la dimensione della nuova partizione in megabyte."},
     {STRING_CREATEPARTITION,
      "   INVIO = Creare la partizione   ESC = Annulla   F3 = Esci"},
+    {STRING_NEWPARTITION,
+    "Setup ha creato una nuova partizione su"},
     {STRING_PARTFORMAT,
     "Questa partizione sar\x85 formattata successivamente."},
     {STRING_NONFORMATTEDPART,
@@ -2293,30 +2289,28 @@ MUI_STRING itITStrings[] =
     "La causa pi\x97 frequente di questo \x8A l'uso di una tastiera USB\r\n"},
     {STRING_CONSOLEFAIL3,
     "le tastiere USB non sono ancora completamente supportate\r\n"},
-    {STRING_FORMATTINGDISK,
-    "Setup sta formattando il disco"},
+    {STRING_FORMATTINGPART,
+    "Setup sta formattando la partizione..."},
     {STRING_CHECKINGDISK,
-    "Setup sta controllando il disco"},
+    "Setup sta controllando il disco..."},
     {STRING_FORMATDISK1,
     " Formatta la partizione con file system %S (formattazione rapida) "},
     {STRING_FORMATDISK2,
     " Formatta la partizione con file system %S "},
     {STRING_KEEPFORMAT,
     " Mantieni il file system attuale (nessuna modifica) "},
-    {STRING_HDINFOPARTCREATE_1,
+    {STRING_HDDISK1,
     "%s."},
-    {STRING_HDINFOPARTDELETE_1,
+    {STRING_HDDISK2,
     "su %s."},
     {STRING_PARTTYPE,
     "Tipo 0x%02x"},
-    {STRING_HDDINFO_1,
+    {STRING_HDDINFO1,
     // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ) [%s]"
     "%I64u %s Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu) su %wZ [%s]"},
-    {STRING_HDDINFO_2,
+    {STRING_HDDINFO2,
     // "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu [%s]"
     "%I64u %s Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "Setup ha creato una nuova partizione su"},
     {STRING_UNPSPACE,
     "Spazio non partizionato"},
     {STRING_MAXSIZE,

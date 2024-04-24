@@ -7,9 +7,6 @@
 
 #include "precomp.h"
 
-#define ok_eq_hex(value, expected) ok((value) == (expected), #value " = 0x%lx, expected 0x%lx\n", value, expected)
-#define ok_eq_pointer(value, expected) ok((value) == (expected), #value " = %p, expected %p\n", value, expected)
-
 #define EXPECT_IN_SAME_DIR (WCHAR*)0xdead
 
 UNICODE_STRING DotDll = RTL_CONSTANT_STRING(L".DLL");

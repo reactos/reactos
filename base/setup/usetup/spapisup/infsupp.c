@@ -27,7 +27,9 @@
 
 /* INCLUDES ******************************************************************/
 
+#ifndef _USETUP_PCH_
 #include "usetup.h"
+#endif
 
 #define NDEBUG
 #include <debug.h>

@@ -5,14 +5,9 @@
 
 /* Win32 Headers */
 #define WINBASEAPI
-#define STARTF_USESIZE 2
-#define STARTF_USEPOSITION 4
-#define INTERNAL_CALL NTAPI
-#define NT_BUILD_ENVIRONMENT
 
 #define DDHMG_HANDLE_LIMIT 0x200000
 #define DDHMG_HTOI(DdHandle) ((DWORD_PTR)DdHandle & (DDHMG_HANDLE_LIMIT-1))
-
 
 #include <windef.h>
 #include <winerror.h>

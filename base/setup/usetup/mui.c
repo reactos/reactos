@@ -545,7 +545,7 @@ SetConsoleCodePage(VOID)
     {
         if (_wcsicmp(ResourceList[lngIndex].LanguageID, SelectedLanguageId) == 0)
         {
-            wCodePage = (UINT) wcstoul(ResourceList[lngIndex].OEMCPage, NULL, 10);
+            wCodePage = ResourceList[lngIndex].OEMCPage;
             SetConsoleOutputCP(wCodePage);
             return;
         }
@@ -553,7 +553,7 @@ SetConsoleCodePage(VOID)
         lngIndex++;
     }
 #else
-    wCodePage = (UINT)wcstoul(MUIGetOEMCodePage(SelectedLanguageId), NULL, 10);
+    wCodePage = MUIGetOEMCodePage(SelectedLanguageId);
     SetConsoleOutputCP(wCodePage);
 #endif
 

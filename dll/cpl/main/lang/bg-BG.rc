@@ -43,7 +43,7 @@ BEGIN
     PUSHBUTTON "&Добре", IDOK, 120, 75, 50, 15
     PUSHBUTTON "&Отказ", IDCANCEL, 175, 75, 50, 15
     LTEXT "На&стройка продължителността на задържане на цъка на мишката, необходимо за да бъде отчетено цъкането", -1, 60, 15, 170, 30
-    ICON IDI_LOOK_KEY, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
+    ICON IDI_LOCK_KEY, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
 END
 
 IDD_PAGE_BUTTON DIALOGEX 0, 0, 246, 228

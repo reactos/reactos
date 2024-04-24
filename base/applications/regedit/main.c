@@ -205,11 +205,6 @@ int WINAPI wWinMain(HINSTANCE hInstance,
 
     UNREFERENCED_PARAMETER(hPrevInstance);
 
-#ifdef _DEBUG
-    /* Report any memory leaks on exit */
-    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-#endif
-
     /* Initialize global strings */
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, ARRAY_SIZE(szTitle));
     LoadStringW(hInstance, IDC_REGEDIT_FRAME, szFrameClass, ARRAY_SIZE(szFrameClass));

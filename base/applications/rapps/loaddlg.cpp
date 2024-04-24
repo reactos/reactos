@@ -42,6 +42,7 @@
 
 #include <ui/rosctrls.h>
 #include <windowsx.h>
+#include <shlwapi_undoc.h>
 #include <process.h>
 #undef SubclassWindow
 
@@ -78,6 +79,30 @@ LoadStatusString(DownloadStatus StatusParam)
     CStringW szString;
     szString.LoadStringW(StatusParam);
     return szString;
+}
+
+#define FILENAME_VALID_CHAR ( \
+    PATH_CHAR_CLASS_LETTER      | \
+    PATH_CHAR_CLASS_DOT         | \
+    PATH_CHAR_CLASS_SEMICOLON   | \
+    PATH_CHAR_CLASS_COMMA       | \
+    PATH_CHAR_CLASS_SPACE       | \
+    PATH_CHAR_CLASS_OTHER_VALID)
+
+VOID
+UrlUnescapeAndMakeFileNameValid(CStringW& str)
+{
+    WCHAR szPath[MAX_PATH];
+    DWORD cchPath = _countof(szPath);
+    UrlUnescapeW(const_cast<LPWSTR>((LPCWSTR)str), szPath, &cchPath, 0);
+
+    for (PWCHAR pch = szPath; *pch; ++pch)
+    {
+        if (!PathIsValidCharW(*pch, FILENAME_VALID_CHAR))
+            *pch = L'_';
+    }
+
+    str = szPath;
 }
 
 struct DownloadInfo
@@ -710,8 +735,12 @@ CDownloadManager::ThreadFunc(LPVOID param)
                 Path += APPLICATION_DATABASE_NAME;
                 break;
             case DLTYPE_APPLICATION:
-                Path += (LPWSTR)(p + 1); // use the filename retrieved from URL
+            {
+                CStringW str = p + 1; // use the filename retrieved from URL
+                UrlUnescapeAndMakeFileNameValid(str);
+                Path += str;
                 break;
+            }
         }
 
         if ((InfoArray[iAppId].DLType == DLTYPE_APPLICATION) && InfoArray[iAppId].szSHA1[0] &&

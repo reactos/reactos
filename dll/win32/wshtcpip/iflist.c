@@ -8,9 +8,6 @@
 
 #include "wshtcpip.h"
 
-#define WIN32_NO_STATUS   /* Tell Windows headers you'll use ntstatus.s from NDK */
-#include <windows.h>      /* Declare Windows Headers like you normally would */
-#include <ntndk.h>        /* Declare the NDK Headers */
 #include <iptypes.h>
 #include <wine/list.h>
 
@@ -29,7 +26,7 @@ BOOL AllocAndGetEntityArray(
     ULONG outBufLen, outBufLenNeeded;
     void* outBuf = NULL;
     TCP_REQUEST_QUERY_INFORMATION_EX inTcpReq;
-    NTSTATUS Status;
+    DWORD dwError;
     TDIEntityID *pEntities;
 
     /* Set up Request */
@@ -62,7 +59,7 @@ BOOL AllocAndGetEntityArray(
         if (outBuf == NULL)
             break;
 
-        Status = NO_ERROR;
+        dwError = NO_ERROR;
         if (!DeviceIoControl(
                 TcpFile,
                 IOCTL_TCP_QUERY_INFORMATION_EX,
@@ -72,16 +69,18 @@ BOOL AllocAndGetEntityArray(
                 outBufLen,
                 &outBufLenNeeded,
                 NULL))
-            Status = GetLastError();
+        {
+            dwError = GetLastError();
+        }
 
         /* We need TDI_SUCCESS and the outBufLenNeeded must be equal or smaller
            than our buffer (outBufLen). */
-        if (Status != NO_ERROR)
+        if (dwError != NO_ERROR)
         {
             HeapFree(hHeap, 0, outBuf);
             break;
         }
-        /* status = Success; was the buffer large enough? */
+        /* dwError = Success; was the buffer large enough? */
         if (outBufLenNeeded <= outBufLen)
         {
             result = TRUE;
@@ -134,7 +133,7 @@ INT GetIPSNMPInfo(
             &BufLenNeeded,
             NULL))
     {
-        DPRINT("DeviceIoControl (IPSNMPInfo) failed, Status %li!\n", GetLastError());
+        DPRINT("DeviceIoControl (IPSNMPInfo) failed, Error %ld!\n", GetLastError());
         return WSAEFAULT;
     }
 
@@ -164,7 +163,7 @@ INT GetTdiEntityType(
             &BufLenNeeded,
             NULL))
     {
-        DPRINT("DeviceIoControl (TdiEntityType) failed, Status %li!\n", GetLastError());
+        DPRINT("DeviceIoControl (TdiEntityType) failed, Error %ld!\n", GetLastError());
         return WSAEFAULT;
     }
 
@@ -195,7 +194,7 @@ INT GetIFEntry(
             &BufLenNeeded,
             NULL))
     {
-        DPRINT("DeviceIoControl (IFEntry) failed, Status %li!\n", GetLastError());
+        DPRINT("DeviceIoControl (IFEntry) failed, Error %ld!\n", GetLastError());
         return WSAEFAULT;
     }
 
@@ -230,20 +229,20 @@ WSHIoctl_GetInterfaceList(
     DWORD outIDCount, i1, iAddr;
     DWORD bCastAddr, outNumberOfBytes;
     ULONG BufLenNeeded, BufLen, IFEntryLen, TdiType;
-    HANDLE TcpFile = 0;
+    HANDLE TcpFile = NULL;
     HANDLE hHeap = GetProcessHeap();
-    DWORD LastErr;
-    INT res = -1;
+    NTSTATUS Status;
+    INT res;
 
     /* Init Interface-ID-List */
     IntfIDList = HeapAlloc(hHeap, 0, sizeof(*IntfIDList));
     list_init(&IntfIDList->entry);
 
     /* open tcp-driver */
-    LastErr = openTcpFile(&TcpFile, FILE_READ_DATA | FILE_WRITE_DATA);
-    if (!NT_SUCCESS(LastErr))
+    Status = openTcpFile(&TcpFile, FILE_READ_DATA | FILE_WRITE_DATA);
+    if (!NT_SUCCESS(Status))
     {
-        res = (INT)LastErr;
+        res = RtlNtStatusToDosError(Status);
         goto cleanup;
     }
 
@@ -330,8 +329,7 @@ WSHIoctl_GetInterfaceList(
                 &BufLenNeeded,
                 NULL))
         {
-            LastErr = GetLastError();
-            DPRINT("DeviceIoControl failed, Status %li!\n", LastErr);
+            DPRINT("DeviceIoControl failed, Error %ld!\n", GetLastError());
             res = WSAEFAULT;
             goto cleanup;
         }
@@ -426,8 +424,8 @@ WSHIoctl_GetInterfaceList(
     res = NO_ERROR;
 cleanup:
     DPRINT("WSHIoctl_GetInterfaceList - CLEANUP\n");
-    if (TcpFile != 0)
-        NtClose(TcpFile);
+    if (TcpFile != NULL)
+        closeTcpFile(TcpFile);
     if (pIFEntry != NULL)
         HeapFree(hHeap, 0, pIFEntry);
     LIST_FOR_EACH_ENTRY_SAFE_REV(pIntfIDItem, pIntfIDNext,

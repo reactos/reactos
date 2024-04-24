@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     Disk Format Utility
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Japanese resource file
+ * TRANSLATOR:  Copyright 2005 tsk <tsk_n@mail.goo.ne.jp>
+ */
+
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 STRINGTABLE

@@ -1,12 +1,11 @@
 /*
- *         translated by Caemyr - Olaf Siejka (Jan, 2008)
- *         Use ReactOS forum PM or IRC to contact me
- *         https://reactos.org
- *         IRC: irc.freenode.net #reactos-pl;
- *         UTF-8 conversion by Caemyr (May, 2011)
- *         Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (April, 2014)
- *         Updated by Zcooger - M. St. Ciuńczyk (October, 2018)
- *         Updated by pithwz - Piotr Hetnarowicz <piotrhwz@gmail.com> (May, 2020)
+ * PROJECT:     ReactOS Software Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATORS: Copyright 2008 Olaf Siejka <caemyr@gmail.com>
+ *              Copyright 2014 Adam Stachowicz <saibamenppl@gmail.com>
+ *              Copyright 2018 M. St. Ciuńczyk (Zcooger)
+ *              Copyright 2020-2024 Piotr Hetnarowicz <piotrhwz@gmail.com>
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -37,7 +36,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Ten program pomoże ci stworzyć skróty do lokalnych lub sieciowych programów, plików, katalogów, komputerów, bądź adresów Internetowych.", -1, 120, 15, 200, 30
     LTEXT "Wpisz ścieżkę dostępu do obiektu:", -1, 120, 50, 120, 10
-    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
+    EDITTEXT IDC_LINK_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "Przeglądaj...", IDC_SHORTCUT_BROWSE, 274, 65, 55, 15, ES_LEFT
     LTEXT "Kliknij Dalej, aby kontynuować.", -1, 120, 97, 162, 10
 END
@@ -97,5 +96,5 @@ BEGIN
     IDS_NO_DIRECTORY "Nie podano ścieżki!"
     IDS_INVALID_PATH "Podana ścieżka jest niepoprawna!"
     IDS_INVALID_NAME "Wprowadzona nazwa skrótu zawiera nieprawidłowe znaki lub jest za długa."
-    IDS_BROWSE_FOR_TARGET "Please select the target of the shortcut below:"
+    IDS_BROWSE_FOR_TARGET "Wybierz element docelowy dla poniższego skrótu:"
 END

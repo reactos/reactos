@@ -22,6 +22,7 @@
 #define IDC_ZOOM     532
 #define IDC_PEN      533
 #define IDC_AIRBRUSH 534
+#define IDC_HANDDRAG 535
 
 #define IDI_HORZSTRETCH 535
 #define IDI_VERTSTRETCH 536
@@ -104,6 +105,8 @@
 
 #define IDM_CTRL_PLUS   290
 #define IDM_CTRL_MINUS  291
+
+#define IDM_CROPSELECTION 292
 
 /* the following 16 numbers need to be in order, increasing by 1 */
 #define ID_FREESEL  600

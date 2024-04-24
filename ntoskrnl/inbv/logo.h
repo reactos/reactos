@@ -72,3 +72,11 @@ CODE_SEG("INIT")
 VOID
 NTAPI
 FinalizeBootLogo(VOID);
+
+VOID
+NTAPI
+DisplayShutdownBitmap(VOID);
+
+VOID
+NTAPI
+DisplayShutdownText(VOID);

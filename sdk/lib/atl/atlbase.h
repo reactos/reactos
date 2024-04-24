@@ -1120,40 +1120,40 @@ public:
 
 public:
 
-    CRegKey() throw()
+    CRegKey() noexcept
         : m_hKey(NULL)
     {
     }
 
-    CRegKey(CRegKey& key) throw()
+    CRegKey(CRegKey& key) noexcept
         : m_hKey(key.Detach())
     {
     }
 
-    explicit CRegKey(HKEY hKey) throw()
+    explicit CRegKey(HKEY hKey) noexcept
         : m_hKey(hKey)
     {
     }
 
 #if 0
     // FIXME & TODO:
-    CRegKey(CAtlTransactionManager* pTM) throw()
+    CRegKey(CAtlTransactionManager* pTM) noexcept
     {
         ...
     }
 #endif
 
-    ~CRegKey() throw()
+    ~CRegKey() noexcept
     {
         Close();
     }
 
-    void Attach(HKEY hKey) throw()
+    void Attach(HKEY hKey) noexcept
     {
         m_hKey = hKey;
     }
 
-    LONG Close() throw()
+    LONG Close() noexcept
     {
         if (m_hKey)
         {
@@ -1163,7 +1163,7 @@ public:
         return ERROR_SUCCESS;
     }
 
-    HKEY Detach() throw()
+    HKEY Detach() noexcept
     {
         HKEY hKey = m_hKey;
         m_hKey = NULL;
@@ -1171,7 +1171,7 @@ public:
     }
 
     LONG Open(HKEY hKeyParent, LPCTSTR lpszKeyName,
-              REGSAM samDesired = KEY_READ | KEY_WRITE) throw()
+              REGSAM samDesired = KEY_READ | KEY_WRITE) noexcept
     {
         ATLASSERT(hKeyParent);
         ATLASSERT(lpszKeyName);
@@ -1191,7 +1191,7 @@ public:
                 DWORD dwOptions = REG_OPTION_NON_VOLATILE,
                 REGSAM samDesired = KEY_READ | KEY_WRITE,
                 LPSECURITY_ATTRIBUTES lpSecAttr = NULL,
-                LPDWORD lpdwDisposition = NULL) throw()
+                LPDWORD lpdwDisposition = NULL) noexcept
     {
         ATLASSERT(hKeyParent);
         ATLASSERT(lpszKeyName);
@@ -1208,13 +1208,13 @@ public:
         return lRes;
     }
 
-    LONG QueryValue(LPCTSTR pszValueName, DWORD* pdwType, void* pData, ULONG* pnBytes) throw()
+    LONG QueryValue(LPCTSTR pszValueName, DWORD* pdwType, void* pData, ULONG* pnBytes) noexcept
     {
         ATLASSERT(m_hKey);
         return ::RegQueryValueEx(m_hKey, pszValueName, NULL, pdwType, (LPBYTE)pData, pnBytes);
     }
 
-    LONG QueryDWORDValue(LPCTSTR pszValueName, DWORD& dwValue) throw()
+    LONG QueryDWORDValue(LPCTSTR pszValueName, DWORD& dwValue) noexcept
     {
         ULONG size = sizeof(DWORD);
         DWORD type = 0;
@@ -1226,7 +1226,7 @@ public:
         return lRet;
     }
 
-    LONG QueryBinaryValue(LPCTSTR pszValueName, void* pValue, ULONG* pnBytes) throw()
+    LONG QueryBinaryValue(LPCTSTR pszValueName, void* pValue, ULONG* pnBytes) noexcept
     {
         DWORD type = 0;
         LONG lRet = QueryValue(pszValueName, &type, pValue, pnBytes);
@@ -1237,7 +1237,7 @@ public:
         return lRet;
     }
 
-    LONG QueryStringValue(LPCTSTR pszValueName, LPTSTR pszValue, ULONG* pnChars) throw()
+    LONG QueryStringValue(LPCTSTR pszValueName, LPTSTR pszValue, ULONG* pnChars) noexcept
     {
         ULONG size = (*pnChars) * sizeof(TCHAR);
         DWORD type = 0;
@@ -1250,7 +1250,7 @@ public:
         return lRet;
     }
 
-    LONG QueryGUIDValue(LPCTSTR pszValueName, GUID& guidValue) throw()
+    LONG QueryGUIDValue(LPCTSTR pszValueName, GUID& guidValue) noexcept
     {
         OLECHAR buf[40] = {0};
         ULONG nChars = 39;
@@ -1275,7 +1275,7 @@ public:
         return lRet;
     }
 
-    LONG QueryQWORDValue(LPCTSTR pszValueName, ULONGLONG& qwValue) throw()
+    LONG QueryQWORDValue(LPCTSTR pszValueName, ULONGLONG& qwValue) noexcept
     {
         ULONG size = sizeof(ULONGLONG);
         DWORD type = 0;
@@ -1288,7 +1288,7 @@ public:
     }
 
     LONG QueryMultiStringValue(LPCTSTR pszValueName, LPTSTR pszValue,
-                               ULONG* pnChars) throw()
+                               ULONG* pnChars) noexcept
     {
         ULONG size = (*pnChars) * sizeof(TCHAR);
         DWORD type;
@@ -1301,18 +1301,18 @@ public:
         return lRet;
     }
 
-    LONG SetValue(LPCTSTR pszValueName, DWORD dwType, const void* pValue, ULONG nBytes) throw()
+    LONG SetValue(LPCTSTR pszValueName, DWORD dwType, const void* pValue, ULONG nBytes) noexcept
     {
         ATLASSERT(m_hKey);
         return ::RegSetValueEx(m_hKey, pszValueName, 0, dwType, (const BYTE*)pValue, nBytes);
     }
 
-    LONG SetDWORDValue(LPCTSTR pszValueName, DWORD dwValue) throw()
+    LONG SetDWORDValue(LPCTSTR pszValueName, DWORD dwValue) noexcept
     {
         return SetValue(pszValueName, REG_DWORD, &dwValue, sizeof(DWORD));
     }
 
-    LONG SetStringValue(LPCTSTR pszValueName, LPCTSTR pszValue, DWORD dwType = REG_SZ) throw()
+    LONG SetStringValue(LPCTSTR pszValueName, LPCTSTR pszValue, DWORD dwType = REG_SZ) noexcept
     {
         SIZE_T length;
         switch (dwType)
@@ -1328,7 +1328,7 @@ public:
         }
     }
 
-    LONG SetGUIDValue(LPCTSTR pszValueName, REFGUID guidValue) throw()
+    LONG SetGUIDValue(LPCTSTR pszValueName, REFGUID guidValue) noexcept
     {
         OLECHAR buf[40] = {0};
         ::StringFromGUID2(guidValue, buf, 39);
@@ -1341,25 +1341,25 @@ public:
 #endif
     }
 
-    LONG SetBinaryValue(LPCTSTR pszValueName, const void* pValue, ULONG nBytes) throw()
+    LONG SetBinaryValue(LPCTSTR pszValueName, const void* pValue, ULONG nBytes) noexcept
     {
         return SetValue(pszValueName, REG_BINARY, pValue, nBytes);
     }
 
-    LONG SetMultiStringValue(LPCTSTR pszValueName, LPCTSTR pszValue) throw()
+    LONG SetMultiStringValue(LPCTSTR pszValueName, LPCTSTR pszValue) noexcept
     {
         ULONG dwSize = CRegKey::_GetMultiStringSize(pszValue);
         return SetValue(pszValueName, REG_MULTI_SZ, pszValue, dwSize);
     }
 
-    LONG SetQWORDValue(LPCTSTR pszValueName, ULONGLONG qwValue) throw()
+    LONG SetQWORDValue(LPCTSTR pszValueName, ULONGLONG qwValue) noexcept
     {
         ULONG dwSize = sizeof(ULONGLONG);
         return SetValue(pszValueName, REG_QWORD, &qwValue, dwSize);
     }
 
     LONG NotifyChangeKeyValue(BOOL bWatchSubtree, DWORD dwNotifyFilter,
-                              HANDLE hEvent, BOOL bAsync = TRUE) throw()
+                              HANDLE hEvent, BOOL bAsync = TRUE) noexcept
     {
         ATLASSERT(m_hKey);
         LONG ret = ::RegNotifyChangeKeyValue(m_hKey, bWatchSubtree,
@@ -1367,7 +1367,7 @@ public:
         return ret;
     }
 
-    LONG Flush() throw()
+    LONG Flush() noexcept
     {
         ATLASSERT(m_hKey);
         LONG ret = ::RegFlushKey(m_hKey);
@@ -1387,7 +1387,7 @@ public:
     }
 
     LONG SetKeyValue(LPCTSTR lpszKeyName, LPCTSTR lpszValue,
-                     LPCTSTR lpszValueName = NULL) throw()
+                     LPCTSTR lpszValueName = NULL) noexcept
     {
         CRegKey key;
         LONG lRet = key.Create(m_hKey, lpszKeyName);
@@ -1398,20 +1398,20 @@ public:
         return lRet;
     }
 
-    LONG DeleteValue(LPCTSTR lpszValue) throw()
+    LONG DeleteValue(LPCTSTR lpszValue) noexcept
     {
         ATLASSERT(m_hKey);
         return ::RegDeleteValue(m_hKey, lpszValue);
     }
 
-    LONG DeleteSubKey(LPCTSTR lpszSubKey) throw()
+    LONG DeleteSubKey(LPCTSTR lpszSubKey) noexcept
     {
         ATLASSERT(m_hKey);
         ATLASSERT(lpszSubKey);
         return ::RegDeleteKey(m_hKey, lpszSubKey);
     }
 
-    LONG RecurseDeleteKey(LPCTSTR lpszKey) throw()
+    LONG RecurseDeleteKey(LPCTSTR lpszKey) noexcept
     {
         ATLASSERT(m_hKey);
         ATLASSERT(lpszKey);
@@ -1419,7 +1419,7 @@ public:
     }
 
     LONG EnumKey(DWORD iIndex, LPTSTR pszName, LPDWORD pnNameLength,
-                 FILETIME* pftLastWriteTime = NULL) throw()
+                 FILETIME* pftLastWriteTime = NULL) noexcept
     {
         ATLASSERT(m_hKey);
         LONG ret = ::RegEnumKeyEx(m_hKey, iIndex, pszName, pnNameLength, NULL,
@@ -1428,7 +1428,7 @@ public:
     }
 
     LONG GetKeySecurity(SECURITY_INFORMATION si, PSECURITY_DESCRIPTOR psd,
-                        LPDWORD pnBytes) throw()
+                        LPDWORD pnBytes) noexcept
     {
         ATLASSERT(m_hKey);
         LONG ret = ::RegGetKeySecurity(m_hKey, si, psd, pnBytes);
@@ -1436,19 +1436,19 @@ public:
     }
 
     LONG SetKeySecurity(SECURITY_INFORMATION si,
-                        PSECURITY_DESCRIPTOR psd) throw()
+                        PSECURITY_DESCRIPTOR psd) noexcept
     {
         ATLASSERT(m_hKey);
         LONG ret = ::RegSetKeySecurity(m_hKey, si, psd);
         return ret;
     }
 
-    operator HKEY() const throw()
+    operator HKEY() const noexcept
     {
         return m_hKey;
     }
 
-    CRegKey& operator=(CRegKey& key) throw()
+    CRegKey& operator=(CRegKey& key) noexcept
     {
         if (m_hKey != key.m_hKey)
         {

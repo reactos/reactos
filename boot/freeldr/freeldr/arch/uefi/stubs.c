@@ -7,8 +7,6 @@
 
 #include <uefildr.h>
 
-#include <debug.h>
-
 #ifndef _M_ARM
 /* TODO: Handle this with custom Disk / partition setup */
 UCHAR
@@ -41,12 +39,6 @@ UefiGetExtendedBIOSData(PULONG ExtendedBIOSDataArea,
                         PULONG ExtendedBIOSDataSize)
 {
 
-}
-
-PCONFIGURATION_COMPONENT_DATA
-UefiHwDetect(VOID)
-{
-    return 0;
 }
 
 VOID

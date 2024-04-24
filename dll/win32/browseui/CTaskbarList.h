@@ -24,15 +24,14 @@ public:
     virtual ~CTaskbarList();
 
     /*** ITaskbarList2 methods ***/
-    virtual HRESULT WINAPI MarkFullscreenWindow(HWND hwnd, BOOL fFullscreen);
+    STDMETHOD(MarkFullscreenWindow)(HWND hwnd, BOOL fFullscreen) override;
 
     /*** ITaskbarList methods ***/
-    virtual HRESULT STDMETHODCALLTYPE HrInit();
-    virtual HRESULT STDMETHODCALLTYPE AddTab(HWND hwnd);
-    virtual HRESULT STDMETHODCALLTYPE DeleteTab(HWND hwnd);
-    virtual HRESULT STDMETHODCALLTYPE ActivateTab(HWND hwnd);
-    virtual HRESULT STDMETHODCALLTYPE SetActiveAlt(HWND hwnd);
-
+    STDMETHOD(HrInit)() override;
+    STDMETHOD(AddTab)(HWND hwnd) override;
+    STDMETHOD(DeleteTab)(HWND hwnd) override;
+    STDMETHOD(ActivateTab)(HWND hwnd) override;
+    STDMETHOD(SetActiveAlt)(HWND hwnd) override;
 
     DECLARE_REGISTRY_RESOURCEID(IDR_TASKBARLIST)
     DECLARE_NOT_AGGREGATABLE(CTaskbarList)

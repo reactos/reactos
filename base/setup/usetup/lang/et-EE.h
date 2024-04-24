@@ -930,59 +930,6 @@ static MUI_ENTRY etEESuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY etEEBootPageEntries[] =
-{
-    {
-        4,
-        3,
-        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
-        TEXT_STYLE_UNDERLINE,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        8,
-        "Alglaadurit ei saanud kettale kirjutada.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        13,
-        "Sisesta vormindatud flopiketas draivi A:",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        14,
-        "ja vajuta ENTER.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        "ENTER = J\204tka   F3 = V\204lju",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
-        TEXT_ID_STATIC
-    },
-    {
-        0,
-        0,
-        NULL,
-        0
-    }
-
-};
-
 static MUI_ENTRY etEESelectPartitionEntries[] =
 {
     {
@@ -1023,7 +970,7 @@ static MUI_ENTRY etEESelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Vajuta P uue primaarse partitsiooni loomiseks.",
+        "\x07  Vajuta C uue primaarse/loogilise partitsiooni loomiseks.",
 //        "\x07  Vajuta C, et teha uus partitsioon.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1038,13 +985,6 @@ static MUI_ENTRY etEESelectPartitionEntries[] =
     {
         8,
         19,
-        "\x07  Vajuta L uue loogilise partitsiooni loomiiseks.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
-        21,
         "\x07  Vajuta D olemasoleva partitsiooni kustutamiseks.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -1312,7 +1252,7 @@ static MUI_ENTRY etEEFormatPartitionEntries[] =
     },
     {
         6,
-        10,
+        16,
         "N\201\201d vormindatakse partitsioon. Vajuta ENTER j\204tkamiseks.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_FORMAT_PROMPT
@@ -1467,7 +1407,7 @@ static MUI_ENTRY etEEFileCopyEntries[] =
     }
 };
 
-static MUI_ENTRY etEEBootLoaderEntries[] =
+static MUI_ENTRY etEEBootLoaderSelectPageEntries[] =
 {
     {
         4,
@@ -1479,7 +1419,7 @@ static MUI_ENTRY etEEBootLoaderEntries[] =
     {
         6,
         8,
-        "Alglaaduri paigaldamine",
+        "Please select where Setup should install the bootloader:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1536,6 +1476,13 @@ static MUI_ENTRY etEEBootLoaderInstallPageEntries[] =
         TEXT_ID_STATIC
     },
     {
+        6,
+        8,
+        "Alglaaduri paigaldamine.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
         0,
         0,
         "Installing the bootloader onto the media, please wait...",
@@ -1548,6 +1495,52 @@ static MUI_ENTRY etEEBootLoaderInstallPageEntries[] =
         NULL,
         0
     }
+};
+
+static MUI_ENTRY etEEBootLoaderRemovableDiskPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " paigaldus ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Alglaadurit ei saanud kettale kirjutada.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        13,
+        "Sisesta vormindatud flopiketas draivi A:",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        14,
+        "ja vajuta ENTER.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "ENTER = J\204tka   F3 = V\204lju",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+
 };
 
 static MUI_ENTRY etEEKeyboardSettingsEntries[] =
@@ -1939,13 +1932,6 @@ MUI_ERROR etEEErrorEntries[] =
         NULL
     },
     {
-        // ERROR_DELETE_SPACE,
-        "Partitsioneerimata kettaruumi ei saa kustutada!\n"
-        "\n"
-        "  * Vajuta mis tahes klahvi, et j\204tkata.",
-        NULL
-    },
-    {
         // ERROR_INSTALL_BOOTCODE,
         "S\201steemikettale ei \344nnestunud paigaldada %S alglaadimiskoodi.",
         "ENTER = Taask\204ivita arvuti"
@@ -2181,8 +2167,8 @@ MUI_PAGE etEEPages[] =
         etEEKeyboardSettingsEntries
     },
     {
-        BOOT_LOADER_PAGE,
-        etEEBootLoaderEntries
+        BOOTLOADER_SELECT_PAGE,
+        etEEBootLoaderSelectPageEntries
     },
     {
         LAYOUT_SETTINGS_PAGE,
@@ -2197,12 +2183,12 @@ MUI_PAGE etEEPages[] =
         etEESuccessPageEntries
     },
     {
-        BOOT_LOADER_INSTALLATION_PAGE,
+        BOOTLOADER_INSTALL_PAGE,
         etEEBootLoaderInstallPageEntries
     },
     {
-        BOOT_LOADER_FLOPPY_PAGE,
-        etEEBootPageEntries
+        BOOTLOADER_REMOVABLE_DISK_PAGE,
+        etEEBootLoaderRemovableDiskPageEntries
     },
     {
         REGISTRY_PAGE,
@@ -2219,26 +2205,28 @@ MUI_STRING etEEStrings[] =
     {STRING_PLEASEWAIT,
      "   Palun oota..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Paigalda   P = Loo primaarne   E = Loo laiendatud   F3 = V\204lju"},
+     "   ENTER = Paigalda   C = Loo primaarne   E = Loo laiendatud   F3 = V\204lju"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Paigalda   L = Loo loogiline partitsioon   F3 = V\204lju"},
+     "   ENTER = Paigalda   C = Loo loogiline partitsioon   F3 = V\204lju"},
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Paigalda  D = Kustuta partitsioon  F3 = V\204lju"},
     {STRING_DELETEPARTITION,
      "   D = Kustuta partitsioon   F3 = V\204lju"},
     {STRING_PARTITIONSIZE,
      "Uue partitsiooni suurus:"},
-    {STRING_CHOOSENEWPARTITION,
+    {STRING_CHOOSE_NEW_PARTITION,
      "You have chosen to create a primary partition on"},
 //     "Oled valinud kettale uue partitsiooni loomise"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
      "You have chosen to create an extended partition on"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "You have chosen to create a logical partition on"},
-    {STRING_HDDSIZE,
+    {STRING_HDPARTSIZE,
     "Sisesta uue partitsiooni suurus megabaitides."},
     {STRING_CREATEPARTITION,
      "   ENTER = Loo partitsioon   ESC = Katkesta   F3 = V\204lju"},
+    {STRING_NEWPARTITION,
+    "Loodi uus partitsioon"},
     {STRING_PARTFORMAT,
     "J\204rgmisena vormindatakse seda partitsiooni."},
     {STRING_NONFORMATTEDPART,
@@ -2289,30 +2277,28 @@ MUI_STRING etEEStrings[] =
     "T\344en\204oliselt on probleem USB klaviatuuri kasutamises\r\n"},
     {STRING_CONSOLEFAIL3,
     "USB klaviatuurid ei ole veel toetatud\r\n"},
-    {STRING_FORMATTINGDISK,
-    "K\344vaketta vormindamine"},
+    {STRING_FORMATTINGPART,
+    "Partitsioon vormindamine..."},
     {STRING_CHECKINGDISK,
-    "K\344vaketta kontrollimine"},
+    "K\344vaketta kontrollimine..."},
     {STRING_FORMATDISK1,
     " Vorminda partitsioon %S failis\201steemiga (kiire vormindus) "},
     {STRING_FORMATDISK2,
     " Vorminda partitsioon %S failis\201steemiga "},
     {STRING_KEEPFORMAT,
     " \216ra muuda praegust failis\201steemi "},
-    {STRING_HDINFOPARTCREATE_1,
+    {STRING_HDDISK1,
     "%s."},
-    {STRING_HDINFOPARTDELETE_1,
+    {STRING_HDDISK2,
     "%s."},
     {STRING_PARTTYPE,
     "Type 0x%02x"},
-    {STRING_HDDINFO_1,
+    {STRING_HDDINFO1,
     // "K\344vaketas %lu (%I64u %s), Port=%hu, Siin=%hu, Id=%hu (%wZ) [%s]"
     "%I64u %s K\344vaketas %lu (Port=%hu, Siin=%hu, Id=%hu) - %wZ [%s]"},
-    {STRING_HDDINFO_2,
+    {STRING_HDDINFO2,
     // "K\344vaketas %lu (%I64u %s), Port=%hu, Siin=%hu, Id=%hu [%s]"
     "%I64u %s K\344vaketas %lu (Port=%hu, Siin=%hu, Id=%hu) [%s]"},
-    {STRING_NEWPARTITION,
-    "Loodi uus partitsioon"},
     {STRING_UNPSPACE,
     "Kasutamata kettaruum"},
     {STRING_MAXSIZE,

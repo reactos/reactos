@@ -4,61 +4,63 @@
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
  *              Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-//IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-ro-RO.bmp"
+//IDB_FONTSTOOLBAR BITMAP "img/fontstoolbar-ro-RO.bmp"
 
 ID_MENU MENU
 BEGIN
     POPUP "&Fișier"
     BEGIN
-        MENUITEM "&Nou\tCtrl+N", IDM_FILENEW
+        MENUITEM "No&u\tCtrl+N", IDM_FILENEW
         MENUITEM "&Deschidere...\tCtrl+O", IDM_FILEOPEN
-        MENUITEM "&Păstrează\tCtrl+S", IDM_FILESAVE
-        MENUITEM "Păst&rare în...", IDM_FILESAVEAS
+        MENUITEM "&Salvare\tCtrl+S", IDM_FILESAVE
+        MENUITEM "S&alvare ca...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "Din aparat media...", IDM_FILEFROMSCANNERORCAMERA
+        MENUITEM "De la scane&r sau cameră digitală...", IDM_FILEFROMSCANNERORCAMERA
         MENUITEM SEPARATOR
-        MENUITEM "Pre&vizionează pagina", IDM_FILEPAGEVIEW
-        MENUITEM "C&onfigurare pagină...", IDM_FILEPAGESETUP
-        MENUITEM "I&mprimă...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM "E&xaminare înaintea imprimării", IDM_FILEPAGEVIEW
+        MENUITEM "Iniţiali&zare pagină...", IDM_FILEPAGESETUP
+        MENUITEM "I&mprimare...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
-        MENUITEM "Transmite...", IDM_FILESEND
+        MENUITEM "S&e trimite...", IDM_FILESEND
         MENUITEM SEPARATOR
-        MENUITEM "Decor de birou (în c&arou)", IDM_FILEASWALLPAPERPLANE
-        MENUITEM "Decor de birou (&centrat)", IDM_FILEASWALLPAPERCENTERED
-        MENUITEM "Decor de birou (e&xtins)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM "S&tabilire ca fundal (mozaic)", IDM_FILEASWALLPAPERPLANE
+        MENUITEM "Sta&bilire ca fundal (centrat)", IDM_FILEASWALLPAPERCENTERED
+        MENUITEM "Stabili&re ca fundal (umplere)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "Cel mai recent fișier", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
+        MENUITEM "Fişier recent", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "I&eșire\tAlt+F4", IDM_FILEEXIT
+        MENUITEM "&Ieşire\tAlt+F4", IDM_FILEEXIT
     END
     POPUP "&Editare"
     BEGIN
-        MENUITEM "Des&face\tCtrl+Z", IDM_EDITUNDO
-        MENUITEM "&Reface\tCtrl+Y", IDM_EDITREDO
+        MENUITEM "&Anulare\tCtrl+Z", IDM_EDITUNDO
+        MENUITEM "&Repetare\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
-        MENUITEM "&Decupează\tCtrl+X", IDM_EDITCUT
-        MENUITEM "&Copiază\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "&Lipește\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Șt&erge selecția\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "In&versează selecția", IDM_EDITINVERTSELECTION
-        MENUITEM "Selecte&ază tot\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "Dec&upare\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Copiere\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "&Lipire\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "&Trunchiere selecţie", IDM_CROPSELECTION       
+        MENUITEM "&Golire selecţie\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "In&versare selecție", IDM_EDITINVERTSELECTION
+        MENUITEM "&Selectare totală\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "C&opiere în...", IDM_EDITCOPYTO
-        MENUITEM "Lipire di&n...", IDM_EDITPASTEFROM
+        MENUITEM "Lipire &din...", IDM_EDITPASTEFROM
     END
-    POPUP "&Afișare"
+    POPUP "&Vizualizare"
     BEGIN
-        MENUITEM "&Panou de instrumente\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
-        MENUITEM "Paletă de &culori\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
+        MENUITEM "&Casetă de instrumente\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
+        MENUITEM "C&asetă de culori\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
         MENUITEM "&Bară de stare", IDM_VIEWSTATUSBAR, CHECKED
-        MENUITEM "Instrumente pentru te&xt", IDM_FORMATICONBAR, CHECKED, GRAYED
+        MENUITEM "Ba&ră de instrumente text", IDM_FORMATICONBAR, CHECKED, GRAYED
         MENUITEM SEPARATOR
-        POPUP "Sca&ră"
+        POPUP "&Panoramare"
         BEGIN
             POPUP "&Definită de utilizator"
             BEGIN
@@ -78,26 +80,26 @@ BEGIN
     END
     POPUP "I&magine"
     BEGIN
-        MENUITEM "&Rotire/Oglindire...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Întin&dere/Înclinare...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "Recoltea&ză", IDM_IMAGECROP
-        MENUITEM "In&versează culorile\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "&Răsturnare/Rotire...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "&Lărgire/Înclinare...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "Trunc&hiere", IDM_IMAGECROP
+        MENUITEM "&Inversare culori\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "&Atribute...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "Șt&erge imaginea", IDM_IMAGEDELETEIMAGE
-        MENUITEM "Mod &opac", IDM_IMAGEDRAWOPAQUE
+        MENUITEM "&Golire imagine", IDM_IMAGEDELETEIMAGE
+        MENUITEM "&Desenare opacă", IDM_IMAGEDRAWOPAQUE
     END
     POPUP "&Culori"
     BEGIN
-        MENUITEM "&Editare paletă...", IDM_COLORSEDITPALETTE
+        MENUITEM "&Editare culori...", IDM_COLORSEDITPALETTE
         MENUITEM SEPARATOR
         MENUITEM "Paletă &modernă", IDM_COLORSMODERNPALETTE
         MENUITEM "Paletă &veche", IDM_COLORSOLDPALETTE
     END
-    POPUP "Aj&utor"
+    POPUP "&Ajutor"
     BEGIN
-        MENUITEM "&Manual...", IDM_HELPHELPTOPICS
+        MENUITEM "&Termeni din Ajutor", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Despre...", IDM_HELPINFO
+        MENUITEM "&Despre Paint", IDM_HELPINFO
     END
 END
 
@@ -105,18 +107,20 @@ ID_POPUPMENU MENU
 BEGIN
     POPUP "Popup #0"
     BEGIN
-        MENUITEM "&Decupează\tCtrl+X", IDM_EDITCUT
-        MENUITEM "&Copiază\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "&Lipește\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "Șt&erge selecția\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Selecte&ază tot\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "Dec&upare\tCtrl+X", IDM_EDITCUT
+        MENUITEM "&Copiere\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "&Lipire\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "&Trunchiere selecție", IDM_CROPSELECTION        
+        MENUITEM "G&olire selecţie\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Selectare &totală\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "C&opiere în...", IDM_EDITCOPYTO
-        MENUITEM "Lipire di&n...", IDM_EDITPASTEFROM
+        MENUITEM "Lipire &din...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
         MENUITEM "&Rotire/Oglindire...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "Întindere/În&clinare...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "&Inversează culorile\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "&Inversare culori\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 
@@ -150,7 +154,7 @@ END
 IDD_MIRRORROTATE DIALOGEX 100, 100, 180, 100
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Rotire/oglindire imagine"
+CAPTION "Rotire și oglindire imagine"
 BEGIN
     GROUPBOX "Rotire sau oglindire", IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
     AUTORADIOBUTTON "Oglindire &orizontală", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
@@ -159,8 +163,8 @@ BEGIN
     AUTORADIOBUTTON "&90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
     AUTORADIOBUTTON "&180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
     AUTORADIOBUTTON "&270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
-    DEFPUSHBUTTON "Con&firmă", IDOK, 125, 8, 48, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 125, 24, 48, 14
+    DEFPUSHBUTTON "OK", IDOK, 125, 8, 48, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 125, 24, 48, 14
 END
 
 IDD_ATTRIBUTES DIALOGEX 100, 100, 225, 120
@@ -168,7 +172,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Atribute"
 BEGIN
-    LTEXT "&Lățime:", IDD_ATTRIBUTESTEXT1, 10, 42, 35, 10
+    LTEXT "&Lăţime:", IDD_ATTRIBUTESTEXT1, 10, 42, 35, 10
     EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
     LTEXT "Î&nălțime:", IDD_ATTRIBUTESTEXT2, 90, 42, 35, 10
     EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
@@ -179,23 +183,23 @@ BEGIN
     LTEXT "Indisponibil", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
     LTEXT "ppcm", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10 /* This unit must match IDS_PRINTRES */
     GROUPBOX "Unități", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
-    AUTORADIOBUTTON "ț&oli", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
-    AUTORADIOBUTTON "c&m", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
-    AUTORADIOBUTTON "&pixeli", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
+    AUTORADIOBUTTON "&Inch", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
+    AUTORADIOBUTTON "&Cm", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
+    AUTORADIOBUTTON "&Pixeli", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
     GROUPBOX "Culori", IDD_ATTRIBUTESGROUP2, 6, 88, 158, 27
-    AUTORADIOBUTTON "&Alb-negru", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
-    AUTORADIOBUTTON "C&uloare", IDD_ATTRIBUTESRB5, 92, 100, 42, 10
-    DEFPUSHBUTTON "Confirmă", IDOK, 170, 8, 48, 14
-    PUSHBUTTON "Anulează", IDCANCEL, 170, 24, 48, 14
-    PUSHBUTTON "Impli&cite", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
+    AUTORADIOBUTTON "Al&b-negru", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
+    AUTORADIOBUTTON "C&ulori", IDD_ATTRIBUTESRB5, 92, 100, 42, 10
+    DEFPUSHBUTTON "OK", IDOK, 170, 8, 48, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 170, 24, 48, 14
+    PUSHBUTTON "I&mplicit", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
 END
 
 IDD_STRETCHSKEW DIALOGEX 100, 100, 225, 150
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Întindere și înclinare imagine"
+CAPTION "Lărgire și înclinare"
 BEGIN
-    GROUPBOX "Întindere", IDD_STRETCHSKEWGROUPSTRETCH, 6, 6, 158, 66
+    GROUPBOX "Lărgire", IDD_STRETCHSKEWGROUPSTRETCH, 6, 6, 158, 66
     ICON IDI_HORZSTRETCH, IDD_STRETCHSKEWICONHSTRETCH, 12, 18, 32, 32
     LTEXT "&Orizontală:", IDD_STRETCHSKEWTEXTHSTRETCH, 45, 24, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITHSTRETCH, 90, 23, 32, 12
@@ -208,13 +212,13 @@ BEGIN
     ICON IDI_HORZSKEW, IDD_STRETCHSKEWICONHSKEW, 12, 88, 32, 32
     LTEXT "Ori&zontală:", IDD_STRETCHSKEWTEXTHSKEW, 45, 94, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITHSKEW, 90, 93, 32, 12
-    LTEXT "grade", IDD_STRETCHSKEWTEXTHDEG, 125, 94, 30, 10
+    LTEXT "Grade", IDD_STRETCHSKEWTEXTHDEG, 125, 94, 30, 10
     ICON IDI_VERTSKEW, IDD_STRETCHSKEWICONVSKEW, 12, 113, 32, 32
     LTEXT "V&erticală:", IDD_STRETCHSKEWTEXTVSKEW, 45, 119, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITVSKEW, 90, 118, 32, 12
-    LTEXT "grade", IDD_STRETCHSKEWTEXTVDEG, 125, 119, 30, 10
-    DEFPUSHBUTTON "Con&firmă", IDOK, 170, 8, 48, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 170, 24, 48, 14
+    LTEXT "Grade", IDD_STRETCHSKEWTEXTVDEG, 125, 119, 30, 10
+    DEFPUSHBUTTON "OK", IDOK, 170, 8, 48, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 170, 24, 48, 14
 END
 
 IDD_FONTS DIALOG 0, 0, 225, 25
@@ -230,12 +234,12 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRAMNAME "Pictare"
-    IDS_WINDOWTITLE "%s - Pictare"
-    IDS_INFOTITLE "Pictare pentru ReactOS"
+    IDS_PROGRAMNAME "Paint"
+    IDS_WINDOWTITLE "%s - Paint"
+    IDS_INFOTITLE "Paint pentru ReactOS"
     IDS_INFOTEXT "Disponibilă sub licența GNU Lesser General Public (vedeți www.gnu.org)"
-    IDS_SAVEPROMPTTEXT "Doriți păstrarea modificărilor din %s?"
-    IDS_DEFAULTFILENAME "Fără nume"
+    IDS_SAVEPROMPTTEXT "Doriți salvarea modificărilor din %s?"
+    IDS_DEFAULTFILENAME "Fără titlu"
     IDS_MINIATURETITLE "Miniatură"
     IDS_TOOLTIP1 "Golire selecție"
     IDS_TOOLTIP2 "Selecție"
@@ -259,15 +263,15 @@ BEGIN
     IDS_INTNUMBERS "Introduceți doar numere întregi!"
     IDS_PERCENTAGE "Procentajul trebuie să fie între 1 și 500."
     IDS_ANGLE "Unghiul trebuie să fie între -89 și 89."
-    IDS_LOADERRORTEXT "Fișierul %s nu poate fi încărcat."
-    IDS_ENLARGEPROMPTTEXT "Imaginea din memorie este mai mare decât suprafața curent disponibilă în aplicație.\nDoriți să redimensionați suprafața de desen disponibilă?"
+    IDS_LOADERRORTEXT "Nu s-a putut încărca fișierul %s."
+    IDS_ENLARGEPROMPTTEXT "Imaginea din memorie este mai mare decât suprafața curentă disponibilă în aplicație.\nDoriți să redimensionați suprafața de desen disponibilă?"
     IDS_BOLD "Îngroșat"
     IDS_ITALIC "Cursiv"
     IDS_UNDERLINE "Subliniat"
     IDS_VERTICAL "Vertical"
     IDS_PRINTRES "%d x %d pixeli/cm"
-    IDS_CANTPASTE "Nu a putut fi lipit din clipboard. Formatul de date este fie incorect, fie nesuportat."
-    IDS_SAVEERROR "Eșec în păstrarea imaginii bitmap („hartă de biți”) în fișierul:\n\n%s"
-    IDS_CANTSENDMAIL "Eșec în trimiterea unei scrisori."
-    IDS_LOSECOLOR "În această operațiune informațiile legate de culoare vor fi pierdute. Sigur veți continua?"
+    IDS_CANTPASTE "Nu s-a putut lipi din clipboard. Formatul de date este fie incorect, fie nesuportat."
+    IDS_SAVEERROR "Nu s-a putut salva imaginea bitmap („hartă de biți”) în fișierul:\n\n%s"
+    IDS_CANTSENDMAIL "Nu s-a putut trimite un e-mail."
+    IDS_LOSECOLOR "În această operațiune informațiile legate de culoare vor fi pierdute. Sunteți sigur că veți continua?"
 END

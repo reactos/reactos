@@ -2249,14 +2249,15 @@ lookinhash:
 
 NTSTATUS
 NTAPI
-LdrpGetProcedureAddress(IN PVOID BaseAddress,
-                        IN PANSI_STRING Name,
-                        IN ULONG Ordinal,
-                        OUT PVOID *ProcedureAddress,
-                        IN BOOLEAN ExecuteInit)
+LdrpGetProcedureAddress(
+    _In_ PVOID BaseAddress,
+    _In_opt_ _When_(Ordinal == 0, _Notnull_) PANSI_STRING Name,
+    _In_opt_ _When_(Name == NULL, _In_range_(>, 0)) ULONG Ordinal,
+    _Out_ PVOID *ProcedureAddress,
+    _In_ BOOLEAN ExecuteInit)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    UCHAR ImportBuffer[64];
+    UCHAR ImportBuffer[64]; // 128 since NT6.2
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     IMAGE_THUNK_DATA Thunk;
     PVOID ImageBase;
@@ -2291,6 +2292,11 @@ LdrpGetProcedureAddress(IN PVOID BaseAddress,
             ImportName = RtlAllocateHeap(RtlGetProcessHeap(),
                                          0,
                                          Length);
+            if (!ImportName)
+            {
+                /* Return STATUS_INSUFFICIENT_RESOURCES since NT6.2 */
+                return STATUS_INVALID_PARAMETER;
+            }
         }
         else
         {
@@ -2449,6 +2455,7 @@ LdrpLoadDll(IN BOOLEAN Redirected,
     RtlCopyUnicodeString(&RawDllName, DllName);
 
     /* Find the extension, if present */
+    /* NOTE: Access violation is expected here in some cases (Buffer[-1]) */
     p = DllName->Buffer + DllName->Length / sizeof(WCHAR) - 1;
     GotExtension = FALSE;
     while (p >= DllName->Buffer)

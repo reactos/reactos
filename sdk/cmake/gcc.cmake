@@ -42,6 +42,9 @@ endif()
 # note: -fno-common is default since GCC 10
 add_compile_options(-pipe -fms-extensions -fno-strict-aliasing -fno-common)
 
+# A long double is 64 bits
+add_compile_options(-mlong-double-64)
+
 # Prevent GCC from searching any of the default directories.
 # The case for C++ is handled through the reactos_c++ INTERFACE library
 add_compile_options("$<$<NOT:$<COMPILE_LANGUAGE:CXX>>:-nostdinc>")
@@ -424,6 +427,9 @@ function(spec2def _dllname _spec_file)
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
         COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__version_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
+
+    # Do not use precompiled headers for the stub file
+    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 
     if(__spec2def_ADD_IMPORTLIB)
         set(_extraflags)

@@ -120,12 +120,11 @@ RegQueryValue(
         ExFreePoolWithTag(pInfo, TAG_TEMP);
 
     return Status;
-
 }
 
 VOID
 NTAPI
-RegWriteSZ(HKEY hkey, PWSTR pwszValue, PWSTR pwszData)
+RegWriteSZ(HKEY hkey, PCWSTR pwszValue, PWSTR pwszData)
 {
     UNICODE_STRING ustrValue;
     UNICODE_STRING ustrData;
@@ -137,7 +136,7 @@ RegWriteSZ(HKEY hkey, PWSTR pwszValue, PWSTR pwszData)
 
 VOID
 NTAPI
-RegWriteDWORD(HKEY hkey, PWSTR pwszValue, DWORD dwData)
+RegWriteDWORD(HKEY hkey, PCWSTR pwszValue, DWORD dwData)
 {
     UNICODE_STRING ustrValue;
 
@@ -147,7 +146,7 @@ RegWriteDWORD(HKEY hkey, PWSTR pwszValue, DWORD dwData)
 
 BOOL
 NTAPI
-RegReadDWORD(HKEY hkey, PWSTR pwszValue, PDWORD pdwData)
+RegReadDWORD(HKEY hkey, PCWSTR pwszValue, PDWORD pdwData)
 {
     NTSTATUS Status;
     ULONG cbSize = sizeof(DWORD);
@@ -170,7 +169,7 @@ RegOpenSectionKey(
 
 DWORD
 NTAPI
-RegGetSectionDWORD(LPCWSTR pszSection, LPWSTR pszValue, DWORD dwDefault)
+RegGetSectionDWORD(LPCWSTR pszSection, PCWSTR pszValue, DWORD dwDefault)
 {
     HKEY hKey;
     DWORD dwValue;

@@ -657,7 +657,7 @@ GetModuleFileNameW(HINSTANCE hModule,
     } _SEH2_END
 
     /* Release the loader lock */
-    LdrUnlockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, Cookie);
+    LdrUnlockLoaderLock(LDR_UNLOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, Cookie);
 
     return Length / sizeof(WCHAR);
 }

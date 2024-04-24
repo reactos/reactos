@@ -133,7 +133,7 @@ Language=Polish
 Pakiet sterownika otrzymany z podsystemu wejścia/wyjścia jest niepoprawny. Przedstawione dane to otrzymany pakiet.
 .
 Language=Romanian
-Un pachet al modulului pilot primit de la subsistemul de In/Ex a fost nevalid. Datele sunt pachetul însuși.
+Un pachet al driverului primit de la subsistemul de In/Ex a fost nevalid. Datele sunt pachetul însuși.
 .
 
 MessageId=6005
@@ -327,7 +327,7 @@ Language=Polish
 Próbowano załadować sterownik jednoprocesorowy na komputerze wieloprocesorowym. Nie można załadować sterownika.
 .
 Language=Romanian
-Un modul pilot specific unui uniprocesor a fost încărcat într-un sistem de tip multiprocesor. Modulul pilot nu a putut fi încărcat.
+Un driver specific unui uniprocesor a fost încărcat într-un sistem de tip multiprocesor. Driverul nu a putut fi încărcat.
 .
 
 
@@ -632,7 +632,7 @@ Language=Polish
 Sterowniki startu rozruchowego oraz systemowego (%1) nie mogą zależeć od usługi.
 .
 Language=Romanian
-Modulul pilot de pornire a inițializării sau al sistemului (%1) nu trebuie să depindă de un serviciu.
+Driverul de pornire a inițializării sau al sistemului (%1) nu trebuie să depindă de un serviciu.
 .
 
 MessageId=7016
@@ -832,7 +832,7 @@ Language=Polish
 Przynajmniej jedna usługa lub jeden sterownik nie dały się uruchomić podczas uruchamiania systemu. Użyj Podglądu zdarzeń, aby znaleźć szczegółowe informacje w dzienniku zdarzeń.
 .
 Language=Romanian
-Cel puțin un serviciu sau un modul pilot a eșuat, în timpul pornirii sistemului. Folosiți Vizualizatorul de evenimente pentru a examina jurnalul pentru detalii.
+Cel puțin un serviciu sau un driver a eșuat, în timpul pornirii sistemului. Folosiți Vizualizatorul de evenimente pentru a examina jurnalul pentru detalii.
 .
 
 MessageId=7026
@@ -852,7 +852,7 @@ Language=Polish
 Nie można załadować następujących sterowników startu rozruchowego lub systemowego: %1
 .
 Language=Romanian
-Următorul(oarele) modul(e) pilot de pornire sau de pornire a sistemului nu a(u)putut fi încărcat(e): %1
+Următorul(oarele) driver(e) de pornire pentru inițializare sau de pornire a sistemului nu a(u) putut fi încărcat(e): %1
 .
 
 MessageId=7027
@@ -1000,7 +1000,7 @@ konfiguracji zabezpieczeń (scesrv.dll) z powodu błędu %1. Trwa ponowne urucha
 .
 Language=Romanian
 Administratorul de control al serviciului nu s-a putut inițializa cu succes. Securitatea
-servitorului de configurație (scesrv.dll) a eșuat să se inițializeze cu eroarea %1.
+serverului de configurație (scesrv.dll) a eșuat să se inițializeze cu eroarea %1.
 Se repornește sistemul...
 .
 

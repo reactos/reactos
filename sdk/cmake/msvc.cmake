@@ -22,8 +22,9 @@ endif()
 # helper macros. Note also that GCC builds use string pooling by default.
 add_compile_options(/GF)
 
-# Enable function level linking and comdat folding
-add_compile_options(/Gy)
+# Enable function level linking and comdat folding (only C/C++, not ASM!)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/Gy>)
+add_compile_options($<$<COMPILE_LANGUAGE:C>:/Gy>)
 add_link_options(/OPT:REF /OPT:ICF)
 
 if(ARCH STREQUAL "i386")
@@ -395,6 +396,9 @@ function(spec2def _dllname _spec_file)
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
         COMMAND native-spec2def --ms -a=${SPEC2DEF_ARCH} -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__version_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
+
+    # Do not use precompiled headers for the stub file
+    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 
     if(__spec2def_ADD_IMPORTLIB)
         generate_import_lib(lib${_file} ${_dllname} ${_spec_file} "${__version_arg}")

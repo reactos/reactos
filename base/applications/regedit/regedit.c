@@ -37,9 +37,7 @@ static void output_writeconsole(const WCHAR *str, DWORD wlen)
 #ifdef __REACTOS__
     /* This is win32gui application, don't ever try writing to console.
      * For the console version we have a separate reg.exe application. */
-    WCHAR AppStr[255];
-    LoadStringW(hInst, IDS_APP_TITLE, AppStr, ARRAY_SIZE(AppStr));
-    MessageBoxW(NULL, str, AppStr, MB_OK | MB_ICONINFORMATION);
+    MessageBoxW(NULL, str, NULL, MB_ICONERROR);
 #else
     DWORD count;
 
@@ -219,7 +217,11 @@ static void PerformRegAction(REGEDIT_ACTION action, WCHAR **argv, int *i)
             break;
         }
     default:
+#ifdef __REACTOS__
+        output_message(STRING_UNHANDLED_ACTION);
+#else
         error_exit(STRING_UNHANDLED_ACTION);
+#endif
         break;
     }
 }

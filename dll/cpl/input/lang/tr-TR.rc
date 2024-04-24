@@ -112,7 +112,7 @@ BEGIN
     IDS_CTRL_SHIFT "Ctrl + Shift"
     IDS_LEFT_ALT_SHIFT "Sol Alt + Shift"
     IDS_SWITCH_BET_INLANG "Giriş dilleri arasında geçiş yap."
-    IDS_REBOOT_NOW, "Şimdi yeniden başlatılsın mı?"
+    IDS_REBOOT_NOW "You have to restart the system for the settings to take effect. Reboot now?"
 END
 
 STRINGTABLE

@@ -118,7 +118,7 @@ USBSTOR_GetDescriptors(
      if (DeviceExtension->DeviceDescriptor->iSerialNumber)
      {
          // get serial number
-         Status = USBSTOR_GetDescriptor(DeviceExtension->LowerDeviceObject, USB_STRING_DESCRIPTOR_TYPE, 100 * sizeof(WCHAR), DeviceExtension->DeviceDescriptor->iSerialNumber, 0x0409, (PVOID*)&DeviceExtension->SerialNumber);
+         Status = USBSTOR_GetDescriptor(DeviceExtension->LowerDeviceObject, USB_STRING_DESCRIPTOR_TYPE, MAXIMUM_USB_STRING_LENGTH, DeviceExtension->DeviceDescriptor->iSerialNumber, 0x0409, (PVOID*)&DeviceExtension->SerialNumber);
          if (!NT_SUCCESS(Status))
          {
              FreeItem(DeviceExtension->DeviceDescriptor);

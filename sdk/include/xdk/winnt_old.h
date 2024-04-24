@@ -457,40 +457,6 @@
 #define PROCESSOR_ARCHITECTURE_AMD64 9
 #define PROCESSOR_ARCHITECTURE_UNKNOWN 0xFFFF
 
-/* Processor features */
-#define PF_FLOATING_POINT_PRECISION_ERRATA       0
-#define PF_FLOATING_POINT_EMULATED               1
-#define PF_COMPARE_EXCHANGE_DOUBLE               2
-#define PF_MMX_INSTRUCTIONS_AVAILABLE            3
-#define PF_PPC_MOVEMEM_64BIT_OK                  4
-#define PF_ALPHA_BYTE_INSTRUCTIONS               5
-#define PF_XMMI_INSTRUCTIONS_AVAILABLE           6
-#define PF_3DNOW_INSTRUCTIONS_AVAILABLE          7
-#define PF_RDTSC_INSTRUCTION_AVAILABLE           8
-#define PF_PAE_ENABLED                           9
-#define PF_XMMI64_INSTRUCTIONS_AVAILABLE        10
-#define PF_SSE_DAZ_MODE_AVAILABLE               11
-#define PF_NX_ENABLED                           12
-#define PF_SSE3_INSTRUCTIONS_AVAILABLE          13
-#define PF_COMPARE_EXCHANGE128                  14
-#define PF_COMPARE64_EXCHANGE128                15
-#define PF_CHANNELS_ENABLED                     16
-#define PF_XSAVE_ENABLED                        17
-#define PF_ARM_VFP_32_REGISTERS_AVAILABLE       18
-#define PF_ARM_NEON_INSTRUCTIONS_AVAILABLE      19
-#define PF_SECOND_LEVEL_ADDRESS_TRANSLATION     20
-#define PF_VIRT_FIRMWARE_ENABLED                21
-#define PF_RDWRFSGSBASE_AVAILABLE               22
-#define PF_FASTFAIL_AVAILABLE                   23
-#define PF_ARM_DIVIDE_INSTRUCTION_AVAILABLE     24
-#define PF_ARM_64BIT_LOADSTORE_ATOMIC           25
-#define PF_ARM_EXTERNAL_CACHE_AVAILABLE         26
-#define PF_ARM_FMAC_INSTRUCTIONS_AVAILABLE      27
-#define PF_RDRAND_INSTRUCTION_AVAILABLE         28
-#define PF_ARM_V8_INSTRUCTIONS_AVAILABLE        29
-#define PF_ARM_V8_CRYPTO_INSTRUCTIONS_AVAILABLE 30
-#define PF_ARM_V8_CRC32_INSTRUCTIONS_AVAILABLE  31
-
 /* also in ddk/ntifs.h */
 #define FILE_ACTION_ADDED                   0x00000001
 #define FILE_ACTION_REMOVED                 0x00000002
@@ -2783,25 +2749,6 @@ NTAPI
 RtlQueryDepthSList(
   _In_ PSLIST_HEADER ListHead);
 
-#ifndef _RTL_RUN_ONCE_DEF
-#define _RTL_RUN_ONCE_DEF
-
-#define RTL_RUN_ONCE_CHECK_ONLY 0x00000001UL
-#define RTL_RUN_ONCE_ASYNC 0x00000002UL
-#define RTL_RUN_ONCE_INIT_FAILED 0x00000004UL
-
-#define RTL_RUN_ONCE_CTX_RESERVED_BITS 2
-
-#define RTL_RUN_ONCE_INIT {0}
-
-typedef union _RTL_RUN_ONCE {
-  PVOID Ptr;
-} RTL_RUN_ONCE, *PRTL_RUN_ONCE;
-
-typedef DWORD WINAPI RTL_RUN_ONCE_INIT_FN(PRTL_RUN_ONCE, PVOID, PVOID*);
-typedef RTL_RUN_ONCE_INIT_FN *PRTL_RUN_ONCE_INIT_FN;
-
-#endif
 
 #define RTL_CONDITION_VARIABLE_INIT {0}
 #define RTL_CONDITION_VARIABLE_LOCKMODE_SHARED 0x1
@@ -4350,7 +4297,7 @@ RtlSecureZeroMemory(_Out_writes_bytes_all_(Length) PVOID Buffer,
 }
 
 #if defined(_M_IX86)
-FORCEINLINE struct _TEB * NtCurrentTeb(void)
+FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
 {
     return (struct _TEB *)__readfsdword(0x18);
 }
@@ -4359,17 +4306,17 @@ FORCEINLINE PVOID GetCurrentFiber(VOID)
     return (PVOID)(ULONG_PTR)__readfsdword(0x10);
 }
 #elif defined (_M_AMD64)
-FORCEINLINE struct _TEB * NtCurrentTeb(void)
+FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
 {
     return (struct _TEB *)__readgsqword(FIELD_OFFSET(NT_TIB, Self));
 }
 FORCEINLINE PVOID GetCurrentFiber(VOID)
 {
-  #ifdef NONAMELESSUNION
+#ifdef NONAMELESSUNION
     return (PVOID)__readgsqword(FIELD_OFFSET(NT_TIB, DUMMYUNIONNAME.FiberData));
-  #else
+#else
     return (PVOID)__readgsqword(FIELD_OFFSET(NT_TIB, FiberData));
-  #endif
+#endif
 }
 #elif defined (_M_ARM)
 #define CP15_PMSELR      15, 0,  9, 12, 5
@@ -4377,20 +4324,20 @@ FORCEINLINE PVOID GetCurrentFiber(VOID)
 #define CP15_TPIDRURW    15, 0, 13,  0, 2
 #define CP15_TPIDRURO    15, 0, 13,  0, 3
 #define CP15_TPIDRPRW    15, 0, 13,  0, 4
-FORCEINLINE struct _TEB * NtCurrentTeb(void)
+FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
 {
     return (struct _TEB *)(ULONG_PTR)_MoveFromCoprocessor(CP15_TPIDRURW);
 }
 FORCEINLINE PVOID GetCurrentFiber(VOID)
 {
-  #ifdef NONAMELESSUNION
-    return ((PNT_TIB )(ULONG_PTR)_MoveFromCoprocessor(CP15_TPIDRURW))->DUMMYUNIONNAME.FiberData;
-  #else
-    return ((PNT_TIB )(ULONG_PTR)_MoveFromCoprocessor(CP15_TPIDRURW))->FiberData;
-  #endif
+#ifdef NONAMELESSUNION
+    return ((PNT_TIB)(ULONG_PTR)_MoveFromCoprocessor(CP15_TPIDRURW))->DUMMYUNIONNAME.FiberData;
+#else
+    return ((PNT_TIB)(ULONG_PTR)_MoveFromCoprocessor(CP15_TPIDRURW))->FiberData;
+#endif
 }
 #elif defined (_M_ARM64)
-FORCEINLINE struct _TEB * NtCurrentTeb(void)
+FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
 {
     //UNIMPLEMENTED;
     return 0;
@@ -4411,11 +4358,11 @@ FORCEINLINE unsigned long _read_teb_dword(const unsigned long Offset)
             : "r7");
     return result;
 }
-FORCEINLINE struct _TEB * NtCurrentTeb(void)
+FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
 {
     return (struct _TEB *)_read_teb_dword(0x18);
 }
-FORCEINLINE PVOID GetCurrentFiber(void)
+FORCEINLINE PVOID GetCurrentFiber(VOID)
 {
     return _read_teb_dword(0x10);
 }
@@ -4423,7 +4370,7 @@ FORCEINLINE PVOID GetCurrentFiber(void)
 #error Unknown architecture
 #endif
 
-FORCEINLINE PVOID GetFiberData(void)
+FORCEINLINE PVOID GetFiberData(VOID)
 {
     return *((PVOID *)GetCurrentFiber());
 }
@@ -4450,7 +4397,7 @@ FORCEINLINE PVOID GetFiberData(void)
 #if defined(_MSC_VER)
 FORCEINLINE
 VOID
-MemoryBarrier (VOID)
+MemoryBarrier(VOID)
 {
     LONG Barrier;
     __asm { xchg Barrier, eax }

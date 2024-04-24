@@ -105,20 +105,20 @@ public:
     void UpdateFolderIcon(HWND hwndDlg);
 
 	// IShellExtInit
-	virtual HRESULT STDMETHODCALLTYPE Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
+	STDMETHOD(Initialize)(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID) override;
 
     // IContextMenu
-	virtual HRESULT WINAPI QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
-	virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpici);
-	virtual HRESULT WINAPI GetCommandString(UINT_PTR idCmd, UINT uType, UINT *pwReserved, LPSTR pszName, UINT cchMax);
+	STDMETHOD(QueryContextMenu)(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags) override;
+	STDMETHOD(InvokeCommand)(LPCMINVOKECOMMANDINFO lpici) override;
+	STDMETHOD(GetCommandString)(UINT_PTR idCmd, UINT uType, UINT *pwReserved, LPSTR pszName, UINT cchMax) override;
 
 	// IShellPropSheetExt
-	virtual HRESULT WINAPI AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam);
-	virtual HRESULT WINAPI ReplacePage(UINT uPageID, LPFNADDPROPSHEETPAGE pfnReplacePage, LPARAM lParam);
+	STDMETHOD(AddPages)(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam) override;
+	STDMETHOD(ReplacePage)(UINT uPageID, LPFNADDPROPSHEETPAGE pfnReplacePage, LPARAM lParam) override;
 
     // IObjectWithSite
-	virtual HRESULT WINAPI SetSite(IUnknown *punk);
-	virtual HRESULT WINAPI GetSite(REFIID iid, void **ppvSite);
+	STDMETHOD(SetSite)(IUnknown *punk) override;
+	STDMETHOD(GetSite)(REFIID iid, void **ppvSite) override;
 
 DECLARE_REGISTRY_RESOURCEID(IDR_FILEDEFEXT)
 DECLARE_NOT_AGGREGATABLE(CFileDefExt)

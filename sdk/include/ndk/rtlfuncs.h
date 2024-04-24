@@ -3975,13 +3975,12 @@ RtlImageRvaToSection(
     _In_ ULONG Rva
 );
 
-NTSYSAPI
 ULONG
 NTAPI
 LdrRelocateImageWithBias(
-    _In_ PVOID NewAddress,
+    _In_ PVOID BaseAddress,
     _In_ LONGLONG AdditionalBias,
-    _In_ PCCH LoaderName,
+    _In_opt_ PCSTR LoaderName,
     _In_ ULONG Success,
     _In_ ULONG Conflict,
     _In_ ULONG Invalid

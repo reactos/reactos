@@ -53,7 +53,7 @@
 namespace ATL
 {
 
-inline HRESULT AtlHresultFromLastError() throw()
+inline HRESULT AtlHresultFromLastError() noexcept
 {
     DWORD dwError = ::GetLastError();
     return HRESULT_FROM_WIN32(dwError);
@@ -96,6 +96,19 @@ public:
     {
         if (p != NULL)
             p->Release();
+    }
+
+    HRESULT CoCreateInstance(REFCLSID rclsid, REFIID riid, LPUNKNOWN pOuter = NULL, DWORD ClsCtx = CLSCTX_ALL)
+    {
+        ATLASSERT(!p);
+        return ::CoCreateInstance(rclsid, pOuter, ClsCtx, riid, (void**)&p);
+    }
+
+    HRESULT CoCreateInstance(LPCOLESTR ProgID, REFIID riid, LPUNKNOWN pOuter = NULL, DWORD ClsCtx = CLSCTX_ALL)
+    {
+        CLSID clsid;
+        HRESULT hr = CLSIDFromProgID(ProgID, &clsid);
+        return FAILED(hr) ? hr : CoCreateInstance(clsid, riid, pOuter, ClsCtx);
     }
 
     T *operator = (T *lp)
@@ -141,6 +154,16 @@ public:
             pOld->Release();
 
         return *this;
+    }
+
+    HRESULT CoCreateInstance(REFCLSID rclsid, LPUNKNOWN pOuter = NULL, DWORD ClsCtx = CLSCTX_ALL)
+    {
+        return CoCreateInstance(rclsid, __uuidof(T), pOuter, ClsCtx);
+    }
+
+    HRESULT CoCreateInstance(LPCOLESTR ProgID, LPUNKNOWN pOuter = NULL, DWORD ClsCtx = CLSCTX_ALL)
+    {
+        return CoCreateInstance(ProgID, __uuidof(T), pOuter, ClsCtx);
     }
 #endif
 

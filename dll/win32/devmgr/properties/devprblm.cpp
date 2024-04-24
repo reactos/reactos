@@ -573,11 +573,6 @@ DeviceProblemTextW(IN HMACHINE hMachine  OPTIONAL,
             case CM_PROB_DISABLED:
                 /* FIXME - if the device was disabled by the system use IDS_DEV_DISABLED2 */
                 break;
-
-            case CM_PROB_FAILED_ADD:
-                /* FIXME - get the name of the sub-device with the error */
-                AdvFormat = TRUE;
-                break;
         }
 
         if (AdvFormat)

@@ -8,7 +8,7 @@
 
 #include "precomp.h"
 
-#define YDEBUG
+// #define NDEBUG
 #include <debug.h>
 
 ULONG
@@ -105,7 +105,6 @@ MMixerOpen(
 
     /* add the event */
     Status = MMixerAddEvent(MixerContext, MixerInfo, MixerEventContext, MixerEventRoutine);
-
 
     /* store result */
     *MixerHandle = (HANDLE)MixerInfo;
@@ -686,7 +685,6 @@ MMixerPrintMixers(
     DPRINT1("WaveInCount %lu\n", MixerList->WaveInListCount);
     DPRINT1("WaveOutCount %lu\n", MixerList->WaveOutListCount);
     DPRINT1("MixerCount %p\n", MixerList->MixerListCount);
-
 
     for(Index = 0; Index < MixerList->MixerListCount; Index++)
     {

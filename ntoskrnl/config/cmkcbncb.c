@@ -164,7 +164,7 @@ CmpGetNameControlBlock(IN PUNICODE_STRING NodeName)
         if (*p != OBJ_NAME_PATH_SEPARATOR)
         {
             /* Add it to the hash */
-            ConvKey = 37 * ConvKey + RtlUpcaseUnicodeChar(*p);
+            ConvKey = COMPUTE_HASH_CHAR(ConvKey, *p);
         }
 
         /* Next character */
@@ -619,11 +619,11 @@ CmpDereferenceKeyControlBlockWithLock(IN PCM_KEY_CONTROL_BLOCK Kcb,
         CMP_ASSERT_KCB_LOCK(Kcb);
 
         /* Check if we should do a direct delete */
-        if (((CmpHoldLazyFlush) &&
+        if ((CmpHoldLazyFlush &&
              !(Kcb->ExtFlags & CM_KCB_SYM_LINK_FOUND) &&
              !(Kcb->Flags & KEY_SYM_LINK)) ||
             (Kcb->ExtFlags & CM_KCB_NO_DELAY_CLOSE) ||
-            (Kcb->Delete))
+             Kcb->Delete)
         {
             /* Clean up the KCB*/
             CmpCleanUpKcbCacheWithLock(Kcb, LockHeldExclusively);
@@ -683,7 +683,7 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
     NodeName = *KeyName;
 
     /* Remove leading slash */
-    while ((NodeName.Length) && (*NodeName.Buffer == OBJ_NAME_PATH_SEPARATOR))
+    while (NodeName.Length && (*NodeName.Buffer == OBJ_NAME_PATH_SEPARATOR))
     {
         /* Move the buffer by one */
         NodeName.Buffer++;
@@ -701,7 +701,7 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
         if (*p != OBJ_NAME_PATH_SEPARATOR)
         {
             /* Add this key to the hash */
-            ConvKey = 37 * ConvKey + RtlUpcaseUnicodeChar(*p);
+            ConvKey = COMPUTE_HASH_CHAR(ConvKey, *p);
         }
 
         /* Move on */
@@ -764,7 +764,7 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
         else
         {
             /* Check if we're not creating a fake one, but it used to be fake */
-            if ((Kcb->ExtFlags & CM_KCB_KEY_NON_EXIST) && !(IsFake))
+            if ((Kcb->ExtFlags & CM_KCB_KEY_NON_EXIST) && !IsFake)
             {
                 /* Set the hive and cell */
                 Kcb->KeyHive = Hive;
@@ -801,7 +801,7 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
         {
             /* Reference the parent */
             if (((Parent->TotalLevels + 1) < 512) &&
-                (CmpReferenceKeyControlBlock(Parent)))
+                CmpReferenceKeyControlBlock(Parent))
             {
                 /* Link it */
                 Kcb->ParentKcb = Parent;
@@ -863,14 +863,14 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
     }
 
     /* Check if this is a KCB inside a frozen hive */
-    if ((Kcb) && (((PCMHIVE)Hive)->Frozen) && (!(Kcb->Flags & KEY_SYM_LINK)))
+    if (Kcb && ((PCMHIVE)Hive)->Frozen && !(Kcb->Flags & KEY_SYM_LINK))
     {
         /* Don't add these to the delay close */
         Kcb->ExtFlags |= CM_KCB_NO_DELAY_CLOSE;
     }
 
     /* Sanity check */
-    ASSERT((!Kcb) || (Kcb->Delete == FALSE));
+    ASSERT(!Kcb || !Kcb->Delete);
 
     /* Check if we had locked the hashes */
     if (!HashLock)
@@ -950,7 +950,7 @@ CmpConstructName(IN PCM_KEY_CONTROL_BLOCK Kcb)
         /* Sanity checks for deleted and fake keys */
         if ((!MyKcb->KeyCell && !MyKcb->Delete) ||
             !MyKcb->KeyHive ||
-            MyKcb->ExtFlags & CM_KCB_KEY_NON_EXIST)
+            (MyKcb->ExtFlags & CM_KCB_KEY_NON_EXIST))
         {
             /* Failure */
             CmpFree(KeyName, 0);
@@ -1109,7 +1109,7 @@ DelistKeyBodyFromKCB(IN PCM_KEY_BODY KeyBody,
     for (i = 0; i < 4; i++)
     {
         /* Add it into the list */
-        if (InterlockedCompareExchangePointer((VOID*)&KeyBody->KeyControlBlock->
+        if (InterlockedCompareExchangePointer((PVOID*)&KeyBody->KeyControlBlock->
                                               KeyBodyArray[i],
                                               NULL,
                                               KeyBody) == KeyBody)
@@ -1132,6 +1132,235 @@ DelistKeyBodyFromKCB(IN PCM_KEY_BODY KeyBody,
 
     /* Unlock it it if we did a manual lock */
     if (!LockHeld) CmpReleaseKcbLock(KeyBody->KeyControlBlock);
+}
+
+/**
+ * @brief
+ * Unlocks a number of KCBs provided by a KCB array.
+ *
+ * @param[in] KcbArray
+ * A pointer to an array of KCBs to be unlocked.
+ */
+VOID
+CmpUnLockKcbArray(
+    _In_ PULONG KcbArray)
+{
+    ULONG i;
+
+    /* Release the locked KCBs in reverse order */
+    for (i = KcbArray[0]; i > 0; i--)
+    {
+        CmpReleaseKcbLockByIndex(KcbArray[i]);
+    }
+}
+
+/**
+ * @brief
+ * Locks a given number of KCBs.
+ *
+ * @param[in] KcbArray
+ * A pointer to an array of KCBs to be locked.
+ * The count of KCBs to be locked is defined by the
+ * first element in the array.
+ *
+ * @param[in] KcbLockFlags
+ * Define a lock flag to lock the KCBs.
+ *
+ * CMP_LOCK_KCB_ARRAY_EXCLUSIVE -- indicates the KCBs are locked
+ * exclusively and owned by the calling thread.
+ *
+ * CMP_LOCK_KCB_ARRAY_SHARED --  indicates the KCBs are locked
+ * in shared mode by the owning threads.
+ */
+static
+VOID
+CmpLockKcbArray(
+    _In_ PULONG KcbArray,
+    _In_ ULONG KcbLockFlags)
+{
+    ULONG i;
+
+    /* Lock the KCBs */
+    for (i = 1; i <= KcbArray[0]; i++)
+    {
+        if (KcbLockFlags & CMP_LOCK_KCB_ARRAY_EXCLUSIVE)
+        {
+            CmpAcquireKcbLockExclusiveByIndex(KcbArray[i]);
+        }
+        else // CMP_LOCK_KCB_ARRAY_SHARED
+        {
+            CmpAcquireKcbLockSharedByIndex(KcbArray[i]);
+        }
+    }
+}
+
+/**
+ * @brief
+ * Sorts an array of KCB hashes in ascending order
+ * and removes any key indices that are duplicates.
+ * The purpose of sorting the KCB elements is to
+ * ensure consistent and proper locking order, so
+ * that we can prevent a deadlock.
+ *
+ * @param[in,out] KcbArray
+ * A pointer to an array of KCBs of which the key
+ * indices are to be sorted.
+ */
+static
+VOID
+CmpSortKcbArray(
+    _Inout_ PULONG KcbArray)
+{
+    ULONG i, j, k, KcbCount;
+
+    /* Ensure we don't go above the limit of KCBs we can hold */
+    KcbCount = KcbArray[0];
+    ASSERT(KcbCount < CMP_KCBS_IN_ARRAY_LIMIT);
+
+    /* Exchange-Sort the array in ascending order. Complexity: O[n^2] */
+    for (i = 1; i <= KcbCount; i++)
+    {
+        for (j = i + 1; j <= KcbCount; j++)
+        {
+            if (KcbArray[i] > KcbArray[j])
+            {
+                ULONG Temp = KcbArray[i];
+                KcbArray[i] = KcbArray[j];
+                KcbArray[j] = Temp;
+            }
+        }
+    }
+
+    /* Now remove any duplicated indices on the sorted array if any */
+    for (i = 1; i <= KcbCount; i++)
+    {
+        for (j = i + 1; j <= KcbCount; j++)
+        {
+            if (KcbArray[i] == KcbArray[j])
+            {
+                for (k = j; k <= KcbCount; k++)
+                {
+                    KcbArray[k - 1] = KcbArray[k];
+                }
+
+                j--;
+                KcbCount--;
+            }
+        }
+    }
+
+    /* Update the KCB count */
+    KcbArray[0] = KcbCount;
+}
+
+/**
+ * @brief
+ * Builds an array of KCBs and locks them. Whether these
+ * KCBs are locked exclusively or in shared mode by the calling
+ * thread, is specified by the KcbLockFlags parameter. The array
+ * is sorted.
+ *
+ * @param[in] HashCacheStack
+ * A pointer to a hash cache stack. This stack parameter
+ * stores the convkey hashes of interested KCBs of a
+ * key path name that need to be locked.
+ *
+ * @param[in] KcbLockFlags
+ * Define a lock flag to lock the KCBs. Consult the
+ * CmpLockKcbArray documentation for more information.
+ *
+ * @param[in] Kcb
+ * A pointer to a key control block to be given. This
+ * KCB is included in the array for locking, that is,
+ * given by the CmpParseKey from the parser object.
+ *
+ * @param[in,out] OuterStackArray
+ * A pointer to an array that lives on the caller's
+ * stack. It acts like an auxiliary array used by
+ * the function to store the KCB elements for locking.
+ * The expected size of the array is up to 32 elements,
+ * which is the imposed limit by CMP_HASH_STACK_LIMIT.
+ * This limit also corresponds to the maximum depth of
+ * subkey levels.
+ *
+ * @param[in] TotalRemainingSubkeys
+ * The number of total remaining subkey levels.
+ *
+ * @param[in] MatchRemainSubkeyLevel
+ * The number of remaining subkey levels that match.
+ *
+ * @return
+ * Returns a pointer to an array of KCBs that have been
+ * locked.
+ *
+ * @remarks
+ * The caller HAS THE RESPONSIBILITY to unlock the KCBs
+ * after the necessary operations are done!
+ */
+PULONG
+NTAPI
+CmpBuildAndLockKcbArray(
+    _In_ PCM_HASH_CACHE_STACK HashCacheStack,
+    _In_ ULONG KcbLockFlags,
+    _In_ PCM_KEY_CONTROL_BLOCK Kcb,
+    _Inout_ PULONG OuterStackArray,
+    _In_ ULONG TotalRemainingSubkeys,
+    _In_ ULONG MatchRemainSubkeyLevel)
+{
+    ULONG KcbIndex = 1, HashStackIndex, TotalRemaining;
+    PULONG LockedKcbs = NULL;
+    PCM_KEY_CONTROL_BLOCK ParentKcb = Kcb->ParentKcb;;
+
+    /* These parameters are expected */
+    ASSERT(HashCacheStack != NULL);
+    ASSERT(Kcb != NULL);
+    ASSERT(OuterStackArray != NULL);
+
+    /*
+     * Ensure when we build an array of KCBs to lock, that
+     * we don't go beyond the boundary the limit allows us
+     * to. 1 is the current KCB we would want to lock
+     * alongside with the remaining key levels in the formula.
+     */
+    TotalRemaining = (1 + TotalRemainingSubkeys) - MatchRemainSubkeyLevel;
+    ASSERT(TotalRemaining <= CMP_KCBS_IN_ARRAY_LIMIT);
+
+    /* Count the parent if we have one */
+    if (ParentKcb)
+    {
+        /* Ensure we are still below the limit and add the parent to KCBs to lock */
+        if (TotalRemainingSubkeys == MatchRemainSubkeyLevel)
+        {
+            TotalRemaining++;
+            ASSERT(TotalRemaining <= CMP_KCBS_IN_ARRAY_LIMIT);
+            OuterStackArray[KcbIndex++] = GET_HASH_INDEX(ParentKcb->ConvKey);
+        }
+    }
+
+    /* Add the current KCB */
+    OuterStackArray[KcbIndex++] = GET_HASH_INDEX(Kcb->ConvKey);
+
+    /* Loop over the hash stack and grab the hashes for locking (they will be converted to indices) */
+    for (HashStackIndex = 0;
+         HashStackIndex < TotalRemainingSubkeys;
+         HashStackIndex++)
+    {
+        OuterStackArray[KcbIndex++] = GET_HASH_INDEX(HashCacheStack[HashStackIndex].ConvKey);
+    }
+
+    /*
+     * Store how many KCBs we need to lock and sort the array.
+     * Remove any duplicated indices from the array if any.
+     */
+    OuterStackArray[0] = KcbIndex - 1;
+    CmpSortKcbArray(OuterStackArray);
+
+    /* Lock them */
+    CmpLockKcbArray(OuterStackArray, KcbLockFlags);
+
+    /* Give the locked KCBs to caller now */
+    LockedKcbs = OuterStackArray;
+    return LockedKcbs;
 }
 
 VOID

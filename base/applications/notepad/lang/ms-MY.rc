@@ -1,4 +1,4 @@
-/* Malay translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+// COPYRIGHT: 2016 Henry Tang Ih <henrytang2@hotmail.com>
 
 LANGUAGE LANG_MALAY, SUBLANG_DEFAULT
 
@@ -156,7 +156,7 @@ BEGIN
     STRING_TEXT_FILES_TXT "Fail teks (*.txt)"
     STRING_TOOLARGE "Fail '%s' adalah terlalu besar untuk notepad.\n\
 Sila gunakan editor yang berbeza."
-    STRING_NOTEXT "Anda tidak memasukkan sebarang teks. \
+    STRING_NOTEXT "Anda tidak memasukkan sebarang teks.\
 \nSila taip sesuatu dan cuba lagi"
     STRING_DOESNOTEXIST "Fail '%s'\ntidak wujud\n\n\
 Adakah anda mahu mencipta fail baru?"
@@ -182,7 +182,7 @@ tugas ini.\nTutup satu atau lebih aplikasi untuk menambah jumlah\ningatan kosong
     STRING_PRINTCANCELING "The print job is being canceled..."
     STRING_PRINTCOMPLETE "Printing is successfully done."
     STRING_PRINTCANCELED "Printing has been canceled."
-    STRING_PRINTFAILED "Printing is failed."
+    STRING_PRINTFAILED "Printing failed."
 
     STRING_TEXT_DOCUMENT "Text Document"
     STRING_NOTEPAD_AUTHORS "Copyright 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"

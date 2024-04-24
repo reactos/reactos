@@ -47,8 +47,8 @@ UserDrawWindowFrame(HDC hdc,
    HBRUSH hbrush = NtGdiSelectBrush( hdc, gpsi->hbrGray );
    NtGdiPatBlt( hdc, rect->left, rect->top, rect->right - rect->left - width, height, PATINVERT );
    NtGdiPatBlt( hdc, rect->left, rect->top + height, width, rect->bottom - rect->top - height, PATINVERT );
-   NtGdiPatBlt( hdc, rect->left + width, rect->bottom - 1, rect->right - rect->left - width, -(LONG)height, PATINVERT );
-   NtGdiPatBlt( hdc, rect->right - 1, rect->top, -(LONG)width, rect->bottom - rect->top - height, PATINVERT );
+   NtGdiPatBlt( hdc, rect->left + width, rect->bottom, rect->right - rect->left - width, -(LONG)height, PATINVERT );
+   NtGdiPatBlt( hdc, rect->right, rect->top, -(LONG)width, rect->bottom - rect->top - height, PATINVERT );
    NtGdiSelectBrush( hdc, hbrush );
 }
 
@@ -394,11 +394,13 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
       if (msg.message == WM_KEYDOWN && (msg.wParam == VK_RETURN || msg.wParam == VK_ESCAPE))
          break; // Exit on Return or Esc
 
-      if (!g_bWindowSnapEnabled && (msg.message == WM_LBUTTONUP))
+      if (!g_bWindowSnapEnabled && (msg.message == WM_LBUTTONUP ||
+         (msg.message == WM_MOUSEMOVE && (msg.wParam & MK_LBUTTON) == 0)))
       { // If no WindowSnapEnabled: Exit on button-up immediately
          break;
       }
-      else if (g_bWindowSnapEnabled && msg.message == WM_LBUTTONUP)
+      else if (g_bWindowSnapEnabled && (msg.message == WM_LBUTTONUP ||
+              (msg.message == WM_MOUSEMOVE && (msg.wParam & MK_LBUTTON) == 0)))
       { // If WindowSnapEnabled: Decide whether to snap before exiting
          DWORD ExStyleTB, StyleTB;
          BOOL IsTaskBar;
@@ -891,8 +893,8 @@ NC_DrawFrame( HDC hDC, RECT *CurrentRect, BOOL Active, DWORD Style, DWORD ExStyl
       /* Draw frame */
       NtGdiPatBlt(hDC, CurrentRect->left, CurrentRect->top, CurrentRect->right - CurrentRect->left, Height, PATCOPY);
       NtGdiPatBlt(hDC, CurrentRect->left, CurrentRect->top, Width, CurrentRect->bottom - CurrentRect->top, PATCOPY);
-      NtGdiPatBlt(hDC, CurrentRect->left, CurrentRect->bottom - 1, CurrentRect->right - CurrentRect->left, -Height, PATCOPY);
-      NtGdiPatBlt(hDC, CurrentRect->right - 1, CurrentRect->top, -Width, CurrentRect->bottom - CurrentRect->top, PATCOPY);
+      NtGdiPatBlt(hDC, CurrentRect->left, CurrentRect->bottom, CurrentRect->right - CurrentRect->left, -Height, PATCOPY);
+      NtGdiPatBlt(hDC, CurrentRect->right, CurrentRect->top, -Width, CurrentRect->bottom - CurrentRect->top, PATCOPY);
 
       RECTL_vInflateRect(CurrentRect, -Width, -Height);
    }
@@ -912,8 +914,8 @@ NC_DrawFrame( HDC hDC, RECT *CurrentRect, BOOL Active, DWORD Style, DWORD ExStyl
       /* Draw frame */
       NtGdiPatBlt(hDC, CurrentRect->left, CurrentRect->top, CurrentRect->right - CurrentRect->left, Height, PATCOPY);
       NtGdiPatBlt(hDC, CurrentRect->left, CurrentRect->top, Width, CurrentRect->bottom - CurrentRect->top, PATCOPY);
-      NtGdiPatBlt(hDC, CurrentRect->left, CurrentRect->bottom - 1, CurrentRect->right - CurrentRect->left, -Height, PATCOPY);
-      NtGdiPatBlt(hDC, CurrentRect->right - 1, CurrentRect->top, -Width, CurrentRect->bottom - CurrentRect->top, PATCOPY);
+      NtGdiPatBlt(hDC, CurrentRect->left, CurrentRect->bottom, CurrentRect->right - CurrentRect->left, -Height, PATCOPY);
+      NtGdiPatBlt(hDC, CurrentRect->right, CurrentRect->top, -Width, CurrentRect->bottom - CurrentRect->top, PATCOPY);
 
       RECTL_vInflateRect(CurrentRect, -Width, -Height);
    }

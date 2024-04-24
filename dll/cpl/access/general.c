@@ -12,6 +12,7 @@
 #define BAUDTICKS 6
 static UINT nBaudArray[BAUDTICKS] = {300, 1200, 2400, 4800, 9600, 19200};
 
+#define FIVE_MINS_IN_MS (5 * 60 * 1000)
 
 INT_PTR CALLBACK
 SerialKeysDlgProc(HWND hwndDlg,
@@ -177,6 +178,7 @@ GeneralPageProc(HWND hwndDlg,
 {
     PGLOBAL_DATA pGlobalData;
     LPPSHNOTIFY lppsn;
+    INT iCurSel;
 
     pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
@@ -194,8 +196,9 @@ GeneralPageProc(HWND hwndDlg,
                            IDC_RESET_BOX,
                            pGlobalData->accessTimeout.dwFlags & ATF_TIMEOUTON ? BST_CHECKED : BST_UNCHECKED);
             FillResetComboBox(GetDlgItem(hwndDlg, IDC_RESET_COMBO));
-            SendDlgItemMessage(hwndDlg, IDC_RESET_COMBO, CB_SETCURSEL,
-                               (pGlobalData->accessTimeout.iTimeOutMSec / 300000) - 1, 0);
+            pGlobalData->accessTimeout.iTimeOutMSec = max(FIVE_MINS_IN_MS, pGlobalData->accessTimeout.iTimeOutMSec);
+            iCurSel = (pGlobalData->accessTimeout.iTimeOutMSec / FIVE_MINS_IN_MS) - 1;
+            SendDlgItemMessage(hwndDlg, IDC_RESET_COMBO, CB_SETCURSEL, iCurSel, 0);
             EnableWindow(GetDlgItem(hwndDlg, IDC_RESET_COMBO),
                          pGlobalData->accessTimeout.dwFlags & ATF_TIMEOUTON ? TRUE : FALSE);
 
@@ -233,7 +236,7 @@ GeneralPageProc(HWND hwndDlg,
                     {
                         INT nSel;
                         nSel = SendDlgItemMessage(hwndDlg, IDC_RESET_COMBO, CB_GETCURSEL, 0, 0);
-                        pGlobalData->accessTimeout.iTimeOutMSec = (ULONG)((nSel + 1) * 300000);
+                        pGlobalData->accessTimeout.iTimeOutMSec = (DWORD)((nSel + 1) * FIVE_MINS_IN_MS);
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;

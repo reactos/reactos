@@ -14,8 +14,6 @@
 #define CX_TOOLBAR          (TOOLBAR_COLUMNS * CXY_TB_BUTTON)
 #define CY_TOOLBAR          (TOOLBAR_ROWS * CXY_TB_BUTTON)
 
-#define WM_TOOLBARHIT   (WM_APP + 1)
-
 class CPaintToolBar : public CWindow
 {
 public:
@@ -26,7 +24,7 @@ public:
 class CToolBox : public CWindowImpl<CToolBox>
 {
 public:
-    DECLARE_WND_CLASS_EX(_T("ToolBox"), CS_DBLCLKS, COLOR_BTNFACE)
+    DECLARE_WND_CLASS_EX(L"ToolBox", CS_DBLCLKS, COLOR_BTNFACE)
 
     BEGIN_MSG_MAP(CToolBox)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
@@ -36,7 +34,6 @@ public:
         MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
         MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
         MESSAGE_HANDLER(WM_TOOLSMODELTOOLCHANGED, OnToolsModelToolChanged)
-        MESSAGE_HANDLER(WM_TOOLBARHIT, OnToolBarHit)
     END_MSG_MAP()
 
     BOOL DoCreate(HWND hwndParent);
@@ -51,5 +48,4 @@ private:
     LRESULT OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnToolsModelToolChanged(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-    LRESULT OnToolBarHit(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 };

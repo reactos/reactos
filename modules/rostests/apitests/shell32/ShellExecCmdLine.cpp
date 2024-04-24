@@ -256,27 +256,6 @@ static WCHAR s_win_test_exe[MAX_PATH];
 static WCHAR s_sys_bat_file[MAX_PATH];
 static WCHAR s_cur_dir[MAX_PATH];
 
-static BOOL
-GetSubProgramPath(void)
-{
-    GetModuleFileNameW(NULL, s_sub_program, _countof(s_sub_program));
-    PathRemoveFileSpecW(s_sub_program);
-    PathAppendW(s_sub_program, L"shell32_apitest_sub.exe");
-
-    if (!PathFileExistsW(s_sub_program))
-    {
-        PathRemoveFileSpecW(s_sub_program);
-        PathAppendW(s_sub_program, L"testdata\\shell32_apitest_sub.exe");
-
-        if (!PathFileExistsW(s_sub_program))
-        {
-            return FALSE;
-        }
-    }
-
-    return TRUE;
-}
-
 static const TEST_ENTRY s_entries_1[] =
 {
     // NULL
@@ -462,11 +441,6 @@ static const TEST_ENTRY s_entries_1[] =
     { __LINE__, TRUE, TRUE, L"shell:::{450d8fba-ad25-11d0-98a8-0800361b1103}", NULL },
     // shell:sendto
     { __LINE__, TRUE, TRUE, L"shell:sendto", NULL },
-    // iexplore.exe
-    { __LINE__, TRUE, FALSE, L"iexplore", NULL },
-    { __LINE__, TRUE, FALSE, L"iexplore.exe", NULL },
-    { __LINE__, TRUE, TRUE, L"iexplore", NULL },
-    { __LINE__, TRUE, TRUE, L"iexplore.exe", NULL },
     // https://google.com
     { __LINE__, TRUE, FALSE, L"https://google.com", NULL },
     { __LINE__, TRUE, TRUE, L"https://google.com", NULL },
@@ -677,7 +651,7 @@ START_TEST(ShellExecCmdLine)
         }
     }
 
-    if (!GetSubProgramPath())
+    if (!FindSubProgram(s_sub_program, _countof(s_sub_program)))
     {
         skip("shell32_apitest_sub.exe is not found\n");
         return;
@@ -747,6 +721,6 @@ START_TEST(ShellExecCmdLine)
     ok(DeleteFileA("Test File 2.bat"), "failed to delete the test file\n");
     free(s_wi0.phwnd);
 
-    DoWaitForWindow(CLASSNAME, CLASSNAME, TRUE, TRUE);
+    DoWaitForWindow(SUB_CLASSNAME, SUB_CLASSNAME, TRUE, TRUE);
     Sleep(100);
 }

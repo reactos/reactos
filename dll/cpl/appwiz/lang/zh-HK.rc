@@ -34,7 +34,7 @@ FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
     LTEXT "這個精靈協助您建立本地或網路程式、檔案、目錄、電腦或互聯網地址的捷徑。", -1, 120, 15, 200, 30
     LTEXT "輸入項目位置：", -1, 120, 50, 120, 10
-    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
+    EDITTEXT IDC_LINK_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "瀏覽...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
     LTEXT "按［下一步］繼續。", -1, 120, 97, 162, 10
 END

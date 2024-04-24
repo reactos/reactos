@@ -16,6 +16,8 @@ BEGIN
     IDS_TOOLTIP_ZOOM_OUT "הרחקה (-)"
     IDS_TOOLTIP_ROT_CLOCKW "סובב עם כיוון השעון (Ctrl+K)"
     IDS_TOOLTIP_ROT_COUNCW "סובב כנגד כיוון השעון (Ctrl+L)"
+    IDS_TOOLTIP_ROT_CWSAVE "Rotate Clockwise and Save (Lossy)"
+    IDS_TOOLTIP_ROT_CCWSAVE "Rotate Counterclockwise and Save (Lossy)"
     IDS_TOOLTIP_DELETE "Delete (DEL)"
     IDS_TOOLTIP_PRINT "הדפס (Ctrl+P)"
     IDS_TOOLTIP_SAVEAS "שמירה בשם... (Ctrl+S)"

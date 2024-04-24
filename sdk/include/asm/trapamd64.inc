@@ -1,13 +1,61 @@
+/*
+ * PROJECT:     ReactOS SDK
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     ASM macros for x64 trap handling
+ * COPYRIGHT:   Copyright 2011-2024 Timo Kreuzer (timo.kreuzer@reactos.org)
+ */
+
+MACRO(ASSERT_TRAP_FRAME_INTS_ENABLED, Register)
+#if DBG
+    LOCAL IntsAreEnabled
+    test dword ptr [Register + KTRAP_FRAME_EFlags], HEX(200)
+    jnz IntsAreEnabled
+    int HEX(2C)
+IntsAreEnabled:
+#endif
+ENDM
+
+MACRO(ASSERT_TRAP_FRAME_IRQL_VALID, Register)
+#if DBG
+    LOCAL IrqlIsValid
+    mov rax, cr8
+    cmp byte ptr [Register + KTRAP_FRAME_PreviousIrql], al
+    je IrqlIsValid
+    int HEX(2C)
+IrqlIsValid:
+#endif
+ENDM
+
+MACRO(ASSERT_IRQL_PASSIVE)
+#if DBG
+    LOCAL IrqlIsPassive
+    mov rax, cr8
+    test rax, rax
+    jz IrqlIsPassive
+    int HEX(2C)
+IrqlIsPassive:
+#endif
+ENDM
+
+// Checks for user APCs and delivers them if necessary.
+// Clobbers all volatile registers except rax.
+MACRO(HANDLE_USER_APCS, ThreadReg, TrapFrame)
+    LOCAL NoUserApcPending
+
+    /* Check for pending user APC */
+    cmp byte ptr [ThreadReg + ThApcState + AsUserApcPending], 0
+    jz NoUserApcPending
+    lea rcx, [TrapFrame]
+    call KiInitiateUserApc
+NoUserApcPending:
+ENDM
 
 APIC_EOI = HEX(0FFFFFFFFFFFE00B0)
 
-TF_VOLATILES            = HEX(01)
-TF_NONVOLATILES         = HEX(02)
-TF_XMM                  = HEX(04)
 TF_SEGMENTS             = HEX(08)
 TF_DEBUG                = HEX(10)
 TF_IRQL                 = HEX(20)
-TF_SAVE_ALL             = (TF_VOLATILES OR TF_NONVOLATILES OR TF_XMM OR TF_SEGMENTS)
+TF_SAVE_ALL             = (TF_SEGMENTS)
 TF_HAS_ERROR_CODE       = HEX(40)
 TF_SEND_EOI             = HEX(80)
 //TF_SYSTEMSERVICE        = (TRAPFLAG_VOLATILES or TRAPFLAG_DEBUG)
@@ -47,47 +95,32 @@ MACRO(EnterTrap, Flags)
     sub rsp, (KTRAP_FRAME_LENGTH - SIZE_INITIAL_FRAME)
     .allocstack (KTRAP_FRAME_LENGTH - SIZE_INITIAL_FRAME)
 
-    /* Save rbp and rax */
+    /* Save rbp */
     mov [rsp + KTRAP_FRAME_Rbp], rbp
     .savereg rbp, KTRAP_FRAME_Rbp
-    mov [rsp + KTRAP_FRAME_Rax], rax
-    .savereg rax, KTRAP_FRAME_Rax
 
     /* Point rbp to the KTRAP_FRAME */
     lea rbp, [rsp]
     .setframe rbp, 0
 
-    if (Flags AND TF_NONVOLATILES)
-        /* Save non-volatile registers */
-        mov [rbp + KTRAP_FRAME_Rbx], rbx
-        .savereg rbx, KTRAP_FRAME_Rbx
-        mov [rbp + KTRAP_FRAME_Rdi], rdi
-        .savereg rdi, KTRAP_FRAME_Rdi
-        mov [rbp + KTRAP_FRAME_Rsi], rsi
-        .savereg rsi, KTRAP_FRAME_Rsi
-    endif
-
     .endprolog
 
-    if (Flags AND TF_VOLATILES)
-        /* Save volatile registers */
-        mov [rbp + KTRAP_FRAME_Rcx], rcx
-        mov [rbp + KTRAP_FRAME_Rdx], rdx
-        mov [rbp + KTRAP_FRAME_R8], r8
-        mov [rbp + KTRAP_FRAME_R9], r9
-        mov [rbp + KTRAP_FRAME_R10], r10
-        mov [rbp + KTRAP_FRAME_R11], r11
-    endif
+    /* Save volatile registers */
+    mov [rbp + KTRAP_FRAME_Rax], rax
+    mov [rbp + KTRAP_FRAME_Rcx], rcx
+    mov [rbp + KTRAP_FRAME_Rdx], rdx
+    mov [rbp + KTRAP_FRAME_R8], r8
+    mov [rbp + KTRAP_FRAME_R9], r9
+    mov [rbp + KTRAP_FRAME_R10], r10
+    mov [rbp + KTRAP_FRAME_R11], r11
 
-    if (Flags AND TF_XMM)
-        /* Save xmm registers */
-        movdqa [rbp + KTRAP_FRAME_Xmm0], xmm0
-        movdqa [rbp + KTRAP_FRAME_Xmm1], xmm1
-        movdqa [rbp + KTRAP_FRAME_Xmm2], xmm2
-        movdqa [rbp + KTRAP_FRAME_Xmm3], xmm3
-        movdqa [rbp + KTRAP_FRAME_Xmm4], xmm4
-        movdqa [rbp + KTRAP_FRAME_Xmm5], xmm5
-    endif
+    /* Save volatile xmm registers */
+    movaps [rbp + KTRAP_FRAME_Xmm0], xmm0
+    movaps [rbp + KTRAP_FRAME_Xmm1], xmm1
+    movaps [rbp + KTRAP_FRAME_Xmm2], xmm2
+    movaps [rbp + KTRAP_FRAME_Xmm3], xmm3
+    movaps [rbp + KTRAP_FRAME_Xmm4], xmm4
+    movaps [rbp + KTRAP_FRAME_Xmm5], xmm5
 
     if (Flags AND TF_SEGMENTS)
         /* Save segment selectors */
@@ -122,13 +155,7 @@ MACRO(EnterTrap, Flags)
     /* Load kernel MXCSR */
     ldmxcsr gs:[PcMxCsr]
 
-#if DBG
-    /* Check IRQL */
-    mov rax, cr8
-    test rax, rax
-    jz kernel_mode_entry
-    int HEX(2c)
-#endif
+    ASSERT_IRQL_PASSIVE
 
 kernel_mode_entry:
 
@@ -163,26 +190,8 @@ ENDM
  */
 MACRO(ExitTrap, Flags)
     LOCAL kernel_mode_return
-    LOCAL IntsEnabled
-    LOCAL NoUserApc
-    LOCAL IrqlPassive
 
-#if DBG
-        /* Check previous irql */
-        mov rax, cr8
-        cmp [rbp + KTRAP_FRAME_PreviousIrql], al
-#ifdef _USE_ML
-        je .irql_ok
-#else
-        je 1f
-#endif
-        int 3
-#ifdef _USE_ML
-    .irql_ok:
-#else
-    1:
-#endif
-#endif
+    ASSERT_TRAP_FRAME_IRQL_VALID rbp
 
     if (Flags AND TF_SEGMENTS)
         /* Restore segment selectors */
@@ -202,29 +211,12 @@ MACRO(ExitTrap, Flags)
     jz kernel_mode_return
 
     if (Flags AND TF_CHECKUSERAPC)
-        /* Load current thread into r10 */
         mov r10, gs:[PcCurrentThread]
-        cmp byte ptr [r10 + KTHREAD_UserApcPending], 0
-        je NoUserApc
-        call KiInitiateUserApc
-    NoUserApc:
+        HANDLE_USER_APCS r10, rbp
     endif
 
-#if DBG
-    /*Make sure interrupts are enabled */
-    test dword ptr [rbp + KTRAP_FRAME_EFlags], HEX(200)
-    jnz IntsEnabled
-    int HEX(2c)
-IntsEnabled:
-
-    /* Make sure we are at passive level */
-    mov rax, cr8
-    test rax, rax
-    jz IrqlPassive
-    int HEX(2C)
-
-IrqlPassive:
-#endif
+    ASSERT_TRAP_FRAME_INTS_ENABLED rbp
+    ASSERT_IRQL_PASSIVE
 
     cli
 
@@ -233,33 +225,22 @@ IrqlPassive:
 
 kernel_mode_return:
 
-    if (Flags AND TF_NONVOLATILES)
-        /* Restore non-volatile registers */
-        mov rbx, [rbp + KTRAP_FRAME_Rbx]
-        mov rdi, [rbp + KTRAP_FRAME_Rdi]
-        mov rsi, [rbp + KTRAP_FRAME_Rsi]
-    endif
+    /* Restore volatile registers */
+    mov rax, [rbp + KTRAP_FRAME_Rax]
+    mov rcx, [rbp + KTRAP_FRAME_Rcx]
+    mov rdx, [rbp + KTRAP_FRAME_Rdx]
+    mov r8, [rbp + KTRAP_FRAME_R8]
+    mov r9, [rbp + KTRAP_FRAME_R9]
+    mov r10, [rbp + KTRAP_FRAME_R10]
+    mov r11, [rbp + KTRAP_FRAME_R11]
 
-    if (Flags AND TF_VOLATILES)
-        /* Restore volatile registers */
-        mov rax, [rbp + KTRAP_FRAME_Rax]
-        mov rcx, [rbp + KTRAP_FRAME_Rcx]
-        mov rdx, [rbp + KTRAP_FRAME_Rdx]
-        mov r8, [rbp + KTRAP_FRAME_R8]
-        mov r9, [rbp + KTRAP_FRAME_R9]
-        mov r10, [rbp + KTRAP_FRAME_R10]
-        mov r11, [rbp + KTRAP_FRAME_R11]
-    endif
-
-    if (Flags AND TF_XMM)
-        /* Restore xmm registers */
-        movdqa xmm0, [rbp + KTRAP_FRAME_Xmm0]
-        movdqa xmm1, [rbp + KTRAP_FRAME_Xmm1]
-        movdqa xmm2, [rbp + KTRAP_FRAME_Xmm2]
-        movdqa xmm3, [rbp + KTRAP_FRAME_Xmm3]
-        movdqa xmm4, [rbp + KTRAP_FRAME_Xmm4]
-        movdqa xmm5, [rbp + KTRAP_FRAME_Xmm5]
-    endif
+    /* Restore xmm registers */
+    movaps xmm0, [rbp + KTRAP_FRAME_Xmm0]
+    movaps xmm1, [rbp + KTRAP_FRAME_Xmm1]
+    movaps xmm2, [rbp + KTRAP_FRAME_Xmm2]
+    movaps xmm3, [rbp + KTRAP_FRAME_Xmm3]
+    movaps xmm4, [rbp + KTRAP_FRAME_Xmm4]
+    movaps xmm5, [rbp + KTRAP_FRAME_Xmm5]
 
     /* Restore MCXSR */
     ldmxcsr [rbp + KTRAP_FRAME_MxCsr]

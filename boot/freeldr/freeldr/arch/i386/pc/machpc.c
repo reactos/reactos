@@ -19,6 +19,8 @@
 #include <freeldr.h>
 #include <cportlib/cportlib.h>
 
+#include "../ntldr/ntldropts.h"
+
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(HWDETECT);
 
@@ -710,6 +712,7 @@ DetectSerialPointerPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey,
     }
 }
 
+static
 ULONG
 PcGetSerialPort(ULONG Index, PULONG Irq)
 {
@@ -727,8 +730,60 @@ PcGetSerialPort(ULONG Index, PULONG Irq)
     return (ULONG) *(BasePtr + Index);
 }
 
+/*
+ * Parse the serial mouse detection options.
+ * Format: /FASTDETECT
+ * or: /NOSERIALMICE=COM[0-9],[0-9],[0-9]...
+ * or: /NOSERIALMICE:COM[0-9]...
+ * If we have /FASTDETECT, then nothing can be detected.
+ */
+static
+ULONG
+GetSerialMouseDetectionBitmap(
+    _In_opt_ PCSTR Options)
+{
+    PCSTR Option, c;
+    ULONG OptionLength, PortBitmap, i;
+
+    if (NtLdrGetOption(Options, "FASTDETECT"))
+        return (1 << MAX_COM_PORTS) - 1;
+
+    Option = NtLdrGetOptionEx(Options, "NOSERIALMICE=", &OptionLength);
+    if (!Option)
+        Option = NtLdrGetOptionEx(Options, "NOSERIALMICE:", &OptionLength);
+
+    if (!Option)
+        return 0;
+
+    /* Invalid port list */
+    if (OptionLength < (sizeof("NOSERIALMICE=COM9") - 1))
+        return (1 << MAX_COM_PORTS) - 1;
+
+    /* Move to the port list */
+    Option += sizeof("NOSERIALMICE=COM") - 1;
+    OptionLength -= sizeof("NOSERIALMICE=COM") - 1;
+
+    PortBitmap = 0;
+    c = Option;
+    for (i = 0; i < OptionLength; i += 2)
+    {
+        UCHAR PortNumber = *c - '0';
+
+        if (PortNumber > 0 && PortNumber <= 9)
+            PortBitmap |= 1 << (PortNumber - 1);
+
+        c += 2;
+    }
+
+    return PortBitmap;
+}
+
 VOID
-DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey, GET_SERIAL_PORT MachGetSerialPort, ULONG Count)
+DetectSerialPorts(
+    _In_opt_ PCSTR Options,
+    _Inout_ PCONFIGURATION_COMPONENT_DATA BusKey,
+    _In_ GET_SERIAL_PORT MachGetSerialPort,
+    _In_ ULONG Count)
 {
     PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
@@ -740,8 +795,11 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey, GET_SERIAL_PORT MachGetS
     PCONFIGURATION_COMPONENT_DATA ControllerKey;
     ULONG i;
     ULONG Size;
+    ULONG PortBitmap;
 
     TRACE("DetectSerialPorts()\n");
+
+    PortBitmap = GetSerialMouseDetectionBitmap(Options);
 
     for (i = 0; i < Count; i++)
     {
@@ -813,7 +871,7 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey, GET_SERIAL_PORT MachGetS
                                Size,
                                &ControllerKey);
 
-        if (!Rs232PortInUse(UlongToPtr(Base)))
+        if (!(PortBitmap & (1 << i)) && !Rs232PortInUse(UlongToPtr(Base)))
         {
             /* Detect serial mouse */
             DetectSerialPointerPeripheral(ControllerKey, UlongToPtr(Base));
@@ -1561,7 +1619,10 @@ DetectDisplayController(PCONFIGURATION_COMPONENT_DATA BusKey)
 
 static
 VOID
-DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
+DetectIsaBios(
+    _In_opt_ PCSTR Options,
+    _Inout_ PCONFIGURATION_COMPONENT_DATA SystemKey,
+    _Out_ ULONG *BusNumber)
 {
     PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
     PCONFIGURATION_COMPONENT_DATA BusKey;
@@ -1600,7 +1661,7 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
     /* Detect ISA/BIOS devices */
     DetectBiosDisks(SystemKey, BusKey);
-    DetectSerialPorts(BusKey, PcGetSerialPort, MAX_COM_PORTS);
+    DetectSerialPorts(Options, BusKey, PcGetSerialPort, MAX_COM_PORTS);
     DetectParallelPorts(BusKey);
     DetectKeyboardController(BusKey);
     DetectPS2Mouse(BusKey);
@@ -1628,7 +1689,8 @@ PcGetFloppyCount(VOID)
 #endif
 
 PCONFIGURATION_COMPONENT_DATA
-PcHwDetect(VOID)
+PcHwDetect(
+    _In_opt_ PCSTR Options)
 {
     PCONFIGURATION_COMPONENT_DATA SystemKey;
     ULONG BusNumber = 0;
@@ -1646,7 +1708,7 @@ PcHwDetect(VOID)
     DetectPciBios(SystemKey, &BusNumber);
     DetectApmBios(SystemKey, &BusNumber);
     DetectPnpBios(SystemKey, &BusNumber);
-    DetectIsaBios(SystemKey, &BusNumber); // TODO: Detect first EISA or MCA, before ISA
+    DetectIsaBios(Options, SystemKey, &BusNumber); // TODO: Detect first EISA or MCA, before ISA
     DetectAcpiBios(SystemKey, &BusNumber);
 
     // TODO: Collect the ROM blocks from 0xC0000 to 0xF0000 and append their

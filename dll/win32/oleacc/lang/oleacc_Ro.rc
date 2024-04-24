@@ -1,7 +1,8 @@
 /*
  * Copyright 2008 Nikolay Sivov
  * Copyright 2009 Michael Stefaniuc
- *           2011 Ștefan Fulea
+ *           2011 Ștefan Fulea <stefan.fulea@mail.com>
+ *           2024 Andrei Miloiu <miloiuandrei@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -121,5 +122,5 @@ STRINGTABLE
     IDS_STATE_ALERT_MEDIUM      "alertă medie"
     IDS_STATE_ALERT_HIGH        "alertă maximă"
     IDS_STATE_PROTECTED         "protejat"
-    IDS_STATE_HASPOPUP          "intempestiv"
+    IDS_STATE_HASPOPUP          "popup"
 }

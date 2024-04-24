@@ -1355,9 +1355,17 @@ IntGetAtomFromStringOrAtom(
     }
     else
     {
-        ASSERT(IS_ATOM(ClassName->Buffer));
-        *Atom = (RTL_ATOM)((ULONG_PTR)ClassName->Buffer);
-        Ret = TRUE;
+        if (ClassName->Buffer)
+        {
+            *Atom = (RTL_ATOM)((ULONG_PTR)ClassName->Buffer);
+            Ret = TRUE;
+        }
+        else
+        {
+            *Atom = 0;
+            EngSetLastError(ERROR_CLASS_DOES_NOT_EXIST);
+            Ret = FALSE;
+        }
     }
 
     return Ret;

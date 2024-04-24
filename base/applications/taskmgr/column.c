@@ -42,8 +42,8 @@ const PresetColumnEntry ColumnPresets[COLUMN_NMAX] = {
     DECLARE_COLUMN_PRESET(COMMANDLINE,      450, FALSE)
 };
 
-static int          InsertColumn(int nCol, LPCWSTR lpszColumnHeading, int nFormat, int nWidth, int nSubItem);
-INT_PTR CALLBACK    ColumnsDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+static int       InsertColumn(int nCol, LPCWSTR lpszColumnHeading, int nFormat, int nWidth, int nSubItem);
+INT_PTR CALLBACK ColumnsDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 void AddColumns(void)
 {
@@ -53,13 +53,13 @@ void AddColumns(void)
 
     for (n=0; n<COLUMN_NMAX; n++) {
         if (TaskManagerSettings.Columns[n]) {
-            LoadStringW(hInst, ColumnPresets[n].dwIdsName, szTemp, sizeof(szTemp)/sizeof(WCHAR));
+            LoadStringW(hInst, ColumnPresets[n].dwIdsName, szTemp, _countof(szTemp));
             InsertColumn(n, szTemp, LVCFMT_LEFT, TaskManagerSettings.ColumnSizeArray[n], -1);
         }
     }
 
     size = SendMessageW(hProcessPageHeaderCtrl, HDM_GETITEMCOUNT, 0, 0);
-    SendMessageW(hProcessPageHeaderCtrl, HDM_SETORDERARRAY, (WPARAM) size, (LPARAM) &TaskManagerSettings.ColumnOrderArray);
+    SendMessageW(hProcessPageHeaderCtrl, HDM_SETORDERARRAY, (WPARAM)size, (LPARAM)&TaskManagerSettings.ColumnOrderArray);
 
     UpdateColumnDataHints();
 }
@@ -104,7 +104,7 @@ void SaveColumnSettings(void)
 
     /* Get header order */
     size = SendMessageW(hProcessPageHeaderCtrl, HDM_GETITEMCOUNT, 0, 0);
-    SendMessageW(hProcessPageHeaderCtrl, HDM_GETORDERARRAY, (WPARAM) size, (LPARAM) &TaskManagerSettings.ColumnOrderArray);
+    SendMessageW(hProcessPageHeaderCtrl, HDM_GETORDERARRAY, (WPARAM)size, (LPARAM)&TaskManagerSettings.ColumnOrderArray);
 
     /* Get visible columns */
     for (i = 0; i < SendMessageW(hProcessPageHeaderCtrl, HDM_GETITEMCOUNT, 0, 0); i++) {
@@ -117,7 +117,7 @@ void SaveColumnSettings(void)
         SendMessageW(hProcessPageHeaderCtrl, HDM_GETITEM, i, (LPARAM) &hditem);
 
         for (n = 0; n < COLUMN_NMAX; n++) {
-            LoadStringW(hInst, ColumnPresets[n].dwIdsName, szTemp, sizeof(szTemp)/sizeof(WCHAR));
+            LoadStringW(hInst, ColumnPresets[n].dwIdsName, szTemp, _countof(szTemp));
             if (_wcsicmp(text, szTemp) == 0)
             {
                 TaskManagerSettings.Columns[n] = TRUE;
@@ -155,7 +155,6 @@ ColumnsDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
     case WM_INITDIALOG:
-
         for (i=0; i<COLUMN_NMAX; i++) {
             if (TaskManagerSettings.Columns[i])
                 CheckDlgButton(hDlg, ColumnPresets[i].dwIdcCtrl, BST_CHECKED);
@@ -163,7 +162,6 @@ ColumnsDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         return TRUE;
 
     case WM_COMMAND:
-
         if (LOWORD(wParam) == IDCANCEL)
         {
             EndDialog(hDlg, LOWORD(wParam));
@@ -207,7 +205,7 @@ void UpdateColumnDataHints(void)
         SendMessageW(hProcessPageHeaderCtrl, HDM_GETITEM, Index, (LPARAM) &hditem);
 
         for (i=0; i<COLUMN_NMAX; i++) {
-            LoadStringW(hInst, ColumnPresets[i].dwIdsName, szTemp, sizeof(szTemp)/sizeof(WCHAR));
+            LoadStringW(hInst, ColumnPresets[i].dwIdsName, szTemp, _countof(szTemp));
             if (_wcsicmp(text, szTemp) == 0)
                 ColumnDataHints[Index] = i;
         }

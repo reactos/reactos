@@ -324,7 +324,7 @@ HalpQueryCapabilities(IN PDEVICE_OBJECT DeviceObject,
         Capabilities->UniqueID = TRUE;
         Capabilities->SilentInstall = TRUE;
 
-        /* Fill out the adress */
+        /* Fill out the address */
         Capabilities->Address = InterfaceTypeUndefined;
         Capabilities->UINumber = InterfaceTypeUndefined;
 

@@ -213,6 +213,7 @@ MmAccessFault(IN ULONG FaultCode,
 {
     PMEMORY_AREA MemoryArea = NULL;
     NTSTATUS Status;
+    BOOLEAN IsArm3Fault = FALSE;
 
     /* Cute little hack for ROS */
     if ((ULONG_PTR)Address >= (ULONG_PTR)MmSystemRangeStart)
@@ -227,30 +228,52 @@ MmAccessFault(IN ULONG FaultCode,
 #endif
     }
 
-    /* Handle shared user page, which doesn't have a VAD / MemoryArea */
-    if (PAGE_ALIGN(Address) == (PVOID)MM_SHARED_USER_DATA_VA)
+    /* Handle shared user page / page table, which don't have a VAD / MemoryArea */
+    if ((PAGE_ALIGN(Address) == (PVOID)MM_SHARED_USER_DATA_VA) ||
+        MI_IS_PAGE_TABLE_ADDRESS(Address))
     {
         /* This is an ARM3 fault */
-        DPRINT("ARM3 fault %p\n", MemoryArea);
+        DPRINT("ARM3 fault %p\n", Address);
         return MmArmAccessFault(FaultCode, Address, Mode, TrapInformation);
     }
 
     /* Is there a ReactOS address space yet? */
     if (MmGetKernelAddressSpace())
     {
-        /* Check if this is an ARM3 memory area */
-        MemoryArea = MmLocateMemoryAreaByAddress(MmGetKernelAddressSpace(), Address);
-        if (!(MemoryArea) && (Address <= MM_HIGHEST_USER_ADDRESS))
+        if (Address > MM_HIGHEST_USER_ADDRESS)
+        {
+            /* Check if this is an ARM3 memory area */
+            MiLockWorkingSetShared(PsGetCurrentThread(), &MmSystemCacheWs);
+            MemoryArea = MmLocateMemoryAreaByAddress(MmGetKernelAddressSpace(), Address);
+
+            if ((MemoryArea != NULL) && (MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3))
+            {
+                IsArm3Fault = TRUE;
+            }
+
+            MiUnlockWorkingSetShared(PsGetCurrentThread(), &MmSystemCacheWs);
+        }
+        else
         {
             /* Could this be a VAD fault from user-mode? */
+            MiLockProcessWorkingSetShared(PsGetCurrentProcess(), PsGetCurrentThread());
             MemoryArea = MmLocateMemoryAreaByAddress(MmGetCurrentAddressSpace(), Address);
+
+            if ((MemoryArea != NULL) && (MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3))
+            {
+                IsArm3Fault = TRUE;
+            }
+
+            MiUnlockProcessWorkingSetShared(PsGetCurrentProcess(), PsGetCurrentThread());
         }
     }
 
     /* Is this an ARM3 memory area, or is there no address space yet? */
-    if (((MemoryArea) && (MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3)) ||
-            (!(MemoryArea) && ((ULONG_PTR)Address >= (ULONG_PTR)MmPagedPoolStart)) ||
-            (!MmGetKernelAddressSpace()))
+    if (IsArm3Fault ||
+        ((MemoryArea == NULL) &&
+         ((ULONG_PTR)Address >= (ULONG_PTR)MmPagedPoolStart) &&
+         ((ULONG_PTR)Address < (ULONG_PTR)MmPagedPoolEnd)) ||
+        (!MmGetKernelAddressSpace()))
     {
         /* This is an ARM3 fault */
         DPRINT("ARM3 fault %p\n", MemoryArea);

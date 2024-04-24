@@ -2,6 +2,6 @@
 
 MUI_LAYOUTS enJMLayouts[] =
 {
-    { L"2009", L"00000409" },
-    { NULL, NULL }
+    { 0x2009, 0x00000409 },
+    { 0, 0 }
 };

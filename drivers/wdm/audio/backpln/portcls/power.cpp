@@ -8,10 +8,7 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
 #define NDEBUG
-#endif
-
 #include <debug.h>
 
 NTSTATUS
@@ -30,7 +27,6 @@ PcRegisterAdapterPowerManagement(
 
     if (!pUnknown || !pvContext)
         return STATUS_INVALID_PARAMETER;
-
 
     pDeviceObject = (PDEVICE_OBJECT)pvContext;
     DeviceExt = (PPCLASS_DEVICE_EXTENSION)pDeviceObject->DeviceExtension;
@@ -70,8 +66,6 @@ PcUnregisterAdapterPowerManagement(
     DeviceExt->AdapterPowerManagement = NULL;
     return STATUS_SUCCESS;
 }
-
-
 
 static
 VOID
@@ -114,7 +108,5 @@ PcRequestNewPowerState(
         KeWaitForSingleObject((PVOID)&Event, Executive, KernelMode, FALSE, NULL);
     }
 
-
     return Status;
 }
-

@@ -53,10 +53,10 @@
 #define STRING_MOVE_ERROR1         342
 #define STRING_MOVE_ERROR2         343
 #define STRING_SET_ENV_ERROR       345
-#define STRING_REN_ERROR1          346
-#define STRING_TIME_ERROR1         348
-#define STRING_TYPE_ERROR1         349
-#define STRING_WINDOW_ERROR1       350
+#define STRING_REN_ERROR           346
+#define STRING_TIME_ERROR          348
+#define STRING_TYPE_ERROR          349
+#define STRING_WINDOW_ERROR        350
 #define STRING_REPLACE_ERROR1      351
 #define STRING_REPLACE_ERROR2      352
 #define STRING_REPLACE_ERROR3      353
@@ -134,7 +134,7 @@
 
 #define STRING_GOTO_HELP1 659
 
-#define STRING_LOCALE_HELP1 666
+#define STRING_TIME_NOW 666
 
 #define STRING_MKDIR_HELP 667
 

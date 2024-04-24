@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     ReactOS Boot Video Driver for VGA-compatible cards
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Command strings for VGA built-in modes
+ * COPYRIGHT:   Copyright 2007 Alex Ionescu <alex.ionescu@reactos.org>
+ *              Copyright 2019 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ */
+
 #include "precomp.h"
 
 //

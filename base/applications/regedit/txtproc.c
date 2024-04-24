@@ -194,8 +194,9 @@ static WCHAR *
 txt_build_subkey_path(LPCWSTR path, DWORD path_len, LPCWSTR subkey_name, DWORD subkey_len)
 {
     WCHAR *subkey_path;
-    subkey_path = malloc((path_len + subkey_len + 2) * sizeof(WCHAR));
-    swprintf(subkey_path, L"%s\\%s", path, subkey_name);
+    SIZE_T cb_subkey_path = (path_len + subkey_len + 2) * sizeof(WCHAR);
+    subkey_path = malloc(cb_subkey_path);
+    StringCbPrintfW(subkey_path, cb_subkey_path, L"%s\\%s", path, subkey_name);
     return subkey_path;
 }
 

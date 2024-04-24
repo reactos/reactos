@@ -8,7 +8,7 @@
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
-//IDB_FONTSTOOLBAR BITMAP "icons/fontstoolbar-tr-TR.bmp"
+//IDB_FONTSTOOLBAR BITMAP "img/fontstoolbar-tr-TR.bmp"
 
 ID_MENU MENU
 BEGIN
@@ -43,6 +43,8 @@ BEGIN
         MENUITEM "&Kes\tCtrl+X", IDM_EDITCUT
         MENUITEM "K&opyala\tCtrl+C", IDM_EDITCOPY
         MENUITEM "Y&apıştır\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "&Seçimi Sil\tDel", IDM_EDITDELETESELECTION
         MENUITEM "S&eçimi Evir", IDM_EDITINVERTSELECTION
         MENUITEM "&Tümünü Seç\tCtrl+A", IDM_EDITSELECTALL
@@ -107,6 +109,8 @@ BEGIN
         MENUITEM "&Kes\tCtrl+X", IDM_EDITCUT
         MENUITEM "K&opyala\tCtrl+C", IDM_EDITCOPY
         MENUITEM "Y&apıştır\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Crop &selection", IDM_CROPSELECTION
         MENUITEM "&Seçimi Sil\tDel", IDM_EDITDELETESELECTION
         MENUITEM "&Tümünü Seç\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR

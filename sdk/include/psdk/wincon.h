@@ -119,8 +119,8 @@ extern "C" {
 /*
  * Read input flags
  */
-#define CONSOLE_READ_KEEPEVENT          0x0001
-#define CONSOLE_READ_CONTINUE           0x0002
+#define CONSOLE_READ_NOREMOVE           0x0001
+#define CONSOLE_READ_NOWAIT             0x0002
 
 /*
  * Event types

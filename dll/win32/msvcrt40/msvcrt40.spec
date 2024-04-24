@@ -482,7 +482,7 @@
 @ stub ?xalloc@ios@@SAHXZ
 @ stub ?xsgetn@streambuf@@UAEHPADH@Z
 @ stub ?xsputn@streambuf@@UAEHPBDH@Z
-@ cdecl $I10_OUTPUT() MSVCRT_I10_OUTPUT
+@ cdecl $I10_OUTPUT() I10_OUTPUT
 @ cdecl -arch=i386 _CIacos()
 @ cdecl -arch=i386 _CIasin()
 @ cdecl -arch=i386 _CIatan()

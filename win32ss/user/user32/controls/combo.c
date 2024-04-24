@@ -1989,8 +1989,15 @@ LRESULT WINAPI ComboWndProc_common( HWND hwnd, UINT message, WPARAM wParam, LPAR
         if ( KEYDATA_ALT & HIWORD(lParam) )
 #endif
             if( wParam == VK_UP || wParam == VK_DOWN )
+#ifdef __REACTOS__
+            {
+#endif
                 COMBO_FlipListbox( lphc, FALSE, FALSE );
         return  0;
+#ifdef __REACTOS__
+            }
+        break;
+#endif
 
     case WM_KEYDOWN:
         if ((wParam == VK_RETURN || wParam == VK_ESCAPE) &&
@@ -2010,6 +2017,10 @@ LRESULT WINAPI ComboWndProc_common( HWND hwnd, UINT message, WPARAM wParam, LPAR
         {
             HWND hwndTarget;
 
+#ifdef __REACTOS__
+            if (lphc->wState & CBF_DROPPED)
+                lphc->wState |= CBF_NOROLLUP;
+#endif
             if ( lphc->wState & CBF_EDIT )
                 hwndTarget = lphc->hWndEdit;
             else

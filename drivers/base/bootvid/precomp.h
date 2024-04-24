@@ -1,3 +1,12 @@
+/*
+ * PROJECT:     ReactOS Boot Video Driver
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Precompiled header
+ * COPYRIGHT:   Copyright 2007 Alex Ionescu <alex.ionescu@reactos.org>
+ *              Copyright 2020 Dmitry Borisov <di.sean@protonmail.com>
+ *              Copyright 2020 Stanislav Motylkov <x86corez@gmail.com>
+ */
+
 #ifndef _BOOTVID_PCH_
 #define _BOOTVID_PCH_
 
@@ -61,18 +70,18 @@ extern const RGBQUAD VidpDefaultPalette[BV_MAX_COLORS];
 
 #define RGB(r, g, b)    ((RGBQUAD)(((UCHAR)(b) | ((USHORT)((UCHAR)(g))<<8)) | (((ULONG)(UCHAR)(r))<<16)))
 
-#define GetRValue(quad)    ((UCHAR)(((quad)>>16) & 0xFF))
-#define GetGValue(quad)    ((UCHAR)(((quad)>>8) & 0xFF))
-#define GetBValue(quad)    ((UCHAR)((quad) & 0xFF))
+#define GetRValue(quad)     ((UCHAR)(((quad)>>16) & 0xFF))
+#define GetGValue(quad)     ((UCHAR)(((quad)>>8) & 0xFF))
+#define GetBValue(quad)     ((UCHAR)((quad) & 0xFF))
 
-#define InitializePalette()    InitPaletteWithTable((PULONG)VidpDefaultPalette, BV_MAX_COLORS)
+#define InitializePalette() InitPaletteWithTable((PULONG)VidpDefaultPalette, BV_MAX_COLORS)
 
 #ifdef CHAR_GEN_UPSIDE_DOWN
-# define GetFontPtr(_Char) &VidpFontData[_Char * BOOTCHAR_HEIGHT] + BOOTCHAR_HEIGHT - 1;
-# define FONT_PTR_DELTA (-1)
+# define GetFontPtr(_Char)  (&VidpFontData[(_Char) * BOOTCHAR_HEIGHT] + BOOTCHAR_HEIGHT - 1)
+# define FONT_PTR_DELTA     (-1)
 #else
-# define GetFontPtr(_Char) &VidpFontData[_Char * BOOTCHAR_HEIGHT];
-# define FONT_PTR_DELTA (1)
+# define GetFontPtr(_Char)  (&VidpFontData[(_Char) * BOOTCHAR_HEIGHT])
+# define FONT_PTR_DELTA     (1)
 #endif
 
 #endif /* _BOOTVID_PCH_ */

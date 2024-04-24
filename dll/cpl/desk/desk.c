@@ -8,11 +8,22 @@
  */
 
 #include "desk.h"
+
 #include <shellapi.h>
 #include <cplext.h>
+#include <winnls.h>
+
+#define NDEBUG
 #include <debug.h>
 
-#define NUM_APPLETS    (1)
+
+/* Enable this for InstallScreenSaverW() to determine a possible full path
+ * to the specified screensaver file, verify its existence and use it.
+ * (NOTE: This is not Windows desk.cpl-compatible.) */
+// #define CHECK_SCR_FULL_PATH
+
+
+VOID WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdShow);
 
 static LONG APIENTRY DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
 
@@ -23,11 +34,11 @@ INT_PTR CALLBACK AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 INT_PTR CALLBACK SettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 UINT CALLBACK SettingsPageCallbackProc(HWND hwnd, UINT uMsg, LPPROPSHEETPAGE ppsp);
 
-HINSTANCE hApplet = 0;
-HWND hCPLWindow;
+HINSTANCE hApplet = NULL;
+HWND hCPLWindow = NULL;
 
 /* Applets */
-APPLET Applets[NUM_APPLETS] =
+APPLET Applets[] =
 {
     {
         IDC_DESK_ICON,
@@ -208,8 +219,8 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
         g_GlobalData.bmMonHeight = bitmap.bmHeight;
     }
 
-    ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
-    psh.dwSize = sizeof(PROPSHEETHEADER);
+    ZeroMemory(&psh, sizeof(psh));
+    psh.dwSize = sizeof(psh);
     psh.dwFlags = PSH_USECALLBACK | PSH_PROPTITLE | PSH_USEICONID;
     psh.hwndParent = hCPLWindow;
     psh.hInstance = hApplet;
@@ -223,7 +234,7 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     /* Allow shell extensions to replace the background page */
     hpsxa = SHCreatePropSheetExtArray(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\Desk"), MAX_DESK_PAGES - psh.nPages);
 
-    for (i = 0; i != sizeof(PropPages) / sizeof(PropPages[0]); i++)
+    for (i = 0; i < _countof(PropPages); i++)
     {
         if (pwszSelectedTab && wcsicmp(pwszSelectedTab, PropPages[i].Name) == 0)
             psh.nStartPage = i;
@@ -273,10 +284,10 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
             return TRUE;
 
         case CPL_GETCOUNT:
-            return NUM_APPLETS;
+            return _countof(Applets);
 
         case CPL_INQUIRE:
-            if (i < NUM_APPLETS)
+            if (i < _countof(Applets))
             {
                 CPLINFO *CPlInfo = (CPLINFO*)lParam2;
                 CPlInfo->lData = 0;
@@ -291,14 +302,14 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
             break;
 
         case CPL_DBLCLK:
-            if (i < NUM_APPLETS)
+            if (i < _countof(Applets))
                 Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
             else
                 return TRUE;
             break;
 
         case CPL_STARTWPARMSW:
-            if (i < NUM_APPLETS)
+            if (i < _countof(Applets))
                 return Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
             break;
     }
@@ -314,45 +325,90 @@ InstallScreenSaverW(
     IN LPCWSTR pszFile,
     IN UINT nCmdShow)
 {
-    WCHAR pszSystemDir[MAX_PATH];
-    WCHAR pszDrive[3];
-    WCHAR pszPath[MAX_PATH];
-    WCHAR pszFilename[MAX_PATH];
-    WCHAR pszExt[MAX_PATH];
-    LPWSTR pszOutName;
-    UINT uCompressionType=FILE_COMPRESSION_NONE;
-    DWORD dwSourceSize;
-    DWORD dwTargetSize;
-    DWORD rc;
+    LRESULT rc;
+    HKEY regKey;
+    INT Timeout;
+#ifdef CHECK_SCR_FULL_PATH
+    HANDLE hFile;
+    WIN32_FIND_DATAW fdFile;
+#endif
+    DWORD dwLen;
+    WCHAR szFullPath[MAX_PATH];
 
     if (!pszFile)
     {
-        DPRINT("InstallScreenSaver() null file\n");
+        DPRINT1("InstallScreenSaver() null file\n");
         SetLastError(ERROR_INVALID_PARAMETER);
         return;
     }
     DPRINT("InstallScreenSaver() Installing screensaver %ls\n", pszFile);
 
-    rc = SetupGetFileCompressionInfoW(pszFile, &pszOutName, &dwSourceSize, &dwTargetSize, &uCompressionType);
-    if (ERROR_SUCCESS != rc)
+#ifdef CHECK_SCR_FULL_PATH
+    /* Retrieve the actual path to the file and verify whether it exists */
+    dwLen = GetFullPathNameW(pszFile, _countof(szFullPath), szFullPath, NULL);
+    if (dwLen == 0 || dwLen > _countof(szFullPath))
     {
-        DPRINT("InstallScreenSaver() SetupGetFileCompressionInfo failed with error 0x%lx\n", rc);
-        SetLastError(rc);
+        DPRINT1("InstallScreenSaver() File %ls not accessible\n", pszFile);
         return;
     }
-    if (!GetSystemDirectoryW((LPWSTR)pszSystemDir, sizeof(pszSystemDir)/sizeof(WCHAR)))
+    hFile = FindFirstFile(szFullPath, &fdFile);
+    if (hFile == INVALID_HANDLE_VALUE)
     {
-        MyFree(pszOutName);
-        DPRINT("InstallScreenSaver() GetSystemDirectory failed with error 0x%lx\n", GetLastError());
+        DPRINT1("InstallScreenSaver() File %ls not found\n", pszFile);
         return;
     }
-    _wsplitpath(pszOutName, pszDrive, pszPath, pszFilename, pszExt);
-    MyFree(pszOutName);
-    StringCbCatW(pszSystemDir, sizeof(pszSystemDir), L"\\");
-    StringCbCatW(pszSystemDir, sizeof(pszSystemDir), pszFilename);
-    StringCbCatW(pszSystemDir, sizeof(pszSystemDir), pszExt);
-    rc = SetupDecompressOrCopyFileW(pszFile, pszSystemDir, &uCompressionType);
-    DPRINT("InstallScreenSaver() Copying to %ls, compression type %d return 0x%lx\n", pszFile, uCompressionType, rc);
+    FindClose(hFile);
+    /* Use the full file path from now on */
+    pszFile = szFullPath;
+#endif
+
+    rc = RegOpenKeyExW(HKEY_CURRENT_USER,
+                       L"Control Panel\\Desktop",
+                       0,
+                       KEY_SET_VALUE,
+                       &regKey);
+    if (rc == ERROR_SUCCESS)
+    {
+        /* Set the screensaver */
+        SIZE_T Length = (wcslen(pszFile) + 1) * sizeof(WCHAR);
+        rc = RegSetValueExW(regKey,
+                            L"SCRNSAVE.EXE",
+                            0,
+                            REG_SZ,
+                            (PBYTE)pszFile,
+                            (DWORD)Length);
+        RegCloseKey(regKey);
+    }
+    if (rc != ERROR_SUCCESS)
+    {
+        DPRINT1("InstallScreenSaver() Could not change the current screensaver\n");
+        return;
+    }
+
+    SystemParametersInfoW(SPI_SETSCREENSAVEACTIVE, TRUE, 0, SPIF_UPDATEINIFILE);
+
+    /* If no screensaver timeout is present, default to 10 minutes (600 seconds) */
+    Timeout = 0;
+    if (!SystemParametersInfoW(SPI_GETSCREENSAVETIMEOUT, 0, &Timeout, 0) || (Timeout <= 0))
+        SystemParametersInfoW(SPI_SETSCREENSAVETIMEOUT, 600, 0, SPIF_UPDATEINIFILE);
+
+    /* Retrieve the name of this current instance of desk.cpl */
+    dwLen = GetModuleFileNameW(hApplet, szFullPath, _countof(szFullPath));
+    if ((dwLen == 0) || (GetLastError() == ERROR_INSUFFICIENT_BUFFER))
+    {
+        /* We failed, copy the default value */
+        StringCchCopyW(szFullPath, _countof(szFullPath), L"desk.cpl");
+    }
+
+    /* Build the desk.cpl command-line to start the ScreenSaver page.
+     * Equivalent to: "desk.cpl,ScreenSaver,@ScreenSaver" */
+    rc = StringCchCatW(szFullPath, _countof(szFullPath), L",,1");
+    if (FAILED(rc))
+        return;
+
+    /* Open the ScreenSaver page in this desk.cpl instance */
+    DPRINT("InstallScreenSaver() Starting '%ls'\n", szFullPath);
+    Control_RunDLLW(hWindow, hInstance, szFullPath, nCmdShow);
 }
 
 void
@@ -364,23 +420,40 @@ InstallScreenSaverA(
     IN UINT nCmdShow)
 {
     LPWSTR lpwString;
+    int nLength;
 
     if (!pszFile)
     {
-        DPRINT("InstallScreenSaver() null file\n");
+        DPRINT1("InstallScreenSaver() null file\n");
         SetLastError(ERROR_INVALID_PARAMETER);
         return;
     }
-    DPRINT("InstallScreenSaver() Install from file %s\n", pszFile);
-    lpwString = pSetupMultiByteToUnicode(pszFile, 0);
+
+    /* Convert the string to unicode */
+    lpwString = NULL;
+    nLength = MultiByteToWideChar(CP_ACP, 0, pszFile, -1, NULL, 0);
+    if (nLength != 0)
+    {
+        lpwString = LocalAlloc(LMEM_FIXED, nLength * sizeof(WCHAR));
+        if (lpwString)
+        {
+            if (!MultiByteToWideChar(CP_ACP, 0, pszFile, -1, lpwString, nLength))
+            {
+                LocalFree(lpwString);
+                lpwString = NULL;
+            }
+        }
+    }
     if (!lpwString)
     {
-        DPRINT("InstallScreenSaver() not enough memory to convert string to unicode\n");
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        DPRINT1("InstallScreenSaver() not enough memory to convert string to unicode\n");
         return;
     }
+
+    /* Call the unicode function */
     InstallScreenSaverW(hWindow, hInstance, lpwString, nCmdShow);
-    MyFree(lpwString);
+
+    LocalFree(lpwString);
 }
 
 BOOL WINAPI
