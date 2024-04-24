@@ -77,7 +77,7 @@ static ULONG WINAPI cordebugprocess_AddRef(ICorDebugProcess *iface)
     DebugProcess *This = impl_from_ICorDebugProcess(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("%p ref=%u\n", This, ref);
+    TRACE("%p ref=%lu\n", This, ref);
 
     return ref;
 }
@@ -87,7 +87,7 @@ static ULONG WINAPI cordebugprocess_Release(ICorDebugProcess *iface)
     DebugProcess *This = impl_from_ICorDebugProcess(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("%p ref=%u\n", This, ref);
+    TRACE("%p ref=%lu\n", This, ref);
 
     if (ref == 0)
     {
@@ -445,7 +445,7 @@ static HRESULT WINAPI process_enum_QueryInterface(ICorDebugProcessEnum *iface, R
 static ULONG WINAPI process_enum_AddRef(ICorDebugProcessEnum *iface)
 {
     CorDebug *This = impl_from_ICorDebugProcessEnum(iface);
-    TRACE("%p ref=%u\n", This, This->ref);
+    TRACE("%p ref=%lu\n", This, This->ref);
 
     return ICorDebug_AddRef(&This->ICorDebug_iface);
 }
@@ -453,7 +453,7 @@ static ULONG WINAPI process_enum_AddRef(ICorDebugProcessEnum *iface)
 static ULONG WINAPI process_enum_Release(ICorDebugProcessEnum *iface)
 {
     CorDebug *This = impl_from_ICorDebugProcessEnum(iface);
-    TRACE("%p ref=%u\n", This, This->ref);
+    TRACE("%p ref=%lu\n", This, This->ref);
 
     return ICorDebug_Release(&This->ICorDebug_iface);
 }
@@ -496,7 +496,7 @@ static HRESULT WINAPI process_enum_Next(ICorDebugProcessEnum *iface, ULONG celt,
             ICorDebugProcess * processes[], ULONG *pceltFetched)
 {
     CorDebug *This = impl_from_ICorDebugProcessEnum(iface);
-    FIXME("stub %p %d %p %p\n", This, celt, processes, pceltFetched);
+    FIXME("stub %p %ld %p %p\n", This, celt, processes, pceltFetched);
     return E_NOTIMPL;
 }
 
@@ -540,7 +540,7 @@ static ULONG WINAPI CorDebug_AddRef(ICorDebug *iface)
     CorDebug *This = impl_from_ICorDebug( iface );
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("%p ref=%u\n", This, ref);
+    TRACE("%p ref=%lu\n", This, ref);
 
     return ref;
 }
@@ -550,7 +550,7 @@ static ULONG WINAPI CorDebug_Release(ICorDebug *iface)
     CorDebug *This = impl_from_ICorDebug( iface );
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("%p ref=%u\n", This, ref);
+    TRACE("%p ref=%lu\n", This, ref);
 
     if (ref == 0)
     {
@@ -560,7 +560,7 @@ static ULONG WINAPI CorDebug_Release(ICorDebug *iface)
         if(This->runtimehost)
             ICLRRuntimeHost_Release(This->runtimehost);
 
-        if(This->pCallback)
+        if(This->pCallback2)
             ICorDebugManagedCallback2_Release(This->pCallback2);
 
         if(This->pCallback)
@@ -652,7 +652,7 @@ static HRESULT WINAPI CorDebug_CreateProcess(ICorDebug *iface, LPCWSTR lpApplica
     ICorDebugProcess *pDebugProcess;
     HRESULT hr;
 
-    TRACE("stub %p %s %s %p %p %d %d %p %s %p %p %d %p\n", This, debugstr_w(lpApplicationName),
+    TRACE("stub %p %s %s %p %p %d %ld %p %s %p %p %d %p\n", This, debugstr_w(lpApplicationName),
             debugstr_w(lpCommandLine), lpProcessAttributes, lpThreadAttributes,
             bInheritHandles, dwCreationFlags, lpEnvironment, debugstr_w(lpCurrentDirectory),
             lpStartupInfo, lpProcessInformation, debuggingFlags, ppProcess);
@@ -690,7 +690,7 @@ static HRESULT WINAPI CorDebug_DebugActiveProcess(ICorDebug *iface, DWORD id, BO
             ICorDebugProcess **ppProcess)
 {
     CorDebug *This = impl_from_ICorDebug( iface );
-    FIXME("stub %p %d %d %p\n", This, id, win32Attach, ppProcess);
+    FIXME("stub %p %ld %d %p\n", This, id, win32Attach, ppProcess);
     return E_NOTIMPL;
 }
 
@@ -711,7 +711,7 @@ static HRESULT WINAPI CorDebug_EnumerateProcesses( ICorDebug *iface, ICorDebugPr
 static HRESULT WINAPI CorDebug_GetProcess(ICorDebug *iface, DWORD dwProcessId, ICorDebugProcess **ppProcess)
 {
     CorDebug *This = impl_from_ICorDebug( iface );
-    FIXME("stub %p %d %p\n", This, dwProcessId, ppProcess);
+    FIXME("stub %p %ld %p\n", This, dwProcessId, ppProcess);
     return E_NOTIMPL;
 }
 
@@ -719,7 +719,7 @@ static HRESULT WINAPI CorDebug_CanLaunchOrAttach(ICorDebug *iface, DWORD dwProce
             BOOL win32DebuggingEnabled)
 {
     CorDebug *This = impl_from_ICorDebug( iface );
-    FIXME("stub %p %d %d\n", This, dwProcessId, win32DebuggingEnabled);
+    FIXME("stub %p %ld %d\n", This, dwProcessId, win32DebuggingEnabled);
     return S_OK;
 }
 
