@@ -24,12 +24,13 @@
 @ stdcall CorBindToRuntimeHost(wstr wstr wstr ptr long ptr ptr ptr)
 @ stub CorDllMainWorker
 @ stdcall CorExitProcess(long)
-@ stub CorGetSvc
-@ stub CorIsLatestSvc
+@ stdcall CorGetSvc(ptr)
+@ stdcall CorIsLatestSvc(ptr ptr)
 @ stub CorMarkThreadInThreadPool
 @ stub CorTickleSvc
 @ stdcall CreateConfigStream(wstr ptr)
 @ stdcall CreateDebuggingInterfaceFromVersion(long wstr ptr)
+@ stdcall CreateInterface(ptr ptr ptr)
 @ stdcall -private DllCanUnloadNow()
 @ stdcall -private DllGetClassObject(ptr ptr ptr)
 @ stdcall -private DllRegisterServer()
@@ -37,7 +38,7 @@
 @ stub EEDllGetClassObjectFromClass
 @ stub EEDllRegisterServer
 @ stub EEDllUnregisterServer
-@ stdcall GetAssemblyMDImport(ptr ptr ptr)
+@ stdcall GetAssemblyMDImport(wstr ptr ptr)
 @ stub GetCORRequiredVersion
 @ stub GetCORRootDirectory
 @ stdcall GetCORSystemDirectory(ptr long ptr)
@@ -63,12 +64,12 @@
 @ stub GetRequestedRuntimeVersionForCLSID
 @ stub GetStartupFlags
 @ stub GetTargetForVTableEntry
-@ stub GetTokenForVTableEntry
+@ stdcall GetTokenForVTableEntry(ptr ptr)
 @ stdcall GetVersionFromProcess(ptr ptr long ptr)
 @ stub GetXMLElement
 @ stub GetXMLElementAttribute
 @ stub GetXMLObject
-@ stdcall LoadLibraryShim(ptr ptr ptr ptr)
+@ stdcall LoadLibraryShim(wstr wstr ptr ptr)
 @ stub LoadLibraryWithPolicyShim
 @ stdcall LoadStringRCEx(long long ptr long long ptr)
 @ stdcall LockClrVersion(ptr ptr ptr)
@@ -107,7 +108,7 @@
 @ stdcall StrongNameSignatureVerification(wstr long ptr)
 @ stdcall StrongNameSignatureVerificationEx(wstr long ptr)
 @ stub StrongNameSignatureVerificationFromImage
-@ stub StrongNameTokenFromAssembly
+@ stdcall StrongNameTokenFromAssembly(wstr ptr ptr)
 @ stub StrongNameTokenFromAssemblyEx
 @ stub StrongNameTokenFromPublicKey
 @ stub TranslateSecurityAttributes
@@ -115,4 +116,4 @@
 @ stdcall _CorExeMain2(ptr long ptr ptr ptr)
 @ stdcall _CorExeMain()
 @ stdcall _CorImageUnloading(ptr)
-@ stdcall _CorValidateImage(ptr ptr)
+@ stdcall _CorValidateImage(ptr wstr)

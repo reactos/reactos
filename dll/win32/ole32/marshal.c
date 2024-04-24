@@ -165,7 +165,7 @@ HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnkno
                     ERR("Failed to create an IRpcStubBuffer from IPSFactory for %s with error 0x%08x\n",
                         debugstr_guid(riid), hr);
             }else {
-                ERR("couldn't get IPSFactory buffer for interface %s\n", debugstr_guid(riid));
+                WARN("couldn't get IPSFactory buffer for interface %s\n", debugstr_guid(riid));
                 hr = E_NOINTERFACE;
             }
 
@@ -303,7 +303,7 @@ static HRESULT WINAPI ClientIdentity_QueryMultipleInterfaces(IMultiQI *iface, UL
                                                nonlocal_mqis, iids, &qiresults);
             IRemUnknown_Release(remunk);
             if (FAILED(hr))
-                ERR("IRemUnknown_RemQueryInterface failed with error 0x%08x\n", hr);
+                WARN("IRemUnknown_RemQueryInterface failed with error 0x%08x\n", hr);
         }
 
         /* IRemUnknown_RemQueryInterface can return S_FALSE if only some of

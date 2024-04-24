@@ -41,6 +41,7 @@
 #include "compobj_private.h"
 #include "moniker.h"
 #include "irot.h"
+#include "irpcss.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -77,6 +78,7 @@ typedef struct RunningObjectTableImpl
 
 static RunningObjectTableImpl* runningObjectTableInstance = NULL;
 static IrotHandle irot_handle;
+static RPC_BINDING_HANDLE irpcss_handle;
 
 /* define the EnumMonikerImpl structure */
 typedef struct EnumMonikerImpl
@@ -102,28 +104,50 @@ static inline EnumMonikerImpl *impl_from_IEnumMoniker(IEnumMoniker *iface)
 static HRESULT EnumMonikerImpl_CreateEnumROTMoniker(InterfaceList *moniker_list,
     ULONG pos, IEnumMoniker **ppenumMoniker);
 
+static RPC_BINDING_HANDLE get_rpc_handle(unsigned short *protseq, unsigned short *endpoint)
+{
+    RPC_BINDING_HANDLE handle = NULL;
+    RPC_STATUS status;
+    RPC_WSTR binding;
+
+    status = RpcStringBindingComposeW(NULL, protseq, NULL, endpoint, NULL, &binding);
+    if (status == RPC_S_OK)
+    {
+        status = RpcBindingFromStringBindingW(binding, &handle);
+        RpcStringFreeW(&binding);
+    }
+
+    return handle;
+}
+
 static IrotHandle get_irot_handle(void)
 {
     if (!irot_handle)
     {
-        RPC_STATUS status;
-        RPC_WSTR binding;
-        IrotHandle new_handle;
-        unsigned short ncacn_np[] = IROT_PROTSEQ;
+        unsigned short protseq[] = IROT_PROTSEQ;
         unsigned short endpoint[] = IROT_ENDPOINT;
-        status = RpcStringBindingComposeW(NULL, ncacn_np, NULL, endpoint, NULL, &binding);
-        if (status == RPC_S_OK)
-        {
-            status = RpcBindingFromStringBindingW(binding, &new_handle);
-            RpcStringFreeW(&binding);
-        }
-        if (status != RPC_S_OK)
-            return NULL;
+
+        IrotHandle new_handle = get_rpc_handle(protseq, endpoint);
         if (InterlockedCompareExchangePointer(&irot_handle, new_handle, NULL))
             /* another thread beat us to it */
             RpcBindingFree(&new_handle);
     }
     return irot_handle;
+}
+
+static RPC_BINDING_HANDLE get_irpcss_handle(void)
+{
+    if (!irpcss_handle)
+    {
+        unsigned short protseq[] = IROT_PROTSEQ;
+        unsigned short endpoint[] = IROT_ENDPOINT;
+
+        RPC_BINDING_HANDLE new_handle = get_rpc_handle(protseq, endpoint);
+        if (InterlockedCompareExchangePointer(&irpcss_handle, new_handle, NULL))
+            /* another thread beat us to it */
+            RpcBindingFree(&new_handle);
+    }
+    return irpcss_handle;
 }
 
 static BOOL start_rpcss(void)
@@ -174,6 +198,40 @@ static BOOL start_rpcss(void)
     CloseServiceHandle( service );
     CloseServiceHandle( scm );
     return ret;
+}
+
+HRESULT __cdecl irpcss_get_thread_seq_id(handle_t h, DWORD *id)
+{
+    static LONG thread_seq_id;
+    *id = InterlockedIncrement(&thread_seq_id);
+    return S_OK;
+}
+
+DWORD rpcss_get_next_seqid(void)
+{
+    DWORD id = 0;
+    HRESULT hr;
+
+    for (;;)
+    {
+        __TRY
+        {
+            hr = irpcss_get_thread_seq_id(get_irpcss_handle(), &id);
+        }
+        __EXCEPT(rpc_filter)
+        {
+            hr = HRESULT_FROM_WIN32(GetExceptionCode());
+        }
+        __ENDTRY
+        if (hr == HRESULT_FROM_WIN32(RPC_S_SERVER_UNAVAILABLE))
+        {
+            if (start_rpcss())
+                continue;
+        }
+        break;
+    }
+
+    return id;
 }
 
 static HRESULT create_stream_on_mip_ro(const InterfaceData *mip, IStream **stream)
