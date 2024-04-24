@@ -295,7 +295,7 @@ PUBLIC RtlRaiseException
 
 RaiseException:
 
-    mov rcx, [rsp + CxP1Home]
+    mov rcx, [rsp + CONTEXT_FRAME_LENGTH + 8 + P1Home]
     mov rdx, rsp
     call ZwRaiseException
 
@@ -305,6 +305,7 @@ RaiseStatus:
     mov rdx, rsp
     call RtlRaiseStatus
 
+    int HEX(2c)
 .ENDP
 
 
