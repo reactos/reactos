@@ -1,9 +1,10 @@
 /*
- * PROJECT:         ReactOS Boot Loader
- * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            boot/freeldr/freeldr/cmdline.c
- * PURPOSE:         FreeLDR Command Line Parsing
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * PROJECT:     FreeLoader
+ * LICENSE:     BSD - See COPYING.ARM in the top level directory
+ *              or MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Command-line parsing and global settings management
+ * COPYRIGHT:   Copyright 2008-2010 ReactOS Portable Systems Group <ros.arm@reactos.org>
+ *              Copyright 2015-2024 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/
@@ -12,32 +13,27 @@
 
 /* GLOBALS ********************************************************************/
 
-typedef struct tagCMDLINEINFO
-{
-    PCSTR DebugString;
-    PCSTR DefaultOs;
-    LONG  TimeOut;
-} CMDLINEINFO, *PCMDLINEINFO;
-
-CCHAR DebugString[256];
-CCHAR DefaultOs[256];
-CMDLINEINFO CmdLineInfo;
+static CCHAR DebugString[256];
+static CCHAR DefaultOs[256];
+BOOTMGRINFO BootMgrInfo = {0};
 
 /* FUNCTIONS ******************************************************************/
 
-VOID
-CmdLineParse(IN PCSTR CmdLine)
+static VOID
+CmdLineParse(
+    _In_ PCSTR CmdLine)
 {
     PCHAR End, Setting;
     ULONG_PTR Length, Offset = 0;
 
     /* Set defaults */
-    CmdLineInfo.DebugString = NULL;
-    CmdLineInfo.DefaultOs = NULL;
-    CmdLineInfo.TimeOut = -1;
+    BootMgrInfo.DebugString = NULL;
+    BootMgrInfo.DefaultOs = NULL;
+    BootMgrInfo.TimeOut = -1;
+    // BootMgrInfo.FrLdrSection = 0;
 
     /*
-     * Get debug string, in the following format:
+     * Get the debug string, in the following format:
      * "debug=option1=XXX;option2=YYY;..."
      * and translate it into the format:
      * "OPTION1=XXX OPTION2=YYY ..."
@@ -62,18 +58,18 @@ CmdLineParse(IN PCSTR CmdLine)
             Setting++;
         }
 
-        CmdLineInfo.DebugString = DebugString;
+        BootMgrInfo.DebugString = DebugString;
     }
 
-    /* Get timeout */
+    /* Get the timeout */
     Setting = strstr(CmdLine, "timeout=");
     if (Setting)
     {
-        CmdLineInfo.TimeOut = atoi(Setting +
+        BootMgrInfo.TimeOut = atoi(Setting +
                                    sizeof("timeout=") - sizeof(ANSI_NULL));
     }
 
-    /* Get default OS */
+    /* Get the default OS */
     Setting = strstr(CmdLine, "defaultos=");
     if (Setting)
     {
@@ -84,10 +80,10 @@ CmdLineParse(IN PCSTR CmdLine)
 
         /* Copy the default OS */
         RtlStringCbCopyNA(DefaultOs, sizeof(DefaultOs), Setting, Length);
-        CmdLineInfo.DefaultOs = DefaultOs;
+        BootMgrInfo.DefaultOs = DefaultOs;
     }
 
-    /* Get ramdisk base address */
+    /* Get the ramdisk base address */
     Setting = strstr(CmdLine, "rdbase=");
     if (Setting)
     {
@@ -97,7 +93,7 @@ CmdLineParse(IN PCSTR CmdLine)
                                        NULL, 0);
     }
 
-    /* Get ramdisk size */
+    /* Get the ramdisk size */
     Setting = strstr(CmdLine, "rdsize=");
     if (Setting)
     {
@@ -106,7 +102,7 @@ CmdLineParse(IN PCSTR CmdLine)
                                    NULL, 0);
     }
 
-    /* Get ramdisk offset */
+    /* Get the ramdisk offset */
     Setting = strstr(CmdLine, "rdoffset=");
     if (Setting)
     {
@@ -119,20 +115,60 @@ CmdLineParse(IN PCSTR CmdLine)
     gInitRamDiskBase = (PVOID)((ULONG_PTR)gInitRamDiskBase + Offset);
 }
 
-PCSTR
-CmdLineGetDebugString(VOID)
+VOID
+LoadSettings(
+    _In_opt_ PCSTR CmdLine)
 {
-    return CmdLineInfo.DebugString;
+    /* Pre-initialization: The settings originate from the command-line.
+     * Main initialization: Overwrite them if needed with those from freeldr.ini */
+    if (CmdLine)
+    {
+        CmdLineParse(CmdLine);
+        return;
+    }
+    else if (IsListEmpty(&IniFileSectionListHead))
+    {
+        // ERR("LoadSettings() called but no freeldr.ini\n");
+        return;
+    }
+
+    /* Open the [FreeLoader] section and load the settings */
+    if ((BootMgrInfo.FrLdrSection == 0) &&
+        !IniOpenSection("FreeLoader", &BootMgrInfo.FrLdrSection))
+    {
+        UiMessageBoxCritical("Section [FreeLoader] not found in freeldr.ini");
+        return;
+    }
+
+    /* Get the debug string. Always override it with the one from freeldr.ini */
+    if (IniReadSettingByName(BootMgrInfo.FrLdrSection, "Debug",
+                             DebugString, sizeof(DebugString)))
+    {
+        BootMgrInfo.DebugString = DebugString;
+    }
+
+    /* Get the timeout. Keep the existing one if it is valid,
+     * otherwise retrieve it from freeldr.ini */
+    if (BootMgrInfo.TimeOut < 0)
+    {
+        CHAR TimeOutText[20];
+        BootMgrInfo.TimeOut = -1;
+        if (IniReadSettingByName(BootMgrInfo.FrLdrSection, "TimeOut",
+                                 TimeOutText, sizeof(TimeOutText)))
+        {
+            BootMgrInfo.TimeOut = atoi(TimeOutText);
+        }
+    }
+
+    /* Get the default OS */
+    if (!BootMgrInfo.DefaultOs || !*BootMgrInfo.DefaultOs)
+    {
+        if (IniReadSettingByName(BootMgrInfo.FrLdrSection, "DefaultOS",
+                                 DefaultOs, sizeof(DefaultOs)))
+        {
+            BootMgrInfo.DefaultOs = DefaultOs;
+        }
+    }
 }
 
-PCSTR
-CmdLineGetDefaultOS(VOID)
-{
-    return CmdLineInfo.DefaultOs;
-}
-
-LONG
-CmdLineGetTimeOut(VOID)
-{
-    return CmdLineInfo.TimeOut;
-}
+/* EOF */
