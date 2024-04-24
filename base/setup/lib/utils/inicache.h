@@ -11,26 +11,19 @@ typedef struct _INI_KEYWORD
 {
     PWSTR Name;
     PWSTR Data;
-
-    struct _INI_KEYWORD *Next;
-    struct _INI_KEYWORD *Prev;
+    LIST_ENTRY ListEntry;
 } INI_KEYWORD, *PINI_KEYWORD;
 
 typedef struct _INI_SECTION
 {
     PWSTR Name;
-
-    PINI_KEYWORD FirstKey;
-    PINI_KEYWORD LastKey;
-
-    struct _INI_SECTION *Next;
-    struct _INI_SECTION *Prev;
+    LIST_ENTRY KeyList;
+    LIST_ENTRY ListEntry;
 } INI_SECTION, *PINI_SECTION;
 
 typedef struct _INICACHE
 {
-    PINI_SECTION FirstSection;
-    PINI_SECTION LastSection;
+    LIST_ENTRY SectionList;
 } INICACHE, *PINICACHE;
 
 typedef struct _PINICACHEITERATOR
@@ -70,39 +63,43 @@ IniCacheLoad(
 
 VOID
 IniCacheDestroy(
-    PINICACHE Cache);
+    _In_ PINICACHE Cache);
 
 PINI_SECTION
 IniGetSection(
     _In_ PINICACHE Cache,
     _In_ PCWSTR Name);
 
-NTSTATUS
+PINI_KEYWORD
 IniGetKey(
-    PINI_SECTION Section,
-    PWCHAR KeyName,
-    PWCHAR *KeyData);
+    _In_ PINI_SECTION Section,
+    _In_ PCWSTR KeyName,
+    _Out_ PCWSTR* KeyData);
 
 PINICACHEITERATOR
 IniFindFirstValue(
-    PINI_SECTION Section,
-    PWCHAR *KeyName,
-    PWCHAR *KeyData);
+    _In_ PINI_SECTION Section,
+    _Out_ PCWSTR* KeyName,
+    _Out_ PCWSTR* KeyData);
 
 BOOLEAN
 IniFindNextValue(
-    PINICACHEITERATOR Iterator,
-    PWCHAR *KeyName,
-    PWCHAR *KeyData);
+    _In_ PINICACHEITERATOR Iterator,
+    _Out_ PCWSTR* KeyName,
+    _Out_ PCWSTR* KeyData);
 
 VOID
 IniFindClose(
-    PINICACHEITERATOR Iterator);
+    _In_ PINICACHEITERATOR Iterator);
 
 PINI_SECTION
 IniAddSection(
     _In_ PINICACHE Cache,
     _In_ PCWSTR Name);
+
+VOID
+IniRemoveSection(
+    _In_ PINI_SECTION Section);
 
 PINI_KEYWORD
 IniInsertKey(
@@ -117,6 +114,16 @@ IniAddKey(
     _In_ PINI_SECTION Section,
     _In_ PCWSTR Name,
     _In_ PCWSTR Data);
+
+VOID
+IniRemoveKeyByName(
+    _In_ PINI_SECTION Section,
+    _In_ PCWSTR KeyName);
+
+VOID
+IniRemoveKey(
+    _In_ PINI_SECTION Section,
+    _In_ PINI_KEYWORD Key);
 
 PINICACHE
 IniCacheCreate(VOID);

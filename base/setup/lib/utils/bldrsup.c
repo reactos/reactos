@@ -1006,9 +1006,8 @@ QueryBootStoreOptions(
     IN OUT PBOOT_STORE_OPTIONS BootOptions
 /* , IN PULONG BootOptionsLength */ )
 {
-    NTSTATUS Status = STATUS_SUCCESS;
     PBOOT_STORE_CONTEXT BootStore = (PBOOT_STORE_CONTEXT)Handle;
-    PWCHAR TimeoutStr;
+    PCWSTR TimeoutStr;
 
     if (!BootStore || !BootOptions)
         return STATUS_INVALID_PARAMETER;
@@ -1036,36 +1035,34 @@ QueryBootStoreOptions(
     {
         BootOptions->Version = FreeLdr;
 
-        Status = IniGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
-                           L"DefaultOS", (PWCHAR*)&BootOptions->CurrentBootEntryKey);
-        if (!NT_SUCCESS(Status))
-            BootOptions->CurrentBootEntryKey = 0;
+        BootOptions->CurrentBootEntryKey = 0;
+        IniGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
+                  L"DefaultOS", (PCWSTR*)&BootOptions->CurrentBootEntryKey);
 
-        Status = IniGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
-                           L"TimeOut", &TimeoutStr);
-        if (NT_SUCCESS(Status) && TimeoutStr)
+        BootOptions->Timeout = 0;
+        if (IniGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
+                      L"TimeOut", &TimeoutStr) && TimeoutStr)
+        {
             BootOptions->Timeout = _wtoi(TimeoutStr);
-        else
-            BootOptions->Timeout = 0;
+        }
     }
     else if (BootStore->Type == NtLdr)
     {
         BootOptions->Version = NtLdr;
 
-        Status = IniGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
-                           L"default", (PWCHAR*)&BootOptions->CurrentBootEntryKey);
-        if (!NT_SUCCESS(Status))
-            BootOptions->CurrentBootEntryKey = 0;
+        BootOptions->CurrentBootEntryKey = 0;
+        IniGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
+                  L"default", (PCWSTR*)&BootOptions->CurrentBootEntryKey);
 
-        Status = IniGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
-                           L"timeout", &TimeoutStr);
-        if (NT_SUCCESS(Status) && TimeoutStr)
+        BootOptions->Timeout = 0;
+        if (IniGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
+                      L"timeout", &TimeoutStr) && TimeoutStr)
+        {
             BootOptions->Timeout = _wtoi(TimeoutStr);
-        else
-            BootOptions->Timeout = 0;
+        }
     }
 
-    return STATUS_SUCCESS; // FIXME: use Status; instead?
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -1110,9 +1107,8 @@ SetBootStoreOptions(
               L"DefaultOS", (PCWSTR)BootOptions->CurrentBootEntryKey);
 
     RtlStringCchPrintfW(TimeoutStr, ARRAYSIZE(TimeoutStr), L"%d", BootOptions->Timeout);
-    IniInsertKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
-                 NULL, INSERT_FIRST, // INSERT_LAST, // FIXME!! There is a bug in the INI parser where a given key can be inserted twice in the same section...
-                 L"TimeOut", TimeoutStr);
+    IniAddKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
+              L"TimeOut", TimeoutStr);
 
     return STATUS_SUCCESS;
 }
@@ -1129,7 +1125,7 @@ FreeLdrEnumerateBootEntries(
     NTSTATUS Status = STATUS_SUCCESS;
     PINICACHEITERATOR Iterator;
     PINI_SECTION OsIniSection;
-    PWCHAR SectionName, KeyData;
+    PCWSTR SectionName, KeyData;
     UCHAR xxBootEntry[FIELD_OFFSET(BOOT_STORE_ENTRY, OsOptions) +
                       max(sizeof(NTOS_OPTIONS), sizeof(BOOT_SECTOR_OPTIONS))];
     PBOOT_STORE_ENTRY BootEntry = (PBOOT_STORE_ENTRY)&xxBootEntry;
@@ -1140,7 +1136,7 @@ FreeLdrEnumerateBootEntries(
     if (!Iterator) return STATUS_SUCCESS;
     do
     {
-        PWCHAR InstallName;
+        PCWSTR InstallName;
         ULONG InstallNameLength;
 
         /* Poor-man quotes removal (improvement over bootsup.c:UpdateFreeLoaderIni) */
@@ -1195,9 +1191,8 @@ FreeLdrEnumerateBootEntries(
         if (!OsIniSection)
             goto DoEnum;
 
-        /* Check for supported boot type "Windows2003" */
-        Status = IniGetKey(OsIniSection, L"BootType", &KeyData);
-        if (!NT_SUCCESS(Status) || !KeyData)
+        /* Check for supported boot type */
+        if (!IniGetKey(OsIniSection, L"BootType", &KeyData) || !KeyData)
         {
             /* Certainly not a ReactOS installation */
             DPRINT1("No BootType value present!\n");
@@ -1222,15 +1217,13 @@ FreeLdrEnumerateBootEntries(
 
             /* Check its SystemPath */
             Options->OsLoadPath = NULL;
-            Status = IniGetKey(OsIniSection, L"SystemPath", &KeyData);
-            if (NT_SUCCESS(Status))
+            if (IniGetKey(OsIniSection, L"SystemPath", &KeyData))
                 Options->OsLoadPath = KeyData;
             // KeyData == SystemRoot;
 
             /* Check the optional Options */
             Options->OsLoadOptions = NULL;
-            Status = IniGetKey(OsIniSection, L"Options", &KeyData);
-            if (NT_SUCCESS(Status))
+            if (IniGetKey(OsIniSection, L"Options", &KeyData))
                 Options->OsLoadOptions = KeyData;
         }
         else
@@ -1251,20 +1244,17 @@ FreeLdrEnumerateBootEntries(
 
             /* Check its BootDrive */
             Options->Drive = NULL;
-            Status = IniGetKey(OsIniSection, L"BootDrive", &KeyData);
-            if (NT_SUCCESS(Status))
+            if (IniGetKey(OsIniSection, L"BootDrive", &KeyData))
                 Options->Drive = KeyData;
 
             /* Check its BootPartition */
             Options->Partition = NULL;
-            Status = IniGetKey(OsIniSection, L"BootPartition", &KeyData);
-            if (NT_SUCCESS(Status))
+            if (IniGetKey(OsIniSection, L"BootPartition", &KeyData))
                 Options->Partition = KeyData;
 
             /* Check its BootSector */
             Options->BootSectorFileName = NULL;
-            Status = IniGetKey(OsIniSection, L"BootSectorFile", &KeyData);
-            if (NT_SUCCESS(Status))
+            if (IniGetKey(OsIniSection, L"BootSectorFile", &KeyData))
                 Options->BootSectorFileName = KeyData;
         }
         else
@@ -1300,7 +1290,7 @@ NtLdrEnumerateBootEntries(
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PINICACHEITERATOR Iterator;
-    PWCHAR SectionName, KeyData;
+    PCWSTR SectionName, KeyData;
     UCHAR xxBootEntry[FIELD_OFFSET(BOOT_STORE_ENTRY, OsOptions) + sizeof(NTOS_OPTIONS)];
     PBOOT_STORE_ENTRY BootEntry = (PBOOT_STORE_ENTRY)&xxBootEntry;
     PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
@@ -1312,7 +1302,7 @@ NtLdrEnumerateBootEntries(
     if (!Iterator) return STATUS_SUCCESS;
     do
     {
-        PWCHAR InstallName, OsOptions;
+        PCWSTR InstallName, OsOptions;
         ULONG InstallNameLength, OsOptionsLength;
 
         /* Poor-man quotes removal (improvement over bootsup.c:UpdateFreeLoaderIni) */

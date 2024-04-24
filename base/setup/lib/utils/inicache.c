@@ -16,60 +16,38 @@
 
 /* PRIVATE FUNCTIONS ********************************************************/
 
-static
-PINI_KEYWORD
+static VOID
 IniCacheFreeKey(
-    PINI_KEYWORD Key)
+    _In_ PINI_KEYWORD Key)
 {
-    PINI_KEYWORD Next;
+    /* Unlink the key */
+    RemoveEntryList(&Key->ListEntry);
 
-    if (Key == NULL)
-        return NULL;
-
-    Next = Key->Next;
-    if (Key->Name != NULL)
-    {
+    /* Free its data */
+    if (Key->Name)
         RtlFreeHeap(ProcessHeap, 0, Key->Name);
-        Key->Name = NULL;
-    }
-
-    if (Key->Data != NULL)
-    {
+    if (Key->Data)
         RtlFreeHeap(ProcessHeap, 0, Key->Data);
-        Key->Data = NULL;
-    }
-
     RtlFreeHeap(ProcessHeap, 0, Key);
-
-    return Next;
 }
 
-static
-PINI_SECTION
+static VOID
 IniCacheFreeSection(
-    PINI_SECTION Section)
+    _In_ PINI_SECTION Section)
 {
-    PINI_SECTION Next;
+    /* Unlink the section */
+    RemoveEntryList(&Section->ListEntry);
 
-    if (Section == NULL)
-        return NULL;
-
-    Next = Section->Next;
-    while (Section->FirstKey != NULL)
+    /* Free its data */
+    while (!IsListEmpty(&Section->KeyList))
     {
-        Section->FirstKey = IniCacheFreeKey(Section->FirstKey);
+        PLIST_ENTRY Entry = RemoveHeadList(&Section->KeyList);
+        PINI_KEYWORD Key = CONTAINING_RECORD(Entry, INI_KEYWORD, ListEntry);
+        IniCacheFreeKey(Key);
     }
-    Section->LastKey = NULL;
-
-    if (Section->Name != NULL)
-    {
+    if (Section->Name)
         RtlFreeHeap(ProcessHeap, 0, Section->Name);
-        Section->Name = NULL;
-    }
-
     RtlFreeHeap(ProcessHeap, 0, Section);
-
-    return Next;
 }
 
 static
@@ -78,10 +56,13 @@ IniCacheFindSection(
     _In_ PINICACHE Cache,
     _In_ PCWSTR Name)
 {
-    PINI_SECTION Section;
+    PLIST_ENTRY Entry;
 
-    for (Section = Cache->FirstSection; Section; Section = Section->Next)
+    for (Entry  =  Cache->SectionList.Flink;
+         Entry != &Cache->SectionList;
+         Entry  =  Entry->Flink)
     {
+        PINI_SECTION Section = CONTAINING_RECORD(Entry, INI_SECTION, ListEntry);
         if (_wcsicmp(Section->Name, Name) == 0)
             return Section;
     }
@@ -94,10 +75,13 @@ IniCacheFindKey(
     _In_ PINI_SECTION Section,
     _In_ PCWSTR Name)
 {
-    PINI_KEYWORD Key;
+    PLIST_ENTRY Entry;
 
-    for (Key = Section->FirstKey; Key; Key = Key->Next)
+    for (Entry  =  Section->KeyList.Flink;
+         Entry != &Section->KeyList;
+         Entry  =  Entry->Flink)
     {
+        PINI_KEYWORD Key = CONTAINING_RECORD(Entry, INI_KEYWORD, ListEntry);
         if (_wcsicmp(Key->Name, Name) == 0)
             return Key;
     }
@@ -208,43 +192,33 @@ IniCacheAddKeyAorW(
     Key->Data = DataU;
 
     /* Insert the key into section */
-    if (Section->FirstKey == NULL)
+    if (IsListEmpty(&Section->KeyList))
     {
-        Section->FirstKey = Key;
-        Section->LastKey = Key;
+        InsertHeadList(&Section->KeyList, &Key->ListEntry);
     }
     else if ((InsertionType == INSERT_FIRST) ||
              ((InsertionType == INSERT_BEFORE) &&
-                ((AnchorKey == NULL) || (AnchorKey == Section->FirstKey))))
+                (!AnchorKey || (&AnchorKey->ListEntry == Section->KeyList.Flink))))
     {
         /* Insert at the head of the list */
-        Section->FirstKey->Prev = Key;
-        Key->Next = Section->FirstKey;
-        Section->FirstKey = Key;
+        InsertHeadList(&Section->KeyList, &Key->ListEntry);
     }
-    else if ((InsertionType == INSERT_BEFORE) && (AnchorKey != NULL))
+    else if ((InsertionType == INSERT_BEFORE) && AnchorKey)
     {
         /* Insert before the anchor key */
-        Key->Next = AnchorKey;
-        Key->Prev = AnchorKey->Prev;
-        AnchorKey->Prev->Next = Key;
-        AnchorKey->Prev = Key;
+        InsertTailList(&AnchorKey->ListEntry, &Key->ListEntry);
     }
     else if ((InsertionType == INSERT_LAST) ||
              ((InsertionType == INSERT_AFTER) &&
-                ((AnchorKey == NULL) || (AnchorKey == Section->LastKey))))
+                (!AnchorKey || (&AnchorKey->ListEntry == Section->KeyList.Blink))))
     {
-        Section->LastKey->Next = Key;
-        Key->Prev = Section->LastKey;
-        Section->LastKey = Key;
+        /* Insert at the tail of the list */
+        InsertTailList(&Section->KeyList, &Key->ListEntry);
     }
-    else if ((InsertionType == INSERT_AFTER) && (AnchorKey != NULL))
+    else if ((InsertionType == INSERT_AFTER) && AnchorKey)
     {
         /* Insert after the anchor key */
-        Key->Next = AnchorKey->Next;
-        Key->Prev = AnchorKey;
-        AnchorKey->Next->Prev = Key;
-        AnchorKey->Next = Key;
+        InsertHeadList(&AnchorKey->ListEntry, &Key->ListEntry);
     }
 
     return Key;
@@ -305,19 +279,10 @@ IniCacheAddSectionAorW(
         return NULL;
     }
     Section->Name = NameU;
+    InitializeListHead(&Section->KeyList);
 
     /* Append the section */
-    if (Cache->FirstSection == NULL)
-    {
-        Cache->FirstSection = Section;
-        Cache->LastSection = Section;
-    }
-    else
-    {
-        Cache->LastSection->Next = Section;
-        Section->Prev = Cache->LastSection;
-        Cache->LastSection = Section;
-    }
+    InsertTailList(&Cache->SectionList, &Section->ListEntry);
 
     return Section;
 }
@@ -540,14 +505,9 @@ IniCacheLoadFromMemory(
     ULONG KeyValueSize;
 
     /* Allocate inicache header */
-    *Cache = (PINICACHE)RtlAllocateHeap(ProcessHeap,
-                                        HEAP_ZERO_MEMORY,
-                                        sizeof(INICACHE));
-    if (*Cache == NULL)
-    {
-        DPRINT("RtlAllocateHeap() failed\n");
+    *Cache = IniCacheCreate();
+    if (!*Cache)
         return STATUS_INSUFFICIENT_RESOURCES;
-    }
 
     /* Parse ini file */
     Section = NULL;
@@ -737,16 +697,17 @@ IniCacheLoad(
 
 VOID
 IniCacheDestroy(
-    PINICACHE Cache)
+    _In_ PINICACHE Cache)
 {
-    if (Cache == NULL)
+    if (!Cache)
         return;
 
-    while (Cache->FirstSection != NULL)
+    while (!IsListEmpty(&Cache->SectionList))
     {
-        Cache->FirstSection = IniCacheFreeSection(Cache->FirstSection);
+        PLIST_ENTRY Entry = RemoveHeadList(&Cache->SectionList);
+        PINI_SECTION Section = CONTAINING_RECORD(Entry, INI_SECTION, ListEntry);
+        IniCacheFreeSection(Section);
     }
-    Cache->LastSection = NULL;
 
     RtlFreeHeap(ProcessHeap, 0, Cache);
 }
@@ -765,110 +726,110 @@ IniGetSection(
     return IniCacheFindSection(Cache, Name);
 }
 
-NTSTATUS
+PINI_KEYWORD
 IniGetKey(
-    PINI_SECTION Section,
-    PWCHAR KeyName,
-    PWCHAR *KeyData)
+    _In_ PINI_SECTION Section,
+    _In_ PCWSTR KeyName,
+    _Out_ PCWSTR* KeyData)
 {
     PINI_KEYWORD Key;
 
-    if (Section == NULL || KeyName == NULL || KeyData == NULL)
+    if (!Section || !KeyName || !KeyData)
     {
         DPRINT("Invalid parameter\n");
-        return STATUS_INVALID_PARAMETER;
+        return NULL;
     }
 
     *KeyData = NULL;
 
     Key = IniCacheFindKey(Section, KeyName);
-    if (Key == NULL)
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
+    if (!Key)
+        return NULL;
 
     *KeyData = Key->Data;
 
-    return STATUS_SUCCESS;
+    return Key;
 }
 
 
 PINICACHEITERATOR
 IniFindFirstValue(
-    PINI_SECTION Section,
-    PWCHAR *KeyName,
-    PWCHAR *KeyData)
+    _In_ PINI_SECTION Section,
+    _Out_ PCWSTR* KeyName,
+    _Out_ PCWSTR* KeyData)
 {
     PINICACHEITERATOR Iterator;
+    PLIST_ENTRY Entry;
     PINI_KEYWORD Key;
 
-    if (Section == NULL || KeyName == NULL || KeyData == NULL)
+    if (!Section || !KeyName || !KeyData)
     {
         DPRINT("Invalid parameter\n");
         return NULL;
     }
 
-    Key = Section->FirstKey;
-    if (Key == NULL)
+    Entry = Section->KeyList.Flink;
+    if (Entry == &Section->KeyList)
     {
         DPRINT("Invalid parameter\n");
         return NULL;
     }
-
-    *KeyName = Key->Name;
-    *KeyData = Key->Data;
+    Key = CONTAINING_RECORD(Entry, INI_KEYWORD, ListEntry);
 
     Iterator = (PINICACHEITERATOR)RtlAllocateHeap(ProcessHeap,
                                                   0,
                                                   sizeof(INICACHEITERATOR));
-    if (Iterator == NULL)
+    if (!Iterator)
     {
         DPRINT("RtlAllocateHeap() failed\n");
         return NULL;
     }
-
     Iterator->Section = Section;
     Iterator->Key = Key;
+
+    *KeyName = Key->Name;
+    *KeyData = Key->Data;
 
     return Iterator;
 }
 
 BOOLEAN
 IniFindNextValue(
-    PINICACHEITERATOR Iterator,
-    PWCHAR *KeyName,
-    PWCHAR *KeyData)
+    _In_ PINICACHEITERATOR Iterator,
+    _Out_ PCWSTR* KeyName,
+    _Out_ PCWSTR* KeyData)
 {
+    PLIST_ENTRY Entry;
     PINI_KEYWORD Key;
 
-    if (Iterator == NULL || KeyName == NULL || KeyData == NULL)
+    if (!Iterator || !KeyName || !KeyData)
     {
         DPRINT("Invalid parameter\n");
         return FALSE;
     }
 
-    Key = Iterator->Key->Next;
-    if (Key == NULL)
+    Entry = Iterator->Key->ListEntry.Flink;
+    if (Entry == &Iterator->Section->KeyList)
     {
         DPRINT("No more entries\n");
         return FALSE;
     }
+    Key = CONTAINING_RECORD(Entry, INI_KEYWORD, ListEntry);
+
+    Iterator->Key = Key;
 
     *KeyName = Key->Name;
     *KeyData = Key->Data;
-
-    Iterator->Key = Key;
 
     return TRUE;
 }
 
 VOID
 IniFindClose(
-    PINICACHEITERATOR Iterator)
+    _In_ PINICACHEITERATOR Iterator)
 {
-    if (Iterator == NULL)
+    if (!Iterator)
         return;
-
     RtlFreeHeap(ProcessHeap, 0, Iterator);
 }
 
@@ -884,6 +845,18 @@ IniAddSection(
         return NULL;
     }
     return IniCacheAddSectionAorW(Cache, Name, wcslen(Name), TRUE);
+}
+
+VOID
+IniRemoveSection(
+    _In_ PINI_SECTION Section)
+{
+    if (!Section)
+    {
+        DPRINT("Invalid parameter\n");
+        return;
+    }
+    IniCacheFreeSection(Section);
 }
 
 PINI_KEYWORD
@@ -915,6 +888,32 @@ IniAddKey(
     return IniInsertKey(Section, NULL, INSERT_LAST, Name, Data);
 }
 
+VOID
+IniRemoveKeyByName(
+    _In_ PINI_SECTION Section,
+    _In_ PCWSTR KeyName)
+{
+    PINI_KEYWORD Key;
+    UNREFERENCED_PARAMETER(Section);
+
+    Key = IniCacheFindKey(Section, KeyName);
+    if (Key)
+        IniCacheFreeKey(Key);
+}
+
+VOID
+IniRemoveKey(
+    _In_ PINI_SECTION Section,
+    _In_ PINI_KEYWORD Key)
+{
+    UNREFERENCED_PARAMETER(Section);
+    if (!Key)
+    {
+        DPRINT("Invalid parameter\n");
+        return;
+    }
+    IniCacheFreeKey(Key);
+}
 
 PINICACHE
 IniCacheCreate(VOID)
@@ -925,11 +924,12 @@ IniCacheCreate(VOID)
     Cache = (PINICACHE)RtlAllocateHeap(ProcessHeap,
                                        HEAP_ZERO_MEMORY,
                                        sizeof(INICACHE));
-    if (Cache == NULL)
+    if (!Cache)
     {
         DPRINT("RtlAllocateHeap() failed\n");
         return NULL;
     }
+    InitializeListHead(&Cache->SectionList);
 
     return Cache;
 }
@@ -940,6 +940,7 @@ IniCacheSaveByHandle(
     HANDLE FileHandle)
 {
     NTSTATUS Status;
+    PLIST_ENTRY Entry1, Entry2;
     PINI_SECTION Section;
     PINI_KEYWORD Key;
     ULONG BufferSize;
@@ -951,23 +952,25 @@ IniCacheSaveByHandle(
 
     /* Calculate required buffer size */
     BufferSize = 0;
-    Section = Cache->FirstSection;
-    while (Section != NULL)
+    Entry1 = Cache->SectionList.Flink;
+    while (Entry1 != &Cache->SectionList)
     {
+        Section = CONTAINING_RECORD(Entry1, INI_SECTION, ListEntry);
         BufferSize += (Section->Name ? wcslen(Section->Name) : 0)
                        + 4; /* "[]\r\n" */
 
-        Key = Section->FirstKey;
-        while (Key != NULL)
+        Entry2 = Section->KeyList.Flink;
+        while (Entry2 != &Section->KeyList)
         {
+            Key = CONTAINING_RECORD(Entry2, INI_KEYWORD, ListEntry);
             BufferSize += wcslen(Key->Name)
                           + (Key->Data ? wcslen(Key->Data) : 0)
                           + 3; /* "=\r\n" */
-            Key = Key->Next;
+            Entry2 = Entry2->Flink;
         }
 
-        Section = Section->Next;
-        if (Section != NULL)
+        Entry1 = Entry1->Flink;
+        if (Entry1 != &Cache->SectionList)
             BufferSize += 2; /* Extra "\r\n" at end of each section */
     }
 
@@ -985,22 +988,24 @@ IniCacheSaveByHandle(
 
     /* Fill file buffer */
     Ptr = Buffer;
-    Section = Cache->FirstSection;
-    while (Section != NULL)
+    Entry1 = Cache->SectionList.Flink;
+    while (Entry1 != &Cache->SectionList)
     {
+        Section = CONTAINING_RECORD(Entry1, INI_SECTION, ListEntry);
         Len = sprintf(Ptr, "[%S]\r\n", Section->Name);
         Ptr += Len;
 
-        Key = Section->FirstKey;
-        while (Key != NULL)
+        Entry2 = Section->KeyList.Flink;
+        while (Entry2 != &Section->KeyList)
         {
+            Key = CONTAINING_RECORD(Entry2, INI_KEYWORD, ListEntry);
             Len = sprintf(Ptr, "%S=%S\r\n", Key->Name, Key->Data);
             Ptr += Len;
-            Key = Key->Next;
+            Entry2 = Entry2->Flink;
         }
 
-        Section = Section->Next;
-        if (Section != NULL)
+        Entry1 = Entry1->Flink;
+        if (Entry1 != &Cache->SectionList)
         {
             Len = sprintf(Ptr, "\r\n");
             Ptr += Len;
