@@ -747,6 +747,6 @@ START_TEST(ShellExecCmdLine)
     ok(DeleteFileA("Test File 2.bat"), "failed to delete the test file\n");
     free(s_wi0.phwnd);
 
-    DoWaitForWindow(CLASSNAME, CLASSNAME, TRUE, TRUE);
+    DoWaitForWindow(SUB_CLASSNAME, SUB_CLASSNAME, TRUE, TRUE);
     Sleep(100);
 }
