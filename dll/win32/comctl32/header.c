@@ -1954,7 +1954,13 @@ HEADER_MouseMove (HEADER_INFO *infoPtr, LPARAM lParam)
                     GetClientRect(infoPtr->hwndSelf, &rcClient);
                     rcScroll = rcClient;
                     rcScroll.left = lpItem->rect.left + nOldWidth;
+#ifdef __REACTOS__
                     ScrollWindowEx(infoPtr->hwndSelf, nWidth - nOldWidth, 0, &rcScroll, &rcClient,
+                                   NULL, NULL, SW_INVALIDATE);
+#else
+                    ScrollWindowEx(infoPtr->hwndSelf, nWidth - nOldWidth, 0, &rcScroll, &rcClient, NULL, NULL, 0);
+                    InvalidateRect(infoPtr->hwndSelf, &lpItem->rect, FALSE);
+#endif
                         NULL, NULL, SW_INVALIDATE);
                     UpdateWindow(infoPtr->hwndSelf);
                     
