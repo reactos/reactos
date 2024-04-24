@@ -88,24 +88,6 @@ static void TEST_Quit(void)
     DoDeleteFilesAndDirs();
 }
 
-static BOOL FindSubProgram(void)
-{
-    GetModuleFileNameW(NULL, s_szSubProgram, _countof(s_szSubProgram));
-    PathRemoveFileSpecW(s_szSubProgram);
-    PathAppendW(s_szSubProgram, L"shell32_apitest_sub.exe");
-
-    if (!PathFileExistsW(s_szSubProgram))
-    {
-        PathRemoveFileSpecW(s_szSubProgram);
-        PathAppendW(s_szSubProgram, L"testdata\\shell32_apitest_sub.exe");
-
-        if (!PathFileExistsW(s_szSubProgram))
-            return FALSE;
-    }
-
-    return TRUE;
-}
-
 static void DoBuildFilesAndDirs(void)
 {
     WCHAR szPath1[MAX_PATH];
@@ -533,7 +515,7 @@ MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 static BOOL TEST_Init(void)
 {
-    if (!FindSubProgram())
+    if (!FindSubProgram(s_szSubProgram, _countof(s_szSubProgram)))
     {
         skip("shell32_apitest_sub.exe not found\n");
         return FALSE;

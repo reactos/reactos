@@ -12,6 +12,24 @@
 
 #define NUM_STAGE 10
 
+static inline BOOL FindSubProgram(LPWSTR pszSubProgram, DWORD cchSubProgram)
+{
+    GetModuleFileNameW(NULL, pszSubProgram, cchSubProgram);
+    PathRemoveFileSpecW(pszSubProgram);
+    PathAppendW(pszSubProgram, L"shell32_apitest_sub.exe");
+
+    if (!PathFileExistsW(pszSubProgram))
+    {
+        PathRemoveFileSpecW(pszSubProgram);
+        PathAppendW(pszSubProgram, L"testdata\\shell32_apitest_sub.exe");
+
+        if (!PathFileExistsW(pszSubProgram))
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
 static inline HWND DoWaitForWindow(LPCWSTR clsname, LPCWSTR text, BOOL bClosing, BOOL bForce)
 {
     HWND hwnd = NULL;

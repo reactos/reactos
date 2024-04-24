@@ -256,27 +256,6 @@ static WCHAR s_win_test_exe[MAX_PATH];
 static WCHAR s_sys_bat_file[MAX_PATH];
 static WCHAR s_cur_dir[MAX_PATH];
 
-static BOOL
-GetSubProgramPath(void)
-{
-    GetModuleFileNameW(NULL, s_sub_program, _countof(s_sub_program));
-    PathRemoveFileSpecW(s_sub_program);
-    PathAppendW(s_sub_program, L"shell32_apitest_sub.exe");
-
-    if (!PathFileExistsW(s_sub_program))
-    {
-        PathRemoveFileSpecW(s_sub_program);
-        PathAppendW(s_sub_program, L"testdata\\shell32_apitest_sub.exe");
-
-        if (!PathFileExistsW(s_sub_program))
-        {
-            return FALSE;
-        }
-    }
-
-    return TRUE;
-}
-
 static const TEST_ENTRY s_entries_1[] =
 {
     // NULL
@@ -677,7 +656,7 @@ START_TEST(ShellExecCmdLine)
         }
     }
 
-    if (!GetSubProgramPath())
+    if (!FindSubProgram(s_sub_program, _countof(s_sub_program)))
     {
         skip("shell32_apitest_sub.exe is not found\n");
         return;
