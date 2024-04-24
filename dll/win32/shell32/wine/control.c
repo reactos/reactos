@@ -994,18 +994,22 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     /* Search for unquoted commas and spaces. */
     for (i = 0; i < nLen; i++)
     {
-        if (wszCmd[i] == '"')
-            quoted = !quoted;
-        if (wszCmd[i] == ',' && !quoted)
+        if (quoted && wszCmd[i] != L'"')
+            continue;
+        switch (wszCmd[i])
         {
-            if (pchFirstComma == NULL)
-                pchFirstComma = &wszCmd[i];
-            else if (pchSecondComma == NULL)
-                pchSecondComma = &wszCmd[i];
-        }
-        if (wszCmd[i] == ' ' && !quoted)
-        {
-            pchLastUnquotedSpace = &wszCmd[i];
+            case L'"':
+                quoted = !quoted;
+                break;
+            case L',':
+                if (!pchFirstComma) 
+                    pchFirstComma = &wszCmd[i];
+                else if (!pchSecondComma) 
+                    pchSecondComma = &wszCmd[i];
+                break;
+            case L' ': 
+                pchLastUnquotedSpace = &wszCmd[i];
+                break;
         }
     }
 
