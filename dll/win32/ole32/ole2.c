@@ -62,6 +62,7 @@ typedef struct tagTrackerWindowInfo
   DWORD        dwOKEffect;
   DWORD*       pdwEffect;
   BOOL       trackingDone;
+  BOOL         inTrackCall;
   HRESULT      returnValue;
 
   BOOL       escPressed;
@@ -775,6 +776,7 @@ HRESULT WINAPI DoDragDrop (
   trackerInfo.dwOKEffect        = dwOKEffect;
   trackerInfo.pdwEffect         = pdwEffect;
   trackerInfo.trackingDone      = FALSE;
+  trackerInfo.inTrackCall       = FALSE;
   trackerInfo.escPressed        = FALSE;
   trackerInfo.curTargetHWND     = 0;
   trackerInfo.curDragTarget     = 0;
@@ -2419,6 +2421,13 @@ static void OLEDD_TrackStateChange(TrackerWindowInfo* trackerInfo)
   POINT pt;
 
   /*
+   * This method may be called from QueryContinueDrag again,
+   * (i.e. by running message loop) so avoid recursive call chain.
+   */
+  if (trackerInfo->inTrackCall) return;
+  trackerInfo->inTrackCall = TRUE;
+
+  /*
    * Get the handle of the window under the mouse
    */
   pt.x = trackerInfo->curMousePos.x;
@@ -2472,6 +2481,8 @@ static void OLEDD_TrackStateChange(TrackerWindowInfo* trackerInfo)
   }
   else
     drag_end( trackerInfo );
+
+  trackerInfo->inTrackCall = FALSE;
 }
 
 /***

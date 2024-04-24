@@ -315,7 +315,7 @@ CompositeMonikerImpl_GetSizeMax(IMoniker* iface,ULARGE_INTEGER* pcbSize)
 
         IMoniker_Release(pmk);
 
-        pcbSize->QuadPart = ptmpSize.QuadPart + sizeof(CLSID);
+        pcbSize->QuadPart += ptmpSize.QuadPart + sizeof(CLSID);
     }
 
     IEnumMoniker_Release(enumMk);

@@ -48,5 +48,7 @@ HRESULT ClassMoniker_CreateFromDisplayName(LPBC pbc, LPCOLESTR szDisplayName,
 
 HRESULT MonikerMarshal_Create(IMoniker *inner, IUnknown **outer) DECLSPEC_HIDDEN;
 
+BOOL is_anti_moniker(IMoniker *iface, DWORD *order) DECLSPEC_HIDDEN;
+HRESULT create_anti_moniker(DWORD order, IMoniker **ret) DECLSPEC_HIDDEN;
 
 #endif /* __WINE_MONIKER_H__ */

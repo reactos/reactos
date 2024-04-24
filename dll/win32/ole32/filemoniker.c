@@ -64,28 +64,25 @@ static HRESULT FileMonikerImpl_Destroy(FileMonikerImpl* iface);
 /*******************************************************************************
  *        FileMoniker_QueryInterface
  */
-static HRESULT WINAPI
-FileMonikerImpl_QueryInterface(IMoniker* iface,REFIID riid,void** ppvObject)
+static HRESULT WINAPI FileMonikerImpl_QueryInterface(IMoniker *iface, REFIID riid, void **ppvObject)
 {
     FileMonikerImpl *This = impl_from_IMoniker(iface);
 
-    TRACE("(%p,%s,%p)\n",This,debugstr_guid(riid),ppvObject);
+    TRACE("%p, %s, %p.\n", iface, debugstr_guid(riid), ppvObject);
 
-    /* Perform a sanity check on the parameters.*/
-    if ( ppvObject==0 )
+    if (!ppvObject)
 	return E_INVALIDARG;
 
-    /* Initialize the return parameter */
     *ppvObject = 0;
 
-    /* Compare the riid with the interface IDs implemented by this object.*/
     if (IsEqualIID(&IID_IUnknown, riid)      ||
         IsEqualIID(&IID_IPersist, riid)      ||
         IsEqualIID(&IID_IPersistStream,riid) ||
-        IsEqualIID(&IID_IMoniker, riid)
-       )
+        IsEqualIID(&IID_IMoniker, riid) ||
+        IsEqualGUID(&CLSID_FileMoniker, riid))
+    {
         *ppvObject = iface;
-
+    }
     else if (IsEqualIID(&IID_IROTData, riid))
         *ppvObject = &This->IROTData_iface;
     else if (IsEqualIID(&IID_IMarshal, riid))
@@ -98,11 +95,9 @@ FileMonikerImpl_QueryInterface(IMoniker* iface,REFIID riid,void** ppvObject)
         return IUnknown_QueryInterface(This->pMarshal, riid, ppvObject);
     }
 
-    /* Check that we obtained an interface.*/
-    if ((*ppvObject)==0)
+    if (!*ppvObject)
         return E_NOINTERFACE;
 
-    /* Query Interface always increases the reference count by one when it is successful */
     IMoniker_AddRef(iface);
 
     return S_OK;
@@ -666,7 +661,7 @@ FileMonikerImpl_ComposeWith(IMoniker* iface, IMoniker* pmkRight,
     static const WCHAR bkSlash[]={'\\',0};
     IBindCtx *bind=0;
     int i=0,j=0,lastIdx1=0,lastIdx2=0;
-    DWORD mkSys;
+    DWORD mkSys, order;
 
     TRACE("(%p,%p,%d,%p)\n",iface,pmkRight,fOnlyIfNotGeneric,ppmkComposite);
 
@@ -735,10 +730,9 @@ FileMonikerImpl_ComposeWith(IMoniker* iface, IMoniker* pmkRight,
 
         return res;
     }
-    else if(mkSys==MKSYS_ANTIMONIKER){
-
-        *ppmkComposite=NULL;
-        return S_OK;
+    else if (is_anti_moniker(pmkRight, &order))
+    {
+        return order > 1 ? create_anti_moniker(order - 1, ppmkComposite) : S_OK;
     }
     else if (fOnlyIfNotGeneric){
 

@@ -283,6 +283,8 @@ typedef enum tagCOINIT
 
 _Check_return_ HRESULT WINAPI CoInitialize(_In_opt_ LPVOID lpReserved);
 
+DECLARE_HANDLE(CO_MTA_USAGE_COOKIE);
+
 _Check_return_
 HRESULT
 WINAPI
@@ -294,7 +296,9 @@ void WINAPI CoUninitialize(void);
 DWORD WINAPI CoGetCurrentProcess(void);
 HRESULT WINAPI CoGetCurrentLogicalThreadId(_Out_ GUID *id);
 HRESULT WINAPI CoGetApartmentType(_Out_ APTTYPE *type, _Out_ APTTYPEQUALIFIER *qualifier);
-
+HRESULT WINAPI CoIncrementMTAUsage(CO_MTA_USAGE_COOKIE *cookie);
+HRESULT WINAPI CoDecrementMTAUsage(CO_MTA_USAGE_COOKIE cookie);
+ 
 HINSTANCE WINAPI CoLoadLibrary(_In_ LPOLESTR lpszLibName, _In_ BOOL bAutoFree);
 void WINAPI CoFreeAllLibraries(void);
 void WINAPI CoFreeLibrary(_In_ HINSTANCE hLibrary);

@@ -32,90 +32,88 @@
 #include "objbase.h"
 #include "oleidl.h"
 #include "wine/debug.h"
+#include "wine/heap.h"
 #include "moniker.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 /* PointerMoniker data structure */
-typedef struct PointerMonikerImpl{
-
+typedef struct PointerMonikerImpl
+{
     IMoniker IMoniker_iface;
+    IMarshal IMarshal_iface;
 
-    LONG ref; /* reference counter for this object */
+    LONG refcount;
 
-    IUnknown *pObject; /* custom marshaler */
+    IUnknown *pObject;
 } PointerMonikerImpl;
 
 static inline PointerMonikerImpl *impl_from_IMoniker(IMoniker *iface)
 {
-return CONTAINING_RECORD(iface, PointerMonikerImpl, IMoniker_iface);
+    return CONTAINING_RECORD(iface, PointerMonikerImpl, IMoniker_iface);
 }
 
-static HRESULT WINAPI
-PointerMonikerImpl_QueryInterface(IMoniker* iface,REFIID riid,void** ppvObject)
+static PointerMonikerImpl *impl_from_IMarshal(IMarshal *iface)
 {
-    PointerMonikerImpl *This = impl_from_IMoniker(iface);
+    return CONTAINING_RECORD(iface, PointerMonikerImpl, IMarshal_iface);
+}
 
-    TRACE("(%p,%s,%p)\n",This,debugstr_guid(riid),ppvObject);
+static PointerMonikerImpl *unsafe_impl_from_IMoniker(IMoniker *iface);
 
-    /* Perform a sanity check on the parameters.*/
-    if ( (This==0) || (ppvObject==0) )
-	return E_INVALIDARG;
+static HRESULT WINAPI PointerMonikerImpl_QueryInterface(IMoniker *iface, REFIID riid, void **ppvObject)
+{
+    PointerMonikerImpl *moniker = impl_from_IMoniker(iface);
 
-    /* Initialize the return parameter */
+    TRACE("%p, %s, %p.\n", iface, debugstr_guid(riid), ppvObject);
+
+    if (!ppvObject)
+        return E_INVALIDARG;
+
     *ppvObject = 0;
 
-    /* Compare the riid with the interface IDs implemented by this object.*/
     if (IsEqualIID(&IID_IUnknown, riid) ||
         IsEqualIID(&IID_IPersist, riid) ||
         IsEqualIID(&IID_IPersistStream, riid) ||
-        IsEqualIID(&IID_IMoniker, riid))
+        IsEqualIID(&IID_IMoniker, riid) ||
+        IsEqualGUID(&CLSID_PointerMoniker, riid))
+    {
         *ppvObject = iface;
+    }
+    else if (IsEqualIID(&IID_IMarshal, riid))
+        *ppvObject = &moniker->IMarshal_iface;
 
-    /* Check that we obtained an interface.*/
-    if ((*ppvObject)==0)
+    if (!*ppvObject)
         return E_NOINTERFACE;
 
-    /* always increase the reference count by one when it is successful */
     IMoniker_AddRef(iface);
 
     return S_OK;
 }
 
-/******************************************************************************
- *        PointerMoniker_AddRef
- ******************************************************************************/
-static ULONG WINAPI
-PointerMonikerImpl_AddRef(IMoniker* iface)
+static ULONG WINAPI PointerMonikerImpl_AddRef(IMoniker *iface)
 {
-    PointerMonikerImpl *This = impl_from_IMoniker(iface);
+    PointerMonikerImpl *moniker = impl_from_IMoniker(iface);
+    ULONG refcount = InterlockedIncrement(&moniker->refcount);
 
-    TRACE("(%p)\n",This);
+    TRACE("%p, refcount %u.\n", iface, refcount);
 
-    return InterlockedIncrement(&This->ref);
+    return refcount;
 }
 
-/******************************************************************************
- *        PointerMoniker_Release
- ******************************************************************************/
-static ULONG WINAPI
-PointerMonikerImpl_Release(IMoniker* iface)
+static ULONG WINAPI PointerMonikerImpl_Release(IMoniker *iface)
 {
-    PointerMonikerImpl *This = impl_from_IMoniker(iface);
-    ULONG ref;
+    PointerMonikerImpl *moniker = impl_from_IMoniker(iface);
+    ULONG refcount = InterlockedDecrement(&moniker->refcount);
 
-    TRACE("(%p)\n",This);
+    TRACE("%p, refcount %u.\n", iface, refcount);
 
-    ref = InterlockedDecrement(&This->ref);
-
-    /* destroy the object if there are no more references on it */
-    if (ref == 0)
+    if (!refcount)
     {
-        if (This->pObject) IUnknown_Release(This->pObject);
-        HeapFree(GetProcessHeap(),0,This);
+        if (moniker->pObject) IUnknown_Release(moniker->pObject);
+        heap_free(moniker);
     }
 
-    return ref;
+    return refcount;
 }
 
 /******************************************************************************
@@ -252,7 +250,7 @@ PointerMonikerImpl_ComposeWith(IMoniker* iface, IMoniker* pmkRight,
 {
 
     HRESULT res=S_OK;
-    DWORD mkSys,mkSys2;
+    DWORD mkSys,mkSys2, order;
     IEnumMoniker* penumMk=0;
     IMoniker *pmostLeftMk=0;
     IMoniker* tempMkComposite=0;
@@ -264,15 +262,15 @@ PointerMonikerImpl_ComposeWith(IMoniker* iface, IMoniker* pmkRight,
 
     *ppmkComposite=0;
 
-    IMoniker_IsSystemMoniker(pmkRight,&mkSys);
-
-    /* If pmkRight is an anti-moniker, the returned moniker is NULL */
-    if(mkSys==MKSYS_ANTIMONIKER)
-        return res;
-
+    if (is_anti_moniker(pmkRight, &order))
+    {
+        return order > 1 ? create_anti_moniker(order - 1, ppmkComposite) : S_OK;
+    }
     else
+    {
         /* if pmkRight is a composite whose leftmost component is an anti-moniker,           */
         /* the returned moniker is the composite after the leftmost anti-moniker is removed. */
+        IMoniker_IsSystemMoniker(pmkRight,&mkSys);
 
          if(mkSys==MKSYS_GENERICCOMPOSITE){
 
@@ -316,47 +314,41 @@ PointerMonikerImpl_ComposeWith(IMoniker* iface, IMoniker* pmkRight,
 
             else
                 return MK_E_NEEDGENERIC;
+    }
 }
 
 /******************************************************************************
  *        PointerMoniker_Enum
  ******************************************************************************/
-static HRESULT WINAPI
-PointerMonikerImpl_Enum(IMoniker* iface,BOOL fForward, IEnumMoniker** ppenumMoniker)
+static HRESULT WINAPI PointerMonikerImpl_Enum(IMoniker *iface, BOOL fForward, IEnumMoniker **ppenumMoniker)
 {
-    TRACE("(%p,%d,%p)\n",iface,fForward,ppenumMoniker);
+    TRACE("%p, %d, %p.\n", iface, fForward, ppenumMoniker);
 
-    if (ppenumMoniker == NULL)
+    if (!ppenumMoniker)
         return E_POINTER;
 
     *ppenumMoniker = NULL;
 
-    return S_OK;
+    return E_NOTIMPL;
 }
 
 /******************************************************************************
  *        PointerMoniker_IsEqual
  ******************************************************************************/
-static HRESULT WINAPI
-PointerMonikerImpl_IsEqual(IMoniker* iface,IMoniker* pmkOtherMoniker)
+static HRESULT WINAPI PointerMonikerImpl_IsEqual(IMoniker *iface, IMoniker *other)
 {
-    PointerMonikerImpl *This = impl_from_IMoniker(iface);
-    DWORD mkSys;
+    PointerMonikerImpl *moniker = impl_from_IMoniker(iface), *other_moniker;
 
-    TRACE("(%p,%p)\n",iface,pmkOtherMoniker);
+    TRACE("%p, %p.\n", iface, other);
 
-    if (pmkOtherMoniker==NULL)
+    if (!other)
+        return E_INVALIDARG;
+
+    other_moniker = unsafe_impl_from_IMoniker(other);
+    if (!other_moniker)
         return S_FALSE;
 
-    IMoniker_IsSystemMoniker(pmkOtherMoniker,&mkSys);
-
-    if (mkSys==MKSYS_POINTERMONIKER)
-    {
-        PointerMonikerImpl *pOtherMoniker = impl_from_IMoniker(pmkOtherMoniker);
-        return This->pObject == pOtherMoniker->pObject ? S_OK : S_FALSE;
-    }
-    else
-        return S_FALSE;
+    return moniker->pObject == other_moniker->pObject ? S_OK : S_FALSE;
 }
 
 /******************************************************************************
@@ -412,18 +404,20 @@ PointerMonikerImpl_Inverse(IMoniker* iface,IMoniker** ppmk)
 /******************************************************************************
  *        PointerMoniker_CommonPrefixWith
  ******************************************************************************/
-static HRESULT WINAPI
-PointerMonikerImpl_CommonPrefixWith(IMoniker* iface,IMoniker* pmkOther,IMoniker** ppmkPrefix)
+static HRESULT WINAPI PointerMonikerImpl_CommonPrefixWith(IMoniker *iface, IMoniker *other, IMoniker **prefix)
 {
-    TRACE("(%p, %p)\n", pmkOther, ppmkPrefix);
+    TRACE("%p, %p, %p.\n", iface, other, prefix);
 
-    *ppmkPrefix = NULL;
+    if (!prefix || !other)
+        return E_INVALIDARG;
 
-    if (PointerMonikerImpl_IsEqual(iface, pmkOther))
+    *prefix = NULL;
+
+    if (PointerMonikerImpl_IsEqual(iface, other) == S_OK)
     {
         IMoniker_AddRef(iface);
 
-        *ppmkPrefix=iface;
+        *prefix = iface;
 
         return MK_S_US;
     }
@@ -539,52 +533,152 @@ static const IMonikerVtbl VT_PointerMonikerImpl =
     PointerMonikerImpl_IsSystemMoniker
 };
 
-/******************************************************************************
- *         PointerMoniker_Construct (local function)
- *******************************************************************************/
-static void PointerMonikerImpl_Construct(PointerMonikerImpl* This, IUnknown *punk)
+static PointerMonikerImpl *unsafe_impl_from_IMoniker(IMoniker *iface)
 {
-    TRACE("(%p)\n",This);
-
-    /* Initialize the virtual function table. */
-    This->IMoniker_iface.lpVtbl = &VT_PointerMonikerImpl;
-    This->ref = 1;
-    if (punk)
-        IUnknown_AddRef(punk);
-    This->pObject      = punk;
+    if (iface->lpVtbl != &VT_PointerMonikerImpl)
+        return NULL;
+    return CONTAINING_RECORD(iface, PointerMonikerImpl, IMoniker_iface);
 }
+
+static HRESULT WINAPI pointer_moniker_marshal_QueryInterface(IMarshal *iface, REFIID riid, LPVOID *ppv)
+{
+    PointerMonikerImpl *moniker = impl_from_IMarshal(iface);
+
+    TRACE("%p, %s, %p.\n", iface, debugstr_guid(riid), ppv);
+
+    return IMoniker_QueryInterface(&moniker->IMoniker_iface, riid, ppv);
+}
+
+static ULONG WINAPI pointer_moniker_marshal_AddRef(IMarshal *iface)
+{
+    PointerMonikerImpl *moniker = impl_from_IMarshal(iface);
+
+    TRACE("%p.\n",iface);
+
+    return IMoniker_AddRef(&moniker->IMoniker_iface);
+}
+
+static ULONG WINAPI pointer_moniker_marshal_Release(IMarshal *iface)
+{
+    PointerMonikerImpl *moniker = impl_from_IMarshal(iface);
+
+    TRACE("%p.\n",iface);
+
+    return IMoniker_Release(&moniker->IMoniker_iface);
+}
+
+static HRESULT WINAPI pointer_moniker_marshal_GetUnmarshalClass(IMarshal *iface, REFIID riid, void *pv,
+        DWORD dwDestContext, void *pvDestContext, DWORD mshlflags, CLSID *clsid)
+{
+    PointerMonikerImpl *moniker = impl_from_IMarshal(iface);
+
+    TRACE("%p, %s, %p, %x, %p, %x, %p.\n", iface, debugstr_guid(riid), pv, dwDestContext, pvDestContext,
+            mshlflags, clsid);
+
+    return IMoniker_GetClassID(&moniker->IMoniker_iface, clsid);
+}
+
+static HRESULT WINAPI pointer_moniker_marshal_GetMarshalSizeMax(IMarshal *iface, REFIID riid, void *pv,
+        DWORD dwDestContext, void *pvDestContext, DWORD mshlflags, DWORD *size)
+{
+    PointerMonikerImpl *moniker = impl_from_IMarshal(iface);
+
+    TRACE("%p, %s, %p, %d, %p, %#x, %p.\n", iface, debugstr_guid(riid), pv, dwDestContext, pvDestContext,
+            mshlflags, size);
+
+    return CoGetMarshalSizeMax(size, &IID_IUnknown, moniker->pObject, dwDestContext, pvDestContext, mshlflags);
+}
+
+static HRESULT WINAPI pointer_moniker_marshal_MarshalInterface(IMarshal *iface, IStream *stream, REFIID riid,
+        void *pv, DWORD dwDestContext, void *pvDestContext, DWORD mshlflags)
+{
+    PointerMonikerImpl *moniker = impl_from_IMarshal(iface);
+
+    TRACE("%p, %s, %p, %x, %p, %x.\n", stream, debugstr_guid(riid), pv,
+        dwDestContext, pvDestContext, mshlflags);
+
+    return CoMarshalInterface(stream, &IID_IUnknown, moniker->pObject, dwDestContext,
+                pvDestContext, mshlflags);
+}
+
+static HRESULT WINAPI pointer_moniker_marshal_UnmarshalInterface(IMarshal *iface, IStream *stream,
+        REFIID riid, void **ppv)
+{
+    PointerMonikerImpl *moniker = impl_from_IMarshal(iface);
+    IUnknown *object;
+    HRESULT hr;
+
+    TRACE("%p, %p, %s, %p.\n", iface, stream, debugstr_guid(riid), ppv);
+
+    hr = CoUnmarshalInterface(stream, &IID_IUnknown, (void **)&object);
+    if (FAILED(hr))
+    {
+        ERR("Couldn't unmarshal moniker, hr = %#x.\n", hr);
+        return hr;
+    }
+
+    if (moniker->pObject)
+        IUnknown_Release(moniker->pObject);
+    moniker->pObject = object;
+
+    return IMoniker_QueryInterface(&moniker->IMoniker_iface, riid, ppv);
+}
+
+static HRESULT WINAPI pointer_moniker_marshal_ReleaseMarshalData(IMarshal *iface, IStream *stream)
+{
+    TRACE("%p, %p.\n", iface, stream);
+
+    return S_OK;
+}
+
+static HRESULT WINAPI pointer_moniker_marshal_DisconnectObject(IMarshal *iface, DWORD reserved)
+{
+    TRACE("%p, %#x.\n", iface, reserved);
+
+    return S_OK;
+}
+
+static const IMarshalVtbl pointer_moniker_marshal_vtbl =
+{
+    pointer_moniker_marshal_QueryInterface,
+    pointer_moniker_marshal_AddRef,
+    pointer_moniker_marshal_Release,
+    pointer_moniker_marshal_GetUnmarshalClass,
+    pointer_moniker_marshal_GetMarshalSizeMax,
+    pointer_moniker_marshal_MarshalInterface,
+    pointer_moniker_marshal_UnmarshalInterface,
+    pointer_moniker_marshal_ReleaseMarshalData,
+    pointer_moniker_marshal_DisconnectObject
+};
 
 /***********************************************************************
  *           CreatePointerMoniker (OLE32.@)
- *
- * Creates a moniker which represents a pointer.
- *
- * PARAMS
- *  punk [I] Pointer to the object to represent.
- *  ppmk [O] Address that receives the pointer to the created moniker.
- *
- * RETURNS
- *  Success: S_OK.
- *  Failure: Any HRESULT code.
  */
-HRESULT WINAPI CreatePointerMoniker(LPUNKNOWN punk, LPMONIKER *ppmk)
+HRESULT WINAPI CreatePointerMoniker(IUnknown *object, IMoniker **ret)
 {
-    PointerMonikerImpl *This;
+    PointerMonikerImpl *moniker;
 
-    TRACE("(%p, %p)\n", punk, ppmk);
+    TRACE("(%p, %p)\n", object, ret);
 
-    if (!ppmk)
+    if (!ret)
         return E_INVALIDARG;
 
-    This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
-    if (!This)
+    moniker = heap_alloc(sizeof(*moniker));
+    if (!moniker)
     {
-        *ppmk = NULL;
+        *ret = NULL;
         return E_OUTOFMEMORY;
     }
 
-    PointerMonikerImpl_Construct(This, punk);
-    *ppmk = &This->IMoniker_iface;
+    moniker->IMoniker_iface.lpVtbl = &VT_PointerMonikerImpl;
+    moniker->IMarshal_iface.lpVtbl = &pointer_moniker_marshal_vtbl;
+    moniker->refcount = 1;
+    moniker->pObject = object;
+    if (moniker->pObject)
+        IUnknown_AddRef(moniker->pObject);
+
+    *ret = &moniker->IMoniker_iface;
+
     return S_OK;
 }
 
@@ -606,9 +700,7 @@ HRESULT WINAPI PointerMoniker_CreateInstance(IClassFactory *iface,
         return hr;
 
     hr = IMoniker_QueryInterface(pMoniker, riid, ppv);
-
-    if (FAILED(hr))
-        IMoniker_Release(pMoniker);
+    IMoniker_Release(pMoniker);
 
     return hr;
 }

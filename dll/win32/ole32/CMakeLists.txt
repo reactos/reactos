@@ -14,7 +14,7 @@ add_definitions(
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(ole32.dll ole32.spec ADD_IMPORTLIB NO_PRIVATE_WARNINGS)
 generate_idl_iids(dcom.idl)
-add_idl_headers(ole32idl dcom.idl irot.idl)
+add_idl_headers(ole32idl dcom.idl irpcss.idl irot.idl)
 add_rpc_files(client irot.idl)
 
 add_rpcproxy_files(
@@ -58,6 +58,7 @@ list(APPEND SOURCE
     stg_stream.c
     storage32.c
     stubmanager.c
+    enumx.c
     usrmarshal.c)
 
 if(MSVC AND (ARCH STREQUAL "i386"))

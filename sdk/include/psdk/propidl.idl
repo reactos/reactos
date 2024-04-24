@@ -1,4 +1,4 @@
-/*
+ /*
  * Copyright 2002 Ove Kaaven
  * Copyright 2004 Francois Gouget
  * Copyright 2005 Juan Lang
@@ -85,6 +85,7 @@ interface IPropertyStorage : IUnknown
       type *pElems; \
     } name
 
+  TYPEDEF_CA(char, CAC);
   TYPEDEF_CA(unsigned char, CAUB);
   TYPEDEF_CA(short, CAI);
   TYPEDEF_CA(USHORT, CAUI);
@@ -143,6 +144,7 @@ interface IPropertyStorage : IUnknown
     [case(VT_LPWSTR)]                     LPWSTR pwszVal;
     [case(VT_UNKNOWN)]                    IUnknown *punkVal;
     [case(VT_DISPATCH)]                   IDispatch *pdispVal;
+    [case(VT_I1|VT_VECTOR)]               CAC cac;
     [case(VT_UI1|VT_VECTOR)]              CAUB caub;
     [case(VT_I2|VT_VECTOR)]               CAI cai;
     [case(VT_UI2|VT_VECTOR)]              CAUI caui;
@@ -203,7 +205,7 @@ interface IPropertyStorage : IUnknown
     [case(VT_BYREF|VT_DISPATCH)]          IDispatch **ppdispVal;
     [case(VT_BYREF|VT_ARRAY)]             LPSAFEARRAY *pparray;
     [case(VT_BYREF|VT_VARIANT)]           PROPVARIANT *pvarVal;
-    } DUMMYUNIONNAME;
+    };
   };
 
   typedef struct tagPROPVARIANT *LPPROPVARIANT;
