@@ -1963,7 +1963,6 @@ HEADER_MouseMove (HEADER_INFO *infoPtr, LPARAM lParam)
                     ScrollWindowEx(infoPtr->hwndSelf, nWidth - nOldWidth, 0, &rcScroll, &rcClient, NULL, NULL, 0);
                     InvalidateRect(infoPtr->hwndSelf, &lpItem->rect, FALSE);
 #endif
-                        NULL, NULL, SW_INVALIDATE);
                     UpdateWindow(infoPtr->hwndSelf);
                     
                     HEADER_SendNotifyWithIntFieldT(infoPtr, HDN_ITEMCHANGEDW, infoPtr->iMoveItem, HDI_WIDTH, nWidth);
