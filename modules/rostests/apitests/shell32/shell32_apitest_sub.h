@@ -10,6 +10,8 @@
 
 #define WM_SHELL_NOTIFY     (WM_USER + 100)
 
+#define NUM_STAGE 10
+
 static inline HWND DoWaitForWindow(LPCWSTR clsname, LPCWSTR text, BOOL bClosing, BOOL bForce)
 {
     HWND hwnd = NULL;
