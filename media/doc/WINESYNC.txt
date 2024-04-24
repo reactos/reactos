@@ -207,6 +207,7 @@ dll/win32/version             # Synced to WineStaging-4.18
 dll/win32/vssapi              # Synced to WineStaging-4.18
 dll/win32/wbemdisp            # Synced to WineStaging-4.18
 dll/win32/wbemprox            # Synced to WineStaging-4.18
+dll/win32/wer                 # Synced to Wine-9.7
 dll/win32/windowscodecs       # Synced to WineStaging-4.18
 dll/win32/windowscodecsext    # Synced to WineStaging-2.9
 dll/win32/winemp3.acm         # Synced to WineStaging-4.18
