@@ -11,12 +11,15 @@
 
 //////////////////////////////////////////////////////////////////////////////
 
+class CFSNode;
+
 // the directory list
 class CDirectoryList
 {
 public:
-    CDirectoryList();
-    CDirectoryList(LPCWSTR pszDirectoryPath, BOOL fRecursive);
+    CDirectoryList(CFSNode *pRoot);
+    CDirectoryList(CFSNode *pRoot, LPCWSTR pszDirectoryPath, BOOL fRecursive);
+    ~CDirectoryList();
 
     BOOL ContainsPath(LPCWSTR pszPath) const;
     BOOL AddPath(LPCWSTR pszPath);
@@ -24,8 +27,8 @@ public:
     BOOL RenamePath(LPCWSTR pszPath1, LPCWSTR pszPath2);
     BOOL DeletePath(LPCWSTR pszPath);
     void RemoveAll();
-    static void Cleanup();
 
 protected:
+    CFSNode *m_pRoot;
     BOOL m_fRecursive;
 };

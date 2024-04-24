@@ -336,7 +336,6 @@ LRESULT CChangeNotifyServer::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, 
 {
     DestroyAllItems();
     CDirectoryWatcher::RequestAllWatchersTermination();
-    CDirectoryList::Cleanup();
     return 0;
 }
 

@@ -81,15 +81,11 @@ protected:
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
-static CFSNode *s_pRoot = NULL;
-
 CFSNode::CFSNode(const CStringW& strName, CFSNode* pParent)
     : m_strName(strName)
     , m_bExpand(FALSE)
     , m_pParent(pParent)
 {
-    if (!s_pRoot)
-        s_pRoot = this;
 }
 
 CFSNode::~CFSNode()
@@ -235,33 +231,40 @@ void CFSNode::clear()
 ///////////////////////////////////////////////////////////////////////////////////////
 // CDirectoryList
 
-CDirectoryList::CDirectoryList() : m_fRecursive(FALSE)
+CDirectoryList::CDirectoryList(CFSNode *pRoot)
+    : m_pRoot(pRoot ? pRoot : (new CFSNode(L"")))
+    , m_fRecursive(FALSE)
 {
-    if (!s_pRoot)
-        s_pRoot = new CFSNode(L"");
 }
 
-CDirectoryList::CDirectoryList(LPCWSTR pszDirectoryPath, BOOL fRecursive)
-    : m_fRecursive(fRecursive)
+CDirectoryList::CDirectoryList(CFSNode *pRoot, LPCWSTR pszDirectoryPath, BOOL fRecursive)
+    : m_pRoot(pRoot ? pRoot : (new CFSNode(L"")))
+    , m_fRecursive(fRecursive)
 {
-    if (!s_pRoot)
-        s_pRoot = new CFSNode(L"");
-
     AddPathsFromDirectory(pszDirectoryPath);
+}
+
+CDirectoryList::~CDirectoryList()
+{
+    delete m_pRoot;
 }
 
 BOOL CDirectoryList::ContainsPath(LPCWSTR pszPath) const
 {
     ATLASSERT(!PathIsRelativeW(pszPath));
 
-    return !!s_pRoot->Find(pszPath);
+    return !!m_pRoot->Find(pszPath);
 }
 
 BOOL CDirectoryList::AddPath(LPCWSTR pszPath)
 {
     ATLASSERT(!PathIsRelativeW(pszPath));
 
-    return !!s_pRoot->BuildPath(pszPath);
+    auto pNode = m_pRoot->BuildPath(pszPath);
+    if (pNode && m_fRecursive)
+        pNode->Expand();
+
+    return TRUE;
 }
 
 BOOL CDirectoryList::RenamePath(LPCWSTR pszPath1, LPCWSTR pszPath2)
@@ -269,7 +272,7 @@ BOOL CDirectoryList::RenamePath(LPCWSTR pszPath1, LPCWSTR pszPath2)
     ATLASSERT(!PathIsRelativeW(pszPath1));
     ATLASSERT(!PathIsRelativeW(pszPath2));
 
-    CFSNode* pNode = s_pRoot->Find(pszPath1);
+    auto pNode = m_pRoot->Find(pszPath1);
     if (!pNode)
         return FALSE;
 
@@ -285,7 +288,7 @@ BOOL CDirectoryList::DeletePath(LPCWSTR pszPath)
 {
     ATLASSERT(!PathIsRelativeW(pszPath));
 
-    CFSNode* pNode = s_pRoot->Find(pszPath);
+    auto pNode = m_pRoot->Find(pszPath);
     if (!pNode)
         return FALSE;
 
@@ -297,14 +300,9 @@ BOOL CDirectoryList::AddPathsFromDirectory(LPCWSTR pszDirectoryPath)
 {
     ATLASSERT(!PathIsRelativeW(pszPath));
 
-    CFSNode* pNode = s_pRoot->BuildPath(pszDirectoryPath);
-    pNode->Expand();
-    return TRUE;
-}
+    auto pNode = m_pRoot->BuildPath(pszDirectoryPath);
+    if (pNode)
+        pNode->Expand();
 
-void CDirectoryList::Cleanup()
-{
-    CFSNode *pOldRoot = s_pRoot;
-    s_pRoot = NULL;
-    delete pOldRoot;
+    return TRUE;
 }
