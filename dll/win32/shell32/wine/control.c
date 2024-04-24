@@ -1066,6 +1066,10 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     while ((ptr = StrChrW(wszDialogBoxName, '"')))
         memmove(ptr, ptr+1, lstrlenW(ptr)*sizeof(WCHAR));
 
+    /* FIXME: required for "appwiz.cpl install_gecko" to work. */
+    if (wszDialogBoxName[0] != L'\0' && wszDialogBoxName[0] != L'@')
+            extraPmts = wszDialogBoxName;
+        
     if (wszDialogBoxName[0] == L'@')
     {
         sp = _wtoi(wszDialogBoxName + 1);
@@ -1102,7 +1106,11 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
 
         bActivated = (applet->hActCtx != INVALID_HANDLE_VALUE ? ActivateActCtx(applet->hActCtx, &cookie) : FALSE);
 
+        /* FIXME: required for "appwiz.cpl install_gecko" to work. 
+         * should be: 
         if (sp < applet->count)
+         */
+        if (sp <= applet->count)
         {
             aCPLPath = GlobalFindAtomW(applet->cmd);
             if (!aCPLPath)
