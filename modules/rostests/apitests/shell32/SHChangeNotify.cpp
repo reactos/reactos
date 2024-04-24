@@ -439,15 +439,10 @@ static BOOL OnCopyData(HWND hwnd, HWND hwndSender, COPYDATASTRUCT *pCopyData)
         return FALSE;
 
     LPBYTE pbData = (LPBYTE)pCopyData->lpData;
+    LPBYTE pb = pbData;
 
     LONG cbTotal = pCopyData->cbData;
-    if (cbTotal < LONG(sizeof(LONG) + sizeof(DWORD) + sizeof(DWORD)))
-    {
-        trace("\n");
-        return FALSE;
-    }
-
-    LPBYTE pb = pbData;
+    assert(cbTotal >= LONG(sizeof(LONG) + sizeof(DWORD) + sizeof(DWORD)));
 
     LONG lEvent = *(LONG*)pb;
     pb += sizeof(lEvent);
@@ -474,11 +469,7 @@ static BOOL OnCopyData(HWND hwnd, HWND hwndSender, COPYDATASTRUCT *pCopyData)
         pb += cbPidl2;
     }
 
-    if ((pb - pbData) != cbTotal)
-    {
-        trace("\n");
-        return FALSE;
-    }
+    assert((pb - pbData) == cbTotal);
 
     DoTestEntry(lEvent, pidl1, pidl2);
 
