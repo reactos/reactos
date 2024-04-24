@@ -8,9 +8,11 @@
 /* INCLUDES *******************************************************************/
 
 #include "precomp.h"
+#include "wdm.h"
 
 #define NDEBUG
 #include <debug.h>
+#include <stdarg.h>
 
 
 /* GLOBALS ********************************************************************/
@@ -615,8 +617,50 @@ StorPortExtendedFunction(
     _In_ PVOID HwDeviceExtension,
     ...)
 {
+    va_list va;
+    ULONG AllocatePoolSize;
+    ULONG PoolTag;
+    PVOID* AllocatedPoolPointer;
+    PVOID PoolPointer;
+
     DPRINT1("StorPortExtendedFunction(%d %p ...)\n",
             FunctionCode, HwDeviceExtension);
+
+    va_start(va, HwDeviceExtension);
+
+    switch (FunctionCode) {
+        case ExtFunctionAllocatePool: {
+            AllocatePoolSize = va_arg(va, ULONG);
+            PoolTag = va_arg(va, ULONG);
+            AllocatedPoolPointer = va_arg(va, PVOID*);
+
+            if (AllocatedPoolPointer == NULL) {
+                return STOR_STATUS_INVALID_PARAMETER;
+            }
+
+            PoolPointer = ExAllocatePoolWithTag(NonPagedPool, AllocatePoolSize, PoolTag);
+
+            if (PoolPointer == NULL) {
+                *AllocatedPoolPointer = NULL;
+                return STOR_STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            *AllocatedPoolPointer = PoolPointer;
+            return STOR_STATUS_SUCCESS;
+        }
+
+        case ExtFunctionFreePool: {
+            PoolPointer = va_arg(va, PVOID);
+
+            if (PoolPointer == NULL) {
+                return STOR_STATUS_INVALID_PARAMETER;
+            }
+
+            ExFreePool(PoolPointer);
+            return STOR_STATUS_SUCCESS;
+        }
+    }
+    
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
