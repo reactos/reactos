@@ -14,7 +14,9 @@
 typedef enum DIRTYPE
 {
     DIRTYPE_DESKTOP = 0,
+    DIRTYPE_DESKTOP_DIR,
     DIRTYPE_DRIVES,
+    DIRTYPE_PRINTERS,
     DIRTYPE_DIR1,
     DIRTYPE_MAX
 } DIRTYPE;
@@ -23,8 +25,6 @@ static HWND s_hMainWnd = NULL, s_hSubWnd = NULL;
 static LPITEMIDLIST s_pidl[DIRTYPE_MAX];
 static UINT s_uRegID = 0;
 static INT s_iStage = -1;
-
-#define NUM_STAGE 4
 
 #define EVENTS (SHCNE_CREATE | SHCNE_DELETE | SHCNE_MKDIR | SHCNE_RMDIR | \
                 SHCNE_RENAMEFOLDER | SHCNE_RENAMEITEM | SHCNE_UPDATEDIR | SHCNE_UPDATEITEM)
@@ -40,9 +40,21 @@ inline LPITEMIDLIST DoGetPidl(INT iDir)
             SHGetSpecialFolderLocation(NULL, CSIDL_DESKTOP, &ret);
             break;
         }
+        case DIRTYPE_DESKTOP_DIR:
+        {
+            WCHAR szPath1[MAX_PATH];
+            SHGetSpecialFolderPathW(NULL, szPath1, CSIDL_DESKTOPDIRECTORY, FALSE);
+            ret = ILCreateFromPathW(szPath1);
+            break;
+        }
         case DIRTYPE_DRIVES:
         {
             SHGetSpecialFolderLocation(NULL, CSIDL_DRIVES, &ret);
+            break;
+        }
+        case DIRTYPE_PRINTERS:
+        {
+            SHGetSpecialFolderLocation(NULL, CSIDL_PRINTERS, &ret);
             break;
         }
         case DIRTYPE_DIR1:
@@ -85,8 +97,8 @@ static BOOL InitSHCN(HWND hwnd)
     {
         case 0:
         {
-            entry.fRecursive = TRUE;
-            entry.pidl = s_pidl[DIRTYPE_DESKTOP];
+            entry.fRecursive = FALSE;
+            entry.pidl = NULL;
             sources = SHCNRF_NewDelivery | SHCNRF_ShellLevel;
             events = EVENTS;
             break;
@@ -94,7 +106,7 @@ static BOOL InitSHCN(HWND hwnd)
         case 1:
         {
             entry.fRecursive = TRUE;
-            entry.pidl = s_pidl[DIRTYPE_DRIVES];
+            entry.pidl = NULL;
             sources = SHCNRF_NewDelivery | SHCNRF_ShellLevel;
             events = EVENTS;
             break;
@@ -102,12 +114,60 @@ static BOOL InitSHCN(HWND hwnd)
         case 2:
         {
             entry.fRecursive = FALSE;
-            entry.pidl = s_pidl[DIRTYPE_DIR1];
+            entry.pidl = s_pidl[DIRTYPE_DESKTOP];
             sources = SHCNRF_NewDelivery | SHCNRF_ShellLevel;
             events = EVENTS;
             break;
         }
         case 3:
+        {
+            entry.fRecursive = TRUE;
+            entry.pidl = s_pidl[DIRTYPE_DESKTOP];
+            sources = SHCNRF_NewDelivery | SHCNRF_ShellLevel;
+            events = EVENTS;
+            break;
+        }
+        case 4:
+        {
+            entry.fRecursive = TRUE;
+            entry.pidl = s_pidl[DIRTYPE_DESKTOP_DIR];
+            sources = SHCNRF_NewDelivery | SHCNRF_ShellLevel;
+            events = EVENTS;
+            break;
+        }
+        case 5:
+        {
+            entry.fRecursive = FALSE;
+            entry.pidl = s_pidl[DIRTYPE_DRIVES];
+            sources = SHCNRF_NewDelivery | SHCNRF_ShellLevel;
+            events = EVENTS;
+            break;
+        }
+        case 6:
+        {
+            entry.fRecursive = TRUE;
+            entry.pidl = s_pidl[DIRTYPE_DRIVES];
+            sources = SHCNRF_NewDelivery | SHCNRF_ShellLevel;
+            events = EVENTS;
+            break;
+        }
+        case 7:
+        {
+            entry.fRecursive = TRUE;
+            entry.pidl = s_pidl[DIRTYPE_PRINTERS];
+            sources = SHCNRF_NewDelivery | SHCNRF_ShellLevel;
+            events = EVENTS;
+            break;
+        }
+        case 8:
+        {
+            entry.fRecursive = FALSE;
+            entry.pidl = s_pidl[DIRTYPE_DIR1];
+            sources = SHCNRF_NewDelivery | SHCNRF_ShellLevel;
+            events = EVENTS;
+            break;
+        }
+        case 9:
         {
             entry.fRecursive = TRUE;
             entry.pidl = s_pidl[DIRTYPE_DIR1];
@@ -293,13 +353,19 @@ wWinMain(
     wc.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
     wc.lpszClassName = SUB_CLASSNAME;
     if (!RegisterClassW(&wc))
+    {
+        assert(0);
         return -1;
+    }
 
     HWND hwnd = CreateWindowW(SUB_CLASSNAME, SUB_CLASSNAME, WS_OVERLAPPEDWINDOW,
                               CW_USEDEFAULT, CW_USEDEFAULT, 400, 100,
                               NULL, NULL, hInstance, NULL);
     if (!hwnd)
+    {
+        assert(0);
         return -2;
+    }
 
     ShowWindow(hwnd, SW_SHOWNORMAL);
     UpdateWindow(hwnd);

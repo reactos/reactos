@@ -11,7 +11,6 @@
 #include "shell32_apitest_sub.h"
 #include <assert.h>
 
-#define NUM_STAGE       4
 #define NUM_STEP        8
 #define NUM_CHECKS      12
 #define INTERVAL        0
@@ -236,24 +235,10 @@ static void DoStepCheck(INT iStage, INT iStep, LPCSTR checks)
     switch (iStage)
     {
         case 0:
-        {
-            static const TEST_ANSWER c_answers[] =
-            {
-                { __LINE__, "000000010000010000000000" }, // 0
-                { __LINE__, "000000040000000000000400" }, // 1
-                { __LINE__, "000000000200020000000000" }, // 2
-                { __LINE__, "000000000000080000000000" }, // 3
-                { __LINE__, "000000000001010000000000" }, // 4
-                { __LINE__, "000000000002020000000000" }, // 5
-                { __LINE__, "000000000000000020000000" }, // 6
-                { __LINE__, "000010000000100000000000" }, // 7
-            };
-            C_ASSERT(_countof(c_answers) == NUM_STEP);
-            lineno = c_answers[iStep].lineno;
-            answer = c_answers[iStep].answer;
-            break;
-        }
         case 1:
+        case 3:
+        case 6:
+        case 9:
         {
             static const TEST_ANSWER c_answers[] =
             {
@@ -272,6 +257,27 @@ static void DoStepCheck(INT iStage, INT iStep, LPCSTR checks)
             break;
         }
         case 2:
+        case 4:
+        case 5:
+        case 7:
+        {
+            static const TEST_ANSWER c_answers[] =
+            {
+                { __LINE__, "000000000000000000000000" }, // 0
+                { __LINE__, "000000000000000000000000" }, // 1
+                { __LINE__, "000000000000000000000000" }, // 2
+                { __LINE__, "000000000000000000000000" }, // 3
+                { __LINE__, "000000000000000000000000" }, // 4
+                { __LINE__, "000000000000000000000000" }, // 5
+                { __LINE__, "000000000000000000000000" }, // 6
+                { __LINE__, "000000000000000000000000" }, // 7
+            };
+            C_ASSERT(_countof(c_answers) == NUM_STEP);
+            lineno = c_answers[iStep].lineno;
+            answer = c_answers[iStep].answer;
+            break;
+        }
+        case 8:
         {
             static const TEST_ANSWER c_answers[] =
             {
@@ -279,8 +285,8 @@ static void DoStepCheck(INT iStage, INT iStep, LPCSTR checks)
                 { __LINE__, "000000040000000000000400" }, // 1
                 { __LINE__, "000000000200020000000000" }, // 2
                 { __LINE__, "000000000000080000000000" }, // 3
-                { __LINE__, "000000000001010000000000" }, // 4 // Recursive
-                { __LINE__, "000000000002020000000000" }, // 5 // Recursive
+                { __LINE__, "000000000001010000000000" }, // 4 // Recursive case
+                { __LINE__, "000000000002020000000000" }, // 5 // Recursive case
                 { __LINE__, "000000000000000020000000" }, // 6
                 { __LINE__, "000010000000100000000000" }, // 7
             };
@@ -290,28 +296,11 @@ static void DoStepCheck(INT iStage, INT iStep, LPCSTR checks)
             if (iStep == 4 || iStep == 5) // Recursive cases
             {
                 if (lstrcmpA(checks, "000000000000000000000000") == 0)
+                {
+                    trace("Warning! Recursive cases...\n");
                     answer = "000000000000000000000000";
-                else
-                    trace("Warning\n");
+                }
             }
-            break;
-        }
-        case 3:
-        {
-            static const TEST_ANSWER c_answers[] =
-            {
-                { __LINE__, "000000010000010000000000" }, // 0
-                { __LINE__, "000000040000000000000400" }, // 1
-                { __LINE__, "000000000200020000000000" }, // 2
-                { __LINE__, "000000000000080000000000" }, // 3
-                { __LINE__, "000000000001010000000000" }, // 4 // Recursive
-                { __LINE__, "000000000002020000000000" }, // 5 // Recursive
-                { __LINE__, "000000000000000020000000" }, // 6
-                { __LINE__, "000010000000100000000000" }, // 7
-            };
-            C_ASSERT(_countof(c_answers) == NUM_STEP);
-            lineno = c_answers[iStep].lineno;
-            answer = c_answers[iStep].answer;
             break;
         }
         default:
@@ -334,7 +323,7 @@ static DWORD WINAPI StageThreadFunc(LPVOID arg)
     // 0: Create file1 in dir1
     s_iStep = 0;
     trace("Step %d\n", s_iStep);
-    ::Sleep(1000); // Extra wait
+    SHChangeNotify(0, SHCNF_PATHW | SHCNF_FLUSH, NULL, NULL);
     ZeroMemory(s_abChecks, sizeof(s_abChecks));
     ret = DoCreateFile(s_szFile1InDir1);
     ok_int(ret, TRUE);
