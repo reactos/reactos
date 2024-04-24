@@ -14,7 +14,7 @@
 #define NUM_STAGE       4
 #define NUM_STEP        8
 #define NUM_CHECKS      12
-#define INTERVAL        600
+#define INTERVAL        0
 #define MAX_EVENT_TYPE  6
 
 static HWND s_hMainWnd = NULL, s_hSubWnd = NULL;
@@ -338,7 +338,7 @@ static DWORD WINAPI StageThreadFunc(LPVOID arg)
     ZeroMemory(s_abChecks, sizeof(s_abChecks));
     ret = DoCreateFile(s_szFile1InDir1);
     ok_int(ret, TRUE);
-    SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW | SHCNF_FLUSH | SHCNF_FLUSHNOWAIT, s_szFile1InDir1, 0);
+    SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW | SHCNF_FLUSH, s_szFile1InDir1, 0);
     ::Sleep(INTERVAL);
     DoStepCheck(s_iStage, s_iStep, StringFromChecks());
 
@@ -348,7 +348,7 @@ static DWORD WINAPI StageThreadFunc(LPVOID arg)
     ZeroMemory(s_abChecks, sizeof(s_abChecks));
     ret = MoveFileW(s_szFile1InDir1, s_szFile2InDir1);
     ok_int(ret, TRUE);
-    SHChangeNotify(SHCNE_RENAMEITEM, SHCNF_PATHW | SHCNF_FLUSH | SHCNF_FLUSHNOWAIT, s_szFile1InDir1, s_szFile2InDir1);
+    SHChangeNotify(SHCNE_RENAMEITEM, SHCNF_PATHW | SHCNF_FLUSH, s_szFile1InDir1, s_szFile2InDir1);
     ::Sleep(INTERVAL);
     DoStepCheck(s_iStage, s_iStep, StringFromChecks());
 
@@ -358,7 +358,7 @@ static DWORD WINAPI StageThreadFunc(LPVOID arg)
     ZeroMemory(s_abChecks, sizeof(s_abChecks));
     ret = DeleteFileW(s_szFile2InDir1);
     ok_int(ret, TRUE);
-    SHChangeNotify(SHCNE_DELETE, SHCNF_PATHW | SHCNF_FLUSH | SHCNF_FLUSHNOWAIT, s_szFile2InDir1, NULL);
+    SHChangeNotify(SHCNE_DELETE, SHCNF_PATHW | SHCNF_FLUSH, s_szFile2InDir1, NULL);
     ::Sleep(INTERVAL);
     DoStepCheck(s_iStage, s_iStep, StringFromChecks());
 
@@ -368,7 +368,7 @@ static DWORD WINAPI StageThreadFunc(LPVOID arg)
     ZeroMemory(s_abChecks, sizeof(s_abChecks));
     ret = CreateDirectoryExW(s_szDir1, s_szDir1InDir1, NULL);
     ok_int(ret, TRUE);
-    SHChangeNotify(SHCNE_MKDIR, SHCNF_PATHW | SHCNF_FLUSH | SHCNF_FLUSHNOWAIT, s_szDir1InDir1, NULL);
+    SHChangeNotify(SHCNE_MKDIR, SHCNF_PATHW | SHCNF_FLUSH, s_szDir1InDir1, NULL);
     ::Sleep(INTERVAL);
     DoStepCheck(s_iStage, s_iStep, StringFromChecks());
 
@@ -378,7 +378,7 @@ static DWORD WINAPI StageThreadFunc(LPVOID arg)
     ZeroMemory(s_abChecks, sizeof(s_abChecks));
     ret = DoCreateFile(s_szFile1InDir1InDir1);
     ok_int(ret, TRUE);
-    SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW | SHCNF_FLUSH | SHCNF_FLUSHNOWAIT, s_szFile1InDir1InDir1, NULL);
+    SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW | SHCNF_FLUSH, s_szFile1InDir1InDir1, NULL);
     ::Sleep(INTERVAL);
     DoStepCheck(s_iStage, s_iStep, StringFromChecks());
 
@@ -388,7 +388,7 @@ static DWORD WINAPI StageThreadFunc(LPVOID arg)
     ZeroMemory(s_abChecks, sizeof(s_abChecks));
     ret = DeleteFileW(s_szFile1InDir1InDir1);
     ok_int(ret, TRUE);
-    SHChangeNotify(SHCNE_DELETE, SHCNF_PATHW | SHCNF_FLUSH | SHCNF_FLUSHNOWAIT, s_szFile1InDir1InDir1, NULL);
+    SHChangeNotify(SHCNE_DELETE, SHCNF_PATHW | SHCNF_FLUSH, s_szFile1InDir1InDir1, NULL);
     ::Sleep(INTERVAL);
     DoStepCheck(s_iStage, s_iStep, StringFromChecks());
 
@@ -398,7 +398,7 @@ static DWORD WINAPI StageThreadFunc(LPVOID arg)
     ZeroMemory(s_abChecks, sizeof(s_abChecks));
     ret = ::MoveFileW(s_szDir1InDir1, s_szDir2InDir1);
     ok_int(ret, TRUE);
-    SHChangeNotify(SHCNE_RENAMEFOLDER, SHCNF_PATHW | SHCNF_FLUSH | SHCNF_FLUSHNOWAIT, s_szDir1InDir1, s_szDir2InDir1);
+    SHChangeNotify(SHCNE_RENAMEFOLDER, SHCNF_PATHW | SHCNF_FLUSH, s_szDir1InDir1, s_szDir2InDir1);
     ::Sleep(INTERVAL);
     DoStepCheck(s_iStage, s_iStep, StringFromChecks());
 
@@ -408,7 +408,7 @@ static DWORD WINAPI StageThreadFunc(LPVOID arg)
     ZeroMemory(s_abChecks, sizeof(s_abChecks));
     ret = RemoveDirectoryW(s_szDir2InDir1);
     ok_int(ret, TRUE);
-    SHChangeNotify(SHCNE_RMDIR, SHCNF_PATHW | SHCNF_FLUSH | SHCNF_FLUSHNOWAIT, s_szDir2InDir1, NULL);
+    SHChangeNotify(SHCNE_RMDIR, SHCNF_PATHW | SHCNF_FLUSH, s_szDir2InDir1, NULL);
     ::Sleep(INTERVAL);
     DoStepCheck(s_iStage, s_iStep, StringFromChecks());
 
