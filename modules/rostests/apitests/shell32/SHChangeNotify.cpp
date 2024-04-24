@@ -414,10 +414,8 @@ static DWORD WINAPI StageThreadFunc(LPVOID arg)
 
     // 8: Finish
     ++s_iStep;
-    trace("Step %d\n", s_iStep);
     assert(s_iStep == NUM_STEP);
     C_ASSERT(NUM_STEP == 8);
-    ZeroMemory(s_abChecks, sizeof(s_abChecks));
     if (s_iStage + 1 < NUM_STAGE)
     {
         ::PostMessage(s_hSubWnd, WM_COMMAND, IDRETRY, 0); // Next stage
