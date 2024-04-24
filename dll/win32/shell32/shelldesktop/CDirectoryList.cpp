@@ -2,307 +2,131 @@
  * PROJECT:     shell32
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Shell change notification
- * COPYRIGHT:   Copyright 2020-2024 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 #include "shelldesktop.h"
 #include "CDirectoryList.h"
-#include <atlstr.h>
+#include <assert.h>      // for assert
 
 WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 
-///////////////////////////////////////////////////////////////////////////////////////
-// File-system path iterator
-
-class CFSPathIterator
+BOOL CDirectoryList::ContainsPath(LPCWSTR pszPath) const
 {
-public:
-    CStringW m_strFullName;
-    INT m_ich;
+    assert(!PathIsRelativeW(pszPath));
 
-    CFSPathIterator(CStringW strFullName) : m_strFullName(strFullName), m_ich(0)
+    for (INT i = 0; i < m_items.GetSize(); ++i)
     {
+        if (m_items[i].IsEmpty())
+            continue;
+
+        if (m_items[i].EqualPath(pszPath))
+            return TRUE; // matched
     }
+    return FALSE;
+}
 
-    bool Next(CStringW& strNext);
-};
-
-///////////////////////////////////////////////////////////////////////////////////////
-
-bool CFSPathIterator::Next(CStringW& strNext)
+BOOL CDirectoryList::AddPath(LPCWSTR pszPath)
 {
-    if (m_ich >= m_strFullName.GetLength())
-        return false;
-
-    auto ich = m_strFullName.Find(L'\\', m_ich);
-    if (ich < 0)
+    assert(!PathIsRelativeW(pszPath));
+    if (ContainsPath(pszPath))
+        return FALSE;
+    for (INT i = 0; i < m_items.GetSize(); ++i)
     {
-        ich = m_strFullName.GetLength();
-        strNext = m_strFullName.Mid(m_ich, ich - m_ich);
-        m_ich = ich;
-    }
-    else
-    {
-        strNext = m_strFullName.Mid(m_ich, ich - m_ich);
-        m_ich = ich + 1;
-    }
-    return true;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////
-// File-system node
-
-class CFSNode
-{
-public:
-    CStringW m_strName;
-
-    CFSNode(const CStringW& strName, CFSNode* pParent = NULL);
-    ~CFSNode();
-
-    CStringW GetFullName();
-    CFSNode* BuildPath(const CStringW& strFullName, BOOL bMarkNotExpanded = TRUE);
-
-    CFSNode* FindChild(const CStringW& strName);
-    CFSNode* Find(const CStringW& strFullName);
-
-    BOOL RemoveChild(CFSNode *pNode);
-    BOOL Remove();
-
-    void MarkNotExpanded();
-
-    void Expand();
-    void clear();
-
-protected:
-    BOOL m_bExpand;
-    CFSNode* m_pParent;
-    CSimpleArray<CFSNode*> m_children;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////
-
-CFSNode::CFSNode(const CStringW& strName, CFSNode* pParent)
-    : m_strName(strName)
-    , m_bExpand(FALSE)
-    , m_pParent(pParent)
-{
-}
-
-CFSNode::~CFSNode()
-{
-    clear();
-}
-
-CStringW CFSNode::GetFullName()
-{
-    CStringW ret;
-    if (m_pParent)
-        ret = m_pParent->GetFullName();
-    if (ret.GetLength())
-        ret += L'\\';
-    ret += m_strName;
-    return ret;
-}
-
-CFSNode* CFSNode::FindChild(const CStringW& strName)
-{
-    for (INT iItem = 0; iItem < m_children.GetSize(); ++iItem)
-    {
-        auto pChild = m_children[iItem];
-        if (pChild &&
-            pChild->m_strName.GetLength() == strName.GetLength() &&
-            lstrcmpiW(pChild->m_strName, strName) == 0)
+        if (m_items[i].IsEmpty())
         {
-            return pChild;
+            m_items[i].SetPath(pszPath);
+            return TRUE;
         }
     }
-    return NULL;
+    return m_items.Add(pszPath);
 }
 
-BOOL CFSNode::RemoveChild(CFSNode *pNode)
+BOOL CDirectoryList::RenamePath(LPCWSTR pszPath1, LPCWSTR pszPath2)
 {
-    for (INT iItem = 0; iItem < m_children.GetSize(); ++iItem)
+    assert(!PathIsRelativeW(pszPath1));
+    assert(!PathIsRelativeW(pszPath2));
+
+    for (INT i = 0; i < m_items.GetSize(); ++i)
     {
-        auto& pChild = m_children[iItem];
-        if (pChild == pNode)
+        if (m_items[i].EqualPath(pszPath1))
         {
-            auto pOld = pChild;
-            pChild = NULL;
-            delete pOld;
+            // matched
+            m_items[i].SetPath(pszPath2);
             return TRUE;
         }
     }
     return FALSE;
 }
 
-BOOL CFSNode::Remove()
-{
-    if (m_pParent)
-        return m_pParent->RemoveChild(this);
-    return FALSE;
-}
-
-CFSNode* CFSNode::Find(const CStringW& strFullName)
-{
-    CFSPathIterator it(strFullName);
-    CStringW strName;
-    CFSNode *pChild, *pNode;
-    for (pNode = this; it.Next(strName); pNode = pChild)
-    {
-        pChild = pNode->FindChild(strName);
-        if (!pChild)
-            return NULL;
-    }
-    return pNode;
-}
-
-void CFSNode::MarkNotExpanded()
-{
-    for (auto pNode = this; pNode; pNode = pNode->m_pParent)
-        pNode->m_bExpand = FALSE;
-}
-
-CFSNode* CFSNode::BuildPath(const CStringW& strFullName, BOOL bMarkNotExpanded)
-{
-    CFSPathIterator it(strFullName);
-    CStringW strName;
-    CFSNode *pNode, *pChild = NULL;
-    for (pNode = this; it.Next(strName); pNode = pChild)
-    {
-        pChild = pNode->FindChild(strName);
-        if (pChild)
-            continue;
-
-        pChild = new CFSNode(strName, pNode);
-        pNode->m_children.Add(pChild);
-        if (bMarkNotExpanded)
-            pNode->MarkNotExpanded();
-    }
-    return pNode;
-}
-
-void CFSNode::Expand()
-{
-    if (m_bExpand)
-        return;
-
-    auto strSpec = GetFullName();
-    strSpec += L"\\*";
-
-    WIN32_FIND_DATAW find;
-    HANDLE hFind = ::FindFirstFileW(strSpec, &find);
-    if (hFind == INVALID_HANDLE_VALUE)
-        return;
-
-    do
-    {
-        if (lstrcmpW(find.cFileName, L".") == 0 ||
-            lstrcmpW(find.cFileName, L"..") == 0 ||
-            !(find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
-            (find.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT))
-        {
-            continue;
-        }
-
-        auto pNode = FindChild(find.cFileName);
-        if (!pNode)
-        {
-            pNode = new CFSNode(find.cFileName, this);
-            m_children.Add(pNode);
-        }
-        pNode->Expand();
-    } while (::FindNextFileW(hFind, &find));
-    ::FindClose(hFind);
-
-    m_bExpand = TRUE;
-}
-
-void CFSNode::clear()
-{
-    for (INT iItem = 0; iItem < m_children.GetSize(); ++iItem)
-    {
-        auto& pChild = m_children[iItem];
-        delete pChild;
-        pChild = NULL;
-    }
-    m_children.RemoveAll();
-}
-
-///////////////////////////////////////////////////////////////////////////////////////
-// CDirectoryList
-
-CDirectoryList::CDirectoryList(CFSNode *pRoot)
-    : m_pRoot(pRoot ? pRoot : (new CFSNode(L"")))
-    , m_fRecursive(FALSE)
-{
-}
-
-CDirectoryList::CDirectoryList(CFSNode *pRoot, LPCWSTR pszDirectoryPath, BOOL fRecursive)
-    : m_pRoot(pRoot ? pRoot : (new CFSNode(L"")))
-    , m_fRecursive(fRecursive)
-{
-    AddPathsFromDirectory(pszDirectoryPath);
-}
-
-CDirectoryList::~CDirectoryList()
-{
-    delete m_pRoot;
-}
-
-BOOL CDirectoryList::ContainsPath(LPCWSTR pszPath) const
-{
-    ATLASSERT(!PathIsRelativeW(pszPath));
-
-    return !!m_pRoot->Find(pszPath);
-}
-
-BOOL CDirectoryList::AddPath(LPCWSTR pszPath)
-{
-    ATLASSERT(!PathIsRelativeW(pszPath));
-
-    auto pNode = m_pRoot->BuildPath(pszPath);
-    if (pNode && m_fRecursive)
-        pNode->Expand();
-
-    return TRUE;
-}
-
-BOOL CDirectoryList::RenamePath(LPCWSTR pszPath1, LPCWSTR pszPath2)
-{
-    ATLASSERT(!PathIsRelativeW(pszPath1));
-    ATLASSERT(!PathIsRelativeW(pszPath2));
-
-    auto pNode = m_pRoot->Find(pszPath1);
-    if (!pNode)
-        return FALSE;
-
-    LPWSTR pch = wcsrchr(pszPath2, L'\\');
-    if (!pch)
-        return FALSE;
-
-    pNode->m_strName = pch + 1;
-    return TRUE;
-}
-
 BOOL CDirectoryList::DeletePath(LPCWSTR pszPath)
 {
-    ATLASSERT(!PathIsRelativeW(pszPath));
+    assert(!PathIsRelativeW(pszPath));
 
-    auto pNode = m_pRoot->Find(pszPath);
-    if (!pNode)
-        return FALSE;
-
-    pNode->Remove();
-    return TRUE;
+    for (INT i = 0; i < m_items.GetSize(); ++i)
+    {
+        if (m_items[i].EqualPath(pszPath))
+        {
+            // matched
+            m_items[i].SetPath(NULL);
+            return TRUE;
+        }
+    }
+    return FALSE;
 }
 
 BOOL CDirectoryList::AddPathsFromDirectory(LPCWSTR pszDirectoryPath)
 {
-    ATLASSERT(!PathIsRelativeW(pszPath));
+    // get the full path
+    WCHAR szPath[MAX_PATH];
+    lstrcpynW(szPath, pszDirectoryPath, _countof(szPath));
+    assert(!PathIsRelativeW(szPath));
 
-    auto pNode = m_pRoot->BuildPath(pszDirectoryPath);
-    if (pNode)
-        pNode->Expand();
+    // is it a directory?
+    if (!PathIsDirectoryW(szPath))
+        return FALSE;
+
+    // add the path
+    if (!AddPath(szPath))
+        return FALSE;
+
+    // enumerate the file items to remember
+    PathAppendW(szPath, L"*");
+    WIN32_FIND_DATAW find;
+    HANDLE hFind = FindFirstFileW(szPath, &find);
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+        ERR("FindFirstFileW failed\n");
+        return FALSE;
+    }
+
+    LPWSTR pch;
+    do
+    {
+        // ignore "." and ".."
+        pch = find.cFileName;
+        if (pch[0] == L'.' && (pch[1] == 0 || (pch[1] == L'.' && pch[2] == 0)))
+            continue;
+
+        // build a path
+        PathRemoveFileSpecW(szPath);
+        if (lstrlenW(szPath) + lstrlenW(find.cFileName) + 1 > MAX_PATH)
+        {
+            ERR("szPath is too long\n");
+            continue;
+        }
+        PathAppendW(szPath, find.cFileName);
+
+        // add the path and do recurse
+        if (find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            if (m_fRecursive)
+                AddPathsFromDirectory(szPath);
+            else
+                AddPath(szPath);
+        }
+    } while (FindNextFileW(hFind, &find));
+
+    FindClose(hFind);
 
     return TRUE;
 }
