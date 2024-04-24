@@ -1011,11 +1011,11 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
 
     /* If no unquoted commas are found, parameters are either space separated, or the entire string
      * is a CPL path. */
-    if (pchFirstComma == NULL)
+    if (!pchFirstComma)
     {
         /* An unquoted space was found in the string. Assume the last word is the dialog box
          * name/number. */
-        if (pchLastUnquotedSpace != NULL)
+        if (pchLastUnquotedSpace)
         {
             int nSpaces = 0;
 
@@ -1040,7 +1040,7 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     {
         /* If there was no second unquoted comma in the string, the CPL path ends at thes
           * null terminator. */
-        if (pchSecondComma == NULL)
+        if (!pchSecondComma)
             pchSecondComma = wszCmd + nLen;
 
         StringCchCopyNW(buffer, nLen + 1, wszCmd, pchFirstComma - wszCmd);
