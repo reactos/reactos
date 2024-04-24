@@ -1948,7 +1948,9 @@ HEADER_MouseMove (HEADER_INFO *infoPtr, LPARAM lParam)
                     
                     if (nWidth < 0) nWidth = 0;
                     infoPtr->items[infoPtr->iMoveItem].cxy = nWidth;
+#ifdef __REACTOS__
                     InvalidateRect(infoPtr->hwndSelf, &lpItem->rect, FALSE);
+#endif
                     HEADER_SetItemBounds(infoPtr);
                     
                     GetClientRect(infoPtr->hwndSelf, &rcClient);
