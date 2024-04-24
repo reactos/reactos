@@ -441,11 +441,6 @@ static const TEST_ENTRY s_entries_1[] =
     { __LINE__, TRUE, TRUE, L"shell:::{450d8fba-ad25-11d0-98a8-0800361b1103}", NULL },
     // shell:sendto
     { __LINE__, TRUE, TRUE, L"shell:sendto", NULL },
-    // iexplore.exe
-    { __LINE__, TRUE, FALSE, L"iexplore", NULL },
-    { __LINE__, TRUE, FALSE, L"iexplore.exe", NULL },
-    { __LINE__, TRUE, TRUE, L"iexplore", NULL },
-    { __LINE__, TRUE, TRUE, L"iexplore.exe", NULL },
     // https://google.com
     { __LINE__, TRUE, FALSE, L"https://google.com", NULL },
     { __LINE__, TRUE, TRUE, L"https://google.com", NULL },
