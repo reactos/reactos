@@ -84,6 +84,10 @@ WarnDeprecated(
     va_list ap;
     CHAR msgString[300];
 
+    /* If the user didn't cancel the timeout, don't display the warning */
+    if (BootMgrInfo.TimeOut >= 0)
+        return;
+
     va_start(ap, MsgFmt);
     RtlStringCbVPrintfA(msgString, sizeof(msgString),
                         MsgFmt, ap);
@@ -328,6 +332,9 @@ MainBootMenuKeyPressFilter(
     IN ULONG SelectedMenuItem,
     IN PVOID Context OPTIONAL)
 {
+    /* Any key-press cancels the global timeout */
+    BootMgrInfo.TimeOut = -1;
+
     switch (KeyPress)
     {
     case KEY_F8:
@@ -445,10 +452,10 @@ VOID RunLoader(VOID)
             goto Reboot;
         }
 
-        BootMgrInfo.TimeOut = -1;
-
         /* Load the chosen operating system */
         LoadOperatingSystem(&OperatingSystemList[SelectedOperatingSystem]);
+
+        BootMgrInfo.TimeOut = -1;
 
         /* If we get there, the OS loader failed. As it may have
          * messed up the display, re-initialize the UI. */
