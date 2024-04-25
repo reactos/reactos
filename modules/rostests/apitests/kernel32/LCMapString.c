@@ -8,7 +8,9 @@
 #include "precomp.h"
 
 #undef ok_wstr_
-void ok_wstr_(const char *file, int line, LPCWSTR x, LPCWSTR y)
+
+static void
+ok_wstr_(const char *file, int line, LPCWSTR x, LPCWSTR y)
 {
     char buf1[100], buf2[100];
     lstrcpynA(buf1, wine_dbgstr_w(x), _countof(buf1));
