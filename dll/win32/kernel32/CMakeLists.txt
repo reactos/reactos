@@ -85,7 +85,7 @@ list(APPEND SOURCE
     winnls/string/fold.c
     winnls/string/format_msg.c
     winnls/string/japanese.c
-    winnls/string/lang.c
+    winnls/string/locale.c
     winnls/string/lcformat.c
     winnls/string/lstring.c
     winnls/string/nls.c
