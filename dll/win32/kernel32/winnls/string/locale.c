@@ -1015,6 +1015,15 @@ static const char* get_locale(int category, const char* category_name)
 {
     const char* ret = setlocale(category, NULL);
 
+#ifdef __ANDROID__
+    if (!strcmp(ret, "C"))
+    {
+        ret = getenv( category_name );
+        if (!ret || !ret[0]) ret = getenv( "LC_ALL" );
+        if (!ret || !ret[0]) ret = "C";
+    }
+#endif
+
 #ifdef __APPLE__
     /* If LC_ALL is set, respect it as a user override.
        If LC_* is set, respect it as a user override, except if it's LC_CTYPE
