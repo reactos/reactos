@@ -2261,7 +2261,6 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::GetControlWindow(UINT id, HWND *lphwnd)
     if (lphwnd == NULL)
         return E_POINTER;
     *lphwnd = NULL;
-    BOOL shown;
     switch (id)
     {
         case FCW_TOOLBAR:
@@ -2271,9 +2270,12 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::GetControlWindow(UINT id, HWND *lphwnd)
             *lphwnd = fStatusBar;
             return S_OK;
         case FCW_TREE:
+        {
+            BOOL shown;
             if (SUCCEEDED(IsControlWindowShown(id, &shown)) && shown)
                 return IUnknown_GetWindow(fClientBars[BIVerticalBaseBar].clientBar.p, lphwnd);
             return S_FALSE;
+        }
         case FCW_PROGRESS:
             // is this a progress dialog?
             return S_OK;
@@ -2478,7 +2480,6 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::ShowControlWindow(UINT id, BOOL fShow)
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::IsControlWindowShown(UINT id, BOOL *pfShown)
 {
-    OLECMD cmd = {};
     HRESULT hr = S_OK;
     BOOL shown = FALSE;
     switch (id)
@@ -2487,10 +2488,12 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::IsControlWindowShown(UINT id, BOOL *pfS
             shown = m_settings.fStatusBarVisible;
             break;
         case FCW_TREE:
-            cmd.cmdID = SBCMDID_EXPLORERBARFOLDERS;
+        {
+            OLECMD cmd = { SBCMDID_EXPLORERBARFOLDERS };
             hr = QueryStatus(&CGID_Explorer, 1, &cmd, NULL);
             shown = cmd.cmdf & OLECMDF_LATCHED;
             break;
+        }
         default:
             hr = E_NOTIMPL;
     }
@@ -2499,7 +2502,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::IsControlWindowShown(UINT id, BOOL *pfS
         *pfShown = shown;
         return hr;
     }
-    return SUCCEEDED(hr) ? shown ? S_OK : S_FALSE : hr;
+    return SUCCEEDED(hr) ? (shown ? S_OK : S_FALSE) : hr;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::IEGetDisplayName(LPCITEMIDLIST pidl, LPWSTR pwszName, UINT uFlags)
