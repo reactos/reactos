@@ -5419,7 +5419,7 @@ static const struct geoinfo_t *get_geoinfo_dataptr(GEOID geoid)
 
         ptr = &geoinfodata[n];
         if (geoid == ptr->id)
-            /* we don't need empty entry */
+            /* we don't need empty entries */
             return *ptr->iso2W ? ptr : NULL;
 
         if (ptr->id > geoid)
