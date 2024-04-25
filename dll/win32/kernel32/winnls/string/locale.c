@@ -60,16 +60,20 @@ extern HMODULE kernel32_handle;
 #define WC_FLAGSMASK (WC_DISCARDNS|WC_SEPCHARS|WC_DEFAULTCHAR|WC_ERR_INVALID_CHARS|\
                       WC_COMPOSITECHECK|WC_NO_BEST_FIT_CHARS)
 
+/* current code pages */
+static const union cptable *ansi_cptable;
+static const union cptable *oem_cptable;
+static const union cptable *mac_cptable;
+static const union cptable *unix_cptable;  /* NULL if UTF8 */
+
 static const WCHAR szLocaleKeyName[] = {
-	'\\', 'R', 'e', 'g', 'i', 's', 't', 'r', 'y', '\\',
-    'M','a','c','h','i','n','e','\\','S','y','s','t','e','m','\\',
+    '\\','R','e','g','i','s','t','r','y','\\','M','a','c','h','i','n','e','\\','S','y','s','t','e','m','\\',
     'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
     'C','o','n','t','r','o','l','\\','N','l','s','\\','L','o','c','a','l','e',0
 };
 
 static const WCHAR szLangGroupsKeyName[] = {
-	'\\', 'R', 'e', 'g', 'i', 's', 't', 'r', 'y', '\\',
-    'M','a','c','h','i','n','e','\\','S','y','s','t','e','m','\\',
+    '\\','R','e','g','i','s','t','r','y','\\','M','a','c','h','i','n','e','\\','S','y','s','t','e','m','\\',
     'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
     'C','o','n','t','r','o','l','\\','N','l','s','\\',
     'L','a','n','g','u','a','g','e',' ','G','r','o','u','p','s',0
@@ -137,6 +141,7 @@ static const struct charset_entry
     { "UTF8", CP_UTF8 }
 };
 #endif
+
 
 struct locale_name
 {
@@ -267,9 +272,7 @@ static inline void strcpynAtoW( WCHAR *dst, const char *src, size_t n )
     }
     if (n) *dst = 0;
 }
-#endif
 
-#ifndef __REACTOS__
 static inline unsigned short get_table_entry( const unsigned short *table, WCHAR ch )
 {
     return table[table[table[ch >> 8] + ((ch >> 4) & 0x0f)] + (ch & 0xf)];
@@ -352,7 +355,8 @@ static UINT find_charset( const WCHAR *name )
         if (isalnum((unsigned char)name[i])) charset_name[j++] = name[i];
     charset_name[j] = 0;
 
-    entry = bsearch( charset_name, charset_names, ARRAY_SIZE( charset_names ),
+    entry = bsearch( charset_name, charset_names,
+                     sizeof(charset_names)/sizeof(charset_names[0]),
                      sizeof(charset_names[0]), charset_cmp );
     if (entry) return entry->codepage;
     return 0;
@@ -393,7 +397,8 @@ static BOOL CALLBACK find_locale_id_callback( HMODULE hModule, LPCWSTR type,
 
     /* first check exact name */
     if (data->win_name[0] &&
-        GetLocaleInfoW( lcid, LOCALE_SNAME | LOCALE_NOUSEROVERRIDE, buffer, ARRAY_SIZE( buffer )))
+        GetLocaleInfoW( lcid, LOCALE_SNAME | LOCALE_NOUSEROVERRIDE,
+                        buffer, sizeof(buffer)/sizeof(WCHAR) ))
     {
         if (!strcmpiW( data->win_name, buffer ))
         {
@@ -403,7 +408,7 @@ static BOOL CALLBACK find_locale_id_callback( HMODULE hModule, LPCWSTR type,
     }
 
     if (!GetLocaleInfoW( lcid, LOCALE_SISO639LANGNAME | LOCALE_NOUSEROVERRIDE,
-                         buffer, ARRAY_SIZE( buffer )))
+                         buffer, sizeof(buffer)/sizeof(WCHAR) ))
         return TRUE;
     if (strcmpiW( buffer, data->lang )) return TRUE;
     matches++;  /* language name matched */
@@ -411,7 +416,7 @@ static BOOL CALLBACK find_locale_id_callback( HMODULE hModule, LPCWSTR type,
     if (data->script)
     {
         if (GetLocaleInfoW( lcid, LOCALE_SSCRIPTS | LOCALE_NOUSEROVERRIDE,
-                            buffer, ARRAY_SIZE( buffer )))
+                            buffer, sizeof(buffer)/sizeof(WCHAR) ))
         {
             const WCHAR *p = buffer;
             unsigned int len = strlenW( data->script );
@@ -429,7 +434,7 @@ static BOOL CALLBACK find_locale_id_callback( HMODULE hModule, LPCWSTR type,
     if (data->country)
     {
         if (GetLocaleInfoW( lcid, LOCALE_SISO3166CTRYNAME|LOCALE_NOUSEROVERRIDE,
-                            buffer, ARRAY_SIZE( buffer )))
+                            buffer, sizeof(buffer)/sizeof(WCHAR) ))
         {
             if (strcmpiW( buffer, data->country )) goto done;
             matches++;  /* country name matched */
@@ -487,7 +492,7 @@ static void parse_locale_name( const WCHAR *str, struct locale_name *name )
     name->matches = 0;
     name->codepage = 0;
     name->win_name[0] = 0;
-    lstrcpynW( name->lang, str, ARRAY_SIZE( name->lang ));
+    lstrcpynW( name->lang, str, sizeof(name->lang)/sizeof(WCHAR) );
 
     if (!*name->lang)
     {
@@ -571,6 +576,7 @@ done:
                             find_locale_id_callback, (LPARAM)name );
 }
 #endif
+
 
 /***********************************************************************
  *           convert_default_lcid
@@ -1399,10 +1405,8 @@ LANGID WINAPI GetSystemDefaultUILanguage(void)
 LCID WINAPI LocaleNameToLCID( LPCWSTR name, DWORD flags )
 {
     struct locale_name locale_name;
-    static int once;
 
-    if (flags && !once++)
-        FIXME( "unsupported flags %x\n", flags );
+    if (flags) FIXME( "unsupported flags %x\n", flags );
 
     if (name == LOCALE_NAME_USER_DEFAULT)
         return GetUserDefaultLCID();
@@ -1432,12 +1436,12 @@ LCID WINAPI LocaleNameToLCID( LPCWSTR name, DWORD flags )
  */
 INT WINAPI LCIDToLocaleName( LCID lcid, LPWSTR name, INT count, DWORD flags )
 {
-    static int once;
-    if (flags && !once++) FIXME( "unsupported flags %x\n", flags );
+    if (flags) FIXME( "unsupported flags %x\n", flags );
 
     return GetLocaleInfoW( lcid, LOCALE_SNAME | LOCALE_NOUSEROVERRIDE, name, count );
 }
 #endif
+
 
 /******************************************************************************
  *		get_locale_registry_value
@@ -1663,7 +1667,6 @@ INT WINAPI GetLocaleInfoW( LCID lcid, LCTYPE lctype, LPWSTR buffer, INT len )
     LANGID lang_id;
     HRSRC hrsrc;
     HGLOBAL hmem;
-    LPCWSTR lpType, lpName;
     INT ret;
     UINT lcflags;
     const WCHAR *p;
@@ -1735,18 +1738,8 @@ INT WINAPI GetLocaleInfoW( LCID lcid, LCTYPE lctype, LPWSTR buffer, INT len )
     /* replace SUBLANG_NEUTRAL by SUBLANG_DEFAULT */
     if (SUBLANGID(lang_id) == SUBLANG_NEUTRAL) lang_id = get_default_sublang( lang_id );
 
-    if (lctype != LOCALE_FONTSIGNATURE)
-    {
-        lpType = MAKEINTRESOURCEW(RT_STRING);
-        lpName = MAKEINTRESOURCEW(ULongToPtr((lctype >> 4) + 1));
-    }
-    else
-    {
-        lpType = MAKEINTRESOURCEW(RT_RCDATA);
-        lpName = MAKEINTRESOURCEW(lctype);
-    }
-
-    if (!(hrsrc = FindResourceExW( kernel32_handle, lpType, lpName, lang_id )))
+    if (!(hrsrc = FindResourceExW( kernel32_handle, (LPWSTR)RT_STRING,
+                                   ULongToPtr((lctype >> 4) + 1), lang_id )))
     {
         SetLastError( ERROR_INVALID_FLAGS );  /* no such lctype */
         return 0;
@@ -1755,10 +1748,7 @@ INT WINAPI GetLocaleInfoW( LCID lcid, LCTYPE lctype, LPWSTR buffer, INT len )
         return 0;
 
     p = LockResource( hmem );
-    if (lctype != LOCALE_FONTSIGNATURE)
-    {
-        for (i = 0; i < (lctype & 0x0f); i++) p += *p + 1;
-    }
+    for (i = 0; i < (lctype & 0x0f); i++) p += *p + 1;
 
     if (lcflags & LOCALE_RETURN_NUMBER) ret = sizeof(UINT)/sizeof(WCHAR);
     else if (is_genitive_name_supported( lctype ) && *p)
@@ -1773,10 +1763,8 @@ INT WINAPI GetLocaleInfoW( LCID lcid, LCTYPE lctype, LPWSTR buffer, INT len )
         }
         else ret = i;
     }
-    else if (lctype != LOCALE_FONTSIGNATURE)
-        ret = *p + 1;
     else
-        ret = SizeofResource(kernel32_handle, hrsrc) / sizeof(WCHAR);
+        ret = (lctype == LOCALE_FONTSIGNATURE) ? *p : *p + 1;
 
     if (!buffer) return ret;
 
@@ -1808,8 +1796,7 @@ INT WINAPI GetLocaleInfoW( LCID lcid, LCTYPE lctype, LPWSTR buffer, INT len )
     }
     else
     {
-        if (lctype != LOCALE_FONTSIGNATURE) p++;
-        memcpy( buffer, p, ret * sizeof(WCHAR) );
+        memcpy( buffer, p + 1, ret * sizeof(WCHAR) );
         if (lctype != LOCALE_FONTSIGNATURE) buffer[ret-1] = 0;
 
         TRACE( "(lcid=0x%x,lctype=0x%x,%p,%d) returning %d %s\n",
@@ -3034,7 +3021,7 @@ static BOOL CALLBACK enum_locale_ex_proc( HMODULE module, LPCWSTR type,
     unsigned int flags;
 
     GetLocaleInfoW( MAKELCID( lang, SORT_DEFAULT ), LOCALE_SNAME | LOCALE_NOUSEROVERRIDE,
-                    buffer, ARRAY_SIZE( buffer ));
+                    buffer, sizeof(buffer) / sizeof(WCHAR) );
     if (!GetLocaleInfoW( MAKELCID( lang, SORT_DEFAULT ),
                          LOCALE_INEUTRAL | LOCALE_NOUSEROVERRIDE | LOCALE_RETURN_NUMBER,
                          (LPWSTR)&neutral, sizeof(neutral) / sizeof(WCHAR) ))
@@ -3097,6 +3084,7 @@ DWORD WINAPI VerLanguageNameW( DWORD wLang, LPWSTR szLang, DWORD nSize )
 {
     return GetLocaleInfoW( MAKELCID(wLang, SORT_DEFAULT), LOCALE_SENGLANGUAGE, szLang, nSize );
 }
+
 
 /******************************************************************************
  *           GetStringTypeW    (KERNEL32.@)
