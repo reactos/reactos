@@ -7,6 +7,7 @@
 
 /* INCLUDES *******************************************************************/
 
+#include "intsafe.h"
 #include "precomp.h"
 #include "wdm.h"
 
@@ -227,6 +228,9 @@ PortAddDevice(
 
     KeInitializeSpinLock(&DeviceExtension->PdoListLock);
     InitializeListHead(&DeviceExtension->PdoListHead);
+
+    KeInitializeSpinLock(&DeviceExtension->TimerListLock);
+    InitializeListHead(&DeviceExtension->TimerListHead);
 
     /* Attach the FDO to the device stack */
     Status = IoAttachDeviceToDeviceStackSafe(Fdo,
@@ -618,6 +622,9 @@ StorPortExtendedFunction(
     ...)
 {
     va_list va;
+    ULONG Status = STATUS_NOT_IMPLEMENTED;
+    PMINIPORT_DEVICE_EXTENSION MiniportExtension = NULL;
+    PFDO_DEVICE_EXTENSION DeviceExtension = NULL;
     ULONG AllocatePoolSize;
     ULONG PoolTag;
     PVOID* AllocatedPoolPointer;
@@ -630,39 +637,152 @@ StorPortExtendedFunction(
 
     switch (FunctionCode) {
         case ExtFunctionAllocatePool: {
+            /* Allocate a non paged pool for miniport */
             AllocatePoolSize = va_arg(va, ULONG);
             PoolTag = va_arg(va, ULONG);
             AllocatedPoolPointer = va_arg(va, PVOID*);
 
             if (AllocatedPoolPointer == NULL) {
-                return STOR_STATUS_INVALID_PARAMETER;
+                Status = STOR_STATUS_INVALID_PARAMETER;
+                break;
             }
 
             PoolPointer = ExAllocatePoolWithTag(NonPagedPool, AllocatePoolSize, PoolTag);
 
             if (PoolPointer == NULL) {
                 *AllocatedPoolPointer = NULL;
-                return STOR_STATUS_INSUFFICIENT_RESOURCES;
+                Status = STOR_STATUS_INSUFFICIENT_RESOURCES;
+                break;
             }
 
             *AllocatedPoolPointer = PoolPointer;
-            return STOR_STATUS_SUCCESS;
+            Status = STOR_STATUS_SUCCESS;
+            break;
         }
 
         case ExtFunctionFreePool: {
+            /* Free a pool allocated with ExtFunctionAllocatePool */
             PoolPointer = va_arg(va, PVOID);
 
             if (PoolPointer == NULL) {
-                return STOR_STATUS_INVALID_PARAMETER;
+                Status =  STOR_STATUS_INVALID_PARAMETER;
+                break;
             }
 
             ExFreePool(PoolPointer);
-            return STOR_STATUS_SUCCESS;
+            Status = STOR_STATUS_SUCCESS;
+            break;
+        }
+
+        case ExtFunctionInitializeTimer: {
+            /* Allocate a timer for an HBA */
+            PTIMER_ENTRY TimerEntry;
+            KLOCK_QUEUE_HANDLE LockHandle;
+            PVOID* TimerHandle = va_arg(va, PVOID*);
+
+            if (TimerHandle == NULL) {
+                Status = STOR_STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            TimerEntry = (PTIMER_ENTRY)ExAllocatePoolWithTag(NonPagedPool, 
+                                                             sizeof(TIMER_ENTRY),
+                                                             TAG_MINIPORT_DATA);
+            RtlZeroMemory(TimerEntry, sizeof(TIMER_ENTRY));
+
+            if (TimerEntry == NULL) {
+                Status = STOR_STATUS_INSUFFICIENT_RESOURCES;
+                break;
+            }
+
+            /* Initialize internal timer object; Win8.1+ EX_TIMER may be used too if we had it */
+            KeInitializeTimer(&TimerEntry->Timer);
+
+            MiniportExtension = CONTAINING_RECORD(HwDeviceExtension,
+                                                  MINIPORT_DEVICE_EXTENSION,
+                                                  HwDeviceExtension);
+            DeviceExtension = MiniportExtension->Miniport->DeviceExtension;
+
+            /* Insert into timer list and increment counter */
+            KeAcquireInStackQueuedSpinLock(&DeviceExtension->TimerListLock, &LockHandle);
+            InsertHeadList(&DeviceExtension->TimerListHead, &TimerEntry->ListEntry);
+            DeviceExtension->TimerCount++;
+            KeReleaseInStackQueuedSpinLock(&LockHandle);
+            
+            /* Return list entry of the timer as its handle */
+            *TimerHandle = (PVOID)&TimerEntry->ListEntry;
+            Status = STOR_STATUS_SUCCESS;
+
+            break;
+        }
+
+        case ExtFunctionRequestTimer: {
+            /* Schedule a single shot timer event */
+            PVOID TimerHandle = va_arg(va, PVOID);
+            PHW_TIMER_EX TimerCallback = va_arg(va, PHW_TIMER_EX);
+            PVOID CallbackContext = va_arg(va, PVOID);
+            ULONGLONG TimerValue = va_arg(va, ULONGLONG);
+            ULONGLONG TolerableDelay = va_arg(va, ULONGLONG);
+            PTIMER_ENTRY TimerEntry;
+            ULONG IsTimerAlreadySet;
+            LARGE_INTEGER TimerDueTime;
+            HRESULT MultiplyResult;
+
+            /* FIXME: I actually don't know how to deal with tolerable delay */
+            UNREFERENCED_PARAMETER(TolerableDelay);
+
+            if (HwDeviceExtension == NULL || TimerHandle == NULL || TimerCallback == NULL) {
+                Status = STOR_STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            TimerEntry = CONTAINING_RECORD(TimerHandle, TIMER_ENTRY, ListEntry);
+
+            /* Check if timer is already set. If so, don't try to reactivate timer. */
+            IsTimerAlreadySet = InterlockedCompareExchange(&TimerEntry->TimerAlreadySet, 1, 0);
+            if (IsTimerAlreadySet == 1) {
+                Status = STOR_STATUS_BUSY;
+                break;
+            }
+
+            /* If timeout is zero, cancel the timer */
+            if (TimerValue == 0ull) {
+                KeCancelTimer(&TimerEntry->Timer);
+                Status = STOR_STATUS_SUCCESS;
+                break;
+            }
+
+            /* This API uses microseconds, KTIMER operate on 100 nanoseconds, multiply by 10
+               to get the correct timer due time */
+            MultiplyResult = ULongLongMult(TimerValue, 10ull, (PULONGLONG)&TimerDueTime.QuadPart);
+            if (MultiplyResult != INTSAFE_SUCCESS) {
+                Status = STOR_STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            /* Initialize the DPC, context and set timer accordingly */
+            TimerEntry->HwDeviceExtension = HwDeviceExtension;
+            TimerEntry->TimerCallback = TimerCallback;
+            TimerEntry->Context = CallbackContext;
+            KeInitializeDpc(&TimerEntry->TimerCallbackDpc,
+                            TimerCallbackDpcRoutine,
+                            (PVOID)TimerEntry);
+            KeSetTimer(&TimerEntry->Timer,
+                       TimerDueTime,
+                       &TimerEntry->TimerCallbackDpc);
+            Status = STOR_STATUS_SUCCESS;
+            break;
+        }
+
+        default: {
+            UNIMPLEMENTED;
+            __debugbreak();
         }
     }
+
+    va_end(va);
     
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    return Status;
 }
 
 

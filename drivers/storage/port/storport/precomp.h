@@ -87,6 +87,17 @@ typedef struct _UNIT_DATA
     INQUIRYDATA InquiryData;
 } UNIT_DATA, *PUNIT_DATA;
 
+typedef struct _TIMER_ENTRY
+{
+    LIST_ENTRY ListEntry;
+    KTIMER Timer;
+    KDPC TimerCallbackDpc;
+    LONG TimerAlreadySet;
+    PVOID HwDeviceExtension; // FIXME: This is passed to callback but I don't know if this is best place for it
+    PHW_TIMER_EX TimerCallback;
+    PVOID Context;
+} TIMER_ENTRY, *PTIMER_ENTRY;
+
 typedef struct _FDO_DEVICE_EXTENSION
 {
     EXTENSION_TYPE ExtensionType;
@@ -115,6 +126,10 @@ typedef struct _FDO_DEVICE_EXTENSION
     KSPIN_LOCK PdoListLock;
     LIST_ENTRY PdoListHead;
     ULONG PdoCount;
+
+    KSPIN_LOCK TimerListLock;
+    LIST_ENTRY TimerListHead;
+    ULONG TimerCount;
 } FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 
@@ -228,6 +243,15 @@ AllocateAddressMapping(
     PVOID MappedAddress,
     ULONG NumberOfBytes,
     ULONG BusNumber);
+
+VOID
+NTAPI
+TimerCallbackDpcRoutine(
+    PKDPC Dpc,
+    PVOID DeferredContext,
+    PVOID SystemArgument1,
+    PVOID SystemArgument2
+);
 
 /* pdo.c */
 

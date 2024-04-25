@@ -7,6 +7,7 @@
 
 /* INCLUDES *******************************************************************/
 
+#include "ntdef.h"
 #include "precomp.h"
 
 #define NDEBUG
@@ -318,6 +319,25 @@ AllocateAddressMapping(
     Mapping->BusNumber = BusNumber;
 
     return STATUS_SUCCESS;
+}
+
+VOID
+NTAPI
+TimerCallbackDpcRoutine(
+    PKDPC Dpc,
+    PVOID DeferredContext,
+    PVOID SystemArgument1,
+    PVOID SystemArgument2
+)
+{
+    UNREFERENCED_PARAMETER(Dpc);
+    UNREFERENCED_PARAMETER(SystemArgument1);
+    UNREFERENCED_PARAMETER(SystemArgument2);
+
+    PTIMER_ENTRY TimerEntry = (PTIMER_ENTRY)DeferredContext;
+
+    TimerEntry->TimerCallback(TimerEntry->HwDeviceExtension,
+                              TimerEntry->Context);
 }
 
 /* EOF */
