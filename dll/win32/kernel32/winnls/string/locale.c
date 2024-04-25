@@ -1310,6 +1310,34 @@ BOOL WINAPI GetThreadPreferredUILanguages( DWORD flags, ULONG *count, WCHAR *buf
     FIXME( "%08x, %p, %p %p\n", flags, count, buf, size );
     return get_dummy_preferred_ui_language( flags, count, buf, size );
 }
+
+#if (WINVER >= 0x0600)
+/******************************************************************************
+ *             GetUserPreferredUILanguages (KERNEL32.@)
+ */
+BOOL WINAPI GetUserPreferredUILanguages( DWORD flags, ULONG *count, WCHAR *buffer, ULONG *size )
+{
+    TRACE( "%u %p %p %p\n", flags, count, buffer, size );
+
+    if (flags & ~(MUI_LANGUAGE_NAME | MUI_LANGUAGE_ID))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    if ((flags & MUI_LANGUAGE_NAME) && (flags & MUI_LANGUAGE_ID))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    if (*size && !buffer)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    return get_dummy_preferred_ui_language( flags, count, buffer, size );
+}
+#endif // (WINVER >= 0x0600)
 #endif // !__REACTOS__
 
 /***********************************************************************
@@ -6150,15 +6178,6 @@ INT WINAPI IdnToUnicode(DWORD dwFlags, LPCWSTR lpASCIICharStr, INT cchASCIIChar,
     return out;
 }
 
-
-/******************************************************************************
- *           GetUserPreferredUILanguages (KERNEL32.@)
- */
-BOOL WINAPI GetUserPreferredUILanguages(DWORD flags, PULONG numlangs, PZZWSTR langbuffer, PULONG bufferlen)
-{
-    FIXME( "stub: %u %p %p %p\n", flags, numlangs, langbuffer, bufferlen );
-    return FALSE;
-}
 
 /******************************************************************************
  *           GetFileMUIPath (KERNEL32.@)
