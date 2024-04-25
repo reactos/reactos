@@ -28,7 +28,8 @@
 
 typedef struct {
     WORD colnameid; // Column title text resource id passed to LoadString
-    WORD colstate;  // SHCOLSTATEF returned by IShellFolder2::GetDefaultColumnState (HACK: SHCOLSTATEF truncated to WORD to reduce .rdata section size)
+    WORD colstate;  // SHCOLSTATEF returned by IShellFolder2::GetDefaultColumnState
+                    // HACK: SHCOLSTATEF truncated to WORD to reduce .rdata section size
     WORD fmt;       // LVCFMT_*
     WORD cxChar;    // Column width hint
 } shvheader;
