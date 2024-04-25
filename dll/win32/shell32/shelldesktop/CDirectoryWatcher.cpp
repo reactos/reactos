@@ -71,7 +71,7 @@ static void NTAPI _RequestAllTerminationAPC(ULONG_PTR Parameter)
 CDirectoryWatcher::CDirectoryWatcher(LPCWSTR pszDirectoryPath, BOOL fSubTree)
     : m_fDead(FALSE)
     , m_fRecursive(fSubTree)
-    , m_dir_list(NULL, pszDirectoryPath, fSubTree)
+    , m_dir_list(pszDirectoryPath, fSubTree)
 {
     TRACE("CDirectoryWatcher::CDirectoryWatcher: %p, '%S'\n", this, pszDirectoryPath);
 
