@@ -42,6 +42,8 @@ class CDesktopFolder :
 
         HRESULT _GetSFFromPidl(LPCITEMIDLIST pidl, IShellFolder2** psf);
 
+        static HRESULT GetColumnDetails(UINT iColumn, SHELLDETAILS &sd);
+
         HRESULT _ParseDisplayNameByParent(
             HWND hwndOwner,
             LPBC pbc,

@@ -550,7 +550,7 @@ HRESULT WINAPI CControlPanelFolder::GetDefaultColumnState(UINT iColumn, DWORD *p
 
     if (!pcsFlags || iColumn >= CONTROLPANEL_COL_COUNT)
         return E_INVALIDARG;
-    *pcsFlags = ControlPanelSFHeader[iColumn].pcsFlags;
+    *pcsFlags = ControlPanelSFHeader[iColumn].colstate;
     return S_OK;
 }
 

@@ -1168,13 +1168,13 @@ HRESULT WINAPI CDrivesFolder::GetDefaultColumn (DWORD dwRes, ULONG *pSort, ULONG
     return S_OK;
 }
 
-HRESULT WINAPI CDrivesFolder::GetDefaultColumnState(UINT iColumn, DWORD * pcsFlags)
+HRESULT WINAPI CDrivesFolder::GetDefaultColumnState(UINT iColumn, SHCOLSTATEF * pcsFlags)
 {
     TRACE("(%p)\n", this);
 
     if (!pcsFlags || iColumn >= _countof(MyComputerSFHeader))
         return E_INVALIDARG;
-    *pcsFlags = MyComputerSFHeader[iColumn].pcsFlags;
+    *pcsFlags = MyComputerSFHeader[iColumn].colstate;
     return S_OK;
 }
 
