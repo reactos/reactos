@@ -1733,8 +1733,7 @@ INT WINAPI GetLocaleInfoW( LCID lcid, LCTYPE lctype, LPWSTR buffer, INT len )
     lang_id = LANGIDFROMLCID( lcid );
 
     /* replace SUBLANG_NEUTRAL by SUBLANG_DEFAULT */
-    if (SUBLANGID(lang_id) == SUBLANG_NEUTRAL)
-        lang_id = MAKELANGID(PRIMARYLANGID(lang_id), get_default_sublang( lang_id ));
+    if (SUBLANGID(lang_id) == SUBLANG_NEUTRAL) lang_id = get_default_sublang( lang_id );
 
     if (lctype != LOCALE_FONTSIGNATURE)
     {
@@ -2902,7 +2901,7 @@ LCID WINAPI ConvertDefaultLocale( LCID lcid )
         langid = LANGIDFROMLCID(lcid);
         if (SUBLANGID(langid) == SUBLANG_NEUTRAL)
         {
-          langid = MAKELANGID(PRIMARYLANGID(langid), get_default_sublang( langid ));
+          langid = get_default_sublang( langid );
           lcid = MAKELCID(langid, SORTIDFROMLCID(lcid));
         }
     }
@@ -4440,8 +4439,7 @@ static BOOL NLS_GetLanguageGroupName(LGRPID lgrpid, LPWSTR szName, ULONG nameSiz
     /* FIXME: Is it correct to use the system default langid? */
     langId = GetSystemDefaultLangID();
 
-    if (SUBLANGID(langId) == SUBLANG_NEUTRAL)
-        langId = MAKELANGID(PRIMARYLANGID(langId), get_default_sublang( langId ));
+    if (SUBLANGID(langId) == SUBLANG_NEUTRAL) langId = get_default_sublang( langId );
 
     hResource = FindResourceExW( kernel32_handle, (LPWSTR)RT_STRING, szResourceName, langId );
 
