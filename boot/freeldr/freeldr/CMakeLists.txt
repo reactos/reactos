@@ -58,12 +58,12 @@ list(APPEND FREELDR_BOOTLIB_SOURCE
 
 list(APPEND FREELDR_BOOTMGR_SOURCE
     include/freeldr.h
-    cmdline.c
     custom.c
     # linuxboot.c
     miscboot.c
     options.c
     oslist.c
+    settings.c
     ui/directui.c
     # ui/gui.c
     ui/minitui.c
