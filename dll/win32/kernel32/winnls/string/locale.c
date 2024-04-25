@@ -1778,17 +1778,31 @@ INT WINAPI GetLocaleInfoW( LCID lcid, LCTYPE lctype, LPWSTR buffer, INT len )
 }
 
 #if (WINVER >= 0x0600)
-WINBASEAPI
-int
-WINAPI
-GetLocaleInfoEx(
-  _In_opt_ LPCWSTR lpLocaleName,
-  _In_ LCTYPE LCType,
-  _Out_writes_opt_(cchData) LPWSTR lpLCData,
-  _In_ int cchData)
+/******************************************************************************
+ *           GetLocaleInfoEx (KERNEL32.@)
+ */
+INT WINAPI GetLocaleInfoEx(LPCWSTR locale, LCTYPE info, LPWSTR buffer, INT len)
 {
-    TRACE( "GetLocaleInfoEx not implemented (lcid=%s,lctype=0x%x,%s,%d)\n", debugstr_w(lpLocaleName), LCType, debugstr_w(lpLCData), cchData );
-    return 0;
+    LCID lcid = LocaleNameToLCID(locale, 0);
+
+    TRACE("%s, lcid=0x%x, 0x%x\n", debugstr_w(locale), lcid, info);
+
+    if (!lcid) return 0;
+
+    /* special handling for neutral locale names */
+    if (info == LOCALE_SNAME && strlenW(locale) == 2)
+    {
+        if (len && len < 3)
+        {
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            return 0;
+        }
+
+        if (len) strcpyW(buffer, locale);
+        return 3;
+    }
+
+    return GetLocaleInfoW(lcid, info, buffer, len);
 }
 
 BOOL
