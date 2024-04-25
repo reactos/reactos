@@ -354,6 +354,7 @@ static UINT find_charset( const WCHAR *name )
     if (entry) return entry->codepage;
     return 0;
 }
+#endif // (WINVER >= 0x0600)
 
 static LANGID get_default_sublang( LANGID lang )
 {
@@ -373,6 +374,7 @@ static LANGID get_default_sublang( LANGID lang )
     return lang;
 }
 
+#if (WINVER >= 0x0600)
 /***********************************************************************
  *           find_locale_id_callback
  */
@@ -1720,7 +1722,7 @@ INT WINAPI GetLocaleInfoW( LCID lcid, LCTYPE lctype, LPWSTR buffer, INT len )
 
     /* replace SUBLANG_NEUTRAL by SUBLANG_DEFAULT */
     if (SUBLANGID(lang_id) == SUBLANG_NEUTRAL)
-        lang_id = MAKELANGID(PRIMARYLANGID(lang_id), SUBLANG_DEFAULT);
+        lang_id = MAKELANGID(PRIMARYLANGID(lang_id), get_default_sublang( lang_id ));
 
     if (lctype != LOCALE_FONTSIGNATURE)
     {
@@ -2868,7 +2870,7 @@ LCID WINAPI ConvertDefaultLocale( LCID lcid )
         langid = LANGIDFROMLCID(lcid);
         if (SUBLANGID(langid) == SUBLANG_NEUTRAL)
         {
-          langid = MAKELANGID(PRIMARYLANGID(langid), SUBLANG_DEFAULT);
+          langid = MAKELANGID(PRIMARYLANGID(langid), get_default_sublang( langid ));
           lcid = MAKELCID(langid, SORTIDFROMLCID(lcid));
         }
     }
@@ -4407,7 +4409,7 @@ static BOOL NLS_GetLanguageGroupName(LGRPID lgrpid, LPWSTR szName, ULONG nameSiz
     langId = GetSystemDefaultLangID();
 
     if (SUBLANGID(langId) == SUBLANG_NEUTRAL)
-        langId = MAKELANGID( PRIMARYLANGID(langId), SUBLANG_DEFAULT );
+        langId = MAKELANGID(PRIMARYLANGID(langId), get_default_sublang( langId ));
 
     hResource = FindResourceExW( kernel32_handle, (LPWSTR)RT_STRING, szResourceName, langId );
 
