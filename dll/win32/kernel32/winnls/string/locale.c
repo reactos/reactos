@@ -1831,16 +1831,22 @@ INT WINAPI GetLocaleInfoEx(LPCWSTR locale, LCTYPE info, LPWSTR buffer, INT len)
     if (!lcid) return 0;
 
     /* special handling for neutral locale names */
-    if (info == LOCALE_SNAME && locale && strlenW(locale) == 2)
+    if (locale && strlenW(locale) == 2)
     {
-        if (len && len < 3)
+        switch (info)
         {
-            SetLastError(ERROR_INSUFFICIENT_BUFFER);
-            return 0;
+        case LOCALE_SNAME:
+            if (len && len < 3)
+            {
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                return 0;
+            }
+            if (len) strcpyW(buffer, locale);
+            return 3;
+        case LOCALE_SPARENT:
+            if (len) buffer[0] = 0;
+            return 1;
         }
-
-        if (len) strcpyW(buffer, locale);
-        return 3;
     }
 
     return GetLocaleInfoW(lcid, info, buffer, len);
