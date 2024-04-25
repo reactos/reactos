@@ -1790,7 +1790,7 @@ INT WINAPI GetLocaleInfoEx(LPCWSTR locale, LCTYPE info, LPWSTR buffer, INT len)
     if (!lcid) return 0;
 
     /* special handling for neutral locale names */
-    if (info == LOCALE_SNAME && strlenW(locale) == 2)
+    if (info == LOCALE_SNAME && locale && strlenW(locale) == 2)
     {
         if (len && len < 3)
         {
