@@ -20,6 +20,10 @@
 
 #include "ntdll_test.h"
 
+#ifdef __REACTOS__
+typedef void (CALLBACK *PTP_IO_CALLBACK)(PTP_CALLBACK_INSTANCE,void*,void*,IO_STATUS_BLOCK*,PTP_IO);
+#endif
+
 static NTSTATUS (WINAPI *pTpAllocCleanupGroup)(TP_CLEANUP_GROUP **);
 static NTSTATUS (WINAPI *pTpAllocIoCompletion)(TP_IO **,HANDLE,PTP_IO_CALLBACK,void *,TP_CALLBACK_ENVIRON *);
 static NTSTATUS (WINAPI *pTpAllocPool)(TP_POOL **,PVOID);
@@ -580,7 +584,9 @@ static void test_tp_simple(void)
     IMAGE_NT_HEADERS *nt = RtlImageNtHeader( NtCurrentTeb()->Peb->ImageBaseAddress );
     TP_POOL_STACK_INFORMATION stack_info;
     TP_CALLBACK_ENVIRON environment;
+#ifndef __REACTOS__
     TP_CALLBACK_ENVIRON_V3 environment3;
+#endif
     TP_CLEANUP_GROUP *group;
     HANDLE semaphore;
     NTSTATUS status;
@@ -616,6 +622,7 @@ static void test_tp_simple(void)
     result = WaitForSingleObject(semaphore, 1000);
     ok(result == WAIT_OBJECT_0, "WaitForSingleObject returned %lu\n", result);
 
+#ifndef __REACTOS__ // Windows 7
     /* test with environment version 3 */
     memset(&environment3, 0, sizeof(environment3));
     environment3.Version = 3;
@@ -635,6 +642,7 @@ static void test_tp_simple(void)
     status = pTpSimpleTryPost(simple_cb, semaphore, (TP_CALLBACK_ENVIRON *)&environment3);
     ok(status == STATUS_INVALID_PARAMETER || broken(!status) /* Vista does not support priorities */,
             "TpSimpleTryPost failed with status %lx\n", status);
+#endif
 
     /* test with invalid version number */
     memset(&environment, 0, sizeof(environment));
@@ -2031,7 +2039,11 @@ static DWORD WINAPI io_wait_thread(void *arg)
 static void test_tp_io(void)
 {
     TP_CALLBACK_ENVIRON environment = {.Version = 1};
+#ifdef __REACTOS__
+    OVERLAPPED ovl = {0}, ovl2 = {0};
+#else
     OVERLAPPED ovl = {}, ovl2 = {};
+#endif
     HANDLE client, server, thread;
     struct io_cb_ctx userdata;
     char in[1], in2[1];
@@ -2251,7 +2263,11 @@ static void CALLBACK kernel32_io_cb(TP_CALLBACK_INSTANCE *instance, void *userda
 static void test_kernel32_tp_io(void)
 {
     TP_CALLBACK_ENVIRON environment = {.Version = 1};
+#ifdef __REACTOS__
+    OVERLAPPED ovl = {0}, ovl2 = {0};
+#else
     OVERLAPPED ovl = {}, ovl2 = {};
+#endif
     HANDLE client, server, thread;
     struct io_cb_ctx userdata;
     char in[1], in2[1];
