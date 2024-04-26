@@ -512,7 +512,11 @@ NTSTATUS
 NTAPI
 RtlSleepConditionVariableSRW(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable,
                              IN OUT PRTL_SRWLOCK SRWLock,
+<<<<<<< HEAD
                              IN PLARGE_INTEGER TimeOut OPTIONAL,
+=======
+                             IN const PLARGE_INTEGER TimeOut OPTIONAL,
+>>>>>>> 7b33071b78c ([KERNEL32_VISTA][SDK] Import Threadpool.c from wine-9.7)
                              IN ULONG Flags)
 {
     return InternalSleep(ConditionVariable,
