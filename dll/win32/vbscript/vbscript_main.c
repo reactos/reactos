@@ -34,6 +34,7 @@ WINE_DECLARE_DEBUG_CHANNEL(heap);
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
 static HINSTANCE vbscript_hinstance;
+static ITypeInfo *dispatch_typeinfo;
 
 BSTR get_vbscript_string(int id)
 {
@@ -180,6 +181,29 @@ heap_pool_t *heap_pool_mark(heap_pool_t *heap)
     return heap;
 }
 
+HRESULT get_dispatch_typeinfo(ITypeInfo **out)
+{
+    ITypeInfo *typeinfo;
+    ITypeLib *typelib;
+    HRESULT hr;
+
+    if (!dispatch_typeinfo)
+    {
+        hr = LoadRegTypeLib(&IID_StdOle, STDOLE_MAJORVERNUM, STDOLE_MINORVERNUM, STDOLE_LCID, &typelib);
+        if (FAILED(hr)) return hr;
+
+        hr = ITypeLib_GetTypeInfoOfGuid(typelib, &IID_IDispatch, &typeinfo);
+        ITypeLib_Release(typelib);
+        if (FAILED(hr)) return hr;
+
+        if (InterlockedCompareExchangePointer((void**)&dispatch_typeinfo, typeinfo, NULL))
+            ITypeInfo_Release(typeinfo);
+    }
+
+    *out = dispatch_typeinfo;
+    return S_OK;
+}
+
 static HRESULT WINAPI ClassFactory_QueryInterface(IClassFactory *iface, REFIID riid, void **ppv)
 {
     *ppv = NULL;
@@ -256,6 +280,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
         break;
     case DLL_PROCESS_DETACH:
         if (lpv) break;
+        if (dispatch_typeinfo) ITypeInfo_Release(dispatch_typeinfo);
         release_regexp_typelib();
     }
 

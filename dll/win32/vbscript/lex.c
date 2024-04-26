@@ -32,125 +32,70 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(vbscript);
 
-static const WCHAR andW[] = {'a','n','d',0};
-static const WCHAR byrefW[] = {'b','y','r','e','f',0};
-static const WCHAR byvalW[] = {'b','y','v','a','l',0};
-static const WCHAR callW[] = {'c','a','l','l',0};
-static const WCHAR caseW[] = {'c','a','s','e',0};
-static const WCHAR classW[] = {'c','l','a','s','s',0};
-static const WCHAR constW[] = {'c','o','n','s','t',0};
-static const WCHAR defaultW[] = {'d','e','f','a','u','l','t',0};
-static const WCHAR dimW[] = {'d','i','m',0};
-static const WCHAR doW[] = {'d','o',0};
-static const WCHAR eachW[] = {'e','a','c','h',0};
-static const WCHAR elseW[] = {'e','l','s','e',0};
-static const WCHAR elseifW[] = {'e','l','s','e','i','f',0};
-static const WCHAR emptyW[] = {'e','m','p','t','y',0};
-static const WCHAR endW[] = {'e','n','d',0};
-static const WCHAR eqvW[] = {'e','q','v',0};
-static const WCHAR errorW[] = {'e','r','r','o','r',0};
-static const WCHAR exitW[] = {'e','x','i','t',0};
-static const WCHAR explicitW[] = {'e','x','p','l','i','c','i','t',0};
-static const WCHAR falseW[] = {'f','a','l','s','e',0};
-static const WCHAR forW[] = {'f','o','r',0};
-static const WCHAR functionW[] = {'f','u','n','c','t','i','o','n',0};
-static const WCHAR getW[] = {'g','e','t',0};
-static const WCHAR gotoW[] = {'g','o','t','o',0};
-static const WCHAR ifW[] = {'i','f',0};
-static const WCHAR impW[] = {'i','m','p',0};
-static const WCHAR inW[] = {'i','n',0};
-static const WCHAR isW[] = {'i','s',0};
-static const WCHAR letW[] = {'l','e','t',0};
-static const WCHAR loopW[] = {'l','o','o','p',0};
-static const WCHAR meW[] = {'m','e',0};
-static const WCHAR modW[] = {'m','o','d',0};
-static const WCHAR newW[] = {'n','e','w',0};
-static const WCHAR nextW[] = {'n','e','x','t',0};
-static const WCHAR notW[] = {'n','o','t',0};
-static const WCHAR nothingW[] = {'n','o','t','h','i','n','g',0};
-static const WCHAR nullW[] = {'n','u','l','l',0};
-static const WCHAR onW[] = {'o','n',0};
-static const WCHAR optionW[] = {'o','p','t','i','o','n',0};
-static const WCHAR orW[] = {'o','r',0};
-static const WCHAR privateW[] = {'p','r','i','v','a','t','e',0};
-static const WCHAR propertyW[] = {'p','r','o','p','e','r','t','y',0};
-static const WCHAR publicW[] = {'p','u','b','l','i','c',0};
-static const WCHAR remW[] = {'r','e','m',0};
-static const WCHAR resumeW[] = {'r','e','s','u','m','e',0};
-static const WCHAR selectW[] = {'s','e','l','e','c','t',0};
-static const WCHAR setW[] = {'s','e','t',0};
-static const WCHAR stepW[] = {'s','t','e','p',0};
-static const WCHAR stopW[] = {'s','t','o','p',0};
-static const WCHAR subW[] = {'s','u','b',0};
-static const WCHAR thenW[] = {'t','h','e','n',0};
-static const WCHAR toW[] = {'t','o',0};
-static const WCHAR trueW[] = {'t','r','u','e',0};
-static const WCHAR untilW[] = {'u','n','t','i','l',0};
-static const WCHAR wendW[] = {'w','e','n','d',0};
-static const WCHAR whileW[] = {'w','h','i','l','e',0};
-static const WCHAR xorW[] = {'x','o','r',0};
-
 static const struct {
     const WCHAR *word;
     int token;
 } keywords[] = {
-    {andW,       tAND},
-    {byrefW,     tBYREF},
-    {byvalW,     tBYVAL},
-    {callW,      tCALL},
-    {caseW,      tCASE},
-    {classW,     tCLASS},
-    {constW,     tCONST},
-    {defaultW,   tDEFAULT},
-    {dimW,       tDIM},
-    {doW,        tDO},
-    {eachW,      tEACH},
-    {elseW,      tELSE},
-    {elseifW,    tELSEIF},
-    {emptyW,     tEMPTY},
-    {endW,       tEND},
-    {eqvW,       tEQV},
-    {errorW,     tERROR},
-    {exitW,      tEXIT},
-    {explicitW,  tEXPLICIT},
-    {falseW,     tFALSE},
-    {forW,       tFOR},
-    {functionW,  tFUNCTION},
-    {getW,       tGET},
-    {gotoW,      tGOTO},
-    {ifW,        tIF},
-    {impW,       tIMP},
-    {inW,        tIN},
-    {isW,        tIS},
-    {letW,       tLET},
-    {loopW,      tLOOP},
-    {meW,        tME},
-    {modW,       tMOD},
-    {newW,       tNEW},
-    {nextW,      tNEXT},
-    {notW,       tNOT},
-    {nothingW,   tNOTHING},
-    {nullW,      tNULL},
-    {onW,        tON},
-    {optionW,    tOPTION},
-    {orW,        tOR},
-    {privateW,   tPRIVATE},
-    {propertyW,  tPROPERTY},
-    {publicW,    tPUBLIC},
-    {remW,       tREM},
-    {resumeW,    tRESUME},
-    {selectW,    tSELECT},
-    {setW,       tSET},
-    {stepW,      tSTEP},
-    {stopW,      tSTOP},
-    {subW,       tSUB},
-    {thenW,      tTHEN},
-    {toW,        tTO},
-    {trueW,      tTRUE},
-    {untilW,     tUNTIL},
-    {wendW,      tWEND},
-    {whileW,     tWHILE},
-    {xorW,       tXOR}
+    {L"and",       tAND},
+    {L"byref",     tBYREF},
+    {L"byval",     tBYVAL},
+    {L"call",      tCALL},
+    {L"case",      tCASE},
+    {L"class",     tCLASS},
+    {L"const",     tCONST},
+    {L"default",   tDEFAULT},
+    {L"dim",       tDIM},
+    {L"do",        tDO},
+    {L"each",      tEACH},
+    {L"else",      tELSE},
+    {L"elseif",    tELSEIF},
+    {L"empty",     tEMPTY},
+    {L"end",       tEND},
+    {L"eqv",       tEQV},
+    {L"error",     tERROR},
+    {L"exit",      tEXIT},
+    {L"explicit",  tEXPLICIT},
+    {L"false",     tFALSE},
+    {L"for",       tFOR},
+    {L"function",  tFUNCTION},
+    {L"get",       tGET},
+    {L"goto",      tGOTO},
+    {L"if",        tIF},
+    {L"imp",       tIMP},
+    {L"in",        tIN},
+    {L"is",        tIS},
+    {L"let",       tLET},
+    {L"loop",      tLOOP},
+    {L"me",        tME},
+    {L"mod",       tMOD},
+    {L"new",       tNEW},
+    {L"next",      tNEXT},
+    {L"not",       tNOT},
+    {L"nothing",   tNOTHING},
+    {L"null",      tNULL},
+    {L"on",        tON},
+    {L"option",    tOPTION},
+    {L"or",        tOR},
+    {L"preserve",  tPRESERVE},
+    {L"private",   tPRIVATE},
+    {L"property",  tPROPERTY},
+    {L"public",    tPUBLIC},
+    {L"redim",     tREDIM},
+    {L"rem",       tREM},
+    {L"resume",    tRESUME},
+    {L"select",    tSELECT},
+    {L"set",       tSET},
+    {L"step",      tSTEP},
+    {L"stop",      tSTOP},
+    {L"sub",       tSUB},
+    {L"then",      tTHEN},
+    {L"to",        tTO},
+    {L"true",      tTRUE},
+    {L"until",     tUNTIL},
+    {L"wend",      tWEND},
+    {L"while",     tWHILE},
+    {L"with",      tWITH},
+    {L"xor",       tXOR}
 };
 
 static inline BOOL is_identifier_char(WCHAR c)
@@ -273,7 +218,7 @@ static int parse_numeric_literal(parser_ctx_t *ctx, void **ret)
     if(*ctx->ptr == '0' && !('0' <= ctx->ptr[1] && ctx->ptr[1] <= '9') && ctx->ptr[1] != '.')
         return *ctx->ptr++;
 
-    while(ctx->ptr < ctx->end && iswdigit(*ctx->ptr)) {
+    while(ctx->ptr < ctx->end && is_digit(*ctx->ptr)) {
         hlp = d*10 + *(ctx->ptr++) - '0';
         if(d>MAXLONGLONG/10 || hlp<0) {
             exp++;
@@ -282,7 +227,7 @@ static int parse_numeric_literal(parser_ctx_t *ctx, void **ret)
         else
             d = hlp;
     }
-    while(ctx->ptr < ctx->end && iswdigit(*ctx->ptr)) {
+    while(ctx->ptr < ctx->end && is_digit(*ctx->ptr)) {
         exp++;
         ctx->ptr++;
     }
@@ -291,7 +236,7 @@ static int parse_numeric_literal(parser_ctx_t *ctx, void **ret)
         use_int = FALSE;
         ctx->ptr++;
 
-        while(ctx->ptr < ctx->end && iswdigit(*ctx->ptr)) {
+        while(ctx->ptr < ctx->end && is_digit(*ctx->ptr)) {
             hlp = d*10 + *(ctx->ptr++) - '0';
             if(d>MAXLONGLONG/10 || hlp<0)
                 break;
@@ -299,7 +244,7 @@ static int parse_numeric_literal(parser_ctx_t *ctx, void **ret)
             d = hlp;
             exp--;
         }
-        while(ctx->ptr < ctx->end && iswdigit(*ctx->ptr))
+        while(ctx->ptr < ctx->end && is_digit(*ctx->ptr))
             ctx->ptr++;
     }
 
@@ -314,7 +259,7 @@ static int parse_numeric_literal(parser_ctx_t *ctx, void **ret)
             ctx->ptr++;
         }
 
-        if(!iswdigit(*ctx->ptr)) {
+        if(!is_digit(*ctx->ptr)) {
             FIXME("Invalid numeric literal\n");
             return 0;
         }
@@ -325,7 +270,7 @@ static int parse_numeric_literal(parser_ctx_t *ctx, void **ret)
             e = e*10 + *(ctx->ptr++) - '0';
             if(sign == -1 && -e+exp < -(INT_MAX/100)) {
                 /* The literal will be rounded to 0 anyway. */
-                while(iswdigit(*ctx->ptr))
+                while(is_digit(*ctx->ptr))
                     ctx->ptr++;
                 *(double*)ret = 0;
                 return tDouble;
@@ -335,7 +280,7 @@ static int parse_numeric_literal(parser_ctx_t *ctx, void **ret)
                 FIXME("Invalid numeric literal\n");
                 return 0;
             }
-        } while(iswdigit(*ctx->ptr));
+        } while(is_digit(*ctx->ptr));
 
         exp += sign*e;
     }
@@ -369,7 +314,7 @@ static int hex_to_int(WCHAR c)
 static int parse_hex_literal(parser_ctx_t *ctx, LONG *ret)
 {
     const WCHAR *begin = ctx->ptr;
-    LONG l = 0, d;
+    unsigned l = 0, d;
 
     while((d = hex_to_int(*++ctx->ptr)) != -1)
         l = l*16 + d;
@@ -379,10 +324,12 @@ static int parse_hex_literal(parser_ctx_t *ctx, LONG *ret)
         return 0;
     }
 
-    if(*ctx->ptr == '&')
+    if(*ctx->ptr == '&') {
         ctx->ptr++;
-
-    *ret = l;
+        *ret = l;
+    }else {
+        *ret = l == (UINT16)l ? (INT16)l : l;
+    }
     return tInt;
 }
 
@@ -403,13 +350,14 @@ static int comment_line(parser_ctx_t *ctx)
     return tNL;
 }
 
-static int parse_next_token(void *lval, parser_ctx_t *ctx)
+static int parse_next_token(void *lval, unsigned *loc, parser_ctx_t *ctx)
 {
     WCHAR c;
 
     skip_spaces(ctx);
+    *loc = ctx->ptr - ctx->code;
     if(ctx->ptr == ctx->end)
-        return ctx->last_token == tNL ? tEOF : tNL;
+        return ctx->last_token == tNL ? 0 : tNL;
 
     c = *ctx->ptr;
 
@@ -417,7 +365,9 @@ static int parse_next_token(void *lval, parser_ctx_t *ctx)
         return parse_numeric_literal(ctx, lval);
 
     if(iswalpha(c)) {
-        int ret = check_keywords(ctx, lval);
+        int ret = 0;
+        if(ctx->last_token != '.' && ctx->last_token != tDOT)
+            ret = check_keywords(ctx, lval);
         if(!ret)
             return parse_identifier(ctx, lval);
         if(ret != tREM)
@@ -441,9 +391,17 @@ static int parse_next_token(void *lval, parser_ctx_t *ctx)
     case '/':
     case '^':
     case '\\':
-    case '.':
     case '_':
         return *ctx->ptr++;
+    case '.':
+        /*
+         * We need to distinguish between '.' used as part of a member expression and
+         * a beginning of a dot expression (a member expression accessing with statement
+         * expression).
+         */
+        c = ctx->ptr > ctx->code ? ctx->ptr[-1] : '\n';
+        ctx->ptr++;
+        return is_identifier_char(c) || c == ')' ? '.' : tDOT;
     case '-':
         if(ctx->is_html && ctx->ptr[1] == '-' && ctx->ptr[2] == '>')
             return comment_line(ctx);
@@ -460,7 +418,13 @@ static int parse_next_token(void *lval, parser_ctx_t *ctx)
             ctx->ptr++;
             return tEMPTYBRACKETS;
         }
-        return '(';
+        /*
+         * Parser can't predict if bracket is part of argument expression or an argument
+         * in call expression. We predict it here instead.
+         */
+        if(ctx->last_token == tIdentifier || ctx->last_token == ')')
+            return '(';
+        return tEXPRLBRACKET;
     case '"':
         return parse_string_literal(ctx, lval);
     case '&':
@@ -493,7 +457,7 @@ static int parse_next_token(void *lval, parser_ctx_t *ctx)
     return 0;
 }
 
-int parser_lex(void *lval, parser_ctx_t *ctx)
+int parser_lex(void *lval, unsigned *loc, parser_ctx_t *ctx)
 {
     int ret;
 
@@ -504,7 +468,7 @@ int parser_lex(void *lval, parser_ctx_t *ctx)
     }
 
     while(1) {
-        ret = parse_next_token(lval, ctx);
+        ret = parse_next_token(lval, loc, ctx);
         if(ret == '_') {
             skip_spaces(ctx);
             if(*ctx->ptr != '\n' && *ctx->ptr != '\r') {
