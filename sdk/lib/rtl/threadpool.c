@@ -48,6 +48,8 @@ typedef void (CALLBACK *PTP_IO_CALLBACK)(PTP_CALLBACK_INSTANCE,void*,void*,IO_ST
 NTSYSAPI NTSTATUS  WINAPI TpSimpleTryPost(PTP_SIMPLE_CALLBACK,PVOID,TP_CALLBACK_ENVIRON *);
 
 // Redefines
+#define PRTL_WORK_ITEM_ROUTINE WORKERCALLBACKFUNC
+
 #define CRITICAL_SECTION RTL_CRITICAL_SECTION
 #define GetProcessHeap() RtlGetProcessHeap()
 #define GetCurrentProcess()   NtCurrentProcess()
@@ -477,11 +479,7 @@ static void CALLBACK process_rtl_work_item( TP_CALLBACK_INSTANCE *instance, void
  *|WT_EXECUTELONGFUNCTION - Hints that the execution can take a long time.
  *|WT_TRANSFER_IMPERSONATION - Executes the function with the current access token.
  */
-#ifdef __REACTOS__
-NTSTATUS WINAPI RtlQueueWorkItem( WORKERCALLBACKFUNC function, PVOID context, ULONG flags )
-#else
 NTSTATUS WINAPI RtlQueueWorkItem( PRTL_WORK_ITEM_ROUTINE function, PVOID context, ULONG flags )
-#endif
 {
     TP_CALLBACK_ENVIRON environment;
     struct rtl_work_item *item;
@@ -499,7 +497,7 @@ NTSTATUS WINAPI RtlQueueWorkItem( PRTL_WORK_ITEM_ROUTINE function, PVOID context
     environment.u.s.Persistent   = (flags & WT_EXECUTEINPERSISTENTTHREAD) != 0;
 
 #ifdef __REACTOS__
-    item->function = (PRTL_WORK_ITEM_ROUTINE)function;
+    item->function = function;
 #else
     item->function = function;
 #endif

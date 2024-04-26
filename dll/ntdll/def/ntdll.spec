@@ -1312,7 +1312,7 @@
 @ stub -version=0x600+ ShipAssertMsgW
 @ stub -version=0x600+ TpAllocAlpcCompletion
 @ stdcall -version=0x600+ TpAllocCleanupGroup(ptr)
-@ stub -version=0x600+ TpAllocIoCompletion
+@ stdcall -version=0x600+ TpAllocIoCompletion(ptr ptr ptr ptr ptr)
 @ stdcall -version=0x600+ TpAllocPool(ptr ptr)
 @ stdcall -version=0x600+ TpAllocTimer(ptr ptr ptr ptr)
 @ stdcall -version=0x600+ TpAllocWait(ptr ptr ptr ptr)
@@ -1323,7 +1323,7 @@
 @ stdcall -version=0x600+ TpCallbackReleaseSemaphoreOnCompletion(ptr ptr long)
 @ stdcall -version=0x600+ TpCallbackSetEventOnCompletion(ptr ptr)
 @ stdcall -version=0x600+ TpCallbackUnloadDllOnCompletion(ptr ptr)
-@ stub -version=0x600+ TpCancelAsyncIoOperation
+@ stdcall -version=0x600+ TpCancelAsyncIoOperation(ptr)
 @ stub -version=0x600+ TpCaptureCaller
 @ stub -version=0x600+ TpCheckTerminateWorker
 @ stub -version=0x600+ TpDbgDumpHeapUsage
@@ -1334,7 +1334,7 @@
 @ stub -version=0x600+ TpReleaseAlpcCompletion
 @ stdcall -version=0x600+ TpReleaseCleanupGroup(ptr)
 @ stdcall -version=0x600+ TpReleaseCleanupGroupMembers(ptr long ptr)
-@ stub -version=0x600+ TpReleaseIoCompletion
+@ stdcall -version=0x600+ TpReleaseIoCompletion(ptr)
 @ stdcall -version=0x600+ TpReleasePool(ptr)
 @ stdcall -version=0x600+ TpReleaseTimer(ptr)
 @ stdcall -version=0x600+ TpReleaseWait(ptr)
@@ -1344,9 +1344,9 @@
 @ stdcall -version=0x600+ TpSetTimer(ptr ptr long long)
 @ stdcall -version=0x600+ TpSetWait(ptr long ptr)
 @ stdcall -version=0x600+ TpSimpleTryPost(ptr ptr ptr)
-@ stub -version=0x600+ TpStartAsyncIoOperation
+@ stdcall -version=0x600+ TpStartAsyncIoOperation(ptr)
 @ stub -version=0x600+ TpWaitForAlpcCompletion
-@ stub -version=0x600+ TpWaitForIoCompletion
+@ stdcall -version=0x600+ TpWaitForIoCompletion(ptr long)
 @ stdcall -version=0x600+ TpWaitForTimer(ptr long)
 @ stdcall -version=0x600+ TpWaitForWait(ptr long)
 @ stdcall -version=0x600+ TpWaitForWork(ptr long)
