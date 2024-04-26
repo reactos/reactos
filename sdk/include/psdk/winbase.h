@@ -4123,6 +4123,7 @@ InitOnceExecuteOnce(
     _Inout_opt_ PVOID Parameter,
     _Outptr_opt_result_maybenull_ LPVOID *Context);
 
+typedef VOID (NTAPI *PTP_WIN32_IO_CALLBACK)(PTP_CALLBACK_INSTANCE,PVOID,PVOID,ULONG,ULONG_PTR,PTP_IO);
 
 #if defined(_SLIST_HEADER_) && !defined(_NTOS_) && !defined(_NTOSP_)
 
