@@ -4748,24 +4748,29 @@ RtlSleepConditionVariableSRW(
 //
 // Synchronization functions
 //
+NTSYSAPI
 VOID
 NTAPI
 RtlInitializeConditionVariable(OUT PRTL_CONDITION_VARIABLE ConditionVariable);
 
+NTSYSAPI
 VOID
 NTAPI
 RtlWakeConditionVariable(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable);
 
+NTSYSAPI
 VOID
 NTAPI
 RtlWakeAllConditionVariable(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable);
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 RtlSleepConditionVariableCS(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable,
                             IN OUT PRTL_CRITICAL_SECTION CriticalSection,
                             IN const PLARGE_INTEGER TimeOut OPTIONAL);
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 RtlSleepConditionVariableSRW(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable,
