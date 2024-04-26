@@ -31,7 +31,6 @@ START_TEST(NtFilterToken)
     NTSTATUS Status;
     HANDLE FilteredToken, Token;
     TOKEN_PRIVILEGES Priv;
-    LUID PrivLuid;
     ULONG Size;
     PTOKEN_STATISTICS TokenStats;
 
@@ -107,8 +106,7 @@ START_TEST(NtFilterToken)
     /* Fill in a privilege to delete */
     Priv.PrivilegeCount = 1;
 
-    ConvertPrivLongToLuid(SE_BACKUP_PRIVILEGE, &PrivLuid);
-    Priv.Privileges[0].Luid = PrivLuid;
+    Priv.Privileges[0].Luid = RtlConvertUlongToLuid(SE_BACKUP_PRIVILEGE);
     Priv.Privileges[0].Attributes = 0;
 
     /* Delete the privileges */
