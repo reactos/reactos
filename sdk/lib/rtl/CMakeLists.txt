@@ -21,6 +21,8 @@ if(MSVC)
     set_source_files_properties(${RTL_WINE_SOURCE} PROPERTIES COMPILE_FLAGS /wd4267)
 endif()
 
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
+
 list(APPEND SOURCE
     ${RTL_WINE_SOURCE}
     access.c
@@ -82,6 +84,7 @@ list(APPEND SOURCE
     vectoreh.c
     version.c
     workitem.c
+    threadpool.c
     rtl.h)
 
 if(ARCH STREQUAL "i386")
@@ -121,12 +124,12 @@ add_library(rtl ${SOURCE} ${rtl_asm})
 target_link_libraries(rtl PRIVATE pseh)
 add_pch(rtl rtl.h SOURCE)
 add_dependencies(rtl psdk asm)
+set_source_files_properties(threadpool.c PROPERTIES COMPILE_DEFINITIONS __WINESRC__)
 
 list(APPEND SOURCE_VISTA
     condvar.c
     runonce.c
     srw.c
-    threadpool.c
     utf8.c)
 
 add_library(rtl_vista ${SOURCE_VISTA})

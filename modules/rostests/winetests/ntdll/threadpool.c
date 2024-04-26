@@ -477,7 +477,7 @@ static void CALLBACK simple2_cb(TP_CALLBACK_INSTANCE *instance, void *userdata)
 static void test_tp_simple(void)
 {
     TP_CALLBACK_ENVIRON environment;
-    TP_CALLBACK_ENVIRON_V3 environment3;
+    //TP_CALLBACK_ENVIRON_V3 environment3;
     TP_CLEANUP_GROUP *group;
     HANDLE semaphore;
     NTSTATUS status;
@@ -512,7 +512,7 @@ static void test_tp_simple(void)
     ok(!status, "TpSimpleTryPost failed with status %x\n", status);
     result = WaitForSingleObject(semaphore, 1000);
     ok(result == WAIT_OBJECT_0, "WaitForSingleObject returned %u\n", result);
-
+#ifndef __REACTOS__ // Windows 7
     /* test with environment version 3 */
     memset(&environment3, 0, sizeof(environment3));
     environment3.Version = 3;
@@ -523,7 +523,7 @@ static void test_tp_simple(void)
     ok(!status, "TpSimpleTryPost failed with status %x\n", status);
     result = WaitForSingleObject(semaphore, 1000);
     ok(result == WAIT_OBJECT_0, "WaitForSingleObject returned %u\n", result);
-
+#endif
     /* test with invalid version number */
     memset(&environment, 0, sizeof(environment));
     environment.Version = 9999;
