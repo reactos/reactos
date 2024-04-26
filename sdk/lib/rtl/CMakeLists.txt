@@ -8,18 +8,24 @@ add_definitions(
 if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # Enable this again. CORE-17637
     add_compile_options(-Wunused-result)
+
+    add_compile_options(-Wno-incompatible-pointer-types)
+    add_compile_options(-Wno-missing-braces)
 endif()
 
 list(APPEND RTL_WINE_SOURCE
     actctx.c
     timerqueue.c
-    wait.c
+    threadpool.c
 )
+set_source_files_properties(threadpool.c PROPERTIES COMPILE_DEFINITIONS __WINESRC__)
 
 if(MSVC)
     # Silence warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
     set_source_files_properties(${RTL_WINE_SOURCE} PROPERTIES COMPILE_OPTIONS "/wd4267")
 endif()
+
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 
 list(APPEND SOURCE
     ${RTL_WINE_SOURCE}
@@ -126,7 +132,6 @@ list(APPEND SOURCE_VISTA
     condvar.c
     runonce.c
     srw.c
-    threadpool.c
     utf8.c)
 
 add_library(rtl_vista ${SOURCE_VISTA})
