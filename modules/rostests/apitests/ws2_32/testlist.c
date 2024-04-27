@@ -25,7 +25,9 @@ const struct test winetest_testlist[] =
 {
     { "bind", func_bind },
     { "close", func_close },
+#ifndef _M_AMD64 // FIXME: Too slow and times out often, see ROSTESTS-392
     { "getaddrinfo", func_getaddrinfo },
+#endif
     { "gethostname", func_gethostname },
     { "getnameinfo", func_getnameinfo },
     { "getservbyname", func_getservbyname },

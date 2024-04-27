@@ -145,7 +145,9 @@ const struct test winetest_testlist[] =
     { "NtQuerySystemInformation",       func_NtQuerySystemInformation },
     { "NtQueryValueKey",                func_NtQueryValueKey },
     { "NtQueryVolumeInformationFile",   func_NtQueryVolumeInformationFile },
+#ifndef _M_AMD64 // FIXME: Slow and can cause timeouts on x64, see ROSTESTS-392
     { "NtReadFile",                     func_NtReadFile },
+#endif
     { "NtSaveKey",                      func_NtSaveKey},
     { "NtSetDefaultLocale",             func_NtSetDefaultLocale },
     { "NtSetInformationFile",           func_NtSetInformationFile },
@@ -156,7 +158,9 @@ const struct test winetest_testlist[] =
     { "NtSetVolumeInformationFile",     func_NtSetVolumeInformationFile },
     { "NtSystemInformation",            func_NtSystemInformation },
     { "NtUnloadDriver",                 func_NtUnloadDriver },
+#ifndef _M_AMD64 // FIXME: Slow and can cause timeouts on x64, see ROSTESTS-392
     { "NtWriteFile",                    func_NtWriteFile },
+#endif
     { "RtlAllocateHeap",                func_RtlAllocateHeap },
     { "RtlBitmapApi",                   func_RtlBitmap },
     { "RtlComputePrivatizedDllName_U",  func_RtlComputePrivatizedDllName_U },

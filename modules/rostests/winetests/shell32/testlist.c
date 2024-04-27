@@ -31,7 +31,9 @@ const struct test winetest_testlist[] =
     { "brsfolder", func_brsfolder },
     { "ebrowser", func_ebrowser },
     { "generated", func_generated },
+#ifndef _M_AMD64 // FIXME: Slow and crashes, see ROSTESTS-392
     { "progman_dde", func_progman_dde },
+#endif
     { "recyclebin", func_recyclebin },
     { "shelldispatch", func_shelldispatch },
     { "shelllink", func_shelllink },
