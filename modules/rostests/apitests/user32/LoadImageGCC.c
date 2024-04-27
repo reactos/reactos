@@ -132,10 +132,10 @@ START_TEST(LoadImageGCC)
     /* Get first 8 bytes of second row of bits from bitmap */
     memcpy(img, (VOID *)((INT_PTR)lpBits + 4 * bitmap.bmWidth), 8);
 
-    ok(img[0] == 0, "Byte 0 Bad\n");
-    ok(img[1] == 0, "Byte 1 Bad\n");
-    ok(img[2] == 0, "Byte 2 Bad\n");
-    ok(img[3] == 0, "Byte 3 Bad\n");
+    ok(img[0] == 0, "Byte 0 Bad. Got 0x%02x, expected 0\n", img[0] & 0xff);
+    ok(img[1] == 0, "Byte 1 Bad. Got 0x%02x, expected 0\n", img[1] & 0xff);
+    ok(img[2] == 0, "Byte 2 Bad. Got 0x%02x, expected 0\n", img[2] & 0xff);
+    ok(img[3] == 0, "Byte 3 Bad. Got 0x%02x, expected 0\n", img[3] & 0xff);
 
     GlobalUnlock(hMem);
     GlobalFree(hMem);
