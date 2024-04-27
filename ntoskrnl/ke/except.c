@@ -17,9 +17,10 @@
 
 VOID
 NTAPI
-KiContinuePreviousModeUser(IN PCONTEXT Context,
-                           IN PKEXCEPTION_FRAME ExceptionFrame,
-                           IN PKTRAP_FRAME TrapFrame)
+KiContinuePreviousModeUser(
+    _In_ PCONTEXT Context,
+    _Out_ PKEXCEPTION_FRAME ExceptionFrame,
+    _Out_ PKTRAP_FRAME TrapFrame)
 {
     CONTEXT LocalContext;
 
@@ -86,11 +87,12 @@ KiContinue(IN PCONTEXT Context,
 
 NTSTATUS
 NTAPI
-KiRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
-                 IN PCONTEXT Context,
-                 IN PKEXCEPTION_FRAME ExceptionFrame,
-                 IN PKTRAP_FRAME TrapFrame,
-                 IN BOOLEAN SearchFrames)
+KiRaiseException(
+    _In_ PEXCEPTION_RECORD ExceptionRecord,
+    _In_ PCONTEXT Context,
+    _Out_ PKEXCEPTION_FRAME ExceptionFrame,
+    _Out_ PKTRAP_FRAME TrapFrame,
+    _In_ BOOLEAN SearchFrames)
 {
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     CONTEXT LocalContext;
@@ -168,9 +170,10 @@ KiRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
 
 NTSTATUS
 NTAPI
-NtRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
-                 IN PCONTEXT Context,
-                 IN BOOLEAN FirstChance)
+NtRaiseException(
+    _In_ PEXCEPTION_RECORD ExceptionRecord,
+    _In_ PCONTEXT Context,
+    _In_ BOOLEAN FirstChance)
 {
     NTSTATUS Status;
     PKTHREAD Thread;
@@ -198,27 +201,21 @@ NtRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
                               ExceptionFrame,
                               TrapFrame,
                               FirstChance);
-    if (NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
-        /* It was handled, so exit restoring all state */
-        KiExceptionExit(TrapFrame, ExceptionFrame);
+        DPRINT1("KiRaiseException failed. Status = 0x%lx\n", Status);
+        return Status;
     }
-#ifdef _M_IX86
-    else
-    {
-        /* Exit with error */
-        KiServiceExit(TrapFrame, Status);
-    }
-#endif
 
-    /* Return to the caller */
-    return Status;
+    /* It was handled, so exit restoring all state */
+    KiExceptionExit(TrapFrame, ExceptionFrame);
 }
 
 NTSTATUS
 NTAPI
-NtContinue(IN PCONTEXT Context,
-           IN BOOLEAN TestAlert)
+NtContinue(
+    _In_ PCONTEXT Context,
+    _In_ BOOLEAN TestAlert)
 {
     PKTHREAD Thread;
     NTSTATUS Status;
@@ -237,24 +234,20 @@ NtContinue(IN PCONTEXT Context,
 
     /* Continue from this point on */
     Status = KiContinue(Context, ExceptionFrame, TrapFrame);
-    if (NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
-        /* Check if alert was requested */
-        if (TestAlert) KeTestAlertThread(Thread->PreviousMode);
-
-        /* Exit to new trap frame */
-        KiExceptionExit(TrapFrame, ExceptionFrame);
+        DPRINT1("KiContinue failed. Status = 0x%lx\n", Status);
+        return Status;
     }
-#ifdef _M_IX86
-    else
+
+    /* Check if alert was requested */
+    if (TestAlert)
     {
-        /* Exit with an error */
-        KiServiceExit(TrapFrame, Status);
+        KeTestAlertThread(Thread->PreviousMode);
     }
-#endif
 
-    /* Return to the caller */
-    return Status;
+    /* Exit to new context */
+    KiExceptionExit(TrapFrame, ExceptionFrame);
 }
 
 /* EOF */
