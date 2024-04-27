@@ -16,9 +16,11 @@
 .code64
 
 PUBLIC __chkstk
+PUBLIC ___chkstk_ms
 PUBLIC __alloca_probe
 
 __alloca_probe:
+___chkstk_ms:
 .PROC __chkstk
 
     push rcx                    /* save temps */
