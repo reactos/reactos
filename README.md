@@ -127,10 +127,10 @@ The main development is done on [GitHub](https://github.com/reactos/reactos). We
 There is also an obsolete [SVN archive repository](https://svn.reactos.org/reactos/) that is kept for historical purposes.
 
 [coverity.badge]:   https://scan.coverity.com/projects/205/badge.svg?flat=1
-[rosbewin.badge]:   https://img.shields.io/badge/RosBE_Windows-2.2.0-0688CB.svg
-[rosbeunix.badge]:  https://img.shields.io/badge/RosBE_Unix-2.2-0688CB.svg
+[rosbewin.badge]:   https://img.shields.io/badge/RosBE_Windows-2.2.1-0688CB.svg
+[rosbeunix.badge]:  https://img.shields.io/badge/RosBE_Unix-2.2.1-0688CB.svg
 [prwelcome.badge]:  https://img.shields.io/badge/PR-welcome-0688CB.svg
 
 [coverity.link]:    https://scan.coverity.com/projects/205
-[rosbewin.link]:    https://sourceforge.net/projects/reactos/files/RosBE-Windows/i386/2.2.0/
-[rosbeunix.link]:   https://sourceforge.net/projects/reactos/files/RosBE-Unix/2.2/
+[rosbewin.link]:    https://sourceforge.net/projects/reactos/files/RosBE-Windows/i386/2.2.1/
+[rosbeunix.link]:   https://sourceforge.net/projects/reactos/files/RosBE-Unix/2.2.1/
