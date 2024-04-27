@@ -199,8 +199,8 @@ typedef struct {
 
 /**********************************************************************/
 
-typedef void * (__cdecl *PFNALLOC)(ULONG cb);
-#define FNALLOC(fn) void * __cdecl fn(ULONG cb)
+typedef void * (__WINE_ALLOC_SIZE(1) __cdecl *PFNALLOC)(ULONG cb);
+#define FNALLOC(fn) void * __WINE_ALLOC_SIZE(1) __cdecl fn(ULONG cb)
 
 typedef void (__cdecl *PFNFREE)(void *pv);
 #define FNFREE(fn) void __cdecl fn(void *pv)
