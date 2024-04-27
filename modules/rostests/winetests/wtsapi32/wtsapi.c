@@ -114,7 +114,15 @@ static void check_wts_process_info(const WTS_PROCESS_INFOW *info, DWORD count)
 #else
             ok(ret, "failed to get token user, error %lu\n", GetLastError());
 #endif
+#ifdef __REACTOS__
+            if (info[i].pUserSid == NULL) {
+                skip("pUserSid is NULL\n");
+            } else {
+                ok(EqualSid(info[i].pUserSid, sid->Sid), "SID did not match\n");
+            }
+#else
             ok(EqualSid(info[i].pUserSid, sid->Sid), "SID did not match\n");
+#endif
             CloseHandle(token);
             CloseHandle(process);
         }
@@ -332,7 +340,15 @@ static void test_WTSQuerySessionInformation(void)
     tempsize = MAX_COMPUTERNAME_LENGTH + 1;
     GetComputerNameW(computernameW, &tempsize);
     /* Windows Vista, 7 and 8 return uppercase computername, while the rest return lowercase. */
+#ifdef __REACTOS__
+    if (buf1 == NULL) {
+        skip("WTSQuerySessionInformationW buffer is NULL\n");
+    } else {
+        ok(!wcsicmp(buf1, computernameW), "expected %s, got %s\n", wine_dbgstr_w(computernameW), wine_dbgstr_w(buf1));
+    }
+#else
     ok(!wcsicmp(buf1, computernameW), "expected %s, got %s\n", wine_dbgstr_w(computernameW), wine_dbgstr_w(buf1));
+#endif
 #ifdef __REACTOS__
     ok(count == (tempsize + 1) * sizeof(WCHAR), "expected %Iu, got %u\n", (tempsize + 1) * sizeof(WCHAR), count);
 #else
@@ -393,7 +409,15 @@ static void test_WTSQuerySessionInformation(void)
     tempsize = UNLEN + 1;
     GetUserNameA(username, &tempsize);
     /* Windows Vista, 7 and 8 return uppercase username, while the rest return lowercase. */
+#ifdef __REACTOS__
+    if (buf2 == NULL) {
+        skip("WTSQuerySessionInformationA bufffer is NULL\n");
+    } else {
+        ok(!stricmp(buf2, username), "expected %s, got %s\n", username, buf2);
+    }
+#else
     ok(!stricmp(buf2, username), "expected %s, got %s\n", username, buf2);
+#endif
 #ifdef __REACTOS__
     ok(count == tempsize, "expected %u, got %u\n", tempsize, count);
 #else
