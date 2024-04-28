@@ -603,9 +603,7 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
 
         if (hkVerb)
         {
-            // FIXME: GetAsyncKeyState should not be called here, clients
-            // need to be updated to set the CMF_EXTENDEDVERBS flag.
-            if (!(uFlags & CMF_EXTENDEDVERBS) && GetAsyncKeyState(VK_SHIFT) >= 0)
+            if (!(uFlags & CMF_EXTENDEDVERBS))
                 hide = RegValueExists(hkVerb, L"Extended");
 
             if (!hide)
@@ -807,7 +805,7 @@ CDefaultContextMenu::QueryContextMenu(
             DeleteMenu(hmenuDefault, IDM_CREATELINK, MF_BYCOMMAND);
         if (!(rfg & SFGAO_CANDELETE))
             DeleteMenu(hmenuDefault, IDM_DELETE, MF_BYCOMMAND);
-        if (!(rfg & SFGAO_CANRENAME))
+        if (!(rfg & SFGAO_CANRENAME) || !(uFlags & CMF_CANRENAME))
             DeleteMenu(hmenuDefault, IDM_RENAME, MF_BYCOMMAND);
         if (!(rfg & SFGAO_HASPROPSHEET))
             DeleteMenu(hmenuDefault, IDM_PROPERTIES, MF_BYCOMMAND);

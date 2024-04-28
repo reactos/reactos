@@ -54,6 +54,20 @@ typedef struct
 // to call TrackPopupMenu and let it use the 0 value as an indication that the menu was canceled
 #define CONTEXT_MENU_BASE_ID 1
 
+static UINT
+GetContextMenuFlags(IShellBrowser *pSB, SFGAOF sfgao)
+{
+    UINT cmf = CMF_NORMAL;
+    if (GetKeyState(VK_SHIFT) < 0)
+        cmf |= CMF_EXTENDEDVERBS;
+    if (sfgao & SFGAO_CANRENAME)
+        cmf |= CMF_CANRENAME;
+    HWND hwnd = NULL;
+    if (pSB && SUCCEEDED(pSB->GetControlWindow(FCW_TREE, &hwnd)) && hwnd)
+        cmf |= CMF_EXPLORE;
+    return cmf;
+}
+
 // Convert client coordinates to listview coordinates
 static void
 ClientToListView(HWND hwndLV, POINT *ppt)
@@ -1362,14 +1376,16 @@ HRESULT CDefView::FillFileMenu()
         IUnknown_SetSite(m_pFileMenu, NULL);
         m_pFileMenu.Release();
     }
+    UINT selcount = m_ListView.GetSelectedCount();
     // Store context menu in m_pFileMenu and keep it to invoke the selected command later on
-    HRESULT hr = GetItemObject(SVGIO_SELECTION, IID_PPV_ARG(IContextMenu, &m_pFileMenu));
+    HRESULT hr = GetItemObject(selcount ? SVGIO_SELECTION : SVGIO_BACKGROUND, IID_PPV_ARG(IContextMenu, &m_pFileMenu));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     HMENU hmenu = CreatePopupMenu();
 
-    hr = m_pFileMenu->QueryContextMenu(hmenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, 0);
+    UINT cmf = GetContextMenuFlags(m_pShellBrowser, SFGAO_CANRENAME);
+    hr = m_pFileMenu->QueryContextMenu(hmenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, cmf);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -1511,10 +1527,10 @@ HRESULT CDefView::InvokeContextMenuCommand(CComPtr<IContextMenu>& pCM, LPCSTR lp
     cmi.hwnd = m_hWnd;
     cmi.lpVerb = lpVerb;
 
-    if (GetKeyState(VK_SHIFT) & 0x8000)
+    if (GetKeyState(VK_SHIFT) < 0)
         cmi.fMask |= CMIC_MASK_SHIFT_DOWN;
 
-    if (GetKeyState(VK_CONTROL) & 0x8000)
+    if (GetKeyState(VK_CONTROL) < 0)
         cmi.fMask |= CMIC_MASK_CONTROL_DOWN;
 
     if (pt)
@@ -1558,7 +1574,8 @@ HRESULT CDefView::OpenSelectedItems()
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
-    hResult = pCM->QueryContextMenu(hMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, CMF_DEFAULTONLY);
+    UINT cmf = CMF_DEFAULTONLY | GetContextMenuFlags(m_pShellBrowser, 0);
+    hResult = pCM->QueryContextMenu(hMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, cmf);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
@@ -1617,8 +1634,9 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     if (FAILED_UNEXPECTEDLY(hResult))
         return 0;
 
+    UINT cmf = GetContextMenuFlags(m_pShellBrowser, SFGAO_CANRENAME);
     // Use 1 as the first id we want. 0 means that user canceled the menu
-    hResult = m_pCM->QueryContextMenu(m_hContextMenu, 0, CONTEXT_MENU_BASE_ID, FCIDM_SHVIEWLAST, CMF_NORMAL);
+    hResult = m_pCM->QueryContextMenu(m_hContextMenu, 0, CONTEXT_MENU_BASE_ID, FCIDM_SHVIEWLAST, cmf);
     if (FAILED_UNEXPECTEDLY(hResult))
         return 0;
 
