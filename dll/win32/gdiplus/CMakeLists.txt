@@ -1,8 +1,8 @@
 
 add_definitions(
     -D__WINESRC__
-    -D__ROS_LONG64__
     -D_USE_MATH_DEFINES)
+remove_definitions(-D__ROS_LONG64__)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(gdiplus.dll gdiplus.spec ADD_IMPORTLIB)
