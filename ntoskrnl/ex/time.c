@@ -35,9 +35,6 @@ ULONG ExpTimerResolutionCount = 0;
  * ExpTimeZoneInfo
  * ExpTimeZoneBias
  * ExpTimeZoneId
- *
- * This variable is modified and returned as a result of this function
- * *TimeZoneId
  *--*/
 static
 BOOLEAN
@@ -47,6 +44,7 @@ ExpGetTimeZoneId(
 {
     LARGE_INTEGER StandardTime;
     LARGE_INTEGER DaylightTime;
+    LARGE_INTEGER LocalTimeNow = *TimeNow;
     NTSTATUS Status;
     static BOOLEAN InitialRun = TRUE;
 
@@ -58,18 +56,17 @@ ExpGetTimeZoneId(
         return FALSE;
     }
 
+    /* Get the default bias */
+    ExpTimeZoneBias.QuadPart = (LONGLONG)ExpTimeZoneInfo.Bias * TICKSPERMINUTE;
     if (!InitialRun)
     {
         /* Adjust TimeNow for Time Zone Bias to use UTC for comparisons */
-        TimeNow->QuadPart -= (LONGLONG)ExpTimeZoneInfo.Bias * TICKSPERMINUTE;
+        LocalTimeNow.QuadPart -= ExpTimeZoneBias.QuadPart;
     }
     else
     {
         InitialRun = FALSE;
     }
-
-    /* Get the default bias */
-    ExpTimeZoneBias.QuadPart = (LONGLONG)ExpTimeZoneInfo.Bias * TICKSPERMINUTE;
 
     if (ExpTimeZoneInfo.StandardDate.Month != 0 &&
         ExpTimeZoneInfo.DaylightDate.Month != 0)
@@ -97,8 +94,8 @@ ExpGetTimeZoneId(
         /* Determine the time zone id and update the time zone bias */
         if (DaylightTime.QuadPart < StandardTime.QuadPart)
         {
-            if ((TimeNow->QuadPart >= DaylightTime.QuadPart) &&
-                (TimeNow->QuadPart < StandardTime.QuadPart))
+            if ((LocalTimeNow.QuadPart >= DaylightTime.QuadPart) &&
+                (LocalTimeNow.QuadPart < StandardTime.QuadPart))
             {
                 DPRINT("Daylight time\n");
                 *TimeZoneId = TIME_ZONE_ID_DAYLIGHT;
@@ -113,8 +110,8 @@ ExpGetTimeZoneId(
         }
         else
         {
-            if ((TimeNow->QuadPart >= StandardTime.QuadPart) &&
-                (TimeNow->QuadPart < DaylightTime.QuadPart))
+            if ((LocalTimeNow.QuadPart >= StandardTime.QuadPart) &&
+                (LocalTimeNow.QuadPart < DaylightTime.QuadPart))
             {
                 DPRINT("Standard time\n");
                 *TimeZoneId = TIME_ZONE_ID_STANDARD;
@@ -457,7 +454,7 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
     TIME_FIELDS TimeFields;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
-    RTL_TIME_ZONE_INFORMATION TimeZoneInformation;
+    RTL_TIME_ZONE_INFORMATION TimeZoneInformation = { 0 };
     ULONG ExpTimeZoneIdSave;
 
     PAGED_CODE();
@@ -469,9 +466,6 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
         UNIMPLEMENTED;
         return STATUS_NOT_IMPLEMENTED;
     }
-
-    // Initialize all fields of TimeZoneInformation to zeroes
-    memset(&TimeZoneInformation, 0, sizeof(TimeZoneInformation));
 
     /* Check if we were called from user-mode */
     if (PreviousMode != KernelMode)
