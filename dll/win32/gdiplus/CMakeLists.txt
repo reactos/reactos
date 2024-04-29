@@ -14,7 +14,6 @@ list(APPEND SOURCE
     gdiplus.c
     graphics.c
     graphicspath.c
-    image.c
     imageattributes.c
     matrix.c
     metafile.c
@@ -24,6 +23,7 @@ list(APPEND SOURCE
     stringformat.c)
 
 list(APPEND PCH_SKIP_SOURCE
+    image.c
     guid.c
     ${CMAKE_CURRENT_BINARY_DIR}/gdiplus_stubs.c)
 
