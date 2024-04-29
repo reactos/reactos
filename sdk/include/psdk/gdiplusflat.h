@@ -1103,6 +1103,8 @@ extern "C"
     GpStatus WINGDIPAPI
     GdipGetMetafileHeaderFromStream(IStream *, MetafileHeader *);
     GpStatus WINGDIPAPI
+    GdipGetMetafileDownLevelRasterizationLimit(GDIPCONST GpMetafile*,UINT*);
+    GpStatus WINGDIPAPI
     GdipGetMetafileHeaderFromWmf(HMETAFILE, GDIPCONST WmfPlaceableFileHeader *, MetafileHeader *);
 
     /* Notification */

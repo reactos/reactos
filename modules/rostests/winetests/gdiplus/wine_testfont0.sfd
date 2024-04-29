@@ -1,0 +1,69 @@
+SplineFontDB: 3.0
+FontName: winegdiptestfont0
+FullName: Wine GDI+ Test Font 0
+FamilyName: winegdiptestfont
+Weight: Regular
+Copyright: Copyright (c) 2020, Shawn M. Chapla
+UComments: "2020-7-15: Created with FontForge (http://fontforge.org)"
+Version: 001.000
+ItalicAngle: 0
+UnderlinePosition: -100
+UnderlineWidth: 50
+Ascent: 800
+Descent: 200
+InvalidEm: 0
+LayerCount: 2
+Layer: 0 0 "Back" 1
+Layer: 1 0 "Fore" 0
+XUID: [1021 445 409452897 2998051]
+StyleMap: 0x0000
+FSType: 0
+OS2Version: 0
+OS2_WeightWidthSlopeOnly: 0
+OS2_UseTypoMetrics: 1
+CreationTime: 1594833132
+ModificationTime: 1594833348
+OS2TypoAscent: 0
+OS2TypoAOffset: 1
+OS2TypoDescent: 0
+OS2TypoDOffset: 1
+OS2TypoLinegap: 90
+OS2WinAscent: 0
+OS2WinAOffset: 1
+OS2WinDescent: 0
+OS2WinDOffset: 1
+HheadAscent: 0
+HheadAOffset: 1
+HheadDescent: 0
+HheadDOffset: 1
+MarkAttachClasses: 1
+DEI: 91125
+Encoding: ISO8859-1
+UnicodeInterp: none
+NameList: AGL For New Fonts
+DisplaySize: -48
+AntiAlias: 1
+FitToEm: 0
+WinInfo: 0 16 4
+BeginPrivate: 0
+EndPrivate
+BeginChars: 256 1
+
+StartChar: uni0000
+Encoding: 0 0 0
+Width: 2977
+VWidth: 0
+Flags: HWO
+LayerCount: 2
+Fore
+SplineSet
+247 690 m 5
+ 748 690 l 5
+ 748 72 l 5
+ 247 72 l 5
+ 247 690 l 5
+EndSplineSet
+Validated: 1
+EndChar
+EndChars
+EndSplineFont

@@ -23,6 +23,7 @@
 
 #include "objbase.h"
 #include "gdiplus.h"
+#include "winspool.h"
 #include "wine/test.h"
 
 #define expect(expected, got) ok((got) == (expected), "Expected %d, got %d\n", (INT)(expected), (INT)(got))
@@ -1312,21 +1313,20 @@ static void test_GdipDrawImagePointsRect(void)
     GpGraphics *graphics = NULL;
     GpPointF ptf[4];
     GpBitmap *bm = NULL;
-    BYTE rbmi[sizeof(BITMAPINFOHEADER)];
     BYTE buff[400];
-    BITMAPINFO *bmi = (BITMAPINFO*)rbmi;
+    BITMAPINFOHEADER bmihdr;
     HDC hdc = GetDC( hwnd );
     if (!hdc)
         return;
 
-    memset(rbmi, 0, sizeof(rbmi));
-    bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi->bmiHeader.biWidth = 10;
-    bmi->bmiHeader.biHeight = 10;
-    bmi->bmiHeader.biPlanes = 1;
-    bmi->bmiHeader.biBitCount = 32;
-    bmi->bmiHeader.biCompression = BI_RGB;
-    status = GdipCreateBitmapFromGdiDib(bmi, buff, &bm);
+    memset(&bmihdr, 0, sizeof(bmihdr));
+    bmihdr.biSize = sizeof(BITMAPINFOHEADER);
+    bmihdr.biWidth = 10;
+    bmihdr.biHeight = 10;
+    bmihdr.biPlanes = 1;
+    bmihdr.biBitCount = 32;
+    bmihdr.biCompression = BI_RGB;
+    status = GdipCreateBitmapFromGdiDib((BITMAPINFO*)&bmihdr, buff, &bm);
     expect(Ok, status);
     ok(NULL != bm, "Expected bitmap to be initialized\n");
     status = GdipCreateFromHDC(hdc, &graphics);
@@ -2279,7 +2279,7 @@ static void test_GdipDrawString(void)
     GpBrush *brush;
     LOGFONTA logfont;
     HDC hdc = GetDC( hwnd );
-    static const WCHAR string[] = {'T','e','s','t',0};
+    static const WCHAR string[] = L"Test";
     static const PointF positions[4] = {{0,0}, {1,1}, {2,2}, {3,3}};
     GpMatrix *matrix;
 
@@ -3178,7 +3178,7 @@ static void test_GdipGetNearestColor(void)
     todo_wine
     ok(color == 0xffa8b8e8 ||
        broken(color == 0xffa0b8e0), /* Win98/WinMe */
-       "Expected ffa8b8e8, got %.8x\n", color);
+       "Expected ffa8b8e8, got %.8lx\n", color);
     GdipDeleteGraphics(graphics);
     GdipDisposeImage((GpImage*)bitmap);
 
@@ -3195,9 +3195,8 @@ static void test_string_functions(void)
     GpBrush *brush;
     ARGB color = 0xff000000;
     HDC hdc = GetDC( hwnd );
-    const WCHAR fontname[] = {'T','a','h','o','m','a',0};
-    const WCHAR teststring[] = {'M','M',' ','M','\n','M',0};
-    const WCHAR teststring2[] = {'j',0};
+    const WCHAR teststring[] = L"MM M\nM";
+    const WCHAR teststring2[] = L"j";
     REAL char_width, char_height;
     INT codepointsfitted, linesfilled;
     GpStringFormat *format;
@@ -3213,7 +3212,7 @@ static void test_string_functions(void)
     expect(Ok, status);
     ok(graphics != NULL, "Expected graphics to be initialized\n");
 
-    status = GdipCreateFontFamilyFromName(fontname, NULL, &family);
+    status = GdipCreateFontFamilyFromName(L"Tahoma", NULL, &family);
     expect(Ok, status);
 
     status = GdipCreateFont(family, 10.0, FontStyleRegular, UnitPixel, &font);
@@ -3744,8 +3743,7 @@ static void test_GdipMeasureString(void)
         { 200.0, 600.0, 1.0, UnitPixel },
         { 200.0, 600.0, 2.0, UnitPixel },
     };
-    static const WCHAR tahomaW[] = { 'T','a','h','o','m','a',0 };
-    static const WCHAR string[] = { '1','2','3','4','5','6','7',0 };
+    static const WCHAR string[] = L"1234567";
     GpStatus status;
     GpGraphics *graphics;
     GpFontFamily *family;
@@ -3761,7 +3759,7 @@ static void test_GdipMeasureString(void)
 
     status = GdipCreateStringFormat(0, LANG_NEUTRAL, &format);
     expect(Ok, status);
-    status = GdipCreateFontFamilyFromName(tahomaW, NULL, &family);
+    status = GdipCreateFontFamilyFromName(L"Tahoma", NULL, &family);
     expect(Ok, status);
 
     /* font size in pixels */
@@ -3786,7 +3784,7 @@ static void test_GdipMeasureString(void)
         height = units_to_pixels(font_size, td[i].unit, td[i].res_y);
         if (td[i].unit != UnitDisplay)
             height *= td[i].page_scale;
-        ok(-lf.lfHeight == (LONG)(height + 0.5), "%u: expected %d (%f), got %d\n",
+        ok(-lf.lfHeight == (LONG)(height + 0.5), "%u: expected %ld (%f), got %ld\n",
            i, (LONG)(height + 0.5), height, lf.lfHeight);
 
         height = font_size + 2.0 * font_size / 6.0;
@@ -3804,7 +3802,7 @@ static void test_GdipMeasureString(void)
 
         expectf(0.0, bounds.X);
         expectf(0.0, bounds.Y);
-todo_wine
+        todo_wine
         expectf_(height, bounds.Height, height / 100.0);
         expectf_(bounds.Height / base_cy, bounds.Width / base_cx, 0.1);
         expect(7, chars);
@@ -3821,7 +3819,7 @@ todo_wine
         expect(Ok, status);
         expectf(50.0, bounds.X);
         expectf(50.0, bounds.Y);
-todo_wine
+        todo_wine
         expectf_(height, bounds.Height, height / 100.0);
         expectf_(bounds.Height / base_cy, bounds.Width / base_cx, 0.1);
         expect(7, chars);
@@ -3867,7 +3865,7 @@ todo_wine
             else
                 height = units_to_pixels(font_size, font_unit, td[i].res_y);
             /*trace("%.1f font units = %f pixels with %.1f dpi, page_scale %.1f\n", font_size, height, td[i].res_y, td[i].page_scale);*/
-            ok(-lf.lfHeight == (LONG)(height + 0.5), "%u: expected %d (%f), got %d\n",
+            ok(-lf.lfHeight == (LONG)(height + 0.5), "%u: expected %ld (%f), got %ld\n",
                i, (LONG)(height + 0.5), height, lf.lfHeight);
 
             if (td[i].unit == UnitDisplay || td[i].unit == UnitPixel)
@@ -3893,7 +3891,7 @@ todo_wine
 
             expectf(0.0, bounds.X);
             expectf(0.0, bounds.Y);
-todo_wine
+            todo_wine
             expectf_(height, bounds.Height, height / 85.0);
             expectf_(bounds.Height / base_cy, bounds.Width / base_cx, 0.1);
             expect(7, chars);
@@ -3910,7 +3908,7 @@ todo_wine
             expect(Ok, status);
             expectf(50.0, bounds.X);
             expectf(50.0, bounds.Y);
-todo_wine
+            todo_wine
             expectf_(height, bounds.Height, height / 85.0);
             expectf_(bounds.Height / base_cy, bounds.Width / base_cx, 0.1);
             expect(7, chars);
@@ -3922,7 +3920,7 @@ todo_wine
                 height *= td[i].page_scale;
             /*trace("%u: unit %u, %.1fx%.1f dpi, scale %.1f, height %f, pixels %f\n",
                   i, td[i].unit, td[i].res_x, td[i].res_y, td[i].page_scale, bounds.Height, height);*/
-todo_wine
+            todo_wine
             expectf_(100.0, height, 1.1);
 
             status = GdipDeleteGraphics(graphics);
@@ -3957,7 +3955,7 @@ todo_wine
         lf.lfHeight = 0xdeadbeef;
         status = GdipGetLogFontW(font, graphics, &lf);
         expect(Ok, status);
-        ok(lf.lfHeight == -100, "%u: expected -100, got %d\n", i, lf.lfHeight);
+        ok(lf.lfHeight == -100, "%u: expected -100, got %ld\n", i, lf.lfHeight);
 
         set_rect_empty(&rc);
         set_rect_empty(&bounds);
@@ -4141,7 +4139,7 @@ static void test_pen_thickness(void)
 
         size = max-min+1;
 
-        ok(size == td[i].cx, "%u: expected %d, got %d\n", i, td[i].cx, size);
+        ok(size == td[i].cx || broken (i == 1 && size == 1), "%u: expected %d, got %d\n", i, td[i].cx, size);
 
         min = -1;
         max = -2;
@@ -4166,7 +4164,7 @@ static void test_pen_thickness(void)
 
         size = max-min+1;
 
-        ok(size == td[i].cy, "%u: expected %d, got %d\n", i, td[i].cy, size);
+        ok(size == td[i].cy || broken (i == 1 && size == 1), "%u: expected %d, got %d\n", i, td[i].cy, size);
 
         status = GdipBitmapUnlockBits(u.bitmap, &bd);
         expect(Ok, status);
@@ -4259,8 +4257,7 @@ static void test_pen_thickness(void)
  */
 static void test_font_height_scaling(void)
 {
-    static const WCHAR tahomaW[] = { 'T','a','h','o','m','a',0 };
-    static const WCHAR string[] = { '1','2','3','4','5','6','7',0 };
+    static const WCHAR string[] = L"1234567";
     HDC hdc;
     GpStringFormat *format;
     CharacterRange range = { 0, 7 };
@@ -4281,7 +4278,7 @@ static void test_font_height_scaling(void)
     status = GdipCreateRegion(&region);
     expect(Ok, status);
 
-    status = GdipCreateFontFamilyFromName(tahomaW, NULL, &family);
+    status = GdipCreateFontFamilyFromName(L"Tahoma", NULL, &family);
     expect(Ok, status);
 
     hdc = CreateCompatibleDC(0);
@@ -4360,7 +4357,6 @@ static void test_font_height_scaling(void)
         /* UnitPixel = 2, UnitPoint = 3, UnitInch = 4, UnitDocument = 5, UnitMillimeter = 6 */
         for (gfx_unit = 2; gfx_unit <= 6; gfx_unit++)
         {
-            static const WCHAR doubleW[2] = { 'W','W' };
             RectF bounds_1, bounds_2;
             REAL margin, margin_y, font_height;
             int match;
@@ -4379,7 +4375,7 @@ static void test_font_height_scaling(void)
             status = GdipMeasureString(graphics, string, -1, font, &rect, format, &bounds, NULL, NULL);
             expect(Ok, status);
             /*trace("bounds: %f,%f,%f,%f\n", bounds.X, bounds.Y, bounds.Width, bounds.Height);*/
-todo_wine
+            todo_wine
             expectf_(font_height + margin_y, bounds.Height, 0.005);
 
             ptf.X = 0;
@@ -4387,25 +4383,25 @@ todo_wine
             status = GdipTransformPoints(graphics, CoordinateSpaceDevice, CoordinateSpaceWorld, &ptf, 1);
             expect(Ok, status);
             match = fabs(100.0 - ptf.Y) <= 1.0;
-todo_wine
+            todo_wine
             ok(match, "Expected 100.0, got %f\n", ptf.Y);
 
             /* verify the result */
             ptf.Y = units_to_pixels(bounds.Height, gfx_unit, dpi);
             ptf.Y /= 100.0;
             match = fabs(100.0 - ptf.Y) <= 1.0;
-todo_wine
+            todo_wine
             ok(match, "Expected 100.0, got %f\n", ptf.Y);
 
             /* bounds.width of 1 glyph: [margin]+[width]+[margin] */
             set_rect_empty(&rect);
             set_rect_empty(&bounds_1);
-            status = GdipMeasureString(graphics, doubleW, 1, font, &rect, format, &bounds_1, NULL, NULL);
+            status = GdipMeasureString(graphics, L"W", 1, font, &rect, format, &bounds_1, NULL, NULL);
             expect(Ok, status);
             /* bounds.width of 2 identical glyphs: [margin]+[width]+[width]+[margin] */
             set_rect_empty(&rect);
             set_rect_empty(&bounds_2);
-            status = GdipMeasureString(graphics, doubleW, 2, font, &rect, format, &bounds_2, NULL, NULL);
+            status = GdipMeasureString(graphics, L"WW", 2, font, &rect, format, &bounds_2, NULL, NULL);
             expect(Ok, status);
 
             /* margin = [bounds.width of 1] - [bounds.width of 2] / 2*/
@@ -4447,10 +4443,10 @@ cleanup:
 
 static void test_measure_string(void)
 {
-    static const WCHAR tahomaW[] = { 'T','a','h','o','m','a',0 };
-    static const WCHAR string[] = { 'A','0','1',0 };
+    static const WCHAR string[] = L"A01";
+    static const WCHAR string2[] = L"M MM";
     HDC hdc;
-    GpStringFormat *format;
+    GpStringFormat *format, *format_no_wrap;
     CharacterRange range;
     GpRegion *region;
     GpGraphics *graphics;
@@ -4458,7 +4454,7 @@ static void test_measure_string(void)
     GpFont *font;
     GpStatus status;
     RectF bounds, rect;
-    REAL width, height, width_1, width_2;
+    REAL width, height, width_1, width_2, width_MM, width_M_M;
     REAL margin_x, margin_y, width_rgn, height_rgn;
     int lines, glyphs;
 
@@ -4469,7 +4465,7 @@ static void test_measure_string(void)
     status = GdipCreateRegion(&region);
     expect(Ok, status);
 
-    status = GdipCreateFontFamilyFromName(tahomaW, NULL, &family);
+    status = GdipCreateFontFamilyFromName(L"Tahoma", NULL, &family);
     expect(Ok, status);
 
     hdc = CreateCompatibleDC(0);
@@ -4502,7 +4498,7 @@ static void test_measure_string(void)
     expectf(0.0, bounds.X);
     expectf(0.0, bounds.Y);
     expectf(width, bounds.Width);
-todo_wine
+    todo_wine
     expectf(height / 2.0, bounds.Height);
 
     range.First = 0;
@@ -4522,7 +4518,7 @@ todo_wine
     expectf_(5.0 + margin_x, bounds.X, 1.0);
     expectf(5.0, bounds.Y);
     expectf_(width - margin_x*2.0, bounds.Width, 1.0);
-todo_wine
+    todo_wine
     expectf_(height - margin_y, bounds.Height, 1.0);
 
     width_rgn = bounds.Width;
@@ -4578,7 +4574,7 @@ todo_wine
     expectf_(5.0 + margin_x, bounds.X, 1.0);
     expectf(5.0, bounds.Y);
     expectf_(width_1, bounds.Width, 1.0);
-todo_wine
+    todo_wine
     expectf_(height - margin_y, bounds.Height, 1.0);
 
     status = GdipSetStringFormatFlags(format, StringFormatFlagsNoWrap | StringFormatFlagsNoClip);
@@ -4621,7 +4617,7 @@ todo_wine
     expectf(0.0, bounds.X);
     expectf(0.0, bounds.Y);
     expectf_(width, bounds.Width, 0.01);
-todo_wine
+    todo_wine
     expectf(height, bounds.Height);
 
     set_rect_empty(&rect);
@@ -4714,7 +4710,7 @@ todo_wine
     expectf_(5.0 + margin_x, bounds.X, 1.0);
     expectf(5.0, bounds.Y);
     expectf_(width - margin_x*2.0, bounds.Width, 1.0);
-todo_wine
+    todo_wine
     expectf_(height - margin_y, bounds.Height, 1.0);
 
     width_rgn = bounds.Width;
@@ -4733,9 +4729,9 @@ todo_wine
     expect(Ok, status);
     expect(3, glyphs);
     expect(1, lines);
-todo_wine
+    todo_wine
     expectf_(5.0 + width/2.0, bounds.X, 0.01);
-todo_wine
+    todo_wine
     expectf(5.0 + height/2.0, bounds.Y);
     expectf_(width, bounds.Width, 0.01);
     expectf(height, bounds.Height);
@@ -4749,9 +4745,9 @@ todo_wine
     expect(Ok, status);
     expect(3, glyphs);
     expect(1, lines);
-todo_wine
+    todo_wine
     expectf_(5.0 - width/2.0, bounds.X, 0.01);
-todo_wine
+    todo_wine
     expectf(5.0 - height/2.0, bounds.Y);
     expectf_(width, bounds.Width, 0.01);
     expectf(height, bounds.Height);
@@ -4765,9 +4761,9 @@ todo_wine
     set_rect_empty(&bounds);
     status = GdipGetRegionBounds(region, graphics, &bounds);
     expect(Ok, status);
-todo_wine
+    todo_wine
     expectf_(5.0 + width_rgn/2.0, bounds.X, 1.0);
-todo_wine
+    todo_wine
     expectf_(5.0 + height_rgn/2.0, bounds.Y, 1.0);
     expectf_(width_rgn, bounds.Width, 1.0);
     expectf_(height_rgn, bounds.Height, 1.0);
@@ -4781,9 +4777,9 @@ todo_wine
     set_rect_empty(&bounds);
     status = GdipGetRegionBounds(region, graphics, &bounds);
     expect(Ok, status);
-todo_wine
+    todo_wine
     expectf_(5.0 - width_rgn/2.0, bounds.X, 1.0);
-todo_wine
+    todo_wine
     expectf_(5.0 - height_rgn/2.0, bounds.Y, 1.0);
     expectf_(width_rgn, bounds.Width, 1.0);
     expectf_(height_rgn, bounds.Height, 1.0);
@@ -4801,9 +4797,9 @@ todo_wine
     expect(Ok, status);
     expect(3, glyphs);
     expect(1, lines);
-todo_wine
+    todo_wine
     expectf_(5.0 + width, bounds.X, 0.01);
-todo_wine
+    todo_wine
     expectf(5.0 + height, bounds.Y);
     expectf_(width, bounds.Width, 0.01);
     expectf(height, bounds.Height);
@@ -4817,9 +4813,9 @@ todo_wine
     expect(Ok, status);
     expect(3, glyphs);
     expect(1, lines);
-todo_wine
+    todo_wine
     expectf_(5.0 - width, bounds.X, 0.01);
-todo_wine
+    todo_wine
     expectf(5.0 - height, bounds.Y);
     expectf_(width, bounds.Width, 0.01);
     expectf(height, bounds.Height);
@@ -4833,9 +4829,9 @@ todo_wine
     set_rect_empty(&bounds);
     status = GdipGetRegionBounds(region, graphics, &bounds);
     expect(Ok, status);
-todo_wine
+    todo_wine
     expectf_(5.0 + width_rgn, bounds.X, 2.0);
-todo_wine
+    todo_wine
     expectf_(5.0 + height_rgn, bounds.Y, 1.0);
     expectf_(width_rgn, bounds.Width, 1.0);
     expectf_(height_rgn, bounds.Height, 1.0);
@@ -4849,12 +4845,59 @@ todo_wine
     set_rect_empty(&bounds);
     status = GdipGetRegionBounds(region, graphics, &bounds);
     expect(Ok, status);
-todo_wine
+    todo_wine
     expectf_(5.0 - width_rgn, bounds.X, 2.0);
-todo_wine
+    todo_wine
     expectf_(5.0 - height_rgn, bounds.Y, 1.0);
     expectf_(width_rgn, bounds.Width, 1.0);
     expectf_(height_rgn, bounds.Height, 1.0);
+
+    /* Measure "MM" */
+    rect.X = 5.0;
+    rect.Y = 5.0;
+    rect.Width = 32000.0;
+    rect.Height = 32000.0;
+    status = GdipMeasureString(graphics, string2 + 2, 2, font, &rect, NULL, &bounds, &glyphs, &lines);
+    expect(Ok, status);
+    expect(2, glyphs);
+    expect(1, lines);
+    width_MM = bounds.Width;
+
+    /* Measure "M M" */
+    rect.X = 5.0;
+    rect.Y = 5.0;
+    rect.Width = 32000.0;
+    rect.Height = 32000.0;
+    status = GdipMeasureString(graphics, string2, 3, font, &rect, NULL, &bounds, &glyphs, &lines);
+    expect(Ok, status);
+    expect(3, glyphs);
+    expect(1, lines);
+    width_M_M = bounds.Width;
+
+    /* With wrap */
+    rect.X = 5.0;
+    rect.Y = 5.0;
+    rect.Width = width_M_M;
+    rect.Height = 32000.0;
+    status = GdipMeasureString(graphics, string2, -1, font, &rect, NULL, &bounds, &glyphs, &lines);
+    expect(Ok, status);
+    expectf_(width_MM, bounds.Width, 0.1);
+    expect(4, glyphs);
+    expect(2, lines);
+
+    /* Without wrap */
+    status = GdipCreateStringFormat(StringFormatFlagsNoWrap, LANG_NEUTRAL, &format_no_wrap);
+    expect(Ok, status);
+
+    rect.X = 5.0;
+    rect.Y = 5.0;
+    rect.Width = width_M_M;
+    rect.Height = 32000.0;
+    status = GdipMeasureString(graphics, string2, -1, font, &rect, format_no_wrap, &bounds, &glyphs, &lines);
+    expect(Ok, status);
+    expectf_(width_M_M, bounds.Width, 0.1);
+    expect(3, glyphs);
+    expect(1, lines);
 
     status = GdipDeleteFont(font);
     expect(Ok, status);
@@ -4866,12 +4909,11 @@ todo_wine
     GdipDeleteFontFamily(family);
     GdipDeleteRegion(region);
     GdipDeleteStringFormat(format);
+    GdipDeleteStringFormat(format_no_wrap);
 }
 
 static void test_measured_extra_space(void)
 {
-    static const WCHAR tahomaW[] = { 'T','a','h','o','m','a',0 };
-    static const WCHAR string[2] = { 'W','W' };
     GpStringFormat *format;
     HDC hdc;
     GpGraphics *graphics;
@@ -4885,7 +4927,7 @@ static void test_measured_extra_space(void)
     status = GdipCreateStringFormat(0, LANG_NEUTRAL, &format);
     expect(Ok, status);
 
-    status = GdipCreateFontFamilyFromName(tahomaW, NULL, &family);
+    status = GdipCreateFontFamilyFromName(L"Tahoma", NULL, &family);
     expect(Ok, status);
     hdc = CreateCompatibleDC(0);
     status = GdipCreateFromHDC(hdc, &graphics);
@@ -4915,12 +4957,12 @@ static void test_measured_extra_space(void)
             /* bounds.width of 1 glyph: [margin]+[width]+[margin] */
             set_rect_empty(&rect);
             set_rect_empty(&bounds_1);
-            status = GdipMeasureString(graphics, string, 1, font, &rect, format, &bounds_1, NULL, NULL);
+            status = GdipMeasureString(graphics, L"W", 1, font, &rect, format, &bounds_1, NULL, NULL);
             expect(Ok, status);
             /* bounds.width of 2 identical glyphs: [margin]+[width]+[width]+[margin] */
             set_rect_empty(&rect);
             set_rect_empty(&bounds_2);
-            status = GdipMeasureString(graphics, string, 2, font, &rect, format, &bounds_2, NULL, NULL);
+            status = GdipMeasureString(graphics, L"WW", 2, font, &rect, format, &bounds_2, NULL, NULL);
             expect(Ok, status);
 
             /* margin = [bounds.width of 1] - [bounds.width of 2] / 2*/
@@ -5071,6 +5113,7 @@ static void test_clipping(void)
     GpRegion *region, *region100x100;
     GpMatrix *matrix;
     GpRectF rect;
+    GpRect recti;
     GpPointF ptf[4];
     GpUnit unit;
     HRGN hrgn;
@@ -5106,6 +5149,11 @@ static void test_clipping(void)
     expect(Ok, status);
     ok(rect.X == 100.0 && rect.Y == 100.0 && rect.Width == 100.0 && rect.Height == 100.0,
        "expected 100.0,100.0-100.0,100.0, got %.2f,%.2f-%.2f,%.2f\n", rect.X, rect.Y, rect.Width, rect.Height);
+
+    status = GdipGetClipBoundsI(graphics, &recti);
+    expect(Ok, status);
+    ok(recti.X == 100 && recti.Y == 100 && recti.Width == 100 && recti.Height == 100,
+       "expected 100,100-100,100, got %i,%i-%i,%i\n", recti.X, recti.Y, recti.Width, recti.Height);
 
     /* Clip region does not account for changes to gdi32 transform */
     SetViewportOrgEx(hdc, 10, 10, NULL);
@@ -5148,6 +5196,11 @@ static void test_clipping(void)
     expect(Ok, status);
     ok(rect.X == 45.0 && rect.Y == 20.0 && rect.Width == 50.0 && rect.Height == 25.0,
        "expected 45.0,20.0-50.0,25.0, got %.2f,%.2f-%.2f,%.2f\n", rect.X, rect.Y, rect.Width, rect.Height);
+
+    status = GdipGetClipBoundsI(graphics, &recti);
+    expect(Ok, status);
+    ok(recti.X == 45 && recti.Y == 20 && recti.Width == 50 && recti.Height == 25,
+       "expected 45,20-50,25, got %i,%i-%i,%i\n", recti.X, recti.Y, recti.Width, recti.Height);
 
     status = GdipSetEmpty(region);
     expect(Ok, status);
@@ -6368,7 +6421,7 @@ static DWORD* GetBitmapPixelBuffer(HDC hdc, HBITMAP hbmp, int width, int height)
     bi.biClrImportant = 0;
 
     lines = GetDIBits(hdc, hbmp, 0, height, buffer, (BITMAPINFO *)&bi, DIB_RGB_COLORS);
-    ok(lines == height, "Expected GetDIBits:%p,%d->%d,%d\n", buffer, height, lines, GetLastError());
+    ok(lines == height, "Expected GetDIBits:%p,%d->%d,%ld\n", buffer, height, lines, GetLastError());
 
     return buffer;
 }
@@ -6792,6 +6845,385 @@ static void test_hdc_caching(void)
     DeleteObject(hbm);
 }
 
+static void test_gdi_interop_bitmap(void)
+{
+    GpBitmap *bitmap;
+    GpGraphics *graphics;
+    GpMatrix *transform;
+    GpBrush *brush;
+    GpStatus stat;
+    HDC hdc;
+    HBRUSH hbrush, holdbrush;
+    ARGB color;
+
+    stat = GdipCreateBitmapFromScan0(100, 100, 0, PixelFormat32bppARGB, NULL, &bitmap);
+    expect(Ok, stat);
+
+    stat = GdipGetImageGraphicsContext((GpImage*)bitmap, &graphics);
+    expect(Ok, stat);
+
+    stat = GdipCreateMatrix(&transform);
+    expect(Ok, stat);
+
+    stat = GdipSetMatrixElements(transform, 1.0, 0.0, 0.0, 1.0, 50.0, 50.0);
+    expect(Ok, stat);
+
+    /* GDI+: Set world transform. Should not matter to GDI. */
+    stat = GdipSetWorldTransform(graphics, transform);
+    expect(Ok, stat);
+
+    stat = GdipGetDC(graphics, &hdc);
+    expect(Ok, stat);
+
+    hbrush = CreateSolidBrush(0xff0000);
+
+    holdbrush = SelectObject(hdc, hbrush);
+
+    /* GDI: Draw a rectangle at physical coords (5, 5) to (12, 10). */
+    Rectangle(hdc, 5, 5, 12, 10);
+
+    holdbrush = SelectObject(hdc, holdbrush);
+
+    /* GDI: Set view port origin. Should not matter to GDI+. */
+    SetViewportOrgEx(hdc, 20, 20, NULL);
+
+    GdipReleaseDC(graphics, hdc);
+
+    stat = GdipCreateSolidFill((ARGB)0xff0000ff, (GpSolidFill**)&brush);
+    expect(Ok, stat);
+
+    /* GDI+: Draw a rectangle at physical coords (85, 85) to (88, 95). */
+    stat = GdipFillRectangleI(graphics, brush, 35, 35, 3, 10);
+    expect(Ok, stat);
+
+    stat = GdipDeleteBrush(brush);
+    expect(Ok, stat);
+
+    stat = GdipGetDC(graphics, &hdc);
+    expect(Ok, stat);
+
+    holdbrush = SelectObject(hdc, hbrush);
+
+    /* GDI: Draw a rectangle at physical coords (25, 25) to (30, 34).
+       Updated view port origin should still be in effect. */
+    Rectangle(hdc, 5, 5, 10, 14);
+
+    SelectObject(hdc, holdbrush);
+
+    DeleteObject(hbrush);
+    stat = GdipReleaseDC(graphics, hdc);
+    expect(Ok, stat);
+
+    stat = GdipDeleteMatrix(transform);
+    expect(Ok, stat);
+
+    stat = GdipBitmapGetPixel(bitmap, 6, 6, &color);
+    expect(Ok, stat);
+    expect(0xff0000ff, color);
+
+    stat = GdipBitmapGetPixel(bitmap, 26, 26, &color);
+    expect(Ok, stat);
+    expect(0xff0000ff, color);
+
+    stat = GdipBitmapGetPixel(bitmap, 86, 86, &color);
+    expect(Ok, stat);
+    expect(0xff0000ff, color);
+
+    stat = GdipDeleteGraphics(graphics);
+    expect(Ok, stat);
+
+    stat = GdipDisposeImage((GpImage*)bitmap);
+    expect(Ok, stat);
+}
+
+static void test_gdi_interop_hdc(void)
+{
+    BITMAPINFO bmi;
+    GpBrush *brush;
+    GpGraphics *graphics;
+    GpMatrix *transform;
+    GpStatus stat;
+    HBITMAP hbm;
+    HBRUSH hbrush, holdbrush;
+    HDC gdi_hdc;
+    HDC src_hdc;
+    ULONG *bits;
+    XFORM xform = { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0 };
+
+    src_hdc = CreateCompatibleDC(0);
+    ok(src_hdc != NULL, "CreateCompatibleDC failed\n");
+
+    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+    bmi.bmiHeader.biHeight = -100;
+    bmi.bmiHeader.biWidth = 100;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    bmi.bmiHeader.biClrUsed = 0;
+    bmi.bmiHeader.biClrImportant = 0;
+
+    hbm = CreateDIBSection(src_hdc, &bmi, DIB_RGB_COLORS, (void**)&bits, NULL, 0);
+    ok(hbm != NULL, "CreateDIBSection failed\n");
+
+    SelectObject(src_hdc, hbm);
+
+    SetGraphicsMode(src_hdc, GM_ADVANCED);
+
+    xform.eDx = 10.0;
+    xform.eDy = 10.0;
+    SetWorldTransform(src_hdc, &xform);
+
+    stat = GdipCreateFromHDC(src_hdc, &graphics);
+    expect(Ok, stat);
+
+    stat = GdipCreateMatrix(&transform);
+    expect(Ok, stat);
+
+    stat = GdipSetMatrixElements(transform, 1.0, 0.0, 0.0, 1.0, 40.0, 40.0);
+    expect(Ok, stat);
+
+    /* GDI+: Set world transform. Should not matter to GDI. */
+    stat = GdipSetWorldTransform(graphics, transform);
+    expect(Ok, stat);
+
+    stat = GdipGetDC(graphics, &gdi_hdc);
+    expect(Ok, stat);
+    ok( gdi_hdc == src_hdc, "wrong dc\n" );
+
+    /* GDI: Set GDI transform back to (0, 0).
+       Should not matter to GDI+. */
+    xform.eDx = 0.0;
+    xform.eDy = 0.0;
+    SetWorldTransform(gdi_hdc, &xform);
+
+    hbrush = CreateSolidBrush(0xff00aa);
+
+    holdbrush = SelectObject(gdi_hdc, hbrush);
+
+    /* GDI: Draw a rectangle at physical coords (5, 5) to (12, 10). */
+    Rectangle(gdi_hdc, 5, 5, 12, 10);
+
+    holdbrush = SelectObject(gdi_hdc, holdbrush);
+
+    /* GDI: Set GDI transform to translate (+20, +20).
+       Should not matter to GDI+. */
+    xform.eDx = 20.0;
+    xform.eDy = 20.0;
+    SetWorldTransform(gdi_hdc, &xform);
+
+    GdipReleaseDC(graphics, gdi_hdc);
+
+    /* GDI world transform should still be intact, even when back
+       in GDI+ mode. */
+    stat = GetWorldTransform(src_hdc, &xform);
+    expect(TRUE, stat);
+    expect(20.0, xform.eDx);
+    expect(20.0, xform.eDy);
+
+    stat = GdipCreateSolidFill((ARGB)0xffaa00ff, (GpSolidFill**)&brush);
+    expect(Ok, stat);
+
+    /* GDI+: Draw a rectangle at physical coords (85, 85) to (88, 95).
+       The fact that the GDI world transform has been updated should
+       not influence the GDI+ world transform. GDI+ should still apply
+       the world transform from the when HDC backed graphics object was
+       instantiated. */
+    stat = GdipFillRectangleI(graphics, brush, 35, 35, 3, 10);
+    expect(Ok, stat);
+
+    stat = GdipDeleteBrush(brush);
+    expect(Ok, stat);
+
+    stat = GdipGetDC(graphics, &gdi_hdc);
+    expect(Ok, stat);
+
+    holdbrush = SelectObject(gdi_hdc, hbrush);
+
+    /* GDI: Draw a rectangle at physical coords (25, 25) to (30, 34).
+       Updated transform should still be in effect. */
+    Rectangle(gdi_hdc, 5, 5, 10, 14);
+
+    SelectObject(gdi_hdc, holdbrush);
+
+    stat = GdipReleaseDC(graphics, gdi_hdc);
+    expect(Ok, stat);
+
+    GdipDeleteGraphics(graphics);
+    stat = GdipDeleteMatrix(transform);
+    expect(Ok, stat);
+
+    holdbrush = SelectObject(src_hdc, hbrush);
+
+    /* GDI: Draw a rectangle at physical coords (35, 35) to (40, 38).
+       Updated transform should still be in effect on src_hdc. */
+    Rectangle(gdi_hdc, 15, 15, 20, 18);
+
+    SelectObject(gdi_hdc, holdbrush);
+
+    DeleteObject(hbrush);
+
+    expect(0x00aa00ff, bits[6 * 100 + 6]);
+    expect(0x00aa00ff, bits[26 * 100 + 26]);
+    expect(0x00aa00ff, bits[36 * 100 + 36]);
+    expect(0xffaa00ff, bits[86 * 100 + 86]);
+
+    DeleteDC(src_hdc);
+    DeleteObject(hbm);
+}
+
+static HDC create_printer_dc(void)
+{
+    char buffer[260];
+    DWORD len;
+    PRINTER_INFO_2A *pbuf = NULL;
+    DRIVER_INFO_3A *dbuf = NULL;
+    HANDLE hprn = 0;
+    HDC hdc = 0;
+    HMODULE winspool = LoadLibraryA("winspool.drv");
+    BOOL (WINAPI *pOpenPrinterA)(LPSTR, HANDLE *, LPPRINTER_DEFAULTSA);
+    BOOL (WINAPI *pGetDefaultPrinterA)(LPSTR, LPDWORD);
+    BOOL (WINAPI *pGetPrinterA)(HANDLE, DWORD, LPBYTE, DWORD, LPDWORD);
+    BOOL (WINAPI *pGetPrinterDriverA)(HANDLE, LPSTR, DWORD, LPBYTE, DWORD, LPDWORD);
+    BOOL (WINAPI *pClosePrinter)(HANDLE);
+
+    pGetDefaultPrinterA = (void *)GetProcAddress(winspool, "GetDefaultPrinterA");
+    pOpenPrinterA = (void *)GetProcAddress(winspool, "OpenPrinterA");
+    pGetPrinterA = (void *)GetProcAddress(winspool, "GetPrinterA");
+    pGetPrinterDriverA = (void *)GetProcAddress(winspool, "GetPrinterDriverA");
+    pClosePrinter = (void *)GetProcAddress(winspool, "ClosePrinter");
+
+    if (!pGetDefaultPrinterA || !pOpenPrinterA || !pGetPrinterA || !pGetPrinterDriverA || !pClosePrinter)
+        goto done;
+
+    len = sizeof(buffer);
+    if (!pGetDefaultPrinterA(buffer, &len)) goto done;
+    if (!pOpenPrinterA(buffer, &hprn, NULL)) goto done;
+
+    pGetPrinterA(hprn, 2, NULL, 0, &len);
+    pbuf = HeapAlloc(GetProcessHeap(), 0, len);
+    if (!pGetPrinterA(hprn, 2, (LPBYTE)pbuf, len, &len)) goto done;
+
+    pGetPrinterDriverA(hprn, NULL, 3, NULL, 0, &len);
+    dbuf = HeapAlloc(GetProcessHeap(), 0, len);
+    if (!pGetPrinterDriverA(hprn, NULL, 3, (LPBYTE)dbuf, len, &len)) goto done;
+
+    hdc = CreateDCA(dbuf->pDriverPath, pbuf->pPrinterName, pbuf->pPortName, pbuf->pDevMode);
+    trace("hdc %p for driver '%s' printer '%s' port '%s'\n", hdc,
+          dbuf->pDriverPath, pbuf->pPrinterName, pbuf->pPortName);
+done:
+    HeapFree(GetProcessHeap(), 0, dbuf);
+    HeapFree(GetProcessHeap(), 0, pbuf);
+    if (hprn) pClosePrinter(hprn);
+    if (winspool) FreeLibrary(winspool);
+    return hdc;
+}
+
+static BOOL check_rect_pixels(const DWORD *pixel, const RectF *rect, UINT width, DWORD expected, Point *failed)
+{
+    UINT x, y;
+    BOOL ret = TRUE;
+
+    for (y = (UINT)rect->Y; y < (UINT)(rect->Y + rect->Height); y++)
+    {
+        for (x = (UINT)rect->X; x < (UINT)(rect->X + rect->Width); x++)
+        {
+            if (pixel[x + y * width] != expected)
+            {
+                ret = FALSE;
+                goto done;
+            }
+        }
+    }
+
+done:
+    if (!ret)
+    {
+        failed->X = x;
+        failed->Y = y;
+    }
+    else
+    {
+        failed->X = 0;
+        failed->Y = 0;
+    }
+    return ret;
+}
+
+static void test_printer_dc(void)
+{
+    HDC hdc_printer, hdc;
+    Status status;
+    GpGraphics *graphics;
+    REAL dpi_x, dpi_y, pixel_per_unit_x, pixel_per_unit_y;
+    HBITMAP bitmap;
+    UINT width = 16, height = 16;
+    GpUnit unit;
+    GpSolidFill *brush;
+    DWORD *pixel;
+    BOOL match;
+    RectF rect;
+    Point pt;
+
+    hdc_printer = create_printer_dc();
+    if (!hdc_printer)
+    {
+        skip("could not create a DC for the default printer\n");
+        return;
+    }
+
+    hdc = CreateCompatibleDC(hdc_printer);
+    bitmap = CreateCompatibleBitmap(hdc, width, height);
+    SelectObject(hdc, bitmap);
+
+    status = GdipCreateFromHDC(hdc, &graphics);
+    expect(Ok, status);
+
+    GdipGetPageUnit(graphics, &unit);
+    expect(UnitDisplay, unit);
+
+    GdipGetDpiX(graphics, &dpi_x);
+    GdipGetDpiY(graphics, &dpi_y);
+    expectf((REAL)GetDeviceCaps(hdc, LOGPIXELSX), dpi_x);
+    expectf((REAL)GetDeviceCaps(hdc, LOGPIXELSY), dpi_y);
+
+    /* For graphics created from printer DC, UnitDisplay specifies that a unit is 1/100 inch */
+    pixel_per_unit_x = dpi_x / 100.0;
+    pixel_per_unit_y = dpi_y / 100.0;
+
+    status = GdipCreateSolidFill((ARGB)0xffffffff, &brush);
+    expect(Ok, status);
+
+    status = GdipFillRectangleI(graphics, (GpBrush *)brush, 1, 1, 1, 1);
+    expect(Ok, status);
+
+    pixel = GetBitmapPixelBuffer(hdc, bitmap, width, height);
+
+    /* pixels at (0, 0) should all be 0 */
+    rect.X = 0;
+    rect.Y = 0;
+    rect.Width = pixel_per_unit_x;
+    rect.Height = pixel_per_unit_y;
+    match = check_rect_pixels(pixel, &rect, width, 0, &pt);
+    ok(match, "Expected pixel (%u, %u) to be %08x, got %08lx\n",
+       pt.X, pt.Y, 0, pixel[pt.X + pt.Y * width]);
+
+    /* pixels at (1, 1) should all be 0x00ffffff */
+    rect.X = pixel_per_unit_x;
+    rect.Y = pixel_per_unit_y;
+    rect.Width = pixel_per_unit_x;
+    rect.Height = pixel_per_unit_y;
+    match = check_rect_pixels(pixel, &rect, width, 0x00ffffff, &pt);
+    ok(match, "Expected pixel (%u, %u) to be %08x, got %08lx\n",
+       pt.X, pt.Y, 0x00ffffff, pixel[pt.X + pt.Y * width]);
+
+    GdipFree(pixel);
+    GdipDeleteBrush((GpBrush *)brush);
+    GdipDeleteGraphics(graphics);
+    DeleteObject(bitmap);
+    DeleteDC(hdc);
+    DeleteDC(hdc_printer);
+}
+
 START_TEST(graphics)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -6885,6 +7317,9 @@ START_TEST(graphics)
     test_GdipGraphicsSetAbort();
     test_cliphrgn_transform();
     test_hdc_caching();
+    test_gdi_interop_bitmap();
+    test_gdi_interop_hdc();
+    test_printer_dc();
 
     GdiplusShutdown(gdiplusToken);
     DestroyWindow( hwnd );
