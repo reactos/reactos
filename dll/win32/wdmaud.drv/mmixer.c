@@ -776,7 +776,32 @@ WdmAudGetWavePositionByMMixer(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
     IN  MMTIME* Time)
 {
-    /* FIXME */
+    PSOUND_DEVICE SoundDevice;
+    MMDEVICE_TYPE DeviceType;
+    MIXER_STATUS Status;
+    MMRESULT Result;
+    DWORD Position;
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+    if (!MMSUCCESS(Result))
+        return TranslateInternalMmResult(Result);
+
+    Result = GetSoundDeviceType(SoundDevice, &DeviceType);
+    SND_ASSERT(Result == MMSYSERR_NOERROR);
+
+    if (DeviceType == WAVE_IN_DEVICE_TYPE || DeviceType == WAVE_OUT_DEVICE_TYPE)
+    {
+        Status = MMixerGetWavePosition(&MixerContext, SoundDeviceInstance->Handle, &Position);
+        if (Status == MM_STATUS_SUCCESS)
+        {
+            /* Store position */
+            Time->wType = TIME_BYTES;
+            Time->u.cb = Position;
+
+            /* Completed successfully */
+            return MMSYSERR_NOERROR;
+        }
+    }
     return MMSYSERR_NOTSUPPORTED;
 }
 
