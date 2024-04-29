@@ -611,6 +611,8 @@ extern "C"
     GpStatus WINGDIPAPI
     GdipSaveAdd(GpImage *, GDIPCONST EncoderParameters *);
     GpStatus WINGDIPAPI
+    GdipSaveAddImage(GpImage*,GpImage*,GDIPCONST EncoderParameters*);
+    GpStatus WINGDIPAPI
     GdipSaveGraphics(GpGraphics *, GraphicsState *);
     GpStatus WINGDIPAPI
     GdipScaleWorldTransform(GpGraphics *, REAL, REAL, GpMatrixOrder);

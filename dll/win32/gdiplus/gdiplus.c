@@ -49,7 +49,7 @@ static Status WINAPI NotificationHook(ULONG_PTR *token)
 
 static void WINAPI NotificationUnhook(ULONG_PTR token)
 {
-    TRACE("%ld\n", token);
+    TRACE("%Id\n", token);
 }
 
 /*****************************************************
@@ -57,7 +57,7 @@ static void WINAPI NotificationUnhook(ULONG_PTR token)
  */
 BOOL WINAPI DllMain(HINSTANCE hinst, DWORD reason, LPVOID reserved)
 {
-    TRACE("(%p, %d, %p)\n", hinst, reason, reserved);
+    TRACE("(%p, %ld, %p)\n", hinst, reason, reserved);
 
     switch(reason)
     {
@@ -115,7 +115,7 @@ GpStatus WINAPI GdiplusNotificationHook(ULONG_PTR *token)
 
 void WINAPI GdiplusNotificationUnhook(ULONG_PTR token)
 {
-    FIXME("%ld\n", token);
+    FIXME("%Id\n", token);
     NotificationUnhook(token);
 }
 
@@ -202,54 +202,54 @@ static void add_arc_part(GpPointF * pt, REAL x1, REAL y1, REAL x2, REAL y2,
  * adjusts the angles so that when we stretch the points they will end in the
  * right place. This is only complicated because atan and atan2 do not behave
  * conveniently. */
-static void unstretch_angle(REAL * angle, REAL rad_x, REAL rad_y)
+static REAL unstretch_angle(REAL angle, REAL dia_x, REAL dia_y)
 {
     REAL stretched;
     INT revs_off;
 
-    *angle = deg2rad(*angle);
+    if(fabs(cos(angle)) < 0.00001 || fabs(sin(angle)) < 0.00001)
+        return angle;
 
-    if(fabs(cos(*angle)) < 0.00001 || fabs(sin(*angle)) < 0.00001)
-        return;
-
-    stretched = gdiplus_atan2(sin(*angle) / fabs(rad_y), cos(*angle) / fabs(rad_x));
-    revs_off = gdip_round(*angle / (2.0 * M_PI)) - gdip_round(stretched / (2.0 * M_PI));
+    stretched = gdiplus_atan2(sin(angle) / fabs(dia_y), cos(angle) / fabs(dia_x));
+    revs_off = gdip_round(angle / (2.0 * M_PI)) - gdip_round(stretched / (2.0 * M_PI));
     stretched += ((REAL)revs_off) * M_PI * 2.0;
-    *angle = stretched;
+    return stretched;
 }
 
 /* Stores the bezier points that correspond to the arc in points.  If points is
  * null, just return the number of points needed to represent the arc. */
-INT arc2polybezier(GpPointF * points, REAL x1, REAL y1, REAL x2, REAL y2,
-    REAL startAngle, REAL sweepAngle)
+INT arc2polybezier(GpPointF * points, REAL left, REAL top, REAL width, REAL height,
+    REAL start_angle, REAL sweep_angle)
 {
     INT i;
-    REAL end_angle, start_angle, endAngle;
+    REAL partial_end_angle, end_angle;
 
-    endAngle = startAngle + sweepAngle;
-    unstretch_angle(&startAngle, x2 / 2.0, y2 / 2.0);
-    unstretch_angle(&endAngle, x2 / 2.0, y2 / 2.0);
+    end_angle = deg2rad(start_angle + sweep_angle);
+    start_angle = deg2rad(start_angle);
 
-    /* start_angle and end_angle are the iterative variables */
-    start_angle = startAngle;
+    if (width != height)
+    {
+        start_angle = unstretch_angle(start_angle, width, height);
+        end_angle = unstretch_angle(end_angle, width, height);
+    }
 
     for(i = 0; i < MAX_ARC_PTS - 1; i += 3){
         /* check if we've overshot the end angle */
-        if( sweepAngle > 0.0 )
+        if( sweep_angle > 0.0 )
         {
-            if (start_angle >= endAngle) break;
-            end_angle = min(start_angle + M_PI_2, endAngle);
+            if (start_angle >= end_angle) break;
+            partial_end_angle = min(start_angle + M_PI_2, end_angle);
         }
         else
         {
-            if (start_angle <= endAngle) break;
-            end_angle = max(start_angle - M_PI_2, endAngle);
+            if (start_angle <= end_angle) break;
+            partial_end_angle = max(start_angle - M_PI_2, end_angle);
         }
 
         if (points)
-            add_arc_part(&points[i], x1, y1, x2, y2, start_angle, end_angle, i == 0);
+            add_arc_part(&points[i], left, top, width, height, start_angle, partial_end_angle, i == 0);
 
-        start_angle += M_PI_2 * (sweepAngle < 0.0 ? -1.0 : 1.0);
+        start_angle = partial_end_angle;
     }
 
     if (i == 0) return 0;
@@ -324,14 +324,18 @@ GpStatus hresult_to_status(HRESULT res)
 }
 
 /* converts a given unit to its value in pixels */
-REAL units_to_pixels(REAL units, GpUnit unit, REAL dpi)
+REAL units_to_pixels(REAL units, GpUnit unit, REAL dpi, BOOL printer_display)
 {
     switch (unit)
     {
     case UnitPixel:
     case UnitWorld:
-    case UnitDisplay:
         return units;
+    case UnitDisplay:
+        if (printer_display)
+            return units * dpi / 100.0;
+        else
+            return units;
     case UnitPoint:
         return units * dpi / point_per_inch;
     case UnitInch:
@@ -347,14 +351,18 @@ REAL units_to_pixels(REAL units, GpUnit unit, REAL dpi)
 }
 
 /* converts value in pixels to a given unit */
-REAL pixels_to_units(REAL pixels, GpUnit unit, REAL dpi)
+REAL pixels_to_units(REAL pixels, GpUnit unit, REAL dpi, BOOL printer_display)
 {
     switch (unit)
     {
     case UnitPixel:
     case UnitWorld:
-    case UnitDisplay:
         return pixels;
+    case UnitDisplay:
+        if (printer_display)
+            return pixels * 100.0 / dpi;
+        else
+            return pixels;
     case UnitPoint:
         return pixels * point_per_inch / dpi;
     case UnitInch:
@@ -369,10 +377,10 @@ REAL pixels_to_units(REAL pixels, GpUnit unit, REAL dpi)
     }
 }
 
-REAL units_scale(GpUnit from, GpUnit to, REAL dpi)
+REAL units_scale(GpUnit from, GpUnit to, REAL dpi, BOOL printer_display)
 {
-    REAL pixels = units_to_pixels(1.0, from, dpi);
-    return pixels_to_units(pixels, to, dpi);
+    REAL pixels = units_to_pixels(1.0, from, dpi, printer_display);
+    return pixels_to_units(pixels, to, dpi, printer_display);
 }
 
 /* Calculates Bezier points from cardinal spline points. */
