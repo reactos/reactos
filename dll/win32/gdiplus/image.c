@@ -5335,7 +5335,11 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromHBITMAP(HBITMAP hbm, HPALETTE hpal, GpBi
     GpStatus retval;
     PixelFormat format;
     BitmapData lockeddata;
+#ifdef __REACTOS__
+    char bmibuf[FIELD_OFFSET(BITMAPINFO, bmiColors) + 256 * sizeof(RGBQUAD)];
+#else
     char bmibuf[FIELD_OFFSET(BITMAPINFO, bmiColors[256])];
+#endif
     BITMAPINFO *pbmi = (BITMAPINFO *)bmibuf;
 
     TRACE("%p %p %p\n", hbm, hpal, bitmap);
