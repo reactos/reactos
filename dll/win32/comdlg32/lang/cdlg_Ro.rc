@@ -514,7 +514,7 @@ FONT 8, "MS Shell Dlg"
     COMBOBOX        IDC_FILETYPE, 226, 256, 100, 60,  WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL |
                     WS_CLIPSIBLINGS | CBS_HASSTRINGS | CBS_DROPDOWNLIST
 
-    DEFPUSHBUTTON   "&Deschideree",  IDOK,     350, 240, 40, 14, WS_GROUP | WS_CLIPSIBLINGS
+    DEFPUSHBUTTON   "&Deschidere",  IDOK,     350, 240, 40, 14, WS_GROUP | WS_CLIPSIBLINGS
 
     /* drop-down menu for open button */
     CONTROL         "6", psh1, "Button", WS_CHILD | WS_CLIPSIBLINGS | WS_GROUP | WS_TABSTOP |
