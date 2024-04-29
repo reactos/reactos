@@ -236,7 +236,7 @@ SetNtpClientValues(VOID)
         goto done;
     }
 
-    dwValue = 4 * 60 * 60; // 4 hour poll time for setting clock
+    dwValue = W32TIME_POLL_INTERVAL;
     dwError = RegSetValueExW(hKey,
                              L"SpecialPollInterval",
                              0,
