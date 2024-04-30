@@ -50,23 +50,23 @@ END
 
 IDD_PAGE_BUTTON DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Bottoni"
+CAPTION "Pulsanti"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Configurazione dei bottoni", -1, 5, 5, 230, 70
-    CHECKBOX "&Scambia il bottone secondario e primario", IDC_SWAP_MOUSE_BUTTONS, 10, 15, 140, 10
+    GROUPBOX "Configurazione dei pulsanti", -1, 5, 5, 230, 70
+    CHECKBOX "&Inverti il pulsante secondario e primario", IDC_SWAP_MOUSE_BUTTONS, 10, 15, 140, 10
     CONTROL "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 165, 15, 65, 57, WS_EX_STATICEDGE
-    LTEXT "Assegna al tasto destro del mouse le funzioni principali come ad esempio la selezione e il trascinamento", -1, 10, 30, 150, 30
-    GROUPBOX "Velocità del doppio clic", -1, 5, 76, 230, 70
-    LTEXT "Fai doppio clic sulla cartella per verificare le impostazioni. Se la cartella non si apre o chiude, prova a usare una velocità minore.", -1, 10, 86, 150, 30
+    LTEXT "Assegna al tasto destro del mouse le funzioni principali come ad esempio la selezione e il trascinamento degli oggetti", -1, 10, 30, 150, 30
+    GROUPBOX "Velocità doppio clic", -1, 5, 76, 230, 70
+    LTEXT "Fare doppio clic sulla cartella per verificare le impostazioni. Se la cartella non si apre o chiude, provare ad usare una velocità minore.", -1, 10, 86, 150, 30
     LTEXT "Velocità:  Lenta", -1, 10, 121, 92, 8
     LTEXT "Veloce", -1, 140, 121, 30, 8
     CONTROL "", IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 62, 121, 70, 17
     CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 165, 86, 65, 57, WS_EX_STATICEDGE
     GROUPBOX "Blocca clic", -1, 5, 150, 230, 70
-    CHECKBOX "&Abilita Blocca Clic", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
+    CHECKBOX "&Attiva Blocca Clic", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
     PUSHBUTTON "&Impostazioni...", IDC_BUTTON_CLICK_LOCK, 164, 160, 66, 14
-    LTEXT "Permette di selezionare e trascinare senza tenere premuto il tasto del mouse. Per attivare premere brevemente il tasto del mouse. Per disattivare, cliccare di nuovo.", -1, 10, 180, 190, 30
+    LTEXT "Permette di selezionare e trascinare oggetti senza tenere premuto il tasto del mouse. Per selezionare, premere il pulsante del mouse. Per rilasciare, fare clic di nuovo.", -1, 10, 180, 190, 30
 END
 
 IDD_PAGE_POINTER DIALOGEX 0, 0, 246, 228
@@ -76,14 +76,14 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Schema", -1, 5, 5, 170, 45
     COMBOBOX IDC_COMBO_CURSOR_SCHEME, 10, 15, 155, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Salva come...", IDC_BUTTON_SAVEAS_SCHEME, 66, 30, 54, 15
-    PUSHBUTTON "&Cancella", IDC_BUTTON_DELETE_SCHEME, 125, 30, 40, 15
+    PUSHBUTTON "Salva con nome...", IDC_BUTTON_SAVEAS_SCHEME, 66, 30, 54, 15
+    PUSHBUTTON "&Elimina", IDC_BUTTON_DELETE_SCHEME, 125, 30, 40, 15
     CONTROL "", IDC_IMAGE_CURRENT_CURSOR, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 190, 9, 45, 41, WS_EX_STATICEDGE
     LTEXT "&Personalizza", -1, 5, 60, 48, 10
     LISTBOX IDC_LISTBOX_CURSOR, 5, 70, 230, 120, WS_VISIBLE | WS_BORDER | WS_TABSTOP | WS_VSCROLL | LBS_OWNERDRAWFIXED | LBS_NOTIFY
-    CHECKBOX "&Abilita l'ombra del puntatore", IDC_CHECK_CURSOR_SHADOW, 5, 200, 108, 10
-    PUSHBUTTON "Usa predefinito", IDC_BUTTON_USE_DEFAULT_CURSOR, 120, 199, 60, 15
-    PUSHBUTTON "&Esplora", IDC_BUTTON_BROWSE_CURSOR, 185, 199, 50, 15
+    CHECKBOX "&Abilita ombra puntatore", IDC_CHECK_CURSOR_SHADOW, 5, 200, 108, 10
+    PUSHBUTTON "Predefinito", IDC_BUTTON_USE_DEFAULT_CURSOR, 120, 199, 60, 15
+    PUSHBUTTON "&Sfoglia....", IDC_BUTTON_BROWSE_CURSOR, 185, 199, 50, 15
 END
 
 IDD_CURSOR_SCHEME_SAVEAS DIALOGEX 0, 0, 200, 75
@@ -128,13 +128,13 @@ END
 
 IDD_PAGE_WHEEL DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Rotella"
+CAPTION "Rotellina"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Scorrimento", -1, 5, 5, 230, 80
     ICON IDI_MOUSE_WHEEL, IDC_ICON_WHEEL, 20, 20, 32, 32
-    LTEXT "Gira la rotella di una tacca per scorrere", -1, 60, 15, 150, 10
-    RADIOBUTTON "Il seguente numero di linee per volta", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
+    LTEXT "Ruotare la rotellina di una tacca per scorrere", -1, 60, 15, 150, 10
+    RADIOBUTTON "Il seguente numero di righe per volta", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
     RADIOBUTTON "&Uno schermo alla volta", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 90, 10
     EDITTEXT IDC_EDIT_WHEEL_SCROLL_LINES, 70, 45, 60, 15, ES_RIGHT | ES_NUMBER | WS_VISIBLE | WS_GROUP | WS_TABSTOP
     CONTROL "", IDC_UPDOWN_WHEEL_SCROLL_LINES, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS, 125, 45, 12, 12
