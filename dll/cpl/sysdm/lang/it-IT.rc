@@ -32,9 +32,9 @@ BEGIN
     ICON IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
     LTEXT "Gestione dispositivi elenca tutti i dispositivi installati nel computer. Usate la gestione dispositivi per modificare le impostazioni di un dispositivo.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "&Gestione dispositivi...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 14
-    GROUPBOX "Hardware Wizard", IDC_STATIC, 6, 79, 244, 61
+    GROUPBOX "Procedura Guidata Hardware", IDC_STATIC, 6, 79, 244, 61
     ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
-    LTEXT "Hardware wizard aiuta ad installare, disinstallare, ripristinare, scollegare, estrarre e configurare l'hardware.", IDC_STATIC, 42, 90, 204, 24
+    LTEXT "Procedura Guidata Hardware aiuta ad installare, disinstallare, ripristinare, scollegare, estrarre e configurare l'hardware.", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON "&Hardware Wizard...", IDC_HARDWARE_WIZARD, 154, 120, 90, 14
     GROUPBOX "Profili Hardware", IDC_STATIC, 6, 149, 244, 61
     ICON IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
@@ -90,7 +90,7 @@ BEGIN
     PUSHBUTTON "C&ancella", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
     GROUPBOX "Selezione dei Profili Hardware", IDC_STATIC, 7, 130, 240, 75
     LTEXT "All'avvio di ReactOS:", IDC_STATIC, 14, 142, 210, 8
-    AUTORADIOBUTTON "&Aspetta finche non viene scelto un profilo", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
+    AUTORADIOBUTTON "&Aspetta finché non viene scelto un profilo", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
     AUTORADIOBUTTON "&Scegli il primo profilo in elenco se non avviene una scelta in ", IDC_HRDPROFSELECT, 14, 173, 190, 8
     LTEXT "Secondi", IDC_STATIC, 65, 187, 35, 8
     EDITTEXT IDC_HRDPROFEDIT, 25, 185, 35, 12
