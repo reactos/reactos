@@ -110,8 +110,6 @@ typedef struct _AFD_SEND_INFO_UDP {
     ULONG				AfdFlags;
     TDI_REQUEST_SEND_DATAGRAM		TdiRequest;
     TDI_CONNECTION_INFORMATION		TdiConnection;
-    PVOID				Address; // for CORE-17521
-    PINT				AddressLength; // for CORE-17521
 } AFD_SEND_INFO_UDP, *PAFD_SEND_INFO_UDP;
 
 C_ASSERT(sizeof(AFD_RECV_INFO) == sizeof(AFD_SEND_INFO));
