@@ -205,7 +205,7 @@ FONT 8, "MS Shell Dlg"
  RADIOBUTTON "&Pagini", rad3, 16, 75, 60, 12
  DEFPUSHBUTTON "OK", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Revocare", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Preferinţe", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Propr&ietăţi…", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
  LTEXT "&de la:", stc3, 60, 80, 30, 9
  LTEXT "&către:", stc4, 120, 80, 30, 9
  LTEXT "C&alitatea imprimării:", stc5, 6, 100, 76, 9
