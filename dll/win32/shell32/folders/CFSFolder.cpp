@@ -685,7 +685,7 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
 
 HRESULT CFSFolder::_ParseSimple(
     _In_ LPOLESTR lpszDisplayName,
-    _Out_ WIN32_FIND_DATAW *pFind,
+    _Inout_ WIN32_FIND_DATAW *pFind,
     _Out_ LPITEMIDLIST *ppidl)
 {
     HRESULT hr;
@@ -693,6 +693,8 @@ HRESULT CFSFolder::_ParseSimple(
 
     *ppidl = NULL;
 
+    const DWORD finalattr = pFind->dwFileAttributes;
+    const DWORD finalsizelo = pFind->nFileSizeLow;
     LPITEMIDLIST pidl;
     for (hr = S_OK; SUCCEEDED(hr); hr = SHILAppend(pidl, ppidl))
     {
@@ -700,9 +702,8 @@ HRESULT CFSFolder::_ParseSimple(
         if (hr != S_OK)
             break;
 
-        if (pchNext)
-            pFind->dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
-
+        pFind->dwFileAttributes = pchNext ? FILE_ATTRIBUTE_DIRECTORY : finalattr;
+        pFind->nFileSizeLow = pchNext ? 0 : finalsizelo;
         pidl = _ILCreateFromFindDataW(pFind);
         if (!pidl)
         {
