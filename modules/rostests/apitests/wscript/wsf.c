@@ -1,34 +1,39 @@
 /*
  * PROJECT:     ReactOS API tests
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
- * PURPOSE:     Test for wscript.exe
- * COPYRIGHT:   ReactOS Team
+ * PURPOSE:     Tests for wscript.exe
+ * COPYRIGHT:   Whindmar Saksit (whindsaks@proton.me)
  */
 
 #include <apitest.h>
 #include <windows.h>
 #include <shlwapi.h>
+#include <stdio.h>
 
 #define MYGUID "{898AC78E-BFC7-41FF-937D-EDD01E666707}"
 
 static DWORD getregdw(HKEY hKey, LPCSTR sub, LPCSTR name, DWORD *out, DWORD defval)
 {
+    LRESULT e;
     DWORD size = sizeof(*out);
     *out = 0;
-    LRESULT e = SHGetValueA(hKey, sub, name, NULL, out, &size);
+    e = SHGetValueA(hKey, sub, name, NULL, out, &size);
     if (e)
         *out = defval;
     return e;
 }
 
-static BOOL makestringfile(LPWSTR path, LPCSTR ext, LPCSTR string, const BYTE *map)
+static BOOL makestringfile(LPWSTR path, SIZE_T cchpath, LPCSTR ext, LPCSTR string, const BYTE *map)
 {
-    UINT cch = GetTempPathW(MAX_PATH, path);
+    UINT cch = GetTempPathW(cchpath, path);
     UINT16 i = 0;
+    if (!cch || cch > cchpath)
+        return FALSE;
     while (++i)
     {
         HANDLE hFile;
-        wsprintfW(path + cch, L"~%u.%hs", i, ext ? ext : "tmp");
+        if (_snwprintf(path + cch, cchpath - cch, L"~%u.%hs", i, ext ? ext : "tmp") >= cchpath - cch)
+            return FALSE;
         hFile = CreateFileW(path, GENERIC_WRITE, FILE_SHARE_READ, 0, CREATE_NEW, 0, NULL);
         if (hFile != INVALID_HANDLE_VALUE)
         {
@@ -57,7 +62,9 @@ static DWORD runscriptfile(LPCWSTR path, LPCWSTR engine)
     PROCESS_INFORMATION pi;
     LPCWSTR exe = engine ? engine : L"wscript.exe";
     WCHAR cmd[MAX_PATH * 2];
-    wsprintfW(cmd, L"\"%s\" //nologo \"%s\"", exe, path);
+
+    if (_snwprintf(cmd, _countof(cmd), L"\"%s\" //nologo \"%s\"", exe, path) >= _countof(cmd))
+        return ERROR_BUFFER_OVERFLOW;
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
     if (CreateProcessW(NULL, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
@@ -74,9 +81,9 @@ static DWORD runscriptfile(LPCWSTR path, LPCWSTR engine)
 
 static DWORD runscript(LPCSTR ext, LPCSTR script, const BYTE *map)
 {
-    WCHAR file[MAX_PATH];
     DWORD code;
-    if (!makestringfile(file, ext, script, map))
+    WCHAR file[MAX_PATH];
+    if (!makestringfile(file, _countof(file), ext, script, map))
     {
         skip("Unable to create script\n");
         return ERROR_FILE_NOT_FOUND;
@@ -86,7 +93,7 @@ static DWORD runscript(LPCSTR ext, LPCSTR script, const BYTE *map)
     return code;
 }
 
-static void test_defaultscriptisjs()
+static void test_defaultscriptisjs(void)
 {
     LPCSTR script = ""
     "<job>"
@@ -99,7 +106,7 @@ static void test_defaultscriptisjs()
     ok(runscript("wsf", script, NULL) == 42, "Script failed\n");
 }
 
-static void test_simplevb()
+static void test_simplevb(void)
 {
     LPCSTR script = ""
     "<job>"
@@ -113,7 +120,7 @@ static void test_simplevb()
     ok(runscript("wsf", script, NULL) == 42, "Script failed\n");
 }
 
-static void test_defpackagejob()
+static void test_defpackagejob(void)
 {
     LPCSTR script = ""
     "<package>"
@@ -132,7 +139,7 @@ static void test_defpackagejob()
     ok(runscript("wsf", script, NULL) == 42, "Script failed\n");
 }
 
-static void test_objecttag()
+static void test_objecttag(void)
 {
     DWORD dw;
     static const BYTE map[] = { '#', '\"', '$', '\\', 0, 0 };
@@ -157,10 +164,7 @@ static void test_objecttag()
 START_TEST(wsf)
 {
     test_defaultscriptisjs();
-
     test_simplevb();
-
     test_defpackagejob();
-
     test_objecttag();
 }

@@ -113,7 +113,7 @@ typedef struct {
 
 SIMPLEVECTOR g_global_items = { sizeof(GLOBAL_ITEM) };
 
-static void free_globals()
+static void free_globals(void)
 {
     UINT i;
     for (i = 0;; ++i)
