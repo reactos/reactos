@@ -926,7 +926,7 @@ HRESULT CDefView::MapFolderColumnToListColumn(UINT FoldCol)
     for (UINT i = 0;; ++i)
     {
         HRESULT r = SHGetLVColumnSubItem(m_ListView.m_hWnd, i);
-        if ((UINT) r == FoldCol)
+        if ((UINT)r == FoldCol)
             return i;
         else if (FAILED(r))
             return r;
@@ -942,7 +942,7 @@ HRESULT CDefView::MapListColumnToFolderColumn(UINT ListCol)
         UINT count = DPA_GetPtrCount(m_ListToFolderColMap);
         if (ListCol < count)
         {
-            HRESULT col = (INT)(INT_PTR) DPA_FastGetPtr(m_ListToFolderColMap, ListCol);
+            HRESULT col = (INT)(INT_PTR)DPA_FastGetPtr(m_ListToFolderColMap, ListCol);
             assert(col >= 0 && col == SHGetLVColumnSubItem(m_ListView.m_hWnd, ListCol));
             return col;
         }
@@ -991,7 +991,7 @@ HRESULT CDefView::LoadColumn(UINT FoldCol, UINT ListCol, BOOL Insert)
     SHELLDETAILS sd;
     HRESULT hr;
 
-    sd.str.uType = !STRRET_WSTR; // Protect ourself from broken implementations
+    sd.str.uType = !STRRET_WSTR; // Make sure "uninitialized" uType is not WSTR
     hr = GetDetailsByFolderColumn(NULL, FoldCol, sd);
     if (FAILED(hr))
         return hr;
@@ -1457,10 +1457,10 @@ HRESULT CDefView::FillList(BOOL IsRefreshCommand)
         sortCol = 0; // In case the folder does not know/care
         if (m_pSF2Parent)
         {
-            ULONG foldSortCol = sortCol;
-            HRESULT hr = m_pSF2Parent->GetDefaultColumn(NULL, &foldSortCol, NULL);
+            ULONG folderSortCol = sortCol, dummy;
+            HRESULT hr = m_pSF2Parent->GetDefaultColumn(NULL, &folderSortCol, &dummy);
             if (SUCCEEDED(hr))
-                hr = MapFolderColumnToListColumn(foldSortCol);
+                hr = MapFolderColumnToListColumn(folderSortCol);
             if (SUCCEEDED(hr))
                 sortCol = (int) hr;
         }
