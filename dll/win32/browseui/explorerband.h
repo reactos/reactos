@@ -64,7 +64,7 @@ private:
     HIMAGELIST m_hImageList;
     HTREEITEM  m_hRoot;
     HTREEITEM  m_oldSelected;
-    LPITEMIDLIST m_pidlCurrent;
+    LPITEMIDLIST m_pidlCurrent; // Note: This is NULL until the first user navigation!
 
     // *** notification cookies ***
     DWORD m_adviseCookie;
@@ -103,6 +103,8 @@ private:
     BOOL RenameItem(HTREEITEM toRename, LPITEMIDLIST newPidl);
     BOOL RefreshTreePidl(HTREEITEM tree, LPITEMIDLIST pidlParent);
     BOOL NavigateToCurrentFolder();
+    HRESULT GetCurrentLocation(PIDLIST_ABSOLUTE &pidl);
+    HRESULT IsCurrentLocation(PCIDLIST_ABSOLUTE pidl);
 
     // *** Tree item sorting callback ***
     static int CALLBACK CompareTreeItems(LPARAM p1, LPARAM p2, LPARAM p3);

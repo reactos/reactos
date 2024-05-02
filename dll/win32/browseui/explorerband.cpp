@@ -22,6 +22,7 @@
 #include "precomp.h"
 #include <commoncontrols.h>
 #include <undocshell.h>
+#include "utility.h"
 
 #if 1
 #undef UNIMPLEMENTED
@@ -261,6 +262,50 @@ CExplorerBand::NodeInfo* CExplorerBand::GetNodeInfo(HTREEITEM hItem)
     return reinterpret_cast<NodeInfo*>(tvItem.lParam);
 }
 
+static HRESULT GetCurrentLocationFromView(IShellView &View, PIDLIST_ABSOLUTE &pidl)
+{
+    CComPtr<IFolderView> pfv;
+    CComPtr<IShellFolder> psf;
+    HRESULT hr = View.QueryInterface(IID_PPV_ARG(IFolderView, &pfv));
+    if (SUCCEEDED(hr) && SUCCEEDED(hr = pfv->GetFolder(IID_PPV_ARG(IShellFolder, &psf))))
+        hr = SHELL_GetIDListFromObject(psf, &pidl);
+    return hr;
+}
+
+HRESULT CExplorerBand::GetCurrentLocation(PIDLIST_ABSOLUTE &pidl)
+{
+    pidl = NULL;
+    CComPtr<IShellBrowser> psb;
+    HRESULT hr = IUnknown_QueryService(m_pSite, SID_STopLevelBrowser, IID_PPV_ARG(IShellBrowser, &psb));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    CComPtr<IBrowserService> pbs;
+    if (SUCCEEDED(hr = psb->QueryInterface(IID_PPV_ARG(IBrowserService, &pbs))))
+        if (SUCCEEDED(hr = pbs->GetPidl(&pidl)) && pidl)
+            return hr;
+
+    CComPtr<IShellView> psv;
+    if (!FAILED_UNEXPECTEDLY(hr = psb->QueryActiveShellView(&psv)))
+        if (SUCCEEDED(hr = psv.p ? GetCurrentLocationFromView(*psv.p, pidl) : E_FAIL))
+            return hr;
+    return hr;
+}
+
+HRESULT CExplorerBand::IsCurrentLocation(PCIDLIST_ABSOLUTE pidl)
+{
+    if (!pidl)
+        return E_INVALIDARG;
+    HRESULT hr = E_FAIL;
+    PIDLIST_ABSOLUTE location = m_pidlCurrent, free = NULL;
+    if (!location && SUCCEEDED(hr = GetCurrentLocation(location)))
+        free = location;
+    if (location)
+        hr = SHELL_IsEqualAbsoluteID(location, pidl) ? S_OK : S_FALSE;
+    ILFree(free);
+    return hr;
+}
+
 HRESULT CExplorerBand::ExecuteCommand(CComPtr<IContextMenu>& menu, UINT nCmd)
 {
     CComPtr<IOleWindow>                 pBrowserOleWnd;
@@ -301,11 +346,8 @@ HRESULT CExplorerBand::UpdateBrowser(LPITEMIDLIST pidlGoto)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    if (m_pidlCurrent)
-    {
-        ILFree(m_pidlCurrent);
-        m_pidlCurrent = ILClone(pidlGoto);
-    }
+    ILFree(m_pidlCurrent);
+    hr = SHILClone(pidlGoto, &m_pidlCurrent);
     return hr;
 }
 
@@ -411,13 +453,16 @@ LRESULT CExplorerBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
     HTREEITEM                           item;
     NodeInfo                            *info;
     HMENU                               treeMenu;
-    WORD                                x;
-    WORD                                y;
+    POINT                               pt;
     CComPtr<IShellFolder>               pFolder;
     CComPtr<IContextMenu>               contextMenu;
     HRESULT                             hr;
     UINT                                uCommand;
     LPITEMIDLIST                        pidlChild;
+    UINT                                cmdBase;
+    UINT                                cmf = CMF_EXPLORE;
+    SFGAOF                              attr = SFGAO_CANRENAME;
+    BOOL                                startedRename = FALSE;
 
     treeMenu = NULL;
     item = TreeView_GetSelection(m_hWnd);
@@ -427,11 +472,17 @@ LRESULT CExplorerBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
         goto Cleanup;
     }
 
-    x = LOWORD(lParam);
-    y = HIWORD(lParam);
-    if (x == -1 && y == -1)
+    pt.x = LOWORD(lParam);
+    pt.y = HIWORD(lParam);
+    if ((UINT)lParam == (UINT)-1)
     {
-        // TODO: grab position of tree item and position it correctly
+        RECT r;
+        if (TreeView_GetItemRect(m_hWnd, item, &r, TRUE))
+        {
+            pt.x = r.left + ((r.right - r.left) / 2);
+            pt.y = r.top + ((r.bottom - r.top) / 2);
+        }
+        ClientToScreen(&pt);
     }
 
     info = GetNodeInfo(item);
@@ -457,28 +508,55 @@ LRESULT CExplorerBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 
     IUnknown_SetSite(contextMenu, (IDeskBand *)this);
 
+    if (SUCCEEDED(pFolder->GetAttributesOf(1, (LPCITEMIDLIST*)&pidlChild, &attr)) && (attr & SFGAO_CANRENAME))
+        cmf |= CMF_CANRENAME;
+
     treeMenu = CreatePopupMenu();
-    hr = contextMenu->QueryContextMenu(treeMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST,
-        CMF_EXPLORE);
+    cmdBase = max(FCIDM_SHVIEWFIRST, 1);
+    hr = contextMenu->QueryContextMenu(treeMenu, 0, cmdBase, FCIDM_SHVIEWLAST, cmf);
     if (!SUCCEEDED(hr))
     {
         WARN("Can't get context menu for item\n");
         DestroyMenu(treeMenu);
         goto Cleanup;
     }
-    uCommand = TrackPopupMenu(treeMenu, TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
-        x, y, 0, m_hWnd, NULL);
 
-    ExecuteCommand(contextMenu, uCommand);
+    uCommand = TrackPopupMenu(treeMenu, TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
+        pt.x, pt.y, 0, m_hWnd, NULL);
+    if (uCommand)
+    {
+        uCommand -= cmdBase;
+
+        // Do DFM_CMD_RENAME in the treeview
+        if ((cmf & CMF_CANRENAME) && SHELL_IsVerb(contextMenu, uCommand, L"rename"))
+        {
+            HTREEITEM oldSelected = m_oldSelected;
+            SetFocus();
+            startedRename = (BOOL)TreeView_EditLabel(m_hWnd, item);
+            m_oldSelected = oldSelected; // Restore after TVN_BEGINLABELEDIT
+            goto Cleanup;
+        }
+
+        hr = ExecuteCommand(contextMenu, uCommand);
+    }
 
 Cleanup:
     if (contextMenu)
         IUnknown_SetSite(contextMenu, NULL);
     if (treeMenu)
         DestroyMenu(treeMenu);
-    m_bNavigating = TRUE;
-    TreeView_SelectItem(m_hWnd, m_oldSelected);
-    m_bNavigating = FALSE;
+    if (startedRename)
+    {
+        // The treeview disables drawing of the edited item so we must make sure
+        // the correct item is selected (on right-click -> rename on not-current folder).
+        // TVN_ENDLABELEDIT becomes responsible for restoring the selection.
+    }
+    else
+    {
+        ++m_bNavigating;
+        TreeView_SelectItem(m_hWnd, m_oldSelected);
+        --m_bNavigating;
+    }
     return TRUE;
 }
 
@@ -825,21 +903,11 @@ BOOL CExplorerBand::NavigateToPIDL(LPITEMIDLIST dest, HTREEITEM *item, BOOL bExp
 BOOL CExplorerBand::NavigateToCurrentFolder()
 {
     LPITEMIDLIST                        explorerPidl;
-    CComPtr<IBrowserService>            pBrowserService;
-    HRESULT                             hr;
     HTREEITEM                           dummy;
     BOOL                                result;
-    explorerPidl = NULL;
 
-    hr = IUnknown_QueryService(m_pSite, SID_STopLevelBrowser, IID_PPV_ARG(IBrowserService, &pBrowserService));
-    if (!SUCCEEDED(hr))
-    {
-        ERR("Can't get IBrowserService !\n");
-        return FALSE;
-    }
-
-    hr = pBrowserService->GetPidl(&explorerPidl);
-    if (!SUCCEEDED(hr) || !explorerPidl)
+    HRESULT hr = GetCurrentLocation(explorerPidl);
+    if (FAILED_UNEXPECTEDLY(hr))
     {
         ERR("Unable to get browser PIDL !\n");
         return FALSE;
@@ -848,6 +916,7 @@ BOOL CExplorerBand::NavigateToCurrentFolder()
     /* find PIDL into our explorer */
     result = NavigateToPIDL(explorerPidl, &dummy, TRUE, FALSE, TRUE);
     m_bNavigating = FALSE;
+    ILFree(explorerPidl);
     return result;
 }
 
@@ -1330,6 +1399,7 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM
                     if (theResult)
                         *theResult = 0;
                     m_isEditing = TRUE;
+                    m_oldSelected = NULL;
                 }
                 return S_OK;
             }
@@ -1340,6 +1410,13 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM
                 HRESULT hr;
 
                 m_isEditing = FALSE;
+                if (m_oldSelected)
+                {
+                    ++m_bNavigating;
+                    TreeView_SelectItem(m_hWnd, m_oldSelected);
+                    --m_bNavigating;
+                }
+
                 if (theResult)
                     *theResult = 0;
                 if (dispInfo->item.pszText)
@@ -1347,12 +1424,13 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM
                     LPITEMIDLIST pidlNew;
                     CComPtr<IShellFolder> pParent;
                     LPCITEMIDLIST pidlChild;
+                    BOOL RenamedCurrent = IsCurrentLocation(info->absolutePidl) == S_OK;
 
                     hr = SHBindToParent(info->absolutePidl, IID_PPV_ARG(IShellFolder, &pParent), &pidlChild);
                     if (!SUCCEEDED(hr) || !pParent.p)
                         return E_FAIL;
 
-                    hr = pParent->SetNameOf(0, pidlChild, dispInfo->item.pszText, SHGDN_INFOLDER, &pidlNew);
+                    hr = pParent->SetNameOf(m_hWnd, pidlChild, dispInfo->item.pszText, SHGDN_INFOLDER, &pidlNew);
                     if(SUCCEEDED(hr) && pidlNew)
                     {
                         CComPtr<IPersistFolder2> pPersist;
@@ -1367,8 +1445,16 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM
                             return E_FAIL;
                         pidlNewAbs = ILCombine(pidlParent, pidlNew);
 
-                        // Navigate to our new location
-                        UpdateBrowser(pidlNewAbs);
+                        if (RenamedCurrent)
+                        {
+                            // Navigate to our new location
+                            UpdateBrowser(pidlNewAbs);
+                        }
+                        else
+                        {
+                            // Tell everyone in case SetNameOf forgot, this causes IShellView to update itself when we renamed a child
+                            SHChangeNotify(SHCNE_RENAMEFOLDER, SHCNF_IDLIST, info->absolutePidl, pidlNewAbs);
+                        }
 
                         ILFree(pidlParent);
                         ILFree(pidlNewAbs);
