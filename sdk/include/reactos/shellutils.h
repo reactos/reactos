@@ -227,25 +227,23 @@ public:
 #endif
 
 template<class T>
-void ReleaseCComPtrExpectZero(CComPtr<T>& cptr, BOOL forceRelease = FALSE)
+ULONG ReleaseCComPtrExpectZeroHelper(const char *file, UINT line, CComPtr<T>& cptr, BOOL forceRelease = FALSE)
 {
+    ULONG r = 0;
     if (cptr.p != NULL)
     {
         T *raw = cptr.Detach();
-        int nrc = raw->Release();
+        int nrc = r = raw->Release();
         if (nrc > 0)
+            Win32DbgPrint(file, line, "WARNING: Unexpected RefCount > 0 (%d)\n", nrc);
+        while (nrc > 0 && forceRelease)
         {
-            DbgPrint("WARNING: Unexpected RefCount > 0 (%d)!\n", nrc);
-            if (forceRelease)
-            {
-                while (nrc > 0)
-                {
-                    nrc = raw->Release();
-                }
-            }
+            nrc = raw->Release();
         }
     }
+    return r;
 }
+#define ReleaseCComPtrExpectZero(...) ReleaseCComPtrExpectZeroHelper(__FILE__, __LINE__, __VA_ARGS__)
 
 template<class T, class R>
 HRESULT inline ShellDebugObjectCreator(REFIID riid, R ** ppv)
