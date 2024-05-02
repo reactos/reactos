@@ -31,10 +31,9 @@ ULONG ExpTimerResolutionCount = 0;
 /* FUNCTIONS ****************************************************************/
 
 /*++
- * If successful, this function sets the following Global Variables:
+ * If successful, this function sets the following global variables:
  * ExpTimeZoneInfo
  * ExpTimeZoneBias
- * ExpTimeZoneId
  *--*/
 static
 BOOLEAN
@@ -74,7 +73,7 @@ ExpGetTimeZoneId(
         /* Get this year's standard start time */
         if (!RtlCutoverTimeToSystemTime(&ExpTimeZoneInfo.StandardDate,
                                         &StandardTime,
-                                        TimeNow,
+                                        &LocalTimeNow,
                                         TRUE))
         {
             DPRINT1("RtlCutoverTimeToSystemTime() for StandardDate failed\n");
@@ -84,7 +83,7 @@ ExpGetTimeZoneId(
         /* Get this year's daylight start time */
         if (!RtlCutoverTimeToSystemTime(&ExpTimeZoneInfo.DaylightDate,
                                         &DaylightTime,
-                                        TimeNow,
+                                        &LocalTimeNow,
                                         TRUE))
         {
             DPRINT1("RtlCutoverTimeToSystemTime() for DaylightDate failed\n");
@@ -130,7 +129,6 @@ ExpGetTimeZoneId(
         *TimeZoneId = TIME_ZONE_ID_UNKNOWN;
     }
 
-    DPRINT("ExpTimeZoneId is %lu\n", ExpTimeZoneId);
     return TRUE;
 }
 
@@ -334,7 +332,7 @@ ExRefreshTimeZoneInformation(IN PLARGE_INTEGER CurrentBootTime)
     /* Set the Global Data for ExpTimeZoneBias and the Time Zone ID */
     if (!ExpGetTimeZoneId(CurrentBootTime, &ExpTimeZoneId))
     {
-        DPRINT1("ExpTimeZoneId failed returning %lu\n", ExpTimeZoneId);
+        DPRINT1("ExpTimeZoneId failed\n");
         return FALSE;
     }
     DPRINT("ExpTimeZoneId is %lu\n", ExpTimeZoneId);
@@ -538,11 +536,6 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
     {
         /* Going from DT to ST or vice versa we need to repeat this */
         DPRINT("Daylight Time and Standard Time are switching\n");
-        Status = RtlQueryTimeZoneInformation(&TimeZoneInformation);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("RtlQueryTimeZoneInformation failed (Status 0x%08lx)\n", Status);
-        }
 
         /* Set the system time and notify the system */
         KeSetSystemTime(&NewSystemTime, &OldSystemTime, FALSE, NULL);
