@@ -945,7 +945,7 @@ IsaPnpCreateLogicalDeviceResources(
             Descriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
         else
             Descriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
-        Descriptor->u.Memory.Length = LogDev->MemRange[i].Description.Length;
+        Descriptor->u.Memory.Length = LogDev->MemRange[i].CurrentLength;
         Descriptor->u.Memory.Start.QuadPart = LogDev->MemRange[i].CurrentBase;
     }
     for (i = 0; i < RTL_NUMBER_OF(LogDev->MemRange32); i++)
@@ -971,7 +971,7 @@ IsaPnpCreateLogicalDeviceResources(
             Descriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
         else
             Descriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
-        Descriptor->u.Memory.Length = LogDev->MemRange32[i].Description.Length;
+        Descriptor->u.Memory.Length = LogDev->MemRange32[i].CurrentLength;
         Descriptor->u.Memory.Start.QuadPart = LogDev->MemRange32[i].CurrentBase;
     }
 
