@@ -981,62 +981,6 @@ InvalidBiosResources:
     return STATUS_SUCCESS;
 }
 
-_Dispatch_type_(IRP_MJ_CREATE)
-_Dispatch_type_(IRP_MJ_CLOSE)
-static CODE_SEG("PAGE") DRIVER_DISPATCH_PAGED IsaCreateClose;
-
-static
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-IsaCreateClose(
-    _In_ PDEVICE_OBJECT DeviceObject,
-    _Inout_ PIRP Irp)
-{
-    PAGED_CODE();
-
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-
-    DPRINT("%s(%p, %p)\n", __FUNCTION__, DeviceObject, Irp);
-
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-    return STATUS_SUCCESS;
-}
-
-_Dispatch_type_(IRP_MJ_DEVICE_CONTROL)
-_Dispatch_type_(IRP_MJ_SYSTEM_CONTROL)
-static CODE_SEG("PAGE") DRIVER_DISPATCH_PAGED IsaForwardOrIgnore;
-
-static
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-IsaForwardOrIgnore(
-    _In_ PDEVICE_OBJECT DeviceObject,
-    _Inout_ PIRP Irp)
-{
-    PISAPNP_COMMON_EXTENSION CommonExt = DeviceObject->DeviceExtension;
-
-    PAGED_CODE();
-
-    DPRINT("%s(%p, %p) Minor - %X\n", __FUNCTION__, DeviceObject, Irp,
-           IoGetCurrentIrpStackLocation(Irp)->MinorFunction);
-
-    if (CommonExt->Signature == IsaPnpBus)
-    {
-        IoSkipCurrentIrpStackLocation(Irp);
-        return IoCallDriver(((PISAPNP_FDO_EXTENSION)CommonExt)->Ldo, Irp);
-    }
-    else
-    {
-        NTSTATUS Status = Irp->IoStatus.Status;
-
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return Status;
-    }
-}
-
 CODE_SEG("PAGE")
 PIO_RESOURCE_REQUIREMENTS_LIST
 IsaPnpCreateReadPortDORequirements(
@@ -1569,6 +1513,62 @@ IsaPnp(
         return IsaFdoPnp((PISAPNP_FDO_EXTENSION)DevExt, Irp, IrpSp);
     else
         return IsaPdoPnp((PISAPNP_PDO_EXTENSION)DevExt, Irp, IrpSp);
+}
+
+_Dispatch_type_(IRP_MJ_CREATE)
+_Dispatch_type_(IRP_MJ_CLOSE)
+static CODE_SEG("PAGE") DRIVER_DISPATCH_PAGED IsaCreateClose;
+
+static
+CODE_SEG("PAGE")
+NTSTATUS
+NTAPI
+IsaCreateClose(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp)
+{
+    PAGED_CODE();
+
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+
+    DPRINT("%s(%p, %p)\n", __FUNCTION__, DeviceObject, Irp);
+
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return STATUS_SUCCESS;
+}
+
+_Dispatch_type_(IRP_MJ_DEVICE_CONTROL)
+_Dispatch_type_(IRP_MJ_SYSTEM_CONTROL)
+static CODE_SEG("PAGE") DRIVER_DISPATCH_PAGED IsaForwardOrIgnore;
+
+static
+CODE_SEG("PAGE")
+NTSTATUS
+NTAPI
+IsaForwardOrIgnore(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp)
+{
+    PISAPNP_COMMON_EXTENSION CommonExt = DeviceObject->DeviceExtension;
+
+    PAGED_CODE();
+
+    DPRINT("%s(%p, %p) Minor - %X\n", __FUNCTION__, DeviceObject, Irp,
+           IoGetCurrentIrpStackLocation(Irp)->MinorFunction);
+
+    if (CommonExt->Signature == IsaPnpBus)
+    {
+        IoSkipCurrentIrpStackLocation(Irp);
+        return IoCallDriver(((PISAPNP_FDO_EXTENSION)CommonExt)->Ldo, Irp);
+    }
+    else
+    {
+        NTSTATUS Status = Irp->IoStatus.Status;
+
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
 }
 
 CODE_SEG("INIT")
