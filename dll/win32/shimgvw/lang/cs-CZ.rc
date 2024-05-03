@@ -1,6 +1,9 @@
-/* Translators:
- * 2008-06-24, Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * 2024-05-02, Václav Zouzalík aka Venca24 (vaclav.zouzalik at seznam dot cz)
+/*
+ * PROJECT:     ReactOS Picture and Fax Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Czech resource file
+ * TRANSLATORS: Copyright 2008 Radek Liška (Black_Fox) <radekliska@gmail.com>
+ *              Copyright 2020-2024 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
