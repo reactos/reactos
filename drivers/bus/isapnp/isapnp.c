@@ -652,7 +652,7 @@ IsaPnpCreateLogicalDeviceResources(
     }
     for (i = 0; i < RTL_NUMBER_OF(LogDev->Dma); i++)
     {
-        if (LogDev->Dma[i].CurrentChannel != 4)
+        if (LogDev->Dma[i].CurrentChannel != DMACHANNEL_NONE)
             ResourceCount++;
         else
             break;
@@ -736,7 +736,7 @@ IsaPnpCreateLogicalDeviceResources(
     }
     for (i = 0; i < RTL_NUMBER_OF(LogDev->Dma); i++)
     {
-        if (LogDev->Dma[i].CurrentChannel == 4)
+        if (LogDev->Dma[i].CurrentChannel == DMACHANNEL_NONE)
             break;
 
         Descriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[ResourceCount++];
