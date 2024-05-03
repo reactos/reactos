@@ -9,9 +9,13 @@
 
 /* INCLUDES *******************************************************************/
 
+#ifndef UNIT_TEST
 #include "isapnp.h"
+#endif /* UNIT_TEST */
 
 #include <search.h>
+
+#ifndef UNIT_TEST
 
 #define NDEBUG
 #include <debug.h>
@@ -25,6 +29,8 @@ BOOLEAN ReadPortCreated = FALSE;
 
 _Guarded_by_(BusSyncEvent)
 LIST_ENTRY BusListHead;
+
+#endif /* UNIT_TEST */
 
 static PUCHAR Priority;
 
@@ -1166,6 +1172,8 @@ IsaPnpCreateReadPortDOResources(VOID)
     return ResourceList;
 }
 
+#ifndef UNIT_TEST
+
 static
 CODE_SEG("PAGE")
 NTSTATUS
@@ -1603,5 +1611,7 @@ DriverEntry(
 
     return STATUS_SUCCESS;
 }
+
+#endif /* UNIT_TEST */
 
 /* EOF */

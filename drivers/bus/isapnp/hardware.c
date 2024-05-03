@@ -7,6 +7,8 @@
  *                  Copyright 2021 Dmitry Borisov <di.sean@protonmail.com>
  */
 
+#ifndef UNIT_TEST
+
 #include "isapnp.h"
 
 #define NDEBUG
@@ -15,6 +17,8 @@
 #ifdef _MSC_VER
 #pragma warning(disable:28138) /* ISA bus always uses hardcoded port addresses */
 #endif
+
+#endif /* UNIT_TEST */
 
 typedef enum
 {
@@ -1517,6 +1521,7 @@ IsaHwFillDeviceList(
         {
             BOOLEAN IsAlreadyEnumerated = FALSE;
 
+#ifndef UNIT_TEST
             for (Entry = FdoExt->DeviceListHead.Flink;
                  Entry != &FdoExt->DeviceListHead;
                  Entry = Entry->Flink)
@@ -1547,6 +1552,7 @@ IsaHwFillDeviceList(
                     break;
                 }
             }
+#endif /* UNIT_TEST */
 
             if (IsAlreadyEnumerated)
                 continue;
@@ -1720,6 +1726,7 @@ IsaHwActivateDevice(
     ActivateDevice(FdoExt->ReadDataPort, LogicalDevice->LDN);
 }
 
+#ifndef UNIT_TEST
 _IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
 IsaHwDeactivateDevice(
@@ -1727,6 +1734,7 @@ IsaHwDeactivateDevice(
 {
     DeactivateDevice(LogicalDevice->LDN);
 }
+#endif /* UNIT_TEST */
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
