@@ -888,6 +888,9 @@ ParseTags(
                 PeekCached(ResourceData, &Temp, TagLen);
                 ResourceData += TagLen;
 
+                /* Save the address bits [0:9] */
+                Temp.IoBase &= ((1 << 10) - 1);
+
                 Description->Information = 0;
                 Description->Minimum =
                 Description->Maximum = Temp.IoBase;
