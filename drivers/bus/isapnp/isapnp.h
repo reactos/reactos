@@ -244,23 +244,23 @@ IsaHwConfigureDevice(
     _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice,
     _In_ PCM_RESOURCE_LIST Resources);
 
-_IRQL_requires_max_(DISPATCH_LEVEL)
+CODE_SEG("PAGE")
 VOID
 IsaHwWakeDevice(
     _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice);
 
-_IRQL_requires_max_(DISPATCH_LEVEL)
+CODE_SEG("PAGE")
 VOID
 IsaHwDeactivateDevice(
     _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice);
 
-_IRQL_requires_max_(DISPATCH_LEVEL)
+CODE_SEG("PAGE")
 VOID
 IsaHwActivateDevice(
     _In_ PISAPNP_FDO_EXTENSION FdoExt,
     _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice);
 
-_IRQL_requires_max_(DISPATCH_LEVEL)
+CODE_SEG("PAGE")
 VOID
 IsaHwWaitForKey(VOID);
 

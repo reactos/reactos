@@ -48,12 +48,14 @@ ReadData(
 }
 
 static
-inline
+CODE_SEG("PAGE")
 VOID
 WriteByte(
     _In_ UCHAR Address,
     _In_ UCHAR Value)
 {
+    PAGED_CODE();
+
     WriteAddress(Address);
     WriteData(Value);
 }
@@ -65,10 +67,8 @@ WriteWord(
     _In_ UCHAR Address,
     _In_ USHORT Value)
 {
-    WriteAddress(Address + 1);
-    WriteData((UCHAR)Value);
-    WriteAddress(Address);
-    WriteData(Value >> 8);
+    WriteByte(Address + 1, (UCHAR)Value);
+    WriteByte(Address, Value >> 8);
 }
 
 static
@@ -83,12 +83,14 @@ WriteDoubleWord(
 }
 
 static
-inline
+CODE_SEG("PAGE")
 UCHAR
 ReadByte(
     _In_ PUCHAR ReadDataPort,
     _In_ UCHAR Address)
 {
+    PAGED_CODE();
+
     WriteAddress(Address);
     return ReadData(ReadDataPort);
 }
@@ -325,10 +327,13 @@ NextLFSR(
 }
 
 static
+CODE_SEG("PAGE")
 VOID
 SendKey(VOID)
 {
     UCHAR i, Lfsr;
+
+    PAGED_CODE();
 
     WriteAddress(0x00);
     WriteAddress(0x00);
@@ -1634,37 +1639,45 @@ IsaHwConfigureDevice(
     return STATUS_SUCCESS;
 }
 
-_IRQL_requires_max_(DISPATCH_LEVEL)
+CODE_SEG("PAGE")
 VOID
 IsaHwWakeDevice(
     _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice)
 {
+    PAGED_CODE();
+
     SendKey();
     Wake(LogicalDevice->CSN);
 }
 
-_IRQL_requires_max_(DISPATCH_LEVEL)
+CODE_SEG("PAGE")
 VOID
 IsaHwActivateDevice(
     _In_ PISAPNP_FDO_EXTENSION FdoExt,
     _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice)
 {
+    PAGED_CODE();
+
     ActivateDevice(FdoExt->ReadDataPort, LogicalDevice->LDN);
 }
 
 #ifndef UNIT_TEST
-_IRQL_requires_max_(DISPATCH_LEVEL)
+CODE_SEG("PAGE")
 VOID
 IsaHwDeactivateDevice(
     _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice)
 {
+    PAGED_CODE();
+
     DeactivateDevice(LogicalDevice->LDN);
 }
 #endif /* UNIT_TEST */
 
-_IRQL_requires_max_(DISPATCH_LEVEL)
+CODE_SEG("PAGE")
 VOID
 IsaHwWaitForKey(VOID)
 {
+    PAGED_CODE();
+
     WaitForKey();
 }
