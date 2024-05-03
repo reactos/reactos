@@ -1121,167 +1121,113 @@ ReadCurrentResources(
 static
 CODE_SEG("PAGE")
 VOID
-WriteResources(
-    _In_ PUCHAR ReadDataPort,
-    _In_ PISAPNP_LOGICAL_DEVICE LogDevice,
-    _In_ PCM_PARTIAL_RESOURCE_LIST PartialResourceList)
+IsaProgramIoDecoder(
+    _In_ PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor,
+    _In_ UCHAR Index)
 {
-    UCHAR i,
-          NumberOfIo = 0,
-          NumberOfIrq = 0,
-          NumberOfDma = 0,
-          NumberOfMemory = 0,
-          NumberOfMemory32 = 0;
+    PAGED_CODE();
+
+    WriteWord(ISAPNP_IOBASE(Index), Descriptor->u.Port.Start.LowPart);
+}
+
+static
+CODE_SEG("PAGE")
+VOID
+IsaProgramIrqSelect(
+    _In_ PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor,
+    _In_ UCHAR Index)
+{
+    UCHAR TypeSelect;
 
     PAGED_CODE();
 
-    WriteLogicalDeviceNumber(LogDevice->LDN);
+    if (Descriptor->Flags & CM_RESOURCE_INTERRUPT_LATCHED)
+        TypeSelect = IRQTYPE_HIGH_EDGE;
+    else
+        TypeSelect = IRQTYPE_LOW_LEVEL;
 
-    for (i = 0; i < PartialResourceList->Count; i++)
+    WriteByte(ISAPNP_IRQNO(Index), Descriptor->u.Interrupt.Level);
+    WriteByte(ISAPNP_IRQTYPE(Index), TypeSelect);
+}
+
+static
+CODE_SEG("PAGE")
+VOID
+IsaProgramDmaSelect(
+    _In_ PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor,
+    _In_ UCHAR Index)
+{
+    PAGED_CODE();
+
+    WriteByte(ISAPNP_DMACHANNEL(Index), Descriptor->u.Dma.Channel);
+}
+
+static
+CODE_SEG("PAGE")
+NTSTATUS
+IsaProgramMemoryDecoder(
+    _In_ PUCHAR ReadDataPort,
+    _In_ PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor,
+    _In_ BOOLEAN IsMemory32,
+    _In_ UCHAR Information,
+    _In_ UCHAR Index)
+{
+    UCHAR MemoryControl;
+    ULONG LengthLimit;
+
+    PAGED_CODE();
+
+    if (!IsMemory32)
     {
-        PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor = &PartialResourceList->PartialDescriptors[i];
+        /* The 24-bit memory address decoder always considers bits 0:7 to be zeros */
+        if (Descriptor->u.Memory.Start.LowPart & 0xFF)
+            return STATUS_INVALID_PARAMETER;
 
-        switch (Descriptor->Type)
+        if (Information & MEMRANGE_16_BIT_MEMORY_MASK)
+            MemoryControl = MEMORY_USE_16_BIT_DECODER;
+        else
+            MemoryControl = MEMORY_USE_8_BIT_DECODER;
+
+        if (ReadMemoryControl(ReadDataPort, Index) & MEMORY_UPPER_LIMIT)
         {
-            case CmResourceTypePort:
-            {
-                (VOID)FindIoDescriptor(LogDevice,
-                                       0,
-                                       Descriptor->u.Port.Start.LowPart,
-                                       Descriptor->u.Port.Start.LowPart +
-                                       Descriptor->u.Port.Length - 1,
-                                       NULL,
-                                       NULL);
-
-                WriteWord(ISAPNP_IOBASE(NumberOfIo), (USHORT)Descriptor->u.Port.Start.LowPart);
-
-                ++NumberOfIo;
-                break;
-            }
-
-            case CmResourceTypeInterrupt:
-            {
-                (VOID)FindIrqDescriptor(LogDevice, Descriptor->u.Interrupt.Level);
-
-                WriteByte(ISAPNP_IRQNO(NumberOfIrq), (UCHAR)Descriptor->u.Interrupt.Level);
-                WriteByte(ISAPNP_IRQTYPE(NumberOfIrq),
-                          Descriptor->Flags & CM_RESOURCE_INTERRUPT_LATCHED
-                          ? IRQTYPE_HIGH_EDGE : IRQTYPE_LOW_LEVEL);
-
-                ++NumberOfIrq;
-                break;
-            }
-
-            case CmResourceTypeDma:
-            {
-                (VOID)FindDmaDescriptor(LogDevice, Descriptor->u.Dma.Channel);
-
-                WriteByte(ISAPNP_DMACHANNEL(NumberOfDma), (UCHAR)Descriptor->u.Dma.Channel);
-
-                ++NumberOfDma;
-                break;
-            }
-
-            case CmResourceTypeMemory:
-            {
-                BOOLEAN Memory32;
-                UCHAR Information;
-                UCHAR MemoryControl = MEMORY_USE_8_BIT_DECODER;
-
-                (VOID)FindMemoryDescriptor(LogDevice,
-                                           Descriptor->u.Memory.Start.LowPart,
-                                           Descriptor->u.Memory.Start.LowPart +
-                                           Descriptor->u.Memory.Length - 1,
-                                           &Memory32,
-                                           &Information);
-
-                if (!Memory32)
-                {
-                    if (Information & MEMRANGE_16_BIT_MEMORY_MASK)
-                        MemoryControl = MEMORY_USE_16_BIT_DECODER;
-
-                    WriteWord(ISAPNP_MEMBASE(NumberOfMemory),
-                              (USHORT)(Descriptor->u.Memory.Start.LowPart >> 8));
-
-                    if (ReadMemoryControl(ReadDataPort, NumberOfMemory) & MEMORY_UPPER_LIMIT)
-                    {
-                        WriteByte(ISAPNP_MEMCONTROL(NumberOfMemory),
-                                  MemoryControl | MEMORY_UPPER_LIMIT);
-                        WriteWord(ISAPNP_MEMLIMIT(NumberOfMemory),
-                                  (USHORT)((Descriptor->u.Memory.Start.LowPart +
-                                            Descriptor->u.Memory.Length) >> 8));
-                    }
-                    else
-                    {
-                        WriteByte(ISAPNP_MEMCONTROL(NumberOfMemory), MemoryControl);
-                        WriteWord(ISAPNP_MEMLIMIT(NumberOfMemory),
-                                  (USHORT)(LENGTH_TO_RANGE_LENGTH(Descriptor->
-                                                                  u.Memory.Length) >> 8));
-                    }
-
-                    ++NumberOfMemory;
-                }
-                else
-                {
-                    WriteDoubleWord(ISAPNP_MEMBASE32(NumberOfMemory32),
-                                    Descriptor->u.Memory.Start.LowPart);
-
-                    if ((Information & MEMRANGE_16_BIT_MEMORY_MASK) == MEMRANGE_32_BIT_MEMORY_ONLY)
-                        MemoryControl = MEMORY_USE_32_BIT_DECODER;
-                    else if (Information & MEMRANGE_16_BIT_MEMORY_MASK)
-                        MemoryControl = MEMORY_USE_16_BIT_DECODER;
-
-                    if (ReadMemoryControl32(ReadDataPort, NumberOfMemory32) & MEMORY_UPPER_LIMIT)
-                    {
-                        WriteByte(ISAPNP_MEMCONTROL32(NumberOfMemory32),
-                                  MemoryControl | MEMORY_UPPER_LIMIT);
-                        WriteDoubleWord(ISAPNP_MEMLIMIT32(NumberOfMemory32),
-                                        Descriptor->u.Memory.Start.LowPart +
-                                        Descriptor->u.Memory.Length);
-                    }
-                    else
-                    {
-                        WriteByte(ISAPNP_MEMCONTROL32(NumberOfMemory32), MemoryControl);
-                        WriteDoubleWord(ISAPNP_MEMLIMIT32(NumberOfMemory32),
-                                        LENGTH_TO_RANGE_LENGTH(Descriptor->u.Memory.Length));
-                    }
-
-                    ++NumberOfMemory32;
-                }
-
-                break;
-            }
-
-            default:
-                break;
+            MemoryControl |= MEMORY_UPPER_LIMIT;
+            LengthLimit = Descriptor->u.Memory.Start.LowPart + Descriptor->u.Memory.Length;
         }
+        else
+        {
+            LengthLimit = LENGTH_TO_RANGE_LENGTH(Descriptor->u.Memory.Length);
+        }
+        LengthLimit >>= 8;
+
+        WriteWord(ISAPNP_MEMBASE(Index), Descriptor->u.Memory.Start.LowPart >> 8);
+        WriteByte(ISAPNP_MEMCONTROL(Index), MemoryControl);
+        WriteWord(ISAPNP_MEMLIMIT(Index), LengthLimit);
+    }
+    else
+    {
+        if ((Information & MEMRANGE_16_BIT_MEMORY_MASK) == MEMRANGE_32_BIT_MEMORY_ONLY)
+            MemoryControl = MEMORY_USE_32_BIT_DECODER;
+        else if (Information & MEMRANGE_16_BIT_MEMORY_MASK)
+            MemoryControl = MEMORY_USE_16_BIT_DECODER;
+        else
+            MemoryControl = MEMORY_USE_8_BIT_DECODER;
+
+        if (ReadMemoryControl32(ReadDataPort, Index) & MEMORY_UPPER_LIMIT)
+        {
+            MemoryControl |= MEMORY_UPPER_LIMIT;
+            LengthLimit = Descriptor->u.Memory.Start.LowPart + Descriptor->u.Memory.Length;
+        }
+        else
+        {
+            LengthLimit = LENGTH_TO_RANGE_LENGTH(Descriptor->u.Memory.Length);
+        }
+
+        WriteDoubleWord(ISAPNP_MEMBASE32(Index), Descriptor->u.Memory.Start.LowPart);
+        WriteByte(ISAPNP_MEMCONTROL32(Index), MemoryControl);
+        WriteDoubleWord(ISAPNP_MEMLIMIT32(Index), LengthLimit);
     }
 
-    for (i = NumberOfIo; i < RTL_NUMBER_OF(LogDevice->Io); i++)
-    {
-        WriteWord(ISAPNP_IOBASE(i), 0);
-    }
-    for (i = NumberOfIrq; i < RTL_NUMBER_OF(LogDevice->Irq); i++)
-    {
-        WriteByte(ISAPNP_IRQNO(i), 0);
-        WriteByte(ISAPNP_IRQTYPE(i), 0);
-    }
-    for (i = NumberOfDma; i < RTL_NUMBER_OF(LogDevice->Dma); i++)
-    {
-        WriteByte(ISAPNP_DMACHANNEL(i), 4);
-    }
-    for (i = NumberOfMemory; i < RTL_NUMBER_OF(LogDevice->MemRange); i++)
-    {
-        WriteWord(ISAPNP_MEMBASE(i), 0);
-        WriteByte(ISAPNP_MEMCONTROL(i), 0);
-        WriteWord(ISAPNP_MEMLIMIT(i), 0);
-    }
-    for (i = NumberOfMemory32; i < RTL_NUMBER_OF(LogDevice->MemRange32); i++)
-    {
-        WriteDoubleWord(ISAPNP_MEMBASE32(i), 0);
-        WriteByte(ISAPNP_MEMCONTROL32(i), 0);
-        WriteDoubleWord(ISAPNP_MEMLIMIT32(i), 0);
-    }
+    return STATUS_SUCCESS;
 }
 
 CODE_SEG("PAGE")
@@ -1549,18 +1495,20 @@ IsaHwConfigureDevice(
     _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice,
     _In_ PCM_RESOURCE_LIST Resources)
 {
-    UCHAR i,
-          NumberOfIo = 0,
+    ULONG i;
+    UCHAR NumberOfIo = 0,
           NumberOfIrq = 0,
           NumberOfDma = 0,
-          NumberOfMemory = 0;
+          NumberOfMemory = 0,
+          NumberOfMemory32 = 0;
 
     PAGED_CODE();
 
     if (!Resources)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* Validate the resource list */
+    WriteLogicalDeviceNumber(LogicalDevice->LDN);
+
     for (i = 0; i < Resources->List[0].PartialResourceList.Count; i++)
     {
         PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor =
@@ -1570,64 +1518,62 @@ IsaHwConfigureDevice(
         {
             case CmResourceTypePort:
             {
-                if (++NumberOfIo > RTL_NUMBER_OF(LogicalDevice->Io))
+                if (NumberOfIo >= RTL_NUMBER_OF(LogicalDevice->Io))
                     return STATUS_INVALID_PARAMETER_1;
 
-                if (!FindIoDescriptor(LogicalDevice,
-                                      0,
-                                      Descriptor->u.Port.Start.LowPart,
-                                      Descriptor->u.Port.Start.LowPart +
-                                      Descriptor->u.Port.Length - 1,
-                                      NULL,
-                                      NULL))
-                {
-                    return STATUS_RESOURCE_DATA_NOT_FOUND;
-                }
-
+                IsaProgramIoDecoder(Descriptor, NumberOfIo++);
                 break;
             }
 
             case CmResourceTypeInterrupt:
             {
-                if (++NumberOfIrq > RTL_NUMBER_OF(LogicalDevice->Irq))
+                if (NumberOfIrq >= RTL_NUMBER_OF(LogicalDevice->Irq))
                     return STATUS_INVALID_PARAMETER_2;
 
-                if (!FindIrqDescriptor(LogicalDevice, Descriptor->u.Interrupt.Level))
-                    return STATUS_RESOURCE_DATA_NOT_FOUND;
-
+                IsaProgramIrqSelect(Descriptor, NumberOfIrq++);
                 break;
             }
 
             case CmResourceTypeDma:
             {
-                if (++NumberOfDma > RTL_NUMBER_OF(LogicalDevice->Dma))
+                if (NumberOfDma >= RTL_NUMBER_OF(LogicalDevice->Dma))
                     return STATUS_INVALID_PARAMETER_3;
 
-                if (!FindDmaDescriptor(LogicalDevice, Descriptor->u.Dma.Channel))
-                    return STATUS_RESOURCE_DATA_NOT_FOUND;
-
+                IsaProgramDmaSelect(Descriptor, NumberOfDma++);
                 break;
             }
 
             case CmResourceTypeMemory:
             {
-                BOOLEAN Memory32;
+                BOOLEAN IsMemory32;
+                UCHAR Index, Information;
+                NTSTATUS Status;
 
-                if (++NumberOfMemory > RTL_NUMBER_OF(LogicalDevice->MemRange))
+                if ((NumberOfMemory + NumberOfMemory32) >= RTL_NUMBER_OF(LogicalDevice->MemRange))
                     return STATUS_INVALID_PARAMETER_4;
 
                 if (!FindMemoryDescriptor(LogicalDevice,
                                           Descriptor->u.Memory.Start.LowPart,
                                           Descriptor->u.Memory.Start.LowPart +
                                           Descriptor->u.Memory.Length - 1,
-                                          &Memory32,
-                                          NULL))
+                                          &IsMemory32,
+                                          &Information))
                 {
                     return STATUS_RESOURCE_DATA_NOT_FOUND;
                 }
 
-                if (!Memory32 && (Descriptor->u.Memory.Start.LowPart & 0xFF))
-                    return STATUS_INVALID_PARAMETER;
+                if (IsMemory32)
+                    Index = NumberOfMemory32++;
+                else
+                    Index = NumberOfMemory++;
+
+                Status = IsaProgramMemoryDecoder(FdoExt->ReadDataPort,
+                                                 Descriptor,
+                                                 IsMemory32,
+                                                 Information,
+                                                 Index);
+                if (!NT_SUCCESS(Status))
+                    return Status;
 
                 break;
             }
@@ -1637,7 +1583,32 @@ IsaHwConfigureDevice(
         }
     }
 
-    WriteResources(FdoExt->ReadDataPort, LogicalDevice, &Resources->List[0].PartialResourceList);
+    /* Disable the unclaimed device resources */
+    for (i = NumberOfIo; i < RTL_NUMBER_OF(LogicalDevice->Io); i++)
+    {
+        WriteWord(ISAPNP_IOBASE(i), 0);
+    }
+    for (i = NumberOfIrq; i < RTL_NUMBER_OF(LogicalDevice->Irq); i++)
+    {
+        WriteByte(ISAPNP_IRQNO(i), 0);
+        WriteByte(ISAPNP_IRQTYPE(i), 0);
+    }
+    for (i = NumberOfDma; i < RTL_NUMBER_OF(LogicalDevice->Dma); i++)
+    {
+        WriteByte(ISAPNP_DMACHANNEL(i), 4);
+    }
+    for (i = NumberOfMemory; i < RTL_NUMBER_OF(LogicalDevice->MemRange); i++)
+    {
+        WriteWord(ISAPNP_MEMBASE(i), 0);
+        WriteByte(ISAPNP_MEMCONTROL(i), 0);
+        WriteWord(ISAPNP_MEMLIMIT(i), 0);
+    }
+    for (i = NumberOfMemory32; i < RTL_NUMBER_OF(LogicalDevice->MemRange32); i++)
+    {
+        WriteDoubleWord(ISAPNP_MEMBASE32(i), 0);
+        WriteByte(ISAPNP_MEMCONTROL32(i), 0);
+        WriteDoubleWord(ISAPNP_MEMLIMIT32(i), 0);
+    }
 
     KeStallExecutionProcessor(10000);
 
