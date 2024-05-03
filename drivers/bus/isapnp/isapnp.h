@@ -151,22 +151,19 @@ FindIoDescriptor(
     _In_ ULONG RangeStart,
     _In_ ULONG RangeEnd,
     _Out_opt_ PUCHAR Information,
-    _Out_opt_ PULONG Length,
-    _Out_opt_ PUCHAR WriteOrder);
+    _Out_opt_ PULONG Length);
 
 CODE_SEG("PAGE")
 BOOLEAN
 FindIrqDescriptor(
     _In_ PISAPNP_LOGICAL_DEVICE LogDevice,
-    _In_ ULONG Vector,
-    _Out_opt_ PUCHAR WriteOrder);
+    _In_ ULONG Vector);
 
 CODE_SEG("PAGE")
 BOOLEAN
 FindDmaDescriptor(
     _In_ PISAPNP_LOGICAL_DEVICE LogDevice,
-    _In_ ULONG Channel,
-    _Out_opt_ PUCHAR WriteOrder);
+    _In_ ULONG Channel);
 
 CODE_SEG("PAGE")
 BOOLEAN
@@ -174,9 +171,7 @@ FindMemoryDescriptor(
     _In_ PISAPNP_LOGICAL_DEVICE LogDevice,
     _In_ ULONG RangeStart,
     _In_ ULONG RangeEnd,
-    _Out_opt_ PBOOLEAN Memory32,
-    _Out_opt_ PUCHAR Information,
-    _Out_opt_ PUCHAR WriteOrder);
+    _Out_opt_ PUCHAR Information);
 
 CODE_SEG("PAGE")
 PIO_RESOURCE_REQUIREMENTS_LIST

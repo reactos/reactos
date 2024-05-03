@@ -9,10 +9,7 @@
 #pragma once
 
 /** @brief Maximum size of resource data structure supported by the driver. */
-#define ISAPNP_MAX_RESOURCEDATA 0x1000
-
-/** @brief Maximum number of Start DF tags supported by the driver. */
-#define ISAPNP_MAX_ALTERNATIVES 8
+#define ISAPNP_MAX_RESOURCEDATA   0x1000
 
 typedef struct _ISAPNP_IO
 {
@@ -59,23 +56,35 @@ typedef struct _ISAPNP_COMPATIBLE_ID_ENTRY
     LIST_ENTRY IdLink;
 } ISAPNP_COMPATIBLE_ID_ENTRY, *PISAPNP_COMPATIBLE_ID_ENTRY;
 
-typedef struct _ISAPNP_ALTERNATIVES
+typedef enum
 {
-    ISAPNP_IO_DESCRIPTION Io[ISAPNP_MAX_ALTERNATIVES];
-    ISAPNP_IRQ_DESCRIPTION Irq[ISAPNP_MAX_ALTERNATIVES];
-    ISAPNP_DMA_DESCRIPTION Dma[ISAPNP_MAX_ALTERNATIVES];
-    ISAPNP_MEMRANGE_DESCRIPTION MemRange[ISAPNP_MAX_ALTERNATIVES];
-    ISAPNP_MEMRANGE32_DESCRIPTION MemRange32[ISAPNP_MAX_ALTERNATIVES];
-    UCHAR Priority[ISAPNP_MAX_ALTERNATIVES];
-    UCHAR IoIndex;
-    UCHAR IrqIndex;
-    UCHAR DmaIndex;
-    UCHAR MemRangeIndex;
-    UCHAR MemRange32Index;
+    dfNotStarted,
+    dfStarted,
+    dfDone
+} ISAPNP_DEPENDENT_FUNCTION_STATE;
 
-    _Field_range_(0, ISAPNP_MAX_ALTERNATIVES)
-    UCHAR Count;
-} ISAPNP_ALTERNATIVES, *PISAPNP_ALTERNATIVES;
+typedef struct _ISAPNP_RESOURCE
+{
+    UCHAR Type;
+#define ISAPNP_RESOURCE_TYPE_END               0
+#define ISAPNP_RESOURCE_TYPE_IO                1
+#define ISAPNP_RESOURCE_TYPE_IRQ               2
+#define ISAPNP_RESOURCE_TYPE_DMA               3
+#define ISAPNP_RESOURCE_TYPE_MEMRANGE          4
+#define ISAPNP_RESOURCE_TYPE_MEMRANGE32        5
+#define ISAPNP_RESOURCE_TYPE_START_DEPENDENT   6
+#define ISAPNP_RESOURCE_TYPE_END_DEPENDENT     7
+
+    union
+    {
+        ISAPNP_IO_DESCRIPTION IoDescription;
+        ISAPNP_IRQ_DESCRIPTION IrqDescription;
+        ISAPNP_DMA_DESCRIPTION DmaDescription;
+        ISAPNP_MEMRANGE_DESCRIPTION MemRangeDescription;
+        ISAPNP_MEMRANGE32_DESCRIPTION MemRange32Description;
+        UCHAR Priority;
+    };
+} ISAPNP_RESOURCE, *PISAPNP_RESOURCE;
 
 typedef struct _ISAPNP_LOGICAL_DEVICE
 {
@@ -91,6 +100,12 @@ typedef struct _ISAPNP_LOGICAL_DEVICE
 
 /** Cleared when the device has no boot resources */
 #define ISAPNP_HAS_RESOURCES        0x00000004
+
+/** The card implements 24-bit memory decoder */
+#define ISAPNP_HAS_MEM24_DECODER    0x00000008
+
+/** The card implements 32-bit memory decoder */
+#define ISAPNP_HAS_MEM32_DECODER    0x00000010
 
     /**
      * @name The card data.
@@ -109,7 +124,7 @@ typedef struct _ISAPNP_LOGICAL_DEVICE
     UCHAR LDN;
     UCHAR LogVendorId[3];
     USHORT LogProdId;
-    PISAPNP_ALTERNATIVES Alternatives;
+    PISAPNP_RESOURCE Resources;
     PSTR FriendlyName;
     LIST_ENTRY CompatibleIdList;
 
@@ -120,43 +135,3 @@ typedef struct _ISAPNP_LOGICAL_DEVICE
     ISAPNP_MEMRANGE32 MemRange32[4];
     /**@}*/
 } ISAPNP_LOGICAL_DEVICE, *PISAPNP_LOGICAL_DEVICE;
-
-FORCEINLINE
-BOOLEAN
-HasIoAlternatives(
-    _In_ PISAPNP_ALTERNATIVES Alternatives)
-{
-    return (Alternatives->Io[0].Length != 0);
-}
-
-FORCEINLINE
-BOOLEAN
-HasIrqAlternatives(
-    _In_ PISAPNP_ALTERNATIVES Alternatives)
-{
-    return (Alternatives->Irq[0].Mask != 0);
-}
-
-FORCEINLINE
-BOOLEAN
-HasDmaAlternatives(
-    _In_ PISAPNP_ALTERNATIVES Alternatives)
-{
-    return (Alternatives->Dma[0].Mask != 0);
-}
-
-FORCEINLINE
-BOOLEAN
-HasMemoryAlternatives(
-    _In_ PISAPNP_ALTERNATIVES Alternatives)
-{
-    return (Alternatives->MemRange[0].Length != 0);
-}
-
-FORCEINLINE
-BOOLEAN
-HasMemory32Alternatives(
-    _In_ PISAPNP_ALTERNATIVES Alternatives)
-{
-    return (Alternatives->MemRange32[0].Length != 0);
-}
