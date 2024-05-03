@@ -118,7 +118,7 @@ ReadDoubleWord(
     _In_ PUCHAR ReadDataPort,
     _In_ UCHAR Address)
 {
-    return ((ReadWord(ReadDataPort, Address) << 8) |
+    return ((ReadWord(ReadDataPort, Address) << 16) |
             (ReadWord(ReadDataPort, Address + 2)));
 }
 
