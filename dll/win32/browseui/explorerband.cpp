@@ -532,7 +532,7 @@ LRESULT CExplorerBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
         {
             HTREEITEM oldSelected = m_oldSelected;
             SetFocus();
-            startedRename = (BOOL)TreeView_EditLabel(m_hWnd, item);
+            startedRename = TreeView_EditLabel(m_hWnd, item) != NULL;
             m_oldSelected = oldSelected; // Restore after TVN_BEGINLABELEDIT
             goto Cleanup;
         }
