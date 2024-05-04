@@ -263,8 +263,8 @@ CheckForValidPEAndVendor(
     VendorName->Length = 0;
 
     Status = OpenAndMapFile(RootDirectory, PathNameToFile,
-                            &FileHandle, &SectionHandle, &ViewBase,
-                            NULL, FALSE);
+                            &FileHandle, NULL,
+                            &SectionHandle, &ViewBase, FALSE);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to open and map file '%S', Status 0x%08lx\n", PathNameToFile, Status);

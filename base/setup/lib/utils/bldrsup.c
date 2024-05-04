@@ -190,7 +190,7 @@ FindBootStore( // By handle
 #if 0
     /* Check whether the loader configuration file exists */
     Status = OpenAndMapFile(PartitionDirectoryHandle, NtosBootLoaders[Type].LoaderConfigurationFile,
-                            &FileHandle, &SectionHandle, &ViewBase, &FileSize, FALSE);
+                            &FileHandle, &FileSize, &SectionHandle, &ViewBase, FALSE);
     if (!NT_SUCCESS(Status))
     {
         /* The loader does not exist, continue with another one */
@@ -343,9 +343,9 @@ OpenIniBootLoaderStore(
         Status = OpenAndMapFile(PartitionDirectoryHandle,
                                 NtosBootLoaders[Type].LoaderConfigurationFile,
                                 &BootStore->FileHandle,
+                                &BootStore->FileSize,
                                 &BootStore->SectionHandle,
                                 &BootStore->ViewBase,
-                                &BootStore->FileSize,
                                 TRUE);
         if (!NT_SUCCESS(Status))
         {

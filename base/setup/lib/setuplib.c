@@ -345,9 +345,9 @@ Quit:
     Status = OpenAndMapFile(NULL,
                             UnattendInfPath,
                             &UnattendFileHandle,
+                            &FileSize,
                             &SectionHandle,
                             &ViewBase,
-                            &FileSize,
                             FALSE);
     if (!NT_SUCCESS(Status))
     {
