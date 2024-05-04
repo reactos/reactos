@@ -30,13 +30,17 @@ typedef enum _BOOT_STORE_TYPE
  */
 typedef struct _BOOT_STORE_OPTIONS
 {
-    ULONG Version;          // BOOT_STORE_TYPE value
     // ULONG Length;
-    ULONG Timeout;
-    ULONG_PTR CurrentBootEntryKey;
-    // ULONG_PTR NextBootEntryKey;
-    // WCHAR HeadlessRedirection[1];
+    ULONG Timeout;  //< Timeout in seconds before the default boot entry is started.
+    ULONG_PTR CurrentBootEntryKey;  //< Selected boot entry for the current boot (informative only).
+    ULONG_PTR NextBootEntryKey;     //< The boot entry for the next boot.
+    // WCHAR HeadlessRedirection[ANYSIZE_ARRAY];
 } BOOT_STORE_OPTIONS, *PBOOT_STORE_OPTIONS;
+
+/* FieldsToChange flags for SetBootStoreOptions() */
+#define BOOT_OPTIONS_TIMEOUT                1
+#define BOOT_OPTIONS_NEXT_BOOTENTRY_KEY     2
+// #define BOOT_OPTIONS_HEADLESS_REDIRECTION   4
 
 /*
  * These macros are used to set a value for the BootEntryKey member of a
@@ -63,10 +67,10 @@ typedef struct _BOOT_STORE_ENTRY
 {
     ULONG Version;          // BOOT_STORE_TYPE value
     // ULONG Length;
-    ULONG_PTR BootEntryKey; // Boot entry "key"
-    PCWSTR FriendlyName;    // Human-readable boot entry description        // LoadIdentifier
-    PCWSTR BootFilePath;    // Path to e.g. osloader.exe, or winload.efi    // EfiOsLoaderFilePath
-    ULONG OsOptionsLength;  // Loader-specific options blob (can be a string, or a binary structure...)
+    ULONG_PTR BootEntryKey; //< Boot entry "key"
+    PCWSTR FriendlyName;    //< Human-readable boot entry description        // LoadIdentifier
+    PCWSTR BootFilePath;    //< Path to e.g. osloader.exe, or winload.efi    // EfiOsLoaderFilePath
+    ULONG OsOptionsLength;  //< Loader-specific options blob (can be a string, or a binary structure...)
     UCHAR OsOptions[ANYSIZE_ARRAY];
 /*
  * In packed form, this structure would contain offsets to 'FriendlyName'

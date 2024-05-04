@@ -130,6 +130,17 @@ NTOS_BOOT_LOADER_FILES NtosBootLoaders[] =
 };
 C_ASSERT(_countof(NtosBootLoaders) == BldrTypeMax);
 
+enum BOOT_OPTION
+{
+    BO_TimeOut,
+    BO_DefaultOS,
+};
+static const PCWSTR BootOptionNames[][2] =
+{
+    {L"TimeOut", L"DefaultOS"}, // FreeLdr
+    {L"timeout", L"default"  }  // NtLdr
+};
+
 
 /* FUNCTIONS ****************************************************************/
 
@@ -1031,36 +1042,32 @@ QueryBootStoreOptions(
         return STATUS_NOT_SUPPORTED;
     }
 
-    if (BootStore->Type == FreeLdr)
+    BootOptions->Timeout = 0;
+    BootOptions->CurrentBootEntryKey = 0;
+    BootOptions->NextBootEntryKey = 0;
+
+    if (IniGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
+                  BootOptionNames[BootStore->Type][BO_TimeOut],
+                  &TimeoutStr) && TimeoutStr)
     {
-        BootOptions->Version = FreeLdr;
-
-        BootOptions->CurrentBootEntryKey = 0;
-        IniGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
-                  L"DefaultOS", (PCWSTR*)&BootOptions->CurrentBootEntryKey);
-
-        BootOptions->Timeout = 0;
-        if (IniGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
-                      L"TimeOut", &TimeoutStr) && TimeoutStr)
-        {
-            BootOptions->Timeout = _wtoi(TimeoutStr);
-        }
+        BootOptions->Timeout = _wtoi(TimeoutStr);
     }
-    else if (BootStore->Type == NtLdr)
-    {
-        BootOptions->Version = NtLdr;
 
-        BootOptions->CurrentBootEntryKey = 0;
-        IniGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
-                  L"default", (PCWSTR*)&BootOptions->CurrentBootEntryKey);
+    IniGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
+              BootOptionNames[BootStore->Type][BO_DefaultOS],
+              (PCWSTR*)&BootOptions->NextBootEntryKey);
 
-        BootOptions->Timeout = 0;
-        if (IniGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
-                      L"timeout", &TimeoutStr) && TimeoutStr)
-        {
-            BootOptions->Timeout = _wtoi(TimeoutStr);
-        }
-    }
+    /*
+     * NOTE: BootOptions->CurrentBootEntryKey is an informative field only.
+     * It indicates which boot entry has been selected for starting the
+     * current OS instance. Such information is NOT stored in the INI file,
+     * but has to be determined via other means. On UEFI the 'BootCurrent'
+     * environment variable does that. Otherwise, one could heuristically
+     * determine it by comparing the boot path and options of each entry
+     * with those used by the current OS instance.
+     * Since we currently do not need this information (and it can be costly
+     * to determine), BootOptions->CurrentBootEntryKey is not evaluated.
+     */
 
     return STATUS_SUCCESS;
 }
@@ -1072,7 +1079,6 @@ SetBootStoreOptions(
     IN ULONG FieldsToChange)
 {
     PBOOT_STORE_CONTEXT BootStore = (PBOOT_STORE_CONTEXT)Handle;
-    WCHAR TimeoutStr[15];
 
     if (!BootStore || !BootOptions)
         return STATUS_INVALID_PARAMETER;
@@ -1090,25 +1096,29 @@ SetBootStoreOptions(
     //
 
     // if (BootStore->Type >= BldrTypeMax || NtosBootLoaders[BootStore->Type].Type >= BldrTypeMax)
-    if (BootStore->Type != FreeLdr)
+    if (BootStore->Type != FreeLdr && BootStore->Type != NtLdr)
     {
         DPRINT1("Loader type %d is currently unsupported!\n", NtosBootLoaders[BootStore->Type].Type);
         return STATUS_NOT_SUPPORTED;
     }
 
-    if (BootOptions->Version != FreeLdr)
-        return STATUS_INVALID_PARAMETER;
+    // if (BootOptions->Length < sizeof(*BootOptions))
+    //     return STATUS_INVALID_PARAMETER;
 
-    //
-    // TODO: Depending on the flags set in 'FieldsToChange',
-    // change either one or both these bootloader options.
-    //
-    IniAddKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
-              L"DefaultOS", (PCWSTR)BootOptions->CurrentBootEntryKey);
-
-    RtlStringCchPrintfW(TimeoutStr, ARRAYSIZE(TimeoutStr), L"%d", BootOptions->Timeout);
-    IniAddKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
-              L"TimeOut", TimeoutStr);
+    if (FieldsToChange & BOOT_OPTIONS_TIMEOUT)
+    {
+        WCHAR TimeoutStr[15];
+        RtlStringCchPrintfW(TimeoutStr, ARRAYSIZE(TimeoutStr), L"%d", BootOptions->Timeout);
+        IniAddKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
+                  BootOptionNames[BootStore->Type][BO_TimeOut],
+                  TimeoutStr);
+    }
+    if (FieldsToChange & BOOT_OPTIONS_NEXT_BOOTENTRY_KEY)
+    {
+        IniAddKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
+                  BootOptionNames[BootStore->Type][BO_DefaultOS],
+                  (PCWSTR)BootOptions->NextBootEntryKey);
+    }
 
     return STATUS_SUCCESS;
 }
