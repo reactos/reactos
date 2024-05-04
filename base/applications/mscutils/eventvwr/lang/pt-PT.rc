@@ -138,12 +138,12 @@ BEGIN
     LTEXT "KB", IDC_STATIC, 152, 122, 20, 8
     LTEXT "Quando for alcançado o tamanho máximo do registo:", IDC_STATIC, 17, 140, 219, 8
     CONTROL "Substituir eventos conforme o &necessário", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
-    CONTROL "Substituir eventos &anteriores a:", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 127, 10
+    CONTROL "Substituir eventos &anteriores a:", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 17, 168, 127, 10
+    CONTROL "&Não substituir eventos\n(limpar registo manualmente)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_TABSTOP, 17, 180, 103, 20
     EDITTEXT IDC_EDIT_EVENTS_AGE, 132, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_EVENTS_AGE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
-            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 195, 165, 10, 14
+            UDS_AUTOBUDDY | UDS_ARROWKEYS, 195, 165, 10, 14
     LTEXT "dias", IDC_STATIC, 170, 168, 20, 8
-    CONTROL "&Não substituir eventos\n(limpar registo manualmente)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 103, 20
     PUSHBUTTON "&Restaurar predefinições", IDC_RESTOREDEFAULTS, 150, 183, 85, 14
     AUTOCHECKBOX "Utilizar uma ligação de baixa &velocidade", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
     PUSHBUTTON "&Limpar o registo", ID_CLEARLOG, 185, 213, 60, 14

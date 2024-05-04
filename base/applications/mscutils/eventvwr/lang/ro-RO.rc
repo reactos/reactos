@@ -140,12 +140,12 @@ BEGIN
     LTEXT "Kio", IDC_STATIC, 130, 122, 20, 8
     LTEXT "Când dimensiunea maximă este atinsă:", IDC_STATIC, 17, 140, 219, 8
     CONTROL "Suprascrie evenimentele cân&d este necesar", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
-    CONTROL "Suprascrie evenimentele mai &vechi de", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 155, 10
+    CONTROL "Suprascrie evenimentele mai &vechi de", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 17, 168, 155, 10
+    CONTROL "Inter&zice suprascrierea\n(gestiune manuală de jurnal)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_TABSTOP, 17, 180, 143, 20
     EDITTEXT IDC_EDIT_EVENTS_AGE, 175, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_EVENTS_AGE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
-            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 104, 165, 10, 14
+            UDS_AUTOBUDDY | UDS_ARROWKEYS, 104, 165, 10, 14
     LTEXT "zile", IDC_STATIC, 215, 168, 20, 8
-    CONTROL "Inter&zice suprascrierea\n(gestiune manuală de jurnal)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 143, 20
     PUSHBUTTON "&Opțiuni implicite", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
     AUTOCHECKBOX "Conexiune de &bandă limitată", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
     PUSHBUTTON "&Curăță jurnal", ID_CLEARLOG, 195, 213, 50, 14

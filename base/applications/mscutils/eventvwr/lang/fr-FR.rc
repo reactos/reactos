@@ -139,12 +139,12 @@ BEGIN
     LTEXT "Ko", IDC_STATIC, 160, 122, 20, 8
     LTEXT "Lorsque la taille maximale du journal est atteinte :", IDC_STATIC, 17, 140, 219, 8
     CONTROL "Remplacer les événements si &nécessaire", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
-    CONTROL "Remplacer les é&vénements datant de plus de", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 155, 10
+    CONTROL "Remplacer les é&vénements datant de plus de", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 17, 168, 155, 10
+    CONTROL "Ne &pas remplacer les événements\n(nettoyage manuel du journal)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_TABSTOP, 17, 180, 133, 20
     EDITTEXT IDC_EDIT_EVENTS_AGE, 175, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_EVENTS_AGE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
-            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 210, 165, 10, 14
+            UDS_AUTOBUDDY | UDS_ARROWKEYS, 210, 165, 10, 14
     LTEXT "jours", IDC_STATIC, 215, 168, 20, 8
-    CONTROL "Ne &pas remplacer les événements\n(nettoyage manuel du journal)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 133, 20
     PUSHBUTTON "Paramètres par &défaut", IDC_RESTOREDEFAULTS, 156, 183, 80, 14
     AUTOCHECKBOX "Utiliser une connection à &basse vitesse", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
     PUSHBUTTON "&Effacer le journal", ID_CLEARLOG, 180, 213, 65, 14

@@ -141,12 +141,12 @@ BEGIN
     LTEXT "KB", IDC_STATIC, 130, 122, 20, 8
     LTEXT "Po osiągnięciu maksymalnego rozmiaru pliku dziennika:", IDC_STATIC, 17, 140, 219, 8
     CONTROL "&Zastąp zdarzenia w razie potrzeby", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
-    CONTROL "Z&astąp zdarzenia starsze niż", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 102, 10
+    CONTROL "Z&astąp zdarzenia starsze niż", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 17, 168, 102, 10
+    CONTROL "&Nie zastępuj zdarzeń\n(ręczne czyszczenie dziennika)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_TABSTOP, 17, 180, 143, 20
     EDITTEXT IDC_EDIT_EVENTS_AGE, 122, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_EVENTS_AGE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
-            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 157, 165, 10, 14
+            UDS_AUTOBUDDY | UDS_ARROWKEYS, 157, 165, 10, 14
     LTEXT "dni", IDC_STATIC, 162, 168, 20, 8
-    CONTROL "&Nie zastępuj zdarzeń\n(ręczne czyszczenie dziennika)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 143, 20
     PUSHBUTTON "&Przywróć domyślne", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
     AUTOCHECKBOX "&Użyj połączenia o małej szybkości", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
     PUSHBUTTON "&Wyczyść dziennik", ID_CLEARLOG, 175, 213, 70, 14
