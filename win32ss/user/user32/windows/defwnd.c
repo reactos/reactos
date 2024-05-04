@@ -1,12 +1,8 @@
 /*
- *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
- * FILE:            win32ss/user/user32/windows/defwnd.c
  * PURPOSE:         Window management
- * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
- * UPDATE HISTORY:
- *      06-06-2001  CSH  Created
+ * PROGRAMMER:      2001 Casper S. Hornstrup <chorns@users.sourceforge.net>
  */
 
 #include <user32.h>
@@ -160,7 +156,7 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
       case SC_RESTORE:
       case SC_CLOSE:
       case SC_HOTKEY:
-        NtUserMessageCall( hWnd, WM_SYSCOMMAND, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
+        NtUserMessageCall(hWnd, WM_SYSCOMMAND, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
         return 0;
 
       default:
@@ -169,13 +165,12 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
   if (ISITHOOKED(WH_CBT))
   {
-     NtUserMessageCall( hWnd, WM_SYSCOMMAND, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
+     NtUserMessageCall(hWnd, WM_SYSCOMMAND, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
      if (lResult) return 0;
   }
 
   switch (wParam & 0xfff0)
     {
-
       case SC_VSCROLL:
       case SC_HSCROLL:
         {
@@ -333,7 +328,6 @@ User32DefWindowProc(HWND hWnd,
             /* This is an undocumented message used by the windows taskbar to
                display the system menu of windows that belong to other processes. */
             HMENU menu = GetSystemMenu(hWnd, FALSE);
-            ERR("WM_POPUPSYSTEMMENU\n");
             if (menu)
             {
                 SetForegroundWindow(hWnd);
@@ -543,22 +537,18 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_INPUTLANGCHANGEREQUEST:
         {
-            HKL NewHkl;
+            HKL hNewKL;
 
-            if(wParam & INPUTLANGCHANGE_BACKWARD
-               && wParam & INPUTLANGCHANGE_FORWARD)
-            {
+            if ((wParam & INPUTLANGCHANGE_BACKWARD) && (wParam & INPUTLANGCHANGE_FORWARD))
                 return FALSE;
-            }
 
             //FIXME: What to do with INPUTLANGCHANGE_SYSCHARSET ?
 
-            if(wParam & INPUTLANGCHANGE_BACKWARD) NewHkl = (HKL) HKL_PREV;
-            else if(wParam & INPUTLANGCHANGE_FORWARD) NewHkl = (HKL) HKL_NEXT;
-            else NewHkl = (HKL) lParam;
+            if(wParam & INPUTLANGCHANGE_BACKWARD) hNewKL = (HKL)HKL_PREV;
+            else if(wParam & INPUTLANGCHANGE_FORWARD) hNewKL = (HKL)HKL_NEXT;
+            else hNewKL = (HKL)lParam;
 
-            NtUserActivateKeyboardLayout(NewHkl, 0);
-
+            NtUserActivateKeyboardLayout(hNewKL, 0);
             return TRUE;
         }
 
@@ -609,7 +599,7 @@ User32DefWindowProc(HWND hWnd,
 
             if (Flags & UISF_ACTIVE)
             {
-                WARN("WM_CHANGEUISTATE does not yet support UISF_ACTIVE!\n");
+                WARN("WM_CHANGEUISTATE does not yet support UISF_ACTIVE\n");
             }
 
             if (Action == UIS_INITIALIZE)
@@ -691,7 +681,7 @@ User32DefWindowProc(HWND hWnd,
 
             if (Flags & UISF_ACTIVE)
             {
-                WARN("WM_UPDATEUISTATE does not yet support UISF_ACTIVE!\n");
+                WARN("WM_UPDATEUISTATE does not yet support UISF_ACTIVE\n");
             }
 
             if (Action == UIS_INITIALIZE)
@@ -791,7 +781,7 @@ User32DefWindowProc(HWND hWnd,
 GoSS:
         {
             LRESULT lResult;
-            NtUserMessageCall( hWnd, Msg, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, !bUnicode);
+            NtUserMessageCall(hWnd, Msg, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, !bUnicode);
             return lResult;
         }
     }
@@ -997,7 +987,7 @@ RealDefWindowProcA(HWND hWnd,
             break;
         }
 
-        /* fall through */
+        // fall through
         default:
             Result = User32DefWindowProc(hWnd, Msg, wParam, lParam, FALSE);
     }
@@ -1036,8 +1026,10 @@ RealDefWindowProcW(HWND hWnd,
                if (!Wnd->pSBInfo)
                {
                   SCROLLINFO si = {sizeof si, SIF_ALL, 0, 100, 0, 0, 0};
-                  SetScrollInfo( hWnd, SB_HORZ, &si, FALSE );
-                  SetScrollInfo( hWnd, SB_VERT, &si, FALSE );
+                  if (Wnd->style & WS_HSCROLL)
+                     SetScrollInfo(hWnd, SB_HORZ, &si, FALSE);
+                  if (Wnd->style & WS_VSCROLL)
+                     SetScrollInfo(hWnd, SB_VERT, &si, FALSE);
                }
             }
 
@@ -1189,10 +1181,7 @@ RealDefWindowProcW(HWND hWnd,
 }
 
 LRESULT WINAPI
-DefWindowProcA(HWND hWnd,
-	       UINT Msg,
-	       WPARAM wParam,
-	       LPARAM lParam)
+DefWindowProcA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
    BOOL Hook, msgOverride = FALSE;
    LRESULT Result = 0;
@@ -1219,7 +1208,7 @@ DefWindowProcA(HWND hWnd,
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-       ERR("Got exception in hooked DefWindowProcA!\n");
+       ERR("Got exception in hooked DefWindowProcA\n");
    }
    _SEH2_END;
 
@@ -1229,10 +1218,7 @@ DefWindowProcA(HWND hWnd,
 }
 
 LRESULT WINAPI
-DefWindowProcW(HWND hWnd,
-	       UINT Msg,
-	       WPARAM wParam,
-	       LPARAM lParam)
+DefWindowProcW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
    BOOL Hook, msgOverride = FALSE;
    LRESULT Result = 0;
@@ -1259,7 +1245,7 @@ DefWindowProcW(HWND hWnd,
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-       ERR("Got exception in hooked DefWindowProcW!\n");
+       ERR("Got exception in hooked DefWindowProcW\n");
    }
    _SEH2_END;
 
