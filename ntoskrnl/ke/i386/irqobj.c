@@ -349,7 +349,7 @@ KeInitializeInterrupt(IN PKINTERRUPT Interrupt,
     }
     else
     {
-        /* This means we'll be usin the built-in one */
+        /* Use the built-in one */
         KeInitializeSpinLock(&Interrupt->SpinLock);
         Interrupt->ActualLock = &Interrupt->SpinLock;
     }
