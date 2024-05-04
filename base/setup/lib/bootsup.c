@@ -170,7 +170,8 @@ CreateFreeLoaderIniForReactOS(
     PVOID BootStoreHandle;
 
     /* Initialize the INI file and create the common FreeLdr sections */
-    Status = OpenBootStore(&BootStoreHandle, IniPath, FreeLdr, TRUE);
+    Status = OpenBootStore(&BootStoreHandle, IniPath, FreeLdr,
+                           BS_CreateAlways /* BS_OpenAlways */, BS_ReadWriteAccess);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -199,7 +200,8 @@ CreateFreeLoaderIniForReactOSAndBootSector(
     PBOOT_SECTOR_OPTIONS Options = (PBOOT_SECTOR_OPTIONS)&BootEntry->OsOptions;
 
     /* Initialize the INI file and create the common FreeLdr sections */
-    Status = OpenBootStore(&BootStoreHandle, IniPath, FreeLdr, TRUE);
+    Status = OpenBootStore(&BootStoreHandle, IniPath, FreeLdr,
+                           BS_CreateAlways /* BS_OpenAlways */, BS_ReadWriteAccess);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -337,7 +339,8 @@ UpdateFreeLoaderIni(
     PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
 
     /* Open the INI file */
-    Status = OpenBootStore(&BootStoreHandle, IniPath, FreeLdr, /*TRUE*/ FALSE);
+    Status = OpenBootStore(&BootStoreHandle, IniPath, FreeLdr,
+                           BS_OpenExisting /* BS_OpenAlways */, BS_ReadWriteAccess);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -398,7 +401,8 @@ UpdateBootIni(
     PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
 
     /* Open the INI file */
-    Status = OpenBootStore(&BootStoreHandle, IniPath, NtLdr, FALSE);
+    Status = OpenBootStore(&BootStoreHandle, IniPath, NtLdr,
+                           BS_OpenExisting /* BS_OpenAlways */, BS_ReadWriteAccess);
     if (!NT_SUCCESS(Status))
         return Status;
 

@@ -129,30 +129,51 @@ FindBootStore( // By handle
     OUT PULONG VersionNumber OPTIONAL);
 
 
+typedef enum _BOOT_STORE_OPENMODE
+{
+    BS_CheckExisting = 0, // See FindBootStore()
+    BS_CreateNew     = 1, // BS_CreateOnly
+    BS_OpenExisting  = 2, // BS_OpenOnly
+    BS_OpenAlways    = 3,
+    BS_RecreateExisting = 4, // BS_RecreateOnly
+    BS_CreateAlways  = 5,
+} BOOT_STORE_OPENMODE;
+
+typedef enum _BOOT_STORE_ACCESS
+{
+    // BS_NoAccess = 0,
+    BS_ReadAccess  = 1,
+    BS_WriteAccess = 2,
+    BS_ReadWriteAccess = (BS_ReadAccess | BS_WriteAccess)
+} BOOT_STORE_ACCESS;
+
 NTSTATUS
 OpenBootStoreByHandle(
-    OUT PVOID* Handle,
-    IN HANDLE PartitionDirectoryHandle, // OPTIONAL
-    IN BOOT_STORE_TYPE Type,
-    IN BOOLEAN CreateNew);
+    _Out_ PVOID* Handle,
+    _In_ HANDLE PartitionDirectoryHandle, // _In_opt_
+    _In_ BOOT_STORE_TYPE Type,
+    _In_ BOOT_STORE_OPENMODE OpenMode,
+    _In_ BOOT_STORE_ACCESS Access);
 
 NTSTATUS
 OpenBootStore_UStr(
-    OUT PVOID* Handle,
-    IN PUNICODE_STRING SystemPartitionPath,
-    IN BOOT_STORE_TYPE Type,
-    IN BOOLEAN CreateNew);
+    _Out_ PVOID* Handle,
+    _In_ PUNICODE_STRING SystemPartitionPath,
+    _In_ BOOT_STORE_TYPE Type,
+    _In_ BOOT_STORE_OPENMODE OpenMode,
+    _In_ BOOT_STORE_ACCESS Access);
 
 NTSTATUS
 OpenBootStore(
-    OUT PVOID* Handle,
-    IN PCWSTR SystemPartition,
-    IN BOOT_STORE_TYPE Type,
-    IN BOOLEAN CreateNew);
+    _Out_ PVOID* Handle,
+    _In_ PCWSTR SystemPartition,
+    _In_ BOOT_STORE_TYPE Type,
+    _In_ BOOT_STORE_OPENMODE OpenMode,
+    _In_ BOOT_STORE_ACCESS Access);
 
 NTSTATUS
 CloseBootStore(
-    IN PVOID Handle);
+    _In_ PVOID Handle);
 
 NTSTATUS
 AddBootStoreEntry(

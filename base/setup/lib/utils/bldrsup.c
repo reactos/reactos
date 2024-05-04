@@ -24,14 +24,15 @@
 
 typedef NTSTATUS
 (*POPEN_BOOT_STORE)(
-    OUT PVOID* Handle,
-    IN HANDLE PartitionDirectoryHandle, // OPTIONAL
-    IN BOOT_STORE_TYPE Type,
-    IN BOOLEAN CreateNew);
+    _Out_ PVOID* Handle,
+    _In_ HANDLE PartitionDirectoryHandle, // _In_opt_
+    _In_ BOOT_STORE_TYPE Type,
+    _In_ BOOT_STORE_OPENMODE OpenMode,
+    _In_ BOOT_STORE_ACCESS Access);
 
 typedef NTSTATUS
 (*PCLOSE_BOOT_STORE)(
-    IN PVOID Handle);
+    _In_ PVOID Handle);
 
 typedef NTSTATUS
 (*PENUM_BOOT_STORE_ENTRIES)(
@@ -57,6 +58,7 @@ typedef struct _NTOS_BOOT_LOADER_FILES
 typedef struct _BOOT_STORE_CONTEXT
 {
     BOOT_STORE_TYPE Type;
+    BOOLEAN ReadOnly;
 //  PNTOS_BOOT_LOADER_FILES ??
 /*
     PVOID PrivateData;
@@ -93,14 +95,15 @@ typedef struct _BOOT_STORE_BCDREG_CONTEXT
 
 static NTSTATUS
 OpenIniBootLoaderStore(
-    OUT PVOID* Handle,
-    IN HANDLE PartitionDirectoryHandle, // OPTIONAL
-    IN BOOT_STORE_TYPE Type,
-    IN BOOLEAN CreateNew);
+    _Out_ PVOID* Handle,
+    _In_ HANDLE PartitionDirectoryHandle, // _In_opt_
+    _In_ BOOT_STORE_TYPE Type,
+    _In_ BOOT_STORE_OPENMODE OpenMode,
+    _In_ BOOT_STORE_ACCESS Access);
 
 static NTSTATUS
 CloseIniBootLoaderStore(
-    IN PVOID Handle);
+    _In_ PVOID Handle);
 
 static NTSTATUS
 FreeLdrEnumerateBootEntries(
@@ -190,26 +193,19 @@ FindBootStore( // By handle
     }
 
     /* Check whether the loader configuration file exists */
-    if (!DoesFileExist(PartitionDirectoryHandle, NtosBootLoaders[Type].LoaderConfigurationFile))
-    {
-        /* The loader does not exist, continue with another one */
-        // FIXME: Consider it might be optional??
-        DPRINT1("Loader configuration file '%S' does not exist\n", NtosBootLoaders[Type].LoaderConfigurationFile);
-        return STATUS_NOT_FOUND;
-    }
-
 #if 0
-    /* Check whether the loader configuration file exists */
     Status = OpenAndMapFile(PartitionDirectoryHandle, NtosBootLoaders[Type].LoaderConfigurationFile,
                             &FileHandle, &FileSize, &SectionHandle, &ViewBase, FALSE);
     if (!NT_SUCCESS(Status))
+#else
+    if (!DoesFileExist(PartitionDirectoryHandle, NtosBootLoaders[Type].LoaderConfigurationFile))
+#endif
     {
         /* The loader does not exist, continue with another one */
         // FIXME: Consider it might be optional??
         DPRINT1("Loader configuration file '%S' does not exist\n", NtosBootLoaders[Type].LoaderConfigurationFile);
         return STATUS_NOT_FOUND;
     }
-#endif
 
     return STATUS_SUCCESS;
 }
@@ -256,13 +252,28 @@ CreateCommonFreeLdrSections(
 
 static NTSTATUS
 OpenIniBootLoaderStore(
-    OUT PVOID* Handle,
-    IN HANDLE PartitionDirectoryHandle, // OPTIONAL
-    IN BOOT_STORE_TYPE Type,
-    IN BOOLEAN CreateNew)
+    _Out_ PVOID* Handle,
+    _In_ HANDLE PartitionDirectoryHandle, // _In_opt_
+    _In_ BOOT_STORE_TYPE Type,
+    _In_ BOOT_STORE_OPENMODE OpenMode,
+    _In_ BOOT_STORE_ACCESS Access)
 {
     NTSTATUS Status;
     PBOOT_STORE_INI_CONTEXT BootStore;
+    UNICODE_STRING Name;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    ACCESS_MASK DesiredAccess;
+    ULONG CreateDisposition;
+
+    //
+    // WARNING! We support the INI creation *ONLY* for FreeLdr, and not for NTLDR
+    //
+    if ((Type == NtLdr) && (OpenMode == BS_CreateNew || OpenMode == BS_CreateAlways || OpenMode == BS_RecreateExisting))
+    {
+        DPRINT1("OpenIniBootLoaderStore() unsupported for NTLDR\n");
+        return STATUS_NOT_SUPPORTED;
+    }
 
     /* Create a boot store structure */
     BootStore = RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, sizeof(*BootStore));
@@ -271,118 +282,211 @@ OpenIniBootLoaderStore(
 
     BootStore->Header.Type = Type;
 
-    if (CreateNew)
+    /*
+     * So far, we only use the INI cache. The file itself is not created or
+     * opened yet, therefore FileHandle, SectionHandle, ViewBase and FileSize
+     * are all NULL. We will use this fact to know that the INI file was indeed
+     * created, and not just opened as an existing file.
+     */
+    // BootStore->FileHandle = NULL;
+    BootStore->SectionHandle = NULL;
+    BootStore->ViewBase = NULL;
+    BootStore->FileSize = 0;
+
+    /*
+     * Create or open the loader configuration INI file as necessary.
+     */
+    RtlInitUnicodeString(&Name, NtosBootLoaders[Type].LoaderConfigurationFile);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               PartitionDirectoryHandle,
+                               NULL);
+
+    DesiredAccess =
+        ((Access & BS_ReadAccess ) ? FILE_GENERIC_READ  : 0) |
+        ((Access & BS_WriteAccess) ? FILE_GENERIC_WRITE : 0);
+
+    CreateDisposition = FILE_OPEN;
+    switch (OpenMode)
     {
-        UNICODE_STRING Name;
-        OBJECT_ATTRIBUTES ObjectAttributes;
-        IO_STATUS_BLOCK IoStatusBlock;
+        case BS_CreateNew:
+            CreateDisposition = FILE_CREATE;
+            break;
+        case BS_CheckExisting:
+        case BS_OpenExisting:
+            CreateDisposition = FILE_OPEN;
+            break;
+        case BS_OpenAlways:
+            CreateDisposition = FILE_OPEN_IF;
+            break;
+        case BS_RecreateExisting:
+            CreateDisposition = FILE_OVERWRITE;
+            break;
+        case BS_CreateAlways:
+            CreateDisposition = FILE_OVERWRITE_IF;
+            break;
+        default:
+            ASSERT(FALSE);
+    }
 
-        //
-        // WARNING! We "support" the INI creation *ONLY* for FreeLdr, and not for NTLDR!!
-        //
-        if (Type == NtLdr)
+    IoStatusBlock.Information = 0;
+    Status = NtCreateFile(&BootStore->FileHandle,
+                          DesiredAccess | SYNCHRONIZE,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL,
+                          FILE_ATTRIBUTE_NORMAL,
+                          FILE_SHARE_READ,
+                          CreateDisposition,
+                          FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY | FILE_NON_DIRECTORY_FILE,
+                          NULL,
+                          0);
+
+    if (OpenMode == BS_CheckExisting)
+    {
+        /* We just want to check for file existence. If we either succeeded
+         * opening the file, or we failed because it exists but we do not
+         * currently have access to it, return success in either case. */
+        BOOLEAN Success = (NT_SUCCESS(Status) || (Status == STATUS_ACCESS_DENIED));
+        if (!Success)
         {
-            DPRINT1("OpenIniBootLoaderStore() unsupported for NTLDR!\n");
-            RtlFreeHeap(ProcessHeap, 0, BootStore);
-            return STATUS_NOT_SUPPORTED;
+            DPRINT1("Couldn't find Loader configuration file '%S'\n",
+                    NtosBootLoaders[Type].LoaderConfigurationFile);
         }
+        if (BootStore->FileHandle)
+            NtClose(BootStore->FileHandle);
+        RtlFreeHeap(ProcessHeap, 0, BootStore);
+        return (Success ? STATUS_SUCCESS : Status);
+    }
 
-        /* Initialize the INI file */
-        BootStore->IniCache = IniCacheCreate();
-        if (!BootStore->IniCache)
-        {
-            DPRINT1("IniCacheCreate() failed.\n");
-            RtlFreeHeap(ProcessHeap, 0, BootStore);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
+    /*
+     * If create/open failed because the file is in read-only mode,
+     * change its attributes and re-attempt opening it.
+     */
+    if (Status == STATUS_ACCESS_DENIED) do
+    {
+        FILE_BASIC_INFORMATION FileInfo = {0};
 
-        /*
-         * So far, we only use the INI cache. The file itself is not created
-         * yet, therefore FileHandle, SectionHandle, ViewBase and FileSize
-         * are all NULL. We will use this fact to know that the INI file was
-         * indeed created, and not just opened as an existing file.
-         */
-        // BootStore->FileHandle = NULL;
-        BootStore->SectionHandle = NULL;
-        BootStore->ViewBase = NULL;
-        BootStore->FileSize = 0;
-
-        /*
-         * The INI file is fresh new, we need to create it now.
-         */
-
-        RtlInitUnicodeString(&Name, NtosBootLoaders[Type].LoaderConfigurationFile);
-
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &Name,
-                                   OBJ_CASE_INSENSITIVE,
-                                   PartitionDirectoryHandle,
-                                   NULL);
-
+        /* Reattempt to open it with limited access */
         Status = NtCreateFile(&BootStore->FileHandle,
-                              FILE_GENERIC_READ | FILE_GENERIC_WRITE, // Contains SYNCHRONIZE
+                              FILE_WRITE_ATTRIBUTES | SYNCHRONIZE,
                               &ObjectAttributes,
                               &IoStatusBlock,
                               NULL,
                               FILE_ATTRIBUTE_NORMAL,
-                              0,
-                              FILE_SUPERSEDE,
+                              FILE_SHARE_READ,
+                              FILE_OPEN,
+                              FILE_NO_INTERMEDIATE_BUFFERING |
                               FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY | FILE_NON_DIRECTORY_FILE,
                               NULL,
                               0);
+        /* Fail for real if we cannot open it that way */
         if (!NT_SUCCESS(Status))
+            break;
+
+        /* Reset attributes to normal, no read-only */
+        FileInfo.FileAttributes = FILE_ATTRIBUTE_NORMAL;
+        /*
+         * We basically don't care about whether it succeeds:
+         * if it didn't, later open will fail.
+         */
+        NtSetInformationFile(BootStore->FileHandle, &IoStatusBlock,
+                             &FileInfo, sizeof(FileInfo),
+                             FileBasicInformation);
+
+        /* Close file */
+        NtClose(BootStore->FileHandle);
+
+        /* And re-attempt create/open */
+        Status = NtCreateFile(&BootStore->FileHandle,
+                              DesiredAccess | SYNCHRONIZE,
+                              &ObjectAttributes,
+                              &IoStatusBlock,
+                              NULL,
+                              FILE_ATTRIBUTE_NORMAL,
+                              FILE_SHARE_READ,
+                              CreateDisposition,
+                              FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY | FILE_NON_DIRECTORY_FILE,
+                              NULL,
+                              0);
+    } while (0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Couldn't open Loader configuration file '%S' (Status 0x%08lx)\n",
+                NtosBootLoaders[Type].LoaderConfigurationFile, Status);
+        RtlFreeHeap(ProcessHeap, 0, BootStore);
+        return Status;
+    }
+
+    BootStore->Header.ReadOnly = !(Access & BS_WriteAccess);
+
+    if (IoStatusBlock.Information == FILE_CREATED     || // with: FILE_CREATE, FILE_OVERWRITE_IF, FILE_OPEN_IF, FILE_SUPERSEDE
+        IoStatusBlock.Information == FILE_OVERWRITTEN || // with: FILE_OVERWRITE, FILE_OVERWRITE_IF
+        IoStatusBlock.Information == FILE_SUPERSEDED)    // with: FILE_SUPERSEDE
+    {
+        /*
+         * The loader configuration INI file is (re)created
+         * fresh new, initialize its cache and its contents.
+         */
+        BootStore->IniCache = IniCacheCreate();
+        if (!BootStore->IniCache)
         {
-            DPRINT1("NtCreateFile() failed (Status 0x%08lx)\n", Status);
-            IniCacheDestroy(BootStore->IniCache);
+            DPRINT1("IniCacheCreate() failed\n");
+            NtClose(BootStore->FileHandle);
             RtlFreeHeap(ProcessHeap, 0, BootStore);
-            return Status;
+            return STATUS_INSUFFICIENT_RESOURCES;
         }
 
-        /* Initialize the INI file contents */
         if (Type == FreeLdr)
             CreateCommonFreeLdrSections(BootStore);
     }
-    else
+    else // if (IoStatusBlock.Information == FILE_OPENED) // with: FILE_OPEN, FILE_OPEN_IF
     {
         PINI_SECTION IniSection;
 
         /*
-         * Check whether the loader configuration INI file exists,
-         * and open it if so.
-         * TODO: FIXME: What if it doesn't exist yet???
+         * The loader configuration INI file exists and is opened,
+         * map its file contents into memory.
          */
-        Status = OpenAndMapFile(PartitionDirectoryHandle,
-                                NtosBootLoaders[Type].LoaderConfigurationFile,
-                                &BootStore->FileHandle,
-                                &BootStore->FileSize,
-                                &BootStore->SectionHandle,
-                                &BootStore->ViewBase,
-                                TRUE);
+#if 0
+        // FIXME: &BootStore->FileSize
+        Status = MapFile(BootStore->FileHandle,
+                         &BootStore->SectionHandle,
+                         &BootStore->ViewBase,
+                         (Access & BS_WriteAccess));
         if (!NT_SUCCESS(Status))
         {
-            /* The loader configuration file does not exist */
-            // FIXME: Consider it might be optional??
-            DPRINT1("Loader configuration file '%S' does not exist (Status 0x%08lx)\n",
+            DPRINT1("Failed to map Loader configuration file '%S' (Status 0x%08lx)\n",
                     NtosBootLoaders[Type].LoaderConfigurationFile, Status);
+            NtClose(BootStore->FileHandle);
             RtlFreeHeap(ProcessHeap, 0, BootStore);
             return Status;
         }
+#else
+        BootStore->SectionHandle = UlongToPtr(1); // Workaround for CloseIniBootLoaderStore
+#endif
 
         /* Open an *existing* INI configuration file */
-        // Status = IniCacheLoad(&BootStore->IniCache, NtosBootLoaders[Type].LoaderConfigurationFile, FALSE);
+#if 0
         Status = IniCacheLoadFromMemory(&BootStore->IniCache,
                                         BootStore->ViewBase,
                                         BootStore->FileSize,
                                         FALSE);
+#else
+        Status = IniCacheLoadByHandle(&BootStore->IniCache, BootStore->FileHandle, FALSE);
+#endif
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("IniCacheLoadFromMemory() failed (Status 0x%08lx)\n", Status);
-
+#if 0
             /* Finally, unmap and close the file */
             UnMapAndCloseFile(BootStore->FileHandle,
                               BootStore->SectionHandle,
                               BootStore->ViewBase);
-
+#else
+            NtClose(BootStore->FileHandle);
+#endif
             RtlFreeHeap(ProcessHeap, 0, BootStore);
             return Status;
         }
@@ -394,9 +498,7 @@ OpenIniBootLoaderStore(
              */
 
             /* Get or create the "FREELOADER" section */
-            IniSection = IniGetSection(BootStore->IniCache, L"FREELOADER");
-            if (!IniSection)
-                IniSection = IniAddSection(BootStore->IniCache, L"FREELOADER");
+            IniSection = IniAddSection(BootStore->IniCache, L"FREELOADER");
             if (!IniSection)
                 DPRINT1("OpenIniBootLoaderStore: Failed to retrieve 'FREELOADER' section!\n");
 
@@ -407,9 +509,7 @@ OpenIniBootLoaderStore(
              */
 
             /* Get or create the "Operating Systems" section */
-            IniSection = IniGetSection(BootStore->IniCache, L"Operating Systems");
-            if (!IniSection)
-                IniSection = IniAddSection(BootStore->IniCache, L"Operating Systems");
+            IniSection = IniAddSection(BootStore->IniCache, L"Operating Systems");
             if (!IniSection)
                 DPRINT1("OpenIniBootLoaderStore: Failed to retrieve 'Operating Systems' section!\n");
 
@@ -485,15 +585,8 @@ OpenIniBootLoaderStore(
              * Cache the "Operating Systems" section for our future usage.
              */
 
-            /* Get the "Operating Systems" section */
-            IniSection = IniGetSection(BootStore->IniCache, L"operating systems");
-#if 0
-            if (!IniSection)
-            {
-                /* It does not exist yet, so create it */
-                IniSection = IniAddSection(BootStore->IniCache, L"operating systems");
-            }
-#endif
+            /* Get or create the "Operating Systems" section */
+            IniSection = IniAddSection(BootStore->IniCache, L"operating systems");
             if (!IniSection)
                 DPRINT1("OpenIniBootLoaderStore: Failed to retrieve 'operating systems' section!\n");
 
@@ -505,71 +598,64 @@ OpenIniBootLoaderStore(
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Selectively changes the attributes of a file.
+ *
+ * @param[in]   FileHandle
+ * Handle to an opened file for which to change its attributes.
+ *
+ * @param[in]   MaskAttributes
+ * A mask specifying which attributes to change; any other attributes
+ * will be maintained as they are. If this parameter is zero, all of
+ * the attributes in *Attributes will be changed.
+ *
+ * @param[in,out]   Attributes
+ * In input, specifies the new attributes to set. Attributes that
+ * are not set, but are specified in MaskAttributes, are removed.
+ * In output, receives the original attributes of the file.
+ *
+ * @return
+ * STATUS_SUCCESS if the attributes were successfully changed,
+ * or a failure code if an error happened.
+ **/
 static NTSTATUS
-UnprotectBootIni(
-    IN HANDLE FileHandle,
-    OUT PULONG Attributes)
+ProtectFile(
+    _In_ HANDLE FileHandle,
+    _In_ ULONG MaskAttributes,
+    _Inout_ PULONG Attributes)
 {
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatusBlock;
     FILE_BASIC_INFORMATION FileInfo;
+    ULONG OldAttributes;
 
+    /* Retrieve the original file attributes */
     Status = NtQueryInformationFile(FileHandle,
                                     &IoStatusBlock,
                                     &FileInfo,
-                                    sizeof(FILE_BASIC_INFORMATION),
+                                    sizeof(FileInfo),
                                     FileBasicInformation);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtQueryInformationFile() failed (Status 0x%08lx)\n", Status);
         return Status;
     }
+    OldAttributes = FileInfo.FileAttributes;
 
-    *Attributes = FileInfo.FileAttributes;
+    /* Modify the attributes and return the old ones */
+    if (MaskAttributes)
+        FileInfo.FileAttributes = (OldAttributes & ~MaskAttributes) | (*Attributes & MaskAttributes);
+    else
+        FileInfo.FileAttributes = *Attributes;
 
-    /* Delete attributes SYSTEM, HIDDEN and READONLY */
-    FileInfo.FileAttributes = FileInfo.FileAttributes &
-                              ~(FILE_ATTRIBUTE_SYSTEM |
-                                FILE_ATTRIBUTE_HIDDEN |
-                                FILE_ATTRIBUTE_READONLY);
+    *Attributes = OldAttributes;
 
+    /* Set the new file attributes */
     Status = NtSetInformationFile(FileHandle,
                                   &IoStatusBlock,
                                   &FileInfo,
-                                  sizeof(FILE_BASIC_INFORMATION),
-                                  FileBasicInformation);
-    if (!NT_SUCCESS(Status))
-        DPRINT1("NtSetInformationFile() failed (Status 0x%08lx)\n", Status);
-
-    return Status;
-}
-
-static NTSTATUS
-ProtectBootIni(
-    IN HANDLE FileHandle,
-    IN ULONG Attributes)
-{
-    NTSTATUS Status;
-    IO_STATUS_BLOCK IoStatusBlock;
-    FILE_BASIC_INFORMATION FileInfo;
-
-    Status = NtQueryInformationFile(FileHandle,
-                                    &IoStatusBlock,
-                                    &FileInfo,
-                                    sizeof(FILE_BASIC_INFORMATION),
-                                    FileBasicInformation);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtQueryInformationFile() failed (Status 0x%08lx)\n", Status);
-        return Status;
-    }
-
-    FileInfo.FileAttributes = FileInfo.FileAttributes | Attributes;
-
-    Status = NtSetInformationFile(FileHandle,
-                                  &IoStatusBlock,
-                                  &FileInfo,
-                                  sizeof(FILE_BASIC_INFORMATION),
+                                  sizeof(FileInfo),
                                   FileBasicInformation);
     if (!NT_SUCCESS(Status))
         DPRINT1("NtSetInformationFile() failed (Status 0x%08lx)\n", Status);
@@ -579,44 +665,45 @@ ProtectBootIni(
 
 static NTSTATUS
 CloseIniBootLoaderStore(
-    IN PVOID Handle)
+    _In_ PVOID Handle)
 {
-    NTSTATUS Status;
+    /* Set or remove SYSTEM, HIDDEN and READONLY attributes */
+    static const ULONG ProtectAttribs =
+        (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_READONLY);
+
     PBOOT_STORE_INI_CONTEXT BootStore = (PBOOT_STORE_INI_CONTEXT)Handle;
-    ULONG FileAttribute = 0;
+    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG FileAttribs;
 
-    // if (!BootStore)
-        // return STATUS_INVALID_PARAMETER;
+    ASSERT(BootStore);
 
+    /* If the INI file was opened in read-only mode, skip saving */
+    if (BootStore->Header.ReadOnly)
+        goto Quit;
+
+    /* If the INI file was already opened because it already existed, unprotect it */
     if (BootStore->SectionHandle)
     {
-        /*
-         * The INI file was already opened because it already existed,
-         * thus (in the case of NTLDR's boot.ini), unprotect it.
-         */
-        if (BootStore->Header.Type == NtLdr)
+        FileAttribs = 0;
+        Status = ProtectFile(BootStore->FileHandle, ProtectAttribs, &FileAttribs);
+        if (!NT_SUCCESS(Status))
         {
-            Status = UnprotectBootIni(BootStore->FileHandle, &FileAttribute);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("Could not unprotect BOOT.INI ! (Status 0x%08lx)\n", Status);
-                goto Quit;
-            }
+            DPRINT1("Could not unprotect INI boot store (Status 0x%08lx)\n", Status);
+            goto Quit;
         }
     }
 
     IniCacheSaveByHandle(BootStore->IniCache, BootStore->FileHandle);
 
-    /* In the case of NTLDR's boot.ini, re-protect the INI file */
-    if (BootStore->Header.Type == NtLdr)
-    {
-        FileAttribute |= (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_READONLY);
-        Status = ProtectBootIni(BootStore->FileHandle, FileAttribute);
-    }
+    /* Re-protect the INI file */
+    FileAttribs = ProtectAttribs;
+    /*Status =*/ ProtectFile(BootStore->FileHandle, ProtectAttribs, &FileAttribs);
+    Status = STATUS_SUCCESS; // Ignore the status and just succeed.
 
 Quit:
     IniCacheDestroy(BootStore->IniCache);
 
+#if 0
     if (BootStore->SectionHandle)
     {
         /* Finally, unmap and close the file */
@@ -625,6 +712,7 @@ Quit:
                           BootStore->ViewBase);
     }
     else // if (BootStore->FileHandle)
+#endif
     {
         /* Just close the file we have opened for creation */
         NtClose(BootStore->FileHandle);
@@ -632,18 +720,17 @@ Quit:
 
     /* Finally, free the boot store structure */
     RtlFreeHeap(ProcessHeap, 0, BootStore);
-
-    // TODO: Use a correct Status based on the return values of the previous functions...
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 
 NTSTATUS
 OpenBootStoreByHandle(
-    OUT PVOID* Handle,
-    IN HANDLE PartitionDirectoryHandle, // OPTIONAL
-    IN BOOT_STORE_TYPE Type,
-    IN BOOLEAN CreateNew)
+    _Out_ PVOID* Handle,
+    _In_ HANDLE PartitionDirectoryHandle, // _In_opt_
+    _In_ BOOT_STORE_TYPE Type,
+    _In_ BOOT_STORE_OPENMODE OpenMode,
+    _In_ BOOT_STORE_ACCESS Access)
 {
     /*
      * NOTE: Currently we open & map the loader configuration file without
@@ -659,18 +746,34 @@ OpenBootStoreByHandle(
         return STATUS_NOT_SUPPORTED;
     }
 
+    /*
+     * Verify the access modes to perform the open actions.
+     * The operating system may allow e.g. file creation even with
+     * read-only access, but we do not allow this because we want
+     * to protect any existing boot store file in case the caller
+     * specified such an open mode.
+     */
+    // if ((OpenMode == BS_CheckExisting) && !(Access & BS_ReadAccess))
+    //     return STATUS_ACCESS_DENIED;
+    if ((OpenMode == BS_CreateNew || OpenMode == BS_CreateAlways || OpenMode == BS_RecreateExisting) && !(Access & BS_WriteAccess))
+        return STATUS_ACCESS_DENIED;
+    if ((OpenMode == BS_OpenExisting || OpenMode == BS_OpenAlways) && !(Access & BS_ReadWriteAccess))
+        return STATUS_ACCESS_DENIED;
+
     return NtosBootLoaders[Type].OpenBootStore(Handle,
                                                PartitionDirectoryHandle,
                                                Type,
-                                               CreateNew);
+                                               OpenMode,
+                                               Access);
 }
 
 NTSTATUS
 OpenBootStore_UStr(
-    OUT PVOID* Handle,
-    IN PUNICODE_STRING SystemPartitionPath,
-    IN BOOT_STORE_TYPE Type,
-    IN BOOLEAN CreateNew)
+    _Out_ PVOID* Handle,
+    _In_ PUNICODE_STRING SystemPartitionPath,
+    _In_ BOOT_STORE_TYPE Type,
+    _In_ BOOT_STORE_OPENMODE OpenMode,
+    _In_ BOOT_STORE_ACCESS Access)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -705,11 +808,16 @@ OpenBootStore_UStr(
                         FILE_SYNCHRONOUS_IO_NONALERT | FILE_DIRECTORY_FILE /* | FILE_OPEN_FOR_BACKUP_INTENT */);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to open SystemPartition '%wZ', Status 0x%08lx\n", SystemPartitionPath, Status);
+        DPRINT1("Failed to open SystemPartition '%wZ' (Status 0x%08lx)\n",
+                SystemPartitionPath, Status);
         return Status;
     }
 
-    Status = OpenBootStoreByHandle(Handle, PartitionDirectoryHandle, Type, CreateNew);
+    Status = OpenBootStoreByHandle(Handle,
+                                   PartitionDirectoryHandle,
+                                   Type,
+                                   OpenMode,
+                                   Access);
 
     /* Done! */
     NtClose(PartitionDirectoryHandle);
@@ -718,19 +826,24 @@ OpenBootStore_UStr(
 
 NTSTATUS
 OpenBootStore(
-    OUT PVOID* Handle,
-    IN PCWSTR SystemPartition,
-    IN BOOT_STORE_TYPE Type,
-    IN BOOLEAN CreateNew)
+    _Out_ PVOID* Handle,
+    _In_ PCWSTR SystemPartition,
+    _In_ BOOT_STORE_TYPE Type,
+    _In_ BOOT_STORE_OPENMODE OpenMode,
+    _In_ BOOT_STORE_ACCESS Access)
 {
     UNICODE_STRING SystemPartitionPath;
     RtlInitUnicodeString(&SystemPartitionPath, SystemPartition);
-    return OpenBootStore_UStr(Handle, &SystemPartitionPath, Type, CreateNew);
+    return OpenBootStore_UStr(Handle,
+                              &SystemPartitionPath,
+                              Type,
+                              OpenMode,
+                              Access);
 }
 
 NTSTATUS
 CloseBootStore(
-    IN PVOID Handle)
+    _In_ PVOID Handle)
 {
     PBOOT_STORE_CONTEXT BootStore = (PBOOT_STORE_CONTEXT)Handle;
 

@@ -743,7 +743,8 @@ FindNTOSInstallations(
         DPRINT("Analyze the OS installations for loader type '%d' in disk #%d, partition #%d\n",
                Type, DiskNumber, PartitionNumber);
 
-        Status = OpenBootStoreByHandle(&BootStoreHandle, PartitionDirectoryHandle, Type, FALSE);
+        Status = OpenBootStoreByHandle(&BootStoreHandle, PartitionDirectoryHandle, Type,
+                                       BS_OpenExisting, BS_ReadAccess);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Could not open the NTOS boot store of type '%d' (Status 0x%08lx), continue with another one...\n",
