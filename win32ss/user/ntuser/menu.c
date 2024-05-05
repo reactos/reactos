@@ -4176,9 +4176,9 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                     /* fall through */
                 case WM_LBUTTONDBLCLK:
                 case WM_LBUTTONDOWN:
+                {
                     /* If the message belongs to the menu, removes it from the queue */
                     /* Else, end menu tracking */
-
                     pWnd = ValidateHwndNoErr(mt.TopMenu->hWnd);
                     /* Don't remove WM_LBUTTONDBLCLK to allow the closing of a window or program */
                     if (msg.message == WM_LBUTTONDBLCLK && GetNCHitEx(pWnd, mt.Pt) == HTSYSMENU)
@@ -4190,6 +4190,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                     if (msg.message == WM_RBUTTONDBLCLK)
                         fInsideMenuLoop = FALSE; // Must exit or loop forever
                     break;
+                }
 
                 case WM_RBUTTONUP:
                     if (!(wFlags & TPM_RIGHTBUTTON)) break;
