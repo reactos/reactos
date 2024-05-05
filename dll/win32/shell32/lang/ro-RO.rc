@@ -738,7 +738,7 @@ BEGIN
     ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
     LTEXT "Elementul '%s' la care această scurtătură face referire a fost schimbată sau mutată, aşa că scurtătura nu va mai funcţiona corect.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
     LTEXT "Cea mai apropiată potrivire, bazată pe nume, tip, mărime şi dată:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
-    LTEXT "Reparaţii scurtătura pentru a atinge ţinta sau doar vreţi să o ştergeţi?", -1, 35, 85, 210, 30
+    LTEXT "Reparaţi scurtătura pentru a atinge ţinta sau doar vreţi să o ştergeţi?", -1, 35, 85, 210, 30
     DEFPUSHBUTTON "&Reparare", IDOK, 55, 120, 60, 15, WS_DISABLED
     PUSHBUTTON "Ş&tergere", IDYES, 120, 120, 60, 15
     PUSHBUTTON "Revocare", IDCANCEL, 185, 120, 60, 15
