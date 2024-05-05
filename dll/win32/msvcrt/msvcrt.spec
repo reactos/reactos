@@ -1035,7 +1035,7 @@
 @ cdecl -version=0x600+ _strupr_s_l(str long ptr)
 @ cdecl -version=0x600+ _strxfrm_l(ptr str long ptr)
 @ cdecl _swab(str str long)
-@ stub -version=0x600+ _swprintf
+@ cdecl -version=0x600+ _swprintf(ptr str)
 @ stub -version=0x600+ _swprintf_c
 @ stub -version=0x600+ _swprintf_c_l
 @ stub -version=0x600+ _swprintf_p_l
