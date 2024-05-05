@@ -69,7 +69,7 @@ STRINGTABLE
 BEGIN
     1 "* Necunoscut *"
     2 "WORKGROUP"
-    3 "La încercarea de a citi informaţiile de membru al domeniului a avut loc următoarea eroare::"
+    3 "La încercarea de a citi informaţiile de membru al domeniului a avut loc următoarea eroare:"
     4 "Modificări ale numelui computerului"
     5 "Grup de lucru:"
     6 "Domeniu:"
@@ -84,7 +84,7 @@ BEGIN
     1021 "Notă: Numai administratorii pot modifica elementele de identificare pentru acest computer."
     1022 "Notă: Imposibil de modificat elementele de identificare pentru acest computer, deoarece:"
     1029 "Numele nou ""%1"" al computerului este un număr. Numele nu poate fi un număr."
-    1030 "Numele nou ""%1"" al computerului conţine caractere nepermise. Caracterele care nu sunt permise includ ` ~ ! @ # $ % ^ & * ( ) = + [ ] { } \\ | ; : ' "" , < > / şi ?"
+    1030 "Numele nou ""%1"" al computerului conţine caractere nepermise. Caracterele care nu sunt permise includ ` ~ ! @ # $ %% ^ & * ( ) = + [ ] { } \\ | ; : ' "" , < > / și ?"
     1031 "Primul domeniu din numele domeniului ""%1"" este un număr.  Primul domeniu nu poate fi un număr."
     1032 "Numele domeniului ""%1"" conţine caractere nepermise. Numele DNS standard pot conţine litere (a-z, A-Z), cifre (0-9) şi cratime, dar nu spaţii. Pentru a separa domenii se utilizează puncte (.). Exemplu: domeniu-1.reactos.org."
     3210 "&Detalii >>"
