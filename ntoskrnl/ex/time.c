@@ -320,13 +320,13 @@ NTAPI
 ExRefreshTimeZoneInformation(IN PLARGE_INTEGER CurrentBootTime)
 {
     LARGE_INTEGER CurrentTime, NewTimeZoneBias;
-    BOOLEAN result;
+    BOOLEAN Success;
 
     DPRINT("ExRefreshTimeZoneInformation\n");
 
-    /* Set the Global Data for ExpTimeZoneBias and the Time Zone ID */
-    result = ExpGetTimeZoneId(CurrentBootTime, &ExpTimeZoneId, &NewTimeZoneBias);
-    if (!result)
+    /* Set the global data for ExpTimeZoneBias and the Time Zone ID */
+    Success = ExpGetTimeZoneId(CurrentBootTime, &ExpTimeZoneId, &NewTimeZoneBias);
+    if (!Success)
     {
         DPRINT1("ExpGetTimeZoneId failed\n");
         return FALSE;
@@ -336,9 +336,9 @@ ExRefreshTimeZoneInformation(IN PLARGE_INTEGER CurrentBootTime)
     ExpTimeZoneBias = NewTimeZoneBias;
 
     /* Change SharedUserData->TimeZoneBias for user-mode applications */
-    SharedUserData->TimeZoneBias.High1Time = ExpTimeZoneBias.u.HighPart;
     SharedUserData->TimeZoneBias.High2Time = ExpTimeZoneBias.u.HighPart;
     SharedUserData->TimeZoneBias.LowPart = ExpTimeZoneBias.u.LowPart;
+    SharedUserData->TimeZoneBias.High1Time = ExpTimeZoneBias.u.HighPart;
     SharedUserData->TimeZoneId = ExpTimeZoneId;
 
     /* Convert boot time from local time to UTC */
@@ -353,9 +353,9 @@ ExRefreshTimeZoneInformation(IN PLARGE_INTEGER CurrentBootTime)
 
     /* Change it for user-mode applications */
     CurrentTime.QuadPart += ExpTimeZoneBias.QuadPart;
+    SharedUserData->SystemTime.High2Time = CurrentTime.u.HighPart;
     SharedUserData->SystemTime.LowPart = CurrentTime.u.LowPart;
     SharedUserData->SystemTime.High1Time = CurrentTime.u.HighPart;
-    SharedUserData->SystemTime.High2Time = CurrentTime.u.HighPart;
 
     /* Return success */
     return TRUE;
@@ -366,7 +366,7 @@ ExpSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
 {
     LARGE_INTEGER LocalTime, SystemTime, OldTime, NewTimeZoneBias;
     TIME_FIELDS TimeFields;
-    BOOLEAN result;
+    BOOLEAN Success;
     NTSTATUS Status;
     LARGE_INTEGER LocalTimeNow;
 
@@ -392,8 +392,8 @@ ExpSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
     LocalTimeNow.QuadPart -= NewTimeZoneBias.QuadPart;
 
     /* Set the Global Data for ExpTimeZoneBias and ExpTimeZoneId */
-    result = ExpGetTimeZoneId(&LocalTimeNow, &ExpTimeZoneId, &NewTimeZoneBias);
-    if (!result)
+    Success = ExpGetTimeZoneId(&LocalTimeNow, &ExpTimeZoneId, &NewTimeZoneBias);
+    if (!Success)
     {
         DPRINT1("ExpGetTimeZoneId() failed\n");
         return STATUS_UNSUCCESSFUL;
