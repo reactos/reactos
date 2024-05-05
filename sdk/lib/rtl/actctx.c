@@ -570,7 +570,7 @@ typedef struct _ASSEMBLY_STORAGE_MAP
 typedef struct _ACTIVATION_CONTEXT
 {
 #ifdef __REACTOS__
-    LONG RefCount;
+    LONG ref_count;
     ULONG Flags;
     LIST_ENTRY Links;
     PACTIVATION_CONTEXT_DATA ActivationContextData;
@@ -600,7 +600,7 @@ typedef struct _ACTIVATION_CONTEXT
     struct guidsection_header *comserver_section;
     struct guidsection_header *ifaceps_section;
     struct guidsection_header *clrsurrogate_section;
-} ACTIVATION_CONTEXT, *PIACTIVATION_CONTEXT;
+} ACTIVATION_CONTEXT;
 
 struct actctx_loader
 {
@@ -1280,14 +1280,14 @@ static ACTIVATION_CONTEXT *check_actctx( HANDLE h )
 
 static inline void actctx_addref( ACTIVATION_CONTEXT *actctx )
 {
-    InterlockedExchangeAdd( &actctx->RefCount, 1 );
+    InterlockedIncrement( &actctx->ref_count );
 }
 
 static void actctx_release( ACTIVATION_CONTEXT *actctx )
 {
     PACTIVATION_CONTEXT_WRAPPED pActual;
 
-    if (InterlockedExchangeAdd(&actctx->RefCount, -1) == 1)
+    if (!InterlockedDecrement( &actctx->ref_count ))
     {
         unsigned int i, j;
 
@@ -5232,7 +5232,7 @@ RtlCreateActivationContext(IN ULONG Flags,
     ActualActCtx->MagicMarker = ACTCTX_MAGIC_MARKER;
 
     actctx = &ActualActCtx->ActivationContext;
-    actctx->RefCount = 1;
+    actctx->ref_count = 1;
     actctx->config.type = ACTIVATION_CONTEXT_PATH_TYPE_NONE;
     actctx->config.info = NULL;
     actctx->appdir.type = ACTIVATION_CONTEXT_PATH_TYPE_WIN32_FILE;
