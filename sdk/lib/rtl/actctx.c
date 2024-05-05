@@ -60,10 +60,7 @@ BOOLEAN RtlpNotAllowingMultipleActivation;
 #define STRSECTION_MAGIC   0x64487353 /* dHsS */
 #define GUIDSECTION_MAGIC  0x64487347 /* dHsG */
 
-#define ACTCTX_MAGIC_MARKER (PVOID)'gMcA'
-
 #define ACTCTX_FAKE_HANDLE ((HANDLE) 0xf00baa)
-#define ACTCTX_FAKE_COOKIE ((ULONG_PTR) 0xf00bad)
 
 /* we don't want to include winuser.h */
 #define RT_MANIFEST                        ((ULONG_PTR)24)
@@ -569,8 +566,9 @@ typedef struct _ASSEMBLY_STORAGE_MAP
 
 typedef struct _ACTIVATION_CONTEXT
 {
+    ULONG               magic;
+    LONG                ref_count;
 #ifdef __REACTOS__
-    LONG ref_count;
     ULONG Flags;
     LIST_ENTRY Links;
     PACTIVATION_CONTEXT_DATA ActivationContextData;
@@ -582,9 +580,6 @@ typedef struct _ACTIVATION_CONTEXT
     PASSEMBLY_STORAGE_MAP_ENTRY InlineStorageMapEntries;
     ULONG StackTraceIndex;
     PVOID StackTraces[4][4];
-#else
-    ULONG               magic;
-    int                 ref_count;
 #endif // __REACTOS__
     struct file_info    config;
     struct file_info    appdir;
@@ -627,63 +622,6 @@ static const WCHAR current_archW[] = {'n','o','n','e',0};
 static const WCHAR asmv1W[] = {'u','r','n',':','s','c','h','e','m','a','s','-','m','i','c','r','o','s','o','f','t','-','c','o','m',':','a','s','m','.','v','1',0};
 static const WCHAR asmv2W[] = {'u','r','n',':','s','c','h','e','m','a','s','-','m','i','c','r','o','s','o','f','t','-','c','o','m',':','a','s','m','.','v','2',0};
 static const WCHAR asmv3W[] = {'u','r','n',':','s','c','h','e','m','a','s','-','m','i','c','r','o','s','o','f','t','-','c','o','m',':','a','s','m','.','v','3',0};
-
-#ifdef __REACTOS__
-typedef struct _ACTIVATION_CONTEXT_WRAPPED
-{
-    PVOID MagicMarker;
-    ACTIVATION_CONTEXT ActivationContext;
-} ACTIVATION_CONTEXT_WRAPPED, *PACTIVATION_CONTEXT_WRAPPED;
-
-VOID
-NTAPI
-RtlpSxsBreakOnInvalidMarker(IN PACTIVATION_CONTEXT ActCtx,
-                            IN ULONG FailureCode)
-{
-    EXCEPTION_RECORD ExceptionRecord;
-
-    /* Fatal SxS exception header */
-    ExceptionRecord.ExceptionRecord = NULL;
-    ExceptionRecord.ExceptionCode = STATUS_SXS_CORRUPTION;
-    ExceptionRecord.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
-
-    /* With SxS-specific information plus the context itself */
-    ExceptionRecord.ExceptionInformation[0] = 1;
-    ExceptionRecord.ExceptionInformation[1] = FailureCode;
-    ExceptionRecord.ExceptionInformation[2] = (ULONG_PTR)ActCtx;
-    ExceptionRecord.NumberParameters = 3;
-
-    /* Raise it */
-    RtlRaiseException(&ExceptionRecord);
-}
-
-FORCEINLINE
-VOID
-RtlpValidateActCtx(IN PACTIVATION_CONTEXT ActCtx)
-{
-    PACTIVATION_CONTEXT_WRAPPED pActual;
-
-    /* Get the caller-opaque header */
-    pActual = CONTAINING_RECORD(ActCtx,
-                                ACTIVATION_CONTEXT_WRAPPED,
-                                ActivationContext);
-
-    /* Check if the header matches as expected */
-    if (pActual->MagicMarker != ACTCTX_MAGIC_MARKER)
-    {
-        /* Nope, print out a warning, assert, and then throw an exception */
-        DbgPrint("%s : Invalid activation context marker %p found in activation context %p\n"
-                 "     This means someone stepped on the allocation, or someone is using a\n"
-                 "     deallocated activation context\n",
-                 __FUNCTION__,
-                 pActual->MagicMarker,
-                 ActCtx);
-        ASSERT(pActual->MagicMarker == ACTCTX_MAGIC_MARKER);
-        RtlpSxsBreakOnInvalidMarker(ActCtx, 1);
-    }
-}
-#endif // __REACTOS__
-
 static const WCHAR assemblyW[] = {'a','s','s','e','m','b','l','y',0};
 static const WCHAR assemblyIdentityW[] = {'a','s','s','e','m','b','l','y','I','d','e','n','t','i','t','y',0};
 static const WCHAR bindingRedirectW[] = {'b','i','n','d','i','n','g','R','e','d','i','r','e','c','t',0};
@@ -828,9 +766,9 @@ static const WCHAR dotManifestW[] = {'.','m','a','n','i','f','e','s','t',0};
 static const WCHAR version_formatW[] = {'%','u','.','%','u','.','%','u','.','%','u',0};
 static const WCHAR wildcardW[] = {'*',0};
 
-static ACTIVATION_CONTEXT_WRAPPED system_actctx = { ACTCTX_MAGIC_MARKER, { 1 } };
-static ACTIVATION_CONTEXT *process_actctx = &system_actctx.ActivationContext;
-static ACTIVATION_CONTEXT *implicit_actctx = &system_actctx.ActivationContext;
+static ACTIVATION_CONTEXT system_actctx = { ACTCTX_MAGIC, 1 };
+static ACTIVATION_CONTEXT *process_actctx = &system_actctx;
+static ACTIVATION_CONTEXT *implicit_actctx = &system_actctx;
 
 static WCHAR *strdupW(const WCHAR* str)
 {
@@ -1259,16 +1197,11 @@ static WCHAR *build_assembly_id( const struct assembly_identity *ai )
 static ACTIVATION_CONTEXT *check_actctx( HANDLE h )
 {
     ACTIVATION_CONTEXT *ret = NULL, *actctx = h;
-    PACTIVATION_CONTEXT_WRAPPED pActual;
 
     if (!h || h == INVALID_HANDLE_VALUE) return NULL;
     __TRY
     {
-        if (actctx)
-        {
-            pActual = CONTAINING_RECORD(actctx, ACTIVATION_CONTEXT_WRAPPED, ActivationContext);
-            if (pActual->MagicMarker == ACTCTX_MAGIC_MARKER) ret = &pActual->ActivationContext;
-        }
+        if (actctx->magic == ACTCTX_MAGIC) ret = actctx;
     }
     __EXCEPT_PAGE_FAULT
     {
@@ -1285,8 +1218,6 @@ static inline void actctx_addref( ACTIVATION_CONTEXT *actctx )
 
 static void actctx_release( ACTIVATION_CONTEXT *actctx )
 {
-    PACTIVATION_CONTEXT_WRAPPED pActual;
-
     if (!InterlockedDecrement( &actctx->ref_count ))
     {
         unsigned int i, j;
@@ -1318,10 +1249,8 @@ static void actctx_release( ACTIVATION_CONTEXT *actctx )
         RtlFreeHeap( GetProcessHeap(), 0, actctx->ifaceps_section );
         RtlFreeHeap( GetProcessHeap(), 0, actctx->clrsurrogate_section );
         RtlFreeHeap( GetProcessHeap(), 0, actctx->progid_section );
-
-        pActual = CONTAINING_RECORD(actctx, ACTIVATION_CONTEXT_WRAPPED, ActivationContext);
-        pActual->MagicMarker = 0;
-        RtlFreeHeap(GetProcessHeap(), 0, pActual);
+        actctx->magic = 0;
+        RtlFreeHeap( GetProcessHeap(), 0, actctx );
     }
 }
 
@@ -5211,7 +5140,6 @@ RtlCreateActivationContext(IN ULONG Flags,
 {
     const ACTCTXW *pActCtx = (PVOID)ActivationContextData;
     const WCHAR *directory = NULL;
-    PACTIVATION_CONTEXT_WRAPPED ActualActCtx;
     ACTIVATION_CONTEXT *actctx;
     UNICODE_STRING nameW;
     ULONG lang = 0;
@@ -5226,12 +5154,10 @@ RtlCreateActivationContext(IN ULONG Flags,
         return STATUS_INVALID_PARAMETER;
 
 
-    if (!(ActualActCtx = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*ActualActCtx))))
+    if (!(actctx = RtlAllocateHeap( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*actctx) )))
         return STATUS_NO_MEMORY;
 
-    ActualActCtx->MagicMarker = ACTCTX_MAGIC_MARKER;
-
-    actctx = &ActualActCtx->ActivationContext;
+    actctx->magic = ACTCTX_MAGIC;
     actctx->ref_count = 1;
     actctx->config.type = ACTIVATION_CONTEXT_PATH_TYPE_NONE;
     actctx->config.info = NULL;
@@ -5349,55 +5275,6 @@ error:
     return status;
 }
 
-#if 0
-#define ACT_CTX_VALID(p)    ((((ULONG_PTR)p - 1) | 7) != -1)
-
-VOID
-NTAPI
-RtlAddRefActivationContext(IN PACTIVATION_CONTEXT Handle)
-{
-    PIACTIVATION_CONTEXT ActCtx = (PIACTIVATION_CONTEXT)Handle;
-    LONG OldRefCount, NewRefCount;
-
-    if ((ActCtx) && (ACT_CTX_VALID(ActCtx)) && (ActCtx->RefCount != LONG_MAX))
-    {
-        RtlpValidateActCtx(ActCtx);
-
-        while (TRUE)
-        {
-            OldRefCount = ActCtx->RefCount;
-            ASSERT(OldRefCount > 0);
-
-            if (OldRefCount == LONG_MAX) break;
-
-            NewRefCount = OldRefCount + 1;
-            if (InterlockedCompareExchange(&ActCtx->RefCount,
-                                           NewRefCount,
-                                           OldRefCount) == OldRefCount)
-            {
-                break;
-            }
-        }
-
-        NewRefCount = LONG_MAX;
-        ASSERT(NewRefCount > 0);
-    }
-}
-
-VOID
-NTAPI
-RtlReleaseActivationContext( HANDLE handle )
-{
-    PIACTIVATION_CONTEXT ActCtx = (PIACTIVATION_CONTEXT) Handle;
-
-    if ((ActCtx) && (ACT_CTX_VALID(ActCtx)) && (ActCtx->RefCount != LONG_MAX))
-    {
-        RtlpValidateActCtx(ActCtx);
-
-        actctx_release(ActCtx);
-    }
-}
-#else
 
 /***********************************************************************
  *		RtlAddRefActivationContext (NTDLL.@)
@@ -5419,8 +5296,6 @@ void WINAPI RtlReleaseActivationContext( HANDLE handle )
 
     if ((actctx = check_actctx( handle ))) actctx_release( actctx );
 }
-
-#endif
 
 /******************************************************************
  *              RtlZombifyActivationContext (NTDLL.@)
