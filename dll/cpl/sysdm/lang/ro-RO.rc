@@ -372,7 +372,7 @@ BEGIN
     IDS_PAGEFILE_SYSTEM "Gestionat de sistem"
     IDS_INFOREBOOT "Modificările efectuate impun repornirea computerului înainte de a fi aplicate."
     IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Confirmare ştergere profil"
-    IDS_HWPROFILE_CONFIRM_DELETE "Sigur ştergeţi profilul hardware „%s”?"
+    IDS_HWPROFILE_CONFIRM_DELETE "Sigur ştergeţi profilul hardware ""%s""?"
     IDS_HWPROFILE_ALREADY_IN_USE "Acest nume de profil se utilizează deja."
     IDS_HWPROFILE_PROFILE "Profil"
     IDS_HWPROFILE_WARNING "Avertisment"
