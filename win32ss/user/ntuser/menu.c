@@ -4199,8 +4199,6 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                     /* Check if a menu was selected by the mouse */
                     if (pmMouse)
                     {
-                        executedMenuId = MENU_ButtonUp( &mt, pmMouse, wFlags);
-
                         pWnd = ValidateHwndNoErr(mt.TopMenu->hWnd);
                         /* Exit system menu if system icon is clicked a second time */
                         if (!firstClick && GetNCHitEx(pWnd, mt.Pt) == HTSYSMENU)
@@ -4212,6 +4210,7 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
                         {
                             /* End the loop if executedMenuId is an item ID */
                             /* or if the job was done (executedMenuId = 0). */
+                            executedMenuId = MENU_ButtonUp( &mt, pmMouse, wFlags);
                             fRemove = (executedMenuId != -1);
                             fInsideMenuLoop = !fRemove;
                             firstClick = FALSE;
