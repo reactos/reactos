@@ -5763,6 +5763,7 @@ NTSTATUS WINAPI RtlFindActivationContextSectionString( ULONG flags, const GUID *
     NTSTATUS status = STATUS_SXS_KEY_NOT_FOUND;
 
     DPRINT("RtlFindActivationContextSectionString(%x %p %x %wZ %p)\n", flags, guid, section_kind, section_name, ptr);
+#ifdef __REACTOS__
     status = RtlpFindActivationContextSection_CheckParameters(flags, guid, section_kind, section_name, data);
     if (!NT_SUCCESS(status))
     {
@@ -5779,6 +5780,24 @@ NTSTATUS WINAPI RtlFindActivationContextSectionString( ULONG flags, const GUID *
         DPRINT("RtlFindActivationContextSectionString() failed with status %x\n", status);
         return status;
     }
+#else
+    if (guid)
+    {
+        FIXME("expected guid == NULL\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+    if (flags & ~FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX)
+    {
+        FIXME("unknown flags %08x\n", flags);
+        return STATUS_INVALID_PARAMETER;
+    }
+    if ((data && data->cbSize < offsetof(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex)) ||
+        !section_name || !section_name->Buffer)
+    {
+        WARN("invalid parameter\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+#endif // __REACTOS__
 
     ASSERT(NtCurrentTeb());
     ASSERT(NtCurrentTeb()->ActivationContextStackPointer);
