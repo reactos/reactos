@@ -5076,12 +5076,10 @@ static const WCHAR *find_app_settings( ACTIVATION_CONTEXT *actctx, const WCHAR *
 }
 
 /* initialize the activation context for the current process */
-void actctx_init(PVOID* pOldShimData)
+void actctx_init(void)
 {
     ACTCTXW ctx;
     HANDLE handle;
-    WCHAR buffer[1024];
-    NTSTATUS Status;
 
     ctx.cbSize   = sizeof(ctx);
     ctx.lpSource = NULL;
@@ -5092,28 +5090,6 @@ void actctx_init(PVOID* pOldShimData)
     if (NT_SUCCESS(RtlCreateActivationContext(0, (PVOID)&ctx, 0, NULL, NULL, &handle)))
     {
         process_actctx = check_actctx(handle);
-    }
-
-    /* ReactOS specific:
-       Now that we have found the process_actctx we can initialize the process compat subsystem */
-    LdrpInitializeProcessCompat(process_actctx, pOldShimData);
-
-
-    ctx.dwFlags  = 0;
-    ctx.hModule  = NULL;
-    ctx.lpResourceName = NULL;
-    ctx.lpSource = buffer;
-    RtlStringCchCopyW(buffer, RTL_NUMBER_OF(buffer), SharedUserData->NtSystemRoot);
-    RtlStringCchCatW(buffer, RTL_NUMBER_OF(buffer), L"\\winsxs\\manifests\\systemcompatible.manifest");
-
-    Status = RtlCreateActivationContext(0, (PVOID)&ctx, 0, NULL, NULL, &handle);
-    if (NT_SUCCESS(Status))
-    {
-        implicit_actctx = check_actctx(handle);
-    }
-    else
-    {
-        DPRINT1("Failed to create the implicit act ctx. Status: 0x%x!!!\n", Status);
     }
 
 #ifdef __REACTOS__
@@ -6067,4 +6043,41 @@ RtlDeactivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CON
     Frame->Frame.Flags |= RTL_ACTIVATION_CONTEXT_STACK_FRAME_FLAG_DEACTIVATED;
     return NewFrame->Previous;
 }
+
+NTSTATUS
+NTAPI
+RtlpInitializeActCtx(PVOID* pOldShimData)
+{
+    ACTCTXW ctx;
+    HANDLE handle;
+    WCHAR buffer[1024];
+    NTSTATUS Status;
+
+    actctx_init();
+
+    /* ReactOS specific:
+       Now that we have found the process_actctx we can initialize the process compat subsystem */
+    LdrpInitializeProcessCompat(process_actctx, pOldShimData);
+
+    ctx.cbSize   = sizeof(ctx);
+    ctx.dwFlags  = 0;
+    ctx.hModule  = NULL;
+    ctx.lpResourceName = NULL;
+    ctx.lpSource = buffer;
+    RtlStringCchCopyW(buffer, RTL_NUMBER_OF(buffer), SharedUserData->NtSystemRoot);
+    RtlStringCchCatW(buffer, RTL_NUMBER_OF(buffer), L"\\winsxs\\manifests\\systemcompatible.manifest");
+
+    Status = RtlCreateActivationContext(0, (PVOID)&ctx, 0, NULL, NULL, &handle);
+    if (NT_SUCCESS(Status))
+    {
+        implicit_actctx = check_actctx(handle);
+    }
+    else
+    {
+        DPRINT1("Failed to create the implicit act ctx. Status: 0x%x!!!\n", Status);
+    }
+
+    return Status;
+}
+
 #endif // __REACTOS__
