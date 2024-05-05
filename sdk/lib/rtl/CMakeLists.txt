@@ -23,6 +23,7 @@ endif()
 
 list(APPEND SOURCE
     ${RTL_WINE_SOURCE}
+    wine_debug.c
     access.c
     acl.c
     appverifier.c
