@@ -345,11 +345,7 @@ ExRefreshTimeZoneInformation(IN PLARGE_INTEGER CurrentBootTime)
     KeBootTime.QuadPart += ExpTimeZoneBias.QuadPart;
 
     /* Convert system time from local time to UTC */
-    do
-    {
-        CurrentTime.u.HighPart = SharedUserData->SystemTime.High1Time;
-        CurrentTime.u.LowPart = SharedUserData->SystemTime.LowPart;
-    } while (CurrentTime.u.HighPart != SharedUserData->SystemTime.High2Time);
+    KeQuerySystemTime(&CurrentTime);;
 
     /* Change it for user-mode applications */
     CurrentTime.QuadPart += ExpTimeZoneBias.QuadPart;
