@@ -594,7 +594,7 @@ BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem)
     HTREEITEM hNewItem;
 
     pszKeyPath = GetItemPath(hwndTV, hItem, &hRootKey);
-    if (pszKeyPath==NULL)
+    if (!pszKeyPath)
         return bSuccess;
     if (pszKeyPath[0] == L'\0')
         hKey = hRootKey;
