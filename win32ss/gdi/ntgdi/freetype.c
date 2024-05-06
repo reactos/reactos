@@ -4210,42 +4210,21 @@ IntGetRealGlyph(
 
     ASSERT_FREETYPE_LOCK_HELD();
 
-    if (Cache->Hashed.Aspect.EmuBoldItalic)
+    Cache->dwHash = IntGetHash(&Cache->Hashed, sizeof(Cache->Hashed) / sizeof(DWORD));
+
+    realglyph = IntFindGlyphCache(Cache);
+    if (realglyph)
+        return realglyph;
+
+    error = FT_Load_Glyph(Cache->Hashed.Face, Cache->Hashed.GlyphIndex, FT_LOAD_DEFAULT);
+    if (error)
     {
-        error = FT_Load_Glyph(Cache->Hashed.Face, Cache->Hashed.GlyphIndex, FT_LOAD_NO_BITMAP);
-        if (error)
-        {
-            DPRINT1("WARNING: Failed to load and render glyph! [index: %d]\n",
-                    Cache->Hashed.GlyphIndex);
-            return NULL;
-        }
-
-        glyph = Cache->Hashed.Face->glyph;
-
-        if (Cache->Hashed.Aspect.Emu.Bold)
-            FT_GlyphSlot_Embolden(glyph);
-        if (Cache->Hashed.Aspect.Emu.Italic)
-            FT_GlyphSlot_Oblique(glyph);
-        realglyph = IntGetBitmapGlyphNoCache(Cache->Hashed.Face, glyph, Cache->Hashed.Aspect.RenderMode);
+        DPRINT1("WARNING: Failed to load and render glyph! [index: %d]\n", Cache->Hashed.GlyphIndex);
+        return NULL;
     }
-    else
-    {
-        Cache->dwHash = IntGetHash(&Cache->Hashed, sizeof(Cache->Hashed) / sizeof(DWORD));
 
-        realglyph = IntFindGlyphCache(Cache);
-        if (realglyph)
-            return realglyph;
-
-        error = FT_Load_Glyph(Cache->Hashed.Face, Cache->Hashed.GlyphIndex, FT_LOAD_DEFAULT);
-        if (error)
-        {
-            DPRINT1("WARNING: Failed to load and render glyph! [index: %d]\n", Cache->Hashed.GlyphIndex);
-            return NULL;
-        }
-
-        glyph = Cache->Hashed.Face->glyph;
-        realglyph = IntGetBitmapGlyphWithCache(Cache, glyph);
-    }
+    glyph = Cache->Hashed.Face->glyph;
+    realglyph = IntGetBitmapGlyphWithCache(Cache, glyph);
 
     if (!realglyph)
         DPRINT1("Failed to render glyph! [index: %d]\n", Cache->Hashed.GlyphIndex);
@@ -4332,12 +4311,6 @@ TextIntGetTextExtentPoint(PDC dc,
         if (NULL != Dx)
         {
             Dx[i] = (TotalWidth64 + 32) >> 6;
-        }
-
-        /* Bold and italic do not use the cache */
-        if (Cache.Hashed.Aspect.EmuBoldItalic)
-        {
-            FT_Done_Glyph((FT_Glyph)realglyph);
         }
 
         previous = glyph_index;
@@ -5927,9 +5900,6 @@ IntGetTextDisposition(
             Y64 -= vec.y;
         }
 
-        if (Cache->Hashed.Aspect.EmuBoldItalic)
-            FT_Done_Glyph((FT_Glyph)realglyph);
-
         previous = glyph_index;
     }
 
@@ -6330,8 +6300,6 @@ IntExtTextOutW(
             {
                 DPRINT1("WARNING: EngCreateBitmap() failed!\n");
                 bResult = FALSE;
-                if (Cache.Hashed.Aspect.EmuBoldItalic)
-                    FT_Done_Glyph((FT_Glyph)realglyph);
                 break;
             }
 
@@ -6341,8 +6309,6 @@ IntExtTextOutW(
                 EngDeleteSurface((HSURF)HSourceGlyph);
                 DPRINT1("WARNING: EngLockSurface() failed!\n");
                 bResult = FALSE;
-                if (Cache.Hashed.Aspect.EmuBoldItalic)
-                    FT_Done_Glyph((FT_Glyph)realglyph);
                 break;
             }
 
@@ -6385,11 +6351,7 @@ IntExtTextOutW(
         }
 
         if (DoBreak)
-        {
-            if (Cache.Hashed.Aspect.EmuBoldItalic)
-                FT_Done_Glyph((FT_Glyph)realglyph);
             break;
-        }
 
         if (NULL == Dx)
         {
@@ -6414,11 +6376,6 @@ IntExtTextOutW(
         DPRINT("New X64, New Y64: %I64d, %I64d\n", X64, Y64);
 
         previous = glyph_index;
-
-        if (Cache.Hashed.Aspect.EmuBoldItalic)
-        {
-            FT_Done_Glyph((FT_Glyph)realglyph);
-        }
     }
 
     if (pdcattr->flTextAlign & TA_UPDATECP)
