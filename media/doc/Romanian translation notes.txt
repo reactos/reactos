@@ -1,6 +1,5 @@
 The following material is addressed (in Romanian) to Romanian translators.
 
-Copyright 2014 Ștefan Fulea
 Copyright 2023-2024 Miloiu Andrei
 
 ------------------------------------------------------------------------------
