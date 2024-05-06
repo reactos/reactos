@@ -74,7 +74,7 @@ BEGIN
     5 "Grup de lucru:"
     6 "Domeniu:"
     7 "Numele domeniului ""%1"" nu este conform specificaţiilor serviciului Internet Domain Name, deşi este un nume ReactOS legal. Pentru nume nestandard utilizaţi serverul DNS ReactOS."
-    8 "Numele de domeniu ""%1"" nu este formatat corespunzător. Punctele (.) sunt utilizate pentru a separa domeniile.  Fiecare domeniu este limitat la %2!d! caractere. Exemplu: domeniul-1.reactos.org."
+    8 "Numele de domeniu ""%1"" nu este formatat corespunzător. Punctele (.) sunt utilizate pentru a separa domeniile. Exemplu: domeniul-1.reactos.org."
     10 "Noul nume al computerului ""%1"" este prea lung. Numele nu poate fi mai lung de 63 de caractere."
     11 "Numele nou introdus pentru computer nu este formatat corespunzător. Numele standard pot conţine litere (a-z, A-Z), cifre (0-9) şi cratime (-), nu şi spaţii sau puncte (.). Numele nu poate fi compus în întregime numai din cifre."
     22 "Bun venit la grupul de lucru ""%1""."
