@@ -45,7 +45,7 @@ WAVERR_SYNC,             "Imposibil de deschis dispozitivul fără a se utiliza 
 MIDIERR_UNPREPARED,      "Nu s-a pregătit antetul MIDI. Utilizaţi funcţia Pregătire pentru a pregăti antetul şi apoi reîncercaţi."
 MIDIERR_STILLPLAYING,    "Imposibil de executat această operaţiune în timp ce datele de pe suport sunt încă redate. Reiniţializaţi dispozitivul sau aşteptaţi terminarea rulării datelor."
 MIDIERR_NOMAP,           "Nu s-a găsit o hartă MIDI. Este posibil ca driverul să aibă o problemă sau ca fişierul MIDIMAP.CFG să fie deteriorat sau inexistent."
-MIDIERR_NOTREADY,        "Port-ul transmite date către dispozitiv. Aşteptaţi terminarea transmisiei de date şi apoi reîncercaţi."
+MIDIERR_NOTREADY,        "Portul transmite date către dispozitiv. Aşteptaţi terminarea transmisiei de date şi apoi reîncercaţi."
 MIDIERR_NODEVICE,        "Instalarea curentă a Identificatorului MIDI face referire la un dispozitiv MIDI care nu este instalat pe sistem. Utilizaţi Identificatorul MIDI pentru a edita instalarea."
 MIDIERR_INVALIDSETUP,    "Instalarea curentă a MIDI este deteriorată. Copiaţi fişierul MIDIMAP.CFG original în directorul Windows SYSTEM şi apoi reîncercaţi."
 
