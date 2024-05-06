@@ -6,6 +6,10 @@ Copyright 2023-2024 Miloiu Andrei
 ------------------------------------------------------------------------------
 
  1. We use only the correct Romanian language diacritics.
+     This means using lowercase ţ instead of ț.
+     This means using lowercase ş instead of ș.
+     This means using uppercase Ş instead of Ș.
+     Some of XP/2k3sp2 fonts do lack ț and ș and Ș.
  2. We will make a correct translation both grammatically and literally.
  3. All of the accelerators and of the translations will follow the MSDN's rules as much as possible. We will keep the same XP/2003 (and newer) accelerators.
 
