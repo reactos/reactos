@@ -122,7 +122,7 @@ WSPGetOverlappedResult(
     }
     Ret = GetOverlappedResult((HANDLE)Handle, lpOverlapped, lpdwBytes, fWait);
 
-    /* Allow APC to be processed */
+    /* HACK: Allow APC to be processed */
     SleepEx(0, TRUE);
 
     if (Ret)

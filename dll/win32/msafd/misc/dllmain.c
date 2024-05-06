@@ -640,7 +640,7 @@ WSPCloseSocket(IN SOCKET Handle,
        return SOCKET_ERROR;
     }
 
-    /* Allow APC to be processed */
+    /* HACK: Allow APC to be processed */
     SleepEx(0, TRUE);
 
     if (Socket->HelperEvents & WSH_NOTIFY_CLOSE)
@@ -1389,7 +1389,7 @@ WSPSelect(IN int nfds,
     HeapFree( GlobalHeap, 0, PollBuffer );
     NtClose( SockEvent );
 
-    /* Allow APC to be processed */
+    /* HACK: Allow APC to be processed */
     SleepEx(0, TRUE);
 
     if( lpErrno )
@@ -2079,7 +2079,7 @@ WSPConnect(SOCKET Handle,
         }
         else
         {
-            /* Allow APC to be processed */
+            /* HACK: Allow APC to be processed */
             SleepEx(0, TRUE);
         }
     }
