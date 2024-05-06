@@ -4180,6 +4180,13 @@ IntGetRealGlyph(
     }
 
     glyph = Cache->Hashed.Face->glyph;
+
+    if (Cache->Hashed.Aspect.Emu.Bold)
+        FT_GlyphSlot_Embolden(glyph); /* Emulate Bold */
+
+    if (Cache->Hashed.Aspect.Emu.Italic)
+        FT_GlyphSlot_Oblique(glyph); /* Emulate Italic */
+
     realglyph = IntGetBitmapGlyphWithCache(Cache, glyph);
 
     if (!realglyph)
