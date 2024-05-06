@@ -6492,7 +6492,8 @@ GreExtTextOutW(
     return bResult;
 }
 
-#define STACK_TEXT_BUFFER_SIZE 100
+#define STACK_TEXT_BUFFER_SIZE 512
+
 BOOL
 APIENTRY
 NtGdiExtTextOutW(
@@ -6534,7 +6535,7 @@ NtGdiExtTextOutW(
         }
 
         /* Check if our local buffer is large enough */
-        if (BufSize > STACK_TEXT_BUFFER_SIZE)
+        if (BufSize > sizeof(LocalBuffer))
         {
             /* It's not, allocate a temp buffer */
             Buffer = ExAllocatePoolWithTag(PagedPool, BufSize, GDITAG_TEXT);
