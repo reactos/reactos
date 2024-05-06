@@ -2867,22 +2867,19 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
     }
     else
     {
-        /* TODO: this doesn't handle arbitrary encodings */
+        DWORD len;
         WCHAR *new_buff;
-        ULONG sizeU;
 
-        status = RtlMultiByteToUnicodeSize(&sizeU, buffer, size);
+        /* let's assume utf-8 for now */
+        status = RtlUTF8ToUnicodeN( NULL, 0, &len, buffer, size );
         if (!NT_SUCCESS(status))
         {
             DPRINT1("RtlMultiByteToUnicodeSize failed with %lx\n", status);
             return STATUS_SXS_CANT_GEN_ACTCTX;
         }
 
-        new_buff = RtlAllocateHeap(GetProcessHeap(), 0, sizeU);
-        if (!new_buff)
-            return STATUS_NO_MEMORY;
-
-        status = RtlMultiByteToUnicodeN(new_buff, sizeU, &sizeU, buffer, size);
+        if (!(new_buff = RtlAllocateHeap( GetProcessHeap(), 0, len ))) return STATUS_NO_MEMORY;
+        status = RtlUTF8ToUnicodeN( new_buff, len, &len, buffer, size );
         if (!NT_SUCCESS(status))
         {
             DPRINT1("RtlMultiByteToUnicodeN failed with %lx\n", status);
@@ -2890,7 +2887,7 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
         }
 
         xmlbuf.ptr = new_buff;
-        xmlbuf.end = xmlbuf.ptr + sizeU / sizeof(WCHAR);
+        xmlbuf.end = xmlbuf.ptr + len / sizeof(WCHAR);
         status = parse_manifest_buffer( acl, assembly, ai, &xmlbuf );
         RtlFreeHeap( GetProcessHeap(), 0, new_buff );
     }
