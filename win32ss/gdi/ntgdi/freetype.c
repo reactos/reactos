@@ -88,7 +88,7 @@ static BOOL             g_RenderingEnabled = TRUE;
 #define ASSERT_FREETYPE_LOCK_NOT_HELD() \
     ASSERT(g_FreeTypeLock->Owner != KeGetCurrentThread())
 
-#define MAX_FONT_CACHE 256
+#define MAX_FONT_CACHE 400
 
 static LIST_ENTRY g_FontCacheListHead;
 static UINT g_FontCacheNumEntries;
