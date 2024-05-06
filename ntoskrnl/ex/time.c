@@ -52,7 +52,7 @@ ExpGetTimeZoneId(
     Status = RtlQueryTimeZoneInformation(&ExpTimeZoneInfo);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("RtlQueryTimeZoneInformation() failed (Status 0x%08lx)\n", Status);
+        DPRINT1("RtlQueryTimeZoneInformation failed (Status 0x%08lx)\n", Status);
         return FALSE;
     }
 
@@ -68,7 +68,7 @@ ExpGetTimeZoneId(
                                         &LocalTimeNow,
                                         TRUE))
         {
-            DPRINT1("RtlCutoverTimeToSystemTime() for StandardDate failed\n");
+            DPRINT1("RtlCutoverTimeToSystemTime for StandardDate failed\n");
             return FALSE;
         }
 
@@ -78,7 +78,7 @@ ExpGetTimeZoneId(
                                         &LocalTimeNow,
                                         TRUE))
         {
-            DPRINT1("RtlCutoverTimeToSystemTime() for DaylightDate failed\n");
+            DPRINT1("RtlCutoverTimeToSystemTime for DaylightDate failed\n");
             return FALSE;
         }
 
@@ -366,13 +366,13 @@ ExpSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
     NTSTATUS Status;
     LARGE_INTEGER LocalTimeNow;
 
-    DPRINT("ExpSetTimeZoneInformation() called\n");
+    DPRINT("ExpSetTimeZoneInformation called\n");
 
     /* Read time zone information from the registry */
     Status = RtlQueryTimeZoneInformation(&ExpTimeZoneInfo);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("RtlQueryTimeZoneInformation() failed (Status 0x%08lx)\n", Status);
+        DPRINT1("RtlQueryTimeZoneInformation failed (Status 0x%08lx)\n", Status);
         return FALSE;
     }
 
@@ -391,7 +391,7 @@ ExpSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
     Success = ExpGetTimeZoneId(&LocalTimeNow, &ExpTimeZoneId, &NewTimeZoneBias);
     if (!Success)
     {
-        DPRINT1("ExpGetTimeZoneId() failed\n");
+        DPRINT1("ExpGetTimeZoneId failed\n");
         return STATUS_UNSUCCESSFUL;
     }
     DPRINT("ExpTimeZoneId is %lu\n", ExpTimeZoneId);
@@ -440,7 +440,7 @@ ExpSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
     PoNotifySystemTimeSet();
 
     /* Return success */
-    DPRINT("ExpSetTimeZoneInformation() done\n");
+    DPRINT("ExpSetTimeZoneInformation done\n");
     return STATUS_SUCCESS;
 }
 
