@@ -76,6 +76,7 @@ list(APPEND SOURCE
     splaytree.c
     sysvol.c
     thread.c
+    threadpool.c
     time.c
     timezone.c
     trace.c
@@ -84,7 +85,6 @@ list(APPEND SOURCE
     vectoreh.c
     version.c
     workitem.c
-    threadpool.c
     rtl.h)
 
 if(ARCH STREQUAL "i386")

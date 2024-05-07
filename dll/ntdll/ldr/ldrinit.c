@@ -2405,10 +2405,9 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     /* Check whether all static imports were properly loaded and return here */
     if (!NT_SUCCESS(ImportStatus)) return ImportStatus;
 
-#if 1 //(DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
+    //(DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
     /* Initialize the keyed event for condition variables - needed for winesync'ed rtl */
     RtlpInitializeKeyedEvent();
-#endif
 
     /* Initialize TLS */
     Status = LdrpInitializeTls();
