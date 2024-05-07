@@ -129,12 +129,7 @@ GetSystemTimeAsFileTime(OUT PFILETIME lpFileTime)
 {
     LARGE_INTEGER SystemTime;
 
-    do
-    {
-        SystemTime.HighPart = SharedUserData->SystemTime.High1Time;
-        SystemTime.LowPart = SharedUserData->SystemTime.LowPart;
-    }
-    while (SystemTime.HighPart != SharedUserData->SystemTime.High2Time);
+    SystemTime = KiReadSystemTime(&SharedUserData->SystemTime);
 
     lpFileTime->dwLowDateTime = SystemTime.LowPart;
     lpFileTime->dwHighDateTime = SystemTime.HighPart;
@@ -227,12 +222,8 @@ FileTimeToLocalFileTime(IN CONST FILETIME *lpFileTime,
     TimePtr = IsTimeZoneRedirectionEnabled() ?
               &BaseStaticServerData->ktTermsrvClientBias :
               &SharedUserData->TimeZoneBias;
-    do
-    {
-        TimeZoneBias.HighPart = TimePtr->High1Time;
-        TimeZoneBias.LowPart = TimePtr->LowPart;
-    }
-    while (TimeZoneBias.HighPart != TimePtr->High2Time);
+
+    TimeZoneBias = KiReadSystemTime(TimePtr);
 
     FileTime.LowPart = lpFileTime->dwLowDateTime;
     FileTime.HighPart = lpFileTime->dwHighDateTime;
@@ -260,12 +251,7 @@ LocalFileTimeToFileTime(IN CONST FILETIME *lpLocalFileTime,
               &BaseStaticServerData->ktTermsrvClientBias :
               &SharedUserData->TimeZoneBias;
 
-    do
-    {
-        TimeZoneBias.HighPart = TimePtr->High1Time;
-        TimeZoneBias.LowPart = TimePtr->LowPart;
-    }
-    while (TimeZoneBias.HighPart != TimePtr->High2Time);
+    TimeZoneBias = KiReadSystemTime(TimePtr);
 
     FileTime.LowPart = lpLocalFileTime->dwLowDateTime;
     FileTime.HighPart = lpLocalFileTime->dwHighDateTime;
@@ -289,22 +275,13 @@ GetLocalTime(OUT LPSYSTEMTIME lpSystemTime)
     TIME_FIELDS TimeFields;
     volatile KSYSTEM_TIME *TimePtr;
 
-    do
-    {
-        SystemTime.HighPart = SharedUserData->SystemTime.High1Time;
-        SystemTime.LowPart = SharedUserData->SystemTime.LowPart;
-    }
-    while (SystemTime.HighPart != SharedUserData->SystemTime.High2Time);
+    SystemTime = KiReadSystemTime(&SharedUserData->SystemTime);
 
     TimePtr = IsTimeZoneRedirectionEnabled() ?
               &BaseStaticServerData->ktTermsrvClientBias :
               &SharedUserData->TimeZoneBias;
-    do
-    {
-        TimeZoneBias.HighPart = TimePtr->High1Time;
-        TimeZoneBias.LowPart = TimePtr->LowPart;
-    }
-    while (TimeZoneBias.HighPart != TimePtr->High2Time);
+
+    TimeZoneBias = KiReadSystemTime(TimePtr);
 
     SystemTime.QuadPart -= TimeZoneBias.QuadPart;
     RtlTimeToTimeFields(&SystemTime, &TimeFields);
@@ -329,12 +306,7 @@ GetSystemTime(OUT LPSYSTEMTIME lpSystemTime)
     LARGE_INTEGER SystemTime;
     TIME_FIELDS TimeFields;
 
-    do
-    {
-        SystemTime.HighPart = SharedUserData->SystemTime.High1Time;
-        SystemTime.LowPart = SharedUserData->SystemTime.LowPart;
-    }
-    while (SystemTime.HighPart != SharedUserData->SystemTime.High2Time);
+    SystemTime = KiReadSystemTime(&SharedUserData->SystemTime);
 
     RtlTimeToTimeFields(&SystemTime, &TimeFields);
 
@@ -365,12 +337,8 @@ SetLocalTime(IN CONST SYSTEMTIME *lpSystemTime)
     TimePtr = IsTimeZoneRedirectionEnabled() ?
               &BaseStaticServerData->ktTermsrvClientBias :
               &SharedUserData->TimeZoneBias;
-    do
-    {
-        TimeZoneBias.HighPart = TimePtr->High1Time;
-        TimeZoneBias.LowPart = TimePtr->LowPart;
-    }
-    while (TimeZoneBias.HighPart != TimePtr->High2Time);
+
+    TimeZoneBias = KiReadSystemTime(TimePtr);
 
     TimeFields.Year = lpSystemTime->wYear;
     TimeFields.Month = lpSystemTime->wMonth;
@@ -454,22 +422,9 @@ DWORD
 WINAPI
 GetTickCount(VOID)
 {
-    ULARGE_INTEGER TickCount;
+    LARGE_INTEGER TickCount;
 
-#ifdef _WIN64
-    TickCount.QuadPart = *((volatile ULONG64*)&SharedUserData->TickCount);
-#else
-    while (TRUE)
-    {
-        TickCount.HighPart = (ULONG)SharedUserData->TickCount.High1Time;
-        TickCount.LowPart = SharedUserData->TickCount.LowPart;
-
-        if (TickCount.HighPart == (ULONG)SharedUserData->TickCount.High2Time)
-            break;
-
-        YieldProcessor();
-    }
-#endif
+    TickCount = KiReadSystemTime(&SharedUserData->TickCount);
 
     return (ULONG)((UInt32x32To64(TickCount.LowPart,
                                   SharedUserData->TickCountMultiplier) >> 24) +

@@ -1550,9 +1550,7 @@ Phase1InitializationDiscard(IN PVOID Context)
                                                     10000000);
 
             /* Set the boot time-zone bias */
-            SharedUserData->TimeZoneBias.High2Time = ExpTimeZoneBias.HighPart;
-            SharedUserData->TimeZoneBias.LowPart = ExpTimeZoneBias.LowPart;
-            SharedUserData->TimeZoneBias.High1Time = ExpTimeZoneBias.HighPart;
+            KiWriteSystemTime(&SharedUserData->TimeZoneBias, ExpTimeZoneBias);
 
             /* Convert the boot time to local time, and set it */
             UniversalBootTime.QuadPart = SystemBootTime.QuadPart +
