@@ -68,8 +68,6 @@ FONT 8, "MS Shell Dlg"
 CAPTION "Очистка истории"
 BEGIN
 
-    DEFPUSHBUTTON  "Отмена", IDCANCEL, 185, 230, 60, 15, WS_GROUP
-    PUSHBUTTON     "Удалить", IDOK, 120, 230, 60, 15
     AUTOCHECKBOX   "Временные файлы\nКэшированные копии страниц, изображений и сертификатов.",
                     IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE | WS_GROUP | WS_TABSTOP
     AUTOCHECKBOX   "Файлы cookies\nФайлы, сохранённые на вашем компьютере, могут содержать пользовательские настройки и информацию для авторизации.",
@@ -80,6 +78,8 @@ BEGIN
                     IDC_DELETE_FORM_DATA, 10, 128, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "Пароли\nСохранённые пароли, которые были указаны в веб-формах.",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
+    DEFPUSHBUTTON  "Отмена", IDCANCEL, 185, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "Удалить", IDOK, 120, 230, 60, 15
 
 END
 

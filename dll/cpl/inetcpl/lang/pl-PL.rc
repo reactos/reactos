@@ -68,8 +68,6 @@ FONT 8, "MS Shell Dlg"
 CAPTION "Usuwanie historii przeglądania"
 BEGIN
 
-    DEFPUSHBUTTON  "Anuluj", IDCANCEL, 185, 230, 60, 15, WS_GROUP
-    PUSHBUTTON     "Usuń", IDOK, 120, 230, 60, 15
     AUTOCHECKBOX   "Tymczasowe pliki internetowe\nKopie stron sieci Web, obrazów i certyfikatów.",
                     IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE | WS_GROUP | WS_TABSTOP
     AUTOCHECKBOX   "Pliki cookies\nPliki przechowywane na komputerze przez witryny sieci Web w celu zapisania preferencji takich jak informacje logowania.",
@@ -80,6 +78,8 @@ BEGIN
                     IDC_DELETE_FORM_DATA, 10, 128, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "Hasła\nHasła uzupełniane automatycznie po zalogowaniu się do wcześniej odwiedzonej witryny Web.",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
+    DEFPUSHBUTTON  "Anuluj", IDCANCEL, 185, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "Usuń", IDOK, 120, 230, 60, 15
 
 END
 

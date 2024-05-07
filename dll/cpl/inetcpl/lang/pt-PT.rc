@@ -68,8 +68,6 @@ FONT 8, "MS Shell Dlg"
 CAPTION "Limpar histórico de navegação"
 BEGIN
 
-    DEFPUSHBUTTON  "Cancelar", IDCANCEL, 185, 230, 60, 15, WS_GROUP
-    PUSHBUTTON     "Apagar", IDOK, 120, 230, 60, 15
     AUTOCHECKBOX   "Ficheiros temporários da internet\nCópias de páginas web em cachê, imagens e certificados.",
                     IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE | WS_GROUP | WS_TABSTOP
     AUTOCHECKBOX   "Cookies\nFicheiros guardados no computador, por websites que armazenam itens como preferências do utilizador e informações de início de sessão.",
@@ -80,6 +78,8 @@ BEGIN
                     IDC_DELETE_FORM_DATA, 10, 128, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "Passwords\n Passwords que inseriu em formulários",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
+    DEFPUSHBUTTON  "Cancelar", IDCANCEL, 185, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "Apagar", IDOK, 120, 230, 60, 15
 
 END
 

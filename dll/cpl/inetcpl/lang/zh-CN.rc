@@ -66,8 +66,6 @@ FONT 9, "宋体"
 CAPTION "删除浏览历史记录"
 BEGIN
 
-    DEFPUSHBUTTON  "取消", IDCANCEL, 185, 230, 60, 15, WS_GROUP
-    PUSHBUTTON     "删除", IDOK, 120, 230, 60, 15
     AUTOCHECKBOX   "Internet 临时文件\n缓存的网站页面、 图像和证书的副本。",
                     IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE | WS_GROUP | WS_TABSTOP
     AUTOCHECKBOX   "Cookies\n通过网站在您的计算机上保存文件存储用户首选项和登录信息。",
@@ -78,6 +76,8 @@ BEGIN
                     IDC_DELETE_FORM_DATA, 10, 128, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "密码\n保存在窗口中输入的密码。",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
+    DEFPUSHBUTTON  "取消", IDCANCEL, 185, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "删除", IDOK, 120, 230, 60, 15
 
 END
 
