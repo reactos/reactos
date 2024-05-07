@@ -36,20 +36,18 @@
 #include <debug.h>
 
 /* The ranges of the surrogate pairs */
-#define HIGH_SURROGATE_MIN 0xD800
-#define HIGH_SURROGATE_MAX 0xDBFF
-#define LOW_SURROGATE_MIN  0xDC00
-#define LOW_SURROGATE_MAX  0xDFFF
+#define HIGH_SURROGATE_MIN 0xD800U
+#define HIGH_SURROGATE_MAX 0xDBFFU
+#define LOW_SURROGATE_MIN  0xDC00U
+#define LOW_SURROGATE_MAX  0xDFFFU
 
 #define IS_HIGH_SURROGATE(ch0) (HIGH_SURROGATE_MIN <= (ch0) && (ch0) <= HIGH_SURROGATE_MAX)
 #define IS_LOW_SURROGATE(ch1)  (LOW_SURROGATE_MIN  <= (ch1) && (ch1) <=  LOW_SURROGATE_MAX)
 
 static inline DWORD
-Utf32FromSurrogatePair(WCHAR ch0, WCHAR ch1)
+Utf32FromSurrogatePair(DWORD ch0, DWORD ch1)
 {
-    DWORD Code = ch0 - HIGH_SURROGATE_MIN;
-    Code <<= 10;
-    return Code + (ch1 - LOW_SURROGATE_MIN) + 0x10000;
+    return ((ch0 - HIGH_SURROGATE_MIN) << 10) + (ch1 - LOW_SURROGATE_MIN) + 0x10000;
 }
 
 /* TPMF_FIXED_PITCH is confusing; brain-dead api */
