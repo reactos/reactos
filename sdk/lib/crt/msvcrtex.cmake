@@ -15,6 +15,8 @@ if(DLL_EXPORT_VERSION LESS 0x600)
         misc/dbgrpt.cpp
         stdlib/_invalid_parameter.c
         stdlib/rand_s.c
+        wstring/mbrtowc.c
+        wstring/wcrtomb.c
     )
 endif()
 

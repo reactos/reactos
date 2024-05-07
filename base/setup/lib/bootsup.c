@@ -130,15 +130,15 @@ CreateFreeLoaderReactOSEntries(
 #if DBG && !defined(_WINKD_)
     if (IsUnattendedSetup)
     {
-        BootOptions.CurrentBootEntryKey = MAKESTRKEY(L"ReactOS_KdSerial");
+        BootOptions.NextBootEntryKey = MAKESTRKEY(L"ReactOS_KdSerial");
     }
     else
 #endif
     {
 #if DBG
-        BootOptions.CurrentBootEntryKey = MAKESTRKEY(L"ReactOS_Debug");
+        BootOptions.NextBootEntryKey = MAKESTRKEY(L"ReactOS_Debug");
 #else
-        BootOptions.CurrentBootEntryKey = MAKESTRKEY(L"ReactOS");
+        BootOptions.NextBootEntryKey = MAKESTRKEY(L"ReactOS");
 #endif
     }
 
@@ -157,8 +157,8 @@ CreateFreeLoaderReactOSEntries(
     }
 #endif
 
-    BootOptions.Version = FreeLdr;
-    SetBootStoreOptions(BootStoreHandle, &BootOptions, 2 | 1);
+    SetBootStoreOptions(BootStoreHandle, &BootOptions,
+                        BOOT_OPTIONS_TIMEOUT | BOOT_OPTIONS_NEXT_BOOTENTRY_KEY);
 }
 
 static NTSTATUS
@@ -170,7 +170,8 @@ CreateFreeLoaderIniForReactOS(
     PVOID BootStoreHandle;
 
     /* Initialize the INI file and create the common FreeLdr sections */
-    Status = OpenBootStore(&BootStoreHandle, IniPath, FreeLdr, TRUE);
+    Status = OpenBootStore(&BootStoreHandle, IniPath, FreeLdr,
+                           BS_CreateAlways /* BS_OpenAlways */, BS_ReadWriteAccess);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -199,7 +200,8 @@ CreateFreeLoaderIniForReactOSAndBootSector(
     PBOOT_SECTOR_OPTIONS Options = (PBOOT_SECTOR_OPTIONS)&BootEntry->OsOptions;
 
     /* Initialize the INI file and create the common FreeLdr sections */
-    Status = OpenBootStore(&BootStoreHandle, IniPath, FreeLdr, TRUE);
+    Status = OpenBootStore(&BootStoreHandle, IniPath, FreeLdr,
+                           BS_CreateAlways /* BS_OpenAlways */, BS_ReadWriteAccess);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -337,7 +339,8 @@ UpdateFreeLoaderIni(
     PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
 
     /* Open the INI file */
-    Status = OpenBootStore(&BootStoreHandle, IniPath, FreeLdr, /*TRUE*/ FALSE);
+    Status = OpenBootStore(&BootStoreHandle, IniPath, FreeLdr,
+                           BS_OpenExisting /* BS_OpenAlways */, BS_ReadWriteAccess);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -398,7 +401,8 @@ UpdateBootIni(
     PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
 
     /* Open the INI file */
-    Status = OpenBootStore(&BootStoreHandle, IniPath, NtLdr, FALSE);
+    Status = OpenBootStore(&BootStoreHandle, IniPath, NtLdr,
+                           BS_OpenExisting /* BS_OpenAlways */, BS_ReadWriteAccess);
     if (!NT_SUCCESS(Status))
         return Status;
 

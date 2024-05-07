@@ -944,62 +944,50 @@ NoUserApcPending:
 /*!
  * VOID
  * DECLSPEC_NORETURN
- * KiServiceExit(IN PKTRAP_FRAME TrapFrame, IN NTSTATUS Status));
+ * KiExceptionExit(
+ *     _In_ PKTRAP_FRAME TrapFrame@<rcx>,
+ *     _In_ PKEXCEPTION_FRAME ExceptionFrame@<rdx>);
  */
-PUBLIC KiServiceExit
-.PROC KiServiceExit
-    .endprolog
+PUBLIC KiExceptionExit
+KiExceptionExit:
 
-    lea rsp, [rcx - MAX_SYSCALL_PARAM_SIZE]
-    jmp KiSystemServiceExit
+    /* Restore registers from exception frame */
+    movaps xmm6, [rdx + ExXmm6]
+    movaps xmm7, [rdx + ExXmm7]
+    movaps xmm8, [rdx + ExXmm8]
+    movaps xmm9, [rdx + ExXmm9]
+    movaps xmm10, [rdx + ExXmm10]
+    movaps xmm11, [rdx + ExXmm11]
+    movaps xmm12, [rdx + ExXmm12]
+    movaps xmm13, [rdx + ExXmm13]
+    movaps xmm14, [rdx + ExXmm14]
+    movaps xmm15, [rdx + ExXmm15]
+    mov rbx, [rdx + ExRbx]
+    mov rdi, [rdx + ExRdi]
+    mov rsi, [rdx + ExRsi]
+    mov r12, [rdx + ExR12]
+    mov r13, [rdx + ExR13]
+    mov r14, [rdx + ExR14]
+    mov r15, [rdx + ExR15]
 
-.ENDP
-
-
-/*!
- * VOID
- * DECLSPEC_NORETURN
- * KiServiceExit2(IN PKTRAP_FRAME TrapFrame);
- */
-PUBLIC KiServiceExit2
-.PROC KiServiceExit2
-    .ENDPROLOG
-
-    // FIXME: this should probably also restore an exception frame
-
+    /* Point rsp at the trap frame */
     mov rsp, rcx
-.ENDP
+    /* Fall through */
 
+/*
+ * Internal function. Exits to user-mode with rsp pointing to the trap frame.
+ * All non-volatile register context must be set up already.
+ * Used by KiInitializeContextThread to set up the init path for a new thread.
+ */
 PUBLIC KiServiceExit3
 .PROC KiServiceExit3
     .PUSHFRAME
     .ALLOCSTACK (KTRAP_FRAME_LENGTH - MachineFrameLength)
     .ENDPROLOG
 
-#if DBG
-    /* Get the current IRQL and compare it to the trap frame */
-    mov rax, cr8
-    cmp byte ptr [rsp + KTRAP_FRAME_PreviousIrql], al
-    je KiServiceExit2_ok1
-    int HEX(2C)
-
-KiServiceExit2_ok1:
-    /* Check if this is a user mode exit */
-    mov ah, byte ptr [rsp + KTRAP_FRAME_SegCs]
-    test ah, 1
-    jz KiServiceExit2_kernel
-
-    /* Validate that we are at PASSIVE_LEVEL */
-    test al, al
-    jz KiServiceExit2_kernel
-    int HEX(2C)
-
-KiServiceExit2_kernel:
-#endif
-
     /* Return */
     mov rbp, rsp
-    ExitTrap TF_SAVE_ALL
+    ExitTrap (TF_SEGMENTS or TF_CHECKUSERAPC)
 .ENDP
 
 

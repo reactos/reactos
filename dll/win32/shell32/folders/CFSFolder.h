@@ -36,7 +36,7 @@ class CFSFolder :
 
         HRESULT _ParseSimple(
             _In_ LPOLESTR lpszDisplayName,
-            _Out_ WIN32_FIND_DATAW *pFind,
+            _Inout_ WIN32_FIND_DATAW *pFind,
             _Out_ LPITEMIDLIST *ppidl);
         BOOL _GetFindDataFromName(_In_ LPCWSTR pszName, _Out_ WIN32_FIND_DATAW *pFind);
         HRESULT _CreateIDListFromName(LPCWSTR pszName, DWORD attrs, IBindCtx *pbc, LPITEMIDLIST *ppidl);

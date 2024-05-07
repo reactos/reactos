@@ -615,6 +615,40 @@ MMixerGetWaveOutCount(
 }
 
 MIXER_STATUS
+MMixerGetWavePosition(
+    _In_ PMIXER_CONTEXT MixerContext,
+    _In_ HANDLE PinHandle,
+    _Out_ PDWORD Position)
+{
+    KSAUDIO_POSITION AudioPosition;
+    KSPROPERTY Property;
+    MIXER_STATUS Status;
+    ULONG Length;
+
+    /* Validate mixer context */
+    Status = MMixerVerifyContext(MixerContext);
+
+    if (Status != MM_STATUS_SUCCESS)
+        return Status;
+
+    Property.Id = KSPROPERTY_AUDIO_POSITION;
+    Property.Set = KSPROPSETID_Audio;
+    Property.Flags = KSPROPERTY_TYPE_GET;
+
+    Status = MixerContext->Control(PinHandle, IOCTL_KS_PROPERTY,
+                                   &Property, sizeof(Property),
+                                   &AudioPosition, sizeof(AudioPosition),
+                                   &Length);
+    if (Status == MM_STATUS_SUCCESS)
+    {
+        /* store audio position */
+        *Position = (DWORD)AudioPosition.PlayOffset;
+    }
+
+    return Status;
+}
+
+MIXER_STATUS
 MMixerSetWaveStatus(
     IN PMIXER_CONTEXT MixerContext,
     IN HANDLE PinHandle,

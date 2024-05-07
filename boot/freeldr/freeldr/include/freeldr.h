@@ -63,7 +63,6 @@
 #include <arcsupp.h>
 #include <bytesex.h>
 #include <cache.h>
-#include <cmdline.h>
 #include <comm.h>
 #include <disk.h>
 #include <fs.h>
@@ -78,6 +77,7 @@
 #include <options.h>
 #include <oslist.h>
 #include <ramdisk.h>
+#include <settings.h>
 #include <ver.h>
 
 /* NTOS loader */

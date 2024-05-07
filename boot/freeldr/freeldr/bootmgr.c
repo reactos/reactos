@@ -84,6 +84,10 @@ WarnDeprecated(
     va_list ap;
     CHAR msgString[300];
 
+    /* If the user didn't cancel the timeout, don't display the warning */
+    if (BootMgrInfo.TimeOut >= 0)
+        return;
+
     va_start(ap, MsgFmt);
     RtlStringCbVPrintfA(msgString, sizeof(msgString),
                         MsgFmt, ap);
@@ -322,34 +326,15 @@ EditOperatingSystemEntry(
 }
 #endif // HAS_OPTION_MENU_EDIT_CMDLINE
 
-static LONG
-GetTimeOut(
-    IN ULONG_PTR FrLdrSectionId)
-{
-    LONG TimeOut = -1;
-    CHAR TimeOutText[20];
-
-    TimeOut = CmdLineGetTimeOut();
-    if (TimeOut >= 0)
-        return TimeOut;
-
-    TimeOut = -1;
-
-    if ((FrLdrSectionId != 0) &&
-        IniReadSettingByName(FrLdrSectionId, "TimeOut", TimeOutText, sizeof(TimeOutText)))
-    {
-        TimeOut = atoi(TimeOutText);
-    }
-
-    return TimeOut;
-}
-
 BOOLEAN
 MainBootMenuKeyPressFilter(
     IN ULONG KeyPress,
     IN ULONG SelectedMenuItem,
     IN PVOID Context OPTIONAL)
 {
+    /* Any key-press cancels the global timeout */
+    BootMgrInfo.TimeOut = -1;
+
     switch (KeyPress)
     {
     case KEY_F8:
@@ -370,14 +355,12 @@ MainBootMenuKeyPressFilter(
 
 VOID RunLoader(VOID)
 {
-    ULONG_PTR SectionId;
-    LONG      TimeOut;
-    ULONG     OperatingSystemCount;
     OperatingSystemItem* OperatingSystemList;
-    PCSTR*    OperatingSystemDisplayNames;
-    ULONG     DefaultOperatingSystem;
-    ULONG     SelectedOperatingSystem;
-    ULONG     i;
+    PCSTR* OperatingSystemDisplayNames;
+    ULONG OperatingSystemCount;
+    ULONG DefaultOperatingSystem;
+    ULONG SelectedOperatingSystem;
+    ULONG i;
 
     if (!MachInitializeBootDevices())
     {
@@ -395,24 +378,23 @@ VOID RunLoader(VOID)
 #endif
 #endif
 
+    /* Open FREELDR.INI and load the global FreeLoader settings */
     if (!IniFileInitialize())
     {
         UiMessageBoxCritical("Error initializing .ini file.");
         return;
     }
-
-    /* Open the [FreeLoader] section */
-    if (!IniOpenSection("FreeLoader", &SectionId))
+    LoadSettings(NULL);
+#if 0
+    if (FALSE)
     {
-        UiMessageBoxCritical("Section [FreeLoader] not found in freeldr.ini.");
+        UiMessageBoxCritical("Could not load global FreeLoader settings.");
         return;
     }
+#endif
 
     /* Debugger main initialization */
-    DebugInit(SectionId);
-
-    /* Retrieve the default timeout */
-    TimeOut = GetTimeOut(SectionId);
+    DebugInit(BootMgrInfo.DebugString);
 
     /* UI main initialization */
     if (!UiInitialize(TRUE))
@@ -421,8 +403,7 @@ VOID RunLoader(VOID)
         return;
     }
 
-    OperatingSystemList = InitOperatingSystemList(SectionId,
-                                                  &OperatingSystemCount,
+    OperatingSystemList = InitOperatingSystemList(&OperatingSystemCount,
                                                   &DefaultOperatingSystem);
     if (!OperatingSystemList)
     {
@@ -446,7 +427,7 @@ VOID RunLoader(VOID)
     }
 
     /* Find all the message box settings and run them */
-    UiShowMessageBoxesInSection(SectionId);
+    UiShowMessageBoxesInSection(BootMgrInfo.FrLdrSection);
 
     for (;;)
     {
@@ -461,7 +442,7 @@ VOID RunLoader(VOID)
                            OperatingSystemDisplayNames,
                            OperatingSystemCount,
                            DefaultOperatingSystem,
-                           TimeOut,
+                           BootMgrInfo.TimeOut,
                            &SelectedOperatingSystem,
                            FALSE,
                            MainBootMenuKeyPressFilter,
@@ -471,10 +452,10 @@ VOID RunLoader(VOID)
             goto Reboot;
         }
 
-        TimeOut = -1;
-
         /* Load the chosen operating system */
         LoadOperatingSystem(&OperatingSystemList[SelectedOperatingSystem]);
+
+        BootMgrInfo.TimeOut = -1;
 
         /* If we get there, the OS loader failed. As it may have
          * messed up the display, re-initialize the UI. */
