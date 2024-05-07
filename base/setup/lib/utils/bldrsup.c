@@ -860,7 +860,13 @@ CloseIniBootLoaderStore(
 
     /* Re-protect the INI file */
     FileAttribs = ProtectAttribs;
-    /*Status =*/ ProtectFile(BootStore->FileHandle, ProtectAttribs, &FileAttribs);
+    if (BootStore->Header.Type == FreeLdr)
+    {
+        // NOTE: CORE-19575: For the time being, don't add READONLY for ease
+        // of testing and modifying files, but it won't always stay this way.
+	FileAttribs &= ~FILE_ATTRIBUTE_READONLY;
+    }
+    /*Status =*/ ProtectFile(BootStore->FileHandle, FileAttribs, &FileAttribs);
     Status = STATUS_SUCCESS; // Ignore the status and just succeed.
 
 Quit:
