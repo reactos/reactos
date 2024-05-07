@@ -35,6 +35,21 @@
 #define NDEBUG
 #include <debug.h>
 
+/* The ranges of the surrogate pairs */
+#define HIGH_SURROGATE_MIN 0xD800U
+#define HIGH_SURROGATE_MAX 0xDBFFU
+#define LOW_SURROGATE_MIN  0xDC00U
+#define LOW_SURROGATE_MAX  0xDFFFU
+
+#define IS_HIGH_SURROGATE(ch0) (HIGH_SURROGATE_MIN <= (ch0) && (ch0) <= HIGH_SURROGATE_MAX)
+#define IS_LOW_SURROGATE(ch1)  (LOW_SURROGATE_MIN  <= (ch1) && (ch1) <=  LOW_SURROGATE_MAX)
+
+static inline DWORD
+Utf32FromSurrogatePair(DWORD ch0, DWORD ch1)
+{
+    return ((ch0 - HIGH_SURROGATE_MIN) << 10) + (ch1 - LOW_SURROGATE_MIN) + 0x10000;
+}
+
 /* TPMF_FIXED_PITCH is confusing; brain-dead api */
 #ifndef _TMPF_VARIABLE_PITCH
     #define _TMPF_VARIABLE_PITCH    TMPF_FIXED_PITCH
@@ -4215,6 +4230,7 @@ TextIntGetTextExtentPoint(PDC dc,
     BOOL use_kerning, bVerticalWriting;
     LONG ascender, descender;
     FONT_CACHE_ENTRY Cache;
+    DWORD ch0, ch1;
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
 
@@ -4250,7 +4266,19 @@ TextIntGetTextExtentPoint(PDC dc,
 
     for (i = 0; i < Count; i++)
     {
-        glyph_index = get_glyph_index_flagged(Cache.Hashed.Face, *String, GTEF_INDICES, fl);
+        ch0 = *String++;
+        if (IS_HIGH_SURROGATE(ch0))
+        {
+            ++i;
+            if (i >= Count)
+                break;
+
+            ch1 = *String++;
+            if (IS_LOW_SURROGATE(ch1))
+                ch0 = Utf32FromSurrogatePair(ch0, ch1);
+        }
+
+        glyph_index = get_glyph_index_flagged(Cache.Hashed.Face, ch0, GTEF_INDICES, fl);
         Cache.Hashed.GlyphIndex = glyph_index;
 
         realglyph = IntGetRealGlyph(&Cache);
@@ -4277,7 +4305,6 @@ TextIntGetTextExtentPoint(PDC dc,
         }
 
         previous = glyph_index;
-        String++;
     }
     ASSERT(FontGDI->Magic == FONTGDI_MAGIC);
     ascender = FontGDI->tmAscent; /* Units above baseline */
@@ -5824,12 +5851,25 @@ IntGetTextDisposition(
     BOOL use_kerning = FT_HAS_KERNING(face);
     ULONG previous = 0;
     FT_Vector delta, vec;
+    DWORD ch0, ch1;
 
     ASSERT_FREETYPE_LOCK_HELD();
 
     for (i = 0; i < Count; ++i)
     {
-        glyph_index = get_glyph_index_flagged(face, *String++, ETO_GLYPH_INDEX, fuOptions);
+        ch0 = *String++;
+        if (IS_HIGH_SURROGATE(ch0))
+        {
+            ++i;
+            if (i >= Count)
+                return TRUE;
+
+            ch1 = *String++;
+            if (IS_LOW_SURROGATE(ch1))
+                ch0 = Utf32FromSurrogatePair(ch0, ch1);
+        }
+
+        glyph_index = get_glyph_index_flagged(face, ch0, ETO_GLYPH_INDEX, fuOptions);
         Cache->Hashed.GlyphIndex = glyph_index;
 
         realglyph = IntGetRealGlyph(Cache);
@@ -6000,6 +6040,7 @@ IntExtTextOutW(
     FONT_CACHE_ENTRY Cache;
     FT_Matrix mat;
     BOOL bNoTransform;
+    DWORD ch0, ch1;
 
     /* Check if String is valid */
     if (Count > 0xFFFF || (Count > 0 && String == NULL))
@@ -6212,9 +6253,6 @@ IntExtTextOutW(
     EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, psurf->ppal, 0, 0, 0);
     EXLATEOBJ_vInitialize(&exloDst2RGB, psurf->ppal, &gpalRGB, 0, 0, 0);
 
-    /* Assume success */
-    bResult = TRUE;
-
     if (pdcattr->ulDirty_ & DIRTY_TEXT)
         DC_vUpdateTextBrush(dc);
 
@@ -6225,9 +6263,22 @@ IntExtTextOutW(
     Y64 = RealYStart64;
     previous = 0;
     DoBreak = FALSE;
+    bResult = TRUE; /* Assume success */
     for (i = 0; i < Count; ++i)
     {
-        glyph_index = get_glyph_index_flagged(face, *String++, ETO_GLYPH_INDEX, fuOptions);
+        ch0 = *String++;
+        if (IS_HIGH_SURROGATE(ch0))
+        {
+            ++i;
+            if (i >= Count)
+                break;
+
+            ch1 = *String++;
+            if (IS_LOW_SURROGATE(ch1))
+                ch0 = Utf32FromSurrogatePair(ch0, ch1);
+        }
+
+        glyph_index = get_glyph_index_flagged(face, ch0, ETO_GLYPH_INDEX, fuOptions);
         Cache.Hashed.GlyphIndex = glyph_index;
 
         realglyph = IntGetRealGlyph(&Cache);
