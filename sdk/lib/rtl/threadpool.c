@@ -68,9 +68,9 @@ NTSYSAPI NTSTATUS  WINAPI TpSimpleTryPost(PTP_SIMPLE_CALLBACK,PVOID,TP_CALLBACK_
 #include "wine/list.h"
 
 #include "ntdll_misc.h"
-#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(threadpool);
+#endif
 
 /*
  * Old thread pooling API
@@ -85,7 +85,9 @@ struct rtl_work_item
 #define EXPIRE_NEVER       (~(ULONGLONG)0)
 #define TIMER_QUEUE_MAGIC  0x516d6954   /* TimQ */
 
+#ifndef __REACTOS__
 static RTL_CRITICAL_SECTION_DEBUG critsect_compl_debug;
+#endif
 
 static struct
 {
@@ -95,15 +97,21 @@ static struct
 old_threadpool =
 {
     NULL,                                       /* compl_port */
+#ifdef __REACTOS__
+    NULL                                        /* threadpool_compl_cs */
+#else
     { &critsect_compl_debug, -1, 0, 0, 0, 0 },  /* threadpool_compl_cs */
+#endif
 };
 
-static RTL_CRITICAL_SECTION_DEBUG critsect_compl_debug =
+#ifndef __REACTOS__
+static RTL_CRITICAL_SECTION_DEBUG critsect_compl_debug ;=
 {
     0, 0, &old_threadpool.threadpool_compl_cs,
     { &critsect_compl_debug.ProcessLocksList, &critsect_compl_debug.ProcessLocksList },
       0, 0, { (DWORD_PTR)(__FILE__ ": threadpool_compl_cs") }
 };
+#endif
 
 struct timer_queue;
 struct queue_timer
@@ -273,8 +281,10 @@ struct threadpool_group
     struct list             members;
 };
 
+#ifndef __REACTOS__
 /* global timerqueue object */
 static RTL_CRITICAL_SECTION_DEBUG timerqueue_debug;
+#endif
 
 static struct
 {
@@ -286,13 +296,22 @@ static struct
 }
 timerqueue =
 {
+#ifdef __REACTOS__
+    NULL,                                       /* cs */
+#else
     { &timerqueue_debug, -1, 0, 0, 0, 0 },      /* cs */
+#endif
     0,                                          /* objcount */
     FALSE,                                      /* thread_running */
+#if __REACTOS__
+    0,
+#else
     LIST_INIT( timerqueue.pending_timers ),     /* pending_timers */
+#endif
     RTL_CONDITION_VARIABLE_INIT                 /* update_event */
 };
 
+#ifndef __REACTOS__
 static RTL_CRITICAL_SECTION_DEBUG timerqueue_debug =
 {
     0, 0, &timerqueue.cs,
@@ -302,6 +321,7 @@ static RTL_CRITICAL_SECTION_DEBUG timerqueue_debug =
 
 /* global waitqueue object */
 static RTL_CRITICAL_SECTION_DEBUG waitqueue_debug;
+#endif
 
 static struct
 {
@@ -311,17 +331,27 @@ static struct
 }
 waitqueue =
 {
+#ifdef __REACTOS__
+    NULL,                                       /* cs */
+#else
     { &waitqueue_debug, -1, 0, 0, 0, 0 },       /* cs */
+#endif
     0,                                          /* num_buckets */
+#ifdef __REACTOS__
+    0
+#else
     LIST_INIT( waitqueue.buckets )              /* buckets */
+#endif
 };
 
+#ifndef __REACTOS__
 static RTL_CRITICAL_SECTION_DEBUG waitqueue_debug =
 {
     0, 0, &waitqueue.cs,
     { &waitqueue_debug.ProcessLocksList, &waitqueue_debug.ProcessLocksList },
       0, 0, { (DWORD_PTR)(__FILE__ ": waitqueue.cs") }
 };
+#endif
 
 struct waitqueue_bucket
 {
@@ -333,9 +363,10 @@ struct waitqueue_bucket
     BOOL                    alertable;
 };
 
+#ifndef __REACTOS__
 /* global I/O completion queue object */
 static RTL_CRITICAL_SECTION_DEBUG ioqueue_debug;
-
+#endif
 static struct
 {
     CRITICAL_SECTION        cs;
@@ -346,15 +377,21 @@ static struct
 }
 ioqueue =
 {
+#ifdef __REACTOS__
+    .cs = NULL,
+#else
     .cs = { &ioqueue_debug, -1, 0, 0, 0, 0 },
+#endif
 };
 
+#ifndef __REACTOS__
 static RTL_CRITICAL_SECTION_DEBUG ioqueue_debug =
 {
     0, 0, &ioqueue.cs,
     { &ioqueue_debug.ProcessLocksList, &ioqueue_debug.ProcessLocksList },
       0, 0, { (DWORD_PTR)(__FILE__ ": ioqueue.cs") }
 };
+#endif
 
 static inline struct threadpool *impl_from_TP_POOL( TP_POOL *pool )
 {
@@ -3483,3 +3520,17 @@ NTSTATUS WINAPI RtlDeregisterWait(HANDLE WaitHandle)
 {
     return RtlDeregisterWaitEx(WaitHandle, NULL);
 }
+
+#ifdef __REACTOS__
+
+VOID
+NTAPI
+RtlpInitializeThreadPooling(
+    VOID)
+{
+    RtlInitializeCriticalSection(&old_threadpool.threadpool_compl_cs);
+    RtlInitializeCriticalSection(&timerqueue.cs);
+    RtlInitializeCriticalSection(&waitqueue.cs);
+    RtlInitializeCriticalSection(&ioqueue.cs);
+}
+#endif

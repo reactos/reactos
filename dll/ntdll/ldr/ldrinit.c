@@ -2408,6 +2408,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     //(DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
     /* Initialize the keyed event for condition variables - needed for winesync'ed rtl */
     RtlpInitializeKeyedEvent();
+    RtlpInitializeThreadPooling();
 
     /* Initialize TLS */
     Status = LdrpInitializeTls();

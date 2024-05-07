@@ -242,4 +242,9 @@ NTAPI
 RtlpInitializeKeyedEvent(
     VOID);
 
+VOID
+NTAPI
+RtlpInitializeThreadPooling(
+    VOID);
+
 /* EOF */
