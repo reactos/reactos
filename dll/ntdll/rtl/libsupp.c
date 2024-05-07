@@ -1221,22 +1221,9 @@ ULONG
 NTAPI
 RtlGetTickCount(VOID)
 {
-    ULARGE_INTEGER TickCount;
+    LARGE_INTEGER TickCount;
 
-#ifdef _WIN64
-    TickCount.QuadPart = *((volatile ULONG64*)&SharedUserData->TickCount);
-#else
-    while (TRUE)
-    {
-        TickCount.HighPart = (ULONG)SharedUserData->TickCount.High1Time;
-        TickCount.LowPart = SharedUserData->TickCount.LowPart;
-
-        if (TickCount.HighPart == (ULONG)SharedUserData->TickCount.High2Time)
-            break;
-
-        YieldProcessor();
-    }
-#endif
+    TickCount = KiReadSystemTime(&SharedUserData->TickCount);
 
     return (ULONG)((UInt32x32To64(TickCount.LowPart,
                                   SharedUserData->TickCountMultiplier) >> 24) +
