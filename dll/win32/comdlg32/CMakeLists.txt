@@ -1,8 +1,9 @@
 
 add_definitions(
     -D__WINESRC__
-    -D_WINE)
-
+    -D_WINE
+    -Dwcsdup=_wcsdup)
+remove_definitions(-D__ROS_LONG64__)
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(comdlg32.dll comdlg32.spec ADD_IMPORTLIB)
 
@@ -15,7 +16,7 @@ list(APPEND SOURCE
     filedlgbrowser.c
     finddlg.c
     fontdlg.c
-    #itemdlg.c /* Win 7 */
+    itemdlg.c
     printdlg.c
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/comdlg32_stubs.c)
