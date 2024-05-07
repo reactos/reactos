@@ -4230,8 +4230,7 @@ TextIntGetTextExtentPoint(PDC dc,
     BOOL use_kerning, bVerticalWriting;
     LONG ascender, descender;
     FONT_CACHE_ENTRY Cache;
-    WCHAR ch0, ch1;
-    DWORD Code;
+    DWORD ch0, ch1;
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
 
@@ -4267,7 +4266,7 @@ TextIntGetTextExtentPoint(PDC dc,
 
     for (i = 0; i < Count; i++)
     {
-        Code = ch0 = *String++;
+        ch0 = *String++;
         if (IS_HIGH_SURROGATE(ch0))
         {
             ++i;
@@ -4276,10 +4275,10 @@ TextIntGetTextExtentPoint(PDC dc,
 
             ch1 = *String++;
             if (IS_LOW_SURROGATE(ch1))
-                Code = Utf32FromSurrogatePair(ch0, ch1);
+                ch0 = Utf32FromSurrogatePair(ch0, ch1);
         }
 
-        glyph_index = get_glyph_index_flagged(Cache.Hashed.Face, Code, GTEF_INDICES, fl);
+        glyph_index = get_glyph_index_flagged(Cache.Hashed.Face, ch0, GTEF_INDICES, fl);
         Cache.Hashed.GlyphIndex = glyph_index;
 
         realglyph = IntGetRealGlyph(&Cache);
@@ -5852,14 +5851,13 @@ IntGetTextDisposition(
     BOOL use_kerning = FT_HAS_KERNING(face);
     ULONG previous = 0;
     FT_Vector delta, vec;
-    WCHAR ch0, ch1;
-    DWORD Code;
+    DWORD ch0, ch1;
 
     ASSERT_FREETYPE_LOCK_HELD();
 
     for (i = 0; i < Count; ++i)
     {
-        Code = ch0 = *String++;
+        ch0 = *String++;
         if (IS_HIGH_SURROGATE(ch0))
         {
             ++i;
@@ -5868,10 +5866,10 @@ IntGetTextDisposition(
 
             ch1 = *String++;
             if (IS_LOW_SURROGATE(ch1))
-                Code = Utf32FromSurrogatePair(ch0, ch1);
+                ch0 = Utf32FromSurrogatePair(ch0, ch1);
         }
 
-        glyph_index = get_glyph_index_flagged(face, Code, ETO_GLYPH_INDEX, fuOptions);
+        glyph_index = get_glyph_index_flagged(face, ch0, ETO_GLYPH_INDEX, fuOptions);
         Cache->Hashed.GlyphIndex = glyph_index;
 
         realglyph = IntGetRealGlyph(Cache);
@@ -6042,8 +6040,7 @@ IntExtTextOutW(
     FONT_CACHE_ENTRY Cache;
     FT_Matrix mat;
     BOOL bNoTransform;
-    WCHAR ch0, ch1;
-    DWORD Code;
+    DWORD ch0, ch1;
 
     /* Check if String is valid */
     if (Count > 0xFFFF || (Count > 0 && String == NULL))
@@ -6269,7 +6266,7 @@ IntExtTextOutW(
     bResult = TRUE; /* Assume success */
     for (i = 0; i < Count; ++i)
     {
-        Code = ch0 = *String++;
+        ch0 = *String++;
         if (IS_HIGH_SURROGATE(ch0))
         {
             ++i;
@@ -6278,10 +6275,10 @@ IntExtTextOutW(
 
             ch1 = *String++;
             if (IS_LOW_SURROGATE(ch1))
-                Code = Utf32FromSurrogatePair(ch0, ch1);
+                ch0 = Utf32FromSurrogatePair(ch0, ch1);
         }
 
-        glyph_index = get_glyph_index_flagged(face, Code, ETO_GLYPH_INDEX, fuOptions);
+        glyph_index = get_glyph_index_flagged(face, ch0, ETO_GLYPH_INDEX, fuOptions);
         Cache.Hashed.GlyphIndex = glyph_index;
 
         realglyph = IntGetRealGlyph(&Cache);
