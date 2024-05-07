@@ -5814,7 +5814,8 @@ IntGetTextDisposition(
     IN INT Count,
     IN OPTIONAL LPINT Dx,
     IN OUT PFONT_CACHE_ENTRY Cache,
-    IN UINT fuOptions)
+    IN UINT fuOptions,
+    IN BOOL bNoTransform)
 {
     LONGLONG X64 = 0, Y64 = 0;
     INT i, glyph_index;
@@ -5822,7 +5823,7 @@ IntGetTextDisposition(
     FT_Face face = Cache->Hashed.Face;
     BOOL use_kerning = FT_HAS_KERNING(face);
     ULONG previous = 0;
-    FT_Vector delta;
+    FT_Vector delta, vec;
 
     ASSERT_FREETYPE_LOCK_HELD();
 
@@ -5850,15 +5851,19 @@ IntGetTextDisposition(
         }
         else if (fuOptions & ETO_PDY)
         {
-            FT_Vector vec = { Dx[2 * i + 0] << 6, Dx[2 * i + 1] << 6 };
-            FT_Vector_Transform(&vec, &Cache->Hashed.matTransform);
+            vec.x = (Dx[2 * i + 0] << 6);
+            vec.y = (Dx[2 * i + 1] << 6);
+            if (!bNoTransform)
+                FT_Vector_Transform(&vec, &Cache->Hashed.matTransform);
             X64 += vec.x;
             Y64 -= vec.y;
         }
         else
         {
-            FT_Vector vec = { Dx[i] << 6, 0 };
-            FT_Vector_Transform(&vec, &Cache->Hashed.matTransform);
+            vec.x = (Dx[i] << 6);
+            vec.y = 0;
+            if (!bNoTransform)
+                FT_Vector_Transform(&vec, &Cache->Hashed.matTransform);
             X64 += vec.x;
             Y64 -= vec.y;
         }
@@ -5989,11 +5994,12 @@ IntExtTextOutW(
     EXLATEOBJ exloRGB2Dst, exloDst2RGB;
     POINT Start;
     PMATRIX pmxWorldToDevice;
-    FT_Vector delta, vecAscent64, vecDescent64;
+    FT_Vector delta, vecAscent64, vecDescent64, vec;
     LOGFONTW *plf;
     BOOL use_kerning, bResult, DoBreak;
     FONT_CACHE_ENTRY Cache;
     FT_Matrix mat;
+    BOOL bNoTransform;
 
     /* Check if String is valid */
     if (Count > 0xFFFF || (Count > 0 && String == NULL))
@@ -6120,6 +6126,10 @@ IntExtTextOutW(
     FT_Matrix_Multiply(&mat, &Cache.Hashed.matTransform);
     FT_Set_Transform(face, &Cache.Hashed.matTransform, NULL);
 
+    /* Is there no transformation? */
+    bNoTransform = ((mat.xy == 0) && (mat.yx == 0) &&
+                    (mat.xx == (1 << 16)) && (mat.yy == (1 << 16)));
+
     /* Calculate the ascent point and the descent point */
     vecAscent64.x = 0;
     vecAscent64.y = (FontGDI->tmAscent << 6);
@@ -6151,7 +6161,8 @@ IntExtTextOutW(
     /* Calculate the text width if necessary */
     if ((fuOptions & ETO_OPAQUE) || (pdcattr->flTextAlign & (TA_CENTER | TA_RIGHT)))
     {
-        if (!IntGetTextDisposition(&DeltaX64, &DeltaY64, String, Count, Dx, &Cache, fuOptions))
+        if (!IntGetTextDisposition(&DeltaX64, &DeltaY64, String, Count, Dx, &Cache,
+                                   fuOptions, bNoTransform))
         {
             IntUnLockFreeType();
             bResult = FALSE;
@@ -6323,15 +6334,19 @@ IntExtTextOutW(
         }
         else if (fuOptions & ETO_PDY)
         {
-            FT_Vector vec = { Dx[2 * i + 0] << 6, Dx[2 * i + 1] << 6 };
-            FT_Vector_Transform(&vec, &Cache.Hashed.matTransform);
+            vec.x = (Dx[2 * i + 0] << 6);
+            vec.y = (Dx[2 * i + 1] << 6);
+            if (!bNoTransform)
+                FT_Vector_Transform(&vec, &Cache.Hashed.matTransform);
             X64 += vec.x;
             Y64 -= vec.y;
         }
         else
         {
-            FT_Vector vec = { Dx[i] << 6, 0 };
-            FT_Vector_Transform(&vec, &Cache.Hashed.matTransform);
+            vec.x = (Dx[i] << 6);
+            vec.y = 0;
+            if (!bNoTransform)
+                FT_Vector_Transform(&vec, &Cache.Hashed.matTransform);
             X64 += vec.x;
             Y64 -= vec.y;
         }
