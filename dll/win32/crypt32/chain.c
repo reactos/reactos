@@ -16,16 +16,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  */
+
 #include <stdarg.h>
+#include <wchar.h>
 #define NONAMELESSUNION
 #include "windef.h"
 #include "winbase.h"
+#include "winnls.h"
 #define CERT_CHAIN_PARA_HAS_EXTRA_FIELDS
 #define CERT_REVOCATION_PARA_HAS_EXTRA_FIELDS
 #include "wincrypt.h"
 #include "wininet.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "crypt32_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
@@ -66,8 +68,6 @@ static inline void CRYPT_CloseStores(DWORD cStores, HCERTSTORE *stores)
         CertCloseStore(stores[i], 0);
 }
 
-static const WCHAR rootW[] = { 'R','o','o','t',0 };
-
 /* Finds cert in store by comparing the cert's hashes. */
 static PCCERT_CONTEXT CRYPT_FindCertInStore(HCERTSTORE store,
  PCCERT_CONTEXT cert)
@@ -92,7 +92,7 @@ static BOOL CRYPT_CheckRestrictedRoot(HCERTSTORE store)
 
     if (store)
     {
-        HCERTSTORE rootStore = CertOpenSystemStoreW(0, rootW);
+        HCERTSTORE rootStore = CertOpenSystemStoreW(0, L"Root");
         PCCERT_CONTEXT cert = NULL, check;
 
         do {
@@ -117,17 +117,13 @@ HCERTCHAINENGINE CRYPT_CreateChainEngine(HCERTSTORE root, DWORD system_store, co
     CertificateChainEngine *engine;
     HCERTSTORE worldStores[4];
 
-    static const WCHAR caW[] = { 'C','A',0 };
-    static const WCHAR myW[] = { 'M','y',0 };
-    static const WCHAR trustW[] = { 'T','r','u','s','t',0 };
-
     if(!root) {
         if(config->cbSize >= sizeof(CERT_CHAIN_ENGINE_CONFIG) && config->hExclusiveRoot)
             root = CertDuplicateStore(config->hExclusiveRoot);
         else if (config->hRestrictedRoot)
             root = CertDuplicateStore(config->hRestrictedRoot);
         else
-            root = CertOpenStore(CERT_STORE_PROV_SYSTEM_W, 0, 0, system_store, rootW);
+            root = CertOpenStore(CERT_STORE_PROV_SYSTEM_W, 0, 0, system_store, L"Root");
         if(!root)
             return NULL;
     }
@@ -142,9 +138,9 @@ HCERTCHAINENGINE CRYPT_CreateChainEngine(HCERTSTORE root, DWORD system_store, co
     engine->hRoot = root;
     engine->hWorld = CertOpenStore(CERT_STORE_PROV_COLLECTION, 0, 0, CERT_STORE_CREATE_NEW_FLAG, NULL);
     worldStores[0] = CertDuplicateStore(engine->hRoot);
-    worldStores[1] = CertOpenStore(CERT_STORE_PROV_SYSTEM_W, 0, 0, system_store, caW);
-    worldStores[2] = CertOpenStore(CERT_STORE_PROV_SYSTEM_W, 0, 0, system_store, myW);
-    worldStores[3] = CertOpenStore(CERT_STORE_PROV_SYSTEM_W, 0, 0, system_store, trustW);
+    worldStores[1] = CertOpenStore(CERT_STORE_PROV_SYSTEM_W, 0, 0, system_store, L"CA");
+    worldStores[2] = CertOpenStore(CERT_STORE_PROV_SYSTEM_W, 0, 0, system_store, L"My");
+    worldStores[3] = CertOpenStore(CERT_STORE_PROV_SYSTEM_W, 0, 0, system_store, L"Trust");
 
     CRYPT_AddStoresToCollection(engine->hWorld, ARRAY_SIZE(worldStores), worldStores);
     CRYPT_AddStoresToCollection(engine->hWorld, config->cAdditionalStore, config->rghAdditionalStore);
@@ -704,18 +700,18 @@ static BOOL url_matches(LPCWSTR constraint, LPCWSTR name,
          * The format for URIs is in RFC 2396.
          *
          * First, remove any scheme that's present. */
-        colon = strchrW(name, ':');
+        colon = wcschr(name, ':');
         if (colon && *(colon + 1) == '/' && *(colon + 2) == '/')
             name = colon + 3;
         /* Next, find the end of the authority component.  (The authority is
          * generally just the hostname, but it may contain a username or a port.
          * Those are removed next.)
          */
-        authority_end = strchrW(name, '/');
+        authority_end = wcschr(name, '/');
         if (!authority_end)
-            authority_end = strchrW(name, '?');
+            authority_end = wcschr(name, '?');
         if (!authority_end)
-            authority_end = name + strlenW(name);
+            authority_end = name + lstrlenW(name);
         /* Remove any port number from the authority.  The userinfo portion
          * of an authority may contain a colon, so stop if a userinfo portion
          * is found (indicated by '@').
@@ -726,7 +722,7 @@ static BOOL url_matches(LPCWSTR constraint, LPCWSTR name,
         if (*colon == ':')
             authority_end = colon;
         /* Remove any username from the authority */
-        if ((at = strchrW(name, '@')))
+        if ((at = wcschr(name, '@')))
             name = at;
         /* Ignore any path or query portion of the URL. */
         if (*authority_end)
@@ -760,11 +756,11 @@ static BOOL rfc822_name_matches(LPCWSTR constraint, LPCWSTR name,
         *trustErrorStatus |= CERT_TRUST_INVALID_NAME_CONSTRAINTS;
     else if (!name)
         ; /* no match */
-    else if (strchrW(constraint, '@'))
+    else if (wcschr(constraint, '@'))
         match = !lstrcmpiW(constraint, name);
     else
     {
-        if ((at = strchrW(name, '@')))
+        if ((at = wcschr(name, '@')))
             match = domain_name_matches(constraint, at + 1);
         else
             match = !lstrcmpiW(constraint, name);
@@ -3195,15 +3191,15 @@ static BOOL match_dns_to_subject_alt_name(const CERT_EXTENSION *ext,
                      * label, then requires an exact match of the remaining
                      * string.
                      */
-                    server_name_dot = strchrW(server_name, '.');
+                    server_name_dot = wcschr(server_name, '.');
                     if (server_name_dot)
                     {
-                        if (!strcmpiW(server_name_dot,
+                        if (!wcsicmp(server_name_dot,
                          subjectName->rgAltEntry[i].u.pwszDNSName + 1))
                             matches = TRUE;
                     }
                 }
-                else if (!strcmpiW(server_name,
+                else if (!wcsicmp(server_name,
                  subjectName->rgAltEntry[i].u.pwszDNSName))
                     matches = TRUE;
             }
@@ -3214,12 +3210,11 @@ static BOOL match_dns_to_subject_alt_name(const CERT_EXTENSION *ext,
 }
 
 static BOOL find_matching_domain_component(const CERT_NAME_INFO *name,
- LPCWSTR component)
+                                           const WCHAR *component, size_t len)
 {
-    BOOL matches = FALSE;
     DWORD i, j;
 
-    for (i = 0; !matches && i < name->cRDN; i++)
+    for (i = 0; i < name->cRDN; i++)
         for (j = 0; j < name->rgRDN[i].cRDNAttr; j++)
             if (!strcmp(szOID_DOMAIN_COMPONENT,
              name->rgRDN[i].rgRDNAttr[j].pszObjId))
@@ -3227,15 +3222,16 @@ static BOOL find_matching_domain_component(const CERT_NAME_INFO *name,
                 const CERT_RDN_ATTR *attr;
 
                 attr = &name->rgRDN[i].rgRDNAttr[j];
-                /* Compare with memicmpW rather than strcmpiW in order to avoid
+                /* Compare with wcsnicmp rather than wcsicmp in order to avoid
                  * a match with a string with an embedded NULL.  The component
                  * must match one domain component attribute's entire string
                  * value with a case-insensitive match.
                  */
-                matches = !memicmpW(component, (LPCWSTR)attr->Value.pbData,
-                 attr->Value.cbData / sizeof(WCHAR));
+                if ((len == attr->Value.cbData / sizeof(WCHAR)) &&
+                    !wcsnicmp(component, (LPCWSTR)attr->Value.pbData, len))
+                    return TRUE;
             }
-    return matches;
+    return FALSE;
 }
 
 static BOOL match_domain_component(LPCWSTR allowed_component, DWORD allowed_len,
@@ -3283,7 +3279,7 @@ static BOOL match_domain_component(LPCWSTR allowed_component, DWORD allowed_len,
             }
         }
         if (matches)
-            matches = tolowerW(*allowed_ptr) == tolowerW(*server_ptr);
+            matches = towlower(*allowed_ptr) == towlower(*server_ptr);
     }
     if (matches && server_ptr - server_component < server_len)
     {
@@ -3301,7 +3297,7 @@ static BOOL match_common_name(LPCWSTR server_name, const CERT_RDN_ATTR *nameAttr
     LPCWSTR allowed_component = allowed;
     DWORD allowed_len = nameAttr->Value.cbData / sizeof(WCHAR);
     LPCWSTR server_component = server_name;
-    DWORD server_len = strlenW(server_name);
+    DWORD server_len = lstrlenW(server_name);
     BOOL matches = TRUE, allow_wildcards = TRUE;
 
     TRACE_(chain)("CN = %s\n", debugstr_wn(allowed_component, allowed_len));
@@ -3332,9 +3328,9 @@ static BOOL match_common_name(LPCWSTR server_name, const CERT_RDN_ATTR *nameAttr
     do {
         LPCWSTR allowed_dot, server_dot;
 
-        allowed_dot = memchrW(allowed_component, '.',
+        allowed_dot = wmemchr(allowed_component, '.',
          allowed_len - (allowed_component - allowed));
-        server_dot = memchrW(server_component, '.',
+        server_dot = wmemchr(server_component, '.',
          server_len - (server_component - server_name));
         /* The number of components must match */
         if ((!allowed_dot && server_dot) || (allowed_dot && !server_dot))
@@ -3395,25 +3391,20 @@ static BOOL match_dns_to_subject_dn(PCCERT_CONTEXT cert, LPCWSTR server_name)
             LPCWSTR ptr = server_name;
 
             do {
-                LPCWSTR dot = strchrW(ptr, '.'), end;
+                LPCWSTR dot = wcschr(ptr, '.'), end;
                 /* 254 is the maximum DNS label length, see RFC 1035 */
-                WCHAR component[255];
-                DWORD len;
+                size_t len;
 
-                end = dot ? dot : ptr + strlenW(ptr);
+                end = dot ? dot : ptr + lstrlenW(ptr);
                 len = end - ptr;
-                if (len >= ARRAY_SIZE(component))
+                if (len >= 255)
                 {
                     WARN_(chain)("domain component %s too long\n",
                      debugstr_wn(ptr, len));
                     matches = FALSE;
                 }
-                else
-                {
-                    memcpy(component, ptr, len * sizeof(WCHAR));
-                    component[len] = 0;
-                    matches = find_matching_domain_component(name, component);
-                }
+                else matches = find_matching_domain_component(name, ptr, len);
+
                 ptr = dot ? dot + 1 : end;
             } while (matches && ptr && *ptr);
         }
@@ -3460,10 +3451,13 @@ static BOOL WINAPI verify_ssl_policy(LPCSTR szPolicyOID,
  PCERT_CHAIN_POLICY_STATUS pPolicyStatus)
 {
     HTTPSPolicyCallbackData *sslPara = NULL;
-    DWORD checks = 0;
+    DWORD checks = 0, baseChecks = 0;
 
     if (pPolicyPara)
+    {
+        baseChecks = pPolicyPara->dwFlags;
         sslPara = pPolicyPara->pvExtraPolicyPara;
+    }
     if (TRACE_ON(chain))
         dump_ssl_extra_chain_policy_para(sslPara);
     if (sslPara && sslPara->u.cbSize >= sizeof(HTTPSPolicyCallbackData))
@@ -3479,7 +3473,8 @@ static BOOL WINAPI verify_ssl_policy(LPCSTR szPolicyOID,
     }
     else if (pChainContext->TrustStatus.dwErrorStatus &
      CERT_TRUST_IS_UNTRUSTED_ROOT &&
-     !(checks & SECURITY_FLAG_IGNORE_UNKNOWN_CA))
+     !(checks & SECURITY_FLAG_IGNORE_UNKNOWN_CA) &&
+     !(baseChecks & CERT_CHAIN_POLICY_ALLOW_UNKNOWN_CA_FLAG))
     {
         pPolicyStatus->dwError = CERT_E_UNTRUSTEDROOT;
         find_element_with_error(pChainContext,
@@ -3661,42 +3656,80 @@ static BYTE msPubKey3[] = {
 0x60,0x1e,0x7a,0x5b,0x38,0xc8,0x8f,0xbb,0x04,0x26,0x7c,0xd4,0x16,0x40,0xe5,
 0xb6,0x6b,0x6c,0xaa,0x86,0xfd,0x00,0xbf,0xce,0xc1,0x35,0x02,0x03,0x01,0x00,
 0x01 };
+/* from Microsoft Root Certificate Authority 2010 */
+static BYTE msPubKey4[] = {
+0x30,0x82,0x02,0x0a,0x02,0x82,0x02,0x01,0x00,0xb9,0x08,0x9e,0x28,0xe4,0xe4,
+0xec,0x06,0x4e,0x50,0x68,0xb3,0x41,0xc5,0x7b,0xeb,0xae,0xb6,0x8e,0xaf,0x81,
+0xba,0x22,0x44,0x1f,0x65,0x34,0x69,0x4c,0xbe,0x70,0x40,0x17,0xf2,0x16,0x7b,
+0xe2,0x79,0xfd,0x86,0xed,0x0d,0x39,0xf4,0x1b,0xa8,0xad,0x92,0x90,0x1e,0xcb,
+0x3d,0x76,0x8f,0x5a,0xd9,0xb5,0x91,0x10,0x2e,0x3c,0x05,0x8d,0x8a,0x6d,0x24,
+0x54,0xe7,0x1f,0xed,0x56,0xad,0x83,0xb4,0x50,0x9c,0x15,0xa5,0x17,0x74,0x88,
+0x59,0x20,0xfc,0x08,0xc5,0x84,0x76,0xd3,0x68,0xd4,0x6f,0x28,0x78,0xce,0x5c,
+0xb8,0xf3,0x50,0x90,0x44,0xff,0xe3,0x63,0x5f,0xbe,0xa1,0x9a,0x2c,0x96,0x15,
+0x04,0xd6,0x07,0xfe,0x1e,0x84,0x21,0xe0,0x42,0x31,0x11,0xc4,0x28,0x36,0x94,
+0xcf,0x50,0xa4,0x62,0x9e,0xc9,0xd6,0xab,0x71,0x00,0xb2,0x5b,0x0c,0xe6,0x96,
+0xd4,0x0a,0x24,0x96,0xf5,0xff,0xc6,0xd5,0xb7,0x1b,0xd7,0xcb,0xb7,0x21,0x62,
+0xaf,0x12,0xdc,0xa1,0x5d,0x37,0xe3,0x1a,0xfb,0x1a,0x46,0x98,0xc0,0x9b,0xc0,
+0xe7,0x63,0x1f,0x2a,0x08,0x93,0x02,0x7e,0x1e,0x6a,0x8e,0xf2,0x9f,0x18,0x89,
+0xe4,0x22,0x85,0xa2,0xb1,0x84,0x57,0x40,0xff,0xf5,0x0e,0xd8,0x6f,0x9c,0xed,
+0xe2,0x45,0x31,0x01,0xcd,0x17,0xe9,0x7f,0xb0,0x81,0x45,0xe3,0xaa,0x21,0x40,
+0x26,0xa1,0x72,0xaa,0xa7,0x4f,0x3c,0x01,0x05,0x7e,0xee,0x83,0x58,0xb1,0x5e,
+0x06,0x63,0x99,0x62,0x91,0x78,0x82,0xb7,0x0d,0x93,0x0c,0x24,0x6a,0xb4,0x1b,
+0xdb,0x27,0xec,0x5f,0x95,0x04,0x3f,0x93,0x4a,0x30,0xf5,0x97,0x18,0xb3,0xa7,
+0xf9,0x19,0xa7,0x93,0x33,0x1d,0x01,0xc8,0xdb,0x22,0x52,0x5c,0xd7,0x25,0xc9,
+0x46,0xf9,0xa2,0xfb,0x87,0x59,0x43,0xbe,0x9b,0x62,0xb1,0x8d,0x2d,0x86,0x44,
+0x1a,0x46,0xac,0x78,0x61,0x7e,0x30,0x09,0xfa,0xae,0x89,0xc4,0x41,0x2a,0x22,
+0x66,0x03,0x91,0x39,0x45,0x9c,0xc7,0x8b,0x0c,0xa8,0xca,0x0d,0x2f,0xfb,0x52,
+0xea,0x0c,0xf7,0x63,0x33,0x23,0x9d,0xfe,0xb0,0x1f,0xad,0x67,0xd6,0xa7,0x50,
+0x03,0xc6,0x04,0x70,0x63,0xb5,0x2c,0xb1,0x86,0x5a,0x43,0xb7,0xfb,0xae,0xf9,
+0x6e,0x29,0x6e,0x21,0x21,0x41,0x26,0x06,0x8c,0xc9,0xc3,0xee,0xb0,0xc2,0x85,
+0x93,0xa1,0xb9,0x85,0xd9,0xe6,0x32,0x6c,0x4b,0x4c,0x3f,0xd6,0x5d,0xa3,0xe5,
+0xb5,0x9d,0x77,0xc3,0x9c,0xc0,0x55,0xb7,0x74,0x00,0xe3,0xb8,0x38,0xab,0x83,
+0x97,0x50,0xe1,0x9a,0x42,0x24,0x1d,0xc6,0xc0,0xa3,0x30,0xd1,0x1a,0x5a,0xc8,
+0x52,0x34,0xf7,0x73,0xf1,0xc7,0x18,0x1f,0x33,0xad,0x7a,0xec,0xcb,0x41,0x60,
+0xf3,0x23,0x94,0x20,0xc2,0x48,0x45,0xac,0x5c,0x51,0xc6,0x2e,0x80,0xc2,0xe2,
+0x77,0x15,0xbd,0x85,0x87,0xed,0x36,0x9d,0x96,0x91,0xee,0x00,0xb5,0xa3,0x70,
+0xec,0x9f,0xe3,0x8d,0x80,0x68,0x83,0x76,0xba,0xaf,0x5d,0x70,0x52,0x22,0x16,
+0xe2,0x66,0xfb,0xba,0xb3,0xc5,0xc2,0xf7,0x3e,0x2f,0x77,0xa6,0xca,0xde,0xc1,
+0xa6,0xc6,0x48,0x4c,0xc3,0x37,0x51,0x23,0xd3,0x27,0xd7,0xb8,0x4e,0x70,0x96,
+0xf0,0xa1,0x44,0x76,0xaf,0x78,0xcf,0x9a,0xe1,0x66,0x13,0x02,0x03,0x01,0x00,
+0x01 };
 
 static BOOL WINAPI verify_ms_root_policy(LPCSTR szPolicyOID,
  PCCERT_CHAIN_CONTEXT pChainContext, PCERT_CHAIN_POLICY_PARA pPolicyPara,
  PCERT_CHAIN_POLICY_STATUS pPolicyStatus)
 {
-    BOOL ret = verify_base_policy(szPolicyOID, pChainContext, pPolicyPara,
-     pPolicyStatus);
+    BOOL isMSRoot = FALSE;
 
-    if (ret && !pPolicyStatus->dwError)
+    CERT_PUBLIC_KEY_INFO msPubKey = { { 0 } };
+    DWORD i;
+    CRYPT_DATA_BLOB keyBlobs[] = {
+        { sizeof(msPubKey1), msPubKey1 },
+        { sizeof(msPubKey2), msPubKey2 },
+        { sizeof(msPubKey3), msPubKey3 },
+        { sizeof(msPubKey4), msPubKey4 },
+    };
+    PCERT_SIMPLE_CHAIN rootChain =
+        pChainContext->rgpChain[pChainContext->cChain - 1];
+    PCCERT_CONTEXT root =
+        rootChain->rgpElement[rootChain->cElement - 1]->pCertContext;
+
+    for (i = 0; !isMSRoot && i < ARRAY_SIZE(keyBlobs); i++)
     {
-        CERT_PUBLIC_KEY_INFO msPubKey = { { 0 } };
-        BOOL isMSRoot = FALSE;
-        DWORD i;
-        CRYPT_DATA_BLOB keyBlobs[] = {
-         { sizeof(msPubKey1), msPubKey1 },
-         { sizeof(msPubKey2), msPubKey2 },
-         { sizeof(msPubKey3), msPubKey3 },
-        };
-        PCERT_SIMPLE_CHAIN rootChain =
-         pChainContext->rgpChain[pChainContext->cChain -1 ];
-        PCCERT_CONTEXT root =
-         rootChain->rgpElement[rootChain->cElement - 1]->pCertContext;
-
-        for (i = 0; !isMSRoot && i < ARRAY_SIZE(keyBlobs); i++)
-        {
-            msPubKey.PublicKey.cbData = keyBlobs[i].cbData;
-            msPubKey.PublicKey.pbData = keyBlobs[i].pbData;
-            if (CertComparePublicKeyInfo(
-             X509_ASN_ENCODING | PKCS_7_ASN_ENCODING,
-             &root->pCertInfo->SubjectPublicKeyInfo, &msPubKey))
-                isMSRoot = TRUE;
-        }
-        if (isMSRoot)
-            pPolicyStatus->lChainIndex = pPolicyStatus->lElementIndex = 0;
+        msPubKey.PublicKey.cbData = keyBlobs[i].cbData;
+        msPubKey.PublicKey.pbData = keyBlobs[i].pbData;
+        if (CertComparePublicKeyInfo(X509_ASN_ENCODING | PKCS_7_ASN_ENCODING,
+                &root->pCertInfo->SubjectPublicKeyInfo, &msPubKey)) isMSRoot = TRUE;
     }
-    return ret;
+
+    pPolicyStatus->lChainIndex = pPolicyStatus->lElementIndex = 0;
+
+    if (isMSRoot)
+        pPolicyStatus->dwError = 0;
+    else
+        pPolicyStatus->dwError = CERT_E_UNTRUSTEDROOT;
+
+    return TRUE;
 }
 
 typedef BOOL (WINAPI *CertVerifyCertificateChainPolicyFunc)(LPCSTR szPolicyOID,

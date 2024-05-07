@@ -7,7 +7,7 @@ add_definitions(
     -D__ROS_LONG64__
     -D_WINE
     -D_CRYPT32_)
-
+remove_definitions(-D_CRT_NON_CONFORMING_SWPRINTFS)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(crypt32.dll crypt32.spec ADD_IMPORTLIB)
 
@@ -27,6 +27,7 @@ list(APPEND SOURCE
     msg.c
     object.c
     oid.c
+    pfx.c
     proplist.c
     protectdata.c
     provstore.c

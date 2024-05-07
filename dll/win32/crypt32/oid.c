@@ -18,9 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include <stdio.h>
 #include <stdarg.h>
 #ifdef __REACTOS__
@@ -32,6 +29,7 @@
 #define CRYPT_OID_INFO_HAS_EXTRA_FIELDS
 #include "wincrypt.h"
 #include "winreg.h"
+#include "wine/winternl.h"
 #include "winuser.h"
 #include "wine/debug.h"
 #include "wine/list.h"
@@ -39,8 +37,6 @@
 #include "cryptres.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
-
-static const WCHAR DllW[] = { 'D','l','l',0 };
 
 static CRITICAL_SECTION funcSetCS;
 static CRITICAL_SECTION_DEBUG funcSetCSDebug =
@@ -68,21 +64,16 @@ struct OIDFunction
     struct list next;
 };
 
-static const WCHAR ROOT[] = {'R','O','O','T',0};
-static const WCHAR MY[] = {'M','Y',0};
-static const WCHAR CA[] = {'C','A',0};
-static const WCHAR ADDRESSBOOK[] = {'A','D','D','R','E','S','S','B','O','O','K',0};
-static const WCHAR TRUSTEDPUBLISHER[] = {'T','r','u','s','t','e','d','P','u','b','l','i','s','h','e','r',0};
-static const WCHAR DISALLOWED[] = {'D','i','s','a','l','l','o','w','e','d',0};
-static const LPCWSTR LocalizedKeys[] = {ROOT,MY,CA,ADDRESSBOOK,TRUSTEDPUBLISHER,DISALLOWED};
+static const LPCWSTR LocalizedKeys[] =
+{
+    L"ROOT",
+    L"MY",
+    L"CA",
+    L"ADDRESSBOOK",
+    L"TrustedPublisher",
+    L"Disallowed"
+};
 static WCHAR LocalizedNames[ARRAY_SIZE(LocalizedKeys)][256];
-
-static const WCHAR nameW[] = { 'N','a','m','e',0 };
-static const WCHAR algidW[] = { 'A','l','g','i','d',0 };
-static const WCHAR extraW[] = { 'E','x','t','r','a','I','n','f','o',0 };
-static const WCHAR cngalgidW[] = { 'C','N','G','A','l','g','i','d',0 };
-static const WCHAR cngextraalgidW[] = { 'C','N','G','E','x','t','r','a','A','l','g','i','d',0 };
-static const WCHAR flagsW[] = { 'F','l','a','g','s',0 };
 
 static void free_function_sets(void)
 {
@@ -121,7 +112,7 @@ HCRYPTOIDFUNCSET WINAPI CryptInitOIDFunctionSet(LPCSTR pszFuncName,
     EnterCriticalSection(&funcSetCS);
     LIST_FOR_EACH_ENTRY(cursor, &funcSets, struct OIDFunctionSet, next)
     {
-        if (!strcasecmp(pszFuncName, cursor->name))
+        if (!stricmp(pszFuncName, cursor->name))
         {
             ret = cursor;
             break;
@@ -193,7 +184,6 @@ static char *CRYPT_GetKeyName(DWORD dwEncodingType, LPCSTR pszFuncName,
 BOOL WINAPI CryptGetDefaultOIDDllList(HCRYPTOIDFUNCSET hFuncSet,
  DWORD dwEncodingType, LPWSTR pwszDllList, DWORD *pcchDllList)
 {
-    BOOL ret = TRUE;
     struct OIDFunctionSet *set = hFuncSet;
     char *keyName;
     HKEY key;
@@ -209,7 +199,7 @@ BOOL WINAPI CryptGetDefaultOIDDllList(HCRYPTOIDFUNCSET hFuncSet,
     {
         DWORD size = *pcchDllList * sizeof(WCHAR);
 
-        rc = RegQueryValueExW(key, DllW, NULL, NULL, (LPBYTE)pwszDllList,
+        rc = RegQueryValueExW(key, L"Dll", NULL, NULL, (LPBYTE)pwszDllList,
          &size);
         if (!rc)
             *pcchDllList = size / sizeof(WCHAR);
@@ -231,7 +221,7 @@ BOOL WINAPI CryptGetDefaultOIDDllList(HCRYPTOIDFUNCSET hFuncSet,
     }
     CryptMemFree(keyName);
 
-    return ret;
+    return TRUE;
 }
 
 BOOL WINAPI CryptInstallOIDFunctionAddress(HMODULE hModule,
@@ -319,14 +309,14 @@ static BOOL CRYPT_GetFuncFromReg(DWORD dwEncodingType, LPCSTR pszOID,
         }
         else
             funcName = szFuncName;
-        rc = RegQueryValueExW(key, DllW, NULL, &type, NULL, &size);
+        rc = RegQueryValueExW(key, L"Dll", NULL, &type, NULL, &size);
         if ((!rc || rc == ERROR_MORE_DATA) && type == REG_SZ)
         {
             LPWSTR dllName = CryptMemAlloc(size);
 
             if (dllName)
             {
-                rc = RegQueryValueExW(key, DllW, NULL, NULL,
+                rc = RegQueryValueExW(key, L"Dll", NULL, NULL,
                  (LPBYTE)dllName, &size);
                 if (!rc)
                 {
@@ -407,7 +397,7 @@ BOOL WINAPI CryptGetOIDFunctionAddress(HCRYPTOIDFUNCSET hFuncSet,
                 if (!IS_INTOID(pszOID))
                 {
                     if (!IS_INTOID(function->entry.pszOID) &&
-                     !strcasecmp(function->entry.pszOID, pszOID))
+                     !stricmp(function->entry.pszOID, pszOID))
                     {
                         *ppvFuncAddr = function->entry.pvFuncAddr;
                         *phFuncAddr = NULL; /* FIXME: what should it be? */
@@ -686,7 +676,7 @@ BOOL WINAPI CryptRegisterOIDFunction(DWORD dwEncodingType, LPCSTR pszFuncName,
              (const BYTE*)pszOverrideFuncName, lstrlenA(pszOverrideFuncName) + 1);
         if (r != ERROR_SUCCESS) goto error_close_key;
     }
-    r = RegSetValueExW(hKey, DllW, 0, REG_SZ, (const BYTE*) pwszDll,
+    r = RegSetValueExW(hKey, L"Dll", 0, REG_SZ, (const BYTE*) pwszDll,
          (lstrlenW(pwszDll) + 1) * sizeof (WCHAR));
 
 error_close_key:
@@ -719,7 +709,7 @@ BOOL WINAPI CryptUnregisterOIDInfo(PCCRYPT_OID_INFO info)
         return FALSE;
     }
 
-    err = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Cryptography\\OID\\EncodingType 0\\CryptDllFindOIDInfo", 0, KEY_ALL_ACCESS, &root);
+    err = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Cryptography\\OID\\EncodingType 0\\CryptDllFindOIDInfo", 0, KEY_ALL_ACCESS, &root);
     if (err != ERROR_SUCCESS)
     {
         SetLastError(err);
@@ -770,7 +760,7 @@ BOOL WINAPI CryptRegisterOIDInfo(PCCRYPT_OID_INFO info, DWORD flags)
         goto done;
     }
 
-    err = RegCreateKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Cryptography\\OID\\EncodingType 0\\CryptDllFindOIDInfo",
+    err = RegCreateKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Cryptography\\OID\\EncodingType 0\\CryptDllFindOIDInfo",
                           0, NULL, 0, KEY_ALL_ACCESS, NULL, &root, NULL);
     if (err != ERROR_SUCCESS) goto done;
 
@@ -780,37 +770,37 @@ BOOL WINAPI CryptRegisterOIDInfo(PCCRYPT_OID_INFO info, DWORD flags)
 
     if (flags)
     {
-        err = RegSetValueExW(key, flagsW, 0, REG_DWORD, (const BYTE *)&flags, sizeof(flags));
+        err = RegSetValueExW(key, L"Flags", 0, REG_DWORD, (const BYTE *)&flags, sizeof(flags));
         if (err != ERROR_SUCCESS) goto done;
     }
 
     if (info->pwszName)
     {
-        err = RegSetValueExW(key, nameW, 0, REG_SZ, (const BYTE *)info->pwszName, (lstrlenW(info->pwszName) + 1) * sizeof(WCHAR));
+        err = RegSetValueExW(key, L"Name", 0, REG_SZ, (const BYTE *)info->pwszName, (lstrlenW(info->pwszName) + 1) * sizeof(WCHAR));
         if (err != ERROR_SUCCESS) goto done;
     }
 
     if (info->u.Algid)
     {
-        err = RegSetValueExW(key, algidW, 0, REG_DWORD, (const BYTE *)&info->u.Algid, sizeof(info->u.Algid));
+        err = RegSetValueExW(key, L"Algid", 0, REG_DWORD, (const BYTE *)&info->u.Algid, sizeof(info->u.Algid));
         if (err != ERROR_SUCCESS) goto done;
     }
 
     if (info->ExtraInfo.cbData && info->ExtraInfo.pbData)
     {
-        err = RegSetValueExW(key, extraW, 0, REG_BINARY, info->ExtraInfo.pbData, info->ExtraInfo.cbData);
+        err = RegSetValueExW(key, L"ExtraInfo", 0, REG_BINARY, info->ExtraInfo.pbData, info->ExtraInfo.cbData);
         if (err != ERROR_SUCCESS) goto done;
     }
 
     if (info->pwszCNGAlgid)
     {
-        err = RegSetValueExW(key, cngalgidW, 0, REG_SZ, (const BYTE *)info->pwszCNGAlgid, (lstrlenW(info->pwszCNGAlgid) + 1) * sizeof(WCHAR));
+        err = RegSetValueExW(key, L"CNGAlgid", 0, REG_SZ, (const BYTE *)info->pwszCNGAlgid, (lstrlenW(info->pwszCNGAlgid) + 1) * sizeof(WCHAR));
         if (err != ERROR_SUCCESS) goto done;
     }
 
     if (info->pwszCNGExtraAlgid)
     {
-        err = RegSetValueExW(key, cngextraalgidW, 0, REG_SZ, (const BYTE *)info->pwszCNGExtraAlgid, (lstrlenW(info->pwszCNGExtraAlgid) + 1) * sizeof(WCHAR));
+        err = RegSetValueExW(key, L"CNGExtraAlgid", 0, REG_SZ, (const BYTE *)info->pwszCNGExtraAlgid, (lstrlenW(info->pwszCNGExtraAlgid) + 1) * sizeof(WCHAR));
         if (err != ERROR_SUCCESS) goto done;
     }
 
@@ -1076,11 +1066,11 @@ static LPWSTR CRYPT_GetDefaultOIDDlls(HKEY key)
     DWORD type, size;
     LPWSTR dlls;
 
-    r = RegQueryValueExW(key, DllW, NULL, &type, NULL, &size);
+    r = RegQueryValueExW(key, L"Dll", NULL, &type, NULL, &size);
     if (r == ERROR_SUCCESS && type == REG_MULTI_SZ)
     {
         dlls = CryptMemAlloc(size);
-        r = RegQueryValueExW(key, DllW, NULL, &type, (LPBYTE)dlls, &size);
+        r = RegQueryValueExW(key, L"Dll", NULL, &type, (LPBYTE)dlls, &size);
         if (r != ERROR_SUCCESS)
         {
             CryptMemFree(dlls);
@@ -1097,7 +1087,7 @@ static inline BOOL CRYPT_SetDefaultOIDDlls(HKEY key, LPCWSTR dlls)
     DWORD len = CRYPT_GetMultiStringCharacterLen(dlls);
     LONG r;
 
-    if ((r = RegSetValueExW(key, DllW, 0, REG_MULTI_SZ, (const BYTE *)dlls,
+    if ((r = RegSetValueExW(key, L"Dll", 0, REG_MULTI_SZ, (const BYTE *)dlls,
      len * sizeof (WCHAR))))
         SetLastError(r);
     return r == ERROR_SUCCESS;
@@ -1205,79 +1195,6 @@ static CRITICAL_SECTION_DEBUG oidInfoCSDebug =
 static CRITICAL_SECTION oidInfoCS = { &oidInfoCSDebug, -1, 0, 0, 0, 0 };
 static struct list oidInfo = { &oidInfo, &oidInfo };
 
-static const WCHAR tripledes[] = { '3','d','e','s',0 };
-static const WCHAR cms3deswrap[] = { 'C','M','S','3','D','E','S','w','r','a',
- 'p',0 };
-static const WCHAR cmsrc2wrap[] = { 'C','M','S','R','C','2','w','r','a','p',0 };
-static const WCHAR des[] = { 'd','e','s',0 };
-static const WCHAR md2[] = { 'm','d','2',0 };
-static const WCHAR md4[] = { 'm','d','4',0 };
-static const WCHAR md5[] = { 'm','d','5',0 };
-static const WCHAR rc2[] = { 'r','c','2',0 };
-static const WCHAR rc4[] = { 'r','c','4',0 };
-static const WCHAR sha[] = { 's','h','a',0 };
-static const WCHAR sha1[] = { 's','h','a','1',0 };
-static const WCHAR sha256[] = { 's','h','a','2','5','6',0 };
-static const WCHAR sha384[] = { 's','h','a','3','8','4',0 };
-static const WCHAR sha512[] = { 's','h','a','5','1','2',0 };
-static const WCHAR RSA[] = { 'R','S','A',0 };
-static const WCHAR RSA_KEYX[] = { 'R','S','A','_','K','E','Y','X',0 };
-static const WCHAR RSA_SIGN[] = { 'R','S','A','_','S','I','G','N',0 };
-static const WCHAR DSA[] = { 'D','S','A',0 };
-static const WCHAR DSA_SIGN[] = { 'D','S','A','_','S','I','G','N',0 };
-static const WCHAR DH[] = { 'D','H',0 };
-static const WCHAR DSS[] = { 'D','S','S',0 };
-static const WCHAR mosaicKMandUpdSig[] =
- { 'm','o','s','a','i','c','K','M','a','n','d','U','p','d','S','i','g',0 };
-static const WCHAR ESDH[] = { 'E','S','D','H',0 };
-static const WCHAR NO_SIGN[] = { 'N','O','S','I','G','N',0 };
-static const WCHAR dsaSHA1[] = { 'd','s','a','S','H','A','1',0 };
-static const WCHAR md2RSA[] = { 'm','d','2','R','S','A',0 };
-static const WCHAR md4RSA[] = { 'm','d','4','R','S','A',0 };
-static const WCHAR md5RSA[] = { 'm','d','5','R','S','A',0 };
-static const WCHAR shaDSA[] = { 's','h','a','D','S','A',0 };
-static const WCHAR sha1DSA[] = { 's','h','a','1','D','S','A',0 };
-static const WCHAR shaRSA[] = { 's','h','a','R','S','A',0 };
-static const WCHAR sha1RSA[] = { 's','h','a','1','R','S','A',0 };
-static const WCHAR sha256RSA[] = { 's','h','a','2','5','6','R','S','A',0 };
-static const WCHAR sha384RSA[] = { 's','h','a','3','8','4','R','S','A',0 };
-static const WCHAR sha512RSA[] = { 's','h','a','5','1','2','R','S','A',0 };
-static const WCHAR mosaicUpdatedSig[] =
- { 'm','o','s','a','i','c','U','p','d','a','t','e','d','S','i','g',0 };
-static const WCHAR sha256ECDSA[] = { 's','h','a','2','5','6','E','C','D','S','A',0 };
-static const WCHAR sha384ECDSA[] = { 's','h','a','3','8','4','E','C','D','S','A',0 };
-static const WCHAR CN[] = { 'C','N',0 };
-static const WCHAR L[] = { 'L',0 };
-static const WCHAR O[] = { 'O',0 };
-static const WCHAR OU[] = { 'O','U',0 };
-static const WCHAR E[] = { 'E',0 };
-static const WCHAR C[] = { 'C',0 };
-static const WCHAR S[] = { 'S',0 };
-static const WCHAR ST[] = { 'S','T',0 };
-static const WCHAR STREET[] = { 'S','T','R','E','E','T',0 };
-static const WCHAR T[] = { 'T',0 };
-static const WCHAR Title[] = { 'T','i','t','l','e',0 };
-static const WCHAR G[] = { 'G',0 };
-static const WCHAR GivenName[] = { 'G','i','v','e','n','N','a','m','e',0 };
-static const WCHAR I[] = { 'I',0 };
-static const WCHAR Initials[] = { 'I','n','i','t','i','a','l','s',0 };
-static const WCHAR SN[] = { 'S','N',0 };
-static const WCHAR DC[] = { 'D','C',0 };
-static const WCHAR Description[] =
- { 'D','e','s','c','r','i','p','t','i','o','n',0 };
-static const WCHAR PostalCode[] = { 'P','o','s','t','a','l','C','o','d','e',0 };
-static const WCHAR POBox[] = { 'P','O','B','o','x',0 };
-static const WCHAR Phone[] = { 'P','h','o','n','e',0 };
-static const WCHAR X21Address[] = { 'X','2','1','A','d','d','r','e','s','s',0 };
-static const WCHAR dnQualifier[] =
- { 'd','n','Q','u','a','l','i','f','i','e','r',0 };
-static const WCHAR SpcSpAgencyInfo[] = { 'S','p','c','S','p','A','g','e','n','c','y','I','n','f','o',0 };
-static const WCHAR SpcFinancialCriteria[] = { 'S','p','c','F','i','n','a','n','c','i','a','l','C','r','i','t','e','r','i','a',0 };
-static const WCHAR SpcMinimalCriteria[] = { 'S','p','c','M','i','n','i','m','a','l','C','r','i','t','e','r','i','a',0 };
-static const WCHAR Email[] = { 'E','m','a','i','l',0 };
-static const WCHAR GN[] = { 'G','N',0 };
-static const WCHAR SERIALNUMBER[] = { 'S','E','R','I','A','L','N','U','M','B','E','R',0 };
-
 static const DWORD noNullFlag = CRYPT_OID_NO_NULL_ALGORITHM_PARA_FLAG;
 static const DWORD mosaicFlags = CRYPT_OID_INHIBIT_SIGNATURE_FORMAT_FLAG |
  CRYPT_OID_NO_NULL_ALGORITHM_PARA_FLAG;
@@ -1324,91 +1241,89 @@ static const struct OIDInfoConstructor {
     const WCHAR *pwszCNGAlgid;
     const WCHAR *pwszCNGExtraAlgid;
 } oidInfoConstructors[] = {
- { 1, szOID_OIWSEC_sha1,               CALG_SHA1,     sha1, NULL },
- { 1, szOID_OIWSEC_sha1,               CALG_SHA1,     sha, NULL },
- { 1, szOID_OIWSEC_sha,                CALG_SHA,      sha, NULL },
- { 1, szOID_RSA_MD5,                   CALG_MD5,      md5, NULL },
- { 1, szOID_RSA_MD4,                   CALG_MD4,      md4, NULL },
- { 1, szOID_RSA_MD2,                   CALG_MD2,      md2, NULL },
+ { 1, szOID_OIWSEC_sha1,               CALG_SHA1,     L"sha1", NULL },
+ { 1, szOID_OIWSEC_sha1,               CALG_SHA1,     L"sha", NULL },
+ { 1, szOID_OIWSEC_sha,                CALG_SHA,      L"sha", NULL },
+ { 1, szOID_RSA_MD5,                   CALG_MD5,      L"md5", NULL },
+ { 1, szOID_RSA_MD4,                   CALG_MD4,      L"md4", NULL },
+ { 1, szOID_RSA_MD2,                   CALG_MD2,      L"md2", NULL },
  /* NOTE: Windows Vista+ uses -1 instead of CALG_SHA_* following SHA entries. */
- { 1, szOID_NIST_sha256,               CALG_SHA_256,  sha256, NULL },
- { 1, szOID_NIST_sha384,               CALG_SHA_384,  sha384, NULL },
- { 1, szOID_NIST_sha512,               CALG_SHA_512,  sha512, NULL },
+ { 1, szOID_NIST_sha256,               CALG_SHA_256,  L"sha256", NULL },
+ { 1, szOID_NIST_sha384,               CALG_SHA_384,  L"sha384", NULL },
+ { 1, szOID_NIST_sha512,               CALG_SHA_512,  L"sha512", NULL },
 
- { 2, szOID_OIWSEC_desCBC,             CALG_DES,      des, NULL },
- { 2, szOID_RSA_DES_EDE3_CBC,          CALG_3DES,     tripledes, NULL },
- { 2, szOID_RSA_RC2CBC,                CALG_RC2,      rc2, NULL },
- { 2, szOID_RSA_RC4,                   CALG_RC4,      rc4, NULL },
- { 2, szOID_RSA_SMIMEalgCMS3DESwrap,   CALG_3DES,     cms3deswrap, NULL },
- { 2, szOID_RSA_SMIMEalgCMSRC2wrap,    CALG_RC2,      cmsrc2wrap, NULL },
+ { 2, szOID_OIWSEC_desCBC,             CALG_DES,      L"des", NULL },
+ { 2, szOID_RSA_DES_EDE3_CBC,          CALG_3DES,     L"3des", NULL },
+ { 2, szOID_RSA_RC2CBC,                CALG_RC2,      L"rc2", NULL },
+ { 2, szOID_RSA_RC4,                   CALG_RC4,      L"rc4", NULL },
+ { 2, szOID_RSA_SMIMEalgCMS3DESwrap,   CALG_3DES,     L"CMS3DESwrap", NULL },
+ { 2, szOID_RSA_SMIMEalgCMSRC2wrap,    CALG_RC2,      L"CMSRC2wrap", NULL },
 
- { 3, szOID_RSA_RSA,                   CALG_RSA_KEYX, RSA, NULL },
- { 3, szOID_X957_DSA,                  CALG_DSS_SIGN, DSA, &noNullBlob },
- { 3, szOID_ANSI_X942_DH,              CALG_DH_SF,    DH, &noNullBlob },
- { 3, szOID_RSA_RSA,                   CALG_RSA_KEYX, RSA_KEYX, NULL },
- { 3, szOID_RSA_RSA,                   CALG_RSA_SIGN, RSA, NULL },
- { 3, szOID_RSA_RSA,                   CALG_RSA_SIGN, RSA_SIGN, NULL },
- { 3, szOID_OIWSEC_dsa,                CALG_DSS_SIGN, DSA, &noNullBlob },
- { 3, szOID_OIWSEC_dsa,                CALG_DSS_SIGN, DSS, &noNullBlob },
- { 3, szOID_OIWSEC_dsa,                CALG_DSS_SIGN, DSA_SIGN, &noNullBlob },
- { 3, szOID_RSA_DH,                    CALG_DH_SF,    DH, &noNullBlob },
- { 3, szOID_OIWSEC_rsaXchg,            CALG_RSA_KEYX, RSA_KEYX, NULL },
- { 3, szOID_INFOSEC_mosaicKMandUpdSig, CALG_DSS_SIGN, mosaicKMandUpdSig,
-   &mosaicFlagsBlob },
- { 3, szOID_RSA_SMIMEalgESDH,          CALG_DH_EPHEM, ESDH, &noNullBlob },
- { 3, szOID_PKIX_NO_SIGNATURE,         CALG_NO_SIGN,  NO_SIGN, NULL },
+ { 3, szOID_RSA_RSA,                   CALG_RSA_KEYX, L"RSA", NULL },
+ { 3, szOID_X957_DSA,                  CALG_DSS_SIGN, L"DSA", &noNullBlob },
+ { 3, szOID_ANSI_X942_DH,              CALG_DH_SF,    L"DH", &noNullBlob },
+ { 3, szOID_RSA_RSA,                   CALG_RSA_KEYX, L"RSA_KEYX", NULL },
+ { 3, szOID_RSA_RSA,                   CALG_RSA_SIGN, L"RSA", NULL },
+ { 3, szOID_RSA_RSA,                   CALG_RSA_SIGN, L"RSA_SIGN", NULL },
+ { 3, szOID_OIWSEC_dsa,                CALG_DSS_SIGN, L"DSA", &noNullBlob },
+ { 3, szOID_OIWSEC_dsa,                CALG_DSS_SIGN, L"DSS", &noNullBlob },
+ { 3, szOID_OIWSEC_dsa,                CALG_DSS_SIGN, L"DSA_SIGN", &noNullBlob },
+ { 3, szOID_RSA_DH,                    CALG_DH_SF,    L"DH", &noNullBlob },
+ { 3, szOID_OIWSEC_rsaXchg,            CALG_RSA_KEYX, L"RSA_KEYX", NULL },
+ { 3, szOID_INFOSEC_mosaicKMandUpdSig, CALG_DSS_SIGN, L"mosaicKMandUpdSig", &mosaicFlagsBlob },
+ { 3, szOID_RSA_SMIMEalgESDH,          CALG_DH_EPHEM, L"ESDH", &noNullBlob },
+ { 3, szOID_PKIX_NO_SIGNATURE,         CALG_NO_SIGN,  L"NOSIGN", NULL },
 
- { 4, szOID_RSA_SHA1RSA,               CALG_SHA1,     sha1RSA, &rsaSignBlob },
- { 4, szOID_RSA_SHA256RSA,             CALG_SHA_256,  sha256RSA, &rsaSignBlob },
- { 4, szOID_RSA_SHA384RSA,             CALG_SHA_384,  sha384RSA, &rsaSignBlob },
- { 4, szOID_RSA_SHA512RSA,             CALG_SHA_512,  sha512RSA, &rsaSignBlob },
- { 4, szOID_RSA_MD5RSA,                CALG_MD5,      md5RSA, &rsaSignBlob },
- { 4, szOID_X957_SHA1DSA,              CALG_SHA1,     sha1DSA, &dssSignBlob },
- { 4, szOID_OIWSEC_sha1RSASign,        CALG_SHA1,     sha1RSA, &rsaSignBlob },
- { 4, szOID_OIWSEC_sha1RSASign,        CALG_SHA1,     shaRSA, &rsaSignBlob },
- { 4, szOID_OIWSEC_shaRSA,             CALG_SHA1,     shaRSA, &rsaSignBlob },
- { 4, szOID_OIWSEC_md5RSA,             CALG_MD5,      md5RSA, &rsaSignBlob },
- { 4, szOID_RSA_MD2RSA,                CALG_MD2,      md2RSA, &rsaSignBlob },
- { 4, szOID_RSA_MD4RSA,                CALG_MD4,      md4RSA, &rsaSignBlob },
- { 4, szOID_OIWSEC_md4RSA,             CALG_MD4,      md4RSA, &rsaSignBlob },
- { 4, szOID_OIWSEC_md4RSA2,            CALG_MD4,      md4RSA, &rsaSignBlob },
- { 4, szOID_OIWDIR_md2RSA,             CALG_MD2,      md2RSA, &rsaSignBlob },
- { 4, szOID_OIWSEC_shaDSA,             CALG_SHA1,     sha1DSA, &dssSignBlob },
- { 4, szOID_OIWSEC_shaDSA,             CALG_SHA1,     shaDSA, &dssSignBlob },
- { 4, szOID_OIWSEC_dsaSHA1,            CALG_SHA1,     dsaSHA1, &dssSignBlob },
- { 4, szOID_INFOSEC_mosaicUpdatedSig,  CALG_SHA1,     mosaicUpdatedSig,
-   &mosaicSignBlob },
- { 4, szOID_ECDSA_SHA256,              CALG_OID_INFO_CNG_ONLY, sha256ECDSA, &ecdsaSignBlob,
+ { 4, szOID_RSA_SHA1RSA,               CALG_SHA1,     L"sha1RSA", &rsaSignBlob },
+ { 4, szOID_RSA_SHA256RSA,             CALG_SHA_256,  L"sha256RSA", &rsaSignBlob },
+ { 4, szOID_RSA_SHA384RSA,             CALG_SHA_384,  L"sha384RSA", &rsaSignBlob },
+ { 4, szOID_RSA_SHA512RSA,             CALG_SHA_512,  L"sha512RSA", &rsaSignBlob },
+ { 4, szOID_RSA_MD5RSA,                CALG_MD5,      L"md5RSA", &rsaSignBlob },
+ { 4, szOID_X957_SHA1DSA,              CALG_SHA1,     L"sha1DSA", &dssSignBlob },
+ { 4, szOID_OIWSEC_sha1RSASign,        CALG_SHA1,     L"sha1RSA", &rsaSignBlob },
+ { 4, szOID_OIWSEC_sha1RSASign,        CALG_SHA1,     L"shaRSA", &rsaSignBlob },
+ { 4, szOID_OIWSEC_shaRSA,             CALG_SHA1,     L"shaRSA", &rsaSignBlob },
+ { 4, szOID_OIWSEC_md5RSA,             CALG_MD5,      L"md5RSA", &rsaSignBlob },
+ { 4, szOID_RSA_MD2RSA,                CALG_MD2,      L"md2RSA", &rsaSignBlob },
+ { 4, szOID_RSA_MD4RSA,                CALG_MD4,      L"md4RSA", &rsaSignBlob },
+ { 4, szOID_OIWSEC_md4RSA,             CALG_MD4,      L"md4RSA", &rsaSignBlob },
+ { 4, szOID_OIWSEC_md4RSA2,            CALG_MD4,      L"md4RSA", &rsaSignBlob },
+ { 4, szOID_OIWDIR_md2RSA,             CALG_MD2,      L"md2RSA", &rsaSignBlob },
+ { 4, szOID_OIWSEC_shaDSA,             CALG_SHA1,     L"sha1DSA", &dssSignBlob },
+ { 4, szOID_OIWSEC_shaDSA,             CALG_SHA1,     L"shaDSA", &dssSignBlob },
+ { 4, szOID_OIWSEC_dsaSHA1,            CALG_SHA1,     L"dsaSHA1", &dssSignBlob },
+ { 4, szOID_INFOSEC_mosaicUpdatedSig,  CALG_SHA1,     L"mosaicUpdatedSig", &mosaicSignBlob },
+ { 4, szOID_ECDSA_SHA256,              CALG_OID_INFO_CNG_ONLY, L"sha256ECDSA", &ecdsaSignBlob,
    BCRYPT_SHA256_ALGORITHM, CRYPT_OID_INFO_ECC_PARAMETERS_ALGORITHM },
- { 4, szOID_ECDSA_SHA384,              CALG_OID_INFO_CNG_ONLY, sha384ECDSA, &ecdsaSignBlob,
+ { 4, szOID_ECDSA_SHA384,              CALG_OID_INFO_CNG_ONLY, L"sha384ECDSA", &ecdsaSignBlob,
    BCRYPT_SHA384_ALGORITHM, CRYPT_OID_INFO_ECC_PARAMETERS_ALGORITHM },
 
- { 5, szOID_COMMON_NAME,              0, CN, NULL },
- { 5, szOID_LOCALITY_NAME,            0, L, NULL },
- { 5, szOID_ORGANIZATION_NAME,        0, O, NULL },
- { 5, szOID_ORGANIZATIONAL_UNIT_NAME, 0, OU, NULL },
- { 5, szOID_RSA_emailAddr,            0, E, &ia5StringBlob },
- { 5, szOID_RSA_emailAddr,            0, Email, &ia5StringBlob },
- { 5, szOID_COUNTRY_NAME,             0, C, &printableStringBlob },
- { 5, szOID_STATE_OR_PROVINCE_NAME,   0, S, NULL },
- { 5, szOID_STATE_OR_PROVINCE_NAME,   0, ST, NULL },
- { 5, szOID_STREET_ADDRESS,           0, STREET, NULL },
- { 5, szOID_TITLE,                    0, T, NULL },
- { 5, szOID_TITLE,                    0, Title, NULL },
- { 5, szOID_GIVEN_NAME,               0, G, NULL },
- { 5, szOID_GIVEN_NAME,               0, GN, NULL },
- { 5, szOID_GIVEN_NAME,               0, GivenName, NULL },
- { 5, szOID_INITIALS,                 0, I, NULL },
- { 5, szOID_INITIALS,                 0, Initials, NULL },
- { 5, szOID_SUR_NAME,                 0, SN, NULL },
- { 5, szOID_DOMAIN_COMPONENT,         0, DC, &domainCompTypesBlob },
- { 5, szOID_DESCRIPTION,              0, Description, NULL },
- { 5, szOID_POSTAL_CODE,              0, PostalCode, NULL },
- { 5, szOID_POST_OFFICE_BOX,          0, POBox, NULL },
- { 5, szOID_TELEPHONE_NUMBER,         0, Phone, &printableStringBlob },
- { 5, szOID_X21_ADDRESS,              0, X21Address, &numericStringBlob },
- { 5, szOID_DN_QUALIFIER,             0, dnQualifier, NULL },
- { 5, szOID_DEVICE_SERIAL_NUMBER,     0, SERIALNUMBER, NULL },
+ { 5, szOID_COMMON_NAME,              0, L"CN", NULL },
+ { 5, szOID_LOCALITY_NAME,            0, L"L", NULL },
+ { 5, szOID_ORGANIZATION_NAME,        0, L"O", NULL },
+ { 5, szOID_ORGANIZATIONAL_UNIT_NAME, 0, L"OU", NULL },
+ { 5, szOID_RSA_emailAddr,            0, L"E", &ia5StringBlob },
+ { 5, szOID_RSA_emailAddr,            0, L"Email", &ia5StringBlob },
+ { 5, szOID_COUNTRY_NAME,             0, L"C", &printableStringBlob },
+ { 5, szOID_STATE_OR_PROVINCE_NAME,   0, L"S", NULL },
+ { 5, szOID_STATE_OR_PROVINCE_NAME,   0, L"ST", NULL },
+ { 5, szOID_STREET_ADDRESS,           0, L"STREET", NULL },
+ { 5, szOID_TITLE,                    0, L"T", NULL },
+ { 5, szOID_TITLE,                    0, L"Title", NULL },
+ { 5, szOID_GIVEN_NAME,               0, L"G", NULL },
+ { 5, szOID_GIVEN_NAME,               0, L"GN", NULL },
+ { 5, szOID_GIVEN_NAME,               0, L"GivenName", NULL },
+ { 5, szOID_INITIALS,                 0, L"I", NULL },
+ { 5, szOID_INITIALS,                 0, L"Initials", NULL },
+ { 5, szOID_SUR_NAME,                 0, L"SN", NULL },
+ { 5, szOID_DOMAIN_COMPONENT,         0, L"DC", &domainCompTypesBlob },
+ { 5, szOID_DESCRIPTION,              0, L"Description", NULL },
+ { 5, szOID_POSTAL_CODE,              0, L"PostalCode", NULL },
+ { 5, szOID_POST_OFFICE_BOX,          0, L"POBox", NULL },
+ { 5, szOID_TELEPHONE_NUMBER,         0, L"Phone", &printableStringBlob },
+ { 5, szOID_X21_ADDRESS,              0, L"X21Address", &numericStringBlob },
+ { 5, szOID_DN_QUALIFIER,             0, L"dnQualifier", NULL },
+ { 5, szOID_DEVICE_SERIAL_NUMBER,     0, L"SERIALNUMBER", NULL },
 
  { 6, szOID_AUTHORITY_KEY_IDENTIFIER2, 0, (LPCWSTR)IDS_AUTHORITY_KEY_ID, NULL },
  { 6, szOID_AUTHORITY_KEY_IDENTIFIER, 0, (LPCWSTR)IDS_AUTHORITY_KEY_ID, NULL },
@@ -1456,9 +1371,9 @@ static const struct OIDInfoConstructor {
  { 6, szOID_NETSCAPE_CA_POLICY_URL, 0, (LPCWSTR)IDS_NETSCAPE_CA_POLICY_URL, NULL },
  { 6, szOID_NETSCAPE_SSL_SERVER_NAME, 0, (LPCWSTR)IDS_NETSCAPE_SSL_SERVER_NAME, NULL },
  { 6, szOID_NETSCAPE_COMMENT, 0, (LPCWSTR)IDS_NETSCAPE_COMMENT, NULL },
- { 6, "1.3.6.1.4.1.311.2.1.10", 0, SpcSpAgencyInfo, NULL },
- { 6, "1.3.6.1.4.1.311.2.1.27", 0, SpcFinancialCriteria, NULL },
- { 6, "1.3.6.1.4.1.311.2.1.26", 0, SpcMinimalCriteria, NULL },
+ { 6, "1.3.6.1.4.1.311.2.1.10", 0, L"SpcSpAgencyInfo", NULL },
+ { 6, "1.3.6.1.4.1.311.2.1.27", 0, L"SpcFinancialCriteria", NULL },
+ { 6, "1.3.6.1.4.1.311.2.1.26", 0, L"SpcMinimalCriteria", NULL },
  { 6, szOID_COUNTRY_NAME, 0, (LPCWSTR)IDS_COUNTRY, NULL },
  { 6, szOID_ORGANIZATION_NAME, 0, (LPCWSTR)IDS_ORGANIZATION, NULL },
  { 6, szOID_ORGANIZATIONAL_UNIT_NAME, 0, (LPCWSTR)IDS_ORGANIZATIONAL_UNIT, NULL },
@@ -1587,17 +1502,17 @@ static struct OIDInfo *read_oid_info(HKEY root, char *key_name, DWORD *flags)
 
     oid_len = strlen(key_name) + 1;
 
-    RegQueryValueExW(key, nameW, NULL, NULL, NULL, &name_len);
-    RegQueryValueExW(key, extraW, NULL, NULL, NULL, &extra_len);
-    RegQueryValueExW(key, cngalgidW, NULL, NULL, NULL, &cngalgid_len);
-    RegQueryValueExW(key, cngextraalgidW, NULL, NULL, NULL, &cngextra_len);
+    RegQueryValueExW(key, L"Name", NULL, NULL, NULL, &name_len);
+    RegQueryValueExW(key, L"ExtraInfo", NULL, NULL, NULL, &extra_len);
+    RegQueryValueExW(key, L"CNGAlgid", NULL, NULL, NULL, &cngalgid_len);
+    RegQueryValueExW(key, L"CNGExtraAlgid", NULL, NULL, NULL, &cngextra_len);
 
     info = CryptMemAlloc(sizeof(*info) + oid_len + name_len + extra_len + cngalgid_len + cngextra_len);
     if (info)
     {
         *flags = 0;
         len = sizeof(*flags);
-        RegQueryValueExW(key, flagsW, NULL, NULL, (BYTE *)flags, &len);
+        RegQueryValueExW(key, L"Flags", NULL, NULL, (BYTE *)flags, &len);
 
         memset(info, 0, sizeof(*info));
         info->info.cbSize = sizeof(info->info);
@@ -1611,34 +1526,34 @@ static struct OIDInfo *read_oid_info(HKEY root, char *key_name, DWORD *flags)
         if (name_len)
         {
             info->info.pwszName = (WCHAR *)p;
-            RegQueryValueExW(key, nameW, NULL, NULL, (BYTE *)info->info.pwszName, &name_len);
+            RegQueryValueExW(key, L"Name", NULL, NULL, (BYTE *)info->info.pwszName, &name_len);
             p += name_len;
         }
 
         info->info.dwGroupId = group_id;
 
         len = sizeof(info->info.u.Algid);
-        RegQueryValueExW(key, algidW, NULL, NULL, (BYTE *)&info->info.u.Algid, &len);
+        RegQueryValueExW(key, L"Algid", NULL, NULL, (BYTE *)&info->info.u.Algid, &len);
 
         if (extra_len)
         {
             info->info.ExtraInfo.cbData = extra_len;
             info->info.ExtraInfo.pbData = (BYTE *)p;
-            RegQueryValueExW(key, extraW, NULL, NULL, info->info.ExtraInfo.pbData, &extra_len);
+            RegQueryValueExW(key, L"ExtraInfo", NULL, NULL, info->info.ExtraInfo.pbData, &extra_len);
             p += extra_len;
         }
 
         if (cngalgid_len)
         {
             info->info.pwszCNGAlgid = (WCHAR *)p;
-            RegQueryValueExW(key, cngalgidW, NULL, NULL, (BYTE *)info->info.pwszCNGAlgid, &cngalgid_len);
+            RegQueryValueExW(key, L"CNGAlgid", NULL, NULL, (BYTE *)info->info.pwszCNGAlgid, &cngalgid_len);
             p += cngalgid_len;
         }
 
         if (cngextra_len)
         {
             info->info.pwszCNGExtraAlgid = (WCHAR *)p;
-            RegQueryValueExW(key, cngextraalgidW, NULL, NULL, (BYTE *)info->info.pwszCNGExtraAlgid, &cngalgid_len);
+            RegQueryValueExW(key, L"CNGExtraAlgid", NULL, NULL, (BYTE *)info->info.pwszCNGExtraAlgid, &cngalgid_len);
         }
     }
 
@@ -1652,7 +1567,7 @@ static void init_registered_oid_info(void)
     DWORD err, idx;
     HKEY root;
 
-    err = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Cryptography\\OID\\EncodingType 0\\CryptDllFindOIDInfo",
+    err = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Cryptography\\OID\\EncodingType 0\\CryptDllFindOIDInfo",
                         0, KEY_ALL_ACCESS, &root);
     if (err != ERROR_SUCCESS) return;
 
@@ -1831,7 +1746,7 @@ PCCRYPT_OID_INFO WINAPI CryptFindOIDInfo(DWORD dwKeyType, void *pvKey,
         EnterCriticalSection(&oidInfoCS);
         LIST_FOR_EACH_ENTRY(info, &oidInfo, struct OIDInfo, entry)
         {
-            if (!lstrcmpW(info->info.pwszName, pvKey) &&
+            if (!wcscmp(info->info.pwszName, pvKey) &&
              (!dwGroupId || info->info.dwGroupId == dwGroupId))
             {
                 ret = &info->info;

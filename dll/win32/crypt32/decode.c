@@ -30,9 +30,6 @@
  * MSDN, especially "Constants for CryptEncodeObject and CryptDecodeObject"
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -683,6 +680,13 @@ static BOOL CRYPT_AsnDecodeArray(const struct AsnArrayDescriptor *arrayDesc,
                              &itemDecoded);
                         if (ret)
                         {
+                            /* Ignore an item that failed to decode but the decoder doesn't want to fail the whole process */
+                            if (!size)
+                            {
+                                ptr += itemEncoded;
+                                continue;
+                            }
+
                             cItems++;
                             if (itemSizes != &itemSize)
                                 itemSizes = CryptMemRealloc(itemSizes,
@@ -1588,15 +1592,12 @@ static BOOL CRYPT_AsnDecodeNameValueInternal(const BYTE *pbEncoded,
                 case ASN_VISIBLESTRING:
                 case ASN_GENERALSTRING:
                     value->Value.cbData = dataLen;
-                    if (dataLen)
-                    {
-                        if (!(dwFlags & CRYPT_DECODE_NOCOPY_FLAG))
-                            memcpy(value->Value.pbData,
-                             pbEncoded + 1 + lenBytes, dataLen);
-                        else
-                            value->Value.pbData = (LPBYTE)pbEncoded + 1 +
-                             lenBytes;
-                    }
+                    if (!(dwFlags & CRYPT_DECODE_NOCOPY_FLAG))
+                        memcpy(value->Value.pbData,
+                         pbEncoded + 1 + lenBytes, dataLen);
+                    else
+                        value->Value.pbData = (LPBYTE)pbEncoded + 1 +
+                         lenBytes;
                     break;
                 case ASN_BMPSTRING:
                 {
@@ -2585,7 +2586,7 @@ static BOOL CRYPT_AsnDecodeUnicodeString(const BYTE *pbEncoded,
             if (dataLen)
             {
                 DWORD i;
-                LPWSTR str = *(LPWSTR *)pStr;
+                LPWSTR str = *pStr;
 
                 assert(str);
                 switch (pbEncoded[0])
@@ -5631,6 +5632,25 @@ static BOOL WINAPI CRYPT_AsnDecodePKCSSignerInfo(DWORD dwCertEncodingType,
     return ret;
 }
 
+static BOOL verify_and_copy_certificate(const BYTE *pbEncoded, DWORD cbEncoded, DWORD dwFlags,
+                                        void *pvStructInfo, DWORD *pcbStructInfo, DWORD *pcbDecoded)
+{
+    PCCERT_CONTEXT cert;
+
+    cert = CertCreateCertificateContext(X509_ASN_ENCODING, pbEncoded, cbEncoded);
+    if (!cert)
+    {
+        WARN("CertCreateCertificateContext error %#x\n", GetLastError());
+        *pcbStructInfo = 0;
+        *pcbDecoded = 0;
+        return TRUE;
+    }
+
+    CertFreeCertificateContext(cert);
+
+    return CRYPT_AsnDecodeCopyBytes(pbEncoded, cbEncoded, dwFlags, pvStructInfo, pcbStructInfo, pcbDecoded);
+}
+
 static BOOL CRYPT_AsnDecodeCMSCertEncoded(const BYTE *pbEncoded,
  DWORD cbEncoded, DWORD dwFlags, void *pvStructInfo, DWORD *pcbStructInfo,
  DWORD *pcbDecoded)
@@ -5640,7 +5660,7 @@ static BOOL CRYPT_AsnDecodeCMSCertEncoded(const BYTE *pbEncoded,
      offsetof(CRYPT_SIGNED_INFO, cCertEncoded),
      offsetof(CRYPT_SIGNED_INFO, rgCertEncoded),
      MEMBERSIZE(CRYPT_SIGNED_INFO, cCertEncoded, cCrlEncoded),
-     CRYPT_AsnDecodeCopyBytes,
+     verify_and_copy_certificate,
      sizeof(CRYPT_DER_BLOB), TRUE, offsetof(CRYPT_DER_BLOB, pbData) };
 
     TRACE("%p, %d, %08x, %p, %d, %p\n", pbEncoded, cbEncoded, dwFlags,
@@ -6395,18 +6415,4 @@ BOOL WINAPI PFXIsPFXBlob(CRYPT_DATA_BLOB *pPFX)
     else
         ret = FALSE;
     return ret;
-}
-
-HCERTSTORE WINAPI PFXImportCertStore(CRYPT_DATA_BLOB *pPFX, LPCWSTR szPassword,
- DWORD dwFlags)
-{
-    FIXME_(crypt)("(%p, %p, %08x): stub\n", pPFX, szPassword, dwFlags);
-    return NULL;
-}
-
-BOOL WINAPI PFXVerifyPassword(CRYPT_DATA_BLOB *pPFX, LPCWSTR szPassword,
- DWORD dwFlags)
-{
-    FIXME_(crypt)("(%p, %p, %08x): stub\n", pPFX, szPassword, dwFlags);
-    return FALSE;
 }

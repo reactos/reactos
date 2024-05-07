@@ -38,7 +38,7 @@ extern "C" {
 #ifdef _ADVAPI32_
 # define WINADVAPI
 #else
-# define WINADVAPI DECLSPEC_IMPORT
+# define WINADVAPI DECLSPEC_HIDDEN
 #endif
 
 /* some typedefs for function parameters */
@@ -1373,15 +1373,7 @@ typedef BOOL
 #define CALG_OID_INFO_CNG_ONLY   0xffffffff
 #define CALG_OID_INFO_PARAMETERS 0xfffffffe
 
-#if defined(__GNUC__)
-#define CRYPT_OID_INFO_HASH_PARAMETERS_ALGORITHM     (const WCHAR []){'C','r','y','p','t','O','I','D','I','n','f','o','H','a','s','h','P','a','r','a','m','e','t','e','r','s',0}
-#define CRYPT_OID_INFO_ECC_PARAMETERS_ALGORITHM      (const WCHAR []){'C','r','y','p','t','O','I','D','I','n','f','o','E','C','C','P','a','r','a','m','e','t','e','r','s',0}
-#define CRYPT_OID_INFO_MGF1_PARAMETERS_ALGORITHM     (const WCHAR []){'C','r','y','p','t','O','I','D','I','n','f','o','M','g','f','1','P','a','r','a','m','e','t','e','r','s',0}
-#define CRYPT_OID_INFO_NO_SIGN_ALGORITHM             (const WCHAR []){'C','r','y','p','t','O','I','D','I','n','f','o','N','o','S','i','g','n',0}
-#define CRYPT_OID_INFO_OAEP_PARAMETERS_ALGORITHM     (const WCHAR []){'C','r','y','p','t','O','I','D','I','n','f','o','O','A','E','P','P','a','r','a','m','e','t','e','r','s',0}
-#define CRYPT_OID_INFO_ECC_WRAP_PARAMETERS_ALGORITHM (const WCHAR []){'C','r','y','p','t','O','I','D','I','n','f','o','E','C','C','W','r','a','p','P','a','r','a','m','e','t','e','r','s',0}
-#define CRYPT_OID_INFO_NO_PARAMETERS_ALGORITHM       (const WCHAR []){'C','r','y','p','t','O','I','D','I','n','f','o','N','o','P','a','r','a','m','e','t','e','r','s',0}
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #define CRYPT_OID_INFO_HASH_PARAMETERS_ALGORITHM     L"CryptOIDInfoHashParameters"
 #define CRYPT_OID_INFO_ECC_PARAMETERS_ALGORITHM      L"CryptOIDInfoECCParameters"
 #define CRYPT_OID_INFO_MGF1_PARAMETERS_ALGORITHM     L"CryptOIDInfoMgf1Parameters"
@@ -1390,13 +1382,13 @@ typedef BOOL
 #define CRYPT_OID_INFO_ECC_WRAP_PARAMETERS_ALGORITHM L"CryptOIDInfoECCWrapParameters"
 #define CRYPT_OID_INFO_NO_PARAMETERS_ALGORITHM       L"CryptOIDInfoNoParameters"
 #else
-static const WCHAR CRYPT_OID_INFO_HASH_PARAMETERS_ALGORITHM[] =     {'C','r','y','p','t','O','I','D','I','n','f','o','H','a','s','h','P','a','r','a','m','e','t','e','r','s',0};
-static const WCHAR CRYPT_OID_INFO_ECC_PARAMETERS_ALGORITHM[] =      {'C','r','y','p','t','O','I','D','I','n','f','o','E','C','C','P','a','r','a','m','e','t','e','r','s',0};
-static const WCHAR CRYPT_OID_INFO_MGF1_PARAMETERS_ALGORITHM[] =     {'C','r','y','p','t','O','I','D','I','n','f','o','M','g','f','1','P','a','r','a','m','e','t','e','r','s',0};
-static const WCHAR CRYPT_OID_INFO_NO_SIGN_ALGORITHM[] =             {'C','r','y','p','t','O','I','D','I','n','f','o','N','o','S','i','g','n',0};
-static const WCHAR CRYPT_OID_INFO_OAEP_PARAMETERS_ALGORITHM[] =     {'C','r','y','p','t','O','I','D','I','n','f','o','O','A','E','P','P','a','r','a','m','e','t','e','r','s',0};
+static const WCHAR CRYPT_OID_INFO_HASH_PARAMETERS_ALGORITHM[] = {'C','r','y','p','t','O','I','D','I','n','f','o','H','a','s','h','P','a','r','a','m','e','t','e','r','s',0};
+static const WCHAR CRYPT_OID_INFO_ECC_PARAMETERS_ALGORITHM[] = {'C','r','y','p','t','O','I','D','I','n','f','o','E','C','C','P','a','r','a','m','e','t','e','r','s',0};
+static const WCHAR CRYPT_OID_INFO_MGF1_PARAMETERS_ALGORITHM[] = {'C','r','y','p','t','O','I','D','I','n','f','o','M','g','f','1','P','a','r','a','m','e','t','e','r','s',0};
+static const WCHAR CRYPT_OID_INFO_NO_SIGN_ALGORITHM[] = {'C','r','y','p','t','O','I','D','I','n','f','o','N','o','S','i','g','n',0};
+static const WCHAR CRYPT_OID_INFO_OAEP_PARAMETERS_ALGORITHM[] = {'C','r','y','p','t','O','I','D','I','n','f','o','O','A','E','P','P','a','r','a','m','e','t','e','r','s',0};
 static const WCHAR CRYPT_OID_INFO_ECC_WRAP_PARAMETERS_ALGORITHM[] = {'C','r','y','p','t','O','I','D','I','n','f','o','E','C','C','W','r','a','p','P','a','r','a','m','e','t','e','r','s',0};
-static const WCHAR CRYPT_OID_INFO_NO_PARAMETERS_ALGORITHM[] =       {'C','r','y','p','t','O','I','D','I','n','f','o','N','o','P','a','r','a','m','e','t','e','r','s',0};
+static const WCHAR CRYPT_OID_INFO_NO_PARAMETERS_ALGORITHM[] = {'C','r','y','p','t','O','I','D','I','n','f','o','N','o','P','a','r','a','m','e','t','e','r','s',0};
 #endif
 
 typedef struct _CRYPT_OID_INFO {
@@ -1858,11 +1850,7 @@ typedef const CERT_CRL_CONTEXT_PAIR *PCCERT_CRL_CONTEXT_PAIR;
 
 /* Provider names */
 #define MS_DEF_PROV_A                            "Microsoft Base Cryptographic Provider v1.0"
-#if defined(__GNUC__)
-# define MS_DEF_PROV_W (const WCHAR []){ 'M','i','c','r','o','s','o','f','t',' ', \
-	'B','a','s','e',' ','C','r','y','p','t','o','g','r','a','p','h','i','c',' ', \
-	'P','r','o','v','i','d','e','r',' ','v','1','.','0',0 }
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 # define MS_DEF_PROV_W      L"Microsoft Base Cryptographic Provider v1.0"
 #else
 static const WCHAR MS_DEF_PROV_W[] =             { 'M','i','c','r','o','s','o','f','t',' ',
@@ -1872,11 +1860,7 @@ static const WCHAR MS_DEF_PROV_W[] =             { 'M','i','c','r','o','s','o','
 #define MS_DEF_PROV                              WINELIB_NAME_AW(MS_DEF_PROV_)
 
 #define MS_ENHANCED_PROV_A                       "Microsoft Enhanced Cryptographic Provider v1.0"
-#if defined(__GNUC__)
-# define MS_ENHANCED_PROV_W (const WCHAR []){ 'M','i','c','r','o','s','o','f','t',' ', \
-	'E','n','h','a','n','c','e','d',' ','C','r','y','p','t','o','g','r','a','p','h','i','c',' ', \
-	'P','r','o','v','i','d','e','r',' ','v','1','.','0',0 }
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 # define MS_ENHANCED_PROV_W     L"Microsoft Enhanced Cryptographic Provider v1.0"
 #else
 static const WCHAR MS_ENHANCED_PROV_W[] =        { 'M','i','c','r','o','s','o','f','t',' ',
@@ -1886,11 +1870,7 @@ static const WCHAR MS_ENHANCED_PROV_W[] =        { 'M','i','c','r','o','s','o','
 #define MS_ENHANCED_PROV                         WINELIB_NAME_AW(MS_ENHANCED_PROV_)
 
 #define MS_STRONG_PROV_A                         "Microsoft Strong Cryptographic Provider"
-#if defined(__GNUC__)
-# define MS_STRONG_PROV_W (const WCHAR []){ 'M','i','c','r','o','s','o','f','t',' ', \
-	'S','t','r','o','n','g',' ','C','r','y','p','t','o','g','r','a','p','h','i','c',' ', \
-	'P','r','o','v','i','d','e','r',0 }
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 # define MS_STRONG_PROV_W     L"Microsoft Strong Cryptographic Provider"
 #else
 static const WCHAR MS_STRONG_PROV_W[] =          { 'M','i','c','r','o','s','o','f','t',' ',
@@ -1900,11 +1880,7 @@ static const WCHAR MS_STRONG_PROV_W[] =          { 'M','i','c','r','o','s','o','
 #define MS_STRONG_PROV                           WINELIB_NAME_AW(MS_STRONG_PROV_)
 
 #define MS_DEF_RSA_SIG_PROV_A                    "Microsoft RSA Signature Cryptographic Provider"
-#if defined(__GNUC__)
-# define MS_DEF_RSA_SIG_PROV_W (const WCHAR []){ 'M','i','c','r','o','s','o','f','t',' ', \
-	'R','S','A',' ','S','i','g','n','a','t','u','r','e',' ', \
-	'C','r','y','p','t','o','g','r','a','p','h','i','c',' ','P','r','o','v','i','d','e','r',0 }
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 # define MS_DEF_RSA_SIG_PROV_W      L"Microsoft RSA Signature Cryptographic Provider"
 #else
 static const WCHAR MS_DEF_RSA_SIG_PROV_W[] =     { 'M','i','c','r','o','s','o','f','t',' ',
@@ -1914,11 +1890,7 @@ static const WCHAR MS_DEF_RSA_SIG_PROV_W[] =     { 'M','i','c','r','o','s','o','
 #define MS_DEF_RSA_SIG_PROV                      WINELIB_NAME_AW(MS_DEF_RSA_SIG_PROV_)
 
 #define MS_DEF_RSA_SCHANNEL_PROV_A               "Microsoft RSA SChannel Cryptographic Provider"
-#if defined(__GNUC__)
-# define MS_DEF_RSA_SCHANNEL_PROV_W (const WCHAR []){ 'M','i','c','r','o','s','o','f','t',' ', \
-	'R','S','A',' ','S','C','h','a','n','n','e','l',' ', \
-	'C','r','y','p','t','o','g','r','a','p','h','i','c',' ','P','r','o','v','i','d','e','r',0 }
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 # define MS_DEF_RSA_SCHANNEL_PROV_W     L"Microsoft RSA SChannel Cryptographic Provider"
 #else
 static const WCHAR MS_DEF_RSA_SCHANNEL_PROV_W[] = { 'M','i','c','r','o','s','o','f','t',' ',
@@ -1928,11 +1900,7 @@ static const WCHAR MS_DEF_RSA_SCHANNEL_PROV_W[] = { 'M','i','c','r','o','s','o',
 #define MS_DEF_RSA_SCHANNEL_PROV                 WINELIB_NAME_AW(MS_DEF_RSA_SCHANNEL_PROV_)
 
 #define MS_DEF_DSS_PROV_A                        "Microsoft Base DSS Cryptographic Provider"
-#if defined(__GNUC__)
-# define MS_DEF_DSS_PROV_W (const WCHAR []){ 'M','i','c','r','o','s','o','f','t',' ', \
-	'B','a','s','e',' ','D','S','S',' ', \
-	'C','r','y','p','t','o','g','r','a','p','h','i','c',' ','P','r','o','v','i','d','e','r',0 }
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 # define MS_DEF_DSS_PROV_W     L"Microsoft Base DSS Cryptographic Provider"
 #else
 static const WCHAR MS_DEF_DSS_PROV_W[] =         { 'M','i','c','r','o','s','o','f','t',' ',
@@ -1942,12 +1910,7 @@ static const WCHAR MS_DEF_DSS_PROV_W[] =         { 'M','i','c','r','o','s','o','
 #define MS_DEF_DSS_PROV                          WINELIB_NAME_AW(MS_DEF_DSS_PROV_)
 
 #define MS_DEF_DSS_DH_PROV_A                     "Microsoft Base DSS and Diffie-Hellman Cryptographic Provider"
-#if defined(__GNUC__)
-# define MS_DEF_DSS_DH_PROV_W (const WCHAR []){ 'M','i','c','r','o','s','o','f','t',' ', \
-	'B','a','s','e',' ','D','S','S',' ','a','n','d',' ', \
-	'D','i','f','f','i','e','-','H','e','l','l','m','a','n',' ', \
-	'C','r','y','p','t','o','g','r','a','p','h','i','c',' ','P','r','o','v','i','d','e','r',0 }
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 # define MS_DEF_DSS_DH_PROV_W     L"Microsoft Base DSS and Diffie-Hellman Cryptographic Provider"
 #else
 static const WCHAR MS_DEF_DSS_DH_PROV_W[] =      { 'M','i','c','r','o','s','o','f','t',' ',
@@ -1958,12 +1921,7 @@ static const WCHAR MS_DEF_DSS_DH_PROV_W[] =      { 'M','i','c','r','o','s','o','
 #define MS_DEF_DSS_DH_PROV                       WINELIB_NAME_AW(MS_DEF_DSS_DH_PROV_)
 
 #define MS_ENH_DSS_DH_PROV_A                     "Microsoft Enhanced DSS and Diffie-Hellman Cryptographic Provider"
-#if defined(__GNUC__)
-# define MS_ENH_DSS_DH_PROV_W (const WCHAR []){ 'M','i','c','r','o','s','o','f','t',' ', \
-	'E','n','h','a','n','c','e','d',' ','D','S','S',' ','a','n','d',' ', \
-	'D','i','f','f','i','e','-','H','e','l','l','m','a','n',' ', \
-	'C','r','y','p','t','o','g','r','a','p','h','i','c',' ','P','r','o','v','i','d','e','r',0 }
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 # define MS_ENH_DSS_DH_PROV_W     L"Microsoft Enhanced DSS and Diffie-Hellman Cryptographic Provider"
 #else
 static const WCHAR MS_ENH_DSS_DH_PROV_W[] =      { 'M','i','c','r','o','s','o','f','t',' ',
@@ -1974,11 +1932,7 @@ static const WCHAR MS_ENH_DSS_DH_PROV_W[] =      { 'M','i','c','r','o','s','o','
 #define MS_ENH_DSS_DH_PROV                       WINELIB_NAME_AW(MS_ENH_DSS_DH_PROV_)
 
 #define MS_DEF_DH_SCHANNEL_PROV_A                "Microsoft DH SChannel Cryptographic Provider"
-#if defined(__GNUC__)
-# define MS_DEF_DH_SCHANNEL_PROV_W (const WCHAR []){ 'M','i','c','r','o','s','o','f','t',' ', \
-	'D','H',' ','S','C','h','a','n','n','e','l',' ', \
-	'C','r','y','p','t','o','g','r','a','p','h','i','c',' ','P','r','o','v','i','d','e','r',0 }
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 # define MS_DEF_DH_SCHANNEL_PROV_W     L"Microsoft DH SChannel Cryptographic Provider"
 #else
 static const WCHAR MS_DEF_DH_SCHANNEL_PROV_W[] = { 'M','i','c','r','o','s','o','f','t',' ',
@@ -1988,11 +1942,7 @@ static const WCHAR MS_DEF_DH_SCHANNEL_PROV_W[] = { 'M','i','c','r','o','s','o','
 #define MS_DEF_DH_SCHANNEL_PROV                  WINELIB_NAME_AW(MS_DEF_DH_SCHANNEL_PROV_)
 
 #define MS_SCARD_PROV_A                          "Microsoft Base Smart Card Cryptographic Provider"
-#if defined(__GNUC__)
-# define MS_SCARD_PROV_W (const WCHAR []){ 'M','i','c','r','o','s','o','f','t',' ', \
-	'B','a','s','e',' ','S','m','a','r','t',' ','C','a','r','d',' ', \
-	'C','r','y','p','t','o','g','r','a','p','h','i','c',' ','P','r','o','v','i','d','e','r',0 }
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 # define MS_SCARD_PROV_W     L"Microsoft Base Smart Card Cryptographic Provider"
 #else
 static const WCHAR MS_SCARD_PROV_W[] =           { 'M','i','c','r','o','s','o','f','t',' ',
@@ -2002,11 +1952,7 @@ static const WCHAR MS_SCARD_PROV_W[] =           { 'M','i','c','r','o','s','o','
 #define MS_SCARD_PROV                            WINELIB_NAME_AW(MS_SCARD_PROV_)
 
 #define MS_ENH_RSA_AES_PROV_A                          "Microsoft Enhanced RSA and AES Cryptographic Provider"
-#if defined(__GNUC__)
-# define MS_ENH_RSA_AES_PROV_W (const WCHAR []){ 'M','i','c','r','o','s','o','f','t',' ', \
-	'E','n','h','a','n','c','e','d',' ','R','S','A',' ','a','n','d',' ','A','E','S',' ',\
-	'C','r','y','p','t','o','g','r','a','p','h','i','c',' ','P','r','o','v','i','d','e','r',0 }
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 # define MS_ENH_RSA_AES_PROV_W     L"Microsoft Enhanced RSA and AES Cryptographic Provider"
 #else
 static const WCHAR MS_ENH_RSA_AES_PROV_W[] =           { 'M','i','c','r','o','s','o','f','t',' ',
@@ -2016,12 +1962,7 @@ static const WCHAR MS_ENH_RSA_AES_PROV_W[] =           { 'M','i','c','r','o','s'
 #define MS_ENH_RSA_AES_PROV                            WINELIB_NAME_AW(MS_ENH_RSA_AES_PROV_)
 
 #define MS_ENH_RSA_AES_PROV_XP_A    "Microsoft Enhanced RSA and AES Cryptographic Provider (Prototype)"
-#if defined(__GNUC__)
-# define MS_ENH_RSA_AES_PROV_XP_W (const WCHAR []){ 'M','i','c','r','o','s','o','f','t',' ', \
-        'E','n','h','a','n','c','e','d',' ','R','S','A',' ','a','n','d',' ','A','E','S',' ',\
-        'C','r','y','p','t','o','g','r','a','p','h','i','c',' ','P','r','o','v','i','d','e','r',' ',\
-        '(','P','r','o','t','o','t','y','p','e',')',0 }
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 # define MS_ENH_RSA_AES_PROV_XP_W   L"Microsoft Enhanced RSA and AES Cryptographic Provider (Prototype)"
 #else
 static const WCHAR MS_ENH_RSA_AES_PROV_XP_W[] = { 'M','i','c','r','o','s','o','f','t',' ',
@@ -2338,16 +2279,7 @@ static const WCHAR MS_ENH_RSA_AES_PROV_XP_W[] = { 'M','i','c','r','o','s','o','f
 #define CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE \
  (CERT_SYSTEM_STORE_LOCAL_MACHINE_ENTERPRISE_ID << CERT_SYSTEM_STORE_LOCATION_SHIFT)
 
-#if defined(__GNUC__)
-#define CERT_LOCAL_MACHINE_SYSTEM_STORE_REGPATH (const WCHAR[])\
- {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t',\
-  '\\','S','y','s','t','e','m','C','e','r','t','i','f','i','c','a','t','e','s',\
-  0 }
-#define CERT_GROUP_POLICY_SYSTEM_STORE_REGPATH (const WCHAR[])\
- {'S','o','f','t','w','a','r','e','\\','P','o','l','i','c','i','e','s','\\',\
-  'M','i','c','r','o','s','o','f','t','\\','S','y','s','t','e','m','C','e','r',\
-  't','i','f','i','c','a','t','e','s',0 }
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #define CERT_LOCAL_MACHINE_SYSTEM_STORE_REGPATH \
  L"Software\\Microsoft\\SystemCertificates"
 #define CERT_GROUP_POLICY_SYSTEM_STORE_REGPATH \
@@ -2362,13 +2294,7 @@ static const WCHAR CERT_GROUP_POLICY_SYSTEM_STORE_REGPATH[] =
   't','i','f','i','c','a','t','e','s',0 };
 #endif
 
-#if defined(__GNUC__)
-#define CERT_EFSBLOB_REGPATH (const WCHAR[])\
-{'S','o','f','t','w','a','r','e','\\','P','o','l','i','c','i','e','s','\\',\
- 'M','i','c','r','o','s','o','f','t','\\','S','y','s','t','e','m','C','e','r',\
- 't','i','f','i','c','a','t','e','s','\\','E','F','S',0 }
-#define CERT_EFSBLOB_VALUE_NAME (const WCHAR[]) {'E','F','S','B','l','o','b',0 }
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #define CERT_EFSBLOB_REGPATH CERT_GROUP_POLICY_SYSTEM_STORE_REGPATH L"\\EFS"
 #define CERT_EFSBLOB_VALUE_NAME L"EFSBlob"
 #else
@@ -2379,13 +2305,7 @@ static const WCHAR CERT_EFSBLOB_REGPATH[] =
 static const CERT_EFSBLOB_VALUE_NAME[] = { 'E','F','S','B','l','o','b',0 };
 #endif
 
-#if defined(__GNUC__)
-#define CERT_PROT_ROOT_FLAGS_REGPATH (const WCHAR[])\
-{'\\','R','o','o','t','\\','P','r','o','t','e','c','t','e','d','R','o','o','t',\
- 's',0 }
-#define CERT_PROT_ROOT_FLAGS_VALUE_NAME (const WCHAR[])\
-{'F','l','a','g','s',0 }
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #define CERT_PROT_ROOT_FLAGS_REGPATH L"\\Root\\ProtectedRoots"
 #define CERT_PROT_ROOT_FLAGS_VALUE_NAME L"Flags"
 #else
@@ -2402,13 +2322,7 @@ static const WCHAR CERT_PROT_ROOT_FLAGS_VALUE_NAME[] = {'F','l','a','g','s',0 };
 #define CERT_PROT_ROOT_DISABLE_NT_AUTH_REQUIRED_FLAG            0x10
 #define CERT_PROT_ROOT_DISABLE_NOT_DEFINED_NAME_CONSTRAINT_FLAG 0x20
 
-#if defined(__GNUC__)
-#define CERT_TRUST_PUB_SAFER_GROUP_POLICY_REGPATH (const WCHAR[])\
-{'S','o','f','t','w','a','r','e','\\','P','o','l','i','c','i','e','s','\\',\
- 'M','i','c','r','o','s','o','f','t','\\','S','y','s','t','e','m','C','e','r',\
- 't','i','f','i','c','a','t','e','s','\\','T','r','u','s','t','e','d',\
- 'P','u','b','l','i','s','h','e','r','\\','S','a','f','e','r',0 }
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #define CERT_TRUST_PUB_SAFER_GROUP_POLICY_REGPATH \
  CERT_GROUP_POLICY_SYSTEM_STORE_REGPATH L"\\TrustedPublisher\\Safer"
 #else
@@ -2419,15 +2333,7 @@ static const WCHAR CERT_TRUST_PUB_SAFER_GROUP_POLICY_REGPATH[] =
   'P','u','b','l','i','s','h','e','r','\\','S','a','f','e','r',0 };
 #endif
 
-#if defined(__GNUC__)
-#define CERT_TRUST_PUB_SAFER_LOCAL_MACHINE_REGPATH (const WCHAR[])\
-{'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',\
- 'S','y','s','t','e','m','C','e','r','t','i','f','i','c','a','t','e','s','\\',\
- 'T','r','u','s','t','e','d','P','u','b','l','i','s','h','e','r','\\',\
- 'S','a','f','e','r',0 }
-#define CERT_TRUST_PUB_AUTHENTICODE_FLAGS_VALUE_NAME (const WCHAR[])\
-{'A','u','t','h','e','n','t','i','c','o','d','e','F','l','a','g','s',0 };
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #define CERT_TRUST_PUB_SAFER_LOCAL_MACHINE_REGPATH \
  CERT_LOCAL_MACHINE_SYSTEM_STORE_REGPATH L"\\TrustedPublisher\\Safer"
 #define CERT_TRUST_PUB_AUTHENTICODE_FLAGS_VALUE_NAME L"AuthenticodeFlags"
@@ -2514,13 +2420,7 @@ static const WCHAR CERT_TRUST_PUB_AUTHENTICODE_FLAGS_VALUE_NAME[] =
 
 #define CRYPT_OID_REGPATH "Software\\Microsoft\\Cryptography\\OID"
 #define CRYPT_OID_REG_ENCODING_TYPE_PREFIX "EncodingType "
-#if defined(__GNUC__)
-# define CRYPT_OID_REG_DLL_VALUE_NAME (const WCHAR []){ 'D','l','l',0 }
-# define CRYPT_OID_REG_FUNC_NAME_VALUE_NAME \
- (const WCHAR []){ 'F','u','n','c','N','a','m','e',0 }
-# define CRYPT_OID_REG_FLAGS_VALUE_NAME \
- (const WCHAR []){ 'C','r','y','p','t','F','l','a','g','s',0 }
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 # define CRYPT_OID_REG_DLL_VALUE_NAME       L"Dll"
 # define CRYPT_OID_REG_FUNC_NAME_VALUE_NAME L"FuncName"
 # define CRYPT_OID_REG_FLAGS_VALUE_NAME     L"CryptFlags"
@@ -2586,23 +2486,7 @@ static const WCHAR CRYPT_OID_REG_FLAGS_VALUE_NAME[] =
 #define CERT_PHYSICAL_STORE_PREDEFINED_ENUM_FLAG 0x1
 
 /* predefined store names */
-#if defined(__GNUC__)
-# define CERT_PHYSICAL_STORE_DEFAULT_NAME (const WCHAR[])\
- {'.','D','e','f','a','u','l','t','0'}
-# define CERT_PHYSICAL_STORE_GROUP_POLICY_NAME (const WCHAR[])\
- {'.','G','r','o','u','p','P','o','l','i','c','y',0}
-# define CERT_PHYSICAL_STORE_LOCAL_MACHINE_NAME (const WCHAR[])\
- {'.','L','o','c','a','l','M','a','c','h','i','n','e',0}
-# define CERT_PHYSICAL_STORE_DS_USER_CERTIFICATE_NAME (const WCHAR[])\
- {'.','U','s','e','r','C','e','r','t','i','f','i','c','a','t','e',0}
-# define CERT_PHYSICAL_STORE_LOCAL_MACHINE_GROUP_POLICY_NAME (const WCHAR[])\
- {'.','L','o','c','a','l','M','a','c','h','i','n','e','G','r','o','u','p',\
- 'P','o','l','i','c','y',0}
-# define CERT_PHYSICAL_STORE_ENTERPRISE_NAME (const WCHAR[])\
- {'.','E','n','t','e','r','p','r','i','s','e',0}
-# define CERT_PHYSICAL_STORE_AUTH_ROOT_NAME (const WCHAR[])\
- {'.','A','u','t','h','R','o','o','t',0}
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 # define CERT_PHYSICAL_STORE_DEFAULT_NAME \
  L".Default"
 # define CERT_PHYSICAL_STORE_GROUP_POLICY_NAME \
@@ -2993,6 +2877,7 @@ typedef struct _CTL_FIND_SUBJECT_PARA
 #define CRYPT_STRING_BASE64X509CRLHEADER 0x00000009
 #define CRYPT_STRING_HEXADDR             0x0000000a
 #define CRYPT_STRING_HEXASCIIADDR        0x0000000b
+#define CRYPT_STRING_HEXRAW              0x0000000c
 #define CRYPT_STRING_NOCRLF              0x40000000
 #define CRYPT_STRING_NOCR                0x80000000
 
@@ -4129,8 +4014,16 @@ typedef BOOL
 #define CMSG_ENCODE_HASHED_SUBJECT_IDENTIFIER_FLAG 0x2
 
 /* PFXImportCertStore flags */
-#define CRYPT_USER_KEYSET           0x00001000
-#define PKCS12_IMPORT_RESERVED_MASK 0xffff0000
+#define CRYPT_USER_KEYSET                       0x00001000
+#define PKCS12_IMPORT_SILENT                    0x00000040
+#define PKCS12_PREFER_CNG_KSP                   0x00000100
+#define PKCS12_ALWAYS_CNG_KSP                   0x00000200
+#define PKCS12_ONLY_CERTIFICATES                0x00000400
+#define PKCS12_ONLY_NOT_ENCRYPTED_CERTIFICATES  0x00000800
+#define PKCS12_ALLOW_OVERWRITE_KEY              0x00004000
+#define PKCS12_NO_PERSIST_KEY                   0x00008000
+#define PKCS12_VIRTUAL_ISOLATION_KEY            0x00010000
+#define PKCS12_IMPORT_RESERVED_MASK             0xffff0000
 /* PFXExportCertStore flags */
 #define REPORT_NO_PRIVATE_KEY                 0x00000001
 #define REPORT_NOT_ABLE_TO_EXPORT_PRIVATE_KEY 0x00000002
@@ -5367,6 +5260,17 @@ CryptHashCertificate(
   _In_ ALG_ID Algid,
   _In_ DWORD dwFlags,
   _In_reads_bytes_(cbEncoded) const BYTE *pbEncoded,
+  _In_ DWORD cbEncoded,
+  _Out_writes_bytes_to_opt_(*pcbComputedHash, *pcbComputedHash) BYTE *pbComputedHash,
+  _Inout_ DWORD *pcbComputedHash);
+
+BOOL
+WINAPI
+CryptHashCertificate2(
+  _In_ LPCWSTR pwszCNGHashAlgid,
+  _In_ DWORD dwFlags,
+  _Reserved_ void *pvReserved,
+  _In_reads_bytes_opt_(cbEncoded) const BYTE *pbEncoded,
   _In_ DWORD cbEncoded,
   _Out_writes_bytes_to_opt_(*pcbComputedHash, *pcbComputedHash) BYTE *pbComputedHash,
   _Inout_ DWORD *pcbComputedHash);

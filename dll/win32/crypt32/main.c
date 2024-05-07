@@ -17,12 +17,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
 #include <stdarg.h>
 #include <stdio.h>
 
 #include "windef.h"
 #include "winbase.h"
+#include "wine/winternl.h"
 #include "wincrypt.h"
 #include "winreg.h"
 #include "winuser.h"
@@ -34,6 +34,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
 static HCRYPTPROV hDefProv;
 HINSTANCE hInstance;
+const struct unix_funcs *unix_funcs = NULL;
 
 static CRITICAL_SECTION prov_param_cs;
 static CRITICAL_SECTION_DEBUG prov_param_cs_debug =
@@ -45,15 +46,18 @@ static CRITICAL_SECTION_DEBUG prov_param_cs_debug =
 };
 static CRITICAL_SECTION prov_param_cs = { &prov_param_cs_debug, -1, 0, 0, 0, 0 };
 
-BOOL WINAPI DllMain(HINSTANCE hInst, DWORD fdwReason, PVOID pvReserved)
+BOOL WINAPI DllMain(HINSTANCE hInst, DWORD reason, PVOID pvReserved)
 {
-    switch (fdwReason)
+    switch (reason)
     {
         case DLL_PROCESS_ATTACH:
             hInstance = hInst;
             DisableThreadLibraryCalls(hInst);
             init_empty_store();
             crypt_oid_init();
+#ifndef __REACTOS__
+            __wine_init_unix_lib( hInst, reason, NULL, &unix_funcs );
+#endif
             break;
         case DLL_PROCESS_DETACH:
             if (pvReserved) break;
@@ -61,6 +65,9 @@ BOOL WINAPI DllMain(HINSTANCE hInst, DWORD fdwReason, PVOID pvReserved)
             crypt_sip_free();
             default_chain_engine_free();
             if (hDefProv) CryptReleaseContext(hDefProv, 0);
+#ifndef __REACTOS__
+            __wine_init_unix_lib( hInst, reason, NULL, NULL );
+#endif
             break;
     }
     return TRUE;
@@ -252,12 +259,6 @@ HCRYPTPROV WINAPI DECLSPEC_HOTPATCH I_CryptGetDefaultCryptProv(ALG_ID algid)
 BOOL WINAPI I_CryptReadTrustedPublisherDWORDValueFromRegistry(LPCWSTR name,
  DWORD *value)
 {
-    static const WCHAR safer[] = { 
-     'S','o','f','t','w','a','r','e','\\','P','o','l','i','c','i','e','s','\\',
-     'M','i','c','r','o','s','o','f','t','\\','S','y','s','t','e','m',
-     'C','e','r','t','i','f','i','c','a','t','e','s','\\',
-     'T','r','u','s','t','e','d','P','u','b','l','i','s','h','e','r','\\',
-     'S','a','f','e','r',0 };
     HKEY key;
     LONG rc;
     BOOL ret = FALSE;
@@ -265,7 +266,7 @@ BOOL WINAPI I_CryptReadTrustedPublisherDWORDValueFromRegistry(LPCWSTR name,
     TRACE("(%s, %p)\n", debugstr_w(name), value);
 
     *value = 0;
-    rc = RegCreateKeyW(HKEY_LOCAL_MACHINE, safer, &key);
+    rc = RegCreateKeyW(HKEY_LOCAL_MACHINE, L"Software\\Policies\\Microsoft\\SystemCertificates\\TrustedPublisher\\Safer", &key);
     if (rc == ERROR_SUCCESS)
     {
         DWORD size = sizeof(DWORD);
