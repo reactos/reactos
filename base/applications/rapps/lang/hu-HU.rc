@@ -268,3 +268,8 @@ BEGIN
     IDS_CMD_PACKAGE_NOT_FOUND "Nem sikerült a(z) %1 csomagot megtalálni.\n"
     IDS_CMD_PACKAGE_INFO "Információ a(z) %1 csomagról:\n"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
+END

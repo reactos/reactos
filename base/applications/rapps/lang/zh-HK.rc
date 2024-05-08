@@ -269,3 +269,8 @@ BEGIN
     IDS_CMD_PACKAGE_NOT_FOUND "無法找到軟件套件 %1。\n"
     IDS_CMD_PACKAGE_INFO "有關軟件套件 %1 的資訊：\n"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
+END
