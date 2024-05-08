@@ -33,14 +33,7 @@
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(inetcpl);
-
-static const WCHAR about_blank[] = {'a','b','o','u','t',':','b','l','a','n','k',0};
-static const WCHAR start_page[] = {'S','t','a','r','t',' ','P','a','g','e',0};
-static const WCHAR default_page[] = {'D','e','f','a','u','l','t','_','P','a','g','e','_','U','R','L',0};
-static const WCHAR reg_ie_main[] = {'S','o','f','t','w','a','r','e','\\',
-                                    'M','i','c','r','o','s','o','f','t','\\',
-                                    'I','n','t','e','r','n','e','t',' ','E','x','p','l','o','r','e','r','\\',
-                                    'M','a','i','n',0};
+static const WCHAR reg_ie_main[] = L"Software\\Microsoft\\Internet Explorer\\Main";
 
 /* list of unimplemented buttons */
 static DWORD disabled_general_buttons[] = {IDC_HOME_CURRENT,
@@ -162,7 +155,7 @@ static DWORD parse_url_from_outside(LPCWSTR url, LPWSTR out, DWORD maxlen)
         return res;
     }
 
-    ERR("failed to get ordinal 170: %d\n", GetLastError());
+    ERR("failed to get ordinal 170: %ld\n", GetLastError());
     FreeLibrary(hdll);
     return 0;
 }
@@ -188,13 +181,14 @@ static INT_PTR general_on_command(HWND hwnd, WPARAM wparam)
             break;
 
         case MAKEWPARAM(IDC_HOME_BLANK, BN_CLICKED):
-            SetDlgItemTextW(hwnd, IDC_HOME_EDIT, about_blank);
+            SetDlgItemTextW(hwnd, IDC_HOME_EDIT, L"about:blank");
             break;
 
         case MAKEWPARAM(IDC_HOME_DEFAULT, BN_CLICKED):
             len = sizeof(buffer);
             type = REG_SZ;
-            res = SHRegGetUSValueW(reg_ie_main, default_page, &type, buffer, &len, FALSE, (LPBYTE) about_blank, sizeof(about_blank));
+            res = SHRegGetUSValueW(reg_ie_main, L"Default_Page_URL", &type, buffer, &len, FALSE,
+                                   (BYTE *)L"about:blank", sizeof(L"about:blank"));
             if (!res && (type == REG_SZ)) SetDlgItemTextW(hwnd, IDC_HOME_EDIT, buffer);
             break;
 
@@ -235,7 +229,8 @@ static VOID general_on_initdialog(HWND hwnd)
     *buffer = 0;
     len = sizeof(buffer);
     type = REG_SZ;
-    res = SHRegGetUSValueW(reg_ie_main, start_page, &type, buffer, &len, FALSE, (LPBYTE) about_blank, sizeof(about_blank));
+    res = SHRegGetUSValueW(reg_ie_main, L"Start Page", &type, buffer, &len, FALSE,
+                           (BYTE *)L"about:blank", sizeof(L"about:blank"));
 
     if (!res && (type == REG_SZ))
     {
@@ -257,7 +252,7 @@ static INT_PTR general_on_notify(HWND hwnd, WPARAM wparam, LPARAM lparam)
     LONG res;
 
     psn = (PSHNOTIFY *) lparam;
-    TRACE("WM_NOTIFY (%p, 0x%lx, 0x%lx) from %p with code: %d\n", hwnd, wparam, lparam,
+    TRACE("WM_NOTIFY (%p, 0x%Ix, 0x%Ix) from %p with code: %d\n", hwnd, wparam, lparam,
             psn->hdr.hwndFrom, psn->hdr.code);
 
     if (psn->hdr.code == PSN_APPLY)
@@ -267,7 +262,7 @@ static INT_PTR general_on_notify(HWND hwnd, WPARAM wparam, LPARAM lparam)
         TRACE("EDITTEXT has %s\n", debugstr_w(buffer));
 
         res = parse_url_from_outside(buffer, parsed, ARRAY_SIZE(parsed));
-        TRACE("got %d with %s\n", res, debugstr_w(parsed));
+        TRACE("got %ld with %s\n", res, debugstr_w(parsed));
 
         if (res)
         {
@@ -281,7 +276,7 @@ static INT_PTR general_on_notify(HWND hwnd, WPARAM wparam, LPARAM lparam)
             res = RegOpenKeyW(HKEY_CURRENT_USER, reg_ie_main, &hkey);
             if (!res)
             {
-                res = RegSetValueExW(hkey, start_page, 0, REG_SZ, (const BYTE *)parsed,
+                res = RegSetValueExW(hkey, L"Start Page", 0, REG_SZ, (const BYTE *)parsed,
                                     (lstrlenW(parsed) + 1) * sizeof(WCHAR));
                 RegCloseKey(hkey);
                 return !res;
@@ -315,7 +310,7 @@ INT_PTR CALLBACK general_dlgproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpar
             if ((msg == WM_SETCURSOR) || (msg == WM_NCHITTEST) || (msg == WM_MOUSEMOVE))
                 return FALSE;
 
-            TRACE("(%p, 0x%08x/%d, 0x%lx, 0x%lx)\n", hwnd, msg, msg, wparam, lparam);
+            TRACE("(%p, 0x%08x/%d, 0x%Ix, 0x%Ix)\n", hwnd, msg, msg, wparam, lparam);
 
     }
     return FALSE;

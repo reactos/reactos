@@ -10,7 +10,6 @@
 
 #define COBJMACROS
 #define CONST_VTABLE
-#define NONAMELESSUNION
 
 #include <windef.h>
 #include <winbase.h>
