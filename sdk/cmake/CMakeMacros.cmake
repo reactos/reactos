@@ -698,20 +698,22 @@ function(end_module_group)
     set(CURRENT_MODULE_GROUP PARENT_SCOPE)
 endfunction()
 
-function(preprocess_file __in __out)
-    set(__arg ${__in})
-    foreach(__def ${ARGN})
-        list(APPEND __arg -D${__def})
-    endforeach()
+function(preprocess_file _in _out)
     if(MSVC)
+        if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+            set(_no_std_includes_flag "-nostdinc")
+        else()
+            set(_no_std_includes_flag "/X")
+        endif()
         add_custom_command(OUTPUT ${_out}
-            COMMAND ${CMAKE_C_COMPILER} /EP ${__arg}
-            DEPENDS ${__in})
+            COMMAND ${CMAKE_C_COMPILER} /nologo ${_no_std_includes_flag} ${ARGN} /C /P /EP ${_in} /Fi${_out}
+            DEPENDS ${_in})
     else()
         add_custom_command(OUTPUT ${_out}
-            COMMAND ${CMAKE_C_COMPILER} -E ${__arg}
-            DEPENDS ${__in})
+            COMMAND ${CMAKE_C_COMPILER} -nostdinc ${ARGN} -P -E ${_in} -o ${_out}
+            DEPENDS ${_in})
     endif()
+    set_source_files_properties(${_out} PROPERTIES GENERATED TRUE)
 endfunction()
 
 function(get_includes OUTPUT_VAR)
