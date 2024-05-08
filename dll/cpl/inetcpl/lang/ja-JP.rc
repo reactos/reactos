@@ -70,7 +70,7 @@ CAPTION "検索履歴を消す"
 BEGIN
 
     AUTOCHECKBOX   "一時インターネットファイル\nキャッシュされたウェブページと画像と証明書です。",
-                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
+                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE | WS_GROUP | WS_TABSTOP
     AUTOCHECKBOX   "クッキー\nウェブサイトにより保存されたファイルです。ユーザー設定やログイン情報を含みます。",
                     IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "履歴\nアクセスしたウェブサイトのリストです。",
@@ -80,7 +80,7 @@ BEGIN
     AUTOCHECKBOX   "パスワード\nフォームに入力した保存済みのパスワードです。",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON  "キャンセル", IDCANCEL, 185, 230, 60, 15, WS_GROUP
-    PUSHBUTTON     "削除", IDOK, 120, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "削除", IDOK, 120, 230, 60, 15
 
 END
 

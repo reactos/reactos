@@ -68,7 +68,7 @@ CAPTION "Fshi historine e Shfletimit"
 BEGIN
 
     AUTOCHECKBOX   "Dokumentat të përkohshëm të internetit\nKopje Kafazit te faqeveweb, imazhe dhe certifikata.",
-                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
+                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE | WS_GROUP | WS_TABSTOP
     AUTOCHECKBOX   "Rekorded\nDokumentat e ruajtur në kompjuterin tuaj nga faqet e internetit, e cila ruan gjëra si parapëlqimet e përdoruesit dhe informacionet e identifikimit.",
                     IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "Historia\nLista e faqet e internetit që keni përdorur.",
@@ -78,7 +78,7 @@ BEGIN
     AUTOCHECKBOX   "Fjalëkalime\nFjalëkalime të ruajtura që kanë hyrë në forma.",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON  "Anulo", IDCANCEL, 185, 230, 60, 15, WS_GROUP
-    PUSHBUTTON     "Fshi", IDOK, 120, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "Fshi", IDOK, 120, 230, 60, 15
 
 END
 

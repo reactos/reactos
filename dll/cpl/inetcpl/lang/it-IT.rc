@@ -69,7 +69,7 @@ CAPTION "Cancella Cronologia"
 BEGIN
 
     AUTOCHECKBOX   "File internet temporanei\nCopie di pagine web, immagini e certificati.",
-                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
+                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE | WS_GROUP | WS_TABSTOP
     AUTOCHECKBOX   "I Cookie\nFile salvate nel tuo computer dai siti web, che contengono dati come le preferenze dell'utente e altri informazioni.",
                     IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "Storia\nLista di siti web che hai visitato.",
@@ -79,7 +79,7 @@ BEGIN
     AUTOCHECKBOX   "Password\nLe password salvate che hai inserito.",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON  "Annulla", IDCANCEL, 185, 230, 60, 15, WS_GROUP
-    PUSHBUTTON     "Cancella", IDOK, 120, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "Cancella", IDOK, 120, 230, 60, 15
 
 END
 
