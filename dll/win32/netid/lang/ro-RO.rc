@@ -20,7 +20,7 @@ BEGIN
     EDITTEXT IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Domeniu:", IDC_WORKGROUPDOMAIN, 7, 84, 64, 9
     EDITTEXT IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Pentru a utiliza Expertul de identificare în reţea pentru asocierea la un domeniu şi crearea unui cont local al utilizatorului, faceţi clic pe IDentificator reţea.", IDC_STATIC, 7, 113, 172, 24
+    LTEXT "Pentru a utiliza Expertul de identificare în reţea pentru asocierea la un domeniu şi crearea unui cont local al utilizatorului, faceţi clic pe ID reţea.", IDC_STATIC, 7, 113, 172, 24
     PUSHBUTTON  "&ID reţea", IDC_NETWORK_ID, 190, 114, 58, 15
     LTEXT "Pentru redenumirea acestui computer sau pentru asocierea la un domeniu, faceţi clic pe Modificare.", IDC_STATIC, 7, 149, 170, 17
     PUSHBUTTON  "&Modificare…", IDC_NETWORK_PROPERTY, 190, 149, 58, 15
