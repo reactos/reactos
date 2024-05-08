@@ -486,7 +486,10 @@ ExtractAndInstallThread(LPVOID Parameter)
     REGSAM regsam = KEY_READ | KEY_WRITE | (IsSystem64Bit() ? KEY_WOW64_64KEY : KEY_WOW64_32KEY);
     Info.Error = arpkey.Create(hRoot, tmp, NULL, REG_OPTION_NON_VOLATILE, regsam);
     if (!Info.Error)
+    {
+        arpkey.RecurseDeleteKey(GENERATE_ARPSUBKEY);
         Info.Error = Info.Entries.Create(arpkey, GENERATE_ARPSUBKEY);
+    }
     if (Info.Error)
         ErrorBox(Info.Error);
 
