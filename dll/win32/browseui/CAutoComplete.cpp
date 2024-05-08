@@ -272,16 +272,27 @@ EditWordBreakProcW(LPWSTR lpch, INT index, INT count, INT code)
         {
             if (index)
                 --index;
-            while (index && !IsWordBreak(lpch[index]))
+            while (index)
+            {
+                if (!IsWordBreak(lpch[index]) && IsWordBreak(lpch[index-1]))
+                    break;
                 --index;
+            }    
             return index;
         }
         case WB_RIGHT:
         {
             if (!count)
                 break;
-            while (index < count && lpch[index] && !IsWordBreak(lpch[index]))
+            while (index < count && lpch[index])
+            {
+                if (IsWordBreak(lpch[index]) && !IsWordBreak(lpch[index+1]))
+                {
+                    ++index;
+                    break;
+                }
                 ++index;
+            }
             return index;
         }
     }
