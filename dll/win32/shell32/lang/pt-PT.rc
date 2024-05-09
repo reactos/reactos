@@ -420,10 +420,10 @@ BEGIN
     AUTORADIOBUTTON "Abrir cada pasta na sua &janela", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 210, 10
     GROUPBOX "Seleccione a seguinte opção", -1, 7, 110, 259, 64
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
-    AUTORADIOBUTTON "&Clique simples para abrir um item", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "&Duplo-clique para abrir um item (um clique para seleccionar)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
-    AUTORADIOBUTTON "Sublinhar os títulos dos ícones mantendo o aspecto do &navegador", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 215, 10, WS_TABSTOP | WS_GROUP //FIXME: Shorten the string to avoid text truncation (recommended), or make it use 2 lines (less recommended). You can have a look at pt-BR.rc which has a string that fits here.
-    AUTORADIOBUTTON "Sublinhar os títulos dos ícones apenas quando &aponto para eles", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 215, 10 //FIXME: Shorten the string to avoid text truncation (recommended), or make it use 2 lines (less recommended). You can have a look at pt-BR.rc which has a string that fits here.
+    AUTORADIOBUTTON "&Click simples para abrir um item", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "&Duplo-click para abrir um item (um click para seleccionar)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
+    AUTORADIOBUTTON "Sublinhar os títulos dos ícones mantendo o aspecto do &browser", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 215, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Sublinhar os títulos dos ícones quando eu &apontar para eles", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 215, 10
     PUSHBUTTON "&Restaurar predefinições", IDC_FOLDER_OPTIONS_RESTORE, 177, 178, 90, 14, WS_TABSTOP
 END
 
@@ -719,7 +719,7 @@ BEGIN
     GROUPBOX "Icones", IDC_STATIC, 5, 165, 230, 50, WS_TABSTOP
     LTEXT "Para todas as vistas, excepto miniaturas, pode alterar o ícone padrão 'pasta' para outro ícone.", IDC_STATIC, 15, 175, 210, 25
     ICON 0, IDC_FOLDERCUST_ICON, 175, 194, 32, 30
-    PUSHBUTTON "Alterar &icone.", IDC_FOLDERCUST_CHANGE_ICON, 15, 195, 75, 15
+    PUSHBUTTON "Alterar &icone", IDC_FOLDERCUST_CHANGE_ICON, 15, 195, 75, 15
 END
 
 IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140

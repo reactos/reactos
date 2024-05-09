@@ -317,11 +317,11 @@ BEGIN
     EDITTEXT 14002, 110, 51, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 64, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     CONTROL "", 14013, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 69, 10, 10
-    LTEXT "उपयोग में लाया गया स्पेस :", -1, 25, 69, 80, 10
+    LTEXT "उपयोग में लाया गया स्पेस:", -1, 25, 69, 80, 10
     EDITTEXT 14003, 110, 69, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14004, 197, 69, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     CONTROL "", 14014, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 82, 10, 10
-    LTEXT "खाली स्पेस :", -1, 25, 82, 80, 10
+    LTEXT "खाली स्पेस:", -1, 25, 82, 80, 10
     EDITTEXT 14005, 110, 82, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14006, 197, 82, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 97, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
@@ -371,7 +371,7 @@ BEGIN
     CHECKBOX "मौजूदा यूज़र %s", 14000, 10, 45, 150, 10
     LTEXT "अनधिकृत प्रोग्राम गतिविधि से अपने कंप्यूटर और डेटा को सुरक्षित रखें", -1, 25, 57, 200, 10, WS_DISABLED
     CHECKBOX "यह विकल्प कंप्यूटर वायरस को आपके कंप्यूटर या व्यक्तिगत डेटा को नुकसान पहुंचाने से रोक सकता है, लेकिन इसे चुनने से प्रोग्राम अनुचित तरीके से कार्य कर सकता है।", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
-    CHECKBOX "निम्नलिखित यूज़र :", 14002, 10, 100, 90, 10
+    CHECKBOX "निम्नलिखित यूज़र:", 14002, 10, 100, 90, 10
     LTEXT "यूज़र नेम:", -1, 20, 118, 54, 10
     COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "...", 14004, 180, 115, 30, 14, WS_TABSTOP

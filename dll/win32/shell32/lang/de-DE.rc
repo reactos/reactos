@@ -66,7 +66,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Ausschneiden", IDM_CUT
         MENUITEM "&Kopieren", IDM_COPY
-        MENUITEM "Paste", IDM_INSERT
+        MENUITEM "Ei&nfügen", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "&Verknüpfung erstellen", IDM_CREATELINK
         MENUITEM "&Löschen", IDM_DELETE
