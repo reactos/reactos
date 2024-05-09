@@ -135,7 +135,7 @@ BEGIN
     IDS_DEF_GATEWAY "Gateway implicit"
     IDS_DHCP_SERVER "Server DHCP"
     IDS_LEASE_OBTAINED "Atribuire obținută"
-    IDS_LEASE_EXPIRES Atribuirea expiră"
+    IDS_LEASE_EXPIRES "Atribuirea expiră"
     IDS_DNS_SERVERS "Servere DNS"
     IDS_WINS_SERVERS "Servere WINS"
     IDS_PROPERTY "Proprietate"
@@ -181,5 +181,5 @@ BEGIN
     IDS_NETWORKDOMAINTITLE "Grup de lucru sau domeniu computer"
     IDS_NETWORKDOMAINSUBTITLE "Un grup de lucru este o colecție de computere care au acelaşi nume de grup de lucru. Un domeniu este o colecție de computere definită de un administrator de rețea."
     IDS_REACTOS_SETUP "Expert de instalare ReactOS"
-    IDS_WZD_DOMAIN_NAME "Expertul nu poate continua până când\nnu introduceți un nume de domeniu\nsau grupul de lucru."
+    IDS_WZD_DOMAIN_NAME "Expertul nu poate continua până\ncând nu introduceți un nume de domeniu\nsau grupul de lucru."
 END
