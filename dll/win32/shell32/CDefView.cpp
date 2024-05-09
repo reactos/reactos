@@ -48,8 +48,8 @@ typedef struct
     INT     nLastHeaderID;
 } LISTVIEW_SORT_INFO, *LPLISTVIEW_SORT_INFO;
 
-#define SHV_CHANGE_NOTIFY WM_USER + 0x1111
-#define SHV_UPDATESTATUSBAR WM_USER + 0x1112
+#define SHV_CHANGE_NOTIFY   (WM_USER + 0x1111)
+#define SHV_UPDATESTATUSBAR (WM_USER + 0x1112)
 
 // For the context menu of the def view, the id of the items are based on 1 because we need
 // to call TrackPopupMenu and let it use the 0 value as an indication that the menu was canceled
@@ -161,7 +161,7 @@ private:
 
     BOOL                      m_isEditing;
     BOOL                      m_isParentFolderSpecial;
-    BYTE                      m_ScheduledStatusbarUpdate;
+    bool                      m_ScheduledStatusbarUpdate;
 
     CLSID m_Category;
     BOOL  m_Destroyed;
@@ -455,7 +455,7 @@ CDefView::CDefView() :
     m_cScrollDelay(0),
     m_isEditing(FALSE),
     m_isParentFolderSpecial(FALSE),
-    m_ScheduledStatusbarUpdate(0),
+    m_ScheduledStatusbarUpdate(false),
     m_Destroyed(FALSE)
 {
     ZeroMemory(&m_FolderSettings, sizeof(m_FolderSettings));
@@ -643,7 +643,7 @@ void CDefView::UpdateStatusbar()
 
 LRESULT CDefView::OnUpdateStatusbar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    m_ScheduledStatusbarUpdate = FALSE;
+    m_ScheduledStatusbarUpdate = false;
     UpdateStatusbar();
     return 0;
 }
@@ -2128,7 +2128,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             OnStateChange(CDBOSC_SELCHANGE); // browser will get the IDataObject
             if (!m_ScheduledStatusbarUpdate)
             {
-                ++m_ScheduledStatusbarUpdate;
+                m_ScheduledStatusbarUpdate = true;
                 PostMessage(SHV_UPDATESTATUSBAR, 0, 0);
             }
             _DoFolderViewCB(SFVM_SELECTIONCHANGED, NULL/* FIXME */, NULL/* FIXME */);
