@@ -88,8 +88,8 @@ BEGIN
     PUSHBUTTON "E&ditare…", IDC_DNSADDRMOD, 75, 53, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Eliminare", IDC_DNSADDRDEL, 135, 53, 50, 14, WS_TABSTOP
     LTEXT "Următoarele trei setări se aplică tuturor conexiunilor care au TCP/IP activat. Pentru rezoluţia numelor necalificate:", -1, 5, 70, 220, 24
-    CONTROL "Adăugare sufi&xe DNS, principal şi specific conexiunii", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 90, 220, 12 //FIXME: accelerator collision &C
-    CHECKBOX "Adău&gare sufixe de rang superior ale sufixului DNS principal", IDC_TOPPRIMSUFFIX, 15, 102, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP //FIXME: accelerator collision &C
+    CONTROL "Adăugare sufi&xe DNS, principal şi specific conexiunii", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 90, 220, 12
+    CHECKBOX "Adău&gare sufixe de rang superior ale sufixului DNS principal", IDC_TOPPRIMSUFFIX, 15, 102, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     CONTROL "&Se adaugă aceste sufixe DNS (în ordine):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 115, 220, 12
     LISTBOX IDC_DNSSUFFIXLIST, 5, 127, 180, 34, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT
     PUSHBUTTON "Sus", IDC_DNSSUFFIXUP, 190, 128, 50, 14, WS_TABSTOP
