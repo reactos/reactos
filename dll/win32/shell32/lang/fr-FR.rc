@@ -730,7 +730,7 @@ BEGIN
     ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
     LTEXT "L'élément '%s' auquel ce raccourci fait référence a été modifié ou déplacé et ce raccourci ne fonctionne plus correctement.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
     LTEXT "Elément correspondant le plus proche basé sur le nom, type, taille et date :", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
-    LTEXT "Voulez-vous corriger ce raccourcis en pointant vers cette cible ou voulez-vous le supprimer ?", -1, 35, 85, 210, 30
+    LTEXT "Voulez-vous corriger ce raccourci en pointant vers cette cible ou voulez-vous le supprimer ?", -1, 35, 85, 210, 30
     DEFPUSHBUTTON "&Corriger", IDOK, 55, 120, 60, 15, WS_DISABLED
     PUSHBUTTON "&Supprimer", IDYES, 120, 120, 60, 15
     PUSHBUTTON "Annuler", IDCANCEL, 185, 120, 60, 15
