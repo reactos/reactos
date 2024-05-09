@@ -1024,8 +1024,8 @@ BEGIN
     IDS_ADVANCED_DISPLAY_ADMINTOOLS "Display Administrative Tools"
     IDS_ADVANCED_SMALL_START_MENU "Show Small Icons in Start menu"
 
-    IDS_NEWEXT_ADVANCED_LEFT "<< Avancé" //FIXME: needs an accelerator, using the same as IDS_NEWEXT_ADVANCED_RIGHT is recommended. What about &v ?
-    IDS_NEWEXT_ADVANCED_RIGHT "Avancé >>" //FIXME: needs an accelerator, using the same as IDS_NEWEXT_ADVANCED_LEFT is recommended. What about &v ?
+    IDS_NEWEXT_ADVANCED_LEFT "<< A&vancé"
+    IDS_NEWEXT_ADVANCED_RIGHT "A&vancé >>"
     IDS_NEWEXT_NEW "<Nouveau>"
     IDS_NEWEXT_SPECIFY_EXT "Vous devez spécifier une extension."
     IDS_NEWEXT_ALREADY_ASSOC "L'extension %s est déjà associée avec le type de fichiers %s. Voulez vous désassocier %s avec %s et créer une nouvelle association de fichier pour celle-ci ?"
