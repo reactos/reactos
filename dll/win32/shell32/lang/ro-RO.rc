@@ -923,7 +923,7 @@ BEGIN
     IDS_RECYCLEBIN_DISKSPACE "Spaţiul disponibil"
     IDS_EMPTY_BITBUCKET "Golire Coş de reciclare"
     IDS_PICK_ICON_TITLE "Alegere pictogramă"
-    IDS_PICK_ICON_FILTER "Fişiere pictogramă (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Orice fişier (*.*)\0*.*\0"
+    IDS_PICK_ICON_FILTER "Fişiere pictogramă (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Toate fişier (*.*)\0*.*\0"
     IDS_OPEN_WITH_FILTER "Programe (*.exe)\0*.exe\0Toate fişier (*.*)\0*.*\0"
 
     IDS_CANTLOCKVOLUME "Imposibil de blocat volumul (Cod de eroare: %lu)."
@@ -956,7 +956,7 @@ BEGIN
     IDS_INI_FILE "Fişier de iniţializare"
     IDS_LNK_FILE "Scurtătură"
     IDS_NT__FILE "Fişier de configurare NT DOS32"
-    IDS_PIF_FILE "Fişier de informații program NT VDM"
+    IDS_PIF_FILE "Fişier de informaţii program NT VDM"
     IDS_SCR_FILE "Animație regim de inactivitate"
     IDS_SYS_FILE "Fişier de sistem"
     IDS_VXD_FILE "Driver de dispozitiv virtual"
@@ -989,8 +989,8 @@ BEGIN
        used in the _File type_ tab of the _Folder Options_ dialog */
     IDS_FILE_EXT_TYPE "Fişier %s"
 
-    IDS_BYTES_FORMAT "octeți"
-    IDS_UNKNOWN_APP "Aplicație nespecificată"
+    IDS_BYTES_FORMAT "octeţi"
+    IDS_UNKNOWN_APP "Aplicaţie nespecificată"
     IDS_EXE_DESCRIPTION "Descriere:"
 
     IDS_MENU_EMPTY "(Gol)"
@@ -998,7 +998,7 @@ BEGIN
     IDS_OBJECTS_SELECTED "%d Obiecte selectate"
 
     IDS_TITLE_MYCOMP "Computerul meu"
-    IDS_TITLE_MYNET "Locaţii în rețea"
+    IDS_TITLE_MYNET "Locaţii în reţea"
     IDS_TITLE_BIN_1 "Coş de reciclare (plin)"
     IDS_TITLE_BIN_0 "Coş de reciclare (gol)"
 
