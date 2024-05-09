@@ -53,7 +53,7 @@ static HRESULT SHELL_CompareAbsoluteIDs(LPARAM lParam, PCIDLIST_ABSOLUTE a, PCID
 
 BOOL SHELL_IsEqualAbsoluteID(PCIDLIST_ABSOLUTE a, PCIDLIST_ABSOLUTE b)
 {
-    return 0 == SHELL_CompareAbsoluteIDs(SHCIDS_CANONICALONLY, a, b);
+    return !SHELL_CompareAbsoluteIDs(SHCIDS_CANONICALONLY, a, b);
 }
 
 BOOL SHELL_IsVerb(IContextMenu *pcm, UINT_PTR idCmd, LPCWSTR Verb)
@@ -63,7 +63,7 @@ BOOL SHELL_IsVerb(IContextMenu *pcm, UINT_PTR idCmd, LPCWSTR Verb)
     if (SUCCEEDED(hr = pcm->GetCommandString(idCmd, GCS_VERBW, NULL, (LPSTR)wide, _countof(wide))))
         return !lstrcmpiW(wide, Verb);
 
-    char ansi[MAX_PATH], buf[_countof(wide)];
+    CHAR ansi[_countof(wide)], buf[MAX_PATH];
     if (SHUnicodeToAnsi(Verb, buf, _countof(buf)))
     {
         if (SUCCEEDED(hr = pcm->GetCommandString(idCmd, GCS_VERBA, NULL, ansi, _countof(ansi))))

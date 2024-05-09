@@ -297,12 +297,11 @@ HRESULT CExplorerBand::IsCurrentLocation(PCIDLIST_ABSOLUTE pidl)
     if (!pidl)
         return E_INVALIDARG;
     HRESULT hr = E_FAIL;
-    PIDLIST_ABSOLUTE location = m_pidlCurrent, free = NULL;
-    if (!location && SUCCEEDED(hr = GetCurrentLocation(location)))
-        free = location;
-    if (location)
+    PIDLIST_ABSOLUTE location = m_pidlCurrent;
+    if (location || SUCCEEDED(hr = GetCurrentLocation(location)))
         hr = SHELL_IsEqualAbsoluteID(location, pidl) ? S_OK : S_FALSE;
-    ILFree(free);
+    if (location != m_pidlCurrent)
+        ILFree(location);
     return hr;
 }
 
@@ -347,8 +346,7 @@ HRESULT CExplorerBand::UpdateBrowser(LPITEMIDLIST pidlGoto)
         return hr;
 
     ILFree(m_pidlCurrent);
-    hr = SHILClone(pidlGoto, &m_pidlCurrent);
-    return hr;
+    return SHILClone(pidlGoto, &m_pidlCurrent);
 }
 
 // *** notifications handling ***
