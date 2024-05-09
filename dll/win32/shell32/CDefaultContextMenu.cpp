@@ -700,9 +700,8 @@ void
 CDefaultContextMenu::TryPickDefault(HMENU hMenu, UINT idCmdFirst, UINT DfltOffset, UINT uFlags)
 {
     // Are we allowed to pick a default?
-    UINT ntver = RosGetProcessEffectiveVersion();
-    if (((uFlags & CMF_NODEFAULT) && ntver >= _WIN32_WINNT_VISTA) ||
-        ((uFlags & CMF_DONOTPICKDEFAULT) && ntver >= _WIN32_WINNT_WIN7))
+    if ((uFlags & CMF_NODEFAULT) ||
+        ((uFlags & CMF_DONOTPICKDEFAULT) && RosGetProcessEffectiveVersion() >= _WIN32_WINNT_WIN7))
     {
         return;
     }
@@ -713,7 +712,7 @@ CDefaultContextMenu::TryPickDefault(HMENU hMenu, UINT idCmdFirst, UINT DfltOffse
 
     // Does the view want to pick one?
     INT_PTR forceDfm = 0;
-    if (_DoCallback(DFM_GETDEFSTATICID, 0, &forceDfm) == S_OK && forceDfm)
+    if (SUCCEEDED(_DoCallback(DFM_GETDEFSTATICID, 0, &forceDfm)) && forceDfm)
     {
         for (UINT i = 0; i < _countof(g_StaticInvokeCmdMap); ++i)
         {
@@ -974,7 +973,7 @@ CDefaultContextMenu::DoProperties(
     // We are asked to run the default property sheet
     if (hr == S_FALSE)
     {
-        return Shell_DefaultContextMenuCallBack(m_psf, m_pDataObj);
+        return SHELL32_ShowPropertiesDialog(m_pDataObj);
     }
 
     return hr;

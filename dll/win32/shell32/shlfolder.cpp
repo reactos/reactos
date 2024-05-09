@@ -493,17 +493,35 @@ _ShowPropertiesDialogThread(LPVOID lpParameter)
 /*
  * for internal use
  */
-HRESULT WINAPI
-Shell_DefaultContextMenuCallBack(IShellFolder *psf, IDataObject *pdtobj)
+HRESULT
+SHELL32_ShowPropertiesDialog(IDataObject *pdtobj)
 {
+    if (!pdtobj)
+        return E_INVALIDARG;
+
     pdtobj->AddRef();
     if (!SHCreateThread(_ShowPropertiesDialogThread, pdtobj, CTF_INSIST | CTF_COINIT, NULL))
     {
         pdtobj->Release();
-        return HRESULT_FROM_WIN32(GetLastError());
+        return HResultFromWin32(GetLastError());
     }
     else
     {
         return S_OK;
     }
+}
+
+HRESULT
+SHELL32_DefaultContextMenuCallBack(IShellFolder *psf, IDataObject *pdo, UINT msg)
+{
+    switch (msg)
+    {
+        case DFM_MERGECONTEXTMENU:
+            return S_OK; // Yes, I want verbs
+        case DFM_INVOKECOMMAND:
+            return S_FALSE; // Do it for me please
+        case DFM_GETDEFSTATICID:
+            return S_FALSE; // Supposedly "required for Windows 7 to pick a default"
+    }
+    return E_NOTIMPL;
 }
