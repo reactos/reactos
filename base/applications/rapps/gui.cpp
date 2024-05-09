@@ -544,7 +544,7 @@ CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
                 break;
 
             case ID_REFRESH:
-                UpdateApplicationsList(SelectedEnumType);
+                UpdateApplicationsList(SelectedEnumType, bReload);
                 break;
 
             case ID_RESETDB:
