@@ -679,9 +679,9 @@ BEGIN
     PUSHBUTTON "&Modifier...", IDC_EDITTYPE_EDIT_BUTTON, 150, 65, 70, 14
     PUSHBUTTON "&Supprimer", IDC_EDITTYPE_REMOVE, 150, 80, 70, 14
     PUSHBUTTON "&Par défaut", IDC_EDITTYPE_SET_DEFAULT, 150, 95, 70, 14
-    AUTOCHECKBOX "Confirmer l'ouverture après le téléchargement", IDC_EDITTYPE_CONFIRM_OPEN, 5, 115, 150, 14 //FIXME: should have an accelerator
-    AUTOCHECKBOX "Toujours afficher l'extension", IDC_EDITTYPE_SHOW_EXT, 5, 130, 150, 14 //FIXME: should have an accelerator
-    AUTOCHECKBOX "Parcourir dans une même fenêtre", IDC_EDITTYPE_SAME_WINDOW, 5, 145, 150, 14 //FIXME: should have an accelerator
+    AUTOCHECKBOX "C&onfirmer l'ouverture après le téléchargement", IDC_EDITTYPE_CONFIRM_OPEN, 5, 115, 150, 14
+    AUTOCHECKBOX "To&ujours afficher l'extension", IDC_EDITTYPE_SHOW_EXT, 5, 130, 150, 14
+    AUTOCHECKBOX "Parcourir dans une même &fenêtre", IDC_EDITTYPE_SAME_WINDOW, 5, 145, 150, 14
     DEFPUSHBUTTON "OK", IDOK, 95, 170, 60, 14
     PUSHBUTTON "Annuler", IDCANCEL, 160, 170, 60, 14
 END
