@@ -1521,7 +1521,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","PRN",0x0000
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","ComSpec",0x00020002,"%SystemRoot%\system32\cmd.exe"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","Path",0x00020002,"%SystemRoot%\bin;%SystemRoot%\System32;%SystemRoot%;%SystemRoot%\System32\Wbem"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","PATHEXT",0x00000002,".COM;.EXE;.BAT;.CMD"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","PROMPT",0x00000002,"$P$G$I"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","TEMP",0x00020002,"%SystemRoot%\TEMP"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","TMP",0x00020002,"%SystemRoot%\TEMP"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","windir",0x00020002,"%SystemRoot%"
