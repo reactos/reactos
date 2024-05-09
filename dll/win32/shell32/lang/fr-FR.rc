@@ -695,7 +695,7 @@ BEGIN
     EDITTEXT IDC_ACTION_ACTION, 5, 20, 150, 14, ES_AUTOHSCROLL
     LTEXT "App&lication utilisée pour exécuter cette action :", -1, 5, 42, 150, 10 //FIXME: should have an accelerator
     EDITTEXT IDC_ACTION_APP, 5, 55, 150, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "Parcourir...", IDC_ACTION_BROWSE, 160, 60, 60, 14 //FIXME: should have an accelerator
+    PUSHBUTTON "&Parcourir...", IDC_ACTION_BROWSE, 160, 60, 60, 14
     AUTOCHECKBOX "&Utiliser DDE", IDC_ACTION_USE_DDE, 10, 75, 103, 14
     DEFPUSHBUTTON "OK", IDOK, 160, 20, 60, 14
     PUSHBUTTON "Annuler", IDCANCEL, 160, 40, 60, 14
