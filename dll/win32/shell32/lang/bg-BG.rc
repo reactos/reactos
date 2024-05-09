@@ -423,7 +423,7 @@ BEGIN
     AUTORADIOBUTTON "&Отваряне с единично цъкане (избор с посочване)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP //FIXME: accelerator collision &O
     AUTORADIOBUTTON "&Отваряне с двойно цъкане (избиране с единично)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10 //FIXME: accelerator collision &O
     AUTORADIOBUTTON "Подчертаване и &заглавия според моя план", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 200, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Подчертайте заглавията, когато са &посочени", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
+    AUTORADIOBUTTON "Подчертайте &посочените заглавия", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
     PUSHBUTTON "От под&разбираните", IDC_FOLDER_OPTIONS_RESTORE, 167, 178, 90, 14, WS_TABSTOP
 END
 
