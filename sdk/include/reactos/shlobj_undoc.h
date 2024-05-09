@@ -59,6 +59,31 @@ struct persistState
 };
 
 /*****************************************************************************
+ * CGID_Explorer (IShellBrowser OLECMD IDs)
+ */
+#define SBCMDID_EXPLORERBARFOLDERS 35 // Query/Toggle
+#define SBCMDID_MIXEDZONE 39
+#define SBCMDID_ONVIEWMOVETOTOP 60
+//SBCMDID_ENABLESHOWTREE ?
+//SBCMDID_SHOWCONTROL ?
+//SBCMDID_CANCELNAVIGATION ?
+//SBCMDID_MAYSAVECHANGES ?
+//SBCMDID_SETHLINKFRAME ?
+//SBCMDID_ENABLESTOP ?
+//SBCMDID_SELECTHISTPIDL ?
+//SBCMDID_GETPANE ? // This is in the official SDK but only the panes are defined
+#define PANE_NONE       ((DWORD)-1)
+#define PANE_ZONE       1
+#define PANE_OFFLINE    2
+#define PANE_PRINTER    3
+#define PANE_SSL        4
+#define PANE_NAVIGATION 5
+#define PANE_PROGRESS   6
+#if (_WIN32_IE >= _WIN32_IE_IE60)
+#define PANE_PRIVACY    7
+#endif
+
+/*****************************************************************************
  * IInitializeObject interface
  */
 #undef  INTERFACE
