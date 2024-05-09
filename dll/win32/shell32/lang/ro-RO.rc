@@ -860,7 +860,7 @@ BEGIN
     IDS_RUNDLG_ERROR "Imposibil de 'Executare fişier' (eroare internă)"
     IDS_RUNDLG_BROWSE_ERROR "Imposibil de 'Răsfoire fişiere' (eroare internă)"
     IDS_RUNDLG_BROWSE_CAPTION "Răsfoire fişiere"
-    IDS_RUNDLG_BROWSE_FILTER "Programe (*.exe)\0*.exe\0Toate fişier (*.*)\0*.*\0"
+    IDS_RUNDLG_BROWSE_FILTER "Programe (*.exe)\0*.exe\0Orice fişier (*.*)\0*.*\0"
 
     /* Shortcut property sheet */
     IDS_SHORTCUT_RUN_NORMAL "Fereastră normală"
@@ -923,8 +923,8 @@ BEGIN
     IDS_RECYCLEBIN_DISKSPACE "Spaţiul disponibil"
     IDS_EMPTY_BITBUCKET "Golire Coş de reciclare"
     IDS_PICK_ICON_TITLE "Alegere pictogramă"
-    IDS_PICK_ICON_FILTER "Fişiere pictogramă (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Toate fişier (*.*)\0*.*\0"
-    IDS_OPEN_WITH_FILTER "Programe (*.exe)\0*.exe\0Toate fişier (*.*)\0*.*\0"
+    IDS_PICK_ICON_FILTER "Fişiere pictogramă (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Orice fişier (*.*)\0*.*\0"
+    IDS_OPEN_WITH_FILTER "Programe (*.exe)\0*.exe\0Orice fişier (*.*)\0*.*\0"
 
     IDS_CANTLOCKVOLUME "Imposibil de blocat volumul (Cod de eroare: %lu)."
     IDS_CANTDISMOUNTVOLUME "Imposibil de demontat volumul (Cod de eroare: %lu)."
@@ -1044,7 +1044,7 @@ BEGIN
     IDS_INVALID_PROGRAM "Programul specificat nu s-a găsit. Verificaţi dacă numele şi calea fişierului sunt corecte."
     IDS_REMOVE_ACTION "Sigur eliminaţi această acţiune?"
     IDS_ACTION_EXISTS "Acțiunea '%s' este deja înregistrată pentru a cest tip de fişier. Introduceţi un nume nou, apoi încercaţi din nou."
-    IDS_EXE_FILTER "Programe\0*.exe\0Toate fişierel\0*.*\0"
+    IDS_EXE_FILTER "Programe\0*.exe\0Orice fişier\0*.*\0"
     IDS_EDITING_ACTION "Editare acţiune pentru tipul: "
     IDS_NO_ICONS "Fişierul '%s' nu conţine pictograme.\n\nAlegeţi o pictogramă din listă sau specificaţi un alt fişier."
     IDS_FILE_NOT_FOUND "Fişierul '%s' nu a fost găsit."
