@@ -693,7 +693,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Action :", -1, 5, 7, 150, 10
     EDITTEXT IDC_ACTION_ACTION, 5, 20, 150, 14, ES_AUTOHSCROLL
-    LTEXT "App&lication utilisée pour exécuter cette action :", -1, 5, 42, 150, 10 //FIXME: should have an accelerator
+    LTEXT "App&lication utilisée pour exécuter cette action :", -1, 5, 42, 150, 10
     EDITTEXT IDC_ACTION_APP, 5, 55, 150, 14, ES_AUTOHSCROLL
     PUSHBUTTON "&Parcourir...", IDC_ACTION_BROWSE, 160, 60, 60, 14
     AUTOCHECKBOX "&Utiliser DDE", IDC_ACTION_USE_DDE, 10, 75, 103, 14
