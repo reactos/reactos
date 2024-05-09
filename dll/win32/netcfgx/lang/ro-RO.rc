@@ -16,7 +16,7 @@ BEGIN
     LTEXT "Dacă reţeaua acceptă, aveţi posibilitatea să obţineţi setări IP atribuite automat. În caz contrar, este necesar să cereţi setările potrivite de la administratorului reţelei.", -1, 9, 9, 235, 27
     GROUPBOX "", -1, 9, 61, 228, 60, BS_GROUPBOX
     CONTROL "Se &obţine automat o adresă IP", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
-    CONTROL "Se &utilizează adresa IP următoare::", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
+    CONTROL "Se &utilizează adresa IP următoare:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
     LTEXT "Adresă I&P:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 144, 75 - 2, 85, 12
     LTEXT "&Mască subreţea:", -1, 14, 90, 135, 8
@@ -26,7 +26,7 @@ BEGIN
     GROUPBOX "", -1, 9, 147, 228, 47, BS_GROUPBOX
     CONTROL "Se o&bţine automat adresa de server DNS", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 129, 210, 12
     CONTROL "S&e utilizează adresa de server DNS următoare:", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 145, 152, 12
-    LTEXT "Server &DNS preferat::", -1, 14, 161, 135, 8
+    LTEXT "Server &DNS preferat:", -1, 14, 161, 135, 8
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 144, 161 - 2, 85, 12
     LTEXT "Server DNS &alternativ:", -1, 14, 176, 135, 8
     CONTROL "", IDC_DNS2, "SysIPAddress32", WS_TABSTOP, 144, 176 - 2, 85, 12
