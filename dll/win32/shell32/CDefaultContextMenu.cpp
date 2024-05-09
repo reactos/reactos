@@ -702,7 +702,7 @@ void
 CDefaultContextMenu::TryPickDefault(HMENU hMenu, UINT idCmdFirst, UINT DfltOffset, UINT uFlags)
 {
     // Are we allowed to pick a default?
-    if (((uFlags & CMF_NODEFAULT)) ||
+    if ((uFlags & CMF_NODEFAULT) ||
         ((uFlags & CMF_DONOTPICKDEFAULT) && RosGetProcessEffectiveVersion() >= _WIN32_WINNT_WIN7))
     {
         return;
