@@ -57,7 +57,7 @@ private:
 
     // *** tree explorer band stuff ***
     BOOL m_fVisible;
-    BOOL m_bNavigating;
+    BYTE m_bNavigating;
     BOOL m_bFocused;
     DWORD m_dwBandID;
     BOOL m_isEditing;

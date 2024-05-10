@@ -148,7 +148,7 @@ Cleanup:
 CExplorerBand::CExplorerBand()
     : m_pSite(NULL)
     , m_fVisible(FALSE)
-    , m_bNavigating(FALSE)
+    , m_bNavigating(0)
     , m_dwBandID(0)
     , m_isEditing(FALSE)
     , m_pidlCurrent(NULL)
@@ -574,9 +574,9 @@ LRESULT CExplorerBand::ContextMenuHack(UINT uMsg, WPARAM wParam, LPARAM lParam, 
 
         // Move to the item selected by the treeview (don't change right pane)
         TreeView_HitTest(m_hWnd, &info);
-        m_bNavigating = TRUE;
+        ++m_bNavigating;
         TreeView_SelectItem(m_hWnd, info.hItem);
-        m_bNavigating = FALSE;
+        --m_bNavigating;
     }
     return FALSE; /* let the wndproc process the message */
 }
@@ -910,10 +910,10 @@ BOOL CExplorerBand::NavigateToCurrentFolder()
         ERR("Unable to get browser PIDL !\n");
         return FALSE;
     }
-    m_bNavigating = TRUE;
+    ++m_bNavigating;
     /* find PIDL into our explorer */
     result = NavigateToPIDL(explorerPidl, &dummy, TRUE, FALSE, TRUE);
-    m_bNavigating = FALSE;
+    --m_bNavigating;
     ILFree(explorerPidl);
     return result;
 }
@@ -1574,9 +1574,9 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::DragOver(DWORD glfKeyState, POINTL pt, 
 
     if (info.hItem)
     {
-        m_bNavigating = TRUE;
+        ++m_bNavigating;
         TreeView_SelectItem(m_hWnd, info.hItem);
-        m_bNavigating = FALSE;
+        --m_bNavigating;
         // Delegate to shell folder
         if (m_pDropTarget && info.hItem != m_childTargetNode)
         {
@@ -1635,9 +1635,9 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::DragOver(DWORD glfKeyState, POINTL pt, 
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::DragLeave()
 {
-    m_bNavigating = TRUE;
+    ++m_bNavigating;
     TreeView_SelectItem(m_hWnd, m_oldSelected);
-    m_bNavigating = FALSE;
+    --m_bNavigating;
     m_childTargetNode = NULL;
     if (m_pCurObject)
     {
