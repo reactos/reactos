@@ -971,6 +971,7 @@ MainWindowProc(HWND hwnd,
                 case IDM_EXIT:
                 {
                     PostQuitMessage(0);
+                    UnregisterHotKey(hwnd, 1);
                     break;
                 }
 
@@ -1275,6 +1276,21 @@ MainWindowProc(HWND hwnd,
             break;
         }
 
+        case WM_HOTKEY:
+        {
+            if (wParam == 1) 
+            {
+                if (Preferences.MixerWindow->Mode == NORMAL_MODE) {
+                    Preferences.MixerWindow->Mode = SMALL_MODE;
+                } else {
+                    Preferences.MixerWindow->Mode = NORMAL_MODE;
+                }
+
+                RebuildMixerWindowControls(&Preferences);
+            }
+            break;
+        }
+
         default:
         {
             Result = DefWindowProc(hwnd,
@@ -1376,6 +1392,11 @@ CreateApplicationWindow(
         HeapFree(hAppHeap,
                  0,
                  MixerWindow);
+    }
+
+    if (!RegisterHotKey(hWnd, 1, MOD_CONTROL, 'S'))
+    {
+        return NULL;
     }
 
     return hWnd;
