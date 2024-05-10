@@ -1249,6 +1249,8 @@ MainWindowProc(HWND hwnd,
                     Result = -1;
                 }
             }
+
+            RegisterHotKey(hwnd, HOTKEY_CTRL_S, MOD_CONTROL, 'S');
             break;
         }
 
@@ -1387,11 +1389,6 @@ CreateApplicationWindow(
         HeapFree(hAppHeap,
                  0,
                  MixerWindow);
-    }
-
-    if (!RegisterHotKey(hWnd, HOTKEY_CTRL_S, MOD_CONTROL, 'S'))
-    {
-        return NULL;
     }
 
     return hWnd;
