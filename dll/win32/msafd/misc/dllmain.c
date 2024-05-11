@@ -2061,15 +2061,6 @@ WSPConnect(SOCKET Handle,
                                    0x22,
                                    NULL,
                                    0);
-    if (Status == STATUS_PENDING)
-    {
-        /* Wait for completion if blocking */
-        if (!Socket->SharedData->NonBlocking)
-            WaitForSingleObject(SockEvent, INFINITE);
-
-        Status = IOSB->Status;
-    }
-
     if (Socket->SharedData->NonBlocking)
     {
         if (Status == STATUS_PENDING)
@@ -2085,6 +2076,13 @@ WSPConnect(SOCKET Handle,
     }
     else
     {
+        /* Wait for completion if blocking */
+        if (Status == STATUS_PENDING)
+        {
+            WaitForSingleObject(SockEvent, INFINITE);
+            Status = IOSB->Status;
+        }
+
         Socket->SharedData->SocketLastError = TranslateNtStatusError(Status);
         if (Status != STATUS_SUCCESS)
             goto Leave;
