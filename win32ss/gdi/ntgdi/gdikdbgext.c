@@ -119,7 +119,7 @@ KdbCommand_Gdi_dumpht(ULONG argc, char *argv[])
         for (i = 0; i <= GDIObjType_MAX_TYPE + 1; i++)
         {
             /* Check if this object type was requested */
-            if (stricmp(argv[0], gpszObjectTypes[i]) == 0) break;
+            if (_stricmp(argv[0], gpszObjectTypes[i]) == 0) break;
         }
 
         /* Check if we didn't find it yet */
@@ -327,28 +327,28 @@ DbgGdiKdbgCliCallback(
     IN PCH argv[])
 {
 
-    if (stricmp(argv[0], "!gdi.help") == 0)
+    if (_stricmp(argv[0], "!gdi.help") == 0)
     {
         KdbCommand_Gdi_help();
     }
-    else if (stricmp(argv[0], "!gdi.dumpht") == 0)
+    else if (_stricmp(argv[0], "!gdi.dumpht") == 0)
     {
         KdbCommand_Gdi_dumpht(argc - 1, argv + 1);
     }
-    else if (stricmp(argv[0], "!gdi.handle") == 0)
+    else if (_stricmp(argv[0], "!gdi.handle") == 0)
     {
         KdbCommand_Gdi_handle(argv[1]);
     }
-    else if (stricmp(argv[0], "!gdi.entry") == 0)
+    else if (_stricmp(argv[0], "!gdi.entry") == 0)
     {
         KdbCommand_Gdi_entry(argv[1]);
     }
-    else if (stricmp(argv[0], "!gdi.baseobject") == 0)
+    else if (_stricmp(argv[0], "!gdi.baseobject") == 0)
     {
         KdbCommand_Gdi_baseobject(argv[1]);
     }
 #if DBG_ENABLE_EVENT_LOGGING
-    else if (stricmp(argv[0], "!gdi.eventlist") == 0)
+    else if (_stricmp(argv[0], "!gdi.eventlist") == 0)
     {
         KdbCommand_Gdi_eventlist(argv[1]);
     }

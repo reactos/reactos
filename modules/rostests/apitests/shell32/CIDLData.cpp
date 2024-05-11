@@ -61,7 +61,7 @@ static void TestAdviseAndCanonical(PCIDLIST_ABSOLUTE pidlFolder, UINT cidl, PCUI
 
 
 #define ok_wstri(x, y) \
-    ok(wcsicmp(x, y) == 0, "Wrong string. Expected '%S', got '%S'\n", y, x)
+    ok(_wcsicmp(x, y) == 0, "Wrong string. Expected '%S', got '%S'\n", y, x)
 
 static void TestHIDA(PVOID pData, SIZE_T Size, LPCWSTR ExpectRoot, LPCWSTR ExpectPath1, LPCWSTR ExpectPath2)
 {

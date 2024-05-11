@@ -72,7 +72,7 @@ BOOL IsBuiltinLayer(PCWSTR Name)
 
     for (n = 0; g_Layers[n].Name; ++n)
     {
-        if (!wcsicmp(g_Layers[n].Name, Name))
+        if (!_wcsicmp(g_Layers[n].Name, Name))
         {
             return TRUE;
         }
@@ -80,7 +80,7 @@ BOOL IsBuiltinLayer(PCWSTR Name)
 
     for (n = 0; g_CompatModes[n].Name; ++n)
     {
-        if (!wcsicmp(g_CompatModes[n].Name, Name))
+        if (!_wcsicmp(g_CompatModes[n].Name, Name))
         {
             return TRUE;
         }
@@ -159,7 +159,7 @@ HRESULT CLayerUIPropPage::InitFile(PCWSTR Filename)
         ACDBG(L"Failed to find an extension: '%s'\r\n", (PCWSTR)ExpandedFilename);
         return E_FAIL;
     }
-    if (!wcsicmp(pwszExt, L".lnk"))
+    if (!_wcsicmp(pwszExt, L".lnk"))
     {
         WCHAR Buffer[MAX_PATH];
         if (!GetExeFromLnk(ExpandedFilename, Buffer, _countof(Buffer)))
@@ -167,7 +167,7 @@ HRESULT CLayerUIPropPage::InitFile(PCWSTR Filename)
             ACDBG(L"Failed to read link target from: '%s'\r\n", (PCWSTR)ExpandedFilename);
             return E_FAIL;
         }
-        if (!wcsicmp(Buffer, ExpandedFilename))
+        if (!_wcsicmp(Buffer, ExpandedFilename))
         {
             ACDBG(L"Link redirects to itself: '%s'\r\n", (PCWSTR)ExpandedFilename);
             return E_FAIL;
@@ -197,7 +197,7 @@ HRESULT CLayerUIPropPage::InitFile(PCWSTR Filename)
 
     for (size_t n = 0; g_AllowedExtensions[n]; ++n)
     {
-        if (!wcsicmp(g_AllowedExtensions[n], pwszExt))
+        if (!_wcsicmp(g_AllowedExtensions[n], pwszExt))
         {
             m_Filename = ExpandedFilename;
             ACDBG(L"Got: %s\r\n", (PCWSTR)ExpandedFilename);
@@ -225,7 +225,7 @@ static BOOL GetLayerInfo(PCWSTR Filename, DWORD QueryFlags, PDWORD OSMode, PDWOR
         size_t n;
         for (n = 0; g_Layers[n].Name; ++n)
         {
-            if (!wcsicmp(g_Layers[n].Name, Layer))
+            if (!_wcsicmp(g_Layers[n].Name, Layer))
             {
                 *Enabledlayers |= (1<<n);
                 break;
@@ -237,7 +237,7 @@ static BOOL GetLayerInfo(PCWSTR Filename, DWORD QueryFlags, PDWORD OSMode, PDWOR
 
         for (n = 0; g_CompatModes[n].Name; ++n)
         {
-            if (!wcsicmp(g_CompatModes[n].Name, Layer))
+            if (!_wcsicmp(g_CompatModes[n].Name, Layer))
             {
                 *OSMode = n+1;
                 break;

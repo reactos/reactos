@@ -36,8 +36,8 @@ InterpretCommand(
         return FALSE;
     }
 
-    if ((wcsicmp(argv[dwArgCount - 1], L"?") == 0) ||
-        (wcsicmp(argv[dwArgCount - 1], L"help") == 0))
+    if ((_wcsicmp(argv[dwArgCount - 1], L"?") == 0) ||
+        (_wcsicmp(argv[dwArgCount - 1], L"help") == 0))
     {
         dwHelpLevel = dwArgCount - 1;
     }
@@ -49,7 +49,7 @@ InterpretCommand(
         pCommand = pContext->pCommandListHead;
         while (pCommand != NULL)
         {
-            if (wcsicmp(argv[0], pCommand->pwszCmdToken) == 0) 
+            if (_wcsicmp(argv[0], pCommand->pwszCmdToken) == 0)
             {
                 if (dwHelpLevel == 1)
                 {
@@ -74,7 +74,7 @@ InterpretCommand(
         pGroup = pContext->pGroupListHead;
         while (pGroup != NULL)
         {
-            if (wcsicmp(argv[0], pGroup->pwszCmdGroupToken) == 0)
+            if (_wcsicmp(argv[0], pGroup->pwszCmdGroupToken) == 0)
             {
                 if (dwHelpLevel == 1)
                 {
@@ -85,7 +85,7 @@ InterpretCommand(
                 pCommand = pGroup->pCommandListHead;
                 while (pCommand != NULL)
                 {
-                    if ((dwArgCount > 1) && (wcsicmp(argv[1], pCommand->pwszCmdToken) == 0))
+                    if ((dwArgCount > 1) && (_wcsicmp(argv[1], pCommand->pwszCmdToken) == 0))
                     {
                         if (dwHelpLevel == 2)
                         {
@@ -120,7 +120,7 @@ InterpretCommand(
             pSubContext = pContext->pSubContextHead;
             while (pSubContext != NULL)
             {
-                if (wcsicmp(argv[0], pSubContext->pszContextName) == 0) 
+                if (_wcsicmp(argv[0], pSubContext->pszContextName) == 0)
                 {
                     pCurrentContext = pSubContext;
                     return TRUE;
