@@ -205,7 +205,7 @@ InitializeGlobalJobList(void)
         if (!IS_VALID_JOB_ID(dwJobID))
             continue;
 
-        if (wcsicmp(p, L".SHD") != 0)
+        if (_wcsicmp(p, L".SHD") != 0)
             continue;
 
         // This shadow file has a valid name. Construct the full path and try to load it.

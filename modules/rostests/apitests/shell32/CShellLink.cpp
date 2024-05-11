@@ -148,7 +148,7 @@ static WCHAR evVar[MAX_PATH];
         ok(hr == expectedHr,
            "IShellLink::GetPath(%d), flags 0x%lx, got hr = 0x%lx, expected 0x%lx\n",
             i, flags, hr, expectedHr);
-        ok(wcsicmp(wPathOut, expectedPathOut) == 0,
+        ok(_wcsicmp(wPathOut, expectedPathOut) == 0,
            "IShellLink::GetPath(%d), flags 0x%lx, in %S, got %S, expected %S\n",
            i, flags, testDef->pathIn, wPathOut, expectedPathOut);
     }

@@ -64,7 +64,7 @@ DoesPortExist(PCWSTR pwszPortName)
     for (i = 0; i < dwReturned; i++)
     {
         // Check if this existing port matches our queried one.
-        if (wcsicmp(p->pName, pwszPortName) == 0)
+        if (_wcsicmp(p->pName, pwszPortName) == 0)
         {
             bReturnValue = TRUE;
             goto Cleanup;

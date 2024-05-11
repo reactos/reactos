@@ -74,7 +74,7 @@ static INT CALLBACK SIC_CompareEntries( LPVOID p1, LPVOID p2, LPARAM lparam)
     if ((e1->dwFlags & GIL_FORSHORTCUT) != (e2->dwFlags & GIL_FORSHORTCUT))
       return ((e1->dwFlags & GIL_FORSHORTCUT) < (e2->dwFlags & GIL_FORSHORTCUT)) ? -1 : 1;
 
-    return wcsicmp(e1->sSourceFile,e2->sSourceFile);
+    return _wcsicmp(e1->sSourceFile,e2->sSourceFile);
 }
 
 /* declare SIC_LoadOverlayIcon() */

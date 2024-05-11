@@ -430,7 +430,7 @@ int CHString::CompareNoCase(CHSTRING_LPCWSTR lpsz) const
 {
     // Just call the deprecated function here - no matter we are null terminated
     // Did you read my statement about how safe is this implementation?
-    return wcsicmp(reinterpret_cast<LPCWSTR>(m_pchData), reinterpret_cast<LPCWSTR>(lpsz));
+    return _wcsicmp(reinterpret_cast<LPCWSTR>(m_pchData), reinterpret_cast<LPCWSTR>(lpsz));
 }
 
 /*

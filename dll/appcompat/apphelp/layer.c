@@ -287,7 +287,7 @@ BOOL SdbpMatchLayer(PCWSTR start, PCWSTR end, PCWSTR compare)
 {
     size_t len;
     if (!end)
-        return !wcsicmp(start, compare);
+        return !_wcsicmp(start, compare);
     len = end - start;
     return wcslen(compare) == len && !_wcsnicmp(start, compare, len);
 }

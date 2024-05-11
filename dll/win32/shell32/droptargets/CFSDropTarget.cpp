@@ -613,7 +613,7 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
 
                 // Check to see if the source is a link
                 BOOL fSourceIsLink = FALSE;
-                if (!wcsicmp(PathFindExtensionW(targetName), L".lnk") && (att & (SFGAO_FOLDER | SFGAO_STREAM)) != SFGAO_FOLDER)
+                if (!_wcsicmp(PathFindExtensionW(targetName), L".lnk") && (att & (SFGAO_FOLDER | SFGAO_STREAM)) != SFGAO_FOLDER)
                 {
                     fSourceIsLink = TRUE;
                     PathRemoveExtensionW(wszCombined);

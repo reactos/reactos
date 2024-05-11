@@ -164,7 +164,7 @@ _Out_opt_ PUINT PWriteEnd)
 
             if (ExpectedCsidl == PIDL_PATH_EQUALS_PATH)
             {
-                ok(wcsicmp(pidlPathName, pidlPathTest) == 0, "Line %lu: Path from pidl does not match; pidlPathName=%S\n", TestLine, pidlPathName);
+                ok(_wcsicmp(pidlPathName, pidlPathTest) == 0, "Line %lu: Path from pidl does not match; pidlPathName=%S\n", TestLine, pidlPathName);
             }
             else if (ExpectedCsidl == PIDL_IS_EMPTY)
             {

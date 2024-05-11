@@ -424,7 +424,7 @@ static DWORD get_type_from_name(LPCWSTR name)
     if (!_wcsnicmp(name, portname_COM, ARRAY_SIZE(portname_COM) -1))
         return PORT_IS_COM;
 
-    if (!wcsicmp(name, portname_FILE))
+    if (!_wcsicmp(name, portname_FILE))
         return PORT_IS_FILE;
 
     if (name[0] == '/')

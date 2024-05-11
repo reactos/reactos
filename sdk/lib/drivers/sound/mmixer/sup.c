@@ -202,7 +202,7 @@ MMixerGetMixerByName(
         MixerInfo = (LPMIXER_INFO)CONTAINING_RECORD(Entry, MIXER_INFO, Entry);
 
         DPRINT1("MixerName %S MixerName %S\n", MixerInfo->MixCaps.szPname, MixerName);
-        if (wcsicmp(MixerInfo->MixCaps.szPname, MixerName) == 0)
+        if (_wcsicmp(MixerInfo->MixCaps.szPname, MixerName) == 0)
         {
             *OutMixerInfo = MixerInfo;
             return MM_STATUS_SUCCESS;
@@ -764,7 +764,7 @@ MMixerGetDataByDeviceName(
     while(Entry != &MixerList->MixerData)
     {
         MixerData = (LPMIXER_DATA)CONTAINING_RECORD(Entry, MIXER_DATA, Entry);
-        if (wcsicmp(&DeviceName[2], &MixerData->DeviceName[2]) == 0)
+        if (_wcsicmp(&DeviceName[2], &MixerData->DeviceName[2]) == 0)
         {
             /* found entry */
             return MixerData;

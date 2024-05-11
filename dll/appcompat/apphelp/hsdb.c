@@ -84,7 +84,7 @@ static BOOL SdbpMatchFileAttributes(PDB pdb, TAGID matching_file, PATTRINFO attr
                     break;
                 case TAG_TYPE_STRINGREF:
                     lpval = SdbGetStringTagPtr(pdb, child);
-                    if (!lpval || wcsicmp(attr->lpattr, lpval))
+                    if (!lpval || _wcsicmp(attr->lpattr, lpval))
                         return FALSE;
                     break;
                 case TAG_TYPE_QWORD:
@@ -519,7 +519,7 @@ BOOL WINAPI SdbGetMatchingExe(HSDB hsdb, LPCWSTR path, LPCWSTR module_name,
         name = SdbFindFirstTag(pdb, iter, TAG_NAME);
         /* If this is a malformed DB, (no TAG_NAME), we should not crash. */
         foundName = SdbGetStringTagPtr(pdb, name);
-        if (foundName && !wcsicmp(foundName, file_name))
+        if (foundName && !_wcsicmp(foundName, file_name))
         {
             /* Get information about executable required to match it with database entry */
             if (!attribs)
