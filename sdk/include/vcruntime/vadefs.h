@@ -10,8 +10,6 @@
 #error Only Win32 target is supported!
 #endif
 
-#include <crtdefs.h>
-
 #undef _CRT_PACKING
 #define _CRT_PACKING 8
 #pragma pack(push,_CRT_PACKING)
