@@ -40,44 +40,44 @@ extern "C" {
 #define _INTSIZEOF(n) ((sizeof(n) + sizeof(int) - 1) & ~(sizeof(int) - 1))
 
 #if defined(__GNUC__) || defined(__clang__)
-#define _crt_va_start(v,l)	__builtin_va_start(v,l)
-#define _crt_va_arg(v,l)	__builtin_va_arg(v,l)
-#define _crt_va_end(v)	__builtin_va_end(v)
+#define __crt_va_start(v,l)	__builtin_va_start(v,l)
+#define __crt_va_arg(v,l)	__builtin_va_arg(v,l)
+#define __crt_va_end(v)	__builtin_va_end(v)
 #define __va_copy(d,s)	__builtin_va_copy(d,s)
 #elif defined(_MSC_VER)
 
 #if defined(_M_IX86)
-#define _crt_va_start(v,l)	((void)((v) = (va_list)_ADDRESSOF(l) + _INTSIZEOF(l)))
-#define _crt_va_arg(v,l)	(*(l *)(((v) += _INTSIZEOF(l)) - _INTSIZEOF(l)))
-#define _crt_va_end(v)	((void)((v) = (va_list)0))
+#define __crt_va_start(v,l)	((void)((v) = (va_list)_ADDRESSOF(l) + _INTSIZEOF(l)))
+#define __crt_va_arg(v,l)	(*(l *)(((v) += _INTSIZEOF(l)) - _INTSIZEOF(l)))
+#define __crt_va_end(v)	((void)((v) = (va_list)0))
 #define __va_copy(d,s)	((void)((d) = (s)))
 #elif defined(_M_AMD64)
 #define _PTRSIZEOF(n) ((sizeof(n) + sizeof(void*) - 1) & ~(sizeof(void*) - 1))
 #define _ISSTRUCT(t) ((sizeof(t) > sizeof(void*)) || (sizeof(t) & (sizeof(t)-1)) != 0)
-#define _crt_va_start(v,l)	((void)((v) = (va_list)_ADDRESSOF(l) + _PTRSIZEOF(l)))
-#define _crt_va_arg(v,t)	(_ISSTRUCT(t) ? \
+#define __crt_va_start(v,l)	((void)((v) = (va_list)_ADDRESSOF(l) + _PTRSIZEOF(l)))
+#define __crt_va_arg(v,t)	(_ISSTRUCT(t) ? \
                             (**(t**)(((v) += sizeof(void*)) - sizeof(void*))) : \
                             (*(t*)(((v) += sizeof(void*)) - sizeof(void*))))
-#define _crt_va_end(v)	((void)((v) = (va_list)0))
+#define __crt_va_end(v)	((void)((v) = (va_list)0))
 #define __va_copy(d,s)	((void)((d) = (s)))
 #elif defined(_M_ARM)
 #ifdef  __cplusplus
   extern void __cdecl __va_start(va_list*, ...);
-  #define _crt_va_start(ap,v) __va_start(&ap, _ADDRESSOF(v), _SLOTSIZEOF(v), _ADDRESSOF(v))
+  #define __crt_va_start(ap,v) __va_start(&ap, _ADDRESSOF(v), _SLOTSIZEOF(v), _ADDRESSOF(v))
 #else
-  #define _crt_va_start(ap,v) (ap = (va_list)_ADDRESSOF(v) + _SLOTSIZEOF(v))
+  #define __crt_va_start(ap,v) (ap = (va_list)_ADDRESSOF(v) + _SLOTSIZEOF(v))
 #endif
-#define _crt_va_arg(ap,t) (*(t*)((ap += _SLOTSIZEOF(t) + _APALIGN(t,ap))  - _SLOTSIZEOF(t)))
-#define _crt_va_end(ap)      ( ap = (va_list)0 )
+#define __crt_va_arg(ap,t) (*(t*)((ap += _SLOTSIZEOF(t) + _APALIGN(t,ap))  - _SLOTSIZEOF(t)))
+#define __crt_va_end(ap)      ( ap = (va_list)0 )
 #define __va_copy(d,s)	((void)((d) = (s)))
 #elif defined(_M_ARM64)
 extern void __cdecl __va_start(va_list*, ...);
-#define _crt_va_start(ap,v) ((void)(__va_start(&ap, _ADDRESSOF(v), _SLOTSIZEOF(v), __alignof(v), _ADDRESSOF(v))))
-#define _crt_va_arg(ap, t)                                                \
+#define __crt_va_start(ap,v) ((void)(__va_start(&ap, _ADDRESSOF(v), _SLOTSIZEOF(v), __alignof(v), _ADDRESSOF(v))))
+#define __crt_va_arg(ap, t)                                                \
     ((sizeof(t) > (2 * sizeof(__int64)))                                   \
         ? **(t**)((ap += sizeof(__int64)) - sizeof(__int64))               \
         : *(t*)((ap += _SLOTSIZEOF(t) + _APALIGN(t,ap)) - _SLOTSIZEOF(t)))
-#define _crt_va_end(ap)       ((void)(ap = (va_list)0))
+#define __crt_va_end(ap)       ((void)(ap = (va_list)0))
 #define __va_copy(d,s)	((void)((d) = (s)))
 #else //if defined(_M_IA64) || defined(_M_CEE)
 #error Please implement me
