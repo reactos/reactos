@@ -359,16 +359,13 @@ WSPRecv(SOCKET Handle,
                                    sizeof(*RecvInfo),
                                    NULL,
                                    0);
-    if (Status == STATUS_PENDING)
-    {
-        /* Wait for completion if not overlapped */
-        if (!lpOverlapped)
-        {
-            /* It's up to the protocol to time out recv. We must wait
-             * until the protocol decides it's had enough. */
-            WaitForSingleObject(SockEvent, INFINITE);
-        }
 
+    /* Wait for completion if not overlapped */
+    if (!lpOverlapped && Status == STATUS_PENDING)
+    {
+        /* It's up to the protocol to time out recv. We must wait
+         * until the protocol decides it's had enough. */
+        WaitForSingleObject(SockEvent, INFINITE);
         Status = IOSB->Status;
     }
 
@@ -603,15 +600,12 @@ WSPRecvFrom(SOCKET Handle,
                                     sizeof(*RecvInfo),
                                     NULL,
                                     0);
-    if (Status == STATUS_PENDING)
-    {
-        /* Wait for completion if not overlapped */
-        if (!lpOverlapped)
-        {
-            /* FIXME: Shouldn't wait infinitely for receive... */
-            WaitForSingleObject(SockEvent, INFINITE);
-        }
 
+    /* Wait for completion if not overlapped */
+    if (!lpOverlapped && Status == STATUS_PENDING)
+    {
+        /* FIXME: Shouldn't wait infinitely for receive... */
+        WaitForSingleObject(SockEvent, INFINITE);
         Status = IOSB->Status;
     }
 
@@ -804,15 +798,12 @@ WSPSend(SOCKET Handle,
                                     sizeof(*SendInfo),
                                     NULL,
                                     0);
-    if (Status == STATUS_PENDING)
-    {
-        /* Wait for completion if not overlapped */
-        if (!lpOverlapped)
-        {
-            /* FIXME: Shouldn't wait infinitely for send... */
-            WaitForSingleObject(SockEvent, INFINITE);
-        }
 
+    /* Wait for completion if not overlapped */
+    if (!lpOverlapped && Status == STATUS_PENDING)
+    {
+        /* FIXME: Shouldn't wait infinitely for send... */
+        WaitForSingleObject(SockEvent, INFINITE);
         Status = IOSB->Status;
     }
 
@@ -1021,15 +1012,12 @@ WSPSendTo(SOCKET Handle,
                                    sizeof(*SendInfo),
                                    NULL,
                                    0);
-    if (Status == STATUS_PENDING)
-    {
-        /* Wait for completion if not overlapped */
-        if (!lpOverlapped)
-        {
-            /* FIXME: Shouldn't wait infinitely for send... */
-            WaitForSingleObject(SockEvent, INFINITE);
-        }
 
+    /* Wait for completion if not overlapped */
+    if (!lpOverlapped && Status == STATUS_PENDING)
+    {
+        /* FIXME: Shouldn't wait infinitely for send... */
+        WaitForSingleObject(SockEvent, INFINITE);
         Status = IOSB->Status;
     }
 
