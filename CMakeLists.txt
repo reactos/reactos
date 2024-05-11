@@ -319,6 +319,7 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
         ${REACTOS_BINARY_DIR}/sdk/include/reactos
         ${REACTOS_BINARY_DIR}/sdk/include/reactos/mc
         sdk/include/crt
+        sdk/include/vcruntime
         sdk/include/ddk
         sdk/include/ndk
         sdk/include/reactos
