@@ -31,7 +31,7 @@ IsShortcut(HKEY hKey)
     if (Type != REG_SZ)
         return FALSE;
 
-    return (wcsicmp(Value, L"yes") == 0);
+    return (_wcsicmp(Value, L"yes") == 0);
 }
 
 BOOL

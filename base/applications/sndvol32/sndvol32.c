@@ -636,7 +636,7 @@ SetVolumeCallback(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVOID Ctx)
     PSET_VOLUME_CONTEXT Context = (PSET_VOLUME_CONTEXT)Ctx;
 
     /* check if the line name is equal */
-    if (wcsicmp(Line->szName, Context->LineName))
+    if (_wcsicmp(Line->szName, Context->LineName))
     {
         /* it is not */
         return TRUE;

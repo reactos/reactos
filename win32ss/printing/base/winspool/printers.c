@@ -3600,7 +3600,7 @@ StartDocDlgW( HANDLE hPrinter, DOCINFOW *doc )
         }
 
         GetPrinterW(hPrinter, 5, (LPBYTE)pi5, len, &len);
-        if (!pi5->pPortName || wcsicmp(pi5->pPortName, FILE_Port))
+        if (!pi5->pPortName || _wcsicmp(pi5->pPortName, FILE_Port))
         {
             HeapFree(GetProcessHeap(), 0, pi5);
             return NULL;
@@ -3608,7 +3608,7 @@ StartDocDlgW( HANDLE hPrinter, DOCINFOW *doc )
         HeapFree(GetProcessHeap(), 0, pi5);
     }
 
-    if (doc->lpszOutput == NULL || !wcsicmp(doc->lpszOutput, FILE_Port))
+    if (doc->lpszOutput == NULL || !_wcsicmp(doc->lpszOutput, FILE_Port))
     {
         LPWSTR name;
 

@@ -236,7 +236,7 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 
     for (i = 0; i < _countof(PropPages); i++)
     {
-        if (pwszSelectedTab && wcsicmp(pwszSelectedTab, PropPages[i].Name) == 0)
+        if (pwszSelectedTab && _wcsicmp(pwszSelectedTab, PropPages[i].Name) == 0)
             psh.nStartPage = i;
 
         /* Override the background page if requested by a shell extension */

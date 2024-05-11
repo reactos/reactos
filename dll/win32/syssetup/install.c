@@ -848,7 +848,7 @@ IsConsoleBoot(VOID)
         pwszNextOption = wcschr(pwszCurrentOption, L' ');
         if (pwszNextOption)
             *pwszNextOption = L'\0';
-        if (wcsicmp(pwszCurrentOption, L"CONSOLE") == 0)
+        if (_wcsicmp(pwszCurrentOption, L"CONSOLE") == 0)
         {
             DPRINT("Found %S. Switching to console boot\n", pwszCurrentOption);
             bConsoleBoot = TRUE;

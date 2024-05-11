@@ -1063,7 +1063,7 @@ AccpOpenNamedObject(LPWSTR pObjectName,
                  i != sizeof(AccRegRootKeys) / sizeof(AccRegRootKeys[0]);
                  i++)
             {
-                if (!wcsicmp(lpRootKeyName,
+                if (!_wcsicmp(lpRootKeyName,
                              AccRegRootKeys[i].szRootKey))
                 {
                     hRootKey = AccRegRootKeys[i].hRootKey;
