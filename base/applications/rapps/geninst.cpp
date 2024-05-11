@@ -752,7 +752,7 @@ UninstallThread(LPVOID Parameter)
                             if (op == UNOP_REGKEY)
                                 err = key.RecurseDeleteKey(tmp);
                             else if (RegKeyHasValues(hKey, str, wowsam) == S_FALSE)
-                                err = key.DeleteSubKey(tmp);
+                                key.DeleteSubKey(tmp); // DelRegEmpty ignores errors
                         }
                         switch(err)
                         {
