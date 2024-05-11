@@ -1424,8 +1424,17 @@ static void CBResetPos(
        }
 
        if( bRedraw && !(lphc->wState & CBF_NOREDRAW) )
+#ifdef __REACTOS__
+       {
+           /* Possible HACK: Fix WPS Office 2016 Installer crash CORE-12033 */
+           if (SendMessageW(lphc->hWndLBox, LB_GETCOUNT, 0, 0))
+               RedrawWindow(lphc->self, NULL, 0,
+                               RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW);
+       }
+#else
            RedrawWindow( lphc->self, NULL, 0,
                            RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW );
+#endif
    }
 }
 
