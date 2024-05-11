@@ -517,7 +517,7 @@ PDHCP_ADAPTER AdapterFindName( const WCHAR *name ) {
          ListEntry != &AdapterList;
          ListEntry = ListEntry->Flink ) {
         Adapter = CONTAINING_RECORD( ListEntry, DHCP_ADAPTER, ListEntry );
-        if( !wcsicmp( Adapter->IfMib.wszName, name ) ) return Adapter;
+        if( !_wcsicmp( Adapter->IfMib.wszName, name ) ) return Adapter;
     }
 
     return NULL;

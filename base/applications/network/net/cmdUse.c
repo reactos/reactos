@@ -47,7 +47,7 @@ EnumerateConnections(LPCWSTR Local)
             lpCur = lpRes;
             for (; dCount; dCount--)
             {
-                if (!Local || wcsicmp(lpCur->lpLocalName, Local) == 0)
+                if (!Local || _wcsicmp(lpCur->lpLocalName, Local) == 0)
                 {
                     ConPrintf(StdOut, L"%s\t\t\t%s\t\t%s\n", lpCur->lpLocalName, lpCur->lpRemoteName, lpCur->lpProvider);
                 }
@@ -135,7 +135,7 @@ cmdUse(
     }
 
     Delete = 0;
-    if (wcsicmp(argv[2], L"/DELETE") == 0)
+    if (_wcsicmp(argv[2], L"/DELETE") == 0)
     {
         Delete = 3;
     }
@@ -149,7 +149,7 @@ cmdUse(
         }
     }
 
-    if (wcsicmp(argv[3], L"/DELETE") == 0)
+    if (_wcsicmp(argv[3], L"/DELETE") == 0)
     {
         Delete = 2;
     }

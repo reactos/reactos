@@ -605,7 +605,7 @@ CheckForCurrentHostname(CONST CHAR * Name, PFIXED_INFO network_info)
         TempName = RtlAllocateHeap(RtlGetProcessHeap(), 0, 1);
         TempName[0] = 0;
     }
-    Found = !stricmp(Name, network_info->HostName) || !stricmp(Name, TempName);
+    Found = !_stricmp(Name, network_info->HostName) || !_stricmp(Name, TempName);
     RtlFreeHeap(RtlGetProcessHeap(), 0, TempName);
     if (!Found)
     {

@@ -815,7 +815,7 @@ HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1
     {
         case IDS_SHV_COLUMN_NAME:
         {
-            result = stricmp(pszDrive1, pszDrive2);
+            result = _stricmp(pszDrive1, pszDrive2);
             hres = MAKE_COMPARE_HRESULT(result);
             break;
         }

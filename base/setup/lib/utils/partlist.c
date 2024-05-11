@@ -876,7 +876,7 @@ AddPartitionToDisk(
              * Handle partition mounted with RawFS: it is
              * either unformatted or has an unknown format.
              */
-            if (wcsicmp(PartEntry->FileSystem, L"RAW") == 0)
+            if (_wcsicmp(PartEntry->FileSystem, L"RAW") == 0)
             {
                 /*
                  * True unformatted partitions on NT are created with their
@@ -3264,10 +3264,10 @@ IsSupportedActivePartition(
         ASSERT(*PartEntry->FileSystem);
 
         /* NOTE: Please keep in sync with the RegisteredFileSystems list! */
-        if (wcsicmp(PartEntry->FileSystem, L"FAT")   == 0 ||
-            wcsicmp(PartEntry->FileSystem, L"FAT32") == 0 ||
-         // wcsicmp(PartEntry->FileSystem, L"NTFS")  == 0 ||
-            wcsicmp(PartEntry->FileSystem, L"BTRFS") == 0)
+        if (_wcsicmp(PartEntry->FileSystem, L"FAT")   == 0 ||
+            _wcsicmp(PartEntry->FileSystem, L"FAT32") == 0 ||
+         // _wcsicmp(PartEntry->FileSystem, L"NTFS")  == 0 ||
+            _wcsicmp(PartEntry->FileSystem, L"BTRFS") == 0)
         {
             return TRUE;
         }

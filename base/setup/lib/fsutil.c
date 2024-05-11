@@ -225,7 +225,7 @@ GetFileSystemByName(
     while (Count--)
     {
         if (FileSystems->FileSystemName &&
-            (wcsicmp(FileSystemName, FileSystems->FileSystemName) == 0))
+            (_wcsicmp(FileSystemName, FileSystems->FileSystemName) == 0))
         {
             return FileSystems;
         }
@@ -332,7 +332,7 @@ FormatFileSystem_UStr(
     }
 
     /* Set the BackwardCompatible flag in case we format with older FAT12/16 */
-    if (wcsicmp(FileSystemName, L"FAT") == 0)
+    if (_wcsicmp(FileSystemName, L"FAT") == 0)
         BackwardCompatible = TRUE;
     // else if (wcsicmp(FileSystemName, L"FAT32") == 0)
         // BackwardCompatible = FALSE;
@@ -858,7 +858,7 @@ FormatPartition(
      * Adjust the filesystem name in case of FAT vs. FAT32, according to
      * the type of partition returned by FileSystemToMBRPartitionType().
      */
-    if (wcsicmp(FileSystemName, L"FAT") == 0)
+    if (_wcsicmp(FileSystemName, L"FAT") == 0)
     {
         if ((PartitionType == PARTITION_FAT32) ||
             (PartitionType == PARTITION_FAT32_XINT13))

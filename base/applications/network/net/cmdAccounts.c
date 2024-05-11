@@ -70,7 +70,7 @@ cmdAccounts(
         if (_wcsnicmp(argv[i], L"/forcelogoff:", 13) == 0)
         {
             p = &argv[i][13];
-            if (wcsicmp(p, L"no") == 0)
+            if (_wcsicmp(p, L"no") == 0)
             {
                 Info0->usrmod0_force_logoff = TIMEQ_FOREVER;
                 Modified = TRUE;
@@ -107,7 +107,7 @@ cmdAccounts(
         {
             p = &argv[i][10];
 
-            if (wcsicmp(p, L"unlimited"))
+            if (_wcsicmp(p, L"unlimited"))
             {
                 Info0->usrmod0_max_passwd_age = ULONG_MAX;
                 Modified = TRUE;

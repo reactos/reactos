@@ -106,22 +106,22 @@ DoWatchDestFileName(LPCWSTR FileName)
 {
     if (FileName[0] == 'm' || FileName[0] == 'M')
     {
-        if (wcsicmp(FileName, L"mingliu.ttc") == 0)
+        if (_wcsicmp(FileName, L"mingliu.ttc") == 0)
         {
             DPRINT("mingliu.ttc found\n");
             s_SubstSettings.bFoundFontMINGLIU = TRUE;
         }
-        else if (wcsicmp(FileName, L"msgothic.ttc") == 0)
+        else if (_wcsicmp(FileName, L"msgothic.ttc") == 0)
         {
             DPRINT("msgothic.ttc found\n");
             s_SubstSettings.bFoundFontMSGOTHIC = TRUE;
         }
-        else if (wcsicmp(FileName, L"msmincho.ttc") == 0)
+        else if (_wcsicmp(FileName, L"msmincho.ttc") == 0)
         {
             DPRINT("msmincho.ttc found\n");
             s_SubstSettings.bFoundFontMSMINCHO = TRUE;
         }
-        else if (wcsicmp(FileName, L"mssong.ttf") == 0)
+        else if (_wcsicmp(FileName, L"mssong.ttf") == 0)
         {
             DPRINT("mssong.ttf found\n");
             s_SubstSettings.bFoundFontMSSONG = TRUE;
@@ -129,17 +129,17 @@ DoWatchDestFileName(LPCWSTR FileName)
     }
     else
     {
-        if (wcsicmp(FileName, L"simsun.ttc") == 0)
+        if (_wcsicmp(FileName, L"simsun.ttc") == 0)
         {
             DPRINT("simsun.ttc found\n");
             s_SubstSettings.bFoundFontSIMSUN = TRUE;
         }
-        else if (wcsicmp(FileName, L"gulim.ttc") == 0)
+        else if (_wcsicmp(FileName, L"gulim.ttc") == 0)
         {
             DPRINT("gulim.ttc found\n");
             s_SubstSettings.bFoundFontGULIM = TRUE;
         }
-        else if (wcsicmp(FileName, L"batang.ttc") == 0)
+        else if (_wcsicmp(FileName, L"batang.ttc") == 0)
         {
             DPRINT("batang.ttc found\n");
             s_SubstSettings.bFoundFontBATANG = TRUE;
@@ -609,7 +609,7 @@ SetupStartPage(PINPUT_RECORD Ir)
              ListEntry = GetNextListEntry(ListEntry))
         {
             LocaleId = ((PGENENTRY)GetListEntryData(ListEntry))->Id;
-            if (!wcsicmp(USetupData.LocaleID, LocaleId))
+            if (!_wcsicmp(USetupData.LocaleID, LocaleId))
             {
                 DPRINT("found %S in LanguageList\n", LocaleId);
                 SetCurrentListEntry(USetupData.LanguageList, ListEntry);
@@ -622,7 +622,7 @@ SetupStartPage(PINPUT_RECORD Ir)
              ListEntry = GetNextListEntry(ListEntry))
         {
             LocaleId = ((PGENENTRY)GetListEntryData(ListEntry))->Id;
-            if (!wcsicmp(USetupData.LocaleID, LocaleId))
+            if (!_wcsicmp(USetupData.LocaleID, LocaleId))
             {
                 DPRINT("found %S in LayoutList\n", LocaleId);
                 SetCurrentListEntry(USetupData.LayoutList, ListEntry);
@@ -3371,7 +3371,7 @@ FileCopyCallback(PVOID Context,
                 if (DstFileName) ++DstFileName;
                 else DstFileName = FilePathInfo->Target;
 
-                if (!wcsicmp(SrcFileName, DstFileName))
+                if (!_wcsicmp(SrcFileName, DstFileName))
                     Param2 = STRING_MOVING;
                 else
                     Param2 = STRING_RENAMING;

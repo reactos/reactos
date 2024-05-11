@@ -546,10 +546,10 @@ HRESULT WINAPI CRecycleBin::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, 
         case 0: /* Name */
             pName1 = PathFindFileNameW(pData1->szName);
             pName2 = PathFindFileNameW(pData2->szName);
-            result = wcsicmp(pName1, pName2);
+            result = _wcsicmp(pName1, pName2);
             break;
         case 1: /* Orig. Location */
-            result = wcsicmp(pData1->szName, pData2->szName);
+            result = _wcsicmp(pData1->szName, pData2->szName);
             break;
         case 2: /* Date Deleted */
             result = CompareFileTime(&pData1->DeletionTime, &pData2->DeletionTime);
@@ -560,7 +560,7 @@ HRESULT WINAPI CRecycleBin::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, 
         case 4: /* Type */
             pName1 = PathFindExtensionW(pData1->szName);
             pName2 = PathFindExtensionW(pData2->szName);
-            result = wcsicmp(pName1, pName2);
+            result = _wcsicmp(pName1, pName2);
             break;
         case 5: /* Modified */
             result = CompareFileTime(&pData1->LastModification, &pData2->LastModification);

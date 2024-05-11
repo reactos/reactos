@@ -360,7 +360,7 @@ static void test_QueryDosDeviceA(void)
     Result = QueryDosDeviceA(SUBST_DRIVE, Buffer, MAX_PATH);
     ok(Result, "failed to get target path\n");
     ok(_strnicmp(Buffer, "\\??\\", 4) == 0, "The target returned does have correct prefix set\n");
-    ok(stricmp(&Buffer[4], Target) == 0, "The target returned does not match the one set\n");
+    ok(_stricmp(&Buffer[4], Target) == 0, "The target returned does not match the one set\n");
     Result = DefineDosDeviceA(DDD_REMOVE_DEFINITION | DDD_EXACT_MATCH_ON_REMOVE, SUBST_DRIVE, Target);
     ok(Result, "Failed to remove subst drive using lowercase drive letter\n");
     Result = QueryDosDeviceA(SUBST_DRIVE, Buffer, MAX_PATH);

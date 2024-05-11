@@ -56,7 +56,7 @@ int wmain(int argc, WCHAR* argv[])
     }
     else
     {
-        if ((wcsicmp(argv[1], L"-s") == 0) || (wcsicmp(argv[1], L"/s") == 0))
+        if ((_wcsicmp(argv[1], L"-s") == 0) || (_wcsicmp(argv[1], L"/s") == 0))
         {
             /* The program doesn't allow the user to set the host name */
             LoadStringW(GetModuleHandle(NULL), IDS_NOSET, Msg, _countof(Msg));

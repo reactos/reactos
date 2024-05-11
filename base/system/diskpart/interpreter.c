@@ -120,30 +120,30 @@ InterpretCmd(
 
     /* First, determine if the user wants to exit
        or to use a comment */
-    if (wcsicmp(argv[0], L"exit") == 0)
+    if (_wcsicmp(argv[0], L"exit") == 0)
         return FALSE;
 
-    if (wcsicmp(argv[0], L"rem") == 0)
+    if (_wcsicmp(argv[0], L"rem") == 0)
         return TRUE;
 
     /* Scan internal command table */
     for (cmdptr = cmds; cmdptr->cmd1; cmdptr++)
     {
         if ((cmdptr1 == NULL) &&
-            (cmdptr->cmd1 != NULL) && (wcsicmp(argv[0], cmdptr->cmd1) == 0))
+            (cmdptr->cmd1 != NULL) && (_wcsicmp(argv[0], cmdptr->cmd1) == 0))
             cmdptr1 = cmdptr;
 
         if ((cmdptr2 == NULL) &&
             (argc >= 2) &&
-            (cmdptr->cmd1 != NULL) && (wcsicmp(argv[0], cmdptr->cmd1) == 0) &&
-            (cmdptr->cmd2 != NULL) && (wcsicmp(argv[1], cmdptr->cmd2) == 0))
+            (cmdptr->cmd1 != NULL) && (_wcsicmp(argv[0], cmdptr->cmd1) == 0) &&
+            (cmdptr->cmd2 != NULL) && (_wcsicmp(argv[1], cmdptr->cmd2) == 0))
             cmdptr2 = cmdptr;
 
         if ((cmdptr3 == NULL) &&
             (argc >= 3) &&
-            (cmdptr->cmd1 != NULL) && (wcsicmp(argv[0], cmdptr->cmd1) == 0) &&
-            (cmdptr->cmd2 != NULL) && (wcsicmp(argv[1], cmdptr->cmd2) == 0) &&
-            (cmdptr->cmd3 != NULL) && (wcsicmp(argv[2], cmdptr->cmd3) == 0))
+            (cmdptr->cmd1 != NULL) && (_wcsicmp(argv[0], cmdptr->cmd1) == 0) &&
+            (cmdptr->cmd2 != NULL) && (_wcsicmp(argv[1], cmdptr->cmd2) == 0) &&
+            (cmdptr->cmd3 != NULL) && (_wcsicmp(argv[2], cmdptr->cmd3) == 0))
             cmdptr3 = cmdptr;
     }
 
