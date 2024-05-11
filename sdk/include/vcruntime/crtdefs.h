@@ -211,43 +211,10 @@
 extern "C" {
 #endif
 
-#ifndef _UINTPTR_T_DEFINED
-#define _UINTPTR_T_DEFINED
-#ifndef __uintptr_t_defined
-#define __uintptr_t_defined
-#undef uintptr_t
-#ifdef _WIN64
-#if defined(__GNUC__) && defined(__STRICT_ANSI__)
-  typedef unsigned int uintptr_t __attribute__ ((mode (DI)));
-#else
-  __MINGW_EXTENSION typedef unsigned __int64 uintptr_t;
-#endif
-#else
-  typedef unsigned int uintptr_t;
-#endif
-#endif
-#endif
-
 #ifndef _WCTYPE_T_DEFINED
 #define _WCTYPE_T_DEFINED
   typedef unsigned short wint_t;
   typedef unsigned short wctype_t;
-#endif
-
-#ifdef __GNUC__
-#ifndef __GNUC_VA_LIST
-#define __GNUC_VA_LIST
-  typedef __builtin_va_list __gnuc_va_list;
-#endif
-#endif
-
-#ifndef _VA_LIST_DEFINED
-#define _VA_LIST_DEFINED
-#if defined(__GNUC__)
-  typedef __gnuc_va_list va_list;
-#elif defined(_MSC_VER)
-  typedef _Writable_bytes_(_Inexpressible_("length varies")) char *  va_list;
-#endif
 #endif
 
 #ifndef _ERRCODE_DEFINED
