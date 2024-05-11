@@ -122,7 +122,7 @@ static DWORD FindFlag(PCWSTR Name, WORD Dest)
     {
         if (g_Flags[n].wDest & Dest)
         {
-            if (!wcsicmp(Name, g_Flags[n].szAbbr))
+            if (!_wcsicmp(Name, g_Flags[n].szAbbr))
             {
                 return g_Flags[n].dwFlag;
             }

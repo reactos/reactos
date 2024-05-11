@@ -842,7 +842,7 @@ static UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpVerb,
                     while (*p == ' ' || *p == '\t') p++;
                 }
 
-                if (wcsicmp(tok, &extension[1]) == 0) /* have to skip the leading "." */
+                if (_wcsicmp(tok, &extension[1]) == 0) /* have to skip the leading "." */
                 {
                     wcscpy(lpResult, xlpFile);
                     /* Need to perhaps check that the file has a path

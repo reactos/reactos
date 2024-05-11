@@ -314,15 +314,15 @@ static HRESULT AssocQ(int argc, WCHAR **argv)
         return ErrMsg(hr);
 
     DWORD size = maxSize;
-    if (!wcsicmp(argv[1], L"string"))
+    if (!_wcsicmp(argv[1], L"string"))
     {
-        if (!wcsicmp(argv[2], L"COMMAND"))
+        if (!_wcsicmp(argv[2], L"COMMAND"))
             qtype = ASSOCSTR_COMMAND;
-        if (!wcsicmp(argv[2], L"EXECUTABLE"))
+        if (!_wcsicmp(argv[2], L"EXECUTABLE"))
             qtype = ASSOCSTR_EXECUTABLE;
-        if (!wcsicmp(argv[2], L"FRIENDLYDOCNAME") || !wcsicmp(argv[2], L"FriendlyTypeName"))
+        if (!_wcsicmp(argv[2], L"FRIENDLYDOCNAME") || !_wcsicmp(argv[2], L"FriendlyTypeName"))
             qtype = ASSOCSTR_FRIENDLYDOCNAME;
-        if (!wcsicmp(argv[2], L"DEFAULTICON"))
+        if (!_wcsicmp(argv[2], L"DEFAULTICON"))
             qtype = ASSOCSTR_DEFAULTICON;
 
         buf[0] = UNICODE_NULL;
@@ -340,11 +340,11 @@ static HRESULT AssocQ(int argc, WCHAR **argv)
             ErrMsg(hr);
         }
     }
-    else if (!wcsicmp(argv[1], L"data"))
+    else if (!_wcsicmp(argv[1], L"data"))
     {
-        if (!wcsicmp(argv[2], L"EDITFLAGS"))
+        if (!_wcsicmp(argv[2], L"EDITFLAGS"))
             qtype = ASSOCDATA_EDITFLAGS;
-        if (!wcsicmp(argv[2], L"VALUE"))
+        if (!_wcsicmp(argv[2], L"VALUE"))
             qtype = ASSOCDATA_VALUE;
 
         hr = qa->GetData(qflags, (ASSOCDATA)qtype, extra, buf, &size);
@@ -359,7 +359,7 @@ static HRESULT AssocQ(int argc, WCHAR **argv)
             ErrMsg(hr);
         }
     }
-    else if (!wcsicmp(argv[1], L"key"))
+    else if (!_wcsicmp(argv[1], L"key"))
     {
         HKEY hKey = NULL;
         hr = qa->GetKey(qflags, (ASSOCKEY)qtype, extra, &hKey);
@@ -632,7 +632,7 @@ static bool isCmdWithArg(int argc, WCHAR** argv, int& n, PCWSTR check, PCWSTR &a
 
 static bool isCmd(int argc, WCHAR** argv, int n, PCWSTR check)
 {
-    return !wcsicmp(argv[n] + 1, check);
+    return !_wcsicmp(argv[n] + 1, check);
 }
 
 extern "C"  // and another hack for gcc

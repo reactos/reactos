@@ -38,7 +38,7 @@ int wmain(int argc, wchar_t* argv[])
 
     GetModuleFileNameW(NULL, RappsExe, ARRAYSIZE(RappsExe));
     arglen = wcslen(RappsExe);
-    if (arglen > 4 && !wcsicmp(RappsExe + arglen - 4, L".com"))
+    if (arglen > 4 && !_wcsicmp(RappsExe + arglen - 4, L".com"))
     {
         wcscpy(RappsExe + arglen - 4, L".exe");
     }

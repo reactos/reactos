@@ -179,7 +179,7 @@ ChanMgrGetChannelByName(IN PWCHAR Name,
             ASSERT(NT_SUCCESS(Status1));
 
             /* Check if this is the name that was passed in */
-            Found = wcsicmp(Name, ChannelName);
+            Found = _wcsicmp(Name, ChannelName);
             SacFreePool(ChannelName);
             if (Found)
             {

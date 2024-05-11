@@ -946,7 +946,7 @@ InstallFatBootcodeToPartition(
             /* Install new bootcode into a file */
             CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"bootsect.ros");
 
-            if (wcsicmp(FileSystemName, L"FAT32") == 0)
+            if (_wcsicmp(FileSystemName, L"FAT32") == 0)
             {
                 /* Install FAT32 bootcode */
                 CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\fat32.bin");
@@ -1139,7 +1139,7 @@ InstallFatBootcodeToPartition(
             }
 
             /* Install new bootsector on the disk */
-            if (wcsicmp(FileSystemName, L"FAT32") == 0)
+            if (_wcsicmp(FileSystemName, L"FAT32") == 0)
             {
                 /* Install FAT32 bootcode */
                 CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\fat32.bin");
@@ -1384,30 +1384,30 @@ InstallVBRToPartition(
     IN PUNICODE_STRING DestinationArcPath,
     IN PCWSTR FileSystemName)
 {
-    if (wcsicmp(FileSystemName, L"FAT")   == 0 ||
-        wcsicmp(FileSystemName, L"FAT32") == 0)
+    if (_wcsicmp(FileSystemName, L"FAT")   == 0 ||
+        _wcsicmp(FileSystemName, L"FAT32") == 0)
     {
         return InstallFatBootcodeToPartition(SystemRootPath,
                                              SourceRootPath,
                                              DestinationArcPath,
                                              FileSystemName);
     }
-    else if (wcsicmp(FileSystemName, L"NTFS") == 0)
+    else if (_wcsicmp(FileSystemName, L"NTFS") == 0)
     {
         return InstallNtfsBootcodeToPartition(SystemRootPath,
                                               SourceRootPath,
                                               DestinationArcPath);
     }
-    else if (wcsicmp(FileSystemName, L"BTRFS") == 0)
+    else if (_wcsicmp(FileSystemName, L"BTRFS") == 0)
     {
         return InstallBtrfsBootcodeToPartition(SystemRootPath,
                                                SourceRootPath,
                                                DestinationArcPath);
     }
     /*
-    else if (wcsicmp(FileSystemName, L"EXT2")  == 0 ||
-             wcsicmp(FileSystemName, L"EXT3")  == 0 ||
-             wcsicmp(FileSystemName, L"EXT4")  == 0)
+    else if (_wcsicmp(FileSystemName, L"EXT2")  == 0 ||
+             _wcsicmp(FileSystemName, L"EXT3")  == 0 ||
+             _wcsicmp(FileSystemName, L"EXT4")  == 0)
     {
         return STATUS_NOT_SUPPORTED;
     }
