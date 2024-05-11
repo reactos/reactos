@@ -422,8 +422,8 @@ BEGIN
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "&Click simples para abrir um item", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "&Duplo-click para abrir um item (um click para seleccionar)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
-    AUTORADIOBUTTON "Sublinhar os títulos dos ícones mantendo o aspecto do &browser", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 215, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Sublinhar os títulos dos ícones quando eu &apontar para eles", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 215, 10
+    AUTORADIOBUTTON "Sublinhar títulos de ícones consistentes com meu &navegador", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 215, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Sublinhar títulos de ícones sómente quando &apontados", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 215, 10
     PUSHBUTTON "&Restaurar predefinições", IDC_FOLDER_OPTIONS_RESTORE, 177, 178, 90, 14, WS_TABSTOP
 END
 
