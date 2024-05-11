@@ -102,6 +102,7 @@ WSPGetOverlappedResult(
     OUT LPINT lpErrno)
 {
     PSOCKET_INFORMATION     Socket;
+    PIO_STATUS_BLOCK        IOSB;
     BOOL                    Ret;
 
     TRACE("Called (%x)\n", Handle);
@@ -120,10 +121,19 @@ WSPGetOverlappedResult(
             *lpErrno = WSAEFAULT;
         return FALSE;
     }
+
+    IOSB = (PIO_STATUS_BLOCK)&lpOverlapped->Internal;
     Ret = GetOverlappedResult((HANDLE)Handle, lpOverlapped, lpdwBytes, fWait);
 
     /* HACK: Allow APC to be processed */
     SleepEx(0, TRUE);
+
+    if (!fWait && IOSB->Status == STATUS_PENDING)
+    {
+        if (lpErrno)
+            *lpErrno = WSA_IO_INCOMPLETE;
+        return FALSE;
+    }
 
     if (Ret)
     {
