@@ -2445,10 +2445,10 @@ ShellExecuteExW(LPSHELLEXECUTEINFOW sei)
         {
             switch (sei->nShow)
             {
-                case SW_SHOWNORMAL:
                 case SW_SHOW:
-                case SW_RESTORE:
                 case SW_SHOWDEFAULT:
+                case SW_SHOWNORMAL:
+                case SW_RESTORE:
                     sei->nShow = SW_SHOWMAXIMIZED;
                     break;
                 default:
