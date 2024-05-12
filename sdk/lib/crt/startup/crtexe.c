@@ -211,7 +211,7 @@ __tmainCRTStartup (void)
   /* We need to make sure that this function is build with frame-pointer
      and that we align the stack to 16 bytes for the sake of SSE ops in main
      or in functions inlined into main.  */
-  lpszCommandLine = (_TCHAR *) alloca (32);
+  lpszCommandLine = (_TCHAR *) _alloca (32);
   memset (lpszCommandLine, 0xcc, 32);
 #ifdef __GNUC__
   asm  __volatile__  ("andl $-16, %%esp" : : : "%esp");
