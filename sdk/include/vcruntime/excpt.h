@@ -6,7 +6,7 @@
 #ifndef _INC_EXCPT
 #define _INC_EXCPT
 
-#include <crtdefs.h>
+#include <vcruntime.h>
 
 #pragma pack(push,_CRT_PACKING)
 
