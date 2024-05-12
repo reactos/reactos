@@ -29,10 +29,10 @@ class CStartMenuBtnCtxMenu :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IContextMenu
 {
-    /* AddStartContextMenuItems uses ID_SHELL_CMD IDs directly and relies on idCmdFirst being 0. */
-    /* CTrayWindow::TrackCtxMenu must pass 0 because DeleteMenu ID_SHELL_CMD_UNDO_ACTION would   */
-    /* delete the wrong item if it used 1. m_Inner->QueryContextMenu is not aware of this game   */
-    /* so we have to reserve the entire ID_SHELL_CMD range for ourself here.                     */
+    /* AddStartContextMenuItems uses ID_SHELL_CMD IDs directly and relies on idCmdFirst being 0.
+     * CTrayWindow::TrackCtxMenu must pass 0 because DeleteMenu ID_SHELL_CMD_UNDO_ACTION would
+     * delete the wrong item if it used 1. m_Inner->QueryContextMenu is not aware of this game
+     * so we have to reserve the entire ID_SHELL_CMD range for ourselves here. */
     enum { INNERIDOFFSET = ID_SHELL_CMD_LAST + 1 };
     static BOOL IsShellCmdId(UINT_PTR id) { return id < INNERIDOFFSET; }
 
