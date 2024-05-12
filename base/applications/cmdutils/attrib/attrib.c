@@ -150,7 +150,7 @@ typedef struct _ENUMFILES_CTX
 static BOOL
 EnumFilesWorker(
     _Inout_ PENUMFILES_CTX EnumCtx,
-    _Inout_ off_t offFilePart) // Offset to the file name inside FullPathBuffer
+    _Inout_ _off_t offFilePart) // Offset to the file name inside FullPathBuffer
 {
     BOOL bFound = FALSE;
     HRESULT hRes;

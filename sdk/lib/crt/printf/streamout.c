@@ -80,18 +80,18 @@ void
 __declspec(noinline)
 #endif
 format_float(
-    TCHAR chr,
+    _TCHAR chr,
     unsigned int flags,
     int precision,
-    TCHAR **string,
-    const TCHAR **prefix,
+    _TCHAR **string,
+    const _TCHAR **prefix,
     va_list *argptr)
 {
-    static const TCHAR digits_l[] = _T("0123456789abcdef0x");
-    static const TCHAR digits_u[] = _T("0123456789ABCDEF0X");
-    static const TCHAR _nan[] = _T("#QNAN");
-    static const TCHAR _infinity[] = _T("#INF");
-    const TCHAR *digits = digits_l;
+    static const _TCHAR digits_l[] = _T("0123456789abcdef0x");
+    static const _TCHAR digits_u[] = _T("0123456789ABCDEF0X");
+    static const _TCHAR _nan[] = _T("#QNAN");
+    static const _TCHAR _infinity[] = _T("#INF");
+    const _TCHAR *digits = digits_l;
     int exponent = 0, sign;
     long double fpval, fpval2;
     int padding = 0, num_digits, val32, base = 10;
@@ -186,13 +186,13 @@ format_float(
     /* Handle special cases first */
     if (_isnan(fpval))
     {
-        (*string) -= sizeof(_nan) / sizeof(TCHAR) - 1;
+        (*string) -= sizeof(_nan) / sizeof(_TCHAR) - 1;
         _tcscpy((*string), _nan);
         fpval2 = 1;
     }
     else if (!_finite(fpval))
     {
-        (*string) -= sizeof(_infinity) / sizeof(TCHAR) - 1;
+        (*string) -= sizeof(_infinity) / sizeof(_TCHAR) - 1;
         _tcscpy((*string), _infinity);
         fpval2 = 1;
     }
@@ -234,16 +234,16 @@ streamout_char(FILE *stream, int chr)
 #endif
 #if defined(_USER32_WSPRINTF) || defined(_LIBCNT_)
     /* Check if the buffer is full */
-    if (stream->_cnt < sizeof(TCHAR))
+    if (stream->_cnt < sizeof(_TCHAR))
         return 0;
 
-    *(TCHAR*)stream->_ptr = chr;
-    stream->_ptr += sizeof(TCHAR);
-    stream->_cnt -= sizeof(TCHAR);
+    *(_TCHAR*)stream->_ptr = chr;
+    stream->_ptr += sizeof(_TCHAR);
+    stream->_cnt -= sizeof(_TCHAR);
 
     return 1;
 #else
-    return _fputtc((TCHAR)chr, stream) != _TEOF;
+    return _fputtc((_TCHAR)chr, stream) != _TEOF;
 #endif
 }
 
@@ -251,7 +251,7 @@ static
 int
 streamout_astring(FILE *stream, const char *string, size_t count)
 {
-    TCHAR chr;
+    _TCHAR chr;
     int written = 0;
 
 #if !defined(_USER32_WSPRINTF)
@@ -323,15 +323,15 @@ streamout_wstring(FILE *stream, const wchar_t *string, size_t count)
 
 int
 __cdecl
-streamout(FILE *stream, const TCHAR *format, va_list argptr)
+streamout(FILE *stream, const _TCHAR *format, va_list argptr)
 {
-    static const TCHAR digits_l[] = _T("0123456789abcdef0x");
-    static const TCHAR digits_u[] = _T("0123456789ABCDEF0X");
+    static const _TCHAR digits_l[] = _T("0123456789abcdef0x");
+    static const _TCHAR digits_u[] = _T("0123456789ABCDEF0X");
     static const char *_nullstring = "(null)";
-    TCHAR buffer[BUFFER_SIZE + 1];
-    TCHAR chr, *string;
+    _TCHAR buffer[BUFFER_SIZE + 1];
+    _TCHAR chr, *string;
     STRING *nt_string;
-    const TCHAR *digits, *prefix;
+    const _TCHAR *digits, *prefix;
     int base, fieldwidth, precision, padding;
     size_t prefixlen, len;
     int written = 1, written_all = 0;
@@ -534,7 +534,7 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
             case_string:
                 if (!string)
                 {
-                    string = (TCHAR*)_nullstring;
+                    string = (_TCHAR*)_nullstring;
                     flags &= ~FLAG_WIDECHAR;
                 }
 
