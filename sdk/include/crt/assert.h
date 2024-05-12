@@ -6,7 +6,7 @@
 #ifndef __ASSERT_H_
 #define __ASSERT_H_
 
-#include <crtdefs.h>
+#include <corecrt.h>
 
 #ifdef NDEBUG
 

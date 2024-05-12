@@ -3,7 +3,7 @@
  * This file is part of the w64 mingw-runtime package.
  * No warranty is given; refer to the file DISCLAIMER within this package.
  */
-#include <crtdefs.h>
+#include <corecrt.h>
 
 #ifndef _INC_CRTDBG
 #define _INC_CRTDBG
