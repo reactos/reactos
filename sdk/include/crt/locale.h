@@ -6,7 +6,7 @@
 #ifndef _INC_LOCALE
 #define _INC_LOCALE
 
-#include <crtdefs.h>
+#include <corecrt.h>
 
 #pragma pack(push,_CRT_PACKING)
 

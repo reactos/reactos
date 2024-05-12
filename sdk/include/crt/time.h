@@ -7,7 +7,7 @@
 #ifndef _TIME_H_
 #define _TIME_H_
 
-#include <crtdefs.h>
+#include <corecrt.h>
 
 #ifndef _WIN32
 #error Only Win32 target is supported!

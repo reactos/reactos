@@ -6,7 +6,7 @@
 #ifndef _INC_STDIO
 #define _INC_STDIO
 
-#include <crtdefs.h>
+#include <corecrt.h>
 
 #define __need___va_list
 #include <stdarg.h>
