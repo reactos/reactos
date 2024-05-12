@@ -237,7 +237,7 @@ BEGIN
     EDITTEXT 14011, 58, 72, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Dimensiune pe disc:", 140101, 8, 88, 55, 10
     EDITTEXT 14012, 58, 88, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Conține:", 14026, 8, 104, 55, 10
+    LTEXT "Conţine:", 14026, 8, 104, 55, 10
     EDITTEXT 14027, 58, 104, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 120, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Creat:", 14014, 8, 128, 55, 10
@@ -845,7 +845,7 @@ BEGIN
     IDS_RESTART_TITLE "Repornire"
     IDS_RESTART_PROMPT "Repornire sistemul?"
     IDS_SHUTDOWN_TITLE "Închidere"
-    IDS_SHUTDOWN_PROMPT "Închidere calculatorul?"
+    IDS_SHUTDOWN_PROMPT "Închidere sistemul?"
 
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Formatare disc local"
