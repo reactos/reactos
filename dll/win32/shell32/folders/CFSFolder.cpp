@@ -872,7 +872,7 @@ HRESULT WINAPI CFSFolder::ParseDisplayName(HWND hwndOwner,
     else
     {
         INT cchElement = lstrlenW(lpszDisplayName) + 1;
-        LPWSTR pszElement = (LPWSTR)alloca(cchElement * sizeof(WCHAR));
+        LPWSTR pszElement = (LPWSTR)_alloca(cchElement * sizeof(WCHAR));
         LPWSTR pchNext = lpszDisplayName;
         hr = Shell_NextElement(&pchNext, pszElement, cchElement, TRUE);
         if (FAILED(hr))
