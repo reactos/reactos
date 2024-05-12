@@ -193,12 +193,7 @@ public:
         InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     {
         UINT uiCmdId = PtrToUlong(lpici->lpVerb);
-        if (IsShellCmdId((UINT_PTR)lpici->lpVerb))
-        {
-            m_TrayWnd->ExecContextMenuCmd(uiCmdId);
-            return S_OK;
-        }
-        else
+        if (!IsShellCmdId((UINT_PTR)lpici->lpVerb))
         {
             CMINVOKECOMMANDINFO cmici = { 0 };
             CHAR szDir[MAX_PATH];
@@ -220,7 +215,8 @@ public:
 
             return m_Inner->InvokeCommand(&cmici);
         }
-        return E_INVALIDARG;;
+        m_TrayWnd->ExecContextMenuCmd(uiCmdId);
+        return S_OK;
     }
 
     virtual HRESULT STDMETHODCALLTYPE
