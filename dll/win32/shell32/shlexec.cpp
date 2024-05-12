@@ -3,7 +3,7 @@
  *
  * Copyright 1998 Marcus Meissner
  * Copyright 2002 Eric Pouech
- * Copyright 2018-2019 Katayama Hirofumi MZ
+ * Copyright 2018-2024 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -31,6 +31,20 @@ EXTERN_C BOOL PathIsExeW(LPCWSTR lpszPath);
 
 typedef UINT_PTR (*SHELL_ExecuteW32)(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
                 const SHELLEXECUTEINFOW *sei, LPSHELLEXECUTEINFOW sei_out);
+
+// Is the current process a rundll32.exe?
+static BOOL SHELL_InRunDllProcess(VOID)
+{
+    WCHAR szModule[MAX_PATH];
+    static INT s_bInDllProcess = -1;
+
+    if (s_bInDllProcess != -1)
+        return s_bInDllProcess;
+
+    s_bInDllProcess = GetModuleFileNameW(NULL, szModule, _countof(szModule)) &&
+                      (StrStrIW(szModule, L"rundll") != NULL);
+    return s_bInDllProcess;
+}
 
 static void ParseNoTildeEffect(PWSTR &res, LPCWSTR &args, DWORD &len, DWORD &used, int argNum)
 {
@@ -2331,9 +2345,13 @@ HINSTANCE WINAPI ShellExecuteA(HWND hWnd, LPCSTR lpVerb, LPCSTR lpFile,
     return sei.hInstApp;
 }
 
+static DWORD ShellExecute_Normal(LPSHELLEXECUTEINFOW sei)
+{
+    return SHELL_execute(sei, SHELL_ExecuteW) ? ERROR_SUCCESS : ERROR_ACCESS_DENIED;
+}
+
 /*************************************************************************
  * ShellExecuteExA                [SHELL32.292]
- *
  */
 BOOL
 WINAPI
@@ -2345,6 +2363,13 @@ ShellExecuteExA(LPSHELLEXECUTEINFOA sei)
     WCHAR *wVerb = NULL, *wFile = NULL, *wParameters = NULL, *wDirectory = NULL, *wClass = NULL;
 
     TRACE("%p\n", sei);
+
+    if (sei->cbSize != sizeof(SHELLEXECUTEINFOA))
+    {
+        sei->hInstApp = (HINSTANCE)ERROR_ACCESS_DENIED;
+        SetLastError(ERROR_ACCESS_DENIED);
+        return FALSE;
+    }
 
     memcpy(&seiW, sei, sizeof(SHELLEXECUTEINFOW));
 
@@ -2365,7 +2390,7 @@ ShellExecuteExA(LPSHELLEXECUTEINFOA sei)
     else
         seiW.lpClass = NULL;
 
-    ret = SHELL_execute(&seiW, SHELL_ExecuteW);
+    ret = ShellExecuteExW(&seiW);
 
     sei->hInstApp = seiW.hInstApp;
 
@@ -2383,14 +2408,61 @@ ShellExecuteExA(LPSHELLEXECUTEINFOA sei)
 
 /*************************************************************************
  * ShellExecuteExW                [SHELL32.293]
- *
  */
 BOOL
 WINAPI
 DECLSPEC_HOTPATCH
 ShellExecuteExW(LPSHELLEXECUTEINFOW sei)
 {
-    return SHELL_execute(sei, SHELL_ExecuteW);
+    HRESULT hrCoInit = SHCoInitializeAnyApartment();
+    DWORD dwError;
+    ULONG fOldMask;
+
+    if (sei->cbSize != sizeof(SHELLEXECUTEINFOW))
+    {
+        dwError = ERROR_ACCESS_DENIED;
+        sei->hInstApp = (HINSTANCE)ERROR_ACCESS_DENIED;
+    }
+    else
+    {
+        fOldMask = sei->fMask;
+
+        sei->fMask |= 0x800;
+
+        if (SHRegGetBoolUSValueW(L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer",
+                                 L"MaximizeApps", FALSE, FALSE))
+        {
+            switch (sei->nShow)
+            {
+                case SW_SHOWNORMAL:
+                case SW_SHOW:
+                case SW_RESTORE:
+                case SW_SHOWDEFAULT:
+                    sei->nShow = SW_SHOWMAXIMIZED;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        if (!(sei->fMask & SEE_MASK_NOASYNC) && SHELL_InRunDllProcess())
+            sei->fMask |= SEE_MASK_WAITFORINPUTIDLE | SEE_MASK_NOASYNC;
+
+        dwError = ShellExecute_Normal(sei);
+
+        if (dwError && dwError != ERROR_DLL_NOT_FOUND && dwError != ERROR_CANCELLED)
+            ShellExecute_Error(sei, NULL, dwError);
+
+        sei->fMask = fOldMask;
+    }
+
+    if (SUCCEEDED(hrCoInit))
+        CoUninitialize();
+
+    if (dwError)
+        SetLastError(dwError);
+
+    return dwError == ERROR_SUCCESS;
 }
 
 /*************************************************************************
