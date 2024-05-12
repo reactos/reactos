@@ -26,7 +26,7 @@
 #ifndef _COMPLEX_H_
 #define _COMPLEX_H_
 
-#include <crtdefs.h>
+#include <corecrt.h>
 
 #if (defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) \
      || !defined __STRICT_ANSI__

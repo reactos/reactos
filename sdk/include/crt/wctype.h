@@ -10,7 +10,7 @@
 #error Only Win32 target is supported!
 #endif
 
-#include <crtdefs.h>
+#include <corecrt.h>
 
 #pragma pack(push,_CRT_PACKING)
 
