@@ -42,7 +42,7 @@ static BOOL SHELL_InRunDllProcess(VOID)
         return s_bInDllProcess;
 
     s_bInDllProcess = GetModuleFileNameW(NULL, szModule, _countof(szModule)) &&
-                      (StrStrIW(szModule, L"rundll") != NULL);
+                      (StrStrIW(PathFindFileNameW(szModule), L"rundll") != NULL);
     return s_bInDllProcess;
 }
 
@@ -2345,9 +2345,20 @@ HINSTANCE WINAPI ShellExecuteA(HWND hWnd, LPCSTR lpVerb, LPCSTR lpFile,
     return sei.hInstApp;
 }
 
-static DWORD ShellExecute_Normal(LPSHELLEXECUTEINFOW sei)
+static DWORD
+ShellExecute_Normal(_Inout_ LPSHELLEXECUTEINFOW sei)
 {
-    return SHELL_execute(sei, SHELL_ExecuteW) ? ERROR_SUCCESS : ERROR_ACCESS_DENIED;
+    // FIXME
+    return SHELL_execute(sei, SHELL_ExecuteW) ? ERROR_SUCCESS : ERROR_FILE_NOT_FOUND;
+}
+
+static VOID
+ShellExecute_ShowError(
+    _In_ const SHELLEXECUTEINFOW *ExecInfo,
+    _In_opt_ LPCWSTR pszCaption,
+    _In_ DWORD dwError)
+{
+    // FIXME: Show error message
 }
 
 /*************************************************************************
@@ -2372,6 +2383,8 @@ ShellExecuteExA(LPSHELLEXECUTEINFOA sei)
     }
 
     memcpy(&seiW, sei, sizeof(SHELLEXECUTEINFOW));
+
+    seiW.cbSize = sizeof(SHELLEXECUTEINFOW);
 
     if (sei->lpVerb)
         seiW.lpVerb = __SHCloneStrAtoW(&wVerb, sei->lpVerb);
@@ -2414,9 +2427,11 @@ WINAPI
 DECLSPEC_HOTPATCH
 ShellExecuteExW(LPSHELLEXECUTEINFOW sei)
 {
-    HRESULT hrCoInit = SHCoInitializeAnyApartment();
+    HRESULT hrCoInit;
     DWORD dwError;
     ULONG fOldMask;
+
+    hrCoInit = SHCoInitializeAnyApartment();
 
     if (sei->cbSize != sizeof(SHELLEXECUTEINFOW))
     {
@@ -2425,10 +2440,6 @@ ShellExecuteExW(LPSHELLEXECUTEINFOW sei)
     }
     else
     {
-        fOldMask = sei->fMask;
-
-        sei->fMask |= 0x800;
-
         if (SHRegGetBoolUSValueW(L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer",
                                  L"MaximizeApps", FALSE, FALSE))
         {
@@ -2445,13 +2456,15 @@ ShellExecuteExW(LPSHELLEXECUTEINFOW sei)
             }
         }
 
-        if (!(sei->fMask & SEE_MASK_NOASYNC) && SHELL_InRunDllProcess())
+        fOldMask = sei->fMask;
+
+        if (!(fOldMask & SEE_MASK_NOASYNC) && SHELL_InRunDllProcess())
             sei->fMask |= SEE_MASK_WAITFORINPUTIDLE | SEE_MASK_NOASYNC;
 
         dwError = ShellExecute_Normal(sei);
 
         if (dwError && dwError != ERROR_DLL_NOT_FOUND && dwError != ERROR_CANCELLED)
-            ShellExecute_Error(sei, NULL, dwError);
+            ShellExecute_ShowError(sei, NULL, dwError);
 
         sei->fMask = fOldMask;
     }
