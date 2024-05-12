@@ -57,7 +57,7 @@ private:
 
     // *** tree explorer band stuff ***
     BOOL m_fVisible;
-    BYTE m_bNavigating;
+    BYTE m_mtxBlockNavigate; // A "lock" that prevents internal selection changes to initiate a navigation to the newly selected item.
     BOOL m_bFocused;
     DWORD m_dwBandID;
     BOOL m_isEditing;

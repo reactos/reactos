@@ -148,7 +148,7 @@ Cleanup:
 CExplorerBand::CExplorerBand()
     : m_pSite(NULL)
     , m_fVisible(FALSE)
-    , m_bNavigating(0)
+    , m_mtxBlockNavigate(0)
     , m_dwBandID(0)
     , m_isEditing(FALSE)
     , m_pidlCurrent(NULL)
@@ -402,7 +402,7 @@ void CExplorerBand::OnSelectionChanged(LPNMTREEVIEW pnmtv)
     NodeInfo* pNodeInfo = GetNodeInfo(pnmtv->itemNew.hItem);
 
     /* Prevents navigation if selection is initiated inside the band */
-    if (m_bNavigating)
+    if (m_mtxBlockNavigate)
         return;
 
     UpdateBrowser(pNodeInfo->absolutePidl);
@@ -457,7 +457,7 @@ LRESULT CExplorerBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
     HRESULT                             hr;
     UINT                                uCommand;
     LPITEMIDLIST                        pidlChild;
-    UINT                                cmdBase;
+    UINT                                cmdBase = max(FCIDM_SHVIEWFIRST, 1);
     UINT                                cmf = CMF_EXPLORE;
     SFGAOF                              attr = SFGAO_CANRENAME;
     BOOL                                startedRename = FALSE;
@@ -477,8 +477,8 @@ LRESULT CExplorerBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
         RECT r;
         if (TreeView_GetItemRect(m_hWnd, item, &r, TRUE))
         {
-            pt.x = r.left + ((r.right - r.left) / 2);
-            pt.y = r.top + ((r.bottom - r.top) / 2);
+            pt.x = (r.left + r.right) / 2; // Center of
+            pt.y = (r.top + r.bottom) / 2; // item rectangle
         }
         ClientToScreen(&pt);
     }
@@ -510,7 +510,6 @@ LRESULT CExplorerBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
         cmf |= CMF_CANRENAME;
 
     treeMenu = CreatePopupMenu();
-    cmdBase = max(FCIDM_SHVIEWFIRST, 1);
     hr = contextMenu->QueryContextMenu(treeMenu, 0, cmdBase, FCIDM_SHVIEWLAST, cmf);
     if (!SUCCEEDED(hr))
     {
@@ -551,9 +550,9 @@ Cleanup:
     }
     else
     {
-        ++m_bNavigating;
+        ++m_mtxBlockNavigate;
         TreeView_SelectItem(m_hWnd, m_oldSelected);
-        --m_bNavigating;
+        --m_mtxBlockNavigate;
     }
     return TRUE;
 }
@@ -574,9 +573,9 @@ LRESULT CExplorerBand::ContextMenuHack(UINT uMsg, WPARAM wParam, LPARAM lParam, 
 
         // Move to the item selected by the treeview (don't change right pane)
         TreeView_HitTest(m_hWnd, &info);
-        ++m_bNavigating;
+        ++m_mtxBlockNavigate;
         TreeView_SelectItem(m_hWnd, info.hItem);
-        --m_bNavigating;
+        --m_mtxBlockNavigate;
     }
     return FALSE; /* let the wndproc process the message */
 }
@@ -910,10 +909,10 @@ BOOL CExplorerBand::NavigateToCurrentFolder()
         ERR("Unable to get browser PIDL !\n");
         return FALSE;
     }
-    ++m_bNavigating;
+    ++m_mtxBlockNavigate;
     /* find PIDL into our explorer */
     result = NavigateToPIDL(explorerPidl, &dummy, TRUE, FALSE, TRUE);
-    --m_bNavigating;
+    --m_mtxBlockNavigate;
     ILFree(explorerPidl);
     return result;
 }
@@ -1410,9 +1409,9 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM
                 m_isEditing = FALSE;
                 if (m_oldSelected)
                 {
-                    ++m_bNavigating;
+                    ++m_mtxBlockNavigate;
                     TreeView_SelectItem(m_hWnd, m_oldSelected);
-                    --m_bNavigating;
+                    --m_mtxBlockNavigate;
                 }
 
                 if (theResult)
@@ -1574,9 +1573,9 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::DragOver(DWORD glfKeyState, POINTL pt, 
 
     if (info.hItem)
     {
-        ++m_bNavigating;
+        ++m_mtxBlockNavigate;
         TreeView_SelectItem(m_hWnd, info.hItem);
-        --m_bNavigating;
+        --m_mtxBlockNavigate;
         // Delegate to shell folder
         if (m_pDropTarget && info.hItem != m_childTargetNode)
         {
@@ -1635,9 +1634,9 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::DragOver(DWORD glfKeyState, POINTL pt, 
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::DragLeave()
 {
-    ++m_bNavigating;
+    ++m_mtxBlockNavigate;
     TreeView_SelectItem(m_hWnd, m_oldSelected);
-    --m_bNavigating;
+    --m_mtxBlockNavigate;
     m_childTargetNode = NULL;
     if (m_pCurObject)
     {
