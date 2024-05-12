@@ -33,7 +33,7 @@ Boston, MA 02110-1301, USA.  */
 #ifndef _INC_STDARG
 #define _INC_STDARG
 
-#include <crtdefs.h>
+#include <vcruntime.h>
 #include <vadefs.h>
 
 #ifndef _WIN32

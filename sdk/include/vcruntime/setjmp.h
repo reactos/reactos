@@ -6,7 +6,7 @@
 #ifndef _INC_SETJMP
 #define _INC_SETJMP
 
-#include <crtdefs.h>
+#include <vcruntime.h>
 
 #pragma pack(push,_CRT_PACKING)
 
