@@ -31,7 +31,7 @@ STRINGTABLE
   IDS_ALLFILES		"Orice fișier (*.*)"
   IDS_VIDEO		"video"
   IDS_AUDIO		"audio"
-  IDS_AVIFILETYPE	"Gestionare implicită de fișiere AVI de către Wine"
+  IDS_AVIFILETYPE	"Gestionare implicită a fișierelor AVI de către Wine"
   IDS_UNCOMPRESSED      "necomprimat"
 }
 
