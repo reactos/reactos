@@ -332,6 +332,7 @@ DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid);
 #define PADE_LNK      0x0010
 #define PADE_CMD      0x0020
 #define PADE_OPTIONAL 0x0040
+#define PADE_ALL (PADE_PIF | PADE_COM | PADE_EXE | PADE_BAT | PADE_LNK | PADE_CMD | PADE_OPTIONAL)
 
 BOOL WINAPI
 PathFileExistsDefExtAndAttributesW(
