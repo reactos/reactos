@@ -82,7 +82,7 @@ IContextMenu_Invoke(
  * PathAddDefExt [Internal]
  */
 static BOOL
-PathAddDefExt(
+PathAddDefExtW(
     _Inout_ LPWSTR pszPath,
     _In_ DWORD dwFlags,
     _Out_opt_ LPDWORD pdwAttrs)
@@ -128,7 +128,6 @@ PathAddDefExt(
 
         if (s_DotExts[iExt])
             break;
-
     } while (FindNextFileW(hFind, &FindData));
 
     FindClose(hFind);
@@ -146,16 +145,18 @@ BOOL WINAPI
 PathFileExistsDefExtAndAttributesW(
     _Inout_ LPWSTR pszPath,
     _In_ DWORD dwFlags,
-    _Out_opt_ LPDWORD pdwAttrs)
+    _Out_opt_ LPDWORD pdwFileAttributes)
 {
-    if (pdwAttrs)
-        *pdwAttrs = INVALID_FILE_ATTRIBUTES;
+    TRACE("(%s, 0x%lX, %p)\n", debugstr_w(pszPath), dwFlags, pdwFileAttributes);
+
+    if (pdwFileAttributes)
+        *pdwFileAttributes = INVALID_FILE_ATTRIBUTES;
 
     if (!pszPath)
         return FALSE;
 
     if (!dwFlags || (*PathFindExtensionW(pszPath) && (dwFlags & PADE_OPTIONAL)))
-        return PathFileExistsAndAttributes(pszPath, pdwAttrs);
+        return PathFileExistsAndAttributesW(pszPath, pdwFileAttributes);
 
-    return PathAddDefExt(pszPath, dwFlags, pdwAttrs);
+    return PathAddDefExtW(pszPath, dwFlags, pdwFileAttributes);
 }

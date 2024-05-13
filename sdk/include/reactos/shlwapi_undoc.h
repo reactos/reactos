@@ -338,7 +338,7 @@ BOOL WINAPI
 PathFileExistsDefExtAndAttributesW(
     _Inout_ LPWSTR pszPath,
     _In_ DWORD dwFlags,
-    _Out_opt_ LPDWORD pdwAttrs);
+    _Out_opt_ LPDWORD pdwFileAttributes);
 
 #ifdef __cplusplus
 } /* extern "C" */
