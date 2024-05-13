@@ -47,14 +47,14 @@ START_TEST(PathFileExistsDefExtAndAttributesW)
     ok_int(ret, FALSE);
 
     /* Add .exe */
-    ret = PathFileExistsDefExtAndAttributesW(szPath, PADE_EXE, NULL);
+    ret = PathFileExistsDefExtAndAttributesW(szPath, WHICH_EXE, NULL);
     ok_int(ret, TRUE);
     ret = PathFileExistsW(szPath);
     ok_int(ret, TRUE);
 
     /* notepad.cmd doesn't exist */
     PathRemoveExtensionW(szPath);
-    ret = PathFileExistsDefExtAndAttributesW(szPath, PADE_CMD, NULL);
+    ret = PathFileExistsDefExtAndAttributesW(szPath, WHICH_CMD, NULL);
     ok_int(ret, FALSE);
     ret = PathFileExistsW(szPath);
     ok_int(ret, FALSE);

@@ -283,7 +283,8 @@ ShellMessageBoxWrapW(
   _In_ UINT fuStyle,
   ...);
 
-/* dwWhich flags for PathFileExistsDefExtW and PathFindOnPathExW */
+/* dwWhich flags for PathFileExistsDefExtW, PathFindOnPathExW,
+   and PathFileExistsDefExtAndAttributesW. */
 #define WHICH_PIF       (1 << 0)
 #define WHICH_COM       (1 << 1)
 #define WHICH_EXE       (1 << 2)
@@ -324,20 +325,10 @@ IContextMenu_Invoke(
 
 DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid);
 
-/* Flags for appending an extension in PathFileExistsDefExtAndAttributesW */
-#define PADE_PIF      0x0001
-#define PADE_COM      0x0002
-#define PADE_EXE      0x0004
-#define PADE_BAT      0x0008
-#define PADE_LNK      0x0010
-#define PADE_CMD      0x0020
-#define PADE_OPTIONAL 0x0040
-#define PADE_ALL (PADE_PIF | PADE_COM | PADE_EXE | PADE_BAT | PADE_LNK | PADE_CMD | PADE_OPTIONAL)
-
 BOOL WINAPI
 PathFileExistsDefExtAndAttributesW(
     _Inout_ LPWSTR pszPath,
-    _In_ DWORD dwFlags,
+    _In_ DWORD dwWhich,
     _Out_opt_ LPDWORD pdwFileAttributes);
 
 #ifdef __cplusplus
