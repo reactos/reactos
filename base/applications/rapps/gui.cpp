@@ -495,7 +495,7 @@ CMainWindow::ShowAboutDlg()
 VOID
 CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
 {
-    BOOL bReload = TRUE;
+    const BOOL bReload = TRUE;
     WORD wCommand = LOWORD(wParam);
 
     if (!lParam)
@@ -552,7 +552,6 @@ CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
                 break;
 
             case ID_REFRESH:
-                bReload = IsInstalledEnum(SelectedEnumType); // Force installed refresh from the registry
                 UpdateApplicationsList(SelectedEnumType, bReload);
                 break;
 
