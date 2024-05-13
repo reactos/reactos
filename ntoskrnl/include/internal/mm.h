@@ -1645,9 +1645,7 @@ MmUnloadSystemImage(
 NTSTATUS
 NTAPI
 MmCheckSystemImage(
-    IN HANDLE ImageHandle,
-    IN BOOLEAN PurgeSection
-);
+    _In_ HANDLE ImageHandle);
 
 NTSTATUS
 NTAPI
