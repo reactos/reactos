@@ -324,8 +324,7 @@ IContextMenu_Invoke(
 
 DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid);
 
-/* Flags for PathFileExistsDefExtAndAttributesW */
-#define PADE_NONE     0x0000
+/* Flags for appending an extension in PathFileExistsDefExtAndAttributesW */
 #define PADE_PIF      0x0001
 #define PADE_COM      0x0002
 #define PADE_EXE      0x0004

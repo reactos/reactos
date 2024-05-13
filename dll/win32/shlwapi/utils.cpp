@@ -79,7 +79,12 @@ IContextMenu_Invoke(
 }
 
 /*************************************************************************
- * PathAddDefExt [Internal]
+ * PathAddDefExtW [Internal]
+ *
+ * @param pszPath The path string.
+ * @param dwFlags The PADE_... flags.
+ * @param pdwAttrs A pointer to the file attributes. Optional.
+ * @return TRUE if successful.
  */
 static BOOL
 PathAddDefExtW(
@@ -88,7 +93,7 @@ PathAddDefExtW(
     _Out_opt_ LPDWORD pdwAttrs)
 {
     INT cchPath = lstrlenW(pszPath);
-    if (cchPath + 4 > MAX_PATH) // ".ext" == 4 letters
+    if (cchPath + 4 + 1 > MAX_PATH) // ".ext" is 4 letters, and then a NUL
         return FALSE;
 
     LPWSTR pch = &pszPath[cchPath];
@@ -109,37 +114,44 @@ PathAddDefExtW(
         L".pif", L".com", L".exe", L".bat", L".lnk", L".cmd", L"", NULL
     };
 
+    BOOL ret = FALSE;
     do
     {
-        SIZE_T iExt, nBits = dwFlags;
-        for (iExt = 0; s_DotExts[iExt]; ++iExt)
+        for (SIZE_T iExt = 0, nBits = dwFlags; s_DotExts[iExt]; ++iExt)
         {
             if ((nBits & 1) || iExt == 6) // 6 --> L""
             {
                 if (lstrcmpiW(&FindData.cFileName[cchFileTitle], s_DotExts[iExt]) == 0)
                 {
                     dwAttrs = FindData.dwFileAttributes;
+                    *pch = UNICODE_NULL;
                     StringCchCatW(pszPath, MAX_PATH, s_DotExts[iExt]);
+                    ret = TRUE;
                     break;
                 }
             }
             nBits >>= 1;
         }
-
-        if (s_DotExts[iExt])
-            break;
-    } while (FindNextFileW(hFind, &FindData));
+    } while (!ret && FindNextFileW(hFind, &FindData));
 
     FindClose(hFind);
 
     if (pdwAttrs)
         *pdwAttrs = dwAttrs;
 
-    return TRUE;
+    if (!ret)
+        *pch = UNICODE_NULL;
+
+    return ret;
 }
 
 /*************************************************************************
  * PathFileExistsDefExtAndAttributesW [SHLWAPI.511]
+ *
+ * @param pszPath The path string.
+ * @param dwFlags The PADE_... flags.
+ * @param pdwFileAttributes A pointer to the file attributes. Optional.
+ * @return TRUE if successful.
  */
 BOOL WINAPI
 PathFileExistsDefExtAndAttributesW(
