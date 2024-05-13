@@ -249,7 +249,8 @@ static BOOL DoSaveFile(VOID)
 
     WaitCursor(TRUE);
 
-    hFile = CreateFileW(Globals.szFileName, GENERIC_WRITE, FILE_SHARE_WRITE,
+    hFile = CreateFileW(Globals.szFileName, GENERIC_WRITE,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
                         NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
     {
