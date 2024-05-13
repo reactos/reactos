@@ -508,7 +508,7 @@
 508 stdcall -noname SHPropertyBag_WriteDWORD(ptr wstr long)
 509 stdcall -noname IUnknown_OnFocusChangeIS(ptr ptr long)
 510 stdcall -noname SHLockSharedEx(ptr long long)
-511 stdcall -stub -noname PathFileExistsDefExtAndAttributesW(wstr long ptr)
+511 stdcall -noname PathFileExistsDefExtAndAttributesW(wstr long ptr)
 512 stub -ordinal IStream_ReadPidl
 513 stub -ordinal IStream_WritePidl
 514 stdcall -noname IUnknown_ProfferService(ptr ptr ptr ptr)

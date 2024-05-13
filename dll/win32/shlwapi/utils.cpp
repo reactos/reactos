@@ -77,3 +77,85 @@ IContextMenu_Invoke(
 
     return ret;
 }
+
+/*************************************************************************
+ * PathAddDefExt [Internal]
+ */
+static BOOL
+PathAddDefExt(
+    _Inout_ LPWSTR pszPath,
+    _In_ DWORD dwFlags,
+    _Out_opt_ LPDWORD pdwAttrs)
+{
+    INT cchPath = lstrlenW(pszPath);
+    if (cchPath + 4 > MAX_PATH) // ".ext" == 4 letters
+        return FALSE;
+
+    LPWSTR pch = &pszPath[cchPath];
+    INT_PTR cchFileTitle = pch - PathFindFileNameW(pszPath);
+
+    WIN32_FIND_DATAW FindData;
+    StringCchCatW(pszPath, MAX_PATH, L".*");
+    HANDLE hFind = FindFirstFileW(pszPath, &FindData);
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+        *pch = UNICODE_NULL;
+        return FALSE;
+    }
+
+    DWORD dwAttrs = INVALID_FILE_ATTRIBUTES;
+    static const LPCWSTR s_DotExts[] =
+    {
+        L".pif", L".com", L".exe", L".bat", L".lnk", L".cmd", L"", NULL
+    };
+
+    do
+    {
+        SIZE_T iExt, nBits = dwFlags;
+        for (iExt = 0; s_DotExts[iExt]; ++iExt)
+        {
+            if ((nBits & 1) || iExt == 6) // 6 --> L""
+            {
+                if (lstrcmpiW(&FindData.cFileName[cchFileTitle], s_DotExts[iExt]) == 0)
+                {
+                    dwAttrs = FindData.dwFileAttributes;
+                    StringCchCatW(pszPath, MAX_PATH, s_DotExts[iExt]);
+                    break;
+                }
+            }
+            nBits >>= 1;
+        }
+
+        if (s_DotExts[iExt])
+            break;
+
+    } while (FindNextFileW(hFind, &FindData));
+
+    FindClose(hFind);
+
+    if (pdwAttrs)
+        *pdwAttrs = dwAttrs;
+
+    return TRUE;
+}
+
+/*************************************************************************
+ * PathFileExistsDefExtAndAttributesW [SHLWAPI.511]
+ */
+BOOL WINAPI
+PathFileExistsDefExtAndAttributesW(
+    _Inout_ LPWSTR pszPath,
+    _In_ DWORD dwFlags,
+    _Out_opt_ LPDWORD pdwAttrs)
+{
+    if (pdwAttrs)
+        *pdwAttrs = INVALID_FILE_ATTRIBUTES;
+
+    if (!pszPath)
+        return FALSE;
+
+    if (!dwFlags || (*PathFindExtensionW(pszPath) && (dwFlags & PADE_OPTIONAL)))
+        return PathFileExistsAndAttributes(pszPath, pdwAttrs);
+
+    return PathAddDefExt(pszPath, dwFlags, pdwAttrs);
+}

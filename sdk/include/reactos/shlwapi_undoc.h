@@ -324,6 +324,22 @@ IContextMenu_Invoke(
 
 DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid);
 
+/* Flags for PathFileExistsDefExtAndAttributesW */
+#define PADE_NONE     0x0000
+#define PADE_PIF      0x0001
+#define PADE_COM      0x0002
+#define PADE_EXE      0x0004
+#define PADE_BAT      0x0008
+#define PADE_LNK      0x0010
+#define PADE_CMD      0x0020
+#define PADE_OPTIONAL 0x0040
+
+BOOL WINAPI
+PathFileExistsDefExtAndAttributesW(
+    _Inout_ LPWSTR pszPath,
+    _In_ DWORD dwFlags,
+    _Out_opt_ LPDWORD pdwAttrs);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */
