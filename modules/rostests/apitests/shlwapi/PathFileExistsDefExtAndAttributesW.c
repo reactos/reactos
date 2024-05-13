@@ -16,19 +16,46 @@ START_TEST(PathFileExistsDefExtAndAttributesW)
     DWORD attrs;
     BOOL ret;
 
+    /* NULL check */
     ret = PathFileExistsDefExtAndAttributesW(NULL, 0, NULL);
     ok_int(ret, FALSE);
 
-    lstrcpynW(szPath, L"This Is Not Existent File.txt", _countof(szPath));
+    /* Not existent file */
+    lstrcpynW(szPath, L"Not Existent File.txt", _countof(szPath));
     ret = PathFileExistsDefExtAndAttributesW(szPath, 0, NULL);
     ok_int(ret, FALSE);
 
+    /* "Windows" directory */
     GetWindowsDirectoryW(szPath, _countof(szPath));
     ret = PathFileExistsDefExtAndAttributesW(szPath, 0, NULL);
     ok_int(ret, TRUE);
 
+    /* "Windows" directory with attributes check */
     attrs = 0;
     ret = PathFileExistsDefExtAndAttributesW(szPath, 0, &attrs);
     ok_int(ret, TRUE);
     ok(attrs != 0 && attrs != INVALID_FILE_ATTRIBUTES, "attrs was 0x%lX\n", attrs);
+
+    /* Find notepad.exe */
+    SearchPathW(NULL, L"notepad.exe", NULL, _countof(szPath), szPath, NULL);
+    ret = PathFileExistsW(szPath);
+    ok_int(ret, TRUE);
+
+    /* Remove .exe */
+    PathRemoveExtensionW(szPath);
+    ret = PathFileExistsW(szPath);
+    ok_int(ret, FALSE);
+
+    /* Add .exe */
+    ret = PathFileExistsDefExtAndAttributesW(szPath, PADE_EXE, NULL);
+    ok_int(ret, TRUE);
+    ret = PathFileExistsW(szPath);
+    ok_int(ret, TRUE);
+
+    /* notepad.cmd doesn't exist */
+    PathRemoveExtensionW(szPath);
+    ret = PathFileExistsDefExtAndAttributesW(szPath, PADE_CMD, NULL);
+    ok_int(ret, FALSE);
+    ret = PathFileExistsW(szPath);
+    ok_int(ret, FALSE);
 }
