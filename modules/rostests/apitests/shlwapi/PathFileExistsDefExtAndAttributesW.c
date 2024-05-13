@@ -14,14 +14,17 @@ START_TEST(PathFileExistsDefExtAndAttributesW)
 {
     WCHAR szPath[MAX_PATH];
     DWORD attrs;
+    BOOL ret;
 
-    ok_int(PathFileExistsDefExtAndAttributesW(NULL, 0, NULL), FALSE);
+    ret = PathFileExistsDefExtAndAttributesW(NULL, 0, NULL);
+    ok_int(ret, FALSE);
 
     GetWindowsDirectoryW(szPath, _countof(szPath));
-
-    ok_int(PathFileExistsDefExtAndAttributesW(szPath, 0, NULL), TRUE);
+    ret = PathFileExistsDefExtAndAttributesW(szPath, 0, NULL);
+    ok_int(ret, TRUE);
 
     attrs = 0;
-    ok_int(PathFileExistsDefExtAndAttributesW(szPath, 0, &attrs), TRUE);
+    ret = PathFileExistsDefExtAndAttributesW(szPath, 0, &attrs);
+    ok_int(ret, TRUE);
     ok(attrs != 0 && attrs != INVALID_FILE_ATTRIBUTES, "attrs was 0x%lX\n", attrs);
 }
