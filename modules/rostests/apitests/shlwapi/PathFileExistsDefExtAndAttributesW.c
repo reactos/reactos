@@ -19,7 +19,7 @@ START_TEST(PathFileExistsDefExtAndAttributesW)
     ret = PathFileExistsDefExtAndAttributesW(NULL, 0, NULL);
     ok_int(ret, FALSE);
 
-    lstrcpynW(szPath, L"This Is Not Existent File.txt");
+    lstrcpynW(szPath, L"This Is Not Existent File.txt", _countof(szPath));
     ret = PathFileExistsDefExtAndAttributesW(szPath, 0, NULL);
     ok_int(ret, FALSE);
 
