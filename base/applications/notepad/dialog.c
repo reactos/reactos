@@ -249,8 +249,10 @@ static BOOL DoSaveFile(VOID)
 
     WaitCursor(TRUE);
 
+    /* Use OPEN_ALWAYS instead of CREATE_ALWAYS in order to succeed
+     * even if the file has HIDDEN or SYSTEM attributes */
     hFile = CreateFileW(Globals.szFileName,
-                        GENERIC_READ | GENERIC_WRITE,
+                        GENERIC_WRITE,
                         FILE_SHARE_READ | FILE_SHARE_WRITE,
                         NULL,
                         OPEN_ALWAYS,
@@ -286,6 +288,7 @@ static BOOL DoSaveFile(VOID)
         }
     }
 
+    /* Truncate the file and close it */
     SetEndOfFile(hFile);
     CloseHandle(hFile);
 
