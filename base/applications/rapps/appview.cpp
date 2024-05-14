@@ -979,7 +979,7 @@ struct CAsyncLoadIcon {
     CAppInfo *AppInfo; // Only used to find the item in the list, do not access on background thread
     UINT TaskId;
     bool Parse;
-    WCHAR Location[1];
+    WCHAR Location[ANYSIZE_ARRAY];
 
     void Free() { LocalFree(this); }
     static CAsyncLoadIcon* Queue(HWND hAppsList, CAppInfo &AppInfo, bool Parse);
@@ -1015,11 +1015,11 @@ AsyncLoadIconProc(LPVOID Param)
 CAsyncLoadIcon*
 CAsyncLoadIcon::Queue(HWND hAppsList, CAppInfo &AppInfo, bool Parse)
 {
-    ATLASSERT(GetCurrentThreadId() && GetWindowThreadProcessId(hAppsList, NULL));
+    ATLASSERT(GetCurrentThreadId() == GetWindowThreadProcessId(hAppsList, NULL));
     CStringW szIconPath;
     if (!AppInfo.RetrieveIcon(szIconPath))
         return NULL;
-    SIZE_T cch = szIconPath.GetLength() + 1, cbstr = cch * sizeof(WCHAR);
+    SIZE_T cbstr = (szIconPath.GetLength() + 1) * sizeof(WCHAR);
     CAsyncLoadIcon *task = (CAsyncLoadIcon*)LocalAlloc(LMEM_FIXED, sizeof(CAsyncLoadIcon) + cbstr);
     if (!task)
         return NULL;
