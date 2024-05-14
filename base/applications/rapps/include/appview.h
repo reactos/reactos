@@ -406,10 +406,14 @@ class CApplicationView : public CUiWindow<CWindowImpl<CApplicationView>>
     VOID
     AppendTabOrderWindow(int Direction, ATL::CSimpleArray<HWND> &TabOrderList);
 
+    struct RESTORELISTSELECTION {
+        LVITEMW Item;
+        WCHAR Name[MAX_PATH];
+    };
     VOID
-    GetRestoreListSelectionData(LVITEMW &Item, WCHAR *Name, UINT NameLen);
+    GetRestoreListSelectionData(RESTORELISTSELECTION &Restore);
     VOID
-    RestoreListSelection(const LVITEMW &Item);
+    RestoreListSelection(const RESTORELISTSELECTION &Restore);
 
     // this function is called when a item of listview get focus.
     // CallbackParam is the param passed to listview when adding the item (the one getting focus now).

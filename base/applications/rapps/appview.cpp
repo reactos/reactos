@@ -1981,12 +1981,13 @@ CApplicationView::AppendTabOrderWindow(int Direction, ATL::CSimpleArray<HWND> &T
 }
 
 VOID
-CApplicationView::GetRestoreListSelectionData(LVITEMW &Item, WCHAR *Name, UINT NameLen)
+CApplicationView::GetRestoreListSelectionData(RESTORELISTSELECTION &Restore)
 {
+    LVITEMW &Item = Restore.Item;
     Item.mask = LVIF_TEXT|LVIF_STATE;
     Item.iItem = -1, Item.iSubItem = 0;
     Item.stateMask = LVIS_FOCUSED|LVIS_SELECTED;
-    Item.pszText = Name, Item.cchTextMax = NameLen;
+    Item.pszText = Restore.Name, Item.cchTextMax = _countof(Restore.Name);
 
     HWND hList = m_ListView ? m_ListView->m_hWnd : NULL;
     if (hList)
@@ -1997,8 +1998,9 @@ CApplicationView::GetRestoreListSelectionData(LVITEMW &Item, WCHAR *Name, UINT N
 }
 
 VOID
-CApplicationView::RestoreListSelection(const LVITEMW &Item)
+CApplicationView::RestoreListSelection(const RESTORELISTSELECTION &Restore)
 {
+    const LVITEMW &Item = Restore.Item;
     int index = Item.iItem;
     if (index != -1) // Was there a selected item?
     {
