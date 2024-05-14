@@ -310,6 +310,13 @@ ShellMessageBoxWrapW(
 #define PATH_CHAR_CLASS_ANY         0xffffffff
 
 BOOL WINAPI PathFileExistsDefExtW(LPWSTR lpszPath, DWORD dwWhich);
+
+BOOL WINAPI
+PathFileExistsDefExtAndAttributesW(
+    _Inout_ LPWSTR pszPath,
+    _In_ DWORD dwWhich,
+    _Out_opt_ LPDWORD pdwFileAttributes);
+
 BOOL WINAPI PathFindOnPathExW(LPWSTR lpszFile, LPCWSTR *lppszOtherDirs, DWORD dwWhich);
 VOID WINAPI FixSlashesAndColonW(LPWSTR);
 BOOL WINAPI PathIsValidCharA(char c, DWORD dwClass);
@@ -324,12 +331,6 @@ IContextMenu_Invoke(
     _In_ UINT uFlags);
 
 DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid);
-
-BOOL WINAPI
-PathFileExistsDefExtAndAttributesW(
-    _Inout_ LPWSTR pszPath,
-    _In_ DWORD dwWhich,
-    _Out_opt_ LPDWORD pdwFileAttributes);
 
 #ifdef __cplusplus
 } /* extern "C" */
