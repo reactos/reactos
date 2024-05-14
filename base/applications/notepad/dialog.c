@@ -253,7 +253,7 @@ static BOOL DoSaveFile(VOID)
      * even if the file has HIDDEN or SYSTEM attributes */
     hFile = CreateFileW(Globals.szFileName,
                         GENERIC_WRITE,
-                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_SHARE_READ,
                         NULL,
                         OPEN_ALWAYS,
                         FILE_ATTRIBUTE_NORMAL,
