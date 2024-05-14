@@ -212,6 +212,13 @@ SetBootStoreOptions(
     _In_ ULONG FieldsToChange);
 
 NTSTATUS
+SetCustomBootStoreOption(
+    _In_ PVOID Handle,
+    _In_ PCWSTR Section,
+    _In_ PCWSTR OptionName,
+    _In_ PCWSTR OptionValue);
+
+NTSTATUS
 EnumerateBootStoreEntries(
     _In_ PVOID Handle,
     _In_ PENUM_BOOT_ENTRIES_ROUTINE EnumBootEntriesRoutine,

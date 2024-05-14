@@ -1775,6 +1775,57 @@ SetBootStoreOptions(
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+SetCustomBootStoreOption(
+    _In_ PVOID Handle,
+    _In_ PCWSTR Section,
+    _In_ PCWSTR OptionName,
+    _In_ PCWSTR OptionValue)
+{
+    PBOOT_STORE_CONTEXT BootStore = (PBOOT_STORE_CONTEXT)Handle;
+    PBOOT_STORE_INI_CONTEXT IniBootStore = (PBOOT_STORE_INI_CONTEXT)BootStore;
+    PINI_SECTION IniSection;
+    BOOLEAN SectionCreated;
+
+    if (!BootStore)
+        return STATUS_INVALID_PARAMETER;
+
+    // if (BootStore->Type >= BldrTypeMax || NtosBootLoaders[BootStore->Type].Type >= BldrTypeMax)
+    if (BootStore->Type != FreeLdr && BootStore->Type != NtLdr)
+    {
+        DPRINT1("Loader type %d is currently unsupported!\n", BootStore->Type);
+        return STATUS_NOT_SUPPORTED;
+    }
+
+    /* Check whether the custom section already exists, so that if we create it
+     * later but we fail to create/modify the option, we can delete the section */
+    SectionCreated = FALSE;
+    IniSection = IniGetSection(IniBootStore->IniCache, Section);
+    if (!IniSection)
+    {
+        IniSection = IniAddSection(IniBootStore->IniCache, Section);
+        SectionCreated = TRUE;
+    }
+    if (!IniSection)
+    {
+        DPRINT1("Failed to create/retrieve '%S' section\n", Section);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Create or modify the option */
+    if (!IniAddKey(IniSection, OptionName, OptionValue))
+    {
+        DPRINT1("Failed to create or modify '%S' key\n", OptionName);
+
+        /* Delete the custom section if we created it */
+        if (SectionCreated)
+            IniRemoveSection(IniSection);
+
+        return STATUS_UNSUCCESSFUL;
+    }
+    return STATUS_SUCCESS;
+}
+
 
 /**
  * @brief
