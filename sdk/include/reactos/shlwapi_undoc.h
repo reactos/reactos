@@ -284,7 +284,7 @@ ShellMessageBoxWrapW(
   ...);
 
 /* dwWhich flags for PathFileExistsDefExtW, PathFindOnPathExW,
-   and PathFileExistsDefExtAndAttributesW. */
+ * and PathFileExistsDefExtAndAttributesW */
 #define WHICH_PIF       (1 << 0)
 #define WHICH_COM       (1 << 1)
 #define WHICH_EXE       (1 << 2)
