@@ -283,7 +283,8 @@ ShellMessageBoxWrapW(
   _In_ UINT fuStyle,
   ...);
 
-/* dwWhich flags for PathFileExistsDefExtW and PathFindOnPathExW */
+/* dwWhich flags for PathFileExistsDefExtW, PathFindOnPathExW,
+ * and PathFileExistsDefExtAndAttributesW */
 #define WHICH_PIF       (1 << 0)
 #define WHICH_COM       (1 << 1)
 #define WHICH_EXE       (1 << 2)
@@ -309,6 +310,13 @@ ShellMessageBoxWrapW(
 #define PATH_CHAR_CLASS_ANY         0xffffffff
 
 BOOL WINAPI PathFileExistsDefExtW(LPWSTR lpszPath, DWORD dwWhich);
+
+BOOL WINAPI
+PathFileExistsDefExtAndAttributesW(
+    _Inout_ LPWSTR pszPath,
+    _In_ DWORD dwWhich,
+    _Out_opt_ LPDWORD pdwFileAttributes);
+
 BOOL WINAPI PathFindOnPathExW(LPWSTR lpszFile, LPCWSTR *lppszOtherDirs, DWORD dwWhich);
 VOID WINAPI FixSlashesAndColonW(LPWSTR);
 BOOL WINAPI PathIsValidCharA(char c, DWORD dwClass);

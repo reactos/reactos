@@ -77,3 +77,41 @@ IContextMenu_Invoke(
 
     return ret;
 }
+
+/*************************************************************************
+ * PathFileExistsDefExtAndAttributesW [SHLWAPI.511]
+ *
+ * @param pszPath The path string.
+ * @param dwWhich The WHICH_... flags.
+ * @param pdwFileAttributes A pointer to the file attributes. Optional.
+ * @return TRUE if successful.
+ */
+BOOL WINAPI
+PathFileExistsDefExtAndAttributesW(
+    _Inout_ LPWSTR pszPath,
+    _In_ DWORD dwWhich,
+    _Out_opt_ LPDWORD pdwFileAttributes)
+{
+    TRACE("(%s, 0x%lX, %p)\n", debugstr_w(pszPath), dwWhich, pdwFileAttributes);
+
+    if (pdwFileAttributes)
+        *pdwFileAttributes = INVALID_FILE_ATTRIBUTES;
+
+    if (!pszPath)
+        return FALSE;
+
+    if (!dwWhich || (*PathFindExtensionW(pszPath) && (dwWhich & WHICH_OPTIONAL)))
+        return PathFileExistsAndAttributesW(pszPath, pdwFileAttributes);
+
+    if (!PathFileExistsDefExtW(pszPath, dwWhich))
+    {
+        if (pdwFileAttributes)
+            *pdwFileAttributes = INVALID_FILE_ATTRIBUTES;
+        return FALSE;
+    }
+
+    if (pdwFileAttributes)
+        *pdwFileAttributes = GetFileAttributesW(pszPath);
+
+    return TRUE;
+}
