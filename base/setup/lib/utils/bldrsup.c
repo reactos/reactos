@@ -1160,38 +1160,94 @@ AddBootStoreEntry(
     }
 }
 
+
+//
+// TODO: It would be helpful to have the INI cache library
+// to have a function that could retrieve a key by its order
+// of appearance in the cache.
+//
+static PINI_KEYWORD
+FindIniEntryByKey(
+    _In_ PINI_SECTION OsIniSection,
+    _In_ ULONG_PTR BootEntryKey)
+{
+    if (IS_INTKEY(BootEntryKey))
+    {
+        /* BootEntryKey is a 1-based line index: count
+         * the OS entries to find which one it refers to */
+
+        PINI_KEYWORD Key = NULL;
+        PINICACHEITERATOR Iterator;
+        PCWSTR SectionName, KeyData;
+        ULONG_PTR LineId = 0;
+
+        /* Enumerate all the valid entries in the "Operating Systems" section */
+        Iterator = IniFindFirstValue(OsIniSection, &SectionName, &KeyData);
+        if (!Iterator)
+            return NULL;
+        do
+        {
+            Key = Iterator->Key;
+            /* Break as soon as we potentially have encountered the line or went over */
+            if (++LineId >= BootEntryKey)
+                break;
+            Key = NULL;
+        }
+        while (IniFindNextValue(Iterator, &SectionName, &KeyData));
+        IniFindClose(Iterator);
+
+        return ((LineId == BootEntryKey) ? Key : NULL);
+    }
+    else
+    {
+        /* BootEntryKey is a pointer to the section name */
+        PCWSTR Dummy;
+        return IniGetKey(OsIniSection, (PCWSTR)BootEntryKey, &Dummy);
+    }
+}
+
+/**
+ * @brief
+ * Deletes an existing boot entry, specified by BootEntry->BootEntryKey.
+ **/
 NTSTATUS
 DeleteBootStoreEntry(
-    IN PVOID Handle,
-    IN ULONG_PTR BootEntryKey)
+    _In_ PVOID Handle,
+    _In_ ULONG_PTR BootEntryKey)
 {
     PBOOT_STORE_CONTEXT BootStore = (PBOOT_STORE_CONTEXT)Handle;
 
     if (!BootStore)
         return STATUS_INVALID_PARAMETER;
 
-    /*
-     * NOTE: Currently we open & map the loader configuration file without
-     * further tests. It's OK as long as we only deal with FreeLdr's freeldr.ini
-     * and NTLDR's boot.ini files. But as soon as we'll implement support for
-     * BOOTMGR detection, the "configuration file" will be the BCD registry
-     * hive and then, we'll have instead to mount the hive & open it.
-     */
-
-    //
-    // FIXME!!
-    //
-
     // if (BootStore->Type >= BldrTypeMax || NtosBootLoaders[BootStore->Type].Type >= BldrTypeMax)
-    if (BootStore->Type != FreeLdr)
+    if ((BootStore->Type == FreeLdr) || (BootStore->Type == NtLdr))
     {
-        DPRINT1("Loader type %d is currently unsupported!\n", NtosBootLoaders[BootStore->Type].Type);
+        PBOOT_STORE_INI_CONTEXT IniBootStore = (PBOOT_STORE_INI_CONTEXT)BootStore;
+        PINI_KEYWORD Key;
+
+        Key = FindIniEntryByKey(IniBootStore->OsIniSection, BootEntryKey);
+        if (!Key)
+            return STATUS_NOT_FOUND;
+
+        if (BootStore->Type == FreeLdr)
+        {
+            /* Remove the corresponding section */
+            PINI_SECTION IniSection;
+            IniSection = IniGetSection(IniBootStore->IniCache, Key->Name);
+            if (IniSection)
+                IniRemoveSection(IniSection);
+        }
+
+        /* Remove the entry into the "Operating Systems" section */
+        IniRemoveKey(IniBootStore->OsIniSection, Key);
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+        DPRINT1("Loader type %d is currently unsupported!\n", BootStore->Type);
         return STATUS_NOT_SUPPORTED;
     }
-
-    // FIXME! This function needs my INI library rewrite to be implemented!!
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
 }
 
 /**

@@ -184,8 +184,8 @@ AddBootStoreEntry(
 
 NTSTATUS
 DeleteBootStoreEntry(
-    IN PVOID Handle,
-    IN ULONG_PTR BootEntryKey);
+    _In_ PVOID Handle,
+    _In_ ULONG_PTR BootEntryKey);
 
 NTSTATUS
 ModifyBootStoreEntry(
