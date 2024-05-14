@@ -975,27 +975,48 @@ CloseBootStore(
 }
 
 
-static
-NTSTATUS
-CreateNTOSEntry(
-    IN PBOOT_STORE_INI_CONTEXT BootStore,
-    IN ULONG_PTR BootEntryKey,
-    IN PBOOT_STORE_ENTRY BootEntry)
+static NTSTATUS
+CreateFreeLdrEntry(
+    _In_ PBOOT_STORE_INI_CONTEXT BootStore,
+    _In_ PBOOT_STORE_ENTRY BootEntry,
+    _Out_opt_ PULONG_PTR BootEntryKey)
 {
     PINI_SECTION IniSection;
-    PCWSTR Section = (PCWSTR)BootEntryKey;
+    PCWSTR SectionName = (PCWSTR)BootEntry->BootEntryKey;
+
+    PWCHAR Buffer = NULL;
+    PCWSTR FriendlyName = BootEntry->FriendlyName;
+    SIZE_T BufferLength = wcslen(FriendlyName);
+
+    /* If FriendlyName is not quoted, allocate a buffer for quoting it
+     * before using it, otherwise use FriendlyName directly */
+    if (BufferLength && (FriendlyName[0] != L'\"' || FriendlyName[BufferLength-1] != L'\"'))
+    {
+        BufferLength += 2 + 1; // Quotes for FriendlyName and NULL-termination
+        Buffer = RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, BufferLength * sizeof(WCHAR));
+        /* If allocation failed, just use FriendlyName directly and hope for the best */
+        if (Buffer)
+        {
+            *Buffer = UNICODE_NULL;
+            RtlStringCchCatW(Buffer, BufferLength, L"\"");
+            RtlStringCchCatW(Buffer, BufferLength, FriendlyName);
+            RtlStringCchCatW(Buffer, BufferLength, L"\"");
+            FriendlyName = Buffer;
+        }
+    }
 
     /* Insert the entry into the "Operating Systems" section */
-    IniAddKey(BootStore->OsIniSection, Section, BootEntry->FriendlyName);
+    IniAddKey(BootStore->OsIniSection, SectionName, FriendlyName);
+
+    if (Buffer)
+        RtlFreeHeap(ProcessHeap, 0, Buffer);
+    Buffer = NULL;
 
     /* Create a new section */
-    IniSection = IniAddSection(BootStore->IniCache, Section);
+    IniSection = IniAddSection(BootStore->IniCache, SectionName);
 
-    if (BootEntry->OsOptionsLength >= sizeof(NTOS_OPTIONS) &&
-        RtlCompareMemory(&BootEntry->OsOptions /* Signature */,
-                         NTOS_OPTIONS_SIGNATURE,
-                         RTL_FIELD_SIZE(NTOS_OPTIONS, Signature)) ==
-                         RTL_FIELD_SIZE(NTOS_OPTIONS, Signature))
+    if ((BootEntry->OsOptionsLength >= sizeof(NTOS_OPTIONS)) &&
+        (*(ULONGLONG*)BootEntry->OsOptions /* Signature */ == NTOS_OPTIONS_SIGNATURE))
     {
         PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
 
@@ -1005,11 +1026,8 @@ CreateNTOSEntry(
         IniAddKey(IniSection, L"Options", Options->OsLoadOptions);
     }
     else
-    if (BootEntry->OsOptionsLength >= sizeof(BOOTSECTOR_OPTIONS) &&
-        RtlCompareMemory(&BootEntry->OsOptions /* Signature */,
-                         BOOTSECTOR_OPTIONS_SIGNATURE,
-                         RTL_FIELD_SIZE(BOOTSECTOR_OPTIONS, Signature)) ==
-                         RTL_FIELD_SIZE(BOOTSECTOR_OPTIONS, Signature))
+    if ((BootEntry->OsOptionsLength >= sizeof(BOOTSECTOR_OPTIONS)) &&
+        (*(ULONGLONG*)BootEntry->OsOptions /* Signature */ == BOOTSECTOR_OPTIONS_SIGNATURE))
     {
         PBOOTSECTOR_OPTIONS Options = (PBOOTSECTOR_OPTIONS)&BootEntry->OsOptions;
 
@@ -1020,104 +1038,108 @@ CreateNTOSEntry(
     }
     else
     {
-        // DPRINT1("Unsupported BootType %lu/'%*.s'\n",
-                // BootEntry->OsOptionsLength, 8, &BootEntry->OsOptions);
         DPRINT1("Unsupported BootType %lu\n", BootEntry->OsOptionsLength);
     }
 
+    if (BootEntryKey)
+        *BootEntryKey = BootEntry->BootEntryKey;
     return STATUS_SUCCESS;
 }
 
+static NTSTATUS
+CreateNtLdrEntry(
+    _In_ PBOOT_STORE_INI_CONTEXT BootStore,
+    _In_ PBOOT_STORE_ENTRY BootEntry,
+    _Out_opt_ PULONG_PTR BootEntryKey)
+{
+    PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
+    PWCHAR Buffer;
+    SIZE_T BufferLength;
+    PCWSTR InstallName, OsOptions;
+    // ULONG InstallNameLength, OsOptionsLength;
+    BOOLEAN IsNameNotQuoted;
+
+    if ((BootEntry->OsOptionsLength < sizeof(NTOS_OPTIONS)) ||
+        (*(ULONGLONG*)BootEntry->OsOptions /* Signature */ != NTOS_OPTIONS_SIGNATURE))
+    {
+        DPRINT1("Unsupported BootType %lu\n", BootEntry->OsOptionsLength);
+        return STATUS_SUCCESS; // STATUS_NOT_SUPPORTED;
+    }
+
+    InstallName = BootEntry->FriendlyName;
+    OsOptions = Options->OsLoadOptions;
+
+    // if (InstallNameLength == 0) InstallName = NULL;
+    // if (OsOptionsLength == 0) OsOptions = NULL;
+
+    BufferLength = wcslen(InstallName);
+    IsNameNotQuoted = (InstallName[0] != L'\"' || InstallName[BufferLength-1] != L'\"');
+
+    BufferLength += (IsNameNotQuoted ? 2 /* Quotes for FriendlyName*/ : 0);
+    if (OsOptions)
+        BufferLength += 1 /* Space between FriendlyName and options */ + wcslen(OsOptions);
+    BufferLength++; /* NULL-termination */
+
+    Buffer = RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, BufferLength * sizeof(WCHAR));
+    if (!Buffer)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    *Buffer = UNICODE_NULL;
+    if (IsNameNotQuoted) RtlStringCchCatW(Buffer, BufferLength, L"\"");
+    RtlStringCchCatW(Buffer, BufferLength, InstallName);
+    if (IsNameNotQuoted) RtlStringCchCatW(Buffer, BufferLength, L"\"");
+    if (OsOptions)
+    {
+        RtlStringCchCatW(Buffer, BufferLength, L" ");
+        RtlStringCchCatW(Buffer, BufferLength, OsOptions);
+    }
+
+    /* Insert the entry into the "Operating Systems" section */
+    IniAddKey(BootStore->OsIniSection, Options->OsLoadPath, Buffer);
+    // TODO: What if we could determine a line ID for where this key has been inserted??
+    // If so, this would become the BootEntryKey, see below.
+
+    RtlFreeHeap(ProcessHeap, 0, Buffer);
+
+    if (BootEntryKey)
+        *BootEntryKey = 0; // FIXME: BootEntry->BootEntryKey;
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief
+ * Adds a new boot entry. The entry to add specifies, via
+ * BootEntry->BootEntryKey, a clue where and how to insert
+ * the entry. The new data is given by the other structure members.
+ **/
 NTSTATUS
 AddBootStoreEntry(
-    IN PVOID Handle,
-    IN PBOOT_STORE_ENTRY BootEntry,
-    IN ULONG_PTR BootEntryKey)
+    _In_ PVOID Handle,
+    _In_ PBOOT_STORE_ENTRY BootEntry,
+    _Out_opt_ PULONG_PTR BootEntryKey)
 {
     PBOOT_STORE_CONTEXT BootStore = (PBOOT_STORE_CONTEXT)Handle;
 
     if (!BootStore || !BootEntry)
         return STATUS_INVALID_PARAMETER;
 
-    /*
-     * NOTE: Currently we open & map the loader configuration file without
-     * further tests. It's OK as long as we only deal with FreeLdr's freeldr.ini
-     * and NTLDR's boot.ini files. But as soon as we'll implement support for
-     * BOOTMGR detection, the "configuration file" will be the BCD registry
-     * hive and then, we'll have instead to mount the hive & open it.
-     */
-
-    //
-    // FIXME!!
-    //
-
     // if (BootStore->Type >= BldrTypeMax || NtosBootLoaders[BootStore->Type].Type >= BldrTypeMax)
-
     if (BootStore->Type == FreeLdr)
     {
         if (BootEntry->Version != FreeLdr)
             return STATUS_INVALID_PARAMETER;
 
-        return CreateNTOSEntry((PBOOT_STORE_INI_CONTEXT)BootStore,
-                               BootEntryKey, BootEntry);
+        return CreateFreeLdrEntry((PBOOT_STORE_INI_CONTEXT)BootStore,
+                                  BootEntry, BootEntryKey);
     }
     else
     if (BootStore->Type == NtLdr)
     {
-        PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
-        PWCHAR Buffer;
-        ULONG BufferLength;
-        PCWSTR InstallName, OsOptions;
-        // ULONG InstallNameLength, OsOptionsLength;
-        BOOLEAN IsNameNotQuoted;
-
         if (BootEntry->Version != NtLdr)
             return STATUS_INVALID_PARAMETER;
 
-        if (BootEntry->OsOptionsLength < sizeof(NTOS_OPTIONS) ||
-            RtlCompareMemory(&BootEntry->OsOptions /* Signature */,
-                             NTOS_OPTIONS_SIGNATURE,
-                             RTL_FIELD_SIZE(NTOS_OPTIONS, Signature)) !=
-                             RTL_FIELD_SIZE(NTOS_OPTIONS, Signature))
-        {
-            // DPRINT1("Unsupported BootType '%S'\n", BootEntry->Version);
-            DPRINT1("Unsupported BootType %lu\n", BootEntry->OsOptionsLength);
-            return STATUS_SUCCESS; // STATUS_NOT_SUPPORTED;
-        }
-
-        InstallName = BootEntry->FriendlyName;
-        OsOptions = Options->OsLoadOptions;
-
-        // if (InstallNameLength == 0) InstallName = NULL;
-        // if (OsOptionsLength == 0) OsOptions = NULL;
-
-        IsNameNotQuoted = (InstallName[0] != L'\"' || InstallName[wcslen(InstallName)-1] != L'\"');
-
-        BufferLength = (IsNameNotQuoted ? 2 /* Quotes for FriendlyName*/ : 0) + wcslen(InstallName);
-        if (OsOptions)
-            BufferLength += 1 /* Space between FriendlyName and options */ + wcslen(OsOptions);
-        BufferLength++; /* NULL-termination */
-
-        Buffer = RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, BufferLength * sizeof(WCHAR));
-        if (!Buffer)
-            return STATUS_INSUFFICIENT_RESOURCES;
-
-        *Buffer = UNICODE_NULL;
-        if (IsNameNotQuoted) RtlStringCchCatW(Buffer, BufferLength, L"\"");
-        RtlStringCchCatW(Buffer, BufferLength, InstallName);
-        if (IsNameNotQuoted) RtlStringCchCatW(Buffer, BufferLength, L"\"");
-        if (OsOptions)
-        {
-            RtlStringCchCatW(Buffer, BufferLength, L" ");
-            RtlStringCchCatW(Buffer, BufferLength, OsOptions);
-        }
-
-        /* Insert the entry into the "Operating Systems" section */
-        IniAddKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OsIniSection,
-                  Options->OsLoadPath, Buffer);
-
-        RtlFreeHeap(ProcessHeap, 0, Buffer);
-        return STATUS_SUCCESS;
+        return CreateNtLdrEntry((PBOOT_STORE_INI_CONTEXT)BootStore,
+                                BootEntry, BootEntryKey);
     }
     else
     {
@@ -1415,7 +1437,7 @@ FreeLdrEnumerateBootEntries(
 
             BootEntry->OsOptionsLength = sizeof(NTOS_OPTIONS);
             RtlCopyMemory(Options->Signature,
-                          NTOS_OPTIONS_SIGNATURE,
+                          &NTOS_OPTIONS_SIGNATURE,
                           RTL_FIELD_SIZE(NTOS_OPTIONS, Signature));
 
             // BootEntry->BootFilePath = NULL;
@@ -1442,7 +1464,7 @@ FreeLdrEnumerateBootEntries(
 
             BootEntry->OsOptionsLength = sizeof(BOOTSECTOR_OPTIONS);
             RtlCopyMemory(Options->Signature,
-                          BOOTSECTOR_OPTIONS_SIGNATURE,
+                          &BOOTSECTOR_OPTIONS_SIGNATURE,
                           RTL_FIELD_SIZE(BOOTSECTOR_OPTIONS, Signature));
 
             // BootEntry->BootFilePath = NULL;
@@ -1592,7 +1614,7 @@ NtLdrEnumerateBootEntries(
 
         BootEntry->OsOptionsLength = sizeof(NTOS_OPTIONS);
         RtlCopyMemory(Options->Signature,
-                      NTOS_OPTIONS_SIGNATURE,
+                      &NTOS_OPTIONS_SIGNATURE,
                       RTL_FIELD_SIZE(NTOS_OPTIONS, Signature));
 
         Options->OsLoadPath    = SectionName;

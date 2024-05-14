@@ -65,64 +65,64 @@ CreateFreeLoaderReactOSEntries(
 
     BootEntry->OsOptionsLength = sizeof(NTOS_OPTIONS);
     RtlCopyMemory(Options->Signature,
-                  NTOS_OPTIONS_SIGNATURE,
+                  &NTOS_OPTIONS_SIGNATURE,
                   RTL_FIELD_SIZE(NTOS_OPTIONS, Signature));
 
     Options->OsLoadPath = ArcPath;
 
     /* ReactOS */
-    // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS");
+    BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS");
     BootEntry->FriendlyName = L"\"ReactOS\"";
     Options->OsLoadOptions  = L"/FASTDETECT";
-    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS"));
+    AddBootStoreEntry(BootStoreHandle, BootEntry, NULL);
 
     /* ReactOS_Debug */
-    // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_Debug");
+    BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_Debug");
     BootEntry->FriendlyName = L"\"ReactOS (Debug)\"";
     Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS";
-    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_Debug"));
+    AddBootStoreEntry(BootStoreHandle, BootEntry, NULL);
 
 #ifdef _WINKD_
     /* ReactOS_VBoxDebug */
-    // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_VBoxDebug");
+    BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_VBoxDebug");
     BootEntry->FriendlyName = L"\"ReactOS (VBox Debug)\"";
     Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=VBOX /SOS";
-    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_VBoxDebug"));
+    AddBootStoreEntry(BootStoreHandle, BootEntry, NULL);
 #endif
 #if DBG
 #ifndef _WINKD_
     /* ReactOS_KdSerial */
-    // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_KdSerial");
+    BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_KdSerial");
     BootEntry->FriendlyName = L"\"ReactOS (RosDbg)\"";
     Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /KDSERIAL";
-    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_KdSerial"));
+    AddBootStoreEntry(BootStoreHandle, BootEntry, NULL);
 #endif
 
     /* ReactOS_Screen */
-    // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_Screen");
+    BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_Screen");
     BootEntry->FriendlyName = L"\"ReactOS (Screen)\"";
     Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=SCREEN /SOS";
-    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_Screen"));
+    AddBootStoreEntry(BootStoreHandle, BootEntry, NULL);
 
     /* ReactOS_LogFile */
-    // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_LogFile");
+    BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_LogFile");
     BootEntry->FriendlyName = L"\"ReactOS (Log file)\"";
     Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=FILE /SOS";
-    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_LogFile"));
+    AddBootStoreEntry(BootStoreHandle, BootEntry, NULL);
 
     /* ReactOS_Ram */
-    // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_Ram");
+    BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_Ram");
     BootEntry->FriendlyName = L"\"ReactOS (RAM Disk)\"";
     Options->OsLoadPath     = L"ramdisk(0)\\ReactOS";
     Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /RDPATH=reactos.img /RDIMAGEOFFSET=32256";
-    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_Ram"));
+    AddBootStoreEntry(BootStoreHandle, BootEntry, NULL);
 
     /* ReactOS_EMS */
-    // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_EMS");
+    BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_EMS");
     BootEntry->FriendlyName = L"\"ReactOS (Emergency Management Services)\"";
     Options->OsLoadPath     = ArcPath;
     Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /redirect=com2 /redirectbaudrate=115200";
-    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_EMS"));
+    AddBootStoreEntry(BootStoreHandle, BootEntry, NULL);
 #endif
 
 
@@ -278,15 +278,15 @@ CreateFreeLoaderIniForReactOSAndBootSector(
 
     BootEntry->OsOptionsLength = sizeof(BOOTSECTOR_OPTIONS);
     RtlCopyMemory(Options->Signature,
-                  BOOTSECTOR_OPTIONS_SIGNATURE,
+                  &BOOTSECTOR_OPTIONS_SIGNATURE,
                   RTL_FIELD_SIZE(BOOTSECTOR_OPTIONS, Signature));
 
     Options->BootPath = BootPathBuffer;
     Options->FileName = BootSector;
 
-    // BootEntry->BootEntryKey = MAKESTRKEY(Section);
+    BootEntry->BootEntryKey = MAKESTRKEY(Section);
     BootEntry->FriendlyName = Description;
-    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(Section));
+    AddBootStoreEntry(BootStoreHandle, BootEntry, NULL);
 
     /* Close the INI file */
     CloseBootStore(BootStoreHandle);
@@ -326,7 +326,7 @@ EnumerateReactOSEntries(
     /* Check for supported boot type "Windows2003" */
     if (BootEntry->OsOptionsLength < sizeof(NTOS_OPTIONS) ||
         RtlCompareMemory(&BootEntry->OsOptions /* Signature */,
-                         NTOS_OPTIONS_SIGNATURE,
+                         &NTOS_OPTIONS_SIGNATURE,
                          RTL_FIELD_SIZE(NTOS_OPTIONS, Signature)) !=
                          RTL_FIELD_SIZE(NTOS_OPTIONS, Signature))
     {
@@ -432,15 +432,15 @@ UpdateFreeLoaderIni(
 
         BootEntry->OsOptionsLength = sizeof(NTOS_OPTIONS);
         RtlCopyMemory(Options->Signature,
-                      NTOS_OPTIONS_SIGNATURE,
+                      &NTOS_OPTIONS_SIGNATURE,
                       RTL_FIELD_SIZE(NTOS_OPTIONS, Signature));
 
         Options->OsLoadPath = ArcPath;
 
-        // BootEntry->BootEntryKey = MAKESTRKEY(Data.SectionName);
+        BootEntry->BootEntryKey = MAKESTRKEY(Data.SectionName);
         BootEntry->FriendlyName = Data.OsName;
         Options->OsLoadOptions  = NULL; // L"";
-        AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(Data.SectionName));
+        AddBootStoreEntry(BootStoreHandle, BootEntry, NULL);
     }
 
     /* Close the INI file */
@@ -492,16 +492,16 @@ UpdateBootIni(
 
         BootEntry->OsOptionsLength = sizeof(NTOS_OPTIONS);
         RtlCopyMemory(Options->Signature,
-                      NTOS_OPTIONS_SIGNATURE,
+                      &NTOS_OPTIONS_SIGNATURE,
                       RTL_FIELD_SIZE(NTOS_OPTIONS, Signature));
 
         Options->OsLoadPath = EntryName;
 
-        // BootEntry->BootEntryKey = MAKESTRKEY(Data.SectionName);
+        BootEntry->BootEntryKey = MAKESTRKEY(0 /*Data.SectionName*/);
         // BootEntry->FriendlyName = Data.OsName;
         BootEntry->FriendlyName = EntryValue;
         Options->OsLoadOptions  = NULL; // L"";
-        AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(0 /*Data.SectionName*/));
+        AddBootStoreEntry(BootStoreHandle, BootEntry, NULL);
     }
 
     /* Close the INI file */

@@ -85,7 +85,7 @@ typedef struct _BOOT_STORE_ENTRY
 /* "NTOS" (aka. ReactOS or MS Windows NT) <= 5.x options */
 typedef struct _NTOS_OPTIONS
 {
-    UCHAR Signature[8];     // "NTOS_5\0\0"
+    UCHAR Signature[8]; // "NTOS_5\0\0"
     // ULONG Version;
     // ULONG Length;
     PCWSTR OsLoadPath;      // The OS SystemRoot path   // OsLoaderFilePath // OsFilePath
@@ -98,20 +98,22 @@ typedef struct _NTOS_OPTIONS
  *  FILE_PATH OsLoadPath;
  */
 } NTOS_OPTIONS, *PNTOS_OPTIONS;
+C_ASSERT(RTL_FIELD_SIZE(NTOS_OPTIONS, Signature) == sizeof(ULONGLONG));
 
-#define NTOS_OPTIONS_SIGNATURE "NTOS_5\0\0"
+#define NTOS_OPTIONS_SIGNATURE          (*(ULONGLONG*)"NTOS_5\0\0")
 
 /* Options for boot-sector boot entries */
 typedef struct _BOOTSECTOR_OPTIONS
 {
-    UCHAR Signature[8];     // "BootSect"
+    UCHAR Signature[8]; // "BootSect"
     // ULONG Version;
     // ULONG Length;
     PCWSTR BootPath;
     PCWSTR FileName;
 } BOOTSECTOR_OPTIONS, *PBOOTSECTOR_OPTIONS;
+C_ASSERT(RTL_FIELD_SIZE(BOOTSECTOR_OPTIONS, Signature) == sizeof(ULONGLONG));
 
-#define BOOTSECTOR_OPTIONS_SIGNATURE "BootSect"
+#define BOOTSECTOR_OPTIONS_SIGNATURE    (*(ULONGLONG*)"BootSect")
 
 
 typedef NTSTATUS
@@ -176,9 +178,9 @@ CloseBootStore(
 
 NTSTATUS
 AddBootStoreEntry(
-    IN PVOID Handle,
-    IN PBOOT_STORE_ENTRY BootEntry,
-    IN ULONG_PTR BootEntryKey);
+    _In_ PVOID Handle,
+    _In_ PBOOT_STORE_ENTRY BootEntry,
+    _Out_opt_ PULONG_PTR BootEntryKey);
 
 NTSTATUS
 DeleteBootStoreEntry(

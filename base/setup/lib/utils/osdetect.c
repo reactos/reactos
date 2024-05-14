@@ -94,7 +94,7 @@ EnumerateInstallations(
     /* Check for supported boot type "Windows2003" */
     if (BootEntry->OsOptionsLength < sizeof(NTOS_OPTIONS) ||
         RtlCompareMemory(&BootEntry->OsOptions /* Signature */,
-                         NTOS_OPTIONS_SIGNATURE,
+                         &NTOS_OPTIONS_SIGNATURE,
                          RTL_FIELD_SIZE(NTOS_OPTIONS, Signature)) !=
                          RTL_FIELD_SIZE(NTOS_OPTIONS, Signature))
     {
