@@ -345,16 +345,13 @@ FreeLdrMigrateBootDrivePart(
             continue;
         }
         if ((_wcsicmp(KeyData, L"Drive")     == 0) ||
-            (_wcsicmp(KeyData, L"\"Drive\"") == 0) ||
-            (_wcsicmp(KeyData, L"Partition")     == 0) ||
-            (_wcsicmp(KeyData, L"\"Partition\"") == 0))
+            (_wcsicmp(KeyData, L"Partition") == 0))
         {
             /* Modify the BootPath value */
             IniAddKey(OsIniSection, L"BootType", L"BootSector");
             goto migrate_drivepart;
         }
-        if ((_wcsicmp(KeyData, L"BootSector")     == 0) ||
-            (_wcsicmp(KeyData, L"\"BootSector\"") == 0))
+        if (_wcsicmp(KeyData, L"BootSector") == 0)
         {
 migrate_drivepart:
             DPRINT("This is a '%S' boot entry\n", KeyData);
@@ -362,51 +359,111 @@ migrate_drivepart:
         }
     }
     while (IniFindNextValue(Iterator, &SectionName, &KeyData));
-
     IniFindClose(Iterator);
 }
 //////////////
 
 
 static VOID
-CreateCommonFreeLdrSections(
-    IN OUT PBOOT_STORE_INI_CONTEXT BootStore)
+GetCreateIniBootStoreCommonSections(
+    _Inout_ PBOOT_STORE_INI_CONTEXT BootStore,
+    _In_ BOOLEAN CreateSections)
 {
     PINI_SECTION IniSection;
 
-    /*
-     * Cache the "FREELOADER" section for our future usage.
-     */
+    if (BootStore->Header.Type == FreeLdr)
+    {
+        /* Get or create the "FREELOADER" section */
+        IniSection = IniAddSection(BootStore->IniCache, L"FREELOADER");
+        if (!IniSection)
+            DPRINT1("Failed to create/retrieve 'FREELOADER' section\n");
 
-    /* Create the "FREELOADER" section */
-    IniSection = IniAddSection(BootStore->IniCache, L"FREELOADER");
-    if (!IniSection)
-        DPRINT1("CreateCommonFreeLdrSections: Failed to create 'FREELOADER' section!\n");
+        BootStore->OptionsIniSection = IniSection;
 
-    BootStore->OptionsIniSection = IniSection;
+        /* Get or create the "Operating Systems" section */
+        IniSection = IniAddSection(BootStore->IniCache, L"Operating Systems");
+        if (!IniSection)
+            DPRINT1("Failed to create/retrieve 'Operating Systems' section\n");
 
-    /* TimeOut */
-    IniAddKey(BootStore->OptionsIniSection, L"TimeOut", L"0");
+        BootStore->OsIniSection = IniSection;
+    }
+    else
+    if (BootStore->Header.Type == NtLdr)
+    {
+        IniSection = NULL;
+        if (!CreateSections)
+        {
+            /*
+             * HISTORICAL NOTE:
+             *
+             * While the "operating systems" section acquired its definitive
+             * name already when Windows NT was at its very early beta stage
+             * (NT 3.1 October 1991 Beta, 10-16-1991), this was not the case
+             * for its general settings section "boot loader".
+             *
+             * The following section names were successively introduced:
+             *
+             * - In NT 3.1 October 1991 Beta, 10-16-1991, using OS Loader V1.5,
+             *   the section was named "multiboot".
+             *
+             * - In the next public beta version NT 3.10.340 Beta, 10-12-1992,
+             *   using OS Loader V2.10, a new name was introduced: "flexboot".
+             *   This is around this time that the NT OS Loader was also
+             *   introduced as the "Windows NT FlexBoot" loader, as shown by
+             *   the Windows NT FAQs that circulated around this time:
+             *   http://cd.textfiles.com/cica9308/CIS_LIBS/WINNT/1/NTFAQ.TXT
+             *   http://cd.textfiles.com/cica/cica9308/UNZIPPED/NT/NTFAQ/FTP/NEWS/NTFAQ1.TXT
+             *   I can only hypothesize that the "FlexBoot" name was chosen
+             *   as a marketing coup, possibly to emphasise its "flexibility"
+             *   as a simple multiboot-aware boot manager.
+             *
+             * - A bit later, with NT 3.10.404 Beta, 3-7-1993, using an updated
+             *   version of OS Loader V2.10, the final section name "boot loader"
+             *   was introduced, and was kept since then.
+             *
+             * Due to the necessity to be able to boot and / or upgrade any
+             * Windows NT version at any time, including its NT Loader and the
+             * associated boot.ini file, all versions of NTLDR and the NT installer
+             * understand and parse these three section names, the default one
+             * being "boot loader", and if not present, they successively fall
+             * back to "flexboot" and then to "multiboot".
+             */
 
-    /* Create "Display" section */
-    IniSection = IniAddSection(BootStore->IniCache, L"Display");
+            /* Get the "boot loader" section, or fall back to "flexboot" or "multiboot" */
+            IniSection = IniGetSection(BootStore->IniCache, L"boot loader");
+            if (!IniSection)
+                IniSection = IniGetSection(BootStore->IniCache, L"flexboot");
+            if (!IniSection)
+                IniSection = IniGetSection(BootStore->IniCache, L"multiboot");
+        }
+        if (!IniSection)
+        {
+            /* Create the "boot loader" section if it does not exist yet */
+            IniSection = IniAddSection(BootStore->IniCache, L"boot loader");
+        }
+        if (!IniSection)
+            DPRINT1("Failed to create/retrieve 'boot loader' section\n");
 
-    /* TitleText and MinimalUI */
-    IniAddKey(IniSection, L"TitleText", L"ReactOS Boot Manager");
-    IniAddKey(IniSection, L"MinimalUI", L"Yes");
+        BootStore->OptionsIniSection = IniSection;
 
-    /*
-     * Cache the "Operating Systems" section for our future usage.
-     */
+        /* Get or create the "Operating Systems" section */
+        IniSection = IniAddSection(BootStore->IniCache, L"operating systems");
+        if (!IniSection)
+            DPRINT1("Failed to create/retrieve 'operating systems' section\n");
 
-    /* Create the "Operating Systems" section */
-    IniSection = IniAddSection(BootStore->IniCache, L"Operating Systems");
-    if (!IniSection)
-        DPRINT1("CreateCommonFreeLdrSections: Failed to create 'Operating Systems' section!\n");
-
-    BootStore->OsIniSection = IniSection;
+        BootStore->OsIniSection = IniSection;
+    }
+    else
+    {
+        ASSERT(FALSE);
+    }
 }
 
+/**
+ * @brief
+ * The open boot store helper for INI-based boot stores
+ * (boot.ini and freeldr.ini).
+ **/
 static NTSTATUS
 OpenIniBootLoaderStore(
     _Out_ PVOID* Handle,
@@ -422,15 +479,6 @@ OpenIniBootLoaderStore(
     IO_STATUS_BLOCK IoStatusBlock;
     ACCESS_MASK DesiredAccess;
     ULONG CreateDisposition;
-
-    //
-    // WARNING! We support the INI creation *ONLY* for FreeLdr, and not for NTLDR
-    //
-    if ((Type == NtLdr) && (OpenMode == BS_CreateNew || OpenMode == BS_CreateAlways || OpenMode == BS_RecreateExisting))
-    {
-        DPRINT1("OpenIniBootLoaderStore() unsupported for NTLDR\n");
-        return STATUS_NOT_SUPPORTED;
-    }
 
     /* Create a boot store structure */
     BootStore = RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, sizeof(*BootStore));
@@ -595,13 +643,12 @@ OpenIniBootLoaderStore(
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
-        if (Type == FreeLdr)
-            CreateCommonFreeLdrSections(BootStore);
+        GetCreateIniBootStoreCommonSections(BootStore, TRUE);
+        // ASSERT(BootStore->OptionsIniSection);
+        // ASSERT(BootStore->OsIniSection);
     }
     else // if (IoStatusBlock.Information == FILE_OPENED) // with: FILE_OPEN, FILE_OPEN_IF
     {
-        PINI_SECTION IniSection;
-
         /*
          * The loader configuration INI file exists and is opened,
          * map its file contents into memory.
@@ -648,113 +695,16 @@ OpenIniBootLoaderStore(
             return Status;
         }
 
+        GetCreateIniBootStoreCommonSections(BootStore, FALSE);
+        // ASSERT(BootStore->OptionsIniSection);
+        // ASSERT(BootStore->OsIniSection);
+
+        //
+        // TEMPORARY: Migrate the DEPRECATED BootDrive and BootPartition
+        // values of BootSector boot entries to the newer BootPath value.
+        //
         if (Type == FreeLdr)
-        {
-            /*
-             * Cache the "FREELOADER" section for our future usage.
-             */
-
-            /* Get or create the "FREELOADER" section */
-            IniSection = IniAddSection(BootStore->IniCache, L"FREELOADER");
-            if (!IniSection)
-                DPRINT1("OpenIniBootLoaderStore: Failed to retrieve 'FREELOADER' section!\n");
-
-            BootStore->OptionsIniSection = IniSection;
-
-            /*
-             * Cache the "Operating Systems" section for our future usage.
-             */
-
-            /* Get or create the "Operating Systems" section */
-            IniSection = IniAddSection(BootStore->IniCache, L"Operating Systems");
-            if (!IniSection)
-                DPRINT1("OpenIniBootLoaderStore: Failed to retrieve 'Operating Systems' section!\n");
-
-            BootStore->OsIniSection = IniSection;
-
-            //
-            // TEMPORARY: Migrate the DEPRECATED BootDrive and BootPartition
-            // values of BootSector boot entries to the newer BootPath value.
-            //
             FreeLdrMigrateBootDrivePart(BootStore);
-        }
-        else
-        if (Type == NtLdr)
-        {
-            /*
-             * Cache the "boot loader" section for our future usage.
-             */
-            /*
-             * HISTORICAL NOTE:
-             *
-             * While the "operating systems" section acquired its definitive
-             * name already when Windows NT was at its very early beta stage
-             * (NT 3.1 October 1991 Beta, 10-16-1991), this was not the case
-             * for its general settings section "boot loader".
-             *
-             * The following section names were successively introduced:
-             *
-             * - In NT 3.1 October 1991 Beta, 10-16-1991, using OS Loader V1.5,
-             *   the section was named "multiboot".
-             *
-             * - In the next public beta version NT 3.10.340 Beta, 10-12-1992,
-             *   using OS Loader V2.10, a new name was introduced: "flexboot".
-             *   This is around this time that the NT OS Loader was also
-             *   introduced as the "Windows NT FlexBoot" loader, as shown by
-             *   the Windows NT FAQs that circulated around this time:
-             *   http://cd.textfiles.com/cica9308/CIS_LIBS/WINNT/1/NTFAQ.TXT
-             *   http://cd.textfiles.com/cica/cica9308/UNZIPPED/NT/NTFAQ/FTP/NEWS/NTFAQ1.TXT
-             *   I can only hypothesize that the "FlexBoot" name was chosen
-             *   as a marketing coup, possibly to emphasise its "flexibility"
-             *   as a simple multiboot-aware boot manager.
-             *
-             * - A bit later, with NT 3.10.404 Beta, 3-7-1993, using an updated
-             *   version of OS Loader V2.10, the final section name "boot loader"
-             *   was introduced, and was kept since then.
-             *
-             * Due to the necessity to be able to boot and / or upgrade any
-             * Windows NT version at any time, including its NT Loader and the
-             * associated boot.ini file, all versions of NTLDR and the NT installer
-             * understand and parse these three section names, the default one
-             * being "boot loader", and if not present, they successively fall
-             * back to "flexboot" and then to "multiboot".
-             */
-
-            /* Get the "boot loader" section */
-            IniSection = IniGetSection(BootStore->IniCache, L"boot loader");
-            if (!IniSection)
-            {
-                /* Fall back to "flexboot" */
-                IniSection = IniGetSection(BootStore->IniCache, L"flexboot");
-                if (!IniSection)
-                {
-                    /* Fall back to "multiboot" */
-                    IniSection = IniGetSection(BootStore->IniCache, L"multiboot");
-                }
-            }
-#if 0
-            if (!IniSection)
-            {
-                /* It does not exist yet, so create it */
-                IniSection = IniAddSection(BootStore->IniCache, L"boot loader");
-            }
-#endif
-            if (!IniSection)
-                DPRINT1("OpenIniBootLoaderStore: Failed to retrieve 'boot loader' section!\n");
-
-            BootStore->OptionsIniSection = IniSection;
-
-            /*
-             * Cache the "Operating Systems" section for our future usage.
-             */
-
-            /* Get or create the "Operating Systems" section */
-            IniSection = IniAddSection(BootStore->IniCache, L"operating systems");
-            if (!IniSection)
-                DPRINT1("OpenIniBootLoaderStore: Failed to retrieve 'operating systems' section!\n");
-
-            BootStore->OsIniSection = IniSection;
-        }
     }
 
     *Handle = BootStore;
@@ -826,6 +776,11 @@ ProtectFile(
     return Status;
 }
 
+/**
+ * @brief
+ * The close boot store helper for INI-based boot stores
+ * (boot.ini and freeldr.ini).
+ **/
 static NTSTATUS
 CloseIniBootLoaderStore(
     _In_ PVOID Handle)
@@ -837,8 +792,6 @@ CloseIniBootLoaderStore(
     PBOOT_STORE_INI_CONTEXT BootStore = (PBOOT_STORE_INI_CONTEXT)Handle;
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG FileAttribs;
-
-    ASSERT(BootStore);
 
     /* If the INI file was opened in read-only mode, skip saving */
     if (BootStore->Header.ReadOnly)
@@ -864,7 +817,7 @@ CloseIniBootLoaderStore(
     {
         // NOTE: CORE-19575: For the time being, don't add READONLY for ease
         // of testing and modifying files, but it won't always stay this way.
-	FileAttribs &= ~FILE_ATTRIBUTE_READONLY;
+        FileAttribs &= ~FILE_ATTRIBUTE_READONLY;
     }
     /*Status =*/ ProtectFile(BootStore->FileHandle, FileAttribs, &FileAttribs);
     Status = STATUS_SUCCESS; // Ignore the status and just succeed.
@@ -949,14 +902,6 @@ OpenBootStore_UStr(
     IO_STATUS_BLOCK IoStatusBlock;
     HANDLE PartitionDirectoryHandle;
 
-    /*
-     * NOTE: Currently we open & map the loader configuration file without
-     * further tests. It's OK as long as we only deal with FreeLdr's freeldr.ini
-     * and NTLDR's boot.ini files. But as soon as we'll implement support for
-     * BOOTMGR detection, the "configuration file" will be the BCD registry
-     * hive and then, we'll have instead to mount the hive & open it.
-     */
-
     if (Type >= BldrTypeMax || NtosBootLoaders[Type].Type >= BldrTypeMax)
     {
         DPRINT1("Loader type %d is currently unsupported!\n", NtosBootLoaders[Type].Type);
@@ -1018,14 +963,6 @@ CloseBootStore(
 
     if (!BootStore)
         return STATUS_INVALID_PARAMETER;
-
-    /*
-     * NOTE: Currently we open & map the loader configuration file without
-     * further tests. It's OK as long as we only deal with FreeLdr's freeldr.ini
-     * and NTLDR's boot.ini files. But as soon as we'll implement support for
-     * BOOTMGR detection, the "configuration file" will be the BCD registry
-     * hive and then, we'll have instead to mount the hive & open it.
-     */
 
     if (BootStore->Type >= BldrTypeMax || NtosBootLoaders[BootStore->Type].Type >= BldrTypeMax)
     {
