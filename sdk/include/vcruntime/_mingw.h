@@ -262,6 +262,10 @@ allow GCC to optimize away some EH unwind code, at least in DW2 case.  */
 #  define __mingw_ovr static __cdecl
 #endif /* __cplusplus */
 
+#if defined(__cplusplus) && !defined(_MSC_VER)
+#define __nullptr nullptr
+#endif
+
 #include "_mingw_mac.h"
 
 #endif /* !_INC_MINGW */
