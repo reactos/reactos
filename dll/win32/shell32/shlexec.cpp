@@ -2431,43 +2431,42 @@ ShellExecuteExW(LPSHELLEXECUTEINFOW sei)
     DWORD dwError;
     ULONG fOldMask;
 
-    hrCoInit = SHCoInitializeAnyApartment();
-
     if (sei->cbSize != sizeof(SHELLEXECUTEINFOW))
     {
-        dwError = ERROR_ACCESS_DENIED;
-        sei->hInstApp = (HINSTANCE)ERROR_ACCESS_DENIED;
+        sei->hInstApp = (HINSTANCE)UlongToHandle(SE_ERR_ACCESSDENIED);
+        SetLastError(ERROR_ACCESS_DENIED);
+        return FALSE;
     }
-    else
+
+    hrCoInit = SHCoInitializeAnyApartment();
+
+    if (SHRegGetBoolUSValueW(L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer",
+                             L"MaximizeApps", FALSE, FALSE))
     {
-        if (SHRegGetBoolUSValueW(L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer",
-                                 L"MaximizeApps", FALSE, FALSE))
+        switch (sei->nShow)
         {
-            switch (sei->nShow)
-            {
-                case SW_SHOW:
-                case SW_SHOWDEFAULT:
-                case SW_SHOWNORMAL:
-                case SW_RESTORE:
-                    sei->nShow = SW_SHOWMAXIMIZED;
-                    break;
-                default:
-                    break;
-            }
+            case SW_SHOW:
+            case SW_SHOWDEFAULT:
+            case SW_SHOWNORMAL:
+            case SW_RESTORE:
+                sei->nShow = SW_SHOWMAXIMIZED;
+                break;
+            default:
+                break;
         }
-
-        fOldMask = sei->fMask;
-
-        if (!(fOldMask & SEE_MASK_NOASYNC) && SHELL_InRunDllProcess())
-            sei->fMask |= SEE_MASK_WAITFORINPUTIDLE | SEE_MASK_NOASYNC;
-
-        dwError = ShellExecute_Normal(sei);
-
-        if (dwError && dwError != ERROR_DLL_NOT_FOUND && dwError != ERROR_CANCELLED)
-            ShellExecute_ShowError(sei, NULL, dwError);
-
-        sei->fMask = fOldMask;
     }
+
+    fOldMask = sei->fMask;
+
+    if (!(fOldMask & SEE_MASK_NOASYNC) && SHELL_InRunDllProcess())
+        sei->fMask |= SEE_MASK_WAITFORINPUTIDLE | SEE_MASK_NOASYNC;
+
+    dwError = ShellExecute_Normal(sei);
+
+    if (dwError && dwError != ERROR_DLL_NOT_FOUND && dwError != ERROR_CANCELLED)
+        ShellExecute_ShowError(sei, NULL, dwError);
+
+    sei->fMask = fOldMask;
 
     if (SUCCEEDED(hrCoInit))
         CoUninitialize();
