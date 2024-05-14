@@ -198,15 +198,15 @@ QueryBootStoreEntry(
 
 NTSTATUS
 QueryBootStoreOptions(
-    IN PVOID Handle,
-    IN OUT PBOOT_STORE_OPTIONS BootOptions
-/* , IN PULONG BootOptionsLength */ );
+    _In_ PVOID Handle,
+    _Inout_ PBOOT_STORE_OPTIONS BootOptions
+/* , _Inout_ PULONG BootOptionsLength */);
 
 NTSTATUS
 SetBootStoreOptions(
-    IN PVOID Handle,
-    IN PBOOT_STORE_OPTIONS BootOptions,
-    IN ULONG FieldsToChange);
+    _In_ PVOID Handle,
+    _In_ PBOOT_STORE_OPTIONS BootOptions,
+    _In_ ULONG FieldsToChange);
 
 NTSTATUS
 EnumerateBootStoreEntries(

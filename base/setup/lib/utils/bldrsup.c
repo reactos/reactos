@@ -137,8 +137,9 @@ enum BOOT_OPTION
 {
     BO_TimeOut,
     BO_DefaultOS,
+    BO_NameMax
 };
-static const PCWSTR BootOptionNames[][2] =
+static const PCWSTR BootOptionNames[][BO_NameMax] =
 {
     {L"TimeOut", L"DefaultOS"}, // FreeLdr
     {L"timeout", L"default"  }  // NtLdr
@@ -1230,27 +1231,16 @@ QueryBootStoreEntry(
 
 NTSTATUS
 QueryBootStoreOptions(
-    IN PVOID Handle,
-    IN OUT PBOOT_STORE_OPTIONS BootOptions
-/* , IN PULONG BootOptionsLength */ )
+    _In_ PVOID Handle,
+    _Inout_ PBOOT_STORE_OPTIONS BootOptions
+/* , _Inout_ PULONG BootOptionsLength */)
 {
     PBOOT_STORE_CONTEXT BootStore = (PBOOT_STORE_CONTEXT)Handle;
+    PBOOT_STORE_INI_CONTEXT IniBootStore = (PBOOT_STORE_INI_CONTEXT)BootStore;
     PCWSTR TimeoutStr;
 
     if (!BootStore || !BootOptions)
         return STATUS_INVALID_PARAMETER;
-
-    /*
-     * NOTE: Currently we open & map the loader configuration file without
-     * further tests. It's OK as long as we only deal with FreeLdr's freeldr.ini
-     * and NTLDR's boot.ini files. But as soon as we'll implement support for
-     * BOOTMGR detection, the "configuration file" will be the BCD registry
-     * hive and then, we'll have instead to mount the hive & open it.
-     */
-
-    //
-    // FIXME!!
-    //
 
     // if (BootStore->Type >= BldrTypeMax || NtosBootLoaders[BootStore->Type].Type >= BldrTypeMax)
     if (BootStore->Type != FreeLdr && BootStore->Type != NtLdr)
@@ -1263,14 +1253,14 @@ QueryBootStoreOptions(
     BootOptions->CurrentBootEntryKey = 0;
     BootOptions->NextBootEntryKey = 0;
 
-    if (IniGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
+    if (IniGetKey(IniBootStore->OptionsIniSection,
                   BootOptionNames[BootStore->Type][BO_TimeOut],
                   &TimeoutStr) && TimeoutStr)
     {
         BootOptions->Timeout = _wtoi(TimeoutStr);
     }
 
-    IniGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
+    IniGetKey(IniBootStore->OptionsIniSection,
               BootOptionNames[BootStore->Type][BO_DefaultOS],
               (PCWSTR*)&BootOptions->NextBootEntryKey);
 
@@ -1291,26 +1281,15 @@ QueryBootStoreOptions(
 
 NTSTATUS
 SetBootStoreOptions(
-    IN PVOID Handle,
-    IN PBOOT_STORE_OPTIONS BootOptions,
-    IN ULONG FieldsToChange)
+    _In_ PVOID Handle,
+    _In_ PBOOT_STORE_OPTIONS BootOptions,
+    _In_ ULONG FieldsToChange)
 {
     PBOOT_STORE_CONTEXT BootStore = (PBOOT_STORE_CONTEXT)Handle;
+    PBOOT_STORE_INI_CONTEXT IniBootStore = (PBOOT_STORE_INI_CONTEXT)BootStore;
 
     if (!BootStore || !BootOptions)
         return STATUS_INVALID_PARAMETER;
-
-    /*
-     * NOTE: Currently we open & map the loader configuration file without
-     * further tests. It's OK as long as we only deal with FreeLdr's freeldr.ini
-     * and NTLDR's boot.ini files. But as soon as we'll implement support for
-     * BOOTMGR detection, the "configuration file" will be the BCD registry
-     * hive and then, we'll have instead to mount the hive & open it.
-     */
-
-    //
-    // FIXME!!
-    //
 
     // if (BootStore->Type >= BldrTypeMax || NtosBootLoaders[BootStore->Type].Type >= BldrTypeMax)
     if (BootStore->Type != FreeLdr && BootStore->Type != NtLdr)
@@ -1325,14 +1304,14 @@ SetBootStoreOptions(
     if (FieldsToChange & BOOT_OPTIONS_TIMEOUT)
     {
         WCHAR TimeoutStr[15];
-        RtlStringCchPrintfW(TimeoutStr, ARRAYSIZE(TimeoutStr), L"%d", BootOptions->Timeout);
-        IniAddKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
+        RtlStringCchPrintfW(TimeoutStr, _countof(TimeoutStr), L"%d", BootOptions->Timeout);
+        IniAddKey(IniBootStore->OptionsIniSection,
                   BootOptionNames[BootStore->Type][BO_TimeOut],
                   TimeoutStr);
     }
     if (FieldsToChange & BOOT_OPTIONS_NEXT_BOOTENTRY_KEY)
     {
-        IniAddKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
+        IniAddKey(IniBootStore->OptionsIniSection,
                   BootOptionNames[BootStore->Type][BO_DefaultOS],
                   (PCWSTR)BootOptions->NextBootEntryKey);
     }
