@@ -1005,6 +1005,16 @@ CreateFreeLdrEntry(
         }
     }
 
+//
+// TODO: Improvement: Discriminate between pure creation and modification
+// of a boot entry, whereby for modification, we would find the position
+// of the existing boot entry (if any) of the corresponding entry key, and
+// ensure the modified one is inserted at its old place -- and same for the
+// section.
+// This may not matter if the INI cache library can reuse the existing key
+// and section, but this is something to think about.
+//
+
     /* Insert the entry into the "Operating Systems" section */
     IniAddKey(BootStore->OsIniSection, SectionName, FriendlyName);
 
@@ -1111,6 +1121,8 @@ CreateNtLdrEntry(
  * Adds a new boot entry. The entry to add specifies, via
  * BootEntry->BootEntryKey, a clue where and how to insert
  * the entry. The new data is given by the other structure members.
+ *
+ * @note    See also ModifyBootStoreEntry().
  **/
 NTSTATUS
 AddBootStoreEntry(
@@ -1182,38 +1194,47 @@ DeleteBootStoreEntry(
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/**
+ * @brief
+ * Modifies an existing boot entry. The entry to modify is specified
+ * by BootEntry->BootEntryKey, and the new data is given by the other
+ * structure members.
+ *
+ * @note    Almost identical to AddBootStoreEntry().
+ **/
 NTSTATUS
 ModifyBootStoreEntry(
-    IN PVOID Handle,
-    IN PBOOT_STORE_ENTRY BootEntry)
+    _In_ PVOID Handle,
+    _In_ PBOOT_STORE_ENTRY BootEntry)
 {
     PBOOT_STORE_CONTEXT BootStore = (PBOOT_STORE_CONTEXT)Handle;
 
     if (!BootStore || !BootEntry)
         return STATUS_INVALID_PARAMETER;
 
-    /*
-     * NOTE: Currently we open & map the loader configuration file without
-     * further tests. It's OK as long as we only deal with FreeLdr's freeldr.ini
-     * and NTLDR's boot.ini files. But as soon as we'll implement support for
-     * BOOTMGR detection, the "configuration file" will be the BCD registry
-     * hive and then, we'll have instead to mount the hive & open it.
-     */
-
-    //
-    // FIXME!!
-    //
-
     // if (BootStore->Type >= BldrTypeMax || NtosBootLoaders[BootStore->Type].Type >= BldrTypeMax)
-    if (BootStore->Type != FreeLdr)
+    if (BootStore->Type == FreeLdr)
     {
-        DPRINT1("Loader type %d is currently unsupported!\n", NtosBootLoaders[BootStore->Type].Type);
+        if (BootEntry->Version != FreeLdr)
+            return STATUS_INVALID_PARAMETER;
+
+        return CreateFreeLdrEntry((PBOOT_STORE_INI_CONTEXT)BootStore,
+                                  BootEntry, NULL);
+    }
+    else
+    if (BootStore->Type == NtLdr)
+    {
+        if (BootEntry->Version != NtLdr)
+            return STATUS_INVALID_PARAMETER;
+
+        return CreateNtLdrEntry((PBOOT_STORE_INI_CONTEXT)BootStore,
+                                BootEntry, NULL);
+    }
+    else
+    {
+        DPRINT1("Loader type %d is currently unsupported!\n", BootStore->Type);
         return STATUS_NOT_SUPPORTED;
     }
-
-    // FIXME! This function needs my INI library rewrite to operate properly!!
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS

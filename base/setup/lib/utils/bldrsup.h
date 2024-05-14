@@ -189,8 +189,8 @@ DeleteBootStoreEntry(
 
 NTSTATUS
 ModifyBootStoreEntry(
-    IN PVOID Handle,
-    IN PBOOT_STORE_ENTRY BootEntry);
+    _In_ PVOID Handle,
+    _In_ PBOOT_STORE_ENTRY BootEntry);
 
 NTSTATUS
 QueryBootStoreEntry(
