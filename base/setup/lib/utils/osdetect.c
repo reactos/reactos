@@ -68,9 +68,9 @@ typedef struct _ENUM_INSTALLS_DATA
 static NTSTATUS
 NTAPI
 EnumerateInstallations(
-    IN BOOT_STORE_TYPE Type,
-    IN PBOOT_STORE_ENTRY BootEntry,
-    IN PVOID Parameter OPTIONAL)
+    _In_ BOOT_STORE_TYPE Type,
+    _In_ PBOOT_STORE_ENTRY BootEntry,
+    _In_opt_ PVOID Parameter)
 {
     PENUM_INSTALLS_DATA Data = (PENUM_INSTALLS_DATA)Parameter;
     PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
@@ -92,15 +92,10 @@ EnumerateInstallations(
     /* We have a boot entry */
 
     /* Check for supported boot type "Windows2003" */
-    if (BootEntry->OsOptionsLength < sizeof(NTOS_OPTIONS) ||
-        RtlCompareMemory(&BootEntry->OsOptions /* Signature */,
-                         &NTOS_OPTIONS_SIGNATURE,
-                         RTL_FIELD_SIZE(NTOS_OPTIONS, Signature)) !=
-                         RTL_FIELD_SIZE(NTOS_OPTIONS, Signature))
+    if ((BootEntry->OsOptionsLength < sizeof(NTOS_OPTIONS)) ||
+        (*(ULONGLONG*)BootEntry->OsOptions /* Signature */ != NTOS_OPTIONS_SIGNATURE))
     {
         /* This is not a ReactOS entry */
-        // DPRINT("    An installation '%S' of unsupported type '%S'\n",
-               // BootEntry->FriendlyName, BootEntry->Version ? BootEntry->Version : L"n/a");
         DPRINT("    An installation '%S' of unsupported type %lu\n",
                BootEntry->FriendlyName, BootEntry->OsOptionsLength);
         /* Continue the enumeration */
@@ -118,8 +113,6 @@ EnumerateInstallations(
 
     DPRINT("    Found a candidate Win2k3 install '%S' with ARC path '%S'\n",
            BootEntry->FriendlyName, Options->OsLoadPath);
-    // DPRINT("    Found a Win2k3 install '%S' with ARC path '%S'\n",
-           // BootEntry->FriendlyName, Options->OsLoadPath);
 
     // TODO: Normalize the ARC path.
 

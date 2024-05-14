@@ -118,9 +118,9 @@ C_ASSERT(RTL_FIELD_SIZE(BOOTSECTOR_OPTIONS, Signature) == sizeof(ULONGLONG));
 
 typedef NTSTATUS
 (NTAPI *PENUM_BOOT_ENTRIES_ROUTINE)(
-    IN BOOT_STORE_TYPE Type,
-    IN PBOOT_STORE_ENTRY BootEntry,
-    IN PVOID Parameter OPTIONAL);
+    _In_ BOOT_STORE_TYPE Type,
+    _In_ PBOOT_STORE_ENTRY BootEntry,
+    _In_opt_ PVOID Parameter);
 
 
 NTSTATUS
@@ -194,9 +194,10 @@ ModifyBootStoreEntry(
 
 NTSTATUS
 QueryBootStoreEntry(
-    IN PVOID Handle,
-    IN ULONG_PTR BootEntryKey,
-    OUT PBOOT_STORE_ENTRY BootEntry); // Technically this should be PBOOT_STORE_ENTRY*
+    _In_ PVOID Handle,
+    _In_ ULONG_PTR BootEntryKey,
+    _Inout_ PBOOT_STORE_ENTRY BootEntry,
+    _Inout_ PULONG BootEntryLength);
 
 NTSTATUS
 QueryBootStoreOptions(
@@ -212,9 +213,8 @@ SetBootStoreOptions(
 
 NTSTATUS
 EnumerateBootStoreEntries(
-    IN PVOID Handle,
-//  IN ULONG Flags, // Determine which data to retrieve
-    IN PENUM_BOOT_ENTRIES_ROUTINE EnumBootEntriesRoutine,
-    IN PVOID Parameter OPTIONAL);
+    _In_ PVOID Handle,
+    _In_ PENUM_BOOT_ENTRIES_ROUTINE EnumBootEntriesRoutine,
+    _In_opt_ PVOID Parameter);
 
 /* EOF */

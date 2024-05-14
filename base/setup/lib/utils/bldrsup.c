@@ -36,10 +36,9 @@ typedef NTSTATUS
 
 typedef NTSTATUS
 (*PENUM_BOOT_STORE_ENTRIES)(
-    IN PVOID Handle,
-//  IN ULONG Flags, // Determine which data to retrieve
-    IN PENUM_BOOT_ENTRIES_ROUTINE EnumBootEntriesRoutine,
-    IN PVOID Parameter OPTIONAL);
+    _In_ PVOID Handle,
+    _In_ PENUM_BOOT_ENTRIES_ROUTINE EnumBootEntriesRoutine,
+    _In_opt_ PVOID Parameter);
 
 typedef struct _NTOS_BOOT_LOADER_FILES
 {
@@ -106,18 +105,10 @@ CloseIniBootLoaderStore(
     _In_ PVOID Handle);
 
 static NTSTATUS
-FreeLdrEnumerateBootEntries(
-    IN PBOOT_STORE_INI_CONTEXT BootStore,
-//  IN ULONG Flags, // Determine which data to retrieve
-    IN PENUM_BOOT_ENTRIES_ROUTINE EnumBootEntriesRoutine,
-    IN PVOID Parameter OPTIONAL);
-
-static NTSTATUS
-NtLdrEnumerateBootEntries(
-    IN PBOOT_STORE_INI_CONTEXT BootStore,
-//  IN ULONG Flags, // Determine which data to retrieve
-    IN PENUM_BOOT_ENTRIES_ROUTINE EnumBootEntriesRoutine,
-    IN PVOID Parameter OPTIONAL);
+EnumerateIniBootEntries(
+    _In_ PBOOT_STORE_INI_CONTEXT BootStore,
+    _In_ PENUM_BOOT_ENTRIES_ROUTINE EnumBootEntriesRoutine,
+    _In_opt_ PVOID Parameter);
 
 
 // Question 1: What if config file is optional?
@@ -125,9 +116,9 @@ NtLdrEnumerateBootEntries(
 NTOS_BOOT_LOADER_FILES NtosBootLoaders[] =
 {
     {FreeLdr, L"freeldr.sys\0", L"freeldr.ini",
-        OpenIniBootLoaderStore, CloseIniBootLoaderStore, (PENUM_BOOT_STORE_ENTRIES)FreeLdrEnumerateBootEntries},
+        OpenIniBootLoaderStore, CloseIniBootLoaderStore, (PENUM_BOOT_STORE_ENTRIES)EnumerateIniBootEntries},
     {NtLdr  , L"ntldr\0" L"osloader.exe\0", L"boot.ini",
-        OpenIniBootLoaderStore, CloseIniBootLoaderStore, (PENUM_BOOT_STORE_ENTRIES)NtLdrEnumerateBootEntries  },
+        OpenIniBootLoaderStore, CloseIniBootLoaderStore, (PENUM_BOOT_STORE_ENTRIES)EnumerateIniBootEntries  },
 //  {SetupLdr, L"setupldr\0" L"setupldr.bin\0" L"setupldr.exe\0", L"txtsetup.sif", UNIMPLEMENTED, UNIMPLEMENTED, UNIMPLEMENTED}
 //  {BootMgr , L"bootmgr", L"BCD", UNIMPLEMENTED, UNIMPLEMENTED, UNIMPLEMENTED}
 };
@@ -1293,39 +1284,405 @@ ModifyBootStoreEntry(
     }
 }
 
+
+/**
+ * @brief
+ * Given a string that starts with quotes, find where the end quotes are and
+ * return a pointer to, and the length, of the string part within the quotes.
+ **/
+static PCWSTR
+GetQuotedPart(
+    _In_ PCWSTR String,
+    _Out_ PSIZE_T Length,
+    _Out_opt_ PCWSTR* PastEndQuote)
+{
+    PCWCH End;
+    PCWSTR QuotedPart;
+    ULONG QuotedPartLength;
+
+    /* If the string starts with a quote, find the next closing quote */
+    End = ((*String == L'"') ? wcschr(String + 1, L'"') : NULL);
+    if (End)
+    {
+        /* The string starts with a quote and has a closing quote:
+         * skip the first quote and retrieve text up to the closing quote */
+        QuotedPart = String + 1;
+        QuotedPartLength = End - QuotedPart;
+
+        /* Skip the ending quote */
+        ++End;
+    }
+    else
+    {
+        /* The string doesn't start with a quote (non-quoted),
+         * or there is no corresponding closing quote: retrieve
+         * everything (including the first quote as well) */
+        QuotedPart = String;
+        QuotedPartLength = wcslen(QuotedPart);
+    }
+
+    *Length = QuotedPartLength;
+    if (PastEndQuote)
+        *PastEndQuote = End;
+
+    // if (QuotedPartLength == 0) QuotedPart = NULL;
+    return QuotedPart;
+}
+
+// CaptureDataBuffer
+static VOID
+CaptureStringBuffer(
+    _Inout_ PVOID* CaptureBuffer,
+    _In_ PCWSTR String,
+    _In_ ULONG StringLength,
+    _Out_ PCWSTR* CapturedString)
+{
+    PWCHAR ptr;
+
+    if (!StringLength)
+        return;
+    ASSERT(String);
+
+    /* Copy the data and return a pointer to the captured string */
+    ptr = (PWCHAR)*CaptureBuffer;
+    RtlCopyMemory(ptr, String, StringLength * sizeof(WCHAR));
+    ptr[StringLength] = UNICODE_NULL;
+    *CapturedString = ptr;
+
+    /* Adjust the capture buffer */
+    *CaptureBuffer = (PVOID)((PWCHAR)*CaptureBuffer + StringLength + 1);
+}
+
+/**
+ * @brief
+ * The query boot store helper for INI-based boot stores
+ * (boot.ini and freeldr.ini).
+ *
+ * @param[out]  LocalAllocation
+ * When QueryIniBootStoreEntry() is called by the EnumerateIniBootEntries()
+ * helper, the latter does not need to specify and allocate a full BootEntry
+ * buffer to retrieve the data. The returned LocalAllocation buffer is only
+ * the minimal allocated capture buffer necessary to store some data, which
+ * is then freed later by EnumerateIniBootEntries().
+ * When QueryIniBootStoreEntry() is called by QueryBootStoreEntry() however,
+ * the caller is the one responsible to allocate a full BootEntry buffer.
+ * In this case, we have instead to return the caller the necessary buffer size.
+ **/
+static NTSTATUS
+QueryIniBootStoreEntry(
+    _In_ PBOOT_STORE_INI_CONTEXT BootStore,
+    _In_ ULONG_PTR BootEntryKey,
+    _In_ PCWSTR SectionName,
+    _In_ PCWSTR Data,
+    _Inout_ PBOOT_STORE_ENTRY BootEntry,
+    _Inout_ PULONG BootEntryLength,
+    _Out_opt_ PVOID* LocalAllocation)
+{
+    PCWSTR KeyData = Data;
+
+    enum { OPTS_None = 0, OPTS_NtOs, OPTS_BootSect } OptionsType;
+
+    typedef struct _LONG_UNICODE_STRING
+    {
+        PCWCH Buffer;
+        ULONG Length;
+    } LONG_UNICODE_STRING;
+
+    LONG_UNICODE_STRING InstallName = {0};
+    LONG_UNICODE_STRING OptsStrings[2] = {0};
+
+    PVOID Buffer;
+    ULONG NeededLength;
+    ULONG BootOptionsSize;
+
+    ASSERT((BootStore->Header.Type == FreeLdr) || (BootStore->Header.Type == NtLdr));
+
+    if (BootStore->Header.Type == FreeLdr)
+    {
+        PINI_SECTION OsIniSection;
+
+        BootEntryKey = MAKESTRKEY(SectionName);
+
+        /* Retrieve the installation name, either quoted (up to
+         * the closing quote) or non-quoted name (copy everything) */
+        InstallName.Buffer = GetQuotedPart(KeyData, &InstallName.Length, NULL);
+        if (InstallName.Length == 0) InstallName.Buffer = NULL;
+
+        DPRINT("Boot entry '%.*S' in OS section '%S'\n",
+               InstallName.Buffer, InstallName.Length, SectionName);
+
+        OptionsType = OPTS_None;
+
+        // BootEntry->BootFilePath = NULL;
+
+        /* Search for an existing boot entry section */
+        OsIniSection = IniGetSection(BootStore->IniCache, SectionName);
+        if (!OsIniSection)
+            goto finish_init; // This may be some sort of legacy entry.
+        // TODO: In case of failure above, we might fall back to the NtLdr case,
+        // if we happen to deal with a '<path>="Item Name" /options' type of
+        // entry.
+
+        /* Check for supported boot type */
+        if (!IniGetKey(OsIniSection, L"BootType", &KeyData) || !KeyData)
+        {
+            /* Certainly not a ReactOS installation */
+            DPRINT1("No BootType value present\n");
+            goto finish_init; // This may be some sort of legacy entry?
+        }
+        DPRINT("This is a '%S' boot entry\n", KeyData);
+
+        if ((_wcsicmp(KeyData, L"Windows2003") == 0) /*||
+            (_wcsicmp(KeyData, L"Windows")     == 0) ||
+            (_wcsicmp(KeyData, L"WindowsNT40") == 0) ||
+            (_wcsicmp(KeyData, L"ReactOSSetup") == 0) */)
+        {
+            /* BootType is Windows2003 */
+            OptionsType = OPTS_NtOs;
+
+            /* Check its SystemPath */
+            OptsStrings[0].Buffer = NULL;
+            if (IniGetKey(OsIniSection, L"SystemPath", &KeyData))
+                OptsStrings[0].Buffer = KeyData; // This is SystemRoot
+            OptsStrings[0].Length = wcslen(OptsStrings[0].Buffer);
+
+            /* Check the Options */
+            OptsStrings[1].Buffer = NULL;
+            if (IniGetKey(OsIniSection, L"Options", &KeyData))
+                OptsStrings[1].Buffer = KeyData;
+            OptsStrings[1].Length = wcslen(OptsStrings[1].Buffer);
+        }
+        else
+        if (_wcsicmp(KeyData, L"BootSector") == 0)
+        {
+            /* BootType is BootSector */
+            OptionsType = OPTS_BootSect;
+
+            /* Check its BootPath */
+            OptsStrings[0].Buffer = NULL;
+            if (IniGetKey(OsIniSection, L"BootPath", &KeyData))
+                OptsStrings[0].Buffer = KeyData;
+            OptsStrings[0].Length = wcslen(OptsStrings[0].Buffer);
+
+            /* Check its BootSectorFile */
+            OptsStrings[1].Buffer = NULL;
+            if (IniGetKey(OsIniSection, L"BootSectorFile", &KeyData))
+                OptsStrings[1].Buffer = KeyData;
+            OptsStrings[1].Length = wcslen(OptsStrings[1].Buffer);
+        }
+        else
+        {
+            DPRINT1("Unrecognized BootType value '%S'\n", KeyData);
+        }
+finish_init:
+        ;
+    }
+    else
+    if (BootStore->Header.Type == NtLdr)
+    {
+        /* Retrieve the installation name, either quoted (up to
+         * the closing quote) or non-quoted name (copy everything) */
+        InstallName.Buffer = GetQuotedPart(KeyData, &InstallName.Length, &OptsStrings[1].Buffer);
+        if (InstallName.Length == 0) InstallName.Buffer = NULL;
+
+        DPRINT1("Boot entry '%.*S' in OS section (path) '%S'\n",
+                InstallName.Buffer, InstallName.Length, SectionName);
+
+        OptsStrings[0].Buffer = SectionName; // This is SystemRoot
+        OptsStrings[0].Length = wcslen(SectionName);
+
+        /* Retrieve the OsLoadOptions that follow the installation name */
+        if (OptsStrings[1].Buffer)
+        {
+            /* Skip any whitespace */
+            while (iswspace(*OptsStrings[1].Buffer)) ++OptsStrings[1].Buffer;
+            /* Get its final length */
+            OptsStrings[1].Length = wcslen(OptsStrings[1].Buffer);
+            if (OptsStrings[1].Length == 0) OptsStrings[1].Buffer = NULL;
+        }
+        else
+        {
+            /* There are no OsLoadOptions */
+            OptsStrings[1].Buffer = NULL;
+            OptsStrings[1].Length = 0;
+        }
+
+        OptionsType = OPTS_NtOs;
+    }
+    else
+    {
+        ASSERT(FALSE);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+
+    /* Retrieve the size of the boot options block */
+    if (OptionsType == OPTS_NtOs)
+        BootOptionsSize = sizeof(NTOS_OPTIONS);
+    else if (OptionsType == OPTS_BootSect)
+        BootOptionsSize = sizeof(BOOTSECTOR_OPTIONS);
+    else
+        BootOptionsSize = 0;
+
+    /*
+     * If the caller wants a local allocation, this is EnumerateIniBootEntries(),
+     * which already pre-allocates the fixed portion of the BootEntry
+     * and options. In this case, only allocate a temporary buffer for
+     * holding the unquoted install name. /// and OS options strings.
+     * If the caller does not want a local allocation, this is QueryBootStoreEntry().
+     * In that case, the caller either wants to retrieve the total needed
+     * length for the BootEntry and options, or, it has already allocated
+     * a buffer large enough and we need to fill it.
+     */
+    if (LocalAllocation)
+    {
+        ULONG BufferSize;
+
+        /* Verify that the provided buffer is at least the minimal
+         * required one for the BootEntry common parts */
+        NeededLength = FIELD_OFFSET(BOOT_STORE_ENTRY, OsOptions) + BootOptionsSize;
+
+        if (*BootEntryLength < NeededLength)
+        {
+            *BootEntryLength = NeededLength;
+            return STATUS_BUFFER_TOO_SMALL;
+        }
+
+        /* Allocate the temporary capture buffer */
+        Buffer = NULL;
+        BufferSize = 0;
+        if (InstallName.Length)
+            BufferSize += (InstallName.Length+1) * sizeof(WCHAR);
+        // if (OptsStrings[1].Length)
+        //     BufferSize += (OptsStrings[1].Length+1) * sizeof(WCHAR);
+
+        if (BufferSize)
+            Buffer = RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, BufferSize);
+        *LocalAllocation = Buffer;
+    }
+    else
+    {
+        /* Calculate the total necessary buffer size */
+        NeededLength = FIELD_OFFSET(BOOT_STORE_ENTRY, OsOptions) + BootOptionsSize;
+        if ((OptionsType == OPTS_NtOs) || (OptionsType == OPTS_BootSect))
+        {
+            if (OptsStrings[0].Length)
+                NeededLength += (OptsStrings[0].Length+1) * sizeof(WCHAR);
+            if (OptsStrings[1].Length)
+                NeededLength += (OptsStrings[1].Length+1) * sizeof(WCHAR);
+        }
+        if (InstallName.Length)
+            NeededLength += (InstallName.Length+1) * sizeof(WCHAR);
+
+        /* Verify the provided buffer size */
+        if (*BootEntryLength < NeededLength)
+        {
+            *BootEntryLength = NeededLength;
+            return STATUS_BUFFER_TOO_SMALL;
+        }
+
+        /* The capture buffer starts after the fixed BootEntry common parts */
+        Buffer = (PVOID)((ULONG_PTR)BootEntry +
+            FIELD_OFFSET(BOOT_STORE_ENTRY, OsOptions) + BootOptionsSize);
+    }
+
+    /* Capture the rest of the data if we are not called as part of EnumerateIniBootEntries() */
+    if (!LocalAllocation)
+    {
+        // TODO: BootFilePath if any.
+
+        /* Capture the option strings */
+        if ((OptionsType == OPTS_NtOs) || (OptionsType == OPTS_BootSect))
+        {
+            if (OptsStrings[0].Length)
+            {
+                ASSERT(OptsStrings[0].Buffer);
+                CaptureStringBuffer(&Buffer, OptsStrings[0].Buffer, OptsStrings[0].Length, &OptsStrings[0].Buffer);
+            }
+            if (OptsStrings[1].Length)
+            {
+                ASSERT(OptsStrings[1].Buffer);
+                CaptureStringBuffer(&Buffer, OptsStrings[1].Buffer, OptsStrings[1].Length, &OptsStrings[1].Buffer);
+            }
+        }
+    }
+
+    /* Capture the unquoted InstallName installation name */
+    if (InstallName.Length)
+    {
+        ASSERT(InstallName.Buffer);
+        CaptureStringBuffer(&Buffer, InstallName.Buffer, InstallName.Length, &InstallName.Buffer);
+    }
+
+
+    /* Initialize the BootEntry common parts */
+    BootEntry->Version = BootStore->Header.Type;
+    BootEntry->BootEntryKey = BootEntryKey;
+    BootEntry->FriendlyName = InstallName.Buffer;
+    BootEntry->BootFilePath = NULL;
+
+    /* Initialize the options */
+    BootEntry->OsOptionsLength = BootOptionsSize;
+    if (OptionsType == OPTS_NtOs)
+    {
+        PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
+        *(ULONGLONG*)Options->Signature = NTOS_OPTIONS_SIGNATURE;
+        Options->OsLoadPath    = OptsStrings[0].Buffer;
+        Options->OsLoadOptions = OptsStrings[1].Buffer;
+    }
+    else
+    if (OptionsType == OPTS_BootSect)
+    {
+        PBOOTSECTOR_OPTIONS Options = (PBOOTSECTOR_OPTIONS)&BootEntry->OsOptions;
+        *(ULONGLONG*)Options->Signature = BOOTSECTOR_OPTIONS_SIGNATURE;
+        Options->BootPath = OptsStrings[0].Buffer;
+        Options->FileName = OptsStrings[1].Buffer;
+    }
+
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS
 QueryBootStoreEntry(
-    IN PVOID Handle,
-    IN ULONG_PTR BootEntryKey,
-    OUT PBOOT_STORE_ENTRY BootEntry) // Technically this should be PBOOT_STORE_ENTRY*
+    _In_ PVOID Handle,
+    _In_ ULONG_PTR BootEntryKey,
+    _Inout_ PBOOT_STORE_ENTRY BootEntry,
+    _Inout_ PULONG BootEntryLength)
 {
     PBOOT_STORE_CONTEXT BootStore = (PBOOT_STORE_CONTEXT)Handle;
 
     if (!BootStore)
         return STATUS_INVALID_PARAMETER;
 
-    /*
-     * NOTE: Currently we open & map the loader configuration file without
-     * further tests. It's OK as long as we only deal with FreeLdr's freeldr.ini
-     * and NTLDR's boot.ini files. But as soon as we'll implement support for
-     * BOOTMGR detection, the "configuration file" will be the BCD registry
-     * hive and then, we'll have instead to mount the hive & open it.
-     */
-
-    //
-    // FIXME!!
-    //
-
     // if (BootStore->Type >= BldrTypeMax || NtosBootLoaders[BootStore->Type].Type >= BldrTypeMax)
-    if (BootStore->Type != FreeLdr)
+    if ((BootStore->Type == FreeLdr) || (BootStore->Type == NtLdr))
     {
-        DPRINT1("Loader type %d is currently unsupported!\n", NtosBootLoaders[BootStore->Type].Type);
+        PBOOT_STORE_INI_CONTEXT IniBootStore = (PBOOT_STORE_INI_CONTEXT)BootStore;
+        PINI_KEYWORD Key;
+        NTSTATUS Status;
+
+        Key = FindIniEntryByKey(IniBootStore->OsIniSection, BootEntryKey);
+        if (!Key)
+            return STATUS_NOT_FOUND;
+
+        Status = QueryIniBootStoreEntry(IniBootStore,
+                                        BootEntryKey,
+                                        Key->Name,
+                                        Key->Data,
+                                        BootEntry,
+                                        BootEntryLength,
+                                        NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Couldn't retrieve boot entry %lu/'%S'\n", BootEntryKey, Key->Name);
+        }
+        return Status;
+    }
+    else
+    {
+        DPRINT1("Loader type %d is currently unsupported!\n", BootStore->Type);
         return STATUS_NOT_SUPPORTED;
     }
-
-    // FIXME! This function needs my INI library rewrite to be implemented!!
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
@@ -1419,307 +1776,75 @@ SetBootStoreOptions(
 }
 
 
+/**
+ * @brief
+ * The boot entries enumeration helper for INI-based boot stores
+ * (boot.ini and freeldr.ini).
+ **/
 static NTSTATUS
-FreeLdrEnumerateBootEntries(
-    IN PBOOT_STORE_INI_CONTEXT BootStore,
-//  IN ULONG Flags, // Determine which data to retrieve
-    IN PENUM_BOOT_ENTRIES_ROUTINE EnumBootEntriesRoutine,
-    IN PVOID Parameter OPTIONAL)
+EnumerateIniBootEntries(
+    _In_ PBOOT_STORE_INI_CONTEXT BootStore,
+    _In_ PENUM_BOOT_ENTRIES_ROUTINE EnumBootEntriesRoutine,
+    _In_opt_ PVOID Parameter)
 {
     NTSTATUS Status = STATUS_SUCCESS;
+    ULONG_PTR LineId = 0;
     PINICACHEITERATOR Iterator;
-    PINI_SECTION OsIniSection;
     PCWSTR SectionName, KeyData;
     UCHAR xxBootEntry[FIELD_OFFSET(BOOT_STORE_ENTRY, OsOptions) +
                       max(sizeof(NTOS_OPTIONS), sizeof(BOOTSECTOR_OPTIONS))];
     PBOOT_STORE_ENTRY BootEntry = (PBOOT_STORE_ENTRY)&xxBootEntry;
-    PWCHAR Buffer;
+    ULONG BootEntryLength;
 
-    /* Enumerate all the valid installations listed in the "Operating Systems" section */
+    ASSERT((BootStore->Header.Type == FreeLdr) || (BootStore->Header.Type == NtLdr));
+
+    /* Enumerate all the valid entries in the "Operating Systems" section */
+    // NOTE: This also does the job of FindIniEntryByKey() by determining
+    // the corresponding BootEntryKey in both "numerical" (LineId) and
+    // string (SectionName) format.
     Iterator = IniFindFirstValue(BootStore->OsIniSection, &SectionName, &KeyData);
     if (!Iterator) return STATUS_SUCCESS;
     do
     {
-        PCWSTR InstallName;
-        ULONG InstallNameLength;
-
-        /* Poor-man quotes removal (improvement over bootsup.c:UpdateFreeLoaderIni) */
-        if (*KeyData == L'"')
+        PVOID LocalAllocation = NULL;
+        ++LineId;
+        BootEntryLength = sizeof(xxBootEntry);
+        Status = QueryIniBootStoreEntry(BootStore,
+                                        LineId,
+                                        SectionName,
+                                        KeyData,
+                                        BootEntry,
+                                        &BootEntryLength,
+                                        &LocalAllocation);
+        if (!NT_SUCCESS(Status))
         {
-            /* Quoted name, copy up to the closing quote */
-            PWCHAR End = wcschr(KeyData + 1, L'"');
-
-            if (End)
-            {
-                /* Skip the first quote */
-                InstallName = KeyData + 1;
-                InstallNameLength = End - InstallName;
-            }
-            else // if (!End)
-            {
-                /* No corresponding closing quote, so we include the first one in the InstallName */
-                InstallName = KeyData;
-                InstallNameLength = wcslen(InstallName);
-            }
-            if (InstallNameLength == 0) InstallName = NULL;
-        }
-        else
-        {
-            /* Non-quoted name, copy everything */
-            InstallName = KeyData;
-            InstallNameLength = wcslen(InstallName);
-            if (InstallNameLength == 0) InstallName = NULL;
+            DPRINT1("Couldn't retrieve boot entry %lu/'%S'\n", LineId, SectionName);
+            continue;
         }
 
-        /* Allocate the temporary buffer */
-        Buffer = NULL;
-        if (InstallNameLength)
-            Buffer = RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, (InstallNameLength + 1) * sizeof(WCHAR));
-        if (Buffer)
-        {
-            RtlCopyMemory(Buffer, InstallName, InstallNameLength * sizeof(WCHAR));
-            Buffer[InstallNameLength] = UNICODE_NULL;
-            InstallName = Buffer;
-        }
-
-        DPRINT("Boot entry '%S' in OS section '%S'\n", InstallName, SectionName);
-
-        BootEntry->Version = FreeLdr;
-        BootEntry->BootEntryKey = MAKESTRKEY(SectionName);
-        BootEntry->FriendlyName = InstallName;
-        BootEntry->BootFilePath = NULL;
-        BootEntry->OsOptionsLength = 0;
-
-        /* Search for an existing boot entry section */
-        OsIniSection = IniGetSection(BootStore->IniCache, SectionName);
-        if (!OsIniSection)
-            goto DoEnum;
-
-        /* Check for supported boot type */
-        if (!IniGetKey(OsIniSection, L"BootType", &KeyData) || !KeyData)
-        {
-            /* Certainly not a ReactOS installation */
-            DPRINT1("No BootType value present\n");
-            goto DoEnum;
-        }
-
-        // TODO: What to do with "Windows" ; "WindowsNT40" ; "ReactOSSetup" ?
-        if ((_wcsicmp(KeyData, L"Windows2003")     == 0) ||
-            (_wcsicmp(KeyData, L"\"Windows2003\"") == 0))
-        {
-            /* BootType is Windows2003 */
-            PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
-
-            DPRINT("This is a '%S' boot entry\n", KeyData);
-
-            BootEntry->OsOptionsLength = sizeof(NTOS_OPTIONS);
-            RtlCopyMemory(Options->Signature,
-                          &NTOS_OPTIONS_SIGNATURE,
-                          RTL_FIELD_SIZE(NTOS_OPTIONS, Signature));
-
-            // BootEntry->BootFilePath = NULL;
-
-            /* Check its SystemPath */
-            Options->OsLoadPath = NULL;
-            if (IniGetKey(OsIniSection, L"SystemPath", &KeyData))
-                Options->OsLoadPath = KeyData;
-            // KeyData == SystemRoot;
-
-            /* Check the optional Options */
-            Options->OsLoadOptions = NULL;
-            if (IniGetKey(OsIniSection, L"Options", &KeyData))
-                Options->OsLoadOptions = KeyData;
-        }
-        else
-        if ((_wcsicmp(KeyData, L"BootSector")     == 0) ||
-            (_wcsicmp(KeyData, L"\"BootSector\"") == 0))
-        {
-            /* BootType is BootSector */
-            PBOOTSECTOR_OPTIONS Options = (PBOOTSECTOR_OPTIONS)&BootEntry->OsOptions;
-
-            DPRINT("This is a '%S' boot entry\n", KeyData);
-
-            BootEntry->OsOptionsLength = sizeof(BOOTSECTOR_OPTIONS);
-            RtlCopyMemory(Options->Signature,
-                          &BOOTSECTOR_OPTIONS_SIGNATURE,
-                          RTL_FIELD_SIZE(BOOTSECTOR_OPTIONS, Signature));
-
-            // BootEntry->BootFilePath = NULL;
-
-            /* Check its BootPath */
-            Options->BootPath = NULL;
-            if (IniGetKey(OsIniSection, L"BootPath", &KeyData))
-                Options->BootPath = KeyData;
-
-            /* Check its BootSector */
-            Options->FileName = NULL;
-            if (IniGetKey(OsIniSection, L"BootSectorFile", &KeyData))
-                Options->FileName = KeyData;
-        }
-        else
-        {
-            DPRINT1("Unrecognized BootType value '%S'\n", KeyData);
-            // goto DoEnum;
-        }
-
-DoEnum:
         /* Call the user enumeration routine callback */
-        Status = EnumBootEntriesRoutine(FreeLdr, BootEntry, Parameter);
+        Status = EnumBootEntriesRoutine(BootStore->Header.Type,
+                                        BootEntry, Parameter);
 
         /* Free temporary buffers */
-        if (Buffer)
-            RtlFreeHeap(ProcessHeap, 0, Buffer);
+        if (LocalAllocation)
+            RtlFreeHeap(ProcessHeap, 0, LocalAllocation);
 
         /* Stop the enumeration if needed */
         if (!NT_SUCCESS(Status))
             break;
     }
     while (IniFindNextValue(Iterator, &SectionName, &KeyData));
-
     IniFindClose(Iterator);
-    return Status;
-}
 
-static NTSTATUS
-NtLdrEnumerateBootEntries(
-    IN PBOOT_STORE_INI_CONTEXT BootStore,
-//  IN ULONG Flags, // Determine which data to retrieve
-    IN PENUM_BOOT_ENTRIES_ROUTINE EnumBootEntriesRoutine,
-    IN PVOID Parameter OPTIONAL)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-    PINICACHEITERATOR Iterator;
-    PCWSTR SectionName, KeyData;
-    UCHAR xxBootEntry[FIELD_OFFSET(BOOT_STORE_ENTRY, OsOptions) + sizeof(NTOS_OPTIONS)];
-    PBOOT_STORE_ENTRY BootEntry = (PBOOT_STORE_ENTRY)&xxBootEntry;
-    PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
-    PWCHAR Buffer;
-    ULONG BufferLength;
-
-    /* Enumerate all the valid installations */
-    Iterator = IniFindFirstValue(BootStore->OsIniSection, &SectionName, &KeyData);
-    if (!Iterator) return STATUS_SUCCESS;
-    do
-    {
-        PCWSTR InstallName, OsOptions;
-        ULONG InstallNameLength, OsOptionsLength;
-
-        /* Poor-man quotes removal (improvement over bootsup.c:UpdateFreeLoaderIni) */
-        if (*KeyData == L'"')
-        {
-            /* Quoted name, copy up to the closing quote */
-            OsOptions = wcschr(KeyData + 1, L'"');
-
-            /* Retrieve the starting point of the installation name and the OS options */
-            if (OsOptions)
-            {
-                /* Skip the first quote */
-                InstallName = KeyData + 1;
-                InstallNameLength = OsOptions - InstallName;
-                if (InstallNameLength == 0) InstallName = NULL;
-
-                /* Skip the ending quote (if found) */
-                ++OsOptions;
-
-                /* Skip any whitespace */
-                while (iswspace(*OsOptions)) ++OsOptions;
-                /* Get its final length */
-                OsOptionsLength = wcslen(OsOptions);
-                if (OsOptionsLength == 0) OsOptions = NULL;
-            }
-            else
-            {
-                /* No corresponding closing quote, so we include the first one in the InstallName */
-                InstallName = KeyData;
-                InstallNameLength = wcslen(InstallName);
-                if (InstallNameLength == 0) InstallName = NULL;
-
-                /* There are no OS options */
-                // OsOptions = NULL;
-                OsOptionsLength = 0;
-            }
-        }
-        else
-        {
-            /* Non-quoted name, copy everything */
-
-            /* Retrieve the starting point of the installation name */
-            InstallName = KeyData;
-            InstallNameLength = wcslen(InstallName);
-            if (InstallNameLength == 0) InstallName = NULL;
-
-            /* There are no OS options */
-            OsOptions = NULL;
-            OsOptionsLength = 0;
-        }
-
-        /* Allocate the temporary buffer */
-        Buffer = NULL;
-        BufferLength = (InstallNameLength + OsOptionsLength) * sizeof(WCHAR);
-        if (BufferLength)
-            Buffer = RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, BufferLength + 2*sizeof(UNICODE_NULL));
-        if (Buffer)
-        {
-            PWCHAR ptr;
-
-            /* Copy the installation name, and make InstallName point into the buffer */
-            if (InstallName && InstallNameLength)
-            {
-                ptr = Buffer;
-                RtlCopyMemory(ptr, InstallName, InstallNameLength * sizeof(WCHAR));
-                ptr[InstallNameLength] = UNICODE_NULL;
-                InstallName = ptr;
-            }
-
-            /* Copy the OS options, and make OsOptions point into the buffer */
-            if (OsOptions && OsOptionsLength)
-            {
-                ptr = Buffer + InstallNameLength + 1;
-                RtlCopyMemory(ptr, OsOptions, OsOptionsLength * sizeof(WCHAR));
-                ptr[OsOptionsLength] = UNICODE_NULL;
-                OsOptions = ptr;
-            }
-        }
-
-        DPRINT1("Boot entry '%S' in OS section (path) '%S'\n", InstallName, SectionName);
-        // SectionName == SystemRoot;
-
-        BootEntry->Version = NtLdr;
-        BootEntry->BootEntryKey = 0; // FIXME??
-        BootEntry->FriendlyName = InstallName;
-        BootEntry->BootFilePath = NULL;
-
-        BootEntry->OsOptionsLength = sizeof(NTOS_OPTIONS);
-        RtlCopyMemory(Options->Signature,
-                      &NTOS_OPTIONS_SIGNATURE,
-                      RTL_FIELD_SIZE(NTOS_OPTIONS, Signature));
-
-        Options->OsLoadPath    = SectionName;
-        Options->OsLoadOptions = OsOptions;
-
-        /* Call the user enumeration routine callback */
-        Status = EnumBootEntriesRoutine(NtLdr, BootEntry, Parameter);
-
-        /* Free temporary buffers */
-        if (Buffer)
-            RtlFreeHeap(ProcessHeap, 0, Buffer);
-
-        /* Stop the enumeration if needed */
-        if (!NT_SUCCESS(Status))
-            break;
-    }
-    while (IniFindNextValue(Iterator, &SectionName, &KeyData));
-
-    IniFindClose(Iterator);
     return Status;
 }
 
 NTSTATUS
 EnumerateBootStoreEntries(
-    IN PVOID Handle,
-//  IN ULONG Flags, // Determine which data to retrieve
-    IN PENUM_BOOT_ENTRIES_ROUTINE EnumBootEntriesRoutine,
-    IN PVOID Parameter OPTIONAL)
+    _In_ PVOID Handle,
+    _In_ PENUM_BOOT_ENTRIES_ROUTINE EnumBootEntriesRoutine,
+    _In_opt_ PVOID Parameter)
 {
     PBOOT_STORE_CONTEXT BootStore = (PBOOT_STORE_CONTEXT)Handle;
 
@@ -1734,7 +1859,7 @@ EnumerateBootStoreEntries(
     }
 
     return NtosBootLoaders[BootStore->Type].EnumBootStoreEntries(
-                (PBOOT_STORE_INI_CONTEXT)BootStore, // Flags,
+                (PBOOT_STORE_INI_CONTEXT)BootStore,
                 EnumBootEntriesRoutine, Parameter);
 }
 
