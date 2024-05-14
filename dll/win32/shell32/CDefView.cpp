@@ -48,7 +48,8 @@ typedef struct
     INT     nLastHeaderID;
 } LISTVIEW_SORT_INFO, *LPLISTVIEW_SORT_INFO;
 
-#define SHV_CHANGE_NOTIFY WM_USER + 0x1111
+#define SHV_CHANGE_NOTIFY   (WM_USER + 0x1111)
+#define SHV_UPDATESTATUSBAR (WM_USER + 0x1112)
 
 // For the context menu of the def view, the id of the items are based on 1 because we need
 // to call TrackPopupMenu and let it use the 0 value as an indication that the menu was canceled
@@ -160,6 +161,7 @@ private:
 
     BOOL                      m_isEditing;
     BOOL                      m_isParentFolderSpecial;
+    bool                      m_ScheduledStatusbarUpdate;
 
     CLSID m_Category;
     BOOL  m_Destroyed;
@@ -339,6 +341,7 @@ public:
     LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnUpdateStatusbar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnCustomItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
@@ -386,6 +389,7 @@ public:
     MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
     MESSAGE_HANDLER(WM_COMMAND, OnCommand)
     MESSAGE_HANDLER(SHV_CHANGE_NOTIFY, OnChangeNotify)
+    MESSAGE_HANDLER(SHV_UPDATESTATUSBAR, OnUpdateStatusbar)
     MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
     MESSAGE_HANDLER(WM_DRAWITEM, OnCustomItem)
     MESSAGE_HANDLER(WM_MEASUREITEM, OnCustomItem)
@@ -451,6 +455,7 @@ CDefView::CDefView() :
     m_cScrollDelay(0),
     m_isEditing(FALSE),
     m_isParentFolderSpecial(FALSE),
+    m_ScheduledStatusbarUpdate(false),
     m_Destroyed(FALSE)
 {
     ZeroMemory(&m_FolderSettings, sizeof(m_FolderSettings));
@@ -587,7 +592,7 @@ void CDefView::UpdateStatusbar()
     // Don't bother with the extra processing if we only have one StatusBar part
     if (!m_isParentFolderSpecial)
     {
-        DWORD uTotalFileSize = 0;
+        UINT64 uTotalFileSize = 0;
         WORD uFileFlags = LVNI_ALL;
         LPARAM pIcon = NULL;
         INT nItem = -1;
@@ -634,6 +639,13 @@ void CDefView::UpdateStatusbar()
         m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETICON, 2, pIcon, &lResult);
         m_pShellBrowser->SendControlMsg(FCW_STATUS, SB_SETTEXT, 2, (LPARAM)szPartText, &lResult);
     }
+}
+
+LRESULT CDefView::OnUpdateStatusbar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    m_ScheduledStatusbarUpdate = false;
+    UpdateStatusbar();
+    return 0;
 }
 
 
@@ -2114,7 +2126,11 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         case LVN_ITEMCHANGED:
             TRACE("-- LVN_ITEMCHANGED %p\n", this);
             OnStateChange(CDBOSC_SELCHANGE); // browser will get the IDataObject
-            UpdateStatusbar();
+            if (!m_ScheduledStatusbarUpdate)
+            {
+                m_ScheduledStatusbarUpdate = true;
+                PostMessage(SHV_UPDATESTATUSBAR, 0, 0);
+            }
             _DoFolderViewCB(SFVM_SELECTIONCHANGED, NULL/* FIXME */, NULL/* FIXME */);
             break;
         case LVN_BEGINDRAG:
