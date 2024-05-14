@@ -611,6 +611,10 @@ CMainWindow::UpdateApplicationsList(AppsCategories EnumType, BOOL bReload, BOOL 
     if (SelectedEnumType != EnumType)
         SelectedEnumType = EnumType;
 
+    LVITEMW selitem;
+    WCHAR selitembuf[MAX_PATH];
+    m_ApplicationView->GetRestoreListSelectionData(selitem, selitembuf, _countof(selitembuf));
+
     if (bReload)
         m_Selected.RemoveAll();
 
@@ -651,6 +655,8 @@ CMainWindow::UpdateApplicationsList(AppsCategories EnumType, BOOL bReload, BOOL 
     {
         ATLASSERT(0 && "This should be unreachable!");
     }
+
+    m_ApplicationView->RestoreListSelection(selitem);
     m_ApplicationView->SetRedraw(TRUE);
     m_ApplicationView->RedrawWindow(0, 0, RDW_INVALIDATE | RDW_ALLCHILDREN); // force the child window to repaint
     UpdateStatusBarText();
