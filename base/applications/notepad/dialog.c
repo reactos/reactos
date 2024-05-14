@@ -251,13 +251,8 @@ static BOOL DoSaveFile(VOID)
 
     /* Use OPEN_ALWAYS instead of CREATE_ALWAYS in order to succeed
      * even if the file has HIDDEN or SYSTEM attributes */
-    hFile = CreateFileW(Globals.szFileName,
-                        GENERIC_WRITE,
-                        FILE_SHARE_READ,
-                        NULL,
-                        OPEN_ALWAYS,
-                        FILE_ATTRIBUTE_NORMAL,
-                        NULL);
+    hFile = CreateFileW(Globals.szFileName, GENERIC_WRITE, FILE_SHARE_READ,
+                        NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
     {
         ShowLastError();
