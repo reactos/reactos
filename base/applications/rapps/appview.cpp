@@ -1015,25 +1015,23 @@ AsyncLoadIconProc(LPVOID Param)
 CAsyncLoadIcon*
 CAsyncLoadIcon::Queue(HWND hAppsList, CAppInfo &AppInfo, bool Parse)
 {
-    ATLASSERT(GetWindowThreadProcessId(hAppsList, NULL) == GetCurrentThreadId());
+    ATLASSERT(GetCurrentThreadId() && GetWindowThreadProcessId(hAppsList, NULL));
     CStringW szIconPath;
-    if (AppInfo.RetrieveIcon(szIconPath))
-    {
-        SIZE_T cch = szIconPath.GetLength() + 1, cbstr = cch * sizeof(WCHAR);
-        CAsyncLoadIcon *task = (CAsyncLoadIcon*)LocalAlloc(LMEM_FIXED, sizeof(CAsyncLoadIcon) + cbstr);
-        if (!task)
-            return NULL;
-        task->hAppsList = hAppsList;
-        task->AppInfo = &AppInfo;
-        task->TaskId = g_AsyncIconTaskId;
-        task->Parse = Parse;
-        CopyMemory(task->Location, szIconPath.GetBuffer(), cbstr);
-        szIconPath.ReleaseBuffer();
-        task->pNext = g_AsyncIconTasks;
-        g_AsyncIconTasks = task;
-        return task;
-    }
-    return NULL;
+    if (!AppInfo.RetrieveIcon(szIconPath))
+        return NULL;
+    SIZE_T cch = szIconPath.GetLength() + 1, cbstr = cch * sizeof(WCHAR);
+    CAsyncLoadIcon *task = (CAsyncLoadIcon*)LocalAlloc(LMEM_FIXED, sizeof(CAsyncLoadIcon) + cbstr);
+    if (!task)
+        return NULL;
+    task->hAppsList = hAppsList;
+    task->AppInfo = &AppInfo;
+    task->TaskId = g_AsyncIconTaskId;
+    task->Parse = Parse;
+    CopyMemory(task->Location, szIconPath.GetBuffer(), cbstr);
+    szIconPath.ReleaseBuffer();
+    task->pNext = g_AsyncIconTasks;
+    g_AsyncIconTasks = task;
+    return task;
 }
 
 void
@@ -1340,7 +1338,7 @@ CAppsListView::SetDisplayAppType(APPLICATION_VIEW_TYPE AppType)
         SetImageList(m_hImageListView, LVSIL_SMALL);
         SetImageList(m_hImageListView, LVSIL_NORMAL);
         g_hDefaultPackageIcon = (HICON)LoadImageW(hInst, MAKEINTRESOURCEW(IDI_MAIN),
-                                                  IMAGE_ICON, IconSize, IconSize, 0);
+                                                  IMAGE_ICON, IconSize, IconSize, LR_SHARED);
     }
     ImageList_RemoveAll(m_hImageListView);
 

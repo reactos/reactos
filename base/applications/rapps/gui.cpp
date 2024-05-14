@@ -616,7 +616,7 @@ CMainWindow::UpdateApplicationsList(AppsCategories EnumType, BOOL bReload, BOOL 
 
     if (HCURSOR hCursor = LoadCursor(NULL, IDC_APPSTARTING))
     {
-        // The Database (.ini files) is parsed on the UI thread, let the user know we are busy
+        // The database (.ini files) is parsed on the UI thread, let the user know we are busy
         SetCursor(hCursor);
         PostMessage(WM_SETCURSOR, (WPARAM)m_hWnd, MAKELONG(HTCLIENT, WM_MOUSEMOVE));
     }
