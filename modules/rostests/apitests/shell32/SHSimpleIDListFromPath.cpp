@@ -14,31 +14,34 @@ START_TEST(SHSimpleIDListFromPath)
     WCHAR szPath[MAX_PATH];
     GetWindowsDirectoryW(szPath, _countof(szPath));
 
-    // We will compare pidl1 and pidl2
+    // We compare pidl1 and pidl2
     CComHeapPtr<ITEMIDLIST> pidl1(SHSimpleIDListFromPath(szPath));
     CComHeapPtr<ITEMIDLIST> pidl2(ILCreateFromPathW(szPath));
 
-    LPITEMIDLIST pidl1Last = ILFindLastID(pidl1);
-    LPITEMIDLIST pidl2Last = ILFindLastID(pidl2);
+    // Yes, they are equal logically
+    LPITEMIDLIST pidl1Last = ILFindLastID(pidl1), pidl2Last = ILFindLastID(pidl2);
     ok_int(ILIsEqual(pidl1, pidl2), TRUE);
     ok_int(ILIsEqual(pidl1Last, pidl2Last), TRUE);
 
+    // Bind to parent
     CComPtr<IShellFolder> psf1, psf2;
     hr = SHBindToParent(pidl1, IID_PPV_ARG(IShellFolder, &psf1), NULL);
     ok_long(hr, S_OK);
     hr = SHBindToParent(pidl2, IID_PPV_ARG(IShellFolder, &psf2), NULL);
     ok_long(hr, S_OK);
 
+    // Get attributes
     DWORD attrs1 = SFGAO_FOLDER, attrs2 = SFGAO_FOLDER;
     hr = (psf1 ? psf1->GetAttributesOf(1, &pidl1Last, &attrs1) : E_UNEXPECTED);
     ok_long(hr, S_OK);
     hr = (psf2 ? psf2->GetAttributesOf(1, &pidl2Last, &attrs2) : E_UNEXPECTED);
     ok_long(hr, S_OK);
 
-    // This fact is important:
+    // This fact is the difference:
     ok_long((attrs1 & SFGAO_FOLDER), 0);
     ok_long((attrs2 & SFGAO_FOLDER), SFGAO_FOLDER);
 
+    // Clean up
     ILFree(pidl1);
     ILFree(pidl2);
 }
