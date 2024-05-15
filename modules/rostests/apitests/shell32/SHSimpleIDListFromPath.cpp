@@ -37,11 +37,7 @@ START_TEST(SHSimpleIDListFromPath)
     hr = (psf2 ? psf2->GetAttributesOf(1, &pidl2Last, &attrs2) : E_UNEXPECTED);
     ok_long(hr, S_OK);
 
-    // This fact is the difference:
+    // There is the difference in attributes:
     ok_long((attrs1 & SFGAO_FOLDER), 0);
     ok_long((attrs2 & SFGAO_FOLDER), SFGAO_FOLDER);
-
-    // Clean up
-    ILFree(pidl1);
-    ILFree(pidl2);
 }
