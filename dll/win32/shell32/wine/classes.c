@@ -348,7 +348,7 @@ BOOL HCU_GetIconW(LPCWSTR szClass, LPWSTR szDest, LPCWSTR szName, DWORD len, int
 
     StringCchPrintfW(sTemp, _countof(sTemp), L"%s\\DefaultIcon", szClass);
 
-    if (!RegOpenKeyExW(HKEY_CURRENT_USER, sTemp, 0, KEY_READ, &hkey))
+    if (!RegOpenKeyExW(HKEY_CLASSES_ROOT, sTemp, 0, KEY_READ, &hkey))
     {
         ret = HCR_RegGetIconW(hkey, szDest, szName, len, picon_idx);
         RegCloseKey(hkey);
