@@ -185,7 +185,7 @@ IShellFolder_ParseDisplayName(
 {
     ULONG dummy1, dummy2;
 
-    TRACE("(%p, %p, %s, %p, %p, %p)\n", hwndOwner, pbcReserved, lpszDisplayName,
+    TRACE("(%p, %p, %s, %p, %p, %p)\n", hwndOwner, pbcReserved, debugstr_w(lpszDisplayName),
                                         pchEaten, ppidl, pdwAttributes);
 
     if (!pdwAttributes)
