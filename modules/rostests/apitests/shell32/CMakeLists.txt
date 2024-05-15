@@ -32,6 +32,7 @@ list(APPEND SOURCE
     SHCreateFileExtractIconW.cpp
     SHParseDisplayName.cpp
     SHRestricted.cpp
+    SHSimpleIDListFromPath.cpp
     She.cpp
     ShellExecCmdLine.cpp
     ShellExecuteEx.cpp
