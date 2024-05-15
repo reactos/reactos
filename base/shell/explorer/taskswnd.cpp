@@ -369,7 +369,6 @@ class CTaskSwitchWnd :
 
     HIMAGELIST m_ImageList;
 
-    BOOL m_IsGroupingEnabled;
     BOOL m_IsDestroying;
 
     BOOL m_CloseTaskGroupOpen;
@@ -381,9 +380,12 @@ class CTaskSwitchWnd :
     UINT m_uHardErrorMsg;
     CHardErrorThread m_HardErrorThread;
 
+    //Taskbar grouping related variables
     INT TaskGroupOpened = -1;
-    CComPtr<IShellMenu2> shellMenu;
+    BOOL m_IsGroupingEnabled;
     CComPtr<IMenuPopup> menuPopup;
+
+    CComPtr<IShellMenu2> shellMenu;
     CComPtr<IBandSite> bandSite;
 
 public:
@@ -984,7 +986,7 @@ public:
         PTASK_ITEM TaskItem, LastTaskItem = NULL;
         WCHAR windowText[255];
         TBBUTTON tbBtn = { 0 };
-        INT iIndex = __INT_MAX__;
+        INT iIndex = INT_MAX;
         HICON icon;
 
         TaskItem = m_TaskItems;
