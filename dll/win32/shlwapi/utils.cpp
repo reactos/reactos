@@ -217,7 +217,7 @@ IShellFolder_CompareIDs(
     HRESULT hr;
     TRACE("(%p, %p, %p, %p)\n", psf, lParam, pidl1, pidl2);
 
-    if (lParam & ~SHCIDS_COLUMNMASK)
+    if (lParam & ~(SIZE_T)SHCIDS_COLUMNMASK)
     {
         /* Try as IShellFolder2 if possible */
         hr = psf->QueryInterface(IID_IShellFolder2, (void **)&psf);
