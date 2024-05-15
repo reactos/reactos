@@ -72,6 +72,8 @@ static void OnInitMenu(HWND hWnd)
     static int s_nFavoriteMenuSubPos = -1;
     HMENU hMenu;
     BOOL bDisplayedAny = FALSE;
+    HTREEITEM hSelTI;
+    BOOL bCanAddFav;
 
     /* Find Favorites menu and clear it out */
     hMenu = GetSubMenu(GetMenu(hWnd), FAVORITES_MENU_POSITION);
@@ -85,6 +87,11 @@ static void OnInitMenu(HWND hWnd)
     {
         while(RemoveMenu(hMenu, s_nFavoriteMenuSubPos, MF_BYPOSITION)) ;
     }
+
+    hSelTI = TreeView_GetSelection(g_pChildWnd->hTreeWnd);
+    bCanAddFav = TreeView_GetParent(g_pChildWnd->hTreeWnd, hSelTI) != NULL;
+    EnableMenuItem(GetMenu(hWnd), ID_FAVOURITES_ADDTOFAVOURITES,
+                   MF_BYCOMMAND | (bCanAddFav ? MF_ENABLED : MF_GRAYED));
 
     lResult = RegOpenKeyW(HKEY_CURRENT_USER, s_szFavoritesRegKey, &hKey);
     if (lResult != ERROR_SUCCESS)
@@ -807,6 +814,98 @@ done:
         RegCloseKey(hKey);
 }
 
+static LPWSTR GetItemFullPath(HTREEITEM hTI)
+{
+    HKEY hRoot;
+    WCHAR rootname[MAX_PATH], *buffer;
+    SIZE_T rootlen, subkeylen;
+    LPCWSTR subkey = GetItemPath(g_pChildWnd->hTreeWnd, hTI, &hRoot);
+    if (!subkey || !hRoot)
+        return NULL;
+    if (!GetKeyName(rootname, ARRAY_SIZE(rootname), hRoot, L""))
+        return NULL;
+    rootlen = lstrlenW(rootname) + 1; // + 1 for '\\'
+    subkeylen = lstrlenW(subkey);
+    buffer = (WCHAR*)GlobalAlloc(GMEM_FIXED, (rootlen + subkeylen + 1) * sizeof(WCHAR));
+    if (buffer)
+    {
+        lstrcpyW(buffer, rootname);
+        buffer[rootlen - 1] = '\\';
+        lstrcpyW(buffer + rootlen, subkey);
+    }
+    return buffer;
+}
+
+static INT_PTR CALLBACK AddToFavoritesDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    HWND hName = GetDlgItem(hWnd, IDC_FAVORITENAME);
+    WCHAR name[MAX_PATH];
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            TVITEM tvi;
+            tvi.mask = TVIF_HANDLE | TVIF_TEXT;
+            tvi.hItem = TreeView_GetSelection(g_pChildWnd->hTreeWnd);
+            tvi.pszText = name;
+            tvi.cchTextMax = _countof(name);
+            if (!TreeView_GetItem(g_pChildWnd->hTreeWnd, &tvi))
+                tvi.pszText[0] = UNICODE_NULL;
+            SendMessageW(hName, WM_SETTEXT, 0, (LPARAM)tvi.pszText);
+            SendMessageW(hName, EM_LIMITTEXT, _countof(name) - 1, 0);
+            return TRUE;
+        }
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                    {
+                        LPCWSTR path;
+                        HKEY hKey;
+                        DWORD err;
+                        if (GetWindowTextW(hName, name, _countof(name)))
+                            err = ERROR_SUCCESS;
+                        else
+                            err = GetLastError();
+
+                        if (err == ERROR_SUCCESS)
+                        {
+                            path = GetItemFullPath(NULL);
+                            if (!path)
+                                err = ERROR_NOT_ENOUGH_MEMORY;
+                        }
+
+                        if (err == ERROR_SUCCESS)
+                            err = RegCreateKeyExW(HKEY_CURRENT_USER, s_szFavoritesRegKey, 0,
+                                                  NULL, 0, KEY_SET_VALUE, NULL, &hKey, NULL);
+                        if (err == ERROR_SUCCESS)
+                        {
+                            err = RegSetValueExW(hKey, name, 0, REG_SZ, (BYTE*)path, (lstrlenW(path) + 1) * sizeof(WCHAR));
+                            RegCloseKey(hKey);
+                        }
+                        if (err)
+                        {
+                            if (!FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                                                NULL, err, 0, name, _countof(name), NULL))
+                                *(UINT*)name = L'?';
+                            MessageBoxW(hWnd, name, NULL, MB_ICONSTOP);
+                        }
+                        if (path)
+                            GlobalFree((HGLOBAL)path);
+                        return EndDialog(hWnd, err);
+                    }
+                case IDCANCEL:
+                    return EndDialog(hWnd, ERROR_CANCELLED);
+                case IDC_FAVORITENAME:
+                    if (HIWORD(wParam) == EN_UPDATE)
+                        EnableWindow(GetDlgItem(hWnd, IDOK), GetWindowTextLengthW(hName) != 0);
+                    break;
+            }
+            break;
+    }
+    return FALSE;
+}
+
 BOOL CopyKeyName(HWND hWnd, HKEY hRootKey, LPCWSTR keyName)
 {
     BOOL bClipboardOpened = FALSE;
@@ -1119,6 +1218,8 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_VIEW_STATUSBAR:
         toggle_child(hWnd, LOWORD(wParam), hStatusBar);
         return TRUE;
+    case ID_FAVOURITES_ADDTOFAVOURITES:
+        return DialogBoxW(hInst, MAKEINTRESOURCEW(IDD_ADDFAVORITES), hWnd, AddToFavoritesDlgProc);
     case ID_HELP_HELPTOPICS:
         WinHelpW(hWnd, L"regedit", HELP_FINDER, 0);
         return TRUE;
