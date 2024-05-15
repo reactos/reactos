@@ -158,12 +158,12 @@ IShellFolder_GetDisplayNameOf(
 EXTERN_C HRESULT WINAPI
 IShellFolder_ParseDisplayName(
     _In_ IShellFolder *psf,
-    _In_ HWND hwndOwner,
-    _In_ LPBC pbcReserved,
+    _In_opt_ HWND hwndOwner,
+    _In_opt_ LPBC pbcReserved,
     _In_ LPOLESTR lpszDisplayName,
-    _Out_ ULONG *pchEaten,
-    _Out_ LPITEMIDLIST *ppidl,
-    _Out_ ULONG *pdwAttributes)
+    _Out_opt_ ULONG *pchEaten,
+    _Out_opt_ LPITEMIDLIST *ppidl,
+    _Out_opt_ ULONG *pdwAttributes)
 {
     ULONG dummy1, dummy2, *pAttrs, *pchAgent;
 
@@ -174,7 +174,8 @@ IShellFolder_ParseDisplayName(
     dummy1 = dummy2 = 0;
     pAttrs = (pdwAttributes ? pdwAttributes : &dummy1);
     pchAgent = (pchEaten ? pchEaten : &dummy2);
-    if (ppidl) *ppidl = NULL;
+    if (ppidl)
+        *ppidl = NULL;
 
     return psf->ParseDisplayName(hwndOwner, pbcReserved, lpszDisplayName, pchAgent, ppidl, pAttrs);
 }
@@ -194,7 +195,7 @@ IShellFolder_CompareIDs(
 
     if (!IS_INTRESOURCE(lParam))
     {
-        /* Try as IShellFolder2 */
+        /* Try as IShellFolder2 if possible */
         hr = psf->QueryInterface(IID_IShellFolder2, (void **)&psf);
         if (FAILED(hr))
             lParam = LOWORD(lParam);
