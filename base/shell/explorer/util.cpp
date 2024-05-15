@@ -228,6 +228,26 @@ GetVersionInfoString(IN LPCWSTR szFileName,
                         }
                     }
                 }
+                if(bRet == FALSE && cbTranslate >= sizeof(LANGCODEPAGE)) {
+                    //Try to use the first language as a fallback
+
+                    wnsprintf(szSubBlock,
+                                _countof(szSubBlock),
+                                L"\\StringFileInfo\\%04X%04X\\%s",
+                                lpTranslate[0].wLanguage,
+                                lpTranslate[0].wCodePage,
+                                szVersionInfo);
+
+                    if (VerQueryValueW(lpData,
+                                        szSubBlock,
+                                        (LPVOID*)&lpszLocalBuf,
+                                        &cbLen) != 0)
+                    {
+                        wcsncpy(szBuffer, lpszLocalBuf, cbBufLen / sizeof(*szBuffer));
+
+                        bRet = TRUE;
+                    }
+                }
             }
 
             HeapFree(hProcessHeap, 0, lpData);
