@@ -332,6 +332,7 @@ IContextMenu_Invoke(
 
 DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid);
 
+#ifdef WANT_ISHELLFOLDER_HELPERS
 HRESULT WINAPI
 IShellFolder_GetDisplayNameOf(
     _In_ IShellFolder *psf,
@@ -356,6 +357,7 @@ IShellFolder_CompareIDs(
     _In_ LPARAM lParam,
     _In_ PCUIDLIST_RELATIVE pidl1,
     _In_ PCUIDLIST_RELATIVE pidl2);
+#endif /* WANT_ISHELLFOLDER_HELPERS */
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -18,7 +18,10 @@
 #undef IShellFolder_GetDisplayNameOf
 #undef IShellFolder_ParseDisplayName
 #undef IShellFolder_CompareIDs
+
+#define WANT_ISHELLFOLDER_HELPERS
 #include <shlwapi_undoc.h>
+
 #include <strsafe.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
@@ -131,7 +134,6 @@ SHLWAPI_IsBogusHRESULT(HRESULT hr)
 /*************************************************************************
  * IShellFolder_GetDisplayNameOf [SHLWAPI.316]
  */
-#undef IShellFolder_GetDisplayNameOf
 EXTERN_C HRESULT WINAPI
 IShellFolder_GetDisplayNameOf(
     _In_ IShellFolder *psf,
@@ -162,7 +164,6 @@ IShellFolder_GetDisplayNameOf(
 /*************************************************************************
  * IShellFolder_ParseDisplayName [SHLWAPI.317]
  */
-#undef IShellFolder_ParseDisplayName
 EXTERN_C HRESULT WINAPI
 IShellFolder_ParseDisplayName(
     _In_ IShellFolder *psf,
@@ -191,7 +192,6 @@ IShellFolder_ParseDisplayName(
 /*************************************************************************
  * IShellFolder_CompareIDs [SHLWAPI.551]
  */
-#undef IShellFolder_CompareIDs
 EXTERN_C HRESULT WINAPI
 IShellFolder_CompareIDs(
     _In_ IShellFolder *psf,
