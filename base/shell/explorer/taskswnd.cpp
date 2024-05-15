@@ -1257,7 +1257,7 @@ public:
             else
             {
                 WCHAR ExePath[MAX_PATH] = {0};
-                GetProcessPath(dwProcessId, ExePath, _countof(ExePath));
+                GetProcessPath(TaskGroup->dwProcessId, ExePath, _countof(ExePath));
 
                 if(!lstrcmpW(ExePath, ItemExePath))
                 {
@@ -2297,9 +2297,9 @@ public:
             PTASK_GROUP TaskGroup = FindTaskGroupByIndex(TaskGroupOpened);
 
             PTASK_ITEM TaskItem, LastTaskItem = NULL;
-            LastTaskItem = TaskItem + m_TaskItemCount;
 
             TaskItem = m_TaskItems;
+            LastTaskItem = TaskItem + m_TaskItemCount;
 
             while (TaskItem != LastTaskItem)
             {
