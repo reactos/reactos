@@ -162,7 +162,7 @@ IShellFolder_GetDisplayNameOf(
     dwRetryFlags |= 0x80000000;
 
     if ((uFlags & SHGDN_FORPARSING) == 0)
-        dwRetryFlags |= 1;
+        dwRetryFlags |= SFGDNO_RETRYWITHFORPARSING;
 
     /* It seems the function is actually retrying here */
     FIXME("dwRetryFlags: 0x%X\n", dwRetryFlags);

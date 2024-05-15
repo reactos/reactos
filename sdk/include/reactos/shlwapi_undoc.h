@@ -345,6 +345,9 @@ IShellFolder_GetDisplayNameOf(
     _Out_ LPSTRRET lpName,
     _In_ DWORD dwRetryFlags);
 
+/* Flags for IShellFolder_GetDisplayNameOf */
+#define SFGDNO_RETRYWITHFORPARSING 1
+
 HRESULT WINAPI
 IShellFolder_ParseDisplayName(
     _In_ IShellFolder *psf,
