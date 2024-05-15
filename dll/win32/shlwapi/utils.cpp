@@ -28,7 +28,7 @@
 #undef IShellFolder_ParseDisplayName
 #undef IShellFolder_CompareIDs
 
-#define SHLWAPI_ISHELLFOLDER_HELPERS
+#define SHLWAPI_ISHELLFOLDER_HELPERS /* HACK! */
 #include <shlwapi_undoc.h>
 
 #include <strsafe.h>
