@@ -826,7 +826,7 @@ static LPWSTR GetItemFullPath(HTREEITEM hTI)
         return NULL;
     rootlen = lstrlenW(rootname) + 1; // + 1 for '\\'
     subkeylen = lstrlenW(subkey);
-    buffer = (WCHAR*)GlobalAlloc(GMEM_FIXED, (rootlen + subkeylen + 1) * sizeof(WCHAR));
+    buffer = (WCHAR*)malloc((rootlen + subkeylen + 1) * sizeof(WCHAR));
     if (buffer)
     {
         lstrcpyW(buffer, rootname);
@@ -860,7 +860,7 @@ static INT_PTR CALLBACK AddToFavoritesDlgProc(HWND hWnd, UINT uMsg, WPARAM wPara
             {
                 case IDOK:
                     {
-                        LPCWSTR path;
+                        LPWSTR path;
                         HKEY hKey;
                         DWORD err;
                         if (GetWindowTextW(hName, name, _countof(name)))
@@ -891,7 +891,7 @@ static INT_PTR CALLBACK AddToFavoritesDlgProc(HWND hWnd, UINT uMsg, WPARAM wPara
                             MessageBoxW(hWnd, name, NULL, MB_ICONSTOP);
                         }
                         if (path)
-                            GlobalFree((HGLOBAL)path);
+                            free(path);
                         return EndDialog(hWnd, err);
                     }
                 case IDCANCEL:
@@ -1219,7 +1219,8 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         toggle_child(hWnd, LOWORD(wParam), hStatusBar);
         return TRUE;
     case ID_FAVOURITES_ADDTOFAVOURITES:
-        return DialogBoxW(hInst, MAKEINTRESOURCEW(IDD_ADDFAVORITES), hWnd, AddToFavoritesDlgProc);
+        DialogBoxW(hInst, MAKEINTRESOURCEW(IDD_ADDFAVORITES), hWnd, AddToFavoritesDlgProc);
+        return TRUE;
     case ID_HELP_HELPTOPICS:
         WinHelpW(hWnd, L"regedit", HELP_FINDER, 0);
         return TRUE;
