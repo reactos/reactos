@@ -8,7 +8,7 @@
 #define _ATL_NO_EXCEPTIONS
 
 /*
- * HACK!  These functions are conflicting with <shobjidl.h> inline functions...
+ * HACK! These functions are conflicting with <shobjidl.h> inline functions...
  */
 #define IShellFolder_GetDisplayNameOf _disabled_IShellFolder_GetDisplayNameOf_
 #define IShellFolder_ParseDisplayName _disabled_IShellFolder_ParseDisplayName_
@@ -22,7 +22,7 @@
 #include <atlstr.h>
 
 /*
- * HACK!  These functions are conflicting with <shobjidl.h> inline functions...
+ * HACK! These functions are conflicting with <shobjidl.h> inline functions...
  */
 #undef IShellFolder_GetDisplayNameOf
 #undef IShellFolder_ParseDisplayName
@@ -188,14 +188,17 @@ IShellFolder_ParseDisplayName(
     TRACE("(%p, %p, %s, %p, %p, %p)\n", hwndOwner, pbcReserved, lpszDisplayName,
                                         pchEaten, ppidl, pdwAttributes);
 
-    /* Improve safety */
-    dummy1 = dummy2 = 0;
-
     if (!pdwAttributes)
+    {
+        dummy1 = 0;
         pdwAttributes = &dummy1;
+    }
 
     if (!pchEaten)
+    {
+        dummy2 = 0;
         pchEaten = &dummy2;
+    }
 
     if (ppidl)
         *ppidl = NULL;
@@ -214,15 +217,14 @@ IShellFolder_CompareIDs(
     _In_ PCUIDLIST_RELATIVE pidl1,
     _In_ PCUIDLIST_RELATIVE pidl2)
 {
-    HRESULT hr;
     TRACE("(%p, %p, %p, %p)\n", psf, lParam, pidl1, pidl2);
 
     if (lParam & ~(SIZE_T)SHCIDS_COLUMNMASK)
     {
         /* Try as IShellFolder2 if possible */
-        hr = psf->QueryInterface(IID_IShellFolder2, (void **)&psf);
+        HRESULT hr = psf->QueryInterface(IID_IShellFolder2, (void **)&psf);
         if (FAILED(hr))
-            lParam = LOWORD(lParam);
+            lParam &= SHCIDS_COLUMNMASK;
         else
             psf->Release();
     }
