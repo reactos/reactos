@@ -534,12 +534,14 @@ public:
 
     VOID RegenerateTaskGroupMenu(PTASK_GROUP TaskGroup) {
 
-        if(TaskGroupOpened != -1 || TaskGroup == NULL) {
+        if (TaskGroupOpened != -1 || TaskGroup == NULL)
+        {
             CloseOpenedTaskGroup(FALSE);
             TaskGroupOpened = -1;
         }
 
-        if(m_IsDestroying) return;
+        if (m_IsDestroying)
+            return;
 
         HMENU hMenu;
         if ((hMenu = CreatePopupMenu()) == NULL)
@@ -579,12 +581,13 @@ public:
 
         /* Create the popup */
         HRESULT hr;
-        if(shellMenu == NULL) {
+        if (shellMenu == NULL)
+        {
             hr = CoCreateInstance(CLSID_MenuBand, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IShellMenu2, &shellMenu));
             hr = CoCreateInstance(CLSID_MenuDeskBar, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IMenuPopup, &menuPopup));
             hr = CoCreateInstance(CLSID_MenuBandSite, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IBandSite, &bandSite));
 
-            if(!shellMenu || !menuPopup || !SUCCEEDED(hr))
+            if (!shellMenu || !menuPopup || !SUCCEEDED(hr))
             {
                 TRACE("Failed to create Taskbar popup menu(CoCreateInstance)\n");
                 return;
@@ -618,7 +621,9 @@ public:
             hr = menuPopup->QueryInterface(IID_PPV_ARG(IInitializeObject, &pIo));
             if (SUCCEEDED(hr))
                 pIo->Initialize();
-        } else {
+        }
+        else
+        {
             TaskGroupOpened = TaskGroup->Index;
 
             menuPopup->OnSelect(MPOS_FULLCANCEL);
@@ -628,7 +633,7 @@ public:
 
         CComPtr<IDeskBand> pIDB;
         hr = shellMenu->QueryInterface(IID_PPV_ARG(IDeskBand, &pIDB));
-        if(!SUCCEEDED(hr))
+        if (!SUCCEEDED(hr))
             return;
 
         HWND hWnd;
@@ -686,9 +691,9 @@ public:
 
         /* Open process to retrieve the filename of the executable */
         WCHAR ExePath[MAX_PATH] = {};
-        if(GetProcessPath(TaskGroup->dwProcessId, ExePath, _countof(ExePath)))
+        if (GetProcessPath(TaskGroup->dwProcessId, ExePath, _countof(ExePath)))
         {
-            if(GetVersionInfoString(ExePath, L"FileDescription", windowText, _countof(windowText)))
+            if (GetVersionInfoString(ExePath, L"FileDescription", windowText, _countof(windowText)))
                 tbbi.pszText = windowText;
 
             if (ExtractIconExW(ExePath, 0, NULL, &icon, 1) <= 0)
@@ -731,7 +736,8 @@ public:
         ASSERT(TaskGroup->IsCollapsed);
         ASSERT(TaskGroup->Index >= 0);
 
-        if (TaskGroupOpened != -1) {
+        if (TaskGroupOpened != -1)
+        {
             if (TaskGroup->Index != TaskGroupOpened)
             {
                 RegenerateTaskGroupMenu(FindTaskGroupByIndex(TaskGroupOpened));
@@ -1008,11 +1014,10 @@ public:
 
         /* Open process to retrieve the filename of the executable */
         WCHAR ExePath[MAX_PATH] = {};
-        if(GetProcessPath(TaskGroup->dwProcessId, ExePath, _countof(ExePath)))
+        if (GetProcessPath(TaskGroup->dwProcessId, ExePath, _countof(ExePath)))
         {
-            if(GetVersionInfoString(ExePath, L"FileDescription", windowText, _countof(windowText))) {
+            if (GetVersionInfoString(ExePath, L"FileDescription", windowText, _countof(windowText)))
                 tbBtn.iString = (DWORD_PTR) windowText;
-            }
 
             if (ExtractIconExW(ExePath, -1, NULL, &icon, 1) <= 0)
                 icon = static_cast<HICON>(LoadImageW(NULL, MAKEINTRESOURCEW(OIC_SAMPLE), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE));
@@ -1057,10 +1062,10 @@ public:
         BOOL bIsLower = m_ButtonCount < iMaxButtons;
         BOOL bIsGreater = bAdding ? (m_ButtonCount >= iMaxButtons) : (m_ButtonCount > iMaxButtons);
 
-        if(m_IsGroupingEnabled && (bIsLower || bIsGreater))
+        if (m_IsGroupingEnabled && (bIsLower || bIsGreater))
         {
-            while(bIsGreater ? (m_ButtonCount >= iMaxButtons) :
-                 (m_ButtonCount < iMaxButtons))
+            while (bIsGreater ? (m_ButtonCount >= iMaxButtons) :
+                  (m_ButtonCount < iMaxButtons))
             {
                 // We expanded the taskbar size, we need to collapse if grouping is enabled
 
@@ -1072,7 +1077,7 @@ public:
                         bIsGreater == (CurrentGroup->Index < 0) &&
                         CurrentGroup->dwTaskCount > 1)
                     {
-                        if(MaxOrMinGroup == NULL ||
+                        if (MaxOrMinGroup == NULL ||
                            (bIsGreater && MaxOrMinGroup->dwTaskCount < CurrentGroup->dwTaskCount) ||
                            (bIsLower && MaxOrMinGroup->dwTaskCount > CurrentGroup->dwTaskCount))
                            MaxOrMinGroup = CurrentGroup;
@@ -1081,9 +1086,10 @@ public:
                     CurrentGroup = CurrentGroup->Next;
                 }
 
-                if(MaxOrMinGroup == NULL) return; // We can't collapse more groups
+                if (MaxOrMinGroup == NULL)
+                    return; // We can't collapse more groups
 
-                if(bIsGreater)
+                if (bIsGreater)
                 {
                     CollapseTaskGroup(MaxOrMinGroup);
                 }
@@ -1097,7 +1103,7 @@ public:
                 }
             }
         }
-        else if(!m_IsGroupingEnabled)
+        else if (!m_IsGroupingEnabled)
         {
             // Expand all the groups
 
@@ -2048,16 +2054,16 @@ public:
 
         switch (GET_APPCOMMAND_LPARAM(lParam))
         {
-        case APPCOMMAND_BROWSER_SEARCH:
-            Ret = SHFindFiles(NULL,
-                NULL);
-            break;
+            case APPCOMMAND_BROWSER_SEARCH:
+                Ret = SHFindFiles(NULL,
+                    NULL);
+                break;
 
-        case APPCOMMAND_BROWSER_HOME:
-        case APPCOMMAND_LAUNCH_MAIL:
-        default:
-            TRACE("Shell app command %d unhandled!\n", (INT) GET_APPCOMMAND_LPARAM(lParam));
-            break;
+            case APPCOMMAND_BROWSER_HOME:
+            case APPCOMMAND_LAUNCH_MAIL:
+            default:
+                TRACE("Shell app command %d unhandled!\n", (INT) GET_APPCOMMAND_LPARAM(lParam));
+                break;
         }
 
         return Ret;
@@ -2078,71 +2084,71 @@ public:
 
         switch ((INT) wParam)
         {
-        case HSHELL_APPCOMMAND:
-            Ret = HandleAppCommand(wParam, lParam);
-            break;
-
-        case HSHELL_WINDOWCREATED:
-            SendPulseToTray(FALSE, (HWND)lParam);
-            AddTask((HWND) lParam);
-            break;
-
-        case HSHELL_WINDOWDESTROYED:
-            /* The window still exists! Delay destroying it a bit */
-            SendPulseToTray(TRUE, (HWND)lParam);
-            DeleteTask((HWND)lParam);
-            break;
-
-        case HSHELL_RUDEAPPACTIVATED:
-        case HSHELL_WINDOWACTIVATED:
-            SendPulseToTray(FALSE, (HWND)lParam);
-            ActivateTask((HWND)lParam);
-            break;
-
-        case HSHELL_FLASH:
-            FlashTask((HWND) lParam);
-            break;
-
-        case HSHELL_REDRAW:
-            RedrawTask((HWND) lParam);
-            break;
-
-        case HSHELL_TASKMAN:
-            ::PostMessage(m_Tray->GetHWND(), TWM_OPENSTARTMENU, 0, 0);
-            break;
-
-        case HSHELL_ACTIVATESHELLWINDOW:
-            ::SwitchToThisWindow(m_Tray->GetHWND(), TRUE);
-            ::SetForegroundWindow(m_Tray->GetHWND());
-            break;
-
-        case HSHELL_LANGUAGE:
-        case HSHELL_SYSMENU:
-        case HSHELL_ENDTASK:
-        case HSHELL_ACCESSIBILITYSTATE:
-        case HSHELL_WINDOWREPLACED:
-        case HSHELL_WINDOWREPLACING:
-
-        case HSHELL_GETMINRECT:
-        default:
-        {
-#if DEBUG_SHELL_HOOK
-            int i, found;
-            for (i = 0, found = 0; i != _countof(hshell_msg); i++)
-            {
-                if (hshell_msg[i].msg == (INT) wParam)
-                {
-                    TRACE("Shell message %ws unhandled (lParam = 0x%p)!\n", hshell_msg[i].msg_name, lParam);
-                    found = 1;
-                    break;
-                }
-            }
-            if (found)
+            case HSHELL_APPCOMMAND:
+                Ret = HandleAppCommand(wParam, lParam);
                 break;
-#endif
-            TRACE("Shell message %d unhandled (lParam = 0x%p)!\n", (INT) wParam, lParam);
-            break;
-        }
+
+            case HSHELL_WINDOWCREATED:
+                SendPulseToTray(FALSE, (HWND)lParam);
+                AddTask((HWND) lParam);
+                break;
+
+            case HSHELL_WINDOWDESTROYED:
+                /* The window still exists! Delay destroying it a bit */
+                SendPulseToTray(TRUE, (HWND)lParam);
+                DeleteTask((HWND)lParam);
+                break;
+
+            case HSHELL_RUDEAPPACTIVATED:
+            case HSHELL_WINDOWACTIVATED:
+                SendPulseToTray(FALSE, (HWND)lParam);
+                ActivateTask((HWND)lParam);
+                break;
+
+            case HSHELL_FLASH:
+                FlashTask((HWND) lParam);
+                break;
+
+            case HSHELL_REDRAW:
+                RedrawTask((HWND) lParam);
+                break;
+
+            case HSHELL_TASKMAN:
+                ::PostMessage(m_Tray->GetHWND(), TWM_OPENSTARTMENU, 0, 0);
+                break;
+
+            case HSHELL_ACTIVATESHELLWINDOW:
+                ::SwitchToThisWindow(m_Tray->GetHWND(), TRUE);
+                ::SetForegroundWindow(m_Tray->GetHWND());
+                break;
+
+            case HSHELL_LANGUAGE:
+            case HSHELL_SYSMENU:
+            case HSHELL_ENDTASK:
+            case HSHELL_ACCESSIBILITYSTATE:
+            case HSHELL_WINDOWREPLACED:
+            case HSHELL_WINDOWREPLACING:
+
+            case HSHELL_GETMINRECT:
+            default:
+            {
+    #if DEBUG_SHELL_HOOK
+                int i, found;
+                for (i = 0, found = 0; i != _countof(hshell_msg); i++)
+                {
+                    if (hshell_msg[i].msg == (INT) wParam)
+                    {
+                        TRACE("Shell message %ws unhandled (lParam = 0x%p)!\n", hshell_msg[i].msg_name, lParam);
+                        found = 1;
+                        break;
+                    }
+                }
+                if (found)
+                    break;
+    #endif
+                TRACE("Shell message %d unhandled (lParam = 0x%p)!\n", (INT) wParam, lParam);
+                break;
+            }
         }
 
         return Ret;
@@ -2182,7 +2188,8 @@ public:
 
     VOID HandleTaskGroupClick(IN OUT PTASK_GROUP TaskGroup)
     {
-        if(m_CloseTaskGroupOpen) {
+        if (m_CloseTaskGroupOpen)
+        {
             m_CloseTaskGroupOpen = FALSE;
 
             m_TaskBar.CheckButton(TaskGroup->Index, FALSE);
@@ -2190,11 +2197,14 @@ public:
             TaskGroupOpened = -1;
         }
 
-        if(TaskGroupOpened != TaskGroup->Index) {
+        if (TaskGroupOpened != TaskGroup->Index)
+        {
             RegenerateTaskGroupMenu(TaskGroup);
 
             TaskGroupOpened = TaskGroup->Index;
-        } else {
+        }
+        else
+        {
             CloseOpenedTaskGroup(FALSE);
             TaskGroupOpened = -1;
         }
@@ -2228,10 +2238,11 @@ public:
 
     HRESULT CloseOpenedTaskGroup(BOOL bDontRemoveIndices)
     {
-        if(shellMenu == NULL || menuPopup == NULL || bandSite == NULL || TaskGroupOpened < 0) return E_FAIL;
+        if (shellMenu == NULL || menuPopup == NULL || bandSite == NULL || TaskGroupOpened < 0)
+            return E_FAIL;
 
         PTASK_GROUP TaskGroup = FindTaskGroupByIndex(TaskGroupOpened);
-        if(TaskGroup == NULL)
+        if (TaskGroup == NULL)
             return E_FAIL;
 
         /*shellMenu->SetSubMenu(menuPopup, FALSE);
@@ -2241,13 +2252,14 @@ public:
         menuPopup = NULL;
         bandSite = NULL;*/
 
-        if(!bDontRemoveIndices)
+        if (!bDontRemoveIndices)
         {
             PTASK_ITEM TaskItem, LastTaskItem = NULL;
 
             TaskItem = m_TaskItems;
             LastTaskItem = TaskItem + m_TaskItemCount;
-            if(TaskGroupOpened != -1) {
+            if (TaskGroupOpened != -1)
+            {
                 while (TaskItem != LastTaskItem)
                 {
                     if (TaskItem->Group == TaskGroup)
@@ -2262,7 +2274,9 @@ public:
             // Avoid a stack overflow
             menuPopup->OnSelect(MPOS_FULLCANCEL);
             shellMenu->SetMenu(NULL, NULL, NULL);
-        } else {
+        }
+        else
+        {
             m_CloseTaskGroupOpen = TRUE;
         }
 
@@ -2335,7 +2349,7 @@ public:
         HMENU hMenu;
 
         hMenu = LoadPopupMenu(hExplorerInstance, MAKEINTRESOURCEW(IDM_TASKGRP));
-        if(!hMenu)
+        if (!hMenu)
             return;
 
         // Check if all windows are minimized
@@ -2372,7 +2386,8 @@ public:
         TaskGroup->IsRightClick = FALSE;
         UpdateTaskGroupButton(TaskGroup);
 
-        if(!iSelection) return;
+        if (!iSelection)
+            return;
 
         CSimpleArray<HWND> kids;
 
@@ -2531,7 +2546,7 @@ public:
             rcBitmap.left += GetSystemMetrics(SM_CXEDGE) + paddingCx / 2;
             rcBitmap.top += paddingCy / 2;
 
-            if(nmtbcd->nmcd.uItemState & (CDIS_SELECTED | CDIS_CHECKED))
+            if (nmtbcd->nmcd.uItemState & (CDIS_SELECTED | CDIS_CHECKED))
             {
                 rcBitmap.left++;
                 rcBitmap.top++;
@@ -2568,7 +2583,7 @@ public:
 
                 rcText.left += TaskCountTextWidth.cx + paddingCx;
 
-                if(!(btni.fsState & (TBSTATE_PRESSED | TBSTATE_CHECKED)))
+                if (!(btni.fsState & (TBSTATE_PRESSED | TBSTATE_CHECKED)))
                     SelectObject(nmtbcd->nmcd.hdc, normalFont);
 
                 DrawTextW(nmtbcd->nmcd.hdc, buttonText, -1, &rcText, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
@@ -2583,7 +2598,7 @@ public:
                 // Shrink the text rect
                 rcText.left += textRect.right - textRect.left + paddingCx;
 
-                if(btni.fsState & (TBSTATE_PRESSED | TBSTATE_CHECKED))
+                if (btni.fsState & (TBSTATE_PRESSED | TBSTATE_CHECKED))
                     oldFont = SelectObject(nmtbcd->nmcd.hdc, newFont);
                 else
                     oldFont = SelectObject(nmtbcd->nmcd.hdc, normalFont);
@@ -2592,31 +2607,29 @@ public:
             }
             SetBkMode(nmtbcd->nmcd.hdc, oldBkMode);
 
-            if(oldFont != NULL)
+            if (oldFont != NULL)
                 SelectObject(nmtbcd->nmcd.hdc, oldFont);
 
             DeleteObject(newFont);
 
-            {
-                INT x, y;
-                HPEN hPen, hOldPen;
+            INT x, y;
+            HPEN hPen, hOldPen;
 
-                if (!(hPen = CreatePen( PS_SOLID, 1, nmtbcd->clrText)))
-                    return Ret;
+            if (!(hPen = CreatePen( PS_SOLID, 1, nmtbcd->clrText)))
+                return Ret;
 
-                hOldPen = (HPEN)SelectObject(nmtbcd->nmcd.hdc, hPen);
-                INT offset = (nmtbcd->nmcd.uItemState & (CDIS_SELECTED | CDIS_CHECKED)) ? 1 : 0;
-                x = rcArrow.left + offset + 2;
-                y = rcArrow.top + offset + (rcArrow.bottom - rcArrow.top - 3) / 2;
-                MoveToEx(nmtbcd->nmcd.hdc, x, y, NULL);
-                LineTo(nmtbcd->nmcd.hdc, x+5, y++); x++;
-                MoveToEx(nmtbcd->nmcd.hdc, x, y, NULL);
-                LineTo(nmtbcd->nmcd.hdc, x+3, y++); x++;
-                MoveToEx(nmtbcd->nmcd.hdc, x, y, NULL);
-                LineTo(nmtbcd->nmcd.hdc, x+1, y);
-                SelectObject(nmtbcd->nmcd.hdc, hOldPen);
-                DeleteObject(hPen);
-            }
+            hOldPen = (HPEN)SelectObject(nmtbcd->nmcd.hdc, hPen);
+            INT offset = (nmtbcd->nmcd.uItemState & (CDIS_SELECTED | CDIS_CHECKED)) ? 1 : 0;
+            x = rcArrow.left + offset + 2;
+            y = rcArrow.top + offset + (rcArrow.bottom - rcArrow.top - 3) / 2;
+            MoveToEx(nmtbcd->nmcd.hdc, x, y, NULL);
+            LineTo(nmtbcd->nmcd.hdc, x+5, y++); x++;
+            MoveToEx(nmtbcd->nmcd.hdc, x, y, NULL);
+            LineTo(nmtbcd->nmcd.hdc, x+3, y++); x++;
+            MoveToEx(nmtbcd->nmcd.hdc, x, y, NULL);
+            LineTo(nmtbcd->nmcd.hdc, x+1, y);
+            SelectObject(nmtbcd->nmcd.hdc, hOldPen);
+            DeleteObject(hPen);
         }
         return Ret;
     }
@@ -2633,18 +2646,17 @@ public:
 
                 switch (nmtbcd->nmcd.dwDrawStage)
                 {
+                    case CDDS_ITEMPREPAINT:
+                        Ret = HandleItemPaint(nmtbcd);
+                        break;
 
-                case CDDS_ITEMPREPAINT:
-                    Ret = HandleItemPaint(nmtbcd);
-                    break;
+                    case CDDS_PREPAINT:
+                        Ret = CDRF_NOTIFYITEMDRAW;
+                        break;
 
-                case CDDS_PREPAINT:
-                    Ret = CDRF_NOTIFYITEMDRAW;
-                    break;
-
-                default:
-                    Ret = CDRF_DODEFAULT;
-                    break;
+                    default:
+                        Ret = CDRF_DODEFAULT;
+                        break;
                 }
                 break;
             }
@@ -2919,10 +2931,11 @@ HRESULT CShellMenuCallback::OnGetObject(
     REFIID iid,
     void ** pv)
 {
-    if(IsEqualIID(iid, IID_IContextMenu) && psmd->uId >= 0) {
+    if (IsEqualIID(iid, IID_IContextMenu) && psmd->uId >= 0)
+    {
         PTASK_ITEM pItem = pTaskSwitchWnd->FindTaskItemOnOpenedGroup(psmd->uId);
 
-        if(pItem != NULL)
+        if (pItem != NULL)
             pTaskSwitchWnd->HandleTaskItemRightClick(pItem);
     }
 
@@ -2935,30 +2948,31 @@ HRESULT STDMETHODCALLTYPE CShellMenuCallback::CallbackSM(
         WPARAM wParam,
         LPARAM lParam)
 {
-    switch(uMsg) {
+    switch(uMsg)
+    {
         case SMC_EXEC:
-            {
-                pTaskSwitchWnd->HandleTaskGroupSelection(psmd->uId);
+        {
+            pTaskSwitchWnd->HandleTaskGroupSelection(psmd->uId);
 
-                return S_OK;
-            }
+            return S_OK;
+        }
         case SMC_GETOBJECT:
-            {
-                return OnGetObject(psmd, *reinterpret_cast<IID *>(wParam), reinterpret_cast<void **>(lParam));
-            }
+        {
+            return OnGetObject(psmd, *reinterpret_cast<IID *>(wParam), reinterpret_cast<void **>(lParam));
+        }
         case SMC_GETINFO:
-            {
-                SMINFO *pInfo = reinterpret_cast<SMINFO *>(lParam);
+        {
+            SMINFO *pInfo = reinterpret_cast<SMINFO *>(lParam);
 
-                if ((pInfo->dwMask & SMIM_TYPE) != 0)
-                    pInfo->dwType = SMIT_STRING;
-                if ((pInfo->dwMask & SMIM_FLAGS) != 0)
-                    pInfo->dwFlags = SMIF_ICON;
-                if ((pInfo->dwMask & SMIM_ICON) != 0)
-                    pInfo->iIcon = pTaskSwitchWnd->GetTaskGroupItemIconIndex(psmd->uId);
+            if ((pInfo->dwMask & SMIM_TYPE) != 0)
+                pInfo->dwType = SMIT_STRING;
+            if ((pInfo->dwMask & SMIM_FLAGS) != 0)
+                pInfo->dwFlags = SMIF_ICON;
+            if ((pInfo->dwMask & SMIM_ICON) != 0)
+                pInfo->iIcon = pTaskSwitchWnd->GetTaskGroupItemIconIndex(psmd->uId);
 
-                return S_OK;
-            }
+            return S_OK;
+        }
     }
 
     return S_FALSE;
@@ -3066,9 +3080,8 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE SetSubMenu(IMenuPopup *pmp, BOOL fSet)
     {
-        if(!fSet) {
+        if (!fSet)
             return m_TaskSwitchWnd->CloseOpenedTaskGroup(TRUE);
-        }
 
         return S_OK;
     }
