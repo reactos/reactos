@@ -183,19 +183,25 @@ IShellFolder_ParseDisplayName(
     _Out_opt_ PIDLIST_RELATIVE *ppidl,
     _Out_opt_ ULONG *pdwAttributes)
 {
-    ULONG dummy1, dummy2, *pAttrs, *pchAgent;
+    ULONG dummy1, dummy2;
 
     TRACE("(%p, %p, %s, %p, %p, %p)\n", hwndOwner, pbcReserved, lpszDisplayName,
                                         pchEaten, ppidl, pdwAttributes);
 
     /* Improve safety */
     dummy1 = dummy2 = 0;
-    pAttrs = (pdwAttributes ? pdwAttributes : &dummy1);
-    pchAgent = (pchEaten ? pchEaten : &dummy2);
+
+    if (!pdwAttributes)
+        pdwAttributes = &dummy1;
+
+    if (!pchEaten)
+        pchEaten = &dummy2;
+
     if (ppidl)
         *ppidl = NULL;
 
-    return psf->ParseDisplayName(hwndOwner, pbcReserved, lpszDisplayName, pchAgent, ppidl, pAttrs);
+    return psf->ParseDisplayName(hwndOwner, pbcReserved, lpszDisplayName, pchEaten,
+                                 ppidl, pdwAttributes);
 }
 
 /*************************************************************************
