@@ -6,13 +6,19 @@
  */
 
 #define _ATL_NO_EXCEPTIONS
+#define IShellFolder_GetDisplayNameOf _disabled_IShellFolder_GetDisplayNameOf_
+#define IShellFolder_ParseDisplayName _disabled_IShellFolder_ParseDisplayName_
+#define IShellFolder_CompareIDs _disabled_IShellFolder_CompareIDs_
 #include "precomp.h"
 #include <shellapi.h>
 #include <shlwapi.h>
-#include <shlwapi_undoc.h>
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
 #include <atlstr.h>
+#undef IShellFolder_GetDisplayNameOf
+#undef IShellFolder_ParseDisplayName
+#undef IShellFolder_CompareIDs
+#include <shlwapi_undoc.h>
 #include <strsafe.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
@@ -125,6 +131,7 @@ SHLWAPI_IsBogusHRESULT(HRESULT hr)
 /*************************************************************************
  * IShellFolder_GetDisplayNameOf [SHLWAPI.316]
  */
+#undef IShellFolder_GetDisplayNameOf
 EXTERN_C HRESULT WINAPI
 IShellFolder_GetDisplayNameOf(
     _In_ IShellFolder *psf,
@@ -155,6 +162,7 @@ IShellFolder_GetDisplayNameOf(
 /*************************************************************************
  * IShellFolder_ParseDisplayName [SHLWAPI.317]
  */
+#undef IShellFolder_ParseDisplayName
 EXTERN_C HRESULT WINAPI
 IShellFolder_ParseDisplayName(
     _In_ IShellFolder *psf,
@@ -162,7 +170,7 @@ IShellFolder_ParseDisplayName(
     _In_opt_ LPBC pbcReserved,
     _In_ LPOLESTR lpszDisplayName,
     _Out_opt_ ULONG *pchEaten,
-    _Out_opt_ LPITEMIDLIST *ppidl,
+    _Out_opt_ PIDLIST_RELATIVE *ppidl,
     _Out_opt_ ULONG *pdwAttributes)
 {
     ULONG dummy1, dummy2, *pAttrs, *pchAgent;
@@ -183,12 +191,13 @@ IShellFolder_ParseDisplayName(
 /*************************************************************************
  * IShellFolder_CompareIDs [SHLWAPI.551]
  */
+#undef IShellFolder_CompareIDs
 EXTERN_C HRESULT WINAPI
 IShellFolder_CompareIDs(
     _In_ IShellFolder *psf,
     _In_ LPARAM lParam,
-    _In_ LPCITEMIDLIST pidl1,
-    _In_ LPCITEMIDLIST pidl2)
+    _In_ PCUIDLIST_RELATIVE pidl1,
+    _In_ PCUIDLIST_RELATIVE pidl2)
 {
     HRESULT hr;
     TRACE("(%p, %p, %p, %p)\n", psf, lParam, pidl1, pidl2);

@@ -347,15 +347,15 @@ IShellFolder_ParseDisplayName(
     _In_ LPBC pbcReserved,
     _In_ LPOLESTR lpszDisplayName,
     _Out_ ULONG *pchEaten,
-    _Out_ LPITEMIDLIST *ppidl,
+    _Out_ PIDLIST_RELATIVE *ppidl,
     _Out_ ULONG *pdwAttributes);
 
 EXTERN_C HRESULT WINAPI
 IShellFolder_CompareIDs(
     _In_ IShellFolder *psf,
     _In_ LPARAM lParam,
-    _In_ LPCITEMIDLIST pidl1,
-    _In_ LPCITEMIDLIST pidl2);
+    _In_ PCUIDLIST_RELATIVE pidl1,
+    _In_ PCUIDLIST_RELATIVE pidl2);
 
 #ifdef __cplusplus
 } /* extern "C" */
