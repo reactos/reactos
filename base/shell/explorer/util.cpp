@@ -1,5 +1,6 @@
 #include "precomp.h"
 #include <winver.h>
+#include <psapi.h>
 
 typedef struct _LANGCODEPAGE
 {
@@ -253,6 +254,23 @@ GetVersionInfoString(IN LPCWSTR szFileName,
             HeapFree(hProcessHeap, 0, lpData);
             lpData = NULL;
         }
+    }
+
+    return bRet;
+}
+
+BOOL GetProcessPath(IN DWORD dwProcessId,
+                    OUT LPWSTR szBuffer,
+                    IN DWORD cbBufLen)
+{
+    HANDLE hTaskProc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, dwProcessId);
+    BOOL bRet = FALSE;
+    if(hTaskProc != NULL) {
+        if(GetModuleFileNameExW(hTaskProc, NULL, szBuffer, cbBufLen)) {
+            bRet = TRUE;
+        }
+
+        CloseHandle(hTaskProc);
     }
 
     return bRet;

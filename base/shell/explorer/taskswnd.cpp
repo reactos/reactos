@@ -339,6 +339,10 @@ GetVersionInfoString(IN LPCWSTR szFileName,
                      OUT LPWSTR szBuffer,
                      IN UINT cbBufLen);
 
+BOOL GetProcessPath(IN DWORD dwProcessId,
+                    OUT LPWSTR szBuffer,
+                    IN DWORD cbBufLen);
+
 class CTaskSwitchWnd :
     public CComCoClass<CTaskSwitchWnd>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -680,18 +684,14 @@ public:
         WCHAR windowText[255];
 
         /* Open process to retrieve the filename of the executable */
-        HANDLE hTaskProc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, TaskGroup->dwProcessId);
-        if(hTaskProc != NULL) {
-            WCHAR ExePath[MAX_PATH] = {};
-
-            if(GetModuleFileNameExW(hTaskProc, NULL, ExePath, _countof(ExePath)) && GetVersionInfoString(ExePath, L"FileDescription", windowText, _countof(windowText))) {
+        WCHAR ExePath[MAX_PATH] = {};
+        if(GetProcessPath(TaskGroup->dwProcessId, ExePath, _countof(ExePath)))
+        {
+            if(GetVersionInfoString(ExePath, L"FileDescription", windowText, _countof(windowText)))
                 tbbi.pszText = windowText;
-            }
 
             if (ExtractIconExW(ExePath, 0, NULL, &icon, 1) <= 0)
                 icon = static_cast<HICON>(LoadImageW(NULL, MAKEINTRESOURCEW(OIC_SAMPLE), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE));
-
-            CloseHandle(hTaskProc);
         }
 
         tbbi.cbSize = sizeof(tbbi);
@@ -1006,18 +1006,15 @@ public:
         }
 
         /* Open process to retrieve the filename of the executable */
-        HANDLE hTaskProc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, TaskGroup->dwProcessId);
-        if(hTaskProc != NULL) {
-            WCHAR ExePath[MAX_PATH] = {};
-
-            if(GetModuleFileNameExW(hTaskProc, NULL, ExePath, _countof(ExePath)) && GetVersionInfoString(ExePath, L"FileDescription", windowText, _countof(windowText))) {
+        WCHAR ExePath[MAX_PATH] = {};
+        if(GetProcessPath(TaskGroup->dwProcessId, ExePath, _countof(ExePath)))
+        {
+            if(GetVersionInfoString(ExePath, L"FileDescription", windowText, _countof(windowText))) {
                 tbBtn.iString = (DWORD_PTR) windowText;
             }
 
             if (ExtractIconExW(ExePath, -1, NULL, &icon, 1) <= 0)
                 icon = static_cast<HICON>(LoadImageW(NULL, MAKEINTRESOURCEW(OIC_SAMPLE), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE));
-
-            CloseHandle(hTaskProc);
         }
 
         TaskGroup->IconIndex = ImageList_ReplaceIcon(m_ImageList, -1, icon);
@@ -1238,13 +1235,7 @@ public:
         }
 
         WCHAR ItemExePath[MAX_PATH] = {0};
-
-        HANDLE hTaskProc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, dwProcessId);
-        if (hTaskProc != NULL)
-        {
-            GetModuleFileNameExW(hTaskProc, NULL, ItemExePath, _countof(ItemExePath));
-            CloseHandle(hTaskProc);
-        }
+        GetProcessPath(dwProcessId, ItemExePath, _countof(ItemExePath));
 
         /* Try to find an existing task group */
         TaskGroup = m_TaskGroups;
@@ -1259,12 +1250,7 @@ public:
             else
             {
                 WCHAR ExePath[MAX_PATH] = {0};
-                hTaskProc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, TaskGroup->dwProcessId);
-                if (hTaskProc != NULL)
-                {
-                    GetModuleFileNameExW(hTaskProc, NULL, ExePath, _countof(ExePath));
-                    CloseHandle(hTaskProc);
-                }
+                GetProcessPath(dwProcessId, ExePath, _countof(ExePath));
 
                 if(!lstrcmpW(ExePath, ItemExePath))
                 {
