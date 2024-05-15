@@ -18,6 +18,7 @@ extern void func_ExtractIconEx(void);
 extern void func_FindExecutable(void);
 extern void func_GetDisplayNameOf(void);
 extern void func_GUIDFromString(void);
+extern void func_ILCreateFromPath(void);
 extern void func_Int64ToString(void);
 extern void func_IShellFolderViewCB(void);
 extern void func_menu(void);
@@ -41,7 +42,6 @@ extern void func_SHGetAttributesFromDataObject(void);
 extern void func_SHLimitInputEdit(void);
 extern void func_SHParseDisplayName(void);
 extern void func_SHSimpleIDListFromPath(void);
-extern void func_ILCreateFromPath(void);
 extern void func_SHRestricted(void);
 
 const struct test winetest_testlist[] =
@@ -61,6 +61,7 @@ const struct test winetest_testlist[] =
     { "FindExecutable", func_FindExecutable },
     { "GetDisplayNameOf", func_GetDisplayNameOf },
     { "GUIDFromString", func_GUIDFromString },
+    { "ILCreateFromPath", func_ILCreateFromPath },
     { "Int64ToString", func_Int64ToString },
     { "IShellFolderViewCB", func_IShellFolderViewCB },
     { "menu", func_menu },
@@ -84,7 +85,6 @@ const struct test winetest_testlist[] =
     { "SHLimitInputEdit", func_SHLimitInputEdit },
     { "SHParseDisplayName", func_SHParseDisplayName },
     { "SHSimpleIDListFromPath", func_SHSimpleIDListFromPath },
-    { "ILCreateFromPath", func_ILCreateFromPath },
     { "SHRestricted", func_SHRestricted },
 
     { 0, 0 }

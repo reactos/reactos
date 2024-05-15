@@ -20,7 +20,6 @@ START_TEST(SHSimpleIDListFromPath)
     HRESULT hr;
     WCHAR szPath[MAX_PATH];
     GetWindowsDirectoryW(szPath, _countof(szPath));
-    LPITEMIDLIST item;
 
     // We compare pidl1 and pidl2
     CComHeapPtr<ITEMIDLIST> pidl1(SHSimpleIDListFromPath(szPath));
@@ -52,12 +51,17 @@ START_TEST(SHSimpleIDListFromPath)
 
 
     // Make sure the internal details match Windows NT5+
+    LPITEMIDLIST item;
     GetSystemDirectoryW(szPath, _countof(szPath));
     CComHeapPtr<ITEMIDLIST> pidlSys32(SHSimpleIDListFromPath(szPath));
     if (szPath[1] != ':' || PathFindFileNameW(szPath) <= szPath)
+    {
         skip("Not a local directory %ls\n", szPath);
+    }
     else if (!(LPITEMIDLIST)pidlSys32)
+    {
         skip("?\n");
+    }
     else
     {
         item = ILFindLastID(pidlSys32);
@@ -74,9 +78,13 @@ START_TEST(SHSimpleIDListFromPath)
     WCHAR drive[4] = { szPath[0], szPath[1], L'\\', L'\0' };
     CComHeapPtr<ITEMIDLIST> pidlDrive(SHSimpleIDListFromPath(drive));
     if (drive[1] != ':')
+    {
         skip("Not a local drive %ls\n", drive);
+    }
     else if (!(LPITEMIDLIST)pidlDrive)
+    {
         skip("?\n");
+    }
     else
     {
         item = ILFindLastID(pidlDrive);
@@ -86,7 +94,9 @@ START_TEST(SHSimpleIDListFromPath)
 
     CComHeapPtr<ITEMIDLIST> pidlVirt(SHSimpleIDListFromPath(L"x:\\IDontExist"));
     if (!(LPITEMIDLIST)pidlVirt)
+    {
         skip("?\n");
+    }
     else
     {
         item = ILFindLastID(pidlVirt);
@@ -94,7 +104,7 @@ START_TEST(SHSimpleIDListFromPath)
         ok_long(FileStruct_Att(item), 0); // Simple PIDL, no attributes
         ok_int(*(UINT*)(&item->mkid.abID[2]), 0); // No size
 
-        ILRemoveLastID(pidlVirt); // "x:\\"
+        ILRemoveLastID(pidlVirt); // "x:\"
         item = ILFindLastID(pidlVirt);
         ok_long(item->mkid.abID[0] & 0x70, 0x20); // Something in My Computer
         ok_char(item->mkid.abID[1] | 32, 'x' | 32); // x:
@@ -111,9 +121,13 @@ START_TEST(ILCreateFromPath)
     GetSystemDirectoryW(szPath, _countof(szPath));
     CComHeapPtr<ITEMIDLIST> pidlDir(ILCreateFromPathW(szPath));
     if (szPath[1] != ':' || PathFindFileNameW(szPath) <= szPath)
+    {
         skip("Not a local directory %ls\n", szPath);
+    }
     else if (!(LPITEMIDLIST)pidlDir)
+    {
         skip("?\n");
+    }
     else
     {
         item = ILFindLastID(pidlDir);
@@ -123,11 +137,13 @@ START_TEST(ILCreateFromPath)
     PathAppendW(szPath, L"kernel32.dll");
     CComHeapPtr<ITEMIDLIST> pidlFile(ILCreateFromPathW(szPath));
     if (!(LPITEMIDLIST)pidlFile)
+    {
         skip("?\n");
+    }
     else
     {
         item = ILFindLastID(pidlFile);
         ok_long(item->mkid.abID[0] & 0x73, 0x30 | FILEBIT);
-        ok_int(*(UINT*)(&item->mkid.abID[2]) > 1024 * 42, TRUE); // At least this big
+        ok_int(*(UINT*)(&item->mkid.abID[2]) > 1024 * 42, TRUE); // At least this large
     }
 }
