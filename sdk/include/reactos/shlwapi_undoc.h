@@ -332,6 +332,31 @@ IContextMenu_Invoke(
 
 DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid);
 
+HRESULT WINAPI
+IShellFolder_GetDisplayNameOf(
+    _In_ IShellFolder *psf,
+    _In_ LPCITEMIDLIST pidl,
+    _In_ DWORD uFlags,
+    _Out_ LPSTRRET lpName,
+    _In_ DWORD dwRetryFlags);
+
+HRESULT WINAPI
+IShellFolder_ParseDisplayName(
+    _In_ IShellFolder *psf,
+    _In_ HWND hwndOwner,
+    _In_ LPBC pbcReserved,
+    _In_ LPOLESTR lpszDisplayName,
+    _Out_ ULONG *pchEaten,
+    _Out_ LPITEMIDLIST *ppidl,
+    _Out_ ULONG *pdwAttributes);
+
+EXTERN_C HRESULT WINAPI
+IShellFolder_CompareIDs(
+    _In_ IShellFolder *psf,
+    _In_ LPARAM lParam,
+    _In_ LPCITEMIDLIST pidl1,
+    _In_ LPCITEMIDLIST pidl2);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */

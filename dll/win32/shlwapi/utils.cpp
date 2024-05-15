@@ -115,3 +115,92 @@ PathFileExistsDefExtAndAttributesW(
 
     return TRUE;
 }
+
+static inline BOOL
+SHLWAPI_IsBogusHRESULT(HRESULT hr)
+{
+    return (hr == E_FAIL || hr == E_INVALIDARG || hr == E_NOTIMPL);
+}
+
+/*************************************************************************
+ * IShellFolder_GetDisplayNameOf [SHLWAPI.316]
+ */
+EXTERN_C HRESULT WINAPI
+IShellFolder_GetDisplayNameOf(
+    _In_ IShellFolder *psf,
+    _In_ LPCITEMIDLIST pidl,
+    _In_ DWORD uFlags,
+    _Out_ LPSTRRET lpName,
+    _In_ DWORD dwRetryFlags)
+{
+    HRESULT hr;
+
+    TRACE("(%p, %p, 0x%lX, %p, 0x%lX)\n", psf, pidl, uFlags, lpName, dwRetryFlags);
+
+    hr = psf->GetDisplayNameOf(pidl, uFlags, lpName);
+    if (!SHLWAPI_IsBogusHRESULT(hr))
+        return hr;
+
+    dwRetryFlags |= 0x80000000;
+
+    if ((uFlags & SHGDN_FORPARSING) == 0)
+        dwRetryFlags |= 1;
+
+    /* It seems the function is actually retrying here */
+    FIXME("dwRetryFlags: 0x%X\n", dwRetryFlags);
+
+    return hr;
+}
+
+/*************************************************************************
+ * IShellFolder_ParseDisplayName [SHLWAPI.317]
+ */
+EXTERN_C HRESULT WINAPI
+IShellFolder_ParseDisplayName(
+    _In_ IShellFolder *psf,
+    _In_ HWND hwndOwner,
+    _In_ LPBC pbcReserved,
+    _In_ LPOLESTR lpszDisplayName,
+    _Out_ ULONG *pchEaten,
+    _Out_ LPITEMIDLIST *ppidl,
+    _Out_ ULONG *pdwAttributes)
+{
+    ULONG dummy1, dummy2, *pAttrs, *pchAgent;
+
+    TRACE("(%p, %p, %s, %p, %p, %p)\n", hwndOwner, pbcReserved, lpszDisplayName,
+                                        pchEaten, ppidl, pdwAttributes);
+
+    /* Improve safety */
+    dummy1 = dummy2 = 0;
+    pAttrs = (pdwAttributes ? pdwAttributes : &dummy1);
+    pchAgent = (pchEaten ? pchEaten : &dummy2);
+    if (ppidl) *ppidl = NULL;
+
+    return psf->ParseDisplayName(hwndOwner, pbcReserved, lpszDisplayName, pchAgent, ppidl, pAttrs);
+}
+
+/*************************************************************************
+ * IShellFolder_CompareIDs [SHLWAPI.551]
+ */
+EXTERN_C HRESULT WINAPI
+IShellFolder_CompareIDs(
+    _In_ IShellFolder *psf,
+    _In_ LPARAM lParam,
+    _In_ LPCITEMIDLIST pidl1,
+    _In_ LPCITEMIDLIST pidl2)
+{
+    HRESULT hr;
+    TRACE("(%p, %p, %p, %p)\n", psf, lParam, pidl1, pidl2);
+
+    if (!IS_INTRESOURCE(lParam))
+    {
+        /* Try as IShellFolder2 */
+        hr = psf->QueryInterface(IID_IShellFolder2, (void **)&psf);
+        if (FAILED(hr))
+            lParam = LOWORD(lParam);
+        else
+            psf->Release();
+    }
+
+    return psf->CompareIDs(lParam, pidl1, pidl2);
+}
