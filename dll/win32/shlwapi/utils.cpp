@@ -6,15 +6,24 @@
  */
 
 #define _ATL_NO_EXCEPTIONS
+
+/*
+ * HACK!  These functions are conflicting with <shobjidl.h> inline functions...
+ */
 #define IShellFolder_GetDisplayNameOf _disabled_IShellFolder_GetDisplayNameOf_
 #define IShellFolder_ParseDisplayName _disabled_IShellFolder_ParseDisplayName_
 #define IShellFolder_CompareIDs _disabled_IShellFolder_CompareIDs_
+
 #include "precomp.h"
 #include <shellapi.h>
 #include <shlwapi.h>
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
 #include <atlstr.h>
+
+/*
+ * HACK!  These functions are conflicting with <shobjidl.h> inline functions...
+ */
 #undef IShellFolder_GetDisplayNameOf
 #undef IShellFolder_ParseDisplayName
 #undef IShellFolder_CompareIDs

@@ -332,6 +332,10 @@ IContextMenu_Invoke(
 
 DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid);
 
+/*
+ * HACK!  These functions are conflicting with <shobjidl.h> inline functions...
+ * We provide an macro option SHLWAPI_ISHELLFOLDER_HELPERS for using these functions.
+ */
 #ifdef SHLWAPI_ISHELLFOLDER_HELPERS
 HRESULT WINAPI
 IShellFolder_GetDisplayNameOf(
