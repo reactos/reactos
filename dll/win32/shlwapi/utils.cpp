@@ -22,7 +22,7 @@
 #include <atlstr.h>
 
 /*
- * HACK! These functions are conflicting with <shobjidl.h> inline functions...
+ * HACK!
  */
 #undef IShellFolder_GetDisplayNameOf
 #undef IShellFolder_ParseDisplayName
