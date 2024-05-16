@@ -892,8 +892,7 @@ static INT_PTR CALLBACK AddToFavoritesDlgProc(HWND hWnd, UINT uMsg, WPARAM wPara
                         RegCloseKey(hKey);
                         if (err) failed:
                             ErrorBox(hWnd, err);
-                        if (path)
-                            free(path);
+                        free(path);
                         return EndDialog(hWnd, err);
                     }
                 case IDCANCEL:
