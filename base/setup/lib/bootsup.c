@@ -11,9 +11,9 @@
 
 #include "bldrsup.h"
 #include "filesup.h"
-#include "partlist.h"
+//#include "partlist.h"
 #include "bootcode.h"
-#include "fsutil.h"
+#include "bootsect.h"
 
 #include "setuplib.h" // HAXX for IsUnattendedSetup and USETUP_DATA!!
 
@@ -643,7 +643,7 @@ SaveBootEntries(
 
 static
 BOOLEAN
-IsThereAValidBootSector(
+IsBootSectorValid(
     _In_ PBOOTCODE BootCode)
 {
     /*
@@ -720,204 +720,6 @@ SaveBootSector(
     return Status;
 }
 
-static
-NTSTATUS
-InstallBootCodeToDisk(
-    _Inout_ PBOOTCODE BootCode,
-    _In_ PCWSTR RootPath,
-    _In_ PFS_INSTALL_BOOTCODE InstallBootCode)
-{
-    NTSTATUS Status, LockStatus;
-    UNICODE_STRING Name;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK IoStatusBlock;
-    HANDLE PartitionHandle;
-
-    /*
-     * Open the root partition from which the bootcode (MBR, VBR) parameters
-     * will be obtained; this is also where we will write the updated bootcode.
-     * Remove any trailing backslash if needed.
-     */
-    RtlInitUnicodeString(&Name, RootPath);
-    TrimTrailingPathSeparators_UStr(&Name);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&PartitionHandle,
-                        GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        FILE_SHARE_READ | FILE_SHARE_WRITE,
-                        FILE_SYNCHRONOUS_IO_NONALERT /* | FILE_SEQUENTIAL_ONLY */);
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    /* Lock the volume */
-    LockStatus = NtFsControlFile(PartitionHandle, NULL, NULL, NULL, &IoStatusBlock, FSCTL_LOCK_VOLUME, NULL, 0, NULL, 0);
-    if (!NT_SUCCESS(LockStatus))
-    {
-        DPRINT1("Unable to lock the volume before installing boot code. Status 0x%08x. Expect problems.\n", LockStatus);
-    }
-
-    /* Install the bootcode (MBR, VBR) */
-    Status = InstallBootCode(BootCode, PartitionHandle, PartitionHandle);
-
-    /* dismount & Unlock the volume */
-    if (NT_SUCCESS(LockStatus))
-    {
-        LockStatus = NtFsControlFile(PartitionHandle, NULL, NULL, NULL, &IoStatusBlock, FSCTL_DISMOUNT_VOLUME, NULL, 0, NULL, 0);
-        if (!NT_SUCCESS(LockStatus))
-        {
-            DPRINT1("Unable to dismount the volume after installing boot code. Status 0x%08x. Expect problems.\n", LockStatus);
-        }
-
-        LockStatus = NtFsControlFile(PartitionHandle, NULL, NULL, NULL, &IoStatusBlock, FSCTL_UNLOCK_VOLUME, NULL, 0, NULL, 0);
-        if (!NT_SUCCESS(LockStatus))
-        {
-            DPRINT1("Unable to unlock the volume after installing boot code. Status 0x%08x. Expect problems.\n", LockStatus);
-        }
-    }
-
-    /* Close the partition */
-    NtClose(PartitionHandle);
-    return Status;
-}
-
-static
-NTSTATUS
-InstallBootCodeToFile(
-    _Inout_ PBOOTCODE BootCode,
-    _In_ PCWSTR DstPath,
-    _In_ PCWSTR RootPath,
-    _In_ PFS_INSTALL_BOOTCODE InstallBootCode)
-{
-    NTSTATUS Status;
-    UNICODE_STRING Name;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK IoStatusBlock;
-    HANDLE PartitionHandle, FileHandle;
-
-    /*
-     * Open the root partition from which the bootcode (MBR, VBR)
-     * parameters will be obtained.
-     *
-     * FIXME? It might be possible that we need to also open it for writing
-     * access in case we really need to still write the second portion of
-     * the boot sector ????
-     *
-     * Remove any trailing backslash if needed.
-     */
-    RtlInitUnicodeString(&Name, RootPath);
-    TrimTrailingPathSeparators_UStr(&Name);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&PartitionHandle,
-                        GENERIC_READ | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        FILE_SHARE_READ | FILE_SHARE_WRITE,
-                        FILE_SYNCHRONOUS_IO_NONALERT /* | FILE_SEQUENTIAL_ONLY */);
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    /* Open or create the file where the new bootsector will be saved */
-    RtlInitUnicodeString(&Name, DstPath);
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtCreateFile(&FileHandle,
-                          GENERIC_WRITE | SYNCHRONIZE,
-                          &ObjectAttributes,
-                          &IoStatusBlock,
-                          NULL,
-                          FILE_ATTRIBUTE_NORMAL,
-                          0,
-                          FILE_SUPERSEDE, // FILE_OVERWRITE_IF
-                          FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY,
-                          NULL,
-                          0);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtCreateFile() failed: Status %lx\n", Status);
-        NtClose(PartitionHandle);
-        return Status;
-    }
-
-    /* Install the bootcode (MBR, VBR) */
-    Status = InstallBootCode(BootCode, FileHandle, PartitionHandle);
-
-    /* Close the file and the partition */
-    NtClose(FileHandle);
-    NtClose(PartitionHandle);
-
-    return Status;
-}
-
-
-static
-NTSTATUS
-InstallMbrBootCode(
-    _Inout_ PBOOTCODE BootCode, // MBR source bootsector
-    _In_ HANDLE DstPath,        // Where to save the bootsector built from the source + disk information
-    _In_ HANDLE DiskHandle)     // Disk holding the (old) MBR information
-{
-    NTSTATUS Status;
-    IO_STATUS_BLOCK IoStatusBlock;
-    LARGE_INTEGER FileOffset;
-    BOOTCODE OrgBootCode = {0};
-
-C_ASSERT(sizeof(PARTITION_SECTOR) == SECTORSIZE);
-
-    /* Check the source bootsector size (1 sector) */
-    if (BootCode->Length != sizeof(PARTITION_SECTOR))
-        return STATUS_INVALID_BUFFER_SIZE;
-
-    /* Allocate and read the current original MBR bootsector */
-    Status = ReadBootCodeByHandle(&OrgBootCode, DiskHandle, sizeof(PARTITION_SECTOR));
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    /*
-     * Copy the disk signature, the reserved fields and
-     * the partition table from the old MBR to the new one.
-     */
-    RtlCopyMemory(&((PPARTITION_SECTOR)BootCode->BootCode)->Signature,
-                  &((PPARTITION_SECTOR)OrgBootCode.BootCode)->Signature,
-                  sizeof(PARTITION_SECTOR) -
-                  FIELD_OFFSET(PARTITION_SECTOR, Signature)
-                  /* Length of partition table */);
-
-    /* Free the original bootsector */
-    FreeBootCode(&OrgBootCode);
-
-    /* Write the new bootsector to DstPath */
-    FileOffset.QuadPart = 0ULL;
-    Status = NtWriteFile(DstPath,
-                         NULL,
-                         NULL,
-                         NULL,
-                         &IoStatusBlock,
-                         BootCode->BootCode,
-                         BootCode->Length,
-                         &FileOffset,
-                         NULL);
-    if (!NT_SUCCESS(Status))
-        DPRINT1("NtWriteFile() failed: Status %lx\n", Status);
-
-    return Status;
-}
 
 static const struct
 {
@@ -1019,7 +821,7 @@ InstallMBRToDisk(
             /* If we failed, there is no valid MBR */
             break;
         }
-        if (!IsThereAValidBootSector(&OrgBootCode))
+        if (!IsBootSectorValid(&OrgBootCode))
             goto Skip;
 
         /* Compare the MBR bootcodes, and save the
@@ -1053,10 +855,14 @@ Skip:
         FreeBootCode(&OrgBootCode);
     } while (0);
 
+    /* Remove any trailing backslash if needed */
+    RtlInitUnicodeString(&Name, SystemDiskPath);
+    TrimTrailingPathSeparators_UStr(&Name);
+
     /* Install the new MBR */
     DPRINT1("Install %s bootcode: %S ==> %S\n",
             BootCodes[BT_MBR].BootCodeName, SrcPath, SystemDiskPath);
-    Status = InstallBootCodeToDisk(&BootCode, SystemDiskPath,
+    Status = InstallBootCodeToDisk(&BootCode, &Name,
                                    BootCodes[BT_MBR].InstallBootCode);
     if (!NT_SUCCESS(Status))
     {
@@ -1407,6 +1213,12 @@ InstallVBRToPartition(
     WCHAR SrcPath[MAX_PATH];
     WCHAR DstPath[MAX_PATH];
 
+    /* Remove any trailing backslash if needed */
+    UNICODE_STRING RootPartition = *SystemRootPath;
+    TrimTrailingPathSeparators_UStr(&RootPartition);
+
+    DPRINT("System path: '%wZ'\n", SystemRootPath);
+
     /* Map the known filesystem to a table lookup ID */
     ASSERT(FileSystemName);
     if (wcsicmp(FileSystemName, L"FAT") == 0)
@@ -1428,8 +1240,6 @@ InstallVBRToPartition(
         DPRINT1("Unknown or unsupported file system '%S'\n", FileSystemName);
         return STATUS_NOT_SUPPORTED;
     }
-
-    DPRINT("System path: '%wZ'\n", SystemRootPath);
 
 
     /* Allocate and read the new bootsector from SrcPath */
@@ -1474,10 +1284,6 @@ InstallVBRToPartition(
         BOOTCODE OrgBootCode = {0};
         BOOLEAN bRec = FALSE;
 
-        /* Remove any trailing backslash if needed */
-        UNICODE_STRING RootPartition = *SystemRootPath;
-        TrimTrailingPathSeparators_UStr(&RootPartition);
-
         /* Allocate and read only the first sector of the partition's
          * current original bootsector for performing recognition */
         Status = ReadBootCodeFromFile(&OrgBootCode, &RootPartition, SECTORSIZE);
@@ -1486,10 +1292,9 @@ InstallVBRToPartition(
             /* If we failed, don't do any VBR recognition */
             break;
         }
-        if (!IsThereAValidBootSector(&OrgBootCode))
+        if (!IsBootSectorValid(&OrgBootCode))
             goto Skip;
 
-#if 0 // FIXME: Make FAT_BOOTSECTOR and co. available...
         /* Compare the original boot code with the new one we install.
          * If they are the same, don't backup the original boot code. */
         {
@@ -1545,7 +1350,6 @@ InstallVBRToPartition(
         if (CompareBootCodes(&OrgBootCode, &BootCode, pExcludeRegion))
             goto Skip; // They are identical, return.
         }
-#endif
 
         switch (BtId)
         {
@@ -1685,7 +1489,7 @@ Skip:
         /* Install the new bootsector on the disk */
         DPRINT1("Install %s bootcode: %S ==> %S\n",
                 BootCodes[BtId].BootCodeName, SrcPath, SystemRootPath->Buffer);
-        Status = InstallBootCodeToDisk(&BootCode, SystemRootPath->Buffer,
+        Status = InstallBootCodeToDisk(&BootCode, &RootPartition,
                                        BootCodes[BtId].InstallBootCode);
         if (!NT_SUCCESS(Status))
         {
@@ -1717,12 +1521,12 @@ Skip:
         }
 
         /* Install the new bootcode into a file */
-        CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"bootsect.ros");
+        CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"bootsect.ros");RtlInitUnicodeString(&Name, DstPath);
 
         DPRINT1("Install %s bootcode: %S ==> %S\n",
                 BootCodes[BtId].BootCodeName, SrcPath, DstPath);
-        Status = InstallBootCodeToFile(&BootCode, DstPath,
-                                       SystemRootPath->Buffer,
+        Status = InstallBootCodeToFile(&BootCode, &Name, // DstPath,
+                                       &RootPartition,
                                        BootCodes[BtId].InstallBootCode);
         if (!NT_SUCCESS(Status))
         {

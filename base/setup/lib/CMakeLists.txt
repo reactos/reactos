@@ -18,6 +18,7 @@ list(APPEND SOURCE
     utils/partlist.c
     utils/regutil.c
     bootcode.c
+    bootsect.c
     bootsup.c
     fsutil.c
     install.c

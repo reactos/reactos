@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Filesystem Format and ChkDsk support functions.
  * COPYRIGHT:   Copyright 2003-2019 Casper S. Hornstrup (chorns@users.sourceforge.net)
- *              Copyright 2017-2020 Hermes Belusca-Maito
+ *              Copyright 2017-2024 Hermès Bélusca-Maïto <hermes.belusca@sfr.fr>
  */
 
 #pragma once
@@ -60,50 +60,6 @@ FormatFileSystem(
     IN ULONG ClusterSize,
     IN PFMIFSCALLBACK Callback);
 
-
-//
-// Bootsector routines
-//
-
-#define FAT_BOOTSECTOR_SIZE     (1 * SECTORSIZE)
-#define FAT32_BOOTSECTOR_SIZE   (1 * SECTORSIZE) // Counts only the primary sector.
-#define BTRFS_BOOTSECTOR_SIZE   (3 * SECTORSIZE)
-#define NTFS_BOOTSECTOR_SIZE   (16 * SECTORSIZE)
-
-typedef NTSTATUS
-(*PFS_INSTALL_BOOTCODE)(
-    _Inout_ PBOOTCODE BootCode, // Source bootsector
-    _In_ HANDLE DstPath,        // Where to save the bootsector built from the source + partition information
-    _In_ HANDLE RootPartition); // Partition holding the (old) bootsector information
-
-NTSTATUS
-InstallFatBootCode(
-    _Inout_ PBOOTCODE BootCode,
-    _In_ HANDLE DstPath,
-    _In_ HANDLE RootPartition);
-
-NTSTATUS
-InstallFat32BootCode(
-    _Inout_ PBOOTCODE BootCode,
-    _In_ HANDLE DstPath,
-    _In_ HANDLE RootPartition);
-
-NTSTATUS
-InstallBtrfsBootCode(
-    _Inout_ PBOOTCODE BootCode,
-    _In_ HANDLE DstPath,
-    _In_ HANDLE RootPartition);
-
-NTSTATUS
-InstallNtfsBootCode(
-    _Inout_ PBOOTCODE BootCode,
-    _In_ HANDLE DstPath,
-    _In_ HANDLE RootPartition);
-
-
-//
-// Formatting routines
-//
 
 NTSTATUS
 ChkdskPartition(
