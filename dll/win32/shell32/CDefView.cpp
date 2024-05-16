@@ -2404,10 +2404,10 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
         case SHCNE_UPDATEIMAGE:
         case SHCNE_MEDIAINSERTED:
         case SHCNE_MEDIAREMOVED:
+        case SHCNE_ASSOCCHANGED:
             LV_RefreshIcons();
             break;
         case SHCNE_UPDATEDIR:
-        case SHCNE_ASSOCCHANGED:
             Refresh();
             break;
         case SHCNE_FREESPACE:
