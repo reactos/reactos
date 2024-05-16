@@ -116,7 +116,7 @@ pre_c_init (void)
     {
       __setusermatherr (_matherr);
     }
-#ifndef __clang__ /* FIXME: CORE-14042 */
+#if !defined(__clang__) && (!defined(_M_ARM64) || (_MSC_VER < 1930)) /* FIXME: CORE-14042 */
   if (__globallocalestatus == -1)
     {
     }
