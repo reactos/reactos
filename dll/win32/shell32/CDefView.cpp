@@ -2408,7 +2408,9 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
             LV_RefreshIcons();
             break;
         case SHCNE_UPDATEDIR:
+        case SHCNE_ATTRIBUTES:
             Refresh();
+            UpdateStatusbar();
             break;
         case SHCNE_FREESPACE:
             UpdateStatusbar();
