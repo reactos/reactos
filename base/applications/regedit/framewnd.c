@@ -851,7 +851,7 @@ static INT_PTR CALLBACK AddToFavoritesDlgProc(HWND hWnd, UINT uMsg, WPARAM wPara
             tvi.cchTextMax = _countof(name);
             if (!TreeView_GetItem(g_pChildWnd->hTreeWnd, &tvi))
                 tvi.pszText[0] = UNICODE_NULL;
-            SendMessageW(hName, WM_SETTEXT, 0, (LPARAM)tvi.pszText);
+            SetWindowTextW(hName, tvi.pszText);
             SendMessageW(hName, EM_LIMITTEXT, _countof(name) - 1, 0);
             return TRUE;
         }
@@ -863,27 +863,24 @@ static INT_PTR CALLBACK AddToFavoritesDlgProc(HWND hWnd, UINT uMsg, WPARAM wPara
                         LPWSTR path;
                         HKEY hKey;
                         DWORD err;
-                        if (GetWindowTextW(hName, name, _countof(name)))
-                            err = ERROR_SUCCESS;
-                        else
+                        if (!GetWindowTextW(hName, name, _countof(name)))
+                        {
                             err = GetLastError();
-
-                        if (err == ERROR_SUCCESS)
-                        {
-                            path = GetItemFullPath(NULL);
-                            if (!path)
-                                err = ERROR_NOT_ENOUGH_MEMORY;
+                            goto failed;
                         }
-
-                        if (err == ERROR_SUCCESS)
-                            err = RegCreateKeyExW(HKEY_CURRENT_USER, s_szFavoritesRegKey, 0,
-                                                  NULL, 0, KEY_SET_VALUE, NULL, &hKey, NULL);
-                        if (err == ERROR_SUCCESS)
+                        path = GetItemFullPath(NULL);
+                        if (!path)
                         {
-                            err = RegSetValueExW(hKey, name, 0, REG_SZ, (BYTE*)path, (lstrlenW(path) + 1) * sizeof(WCHAR));
-                            RegCloseKey(hKey);
+                            err = ERROR_NOT_ENOUGH_MEMORY;
+                            goto failed;
                         }
+                        err = RegCreateKeyExW(HKEY_CURRENT_USER, s_szFavoritesRegKey, 0,
+                                              NULL, 0, KEY_SET_VALUE, NULL, &hKey, NULL);
                         if (err)
+                            goto failed;
+                        err = RegSetValueExW(hKey, name, 0, REG_SZ, (BYTE*)path, (lstrlenW(path) + 1) * sizeof(WCHAR));
+                        RegCloseKey(hKey);
+                        if (err) failed:
                         {
                             if (!FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
                                                 NULL, err, 0, name, _countof(name), NULL))
