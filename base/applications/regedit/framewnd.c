@@ -39,6 +39,16 @@ extern WCHAR Suggestions[256];
  * Local module support methods
  */
 
+static UINT ErrorBox(HWND hWnd, UINT Error)
+{
+    WCHAR buf[400];
+    if (!FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                        NULL, Error, 0, buf, _countof(buf), NULL))
+        *(UINT*)buf = L'?';
+    MessageBoxW(hWnd, buf, NULL, MB_ICONSTOP);
+    return Error;
+}
+
 static void resize_frame_rect(HWND hWnd, PRECT prect)
 {
     if (IsWindowVisible(hStatusBar))
@@ -72,7 +82,7 @@ static void OnInitMenu(HWND hWnd)
     static int s_nFavoriteMenuSubPos = -1;
     HMENU hMenu;
     BOOL bDisplayedAny = FALSE;
-    HTREEITEM hSelTI;
+    HTREEITEM hSelTreeItem;
     BOOL bCanAddFav;
 
     /* Find Favorites menu and clear it out */
@@ -88,8 +98,8 @@ static void OnInitMenu(HWND hWnd)
         while(RemoveMenu(hMenu, s_nFavoriteMenuSubPos, MF_BYPOSITION)) ;
     }
 
-    hSelTI = TreeView_GetSelection(g_pChildWnd->hTreeWnd);
-    bCanAddFav = TreeView_GetParent(g_pChildWnd->hTreeWnd, hSelTI) != NULL;
+    hSelTreeItem = TreeView_GetSelection(g_pChildWnd->hTreeWnd);
+    bCanAddFav = TreeView_GetParent(g_pChildWnd->hTreeWnd, hSelTreeItem) != NULL;
     EnableMenuItem(GetMenu(hWnd), ID_FAVOURITES_ADDTOFAVOURITES,
                    MF_BYCOMMAND | (bCanAddFav ? MF_ENABLED : MF_GRAYED));
 
@@ -881,12 +891,7 @@ static INT_PTR CALLBACK AddToFavoritesDlgProc(HWND hWnd, UINT uMsg, WPARAM wPara
                         err = RegSetValueExW(hKey, name, 0, REG_SZ, (BYTE*)path, (lstrlenW(path) + 1) * sizeof(WCHAR));
                         RegCloseKey(hKey);
                         if (err) failed:
-                        {
-                            if (!FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                                                NULL, err, 0, name, _countof(name), NULL))
-                                *(UINT*)name = L'?';
-                            MessageBoxW(hWnd, name, NULL, MB_ICONSTOP);
-                        }
+                            ErrorBox(hWnd, err);
                         if (path)
                             free(path);
                         return EndDialog(hWnd, err);
