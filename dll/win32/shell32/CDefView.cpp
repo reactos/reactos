@@ -2402,6 +2402,7 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
                 LV_UpdateItem(child0);
             break;
         case SHCNE_UPDATEIMAGE:
+            /* HACK! */
             LV_RefreshIcons();
             break;
         case SHCNE_UPDATEDIR:
