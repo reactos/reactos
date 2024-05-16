@@ -2346,21 +2346,17 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
 
     // Translate PIDLs.
     // SHSimpleIDListFromPathW creates fake PIDLs (lacking some attributes)
-    CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidl0, pidl1;
-    WCHAR path0[MAX_PATH], path1[MAX_PATH];
-    if (Pidls[0])
+    CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidl0(Pidls[0]), pidl1(Pidls[1]);
+    WCHAR path[MAX_PATH];
+    if (pidl0 && SHGetPathFromIDListW(pidl0, path) && PathFileExistsW(path))
     {
-        if (SHGetPathFromIDListW(Pidls[0], path0) && PathFileExistsW(path0))
-            pidl0.Attach(ILCreateFromPathW(path0));
-        else
-            pidl0.Attach(ILClone(Pidls[0]));
+        pidl0.Free();
+        pidl0.Attach(ILCreateFromPathW(path));
     }
-    if (Pidls[1])
+    if (pidl1 && SHGetPathFromIDListW(pidl1, path) && PathFileExistsW(path))
     {
-        if (SHGetPathFromIDListW(Pidls[1], path1) && PathFileExistsW(path1))
-            pidl1.Attach(ILCreateFromPathW(path1));
-        else
-            pidl1.Attach(ILClone(Pidls[1]));
+        pidl1.Free();
+        pidl1.Attach(ILCreateFromPathW(path));
     }
 
     PITEMID_CHILD child0 = NULL, child1 = NULL;
@@ -2417,8 +2413,6 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
             break;
     }
 
-    ILFree(Pidls[0]);
-    ILFree(Pidls[1]);
     SHChangeNotification_Unlock(hLock);
     return TRUE;
 }
