@@ -66,7 +66,12 @@ DeleteExt(HWND hwndDlg, LPCWSTR pszExt)
         SHDeleteKeyW(HKEY_CLASSES_ROOT, szValue);
 
     // delete ".ext" key
-    return SHDeleteKeyW(HKEY_CLASSES_ROOT, pszExt) == ERROR_SUCCESS;
+    BOOL ret = (SHDeleteKeyW(HKEY_CLASSES_ROOT, pszExt) == ERROR_SUCCESS);
+
+    // notify
+    SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSHNOWAIT, NULL, NULL);
+
+    return ret;
 }
 
 static inline HICON

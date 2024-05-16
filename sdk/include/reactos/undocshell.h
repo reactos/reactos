@@ -122,6 +122,7 @@ typedef struct _SHCNF_PRINTJOB_INFO
 #define SHCNF_PRINTJOBA 0x0004
 #define SHCNF_PRINTJOBW 0x0007
 
+HRESULT WINAPI SHUpdateRecycleBinIcon(void);
 
 /****************************************************************************
  * Shell Common Dialogs

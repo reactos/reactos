@@ -1078,6 +1078,11 @@ EXTERN_C HRESULT WINAPI SHUpdateRecycleBinIcon(void)
 {
     FIXME("stub\n");
 
+    // HACK! This dwItem2 should be the icon index in the system image list that has changed.
+    // FIXME: Call SHMapPIDLToSystemImageListIndex
+    DWORD dwItem2 = -1;
+
+    SHChangeNotify(SHCNE_UPDATEIMAGE, SHCNF_DWORD, NULL, &dwItem2);
     return S_OK;
 }
 

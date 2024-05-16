@@ -683,6 +683,7 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
     return S_OK;
 }
 
+// This method is typically invoked from SHSimpleIDListFromPathA/W.
 HRESULT CFSFolder::_ParseSimple(
     _In_ LPOLESTR lpszDisplayName,
     _Inout_ WIN32_FIND_DATAW *pFind,
