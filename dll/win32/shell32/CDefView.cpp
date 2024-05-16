@@ -214,7 +214,8 @@ public:
     HRESULT drag_notify_subitem(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
     HRESULT InvokeContextMenuCommand(CComPtr<IContextMenu>& pCM, LPCSTR lpVerb, POINT* pt = NULL);
     LRESULT OnExplorerCommand(UINT uCommand, BOOL bUseSelection);
-    void RefreshIcons();
+    void LV_RefreshIcon(INT iItem);
+    void LV_RefreshIcons();
 
     // *** IOleWindow methods ***
     STDMETHOD(GetWindow)(HWND *lphwnd) override;
@@ -2299,21 +2300,28 @@ static BOOL ILIsParentOrSpecialParent(PCIDLIST_ABSOLUTE pidl1, PCIDLIST_ABSOLUTE
     return FALSE;
 }
 
-void CDefView::RefreshIcons()
+void CDefView::LV_RefreshIcon(INT iItem)
 {
     ASSERT(m_ListView);
 
     LVITEMW lvItem = { LVIF_IMAGE };
+    lvItem.iItem = iItem;
+    lvItem.iImage = I_IMAGECALLBACK;
+    m_ListView.SetItem(&lvItem);
+    m_ListView.Update(iItem);
+}
+
+void CDefView::LV_RefreshIcons()
+{
+    ASSERT(m_ListView);
+
     for (INT iItem = -1;;)
     {
         iItem = ListView_GetNextItem(m_ListView, iItem, LVNI_ALL);
         if (iItem == -1)
             break;
 
-        lvItem.iItem = iItem;
-        lvItem.iImage = I_IMAGECALLBACK;
-        m_ListView.SetItem(&lvItem);
-        m_ListView.Update(iItem);
+        LV_RefreshIcon(iItem);
     }
 }
 
@@ -2394,7 +2402,7 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
                 LV_UpdateItem(child0);
             break;
         case SHCNE_UPDATEIMAGE:
-            RefreshIcons();
+            LV_RefreshIcons();
             break;
         case SHCNE_UPDATEDIR:
         case SHCNE_ASSOCCHANGED:
