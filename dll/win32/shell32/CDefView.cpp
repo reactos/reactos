@@ -200,6 +200,8 @@ public:
     BOOLEAN LV_DeleteItem(PCUITEMID_CHILD pidl);
     BOOLEAN LV_RenameItem(PCUITEMID_CHILD pidlOld, PCUITEMID_CHILD pidlNew);
     BOOLEAN LV_UpdateItem(PCUITEMID_CHILD pidl);
+    void LV_RefreshIcon(INT iItem);
+    void LV_RefreshIcons();
     static INT CALLBACK fill_list(LPVOID ptr, LPVOID arg);
     HRESULT FillList();
     HRESULT FillFileMenu();
@@ -214,8 +216,6 @@ public:
     HRESULT drag_notify_subitem(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
     HRESULT InvokeContextMenuCommand(CComPtr<IContextMenu>& pCM, LPCSTR lpVerb, POINT* pt = NULL);
     LRESULT OnExplorerCommand(UINT uCommand, BOOL bUseSelection);
-    void LV_RefreshIcon(INT iItem);
-    void LV_RefreshIcons();
 
     // *** IOleWindow methods ***
     STDMETHOD(GetWindow)(HWND *lphwnd) override;
@@ -1044,6 +1044,31 @@ BOOLEAN CDefView::LV_UpdateItem(PCUITEMID_CHILD pidl)
     }
 
     return FALSE;
+}
+
+void CDefView::LV_RefreshIcon(INT iItem)
+{
+    ASSERT(m_ListView);
+
+    LVITEMW lvItem = { LVIF_IMAGE };
+    lvItem.iItem = iItem;
+    lvItem.iImage = I_IMAGECALLBACK;
+    m_ListView.SetItem(&lvItem);
+    m_ListView.Update(iItem);
+}
+
+void CDefView::LV_RefreshIcons()
+{
+    ASSERT(m_ListView);
+
+    for (INT iItem = -1;;)
+    {
+        iItem = ListView_GetNextItem(m_ListView, iItem, LVNI_ALL);
+        if (iItem == -1)
+            break;
+
+        LV_RefreshIcon(iItem);
+    }
 }
 
 INT CALLBACK CDefView::fill_list(LPVOID ptr, LPVOID arg)
@@ -2298,31 +2323,6 @@ static BOOL ILIsParentOrSpecialParent(PCIDLIST_ABSOLUTE pidl1, PCIDLIST_ABSOLUTE
     ILFree(pidl2Clone);
 
     return FALSE;
-}
-
-void CDefView::LV_RefreshIcon(INT iItem)
-{
-    ASSERT(m_ListView);
-
-    LVITEMW lvItem = { LVIF_IMAGE };
-    lvItem.iItem = iItem;
-    lvItem.iImage = I_IMAGECALLBACK;
-    m_ListView.SetItem(&lvItem);
-    m_ListView.Update(iItem);
-}
-
-void CDefView::LV_RefreshIcons()
-{
-    ASSERT(m_ListView);
-
-    for (INT iItem = -1;;)
-    {
-        iItem = ListView_GetNextItem(m_ListView, iItem, LVNI_ALL);
-        if (iItem == -1)
-            break;
-
-        LV_RefreshIcon(iItem);
-    }
 }
 
 LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
