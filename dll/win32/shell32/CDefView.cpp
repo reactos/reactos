@@ -199,7 +199,7 @@ public:
     int LV_AddItem(PCUITEMID_CHILD pidl);
     BOOLEAN LV_DeleteItem(PCUITEMID_CHILD pidl);
     BOOLEAN LV_RenameItem(PCUITEMID_CHILD pidlOld, PCUITEMID_CHILD pidlNew);
-    BOOLEAN LV_ProdItem(PCUITEMID_CHILD pidl);
+    BOOLEAN LV_UpdateItem(PCUITEMID_CHILD pidl);
     static INT CALLBACK fill_list(LPVOID ptr, LPVOID arg);
     HRESULT FillList();
     HRESULT FillFileMenu();
@@ -214,6 +214,7 @@ public:
     HRESULT drag_notify_subitem(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect);
     HRESULT InvokeContextMenuCommand(CComPtr<IContextMenu>& pCM, LPCSTR lpVerb, POINT* pt = NULL);
     LRESULT OnExplorerCommand(UINT uCommand, BOOL bUseSelection);
+    void RefreshIcons();
 
     // *** IOleWindow methods ***
     STDMETHOD(GetWindow)(HWND *lphwnd) override;
@@ -973,6 +974,8 @@ BOOLEAN CDefView::LV_DeleteItem(PCUITEMID_CHILD pidl)
     if (nIndex < 0)
         return FALSE;
 
+    _DoFolderViewCB(SFVM_REMOVINGOBJECT, 0, (LPARAM)pidl);
+
     return m_ListView.DeleteItem(nIndex);
 }
 
@@ -1015,7 +1018,7 @@ BOOLEAN CDefView::LV_RenameItem(PCUITEMID_CHILD pidlOld, PCUITEMID_CHILD pidlNew
     return FALSE;
 }
 
-BOOLEAN CDefView::LV_ProdItem(PCUITEMID_CHILD pidl)
+BOOLEAN CDefView::LV_UpdateItem(PCUITEMID_CHILD pidl)
 {
     int nItem;
     LVITEMW lvItem;
@@ -1028,6 +1031,8 @@ BOOLEAN CDefView::LV_ProdItem(PCUITEMID_CHILD pidl)
 
     if (-1 != nItem)
     {
+        _DoFolderViewCB(SFVM_UPDATINGOBJECT, 0, (LPARAM)pidl);
+
         lvItem.mask = LVIF_IMAGE;
         lvItem.iItem = nItem;
         lvItem.iSubItem = 0;
@@ -2294,6 +2299,24 @@ static BOOL ILIsParentOrSpecialParent(PCIDLIST_ABSOLUTE pidl1, PCIDLIST_ABSOLUTE
     return FALSE;
 }
 
+void CDefView::RefreshIcons()
+{
+    ASSERT(m_ListView);
+
+    LVITEMW lvItem = { LVIF_IMAGE };
+    for (INT iItem = -1;;)
+    {
+        iItem = ListView_GetNextItem(m_ListView, iItem, LVNI_ALL);
+        if (iItem == -1)
+            break;
+
+        lvItem.iItem = iItem;
+        lvItem.iImage = I_IMAGECALLBACK;
+        m_ListView.SetItem(&lvItem);
+        m_ListView.Update(iItem);
+    }
+}
+
 LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     // The change notify can come before WM_CREATE
@@ -2311,10 +2334,32 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
         return FALSE;
     }
 
-    BOOL bParent0 = ILIsParentOrSpecialParent(m_pidlParent, Pidls[0]);
-    BOOL bParent1 = ILIsParentOrSpecialParent(m_pidlParent, Pidls[1]);
-
     TRACE("(%p)(%p,%p,0x%08x)\n", this, Pidls[0], Pidls[1], lParam);
+
+    // Translate PIDLs.
+    // SHSimpleIDListFromPathW creates fake PIDLs (lacking some attributes)
+    CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidl0, pidl1;
+    WCHAR path0[MAX_PATH], path1[MAX_PATH];
+    if (Pidls[0])
+    {
+        if (SHGetPathFromIDListW(Pidls[0], path0) && PathFileExistsW(path0))
+            pidl0.Attach(ILCreateFromPathW(path0));
+        else
+            pidl0.Attach(ILClone(Pidls[0]));
+    }
+    if (Pidls[1])
+    {
+        if (SHGetPathFromIDListW(Pidls[1], path1) && PathFileExistsW(path1))
+            pidl1.Attach(ILCreateFromPathW(path1));
+        else
+            pidl1.Attach(ILClone(Pidls[1]));
+    }
+
+    PITEMID_CHILD child0 = NULL, child1 = NULL;
+    if (ILIsParentOrSpecialParent(m_pidlParent, pidl0))
+        child0 = ILFindLastID(pidl0);
+    if (ILIsParentOrSpecialParent(m_pidlParent, pidl1))
+        child1 = ILFindLastID(pidl1);
 
     lEvent &= ~SHCNE_INTERRUPT;
     switch (lEvent)
@@ -2322,38 +2367,48 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
         case SHCNE_MKDIR:
         case SHCNE_CREATE:
         case SHCNE_DRIVEADD:
-            if (bParent0)
-            {
-                if (LV_FindItemByPidl(ILFindLastID(Pidls[0])) == -1)
-                    LV_AddItem(ILFindLastID(Pidls[0]));
-                else
-                    LV_ProdItem(ILFindLastID(Pidls[0]));
-            }
+            if (!child0)
+                break;
+            if (LV_FindItemByPidl(child0) < 0)
+                LV_AddItem(child0);
+            else
+                LV_UpdateItem(child0);
             break;
         case SHCNE_RMDIR:
         case SHCNE_DELETE:
         case SHCNE_DRIVEREMOVED:
-            if (bParent0)
-                LV_DeleteItem(ILFindLastID(Pidls[0]));
+            if (child0)
+                LV_DeleteItem(child0);
             break;
         case SHCNE_RENAMEFOLDER:
         case SHCNE_RENAMEITEM:
-            if (bParent0 && bParent1)
-                LV_RenameItem(ILFindLastID(Pidls[0]), ILFindLastID(Pidls[1]));
-            else if (bParent0)
-                LV_DeleteItem(ILFindLastID(Pidls[0]));
-            else if (bParent1)
-                LV_AddItem(ILFindLastID(Pidls[1]));
+            if (child0 && child1)
+                LV_RenameItem(child0, child1);
+            else if (child0)
+                LV_DeleteItem(child0);
+            else if (child1)
+                LV_AddItem(child1);
             break;
         case SHCNE_UPDATEITEM:
-            if (bParent0)
-                LV_RenameItem(ILFindLastID(Pidls[0]), ILFindLastID(Pidls[0]));
+            if (child0)
+                LV_UpdateItem(child0);
+            break;
+        case SHCNE_UPDATEIMAGE:
+            RefreshIcons();
             break;
         case SHCNE_UPDATEDIR:
+        case SHCNE_ASSOCCHANGED:
+        case SHCNE_MEDIAINSERTED:
+        case SHCNE_MEDIAREMOVED:
             Refresh();
+            break;
+        case SHCNE_FREESPACE:
+            UpdateStatusbar();
             break;
     }
 
+    ILFree(Pidls[0]);
+    ILFree(Pidls[1]);
     SHChangeNotification_Unlock(hLock);
     return TRUE;
 }

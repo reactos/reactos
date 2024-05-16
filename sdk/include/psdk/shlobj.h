@@ -1323,6 +1323,7 @@ SHCreateShellFolderViewEx(
 #define SFVM_SETISFV                  39
 #define SFVM_GETEXTVIEWS              40 /* undocumented */
 #define SFVM_THISIDLIST               41
+#define SFVM_UPDATINGOBJECT           43 /* undocumented */
 #define SFVM_ADDPROPERTYPAGES         47
 #define SFVM_BACKGROUNDENUMDONE       48
 #define SFVM_GETNOTIFY                49

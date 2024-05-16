@@ -1078,6 +1078,10 @@ EXTERN_C HRESULT WINAPI SHUpdateRecycleBinIcon(void)
 {
     FIXME("stub\n");
 
+    /* HACK! */
+    LPITEMIDLIST pidl = _ILCreateBitBucket();
+    SHChangeNotify(SHCNE_UPDATEIMAGE, SHCNF_IDLIST, pidl, NULL);
+    ILFree(pidl);
     return S_OK;
 }
 
