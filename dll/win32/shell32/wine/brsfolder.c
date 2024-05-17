@@ -18,7 +18,6 @@
  * FIXME:
  *  - many memory leaks
  *  - many flags unimplemented
- *    - implement editbox
  */
 
 #define WIN32_NO_STATUS
@@ -1175,15 +1174,14 @@ LPITEMIDLIST WINAPI SHBrowseForFolderA (LPBROWSEINFOA lpbi)
 LPITEMIDLIST WINAPI SHBrowseForFolderW (LPBROWSEINFOW lpbi)
 {
     browse_info info;
-    DWORD r;
+    INT_PTR r;
     HRESULT hr;
     WORD wDlgId;
 
-    info.hWnd = 0;
+    info.hWnd = NULL;
     info.pidlRet = NULL;
     info.lpBrowseInfo = lpbi;
     info.hwndTreeView = NULL;
-
     info.layout = NULL;
 
     hr = OleInitialize(NULL);
