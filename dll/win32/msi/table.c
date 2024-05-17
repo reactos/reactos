@@ -2856,7 +2856,7 @@ UINT TransformView_Create( MSIDATABASE *db, string_table *st, LPCWSTR name, MSIV
         MSI_ViewClose( q );
         msiobj_release( &q->hdr );
         free( tv );
-        return r;
+        return ERROR_OUTOFMEMORY;
     }
 
     while (MSI_ViewFetch( q, &rec ) == ERROR_SUCCESS)
