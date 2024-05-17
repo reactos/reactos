@@ -377,7 +377,7 @@ done:
     return wdata;
 }
 
-static void parse_line(WCHAR **line, WCHAR ***entries, DWORD *num_entries, DWORD *len)
+static UINT parse_line(WCHAR **line, WCHAR ***entries, DWORD *num_entries, DWORD *len)
 {
     LPWSTR ptr = *line, save;
     DWORD i, count = 1, chars_left = *len;
@@ -395,9 +395,16 @@ static void parse_line(WCHAR **line, WCHAR ***entries, DWORD *num_entries, DWORD
         chars_left--;
     }
 
+    /*
+     * make sure this line has the same number of entries as there are columns
+     * which are indicated by the first line.
+     */
+    if (*num_entries && *num_entries != count)
+        return ERROR_FUNCTION_FAILED;
+
     *entries = malloc(count * sizeof(WCHAR *));
     if (!*entries)
-        return;
+        return ERROR_OUTOFMEMORY;
 
     /* store pointers into the data */
     chars_left = *len;
@@ -442,8 +449,10 @@ static void parse_line(WCHAR **line, WCHAR ***entries, DWORD *num_entries, DWORD
     /* move to the next line if there's more, else EOF */
     *line = ptr;
     *len = chars_left;
-    if (num_entries)
+    if (!*num_entries)
         *num_entries = count;
+
+    return ERROR_SUCCESS;
 }
 
 static WCHAR *build_createsql_prelude(const WCHAR *table)
@@ -732,7 +741,7 @@ done:
 static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
 {
     UINT r;
-    DWORD len, i, num_labels, num_types, num_columns, num_records = 0;
+    DWORD len, i, num_labels = 0, num_types = 0, num_columns = 0, num_records = 0;
     WCHAR **columns, **types, **labels, *path, *ptr, *data, ***records = NULL, ***temp_records;
 
     TRACE("%p %s %s\n", db, debugstr_w(folder), debugstr_w(file) );
@@ -784,7 +793,9 @@ static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
     /* read in the table records */
     while (len)
     {
-        parse_line( &ptr, &records[num_records], NULL, &len );
+        r = parse_line( &ptr, &records[num_records], &num_columns, &len );
+        if (r != ERROR_SUCCESS)
+            goto done;
 
         num_records++;
         temp_records = realloc(records, (num_records + 1) * sizeof(WCHAR **));

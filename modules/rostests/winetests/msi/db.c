@@ -8584,6 +8584,12 @@ static void test_embedded_nulls(void)
         "s72\tL0\n"
         "Control\tDialog\n"
         "LicenseAgreementDlg\ttext\x11\x19text\0text";
+    /* newlines have alternate representation in idt files */
+    static const char control_table2[] =
+        "Dialog\tText\n"
+        "s72\tL0\n"
+        "Control\tDialog\n"
+        "LicenseAgreementDlg\ttext\x11\x19te\nxt\0text";
     UINT r;
     DWORD sz;
     MSIHANDLE hdb, hrec;
@@ -8608,6 +8614,18 @@ static void test_embedded_nulls(void)
     ok( !memcmp( "text\r\ntext\ntext", buffer, sizeof("text\r\ntext\ntext") - 1 ), "wrong buffer contents \"%s\"\n", buffer );
 
     MsiCloseHandle( hrec );
+    MsiCloseHandle( hdb );
+    DeleteFileA( msifile );
+
+    r = MsiOpenDatabaseW( msifileW, MSIDBOPEN_CREATE, &hdb );
+    ok( r == ERROR_SUCCESS, "failed to open database %u\n", r );
+
+    GetCurrentDirectoryA( MAX_PATH, CURR_DIR );
+    write_file( "temp_file", control_table2, sizeof(control_table2) );
+    r = MsiDatabaseImportA( hdb, CURR_DIR, "temp_file" );
+    ok( r == ERROR_FUNCTION_FAILED, "failed to import table %u\n", r );
+    DeleteFileA( "temp_file" );
+
     MsiCloseHandle( hdb );
     DeleteFileA( msifile );
 }
