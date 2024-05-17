@@ -928,7 +928,7 @@ VOID DIALOG_StatusBarUpdateCaretPos(VOID)
     DWORD dwStart, dwSize;
 
     SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwSize);
-    line = SendMessage(Globals.hEdit, EM_LINEFROMCHAR, (WPARAM)dwStart, 0);
+    line = (int)SendMessage(Globals.hEdit, EM_LINEFROMCHAR, (WPARAM)dwStart, 0);
     ich = (int)SendMessage(Globals.hEdit, EM_LINEINDEX, (WPARAM)line, 0);
 
     /* EM_LINEINDEX can return -1 on failure */
