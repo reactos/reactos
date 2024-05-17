@@ -2304,16 +2304,16 @@ static UINT ACTION_CostFinalize(MSIPACKAGE *package)
                 }
                 required = get_volume_space_required( package );
 #ifdef __REACTOS__
-                swprintf( buf, ARRAY_SIZE(buf), L"%I64u", required / 512 );
+                swprintf( buf, ARRAY_SIZE(buf), L"%I64u", required );
 #else
-                swprintf( buf, ARRAY_SIZE(buf), L"%lu", required / 512 );
+                swprintf( buf, ARRAY_SIZE(buf), L"%lu", required );
 #endif
                 msi_set_property( package->db, L"PrimaryVolumeSpaceRequired", buf, -1 );
 
 #ifdef __REACTOS__
-                swprintf( buf, ARRAY_SIZE(buf), L"%I64u", (free.QuadPart - required) / 512 );
+                swprintf( buf, ARRAY_SIZE(buf), L"%I64u", (free.QuadPart / 512) - required );
 #else
-                swprintf( buf, ARRAY_SIZE(buf), L"%lu", (free.QuadPart - required) / 512 );
+                swprintf( buf, ARRAY_SIZE(buf), L"%lu", (free.QuadPart / 512) - required );
 #endif
                 msi_set_property( package->db, L"PrimaryVolumeSpaceRemaining", buf, -1 );
                 msi_set_property( package->db, L"PrimaryVolumePath", primary_folder, 2 );
