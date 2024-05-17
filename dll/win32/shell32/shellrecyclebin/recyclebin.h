@@ -47,7 +47,7 @@ typedef struct _DELETED_FILE_DETAILS_W
 #define PDELETED_FILE_DETAILS PDELETED_FILE_DETAILS_A
 #endif
 
-/* Special handle type for deleted file/folder */
+/* Distinct handle type for deleted file/folder */
 DECLARE_HANDLE(HDELFILE);
 
 /* API Interface */
