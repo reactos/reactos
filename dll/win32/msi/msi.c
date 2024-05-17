@@ -21,8 +21,6 @@
 #include <stdarg.h>
 
 #define COBJMACROS
-#define NONAMELESSUNION
-
 #include "windef.h"
 #include "winbase.h"
 #include "winreg.h"
@@ -2548,7 +2546,7 @@ HRESULT WINAPI MsiGetFileSignatureInformationW( const WCHAR *path, DWORD flags, 
     data.dwUIChoice          = WTD_UI_NONE;
     data.fdwRevocationChecks = WTD_REVOKE_WHOLECHAIN;
     data.dwUnionChoice       = WTD_CHOICE_FILE;
-    data.u.pFile             = &info;
+    data.pFile               = &info;
     data.dwStateAction       = WTD_STATEACTION_VERIFY;
     data.dwUIContext         = WTD_UICONTEXT_INSTALL;
 

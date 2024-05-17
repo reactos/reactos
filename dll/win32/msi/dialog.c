@@ -20,7 +20,6 @@
  */
 
 #define COBJMACROS
-#define NONAMELESSUNION
 
 #include <stdarg.h>
 
@@ -2439,9 +2438,9 @@ static void seltree_add_child_features( MSIPACKAGE *package, HWND hwnd, const WC
         memset( &tvis, 0, sizeof tvis );
         tvis.hParent = hParent;
         tvis.hInsertAfter = TVI_LAST;
-        tvis.u.item.mask = TVIF_TEXT | TVIF_PARAM;
-        tvis.u.item.pszText = feature->Title;
-        tvis.u.item.lParam = (LPARAM) feature;
+        tvis.item.mask = TVIF_TEXT | TVIF_PARAM;
+        tvis.item.pszText = feature->Title;
+        tvis.item.lParam = (LPARAM) feature;
 
         hitem = (HTREEITEM) SendMessageW( hwnd, TVM_INSERTITEMW, 0, (LPARAM) &tvis );
         if (!hitem)
