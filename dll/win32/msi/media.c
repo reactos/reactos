@@ -109,6 +109,8 @@ static INT_PTR CDECL cabinet_open(char *pszFile, int oflag, int pmode)
     DWORD dwAccess = 0;
     DWORD dwShareMode = 0;
     DWORD dwCreateDisposition = OPEN_EXISTING;
+    HANDLE handle;
+    WCHAR *path;
 
     switch (oflag & _O_ACCMODE)
     {
@@ -131,8 +133,10 @@ static INT_PTR CDECL cabinet_open(char *pszFile, int oflag, int pmode)
     else if (oflag & _O_CREAT)
         dwCreateDisposition = CREATE_ALWAYS;
 
-    return (INT_PTR)CreateFileA(pszFile, dwAccess, dwShareMode, NULL,
-                                dwCreateDisposition, 0, NULL);
+    path = strdupUtoW(pszFile);
+    handle = CreateFileW(path, dwAccess, dwShareMode, NULL, dwCreateDisposition, 0, NULL);
+    free(path);
+    return (INT_PTR)handle;
 }
 
 static UINT CDECL cabinet_read(INT_PTR hf, void *pv, UINT cb)
@@ -577,11 +581,11 @@ static BOOL extract_cabinet( MSIPACKAGE* package, MSIMEDIAINFO *mi, LPVOID data 
         return FALSE;
     }
 
-    cabinet = strdupWtoA( mi->cabinet );
+    cabinet = strdupWtoU( mi->cabinet );
     if (!cabinet)
         goto done;
 
-    cab_path = strdupWtoA( mi->sourcedir );
+    cab_path = strdupWtoU( mi->sourcedir );
     if (!cab_path)
         goto done;
 
