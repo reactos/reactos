@@ -3466,7 +3466,7 @@ static BOOL CALLBACK Typelib_EnumResNameProc( HMODULE hModule, LPCWSTR lpszType,
         tl_struct->path = wcsdup(tl_struct->source);
     else
     {
-        tl_struct->path = msi_alloc(sz * sizeof(WCHAR));
+        tl_struct->path = malloc(sz * sizeof(WCHAR));
 #ifdef __REACTOS__
         swprintf(tl_struct->path, sz, L"%s\\%d", tl_struct->source, (WORD)(INT_PTR)lpszName);
 #else
@@ -7166,8 +7166,8 @@ UINT msi_validate_product_id( MSIPACKAGE *package )
         r = msi_set_property( package->db, L"ProductID", key, -1 );
 #endif
     }
-    msi_free( template );
-    msi_free( key );
+    free( template );
+    free( key );
     return r;
 }
 

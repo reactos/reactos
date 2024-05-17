@@ -2945,9 +2945,13 @@ static UINT msi_dialog_directorylist_up( msi_dialog *dialog )
     path = msi_dialog_dup_property( dialog, prop, TRUE );
 
     /* strip off the last directory */
-    if (ptr != path) *(ptr - 1) = '\0';
-    PathAddBackslashW( path );
-
+    ptr = PathFindFileNameW( path );
+    if (ptr != path)
+    {
+        *(ptr - 1) = '\0';
+        PathAddBackslashW( path );
+    }
+	
     msi_dialog_set_property( dialog->package, prop, path );
 
     msi_dialog_update_directory_list( dialog, NULL );
@@ -3166,11 +3170,11 @@ static void msi_dialog_vcl_add_columns( msi_dialog *dialog, msi_control *control
             if (count == 0 && (!wcsncmp(num, L"\\", 1) || !wcsncmp(num, L"&", 1)))
             {
                 FIXME("Style prefix not supported\n");
-                msi_free(num);
+                free(num);
                 continue;
             }
 #endif
-            msi_free( num );
+            free( num );
             return;
         }
 
