@@ -875,7 +875,7 @@ static UINT search_directory( MSIPACKAGE *package, MSISIGNATURE *sig, const WCHA
 {
     UINT rc;
     DWORD attr;
-    LPWSTR val = NULL;
+    WCHAR *val = NULL, *new_val;
 
     TRACE("%p, %p, %s, %d, %p\n", package, sig, debugstr_w(path), depth, appValue);
 
@@ -920,11 +920,18 @@ static UINT search_directory( MSIPACKAGE *package, MSISIGNATURE *sig, const WCHA
     if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY) &&
         val && val[lstrlenW(val) - 1] != '\\')
     {
-        val = realloc(val, (wcslen(val) + 2) * sizeof(WCHAR));
-        if (!val)
+        new_val = realloc(val, (wcslen(val) + 2) * sizeof(WCHAR));
+        if (!new_val)
+        {
+            free(val);
+            val = NULL;
             rc = ERROR_OUTOFMEMORY;
+        }
         else
+        {
+            val = new_val;
             PathAddBackslashW(val);
+        }
     }
 
     *appValue = val;
