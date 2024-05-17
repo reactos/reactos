@@ -1190,7 +1190,7 @@ static UINT dialog_line_control( msi_dialog *dialog, MSIRECORD *rec )
         return ERROR_OUTOFMEMORY;
 
     lstrcpyW( control->name, name );
-    list_add_head( &dialog->controls, &control->entry );
+    list_add_tail( &dialog->controls, &control->entry );
     control->handler = NULL;
     control->update = NULL;
     control->property = NULL;
