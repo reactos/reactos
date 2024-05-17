@@ -4493,7 +4493,7 @@ static UINT event_set_target_path( msi_dialog *dialog, const WCHAR *argument )
         r = MSI_SetTargetPathW( dialog->package, argument, path );
         free( path );
     }
-    free( &rec->hdr );
+    msiobj_release( &rec->hdr );
     return r;
 }
 
