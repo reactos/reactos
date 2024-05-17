@@ -347,7 +347,7 @@ end:
     return r;
 }
 
-static LPWSTR msi_read_text_archive(LPCWSTR path, DWORD *len)
+static WCHAR *read_text_archive(const WCHAR *path, DWORD *len)
 {
     HANDLE file;
     LPSTR data = NULL;
@@ -377,7 +377,7 @@ done:
     return wdata;
 }
 
-static void msi_parse_line(LPWSTR *line, LPWSTR **entries, DWORD *num_entries, DWORD *len)
+static void parse_line(WCHAR **line, WCHAR ***entries, DWORD *num_entries, DWORD *len)
 {
     LPWSTR ptr = *line, save;
     DWORD i, count = 1, chars_left = *len;
@@ -446,7 +446,7 @@ static void msi_parse_line(LPWSTR *line, LPWSTR **entries, DWORD *num_entries, D
         *num_entries = count;
 }
 
-static LPWSTR msi_build_createsql_prelude(LPWSTR table)
+static WCHAR *build_createsql_prelude(const WCHAR *table)
 {
     LPWSTR prelude;
     DWORD size;
@@ -460,7 +460,7 @@ static LPWSTR msi_build_createsql_prelude(LPWSTR table)
     return prelude;
 }
 
-static LPWSTR msi_build_createsql_columns(LPWSTR *columns_data, LPWSTR *types, DWORD num_columns)
+static WCHAR *build_createsql_columns(WCHAR **columns_data, WCHAR **types, DWORD num_columns)
 {
     LPWSTR columns, p;
     LPCWSTR type;
@@ -547,7 +547,7 @@ static LPWSTR msi_build_createsql_columns(LPWSTR *columns_data, LPWSTR *types, D
     return columns;
 }
 
-static LPWSTR msi_build_createsql_postlude(LPWSTR *primary_keys, DWORD num_keys)
+static WCHAR *build_createsql_postlude(WCHAR **primary_keys, DWORD num_keys)
 {
     LPWSTR postlude, keys, ptr;
     DWORD size, i;
@@ -579,7 +579,8 @@ done:
     return postlude;
 }
 
-static UINT msi_add_table_to_db(MSIDATABASE *db, LPWSTR *columns, LPWSTR *types, LPWSTR *labels, DWORD num_labels, DWORD num_columns)
+static UINT add_table_to_db(MSIDATABASE *db, WCHAR **columns, WCHAR **types, WCHAR **labels, DWORD num_labels,
+                            DWORD num_columns)
 {
     UINT r = ERROR_OUTOFMEMORY;
     DWORD size;
@@ -587,9 +588,9 @@ static UINT msi_add_table_to_db(MSIDATABASE *db, LPWSTR *columns, LPWSTR *types,
     LPWSTR create_sql = NULL;
     LPWSTR prelude, columns_sql, postlude;
 
-    prelude = msi_build_createsql_prelude(labels[0]);
-    columns_sql = msi_build_createsql_columns(columns, types, num_columns);
-    postlude = msi_build_createsql_postlude(labels + 1, num_labels - 1); /* skip over table name */
+    prelude = build_createsql_prelude(labels[0]);
+    columns_sql = build_createsql_columns(columns, types, num_columns);
+    postlude = build_createsql_postlude(labels + 1, num_labels - 1); /* skip over table name */
 
     if (!prelude || !columns_sql || !postlude)
         goto done;
@@ -619,7 +620,7 @@ done:
     return r;
 }
 
-static LPWSTR msi_import_stream_filename(LPCWSTR path, LPCWSTR name)
+static WCHAR *import_stream_filename(const WCHAR *path, const WCHAR *name)
 {
     DWORD len;
     LPWSTR fullname, ptr;
@@ -667,7 +668,7 @@ static UINT construct_record(DWORD num_columns, LPWSTR *types,
                 if (*data[i])
                 {
                     UINT r;
-                    LPWSTR file = msi_import_stream_filename(path, data[i]);
+                    WCHAR *file = import_stream_filename(path, data[i]);
                     if (!file)
                         return ERROR_FUNCTION_FAILED;
 
@@ -687,10 +688,8 @@ static UINT construct_record(DWORD num_columns, LPWSTR *types,
     return ERROR_SUCCESS;
 }
 
-static UINT msi_add_records_to_table(MSIDATABASE *db, LPWSTR *columns, LPWSTR *types,
-                                     LPWSTR *labels, LPWSTR **records,
-                                     int num_columns, int num_records,
-                                     LPWSTR path)
+static UINT add_records_to_table(MSIDATABASE *db, WCHAR **columns, WCHAR **types, WCHAR **labels, WCHAR ***records,
+                                 int num_columns, int num_records, WCHAR *path)
 {
     UINT r;
     int i;
@@ -750,7 +749,7 @@ static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
     lstrcatW( path, L"\\" );
     lstrcatW( path, file );
 
-    data = msi_read_text_archive( path, &len );
+    data = read_text_archive( path, &len );
     if (!data)
     {
         free(path);
@@ -758,9 +757,9 @@ static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
     }
 
     ptr = data;
-    msi_parse_line( &ptr, &columns, &num_columns, &len );
-    msi_parse_line( &ptr, &types, &num_types, &len );
-    msi_parse_line( &ptr, &labels, &num_labels, &len );
+    parse_line( &ptr, &columns, &num_columns, &len );
+    parse_line( &ptr, &types, &num_types, &len );
+    parse_line( &ptr, &labels, &num_labels, &len );
 
     if (num_columns == 1 && !columns[0][0] && num_labels == 1 && !labels[0][0] &&
         num_types == 2 && !wcscmp( types[1], L"_ForceCodepage" ))
@@ -785,7 +784,7 @@ static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
     /* read in the table records */
     while (len)
     {
-        msi_parse_line( &ptr, &records[num_records], NULL, &len );
+        parse_line( &ptr, &records[num_records], NULL, &len );
 
         num_records++;
         temp_records = realloc(records, (num_records + 1) * sizeof(WCHAR **));
@@ -810,7 +809,7 @@ static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
     {
         if (!TABLE_Exists(db, labels[0]))
         {
-            r = msi_add_table_to_db( db, columns, types, labels, num_labels, num_columns );
+            r = add_table_to_db( db, columns, types, labels, num_labels, num_columns );
             if (r != ERROR_SUCCESS)
             {
                 r = ERROR_FUNCTION_FAILED;
@@ -818,7 +817,7 @@ static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
             }
         }
 
-        r = msi_add_records_to_table( db, columns, types, labels, records, num_columns, num_records, path );
+        r = add_records_to_table( db, columns, types, labels, records, num_columns, num_records, path );
     }
 
 done:
@@ -880,7 +879,7 @@ end:
     return r;
 }
 
-static UINT msi_export_field( HANDLE handle, MSIRECORD *row, UINT field )
+static UINT export_field( HANDLE handle, MSIRECORD *row, UINT field )
 {
     char *buffer;
     BOOL ret;
@@ -923,7 +922,7 @@ static UINT msi_export_field( HANDLE handle, MSIRECORD *row, UINT field )
     return ret ? ERROR_SUCCESS : ERROR_FUNCTION_FAILED;
 }
 
-static UINT msi_export_stream( const WCHAR *folder, const WCHAR *table, MSIRECORD *row, UINT field, UINT start )
+static UINT export_stream( const WCHAR *folder, const WCHAR *table, MSIRECORD *row, UINT field, UINT start )
 {
     WCHAR stream[MAX_STREAM_NAME_LEN + 1], *path;
     DWORD sz, read_size, write_size;
@@ -981,7 +980,7 @@ struct row_export_info
     const WCHAR *table;
 };
 
-static UINT msi_export_record( struct row_export_info *row_export_info, MSIRECORD *row, UINT start )
+static UINT export_record( struct row_export_info *row_export_info, MSIRECORD *row, UINT start )
 {
     HANDLE handle = row_export_info->handle;
     UINT i, count, r = ERROR_SUCCESS;
@@ -991,15 +990,15 @@ static UINT msi_export_record( struct row_export_info *row_export_info, MSIRECOR
     count = MSI_RecordGetFieldCount( row );
     for (i = start; i <= count; i++)
     {
-        r = msi_export_field( handle, row, i );
+        r = export_field( handle, row, i );
         if (r == ERROR_INVALID_PARAMETER)
         {
-            r = msi_export_stream( row_export_info->folder, row_export_info->table, row, i, start );
+            r = export_stream( row_export_info->folder, row_export_info->table, row, i, start );
             if (r != ERROR_SUCCESS)
                 return r;
 
             /* exporting a binary stream, repeat the "Name" field */
-            r = msi_export_field( handle, row, start );
+            r = export_field( handle, row, start );
             if (r != ERROR_SUCCESS)
                 return r;
         }
@@ -1013,12 +1012,12 @@ static UINT msi_export_record( struct row_export_info *row_export_info, MSIRECOR
     return r;
 }
 
-static UINT msi_export_row( MSIRECORD *row, void *arg )
+static UINT export_row( MSIRECORD *row, void *arg )
 {
-    return msi_export_record( arg, row, 1 );
+    return export_record( arg, row, 1 );
 }
 
-static UINT msi_export_forcecodepage( HANDLE handle, UINT codepage )
+static UINT export_forcecodepage( HANDLE handle, UINT codepage )
 {
     static const char fmt[] = "\r\n\r\n%u\t_ForceCodepage\r\n";
     char data[sizeof(fmt) + 10];
@@ -1030,7 +1029,7 @@ static UINT msi_export_forcecodepage( HANDLE handle, UINT codepage )
     return ERROR_SUCCESS;
 }
 
-static UINT msi_export_summaryinformation( MSIDATABASE *db, HANDLE handle )
+static UINT export_summaryinformation( MSIDATABASE *db, HANDLE handle )
 {
     static const char header[] = "PropertyId\tValue\r\n"
                                  "i2\tl255\r\n"
@@ -1075,13 +1074,13 @@ static UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table, LPCWSTR folder, 
     if (!wcscmp( table, L"_ForceCodepage" ))
     {
         UINT codepage = msi_get_string_table_codepage( db->strings );
-        r = msi_export_forcecodepage( handle, codepage );
+        r = export_forcecodepage( handle, codepage );
         goto done;
     }
 
     if (!wcscmp( table, L"_SummaryInformation" ))
     {
-        r = msi_export_summaryinformation( db, handle );
+        r = export_summaryinformation( db, handle );
         goto done;
     }
 
@@ -1094,7 +1093,7 @@ static UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table, LPCWSTR folder, 
         r = MSI_ViewGetColumnInfo(view, MSICOLINFO_NAMES, &rec);
         if (r == ERROR_SUCCESS)
         {
-            msi_export_record( &row_export_info, rec, 1 );
+            export_record( &row_export_info, rec, 1 );
             msiobj_release( &rec->hdr );
         }
 
@@ -1102,7 +1101,7 @@ static UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table, LPCWSTR folder, 
         r = MSI_ViewGetColumnInfo(view, MSICOLINFO_TYPES, &rec);
         if (r == ERROR_SUCCESS)
         {
-            msi_export_record( &row_export_info, rec, 1 );
+            export_record( &row_export_info, rec, 1 );
             msiobj_release( &rec->hdr );
         }
 
@@ -1111,12 +1110,12 @@ static UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table, LPCWSTR folder, 
         if (r == ERROR_SUCCESS)
         {
             MSI_RecordSetStringW( rec, 0, table );
-            msi_export_record( &row_export_info, rec, 0 );
+            export_record( &row_export_info, rec, 0 );
             msiobj_release( &rec->hdr );
         }
 
         /* write out row 4 onwards, the data */
-        r = MSI_IterateRecords( view, 0, msi_export_row, &row_export_info );
+        r = MSI_IterateRecords( view, 0, export_row, &row_export_info );
         msiobj_release( &view->hdr );
     }
 
@@ -1521,7 +1520,7 @@ done:
     return r;
 }
 
-static UINT msi_get_table_labels(MSIDATABASE *db, LPCWSTR table, LPWSTR **labels, DWORD *numlabels)
+static UINT get_table_labels(MSIDATABASE *db, const WCHAR *table, WCHAR ***labels, DWORD *numlabels)
 {
     UINT r, i, count;
     MSIRECORD *prec = NULL;
@@ -1550,7 +1549,7 @@ end:
     return r;
 }
 
-static UINT msi_get_query_columns(MSIQUERY *query, LPWSTR **columns, DWORD *numcolumns)
+static UINT get_query_columns(MSIQUERY *query, WCHAR ***columns, DWORD *numcolumns)
 {
     UINT r, i, count;
     MSIRECORD *prec = NULL;
@@ -1579,7 +1578,7 @@ end:
     return r;
 }
 
-static UINT msi_get_query_types(MSIQUERY *query, LPWSTR **types, DWORD *numtypes)
+static UINT get_query_types(MSIQUERY *query, WCHAR ***types, DWORD *numtypes)
 {
     UINT r, i, count;
     MSIRECORD *prec = NULL;
@@ -1655,7 +1654,7 @@ static void free_merge_table(MERGETABLE *table)
     free(table);
 }
 
-static UINT msi_get_merge_table (MSIDATABASE *db, LPCWSTR name, MERGETABLE **ptable)
+static UINT get_merge_table(MSIDATABASE *db, const WCHAR *name, MERGETABLE **ptable)
 {
     UINT r;
     MERGETABLE *table;
@@ -1668,7 +1667,7 @@ static UINT msi_get_merge_table (MSIDATABASE *db, LPCWSTR name, MERGETABLE **pta
        return ERROR_OUTOFMEMORY;
     }
 
-    r = msi_get_table_labels(db, name, &table->labels, &table->numlabels);
+    r = get_table_labels(db, name, &table->labels, &table->numlabels);
     if (r != ERROR_SUCCESS)
         goto err;
 
@@ -1676,11 +1675,11 @@ static UINT msi_get_merge_table (MSIDATABASE *db, LPCWSTR name, MERGETABLE **pta
     if (r != ERROR_SUCCESS)
         goto err;
 
-    r = msi_get_query_columns(mergeview, &table->columns, &table->numcolumns);
+    r = get_query_columns(mergeview, &table->columns, &table->numcolumns);
     if (r != ERROR_SUCCESS)
         goto err;
 
-    r = msi_get_query_types(mergeview, &table->types, &table->numtypes);
+    r = get_query_types(mergeview, &table->types, &table->numtypes);
     if (r != ERROR_SUCCESS)
         goto err;
 
@@ -1730,7 +1729,7 @@ static UINT merge_diff_tables(MSIRECORD *rec, LPVOID param)
             goto done;
     }
 
-    r = msi_get_merge_table(data->merge, name, &table);
+    r = get_merge_table(data->merge, name, &table);
     if (r != ERROR_SUCCESS)
         goto done;
 
@@ -1778,8 +1777,7 @@ static UINT merge_table(MSIDATABASE *db, MERGETABLE *table)
 
     if (!TABLE_Exists(db, table->name))
     {
-        r = msi_add_table_to_db(db, table->columns, table->types,
-               table->labels, table->numlabels, table->numcolumns);
+        r = add_table_to_db(db, table->columns, table->types, table->labels, table->numlabels, table->numcolumns);
         if (r != ERROR_SUCCESS)
            return ERROR_FUNCTION_FAILED;
     }

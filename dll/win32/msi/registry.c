@@ -1687,9 +1687,8 @@ done:
     return r;
 }
 
-static UINT msi_get_patch_state(LPCWSTR prodcode, LPCWSTR usersid,
-                                MSIINSTALLCONTEXT context,
-                                LPWSTR patch, MSIPATCHSTATE *state)
+static UINT get_patch_state(const WCHAR *prodcode, const WCHAR *usersid, MSIINSTALLCONTEXT context,
+                            WCHAR *patch, MSIPATCHSTATE *state)
 {
     DWORD type, val, size;
     HKEY prod, hkey = 0;
@@ -1732,10 +1731,9 @@ done:
     return r;
 }
 
-static UINT msi_check_product_patches(LPCWSTR prodcode, LPCWSTR usersid,
-        MSIINSTALLCONTEXT context, DWORD filter, DWORD index, DWORD *idx,
-        LPWSTR patch, LPWSTR targetprod, MSIINSTALLCONTEXT *targetctx,
-        LPWSTR targetsid, DWORD *sidsize, LPWSTR *transforms)
+static UINT check_product_patches(const WCHAR *prodcode, const WCHAR *usersid, MSIINSTALLCONTEXT context,
+                                  DWORD filter, DWORD index, DWORD *idx, WCHAR *patch, WCHAR *targetprod,
+                                  MSIINSTALLCONTEXT *targetctx, WCHAR *targetsid, DWORD *sidsize, WCHAR **transforms)
 {
     MSIPATCHSTATE state = MSIPATCHSTATE_INVALID;
     LPWSTR ptr, patches = NULL;
@@ -1806,8 +1804,7 @@ static UINT msi_check_product_patches(LPCWSTR prodcode, LPCWSTR usersid,
         {
             if (!(filter & MSIPATCHSTATE_APPLIED))
             {
-                temp = msi_get_patch_state(prodcode, usersid, context,
-                                           ptr, &state);
+                temp = get_patch_state(prodcode, usersid, context, ptr, &state);
                 if (temp == ERROR_BAD_CONFIGURATION)
                 {
                     r = ERROR_BAD_CONFIGURATION;
@@ -1822,8 +1819,7 @@ static UINT msi_check_product_patches(LPCWSTR prodcode, LPCWSTR usersid,
         {
             if (!(filter & MSIPATCHSTATE_APPLIED))
             {
-                temp = msi_get_patch_state(prodcode, usersid, context,
-                                           ptr, &state);
+                temp = get_patch_state(prodcode, usersid, context, ptr, &state);
                 if (temp == ERROR_BAD_CONFIGURATION)
                 {
                     r = ERROR_BAD_CONFIGURATION;
@@ -1901,11 +1897,10 @@ done:
     return r;
 }
 
-static UINT msi_enum_patches(LPCWSTR szProductCode, LPCWSTR szUserSid,
-        DWORD dwContext, DWORD dwFilter, DWORD dwIndex, DWORD *idx,
-        LPWSTR szPatchCode, LPWSTR szTargetProductCode,
-        MSIINSTALLCONTEXT *pdwTargetProductContext, LPWSTR szTargetUserSid,
-        LPDWORD pcchTargetUserSid, LPWSTR *szTransforms)
+static UINT enum_patches(const WCHAR *szProductCode, const WCHAR *szUserSid, DWORD dwContext, DWORD dwFilter,
+                         DWORD dwIndex, DWORD *idx, WCHAR *szPatchCode, WCHAR *szTargetProductCode,
+                         MSIINSTALLCONTEXT *pdwTargetProductContext, WCHAR *szTargetUserSid, DWORD *pcchTargetUserSid,
+                         WCHAR **szTransforms)
 {
     LPWSTR usersid = NULL;
     UINT r = ERROR_INVALID_PARAMETER;
@@ -1918,36 +1913,27 @@ static UINT msi_enum_patches(LPCWSTR szProductCode, LPCWSTR szUserSid,
 
     if (dwContext & MSIINSTALLCONTEXT_USERMANAGED)
     {
-        r = msi_check_product_patches(szProductCode, szUserSid,
-                                      MSIINSTALLCONTEXT_USERMANAGED, dwFilter,
-                                      dwIndex, idx, szPatchCode,
-                                      szTargetProductCode,
-                                      pdwTargetProductContext, szTargetUserSid,
-                                      pcchTargetUserSid, szTransforms);
+        r = check_product_patches(szProductCode, szUserSid, MSIINSTALLCONTEXT_USERMANAGED, dwFilter, dwIndex, idx,
+                                  szPatchCode, szTargetProductCode, pdwTargetProductContext, szTargetUserSid,
+                                  pcchTargetUserSid, szTransforms);
         if (r != ERROR_NO_MORE_ITEMS)
             goto done;
     }
 
     if (dwContext & MSIINSTALLCONTEXT_USERUNMANAGED)
     {
-        r = msi_check_product_patches(szProductCode, szUserSid,
-                                      MSIINSTALLCONTEXT_USERUNMANAGED, dwFilter,
-                                      dwIndex, idx, szPatchCode,
-                                      szTargetProductCode,
-                                      pdwTargetProductContext, szTargetUserSid,
-                                      pcchTargetUserSid, szTransforms);
+        r = check_product_patches(szProductCode, szUserSid, MSIINSTALLCONTEXT_USERUNMANAGED, dwFilter, dwIndex, idx,
+                                  szPatchCode, szTargetProductCode, pdwTargetProductContext, szTargetUserSid,
+                                  pcchTargetUserSid, szTransforms);
         if (r != ERROR_NO_MORE_ITEMS)
             goto done;
     }
 
     if (dwContext & MSIINSTALLCONTEXT_MACHINE)
     {
-        r = msi_check_product_patches(szProductCode, szUserSid,
-                                      MSIINSTALLCONTEXT_MACHINE, dwFilter,
-                                      dwIndex, idx, szPatchCode,
-                                      szTargetProductCode,
-                                      pdwTargetProductContext, szTargetUserSid,
-                                      pcchTargetUserSid, szTransforms);
+        r = check_product_patches(szProductCode, szUserSid, MSIINSTALLCONTEXT_MACHINE, dwFilter, dwIndex, idx,
+                                  szPatchCode, szTargetProductCode, pdwTargetProductContext, szTargetUserSid,
+                                  pcchTargetUserSid, szTransforms);
         if (r != ERROR_NO_MORE_ITEMS)
             goto done;
     }
@@ -1997,10 +1983,8 @@ UINT WINAPI MsiEnumPatchesExW( const WCHAR *szProductCode, const WCHAR *szUserSi
     if (dwIndex == 0)
         last_index = 0;
 
-    r = msi_enum_patches(szProductCode, szUserSid, dwContext, dwFilter,
-                         dwIndex, &idx, szPatchCode, szTargetProductCode,
-                         pdwTargetProductContext, szTargetUserSid,
-                         pcchTargetUserSid, NULL);
+    r = enum_patches(szProductCode, szUserSid, dwContext, dwFilter, dwIndex, &idx, szPatchCode, szTargetProductCode,
+                     pdwTargetProductContext, szTargetUserSid, pcchTargetUserSid, NULL);
 
     if (r == ERROR_SUCCESS)
         last_index = dwIndex;
@@ -2094,9 +2078,8 @@ UINT WINAPI MsiEnumPatchesW( const WCHAR *szProduct, DWORD iPatchIndex, WCHAR *l
 
     RegCloseKey(prod);
 
-    r = msi_enum_patches(szProduct, NULL, MSIINSTALLCONTEXT_ALL,
-                         MSIPATCHSTATE_ALL, iPatchIndex, &idx, lpPatchBuf,
-                         NULL, NULL, NULL, NULL, &transforms);
+    r = enum_patches(szProduct, NULL, MSIINSTALLCONTEXT_ALL, MSIPATCHSTATE_ALL, iPatchIndex, &idx, lpPatchBuf, NULL,
+                     NULL, NULL, NULL, &transforms);
     if (r != ERROR_SUCCESS)
         goto done;
 

@@ -3499,7 +3499,7 @@ static BOOL CALLBACK Typelib_EnumResNameProc( HMODULE hModule, LPCWSTR lpszType,
     return TRUE;
 }
 
-static HMODULE msi_load_library( MSIPACKAGE *package, const WCHAR *filename, DWORD flags )
+static HMODULE load_library( MSIPACKAGE *package, const WCHAR *filename, DWORD flags )
 {
     HMODULE module;
     msi_disable_fs_redirection( package );
@@ -3508,7 +3508,7 @@ static HMODULE msi_load_library( MSIPACKAGE *package, const WCHAR *filename, DWO
     return module;
 }
 
-static HRESULT msi_load_typelib( MSIPACKAGE *package, const WCHAR *filename, REGKIND kind, ITypeLib **lib )
+static HRESULT load_typelib( MSIPACKAGE *package, const WCHAR *filename, REGKIND kind, ITypeLib **lib )
 {
     HRESULT hr;
     msi_disable_fs_redirection( package );
@@ -3547,7 +3547,7 @@ static UINT ITERATE_RegisterTypeLibraries(MSIRECORD *row, LPVOID param)
     }
     MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONDATA, row);
 
-    module = msi_load_library( package, file->TargetPath, LOAD_LIBRARY_AS_DATAFILE );
+    module = load_library( package, file->TargetPath, LOAD_LIBRARY_AS_DATAFILE );
     if (module)
     {
         LPCWSTR guid;
@@ -3584,7 +3584,7 @@ static UINT ITERATE_RegisterTypeLibraries(MSIRECORD *row, LPVOID param)
     }
     else
     {
-        hr = msi_load_typelib( package, file->TargetPath, REGKIND_REGISTER, &tlib );
+        hr = load_typelib( package, file->TargetPath, REGKIND_REGISTER, &tlib );
         if (FAILED(hr))
         {
             ERR( "failed to load type library: %#lx\n", hr );
@@ -3958,7 +3958,7 @@ static UINT ITERATE_PublishIcon(MSIRECORD *row, LPVOID param)
     return ERROR_SUCCESS;
 }
 
-static UINT msi_publish_icons(MSIPACKAGE *package)
+static UINT publish_icons(MSIPACKAGE *package)
 {
     MSIQUERY *view;
     UINT r;
@@ -3974,7 +3974,7 @@ static UINT msi_publish_icons(MSIPACKAGE *package)
     return ERROR_SUCCESS;
 }
 
-static UINT msi_publish_sourcelist(MSIPACKAGE *package, HKEY hkey)
+static UINT publish_sourcelist(MSIPACKAGE *package, HKEY hkey)
 {
     UINT r;
     HKEY source;
@@ -4028,7 +4028,7 @@ static UINT msi_publish_sourcelist(MSIPACKAGE *package, HKEY hkey)
     return ERROR_SUCCESS;
 }
 
-static UINT msi_publish_product_properties(MSIPACKAGE *package, HKEY hkey)
+static UINT publish_product_properties(MSIPACKAGE *package, HKEY hkey)
 {
     WCHAR *buffer, *ptr, *guids, packcode[SQUASHED_GUID_SIZE];
     DWORD langid;
@@ -4074,7 +4074,7 @@ static UINT msi_publish_product_properties(MSIPACKAGE *package, HKEY hkey)
     return ERROR_SUCCESS;
 }
 
-static UINT msi_publish_upgrade_code(MSIPACKAGE *package)
+static UINT publish_upgrade_code(MSIPACKAGE *package)
 {
     UINT r;
     HKEY hkey;
@@ -4102,7 +4102,7 @@ static UINT msi_publish_upgrade_code(MSIPACKAGE *package)
     return ERROR_SUCCESS;
 }
 
-static BOOL msi_check_publish(MSIPACKAGE *package)
+static BOOL check_publish(MSIPACKAGE *package)
 {
     MSIFEATURE *feature;
 
@@ -4116,7 +4116,7 @@ static BOOL msi_check_publish(MSIPACKAGE *package)
     return FALSE;
 }
 
-static BOOL msi_check_unpublish(MSIPACKAGE *package)
+static BOOL check_unpublish(MSIPACKAGE *package)
 {
     MSIFEATURE *feature;
 
@@ -4130,7 +4130,7 @@ static BOOL msi_check_unpublish(MSIPACKAGE *package)
     return TRUE;
 }
 
-static UINT msi_publish_patches( MSIPACKAGE *package )
+static UINT publish_patches( MSIPACKAGE *package )
 {
     WCHAR patch_squashed[GUID_SIZE];
     HKEY patches_key = NULL, product_patches_key = NULL, product_key;
@@ -4244,7 +4244,7 @@ static UINT ACTION_PublishProduct(MSIPACKAGE *package)
 
     if (!list_empty(&package->patches))
     {
-        rc = msi_publish_patches(package);
+        rc = publish_patches(package);
         if (rc != ERROR_SUCCESS)
             goto end;
     }
@@ -4278,7 +4278,7 @@ static UINT ACTION_PublishProduct(MSIPACKAGE *package)
     }
 
     /* FIXME: also need to publish if the product is in advertise mode */
-    if (!republish && !msi_check_publish(package))
+    if (!republish && !check_publish(package))
     {
         if (hukey)
             RegCloseKey(hukey);
@@ -4298,19 +4298,19 @@ static UINT ACTION_PublishProduct(MSIPACKAGE *package)
     if (rc != ERROR_SUCCESS)
         goto end;
 
-    rc = msi_publish_upgrade_code(package);
+    rc = publish_upgrade_code(package);
     if (rc != ERROR_SUCCESS)
         goto end;
 
-    rc = msi_publish_product_properties(package, hukey);
+    rc = publish_product_properties(package, hukey);
     if (rc != ERROR_SUCCESS)
         goto end;
 
-    rc = msi_publish_sourcelist(package, hukey);
+    rc = publish_sourcelist(package, hukey);
     if (rc != ERROR_SUCCESS)
         goto end;
 
-    rc = msi_publish_icons(package);
+    rc = publish_icons(package);
 
 end:
     uirow = MSI_CreateRecord( 1 );
@@ -4735,7 +4735,7 @@ static UINT ACTION_PublishFeatures(MSIPACKAGE *package)
     if (package->script == SCRIPT_NONE)
         return msi_schedule_action(package, SCRIPT_INSTALL, L"PublishFeatures");
 
-    if (!msi_check_publish(package))
+    if (!check_publish(package))
         return ERROR_SUCCESS;
 
     rc = MSIREG_OpenFeaturesKey(package->ProductCode, NULL, package->Context,
@@ -4838,7 +4838,7 @@ end:
     return rc;
 }
 
-static UINT msi_unpublish_feature(MSIPACKAGE *package, MSIFEATURE *feature)
+static UINT unpublish_feature(MSIPACKAGE *package, MSIFEATURE *feature)
 {
     UINT r;
     HKEY hkey;
@@ -4877,18 +4877,18 @@ static UINT ACTION_UnpublishFeatures(MSIPACKAGE *package)
     if (package->script == SCRIPT_NONE)
         return msi_schedule_action(package, SCRIPT_INSTALL, L"UnpublishFeatures");
 
-    if (!msi_check_unpublish(package))
+    if (!check_unpublish(package))
         return ERROR_SUCCESS;
 
     LIST_FOR_EACH_ENTRY(feature, &package->features, MSIFEATURE, entry)
     {
-        msi_unpublish_feature(package, feature);
+        unpublish_feature(package, feature);
     }
 
     return ERROR_SUCCESS;
 }
 
-static UINT msi_publish_install_properties(MSIPACKAGE *package, HKEY hkey)
+static UINT publish_install_properties(MSIPACKAGE *package, HKEY hkey)
 {
     static const WCHAR *propval[] =
     {
@@ -4987,8 +4987,7 @@ static UINT ACTION_RegisterProduct(MSIPACKAGE *package)
         return msi_schedule_action(package, SCRIPT_INSTALL, L"RegisterProduct");
 
     /* FIXME: also need to publish if the product is in advertise mode */
-    if (!msi_get_property_int( package->db, L"ProductToBeRegistered", 0 )
-            && !msi_check_publish(package))
+    if (!msi_get_property_int( package->db, L"ProductToBeRegistered", 0 ) && !check_publish(package))
         return ERROR_SUCCESS;
 
     rc = MSIREG_OpenUninstallKey(package->ProductCode, package->platform, &hkey, TRUE);
@@ -4999,11 +4998,11 @@ static UINT ACTION_RegisterProduct(MSIPACKAGE *package)
     if (rc != ERROR_SUCCESS)
         goto done;
 
-    rc = msi_publish_install_properties(package, hkey);
+    rc = publish_install_properties(package, hkey);
     if (rc != ERROR_SUCCESS)
         goto done;
 
-    rc = msi_publish_install_properties(package, props);
+    rc = publish_install_properties(package, props);
     if (rc != ERROR_SUCCESS)
         goto done;
 
@@ -5058,7 +5057,7 @@ static UINT ITERATE_UnpublishIcon( MSIRECORD *row, LPVOID param )
     return ERROR_SUCCESS;
 }
 
-static UINT msi_unpublish_icons( MSIPACKAGE *package )
+static UINT unpublish_icons( MSIPACKAGE *package )
 {
     MSIQUERY *view;
     UINT r;
@@ -5140,7 +5139,7 @@ static UINT ACTION_UnpublishProduct(MSIPACKAGE *package)
     TRACE("removing local package %s\n", debugstr_w(package->localfile));
     package->delete_on_close = TRUE;
 
-    msi_unpublish_icons( package );
+    unpublish_icons( package );
     return ERROR_SUCCESS;
 }
 
@@ -5323,7 +5322,7 @@ static UINT ACTION_RegisterUser(MSIPACKAGE *package)
     if (package->script == SCRIPT_NONE)
         return msi_schedule_action(package, SCRIPT_INSTALL, L"RegisterUser");
 
-    if (msi_check_unpublish(package))
+    if (check_unpublish(package))
     {
         MSIREG_DeleteUserDataProductKey(package->ProductCode, package->Context);
         goto end;
@@ -5860,7 +5859,7 @@ static UINT ACTION_InstallServices( MSIPACKAGE *package )
 }
 
 /* converts arg1[~]arg2[~]arg3 to a list of ptrs to the strings */
-static LPCWSTR *msi_service_args_to_vector(LPWSTR args, DWORD *numargs)
+static const WCHAR **service_args_to_vector(WCHAR *args, DWORD *numargs)
 {
     LPCWSTR *vector, *temp_vector;
     LPWSTR p, q;
@@ -5956,7 +5955,7 @@ static UINT ITERATE_StartService(MSIRECORD *rec, LPVOID param)
         goto done;
     }
 
-    vector = msi_service_args_to_vector(args, &numargs);
+    vector = service_args_to_vector(args, &numargs);
 
     if (!StartServiceW(service, numargs, vector) &&
         GetLastError() != ERROR_SERVICE_ALREADY_RUNNING)
@@ -7400,21 +7399,11 @@ static UINT ACTION_MigrateFeatureStates( MSIPACKAGE *package )
     return ERROR_SUCCESS;
 }
 
-static BOOL msi_bind_image( MSIPACKAGE *package, const char *filename, const char *path )
-{
-    BOOL ret;
-    msi_disable_fs_redirection( package );
-    ret = BindImage( filename, path, NULL );
-    msi_revert_fs_redirection( package );
-    return ret;
-}
-
 static void bind_image( MSIPACKAGE *package, const char *filename, const char *path )
 {
-    if (!msi_bind_image( package, filename, path ))
-    {
-        WARN( "failed to bind image %lu\n", GetLastError() );
-    }
+    msi_disable_fs_redirection( package );
+    if (!BindImage( filename, path, NULL )) WARN( "failed to bind image %lu\n", GetLastError() );
+    msi_revert_fs_redirection( package );
 }
 
 static UINT ITERATE_BindImage( MSIRECORD *rec, LPVOID param )
@@ -7469,7 +7458,7 @@ static UINT ACTION_BindImage( MSIPACKAGE *package )
     return ERROR_SUCCESS;
 }
 
-static UINT msi_unimplemented_action_stub( MSIPACKAGE *package, LPCSTR action, LPCWSTR table )
+static UINT unimplemented_action_stub( MSIPACKAGE *package, LPCSTR action, LPCWSTR table )
 {
     MSIQUERY *view;
     DWORD count = 0;
@@ -7489,27 +7478,27 @@ static UINT msi_unimplemented_action_stub( MSIPACKAGE *package, LPCSTR action, L
 
 static UINT ACTION_IsolateComponents( MSIPACKAGE *package )
 {
-    return msi_unimplemented_action_stub( package, "IsolateComponents", L"IsolateComponent" );
+    return unimplemented_action_stub( package, "IsolateComponents", L"IsolateComponent" );
 }
 
 static UINT ACTION_RMCCPSearch( MSIPACKAGE *package )
 {
-    return msi_unimplemented_action_stub( package, "RMCCPSearch", L"CCPSearch" );
+    return unimplemented_action_stub( package, "RMCCPSearch", L"CCPSearch" );
 }
 
 static UINT ACTION_RegisterComPlus( MSIPACKAGE *package )
 {
-    return msi_unimplemented_action_stub( package, "RegisterComPlus", L"Complus" );
+    return unimplemented_action_stub( package, "RegisterComPlus", L"Complus" );
 }
 
 static UINT ACTION_UnregisterComPlus( MSIPACKAGE *package )
 {
-    return msi_unimplemented_action_stub( package, "UnregisterComPlus", L"Complus" );
+    return unimplemented_action_stub( package, "UnregisterComPlus", L"Complus" );
 }
 
 static UINT ACTION_InstallSFPCatalogFile( MSIPACKAGE *package )
 {
-    return msi_unimplemented_action_stub( package, "InstallSFPCatalogFile", L"SFPCatalog" );
+    return unimplemented_action_stub( package, "InstallSFPCatalogFile", L"SFPCatalog" );
 }
 
 static const struct

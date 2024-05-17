@@ -106,7 +106,7 @@ err:
 /* checks to see if the column order specified in the INSERT query
  * matches the column order of the table
  */
-static BOOL msi_columns_in_order(MSIINSERTVIEW *iv, UINT col_count)
+static BOOL columns_in_order(MSIINSERTVIEW *iv, UINT col_count)
 {
     LPCWSTR a, b;
     UINT i;
@@ -124,7 +124,7 @@ static BOOL msi_columns_in_order(MSIINSERTVIEW *iv, UINT col_count)
 /* rearranges the data in the record to be inserted based on column order,
  * and pads the record for any missing columns in the INSERT query
  */
-static UINT msi_arrange_record(MSIINSERTVIEW *iv, MSIRECORD **values)
+static UINT arrange_record(MSIINSERTVIEW *iv, MSIRECORD **values)
 {
     MSIRECORD *padded;
     UINT col_count, val_count;
@@ -140,7 +140,7 @@ static UINT msi_arrange_record(MSIINSERTVIEW *iv, MSIRECORD **values)
     /* check to see if the columns are arranged already
      * to avoid unnecessary copying
      */
-    if (col_count == val_count && msi_columns_in_order(iv, col_count))
+    if (col_count == val_count && columns_in_order(iv, col_count))
         return ERROR_SUCCESS;
 
     padded = MSI_CreateRecord(col_count);
@@ -231,7 +231,7 @@ static UINT INSERT_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     if( !values )
         goto err;
 
-    r = msi_arrange_record( iv, &values );
+    r = arrange_record( iv, &values );
     if( r != ERROR_SUCCESS )
         goto err;
 

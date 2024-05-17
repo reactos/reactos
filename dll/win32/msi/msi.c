@@ -1365,7 +1365,7 @@ done:
     return r;
 }
 
-static UINT msi_copy_outval(LPWSTR val, LPWSTR out, LPDWORD size)
+static UINT copy_outval(const WCHAR *val, WCHAR *out, DWORD *size)
 {
     UINT r = ERROR_SUCCESS;
 
@@ -1490,7 +1490,7 @@ UINT WINAPI MsiGetProductInfoExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
         if (!val)
             val = wcsdup(L"");
 
-        r = msi_copy_outval(val, szValue, pcchValue);
+        r = copy_outval(val, szValue, pcchValue);
     }
     else if (!wcscmp( szProperty, INSTALLPROPERTY_TRANSFORMSW ) ||
              !wcscmp( szProperty, INSTALLPROPERTY_LANGUAGEW ) ||
@@ -1515,7 +1515,7 @@ UINT WINAPI MsiGetProductInfoExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
         if (!val)
             val = wcsdup(L"");
 
-        r = msi_copy_outval(val, szValue, pcchValue);
+        r = copy_outval(val, szValue, pcchValue);
     }
     else if (!wcscmp( szProperty, INSTALLPROPERTY_PRODUCTSTATEW ))
     {
@@ -1533,14 +1533,14 @@ UINT WINAPI MsiGetProductInfoExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
             else
                 val = wcsdup(L"1");
 
-            r = msi_copy_outval(val, szValue, pcchValue);
+            r = copy_outval(val, szValue, pcchValue);
             goto done;
         }
         else if (props && (val = reg_get_value(props, package, &type)))
         {
             free(val);
             val = wcsdup(L"5");
-            r = msi_copy_outval(val, szValue, pcchValue);
+            r = copy_outval(val, szValue, pcchValue);
             goto done;
         }
 
@@ -1549,7 +1549,7 @@ UINT WINAPI MsiGetProductInfoExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
         else
             goto done;
 
-        r = msi_copy_outval(val, szValue, pcchValue);
+        r = copy_outval(val, szValue, pcchValue);
     }
     else if (!wcscmp( szProperty, INSTALLPROPERTY_ASSIGNMENTTYPEW ))
     {
@@ -1558,7 +1558,7 @@ UINT WINAPI MsiGetProductInfoExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
 
         /* FIXME */
         val = wcsdup(L"");
-        r = msi_copy_outval(val, szValue, pcchValue);
+        r = copy_outval(val, szValue, pcchValue);
     }
     else
         r = ERROR_UNKNOWN_PROPERTY;
@@ -2082,7 +2082,7 @@ UINT WINAPI MsiQueryComponentStateA(LPCSTR szProductCode,
     return r;
 }
 
-static BOOL msi_comp_find_prod_key(LPCWSTR prodcode, MSIINSTALLCONTEXT context)
+static BOOL comp_find_prod_key(const WCHAR *prodcode, MSIINSTALLCONTEXT context)
 {
     UINT r;
     HKEY hkey = NULL;
@@ -2092,7 +2092,7 @@ static BOOL msi_comp_find_prod_key(LPCWSTR prodcode, MSIINSTALLCONTEXT context)
     return (r == ERROR_SUCCESS);
 }
 
-static BOOL msi_comp_find_package(LPCWSTR prodcode, MSIINSTALLCONTEXT context)
+static BOOL comp_find_package(const WCHAR *prodcode, MSIINSTALLCONTEXT context)
 {
     LPCWSTR package;
     HKEY hkey;
@@ -2116,9 +2116,8 @@ static BOOL msi_comp_find_package(LPCWSTR prodcode, MSIINSTALLCONTEXT context)
     return (res == ERROR_SUCCESS);
 }
 
-static UINT msi_comp_find_prodcode(WCHAR *squashed_pc,
-                                   MSIINSTALLCONTEXT context,
-                                   LPCWSTR comp, LPWSTR val, DWORD *sz)
+static UINT comp_find_prodcode(const WCHAR *squashed_pc, MSIINSTALLCONTEXT context, const WCHAR *comp, WCHAR *val,
+                               DWORD *sz)
 {
     HKEY hkey;
     LONG res;
@@ -2160,9 +2159,9 @@ UINT WINAPI MsiQueryComponentStateW(LPCWSTR szProductCode,
     if (!squash_guid( szProductCode, squashed_pc ))
         return ERROR_INVALID_PARAMETER;
 
-    found = msi_comp_find_prod_key(szProductCode, dwContext);
+    found = comp_find_prod_key(szProductCode, dwContext);
 
-    if (!msi_comp_find_package(szProductCode, dwContext))
+    if (!comp_find_package(szProductCode, dwContext))
     {
         if (found)
         {
@@ -2176,7 +2175,7 @@ UINT WINAPI MsiQueryComponentStateW(LPCWSTR szProductCode,
     *pdwState = INSTALLSTATE_UNKNOWN;
 
     sz = 0;
-    if (msi_comp_find_prodcode( squashed_pc, dwContext, szComponent, NULL, &sz ))
+    if (comp_find_prodcode( squashed_pc, dwContext, szComponent, NULL, &sz ))
         return ERROR_UNKNOWN_COMPONENT;
 
     if (sz == 0)
@@ -2187,7 +2186,7 @@ UINT WINAPI MsiQueryComponentStateW(LPCWSTR szProductCode,
         UINT r;
 
         if (!(val = malloc( sz ))) return ERROR_OUTOFMEMORY;
-        if ((r = msi_comp_find_prodcode( squashed_pc, dwContext, szComponent, val, &sz )))
+        if ((r = comp_find_prodcode( squashed_pc, dwContext, szComponent, val, &sz )))
         {
             free(val);
             return r;

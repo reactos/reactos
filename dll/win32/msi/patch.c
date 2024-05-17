@@ -315,7 +315,7 @@ UINT msi_check_patch_applicable( MSIPACKAGE *package, MSISUMMARYINFO *si )
     return ret;
 }
 
-static UINT msi_parse_patch_summary( MSISUMMARYINFO *si, MSIPATCHINFO **patch )
+static UINT parse_patch_summary( MSISUMMARYINFO *si, MSIPATCHINFO **patch )
 {
     MSIPATCHINFO *pi;
     UINT r = ERROR_SUCCESS;
@@ -831,7 +831,7 @@ static DWORD is_uninstallable( MSIDATABASE *db )
     return ret;
 }
 
-static UINT msi_apply_patch_db( MSIPACKAGE *package, MSIDATABASE *patch_db, MSIPATCHINFO *patch )
+static UINT apply_patch_db( MSIPACKAGE *package, MSIDATABASE *patch_db, MSIPATCHINFO *patch )
 {
     UINT i, r = ERROR_SUCCESS;
     WCHAR **substorage;
@@ -872,7 +872,7 @@ void msi_free_patchinfo( MSIPATCHINFO *patch )
     free( patch );
 }
 
-static UINT msi_apply_patch_package( MSIPACKAGE *package, const WCHAR *file )
+static UINT apply_patch_package( MSIPACKAGE *package, const WCHAR *file )
 {
     MSIDATABASE *patch_db = NULL;
     WCHAR localfile[MAX_PATH];
@@ -901,7 +901,7 @@ static UINT msi_apply_patch_package( MSIPACKAGE *package, const WCHAR *file )
         r = ERROR_SUCCESS;
         goto done;
     }
-    r = msi_parse_patch_summary( si, &patch );
+    r = parse_patch_summary( si, &patch );
     if ( r != ERROR_SUCCESS )
         goto done;
 
@@ -914,7 +914,7 @@ static UINT msi_apply_patch_package( MSIPACKAGE *package, const WCHAR *file )
     if (!(patch->filename = wcsdup( file ))) goto done;
     if (!(patch->localfile = wcsdup( localfile ))) goto done;
 
-    r = msi_apply_patch_db( package, patch_db, patch );
+    r = apply_patch_db( package, patch_db, patch );
     if (r != ERROR_SUCCESS) WARN("patch failed to apply %u\n", r);
 
 done:
@@ -940,7 +940,7 @@ UINT msi_apply_patches( MSIPACKAGE *package )
 
     patches = msi_split_string( patch_list, ';' );
     for (i = 0; patches && patches[i] && r == ERROR_SUCCESS; i++)
-        r = msi_apply_patch_package( package, patches[i] );
+        r = apply_patch_package( package, patches[i] );
 
     free( patches );
     free( patch_list );
@@ -1018,7 +1018,7 @@ UINT msi_apply_registered_patch( MSIPACKAGE *package, LPCWSTR patch_code )
         msiobj_release( &patch_db->hdr );
         return r;
     }
-    r = msi_parse_patch_summary( si, &patch_info );
+    r = parse_patch_summary( si, &patch_info );
     msiobj_release( &si->hdr );
     if (r != ERROR_SUCCESS)
     {
@@ -1034,7 +1034,7 @@ UINT msi_apply_registered_patch( MSIPACKAGE *package, LPCWSTR patch_code )
         msi_free_patchinfo( patch_info );
         return ERROR_OUTOFMEMORY;
     }
-    r = msi_apply_patch_db( package, patch_db, patch_info );
+    r = apply_patch_db( package, patch_db, patch_info );
     msiobj_release( &patch_db->hdr );
     if (r != ERROR_SUCCESS)
     {

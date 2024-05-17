@@ -888,8 +888,8 @@ static UINT set_prop( MSISUMMARYINFO *si, UINT uiProperty, UINT type,
     return ERROR_SUCCESS;
 }
 
-static UINT msi_set_prop( MSISUMMARYINFO *si, UINT uiProperty, UINT uiDataType,
-                          INT iValue, FILETIME *pftValue, awcstring *str )
+static UINT suminfo_set_prop( MSISUMMARYINFO *si, UINT uiProperty, UINT uiDataType, INT iValue, FILETIME *pftValue,
+                              awcstring *str )
 {
     UINT type = get_type( uiProperty );
     if( type == VT_EMPTY || type != uiDataType )
@@ -929,7 +929,7 @@ UINT WINAPI MsiSummaryInfoSetPropertyW( MSIHANDLE handle, UINT uiProperty, UINT 
     str.unicode = TRUE;
     str.str.w = szValue;
 
-    ret = msi_set_prop( si, uiProperty, uiDataType, iValue, pftValue, &str );
+    ret = suminfo_set_prop( si, uiProperty, uiDataType, iValue, pftValue, &str );
     msiobj_release( &si->hdr );
     return ret;
 }
@@ -959,7 +959,7 @@ UINT WINAPI MsiSummaryInfoSetPropertyA( MSIHANDLE handle, UINT uiProperty, UINT 
     str.unicode = FALSE;
     str.str.a = szValue;
 
-    ret = msi_set_prop( si, uiProperty, uiDataType, iValue, pftValue, &str );
+    ret = suminfo_set_prop( si, uiProperty, uiDataType, iValue, pftValue, &str );
     msiobj_release( &si->hdr );
     return ret;
 }
