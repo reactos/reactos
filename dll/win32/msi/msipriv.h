@@ -783,7 +783,7 @@ extern string_table *msi_load_string_table( IStorage *stg, UINT *bytes_per_strre
 extern UINT msi_save_string_table( const string_table *st, IStorage *storage, UINT *bytes_per_strref ) DECLSPEC_HIDDEN;
 extern UINT msi_get_string_table_codepage( const string_table *st ) DECLSPEC_HIDDEN;
 extern UINT msi_set_string_table_codepage( string_table *st, UINT codepage ) DECLSPEC_HIDDEN;
-extern WCHAR *msi_strdupW( const WCHAR *value, int len ) DECLSPEC_HIDDEN;
+extern WCHAR *msi_strdupW( const WCHAR *value, int len ) __WINE_DEALLOC(free) __WINE_MALLOC DECLSPEC_HIDDEN;
 
 extern BOOL TABLE_Exists( MSIDATABASE *db, LPCWSTR name ) DECLSPEC_HIDDEN;
 extern MSICONDITION MSI_DatabaseIsTablePersistent( MSIDATABASE *db, LPCWSTR table ) DECLSPEC_HIDDEN;
@@ -854,7 +854,7 @@ extern UINT copy_remote_record(const struct wire_record *rec, MSIHANDLE handle) 
 
 /* stream internals */
 extern void enum_stream_names( IStorage *stg ) DECLSPEC_HIDDEN;
-extern LPWSTR encode_streamname(BOOL bTable, LPCWSTR in) DECLSPEC_HIDDEN;
+extern WCHAR *encode_streamname(BOOL is_table, const WCHAR *in) __WINE_DEALLOC(free) __WINE_MALLOC DECLSPEC_HIDDEN;
 extern BOOL decode_streamname(LPCWSTR in, LPWSTR out) DECLSPEC_HIDDEN;
 
 /* database internals */
@@ -942,7 +942,7 @@ extern UINT MSIREG_OpenClassesUpgradeCodesKey(LPCWSTR szUpgradeCode, HKEY* key, 
 extern UINT MSIREG_DeleteLocalClassesProductKey(LPCWSTR szProductCode) DECLSPEC_HIDDEN;
 extern UINT MSIREG_DeleteLocalClassesFeaturesKey(LPCWSTR szProductCode) DECLSPEC_HIDDEN;
 extern UINT msi_locate_product(LPCWSTR szProduct, MSIINSTALLCONTEXT *context) DECLSPEC_HIDDEN;
-extern LPWSTR msi_reg_get_val_str( HKEY hkey, LPCWSTR name ) DECLSPEC_HIDDEN;
+extern WCHAR *msi_reg_get_val_str( HKEY hkey, const WCHAR *name ) __WINE_DEALLOC(free) __WINE_MALLOC DECLSPEC_HIDDEN;
 extern BOOL msi_reg_get_val_dword( HKEY hkey, LPCWSTR name, DWORD *val) DECLSPEC_HIDDEN;
 
 extern DWORD msi_version_str_to_dword(LPCWSTR p) DECLSPEC_HIDDEN;
@@ -963,9 +963,10 @@ extern void msi_dialog_unregister_class( void ) DECLSPEC_HIDDEN;
 /* summary information */
 extern UINT msi_get_suminfo( IStorage *stg, UINT uiUpdateCount, MSISUMMARYINFO **si ) DECLSPEC_HIDDEN;
 extern UINT msi_get_db_suminfo( MSIDATABASE *db, UINT uiUpdateCount, MSISUMMARYINFO **si ) DECLSPEC_HIDDEN;
-extern LPWSTR msi_suminfo_dup_string( MSISUMMARYINFO *si, UINT uiProperty ) DECLSPEC_HIDDEN;
+extern WCHAR *msi_suminfo_dup_string( MSISUMMARYINFO *si,
+                                      UINT property ) __WINE_DEALLOC(free) __WINE_MALLOC DECLSPEC_HIDDEN;
 extern INT msi_suminfo_get_int32( MSISUMMARYINFO *si, UINT uiProperty ) DECLSPEC_HIDDEN;
-extern LPWSTR msi_get_suminfo_product( IStorage *stg ) DECLSPEC_HIDDEN;
+extern WCHAR *msi_get_suminfo_product( IStorage *stg ) __WINE_DEALLOC(free) __WINE_MALLOC DECLSPEC_HIDDEN;
 extern UINT msi_add_suminfo( MSIDATABASE *db, LPWSTR **records, int num_records, int num_columns ) DECLSPEC_HIDDEN;
 extern UINT msi_export_suminfo( MSIDATABASE *db, HANDLE handle ) DECLSPEC_HIDDEN;
 extern UINT msi_load_suminfo_properties( MSIPACKAGE *package ) DECLSPEC_HIDDEN;
@@ -1021,27 +1022,30 @@ extern UINT ACTION_MsiUnpublishAssemblies(MSIPACKAGE *package) DECLSPEC_HIDDEN;
 
 /* Helpers */
 extern DWORD deformat_string(MSIPACKAGE *package, LPCWSTR ptr, WCHAR** data ) DECLSPEC_HIDDEN;
-extern WCHAR *msi_dup_record_field(MSIRECORD *row, INT index) DECLSPEC_HIDDEN;
-extern LPWSTR msi_dup_property( MSIDATABASE *db, LPCWSTR prop ) DECLSPEC_HIDDEN;
+extern WCHAR *msi_dup_record_field( MSIRECORD *row, INT index ) __WINE_DEALLOC(free) __WINE_MALLOC DECLSPEC_HIDDEN;
+extern WCHAR *msi_dup_property( MSIDATABASE *db, const WCHAR *prop ) __WINE_DEALLOC(free) __WINE_MALLOC DECLSPEC_HIDDEN;
 extern UINT msi_set_property( MSIDATABASE *, const WCHAR *, const WCHAR *, int ) DECLSPEC_HIDDEN;
 extern UINT msi_get_property( MSIDATABASE *, LPCWSTR, LPWSTR, LPDWORD ) DECLSPEC_HIDDEN;
 extern int msi_get_property_int( MSIDATABASE *package, LPCWSTR prop, int def ) DECLSPEC_HIDDEN;
-extern WCHAR *msi_resolve_source_folder(MSIPACKAGE *package, const WCHAR *name, MSIFOLDER **folder) DECLSPEC_HIDDEN;
+extern WCHAR *msi_resolve_source_folder(MSIPACKAGE *package, const WCHAR *name,
+                                        MSIFOLDER **folder) __WINE_DEALLOC(free) __WINE_MALLOC DECLSPEC_HIDDEN;
 extern void msi_resolve_target_folder(MSIPACKAGE *package, const WCHAR *name, BOOL load_prop) DECLSPEC_HIDDEN;
-extern WCHAR *msi_normalize_path(const WCHAR *) DECLSPEC_HIDDEN;
-extern WCHAR *msi_resolve_file_source(MSIPACKAGE *package, MSIFILE *file) DECLSPEC_HIDDEN;
+extern WCHAR *msi_normalize_path(const WCHAR *) __WINE_DEALLOC(free) __WINE_MALLOC DECLSPEC_HIDDEN;
+extern WCHAR *msi_resolve_file_source(MSIPACKAGE *package,
+                                      MSIFILE *file) __WINE_DEALLOC(free) __WINE_MALLOC DECLSPEC_HIDDEN;
 extern const WCHAR *msi_get_target_folder(MSIPACKAGE *package, const WCHAR *name) DECLSPEC_HIDDEN;
 extern void msi_reset_source_folders( MSIPACKAGE *package ) DECLSPEC_HIDDEN;
 extern MSICOMPONENT *msi_get_loaded_component(MSIPACKAGE *package, const WCHAR *Component) DECLSPEC_HIDDEN;
 extern MSIFEATURE *msi_get_loaded_feature(MSIPACKAGE *package, const WCHAR *Feature) DECLSPEC_HIDDEN;
 extern MSIFILE *msi_get_loaded_file(MSIPACKAGE *package, const WCHAR *file) DECLSPEC_HIDDEN;
 extern MSIFOLDER *msi_get_loaded_folder(MSIPACKAGE *package, const WCHAR *dir) DECLSPEC_HIDDEN;
-extern WCHAR *msi_create_temp_file(MSIDATABASE *db) DECLSPEC_HIDDEN;
+extern WCHAR *msi_create_temp_file(MSIDATABASE *db) __WINE_DEALLOC(free) __WINE_MALLOC DECLSPEC_HIDDEN;
 extern void msi_free_action_script(MSIPACKAGE *package, UINT script) DECLSPEC_HIDDEN;
-extern WCHAR *msi_build_icon_path(MSIPACKAGE *, const WCHAR *) DECLSPEC_HIDDEN;
-extern WCHAR * WINAPIV msi_build_directory_name(DWORD , ...) DECLSPEC_HIDDEN;
+extern WCHAR *msi_build_icon_path(MSIPACKAGE *, const WCHAR *) __WINE_DEALLOC(free) __WINE_MALLOC DECLSPEC_HIDDEN;
+extern WCHAR * WINAPIV msi_build_directory_name(DWORD , ...) __WINE_DEALLOC(free) __WINE_MALLOC DECLSPEC_HIDDEN;
 extern void msi_reduce_to_long_filename(WCHAR *) DECLSPEC_HIDDEN;
-extern WCHAR *msi_create_component_advertise_string(MSIPACKAGE *, MSICOMPONENT *, const WCHAR *) DECLSPEC_HIDDEN;
+extern WCHAR *msi_create_component_advertise_string(MSIPACKAGE *, MSICOMPONENT *,
+                                                    const WCHAR *) __WINE_DEALLOC(free) __WINE_MALLOC DECLSPEC_HIDDEN;
 extern void ACTION_UpdateComponentStates(MSIPACKAGE *package, MSIFEATURE *feature) DECLSPEC_HIDDEN;
 extern UINT msi_register_unique_action(MSIPACKAGE *, const WCHAR *) DECLSPEC_HIDDEN;
 extern BOOL msi_action_is_unique(const MSIPACKAGE *, const WCHAR *) DECLSPEC_HIDDEN;
@@ -1055,13 +1059,13 @@ extern UINT msi_uninstall_assembly(MSIPACKAGE *, MSICOMPONENT *) DECLSPEC_HIDDEN
 extern void msi_destroy_assembly_caches(MSIPACKAGE *) DECLSPEC_HIDDEN;
 extern BOOL msi_is_global_assembly(MSICOMPONENT *) DECLSPEC_HIDDEN;
 extern IAssemblyEnum *msi_create_assembly_enum(MSIPACKAGE *, const WCHAR *) DECLSPEC_HIDDEN;
-extern WCHAR *msi_get_assembly_path(MSIPACKAGE *, const WCHAR *) DECLSPEC_HIDDEN;
+extern WCHAR *msi_get_assembly_path(MSIPACKAGE *, const WCHAR *) __WINE_DEALLOC(free) __WINE_MALLOC DECLSPEC_HIDDEN;
 extern WCHAR **msi_split_string(const WCHAR *, WCHAR) DECLSPEC_HIDDEN;
 extern UINT msi_set_original_database_property(MSIDATABASE *, const WCHAR *) DECLSPEC_HIDDEN;
-extern WCHAR *msi_get_error_message(MSIDATABASE *, int) DECLSPEC_HIDDEN;
+extern WCHAR *msi_get_error_message(MSIDATABASE *, int) __WINE_DEALLOC(free) __WINE_MALLOC DECLSPEC_HIDDEN;
 extern UINT msi_strncpyWtoA(const WCHAR *str, int len, char *buf, DWORD *sz, BOOL remote) DECLSPEC_HIDDEN;
 extern UINT msi_strncpyW(const WCHAR *str, int len, WCHAR *buf, DWORD *sz) DECLSPEC_HIDDEN;
-extern WCHAR *msi_get_package_code(MSIDATABASE *db) DECLSPEC_HIDDEN;
+extern WCHAR *msi_get_package_code(MSIDATABASE *db) __WINE_DEALLOC(free) __WINE_MALLOC DECLSPEC_HIDDEN;
 
 /* wrappers for filesystem functions */
 static inline void msi_disable_fs_redirection( MSIPACKAGE *package )
@@ -1086,7 +1090,8 @@ extern BOOL msi_create_full_path( MSIPACKAGE *, const WCHAR * ) DECLSPEC_HIDDEN;
 extern DWORD msi_get_disk_file_size( MSIPACKAGE *, const WCHAR * ) DECLSPEC_HIDDEN;
 extern VS_FIXEDFILEINFO *msi_get_disk_file_version( MSIPACKAGE *, const WCHAR * ) DECLSPEC_HIDDEN;
 extern UINT msi_get_filehash( MSIPACKAGE *, const WCHAR *, MSIFILEHASHINFO * ) DECLSPEC_HIDDEN;
-extern WCHAR *msi_get_font_file_version( MSIPACKAGE *, const WCHAR * ) DECLSPEC_HIDDEN;
+extern WCHAR *msi_get_font_file_version( MSIPACKAGE *,
+                                         const WCHAR * ) __WINE_DEALLOC(free) __WINE_MALLOC DECLSPEC_HIDDEN;
 
 /* media */
 
