@@ -1088,7 +1088,7 @@ UINT WINAPI MsiSourceListAddSourceExW( const WCHAR *szProduct, const WCHAR *szUs
 
     postfix = (dwOptions & MSISOURCETYPE_NETWORK) ? L"\\" : L"/";
     if (szSource[lstrlenW(szSource) - 1] == *postfix)
-        source = strdupW(szSource);
+        source = wcsdup(szSource);
     else
     {
         size = lstrlenW(szSource) + 2;
@@ -1125,7 +1125,7 @@ UINT WINAPI MsiSourceListAddSourceExW( const WCHAR *szProduct, const WCHAR *szUs
             goto done;
         }
 
-        info->path = strdupW(source);
+        info->path = wcsdup(source);
         lstrcpyW(info->szIndex, name);
         info->index = dwIndex;
         add_source_to_list(&sourcelist, info, &index);

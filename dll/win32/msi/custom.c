@@ -105,7 +105,7 @@ UINT msi_schedule_action( MSIPACKAGE *package, UINT script, const WCHAR *action 
                                           package->script_actions_count[script] * sizeof(WCHAR *) );
     else newbuf = msi_alloc( sizeof(WCHAR *) );
 
-    newbuf[count] = strdupW( action );
+    newbuf[count] = wcsdup( action );
     package->script_actions[script] = newbuf;
     return ERROR_SUCCESS;
 }
@@ -123,7 +123,7 @@ UINT msi_register_unique_action( MSIPACKAGE *package, const WCHAR *action )
                                           package->unique_actions_count * sizeof(WCHAR *) );
     else newbuf = msi_alloc( sizeof(WCHAR *) );
 
-    newbuf[count] = strdupW( action );
+    newbuf[count] = wcsdup( action );
     package->unique_actions = newbuf;
     return ERROR_SUCCESS;
 }
@@ -185,7 +185,7 @@ static LPWSTR msi_get_deferred_action(LPCWSTR action, LPCWSTR actiondata,
     DWORD len;
 
     if (!actiondata)
-        return strdupW(action);
+        return wcsdup(action);
 
     len = lstrlenW(action) + lstrlenW(actiondata) +
           lstrlenW(usersid) + lstrlenW(prodcode) +
@@ -226,7 +226,7 @@ WCHAR *msi_create_temp_file( MSIDATABASE *db )
         {
             GetTempPathW( MAX_PATH, tmp );
         }
-        if (!(db->tempfolder = strdupW( tmp ))) return NULL;
+        if (!(db->tempfolder = wcsdup( tmp ))) return NULL;
     }
 
     if ((ret = msi_alloc( (lstrlenW( db->tempfolder ) + 20) * sizeof(WCHAR) )))
@@ -274,7 +274,7 @@ static MSIBINARY *create_temp_binary(MSIPACKAGE *package, LPCWSTR source)
     CloseHandle( file );
     if (r != ERROR_SUCCESS) goto error;
 
-    binary->source = strdupW( source );
+    binary->source = wcsdup( source );
     binary->tmpfile = tmpfile;
     list_add_tail( &package->binaries, &binary->entry );
 
@@ -311,7 +311,7 @@ static void file_running_action(MSIPACKAGE* package, HANDLE Handle,
 
     action->handle = Handle;
     action->process = process;
-    action->name = strdupW(name);
+    action->name = wcsdup(name);
 
     list_add_tail( &package->RunningActions, &action->entry );
 }
@@ -593,35 +593,12 @@ UINT CDECL __wine_msi_call_dll_function(DWORD client_pid, const GUID *guid)
     return r;
 }
 
-static HANDLE get_admin_token(void)
-{
-    TOKEN_ELEVATION_TYPE type;
-    TOKEN_LINKED_TOKEN linked;
-    DWORD size;
-
-#ifdef __REACTOS__
-#ifndef GetCurrentThreadEffectiveToken
-#define GetCurrentProcessToken() ((HANDLE)~(ULONG_PTR)3)
-#define GetCurrentThreadEffectiveToken() GetCurrentProcessToken()
-#endif
-#endif
-
-    if (!GetTokenInformation(GetCurrentThreadEffectiveToken(), TokenElevationType, &type, sizeof(type), &size)
-            || type == TokenElevationTypeFull)
-        return NULL;
-
-    if (!GetTokenInformation(GetCurrentThreadEffectiveToken(), TokenLinkedToken, &linked, sizeof(linked), &size))
-        return NULL;
-    return linked.LinkedToken;
-}
-
 static DWORD custom_start_server(MSIPACKAGE *package, DWORD arch)
 {
     WCHAR path[MAX_PATH], cmdline[MAX_PATH + 23];
     PROCESS_INFORMATION pi = {0};
     STARTUPINFOW si = {0};
     WCHAR buffer[24];
-    HANDLE token;
     void *cookie;
     HANDLE pipe;
 
@@ -643,18 +620,14 @@ static DWORD custom_start_server(MSIPACKAGE *package, DWORD arch)
     lstrcatW(path, L"\\msiexec.exe");
     swprintf(cmdline, ARRAY_SIZE(cmdline), L"%s -Embedding %d", path, GetCurrentProcessId());
 
-    token = get_admin_token();
-
     if (is_wow64 && arch == SCS_64BIT_BINARY)
     {
         Wow64DisableWow64FsRedirection(&cookie);
-        CreateProcessAsUserW(token, path, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+        CreateProcessW(path, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
         Wow64RevertWow64FsRedirection(cookie);
     }
     else
-        CreateProcessAsUserW(token, path, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
-
-    if (token) CloseHandle(token);
+        CreateProcessW(path, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
 
     CloseHandle(pi.hThread);
 
@@ -802,9 +775,9 @@ static msi_custom_action_info *do_msidbCustomActionTypeDll(
     msiobj_addref( &package->hdr );
     info->package = package;
     info->type = type;
-    info->target = strdupW( target );
-    info->source = strdupW( source );
-    info->action = strdupW( action );
+    info->target = wcsdup( target );
+    info->source = wcsdup( source );
+    info->action = wcsdup( action );
     CoCreateGuid( &info->guid );
 
     EnterCriticalSection( &msi_custom_action_cs );
@@ -1249,9 +1222,9 @@ static msi_custom_action_info *do_msidbCustomActionTypeScript(
     msiobj_addref( &package->hdr );
     info->package = package;
     info->type = type;
-    info->target = strdupW( function );
-    info->source = strdupW( script );
-    info->action = strdupW( action );
+    info->target = wcsdup( function );
+    info->source = wcsdup( script );
+    info->action = wcsdup( action );
     CoCreateGuid( &info->guid );
 
     EnterCriticalSection( &msi_custom_action_cs );
@@ -1663,10 +1636,10 @@ UINT __cdecl s_remote_GetActionInfo(const GUID *guid, WCHAR **name, int *type, W
     if (!info)
         return ERROR_INVALID_DATA;
 
-    *name = strdupW(info->action);
+    *name = wcsdup(info->action);
     *type = info->type;
     *hinst = alloc_msihandle(&info->package->hdr);
-    *dll = strdupW(info->source);
+    *dll = wcsdup(info->source);
     *func = strdupWtoA(info->target);
 
     return ERROR_SUCCESS;

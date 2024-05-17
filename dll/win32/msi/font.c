@@ -152,7 +152,7 @@ static WCHAR *load_ttf_name_id( MSIPACKAGE *package, const WCHAR *filename, DWOR
                 goto end;
             }
             for (i = 0; i < dwRead / sizeof(WCHAR); i++) buf[i] = SWAPWORD(buf[i]);
-            ret = strdupW(buf);
+            ret = wcsdup(buf);
             msi_free(buf);
             break;
         }
@@ -260,7 +260,7 @@ static UINT ITERATE_RegisterFonts(MSIRECORD *row, LPVOID param)
 
     /* the UI chunk */
     uirow = MSI_CreateRecord( 1 );
-    uipath = strdupW( file->TargetPath );
+    uipath = wcsdup( file->TargetPath );
     p = wcsrchr(uipath,'\\');
     if (p) p++;
     else p = uipath;
@@ -341,7 +341,7 @@ static UINT ITERATE_UnregisterFonts( MSIRECORD *row, LPVOID param )
 
     /* the UI chunk */
     uirow = MSI_CreateRecord( 1 );
-    uipath = strdupW( file->TargetPath );
+    uipath = wcsdup( file->TargetPath );
     p = wcsrchr( uipath,'\\' );
     if (p) p++;
     else p = uipath;

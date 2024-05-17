@@ -3419,7 +3419,7 @@ UINT msi_table_apply_transform( MSIDATABASE *db, IStorage *stg, int err_cond )
 
         list_add_tail( &transforms, &transform->entry );
 
-        transform->name = strdupW( name + 1 );
+        transform->name = wcsdup( name + 1 );
 
         if ( !wcscmp( transform->name, L"_Tables" ) )
             tables = transform;

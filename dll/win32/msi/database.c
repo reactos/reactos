@@ -262,7 +262,7 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     else
         lstrcpyW( path, save_path );
 
-    db->path = strdupW( path );
+    db->path = wcsdup( path );
     db->media_transform_offset = MSI_INITIAL_MEDIA_TRANSFORM_OFFSET;
     db->media_transform_disk_id = MSI_INITIAL_MEDIA_TRANSFORM_DISKID;
 
@@ -272,7 +272,7 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     db->storage = stg;
     db->mode = mode;
     if (created)
-        db->deletefile = strdupW( szDBPath );
+        db->deletefile = wcsdup( szDBPath );
     list_init( &db->tables );
     list_init( &db->transforms );
 
@@ -1542,10 +1542,10 @@ static UINT msi_get_table_labels(MSIDATABASE *db, LPCWSTR table, LPWSTR **labels
         goto end;
     }
 
-    (*labels)[0] = strdupW(table);
+    (*labels)[0] = wcsdup(table);
     for (i=1; i<=count; i++ )
     {
-        (*labels)[i] = strdupW(MSI_RecordGetString(prec, i));
+        (*labels)[i] = wcsdup(MSI_RecordGetString(prec, i));
     }
 
 end:
@@ -1572,7 +1572,7 @@ static UINT msi_get_query_columns(MSIQUERY *query, LPWSTR **columns, DWORD *numc
 
     for (i=1; i<=count; i++ )
     {
-        (*columns)[i-1] = strdupW(MSI_RecordGetString(prec, i));
+        (*columns)[i-1] = wcsdup(MSI_RecordGetString(prec, i));
     }
 
     *numcolumns = count;
@@ -1602,7 +1602,7 @@ static UINT msi_get_query_types(MSIQUERY *query, LPWSTR **types, DWORD *numtypes
     *numtypes = count;
     for (i=1; i<=count; i++ )
     {
-        (*types)[i-1] = strdupW(MSI_RecordGetString(prec, i));
+        (*types)[i-1] = wcsdup(MSI_RecordGetString(prec, i));
     }
 
 end:
@@ -1689,7 +1689,7 @@ static UINT msi_get_merge_table (MSIDATABASE *db, LPCWSTR name, MERGETABLE **pta
 
     list_init(&table->rows);
 
-    table->name = strdupW(name);
+    table->name = wcsdup(name);
     table->numconflicts = 0;
 
     msiobj_release(&mergeview->hdr);

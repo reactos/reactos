@@ -169,7 +169,7 @@ static WCHAR *search_file( MSIPACKAGE *package, WCHAR *path, MSISIGNATURE *sig )
 
         attr = msi_get_file_attributes( package, path );
         if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY))
-            return strdupW(path);
+            return wcsdup(path);
 
         return NULL;
     }
@@ -180,7 +180,7 @@ static WCHAR *search_file( MSIPACKAGE *package, WCHAR *path, MSISIGNATURE *sig )
 
     size = msi_get_file_version_info( package, path, 0, NULL );
     if (!size)
-        return strdupW(path);
+        return wcsdup(path);
 
     buffer = msi_alloc(size);
     if (!buffer)
@@ -213,7 +213,7 @@ static WCHAR *search_file( MSIPACKAGE *package, WCHAR *path, MSISIGNATURE *sig )
             goto done;
     }
 
-    val = strdupW(path);
+    val = wcsdup(path);
 
 done:
     msi_free(buffer);
@@ -276,7 +276,7 @@ static UINT search_components( MSIPACKAGE *package, WCHAR **appValue, MSISIGNATU
         else
             PathAddBackslashW(path);
 
-        *appValue = strdupW(path);
+        *appValue = wcsdup(path);
     }
     else if (sigpresent)
     {
@@ -285,7 +285,7 @@ static UINT search_components( MSIPACKAGE *package, WCHAR **appValue, MSISIGNATU
 
         attr = msi_get_file_attributes( package, path );
         if (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY))
-            *appValue = strdupW(path);
+            *appValue = wcsdup(path);
     }
 
 done:
@@ -474,7 +474,7 @@ static LPWSTR get_ini_field(LPWSTR buf, int field)
     int i = 1;
 
     if (field == 0)
-        return strdupW(buf);
+        return wcsdup(buf);
 
     beg = buf;
     while ((end = wcschr(beg, ',')) && i < field)
@@ -491,7 +491,7 @@ static LPWSTR get_ini_field(LPWSTR buf, int field)
         end = beg + lstrlenW(beg);
 
     *end = '\0';
-    return strdupW(beg);
+    return wcsdup(beg);
 }
 
 static UINT search_ini( MSIPACKAGE *package, WCHAR **appValue, MSISIGNATURE *sig )
@@ -590,7 +590,7 @@ static void expand_any_path( MSIPACKAGE *package, WCHAR *src, WCHAR *dst, size_t
 static LANGID *parse_languages( const WCHAR *languages, DWORD *num_ids )
 {
     UINT i, count = 1;
-    WCHAR *str = strdupW( languages ), *p, *q;
+    WCHAR *str = wcsdup( languages ), *p, *q;
     LANGID *ret;
 
     if (!str) return NULL;
@@ -851,7 +851,7 @@ static UINT check_directory( MSIPACKAGE *package, const WCHAR *dir, WCHAR **appV
     if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY))
     {
         TRACE("directory exists, returning %s\n", debugstr_w(dir));
-        *appValue = strdupW(dir);
+        *appValue = wcsdup(dir);
     }
 
     return ERROR_SUCCESS;

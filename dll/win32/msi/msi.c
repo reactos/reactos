@@ -1080,7 +1080,7 @@ static WCHAR *reg_get_value( HKEY hkey, const WCHAR *name, DWORD *type )
 
         if (!msi_reg_get_val_dword( hkey, name, &val )) return NULL;
         swprintf( temp, ARRAY_SIZE(temp), L"%u", val );
-        return strdupW( temp );
+        return wcsdup( temp );
     }
 
     ERR( "unhandled value type %lu\n", *type );
@@ -1210,7 +1210,7 @@ static UINT MSI_GetProductInfo(LPCWSTR szProduct, LPCWSTR szAttribute,
             {
                 unsquash_guid(val, packagecode);
                 msi_free(val);
-                val = strdupW(packagecode);
+                val = wcsdup(packagecode);
             }
         }
     }
@@ -1488,7 +1488,7 @@ UINT WINAPI MsiGetProductInfoExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
 
         val = reg_get_value(props, szProperty, &type);
         if (!val)
-            val = strdupW(L"");
+            val = wcsdup(L"");
 
         r = msi_copy_outval(val, szValue, pcchValue);
     }
@@ -1513,7 +1513,7 @@ UINT WINAPI MsiGetProductInfoExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
 
         val = reg_get_value(hkey, szProperty, &type);
         if (!val)
-            val = strdupW(L"");
+            val = wcsdup(L"");
 
         r = msi_copy_outval(val, szValue, pcchValue);
     }
@@ -1528,10 +1528,10 @@ UINT WINAPI MsiGetProductInfoExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
                     goto done;
 
                 msi_free(val);
-                val = strdupW(L"5");
+                val = wcsdup(L"5");
             }
             else
-                val = strdupW(L"1");
+                val = wcsdup(L"1");
 
             r = msi_copy_outval(val, szValue, pcchValue);
             goto done;
@@ -1539,13 +1539,13 @@ UINT WINAPI MsiGetProductInfoExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
         else if (props && (val = reg_get_value(props, package, &type)))
         {
             msi_free(val);
-            val = strdupW(L"5");
+            val = wcsdup(L"5");
             r = msi_copy_outval(val, szValue, pcchValue);
             goto done;
         }
 
         if (prod || managed)
-            val = strdupW(L"1");
+            val = wcsdup(L"1");
         else
             goto done;
 
@@ -1557,7 +1557,7 @@ UINT WINAPI MsiGetProductInfoExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
             goto done;
 
         /* FIXME */
-        val = strdupW(L"");
+        val = wcsdup(L"");
         r = msi_copy_outval(val, szValue, pcchValue);
     }
     else
@@ -1760,7 +1760,7 @@ UINT WINAPI MsiGetPatchInfoExW(LPCWSTR szPatchCode, LPCWSTR szProductCode,
 
     val = reg_get_value(datakey, szProperty, &type);
     if (!val)
-        val = strdupW(L"");
+        val = wcsdup(L"");
 
     r = ERROR_SUCCESS;
 
@@ -1915,7 +1915,7 @@ UINT WINAPI MsiEnableLogW( DWORD dwLogMode, const WCHAR *szLogFile, DWORD attrib
                            FILE_ATTRIBUTE_NORMAL, NULL);
         if (file != INVALID_HANDLE_VALUE)
         {
-            gszLogFile = strdupW(szLogFile);
+            gszLogFile = wcsdup(szLogFile);
             CloseHandle(file);
         }
         else ERR( "unable to enable log %s (%lu)\n", debugstr_w(szLogFile), GetLastError() );

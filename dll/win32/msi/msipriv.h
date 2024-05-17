@@ -1188,14 +1188,4 @@ static inline LPWSTR strdupAtoW( LPCSTR str )
     return ret;
 }
 
-static inline LPWSTR strdupW( LPCWSTR src )
-{
-    LPWSTR dest;
-    if (!src) return NULL;
-    dest = msi_alloc( (lstrlenW(src)+1)*sizeof(WCHAR) );
-    if (dest)
-        lstrcpyW(dest, src);
-    return dest;
-}
-
 #endif /* __WINE_MSI_PRIVATE__ */

@@ -994,7 +994,7 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db )
         package->LastActionTemplate = NULL;
         package->LastActionResult = MSI_NULL_INTEGER;
         package->WordCount = 0;
-        package->PackagePath = strdupW( db->path );
+        package->PackagePath = wcsdup( db->path );
 
         create_temp_property_table( package );
         msi_clone_properties( package->db );
@@ -1232,7 +1232,7 @@ static WCHAR *get_property( MSIDATABASE *db, const WCHAR *prop )
     }
     if (MSI_ViewFetch( view, &rec ) == ERROR_SUCCESS)
     {
-        ret = strdupW( MSI_RecordGetString( rec, 1 ) );
+        ret = wcsdup( MSI_RecordGetString( rec, 1 ) );
         msiobj_release( &rec->hdr );
     }
     MSI_ViewClose( view );
@@ -1494,7 +1494,7 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, DWORD dwOptions, MSIPACKAGE **pPackage)
     package = MSI_CreatePackage( db );
     msiobj_release( &db->hdr );
     if (!package) return ERROR_INSTALL_PACKAGE_INVALID;
-    package->localfile = strdupW( localfile );
+    package->localfile = wcsdup( localfile );
     package->delete_on_close = delete_on_close;
 
     r = msi_get_suminfo( db->storage, 0, &si );
@@ -1955,7 +1955,7 @@ INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType, MSIREC
                 template_rec = msi_dup_record_field(record, 0);
 
             template_prefix = msi_get_error_message(package->db, eMessageType >> 24);
-            if (!template_prefix) template_prefix = strdupW(L"");
+            if (!template_prefix) template_prefix = wcsdup(L"");
 
             if (!template_rec)
             {
@@ -1987,7 +1987,7 @@ INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType, MSIREC
         msi_free(package->LastAction);
         msi_free(package->LastActionTemplate);
         package->LastAction = msi_dup_record_field(record, 1);
-        if (!package->LastAction) package->LastAction = strdupW(L"");
+        if (!package->LastAction) package->LastAction = wcsdup(L"");
         package->LastActionTemplate = msi_dup_record_field(record, 3);
         break;
     }
@@ -2639,7 +2639,7 @@ UINT msi_package_add_info(MSIPACKAGE *package, DWORD context, DWORD options,
     info->context = context;
     info->options = options;
     info->property = property;
-    info->value = strdupW(value);
+    info->value = wcsdup(value);
     list_add_head(&package->sourcelist_info, &info->entry);
 
     return ERROR_SUCCESS;
@@ -2662,8 +2662,8 @@ UINT msi_package_add_media_disk(MSIPACKAGE *package, DWORD context, DWORD option
     disk->context = context;
     disk->options = options;
     disk->disk_id = disk_id;
-    disk->volume_label = strdupW(volume_label);
-    disk->disk_prompt = strdupW(disk_prompt);
+    disk->volume_label = wcsdup(volume_label);
+    disk->disk_prompt = wcsdup(disk_prompt);
     list_add_head(&package->sourcelist_media, &disk->entry);
 
     return ERROR_SUCCESS;

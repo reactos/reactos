@@ -225,7 +225,7 @@ static LPWSTR msi_dialog_dup_property( msi_dialog *dialog, LPCWSTR property, BOO
         prop = msi_dup_property( dialog->package->db, property );
 
     if (!prop)
-        prop = strdupW( property );
+        prop = wcsdup( property );
 
     return prop;
 }
@@ -402,8 +402,8 @@ static msi_control *dialog_create_window( msi_dialog *dialog, MSIRECORD *rec, DW
     control->hIcon = NULL;
     control->hImageList = NULL;
     control->hDll = NULL;
-    control->tabnext = strdupW( MSI_RecordGetString( rec, 11) );
-    control->type = strdupW( MSI_RecordGetString( rec, 3 ) );
+    control->tabnext = wcsdup( MSI_RecordGetString( rec, 11 ) );
+    control->type = wcsdup( MSI_RecordGetString( rec, 3 ) );
     control->progress_current = 0;
     control->progress_max = 100;
     control->progress_backwards = FALSE;
@@ -446,7 +446,7 @@ static LPWSTR msi_dialog_get_uitext( msi_dialog *dialog, LPCWSTR key )
 
     rec = MSI_QueryGetRecord( dialog->package->db, L"SELECT * FROM `UIText` WHERE `Key` = '%s'", key );
     if (!rec) return NULL;
-    text = strdupW( MSI_RecordGetString( rec, 2 ) );
+    text = wcsdup( MSI_RecordGetString( rec, 2 ) );
     msiobj_release( &rec->hdr );
     return text;
 }
@@ -677,9 +677,9 @@ static void event_subscribe( msi_dialog *dialog, const WCHAR *event, const WCHAR
     }
     if (!(sub = msi_alloc( sizeof(*sub) ))) return;
     sub->dialog    = dialog;
-    sub->event     = strdupW( event );
-    sub->control   = strdupW( control );
-    sub->attribute = strdupW( attribute );
+    sub->event     = wcsdup( event );
+    sub->control   = wcsdup( control );
+    sub->attribute = wcsdup( attribute );
     list_add_tail( &dialog->package->subscriptions, &sub->entry );
 }
 
@@ -856,7 +856,7 @@ static WCHAR *msi_get_binary_name( MSIPACKAGE *package, MSIRECORD *rec )
     while (*p && *p != '}') p++;
     if (!*p++) return text;
 
-    p = strdupW( p );
+    p = wcsdup( p );
     msi_free( text );
     return p;
 }
@@ -1163,7 +1163,7 @@ static UINT msi_dialog_checkbox_control( msi_dialog *dialog, MSIRECORD *rec )
     prop = MSI_RecordGetString( rec, 9 );
     if (prop)
     {
-        control->property = strdupW( prop );
+        control->property = wcsdup( prop );
         control->value = msi_get_checkbox_value( dialog, prop );
         TRACE("control %s value %s\n", debugstr_w(control->property), debugstr_w(control->value));
     }
@@ -1207,8 +1207,8 @@ static UINT msi_dialog_line_control( msi_dialog *dialog, MSIRECORD *rec )
     control->hBitmap = NULL;
     control->hIcon = NULL;
     control->hDll = NULL;
-    control->tabnext = strdupW( MSI_RecordGetString( rec, 11) );
-    control->type = strdupW( MSI_RecordGetString( rec, 3 ) );
+    control->tabnext = wcsdup( MSI_RecordGetString( rec, 11 ) );
+    control->type = wcsdup( MSI_RecordGetString( rec, 3 ) );
     control->progress_current = 0;
     control->progress_max = 100;
     control->progress_backwards = FALSE;
@@ -1458,7 +1458,7 @@ static UINT msi_combobox_add_item( MSIRECORD *rec, LPVOID param )
     value = MSI_RecordGetString( rec, 3 );
     text = MSI_RecordGetString( rec, 4 );
 
-    info->items[info->addpos_items] = strdupW( value );
+    info->items[info->addpos_items] = wcsdup( value );
 
     pos = SendMessageW( info->hwnd, CB_ADDSTRING, 0, (LPARAM)text );
     SendMessageW( info->hwnd, CB_SETITEMDATA, pos, (LPARAM)info->items[info->addpos_items] );
@@ -1705,7 +1705,7 @@ static UINT msi_dialog_edit_control( msi_dialog *dialog, MSIRECORD *rec )
 
     prop = MSI_RecordGetString( rec, 9 );
     if( prop )
-        control->property = strdupW( prop );
+        control->property = wcsdup( prop );
 
     val = msi_dup_property( dialog->package->db, control->property );
     SetWindowTextW( control->hwnd, val );
@@ -1864,7 +1864,7 @@ msi_maskedit_set_text( struct msi_maskedit_info *info, LPCWSTR text )
     {
         if( info->group[i].len < lstrlenW( p ) )
         {
-            LPWSTR chunk = strdupW( p );
+            WCHAR *chunk = wcsdup( p );
             chunk[ info->group[i].len ] = 0;
             SetWindowTextW( info->group[i].hwnd, chunk );
             msi_free( chunk );
@@ -2035,7 +2035,7 @@ static UINT msi_dialog_maskedit_control( msi_dialog *dialog, MSIRECORD *rec )
 
     prop = MSI_RecordGetString( rec, 9 );
     if( prop )
-        info->prop = strdupW( prop );
+        info->prop = wcsdup( prop );
 
     msi_maskedit_create_children( info, font );
 
@@ -2245,7 +2245,7 @@ static UINT msi_dialog_create_radiobutton( MSIRECORD *rec, LPVOID param )
 
     prop = MSI_RecordGetString( rec, 1 );
     if( prop )
-        control->property = strdupW( prop );
+        control->property = wcsdup( prop );
 
     return ERROR_SUCCESS;
 }
@@ -2311,7 +2311,7 @@ static UINT msi_dialog_radiogroup_control( msi_dialog *dialog, MSIRECORD *rec )
     SetWindowLongPtrW( control->hwnd, GWL_EXSTYLE, WS_EX_CONTROLPARENT );
 
     if( prop )
-        control->property = strdupW( prop );
+        control->property = wcsdup( prop );
 
     /* query the Radio Button table for all control in this group */
     r = MSI_OpenQuery( package->db, &view, L"SELECT * FROM `RadioButton` WHERE `Property` = '%s'", prop );
@@ -2744,7 +2744,7 @@ static UINT msi_listbox_add_item( MSIRECORD *rec, LPVOID param )
     value = MSI_RecordGetString( rec, 3 );
     text = MSI_RecordGetString( rec, 4 );
 
-    info->items[info->addpos_items] = strdupW( value );
+    info->items[info->addpos_items] = wcsdup( value );
 
     pos = SendMessageW( info->hwnd, LB_ADDSTRING, 0, (LPARAM)text );
     SendMessageW( info->hwnd, LB_SETITEMDATA, pos, (LPARAM)info->items[info->addpos_items] );
@@ -2942,12 +2942,8 @@ static UINT msi_dialog_directorylist_up( msi_dialog *dialog )
     path = msi_dialog_dup_property( dialog, prop, TRUE );
 
     /* strip off the last directory */
-    ptr = PathFindFileNameW( path );
-    if (ptr != path)
-    {
-        *(ptr - 1) = '\0';
-        PathAddBackslashW( path );
-    }
+    if (ptr != path) *(ptr - 1) = '\0';
+    PathAddBackslashW( path );
 
     msi_dialog_set_property( dialog->package, prop, path );
 
@@ -3782,7 +3778,7 @@ static LRESULT msi_dialog_oncreate( HWND hwnd, LPCREATESTRUCTW cs )
     dialog->default_font = msi_dup_property( dialog->package->db, L"DefaultUIFont" );
     if (!dialog->default_font)
     {
-        dialog->default_font = strdupW( L"MS Shell Dlg" );
+        dialog->default_font = wcsdup( L"MS Shell Dlg" );
         if (!dialog->default_font)
         {
             msiobj_release( &rec->hdr );
@@ -4044,8 +4040,8 @@ static msi_dialog *dialog_create( MSIPACKAGE *package, const WCHAR *name, msi_di
         return NULL;
     }
     dialog->attributes = MSI_RecordGetInteger( rec, 6 );
-    dialog->control_default = strdupW( MSI_RecordGetString( rec, 9 ) );
-    dialog->control_cancel = strdupW( MSI_RecordGetString( rec, 10 ) );
+    dialog->control_default = wcsdup( MSI_RecordGetString( rec, 9 ) );
+    dialog->control_cancel = wcsdup( MSI_RecordGetString( rec, 10 ) );
     msiobj_release( &rec->hdr );
 
     rec = MSI_CreateRecord(2);
@@ -4392,7 +4388,7 @@ static UINT pending_event_end_dialog( msi_dialog *dialog, const WCHAR *argument 
 {
     dialog->pending_event = event_end_dialog;
     msi_free( dialog->pending_argument );
-    dialog->pending_argument = strdupW( argument );
+    dialog->pending_argument = wcsdup( argument );
     return ERROR_SUCCESS;
 }
 
@@ -4400,7 +4396,7 @@ static UINT pending_event_end_dialog( msi_dialog *dialog, const WCHAR *argument 
 static UINT event_new_dialog( msi_dialog *dialog, const WCHAR *argument )
 {
     /* store the name of the next dialog, and signal this one to end */
-    dialog->package->next_dialog = strdupW( argument );
+    dialog->package->next_dialog = wcsdup( argument );
     msi_event_cleanup_all_subscriptions( dialog->package );
     msi_dialog_end_dialog( dialog );
     return ERROR_SUCCESS;
@@ -4410,7 +4406,7 @@ static UINT pending_event_new_dialog( msi_dialog *dialog, const WCHAR *argument 
 {
     dialog->pending_event = event_new_dialog;
     msi_free( dialog->pending_argument );
-    dialog->pending_argument = strdupW( argument );
+    dialog->pending_argument = wcsdup( argument );
     return ERROR_SUCCESS;
 }
 
@@ -4435,7 +4431,7 @@ static UINT pending_event_spawn_dialog( msi_dialog *dialog, const WCHAR *argumen
 {
     dialog->pending_event = event_spawn_dialog;
     msi_free( dialog->pending_argument );
-    dialog->pending_argument = strdupW( argument );
+    dialog->pending_argument = wcsdup( argument );
     return ERROR_SUCCESS;
 }
 

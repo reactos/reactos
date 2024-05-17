@@ -327,13 +327,13 @@ MSIASSEMBLY *msi_load_assembly( MSIPACKAGE *package, MSICOMPONENT *comp )
         msiobj_release( &rec->hdr );
         return NULL;
     }
-    a->feature = strdupW( MSI_RecordGetString( rec, 2 ) );
+    a->feature = wcsdup( MSI_RecordGetString( rec, 2 ) );
     TRACE("feature %s\n", debugstr_w(a->feature));
 
-    a->manifest = strdupW( MSI_RecordGetString( rec, 3 ) );
+    a->manifest = wcsdup( MSI_RecordGetString( rec, 3 ) );
     TRACE("manifest %s\n", debugstr_w(a->manifest));
 
-    a->application = strdupW( MSI_RecordGetString( rec, 4 ) );
+    a->application = wcsdup( MSI_RecordGetString( rec, 4 ) );
     TRACE("application %s\n", debugstr_w(a->application));
 
     a->attributes = MSI_RecordGetInteger( rec, 5 );

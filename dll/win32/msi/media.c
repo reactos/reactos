@@ -282,9 +282,9 @@ static UINT msi_media_get_disk_info(MSIPACKAGE *package, MSIMEDIAINFO *mi)
         return ERROR_FUNCTION_FAILED;
     }
 
-    mi->disk_prompt = strdupW(MSI_RecordGetString(row, 3));
-    mi->cabinet = strdupW(MSI_RecordGetString(row, 4));
-    mi->volume_label = strdupW(MSI_RecordGetString(row, 5));
+    mi->disk_prompt = wcsdup(MSI_RecordGetString(row, 3));
+    mi->cabinet = wcsdup(MSI_RecordGetString(row, 4));
+    mi->volume_label = wcsdup(MSI_RecordGetString(row, 5));
 
     msiobj_release(&row->hdr);
     return ERROR_SUCCESS;
@@ -460,7 +460,7 @@ static INT_PTR cabinet_copy_file(FDINOTIFICATIONTYPE fdint,
 
             TRACE("file in use, scheduling rename operation\n");
 
-            if (!(tmppathW = strdupW( path ))) return ERROR_OUTOFMEMORY;
+            if (!(tmppathW = wcsdup(path))) return ERROR_OUTOFMEMORY;
             if ((p = wcsrchr(tmppathW, '\\'))) *p = 0;
             len = lstrlenW( tmppathW ) + 16;
             if (!(tmpfileW = msi_alloc(len * sizeof(WCHAR))))
@@ -681,7 +681,7 @@ static UINT get_drive_type(const WCHAR *path)
 static WCHAR *get_base_url( MSIDATABASE *db )
 {
     WCHAR *p, *ret = NULL, *orig_db = msi_dup_property( db, L"OriginalDatabase" );
-    if (UrlIsW( orig_db, URLIS_URL ) && (ret = strdupW( orig_db )) && (p = wcsrchr( ret, '/'))) p[1] = 0;
+    if (UrlIsW( orig_db, URLIS_URL ) && (ret = wcsdup( orig_db )) && (p = wcsrchr( ret, '/' ))) p[1] = 0;
     msi_free( orig_db );
     return ret;
 }
@@ -706,11 +706,11 @@ UINT msi_load_media_info(MSIPACKAGE *package, UINT Sequence, MSIMEDIAINFO *mi)
     mi->disk_id = MSI_RecordGetInteger(row, 1);
     mi->last_sequence = MSI_RecordGetInteger(row, 2);
     msi_free(mi->disk_prompt);
-    mi->disk_prompt = strdupW(MSI_RecordGetString(row, 3));
+    mi->disk_prompt = wcsdup(MSI_RecordGetString(row, 3));
     msi_free(mi->cabinet);
-    mi->cabinet = strdupW(MSI_RecordGetString(row, 4));
+    mi->cabinet = wcsdup(MSI_RecordGetString(row, 4));
     msi_free(mi->volume_label);
-    mi->volume_label = strdupW(MSI_RecordGetString(row, 5));
+    mi->volume_label = wcsdup(MSI_RecordGetString(row, 5));
     msiobj_release(&row->hdr);
 
     msi_set_sourcedir_props(package, FALSE);
@@ -887,7 +887,7 @@ UINT ready_media( MSIPACKAGE *package, BOOL compressed, MSIMEDIAINFO *mi )
             lstrcpyW( mi->sourcedir, temppath );
             PathAddBackslashW( mi->sourcedir );
             msi_free( mi->cabinet );
-            mi->cabinet = strdupW( p + 1 );
+            mi->cabinet = wcsdup( p + 1 );
 
             msi_free( url );
             return ERROR_SUCCESS;
@@ -914,7 +914,7 @@ UINT ready_media( MSIPACKAGE *package, BOOL compressed, MSIMEDIAINFO *mi )
         }
 
         msi_free(mi->last_volume);
-        mi->last_volume = strdupW(mi->volume_label);
+        mi->last_volume = wcsdup(mi->volume_label);
     }
     if (mi->cabinet)
     {

@@ -219,7 +219,7 @@ static WCHAR *deformat_component( FORMAT *format, FORMSTR *str, int *ret_len )
     if (comp->Action == INSTALLSTATE_SOURCE)
         ret = msi_resolve_source_folder( format->package, comp->Directory, NULL );
     else
-        ret = strdupW( msi_get_target_folder( format->package, comp->Directory ) );
+        ret = wcsdup( msi_get_target_folder( format->package, comp->Directory ) );
 
     if (ret) *ret_len = lstrlenW( ret );
     else *ret_len = 0;
@@ -239,12 +239,12 @@ static WCHAR *deformat_file( FORMAT *format, FORMSTR *str, BOOL shortname, int *
     if (!(file = msi_get_loaded_file( format->package, key ))) goto done;
     if (!shortname)
     {
-        if ((ret = strdupW( file->TargetPath ))) len = lstrlenW( ret );
+        if ((ret = wcsdup( file->TargetPath ))) len = lstrlenW( ret );
         goto done;
     }
     if (!(len = GetShortPathNameW(file->TargetPath, NULL, 0)))
     {
-        if ((ret = strdupW( file->TargetPath ))) len = lstrlenW( ret );
+        if ((ret = wcsdup( file->TargetPath ))) len = lstrlenW( ret );
         goto done;
     }
     len++;
@@ -770,7 +770,7 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
         return ERROR_SUCCESS;
     }
 
-    *data = strdupW(ptr);
+    *data = wcsdup(ptr);
     *len = lstrlenW(ptr);
 
     ZeroMemory(&format, sizeof(FORMAT));

@@ -379,7 +379,7 @@ WCHAR *msi_resolve_source_folder( MSIPACKAGE *package, const WCHAR *name, MSIFOL
     if (folder) *folder = f;
     if (f->ResolvedSource)
     {
-        path = strdupW( f->ResolvedSource );
+        path = wcsdup( f->ResolvedSource );
         TRACE("   already resolved to %s\n", debugstr_w(path));
         return path;
     }
@@ -397,7 +397,7 @@ WCHAR *msi_resolve_source_folder( MSIPACKAGE *package, const WCHAR *name, MSIFOL
         path = msi_build_directory_name( 3, p, f->SourceLongPath, NULL );
 
     TRACE("-> %s\n", debugstr_w(path));
-    f->ResolvedSource = strdupW( path );
+    f->ResolvedSource = wcsdup( path );
     msi_free( p );
 
     return path;

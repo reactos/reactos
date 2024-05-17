@@ -254,14 +254,14 @@ static MSICLASS *load_class( MSIPACKAGE* package, MSIRECORD *row )
             switch(i)
             {
                 case 1:
-                    cls->DefInprocHandler = strdupW(L"ole2.dll");
+                    cls->DefInprocHandler = wcsdup(L"ole2.dll");
                     break;
                 case 2:
-                    cls->DefInprocHandler32 = strdupW(L"ole32.dll");
+                    cls->DefInprocHandler32 = wcsdup(L"ole32.dll");
                     break;
                 case 3:
-                    cls->DefInprocHandler = strdupW(L"ole2.dll");
-                    cls->DefInprocHandler32 = strdupW(L"ole32.dll");
+                    cls->DefInprocHandler = wcsdup(L"ole2.dll");
+                    cls->DefInprocHandler32 = wcsdup(L"ole32.dll");
                     break;
             }
         }
@@ -333,7 +333,7 @@ static MSIMIME *load_mime( MSIPACKAGE* package, MSIRECORD *row )
 
     extension = MSI_RecordGetString( row, 2 );
     mt->Extension = load_given_extension( package, extension );
-    mt->suffix = strdupW( extension );
+    mt->suffix = wcsdup( extension );
 
     mt->clsid = msi_dup_record_field( row, 3 );
     mt->Class = load_given_class( package, mt->clsid );

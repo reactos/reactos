@@ -443,7 +443,7 @@ static UINT copy_install_file(MSIPACKAGE *package, MSIFILE *file, LPWSTR source)
 
         TRACE("file in use, scheduling rename operation\n");
 
-        if (!(pathW = strdupW( file->TargetPath ))) return ERROR_OUTOFMEMORY;
+        if (!(pathW = wcsdup( file->TargetPath ))) return ERROR_OUTOFMEMORY;
         if ((p = wcsrchr(pathW, '\\'))) *p = 0;
         len = lstrlenW( pathW ) + 16;
         if (!(tmpfileW = msi_alloc(len * sizeof(WCHAR))))
@@ -522,7 +522,7 @@ static BOOL installfiles_cb(MSIPACKAGE *package, LPCWSTR filename, DWORD action,
         {
             create_directory( package, file->Component->Directory );
         }
-        *path = strdupW( file->TargetPath );
+        *path = wcsdup( file->TargetPath );
         *attrs = file->Attributes;
         *(MSIFILE **)user = file;
     }
@@ -706,7 +706,7 @@ static BOOL patchfiles_cb(MSIPACKAGE *package, LPCWSTR file, DWORD action,
         }
 
         patch->path = msi_create_temp_file( package->db );
-        *path = strdupW( patch->path );
+        *path = wcsdup( patch->path );
         *attrs = patch->File->Attributes;
         *(MSIFILEPATCH **)user = patch;
     }
@@ -971,7 +971,7 @@ static BOOL add_wildcard( FILE_LIST *files, const WCHAR *source, WCHAR *dest )
     if (!new)
         return FALSE;
 
-    new->source = strdupW(source);
+    new->source = wcsdup(source);
     ptr = wcsrchr(dest, '\\') + 1;
     filename = wcsrchr(new->source, '\\') + 1;
 
@@ -1125,7 +1125,7 @@ static UINT ITERATE_MoveFiles( MSIRECORD *rec, LPVOID param )
         if (msi_get_file_attributes( package, sourcedir ) == INVALID_FILE_ATTRIBUTES)
             goto done;
 
-        source = strdupW(sourcedir);
+        source = wcsdup(sourcedir);
         if (!source)
             goto done;
     }
@@ -1150,18 +1150,18 @@ static UINT ITERATE_MoveFiles( MSIRECORD *rec, LPVOID param )
         {
             WCHAR *p;
             if (sourcename)
-                destname = strdupW(sourcename);
+                destname = wcsdup(sourcename);
             else if ((p = wcsrchr(sourcedir, '\\')))
-                destname = strdupW(p + 1);
+                destname = wcsdup(p + 1);
             else
-                destname = strdupW(sourcedir);
+                destname = wcsdup(sourcedir);
             if (!destname)
                 goto done;
         }
     }
     else
     {
-        destname = strdupW(MSI_RecordGetString(rec, 4));
+        destname = wcsdup(MSI_RecordGetString(rec, 4));
         if (destname) msi_reduce_to_long_filename(destname);
     }
 
@@ -1251,7 +1251,7 @@ static WCHAR *get_duplicate_filename( MSIPACKAGE *package, MSIRECORD *row, const
     if (MSI_RecordIsNull( row, 5 ))
     {
         WCHAR *p;
-        dst_path = strdupW( src );
+        dst_path = wcsdup( src );
         p = wcsrchr( dst_path, '\\' );
         if (p) *p = 0;
     }
@@ -1259,7 +1259,7 @@ static WCHAR *get_duplicate_filename( MSIPACKAGE *package, MSIRECORD *row, const
     {
         const WCHAR *dst_key = MSI_RecordGetString( row, 5 );
 
-        dst_path = strdupW( msi_get_target_folder( package, dst_key ) );
+        dst_path = wcsdup( msi_get_target_folder( package, dst_key ) );
         if (!dst_path)
         {
             /* try a property */
@@ -1500,7 +1500,7 @@ static UINT ITERATE_RemoveFiles(MSIRECORD *row, LPVOID param)
         return ERROR_SUCCESS;
     }
     size = 0;
-    if ((filename = strdupW( MSI_RecordGetString(row, 3) )))
+    if ((filename = wcsdup( MSI_RecordGetString(row, 3) )))
     {
         msi_reduce_to_long_filename( filename );
         size = lstrlenW( filename );

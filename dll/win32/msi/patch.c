@@ -911,8 +911,8 @@ static UINT msi_apply_patch_package( MSIPACKAGE *package, const WCHAR *file )
 
     r = ERROR_OUTOFMEMORY;
     patch->registered = FALSE;
-    if (!(patch->filename = strdupW( file ))) goto done;
-    if (!(patch->localfile = strdupW( localfile ))) goto done;
+    if (!(patch->filename = wcsdup( file ))) goto done;
+    if (!(patch->localfile = wcsdup( localfile ))) goto done;
 
     r = msi_apply_patch_db( package, patch_db, patch );
     if (r != ERROR_SUCCESS) WARN("patch failed to apply %u\n", r);
@@ -1027,7 +1027,7 @@ UINT msi_apply_registered_patch( MSIPACKAGE *package, LPCWSTR patch_code )
         return r;
     }
     patch_info->registered = TRUE;
-    patch_info->localfile = strdupW( patch_file );
+    patch_info->localfile = wcsdup( patch_file );
     if (!patch_info->localfile)
     {
         msiobj_release( &patch_db->hdr );

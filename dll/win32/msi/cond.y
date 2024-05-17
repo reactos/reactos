@@ -414,8 +414,8 @@ static int COND_IsNumber( WCHAR x )
 static WCHAR *strstriW( const WCHAR *str, const WCHAR *sub )
 {
     LPWSTR strlower, sublower, r;
-    strlower = CharLowerW( strdupW( str ) );
-    sublower = CharLowerW( strdupW( sub ) );
+    strlower = CharLowerW( wcsdup( str ) );
+    sublower = CharLowerW( wcsdup( sub ) );
     r = wcsstr( strlower, sublower );
     if (r)
         r = (LPWSTR)str + (r - strlower);

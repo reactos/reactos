@@ -1129,7 +1129,7 @@ struct wire_record *marshal_record(MSIHANDLE handle)
             ret->fields[i].u.iVal = rec->fields[i].u.iVal;
             break;
         case MSIFIELD_WSTR:
-            ret->fields[i].u.szwVal = strdupW(rec->fields[i].u.szwVal);
+            ret->fields[i].u.szwVal = wcsdup(rec->fields[i].u.szwVal);
             break;
         case MSIFIELD_STREAM:
             IStream_AddRef(rec->fields[i].u.stream);

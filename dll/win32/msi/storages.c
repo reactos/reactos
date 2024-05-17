@@ -218,7 +218,7 @@ static UINT STORAGES_set_row(struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, 
         return r;
     }
 
-    name = strdupW(MSI_RecordGetString(rec, 1));
+    name = wcsdup(MSI_RecordGetString(rec, 1));
     if (!name)
     {
         r = ERROR_OUTOFMEMORY;
