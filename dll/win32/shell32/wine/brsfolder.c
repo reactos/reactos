@@ -111,6 +111,7 @@ BrsFolder_GetDataFromItem(browse_info *info, HTREEITEM hItem)
     item.hItem = hItem;
     TreeView_GetItem(info->hwndTreeView, item.lParam);
     return (LPTV_ITEMDATA)item.lParam;
+}
 
 /******************************************************************************
  * InitializeTreeView [Internal]
