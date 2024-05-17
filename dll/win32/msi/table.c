@@ -2779,7 +2779,7 @@ static UINT TransformView_Create( MSIDATABASE *db, string_table *st, LPCWSTR nam
 
     name_len = wcslen( name );
 
-    r = TABLE_CreateView( db, name, view );
+    r = TABLE_CreateView( db, name, (MSIVIEW **)&tv );
     if (r == ERROR_INVALID_PARAMETER)
     {
         /* table does not exist */
@@ -2790,15 +2790,10 @@ static UINT TransformView_Create( MSIDATABASE *db, string_table *st, LPCWSTR nam
 
         tv->db = db;
         memcpy( tv->name, name, name_len * sizeof(WCHAR) );
-        *view = (MSIVIEW*)tv;
     }
     else if (r != ERROR_SUCCESS)
     {
         return r;
-    }
-    else
-    {
-        tv = (struct table_view *)*view;
     }
 
     tv->view.ops = &transform_view_ops;
@@ -2847,6 +2842,7 @@ static UINT TransformView_Create( MSIDATABASE *db, string_table *st, LPCWSTR nam
     {
         MSI_ViewClose( q );
         msiobj_release( &q->hdr );
+        *view = (MSIVIEW *)tv;
         return ERROR_SUCCESS;
     }
 
@@ -2883,6 +2879,7 @@ static UINT TransformView_Create( MSIDATABASE *db, string_table *st, LPCWSTR nam
     memcpy( colinfo, tv->columns, tv->num_cols * sizeof(*colinfo) );
     tv->columns = colinfo;
     tv->num_cols += add_col;
+    *view = (MSIVIEW *)tv;
     return ERROR_SUCCESS;
 }
 
