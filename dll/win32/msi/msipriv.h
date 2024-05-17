@@ -532,7 +532,8 @@ typedef struct tagMSICOMPONENT
     INSTALLSTATE Action;
     BOOL ForceLocalState;
     BOOL Enabled;
-    INT  Cost;
+    /* Cost is in 512-byte units, as returned from MsiEnumComponentCosts() et al. */
+    int cost;
     INT  RefCount;
     LPWSTR FullKeypath;
     LPWSTR AdvertiseString;

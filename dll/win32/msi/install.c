@@ -1147,7 +1147,7 @@ static INT feature_cost( MSIFEATURE *feature )
 
     LIST_FOR_EACH_ENTRY( cl, &feature->Components, ComponentList, entry )
     {
-        cost += cl->component->Cost;
+        cost += cl->component->cost;
     }
     return cost;
 }
@@ -1197,7 +1197,6 @@ UINT MSI_GetFeatureCost( MSIPACKAGE *package, MSIFEATURE *feature, MSICOSTTREE t
         break;
     }
 
-    *cost /= 512;
     return ERROR_SUCCESS;
 }
 

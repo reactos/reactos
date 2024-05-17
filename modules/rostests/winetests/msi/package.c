@@ -8607,7 +8607,7 @@ static void test_costs(void)
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r );
     ok( len == 2, "expected len == 2, got %lu\n", len );
     ok( drive[0], "expected a drive\n" );
-    todo_wine ok( cost == 12000024, "got %d\n", cost );
+    ok( cost == 12000024, "got %d\n", cost );
     ok( !temp, "expected temp == 0, got %d\n", temp );
 
     len = sizeof(drive);
@@ -8651,7 +8651,7 @@ static void test_costs(void)
     cost = 0xdead;
     r = MsiGetFeatureCostA( hpkg, "one", MSICOSTTREE_SELFONLY, INSTALLSTATE_LOCAL, &cost );
     ok( !r, "got %u\n", r);
-    todo_wine ok( cost == 12000024, "got %d\n", cost );
+    ok( cost == 12000024, "got %d\n", cost );
 
     MsiCloseHandle( hpkg );
 error:
