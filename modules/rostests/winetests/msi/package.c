@@ -5583,7 +5583,7 @@ static void test_installprops(void)
     CHAR path[MAX_PATH], buf[MAX_PATH];
     DWORD size, type;
     LANGID langid;
-    HKEY hkey1, hkey2, pathkey;
+    HKEY hkey1, hkey2, pathkey = NULL;
     int res;
     UINT r;
     REGSAM access = KEY_ALL_ACCESS;
