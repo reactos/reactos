@@ -696,7 +696,7 @@ static void test_simple_patch( void )
         win_skip("MsiApplyPatchA is not available\n");
         return;
     }
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -1035,7 +1035,7 @@ static void test_system_tables( void )
         win_skip("MsiApplyPatchA is not available\n");
         return;
     }
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -1225,7 +1225,7 @@ static void test_patch_registration( void )
         win_skip("required functions not available\n");
         return;
     }
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -1321,6 +1321,8 @@ START_TEST(patch)
 {
     DWORD len;
     char temp_path[MAX_PATH], prev_path[MAX_PATH];
+
+    if (!is_process_elevated()) restart_as_admin_elevated();
 
     init_function_pointers();
 

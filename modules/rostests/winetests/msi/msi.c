@@ -3382,7 +3382,7 @@ static void test_MsiProvideComponent(void)
     DWORD len, len2;
     UINT r;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -3472,7 +3472,7 @@ static void test_MsiProvideQualifiedComponentEx(void)
     HKEY hkey, hkey2, hkey3, hkey4, hkey5;
     LONG res;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip( "process is limited\n" );
         return;
@@ -13102,7 +13102,7 @@ static void test_MsiEnumProducts(void)
     HKEY key1, key2, key3;
     REGSAM access = KEY_ALL_ACCESS;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip( "process is limited\n" );
         return;
@@ -13418,7 +13418,7 @@ static void test_MsiEnumComponents(void)
     char *usersid = get_user_sid();
     HKEY key1 = NULL, key2 = NULL;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -13497,7 +13497,7 @@ static void test_MsiEnumComponentsEx(void)
         win_skip( "MsiEnumComponentsExA not implemented\n" );
         return;
     }
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -13593,7 +13593,7 @@ static void test_MsiConfigureProductEx(void)
     CHAR keypath[MAX_PATH * 2], localpackage[MAX_PATH], packagename[MAX_PATH];
     REGSAM access = KEY_ALL_ACCESS;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -13876,7 +13876,7 @@ static void test_MsiSetFeatureAttributes(void)
     char path[MAX_PATH];
     MSIHANDLE package;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -13958,7 +13958,7 @@ static void test_MsiGetFeatureInfo(void)
     char title[32], help[32], path[MAX_PATH];
     DWORD attrs, title_len, help_len;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -14255,7 +14255,7 @@ static void test_setpropertyfolder(void)
 {
     UINT r;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -14310,7 +14310,7 @@ static void test_sourcedir_props(void)
 {
     UINT r;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -14374,7 +14374,7 @@ static void test_concurrentinstall(void)
     UINT r;
     CHAR path[MAX_PATH];
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -14426,7 +14426,7 @@ static void test_command_line_parsing(void)
     UINT r;
     const char *cmd;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;

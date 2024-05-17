@@ -2251,40 +2251,17 @@ static void init_functionpointers(void)
 #undef GET_PROC
 }
 
-BOOL is_process_limited(void)
+BOOL is_process_elevated(void)
 {
-    SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
-    PSID Group = NULL;
-    BOOL IsInGroup;
     HANDLE token;
+    TOKEN_ELEVATION_TYPE type = TokenElevationTypeDefault;
+    DWORD size;
+    BOOL ret;
 
-    if (!AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
-                                  DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &Group) ||
-        !CheckTokenMembership(NULL, Group, &IsInGroup))
-    {
-        trace("Could not check if the current user is an administrator\n");
-        FreeSid(Group);
-        return FALSE;
-    }
-    FreeSid(Group);
-
-    if (!IsInGroup)
-    {
-        /* Only administrators have enough privileges for these tests */
-        return TRUE;
-    }
-
-    if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
-    {
-        BOOL ret;
-        TOKEN_ELEVATION_TYPE type = TokenElevationTypeDefault;
-        DWORD size;
-
-        ret = GetTokenInformation(token, TokenElevationType, &type, sizeof(type), &size);
-        CloseHandle(token);
-        return (ret && type == TokenElevationTypeLimited);
-    }
-    return FALSE;
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token)) return FALSE;
+    ret = GetTokenInformation(token, TokenElevationType, &type, sizeof(type), &size);
+    CloseHandle(token);
+    return (ret && type == TokenElevationTypeFull);
 }
 
 static BOOL check_record(MSIHANDLE rec, UINT field, LPCSTR val)
@@ -2771,7 +2748,7 @@ static void test_MsiInstallProduct(void)
     DWORD num, size, type;
     REGSAM access = KEY_ALL_ACCESS;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -3116,7 +3093,7 @@ static void test_continuouscabs(void)
 {
     UINT r;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -3309,7 +3286,7 @@ static void test_mixedmedia(void)
 {
     UINT r;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -3429,7 +3406,7 @@ static void test_readonlyfile(void)
     HANDLE file;
     CHAR path[MAX_PATH];
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -3478,7 +3455,7 @@ static void test_readonlyfile_cab(void)
     CHAR path[MAX_PATH];
     CHAR buf[16];
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -3535,7 +3512,7 @@ static void test_setdirproperty(void)
 {
     UINT r;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -3568,7 +3545,7 @@ static void test_cabisextracted(void)
 {
     UINT r;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -3809,7 +3786,7 @@ static void test_transformprop(void)
 {
     UINT r;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -3857,7 +3834,7 @@ static void test_currentworkingdir(void)
     CHAR drive[MAX_PATH], path[MAX_PATH + 12];
     LPSTR ptr;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -4015,7 +3992,7 @@ static void test_adminprops(void)
 {
     UINT r;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -4066,7 +4043,7 @@ static void test_missingcab(void)
 {
     UINT r;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -4136,7 +4113,7 @@ static void test_sourcefolder(void)
 {
     UINT r;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -4239,7 +4216,7 @@ static void test_customaction51(void)
 {
     UINT r;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -4272,7 +4249,7 @@ static void test_installstate(void)
 {
     UINT r;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -4758,7 +4735,7 @@ static void test_missingcomponent(void)
 {
     UINT r;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -4814,7 +4791,7 @@ static void test_sourcedirprop(void)
     UINT r;
     CHAR props[MAX_PATH + 18];
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -4865,7 +4842,7 @@ static void test_adminimage(void)
 {
     UINT r;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -4936,7 +4913,7 @@ static void test_propcase(void)
 {
     UINT r;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -5042,7 +5019,7 @@ static void test_shortcut(void)
     UINT r;
     HRESULT hr;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -5089,7 +5066,7 @@ static void test_preselected(void)
 {
     UINT r;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -5145,7 +5122,7 @@ static void test_installed_prop(void)
     static const char prodcode[] = "{7df88a48-996f-4ec8-a022-bf956f9b2cbb}";
     UINT r;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -5184,7 +5161,7 @@ static void test_allusers_prop(void)
 {
     UINT r;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -5345,7 +5322,7 @@ static void test_file_in_use(void)
     HKEY hkey;
     char path[MAX_PATH];
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -5404,7 +5381,7 @@ static void test_file_in_use_cab(void)
     HKEY hkey;
     char path[MAX_PATH];
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -5465,7 +5442,7 @@ static void test_feature_override(void)
     UINT r;
     REGSAM access = KEY_ALL_ACCESS;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -5545,7 +5522,7 @@ static void test_icon_table(void)
     CHAR path[MAX_PATH];
     static const char prodcode[] = "{7DF88A49-996F-4EC8-A022-BF956F9B2CBB}";
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -5623,7 +5600,7 @@ static void test_package_validation(void)
 {
     UINT r;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -5814,7 +5791,7 @@ static void test_upgrade_code(void)
 {
     UINT r;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -5850,7 +5827,7 @@ static void test_mixed_package(void)
     char value[MAX_PATH];
     DWORD size;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -5999,7 +5976,7 @@ static void test_volume_props(void)
 {
     UINT r;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -6025,7 +6002,7 @@ static void test_shared_component(void)
 {
     UINT r;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -6074,7 +6051,7 @@ static void test_remove_upgrade_code(void)
     DWORD type, size;
     char buf[1];
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip( "process is limited\n" );
         return;
@@ -6120,7 +6097,7 @@ static void test_feature_tree(void)
 {
     UINT r;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip( "process is limited\n" );
         return;
@@ -6197,7 +6174,7 @@ static void test_wow64(void)
         return;
     }
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -6250,7 +6227,7 @@ static void test_source_resolution(void)
 {
     UINT r;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip( "process is limited\n" );
         return;
@@ -6281,6 +6258,8 @@ START_TEST(install)
     char temp_path[MAX_PATH], prev_path[MAX_PATH], log_file[MAX_PATH];
     STATEMGRSTATUS status;
     BOOL ret = FALSE;
+
+    if (!is_process_elevated()) restart_as_admin_elevated();
 
     init_functionpointers();
     subtest("custom");

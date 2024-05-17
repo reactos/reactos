@@ -2995,7 +2995,7 @@ static void test_states(void)
     char value[MAX_PATH];
     DWORD size;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -4055,7 +4055,7 @@ static void test_appsearch_complocator(void)
     if (!(usersid = get_user_sid()))
         return;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -9563,6 +9563,8 @@ START_TEST(package)
     STATEMGRSTATUS status;
     BOOL ret = FALSE;
     DWORD len;
+
+    if (!is_process_elevated()) restart_as_admin_elevated();
 
     init_functionpointers();
 

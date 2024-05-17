@@ -2313,7 +2313,7 @@ static void test_Installer_InstallProduct(void)
     IDispatch *pStringList = NULL;
     REGSAM access = KEY_ALL_ACCESS;
 
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         /* In fact InstallProduct would succeed but then Windows XP
          * would not allow us to clean up the registry!
@@ -2629,6 +2629,8 @@ START_TEST(automation)
     IUnknown *pUnk;
 
     init_functionpointers();
+
+    if (!is_process_elevated()) restart_as_admin_elevated();
 
     if (pIsWow64Process)
         pIsWow64Process(GetCurrentProcess(), &is_wow64);

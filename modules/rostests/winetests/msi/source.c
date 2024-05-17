@@ -687,7 +687,7 @@ static void test_MsiSourceListAddSourceEx(void)
         win_skip("Skipping MsiSourceListAddSourceExA tests\n");
         return;
     }
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -1701,7 +1701,7 @@ static void test_MsiSourceListSetInfo(void)
         win_skip("MsiSourceListSetInfoA is not available\n");
         return;
     }
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -2137,7 +2137,7 @@ static void test_MsiSourceListAddMediaDisk(void)
         win_skip("MsiSourceListAddMediaDiskA is not available\n");
         return;
     }
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -3293,7 +3293,7 @@ static void test_MsiSourceListAddSource(void)
         win_skip("Skipping MsiSourceListAddSourceA tests\n");
         return;
     }
-    if (is_process_limited())
+    if (!is_process_elevated())
     {
         skip("process is limited\n");
         return;
@@ -3554,6 +3554,8 @@ done:
 
 START_TEST(source)
 {
+    if (!is_process_elevated()) restart_as_admin_elevated();
+
     init_functionpointers();
 
     if (pIsWow64Process)
