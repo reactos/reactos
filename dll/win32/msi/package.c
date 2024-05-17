@@ -580,11 +580,11 @@ static LPWSTR get_fusion_filename(MSIPACKAGE *package)
     return filename;
 }
 
-typedef struct tagLANGANDCODEPAGE
+struct lang_codepage
 {
   WORD wLanguage;
   WORD wCodePage;
-} LANGANDCODEPAGE;
+};
 
 static void set_msi_assembly_prop(MSIPACKAGE *package)
 {
@@ -593,7 +593,7 @@ static void set_msi_assembly_prop(MSIPACKAGE *package)
     LPVOID version = NULL;
     WCHAR buf[MAX_PATH];
     LPWSTR fusion, verstr;
-    LANGANDCODEPAGE *translate;
+    struct lang_codepage *translate;
 
     fusion = get_fusion_filename(package);
     if (!fusion)

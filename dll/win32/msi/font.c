@@ -28,40 +28,43 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
-typedef struct _tagTT_OFFSET_TABLE {
+struct offset_table
+{
     USHORT uMajorVersion;
     USHORT uMinorVersion;
     USHORT uNumOfTables;
     USHORT uSearchRange;
     USHORT uEntrySelector;
     USHORT uRangeShift;
-} TT_OFFSET_TABLE;
+};
 
-typedef struct _tagTT_TABLE_DIRECTORY {
+struct table_directory
+{
     char szTag[4]; /* table name */
     ULONG uCheckSum; /* Check sum */
     ULONG uOffset; /* Offset from beginning of file */
     ULONG uLength; /* length of the table in bytes */
-} TT_TABLE_DIRECTORY;
+};
 
-typedef struct _tagTT_NAME_TABLE_HEADER {
+struct name_table_header
+{
     USHORT uFSelector; /* format selector. Always 0 */
     USHORT uNRCount; /* Name Records count */
-    USHORT uStorageOffset; /* Offset for strings storage,
-                            * from start of the table */
-} TT_NAME_TABLE_HEADER;
+    USHORT uStorageOffset; /* Offset for strings storage from start of the table */
+};
 
 #define NAME_ID_FULL_FONT_NAME  4
 #define NAME_ID_VERSION         5
 
-typedef struct _tagTT_NAME_RECORD {
+struct name_record
+{
     USHORT uPlatformID;
     USHORT uEncodingID;
     USHORT uLanguageID;
     USHORT uNameID;
     USHORT uStringLength;
     USHORT uStringOffset; /* from start of storage area */
-} TT_NAME_RECORD;
+};
 
 #define SWAPWORD(x) MAKEWORD(HIBYTE(x), LOBYTE(x))
 #define SWAPLONG(x) MAKELONG(SWAPWORD(HIWORD(x)), SWAPWORD(LOWORD(x)))
@@ -72,11 +75,11 @@ typedef struct _tagTT_NAME_RECORD {
  */
 static WCHAR *load_ttf_name_id( MSIPACKAGE *package, const WCHAR *filename, DWORD id )
 {
-    TT_TABLE_DIRECTORY tblDir;
+    struct table_directory tblDir;
     BOOL bFound = FALSE;
-    TT_OFFSET_TABLE ttOffsetTable;
-    TT_NAME_TABLE_HEADER ttNTHeader;
-    TT_NAME_RECORD ttRecord;
+    struct offset_table ttOffsetTable;
+    struct name_table_header ttNTHeader;
+    struct name_record ttRecord;
     DWORD dwRead;
     HANDLE handle;
     LPWSTR ret = NULL;
@@ -92,7 +95,7 @@ static WCHAR *load_ttf_name_id( MSIPACKAGE *package, const WCHAR *filename, DWOR
         return NULL;
     }
 
-    if (!ReadFile(handle,&ttOffsetTable, sizeof(TT_OFFSET_TABLE),&dwRead,NULL))
+    if (!ReadFile(handle,&ttOffsetTable, sizeof(struct offset_table),&dwRead,NULL))
         goto end;
 
     ttOffsetTable.uNumOfTables = SWAPWORD(ttOffsetTable.uNumOfTables);
@@ -105,7 +108,7 @@ static WCHAR *load_ttf_name_id( MSIPACKAGE *package, const WCHAR *filename, DWOR
 
     for (i=0; i< ttOffsetTable.uNumOfTables; i++)
     {
-        if (!ReadFile(handle,&tblDir, sizeof(TT_TABLE_DIRECTORY),&dwRead,NULL))
+        if (!ReadFile(handle, &tblDir, sizeof(tblDir), &dwRead, NULL))
             break;
         if (memcmp(tblDir.szTag,"name",4)==0)
         {
@@ -120,14 +123,14 @@ static WCHAR *load_ttf_name_id( MSIPACKAGE *package, const WCHAR *filename, DWOR
         goto end;
 
     SetFilePointer(handle, tblDir.uOffset, NULL, FILE_BEGIN);
-    if (!ReadFile(handle,&ttNTHeader, sizeof(TT_NAME_TABLE_HEADER), &dwRead,NULL))
+    if (!ReadFile(handle, &ttNTHeader, sizeof(ttNTHeader), &dwRead, NULL))
         goto end;
 
     ttNTHeader.uNRCount = SWAPWORD(ttNTHeader.uNRCount);
     ttNTHeader.uStorageOffset = SWAPWORD(ttNTHeader.uStorageOffset);
     for(i=0; i<ttNTHeader.uNRCount; i++)
     {
-        if (!ReadFile(handle,&ttRecord, sizeof(TT_NAME_RECORD),&dwRead,NULL))
+        if (!ReadFile(handle, &ttRecord, sizeof(ttRecord), &dwRead, NULL))
             break;
 
         ttRecord.uNameID = SWAPWORD(ttRecord.uNameID);

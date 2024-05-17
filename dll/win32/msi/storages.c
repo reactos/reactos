@@ -40,23 +40,23 @@ WINE_DEFAULT_DEBUG_CHANNEL(msidb);
 #define NUM_STORAGES_COLS    2
 #define MAX_STORAGES_NAME_LEN 62
 
-typedef struct tabSTORAGE
+struct storage
 {
     UINT str_index;
     IStorage *storage;
 } STORAGE;
 
-typedef struct tagMSISTORAGESVIEW
+struct storages_view
 {
     MSIVIEW view;
     MSIDATABASE *db;
-    STORAGE *storages;
+    struct storage *storages;
     UINT max_storages;
     UINT num_rows;
     UINT row_size;
-} MSISTORAGESVIEW;
+};
 
-static BOOL storages_set_table_size(MSISTORAGESVIEW *sv, UINT size)
+static BOOL storages_set_table_size(struct storages_view *sv, UINT size)
 {
     if (size >= sv->max_storages)
     {
@@ -71,7 +71,7 @@ static BOOL storages_set_table_size(MSISTORAGESVIEW *sv, UINT size)
 
 static UINT STORAGES_fetch_int(struct tagMSIVIEW *view, UINT row, UINT col, UINT *val)
 {
-    MSISTORAGESVIEW *sv = (MSISTORAGESVIEW *)view;
+    struct storages_view *sv = (struct storages_view *)view;
 
     TRACE("(%p, %d, %d, %p)\n", view, row, col, val);
 
@@ -88,7 +88,7 @@ static UINT STORAGES_fetch_int(struct tagMSIVIEW *view, UINT row, UINT col, UINT
 
 static UINT STORAGES_fetch_stream(struct tagMSIVIEW *view, UINT row, UINT col, IStream **stm)
 {
-    MSISTORAGESVIEW *sv = (MSISTORAGESVIEW *)view;
+    struct storages_view *sv = (struct storages_view *)view;
 
     TRACE("(%p, %d, %d, %p)\n", view, row, col, stm);
 
@@ -155,7 +155,7 @@ done:
 
 static UINT STORAGES_set_stream( MSIVIEW *view, UINT row, UINT col, IStream *stream )
 {
-    MSISTORAGESVIEW *sv = (MSISTORAGESVIEW *)view;
+    struct storages_view *sv = (struct storages_view *)view;
     IStorage *stg, *substg, *prev;
     const WCHAR *name;
     HRESULT hr;
@@ -195,7 +195,7 @@ static UINT STORAGES_set_stream( MSIVIEW *view, UINT row, UINT col, IStream *str
 
 static UINT STORAGES_set_row(struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, UINT mask)
 {
-    MSISTORAGESVIEW *sv = (MSISTORAGESVIEW *)view;
+    struct storages_view *sv = (struct storages_view *)view;
     IStorage *stg, *substg = NULL, *prev;
     IStream *stm;
     LPWSTR name = NULL;
@@ -259,7 +259,7 @@ done:
 
 static UINT STORAGES_insert_row(struct tagMSIVIEW *view, MSIRECORD *rec, UINT row, BOOL temporary)
 {
-    MSISTORAGESVIEW *sv = (MSISTORAGESVIEW *)view;
+    struct storages_view *sv = (struct storages_view *)view;
 
     if (!storages_set_table_size(sv, ++sv->num_rows))
         return ERROR_FUNCTION_FAILED;
@@ -294,7 +294,7 @@ static UINT STORAGES_close(struct tagMSIVIEW *view)
 
 static UINT STORAGES_get_dimensions(struct tagMSIVIEW *view, UINT *rows, UINT *cols)
 {
-    MSISTORAGESVIEW *sv = (MSISTORAGESVIEW *)view;
+    struct storages_view *sv = (struct storages_view *)view;
 
     TRACE("(%p, %p, %p)\n", view, rows, cols);
 
@@ -330,7 +330,7 @@ static UINT STORAGES_get_column_info( struct tagMSIVIEW *view, UINT n, LPCWSTR *
     return ERROR_SUCCESS;
 }
 
-static UINT storages_find_row(MSISTORAGESVIEW *sv, MSIRECORD *rec, UINT *row)
+static UINT storages_find_row(struct storages_view *sv, MSIRECORD *rec, UINT *row)
 {
     LPCWSTR str;
     UINT r, i, id, data;
@@ -356,7 +356,7 @@ static UINT storages_find_row(MSISTORAGESVIEW *sv, MSIRECORD *rec, UINT *row)
 
 static UINT storages_modify_update(struct tagMSIVIEW *view, MSIRECORD *rec)
 {
-    MSISTORAGESVIEW *sv = (MSISTORAGESVIEW *)view;
+    struct storages_view *sv = (struct storages_view *)view;
     UINT r, row;
 
     r = storages_find_row(sv, rec, &row);
@@ -368,7 +368,7 @@ static UINT storages_modify_update(struct tagMSIVIEW *view, MSIRECORD *rec)
 
 static UINT storages_modify_assign(struct tagMSIVIEW *view, MSIRECORD *rec)
 {
-    MSISTORAGESVIEW *sv = (MSISTORAGESVIEW *)view;
+    struct storages_view *sv = (struct storages_view *)view;
     UINT r, row;
 
     r = storages_find_row(sv, rec, &row);
@@ -420,7 +420,7 @@ static UINT STORAGES_modify(struct tagMSIVIEW *view, MSIMODIFY eModifyMode, MSIR
 
 static UINT STORAGES_delete(struct tagMSIVIEW *view)
 {
-    MSISTORAGESVIEW *sv = (MSISTORAGESVIEW *)view;
+    struct storages_view *sv = (struct storages_view *)view;
     UINT i;
 
     TRACE("(%p)\n", view);
@@ -461,7 +461,7 @@ static const MSIVIEWOPS storages_ops =
     NULL,
 };
 
-static INT add_storages_to_table(MSISTORAGESVIEW *sv)
+static INT add_storages_to_table(struct storages_view *sv)
 {
     IEnumSTATSTG *stgenum = NULL;
     STATSTG stat;
@@ -514,12 +514,12 @@ static INT add_storages_to_table(MSISTORAGESVIEW *sv)
 
 UINT STORAGES_CreateView(MSIDATABASE *db, MSIVIEW **view)
 {
-    MSISTORAGESVIEW *sv;
+    struct storages_view *sv;
     INT rows;
 
     TRACE("(%p, %p)\n", db, view);
 
-    sv = calloc(1, sizeof(MSISTORAGESVIEW));
+    sv = calloc(1, sizeof(*sv));
     if (!sv)
         return ERROR_FUNCTION_FAILED;
 

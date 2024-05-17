@@ -42,13 +42,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
  * These apis are defined in MSI 3.0
  */
 
-typedef struct tagMediaInfo
+struct media_info
 {
     struct list entry;
     LPWSTR  path;
     WCHAR   szIndex[10];
     DWORD   index;
-} media_info;
+};
 
 static UINT OpenSourceKey(LPCWSTR szProduct, HKEY* key, DWORD dwOptions,
                           MSIINSTALLCONTEXT context, BOOL create)
@@ -937,17 +937,16 @@ static void free_source_list(struct list *sourcelist)
 {
     while (!list_empty(sourcelist))
     {
-        media_info *info = LIST_ENTRY(list_head(sourcelist), media_info, entry);
+        struct media_info *info = LIST_ENTRY(list_head(sourcelist), struct media_info, entry);
         list_remove(&info->entry);
         free(info->path);
         free(info);
     }
 }
 
-static void add_source_to_list(struct list *sourcelist, media_info *info,
-                               DWORD *index)
+static void add_source_to_list(struct list *sourcelist, struct media_info *info, DWORD *index)
 {
-    media_info *iter;
+    struct media_info *iter;
     BOOL found = FALSE;
 
     if (index) *index = 0;
@@ -958,7 +957,7 @@ static void add_source_to_list(struct list *sourcelist, media_info *info,
         return;
     }
 
-    LIST_FOR_EACH_ENTRY(iter, sourcelist, media_info, entry)
+    LIST_FOR_EACH_ENTRY(iter, sourcelist, struct media_info, entry)
     {
         if (!found && info->index < iter->index)
         {
@@ -983,7 +982,7 @@ static UINT fill_source_list(struct list *sourcelist, HKEY sourcekey, DWORD *cou
     DWORD index = 0;
     WCHAR name[10];
     DWORD size, val_size;
-    media_info *entry;
+    struct media_info *entry;
 
     *count = 0;
 
@@ -994,7 +993,7 @@ static UINT fill_source_list(struct list *sourcelist, HKEY sourcekey, DWORD *cou
         if (r != ERROR_SUCCESS)
             return r;
 
-        entry = malloc(sizeof(media_info));
+        entry = malloc(sizeof(*entry));
         if (!entry)
             goto error;
 
@@ -1037,7 +1036,7 @@ UINT WINAPI MsiSourceListAddSourceExW( const WCHAR *szProduct, const WCHAR *szUs
     HKEY sourcekey, typekey;
     UINT rc;
     struct list sourcelist;
-    media_info *info;
+    struct media_info *info;
     WCHAR *source, squashed_pc[SQUASHED_GUID_SIZE], name[10];
     LPCWSTR postfix;
     DWORD size, count, index;
@@ -1118,7 +1117,7 @@ UINT WINAPI MsiSourceListAddSourceExW( const WCHAR *szProduct, const WCHAR *szUs
     else
     {
         swprintf(name, ARRAY_SIZE(name), L"%d", dwIndex);
-        info = malloc(sizeof(media_info));
+        info = malloc(sizeof(*info));
         if (!info)
         {
             rc = ERROR_OUTOFMEMORY;
@@ -1130,7 +1129,7 @@ UINT WINAPI MsiSourceListAddSourceExW( const WCHAR *szProduct, const WCHAR *szUs
         info->index = dwIndex;
         add_source_to_list(&sourcelist, info, &index);
 
-        LIST_FOR_EACH_ENTRY(info, &sourcelist, media_info, entry)
+        LIST_FOR_EACH_ENTRY(info, &sourcelist, struct media_info, entry)
         {
             if (info->index < index)
                 continue;

@@ -1206,7 +1206,7 @@ UINT WINAPI MsiDatabaseMergeA( MSIHANDLE hDatabase, MSIHANDLE hDatabaseMerge, co
     return r;
 }
 
-typedef struct _tagMERGETABLE
+struct merge_table
 {
     struct list entry;
     struct list rows;
@@ -1218,22 +1218,22 @@ typedef struct _tagMERGETABLE
     DWORD numtypes;
     LPWSTR *labels;
     DWORD numlabels;
-} MERGETABLE;
+};
 
-typedef struct _tagMERGEROW
+struct merge_row
 {
     struct list entry;
     MSIRECORD *data;
-} MERGEROW;
+};
 
-typedef struct _tagMERGEDATA
+struct merge_data
 {
     MSIDATABASE *db;
     MSIDATABASE *merge;
-    MERGETABLE *curtable;
+    struct merge_table *curtable;
     MSIQUERY *curview;
     struct list *tabledata;
-} MERGEDATA;
+};
 
 static BOOL merge_type_match(LPCWSTR type1, LPCWSTR type2)
 {
@@ -1462,9 +1462,9 @@ done:
 
 static UINT merge_diff_row(MSIRECORD *rec, LPVOID param)
 {
-    MERGEDATA *data = param;
-    MERGETABLE *table = data->curtable;
-    MERGEROW *mergerow;
+    struct merge_data *data = param;
+    struct merge_table *table = data->curtable;
+    struct merge_row *mergerow;
     MSIQUERY *dbview = NULL;
     MSIRECORD *row = NULL;
     LPWSTR query = NULL;
@@ -1496,7 +1496,7 @@ static UINT merge_diff_row(MSIRECORD *rec, LPVOID param)
         r = ERROR_SUCCESS;
     }
 
-    mergerow = malloc(sizeof(MERGEROW));
+    mergerow = malloc(sizeof(*mergerow));
     if (!mergerow)
     {
         r = ERROR_OUTOFMEMORY;
@@ -1606,13 +1606,13 @@ end:
     return r;
 }
 
-static void merge_free_rows(MERGETABLE *table)
+static void merge_free_rows(struct merge_table *table)
 {
     struct list *item, *cursor;
 
     LIST_FOR_EACH_SAFE(item, cursor, &table->rows)
     {
-        MERGEROW *row = LIST_ENTRY(item, MERGEROW, entry);
+        struct merge_row *row = LIST_ENTRY(item, struct merge_row, entry);
 
         list_remove(&row->entry);
         msiobj_release(&row->data->hdr);
@@ -1620,7 +1620,7 @@ static void merge_free_rows(MERGETABLE *table)
     }
 }
 
-static void free_merge_table(MERGETABLE *table)
+static void free_merge_table(struct merge_table *table)
 {
     UINT i;
 
@@ -1654,13 +1654,13 @@ static void free_merge_table(MERGETABLE *table)
     free(table);
 }
 
-static UINT get_merge_table(MSIDATABASE *db, const WCHAR *name, MERGETABLE **ptable)
+static UINT get_merge_table(MSIDATABASE *db, const WCHAR *name, struct merge_table **ptable)
 {
     UINT r;
-    MERGETABLE *table;
+    struct merge_table *table;
     MSIQUERY *mergeview = NULL;
 
-    table = calloc(1, sizeof(MERGETABLE));
+    table = calloc(1, sizeof(*table));
     if (!table)
     {
        *ptable = NULL;
@@ -1701,8 +1701,8 @@ err:
 
 static UINT merge_diff_tables(MSIRECORD *rec, LPVOID param)
 {
-    MERGEDATA *data = param;
-    MERGETABLE *table;
+    struct merge_data *data = param;
+    struct merge_table *table;
     MSIQUERY *dbview = NULL;
     MSIQUERY *mergeview = NULL;
     LPCWSTR name;
@@ -1754,7 +1754,7 @@ static UINT gather_merge_data(MSIDATABASE *db, MSIDATABASE *merge,
                               struct list *tabledata)
 {
     MSIQUERY *view;
-    MERGEDATA data;
+    struct merge_data data;
     UINT r;
 
     r = MSI_DatabaseOpenViewW(merge, L"SELECT * FROM `_Tables`", &view);
@@ -1769,10 +1769,10 @@ static UINT gather_merge_data(MSIDATABASE *db, MSIDATABASE *merge,
     return r;
 }
 
-static UINT merge_table(MSIDATABASE *db, MERGETABLE *table)
+static UINT merge_table(MSIDATABASE *db, struct merge_table *table)
 {
     UINT r;
-    MERGEROW *row;
+    struct merge_row *row;
     MSIVIEW *tv;
 
     if (!TABLE_Exists(db, table->name))
@@ -1782,7 +1782,7 @@ static UINT merge_table(MSIDATABASE *db, MERGETABLE *table)
            return ERROR_FUNCTION_FAILED;
     }
 
-    LIST_FOR_EACH_ENTRY(row, &table->rows, MERGEROW, entry)
+    LIST_FOR_EACH_ENTRY(row, &table->rows, struct merge_row, entry)
     {
         r = TABLE_CreateView(db, table->name, &tv);
         if (r != ERROR_SUCCESS)
@@ -1832,7 +1832,7 @@ UINT WINAPI MsiDatabaseMergeW( MSIHANDLE hDatabase, MSIHANDLE hDatabaseMerge, co
     struct list tabledata = LIST_INIT(tabledata);
     struct list *item, *cursor;
     MSIDATABASE *db, *merge;
-    MERGETABLE *table;
+    struct merge_table *table;
     BOOL conflicts;
     UINT r;
 
@@ -1854,7 +1854,7 @@ UINT WINAPI MsiDatabaseMergeW( MSIHANDLE hDatabase, MSIHANDLE hDatabaseMerge, co
         goto done;
 
     conflicts = FALSE;
-    LIST_FOR_EACH_ENTRY(table, &tabledata, MERGETABLE, entry)
+    LIST_FOR_EACH_ENTRY(table, &tabledata, struct merge_table, entry)
     {
         if (table->numconflicts)
         {
@@ -1875,7 +1875,7 @@ UINT WINAPI MsiDatabaseMergeW( MSIHANDLE hDatabase, MSIHANDLE hDatabaseMerge, co
 
     LIST_FOR_EACH_SAFE(item, cursor, &tabledata)
     {
-        MERGETABLE *table = LIST_ENTRY(item, MERGETABLE, entry);
+        struct merge_table *table = LIST_ENTRY(item, struct merge_table, entry);
         list_remove(&table->entry);
         free_merge_table(table);
     }

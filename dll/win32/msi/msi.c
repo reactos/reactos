@@ -4005,17 +4005,17 @@ UINT WINAPI MsiReinstallFeatureA( const char *szProduct, const char *szFeature, 
     return rc;
 }
 
-typedef struct
+struct md5_ctx
 {
     unsigned int i[2];
     unsigned int buf[4];
     unsigned char in[64];
     unsigned char digest[16];
-} MD5_CTX;
+};
 
-extern VOID WINAPI MD5Init( MD5_CTX *);
-extern VOID WINAPI MD5Update( MD5_CTX *, const unsigned char *, unsigned int );
-extern VOID WINAPI MD5Final( MD5_CTX *);
+extern void WINAPI MD5Init( struct md5_ctx * );
+extern void WINAPI MD5Update( struct md5_ctx *, const unsigned char *, unsigned int );
+extern void WINAPI MD5Final( struct md5_ctx * );
 
 UINT msi_get_filehash( MSIPACKAGE *package, const WCHAR *path, MSIFILEHASHINFO *hash )
 {
@@ -4039,7 +4039,7 @@ UINT msi_get_filehash( MSIPACKAGE *package, const WCHAR *path, MSIFILEHASHINFO *
         {
             if ((p = MapViewOfFile( mapping, FILE_MAP_READ, 0, 0, length )))
             {
-                MD5_CTX ctx;
+                struct md5_ctx ctx;
 
                 MD5Init( &ctx );
                 MD5Update( &ctx, p, length );

@@ -68,7 +68,6 @@ struct complex_expr
     struct expr *right;
 };
 
-struct tagJOINTABLE;
 union ext_column
 {
     struct
@@ -79,7 +78,7 @@ union ext_column
     struct
     {
         UINT column;
-        struct tagJOINTABLE *table;
+        struct join_table *table;
     } parsed;
 };
 

@@ -50,13 +50,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
 #define CUSTOM_ACTION_TYPE_MASK 0x3F
 
-typedef struct tagMSIRUNNINGACTION
+struct running_action
 {
     struct list entry;
     HANDLE handle;
     BOOL   process;
     LPWSTR name;
-} MSIRUNNINGACTION;
+};
 
 typedef UINT (WINAPI *MsiCustomActionEntryPoint)( MSIHANDLE );
 
@@ -305,9 +305,9 @@ static MSIBINARY *get_temp_binary(MSIPACKAGE *package, LPCWSTR source)
 static void file_running_action(MSIPACKAGE* package, HANDLE Handle,
                                 BOOL process, LPCWSTR name)
 {
-    MSIRUNNINGACTION *action;
+    struct running_action *action;
 
-    action = malloc( sizeof(MSIRUNNINGACTION) );
+    action = malloc( sizeof(*action) );
 
     action->handle = Handle;
     action->process = process;
@@ -1584,7 +1584,7 @@ void ACTION_FinishCustomActions(const MSIPACKAGE* package)
 
     while ((item = list_head( &package->RunningActions )))
     {
-        MSIRUNNINGACTION *action = LIST_ENTRY( item, MSIRUNNINGACTION, entry );
+        struct running_action *action = LIST_ENTRY( item, struct running_action, entry );
 
         list_remove( &action->entry );
 

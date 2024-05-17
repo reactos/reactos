@@ -851,14 +851,14 @@ done:
 
 #define is_dot_dir(x) ((x[0] == '.') && ((x[1] == 0) || ((x[1] == '.') && (x[2] == 0))))
 
-typedef struct
+struct file_list
 {
     struct list entry;
     LPWSTR sourcename;
     LPWSTR destname;
     LPWSTR source;
     LPWSTR dest;
-} FILE_LIST;
+};
 
 static BOOL move_file( MSIPACKAGE *package, const WCHAR *source, const WCHAR *dest, int options )
 {
@@ -913,31 +913,31 @@ static WCHAR *wildcard_to_file( const WCHAR *wildcard, const WCHAR *filename )
     return path;
 }
 
-static void free_file_entry(FILE_LIST *file)
+static void free_file_entry(struct file_list *file)
 {
     free(file->source);
     free(file->dest);
     free(file);
 }
 
-static void free_list(FILE_LIST *list)
+static void free_list(struct file_list *list)
 {
     while (!list_empty(&list->entry))
     {
-        FILE_LIST *file = LIST_ENTRY(list_head(&list->entry), FILE_LIST, entry);
+        struct file_list *file = LIST_ENTRY(list_head(&list->entry), struct file_list, entry);
 
         list_remove(&file->entry);
         free_file_entry(file);
     }
 }
 
-static BOOL add_wildcard( FILE_LIST *files, const WCHAR *source, WCHAR *dest )
+static BOOL add_wildcard( struct file_list *files, const WCHAR *source, WCHAR *dest )
 {
-    FILE_LIST *new, *file;
+    struct file_list *new, *file;
     WCHAR *ptr, *filename;
     DWORD size;
 
-    new = calloc(1, sizeof(FILE_LIST));
+    new = calloc(1, sizeof(*new));
     if (!new)
         return FALSE;
 
@@ -969,7 +969,7 @@ static BOOL add_wildcard( FILE_LIST *files, const WCHAR *source, WCHAR *dest )
         return TRUE;
     }
 
-    LIST_FOR_EACH_ENTRY(file, &files->entry, FILE_LIST, entry)
+    LIST_FOR_EACH_ENTRY(file, &files->entry, struct file_list, entry)
     {
         if (wcscmp( source, file->source ) < 0)
         {
@@ -988,7 +988,7 @@ static BOOL move_files_wildcard( MSIPACKAGE *package, const WCHAR *source, WCHAR
     HANDLE hfile;
     LPWSTR path;
     BOOL res;
-    FILE_LIST files, *file;
+    struct file_list files, *file;
     DWORD size;
 
     hfile = msi_find_first_file( package, source, &wfd );
@@ -1016,7 +1016,7 @@ static BOOL move_files_wildcard( MSIPACKAGE *package, const WCHAR *source, WCHAR
         goto done;
 
     /* only the first wildcard match gets renamed to dest */
-    file = LIST_ENTRY(list_head(&files.entry), FILE_LIST, entry);
+    file = LIST_ENTRY(list_head(&files.entry), struct file_list, entry);
     size = (wcsrchr(file->dest, '\\') - file->dest) + lstrlenW(file->destname) + 2;
     file->dest = realloc(file->dest, size * sizeof(WCHAR));
     if (!file->dest)
@@ -1034,7 +1034,7 @@ static BOOL move_files_wildcard( MSIPACKAGE *package, const WCHAR *source, WCHAR
 
     while (!list_empty(&files.entry))
     {
-        file = LIST_ENTRY(list_head(&files.entry), FILE_LIST, entry);
+        file = LIST_ENTRY(list_head(&files.entry), struct file_list, entry);
 
         move_file( package, file->source, file->dest, options );
 

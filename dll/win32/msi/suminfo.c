@@ -43,30 +43,35 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
 #include "pshpack1.h"
 
-typedef struct {
+struct property_set_header
+{
     WORD wByteOrder;
     WORD wFormat;
     DWORD dwOSVer;
     CLSID clsID;
     DWORD reserved;
-} PROPERTYSETHEADER;
+};
 
-typedef struct {
+struct format_id_offset
+{
     FMTID fmtid;
     DWORD dwOffset;
-} FORMATIDOFFSET;
+};
 
-typedef struct {
+struct property_section_header
+{
     DWORD cbSection;
     DWORD cProperties;
-} PROPERTYSECTIONHEADER;
+};
 
-typedef struct {
+struct property_id_offset
+{
     DWORD propid;
     DWORD dwOffset;
-} PROPERTYIDOFFSET;
+};
 
-typedef struct {
+struct property_data
+{
     DWORD type;
     union {
         INT i4;
@@ -77,7 +82,7 @@ typedef struct {
             BYTE str[1];
         } str;
     } u;
-} PROPERTY_DATA;
+};
 
 #include "poppack.h"
 
@@ -85,7 +90,7 @@ static HRESULT (WINAPI *pPropVariantChangeType)
     (PROPVARIANT *ppropvarDest, REFPROPVARIANT propvarSrc,
      PROPVAR_CHANGE_FLAGS flags, VARTYPE vt);
 
-#define SECT_HDR_SIZE (sizeof(PROPERTYSECTIONHEADER))
+#define SECT_HDR_SIZE (sizeof(struct property_section_header))
 
 static void free_prop( PROPVARIANT *prop )
 {
@@ -183,14 +188,14 @@ static void read_properties_from_data( PROPVARIANT *prop, LPBYTE data, DWORD sz 
 {
     UINT type;
     DWORD i, size;
-    PROPERTY_DATA *propdata;
+    struct property_data *propdata;
     PROPVARIANT property, *ptr;
     PROPVARIANT changed;
-    PROPERTYIDOFFSET *idofs;
-    PROPERTYSECTIONHEADER *section_hdr;
+    struct property_id_offset *idofs;
+    struct property_section_header *section_hdr;
 
-    section_hdr = (PROPERTYSECTIONHEADER*) &data[0];
-    idofs = (PROPERTYIDOFFSET*) &data[SECT_HDR_SIZE];
+    section_hdr = (struct property_section_header *) &data[0];
+    idofs = (struct property_id_offset *)&data[SECT_HDR_SIZE];
 
     /* now set all the properties */
     for( i = 0; i < section_hdr->cProperties; i++ )
@@ -208,7 +213,7 @@ static void read_properties_from_data( PROPVARIANT *prop, LPBYTE data, DWORD sz 
             break;
         }
 
-        propdata = (PROPERTY_DATA*) &data[ idofs[i].dwOffset ];
+        propdata = (struct property_data *)&data[ idofs[i].dwOffset ];
 
         /* check we don't run off the end of the data */
         size = sz - idofs[i].dwOffset - sizeof(DWORD);
@@ -250,9 +255,9 @@ static void read_properties_from_data( PROPVARIANT *prop, LPBYTE data, DWORD sz 
 
 static UINT load_summary_info( MSISUMMARYINFO *si, IStream *stm )
 {
-    PROPERTYSETHEADER set_hdr;
-    FORMATIDOFFSET format_hdr;
-    PROPERTYSECTIONHEADER section_hdr;
+    struct property_set_header set_hdr;
+    struct format_id_offset format_hdr;
+    struct property_section_header section_hdr;
     LPBYTE data = NULL;
     LARGE_INTEGER ofs;
     ULONG count, sz;
@@ -375,10 +380,10 @@ static UINT write_property_to_data( const PROPVARIANT *prop, LPBYTE data )
 static UINT save_summary_info( const MSISUMMARYINFO * si, IStream *stm )
 {
     UINT ret = ERROR_FUNCTION_FAILED;
-    PROPERTYSETHEADER set_hdr;
-    FORMATIDOFFSET format_hdr;
-    PROPERTYSECTIONHEADER section_hdr;
-    PROPERTYIDOFFSET idofs[MSI_MAX_PROPS];
+    struct property_set_header set_hdr;
+    struct format_id_offset format_hdr;
+    struct property_section_header section_hdr;
+    struct property_id_offset idofs[MSI_MAX_PROPS];
     LPBYTE data = NULL;
     ULONG count, sz;
     HRESULT r;

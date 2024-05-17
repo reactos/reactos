@@ -76,8 +76,7 @@ static INT ui_actionstart(MSIPACKAGE *package, LPCWSTR action, LPCWSTR descripti
     return rc;
 }
 
-static void ui_actioninfo(MSIPACKAGE *package, LPCWSTR action, BOOL start, 
-                          INT rc)
+static void ui_actioninfo(MSIPACKAGE *package, const WCHAR *action, BOOL start, INT rc)
 {
     MSIRECORD *row;
     WCHAR *template;
@@ -822,11 +821,6 @@ UINT msi_load_all_components( MSIPACKAGE *package )
     return r;
 }
 
-typedef struct {
-    MSIPACKAGE *package;
-    MSIFEATURE *feature;
-} _ilfs;
-
 static UINT add_feature_component( MSIFEATURE *feature, MSICOMPONENT *comp )
 {
     ComponentList *cl;
@@ -853,22 +847,28 @@ static UINT add_feature_child( MSIFEATURE *parent, MSIFEATURE *child )
     return ERROR_SUCCESS;
 }
 
+struct package_feature
+{
+    MSIPACKAGE *package;
+    MSIFEATURE *feature;
+};
+
 static UINT iterate_load_featurecomponents(MSIRECORD *row, LPVOID param)
 {
-    _ilfs* ilfs = param;
+    struct package_feature *package_feature = param;
     LPCWSTR component;
     MSICOMPONENT *comp;
 
     component = MSI_RecordGetString(row,1);
 
     /* check to see if the component is already loaded */
-    comp = msi_get_loaded_component( ilfs->package, component );
+    comp = msi_get_loaded_component( package_feature->package, component );
     if (!comp)
     {
         WARN("ignoring unknown component %s\n", debugstr_w(component));
         return ERROR_SUCCESS;
     }
-    add_feature_component( ilfs->feature, comp );
+    add_feature_component( package_feature->feature, comp );
     comp->Enabled = TRUE;
 
     return ERROR_SUCCESS;
@@ -879,7 +879,7 @@ static UINT load_feature(MSIRECORD *row, LPVOID param)
     MSIPACKAGE *package = param;
     MSIFEATURE *feature;
     MSIQUERY *view;
-    _ilfs ilfs;
+    struct package_feature package_feature;
     UINT rc;
 
     /* fill in the data */
@@ -919,10 +919,10 @@ static UINT load_feature(MSIRECORD *row, LPVOID param)
     if (rc != ERROR_SUCCESS)
         return ERROR_SUCCESS;
 
-    ilfs.package = package;
-    ilfs.feature = feature;
+    package_feature.package = package;
+    package_feature.feature = feature;
 
-    rc = MSI_IterateRecords(view, NULL, iterate_load_featurecomponents , &ilfs);
+    rc = MSI_IterateRecords(view, NULL, iterate_load_featurecomponents, &package_feature);
     msiobj_release(&view->hdr);
     return rc;
 }
@@ -3437,19 +3437,19 @@ static UINT ACTION_ProcessComponents(MSIPACKAGE *package)
     return ERROR_SUCCESS;
 }
 
-typedef struct {
+struct typelib
+{
     CLSID       clsid;
     LPWSTR      source;
-
     LPWSTR      path;
     ITypeLib    *ptLib;
-} typelib_struct;
+};
 
 static BOOL CALLBACK Typelib_EnumResNameProc( HMODULE hModule, LPCWSTR lpszType, 
                                        LPWSTR lpszName, LONG_PTR lParam)
 {
     TLIBATTR *attr;
-    typelib_struct *tl_struct = (typelib_struct*) lParam;
+    struct typelib *tl_struct = (struct typelib *)lParam;
     int sz;
     HRESULT res;
 
@@ -3523,7 +3523,7 @@ static UINT ITERATE_RegisterTypeLibraries(MSIRECORD *row, LPVOID param)
     LPCWSTR component;
     MSICOMPONENT *comp;
     MSIFILE *file;
-    typelib_struct tl_struct;
+    struct typelib tl_struct;
     ITypeLib *tlib;
     HMODULE module;
     HRESULT hr;
