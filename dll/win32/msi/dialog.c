@@ -143,7 +143,7 @@ static HWND hMsiHiddenWindow;
 static LPWSTR msi_get_window_text( HWND hwnd )
 {
     UINT sz, r;
-    LPWSTR buf;
+    WCHAR *buf, *new_buf;
 
     sz = 0x20;
     buf = malloc( sz * sizeof(WCHAR) );
@@ -153,7 +153,10 @@ static LPWSTR msi_get_window_text( HWND hwnd )
         if ( r < (sz - 1) )
             break;
         sz *= 2;
-        buf = realloc( buf, sz * sizeof(WCHAR) );
+        new_buf = realloc( buf, sz * sizeof(WCHAR) );
+        if ( !new_buf )
+            free( buf );
+        buf = new_buf;
     }
 
     return buf;
