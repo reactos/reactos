@@ -3678,7 +3678,7 @@ static UINT ACTION_UnregisterTypeLibraries( MSIPACKAGE *package )
 static WCHAR *get_link_file( MSIPACKAGE *package, MSIRECORD *row )
 {
     LPCWSTR directory, extension, link_folder;
-    LPWSTR link_file, filename;
+    WCHAR *link_file = NULL, *filename, *new_filename;
 
     directory = MSI_RecordGetString( row, 2 );
     link_folder = msi_get_target_folder( package, directory );
@@ -3691,18 +3691,22 @@ static WCHAR *get_link_file( MSIPACKAGE *package, MSIRECORD *row )
     msi_create_full_path( package, link_folder );
 
     filename = msi_dup_record_field( row, 3 );
+    if (!filename) return NULL;
     msi_reduce_to_long_filename( filename );
 
     extension = wcsrchr( filename, '.' );
     if (!extension || wcsicmp( extension, L".lnk" ))
     {
         int len = lstrlenW( filename );
-        filename = realloc( filename, len * sizeof(WCHAR) + sizeof(L".lnk") );
+        new_filename = realloc( filename, len * sizeof(WCHAR) + sizeof(L".lnk") );
+        if (!new_filename) goto done;
+        filename = new_filename;
         memcpy( filename + len, L".lnk", sizeof(L".lnk") );
     }
     link_file = msi_build_directory_name( 2, link_folder, filename );
-    free( filename );
 
+done:
+    free( filename );
     return link_file;
 }
 
