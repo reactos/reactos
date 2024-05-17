@@ -20,6 +20,8 @@
 
 #include <stdarg.h>
 
+#define COBJMACROS
+
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
@@ -269,6 +271,7 @@ UINT msi_select_update(MSIVIEW *view, MSIRECORD *rec, UINT row)
             if (MSI_RecordGetIStream(rec, i + 1, &stream))
                 return ERROR_FUNCTION_FAILED;
             r = sv->table->ops->set_stream(sv->table, row, col, stream);
+            IStream_Release(stream);
         }
         else if (type & MSITYPE_STRING)
         {
