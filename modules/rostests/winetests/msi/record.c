@@ -244,11 +244,11 @@ static void test_msirecord(void)
     i = MsiRecordSetStringA(h,0,"42");
     ok(i == ERROR_SUCCESS, "Failed to set string at 0\n");
     i = MsiRecordGetInteger(h, 0);
-    ok(i == 42, "should get invalid integer\n");
+    ok(i == 42, "should get 42\n");
     i = MsiRecordSetStringA(h,0,"-42");
     ok(i == ERROR_SUCCESS, "Failed to set string at 0\n");
     i = MsiRecordGetInteger(h, 0);
-    ok(i == -42, "should get invalid integer\n");
+    ok(i == -42, "should get -42\n");
     i = MsiRecordSetStringA(h,0," 42");
     ok(i == ERROR_SUCCESS, "Failed to set string at 0\n");
     i = MsiRecordGetInteger(h, 0);
