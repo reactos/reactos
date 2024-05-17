@@ -1192,10 +1192,12 @@ static UINT dialog_line_control( msi_dialog *dialog, MSIRECORD *rec )
     lstrcpyW( control->name, name );
     list_add_head( &dialog->controls, &control->entry );
     control->handler = NULL;
+    control->update = NULL;
     control->property = NULL;
     control->value = NULL;
     control->hBitmap = NULL;
     control->hIcon = NULL;
+    control->hImageList = NULL;
     control->hDll = NULL;
     control->tabnext = wcsdup( MSI_RecordGetString( rec, 11 ) );
     control->type = wcsdup( MSI_RecordGetString( rec, 3 ) );
