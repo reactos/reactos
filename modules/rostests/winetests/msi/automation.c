@@ -40,9 +40,6 @@
 
 static BOOL is_wow64;
 
-static LONG (WINAPI *pRegDeleteKeyExA)(HKEY, LPCSTR, REGSAM, DWORD);
-static BOOL (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
-
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
 static const char *msifile = "winetest-automation.msi";
@@ -194,29 +191,6 @@ static const msi_summary_info summary_info[] =
     ADD_INFO_FILETIME(PID_CREATE_DTM, &systemtime),
     ADD_INFO_FILETIME(PID_LASTPRINTED, &systemtime)
 };
-
-static void init_functionpointers(void)
-{
-    HMODULE hadvapi32 = GetModuleHandleA("advapi32.dll");
-    HMODULE hkernel32 = GetModuleHandleA("kernel32.dll");
-
-#define GET_PROC(dll, func) \
-    p ## func = (void *)GetProcAddress(dll, #func); \
-    if(!p ## func) \
-      trace("GetProcAddress(%s) failed\n", #func);
-
-    GET_PROC(hadvapi32, RegDeleteKeyExA)
-    GET_PROC(hkernel32, IsWow64Process)
-
-#undef GET_PROC
-}
-
-static LONG delete_key_portable( HKEY key, LPCSTR subkey, REGSAM access )
-{
-    if (pRegDeleteKeyExA)
-        return pRegDeleteKeyExA( key, subkey, access, 0 );
-    return RegDeleteKeyA( key, subkey );
-}
 
 /*
  * Database Helpers
@@ -2263,7 +2237,7 @@ static UINT delete_registry_key(HKEY hkeyParent, LPCSTR subkey, REGSAM access)
 
     RegCloseKey(hkey);
     free(string);
-    delete_key_portable(hkeyParent, subkey, access);
+    RegDeleteKeyExA(hkeyParent, subkey, access, 0);
     return ERROR_SUCCESS;
 }
 
@@ -2443,13 +2417,13 @@ static void test_Installer_InstallProduct(void)
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     /* Remove registry keys written by RegisterProduct standard action */
-    res = delete_key_portable(HKEY_LOCAL_MACHINE,
+    res = RegDeleteKeyExA(HKEY_LOCAL_MACHINE,
         "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{837450fa-a39b-4bc8-b321-08b393f784b3}",
-                              KEY_WOW64_32KEY);
+                              KEY_WOW64_32KEY, 0);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
-    res = delete_key_portable(HKEY_LOCAL_MACHINE,
-        "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Installer\\UpgradeCodes\\D8E760ECA1E276347B43E42BDBDA5656", access);
+    res = RegDeleteKeyExA(HKEY_LOCAL_MACHINE,
+        "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Installer\\UpgradeCodes\\D8E760ECA1E276347B43E42BDBDA5656", access, 0);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     res = find_registry_key(HKEY_LOCAL_MACHINE,
@@ -2460,8 +2434,8 @@ static void test_Installer_InstallProduct(void)
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
     RegCloseKey(hkey);
 
-    res = delete_key_portable(HKEY_LOCAL_MACHINE,
-        "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Installer\\Products\\af054738b93a8cb43b12803b397f483b", access);
+    res = RegDeleteKeyExA(HKEY_LOCAL_MACHINE,
+        "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Installer\\Products\\af054738b93a8cb43b12803b397f483b", access, 0);
     ok(res == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %ld\n", res);
 
     /* Remove registry keys written by PublishProduct standard action */
@@ -2628,12 +2602,9 @@ START_TEST(automation)
     CLSID clsid;
     IUnknown *pUnk;
 
-    init_functionpointers();
-
     if (!is_process_elevated()) restart_as_admin_elevated();
 
-    if (pIsWow64Process)
-        pIsWow64Process(GetCurrentProcess(), &is_wow64);
+    IsWow64Process(GetCurrentProcess(), &is_wow64);
 
     GetSystemTimeAsFileTime(&systemtime);
 
@@ -2670,6 +2641,5 @@ START_TEST(automation)
     }
 
     OleUninitialize();
-
     SetCurrentDirectoryA(prev_path);
 }

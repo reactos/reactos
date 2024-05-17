@@ -32,12 +32,6 @@
 #include "wine/test.h"
 #include "utils.h"
 
-static UINT (WINAPI *pMsiApplyPatchA)( LPCSTR, LPCSTR, INSTALLTYPE, LPCSTR );
-static UINT (WINAPI *pMsiGetPatchInfoExA)( LPCSTR, LPCSTR, LPCSTR, MSIINSTALLCONTEXT,
-                                           LPCSTR, LPSTR, DWORD * );
-static UINT (WINAPI *pMsiEnumPatchesExA)( LPCSTR, LPCSTR, DWORD, DWORD, DWORD, LPSTR,
-                                          LPSTR, MSIINSTALLCONTEXT *, LPSTR, LPDWORD );
-
 static const char *msifile = "winetest-patch.msi";
 static const char *mspfile = "winetest-patch.msp";
 static const WCHAR msifileW[] = L"winetest-patch.msi";
@@ -145,22 +139,6 @@ static const struct msi_table tables[] =
     ADD_TABLE( media ),
     ADD_TABLE( condition )
 };
-
-static void init_function_pointers( void )
-{
-    HMODULE hmsi = GetModuleHandleA( "msi.dll" );
-
-#define GET_PROC( mod, func ) \
-    p ## func = (void *)GetProcAddress( mod, #func ); \
-    if (!p ## func) \
-        trace( "GetProcAddress(%s) failed\n", #func );
-
-    GET_PROC( hmsi, MsiApplyPatchA );
-    GET_PROC( hmsi, MsiGetPatchInfoExA );
-    GET_PROC( hmsi, MsiEnumPatchesExA );
-
-#undef GET_PROC
-}
 
 static BOOL get_program_files_dir( char *buf, char *buf2 )
 {
@@ -691,11 +669,6 @@ static void test_simple_patch( void )
     WCHAR pathW[MAX_PATH];
     MSIHANDLE hpackage, hdb, hview, hrec;
 
-    if (!pMsiApplyPatchA)
-    {
-        win_skip("MsiApplyPatchA is not available\n");
-        return;
-    }
     if (!is_process_elevated())
     {
         skip("process is limited\n");
@@ -774,14 +747,7 @@ static void test_simple_patch( void )
     MsiCloseHandle( hpackage );
 
     r = MsiApplyPatchA( mspfile, NULL, INSTALLTYPE_DEFAULT, NULL );
-    ok( r == ERROR_SUCCESS || broken( r == ERROR_PATCH_PACKAGE_INVALID ), /* version 2.0 */
-        "expected ERROR_SUCCESS, got %u\n", r );
-
-    if (r == ERROR_PATCH_PACKAGE_INVALID)
-    {
-        win_skip("Windows Installer < 3.0 detected\n");
-        goto uninstall;
-    }
+    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
 
     size = get_pf_file_size( "msitest\\patch.txt" );
     ok( size == 1002, "expected 1002, got %lu\n", size );
@@ -857,7 +823,6 @@ static void test_simple_patch( void )
     MsiCloseHandle( hview );
     MsiCloseHandle( hdb );
 
-uninstall:
     size = sizeof(path);
     r = MsiGetProductInfoA( "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}",
                             "InstallSource", path, &size );
@@ -1030,11 +995,6 @@ static void test_system_tables( void )
     const char *query;
     MSIHANDLE hproduct, hdb, hview, hrec;
 
-    if (!pMsiApplyPatchA)
-    {
-        win_skip("MsiApplyPatchA is not available\n");
-        return;
-    }
     if (!is_process_elevated())
     {
         skip("process is limited\n");
@@ -1112,14 +1072,7 @@ static void test_system_tables( void )
     MsiCloseHandle( hproduct );
 
     r = MsiApplyPatchA( mspfile, NULL, INSTALLTYPE_DEFAULT, NULL );
-    ok( r == ERROR_SUCCESS || broken( r == ERROR_PATCH_PACKAGE_INVALID ), /* version 2.0 */
-        "expected ERROR_SUCCESS, got %u\n", r );
-
-    if (r == ERROR_PATCH_PACKAGE_INVALID)
-    {
-        win_skip("Windows Installer < 3.0 detected\n");
-        goto uninstall;
-    }
+    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
 
     r = MsiOpenProductA( "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}", &hproduct );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
@@ -1203,7 +1156,6 @@ static void test_system_tables( void )
     MsiCloseHandle( hdb );
     MsiCloseHandle( hproduct );
 
-uninstall:
     r = MsiInstallProductA( msifile, "REMOVE=ALL" );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
 
@@ -1220,11 +1172,6 @@ static void test_patch_registration( void )
     DWORD size;
     char buffer[MAX_PATH], patch_code[39];
 
-    if (!pMsiApplyPatchA || !pMsiGetPatchInfoExA || !pMsiEnumPatchesExA)
-    {
-        win_skip("required functions not available\n");
-        return;
-    }
     if (!is_process_elevated())
     {
         skip("process is limited\n");
@@ -1247,67 +1194,59 @@ static void test_patch_registration( void )
     }
 
     r = MsiApplyPatchA( mspfile, NULL, INSTALLTYPE_DEFAULT, NULL );
-    ok( r == ERROR_SUCCESS || broken( r == ERROR_PATCH_PACKAGE_INVALID ), /* version 2.0 */
-        "expected ERROR_SUCCESS, got %u\n", r );
-
-    if (r == ERROR_PATCH_PACKAGE_INVALID)
-    {
-        win_skip("Windows Installer < 3.0 detected\n");
-        goto uninstall;
-    }
+    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
 
     buffer[0] = 0;
     size = sizeof(buffer);
-    r = pMsiGetPatchInfoExA( "{0F96CDC0-4CDF-4304-B283-7B9264889EF7}",
-                             "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}",
-                              NULL, MSIINSTALLCONTEXT_USERUNMANAGED,
-                              INSTALLPROPERTY_LOCALPACKAGEA, buffer, &size );
+    r = MsiGetPatchInfoExA( "{0F96CDC0-4CDF-4304-B283-7B9264889EF7}",
+                            "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}",
+                             NULL, MSIINSTALLCONTEXT_USERUNMANAGED,
+                             INSTALLPROPERTY_LOCALPACKAGEA, buffer, &size );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
     ok( buffer[0], "buffer empty\n" );
 
     buffer[0] = 0;
     size = sizeof(buffer);
-    r = pMsiGetPatchInfoExA( "{0F96CDC0-4CDF-4304-B283-7B9264889EF7}",
-                             "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}",
-                             NULL, MSIINSTALLCONTEXT_MACHINE,
-                             INSTALLPROPERTY_LOCALPACKAGEA, buffer, &size );
+    r = MsiGetPatchInfoExA( "{0F96CDC0-4CDF-4304-B283-7B9264889EF7}",
+                            "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}",
+                            NULL, MSIINSTALLCONTEXT_MACHINE,
+                            INSTALLPROPERTY_LOCALPACKAGEA, buffer, &size );
     ok( r == ERROR_UNKNOWN_PRODUCT, "expected ERROR_UNKNOWN_PRODUCT, got %u\n", r );
 
     buffer[0] = 0;
     size = sizeof(buffer);
-    r = pMsiGetPatchInfoExA( "{0F96CDC0-4CDF-4304-B283-7B9264889EF7}",
-                             "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}",
+    r = MsiGetPatchInfoExA( "{0F96CDC0-4CDF-4304-B283-7B9264889EF7}",
+                            "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}",
                              NULL, MSIINSTALLCONTEXT_USERMANAGED,
                              INSTALLPROPERTY_LOCALPACKAGEA, buffer, &size );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
     ok( !buffer[0], "got %s\n", buffer );
 
-    r = pMsiEnumPatchesExA( "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}",
-                           NULL, MSIINSTALLCONTEXT_USERUNMANAGED, MSIPATCHSTATE_APPLIED,
-                           0, patch_code, NULL, NULL, NULL, NULL );
+    r = MsiEnumPatchesExA( "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}",
+                          NULL, MSIINSTALLCONTEXT_USERUNMANAGED, MSIPATCHSTATE_APPLIED,
+                          0, patch_code, NULL, NULL, NULL, NULL );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
     ok( !strcmp( patch_code, "{0F96CDC0-4CDF-4304-B283-7B9264889EF7}" ), "wrong patch code\n" );
 
-    r = pMsiEnumPatchesExA( "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}",
-                           NULL, MSIINSTALLCONTEXT_MACHINE, MSIPATCHSTATE_APPLIED,
-                           0, patch_code, NULL, NULL, NULL, NULL );
+    r = MsiEnumPatchesExA( "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}",
+                          NULL, MSIINSTALLCONTEXT_MACHINE, MSIPATCHSTATE_APPLIED,
+                          0, patch_code, NULL, NULL, NULL, NULL );
     ok( r == ERROR_NO_MORE_ITEMS, "expected ERROR_NO_MORE_ITEMS, got %u\n", r );
 
-    r = pMsiEnumPatchesExA( "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}",
-                           NULL, MSIINSTALLCONTEXT_USERMANAGED, MSIPATCHSTATE_APPLIED,
-                           0, patch_code, NULL, NULL, NULL, NULL );
+    r = MsiEnumPatchesExA( "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}",
+                          NULL, MSIINSTALLCONTEXT_USERMANAGED, MSIPATCHSTATE_APPLIED,
+                          0, patch_code, NULL, NULL, NULL, NULL );
     ok( r == ERROR_NO_MORE_ITEMS, "expected ERROR_NO_MORE_ITEMS, got %u\n", r );
 
-uninstall:
     r = MsiInstallProductA( msifile, "REMOVE=ALL" );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
 
     buffer[0] = 0;
     size = sizeof(buffer);
-    r = pMsiGetPatchInfoExA( "{0F96CDC0-4CDF-4304-B283-7B9264889EF7}",
-                             "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}",
-                              NULL, MSIINSTALLCONTEXT_USERUNMANAGED,
-                              INSTALLPROPERTY_LOCALPACKAGEA, buffer, &size );
+    r = MsiGetPatchInfoExA( "{0F96CDC0-4CDF-4304-B283-7B9264889EF7}",
+                            "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}",
+                             NULL, MSIINSTALLCONTEXT_USERUNMANAGED,
+                             INSTALLPROPERTY_LOCALPACKAGEA, buffer, &size );
     ok( r == ERROR_UNKNOWN_PRODUCT, "expected ERROR_UNKNOWN_PRODUCT, got %u\n", r );
 
 cleanup:
@@ -1323,8 +1262,6 @@ START_TEST(patch)
     char temp_path[MAX_PATH], prev_path[MAX_PATH];
 
     if (!is_process_elevated()) restart_as_admin_elevated();
-
-    init_function_pointers();
 
     GetCurrentDirectoryA( MAX_PATH, prev_path );
     GetTempPathA( MAX_PATH, temp_path );

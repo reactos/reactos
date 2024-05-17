@@ -1128,9 +1128,7 @@ static void test_invalid_functions(MSIHANDLE hinst)
     ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
 
     r = MsiCreateTransformSummaryInfoA(db, db, "bogus.mst", 0, 0);
-    todo_wine ok(hinst, r == ERROR_INSTALL_PACKAGE_OPEN_FAILED ||
-                        r == ERROR_INSTALL_PACKAGE_INVALID /* winxp */,
-                 "got %u\n", r);
+    todo_wine ok(hinst, r == ERROR_INSTALL_PACKAGE_OPEN_FAILED, "got %u\n", r);
 
     GetCurrentDirectoryA(sizeof(path), path);
     r = MsiDatabaseExportA(db, "Test", path, "bogus.idt");

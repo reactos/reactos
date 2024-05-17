@@ -38,43 +38,6 @@ static BOOL is_wow64;
 static const char msifile[] = "winetest-package.msi";
 static const WCHAR msifileW[] = L"winetest-package.msi";
 
-static INSTALLSTATE (WINAPI *pMsiGetComponentPathExA)(LPCSTR, LPCSTR, LPCSTR, MSIINSTALLCONTEXT, LPSTR, LPDWORD);
-
-static LONG (WINAPI *pRegDeleteKeyExA)(HKEY, LPCSTR, REGSAM, DWORD);
-static LONG (WINAPI *pRegDeleteKeyExW)(HKEY, LPCWSTR, REGSAM, DWORD);
-static BOOL (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
-static BOOL (WINAPI *pSRRemoveRestorePoint)(DWORD);
-static BOOL (WINAPI *pSRSetRestorePointA)(RESTOREPOINTINFOA*, STATEMGRSTATUS*);
-
-static void init_functionpointers(void)
-{
-    HMODULE hmsi = GetModuleHandleA("msi.dll");
-    HMODULE hadvapi32 = GetModuleHandleA("advapi32.dll");
-    HMODULE hkernel32 = GetModuleHandleA("kernel32.dll");
-    HMODULE hsrclient = LoadLibraryA("srclient.dll");
-
-#define GET_PROC(mod, func) \
-    p ## func = (void*)GetProcAddress(mod, #func);
-
-    GET_PROC(hmsi, MsiGetComponentPathExA);
-
-    GET_PROC(hadvapi32, RegDeleteKeyExA)
-    GET_PROC(hadvapi32, RegDeleteKeyExW)
-    GET_PROC(hkernel32, IsWow64Process)
-
-    GET_PROC(hsrclient, SRRemoveRestorePoint);
-    GET_PROC(hsrclient, SRSetRestorePointA);
-
-#undef GET_PROC
-}
-
-static LONG delete_key( HKEY key, LPCSTR subkey, REGSAM access )
-{
-    if (pRegDeleteKeyExA)
-        return pRegDeleteKeyExA( key, subkey, access, 0 );
-    return RegDeleteKeyA( key, subkey );
-}
-
 static char *get_user_sid(void)
 {
     HANDLE token;
@@ -138,12 +101,7 @@ static LSTATUS package_RegDeleteTreeW(HKEY hKey, LPCWSTR lpszSubKey, REGSAM acce
     }
 
     if (lpszSubKey)
-    {
-        if (pRegDeleteKeyExW)
-            ret = pRegDeleteKeyExW(hKey, lpszSubKey, access, 0);
-        else
-            ret = RegDeleteKeyW(hKey, lpszSubKey);
-    }
+        ret = RegDeleteKeyExW(hKey, lpszSubKey, access, 0);
     else
         while (TRUE)
         {
@@ -975,27 +933,6 @@ static BOOL create_file_with_version(const CHAR *name, LONG ms, LONG ls)
 done:
     free(buffer);
     return ret;
-}
-
-static BOOL notify_system_change(DWORD event_type, STATEMGRSTATUS *status)
-{
-    RESTOREPOINTINFOA spec;
-
-    spec.dwEventType = event_type;
-    spec.dwRestorePtType = APPLICATION_INSTALL;
-    spec.llSequenceNumber = status->llSequenceNumber;
-    lstrcpyA(spec.szDescription, "msitest restore point");
-
-    return pSRSetRestorePointA(&spec, status);
-}
-
-static void remove_restore_point(DWORD seq_number)
-{
-    DWORD res;
-
-    res = pSRRemoveRestorePoint(seq_number);
-    if (res != ERROR_SUCCESS)
-        trace("Failed to remove the restore point: %#lx\n", res);
 }
 
 static BOOL is_root(const char *path)
@@ -2038,20 +1975,16 @@ static void test_condition(void)
     ok( r == MSICONDITION_FALSE, "wrong return val (%d)\n", r);
 
     r = MsiEvaluateConditionW(hpkg, L"\"a\x30a\"<\"\xe5\"");
-    ok( r == MSICONDITION_TRUE || broken(r == MSICONDITION_FALSE),
-        "wrong return val (%d)\n", r);
+    ok( r == MSICONDITION_TRUE, "wrong return val (%d)\n", r);
 
     r = MsiEvaluateConditionW(hpkg, L"\"a\x30a\">\"\xe5\"");
-    ok( r == MSICONDITION_FALSE || broken(r == MSICONDITION_TRUE),
-        "wrong return val (%d)\n", r);
+    ok( r == MSICONDITION_FALSE, "wrong return val (%d)\n", r);
 
     r = MsiEvaluateConditionW(hpkg, L"\"a\x30a\"<>\"\xe5\"");
-    ok( r == MSICONDITION_TRUE || broken(r == MSICONDITION_FALSE),
-        "wrong return val (%d)\n", r);
+    ok( r == MSICONDITION_TRUE, "wrong return val (%d)\n", r);
 
     r = MsiEvaluateConditionW(hpkg, L"\"a\x30a\"=\"\xe5\"");
-    ok( r == MSICONDITION_FALSE || broken(r == MSICONDITION_TRUE),
-        "wrong return val (%d)\n", r);
+    ok( r == MSICONDITION_FALSE, "wrong return val (%d)\n", r);
 
     MsiCloseHandle( hpkg );
     DeleteFileA(msifile);
@@ -2991,7 +2924,6 @@ static void test_states(void)
     MSIHANDLE hpkg, hprod;
     UINT r;
     MSIHANDLE hdb;
-    BOOL is_broken;
     char value[MAX_PATH];
     DWORD size;
 
@@ -3528,8 +3460,7 @@ static void test_states(void)
 
     /* reinstall the product */
     r = MsiInstallProductA(msifile3, "REINSTALL=ALL");
-    is_broken = (r == ERROR_INSTALL_FAILURE);
-    ok(r == ERROR_SUCCESS || broken(is_broken) /* win2k3 */, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     state = MsiQueryFeatureStateA("{7262AC98-EEBD-4364-8CE3-D654F6A425B9}", "five");
     ok(state == INSTALLSTATE_UNKNOWN, "state = %d\n", state);
@@ -3701,8 +3632,7 @@ static void test_states(void)
     MsiCloseHandle( hpkg );
 
     r = MsiInstallProductA(msifile, "");
-    ok(r == ERROR_SUCCESS || (is_broken && r == ERROR_INSTALL_FAILURE) /* win2k3 */,
-            "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     state = MsiQueryFeatureStateA("{7262AC98-EEBD-4364-8CE3-D654F6A425B9}", "one");
     ok(state == INSTALLSTATE_SOURCE, "state = %d\n", state);
     state = MsiQueryFeatureStateA("{7262AC98-EEBD-4364-8CE3-D654F6A425B9}", "two");
@@ -4040,8 +3970,8 @@ done:
     MsiCloseHandle( hpkg );
     DeleteFileA(msifile);
     RegDeleteKeyA(HKEY_CURRENT_USER, "Software\\Winetest_msi");
-    delete_key(HKEY_LOCAL_MACHINE, "Software\\Winetest_msi", KEY_WOW64_32KEY);
-    delete_key(HKEY_LOCAL_MACHINE, "Software\\Winetest_msi", KEY_WOW64_64KEY);
+    RegDeleteKeyExA(HKEY_LOCAL_MACHINE, "Software\\Winetest_msi", KEY_WOW64_32KEY, 0);
+    RegDeleteKeyExA(HKEY_LOCAL_MACHINE, "Software\\Winetest_msi", KEY_WOW64_64KEY, 0);
 }
 
 static void test_appsearch_complocator(void)
@@ -4332,9 +4262,7 @@ static void test_appsearch_reglocator(void)
 
     users = 0;
     res = RegCreateKeyA(HKEY_USERS, "S-1-5-18\\Software\\Wine", &users);
-    ok(res == ERROR_SUCCESS ||
-       broken(res == ERROR_INVALID_PARAMETER),
-       "Expected ERROR_SUCCESS, got %ld\n", res);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     if (res == ERROR_SUCCESS)
     {
@@ -7955,6 +7883,7 @@ static void test_MsiGetProductProperty(void)
         skip("Not enough rights to perform tests\n");
         RegDeleteKeyA(prodkey, "");
         RegCloseKey(prodkey);
+        DeleteFileA(msifile);
         return;
     }
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
@@ -7965,12 +7894,16 @@ static void test_MsiGetProductProperty(void)
     lstrcpyA(val, path);
     lstrcatA(val, "\\");
     lstrcatA(val, msifile);
-    res = RegSetValueExA(props, "LocalPackage", 0, REG_SZ,
-                         (const BYTE *)val, lstrlenA(val) + 1);
+    res = RegSetValueExA(props, "LocalPackage", 0, REG_SZ, (const BYTE *)val, lstrlenA(val) + 1);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", res);
 
     hprod = 0xdeadbeef;
     r = MsiOpenProductA(prodcode, &hprod);
+    if (r == ERROR_UNKNOWN_PRODUCT)
+    {
+        win_skip("broken result, skipping tests\n");
+        goto done;
+    }
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(hprod != 0 && hprod != 0xdeadbeef, "Expected a valid product handle\n");
 
@@ -8191,13 +8124,13 @@ static void test_MsiGetProductProperty(void)
        "Expected %d, got %lu\n", lstrlenW(prodcodeW), size);
 
     MsiCloseHandle(hprod);
-
+done:
     RegDeleteValueA(props, "LocalPackage");
-    delete_key(props, "", access);
+    RegDeleteKeyExA(props, "", access, 0);
     RegCloseKey(props);
-    delete_key(userkey, "", access);
+    RegDeleteKeyExA(userkey, "", access, 0);
     RegCloseKey(userkey);
-    delete_key(prodkey, "", access);
+    RegDeleteKeyExA(prodkey, "", access, 0);
     RegCloseKey(prodkey);
     DeleteFileA(msifile);
 }
@@ -9560,16 +9493,11 @@ static void test_top_level_action(void)
 START_TEST(package)
 {
     char temp_path[MAX_PATH], prev_path[MAX_PATH];
-    STATEMGRSTATUS status;
-    BOOL ret = FALSE;
     DWORD len;
 
     if (!is_process_elevated()) restart_as_admin_elevated();
 
-    init_functionpointers();
-
-    if (pIsWow64Process)
-        pIsWow64Process(GetCurrentProcess(), &is_wow64);
+    IsWow64Process(GetCurrentProcess(), &is_wow64);
 
     GetCurrentDirectoryA(MAX_PATH, prev_path);
     GetTempPathA(MAX_PATH, temp_path);
@@ -9580,18 +9508,6 @@ START_TEST(package)
 
     if (len && (CURR_DIR[len - 1] == '\\'))
         CURR_DIR[len - 1] = 0;
-
-    /* Create a restore point ourselves so we circumvent the multitude of restore points
-     * that would have been created by all the installation and removal tests.
-     *
-     * This is not needed on version 5.0 where setting MSIFASTINSTALL prevents the
-     * creation of restore points.
-     */
-    if (pSRSetRestorePointA && !pMsiGetComponentPathExA)
-    {
-        memset(&status, 0, sizeof(status));
-        ret = notify_system_change(BEGIN_NESTED_SYSTEM_CHANGE, &status);
-    }
 
     test_createpackage();
     test_doaction();
@@ -9630,13 +9546,6 @@ START_TEST(package)
     test_externalui_message();
     test_controlevent();
     test_top_level_action();
-
-    if (pSRSetRestorePointA && !pMsiGetComponentPathExA && ret)
-    {
-        ret = notify_system_change(END_NESTED_SYSTEM_CHANGE, &status);
-        if (ret)
-            remove_restore_point(status.llSequenceNumber);
-    }
 
     SetCurrentDirectoryA(prev_path);
 }
