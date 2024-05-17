@@ -427,7 +427,6 @@ static BOOL delete_pf(const CHAR *rel_path, BOOL is_file)
 
 static void delete_test_files(void)
 {
-    DeleteFileA(msifile);
     DeleteFileA("msitest\\cabout\\new\\five.txt");
     DeleteFileA("msitest\\cabout\\four.txt");
     DeleteFileA("msitest\\second\\three.txt");
@@ -2695,6 +2694,7 @@ static void test_Installer(void)
 
     /* Installer::InstallProduct and other tests that depend on our product being installed */
     test_Installer_InstallProduct();
+    DeleteFileA(msifile);
 }
 
 START_TEST(automation)
