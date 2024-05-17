@@ -1960,7 +1960,12 @@ INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType, MSIREC
             }
 
             template = malloc((wcslen(template_rec) + wcslen(template_prefix) + 1) * sizeof(WCHAR));
-            if (!template) return ERROR_OUTOFMEMORY;
+            if (!template)
+            {
+                free(template_prefix);
+                free(template_rec);
+                return ERROR_OUTOFMEMORY;
+            }
 
             lstrcpyW(template, template_prefix);
             lstrcatW(template, template_rec);
