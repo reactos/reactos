@@ -2849,16 +2849,16 @@ static void dialog_update_directory_list( msi_dialog *dialog, struct control *co
     FindClose( file );
 }
 
-static UINT msi_dialog_directorylist_up( msi_dialog *dialog )
+static UINT dialog_directorylist_up( msi_dialog *dialog )
 {
-    msi_control *control;
+    struct control *control;
     LPWSTR prop, path, ptr;
     BOOL indirect;
 
-    control = msi_dialog_find_control_by_type( dialog, L"DirectoryList" );
+    control = dialog_find_control_by_type( dialog, L"DirectoryList" );
     indirect = control->attributes & msidbControlAttributesIndirect;
-    prop = msi_dialog_dup_property( dialog, control->property, indirect );
-    path = msi_dialog_dup_property( dialog, prop, TRUE );
+    prop = dialog_dup_property( dialog, control->property, indirect );
+    path = dialog_dup_property( dialog, prop, TRUE );
 
     /* strip off the last directory */
     ptr = PathFindFileNameW( path );
@@ -2867,12 +2867,12 @@ static UINT msi_dialog_directorylist_up( msi_dialog *dialog )
         *(ptr - 1) = '\0';
         PathAddBackslashW( path );
     }
-	
-    msi_dialog_set_property( dialog->package, prop, path );
 
-    msi_dialog_update_directory_list( dialog, NULL );
-    msi_dialog_update_directory_combo( dialog, NULL );
-    msi_dialog_update_pathedit( dialog, NULL );
+    dialog_set_property( dialog->package, prop, path );
+
+    dialog_update_directory_list( dialog, NULL );
+    dialog_update_directory_combo( dialog, NULL );
+    dialog_update_pathedit( dialog, NULL );
 
     free( path );
     free( prop );
@@ -3142,7 +3142,7 @@ static void dialog_vcl_add_drives( msi_dialog *dialog, struct control *control )
 #endif
     int i = 0;
 
-    cost = msi_vcl_get_cost(dialog);
+    cost = vcl_get_cost(dialog);
     StrFormatByteSizeW(cost, cost_text, MAX_PATH);
 
     size = GetLogicalDriveStringsW( 0, NULL );

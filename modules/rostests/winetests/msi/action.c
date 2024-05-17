@@ -6459,6 +6459,13 @@ static HANDLE get_admin_token(void)
     TOKEN_LINKED_TOKEN linked;
     DWORD size;
 
+#ifdef __REACTOS__
+#ifndef GetCurrentThreadEffectiveToken
+#define GetCurrentProcessToken() ((HANDLE)~(ULONG_PTR)3)
+#define GetCurrentThreadEffectiveToken() GetCurrentProcessToken()
+#endif
+#endif
+
     if (!GetTokenInformation(GetCurrentThreadEffectiveToken(), TokenElevationType, &type, sizeof(type), &size)
             || type == TokenElevationTypeFull)
         return NULL;

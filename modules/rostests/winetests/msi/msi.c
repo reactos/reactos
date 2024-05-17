@@ -12042,8 +12042,8 @@ static void test_MsiEnumProducts(void)
     ros_skip_flaky
     ok(found3, "product3 not found\n");
 
-    RegDeleteKeyExA(key1, "", access & KEY_WOW64_64KEY);
-    RegDeleteKeyExA(key2, "", access & KEY_WOW64_64KEY);
+    RegDeleteKeyExA(key1, "", access & KEY_WOW64_64KEY, 0);
+    RegDeleteKeyExA(key2, "", access & KEY_WOW64_64KEY, 0);
     RegDeleteKeyA(key3, "");
     RegCloseKey(key1);
     RegCloseKey(key2);
