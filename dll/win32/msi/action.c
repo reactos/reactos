@@ -5286,9 +5286,13 @@ static UINT ACTION_ResolveSource(MSIPACKAGE* package)
             MSI_RecordSetStringW(record, 0, NULL);
             rc = MSI_ProcessMessage(package, INSTALLMESSAGE_ERROR, record);
             if (rc == IDCANCEL)
+            {
+                msiobj_release(&record->hdr);
                 return ERROR_INSTALL_USEREXIT;
+            }
             attrib = GetFileAttributesW(package->db->path);
         }
+        msiobj_release(&record->hdr);
         rc = ERROR_SUCCESS;
     }
     else
