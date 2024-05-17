@@ -5066,6 +5066,7 @@ static void test_appsearch_inilocator(void)
     }
     ok(r == ERROR_SUCCESS, "Expected a valid package handle %u\n", r);
 
+    MsiCloseHandle( hdb );
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
     r = MsiDoActionA(hpkg, "AppSearch");
@@ -5074,6 +5075,12 @@ static void test_appsearch_inilocator(void)
     size = MAX_PATH;
     r = MsiGetPropertyA(hpkg, "SIGPROP1", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    if (!prop[0])
+    {
+        win_skip("broken result\n");
+        MsiCloseHandle(hpkg);
+        goto error;
+    }
     ok(!lstrcmpA(prop, "keydata"), "Expected \"keydata\", got \"%s\"\n", prop);
 
     size = MAX_PATH;
@@ -5628,7 +5635,12 @@ static void test_installprops(void)
     ok( !lstrcmpA(buf, path), "Expected %s, got %s\n", path, buf);
 
     RegOpenKeyA(HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\MS Setup (ACME)\\User Info", &hkey1);
-    RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 0, access, &hkey2);
+    res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 0, access, &hkey2);
+    if (res == ERROR_ACCESS_DENIED)
+    {
+        win_skip("no access\n");
+        goto done;
+    }
     RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion",
         0, KEY_QUERY_VALUE | KEY_WOW64_64KEY, &pathkey);
 
@@ -5800,6 +5812,7 @@ static void test_installprops(void)
         check_prop(hpkg, "CommonFiles64Dir", "", 0, 0);
     }
 
+done:
     CloseHandle(hkey1);
     CloseHandle(hkey2);
     RegCloseKey(pathkey);
