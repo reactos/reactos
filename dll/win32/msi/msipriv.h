@@ -1194,4 +1194,11 @@ static inline LPWSTR strdupUtoW( LPCSTR str )
     return ret;
 }
 
+static inline int cost_from_size( int size )
+{
+    /* Cost is size rounded up to the nearest 4096 bytes,
+     * expressed in units of 512 bytes. */
+    return ((size + 4095) & ~4095) / 512;
+}
+
 #endif /* __WINE_MSI_PRIVATE__ */

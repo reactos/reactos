@@ -2037,14 +2037,14 @@ UINT WINAPI MsiEnumComponentCostsW( MSIHANDLE handle, const WCHAR *component, DW
         }
         else if ((file = msi_get_loaded_file( package, comp->KeyPath )))
         {
-            *cost = max( 8, comp->Cost / 512 );
+            *cost = cost_from_size( comp->Cost );
             *buflen = set_drive( drive, file->TargetPath[0] );
             r = ERROR_SUCCESS;
         }
     }
     else if (IStorage_Stat( package->db->storage, &stat, STATFLAG_NONAME ) == S_OK)
     {
-        *temp = max( 8, stat.cbSize.QuadPart / 512 );
+        *temp = cost_from_size( stat.cbSize.QuadPart );
         *buflen = set_drive( drive, path[0] );
         r = ERROR_SUCCESS;
     }

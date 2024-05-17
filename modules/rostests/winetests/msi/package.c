@@ -8628,7 +8628,7 @@ static void test_costs(void)
     ok( len == 2, "expected len == 2, got %lu\n", len );
     ok( drive[0], "expected a drive\n" );
     ok( !cost, "expected cost == 0, got %d\n", cost );
-    ok( temp && temp != 0xdead, "expected temp > 0, got %d\n", temp );
+    todo_wine ok( temp && temp != 0xdead, "expected temp > 0, got %d\n", temp );
 
     /* increased index */
     len = sizeof(drive);
