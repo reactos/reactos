@@ -4717,7 +4717,7 @@ static void test_appsearch_reglocator(void)
     memset(&si, 0, sizeof(si));
     GetNativeSystemInfo(&si);
 
-    if (S(U(si)).wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL)
+    if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL)
     {
         size = ExpandEnvironmentStringsA("%PATH%", NULL, 0);
         pathvar = malloc(size);
@@ -5748,7 +5748,7 @@ static void test_installprops(void)
     sprintf(buf, "%d", LOBYTE(LOWORD(GetVersion())) * 100 + HIBYTE(LOWORD(GetVersion())));
     check_prop(hpkg, "VersionNT", buf, 1, 1);
 
-    if (S(U(si)).wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64)
+    if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64)
     {
         sprintf(buf, "%d", si.wProcessorLevel);
         check_prop(hpkg, "Intel", buf, 1, 0);
@@ -5785,7 +5785,7 @@ static void test_installprops(void)
         strcat(path, "\\");
         check_prop(hpkg, "CommonFiles64Folder", path, 0, 0);
     }
-    else if (S(U(si)).wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL)
+    else if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL)
     {
         sprintf(buf, "%d", si.wProcessorLevel);
         check_prop(hpkg, "Intel", buf, 1, 0);
