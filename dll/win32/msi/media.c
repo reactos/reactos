@@ -855,11 +855,11 @@ UINT ready_media( MSIPACKAGE *package, BOOL compressed, MSIMEDIAINFO *mi )
             WCHAR temppath[MAX_PATH], *p, *url;
 
             free( cabinet_file );
-            if (!(url = malloc( (wcslen( base_url ) + wcslen( mi->cabinet ) + 1) * sizeof(WCHAR) )))
+            if (!(url = realloc( base_url, (wcslen( base_url ) + wcslen( mi->cabinet ) + 1) * sizeof(WCHAR) )))
             {
+                free( base_url );
                 return ERROR_OUTOFMEMORY;
             }
-            lstrcpyW( url, base_url );
             lstrcatW( url, mi->cabinet );
             if ((rc = msi_download_file( url, temppath )) != ERROR_SUCCESS)
             {
