@@ -32,9 +32,15 @@
 #include <msiquery.h>
 #include <msidefs.h>
 
+#if defined(__MINGW32__) || (!defined(__WINE_USE_MSVCRT) && (defined(__GNUC__) || defined(__clang__)))
+#define __WINE_PRINTF_ATTR(fmt,args) __attribute__((format (printf,fmt,args)))
+#else
+#define __WINE_PRINTF_ATTR(fmt,args)
+#endif
+
 static int todo_level, todo_do_loop;
 
-static void WINAPIV ok_(MSIHANDLE hinst, int todo, const char *file, int line, int condition, const char *msg, ...)
+static void WINAPIV  __WINE_PRINTF_ATTR(6,7) ok_(MSIHANDLE hinst, int todo, const char *file, int line, int condition, const char *msg, ...)
 {
     static char buffer[2000];
     MSIHANDLE record;
