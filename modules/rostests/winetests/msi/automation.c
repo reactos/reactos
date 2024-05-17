@@ -32,6 +32,7 @@
 #include <oaidl.h>
 
 #include "wine/test.h"
+#include "utils.h"
 
 #ifdef __REACTOS__
 #include "ole2.h"
