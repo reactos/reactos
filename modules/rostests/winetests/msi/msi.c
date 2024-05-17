@@ -14595,6 +14595,8 @@ START_TEST(msi)
     }
 #endif
 
+    if (!is_process_elevated()) restart_as_admin_elevated();
+
     init_functionpointers();
 
     if (pIsWow64Process)
