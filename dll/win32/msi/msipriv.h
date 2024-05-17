@@ -515,7 +515,6 @@ typedef struct tagMSIASSEMBLY
     DWORD attributes;
     LPWSTR display_name;
     LPWSTR tempdir;
-    BOOL installed;
     BOOL clr_version[CLR_VERSION_MAX];
 } MSIASSEMBLY;
 
@@ -806,6 +805,7 @@ extern UINT msi_check_patch_applicable( MSIPACKAGE *package, MSISUMMARYINFO *si 
 extern UINT msi_apply_patches( MSIPACKAGE *package ) DECLSPEC_HIDDEN;
 extern UINT msi_apply_registered_patch( MSIPACKAGE *package, LPCWSTR patch_code ) DECLSPEC_HIDDEN;
 extern void msi_free_patchinfo( MSIPATCHINFO *patch ) DECLSPEC_HIDDEN;
+extern UINT msi_patch_assembly( MSIPACKAGE *, MSIASSEMBLY *, MSIFILEPATCH * ) DECLSPEC_HIDDEN;
 
 /* action internals */
 extern UINT MSI_InstallPackage( MSIPACKAGE *, LPCWSTR, LPCWSTR ) DECLSPEC_HIDDEN;

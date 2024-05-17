@@ -305,7 +305,7 @@ static msi_file_state calculate_install_state( MSIPACKAGE *package, MSIFILE *fil
     DWORD size;
 
     comp->Action = msi_get_component_action( package, comp );
-    if (!comp->Enabled || comp->Action != INSTALLSTATE_LOCAL || (comp->assembly && comp->assembly->installed))
+    if (!comp->Enabled || comp->Action != INSTALLSTATE_LOCAL)
     {
         TRACE("skipping %s (not scheduled for install)\n", debugstr_w(file->File));
         return msifs_skipped;
@@ -315,8 +315,7 @@ static msi_file_state calculate_install_state( MSIPACKAGE *package, MSIFILE *fil
         TRACE("skipping %s (obsoleted by patch)\n", debugstr_w(file->File));
         return msifs_skipped;
     }
-    if ((msi_is_global_assembly( comp ) && !comp->assembly->installed) ||
-        msi_get_file_attributes( package, file->TargetPath ) == INVALID_FILE_ATTRIBUTES)
+    if (msi_get_file_attributes( package, file->TargetPath ) == INVALID_FILE_ATTRIBUTES)
     {
         TRACE("installing %s (missing)\n", debugstr_w(file->File));
         return msifs_missing;
@@ -650,22 +649,6 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
             goto done;
         }
     }
-    LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
-    {
-        MSICOMPONENT *comp = file->Component;
-
-        if (!msi_is_global_assembly( comp ) || comp->assembly->installed ||
-            (file->state != msifs_missing && file->state != msifs_overwrite)) continue;
-
-        rc = msi_install_assembly( package, comp );
-        if (rc != ERROR_SUCCESS)
-        {
-            ERR("Failed to install assembly\n");
-            rc = ERROR_INSTALL_FAILURE;
-            break;
-        }
-        file->state = msifs_installed;
-    }
 
 done:
     msi_free_media_info(mi);
@@ -740,7 +723,7 @@ static UINT patch_file( MSIPACKAGE *package, MSIFILEPATCH *patch )
     return r;
 }
 
-static UINT patch_assembly( MSIPACKAGE *package, MSIASSEMBLY *assembly, MSIFILEPATCH *patch )
+UINT msi_patch_assembly( MSIPACKAGE *package, MSIASSEMBLY *assembly, MSIFILEPATCH *patch )
 {
     UINT r = ERROR_FUNCTION_FAILED;
     IAssemblyName *name;
@@ -851,26 +834,13 @@ UINT ACTION_PatchFiles( MSIPACKAGE *package )
     {
         MSICOMPONENT *comp = patch->File->Component;
 
-        if (!patch->path) continue;
+        if (msi_is_global_assembly( comp ) || !patch->path) continue;
 
-        if (msi_is_global_assembly( comp ))
-            rc = patch_assembly( package, comp->assembly, patch );
-        else
-            rc = patch_file( package, patch );
-
+        rc = patch_file( package, patch );
         if (rc && !(patch->Attributes & msidbPatchAttributesNonVital))
         {
             ERR("Failed to apply patch to file: %s\n", debugstr_w(patch->File->File));
             break;
-        }
-
-        if (msi_is_global_assembly( comp ))
-        {
-            if ((rc = msi_install_assembly( package, comp )))
-            {
-                ERR("Failed to install patched assembly\n");
-                break;
-            }
         }
     }
 

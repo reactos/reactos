@@ -219,24 +219,6 @@ done:
     return display_name;
 }
 
-static BOOL is_assembly_installed( IAssemblyCache *cache, const WCHAR *display_name )
-{
-    HRESULT hr;
-    ASSEMBLY_INFO info;
-
-    if (!cache) return FALSE;
-
-    memset( &info, 0, sizeof(info) );
-    info.cbAssemblyInfo = sizeof(info);
-    hr = IAssemblyCache_QueryAssemblyInfo( cache, 0, display_name, &info );
-    if (hr == S_OK /* sxs version */ || hr == E_NOT_SUFFICIENT_BUFFER)
-    {
-        return (info.dwAssemblyFlags == ASSEMBLYINFO_FLAG_INSTALLED);
-    }
-    TRACE( "QueryAssemblyInfo returned %#lx\n", hr );
-    return FALSE;
-}
-
 WCHAR *msi_get_assembly_path( MSIPACKAGE *package, const WCHAR *displayname )
 {
     HRESULT hr;
@@ -309,13 +291,6 @@ static const WCHAR *clr_version[] =
     L"v4.0.30319"
 };
 
-static const WCHAR *get_clr_version_str( enum clr_version version )
-{
-    if (version >= ARRAY_SIZE( clr_version )) return L"unknown";
-    return clr_version[version];
-}
-
-/* assembly caches must be initialized */
 MSIASSEMBLY *msi_load_assembly( MSIPACKAGE *package, MSICOMPONENT *comp )
 {
     MSIRECORD *rec;
@@ -351,34 +326,6 @@ MSIASSEMBLY *msi_load_assembly( MSIPACKAGE *package, MSICOMPONENT *comp )
     }
     TRACE("display name %s\n", debugstr_w(a->display_name));
 
-    if (a->application)
-    {
-        /* We can't check the manifest here because the target path may still change.
-           So we assume that the assembly is not installed and lean on the InstallFiles
-           action to determine which files need to be installed.
-         */
-        a->installed = FALSE;
-    }
-    else
-    {
-        if (a->attributes == msidbAssemblyAttributesWin32)
-            a->installed = is_assembly_installed( package->cache_sxs, a->display_name );
-        else
-        {
-            UINT i;
-            for (i = 0; i < CLR_VERSION_MAX; i++)
-            {
-                a->clr_version[i] = is_assembly_installed( package->cache_net[i], a->display_name );
-                if (a->clr_version[i])
-                {
-                    TRACE("runtime version %s\n", debugstr_w(get_clr_version_str( i )));
-                    a->installed = TRUE;
-                    break;
-                }
-            }
-        }
-    }
-    TRACE("assembly is %s\n", a->installed ? "installed" : "not installed");
     msiobj_release( &rec->hdr );
     return a;
 }
@@ -449,7 +396,6 @@ UINT msi_install_assembly( MSIPACKAGE *package, MSICOMPONENT *comp )
         return ERROR_FUNCTION_FAILED;
     }
     if (feature) feature->Action = INSTALLSTATE_LOCAL;
-    assembly->installed = TRUE;
     return ERROR_SUCCESS;
 }
 
@@ -491,7 +437,6 @@ UINT msi_uninstall_assembly( MSIPACKAGE *package, MSICOMPONENT *comp )
         }
     }
     if (feature) feature->Action = INSTALLSTATE_ABSENT;
-    assembly->installed = FALSE;
     return ERROR_SUCCESS;
 }
 

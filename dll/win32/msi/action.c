@@ -2075,8 +2075,7 @@ static UINT calculate_file_cost( MSIPACKAGE *package )
 
         set_target_path( package, file );
 
-        if ((comp->assembly && !comp->assembly->installed) ||
-            msi_get_file_attributes( package, file->TargetPath ) == INVALID_FILE_ATTRIBUTES)
+        if (msi_get_file_attributes( package, file->TargetPath ) == INVALID_FILE_ATTRIBUTES)
         {
             comp->Cost += file->FileSize;
             continue;
@@ -5162,6 +5161,8 @@ static BOOL is_full_uninstall( MSIPACKAGE *package )
 static UINT ACTION_InstallFinalize(MSIPACKAGE *package)
 {
     UINT rc;
+    MSIFILE *file;
+    MSIFILEPATCH *patch;
 
     /* first do the same as an InstallExecute */
     rc = execute_script(package, SCRIPT_INSTALL);
@@ -5172,6 +5173,44 @@ static UINT ACTION_InstallFinalize(MSIPACKAGE *package)
     rc = execute_script(package, SCRIPT_COMMIT);
     if (rc != ERROR_SUCCESS)
         return rc;
+
+    /* install global assemblies */
+    LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
+    {
+        MSICOMPONENT *comp = file->Component;
+
+        if (!msi_is_global_assembly( comp ) || (file->state != msifs_missing && file->state != msifs_overwrite))
+            continue;
+
+        rc = msi_install_assembly( package, comp );
+        if (rc != ERROR_SUCCESS)
+        {
+            ERR("Failed to install assembly\n");
+            return ERROR_INSTALL_FAILURE;
+        }
+        file->state = msifs_installed;
+    }
+
+    /* patch global assemblies */
+    LIST_FOR_EACH_ENTRY( patch, &package->filepatches, MSIFILEPATCH, entry )
+    {
+        MSICOMPONENT *comp = patch->File->Component;
+
+        if (!msi_is_global_assembly( comp ) || !patch->path) continue;
+
+        rc = msi_patch_assembly( package, comp->assembly, patch );
+        if (rc && !(patch->Attributes & msidbPatchAttributesNonVital))
+        {
+            ERR("Failed to apply patch to file: %s\n", debugstr_w(patch->File->File));
+            return rc;
+        }
+
+        if ((rc = msi_install_assembly( package, comp )))
+        {
+            ERR("Failed to install patched assembly\n");
+            return rc;
+        }
+    }
 
     if (is_full_uninstall(package))
         rc = ACTION_UnpublishProduct(package);
