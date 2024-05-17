@@ -2544,18 +2544,15 @@ HRESULT WINAPI MsiGetFileSignatureInformationW( const WCHAR *path, DWORD flags, 
     info.hFile          = NULL;
     info.pgKnownSubject = NULL;
 
+    memset( &data, 0, sizeof(data) );
     data.cbStruct            = sizeof(data);
-    data.pPolicyCallbackData = NULL;
-    data.pSIPClientData      = NULL;
     data.dwUIChoice          = WTD_UI_NONE;
     data.fdwRevocationChecks = WTD_REVOKE_WHOLECHAIN;
     data.dwUnionChoice       = WTD_CHOICE_FILE;
     data.u.pFile             = &info;
     data.dwStateAction       = WTD_STATEACTION_VERIFY;
-    data.hWVTStateData       = NULL;
-    data.pwszURLReference    = NULL;
-    data.dwProvFlags         = 0;
     data.dwUIContext         = WTD_UICONTEXT_INSTALL;
+
     hr = WinVerifyTrustEx( INVALID_HANDLE_VALUE, &generic_verify_v2, &data );
     *cert = NULL;
     if (FAILED(hr)) goto done;
