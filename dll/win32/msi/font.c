@@ -143,17 +143,17 @@ static WCHAR *load_ttf_name_id( MSIPACKAGE *package, const WCHAR *filename, DWOR
             ttRecord.uStringOffset = SWAPWORD(ttRecord.uStringOffset);
             SetFilePointer(handle, tblDir.uOffset + ttRecord.uStringOffset + ttNTHeader.uStorageOffset,
                            NULL, FILE_BEGIN);
-            if (!(buf = msi_alloc_zero( ttRecord.uStringLength + sizeof(WCHAR) ))) goto end;
+            if (!(buf = calloc(ttRecord.uStringLength, sizeof(WCHAR)))) goto end;
             dwRead = 0;
             ReadFile(handle, buf, ttRecord.uStringLength, &dwRead, NULL);
             if (dwRead % sizeof(WCHAR))
             {
-                msi_free(buf);
+                free(buf);
                 goto end;
             }
             for (i = 0; i < dwRead / sizeof(WCHAR); i++) buf[i] = SWAPWORD(buf[i]);
             ret = wcsdup(buf);
-            msi_free(buf);
+            free(buf);
             break;
         }
     }
@@ -172,13 +172,13 @@ static WCHAR *font_name_from_file( MSIPACKAGE *package, const WCHAR *filename )
         if (!name[0])
         {
             WARN("empty font name\n");
-            msi_free( name );
+            free( name );
             return NULL;
         }
-        ret = msi_alloc( (lstrlenW( name ) + lstrlenW( L" (TrueType)" ) + 1 ) * sizeof(WCHAR) );
+        ret = malloc( wcslen( name ) * sizeof(WCHAR) + sizeof( L" (TrueType)" ) );
         lstrcpyW( ret, name );
         lstrcatW( ret, L" (TrueType)" );
-        msi_free( name );
+        free( name );
     }
     return ret;
 }
@@ -202,9 +202,9 @@ WCHAR *msi_get_font_file_version( MSIPACKAGE *package, const WCHAR *filename )
             else major = 0;
         }
         len = lstrlenW( L"%u.%u.0.0" ) + 20;
-        ret = msi_alloc( len * sizeof(WCHAR) );
+        ret = malloc( len * sizeof(WCHAR) );
         swprintf( ret, len, L"%u.%u.0.0", major, minor );
-        msi_free( version );
+        free( version );
     }
     return ret;
 }
@@ -254,7 +254,7 @@ static UINT ITERATE_RegisterFonts(MSIRECORD *row, LPVOID param)
         msi_reg_set_val_str( hkey2, name, file->TargetPath);
     }
 
-    msi_free(name);
+    free(name);
     RegCloseKey(hkey1);
     RegCloseKey(hkey2);
 
@@ -267,7 +267,7 @@ static UINT ITERATE_RegisterFonts(MSIRECORD *row, LPVOID param)
     MSI_RecordSetStringW( uirow, 1, p );
     MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONDATA, uirow);
     msiobj_release( &uirow->hdr );
-    msi_free( uipath );
+    free( uipath );
     /* FIXME: call msi_ui_progress? */
 
     return ERROR_SUCCESS;
@@ -335,7 +335,7 @@ static UINT ITERATE_UnregisterFonts( MSIRECORD *row, LPVOID param )
         RegDeleteValueW( hkey2, name );
     }
 
-    msi_free( name );
+    free( name );
     RegCloseKey( hkey1 );
     RegCloseKey( hkey2 );
 
@@ -348,7 +348,7 @@ static UINT ITERATE_UnregisterFonts( MSIRECORD *row, LPVOID param )
     MSI_RecordSetStringW( uirow, 1, p );
     MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONDATA, uirow);
     msiobj_release( &uirow->hdr );
-    msi_free( uipath );
+    free( uipath );
     /* FIXME: call msi_ui_progress? */
 
     return ERROR_SUCCESS;

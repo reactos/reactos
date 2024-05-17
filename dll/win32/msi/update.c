@@ -190,7 +190,7 @@ static UINT UPDATE_delete( struct tagMSIVIEW *view )
     if( wv )
         wv->ops->delete( wv );
     msiobj_release( &uv->db->hdr );
-    msi_free( uv );
+    free( uv );
 
     return ERROR_SUCCESS;
 }
@@ -242,7 +242,7 @@ UINT UPDATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
         return r;
     }
 
-    uv = msi_alloc_zero( sizeof *uv );
+    uv = calloc( 1, sizeof *uv );
     if( !uv )
     {
         wv->ops->delete( wv );

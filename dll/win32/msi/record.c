@@ -54,7 +54,7 @@ static void MSI_FreeField( MSIFIELD *field )
     case MSIFIELD_INT:
         break;
     case MSIFIELD_WSTR:
-        msi_free( field->u.szwVal);
+        free( field->u.szwVal);
         break;
     case MSIFIELD_STREAM:
         IStream_Release( field->u.stream );
@@ -157,7 +157,7 @@ WCHAR *msi_strdupW( const WCHAR *value, int len )
     WCHAR *ret;
 
     if (!value) return NULL;
-    if (!(ret = msi_alloc( (len + 1) * sizeof(WCHAR) ))) return NULL;
+    if (!(ret = malloc( (len + 1) * sizeof(WCHAR) ))) return NULL;
     memcpy( ret, value, len * sizeof(WCHAR) );
     ret[len] = 0;
     return ret;
@@ -559,14 +559,14 @@ UINT WINAPI MsiRecordSetStringA( MSIHANDLE handle, UINT iField, const char *szVa
     rec = msihandle2msiinfo( handle, MSIHANDLETYPE_RECORD );
     if( !rec )
     {
-        msi_free( valueW );
+        free( valueW );
         return ERROR_INVALID_HANDLE;
     }
     msiobj_lock( &rec->hdr );
     ret = MSI_RecordSetStringW( rec, iField, valueW );
     msiobj_unlock( &rec->hdr );
     msiobj_release( &rec->hdr );
-    msi_free( valueW );
+    free( valueW );
     return ret;
 }
 
@@ -735,7 +735,7 @@ UINT WINAPI MsiRecordSetStreamA( MSIHANDLE hRecord, UINT iField, const char *szF
              return ERROR_OUTOFMEMORY;
     }
     ret = MsiRecordSetStreamW(hRecord, iField, wstr);
-    msi_free(wstr);
+    free(wstr);
 
     return ret;
 }
@@ -1012,14 +1012,14 @@ WCHAR *msi_dup_record_field( MSIRECORD *rec, INT field )
         return NULL;
 
     sz++;
-    str = msi_alloc( sz * sizeof(WCHAR) );
+    str = malloc( sz * sizeof(WCHAR) );
     if (!str) return NULL;
     str[0] = 0;
     r = MSI_RecordGetStringW( rec, field, str, &sz );
     if (r != ERROR_SUCCESS)
     {
         ERR("failed to get string!\n");
-        msi_free( str );
+        free( str );
         return NULL;
     }
     return str;

@@ -52,7 +52,7 @@ static void MSI_CloseView( MSIOBJECTHDR *arg )
 
     LIST_FOR_EACH_SAFE( ptr, t, &query->mem )
     {
-        msi_free( ptr );
+        free( ptr );
     }
 }
 
@@ -103,7 +103,7 @@ UINT WINAPI MsiDatabaseOpenViewA( MSIHANDLE hdb, const char *szQuery, MSIHANDLE 
 
     r = MsiDatabaseOpenViewW( hdb, szwQuery, phView);
 
-    msi_free( szwQuery );
+    free( szwQuery );
     return r;
 }
 
@@ -145,18 +145,18 @@ UINT WINAPIV MSI_OpenQuery( MSIDATABASE *db, MSIQUERY **view, LPCWSTR fmt, ... )
     for (;;)
     {
         va_list va;
-        query = msi_alloc( size*sizeof(WCHAR) );
+        query = malloc(size * sizeof(WCHAR));
         va_start(va, fmt);
         res = vswprintf(query, size, fmt, va);
         va_end(va);
         if (res == -1) size *= 2;
         else if (res >= size) size = res + 1;
         else break;
-        msi_free( query );
+        free(query);
     }
     /* perform the query */
     r = MSI_DatabaseOpenViewW(db, query, view);
-    msi_free(query);
+    free(query);
     return r;
 }
 
@@ -210,18 +210,18 @@ MSIRECORD * WINAPIV MSI_QueryGetRecord( MSIDATABASE *db, LPCWSTR fmt, ... )
     for (;;)
     {
         va_list va;
-        query = msi_alloc( size*sizeof(WCHAR) );
+        query = malloc(size * sizeof(WCHAR));
         va_start(va, fmt);
         res = vswprintf(query, size, fmt, va);
         va_end(va);
         if (res == -1) size *= 2;
         else if (res >= size) size = res + 1;
         else break;
-        msi_free( query );
+        free(query);
     }
     /* perform the query */
     r = MSI_DatabaseOpenViewW(db, query, &view);
-    msi_free(query);
+    free(query);
 
     if( r == ERROR_SUCCESS )
     {
@@ -942,7 +942,7 @@ UINT WINAPI MsiDatabaseApplyTransformA( MSIHANDLE hdb, const char *transform, in
         return ERROR_NOT_ENOUGH_MEMORY;
 
     ret = MsiDatabaseApplyTransformW( hdb, wstr, error_cond );
-    msi_free( wstr );
+    free( wstr );
     return ret;
 }
 
@@ -1002,7 +1002,7 @@ UINT WINAPI MsiDatabaseCommit( MSIHANDLE hdb )
 
     if (r == ERROR_SUCCESS)
     {
-        msi_free( db->deletefile );
+        free( db->deletefile );
         db->deletefile = NULL;
     }
 
@@ -1140,7 +1140,7 @@ UINT WINAPI MsiDatabaseGetPrimaryKeysA( MSIHANDLE hdb, const char *table, MSIHAN
             return ERROR_OUTOFMEMORY;
     }
     r = MsiDatabaseGetPrimaryKeysW( hdb, szwTable, phRec );
-    msi_free( szwTable );
+    free( szwTable );
 
     return r;
 }
@@ -1159,7 +1159,7 @@ MSICONDITION WINAPI MsiDatabaseIsTablePersistentA( MSIHANDLE hDatabase, const ch
             return MSICONDITION_ERROR;
     }
     r = MsiDatabaseIsTablePersistentW( hDatabase, szwTableName );
-    msi_free( szwTableName );
+    free( szwTableName );
 
     return r;
 }

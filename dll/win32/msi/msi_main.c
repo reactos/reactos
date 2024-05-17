@@ -80,7 +80,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         if (lpvReserved) break;
         msi_dialog_unregister_class();
         msi_free_handle_table();
-        msi_free( gszLogFile );
+        free( gszLogFile );
         release_typelib();
         break;
     }

@@ -116,7 +116,7 @@ static UINT CREATE_delete( struct tagMSIVIEW *view )
     TRACE("%p\n", cv );
 
     msiobj_release( &cv->db->hdr );
-    msi_free( cv );
+    free( cv );
 
     return ERROR_SUCCESS;
 }
@@ -172,7 +172,7 @@ UINT CREATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPCWSTR table,
     if( r != ERROR_SUCCESS )
         return r;
 
-    cv = msi_alloc_zero( sizeof *cv );
+    cv = calloc( 1, sizeof *cv );
     if( !cv )
         return ERROR_FUNCTION_FAILED;
 
@@ -189,7 +189,7 @@ UINT CREATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPCWSTR table,
 
     if ( !temp && tempprim )
     {
-        msi_free( cv );
+        free( cv );
         return ERROR_FUNCTION_FAILED;
     }
 

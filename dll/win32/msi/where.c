@@ -90,9 +90,9 @@ static void free_reorder(MSIWHEREVIEW *wv)
         return;
 
     for (i = 0; i < wv->row_count; i++)
-        msi_free(wv->reorder[i]);
+        free(wv->reorder[i]);
 
-    msi_free( wv->reorder );
+    free(wv->reorder);
     wv->reorder = NULL;
     wv->reorder_size = 0;
     wv->row_count = 0;
@@ -100,7 +100,7 @@ static void free_reorder(MSIWHEREVIEW *wv)
 
 static UINT init_reorder(MSIWHEREVIEW *wv)
 {
-    MSIROWENTRY **new = msi_alloc_zero(sizeof(MSIROWENTRY *) * INITIAL_REORDER_SIZE);
+    MSIROWENTRY **new = calloc(INITIAL_REORDER_SIZE, sizeof(MSIROWENTRY *));
     if (!new)
         return ERROR_OUTOFMEMORY;
 
@@ -131,7 +131,7 @@ static UINT add_row(MSIWHEREVIEW *wv, UINT vals[])
         MSIROWENTRY **new_reorder;
         UINT newsize = wv->reorder_size * 2;
 
-        new_reorder = msi_realloc(wv->reorder, newsize * sizeof(*new_reorder));
+        new_reorder = realloc(wv->reorder, newsize * sizeof(*new_reorder));
         if (!new_reorder)
             return ERROR_OUTOFMEMORY;
         memset(new_reorder + wv->reorder_size, 0, (newsize - wv->reorder_size) * sizeof(*new_reorder));
@@ -140,7 +140,7 @@ static UINT add_row(MSIWHEREVIEW *wv, UINT vals[])
         wv->reorder_size = newsize;
     }
 
-    new = msi_alloc(FIELD_OFFSET( MSIROWENTRY, values[wv->table_count] ));
+    new = malloc(offsetof(MSIROWENTRY, values[wv->table_count]));
 
     if (!new)
         return ERROR_OUTOFMEMORY;
@@ -792,7 +792,7 @@ static JOINTABLE **ordertables( MSIWHEREVIEW *wv )
     JOINTABLE *table;
     JOINTABLE **tables;
 
-    tables = msi_alloc_zero( (wv->table_count + 1) * sizeof(*tables) );
+    tables = calloc(wv->table_count + 1, sizeof(*tables));
 
     if (wv->cond)
     {
@@ -848,7 +848,7 @@ static UINT WHERE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
 
     ordered_tables = ordertables( wv );
 
-    rows = msi_alloc( wv->table_count * sizeof(*rows) );
+    rows = malloc(wv->table_count * sizeof(*rows));
     for (i = 0; i < wv->table_count; i++)
         rows[i] = INVALID_ROW_INDEX;
 
@@ -862,8 +862,8 @@ static UINT WHERE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     if (wv->order_info)
         r = wv->order_info->error;
 
-    msi_free( rows );
-    msi_free( ordered_tables );
+    free(rows);
+    free(ordered_tables);
     return r;
 }
 
@@ -1046,7 +1046,7 @@ static UINT WHERE_delete( struct tagMSIVIEW *view )
         table->view->ops->delete(table->view);
         table->view = NULL;
         next = table->next;
-        msi_free(table);
+        free(table);
         table = next;
     }
     wv->tables = NULL;
@@ -1054,11 +1054,11 @@ static UINT WHERE_delete( struct tagMSIVIEW *view )
 
     free_reorder(wv);
 
-    msi_free(wv->order_info);
+    free(wv->order_info);
     wv->order_info = NULL;
 
     msiobj_release( &wv->db->hdr );
-    msi_free( wv );
+    free(wv);
 
     return ERROR_SUCCESS;
 }
@@ -1086,7 +1086,7 @@ static UINT WHERE_sort(struct tagMSIVIEW *view, column_info *columns)
     if (count == 0)
         return ERROR_SUCCESS;
 
-    orderinfo = msi_alloc(FIELD_OFFSET(MSIORDERINFO, columns[count]));
+    orderinfo = malloc(offsetof(MSIORDERINFO, columns[count]));
     if (!orderinfo)
         return ERROR_OUTOFMEMORY;
 
@@ -1108,7 +1108,7 @@ static UINT WHERE_sort(struct tagMSIVIEW *view, column_info *columns)
 
     return ERROR_SUCCESS;
 error:
-    msi_free(orderinfo);
+    free(orderinfo);
     return r;
 }
 
@@ -1233,7 +1233,7 @@ UINT WHERE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR tables,
 
     TRACE("(%s)\n", debugstr_w(tables) );
 
-    wv = msi_alloc_zero( sizeof *wv );
+    wv = calloc(1, sizeof *wv);
     if( !wv )
         return ERROR_FUNCTION_FAILED;
 
@@ -1250,7 +1250,7 @@ UINT WHERE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR tables,
         if ((ptr = wcschr(tables, ' ')))
             *ptr = '\0';
 
-        table = msi_alloc(sizeof(JOINTABLE));
+        table = malloc(sizeof(JOINTABLE));
         if (!table)
         {
             r = ERROR_OUTOFMEMORY;
@@ -1261,7 +1261,7 @@ UINT WHERE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR tables,
         if (r != ERROR_SUCCESS)
         {
             WARN("can't create table: %s\n", debugstr_w(tables));
-            msi_free(table);
+            free(table);
             r = ERROR_BAD_QUERY_SYNTAX;
             goto end;
         }
@@ -1272,7 +1272,7 @@ UINT WHERE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR tables,
         {
             ERR("can't get table dimensions\n");
             table->view->ops->delete(table->view);
-            msi_free(table);
+            free(table);
             goto end;
         }
 

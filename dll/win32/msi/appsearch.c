@@ -109,13 +109,13 @@ static UINT get_signature( MSIPACKAGE *package, MSISIGNATURE *sig, const WCHAR *
     if (minVersion)
     {
         msi_parse_version_string( minVersion, &sig->MinVersionMS, &sig->MinVersionLS );
-        msi_free( minVersion );
+        free( minVersion );
     }
     maxVersion = msi_dup_record_field(row,4);
     if (maxVersion)
     {
         msi_parse_version_string( maxVersion, &sig->MaxVersionMS, &sig->MaxVersionLS );
-        msi_free( maxVersion );
+        free( maxVersion );
     }
     sig->MinSize = MSI_RecordGetInteger(row,5);
     if (sig->MinSize == MSI_NULL_INTEGER)
@@ -150,8 +150,8 @@ static UINT get_signature( MSIPACKAGE *package, MSISIGNATURE *sig, const WCHAR *
 /* Frees any memory allocated in sig */
 static void free_signature( MSISIGNATURE *sig )
 {
-    msi_free(sig->File);
-    msi_free(sig->Languages);
+    free(sig->File);
+    free(sig->Languages);
 }
 
 static WCHAR *search_file( MSIPACKAGE *package, WCHAR *path, MSISIGNATURE *sig )
@@ -182,7 +182,7 @@ static WCHAR *search_file( MSIPACKAGE *package, WCHAR *path, MSISIGNATURE *sig )
     if (!size)
         return wcsdup(path);
 
-    buffer = msi_alloc(size);
+    buffer = malloc(size);
     if (!buffer)
         return NULL;
 
@@ -216,7 +216,7 @@ static WCHAR *search_file( MSIPACKAGE *package, WCHAR *path, MSISIGNATURE *sig )
     val = wcsdup(path);
 
 done:
-    msi_free(buffer);
+    free(buffer);
     return val;
 }
 
@@ -305,13 +305,13 @@ static void convert_reg_value( DWORD regType, const BYTE *value, DWORD sz, WCHAR
             if (*(LPCWSTR)value == '#')
             {
                 /* escape leading pound with another */
-                *appValue = msi_alloc(sz + sizeof(WCHAR));
+                *appValue = malloc(sz + sizeof(WCHAR));
                 (*appValue)[0] = '#';
                 lstrcpyW(*appValue + 1, (LPCWSTR)value);
             }
             else
             {
-                *appValue = msi_alloc(sz);
+                *appValue = malloc(sz);
                 lstrcpyW(*appValue, (LPCWSTR)value);
             }
             break;
@@ -319,17 +319,17 @@ static void convert_reg_value( DWORD regType, const BYTE *value, DWORD sz, WCHAR
             /* 7 chars for digits, 1 for NULL, 1 for #, and 1 for sign
              * char if needed
              */
-            *appValue = msi_alloc(10 * sizeof(WCHAR));
+            *appValue = malloc(10 * sizeof(WCHAR));
             swprintf(*appValue, 10, L"#%d", *(const DWORD *)value);
             break;
         case REG_EXPAND_SZ:
             sz = ExpandEnvironmentStringsW((LPCWSTR)value, NULL, 0);
-            *appValue = msi_alloc(sz * sizeof(WCHAR));
+            *appValue = malloc(sz * sizeof(WCHAR));
             ExpandEnvironmentStringsW((LPCWSTR)value, *appValue, sz);
             break;
         case REG_BINARY:
             /* #x<nibbles>\0 */
-            *appValue = msi_alloc((sz * 2 + 3) * sizeof(WCHAR));
+            *appValue = malloc((sz * 2 + 3) * sizeof(WCHAR));
             lstrcpyW(*appValue, L"#x");
             ptr = *appValue + lstrlenW(L"#x");
             for (i = 0; i < sz; i++, ptr += 2)
@@ -401,7 +401,7 @@ static UINT search_reg( MSIPACKAGE *package, WCHAR **appValue, MSISIGNATURE *sig
         goto end;
     }
 
-    msi_free(deformatted);
+    free(deformatted);
     deformat_string(package, valueName, &deformatted);
 
     rc = RegQueryValueExW(key, deformatted, NULL, NULL, NULL, &sz);
@@ -413,7 +413,7 @@ static UINT search_reg( MSIPACKAGE *package, WCHAR **appValue, MSISIGNATURE *sig
     /* FIXME: sanity-check sz before allocating (is there an upper-limit
      * on the value of a property?)
      */
-    value = msi_alloc( sz );
+    value = malloc(sz);
     rc = RegQueryValueExW(key, deformatted, NULL, &regType, value, &sz);
     if (rc)
     {
@@ -431,9 +431,9 @@ static UINT search_reg( MSIPACKAGE *package, WCHAR **appValue, MSISIGNATURE *sig
         sz = ExpandEnvironmentStringsW((LPCWSTR)value, NULL, 0);
         if (sz)
         {
-            LPWSTR buf = msi_alloc(sz * sizeof(WCHAR));
+            WCHAR *buf = malloc(sz * sizeof(WCHAR));
             ExpandEnvironmentStringsW((LPCWSTR)value, buf, sz);
-            msi_free(value);
+            free(value);
             value = (LPBYTE)buf;
         }
     }
@@ -460,9 +460,9 @@ static UINT search_reg( MSIPACKAGE *package, WCHAR **appValue, MSISIGNATURE *sig
               type, debugstr_w(keyPath), debugstr_w(valueName));
     }
 end:
-    msi_free( value );
+    free( value );
     RegCloseKey( key );
-    msi_free( deformatted );
+    free( deformatted );
 
     msiobj_release(&row->hdr);
     return ERROR_SUCCESS;
@@ -539,9 +539,9 @@ static UINT search_ini( MSIPACKAGE *package, WCHAR **appValue, MSISIGNATURE *sig
         }
     }
 
-    msi_free(fileName);
-    msi_free(section);
-    msi_free(key);
+    free(fileName);
+    free(section);
+    free(key);
 
     msiobj_release(&row->hdr);
 
@@ -578,13 +578,13 @@ static void expand_any_path( MSIPACKAGE *package, WCHAR *src, WCHAR *dst, size_t
     deformat_string(package, ptr, &deformatted);
     if (!deformatted || lstrlenW(deformatted) > len - 1)
     {
-        msi_free(deformatted);
+        free(deformatted);
         return;
     }
 
     lstrcpyW(dst, deformatted);
     dst[lstrlenW(deformatted)] = '\0';
-    msi_free(deformatted);
+    free(deformatted);
 }
 
 static LANGID *parse_languages( const WCHAR *languages, DWORD *num_ids )
@@ -596,9 +596,9 @@ static LANGID *parse_languages( const WCHAR *languages, DWORD *num_ids )
     if (!str) return NULL;
     for (p = q = str; (q = wcschr( q, ',' )); q++) count++;
 
-    if (!(ret = msi_alloc( count * sizeof(LANGID) )))
+    if (!(ret = malloc( count * sizeof(LANGID) )))
     {
-        msi_free( str );
+        free( str );
         return NULL;
     }
     i = 0;
@@ -611,7 +611,7 @@ static LANGID *parse_languages( const WCHAR *languages, DWORD *num_ids )
         p = q + 1;
         i++;
     }
-    msi_free( str );
+    free( str );
     *num_ids = count;
     return ret;
 }
@@ -643,7 +643,7 @@ static BOOL match_languages( const void *version, const WCHAR *languages )
     }
 
 done:
-    msi_free( ids );
+    free( ids );
     return found;
 }
 
@@ -663,7 +663,7 @@ static UINT file_version_matches( MSIPACKAGE *package, const MSISIGNATURE *sig, 
     *matches = FALSE;
 
     if (!size) return ERROR_SUCCESS;
-    if (!(version = msi_alloc( size ))) return ERROR_OUTOFMEMORY;
+    if (!(version = malloc( size ))) return ERROR_OUTOFMEMORY;
 
     if (msi_get_file_version_info( package, filePath, size, version ))
         VerQueryValueW( version, L"\\", (void **)&info, &len );
@@ -702,7 +702,7 @@ static UINT file_version_matches( MSIPACKAGE *package, const MSISIGNATURE *sig, 
         }
         else *matches = TRUE;
     }
-    msi_free( version );
+    free( version );
     return ERROR_SUCCESS;
 }
 
@@ -779,7 +779,7 @@ static UINT recurse_search_directory( MSIPACKAGE *package, WCHAR **appValue, MSI
      * isn't backslash-terminated.
      */
     len = dirLen + max(fileLen, lstrlenW(L"*.*")) + 2;
-    buf = msi_alloc(len * sizeof(WCHAR));
+    buf = malloc(len * sizeof(WCHAR));
     if (!buf)
         return ERROR_OUTOFMEMORY;
 
@@ -839,7 +839,7 @@ static UINT recurse_search_directory( MSIPACKAGE *package, WCHAR **appValue, MSI
     }
 
     if (*appValue != buf)
-        msi_free(buf);
+        free(buf);
 
     return rc;
 }
@@ -920,7 +920,7 @@ static UINT search_directory( MSIPACKAGE *package, MSISIGNATURE *sig, const WCHA
     if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY) &&
         val && val[lstrlenW(val) - 1] != '\\')
     {
-        val = msi_realloc(val, (lstrlenW(val) + 2) * sizeof(WCHAR));
+        val = realloc(val, (wcslen(val) + 2) * sizeof(WCHAR));
         if (!val)
             rc = ERROR_OUTOFMEMORY;
         else
@@ -1004,7 +1004,7 @@ static UINT search_dr( MSIPACKAGE *package, WCHAR **appValue, MSISIGNATURE *sig 
 
     rc = search_directory( package, sig, path, depth, appValue );
 
-    msi_free(parent);
+    free(parent);
     msiobj_release(&row->hdr);
     TRACE("returning %d\n", rc);
     return rc;
@@ -1055,7 +1055,7 @@ static UINT ITERATE_AppSearch(MSIRECORD *row, LPVOID param)
         if (r == ERROR_SUCCESS && !wcscmp( propName, L"SourceDir" ))
             msi_reset_source_folders( package );
 
-        msi_free(value);
+        free(value);
     }
     free_signature( &sig );
 
@@ -1107,7 +1107,7 @@ static UINT ITERATE_CCPSearch(MSIRECORD *row, LPVOID param)
     {
         TRACE("Found signature %s\n", debugstr_w(signature));
         msi_set_property( package->db, L"CCP_Success", L"1", -1 );
-        msi_free(value);
+        free(value);
         r = ERROR_NO_MORE_ITEMS;
     }
 

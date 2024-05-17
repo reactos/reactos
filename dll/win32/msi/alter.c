@@ -129,7 +129,7 @@ static UINT ALTER_delete( struct tagMSIVIEW *view )
     TRACE("%p\n", av );
     if (av->table)
         av->table->ops->delete( av->table );
-    msi_free( av );
+    free( av );
 
     return ERROR_SUCCESS;
 }
@@ -164,14 +164,14 @@ UINT ALTER_CreateView( MSIDATABASE *db, MSIVIEW **view, LPCWSTR name, column_inf
 
     TRACE("%p %p %s %d\n", view, colinfo, debugstr_w(name), hold );
 
-    av = msi_alloc_zero( sizeof *av );
+    av = calloc( 1, sizeof *av );
     if( !av )
         return ERROR_FUNCTION_FAILED;
 
     r = TABLE_CreateView( db, name, &av->table );
     if (r != ERROR_SUCCESS)
     {
-        msi_free( av );
+        free( av );
         return r;
     }
 

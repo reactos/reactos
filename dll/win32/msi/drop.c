@@ -87,7 +87,7 @@ static UINT DROP_delete( struct tagMSIVIEW *view )
     if( dv->table )
         dv->table->ops->delete( dv->table );
 
-    msi_free( dv );
+    free( dv );
 
     return ERROR_SUCCESS;
 }
@@ -122,14 +122,14 @@ UINT DROP_CreateView(MSIDATABASE *db, MSIVIEW **view, LPCWSTR name)
 
     TRACE("%p %s\n", view, debugstr_w(name));
 
-    dv = msi_alloc_zero(sizeof *dv);
+    dv = calloc(1, sizeof *dv);
     if(!dv)
         return ERROR_FUNCTION_FAILED;
 
     r = TABLE_CreateView(db, name, &dv->table);
     if (r != ERROR_SUCCESS)
     {
-        msi_free( dv );
+        free( dv );
         return r;
     }
 

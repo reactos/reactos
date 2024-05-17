@@ -239,7 +239,7 @@ static ULONG WINAPI AutomationObject_Release(IDispatch* iface)
     {
         if (tid_ids[This->tid].fn_free) tid_ids[This->tid].fn_free(This);
         MsiCloseHandle(This->msiHandle);
-        msi_free(This);
+        free(This);
     }
 
     return ref;
@@ -607,7 +607,7 @@ static ULONG WINAPI ListEnumerator_Release(IEnumVARIANT* iface)
     if (!ref)
     {
         if (This->list) IDispatch_Release(&This->list->autoobj.IDispatch_iface);
-        msi_free(This);
+        free(This);
     }
 
     return ref;
@@ -703,7 +703,7 @@ static HRESULT create_list_enumerator(ListObject *list, void **ppObj)
 
     TRACE("(%p, %p)\n", list, ppObj);
 
-    object = msi_alloc(sizeof(ListEnumerator));
+    object = malloc(sizeof(ListEnumerator));
 
     /* Set all the VTable references */
     object->IEnumVARIANT_iface.lpVtbl = &ListEnumerator_Vtbl;
@@ -807,7 +807,7 @@ static HRESULT summaryinfo_invoke(
                         break;
 
                     case VT_LPSTR:
-                        if (!(str = msi_alloc(++size * sizeof(WCHAR))))
+                        if (!(str = malloc(++size * sizeof(WCHAR))))
                             ERR("Out of memory\n");
                         else if ((ret = MsiSummaryInfoGetPropertyW(This->msiHandle, V_I4(&varg0), &type, NULL,
                                                                    NULL, str, &size)) != ERROR_SUCCESS)
@@ -817,7 +817,7 @@ static HRESULT summaryinfo_invoke(
                             V_VT(pVarResult) = VT_BSTR;
                             V_BSTR(pVarResult) = SysAllocString(str);
                         }
-                        msi_free(str);
+                        free(str);
                         break;
 
                     case VT_FILETIME:
@@ -941,11 +941,11 @@ static HRESULT record_invoke(
                 V_BSTR(pVarResult) = NULL;
                 if ((ret = MsiRecordGetStringW(This->msiHandle, V_I4(&varg0), NULL, &dwLen)) == ERROR_SUCCESS)
                 {
-                    if (!(szString = msi_alloc((++dwLen)*sizeof(WCHAR))))
+                    if (!(szString = malloc((++dwLen) * sizeof(WCHAR))))
                         ERR("Out of memory\n");
                     else if ((ret = MsiRecordGetStringW(This->msiHandle, V_I4(&varg0), szString, &dwLen)) == ERROR_SUCCESS)
                         V_BSTR(pVarResult) = SysAllocString(szString);
-                    msi_free(szString);
+                    free(szString);
                 }
                 if (ret != ERROR_SUCCESS)
                     ERR("MsiRecordGetString returned %d\n", ret);
@@ -998,7 +998,7 @@ static HRESULT create_record(MSIHANDLE msiHandle, IDispatch **disp)
 {
     AutomationObject *record;
 
-    record = msi_alloc(sizeof(*record));
+    record = malloc(sizeof(*record));
     if (!record) return E_OUTOFMEMORY;
 
     init_automation_object(record, msiHandle, Record_tid);
@@ -1072,7 +1072,7 @@ static void list_free(AutomationObject *This)
 
     for (i = 0; i < list->count; i++)
         VariantClear(&list->data[i]);
-    msi_free(list->data);
+    free(list->data);
 }
 
 static HRESULT get_products_count(const WCHAR *product, int *len)
@@ -1109,7 +1109,7 @@ static HRESULT create_list(const WCHAR *product, IDispatch **dispatch)
     HRESULT hr;
     int i;
 
-    list = msi_alloc_zero(sizeof(ListObject));
+    list = calloc(1, sizeof(ListObject));
     if (!list) return E_OUTOFMEMORY;
 
     init_automation_object(&list->autoobj, 0, StringList_tid);
@@ -1123,7 +1123,7 @@ static HRESULT create_list(const WCHAR *product, IDispatch **dispatch)
         return hr;
     }
 
-    list->data = msi_alloc(list->count*sizeof(VARIANT));
+    list->data = malloc(list->count * sizeof(VARIANT));
     if (!list->data)
     {
         IDispatch_Release(*dispatch);
@@ -1382,11 +1382,11 @@ static HRESULT session_invoke(
                 V_BSTR(pVarResult) = NULL;
                 if ((ret = MsiGetPropertyW(This->msiHandle, V_BSTR(&varg0), NULL, &dwLen)) == ERROR_SUCCESS)
                 {
-                    if (!(szString = msi_alloc((++dwLen)*sizeof(WCHAR))))
+                    if (!(szString = malloc((++dwLen) * sizeof(WCHAR))))
                         ERR("Out of memory\n");
                     else if ((ret = MsiGetPropertyW(This->msiHandle, V_BSTR(&varg0), szString, &dwLen)) == ERROR_SUCCESS)
                         V_BSTR(pVarResult) = SysAllocString(szString);
-                    msi_free(szString);
+                    free(szString);
                 }
                 if (ret != ERROR_SUCCESS)
                     ERR("MsiGetProperty returned %d\n", ret);
@@ -1619,7 +1619,7 @@ static void variant_from_registry_value(VARIANT *pVarResult, DWORD dwType, LPBYT
         case REG_EXPAND_SZ:
             if (!(dwNewSize = ExpandEnvironmentStringsW(szString, szNewString, dwNewSize)))
                 ERR("ExpandEnvironmentStrings returned error %lu\n", GetLastError());
-            else if (!(szNewString = msi_alloc(dwNewSize * sizeof(WCHAR))))
+            else if (!(szNewString = malloc(dwNewSize * sizeof(WCHAR))))
                 ERR("Out of memory\n");
             else if (!(dwNewSize = ExpandEnvironmentStringsW(szString, szNewString, dwNewSize)))
                 ERR("ExpandEnvironmentStrings returned error %lu\n", GetLastError());
@@ -1628,7 +1628,7 @@ static void variant_from_registry_value(VARIANT *pVarResult, DWORD dwType, LPBYT
                 V_VT(pVarResult) = VT_BSTR;
                 V_BSTR(pVarResult) = SysAllocStringLen(szNewString, dwNewSize);
             }
-            msi_free(szNewString);
+            free(szNewString);
             break;
 
         case REG_DWORD:
@@ -2047,7 +2047,7 @@ static HRESULT InstallerImpl_RegistryValue(WORD wFlags,
                 goto done;
             }
 
-            szString = msi_alloc(size);
+            szString = malloc(size);
             if (!szString)
             {
                 hr = E_OUTOFMEMORY;
@@ -2058,14 +2058,14 @@ static HRESULT InstallerImpl_RegistryValue(WORD wFlags,
                                    &type, (LPBYTE)szString, &size);
             if (ret != ERROR_SUCCESS)
             {
-                msi_free(szString);
+                free(szString);
                 hr = DISP_E_BADINDEX;
                 goto done;
             }
 
             variant_from_registry_value(pVarResult, type,
                                         (LPBYTE)szString, size);
-            msi_free(szString);
+            free(szString);
             break;
 
         /* Try to make it into VT_I4, can use VariantChangeType for this. */
@@ -2093,7 +2093,7 @@ static HRESULT InstallerImpl_RegistryValue(WORD wFlags,
             if (ret != ERROR_SUCCESS)
                 goto done;
 
-            szString = msi_alloc(++size * sizeof(WCHAR));
+            szString = malloc(++size * sizeof(WCHAR));
             if (!szString)
             {
                 hr = E_OUTOFMEMORY;
@@ -2115,7 +2115,7 @@ static HRESULT InstallerImpl_RegistryValue(WORD wFlags,
                 V_BSTR(pVarResult) = SysAllocString(szString);
             }
 
-            msi_free(szString);
+            free(szString);
     }
 
 done:
@@ -2245,7 +2245,7 @@ static HRESULT InstallerImpl_ProductInfo(WORD wFlags,
         goto done;
     }
 
-    str = msi_alloc(++size * sizeof(WCHAR));
+    str = malloc(++size * sizeof(WCHAR));
     if (!str)
     {
         hr = E_OUTOFMEMORY;
@@ -2263,7 +2263,7 @@ static HRESULT InstallerImpl_ProductInfo(WORD wFlags,
     hr = S_OK;
 
 done:
-    msi_free(str);
+    free(str);
     VariantClear(&varg0);
     VariantClear(&varg1);
     return hr;
@@ -2427,7 +2427,7 @@ HRESULT create_msiserver(IUnknown *outer, void **ppObj)
     if (outer)
         return CLASS_E_NOAGGREGATION;
 
-    installer = msi_alloc(sizeof(AutomationObject));
+    installer = malloc(sizeof(AutomationObject));
     if (!installer) return E_OUTOFMEMORY;
 
     init_automation_object(installer, 0, Installer_tid);
@@ -2441,7 +2441,7 @@ HRESULT create_session(MSIHANDLE msiHandle, IDispatch *installer, IDispatch **di
 {
     SessionObject *session;
 
-    session = msi_alloc(sizeof(SessionObject));
+    session = malloc(sizeof(SessionObject));
     if (!session) return E_OUTOFMEMORY;
 
     init_automation_object(&session->autoobj, msiHandle, Session_tid);
@@ -2458,7 +2458,7 @@ static HRESULT create_database(MSIHANDLE msiHandle, IDispatch **dispatch)
 
     TRACE("%lu %p\n", msiHandle, dispatch);
 
-    database = msi_alloc(sizeof(AutomationObject));
+    database = malloc(sizeof(AutomationObject));
     if (!database) return E_OUTOFMEMORY;
 
     init_automation_object(database, msiHandle, Database_tid);
@@ -2474,7 +2474,7 @@ static HRESULT create_view(MSIHANDLE msiHandle, IDispatch **dispatch)
 
     TRACE("%lu %p\n", msiHandle, dispatch);
 
-    view = msi_alloc(sizeof(AutomationObject));
+    view = malloc(sizeof(AutomationObject));
     if (!view) return E_OUTOFMEMORY;
 
     init_automation_object(view, msiHandle, View_tid);
@@ -2488,7 +2488,7 @@ static HRESULT create_summaryinfo(MSIHANDLE msiHandle, IDispatch **disp)
 {
     AutomationObject *info;
 
-    info = msi_alloc(sizeof(*info));
+    info = malloc(sizeof(*info));
     if (!info) return E_OUTOFMEMORY;
 
     init_automation_object(info, msiHandle, SummaryInfo_tid);

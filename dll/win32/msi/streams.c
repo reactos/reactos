@@ -49,7 +49,7 @@ static BOOL streams_resize_table( MSIDATABASE *db, UINT size )
 {
     if (!db->num_streams_allocated)
     {
-        if (!(db->streams = msi_alloc_zero( size * sizeof(MSISTREAM) ))) return FALSE;
+        if (!(db->streams = calloc( size, sizeof(MSISTREAM) ))) return FALSE;
         db->num_streams_allocated = size;
         return TRUE;
     }
@@ -57,7 +57,7 @@ static BOOL streams_resize_table( MSIDATABASE *db, UINT size )
     {
         MSISTREAM *tmp;
         UINT new_size = db->num_streams_allocated * 2;
-        if (!(tmp = msi_realloc( db->streams, new_size * sizeof(*tmp) ))) return FALSE;
+        if (!(tmp = realloc( db->streams, new_size * sizeof(*tmp) ))) return FALSE;
         memset( tmp + db->num_streams_allocated, 0, (new_size - db->num_streams_allocated) * sizeof(*tmp) );
         db->streams = tmp;
         db->num_streams_allocated = new_size;
@@ -238,7 +238,7 @@ static UINT STREAMS_delete_row(struct tagMSIVIEW *view, UINT row)
     db->num_streams = num_rows;
 
     hr = IStorage_DestroyElement( db->storage, encname );
-    msi_free( encname );
+    free( encname );
     return FAILED( hr ) ? ERROR_FUNCTION_FAILED : ERROR_SUCCESS;
 }
 
@@ -366,7 +366,7 @@ static UINT STREAMS_delete(struct tagMSIVIEW *view)
 
     TRACE("(%p)\n", view);
 
-    msi_free(sv);
+    free(sv);
     return ERROR_SUCCESS;
 }
 
@@ -521,7 +521,7 @@ UINT msi_get_stream( MSIDATABASE *db, const WCHAR *name, IStream **ret )
         return ERROR_OUTOFMEMORY;
 
     hr = open_stream( db, encname, ret );
-    msi_free( encname );
+    free( encname );
     if (FAILED( hr ))
         return ERROR_FUNCTION_FAILED;
 
@@ -547,7 +547,7 @@ UINT STREAMS_CreateView(MSIDATABASE *db, MSIVIEW **view)
     if (r != ERROR_SUCCESS)
         return r;
 
-    if (!(sv = msi_alloc_zero( sizeof(MSISTREAMSVIEW) )))
+    if (!(sv = calloc( 1, sizeof(MSISTREAMSVIEW) )))
         return ERROR_OUTOFMEMORY;
 
     sv->view.ops = &streams_ops;
@@ -629,7 +629,7 @@ UINT msi_commit_streams( MSIDATABASE *db )
             if (FAILED( hr ))
             {
                 ERR( "failed to write stream %s (hr = %#lx)\n", debugstr_w(encname), hr );
-                msi_free( encname );
+                free( encname );
                 IStream_Release( stream );
                 return ERROR_FUNCTION_FAILED;
             }
@@ -638,17 +638,17 @@ UINT msi_commit_streams( MSIDATABASE *db )
             if (FAILED( hr ))
             {
                 ERR( "failed to commit stream %s (hr = %#lx)\n", debugstr_w(encname), hr );
-                msi_free( encname );
+                free( encname );
                 return ERROR_FUNCTION_FAILED;
             }
         }
         else if (hr != STG_E_FILEALREADYEXISTS)
         {
             ERR( "failed to create stream %s (hr = %#lx)\n", debugstr_w(encname), hr );
-            msi_free( encname );
+            free( encname );
             return ERROR_FUNCTION_FAILED;
         }
-        msi_free( encname );
+        free( encname );
     }
 
     return ERROR_SUCCESS;

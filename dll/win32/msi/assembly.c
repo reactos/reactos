@@ -164,7 +164,7 @@ static UINT get_assembly_name_attribute( MSIRECORD *rec, LPVOID param )
     const WCHAR *value = MSI_RecordGetString( rec, 3 );
     int len = lstrlenW( L"%s=\"%s\"" ) + lstrlenW( attr ) + lstrlenW( value );
 
-    if (!(name->attrs[name->index] = msi_alloc( len * sizeof(WCHAR) )))
+    if (!(name->attrs[name->index] = malloc( len * sizeof(WCHAR) )))
         return ERROR_OUTOFMEMORY;
 
     if (!wcsicmp( attr, L"name" )) lstrcpyW( name->attrs[name->index++], value );
@@ -190,7 +190,7 @@ static WCHAR *get_assembly_display_name( MSIDATABASE *db, const WCHAR *comp, MSI
     MSI_IterateRecords( view, &name.count, NULL, NULL );
     if (!name.count) goto done;
 
-    name.attrs = msi_alloc( name.count * sizeof(WCHAR *) );
+    name.attrs = malloc( name.count * sizeof(WCHAR *) );
     if (!name.attrs) goto done;
 
     MSI_IterateRecords( view, NULL, get_assembly_name_attribute, &name );
@@ -198,7 +198,7 @@ static WCHAR *get_assembly_display_name( MSIDATABASE *db, const WCHAR *comp, MSI
     len = 0;
     for (i = 0; i < name.count; i++) len += lstrlenW( name.attrs[i] ) + 1;
 
-    display_name = msi_alloc( (len + 1) * sizeof(WCHAR) );
+    display_name = malloc( (len + 1) * sizeof(WCHAR) );
     if (display_name)
     {
         display_name[0] = 0;
@@ -213,8 +213,8 @@ done:
     msiobj_release( &view->hdr );
     if (name.attrs)
     {
-        for (i = 0; i < name.count; i++) msi_free( name.attrs[i] );
-        msi_free( name.attrs );
+        for (i = 0; i < name.count; i++) free( name.attrs[i] );
+        free( name.attrs );
     }
     return display_name;
 }
@@ -250,12 +250,12 @@ WCHAR *msi_get_assembly_path( MSIPACKAGE *package, const WCHAR *displayname )
     hr = IAssemblyCache_QueryAssemblyInfo( cache, 0, displayname, &info );
     if (hr != E_NOT_SUFFICIENT_BUFFER) return NULL;
 
-    if (!(info.pszCurrentAssemblyPathBuf = msi_alloc( info.cchBuf * sizeof(WCHAR) ))) return NULL;
+    if (!(info.pszCurrentAssemblyPathBuf = malloc( info.cchBuf * sizeof(WCHAR) ))) return NULL;
 
     hr = IAssemblyCache_QueryAssemblyInfo( cache, 0, displayname, &info );
     if (FAILED( hr ))
     {
-        msi_free( info.pszCurrentAssemblyPathBuf );
+        free( info.pszCurrentAssemblyPathBuf );
         return NULL;
     }
     TRACE("returning %s\n", debugstr_w(info.pszCurrentAssemblyPathBuf));
@@ -276,7 +276,7 @@ IAssemblyEnum *msi_create_assembly_enum( MSIPACKAGE *package, const WCHAR *displ
     if (FAILED( hr )) return NULL;
 
     hr = IAssemblyName_GetName( name, &len, NULL );
-    if (hr != E_NOT_SUFFICIENT_BUFFER || !(str = msi_alloc( len * sizeof(WCHAR) )))
+    if (hr != E_NOT_SUFFICIENT_BUFFER || !(str = malloc( len * sizeof(WCHAR) )))
     {
         IAssemblyName_Release( name );
         return NULL;
@@ -286,12 +286,12 @@ IAssemblyEnum *msi_create_assembly_enum( MSIPACKAGE *package, const WCHAR *displ
     IAssemblyName_Release( name );
     if (FAILED( hr ))
     {
-        msi_free( str );
+        free( str );
         return NULL;
     }
 
     hr = package->pCreateAssemblyNameObject( &name, str, 0, NULL );
-    msi_free( str );
+    free( str );
     if (FAILED( hr )) return NULL;
 
     hr = package->pCreateAssemblyEnum( &ret, NULL, name, ASM_CACHE_GAC, NULL );
@@ -322,7 +322,7 @@ MSIASSEMBLY *msi_load_assembly( MSIPACKAGE *package, MSICOMPONENT *comp )
     MSIASSEMBLY *a;
 
     if (!(rec = get_assembly_record( package, comp->Component ))) return NULL;
-    if (!(a = msi_alloc_zero( sizeof(MSIASSEMBLY) )))
+    if (!(a = calloc( 1, sizeof(MSIASSEMBLY) )))
     {
         msiobj_release( &rec->hdr );
         return NULL;
@@ -343,10 +343,10 @@ MSIASSEMBLY *msi_load_assembly( MSIPACKAGE *package, MSICOMPONENT *comp )
     {
         WARN("can't get display name\n");
         msiobj_release( &rec->hdr );
-        msi_free( a->feature );
-        msi_free( a->manifest );
-        msi_free( a->application );
-        msi_free( a );
+        free( a->feature );
+        free( a->manifest );
+        free( a->application );
+        free( a );
         return NULL;
     }
     TRACE("display name %s\n", debugstr_w(a->display_name));
@@ -394,7 +394,7 @@ static enum clr_version get_clr_version( MSIPACKAGE *package, const WCHAR *filen
 
     hr = package->pGetFileVersion( filename, NULL, 0, &len );
     if (hr != E_NOT_SUFFICIENT_BUFFER) return CLR_VERSION_V11;
-    if ((strW = msi_alloc( len * sizeof(WCHAR) )))
+    if ((strW = malloc( len * sizeof(WCHAR) )))
     {
         hr = package->pGetFileVersion( filename, strW, len, &len );
         if (hr == S_OK)
@@ -403,7 +403,7 @@ static enum clr_version get_clr_version( MSIPACKAGE *package, const WCHAR *filen
             for (i = 0; i < CLR_VERSION_MAX; i++)
                 if (!wcscmp( strW, clr_version[i] )) version = i;
         }
-        msi_free( strW );
+        free( strW );
     }
     return version;
 }
@@ -500,7 +500,7 @@ static WCHAR *build_local_assembly_path( const WCHAR *filename )
     UINT i;
     WCHAR *ret;
 
-    if (!(ret = msi_alloc( (lstrlenW( filename ) + 1) * sizeof(WCHAR) )))
+    if (!(ret = malloc( (wcslen( filename ) + 1) * sizeof(WCHAR) )))
         return NULL;
 
     for (i = 0; filename[i]; i++)
@@ -543,12 +543,12 @@ static LONG open_local_assembly_key( UINT context, BOOL win32, const WCHAR *file
 
     if ((res = open_assemblies_key( context, win32, &root )))
     {
-        msi_free( path );
+        free( path );
         return res;
     }
     res = RegCreateKeyW( root, path, hkey );
     RegCloseKey( root );
-    msi_free( path );
+    free( path );
     return res;
 }
 
@@ -563,12 +563,12 @@ static LONG delete_local_assembly_key( UINT context, BOOL win32, const WCHAR *fi
 
     if ((res = open_assemblies_key( context, win32, &root )))
     {
-        msi_free( path );
+        free( path );
         return res;
     }
     res = RegDeleteKeyW( root, path );
     RegCloseKey( root );
-    msi_free( path );
+    free( path );
     return res;
 }
 

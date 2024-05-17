@@ -102,7 +102,7 @@ static ULONG WINAPI MsiActiveScriptSite_Release(IActiveScriptSite* iface)
     TRACE( "(%p)->(%lu)\n", This, ref );
 
     if (!ref)
-        msi_free(This);
+        free(This);
 
     return ref;
 }
@@ -254,7 +254,7 @@ static HRESULT create_activescriptsite(MsiActiveScriptSite **obj)
 
     *obj = NULL;
 
-    object = msi_alloc( sizeof(MsiActiveScriptSite) );
+    object = malloc(sizeof(MsiActiveScriptSite));
     if (!object)
         return E_OUTOFMEMORY;
 

@@ -344,7 +344,7 @@ static UINT SELECT_delete( struct tagMSIVIEW *view )
         sv->table->ops->delete( sv->table );
     sv->table = NULL;
 
-    msi_free( sv );
+    free( sv );
 
     return ERROR_SUCCESS;
 }
@@ -430,7 +430,7 @@ UINT SELECT_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table,
 
     count = select_count_columns( columns );
 
-    sv = msi_alloc_zero( FIELD_OFFSET( MSISELECTVIEW, cols[count] ));
+    sv = calloc( 1, offsetof( MSISELECTVIEW, cols[count] ) );
     if( !sv )
         return ERROR_FUNCTION_FAILED;
 
@@ -452,7 +452,7 @@ UINT SELECT_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table,
     if( r == ERROR_SUCCESS )
         *view = &sv->view;
     else
-        msi_free( sv );
+        free( sv );
 
     return r;
 }

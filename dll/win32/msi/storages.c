@@ -61,7 +61,7 @@ static BOOL storages_set_table_size(MSISTORAGESVIEW *sv, UINT size)
     if (size >= sv->max_storages)
     {
         sv->max_storages *= 2;
-        sv->storages = msi_realloc(sv->storages, sv->max_storages * sizeof(*sv->storages));
+        sv->storages = realloc(sv->storages, sv->max_storages * sizeof(*sv->storages));
         if (!sv->storages)
             return FALSE;
     }
@@ -124,7 +124,7 @@ static HRESULT stream_to_storage(IStream *stm, IStorage **stg)
     }
 
     size = stat.cbSize.QuadPart;
-    data = msi_alloc(size);
+    data = malloc(size);
     if (!data)
         return E_OUTOFMEMORY;
 
@@ -148,7 +148,7 @@ static HRESULT stream_to_storage(IStream *stm, IStorage **stg)
         goto done;
 
 done:
-    msi_free(data);
+    free(data);
     if (lockbytes) ILockBytes_Release(lockbytes);
     return hr;
 }
@@ -248,7 +248,7 @@ static UINT STORAGES_set_row(struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, 
     if (prev) IStorage_Release(prev);
 
 done:
-    msi_free(name);
+    free(name);
 
     if (substg) IStorage_Release(substg);
     IStorage_Release(stg);
@@ -431,9 +431,9 @@ static UINT STORAGES_delete(struct tagMSIVIEW *view)
             IStorage_Release(sv->storages[i].storage);
     }
 
-    msi_free(sv->storages);
+    free(sv->storages);
     sv->storages = NULL;
-    msi_free(sv);
+    free(sv);
 
     return ERROR_SUCCESS;
 }
@@ -474,7 +474,7 @@ static INT add_storages_to_table(MSISTORAGESVIEW *sv)
         return -1;
 
     sv->max_storages = 1;
-    sv->storages = msi_alloc(sizeof(*sv->storages));
+    sv->storages = malloc(sizeof(*sv->storages));
     if (!sv->storages)
         return -1;
 
@@ -519,7 +519,7 @@ UINT STORAGES_CreateView(MSIDATABASE *db, MSIVIEW **view)
 
     TRACE("(%p, %p)\n", db, view);
 
-    sv = msi_alloc_zero( sizeof(MSISTORAGESVIEW) );
+    sv = calloc(1, sizeof(MSISTORAGESVIEW));
     if (!sv)
         return ERROR_FUNCTION_FAILED;
 
@@ -529,7 +529,7 @@ UINT STORAGES_CreateView(MSIDATABASE *db, MSIVIEW **view)
     rows = add_storages_to_table(sv);
     if (rows < 0)
     {
-        msi_free( sv );
+        free(sv);
         return ERROR_FUNCTION_FAILED;
     }
     sv->num_rows = rows;

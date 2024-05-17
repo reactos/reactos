@@ -70,7 +70,7 @@ static unsigned int msihandletable_size = 0;
 
 void msi_free_handle_table(void)
 {
-    msi_free( msihandletable );
+    free( msihandletable );
     msihandletable = NULL;
     msihandletable_size = 0;
     DeleteCriticalSection(&MSI_handle_cs);
@@ -92,12 +92,12 @@ static MSIHANDLE alloc_handle_table_entry(void)
         if (msihandletable_size == 0)
         {
             newsize = 256;
-            p = msi_alloc_zero(newsize * sizeof(*p));
+            p = calloc(newsize, sizeof(*p));
         }
         else
         {
             newsize = msihandletable_size * 2;
-            p = msi_realloc(msihandletable, newsize * sizeof(*p));
+            p = realloc(msihandletable, newsize * sizeof(*p));
             if (p) memset(p + msihandletable_size, 0, (newsize - msihandletable_size) * sizeof(*p));
         }
         if (!p)
@@ -202,7 +202,7 @@ void *alloc_msiobject(UINT type, UINT size, msihandledestructor destroy )
 {
     MSIOBJECTHDR *info;
 
-    info = msi_alloc_zero( size );
+    info = calloc( 1, size );
     if( info )
     {
         info->magic = MSIHANDLE_MAGIC;
@@ -257,7 +257,7 @@ int msiobj_release( MSIOBJECTHDR *info )
         if( info->destructor )
             info->destructor( info );
         TRACE("object %p destroyed\n", info);
-        msi_free( info );
+        free( info );
     }
 
     return ret;

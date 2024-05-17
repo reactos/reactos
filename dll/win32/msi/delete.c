@@ -159,7 +159,7 @@ static UINT DELETE_delete( struct tagMSIVIEW *view )
     if( dv->table )
         dv->table->ops->delete( dv->table );
 
-    msi_free( dv );
+    free( dv );
 
     return ERROR_SUCCESS;
 }
@@ -193,7 +193,7 @@ UINT DELETE_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table )
 
     TRACE("%p\n", dv );
 
-    dv = msi_alloc_zero( sizeof *dv );
+    dv = calloc( 1, sizeof *dv );
     if( !dv )
         return ERROR_FUNCTION_FAILED;
 

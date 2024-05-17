@@ -1138,30 +1138,6 @@ extern DWORD call_script(MSIHANDLE hPackage, INT type, LPCWSTR script, LPCWSTR f
 /* User interface messages from the actions */
 extern void msi_ui_progress(MSIPACKAGE *, int, int, int, int) DECLSPEC_HIDDEN;
 
-/* memory allocation macro functions */
-static void *msi_alloc( size_t len ) __WINE_ALLOC_SIZE(1);
-static inline void *msi_alloc( size_t len )
-{
-    return malloc( len );
-}
-
-static void *msi_alloc_zero( size_t len ) __WINE_ALLOC_SIZE(1);
-static inline void *msi_alloc_zero( size_t len )
-{
-    return calloc( 1, len );
-}
-
-static void *msi_realloc( void *mem, size_t len ) __WINE_ALLOC_SIZE(2);
-static inline void *msi_realloc( void *mem, size_t len )
-{
-    return realloc( mem, len );
-}
-
-static inline void msi_free( void *mem )
-{
-    free( mem );
-}
-
 static inline char *strdupWtoA( LPCWSTR str )
 {
     LPSTR ret = NULL;
@@ -1169,7 +1145,7 @@ static inline char *strdupWtoA( LPCWSTR str )
 
     if (!str) return ret;
     len = WideCharToMultiByte( CP_ACP, 0, str, -1, NULL, 0, NULL, NULL);
-    ret = msi_alloc( len );
+    ret = malloc( len );
     if (ret)
         WideCharToMultiByte( CP_ACP, 0, str, -1, ret, len, NULL, NULL );
     return ret;
@@ -1182,7 +1158,7 @@ static inline LPWSTR strdupAtoW( LPCSTR str )
 
     if (!str) return ret;
     len = MultiByteToWideChar( CP_ACP, 0, str, -1, NULL, 0 );
-    ret = msi_alloc( len * sizeof(WCHAR) );
+    ret = malloc( len * sizeof(WCHAR) );
     if (ret)
         MultiByteToWideChar( CP_ACP, 0, str, -1, ret, len );
     return ret;

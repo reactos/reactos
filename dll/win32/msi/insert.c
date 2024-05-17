@@ -312,7 +312,7 @@ static UINT INSERT_delete( struct tagMSIVIEW *view )
     if( sv )
         sv->ops->delete( sv );
     msiobj_release( &iv->db->hdr );
-    msi_free( iv );
+    free( iv );
 
     return ERROR_SUCCESS;
 }
@@ -373,7 +373,7 @@ UINT INSERT_CreateView( MSIDATABASE *db, MSIVIEW **view, LPCWSTR table,
         return r;
     }
 
-    iv = msi_alloc_zero( sizeof *iv );
+    iv = calloc( 1, sizeof *iv );
     if( !iv )
         return ERROR_FUNCTION_FAILED;
 

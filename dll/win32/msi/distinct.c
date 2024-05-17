@@ -67,7 +67,7 @@ static DISTINCTSET ** distinct_insert( DISTINCTSET **x, UINT val, UINT row )
     }
 
     /* nothing found, so add one */
-    *x = msi_alloc( sizeof (DISTINCTSET) );
+    *x = malloc( sizeof(DISTINCTSET) );
     if( *x )
     {
         (*x)->val = val;
@@ -85,7 +85,7 @@ static void distinct_free( DISTINCTSET *x )
     {
         DISTINCTSET *next = x->nextrow;
         distinct_free( x->nextcol );
-        msi_free( x );
+        free( x );
         x = next;
     }
 }
@@ -126,7 +126,7 @@ static UINT DISTINCT_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     if( r != ERROR_SUCCESS )
         return r;
 
-    dv->translation = msi_alloc( r_count*sizeof(UINT) );
+    dv->translation = malloc( r_count * sizeof(UINT) );
     if( !dv->translation )
         return ERROR_FUNCTION_FAILED;
 
@@ -178,7 +178,7 @@ static UINT DISTINCT_close( struct tagMSIVIEW *view )
     if( !dv->table )
          return ERROR_FUNCTION_FAILED;
 
-    msi_free( dv->translation );
+    free( dv->translation );
     dv->translation = NULL;
     dv->row_count = 0;
 
@@ -240,9 +240,9 @@ static UINT DISTINCT_delete( struct tagMSIVIEW *view )
     if( dv->table )
         dv->table->ops->delete( dv->table );
 
-    msi_free( dv->translation );
+    free( dv->translation );
     msiobj_release( &dv->db->hdr );
-    msi_free( dv );
+    free( dv );
 
     return ERROR_SUCCESS;
 }
@@ -284,7 +284,7 @@ UINT DISTINCT_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table )
         return r;
     }
 
-    dv = msi_alloc_zero( sizeof *dv );
+    dv = calloc( 1, sizeof *dv );
     if( !dv )
         return ERROR_FUNCTION_FAILED;
 
