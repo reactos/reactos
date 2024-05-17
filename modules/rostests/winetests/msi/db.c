@@ -8584,12 +8584,18 @@ static void test_embedded_nulls(void)
         "s72\tL0\n"
         "Control\tDialog\n"
         "LicenseAgreementDlg\ttext\x11\x19text\0text";
+    static const char export_expected[] =
+        "Dialog\tText\r\n"
+        "s72\tL0\r\n"
+        "Control\tDialog\r\n"
+        "LicenseAgreementDlg\ttext\x11\x19text\x19text";
     /* newlines have alternate representation in idt files */
     static const char control_table2[] =
         "Dialog\tText\n"
         "s72\tL0\n"
         "Control\tDialog\n"
         "LicenseAgreementDlg\ttext\x11\x19te\nxt\0text";
+    char data[1024];
     UINT r;
     DWORD sz;
     MSIHANDLE hdb, hrec;
@@ -8612,6 +8618,12 @@ static void test_embedded_nulls(void)
     r = MsiRecordGetStringA( hrec, 1, buffer, &sz );
     ok( r == ERROR_SUCCESS, "failed to get string %u\n", r );
     ok( !memcmp( "text\r\ntext\ntext", buffer, sizeof("text\r\ntext\ntext") - 1 ), "wrong buffer contents \"%s\"\n", buffer );
+
+    r = MsiDatabaseExportA( hdb, "Control", CURR_DIR, "temp_file1");
+    ok( r == ERROR_SUCCESS, "failed to export table %u\n", r );
+    read_file_data( "temp_file1", data );
+    ok( !memcmp( data, export_expected, sizeof(export_expected) - 1), "expected: \"%s\" got: \"%s\"\n", export_expected, data );
+    DeleteFileA( "temp_file1" );
 
     MsiCloseHandle( hrec );
     MsiCloseHandle( hdb );

@@ -892,7 +892,7 @@ end:
 
 static UINT export_field( HANDLE handle, MSIRECORD *row, UINT field )
 {
-    char *buffer;
+    char *buffer, *ptr;
     BOOL ret;
     DWORD sz = 0x100;
     UINT r;
@@ -926,6 +926,22 @@ static UINT export_field( HANDLE handle, MSIRECORD *row, UINT field )
     {
         free( buffer );
         return r;
+    }
+
+    ptr = buffer;
+    while( *ptr )
+    {
+         if (*ptr == '\r' && *( ptr + 1 ) == '\n')
+         {
+             *ptr++ = '\x11';
+             *ptr++ = '\x19';
+             continue;
+         }
+
+         if (*ptr == '\n')
+             *ptr = '\x19';
+
+         ptr++;
     }
 
     ret = WriteFile( handle, buffer, sz, &sz, NULL );
