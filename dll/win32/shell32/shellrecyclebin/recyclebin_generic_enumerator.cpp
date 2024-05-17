@@ -17,10 +17,11 @@ struct RecycleBinGenericEnum
     SIZE_T m_skip;
 };
 
-struct CRecycleBinGenericEnum
+class CRecycleBinGenericEnum
     : public IRecycleBinEnumList
     , public RecycleBinGenericEnum
 {
+public:
     CRecycleBinGenericEnum();
     virtual ~CRecycleBinGenericEnum();
 
