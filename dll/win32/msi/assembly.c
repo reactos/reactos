@@ -30,55 +30,52 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
-static BOOL load_fusion_dlls( MSIPACKAGE *package )
+static void load_fusion_dlls( MSIPACKAGE *package )
 {
     HRESULT (WINAPI *pLoadLibraryShim)( const WCHAR *, const WCHAR *, void *, HMODULE * );
     WCHAR path[MAX_PATH];
     DWORD len = GetSystemDirectoryW( path, MAX_PATH );
 
     lstrcpyW( path + len, L"\\mscoree.dll" );
-    if (package->hmscoree || !(package->hmscoree = LoadLibraryW( path ))) return TRUE;
+    if (!package->hmscoree && !(package->hmscoree = LoadLibraryW( path ))) return;
     if (!(pLoadLibraryShim = (void *)GetProcAddress( package->hmscoree, "LoadLibraryShim" )))
     {
         FreeLibrary( package->hmscoree );
         package->hmscoree = NULL;
-        return TRUE;
+        return;
     }
 
-    pLoadLibraryShim( L"fusion.dll", L"v1.0.3705", NULL, &package->hfusion10 );
-    pLoadLibraryShim( L"fusion.dll", L"v1.1.4322", NULL, &package->hfusion11 );
-    pLoadLibraryShim( L"fusion.dll", L"v2.0.50727", NULL, &package->hfusion20 );
-    pLoadLibraryShim( L"fusion.dll", L"v4.0.30319", NULL, &package->hfusion40 );
-
-    return TRUE;
+    if (!package->hfusion10) pLoadLibraryShim( L"fusion.dll", L"v1.0.3705", NULL, &package->hfusion10 );
+    if (!package->hfusion11) pLoadLibraryShim( L"fusion.dll", L"v1.1.4322", NULL, &package->hfusion11 );
+    if (!package->hfusion20) pLoadLibraryShim( L"fusion.dll", L"v2.0.50727", NULL, &package->hfusion20 );
+    if (!package->hfusion40) pLoadLibraryShim( L"fusion.dll", L"v4.0.30319", NULL, &package->hfusion40 );
 }
 
-BOOL msi_init_assembly_caches( MSIPACKAGE *package )
+static BOOL init_assembly_caches( MSIPACKAGE *package )
 {
     HRESULT (WINAPI *pCreateAssemblyCache)( IAssemblyCache **, DWORD );
 
-    if (package->cache_sxs) return TRUE;
-    if (CreateAssemblyCache( &package->cache_sxs, 0 ) != S_OK) return FALSE;
+    if (!package->cache_sxs && CreateAssemblyCache( &package->cache_sxs, 0 ) != S_OK) return FALSE;
 
-    if (!load_fusion_dlls( package )) return FALSE;
+    load_fusion_dlls( package );
     package->pGetFileVersion = (void *)GetProcAddress( package->hmscoree, "GetFileVersion" ); /* missing from v1.0.3705 */
 
-    if (package->hfusion10)
+    if (package->hfusion10 && !package->cache_net[CLR_VERSION_V10])
     {
         pCreateAssemblyCache = (void *)GetProcAddress( package->hfusion10, "CreateAssemblyCache" );
         pCreateAssemblyCache( &package->cache_net[CLR_VERSION_V10], 0 );
     }
-    if (package->hfusion11)
+    if (package->hfusion11 && !package->cache_net[CLR_VERSION_V11])
     {
         pCreateAssemblyCache = (void *)GetProcAddress( package->hfusion11, "CreateAssemblyCache" );
         pCreateAssemblyCache( &package->cache_net[CLR_VERSION_V11], 0 );
     }
-    if (package->hfusion20)
+    if (package->hfusion20 && !package->cache_net[CLR_VERSION_V20])
     {
         pCreateAssemblyCache = (void *)GetProcAddress( package->hfusion20, "CreateAssemblyCache" );
         pCreateAssemblyCache( &package->cache_net[CLR_VERSION_V20], 0 );
     }
-    if (package->hfusion40)
+    if (package->hfusion40 && !package->cache_net[CLR_VERSION_V40])
     {
         pCreateAssemblyCache = (void *)GetProcAddress( package->hfusion40, "CreateAssemblyCache" );
         pCreateAssemblyCache( &package->cache_net[CLR_VERSION_V40], 0 );
@@ -223,9 +220,9 @@ WCHAR *msi_get_assembly_path( MSIPACKAGE *package, const WCHAR *displayname )
 {
     HRESULT hr;
     ASSEMBLY_INFO info;
-    IAssemblyCache *cache = package->cache_net[CLR_VERSION_V40];
+    IAssemblyCache *cache;
 
-    if (!cache) return NULL;
+    if (!init_assembly_caches( package ) || !(cache = package->cache_net[CLR_VERSION_V40])) return NULL;
 
     memset( &info, 0, sizeof(info) );
     info.cbAssemblyInfo = sizeof(info);
@@ -252,7 +249,8 @@ IAssemblyEnum *msi_create_assembly_enum( MSIPACKAGE *package, const WCHAR *displ
     WCHAR *str;
     DWORD len = 0;
 
-    if (!package->pCreateAssemblyNameObject || !package->pCreateAssemblyEnum) return NULL;
+    if (!init_assembly_caches( package ) || !package->pCreateAssemblyNameObject || !package->pCreateAssemblyEnum)
+        return NULL;
 
     hr = package->pCreateAssemblyNameObject( &name, displayname, CANOF_PARSE_DISPLAY_NAME, NULL );
     if (FAILED( hr )) return NULL;
@@ -363,6 +361,8 @@ UINT msi_install_assembly( MSIPACKAGE *package, MSICOMPONENT *comp )
     MSIASSEMBLY *assembly = comp->assembly;
     MSIFEATURE *feature = NULL;
 
+    if (!init_assembly_caches( package )) return ERROR_FUNCTION_FAILED;
+
     if (comp->assembly->feature)
         feature = msi_get_loaded_feature( package, comp->assembly->feature );
 
@@ -405,6 +405,8 @@ UINT msi_uninstall_assembly( MSIPACKAGE *package, MSICOMPONENT *comp )
     IAssemblyCache *cache;
     MSIASSEMBLY *assembly = comp->assembly;
     MSIFEATURE *feature = NULL;
+
+    if (!init_assembly_caches( package )) return ERROR_FUNCTION_FAILED;
 
     if (comp->assembly->feature)
         feature = msi_get_loaded_feature( package, comp->assembly->feature );
