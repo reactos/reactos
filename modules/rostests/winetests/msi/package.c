@@ -32,11 +32,11 @@
 #include <sddl.h>
 
 #include "wine/test.h"
+#include "utils.h"
 
 static BOOL is_wow64;
 static const char msifile[] = "winetest-package.msi";
 static const WCHAR msifileW[] = L"winetest-package.msi";
-static char CURR_DIR[MAX_PATH];
 
 static INSTALLSTATE (WINAPI *pMsiGetComponentPathExA)(LPCSTR, LPCSTR, LPCSTR, MSIINSTALLCONTEXT, LPSTR, LPDWORD);
 
@@ -66,54 +66,6 @@ static void init_functionpointers(void)
     GET_PROC(hsrclient, SRSetRestorePointA);
 
 #undef GET_PROC
-}
-
-static BOOL is_process_limited(void)
-{
-    SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
-    PSID Group = NULL;
-    BOOL IsInGroup;
-    HANDLE token;
-
-    if (!AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
-                                  DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &Group) ||
-        !CheckTokenMembership(NULL, Group, &IsInGroup))
-    {
-        trace("Could not check if the current user is an administrator\n");
-        FreeSid(Group);
-        return FALSE;
-    }
-    FreeSid(Group);
-
-    if (!IsInGroup)
-    {
-        if (!AllocateAndInitializeSid(&NtAuthority, 2,
-                                      SECURITY_BUILTIN_DOMAIN_RID,
-                                      DOMAIN_ALIAS_RID_POWER_USERS,
-                                      0, 0, 0, 0, 0, 0, &Group) ||
-            !CheckTokenMembership(NULL, Group, &IsInGroup))
-        {
-            trace("Could not check if the current user is a power user\n");
-            return FALSE;
-        }
-        if (!IsInGroup)
-        {
-            /* Only administrators and power users can be powerful */
-            return TRUE;
-        }
-    }
-
-    if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
-    {
-        BOOL ret;
-        TOKEN_ELEVATION_TYPE type = TokenElevationTypeDefault;
-        DWORD size;
-
-        ret = GetTokenInformation(token, TokenElevationType, &type, sizeof(type), &size);
-        CloseHandle(token);
-        return (ret && type == TokenElevationTypeLimited);
-    }
-    return FALSE;
 }
 
 static LONG delete_key( HKEY key, LPCSTR subkey, REGSAM access )
@@ -402,25 +354,9 @@ static UINT do_query(MSIHANDLE hdb, const char *query, MSIHANDLE *phrec)
     return ret;
 }
 
-static UINT run_query( MSIHANDLE hdb, const char *query )
-{
-    MSIHANDLE hview = 0;
-    UINT r;
-
-    r = MsiDatabaseOpenViewA(hdb, query, &hview);
-    if( r != ERROR_SUCCESS )
-        return r;
-
-    r = MsiViewExecute(hview, 0);
-    if( r == ERROR_SUCCESS )
-        r = MsiViewClose(hview);
-    MsiCloseHandle(hview);
-    return r;
-}
-
 static UINT create_component_table( MSIHANDLE hdb )
 {
-    UINT r = run_query( hdb,
+    UINT r = run_query( hdb, 0,
             "CREATE TABLE `Component` ( "
             "`Component` CHAR(72) NOT NULL, "
             "`ComponentId` CHAR(38), "
@@ -435,7 +371,7 @@ static UINT create_component_table( MSIHANDLE hdb )
 
 static UINT create_feature_table( MSIHANDLE hdb )
 {
-    UINT r = run_query( hdb,
+    UINT r = run_query( hdb, 0,
             "CREATE TABLE `Feature` ( "
             "`Feature` CHAR(38) NOT NULL, "
             "`Feature_Parent` CHAR(38), "
@@ -452,7 +388,7 @@ static UINT create_feature_table( MSIHANDLE hdb )
 
 static UINT create_feature_components_table( MSIHANDLE hdb )
 {
-    UINT r = run_query( hdb,
+    UINT r = run_query( hdb, 0,
             "CREATE TABLE `FeatureComponents` ( "
             "`Feature_` CHAR(38) NOT NULL, "
             "`Component_` CHAR(72) NOT NULL "
@@ -463,7 +399,7 @@ static UINT create_feature_components_table( MSIHANDLE hdb )
 
 static UINT create_file_table( MSIHANDLE hdb )
 {
-    UINT r = run_query( hdb,
+    UINT r = run_query( hdb, 0,
             "CREATE TABLE `File` ("
             "`File` CHAR(72) NOT NULL, "
             "`Component_` CHAR(72) NOT NULL, "
@@ -480,7 +416,7 @@ static UINT create_file_table( MSIHANDLE hdb )
 
 static UINT create_remove_file_table( MSIHANDLE hdb )
 {
-    UINT r = run_query( hdb,
+    UINT r = run_query( hdb, 0,
             "CREATE TABLE `RemoveFile` ("
             "`FileKey` CHAR(72) NOT NULL, "
             "`Component_` CHAR(72) NOT NULL, "
@@ -494,7 +430,7 @@ static UINT create_remove_file_table( MSIHANDLE hdb )
 
 static UINT create_appsearch_table( MSIHANDLE hdb )
 {
-    UINT r = run_query( hdb,
+    UINT r = run_query( hdb, 0,
             "CREATE TABLE `AppSearch` ("
             "`Property` CHAR(72) NOT NULL, "
             "`Signature_` CHAR(72) NOT NULL "
@@ -505,7 +441,7 @@ static UINT create_appsearch_table( MSIHANDLE hdb )
 
 static UINT create_reglocator_table( MSIHANDLE hdb )
 {
-    UINT r = run_query( hdb,
+    UINT r = run_query( hdb, 0,
             "CREATE TABLE `RegLocator` ("
             "`Signature_` CHAR(72) NOT NULL, "
             "`Root` SHORT NOT NULL, "
@@ -519,7 +455,7 @@ static UINT create_reglocator_table( MSIHANDLE hdb )
 
 static UINT create_signature_table( MSIHANDLE hdb )
 {
-    UINT r = run_query( hdb,
+    UINT r = run_query( hdb, 0,
             "CREATE TABLE `Signature` ("
             "`Signature` CHAR(72) NOT NULL, "
             "`FileName` CHAR(255) NOT NULL, "
@@ -537,7 +473,7 @@ static UINT create_signature_table( MSIHANDLE hdb )
 
 static UINT create_launchcondition_table( MSIHANDLE hdb )
 {
-    UINT r = run_query( hdb,
+    UINT r = run_query( hdb, 0,
             "CREATE TABLE `LaunchCondition` ("
             "`Condition` CHAR(255) NOT NULL, "
             "`Description` CHAR(255) NOT NULL "
@@ -548,7 +484,7 @@ static UINT create_launchcondition_table( MSIHANDLE hdb )
 
 static UINT create_property_table( MSIHANDLE hdb )
 {
-    UINT r = run_query( hdb,
+    UINT r = run_query( hdb, 0,
             "CREATE TABLE `Property` ("
             "`Property` CHAR(72) NOT NULL, "
             "`Value` CHAR(0) "
@@ -559,7 +495,7 @@ static UINT create_property_table( MSIHANDLE hdb )
 
 static UINT create_install_execute_sequence_table( MSIHANDLE hdb )
 {
-    UINT r = run_query( hdb,
+    UINT r = run_query( hdb, 0,
             "CREATE TABLE `InstallExecuteSequence` ("
             "`Action` CHAR(72) NOT NULL, "
             "`Condition` CHAR(255), "
@@ -571,7 +507,7 @@ static UINT create_install_execute_sequence_table( MSIHANDLE hdb )
 
 static UINT create_install_ui_sequence_table( MSIHANDLE hdb )
 {
-    UINT r = run_query( hdb,
+    UINT r = run_query( hdb, 0,
             "CREATE TABLE `InstallUISequence` ("
             "`Action` CHAR(72) NOT NULL, "
             "`Condition` CHAR(255), "
@@ -583,7 +519,7 @@ static UINT create_install_ui_sequence_table( MSIHANDLE hdb )
 
 static UINT create_media_table( MSIHANDLE hdb )
 {
-    UINT r = run_query( hdb,
+    UINT r = run_query( hdb, 0,
             "CREATE TABLE `Media` ("
             "`DiskId` SHORT NOT NULL, "
             "`LastSequence` SHORT NOT NULL, "
@@ -598,7 +534,7 @@ static UINT create_media_table( MSIHANDLE hdb )
 
 static UINT create_ccpsearch_table( MSIHANDLE hdb )
 {
-    UINT r = run_query( hdb,
+    UINT r = run_query( hdb, 0,
             "CREATE TABLE `CCPSearch` ("
             "`Signature_` CHAR(72) NOT NULL "
             "PRIMARY KEY `Signature_`)" );
@@ -608,7 +544,7 @@ static UINT create_ccpsearch_table( MSIHANDLE hdb )
 
 static UINT create_drlocator_table( MSIHANDLE hdb )
 {
-    UINT r = run_query( hdb,
+    UINT r = run_query( hdb, 0,
             "CREATE TABLE `DrLocator` ("
             "`Signature_` CHAR(72) NOT NULL, "
             "`Parent` CHAR(72), "
@@ -621,7 +557,7 @@ static UINT create_drlocator_table( MSIHANDLE hdb )
 
 static UINT create_complocator_table( MSIHANDLE hdb )
 {
-    UINT r = run_query( hdb,
+    UINT r = run_query( hdb, 0,
             "CREATE TABLE `CompLocator` ("
             "`Signature_` CHAR(72) NOT NULL, "
             "`ComponentId` CHAR(38) NOT NULL, "
@@ -633,7 +569,7 @@ static UINT create_complocator_table( MSIHANDLE hdb )
 
 static UINT create_inilocator_table( MSIHANDLE hdb )
 {
-    UINT r = run_query( hdb,
+    UINT r = run_query( hdb, 0,
             "CREATE TABLE `IniLocator` ("
             "`Signature_` CHAR(72) NOT NULL, "
             "`FileName` CHAR(255) NOT NULL, "
@@ -648,7 +584,7 @@ static UINT create_inilocator_table( MSIHANDLE hdb )
 
 static UINT create_custom_action_table( MSIHANDLE hdb )
 {
-    UINT r = run_query( hdb,
+    UINT r = run_query( hdb, 0,
             "CREATE TABLE `CustomAction` ("
             "`Action` CHAR(72) NOT NULL, "
             "`Type` SHORT NOT NULL, "
@@ -661,7 +597,7 @@ static UINT create_custom_action_table( MSIHANDLE hdb )
 
 static UINT create_dialog_table( MSIHANDLE hdb )
 {
-    UINT r = run_query(hdb,
+    UINT r = run_query(hdb, 0,
             "CREATE TABLE `Dialog` ("
             "`Dialog` CHAR(72) NOT NULL, "
             "`HCentering` SHORT NOT NULL, "
@@ -680,7 +616,7 @@ static UINT create_dialog_table( MSIHANDLE hdb )
 
 static UINT create_control_table( MSIHANDLE hdb )
 {
-    UINT r = run_query(hdb,
+    UINT r = run_query(hdb, 0,
             "CREATE TABLE `Control` ("
             "`Dialog_` CHAR(72) NOT NULL, "
             "`Control` CHAR(50) NOT NULL, "
@@ -701,7 +637,7 @@ static UINT create_control_table( MSIHANDLE hdb )
 
 static UINT create_controlevent_table( MSIHANDLE hdb )
 {
-    UINT r = run_query(hdb,
+    UINT r = run_query(hdb, 0,
             "CREATE TABLE `ControlEvent` ("
             "`Dialog_` CHAR(72) NOT NULL, "
             "`Control_` CHAR(50) NOT NULL, "
@@ -716,7 +652,7 @@ static UINT create_controlevent_table( MSIHANDLE hdb )
 
 static UINT create_actiontext_table( MSIHANDLE hdb )
 {
-    UINT r = run_query(hdb,
+    UINT r = run_query(hdb, 0,
             "CREATE TABLE `ActionText` ("
             "`Action` CHAR(72) NOT NULL, "
             "`Description` CHAR(64) LOCALIZABLE, "
@@ -728,7 +664,7 @@ static UINT create_actiontext_table( MSIHANDLE hdb )
 
 static UINT create_upgrade_table( MSIHANDLE hdb )
 {
-    UINT r = run_query( hdb,
+    UINT r = run_query( hdb, 0,
             "CREATE TABLE `Upgrade` ("
             "`UpgradeCode` CHAR(38) NOT NULL, "
             "`VersionMin` CHAR(20), "
@@ -750,7 +686,7 @@ static inline UINT add_entry(const char *file, int line, const char *type, MSIHA
     sz = strlen(values) + strlen(insert) + 1;
     query = malloc(sz);
     sprintf(query, insert, values);
-    r = run_query(hdb, query);
+    r = run_query(hdb, 0, query);
     free(query);
     ok_(file, line)(r == ERROR_SUCCESS, "failed to insert into %s table: %u\n", type, r);
     return r;
@@ -867,7 +803,7 @@ static UINT add_reglocator_entry( MSIHANDLE hdb, const char *sig, UINT root, con
     sz = strlen( sig ) + 10 + strlen( path ) + strlen( name ) + 10 + sizeof( insert );
     query = malloc( sz );
     sprintf( query, insert, sig, root, path, name, type );
-    r = run_query( hdb, query );
+    r = run_query( hdb, 0, query );
     free( query );
     ok(r == ERROR_SUCCESS, "failed to insert into reglocator table: %u\n", r); \
     return r;
@@ -937,7 +873,7 @@ static MSIHANDLE create_package_db(void)
     res = set_summary_info(hdb);
     ok( res == ERROR_SUCCESS, "Expected ERROR_SUCCESS got %d\n", res);
 
-    res = run_query( hdb,
+    res = run_query( hdb, 0,
             "CREATE TABLE `Directory` ( "
             "`Directory` CHAR(255) NOT NULL, "
             "`Directory_Parent` CHAR(255), "
@@ -973,25 +909,9 @@ static UINT package_from_db(MSIHANDLE hdb, MSIHANDLE *handle)
     return ERROR_SUCCESS;
 }
 
-static void create_file_data(LPCSTR name, LPCSTR data)
-{
-    HANDLE file;
-    DWORD written;
-
-    file = CreateFileA(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
-    ok(file != INVALID_HANDLE_VALUE, "Failure to open file %s\n", name);
-    if (file == INVALID_HANDLE_VALUE)
-        return;
-
-    WriteFile(file, data, strlen(data), &written, NULL);
-    WriteFile(file, "\n", strlen("\n"), &written, NULL);
-
-    CloseHandle(file);
-}
-
 static void create_test_file(const CHAR *name)
 {
-    create_file_data(name, name);
+    create_file_data(name, name, strlen(name));
 }
 
 typedef struct _tagVS_VERSIONINFO
@@ -2393,7 +2313,7 @@ static void test_property_table(void)
 
     query = "CREATE TABLE `_Property` ( "
         "`foo` INT NOT NULL, `bar` INT LOCALIZABLE PRIMARY KEY `foo`)";
-    r = run_query(hdb, query);
+    r = run_query(hdb, 0, query);
     ok(r == ERROR_BAD_QUERY_SYNTAX, "Expected ERROR_BAD_QUERY_SYNTAX, got %d\n", r);
 
     MsiCloseHandle(hdb);
@@ -2405,19 +2325,19 @@ static void test_property_table(void)
 
     query = "CREATE TABLE `_Property` ( "
         "`foo` INT NOT NULL, `bar` INT LOCALIZABLE PRIMARY KEY `foo`)";
-    r = run_query(hdb, query);
+    r = run_query(hdb, 0, query);
     ok(r == ERROR_SUCCESS, "failed to create table\n");
 
     query = "ALTER `_Property` ADD `foo` INTEGER";
-    r = run_query(hdb, query);
+    r = run_query(hdb, 0, query);
     ok(r == ERROR_BAD_QUERY_SYNTAX, "failed to add column\n");
 
     query = "ALTER TABLE `_Property` ADD `foo` INTEGER";
-    r = run_query(hdb, query);
+    r = run_query(hdb, 0, query);
     ok(r == ERROR_BAD_QUERY_SYNTAX, "failed to add column\n");
 
     query = "ALTER TABLE `_Property` ADD `extra` INTEGER";
-    r = run_query(hdb, query);
+    r = run_query(hdb, 0, query);
     ok(r == ERROR_SUCCESS, "failed to add column\n");
 
     sprintf(package, "#%lu", hdb);
@@ -7995,7 +7915,7 @@ static void test_MsiGetProductProperty(void)
     r = set_summary_info(hdb);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
-    r = run_query(hdb,
+    r = run_query(hdb, 0,
             "CREATE TABLE `Directory` ( "
             "`Directory` CHAR(255) NOT NULL, "
             "`Directory_Parent` CHAR(255), "
@@ -9125,13 +9045,13 @@ static void test_externalui_message(void)
     hdb = create_package_db();
     ok(hdb, "failed to create database\n");
 
-    create_file_data("forcecodepage.idt", "\r\n\r\n1252\t_ForceCodepage\r\n");
+    create_file_data("forcecodepage.idt", "\r\n\r\n1252\t_ForceCodepage\r\n", sizeof("\r\n\r\n1252\t_ForceCodepage\r\n") - 1);
     r = MsiDatabaseImportA(hdb, CURR_DIR, "forcecodepage.idt");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
-    r = run_query(hdb, "CREATE TABLE `Error` (`Error` SHORT NOT NULL, `Message` CHAR(0) PRIMARY KEY `Error`)");
+    r = run_query(hdb, 0, "CREATE TABLE `Error` (`Error` SHORT NOT NULL, `Message` CHAR(0) PRIMARY KEY `Error`)");
     ok(r == ERROR_SUCCESS, "Failed to create Error table: %u\n", r);
-    r = run_query(hdb, "INSERT INTO `Error` (`Error`, `Message`) VALUES (5, 'internal error')");
+    r = run_query(hdb, 0, "INSERT INTO `Error` (`Error`, `Message`) VALUES (5, 'internal error')");
     ok(r == ERROR_SUCCESS, "Failed to insert into Error table: %u\n", r);
 
     create_actiontext_table(hdb);
@@ -9342,7 +9262,7 @@ static void test_controlevent(void)
     hdb = create_package_db();
     ok(hdb, "failed to create database\n");
 
-    create_file_data("forcecodepage.idt", "\r\n\r\n1252\t_ForceCodepage\r\n");
+    create_file_data("forcecodepage.idt", "\r\n\r\n1252\t_ForceCodepage\r\n", sizeof("\r\n\r\n1252\t_ForceCodepage\r\n") - 1);
     r = MsiDatabaseImportA(hdb, CURR_DIR, "forcecodepage.idt");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
@@ -9565,7 +9485,7 @@ static void test_top_level_action(void)
     hdb = create_package_db();
     ok(hdb, "failed to create database\n");
 
-    create_file_data("forcecodepage.idt", "\r\n\r\n1252\t_ForceCodepage\r\n");
+    create_file_data("forcecodepage.idt", "\r\n\r\n1252\t_ForceCodepage\r\n", sizeof("\r\n\r\n1252\t_ForceCodepage\r\n") -1 );
     r = MsiDatabaseImportA(hdb, CURR_DIR, "forcecodepage.idt");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 

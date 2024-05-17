@@ -46,7 +46,6 @@ DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
 static const char *msifile = "winetest-automation.msi";
 static FILETIME systemtime;
-static CHAR CURR_DIR[MAX_PATH];
 static EXCEPINFO excepinfo;
 
 /*
@@ -156,13 +155,6 @@ static const CHAR registry_dat[] = "Registry\tRoot\tKey\tName\tValue\tComponent_
                                    "regdata\t1\tSOFTWARE\\Wine\\msitest\tblah\tbad\tdangler\n"
                                    "OrderTest\t1\tSOFTWARE\\Wine\\msitest\tOrderTestName\tOrderTestValue\tcomponent\n";
 
-typedef struct _msi_table
-{
-    const CHAR *filename;
-    const CHAR *data;
-    int size;
-} msi_table;
-
 #define ADD_TABLE(x) {#x".idt", x##_dat, sizeof(x##_dat)}
 
 static const msi_table tables[] =
@@ -218,42 +210,6 @@ static void init_functionpointers(void)
 #undef GET_PROC
 }
 
-static BOOL is_process_limited(void)
-{
-    SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
-    PSID Group = NULL;
-    BOOL IsInGroup;
-    HANDLE token;
-
-    if (!AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
-                                  DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &Group) ||
-        !CheckTokenMembership(NULL, Group, &IsInGroup))
-    {
-        trace("Could not check if the current user is an administrator\n");
-        FreeSid(Group);
-        return FALSE;
-    }
-    FreeSid(Group);
-
-    if (!IsInGroup)
-    {
-        /* Only administrators have enough privileges for these tests */
-        return TRUE;
-    }
-
-    if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
-    {
-        BOOL ret;
-        TOKEN_ELEVATION_TYPE type = TokenElevationTypeDefault;
-        DWORD size;
-
-        ret = GetTokenInformation(token, TokenElevationType, &type, sizeof(type), &size);
-        CloseHandle(token);
-        return (ret && type == TokenElevationTypeLimited);
-    }
-    return FALSE;
-}
-
 static LONG delete_key_portable( HKEY key, LPCSTR subkey, REGSAM access )
 {
     if (pRegDeleteKeyExA)
@@ -301,8 +257,8 @@ static void write_msi_summary_info(MSIHANDLE db, const msi_summary_info *info, i
     MsiCloseHandle(summary);
 }
 
-static void create_database(const CHAR *name, const msi_table *tables, int num_tables,
-                            const msi_summary_info *info, int num_info)
+static void create_database_suminfo(const CHAR *name, const msi_table *tables, int num_tables,
+                                    const msi_summary_info *info, int num_info)
 {
     MSIHANDLE db;
     UINT r;
@@ -343,7 +299,7 @@ static BOOL create_package(LPWSTR path)
     DWORD len;
 
     /* Prepare package */
-    create_database(msifile, tables, ARRAY_SIZE(tables), summary_info, ARRAY_SIZE(summary_info));
+    create_database_suminfo(msifile, tables, ARRAY_SIZE(tables), summary_info, ARRAY_SIZE(summary_info));
 
     len = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED,
                               CURR_DIR, -1, path, MAX_PATH);
@@ -358,8 +314,6 @@ static BOOL create_package(LPWSTR path)
 /*
  * Installation helpers
  */
-
-static char PROG_FILES_DIR[MAX_PATH];
 
 static BOOL get_program_files_dir(LPSTR buf)
 {
@@ -378,24 +332,6 @@ static BOOL get_program_files_dir(LPSTR buf)
     return TRUE;
 }
 
-static void create_file(const CHAR *name, DWORD size)
-{
-    HANDLE file;
-    DWORD written, left;
-
-    file = CreateFileA(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
-    ok(file != INVALID_HANDLE_VALUE, "Failure to open file %s\n", name);
-    WriteFile(file, name, strlen(name), &written, NULL);
-    WriteFile(file, "\n", strlen("\n"), &written, NULL);
-
-    left = size - lstrlenA(name) - 1;
-
-    SetFilePointer(file, left, NULL, FILE_CURRENT);
-    SetEndOfFile(file);
-
-    CloseHandle(file);
-}
-
 static void create_test_files(void)
 {
     CreateDirectoryA("msitest", NULL);
@@ -409,20 +345,6 @@ static void create_test_files(void)
     CreateDirectoryA("msitest\\cabout\\new",NULL);
     create_file("msitest\\cabout\\new\\five.txt", 100);
     create_file("msitest\\filename", 100);
-}
-
-static BOOL delete_pf(const CHAR *rel_path, BOOL is_file)
-{
-    CHAR path[MAX_PATH];
-
-    lstrcpyA(path, PROG_FILES_DIR);
-    lstrcatA(path, "\\");
-    lstrcatA(path, rel_path);
-
-    if (is_file)
-        return DeleteFileA(path);
-    else
-        return RemoveDirectoryA(path);
 }
 
 static void delete_test_files(void)

@@ -30,6 +30,7 @@
 #include <wtypes.h>
 
 #include "wine/test.h"
+#include "utils.h"
 
 static UINT (WINAPI *pMsiApplyPatchA)( LPCSTR, LPCSTR, INSTALLTYPE, LPCSTR );
 static UINT (WINAPI *pMsiGetPatchInfoExA)( LPCSTR, LPCSTR, LPCSTR, MSIINSTALLCONTEXT,
@@ -41,10 +42,6 @@ static const char *msifile = "winetest-patch.msi";
 static const char *mspfile = "winetest-patch.msp";
 static const WCHAR msifileW[] = L"winetest-patch.msi";
 static const WCHAR mspfileW[] = L"winetest-patch.msp";
-
-static char CURR_DIR[MAX_PATH];
-static char PROG_FILES_DIR[MAX_PATH];
-static char COMMON_FILES_DIR[MAX_PATH];
 
 /* msi database data */
 
@@ -136,8 +133,6 @@ struct msi_table
     int size;
 };
 
-#define ADD_TABLE( x ) { #x".idt", x##_dat, sizeof(x##_dat) }
-
 static const struct msi_table tables[] =
 {
     ADD_TABLE( directory ),
@@ -167,23 +162,6 @@ static void init_function_pointers( void )
 #undef GET_PROC
 }
 
-static BOOL is_process_limited(void)
-{
-    HANDLE token;
-
-    if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
-    {
-        BOOL ret;
-        TOKEN_ELEVATION_TYPE type = TokenElevationTypeDefault;
-        DWORD size;
-
-        ret = GetTokenInformation(token, TokenElevationType, &type, sizeof(type), &size);
-        CloseHandle(token);
-        return (ret && type == TokenElevationTypeLimited);
-    }
-    return FALSE;
-}
-
 static BOOL get_program_files_dir( char *buf, char *buf2 )
 {
     HKEY hkey;
@@ -207,40 +185,6 @@ static BOOL get_program_files_dir( char *buf, char *buf2 )
     }
     RegCloseKey( hkey );
     return TRUE;
-}
-
-static void create_file_data( const char *filename, const char *data, DWORD size )
-{
-    HANDLE file;
-    DWORD written;
-
-    file = CreateFileA( filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL );
-    if (file == INVALID_HANDLE_VALUE)
-        return;
-
-    WriteFile( file, data, strlen( data ), &written, NULL );
-    if (size)
-    {
-        SetFilePointer( file, size, NULL, FILE_BEGIN );
-        SetEndOfFile( file );
-    }
-    CloseHandle( file );
-}
-
-#define create_file( name, size ) create_file_data( name, name, size )
-
-static BOOL delete_pf( const char *rel_path, BOOL is_file )
-{
-    char path[MAX_PATH];
-
-    strcpy( path, PROG_FILES_DIR );
-    strcat( path, "\\" );
-    strcat( path, rel_path );
-
-    if (is_file)
-        return DeleteFileA( path );
-    else
-        return RemoveDirectoryA( path );
 }
 
 static DWORD get_pf_file_size( const char *filename )
@@ -313,7 +257,7 @@ static void set_suminfo( const WCHAR *filename )
     ok( r == ERROR_SUCCESS, "failed to close database %u\n", r );
 }
 
-static void create_database( const char *filename, const struct msi_table *tables, UINT num_tables )
+static void create_database_suminfo( const char *filename, const struct msi_table *tables, UINT num_tables )
 {
     MSIHANDLE hdb;
     UINT r, i;
@@ -761,7 +705,7 @@ static void test_simple_patch( void )
     CreateDirectoryA( "msitest", NULL );
     create_file( "msitest\\patch.txt", 1000 );
 
-    create_database( msifile, tables, ARRAY_SIZE(tables) );
+    create_database_suminfo( msifile, tables, ARRAY_SIZE(tables) );
     create_patch( mspfile );
 
     MsiSetInternalUI( INSTALLUILEVEL_NONE, NULL );
@@ -962,7 +906,7 @@ static void test_MsiOpenDatabase( void )
     MsiCloseHandle( hdb );
     DeleteFileA( mspfile );
 
-    create_database( msifile, tables, ARRAY_SIZE(tables) );
+    create_database_suminfo( msifile, tables, ARRAY_SIZE(tables) );
     create_patch( mspfile );
 
     r = MsiOpenDatabaseW( msifileW, MSIDBOPEN_READONLY + MSIDBOPEN_PATCHFILE, &hdb );
@@ -1100,7 +1044,7 @@ static void test_system_tables( void )
     CreateDirectoryA( "msitest", NULL );
     create_file( "msitest\\patch.txt", 1000 );
 
-    create_database( msifile, tables, ARRAY_SIZE(tables) );
+    create_database_suminfo( msifile, tables, ARRAY_SIZE(tables) );
     create_patch( mspfile );
 
     MsiSetInternalUI( INSTALLUILEVEL_NONE, NULL );
@@ -1290,7 +1234,7 @@ static void test_patch_registration( void )
     CreateDirectoryA( "msitest", NULL );
     create_file( "msitest\\patch.txt", 1000 );
 
-    create_database( msifile, tables, ARRAY_SIZE(tables) );
+    create_database_suminfo( msifile, tables, ARRAY_SIZE(tables) );
     create_patch( mspfile );
 
     MsiSetInternalUI( INSTALLUILEVEL_NONE, NULL );
