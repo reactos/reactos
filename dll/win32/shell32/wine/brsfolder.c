@@ -194,7 +194,16 @@ static void LayoutUpdate(HWND hwnd, LAYOUT_DATA *data, const LAYOUT_INFO *layout
 }
 #endif
 
-
+#ifdef __REACTOS__
+static LPTV_ITEMDATA
+BrsFolder_GetDataFromItem(browse_info *info, HTREEITEM hItem)
+{
+    TVITEMW item = { TVIF_HANDLE | TVIF_PARAM };
+    item.hItem = hItem;
+    TreeView_GetItem(info->hwndTreeView, item.lParam);
+    return (LPTV_ITEMDATA)item.lParam;
+}
+#endif
 /******************************************************************************
  * InitializeTreeView [Internal]
  *
@@ -220,7 +229,11 @@ static void InitializeTreeView( browse_info *info )
     Shell_GetImageLists(NULL, &hImageList);
 
     if (hImageList)
+#ifdef __REACTOS__
+        TreeView_SetImageList(info->hwndTreeView, hImageList, 0);
+#else
         SendMessageW( info->hwndTreeView, TVM_SETIMAGELIST, 0, (LPARAM)hImageList );
+#endif
 
     /* We want to call InsertTreeViewItem down the code, in order to insert
      * the root item of the treeview. Due to InsertTreeViewItem's signature, 
@@ -286,10 +299,18 @@ static void InitializeTreeView( browse_info *info )
         return;
     }
 
+#ifdef __REACTOS__
+    TreeView_DeleteItem(info->hwndTreeView, TVI_ROOT);
+#else
     SendMessageW( info->hwndTreeView, TVM_DELETEITEM, 0, (LPARAM)TVI_ROOT );
+#endif
     item = InsertTreeViewItem( info, lpsfParent, pidlChild,
                                pidlParent, pEnumChildren, TVI_ROOT );
+#ifdef __REACTOS__
+    TreeView_Expand(info->hwndTreeView, item, TVE_EXPAND);
+#else
     SendMessageW( info->hwndTreeView, TVM_EXPAND, TVE_EXPAND, (LPARAM)item );
+#endif
 
     ILFree(pidlChild);
     ILFree(pidlParent);
@@ -574,8 +595,12 @@ static LRESULT BrsFolder_Treeview_Expand( browse_info *info, NMTREEVIEWW *pnmtv 
     /* My Computer is already sorted and trying to do a simple text
      * sort will only mess things up */
     if (!_ILIsMyComputer(lptvid->lpi))
+#ifdef __REACTOS__
+        TreeView_SortChildren(info->hwndTreeView, pnmtv->itemNew.hItem, FALSE);
+#else
         SendMessageW( info->hwndTreeView, TVM_SORTCHILDREN,
                       FALSE, (LPARAM)pnmtv->itemNew.hItem );
+#endif
 
     return 0;
 }
@@ -607,10 +632,15 @@ static LRESULT BrsFolder_Treeview_Rename(browse_info *info, NMTVDISPINFOW *pnmtv
     if(!pnmtv->item.pszText)
         return 0;
 
+#ifdef __REACTOS__
+    item.hItem = TreeView_GetSelection(info->hwndTreeView);
+    item_data = BrsFolder_GetDataFromItem(info, item.hItem);
+#else
     item.mask = TVIF_HANDLE|TVIF_PARAM;
     item.hItem = (HTREEITEM)SendMessageW(info->hwndTreeView, TVM_GETNEXTITEM, TVGN_CARET, 0);
     SendMessageW(info->hwndTreeView, TVM_GETITEMW, 0, (LPARAM)&item);
     item_data = (LPTV_ITEMDATA)item.lParam;
+#endif
 
     SHGetPathFromIDListW(item_data->lpifq, old_path);
     if(!(p = strrchrW(old_path, '\\')))
@@ -630,7 +660,11 @@ static LRESULT BrsFolder_Treeview_Rename(browse_info *info, NMTVDISPINFOW *pnmtv
 
     item.mask = TVIF_HANDLE|TVIF_TEXT;
     item.pszText = pnmtv->item.pszText;
+#ifdef __REACTOS__
+    TreeView_SetItem(info->hwndTreeView, &item);
+#else
     SendMessageW(info->hwndTreeView, TVM_SETITEMW, 0, (LPARAM)&item);
+#endif
 
     nmtv.itemNew.lParam = item.lParam;
     BrsFolder_Treeview_Changed(info, &nmtv);
@@ -639,8 +673,13 @@ static LRESULT BrsFolder_Treeview_Rename(browse_info *info, NMTVDISPINFOW *pnmtv
 
 static HRESULT BrsFolder_Rename(browse_info *info, HTREEITEM rename)
 {
+#ifdef __REACTOS__
+    TreeView_SelectItem(info->hwndTreeView, rename);
+    TreeView_EditLabel(info->hwndTreeView, rename);
+#else
     SendMessageW(info->hwndTreeView, TVM_SELECTITEM, TVGN_CARET, (LPARAM)rename);
     SendMessageW(info->hwndTreeView, TVM_EDITLABELW, 0, (LPARAM)rename);
+#endif
     return S_OK;
 }
 
@@ -648,20 +687,12 @@ static HRESULT BrsFolder_Rename(browse_info *info, HTREEITEM rename)
 static void
 BrsFolder_Delete(browse_info *info, HTREEITEM selected_item)
 {
-    TV_ITEMW item;
     TV_ITEMDATA *item_data;
     SHFILEOPSTRUCTW fileop = { info->hwndTreeView };
     WCHAR szzFrom[MAX_PATH + 1];
 
     /* get item_data */
-    item.mask = TVIF_HANDLE | TVIF_PARAM;
-    item.hItem = selected_item;
-    if (!SendMessageW(info->hwndTreeView, TVM_GETITEMW, 0, (LPARAM)&item))
-    {
-        ERR("TVM_GETITEMW failed\n");
-        return;
-    }
-    item_data = (TV_ITEMDATA *)item.lParam;
+    item_data = BrsFolder_GetDataFromItem(info, selected_item);
 
     /* get the path */
     if (!SHGetPathFromIDListW(item_data->lpifq, szzFrom))
@@ -690,7 +721,11 @@ static LRESULT BrsFolder_Treeview_Keydown(browse_info *info, LPNMTVKEYDOWN keydo
 #endif
         return 0;
 
+#ifdef __REACTOS__
+    selected_item = TreeView_GetSelection(info->hwndTreeView);
+#else
     selected_item = (HTREEITEM)SendMessageW(info->hwndTreeView, TVM_GETNEXTITEM, TVGN_CARET, 0);
+#endif
 
     switch (keydown->wVKey)
     {
@@ -980,16 +1015,28 @@ static HRESULT BrsFolder_NewFolder(browse_info *info)
         goto cleanup;
 
     /* Update parent of newly created directory */
+#ifdef __REACTOS__
+    parent = TreeView_GetSelection(info->hwndTreeView);
+#else
     parent = (HTREEITEM)SendMessageW(info->hwndTreeView, TVM_GETNEXTITEM, TVGN_CARET, 0);
+#endif
     if(!parent)
         goto cleanup;
 
+#ifdef __REACTOS__
+    TreeView_Expand(info->hwndTreeView, parent, TVE_EXPAND);
+#else
     SendMessageW(info->hwndTreeView, TVM_EXPAND, TVE_EXPAND, (LPARAM)parent);
+#endif
 
     memset(&item, 0, sizeof(TVITEMW));
     item.mask = TVIF_PARAM|TVIF_STATE;
     item.hItem = parent;
+#ifdef __REACTOS__
+    TreeView_GetItem(info->hwndTreeView, &item);
+#else
     SendMessageW(info->hwndTreeView, TVM_GETITEMW, 0, (LPARAM)&item);
+#endif
     item_data = (LPTV_ITEMDATA)item.lParam;
     if(!item_data)
         goto cleanup;
@@ -1005,7 +1052,11 @@ static HRESULT BrsFolder_NewFolder(browse_info *info)
         item.mask = TVIF_STATE;
         item.state = TVIS_EXPANDEDONCE;
         item.stateMask = TVIS_EXPANDEDONCE;
+#ifdef __REACTOS__
+        TreeView_SetItem(info->hwndTreeView, &item);
+#else
         SendMessageW(info->hwndTreeView, TVM_SETITEMW, 0, (LPARAM)&item);
+#endif
     }
 
     hr = IShellFolder_ParseDisplayName(cur, NULL, NULL, name+len, NULL, &new_item, NULL);
@@ -1016,7 +1067,11 @@ static HRESULT BrsFolder_NewFolder(browse_info *info)
     IShellFolder_Release(cur);
     SHFree(new_item);
 
+#ifdef __REACTOS__
+    TreeView_SortChildren(info->hwndTreeView, parent, FALSE);
+#else
     SendMessageW(info->hwndTreeView, TVM_SORTCHILDREN, FALSE, (LPARAM)parent);
+#endif
     return BrsFolder_Rename(info, added);
 
 cleanup:
@@ -1129,17 +1184,29 @@ static BOOL BrsFolder_OnSetExpanded(browse_info *info, LPVOID selection,
 
     /* Initialize item to point to the first child of the root folder. */
     item.mask = TVIF_PARAM;
+#ifdef __REACTOS__
+    item.hItem = TreeView_GetRoot(info->hwndTreeView);
+#else
     item.hItem = (HTREEITEM)SendMessageW(info->hwndTreeView, TVM_GETNEXTITEM, TVGN_ROOT, 0);
+#endif
 
     if (item.hItem)
+#ifdef __REACTOS__
+        item.hItem = TreeView_GetChild(info->hwndTreeView, item.hItem);
+#else
         item.hItem = (HTREEITEM)SendMessageW(info->hwndTreeView, TVM_GETNEXTITEM, TVGN_CHILD,
                                              (LPARAM)item.hItem);
+#endif
 
     /* Walk the tree along the nodes corresponding to the remaining ITEMIDLIST */
     while (item.hItem && !_ILIsEmpty(pidlCurrent)) {
         LPTV_ITEMDATA pItemData;
 
+#ifdef __REACTOS__
+        TreeView_GetItem(info->hwndTreeView, &item);
+#else
         SendMessageW(info->hwndTreeView, TVM_GETITEMW, 0, (LPARAM)&item);
+#endif
         pItemData = (LPTV_ITEMDATA)item.lParam;
 
         if (_ILIsEqualSimple(pItemData->lpi, pidlCurrent)) {
@@ -1147,13 +1214,22 @@ static BOOL BrsFolder_OnSetExpanded(browse_info *info, LPVOID selection,
             if (!_ILIsEmpty(pidlCurrent)) {
                 /* Only expand current node and move on to its first child,
                  * if we didn't already reach the last SHITEMID */
+#ifdef __REACTOS__
+                TreeView_Expand(info->hwndTreeView, item.hItem, TVE_EXPAND);
+                item.hItem = TreeView_GetChild(info->hwndTreeView, item.hItem);
+#else
                 SendMessageW(info->hwndTreeView, TVM_EXPAND, TVE_EXPAND, (LPARAM)item.hItem);
                 item.hItem = (HTREEITEM)SendMessageW(info->hwndTreeView, TVM_GETNEXTITEM, TVGN_CHILD,
                                              (LPARAM)item.hItem);
+#endif
             }
         } else {
+#ifdef __REACTOS__
+            item.hItem = TreeView_GetNextSibling(info->hwndTreeView, item.hItem);
+#else
             item.hItem = (HTREEITEM)SendMessageW(info->hwndTreeView, TVM_GETNEXTITEM, TVGN_NEXT,
                                              (LPARAM)item.hItem);
+#endif
         }
     }
 
@@ -1178,7 +1254,11 @@ static BOOL BrsFolder_OnSetSelectionW(browse_info *info, LPVOID selection, BOOL 
 
     bResult = BrsFolder_OnSetExpanded(info, selection, is_str, &hItem);
     if (bResult)
+#ifdef __REACTOS__
+        TreeView_SelectItem(info->hwndTreeView, hItem);
+#else
         SendMessageW(info->hwndTreeView, TVM_SELECTITEM, TVGN_CARET, (LPARAM)hItem );
+#endif
     return bResult;
 }
 
@@ -1239,27 +1319,41 @@ static INT BrsFolder_OnDestroy(browse_info *info)
 /* Find a treeview node by recursively walking the treeview */
 static HTREEITEM BrsFolder_FindItemByPidl(browse_info *info, LPCITEMIDLIST pidl, HTREEITEM hItem)
 {
+#ifndef __REACTOS__
     TV_ITEMW item;
+#endif
     TV_ITEMDATA *item_data;
     HRESULT hr;
 
+#ifdef __REACTOS__
+    item_data = BrsFolder_GetDataFromItem(info, hItem);
+#else
     item.mask = TVIF_HANDLE | TVIF_PARAM;
     item.hItem = hItem;
     SendMessageW(info->hwndTreeView, TVM_GETITEMW, 0, (LPARAM)&item);
     item_data = (TV_ITEMDATA *)item.lParam;
+#endif
 
     hr = IShellFolder_CompareIDs(item_data->lpsfParent, 0, item_data->lpifq, pidl);
     if(SUCCEEDED(hr) && !HRESULT_CODE(hr))
         return hItem;
 
+#ifdef __REACTOS__
+    hItem = TreeView_GetChild(info->hwndTreeView, hItem);
+#else
     hItem = (HTREEITEM)SendMessageW(info->hwndTreeView, TVM_GETNEXTITEM, TVGN_CHILD, (LPARAM)hItem);
+#endif
 
     while (hItem)
     {
         HTREEITEM newItem = BrsFolder_FindItemByPidl(info, pidl, hItem);
         if (newItem)
             return newItem;
+#ifdef __REACTOS__
+        hItem = TreeView_GetNextSibling(info->hwndTreeView, hItem);
+#else
         hItem = (HTREEITEM)SendMessageW(info->hwndTreeView, TVM_GETNEXTITEM, TVGN_NEXT, (LPARAM)hItem);
+#endif
     }
     return NULL;
 }
@@ -1275,11 +1369,18 @@ static LRESULT BrsFolder_OnChange(browse_info *info, const LPCITEMIDLIST *pidls,
         case SHCNE_RMDIR:
         case SHCNE_DELETE:
         {
+#ifdef __REACTOS__
+            HTREEITEM handle_root = TreeView_GetRoot(info->hwndTreeView);
+            HTREEITEM handle_item = BrsFolder_FindItemByPidl(info, pidls[0], handle_root);
+            if (handle_item)
+                TreeView_DeleteItem(info->hwndTreeView, handle_item);
+#else
             HTREEITEM handle_root = (HTREEITEM)SendMessageW(info->hwndTreeView, TVM_GETNEXTITEM, TVGN_ROOT, 0);
             HTREEITEM handle_item = BrsFolder_FindItemByPidl(info, pidls[0], handle_root);
 
             if (handle_item)
                 SendMessageW(info->hwndTreeView, TVM_DELETEITEM, 0, (LPARAM)handle_item);
+#endif
 
             break;
         }
