@@ -8472,10 +8472,14 @@ static void test_costs(void)
     add_media_entry( hdb, "'1', '2', 'cabinet', '', '', ''");
 
     create_file_table( hdb );
-    add_file_entry( hdb, "'one.txt', 'one', 'one.txt', 4096, '', '', 8192, 1" );
+    add_file_entry( hdb, "'a.txt', 'one', 'a.txt', 2048000000, '', '', 8192, 1" );
+    add_file_entry( hdb, "'b.txt', 'one', 'b.txt', 2048000000, '', '', 8192, 1" );
+    add_file_entry( hdb, "'c.txt', 'one', 'c.txt', 2048000000, '', '', 8192, 1" );
+    add_file_entry( hdb, "'d.txt', 'one', 'd.txt', 4097, '', '', 8192, 1" );
+    add_file_entry( hdb, "'e.txt', 'one', 'e.txt', 1, '', '', 8192, 1" );
 
     create_component_table( hdb );
-    add_component_entry( hdb, "'one', '{B2F86B9D-8447-4BC5-8883-750C45AA31CA}', 'TARGETDIR', 0, '', 'one.txt'" );
+    add_component_entry( hdb, "'one', '{B2F86B9D-8447-4BC5-8883-750C45AA31CA}', 'TARGETDIR', 0, '', 'a.txt'" );
     add_component_entry( hdb, "'two', '{62A09F6E-0B74-4829-BDB7-CAB66F42CCE8}', 'TARGETDIR', 0, '', ''" );
 
     create_feature_table( hdb );
@@ -8603,7 +8607,7 @@ static void test_costs(void)
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r );
     ok( len == 2, "expected len == 2, got %lu\n", len );
     ok( drive[0], "expected a drive\n" );
-    ok( cost && cost != 0xdead, "expected cost > 0, got %d\n", cost );
+    todo_wine ok( cost == 12000024, "got %d\n", cost );
     ok( !temp, "expected temp == 0, got %d\n", temp );
 
     len = sizeof(drive);
@@ -8647,7 +8651,7 @@ static void test_costs(void)
     cost = 0xdead;
     r = MsiGetFeatureCostA( hpkg, "one", MSICOSTTREE_SELFONLY, INSTALLSTATE_LOCAL, &cost );
     ok( !r, "got %u\n", r);
-    ok( cost == 8, "got %d\n", cost );
+    todo_wine ok( cost == 12000024, "got %d\n", cost );
 
     MsiCloseHandle( hpkg );
 error:
