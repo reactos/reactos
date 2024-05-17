@@ -546,10 +546,10 @@ static LRESULT BrsFolder_Treeview_Rename(browse_info *info, NMTVDISPINFOW *pnmtv
     return 0;
 }
 
-static HRESULT BrsFolder_Rename(browse_info *info, HTREEITEM rename)
+static HRESULT BrsFolder_Rename(browse_info *info, HTREEITEM hItem)
 {
-    TreeView_SelectItem(info->hwndTreeView, rename);
-    TreeView_EditLabel(info->hwndTreeView, rename);
+    TreeView_SelectItem(info->hwndTreeView, hItem);
+    TreeView_EditLabel(info->hwndTreeView, hItem);
     return S_OK;
 }
 
@@ -740,7 +740,7 @@ static HRESULT BrsFolder_NewFolder(browse_info *info)
     WCHAR wszNewFolder[25];
     WCHAR path[MAX_PATH];
     WCHAR name[MAX_PATH];
-    HTREEITEM parent, added;
+    HTREEITEM hParent, hAdded;
     LPTV_ITEMDATA item_data;
     LPITEMIDLIST new_item;
     TVITEMW item;
@@ -783,15 +783,15 @@ static HRESULT BrsFolder_NewFolder(browse_info *info)
         goto cleanup;
 
     /* Update parent of newly created directory */
-    parent = TreeView_GetSelection(info->hwndTreeView);
-    if(!parent)
+    hParent = TreeView_GetSelection(info->hwndTreeView);
+    if(!hParent)
         goto cleanup;
 
-    TreeView_Expand(info->hwndTreeView, parent, TVE_EXPAND);
+    TreeView_Expand(info->hwndTreeView, hParent, TVE_EXPAND);
 
     memset(&item, 0, sizeof(TVITEMW));
     item.mask = TVIF_PARAM|TVIF_STATE;
-    item.hItem = parent;
+    item.hItem = hParent;
     TreeView_GetItem(info->hwndTreeView, &item);
     item_data = (LPTV_ITEMDATA)item.lParam;
     if(!item_data)
@@ -815,12 +815,12 @@ static HRESULT BrsFolder_NewFolder(browse_info *info)
     if(FAILED(hr))
         goto cleanup;
 
-    added = InsertTreeViewItem(info, cur, new_item, item_data->lpifq, NULL, parent);
+    hAdded = InsertTreeViewItem(info, cur, new_item, item_data->lpifq, NULL, hParent);
     IShellFolder_Release(cur);
     SHFree(new_item);
 
-    TreeView_SortChildren(info->hwndTreeView, parent, FALSE);
-    return BrsFolder_Rename(info, added);
+    TreeView_SortChildren(info->hwndTreeView, hParent, FALSE);
+    return BrsFolder_Rename(info, hAdded);
 
 cleanup:
     return hr;
@@ -1039,10 +1039,10 @@ static LRESULT BrsFolder_OnChange(browse_info *info, const LPCITEMIDLIST *pidls,
         case SHCNE_RMDIR:
         case SHCNE_DELETE:
         {
-            HTREEITEM handle_root = TreeView_GetRoot(info->hwndTreeView);
-            HTREEITEM handle_item = BrsFolder_FindItemByPidl(info, pidls[0], handle_root);
-            if (handle_item)
-                TreeView_DeleteItem(info->hwndTreeView, handle_item);
+            HTREEITEM hRoot = TreeView_GetRoot(info->hwndTreeView);
+            HTREEITEM hItem = BrsFolder_FindItemByPidl(info, pidls[0], hRoot);
+            if (hItem)
+                TreeView_DeleteItem(info->hwndTreeView, hItem);
             break;
         }
     }
@@ -1188,14 +1188,14 @@ LPITEMIDLIST WINAPI SHBrowseForFolderW (LPBROWSEINFOW lpbi)
 
     hr = OleInitialize(NULL);
 
-    if (lpbi->ulFlags & BIF_USENEWUI)
-        wDlgId = IDD_BROWSE_FOR_FOLDER_NEW;
-    else
-        wDlgId = IDD_BROWSE_FOR_FOLDER;
-    r = DialogBoxParamW( shell32_hInstance, MAKEINTRESOURCEW(wDlgId), lpbi->hwndOwner,
-	                 BrsFolderDlgProc, (LPARAM)&info );
-    if (SUCCEEDED(hr)) 
+    wDlgId = ((lpbi->ulFlags & BIF_USENEWUI) ? IDD_BROWSE_FOR_FOLDER_NEW : IDD_BROWSE_FOR_FOLDER);
+
+    r = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(wDlgId), lpbi->hwndOwner,
+                        BrsFolderDlgProc, (LPARAM)&info );
+
+    if (SUCCEEDED(hr))
         OleUninitialize();
+
     if (!r)
     {
         ILFree(info.pidlRet);
