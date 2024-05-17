@@ -3116,14 +3116,12 @@ static LONGLONG vcl_get_cost( msi_dialog *dialog )
         if (ERROR_SUCCESS == (MSI_GetFeatureCost(dialog->package, feature,
                 MSICOSTTREE_SELFONLY, INSTALLSTATE_LOCAL, &each_cost)))
         {
-            /* each_cost is in 512-byte units */
-            total_cost += ((LONGLONG)each_cost) * 512;
+            total_cost += each_cost;
         }
         if (ERROR_SUCCESS == (MSI_GetFeatureCost(dialog->package, feature,
                 MSICOSTTREE_SELFONLY, INSTALLSTATE_ABSENT, &each_cost)))
         {
-            /* each_cost is in 512-byte units */
-            total_cost -= ((LONGLONG)each_cost) * 512;
+            total_cost -= each_cost;
         }
     }
     return total_cost;
