@@ -3693,9 +3693,10 @@ static void test_publish(void)
     LONG res;
     HKEY uninstall, prodkey, uninstall_32node = NULL;
     INSTALLSTATE state;
-    char date[MAX_PATH], temp[MAX_PATH], prodcode[] = "{7DF88A48-996F-4EC8-A022-BF956F9B2CBB}";
+    char date[MAX_PATH], date2[MAX_PATH], temp[MAX_PATH], buf[MAX_PATH];
+    const char prodcode[] = "{7DF88A48-996F-4EC8-A022-BF956F9B2CBB}";
     REGSAM access = KEY_ALL_ACCESS;
-    DWORD error;
+    DWORD error, type, size;
 
     if (!pMsiQueryFeatureStateExA)
     {
@@ -4219,7 +4220,15 @@ static void test_publish(void)
 
     CHECK_REG_STR(prodkey, "DisplayName", "MSITEST");
     CHECK_REG_STR(prodkey, "DisplayVersion", "1.1.1");
-    CHECK_REG_STR(prodkey, "InstallDate", date);
+
+    get_date_str(date2);
+    size = ARRAY_SIZE(buf);
+    buf[0] = '\0';
+    res = RegQueryValueExA(prodkey, "InstallDate", NULL, &type, (BYTE *)buf, &size);
+    ok(!res, "Failed to query value, error %ld\n", res);
+    ok(type == REG_SZ, "Got wrong type %lu\n", type);
+    ok(!strcmp(buf, date) || !strcmp(buf, date2), "got %s\n", debugstr_a(buf));
+
     CHECK_REG_STR(prodkey, "InstallSource", temp);
     CHECK_REG_ISTR(prodkey, "ModifyPath", "MsiExec.exe /X{7DF88A48-996F-4EC8-A022-BF956F9B2CBB}");
     CHECK_REG_STR(prodkey, "Publisher", "Wine");

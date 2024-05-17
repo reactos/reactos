@@ -1073,6 +1073,7 @@ static inline void msi_revert_fs_redirection( MSIPACKAGE *package )
 {
     if (is_wow64 && package->platform == PLATFORM_X64) Wow64RevertWow64FsRedirection( package->cookie );
 }
+extern BOOL msi_get_temp_file_name( MSIPACKAGE *, const WCHAR *, const WCHAR *, WCHAR * ) DECLSPEC_HIDDEN;
 extern HANDLE msi_create_file( MSIPACKAGE *, const WCHAR *, DWORD, DWORD, DWORD, DWORD ) DECLSPEC_HIDDEN;
 extern BOOL msi_delete_file( MSIPACKAGE *, const WCHAR * ) DECLSPEC_HIDDEN;
 extern BOOL msi_remove_directory( MSIPACKAGE *, const WCHAR * ) DECLSPEC_HIDDEN;

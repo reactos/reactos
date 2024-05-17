@@ -256,8 +256,8 @@ int msiobj_release( MSIOBJECTHDR *info )
     {
         if( info->destructor )
             info->destructor( info );
-        msi_free( info );
         TRACE("object %p destroyed\n", info);
+        msi_free( info );
     }
 
     return ret;

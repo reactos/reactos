@@ -48,6 +48,15 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
+BOOL msi_get_temp_file_name( MSIPACKAGE *package, const WCHAR *tmp_path, const WCHAR *prefix, WCHAR *tmp_filename )
+{
+    BOOL ret;
+    msi_disable_fs_redirection( package );
+    ret = GetTempFileNameW( tmp_path, prefix, 0, tmp_filename );
+    msi_revert_fs_redirection( package );
+    return ret;
+}
+
 HANDLE msi_create_file( MSIPACKAGE *package, const WCHAR *filename, DWORD access, DWORD sharing, DWORD creation,
                         DWORD flags )
 {

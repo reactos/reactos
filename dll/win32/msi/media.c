@@ -468,10 +468,10 @@ static INT_PTR cabinet_copy_file(FDINOTIFICATIONTYPE fdint,
                 msi_free( tmppathW );
                 return ERROR_OUTOFMEMORY;
             }
-            if (!GetTempFileNameW(tmppathW, L"msi", 0, tmpfileW)) tmpfileW[0] = 0;
+            if (!msi_get_temp_file_name( data->package, tmppathW, L"msi", tmpfileW )) tmpfileW[0] = 0;
             msi_free( tmppathW );
 
-            handle = CreateFileW(tmpfileW, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, attrs, NULL);
+            handle = msi_create_file( data->package, tmpfileW, GENERIC_READ | GENERIC_WRITE, 0, CREATE_ALWAYS, attrs );
 
             if (handle != INVALID_HANDLE_VALUE &&
                 msi_move_file( data->package, path, NULL, MOVEFILE_DELAY_UNTIL_REBOOT ) &&
@@ -482,7 +482,7 @@ static INT_PTR cabinet_copy_file(FDINOTIFICATIONTYPE fdint,
             else
             {
                 WARN( "failed to schedule rename operation %s (error %lu)\n", debugstr_w(path), GetLastError() );
-                DeleteFileW( tmpfileW );
+                msi_delete_file( data->package, tmpfileW );
             }
             msi_free(tmpfileW);
         }
