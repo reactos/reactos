@@ -313,8 +313,8 @@
 313 stdcall -noname SHGetFileInfoWrapW(ptr long ptr long long)
 314 stdcall -noname RegisterClassExWrapW(ptr) user32.RegisterClassExW
 315 stdcall -noname GetClassInfoExWrapW(long wstr ptr) user32.GetClassInfoExW
-316 stub -noname IShellFolder_GetDisplayNameOf
-317 stub -noname IShellFolder_ParseDisplayName
+316 stdcall -noname IShellFolder_GetDisplayNameOf(ptr ptr long ptr long)
+317 stdcall -noname IShellFolder_ParseDisplayName(ptr ptr ptr wstr ptr ptr ptr)
 318 stdcall -noname DragQueryFileWrapW(long long wstr long)
 319 stdcall -noname FindWindowExWrapW(long long wstr wstr) user32.FindWindowExW
 320 stdcall -noname RegisterMIMETypeForExtensionA(str str)
@@ -548,7 +548,7 @@
 548 stdcall -noname SHAreIconsEqual(ptr ptr)
 549 stdcall -noname SHCoCreateInstanceAC(ptr ptr long ptr ptr)
 550 stub -noname GetTemplateInfoFromHandle
-551 stub -noname IShellFolder_CompareIDs
+551 stdcall -noname IShellFolder_CompareIDs(ptr ptr ptr ptr)
 552 stdcall -stub -noname -version=0x501-0x502 SHEvaluateSystemCommandTemplate(wstr ptr ptr ptr)
 553 stdcall IsInternetESCEnabled()
 554 stdcall -noname -stub SHGetAllAccessSA()

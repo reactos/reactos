@@ -218,14 +218,18 @@ interface IShellFolder : IUnknown
     cpp_quote("#define SFGAO_STORAGEANCESTOR   0x00800000L")
     cpp_quote("#define SFGAO_STORAGECAPMASK    0x70C50008L")
     cpp_quote("#define SFGAO_PKEYSFGAOMASK     0x81044000L")
+    typedef ULONG SFGAOF;
+
+    cpp_quote("#define SHCIDS_COLUMNMASK 0x0000FFFFL")
+    cpp_quote("#define SHCIDS_BITMASK 0xFFFF0000L")
+    cpp_quote("#define SHCIDS_CANONICALONLY 0x10000000L")
+    cpp_quote("#define SHCIDS_ALLFIELDS 0x80000000L")
 
     cpp_quote("#define STR_PARSE_SHELL_PROTOCOL_TO_FILE_OBJECTS L\"Parse Shell Protocol To File Objects\"")
     cpp_quote("#define STR_FILE_SYS_BIND_DATA L\"File System Bind Data\"")
     cpp_quote("#define STR_PARSE_PREFER_FOLDER_BROWSING L\"Parse Prefer Folder Browsing\"")
     cpp_quote("#define STR_PARSE_TRANSLATE_ALIASES L\"Parse Translate Aliases\"")
     cpp_quote("#define STR_DONT_PARSE_RELATIVE L\"Don't Parse Relative\"")
-
-    typedef ULONG SFGAOF;
 
     HRESULT ParseDisplayName(
         [in] HWND hwndOwner,
