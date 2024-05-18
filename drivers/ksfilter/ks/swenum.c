@@ -40,7 +40,7 @@ KspCreatePDO(
     CurDeviceId = InterlockedIncrement(&KsDeviceCount);
 
     /* generate new device id */
-    swprintf(Buffer, L"\\Device\\KSENUM%08x", CurDeviceId);
+    _swprintf(Buffer, L"\\Device\\KSENUM%08x", CurDeviceId);
 
     /* initialize new device name */
     RtlInitUnicodeString(&DeviceName, Buffer);
@@ -702,7 +702,7 @@ KspDoReparseForIrp(
     }
 
     /* construct buffer */
-    swprintf(Buffer, L"%s\\%s", DeviceEntry->PDODeviceName, DeviceEntry->Instance);
+    _swprintf(Buffer, L"%s\\%s", DeviceEntry->PDODeviceName, DeviceEntry->Instance);
 
     /* free old buffer*/
     ExFreePoolWithTag(IoStack->FileObject->FileName.Buffer, 'mNoI');

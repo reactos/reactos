@@ -320,7 +320,7 @@ InitKeyboardLayouts(VOID)
         while (TRUE)
         {
             /* Read values with integer names only */
-            swprintf(wszKeyName, L"%d", i++);
+            _swprintf(wszKeyName, L"%d", i++);
             if (RegQueryValueExW(hKey, wszKeyName, NULL, &dwType, (LPBYTE)wszKLID, &dwSize) != ERROR_SUCCESS)
             {
                 /* There is no more entries */

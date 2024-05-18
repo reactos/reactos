@@ -41,7 +41,7 @@ UpdateLanStatusUiDlg(
     {
         if (LoadStringW(netshell_hInstance, IDS_FORMAT_BIT, szFormat, sizeof(szFormat)/sizeof(WCHAR)))
         {
-            swprintf(szBuffer, szFormat, IfEntry->dwSpeed);
+            _swprintf(szBuffer, szFormat, IfEntry->dwSpeed);
             SendDlgItemMessageW(hwndDlg, IDC_SPEED, WM_SETTEXT, 0, (LPARAM)szBuffer);
         }
     }
@@ -49,7 +49,7 @@ UpdateLanStatusUiDlg(
     {
         if (LoadStringW(netshell_hInstance, IDS_FORMAT_KBIT, szFormat, sizeof(szFormat)/sizeof(WCHAR)))
         {
-            swprintf(szBuffer, szFormat, IfEntry->dwSpeed/1000);
+            _swprintf(szBuffer, szFormat, IfEntry->dwSpeed/1000);
             SendDlgItemMessageW(hwndDlg, IDC_SPEED, WM_SETTEXT, 0, (LPARAM)szBuffer);
         }
     }
@@ -57,7 +57,7 @@ UpdateLanStatusUiDlg(
     {
         if (LoadStringW(netshell_hInstance, IDS_FORMAT_MBIT, szFormat, sizeof(szFormat)/sizeof(WCHAR)))
         {
-            swprintf(szBuffer, szFormat, IfEntry->dwSpeed/1000000);
+            _swprintf(szBuffer, szFormat, IfEntry->dwSpeed/1000000);
             SendDlgItemMessageW(hwndDlg, IDC_SPEED, WM_SETTEXT, 0, (LPARAM)szBuffer);
         }
     }
@@ -65,7 +65,7 @@ UpdateLanStatusUiDlg(
     {
         if (LoadStringW(netshell_hInstance, IDS_FORMAT_GBIT, szFormat, sizeof(szFormat)/sizeof(WCHAR)))
         {
-            swprintf(szBuffer, szFormat, IfEntry->dwSpeed/1000000000);
+            _swprintf(szBuffer, szFormat, IfEntry->dwSpeed/1000000000);
             SendDlgItemMessageW(hwndDlg, IDC_SPEED, WM_SETTEXT, 0, (LPARAM)szBuffer);
         }
     }
@@ -111,7 +111,7 @@ UpdateLanStatusUiDlg(
             if (!LoadStringW(netshell_hInstance, IDS_DURATION_DAYS, DayBuffer, sizeof(DayBuffer) / sizeof(DayBuffer[0])))
                 DayBuffer[0] = L'\0';
         }
-        swprintf(Buffer, DayBuffer, TimeConnected.wDay, LocBuffer);
+        _swprintf(Buffer, DayBuffer, TimeConnected.wDay, LocBuffer);
         SendDlgItemMessageW(hwndDlg, IDC_DURATION, WM_SETTEXT, 0, (LPARAM)Buffer);
     }
 
@@ -469,8 +469,8 @@ LANStatusUiDetailsDlg(
                 li.iItem = InsertItemToListView(hDlgCtrl, IDS_PHYSICAL_ADDRESS);
                 if (li.iItem >= 0)
                 {
-                    swprintf(szBuffer, L"%02x-%02x-%02x-%02x-%02x-%02x",pCurAdapter->Address[0], pCurAdapter->Address[1],
-                             pCurAdapter->Address[2], pCurAdapter->Address[3], pCurAdapter->Address[4], pCurAdapter->Address[5]);
+                    _swprintf(szBuffer, L"%02x-%02x-%02x-%02x-%02x-%02x",pCurAdapter->Address[0], pCurAdapter->Address[1],
+                              pCurAdapter->Address[2], pCurAdapter->Address[3], pCurAdapter->Address[4], pCurAdapter->Address[5]);
                     SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&li);
                 }
                 li.iItem = InsertItemToListView(hDlgCtrl, IDS_IP_ADDRESS);
@@ -590,20 +590,20 @@ LANStatusUiAdvancedDlg(
 
 
             dwIpAddr = ntohl(pContext->IpAddress);
-            swprintf(szBuffer, L"%u.%u.%u.%u", FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr),
-                     THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
+            _swprintf(szBuffer, L"%u.%u.%u.%u", FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr),
+                      THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
             SendDlgItemMessageW(hwndDlg, IDC_DETAILSIP, WM_SETTEXT, 0, (LPARAM)szBuffer);
 
             dwIpAddr = ntohl(pContext->SubnetMask);
-            swprintf(szBuffer, L"%u.%u.%u.%u", FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr),
-                     THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
+            _swprintf(szBuffer, L"%u.%u.%u.%u", FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr),
+                      THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
             SendDlgItemMessageW(hwndDlg, IDC_DETAILSSUBNET, WM_SETTEXT, 0, (LPARAM)szBuffer);
 
             dwIpAddr = ntohl(pContext->Gateway);
             if (dwIpAddr)
             {
-                swprintf(szBuffer, L"%u.%u.%u.%u", FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr),
-                         THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
+                _swprintf(szBuffer, L"%u.%u.%u.%u", FIRST_IPADDRESS(dwIpAddr), SECOND_IPADDRESS(dwIpAddr),
+                          THIRD_IPADDRESS(dwIpAddr), FOURTH_IPADDRESS(dwIpAddr));
                 SendDlgItemMessageW(hwndDlg, IDC_DETAILSGATEWAY, WM_SETTEXT, 0, (LPARAM)szBuffer);
             }
             return TRUE;

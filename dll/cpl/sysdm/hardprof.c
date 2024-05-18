@@ -160,7 +160,7 @@ CopyHardwareProfile(
     LoadStringW(hApplet, IDS_HWPROFILE_PROFILE, szBuffer, sizeof(szBuffer) / sizeof(WCHAR));
 
     wcscpy(ProfileNames.szSourceName, pProfile->szFriendlyName);
-    swprintf(ProfileNames.szDestinationName, L"%s %lu", szBuffer, pProfileData->dwProfileCount);
+    _swprintf(ProfileNames.szDestinationName, L"%s %lu", szBuffer, pProfileData->dwProfileCount);
 
     ProfileNames.pProfileData = pProfileData;
 
@@ -196,7 +196,7 @@ CopyHardwareProfile(
     wcscpy(pNewProfile->szFriendlyName, ProfileNames.szDestinationName);
 
     pNewProfile->dwProfileNumber = ++pProfileData->dwLastProfile;
-    swprintf(pNewProfile->szName, L"%04lu", pNewProfile->dwProfileNumber);
+    _swprintf(pNewProfile->szName, L"%04lu", pNewProfile->dwProfileNumber);
 
     pNewProfile->dwPreferenceOrder = pNewProfile->dwProfileNumber;
 
@@ -281,7 +281,7 @@ RenameHardwareProfile(
     LoadStringW(hApplet, IDS_HWPROFILE_PROFILE, szBuffer, sizeof(szBuffer) / sizeof(WCHAR));
 
     wcscpy(ProfileNames.szSourceName, pProfile->szFriendlyName);
-    swprintf(ProfileNames.szDestinationName, L"%s %lu", szBuffer, pProfileData->dwProfileCount);
+    _swprintf(ProfileNames.szDestinationName, L"%s %lu", szBuffer, pProfileData->dwProfileCount);
 
     ProfileNames.pProfileData = pProfileData;
 

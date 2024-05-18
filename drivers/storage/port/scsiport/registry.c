@@ -171,9 +171,9 @@ RegistryInitAdapterKey(
     /* Create new 'Scsi Port X' subkey */
     DPRINT("Scsi Port %lu\n", DeviceExtension->PortNumber);
 
-    swprintf(NameBuffer,
-             L"Scsi Port %lu",
-             DeviceExtension->PortNumber);
+    _swprintf(NameBuffer,
+              L"Scsi Port %lu",
+              DeviceExtension->PortNumber);
     RtlInitUnicodeString(&KeyName, NameBuffer);
     InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_KERNEL_HANDLE, ScsiKey, NULL);
     Status = ZwCreateKey(&ScsiPortKey,
@@ -284,9 +284,9 @@ RegistryInitAdapterKey(
     {
         /* Create 'Scsi Bus X' key */
         DPRINT("    Scsi Bus %lu\n", BusNumber);
-        swprintf(NameBuffer,
-                 L"Scsi Bus %lu",
-                 BusNumber);
+        _swprintf(NameBuffer,
+                  L"Scsi Bus %lu",
+                  BusNumber);
         RtlInitUnicodeString(&KeyName, NameBuffer);
         InitializeObjectAttributes(&ObjectAttributes,
                                    &KeyName,
@@ -309,9 +309,9 @@ RegistryInitAdapterKey(
         /* Create 'Initiator Id X' key */
         DPRINT("      Initiator Id %lu\n",
                DeviceExtension->PortConfig->InitiatorBusId[BusNumber]);
-        swprintf(NameBuffer,
-                 L"Initiator Id %lu",
-                 (ULONG)(UCHAR)DeviceExtension->PortConfig->InitiatorBusId[BusNumber]);
+        _swprintf(NameBuffer,
+                  L"Initiator Id %lu",
+                  (ULONG)(UCHAR)DeviceExtension->PortConfig->InitiatorBusId[BusNumber]);
         RtlInitUnicodeString(&KeyName, NameBuffer);
         InitializeObjectAttributes(&ObjectAttributes,
                                    &KeyName,
@@ -371,7 +371,7 @@ RegistryInitLunKey(
     HANDLE busKey = portExt->Buses[LunExtension->PathId].RegistryMapKey;
 
     // create/open 'Target Id X' key
-    swprintf(nameBuffer, L"Target Id %lu", LunExtension->TargetId);
+    _swprintf(nameBuffer, L"Target Id %lu", LunExtension->TargetId);
     RtlInitUnicodeString(&keyName, nameBuffer);
     InitializeObjectAttributes(&objectAttributes, &keyName, OBJ_KERNEL_HANDLE, busKey, NULL);
     status = ZwCreateKey(&targetKey,
@@ -388,7 +388,7 @@ RegistryInitLunKey(
     }
 
     // Create 'Logical Unit Id X' key
-    swprintf(nameBuffer, L"Logical Unit Id %lu", LunExtension->Lun);
+    _swprintf(nameBuffer, L"Logical Unit Id %lu", LunExtension->Lun);
     RtlInitUnicodeString(&keyName, nameBuffer);
     InitializeObjectAttributes(&objectAttributes, &keyName, OBJ_KERNEL_HANDLE, targetKey, NULL);
     status = ZwCreateKey(&LunExtension->RegistryMapKey,
@@ -405,11 +405,11 @@ RegistryInitLunKey(
     }
 
     // Set 'Identifier' (REG_SZ) value
-    swprintf(nameBuffer,
-             L"%.8S%.16S%.4S",
-             LunExtension->InquiryData.VendorId,
-             LunExtension->InquiryData.ProductId,
-             LunExtension->InquiryData.ProductRevisionLevel);
+    _swprintf(nameBuffer,
+              L"%.8S%.16S%.4S",
+              LunExtension->InquiryData.VendorId,
+              LunExtension->InquiryData.ProductId,
+              LunExtension->InquiryData.ProductRevisionLevel);
     RtlInitUnicodeString(&valueName, L"Identifier");
     status = ZwSetValueKey(LunExtension->RegistryMapKey,
                            &valueName,

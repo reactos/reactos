@@ -74,7 +74,7 @@ CClassFactory::CreateInstance(
 
     StringFromCLSID(riid, &lpstr);
 
-    swprintf(Buffer, L"riid %s", lpstr);
+    _swprintf(Buffer, L"riid %s", lpstr);
     OutputDebugStringW(Buffer);
 
 

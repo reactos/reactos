@@ -1896,7 +1896,7 @@ ShowPartitionSizeInputBox(SHORT Left,
                                  coPos,
                                  &Written);
 
-    swprintf(InputBuffer, L"%lu", MaxSize);
+    _swprintf(InputBuffer, L"%lu", MaxSize);
     Length = wcslen(InputBuffer);
     Pos = Length;
     CONSOLE_SetInputTextXY(iLeft,

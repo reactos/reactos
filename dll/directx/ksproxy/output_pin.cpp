@@ -252,7 +252,7 @@ COutputPin::COutputPin(
 
 #ifdef KSPROXY_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"COutputPin::COutputPin Format %p pbFormat %lu\n", &m_MediaFormat, m_MediaFormat.cbFormat);
+    _swprintf(Buffer, L"COutputPin::COutputPin Format %p pbFormat %lu\n", &m_MediaFormat, m_MediaFormat.cbFormat);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -398,7 +398,7 @@ COutputPin::QueryInterface(
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
     StringFromCLSID(refiid, &lpstr);
-    swprintf(Buffer, L"COutputPin::QueryInterface: NoInterface for %s PinId %u PinName %s\n", lpstr, m_PinId, m_PinName);
+    _swprintf(Buffer, L"COutputPin::QueryInterface: NoInterface for %s PinId %u PinName %s\n", lpstr, m_PinId, m_PinName);
     OutputDebugStringW(Buffer);
     CoTaskMemFree(lpstr);
 #endif
@@ -1363,7 +1363,7 @@ COutputPin::KsProperty(
     WCHAR Buffer[100];
     LPOLESTR pstr;
     StringFromCLSID(Property->Set, &pstr);
-    swprintf(Buffer, L"COutputPin::KsProperty Set %s Id %lu Flags %x hr %x\n", pstr, Property->Id, Property->Flags, hr);
+    _swprintf(Buffer, L"COutputPin::KsProperty Set %s Id %lu Flags %x hr %x\n", pstr, Property->Id, Property->Flags, hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -1556,7 +1556,7 @@ COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
         if (FAILED(hr))
         {
 #ifdef KSPROXY_TRACE
-            swprintf(Buffer, L"COutputPin::Connect CreatePin handle failed with %lx\n", hr);
+            _swprintf(Buffer, L"COutputPin::Connect CreatePin handle failed with %lx\n", hr);
             OutputDebugStringW(Buffer);
 #endif
             return hr;
@@ -1607,7 +1607,7 @@ COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
         if (FAILED(hr))
         {
 #ifdef KSPROXY_TRACE
-            swprintf(Buffer, L"COutputPin::Connect IMemAllocator::SetProperties failed with hr %lx\n", hr);
+            _swprintf(Buffer, L"COutputPin::Connect IMemAllocator::SetProperties failed with hr %lx\n", hr);
             OutputDebugStringW(Buffer);
 #endif
             m_MemAllocator->Release();
@@ -1621,7 +1621,7 @@ COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
     if (FAILED(hr))
     {
 #ifdef KSPROXY_TRACE
-        swprintf(Buffer, L"COutputPin::Connect IMemAllocator::Commit failed with hr %lx\n", hr);
+        _swprintf(Buffer, L"COutputPin::Connect IMemAllocator::Commit failed with hr %lx\n", hr);
         OutputDebugStringW(Buffer);
 #endif
         m_MemAllocator->Release();
@@ -1634,7 +1634,7 @@ COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
     if (FAILED(hr))
     {
 #ifdef KSPROXY_TRACE
-        swprintf(Buffer, L"COutputPin::Connect No IMemAllocatorCallbackTemp interface hr %lx\n", hr);
+        _swprintf(Buffer, L"COutputPin::Connect No IMemAllocatorCallbackTemp interface hr %lx\n", hr);
         OutputDebugStringW(Buffer);
 #endif
         m_MemAllocator->Release();
@@ -1651,7 +1651,7 @@ COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
     if (FAILED(hr))
     {
 #ifdef KSPROXY_TRACE
-        swprintf(Buffer, L"COutputPin::Connect IMemAllocatorNotifyCallbackTemp::SetNotify failed hr %lx\n", hr);
+        _swprintf(Buffer, L"COutputPin::Connect IMemAllocatorNotifyCallbackTemp::SetNotify failed hr %lx\n", hr);
         OutputDebugStringW(Buffer);
 #endif
         m_MemAllocator->Release();
@@ -1664,7 +1664,7 @@ COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
     if (FAILED(hr))
     {
 #ifdef KSPROXY_TRACE
-        swprintf(Buffer, L"COutputPin::Connect IMemInputPin::NotifyAllocator failed with hr %lx\n", hr);
+        _swprintf(Buffer, L"COutputPin::Connect IMemInputPin::NotifyAllocator failed with hr %lx\n", hr);
         OutputDebugStringW(Buffer);
 #endif
         m_MemAllocator->Release();
@@ -1986,7 +1986,7 @@ COutputPin::CreatePin(
     {
 #ifdef KSPROXY_TRACE
         WCHAR Buffer[100];
-        swprintf(Buffer, L"COutputPin::CreatePin KsQueryMediums failed %lx\n", hr);
+        _swprintf(Buffer, L"COutputPin::CreatePin KsQueryMediums failed %lx\n", hr);
         OutputDebugStringW(Buffer);
 #endif
         return hr;
@@ -1999,7 +1999,7 @@ COutputPin::CreatePin(
         // failed
 #ifdef KSPROXY_TRACE
         WCHAR Buffer[100];
-        swprintf(Buffer, L"COutputPin::CreatePin KsQueryInterfaces failed %lx\n", hr);
+        _swprintf(Buffer, L"COutputPin::CreatePin KsQueryInterfaces failed %lx\n", hr);
         OutputDebugStringW(Buffer);
 #endif
 
@@ -2037,7 +2037,7 @@ COutputPin::CreatePin(
         {
 #ifdef KSPROXY_TRACE
             WCHAR Buffer[100];
-            swprintf(Buffer, L"COutputPin::CreatePinHandle failed with %lx\n", hr);
+            _swprintf(Buffer, L"COutputPin::CreatePinHandle failed with %lx\n", hr);
             OutputDebugStringW(Buffer);
 #endif
             return hr;
@@ -2055,7 +2055,7 @@ COutputPin::CreatePin(
 
 #ifdef KSPROXY_TRACE
                 WCHAR Buffer[100];
-                swprintf(Buffer, L"COutputPin::CreatePin failed to create interface handler %lx\n", hr);
+                _swprintf(Buffer, L"COutputPin::CreatePin failed to create interface handler %lx\n", hr);
                 OutputDebugStringW(Buffer);
 #endif
 
@@ -2069,7 +2069,7 @@ COutputPin::CreatePin(
                 // failed to initialize interface handler plugin
 #ifdef KSPROXY_TRACE
                 WCHAR Buffer[100];
-                swprintf(Buffer, L"COutputPin::CreatePin failed to initialize interface handler %lx\n", hr);
+                _swprintf(Buffer, L"COutputPin::CreatePin failed to initialize interface handler %lx\n", hr);
                 OutputDebugStringW(Buffer);
 #endif
                 InterfaceHandler->Release();
@@ -2086,7 +2086,7 @@ COutputPin::CreatePin(
     {
 #ifdef KSPROXY_TRACE
         WCHAR Buffer[100];
-        swprintf(Buffer, L"COutputPin::CreatePin unexpected communication %u %s\n", m_Communication, m_PinName);
+        _swprintf(Buffer, L"COutputPin::CreatePin unexpected communication %u %s\n", m_Communication, m_PinName);
         OutputDebugStringW(Buffer);
 #endif
 
@@ -2099,7 +2099,7 @@ COutputPin::CreatePin(
 
 #ifdef KSPROXY_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"COutputPin::CreatePin Result %lx\n", hr);
+    _swprintf(Buffer, L"COutputPin::CreatePin Result %lx\n", hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -2172,7 +2172,7 @@ COutputPin::CreatePinHandle(
     {
         // copy extended format
         WCHAR Buffer[100];
-        swprintf(Buffer, L"COutputPin::CreatePinHandle copy format %p pbFormat %lu\n", pmt, pmt->cbFormat);
+        _swprintf(Buffer, L"COutputPin::CreatePinHandle copy format %p pbFormat %lu\n", pmt, pmt->cbFormat);
         OutputDebugStringW(Buffer);
         CopyMemory((DataFormat + 1), pmt->pbFormat, pmt->cbFormat);
     }
@@ -2216,7 +2216,7 @@ COutputPin::CreatePinHandle(
         StringFromIID(m_MediaFormat.subtype , &pSub);
         StringFromIID(m_MediaFormat.formattype, &pFormat);
         WCHAR Buffer[200];
-        swprintf(Buffer, L"COutputPin::CreatePinHandle Major %s SubType %s Format %s pbFormat %p cbFormat %u\n", pMajor, pSub, pFormat, pmt->pbFormat, pmt->cbFormat);
+        _swprintf(Buffer, L"COutputPin::CreatePinHandle Major %s SubType %s Format %s pbFormat %p cbFormat %u\n", pMajor, pSub, pFormat, pmt->pbFormat, pmt->cbFormat);
         CoTaskMemFree(pMajor);
         CoTaskMemFree(pSub);
         CoTaskMemFree(pFormat);
@@ -2343,7 +2343,7 @@ COutputPin::GetSupportedSets(
 
 #ifdef KSPROXY_TRACE
     WCHAR Buffer[200];
-    swprintf(Buffer, L"NumProperty %lu NumMethods %lu NumEvents %lu\n", NumProperty, NumMethods, NumEvents);
+    _swprintf(Buffer, L"NumProperty %lu NumMethods %lu NumEvents %lu\n", NumProperty, NumMethods, NumEvents);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -2487,7 +2487,7 @@ COutputPin::IoProcessRoutine()
         if (FAILED(hr) || !StreamSegment)
         {
 #ifdef KSPROXY_TRACE
-            swprintf(Buffer, L"COutputPin::IoProcessRoutine KsProcessMediaSamples FAILED PinName %s hr %lx\n", m_PinName, hr);
+            _swprintf(Buffer, L"COutputPin::IoProcessRoutine KsProcessMediaSamples FAILED PinName %s hr %lx\n", m_PinName, hr);
             OutputDebugStringW(Buffer);
 #endif
             break;
@@ -2496,7 +2496,7 @@ COutputPin::IoProcessRoutine()
         // interface handle should increment pending i/o count
         assert(m_IoCount >= 1);
 
-        swprintf(Buffer, L"COutputPin::IoProcessRoutine m_IoCount %lu NumHandles %lu\n", m_IoCount, NumHandles);
+        _swprintf(Buffer, L"COutputPin::IoProcessRoutine m_IoCount %lu NumHandles %lu\n", m_IoCount, NumHandles);
         OutputDebugStringW(Buffer);
 
         if (m_IoCount != NumHandles)
@@ -2508,7 +2508,7 @@ COutputPin::IoProcessRoutine()
         // wait for i/o completion
         dwStatus = WaitForSingleObject(hEvent, INFINITE);
 
-        swprintf(Buffer, L"COutputPin::IoProcessRoutine dwStatus %lx Error %lx NumHandles %lu\n", dwStatus, GetLastError(), NumHandles);
+        _swprintf(Buffer, L"COutputPin::IoProcessRoutine dwStatus %lx Error %lx NumHandles %lu\n", dwStatus, GetLastError(), NumHandles);
         OutputDebugStringW(Buffer);
 
         // perform completion
@@ -2525,7 +2525,7 @@ COutputPin::IoProcessRoutine()
             hr = m_MemInputPin->Receive(Samples[0]);
 
 #ifdef KSPROXY_TRACE
-            swprintf(Buffer, L"COutputPin::IoProcessRoutine PinName %s IMemInputPin::Receive hr %lx Sample %p m_MemAllocator %p\n", m_PinName, hr, Sample, m_MemAllocator);
+            _swprintf(Buffer, L"COutputPin::IoProcessRoutine PinName %s IMemInputPin::Receive hr %lx Sample %p m_MemAllocator %p\n", m_PinName, hr, Sample, m_MemAllocator);
             OutputDebugStringW(Buffer);
 #endif
 
@@ -2642,7 +2642,7 @@ COutputPin_SetState(
             hr = pPin->KsProperty(&Property, sizeof(KSPROPERTY), &CurState, sizeof(KSSTATE), &BytesReturned);
 
 #ifdef KSPROXY_TRACE
-            swprintf(Buffer, L"COutputPin_SetState Setting State CurState: KSSTATE_STOP KSSTATE_ACQUIRE PinName %s hr %lx\n", pPin->m_PinName, hr);
+            _swprintf(Buffer, L"COutputPin_SetState Setting State CurState: KSSTATE_STOP KSSTATE_ACQUIRE PinName %s hr %lx\n", pPin->m_PinName, hr);
             OutputDebugStringW(Buffer);
 #endif
 
@@ -2666,7 +2666,7 @@ COutputPin_SetState(
             hr = pPin->KsProperty(&Property, sizeof(KSPROPERTY), &CurState, sizeof(KSSTATE), &BytesReturned);
 
 #ifdef KSPROXY_TRACE
-            swprintf(Buffer, L"COutputPin_SetState Setting State CurState KSSTATE_ACQUIRE KSSTATE_PAUSE PinName %s hr %lx\n", pPin->m_PinName, hr);
+            _swprintf(Buffer, L"COutputPin_SetState Setting State CurState KSSTATE_ACQUIRE KSSTATE_PAUSE PinName %s hr %lx\n", pPin->m_PinName, hr);
             OutputDebugStringW(Buffer);
 #endif
 
@@ -2690,7 +2690,7 @@ COutputPin_SetState(
             hr = pPin->KsProperty(&Property, sizeof(KSPROPERTY), &CurState, sizeof(KSSTATE), &BytesReturned);
 
 #ifdef KSPROXY_TRACE
-            swprintf(Buffer, L"COutputPin_SetState Setting State CurState: KSSTATE_PAUSE KSSTATE_RUN PinName %s hr %lx\n", pPin->m_PinName, hr);
+            _swprintf(Buffer, L"COutputPin_SetState Setting State CurState: KSSTATE_PAUSE KSSTATE_RUN PinName %s hr %lx\n", pPin->m_PinName, hr);
             OutputDebugStringW(Buffer);
 #endif
 
@@ -2722,7 +2722,7 @@ COutputPin_SetState(
             hr = pPin->KsProperty(&Property, sizeof(KSPROPERTY), &CurState, sizeof(KSSTATE), &BytesReturned);
 
 #ifdef KSPROXY_TRACE
-            swprintf(Buffer, L"COutputPin_SetState Setting State CurState: KSSTATE_RUN KSSTATE_PAUSE PinName %s hr %lx\n", pPin->m_PinName, hr);
+            _swprintf(Buffer, L"COutputPin_SetState Setting State CurState: KSSTATE_RUN KSSTATE_PAUSE PinName %s hr %lx\n", pPin->m_PinName, hr);
             OutputDebugStringW(Buffer);
 #endif
 
@@ -2746,7 +2746,7 @@ COutputPin_SetState(
             hr = pPin->KsProperty(&Property, sizeof(KSPROPERTY), &CurState, sizeof(KSSTATE), &BytesReturned);
 
 #ifdef KSPROXY_TRACE
-            swprintf(Buffer, L"COutputPin_SetState Setting State CurState: KSSTATE_PAUSE KSSTATE_ACQUIRE PinName %s hr %lx\n", pPin->m_PinName, hr);
+            _swprintf(Buffer, L"COutputPin_SetState Setting State CurState: KSSTATE_PAUSE KSSTATE_ACQUIRE PinName %s hr %lx\n", pPin->m_PinName, hr);
             OutputDebugStringW(Buffer);
 #endif
 
@@ -2778,7 +2778,7 @@ COutputPin_SetState(
         hr = pPin->KsProperty(&Property, sizeof(KSPROPERTY), &CurState, sizeof(KSSTATE), &BytesReturned);
 
 #ifdef KSPROXY_TRACE
-        swprintf(Buffer, L"COutputPin_SetState Setting State CurState: KSSTATE_ACQUIRE KSSTATE_STOP PinName %s hr %lx\n", pPin->m_PinName, hr);
+        _swprintf(Buffer, L"COutputPin_SetState Setting State CurState: KSSTATE_ACQUIRE KSSTATE_STOP PinName %s hr %lx\n", pPin->m_PinName, hr);
         OutputDebugStringW(Buffer);
 #endif
 

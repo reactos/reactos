@@ -78,7 +78,7 @@ CControlNode::QueryInterface(
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
     StringFromCLSID(refiid, &lpstr);
-    swprintf(Buffer, L"CControlNode::QueryInterface: NoInterface for %s", lpstr);
+    _swprintf(Buffer, L"CControlNode::QueryInterface: NoInterface for %s", lpstr);
     OutputDebugStringW(Buffer);
     CoTaskMemFree(lpstr);
 #endif
@@ -102,7 +102,7 @@ CControlNode_fnConstructor(
     IKsPropertySet * pProperty;
 
     // store pin id
-    swprintf(Buffer, L"%u", PinId);
+    _swprintf(Buffer, L"%u", PinId);
 
     // try find target pin
     hr = pFilter->FindPin(Buffer, &pPin);
@@ -110,7 +110,7 @@ CControlNode_fnConstructor(
     if (FAILED(hr))
     {
 #ifdef BDAPLGIN_TRACE
-        swprintf(Buffer, L"CControlNode_fnConstructor failed find pin %lu with %lx\n", PinId, hr);
+        _swprintf(Buffer, L"CControlNode_fnConstructor failed find pin %lu with %lx\n", PinId, hr);
         OutputDebugStringW(Buffer);
 #endif
         return hr;
@@ -122,7 +122,7 @@ CControlNode_fnConstructor(
         return hr;
 
 #ifdef BDAPLGIN_TRACE
-    swprintf(Buffer, L"CControlNode_fnConstructor get IID_IKsObject status %lx\n", hr);
+    _swprintf(Buffer, L"CControlNode_fnConstructor get IID_IKsObject status %lx\n", hr);
     OutputDebugStringW(Buffer);
 #endif
 

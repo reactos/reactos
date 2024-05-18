@@ -340,7 +340,7 @@ IopComputeHarddiskDerangements(
     for (i = 0; i < DiskCount; ++i)
     {
         /* Using their ARC name */
-        swprintf(Buffer, L"\\ArcName\\multi(0)disk(0)rdisk(%d)", i);
+        _swprintf(Buffer, L"\\ArcName\\multi(0)disk(0)rdisk(%d)", i);
         RtlInitUnicodeString(&ArcName, Buffer);
 
         /* Get the attached DeviceObject */
@@ -531,7 +531,7 @@ HalpSetMountLetter(
     PMOUNTMGR_CREATE_POINT_INPUT InputBuffer;
 
     /* Setup the DosDevice name */
-    swprintf(Buffer, L"\\DosDevices\\%c:", DriveLetter);
+    _swprintf(Buffer, L"\\DosDevices\\%c:", DriveLetter);
     RtlInitUnicodeString(&DosDevice, Buffer);
 
     /* Allocate the input buffer for the MountMgr */
@@ -656,7 +656,7 @@ HalpNextDriveLetter(
     for (i = DriveLetter; i <= 'Z'; ++i)
     {
         /* We'll link manually, without the MountMgr knowing anything about the device */
-        swprintf(Buffer, L"\\DosDevices\\%c:", i);
+        _swprintf(Buffer, L"\\DosDevices\\%c:", i);
         RtlInitUnicodeString(&DosDevice, Buffer);
 
         /* If linking worked, the letter was free ;-) */
@@ -756,7 +756,7 @@ HalpDeleteMountLetter(
     PMOUNTMGR_MOUNT_POINTS OutputBuffer;
 
     /* Setup the device name of the letter to delete */
-    swprintf(Buffer, L"\\DosDevices\\%c:", DriveLetter);
+    _swprintf(Buffer, L"\\DosDevices\\%c:", DriveLetter);
     RtlInitUnicodeString(&DosDevice, Buffer);
 
     /* Allocate the input buffer for the MountMgr */
@@ -975,7 +975,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     for (i = 0; i < DiskCount; ++i)
     {
         /* Setup the device name */
-        swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition0", i);
+        _swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition0", i);
         RtlInitUnicodeString(&DeviceName, Buffer);
 
         /* Open the device */
@@ -994,7 +994,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         {
             /* If we succeeded, create the link */
             UNICODE_STRING LinkName;
-            swprintf(Buffer2, L"\\DosDevices\\PhysicalDrive%d", i);
+            _swprintf(Buffer2, L"\\DosDevices\\PhysicalDrive%d", i);
             RtlInitUnicodeString(&LinkName, Buffer2);
 
             IoCreateSymbolicLink(&LinkName, &DeviceName);
@@ -1047,7 +1047,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         HarddiskCount = (Devices ? Devices[i] : i);
 
         /* Query the disk layout */
-        swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition0", HarddiskCount);
+        _swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition0", HarddiskCount);
         RtlInitUnicodeString(&DeviceName, Buffer);
         Status = HalpQueryDriveLayout(&DeviceName, &LayoutInfo);
         if (!NT_SUCCESS(Status))
@@ -1057,7 +1057,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         BootableFound = FALSE;
         for (PartitionCount = 1; ; ++PartitionCount)
         {
-            swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition%d", HarddiskCount, PartitionCount);
+            _swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition%d", HarddiskCount, PartitionCount);
             RtlInitUnicodeString(&DeviceName, Buffer);
             Status = HalpQueryPartitionType(&DeviceName, LayoutInfo, &PartitionType);
             if (!NT_SUCCESS(Status))
@@ -1084,7 +1084,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         {
             for (PartitionCount = 1; ; ++PartitionCount)
             {
-                swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition%d", HarddiskCount, PartitionCount);
+                _swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition%d", HarddiskCount, PartitionCount);
                 RtlInitUnicodeString(&DeviceName, Buffer);
                 Status = HalpQueryPartitionType(&DeviceName, LayoutInfo, &PartitionType);
                 if (!NT_SUCCESS(Status))
@@ -1111,7 +1111,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         HarddiskCount = (Devices ? Devices[i] : i);
 
         /* Query the disk layout */
-        swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition0", HarddiskCount);
+        _swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition0", HarddiskCount);
         RtlInitUnicodeString(&DeviceName, Buffer);
         Status = HalpQueryDriveLayout(&DeviceName, &LayoutInfo);
         if (!NT_SUCCESS(Status))
@@ -1120,7 +1120,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         /* And assign drive letters to logical partitions */
         for (PartitionCount = 1; ; ++PartitionCount)
         {
-            swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition%d", HarddiskCount, PartitionCount);
+            _swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition%d", HarddiskCount, PartitionCount);
             RtlInitUnicodeString(&DeviceName, Buffer);
             Status = HalpQueryPartitionType(&DeviceName, LayoutInfo, &PartitionType);
             if (!NT_SUCCESS(Status))
@@ -1144,7 +1144,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         HarddiskCount = (Devices ? Devices[i] : i);
 
         /* Query the disk layout */
-        swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition0", HarddiskCount);
+        _swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition0", HarddiskCount);
         RtlInitUnicodeString(&DeviceName, Buffer);
         Status = HalpQueryDriveLayout(&DeviceName, &LayoutInfo);
         if (!NT_SUCCESS(Status))
@@ -1154,7 +1154,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         SkipPartition = 0;
         for (PartitionCount = 1; ; ++PartitionCount)
         {
-            swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition%d", HarddiskCount, PartitionCount);
+            _swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition%d", HarddiskCount, PartitionCount);
             RtlInitUnicodeString(&DeviceName, Buffer);
             Status = HalpQueryPartitionType(&DeviceName, LayoutInfo, &PartitionType);
             if (!NT_SUCCESS(Status))
@@ -1173,7 +1173,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             if (PartitionCount == SkipPartition)
                 continue;
 
-            swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition%d", HarddiskCount, PartitionCount);
+            _swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition%d", HarddiskCount, PartitionCount);
             RtlInitUnicodeString(&DeviceName, Buffer);
             Status = HalpQueryPartitionType(&DeviceName, LayoutInfo, &PartitionType);
             if (!NT_SUCCESS(Status))
@@ -1198,14 +1198,14 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
      * first for legacy, then for MountMgr-aware ones. */
     for (i = 0; i < ConfigInfo->FloppyCount; ++i)
     {
-        swprintf(Buffer, L"\\Device\\Floppy%d", i);
+        _swprintf(Buffer, L"\\Device\\Floppy%d", i);
         RtlInitUnicodeString(&DeviceName, Buffer);
         if (HalpIsOldStyleFloppy(&DeviceName)) // Legacy device
             HalpNextDriveLetter(&DeviceName, NtDeviceName, NtSystemPath, TRUE);
     }
     for (i = 0; i < ConfigInfo->FloppyCount; ++i)
     {
-        swprintf(Buffer, L"\\Device\\Floppy%d", i);
+        _swprintf(Buffer, L"\\Device\\Floppy%d", i);
         RtlInitUnicodeString(&DeviceName, Buffer);
         if (!HalpIsOldStyleFloppy(&DeviceName)) // MountMgr-aware device
             HalpNextDriveLetter(&DeviceName, NtDeviceName, NtSystemPath, TRUE);
@@ -1214,7 +1214,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     /* And CD-ROM drives */
     for (i = 0; i < ConfigInfo->CdRomCount; ++i)
     {
-        swprintf(Buffer, L"\\Device\\CdRom%d", i);
+        _swprintf(Buffer, L"\\Device\\CdRom%d", i);
         RtlInitUnicodeString(&DeviceName, Buffer);
         HalpNextDriveLetter(&DeviceName, NtDeviceName, NtSystemPath, TRUE);
     }

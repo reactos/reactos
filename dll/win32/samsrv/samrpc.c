@@ -1988,7 +1988,7 @@ SamrCreateGroupInDomain(IN SAMPR_HANDLE DomainHandle,
     TRACE("RID: %lx\n", ulRid);
 
     /* Convert the RID into a string (hex) */
-    swprintf(szRid, L"%08lX", ulRid);
+    _swprintf(szRid, L"%08lX", ulRid);
 
     /* Create the group object */
     Status = SampCreateDbObject(DomainObject,
@@ -2411,7 +2411,7 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Convert the RID into a string (hex) */
-    swprintf(szRid, L"%08lX", ulRid);
+    _swprintf(szRid, L"%08lX", ulRid);
 
     /* Create the user object */
     Status = SampCreateDbObject(DomainObject,
@@ -3002,7 +3002,7 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
     TRACE("RID: %lx\n", ulRid);
 
     /* Convert the RID into a string (hex) */
-    swprintf(szRid, L"%08lX", ulRid);
+    _swprintf(szRid, L"%08lX", ulRid);
 
     /* Create the alias object */
     Status = SampCreateDbObject(DomainObject,
@@ -3754,7 +3754,7 @@ SamrLookupIdsInDomain(IN SAMPR_HANDLE DomainHandle,
     {
         TRACE("RID: %lu\n", RelativeIds[i]);
 
-        swprintf(RidString, L"%08lx", RelativeIds[i]);
+        _swprintf(RidString, L"%08lx", RelativeIds[i]);
 
         /* Lookup aliases */
         Status = SampRegOpenKey(DomainObject->KeyHandle,
@@ -4007,7 +4007,7 @@ SamrOpenGroup(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Convert the RID into a string (hex) */
-    swprintf(szRid, L"%08lX", GroupId);
+    _swprintf(szRid, L"%08lX", GroupId);
 
     /* Create the group object */
     Status = SampOpenDbObject(DomainObject,
@@ -4850,7 +4850,7 @@ SamrOpenAlias(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Convert the RID into a string (hex) */
-    swprintf(szRid, L"%08lX", AliasId);
+    _swprintf(szRid, L"%08lX", AliasId);
 
     /* Create the alias object */
     Status = SampOpenDbObject(DomainObject,
@@ -5451,7 +5451,7 @@ SamrOpenUser(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Convert the RID into a string (hex) */
-    swprintf(szRid, L"%08lX", UserId);
+    _swprintf(szRid, L"%08lX", UserId);
 
     /* Create the user object */
     Status = SampOpenDbObject(DomainObject,
@@ -8950,7 +8950,7 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Convert the RID into a string (hex) */
-    swprintf(szRid, L"%08lX", ulRid);
+    _swprintf(szRid, L"%08lX", ulRid);
 
     /* Create the user object */
     Status = SampCreateDbObject(DomainObject,

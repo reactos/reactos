@@ -543,7 +543,7 @@ IntCreateNewRegistryPath(
     RtlAppendUnicodeToString(&DeviceExtension->NewRegistryPath, L"0000");
 
     /* Write instance ID */
-    swprintf(InstanceIdBuffer, L"%04u", DeviceExtension->DisplayNumber);
+    _swprintf(InstanceIdBuffer, L"%04u", DeviceExtension->DisplayNumber);
 
     /* Check if the name exists */
     Status = RtlCheckRegistryKey(RTL_REGISTRY_ABSOLUTE,

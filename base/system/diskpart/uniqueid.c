@@ -35,7 +35,7 @@ UniqueIdDisk(
         if (CurrentDisk->LayoutBuffer->PartitionStyle == PARTITION_STYLE_GPT)
             PrintGUID(szBuffer, &CurrentDisk->LayoutBuffer->Gpt.DiskId);
         else if (CurrentDisk->LayoutBuffer->PartitionStyle == PARTITION_STYLE_MBR)
-            swprintf(szBuffer, L"%08lx", CurrentDisk->LayoutBuffer->Mbr.Signature);
+            _swprintf(szBuffer, L"%08lx", CurrentDisk->LayoutBuffer->Mbr.Signature);
         else
             wcscpy(szBuffer, L"00000000");
         ConPrintf(StdOut, L"Disk ID: %s\n", szBuffer);

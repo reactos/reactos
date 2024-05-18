@@ -497,7 +497,7 @@ CDrvDefExt::InitGeneralPage(HWND hwndDlg)
     /* Set drive description */
     WCHAR wszFormat[50];
     GetDlgItemTextW(hwndDlg, 14009, wszFormat, _countof(wszFormat));
-    swprintf(wszBuf, wszFormat, m_wszDrive[0]);
+    _swprintf(wszBuf, wszFormat, m_wszDrive[0]);
     SetDlgItemTextW(hwndDlg, 14009, wszBuf);
 
     /* show disk cleanup button only for fixed drives */
