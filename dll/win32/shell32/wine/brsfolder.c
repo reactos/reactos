@@ -108,7 +108,8 @@ BrsFolder_GetDataFromItem(browse_info *info, HTREEITEM hItem)
 {
     TVITEMW item = { TVIF_HANDLE | TVIF_PARAM };
     item.hItem = hItem;
-    TreeView_GetItem(info->hwndTreeView, &item);
+    if (!TreeView_GetItem(info->hwndTreeView, &item))
+        ERR("TreeView_GetItem failed\n");
     return (LPTV_ITEMDATA)item.lParam;
 }
 
@@ -536,7 +537,7 @@ static LRESULT BrsFolder_Treeview_Rename(browse_info *info, NMTVDISPINFOW *pnmtv
     IShellFolder_ParseDisplayName(item_data->lpsfParent, NULL, NULL,
             pnmtv->item.pszText, NULL, &item_data->lpi, NULL);
 
-    item.mask = TVIF_HANDLE|TVIF_TEXT;
+    item.mask = TVIF_HANDLE | TVIF_TEXT;
     item.pszText = pnmtv->item.pszText;
     TreeView_SetItem(info->hwndTreeView, &item);
 
