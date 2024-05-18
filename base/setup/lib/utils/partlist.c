@@ -13,6 +13,7 @@
 
 #include <ntddscsi.h>
 #include <ntddstor.h> // For GUID_DEVINTERFACE_DISK, STORAGE_DEVICE_NUMBER and co.
+#include <ntddvol.h>  // For IOCTL_VOLUME_IS_PARTITION
 
 #include "partlist.h"
 #include "vollist.h"
@@ -1061,6 +1062,80 @@ InitializePartitionEntry(
     return TRUE;
 }
 
+/**
+ * @brief
+ * Returns TRUE if the partition is a simple LDM (*not basic*) volume.
+ **/
+static
+BOOLEAN
+IsPartitionSimpleVolume(
+    _In_ PPARTENTRY PartEntry)
+{
+    NTSTATUS Status;
+    UNICODE_STRING Name;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK Iosb; // IoStatusBlock
+    HANDLE PartHandle;
+    WCHAR DeviceName[MAX_PATH];
+
+    if (!(PartEntry->PartitionType == PARTITION_LDM /* ||
+          PartEntry->PartitionType == 0x8E || // Linux LVM
+          PartEntry->PartitionType == PARTITION_SPACES_DATA ||
+          PartEntry->PartitionType == PARTITION_SPACES */))
+    {
+        return FALSE; // TRUE;
+    }
+
+    ASSERT(PartEntry->DiskEntry->IsDynamic);
+    ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
+
+    /* Don't ever attempt to open the disk as a whole */
+    if (PartEntry->PartitionNumber == 0)
+        return FALSE;
+
+    /* Make a device name for the partition */
+    Status = RtlStringCchPrintfW(DeviceName,
+                                 _countof(DeviceName),
+                                 L"\\Device\\Harddisk%lu\\Partition%lu",
+                                 PartEntry->DiskEntry->DiskNumber,
+                                 PartEntry->PartitionNumber);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Try to open the partition (if it's a valid volume this will also mount it) */
+    RtlInitUnicodeString(&Name, DeviceName);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenFile(&PartHandle,
+                        FILE_READ_DATA | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &Iosb,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtOpenFile() failed, Status 0x%08lx\n", Status);
+        return FALSE;
+    }
+
+    /* Check whether the partition is a volume */
+    // NOTE: Vista+ IOCTL_VOLUME_IS_DYNAMIC would return success as well
+    // (a boolean buffer needs to be passed in OutputBuffer, though)
+    // since this volume lies on an LDM partition.
+    Status = NtDeviceIoControlFile(PartHandle,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   &Iosb,
+                                   IOCTL_VOLUME_IS_PARTITION,
+                                   NULL, 0,
+                                   NULL, 0);
+    NtClose(PartHandle);
+
+    return NT_SUCCESS(Status);
+}
 
 static
 VOID
@@ -1080,6 +1155,15 @@ AddPartitionToDisk(
         return;
     /* Request must be consistent, though! */
     ASSERT(!(LogicalPartition && IsContainerPartition(PartitionInfo->PartitionType)));
+
+    /* If we've got an LDM partition, mark the disk as dynamic */
+    if (PartitionInfo->PartitionType == PARTITION_LDM /* ||
+        PartitionInfo->PartitionType == 0x8E || // Linux LVM
+        PartitionInfo->PartitionType == PARTITION_SPACES_DATA ||
+        PartitionInfo->PartitionType == PARTITION_SPACES */)
+    {
+        DiskEntry->IsDynamic = TRUE;
+    }
 
     PartEntry = RtlAllocateHeap(ProcessHeap,
                                 HEAP_ZERO_MEMORY,
@@ -1110,7 +1194,8 @@ AddPartitionToDisk(
             DiskEntry->ExtendedPartition = PartEntry;
     }
     else if (IsRecognizedPartition(PartEntry->PartitionType) || // PartitionInfo->RecognizedPartition
-             IsOEMPartition(PartEntry->PartitionType))
+             IsOEMPartition(PartEntry->PartitionType) ||
+             IsPartitionSimpleVolume(PartEntry))
     {
         NTSTATUS Status;
 
@@ -1678,6 +1763,10 @@ AddDiskToList(
         DPRINT1("Disk %lu of identifier '%S' is fixed\n", DiskNumber, Identifier);
     }
 
+    /* Default to basic disk, the actual type will be determined
+     * when enumerating partitions below */
+    DiskEntry->IsDynamic = FALSE;
+
 //    DiskEntry->Checksum = Checksum;
 //    DiskEntry->Signature = Signature;
     DiskEntry->BiosFound = FALSE;
@@ -1933,6 +2022,9 @@ AddDiskToList(
     }
 
     ScanForUnpartitionedDiskSpace(DiskEntry);
+
+    if (DiskEntry->IsDynamic)
+        DPRINT1("Dynamic disk detected, not currently supported by SETUP!\n");
 
     return STATUS_SUCCESS;
 }

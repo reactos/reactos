@@ -106,7 +106,8 @@ typedef struct _DISKENTRY
     /* The list of disks/partitions this disk belongs to */
     struct _PARTLIST *PartList;
 
-    MEDIA_TYPE MediaType;   /* FixedMedia or RemovableMedia */
+    MEDIA_TYPE MediaType;   //< FixedMedia or RemovableMedia
+    BOOLEAN IsDynamic;      //< TRUE for dynamic (LDM/LVM) or FALSE for basic disk
 
     /* Disk geometry */
 
