@@ -819,7 +819,21 @@ ShowStatusPropertyDialog(
         else if (pProperties->Status == NCS_MEDIA_DISCONNECTED || pProperties->Status == NCS_DISCONNECTED ||
                  pProperties->Status == NCS_HARDWARE_DISABLED)
         {
-            ShowNetConnectionProperties(pContext->pNet, pContext->hwndDlg);
+            WCHAR buffer[100];
+            
+            LoadStringW(netshell_hInstance, IDS_NETWORKCONNECTION, buffer, _countof(buffer));
+            HWND prophwnd = FindWindow(NULL, buffer);
+
+            /* if the window is already open, prevent it from opening again */
+            if (prophwnd != NULL)
+            {
+                ShowWindow(prophwnd, SW_SHOWNORMAL);
+                SetForegroundWindow(prophwnd);
+            }
+            else
+            {
+                ShellExecuteW(NULL, L"open", L"explorer.exe", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{7007ACC7-3202-11D1-AAD2-00805FC1270E}", NULL, SW_SHOWNORMAL);
+            }
         }
 
         NcFreeNetconProperties(pProperties);
