@@ -153,20 +153,20 @@ BEGIN
     STRING_ALL_FILES "모든 파일 (*.*)"
     STRING_TEXT_FILES_TXT "텍스트 파일 (*.txt)"
     STRING_TOOLARGE "'%s' 파일이 메모장에 사용하기에 너무 큽니다.\n\
-Please use a different editor."
+다른 편집기를 사용하세요."
     STRING_NOTEXT "텍스트를 입력하지 않았습니다.\n\
-Please type something and try again"
+입력한 후 다시 시도하세요."
     STRING_DOESNOTEXIST "'%s' 파일이\n존재하지 않습니다\n\n\
-Do you want to create a new file?"
+새 파일을 생성하시겠습니까?"
     STRING_NOTSAVED "'%s' 파일\n수정되었습니다\n\n\
-Would you like to save the changes?"
+변경 사항을 저장하시겠습니까?"
     STRING_NOTFOUND "'%s'을(를) 찾을 수 없습니다."
     STRING_OUT_OF_MEMORY "메모리가 부족하여 이 작업을 완료할 수 없습니다.\n\
-Close one or more applications to increase the amount of\nfree memory."
+하나 이상의 응용 프로그램을 닫아 사용 가능한 메모리를 늘립니다."
     STRING_CANNOTFIND "'%s'을(를) 찾을 수 없습니다'"
     STRING_ANSI "ANSI"
     STRING_UNICODE "유니코드"
-    STRING_UNICODE_BE "유니코드 (big endian)"
+    STRING_UNICODE_BE "유니코드 (빅 엔디안)"
     STRING_UTF8 "UTF-8"
     STRING_UTF8_BOM "UTF-8 (BOM 포함)"
     STRING_CRLF "Windows (CR + LF)"
