@@ -155,7 +155,7 @@ static void SuggestKeys(HKEY hRootKey, LPCWSTR pszKeyPath, LPWSTR pszSuggestions
     size_t i;
     HKEY hOtherKey, hSubKey;
     BOOL bFound;
-    REGSAM regsam = KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE;
+    const REGSAM regsam = KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE;
 
     memset(pszSuggestions, 0, iSuggestionsLength * sizeof(*pszSuggestions));
     iSuggestionsLength--;
