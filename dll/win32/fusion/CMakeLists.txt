@@ -11,6 +11,7 @@ list(APPEND COMMON_SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/fusion_stubs.c)
 
 add_library(fusion_common STATIC ${COMMON_SOURCE})
+target_compile_definitions(fusion_common PRIVATE _CRT_NON_CONFORMING_SWPRINTFS)
 target_link_libraries(fusion_common oldnames)
 add_dependencies(fusion_common psdk)
 add_pch(fusion_common precomp.h COMMON_SOURCE)

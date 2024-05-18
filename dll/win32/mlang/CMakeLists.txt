@@ -1,6 +1,6 @@
 
 add_definitions(
-    -DCOM_NO_WINDOWS_H)
+    -DCOM_NO_WINDOWS_H -D_CRT_NON_CONFORMING_SWPRINTFS)
 
 spec2def(mlang.dll mlang.spec ADD_IMPORTLIB)
 

@@ -11,6 +11,7 @@ list(APPEND SOURCE
 
 add_library(pdh MODULE ${SOURCE})
 set_module_type(pdh win32dll)
+target_compile_definitions(pdh PRIVATE _CRT_NON_CONFORMING_SWPRINTFS)
 target_link_libraries(pdh wine)
 add_importlibs(pdh msvcrt kernel32_vista kernel32 ntdll)
 add_cd_file(TARGET pdh DESTINATION reactos/system32 FOR all)

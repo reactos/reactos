@@ -16,6 +16,7 @@ add_library(sxs MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/sxs.def)
 
 set_module_type(sxs win32dll)
+target_compile_definitions(sxs PRIVATE _CRT_NON_CONFORMING_SWPRINTFS)
 target_link_libraries(sxs wine)
 add_importlibs(sxs oleaut32 ole32 msvcrt kernel32 ntdll)
 add_pch(sxs precomp.h "${PCH_SKIP_SOURCE}")

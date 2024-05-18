@@ -5,6 +5,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 add_definitions(
     -D_RPCRT4_
     -DCOM_NO_WINDOWS_H
+    -D_CRT_NON_CONFORMING_SWPRINTFS
     -DMSWMSG)
 
 spec2def(rpcrt4.dll rpcrt4.spec ADD_IMPORTLIB)

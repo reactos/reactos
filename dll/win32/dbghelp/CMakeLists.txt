@@ -1,6 +1,6 @@
 
 if(NOT CMAKE_CROSSCOMPILING)
-    add_definitions(-DDBGHELP_STATIC_LIB -DNONAMELESSUNION)
+    add_definitions(-DDBGHELP_STATIC_LIB -DNONAMELESSUNION -D_CRT_NON_CONFORMING_SWPRINTFS)
 
     include_directories(
         ${REACTOS_SOURCE_DIR}/tools)
@@ -28,6 +28,7 @@ else()
     add_definitions(
         -D_WINE
         -DHAVE_ALLOCA_H
+        -D_CRT_NON_CONFORMING_SWPRINTFS
         -D_IMAGEHLP_SOURCE_)
 
     include_directories(
