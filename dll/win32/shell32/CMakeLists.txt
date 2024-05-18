@@ -82,7 +82,7 @@ list(APPEND SOURCE
 
 list(APPEND PCH_SKIP_SOURCE
     wine/appbar.c
-    wine/brsfolder.c
+    wine/brsfolder.cpp
     wine/classes.c
     wine/clipboard.c
     wine/control.c
