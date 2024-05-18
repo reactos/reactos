@@ -25,11 +25,11 @@
 VOID
 ErrorMessage(
     IN DWORD dwErrorCode,
-    IN PCTSTR szFormat OPTIONAL,
+    IN PCWSTR szFormat OPTIONAL,
     ...)
 {
     va_list arg_ptr;
-    PTSTR szError;
+    PWSTR szError;
     TCHAR szMsg[RC_STRING_MAX_SIZE];
     TCHAR szMessage[1024];
 
@@ -40,7 +40,7 @@ ErrorMessage(
     if (szFormat)
     {
         va_start(arg_ptr, szFormat);
-        _vstprintf(szMessage, szFormat, arg_ptr);
+        vswprintf(szMessage, szFormat, arg_ptr);
         va_end(arg_ptr);
     }
 
@@ -62,21 +62,21 @@ ErrorMessage(
         ConErrPrintf(_T("%s\n"), szMsg);
 }
 
-VOID error_parameter_format(TCHAR ch)
+VOID error_parameter_format(WCHAR ch)
 {
     ConErrResPrintf(STRING_ERROR_PARAMETERF_ERROR, ch);
     nErrorLevel = 1;
 }
 
 
-VOID error_invalid_switch(TCHAR ch)
+VOID error_invalid_switch(WCHAR ch)
 {
     ConErrResPrintf(STRING_ERROR_INVALID_SWITCH, ch);
     nErrorLevel = 1;
 }
 
 
-VOID error_too_many_parameters(PCTSTR s)
+VOID error_too_many_parameters(PCWSTR s)
 {
     ConErrResPrintf(STRING_ERROR_TOO_MANY_PARAMETERS, s);
     nErrorLevel = 1;
@@ -97,7 +97,7 @@ VOID error_file_not_found(VOID)
 }
 
 
-VOID error_sfile_not_found(PCTSTR s)
+VOID error_sfile_not_found(PCWSTR s)
 {
     TCHAR szMsg[RC_STRING_MAX_SIZE];
 
@@ -121,7 +121,7 @@ VOID error_invalid_drive(VOID)
 }
 
 
-VOID error_bad_command(PCTSTR s)
+VOID error_bad_command(PCWSTR s)
 {
     ConErrResPrintf(STRING_ERROR_BADCOMMAND, s);
     nErrorLevel = 9009;
@@ -142,16 +142,16 @@ VOID error_out_of_memory(VOID)
 }
 
 
-VOID error_invalid_parameter_format(PCTSTR s)
+VOID error_invalid_parameter_format(PCWSTR s)
 {
     ConErrResPrintf(STRING_ERROR_INVALID_PARAM_FORMAT, s);
     nErrorLevel = 1;
 }
 
 
-VOID error_syntax(PCTSTR s)
+VOID error_syntax(PCWSTR s)
 {
-    TCHAR szMsg[RC_STRING_MAX_SIZE];
+    WCHAR szMsg[RC_STRING_MAX_SIZE];
 
     LoadString(CMD_ModuleHandle, STRING_ERROR_ERROR2, szMsg, ARRAYSIZE(szMsg));
 
