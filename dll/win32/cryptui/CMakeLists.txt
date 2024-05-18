@@ -11,6 +11,7 @@ list(APPEND SOURCE
 
 add_library(cryptui MODULE ${SOURCE} cryptui.rc)
 set_module_type(cryptui win32dll)
+target_compile_definitions(cryptui PRIVATE _CRT_NON_CONFORMING_SWPRINTFS)
 target_link_libraries(cryptui uuid wine oldnames)
 add_delay_importlibs(cryptui urlmon wintrust)
 add_importlibs(cryptui user32 ole32 crypt32 gdi32 advapi32 comctl32 comdlg32 msvcrt kernel32 ntdll)

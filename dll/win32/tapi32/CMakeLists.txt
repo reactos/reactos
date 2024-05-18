@@ -14,6 +14,7 @@ add_library(tapi32 MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/tapi32.def)
 
 set_module_type(tapi32 win32dll)
+target_compile_definitions(tapi32 PRIVATE _CRT_NON_CONFORMING_SWPRINTFS)
 target_link_libraries(tapi32 wine)
 add_importlibs(tapi32 advapi32 msvcrt kernel32 ntdll)
 add_pch(tapi32 precomp.h SOURCE)

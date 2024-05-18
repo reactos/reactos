@@ -85,7 +85,7 @@ list(APPEND SOURCE
     CFolderItems.cpp
     CFolderItemVerbs.cpp)
 
-list(APPEND PCH_SKIP_SOURCE
+list(APPEND WINE_SOURCE
     appbar.c
     wine/classes.c
     wine/clipboard.c
@@ -98,7 +98,12 @@ list(APPEND PCH_SKIP_SOURCE
     wine/shellreg.c
     wine/shellstring.c
     wine/shlmenu.c
-    wine/shpolicy.c
+    wine/shpolicy.c)
+
+set_source_files_properties(${WINE_SOURCE} PROPERTIES COMPILE_DEFINITIONS _CRT_NON_CONFORMING_SWPRINTFS)
+
+list(APPEND PCH_SKIP_SOURCE
+    ${WINE_SOURCE}
     vista.c
     ${CMAKE_CURRENT_BINARY_DIR}/shell32_stubs.c)
 

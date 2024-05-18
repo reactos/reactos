@@ -19,6 +19,7 @@ if(MSVC)
 endif()
 
 set_module_type(xmllite win32dll)
+target_compile_definitions(xmllite PRIVATE _CRT_NON_CONFORMING_SWPRINTFS)
 target_link_libraries(xmllite uuid wine oldnames)
 add_importlibs(xmllite msvcrt kernel32 ntdll)
 add_pch(xmllite precomp.h SOURCE)

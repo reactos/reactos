@@ -37,6 +37,8 @@ add_library(shellbtrfs MODULE
     shellbtrfs.rc
     ${CMAKE_CURRENT_BINARY_DIR}/shellbtrfs.def)
 
+target_compile_definitions(shellbtrfs PRIVATE _CRT_NON_CONFORMING_SWPRINTFS)
+
 file(GLOB shellbtrfs_rc_deps *.ico)
 add_rc_deps(shellbtrfs.rc ${shellbtrfs_rc_deps})
 
