@@ -596,14 +596,14 @@ AddNTOSInstallationItem(
     IN SIZE_T cchBufferSize)
 {
     PNTOS_INSTALLATION NtOsInstall = (PNTOS_INSTALLATION)GetListEntryData(Entry);
-    PPARTENTRY PartEntry = NtOsInstall->PartEntry;
+    PVOLINFO VolInfo = (NtOsInstall->Volume ? &NtOsInstall->Volume->Info : NULL);
 
-    if (PartEntry && PartEntry->DriveLetter)
+    if (VolInfo && VolInfo->DriveLetter)
     {
         /* We have retrieved a partition that is mounted */
         StringCchPrintfW(Buffer, cchBufferSize,
                          L"%c:%s",
-                         PartEntry->DriveLetter,
+                         VolInfo->DriveLetter,
                          NtOsInstall->PathComponent);
     }
     else

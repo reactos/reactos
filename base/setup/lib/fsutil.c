@@ -754,6 +754,30 @@ Quit:
 //
 
 NTSTATUS
+ChkdskVolume(
+    _In_ PVOLINFO Volume,
+    _In_ BOOLEAN FixErrors,
+    _In_ BOOLEAN Verbose,
+    _In_ BOOLEAN CheckOnlyIfDirty,
+    _In_ BOOLEAN ScanDrive,
+    _In_opt_ PFMIFSCALLBACK Callback)
+{
+    /* Do not check a volume with an unknown file system */
+    if (!*Volume->FileSystem)
+        return STATUS_UNRECOGNIZED_VOLUME;
+
+    /* Check the volume */
+    DPRINT("Volume->DeviceName: %S\n", Volume->DeviceName);
+    return ChkdskFileSystem(Volume->DeviceName,
+                            Volume->FileSystem,
+                            FixErrors,
+                            Verbose,
+                            CheckOnlyIfDirty,
+                            ScanDrive,
+                            Callback);
+}
+
+NTSTATUS
 ChkdskPartition(
     _In_ PPARTENTRY PartEntry,
     _In_ BOOLEAN FixErrors,
@@ -762,31 +786,56 @@ ChkdskPartition(
     _In_ BOOLEAN ScanDrive,
     _In_opt_ PFMIFSCALLBACK Callback)
 {
-    PDISKENTRY DiskEntry = PartEntry->DiskEntry;
-    // UNICODE_STRING PartitionRootPath;
-    WCHAR PartitionRootPath[MAX_PATH]; // PathBuffer
-
     ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
+    ASSERT(PartEntry->Volume);
 
-    /* Do not check a partition with an unknown file system */
-    if (!*PartEntry->FileSystem)
-        return STATUS_UNRECOGNIZED_VOLUME; // STATUS_NOT_SUPPORTED;
+    // if (!PartEntry->Volume) { check_raw_sectors(); } else { check_FS(); }
 
-    /* Set PartitionRootPath */
-    RtlStringCchPrintfW(PartitionRootPath, ARRAYSIZE(PartitionRootPath),
-                        L"\\Device\\Harddisk%lu\\Partition%lu",
-                        DiskEntry->DiskNumber,
-                        PartEntry->PartitionNumber);
-    DPRINT("PartitionRootPath: %S\n", PartitionRootPath);
+    /* Check the associated volume */
+    return ChkdskVolume(&PartEntry->Volume->Info,
+                        FixErrors,
+                        Verbose,
+                        CheckOnlyIfDirty,
+                        ScanDrive,
+                        Callback);
+}
 
-    /* Check the partition */
-    return ChkdskFileSystem(PartitionRootPath,
-                            PartEntry->FileSystem,
-                            FixErrors,
-                            Verbose,
-                            CheckOnlyIfDirty,
-                            ScanDrive,
-                            Callback);
+NTSTATUS
+FormatVolume(
+    _In_ PVOLINFO Volume,
+    _In_ PCWSTR FileSystemName,
+    _In_ FMIFS_MEDIA_FLAG MediaFlag,
+    _In_opt_ PCWSTR Label,
+    _In_ BOOLEAN QuickFormat,
+    _In_ ULONG ClusterSize,
+    _In_opt_ PFMIFSCALLBACK Callback)
+{
+    NTSTATUS Status;
+
+    if (!FileSystemName || !*FileSystemName)
+    {
+        DPRINT1("No file system specified\n");
+        return STATUS_UNRECOGNIZED_VOLUME;
+    }
+
+    /* Format the volume */
+    DPRINT("Volume->DeviceName: %S\n", Volume->DeviceName);
+    Status = FormatFileSystem(Volume->DeviceName,
+                              FileSystemName,
+                              MediaFlag,
+                              Label,
+                              QuickFormat,
+                              ClusterSize,
+                              Callback);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Set the new volume's file system and label */
+    RtlStringCbCopyW(Volume->FileSystem, sizeof(Volume->FileSystem), FileSystemName);
+    if (!Label) Label = L"";
+    RtlStringCbCopyW(Volume->VolumeLabel, sizeof(Volume->VolumeLabel), Label);
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -802,14 +851,12 @@ FormatPartition(
     NTSTATUS Status;
     PDISKENTRY DiskEntry = PartEntry->DiskEntry;
     UCHAR PartitionType;
-    // UNICODE_STRING PartitionRootPath;
-    WCHAR PartitionRootPath[MAX_PATH]; // PathBuffer
 
     ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
 
     if (!FileSystemName || !*FileSystemName)
     {
-        DPRINT1("No file system specified?\n");
+        DPRINT1("No file system specified\n");
         return STATUS_UNRECOGNIZED_VOLUME;
     }
 
@@ -867,37 +914,22 @@ FormatPartition(
         return STATUS_PARTITION_FAILURE;
     }
 
-    /* Set PartitionRootPath */
-    RtlStringCchPrintfW(PartitionRootPath, ARRAYSIZE(PartitionRootPath),
-                        L"\\Device\\Harddisk%lu\\Partition%lu",
-                        DiskEntry->DiskNumber,
-                        PartEntry->PartitionNumber);
-    DPRINT("PartitionRootPath: %S\n", PartitionRootPath);
+    /* We must have an associated volume now */
+    ASSERT(PartEntry->Volume);
 
-    /* Format the partition */
-    Status = FormatFileSystem(PartitionRootPath,
-                              FileSystemName,
-                              MediaFlag,
-                              Label,
-                              QuickFormat,
-                              ClusterSize,
-                              Callback);
+    /* Format the associated volume */
+    Status = FormatVolume(&PartEntry->Volume->Info,
+                          FileSystemName,
+                          MediaFlag,
+                          Label,
+                          QuickFormat,
+                          ClusterSize,
+                          Callback);
     if (!NT_SUCCESS(Status))
         return Status;
 
-//
-// TODO: Here, call a partlist.c function that update the actual
-// FS name and the label fields of the volume.
-//
-    PartEntry->FormatState = Formatted;
-
-    /* Set the new partition's file system proper */
-    RtlStringCbCopyW(PartEntry->FileSystem,
-                     sizeof(PartEntry->FileSystem),
-                     FileSystemName);
-
-    PartEntry->New = FALSE;
-
+    PartEntry->Volume->FormatState = Formatted;
+    PartEntry->Volume->New = FALSE;
     return STATUS_SUCCESS;
 }
 
@@ -908,17 +940,19 @@ FormatPartition(
 
 static FSVOL_OP
 DoFormatting(
-    _In_ PPARTENTRY PartEntry,
+    _In_ PVOLENTRY Volume,
     _In_opt_ PVOID Context,
     _In_opt_ PFSVOL_CALLBACK FsVolCallback)
 {
     FSVOL_OP Result;
     NTSTATUS Status = STATUS_SUCCESS;
+    PPARTENTRY PartEntry;
     FORMAT_VOLUME_INFO FmtInfo = {0};
 
-    ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
+    PartEntry = Volume->PartEntry;
+    ASSERT(PartEntry && (PartEntry->Volume == Volume));
 
-    FmtInfo.PartEntry = PartEntry;
+    FmtInfo.Volume = Volume;
 
 RetryFormat:
     Result = FsVolCallback(Context,
@@ -964,7 +998,7 @@ EndFormat:
 
 static FSVOL_OP
 DoChecking(
-    _In_ PPARTENTRY PartEntry,
+    _In_ PVOLENTRY Volume,
     _In_opt_ PVOID Context,
     _In_opt_ PFSVOL_CALLBACK FsVolCallback)
 {
@@ -972,11 +1006,9 @@ DoChecking(
     NTSTATUS Status = STATUS_SUCCESS;
     CHECK_VOLUME_INFO ChkInfo = {0};
 
-    ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
+    ASSERT(*Volume->Info.FileSystem);
 
-    ASSERT(*PartEntry->FileSystem);
-
-    ChkInfo.PartEntry = PartEntry;
+    ChkInfo.Volume = Volume;
 
 RetryCheck:
     Result = FsVolCallback(Context,
@@ -986,18 +1018,18 @@ RetryCheck:
     if (Result != FSVOL_DOIT)
         goto EndCheck;
 
-    /* Check the partition */
-    Status = ChkdskPartition(PartEntry,
-                             ChkInfo.FixErrors,
-                             ChkInfo.Verbose,
-                             ChkInfo.CheckOnlyIfDirty,
-                             ChkInfo.ScanDrive,
-                             ChkInfo.Callback);
+    /* Check the volume */
+    Status = ChkdskVolume(&Volume->Info,
+                          ChkInfo.FixErrors,
+                          ChkInfo.Verbose,
+                          ChkInfo.CheckOnlyIfDirty,
+                          ChkInfo.ScanDrive,
+                          ChkInfo.Callback);
 
     /* If volume checking succeeded, or if it is not supported
      * with the current file system, disable checks on the volume */
     if (NT_SUCCESS(Status) || (Status == STATUS_NOT_SUPPORTED))
-        PartEntry->NeedsCheck = FALSE;
+        Volume->NeedsCheck = FALSE;
 
     if (!NT_SUCCESS(Status))
     {
@@ -1012,7 +1044,7 @@ RetryCheck:
             goto RetryCheck;
         // else if (Result == FSVOL_ABORT || Result == FSVOL_SKIP), stop.
 
-        // PartEntry->NeedsCheck = FALSE;
+        // Volume->NeedsCheck = FALSE;
     }
 
 EndCheck:
@@ -1025,125 +1057,44 @@ EndCheck:
     return Result;
 }
 
-static BOOLEAN
-GetNextUnformattedPartition(
-    IN PPARTLIST List,
-    OUT PPARTENTRY *pPartEntry)
+static
+PVOLENTRY
+GetNextUnformattedVolume(
+    _In_ PPARTLIST List,
+    _In_opt_ PVOLENTRY Volume)
 {
-    PLIST_ENTRY Entry1, Entry2;
-    PDISKENTRY DiskEntry;
-    PPARTENTRY PartEntry;
+    PLIST_ENTRY Entry;
 
-    for (Entry1 = List->DiskListHead.Flink;
-         Entry1 != &List->DiskListHead;
-         Entry1 = Entry1->Flink)
+    for (;;)
     {
-        DiskEntry = CONTAINING_RECORD(Entry1,
-                                      DISKENTRY,
-                                      ListEntry);
+        /* If we have a current volume, get the next one, otherwise get the first */
+        Entry = (Volume ? &Volume->ListEntry : &List->VolumesList);
+        Entry = Entry->Flink;
 
-        if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
-        {
-            DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
-            continue;
-        }
+        if (Entry == &List->VolumesList)
+            return NULL;
 
-        for (Entry2 = DiskEntry->PrimaryPartListHead.Flink;
-             Entry2 != &DiskEntry->PrimaryPartListHead;
-             Entry2 = Entry2->Flink)
+        Volume = CONTAINING_RECORD(Entry, VOLENTRY, ListEntry);
+        if (Volume->New && (Volume->FormatState == Unformatted))
         {
-            PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
-            if (PartEntry->IsPartitioned && PartEntry->New)
-            {
-                ASSERT(DiskEntry == PartEntry->DiskEntry);
-                *pPartEntry = PartEntry;
-                return TRUE;
-            }
-        }
-
-        for (Entry2 = DiskEntry->LogicalPartListHead.Flink;
-             Entry2 != &DiskEntry->LogicalPartListHead;
-             Entry2 = Entry2->Flink)
-        {
-            PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
-            if (PartEntry->IsPartitioned && PartEntry->New)
-            {
-                ASSERT(DiskEntry == PartEntry->DiskEntry);
-                *pPartEntry = PartEntry;
-                return TRUE;
-            }
+            /* Found a candidate, return it */
+            return Volume;
         }
     }
-
-    *pPartEntry = NULL;
-    return FALSE;
-}
-
-static BOOLEAN
-GetNextUncheckedPartition(
-    IN PPARTLIST List,
-    OUT PPARTENTRY *pPartEntry)
-{
-    PLIST_ENTRY Entry1, Entry2;
-    PDISKENTRY DiskEntry;
-    PPARTENTRY PartEntry;
-
-    for (Entry1 = List->DiskListHead.Flink;
-         Entry1 != &List->DiskListHead;
-         Entry1 = Entry1->Flink)
-    {
-        DiskEntry = CONTAINING_RECORD(Entry1,
-                                      DISKENTRY,
-                                      ListEntry);
-
-        if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
-        {
-            DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
-            continue;
-        }
-
-        for (Entry2 = DiskEntry->PrimaryPartListHead.Flink;
-             Entry2 != &DiskEntry->PrimaryPartListHead;
-             Entry2 = Entry2->Flink)
-        {
-            PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
-            if (PartEntry->IsPartitioned && PartEntry->NeedsCheck)
-            {
-                ASSERT(DiskEntry == PartEntry->DiskEntry);
-                *pPartEntry = PartEntry;
-                return TRUE;
-            }
-        }
-
-        for (Entry2 = DiskEntry->LogicalPartListHead.Flink;
-             Entry2 != &DiskEntry->LogicalPartListHead;
-             Entry2 = Entry2->Flink)
-        {
-            PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
-            if (PartEntry->IsPartitioned && PartEntry->NeedsCheck)
-            {
-                ASSERT(DiskEntry == PartEntry->DiskEntry);
-                *pPartEntry = PartEntry;
-                return TRUE;
-            }
-        }
-    }
-
-    *pPartEntry = NULL;
-    return FALSE;
 }
 
 BOOLEAN
 FsVolCommitOpsQueue(
     _In_ PPARTLIST PartitionList,
-    _In_ PPARTENTRY SystemPartition,
-    _In_ PPARTENTRY InstallPartition,
+    _In_ PVOLENTRY SystemVolume,
+    _In_ PVOLENTRY InstallVolume,
     _In_opt_ PFSVOL_CALLBACK FsVolCallback,
     _In_opt_ PVOID Context)
 {
     BOOLEAN Success = TRUE; // Suppose success originally.
     FSVOL_OP Result;
-    PPARTENTRY PartEntry;
+    PLIST_ENTRY Entry;
+    PVOLENTRY Volume;
 
     /* Machine state for the format step */
     typedef enum _FORMATMACHINESTATE
@@ -1163,7 +1114,7 @@ FsVolCommitOpsQueue(
         "FormatDone"
     };
 
-    ASSERT(PartitionList && InstallPartition && SystemPartition);
+    ASSERT(PartitionList && SystemVolume && InstallVolume);
 
     /* Commit all partition changes to all the disks */
     if (!WritePartitionsToDisk(PartitionList))
@@ -1184,8 +1135,8 @@ FsVolCommitOpsQueue(
      * we must perform a file system check of both the system and the
      * installation volumes.
      */
-    SystemPartition->NeedsCheck = TRUE;
-    InstallPartition->NeedsCheck = TRUE;
+    SystemVolume->NeedsCheck = TRUE;
+    InstallVolume->NeedsCheck = TRUE;
 
     Result = FsVolCallback(Context,
                            FSVOLNOTIFY_STARTQUEUE,
@@ -1210,8 +1161,8 @@ FsVolCommitOpsQueue(
 
     /* Reset the formatter machine state */
     FormatState = Start;
+    Volume = NULL;
 NextFormat:
-    PartEntry = NULL;
     OldFormatState = FormatState;
     switch (FormatState)
     {
@@ -1223,12 +1174,11 @@ NextFormat:
              * volume. Otherwise we just require a file system check on it,
              * and start by formatting the installation volume instead.
              */
-            ASSERT(SystemPartition->IsPartitioned);
-            if (SystemPartition != InstallPartition)
+            if (SystemVolume != InstallVolume)
             {
-                PartEntry = SystemPartition;
+                Volume = SystemVolume;
 
-                if (PartEntry->FormatState == Unformatted)
+                if (Volume->FormatState == Unformatted)
                 {
                     // TODO: Should we let the user use a custom file system,
                     // or should we always use FAT(32) for it?
@@ -1241,18 +1191,17 @@ NextFormat:
                 }
 
                 /* The system volume is separate, so it had better be formatted! */
-                ASSERT((PartEntry->FormatState == Preformatted) ||
-                       (PartEntry->FormatState == Formatted));
+                ASSERT(Volume->FormatState == Formatted);
 
                 /* Require a file system check on the system volume too */
-                PartEntry->NeedsCheck = TRUE;
+                Volume->NeedsCheck = TRUE;
             }
             __fallthrough;
         }
 
         case FormatSystemVolume:
         {
-            PartEntry = InstallPartition;
+            Volume = InstallVolume;
 
             FormatState = FormatInstallVolume;
             DPRINT1("FormatState: %s --> %s\n",
@@ -1261,15 +1210,16 @@ NextFormat:
         }
 
         case FormatInstallVolume:
+            /* Restart volume enumeration */
+            Volume = NULL;
         case FormatOtherVolume:
         {
-            BOOLEAN Found = GetNextUnformattedPartition(PartitionList, &PartEntry);
-            if (Found) ASSERT(PartEntry);
+            Volume = GetNextUnformattedVolume(PartitionList, Volume);
 
-            FormatState = (PartEntry ? FormatOtherVolume : FormatDone);
+            FormatState = (Volume ? FormatOtherVolume : FormatDone);
             DPRINT1("FormatState: %s --> %s\n",
                     FormatStateNames[OldFormatState], FormatStateNames[FormatState]);
-            if (Found)
+            if (Volume)
                 break;
             __fallthrough;
         }
@@ -1283,15 +1233,14 @@ NextFormat:
         DEFAULT_UNREACHABLE;
     }
 
-    ASSERT(PartEntry);
-    Result = DoFormatting(PartEntry, Context, FsVolCallback);
+    Result = DoFormatting(Volume, Context, FsVolCallback);
     if (Result == FSVOL_ABORT)
     {
         Success = FALSE;
         goto Quit;
     }
     /* Schedule a check for this volume */
-    PartEntry->NeedsCheck = TRUE;
+    Volume->NeedsCheck = TRUE;
     /* Go to the next volume to be formatted */
     goto NextFormat;
 
@@ -1314,24 +1263,27 @@ StartCheckQueue:
     if (Result == FSVOL_ABORT)
         return FALSE;
 
-NextCheck:
-    if (!GetNextUncheckedPartition(PartitionList, &PartEntry))
+    /* Loop through each unchecked volume and do the check */
+    for (Entry = PartitionList->VolumesList.Flink;
+         Entry != &PartitionList->VolumesList;
+         Entry = Entry->Flink)
     {
-        Success = TRUE;
-        goto EndCheck;
-    }
+        Volume = CONTAINING_RECORD(Entry, VOLENTRY, ListEntry);
+        if (!Volume->NeedsCheck)
+            continue;
 
-    ASSERT(PartEntry);
-    Result = DoChecking(PartEntry, Context, FsVolCallback);
-    if (Result == FSVOL_ABORT)
-    {
-        Success = FALSE;
-        goto Quit;
+        /* Found a candidate */
+        ASSERT(Volume->FormatState == Formatted);
+        Result = DoChecking(Volume, Context, FsVolCallback);
+        if (Result == FSVOL_ABORT)
+        {
+            Success = FALSE;
+            goto Quit;
+        }
+        /* Go to the next volume to be checked */
     }
-    /* Go to the next volume to be checked */
-    goto NextCheck;
+    Success = TRUE;
 
-EndCheck:
     FsVolCallback(Context,
                   FSVOLNOTIFY_ENDSUBQUEUE,
                   FSVOL_CHECK,
