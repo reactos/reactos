@@ -1622,7 +1622,7 @@
 @ cdecl strrchr()
 @ cdecl strspn()
 @ cdecl strstr()
-@ cdecl swprintf()
+@ cdecl swprintf() _swprintf # Non-conforming swprintf
 @ cdecl tolower()
 @ cdecl toupper() toupper_nt_mb
 @ cdecl towlower()
