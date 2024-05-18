@@ -926,70 +926,6 @@ InitPartitionDeviceName(
 
 static
 VOID
-InitVolumeDeviceName(
-    _Inout_ PVOLENTRY Volume)
-{
-    NTSTATUS Status;
-    PPARTENTRY PartEntry;
-
-    /* If we already have a volume device name, do nothing more */
-    if (*Volume->Info.DeviceName)
-        return;
-
-    /* Use the partition device name as a temporary volume device name */
-    // TODO: Ask instead the MOUNTMGR for the name.
-    PartEntry = Volume->PartEntry;
-    ASSERT(PartEntry);
-    ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
-
-    /* Copy the volume device name */
-    Status = RtlStringCchCopyW(Volume->Info.DeviceName,
-                               _countof(Volume->Info.DeviceName),
-                               PartEntry->DeviceName);
-    ASSERT(NT_SUCCESS(Status));
-}
-
-static
-PVOLENTRY
-InitVolume(
-    _In_ PPARTLIST List,
-    _In_opt_ PPARTENTRY PartEntry)
-{
-    PVOLENTRY Volume;
-
-    Volume = RtlAllocateHeap(ProcessHeap,
-                             HEAP_ZERO_MEMORY,
-                             sizeof(VOLENTRY));
-    if (!Volume)
-        return NULL;
-
-    /* Reset some volume information */
-
-    /* No device name for now */
-    Volume->Info.DeviceName[0] = UNICODE_NULL;
-    // Volume->Info.VolumeName[0] = UNICODE_NULL;
-
-    /* Initialize the volume letter and label */
-    Volume->Info.DriveLetter = UNICODE_NULL;
-    Volume->Info.VolumeLabel[0] = UNICODE_NULL;
-
-    /* Specify the volume as initially unformatted */
-    Volume->Info.FileSystem[0] = UNICODE_NULL;
-    Volume->FormatState = Unformatted;
-    Volume->NeedsCheck = FALSE;
-    Volume->New = TRUE;
-
-    if (PartEntry)
-    {
-        ASSERT(PartEntry->DiskEntry->PartList == List);
-        Volume->PartEntry = PartEntry;
-    }
-    InsertTailList(&List->VolumesList, &Volume->ListEntry);
-    return Volume;
-}
-
-static
-VOID
 AddPartitionToDisk(
     IN ULONG DiskNumber,
     IN PDISKENTRY DiskEntry,
@@ -1036,63 +972,19 @@ AddPartitionToDisk(
         if (!LogicalPartition && DiskEntry->ExtendedPartition == NULL)
             DiskEntry->ExtendedPartition = PartEntry;
     }
-    else if (IsRecognizedPartition(PartEntry->PartitionType) || // PartitionInfo->RecognizedPartition
-             IsOEMPartition(PartEntry->PartitionType))
-    {
-        PVOLENTRY Volume;
-        NTSTATUS Status;
-
-        ASSERT(PartEntry->PartitionNumber != 0);
-
-        /* The PARTMGR should have notified the MOUNTMGR that a volume
-         * associated with this partition had to be created */
-        Volume = InitVolume(DiskEntry->PartList, PartEntry);
-        if (!Volume)
-        {
-            DPRINT1("Couldn't allocate a volume for device '%S'\n",
-                    PartEntry->DeviceName);
-            goto SkipVolume;
-        }
-        PartEntry->Volume = Volume;
-        InitVolumeDeviceName(Volume);
-        Volume->New = FALSE;
-
-        /* Attach and mount the volume */
-        Status = MountVolume(&Volume->Info, PartEntry->PartitionType);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failed to mount volume '%S', Status 0x%08lx\n",
-                    Volume->Info.DeviceName, Status);
-        }
-
-        //
-        // FIXME: TEMP Backward-compatibility: Set the FormatState
-        // flag in accordance with the FileSystem volume value.
-        //
-        /*
-         * MountVolume() determines whether the given volume is actually
-         * unformatted, if it was mounted with RawFS and the partition
-         * type has specific values for FAT volumes. If so, the volume
-         * stays mounted with RawFS (the FileSystem is "RAW"). However,
-         * if the partition type has different values, the volume is
-         * considered as having an unknown format (it may or may not be
-         * formatted) and the FileSystem value has been emptied.
-         */
-        if (IsUnknown(&Volume->Info))
-            Volume->FormatState = UnknownFormat;
-        else if (IsUnformatted(&Volume->Info)) // FileSystem is "RAW"
-            Volume->FormatState = Unformatted;
-        else // !IsUnknown && !IsUnformatted == IsFormatted
-            Volume->FormatState = Formatted;
-SkipVolume:;
-    }
     else
     {
-        /* Unknown partition (may or may not be actually formatted):
-         * the partition is hidden, hence no volume */
-        DPRINT1("Disk %lu Partition %lu is not recognized (Type 0x%02x)\n",
-                DiskEntry->DiskNumber, PartEntry->PartitionNumber,
-                PartEntry->PartitionType);
+        ASSERT(PartEntry->PartitionNumber != 0);
+
+        if (!IsRecognizedPartition(PartEntry->PartitionType) && // !PartitionInfo->RecognizedPartition
+            !IsOEMPartition(PartEntry->PartitionType))
+        {
+            /* Unknown partition (may or may not be actually formatted):
+             * the partition is hidden, hence no volume */
+            DPRINT1("Disk %lu Partition %lu is not recognized (Type 0x%02x)\n",
+                    DiskEntry->DiskNumber, PartEntry->PartitionNumber,
+                    PartEntry->PartitionType);
+        }
     }
 
     InsertDiskRegion(DiskEntry, PartEntry, LogicalPartition);
@@ -2048,6 +1940,229 @@ GetActiveDiskPartition(
     return ActivePartition;
 }
 
+
+static
+VOID
+InitVolumeDeviceName(
+    _Inout_ PVOLENTRY Volume)
+{
+    NTSTATUS Status;
+    PPARTENTRY PartEntry;
+
+    /* If we already have a volume device name, do nothing more */
+    if (*Volume->Info.DeviceName)
+        return;
+
+    /* Use the partition device name as a temporary volume device name */
+    // TODO: Ask instead the MOUNTMGR for the name.
+    PartEntry = Volume->PartEntry;
+    ASSERT(PartEntry);
+    ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
+
+    /* Copy the volume device name */
+    Status = RtlStringCchCopyW(Volume->Info.DeviceName,
+                               _countof(Volume->Info.DeviceName),
+                               PartEntry->DeviceName);
+    ASSERT(NT_SUCCESS(Status));
+}
+
+// Old name: CreateVolume
+static
+PVOLENTRY
+InitVolume(
+    _In_ PPARTLIST List,
+    _In_opt_ PPARTENTRY PartEntry)
+{
+    PVOLENTRY Volume;
+
+    Volume = RtlAllocateHeap(ProcessHeap,
+                             HEAP_ZERO_MEMORY,
+                             sizeof(VOLENTRY));
+    if (!Volume)
+        return NULL;
+
+    /* Reset some volume information */
+
+    /* No device name for now */
+    Volume->Info.DeviceName[0] = UNICODE_NULL;
+    // Volume->Info.VolumeName[0] = UNICODE_NULL;
+
+    /* Initialize the volume letter and label */
+    Volume->Info.DriveLetter = UNICODE_NULL;
+    Volume->Info.VolumeLabel[0] = UNICODE_NULL;
+
+    /* Specify the volume as initially unformatted */
+    Volume->Info.FileSystem[0] = UNICODE_NULL;
+    Volume->FormatState = Unformatted;
+    Volume->NeedsCheck = FALSE;
+    Volume->New = TRUE;
+
+    if (PartEntry)
+    {
+        ASSERT(PartEntry->DiskEntry->PartList == List);
+        Volume->PartEntry = PartEntry;
+    }
+    InsertTailList(&List->VolumesList, &Volume->ListEntry);
+    return Volume;
+}
+
+// PENUM_DEVICES_PROC
+static NTSTATUS
+NTAPI
+AddVolumeToList(
+    _In_ ULONG_PTR DeviceCtx, // _In_ PCWSTR DevicePath,
+    _In_ HANDLE DeviceHandle,
+    _In_opt_ PVOID Context)
+{
+    PPARTLIST List = (PPARTLIST)Context;
+    NTSTATUS Status;
+    PPARTENTRY PartEntry = (PPARTENTRY)DeviceCtx;
+    PCWSTR DevicePath = PartEntry->DeviceName;
+    PVOLENTRY Volume;
+
+__debugbreak();
+
+    Volume = InitVolume(List, PartEntry);
+    if (!Volume)
+    {
+        DPRINT1("Couldn't allocate a volume for device '%S'\n", DevicePath);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    PartEntry->Volume = Volume;
+    InitVolumeDeviceName(Volume);
+    Volume->New = FALSE;
+
+    /* Attach and mount the volume */
+    Status = MountVolume(&Volume->Info, PartEntry->PartitionType);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to mount volume '%S', Status 0x%08lx\n",
+                Volume->Info.DeviceName, Status);
+    }
+
+    //
+    // FIXME: TEMP Backward-compatibility: Set the FormatState
+    // flag in accordance with the FileSystem volume value.
+    //
+    /*
+     * MountVolume() determines whether the given volume is actually
+     * unformatted, if it was mounted with RawFS and the partition
+     * type has specific values for FAT volumes. If so, the volume
+     * stays mounted with RawFS (the FileSystem is "RAW"). However,
+     * if the partition type has different values, the volume is
+     * considered as having an unknown format (it may or may not be
+     * formatted) and the FileSystem value has been emptied.
+     */
+    if (IsUnknown(&Volume->Info))
+        Volume->FormatState = UnknownFormat;
+    else if (IsUnformatted(&Volume->Info)) // FileSystem is "RAW"
+        Volume->FormatState = Unformatted;
+    else // !IsUnknown && !IsUnformatted == IsFormatted
+        Volume->FormatState = Formatted;
+
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS
+LegacyRecognizeVolumeInPartition(
+    _In_ PPARTENTRY PartEntry,
+    _In_ PENUM_DEVICES_PROC Callback,
+    _In_opt_ PVOID Context)
+{
+    NTSTATUS Status;
+    BOOLEAN IsHandled, IsHidden;
+    PDISKENTRY DiskEntry = PartEntry->DiskEntry;
+    HANDLE DeviceHandle;
+
+    ASSERT(PartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
+    ASSERT(!IsContainerPartition(PartEntry->PartitionType));
+    ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
+
+    /* Don't ever attempt to open the disk as a whole */
+    if (PartEntry->PartitionNumber == 0)
+        return FALSE;
+
+    IsHidden = IsOEMPartition(PartEntry->PartitionType);
+    IsHandled = (IsRecognizedPartition(PartEntry->PartitionType) || IsHidden);
+
+    if (!IsHandled)
+    {
+        /* Unknown partition (may or may not be actually formatted):
+         * the partition is hidden, hence no volume */
+        DPRINT1("Disk %lu Partition %lu is not recognized (Type 0x%02x)\n",
+                DiskEntry->DiskNumber, PartEntry->PartitionNumber,
+                PartEntry->PartitionType);
+        return STATUS_SUCCESS;
+    }
+
+    /* The PARTMGR should have notified the MOUNTMGR that a volume
+     * associated with this partition had to be created */
+
+    Status = pOpenDevice(PartEntry->DeviceName, &DeviceHandle);
+    if (NT_SUCCESS(Status))
+    {
+        /* Do the callback */
+        if (Callback)
+            (void)Callback((ULONG_PTR)PartEntry /*PartEntry->DeviceName*/, DeviceHandle, Context);
+
+        NtClose(DeviceHandle);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS
+pEnumVolumes(
+    _In_ PENUM_DEVICES_PROC Callback,
+    _In_opt_ PVOID Context)
+{
+    /* Enumerate all available disks, and for each, enumerate their
+     * partitions and check whether they can contain a volume */
+
+    PPARTLIST List = (PPARTLIST)Context;
+    PLIST_ENTRY Entry, Entry2;
+    PDISKENTRY DiskEntry;
+    PPARTENTRY PartEntry;
+
+    /* For all disks */
+    for (Entry = List->DiskListHead.Flink;
+         Entry != &List->DiskListHead;
+         Entry = Entry->Flink)
+    {
+        DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
+
+        /* For all primary partitions */
+        for (Entry2 = DiskEntry->PrimaryPartListHead.Flink;
+             Entry2 != &DiskEntry->PrimaryPartListHead;
+             Entry2 = Entry2->Flink)
+        {
+            PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
+            if (!PartEntry->IsPartitioned)
+                continue;
+            ASSERT(PartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
+
+            (void)LegacyRecognizeVolumeInPartition(PartEntry, Callback, Context);
+        }
+
+        /* For all logical partitions */
+        for (Entry2 = DiskEntry->LogicalPartListHead.Flink;
+             Entry2 != &DiskEntry->LogicalPartListHead;
+             Entry2 = Entry2->Flink)
+        {
+            PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
+            if (!PartEntry->IsPartitioned)
+                continue;
+            ASSERT(PartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
+
+            (void)LegacyRecognizeVolumeInPartition(PartEntry, Callback, Context);
+        }
+    }
+
+    // DPRINT1("Detected %lu volumes\n", NumberOfVolumes);
+    return STATUS_SUCCESS;
+}
+
+
 PPARTLIST
 NTAPI
 CreatePartitionList(VOID)
@@ -2081,6 +2196,15 @@ CreatePartitionList(VOID)
         DPRINT1("Failed to enumerate disks on the system, Status 0x%08lx\n", Status);
         RtlFreeHeap(ProcessHeap, 0, List); // DestroyPartitionList(List);
         return NULL;
+    }
+
+    /* Enumerate volumes on the system */
+    Status = pEnumVolumes(AddVolumeToList, List);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to enumerate volumes on the system, Status 0x%08lx\n", Status);
+        // RtlFreeHeap(ProcessHeap, 0, List);
+        // return NULL;
     }
 
     UpdateDiskSignatures(List);
