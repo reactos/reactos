@@ -424,7 +424,7 @@ static int custom_action_server(const WCHAR *arg)
         return 1;
     }
 
-    swprintf(buffer, ARRAY_SIZE(buffer), L"\\\\.\\pipe\\msica_%x_%d", client_pid, sizeof(void *) * 8);
+    swprintf(buffer, ARRAY_SIZE(buffer), L"\\\\.\\pipe\\msica_%x_%lld", client_pid, sizeof(void *) * 8);
     pipe = CreateFileW(buffer, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
     if (pipe == INVALID_HANDLE_VALUE)
     {
