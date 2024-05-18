@@ -707,30 +707,29 @@ InitSystemPartition(
      * In all cases, whether or not we are going to perform a formatting,
      * we must perform a filesystem check of the system partition.
      */
-    SystemPartition->NeedsCheck = TRUE;
+    if (SystemPartition->Volume)
+        SystemPartition->Volume->NeedsCheck = TRUE;
 
     return TRUE;
 }
 
 NTSTATUS
 InitDestinationPaths(
-    IN OUT PUSETUP_DATA pSetupData,
-    IN PCWSTR InstallationDir,
-    IN PPARTENTRY PartEntry)    // FIXME: HACK!
+    _Inout_ PUSETUP_DATA pSetupData,
+    _In_ PCWSTR InstallationDir,
+    _In_ PVOLENTRY Volume)  // FIXME: HACK!
 {
     NTSTATUS Status;
+    PPARTENTRY PartEntry = Volume->PartEntry;
     PDISKENTRY DiskEntry = PartEntry->DiskEntry;
-    WCHAR PathBuffer[MAX_PATH];
+    WCHAR PathBuffer[/*MAX_PATH*/ RTL_NUMBER_OF_FIELD(VOLINFO, DeviceName) + 1];
 
     ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
 
     /* Create 'pSetupData->DestinationRootPath' string */
     RtlFreeUnicodeString(&pSetupData->DestinationRootPath);
-    Status = RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
-                     L"\\Device\\Harddisk%lu\\Partition%lu\\",
-                     DiskEntry->DiskNumber,
-                     PartEntry->PartitionNumber);
-
+    Status = RtlStringCchPrintfW(PathBuffer, _countof(PathBuffer),
+                                 L"%s\\", Volume->Info.DeviceName);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("RtlStringCchPrintfW() failed with status 0x%08lx\n", Status);

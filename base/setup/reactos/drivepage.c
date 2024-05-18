@@ -304,6 +304,7 @@ PrintPartitionData(
     IN PDISKENTRY DiskEntry,
     IN PPARTENTRY PartEntry)
 {
+    PVOLENTRY Volume = PartEntry->Volume;
     LARGE_INTEGER PartSize;
     HTLITEM htiPart;
     CHAR PartTypeString[32];
@@ -322,9 +323,9 @@ PrintPartitionData(
         StringCchPrintfW(LineBuffer, ARRAYSIZE(LineBuffer),
                          // MUIGetString(STRING_HDDINFOUNK5),
                          L"%s (%c%c)",
-                         *PartEntry->VolumeLabel ? PartEntry->VolumeLabel : L"Partition",
-                         (PartEntry->DriveLetter == 0) ? L'-' : PartEntry->DriveLetter,
-                         (PartEntry->DriveLetter == 0) ? L'-' : L':');
+                         (Volume && *Volume->Info.VolumeLabel) ? Volume->Info.VolumeLabel : L"Partition",
+                         !Volume || (Volume->Info.DriveLetter == 0) ? L'-' : Volume->Info.DriveLetter,
+                         !Volume || (Volume->Info.DriveLetter == 0) ? L'-' : L':');
     }
 
     htiPart = TreeListAddItem(hWndList, htiParent, LineBuffer,
@@ -734,8 +735,8 @@ DriveDlgProc(
 
                             if (PartEntry->IsPartitioned &&
                                 !IsContainerPartition(PartEntry->PartitionType) /* alternatively: PartEntry->PartitionNumber != 0 */ &&
-                                // !PartEntry->New &&
-                                (PartEntry->FormatState == Preformatted /* || PartEntry->FormatState == Formatted */))
+                                // !PartEntry->New && PartEntry->Volume && !PartEntry->Volume->New &&
+                                (PartEntry->Volume->FormatState == Formatted))
                             {
                                 PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                             }
@@ -812,11 +813,12 @@ DisableWizNext:
                     DiskEntry.HwFixedDiskNumber = 0;
                     PartEntry.DiskEntry = &DiskEntry;
                     PartEntry.PartitionNumber = 1; // 4;
+                    PartEntry.Volume = NULL;
                     /****/
 
                     Status = InitDestinationPaths(&pSetupData->USetupData,
                                                   NULL, // pSetupData->USetupData.InstallationDirectory,
-                                                  &PartEntry);
+                                                  PartEntry.Volume);
 
                     if (!NT_SUCCESS(Status))
                     {
