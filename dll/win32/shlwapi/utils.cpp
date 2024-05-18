@@ -153,7 +153,7 @@ IShellFolder_GetDisplayNameOf(
 {
     HRESULT hr;
 
-    TRACE("(%p, %p, 0x%lX, %p, 0x%lX)\n", psf, pidl, uFlags, lpName, dwRetryFlags);
+    TRACE("(%p)->(%p, 0x%lX, %p, 0x%lX)\n", psf, pidl, uFlags, lpName, dwRetryFlags);
 
     hr = psf->GetDisplayNameOf(pidl, uFlags, lpName);
     if (!SHLWAPI_IsBogusHRESULT(hr))
@@ -185,8 +185,8 @@ IShellFolder_ParseDisplayName(
 {
     ULONG dummy1, dummy2;
 
-    TRACE("(%p, %p, %s, %p, %p, %p)\n", hwndOwner, pbcReserved, debugstr_w(lpszDisplayName),
-                                        pchEaten, ppidl, pdwAttributes);
+    TRACE("(%p)->(%p, %p, %s, %p, %p, %p)\n", psf, hwndOwner, pbcReserved,
+          debugstr_w(lpszDisplayName), pchEaten, ppidl, pdwAttributes);
 
     if (!pdwAttributes)
     {
