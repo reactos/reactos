@@ -12,25 +12,12 @@
  *  - many flags unimplemented
  */
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
+#include "precomp.h"
 
-#include <windef.h>
-#include <winbase.h>
-#include <shlobj.h>
-#include <undocshell.h>
-#include <shellapi.h>
-#include <shlwapi.h>
-#include <atlbase.h>
-#include <atlcom.h>
-#include <shellutils.h>
-#include <wine/debug.h>
-#include <wine/unicode.h>
-
-#include "pidl.h"
-#include "shell32_main.h"
+#include "wine/pidl.h"
+#include "wine/shell32_main.h"
 #include "shresdef.h"
-#include "ui/layout.h" /* Resizable window */
+#include <ui/layout.h> /* Resizable window */
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -1158,35 +1145,24 @@ LPITEMIDLIST WINAPI SHBrowseForFolderA (LPBROWSEINFOA lpbi)
 
 /*************************************************************************
  * SHBrowseForFolderW [SHELL32.@]
- *
- * NOTES
- *  crashes when passed a null pointer
  */
 EXTERN_C
-LPITEMIDLIST WINAPI SHBrowseForFolderW (LPBROWSEINFOW lpbi)
+LPITEMIDLIST WINAPI SHBrowseForFolderW(LPBROWSEINFOW lpbi)
 {
-    browse_info info;
-    INT_PTR r;
-    HRESULT hr;
-    WORD wDlgId;
+    TRACE("%p\n", lpbi);
 
-    info.hWnd = NULL;
-    info.pidlRet = NULL;
+    browse_info info = { NULL };
     info.lpBrowseInfo = lpbi;
-    info.hwndTreeView = NULL;
-    info.layout = NULL;
 
-    hr = OleInitialize(NULL);
+    HRESULT hr = OleInitialize(NULL);
 
-    wDlgId = ((lpbi->ulFlags & BIF_USENEWUI) ? IDD_BROWSE_FOR_FOLDER_NEW : IDD_BROWSE_FOR_FOLDER);
-
-    r = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(wDlgId), lpbi->hwndOwner,
-                        BrsFolderDlgProc, (LPARAM)&info );
-
+    INT id = ((lpbi->ulFlags & BIF_USENEWUI) ? IDD_BROWSE_FOR_FOLDER_NEW : IDD_BROWSE_FOR_FOLDER);
+    INT_PTR ret = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(id), lpbi->hwndOwner,
+                                  BrsFolderDlgProc, (LPARAM)&info);
     if (SUCCEEDED(hr))
         OleUninitialize();
 
-    if (!r)
+    if (!ret)
     {
         ILFree(info.pidlRet);
         return NULL;
