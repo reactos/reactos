@@ -1,0 +1,187 @@
+﻿LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+ID_ACCEL ACCELERATORS
+BEGIN
+    "^A", CMD_SELECT_ALL
+    "^C", CMD_COPY
+    "^F", CMD_SEARCH
+    "^G", CMD_GOTO
+    "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
+    "N", CMD_NEW_WINDOW, VIRTKEY,CONTROL , SHIFT
+    "^O", CMD_OPEN
+    "^P", CMD_PRINT
+    "^S", CMD_SAVE
+    "^V", CMD_PASTE
+    "^X", CMD_CUT
+    "^Z", CMD_UNDO
+    VK_F3, CMD_SEARCH_NEXT, VIRTKEY
+    VK_F3, CMD_SEARCH_PREV, VIRTKEY, SHIFT
+    VK_F5, CMD_TIME_DATE, VIRTKEY
+END
+
+MAIN_MENU MENU
+BEGIN
+    POPUP "파일(&F)"
+    BEGIN
+        MENUITEM "새로 만들기(&N)\tCtrl+N", CMD_NEW
+        MENUITEM "새창 만들기(&W)\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "열기(&O)...\tCtrl+O", CMD_OPEN
+        MENUITEM "저장(&S)\tCtrl+S", CMD_SAVE
+        MENUITEM "다른 이름으로 저장(&A)...", CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "페이지 설정(&U)...", CMD_PAGE_SETUP
+        MENUITEM "인쇄(&P)...\tCtrl+P", CMD_PRINT
+        MENUITEM SEPARATOR
+        MENUITEM "종료(&X)", CMD_EXIT
+    END
+    POPUP "편집(&E)"
+    BEGIN
+        MENUITEM "실행 취소(&U)\tCtrl+Z", CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "잘라내기(&T)\tCtrl+X", CMD_CUT
+        MENUITEM "복사(&C)\tCtrl+C", CMD_COPY
+        MENUITEM "붙여넣기(&P)\tCtrl+V", CMD_PASTE
+        MENUITEM "삭제(&L)\tDel", CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "찾기(&F)...\tCtrl+F", CMD_SEARCH
+        MENUITEM "다음 찾기(&N)\tF3", CMD_SEARCH_NEXT
+        MENUITEM "바꾸기(&R)...\tCtrl+H", CMD_REPLACE
+        MENUITEM "이동(&G)...\tCtrl+G", CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "모두 선택(&A)\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "시간/날짜(&D)\tF5", CMD_TIME_DATE
+    END
+    POPUP "형식(&O)"
+    BEGIN
+        MENUITEM "줄바꿈(&W)", CMD_WRAP
+        MENUITEM "글꼴(&F)...", CMD_FONT
+    END
+    POPUP "보기(&V)"
+    BEGIN
+        MENUITEM "상태 표시줄(&S)", CMD_STATUSBAR
+    END
+    POPUP "도움말(&H)"
+    BEGIN
+        MENUITEM "도움말 보기(&H)", CMD_HELP_CONTENTS
+        MENUITEM SEPARATOR
+        MENUITEM "Notepad 정보(&A)", CMD_HELP_ABOUT_NOTEPAD
+    END
+END
+
+/* Dialog 'Page setup' */
+DIALOG_PAGESETUP DIALOGEX 0, 0, 365, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+FONT 8, "MS Shell Dlg"
+CAPTION "페이지 설정"
+BEGIN
+    GROUPBOX "미리보기", 0, 240, 6, 120, 153, BS_GROUPBOX
+    CONTROL "", rct1, "고정", SS_WHITERECT, 260, 42, 80, 80
+    CONTROL "", rct2, "고정", SS_GRAYRECT, 340, 46, 4, 80
+    CONTROL "", rct3, "고정", SS_GRAYRECT, 264, 122, 80, 4
+    GROUPBOX "용지", grp2, 8, 6, 224, 56, BS_GROUPBOX
+    LTEXT "크기(&S):", stc2, 16, 22, 36, 8
+    COMBOBOX cmb2, 64, 20, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    LTEXT "트레이(&T):", stc3, 16, 42, 36, 8
+    COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    GROUPBOX "방향", grp1, 8, 66, 64, 56, BS_GROUPBOX
+    AUTORADIOBUTTON "세로(&P)", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
+    AUTORADIOBUTTON "가로(&L)", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
+    GROUPBOX "테두리", grp4, 80, 66, 152, 56, BS_GROUPBOX
+    LTEXT "왼쪽(&E):", stc15, 88, 82, 30, 8
+    EDITTEXT edt4, 119, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "오른쪽(&R):", stc16, 159, 82, 30, 8
+    EDITTEXT edt6, 190, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "상단(&O):", stc17, 88, 102, 30, 8
+    EDITTEXT edt5, 119, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "하단(&B):", stc18, 159, 102, 30, 8
+    EDITTEXT edt7, 190, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
+    LTEXT "머리말(&H):", 0x140, 8, 132, 40, 15
+    EDITTEXT 0x141, 58, 130, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "꼬리말(&F):", 0x142, 8, 149, 40, 15
+    EDITTEXT 0x143, 58, 147, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
+    PUSHBUTTON "도움말", IDHELP, 8, 170, 50, 14
+    DEFPUSHBUTTON "확인", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
+    PUSHBUTTON "취소", IDCANCEL, 254, 170, 50, 14
+    PUSHBUTTON "프린터(&R)...", psh3, 310, 170, 50, 14
+END
+
+/* Dialog 'Encoding' */
+DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "인코딩"
+BEGIN
+    COMBOBOX ID_ENCODING, 124, 0, 125, 80, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT "인코딩:", 0x155, 65, 2, 41, 12
+    COMBOBOX ID_EOLN, 124, 18, 125, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "끝 줄:", 0x156, 65, 20, 41, 12
+END
+
+/* Dialog 'Go To' */
+DIALOG_GOTO DIALOGEX 0, 0, 165, 50
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "줄 이동"
+BEGIN
+    LTEXT "줄 번호:", 0x155, 5, 12, 41, 12
+    EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, ES_NUMBER
+    DEFPUSHBUTTON "확인", IDOK, 75, 30, 40, 15
+    PUSHBUTTON "취소", IDCANCEL, 120, 30, 40, 15
+END
+
+DIALOG_PRINTING DIALOG 0, 0, 160, 100
+CAPTION "지금 인쇄"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CTEXT "인쇄 작업 시작 중...", IDC_PRINTING_STATUS, 5, 10, 150, 15
+    CTEXT "(파일 이름)", IDC_PRINTING_FILENAME, 5, 35, 150, 15
+    CTEXT "페이지 %u", IDC_PRINTING_PAGE, 5, 55, 150, 15
+    PUSHBUTTON "취소", IDCANCEL, 50, 75, 60, 20
+END
+
+STRINGTABLE
+BEGIN
+    STRING_PAGESETUP_HEADERVALUE "&f"
+    STRING_PAGESETUP_FOOTERVALUE "페이지 &p"
+    STRING_NOTEPAD "Notepad"
+    STRING_ERROR "오류"
+    STRING_WARNING "경고"
+    STRING_INFO "정보"
+    STRING_UNTITLED "제목 없음"
+    STRING_ALL_FILES "모든 파일 (*.*)"
+    STRING_TEXT_FILES_TXT "텍스트 파일 (*.txt)"
+    STRING_TOOLARGE "'%s' 파일이 메모장에 사용하기에 너무 큽니다.\n\
+Please use a different editor."
+    STRING_NOTEXT "텍스트를 입력하지 않았습니다.\n\
+Please type something and try again"
+    STRING_DOESNOTEXIST "'%s' 파일이\n존재하지 않습니다\n\n\
+Do you want to create a new file?"
+    STRING_NOTSAVED "'%s' 파일\n수정되었습니다\n\n\
+Would you like to save the changes?"
+    STRING_NOTFOUND "'%s'을(를) 찾을 수 없습니다."
+    STRING_OUT_OF_MEMORY "메모리가 부족하여 이 작업을 완료할 수 없습니다.\n\
+Close one or more applications to increase the amount of\nfree memory."
+    STRING_CANNOTFIND "'%s'을(를) 찾을 수 없습니다'"
+    STRING_ANSI "ANSI"
+    STRING_UNICODE "유니코드"
+    STRING_UNICODE_BE "유니코드 (big endian)"
+    STRING_UTF8 "UTF-8"
+    STRING_UTF8_BOM "UTF-8 (BOM 포함)"
+    STRING_CRLF "Windows (CR + LF)"
+    STRING_LF "Unix (LF)"
+    STRING_CR "Mac (CR)"
+    STRING_LINE_COLUMN "줄 %d, 열 %d"
+    STRING_PRINTERROR "'%s' 파일을 인쇄할 수 없습니다.\n\n프린터가 켜져 있고 올바르게 구성되었는지 확인합니다."
+    STRING_DEFAULTFONT "Lucida 콘솔"
+    STRING_LINE_NUMBER_OUT_OF_RANGE "지정한 줄 번호가 범위를 벗어났습니다."
+    STRING_NOWPRINTING "지금 인쇄 중 페이지..."
+    STRING_PRINTCANCELING "인쇄 작업을 취소하는 중..."
+    STRING_PRINTCOMPLETE "인쇄가 성공적으로 완료되었습니다."
+    STRING_PRINTCANCELED "인쇄가 취소되었습니다."
+    STRING_PRINTFAILED "인쇄에 실패했습니다."
+
+    STRING_TEXT_DOCUMENT "텍스트 문서"
+    STRING_NOTEPAD_AUTHORS "Copyright 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"
+END
