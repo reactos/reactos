@@ -26,6 +26,12 @@
       ((PartitionType) == PARTITION_DELL)        || \
       ((PartitionType) == PARTITION_IBM) )
 
+#define IsLDMPartition(PartitionType) \
+    ((PartitionType) == PARTITION_LDM) /* || \
+     (PartitionType) == 0x8E || // Linux LVM \
+     (PartitionType) == PARTITION_SPACES_DATA || \
+     (PartitionType) == PARTITION_SPACES) */
+
 
 /* PARTITION UTILITY FUNCTIONS **********************************************/
 
@@ -103,7 +109,8 @@ typedef struct _DISKENTRY
     /* The list of disks/partitions this disk belongs to */
     struct _PARTLIST *PartList;
 
-    MEDIA_TYPE MediaType;   /* FixedMedia or RemovableMedia */
+    MEDIA_TYPE MediaType;   ///< FixedMedia or RemovableMedia
+    BOOLEAN IsDynamic;      ///< TRUE for dynamic (LDM/LVM) or FALSE for basic disk
 
     /* Disk geometry */
 

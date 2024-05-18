@@ -21,6 +21,8 @@ typedef struct _VOLINFO
     WCHAR VolumeLabel[MAXIMUM_VOLUME_LABEL_LENGTH / sizeof(WCHAR) + 1]; ///< Volume label, NUL-terminated
     WCHAR FileSystem[MAX_PATH+1];
 
+    BOOLEAN IsSimpleVolume;
+
     // VOLUME_TYPE VolumeType;
     // ULARGE_INTEGER Size;
     // PVOLUME_DISK_EXTENTS Extents;
