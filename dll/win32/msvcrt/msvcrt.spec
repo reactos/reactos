@@ -1460,7 +1460,7 @@
 @ cdecl strtoul(str ptr long)
 @ cdecl -impsym strtoull(str ptr long) _strtoui64
 @ cdecl strxfrm(ptr str long)
-@ varargs swprintf(ptr wstr) _swprintf
+@ varargs swprintf(ptr wstr) _swprintf # Non-conforming swprintf
 @ varargs -version=0x600+ swprintf_s(ptr long wstr)
 @ varargs swscanf(wstr wstr)
 @ varargs -version=0x600+ swscanf_s(wstr wstr)
@@ -1492,7 +1492,7 @@
 @ cdecl -version=0x600+ vsnprintf(ptr long str ptr) _vsnprintf
 @ cdecl vsprintf(ptr str ptr)
 @ cdecl -version=0x600+ vsprintf_s(ptr long str ptr)
-@ cdecl vswprintf(ptr wstr ptr) _vswprintf
+@ cdecl vswprintf(ptr wstr ptr) _vswprintf # Non-conforming vswprintf
 @ cdecl -version=0x600+ vswprintf_s(ptr long wstr ptr)
 @ cdecl vwprintf(wstr ptr)
 @ cdecl -version=0x600+ vwprintf_s(wstr ptr)
