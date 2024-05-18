@@ -3142,7 +3142,7 @@ static void dialog_vcl_add_drives( msi_dialog *dialog, struct control *control )
 #endif
     int i = 0;
 
-    cost = vcl_get_cost(dialog);
+    cost = vcl_get_cost(dialog) * 512;
     StrFormatByteSizeW(cost, cost_text, MAX_PATH);
 
     size = GetLogicalDriveStringsW( 0, NULL );
