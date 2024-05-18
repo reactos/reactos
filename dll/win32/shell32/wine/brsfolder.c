@@ -108,7 +108,7 @@ BrsFolder_GetDataFromItem(browse_info *info, HTREEITEM hItem)
 {
     TVITEMW item = { TVIF_HANDLE | TVIF_PARAM };
     item.hItem = hItem;
-    TreeView_GetItem(info->hwndTreeView, item.lParam);
+    TreeView_GetItem(info->hwndTreeView, &item);
     return (LPTV_ITEMDATA)item.lParam;
 }
 
