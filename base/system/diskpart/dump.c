@@ -90,7 +90,7 @@ DumpDisk(
         goto done;
     }
 
-    swprintf(Buffer,
+    _swprintf(Buffer,
              L"\\Device\\Harddisk%d\\Partition0",
              CurrentDisk->DiskNumber);
     RtlInitUnicodeString(&Name,
@@ -195,7 +195,7 @@ DumpPartition(
         goto done;
     }
 
-    swprintf(Buffer,
+    _swprintf(Buffer,
              L"\\Device\\Harddisk%d\\Partition%d",
              CurrentDisk->DiskNumber,
              CurrentPartition->PartitionNumber);

@@ -66,7 +66,7 @@ CEnumTuningSpaces::QueryInterface(
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
     StringFromCLSID(refiid, &lpstr);
-    swprintf(Buffer, L"CEnumTuningSpaces::QueryInterface: NoInterface for %s\n", lpstr);
+    _swprintf(Buffer, L"CEnumTuningSpaces::QueryInterface: NoInterface for %s\n", lpstr);
     OutputDebugStringW(Buffer);
     CoTaskMemFree(lpstr);
 
@@ -123,7 +123,7 @@ CEnumTuningSpaces_fnConstructor(
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
     StringFromCLSID(riid, &lpstr);
-    swprintf(Buffer, L"CEnumTuningSpaces_fnConstructor riid %s pUnknown %p\n", lpstr, pUnknown);
+    _swprintf(Buffer, L"CEnumTuningSpaces_fnConstructor riid %s pUnknown %p\n", lpstr, pUnknown);
     OutputDebugStringW(Buffer);
 #endif
 

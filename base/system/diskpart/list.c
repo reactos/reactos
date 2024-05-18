@@ -52,7 +52,7 @@ PrintSize(
                 nUnitId,
                 szUnitBuffer, ARRAYSIZE(szUnitBuffer));
 
-    swprintf(pszOutBuffer, L"%4I64u %-2s", ullSize, szUnitBuffer);
+    _swprintf(pszOutBuffer, L"%4I64u %-2s", ullSize, szUnitBuffer);
     StringCchPrintfW(pszOutBuffer,
                      ulOutBufferSize,
                      L"%4I64u %-2s", ullSize, szUnitBuffer);

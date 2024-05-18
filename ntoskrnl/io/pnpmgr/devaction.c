@@ -1462,7 +1462,7 @@ IopSetServiceEnumData(
         }
 
         /* Set the instance path */
-        swprintf(ValueBuffer, L"%lu", NextInstance);
+        _swprintf(ValueBuffer, L"%lu", NextInstance);
         RtlInitUnicodeString(&ValueName, ValueBuffer);
         Status = ZwSetValueKey(ServiceEnumKey,
                                &ValueName,

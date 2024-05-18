@@ -431,7 +431,7 @@ CsrCreateSessionObjectDirectory(IN ULONG Session)
     NTSTATUS Status;
 
     /* Generate the Session BNOLINKS Directory name */
-    swprintf(SessionBuffer, L"%ws\\BNOLINKS", SESSION_ROOT);
+    _swprintf(SessionBuffer, L"%ws\\BNOLINKS", SESSION_ROOT);
     RtlInitUnicodeString(&SessionString, SessionBuffer);
 
     /* Create it */
@@ -451,14 +451,14 @@ CsrCreateSessionObjectDirectory(IN ULONG Session)
     }
 
     /* Now add the Session ID */
-    swprintf(SessionBuffer, L"%ld", Session);
+    _swprintf(SessionBuffer, L"%ld", Session);
     RtlInitUnicodeString(&SessionString, SessionBuffer);
 
     /* Check if this is the first Session */
     if (Session)
     {
         /* Not the first, so the name will be slighly more complex */
-        swprintf(BnoBuffer, L"%ws\\%ld\\BaseNamedObjects", SESSION_ROOT, Session);
+        _swprintf(BnoBuffer, L"%ws\\%ld\\BaseNamedObjects", SESSION_ROOT, Session);
         RtlInitUnicodeString(&BnoString, BnoBuffer);
     }
     else
@@ -489,7 +489,7 @@ CsrCreateSessionObjectDirectory(IN ULONG Session)
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Now create a directory for this session */
-    swprintf(SessionBuffer, L"%ws\\%ld", SESSION_ROOT, Session);
+    _swprintf(SessionBuffer, L"%ws\\%ld", SESSION_ROOT, Session);
     RtlInitUnicodeString(&SessionString, SessionBuffer);
 
     /* Create the directory */

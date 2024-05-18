@@ -307,7 +307,7 @@ FindProductName(
     for(Index = 0; Index < KeyInformation->SubKeys; Index++)
     {
         /* subkeys are always in the format 0000-XXXX */
-        swprintf(SubKey, L"%04u", Index);
+        _swprintf(SubKey, L"%04u", Index);
 
         /* initialize subkey name */
         RtlInitUnicodeString(&SubKeyName, SubKey);

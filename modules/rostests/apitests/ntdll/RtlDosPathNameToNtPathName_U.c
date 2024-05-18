@@ -189,13 +189,13 @@ static void test(const char* psz, const char* pszExpected, const char* pszExpect
 	WCHAR wszTmp3[512];
 	LPCWSTR p2 = 0;
 	LPCWSTR p3 = 0;
-	swprintf(wszTmp1, L"%S", psz);
+	_swprintf(wszTmp1, L"%S", psz);
 	if (pszExpected) {
-		swprintf(wszTmp2, L"%S", pszExpected);
+		_swprintf(wszTmp2, L"%S", pszExpected);
 		p2 = wszTmp2;
 	}
 	if (pszExpectedPartName) {
-		swprintf(wszTmp3, L"%S", pszExpectedPartName);
+		_swprintf(wszTmp3, L"%S", pszExpectedPartName);
 		p3 = wszTmp3;
 	}
 	test2(wszTmp1, p2, p3);

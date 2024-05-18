@@ -92,7 +92,7 @@ CScanningTunner::QueryInterface(
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
     StringFromCLSID(refiid, &lpstr);
-    swprintf(Buffer, L"CScanningTunner::QueryInterface: NoInterface for %s\n", lpstr);
+    _swprintf(Buffer, L"CScanningTunner::QueryInterface: NoInterface for %s\n", lpstr);
     OutputDebugStringW(Buffer);
     CoTaskMemFree(lpstr);
 
@@ -312,8 +312,8 @@ CScanningTunner::performDVBTTune(
 
 
     WCHAR Buffer[1000];
-    swprintf(Buffer, L"BandWidth %lu Frequency %lu Rate %lu InnerFEC %ld OuterFEC %ld InnerFECRate %ld OuterFECRate %ld Modulation %lu\n",
-             BandWidth, Frequency, SymbolRate, InnerFEC, OuterFEC, InnerFECRate, OuterFECRate, Modulation);
+    _swprintf(Buffer, L"BandWidth %lu Frequency %lu Rate %lu InnerFEC %ld OuterFEC %ld InnerFECRate %ld OuterFECRate %ld Modulation %lu\n",
+              BandWidth, Frequency, SymbolRate, InnerFEC, OuterFEC, InnerFECRate, OuterFECRate, Modulation);
 
     OutputDebugStringW(Buffer);
 
@@ -335,7 +335,7 @@ CScanningTunner::performDVBTTune(
         hr = pTopo->GetControlNode(0, 1, 0, &pNode); //HACK
 
         WCHAR Buffer[100];
-        swprintf(Buffer, L"CScanningTunner::performDVBTTune GetControlNode %lx\n", hr);
+        _swprintf(Buffer, L"CScanningTunner::performDVBTTune GetControlNode %lx\n", hr);
         OutputDebugStringW(Buffer);
 
         if (FAILED(hr))
@@ -347,7 +347,7 @@ CScanningTunner::performDVBTTune(
 
         hr = pNode->QueryInterface(IID_IBDA_FrequencyFilter, (void**)&pFrequency);
 
-        swprintf(Buffer, L"CScanningTunner::performDVBTTune IID_IBDA_FrequencyFilter hr %lx\n", hr);
+        _swprintf(Buffer, L"CScanningTunner::performDVBTTune IID_IBDA_FrequencyFilter hr %lx\n", hr);
         OutputDebugStringW(Buffer);
 
         // sanity check
@@ -355,7 +355,7 @@ CScanningTunner::performDVBTTune(
 
         hr = SetFrequency(pFrequency, 1000 /* FIXME */, Frequency, BDA_POLARISATION_NOT_DEFINED /* FIXME */, BDA_RANGE_NOT_SET /* FIXME */, BandWidth);
 
-        swprintf(Buffer, L"CScanningTunner::performDVBTTune SetFrequency hr %lx\n", hr);
+        _swprintf(Buffer, L"CScanningTunner::performDVBTTune SetFrequency hr %lx\n", hr);
         OutputDebugStringW(Buffer);
 
         //sanity check
@@ -367,7 +367,7 @@ CScanningTunner::performDVBTTune(
 
         hr = pNode->QueryInterface(IID_IBDA_LNBInfo, (void**)&pLnbInfo);
 
-        swprintf(Buffer, L"CScanningTunner::performDVBTTune IID_IBDA_LNBInfo hr %lx\n", hr);
+        _swprintf(Buffer, L"CScanningTunner::performDVBTTune IID_IBDA_LNBInfo hr %lx\n", hr);
         OutputDebugStringW(Buffer);
 
         // sanity check
@@ -376,7 +376,7 @@ CScanningTunner::performDVBTTune(
         hr = SetLnbInfo(pLnbInfo, ULONG_MAX /* FIXME */, ULONG_MAX /* FIXME*/, ULONG_MAX /*FIXME*/);
 
 
-        swprintf(Buffer, L"CScanningTunner::performDVBTTune SetLnbInfo hr %lx\n", hr);
+        _swprintf(Buffer, L"CScanningTunner::performDVBTTune SetLnbInfo hr %lx\n", hr);
         OutputDebugStringW(Buffer);
 
         // sanity check
@@ -387,7 +387,7 @@ CScanningTunner::performDVBTTune(
 
         hr = pNode->QueryInterface(IID_IBDA_DigitalDemodulator, (void**)&pDigitalDemo);
 
-        swprintf(Buffer, L"CScanningTunner::performDVBTTune IID_IBDA_DigitalDemodulator hr %lx\n", hr);
+        _swprintf(Buffer, L"CScanningTunner::performDVBTTune IID_IBDA_DigitalDemodulator hr %lx\n", hr);
         OutputDebugStringW(Buffer);
 
         // sanity check
@@ -395,7 +395,7 @@ CScanningTunner::performDVBTTune(
 
         hr = SetDigitalDemodulator(pDigitalDemo, Modulation, InnerFEC, InnerFECRate, OuterFEC, OuterFECRate, SymbolRate);
 
-        swprintf(Buffer, L"CScanningTunner::performDVBTTune SetDigitalDemodulator hr %lx\n", hr);
+        _swprintf(Buffer, L"CScanningTunner::performDVBTTune SetDigitalDemodulator hr %lx\n", hr);
         OutputDebugStringW(Buffer);
 
         // sanity check
@@ -704,7 +704,7 @@ CScanningTunner_fnConstructor(
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
     StringFromCLSID(riid, &lpstr);
-    swprintf(Buffer, L"CScanningTunner_fnConstructor riid %s\n", lpstr);
+    _swprintf(Buffer, L"CScanningTunner_fnConstructor riid %s\n", lpstr);
     OutputDebugStringW(Buffer);
 #endif
 

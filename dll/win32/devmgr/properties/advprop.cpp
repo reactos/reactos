@@ -226,8 +226,8 @@ UpdateDriverVersionInfoDetails(IN HWND hwndDlg,
         goto done;
 
     dwLangId = *(LPDWORD)lpInfo;
-    swprintf(szLangInfo, L"\\StringFileInfo\\%04x%04x\\",
-             LOWORD(dwLangId), HIWORD(dwLangId));
+    _swprintf(szLangInfo, L"\\StringFileInfo\\%04x%04x\\",
+              LOWORD(dwLangId), HIWORD(dwLangId));
 
     /* read CompanyName */
     wcscpy(szLangPath, szLangInfo);
@@ -900,7 +900,7 @@ DisplayDevicePropertyText(IN PDEVADVPROP_INFO dap,
     {
         if (GetLastError() != ERROR_FILE_NOT_FOUND)
         {
-            swprintf(dap->szTemp, L"Error: Getting the size failed! (Error: %ld)", GetLastError());
+            _swprintf(dap->szTemp, L"Error: Getting the size failed! (Error: %ld)", GetLastError());
             SetListViewText(hwndListView, 0, dap->szTemp);
         }
         return;
@@ -952,7 +952,7 @@ DisplayDevicePropertyText(IN PDEVADVPROP_INFO dap,
             {
                 case SPDRP_CAPABILITIES:
                     index = 0;
-                    swprintf(dap->szTemp, L"%08lx", dwValue);
+                    _swprintf(dap->szTemp, L"%08lx", dwValue);
                     SetListViewText(hwndListView, index++, dap->szTemp);
                     if (dwValue & CM_DEVCAP_LOCKSUPPORTED)
                         SetListViewText(hwndListView, index++, L"CM_DEVCAP_LOCKSUPPORTED");
@@ -978,7 +978,7 @@ DisplayDevicePropertyText(IN PDEVADVPROP_INFO dap,
 
                 case SPDRP_CONFIGFLAGS:
                     index = 0;
-                    swprintf(dap->szTemp, L"%08lx", dwValue);
+                    _swprintf(dap->szTemp, L"%08lx", dwValue);
                     SetListViewText(hwndListView, index++, dap->szTemp);
                     if (dwValue & CONFIGFLAG_DISABLED)
                         SetListViewText(hwndListView, index++, L"CONFIGFLAG_DISABLED");
@@ -1003,7 +1003,7 @@ DisplayDevicePropertyText(IN PDEVADVPROP_INFO dap,
                     break;
 
                 default:
-                    swprintf(dap->szTemp, L"0x%08lx", dwValue);
+                    _swprintf(dap->szTemp, L"0x%08lx", dwValue);
                     SetListViewText(hwndListView, 0, dap->szTemp);
                     break;
             }
@@ -1039,7 +1039,7 @@ DisplayDevNodeFlags(IN PDEVADVPROP_INFO dap,
                              dap->hMachine);
 
     index = 0;
-    swprintf(dap->szTemp, L"%08lx", dwStatus);
+    _swprintf(dap->szTemp, L"%08lx", dwStatus);
     SetListViewText(hwndListView, index++, dap->szTemp);
     if (dwStatus & DN_ROOT_ENUMERATED)
         SetListViewText(hwndListView, index++, L"DN_ROOT_ENUMERATED");
@@ -1155,7 +1155,7 @@ DisplayCsFlags(IN PDEVADVPROP_INFO dap,
                             dap->hMachine);
 
     index = 0;
-    swprintf(dap->szTemp, L"%08lx", dwValue);
+    _swprintf(dap->szTemp, L"%08lx", dwValue);
     SetListViewText(hwndListView, index++, dap->szTemp);
 
     if (dwValue & CSCONFIGFLAG_DISABLED)
@@ -1689,7 +1689,7 @@ DisplayPowerStateMappings(
         PowerState = PowerData.PD_PowerStateMapping[i];
         if ((PowerState >= PowerDeviceUnspecified) && (PowerState <= PowerDeviceD3))
         {
-            swprintf(szSystemStateBuffer, L"S%u", i - 1);
+            _swprintf(szSystemStateBuffer, L"S%u", i - 1);
 
             switch (PowerState)
             {
@@ -1717,7 +1717,7 @@ DisplayPowerStateMappings(
                     break;
             }
 
-            swprintf(szOutBuffer, L"%s -> %s", szSystemStateBuffer, szDeviceStateBuffer);
+            _swprintf(szOutBuffer, L"%s -> %s", szSystemStateBuffer, szDeviceStateBuffer);
             SetListViewText(hwndListView, i, szOutBuffer);
         }
     }

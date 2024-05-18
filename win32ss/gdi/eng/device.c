@@ -210,10 +210,10 @@ EngpUpdateGraphicsDeviceList(VOID)
     for (iDevNum = 0; iDevNum <= ulMaxObjectNumber; iDevNum++)
     {
         /* Create the adapter's key name */
-        swprintf(awcDeviceName, L"\\Device\\Video%lu", iDevNum);
+        _swprintf(awcDeviceName, L"\\Device\\Video%lu", iDevNum);
 
         /* Create the display device name */
-        swprintf(awcWinDeviceName, L"\\\\.\\DISPLAY%lu", iDevNum + 1);
+        _swprintf(awcWinDeviceName, L"\\\\.\\DISPLAY%lu", iDevNum + 1);
         RtlInitUnicodeString(&ustrDeviceName, awcWinDeviceName);
 
         /* Check if the device exists already */

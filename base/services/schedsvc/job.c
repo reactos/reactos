@@ -192,7 +192,7 @@ GetJobName(
     for (;;)
     {
         ulValue = RtlRandomEx(&ulSeed);
-        swprintf(szNameBuffer, L"%08lx", ulValue);
+        _swprintf(szNameBuffer, L"%08lx", ulValue);
 
         hKey = NULL;
         lError = RegOpenKeyEx(hJobsKey,

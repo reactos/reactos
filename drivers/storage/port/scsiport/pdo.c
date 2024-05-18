@@ -500,7 +500,7 @@ PdoHandleQueryInstanceId(
     LPWSTR InstanceId;
 
     // use instance count and LUN
-    swprintf(Buffer, L"%x%x%x", lunExt->PathId, lunExt->TargetId, lunExt->Lun);
+    _swprintf(Buffer, L"%x%x%x", lunExt->PathId, lunExt->TargetId, lunExt->Lun);
 
     Length = wcslen(Buffer) + 1;
 

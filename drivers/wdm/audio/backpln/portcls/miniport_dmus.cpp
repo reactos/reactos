@@ -2523,7 +2523,7 @@ PropertyHandler_Synth
                         aMiniport = (CMiniportDMusUART *)(PMINIPORTDMUS)(pRequest->MajorTarget);
                         WCHAR wszDesc2[16];
                         int cLen;
-                        cLen = swprintf(wszDesc2,L"[%03x]\0",PtrToUlong(aMiniport->m_pPortBase));
+                        cLen = _swprintf(wszDesc2,L"[%03x]\0",PtrToUlong(aMiniport->m_pPortBase));
 
                         cLen *= sizeof(WCHAR);
                         RtlCopyMemory((WCHAR *)((DWORD_PTR)(caps->Description) + increment),

@@ -67,7 +67,7 @@ CEnumPins::QueryInterface(
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
     StringFromCLSID(refiid, &lpstr);
-    swprintf(Buffer, L"CEnumPins::QueryInterface: NoInterface for %s\n", lpstr);
+    _swprintf(Buffer, L"CEnumPins::QueryInterface: NoInterface for %s\n", lpstr);
     OutputDebugStringW(Buffer);
     CoTaskMemFree(lpstr);
 

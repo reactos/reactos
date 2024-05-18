@@ -1795,7 +1795,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
 
     /* And now let's write the processor level */
     RtlInitUnicodeString(&ValueName, L"PROCESSOR_LEVEL");
-    swprintf(ValueBuffer, L"%u", ProcessorInfo.ProcessorLevel);
+    _swprintf(ValueBuffer, L"%u", ProcessorInfo.ProcessorLevel);
     DPRINT("Setting %wZ to %S\n", &ValueName, ValueBuffer);
     Status = NtSetValueKey(KeyHandle,
                            &ValueName,
@@ -1904,7 +1904,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
             if ((ProcessorInfo.ProcessorRevision >> 8) == 0xFF)
             {
                 /* These guys used a revision + stepping, so get the rev only */
-                swprintf(ValueBuffer, L"%02x", ProcessorInfo.ProcessorRevision & 0xFF);
+                _swprintf(ValueBuffer, L"%02x", ProcessorInfo.ProcessorRevision & 0xFF);
                 _wcsupr(ValueBuffer);
                 break;
             }
@@ -1912,12 +1912,12 @@ SmpCreateDynamicEnvironmentVariables(VOID)
         /* Modern Intel, as well as 64-bit CPUs use a revision without stepping */
         case PROCESSOR_ARCHITECTURE_IA64:
         case PROCESSOR_ARCHITECTURE_AMD64:
-            swprintf(ValueBuffer, L"%04x", ProcessorInfo.ProcessorRevision);
+            _swprintf(ValueBuffer, L"%04x", ProcessorInfo.ProcessorRevision);
             break;
 
         /* And anything else we'll just read the whole revision identifier */
         default:
-            swprintf(ValueBuffer, L"%u", ProcessorInfo.ProcessorRevision);
+            _swprintf(ValueBuffer, L"%u", ProcessorInfo.ProcessorRevision);
             break;
     }
 
@@ -1939,7 +1939,7 @@ SmpCreateDynamicEnvironmentVariables(VOID)
 
     /* And finally, write the number of CPUs */
     RtlInitUnicodeString(&ValueName, L"NUMBER_OF_PROCESSORS");
-    swprintf(ValueBuffer, L"%d", BasicInfo.NumberOfProcessors);
+    _swprintf(ValueBuffer, L"%d", BasicInfo.NumberOfProcessors);
     DPRINT("Setting %wZ to %S\n", &ValueName, ValueBuffer);
     Status = NtSetValueKey(KeyHandle,
                            &ValueName,

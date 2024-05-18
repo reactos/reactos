@@ -132,7 +132,7 @@ CBDADeviceControl::StartChanges( void)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDADeviceControl::StartChanges: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
+    _swprintf(Buffer, L"CBDADeviceControl::StartChanges: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -158,7 +158,7 @@ CBDADeviceControl::CheckChanges( void)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDADeviceControl::CheckChanges: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
+    _swprintf(Buffer, L"CBDADeviceControl::CheckChanges: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -184,7 +184,7 @@ CBDADeviceControl::CommitChanges( void)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDADeviceControl::CommitChanges: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
+    _swprintf(Buffer, L"CBDADeviceControl::CommitChanges: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -229,14 +229,14 @@ CBDADeviceControl::GetNodeTypes(ULONG *pulcNodeTypes, ULONG ulcNodeTypesMax, ULO
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDADeviceControl::GetNodeTypes: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
+    _swprintf(Buffer, L"CBDADeviceControl::GetNodeTypes: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
     OutputDebugStringW(Buffer);
 
     if (SUCCEEDED(hr))
     {
         for(ULONG Index = 0; Index < *pulcNodeTypes; Index++)
         {
-            swprintf(Buffer, L"CBDADeviceControl::GetPinTypes: Index %lu Value %lx\n", Index, rgulNodeTypes[Index]);
+            _swprintf(Buffer, L"CBDADeviceControl::GetPinTypes: Index %lu Value %lx\n", Index, rgulNodeTypes[Index]);
             OutputDebugStringW(Buffer);
         }
     }
@@ -266,7 +266,7 @@ CBDADeviceControl::GetNodeDescriptors(ULONG *ulcNodeDescriptors, ULONG ulcNodeDe
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[1000];
-    swprintf(Buffer, L"CBDADeviceControl::GetNodeDescriptors: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
+    _swprintf(Buffer, L"CBDADeviceControl::GetNodeDescriptors: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
     OutputDebugStringW(Buffer);
 
 
@@ -279,7 +279,7 @@ CBDADeviceControl::GetNodeDescriptors(ULONG *ulcNodeDescriptors, ULONG ulcNodeDe
             StringFromCLSID(rgNodeDescriptors[Index].guidFunction, &pGUIDFunction);
             StringFromCLSID(rgNodeDescriptors[Index].guidName, &pGUIDName);
 
-            swprintf(Buffer, L"CBDADeviceControl::GetPinTypes: Index %lu Value %lx\nFunction %s\n Name %s\n-----\n", Index, rgNodeDescriptors[Index].ulBdaNodeType, pGUIDFunction, pGUIDName);
+            _swprintf(Buffer, L"CBDADeviceControl::GetPinTypes: Index %lu Value %lx\nFunction %s\n Name %s\n-----\n", Index, rgNodeDescriptors[Index].ulBdaNodeType, pGUIDFunction, pGUIDName);
             OutputDebugStringW(Buffer);
         }
     }
@@ -312,7 +312,7 @@ CBDADeviceControl::GetNodeInterfaces(ULONG ulNodeType, ULONG *pulcInterfaces, UL
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDADeviceControl::GetNodeInterfaces: hr %lx, BytesReturned %lu ulNodeType %lu\n", hr, BytesReturned, ulNodeType);
+    _swprintf(Buffer, L"CBDADeviceControl::GetNodeInterfaces: hr %lx, BytesReturned %lu ulNodeType %lu\n", hr, BytesReturned, ulNodeType);
     OutputDebugStringW(Buffer);
 
     if (SUCCEEDED(hr))
@@ -323,7 +323,7 @@ CBDADeviceControl::GetNodeInterfaces(ULONG ulNodeType, ULONG *pulcInterfaces, UL
 
             StringFromCLSID(rgguidInterfaces[Index], &pstr);
 
-            swprintf(Buffer, L"CBDADeviceControl::GetNodeInterfaces: Index %lu Name %s\n", Index, pstr);
+            _swprintf(Buffer, L"CBDADeviceControl::GetNodeInterfaces: Index %lu Name %s\n", Index, pstr);
             OutputDebugStringW(Buffer);
         }
     }
@@ -352,14 +352,14 @@ CBDADeviceControl::GetPinTypes(ULONG *pulcPinTypes, ULONG ulcPinTypesMax, ULONG 
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDADeviceControl::GetPinTypes: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
+    _swprintf(Buffer, L"CBDADeviceControl::GetPinTypes: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
     OutputDebugStringW(Buffer);
 
     if (SUCCEEDED(hr))
     {
         for(ULONG Index = 0; Index < *pulcPinTypes; Index++)
         {
-            swprintf(Buffer, L"CBDADeviceControl::GetPinTypes: Index %lu Value %lx\n", Index, rgulPinTypes[Index]);
+            _swprintf(Buffer, L"CBDADeviceControl::GetPinTypes: Index %lu Value %lx\n", Index, rgulPinTypes[Index]);
             OutputDebugStringW(Buffer);
         }
     }
@@ -441,7 +441,7 @@ CBDADeviceControl::CreateTopology(ULONG ulInputPinId, ULONG ulOutputPinId)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDADeviceControl::CreateTopology: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
+    _swprintf(Buffer, L"CBDADeviceControl::CreateTopology: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -473,7 +473,7 @@ CBDADeviceControl::GetControlNode(ULONG ulInputPinId, ULONG ulOutputPinId, ULONG
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[200];
-    swprintf(Buffer, L"CBDADeviceControl::GetControlNode: hr %lx, BytesReturned %lu PinId %lu ulInputPinId %lu ulOutputPinId %lu ulNodeType %lu\n", hr, BytesReturned, PinId, ulInputPinId, ulOutputPinId, ulNodeType);
+    _swprintf(Buffer, L"CBDADeviceControl::GetControlNode: hr %lx, BytesReturned %lu PinId %lu ulInputPinId %lu ulOutputPinId %lu ulNodeType %lu\n", hr, BytesReturned, PinId, ulInputPinId, ulOutputPinId, ulNodeType);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -483,7 +483,7 @@ CBDADeviceControl::GetControlNode(ULONG ulInputPinId, ULONG ulOutputPinId, ULONG
     hr = CControlNode_fnConstructor(m_pFilter, ulNodeType, PinId, IID_IUnknown, (LPVOID*)ppControlNode);
 
 #ifdef BDAPLGIN_TRACE
-    swprintf(Buffer, L"CBDADeviceControl::GetControlNode: hr %lx\n", hr);
+    _swprintf(Buffer, L"CBDADeviceControl::GetControlNode: hr %lx\n", hr);
     OutputDebugStringW(Buffer);
 #endif
 

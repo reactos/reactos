@@ -4,7 +4,7 @@
  * FILE:            drivers/dd/serial/pnp.c
  * PURPOSE:         Serial IRP_MJ_PNP operations
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     HervÃ© Poussineau (hpoussin@reactos.org)
  */
 /* FIXME: call IoAcquireRemoveLock/IoReleaseRemoveLock around each I/O operation */
 
@@ -34,7 +34,7 @@ SerialAddDeviceInternal(
 	ASSERT(Pdo);
 
 	/* Create new device object */
-	swprintf(DeviceNameBuffer, L"\\Device\\Serial%lu", IoGetConfigurationInformation()->SerialCount);
+	_swprintf(DeviceNameBuffer, L"\\Device\\Serial%lu", IoGetConfigurationInformation()->SerialCount);
 	RtlInitUnicodeString(&DeviceName, DeviceNameBuffer);
 	Status = IoCreateDevice(DriverObject,
 	                        sizeof(SERIAL_DEVICE_EXTENSION),
@@ -265,9 +265,9 @@ SerialPnpStartDevice(
 	}
 
 	/* Create link \DosDevices\COMX -> \Device\SerialX */
-	swprintf(DeviceNameBuffer, L"\\Device\\Serial%lu", DeviceExtension->SerialPortNumber);
-	swprintf(LinkNameBuffer, L"\\DosDevices\\COM%lu", DeviceExtension->ComPort);
-	swprintf(ComPortBuffer, L"COM%lu", DeviceExtension->ComPort);
+	_swprintf(DeviceNameBuffer, L"\\Device\\Serial%lu", DeviceExtension->SerialPortNumber);
+	_swprintf(LinkNameBuffer, L"\\DosDevices\\COM%lu", DeviceExtension->ComPort);
+	_swprintf(ComPortBuffer, L"COM%lu", DeviceExtension->ComPort);
 	RtlInitUnicodeString(&DeviceName, DeviceNameBuffer);
 	RtlInitUnicodeString(&LinkName, LinkNameBuffer);
 	RtlInitUnicodeString(&ComPort, ComPortBuffer);

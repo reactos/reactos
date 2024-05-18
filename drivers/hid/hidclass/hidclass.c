@@ -49,7 +49,7 @@ HidClassAddDevice(
     InterlockedIncrement((PLONG)&HidClassDeviceNumber);
 
     /* construct device name */
-    swprintf(CharDeviceName, L"\\Device\\_HID%08x", HidClassDeviceNumber);
+    _swprintf(CharDeviceName, L"\\Device\\_HID%08x", HidClassDeviceNumber);
 
     /* initialize device name */
     RtlInitUnicodeString(&DeviceName, CharDeviceName);

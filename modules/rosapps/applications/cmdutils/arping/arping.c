@@ -253,10 +253,12 @@ static BOOL Setup(VOID)
     }
 
     Target.S_un.S_addr = TargetAddr;
-    swprintf(TargetIP, L"%d.%d.%d.%d", Target.S_un.S_un_b.s_b1,
-                                       Target.S_un.S_un_b.s_b2,
-                                       Target.S_un.S_un_b.s_b3,
-                                       Target.S_un.S_un_b.s_b4);
+    _swprintf(TargetIP,
+              L"%d.%d.%d.%d",
+              Target.S_un.S_un_b.s_b1,
+              Target.S_un.S_un_b.s_b2,
+              Target.S_un.S_un_b.s_b3,
+              Target.S_un.S_un_b.s_b4);
 
     if (!WideCharToMultiByte(CP_ACP, 0, SourceName, -1, aTargetName,
                              sizeof(aTargetName), NULL, NULL))
@@ -356,9 +358,11 @@ static BOOL Ping(VOID)
             TimeToMsString(Time, sizeof(Time) / sizeof(WCHAR), RelativeTime);
         }
 
-        swprintf(StrHwAddr, L"%02x:%02x:%02x:%02x:%02x:%02x", TargetHW[0], TargetHW[1],
-                                                              TargetHW[2], TargetHW[3],
-                                                              TargetHW[4], TargetHW[5]);
+        _swprintf(StrHwAddr,
+                  L"%02x:%02x:%02x:%02x:%02x:%02x",
+                  TargetHW[0], TargetHW[1],
+                  TargetHW[2], TargetHW[3],
+                  TargetHW[4], TargetHW[5]);
         FormatOutput(IDS_REPLY_FROM, TargetIP, StrHwAddr, Sign, Time);
         Received++;
 

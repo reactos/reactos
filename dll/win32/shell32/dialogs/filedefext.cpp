@@ -164,7 +164,7 @@ LPCWSTR CFileVersionInfo::GetString(LPCWSTR pwszName)
         return NULL;
 
     WCHAR wszBuf[256];
-    swprintf(wszBuf, L"\\StringFileInfo\\%04x%04x\\%s", m_wLang, m_wCode, pwszName);
+    _swprintf(wszBuf, L"\\StringFileInfo\\%04x%04x\\%s", m_wLang, m_wCode, pwszName);
 
     /* Query string in version block */
     LPCWSTR pwszResult = NULL;
@@ -175,7 +175,7 @@ LPCWSTR CFileVersionInfo::GetString(LPCWSTR pwszName)
     if (!pwszResult)
     {
         /* Try US English */
-        swprintf(wszBuf, L"\\StringFileInfo\\%04x%04x\\%s", MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), 1252, pwszName);
+        _swprintf(wszBuf, L"\\StringFileInfo\\%04x%04x\\%s", MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), 1252, pwszName);
         if (!VerQueryValueW(m_pInfo, wszBuf, (LPVOID *)&pwszResult, &cBytes))
             pwszResult = NULL;
     }
@@ -219,7 +219,7 @@ SH_FormatInteger(LONGLONG Num, LPWSTR pwszResult, UINT cchResultMax)
 {
     // Print the number in uniform mode
     WCHAR wszNumber[24];
-    swprintf(wszNumber, L"%I64u", Num);
+    _swprintf(wszNumber, L"%I64u", Num);
 
     // Get system strings for decimal and thousand separators.
     WCHAR wszDecimalSep[8], wszThousandSep[8];
@@ -1087,10 +1087,10 @@ CFileDefExt::InitVersionPage(HWND hwndDlg)
     if (pInfo)
     {
         WCHAR wszVersion[256];
-        swprintf(wszVersion, L"%u.%u.%u.%u", HIWORD(pInfo->dwFileVersionMS),
-                 LOWORD(pInfo->dwFileVersionMS),
-                 HIWORD(pInfo->dwFileVersionLS),
-                 LOWORD(pInfo->dwFileVersionLS));
+        _swprintf(wszVersion, L"%u.%u.%u.%u", HIWORD(pInfo->dwFileVersionMS),
+                  LOWORD(pInfo->dwFileVersionMS),
+                  HIWORD(pInfo->dwFileVersionLS),
+                  LOWORD(pInfo->dwFileVersionLS));
         TRACE("MS %x LS %x ver %s \n", pInfo->dwFileVersionMS, pInfo->dwFileVersionLS, debugstr_w(wszVersion));
         SetDlgItemTextW(hwndDlg, 14001, wszVersion);
     }

@@ -376,8 +376,8 @@ CommandDumpSector(
     Sector.QuadPart = _atoi64(argv[1]);
 
     /* Build full drive name */
-//    swprintf(DriveName, L"\\\\.\\PHYSICALDRIVE%lu", ulDrive);
-    swprintf(DriveName, L"\\Device\\Harddisk%lu\\Partition0", ulDrive);
+//    _swprintf(DriveName, L"\\\\.\\PHYSICALDRIVE%lu", ulDrive);
+    _swprintf(DriveName, L"\\Device\\Harddisk%lu\\Partition0", ulDrive);
 
     RtlInitUnicodeString(&PathName,
                          DriveName);
@@ -603,7 +603,7 @@ CommandPartInfo(
     ulDrive = strtoul(argv[0], NULL, 0);
 
     /* Build full drive name */
-    swprintf(DriveName, L"\\Device\\Harddisk%lu\\Partition0", ulDrive);
+    _swprintf(DriveName, L"\\Device\\Harddisk%lu\\Partition0", ulDrive);
 
     RtlInitUnicodeString(&PathName,
                          DriveName);

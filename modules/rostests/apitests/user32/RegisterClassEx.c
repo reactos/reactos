@@ -229,7 +229,7 @@ VOID TestVersionedClasses(VOID)
     ok (proc3 == DefWindowProcW, "Got 0x%p, expected 0x%p\n", proc2, DefWindowProcA);
 
     a = _RegisterClass(L"VersionTestClass3", hmod, 0, DefWindowProcW);
-    swprintf(buffer, L"#%d", a);
+    _swprintf(buffer, L"#%d", a);
     proc1 = _GetWndproc((LPCWSTR)(DWORD_PTR)a, hmod);
     proc2 = _GetWndproc(buffer, hmod);
     ok (a != 0, "\n");
@@ -238,7 +238,7 @@ VOID TestVersionedClasses(VOID)
     DeactivateActCtx(0, cookie1);
 
     a = _RegisterClass(L"VersionTestClass3", hmod, 0, DefWindowProcW);
-    swprintf(buffer, L"#%d", a);
+    _swprintf(buffer, L"#%d", a);
     proc1 = _GetWndproc((LPCWSTR)(DWORD_PTR)a, hmod);
     proc2 = _GetWndproc(buffer, hmod);
     ok (a != 0, "\n");

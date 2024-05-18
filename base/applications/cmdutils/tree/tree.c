@@ -136,9 +136,9 @@ static VOID DrawTree(PCWSTR strPath,
             {
                 /* Add '├───Folder name' (\xC3\xC4\xC4\xC4 or \x251C\x2500\x2500\x2500) */
                 if (bUseAscii)
-                    swprintf(str, L"+---%s", arrFolder[i].cFileName);
+                    _swprintf(str, L"+---%s", arrFolder[i].cFileName);
                 else
-                    swprintf(str, L"\x251C\x2500\x2500\x2500%s", arrFolder[i].cFileName);
+                    _swprintf(str, L"\x251C\x2500\x2500\x2500%s", arrFolder[i].cFileName);
             }
             else
             {
@@ -147,14 +147,14 @@ static VOID DrawTree(PCWSTR strPath,
                     /* Add '│   FileName' (\xB3 or \x2502) */
                     // This line is added to connect the below-folder sub-structure
                     if (bUseAscii)
-                        swprintf(str, L"|   %s", arrFolder[i].cFileName);
+                        _swprintf(str, L"|   %s", arrFolder[i].cFileName);
                     else
-                        swprintf(str, L"\x2502   %s", arrFolder[i].cFileName);
+                        _swprintf(str, L"\x2502   %s", arrFolder[i].cFileName);
                 }
                 else
                 {
                     /* Add '    FileName' */
-                    swprintf(str, L"    %s", arrFolder[i].cFileName);
+                    _swprintf(str, L"    %s", arrFolder[i].cFileName);
                 }
             }
         }
@@ -164,9 +164,9 @@ static VOID DrawTree(PCWSTR strPath,
             {
                 /* '└───Folder name' (\xC0\xC4\xC4\xC4 or \x2514\x2500\x2500\x2500) */
                 if (bUseAscii)
-                    swprintf(str, L"\\---%s", arrFolder[i].cFileName);
+                    _swprintf(str, L"\\---%s", arrFolder[i].cFileName);
                 else
-                    swprintf(str, L"\x2514\x2500\x2500\x2500%s", arrFolder[i].cFileName);
+                    _swprintf(str, L"\x2514\x2500\x2500\x2500%s", arrFolder[i].cFileName);
             }
             else
             {
@@ -174,14 +174,14 @@ static VOID DrawTree(PCWSTR strPath,
                 {
                     /* '│   FileName' (\xB3 or \x2502) */
                     if (bUseAscii)
-                        swprintf(str, L"|   %s", arrFolder[i].cFileName);
+                        _swprintf(str, L"|   %s", arrFolder[i].cFileName);
                     else
-                        swprintf(str, L"\x2502   %s", arrFolder[i].cFileName);
+                        _swprintf(str, L"\x2502   %s", arrFolder[i].cFileName);
                 }
                 else
                 {
                     /* '    FileName' */
-                    swprintf(str, L"    %s", arrFolder[i].cFileName);
+                    _swprintf(str, L"    %s", arrFolder[i].cFileName);
                 }
             }
         }

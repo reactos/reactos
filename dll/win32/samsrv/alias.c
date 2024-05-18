@@ -22,7 +22,7 @@ SampOpenAliasObject(IN PSAM_DB_OBJECT DomainObject,
           DomainObject, AliasId, DesiredAccess, AliasObject);
 
     /* Convert the RID into a string (hex) */
-    swprintf(szRid, L"%08lX", AliasId);
+    _swprintf(szRid, L"%08lX", AliasId);
 
     /* Create the user object */
     return SampOpenDbObject(DomainObject,

@@ -284,12 +284,12 @@ WritePortSettings(
         nFlowControlIndex = ComboBox_GetCurSel(hwndControl);
     }
 
-    swprintf(szPortData,
-             L"%lu,%s,%s,%s",
-             BaudRates[nBaudRateIndex],
-             Paritys[nParityIndex],
-             DataBits[nDataBitsIndex],
-             StopBits[nStopBitsIndex]);
+    _swprintf(szPortData,
+              L"%lu,%s,%s,%s",
+              BaudRates[nBaudRateIndex],
+              Paritys[nParityIndex],
+              DataBits[nDataBitsIndex],
+              StopBits[nStopBitsIndex]);
     if (nFlowControlIndex < 2)
     {
         wcscat(szPortData, L",");

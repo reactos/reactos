@@ -112,7 +112,7 @@ AddIpv4HostEntries(
     ARecord.Data.A.IpAddress = pAddress->S_un.S_addr;
 
     /* Prepare the PTR record */
-    swprintf(szReverseName,
+    _swprintf(szReverseName,
              L"%u.%u.%u.%u.in-addr.arpa.",
              pAddress->S_un.S_un_b.s_b4,
              pAddress->S_un.S_un_b.s_b3,

@@ -28,7 +28,7 @@ PartitionCreateDevice(
     UINT32 volumeNum;
 
     volumeNum = HarddiskVolumeNextId++;
-    swprintf(nameBuf, L"\\Device\\HarddiskVolume%lu", volumeNum);
+    _swprintf(nameBuf, L"\\Device\\HarddiskVolume%lu", volumeNum);
     RtlCreateUnicodeString(&deviceName, nameBuf);
 
     /*
@@ -115,7 +115,7 @@ PartitionHandleStartDevice(
     PFDO_EXTENSION fdoExtension = PartExt->LowerDevice->DeviceExtension;
 
     // \\Device\\Harddisk%lu\\Partition%lu
-    swprintf(nameBuf, PartitionSymLinkFormat,
+    _swprintf(nameBuf, PartitionSymLinkFormat,
         fdoExtension->DiskData.DeviceNumber, PartExt->DetectedNumber);
 
     if (!RtlCreateUnicodeString(&partitionSymlink, nameBuf))
@@ -296,7 +296,7 @@ PartitionHandleRemove(
         UNICODE_STRING partitionSymlink;
         PFDO_EXTENSION fdoExtension = PartExt->LowerDevice->DeviceExtension;
 
-        swprintf(nameBuf, PartitionSymLinkFormat,
+        _swprintf(nameBuf, PartitionSymLinkFormat,
             fdoExtension->DiskData.DeviceNumber, PartExt->DetectedNumber);
 
         RtlInitUnicodeString(&partitionSymlink, nameBuf);
@@ -441,28 +441,28 @@ PartitionHandleQueryId(
 
             if (fdoExtension->DiskData.PartitionStyle == PARTITION_STYLE_MBR)
             {
-                swprintf(string, L"S%08lx_O%I64x_L%I64x",
-                         fdoExtension->DiskData.Mbr.Signature,
-                         PartExt->StartingOffset,
-                         PartExt->PartitionLength);
+                _swprintf(string, L"S%08lx_O%I64x_L%I64x",
+                          fdoExtension->DiskData.Mbr.Signature,
+                          PartExt->StartingOffset,
+                          PartExt->PartitionLength);
             }
             else
             {
-                swprintf(string,
-                        L"S%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02xS_O%I64x_L%I64x",
-                        fdoExtension->DiskData.Gpt.DiskId.Data1,
-                        fdoExtension->DiskData.Gpt.DiskId.Data2,
-                        fdoExtension->DiskData.Gpt.DiskId.Data3,
-                        fdoExtension->DiskData.Gpt.DiskId.Data4[0],
-                        fdoExtension->DiskData.Gpt.DiskId.Data4[1],
-                        fdoExtension->DiskData.Gpt.DiskId.Data4[2],
-                        fdoExtension->DiskData.Gpt.DiskId.Data4[3],
-                        fdoExtension->DiskData.Gpt.DiskId.Data4[4],
-                        fdoExtension->DiskData.Gpt.DiskId.Data4[5],
-                        fdoExtension->DiskData.Gpt.DiskId.Data4[6],
-                        fdoExtension->DiskData.Gpt.DiskId.Data4[7],
-                        PartExt->StartingOffset,
-                        PartExt->PartitionLength);
+                _swprintf(string,
+                          L"S%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02xS_O%I64x_L%I64x",
+                          fdoExtension->DiskData.Gpt.DiskId.Data1,
+                          fdoExtension->DiskData.Gpt.DiskId.Data2,
+                          fdoExtension->DiskData.Gpt.DiskId.Data3,
+                          fdoExtension->DiskData.Gpt.DiskId.Data4[0],
+                          fdoExtension->DiskData.Gpt.DiskId.Data4[1],
+                          fdoExtension->DiskData.Gpt.DiskId.Data4[2],
+                          fdoExtension->DiskData.Gpt.DiskId.Data4[3],
+                          fdoExtension->DiskData.Gpt.DiskId.Data4[4],
+                          fdoExtension->DiskData.Gpt.DiskId.Data4[5],
+                          fdoExtension->DiskData.Gpt.DiskId.Data4[6],
+                          fdoExtension->DiskData.Gpt.DiskId.Data4[7],
+                          PartExt->StartingOffset,
+                          PartExt->PartitionLength);
             }
 
             PartMgrReleaseLayoutLock(fdoExtension);

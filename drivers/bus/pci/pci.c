@@ -286,13 +286,13 @@ PciCreateDeviceIDString(PUNICODE_STRING DeviceID,
 {
     WCHAR Buffer[256];
 
-    swprintf(Buffer,
-             L"PCI\\VEN_%04X&DEV_%04X&SUBSYS_%08X&REV_%02X",
-             Device->PciConfig.VendorID,
-             Device->PciConfig.DeviceID,
-             (Device->PciConfig.u.type0.SubSystemID << 16) +
-             Device->PciConfig.u.type0.SubVendorID,
-             Device->PciConfig.RevisionID);
+    _swprintf(Buffer,
+              L"PCI\\VEN_%04X&DEV_%04X&SUBSYS_%08X&REV_%02X",
+              Device->PciConfig.VendorID,
+              Device->PciConfig.DeviceID,
+              (Device->PciConfig.u.type0.SubSystemID << 16) +
+              Device->PciConfig.u.type0.SubVendorID,
+              Device->PciConfig.RevisionID);
 
     return RtlCreateUnicodeString(DeviceID, Buffer) ? STATUS_SUCCESS : STATUS_INSUFFICIENT_RESOURCES;
 }
@@ -304,7 +304,7 @@ PciCreateInstanceIDString(PUNICODE_STRING InstanceID,
 {
     WCHAR Buffer[3];
 
-    swprintf(Buffer, L"%02X", Device->SlotNumber.u.AsULONG & 0xff);
+    _swprintf(Buffer, L"%02X", Device->SlotNumber.u.AsULONG & 0xff);
 
     return RtlCreateUnicodeString(InstanceID, Buffer) ? STATUS_SUCCESS : STATUS_INSUFFICIENT_RESOURCES;
 }
@@ -319,38 +319,38 @@ PciCreateHardwareIDsString(PUNICODE_STRING HardwareIDs,
     ULONG Index;
 
     Index = 0;
-    Index += swprintf(&Buffer[Index],
-                      L"PCI\\VEN_%04X&DEV_%04X&SUBSYS_%08X&REV_%02X",
-                      Device->PciConfig.VendorID,
-                      Device->PciConfig.DeviceID,
-                      (Device->PciConfig.u.type0.SubSystemID << 16) +
-                      Device->PciConfig.u.type0.SubVendorID,
-                      Device->PciConfig.RevisionID);
+    Index += _swprintf(&Buffer[Index],
+                       L"PCI\\VEN_%04X&DEV_%04X&SUBSYS_%08X&REV_%02X",
+                       Device->PciConfig.VendorID,
+                       Device->PciConfig.DeviceID,
+                       (Device->PciConfig.u.type0.SubSystemID << 16) +
+                       Device->PciConfig.u.type0.SubVendorID,
+                       Device->PciConfig.RevisionID);
     Index++;
 
-    Index += swprintf(&Buffer[Index],
-                      L"PCI\\VEN_%04X&DEV_%04X&SUBSYS_%08X",
-                      Device->PciConfig.VendorID,
-                      Device->PciConfig.DeviceID,
-                      (Device->PciConfig.u.type0.SubSystemID << 16) +
-                      Device->PciConfig.u.type0.SubVendorID);
+    Index += _swprintf(&Buffer[Index],
+                       L"PCI\\VEN_%04X&DEV_%04X&SUBSYS_%08X",
+                       Device->PciConfig.VendorID,
+                       Device->PciConfig.DeviceID,
+                       (Device->PciConfig.u.type0.SubSystemID << 16) +
+                       Device->PciConfig.u.type0.SubVendorID);
     Index++;
 
-    Index += swprintf(&Buffer[Index],
-                      L"PCI\\VEN_%04X&DEV_%04X&CC_%02X%02X%02X",
-                      Device->PciConfig.VendorID,
-                      Device->PciConfig.DeviceID,
-                      Device->PciConfig.BaseClass,
-                      Device->PciConfig.SubClass,
-                      Device->PciConfig.ProgIf);
+    Index += _swprintf(&Buffer[Index],
+                       L"PCI\\VEN_%04X&DEV_%04X&CC_%02X%02X%02X",
+                       Device->PciConfig.VendorID,
+                       Device->PciConfig.DeviceID,
+                       Device->PciConfig.BaseClass,
+                       Device->PciConfig.SubClass,
+                       Device->PciConfig.ProgIf);
     Index++;
 
-    Index += swprintf(&Buffer[Index],
-                      L"PCI\\VEN_%04X&DEV_%04X&CC_%02X%02X",
-                      Device->PciConfig.VendorID,
-                      Device->PciConfig.DeviceID,
-                      Device->PciConfig.BaseClass,
-                      Device->PciConfig.SubClass);
+    Index += _swprintf(&Buffer[Index],
+                       L"PCI\\VEN_%04X&DEV_%04X&CC_%02X%02X",
+                       Device->PciConfig.VendorID,
+                       Device->PciConfig.DeviceID,
+                       Device->PciConfig.BaseClass,
+                       Device->PciConfig.SubClass);
     Index++;
 
     Buffer[Index] = UNICODE_NULL;
@@ -371,50 +371,50 @@ PciCreateCompatibleIDsString(PUNICODE_STRING CompatibleIDs,
     ULONG Index;
 
     Index = 0;
-    Index += swprintf(&Buffer[Index],
-                      L"PCI\\VEN_%04X&DEV_%04X&REV_%02X",
-                      Device->PciConfig.VendorID,
-                      Device->PciConfig.DeviceID,
-                      Device->PciConfig.RevisionID);
+    Index += _swprintf(&Buffer[Index],
+                       L"PCI\\VEN_%04X&DEV_%04X&REV_%02X",
+                       Device->PciConfig.VendorID,
+                       Device->PciConfig.DeviceID,
+                       Device->PciConfig.RevisionID);
     Index++;
 
-    Index += swprintf(&Buffer[Index],
-                      L"PCI\\VEN_%04X&DEV_%04X",
-                      Device->PciConfig.VendorID,
-                      Device->PciConfig.DeviceID);
+    Index += _swprintf(&Buffer[Index],
+                       L"PCI\\VEN_%04X&DEV_%04X",
+                       Device->PciConfig.VendorID,
+                       Device->PciConfig.DeviceID);
     Index++;
 
-    Index += swprintf(&Buffer[Index],
-                      L"PCI\\VEN_%04X&CC_%02X%02X%02X",
-                      Device->PciConfig.VendorID,
-                      Device->PciConfig.BaseClass,
-                      Device->PciConfig.SubClass,
-                      Device->PciConfig.ProgIf);
+    Index += _swprintf(&Buffer[Index],
+                       L"PCI\\VEN_%04X&CC_%02X%02X%02X",
+                       Device->PciConfig.VendorID,
+                       Device->PciConfig.BaseClass,
+                       Device->PciConfig.SubClass,
+                       Device->PciConfig.ProgIf);
     Index++;
 
-    Index += swprintf(&Buffer[Index],
-                      L"PCI\\VEN_%04X&CC_%02X%02X",
-                      Device->PciConfig.VendorID,
-                      Device->PciConfig.BaseClass,
-                      Device->PciConfig.SubClass);
+    Index += _swprintf(&Buffer[Index],
+                       L"PCI\\VEN_%04X&CC_%02X%02X",
+                       Device->PciConfig.VendorID,
+                       Device->PciConfig.BaseClass,
+                       Device->PciConfig.SubClass);
     Index++;
 
-    Index += swprintf(&Buffer[Index],
-                      L"PCI\\VEN_%04X",
-                      Device->PciConfig.VendorID);
+    Index += _swprintf(&Buffer[Index],
+                       L"PCI\\VEN_%04X",
+                       Device->PciConfig.VendorID);
     Index++;
 
-    Index += swprintf(&Buffer[Index],
-                      L"PCI\\CC_%02X%02X%02X",
-                      Device->PciConfig.BaseClass,
-                      Device->PciConfig.SubClass,
-                      Device->PciConfig.ProgIf);
+    Index += _swprintf(&Buffer[Index],
+                       L"PCI\\CC_%02X%02X%02X",
+                       Device->PciConfig.BaseClass,
+                       Device->PciConfig.SubClass,
+                       Device->PciConfig.ProgIf);
     Index++;
 
-    Index += swprintf(&Buffer[Index],
-                      L"PCI\\CC_%02X%02X",
-                      Device->PciConfig.BaseClass,
-                      Device->PciConfig.SubClass);
+    Index += _swprintf(&Buffer[Index],
+                       L"PCI\\CC_%02X%02X",
+                       Device->PciConfig.BaseClass,
+                       Device->PciConfig.SubClass);
     Index++;
 
     Buffer[Index] = UNICODE_NULL;
@@ -700,11 +700,11 @@ PciCreateDeviceLocationString(PUNICODE_STRING DeviceLocation,
 {
     WCHAR Buffer[256];
 
-    swprintf(Buffer,
-             L"PCI-Bus %lu, Device %u, Function %u",
-             Device->BusNumber,
-             Device->SlotNumber.u.bits.DeviceNumber,
-             Device->SlotNumber.u.bits.FunctionNumber);
+    _swprintf(Buffer,
+              L"PCI-Bus %lu, Device %u, Function %u",
+              Device->BusNumber,
+              Device->SlotNumber.u.bits.DeviceNumber,
+              Device->SlotNumber.u.bits.FunctionNumber);
 
     return RtlCreateUnicodeString(DeviceLocation, Buffer) ? STATUS_SUCCESS : STATUS_INSUFFICIENT_RESOURCES;
 }

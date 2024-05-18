@@ -314,7 +314,7 @@ CNetConnectionPropertyUi::LANPropertiesUIDlg(
                 //NOTE: Windows write these setting with the undocumented INetLanConnection::SetInfo
                 if (StringFromCLSID((CLSID)This->m_pProperties->guidId, &pStr) == ERROR_SUCCESS)
                 {
-                    swprintf(szKey, L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%s\\Connection", pStr);
+                    _swprintf(szKey, L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%s\\Connection", pStr);
                     CoTaskMemFree(pStr);
                     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szKey, 0, KEY_WRITE, &hKey) == ERROR_SUCCESS)
                     {
@@ -540,7 +540,7 @@ CNetConnectionPropertyUi::Disconnect(
     DWORD dwFlags)
 {
     WCHAR szBuffer[100];
-    swprintf(szBuffer, L"INetConnectionConnectUi_fnDisconnect flags %x\n", dwFlags);
+    _swprintf(szBuffer, L"INetConnectionConnectUi_fnDisconnect flags %x\n", dwFlags);
     MessageBoxW(NULL, szBuffer, NULL, MB_OK);
 
     return S_OK;

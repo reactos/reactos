@@ -287,7 +287,7 @@ CKsInterfaceHandler::KsProcessMediaSamples(
          }
 #ifdef KSPROXY_TRACE
          WCHAR Buffer[200];
-         swprintf(Buffer, L"CKsInterfaceHandler::KsProcessMediaSamples PinName %s BufferLength %lu Property Buffer %p ExtendedSize %u lActual %u dwSampleFlags %lx\n", m_PinName, Properties.cbBuffer, Properties.pbBuffer, ExtendedSize, Properties.lActual, Properties.dwSampleFlags);
+         _swprintf(Buffer, L"CKsInterfaceHandler::KsProcessMediaSamples PinName %s BufferLength %lu Property Buffer %p ExtendedSize %u lActual %u dwSampleFlags %lx\n", m_PinName, Properties.cbBuffer, Properties.pbBuffer, ExtendedSize, Properties.lActual, Properties.dwSampleFlags);
          OutputDebugStringW(Buffer);
 #endif
 

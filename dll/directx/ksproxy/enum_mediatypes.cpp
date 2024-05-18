@@ -184,7 +184,7 @@ CEnumMediaTypes_fnConstructor(
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
     StringFromCLSID(riid, &lpstr);
-    swprintf(Buffer, L"CEnumMediaTypes_fnConstructor riid %s\n", lpstr);
+    _swprintf(Buffer, L"CEnumMediaTypes_fnConstructor riid %s\n", lpstr);
     OutputDebugStringW(Buffer);
 #endif
 

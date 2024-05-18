@@ -213,7 +213,7 @@ PrintErrorMessage(
     if (dwError != ERROR_SUCCESS)
     {
         /* Format insert for the 3514 message */
-        swprintf(szErrorBuffer, L"%lu", dwError);
+        _swprintf(szErrorBuffer, L"%lu", dwError);
         pErrorInserts[0] = szErrorBuffer;
 
         /* Format and print the 3514 message */

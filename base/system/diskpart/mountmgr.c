@@ -195,7 +195,7 @@ AssignDriveLetter(
 
     DeviceNameLength = wcslen(DeviceName) * sizeof(WCHAR);
 
-    swprintf(DosDeviceName, L"\\DosDevices\\%c:", DriveLetter);
+    _swprintf(DosDeviceName, L"\\DosDevices\\%c:", DriveLetter);
     DosDeviceNameLength = wcslen(DosDeviceName) * sizeof(WCHAR);
 
     /* Allocate the input buffer for the MountMgr */
@@ -345,7 +345,7 @@ DeleteDriveLetter(
     DPRINT("DeleteDriveLetter(%c)\n", DriveLetter);
 
     /* Setup the device name of the letter to delete */
-    swprintf(DosDeviceName, L"\\DosDevices\\%c:", DriveLetter);
+    _swprintf(DosDeviceName, L"\\DosDevices\\%c:", DriveLetter);
     DosDeviceNameLength = wcslen(DosDeviceName) * sizeof(WCHAR);
 
     /* Allocate the input buffer for MountMgr */
