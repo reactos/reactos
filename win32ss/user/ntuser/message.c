@@ -12,9 +12,8 @@
 DBG_DEFAULT_CHANNEL(UserMsg);
 
 #define PM_BADMSGFLAGS ~((QS_RAWINPUT << 16)|PM_QS_SENDMESSAGE|PM_QS_PAINT|PM_QS_POSTMESSAGE|PM_QS_INPUT|PM_NOYIELD|PM_REMOVE)
-#define EXCEPTION_ACCESS_VIOLATION ((DWORD)0xC0000005)
 
-/* Strings that are OK to pass between user and kernel mode
+/* Strings that are OK to pass between user and kernel mode.
  * There may be other strings needed that can easily be added here. */
 WCHAR StrUserKernel[3][20] = {{L"intl"}, {L"Environment"}, {L"Policy"}};
 
@@ -26,14 +25,13 @@ WCHAR StrUserKernel[3][20] = {{L"intl"}, {L"Environment"}, {L"Policy"}};
  * These strings are enumerated in the StrUserKernel definition.
  * Returns: A positive integer indicating its position in the array if the
  * string is found, or returns a minus one (-1) if the string is not found. */
-INT PosInArray(WCHAR String[])
+static INT PosInArray(_In_ PCWSTR String)
 {
     INT i;
-    INT End = ARRAYSIZE(StrUserKernel);
 
-    for (i = 0; i < End; ++i)
+    for (i = 0; i < ARRAYSIZE(StrUserKernel); ++i)
     {
-        if (wcsncmp(String, StrUserKernel[i], sizeof(StrUserKernel[0])) == 0)
+        if (wcsncmp(String, StrUserKernel[i], _countof(StrUserKernel[0])) == 0)
             return i;
     }
     return -1;
@@ -483,18 +481,18 @@ CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEnt
         /* Copy data if required */
         if (0 != (MsgMemoryEntry->Flags & MMS_FLAG_READ))
         {
-            WCHAR lParamMsg[sizeof(StrUserKernel[0])/2 + 1] = { 0 };
+            WCHAR lParamMsg[_countof(StrUserKernel[0]) + 1] = { 0 };
 
             TRACE("Copy Message %u from usermode buffer\n", KernelModeMsg->message);
 
             _SEH2_TRY
             {
                 if (UserModeMsg->lParam)
-                    RtlCopyMemory( lParamMsg, (WCHAR*)UserModeMsg->lParam, sizeof(lParamMsg));
+                    RtlCopyMemory(lParamMsg, (WCHAR*)UserModeMsg->lParam, sizeof(lParamMsg));
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                _SEH2_YIELD(return EXCEPTION_ACCESS_VIOLATION);
+                _SEH2_YIELD(return STATUS_ACCESS_VIOLATION);
             }
             _SEH2_END;
 
@@ -506,8 +504,10 @@ CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEnt
                 return STATUS_SUCCESS;
             }
             else
-                Status = MmCopyFromCaller(KernelMem, (PVOID) UserModeMsg->lParam, Size);
-            if (! NT_SUCCESS(Status))
+            {
+                Status = MmCopyFromCaller(KernelMem, (PVOID)UserModeMsg->lParam, Size);
+            }
+            if (!NT_SUCCESS(Status))
             {
                 ERR("Failed to copy message to kernel: invalid usermode lParam buffer\n");
                 ExFreePoolWithTag(KernelMem, TAG_MSG);
@@ -2767,7 +2767,7 @@ NtUserMessageCall( HWND hWnd,
                         }
                         ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
                      }
-                     if (lParam && !wParam && wcscmp((WCHAR*)lParam, L"Environment") == 0)
+                     if (lParam && !wParam && wcsicmp((WCHAR*)lParam, L"Environment") == 0)
                      {
                          /* Handle Broadcast of WM_SETTINGCHAGE for Environment */
                          co_IntDoSendMessage(HWND_BROADCAST, WM_SETTINGCHANGE,
