@@ -73,6 +73,7 @@ typedef struct _PARTITION_EXTENSION
     UINT64 PartitionLength;
     SINGLE_LIST_ENTRY ListEntry;
 
+    UINT32 VolumeNumber; // Volume number in the "\Device\HarddiskVolumeN" device name
     UINT32 DetectedNumber;
     UINT32 OnDiskNumber; // partition number for issuing Io requests to the kernel
     BOOLEAN IsEnumerated; // reported via IRP_MN_QUERY_DEVICE_RELATIONS

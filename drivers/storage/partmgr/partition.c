@@ -7,7 +7,7 @@
 
 #include "partmgr.h"
 
-static const WCHAR PartitionSymLinkFormat[] = L"\\Device\\Harddisk%u\\Partition%u";
+static const WCHAR PartitionSymLinkFormat[] = L"\\Device\\Harddisk%lu\\Partition%lu";
 
 
 CODE_SEG("PAGE")
@@ -25,10 +25,12 @@ PartitionCreateDevice(
 
     WCHAR nameBuf[64];
     UNICODE_STRING deviceName;
+    UINT32 volumeNum;
 
     // create the device object
 
-    swprintf(nameBuf, L"\\Device\\HarddiskVolume%u", HarddiskVolumeNextId++);
+    volumeNum = HarddiskVolumeNextId++;
+    swprintf(nameBuf, L"\\Device\\HarddiskVolume%lu", volumeNum);
     RtlCreateUnicodeString(&deviceName, nameBuf);
 
     PDEVICE_OBJECT partitionDevice;
@@ -74,6 +76,7 @@ PartitionCreateDevice(
     partExt->PartitionLength = PartitionEntry->PartitionLength.QuadPart;
     partExt->OnDiskNumber = PartitionEntry->PartitionNumber; // the "physical" partition number
     partExt->DetectedNumber = PdoNumber; // counts only partitions with PDO created
+    partExt->VolumeNumber = volumeNum;
 
     partExt->DeviceObject = partitionDevice;
     partExt->LowerDevice = FDObject;
@@ -99,7 +102,7 @@ PartitionHandleStartDevice(
     UNICODE_STRING partitionSymlink, interfaceName;
     PFDO_EXTENSION fdoExtension = PartExt->LowerDevice->DeviceExtension;
 
-    // \\Device\\Harddisk%u\\Partition%u
+    // \\Device\\Harddisk%lu\\Partition%lu
     swprintf(nameBuf, PartitionSymLinkFormat,
         fdoExtension->DiskData.DeviceNumber, PartExt->DetectedNumber);
 
@@ -662,7 +665,7 @@ PartitionHandleDeviceControl(
         {
             return ForwardIrpAndForget(DeviceObject, Irp);
         }
-        // volume stuff (most of that should be in volmgr.sys one it is implemented)
+        // volume stuff (most of that should be in volmgr.sys once it is implemented)
         case IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS:
         {
             PVOLUME_DISK_EXTENTS volExts = Irp->AssociatedIrp.SystemBuffer;
@@ -692,6 +695,38 @@ PartitionHandleDeviceControl(
 
             status = STATUS_SUCCESS;
             Irp->IoStatus.Information = sizeof(*volExts);
+            break;
+        }
+        case IOCTL_VOLUME_QUERY_VOLUME_NUMBER:
+        {
+            PVOLUME_NUMBER volNum = Irp->AssociatedIrp.SystemBuffer;
+            if (!VerifyIrpOutBufferSize(Irp, sizeof(*volNum)))
+            {
+                status = STATUS_BUFFER_TOO_SMALL;
+                break;
+            }
+
+            PartMgrAcquireLayoutLock(fdoExtension);
+
+            volNum->VolumeNumber = partExt->VolumeNumber;
+            RtlCopyMemory(volNum->VolumeManagerName,
+                          L"VOLMGR  ", // Must be 8 space-padded characters
+                          sizeof(volNum->VolumeManagerName));
+
+            PartMgrReleaseLayoutLock(fdoExtension);
+
+            status = STATUS_SUCCESS;
+            Irp->IoStatus.Information = sizeof(*volNum);
+            break;
+        }
+        case IOCTL_VOLUME_IS_PARTITION:
+        {
+            // The only type of volume we support right now is disk partition
+            // so we just return success. A more robust algorithm would be
+            // to check whether the volume has only one single extent, that
+            // covers the whole partition on which it lies upon. If this is
+            // not the case, return STATUS_UNSUCCESSFUL instead.
+            status = STATUS_SUCCESS;
             break;
         }
         case IOCTL_VOLUME_ONLINE:
