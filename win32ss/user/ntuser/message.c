@@ -453,7 +453,7 @@ CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEnt
     NTSTATUS Status;
 
     PVOID KernelMem;
-    UINT Size;
+    UINT Size, i;
 
     *KernelModeMsg = *UserModeMsg;
 
@@ -489,6 +489,15 @@ CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEnt
             {
                 if (UserModeMsg->lParam)
                     RtlCopyMemory(lParamMsg, (WCHAR*)UserModeMsg->lParam, sizeof(lParamMsg));
+                    /* Make sure that the last WCHAR is a UNICODE_NULL */
+                    for (i = 0; i < ARRAYSIZE(lParamMsg); ++i)
+                    {
+                        if (lParamMsg[i] == 0)
+                            break;
+                    }
+                    /* If we did not find a UNICODE_NULL, then set last WCHAR to one */
+                    if (i == ARRAYSIZE(lParamMsg))
+                        lParamMsg[_countof(StrUserKernel[0])] = UNICODE_NULL;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
