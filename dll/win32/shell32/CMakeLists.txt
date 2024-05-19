@@ -18,6 +18,7 @@ if(DBG)
 endif()
 
 list(APPEND SOURCE
+    brsfolder.cpp
     CActiveDesktop.cpp
     CActiveDesktop.h
     CIDLDataObj.cpp
@@ -82,7 +83,6 @@ list(APPEND SOURCE
 
 list(APPEND PCH_SKIP_SOURCE
     wine/appbar.c
-    wine/brsfolder.c
     wine/classes.c
     wine/clipboard.c
     wine/control.c
