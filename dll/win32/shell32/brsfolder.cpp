@@ -285,7 +285,7 @@ static HTREEITEM InsertTreeViewItem( browse_info *info, IShellFolder * lpsf,
 	if (!GetName(lpsf, pidl, SHGDN_NORMAL, szBuff))
 	    return NULL;
 
-    lptvid = (LPTV_ITEMDATA)SHAlloc( sizeof(TV_ITEMDATA) );
+	lptvid = (LPTV_ITEMDATA)SHAlloc(sizeof(TV_ITEMDATA));
 	if (!lptvid)
 	    return NULL;
 
@@ -1149,8 +1149,6 @@ LPITEMIDLIST WINAPI SHBrowseForFolderA (LPBROWSEINFOA lpbi)
 EXTERN_C
 LPITEMIDLIST WINAPI SHBrowseForFolderW(LPBROWSEINFOW lpbi)
 {
-    TRACE("%p\n", lpbi);
-
     browse_info info = { NULL };
     info.lpBrowseInfo = lpbi;
 
