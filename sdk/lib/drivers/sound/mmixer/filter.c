@@ -180,11 +180,6 @@ MMixerGetControlTypeFromTopologyNode(
         /* mux control */
         return MIXERCONTROL_CONTROLTYPE_MUX;
     }
-    else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_MUX))
-    {
-        /* mux control */
-        return MIXERCONTROL_CONTROLTYPE_MUX;
-    }
     else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_STEREO_WIDE))
     {
         /* stero wide control */
