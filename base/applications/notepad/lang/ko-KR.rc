@@ -1,4 +1,11 @@
-﻿LANGUAGE LANG_KOREAN, SUBLANG_KOREAN
+/*
+ * PROJECT:     ReactOS Notepad
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Korean resource file
+ * TRANSLATOR:  Copyright 2024 Your Name <your@email.com>
+ */
+
+﻿LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 ID_ACCEL ACCELERATORS
 BEGIN
