@@ -1988,9 +1988,7 @@ SelectExtOnRename(void)
     LONG error;
     DWORD dwValue = FALSE, cbValue;
 
-    error = RegOpenKeyExW(HKEY_CURRENT_USER,
-                          L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer",
-                          0, KEY_READ, &hKey);
+    error = RegOpenKeyExW(HKEY_CURRENT_USER, REGSTR_PATH_EXPLORER, 0, KEY_READ, &hKey);
     if (error)
         return dwValue;
 
@@ -3325,6 +3323,23 @@ HRESULT WINAPI CDefView::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCm
             (nCmdID == 9) &&
             (nCmdexecopt == 0))
         return 1;
+
+    if (IsEqualIID(*pguidCmdGroup, CGID_DefView))
+    {
+        WCHAR SubKey[MAX_PATH];
+        switch (nCmdID)
+        {
+            case DVCMDID_SETDEFAULTFOLDERSETTINGS:
+                SHDeleteKey(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\ShellNoRoam\\Bags");
+                FIXME("Save current as default\n");
+                break;
+            case DVCMDID_RESETDEFAULTFOLDERSETTINGS:
+                wsprintfW(SubKey, L"%s\\%s", REGSTR_PATH_EXPLORER, L"Streams\\Default");
+                SHDeleteKey(HKEY_CURRENT_USER, SubKey);
+                SHDeleteKey(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\ShellNoRoam\\Bags");
+                break;
+        }
+    }
 
     return OLECMDERR_E_UNKNOWNGROUP;
 }

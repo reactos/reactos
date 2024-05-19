@@ -84,6 +84,12 @@ struct persistState
 #endif
 
 /*****************************************************************************
+ * CGID_DefView OLECMD IDs
+ */
+#define DVCMDID_SETDEFAULTFOLDERSETTINGS 0
+#define DVCMDID_RESETDEFAULTFOLDERSETTINGS 1
+
+/*****************************************************************************
  * IInitializeObject interface
  */
 #undef  INTERFACE
@@ -144,7 +150,9 @@ DECLARE_INTERFACE_(IBanneredBar, IUnknown)//, "596A9A94-013E-11d1-8D34-00A0C90F2
  */
 struct DEFFOLDERSETTINGS
 {
-	long					offset0;
+    enum { STRUCTSIZE_NT5 = 40 };
+    UINT ReactOsSignature;
+    FOLDERSETTINGS FolderSettings;
 };
 
 #undef  INTERFACE
@@ -156,8 +164,8 @@ DECLARE_INTERFACE_(IGlobalFolderSettings, IUnknown)
 	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IGlobalFolderSettings ***/
-	STDMETHOD(Get)(THIS_ struct DEFFOLDERSETTINGS *buffer, int theSize) PURE;
-	STDMETHOD(Set)(THIS_ const struct DEFFOLDERSETTINGS *buffer, int theSize, unsigned int param14) PURE;
+    STDMETHOD(Get)(THIS_ DEFFOLDERSETTINGS *pFDS, UINT cb) PURE;
+    STDMETHOD(Set)(THIS_ const DEFFOLDERSETTINGS *pFDS, UINT cb, UINT unknown) PURE;
 };
 #undef INTERFACE
 
