@@ -14,9 +14,6 @@
 
 #include "precomp.h"
 
-#include "wine/pidl.h"
-#include "wine/shell32_main.h"
-#include "shresdef.h"
 #include <ui/layout.h> /* Resizable window */
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
