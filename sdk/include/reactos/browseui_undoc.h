@@ -21,6 +21,8 @@
 #ifndef __BROWSEUI_UNDOC_H
 #define __BROWSEUI_UNDOC_H
 
+#define FCW_ADDRESSBAR 9
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* defined(__cplusplus) */

@@ -349,8 +349,10 @@ public:
     HRESULT UpdateUpState();
     void UpdateGotoMenu(HMENU theMenu);
     void UpdateViewMenu(HMENU theMenu);
+    HRESULT IsInternetToolbarBandShown(UINT ITId);
     void RefreshCabinetState();
     void UpdateWindowTitle();
+    void SaveITBarLayout();
 
 /*    // *** IDockingWindowFrame methods ***
     STDMETHOD(AddToolbar)(IUnknown *punkSrc, LPCWSTR pwszItem, DWORD dwAddFlags) override;
@@ -768,19 +770,11 @@ HRESULT CShellBrowser::Initialize()
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
-    // TODO: create settingsStream from registry entry
-    //if (settingsStream.p)
-    //{
-    //    hResult = persistStreamInit->Load(settingsStream);
-    //    if (FAILED_UNEXPECTEDLY(hResult))
-    //        return hResult;
-    //}
-    //else
-    {
-        hResult = persistStreamInit->InitNew();
-        if (FAILED_UNEXPECTEDLY(hResult))
-            return hResult;
-    }
+    CComPtr<IStream> pITBarStream;
+    hResult = CInternetToolbar::GetStream(ITBARSTREAM_EXPLORER, STGM_READ, &pITBarStream);
+    hResult = SUCCEEDED(hResult) ? persistStreamInit->Load(pITBarStream) : persistStreamInit->InitNew();
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
 
     hResult = IUnknown_ShowDW(clientBar, TRUE);
     if (FAILED_UNEXPECTEDLY(hResult))
@@ -2118,6 +2112,9 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::Exec(const GUID *pguidCmdGroup, DWORD n
         {
             case 40994:
                 return NavigateToParent();
+            case IDM_NOTIFYITBARDIRTY:
+                    SaveITBarLayout();
+                    break;
         }
     }
     else if (IsEqualIID(*pguidCmdGroup, CGID_IExplorerToolbar))
@@ -2362,7 +2359,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::QueryService(REFGUID guidService, REFII
         return this->QueryInterface(riid, ppvObject);
     if (IsEqualIID(guidService, SID_SProxyBrowser))
         return this->QueryInterface(riid, ppvObject);
-    if (IsEqualIID(guidService, SID_IExplorerToolbar))
+    if (IsEqualIID(guidService, SID_IExplorerToolbar) && fClientBars[BIInternetToolbar].clientBar.p)
         return fClientBars[BIInternetToolbar].clientBar->QueryInterface(riid, ppvObject);
     if (IsEqualIID(riid, IID_IShellBrowser))
         return this->QueryInterface(riid, ppvObject);
@@ -2474,6 +2471,9 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::ShowControlWindow(UINT id, BOOL fShow)
             return S_OK;
         case FCW_TREE:
             return Exec(&CGID_Explorer, SBCMDID_EXPLORERBARFOLDERS, 0, NULL, NULL);
+        case FCW_ADDRESSBAR:
+            return IUnknown_Exec(fClientBars[BIInternetToolbar].clientBar,
+                                 CGID_PrivCITCommands, ITID_ADDRESSBANDSHOWN, 0, NULL, NULL);
     }
     return E_NOTIMPL;
 }
@@ -2494,6 +2494,10 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::IsControlWindowShown(UINT id, BOOL *pfS
             shown = cmd.cmdf & OLECMDF_LATCHED;
             break;
         }
+        case FCW_ADDRESSBAR:
+            hr = IsInternetToolbarBandShown(ITID_ADDRESSBANDSHOWN);
+            shown = hr == S_OK;
+            break;
         default:
             hr = E_NOTIMPL;
     }
@@ -2503,6 +2507,14 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::IsControlWindowShown(UINT id, BOOL *pfS
         return hr;
     }
     return SUCCEEDED(hr) ? (shown ? S_OK : S_FALSE) : hr;
+}
+
+HRESULT CShellBrowser::IsInternetToolbarBandShown(UINT ITId)
+{
+    OLECMD cmd = { ITId };
+    HRESULT hr = IUnknown_QueryStatus(fClientBars[BIInternetToolbar].clientBar,
+                                      CGID_PrivCITCommands, 1, &cmd, NULL);
+    return SUCCEEDED(hr) ? (cmd.cmdf & OLECMDF_LATCHED) ? S_OK : S_FALSE : hr;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::IEGetDisplayName(LPCITEMIDLIST pidl, LPWSTR pwszName, UINT uFlags)
@@ -3961,4 +3973,26 @@ void CShellBrowser::UpdateWindowTitle()
 
     if (SUCCEEDED(IEGetNameAndFlags(fCurrentDirectoryPIDL, flags, title, _countof(title), NULL)))
         SetWindowText(title);
+}
+
+void CShellBrowser::SaveITBarLayout()
+{
+    if (!gCabinetState.fSaveLocalView)
+        return ;
+#if 0 // If CDesktopBrowser aggregates us, skip saving
+    FOLDERSETTINGS fs;
+    if (fCurrentShellView && SUCCEEDED(fCurrentShellView->GetCurrentInfo(&fs)) && (fs.fFlags & FWF_DESKTOP))
+        return ;
+#endif
+
+    CComPtr<IPersistStreamInit> pPSI;
+    CComPtr<IStream> pITBarStream;
+    if (!fClientBars[BIInternetToolbar].clientBar.p)
+        return ;
+    HRESULT hr = fClientBars[BIInternetToolbar].clientBar->QueryInterface(IID_PPV_ARG(IPersistStreamInit, &pPSI));
+    if (FAILED(hr))
+        return ;
+    if (FAILED(hr = CInternetToolbar::GetStream(ITBARSTREAM_EXPLORER, STGM_WRITE, &pITBarStream)))
+        return ;
+    pPSI->Save(pITBarStream, TRUE);
 }
