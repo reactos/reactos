@@ -389,7 +389,7 @@ CAPTION "General"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
-    GROUPBOX "Preferințe pentru locația aleasă", -1, 10, 72, 220, 70
+    GROUPBOX "Preferinţe pentru locaţia aleasă", -1, 10, 72, 220, 70
     RADIOBUTTON "&Dimensiune specificată:", 14001, 20, 90, 88, 10, WS_TABSTOP
     EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "Dimensiune maximă (MO):", -1, 20, 105, 84, 10
@@ -1043,7 +1043,7 @@ BEGIN
     IDS_SPECIFY_ACTION "Trebuie să specificaţi o acţiune."
     IDS_INVALID_PROGRAM "Programul specificat nu s-a găsit. Verificaţi dacă numele şi calea fişierului sunt corecte."
     IDS_REMOVE_ACTION "Sigur eliminaţi această acţiune?"
-    IDS_ACTION_EXISTS "Acțiunea '%s' este deja înregistrată pentru a cest tip de fişier. Introduceţi un nume nou, apoi încercaţi din nou."
+    IDS_ACTION_EXISTS "Acţiunea '%s' este deja înregistrată pentru a cest tip de fişier. Introduceţi un nume nou, apoi încercaţi din nou."
     IDS_EXE_FILTER "Programe\0*.exe\0Orice fişier\0*.*\0"
     IDS_EDITING_ACTION "Editare acţiune pentru tipul: "
     IDS_NO_ICONS "Fişierul '%s' nu conţine pictograme.\n\nAlegeţi o pictogramă din listă sau specificaţi un alt fişier."
