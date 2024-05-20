@@ -17,7 +17,7 @@ public:
     HANDLE m_hDirectory;
     WCHAR m_szDirectoryPath[MAX_PATH];
 
-    static CDirectoryWatcher *Create(HWND hNotifWnd, LPCWSTR pszDirectoryPath, BOOL fSubTree);
+    static CDirectoryWatcher *Create(HWND hNotifyWnd, LPCWSTR pszDirectoryPath, BOOL fSubTree);
     static void RequestAllWatchersTermination();
     ~CDirectoryWatcher();
 
@@ -29,7 +29,7 @@ public:
     void ReadCompletion(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered);
 
 protected:
-    HWND m_hNotifWnd;
+    HWND m_hNotifyWnd;
     BOOL m_fDead;
     BOOL m_fRecursive;
     CDirectoryList m_dir_list;
@@ -37,5 +37,5 @@ protected:
 
     BOOL CreateAPCThread();
     void ProcessNotification();
-    CDirectoryWatcher(HWND hNotifWnd, LPCWSTR pszDirectoryPath, BOOL fSubTree);
+    CDirectoryWatcher(HWND hNotifyWnd, LPCWSTR pszDirectoryPath, BOOL fSubTree);
 };

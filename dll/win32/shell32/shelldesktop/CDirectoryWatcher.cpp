@@ -68,13 +68,13 @@ static void NTAPI _RequestAllTerminationAPC(ULONG_PTR Parameter)
     s_hThreadAPC = NULL;
 }
 
-CDirectoryWatcher::CDirectoryWatcher(HWND hNotifWnd, LPCWSTR pszDirectoryPath, BOOL fSubTree)
-    : m_hNotifWnd(hNotifWnd)
+CDirectoryWatcher::CDirectoryWatcher(HWND hNotifyWnd, LPCWSTR pszDirectoryPath, BOOL fSubTree)
+    : m_hNotifyWnd(hNotifyWnd)
     , m_fDead(FALSE)
     , m_fRecursive(fSubTree)
     , m_dir_list(pszDirectoryPath, fSubTree)
 {
-    TRACE("CDirectoryWatcher::CDirectoryWatcher: %p, '%S'\n", this, pszDirectoryPath);
+    TRACE("%p, '%S'\n", this, pszDirectoryPath);
 
     GetFullPathNameW(pszDirectoryPath, _countof(m_szDirectoryPath), m_szDirectoryPath, NULL);
 
@@ -87,10 +87,10 @@ CDirectoryWatcher::CDirectoryWatcher(HWND hNotifWnd, LPCWSTR pszDirectoryPath, B
 }
 
 /*static*/ CDirectoryWatcher *
-CDirectoryWatcher::Create(HWND hNotifWnd, LPCWSTR pszDirectoryPath, BOOL fSubTree)
+CDirectoryWatcher::Create(HWND hNotifyWnd, LPCWSTR pszDirectoryPath, BOOL fSubTree)
 {
     CDirectoryWatcher *pDirectoryWatcher =
-        new CDirectoryWatcher(hNotifWnd, pszDirectoryPath, fSubTree);
+        new CDirectoryWatcher(hNotifyWnd, pszDirectoryPath, fSubTree);
     if (pDirectoryWatcher->m_hDirectory == INVALID_HANDLE_VALUE)
     {
         ERR("CreateFileW failed\n");
@@ -102,7 +102,7 @@ CDirectoryWatcher::Create(HWND hNotifWnd, LPCWSTR pszDirectoryPath, BOOL fSubTre
 
 CDirectoryWatcher::~CDirectoryWatcher()
 {
-    TRACE("CDirectoryWatcher::~CDirectoryWatcher: %p, '%S'\n", this, m_szDirectoryPath);
+    TRACE("%p, '%S'\n", this, m_szDirectoryPath);
 
     if (m_hDirectory != INVALID_HANDLE_VALUE)
         CloseHandle(m_hDirectory);
@@ -389,10 +389,11 @@ void CDirectoryWatcher::QuitWatching()
 
 BOOL CDirectoryWatcher::IsDead()
 {
-    if (m_hNotifWnd && !::IsWindow(m_hNotifWnd))
+    if (m_hNotifyWnd && !::IsWindow(m_hNotifyWnd))
     {
-        m_hNotifWnd = NULL;
+        m_hNotifyWnd = NULL;
         m_fDead = TRUE;
+        CancelIo(m_hDirectory);
     }
     return m_fDead;
 }
