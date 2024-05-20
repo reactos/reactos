@@ -2071,6 +2071,13 @@ MmProtectSectionView(PMMSUPPORT AddressSpace,
     NTSTATUS Status;
     ULONG_PTR MaxLength;
 
+    ASSERT(MemoryArea->Type == MEMORY_AREA_SECTION_VIEW);
+
+    if (MemoryArea->DeleteInProgress)
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
     MaxLength = MA_GetEndingAddress(MemoryArea) - (ULONG_PTR)BaseAddress;
     if (Length > MaxLength)
         Length = (ULONG)MaxLength;
@@ -2086,7 +2093,8 @@ MmProtectSectionView(PMMSUPPORT AddressSpace,
         return STATUS_INVALID_PAGE_PROTECTION;
     }
 
-    *OldProtect = Region->Protect;
+    if (OldProtect != NULL)
+        *OldProtect = Region->Protect;
     Status = MmAlterRegion(AddressSpace, (PVOID)MA_GetStartingAddress(MemoryArea),
                            &MemoryArea->SectionData.RegionListHead,
                            BaseAddress, Length, Region->Type, Protect,
@@ -3586,12 +3594,13 @@ MmUnmapViewOfSegment(PMMSUPPORT AddressSpace,
 /* This functions must be called with a locked address space */
 NTSTATUS
 NTAPI
-MiRosUnmapViewOfSection(IN PEPROCESS Process,
-                        IN PVOID BaseAddress,
-                        IN BOOLEAN SkipDebuggerNotify)
+MiRosUnmapViewOfSection(
+    _In_ PEPROCESS Process,
+    _In_ PMEMORY_AREA MemoryArea,
+    _In_ PVOID BaseAddress,
+    _In_ BOOLEAN SkipDebuggerNotify)
 {
     NTSTATUS Status;
-    PMEMORY_AREA MemoryArea;
     PMMSUPPORT AddressSpace;
     PVOID ImageBaseAddress = 0;
 
@@ -3599,11 +3608,10 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
            Process, BaseAddress);
 
     ASSERT(Process);
+    ASSERT(MemoryArea);
 
     AddressSpace = &Process->Vm;
 
-    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace,
-                 BaseAddress);
     if (MemoryArea == NULL ||
 #ifdef NEWCC
             ((MemoryArea->Type != MEMORY_AREA_SECTION_VIEW) && (MemoryArea->Type != MEMORY_AREA_CACHE)) ||
@@ -4099,8 +4107,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
         }
 
         /* Check there is enough space to map the section at that point. */
-        if (MmLocateMemoryAreaByRegion(AddressSpace, (PVOID)ImageBase,
-                                       PAGE_ROUND_UP(ImageSize)) != NULL)
+        if (!MmIsAddressRangeFree(AddressSpace, (PVOID)ImageBase, PAGE_ROUND_UP(ImageSize)))
         {
             /* Fail if the user requested a fixed base address. */
             if ((*BaseAddress) != NULL)
