@@ -2104,7 +2104,7 @@ EndDialog(
        owner = GetAncestor( hwnd, GA_PARENT);
     }
     else
-       owner = GetWindow( hwnd, GW_OWNER );    
+       owner = GetWindow( hwnd, GW_OWNER );
 
     if (owner)
         EnableWindow( owner, TRUE );
@@ -2186,7 +2186,7 @@ GetDlgItem(
     HWND *list;
     HWND ret = 0;
 
-    if (!hDlg) return 0; 
+    if (!hDlg) return 0;
 
     list = WIN_ListChildren(hDlg);
     if (!list) return 0;
@@ -2394,7 +2394,7 @@ GetNextDlgTabItem(
   BOOL bPrevious)
 {
     PWND pWindow;
-      
+
     pWindow = ValidateHwnd( hDlg );
     if (!pWindow) return NULL;
     if (hCtl)
@@ -2563,7 +2563,7 @@ IsDialogMessageW(
                 {
                     fIsDialog = (GETDLGINFO(hDlg) != NULL);
                 }
-  
+
                 SendMessageW(hDlg, WM_CHANGEUISTATE, MAKEWPARAM(UIS_CLEAR, UISF_HIDEFOCUS), 0);
 
                 /* I am not sure under which circumstances the TAB is handled
@@ -2618,13 +2618,13 @@ IsDialogMessageW(
              {
                  BOOL fPrevious = (lpMsg->wParam == VK_LEFT || lpMsg->wParam == VK_UP);
 
-                 /* Skip STATIC elements when arrow-moving through a list of controls */
+                 /* Skip STATIC, SBS_SIZEBOX and SBS_SIZEGRIP elements when arrow-moving through a list of controls */
                  HWND hwndNext, hwndFirst = lpMsg->hwnd;
                  for (hwndNext = GetNextDlgGroupItem(hDlg, hwndFirst, fPrevious);
                       hwndNext && hwndFirst != hwndNext;
                       hwndNext = GetNextDlgGroupItem(hDlg, hwndNext, fPrevious))
                   {
-                      if (!(SendMessageW(hwndNext, WM_GETDLGCODE, 0, 0) & DLGC_STATIC))
+                      if ( (!(SendMessageW(hwndNext, WM_GETDLGCODE, 0, 0) & DLGC_STATIC)) && !(GetWindowLongPtrW(hwndNext, GWL_STYLE) & (SBS_SIZEBOX | SBS_SIZEGRIP)) )
                           break;
                   }
 
