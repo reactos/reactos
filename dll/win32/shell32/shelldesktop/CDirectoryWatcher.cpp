@@ -384,6 +384,7 @@ void CDirectoryWatcher::QuitWatching()
     assert(this != NULL);
 
     m_fDead = TRUE;
+    m_hNotifyWnd = NULL;
     CancelIo(m_hDirectory);
 }
 
