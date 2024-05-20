@@ -1321,7 +1321,7 @@ CAppsListView::SetDisplayAppType(APPLICATION_VIEW_TYPE AppType)
     ItemCount = 0;
     CheckedItemCount = 0;
 
-    ListView_Scroll(m_hWnd, 0, 0x7fff * -1); // Fixes a bug in Wine ComCtl32 where VScroll is not reset after deleting items
+    ListView_Scroll(m_hWnd, 0, 0x7fff * -1); // FIXME: a bug in Wine ComCtl32 where VScroll is not reset after deleting items
 
     // delete old columns
     while (ColumnCount)
