@@ -77,6 +77,14 @@ Bus_PDO_PnP (
                                                &DeviceData->InterfaceName);
         }
         else if (device->flags.hardware_id &&
+                 strstr(device->pnp.hardware_id, ACPI_FAN_HID))
+        {
+            status = IoRegisterDeviceInterface(DeviceData->Common.Self,
+                                               &GUID_DEVICE_FAN,
+                                               NULL,
+                                               &DeviceData->InterfaceName);
+        }
+        else if (device->flags.hardware_id &&
                  strstr(device->pnp.hardware_id, ACPI_BUTTON_HID_LID))
         {
             status = IoRegisterDeviceInterface(DeviceData->Common.Self,
