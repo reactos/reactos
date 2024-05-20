@@ -68,17 +68,18 @@ static void NTAPI _RequestAllTerminationAPC(ULONG_PTR Parameter)
     s_hThreadAPC = NULL;
 }
 
-CDirectoryWatcher::CDirectoryWatcher(LPCWSTR pszDirectoryPath, BOOL fSubTree)
-    : m_fDead(FALSE)
+CDirectoryWatcher::CDirectoryWatcher(HWND hNotifWnd, LPCWSTR pszDirectoryPath, BOOL fSubTree)
+    : m_hNotifWnd(hNotifWnd)
+    , m_fDead(FALSE)
     , m_fRecursive(fSubTree)
     , m_dir_list(pszDirectoryPath, fSubTree)
 {
     TRACE("CDirectoryWatcher::CDirectoryWatcher: %p, '%S'\n", this, pszDirectoryPath);
 
-    lstrcpynW(m_szDirectoryPath, pszDirectoryPath, MAX_PATH);
+    GetFullPathNameW(pszDirectoryPath, _countof(m_szDirectoryPath), m_szDirectoryPath, NULL);
 
     // open the directory to watch changes (for ReadDirectoryChangesW)
-    m_hDirectory = CreateFileW(pszDirectoryPath, FILE_LIST_DIRECTORY,
+    m_hDirectory = CreateFileW(m_szDirectoryPath, FILE_LIST_DIRECTORY,
                                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                                NULL, OPEN_EXISTING,
                                FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
@@ -86,12 +87,10 @@ CDirectoryWatcher::CDirectoryWatcher(LPCWSTR pszDirectoryPath, BOOL fSubTree)
 }
 
 /*static*/ CDirectoryWatcher *
-CDirectoryWatcher::Create(LPCWSTR pszDirectoryPath, BOOL fSubTree)
+CDirectoryWatcher::Create(HWND hNotifWnd, LPCWSTR pszDirectoryPath, BOOL fSubTree)
 {
-    WCHAR szFullPath[MAX_PATH];
-    GetFullPathNameW(pszDirectoryPath, _countof(szFullPath), szFullPath, NULL);
-
-    CDirectoryWatcher *pDirectoryWatcher = new CDirectoryWatcher(szFullPath, fSubTree);
+    CDirectoryWatcher *pDirectoryWatcher =
+        new CDirectoryWatcher(hNotifWnd, pszDirectoryPath, fSubTree);
     if (pDirectoryWatcher->m_hDirectory == INVALID_HANDLE_VALUE)
     {
         ERR("CreateFileW failed\n");
@@ -388,7 +387,12 @@ void CDirectoryWatcher::QuitWatching()
     CancelIo(m_hDirectory);
 }
 
-BOOL CDirectoryWatcher::IsDead() const
+BOOL CDirectoryWatcher::IsDead()
 {
+    if (m_hNotifWnd && !::IsWindow(m_hNotifWnd))
+    {
+        m_hNotifWnd = NULL;
+        m_fDead = TRUE;
+    }
     return m_fDead;
 }
