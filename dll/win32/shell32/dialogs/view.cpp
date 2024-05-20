@@ -962,15 +962,15 @@ FolderOptionsViewDlg(
 
                 case IDC_VIEW_APPLY_TO_ALL:
                 case IDC_VIEW_RESET_ALL:
-                    {
-                        HRESULT hr = HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
-                        CFolderOptions *pFO = (CFolderOptions*)GetWindowLongPtr(hwndDlg, GWL_USERDATA);
-                        if (pFO)
-                            hr = pFO->ApplyDefFolderSettings(LOWORD(wParam) == IDC_VIEW_RESET_ALL);
-                        if (FAILED(hr))
-                            SHELL_ErrorBox(hwndDlg, hr);
-                        break;
-                    }
+                {
+                    HRESULT hr = HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
+                    CFolderOptions *pFO = (CFolderOptions*)GetWindowLongPtr(hwndDlg, GWL_USERDATA);
+                    if (pFO)
+                        hr = pFO->ApplyDefFolderSettings(LOWORD(wParam) == IDC_VIEW_RESET_ALL);
+                    if (FAILED(hr))
+                        SHELL_ErrorBox(hwndDlg, hr);
+                    break;
+                }
             }
             break;
 

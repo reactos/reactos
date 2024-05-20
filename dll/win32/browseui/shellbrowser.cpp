@@ -2153,7 +2153,6 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::Exec(const GUID *pguidCmdGroup, DWORD n
         switch (nCmdID)
         {
             case DVCMDID_RESETDEFAULTFOLDERSETTINGS:
-                ApplyBrowserDefaultFolderSettings(NULL);
                 IUnknown_Exec(fCurrentShellView, CGID_DefView, nCmdID, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
                 break;
         }

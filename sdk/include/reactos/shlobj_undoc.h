@@ -150,7 +150,7 @@ DECLARE_INTERFACE_(IBanneredBar, IUnknown)//, "596A9A94-013E-11d1-8D34-00A0C90F2
  */
 struct DEFFOLDERSETTINGS
 {
-    enum { STRUCTSIZE_NT5 = 40 };
+    enum { STRUCTSIZE_XP = 40 };
     UINT ReactOsSignature;
     FOLDERSETTINGS FolderSettings;
 };
@@ -160,12 +160,12 @@ struct DEFFOLDERSETTINGS
 DECLARE_INTERFACE_(IGlobalFolderSettings, IUnknown)
 {
     /*** IUnknown ***/
-	STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
-	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-	STDMETHOD_(ULONG,Release)(THIS) PURE;
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IGlobalFolderSettings ***/
-    STDMETHOD(Get)(THIS_ DEFFOLDERSETTINGS *pFDS, UINT cb) PURE;
-    STDMETHOD(Set)(THIS_ const DEFFOLDERSETTINGS *pFDS, UINT cb, UINT unknown) PURE;
+    STDMETHOD(Get)(THIS_ struct DEFFOLDERSETTINGS *pFDS, UINT cb) PURE;
+    STDMETHOD(Set)(THIS_ const struct DEFFOLDERSETTINGS *pFDS, UINT cb, UINT unknown) PURE;
 };
 #undef INTERFACE
 

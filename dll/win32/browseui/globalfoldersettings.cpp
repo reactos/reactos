@@ -113,14 +113,14 @@ HRESULT CGlobalFolderSettings::Save(const DEFFOLDERSETTINGS *pFDS)
     return hr;
 }
 
-HRESULT STDMETHODCALLTYPE CGlobalFolderSettings::Get(DEFFOLDERSETTINGS *pFDS, UINT cb)
+HRESULT STDMETHODCALLTYPE CGlobalFolderSettings::Get(struct DEFFOLDERSETTINGS *pFDS, UINT cb)
 {
     if (cb != sizeof(DEFFOLDERSETTINGS) || !pFDS)
         return E_INVALIDARG;
     return Load(*pFDS);
 }
 
-HRESULT STDMETHODCALLTYPE CGlobalFolderSettings::Set(const DEFFOLDERSETTINGS *pFDS, UINT cb, UINT unknown)
+HRESULT STDMETHODCALLTYPE CGlobalFolderSettings::Set(const struct DEFFOLDERSETTINGS *pFDS, UINT cb, UINT unknown)
 {
     // NULL pFDS means reset
     if (cb != sizeof(DEFFOLDERSETTINGS) && pFDS)

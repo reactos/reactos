@@ -49,8 +49,8 @@ public:
     static HRESULT Save(const DEFFOLDERSETTINGS *pFDS);
 
     // *** IGlobalFolderSettings methods ***
-    STDMETHOD(Get)(DEFFOLDERSETTINGS *pFDS, UINT cb) override;
-    STDMETHOD(Set)(const DEFFOLDERSETTINGS *pFDS, UINT cb, UINT unknown) override;
+    STDMETHOD(Get)(struct DEFFOLDERSETTINGS *pFDS, UINT cb) override;
+    STDMETHOD(Set)(const struct DEFFOLDERSETTINGS *pFDS, UINT cb, UINT unknown) override;
 
     DECLARE_REGISTRY_RESOURCEID(IDR_GLOBALFOLDERSETTINGS)
     DECLARE_NOT_AGGREGATABLE(CGlobalFolderSettings)

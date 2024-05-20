@@ -130,5 +130,18 @@ HRESULT CFolderOptions::HandleDefFolderSettings(int Action)
         }
         bs2->Release();
     }
+
+    if (Action == DFSA_RESET)
+    {
+        IGlobalFolderSettings *pgfs;
+        HRESULT hr = CoCreateInstance(CLSID_GlobalFolderSettings, NULL, CLSCTX_INPROC_SERVER,
+                                      IID_IGlobalFolderSettings, (void **)&pgfs);
+        if (SUCCEEDED(hr))
+        {
+            hr = pgfs->Set(NULL, 0, 0);
+            pgfs->Release();
+        }
+    }
+
     return hr;
 }
