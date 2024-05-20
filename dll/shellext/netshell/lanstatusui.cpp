@@ -822,13 +822,13 @@ ShowStatusPropertyDialog(
             WCHAR buffer[100];
             
             LoadStringW(netshell_hInstance, IDS_NETWORKCONNECTION, buffer, _countof(buffer));
-            HWND prophwnd = FindWindow(NULL, buffer);
+            HWND hWndProp = FindWindow(NULL, buffer);
 
-            /* if the window is already open, prevent it from opening again */
-            if (prophwnd != NULL)
+            /* If the window is already opened, prevent it from opening again */
+            if (hWndProp != NULL)
             {
-                ShowWindow(prophwnd, SW_SHOWNORMAL);
-                SetForegroundWindow(prophwnd);
+                ShowWindow(hWndProp, SW_SHOWNORMAL);
+                SetForegroundWindow(hWndProp);
             }
             else
             {
