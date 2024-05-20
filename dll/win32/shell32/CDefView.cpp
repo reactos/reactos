@@ -2347,7 +2347,7 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     // Translate PIDLs.
     // SHSimpleIDListFromPathW creates fake PIDLs (lacking some attributes)
     // FIXME: Use SHGetRealIDL
-    CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidl0(Pidls[0]), pidl1(Pidls[1]);
+    CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidl0(ILClone(Pidls[0])), pidl1(ILClone(Pidls[1]));
     WCHAR path[MAX_PATH];
     if (pidl0 && SHGetPathFromIDListW(pidl0, path) && PathFileExistsW(path))
     {
