@@ -323,7 +323,6 @@ public:
     CShellBrowser();
     ~CShellBrowser();
     HRESULT Initialize();
-    HRESULT ApplyBrowserDefaultFolderSettings(IShellView *pvs);
 public:
     HRESULT BrowseToPIDL(LPCITEMIDLIST pidl, long flags);
     HRESULT BrowseToPath(IShellFolder *newShellFolder, LPCITEMIDLIST absolutePIDL,
@@ -334,6 +333,7 @@ public:
     HRESULT ShowBand(const CLSID &classID, bool vertical);
     HRESULT NavigateToParent();
     HRESULT DoFolderOptions();
+    HRESULT ApplyBrowserDefaultFolderSettings(IShellView *pvs);
     static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     void RepositionBars();
     HRESULT BuildExplorerBandMenu();
