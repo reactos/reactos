@@ -188,7 +188,7 @@ BEGIN
     LTEXT "", -1, 8, 31, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Tipi Objektivit:", IDC_SHORTCUT_TYPE, 8, 38, 68, 10
     EDITTEXT IDC_SHORTCUT_TYPE_EDIT, 79, 37, 150, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Vendndodhja ObjektivitTarget location:", IDC_SHORTCUT_LOCATION, 8, 55, 68, 10
+    LTEXT "Vendndodhja ObjektivitTarget location:", IDC_SHORTCUT_LOCATION, 8, 55, 68, 10 //FIXME: That string is duplicated sq + en and much too long. Even when keeping just "Vendndodhja Objektivit" it would still be too long. Provide something shorter!
     EDITTEXT IDC_SHORTCUT_LOCATION_EDIT, 79, 53, 150, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "&Objektivi:", IDC_SHORTCUT_TARGET, 8, 71, 68, 10
     EDITTEXT IDC_SHORTCUT_TARGET_TEXT, 79, 69, 150, 14, ES_AUTOHSCROLL
