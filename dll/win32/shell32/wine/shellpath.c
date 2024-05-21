@@ -3100,7 +3100,7 @@ BOOL WINAPI SHGetSpecialFolderPathW (
 }
 
 #ifdef __REACTOS__
-HRESULT WINAPI SHGetFolderLocationHelper(HWND hwnd, int nFolder, REFCLSID clsid, LPITEMIDLIST *ppidl)
+HRESULT SHGetFolderLocationHelper(HWND hwnd, int nFolder, REFCLSID clsid, LPITEMIDLIST *ppidl)
 {
     HRESULT hr;
     IShellFolder *psf;

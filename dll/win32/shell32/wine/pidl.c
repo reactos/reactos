@@ -1682,10 +1682,10 @@ LPITEMIDLIST _ILCreatePrinters(void)
 {
 #ifdef __REACTOS__
     // Note: Wine returns the PIDL as it was in Windows 95, NT5 moved it into CSIDL_CONTROLS
-    extern HRESULT WINAPI SHGetFolderLocationHelper(HWND hwnd, int nFolder, REFCLSID clsid, LPITEMIDLIST *ppidl);
+    extern HRESULT SHGetFolderLocationHelper(HWND hwnd, int nFolder, REFCLSID clsid, LPITEMIDLIST *ppidl);
     LPITEMIDLIST pidl;
-    HRESULT hr = SHGetFolderLocationHelper(NULL, CSIDL_CONTROLS, &CLSID_Printers, &pidl);
-    return SUCCEEDED(hr) ? pidl : NULL;
+    SHGetFolderLocationHelper(NULL, CSIDL_CONTROLS, &CLSID_Printers, &pidl);
+    return pidl;
 #else
     LPITEMIDLIST parent = _ILCreateGuid(PT_GUID, &CLSID_MyComputer), ret = NULL;
 
