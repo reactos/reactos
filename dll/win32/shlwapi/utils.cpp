@@ -140,6 +140,22 @@ SHLWAPI_IsBogusHRESULT(HRESULT hr)
     return (hr == E_FAIL || hr == E_INVALIDARG || hr == E_NOTIMPL);
 }
 
+struct RETRY_DATA
+{
+    DWORD dwMask;
+    DWORD dwAdd;
+    DWORD dwRetryFlags;
+};
+
+static const RETRY_DATA g_RetryData[] =
+{
+    { (DWORD)~SHGDN_FOREDITING,     SHGDN_NORMAL,     0x80000000 },
+    { (DWORD)~SHGDN_FORADDRESSBAR,  SHGDN_NORMAL,     0x80000000 },
+    { (DWORD)~0,                    SHGDN_FORPARSING, 0x80000000 },
+    { (DWORD)~SHGDN_FORPARSING,     SHGDN_NORMAL,     SFGDNO_RETRYWITHFORPARSING },
+    { (DWORD)~SHGDN_INFOLDER,       SHGDN_NORMAL,     0x80000000 },
+};
+
 /*************************************************************************
  * IShellFolder_GetDisplayNameOf [SHLWAPI.316]
  */
@@ -164,8 +180,22 @@ IShellFolder_GetDisplayNameOf(
     if ((uFlags & SHGDN_FORPARSING) == 0)
         dwRetryFlags |= SFGDNO_RETRYWITHFORPARSING;
 
-    /* It seems the function is actually retrying here */
-    FIXME("dwRetryFlags: 0x%X\n", dwRetryFlags);
+    for (size_t iEntry = 0; iEntry < _countof(g_RetryData); ++iEntry)
+    {
+        const RETRY_DATA *pData = &g_RetryData[iEntry];
+        if (dwRetryFlags & pData->dwRetryFlags)
+        {
+            UINT uNewFlags = (pData->dwAdd | (uFlags & pData->dwMask));
+            if (uNewFlags != uFlags)
+            {
+                hr = psf->GetDisplayNameOf(pidl, uNewFlags, lpName);
+                if (!SHLWAPI_IsBogusHRESULT(hr))
+                    break;
+
+                uFlags = uNewFlags;
+            }
+        }
+    }
 
     return hr;
 }
