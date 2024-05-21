@@ -142,18 +142,18 @@ SHLWAPI_IsBogusHRESULT(HRESULT hr)
 
 struct RETRY_DATA
 {
-    DWORD dwMask;
+    DWORD dwRemove;
     DWORD dwAdd;
     DWORD dwRetryFlags;
 };
 
 static const RETRY_DATA g_RetryData[] =
 {
-    { (DWORD)~SHGDN_FOREDITING,     SHGDN_NORMAL,     0x80000000 },
-    { (DWORD)~SHGDN_FORADDRESSBAR,  SHGDN_NORMAL,     0x80000000 },
-    { (DWORD)~0,                    SHGDN_FORPARSING, 0x80000000 },
-    { (DWORD)~SHGDN_FORPARSING,     SHGDN_NORMAL,     SFGDNO_RETRYWITHFORPARSING },
-    { (DWORD)~SHGDN_INFOLDER,       SHGDN_NORMAL,     0x80000000 },
+    { SHGDN_FOREDITING,     SHGDN_NORMAL,     0x80000000 },
+    { SHGDN_FORADDRESSBAR,  SHGDN_NORMAL,     0x80000000 },
+    { 0,                    SHGDN_FORPARSING, 0x80000000 },
+    { SHGDN_FORPARSING,     SHGDN_NORMAL,     SFGDNO_RETRYWITHFORPARSING },
+    { SHGDN_INFOLDER,       SHGDN_NORMAL,     0x80000000 },
 };
 
 /*************************************************************************
@@ -180,21 +180,21 @@ IShellFolder_GetDisplayNameOf(
     if ((uFlags & SHGDN_FORPARSING) == 0)
         dwRetryFlags |= SFGDNO_RETRYWITHFORPARSING;
 
-    for (size_t iEntry = 0; iEntry < _countof(g_RetryData); ++iEntry)
+    for (SIZE_T iEntry = 0; iEntry < _countof(g_RetryData); ++iEntry)
     {
         const RETRY_DATA *pData = &g_RetryData[iEntry];
-        if (dwRetryFlags & pData->dwRetryFlags)
-        {
-            UINT uNewFlags = (pData->dwAdd | (uFlags & pData->dwMask));
-            if (uNewFlags != uFlags)
-            {
-                hr = psf->GetDisplayNameOf(pidl, uNewFlags, lpName);
-                if (!SHLWAPI_IsBogusHRESULT(hr))
-                    break;
+        if (!(dwRetryFlags & pData->dwRetryFlags))
+            continue;
 
-                uFlags = uNewFlags;
-            }
-        }
+        UINT uNewFlags = ((uFlags & ~pData->dwRemove) | pData->dwAdd);
+        if (uNewFlags == uFlags)
+            continue;
+
+        hr = psf->GetDisplayNameOf(pidl, uNewFlags, lpName);
+        if (!SHLWAPI_IsBogusHRESULT(hr))
+            break;
+
+        uFlags = uNewFlags;
     }
 
     return hr;
