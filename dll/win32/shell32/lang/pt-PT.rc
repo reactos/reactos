@@ -46,7 +46,7 @@ MENU_003 MENU
 BEGIN
     MENUITEM "&Retroceder\tCtrl+Z", FCIDM_SHVIEW_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "Cor&tar\tCtrl+X", FCIDM_SHVIEW_CUT
+    MENUITEM "Cor&tar\tCtrl+X", FCIDM_SHVIEW_CUT //FIXME: accelerator collision &T
     MENUITEM "&Copiar\tCtrl+C", FCIDM_SHVIEW_COPY
     MENUITEM "Co&lar\tCtrl+V", FCIDM_SHVIEW_INSERT
     MENUITEM "Colar &atalho", FCIDM_SHVIEW_INSERTLINK
@@ -54,7 +54,7 @@ BEGIN
     MENUITEM "Copiar &pasta...", FCIDM_SHVIEW_COPYTO
     MENUITEM "Mo&ver para pasta...", FCIDM_SHVIEW_MOVETO
     MENUITEM SEPARATOR
-    MENUITEM "Seleccionar &tudo\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "Seleccionar &tudo\tCtrl+A", FCIDM_SHVIEW_SELECTALL //FIXME: accelerator collision &T
     MENUITEM "&Inverter Selecção.", FCIDM_SHVIEW_INVERTSELECTION
 END
 
