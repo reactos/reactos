@@ -159,7 +159,8 @@ static const RETRY_DATA g_RetryData[] =
 /*************************************************************************
  * IShellFolder_GetDisplayNameOf [SHLWAPI.316]
  *
- * @note Don't confuse with <shobjidl.h> inline function of same name.
+ * @note Don't confuse with <shobjidl.h> inline function of the same name.
+ *       This function retries with other flags.
  */
 EXTERN_C HRESULT WINAPI
 IShellFolder_GetDisplayNameOf(
@@ -182,7 +183,7 @@ IShellFolder_GetDisplayNameOf(
     if ((uFlags & SHGDN_FORPARSING) == 0)
         dwRetryFlags |= SFGDNO_RETRYWITHFORPARSING;
 
-    // Retry with another flags
+    // Retry with other flags to get successful results
     for (SIZE_T iEntry = 0; iEntry < _countof(g_RetryData); ++iEntry)
     {
         const RETRY_DATA *pData = &g_RetryData[iEntry];
@@ -206,7 +207,8 @@ IShellFolder_GetDisplayNameOf(
 /*************************************************************************
  * IShellFolder_ParseDisplayName [SHLWAPI.317]
  *
- * @note Don't confuse with <shobjidl.h> inline function of same name.
+ * @note Don't confuse with <shobjidl.h> inline function of the same name.
+ *       This function is safer than IShellFolder::ParseDisplayName.
  */
 EXTERN_C HRESULT WINAPI
 IShellFolder_ParseDisplayName(
@@ -245,7 +247,8 @@ IShellFolder_ParseDisplayName(
 /*************************************************************************
  * IShellFolder_CompareIDs [SHLWAPI.551]
  *
- * @note Don't confuse with <shobjidl.h> inline function of same name.
+ * @note Don't confuse with <shobjidl.h> inline function of the same name.
+ *       This function tries IShellFolder2 if possible.
  */
 EXTERN_C HRESULT WINAPI
 IShellFolder_CompareIDs(
