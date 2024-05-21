@@ -181,7 +181,7 @@ Shell_DisplayNameOf(
     _Out_ LPWSTR pszBuf,
     _In_ UINT cchBuf);
 
-HRESULT SHBindToObject(
+EXTERN_C HRESULT SHBindToObject(
     _In_opt_ IShellFolder *psf,
     _In_ LPCITEMIDLIST pidl,
     _In_ REFIID riid,
