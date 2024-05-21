@@ -37,7 +37,7 @@ BEGIN
         MENUITEM "Uppdatera", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Klistra in", FCIDM_SHVIEW_INSERT
-        MENUITEM "Klistra in som genväg", FCIDM_SHVIEW_INSERTLINK //FIXME: should we use "Klistra in &genväg" here to sync it with the same string ~1ß lines below? ATTENTION: There is also a IDM_CREATELINK and IDS_CREATELINK "Skapa &genväg" (not sure whether those can happen in the same menu or not)
+        MENUITEM "Klistra in som genväg", FCIDM_SHVIEW_INSERTLINK //FIXME: should we use "Klistra in &genväg" here to sync it with the same string ~10 lines below? ATTENTION: There is also a IDM_CREATELINK and IDS_CREATELINK "Skapa &genväg" (not sure whether those can happen in the same menu or not)
     END
 END
 
