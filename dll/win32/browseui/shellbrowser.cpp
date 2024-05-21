@@ -2312,8 +2312,11 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::QueryActiveShellView(IShellView **ppshv
         return E_POINTER;
     *ppshv = fCurrentShellView;
     if (fCurrentShellView.p != NULL)
+    {
         fCurrentShellView.p->AddRef();
-    return S_OK;
+        return S_OK;
+    }
+    return E_FAIL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::OnViewWindowActive(IShellView *ppshv)
@@ -2568,10 +2571,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::CanNavigateNow()
 HRESULT STDMETHODCALLTYPE CShellBrowser::GetPidl(LPITEMIDLIST *ppidl)
 {
     // called by explorer bar to get current pidl
-    if (ppidl == NULL)
-        return E_POINTER;
-    *ppidl = ILClone(fCurrentDirectoryPIDL);
-    return S_OK;
+    return ppidl ? SHILClone(fCurrentDirectoryPIDL, ppidl) : E_POINTER;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::SetReferrer(LPCITEMIDLIST pidl)
