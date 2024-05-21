@@ -149,11 +149,11 @@ struct RETRY_DATA
 };
 static const RETRY_DATA g_RetryData[] =
 {
-    { SHGDN_FOREDITING,    SHGDN_NORMAL,     SFGDNO_RETRYALWAYS         },
-    { SHGDN_FORADDRESSBAR, SHGDN_NORMAL,     SFGDNO_RETRYALWAYS         },
+    { SHGDN_FOREDITING,    0,                SFGDNO_RETRYALWAYS         },
+    { SHGDN_FORADDRESSBAR, 0,                SFGDNO_RETRYALWAYS         },
     { 0,                   SHGDN_FORPARSING, SFGDNO_RETRYALWAYS         },
-    { SHGDN_FORPARSING,    SHGDN_NORMAL,     SFGDNO_RETRYWITHFORPARSING },
-    { SHGDN_INFOLDER,      SHGDN_NORMAL,     SFGDNO_RETRYALWAYS         },
+    { SHGDN_FORPARSING,    0,                SFGDNO_RETRYWITHFORPARSING },
+    { SHGDN_INFOLDER,      0,                SFGDNO_RETRYALWAYS         },
 };
 
 /*************************************************************************
