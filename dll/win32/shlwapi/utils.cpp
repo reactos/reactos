@@ -143,8 +143,8 @@ SHLWAPI_IsBogusHRESULT(HRESULT hr)
 // Used for IShellFolder_GetDisplayNameOf
 struct RETRY_DATA
 {
-    DWORD dwRemove;
-    DWORD dwAdd;
+    UINT uRemove;
+    UINT uAdd;
     DWORD dwRetryFlags;
 };
 static const RETRY_DATA g_RetryData[] =
@@ -189,7 +189,7 @@ IShellFolder_GetDisplayNameOf(
         if (!(dwRetryFlags & pData->dwRetryFlags))
             continue;
 
-        UINT uNewFlags = ((uFlags & ~pData->dwRemove) | pData->dwAdd);
+        UINT uNewFlags = ((uFlags & ~pData->uRemove) | pData->uAdd);
         if (uNewFlags == uFlags)
             continue;
 
