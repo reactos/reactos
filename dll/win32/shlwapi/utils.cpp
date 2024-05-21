@@ -167,7 +167,7 @@ IShellFolder_GetDisplayNameOf(
     _In_ LPCITEMIDLIST pidl,
     _In_ DWORD uFlags,
     _Out_ LPSTRRET lpName,
-    _In_ DWORD dwRetryFlags)
+    _In_ DWORD dwRetryFlags) // dwRetryFlags is an additional parameter
 {
     HRESULT hr;
 
