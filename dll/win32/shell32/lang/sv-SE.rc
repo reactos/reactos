@@ -37,7 +37,7 @@ BEGIN
         MENUITEM "Uppdatera", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Klistra in", FCIDM_SHVIEW_INSERT
-        MENUITEM "Klistra in som genväg", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "Klistra in som genväg", FCIDM_SHVIEW_INSERTLINK //FIXME: should we use "Klistra in &genväg" here to sync it with the same string ~1ß lines below? ATTENTION: There is also a IDM_CREATELINK and IDS_CREATELINK "Skapa &genväg" (not sure whether those can happen in the same menu or not)
     END
 END
 
@@ -46,9 +46,9 @@ MENU_003 MENU
 BEGIN
     MENUITEM "&Ångra\tCtrl+Z", FCIDM_SHVIEW_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "Kl&ipp ut\tCtrl+X", FCIDM_SHVIEW_CUT
-    MENUITEM "&Kopiera\tCtrl+C", FCIDM_SHVIEW_COPY
-    MENUITEM "&Klistra in\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "Kl&ipp ut\tCtrl+X", FCIDM_SHVIEW_CUT //FIXME: double-check this accelerator on Windows! Should it be &t maybe?
+    MENUITEM "&Kopiera\tCtrl+C", FCIDM_SHVIEW_COPY //FIXME: accelerator collision &K
+    MENUITEM "&Klistra in\tCtrl+V", FCIDM_SHVIEW_INSERT //FIXME: accelerator collision &K
     MENUITEM "Klistra in &genväg", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
     MENUITEM "Kopiera till &mapp...", FCIDM_SHVIEW_COPYTO
@@ -64,15 +64,15 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "K&lipp ut", IDM_CUT
+        MENUITEM "K&lipp ut", IDM_CUT //FIXME: double-check this accelerator on Windows! Should it be &t maybe? (which is currently used by IDM_DELETE). Don't forget to keep in sync with IDS_CUT!
         MENUITEM "&Kopiera", IDM_COPY
         MENUITEM "Paste", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "Skapa &genväg", IDM_CREATELINK
-        MENUITEM "&Ta bort", IDM_DELETE
-        MENUITEM "&Byt namn", IDM_RENAME
+        MENUITEM "&Ta bort", IDM_DELETE //FIXME: double-check this accelerator on Windows! Don't forget to keep in sync with IDS_DELETE
+        MENUITEM "&Byt namn", IDM_RENAME //FIXME: sync that with IDS_RENAME "Byt namn". Either both should have an accelerator or both not. It's up to you.
         MENUITEM SEPARATOR
-        MENUITEM "&Egenskaper", IDM_PROPERTIES
+        MENUITEM "&Egenskaper", IDM_PROPERTIES //FIXME: sync that with IDS_PROPERTIES regarding the accelerator. Either &E or none, it's your choice!
     END
 END
 
@@ -786,9 +786,9 @@ BEGIN
     IDS_OPEN "Öppna"
     IDS_CREATELINK "Skapa &genväg"
     IDS_COPY "&Kopiera"
-    IDS_DELETE "Ta bort"
+    IDS_DELETE "Ta bort" //FIXME: double-check this accelerator on Windows! Don't forget to keep in sync with IDM_DELETE
     IDS_PROPERTIES "Egenskaper"
-    IDS_CUT "K&lipp ut"
+    IDS_CUT "K&lipp ut" //FIXME: double-check this accelerator on Windows! Should it be &t maybe? (which is currently used by IDM_DELETE). Don't forget to keep in sync with IDS_CUT!
     IDS_RESTORE "Återställ"
     IDS_FORMATDRIVE "Formatera..."
     IDS_RENAME "Byt namn"
