@@ -140,13 +140,13 @@ SHLWAPI_IsBogusHRESULT(HRESULT hr)
     return (hr == E_FAIL || hr == E_INVALIDARG || hr == E_NOTIMPL);
 }
 
+// Used for IShellFolder_GetDisplayNameOf
 struct RETRY_DATA
 {
     DWORD dwRemove;
     DWORD dwAdd;
     DWORD dwRetryFlags;
 };
-
 static const RETRY_DATA g_RetryData[] =
 {
     { SHGDN_FOREDITING,    SHGDN_NORMAL,     SFGDNO_RETRYALWAYS         },
@@ -180,6 +180,7 @@ IShellFolder_GetDisplayNameOf(
     if ((uFlags & SHGDN_FORPARSING) == 0)
         dwRetryFlags |= SFGDNO_RETRYWITHFORPARSING;
 
+    // Retry with another flags
     for (SIZE_T iEntry = 0; iEntry < _countof(g_RetryData); ++iEntry)
     {
         const RETRY_DATA *pData = &g_RetryData[iEntry];
@@ -194,7 +195,7 @@ IShellFolder_GetDisplayNameOf(
         if (!SHLWAPI_IsBogusHRESULT(hr))
             break;
 
-        uFlags = uNewFlags;
+        uFlags = uNewFlags; // Update flags every time
     }
 
     return hr;
