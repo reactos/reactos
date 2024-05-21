@@ -341,7 +341,7 @@ HRESULT WINAPI
 IShellFolder_GetDisplayNameOf(
     _In_ IShellFolder *psf,
     _In_ LPCITEMIDLIST pidl,
-    _In_ DWORD uFlags,
+    _In_ SHGDNF uFlags,
     _Out_ LPSTRRET lpName,
     _In_ DWORD dwRetryFlags);
 

@@ -143,30 +143,31 @@ SHLWAPI_IsBogusHRESULT(HRESULT hr)
 // Used for IShellFolder_GetDisplayNameOf
 struct RETRY_DATA
 {
-    UINT uRemove;
-    UINT uAdd;
+    SHGDNF uRemove;
+    SHGDNF uAdd;
     DWORD dwRetryFlags;
 };
 static const RETRY_DATA g_RetryData[] =
 {
-    { SHGDN_FOREDITING,    0,                SFGDNO_RETRYALWAYS         },
-    { SHGDN_FORADDRESSBAR, 0,                SFGDNO_RETRYALWAYS         },
-    { 0,                   SHGDN_FORPARSING, SFGDNO_RETRYALWAYS         },
-    { SHGDN_FORPARSING,    0,                SFGDNO_RETRYWITHFORPARSING },
-    { SHGDN_INFOLDER,      0,                SFGDNO_RETRYALWAYS         },
+    { SHGDN_FOREDITING,    SHGDN_NORMAL,     SFGDNO_RETRYALWAYS         },
+    { SHGDN_FORADDRESSBAR, SHGDN_NORMAL,     SFGDNO_RETRYALWAYS         },
+    { SHGDN_NORMAL,        SHGDN_FORPARSING, SFGDNO_RETRYALWAYS         },
+    { SHGDN_FORPARSING,    SHGDN_NORMAL,     SFGDNO_RETRYWITHFORPARSING },
+    { SHGDN_INFOLDER,      SHGDN_NORMAL,     SFGDNO_RETRYALWAYS         },
 };
 
 /*************************************************************************
  * IShellFolder_GetDisplayNameOf [SHLWAPI.316]
  *
  * @note Don't confuse with <shobjidl.h> inline function of the same name.
- *       This function retries with other flags.
+ *       If the original call fails with the given uFlags, this function will
+ *       retry with other flags to attempt retrieving any meaningful description.
  */
 EXTERN_C HRESULT WINAPI
 IShellFolder_GetDisplayNameOf(
     _In_ IShellFolder *psf,
     _In_ LPCITEMIDLIST pidl,
-    _In_ DWORD uFlags,
+    _In_ SHGDNF uFlags,
     _Out_ LPSTRRET lpName,
     _In_ DWORD dwRetryFlags) // dwRetryFlags is an additional parameter
 {
@@ -190,7 +191,7 @@ IShellFolder_GetDisplayNameOf(
         if (!(dwRetryFlags & pData->dwRetryFlags))
             continue;
 
-        UINT uNewFlags = ((uFlags & ~pData->uRemove) | pData->uAdd);
+        SHGDNF uNewFlags = ((uFlags & ~pData->uRemove) | pData->uAdd);
         if (uNewFlags == uFlags)
             continue;
 
