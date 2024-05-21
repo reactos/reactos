@@ -1,4 +1,9 @@
 
+add_definitions(
+    -D__WINESRC__
+    -Dstrcasecmp=_stricmp
+)
+
 list(APPEND SOURCE
     devinst.c
     dialog.c
