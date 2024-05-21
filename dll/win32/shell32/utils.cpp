@@ -202,6 +202,7 @@ SHBindToObjectEx(
     return hr;
 }
 
+EXTERN_C
 HRESULT SHBindToObject(
     _In_opt_ IShellFolder *psf,
     _In_ LPCITEMIDLIST pidl,

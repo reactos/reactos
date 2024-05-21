@@ -3099,6 +3099,32 @@ BOOL WINAPI SHGetSpecialFolderPathW (
                             szPath) == S_OK;
 }
 
+#ifdef __REACTOS__
+HRESULT SHGetFolderLocationHelper(HWND hwnd, int nFolder, REFCLSID clsid, LPITEMIDLIST *ppidl)
+{
+    HRESULT hr;
+    IShellFolder *psf;
+    LPITEMIDLIST parent, child;
+    EXTERN_C HRESULT SHBindToObject(IShellFolder *psf, LPCITEMIDLIST pidl, REFIID riid, void **ppvObj);
+    *ppidl = NULL;
+    if (FAILED(hr = SHGetFolderLocation(hwnd, nFolder, NULL, 0, &parent)))
+        return hr;
+    if (SUCCEEDED(hr = SHBindToObject(NULL, parent, &IID_IShellFolder, (void**)&psf)))
+    {
+        WCHAR clsidstr[2 + 38 + 1];
+        clsidstr[0] = clsidstr[1] = L':';
+        StringFromGUID2(clsid, clsidstr + 2, 38 + 1);
+        hr = IShellFolder_ParseDisplayName(psf, hwnd, NULL, clsidstr, NULL, &child, NULL);
+        if (SUCCEEDED(hr))
+            *ppidl = ILCombine(parent, child);
+        IShellFolder_Release(psf);
+        ILFree(child);
+    }
+    ILFree(parent);
+    return hr;
+}
+#endif
+
 /*************************************************************************
  * SHGetFolderLocation [SHELL32.@]
  *
@@ -3185,6 +3211,15 @@ HRESULT WINAPI SHGetFolderLocation(
         case CSIDL_NETWORK:
             *ppidl = _ILCreateNetwork();
             break;
+
+#ifdef __REACTOS__
+        case CSIDL_CONNECTIONS:
+        {
+            EXTERN_C const CLSID CLSID_ConnectionFolder;
+            hr = SHGetFolderLocationHelper(hwndOwner, CSIDL_CONTROLS, &CLSID_ConnectionFolder, ppidl);
+            break;
+        }
+#endif
 
         default:
         {
