@@ -843,9 +843,9 @@ BEGIN
 
     /* message box strings */
     IDS_RESTART_TITLE "Repornire"
-    IDS_RESTART_PROMPT "Repornire sistemul?"
+    IDS_RESTART_PROMPT "Repornire sistem?"
     IDS_SHUTDOWN_TITLE "Închidere"
-    IDS_SHUTDOWN_PROMPT "Închidere sistemul?"
+    IDS_SHUTDOWN_PROMPT "Închidere sistem?"
 
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Formatare disc local"
