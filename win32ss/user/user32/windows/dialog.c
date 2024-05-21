@@ -2624,7 +2624,7 @@ IsDialogMessageW(
                       hwndNext && hwndFirst != hwndNext;
                       hwndNext = GetNextDlgGroupItem(hDlg, hwndNext, fPrevious))
                   {
-                      if ( (!(SendMessageW(hwndNext, WM_GETDLGCODE, 0, 0) & DLGC_STATIC)) && !(GetWindowLongPtrW(hwndNext, GWL_STYLE) & (SBS_SIZEBOX | SBS_SIZEGRIP)) )
+                      if ( !(SendMessageW(hwndNext, WM_GETDLGCODE, 0, 0) & DLGC_STATIC) && !(GetWindowLongPtrW(hwndNext, GWL_STYLE) & (SBS_SIZEBOX | SBS_SIZEGRIP)) )
                           break;
                   }
 
