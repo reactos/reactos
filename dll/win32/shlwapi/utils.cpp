@@ -158,6 +158,8 @@ static const RETRY_DATA g_RetryData[] =
 
 /*************************************************************************
  * IShellFolder_GetDisplayNameOf [SHLWAPI.316]
+ *
+ * @note Don't confuse with <shobjidl.h> inline function.
  */
 EXTERN_C HRESULT WINAPI
 IShellFolder_GetDisplayNameOf(
@@ -203,6 +205,8 @@ IShellFolder_GetDisplayNameOf(
 
 /*************************************************************************
  * IShellFolder_ParseDisplayName [SHLWAPI.317]
+ *
+ * @note Don't confuse with <shobjidl.h> inline function.
  */
 EXTERN_C HRESULT WINAPI
 IShellFolder_ParseDisplayName(
@@ -240,6 +244,8 @@ IShellFolder_ParseDisplayName(
 
 /*************************************************************************
  * IShellFolder_CompareIDs [SHLWAPI.551]
+ *
+ * @note Don't confuse with <shobjidl.h> inline function.
  */
 EXTERN_C HRESULT WINAPI
 IShellFolder_CompareIDs(
