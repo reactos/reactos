@@ -39,7 +39,7 @@ add_library(oleacc MODULE
 
 add_dependencies(oleacc oleacc_idlheader stdole2)
 set_module_type(oleacc win32dll)
-target_link_libraries(oleacc uuid wine ${PSEH_LIB})
+target_link_libraries(oleacc uuid wine ${PSEH_LIB} oldnames)
 add_importlibs(oleacc oleaut32 ole32 user32 rpcrt4 msvcrt kernel32 ntdll)
 add_pch(oleacc precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET oleacc DESTINATION reactos/system32 FOR all)

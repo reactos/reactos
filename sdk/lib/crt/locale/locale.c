@@ -31,6 +31,8 @@
 #error _pctype should not be defined
 #endif
 
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
 unsigned int __lc_codepage = 0;
 int MSVCRT___lc_collate_cp = 0;
 LCID MSVCRT___lc_handle[LC_MAX - LC_MIN + 1] = { 0 };
