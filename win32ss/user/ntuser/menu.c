@@ -3394,7 +3394,7 @@ static PMENU FASTCALL MENU_ShowSubPopup(PWND WndOwner, PMENU Menu, BOOL SelectFi
   }
   Item->fState |= MF_MOUSESELECT;
 
-  if (IS_SYSTEM_MENU(Menu))
+  if (IS_SYSTEM_MENU(Menu) && !(Menu->fFlags & MNF_POPUP))
   {
       MENU_InitSysMenuPopup(Item->spSubMenu, pWnd->style, pWnd->pcls->style, HTSYSMENU);
 
