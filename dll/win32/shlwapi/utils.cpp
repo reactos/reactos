@@ -149,11 +149,11 @@ struct RETRY_DATA
 
 static const RETRY_DATA g_RetryData[] =
 {
-    { SHGDN_FOREDITING,     SHGDN_NORMAL,     0x80000000 },
-    { SHGDN_FORADDRESSBAR,  SHGDN_NORMAL,     0x80000000 },
-    { 0,                    SHGDN_FORPARSING, 0x80000000 },
-    { SHGDN_FORPARSING,     SHGDN_NORMAL,     SFGDNO_RETRYWITHFORPARSING },
-    { SHGDN_INFOLDER,       SHGDN_NORMAL,     0x80000000 },
+    { SHGDN_FOREDITING,    SHGDN_NORMAL,     SFGDNO_RETRYALWAYS         },
+    { SHGDN_FORADDRESSBAR, SHGDN_NORMAL,     SFGDNO_RETRYALWAYS         },
+    { 0,                   SHGDN_FORPARSING, SFGDNO_RETRYALWAYS         },
+    { SHGDN_FORPARSING,    SHGDN_NORMAL,     SFGDNO_RETRYWITHFORPARSING },
+    { SHGDN_INFOLDER,      SHGDN_NORMAL,     SFGDNO_RETRYALWAYS         },
 };
 
 /*************************************************************************
@@ -175,7 +175,7 @@ IShellFolder_GetDisplayNameOf(
     if (!SHLWAPI_IsBogusHRESULT(hr))
         return hr;
 
-    dwRetryFlags |= 0x80000000;
+    dwRetryFlags |= SFGDNO_RETRYALWAYS;
 
     if ((uFlags & SHGDN_FORPARSING) == 0)
         dwRetryFlags |= SFGDNO_RETRYWITHFORPARSING;

@@ -347,6 +347,7 @@ IShellFolder_GetDisplayNameOf(
 
 /* Flags for IShellFolder_GetDisplayNameOf */
 #define SFGDNO_RETRYWITHFORPARSING 1
+#define SFGDNO_RETRYALWAYS 0x80000000
 
 HRESULT WINAPI
 IShellFolder_ParseDisplayName(
