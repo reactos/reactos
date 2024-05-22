@@ -328,7 +328,6 @@ HKCR,"txtfile\shell\print\command","",0x00000000,"notepad.exe /p ""%1"""
 HKCR,".xml","",0x00000000,"xmlfile"
 HKCR,".xml","Content Type",0x00000000,"text/xml"
 HKCR,"xmlfile","",0x00000000,%XMLFILE%
-;;HKCR,"xmlfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\msxml3r.dll,-1"
 HKCR,"xmlfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\msxml3.dll,0"
 HKCR,"xmlfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
 
@@ -336,7 +335,6 @@ HKCR,"xmlfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.e
 HKCR,".xsl","",0x00000000,"xslfile"
 HKCR,".xsl","Content Type",0x00000000,"text/xml"
 HKCR,"xslfile","",0x00000000,%XSLFILE%
-;;HKCR,"xslfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\msxml3r.dll,-2"
 HKCR,"xslfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\msxml3.dll,1"
 HKCR,"xslfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
 
@@ -351,7 +349,7 @@ HKCR,"Msi.Package\shell\Repair\command","",0x00020000,"%SystemRoot%\system32\msi
 HKCR,"Msi.Package\shell\Uninstall","",0x00000000,%UNINSTALL%
 HKCR,"Msi.Package\shell\Uninstall\command","",0x00020000,"%SystemRoot%\system32\msiexec.exe /x ""%1"""
 
-; Program Information File for NT VDM
+; NT VDM Program Information File
 HKCR,".pif","",0x00000000,"piffile"
 HKCR,"piffile","",0x00000000,"NT VDM Program Information File"
 HKCR,"piffile","EditFlags",0x00010001,0x00000001
@@ -694,7 +692,7 @@ OCXFILE="OLE Control Extension"
 SCFFILE="ReactOS Explorer Command"
 WMZFILE="Compressed Enhanced Metafile"
 
-:: For .reg files, right-click menu
+;; For .reg files, right-click menu
 MERGE="Merge"
 
 ;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
