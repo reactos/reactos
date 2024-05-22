@@ -108,7 +108,7 @@ if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
 endif()
 
 target_link_libraries(ext2fs memcmp ${PSEH_LIB})
-add_definitions(-D__KERNEL__ -D_CRT_NO_POSIX_ERROR_CODES)
+add_definitions(-D__KERNEL__ -D_CRT_NO_POSIX_ERROR_CODES -D_CRT_DECLARE_NONSTDC_NAMES=1)
 set_module_type(ext2fs kernelmodedriver)
 add_importlibs(ext2fs ntoskrnl hal)
 add_pch(ext2fs inc/ext2fs.h SOURCE)

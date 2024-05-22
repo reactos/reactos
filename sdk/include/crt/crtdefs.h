@@ -33,10 +33,9 @@
 #pragma pack(push,_CRT_PACKING)
 
 /* Disable non-ANSI C definitions if compiling with __STDC__ */
-//HACK: Disabled
-//#if __STDC__
-//#define NO_OLDNAMES
-//#endif
+#if (!defined _CRT_DECLARE_NONSTDC_NAMES || !_CRT_DECLARE_NONSTDC_NAMES) && (defined _CRT_DECLARE_NONSTDC_NAMES || __STDC__)
+#define NO_OLDNAMES
+#endif
 
 
 /** Properties ***************************************************************/
