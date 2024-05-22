@@ -65,7 +65,7 @@ PartitionCreateDevice(
     else
     {
         partExt->Gpt.PartitionType = PartitionEntry->Gpt.PartitionType;
-        partExt->Gpt.PartitionId = PartitionEntry->Gpt.PartitionType;
+        partExt->Gpt.PartitionId = PartitionEntry->Gpt.PartitionId;
         partExt->Gpt.Attributes = PartitionEntry->Gpt.Attributes;
 
         RtlCopyMemory(partExt->Gpt.Name, PartitionEntry->Gpt.Name, sizeof(partExt->Gpt.Name));
@@ -756,7 +756,7 @@ PartitionHandleDeviceControl(
             Irp->IoStatus.Information = sizeof(*gptAttrs);
             break;
         }
-        // mountmgr stuff
+        // mountmgr notifications (these should be in volmgr.sys once it is implemented)
         case IOCTL_MOUNTDEV_QUERY_DEVICE_NAME:
         {
             PMOUNTDEV_NAME name = Irp->AssociatedIrp.SystemBuffer;
@@ -785,36 +785,88 @@ PartitionHandleDeviceControl(
         }
         case IOCTL_MOUNTDEV_QUERY_UNIQUE_ID:
         {
+            const SIZE_T headerSize = FIELD_OFFSET(MOUNTDEV_UNIQUE_ID, UniqueId);
             PMOUNTDEV_UNIQUE_ID uniqueId = Irp->AssociatedIrp.SystemBuffer;
+            PBASIC_VOLUME_UNIQUE_ID basicVolId = (PBASIC_VOLUME_UNIQUE_ID)&uniqueId->UniqueId;
+            PUNICODE_STRING InterfaceName;
 
-            if (!partExt->VolumeInterfaceName.Buffer)
-            {
-                status = STATUS_INVALID_PARAMETER;
-                break;
-            }
-
-            if (!VerifyIrpOutBufferSize(Irp, sizeof(USHORT)))
+            // Check whether the minimal header size was provided
+            if (!VerifyIrpOutBufferSize(Irp, headerSize))
             {
                 status = STATUS_BUFFER_TOO_SMALL;
                 break;
             }
 
-            uniqueId->UniqueIdLength = partExt->VolumeInterfaceName.Length;
+            PartMgrAcquireLayoutLock(fdoExtension);
 
-            // return UniqueIdLength back
-            if (!VerifyIrpOutBufferSize(Irp, sizeof(USHORT) + uniqueId->UniqueIdLength))
+            InterfaceName = &partExt->VolumeInterfaceName;
+            if (fdoExtension->IsSuperFloppy)
+                InterfaceName = &fdoExtension->DiskInterfaceName;
+
+            // Calculate and return the necessary data size
+            if ((fdoExtension->DiskData.PartitionStyle == PARTITION_STYLE_MBR) &&
+                !fdoExtension->IsSuperFloppy)
             {
-                Irp->IoStatus.Information = sizeof(USHORT);
+                uniqueId->UniqueIdLength = sizeof(basicVolId->Mbr);
+            }
+            else if (fdoExtension->DiskData.PartitionStyle == PARTITION_STYLE_GPT)
+            {
+                uniqueId->UniqueIdLength = sizeof(basicVolId->Gpt);
+            }
+            else
+            {
+                if (!InterfaceName->Buffer || !InterfaceName->Length)
+                {
+                    PartMgrReleaseLayoutLock(fdoExtension);
+                    status = STATUS_INVALID_PARAMETER;
+                    break;
+                }
+                uniqueId->UniqueIdLength = InterfaceName->Length;
+            }
+
+            // Return UniqueIdLength back
+            if (!VerifyIrpOutBufferSize(Irp, headerSize + uniqueId->UniqueIdLength))
+            {
+                PartMgrReleaseLayoutLock(fdoExtension);
+                Irp->IoStatus.Information = headerSize;
                 status = STATUS_BUFFER_OVERFLOW;
                 break;
             }
 
-            RtlCopyMemory(uniqueId->UniqueId,
-                          partExt->VolumeInterfaceName.Buffer,
-                          uniqueId->UniqueIdLength);
+            //
+            // Write the UniqueId
+            //
+            // Format:
+            // - Basic volume on MBR disk: disk Mbr.Signature + partition StartingOffset (length: 0x0C)
+            // - Basic volume on GPT disk: "DMIO:ID:" + Gpt.PartitionGuid (length: 0x18)
+            // - Volume on Basic disk (NT <= 4): 8-byte FTDisk identifier (length: 0x08)
+            // - Volume on Dynamic disk (NT 5+): "DMIO:ID:" + dmio VolumeGuid (length: 0x18)
+            // - Super-floppy (single-partition with StartingOffset == 0),
+            //   or Removable media: DiskInterfaceName.
+            // - As fallback, we use the VolumeInterfaceName.
+            //
+            if ((fdoExtension->DiskData.PartitionStyle == PARTITION_STYLE_MBR) &&
+                !fdoExtension->IsSuperFloppy)
+            {
+                basicVolId->Mbr.Signature = fdoExtension->DiskData.Mbr.Signature;
+                basicVolId->Mbr.StartingOffset = partExt->StartingOffset;
+            }
+            else if (fdoExtension->DiskData.PartitionStyle == PARTITION_STYLE_GPT)
+            {
+                basicVolId->Gpt.Signature = DMIO_ID_SIGNATURE;
+                basicVolId->Gpt.PartitionGuid = partExt->Gpt.PartitionId;
+            }
+            else
+            {
+                RtlCopyMemory(uniqueId->UniqueId,
+                              InterfaceName->Buffer,
+                              uniqueId->UniqueIdLength);
+            }
+
+            PartMgrReleaseLayoutLock(fdoExtension);
 
             status = STATUS_SUCCESS;
-            Irp->IoStatus.Information = sizeof(USHORT) + uniqueId->UniqueIdLength;
+            Irp->IoStatus.Information = headerSize + uniqueId->UniqueIdLength;
             break;
         }
         default:
