@@ -150,7 +150,6 @@
 #define IDS_DB__FILE              220
 #define IDS_DLL_FILE              206
 #define IDS_DRV_FILE              207
-#define IDS_EFI_FILE              221
 #define IDS_EXE_FILE              208
 #define IDS_NLS_FILE              222
 #define IDS_OCX_FILE              223
@@ -240,10 +239,8 @@
 
 /* Advanced settings */
 #define IDS_ADVANCED_FOLDER                         30498
-#define IDS_ADVANCED_NET_CRAWLER                    30509
 #define IDS_ADVANCED_FOLDER_SIZE_TIP                30514
 #define IDS_ADVANCED_FRIENDLY_TREE                  30511
-#define IDS_ADVANCED_WEB_VIEW_BARRICADE             30510
 #define IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS         30505
 #define IDS_ADVANCED_SHOW_FULL_PATH                 30504
 #define IDS_ADVANCED_DISABLE_THUMB_CACHE            30517
@@ -347,12 +344,19 @@
 #define IDC_FILETYPES_CHANGE                14006
 #define IDC_FILETYPES_DESCRIPTION           14007
 #define IDC_FILETYPES_ADVANCED              14008
+#define IDC_FILETYPES_ICON                  14009
 
 /* Control IDs for IDD_NEWEXTENSION dialog */
 #define IDC_NEWEXT_EDIT                     14001
 #define IDC_NEWEXT_ADVANCED                 14002
 #define IDC_NEWEXT_COMBOBOX                 14003
 #define IDC_NEWEXT_ASSOC                    14004
+
+/* Control IDs for IDD_FOLDER_OPTIONS_VIEW dialog */
+#define IDC_VIEW_APPLY_TO_ALL               14001
+#define IDC_VIEW_RESET_ALL                  14002
+#define IDC_VIEW_TREEVIEW                   14003
+#define IDC_VIEW_RESTORE_DEFAULTS           14004
 
 /* Other dialogs */
 #define IDD_RUN_AS       23
@@ -637,8 +641,6 @@
 #define FCIDM_SHVIEW_INSERT          0x701A
 #define FCIDM_SHVIEW_UNDO            0x701B
 #define FCIDM_SHVIEW_INSERTLINK      0x701C
-#define FCIDM_SHVIEW_COPYTO          0x701E
-#define FCIDM_SHVIEW_MOVETO          0x701F
 #define FCIDM_SHVIEW_SELECTALL       0x7021
 #define FCIDM_SHVIEW_INVERTSELECTION 0x7022
 
@@ -648,7 +650,6 @@
 #define FCIDM_SHVIEW_REPORTVIEW  0x702C //FIXME
 /* 0x7030-0x703f are used by the shellbrowser */
 #define FCIDM_SHVIEW_AUTOARRANGE 0x7031
-#define FCIDM_SHVIEW_SNAPTOGRID  0x7032
 
 #define FCIDM_SHVIEW_HELP       0x7041
 #define FCIDM_SHVIEW_RENAME     0x7050

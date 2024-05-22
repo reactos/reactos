@@ -37,7 +37,7 @@ typedef struct
     WCHAR FileDescription[100];
     WCHAR ClassKey[MAX_PATH];
     DWORD EditFlags;
-} FOLDER_FILE_TYPE_ENTRY, *PFOLDER_FILE_TYPE_ENTRY;
+} FILE_TYPE_ENTRY, *PFILE_TYPE_ENTRY;
 
 // uniquely-defined icon entry for Advanced Settings
 typedef struct ADVANCED_ICON
@@ -1129,50 +1129,48 @@ FolderOptionsViewDlg(
 
 static
 VOID
-InitializeFileTypesListCtrlColumns(HWND hDlgCtrl)
+FileTypesDlg_InitListView(HWND hDlgCtrl)
 {
     RECT clientRect;
     LVCOLUMNW col;
     WCHAR szName[50];
     DWORD dwStyle;
-    int columnSize = 140;
+    INT columnSize = 120;
 
-
-    if (!LoadStringW(shell32_hInstance, IDS_COLUMN_EXTENSION, szName, sizeof(szName) / sizeof(WCHAR)))
+    if (!LoadStringW(shell32_hInstance, IDS_COLUMN_EXTENSION, szName, _countof(szName)))
     {
-        /* default to english */
+        // default to english
         wcscpy(szName, L"Extensions");
     }
 
-    /* make sure its null terminated */
-    szName[(sizeof(szName)/sizeof(WCHAR))-1] = 0;
+    // make sure its null terminated
+    szName[_countof(szName) - 1] = 0;
 
     GetClientRect(hDlgCtrl, &clientRect);
     ZeroMemory(&col, sizeof(LV_COLUMN));
-    columnSize = 140; //FIXME
     col.iSubItem   = 0;
     col.mask      = LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM | LVCF_FMT;
     col.fmt = LVCFMT_FIXED_WIDTH;
     col.cx         = columnSize | LVCFMT_LEFT;
     col.cchTextMax = wcslen(szName);
     col.pszText    = szName;
-    (void)SendMessageW(hDlgCtrl, LVM_INSERTCOLUMNW, 0, (LPARAM)&col);
+    SendMessageW(hDlgCtrl, LVM_INSERTCOLUMNW, 0, (LPARAM)&col);
 
-    if (!LoadStringW(shell32_hInstance, IDS_FILE_TYPES, szName, sizeof(szName) / sizeof(WCHAR)))
+    if (!LoadStringW(shell32_hInstance, IDS_FILE_TYPES, szName, _countof(szName)))
     {
-        /* default to english */
+        // default to english
         wcscpy(szName, L"File Types");
-        ERR("Failed to load localized string!\n");
+        ERR("Failed to load localized string\n");
     }
 
     col.iSubItem   = 1;
     col.cx         = clientRect.right - clientRect.left - columnSize;
     col.cchTextMax = wcslen(szName);
     col.pszText    = szName;
-    (void)SendMessageW(hDlgCtrl, LVM_INSERTCOLUMNW, 1, (LPARAM)&col);
+    SendMessageW(hDlgCtrl, LVM_INSERTCOLUMNW, 1, (LPARAM)&col);
 
-    /* set full select style */
-    dwStyle = (DWORD) SendMessage(hDlgCtrl, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
+    // set full select style
+    dwStyle = (DWORD)SendMessage(hDlgCtrl, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
     dwStyle = dwStyle | LVS_EX_FULLROWSELECT;
     SendMessage(hDlgCtrl, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, dwStyle);
 }
@@ -1214,9 +1212,9 @@ DeleteExt(HWND hwndDlg, LPCWSTR pszExt)
 
 static
 VOID
-InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile)
+InsertFileType(HWND hDlgCtrl, LPCWSTR szName, PINT iItem, LPCWSTR szFile)
 {
-    PFOLDER_FILE_TYPE_ENTRY Entry;
+    PFILE_TYPE_ENTRY Entry;
     HKEY hKey;
     LVITEMW lvItem;
     DWORD dwSize;
@@ -1224,57 +1222,56 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile)
 
     if (szName[0] != L'.')
     {
-        /* FIXME handle URL protocol handlers */
+        // FIXME handle URL protocol handlers
         return;
     }
 
-    /* allocate file type entry */
-    Entry = (PFOLDER_FILE_TYPE_ENTRY)HeapAlloc(GetProcessHeap(), 0, sizeof(FOLDER_FILE_TYPE_ENTRY));
-
+    // allocate file type entry
+    Entry = (PFILE_TYPE_ENTRY)HeapAlloc(GetProcessHeap(), 0, sizeof(FILE_TYPE_ENTRY));
     if (!Entry)
         return;
 
-    /* open key */
+    // open key
     if (RegOpenKeyExW(HKEY_CLASSES_ROOT, szName, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
     {
         HeapFree(GetProcessHeap(), 0, Entry);
         return;
     }
 
-    /* FIXME check for duplicates */
+    // FIXME check for duplicates
 
-    /* query for the default key */
+    // query for the default key
     dwSize = sizeof(Entry->ClassKey);
-    if (RegQueryValueExW(hKey, NULL, NULL, NULL, (LPBYTE)Entry->ClassKey, &dwSize) != ERROR_SUCCESS)
+    if (RegQueryValueExW(hKey, NULL, NULL, NULL, LPBYTE(Entry->ClassKey), &dwSize) != ERROR_SUCCESS)
     {
-        /* no link available */
+        // no link available
         Entry->ClassKey[0] = 0;
     }
 
     if (Entry->ClassKey[0])
     {
         HKEY hTemp;
-        /* try open linked key */
+        // try open linked key
         if (RegOpenKeyExW(HKEY_CLASSES_ROOT, Entry->ClassKey, 0, KEY_READ, &hTemp) == ERROR_SUCCESS)
         {
-            /* use linked key */
+            // use linked key
             RegCloseKey(hKey);
             hKey = hTemp;
         }
     }
 
-    /* read friendly type name */
+    // read friendly type name
     if (RegLoadMUIStringW(hKey, L"FriendlyTypeName", Entry->FileDescription, sizeof(Entry->FileDescription), NULL, 0, NULL) != ERROR_SUCCESS)
     {
-        /* read file description */
+        // read file description
         dwSize = sizeof(Entry->FileDescription);
         Entry->FileDescription[0] = 0;
 
-        /* read default key */
-        RegQueryValueExW(hKey, NULL, NULL, NULL, (LPBYTE)Entry->FileDescription, &dwSize);
+        // read default key
+        RegQueryValueExW(hKey, NULL, NULL, NULL, LPBYTE(Entry->FileDescription), &dwSize);
     }
 
-    /* Read the EditFlags value */
+    // Read the EditFlags value
     Entry->EditFlags = 0;
     if (!RegQueryValueExW(hKey, L"EditFlags", NULL, &dwType, NULL, &dwSize))
     {
@@ -1282,24 +1279,24 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile)
             RegQueryValueExW(hKey, L"EditFlags", NULL, NULL, (LPBYTE)&Entry->EditFlags, &dwSize);
     }
 
-    /* close key */
+    // close key
     RegCloseKey(hKey);
 
-    /* Do not add excluded entries */
+    // Do not add excluded entries
     if (Entry->EditFlags & 0x00000001) //FTA_Exclude
     {
         HeapFree(GetProcessHeap(), 0, Entry);
         return;
     }
 
-    /* convert extension to upper case */
+    // convert extension to upper case
     wcscpy(Entry->FileExtension, szName);
     _wcsupr(Entry->FileExtension);
 
     if (!Entry->FileDescription[0])
     {
-        /* construct default 'FileExtensionFile' by formatting the uppercase extension
-           with IDS_FILE_EXT_TYPE, outputting something like a l18n 'INI File' */
+        // construct default 'FileExtensionFile' by formatting the uppercase extension
+        // with IDS_FILE_EXT_TYPE, outputting something like a l18n 'INI File'
 
         StringCchPrintf(Entry->FileDescription, _countof(Entry->FileDescription), szFile, &Entry->FileExtension[1]);
     }
@@ -1310,7 +1307,7 @@ InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile)
     lvItem.pszText = &Entry->FileExtension[1];
     lvItem.iItem = *iItem;
     lvItem.lParam = (LPARAM)Entry;
-    (void)SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&lvItem);
+    SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&lvItem);
 
     ZeroMemory(&lvItem, sizeof(LVITEMW));
     lvItem.mask = LVIF_TEXT;
@@ -1327,11 +1324,11 @@ int
 CALLBACK
 ListViewCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-    PFOLDER_FILE_TYPE_ENTRY Entry1, Entry2;
+    PFILE_TYPE_ENTRY Entry1, Entry2;
     int x;
 
-    Entry1 = (PFOLDER_FILE_TYPE_ENTRY)lParam1;
-    Entry2 = (PFOLDER_FILE_TYPE_ENTRY)lParam2;
+    Entry1 = (PFILE_TYPE_ENTRY)lParam1;
+    Entry2 = (PFILE_TYPE_ENTRY)lParam2;
 
     x = wcsicmp(Entry1->FileExtension, Entry2->FileExtension);
     if (x != 0)
@@ -1341,8 +1338,8 @@ ListViewCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 }
 
 static
-PFOLDER_FILE_TYPE_ENTRY
-InitializeFileTypesListCtrl(HWND hwndDlg)
+PFILE_TYPE_ENTRY
+FileTypesDlg_DoList(HWND hwndDlg)
 {
     HWND hDlgCtrl;
     DWORD dwIndex = 0;
@@ -1352,13 +1349,13 @@ InitializeFileTypesListCtrl(HWND hwndDlg)
     LVITEMW lvItem;
     INT iItem = 0;
 
-    hDlgCtrl = GetDlgItem(hwndDlg, 14000);
-    InitializeFileTypesListCtrlColumns(hDlgCtrl);
+    hDlgCtrl = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
+    FileTypesDlg_InitListView(hDlgCtrl);
 
     szFile[0] = 0;
     if (!LoadStringW(shell32_hInstance, IDS_FILE_EXT_TYPE, szFile, _countof(szFile)))
     {
-        /* default to english */
+        // default to english
         wcscpy(szFile, L"%s File");
     }
     szFile[(_countof(szFile)) - 1] = 0;
@@ -1371,14 +1368,14 @@ InitializeFileTypesListCtrl(HWND hwndDlg)
         dwName = _countof(szName);
     }
 
-    /* Leave if the list is empty */
+    // Leave if the list is empty
     if (iItem == 0)
         return NULL;
 
-    /* sort list */
+    // sort list
     ListView_SortItems(hDlgCtrl, ListViewCompareProc, NULL);
 
-    /* select first item */
+    // select first item
     ZeroMemory(&lvItem, sizeof(LVITEMW));
     lvItem.mask = LVIF_STATE;
     lvItem.stateMask = (UINT)-1;
@@ -1389,11 +1386,11 @@ InitializeFileTypesListCtrl(HWND hwndDlg)
     lvItem.mask = LVIF_PARAM;
     ListView_GetItem(hDlgCtrl, &lvItem);
 
-    return (PFOLDER_FILE_TYPE_ENTRY)lvItem.lParam;
+    return (PFILE_TYPE_ENTRY)lvItem.lParam;
 }
 
 static
-PFOLDER_FILE_TYPE_ENTRY
+PFILE_TYPE_ENTRY
 FindSelectedItem(
     HWND hDlgCtrl)
 {
@@ -1412,7 +1409,7 @@ FindSelectedItem(
         if (ListView_GetItem(hDlgCtrl, &lvItem))
         {
             if (lvItem.state & LVIS_SELECTED)
-                return (PFOLDER_FILE_TYPE_ENTRY)lvItem.lParam;
+                return (PFILE_TYPE_ENTRY)lvItem.lParam;
         }
     }
 
@@ -1626,10 +1623,9 @@ NewExtDlg_OnOK(HWND hwndDlg, NEWEXT_DIALOG *pNewExt)
     return TRUE;
 }
 
-// IDD_NEWEXTENSION dialog
-INT_PTR
-CALLBACK
-NewExtensionDlgProc(
+// IDD_NEWEXTENSION
+INT_PTR CALLBACK
+NewExtDlgProc(
     HWND hwndDlg,
     UINT uMsg,
     WPARAM wParam,
@@ -1764,9 +1760,8 @@ FileTypesDlg_RemoveExt(HWND hwndDlg)
     return FALSE;
 }
 
-// IDD_FOLDER_OPTIONS_FILETYPES dialog
-INT_PTR
-CALLBACK
+// IDD_FOLDER_OPTIONS_FILETYPES
+INT_PTR CALLBACK
 FolderOptionsFileTypesDlg(
     HWND hwndDlg,
     UINT uMsg,
@@ -1776,14 +1771,14 @@ FolderOptionsFileTypesDlg(
     LPNMLISTVIEW lppl;
     LVITEMW lvItem;
     WCHAR Buffer[255], FormatBuffer[255];
-    PFOLDER_FILE_TYPE_ENTRY pItem;
+    PFILE_TYPE_ENTRY pItem;
     OPENASINFO Info;
     NEWEXT_DIALOG newext;
 
     switch(uMsg)
     {
         case WM_INITDIALOG:
-            pItem = InitializeFileTypesListCtrl(hwndDlg);
+            pItem = FileTypesDlg_DoList(hwndDlg);
 
             /* Disable the Delete button if the listview is empty or
                the selected item should not be deleted by the user */
@@ -1796,7 +1791,7 @@ FolderOptionsFileTypesDlg(
                 case IDC_FILETYPES_NEW:
                     newext.hwndLV = GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW);
                     if (IDOK == DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_NEWEXTENSION),
-                                                hwndDlg, NewExtensionDlgProc, (LPARAM)&newext))
+                                                hwndDlg, NewExtDlgProc, (LPARAM)&newext))
                     {
                         FileTypesDlg_AddExt(hwndDlg, newext.szExt, newext.szFileType);
                     }
@@ -1815,8 +1810,9 @@ FolderOptionsFileTypesDlg(
                     pItem = FindSelectedItem(GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW));
                     if (pItem)
                     {
+                        ZeroMemory(&Info, sizeof(Info));
                         Info.oaifInFlags = OAIF_ALLOW_REGISTRATION | OAIF_REGISTER_EXT;
-                        Info.pcszClass = pItem->FileExtension;
+                        Info.pcszFile = pItem->FileExtension;
                         SHOpenWithDialog(hwndDlg, &Info);
                     }
                     break;
@@ -1824,7 +1820,6 @@ FolderOptionsFileTypesDlg(
             break;
         case WM_NOTIFY:
             lppl = (LPNMLISTVIEW) lParam;
-
             if (lppl->hdr.code == LVN_ITEMCHANGING)
             {
                 ZeroMemory(&lvItem, sizeof(LVITEM));
@@ -1833,35 +1828,35 @@ FolderOptionsFileTypesDlg(
                 if (!SendMessageW(lppl->hdr.hwndFrom, LVM_GETITEMW, 0, (LPARAM)&lvItem))
                     return TRUE;
 
-                pItem = (PFOLDER_FILE_TYPE_ENTRY)lvItem.lParam;
+                pItem = (PFILE_TYPE_ENTRY)lvItem.lParam;
                 if (!pItem)
                     return TRUE;
 
                 if (!(lppl->uOldState & LVIS_FOCUSED) && (lppl->uNewState & LVIS_FOCUSED))
                 {
-                    /* new focused item */
+                    // new focused item
                     if (!LoadStringW(shell32_hInstance, IDS_FILE_DETAILS, FormatBuffer, sizeof(FormatBuffer) / sizeof(WCHAR)))
                     {
-                        /* use default english format string */
+                        // use default english format string
                         wcscpy(FormatBuffer, L"Details for '%s' extension");
                     }
 
                     /* format buffer */
                     swprintf(Buffer, FormatBuffer, &pItem->FileExtension[1]);
-                    /* update dialog */
+                    // update dialog
                     SetDlgItemTextW(hwndDlg, IDC_FILETYPES_DETAILS_GROUPBOX, Buffer);
 
                     if (!LoadStringW(shell32_hInstance, IDS_FILE_DETAILSADV, FormatBuffer, sizeof(FormatBuffer) / sizeof(WCHAR)))
                     {
-                        /* use default english format string */
+                        // use default english format string
                         wcscpy(FormatBuffer, L"Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced.");
                     }
-                    /* format buffer */
+                    // format buffer
                     swprintf(Buffer, FormatBuffer, &pItem->FileExtension[1], &pItem->FileDescription[0], &pItem->FileDescription[0]);
                     /* update dialog */
                     SetDlgItemTextW(hwndDlg, IDC_FILETYPES_DESCRIPTION, Buffer);
 
-                    /* Enable the Delete button */
+                    // Enable the Delete button
                     if (pItem->EditFlags & 0x00000010) // FTA_NoRemove
                         EnableWindow(GetDlgItem(hwndDlg, IDC_FILETYPES_DELETE), FALSE);
                     else
@@ -1870,7 +1865,7 @@ FolderOptionsFileTypesDlg(
             }
             else if (lppl->hdr.code == PSN_SETACTIVE)
             {
-                /* On page activation, set the focus to the listview */
+                // On page activation, set the focus to the listview */
                 SetFocus(GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW));
             }
             break;
