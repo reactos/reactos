@@ -127,9 +127,9 @@ CAPTION "Meszhe"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "&Po", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Po për T'gjitha", IDC_YESTOALL, 92, 69, 65, 14, WS_TABSTOP
+    PUSHBUTTON "Po për T'gjitha", IDC_YESTOALL, 92, 69, 65, 14, WS_TABSTOP //FIXME: accelerator missing
     PUSHBUTTON "&Jo", IDNO, 162, 69, 53, 14, WS_TABSTOP
-    PUSHBUTTON "&Anulo", IDCANCEL, 220, 69, 53, 14, WS_TABSTOP
+    PUSHBUTTON "Anulo", IDCANCEL, 220, 69, 53, 14
     ICON "", IDC_YESTOALL_ICON, 10, 10, 16, 16
     LTEXT "", IDC_YESTOALL_MESSAGE, 40, 10, 238, 52, 0
 END
@@ -188,7 +188,7 @@ BEGIN
     LTEXT "", -1, 8, 31, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Tipi Objektivit:", IDC_SHORTCUT_TYPE, 8, 38, 68, 10
     EDITTEXT IDC_SHORTCUT_TYPE_EDIT, 79, 37, 150, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Vendndodhja ObjektivitTarget location:", IDC_SHORTCUT_LOCATION, 8, 55, 68, 10
+    LTEXT "Vendndodhja ObjektivitTarget location:", IDC_SHORTCUT_LOCATION, 8, 55, 68, 10 //FIXME: That string is duplicated sq + en and much too long. Even when keeping just "Vendndodhja Objektivit" it would still be too long. Provide something shorter!
     EDITTEXT IDC_SHORTCUT_LOCATION_EDIT, 79, 53, 150, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "&Objektivi:", IDC_SHORTCUT_TARGET, 8, 71, 68, 10
     EDITTEXT IDC_SHORTCUT_TARGET_TEXT, 79, 69, 150, 14, ES_AUTOHSCROLL
