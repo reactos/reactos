@@ -44,7 +44,7 @@ typedef struct _FDO_EXTENSION
 
     SINGLE_LIST_ENTRY PartitionList;
     UINT32 EnumeratedPartitionsTotal;
-    UNICODE_STRING DiskInterfaceName;
+    BOOLEAN IsSuperFloppy;
 
     struct {
         UINT64 DiskSize;
@@ -60,6 +60,7 @@ typedef struct _FDO_EXTENSION
             } Gpt;
         };
     } DiskData;
+    UNICODE_STRING DiskInterfaceName;
 } FDO_EXTENSION, *PFDO_EXTENSION;
 
 typedef struct _PARTITION_EXTENSION
