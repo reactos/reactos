@@ -832,7 +832,21 @@ ShowStatusPropertyDialog(
             }
             else
             {
-                ShellExecuteW(NULL, L"open", L"explorer.exe", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{7007ACC7-3202-11D1-AAD2-00805FC1270E}", NULL, SW_SHOWNORMAL);
+                LPITEMIDLIST pidl = NULL;
+                if (SUCCEEDED(SHGetSpecialFolderLocation(NULL, CSIDL_CONNECTIONS, &pidl)))
+                {
+                    SHELLEXECUTEINFOW shExInfo = { 0 };
+                    shExInfo.cbSize = sizeof(shExInfo);
+                    shExInfo.fMask = SEE_MASK_INVOKEIDLIST;
+                    shExInfo.hwnd = NULL;
+                    shExInfo.lpVerb = L"open";
+                    shExInfo.lpIDList = pidl;
+                    shExInfo.nShow = SW_SHOWNORMAL;
+
+                    ShellExecuteExW(&shExInfo);
+
+                    ILFree(pidl);
+                }
             }
         }
 
