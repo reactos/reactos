@@ -37,6 +37,7 @@
 #define ARRAY_SIZE(a) (sizeof(a)/sizeof((a)[0]))
 #define wcsnicmp _wcsnicmp
 #define swprintf _snwprintf
+#define wcsicmp _wcsicmp
 
 #undef RT_MANIFEST
 #undef CREATEPROCESS_MANIFEST_RESOURCE_ID

@@ -575,9 +575,6 @@ extern "C" {
     _In_z_ const char *_Str,
     _In_ size_t _MaxCount);
 
-//  __CRT_INLINE int __cdecl strncasecmp (const char *__sz1, const char *__sz2, size_t __sizeMaxCompare) { return _strnicmp (__sz1, __sz2, __sizeMaxCompare); }
-//  __CRT_INLINE int __cdecl strcasecmp (const char *__sz1, const char *__sz2) { return _stricmp (__sz1, __sz2); }
-
   _CRTIMP
   _CRT_NONSTDC_DEPRECATE(_strnset)
   char*
@@ -1137,12 +1134,6 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-
-// HACK
-#define strcasecmp _stricmp
-#define strncasecmp _strnicmp
-#define stricmp _stricmp
-#define wcsicmp _wcsicmp
 
 #include <sec_api/string_s.h>
 #endif
