@@ -120,7 +120,7 @@ PartitionHandleStartDevice(
 
     PartExt->SymlinkCreated = TRUE;
 
-    TRACE("Symlink created %wZ -> %wZ\n", &PartExt->DeviceName, &partitionSymlink);
+    INFO("Symlink created %wZ -> %wZ\n", &partitionSymlink, &PartExt->DeviceName);
 
     // our partition device will have two interfaces:
     // GUID_DEVINTERFACE_PARTITION and GUID_DEVINTERFACE_VOLUME
@@ -203,7 +203,7 @@ PartitionHandleRemove(
         }
         PartExt->SymlinkCreated = FALSE;
 
-        INFO("Symlink removed %wZ -> %wZ\n", &PartExt->DeviceName, &partitionSymlink);
+        INFO("Symlink removed %wZ -> %wZ\n", &partitionSymlink, &PartExt->DeviceName);
     }
 
     // release device interfaces
@@ -258,7 +258,7 @@ PartitionHandleDeviceRelations(
 
     if (type == TargetDeviceRelation)
     {
-        // Device relations has one entry built in to it's size.
+        // Device relations have one entry built into their size.
         PDEVICE_RELATIONS deviceRelations =
             ExAllocatePoolZero(PagedPool, sizeof(DEVICE_RELATIONS), TAG_PARTMGR);
 
