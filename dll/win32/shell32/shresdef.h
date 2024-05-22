@@ -234,10 +234,8 @@
 
 /* Advanced settings */
 #define IDS_ADVANCED_FOLDER                         30498
-#define IDS_ADVANCED_NET_CRAWLER                    30509
 #define IDS_ADVANCED_FOLDER_SIZE_TIP                30514
 #define IDS_ADVANCED_FRIENDLY_TREE                  30511
-#define IDS_ADVANCED_WEB_VIEW_BARRICADE             30510
 #define IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS         30505
 #define IDS_ADVANCED_SHOW_FULL_PATH                 30504
 #define IDS_ADVANCED_DISABLE_THUMB_CACHE            30517
@@ -253,6 +251,7 @@
 #define IDS_ADVANCED_SHOW_COMP_COLOR                30512
 #define IDS_ADVANCED_SHOW_INFO_TIP                  30502
 
+#define IDS_REMOVE_EXT                              30522
 #define IDS_FILE_NOT_FOUND                          30530
 
 /* Dialogs */
@@ -323,6 +322,23 @@
 #define IDC_BROWSE_FOR_FOLDER_STATUS      0x3743
 #define IDC_BROWSE_FOR_FOLDER_TITLE       0x3742
 #define IDC_BROWSE_FOR_FOLDER_TREEVIEW    0x3741
+
+/* Control IDs for IDD_FOLDER_OPTIONS_FILETYPES dialog */
+#define IDC_FILETYPES_LISTVIEW              14000
+#define IDC_FILETYPES_NEW                   14001
+#define IDC_FILETYPES_DELETE                14002
+#define IDC_FILETYPES_DETAILS_GROUPBOX      14003
+#define IDC_FILETYPES_APPNAME               14005
+#define IDC_FILETYPES_CHANGE                14006
+#define IDC_FILETYPES_DESCRIPTION           14007
+#define IDC_FILETYPES_ADVANCED              14008
+#define IDC_FILETYPES_ICON                  14009
+
+/* Control IDs for IDD_FOLDER_OPTIONS_VIEW dialog */
+#define IDC_VIEW_APPLY_TO_ALL               14001
+#define IDC_VIEW_RESET_ALL                  14002
+#define IDC_VIEW_TREEVIEW                   14003
+#define IDC_VIEW_RESTORE_DEFAULTS           14004
 
 /* Other dialogs */
 #define IDD_RUN_AS       23
@@ -606,8 +622,6 @@
 #define FCIDM_SHVIEW_INSERT          0x701A
 #define FCIDM_SHVIEW_UNDO            0x701B
 #define FCIDM_SHVIEW_INSERTLINK      0x701C
-#define FCIDM_SHVIEW_COPYTO          0x701E
-#define FCIDM_SHVIEW_MOVETO          0x701F
 #define FCIDM_SHVIEW_SELECTALL       0x7021
 #define FCIDM_SHVIEW_INVERTSELECTION 0x7022
 
@@ -617,7 +631,6 @@
 #define FCIDM_SHVIEW_REPORTVIEW  0x702C //FIXME
 /* 0x7030-0x703f are used by the shellbrowser */
 #define FCIDM_SHVIEW_AUTOARRANGE 0x7031
-#define FCIDM_SHVIEW_SNAPTOGRID  0x7032
 
 #define FCIDM_SHVIEW_HELP       0x7041
 #define FCIDM_SHVIEW_RENAME     0x7050
