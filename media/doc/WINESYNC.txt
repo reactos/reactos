@@ -184,7 +184,7 @@ dll/win32/shdoclc             # Synced to Wine-4.18
 dll/win32/shdocvw             # Synced to WineStaging-4.18
 dll/win32/shell32             # Forked at Wine-20071011
 dll/win32/shfolder            # Synced to Wine-4.18
-dll/win32/shlwapi             # Synced to Wine-4.18
+dll/win32/shlwapi             # Forked at WineStaging-3.3
 dll/win32/slbcsp              # Synced to WineStaging-4.18
 dll/win32/snmpapi             # Synced to WineStaging-4.18
 dll/win32/softpub             # Synced to WineStaging-2.9
