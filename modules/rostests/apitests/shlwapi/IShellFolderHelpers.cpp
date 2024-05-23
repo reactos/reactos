@@ -195,7 +195,7 @@ static void Test_ParseDisplayName(void)
     HRESULT hr;
 
     s_nStep = 10;
-    LPITEMIDLIST pidl;
+    LPITEMIDLIST pidl = (LPITEMIDLIST)UlongToPtr(0xDEADDEAD);
     hr = IShellFolder_ParseDisplayName(
         psf,
         NULL,
@@ -248,6 +248,7 @@ static void Test_CompareIDs(void)
         0x00005678,
         NULL,
         NULL);
+    ok_long(hr, 0xFEEDF00D);
     ok_int(s_nStep, 14);
 
     delete psf;
