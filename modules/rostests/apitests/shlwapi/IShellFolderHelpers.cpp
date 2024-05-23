@@ -8,6 +8,7 @@
 #include <apitest.h>
 #include <shlobj.h>
 #include <shlwapi.h>
+#include <versionhelpers.h>
 
 #define SHLWAPI_ISHELLFOLDER_HELPERS
 #include <shlwapi_undoc.h>
@@ -33,7 +34,9 @@ public:
     // IUnknown methods
     STDMETHOD(QueryInterface)(REFIID riid, void **ppvObject) override
     {
-        return E_NOTIMPL;
+        ok_int(IsEqualGUID(riid, IID_IShellFolder2), TRUE);
+        ++s_nStage;
+        return E_NOINTERFACE;
     }
     STDMETHOD_(ULONG, AddRef)() override
     {
@@ -47,7 +50,10 @@ public:
     // IShellFolder methods
     STDMETHOD(ParseDisplayName)(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, ULONG *pchEaten, PIDLIST_RELATIVE *ppidl, ULONG *pdwAttributes) override
     {
-        return E_NOTIMPL;
+        ok_ptr(*ppidl, NULL);
+        ok_long(*pdwAttributes, 0);
+        ++s_nStage;
+        return 0xDEADFACE;
     }
     STDMETHOD(EnumObjects)(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList) override
     {
@@ -63,7 +69,24 @@ public:
     }
     STDMETHOD(CompareIDs)(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2) override
     {
-        return E_NOTIMPL;
+        switch (s_nStage)
+        {
+            case 11:
+                // It shouldn't come here
+                ok_int(TRUE, FALSE);
+                break;
+            case 12:
+                ok_long((LONG)lParam, 0x00001234);
+                break;
+            case 13:
+                ok_long((LONG)lParam, 0x00005678);
+                break;
+            default:
+                skip("\n");
+                break;
+        }
+        ++s_nStage;
+        return 0xFEEDF00D;
     }
     STDMETHOD(CreateViewObject)(HWND hwndOwner, REFIID riid, LPVOID *ppvOut) override
     {
@@ -155,17 +178,76 @@ static void Test_GetDisplayNameOf(void)
 
 static void Test_ParseDisplayName(void)
 {
-    // FIXME
+    CTestShellFolder *psf = new CTestShellFolder();
+    HRESULT hr;
+
+    s_nStage = 10;
+    LPITEMIDLIST pidl;
+    hr = IShellFolder_ParseDisplayName(
+        psf,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        &pidl,
+        NULL);
+    ok_long(hr, 0xDEADFACE);
+    ok_int(s_nStage, 11);
+
+    delete psf;
 }
+
+typedef HRESULT (WINAPI *FN_IShellFolder_CompareIDs)(
+    _In_ IShellFolder *psf,
+    _In_ LPARAM lParam,
+    _In_ PCUIDLIST_RELATIVE pidl1,
+    _In_ PCUIDLIST_RELATIVE pidl2);
 
 static void Test_CompareIDs(void)
 {
-    // FIXME
+    FN_IShellFolder_CompareIDs fnIShellFolder_CompareIDs;
+    fnIShellFolder_CompareIDs =
+        (FN_IShellFolder_CompareIDs)
+            GetProcAddress(GetModuleHandleA("shlwapi"), MAKEINTRESOURCEA(551));
+
+    if (IsWindowsVistaOrGreater())
+    {
+        skip("Vista+\n");
+        ok(fnIShellFolder_CompareIDs == NULL, "Vista+ should have no IShellFolder_CompareIDs\n");
+        return;
+    }
+
+    CTestShellFolder *psf = new CTestShellFolder();
+    HRESULT hr;
+
+    s_nStage = 11;
+    hr = fnIShellFolder_CompareIDs(
+        psf,
+        0xFFFF1234,
+        NULL,
+        NULL);
+    ok_long(hr, 0xFEEDF00D);
+    ok_int(s_nStage, 13);
+
+    s_nStage = 13;
+    hr = fnIShellFolder_CompareIDs(
+        psf,
+        0x00005678,
+        NULL,
+        NULL);
+    ok_int(s_nStage, 14);
+
+    delete psf;
 }
 
 START_TEST(IShellFolderHelpers)
 {
+    HRESULT hrCoInit = ::CoInitialize(NULL);
+
     Test_GetDisplayNameOf();
     Test_ParseDisplayName();
     Test_CompareIDs();
+
+    if (SUCCEEDED(hrCoInit))
+        ::CoUninitialize();
 }
