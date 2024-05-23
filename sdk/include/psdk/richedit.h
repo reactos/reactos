@@ -206,6 +206,9 @@ static const WCHAR RICHEDIT_CLASS20W[] = { 'R','i','c','h','E','d','i','t','2','
 #define EN_LOWFIRTF                     0x070f
 #define EN_ALIGNLTR			0x0710
 #define EN_ALIGNRTL			0x0711
+#define EN_CLIPFORMAT                   0x0712
+#define EN_STARTCOMPOSITION             0x0713
+#define EN_ENDCOMPOSITION               0x0714
 
 
 typedef DWORD (CALLBACK * EDITSTREAMCALLBACK)( DWORD_PTR, LPBYTE, LONG, LONG * );
