@@ -1396,6 +1396,702 @@ interface IHTMLCSSStyleDeclaration : IDispatch
 }
 
 /*****************************************************************************
+ *    IHTMLCSSStyleDeclaration2 interface
+ */
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(305107d1-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLCSSStyleDeclaration2 : IDispatch
+{
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLCHAINING), displaybind, bindable]
+    HRESULT msScrollChaining([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLCHAINING), displaybind, bindable]
+    HRESULT msScrollChaining([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSCONTENTZOOMING), displaybind, bindable]
+    HRESULT msContentZooming([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSCONTENTZOOMING), displaybind, bindable]
+    HRESULT msContentZooming([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSCONTENTZOOMSNAPTYPE), displaybind, bindable]
+    HRESULT msContentZoomSnapType([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSCONTENTZOOMSNAPTYPE), displaybind, bindable]
+    HRESULT msContentZoomSnapType([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLRAILS), displaybind, bindable]
+    HRESULT msScrollRails([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLRAILS), displaybind, bindable]
+    HRESULT msScrollRails([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSCONTENTZOOMCHAINING), displaybind, bindable]
+    HRESULT msContentZoomChaining([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSCONTENTZOOMCHAINING), displaybind, bindable]
+    HRESULT msContentZoomChaining([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLSNAPTYPE), displaybind, bindable]
+    HRESULT msScrollSnapType([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLSNAPTYPE), displaybind, bindable]
+    HRESULT msScrollSnapType([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSCONTENTZOOMLIMIT), displaybind, bindable]
+    HRESULT msContentZoomLimit([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSCONTENTZOOMLIMIT), displaybind, bindable]
+    HRESULT msContentZoomLimit([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSCONTENTZOOMSNAP), displaybind, bindable]
+    HRESULT msContentZoomSnap([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSCONTENTZOOMSNAP), displaybind, bindable]
+    HRESULT msContentZoomSnap([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSCONTENTZOOMSNAPPOINTS), displaybind, bindable]
+    HRESULT msContentZoomSnapPoints([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSCONTENTZOOMSNAPPOINTS), displaybind, bindable]
+    HRESULT msContentZoomSnapPoints([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSCONTENTZOOMLIMITMIN), displaybind, bindable]
+    HRESULT msContentZoomLimitMin([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSCONTENTZOOMLIMITMIN), displaybind, bindable]
+    HRESULT msContentZoomLimitMin([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSCONTENTZOOMLIMITMAX), displaybind, bindable]
+    HRESULT msContentZoomLimitMax([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSCONTENTZOOMLIMITMAX), displaybind, bindable]
+    HRESULT msContentZoomLimitMax([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLSNAPX), displaybind, bindable]
+    HRESULT msScrollSnapX([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLSNAPX), displaybind, bindable]
+    HRESULT msScrollSnapX([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLSNAPY), displaybind, bindable]
+    HRESULT msScrollSnapY([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLSNAPY), displaybind, bindable]
+    HRESULT msScrollSnapY([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLSNAPPOINTSX), displaybind, bindable]
+    HRESULT msScrollSnapPointsX([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLSNAPPOINTSX), displaybind, bindable]
+    HRESULT msScrollSnapPointsX([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLSNAPPOINTSY), displaybind, bindable]
+    HRESULT msScrollSnapPointsY([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLSNAPPOINTSY), displaybind, bindable]
+    HRESULT msScrollSnapPointsY([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSGRIDCOLUMN), displaybind, bindable]
+    HRESULT msGridColumn([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSGRIDCOLUMN), displaybind, bindable]
+    HRESULT msGridColumn([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSGRIDCOLUMNALIGN), displaybind, bindable]
+    HRESULT msGridColumnAlign([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSGRIDCOLUMNALIGN), displaybind, bindable]
+    HRESULT msGridColumnAlign([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSGRIDCOLUMNS), displaybind, bindable]
+    HRESULT msGridColumns([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSGRIDCOLUMNS), displaybind, bindable]
+    HRESULT msGridColumns([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSGRIDCOLUMNSPAN), displaybind, bindable]
+    HRESULT msGridColumnSpan([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSGRIDCOLUMNSPAN), displaybind, bindable]
+    HRESULT msGridColumnSpan([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSGRIDROW), displaybind, bindable]
+    HRESULT msGridRow([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSGRIDROW), displaybind, bindable]
+    HRESULT msGridRow([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSGRIDROWALIGN), displaybind, bindable]
+    HRESULT msGridRowAlign([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSGRIDROWALIGN), displaybind, bindable]
+    HRESULT msGridRowAlign([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSGRIDROWS), displaybind, bindable]
+    HRESULT msGridRows([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSGRIDROWS), displaybind, bindable]
+    HRESULT msGridRows([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSGRIDROWSPAN), displaybind, bindable]
+    HRESULT msGridRowSpan([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSGRIDROWSPAN), displaybind, bindable]
+    HRESULT msGridRowSpan([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSWRAPTHROUGH), displaybind, bindable]
+    HRESULT msWrapThrough([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSWRAPTHROUGH), displaybind, bindable]
+    HRESULT msWrapThrough([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSWRAPMARGIN), displaybind, bindable]
+    HRESULT msWrapMargin([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSWRAPMARGIN), displaybind, bindable]
+    HRESULT msWrapMargin([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSWRAPFLOW), displaybind, bindable]
+    HRESULT msWrapFlow([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSWRAPFLOW), displaybind, bindable]
+    HRESULT msWrapFlow([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSANIMATIONNAME), displaybind, bindable]
+    HRESULT msAnimationName([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSANIMATIONNAME), displaybind, bindable]
+    HRESULT msAnimationName([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSANIMATIONDURATION), displaybind, bindable]
+    HRESULT msAnimationDuration([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSANIMATIONDURATION), displaybind, bindable]
+    HRESULT msAnimationDuration([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSANIMATIONTIMINGFUNCTION), displaybind, bindable]
+    HRESULT msAnimationTimingFunction([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSANIMATIONTIMINGFUNCTION), displaybind, bindable]
+    HRESULT msAnimationTimingFunction([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSANIMATIONDELAY), displaybind, bindable]
+    HRESULT msAnimationDelay([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSANIMATIONDELAY), displaybind, bindable]
+    HRESULT msAnimationDelay([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSANIMATIONDIRECTION), displaybind, bindable]
+    HRESULT msAnimationDirection([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSANIMATIONDIRECTION), displaybind, bindable]
+    HRESULT msAnimationDirection([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSANIMATIONPLAYSTATE), displaybind, bindable]
+    HRESULT msAnimationPlayState([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSANIMATIONPLAYSTATE), displaybind, bindable]
+    HRESULT msAnimationPlayState([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSANIMATIONITERATIONCOUNT), displaybind, bindable]
+    HRESULT msAnimationIterationCount([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSANIMATIONITERATIONCOUNT), displaybind, bindable]
+    HRESULT msAnimationIterationCount([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSANIMATION), displaybind, bindable]
+    HRESULT msAnimation([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSANIMATION), displaybind, bindable]
+    HRESULT msAnimation([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSANIMATIONFILLMODE), displaybind, bindable]
+    HRESULT msAnimationFillMode([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSANIMATIONFILLMODE), displaybind, bindable]
+    HRESULT msAnimationFillMode([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_COLORINTERPOLATIONFILTERS), displaybind, bindable]
+    HRESULT colorInterpolationFilters([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_COLORINTERPOLATIONFILTERS), displaybind, bindable]
+    HRESULT colorInterpolationFilters([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_COLUMNCOUNT), displaybind, bindable]
+    HRESULT columnCount([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_COLUMNCOUNT), displaybind, bindable]
+    HRESULT columnCount([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_COLUMNWIDTH), displaybind, bindable]
+    HRESULT columnWidth([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_COLUMNWIDTH), displaybind, bindable]
+    HRESULT columnWidth([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_COLUMNGAP), displaybind, bindable]
+    HRESULT columnGap([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_COLUMNGAP), displaybind, bindable]
+    HRESULT columnGap([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_COLUMNFILL), displaybind, bindable]
+    HRESULT columnFill([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_COLUMNFILL), displaybind, bindable]
+    HRESULT columnFill([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_COLUMNSPAN), displaybind, bindable]
+    HRESULT columnSpan([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_COLUMNSPAN), displaybind, bindable]
+    HRESULT columnSpan([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_COLUMNS), displaybind, bindable, nonbrowsable]
+    HRESULT columns([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_COLUMNS), displaybind, bindable, nonbrowsable]
+    HRESULT columns([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_COLUMNRULE), displaybind, bindable]
+    HRESULT columnRule([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_COLUMNRULE), displaybind, bindable]
+    HRESULT columnRule([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_COLUMNRULECOLOR), displaybind, bindable]
+    HRESULT columnRuleColor([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_COLUMNRULECOLOR), displaybind, bindable]
+    HRESULT columnRuleColor([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_COLUMNRULESTYLE), displaybind, bindable]
+    HRESULT columnRuleStyle([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_COLUMNRULESTYLE), displaybind, bindable]
+    HRESULT columnRuleStyle([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_COLUMNRULEWIDTH), displaybind, bindable]
+    HRESULT columnRuleWidth([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_COLUMNRULEWIDTH), displaybind, bindable]
+    HRESULT columnRuleWidth([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_BREAKBEFORE), displaybind, bindable]
+    HRESULT breakBefore([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_BREAKBEFORE), displaybind, bindable]
+    HRESULT breakBefore([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_BREAKAFTER), displaybind, bindable]
+    HRESULT breakAfter([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_BREAKAFTER), displaybind, bindable]
+    HRESULT breakAfter([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_BREAKINSIDE), displaybind, bindable]
+    HRESULT breakInside([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_BREAKINSIDE), displaybind, bindable]
+    HRESULT breakInside([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_FLOODCOLOR), displaybind, bindable]
+    HRESULT floodColor([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_FLOODCOLOR), displaybind, bindable]
+    HRESULT floodColor([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_FLOODOPACITY), displaybind, bindable]
+    HRESULT floodOpacity([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_FLOODOPACITY), displaybind, bindable]
+    HRESULT floodOpacity([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_LIGHTINGCOLOR), displaybind, bindable]
+    HRESULT lightingColor([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_LIGHTINGCOLOR), displaybind, bindable]
+    HRESULT lightingColor([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLLIMITXMIN), displaybind, bindable]
+    HRESULT msScrollLimitXMin([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLLIMITXMIN), displaybind, bindable]
+    HRESULT msScrollLimitXMin([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLLIMITYMIN), displaybind, bindable]
+    HRESULT msScrollLimitYMin([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLLIMITYMIN), displaybind, bindable]
+    HRESULT msScrollLimitYMin([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLLIMITXMAX), displaybind, bindable]
+    HRESULT msScrollLimitXMax([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLLIMITXMAX), displaybind, bindable]
+    HRESULT msScrollLimitXMax([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLLIMITYMAX), displaybind, bindable]
+    HRESULT msScrollLimitYMax([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLLIMITYMAX), displaybind, bindable]
+    HRESULT msScrollLimitYMax([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLLIMIT), displaybind, bindable]
+    HRESULT msScrollLimit([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLLIMIT), displaybind, bindable]
+    HRESULT msScrollLimit([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_TEXTSHADOW), displaybind, bindable]
+    HRESULT textShadow([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_TEXTSHADOW), displaybind, bindable]
+    HRESULT textShadow([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLOWFROM), displaybind, bindable]
+    HRESULT msFlowFrom([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLOWFROM), displaybind, bindable]
+    HRESULT msFlowFrom([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLOWINTO), displaybind, bindable]
+    HRESULT msFlowInto([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLOWINTO), displaybind, bindable]
+    HRESULT msFlowInto([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSHYPHENS), displaybind, bindable]
+    HRESULT msHyphens([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSHYPHENS), displaybind, bindable]
+    HRESULT msHyphens([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSHYPHENATELIMITZONE), displaybind, bindable]
+    HRESULT msHyphenateLimitZone([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSHYPHENATELIMITZONE), displaybind, bindable]
+    HRESULT msHyphenateLimitZone([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSHYPHENATELIMITCHARS), displaybind, bindable]
+    HRESULT msHyphenateLimitChars([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSHYPHENATELIMITCHARS), displaybind, bindable]
+    HRESULT msHyphenateLimitChars([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSHYPHENATELIMITLINES), displaybind, bindable]
+    HRESULT msHyphenateLimitLines([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSHYPHENATELIMITLINES), displaybind, bindable]
+    HRESULT msHyphenateLimitLines([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSHIGHCONTRASTADJUST), displaybind, bindable]
+    HRESULT msHighContrastAdjust([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSHIGHCONTRASTADJUST), displaybind, bindable]
+    HRESULT msHighContrastAdjust([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_ENABLEBACKGROUND), displaybind, bindable]
+    HRESULT enableBackground([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_ENABLEBACKGROUND), displaybind, bindable]
+    HRESULT enableBackground([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFONTFEATURESETTINGS), displaybind, bindable]
+    HRESULT msFontFeatureSettings([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFONTFEATURESETTINGS), displaybind, bindable]
+    HRESULT msFontFeatureSettings([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSUSERSELECT), displaybind, bindable]
+    HRESULT msUserSelect([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSUSERSELECT), displaybind, bindable]
+    HRESULT msUserSelect([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSOVERFLOWSTYLE), displaybind, bindable]
+    HRESULT msOverflowStyle([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSOVERFLOWSTYLE), displaybind, bindable]
+    HRESULT msOverflowStyle([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSTRANSFORMSTYLE), displaybind, bindable]
+    HRESULT msTransformStyle([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSTRANSFORMSTYLE), displaybind, bindable]
+    HRESULT msTransformStyle([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSBACKFACEVISIBILITY), displaybind, bindable]
+    HRESULT msBackfaceVisibility([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSBACKFACEVISIBILITY), displaybind, bindable]
+    HRESULT msBackfaceVisibility([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSPERSPECTIVE), displaybind, bindable]
+    HRESULT msPerspective([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSPERSPECTIVE), displaybind, bindable]
+    HRESULT msPerspective([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSPERSPECTIVEORIGIN), displaybind, bindable]
+    HRESULT msPerspectiveOrigin([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSPERSPECTIVEORIGIN), displaybind, bindable]
+    HRESULT msPerspectiveOrigin([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSTRANSITIONPROPERTY), displaybind, bindable]
+    HRESULT msTransitionProperty([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSTRANSITIONPROPERTY), displaybind, bindable]
+    HRESULT msTransitionProperty([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSTRANSITIONDURATION), displaybind, bindable]
+    HRESULT msTransitionDuration([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSTRANSITIONDURATION), displaybind, bindable]
+    HRESULT msTransitionDuration([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSTRANSITIONTIMINGFUNCTION), displaybind, bindable]
+    HRESULT msTransitionTimingFunction([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSTRANSITIONTIMINGFUNCTION), displaybind, bindable]
+    HRESULT msTransitionTimingFunction([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSTRANSITIONDELAY), displaybind, bindable]
+    HRESULT msTransitionDelay([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSTRANSITIONDELAY), displaybind, bindable]
+    HRESULT msTransitionDelay([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSTRANSITION), displaybind, bindable]
+    HRESULT msTransition([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSTRANSITION), displaybind, bindable]
+    HRESULT msTransition([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSTOUCHACTION), displaybind, bindable]
+    HRESULT msTouchAction([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSTOUCHACTION), displaybind, bindable]
+    HRESULT msTouchAction([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLTRANSLATION), displaybind, bindable]
+    HRESULT msScrollTranslation([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSSCROLLTRANSLATION), displaybind, bindable]
+    HRESULT msScrollTranslation([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLEX), displaybind, bindable]
+    HRESULT msFlex([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLEX), displaybind, bindable]
+    HRESULT msFlex([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLEXPOSITIVE), displaybind, bindable]
+    HRESULT msFlexPositive([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLEXPOSITIVE), displaybind, bindable]
+    HRESULT msFlexPositive([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLEXNEGATIVE), displaybind, bindable]
+    HRESULT msFlexNegative([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLEXNEGATIVE), displaybind, bindable]
+    HRESULT msFlexNegative([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLEXPREFERREDSIZE), displaybind, bindable]
+    HRESULT msFlexPreferredSize([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLEXPREFERREDSIZE), displaybind, bindable]
+    HRESULT msFlexPreferredSize([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLEXFLOW), displaybind, bindable]
+    HRESULT msFlexFlow([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLEXFLOW), displaybind, bindable]
+    HRESULT msFlexFlow([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLEXDIRECTION), displaybind, bindable]
+    HRESULT msFlexDirection([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLEXDIRECTION), displaybind, bindable]
+    HRESULT msFlexDirection([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLEXWRAP), displaybind, bindable]
+    HRESULT msFlexWrap([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLEXWRAP), displaybind, bindable]
+    HRESULT msFlexWrap([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLEXALIGN), displaybind, bindable]
+    HRESULT msFlexAlign([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLEXALIGN), displaybind, bindable]
+    HRESULT msFlexAlign([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLEXITEMALIGN), displaybind, bindable]
+    HRESULT msFlexItemAlign([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLEXITEMALIGN), displaybind, bindable]
+    HRESULT msFlexItemAlign([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLEXPACK), displaybind, bindable]
+    HRESULT msFlexPack([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLEXPACK), displaybind, bindable]
+    HRESULT msFlexPack([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLEXLINEPACK), displaybind, bindable]
+    HRESULT msFlexLinePack([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLEXLINEPACK), displaybind, bindable]
+    HRESULT msFlexLinePack([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLEXORDER), displaybind, bindable]
+    HRESULT msFlexOrder([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSFLEXORDER), displaybind, bindable]
+    HRESULT msFlexOrder([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSTOUCHSELECT), displaybind, bindable]
+    HRESULT msTouchSelect([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_MSTOUCHSELECT), displaybind, bindable]
+    HRESULT msTouchSelect([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_TRANSFORM), displaybind, bindable]
+    HRESULT transform([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_TRANSFORM), displaybind, bindable]
+    HRESULT transform([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_TRANSFORMORIGIN), displaybind, bindable]
+    HRESULT transformOrigin([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_TRANSFORMORIGIN), displaybind, bindable]
+    HRESULT transformOrigin([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_TRANSFORMSTYLE), displaybind, bindable]
+    HRESULT transformStyle([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_TRANSFORMSTYLE), displaybind, bindable]
+    HRESULT transformStyle([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_BACKFACEVISIBILITY), displaybind, bindable]
+    HRESULT backfaceVisibility([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_BACKFACEVISIBILITY), displaybind, bindable]
+    HRESULT backfaceVisibility([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_PERSPECTIVE), displaybind, bindable]
+    HRESULT perspective([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_PERSPECTIVE), displaybind, bindable]
+    HRESULT perspective([out, retval] VARIANT *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_PERSPECTIVEORIGIN), displaybind, bindable]
+    HRESULT perspectiveOrigin([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_PERSPECTIVEORIGIN), displaybind, bindable]
+    HRESULT perspectiveOrigin([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_TRANSITIONPROPERTY), displaybind, bindable]
+    HRESULT transitionProperty([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_TRANSITIONPROPERTY), displaybind, bindable]
+    HRESULT transitionProperty([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_TRANSITIONDURATION), displaybind, bindable]
+    HRESULT transitionDuration([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_TRANSITIONDURATION), displaybind, bindable]
+    HRESULT transitionDuration([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_TRANSITIONTIMINGFUNCTION), displaybind, bindable]
+    HRESULT transitionTimingFunction([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_TRANSITIONTIMINGFUNCTION), displaybind, bindable]
+    HRESULT transitionTimingFunction([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_TRANSITIONDELAY), displaybind, bindable]
+    HRESULT transitionDelay([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_TRANSITIONDELAY), displaybind, bindable]
+    HRESULT transitionDelay([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_TRANSITION), displaybind, bindable]
+    HRESULT transition([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_TRANSITION), displaybind, bindable]
+    HRESULT transition([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_FONTFEATURESETTINGS), displaybind, bindable]
+    HRESULT fontFeatureSettings([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_FONTFEATURESETTINGS), displaybind, bindable]
+    HRESULT fontFeatureSettings([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_ANIMATIONNAME), displaybind, bindable]
+    HRESULT animationName([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_ANIMATIONNAME), displaybind, bindable]
+    HRESULT animationName([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_ANIMATIONDURATION), displaybind, bindable]
+    HRESULT animationDuration([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_ANIMATIONDURATION), displaybind, bindable]
+    HRESULT animationDuration([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_ANIMATIONTIMINGFUNCTION), displaybind, bindable]
+    HRESULT animationTimingFunction([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_ANIMATIONTIMINGFUNCTION), displaybind, bindable]
+    HRESULT animationTimingFunction([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_ANIMATIONDELAY), displaybind, bindable]
+    HRESULT animationDelay([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_ANIMATIONDELAY), displaybind, bindable]
+    HRESULT animationDelay([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_ANIMATIONDIRECTION), displaybind, bindable]
+    HRESULT animationDirection([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_ANIMATIONDIRECTION), displaybind, bindable]
+    HRESULT animationDirection([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_ANIMATIONPLAYSTATE), displaybind, bindable]
+    HRESULT animationPlayState([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_ANIMATIONPLAYSTATE), displaybind, bindable]
+    HRESULT animationPlayState([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_ANIMATIONITERATIONCOUNT), displaybind, bindable]
+    HRESULT animationIterationCount([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_ANIMATIONITERATIONCOUNT), displaybind, bindable]
+    HRESULT animationIterationCount([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_ANIMATION), displaybind, bindable]
+    HRESULT animation([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_ANIMATION), displaybind, bindable]
+    HRESULT animation([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLCSSSTYLEDECLARATION2_ANIMATIONFILLMODE), displaybind, bindable]
+    HRESULT animationFillMode([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLCSSSTYLEDECLARATION2_ANIMATIONFILLMODE), displaybind, bindable]
+    HRESULT animationFillMode([out, retval] BSTR *p);
+}
+
+/*****************************************************************************
  *    IHTMLFiltersCollection interface
  */
 [
