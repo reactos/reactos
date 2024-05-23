@@ -37,6 +37,7 @@ public:
     // IUnknown methods
     STDMETHOD(QueryInterface)(REFIID riid, void **ppvObject) override
     {
+        ok_int(s_nStep, 11);
         ok_int(IsEqualGUID(riid, IID_IShellFolder2), TRUE);
         ++s_nStep;
         return E_NOINTERFACE;
