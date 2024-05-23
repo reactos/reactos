@@ -43,10 +43,12 @@ public:
     }
     STDMETHOD_(ULONG, AddRef)() override
     {
+        ok_int(TRUE, FALSE);
         return 1;
     }
     STDMETHOD_(ULONG, Release)() override
     {
+        ok_int(TRUE, FALSE);
         return 1;
     }
 
@@ -60,14 +62,17 @@ public:
     }
     STDMETHOD(EnumObjects)(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList) override
     {
+        ok_int(TRUE, FALSE);
         return E_NOTIMPL;
     }
     STDMETHOD(BindToObject)(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut) override
     {
+        ok_int(TRUE, FALSE);
         return E_NOTIMPL;
     }
     STDMETHOD(BindToStorage)(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut) override
     {
+        ok_int(TRUE, FALSE);
         return E_NOTIMPL;
     }
     STDMETHOD(CompareIDs)(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2) override
@@ -93,14 +98,17 @@ public:
     }
     STDMETHOD(CreateViewObject)(HWND hwndOwner, REFIID riid, LPVOID *ppvOut) override
     {
+        ok_int(TRUE, FALSE);
         return E_NOTIMPL;
     }
     STDMETHOD(GetAttributesOf)(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD *rgfInOut) override
     {
+        ok_int(TRUE, FALSE);
         return E_NOTIMPL;
     }
     STDMETHOD(GetUIObjectOf)(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid, UINT * prgfInOut, LPVOID * ppvOut) override
     {
+        ok_int(TRUE, FALSE);
         return E_NOTIMPL;
     }
     STDMETHOD(GetDisplayNameOf)(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet) override
@@ -146,6 +154,7 @@ public:
     }
     STDMETHOD(SetNameOf)(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut) override
     {
+        ok_int(TRUE, FALSE);
         return E_NOTIMPL;
     }
 };
