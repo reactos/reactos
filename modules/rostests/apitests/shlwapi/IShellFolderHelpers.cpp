@@ -15,21 +15,24 @@
 
 static INT s_nStage = 0;
 
-void *operator new(size_t size)
-{
-    return LocalAlloc(LPTR, size);
-}
-
-void operator delete(void *ptr)
-{
-    LocalFree(ptr);
-}
-
 class CTestShellFolder : public IShellFolder
 {
 public:
     CTestShellFolder() { }
     virtual ~CTestShellFolder() { }
+
+    static void *operator new(size_t size)
+    {
+        return LocalAlloc(LPTR, size);
+    }
+    static void operator delete(void *ptr)
+    {
+        LocalFree(ptr);
+    }
+    static void operator delete(void *ptr, size_t size)
+    {
+        LocalFree(ptr);
+    }
 
     // IUnknown methods
     STDMETHOD(QueryInterface)(REFIID riid, void **ppvObject) override
