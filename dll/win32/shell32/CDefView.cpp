@@ -2342,19 +2342,18 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     // Translate child IDLs.
     // SHSimpleIDListFromPathW creates fake PIDLs (lacking some attributes)
     HRESULT hr;
-    PIDLIST_ABSOLUTE pidl0 = Pidls[0], pidl1 = Pidls[1];
-    CComHeapPtr<ITEMIDLIST_RELATIVE> pidl0Temp, pidl1Temp;
     PITEMID_CHILD child0 = NULL, child1 = NULL;
-    if (ILIsParentOrSpecialParent(m_pidlParent, pidl0))
+    CComHeapPtr<ITEMIDLIST_RELATIVE> pidl0Temp, pidl1Temp;
+    if (ILIsParentOrSpecialParent(m_pidlParent, Pidls[0]))
     {
-        child0 = ILFindLastID(pidl0);
+        child0 = ILFindLastID(Pidls[0]);
         hr = SHGetRealIDL(m_pSFParent, child0, &pidl0Temp);
         if (SUCCEEDED(hr))
             child0 = pidl0Temp;
     }
-    if (ILIsParentOrSpecialParent(m_pidlParent, pidl1))
+    if (ILIsParentOrSpecialParent(m_pidlParent, Pidls[1]))
     {
-        child1 = ILFindLastID(pidl1);
+        child1 = ILFindLastID(Pidls[1]);
         hr = SHGetRealIDL(m_pSFParent, child1, &pidl1Temp);
         if (SUCCEEDED(hr))
             child1 = pidl1Temp;
