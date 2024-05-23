@@ -140,16 +140,36 @@ SHLWAPI_IsBogusHRESULT(HRESULT hr)
     return (hr == E_FAIL || hr == E_INVALIDARG || hr == E_NOTIMPL);
 }
 
+// Used for IShellFolder_GetDisplayNameOf
+struct RETRY_DATA
+{
+    SHGDNF uRemove;
+    SHGDNF uAdd;
+    DWORD dwRetryFlags;
+};
+static const RETRY_DATA g_RetryData[] =
+{
+    { SHGDN_FOREDITING,    SHGDN_NORMAL,     SFGDNO_RETRYALWAYS         },
+    { SHGDN_FORADDRESSBAR, SHGDN_NORMAL,     SFGDNO_RETRYALWAYS         },
+    { SHGDN_NORMAL,        SHGDN_FORPARSING, SFGDNO_RETRYALWAYS         },
+    { SHGDN_FORPARSING,    SHGDN_NORMAL,     SFGDNO_RETRYWITHFORPARSING },
+    { SHGDN_INFOLDER,      SHGDN_NORMAL,     SFGDNO_RETRYALWAYS         },
+};
+
 /*************************************************************************
  * IShellFolder_GetDisplayNameOf [SHLWAPI.316]
+ *
+ * @note Don't confuse with <shobjidl.h> inline function of the same name.
+ *       If the original call fails with the given uFlags, this function will
+ *       retry with other flags to attempt retrieving any meaningful description.
  */
 EXTERN_C HRESULT WINAPI
 IShellFolder_GetDisplayNameOf(
     _In_ IShellFolder *psf,
     _In_ LPCITEMIDLIST pidl,
-    _In_ DWORD uFlags,
+    _In_ SHGDNF uFlags,
     _Out_ LPSTRRET lpName,
-    _In_ DWORD dwRetryFlags)
+    _In_ DWORD dwRetryFlags) // dwRetryFlags is an additional parameter
 {
     HRESULT hr;
 
@@ -159,19 +179,37 @@ IShellFolder_GetDisplayNameOf(
     if (!SHLWAPI_IsBogusHRESULT(hr))
         return hr;
 
-    dwRetryFlags |= 0x80000000;
+    dwRetryFlags |= SFGDNO_RETRYALWAYS;
 
     if ((uFlags & SHGDN_FORPARSING) == 0)
         dwRetryFlags |= SFGDNO_RETRYWITHFORPARSING;
 
-    /* It seems the function is actually retrying here */
-    FIXME("dwRetryFlags: 0x%X\n", dwRetryFlags);
+    // Retry with other flags to get successful results
+    for (SIZE_T iEntry = 0; iEntry < _countof(g_RetryData); ++iEntry)
+    {
+        const RETRY_DATA *pData = &g_RetryData[iEntry];
+        if (!(dwRetryFlags & pData->dwRetryFlags))
+            continue;
+
+        SHGDNF uNewFlags = ((uFlags & ~pData->uRemove) | pData->uAdd);
+        if (uNewFlags == uFlags)
+            continue;
+
+        hr = psf->GetDisplayNameOf(pidl, uNewFlags, lpName);
+        if (!SHLWAPI_IsBogusHRESULT(hr))
+            break;
+
+        uFlags = uNewFlags; // Update flags every time
+    }
 
     return hr;
 }
 
 /*************************************************************************
  * IShellFolder_ParseDisplayName [SHLWAPI.317]
+ *
+ * @note Don't confuse with <shobjidl.h> inline function of the same name.
+ *       This function is safer than IShellFolder::ParseDisplayName.
  */
 EXTERN_C HRESULT WINAPI
 IShellFolder_ParseDisplayName(
@@ -209,6 +247,9 @@ IShellFolder_ParseDisplayName(
 
 /*************************************************************************
  * IShellFolder_CompareIDs [SHLWAPI.551]
+ *
+ * @note Don't confuse with <shobjidl.h> inline function of the same name.
+ *       This function tries IShellFolder2 if possible.
  */
 EXTERN_C HRESULT WINAPI
 IShellFolder_CompareIDs(

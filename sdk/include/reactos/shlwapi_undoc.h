@@ -341,12 +341,13 @@ HRESULT WINAPI
 IShellFolder_GetDisplayNameOf(
     _In_ IShellFolder *psf,
     _In_ LPCITEMIDLIST pidl,
-    _In_ DWORD uFlags,
+    _In_ SHGDNF uFlags,
     _Out_ LPSTRRET lpName,
     _In_ DWORD dwRetryFlags);
 
 /* Flags for IShellFolder_GetDisplayNameOf */
-#define SFGDNO_RETRYWITHFORPARSING 1
+#define SFGDNO_RETRYWITHFORPARSING  0x00000001
+#define SFGDNO_RETRYALWAYS          0x80000000
 
 HRESULT WINAPI
 IShellFolder_ParseDisplayName(
