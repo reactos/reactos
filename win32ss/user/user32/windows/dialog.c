@@ -2618,13 +2618,13 @@ IsDialogMessageW(
              {
                  BOOL fPrevious = (lpMsg->wParam == VK_LEFT || lpMsg->wParam == VK_UP);
 
-                 /* Skip STATIC, SBS_SIZEBOX and SBS_SIZEGRIP elements when arrow-moving through a list of controls */
+                 /* Skip STATIC elements when arrow-moving through a list of controls */
                  HWND hwndNext, hwndFirst = lpMsg->hwnd;
                  for (hwndNext = GetNextDlgGroupItem(hDlg, hwndFirst, fPrevious);
                       hwndNext && hwndFirst != hwndNext;
                       hwndNext = GetNextDlgGroupItem(hDlg, hwndNext, fPrevious))
                   {
-                      if ( !(SendMessageW(hwndNext, WM_GETDLGCODE, 0, 0) & DLGC_STATIC) && !(GetWindowLongPtrW(hwndNext, GWL_STYLE) & (SBS_SIZEBOX | SBS_SIZEGRIP)) )
+                      if (!(SendMessageW(hwndNext, WM_GETDLGCODE, 0, 0) & DLGC_STATIC))
                           break;
                   }
 
