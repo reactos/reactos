@@ -4,6 +4,7 @@
 extern void func_AssocQueryString(void);
 extern void func_PathFileExistsDefExtAndAttributesW(void);
 extern void func_PathFindOnPath(void);
+extern void func_IShellFolderHelpers(void);
 extern void func_isuncpath(void);
 extern void func_isuncpathserver(void);
 extern void func_isuncpathservershare(void);
@@ -22,6 +23,7 @@ const struct test winetest_testlist[] =
     { "AssocQueryString", func_AssocQueryString },
     { "PathFileExistsDefExtAndAttributesW", func_PathFileExistsDefExtAndAttributesW },
     { "PathFindOnPath", func_PathFindOnPath },
+    { "IShellFolderHelpers", func_IShellFolderHelpers },
     { "PathIsUNC", func_isuncpath },
     { "PathIsUNCServer", func_isuncpathserver },
     { "PathIsUNCServerShare", func_isuncpathservershare },
