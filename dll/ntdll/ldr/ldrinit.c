@@ -2405,8 +2405,8 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     /* Check whether all static imports were properly loaded and return here */
     if (!NT_SUCCESS(ImportStatus)) return ImportStatus;
 
-    //(DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
-    /* Initialize the keyed event for condition variables - needed for winesync'ed rtl */
+    /* Following two calls are for Vista+ support, required for winesyncs */
+    /* Initialize the keyed event for condition variables */
     RtlpInitializeKeyedEvent();
     RtlpInitializeThreadPooling();
 

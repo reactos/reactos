@@ -8,13 +8,17 @@ add_definitions(
 if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # Enable this again. CORE-17637
     add_compile_options(-Wunused-result)
+
+    add_compile_options(-Wno-incompatible-pointer-types)
+    add_compile_options(-Wno-missing-braces)
 endif()
 
 list(APPEND RTL_WINE_SOURCE
     actctx.c
     timerqueue.c
-    wait.c
+    threadpool.c
 )
+set_source_files_properties(threadpool.c PROPERTIES COMPILE_DEFINITIONS __WINESRC__)
 
 if(MSVC)
     # Silence warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
@@ -76,7 +80,6 @@ list(APPEND SOURCE
     splaytree.c
     sysvol.c
     thread.c
-    threadpool.c
     time.c
     timezone.c
     trace.c
@@ -124,7 +127,6 @@ add_library(rtl ${SOURCE} ${rtl_asm})
 target_link_libraries(rtl PRIVATE pseh)
 add_pch(rtl rtl.h SOURCE)
 add_dependencies(rtl psdk asm)
-set_source_files_properties(threadpool.c PROPERTIES COMPILE_DEFINITIONS __WINESRC__)
 
 list(APPEND SOURCE_VISTA
     condvar.c

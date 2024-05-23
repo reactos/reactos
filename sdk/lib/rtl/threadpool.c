@@ -105,7 +105,7 @@ old_threadpool =
 };
 
 #ifndef __REACTOS__
-static RTL_CRITICAL_SECTION_DEBUG critsect_compl_debug ;=
+static RTL_CRITICAL_SECTION_DEBUG critsect_compl_debug =
 {
     0, 0, &old_threadpool.threadpool_compl_cs,
     { &critsect_compl_debug.ProcessLocksList, &critsect_compl_debug.ProcessLocksList },
@@ -305,10 +305,11 @@ timerqueue =
     FALSE,                                      /* thread_running */
 #if __REACTOS__
     0,
+    0,
 #else
     LIST_INIT( timerqueue.pending_timers ),     /* pending_timers */
-#endif
     RTL_CONDITION_VARIABLE_INIT                 /* update_event */
+#endif
 };
 
 #ifndef __REACTOS__
@@ -367,6 +368,7 @@ struct waitqueue_bucket
 /* global I/O completion queue object */
 static RTL_CRITICAL_SECTION_DEBUG ioqueue_debug;
 #endif
+
 static struct
 {
     CRITICAL_SECTION        cs;
@@ -2029,8 +2031,7 @@ static BOOL tp_group_release( struct threadpool_group *group )
     assert( group->shutdown );
     assert( list_empty( &group->members ) );
 
-#ifdef __REACTOS__
-#else
+#ifndef __REACTOS__
     group->cs.DebugInfo->Spare[0] = 0;
 #endif
     RtlDeleteCriticalSection( &group->cs );
@@ -3522,7 +3523,6 @@ NTSTATUS WINAPI RtlDeregisterWait(HANDLE WaitHandle)
 }
 
 #ifdef __REACTOS__
-
 VOID
 NTAPI
 RtlpInitializeThreadPooling(
