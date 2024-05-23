@@ -16,7 +16,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #define SHV_CHANGE_NOTIFY (WM_USER + 0x1111)
 
-struct BrsFolder
+struct BrFolder
 {
     LPBROWSEINFOW    lpBrowseInfo;
     HWND             hWnd;
@@ -27,7 +27,7 @@ struct BrsFolder
     ULONG            hChangeNotify; // Change notification handle
 };
 
-struct BrsItemData
+struct BrItemData
 {
     CComPtr<IShellFolder>            lpsfParent; // IShellFolder of the parent
     CComHeapPtr<ITEMIDLIST_RELATIVE> pidlChild;  // PIDL relative to parent
@@ -51,8 +51,8 @@ static const LAYOUT_INFO g_layout_info[] =
                          BIF_BROWSEINCLUDEFILES)
 
 static HTREEITEM
-BrsFolder_InsertItem(
-    BrsFolder *info,
+BrFolder_InsertItem(
+    BrFolder *info,
     IShellFolder *lpsf,
     PCIDLIST_RELATIVE pidlChild,
     PCIDLIST_ABSOLUTE pidlParent,
@@ -66,15 +66,15 @@ BrowseFlagsToSHCONTF(UINT ulFlags)
 }
 
 static void
-BrsFolder_Callback(LPBROWSEINFOW lpBrowseInfo, HWND hWnd, UINT uMsg, LPARAM lParam)
+BrFolder_Callback(LPBROWSEINFOW lpBrowseInfo, HWND hWnd, UINT uMsg, LPARAM lParam)
 {
     if (!lpBrowseInfo->lpfn)
         return;
     lpBrowseInfo->lpfn(hWnd, uMsg, lParam, lpBrowseInfo->lParam);
 }
 
-static BrsItemData *
-BrsFolder_GetItemData(BrsFolder *info, HTREEITEM hItem)
+static BrItemData *
+BrFolder_GetItemData(BrFolder *info, HTREEITEM hItem)
 {
     TVITEMW item = { TVIF_HANDLE | TVIF_PARAM };
     item.hItem = hItem;
@@ -83,16 +83,16 @@ BrsFolder_GetItemData(BrsFolder *info, HTREEITEM hItem)
         ERR("TreeView_GetItem failed\n");
         return NULL;
     }
-    return (BrsItemData *)item.lParam;
+    return (BrItemData *)item.lParam;
 }
 
 /******************************************************************************
- * BrsFolder_InitTreeView [Internal]
+ * BrFolder_InitTreeView [Internal]
  *
  * Called from WM_INITDIALOG handler.
  */
 static void
-BrsFolder_InitTreeView(BrsFolder *info)
+BrFolder_InitTreeView(BrFolder *info)
 {
     HIMAGELIST hImageList;
     HRESULT hr;
@@ -105,8 +105,8 @@ BrsFolder_InitTreeView(BrsFolder *info)
     if (hImageList)
         TreeView_SetImageList(info->hwndTreeView, hImageList, 0);
 
-    /* We want to call BrsFolder_InsertItem down the code, in order to insert
-     * the root item of the treeview. Due to BrsFolder_InsertItem's signature,
+    /* We want to call BrFolder_InsertItem down the code, in order to insert
+     * the root item of the treeview. Due to BrFolder_InsertItem's signature,
      * we need the following to do this:
      *
      * + An ITEMIDLIST corresponding to _the parent_ of root.
@@ -154,12 +154,12 @@ BrsFolder_InitTreeView(BrsFolder *info)
         return;
 
     TreeView_DeleteItem(info->hwndTreeView, TVI_ROOT);
-    hItem = BrsFolder_InsertItem(info, lpsfParent, pidlChild, pidlParent, pEnumChildren, TVI_ROOT);
+    hItem = BrFolder_InsertItem(info, lpsfParent, pidlChild, pidlParent, pEnumChildren, TVI_ROOT);
     TreeView_Expand(info->hwndTreeView, hItem, TVE_EXPAND);
 }
 
 static INT
-BrsFolder_GetIcon(PCIDLIST_ABSOLUTE pidl, UINT uFlags)
+BrFolder_GetIcon(PCIDLIST_ABSOLUTE pidl, UINT uFlags)
 {
     SHFILEINFOW sfi;
     SHGetFileInfoW((LPCWSTR)pidl, 0, &sfi, sizeof(sfi), uFlags);
@@ -167,7 +167,7 @@ BrsFolder_GetIcon(PCIDLIST_ABSOLUTE pidl, UINT uFlags)
 }
 
 static void
-BrsFolder_GetIconPair(PCIDLIST_ABSOLUTE pidl, LPTVITEMW pItem)
+BrFolder_GetIconPair(PCIDLIST_ABSOLUTE pidl, LPTVITEMW pItem)
 {
     DWORD flags;
 
@@ -179,14 +179,14 @@ BrsFolder_GetIconPair(PCIDLIST_ABSOLUTE pidl, LPTVITEMW pItem)
     }
 
     flags = SHGFI_PIDL | SHGFI_SYSICONINDEX | SHGFI_SMALLICON;
-    pItem->iImage = BrsFolder_GetIcon(pidl, flags);
+    pItem->iImage = BrFolder_GetIcon(pidl, flags);
 
     flags = SHGFI_PIDL | SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_OPENICON;
-    pItem->iSelectedImage = BrsFolder_GetIcon(pidl, flags);
+    pItem->iSelectedImage = BrFolder_GetIcon(pidl, flags);
 }
 
 /******************************************************************************
- * BrsFolder_GetName [Internal]
+ * BrFolder_GetName [Internal]
  *
  * Query a shell folder for the display name of one of its children
  *
@@ -201,7 +201,7 @@ BrsFolder_GetIconPair(PCIDLIST_ABSOLUTE pidl, LPTVITEMW pItem)
  *  Failure: FALSE
  */
 static BOOL
-BrsFolder_GetName(
+BrFolder_GetName(
     IShellFolder *lpsf,
     PCIDLIST_RELATIVE pidlChild,
     DWORD dwFlags,
@@ -219,7 +219,7 @@ BrsFolder_GetName(
 }
 
 /******************************************************************************
- * BrsFolder_InsertItem [Internal]
+ * BrFolder_InsertItem [Internal]
  *
  * PARAMS
  *  info       [I] data for the dialog
@@ -234,8 +234,8 @@ BrsFolder_GetName(
  *  Failure: NULL
  */
 static HTREEITEM
-BrsFolder_InsertItem(
-    BrsFolder *info,
+BrFolder_InsertItem(
+    BrFolder *info,
     IShellFolder *lpsf,
     PCIDLIST_RELATIVE pidlChild,
     PCIDLIST_ABSOLUTE pidlParent,
@@ -243,10 +243,10 @@ BrsFolder_InsertItem(
     HTREEITEM hParent)
 {
     WCHAR szName[MAX_PATH];
-    if (!BrsFolder_GetName(lpsf, pidlChild, SHGDN_NORMAL, szName))
+    if (!BrFolder_GetName(lpsf, pidlChild, SHGDN_NORMAL, szName))
         return NULL;
 
-    BrsItemData *pItemData = new BrsItemData();
+    BrItemData *pItemData = new BrItemData();
 
     TVITEMW item = { TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_PARAM | TVIF_CHILDREN };
     item.cChildren  = (pEnumIL ? 1 : 0);
@@ -256,7 +256,7 @@ BrsFolder_InsertItem(
 
     PIDLIST_ABSOLUTE pidlFull =
         (pidlParent ? ILCombine(pidlParent, pidlChild) : ILClone(pidlChild));
-    BrsFolder_GetIconPair(pidlFull, &item);
+    BrFolder_GetIconPair(pidlFull, &item);
 
     pItemData->lpsfParent.Attach(lpsf);
     pItemData->pidlChild.Attach(ILClone(pidlChild));
@@ -269,7 +269,7 @@ BrsFolder_InsertItem(
 }
 
 /******************************************************************************
- * BrsFolder_Expand [Internal]
+ * BrFolder_Expand [Internal]
  *
  * For each child (given by pEnum) of the parent shell folder, which is given by
  * lpsf and whose PIDL is pidl, insert a treeview-item right under hParent
@@ -282,8 +282,8 @@ BrsFolder_InsertItem(
  *  pEnum   [I] An iterator for the children of the parent shell folder
  */
 static void
-BrsFolder_Expand(
-    BrsFolder *info,
+BrFolder_Expand(
+    BrFolder *info,
     IShellFolder *lpsf,
     PCIDLIST_ABSOLUTE pidl,
     HTREEITEM hParent,
@@ -327,7 +327,7 @@ BrsFolder_Expand(
         }
         if (ulAttrs != (ulAttrs & SFGAO_FOLDER))
         {
-            if (!BrsFolder_InsertItem(info, lpsf, pidlTemp, pidl, pEnumIL, hParent))
+            if (!BrFolder_InsertItem(info, lpsf, pidlTemp, pidl, pEnumIL, hParent))
                 goto done;
         }
         pidlTemp.Free(); // Finally, free the pidl that the shell gave us...
@@ -348,7 +348,7 @@ PIDLIsType(LPCITEMIDLIST pidl, PIDLTYPE type)
 }
 
 static void
-BrsFolder_CheckValidSelection(BrsFolder *info, BrsItemData *pItemData)
+BrFolder_CheckValidSelection(BrFolder *info, BrItemData *pItemData)
 {
     LPBROWSEINFOW lpBrowseInfo = info->lpBrowseInfo;
     PCIDLIST_RELATIVE pidlChild = pItemData->pidlChild;
@@ -387,9 +387,9 @@ BrsFolder_CheckValidSelection(BrsFolder *info, BrsItemData *pItemData)
 }
 
 static LRESULT
-BrsFolder_Treeview_Delete(BrsFolder *info, NMTREEVIEWW *pnmtv)
+BrFolder_Treeview_Delete(BrFolder *info, NMTREEVIEWW *pnmtv)
 {
-    BrsItemData *pItemData = (BrsItemData *)pnmtv->itemOld.lParam;
+    BrItemData *pItemData = (BrItemData *)pnmtv->itemOld.lParam;
 
     TRACE("TVN_DELETEITEMA/W %p\n", pItemData);
 
@@ -398,9 +398,9 @@ BrsFolder_Treeview_Delete(BrsFolder *info, NMTREEVIEWW *pnmtv)
 }
 
 static LRESULT
-BrsFolder_Treeview_Expand(BrsFolder *info, NMTREEVIEWW *pnmtv)
+BrFolder_Treeview_Expand(BrFolder *info, NMTREEVIEWW *pnmtv)
 {
-    BrsItemData *pItemData = (BrsItemData *)pnmtv->itemNew.lParam;
+    BrItemData *pItemData = (BrItemData *)pnmtv->itemNew.lParam;
 
     TRACE("TVN_ITEMEXPANDINGA/W\n");
 
@@ -421,7 +421,7 @@ BrsFolder_Treeview_Expand(BrsFolder *info, NMTREEVIEWW *pnmtv)
 
     HTREEITEM hItem = pnmtv->itemNew.hItem;
     if (!FAILED_UNEXPECTEDLY(hr))
-        BrsFolder_Expand(info, lpsf2, pItemData->pidlFull, hItem, pItemData->pEnumIL);
+        BrFolder_Expand(info, lpsf2, pItemData->pidlFull, hItem, pItemData->pEnumIL);
 
     // My Computer is already sorted and trying to do a simple text
     // sort will only mess things up
@@ -432,24 +432,24 @@ BrsFolder_Treeview_Expand(BrsFolder *info, NMTREEVIEWW *pnmtv)
 }
 
 static HRESULT
-BrsFolder_Treeview_Changed(BrsFolder *info, NMTREEVIEWW *pnmtv)
+BrFolder_Treeview_Changed(BrFolder *info, NMTREEVIEWW *pnmtv)
 {
-    BrsItemData *pItemData = (BrsItemData *)pnmtv->itemNew.lParam;
+    BrItemData *pItemData = (BrItemData *)pnmtv->itemNew.lParam;
 
     ILFree(info->pidlRet);
     info->pidlRet = ILClone(pItemData->pidlFull);
 
     WCHAR szName[MAX_PATH];
-    if (BrsFolder_GetName(pItemData->lpsfParent, pItemData->pidlChild, SHGDN_NORMAL, szName))
+    if (BrFolder_GetName(pItemData->lpsfParent, pItemData->pidlChild, SHGDN_NORMAL, szName))
         SetDlgItemTextW(info->hWnd, IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, szName);
 
-    BrsFolder_Callback(info->lpBrowseInfo, info->hWnd, BFFM_SELCHANGED, (LPARAM)info->pidlRet);
-    BrsFolder_CheckValidSelection(info, pItemData);
+    BrFolder_Callback(info->lpBrowseInfo, info->hWnd, BFFM_SELCHANGED, (LPARAM)info->pidlRet);
+    BrFolder_CheckValidSelection(info, pItemData);
     return S_OK;
 }
 
 static LRESULT
-BrsFolder_Treeview_Rename(BrsFolder *info, NMTVDISPINFOW *pnmtv)
+BrFolder_Treeview_Rename(BrFolder *info, NMTVDISPINFOW *pnmtv)
 {
     WCHAR old_path[MAX_PATH], new_path[MAX_PATH];
     NMTREEVIEWW nmtv;
@@ -459,7 +459,7 @@ BrsFolder_Treeview_Rename(BrsFolder *info, NMTVDISPINFOW *pnmtv)
         return 0;
 
     item.hItem = TreeView_GetSelection(info->hwndTreeView);
-    BrsItemData *item_data = BrsFolder_GetItemData(info, item.hItem);
+    BrItemData *item_data = BrFolder_GetItemData(info, item.hItem);
 
     SHGetPathFromIDListW(item_data->pidlFull, old_path);
     lstrcpynW(new_path, old_path, _countof(new_path));
@@ -480,12 +480,12 @@ BrsFolder_Treeview_Rename(BrsFolder *info, NMTVDISPINFOW *pnmtv)
     TreeView_SetItem(info->hwndTreeView, &item);
 
     nmtv.itemNew.lParam = item.lParam;
-    BrsFolder_Treeview_Changed(info, &nmtv);
+    BrFolder_Treeview_Changed(info, &nmtv);
     return 0;
 }
 
 static HRESULT
-BrsFolder_Rename(BrsFolder *info, HTREEITEM hItem)
+BrFolder_Rename(BrFolder *info, HTREEITEM hItem)
 {
     TreeView_SelectItem(info->hwndTreeView, hItem);
     TreeView_EditLabel(info->hwndTreeView, hItem);
@@ -493,13 +493,13 @@ BrsFolder_Rename(BrsFolder *info, HTREEITEM hItem)
 }
 
 static void
-BrsFolder_Delete(BrsFolder *info, HTREEITEM hItem)
+BrFolder_Delete(BrFolder *info, HTREEITEM hItem)
 {
     SHFILEOPSTRUCTW fileop = { info->hwndTreeView };
     WCHAR szzFrom[MAX_PATH + 1];
 
     // Get item_data
-    BrsItemData *item_data = BrsFolder_GetItemData(info, hItem);
+    BrItemData *item_data = BrFolder_GetItemData(info, hItem);
 
     // Get the path
     if (!SHGetPathFromIDListW(item_data->pidlFull, szzFrom))
@@ -517,7 +517,7 @@ BrsFolder_Delete(BrsFolder *info, HTREEITEM hItem)
 }
 
 static LRESULT
-BrsFolder_Treeview_Keydown(BrsFolder *info, LPNMTVKEYDOWN keydown)
+BrFolder_Treeview_Keydown(BrFolder *info, LPNMTVKEYDOWN keydown)
 {
     // Old dialog doesn't support those advanced features
     if (!(info->lpBrowseInfo->ulFlags & BIF_USENEWUI))
@@ -528,17 +528,17 @@ BrsFolder_Treeview_Keydown(BrsFolder *info, LPNMTVKEYDOWN keydown)
     switch (keydown->wVKey)
     {
         case VK_F2:
-            BrsFolder_Rename(info, hItem);
+            BrFolder_Rename(info, hItem);
             break;
         case VK_DELETE:
-            BrsFolder_Delete(info, hItem);
+            BrFolder_Delete(info, hItem);
             break;
     }
     return 0;
 }
 
 static LRESULT
-BrsFolder_OnNotify(BrsFolder *info, UINT CtlID, LPNMHDR lpnmh)
+BrFolder_OnNotify(BrFolder *info, UINT CtlID, LPNMHDR lpnmh)
 {
     NMTREEVIEWW *pnmtv = (NMTREEVIEWW *)lpnmh;
 
@@ -551,22 +551,22 @@ BrsFolder_OnNotify(BrsFolder *info, UINT CtlID, LPNMHDR lpnmh)
     {
         case TVN_DELETEITEMA:
         case TVN_DELETEITEMW:
-            return BrsFolder_Treeview_Delete(info, pnmtv);
+            return BrFolder_Treeview_Delete(info, pnmtv);
 
         case TVN_ITEMEXPANDINGA:
         case TVN_ITEMEXPANDINGW:
-            return BrsFolder_Treeview_Expand(info, pnmtv);
+            return BrFolder_Treeview_Expand(info, pnmtv);
 
         case TVN_SELCHANGEDA:
         case TVN_SELCHANGEDW:
-            return BrsFolder_Treeview_Changed(info, pnmtv);
+            return BrFolder_Treeview_Changed(info, pnmtv);
 
         case TVN_ENDLABELEDITA:
         case TVN_ENDLABELEDITW:
-            return BrsFolder_Treeview_Rename(info, (LPNMTVDISPINFOW)pnmtv);
+            return BrFolder_Treeview_Rename(info, (LPNMTVDISPINFOW)pnmtv);
 
         case TVN_KEYDOWN:
-            return BrsFolder_Treeview_Keydown(info, (LPNMTVKEYDOWN)pnmtv);
+            return BrFolder_Treeview_Keydown(info, (LPNMTVKEYDOWN)pnmtv);
 
         default:
             WARN("unhandled (%d)\n", pnmtv->hdr.code);
@@ -577,7 +577,7 @@ BrsFolder_OnNotify(BrsFolder *info, UINT CtlID, LPNMHDR lpnmh)
 }
 
 static BOOL
-BrsFolder_OnInitDialog(HWND hWnd, BrsFolder *info)
+BrFolder_OnInitDialog(HWND hWnd, BrFolder *info)
 {
     CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlDesktop;
     SHChangeNotifyEntry ntreg;
@@ -651,7 +651,7 @@ BrsFolder_OnInitDialog(HWND hWnd, BrsFolder *info)
 
     info->hwndTreeView = GetDlgItem(hWnd, IDC_BROWSE_FOR_FOLDER_TREEVIEW);
     if (info->hwndTreeView)
-        BrsFolder_InitTreeView(info);
+        BrFolder_InitTreeView(info);
     else
         ERR("treeview control missing!\n");
 
@@ -664,7 +664,7 @@ BrsFolder_OnInitDialog(HWND hWnd, BrsFolder *info)
                                                  SHV_CHANGE_NOTIFY, 1, &ntreg);
 
     SetFocus(info->hwndTreeView);
-    BrsFolder_Callback(info->lpBrowseInfo, hWnd, BFFM_INITIALIZED, 0);
+    BrFolder_Callback(info->lpBrowseInfo, hWnd, BFFM_INITIALIZED, 0);
 
     SHAutoComplete(GetDlgItem(hWnd, IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT),
                    (SHACF_FILESYS_ONLY | SHACF_URLHISTORY | SHACF_FILESYSTEM));
@@ -672,7 +672,7 @@ BrsFolder_OnInitDialog(HWND hWnd, BrsFolder *info)
 }
 
 static HRESULT
-BrsFolder_NewFolder(BrsFolder *info)
+BrFolder_NewFolder(BrFolder *info)
 {
     DWORD flags = BrowseFlagsToSHCONTF(info->lpBrowseInfo->ulFlags);
     CComPtr<IShellFolder> desktop, cur;
@@ -723,7 +723,7 @@ BrsFolder_NewFolder(BrsFolder *info)
     TVITEMW item = { TVIF_PARAM | TVIF_STATE };
     item.hItem = hParent;
     TreeView_GetItem(info->hwndTreeView, &item);
-    BrsItemData *item_data = (BrsItemData *)item.lParam;
+    BrItemData *item_data = (BrItemData *)item.lParam;
     if (!item_data)
         return hr;
 
@@ -746,14 +746,14 @@ BrsFolder_NewFolder(BrsFolder *info)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    HTREEITEM hAdded = BrsFolder_InsertItem(info, cur, pidlNew, item_data->pidlFull, NULL, hParent);
+    HTREEITEM hAdded = BrFolder_InsertItem(info, cur, pidlNew, item_data->pidlFull, NULL, hParent);
 
     TreeView_SortChildren(info->hwndTreeView, hParent, FALSE);
-    return BrsFolder_Rename(info, hAdded);
+    return BrFolder_Rename(info, hAdded);
 }
 
 static void
-BrsFolder_OnCommand(BrsFolder *info, UINT id)
+BrFolder_OnCommand(BrFolder *info, UINT id)
 {
     LPBROWSEINFOW lpBrowseInfo = info->lpBrowseInfo;
     WCHAR szPath[MAX_PATH];
@@ -799,14 +799,14 @@ BrsFolder_OnCommand(BrsFolder *info, UINT id)
         }
         case IDC_BROWSE_FOR_FOLDER_NEW_FOLDER:
         {
-            BrsFolder_NewFolder(info);
+            BrFolder_NewFolder(info);
             break;
         }
     }
 }
 
 static BOOL
-BrsFolder_OnSetExpandedPidl(BrsFolder *info, LPITEMIDLIST pidlSelection, HTREEITEM *phItem)
+BrFolder_OnSetExpandedPidl(BrFolder *info, LPITEMIDLIST pidlSelection, HTREEITEM *phItem)
 {
     if (_ILIsDesktop(pidlSelection))
     {
@@ -844,7 +844,7 @@ BrsFolder_OnSetExpandedPidl(BrsFolder *info, LPITEMIDLIST pidlSelection, HTREEIT
     while (item.hItem && !_ILIsEmpty(pidlCurrent))
     {
         TreeView_GetItem(info->hwndTreeView, &item);
-        BrsItemData *pItemData = (BrsItemData *)item.lParam;
+        BrItemData *pItemData = (BrItemData *)item.lParam;
 
         if (_ILIsEqualSimple(pItemData->pidlChild, pidlCurrent))
         {
@@ -870,7 +870,7 @@ BrsFolder_OnSetExpandedPidl(BrsFolder *info, LPITEMIDLIST pidlSelection, HTREEIT
 }
 
 static BOOL
-BrsFolder_OnSetExpandedString(BrsFolder *info, LPWSTR pszString, HTREEITEM *phItem)
+BrFolder_OnSetExpandedString(BrFolder *info, LPWSTR pszString, HTREEITEM *phItem)
 {
     CComPtr<IShellFolder> psfDesktop;
     HRESULT hr = SHGetDesktopFolder(&psfDesktop);
@@ -882,37 +882,37 @@ BrsFolder_OnSetExpandedString(BrsFolder *info, LPWSTR pszString, HTREEITEM *phIt
     if (FAILED_UNEXPECTEDLY(hr))
         return FALSE;
 
-    return BrsFolder_OnSetExpandedPidl(info, pidlSelection, phItem);
+    return BrFolder_OnSetExpandedPidl(info, pidlSelection, phItem);
 }
 
 static BOOL
-BrsFolder_OnSetSelectionPidl(BrsFolder *info, LPITEMIDLIST pidlSelection)
+BrFolder_OnSetSelectionPidl(BrFolder *info, LPITEMIDLIST pidlSelection)
 {
     if (!pidlSelection)
         return FALSE;
 
     HTREEITEM hItem;
-    BOOL ret = BrsFolder_OnSetExpandedPidl(info, pidlSelection, &hItem);
+    BOOL ret = BrFolder_OnSetExpandedPidl(info, pidlSelection, &hItem);
     if (ret)
         TreeView_SelectItem(info->hwndTreeView, hItem);
     return ret;
 }
 
 static BOOL
-BrsFolder_OnSetSelectionW(BrsFolder *info, LPWSTR pszSelection)
+BrFolder_OnSetSelectionW(BrFolder *info, LPWSTR pszSelection)
 {
     if (!pszSelection)
         return FALSE;
 
     HTREEITEM hItem;
-    BOOL ret = BrsFolder_OnSetExpandedString(info, pszSelection, &hItem);
+    BOOL ret = BrFolder_OnSetExpandedString(info, pszSelection, &hItem);
     if (ret)
         TreeView_SelectItem(info->hwndTreeView, hItem);
     return ret;
 }
 
 static BOOL
-BrsFolder_OnSetSelectionA(BrsFolder *info, LPSTR pszSelectionA)
+BrFolder_OnSetSelectionA(BrFolder *info, LPSTR pszSelectionA)
 {
     if (!pszSelectionA)
         return FALSE;
@@ -922,11 +922,11 @@ BrsFolder_OnSetSelectionA(BrsFolder *info, LPSTR pszSelectionA)
     if (!pszSelectionW)
         return FALSE;
 
-    return BrsFolder_OnSetSelectionW(info, pszSelectionW);
+    return BrFolder_OnSetSelectionW(info, pszSelectionW);
 }
 
 static void
-BrsFolder_OnDestroy(BrsFolder *info)
+BrFolder_OnDestroy(BrFolder *info)
 {
     if (info->layout)
     {
@@ -939,9 +939,9 @@ BrsFolder_OnDestroy(BrsFolder *info)
 
 // Find a treeview node by recursively walking the treeview
 static HTREEITEM
-BrsFolder_FindItemByPidl(BrsFolder *info, PCIDLIST_ABSOLUTE pidlFull, HTREEITEM hItem)
+BrFolder_FindItemByPidl(BrFolder *info, PCIDLIST_ABSOLUTE pidlFull, HTREEITEM hItem)
 {
-    BrsItemData *item_data = BrsFolder_GetItemData(info, hItem);
+    BrItemData *item_data = BrFolder_GetItemData(info, hItem);
 
     HRESULT hr = item_data->lpsfParent->CompareIDs(0, item_data->pidlFull, pidlFull);
     if (SUCCEEDED(hr) && !HRESULT_CODE(hr))
@@ -950,7 +950,7 @@ BrsFolder_FindItemByPidl(BrsFolder *info, PCIDLIST_ABSOLUTE pidlFull, HTREEITEM 
     for (hItem = TreeView_GetChild(info->hwndTreeView, hItem); hItem;
          hItem = TreeView_GetNextSibling(info->hwndTreeView, hItem))
     {
-        HTREEITEM newItem = BrsFolder_FindItemByPidl(info, pidlFull, hItem);
+        HTREEITEM newItem = BrFolder_FindItemByPidl(info, pidlFull, hItem);
         if (newItem)
             return newItem;
     }
@@ -959,7 +959,7 @@ BrsFolder_FindItemByPidl(BrsFolder *info, PCIDLIST_ABSOLUTE pidlFull, HTREEITEM 
 }
 
 static void
-BrsFolder_OnChange(BrsFolder *info, const PCIDLIST_ABSOLUTE *pidls, LONG event)
+BrFolder_OnChange(BrFolder *info, const PCIDLIST_ABSOLUTE *pidls, LONG event)
 {
     TRACE("(%p)->(%p, %p, 0x%08x)\n", info, pidls[0], pidls[1], event);
 
@@ -969,7 +969,7 @@ BrsFolder_OnChange(BrsFolder *info, const PCIDLIST_ABSOLUTE *pidls, LONG event)
         case SHCNE_DELETE:
         {
             HTREEITEM hRoot = TreeView_GetRoot(info->hwndTreeView);
-            HTREEITEM hItem = BrsFolder_FindItemByPidl(info, pidls[0], hRoot);
+            HTREEITEM hItem = BrFolder_FindItemByPidl(info, pidls[0], hRoot);
             if (hItem)
                 TreeView_DeleteItem(info->hwndTreeView, hItem);
             break;
@@ -978,25 +978,25 @@ BrsFolder_OnChange(BrsFolder *info, const PCIDLIST_ABSOLUTE *pidls, LONG event)
 }
 
 /*************************************************************************
- *             BrsFolderDlgProc32  (not an exported API function)
+ *             BrFolderDlgProc32  (not an exported API function)
  */
 static INT_PTR CALLBACK
-BrsFolderDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+BrFolderDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     if (uMsg == WM_INITDIALOG)
-        return BrsFolder_OnInitDialog(hWnd, (BrsFolder *)lParam);
+        return BrFolder_OnInitDialog(hWnd, (BrFolder *)lParam);
 
-    BrsFolder *info = (BrsFolder *)GetPropW(hWnd, L"__WINE_BRSFOLDERDLG_INFO");
+    BrFolder *info = (BrFolder *)GetPropW(hWnd, L"__WINE_BRSFOLDERDLG_INFO");
     if (!info)
         return 0;
 
     switch (uMsg)
     {
         case WM_NOTIFY:
-            return BrsFolder_OnNotify(info, (UINT)wParam, (LPNMHDR)lParam);
+            return BrFolder_OnNotify(info, (UINT)wParam, (LPNMHDR)lParam);
 
         case WM_COMMAND:
-            BrsFolder_OnCommand(info, wParam);
+            BrFolder_OnCommand(info, wParam);
             break;
 
         case WM_GETMINMAXINFO:
@@ -1027,28 +1027,28 @@ BrsFolderDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case BFFM_SETSELECTIONA:
             if (wParam) // String
-                return BrsFolder_OnSetSelectionA(info, (LPSTR)lParam);
+                return BrFolder_OnSetSelectionA(info, (LPSTR)lParam);
             else // PIDL
-                return BrsFolder_OnSetSelectionPidl(info, (LPITEMIDLIST)lParam);
+                return BrFolder_OnSetSelectionPidl(info, (LPITEMIDLIST)lParam);
 
         case BFFM_SETSELECTIONW:
             if (wParam) // String
-                return BrsFolder_OnSetSelectionW(info, (LPWSTR)lParam);
+                return BrFolder_OnSetSelectionW(info, (LPWSTR)lParam);
             else // PIDL
-                return BrsFolder_OnSetSelectionPidl(info, (LPITEMIDLIST)lParam);
+                return BrFolder_OnSetSelectionPidl(info, (LPITEMIDLIST)lParam);
 
         case BFFM_SETEXPANDED: // Unicode only
             if (wParam) // String
-                return BrsFolder_OnSetExpandedString(info, (LPWSTR)lParam, NULL);
+                return BrFolder_OnSetExpandedString(info, (LPWSTR)lParam, NULL);
             else // PIDL
-                return BrsFolder_OnSetExpandedPidl(info, (LPITEMIDLIST)lParam, NULL);
+                return BrFolder_OnSetExpandedPidl(info, (LPITEMIDLIST)lParam, NULL);
 
         case SHV_CHANGE_NOTIFY:
-            BrsFolder_OnChange(info, (const PCIDLIST_ABSOLUTE *)wParam, (LONG)lParam);
+            BrFolder_OnChange(info, (const PCIDLIST_ABSOLUTE *)wParam, (LONG)lParam);
             break;
 
         case WM_DESTROY:
-            BrsFolder_OnDestroy(info);
+            BrFolder_OnDestroy(info);
             break;
     }
 
@@ -1097,13 +1097,13 @@ SHBrowseForFolderW(LPBROWSEINFOW lpbi)
 {
     TRACE("%p\n", lpbi);
 
-    BrsFolder info = { lpbi };
+    BrFolder info = { lpbi };
 
     HRESULT hr = OleInitialize(NULL);
 
     INT id = ((lpbi->ulFlags & BIF_USENEWUI) ? IDD_BROWSE_FOR_FOLDER_NEW : IDD_BROWSE_FOR_FOLDER);
     INT_PTR ret = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(id), lpbi->hwndOwner,
-                                  BrsFolderDlgProc, (LPARAM)&info);
+                                  BrFolderDlgProc, (LPARAM)&info);
     if (SUCCEEDED(hr))
         OleUninitialize();
 
