@@ -4421,6 +4421,20 @@ typedef enum ASSOC_FILTER
 } ASSOC_FILTER;
 cpp_quote("HRESULT WINAPI SHAssocEnumHandlers(PCWSTR extra, ASSOC_FILTER filter, IEnumAssocHandlers **handlersenum);")
 
+[
+    uuid(1df0d7f1-b267-4d28-8b10-12e23202a5c4),
+]
+interface IItemNameLimits : IUnknown
+{
+    HRESULT GetValidCharacters(
+        [out, string] LPWSTR *validchars,
+        [out, string] LPWSTR *invalidchars);
+
+    HRESULT GetMaxLength(
+        [in, string] LPCWSTR name,
+        [out] int *max_length);
+}
+
 typedef [v1_enum] enum ACTIVATEOPTIONS
 {
     AO_NONE             = 0x00000000,
