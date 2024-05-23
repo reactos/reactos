@@ -34,9 +34,11 @@ typedef CHAR  SEC_CHAR;
 typedef LONG SECURITY_STATUS;
 #endif
 
+#ifndef UNISP_NAME_W
 #define UNISP_NAME_A "Microsoft Unified Security Protocol Provider"
 #define UNISP_NAME_W L"Microsoft Unified Security Protocol Provider"
 #define UNISP_NAME WINELIB_NAME_AW(UNISP_NAME_)
+#endif
 
 #ifdef UNICODE
 typedef SEC_WCHAR * SECURITY_PSTR;
