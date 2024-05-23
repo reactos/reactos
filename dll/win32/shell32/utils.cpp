@@ -1262,7 +1262,7 @@ HRESULT WINAPI
 SHGetRealIDL(
     _In_ IShellFolder *psf,
     _In_ PCUITEMID_CHILD pidlSimple,
-    _Outptr_ PITEMID_CHILD * ppidlReal)
+    _Outptr_ PITEMID_CHILD *ppidlReal)
 {
     HRESULT hr;
     STRRET strret;
