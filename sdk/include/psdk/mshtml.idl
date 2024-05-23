@@ -15751,6 +15751,135 @@ interface IDOMProcessingInstruction : IDispatch
 }
 
 /*****************************************************************************
+ *    IHTMLPerformanceNavigation interface
+ */
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(30510750-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLPerformanceNavigation : IDispatch
+{
+    [propget, id(DISPID_IHTMLPERFORMANCENAVIGATION_TYPE)]
+    HRESULT type([out, retval] ULONG *p);
+
+    [propget, id(DISPID_IHTMLPERFORMANCENAVIGATION_REDIRECTCOUNT)]
+    HRESULT redirectCount([out, retval] ULONG *p);
+
+    [id(DISPID_IHTMLPERFORMANCENAVIGATION_TOSTRING)]
+    HRESULT toString([out, retval] BSTR *string);
+
+    [id(DISPID_IHTMLPERFORMANCENAVIGATION_TOJSON)]
+    HRESULT toJSON([out, retval] VARIANT *pVar);
+}
+
+/*****************************************************************************
+ *    IHTMLPerformanceTiming interface
+ */
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(30510752-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLPerformanceTiming : IDispatch
+{
+    [propget, id(DISPID_IHTMLPERFORMANCETIMING_NAVIGATIONSTART)]
+    HRESULT navigationStart([out, retval] ULONGLONG *p);
+
+    [propget, id(DISPID_IHTMLPERFORMANCETIMING_UNLOADEVENTSTART)]
+    HRESULT unloadEventStart([out, retval] ULONGLONG *p);
+
+    [propget, id(DISPID_IHTMLPERFORMANCETIMING_UNLOADEVENTEND)]
+    HRESULT unloadEventEnd([out, retval] ULONGLONG *p);
+
+    [propget, id(DISPID_IHTMLPERFORMANCETIMING_REDIRECTSTART)]
+    HRESULT redirectStart([out, retval] ULONGLONG *p);
+
+    [propget, id(DISPID_IHTMLPERFORMANCETIMING_REDIRECTEND)]
+    HRESULT redirectEnd([out, retval] ULONGLONG *p);
+
+    [propget, id(DISPID_IHTMLPERFORMANCETIMING_FETCHSTART)]
+    HRESULT fetchStart([out, retval] ULONGLONG *p);
+
+    [propget, id(DISPID_IHTMLPERFORMANCETIMING_DOMAINLOOKUPSTART)]
+    HRESULT domainLookupStart([out, retval] ULONGLONG *p);
+
+    [propget, id(DISPID_IHTMLPERFORMANCETIMING_DOMAINLOOKUPEND)]
+    HRESULT domainLookupEnd([out, retval] ULONGLONG *p);
+
+    [propget, id(DISPID_IHTMLPERFORMANCETIMING_CONNECTSTART)]
+    HRESULT connectStart([out, retval] ULONGLONG *p);
+
+    [propget, id(DISPID_IHTMLPERFORMANCETIMING_CONNECTEND)]
+    HRESULT connectEnd([out, retval] ULONGLONG *p);
+
+    [propget, id(DISPID_IHTMLPERFORMANCETIMING_REQUESTSTART)]
+    HRESULT requestStart([out, retval] ULONGLONG *p);
+
+    [propget, id(DISPID_IHTMLPERFORMANCETIMING_RESPONSESTART)]
+    HRESULT responseStart([out, retval] ULONGLONG *p);
+
+    [propget, id(DISPID_IHTMLPERFORMANCETIMING_RESPONSEEND)]
+    HRESULT responseEnd([out, retval] ULONGLONG *p);
+
+    [propget, id(DISPID_IHTMLPERFORMANCETIMING_DOMLOADING)]
+    HRESULT domLoading([out, retval] ULONGLONG *p);
+
+    [propget, id(DISPID_IHTMLPERFORMANCETIMING_DOMINTERACTIVE)]
+    HRESULT domInteractive([out, retval] ULONGLONG *p);
+
+    [propget, id(DISPID_IHTMLPERFORMANCETIMING_DOMCONTENTLOADEDEVENTSTART)]
+    HRESULT domContentLoadedEventStart([out, retval] ULONGLONG *p);
+
+    [propget, id(DISPID_IHTMLPERFORMANCETIMING_DOMCONTENTLOADEDEVENTEND)]
+    HRESULT domContentLoadedEventEnd([out, retval] ULONGLONG *p);
+
+    [propget, id(DISPID_IHTMLPERFORMANCETIMING_DOMCOMPLETE)]
+    HRESULT domComplete([out, retval] ULONGLONG *p);
+
+    [propget, id(DISPID_IHTMLPERFORMANCETIMING_LOADEVENTSTART)]
+    HRESULT loadEventStart([out, retval] ULONGLONG *p);
+
+    [propget, id(DISPID_IHTMLPERFORMANCETIMING_LOADEVENTEND)]
+    HRESULT loadEventEnd([out, retval] ULONGLONG *p);
+
+    [propget, id(DISPID_IHTMLPERFORMANCETIMING_MSFIRSTPAINT)]
+    HRESULT msFirstPaint([out, retval] ULONGLONG *p);
+
+    [id(DISPID_IHTMLPERFORMANCETIMING_TOSTRING)]
+    HRESULT toString([out, retval] BSTR *string);
+
+    [id(DISPID_IHTMLPERFORMANCETIMING_TOJSON)]
+    HRESULT toJSON([out, retval] VARIANT *pVar);
+}
+
+/*****************************************************************************
+ *    IHTMLPerformance interface
+ */
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(3051074e-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLPerformance : IDispatch
+{
+    [propget, id(DISPID_IHTMLPERFORMANCE_NAVIGATION)]
+    HRESULT navigation([out, retval] IHTMLPerformanceNavigation **p);
+
+    [propget, id(DISPID_IHTMLPERFORMANCE_TIMING)]
+    HRESULT timing([out, retval] IHTMLPerformanceTiming **p);
+
+    [id(DISPID_IHTMLPERFORMANCE_TOSTRING)]
+    HRESULT toString([out, retval] BSTR *string);
+
+    [id(DISPID_IHTMLPERFORMANCE_TOJSON)]
+    HRESULT toJSON([out, retval] VARIANT *pVar);
+}
+
+/*****************************************************************************
  *    IHTMLDocument interface
  */
 [
