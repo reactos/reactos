@@ -367,7 +367,7 @@ FdoIoctlDiskGetDriveGeometryEx(
     // as disk.sys doesn't really know about the partition table on a disk
 
     PDISK_GEOMETRY_EX_INTERNAL geometryEx = Irp->AssociatedIrp.SystemBuffer;
-    size_t outBufferLength = ioStack->Parameters.DeviceIoControl.OutputBufferLength;
+    ULONG outBufferLength = ioStack->Parameters.DeviceIoControl.OutputBufferLength;
     NTSTATUS status;
 
     status = IssueSyncIoControlRequest(IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
