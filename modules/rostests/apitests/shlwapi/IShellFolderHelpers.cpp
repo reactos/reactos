@@ -13,7 +13,7 @@
 #define SHLWAPI_ISHELLFOLDER_HELPERS
 #include <shlwapi_undoc.h>
 
-static INT s_nStage = 0;
+static INT s_nStep = 0;
 
 class CTestShellFolder : public IShellFolder
 {
@@ -38,7 +38,7 @@ public:
     STDMETHOD(QueryInterface)(REFIID riid, void **ppvObject) override
     {
         ok_int(IsEqualGUID(riid, IID_IShellFolder2), TRUE);
-        ++s_nStage;
+        ++s_nStep;
         return E_NOINTERFACE;
     }
     STDMETHOD_(ULONG, AddRef)() override
@@ -57,7 +57,7 @@ public:
     {
         ok_ptr(*ppidl, NULL);
         ok_long(*pdwAttributes, 0);
-        ++s_nStage;
+        ++s_nStep;
         return 0xDEADFACE;
     }
     STDMETHOD(EnumObjects)(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList) override
@@ -77,7 +77,7 @@ public:
     }
     STDMETHOD(CompareIDs)(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2) override
     {
-        switch (s_nStage)
+        switch (s_nStep)
         {
             case 11:
                 // It shouldn't come here
@@ -93,7 +93,7 @@ public:
                 skip("\n");
                 break;
         }
-        ++s_nStage;
+        ++s_nStep;
         return 0xFEEDF00D;
     }
     STDMETHOD(CreateViewObject)(HWND hwndOwner, REFIID riid, LPVOID *ppvOut) override
@@ -113,7 +113,7 @@ public:
     }
     STDMETHOD(GetDisplayNameOf)(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet) override
     {
-        switch (s_nStage)
+        switch (s_nStep)
         {
             case 0:
                 ok_long(dwFlags, SHGDN_FORPARSING | SHGDN_FORADDRESSBAR | SHGDN_FOREDITING | SHGDN_INFOLDER);
@@ -149,7 +149,7 @@ public:
                 skip("\n");
                 break;
         }
-        ++s_nStage;
+        ++s_nStep;
         return E_FAIL;
     }
     STDMETHOD(SetNameOf)(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut) override
@@ -171,7 +171,7 @@ static void Test_GetDisplayNameOf(void)
         NULL,
         0);
     ok_long(hr, E_FAIL);
-    ok_int(s_nStage, 4);
+    ok_int(s_nStep, 4);
 
     hr = IShellFolder_GetDisplayNameOf(
         psf,
@@ -180,10 +180,10 @@ static void Test_GetDisplayNameOf(void)
         NULL,
         0);
     ok_long(hr, E_FAIL);
-    ok_int(s_nStage, 10);
+    ok_int(s_nStep, 10);
 
-    if (s_nStage != 10)
-        skip("s_nStage value is wrong\n");
+    if (s_nStep != 10)
+        skip("s_nStep value is wrong\n");
 
     delete psf;
 }
@@ -193,7 +193,7 @@ static void Test_ParseDisplayName(void)
     CTestShellFolder *psf = new CTestShellFolder();
     HRESULT hr;
 
-    s_nStage = 10;
+    s_nStep = 10;
     LPITEMIDLIST pidl;
     hr = IShellFolder_ParseDisplayName(
         psf,
@@ -204,7 +204,7 @@ static void Test_ParseDisplayName(void)
         &pidl,
         NULL);
     ok_long(hr, 0xDEADFACE);
-    ok_int(s_nStage, 11);
+    ok_int(s_nStep, 11);
 
     delete psf;
 }
@@ -232,22 +232,22 @@ static void Test_CompareIDs(void)
     CTestShellFolder *psf = new CTestShellFolder();
     HRESULT hr;
 
-    s_nStage = 11;
+    s_nStep = 11;
     hr = fnIShellFolder_CompareIDs(
         psf,
         0xFFFF1234,
         NULL,
         NULL);
     ok_long(hr, 0xFEEDF00D);
-    ok_int(s_nStage, 13);
+    ok_int(s_nStep, 13);
 
-    s_nStage = 13;
+    s_nStep = 13;
     hr = fnIShellFolder_CompareIDs(
         psf,
         0x00005678,
         NULL,
         NULL);
-    ok_int(s_nStage, 14);
+    ok_int(s_nStep, 14);
 
     delete psf;
 }
