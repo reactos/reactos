@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS api tests
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Tests for IShellFolder helpers
+ * PURPOSE:     Tests for SHLWAPI IShellFolder helpers
  * COPYRIGHT:   Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
@@ -54,29 +54,49 @@ public:
     }
 
     // IShellFolder methods
-    STDMETHOD(ParseDisplayName)(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, ULONG *pchEaten, PIDLIST_RELATIVE *ppidl, ULONG *pdwAttributes) override
+    STDMETHOD(ParseDisplayName)(
+        HWND hwndOwner,
+        LPBC pbc,
+        LPOLESTR lpszDisplayName,
+        ULONG *pchEaten,
+        PIDLIST_RELATIVE *ppidl,
+        ULONG *pdwAttributes) override
     {
         ok_ptr(*ppidl, NULL);
         ok_long(*pdwAttributes, 0);
         ++s_nStep;
         return 0xDEADFACE;
     }
-    STDMETHOD(EnumObjects)(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList) override
+    STDMETHOD(EnumObjects)(
+        HWND hwndOwner,
+        DWORD dwFlags,
+        LPENUMIDLIST *ppEnumIDList) override
     {
         ok_int(TRUE, FALSE);
         return E_NOTIMPL;
     }
-    STDMETHOD(BindToObject)(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut) override
+    STDMETHOD(BindToObject)(
+        PCUIDLIST_RELATIVE pidl,
+        LPBC pbcReserved,
+        REFIID riid,
+        LPVOID *ppvOut) override
     {
         ok_int(TRUE, FALSE);
         return E_NOTIMPL;
     }
-    STDMETHOD(BindToStorage)(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut) override
+    STDMETHOD(BindToStorage)(
+        PCUIDLIST_RELATIVE pidl,
+        LPBC pbcReserved,
+        REFIID riid,
+        LPVOID *ppvOut) override
     {
         ok_int(TRUE, FALSE);
         return E_NOTIMPL;
     }
-    STDMETHOD(CompareIDs)(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2) override
+    STDMETHOD(CompareIDs)(
+        LPARAM lParam,
+        PCUIDLIST_RELATIVE pidl1,
+        PCUIDLIST_RELATIVE pidl2) override
     {
         switch (s_nStep)
         {
@@ -97,27 +117,43 @@ public:
         ++s_nStep;
         return 0xFEEDF00D;
     }
-    STDMETHOD(CreateViewObject)(HWND hwndOwner, REFIID riid, LPVOID *ppvOut) override
+    STDMETHOD(CreateViewObject)(
+        HWND hwndOwner,
+        REFIID riid,
+        LPVOID *ppvOut) override
     {
         ok_int(TRUE, FALSE);
         return E_NOTIMPL;
     }
-    STDMETHOD(GetAttributesOf)(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD *rgfInOut) override
+    STDMETHOD(GetAttributesOf)(
+        UINT cidl,
+        PCUITEMID_CHILD_ARRAY apidl,
+        DWORD *rgfInOut) override
     {
         ok_int(TRUE, FALSE);
         return E_NOTIMPL;
     }
-    STDMETHOD(GetUIObjectOf)(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid, UINT * prgfInOut, LPVOID * ppvOut) override
+    STDMETHOD(GetUIObjectOf)(
+        HWND hwndOwner,
+        UINT cidl,
+        PCUITEMID_CHILD_ARRAY apidl,
+        REFIID riid,
+        UINT * prgfInOut,
+        LPVOID * ppvOut) override
     {
         ok_int(TRUE, FALSE);
         return E_NOTIMPL;
     }
-    STDMETHOD(GetDisplayNameOf)(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet) override
+    STDMETHOD(GetDisplayNameOf)(
+        PCUITEMID_CHILD pidl,
+        DWORD dwFlags,
+        LPSTRRET strRet) override
     {
         switch (s_nStep)
         {
             case 0:
-                ok_long(dwFlags, SHGDN_FORPARSING | SHGDN_FORADDRESSBAR | SHGDN_FOREDITING | SHGDN_INFOLDER);
+                ok_long(dwFlags, SHGDN_FORPARSING | SHGDN_FORADDRESSBAR | SHGDN_FOREDITING |
+                                 SHGDN_INFOLDER);
                 break;
             case 1:
                 ok_long(dwFlags, SHGDN_FORPARSING | SHGDN_FORADDRESSBAR | SHGDN_INFOLDER);
@@ -153,7 +189,12 @@ public:
         ++s_nStep;
         return E_FAIL;
     }
-    STDMETHOD(SetNameOf)(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut) override
+    STDMETHOD(SetNameOf)(
+        HWND hwndOwner,
+        PCUITEMID_CHILD pidl,
+        LPCOLESTR lpName,
+        DWORD dwFlags,
+        PITEMID_CHILD *pPidlOut) override
     {
         ok_int(TRUE, FALSE);
         return E_NOTIMPL;
