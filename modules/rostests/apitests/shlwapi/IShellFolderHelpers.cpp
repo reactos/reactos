@@ -226,7 +226,7 @@ static void Test_CompareIDs(void)
     if (IsWindowsVistaOrGreater())
     {
         skip("Vista+\n");
-        ok(fnIShellFolder_CompareIDs == NULL, "Vista+ should have no IShellFolder_CompareIDs\n");
+        ok(fnIShellFolder_CompareIDs == NULL, "Vista+ has no IShellFolder_CompareIDs\n");
         return;
     }
 
