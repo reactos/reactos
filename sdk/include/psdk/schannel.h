@@ -20,6 +20,9 @@
 
 #include <wincrypt.h>
 
+
+#ifndef UNISP_NAME_W
+#define UNISP_NAME_A "Microsoft Unified Security Protocol Provider"
 /* Package names */
 #define UNISP_NAME_A "Microsoft Unified Security Protocol Provider"
 #if defined(__GNUC__)
@@ -34,7 +37,7 @@ static const WCHAR UNISP_NAME_W[] = { 'M','i','c','r','o','s','o','f','t',
  'P','r','o','t','o','c','o','l',' ','P','r','o','v','i','d','e','r',0 };
 #endif
 #define UNISP_NAME WINELIB_NAME_AW(UNISP_NAME_)
-
+#endif
 #define SSL2SP_NAME_A   "Microsoft SSL 2.0"
 #if defined(__GNUC__)
 #define SSL2SP_NAME_W (const WCHAR []){ 'M','i','c','r','o','s','o','f','t',\
