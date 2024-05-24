@@ -51,10 +51,7 @@ static const WCHAR SSL2SP_NAME_W[] = { 'M','i','c','r','o','s','o','f','t',
 #define SSL2SP_NAME WINELIB_NAME_AW(SSL2SP_NAME_)
 
 #define SSL3SP_NAME_A   "Microsoft SSL 3.0"
-#if defined(__GNUC__)
-#define SSL3SP_NAME_W (const WCHAR []){ 'M','i','c','r','o','s','o','f','t',\
- ' ','S','S','L',' ','3','.','0',0 }
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #define SSL3SP_NAME_W  L"Microsoft SSL 3.0"
 #else
 static const WCHAR SSL3SP_NAME_W[] = { 'M','i','c','r','o','s','o','f','t',
@@ -63,10 +60,7 @@ static const WCHAR SSL3SP_NAME_W[] = { 'M','i','c','r','o','s','o','f','t',
 #define SSL3SP_NAME WINELIB_NAME_AW(SSL3SP_NAME_)
 
 #define TLS1SP_NAME_A   "Microsoft TLS 1.0"
-#if defined(__GNUC__)
-#define TLS1SP_NAME_W (const WCHAR []){ 'M','i','c','r','o','s','o','f','t',\
- ' ','T','L','S',' ','1','.','0',0 }
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #define TLS1SP_NAME_W  L"Microsoft TLS 1.0"
 #else
 static const WCHAR TLS1SP_NAME_W[] = { 'M','i','c','r','o','s','o','f','t',
@@ -75,10 +69,7 @@ static const WCHAR TLS1SP_NAME_W[] = { 'M','i','c','r','o','s','o','f','t',
 #define TLS1SP_NAME WINELIB_NAME_AW(TLS1SP_NAME_)
 
 #define PCT1SP_NAME_A   "Microsoft PCT 1.0"
-#if defined(__GNUC__)
-#define PCT1SP_NAME_W (const WCHAR []){ 'M','i','c','r','o','s','o','f','t',\
- ' ','P','C','T',' ','1','.','0',0 }
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #define PCT1SP_NAME_W  L"Microsoft PCT 1.0"
 #else
 static const WCHAR PCT1SP_NAME_W[] = { 'M','i','c','r','o','s','o','f','t',
@@ -87,9 +78,7 @@ static const WCHAR PCT1SP_NAME_W[] = { 'M','i','c','r','o','s','o','f','t',
 #define PCT1SP_NAME WINELIB_NAME_AW(PCT1SP_NAME_)
 
 #define SCHANNEL_NAME_A "Schannel"
-#if defined(__GNUC__)
-#define SCHANNEL_NAME_W (const WCHAR []){ 'S','c','h','a','n','n','e','l',0 }
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #define SCHANNEL_NAME_W  L"Schannel"
 #else
 static const WCHAR SCHANNEL_NAME_W[] = { 'S','c','h','a','n','n','e','l',0 };
