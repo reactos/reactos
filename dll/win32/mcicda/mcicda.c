@@ -682,7 +682,11 @@ static DWORD MCICDA_Info(UINT wDevID, DWORD dwFlags, LPMCI_INFO_PARMSW lpParms)
 	}
 
 	res = CDROM_Audio_GetSerial(&toc);
+#ifdef __REACTOS__
+    sprintfW(buffer, wszLu, res);
+#else
 	swprintf(buffer, ARRAY_SIZE(buffer), wszLu, res);
+#endif
 	str = buffer;
     } else {
 	WARN("Don't know this info command (%u)\n", dwFlags);
