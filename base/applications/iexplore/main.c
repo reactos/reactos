@@ -23,7 +23,6 @@
 #include <ole2.h>
 #include <rpcproxy.h>
 
-#include "wine/unicode.h"
 #include "wine/debug.h"
 
 extern DWORD WINAPI IEWinMain(const WCHAR*, int);
@@ -57,7 +56,7 @@ static BOOL check_native_ie(void)
     if (VerQueryValueW(buf, translationW, (void **)&translation, &bytes))
     {
         wsprintfW(file_desc_strW, file_desc_fmtW, translation[0], translation[1]);
-        ret = !VerQueryValueW(buf, file_desc_strW, (void**)&file_desc, &bytes) || !strstrW(file_desc, wineW);
+        ret = !VerQueryValueW(buf, file_desc_strW, (void**)&file_desc, &bytes) || !wcsstr(file_desc, wineW);
     }
 
     HeapFree(GetProcessHeap(), 0, buf);
@@ -83,9 +82,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE prev, WCHAR *cmdline, int sho
     static const WCHAR unregserverW[] = {'u','n','r','e','g','s','e','r','v','e','r',0};
 
     if(*cmdline == '-' || *cmdline == '/') {
-        if(!strcmpiW(cmdline+1, regserverW))
+        if(!wcsicmp(cmdline+1, regserverW))
             return register_iexplore(TRUE);
-        if(!strcmpiW(cmdline+1, unregserverW))
+        if(!wcsicmp(cmdline+1, unregserverW))
             return register_iexplore(FALSE);
     }
 
