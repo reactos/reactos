@@ -690,11 +690,10 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","Gulim",
 	"micross.ttf,Microsoft Sans Serif",\
 	"msgothic.ttc,MS UI Gothic",\
 	"mingliu.ttc,PMingLiU"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","MingLiU",0x00010000,\
-	"micross.ttf,Microsoft Sans Serif",\
-	"simsun.ttc,SimSun",\
-	"msmincho.ttc,MS Mincho",\
-	"batang.ttc,BatangChe"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","GulimChe",0x00010000,\
+	"msgothic.ttc,MS Gothic",\
+	"mingliu.ttc,MingLiU",\
+	"simsun.ttc,SimSun"
 
 ; Win32k GRE initialization
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\GRE_Initialize",,0x00000012
