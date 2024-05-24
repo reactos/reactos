@@ -1,0 +1,9 @@
+diff a/dll/win32/mcicda/mcicda.c b/dll/win32/mcicda/mcicda.c	(rejected hunks)
+@@ -36,7 +35,6 @@
+ #include "ntddcdrm.h"
+ #include "winternl.h"
+ #include "wine/debug.h"
+-#include "wine/unicode.h"
+ #include "dsound.h"
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(mcicda);

@@ -37,7 +37,6 @@
 #include "mmddk.h"
 #include "mmreg.h"
 #include "msacm.h"
-#include "wine/unicode.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(wavemap);
@@ -1068,7 +1067,7 @@ static	DWORD	widGetDevCaps(UINT wDevID, WAVEMAPDATA* wim, LPWAVEINCAPSW lpWaveCa
 	wic.wMid = 0x00FF;
 	wic.wPid = 0x0001;
 	wic.vDriverVersion = 0x0001;
-	strcpyW(wic.szPname, init);
+	lstrcpyW(wic.szPname, init);
 	wic.dwFormats =
             WAVE_FORMAT_96M08 | WAVE_FORMAT_96S08 | WAVE_FORMAT_96M16 | WAVE_FORMAT_96S16 |
             WAVE_FORMAT_48M08 | WAVE_FORMAT_48S08 | WAVE_FORMAT_48M16 | WAVE_FORMAT_48S16 |
