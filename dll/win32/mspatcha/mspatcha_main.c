@@ -27,6 +27,8 @@
 #include "patchapi.h"
 #include "lzx.h"
 #include "wine/debug.h"
+#include <stdlib.h>
+#include "pa19.h"
 
 static const char szHexString[] = "0123456789abcdef";
 #define SIGNATURE_MIN_SIZE          9
@@ -602,6 +604,101 @@ BOOL WINAPI TestApplyPatchToFileA(LPCSTR patch_file, LPCSTR old_file, ULONG appl
 BOOL WINAPI TestApplyPatchToFileByHandles(HANDLE patch_file, HANDLE old_file, ULONG apply_flags)
 {
     return ApplyPatchToFileByHandles(patch_file, old_file, INVALID_HANDLE_VALUE, apply_flags | APPLY_OPTION_TEST_ONLY);
+}
+
+static inline WCHAR *strdupAW(const char *src)
+{
+    int len;
+    WCHAR *dst;
+    if (!src) return NULL;
+    len = MultiByteToWideChar(CP_ACP, 0, src, -1, NULL, 0);
+    if ((dst = malloc(len * sizeof(*dst)))) MultiByteToWideChar(CP_ACP, 0, src, -1, dst, len);
+    return dst;
+}
+
+BOOL WINAPI ApplyPatchToFileExA(LPCSTR patch_file, LPCSTR old_file, LPCSTR new_file, ULONG apply_flags,
+    PPATCH_PROGRESS_CALLBACK progress_fn, PVOID progress_ctx)
+{
+    BOOL ret = FALSE;
+    WCHAR *patch_fileW, *new_fileW, *old_fileW = NULL;
+
+    if (!(patch_fileW = strdupAW(patch_file))) return FALSE;
+
+    if (old_file && !(old_fileW = strdupAW(old_file)))
+        goto free_wstrs;
+    if (!(new_fileW = strdupAW(new_file)))
+        goto free_wstrs;
+
+    ret = apply_patch_to_file(patch_fileW, old_fileW, new_fileW, apply_flags, progress_fn, progress_ctx, FALSE);
+
+    HeapFree(GetProcessHeap(), 0, new_fileW);
+free_wstrs:
+    HeapFree(GetProcessHeap(), 0, patch_fileW);
+    HeapFree(GetProcessHeap(), 0, old_fileW);
+    return ret;
+}
+
+/*****************************************************
+ *    ApplyPatchToFileExW (MSPATCHA.@)
+ */
+BOOL WINAPI ApplyPatchToFileExW(LPCWSTR patch_file_name, LPCWSTR old_file_name, LPCWSTR new_file_name,
+    ULONG apply_option_flags,
+    PPATCH_PROGRESS_CALLBACK progress_fn, PVOID progress_ctx)
+{
+    return apply_patch_to_file(patch_file_name, old_file_name, new_file_name, apply_option_flags,
+        progress_fn, progress_ctx, FALSE);
+}
+
+/*****************************************************
+ *    ApplyPatchToFileByHandlesEx (MSPATCHA.@)
+ */
+BOOL WINAPI ApplyPatchToFileByHandlesEx(HANDLE patch_file_hndl, HANDLE old_file_hndl, HANDLE new_file_hndl,
+    ULONG apply_option_flags,
+    PPATCH_PROGRESS_CALLBACK progress_fn,
+    PVOID progress_ctx)
+{
+    return apply_patch_to_file_by_handles(patch_file_hndl, old_file_hndl, new_file_hndl,
+        apply_option_flags, progress_fn, progress_ctx, FALSE);
+}
+
+BOOL WINAPI ApplyPatchToFileByBuffers(PBYTE patch_file_view, ULONG  patch_file_size,
+    PBYTE  old_file_view, ULONG  old_file_size,
+    PBYTE* new_file_buf, ULONG  new_file_buf_size, ULONG* new_file_size,
+    FILETIME* new_file_time,
+    ULONG  apply_option_flags,
+    PPATCH_PROGRESS_CALLBACK progress_fn, PVOID  progress_ctx)
+ {
+    /* NOTE: windows preserves last error on success for this function, but no apps are known to depend on it */
+
+    DWORD err = apply_patch_to_file_by_buffers(patch_file_view, patch_file_size,
+        old_file_view, old_file_size,
+        new_file_buf, new_file_buf_size, new_file_size, new_file_time,
+        apply_option_flags,
+        progress_fn, progress_ctx,
+        FALSE);
+
+    SetLastError(err);
+
+    return err == ERROR_SUCCESS;
+}
+
+BOOL WINAPI TestApplyPatchToFileByBuffers(BYTE *patch_file_buf, ULONG patch_file_size,
+    BYTE *old_file_buf, ULONG old_file_size,
+    ULONG* new_file_size,
+    ULONG  apply_option_flags)
+{
+    /* NOTE: windows preserves last error on success for this function, but no apps are known to depend on it */
+
+    DWORD err = apply_patch_to_file_by_buffers(patch_file_buf, patch_file_size,
+        old_file_buf, old_file_size,
+        NULL, 0, new_file_size, NULL,
+        apply_option_flags,
+        NULL, NULL,
+        TRUE);
+
+    SetLastError(err);
+
+    return err == ERROR_SUCCESS;
 }
 
 /*****************************************************
