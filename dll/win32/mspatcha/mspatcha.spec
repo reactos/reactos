@@ -1,8 +1,8 @@
 1 stdcall ApplyPatchToFileA(str str str long)
 2 stdcall ApplyPatchToFileByHandles(ptr ptr ptr long)
-3 stub ApplyPatchToFileByHandlesEx
-4 stub ApplyPatchToFileExA
-5 stub ApplyPatchToFileExW
+3 stdcall ApplyPatchToFileByHandlesEx(ptr ptr ptr long ptr ptr)
+4 stdcall ApplyPatchToFileExA(str str str long ptr ptr)
+5 stdcall ApplyPatchToFileExW(wstr wstr wstr long ptr ptr)
 6 stdcall ApplyPatchToFileW(wstr wstr wstr long)
 7 stdcall GetFilePatchSignatureA(str long ptr long ptr long ptr long ptr)
 8 stdcall GetFilePatchSignatureByHandle(ptr long ptr long ptr long ptr long ptr)
@@ -10,3 +10,6 @@
 10 stdcall TestApplyPatchToFileA(str str long)
 11 stdcall TestApplyPatchToFileByHandles(ptr ptr long)
 12 stdcall TestApplyPatchToFileW(wstr wstr long)
+
+@ stdcall ApplyPatchToFileByBuffers(ptr long ptr long ptr long ptr ptr long ptr ptr)
+@ stdcall TestApplyPatchToFileByBuffers(ptr long ptr long ptr long)

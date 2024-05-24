@@ -7,6 +7,10 @@ list(APPEND SOURCE
     mspatcha_main.c
     lzx.c
     lzx.h
+    lzxd_dec.c
+    lzxd_dec.h
+    pa19.c
+    pa19.h
     ${CMAKE_CURRENT_BINARY_DIR}/mspatcha_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/mspatcha.def)
 
