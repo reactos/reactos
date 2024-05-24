@@ -40,6 +40,8 @@
 #include <comctl32_undoc.h>
 #include <shlguid_undoc.h>
 #include <shlobj_undoc.h>
+
+#define SHLWAPI_ISHELLFOLDER_HELPERS
 #include <shlwapi_undoc.h>
 
 #include <shellapi.h>

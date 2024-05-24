@@ -2308,17 +2308,12 @@ static BOOL ILIsParentOrSpecialParent(PCIDLIST_ABSOLUTE pidl1, PCIDLIST_ABSOLUTE
         ILFree(deskpidl);
     }
 
-    WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
     LPITEMIDLIST pidl2Clone = ILClone(pidl2);
     ILRemoveLastID(pidl2Clone);
-    if (SHGetPathFromIDListW(pidl1, szPath1) &&
-        SHGetPathFromIDListW(pidl2Clone, szPath2))
+    if (ILIsEqual(pidl1, pidl2Clone))
     {
-        if (lstrcmpiW(szPath1, szPath2) == 0)
-        {
-            ILFree(pidl2Clone);
-            return TRUE;
-        }
+        ILFree(pidl2Clone);
+        return TRUE;
     }
     ILFree(pidl2Clone);
 
@@ -2342,29 +2337,27 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
         return FALSE;
     }
 
-    TRACE("(%p)(%p,%p,0x%08x)\n", this, Pidls[0], Pidls[1], lParam);
+    TRACE("(%p)(%p,%p,%p)\n", this, Pidls[0], Pidls[1], lParam);
 
-    // Translate PIDLs.
+    // Translate child IDLs.
     // SHSimpleIDListFromPathW creates fake PIDLs (lacking some attributes)
-    // FIXME: Use SHGetRealIDL
-    CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidl0(Pidls[0]), pidl1(Pidls[1]);
-    WCHAR path[MAX_PATH];
-    if (pidl0 && SHGetPathFromIDListW(pidl0, path) && PathFileExistsW(path))
-    {
-        pidl0.Free();
-        pidl0.Attach(ILCreateFromPathW(path));
-    }
-    if (pidl1 && SHGetPathFromIDListW(pidl1, path) && PathFileExistsW(path))
-    {
-        pidl1.Free();
-        pidl1.Attach(ILCreateFromPathW(path));
-    }
-
+    HRESULT hr;
     PITEMID_CHILD child0 = NULL, child1 = NULL;
-    if (ILIsParentOrSpecialParent(m_pidlParent, pidl0))
-        child0 = ILFindLastID(pidl0);
-    if (ILIsParentOrSpecialParent(m_pidlParent, pidl1))
-        child1 = ILFindLastID(pidl1);
+    CComHeapPtr<ITEMIDLIST_RELATIVE> pidl0Temp, pidl1Temp;
+    if (ILIsParentOrSpecialParent(m_pidlParent, Pidls[0]))
+    {
+        child0 = ILFindLastID(Pidls[0]);
+        hr = SHGetRealIDL(m_pSFParent, child0, &pidl0Temp);
+        if (SUCCEEDED(hr))
+            child0 = pidl0Temp;
+    }
+    if (ILIsParentOrSpecialParent(m_pidlParent, Pidls[1]))
+    {
+        child1 = ILFindLastID(Pidls[1]);
+        hr = SHGetRealIDL(m_pSFParent, child1, &pidl1Temp);
+        if (SUCCEEDED(hr))
+            child1 = pidl1Temp;
+    }
 
     lEvent &= ~SHCNE_INTERRUPT;
     switch (lEvent)

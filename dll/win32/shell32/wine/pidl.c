@@ -747,6 +747,7 @@ LPITEMIDLIST WINAPI ILCombine(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
     return pidlNew;
 }
 
+#ifndef __REACTOS__ /* See ..\utils.cpp */
 /*************************************************************************
  *  SHGetRealIDL [SHELL32.98]
  *
@@ -794,6 +795,7 @@ HRESULT WINAPI SHGetRealIDL(LPSHELLFOLDER lpsf, LPCITEMIDLIST pidlSimple, LPITEM
 
     return hr;
 }
+#endif
 
 /*************************************************************************
  *  SHLogILFromFSIL [SHELL32.95]

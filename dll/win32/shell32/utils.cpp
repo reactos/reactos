@@ -2,12 +2,26 @@
  * PROJECT:     shell32
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
  * PURPOSE:     Utility functions
- * COPYRIGHT:   Copyright 2023 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * COPYRIGHT:   Copyright 2023-2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
+
+HRESULT
+SHILClone(
+    _In_opt_ LPCITEMIDLIST pidl,
+    _Outptr_ LPITEMIDLIST *ppidl)
+{
+    if (!pidl)
+    {
+        *ppidl = NULL;
+        return S_OK;
+    }
+    *ppidl = ILClone(pidl);
+    return (*ppidl ? S_OK : E_OUTOFMEMORY);
+}
 
 BOOL PathIsDotOrDotDotW(_In_ LPCWSTR pszPath)
 {
@@ -1241,4 +1255,42 @@ PathIsEqualOrSubFolder(
         return FALSE;
 
     return strPath1.CompareNoCase(strCommon) == 0;
+}
+
+/*************************************************************************
+ *  SHGetRealIDL [SHELL32.98]
+ */
+EXTERN_C
+HRESULT WINAPI
+SHGetRealIDL(
+    _In_ IShellFolder *psf,
+    _In_ PCUITEMID_CHILD pidlSimple,
+    _Outptr_ PITEMID_CHILD *ppidlReal)
+{
+    HRESULT hr;
+    STRRET strret;
+    WCHAR szPath[MAX_PATH];
+    SFGAOF attrs;
+
+    *ppidlReal = NULL;
+
+    hr = IShellFolder_GetDisplayNameOf(psf, pidlSimple, SHGDN_INFOLDER | SHGDN_FORPARSING,
+                                       &strret, 0);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = StrRetToBufW(&strret, pidlSimple, szPath, _countof(szPath));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    attrs = SFGAO_FILESYSTEM;
+    hr = psf->GetAttributesOf(1, &pidlSimple, &attrs);
+    if (SUCCEEDED(hr) && !(attrs & SFGAO_FILESYSTEM))
+        return SHILClone(pidlSimple, ppidlReal);
+
+    hr = IShellFolder_ParseDisplayName(psf, NULL, NULL, szPath, NULL, ppidlReal, NULL);
+    if (hr == E_INVALIDARG || hr == E_NOTIMPL)
+        return SHILClone(pidlSimple, ppidlReal);
+
+    return hr;
 }
