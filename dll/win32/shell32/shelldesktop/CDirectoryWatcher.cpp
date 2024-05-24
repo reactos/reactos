@@ -169,7 +169,6 @@ void CDirectoryWatcher::ProcessNotification()
 
         // convert action to event
         fDir = PathIsDirectoryW(szPath);
-
         dwEvent = ConvertActionToEvent(pInfo->Action, fDir);
         switch (dwEvent)
         {
