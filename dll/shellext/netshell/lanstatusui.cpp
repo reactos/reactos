@@ -821,10 +821,9 @@ ShowStatusPropertyDialog(
         {
             WCHAR buffer[100];
             
+            /* If the window is already opened, prevent it from opening again */
             LoadStringW(netshell_hInstance, IDS_NETWORKCONNECTION, buffer, _countof(buffer));
             HWND hWndProp = FindWindow(NULL, buffer);
-
-            /* If the window is already opened, prevent it from opening again */
             if (hWndProp != NULL)
             {
                 ShowWindow(hWndProp, SW_SHOWNORMAL);
