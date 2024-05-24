@@ -9,7 +9,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-HRESULT SHILClone(LPCITEMIDLIST pidl, LPITEMIDLIST *ppidl)
+HRESULT
+SHILClone(
+    _In_opt_ LPCITEMIDLIST pidl,
+    _Outptr_ LPITEMIDLIST *ppidl)
 {
     if (!pidl)
     {
