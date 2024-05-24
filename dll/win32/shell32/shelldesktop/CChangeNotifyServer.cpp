@@ -7,6 +7,7 @@
 #include "shelldesktop.h"
 #include "shlwapi_undoc.h"
 #include "CDirectoryWatcher.h"
+#include <atlsimpcoll.h>
 #include <assert.h>      // for assert
 
 WINE_DEFAULT_DEBUG_CHANNEL(shcn);
