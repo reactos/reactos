@@ -2289,35 +2289,9 @@ static BOOL ILIsParentOrSpecialParent(PCIDLIST_ABSOLUTE pidl1, PCIDLIST_ABSOLUTE
     if (ILIsParent(pidl1, pidl2, TRUE))
         return TRUE;
 
-    if (_ILIsDesktop(pidl1))
-    {
-        PIDLIST_ABSOLUTE deskpidl;
-        SHGetFolderLocation(NULL, CSIDL_DESKTOPDIRECTORY, NULL, 0, &deskpidl);
-        if (ILIsParent(deskpidl, pidl2, TRUE))
-        {
-            ILFree(deskpidl);
-            return TRUE;
-        }
-        ILFree(deskpidl);
-        SHGetFolderLocation(NULL, CSIDL_COMMON_DESKTOPDIRECTORY, NULL, 0, &deskpidl);
-        if (ILIsParent(deskpidl, pidl2, TRUE))
-        {
-            ILFree(deskpidl);
-            return TRUE;
-        }
-        ILFree(deskpidl);
-    }
-
-    LPITEMIDLIST pidl2Clone = ILClone(pidl2);
+    CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidl2Clone(ILClone(pidl2));
     ILRemoveLastID(pidl2Clone);
-    if (ILIsEqual(pidl1, pidl2Clone))
-    {
-        ILFree(pidl2Clone);
-        return TRUE;
-    }
-    ILFree(pidl2Clone);
-
-    return FALSE;
+    return ILIsEqual(pidl1, pidl2Clone);
 }
 
 LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
