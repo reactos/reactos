@@ -980,6 +980,23 @@ PartitionHandleDeviceControl(
             Irp->IoStatus.Information = headerSize + uniqueId->UniqueIdLength;
             break;
         }
+        case IOCTL_MOUNTDEV_QUERY_SUGGESTED_LINK_NAME:
+        case IOCTL_MOUNTDEV_LINK_CREATED:
+        case IOCTL_MOUNTDEV_LINK_DELETED:
+#if (NTDDI_VERSION >= NTDDI_WS03)
+        /* Deprecated Windows 2000/XP versions of IOCTL_MOUNTDEV_LINK_[CREATED|DELETED]
+         * without access protection, that were updated in Windows 2003 */
+        case CTL_CODE(MOUNTDEVCONTROLTYPE, 4, METHOD_BUFFERED, FILE_ANY_ACCESS):
+        case CTL_CODE(MOUNTDEVCONTROLTYPE, 5, METHOD_BUFFERED, FILE_ANY_ACCESS):
+#endif
+        case IOCTL_MOUNTDEV_QUERY_STABLE_GUID:
+        case IOCTL_MOUNTDEV_UNIQUE_ID_CHANGE_NOTIFY:
+        {
+            WARN("Ignored MountMgr notification: 0x%lX\n",
+                 ioStack->Parameters.DeviceIoControl.IoControlCode);
+            status = STATUS_NOT_IMPLEMENTED;
+            break;
+        }
         default:
             return ForwardIrpAndForget(DeviceObject, Irp);
     }
