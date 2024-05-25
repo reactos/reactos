@@ -659,7 +659,9 @@ BrFolder_OnInitDialog(HWND hWnd, BrFolder *info)
 
     ntreg.pidl = pidlDesktop;
     ntreg.fRecursive = TRUE;
-    info->hChangeNotify = SHChangeNotifyRegister(hWnd, SHCNRF_InterruptLevel, SHCNE_ALLEVENTS,
+    info->hChangeNotify = SHChangeNotifyRegister(hWnd,
+                                                 SHCNRF_ShellLevel | SHCNRF_NewDelivery,
+                                                 SHCNE_ALLEVENTS,
                                                  SHV_CHANGE_NOTIFY, 1, &ntreg);
 
     BrFolder_Callback(info->lpBrowseInfo, hWnd, BFFM_INITIALIZED, 0);
@@ -940,8 +942,7 @@ BrFolder_FindItemByPidl(BrFolder *info, PCIDLIST_ABSOLUTE pidlFull, HTREEITEM hI
 {
     BrItemData *item_data = BrFolder_GetItemData(info, hItem);
 
-    HRESULT hr = item_data->lpsfParent->CompareIDs(0, item_data->pidlFull, pidlFull);
-    if (SUCCEEDED(hr) && !HRESULT_CODE(hr))
+    if (ILIsEqual(item_data->pidlFull, pidlFull))
         return hItem;
 
     for (hItem = TreeView_GetChild(info->hwndTreeView, hItem); hItem;
@@ -956,22 +957,68 @@ BrFolder_FindItemByPidl(BrFolder *info, PCIDLIST_ABSOLUTE pidlFull, HTREEITEM hI
 }
 
 static void
-BrFolder_OnChange(BrFolder *info, const PCIDLIST_ABSOLUTE *pidls, LONG event)
+BrFolder_OnChangeEx(
+    _Inout_ BrFolder *info,
+    _In_ PCIDLIST_ABSOLUTE pidl0,
+    _In_ PCIDLIST_ABSOLUTE pidl1,
+    _In_ LONG event)
 {
-    TRACE("(%p)->(%p, %p, 0x%08x)\n", info, pidls[0], pidls[1], event);
+    TRACE("(%p)->(%p, %p, 0x%lX)\n", info, pidl0, pidl1, event);
 
     switch (event)
     {
+        case SHCNE_DRIVEADD:
+        case SHCNE_MKDIR:
+        case SHCNE_CREATE:
+        {
+            // FIXME
+            break;
+        }
+        case SHCNE_DRIVEREMOVED:
         case SHCNE_RMDIR:
         case SHCNE_DELETE:
         {
             HTREEITEM hRoot = TreeView_GetRoot(info->hwndTreeView);
-            HTREEITEM hItem = BrFolder_FindItemByPidl(info, pidls[0], hRoot);
-            if (hItem)
+            for (;;)
+            {
+                HTREEITEM hItem = BrFolder_FindItemByPidl(info, pidl0, hRoot);
+                if (!hItem)
+                    break;
                 TreeView_DeleteItem(info->hwndTreeView, hItem);
+            }
+            break;
+        }
+        case SHCNE_RENAMEFOLDER:
+        case SHCNE_RENAMEITEM:
+        case SHCNE_UPDATEDIR:
+        case SHCNE_UPDATEITEM:
+        {
+            // FIXME
             break;
         }
     }
+}
+
+// SHV_CHANGE_NOTIFY
+static void
+BrFolder_OnChange(BrFolder *info, WPARAM wParam, LPARAM lParam)
+{
+    // We use SHCNRF_NewDelivery method
+    HANDLE hChange = (HANDLE)wParam;
+    DWORD dwProcID = (DWORD)lParam;
+
+    PIDLIST_ABSOLUTE *ppidl = NULL;
+    LONG event;
+    HANDLE hLock = SHChangeNotification_Lock(hChange, dwProcID, &ppidl, &event);
+    if (hLock == NULL)
+    {
+        ERR("hLock == NULL\n");
+        return;
+    }
+
+    BrFolder_OnChangeEx(info, ppidl[0], ppidl[1], (event & ~SHCNE_INTERRUPT));
+
+    SHChangeNotification_Unlock(hLock);
 }
 
 /*************************************************************************
@@ -1041,7 +1088,7 @@ BrFolderDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 return BrFolder_OnSetExpandedPidl(info, (LPITEMIDLIST)lParam, NULL);
 
         case SHV_CHANGE_NOTIFY:
-            BrFolder_OnChange(info, (const PCIDLIST_ABSOLUTE *)wParam, (LONG)lParam);
+            BrFolder_OnChange(info, wParam, lParam);
             break;
 
         case WM_DESTROY:
