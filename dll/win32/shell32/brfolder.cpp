@@ -258,10 +258,10 @@ BrFolder_InsertItem(
         (pidlParent ? ILCombine(pidlParent, pidlChild) : ILClone(pidlChild));
     BrFolder_GetIconPair(pidlFull, &item);
 
-    pItemData->lpsfParent.Attach(lpsf);
+    pItemData->lpsfParent = lpsf;
     pItemData->pidlChild.Attach(ILClone(pidlChild));
     pItemData->pidlFull.Attach(pidlFull);
-    pItemData->pEnumIL.Attach(pEnumIL);
+    pItemData->pEnumIL = pEnumIL;
 
     TVINSERTSTRUCTW tvins = { hParent };
     tvins.item = item;
@@ -308,7 +308,8 @@ BrFolder_Expand(
         ULONG ulAttrs = SFGAO_HASSUBFOLDER | SFGAO_FOLDER;
         CComPtr<IEnumIDList> pEnumIL;
         CComPtr<IShellFolder> pSFChild;
-        lpsf->GetAttributesOf(1, (LPCITEMIDLIST *)&pidlTemp, &ulAttrs);
+        LPCITEMIDLIST pidlRef = pidlTemp;
+        lpsf->GetAttributesOf(1, &pidlRef, &ulAttrs);
         if (ulAttrs & SFGAO_FOLDER)
         {
             hr = lpsf->BindToObject(pidlTemp, NULL, IID_PPV_ARG(IShellFolder, &pSFChild));
@@ -320,7 +321,7 @@ BrFolder_Expand(
                 {
                     if ((pEnumIL->Skip(1) != S_OK) || FAILED(pEnumIL->Reset()))
                     {
-                        pEnumIL.Release();
+                        pEnumIL = NULL;
                     }
                 }
             }
@@ -362,15 +363,13 @@ BrFolder_CheckValidSelection(BrFolder *info, BrItemData *pItemData)
     if (lpBrowseInfo->ulFlags & BIF_RETURNFSANCESTORS)
     {
         dwAttributes = SFGAO_FILESYSANCESTOR | SFGAO_FILESYSTEM;
-        hr = pItemData->lpsfParent->GetAttributesOf(1, (LPCITEMIDLIST *)&pItemData->pidlChild,
-                                                    &dwAttributes);
+        hr = pItemData->lpsfParent->GetAttributesOf(1, &pidlChild, &dwAttributes);
         if (FAILED(hr) || !(dwAttributes & (SFGAO_FILESYSANCESTOR | SFGAO_FILESYSTEM)))
             bEnabled = FALSE;
     }
 
     dwAttributes = SFGAO_FOLDER | SFGAO_FILESYSTEM;
-    hr = pItemData->lpsfParent->GetAttributesOf(1, (LPCITEMIDLIST *)&pItemData->pidlChild,
-                                                &dwAttributes);
+    hr = pItemData->lpsfParent->GetAttributesOf(1, &pidlChild, &dwAttributes);
     if (FAILED_UNEXPECTEDLY(hr) ||
         ((dwAttributes & (SFGAO_FOLDER | SFGAO_FILESYSTEM)) != (SFGAO_FOLDER | SFGAO_FILESYSTEM)))
     {
@@ -416,7 +415,7 @@ BrFolder_Treeview_Expand(BrFolder *info, NMTREEVIEWW *pnmtv)
     }
     else
     {
-        lpsf2.Attach(pItemData->lpsfParent);
+        lpsf2 = pItemData->lpsfParent;
     }
 
     HTREEITEM hItem = pnmtv->itemNew.hItem;
@@ -692,7 +691,7 @@ BrFolder_NewFolder(BrFolder *info)
     }
     else
     {
-        cur.Attach(desktop);
+        cur = desktop;
         hr = SHGetFolderPathW(NULL, CSIDL_DESKTOPDIRECTORY, NULL, SHGFP_TYPE_CURRENT, path);
     }
 
@@ -727,8 +726,7 @@ BrFolder_NewFolder(BrFolder *info)
     if (!item_data)
         return hr;
 
-    if (item_data->pEnumIL)
-        item_data->pEnumIL.Release();
+    item_data->pEnumIL = NULL;
     hr = cur->EnumObjects(info->hwndTreeView, flags, &item_data->pEnumIL);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
