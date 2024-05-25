@@ -978,11 +978,14 @@ BrFolder_OnChangeEx(
         case SHCNE_RMDIR:
         case SHCNE_DELETE:
         {
-            // FIXME
             HTREEITEM hRoot = TreeView_GetRoot(info->hwndTreeView);
-            HTREEITEM hItem = BrFolder_FindItemByPidl(info, pidl0, hRoot);
-            if (hItem)
+            for (;;)
+            {
+                HTREEITEM hItem = BrFolder_FindItemByPidl(info, pidl0, hRoot);
+                if (!hItem)
+                    break;
                 TreeView_DeleteItem(info->hwndTreeView, hItem);
+            }
             break;
         }
         case SHCNE_RENAMEFOLDER:
