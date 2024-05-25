@@ -942,8 +942,7 @@ BrFolder_FindItemByPidl(BrFolder *info, PCIDLIST_ABSOLUTE pidlFull, HTREEITEM hI
 {
     BrItemData *item_data = BrFolder_GetItemData(info, hItem);
 
-    HRESULT hr = item_data->lpsfParent->CompareIDs(0, item_data->pidlFull, pidlFull);
-    if (SUCCEEDED(hr) && !HRESULT_CODE(hr))
+    if (ILIsEqual(item_data->pidlFull, pidlFull))
         return hItem;
 
     for (hItem = TreeView_GetChild(info->hwndTreeView, hItem); hItem;
@@ -957,12 +956,11 @@ BrFolder_FindItemByPidl(BrFolder *info, PCIDLIST_ABSOLUTE pidlFull, HTREEITEM hI
     return NULL;
 }
 
-// SHV_CHANGE_NOTIFY
 static void
 BrFolder_OnChangeEx(
     _Inout_ BrFolder *info,
-    _In_ const IDLIST_ABSOLUTE pidl0,
-    _In_ const IDLIST_ABSOLUTE pidl1,
+    _In_ PCIDLIST_ABSOLUTE pidl0,
+    _In_ PCIDLIST_ABSOLUTE pidl1,
     _In_ LONG event)
 {
     TRACE("(%p)->(%p, %p, 0x%lX)\n", info, pidl0, pidl1, event);
@@ -982,7 +980,7 @@ BrFolder_OnChangeEx(
         {
             // FIXME
             HTREEITEM hRoot = TreeView_GetRoot(info->hwndTreeView);
-            HTREEITEM hItem = BrFolder_FindItemByPidl(info, pidls[0], hRoot);
+            HTREEITEM hItem = BrFolder_FindItemByPidl(info, pidl0, hRoot);
             if (hItem)
                 TreeView_DeleteItem(info->hwndTreeView, hItem);
             break;
@@ -998,6 +996,7 @@ BrFolder_OnChangeEx(
     }
 }
 
+// SHV_CHANGE_NOTIFY
 static void
 BrFolder_OnChange(BrFolder *info, WPARAM wParam, LPARAM lParam)
 {
