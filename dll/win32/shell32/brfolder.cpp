@@ -259,9 +259,11 @@ BrFolder_InsertItem(
     BrFolder_GetIconPair(pidlFull, &item);
 
     pItemData->lpsfParent.Attach(lpsf);
+    pItemData->lpsfParent.AddRef();
     pItemData->pidlChild.Attach(ILClone(pidlChild));
     pItemData->pidlFull.Attach(pidlFull);
     pItemData->pEnumIL.Attach(pEnumIL);
+    pItemData->pEnumIL.AddRef();
 
     TVINSERTSTRUCTW tvins = { hParent };
     tvins.item = item;
@@ -416,6 +418,7 @@ BrFolder_Treeview_Expand(BrFolder *info, NMTREEVIEWW *pnmtv)
     else
     {
         lpsf2.Attach(pItemData->lpsfParent);
+        lpsf2.AddRef();
     }
 
     HTREEITEM hItem = pnmtv->itemNew.hItem;
@@ -692,6 +695,7 @@ BrFolder_NewFolder(BrFolder *info)
     else
     {
         cur.Attach(desktop);
+        cur.AddRef(desktop);
         hr = SHGetFolderPathW(NULL, CSIDL_DESKTOPDIRECTORY, NULL, SHGFP_TYPE_CURRENT, path);
     }
 
