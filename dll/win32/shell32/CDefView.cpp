@@ -2344,14 +2344,14 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     HRESULT hr;
     PITEMID_CHILD child0 = NULL, child1 = NULL;
     CComHeapPtr<ITEMIDLIST_RELATIVE> pidl0Temp, pidl1Temp;
-    if (ILIsParentOrSpecialParent(m_pidlParent, Pidls[0]))
+    if (_ILGetGUIDPointer(Pidls[0]) || ILIsParentOrSpecialParent(m_pidlParent, Pidls[0]))
     {
         child0 = ILFindLastID(Pidls[0]);
         hr = SHGetRealIDL(m_pSFParent, child0, &pidl0Temp);
         if (SUCCEEDED(hr))
             child0 = pidl0Temp;
     }
-    if (ILIsParentOrSpecialParent(m_pidlParent, Pidls[1]))
+    if (_ILGetGUIDPointer(Pidls[1]) || ILIsParentOrSpecialParent(m_pidlParent, Pidls[1]))
     {
         child1 = ILFindLastID(Pidls[1]);
         hr = SHGetRealIDL(m_pSFParent, child1, &pidl1Temp);
