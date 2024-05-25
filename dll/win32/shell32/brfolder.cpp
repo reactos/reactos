@@ -258,12 +258,10 @@ BrFolder_InsertItem(
         (pidlParent ? ILCombine(pidlParent, pidlChild) : ILClone(pidlChild));
     BrFolder_GetIconPair(pidlFull, &item);
 
-    pItemData->lpsfParent.Attach(lpsf);
-    lpsf->AddRef();
+    pItemData->lpsfParent = lpsf;
     pItemData->pidlChild.Attach(ILClone(pidlChild));
     pItemData->pidlFull.Attach(pidlFull);
-    pItemData->pEnumIL.Attach(pEnumIL);
-    pEnumIL->AddRef();
+    pItemData->pEnumIL = pEnumIL;
 
     TVINSERTSTRUCTW tvins = { hParent };
     tvins.item = item;
@@ -323,7 +321,7 @@ BrFolder_Expand(
                 {
                     if ((pEnumIL->Skip(1) != S_OK) || FAILED(pEnumIL->Reset()))
                     {
-                        pEnumIL.Release();
+                        pEnumIL = NULL;
                     }
                 }
             }
@@ -417,8 +415,7 @@ BrFolder_Treeview_Expand(BrFolder *info, NMTREEVIEWW *pnmtv)
     }
     else
     {
-        lpsf2.Attach(pItemData->lpsfParent);
-        pItemData->lpsfParent->AddRef();
+        lpsf2 = pItemData->lpsfParent;
     }
 
     HTREEITEM hItem = pnmtv->itemNew.hItem;
@@ -694,8 +691,7 @@ BrFolder_NewFolder(BrFolder *info)
     }
     else
     {
-        cur.Attach(desktop);
-        desktop->AddRef();
+        cur = desktop;
         hr = SHGetFolderPathW(NULL, CSIDL_DESKTOPDIRECTORY, NULL, SHGFP_TYPE_CURRENT, path);
     }
 
@@ -730,8 +726,7 @@ BrFolder_NewFolder(BrFolder *info)
     if (!item_data)
         return hr;
 
-    if (item_data->pEnumIL)
-        item_data->pEnumIL.Release();
+    item_data->pEnumIL = NULL;
     hr = cur->EnumObjects(info->hwndTreeView, flags, &item_data->pEnumIL);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
