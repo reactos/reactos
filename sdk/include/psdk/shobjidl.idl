@@ -120,6 +120,12 @@ cpp_quote("#include <prsht.h>")
 cpp_quote("typedef LPFNADDPROPSHEETPAGE LPFNSVADDPROPSHEETPAGE;")
 cpp_quote("#endif")
 
+cpp_quote("typedef struct _SFVM_PROPPAGE_DATA {")
+cpp_quote("    DWORD                dwReserved;")
+cpp_quote("    LPFNADDPROPSHEETPAGE pfn;")
+cpp_quote("    LPARAM               lParam;")
+cpp_quote("} SFVM_PROPPAGE_DATA;")
+
 [
     object,
     uuid(000214E9-0000-0000-C000-000000000046),
