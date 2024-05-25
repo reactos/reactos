@@ -2313,19 +2313,22 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
 
     TRACE("(%p)(%p,%p,%p)\n", this, Pidls[0], Pidls[1], lParam);
 
+    if (_DoFolderViewCB(SFVM_FSNOTIFY, (WPARAM)Pidls, lEvent) == S_FALSE)
+        return FALSE;
+
     // Translate child IDLs.
     // SHSimpleIDListFromPathW creates fake PIDLs (lacking some attributes)
     HRESULT hr;
     PITEMID_CHILD child0 = NULL, child1 = NULL;
     CComHeapPtr<ITEMIDLIST_RELATIVE> pidl0Temp, pidl1Temp;
-    if (_ILIsSpecialFolder(Pidls[0]) || ILIsParentOrSpecialParent(m_pidlParent, Pidls[0]))
+    if (_ILIsPidlSimple(Pidls[0]) || ILIsParentOrSpecialParent(m_pidlParent, Pidls[0]))
     {
         child0 = ILFindLastID(Pidls[0]);
         hr = SHGetRealIDL(m_pSFParent, child0, &pidl0Temp);
         if (SUCCEEDED(hr))
             child0 = pidl0Temp;
     }
-    if (_ILIsSpecialFolder(Pidls[1]) || ILIsParentOrSpecialParent(m_pidlParent, Pidls[1]))
+    if (_ILIsPidlSimple(Pidls[1]) || ILIsParentOrSpecialParent(m_pidlParent, Pidls[1]))
     {
         child1 = ILFindLastID(Pidls[1]);
         hr = SHGetRealIDL(m_pSFParent, child1, &pidl1Temp);
