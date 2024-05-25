@@ -2647,21 +2647,13 @@ HRESULT WINAPI CDefView::GetCurrentInfo(LPFOLDERSETTINGS lpfs)
     return S_OK;
 }
 
-//typedef struct _SFVM_PROPPAGE_DATA
-//{
-//    DWORD                dwReserved;
-//    LPFNADDPROPSHEETPAGE pfn;
-//    LPARAM               lParam;
-//} SFVM_PROPPAGE_DATA;
-
 HRESULT WINAPI CDefView::AddPropertySheetPages(DWORD dwReserved, LPFNADDPROPSHEETPAGE lpfn, LPARAM lparam)
 {
     TRACE("(%p)->(0x%lX, %p, %p)\n", this, dwReserved, lpfn, lparam);
 
     SFVM_PROPPAGE_DATA Data = { dwReserved, lpfn, lparam };
-    _DoFolderViewCB(SFVM_ADDPROPERTYPAGES , 0, (LPARAM)&Data);
-
-    return E_NOTIMPL;
+    _DoFolderViewCB(SFVM_ADDPROPERTYPAGES, 0, (LPARAM)&Data);
+    return S_OK;
 }
 
 HRESULT WINAPI CDefView::SaveViewState()
