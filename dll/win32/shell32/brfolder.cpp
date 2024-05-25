@@ -308,7 +308,8 @@ BrFolder_Expand(
         ULONG ulAttrs = SFGAO_HASSUBFOLDER | SFGAO_FOLDER;
         CComPtr<IEnumIDList> pEnumIL;
         CComPtr<IShellFolder> pSFChild;
-        lpsf->GetAttributesOf(1, (LPCITEMIDLIST *)&pidlTemp, &ulAttrs);
+        LPCITEMIDLIST pidlRef = pidlTemp;
+        lpsf->GetAttributesOf(1, &pidlRef, &ulAttrs);
         if (ulAttrs & SFGAO_FOLDER)
         {
             hr = lpsf->BindToObject(pidlTemp, NULL, IID_PPV_ARG(IShellFolder, &pSFChild));
@@ -362,15 +363,13 @@ BrFolder_CheckValidSelection(BrFolder *info, BrItemData *pItemData)
     if (lpBrowseInfo->ulFlags & BIF_RETURNFSANCESTORS)
     {
         dwAttributes = SFGAO_FILESYSANCESTOR | SFGAO_FILESYSTEM;
-        hr = pItemData->lpsfParent->GetAttributesOf(1, (LPCITEMIDLIST *)&pItemData->pidlChild,
-                                                    &dwAttributes);
+        hr = pItemData->lpsfParent->GetAttributesOf(1, &pidlChild, &dwAttributes);
         if (FAILED(hr) || !(dwAttributes & (SFGAO_FILESYSANCESTOR | SFGAO_FILESYSTEM)))
             bEnabled = FALSE;
     }
 
     dwAttributes = SFGAO_FOLDER | SFGAO_FILESYSTEM;
-    hr = pItemData->lpsfParent->GetAttributesOf(1, (LPCITEMIDLIST *)&pItemData->pidlChild,
-                                                &dwAttributes);
+    hr = pItemData->lpsfParent->GetAttributesOf(1, &pidlChild, &dwAttributes);
     if (FAILED_UNEXPECTEDLY(hr) ||
         ((dwAttributes & (SFGAO_FOLDER | SFGAO_FILESYSTEM)) != (SFGAO_FOLDER | SFGAO_FILESYSTEM)))
     {
