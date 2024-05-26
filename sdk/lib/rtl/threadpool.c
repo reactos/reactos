@@ -98,7 +98,7 @@ old_threadpool =
 {
     NULL,                                       /* compl_port */
 #ifdef __REACTOS__
-    NULL                                        /* threadpool_compl_cs */
+    {0},                                        /* threadpool_compl_cs */
 #else
     { &critsect_compl_debug, -1, 0, 0, 0, 0 },  /* threadpool_compl_cs */
 #endif
@@ -297,17 +297,16 @@ static struct
 timerqueue =
 {
 #ifdef __REACTOS__
-    NULL,                                       /* cs */
+    {0},                                        /* cs */
 #else
     { &timerqueue_debug, -1, 0, 0, 0, 0 },      /* cs */
 #endif
     0,                                          /* objcount */
     FALSE,                                      /* thread_running */
+    LIST_INIT( timerqueue.pending_timers ),     /* pending_timers */
 #if __REACTOS__
     0,
-    0,
 #else
-    LIST_INIT( timerqueue.pending_timers ),     /* pending_timers */
     RTL_CONDITION_VARIABLE_INIT                 /* update_event */
 #endif
 };
@@ -333,16 +332,12 @@ static struct
 waitqueue =
 {
 #ifdef __REACTOS__
-    NULL,                                       /* cs */
+    {0},       /* cs */
 #else
     { &waitqueue_debug, -1, 0, 0, 0, 0 },       /* cs */
 #endif
     0,                                          /* num_buckets */
-#ifdef __REACTOS__
-    0
-#else
     LIST_INIT( waitqueue.buckets )              /* buckets */
-#endif
 };
 
 #ifndef __REACTOS__
@@ -380,7 +375,7 @@ static struct
 ioqueue =
 {
 #ifdef __REACTOS__
-    .cs = NULL,
+    .cs = {0},
 #else
     .cs = { &ioqueue_debug, -1, 0, 0, 0, 0 },
 #endif
