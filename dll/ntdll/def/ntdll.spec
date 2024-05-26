@@ -1331,6 +1331,7 @@
 @ stdcall -version=0x600+ TpDisassociateCallback(ptr)
 @ stdcall -version=0x600+ TpIsTimerSet(ptr)
 @ stdcall -version=0x600+ TpPostWork(ptr)
+@ stdcall -version=0x600+ TpQueryPoolStackInformation(ptr ptr)
 @ stub -version=0x600+ TpReleaseAlpcCompletion
 @ stdcall -version=0x600+ TpReleaseCleanupGroup(ptr)
 @ stdcall -version=0x600+ TpReleaseCleanupGroupMembers(ptr long ptr)
@@ -1341,6 +1342,7 @@
 @ stdcall -version=0x600+ TpReleaseWork(ptr)
 @ stdcall -version=0x600+ TpSetPoolMaxThreads(ptr long)
 @ stdcall -version=0x600+ TpSetPoolMinThreads(ptr long)
+@ stdcall -version=0x600+ TpSetPoolStackInformation(ptr ptr)
 @ stdcall -version=0x600+ TpSetTimer(ptr ptr long long)
 @ stdcall -version=0x600+ TpSetWait(ptr long ptr)
 @ stdcall -version=0x600+ TpSimpleTryPost(ptr ptr ptr)
