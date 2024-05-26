@@ -152,4 +152,3 @@ extern CCanvasWindow canvasWindow;
 extern CTextEditWindow textEditWindow;
 
 extern BOOL g_bNoUI;
-extern BOOL g_bSetWallpaper;

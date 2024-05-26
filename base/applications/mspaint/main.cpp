@@ -22,7 +22,6 @@ BOOL g_imageSaved = FALSE;
 BOOL g_showGrid = FALSE;
 HWND g_hStatusBar = NULL;
 BOOL g_bNoUI = FALSE;
-BOOL g_bSetWallpaper = FALSE;
 
 CMainWindow mainWindow;
 
@@ -1350,10 +1349,11 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nCm
 
     // Set wallpaper?
     INT nOldCmdShow = registrySettings.WindowPlacement.showCmd;
+    BOOL bSetWallpaper = FALSE;
     if (__argc >= 3 && lstrcmpiW(__targv[2], L"/Wallpaper") == 0)
     {
-        g_bSetWallpaper = g_bNoUI = TRUE;
-        registrySettings.WindowPlacement.showCmd = SW_HIDE; // Hide main window
+        bSetWallpaper = g_bNoUI = TRUE;
+        registrySettings.WindowPlacement.showCmd = SW_HIDE; // Hide the main window
     }
 
     // Create the main window
@@ -1371,17 +1371,18 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nCm
     mainWindow.ShowWindow(registrySettings.WindowPlacement.showCmd);
 
     // Set the wallpaper
-    if (g_bSetWallpaper)
+    if (bSetWallpaper)
     {
-        registrySettings.WindowPlacement.showCmd = nOldCmdShow; // Restore show settings
-
         if (__targv[1][0])
             mainWindow.PostMessage(WM_COMMAND, IDM_FILEASWALLPAPERSTRETCHED, 0);
         else
             RegistrySettings::ResetWallpaper();
 
-        // Auto close
-        ::PostMessageW(mainWindow, WM_CLOSE, 0, 0);
+        if (g_bNoUI)
+        {
+            registrySettings.WindowPlacement.showCmd = nOldCmdShow; // Restore show settings
+            ::PostMessageW(mainWindow, WM_CLOSE, 0, 0); // Auto close
+        }
     }
 
     // Load the access keys
