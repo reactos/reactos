@@ -1366,8 +1366,6 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                                        events, SHV_CHANGE_NOTIFY,
                                        1, ntreg);
 
-    //_DoFolderViewCB(SFVM_GETNOTIFY, ??  ??)
-
     m_hAccel = LoadAcceleratorsW(shell32_hInstance, MAKEINTRESOURCEW(IDA_SHELLVIEW));
 
     BOOL bPreviousParentSpecial = m_isParentFolderSpecial;
