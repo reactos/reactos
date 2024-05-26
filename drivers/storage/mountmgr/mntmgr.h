@@ -179,6 +179,17 @@ extern LONG Unloading;
 CODE_SEG("INIT")
 DRIVER_INITIALIZE DriverEntry;
 
+_IRQL_requires_(PASSIVE_LEVEL)
+NTSTATUS
+MountMgrSendSyncDeviceIoCtl(
+    _In_ ULONG IoControlCode,
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,
+    _In_ ULONG InputBufferLength,
+    _Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,
+    _In_ ULONG OutputBufferLength,
+    _In_opt_ PFILE_OBJECT FileObject);
+
 VOID
 NTAPI
 MountMgrCancel(
