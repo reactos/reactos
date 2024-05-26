@@ -1348,12 +1348,14 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
     // Set up change notification
     LPITEMIDLIST pidlTarget = NULL;
     LONG events = 0;
-    if (FAILED(_DoFolderViewCB(SFVM_GETNOTIFY, (WPARAM)&pidlTarget, (LPARAM)&events)))
+    HRESULT hr = _DoFolderViewCB(SFVM_GETNOTIFY, (WPARAM)&pidlTarget, (LPARAM)&events);
+    if (FAILED(hr) || (!pidlTarget && !events))
     {
         pidlTarget = m_pidlParent;
         events = SHCNE_ALLEVENTS;
     }
-    if (FAILED(_DoFolderViewCB(SFVM_QUERYFSNOTIFY, 0, (LPARAM)&ntreg[0])))
+    hr = _DoFolderViewCB(SFVM_QUERYFSNOTIFY, 0, (LPARAM)&ntreg[0]);
+    if (FAILED(hr))
     {
         ntreg[0].fRecursive = FALSE;
         ntreg[0].pidl = pidlTarget;
