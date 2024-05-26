@@ -2117,7 +2117,8 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                 m_sortInfo.bIsAscending = !m_sortInfo.bIsAscending;
             else
                 m_sortInfo.bIsAscending = TRUE;
-            _Sort();
+            if (_DoFolderViewCB(SFVM_COLUMNCLICK, lpnmlv->iSubItem, 0) != S_OK)
+                _Sort();
             break;
         case LVN_GETDISPINFOA:
         case LVN_GETDISPINFOW:
