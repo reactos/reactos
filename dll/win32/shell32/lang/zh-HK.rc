@@ -933,6 +933,9 @@ BEGIN
     IDS_CANTDISCONNECT "無法中斷（錯誤碼：%lu）。"
     IDS_NONE "(None)"
 
+    IDS_EXPAND "Exp&and"
+    IDS_COLLAPSE "Coll&apse"
+
     /* Friendly File Type Names */
     IDS_DIRECTORY "資料夾"
     IDS_BAT_FILE "ReactOS 批次文件"

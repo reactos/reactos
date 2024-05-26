@@ -927,6 +927,9 @@ BEGIN
     IDS_CANTDISCONNECT "डिस्कनेक्ट करने में असमर्थ (एरर कोड: %lu)."
     IDS_NONE "(None)"
 
+    IDS_EXPAND "Exp&and"
+    IDS_COLLAPSE "Coll&apse"
+
     /* Friendly File Type Names */
     IDS_DIRECTORY "फोल्डर"
     IDS_BAT_FILE "रिऐक्ट ओएस बैच फ़ाइल"

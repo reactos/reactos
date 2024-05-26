@@ -925,6 +925,9 @@ BEGIN
     IDS_CANTDISCONNECT "Не вдалось відключити (код помилки: %lu)."
     IDS_NONE "(None)"
 
+    IDS_EXPAND "Exp&and"
+    IDS_COLLAPSE "Coll&apse"
+
     /* Friendly File Type Names */
     IDS_DIRECTORY "Папка"
     IDS_BAT_FILE "Пакетний файл ReactOS"

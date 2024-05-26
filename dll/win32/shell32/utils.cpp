@@ -1294,3 +1294,30 @@ SHGetRealIDL(
 
     return hr;
 }
+
+static HRESULT
+GetCommandStringA(IContextMenu*pCM, UINT_PTR Id, UINT GCS, LPSTR Buf, UINT cchMax)
+{
+    HRESULT hr = pCM->GetCommandString(Id, GCS & ~GCS_UNICODE, NULL, Buf, cchMax);
+    if (FAILED(hr))
+    {
+        WCHAR buf[MAX_PATH];
+        hr = pCM->GetCommandString(Id, GCS | GCS_UNICODE, NULL, (LPSTR)buf, _countof(buf));
+        if (SUCCEEDED(hr))
+            hr = SHUnicodeToAnsi(buf, Buf, cchMax) > 0 ? S_OK : E_FAIL;
+    }
+    return hr;
+}
+
+UINT
+GetDfmCmd(IContextMenu*pCM, LPCSTR verba)
+{
+    CHAR buf[MAX_PATH];
+    if (IS_INTRESOURCE(verba))
+    {
+        if (FAILED(GetCommandStringA(pCM, LOWORD(verba), GCS_VERB, buf, _countof(buf))))
+            return 0;
+        verba = buf;
+    }
+    return MapVerbToDfmCmd(verba);
+}

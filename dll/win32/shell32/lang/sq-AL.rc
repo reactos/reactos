@@ -932,6 +932,9 @@ BEGIN
     IDS_CANTDISCONNECT "Unable to disconnect (Error Code: %lu)."
     IDS_NONE "(None)"
 
+    IDS_EXPAND "Exp&and"
+    IDS_COLLAPSE "Coll&apse"
+
     /* Friendly File Type Names */
     IDS_DIRECTORY "Dosje"
     IDS_BAT_FILE "ReactOS Dokument Batch"
