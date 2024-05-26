@@ -1347,14 +1347,23 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nCm
     // Load settings from registry
     registrySettings.Load(nCmdShow);
 
-    // Set wallpaper?
+    // Save show setting
     INT nOldCmdShow = registrySettings.WindowPlacement.showCmd;
-    BOOL bSetWallpaper = FALSE;
-    if (__argc >= 3 && lstrcmpiW(__targv[2], L"/Wallpaper") == 0)
+
+    // Set wallpaper?
+    BOOL bWallpaper = FALSE;
+    LPWSTR filename = (__argc >= 2 ? __targv[1] : NULL);
+    if (__argc >= 3)
     {
-        bSetWallpaper = g_bNoUI = TRUE;
-        registrySettings.WindowPlacement.showCmd = SW_HIDE; // Hide the main window
+        BOOL bWallpaper1 = (lstrcmpiW(__targv[1], L"/wallpaper") == 0);
+        BOOL bWallpaper2 = (lstrcmpiW(__targv[2], L"/wallpaper") == 0);
+        if (bWallpaper1)
+            filename = __targv[2];
+        g_bNoUI = bWallpaper = (bWallpaper1 || bWallpaper2);
     }
+
+    if (g_bNoUI)
+        registrySettings.WindowPlacement.showCmd = SW_HIDE; // Hide the main window
 
     // Create the main window
     if (!mainWindow.DoCreate())
@@ -1364,14 +1373,14 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nCm
     }
 
     // Initialize imageModel
-    if (__argc < 2 || !DoLoadImageFile(mainWindow, __targv[1], TRUE))
+    if (__argc < 2 || !DoLoadImageFile(mainWindow, filename, TRUE))
         InitializeImage(NULL, NULL, FALSE);
 
     // Make the window visible on the screen
     mainWindow.ShowWindow(registrySettings.WindowPlacement.showCmd);
 
     // Set the wallpaper
-    if (bSetWallpaper)
+    if (bWallpaper)
     {
         if (__targv[1][0])
             mainWindow.PostMessage(WM_COMMAND, IDM_FILEASWALLPAPERSTRETCHED, 0);
