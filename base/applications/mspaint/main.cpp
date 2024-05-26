@@ -1332,6 +1332,24 @@ VOID CMainWindow::TrackPopupMenu(POINT ptScreen, INT iSubMenu)
     ::DestroyMenu(hMenu);
 }
 
+#define OPTION_WALLPAPER (1 << 0)
+
+LPCWSTR ParseCommandLine(INT argc, WCHAR **argv, UINT *puFlags)
+{
+    LPCWSTR filename = NULL;
+    for (INT iarg = 1; iarg < argc; ++iarg)
+    {
+        if (lstrcmpiW(argv[iarg], L"/wallpaper") == 0)
+        {
+            *puFlags |= OPTION_WALLPAPER;
+            continue;
+        }
+        if (!filename)
+            filename = argv[iarg];
+    }
+    return filename;
+}
+
 // entry point
 INT WINAPI
 wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nCmdShow)
@@ -1350,17 +1368,12 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nCm
     // Save show setting
     INT nOldCmdShow = registrySettings.WindowPlacement.showCmd;
 
+    UINT uFlags = 0;
+    LPCWSTR filename = ParseCommandLine(__argc, __targv, &uFlags);
+
     // Set wallpaper?
-    BOOL bWallpaper = FALSE;
-    LPWSTR filename = (__argc >= 2 ? __targv[1] : NULL);
-    if (__argc >= 3)
-    {
-        BOOL bWallpaper1 = (lstrcmpiW(__targv[1], L"/wallpaper") == 0);
-        BOOL bWallpaper2 = (lstrcmpiW(__targv[2], L"/wallpaper") == 0);
-        if (bWallpaper1)
-            filename = __targv[2];
-        g_bNoUI = bWallpaper = (bWallpaper1 || bWallpaper2);
-    }
+    BOOL bWallpaper = !!(uFlags & OPTION_WALLPAPER);
+    g_bNoUI = bWallpaper;
 
     if (g_bNoUI)
         registrySettings.WindowPlacement.showCmd = SW_HIDE; // Hide the main window
@@ -1368,12 +1381,12 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nCm
     // Create the main window
     if (!mainWindow.DoCreate())
     {
-        MessageBox(NULL, L"Failed to create main window.", NULL, MB_ICONERROR);
+        MessageBoxW(NULL, L"Failed to create main window.", NULL, MB_ICONERROR);
         return 1;
     }
 
     // Initialize imageModel
-    if (__argc < 2 || !DoLoadImageFile(mainWindow, filename, TRUE))
+    if (!filename || !filename[0] || !DoLoadImageFile(mainWindow, filename, TRUE))
         InitializeImage(NULL, NULL, FALSE);
 
     // Make the window visible on the screen
