@@ -226,12 +226,12 @@ lab listdone
 
         mov     esi,string      ; si = string
 
-_ifnd   SSTRPBRK <or     ecx,-1> ; set ecx to -1
+_ifnd   SSTRPBRK, <or     ecx,-1> ; set ecx to -1
 
         align   @WordSize
 lab dstnext
 
-_ifnd   SSTRPBRK <add    ecx,1>
+_ifnd   SSTRPBRK, <add    ecx,1>
 
         mov     al,[esi]
         or      al,al
@@ -252,7 +252,7 @@ endif  ; SSTRSPN
 
 lab dstdone
 
-_ifnd   SSTRPBRK <mov   eax,ecx> ; strspn/strcspn: return index
+_ifnd   SSTRPBRK, <mov   eax,ecx> ; strspn/strcspn: return index
 
         add     esp,32
 
