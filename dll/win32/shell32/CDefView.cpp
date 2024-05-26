@@ -1344,15 +1344,24 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
     SHChangeNotifyEntry ntreg[1];
     ZeroMemory(ntreg, sizeof(ntreg));
+
+    // Set up change notification
+    LPITEMIDLIST pidlTarget = NULL;
+    LONG events = 0;
+    if (FAILED(_DoFolderViewCB(SFVM_GETNOTIFY, (WPARAM)&pidlTarget, (LPARAM)&events)))
+    {
+        pidlTarget = m_pidlParent;
+        events = SHCNE_ALLEVENTS;
+    }
     if (FAILED(_DoFolderViewCB(SFVM_QUERYFSNOTIFY, 0, (LPARAM)&ntreg[0])))
     {
         ntreg[0].fRecursive = FALSE;
-        ntreg[0].pidl = m_pidlParent;
+        ntreg[0].pidl = pidlTarget;
     }
     m_hNotify = SHChangeNotifyRegister(m_hWnd,
                                        SHCNRF_InterruptLevel | SHCNRF_ShellLevel |
                                        SHCNRF_NewDelivery,
-                                       SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY,
+                                       events, SHV_CHANGE_NOTIFY,
                                        1, ntreg);
 
     //_DoFolderViewCB(SFVM_GETNOTIFY, ??  ??)
