@@ -28,6 +28,15 @@
 #define NDEBUG
 #include <debug.h>
 
+/* Deprecated Windows 2000/XP versions of IOCTL_MOUNTDEV_LINK_[CREATED|DELETED]
+ * without access protection, that were updated in Windows 2003.
+ * They are sent to MountMgr clients if they do not recognize the new IOCTLs
+ * (e.g. they are for an older NT version). */
+#if (NTDDI_VERSION >= NTDDI_WS03)
+#define IOCTL_MOUNTDEV_LINK_CREATED_UNSECURE_DEPRECATED     CTL_CODE(MOUNTDEVCONTROLTYPE, 4, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define IOCTL_MOUNTDEV_LINK_DELETED_UNSECURE_DEPRECATED     CTL_CODE(MOUNTDEVCONTROLTYPE, 5, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#endif
+
 UNICODE_STRING DeviceMount = RTL_CONSTANT_STRING(MOUNTMGR_DEVICE_NAME);
 UNICODE_STRING DosDevicesMount = RTL_CONSTANT_STRING(L"\\DosDevices\\MountPointManager");
 UNICODE_STRING DosDevices = RTL_CONSTANT_STRING(L"\\DosDevices\\");
@@ -194,11 +203,12 @@ SendLinkCreated(IN PUNICODE_STRING SymbolicName)
     Name->NameLength = SymbolicName->Length;
     RtlCopyMemory(Name->Name, SymbolicName->Buffer, SymbolicName->Length);
 
+    /* Send the notification, using the new (Windows 2003+) IOCTL definition
+     * (with limited access) first. If this fails, the called driver may be
+     * for an older NT version, and so, we send again the notification using
+     * the old (Windows 2000) IOCTL definition (with any access). */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    /* Microsoft does it twice... Once with limited access, second with any
-     * So, first one here
-     */
-    Irp = IoBuildDeviceIoControlRequest(CTL_CODE(MOUNTDEVCONTROLTYPE, 4, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS),
+    Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTDEV_LINK_CREATED,
                                         DeviceObject,
                                         Name,
                                         NameSize,
@@ -219,10 +229,10 @@ SendLinkCreated(IN PUNICODE_STRING SymbolicName)
             KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
         }
     }
-
+#if (NTDDI_VERSION >= NTDDI_WS03)
     /* Then, second one */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTDEV_LINK_CREATED,
+    Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTDEV_LINK_CREATED_UNSECURE_DEPRECATED,
                                         DeviceObject,
                                         Name,
                                         NameSize,
@@ -245,6 +255,7 @@ SendLinkCreated(IN PUNICODE_STRING SymbolicName)
     {
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
     }
+#endif // (NTDDI_VERSION >= NTDDI_WS03)
 
 Cleanup:
     if (Name)
@@ -300,9 +311,12 @@ SendLinkDeleted(IN PUNICODE_STRING DeviceName,
     Name->NameLength = SymbolicName->Length;
     RtlCopyMemory(Name->Name, SymbolicName->Buffer, SymbolicName->Length);
 
+    /* Send the notification, using the new (Windows 2003+) IOCTL definition
+     * (with limited access) first. If this fails, the called driver may be
+     * for an older NT version, and so, we send again the notification using
+     * the old (Windows 2000) IOCTL definition (with any access). */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    /* Cf: SendLinkCreated comment */
-    Irp = IoBuildDeviceIoControlRequest(CTL_CODE(MOUNTDEVCONTROLTYPE, 5, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS),
+    Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTDEV_LINK_DELETED,
                                         DeviceObject,
                                         Name,
                                         NameSize,
@@ -323,10 +337,10 @@ SendLinkDeleted(IN PUNICODE_STRING DeviceName,
             KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
         }
     }
-
+#if (NTDDI_VERSION >= NTDDI_WS03)
     /* Then, second one */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTDEV_LINK_DELETED,
+    Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTDEV_LINK_DELETED_UNSECURE_DEPRECATED,
                                         DeviceObject,
                                         Name,
                                         NameSize,
@@ -349,6 +363,7 @@ SendLinkDeleted(IN PUNICODE_STRING DeviceName,
     {
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
     }
+#endif // (NTDDI_VERSION >= NTDDI_WS03)
 
 Cleanup:
     if (Name)
