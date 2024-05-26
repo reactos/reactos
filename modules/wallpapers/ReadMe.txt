@@ -10,7 +10,7 @@ ReactOS_Mizu_4x3.png           | Forum user "Foxlet" (foxlet@furcode.co)       |
 ReactOS_Mizu_16x9_B.png        | Forum user "Foxlet" (foxlet@furcode.co)       | https://jira.reactos.org/browse/CORE-15783
 -----------------------------------------------------------------------------------------------------------------------------------------
 
-You can also download the other wallpapers from rapps "ReactOS Standard Wallpapers".
+You can also download the other wallpapers from the "ReactOS Standard Wallpapers" package in the ReactOS Applications Manager.
 
 To include the module in your build folder, run the configure script with the flags -DENABLE_WALLPAPERS=1
 
