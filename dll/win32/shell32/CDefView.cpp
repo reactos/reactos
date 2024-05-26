@@ -1585,7 +1585,7 @@ HRESULT CDefView::InvokeContextMenuCommand(CComPtr<IContextMenu>& pCM, LPCSTR lp
     WCHAR szDirW[MAX_PATH] = L"";
     CHAR szDirA[MAX_PATH];
     if (SUCCEEDED(_DoFolderViewCB(SFVM_GETCOMMANDDIR, _countof(szDirW), (LPARAM)szDirW)) &&
-        szDirW[0] != UNICODE_NULL)
+        *szDirW != UNICODE_NULL)
     {
         SHUnicodeToAnsi(szDirW, szDirA, _countof(szDirA));
         cmi.fMask |= CMIC_MASK_UNICODE;
