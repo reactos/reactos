@@ -1329,8 +1329,8 @@ CmLoadKey(
 NTSTATUS
 NTAPI
 CmUnloadKey(
-    IN PCM_KEY_CONTROL_BLOCK Kcb,
-    IN ULONG Flags
+    _In_ PCM_KEY_CONTROL_BLOCK Kcb,
+    _In_ ULONG Flags
 );
 
 ULONG

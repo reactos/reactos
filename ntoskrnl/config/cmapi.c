@@ -2206,8 +2206,9 @@ CmpUnlinkHiveFromMaster(IN PCMHIVE CmHive,
 
 NTSTATUS
 NTAPI
-CmUnloadKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
-            IN ULONG Flags)
+CmUnloadKey(
+    _In_ PCM_KEY_CONTROL_BLOCK Kcb,
+    _In_ ULONG Flags)
 {
     PHHIVE Hive;
     PCMHIVE CmHive;
