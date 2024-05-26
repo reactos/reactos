@@ -1377,12 +1377,12 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nCm
             mainWindow.PostMessage(WM_COMMAND, IDM_FILEASWALLPAPERSTRETCHED, 0);
         else
             RegistrySettings::ResetWallpaper();
+    }
 
-        if (g_bNoUI)
-        {
-            registrySettings.WindowPlacement.showCmd = nOldCmdShow; // Restore show settings
-            ::PostMessageW(mainWindow, WM_CLOSE, 0, 0); // Auto close
-        }
+    if (g_bNoUI)
+    {
+        registrySettings.WindowPlacement.showCmd = nOldCmdShow; // Restore show settings
+        ::PostMessageW(mainWindow, WM_CLOSE, 0, 0); // Auto close
     }
 
     // Load the access keys
