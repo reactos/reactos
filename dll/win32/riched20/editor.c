@@ -4507,7 +4507,11 @@ done:
  */
 static BOOL ME_IsCandidateAnURL(ME_TextEditor *editor, const ME_Cursor *start, int nChars)
 {
+#ifdef __REACTOS__ // Fixes dll\win32\riched20\editor.c(4528): warning C4045: 'text': array bounds overflow
+#define MAX_PREFIX_LEN 10
+#else
 #define MAX_PREFIX_LEN 9
+#endif
 #define X(str)  str, ARRAY_SIZE(str) - 1
   struct prefix_s {
     const WCHAR text[MAX_PREFIX_LEN];
