@@ -75,23 +75,6 @@ static void	RTFPutCodePageChar(RTF_Info *info, int c);
 /* ---------------------------------------------------------------------- */
 
 
-/*
- * Saves a string on the heap and returns a pointer to it.
- */
-static inline char *RTFStrSave(const char *s)
-{
-	char	*p;
-
-	p = heap_alloc (lstrlenA(s) + 1);
-	if (p == NULL)
-		return NULL;
-	return lstrcpyA (p, s);
-}
-
-
-/* ---------------------------------------------------------------------- */
-
-
 int _RTFGetChar(RTF_Info *info)
 {
 	int ch;
@@ -129,14 +112,14 @@ RTFDestroyAttrs(RTF_Info *info)
 	while (info->fontList)
 	{
 		fp = info->fontList->rtfNextFont;
-		heap_free (info->fontList->rtfFName);
-		heap_free (info->fontList);
+		free (info->fontList->rtfFName);
+		free (info->fontList);
 		info->fontList = fp;
 	}
 	while (info->colorList)
 	{
 		cp = info->colorList->rtfNextColor;
-		heap_free (info->colorList);
+		free (info->colorList);
 		info->colorList = cp;
 	}
 	while (info->styleList)
@@ -146,12 +129,12 @@ RTFDestroyAttrs(RTF_Info *info)
 		while (eltList)
 		{
 			ep = eltList->rtfNextSE;
-			heap_free (eltList->rtfSEText);
-			heap_free (eltList);
+			free (eltList->rtfSEText);
+			free (eltList);
 			eltList = ep;
 		}
-		heap_free (info->styleList->rtfSName);
-		heap_free (info->styleList);
+		free (info->styleList->rtfSName);
+		free (info->styleList);
 		info->styleList = sp;
 	}
 }
@@ -162,16 +145,16 @@ RTFDestroy(RTF_Info *info)
 {
 	if (info->rtfTextBuf)
 	{
-		heap_free(info->rtfTextBuf);
-		heap_free(info->pushedTextBuf);
+		free(info->rtfTextBuf);
+		free(info->pushedTextBuf);
 	}
 	RTFDestroyAttrs(info);
-	heap_free(info->cpOutputBuffer);
+	free(info->cpOutputBuffer);
         while (info->tableDef)
         {
                 RTFTable *tableDef = info->tableDef;
                 info->tableDef = tableDef->parent;
-                heap_free(tableDef);
+                free(tableDef);
         }
 }
 
@@ -215,8 +198,8 @@ void RTFInit(RTF_Info *info)
 
 	if (info->rtfTextBuf == NULL)	/* initialize the text buffers */
 	{
-		info->rtfTextBuf = heap_alloc (rtfBufSiz);
-		info->pushedTextBuf = heap_alloc (rtfBufSiz);
+		info->rtfTextBuf = malloc (rtfBufSiz);
+		info->pushedTextBuf = malloc (rtfBufSiz);
 		if (info->rtfTextBuf == NULL || info->pushedTextBuf == NULL) {
 			ERR ("Cannot allocate text buffers.\n");
 			return;
@@ -262,7 +245,7 @@ void RTFInit(RTF_Info *info)
         if (!info->cpOutputBuffer)
 	{
 		info->dwMaxCPOutputCount = 0x1000;
-		info->cpOutputBuffer = heap_alloc(info->dwMaxCPOutputCount);
+		info->cpOutputBuffer = malloc (info->dwMaxCPOutputCount);
 	}
 
         info->tableDef = NULL;
@@ -813,7 +796,7 @@ static void ReadFontTbl(RTF_Info *info)
 			if (info->rtfClass == rtfEOF)
 				break;
 		}
-		fp = New (RTFFont);
+		fp = malloc (sizeof(*fp));
 		if (fp == NULL) {
 			ERR ("cannot allocate font entry\n");
 			break;
@@ -901,7 +884,7 @@ static void ReadFontTbl(RTF_Info *info)
 					RTFUngetToken (info);
 				}
 				*bp = '\0';
-				fp->rtfFName = RTFStrSave (buf);
+				fp->rtfFName = strdup (buf);
 				if (fp->rtfFName == NULL)
 					ERR ("cannot allocate font name\n");
 				/* already have next token; don't read one */
@@ -986,7 +969,7 @@ static void ReadColorTbl(RTF_Info *info)
                         continue;
                 }
 
-		cp = New (RTFColor);
+		cp = malloc (sizeof(*cp));
 		if (cp == NULL) {
 			ERR ("cannot allocate color entry\n");
 			break;
@@ -1036,7 +1019,7 @@ static void ReadStyleSheet(RTF_Info *info)
 			break;
 		if (RTFCheckCM (info, rtfGroup, rtfEndGroup))
 			break;
-		sp = New (RTFStyle);
+		sp = malloc (sizeof(*sp));
 		if (sp == NULL) {
 			ERR ("cannot allocate stylesheet entry\n");
 			break;
@@ -1104,7 +1087,7 @@ static void ReadStyleSheet(RTF_Info *info)
 					sp->rtfSNextPar = info->rtfParam;
 					continue;
 				}
-				sep = New (RTFStyleElt);
+				sep = malloc (sizeof(*sep));
 				if (sep == NULL)
                                 {
 					ERR ("cannot allocate style element\n");
@@ -1114,7 +1097,7 @@ static void ReadStyleSheet(RTF_Info *info)
 				sep->rtfSEMajor = info->rtfMajor;
 				sep->rtfSEMinor = info->rtfMinor;
 				sep->rtfSEParam = info->rtfParam;
-				sep->rtfSEText = RTFStrSave (info->rtfTextBuf);
+				sep->rtfSEText = strdup (info->rtfTextBuf);
 				if (sep->rtfSEText == NULL)
 					ERR ("cannot allocate style element text\n");
 				if (sepLast == NULL)
@@ -1149,7 +1132,7 @@ static void ReadStyleSheet(RTF_Info *info)
 					RTFGetToken (info);
 				}
 				*bp = '\0';
-				sp->rtfSName = RTFStrSave (buf);
+				sp->rtfSName = strdup (buf);
 				if (sp->rtfSName == NULL)
 					ERR ("cannot allocate style name\n");
 			}
@@ -2199,10 +2182,7 @@ void LookupInit(void)
 
 		rp->rtfKHash = Hash (rp->rtfKStr);
 		index = rp->rtfKHash % (ARRAY_SIZE(rtfKey) * 2);
-		if (!rtfHashTable[index].count)
-			rtfHashTable[index].value = heap_alloc(sizeof(RTFKey *));
-		else
-			rtfHashTable[index].value = heap_realloc(rtfHashTable[index].value, sizeof(RTFKey *) * (rtfHashTable[index].count + 1));
+		rtfHashTable[index].value = realloc(rtfHashTable[index].value, sizeof(RTFKey *) * (rtfHashTable[index].count + 1));
 		rtfHashTable[index].value[rtfHashTable[index].count++] = rp;
 	}
 }
@@ -2213,7 +2193,7 @@ void LookupCleanup(void)
 
 	for (i = 0; i < ARRAY_SIZE(rtfKey) * 2; i++)
 	{
-		heap_free( rtfHashTable[i].value );
+		free(rtfHashTable[i].value);
 		rtfHashTable[i].value = NULL;
 		rtfHashTable[i].count = 0;
 	}
@@ -2519,7 +2499,7 @@ static void SpecialChar (RTF_Info *info)
 	case rtfSect:
 	case rtfPar:
                 RTFFlushOutputBuffer(info);
-                ME_SetSelectionParaFormat(info->editor, &info->fmt);
+                editor_set_selection_para_fmt( info->editor, &info->fmt );
                 memset(&info->fmt, 0, sizeof(info->fmt));
                 info->fmt.cbSize = sizeof(info->fmt);
 		RTFPutUnicodeChar (info, '\r');
@@ -2611,7 +2591,7 @@ static void
 RTFFlushCPOutputBuffer(RTF_Info *info)
 {
         int bufferMax = info->dwCPOutputCount * 2 * sizeof(WCHAR);
-        WCHAR *buffer = heap_alloc(bufferMax);
+        WCHAR *buffer = malloc(bufferMax);
         int length;
 
         length = MultiByteToWideChar(info->codePage, 0, info->cpOutputBuffer,
@@ -2619,7 +2599,7 @@ RTFFlushCPOutputBuffer(RTF_Info *info)
         info->dwCPOutputCount = 0;
 
         RTFPutUnicodeString(info, buffer, length);
-        heap_free(buffer);
+        free(buffer);
 }
 
 void
@@ -2648,7 +2628,7 @@ RTFPutCodePageChar(RTF_Info *info, int c)
         if (info->dwCPOutputCount >= info->dwMaxCPOutputCount)
         {
                 info->dwMaxCPOutputCount *= 2;
-                info->cpOutputBuffer = heap_realloc(info->cpOutputBuffer, info->dwMaxCPOutputCount);
+                info->cpOutputBuffer = realloc(info->cpOutputBuffer, info->dwMaxCPOutputCount);
         }
         info->cpOutputBuffer[info->dwCPOutputCount++] = c;
 }

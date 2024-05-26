@@ -1,5 +1,9 @@
 
-add_definitions(-D__WINESRC__ -D__ROS_LONG64__)
+add_definitions(-D__WINESRC__)
+remove_definitions(-D__ROS_LONG64__)
+
+add_definitions(-Dstrdup=_strdup)
+
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(riched20.dll riched20.spec ADD_IMPORTLIB)
 
