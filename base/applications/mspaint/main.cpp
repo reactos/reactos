@@ -1395,7 +1395,7 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nCm
     // Set the wallpaper
     if (bWallpaper)
     {
-        if (filename[0])
+        if (filename && filename[0])
             mainWindow.PostMessage(WM_COMMAND, IDM_FILEASWALLPAPERSTRETCHED, 0);
         else
             RegistrySettings::ResetWallpaper();
