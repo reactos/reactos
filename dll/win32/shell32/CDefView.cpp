@@ -1342,29 +1342,28 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         SetShellWindowEx(hwndSB, m_ListView);
     }
 
-    SHChangeNotifyEntry ntreg[1];
-    ZeroMemory(ntreg, sizeof(ntreg));
+    SHChangeNotifyEntry ntreg = {};
 
     // Set up change notification
     LPITEMIDLIST pidlTarget = NULL;
-    LONG events = 0;
-    HRESULT hr = _DoFolderViewCB(SFVM_GETNOTIFY, (WPARAM)&pidlTarget, (LPARAM)&events);
-    if (FAILED(hr) || (!pidlTarget && !events))
+    LONG fEvents = 0;
+    HRESULT hr = _DoFolderViewCB(SFVM_GETNOTIFY, (WPARAM)&pidlTarget, (LPARAM)&fEvents);
+    if (FAILED(hr) || (!pidlTarget && !fEvents))
     {
         pidlTarget = m_pidlParent;
-        events = SHCNE_ALLEVENTS;
+        fEvents = SHCNE_ALLEVENTS;
     }
-    hr = _DoFolderViewCB(SFVM_QUERYFSNOTIFY, 0, (LPARAM)&ntreg[0]);
+    hr = _DoFolderViewCB(SFVM_QUERYFSNOTIFY, 0, (LPARAM)&ntreg);
     if (FAILED(hr))
     {
-        ntreg[0].fRecursive = FALSE;
-        ntreg[0].pidl = pidlTarget;
+        ntreg.fRecursive = FALSE;
+        ntreg.pidl = pidlTarget;
     }
     m_hNotify = SHChangeNotifyRegister(m_hWnd,
                                        SHCNRF_InterruptLevel | SHCNRF_ShellLevel |
                                        SHCNRF_NewDelivery,
-                                       events, SHV_CHANGE_NOTIFY,
-                                       1, ntreg);
+                                       fEvents, SHV_CHANGE_NOTIFY,
+                                       1, &ntreg);
 
     m_hAccel = LoadAcceleratorsW(shell32_hInstance, MAKEINTRESOURCEW(IDA_SHELLVIEW));
 
