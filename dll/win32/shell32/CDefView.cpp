@@ -1582,9 +1582,8 @@ HRESULT CDefView::InvokeContextMenuCommand(CComPtr<IContextMenu>& pCM, LPCSTR lp
         cmi.ptInvoke = *pt;
     }
 
-    WCHAR szDirW[MAX_PATH];
+    WCHAR szDirW[MAX_PATH] = L"";
     CHAR szDirA[MAX_PATH];
-    szDirW[0] = 0;
     if (SUCCEEDED(_DoFolderViewCB(SFVM_GETCOMMANDDIR, _countof(szDirW), (LPARAM)szDirW)) &&
         szDirW[0] != UNICODE_NULL)
     {
