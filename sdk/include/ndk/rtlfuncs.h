@@ -4693,53 +4693,45 @@ BOOLEAN
 NTAPI
 RtlGetNtProductType(_Out_ PNT_PRODUCT_TYPE ProductType);
 
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
 //
 // Synchronization functions
 //
+NTSYSAPI
 VOID
 NTAPI
-RtlInitializeConditionVariable(OUT PRTL_CONDITION_VARIABLE ConditionVariable);
+RtlInitializeConditionVariable(
+    _Out_ PRTL_CONDITION_VARIABLE ConditionVariable);
 
+NTSYSAPI
 VOID
 NTAPI
-RtlWakeConditionVariable(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable);
+RtlWakeConditionVariable(
+    _Inout_ PRTL_CONDITION_VARIABLE ConditionVariable);
 
+NTSYSAPI
 VOID
 NTAPI
-RtlWakeAllConditionVariable(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable);
+RtlWakeAllConditionVariable(
+    _Inout_ PRTL_CONDITION_VARIABLE ConditionVariable);
 
+NTSYSAPI
 NTSTATUS
 NTAPI
-RtlSleepConditionVariableCS(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable,
-                            IN OUT PRTL_CRITICAL_SECTION CriticalSection,
-                            IN PLARGE_INTEGER TimeOut OPTIONAL);
+RtlSleepConditionVariableCS(
+    _Inout_ PRTL_CONDITION_VARIABLE ConditionVariable,
+    _Inout_ PRTL_CRITICAL_SECTION CriticalSection,
+    _In_opt_ PLARGE_INTEGER TimeOut);
 
+NTSYSAPI
 NTSTATUS
 NTAPI
-RtlSleepConditionVariableSRW(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable,
-                             IN OUT PRTL_SRWLOCK SRWLock,
-                             IN PLARGE_INTEGER TimeOut OPTIONAL,
-                             IN ULONG Flags);
-
-VOID
-NTAPI
-RtlInitializeSRWLock(OUT PRTL_SRWLOCK SRWLock);
-
-VOID
-NTAPI
-RtlAcquireSRWLockShared(IN OUT PRTL_SRWLOCK SRWLock);
-
-VOID
-NTAPI
-RtlReleaseSRWLockShared(IN OUT PRTL_SRWLOCK SRWLock);
-
-VOID
-NTAPI
-RtlAcquireSRWLockExclusive(IN OUT PRTL_SRWLOCK SRWLock);
-
-VOID
-NTAPI
-RtlReleaseSRWLockExclusive(IN OUT PRTL_SRWLOCK SRWLock);
+RtlSleepConditionVariableSRW(
+    _Inout_ PRTL_CONDITION_VARIABLE ConditionVariable,
+    _Inout_ PRTL_SRWLOCK SRWLock,
+    _In_opt_ PLARGE_INTEGER TimeOut,
+    _In_ ULONG Flags);
+#endif
 
 //
 // Secure Memory Functions
