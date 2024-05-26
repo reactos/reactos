@@ -2228,7 +2228,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                     INT cchLimit = 0;
                     _DoFolderViewCB(SFVM_GETNAMELENGTH, (WPARAM)pidlFull, (LPARAM)&cchLimit);
                     if (cchLimit)
-                        ::PostMessageW(hEdit, EM_SETLIMITTEXT, cchLimit, 0);
+                        ::SendMessageW(hEdit, EM_SETLIMITTEXT, cchLimit, 0);
 
                     if (!SHELL_FS_HideExtension(szFullPath))
                     {
