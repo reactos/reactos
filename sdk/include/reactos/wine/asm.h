@@ -72,21 +72,6 @@
 
 #define __ASM_STDCALL_FUNC(name,args,code) __ASM_DEFINE_FUNC(__ASM_STDCALL(#name,args),code)
 
-/* stdcall support */
-
-#ifdef __i386__
-# ifdef __WINE_PE_BUILD
-#  define __ASM_STDCALL(name,args)  "_" name "@" #args
-#  define __ASM_FASTCALL(name,args) "@" name "@" #args
-#  define __ASM_STDCALL_IMPORT(name,args) __ASM_DEFINE_IMPORT(__ASM_STDCALL(#name,args))
-# else
-#  define __ASM_FASTCALL(name,args) __ASM_NAME("__fastcall_" name)
-#  define __ASM_STDCALL_IMPORT(name,args) /* nothing */
-# endif
-# define __ASM_STDCALL_FUNC(name,args,code) __ASM_DEFINE_FUNC(__ASM_STDCALL(#name,args),code)
-# define __ASM_FASTCALL_FUNC(name,args,code) __ASM_DEFINE_FUNC(__ASM_FASTCALL(#name,args),code)
-#endif
-
 /* fastcall support */
 
 #if defined(__i386__) && !defined(__WINE_PE_BUILD)
