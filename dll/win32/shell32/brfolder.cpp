@@ -460,11 +460,10 @@ BrFolder_Treeview_Rename(BrFolder *info, NMTVDISPINFOW *pnmtv)
 {
     if (!pnmtv->item.pszText)
         return FALSE;
-    TVITEMW item;
-    item.hItem = TreeView_GetSelection(info->hwndTreeView);
-    BrItemData *data = BrFolder_GetItemData(info, item.hItem);
+    HTREEITEM hItem = TreeView_GetSelection(info->hwndTreeView);
+    BrItemData *data = BrFolder_GetItemData(info, hItem);
     ASSERT(data);
-    ASSERT(BrFolder_GetItemAttributes(info, item.hItem, SFGAO_CANRENAME) & SFGAO_CANRENAME);
+    ASSERT(BrFolder_GetItemAttributes(info, hItem, SFGAO_CANRENAME) & SFGAO_CANRENAME);
 
     PITEMID_CHILD newChild;
     HRESULT hr = data->lpsfParent->SetNameOf(info->hWnd, data->pidlChild,
@@ -476,8 +475,7 @@ BrFolder_Treeview_Rename(BrFolder *info, NMTVDISPINFOW *pnmtv)
     if (SUCCEEDED(hr = SHILClone((LPITEMIDLIST)data->pidlFull, &newFull)))
     {
         ILRemoveLastID(newFull);
-        LPITEMIDLIST newLastChild = ILFindLastID(newChild); // SetNameOf is broken, returns full pidl
-        if (SUCCEEDED(hr = SHILAppend(newLastChild, &newFull)))
+        if (SUCCEEDED(hr = SHILAppend(newChild, &newFull)))
         {
             data->pidlFull.Free();
             data->pidlFull.Attach(newFull);
@@ -488,7 +486,7 @@ BrFolder_Treeview_Rename(BrFolder *info, NMTVDISPINFOW *pnmtv)
     ILFree(newChild);
 
     NMTREEVIEWW nmtv;
-    nmtv.itemNew.lParam = item.lParam;
+    nmtv.itemNew.lParam = (LPARAM)data;
     BrFolder_Treeview_Changed(info, &nmtv);
     return TRUE;
 }
