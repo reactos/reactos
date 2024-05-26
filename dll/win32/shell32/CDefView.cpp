@@ -1342,8 +1342,6 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         SetShellWindowEx(hwndSB, m_ListView);
     }
 
-    SHChangeNotifyEntry ntreg = {};
-
     // Set up change notification
     LPITEMIDLIST pidlTarget = NULL;
     LONG fEvents = 0;
@@ -1353,6 +1351,7 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         pidlTarget = m_pidlParent;
         fEvents = SHCNE_ALLEVENTS;
     }
+    SHChangeNotifyEntry ntreg = {};
     hr = _DoFolderViewCB(SFVM_QUERYFSNOTIFY, 0, (LPARAM)&ntreg);
     if (FAILED(hr))
     {
