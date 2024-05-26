@@ -1499,7 +1499,7 @@ HRESULT WINAPI CFSFolder::SetNameOf(
     }
 
     /* build source path */
-    PathCombineW(szSrc, m_sPathTarget, pDataW->wszName);
+    PathCombineW(szSrc, m_sPathTarget, pDataW->wszName); // FIXME: PIDLs without wide string
 
     /* build destination path */
     if (dwFlags == SHGDN_NORMAL || dwFlags & SHGDN_INFOLDER)
@@ -1507,7 +1507,7 @@ HRESULT WINAPI CFSFolder::SetNameOf(
     else
         lstrcpynW(szDest, lpName, MAX_PATH);
 
-    if(!(dwFlags & SHGDN_FORPARSING) && SHELL_FS_HideExtension(szSrc)) {
+    if(!(dwFlags & SHGDN_FORPARSING) && !bIsFolder && SHELL_FS_HideExtension(szSrc)) {
         WCHAR *ext = PathFindExtensionW(szSrc);
         if(*ext != '\0') {
             INT len = wcslen(szDest);
@@ -1515,31 +1515,26 @@ HRESULT WINAPI CFSFolder::SetNameOf(
         }
     }
 
+    HRESULT hr = S_OK;
     TRACE ("src=%s dest=%s\n", debugstr_w(szSrc), debugstr_w(szDest));
     if (!wcscmp(szSrc, szDest))
     {
         /* src and destination is the same */
-        HRESULT hr = S_OK;
         if (pPidlOut)
-            hr = _ILCreateFromPathW(szDest, pPidlOut);
-
-        return hr;
+            hr = SHILClone(pidl, pPidlOut);
     }
-
-    if (MoveFileW (szSrc, szDest))
+    else if (MoveFileW(szSrc, szDest))
     {
-        HRESULT hr = S_OK;
-
         if (pPidlOut)
-            hr = _ILCreateFromPathW(szDest, pPidlOut);
+            hr = ParseDisplayName(hwndOwner, NULL, PathFindFileNameW(szDest), NULL, pPidlOut, NULL);
 
-        SHChangeNotify (bIsFolder ? SHCNE_RENAMEFOLDER : SHCNE_RENAMEITEM,
-                        SHCNF_PATHW, szSrc, szDest);
-
-        return hr;
+        SHChangeNotify(bIsFolder ? SHCNE_RENAMEFOLDER : SHCNE_RENAMEITEM, SHCNF_PATHW, szSrc, szDest);
     }
-
-    return E_FAIL;
+    else
+    {
+        hr = HResultFromWin32(GetLastError());
+    }
+    return hr;
 }
 
 HRESULT WINAPI CFSFolder::GetDefaultSearchGUID(GUID * pguid)
