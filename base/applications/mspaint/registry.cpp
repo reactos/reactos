@@ -36,6 +36,24 @@ static void ReadString(CRegKey &key, LPCWSTR lpName, CStringW &strValue, LPCWSTR
         strValue = lpDefault;
 }
 
+void RegistrySettings::ResetWallpaper()
+{
+    // Write the wallpaper settings to the registry
+    CRegKey desktop;
+    if (desktop.Open(HKEY_CURRENT_USER, L"Control Panel\\Desktop") == ERROR_SUCCESS)
+    {
+        desktop.SetStringValue(L"Wallpaper", L"");
+        desktop.SetStringValue(L"WallpaperStyle", L"0");
+        desktop.SetStringValue(L"TileWallpaper", L"0");
+        desktop.SetStringValue(L"ConvertedWallpaper", L"");
+        desktop.SetStringValue(L"OriginalWallpaper", L"");
+    }
+
+    // Set the desktop wallpaper
+    WCHAR szEmpty[] = L"";
+    SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, szEmpty, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
+}
+
 void RegistrySettings::SetWallpaper(LPCWSTR szFileName, RegistrySettings::WallpaperStyle style)
 {
     // Build the local path to the converted cached BMP wallpaper

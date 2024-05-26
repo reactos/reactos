@@ -62,6 +62,7 @@ public:
     };
 
     static void SetWallpaper(LPCWSTR szFileName, WallpaperStyle style);
+    static void ResetWallpaper();
 
     void Load(INT nCmdShow);
     void Store();
