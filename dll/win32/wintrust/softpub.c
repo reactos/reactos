@@ -16,9 +16,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include <stdarg.h>
 
-#define NONAMELESSUNION
+#include <stdarg.h>
+#include <stdlib.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -40,7 +40,7 @@ HRESULT WINAPI SoftpubDefCertInit(CRYPT_PROVIDER_DATA *data)
     if (data->padwTrustStepErrors &&
      !data->padwTrustStepErrors[TRUSTERROR_STEP_FINAL_WVTINIT])
         ret = S_OK;
-    TRACE("returning %08x\n", ret);
+    TRACE("returning %08lx\n", ret);
     return ret;
 }
 
@@ -53,7 +53,7 @@ HRESULT WINAPI SoftpubInitialize(CRYPT_PROVIDER_DATA *data)
     if (data->padwTrustStepErrors &&
      !data->padwTrustStepErrors[TRUSTERROR_STEP_FINAL_WVTINIT])
         ret = S_OK;
-    TRACE("returning %08x\n", ret);
+    TRACE("returning %08lx\n", ret);
     return ret;
 }
 
@@ -86,25 +86,25 @@ static DWORD SOFTPUB_OpenFile(CRYPT_PROVIDER_DATA *data)
      * typically have hFile as NULL rather than INVALID_HANDLE_VALUE.  Check
      * for both.
      */
-    if (!data->pWintrustData->u.pFile->hFile ||
-     data->pWintrustData->u.pFile->hFile == INVALID_HANDLE_VALUE)
+    if (!data->pWintrustData->pFile->hFile ||
+     data->pWintrustData->pFile->hFile == INVALID_HANDLE_VALUE)
     {
-        data->pWintrustData->u.pFile->hFile =
-            CreateFileW(data->pWintrustData->u.pFile->pcwszFilePath, GENERIC_READ,
+        data->pWintrustData->pFile->hFile =
+            CreateFileW(data->pWintrustData->pFile->pcwszFilePath, GENERIC_READ,
           FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-        if (data->pWintrustData->u.pFile->hFile != INVALID_HANDLE_VALUE)
+        if (data->pWintrustData->pFile->hFile != INVALID_HANDLE_VALUE)
             data->fOpenedFile = TRUE;
         else
             err = GetLastError();
     }
     if (!err)
-        GetFileTime(data->pWintrustData->u.pFile->hFile, &data->sftSystemTime,
+        GetFileTime(data->pWintrustData->pFile->hFile, &data->sftSystemTime,
          NULL, NULL);
-    TRACE("returning %d\n", err);
+    TRACE("returning %ld\n", err);
     return err;
 }
 
-/* Assumes data->pWintrustData->u.pFile exists.  Sets data->pPDSip->gSubject to
+/* Assumes data->pWintrustData->pFile exists.  Sets data->pPDSip->gSubject to
  * the file's subject GUID.
  */
 static DWORD SOFTPUB_GetFileSubject(CRYPT_PROVIDER_DATA *data)
@@ -112,13 +112,13 @@ static DWORD SOFTPUB_GetFileSubject(CRYPT_PROVIDER_DATA *data)
     DWORD err = ERROR_SUCCESS;
 
     if (!WVT_ISINSTRUCT(WINTRUST_FILE_INFO,
-     data->pWintrustData->u.pFile->cbStruct, pgKnownSubject) ||
-     !data->pWintrustData->u.pFile->pgKnownSubject)
+     data->pWintrustData->pFile->cbStruct, pgKnownSubject) ||
+     !data->pWintrustData->pFile->pgKnownSubject)
     {
         if (!CryptSIPRetrieveSubjectGuid(
-         data->pWintrustData->u.pFile->pcwszFilePath,
-         data->pWintrustData->u.pFile->hFile,
-         &data->u.pPDSip->gSubject))
+         data->pWintrustData->pFile->pcwszFilePath,
+         data->pWintrustData->pFile->hFile,
+         &data->pPDSip->gSubject))
         {
             LARGE_INTEGER fileSize;
             DWORD sipError = GetLastError();
@@ -127,7 +127,7 @@ static DWORD SOFTPUB_GetFileSubject(CRYPT_PROVIDER_DATA *data)
              * TRUST_E_SUBJECT_FORM_UNKNOWN, rather than whatever
              * CryptSIPRetrieveSubjectGuid returns.
              */
-            if (GetFileSizeEx(data->pWintrustData->u.pFile->hFile, &fileSize)
+            if (GetFileSizeEx(data->pWintrustData->pFile->hFile, &fileSize)
              && !fileSize.QuadPart)
                 err = TRUST_E_SUBJECT_FORM_UNKNOWN;
             else
@@ -135,32 +135,32 @@ static DWORD SOFTPUB_GetFileSubject(CRYPT_PROVIDER_DATA *data)
         }
     }
     else
-        data->u.pPDSip->gSubject = *data->pWintrustData->u.pFile->pgKnownSubject;
-    TRACE("returning %d\n", err);
+        data->pPDSip->gSubject = *data->pWintrustData->pFile->pgKnownSubject;
+    TRACE("returning %ld\n", err);
     return err;
 }
 
-/* Assumes data->u.pPDSip exists, and its gSubject member set.
- * Allocates data->u.pPDSip->pSip and loads it, if possible.
+/* Assumes data->pPDSip exists, and its gSubject member set.
+ * Allocates data->pPDSip->pSip and loads it, if possible.
  */
 static DWORD SOFTPUB_GetSIP(CRYPT_PROVIDER_DATA *data)
 {
     DWORD err = ERROR_SUCCESS;
 
-    data->u.pPDSip->pSip = data->psPfns->pfnAlloc(sizeof(SIP_DISPATCH_INFO));
-    if (data->u.pPDSip->pSip)
+    data->pPDSip->pSip = data->psPfns->pfnAlloc(sizeof(SIP_DISPATCH_INFO));
+    if (data->pPDSip->pSip)
     {
-        if (!CryptSIPLoad(&data->u.pPDSip->gSubject, 0, data->u.pPDSip->pSip))
+        if (!CryptSIPLoad(&data->pPDSip->gSubject, 0, data->pPDSip->pSip))
             err = GetLastError();
     }
     else
         err = ERROR_OUTOFMEMORY;
-    TRACE("returning %d\n", err);
+    TRACE("returning %ld\n", err);
     return err;
 }
 
-/* Assumes data->u.pPDSip has been loaded, and data->u.pPDSip->pSip allocated.
- * Calls data->u.pPDSip->pSip->pfGet to construct data->hMsg.
+/* Assumes data->pPDSip has been loaded, and data->pPDSip->pSip allocated.
+ * Calls data->pPDSip->pSip->pfGet to construct data->hMsg.
  */
 static DWORD SOFTPUB_GetMessageFromFile(CRYPT_PROVIDER_DATA *data, HANDLE file,
  LPCWSTR filePath)
@@ -170,17 +170,17 @@ static DWORD SOFTPUB_GetMessageFromFile(CRYPT_PROVIDER_DATA *data, HANDLE file,
     LPBYTE buf = NULL;
     DWORD size = 0;
 
-    data->u.pPDSip->psSipSubjectInfo =
+    data->pPDSip->psSipSubjectInfo =
      data->psPfns->pfnAlloc(sizeof(SIP_SUBJECTINFO));
-    if (!data->u.pPDSip->psSipSubjectInfo)
+    if (!data->pPDSip->psSipSubjectInfo)
         return ERROR_OUTOFMEMORY;
 
-    data->u.pPDSip->psSipSubjectInfo->cbSize = sizeof(SIP_SUBJECTINFO);
-    data->u.pPDSip->psSipSubjectInfo->pgSubjectType = &data->u.pPDSip->gSubject;
-    data->u.pPDSip->psSipSubjectInfo->hFile = file;
-    data->u.pPDSip->psSipSubjectInfo->pwsFileName = filePath;
-    data->u.pPDSip->psSipSubjectInfo->hProv = data->hProv;
-    ret = data->u.pPDSip->pSip->pfGet(data->u.pPDSip->psSipSubjectInfo,
+    data->pPDSip->psSipSubjectInfo->cbSize = sizeof(SIP_SUBJECTINFO);
+    data->pPDSip->psSipSubjectInfo->pgSubjectType = &data->pPDSip->gSubject;
+    data->pPDSip->psSipSubjectInfo->hFile = file;
+    data->pPDSip->psSipSubjectInfo->pwsFileName = filePath;
+    data->pPDSip->psSipSubjectInfo->hProv = data->hProv;
+    ret = data->pPDSip->pSip->pfGet(data->pPDSip->psSipSubjectInfo,
      &data->dwEncoding, 0, &size, 0);
     if (!ret)
         return TRUST_E_NOSIGNATURE;
@@ -189,7 +189,7 @@ static DWORD SOFTPUB_GetMessageFromFile(CRYPT_PROVIDER_DATA *data, HANDLE file,
     if (!buf)
         return ERROR_OUTOFMEMORY;
 
-    ret = data->u.pPDSip->pSip->pfGet(data->u.pPDSip->psSipSubjectInfo,
+    ret = data->pPDSip->pSip->pfGet(data->pPDSip->psSipSubjectInfo,
      &data->dwEncoding, 0, &size, buf);
     if (ret)
     {
@@ -206,7 +206,7 @@ static DWORD SOFTPUB_GetMessageFromFile(CRYPT_PROVIDER_DATA *data, HANDLE file,
         err = GetLastError();
 
     data->psPfns->pfnFree(buf);
-    TRACE("returning %d\n", err);
+    TRACE("returning %ld\n", err);
     return err;
 }
 
@@ -214,7 +214,7 @@ static BOOL hash_file_data( HANDLE file, DWORD start, DWORD end, HCRYPTHASH hash
 {
     DWORD bytes_read, size = end - start;
     DWORD buffer_size = min( size, 1024*1024 );
-    BYTE *buffer = HeapAlloc( GetProcessHeap(), 0, buffer_size );
+    BYTE *buffer = malloc( buffer_size );
 
     if (!buffer) return FALSE;
     SetFilePointer( file, start, NULL, FILE_BEGIN );
@@ -225,7 +225,7 @@ static BOOL hash_file_data( HANDLE file, DWORD start, DWORD end, HCRYPTHASH hash
         if (!CryptHashData( hash, buffer, bytes_read, 0 )) break;
         size -= bytes_read;
     }
-    HeapFree( GetProcessHeap(), 0, buffer );
+    free( buffer );
     return !size;
 }
 
@@ -308,7 +308,7 @@ static BOOL SOFTPUB_HashPEFile(HANDLE file, HCRYPTHASH hash)
 
 static DWORD SOFTPUB_VerifyImageHash(CRYPT_PROVIDER_DATA *data, HANDLE file)
 {
-    SPC_INDIRECT_DATA_CONTENT *indirect = (SPC_INDIRECT_DATA_CONTENT *)data->u.pPDSip->psIndirectData;
+    SPC_INDIRECT_DATA_CONTENT *indirect = (SPC_INDIRECT_DATA_CONTENT *)data->pPDSip->psIndirectData;
     DWORD err, hash_size, length;
     BYTE *hash_data;
     BOOL release_prov = FALSE;
@@ -393,7 +393,7 @@ static DWORD SOFTPUB_CreateStoreFromMessage(CRYPT_PROVIDER_DATA *data)
     }
     else
         err = GetLastError();
-    TRACE("returning %d\n", err);
+    TRACE("returning %ld\n", err);
     return err;
 }
 
@@ -448,19 +448,19 @@ static DWORD SOFTPUB_DecodeInnerContent(CRYPT_PROVIDER_DATA *data)
         err = GetLastError();
         goto error;
     }
-    data->u.pPDSip->psIndirectData = data->psPfns->pfnAlloc(size);
-    if (!data->u.pPDSip->psIndirectData)
+    data->pPDSip->psIndirectData = data->psPfns->pfnAlloc(size);
+    if (!data->pPDSip->psIndirectData)
     {
         err = ERROR_OUTOFMEMORY;
         goto error;
     }
     ret = CryptDecodeObject(data->dwEncoding, oid, buf, size, 0,
-     data->u.pPDSip->psIndirectData, &size);
+     data->pPDSip->psIndirectData, &size);
     if (!ret)
         err = GetLastError();
 
 error:
-    TRACE("returning %d\n", err);
+    TRACE("returning %ld\n", err);
     data->psPfns->pfnFree(oid);
     data->psPfns->pfnFree(buf);
     return err;
@@ -470,9 +470,9 @@ static DWORD SOFTPUB_LoadCertMessage(CRYPT_PROVIDER_DATA *data)
 {
     DWORD err = ERROR_SUCCESS;
 
-    if (data->pWintrustData->u.pCert &&
+    if (data->pWintrustData->pCert &&
      WVT_IS_CBSTRUCT_GT_MEMBEROFFSET(WINTRUST_CERT_INFO,
-     data->pWintrustData->u.pCert->cbStruct, psCertContext))
+     data->pWintrustData->pCert->cbStruct, psCertContext))
     {
         if (data->psPfns)
         {
@@ -484,8 +484,8 @@ static DWORD SOFTPUB_LoadCertMessage(CRYPT_PROVIDER_DATA *data)
              * add a cert to it
              */
             if (WVT_ISINSTRUCT(WINTRUST_CERT_INFO,
-             data->pWintrustData->u.pCert->cbStruct, psftVerifyAsOf) &&
-             data->pWintrustData->u.pCert->psftVerifyAsOf)
+             data->pWintrustData->pCert->cbStruct, psftVerifyAsOf) &&
+             data->pWintrustData->pCert->psftVerifyAsOf)
                 data->sftSystemTime = signer.sftVerifyAsOf;
             else
             {
@@ -498,13 +498,13 @@ static DWORD SOFTPUB_LoadCertMessage(CRYPT_PROVIDER_DATA *data)
             if (ret)
             {
                 ret = data->psPfns->pfnAddCert2Chain(data, 0, FALSE, 0,
-                 data->pWintrustData->u.pCert->psCertContext);
+                 data->pWintrustData->pCert->psCertContext);
                 if (WVT_ISINSTRUCT(WINTRUST_CERT_INFO,
-                 data->pWintrustData->u.pCert->cbStruct, pahStores))
+                 data->pWintrustData->pCert->cbStruct, pahStores))
                         for (i = 0;
-                         ret && i < data->pWintrustData->u.pCert->chStores; i++)
+                         ret && i < data->pWintrustData->pCert->chStores; i++)
                             ret = data->psPfns->pfnAddStore2Chain(data,
-                             data->pWintrustData->u.pCert->pahStores[i]);
+                             data->pWintrustData->pCert->pahStores[i]);
             }
             if (!ret)
                 err = GetLastError();
@@ -519,7 +519,7 @@ static DWORD SOFTPUB_LoadFileMessage(CRYPT_PROVIDER_DATA *data)
 {
     DWORD err = ERROR_SUCCESS;
 
-    if (!data->pWintrustData->u.pFile)
+    if (!data->pWintrustData->pFile)
     {
         err = ERROR_INVALID_PARAMETER;
         goto error;
@@ -533,8 +533,8 @@ static DWORD SOFTPUB_LoadFileMessage(CRYPT_PROVIDER_DATA *data)
     err = SOFTPUB_GetSIP(data);
     if (err)
         goto error;
-    err = SOFTPUB_GetMessageFromFile(data, data->pWintrustData->u.pFile->hFile,
-     data->pWintrustData->u.pFile->pcwszFilePath);
+    err = SOFTPUB_GetMessageFromFile(data, data->pWintrustData->pFile->hFile,
+     data->pWintrustData->pFile->pcwszFilePath);
     if (err)
         goto error;
     err = SOFTPUB_CreateStoreFromMessage(data);
@@ -543,15 +543,15 @@ static DWORD SOFTPUB_LoadFileMessage(CRYPT_PROVIDER_DATA *data)
     err = SOFTPUB_DecodeInnerContent(data);
     if (err)
         goto error;
-    err = SOFTPUB_VerifyImageHash(data, data->pWintrustData->u.pFile->hFile);
+    err = SOFTPUB_VerifyImageHash(data, data->pWintrustData->pFile->hFile);
 
 error:
-    if (err && data->fOpenedFile && data->pWintrustData->u.pFile)
+    if (err && data->fOpenedFile && data->pWintrustData->pFile)
     {
         /* The caller won't expect the file to be open on failure, so close it.
          */
-        CloseHandle(data->pWintrustData->u.pFile->hFile);
-        data->pWintrustData->u.pFile->hFile = INVALID_HANDLE_VALUE;
+        CloseHandle(data->pWintrustData->pFile->hFile);
+        data->pWintrustData->pFile->hFile = INVALID_HANDLE_VALUE;
         data->fOpenedFile = FALSE;
     }
     return err;
@@ -562,19 +562,19 @@ static DWORD SOFTPUB_LoadCatalogMessage(CRYPT_PROVIDER_DATA *data)
     DWORD err;
     HANDLE catalog = INVALID_HANDLE_VALUE;
 
-    if (!data->pWintrustData->u.pCatalog)
+    if (!data->pWintrustData->pCatalog)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-    catalog = CreateFileW(data->pWintrustData->u.pCatalog->pcwszCatalogFilePath,
+    catalog = CreateFileW(data->pWintrustData->pCatalog->pcwszCatalogFilePath,
      GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
      NULL);
     if (catalog == INVALID_HANDLE_VALUE)
         return GetLastError();
     if (!CryptSIPRetrieveSubjectGuid(
-     data->pWintrustData->u.pCatalog->pcwszCatalogFilePath, catalog,
-     &data->u.pPDSip->gSubject))
+     data->pWintrustData->pCatalog->pcwszCatalogFilePath, catalog,
+     &data->pPDSip->gSubject))
     {
         err = GetLastError();
         goto error;
@@ -583,7 +583,7 @@ static DWORD SOFTPUB_LoadCatalogMessage(CRYPT_PROVIDER_DATA *data)
     if (err)
         goto error;
     err = SOFTPUB_GetMessageFromFile(data, catalog,
-     data->pWintrustData->u.pCatalog->pcwszCatalogFilePath);
+     data->pWintrustData->pCatalog->pcwszCatalogFilePath);
     if (err)
         goto error;
     err = SOFTPUB_CreateStoreFromMessage(data);
@@ -617,13 +617,13 @@ HRESULT WINAPI SoftpubLoadMessage(CRYPT_PROVIDER_DATA *data)
         err = SOFTPUB_LoadCatalogMessage(data);
         break;
     default:
-        FIXME("unimplemented for %d\n", data->pWintrustData->dwUnionChoice);
+        FIXME("unimplemented for %ld\n", data->pWintrustData->dwUnionChoice);
         err = ERROR_INVALID_PARAMETER;
     }
 
     if (err)
         data->padwTrustStepErrors[TRUSTERROR_STEP_FINAL_OBJPROV] = err;
-    TRACE("returning %d (%08x)\n", !err ? S_OK : S_FALSE,
+    TRACE("returning %ld (%08lx)\n", !err ? S_OK : S_FALSE,
      data->padwTrustStepErrors[TRUSTERROR_STEP_FINAL_OBJPROV]);
     return !err ? S_OK : S_FALSE;
 }
@@ -830,16 +830,93 @@ static DWORD WINTRUST_VerifySigner(CRYPT_PROVIDER_DATA *data, DWORD signerIdx)
     return err;
 }
 
+static void load_secondary_signatures(CRYPT_PROVIDER_DATA *data, HCRYPTMSG msg)
+{
+    CRYPT_PROVIDER_SIGSTATE *s = data->pSigState;
+    CRYPT_ATTRIBUTES *attrs;
+    unsigned int i, j;
+    DWORD size;
+
+    if (!CryptMsgGetParam(msg, CMSG_SIGNER_UNAUTH_ATTR_PARAM, 0, NULL, &size))
+        return;
+
+    if (!(attrs = data->psPfns->pfnAlloc(size)))
+    {
+        ERR("No memory.\n");
+        return;
+    }
+    if (!CryptMsgGetParam(msg, CMSG_SIGNER_UNAUTH_ATTR_PARAM, 0, attrs, &size))
+        goto done;
+
+    for (i = 0; i < attrs->cAttr; ++i)
+    {
+        if (strcmp(attrs->rgAttr[i].pszObjId, szOID_NESTED_SIGNATURE))
+            continue;
+
+        if (!(s->rhSecondarySigs = data->psPfns->pfnAlloc(attrs->rgAttr[i].cValue * sizeof(*s->rhSecondarySigs))))
+        {
+            ERR("No memory.\n");
+            goto done;
+        }
+        s->cSecondarySigs = 0;
+        for (j = 0; j < attrs->rgAttr[i].cValue; ++j)
+        {
+            if (!(msg = CryptMsgOpenToDecode(X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, 0, 0, 0, NULL, NULL)))
+            {
+                ERR("Could not create crypt message.\n");
+                goto done;
+            }
+            if (!CryptMsgUpdate(msg, attrs->rgAttr[i].rgValue[j].pbData, attrs->rgAttr[i].rgValue[j].cbData, TRUE))
+            {
+                ERR("Could not update crypt message, err %lu.\n", GetLastError());
+                CryptMsgClose(msg);
+                goto done;
+            }
+            s->rhSecondarySigs[j] = msg;
+            ++s->cSecondarySigs;
+        }
+        break;
+    }
+done:
+    data->psPfns->pfnFree(attrs);
+}
+
 HRESULT WINAPI SoftpubLoadSignature(CRYPT_PROVIDER_DATA *data)
 {
-    DWORD err;
+    DWORD err = ERROR_SUCCESS;
 
     TRACE("(%p)\n", data);
 
     if (!data->padwTrustStepErrors)
         return S_FALSE;
 
-    if (data->hMsg)
+    if (data->pSigState)
+    {
+        /* We did not initialize this, probably an unsupported usage. */
+        FIXME("pSigState %p already initialized.\n", data->pSigState);
+    }
+    if (!(data->pSigState = data->psPfns->pfnAlloc(sizeof(*data->pSigState))))
+    {
+        err = ERROR_OUTOFMEMORY;
+    }
+    else
+    {
+        data->pSigState->cbStruct = sizeof(*data->pSigState);
+        data->pSigState->fSupportMultiSig = TRUE;
+        data->pSigState->dwCryptoPolicySupport = WSS_SIGTRUST_SUPPORT | WSS_OBJTRUST_SUPPORT | WSS_CERTTRUST_SUPPORT;
+        if (data->hMsg)
+        {
+            data->pSigState->hPrimarySig = CryptMsgDuplicate(data->hMsg);
+            load_secondary_signatures(data, data->pSigState->hPrimarySig);
+        }
+        if (data->pSigSettings)
+        {
+            if (data->pSigSettings->dwFlags & WSS_GET_SECONDARY_SIG_COUNT)
+                data->pSigSettings->cSecondarySigs = data->pSigState->cSecondarySigs;
+        }
+    }
+
+    if (!err && data->hMsg)
     {
         DWORD signerCount, size;
 
@@ -859,8 +936,7 @@ HRESULT WINAPI SoftpubLoadSignature(CRYPT_PROVIDER_DATA *data)
         else
             err = TRUST_E_NOSIGNATURE;
     }
-    else
-        err = ERROR_SUCCESS;
+
     if (err)
         data->padwTrustStepErrors[TRUSTERROR_STEP_FINAL_SIGPROV] = err;
     return !err ? S_OK : S_FALSE;
@@ -885,7 +961,7 @@ BOOL WINAPI SoftpubCheckCert(CRYPT_PROVIDER_DATA *data, DWORD idxSigner,
 {
     BOOL ret;
 
-    TRACE("(%p, %d, %d, %d)\n", data, idxSigner, fCounterSignerChain,
+    TRACE("(%p, %ld, %d, %ld)\n", data, idxSigner, fCounterSignerChain,
      idxCounterSigner);
 
     if (fCounterSignerChain)
@@ -958,7 +1034,7 @@ static DWORD WINTRUST_TrustStatusToError(DWORD errorStatus)
         error = CERT_E_INVALID_POLICY;
     else if (errorStatus)
     {
-        FIXME("unknown error status %08x\n", errorStatus);
+        FIXME("unknown error status %08lx\n", errorStatus);
         error = TRUST_E_SYSTEM_ERROR;
     }
     else
@@ -1011,7 +1087,7 @@ static void WINTRUST_CreateChainPolicyCreateInfo(
         chainPara->RequestedUsage.dwType = 0;
         chainPara->RequestedUsage.Usage.cUsageIdentifier = 0;
     }
-    info->u.cbSize = sizeof(WTD_GENERIC_CHAIN_POLICY_CREATE_INFO);
+    info->cbSize = sizeof(WTD_GENERIC_CHAIN_POLICY_CREATE_INFO);
     info->hChainEngine = NULL;
     info->pChainPara = chainPara;
     if (data->dwProvFlags & CPD_REVOCATION_CHECK_END_CERT)
@@ -1115,7 +1191,7 @@ HRESULT WINAPI WintrustCertificateTrust(CRYPT_PROVIDER_DATA *data)
     }
     if (err)
         data->padwTrustStepErrors[TRUSTERROR_STEP_FINAL_CERTPROV] = err;
-    TRACE("returning %d (%08x)\n", !err ? S_OK : S_FALSE,
+    TRACE("returning %ld (%08lx)\n", !err ? S_OK : S_FALSE,
      data->padwTrustStepErrors[TRUSTERROR_STEP_FINAL_CERTPROV]);
     return !err ? S_OK : S_FALSE;
 }
@@ -1128,7 +1204,7 @@ HRESULT WINAPI GenericChainCertificateTrust(CRYPT_PROVIDER_DATA *data)
 
     TRACE("(%p)\n", data);
 
-    if (policyData && policyData->u.cbSize !=
+    if (policyData && policyData->cbSize !=
      sizeof(WTD_GENERIC_CHAIN_POLICY_CREATE_INFO))
     {
         err = ERROR_INVALID_PARAMETER;
@@ -1162,7 +1238,7 @@ HRESULT WINAPI GenericChainCertificateTrust(CRYPT_PROVIDER_DATA *data)
 end:
     if (err)
         data->padwTrustStepErrors[TRUSTERROR_STEP_FINAL_CERTPROV] = err;
-    TRACE("returning %d (%08x)\n", !err ? S_OK : S_FALSE,
+    TRACE("returning %ld (%08lx)\n", !err ? S_OK : S_FALSE,
      data->padwTrustStepErrors[TRUSTERROR_STEP_FINAL_CERTPROV]);
     return !err ? S_OK : S_FALSE;
 }
@@ -1175,7 +1251,7 @@ HRESULT WINAPI SoftpubAuthenticode(CRYPT_PROVIDER_DATA *data)
     TRACE("(%p)\n", data);
 
     if (data->pWintrustData->dwUIChoice != WTD_UI_NONE)
-        FIXME("unimplemented for UI choice %d\n",
+        FIXME("unimplemented for UI choice %ld\n",
          data->pWintrustData->dwUIChoice);
     if (!data->csSigners)
     {
@@ -1248,7 +1324,7 @@ HRESULT WINAPI SoftpubAuthenticode(CRYPT_PROVIDER_DATA *data)
     if (!ret)
         data->padwTrustStepErrors[TRUSTERROR_STEP_FINAL_POLICYPROV] =
          policyStatus.dwError;
-    TRACE("returning %d (%08x)\n", ret ? S_OK : S_FALSE,
+    TRACE("returning %ld (%08lx)\n", ret ? S_OK : S_FALSE,
      data->padwTrustStepErrors[TRUSTERROR_STEP_FINAL_POLICYPROV]);
     return ret ? S_OK : S_FALSE;
 }
@@ -1290,7 +1366,7 @@ HRESULT WINAPI GenericChainFinalProv(CRYPT_PROVIDER_DATA *data)
     TRACE("(%p)\n", data);
 
     if (data->pWintrustData->dwUIChoice != WTD_UI_NONE)
-        FIXME("unimplemented for UI choice %d\n",
+        FIXME("unimplemented for UI choice %ld\n",
          data->pWintrustData->dwUIChoice);
     if (!data->csSigners)
         err = TRUST_E_NOSIGNATURE;
@@ -1320,7 +1396,7 @@ HRESULT WINAPI GenericChainFinalProv(CRYPT_PROVIDER_DATA *data)
             {
                 for (i = 0; i < data->csSigners; i++)
                 {
-                    signers[i].u.cbSize =
+                    signers[i].cbSize =
                      sizeof(WTD_GENERIC_CHAIN_POLICY_SIGNER_INFO);
                     signers[i].pChainContext =
                      data->pasSigners[i].pChainContext;
@@ -1343,7 +1419,7 @@ HRESULT WINAPI GenericChainFinalProv(CRYPT_PROVIDER_DATA *data)
     }
     if (err != NO_ERROR)
         data->padwTrustStepErrors[TRUSTERROR_STEP_FINAL_POLICYPROV] = err;
-    TRACE("returning %d (%08x)\n", err == NO_ERROR ? S_OK : S_FALSE,
+    TRACE("returning %ld (%08lx)\n", err == NO_ERROR ? S_OK : S_FALSE,
      data->padwTrustStepErrors[TRUSTERROR_STEP_FINAL_POLICYPROV]);
     return err == NO_ERROR ? S_OK : S_FALSE;
 }
@@ -1366,23 +1442,30 @@ HRESULT WINAPI SoftpubCleanup(CRYPT_PROVIDER_DATA *data)
         CertCloseStore(data->pahStores[i], 0);
     data->psPfns->pfnFree(data->pahStores);
 
-    if (data->u.pPDSip)
+    if (data->pPDSip)
     {
-        data->psPfns->pfnFree(data->u.pPDSip->pSip);
-        data->psPfns->pfnFree(data->u.pPDSip->pCATSip);
-        data->psPfns->pfnFree(data->u.pPDSip->psSipSubjectInfo);
-        data->psPfns->pfnFree(data->u.pPDSip->psSipCATSubjectInfo);
-        data->psPfns->pfnFree(data->u.pPDSip->psIndirectData);
+        data->psPfns->pfnFree(data->pPDSip->pSip);
+        data->psPfns->pfnFree(data->pPDSip->pCATSip);
+        data->psPfns->pfnFree(data->pPDSip->psSipSubjectInfo);
+        data->psPfns->pfnFree(data->pPDSip->psSipCATSubjectInfo);
+        data->psPfns->pfnFree(data->pPDSip->psIndirectData);
     }
 
+    if (WVT_ISINSTRUCT(CRYPT_PROVIDER_DATA, data->cbStruct, pSigState) && data->pSigState)
+    {
+        CryptMsgClose(data->pSigState->hPrimarySig);
+        for (i = 0; i < data->pSigState->cSecondarySigs; ++i)
+            CryptMsgClose(data->pSigState->rhSecondarySigs[i]);
+        data->psPfns->pfnFree(data->pSigState);
+    }
     CryptMsgClose(data->hMsg);
 
     if (data->fOpenedFile &&
      data->pWintrustData->dwUnionChoice == WTD_CHOICE_FILE &&
-     data->pWintrustData->u.pFile)
+     data->pWintrustData->pFile)
     {
-        CloseHandle(data->pWintrustData->u.pFile->hFile);
-        data->pWintrustData->u.pFile->hFile = INVALID_HANDLE_VALUE;
+        CloseHandle(data->pWintrustData->pFile->hFile);
+        data->pWintrustData->pFile->hFile = INVALID_HANDLE_VALUE;
         data->fOpenedFile = FALSE;
     }
 

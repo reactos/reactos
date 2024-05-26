@@ -1,5 +1,6 @@
 
 add_definitions(-DUSE_WINE_TODOS)
+remove_definitions(-D__ROS_LONG64__)
 
 list(APPEND SOURCE
     asn.c
