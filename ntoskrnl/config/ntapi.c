@@ -1565,7 +1565,7 @@ NtQueryOpenSubKeys(IN POBJECT_ATTRIBUTES TargetKey,
 
     /* Call the internal API */
     SubKeys = CmpEnumerateOpenSubKeys(KeyBody->KeyControlBlock,
-                                      TRUE, FALSE, FALSE);
+                                      FALSE, FALSE);
 
     /* Unlock the registry */
     CmpUnlockRegistry();
@@ -1803,7 +1803,6 @@ NtUnloadKey2(IN POBJECT_ATTRIBUTES TargetKey,
     CM_PARSE_CONTEXT ParseContext = {0};
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PCM_KEY_BODY KeyBody = NULL;
-    ULONG ParentConv = 0, ChildConv = 0;
     HANDLE Handle;
 
     PAGED_CODE();
@@ -1895,30 +1894,17 @@ NtUnloadKey2(IN POBJECT_ATTRIBUTES TargetKey,
     if (!NT_SUCCESS(Status))
         return Status;
 
-    /* Acquire the lock depending on flags */
-    if (Flags == REG_FORCE_UNLOAD)
-    {
-        /* Lock registry exclusively */
-        CmpLockRegistryExclusive();
-    }
-    else
-    {
-        /* Lock registry */
-        CmpLockRegistry();
-
-        /* Acquire the hive loading lock */
-        ExAcquirePushLockExclusive(&CmpLoadHiveLock);
-
-        /* Lock parent and child */
-        if (KeyBody->KeyControlBlock->ParentKcb)
-            ParentConv = KeyBody->KeyControlBlock->ParentKcb->ConvKey;
-        else
-            ParentConv = KeyBody->KeyControlBlock->ConvKey;
-
-        ChildConv = KeyBody->KeyControlBlock->ConvKey;
-
-        CmpAcquireTwoKcbLocksExclusiveByKey(ChildConv, ParentConv);
-    }
+    /*
+     * Lock down the entire registry when we unload a hive.
+     *
+     * NOTE: We might block other threads of other processes that do
+     * operations with unrelated keys of other hives when we lock
+     * the registry for exclusive use by the calling thread that does
+     * the unloading. If this turns out to cause a major overhead we
+     * have to rethink the locking mechanism here (prior commit - f1d2a44).
+     */
+    CmpLockRegistryExclusive();
+    ExAcquirePushLockExclusive(&CmpLoadHiveLock);
 
     /* Check if it's being deleted already */
     if (KeyBody->KeyControlBlock->Delete)
@@ -1939,34 +1925,12 @@ NtUnloadKey2(IN POBJECT_ATTRIBUTES TargetKey,
     /* Call the internal API. Note that CmUnloadKey() unlocks the registry only on success. */
     Status = CmUnloadKey(KeyBody->KeyControlBlock, Flags);
 
-    /* Check if we failed, but really need to succeed */
-    if ((Status == STATUS_CANNOT_DELETE) && (Flags == REG_FORCE_UNLOAD))
-    {
-        /* TODO: We should perform another attempt here */
-        _SEH2_TRY
-        {
-            DPRINT1("NtUnloadKey2(%wZ): We want to force-unload the hive but couldn't unload it: Retrying is UNIMPLEMENTED!\n", TargetKey->ObjectName);
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-        }
-        _SEH2_END;
-    }
-
 Quit:
     /* If CmUnloadKey() failed we need to unlock registry ourselves */
     if (!NT_SUCCESS(Status))
     {
-        if (Flags != REG_FORCE_UNLOAD)
-        {
-            /* Release the KCB locks */
-            CmpReleaseTwoKcbLockByKey(ChildConv, ParentConv);
-
-            /* Release the hive loading lock */
-            ExReleasePushLockExclusive(&CmpLoadHiveLock);
-        }
-
-        /* Unlock the registry */
+        /* Unlock the hive loading and registry locks */
+        ExReleasePushLockExclusive(&CmpLoadHiveLock);
         CmpUnlockRegistry();
     }
 
