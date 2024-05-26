@@ -1582,6 +1582,17 @@ HRESULT CDefView::InvokeContextMenuCommand(CComPtr<IContextMenu>& pCM, LPCSTR lp
         cmi.ptInvoke = *pt;
     }
 
+    WCHAR szDirW[MAX_PATH] = L"";
+    CHAR szDirA[MAX_PATH];
+    if (SUCCEEDED(_DoFolderViewCB(SFVM_GETCOMMANDDIR, _countof(szDirW), (LPARAM)szDirW)) &&
+        *szDirW != UNICODE_NULL)
+    {
+        SHUnicodeToAnsi(szDirW, szDirA, _countof(szDirA));
+        cmi.fMask |= CMIC_MASK_UNICODE;
+        cmi.lpDirectory = szDirA;
+        cmi.lpDirectoryW = szDirW;
+    }
+
     HRESULT hr = pCM->InvokeCommand((LPCMINVOKECOMMANDINFO)&cmi);
     // Most of our callers will do this, but if they would forget (File menu!)
     IUnknown_SetSite(pCM, NULL);
