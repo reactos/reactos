@@ -13,10 +13,11 @@ enum { DIRBIT = 1, FILEBIT = 2 };
 
 static BYTE GetPIDLType(LPCITEMIDLIST pidl)
 {
+    // Return the type without the 0x80 flag
     return pidl && pidl->mkid.cb >= 3 ? (pidl->mkid.abID[0] & 0x7F) : 0;
 }
 
-struct FS95
+struct FS95 // FileSystem item header
 {
     WORD cb;
     BYTE type;
@@ -47,7 +48,7 @@ static int FileStruct_Att(LPCITEMIDLIST pidl)
 #define TEST_CLSID(pidl, type, offset, clsid) \
     do { \
         ok_long(GetPIDLType(pidl), (type)); \
-        ok_int(*(CLSID*)((&pidl->mkid.abID[(offset) - 2])) == clsid, TRUE); \
+        ok_int(*(CLSID*)((&pidl->mkid.abID[(offset) - sizeof(WORD)])) == clsid, TRUE); \
     } while (0)
 
 START_TEST(SHSimpleIDListFromPath)
