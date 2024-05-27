@@ -830,8 +830,8 @@ BrFolder_OnContextMenu(BrFolder &info, LPARAM lParam)
     enum { IDC_EXPAND = 1, ID_FIRSTCMD, ID_LASTCMD = 0xffff };
     HTREEITEM hSelected = TreeView_GetSelection(info.hwndTreeView);
     CMINVOKECOMMANDINFOEX ici = { sizeof(ici), CMIC_MASK_PTINVOKE, info.hWnd };
-    ici.fMask |= GetKeyState(VK_SHIFT) < 0 ? CMIC_MASK_SHIFT_DOWN : 0;
-    ici.fMask |= GetKeyState(VK_CONTROL) < 0 ? CMIC_MASK_CONTROL_DOWN : 0;
+    ici.fMask |= (GetKeyState(VK_SHIFT) < 0) ? CMIC_MASK_SHIFT_DOWN : 0;
+    ici.fMask |= (GetKeyState(VK_CONTROL) < 0) ? CMIC_MASK_CONTROL_DOWN : 0;
     ici.nShow = SW_SHOW;
     ici.ptInvoke.x = GET_X_LPARAM(lParam);
     ici.ptInvoke.y = GET_Y_LPARAM(lParam);
@@ -848,18 +848,22 @@ BrFolder_OnContextMenu(BrFolder &info, LPARAM lParam)
     BrItemData *item = BrFolder_GetItemData(&info, hSelected);
     if (!item)
         return ; // Not on an item
+
     TV_ITEM tvi;
     tvi.mask = TVIF_STATE | TVIF_CHILDREN;
     tvi.stateMask = TVIS_EXPANDED;
     tvi.hItem = hSelected;
     TreeView_GetItem(info.hwndTreeView, &tvi);
-    IContextMenu *pcm;
+    CComPtr<IContextMenu> pcm;
     LPITEMIDLIST child = item->pidlChild; // ATL is stupid and will assert if we take the address of this
     HRESULT hr = item->lpsfParent->GetUIObjectOf(info.hWnd, 1, &child,
                                                  IID_IContextMenu, NULL, (void**)&pcm);
     if (FAILED(hr))
         return ;
+
     HMENU hMenu = CreatePopupMenu();
+    if (!hMenu)
+        return ;
     info.pContextMenu = pcm;
     UINT cmf = ((ici.fMask & CMIC_MASK_SHIFT_DOWN) ? CMF_EXTENDEDVERBS : 0) | CMF_CANRENAME;
     hr = pcm->QueryContextMenu(hMenu, 0, ID_FIRSTCMD, ID_LASTCMD, CMF_NODEFAULT | cmf);
@@ -871,22 +875,21 @@ BrFolder_OnContextMenu(BrFolder &info, LPARAM lParam)
 
     UINT cmd = TrackPopupMenuEx(hMenu, TPM_RETURNCMD, ici.ptInvoke.x, ici.ptInvoke.y, info.hWnd, NULL);
     ici.lpVerb = MAKEINTRESOURCEA(cmd - ID_FIRSTCMD);
-    if (cmd != 0 && GetDfmCmd(pcm, ici.lpVerb) == DFM_CMD_RENAME)
-    {
-        PostMessage(info.hwndTreeView, TVM_SELECTITEM, TVGN_CARET, (LPARAM)hSelected);
-        PostMessage(info.hwndTreeView, TVM_EDITLABEL, 0, (LPARAM)hSelected);
-    }
-    else if (cmd == IDC_EXPAND)
+    if (cmd == IDC_EXPAND)
     {
         PostMessage(info.hwndTreeView, TVM_SELECTITEM, TVGN_CARET, (LPARAM)hSelected);
         PostMessage(info.hwndTreeView, TVM_EXPAND, TVE_TOGGLE, (LPARAM)hSelected);
+    }
+    else if (cmd != 0 && GetDfmCmd(pcm, ici.lpVerb) == DFM_CMD_RENAME)
+    {
+        PostMessage(info.hwndTreeView, TVM_SELECTITEM, TVGN_CARET, (LPARAM)hSelected);
+        PostMessage(info.hwndTreeView, TVM_EDITLABEL, 0, (LPARAM)hSelected);
     }
     else if (cmd != 0)
     {
         pcm->InvokeCommand((CMINVOKECOMMANDINFO*)&ici);
     }
     info.pContextMenu = NULL;
-    pcm->Release();
     DestroyMenu(hMenu);
 }
 
@@ -1122,9 +1125,12 @@ BrFolderDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     if (info->pContextMenu)
     {
         LRESULT result;
-        if (S_OK == SHForwardContextMenuMsg(info->pContextMenu, uMsg, wParam,
-                                              lParam, &result, TRUE))
-            return TRUE | SetWindowLongPtr(hWnd, DWLP_MSGRESULT, result);
+        if (SHForwardContextMenuMsg(info->pContextMenu, uMsg, wParam,
+                                    lParam, &result, TRUE) == S_OK)
+        {
+            SetWindowLongPtr(hWnd, DWLP_MSGRESULT, result);
+            return TRUE;
+        }
     }
 
     switch (uMsg)
