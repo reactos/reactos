@@ -1,7 +1,6 @@
 /*
  * PROJECT:     shell32
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/shell32/shv_item_new.c
  * PURPOSE:     provides default context menu implementation
  * PROGRAMMERS: Johannes Anderwald (johannes.anderwald@reactos.org)
  */
@@ -384,7 +383,7 @@ CDefaultContextMenu::LoadDynamicContextMenuHandler(HKEY hKey, const CLSID *pclsi
     hr = pExtInit->Initialize(m_pidlFolder, m_pDataObj, hKey);
     if (FAILED(hr))
     {
-        ERR("IShellExtInit::Initialize failed.clsid %s hr 0x%x\n", wine_dbgstr_guid(pclsid), hr);
+        WARN("IShellExtInit::Initialize failed.clsid %s hr 0x%x\n", wine_dbgstr_guid(pclsid), hr);
         return hr;
     }
 

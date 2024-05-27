@@ -88,8 +88,6 @@ HKLM,"SOFTWARE\Classes\Applications\mspaint.exe\SupportedTypes",".jpeg",0x000000
 HKLM,"SOFTWARE\Classes\Applications\mspaint.exe\SupportedTypes",".jpe",0x00000000,""
 HKLM,"SOFTWARE\Classes\Applications\mspaint.exe\SupportedTypes",".jfif",0x00000000,""
 HKLM,"SOFTWARE\Classes\Applications\mspaint.exe\SupportedTypes",".gif",0x00000000,""
-; HKLM,"SOFTWARE\Classes\Applications\mspaint.exe\SupportedTypes",".emf",0x00000000,"" ; NOT SUPPORTED YET
-; HKLM,"SOFTWARE\Classes\Applications\mspaint.exe\SupportedTypes",".wmf",0x00000000,"" ; NOT SUPPORTED YET
 HKLM,"SOFTWARE\Classes\Applications\mspaint.exe\SupportedTypes",".tif",0x00000000,""
 HKLM,"SOFTWARE\Classes\Applications\mspaint.exe\SupportedTypes",".tiff",0x00000000,""
 HKLM,"SOFTWARE\Classes\Applications\mspaint.exe\SupportedTypes",".png",0x00000000,""
@@ -311,7 +309,7 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","Type",0x00000000,"radio"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","CheckedValue",0x00010001,0x00000002
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","ValueName",0x00000000,"Hidden"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","DefaultValue",0x00010001,0x00000002
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","DefaultValue",0x00010001,0x00000001
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","HKeyRoot",0x00010001,0x80000001
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","HelpID",0x00000000,"shell.hlp#51104"
 
@@ -321,7 +319,7 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","Type",0x00000000,"radio"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","CheckedValue",0x00010001,0x00000001
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","ValueName",0x00000000,"Hidden"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","DefaultValue",0x00010001,0x00000002
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","DefaultValue",0x00010001,0x00000001
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","HKeyRoot",0x00010001,0x80000001
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","HelpID",0x00000000,"shell.hlp#51105"
 
@@ -335,20 +333,6 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\HideFil
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\HideFileExt","UncheckedValue",0x00010001,0x00000000
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\HideFileExt","DefaultValue",0x00010001,0x00000000
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\HideFileExt","HelpID",0x00000000,""
-
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler",,0x00000012
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler","Type",0x00000000,"checkbox"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler","Text",0x00000000,"@shell32.dll,-30509"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler","HKeyRoot",0x00010001,0x80000001
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler","RegPath",0x00000000,"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler","ValueName",0x00000000,"NoNetCrawling"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler","CheckedValue",0x00010001,0x00000000
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler","UncheckedValue",0x00010001,0x00000001
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler","DefaultValue",0x00010001,0x00000000
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler","HelpID",0x00000000,"shell.hlp#51147"
-
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler\Policy",,0x00000012
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler\Policy\NoNetCrawling",,0x00000012
 
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\PersistBrowsers",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\PersistBrowsers","Type",0x00000000,"checkbox"
@@ -419,17 +403,6 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\SuperHi
 
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\SuperHidden\Policy",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\SuperHidden\Policy\DontShowSuperHidden",,0x00000012
-
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade",,0x00000012
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade","Type",0x00000000,"checkbox"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade","Text",0x00000000,"@shell32.dll,-30510"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade","HKeyRoot",0x00010001,0x80000001
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade","RegPath",0x00000000,"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade","ValueName",0x00000000,"WebViewBarricade"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade","CheckedValue",0x00010001,0x00000001
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade","UncheckedValue",0x00010001,0x00000000
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade","HelpID",0x00000000,"shell.hlp#51148"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade","DefaultValue",0x00010001,0x00000000
 
 ; Common shell folders
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders",,0x00000012
@@ -535,7 +508,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Print\Printers\Dummy Printer 
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Print\Printers\Dummy Printer On LPT1","Printer Driver",,"Dummy Printer Driver"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Print\Printers\Dummy Printer On LPT1","Status",0x00010001,0
 
-; Image File Execution Options (NtGlobalFlag with FLG_SHOW_LDR_SNAPS set for loadlib.exe) 
+; Image File Execution Options (NtGlobalFlag with FLG_SHOW_LDR_SNAPS set for loadlib.exe)
 HKLM,"Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\loadlib.exe","GlobalFlag",0x00000000,"0x02000000"
 ;HKLM,"Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\loaddll.exe","GlobalFlag",0x00010001,0x00000002
 ;HKLM,"Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\soffice.exe","GlobalFlag",0x00010001,0x00000002
@@ -1481,18 +1454,18 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","DefaultUserName",0
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","DefaultPassword",0x00000000,""
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\ScCertProp",,0x00000012
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\ScCertProp","DlLName",0x00020000,"wlnotify.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\ScCertProp","DllName",0x00020000,"wlnotify.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\ScCertProp","Lock",0x00000000,"SCardSuspendCertProp"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\ScCertProp","Logoff",0x00000000,"SCardStopCertProp"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\ScCertProp","Logon",0x00000000,"SCardStartCertProp"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\ScCertProp","Unlock",0x00000000,"SCardResumeCertProp"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\Schedule",,0x00000012
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\Schedule","DlLName",0x00020000,"wlnotify.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\Schedule","DllName",0x00020000,"wlnotify.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\Schedule","Logoff",0x00000000,"SchedEventLogoff"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\Schedule","StartShell",0x00000000,"SchedStartShell"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn","Disconnect",0x00000000,"SensDisconnectEvent"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn","DlLName",0x00020000,"wlnotify.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn","DllName",0x00020000,"wlnotify.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn","Lock",0x00000000,"SensLockEvent"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn","Logoff",0x00000000,"SensLogoffEvent"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn","Logon",0x00000000,"SensLogonEvent"
@@ -1506,7 +1479,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn","St
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn","Unlock",0x00000000,"SensUnlockEvent"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","Disconnect",0x00000000,"TSEventDisconnect"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","DlLName",0x00020000,"wlnotify.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","DllName",0x00020000,"wlnotify.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","Logoff",0x00000000,"TSEventLogoff"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","Logon",0x00000000,"TSEventLogon"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","PostShell",0x00000000,"TSEventPostShell"
@@ -1515,7 +1488,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","Shu
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","StartShell",0x00000000,"TSEventStartShell"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\termsrv","Startup",0x00000000,"TSEventStartup"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\wlballoon",,0x00000012
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\wlballoon","DlLName",0x00020000,"wlnotify.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\wlballoon","DllName",0x00020000,"wlnotify.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\wlballoon","Logoff",0x00000000,"UnregisterTicketExpiredNotificationEvent"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\wlballoon","Logon",0x00000000,"RegisterTicketExpiredNotificationEvent"
 
@@ -3363,7 +3336,6 @@ GMT_PLUS_13_A_DESC    ="(GMT+13:00) Nuku'alofa"
 GMT_PLUS_13_A_DAYLIGHT="Tonga (czas letni)"
 GMT_PLUS_13_A_STANDARD="Tonga (czas standardowy)"
 
-
 ; LANG_ROMANIAN SUBLANG_NEUTRAL
 [Strings.0018]
 COUNTRY_AD="Andorra, Principatul"
@@ -3939,7 +3911,6 @@ GMT_PLUS_13_A_DESC    ="(UTC+13:00) Nuku'alofa"
 GMT_PLUS_13_A_DAYLIGHT="Oră de Tonga diurnă"
 GMT_PLUS_13_A_STANDARD="Oră de Tonga standard"
 
-
 ; LANG_RUSSIAN SUBLANG_NEUTRAL
 [Strings.0019]
 COUNTRY_AD="Андорра"
@@ -4272,7 +4243,6 @@ GMT_PLUS_12_A_DESC      ="(GMT+12:00) Камчатка, Маршалловы о-
 GMT_PLUS_12_B_DESC      ="(GMT+12:00) Анадырь, Петропавловск-Камчатский"
 GMT_PLUS_12_C_DESC      ="(GMT+12:00) Окленд, Веллингтон"
 GMT_PLUS_13_A_DESC      ="(GMT+13:00) Нуку-алофа"
-
 
 ; LANG_UKRAINIAN SUBLANG_NEUTRAL
 [Strings.0022]
