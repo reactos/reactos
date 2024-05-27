@@ -1373,7 +1373,7 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nCm
 
     // Set wallpaper?
     BOOL bWallpaper = !!(fuOptions & OPTION_WALLPAPER);
-    g_bNoUI = bWallpaper;
+    g_bNoUI |= bWallpaper;
 
     if (g_bNoUI)
         registrySettings.WindowPlacement.showCmd = SW_HIDE; // Hide the main window
