@@ -1335,9 +1335,9 @@ VOID CMainWindow::TrackPopupMenu(POINT ptScreen, INT iSubMenu)
     ::DestroyMenu(hMenu);
 }
 
-#define OPTION_WALLPAPER           (1 << 0)
-#define OPTION_WALLPAPER_TILE      (1 << 1)
-#define OPTION_WALLPAPER_CENTERED  (1 << 2)
+#define OPTION_WALLPAPER           (1 << 0) // ReactOS specific!
+#define OPTION_WALLPAPER_TILE      (1 << 1) // ReactOS specific!
+#define OPTION_WALLPAPER_CENTERED  (1 << 2) // ReactOS specific!
 
 LPCWSTR ParseCommandLine(INT argc, WCHAR **argv, UINT *pfuOptions)
 {
@@ -1345,17 +1345,17 @@ LPCWSTR ParseCommandLine(INT argc, WCHAR **argv, UINT *pfuOptions)
     for (INT iarg = 1; iarg < argc; ++iarg)
     {
         LPCWSTR arg = argv[iarg];
-        if (lstrcmpiW(arg, L"/wallpaper") == 0)
+        if (lstrcmpiW(arg, L"/wallpaper") == 0) // ReactOS specific!
         {
             *pfuOptions |= OPTION_WALLPAPER;
             continue;
         }
-        if (lstrcmpiW(arg, L"/tile") == 0)
+        if (lstrcmpiW(arg, L"/tile") == 0) // ReactOS specific!
         {
             *pfuOptions |= OPTION_WALLPAPER | OPTION_WALLPAPER_TILE;
             continue;
         }
-        if (lstrcmpiW(arg, L"/center") == 0)
+        if (lstrcmpiW(arg, L"/center") == 0) // ReactOS specific!
         {
             *pfuOptions |= OPTION_WALLPAPER | OPTION_WALLPAPER_CENTERED;
             continue;
@@ -1408,7 +1408,7 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nCm
     mainWindow.ShowWindow(registrySettings.WindowPlacement.showCmd);
 
     // Set the desktop wallpaper
-    if (fuOptions & OPTION_WALLPAPER)
+    if (fuOptions & OPTION_WALLPAPER) // ReactOS specific!
     {
         INT nID = IDM_FILEASWALLPAPERSTRETCHED;
         if (!filename)
