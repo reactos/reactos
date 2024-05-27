@@ -110,6 +110,13 @@ typedef enum
 
 typedef int GPFIDL_FLAGS;
 
+typedef struct _SFVM_PROPPAGE_DATA
+{
+    DWORD dwReserved;
+    LPFNADDPROPSHEETPAGE pfn;
+    LPARAM lParam;
+} SFVM_PROPPAGE_DATA, *LPSFVM_PROPPAGE_DATA;
+
 UINT
 WINAPI
 SHAddFromPropSheetExtArray(

@@ -1355,17 +1355,13 @@ HRESULT CShellBrowser::DoFolderOptions()
     if (FAILED_UNEXPECTEDLY(hResult))
         return E_FAIL;
 
-// CORE-11140 : Disabled this bit, because it prevents the folder options from showing.
-//              It returns 'E_NOTIMPL'
-#if 0
-    if (fCurrentShellView != NULL)
+    if (fCurrentShellView)
     {
         hResult = fCurrentShellView->AddPropertySheetPages(
             0, AddFolderOptionsPage, reinterpret_cast<LPARAM>(&m_PropSheet));
         if (FAILED_UNEXPECTEDLY(hResult))
             return E_FAIL;
     }
-#endif
 
     // show sheet
     CStringW strFolderOptions(MAKEINTRESOURCEW(IDS_FOLDER_OPTIONS));

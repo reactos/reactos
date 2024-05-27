@@ -2662,9 +2662,11 @@ HRESULT WINAPI CDefView::GetCurrentInfo(LPFOLDERSETTINGS lpfs)
 
 HRESULT WINAPI CDefView::AddPropertySheetPages(DWORD dwReserved, LPFNADDPROPSHEETPAGE lpfn, LPARAM lparam)
 {
-    FIXME("(%p) stub\n", this);
+    TRACE("(%p)->(0x%lX, %p, %p)\n", this, dwReserved, lpfn, lparam);
 
-    return E_NOTIMPL;
+    SFVM_PROPPAGE_DATA Data = { dwReserved, lpfn, lparam };
+    _DoFolderViewCB(SFVM_ADDPROPERTYPAGES, 0, (LPARAM)&Data);
+    return S_OK;
 }
 
 HRESULT WINAPI CDefView::SaveViewState()
