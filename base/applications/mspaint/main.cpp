@@ -907,6 +907,9 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 ShowError(IDS_CANTSENDMAIL);
             }
             break;
+        case IDM_FILEASWALLPAPERRESET:
+            RegistrySettings::ResetWallpaper();
+            break;
         case IDM_FILEASWALLPAPERPLANE:
             RegistrySettings::SetWallpaper(g_szFileName, RegistrySettings::TILED);
             break;
@@ -1377,16 +1380,12 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nCm
     // Load settings from registry
     registrySettings.Load(nCmdShow);
 
-    // Save show setting
-    INT nOldCmdShow = registrySettings.WindowPlacement.showCmd;
-
+    // Parse the command line
     UINT fuOptions = 0;
     LPCWSTR filename = ParseCommandLine(__argc, __targv, &fuOptions);
+    g_bNoUI |= !!(fuOptions & OPTION_WALLPAPER);
 
-    // Set wallpaper?
-    BOOL bWallpaper = !!(fuOptions & OPTION_WALLPAPER);
-    g_bNoUI |= bWallpaper;
-
+    INT nOldCmdShow = registrySettings.WindowPlacement.showCmd; // Save old show setting
     if (g_bNoUI)
         registrySettings.WindowPlacement.showCmd = SW_HIDE; // Hide the main window
 
@@ -1407,17 +1406,17 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nCm
     // Make the window visible on the screen
     mainWindow.ShowWindow(registrySettings.WindowPlacement.showCmd);
 
-    // Set the wallpaper
-    if (bWallpaper)
+    // Set the desktop wallpaper
+    if (fuOptions & OPTION_WALLPAPER)
     {
+        INT nID = IDM_FILEASWALLPAPERSTRETCHED;
         if (!filename)
-            RegistrySettings::ResetWallpaper();
+            nID = IDM_FILEASWALLPAPERRESET;
         else if (fuOptions & OPTION_WALLPAPER_TILE)
-            mainWindow.PostMessage(WM_COMMAND, IDM_FILEASWALLPAPERPLANE, 0);
+            nID = IDM_FILEASWALLPAPERPLANE;
         else if (fuOptions & OPTION_WALLPAPER_CENTERED)
-            mainWindow.PostMessage(WM_COMMAND, IDM_FILEASWALLPAPERCENTERED, 0);
-        else
-            mainWindow.PostMessage(WM_COMMAND, IDM_FILEASWALLPAPERSTRETCHED, 0);
+            nID = IDM_FILEASWALLPAPERCENTERED;
+        mainWindow.PostMessage(WM_COMMAND, nID, 0);
     }
 
     if (g_bNoUI)

@@ -43,8 +43,6 @@ void RegistrySettings::ResetWallpaper()
     if (desktop.Open(HKEY_CURRENT_USER, L"Control Panel\\Desktop") == ERROR_SUCCESS)
     {
         desktop.SetStringValue(L"Wallpaper", L"");
-        desktop.SetStringValue(L"WallpaperStyle", L"0");
-        desktop.SetStringValue(L"TileWallpaper", L"0");
         desktop.SetStringValue(L"ConvertedWallpaper", L"");
         desktop.SetStringValue(L"OriginalWallpaper", L"");
     }
