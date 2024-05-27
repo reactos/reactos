@@ -1983,7 +1983,8 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
                 AutoArrange();
             break;
         case FCIDM_SHVIEW_SELECTALL:
-            m_ListView.SetItemState(-1, LVIS_SELECTED, LVIS_SELECTED);
+            if (_DoFolderViewCB(SFVM_CANSELECTALL, 0, 0) != S_FALSE)
+                m_ListView.SetItemState(-1, LVIS_SELECTED, LVIS_SELECTED);
             break;
         case FCIDM_SHVIEW_INVERTSELECTION:
             nCount = m_ListView.GetItemCount();
