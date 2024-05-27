@@ -815,11 +815,11 @@ BrFolder_OnCommand(BrFolder *info, UINT id)
 static void
 GetTreeViewItemContextMenuPos(HWND hWnd, HTREEITEM hItem, POINT *ppt)
 {
-    RECT r;
-    if (TreeView_GetItemRect(hWnd, hItem, &r, TRUE))
+    RECT rc;
+    if (TreeView_GetItemRect(hWnd, hItem, &rc, TRUE))
     {
-        ppt->x = (r.left + r.right) / 2;
-        ppt->y = (r.top + r.bottom) / 2;
+        ppt->x = (rc.left + rc.right) / 2;
+        ppt->y = (rc.top + rc.bottom) / 2;
     }
     ClientToScreen(hWnd, ppt);
 }
