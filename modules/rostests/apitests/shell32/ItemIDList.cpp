@@ -11,10 +11,44 @@
 
 enum { DIRBIT = 1, FILEBIT = 2 };
 
+static BYTE GetPIDLType(LPCITEMIDLIST pidl)
+{
+    return pidl && pidl->mkid.cb >= 3 ? (pidl->mkid.abID[0] & 0x7F) : 0;
+}
+
+struct FS95
+{
+    WORD cb;
+    BYTE type;
+    BYTE unknown;
+    UINT size;
+    WORD date, time;
+    WORD att;
+    CHAR name[ANYSIZE_ARRAY];
+
+    static BOOL IsFS(LPCITEMIDLIST p)
+    {
+        return (p && p->mkid.cb > 2) ? (p->mkid.abID[0] & 0x70) == 0x30 : FALSE;
+    }
+    static FS95* Validate(LPCITEMIDLIST p)
+    {
+        C_ASSERT(FIELD_OFFSET(FS95, name) == 14);
+        return p && p->mkid.cb > FIELD_OFFSET(FS95, name) && IsFS(p) ? (FS95*)p : NULL;
+    }
+};
+
 static int FileStruct_Att(LPCITEMIDLIST pidl)
 {
-    return pidl && pidl->mkid.cb > 14 ? *((WORD*)((BYTE*)(pidl) + 12)) : (1 << 31); // See FileStruct in pidl.h
+    C_ASSERT(FIELD_OFFSET(FS95, att) == 12);
+    FS95 *p = FS95::Validate(pidl);
+    return p ? p->att : (UINT(1) << 31);
 }
+
+#define TEST_CLSID(pidl, type, offset, clsid) \
+    do { \
+        ok_long(GetPIDLType(pidl), (type)); \
+        ok_int(*(CLSID*)((&pidl->mkid.abID[(offset) - 2])) == clsid, TRUE); \
+    } while (0)
 
 START_TEST(SHSimpleIDListFromPath)
 {
@@ -147,4 +181,23 @@ START_TEST(ILCreateFromPath)
         ok_long(item->mkid.abID[0] & 0x73, 0x30 | FILEBIT);
         ok_int(*(UINT*)(&item->mkid.abID[2]) > 1024 * 42, TRUE); // At least this large
     }
+}
+
+START_TEST(PIDL)
+{
+    LPITEMIDLIST pidl;
+
+    pidl = SHCloneSpecialIDList(NULL, CSIDL_DRIVES, FALSE);
+    if (pidl)
+        TEST_CLSID(ILFindLastID(pidl), 0x1f, 4, CLSID_MyComputer);
+    else
+        skip("?\n");
+    ILFree(pidl);
+
+    pidl = SHCloneSpecialIDList(NULL, CSIDL_PRINTERS, FALSE);
+    if (pidl)
+        TEST_CLSID(ILFindLastID(pidl), 0x71, 14, CLSID_Printers);
+    else
+        skip("?\n");
+    ILFree(pidl);
 }

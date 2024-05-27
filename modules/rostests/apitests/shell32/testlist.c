@@ -26,6 +26,7 @@ extern void func_OpenAs_RunDLL(void);
 extern void func_PathIsEqualOrSubFolder(void);
 extern void func_PathIsTemporary(void);
 extern void func_PathResolve(void);
+extern void func_PIDL(void);
 extern void func_RealShellExecuteEx(void);
 extern void func_SHAppBarMessage(void);
 extern void func_SHChangeNotify(void);
@@ -69,6 +70,7 @@ const struct test winetest_testlist[] =
     { "PathIsEqualOrSubFolder", func_PathIsEqualOrSubFolder },
     { "PathIsTemporary", func_PathIsTemporary },
     { "PathResolve", func_PathResolve },
+    { "PIDL", func_PIDL },
     { "RealShellExecuteEx", func_RealShellExecuteEx },
     { "SHAppBarMessage", func_SHAppBarMessage },
     { "SHChangeNotify", func_SHChangeNotify },
