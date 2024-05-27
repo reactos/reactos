@@ -1348,12 +1348,12 @@ LPCWSTR ParseCommandLine(INT argc, WCHAR **argv, UINT *pfuOptions)
         }
         if (lstrcmpiW(argv[iarg], L"/tile") == 0)
         {
-            *pfuOptions |= OPTION_WALLPAPER_TILE;
+            *pfuOptions |= OPTION_WALLPAPER | OPTION_WALLPAPER_TILE;
             continue;
         }
         if (lstrcmpiW(argv[iarg], L"/center") == 0)
         {
-            *pfuOptions |= OPTION_WALLPAPER_CENTERED;
+            *pfuOptions |= OPTION_WALLPAPER | OPTION_WALLPAPER_CENTERED;
             continue;
         }
         if (!filename)
