@@ -87,10 +87,10 @@ BrFolder_GetItemData(BrFolder *info, HTREEITEM hItem)
 }
 
 static SFGAOF
-BrFolder_GetItemAttributes(BrFolder *info, HTREEITEM hItem, UINT Att)
+BrFolder_GetItemAttributes(BrFolder *info, HTREEITEM hItem, SFGAOF Att)
 {
     BrItemData *item = BrFolder_GetItemData(info, hItem);
-    HRESULT hr = item ? item->lpsfParent->GetAttributesOf(1, &item->pidlChild, (SFGAOF*)&Att) : E_FAIL;
+    HRESULT hr = item ? item->lpsfParent->GetAttributesOf(1, &item->pidlChild, &Att) : E_FAIL;
     return SUCCEEDED(hr) ? Att : 0;
 }
 
