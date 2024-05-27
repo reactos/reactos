@@ -157,14 +157,6 @@ HKCR,"drvfile","",0x00000000,"Device Driver"
 HKCR,"drvfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-207"
 HKCR,"drvfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
 
-; Extensible Firmware Interface Executable
-HKCR,".efi","",0x00000000,"efifile"
-HKCR,".efi","Content Type",0x00000000,"application/octet-stream"
-HKCR,"efifile","",0x00000000,"Extensible Firmware Interface Executable"
-HKCR,"efifile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-221"
-HKCR,"efifile","NoOpen",0x00000000,""
-HKCR,"efifile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
-
 ; Applications
 HKCR,".exe","",0x00000000,"exefile"
 HKCR,".exe","Content Type",0x00000000,"application/x-msdownload"
