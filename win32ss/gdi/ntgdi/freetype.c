@@ -476,9 +476,7 @@ VOID DumpFontSubstList(VOID)
          pListEntry != pHead;
          pListEntry = pListEntry->Flink)
     {
-        pSubstEntry =
-            (PFONTSUBST_ENTRY)CONTAINING_RECORD(pListEntry, FONT_ENTRY, ListEntry);
-
+        pSubstEntry = CONTAINING_RECORD(pListEntry, FONTSUBST_ENTRY, ListEntry);
         DumpFontSubstEntry(pSubstEntry);
     }
 }
@@ -742,7 +740,7 @@ IntFreeFontSubstList(PLIST_ENTRY pHead)
     for (pEntry = pHead->Flink; pEntry != pHead; pEntry = pNextEntry)
     {
         pNextEntry = pEntry->Flink;
-        pSubstEntry = (PFONTSUBST_ENTRY)CONTAINING_RECORD(pEntry, FONT_ENTRY, ListEntry);
+        pSubstEntry = CONTAINING_RECORD(pEntry, FONTSUBST_ENTRY, ListEntry);
         ExFreePoolWithTag(pSubstEntry, TAG_FONT);
     }
 
@@ -858,8 +856,7 @@ SubstituteFontByList(PLIST_ENTRY        pHead,
          pListEntry != pHead;
          pListEntry = pListEntry->Flink)
     {
-        pSubstEntry =
-            (PFONTSUBST_ENTRY)CONTAINING_RECORD(pListEntry, FONT_ENTRY, ListEntry);
+        pSubstEntry = CONTAINING_RECORD(pListEntry, FONTSUBST_ENTRY, ListEntry);
 
         CharSets[FONTSUBST_FROM] = pSubstEntry->CharSets[FONTSUBST_FROM];
 
