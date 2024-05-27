@@ -19,6 +19,9 @@ CFontsDialog fontsDialog;
 
 void ShowError(INT stringID, ...)
 {
+    if (g_bNoUI)
+        return;
+
     va_list va;
     va_start(va, stringID);
 

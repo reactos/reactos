@@ -262,8 +262,7 @@ HBITMAP DoLoadImageFile(HWND hwnd, LPCWSTR name, BOOL fIsMainFile)
     HANDLE hFind = ::FindFirstFileW(name, &find);
     if (hFind == INVALID_HANDLE_VALUE) // does not exist
     {
-        if (!g_bNoUI)
-            ShowError(IDS_LOADERRORTEXT, name);
+        ShowError(IDS_LOADERRORTEXT, name);
         return NULL;
     }
     ::FindClose(hFind);
@@ -287,8 +286,7 @@ HBITMAP DoLoadImageFile(HWND hwnd, LPCWSTR name, BOOL fIsMainFile)
     if (FAILED(hr))
     {
         ATLTRACE("hr: 0x%08lX\n", hr);
-        if (!g_bNoUI)
-            ShowError(IDS_LOADERRORTEXT, name);
+        ShowError(IDS_LOADERRORTEXT, name);
         return NULL;
     }
 
