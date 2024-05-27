@@ -20,7 +20,7 @@ list(APPEND UCRT_HEAP_SOURCES
     heap/recalloc.cpp
 )
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(DBG)
     list(APPEND UCRT_HEAP_SOURCES
         heap/debug_heap.cpp
         heap/debug_heap_hook.cpp
