@@ -1334,14 +1334,14 @@ VOID CMainWindow::TrackPopupMenu(POINT ptScreen, INT iSubMenu)
 
 #define OPTION_WALLPAPER (1 << 0)
 
-LPCWSTR ParseCommandLine(INT argc, WCHAR **argv, UINT *puFlags)
+LPCWSTR ParseCommandLine(INT argc, WCHAR **argv, UINT *pfuOptions)
 {
     LPCWSTR filename = NULL;
     for (INT iarg = 1; iarg < argc; ++iarg)
     {
         if (lstrcmpiW(argv[iarg], L"/wallpaper") == 0)
         {
-            *puFlags |= OPTION_WALLPAPER;
+            *pfuOptions |= OPTION_WALLPAPER;
             continue;
         }
         if (!filename)
@@ -1368,11 +1368,11 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nCm
     // Save show setting
     INT nOldCmdShow = registrySettings.WindowPlacement.showCmd;
 
-    UINT uFlags = 0;
-    LPCWSTR filename = ParseCommandLine(__argc, __targv, &uFlags);
+    UINT fuOptions = 0;
+    LPCWSTR filename = ParseCommandLine(__argc, __targv, &fuOptions);
 
     // Set wallpaper?
-    BOOL bWallpaper = !!(uFlags & OPTION_WALLPAPER);
+    BOOL bWallpaper = !!(fuOptions & OPTION_WALLPAPER);
     g_bNoUI = bWallpaper;
 
     if (g_bNoUI)
