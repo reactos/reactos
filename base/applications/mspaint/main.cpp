@@ -1344,23 +1344,24 @@ LPCWSTR ParseCommandLine(INT argc, WCHAR **argv, UINT *pfuOptions)
     LPCWSTR filename = NULL;
     for (INT iarg = 1; iarg < argc; ++iarg)
     {
-        if (lstrcmpiW(argv[iarg], L"/wallpaper") == 0)
+        LPCWSTR arg = argv[iarg];
+        if (lstrcmpiW(arg, L"/wallpaper") == 0)
         {
             *pfuOptions |= OPTION_WALLPAPER;
             continue;
         }
-        if (lstrcmpiW(argv[iarg], L"/tile") == 0)
+        if (lstrcmpiW(arg, L"/tile") == 0)
         {
             *pfuOptions |= OPTION_WALLPAPER | OPTION_WALLPAPER_TILE;
             continue;
         }
-        if (lstrcmpiW(argv[iarg], L"/center") == 0)
+        if (lstrcmpiW(arg, L"/center") == 0)
         {
             *pfuOptions |= OPTION_WALLPAPER | OPTION_WALLPAPER_CENTERED;
             continue;
         }
         if (!filename)
-            filename = argv[iarg];
+            filename = arg;
     }
     return filename;
 }
