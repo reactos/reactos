@@ -2238,6 +2238,11 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                     PIDLIST_ABSOLUTE pidlFull = ILCombine(m_pidlParent, pidl);
                     SHGetPathFromIDListW(pidlFull, szFullPath);
 
+                    INT cchLimit = 0;
+                    _DoFolderViewCB(SFVM_GETNAMELENGTH, (WPARAM)pidlFull, (LPARAM)&cchLimit);
+                    if (cchLimit)
+                        ::SendMessageW(hEdit, EM_SETLIMITTEXT, cchLimit, 0);
+
                     if (!SHELL_FS_HideExtension(szFullPath))
                     {
                         LPWSTR pszText = lpdi->item.pszText;
