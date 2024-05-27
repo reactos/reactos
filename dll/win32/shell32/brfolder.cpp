@@ -478,7 +478,7 @@ BrFolder_Treeview_Rename(BrFolder *info, NMTVDISPINFOW *pnmtv)
     item.pszText = pnmtv->item.pszText;
     TreeView_SetItem(info->hwndTreeView, &item);
 
-    nmtv.itemNew.lParam = item.lParam;
+    nmtv.itemNew.lParam = (LPARAM)item_data;
     BrFolder_Treeview_Changed(info, &nmtv);
     return 0;
 }
