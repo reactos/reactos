@@ -711,67 +711,41 @@ InitFontSupport(VOID)
     return TRUE;
 }
 
-static VOID
-IntFreeFontCacheList(PLIST_ENTRY pHead)
+VOID FASTCALL FreeFontSupport(VOID)
 {
-    PLIST_ENTRY pEntry, pNextEntry;
+    PLIST_ENTRY pHead, pEntry;
     PFONT_CACHE_ENTRY pFontCache;
+    PFONTSUBST_ENTRY pSubstEntry;
+    PFONT_ENTRY pFontEntry;
 
-    ASSERT_FREETYPE_LOCK_HELD();
+    IntLockGlobalFonts();
 
-    for (pEntry = pHead->Flink; pEntry != pHead; pEntry = pNextEntry)
+    // Free font cache list
+    pHead = &g_FontCacheListHead;
+    while (!IsListEmpty(pHead))
     {
-        pNextEntry = pEntry->Flink;
+        pEntry = RemoveHeadList(pHead);
         pFontCache = CONTAINING_RECORD(pEntry, FONT_CACHE_ENTRY, ListEntry);
         RemoveCachedEntry(pFontCache);
     }
 
-    pHead->Flink = pHead;
-}
-
-static VOID
-IntFreeFontSubstList(PLIST_ENTRY pHead)
-{
-    PLIST_ENTRY pEntry, pNextEntry;
-    PFONTSUBST_ENTRY pSubstEntry;
-
-    ASSERT_FREETYPE_LOCK_HELD();
-
-    for (pEntry = pHead->Flink; pEntry != pHead; pEntry = pNextEntry)
+    // Free font subst list
+    pHead = &g_FontSubstListHead;
+    while (!IsListEmpty(pHead))
     {
-        pNextEntry = pEntry->Flink;
+        pEntry = RemoveHeadList(pHead);
         pSubstEntry = CONTAINING_RECORD(pEntry, FONTSUBST_ENTRY, ListEntry);
         ExFreePoolWithTag(pSubstEntry, TAG_FONT);
     }
 
-    pHead->Flink = pHead;
-}
-
-static VOID
-IntFreeFontList(PLIST_ENTRY pHead)
-{
-    PLIST_ENTRY pEntry, pNextEntry;
-    PFONT_ENTRY pFontEntry;
-
-    ASSERT_FREETYPE_LOCK_HELD();
-
-    for (pEntry = pHead->Flink; pEntry != pHead; pEntry = pNextEntry)
+    // Free font list
+    pHead = &g_FontListHead;
+    while (!IsListEmpty(pHead))
     {
-        pNextEntry = pEntry->Flink;
+        pEntry = RemoveHeadList(pHead);
         pFontEntry = CONTAINING_RECORD(pEntry, FONT_ENTRY, ListEntry);
         CleanupFontEntry(pFontEntry);
     }
-
-    pHead->Flink = pHead;
-}
-
-VOID FASTCALL FreeFontSupport(VOID)
-{
-    IntLockGlobalFonts();
-
-    IntFreeFontCacheList(&g_FontCacheListHead);
-    IntFreeFontSubstList(&g_FontSubstListHead);
-    IntFreeFontList(&g_FontListHead);
 
     if (g_FreeTypeLibrary)
     {
