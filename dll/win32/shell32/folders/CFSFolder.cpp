@@ -1507,12 +1507,11 @@ HRESULT WINAPI CFSFolder::SetNameOf(
     else
         lstrcpynW(szDest, lpName, MAX_PATH);
 
-    if(!(dwFlags & SHGDN_FORPARSING) && !bIsFolder && SHELL_FS_HideExtension(szSrc)) {
-        WCHAR *ext = PathFindExtensionW(szSrc);
-        if(*ext != '\0') {
-            INT len = wcslen(szDest);
-            lstrcpynW(szDest + len, ext, MAX_PATH - len);
-        }
+    if (!(dwFlags & SHGDN_FORPARSING) && !bIsFolder && SHELL_FS_HideExtension(szSrc))
+    {
+        LPCWSTR ext = PathFindExtensionW(szSrc);
+        if (*ext)
+            PathAddExtensionW(szDest, ext);
     }
 
     HRESULT hr = S_OK;
