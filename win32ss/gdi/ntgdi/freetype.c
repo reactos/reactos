@@ -78,7 +78,7 @@ static UNICODE_STRING g_FontRegPath =
    to serialize access to it */
 static PFAST_MUTEX      g_FreeTypeLock;
 
-static LIST_ENTRY       g_FontListHead;
+static RTL_STATIC_LIST_HEAD(g_FontListHead);
 static PFAST_MUTEX      g_FontListLock;
 static BOOL             g_RenderingEnabled = TRUE;
 
@@ -105,7 +105,7 @@ static BOOL             g_RenderingEnabled = TRUE;
 
 #define MAX_FONT_CACHE 256
 
-static LIST_ENTRY g_FontCacheListHead;
+static RTL_STATIC_LIST_HEAD(g_FontCacheListHead);
 static UINT g_FontCacheNumEntries;
 
 static PWCHAR g_ElfScripts[32] =   /* These are in the order of the fsCsb[0] bits */
@@ -673,8 +673,6 @@ InitFontSupport(VOID)
 {
     ULONG ulError;
 
-    InitializeListHead(&g_FontListHead);
-    InitializeListHead(&g_FontCacheListHead);
     g_FontCacheNumEntries = 0;
     /* Fast Mutexes must be allocated from non paged pool */
     g_FontListLock = ExAllocatePoolWithTag(NonPagedPool, sizeof(FAST_MUTEX), TAG_INTERNAL_SYNC);
@@ -713,6 +711,83 @@ InitFontSupport(VOID)
 #endif
 
     return TRUE;
+}
+
+static VOID
+IntFreeFontCache(PLIST_ENTRY pHead)
+{
+    PLIST_ENTRY pEntry, pNextEntry;
+    PFONT_CACHE_ENTRY pFontCache;
+
+    ASSERT_FREETYPE_LOCK_HELD();
+
+    for (pEntry = pHead->Flink; pEntry != pHead; pEntry = pNextEntry)
+    {
+        pNextEntry = pEntry->Flink;
+        pFontCache = CONTAINING_RECORD(pEntry, FONT_CACHE_ENTRY, ListEntry);
+        RemoveCachedEntry(pFontCache);
+    }
+
+    pHead->Flink = pHead;
+}
+
+static VOID
+IntFreeFontSubstList(PLIST_ENTRY pHead)
+{
+    PLIST_ENTRY pEntry, pNextEntry;
+    PFONTSUBST_ENTRY pSubstEntry;
+
+    ASSERT_FREETYPE_LOCK_HELD();
+
+    for (pEntry = pHead->Flink; pEntry != pHead; pEntry = pNextEntry)
+    {
+        pNextEntry = pEntry->Flink;
+        pSubstEntry = (PFONTSUBST_ENTRY)CONTAINING_RECORD(pEntry, FONT_ENTRY, ListEntry);
+        ExFreePoolWithTag(pSubstEntry, TAG_FONT);
+    }
+
+    pHead->Flink = pHead;
+}
+
+static VOID
+IntFreeFonts(PLIST_ENTRY pHead)
+{
+    PLIST_ENTRY pEntry, pNextEntry;
+    PFONT_ENTRY pFontEntry;
+
+    ASSERT_FREETYPE_LOCK_HELD();
+
+    for (pEntry = pHead->Flink; pEntry != pHead; pEntry = pNextEntry)
+    {
+        pNextEntry = pEntry->Flink;
+        pFontEntry = CONTAINING_RECORD(pEntry, FONT_ENTRY, ListEntry);
+        CleanupFontEntry(pFontEntry);
+    }
+
+    pHead->Flink = pHead;
+}
+
+VOID FASTCALL FreeFontSupport(VOID)
+{
+    IntLockGlobalFonts();
+
+    IntFreeFontCache(&g_FontCacheListHead);
+    IntFreeFontSubstList(&g_FontSubstListHead);
+    IntFreeFonts(&g_FontListHead);
+
+    if (g_FreeTypeLibrary)
+    {
+        FT_Done_Library(g_FreeTypeLibrary);
+        g_FreeTypeLibrary = NULL;
+    }
+
+    IntUnLockGlobalFonts();
+
+    ExFreePoolWithTag(g_FontListLock, TAG_INTERNAL_SYNC);
+    g_FontListLock = NULL;
+
+    ExFreePoolWithTag(g_FreeTypeLock, TAG_INTERNAL_SYNC);
+    g_FreeTypeLock = NULL;
 }
 
 static LONG IntNormalizeAngle(LONG nTenthsOfDegrees)
