@@ -1332,7 +1332,9 @@ VOID CMainWindow::TrackPopupMenu(POINT ptScreen, INT iSubMenu)
     ::DestroyMenu(hMenu);
 }
 
-#define OPTION_WALLPAPER (1 << 0)
+#define OPTION_WALLPAPER           (1 << 0)
+#define OPTION_WALLPAPER_TILE      (1 << 1)
+#define OPTION_WALLPAPER_CENTERED  (1 << 2)
 
 LPCWSTR ParseCommandLine(INT argc, WCHAR **argv, UINT *pfuOptions)
 {
@@ -1342,6 +1344,16 @@ LPCWSTR ParseCommandLine(INT argc, WCHAR **argv, UINT *pfuOptions)
         if (lstrcmpiW(argv[iarg], L"/wallpaper") == 0)
         {
             *pfuOptions |= OPTION_WALLPAPER;
+            continue;
+        }
+        if (lstrcmpiW(argv[iarg], L"/tile") == 0)
+        {
+            *pfuOptions |= OPTION_WALLPAPER_TILE;
+            continue;
+        }
+        if (lstrcmpiW(argv[iarg], L"/center") == 0)
+        {
+            *pfuOptions |= OPTION_WALLPAPER_CENTERED;
             continue;
         }
         if (!filename)
@@ -1396,9 +1408,18 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nCm
     if (bWallpaper)
     {
         if (filename && filename[0])
-            mainWindow.PostMessage(WM_COMMAND, IDM_FILEASWALLPAPERSTRETCHED, 0);
+        {
+            if (fuOptions & OPTION_WALLPAPER_TILE)
+                mainWindow.PostMessage(WM_COMMAND, IDM_FILEASWALLPAPERPLANE, 0);
+            else if (fuOptions & OPTION_WALLPAPER_CENTERED)
+                mainWindow.PostMessage(WM_COMMAND, IDM_FILEASWALLPAPERCENTERED, 0);
+            else
+                mainWindow.PostMessage(WM_COMMAND, IDM_FILEASWALLPAPERSTRETCHED, 0);
+        }
         else
+        {
             RegistrySettings::ResetWallpaper();
+        }
     }
 
     if (g_bNoUI)
