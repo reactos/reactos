@@ -570,7 +570,7 @@ LRESULT CMainWindow::OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
     canvasWindow.Create(m_hWnd, rcEmpty, NULL, style, WS_EX_CLIENTEDGE);
 
     // Create and show the miniature if necessary
-    if (registrySettings.ShowThumbnail)
+    if (registrySettings.ShowThumbnail && !g_bNoUI)
     {
         miniature.DoCreate(m_hWnd);
         miniature.ShowWindow(SW_SHOWNOACTIVATE);
