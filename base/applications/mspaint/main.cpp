@@ -907,7 +907,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 ShowError(IDS_CANTSENDMAIL);
             }
             break;
-        case IDM_FILEASWALLPAPERRESET:
+        case IDM_RESETWALLPAPER:
             RegistrySettings::ResetWallpaper();
             break;
         case IDM_FILEASWALLPAPERPLANE:
@@ -1412,7 +1412,7 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nCm
     {
         INT nID = IDM_FILEASWALLPAPERSTRETCHED;
         if (!filename)
-            nID = IDM_FILEASWALLPAPERRESET;
+            nID = IDM_RESETWALLPAPER;
         else if (fuOptions & OPTION_WALLPAPER_TILE)
             nID = IDM_FILEASWALLPAPERPLANE;
         else if (fuOptions & OPTION_WALLPAPER_CENTERED)

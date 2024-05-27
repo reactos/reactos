@@ -107,7 +107,7 @@
 #define IDM_CTRL_MINUS  291
 
 #define IDM_CROPSELECTION 292
-#define IDM_FILEASWALLPAPERRESET 293
+#define IDM_RESETWALLPAPER 293
 
 /* the following 16 numbers need to be in order, increasing by 1 */
 #define ID_FREESEL  600
