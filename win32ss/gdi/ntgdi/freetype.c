@@ -714,7 +714,7 @@ InitFontSupport(VOID)
 }
 
 static VOID
-IntFreeFontCache(PLIST_ENTRY pHead)
+IntFreeFontCacheList(PLIST_ENTRY pHead)
 {
     PLIST_ENTRY pEntry, pNextEntry;
     PFONT_CACHE_ENTRY pFontCache;
@@ -750,7 +750,7 @@ IntFreeFontSubstList(PLIST_ENTRY pHead)
 }
 
 static VOID
-IntFreeFonts(PLIST_ENTRY pHead)
+IntFreeFontList(PLIST_ENTRY pHead)
 {
     PLIST_ENTRY pEntry, pNextEntry;
     PFONT_ENTRY pFontEntry;
@@ -771,9 +771,9 @@ VOID FASTCALL FreeFontSupport(VOID)
 {
     IntLockGlobalFonts();
 
-    IntFreeFontCache(&g_FontCacheListHead);
+    IntFreeFontCacheList(&g_FontCacheListHead);
     IntFreeFontSubstList(&g_FontSubstListHead);
-    IntFreeFonts(&g_FontListHead);
+    IntFreeFontList(&g_FontListHead);
 
     if (g_FreeTypeLibrary)
     {
