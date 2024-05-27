@@ -1399,7 +1399,10 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nCm
 
     // Initialize imageModel
     if (!filename || !filename[0] || !DoLoadImageFile(mainWindow, filename, TRUE))
+    {
         InitializeImage(NULL, NULL, FALSE);
+        filename = NULL;
+    }
 
     // Make the window visible on the screen
     mainWindow.ShowWindow(registrySettings.WindowPlacement.showCmd);
@@ -1407,19 +1410,14 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nCm
     // Set the wallpaper
     if (bWallpaper)
     {
-        if (filename && filename[0])
-        {
-            if (fuOptions & OPTION_WALLPAPER_TILE)
-                mainWindow.PostMessage(WM_COMMAND, IDM_FILEASWALLPAPERPLANE, 0);
-            else if (fuOptions & OPTION_WALLPAPER_CENTERED)
-                mainWindow.PostMessage(WM_COMMAND, IDM_FILEASWALLPAPERCENTERED, 0);
-            else
-                mainWindow.PostMessage(WM_COMMAND, IDM_FILEASWALLPAPERSTRETCHED, 0);
-        }
-        else
-        {
+        if (!filename)
             RegistrySettings::ResetWallpaper();
-        }
+        else if (fuOptions & OPTION_WALLPAPER_TILE)
+            mainWindow.PostMessage(WM_COMMAND, IDM_FILEASWALLPAPERPLANE, 0);
+        else if (fuOptions & OPTION_WALLPAPER_CENTERED)
+            mainWindow.PostMessage(WM_COMMAND, IDM_FILEASWALLPAPERCENTERED, 0);
+        else
+            mainWindow.PostMessage(WM_COMMAND, IDM_FILEASWALLPAPERSTRETCHED, 0);
     }
 
     if (g_bNoUI)
