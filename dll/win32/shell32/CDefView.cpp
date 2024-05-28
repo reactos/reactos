@@ -26,7 +26,7 @@
 
 /*
 TODO:
-- Load/Save the view state from/into the stream provided by the ShellBrowser.
+- Load/Save the view state from/into the stream provided by the ShellBrowser unless FWF_NOBROWSERVIEWSTATE is set.
 - When editing starts on item, set edit text to for editing value.
 - Fix shell view to handle view mode popup exec.
 - The background context menu should have a pidl just like foreground menus. This
@@ -41,11 +41,27 @@ TODO:
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+// It would be easier to allocate these from 1 and up but the original code used the entire
+// FCIDM_SHVIEWFIRST..FCIDM_SHVIEWLAST range when dealing with IContextMenu and to avoid
+// breaking anything relying on this we will allocate our ranges from the end instead.
+enum  {
+    DEFVIEW_ARRANGESORT_MAXENUM = 9, // Limit the number of the visible columns we will display in the submenu
+    DEFVIEW_ARRANGESORT_MAX = DEFVIEW_ARRANGESORT_MAXENUM + 1, // Reserve one extra for the current sort-by column
+    DVIDM_ARRANGESORT_LAST = FCIDM_SHVIEWLAST,
+    DVIDM_ARRANGESORT_FIRST = DVIDM_ARRANGESORT_LAST - (DEFVIEW_ARRANGESORT_MAX - 1),
+
+    DVIDM_CONTEXTMENU_LAST = DVIDM_ARRANGESORT_FIRST - 1,
+    // FIXME: FCIDM_SHVIEWFIRST is 0 and using that with QueryContextMenu is a
+    // bad idea because it hides bugs related to the ids in ici.lpVerb.
+    // CONTEXT_MENU_BASE_ID acknowledges this but failed to apply the fix everywhere.
+    DVIDM_CONTEXTMENU_FIRST = FCIDM_SHVIEWFIRST,
+};
+#undef FCIDM_SHVIEWLAST // Don't use this constant, change DVIDM_CONTEXTMENU_LAST if you need a new id.
+
 typedef struct
 {
     BOOL    bIsAscending;
-    INT     nHeaderID;
-    INT     nLastHeaderID;
+    INT     ListColumn;
 } LISTVIEW_SORT_INFO, *LPLISTVIEW_SORT_INFO;
 
 #define SHV_CHANGE_NOTIFY   (WM_USER + 0x1111)
@@ -109,6 +125,64 @@ struct MenuCleanup
     }
 };
 
+static BOOL AppendMenuItem(HMENU hMenu, UINT MF, UINT Id, LPCWSTR String, SIZE_T Data = 0)
+{
+    MENUITEMINFOW mii;
+    mii.cbSize = sizeof(mii);
+    mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_DATA | MIIM_STATE;
+    mii.fState = MF & (MFS_CHECKED | MFS_DISABLED);
+    mii.fType = MF & ~mii.fState;
+    mii.wID = Id;
+    mii.dwTypeData = const_cast<LPWSTR>(String);
+    mii.dwItemData = Data;
+    return InsertMenuItemW(hMenu, -1, TRUE, &mii);
+}
+
+static SIZE_T GetMenuItemDataById(HMENU hMenu, UINT Id)
+{
+    MENUITEMINFOW mii;
+    mii.cbSize = FIELD_OFFSET(MENUITEMINFOW, hbmpItem);
+    mii.fMask = MIIM_DATA;
+    if (GetMenuItemInfoW(hMenu, Id, FALSE, &mii))
+        return mii.dwItemData;
+    else
+        return 0;
+}
+
+static HMENU GetSubmenuByID(HMENU hmenu, UINT id)
+{
+    MENUITEMINFOW mii = {sizeof(mii), MIIM_SUBMENU};
+    if (::GetMenuItemInfoW(hmenu, id, FALSE, &mii))
+        return mii.hSubMenu;
+
+    return NULL;
+}
+
+/* ReallyGetMenuItemID returns the id of an item even if it opens a submenu,
+   GetMenuItemID returns -1 if the specified item opens a submenu */
+static UINT ReallyGetMenuItemID(HMENU hmenu, int i)
+{
+    MENUITEMINFOW mii = {sizeof(mii), MIIM_ID};
+    if (::GetMenuItemInfoW(hmenu, i, TRUE, &mii))
+        return mii.wID;
+
+    return UINT_MAX;
+}
+
+static UINT CalculateCharWidth(HWND hwnd)
+{
+    UINT ret = 0;
+    HDC hDC = GetDC(hwnd);
+    if (hDC)
+    {
+        HGDIOBJ hOrg = SelectObject(hDC, (HGDIOBJ)SendMessage(hwnd, WM_GETFONT, 0, 0));
+        ret = GdiGetCharDimensions(hDC, NULL, NULL);
+        SelectObject(hDC, hOrg);
+        ReleaseDC(hwnd, hDC);
+    }
+    return ret;
+}
+
 class CDefView :
     public CWindowImpl<CDefView, CWindow, CControlWinTraits>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -124,6 +198,7 @@ class CDefView :
 private:
     CComPtr<IShellFolder>     m_pSFParent;
     CComPtr<IShellFolder2>    m_pSF2Parent;
+    CComPtr<IShellDetails>    m_pSDParent;
     CComPtr<IShellFolderViewCB> m_pShellFolderViewCB;
     CComPtr<IShellBrowser>    m_pShellBrowser;
     CComPtr<ICommDlgBrowser>  m_pCommDlgBrowser;
@@ -140,6 +215,7 @@ private:
     UINT                      m_cidl;
     PCUITEMID_CHILD          *m_apidl;
     PIDLIST_ABSOLUTE          m_pidlParent;
+    HDPA                      m_ListToFolderColMap;
     LISTVIEW_SORT_INFO        m_sortInfo;
     ULONG                     m_hNotify;            // Change notification handle
     HACCEL                    m_hAccel;
@@ -170,7 +246,7 @@ private:
     HICON                     m_hMyComputerIcon;
 
     HRESULT _MergeToolbar();
-    BOOL _Sort();
+    BOOL _Sort(int Col = -1);
     HRESULT _DoFolderViewCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
     HRESULT _GetSnapToGrid();
     void _MoveSelectionOnAutoArrange(POINT pt);
@@ -193,6 +269,13 @@ public:
     BOOL InitList();
     static INT CALLBACK ListViewCompareItems(LPARAM lParam1, LPARAM lParam2, LPARAM lpData);
 
+    HRESULT MapFolderColumnToListColumn(UINT FoldCol);
+    HRESULT MapListColumnToFolderColumn(UINT ListCol);
+    HRESULT GetDetailsByFolderColumn(PCUITEMID_CHILD pidl, UINT FoldCol, SHELLDETAILS &sd);
+    HRESULT GetDetailsByListColumn(PCUITEMID_CHILD pidl, UINT ListCol, SHELLDETAILS &sd);
+    HRESULT LoadColumn(UINT FoldCol, UINT ListCol, BOOL Insert);
+    HRESULT LoadColumns(UINT *pColList = NULL, UINT ColListCount = 0);
+    void ColumnListChanged();
     PCUITEMID_CHILD _PidlByItem(int i);
     PCUITEMID_CHILD _PidlByItem(LVITEM& lvItem);
     int LV_FindItemByPidl(PCUITEMID_CHILD pidl);
@@ -203,12 +286,13 @@ public:
     void LV_RefreshIcon(INT iItem);
     void LV_RefreshIcons();
     static INT CALLBACK fill_list(LPVOID ptr, LPVOID arg);
-    HRESULT FillList();
+    HRESULT FillList(BOOL IsRefreshCommand = TRUE);
     HRESULT FillFileMenu();
     HRESULT FillEditMenu();
     HRESULT FillViewMenu();
     HRESULT FillArrangeAsMenu(HMENU hmenuArrange);
     HRESULT CheckViewMode(HMENU hmenuView);
+    LRESULT DoColumnContextMenu(LRESULT lParam);
     UINT GetSelections();
     HRESULT OpenSelectedItems();
     void OnDeactivate();
@@ -423,11 +507,6 @@ public:
     END_COM_MAP()
 };
 
-// menu items
-#define IDM_VIEW_FILES  (FCIDM_SHVIEWFIRST + 0x500)
-#define IDM_VIEW_IDW    (FCIDM_SHVIEWFIRST + 0x501)
-#define IDM_MYFILEITEM  (FCIDM_SHVIEWFIRST + 0x502)
-
 #define ID_LISTVIEW     1
 
 // windowsx.h
@@ -468,6 +547,7 @@ CDefView::CDefView() :
     m_viewinfo_data.clrTextBack = GetSysColor(COLOR_WINDOW);
     m_viewinfo_data.hbmBack = NULL;
 
+    m_ListToFolderColMap = DPA_Create(0);
     m_hMyComputerIcon = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_COMPUTER_DESKTOP));
 }
 
@@ -489,12 +569,14 @@ CDefView::~CDefView()
     }
 
     SHFree(m_apidl);
+    DPA_Destroy(m_ListToFolderColMap);
 }
 
 HRESULT WINAPI CDefView::Initialize(IShellFolder *shellFolder)
 {
     m_pSFParent = shellFolder;
     shellFolder->QueryInterface(IID_PPV_ARG(IShellFolder2, &m_pSF2Parent));
+    shellFolder->QueryInterface(IID_PPV_ARG(IShellDetails, &m_pSDParent));
 
     return S_OK;
 }
@@ -745,8 +827,7 @@ BOOL CDefView::CreateList()
     m_ListView.SetExtendedListViewStyle(ListExStyle);
 
     m_sortInfo.bIsAscending = TRUE;
-    m_sortInfo.nHeaderID = -1;
-    m_sortInfo.nLastHeaderID = -1;
+    m_sortInfo.ListColumn = -1;
 
     /*  UpdateShellSettings(); */
     return TRUE;
@@ -811,40 +892,243 @@ void CDefView::UpdateListColors()
 // adds all needed columns to the shellview
 BOOL CDefView::InitList()
 {
-    SHELLDETAILS sd;
-    WCHAR szTemp[50];
     HIMAGELIST big_icons, small_icons;
 
     TRACE("%p\n", this);
 
     m_ListView.DeleteAllItems();
 
-    m_hMenuArrangeModes = CreateMenu();
-
-    if (m_pSF2Parent)
-    {
-        for (int i = 0; 1; i++)
-        {
-            if (FAILED(m_pSF2Parent->GetDetailsOf(NULL, i, &sd)))
-                break;
-            StrRetToStrNW( szTemp, 50, &sd.str, NULL);
-            m_ListView.InsertColumn(i, szTemp, sd.fmt, sd.cxChar * 8);
-
-            InsertMenuW(m_hMenuArrangeModes, -1, MF_STRING, 0x30 + i,  szTemp);
-        }
-
-        InsertMenuW(m_hMenuArrangeModes, -1, MF_BYPOSITION | MF_SEPARATOR, 0, 0);
-    }
-    else
-    {
-        FIXME("no m_pSF2Parent\n");
-    }
-
     Shell_GetImageLists(&big_icons, &small_icons);
     m_ListView.SetImageList(big_icons, LVSIL_NORMAL);
     m_ListView.SetImageList(small_icons, LVSIL_SMALL);
 
+    m_hMenuArrangeModes = CreateMenu();
+    LoadColumns();
     return TRUE;
+}
+
+/**********************************************************
+* Column handling
+*/
+static HRESULT SHGetLVColumnSubItem(HWND List, UINT Col)
+{
+    LVCOLUMN lvc;
+    lvc.mask = LVCF_SUBITEM;
+    if (!ListView_GetColumn(List, Col, &lvc))
+        return E_FAIL;
+    else
+        return lvc.iSubItem;
+}
+
+HRESULT CDefView::MapFolderColumnToListColumn(UINT FoldCol)
+{
+    // This function is only called during column management, performance is not critical.
+    for (UINT i = 0;; ++i)
+    {
+        HRESULT r = SHGetLVColumnSubItem(m_ListView.m_hWnd, i);
+        if ((UINT)r == FoldCol)
+            return i;
+        else if (FAILED(r))
+            return r;
+    }
+}
+
+HRESULT CDefView::MapListColumnToFolderColumn(UINT ListCol)
+{
+    // This function is called every time a LVITEM::iSubItem is mapped to
+    // a folder column (calls to GetDetailsOf etc.) and should be fast.
+    if (m_ListToFolderColMap)
+    {
+        UINT count = DPA_GetPtrCount(m_ListToFolderColMap);
+        if (ListCol < count)
+        {
+            HRESULT col = (INT)(INT_PTR)DPA_FastGetPtr(m_ListToFolderColMap, ListCol);
+            assert(col >= 0 && col == SHGetLVColumnSubItem(m_ListView.m_hWnd, ListCol));
+            return col;
+        }
+        else if (count)
+        {
+            TRACE("m_ListToFolderColMap cache miss while mapping %d\n", ListCol);
+        }
+    }
+    return SHGetLVColumnSubItem(m_ListView.m_hWnd, ListCol);
+}
+
+HRESULT CDefView::GetDetailsByFolderColumn(PCUITEMID_CHILD pidl, UINT FoldCol, SHELLDETAILS &sd)
+{
+    // According to learn.microsoft.com/en-us/windows/win32/shell/sfvm-getdetailsof
+    // the query order is IShellFolder2, IShellDetails, SFVM_GETDETAILSOF.
+    HRESULT hr;
+    if (m_pSF2Parent)
+    {
+        hr = m_pSF2Parent->GetDetailsOf(pidl, FoldCol, &sd);
+    }
+    if (FAILED(hr) && m_pSDParent)
+    {
+        hr = m_pSDParent->GetDetailsOf(pidl, FoldCol, &sd);
+    }
+#if 0 // TODO
+    if (FAILED(hr))
+    {
+        FIXME("Try SFVM_GETDETAILSOF\n");
+    }
+#endif
+    return hr;
+}
+
+HRESULT CDefView::GetDetailsByListColumn(PCUITEMID_CHILD pidl, UINT ListCol, SHELLDETAILS &sd)
+{
+    HRESULT hr = MapListColumnToFolderColumn(ListCol);
+    if (SUCCEEDED(hr))
+        return GetDetailsByFolderColumn(pidl, hr, sd);
+    ERR("Unable to determine folder column from list column %d\n", (int) ListCol);
+    return hr;
+}
+
+HRESULT CDefView::LoadColumn(UINT FoldCol, UINT ListCol, BOOL Insert)
+{
+    WCHAR buf[MAX_PATH];
+    SHELLDETAILS sd;
+    HRESULT hr;
+
+    sd.str.uType = !STRRET_WSTR; // Make sure "uninitialized" uType is not WSTR
+    hr = GetDetailsByFolderColumn(NULL, FoldCol, sd);
+    if (FAILED(hr))
+        return hr;
+    hr = StrRetToStrNW(buf, _countof(buf), &sd.str, NULL);
+    if (FAILED(hr))
+        return hr;
+
+    UINT chavewidth = CalculateCharWidth(m_ListView.m_hWnd);
+    if (!chavewidth)
+        chavewidth = 6; // 6 is a reasonable default fallback
+
+    LVCOLUMN lvc;
+    lvc.mask = LVCF_TEXT | LVCF_FMT | LVCF_WIDTH | LVCF_SUBITEM;
+    lvc.pszText = buf;
+    lvc.fmt = sd.fmt;
+    lvc.cx = sd.cxChar * chavewidth; // FIXME: DPI?
+    lvc.iSubItem = FoldCol; // Used by MapFolderColumnToListColumn & MapListColumnToFolderColumn
+    if ((int)ListCol == -1)
+    {
+        assert(Insert); // You can insert at the end but you can't change something that is not there
+        if (Insert)
+            ListCol = 0x7fffffff;
+    }
+    if (Insert)
+        ListView_InsertColumn(m_ListView.m_hWnd, ListCol, &lvc);
+    else
+        ListView_SetColumn(m_ListView.m_hWnd, ListCol, &lvc);
+    return S_OK;
+}
+
+HRESULT CDefView::LoadColumns(UINT *pColList, UINT ColListCount)
+{
+    HWND hWndHdr = ListView_GetHeader(m_ListView.m_hWnd);
+    UINT newColCount = 0, oldColCount = Header_GetItemCount(hWndHdr);
+    UINT foldCol, i;
+    HRESULT hr = S_FALSE;
+
+    m_ListView.SetRedraw(FALSE);
+    for (i = 0, foldCol = 0;; ++foldCol)
+    {
+        if (newColCount >= 0xffff)
+            break; // CompareIDs limit reached
+
+        if (pColList)
+        {
+            if (i >= ColListCount)
+                break;
+            foldCol = pColList[i++];
+        }
+
+        SHCOLSTATEF state = 0;
+        if (!m_pSF2Parent || FAILED(m_pSF2Parent->GetDefaultColumnState(foldCol, &state)))
+            state = SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT;
+
+        if (foldCol == 0)
+        {
+            // Force the first column
+        }
+        else if (state & SHCOLSTATE_HIDDEN)
+        {
+            continue;
+        }
+        else if (!pColList && !(state & SHCOLSTATE_ONBYDEFAULT))
+        {
+            continue;
+        }
+
+        bool insert = newColCount >= oldColCount;
+        UINT listCol = insert ? -1 : newColCount;
+        hr = LoadColumn(foldCol, listCol, insert);
+        if (FAILED(hr))
+        {
+            if (!pColList)
+                hr = S_OK; // No more items, we are done
+            break;
+        }
+        ++newColCount;
+    }
+    for (i = newColCount; i < oldColCount; ++i)
+    {
+        ListView_DeleteColumn(m_ListView.m_hWnd, i);
+    }
+
+    m_ListView.SetRedraw(TRUE);
+    ColumnListChanged();
+    assert(SUCCEEDED(MapFolderColumnToListColumn(0))); // We don't allow turning off the Name column
+    return hr;
+}
+
+void CDefView::ColumnListChanged()
+{
+    HDPA cache = m_ListToFolderColMap;
+    m_ListToFolderColMap = NULL; // No cache while we are building the cache
+    DPA_DeleteAllPtrs(cache);
+    for (UINT i = 0;; ++i)
+    {
+        HRESULT hr = MapListColumnToFolderColumn(i);
+        if (FAILED(hr))
+            break; // No more columns
+        if (!DPA_SetPtr(cache, i, (void*)(INT_PTR) hr))
+            break; // Cannot allow holes in the cache, must stop now.
+    }
+    m_ListToFolderColMap = cache;
+
+    for (;;)
+    {
+        if (!RemoveMenu(m_hMenuArrangeModes, 0, MF_BYPOSITION))
+            break;
+    }
+    HMENU hMenu = GetSubmenuByID(m_hMenu, FCIDM_MENU_VIEW);
+    if (hMenu)
+    {
+        hMenu = GetSubmenuByID(hMenu, FCIDM_SHVIEW_ARRANGE);
+        for (UINT i = DVIDM_ARRANGESORT_FIRST; i <= DVIDM_ARRANGESORT_LAST && hMenu; ++i)
+        {
+            RemoveMenu(hMenu, i, MF_BYCOMMAND);
+        }
+        if ((int) GetMenuItemID(hMenu, 0) <= 0)
+            RemoveMenu(hMenu, 0, MF_BYPOSITION); // Separator
+    }
+    WCHAR buf[MAX_PATH];
+    LVCOLUMN lvc;
+    lvc.mask = LVCF_TEXT;
+    lvc.pszText = buf;
+    lvc.cchTextMax = _countof(buf);
+    for (UINT listCol = 0; listCol < DEFVIEW_ARRANGESORT_MAXENUM; ++listCol)
+    {
+        if (!ListView_GetColumn(m_ListView.m_hWnd, listCol, &lvc))
+            break;
+        HRESULT foldCol = MapListColumnToFolderColumn(listCol);
+        assert(SUCCEEDED(foldCol));
+        AppendMenuItem(m_hMenuArrangeModes, MF_STRING,
+                       DVIDM_ARRANGESORT_FIRST + listCol, lvc.pszText, listCol);
+    }
+
+    ListView_RedrawItems(m_ListView.m_hWnd, 0, 0x7fffffff);
+    m_ListView.InvalidateRect(NULL, TRUE);
 }
 
 /*************************************************************************
@@ -868,7 +1152,7 @@ INT CALLBACK CDefView::ListViewCompareItems(LPARAM lParam1, LPARAM lParam2, LPAR
     PCUIDLIST_RELATIVE pidl2 = reinterpret_cast<PCUIDLIST_RELATIVE>(lParam2);
     CDefView *pThis = reinterpret_cast<CDefView*>(lpData);
 
-    HRESULT hres = pThis->m_pSFParent->CompareIDs(pThis->m_sortInfo.nHeaderID, pidl1, pidl2);
+    HRESULT hres = pThis->m_pSFParent->CompareIDs(pThis->m_sortInfo.ListColumn, pidl1, pidl2);
     if (FAILED_UNEXPECTEDLY(hres))
         return 0;
 
@@ -878,37 +1162,51 @@ INT CALLBACK CDefView::ListViewCompareItems(LPARAM lParam1, LPARAM lParam2, LPAR
     return nDiff;
 }
 
-BOOL CDefView::_Sort()
+BOOL CDefView::_Sort(int Col)
 {
     HWND hHeader;
     HDITEM hColumn;
+    int prevCol = m_sortInfo.ListColumn;
 
+    // FIXME: Is this correct? Who sets this style?
+    // And if it is set, should it also block sorting using the menu?
+    // Any why should it block sorting when the view is loaded initially?
     if (m_ListView.GetWindowLongPtr(GWL_STYLE) & LVS_NOSORTHEADER)
         return TRUE;
 
-    hHeader = (HWND)m_ListView.SendMessage(LVM_GETHEADER, 0, 0);
-    ZeroMemory(&hColumn, sizeof(hColumn));
-
-    // If the sorting column changed, remove sorting style from the old column
-    if ( (m_sortInfo.nLastHeaderID != -1) &&
-         (m_sortInfo.nLastHeaderID != m_sortInfo.nHeaderID) )
+    hHeader = ListView_GetHeader(m_ListView.m_hWnd);
+    if (Col != -1)
     {
-        hColumn.mask = HDI_FORMAT;
-        Header_GetItem(hHeader, m_sortInfo.nLastHeaderID, &hColumn);
-        hColumn.fmt &= ~(HDF_SORTUP | HDF_SORTDOWN);
-        Header_SetItem(hHeader, m_sortInfo.nLastHeaderID, &hColumn);
+        if (Col >= Header_GetItemCount(hHeader))
+        {
+            ERR("Sort column out of range\n");
+            return FALSE;
+        }
+
+        if (prevCol == Col)
+            m_sortInfo.bIsAscending = !m_sortInfo.bIsAscending;
+        else
+            m_sortInfo.bIsAscending = TRUE;
+        m_sortInfo.ListColumn = Col;
     }
 
-    /* Set the sorting style to the new column */
-    hColumn.mask = HDI_FORMAT;
-    Header_GetItem(hHeader, m_sortInfo.nHeaderID, &hColumn);
+    /* If the sorting column changed, remove the sorting style from the old column */
+    if (prevCol != -1 && prevCol != m_sortInfo.ListColumn)
+    {
+        hColumn.mask = HDI_FORMAT;
+        Header_GetItem(hHeader, prevCol, &hColumn);
+        hColumn.fmt &= ~(HDF_SORTUP | HDF_SORTDOWN);
+        Header_SetItem(hHeader, prevCol, &hColumn);
+    }
 
+    /* Set the sorting style on the new column */
+    hColumn.mask = HDI_FORMAT;
+    Header_GetItem(hHeader, m_sortInfo.ListColumn, &hColumn);
     hColumn.fmt &= (m_sortInfo.bIsAscending ? ~HDF_SORTDOWN : ~HDF_SORTUP );
     hColumn.fmt |= (m_sortInfo.bIsAscending ?  HDF_SORTUP   : HDF_SORTDOWN);
-    Header_SetItem(hHeader, m_sortInfo.nHeaderID, &hColumn);
+    Header_SetItem(hHeader, m_sortInfo.ListColumn, &hColumn);
 
-    /* Sort the list, using the current values of nHeaderID and bIsAscending */
-    m_sortInfo.nLastHeaderID = m_sortInfo.nHeaderID;
+    /* Sort the list, using the current values of ListColumn and bIsAscending */
     return m_ListView.SortItems(ListViewCompareItems, this);
 }
 
@@ -1088,7 +1386,7 @@ INT CALLBACK CDefView::fill_list(LPVOID ptr, LPVOID arg)
 // - gets the objectlist from the shellfolder
 // - sorts the list
 // - fills the list into the view
-HRESULT CDefView::FillList()
+HRESULT CDefView::FillList(BOOL IsRefreshCommand)
 {
     CComPtr<IEnumIDList> pEnumIDList;
     PITEMID_CHILD pidl;
@@ -1152,16 +1450,22 @@ HRESULT CDefView::FillList()
     DPA_DestroyCallback( hdpa, fill_list, this);
 
     /* sort the array */
-    if (m_pSF2Parent)
+    int sortCol = -1;
+    if (!IsRefreshCommand) // Are we loading for the first time?
     {
-        m_pSF2Parent->GetDefaultColumn(NULL, (ULONG*)&m_sortInfo.nHeaderID, NULL);
+        m_sortInfo.bIsAscending = TRUE;
+        sortCol = 0; // In case the folder does not know/care
+        if (m_pSF2Parent)
+        {
+            ULONG folderSortCol = sortCol, dummy;
+            HRESULT hr = m_pSF2Parent->GetDefaultColumn(NULL, &folderSortCol, &dummy);
+            if (SUCCEEDED(hr))
+                hr = MapFolderColumnToListColumn(folderSortCol);
+            if (SUCCEEDED(hr))
+                sortCol = (int) hr;
+        }
     }
-    else
-    {
-        FIXME("no m_pSF2Parent\n");
-    }
-    m_sortInfo.bIsAscending = TRUE;
-    _Sort();
+    _Sort(sortCol);
 
     if (m_viewinfo_data.hbmBack)
     {
@@ -1331,7 +1635,7 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
     {
         if (InitList())
         {
-            FillList();
+            FillList(FALSE);
         }
     }
 
@@ -1342,16 +1646,27 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         SetShellWindowEx(hwndSB, m_ListView);
     }
 
-    SHChangeNotifyEntry ntreg[1];
-    ntreg[0].fRecursive = FALSE;
-    ntreg[0].pidl = m_pidlParent;
+    // Set up change notification
+    LPITEMIDLIST pidlTarget = NULL;
+    LONG fEvents = 0;
+    HRESULT hr = _DoFolderViewCB(SFVM_GETNOTIFY, (WPARAM)&pidlTarget, (LPARAM)&fEvents);
+    if (FAILED(hr) || (!pidlTarget && !fEvents))
+    {
+        pidlTarget = m_pidlParent;
+        fEvents = SHCNE_ALLEVENTS;
+    }
+    SHChangeNotifyEntry ntreg = {};
+    hr = _DoFolderViewCB(SFVM_QUERYFSNOTIFY, 0, (LPARAM)&ntreg);
+    if (FAILED(hr))
+    {
+        ntreg.fRecursive = FALSE;
+        ntreg.pidl = pidlTarget;
+    }
     m_hNotify = SHChangeNotifyRegister(m_hWnd,
                                        SHCNRF_InterruptLevel | SHCNRF_ShellLevel |
                                        SHCNRF_NewDelivery,
-                                       SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY,
-                                       1, ntreg);
-
-    //_DoFolderViewCB(SFVM_GETNOTIFY, ??  ??)
+                                       fEvents, SHV_CHANGE_NOTIFY,
+                                       1, &ntreg);
 
     m_hAccel = LoadAcceleratorsW(shell32_hInstance, MAKEINTRESOURCEW(IDA_SHELLVIEW));
 
@@ -1378,26 +1693,6 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 // #### Handling of the menus ####
 
 extern "C" DWORD WINAPI SHMenuIndexFromID(HMENU hMenu, UINT uID);
-
-HMENU GetSubmenuByID(HMENU hmenu, UINT id)
-{
-    MENUITEMINFOW mii = {sizeof(mii), MIIM_SUBMENU};
-    if (::GetMenuItemInfoW(hmenu, id, FALSE, &mii))
-        return mii.hSubMenu;
-
-    return NULL;
-}
-
-// ReallyGetMenuItemID returns the id of an item even if it opens a submenu,
-// GetMenuItemID returns -1 if the specified item opens a submenu
-UINT ReallyGetMenuItemID(HMENU hmenu, int i)
-{
-    MENUITEMINFOW mii = {sizeof(mii), MIIM_ID};
-    if (::GetMenuItemInfoW(hmenu, i, TRUE, &mii))
-        return mii.wID;
-
-    return UINT_MAX;
-}
 
 HRESULT CDefView::FillFileMenu()
 {
@@ -1428,7 +1723,7 @@ HRESULT CDefView::FillFileMenu()
     HMENU hmenu = CreatePopupMenu();
 
     UINT cmf = GetContextMenuFlags(m_pShellBrowser, SFGAO_CANRENAME);
-    hr = m_pFileMenu->QueryContextMenu(hmenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, cmf);
+    hr = m_pFileMenu->QueryContextMenu(hmenu, 0, DVIDM_CONTEXTMENU_FIRST, DVIDM_CONTEXTMENU_LAST, cmf);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -1476,18 +1771,35 @@ HRESULT CDefView::FillViewMenu()
 
 HRESULT CDefView::FillArrangeAsMenu(HMENU hmenuArrange)
 {
-    /* We only need to fill this once */
-    if (GetMenuItemID(hmenuArrange, 0) == FCIDM_SHVIEW_AUTOARRANGE)
+    bool forceMerge = false;
+    UINT currentSortId = DVIDM_ARRANGESORT_FIRST + m_sortInfo.ListColumn;
+
+    // Make sure the column we currently sort by is in the menu
+    RemoveMenu(m_hMenuArrangeModes, DVIDM_ARRANGESORT_LAST, MF_BYCOMMAND);
+    if (m_sortInfo.ListColumn >= DEFVIEW_ARRANGESORT_MAXENUM)
     {
-        Shell_MergeMenus(hmenuArrange, m_hMenuArrangeModes, 0, 0, 0xFFFF,0);
+        C_ASSERT(DEFVIEW_ARRANGESORT_MAXENUM < DEFVIEW_ARRANGESORT_MAX);
+        C_ASSERT(DVIDM_ARRANGESORT_FIRST + DEFVIEW_ARRANGESORT_MAXENUM == DVIDM_ARRANGESORT_LAST);
+        WCHAR buf[MAX_PATH];
+        LVCOLUMN lvc;
+        lvc.mask = LVCF_TEXT;
+        lvc.pszText = buf;
+        lvc.cchTextMax = _countof(buf);
+        currentSortId = DVIDM_ARRANGESORT_LAST;
+        forceMerge = true;
+        ListView_GetColumn(m_ListView.m_hWnd, m_sortInfo.ListColumn, &lvc);
+        AppendMenuItem(m_hMenuArrangeModes, MF_STRING, currentSortId, lvc.pszText, m_sortInfo.ListColumn);
     }
 
-    /* Also check the menu item according to which we sort */
+    // Prepend the sort-by items unless they are aleady there
+    if (GetMenuItemID(hmenuArrange, 0) == FCIDM_SHVIEW_AUTOARRANGE || forceMerge)
+    {
+        Shell_MergeMenus(hmenuArrange, m_hMenuArrangeModes, 0, 0, 0xFFFF, MM_ADDSEPARATOR);
+    }
+
     CheckMenuRadioItem(hmenuArrange,
-                       0x30,
-                       0x100,
-                       m_sortInfo.nHeaderID + 0x30,
-                       MF_BYCOMMAND);
+                       DVIDM_ARRANGESORT_FIRST, DVIDM_ARRANGESORT_LAST,
+                       currentSortId, MF_BYCOMMAND);
 
     if (m_FolderSettings.ViewMode == FVM_DETAILS || m_FolderSettings.ViewMode == FVM_LIST)
     {
@@ -1526,11 +1838,113 @@ HRESULT CDefView::CheckViewMode(HMENU hmenuView)
     return S_OK;
 }
 
-///
-// - fills the m_apidl list with the selected objects
-//
-// RETURNS
-//  number of selected items
+LRESULT CDefView::DoColumnContextMenu(LPARAM lParam)
+{
+    const UINT maxItems = 15; // Feels about right
+    const UINT idMore = 0x1337;
+    UINT idFirst = idMore + 1, idLast = idFirst;
+    UINT lastValidListCol = 0; // Keep track of where the new column should be inserted
+    UINT showMore = GetKeyState(VK_SHIFT) < 0;
+    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+    HWND hWndHdr = ListView_GetHeader(m_ListView.m_hWnd);
+
+    if (lParam == ~0)
+    {
+        RECT r;
+        ::GetWindowRect(hWndHdr, &r);
+        pt.x = r.left + ((r.right - r.left) / 2);
+        pt.y = r.top + ((r.bottom - r.top) / 2);
+    }
+
+    HMENU hMenu = CreatePopupMenu();
+    if (!hMenu)
+        return 0;
+
+    for (UINT foldCol = 0;; ++foldCol)
+    {
+        WCHAR buf[MAX_PATH];
+        SHELLDETAILS sd;
+        sd.str.uType = !STRRET_WSTR;
+        if (FAILED(GetDetailsByFolderColumn(NULL, foldCol, sd)))
+            break;
+        if (FAILED(StrRetToStrNW(buf, _countof(buf), &sd.str, NULL)))
+            break;
+
+        SHCOLSTATEF state = 0;
+        if (!m_pSF2Parent || FAILED(m_pSF2Parent->GetDefaultColumnState(foldCol, &state)))
+            state = 0;
+        showMore |= (state & (SHCOLSTATE_SECONDARYUI));
+
+        UINT mf = MF_STRING;
+        HRESULT listCol = MapFolderColumnToListColumn(foldCol);
+
+        if (foldCol == 0)
+            mf |= MF_CHECKED | MF_GRAYED | MF_DISABLED; // Force column 0
+        else if (state & (SHCOLSTATE_SECONDARYUI | SHCOLSTATE_HIDDEN))
+            continue;
+        else if (SUCCEEDED(listCol))
+            mf |= MF_CHECKED;
+
+        if (AppendMenuItem(hMenu, mf, idLast, buf, lastValidListCol + 1))
+        {
+            idLast++;
+            if (SUCCEEDED(listCol))
+                lastValidListCol = listCol;
+        }
+
+        if (idLast - idFirst == maxItems)
+        {
+            showMore++;
+            break;
+        }
+    }
+
+    if (showMore)
+    {
+#if 0 // TODO
+        InsertMenuW(hMenu, -1, MF_SEPARATOR, 0, NULL);
+        InsertMenuW(hMenu, -1, MF_STRING, idMore, L"More...");
+#endif
+    }
+
+    // A cludge to force the cursor to update so we are not stuck with "size left/right" if
+    // the right-click was on a column divider.
+    ::PostMessage(m_ListView.m_hWnd, WM_SETCURSOR, (WPARAM) m_ListView.m_hWnd, HTCLIENT);
+
+    // Note: Uses the header as the owner so CDefView::OnInitMenuPopup does not mess us up.
+    UINT idCmd = TrackPopupMenu(hMenu, TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
+                                pt.x, pt.y, 0, hWndHdr, NULL);
+    if (idCmd == idMore)
+    {
+        FIXME("Open More dialog\n");
+    }
+    else if (idCmd)
+    {
+        UINT foldCol = idCmd - idFirst;
+        HRESULT listCol = MapFolderColumnToListColumn(foldCol);
+        if (SUCCEEDED(listCol))
+        {
+            ListView_DeleteColumn(m_ListView.m_hWnd, listCol);
+        }
+        else
+        {
+            listCol = (UINT) GetMenuItemDataById(hMenu, idCmd);
+            LoadColumn(foldCol, listCol, TRUE);
+        }
+        ColumnListChanged();
+    }
+    DestroyMenu(hMenu);
+    return 0;
+}
+
+/**********************************************************
+*   ShellView_GetSelections()
+*
+* - fills the m_apidl list with the selected objects
+*
+* RETURNS
+*  number of selected items
+*/
 UINT CDefView::GetSelections()
 {
     SHFree(m_apidl);
@@ -1582,6 +1996,17 @@ HRESULT CDefView::InvokeContextMenuCommand(CComPtr<IContextMenu>& pCM, LPCSTR lp
         cmi.ptInvoke = *pt;
     }
 
+    WCHAR szDirW[MAX_PATH] = L"";
+    CHAR szDirA[MAX_PATH];
+    if (SUCCEEDED(_DoFolderViewCB(SFVM_GETCOMMANDDIR, _countof(szDirW), (LPARAM)szDirW)) &&
+        *szDirW != UNICODE_NULL)
+    {
+        SHUnicodeToAnsi(szDirW, szDirA, _countof(szDirA));
+        cmi.fMask |= CMIC_MASK_UNICODE;
+        cmi.lpDirectory = szDirA;
+        cmi.lpDirectoryW = szDirW;
+    }
+
     HRESULT hr = pCM->InvokeCommand((LPCMINVOKECOMMANDINFO)&cmi);
     // Most of our callers will do this, but if they would forget (File menu!)
     IUnknown_SetSite(pCM, NULL);
@@ -1618,7 +2043,7 @@ HRESULT CDefView::OpenSelectedItems()
         return hResult;
 
     UINT cmf = CMF_DEFAULTONLY | GetContextMenuFlags(m_pShellBrowser, 0);
-    hResult = pCM->QueryContextMenu(hMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, cmf);
+    hResult = pCM->QueryContextMenu(hMenu, 0, DVIDM_CONTEXTMENU_FIRST, DVIDM_CONTEXTMENU_LAST, cmf);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
@@ -1636,7 +2061,7 @@ HRESULT CDefView::OpenSelectedItems()
 
 LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    POINT pt;
+    POINT pt = { pt.x = GET_X_LPARAM(lParam), pt.y = GET_Y_LPARAM(lParam) };
     UINT    uCommand;
     HRESULT hResult;
 
@@ -1648,15 +2073,19 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
         return 0;
     }
 
+    HWND hWndHdr = ListView_GetHeader(m_ListView.m_hWnd);
+    RECT r;
+    if (::GetWindowRect(hWndHdr, &r) && PtInRect(&r, pt) && ::IsWindowVisible(hWndHdr))
+    {
+        return DoColumnContextMenu(lParam);
+    }
+
     m_hContextMenu = CreatePopupMenu();
     if (!m_hContextMenu)
         return E_FAIL;
 
     if (lParam != ~0) // unless app key (menu key) was pressed
     {
-        pt.x = GET_X_LPARAM(lParam);
-        pt.y = GET_Y_LPARAM(lParam);
-
         LV_HITTESTINFO hittest = { pt };
         ScreenToClient(&hittest.pt);
         m_ListView.HitTest(&hittest);
@@ -1679,7 +2108,7 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 
     UINT cmf = GetContextMenuFlags(m_pShellBrowser, SFGAO_CANRENAME);
     // Use 1 as the first id we want. 0 means that user canceled the menu
-    hResult = m_pCM->QueryContextMenu(m_hContextMenu, 0, CONTEXT_MENU_BASE_ID, FCIDM_SHVIEWLAST, cmf);
+    hResult = m_pCM->QueryContextMenu(m_hContextMenu, 0, CONTEXT_MENU_BASE_ID, DVIDM_CONTEXTMENU_LAST, cmf);
     if (FAILED_UNEXPECTEDLY(hResult))
         return 0;
 
@@ -1723,6 +2152,9 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     if (uCommand == 0)
         return 0;
 
+    if (uCommand >= DVIDM_ARRANGESORT_FIRST && uCommand <= DVIDM_ARRANGESORT_LAST)
+        return SendMessage(WM_COMMAND, uCommand, 0);
+
     if (uCommand == FCIDM_SHVIEW_OPEN && OnDefaultCommand() == S_OK)
         return 0;
 
@@ -1749,7 +2181,7 @@ LRESULT CDefView::OnExplorerCommand(UINT uCommand, BOOL bUseSelection)
         if (!hMenu)
             return 0;
 
-        hResult = pCM->QueryContextMenu(hMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, CMF_NORMAL);
+        hResult = pCM->QueryContextMenu(hMenu, 0, DVIDM_CONTEXTMENU_FIRST, DVIDM_CONTEXTMENU_LAST, CMF_NORMAL);
         if (FAILED_UNEXPECTEDLY(hResult))
             return 0;
     }
@@ -1925,6 +2357,13 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
 
     TRACE("(%p)->(0x%08x 0x%08x %p) stub\n", this, dwCmdID, dwCmd, hwndCmd);
 
+    if (dwCmdID >= DVIDM_ARRANGESORT_FIRST && dwCmdID <= DVIDM_ARRANGESORT_LAST)
+    {
+        UINT listCol = (UINT)GetMenuItemDataById(m_hMenuArrangeModes, dwCmdID);
+        _Sort(listCol);
+        return 0;
+    }
+
     switch (dwCmdID)
     {
         case FCIDM_SHVIEW_SMALLICON:
@@ -1947,15 +2386,6 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
             m_ListView.ModifyStyle(LVS_TYPEMASK, LVS_REPORT);
             CheckToolbar();
             break;
-        /* the menu-ID's for sorting are 0x30... see shrec.rc */
-        case 0x30:
-        case 0x31:
-        case 0x32:
-        case 0x33:
-            m_sortInfo.nHeaderID = dwCmdID - 0x30;
-            m_sortInfo.bIsAscending = TRUE;
-            _Sort();
-            break;
         case FCIDM_SHVIEW_SNAPTOGRID:
             m_ListView.Arrange(LVA_SNAPTOGRID);
             break;
@@ -1972,7 +2402,8 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
                 AutoArrange();
             break;
         case FCIDM_SHVIEW_SELECTALL:
-            m_ListView.SetItemState(-1, LVIS_SELECTED, LVIS_SELECTED);
+            if (_DoFolderViewCB(SFVM_CANSELECTALL, 0, 0) != S_FALSE)
+                m_ListView.SetItemState(-1, LVIS_SELECTED, LVIS_SELECTED);
             break;
         case FCIDM_SHVIEW_INVERTSELECTION:
             nCount = m_ListView.GetItemCount();
@@ -2101,13 +2532,17 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             OnStateChange(CDBOSC_SELCHANGE); // browser will get the IDataObject
             break;
         case LVN_COLUMNCLICK:
-            m_sortInfo.nHeaderID = lpnmlv->iSubItem;
-            if (m_sortInfo.nLastHeaderID == m_sortInfo.nHeaderID)
-                m_sortInfo.bIsAscending = !m_sortInfo.bIsAscending;
-            else
-                m_sortInfo.bIsAscending = TRUE;
-            _Sort();
+        {
+            UINT foldercol = MapListColumnToFolderColumn(lpnmlv->iSubItem);
+            HRESULT hr = S_FALSE;
+            if (m_pSDParent)
+                hr = m_pSDParent->ColumnClick(foldercol);
+            if (hr != S_OK)
+                hr = _DoFolderViewCB(SFVM_COLUMNCLICK, foldercol, 0);
+            if (hr != S_OK)
+                _Sort(lpnmlv->iSubItem);
             break;
+        }
         case LVN_GETDISPINFOA:
         case LVN_GETDISPINFOW:
             TRACE("-- LVN_GETDISPINFO %p\n", this);
@@ -2115,28 +2550,21 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
             if (lpdi->item.mask & LVIF_TEXT)    /* text requested */
             {
-                if (m_pSF2Parent)
-                {
-                    SHELLDETAILS sd;
-                    if (FAILED_UNEXPECTEDLY(m_pSF2Parent->GetDetailsOf(pidl, lpdi->item.iSubItem, &sd)))
-                        break;
+                SHELLDETAILS sd;
+                if (FAILED_UNEXPECTEDLY(GetDetailsByListColumn(pidl, lpdi->item.iSubItem, sd)))
+                    break;
 
-                    if (lpnmh->code == LVN_GETDISPINFOA)
-                    {
-                        /* shouldn't happen */
-                        NMLVDISPINFOA *lpdiA = (NMLVDISPINFOA *)lpnmh;
-                        StrRetToStrNA( lpdiA->item.pszText, lpdiA->item.cchTextMax, &sd.str, NULL);
-                        TRACE("-- text=%s\n", lpdiA->item.pszText);
-                    }
-                    else /* LVN_GETDISPINFOW */
-                    {
-                        StrRetToStrNW( lpdi->item.pszText, lpdi->item.cchTextMax, &sd.str, NULL);
-                        TRACE("-- text=%s\n", debugstr_w(lpdi->item.pszText));
-                    }
-                }
-                else
+                if (lpnmh->code == LVN_GETDISPINFOA)
                 {
-                    FIXME("no m_pSF2Parent\n");
+                    /* shouldn't happen */
+                    NMLVDISPINFOA *lpdiA = (NMLVDISPINFOA *)lpnmh;
+                    StrRetToStrNA( lpdiA->item.pszText, lpdiA->item.cchTextMax, &sd.str, NULL);
+                    TRACE("-- text=%s\n", lpdiA->item.pszText);
+                }
+                else /* LVN_GETDISPINFOW */
+                {
+                    StrRetToStrNW( lpdi->item.pszText, lpdi->item.cchTextMax, &sd.str, NULL);
+                    TRACE("-- text=%s\n", debugstr_w(lpdi->item.pszText));
                 }
             }
             if(lpdi->item.mask & LVIF_IMAGE)    /* image requested */
@@ -2225,6 +2653,11 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                     PIDLIST_ABSOLUTE pidlFull = ILCombine(m_pidlParent, pidl);
                     SHGetPathFromIDListW(pidlFull, szFullPath);
 
+                    INT cchLimit = 0;
+                    _DoFolderViewCB(SFVM_GETNAMELENGTH, (WPARAM)pidlFull, (LPARAM)&cchLimit);
+                    if (cchLimit)
+                        ::SendMessageW(hEdit, EM_SETLIMITTEXT, cchLimit, 0);
+
                     if (!SHELL_FS_HideExtension(szFullPath))
                     {
                         LPWSTR pszText = lpdi->item.pszText;
@@ -2289,35 +2722,9 @@ static BOOL ILIsParentOrSpecialParent(PCIDLIST_ABSOLUTE pidl1, PCIDLIST_ABSOLUTE
     if (ILIsParent(pidl1, pidl2, TRUE))
         return TRUE;
 
-    if (_ILIsDesktop(pidl1))
-    {
-        PIDLIST_ABSOLUTE deskpidl;
-        SHGetFolderLocation(NULL, CSIDL_DESKTOPDIRECTORY, NULL, 0, &deskpidl);
-        if (ILIsParent(deskpidl, pidl2, TRUE))
-        {
-            ILFree(deskpidl);
-            return TRUE;
-        }
-        ILFree(deskpidl);
-        SHGetFolderLocation(NULL, CSIDL_COMMON_DESKTOPDIRECTORY, NULL, 0, &deskpidl);
-        if (ILIsParent(deskpidl, pidl2, TRUE))
-        {
-            ILFree(deskpidl);
-            return TRUE;
-        }
-        ILFree(deskpidl);
-    }
-
-    LPITEMIDLIST pidl2Clone = ILClone(pidl2);
+    CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidl2Clone(ILClone(pidl2));
     ILRemoveLastID(pidl2Clone);
-    if (ILIsEqual(pidl1, pidl2Clone))
-    {
-        ILFree(pidl2Clone);
-        return TRUE;
-    }
-    ILFree(pidl2Clone);
-
-    return FALSE;
+    return ILIsEqual(pidl1, pidl2Clone);
 }
 
 LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -2339,19 +2746,22 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
 
     TRACE("(%p)(%p,%p,%p)\n", this, Pidls[0], Pidls[1], lParam);
 
+    if (_DoFolderViewCB(SFVM_FSNOTIFY, (WPARAM)Pidls, lEvent) == S_FALSE)
+        return FALSE;
+
     // Translate child IDLs.
     // SHSimpleIDListFromPathW creates fake PIDLs (lacking some attributes)
     HRESULT hr;
     PITEMID_CHILD child0 = NULL, child1 = NULL;
     CComHeapPtr<ITEMIDLIST_RELATIVE> pidl0Temp, pidl1Temp;
-    if (ILIsParentOrSpecialParent(m_pidlParent, Pidls[0]))
+    if (_ILIsSpecialFolder(Pidls[0]) || ILIsParentOrSpecialParent(m_pidlParent, Pidls[0]))
     {
         child0 = ILFindLastID(Pidls[0]);
         hr = SHGetRealIDL(m_pSFParent, child0, &pidl0Temp);
         if (SUCCEEDED(hr))
             child0 = pidl0Temp;
     }
-    if (ILIsParentOrSpecialParent(m_pidlParent, Pidls[1]))
+    if (_ILIsSpecialFolder(Pidls[1]) || ILIsParentOrSpecialParent(m_pidlParent, Pidls[1]))
     {
         child1 = ILFindLastID(Pidls[1]);
         hr = SHGetRealIDL(m_pSFParent, child1, &pidl1Temp);
@@ -2649,9 +3059,11 @@ HRESULT WINAPI CDefView::GetCurrentInfo(LPFOLDERSETTINGS lpfs)
 
 HRESULT WINAPI CDefView::AddPropertySheetPages(DWORD dwReserved, LPFNADDPROPSHEETPAGE lpfn, LPARAM lparam)
 {
-    FIXME("(%p) stub\n", this);
+    TRACE("(%p)->(0x%lX, %p, %p)\n", this, dwReserved, lpfn, lparam);
 
-    return E_NOTIMPL;
+    SFVM_PROPPAGE_DATA Data = { dwReserved, lpfn, lparam };
+    _DoFolderViewCB(SFVM_ADDPROPERTYPAGES, 0, (LPARAM)&Data);
+    return S_OK;
 }
 
 HRESULT WINAPI CDefView::SaveViewState()

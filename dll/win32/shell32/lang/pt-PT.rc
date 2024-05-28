@@ -28,16 +28,16 @@ BEGIN
             MENUITEM "&Detalhes", FCIDM_SHVIEW_REPORTVIEW
         END
         MENUITEM "", -1, MFT_SEPARATOR
-        POPUP "O&rganizar ícones", FCIDM_SHVIEW_ARRANGE
+        POPUP "Di&spor ícones por", FCIDM_SHVIEW_ARRANGE
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "Alinhar icones &automaticamente", FCIDM_SHVIEW_AUTOARRANGE
             MENUITEM "Alinhar icones com a &grelha", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "&Actualizar", FCIDM_SHVIEW_REFRESH
+        MENUITEM "Actuali&zar", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Co&lar", FCIDM_SHVIEW_INSERT
-        MENUITEM "Colar a&talho", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "&Colar", FCIDM_SHVIEW_INSERT
+        MENUITEM "Colar atal&ho", FCIDM_SHVIEW_INSERTLINK
     END
 END
 
@@ -46,15 +46,15 @@ MENU_003 MENU
 BEGIN
     MENUITEM "&Retroceder\tCtrl+Z", FCIDM_SHVIEW_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "Cor&tar\tCtrl+X", FCIDM_SHVIEW_CUT //FIXME: accelerator collision &T
+    MENUITEM "Cor&tar\tCtrl+X", FCIDM_SHVIEW_CUT
     MENUITEM "&Copiar\tCtrl+C", FCIDM_SHVIEW_COPY
-    MENUITEM "Co&lar\tCtrl+V", FCIDM_SHVIEW_INSERT
-    MENUITEM "Colar &atalho", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM "C&olar\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "Colar atal&ho", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
-    MENUITEM "Copiar &pasta...", FCIDM_SHVIEW_COPYTO
-    MENUITEM "Mo&ver para pasta...", FCIDM_SHVIEW_MOVETO
+    MENUITEM "Copiar para a &pasta...", FCIDM_SHVIEW_COPYTO
+    MENUITEM "Mo&ver para a pasta...", FCIDM_SHVIEW_MOVETO
     MENUITEM SEPARATOR
-    MENUITEM "Seleccionar &tudo\tCtrl+A", FCIDM_SHVIEW_SELECTALL //FIXME: accelerator collision &T
+    MENUITEM "S&eleccionar tudo\tCtrl+A", FCIDM_SHVIEW_SELECTALL
     MENUITEM "&Inverter Selecção.", FCIDM_SHVIEW_INVERTSELECTION
 END
 
@@ -64,9 +64,9 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "C&ortar", IDM_CUT
+        MENUITEM "Cor&tar", IDM_CUT
         MENUITEM "&Copiar", IDM_COPY
-        MENUITEM "Co&lar", IDM_INSERT
+        MENUITEM "C&olar", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "Criar &atalho", IDM_CREATELINK
         MENUITEM "&Eliminar", IDM_DELETE
@@ -787,17 +787,17 @@ BEGIN
     IDS_CREATELINK "Criar &atalho"
     IDS_COPY "Copiar"
     IDS_DELETE "Eliminar"
-    IDS_PROPERTIES "Propriedades"
-    IDS_CUT "Cortar"
+    IDS_PROPERTIES "Propriedade&s"
+    IDS_CUT "Cor&tar"
     IDS_RESTORE "Restaurar"
-    IDS_FORMATDRIVE "Formatar..."
+    IDS_FORMATDRIVE "F&ormatar..."
     IDS_RENAME "Mudar o nome"
     IDS_PASTE "Inserir"
     IDS_EJECT "Ejectar"
     IDS_DISCONNECT "Desligar"
     IDS_OPENFILELOCATION "Abrir localização do f&icheiro"
     IDS_SENDTO_MENU "&Enviar para"
-    IDS_COPYASPATHMENU "Copy as path"
+    IDS_COPYASPATHMENU "Copiar como caminho"
 
     IDS_MOVEERRORTITLE "Erro ao mover pasta ou ficheiro"
     IDS_COPYERRORTITLE "Erro ao copiar pasta ou ficheiro"
@@ -906,7 +906,7 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Autores"
     IDS_SHELL_ABOUT_BACK "< &Retroceder"
-    FCIDM_SHVIEW_NEW "No&vo" /* A menu item with an ampersand */
+    FCIDM_SHVIEW_NEW "&Novo" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "&Pasta"
     FCIDM_SHVIEW_NEWLINK "&Atalho"
     IDS_FOLDER_OPTIONS "Opções das Pastas"
@@ -953,8 +953,8 @@ BEGIN
     IDS_VXD_FILE "Controlador de Dispositivo Virtual"
     IDS_ANY_FILE "Ficheiro %s"
 
-    IDS_OPEN_VERB "Abrir"
-    IDS_EXPLORE_VERB "Explorar"
+    IDS_OPEN_VERB "A&brir"
+    IDS_EXPLORE_VERB "&Explorar"
     IDS_RUNAS_VERB "Executar como..."
     IDS_EDIT_VERB "Editar"
     IDS_FIND_VERB "Procurar"
