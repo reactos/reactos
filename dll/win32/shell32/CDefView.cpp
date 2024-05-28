@@ -1646,16 +1646,27 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         SetShellWindowEx(hwndSB, m_ListView);
     }
 
-    SHChangeNotifyEntry ntreg[1];
-    ntreg[0].fRecursive = FALSE;
-    ntreg[0].pidl = m_pidlParent;
+    // Set up change notification
+    LPITEMIDLIST pidlTarget = NULL;
+    LONG fEvents = 0;
+    HRESULT hr = _DoFolderViewCB(SFVM_GETNOTIFY, (WPARAM)&pidlTarget, (LPARAM)&fEvents);
+    if (FAILED(hr) || (!pidlTarget && !fEvents))
+    {
+        pidlTarget = m_pidlParent;
+        fEvents = SHCNE_ALLEVENTS;
+    }
+    SHChangeNotifyEntry ntreg = {};
+    hr = _DoFolderViewCB(SFVM_QUERYFSNOTIFY, 0, (LPARAM)&ntreg);
+    if (FAILED(hr))
+    {
+        ntreg.fRecursive = FALSE;
+        ntreg.pidl = pidlTarget;
+    }
     m_hNotify = SHChangeNotifyRegister(m_hWnd,
                                        SHCNRF_InterruptLevel | SHCNRF_ShellLevel |
                                        SHCNRF_NewDelivery,
-                                       SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY,
-                                       1, ntreg);
-
-    //_DoFolderViewCB(SFVM_GETNOTIFY, ??  ??)
+                                       fEvents, SHV_CHANGE_NOTIFY,
+                                       1, &ntreg);
 
     m_hAccel = LoadAcceleratorsW(shell32_hInstance, MAKEINTRESOURCEW(IDA_SHELLVIEW));
 
@@ -2711,35 +2722,9 @@ static BOOL ILIsParentOrSpecialParent(PCIDLIST_ABSOLUTE pidl1, PCIDLIST_ABSOLUTE
     if (ILIsParent(pidl1, pidl2, TRUE))
         return TRUE;
 
-    if (_ILIsDesktop(pidl1))
-    {
-        PIDLIST_ABSOLUTE deskpidl;
-        SHGetFolderLocation(NULL, CSIDL_DESKTOPDIRECTORY, NULL, 0, &deskpidl);
-        if (ILIsParent(deskpidl, pidl2, TRUE))
-        {
-            ILFree(deskpidl);
-            return TRUE;
-        }
-        ILFree(deskpidl);
-        SHGetFolderLocation(NULL, CSIDL_COMMON_DESKTOPDIRECTORY, NULL, 0, &deskpidl);
-        if (ILIsParent(deskpidl, pidl2, TRUE))
-        {
-            ILFree(deskpidl);
-            return TRUE;
-        }
-        ILFree(deskpidl);
-    }
-
-    LPITEMIDLIST pidl2Clone = ILClone(pidl2);
+    CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidl2Clone(ILClone(pidl2));
     ILRemoveLastID(pidl2Clone);
-    if (ILIsEqual(pidl1, pidl2Clone))
-    {
-        ILFree(pidl2Clone);
-        return TRUE;
-    }
-    ILFree(pidl2Clone);
-
-    return FALSE;
+    return ILIsEqual(pidl1, pidl2Clone);
 }
 
 LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -2761,19 +2746,22 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
 
     TRACE("(%p)(%p,%p,%p)\n", this, Pidls[0], Pidls[1], lParam);
 
+    if (_DoFolderViewCB(SFVM_FSNOTIFY, (WPARAM)Pidls, lEvent) == S_FALSE)
+        return FALSE;
+
     // Translate child IDLs.
     // SHSimpleIDListFromPathW creates fake PIDLs (lacking some attributes)
     HRESULT hr;
     PITEMID_CHILD child0 = NULL, child1 = NULL;
     CComHeapPtr<ITEMIDLIST_RELATIVE> pidl0Temp, pidl1Temp;
-    if (ILIsParentOrSpecialParent(m_pidlParent, Pidls[0]))
+    if (_ILIsSpecialFolder(Pidls[0]) || ILIsParentOrSpecialParent(m_pidlParent, Pidls[0]))
     {
         child0 = ILFindLastID(Pidls[0]);
         hr = SHGetRealIDL(m_pSFParent, child0, &pidl0Temp);
         if (SUCCEEDED(hr))
             child0 = pidl0Temp;
     }
-    if (ILIsParentOrSpecialParent(m_pidlParent, Pidls[1]))
+    if (_ILIsSpecialFolder(Pidls[1]) || ILIsParentOrSpecialParent(m_pidlParent, Pidls[1]))
     {
         child1 = ILFindLastID(Pidls[1]);
         hr = SHGetRealIDL(m_pSFParent, child1, &pidl1Temp);
