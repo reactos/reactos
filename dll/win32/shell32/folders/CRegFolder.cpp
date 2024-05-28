@@ -772,10 +772,7 @@ HRESULT WINAPI CRegFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl,    /*
 
     if (res == ERROR_SUCCESS)
     {
-        hr = S_OK;
-        if (pPidlOut)
-            hr = SHILClone(pidl, pPidlOut);
-        return hr;
+        return pPidlOut ? SHILClone(pidl, pPidlOut) : S_OK;
     }
 
     return E_FAIL;
