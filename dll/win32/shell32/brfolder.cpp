@@ -460,6 +460,7 @@ BrFolder_Treeview_Rename(BrFolder *info, NMTVDISPINFOW *pnmtv)
 {
     if (!pnmtv->item.pszText)
         return FALSE;
+
     HTREEITEM hItem = TreeView_GetSelection(info->hwndTreeView);
     BrItemData *data = BrFolder_GetItemData(info, hItem);
     ASSERT(data);
