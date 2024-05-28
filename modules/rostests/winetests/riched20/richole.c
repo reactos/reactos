@@ -3894,8 +3894,10 @@ static void subtest_InsertObject(struct reolecb_obj *callback)
   WCHAR buffer[1024];
   CHAR bufferA[1024];
   LONG count, result;
+#ifdef __GNUC__
   ITextRange *range;
   BSTR bstr;
+#endif
   struct testoleobj *testobj;
   IOleClientSite *clientsite;
   REOBJECT reobj;
@@ -4061,7 +4063,7 @@ static void subtest_InsertObject(struct reolecb_obj *callback)
 
   SendMessageW(hwnd, EM_SETSEL, 5, 6);
   CHECK_REOBJECT_STRUCT(reole, REO_IOB_SELECTION, REO_GETOBJ_ALL_INTERFACES, 1, 5, NULL, NULL, reo2.polesite, 2);
-
+#ifdef __GNUC__ // "error C2022: '65532': too big for character" on MSVC
   expected_string = L"abc\xfffc""d\xfffc""efg";
   gettextex.cb = sizeof(buffer);
   gettextex.flags = GT_DEFAULT;
@@ -4090,7 +4092,7 @@ static void subtest_InsertObject(struct reolecb_obj *callback)
   result = SendMessageW(hwnd, EM_GETTEXTEX, (WPARAM)&gettextex, (LPARAM)buffer);
   ok(result == lstrlenW(expected_string), "Got wrong length: %ld.\n", result);
   todo_wine ok(!lstrcmpW(buffer, expected_string), "Got wrong content: %s.\n", debugstr_w(buffer));
-
+#endif
   expected_string = L"abc d efg";
   gettextex.flags = GT_USECRLF;
   memset(buffer, 0, sizeof(buffer));
@@ -4116,7 +4118,7 @@ static void subtest_InsertObject(struct reolecb_obj *callback)
   result = SendMessageA(hwnd, EM_GETTEXTRANGE, 0, (LPARAM)&textrange);
   ok(result == strlen(expected_stringA), "Got wrong length: %ld.\n", result);
   ok(!strcmp(bufferA, expected_stringA), "Got wrong content: %s.\n", bufferA);
-
+#ifdef __GNUC__
   expected_string = L"abc\xfffc""d\xfffc""efg\r";
   hr = ITextDocument_Range(doc, 0, 11, &range);
   ok(hr == S_OK, "Got hr %#lx.\n", hr);
@@ -4151,7 +4153,7 @@ static void subtest_InsertObject(struct reolecb_obj *callback)
   SendMessageA(hwnd, WM_SETTEXT, 0, (LPARAM)test_text1);
   INSERT_REOBJECT(callback, reole, &reo1, 3, 1);
   INSERT_REOBJECT(callback, reole, &reo2, 5, 2);
-
+#endif
   expected_string = L"abc d efg";
   charrange.cpMin = 0;
   charrange.cpMax = 11;
@@ -4168,7 +4170,7 @@ static void subtest_InsertObject(struct reolecb_obj *callback)
   ok(lstrlenW(string) == lstrlenW(expected_string), "Got wrong length: %d.\n", lstrlenW(string));
   ok(!lstrcmpW(string, expected_string), "Got wrong content: %s.\n", debugstr_w(string));
   GlobalUnlock(stgmedium.hGlobal);
-
+#ifdef __GNUC__
   expected_string = L"abc\xfffc""d\xfffc""efg";
   gettextex.cb = sizeof(buffer);
   gettextex.flags = GT_DEFAULT;
@@ -4184,7 +4186,7 @@ static void subtest_InsertObject(struct reolecb_obj *callback)
   result = SendMessageW(hwnd, EM_GETTEXTEX, (WPARAM)&gettextex, (LPARAM)buffer);
   ok(result == lstrlenW(expected_string), "Got wrong length: %ld.\n", result);
   todo_wine ok(!lstrcmpW(buffer, expected_string), "Got wrong content: %s.\n", debugstr_w(buffer));
-
+#endif
   expected_stringA = "abc d efg";
   memset(bufferA, 0, sizeof(bufferA));
   SendMessageA(hwnd, EM_SETSEL, 0, -1);
@@ -4203,7 +4205,7 @@ static void subtest_InsertObject(struct reolecb_obj *callback)
   result = SendMessageA(hwnd, EM_GETTEXTRANGE, 0, (LPARAM)&textrange);
   ok(result == strlen(expected_stringA), "Got wrong length: %ld.\n", result);
   ok(!strcmp(bufferA, expected_stringA), "Got wrong content: %s.\n", bufferA);
-
+#ifdef __GNUC__
   expected_string = L"abc\xfffc""d\xfffc""efg";
   hr = ITextDocument_Range(doc, 0, 11, &range);
   ok(hr == S_OK, "Got hr %#lx.\n", hr);
@@ -4230,7 +4232,7 @@ static void subtest_InsertObject(struct reolecb_obj *callback)
   hr = ITextSelection_GetChar(selection, &result);
   ok(hr == S_OK, "Got hr %#lx.\n", hr);
   todo_wine ok(result == 0xfffc, "Got char: %lc\n", (WCHAR)result);
-
+#endif
   hr = testoleobj_Create(&testobj);
   ok(hr == S_OK, "testoleobj_Create got hr %#lx.\n", hr);
   testobj->extent.cx = 800;
