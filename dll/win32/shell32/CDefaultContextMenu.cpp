@@ -80,7 +80,7 @@ static const struct _StaticInvokeCommandMap_
     { "moveto",          FCIDM_SHVIEW_MOVETO },
 };
 
-UINT MapVerbToDfmCmd(LPCSTR verba)
+UINT MapVerbToDfmCmd(_In_ LPCSTR verba)
 {
     for (UINT i = 0; i < _countof(g_StaticInvokeCmdMap); ++i)
     {

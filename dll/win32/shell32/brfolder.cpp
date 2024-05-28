@@ -827,7 +827,7 @@ GetTreeViewItemContextMenuPos(HWND hWnd, HTREEITEM hItem, POINT *ppt)
 static void
 BrFolder_OnContextMenu(BrFolder &info, LPARAM lParam)
 {
-    enum { IDC_EXPAND = 1, ID_FIRSTCMD, ID_LASTCMD = 0xffff };
+    enum { IDC_TOGGLE = 1, ID_FIRSTCMD, ID_LASTCMD = 0xffff };
     HTREEITEM hSelected = TreeView_GetSelection(info.hwndTreeView);
     CMINVOKECOMMANDINFOEX ici = { sizeof(ici), CMIC_MASK_PTINVOKE, info.hWnd };
     ici.fMask |= (GetKeyState(VK_SHIFT) < 0) ? CMIC_MASK_SHIFT_DOWN : 0;
@@ -847,35 +847,36 @@ BrFolder_OnContextMenu(BrFolder &info, LPARAM lParam)
     }
     BrItemData *item = BrFolder_GetItemData(&info, hSelected);
     if (!item)
-        return ; // Not on an item
+        return; // Not on an item
 
     TV_ITEM tvi;
     tvi.mask = TVIF_STATE | TVIF_CHILDREN;
     tvi.stateMask = TVIS_EXPANDED;
     tvi.hItem = hSelected;
     TreeView_GetItem(info.hwndTreeView, &tvi);
+
     CComPtr<IContextMenu> pcm;
     LPITEMIDLIST child = item->pidlChild; // ATL is stupid and will assert if we take the address of this
     HRESULT hr = item->lpsfParent->GetUIObjectOf(info.hWnd, 1, &child,
                                                  IID_IContextMenu, NULL, (void**)&pcm);
     if (FAILED(hr))
-        return ; 
+        return;
 
     HMENU hMenu = CreatePopupMenu();
     if (!hMenu)
-        return ;
+        return;
     info.pContextMenu = pcm;
     UINT cmf = ((ici.fMask & CMIC_MASK_SHIFT_DOWN) ? CMF_EXTENDEDVERBS : 0) | CMF_CANRENAME;
     hr = pcm->QueryContextMenu(hMenu, 0, ID_FIRSTCMD, ID_LASTCMD, CMF_NODEFAULT | cmf);
     if (hr > 0)
         _InsertMenuItemW(hMenu, 0, TRUE, 0, MFT_SEPARATOR, NULL, 0);
-    _InsertMenuItemW(hMenu, 0, TRUE, IDC_EXPAND, MFT_STRING,
+    _InsertMenuItemW(hMenu, 0, TRUE, IDC_TOGGLE, MFT_STRING,
         MAKEINTRESOURCEW((tvi.state & TVIS_EXPANDED) ? IDS_COLLAPSE : IDS_EXPAND),
         MFS_DEFAULT | (tvi.cChildren ? 0 : MFS_GRAYED));
 
     UINT cmd = TrackPopupMenuEx(hMenu, TPM_RETURNCMD, ici.ptInvoke.x, ici.ptInvoke.y, info.hWnd, NULL);
     ici.lpVerb = MAKEINTRESOURCEA(cmd - ID_FIRSTCMD);
-    if (cmd == IDC_EXPAND)
+    if (cmd == IDC_TOGGLE)
     {
         TreeView_SelectItem(info.hwndTreeView, hSelected);
         TreeView_Expand(info.hwndTreeView, hSelected, TVE_TOGGLE);

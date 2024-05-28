@@ -153,8 +153,8 @@
 #define IDS_CANTDISCONNECT        160
 #define IDS_NONE                  161
 
-#define IDS_EXPAND 170
-#define IDS_COLLAPSE 171
+#define IDS_EXPAND                170
+#define IDS_COLLAPSE              171
 
 /* Friendly File Type Names */
 #define IDS_DIRECTORY             200
