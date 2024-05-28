@@ -149,7 +149,7 @@ SHELL32_DefaultContextMenuCallBack(IShellFolder *psf, IDataObject *pdo, UINT msg
 UINT
 MapVerbToDfmCmd(LPCSTR verba);
 UINT
-GetDfmCmd(_In_ IContextMenu*pCM, _In_ LPCSTR verba);
+GetDfmCmd(_In_ IContextMenu *pCM, _In_ LPCSTR verba);
 #define SHELL_ExecuteControlPanelCPL(hwnd, cpl) SHRunControlPanel((cpl), (hwnd))
 
 // CStubWindow32 --- The owner window of file property sheets.

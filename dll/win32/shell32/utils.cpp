@@ -1296,7 +1296,7 @@ SHGetRealIDL(
 }
 
 static HRESULT
-GetCommandStringA(_In_ IContextMenu*pCM, _In_ UINT_PTR Id, _In_ UINT GCS, _Out_writes_(cchMax) LPSTR Buf, _In_ UINT cchMax)
+GetCommandStringA(_In_ IContextMenu *pCM, _In_ UINT_PTR Id, _In_ UINT GCS, _Out_writes_(cchMax) LPSTR Buf, _In_ UINT cchMax)
 {
     HRESULT hr = pCM->GetCommandString(Id, GCS & ~GCS_UNICODE, NULL, Buf, cchMax);
     if (FAILED(hr))
@@ -1310,7 +1310,7 @@ GetCommandStringA(_In_ IContextMenu*pCM, _In_ UINT_PTR Id, _In_ UINT GCS, _Out_w
 }
 
 UINT
-GetDfmCmd(_In_ IContextMenu*pCM, _In_ LPCSTR verba)
+GetDfmCmd(_In_ IContextMenu *pCM, _In_ LPCSTR verba)
 {
     CHAR buf[MAX_PATH];
     if (IS_INTRESOURCE(verba))
@@ -1319,5 +1319,5 @@ GetDfmCmd(_In_ IContextMenu*pCM, _In_ LPCSTR verba)
             return 0;
         verba = buf;
     }
-    return MapVerbToDfmCmd(verba);
+    return MapVerbToDfmCmd(verba); // Returns DFM_CMD_* or 0
 }

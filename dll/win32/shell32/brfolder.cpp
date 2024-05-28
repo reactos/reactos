@@ -859,7 +859,7 @@ BrFolder_OnContextMenu(BrFolder &info, LPARAM lParam)
     HRESULT hr = item->lpsfParent->GetUIObjectOf(info.hWnd, 1, &child,
                                                  IID_IContextMenu, NULL, (void**)&pcm);
     if (FAILED(hr))
-        return ;
+        return ; 
 
     HMENU hMenu = CreatePopupMenu();
     if (!hMenu)
@@ -877,13 +877,13 @@ BrFolder_OnContextMenu(BrFolder &info, LPARAM lParam)
     ici.lpVerb = MAKEINTRESOURCEA(cmd - ID_FIRSTCMD);
     if (cmd == IDC_EXPAND)
     {
-        PostMessage(info.hwndTreeView, TVM_SELECTITEM, TVGN_CARET, (LPARAM)hSelected);
-        PostMessage(info.hwndTreeView, TVM_EXPAND, TVE_TOGGLE, (LPARAM)hSelected);
+        TreeView_SelectItem(info.hwndTreeView, hSelected);
+        TreeView_Expand(info.hwndTreeView, hSelected, TVE_TOGGLE);
     }
     else if (cmd != 0 && GetDfmCmd(pcm, ici.lpVerb) == DFM_CMD_RENAME)
     {
-        PostMessage(info.hwndTreeView, TVM_SELECTITEM, TVGN_CARET, (LPARAM)hSelected);
-        PostMessage(info.hwndTreeView, TVM_EDITLABEL, 0, (LPARAM)hSelected);
+        TreeView_SelectItem(info.hwndTreeView, hSelected);
+        TreeView_EditLabel(info.hwndTreeView, hSelected);
     }
     else if (cmd != 0)
     {
