@@ -1422,13 +1422,15 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nCm
     // Set the desktop wallpaper
     if (fuOptions & OPTION_WALLPAPER) // ReactOS specific!
     {
-        INT nID = IDM_FILEASWALLPAPERSTRETCHED;
+        INT nID;
         if (!filename)
             nID = IDM_RESETWALLPAPER;
         else if (fuOptions & OPTION_WALLPAPER_TILE)
             nID = IDM_FILEASWALLPAPERPLANE;
         else if (fuOptions & OPTION_WALLPAPER_CENTERED)
             nID = IDM_FILEASWALLPAPERCENTERED;
+        else
+            nID = IDM_FILEASWALLPAPERSTRETCHED;
         mainWindow.PostMessage(WM_COMMAND, nID, 0);
     }
 
