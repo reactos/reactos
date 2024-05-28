@@ -711,7 +711,8 @@ InitFontSupport(VOID)
     return TRUE;
 }
 
-VOID FASTCALL FreeFontSupport(VOID)
+VOID FASTCALL
+FreeFontSupport(VOID)
 {
     PLIST_ENTRY pHead, pEntry;
     PFONT_CACHE_ENTRY pFontCache;
