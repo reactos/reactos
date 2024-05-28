@@ -1345,21 +1345,32 @@ LPCWSTR ParseCommandLine(INT argc, WCHAR **argv, UINT *pfuOptions)
     for (INT iarg = 1; iarg < argc; ++iarg)
     {
         LPCWSTR arg = argv[iarg];
-        if (lstrcmpiW(arg, L"/wallpaper") == 0) // ReactOS specific!
+
+        // ReactOS specific!
+        if (lstrcmpiW(arg, L"/wallpaper") == 0 || lstrcmpiW(arg, L"/wallpaper:fit") == 0)
         {
             *pfuOptions |= OPTION_WALLPAPER;
             continue;
         }
-        if (lstrcmpiW(arg, L"/tile") == 0) // ReactOS specific!
+
+        if (lstrcmpiW(arg, L"/wallpaper:tile") == 0) // ReactOS specific!
         {
             *pfuOptions |= OPTION_WALLPAPER | OPTION_WALLPAPER_TILE;
             continue;
         }
-        if (lstrcmpiW(arg, L"/center") == 0) // ReactOS specific!
+
+        if (lstrcmpiW(arg, L"/wallpaper:center") == 0) // ReactOS specific!
         {
             *pfuOptions |= OPTION_WALLPAPER | OPTION_WALLPAPER_CENTERED;
             continue;
         }
+
+        if (lstrcmpiW(arg, L"/wallpaper:no") == 0) // ReactOS specific!
+        {
+            filename = L"";
+            continue;
+        }
+
         if (!filename)
             filename = arg;
     }
