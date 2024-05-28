@@ -20,8 +20,9 @@
 
 #include "precomp.h"
 
-#define ROSSIG ( ('R' << 0) | ('O' << 8) | ('S' << 16) | (('g' ^ 'f' ^ 's') << 24) )
 #define DEFBROWSERSTREAM L"Settings"
+#define DEFAULT_VID GUID_NULL // We don't support WebView
+#define CURRENT_VERSION ( DEFFOLDERSETTINGS::VER_XP )
 
 template<class S, class D> static void CopyTo(const S &Src, D &Dst)
 {
@@ -40,6 +41,22 @@ static void EnsureValid(FOLDERSETTINGS &fs)
 static void EnsureValid(DEFFOLDERSETTINGS &dfs)
 {
     EnsureValid(dfs.FolderSettings);
+}
+
+static void InitializeDefaults(DEFFOLDERSETTINGS &dfs)
+{
+    C_ASSERT(FIELD_OFFSET(DEFFOLDERSETTINGS, FolderSettings) == 4);
+    C_ASSERT(FIELD_OFFSET(DEFFOLDERSETTINGS, ViewPriority) == DEFFOLDERSETTINGS::SIZE_IE4);
+    C_ASSERT(sizeof(DEFFOLDERSETTINGS) == DEFFOLDERSETTINGS::SIZE_XP);
+
+    *(UINT*)&dfs = 0; // Set all flags to 0
+    dfs.Statusbar = 1;
+    dfs.FolderSettings.ViewMode = SBFOLDERSETTINGS::DEF_FVM;
+    dfs.FolderSettings.fFlags = SBFOLDERSETTINGS::DEF_FWF;
+    dfs.vid = DEFAULT_VID;
+    dfs.Version = CURRENT_VERSION;
+    dfs.Counter = 0;
+    dfs.ViewPriority = VIEW_PRIORITY_CACHEMISS;
 }
 
 void SBFOLDERSETTINGS::Load()
@@ -65,7 +82,7 @@ HRESULT CGlobalFolderSettings::ResetBrowserSettings()
 HRESULT CGlobalFolderSettings::SaveBrowserSettings(const SBFOLDERSETTINGS &sbfs)
 {
     DEFFOLDERSETTINGS dfs;
-    dfs.ReactOsSignature = ROSSIG;
+    InitializeDefaults(dfs);
     CopyTo(sbfs, dfs);
     return Save(&dfs);
 }
@@ -79,15 +96,26 @@ HRESULT CGlobalFolderSettings::Load(DEFFOLDERSETTINGS &dfs)
         DWORD err = SHRegGetValueW(hStreamsKey, NULL, DEFBROWSERSTREAM,
                                    SRRF_RT_REG_BINARY, NULL, &dfs, &cb);
         RegCloseKey(hStreamsKey);
-        if (!err && cb == sizeof(DEFFOLDERSETTINGS) && dfs.ReactOsSignature == ROSSIG)
+        if (!err && cb >= DEFFOLDERSETTINGS::SIZE_NT4)
         {
+            if (cb < FIELD_OFFSET(DEFFOLDERSETTINGS, vid))
+            {
+                dfs.FolderSettings.fFlags = SBFOLDERSETTINGS::DEF_FWF;
+            }
+            if (cb < FIELD_OFFSET(DEFFOLDERSETTINGS, Version))
+            {
+                dfs.vid = DEFAULT_VID;
+            }
+            if (cb <= FIELD_OFFSET(DEFFOLDERSETTINGS, ViewPriority))
+            {
+                dfs.Version = CURRENT_VERSION;
+            }
+            dfs.ViewPriority = VIEW_PRIORITY_STALECACHEHIT;
             EnsureValid(dfs);
             return S_OK;
         }
     }
-    SBFOLDERSETTINGS sbfs;
-    sbfs.InitializeDefaults();
-    CopyTo(sbfs, dfs);
+    InitializeDefaults(dfs);
     return S_FALSE;
 }
 
@@ -103,9 +131,8 @@ HRESULT CGlobalFolderSettings::Save(const DEFFOLDERSETTINGS *pFDS)
         DWORD err = SHDeleteValueW(hStreamsKey, NULL, DEFBROWSERSTREAM);
         hr = (!err || err == ERROR_FILE_NOT_FOUND) ? S_OK : HResultFromWin32(err);
     }
-    else if (pFDS->ReactOsSignature == ROSSIG)
+    else
     {
-        // FIXME: Until we figure out the format Windows uses, just store our private version.
         DWORD cb = sizeof(DEFFOLDERSETTINGS);
         hr = HResultFromWin32(SHSetValueW(hStreamsKey, NULL, DEFBROWSERSTREAM, REG_BINARY, pFDS, cb));
     }

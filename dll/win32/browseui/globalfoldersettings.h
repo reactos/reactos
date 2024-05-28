@@ -25,10 +25,11 @@ struct SBFOLDERSETTINGS // Private version of DEFFOLDERSETTINGS used by CShellBr
     FOLDERSETTINGS FolderSettings;
 
     enum { DEF_FVM = FVM_DETAILS }; // Windows uses FVM_ICON?
+    enum { DEF_FWF = FWF_NOHEADERINALLVIEWS };
     void InitializeDefaults()
     {
         FolderSettings.ViewMode = DEF_FVM;
-        FolderSettings.fFlags = FWF_NOHEADERINALLVIEWS;
+        FolderSettings.fFlags = DEF_FWF;
     }
     void Load();
 };
