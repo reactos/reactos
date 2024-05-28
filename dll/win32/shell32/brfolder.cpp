@@ -961,8 +961,7 @@ BrFolder_OnContextMenu(BrFolder &info, LPARAM lParam)
     }
     else if (cmd != 0 && GetDfmCmd(pcm, ici.lpVerb) == DFM_CMD_RENAME)
     {
-        TreeView_SelectItem(info.hwndTreeView, hSelected);
-        TreeView_EditLabel(info.hwndTreeView, hSelected);
+        BrFolder_Rename(&info, hSelected);
     }
     else if (cmd != 0)
     {
