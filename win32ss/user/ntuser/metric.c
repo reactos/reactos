@@ -24,7 +24,7 @@ BOOL FASTCALL UserIsIMMEnabled(VOID)
     if (NLS_MB_CODE_PAGE_TAG)
         return TRUE;
 
-    /* "LoadIMM" means Cicero despite of its name (brain-dead) */
+    /* "LoadIMM" means Cicero despite its name */
     return !!RegGetSectionDWORD(L"IMM", L"LoadIMM", FALSE);
 }
 
