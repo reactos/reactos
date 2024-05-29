@@ -87,8 +87,8 @@ BEGIN
         MENUITEM "&Імпорт...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Експорт...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Завантажити файл реєстру...", ID_REGISTRY_LOADHIVE, GRAYED //FIXME: accelerator missing. You are allowed to use the same for ID_REGISTRY_LOADHIVE abd ID_REGISTRY_UNLOADHIVE, since they are never visible at the same time.
-        MENUITEM "Вивантажити файл реєстру...", ID_REGISTRY_UNLOADHIVE, GRAYED //FIXME: accelerator missing. You are allowed to use the same for ID_REGISTRY_LOADHIVE abd ID_REGISTRY_UNLOADHIVE, since they are never visible at the same time.
+        MENUITEM "Завантажити файл реєстру...", ID_REGISTRY_LOADHIVE, GRAYED //FIXME: accelerator missing. You are allowed to use the same for ID_REGISTRY_LOADHIVE and ID_REGISTRY_UNLOADHIVE, since they are never visible at the same time.
+        MENUITEM "Вивантажити файл реєстру...", ID_REGISTRY_UNLOADHIVE, GRAYED //FIXME: accelerator missing. You are allowed to use the same for ID_REGISTRY_LOADHIVE and ID_REGISTRY_UNLOADHIVE, since they are never visible at the same time.
         MENUITEM SEPARATOR
         MENUITEM "&Підключити мережевий реєстр...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Відключити мережевий реєстр...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
