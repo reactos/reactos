@@ -70,7 +70,7 @@ END
 
 IDC_REGEDIT MENU
 BEGIN
-    POPUP "&Файл"
+    POPUP "&Файл" //FIXME: Harmonize this string (part 1 of 2)
     BEGIN
         MENUITEM "В&ихід", ID_REGISTRY_EXIT
     END
@@ -82,7 +82,7 @@ END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "Фа&йл"
+    POPUP "Фа&йл" //FIXME: Harmonize this string (part 2 of 2)
     BEGIN
         MENUITEM "&Імпорт...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Експорт...", ID_REGISTRY_EXPORTREGISTRYFILE
