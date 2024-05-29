@@ -74,7 +74,7 @@ BEGIN
     END
     POPUP "&Súgó"
     BEGIN
-        MENUITEM "&Névjegy", ID_HELP_ABOUT
+        MENUITEM "&Névjegy", ID_HELP_ABOUT //FIXME: There are 2 ID_HELP_ABOUT and their text should be synced
     END
 END
 
@@ -128,7 +128,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Refresh\tF5", ID_VIEW_REFRESH
     END
-    POPUP "&Favorites" //FIXME: accelerator collision &F
+    POPUP "F&avorites"
     BEGIN
         MENUITEM "&Add to Favorites", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
         MENUITEM "&Remove Favorite", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
@@ -137,7 +137,7 @@ BEGIN
     BEGIN
         MENUITEM "&Help Topics\tF1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&About Registry Editor", ID_HELP_ABOUT
+        MENUITEM "&About Registry Editor", ID_HELP_ABOUT //FIXME: There are 2 ID_HELP_ABOUT and their text should be synced
     END
 END
 
