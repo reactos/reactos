@@ -95,8 +95,8 @@ BEGIN
         MENUITEM "&Importuj plik rejestru...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Eksportuj plik rejestru...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Ładuj Drzewo....", ID_REGISTRY_LOADHIVE, GRAYED //FIXME: add accelerator. It is possible to use the same for ID_REGISTRY_LOADHIVE and ID_REGISTRY_UNLOADHIVE because both are never shown at the same time.
-        MENUITEM "Wyładuj Drzewo..", ID_REGISTRY_UNLOADHIVE, GRAYED //FIXME: add accelerator. It is possible to use the same for ID_REGISTRY_LOADHIVE and ID_REGISTRY_UNLOADHIVE because both are never shown at the same time.
+        MENUITEM "Ładuj Drzewo...", ID_REGISTRY_LOADHIVE, GRAYED //FIXME: add accelerator. It is possible to use the same for ID_REGISTRY_LOADHIVE and ID_REGISTRY_UNLOADHIVE because both are never shown at the same time.
+        MENUITEM "Wyładuj Drzewo...", ID_REGISTRY_UNLOADHIVE, GRAYED //FIXME: add accelerator. It is possible to use the same for ID_REGISTRY_LOADHIVE and ID_REGISTRY_UNLOADHIVE because both are never shown at the same time.
         MENUITEM SEPARATOR
         MENUITEM "&Podłącz rejestr sieciowy...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Odłącz rejestr sieciowy...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
