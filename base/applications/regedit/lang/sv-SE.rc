@@ -183,7 +183,7 @@ BEGIN
         MENUITEM "&Byt namn", ID_TREE_RENAME //FIXME: accelerator collision &B. Attention "&Byt namn" does exist 3 times in this file. Therefote I do recommend to change the accel at "&Behörigheter..." instead!
         MENUITEM SEPARATOR
         MENUITEM "&Exportera", ID_TREE_EXPORT
-        MENUITEM "&Behörigheter...", ID_TREE_PERMISSIONS //FIXME: accelerator collision &B. I used "Be&hörigheter..." for the backport-
+        MENUITEM "&Behörigheter...", ID_TREE_PERMISSIONS //FIXME: accelerator collision &B. I used "Be&hörigheter..." for the backport
         MENUITEM SEPARATOR
         MENUITEM "&Kopiera nyckelnamn", ID_EDIT_COPYKEYNAME
     END
