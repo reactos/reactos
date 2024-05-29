@@ -85,8 +85,8 @@ BEGIN
         MENUITEM "ייבוא...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "ייצוא...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "טעינת כוורת (Hive)...", ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "ביטול טעינת כוורת (Hive)...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "טעינת כוורת (Hive)...", ID_REGISTRY_LOADHIVE, GRAYED //FIXME: add accel
+        MENUITEM "ביטול טעינת כוורת (Hive)...", ID_REGISTRY_UNLOADHIVE, GRAYED //FIXME: add accel
         MENUITEM SEPARATOR
         MENUITEM "התחברות לרישום ברשת...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "התנתקות מרישום ברשת...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
