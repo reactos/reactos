@@ -78,7 +78,7 @@ static UNICODE_STRING g_FontRegPath =
    to serialize access to it */
 static PFAST_MUTEX      g_FreeTypeLock;
 
-static LIST_ENTRY       g_FontListHead;
+static RTL_STATIC_LIST_HEAD(g_FontListHead);
 static PFAST_MUTEX      g_FontListLock;
 static BOOL             g_RenderingEnabled = TRUE;
 
@@ -105,7 +105,7 @@ static BOOL             g_RenderingEnabled = TRUE;
 
 #define MAX_FONT_CACHE 256
 
-static LIST_ENTRY g_FontCacheListHead;
+static RTL_STATIC_LIST_HEAD(g_FontCacheListHead);
 static UINT g_FontCacheNumEntries;
 
 static PWCHAR g_ElfScripts[32] =   /* These are in the order of the fsCsb[0] bits */
@@ -476,9 +476,7 @@ VOID DumpFontSubstList(VOID)
          pListEntry != pHead;
          pListEntry = pListEntry->Flink)
     {
-        pSubstEntry =
-            (PFONTSUBST_ENTRY)CONTAINING_RECORD(pListEntry, FONT_ENTRY, ListEntry);
-
+        pSubstEntry = CONTAINING_RECORD(pListEntry, FONTSUBST_ENTRY, ListEntry);
         DumpFontSubstEntry(pSubstEntry);
     }
 }
@@ -673,8 +671,6 @@ InitFontSupport(VOID)
 {
     ULONG ulError;
 
-    InitializeListHead(&g_FontListHead);
-    InitializeListHead(&g_FontCacheListHead);
     g_FontCacheNumEntries = 0;
     /* Fast Mutexes must be allocated from non paged pool */
     g_FontListLock = ExAllocatePoolWithTag(NonPagedPool, sizeof(FAST_MUTEX), TAG_INTERNAL_SYNC);
@@ -713,6 +709,58 @@ InitFontSupport(VOID)
 #endif
 
     return TRUE;
+}
+
+VOID FASTCALL
+FreeFontSupport(VOID)
+{
+    PLIST_ENTRY pHead, pEntry;
+    PFONT_CACHE_ENTRY pFontCache;
+    PFONTSUBST_ENTRY pSubstEntry;
+    PFONT_ENTRY pFontEntry;
+
+    IntLockGlobalFonts();
+
+    // Free font cache list
+    pHead = &g_FontCacheListHead;
+    while (!IsListEmpty(pHead))
+    {
+        pEntry = RemoveHeadList(pHead);
+        pFontCache = CONTAINING_RECORD(pEntry, FONT_CACHE_ENTRY, ListEntry);
+        RemoveCachedEntry(pFontCache);
+    }
+
+    // Free font subst list
+    pHead = &g_FontSubstListHead;
+    while (!IsListEmpty(pHead))
+    {
+        pEntry = RemoveHeadList(pHead);
+        pSubstEntry = CONTAINING_RECORD(pEntry, FONTSUBST_ENTRY, ListEntry);
+        ExFreePoolWithTag(pSubstEntry, TAG_FONT);
+    }
+
+    // Free font list
+    pHead = &g_FontListHead;
+    while (!IsListEmpty(pHead))
+    {
+        pEntry = RemoveHeadList(pHead);
+        pFontEntry = CONTAINING_RECORD(pEntry, FONT_ENTRY, ListEntry);
+        CleanupFontEntry(pFontEntry);
+    }
+
+    if (g_FreeTypeLibrary)
+    {
+        FT_Done_Library(g_FreeTypeLibrary);
+        g_FreeTypeLibrary = NULL;
+    }
+
+    IntUnLockGlobalFonts();
+
+    ExFreePoolWithTag(g_FontListLock, TAG_INTERNAL_SYNC);
+    g_FontListLock = NULL;
+
+    ExFreePoolWithTag(g_FreeTypeLock, TAG_INTERNAL_SYNC);
+    g_FreeTypeLock = NULL;
 }
 
 static LONG IntNormalizeAngle(LONG nTenthsOfDegrees)
@@ -783,8 +831,7 @@ SubstituteFontByList(PLIST_ENTRY        pHead,
          pListEntry != pHead;
          pListEntry = pListEntry->Flink)
     {
-        pSubstEntry =
-            (PFONTSUBST_ENTRY)CONTAINING_RECORD(pListEntry, FONT_ENTRY, ListEntry);
+        pSubstEntry = CONTAINING_RECORD(pListEntry, FONTSUBST_ENTRY, ListEntry);
 
         CharSets[FONTSUBST_FROM] = pSubstEntry->CharSets[FONTSUBST_FROM];
 
