@@ -36,9 +36,11 @@
 #include <wine/test.h>
 
 #define EXPECT_TODO_WINE 0x80000000UL
-#ifdef __REACTOS__
-static inline const char *debugstr_guid( const struct _GUID *id ) { return wine_dbgstr_guid(id); }
+
+#ifdef __REACTOS__  
+#define debugstr_guid(id) wine_dbgstr_guid(id)  
 #endif
+
 struct reolecb_obj
 {
     IRichEditOleCallback IRichEditOleCallback_iface;
