@@ -137,7 +137,7 @@ BEGIN
     BEGIN
         MENUITEM "&Hilfethemen\tF1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Info", ID_HELP_ABOUT
+        MENUITEM "Inf&o", ID_HELP_ABOUT
     END
 END
 
