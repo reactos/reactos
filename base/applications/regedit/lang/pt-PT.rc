@@ -68,7 +68,7 @@ END
 
 IDC_REGEDIT MENU
 BEGIN
-    POPUP "&Ficheiro"
+    POPUP "&Ficheiro" //FIXME: harmonize that string with POPUP "&Registo" (part 1 of 2). I do recommend to use POPUP "&Registo" for both. Because that will not accelerator-collide with POPUP "&Favoritos"
     BEGIN
         MENUITEM "Sai&r", ID_REGISTRY_EXIT
     END
@@ -80,13 +80,13 @@ END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "&Registo"
+    POPUP "&Registo" //FIXME: harmonize that string with POPUP "&Ficheiro" (part 2 of 2). I do recommend to use POPUP "&Registo" for both. Because that will not accelerator-collide with POPUP "&Favoritos"
     BEGIN
         MENUITEM "&Importar ficheiro de Registo...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Exportar ficheiro de Registo...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Carregar ramo de registo...", ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "Descarregar ramo de registo...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "Carregar ramo de registo...", ID_REGISTRY_LOADHIVE, GRAYED //FIXME: add accelerator. It is possible to use the same for ID_REGISTRY_LOADHIVE and ID_REGISTRY_UNLOADHIVE. Because they are never shown at the same time.
+        MENUITEM "Descarregar ramo de registo...", ID_REGISTRY_UNLOADHIVE, GRAYED //FIXME: add accelerator. It is possible to use the same for ID_REGISTRY_LOADHIVE and ID_REGISTRY_UNLOADHIVE. Because they are never shown at the same time.
         MENUITEM SEPARATOR
         MENUITEM "&Ligar ao Registo de rede...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Desligar do Registo de rede...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
@@ -723,7 +723,7 @@ CAPTION "Procurar"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
-    DEFPUSHBUTTON "&Cancelar", IDCANCEL, 93, 29, 45, 14
+    DEFPUSHBUTTON "Cancelar", IDCANCEL, 93, 29, 45, 14
     LTEXT "Procurar no registo...", IDC_STATIC, 33, 12, 83, 8
 END
 
