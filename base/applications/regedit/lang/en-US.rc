@@ -128,7 +128,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Refresh\tF5", ID_VIEW_REFRESH
     END
-    POPUP "&Favorites"
+    POPUP "&Favorites" //FIXME: acclerator collision &F "&File" vs. "&Favorites". The "&Favorites" one is where the bug is. THIS DOES AFFECT SEVERAL LANGUAGES! FIX THEM ALL!
     BEGIN
         MENUITEM "&Add to Favorites", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
         MENUITEM "&Remove Favorite", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
@@ -723,7 +723,7 @@ CAPTION "Find"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
-    DEFPUSHBUTTON "&Cancel", IDCANCEL, 93, 29, 45, 14
+    DEFPUSHBUTTON "Cancel", IDCANCEL, 93, 29, 45, 14
     LTEXT "Searching the registry...", IDC_STATIC, 33, 12, 83, 8
 END
 
