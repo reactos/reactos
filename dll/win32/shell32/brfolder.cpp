@@ -30,7 +30,7 @@ struct BrFolder
 struct BrItemData
 {
     CComPtr<IShellFolder>            lpsfParent; // IShellFolder of the parent
-    CComHeapPtr<ITEMIDLIST_RELATIVE> pidlChild;  // PIDL relative to parent
+    PCIDLIST_RELATIVE                pidlChild;  // PIDL relative to parent
     CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlFull;   // Fully qualified PIDL
 };
 
@@ -82,6 +82,14 @@ BrFolder_GetItemData(BrFolder *info, HTREEITEM hItem)
         return NULL;
     }
     return (BrItemData *)item.lParam;
+}
+
+static SFGAOF
+BrFolder_GetItemAttributes(BrFolder *info, HTREEITEM hItem, SFGAOF Att)
+{
+    BrItemData *item = BrFolder_GetItemData(info, hItem);
+    HRESULT hr = item ? item->lpsfParent->GetAttributesOf(1, &item->pidlChild, &Att) : E_FAIL;
+    return SUCCEEDED(hr) ? Att : 0;
 }
 
 static HRESULT
@@ -160,7 +168,7 @@ BrFolder_InitTreeView(BrFolder *info)
     PCIDLIST_ABSOLUTE pidlRoot = info->lpBrowseInfo->pidlRoot;
     CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlParent(ILClone(pidlRoot));
     ILRemoveLastID(pidlParent);
-    CComHeapPtr<ITEMIDLIST_RELATIVE> pidlChild(ILClone(ILFindLastID(pidlRoot)));
+    PCIDLIST_RELATIVE pidlChild = ILFindLastID(pidlRoot);
 
     if (_ILIsDesktop(pidlParent))
     {
@@ -283,8 +291,8 @@ BrFolder_InsertItem(
     BrFolder_GetIconPair(pidlFull, &item);
 
     pItemData->lpsfParent = lpsf;
-    pItemData->pidlChild.Attach(ILClone(pidlChild));
     pItemData->pidlFull.Attach(pidlFull);
+    pItemData->pidlChild = ILFindLastID(pItemData->pidlFull);
 
     if (BrFolder_GetChildrenEnum(info, pItemData, NULL) == S_OK)
         item.cChildren = 1;
@@ -450,37 +458,38 @@ BrFolder_Treeview_Changed(BrFolder *info, NMTREEVIEWW *pnmtv)
 static LRESULT
 BrFolder_Treeview_Rename(BrFolder *info, NMTVDISPINFOW *pnmtv)
 {
-    WCHAR old_path[MAX_PATH], new_path[MAX_PATH];
-    NMTREEVIEWW nmtv;
-    TVITEMW item;
-
     if (!pnmtv->item.pszText)
-        return 0;
+        return FALSE;
 
-    item.hItem = TreeView_GetSelection(info->hwndTreeView);
-    BrItemData *item_data = BrFolder_GetItemData(info, item.hItem);
+    HTREEITEM hItem = TreeView_GetSelection(info->hwndTreeView);
+    BrItemData *data = BrFolder_GetItemData(info, hItem);
+    ASSERT(data);
+    ASSERT(BrFolder_GetItemAttributes(info, hItem, SFGAO_CANRENAME) & SFGAO_CANRENAME);
 
-    SHGetPathFromIDListW(item_data->pidlFull, old_path);
-    lstrcpynW(new_path, old_path, _countof(new_path));
-    PathRemoveFileSpecW(new_path);
-    PathAppendW(new_path, pnmtv->item.pszText);
+    PITEMID_CHILD newChild;
+    HRESULT hr = data->lpsfParent->SetNameOf(info->hWnd, data->pidlChild,
+                                             pnmtv->item.pszText, SHGDN_NORMAL, &newChild);
+    if (FAILED(hr))
+        return FALSE;
 
-    if (!MoveFileW(old_path, new_path))
-        return 0;
+    LPITEMIDLIST newFull;
+    if (SUCCEEDED(hr = SHILClone((LPITEMIDLIST)data->pidlFull, &newFull)))
+    {
+        ILRemoveLastID(newFull);
+        if (SUCCEEDED(hr = SHILAppend(newChild, &newFull)))
+        {
+            data->pidlFull.Free();
+            data->pidlFull.Attach(newFull);
+            data->pidlChild = ILFindLastID(data->pidlFull);
+        }
+        newChild = NULL; // SHILAppend is nuts and frees this
+    }
+    ILFree(newChild);
 
-    item_data->pidlFull.Free();
-    item_data->pidlChild.Free();
-    item_data->pidlFull.Attach(SHSimpleIDListFromPathW(new_path));
-    item_data->lpsfParent->ParseDisplayName(NULL, NULL, pnmtv->item.pszText, NULL,
-                                            &item_data->pidlChild, NULL);
-
-    item.mask = TVIF_HANDLE | TVIF_TEXT;
-    item.pszText = pnmtv->item.pszText;
-    TreeView_SetItem(info->hwndTreeView, &item);
-
-    nmtv.itemNew.lParam = item.lParam;
+    NMTREEVIEWW nmtv;
+    nmtv.itemNew.lParam = (LPARAM)data;
     BrFolder_Treeview_Changed(info, &nmtv);
-    return 0;
+    return TRUE;
 }
 
 static HRESULT
@@ -560,7 +569,14 @@ BrFolder_OnNotify(BrFolder *info, UINT CtlID, LPNMHDR lpnmh)
         case TVN_SELCHANGEDW:
             return BrFolder_Treeview_Changed(info, pnmtv);
 
-        case TVN_ENDLABELEDITA:
+        case TVN_BEGINLABELEDITA:
+        case TVN_BEGINLABELEDITW:
+        {
+            NMTVDISPINFO &tvdi = *(NMTVDISPINFO*)lpnmh;
+            UINT att = BrFolder_GetItemAttributes(info, tvdi.item.hItem, SFGAO_CANRENAME);
+            return !(att & SFGAO_CANRENAME);
+        }
+
         case TVN_ENDLABELEDITW:
             return BrFolder_Treeview_Rename(info, (LPNMTVDISPINFOW)pnmtv);
 
@@ -1027,7 +1043,8 @@ BrFolderDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
         case WM_NOTIFY:
-            return BrFolder_OnNotify(info, (UINT)wParam, (LPNMHDR)lParam);
+            SetWindowLongPtr(hWnd, DWLP_MSGRESULT, BrFolder_OnNotify(info, (UINT)wParam, (LPNMHDR)lParam));
+            return TRUE;
 
         case WM_COMMAND:
             BrFolder_OnCommand(info, wParam);
