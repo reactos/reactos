@@ -80,7 +80,7 @@ END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "&File" //FIXME: accelerator collision &F
+    POPUP "&File"
     BEGIN
         MENUITEM "&Import Registry File...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Export Registry File...", ID_REGISTRY_EXPORTREGISTRYFILE
