@@ -88,8 +88,8 @@ BEGIN
         MENUITEM "&Importar archivo...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Exportar archivo...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Cargar subárbol...", ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "Descargar subárbol...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "Cargar subárbol...", ID_REGISTRY_LOADHIVE, GRAYED //FIXME: add accel
+        MENUITEM "Descargar subárbol...", ID_REGISTRY_UNLOADHIVE, GRAYED //FIXME: add accel
         MENUITEM SEPARATOR
         MENUITEM "&Conectar al Registro de red...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Desconectar del Registro de red...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
@@ -182,10 +182,10 @@ BEGIN
         END
         MENUITEM "&Buscar...", ID_EDIT_FIND
         MENUITEM SEPARATOR
-        MENUITEM "&Eliminar", ID_TREE_DELETE
+        MENUITEM "&Eliminar", ID_TREE_DELETE //FIXME: accelerator collision &E
         MENUITEM "&Renombrar", ID_TREE_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Exportar", ID_TREE_EXPORT
+        MENUITEM "&Exportar", ID_TREE_EXPORT //FIXME: accelerator collision &E. Please notice that there is another MENUITEM "&Exportar", ID_TREE_EXPORT ~ 10 lines below and also another MENUITEM "&Eliminar", ID_HEXEDIT_DELETE ~ 20 lines below. If possible keep them harmonizd.
         MENUITEM "&Permisos...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Copiar nombre de clave", ID_EDIT_COPYKEYNAME
