@@ -629,6 +629,12 @@ BrFolder_Treeview_Keydown(BrFolder *info, LPNMTVKEYDOWN keydown)
             }
             break;
         }
+        case VK_F5:
+        {
+            HTREEITEM hRoot = TreeView_GetRoot(info->hwndTreeView);
+            BrFolder_Refresh(info, hRoot);
+            break;
+        }
     }
     return 0;
 }
