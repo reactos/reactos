@@ -599,9 +599,7 @@ BrFolder_Delete(BrFolder *info, HTREEITEM hItem)
 }
 
 static void
-BrFolder_RefreshRecurse(
-    _Inout_ BrFolder *info,
-    _In_ HTREEITEM hTarget);
+BrFolder_Refresh(_Inout_ BrFolder *info);
 
 static LRESULT
 BrFolder_Treeview_Keydown(BrFolder *info, LPNMTVKEYDOWN keydown)
@@ -623,16 +621,12 @@ BrFolder_Treeview_Keydown(BrFolder *info, LPNMTVKEYDOWN keydown)
         case 'R':
         {
             if (GetKeyState(VK_CONTROL) < 0) // Ctrl+R
-            {
-                HTREEITEM hRoot = TreeView_GetRoot(info->hwndTreeView);
-                BrFolder_RefreshRecurse(info, hRoot);
-            }
+                BrFolder_Refresh(info);
             break;
         }
         case VK_F5:
         {
-            HTREEITEM hRoot = TreeView_GetRoot(info->hwndTreeView);
-            BrFolder_RefreshRecurse(info, hRoot);
+            BrFolder_Refresh(info);
             break;
         }
     }
@@ -1103,6 +1097,19 @@ BrFolder_RefreshRecurse(
 }
 
 static void
+BrFolder_Refresh(_Inout_ BrFolder *info)
+{
+    HTREEITEM hRoot = TreeView_GetRoot(info->hwndTreeView);
+
+    SendMessageW(info->hwndTreeView, WM_SETREDRAW, FALSE, 0);
+
+    BrFolder_RefreshRecurse(info, hRoot);
+
+    SendMessageW(info->hwndTreeView, WM_SETREDRAW, TRUE, 0);
+    InvalidateRect(info->hwndTreeView, NULL, TRUE);
+}
+
+static void
 BrFolder_OnChangeEx(
     _Inout_ BrFolder *info,
     _In_ PCIDLIST_ABSOLUTE pidl0,
@@ -1124,8 +1131,7 @@ BrFolder_OnChangeEx(
         case SHCNE_UPDATEDIR:
         case SHCNE_UPDATEITEM:
         {
-            HTREEITEM hRoot = TreeView_GetRoot(info->hwndTreeView);
-            BrFolder_RefreshRecurse(info, hRoot);
+            BrFolder_Refresh(info);
             break;
         }
     }
