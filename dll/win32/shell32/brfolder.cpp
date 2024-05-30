@@ -281,7 +281,7 @@ BrFolder_IsTreeItemInEnum(
 }
 
 static BOOL
-BrFolder_TreeItemHasChild(BrFolder *info, HTREEITEM hItem, PITEMID_CHILD pidlChild)
+BrFolder_TreeItemHasThisChild(BrFolder *info, HTREEITEM hItem, PITEMID_CHILD pidlChild)
 {
     HTREEITEM hNextItem;
     for (hItem = TreeView_GetChild(info->hwndTreeView, hItem); hItem; hItem = hNextItem)
@@ -1046,7 +1046,7 @@ BrFolder_RefreshRecurse(
         CComHeapPtr<ITEMIDLIST_RELATIVE> pidlTemp;
         while (S_OK == pEnum->Next(1, &pidlTemp, NULL))
         {
-            if (!BrFolder_TreeItemHasChild(info, hTarget, pidlTemp))
+            if (!BrFolder_TreeItemHasThisChild(info, hTarget, pidlTemp))
             {
                 BrFolder_InsertItem(info, pItemData->lpsfParent, pidlTemp, pItemData->pidlFull,
                                     hTarget);
