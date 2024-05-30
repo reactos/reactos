@@ -536,8 +536,6 @@ BrFolder_Treeview_Rename(BrFolder *info, NMTVDISPINFOW *pnmtv)
     ASSERT(data);
     ASSERT(BrFolder_GetItemAttributes(info, hItem, SFGAO_CANRENAME) & SFGAO_CANRENAME);
 
-    CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlOldFull(ILClone(data->pidlFull));
-
     PITEMID_CHILD newChild;
     HRESULT hr = data->lpsfParent->SetNameOf(info->hWnd, data->pidlChild,
                                              pnmtv->item.pszText, SHGDN_NORMAL, &newChild);
@@ -550,8 +548,6 @@ BrFolder_Treeview_Rename(BrFolder *info, NMTVDISPINFOW *pnmtv)
         ILRemoveLastID(newFull);
         if (SUCCEEDED(hr = SHILAppend(newChild, &newFull)))
         {
-            SHChangeNotify(SHCNE_RENAMEFOLDER, SHCNF_IDLIST, pidlOldFull, newFull);
-
             data->pidlFull.Free();
             data->pidlFull.Attach(newFull);
             data->pidlChild = ILFindLastID(data->pidlFull);
