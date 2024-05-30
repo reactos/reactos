@@ -62,3 +62,12 @@
 #define DLG_TIMES      1
 #define DLG_CONGRATS   2
 #define DLG_CUSTOM     3
+
+#ifdef __REACTOS__
+/* Sound effects */
+#define IDW_BOX        1301
+#define IDW_FLAG       1302
+#define IDW_QUESTION   1303
+#define IDW_EXPLODE    1304
+#define IDW_WIN        1305
+#endif

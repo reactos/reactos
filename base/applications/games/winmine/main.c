@@ -26,6 +26,9 @@
 #include <time.h>
 #include <stdlib.h>
 #include <shellapi.h>
+#ifdef __REACTOS__
+#include <mmsystem.h>
+#endif
 
 #include <wine/debug.h>
 
@@ -542,13 +545,25 @@ static void DrawBoard( HDC hdc, HDC hMemDC, PAINTSTRUCT *ps, BOARD *p_board )
 }
 
 
+#ifdef __REACTOS__
+static void PlaySoundEffect( UINT id )
+{
+    PlaySoundW(MAKEINTRESOURCEW(id), GetModuleHandleW(NULL), SND_RESOURCE | SND_ASYNC);
+}
+#endif
+
+
 static void AddFlag( BOARD *p_board, unsigned col, unsigned row )
 {
     if( p_board->box[col][row].FlagType != COMPLETE ) {
         switch( p_board->box[col][row].FlagType ) {
         case FLAG:
-            if( p_board->IsMarkQ )
+            if( p_board->IsMarkQ ) {
                 p_board->box[col][row].FlagType = QUESTION;
+#ifdef __REACTOS__
+                PlaySoundEffect(IDW_QUESTION);
+#endif
+            }
             else
                 p_board->box[col][row].FlagType = NORMAL;
             p_board->num_flags--;
@@ -561,6 +576,9 @@ static void AddFlag( BOARD *p_board, unsigned col, unsigned row )
         default:
             p_board->box[col][row].FlagType = FLAG;
             p_board->num_flags++;
+#ifdef __REACTOS__
+            PlaySoundEffect(IDW_FLAG);
+#endif
         }
     }
 }
@@ -640,7 +658,11 @@ static void PressBoxes( BOARD *p_board, unsigned col, unsigned row )
 }
 
 
+#ifdef __REACTOS__
+static void CompleteBox( BOARD *p_board, unsigned col, unsigned row, BOOL is_first_box )
+#else
 static void CompleteBox( BOARD *p_board, unsigned col, unsigned row )
+#endif
 {
     int i, j;
 
@@ -653,15 +675,27 @@ static void CompleteBox( BOARD *p_board, unsigned col, unsigned row )
         if( p_board->box[col][row].IsMine ) {
             p_board->face_bmp = DEAD_BMP;
             p_board->status = GAMEOVER;
+#ifdef __REACTOS__
+            PlaySoundEffect(IDW_EXPLODE);
+#endif
         }
-        else if( p_board->status != GAMEOVER )
+        else if( p_board->status != GAMEOVER ) {
             p_board->boxes_left--;
+#ifdef __REACTOS__
+            if (is_first_box)
+                PlaySoundEffect(IDW_BOX);
+#endif
+        }
 
         if( p_board->box[col][row].NumMines == 0 )
         {
             for( i = -1; i <= 1; i++ )
             for( j = -1; j <= 1; j++ )
+#ifdef __REACTOS__
+                CompleteBox( p_board, col + i, row + j, FALSE );
+#else
                 CompleteBox( p_board, col + i, row + j  );
+#endif
         }
     }
 }
@@ -683,7 +717,11 @@ static void CompleteBoxes( BOARD *p_board, unsigned col, unsigned row )
             for( i = -1; i <= 1; i++ )
               for( j = -1; j <= 1; j++ ) {
                 if( p_board->box[col+i][row+j].FlagType != FLAG )
+#ifdef __REACTOS__
+                    CompleteBox( p_board, col+i, row+j, FALSE );
+#else
                     CompleteBox( p_board, col+i, row+j );
+#endif
               }
         }
     }
@@ -722,7 +760,11 @@ static void TestMines( BOARD *p_board, POINT pt, int msg )
             p_board->status = PLAYING;
             PlaceMines( p_board, col, row );
         }
+#ifdef __REACTOS__
+        CompleteBox( p_board, col, row, TRUE );
+#else
         CompleteBox( p_board, col, row );
+#endif
         break;
 
     case WM_MBUTTONDOWN:
@@ -800,6 +842,10 @@ static void TestBoard( HWND hWnd, BOARD *p_board, int x, int y, int msg )
     }
 
     if( p_board->boxes_left == 0 ) {
+#ifdef __REACTOS__
+        if (p_board->status != WON)
+            PlaySoundEffect(IDW_WIN);
+#endif
         p_board->status = WON;
 
         if (p_board->num_flags < p_board->mines) {
