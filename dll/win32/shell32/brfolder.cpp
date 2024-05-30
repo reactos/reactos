@@ -274,7 +274,7 @@ BrFolder_IsTreeItemInEnum(
             ret = TRUE;
             break;
         }
-        pidlTemp.Free(); // Finally, free the pidl that the shell gave us...
+        pidlTemp.Free();
     }
 
     return ret;
