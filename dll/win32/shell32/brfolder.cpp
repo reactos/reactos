@@ -253,6 +253,76 @@ BrFolder_GetName(
     return bSuccess;
 }
 
+static BOOL
+BrFolder_IsTreeItemInEnum(
+    _Inout_ BrFolder *info,
+    _In_ HTREEITEM hItem,
+    _Inout_ IEnumIDList *pEnum)
+{
+    BrItemData *pItemData = BrFolder_GetItemData(info, hItem);
+    if (!pItemData)
+        return FALSE;
+
+    pEnum->Reset();
+
+    BOOL ret = FALSE;
+    CComHeapPtr<ITEMIDLIST_RELATIVE> pidlTemp;
+    while (S_OK == pEnum->Next(1, &pidlTemp, NULL))
+    {
+        if (ILIsEqual(pidlTemp, pItemData->pidlChild))
+        {
+            ret = TRUE;
+            break;
+        }
+        pidlTemp.Free(); // Finally, free the pidl that the shell gave us...
+    }
+
+    return ret;
+}
+
+static BOOL
+BrFolder_TreeItemHasChild(BrFolder *info, HTREEITEM hItem, PITEMID_CHILD pidlChild)
+{
+    HTREEITEM hNextItem;
+    for (hItem = TreeView_GetChild(info->hwndTreeView, hItem); hItem; hItem = hNextItem)
+    {
+        hNextItem = TreeView_GetNextSibling(info->hwndTreeView, hItem);
+
+        BrItemData *pItemData = BrFolder_GetItemData(info, hItem);
+        if (ILIsEqual(pItemData->pidlChild, pidlChild))
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+static void
+BrFolder_UpdateItem(BrFolder *info, HTREEITEM hItem)
+{
+    BrItemData *pItemData = BrFolder_GetItemData(info, hItem);
+    if (!pItemData)
+        return;
+
+    TVITEMW item = { TVIF_HANDLE | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_CHILDREN };
+    item.hItem = hItem;
+
+    BrFolder_GetIconPair(pItemData->pidlFull, &item);
+
+    item.cChildren = 0;
+    CComPtr<IEnumIDList> pEnum;
+    if (BrFolder_GetChildrenEnum(info, pItemData, &pEnum) == S_OK)
+    {
+        CComHeapPtr<ITEMIDLIST_RELATIVE> pidlTemp;
+        while (S_OK == pEnum->Next(1, &pidlTemp, NULL))
+        {
+            ++item.cChildren;
+            pidlTemp.Free();
+        }
+    }
+
+    TreeView_SetItem(info->hwndTreeView, &item);
+}
+
 /******************************************************************************
  * BrFolder_InsertItem [Internal]
  *
@@ -334,7 +404,7 @@ BrFolder_Expand(
     SetCapture(info->hWnd);
     SetCursor(LoadCursorW(NULL, (LPWSTR)IDC_WAIT));
 
-    CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlTemp;
+    CComHeapPtr<ITEMIDLIST_RELATIVE> pidlTemp;
     ULONG ulFetched;
     while (S_OK == pEnum->Next(1, &pidlTemp, &ulFetched))
     {
@@ -466,6 +536,8 @@ BrFolder_Treeview_Rename(BrFolder *info, NMTVDISPINFOW *pnmtv)
     ASSERT(data);
     ASSERT(BrFolder_GetItemAttributes(info, hItem, SFGAO_CANRENAME) & SFGAO_CANRENAME);
 
+    CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlOldFull(ILClone(data->pidlFull));
+
     PITEMID_CHILD newChild;
     HRESULT hr = data->lpsfParent->SetNameOf(info->hWnd, data->pidlChild,
                                              pnmtv->item.pszText, SHGDN_NORMAL, &newChild);
@@ -473,11 +545,13 @@ BrFolder_Treeview_Rename(BrFolder *info, NMTVDISPINFOW *pnmtv)
         return FALSE;
 
     LPITEMIDLIST newFull;
-    if (SUCCEEDED(hr = SHILClone((LPITEMIDLIST)data->pidlFull, &newFull)))
+    if (SUCCEEDED(hr = SHILClone(data->pidlFull, &newFull)))
     {
         ILRemoveLastID(newFull);
         if (SUCCEEDED(hr = SHILAppend(newChild, &newFull)))
         {
+            SHChangeNotify(SHCNE_RENAMEFOLDER, SHCNF_IDLIST, pidlOldFull, newFull);
+
             data->pidlFull.Free();
             data->pidlFull.Attach(newFull);
             data->pidlChild = ILFindLastID(data->pidlFull);
@@ -524,6 +598,11 @@ BrFolder_Delete(BrFolder *info, HTREEITEM hItem)
     SHFileOperationW(&fileop);
 }
 
+static void
+BrFolder_Refresh(
+    _Inout_ BrFolder *info,
+    _In_ HTREEITEM hTarget);
+
 static LRESULT
 BrFolder_Treeview_Keydown(BrFolder *info, LPNMTVKEYDOWN keydown)
 {
@@ -541,6 +620,15 @@ BrFolder_Treeview_Keydown(BrFolder *info, LPNMTVKEYDOWN keydown)
         case VK_DELETE:
             BrFolder_Delete(info, hItem);
             break;
+        case 'R':
+        {
+            if (GetKeyState(VK_CONTROL) < 0) // Ctrl+R
+            {
+                HTREEITEM hRoot = TreeView_GetRoot(info->hwndTreeView);
+                BrFolder_Refresh(info, hRoot);
+            }
+            break;
+        }
     }
     return 0;
 }
@@ -963,6 +1051,52 @@ BrFolder_FindItemByPidl(BrFolder *info, PCIDLIST_ABSOLUTE pidlFull, HTREEITEM hI
 }
 
 static void
+BrFolder_Refresh(
+    _Inout_ BrFolder *info,
+    _In_ HTREEITEM hTarget)
+{
+    // Get enum
+    CComPtr<IEnumIDList> pEnum;
+    BrItemData *pItemData = BrFolder_GetItemData(info, hTarget);
+    HRESULT hrEnum = BrFolder_GetChildrenEnum(info, pItemData, &pEnum);
+
+    // Insert new items
+    if (SUCCEEDED(hrEnum))
+    {
+        CComHeapPtr<ITEMIDLIST_RELATIVE> pidlTemp;
+        while (S_OK == pEnum->Next(1, &pidlTemp, NULL))
+        {
+            if (!BrFolder_TreeItemHasChild(info, hTarget, pidlTemp))
+            {
+                BrFolder_InsertItem(info, pItemData->lpsfParent, pidlTemp, pItemData->pidlFull,
+                                    hTarget);
+            }
+            pidlTemp.Free();
+        }
+    }
+
+    // Delete zombie items and update items
+    HTREEITEM hItem, hNextItem;
+    for (hItem = TreeView_GetChild(info->hwndTreeView, hTarget); hItem; hItem = hNextItem)
+    {
+        hNextItem = TreeView_GetNextSibling(info->hwndTreeView, hItem);
+
+        if (FAILED(hrEnum) || !BrFolder_IsTreeItemInEnum(info, hItem, pEnum))
+        {
+            TreeView_DeleteItem(info->hwndTreeView, hItem);
+            hNextItem = TreeView_GetChild(info->hwndTreeView, hTarget);
+            continue;
+        }
+
+        BrFolder_UpdateItem(info, hItem);
+        BrFolder_Refresh(info, hItem);
+    }
+
+    if (SUCCEEDED(hrEnum))
+        TreeView_SortChildren(info->hwndTreeView, hTarget, FALSE);
+}
+
+static void
 BrFolder_OnChangeEx(
     _Inout_ BrFolder *info,
     _In_ PCIDLIST_ABSOLUTE pidl0,
@@ -976,30 +1110,16 @@ BrFolder_OnChangeEx(
         case SHCNE_DRIVEADD:
         case SHCNE_MKDIR:
         case SHCNE_CREATE:
-        {
-            // FIXME
-            break;
-        }
         case SHCNE_DRIVEREMOVED:
         case SHCNE_RMDIR:
         case SHCNE_DELETE:
-        {
-            HTREEITEM hRoot = TreeView_GetRoot(info->hwndTreeView);
-            for (;;)
-            {
-                HTREEITEM hItem = BrFolder_FindItemByPidl(info, pidl0, hRoot);
-                if (!hItem)
-                    break;
-                TreeView_DeleteItem(info->hwndTreeView, hItem);
-            }
-            break;
-        }
         case SHCNE_RENAMEFOLDER:
         case SHCNE_RENAMEITEM:
         case SHCNE_UPDATEDIR:
         case SHCNE_UPDATEITEM:
         {
-            // FIXME
+            HTREEITEM hRoot = TreeView_GetRoot(info->hwndTreeView);
+            BrFolder_Refresh(info, hRoot);
             break;
         }
     }
