@@ -1030,26 +1030,6 @@ BrFolder_OnDestroy(BrFolder *info)
     SHChangeNotifyDeregister(info->hChangeNotify);
 }
 
-// Find a treeview node by recursively walking the treeview
-static HTREEITEM
-BrFolder_FindItemByPidl(BrFolder *info, PCIDLIST_ABSOLUTE pidlFull, HTREEITEM hItem)
-{
-    BrItemData *item_data = BrFolder_GetItemData(info, hItem);
-
-    if (ILIsEqual(item_data->pidlFull, pidlFull))
-        return hItem;
-
-    for (hItem = TreeView_GetChild(info->hwndTreeView, hItem); hItem;
-         hItem = TreeView_GetNextSibling(info->hwndTreeView, hItem))
-    {
-        HTREEITEM newItem = BrFolder_FindItemByPidl(info, pidlFull, hItem);
-        if (newItem)
-            return newItem;
-    }
-
-    return NULL;
-}
-
 static void
 BrFolder_RefreshRecurse(
     _Inout_ BrFolder *info,
