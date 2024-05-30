@@ -110,9 +110,9 @@ BEGIN
             MENUITEM "&Expandable String Τιμή", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Δικαιώματα...", ID_EDIT_PERMISSIONS
+        MENUITEM "&Δικαιώματα...", ID_EDIT_PERMISSIONS //FIXME: accelerator collision &Δ. ID_EDIT_PERMISSIONS exists only 1 time, but ID_EDIT_DELETE exists 2 times in this file. Therefore I do recommed to change the accel for ID_EDIT_PERMISSIONS.
         MENUITEM SEPARATOR
-        MENUITEM "&ΔΙαγραφή\tDel", ID_EDIT_DELETE
+        MENUITEM "&ΔΙαγραφή\tDel", ID_EDIT_DELETE //FIXME: accelerator collision &Δ. Since ID_EDIT_DELETE exists 2 times in this file and ID_EDIT_PERMISSIONS exists only once, I would recommend to change the accel at ID_EDIT_PERMISSIONS
         MENUITEM "&Μετονομασία", ID_EDIT_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Αντιγραφή Ονόματος Κλειδιού", ID_EDIT_COPYKEYNAME
