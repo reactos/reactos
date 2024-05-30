@@ -934,6 +934,9 @@ BEGIN
     IDS_CANTDISCONNECT "Nie można odłączyć (kod błędu: %lu)."
     IDS_NONE "(brak)"
 
+    IDS_EXPAND "Exp&and"
+    IDS_COLLAPSE "Coll&apse"
+
     /* Friendly File Type Names */
     IDS_DIRECTORY "Folder"
     IDS_BAT_FILE "Plik wsadowy ReactOS"

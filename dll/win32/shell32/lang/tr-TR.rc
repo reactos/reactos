@@ -934,6 +934,9 @@ BEGIN
     IDS_CANTDISCONNECT "Bağlanılamıyor (Hata Kodu: %lu)."
     IDS_NONE "(Hiçbir Şey)"
 
+    IDS_EXPAND "Exp&and"
+    IDS_COLLAPSE "Coll&apse"
+
     /* Friendly File Type Names */
     IDS_DIRECTORY "Dizin"
     IDS_BAT_FILE "ReactOS Toplu İş Dosyası"

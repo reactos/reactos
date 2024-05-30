@@ -924,6 +924,9 @@ BEGIN
     IDS_CANTDISCONNECT "Nem sikerült a szétkapcsolódás (hibakód: %lu)."
     IDS_NONE "(Nincs)"
 
+    IDS_EXPAND "Exp&and"
+    IDS_COLLAPSE "Coll&apse"
+
     /* Friendly File Type Names */
     IDS_DIRECTORY "Mappa"
     IDS_BAT_FILE "ReactOS kötegfájl"

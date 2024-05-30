@@ -926,6 +926,9 @@ BEGIN
     IDS_CANTDISCONNECT "Trennen nicht möglich (Fehlercode: %lu)."
     IDS_NONE "(Leer)"
 
+    IDS_EXPAND "Exp&and"
+    IDS_COLLAPSE "Coll&apse"
+
     /* Friendly File Type Names */
     IDS_DIRECTORY "Dateiordner"
     IDS_BAT_FILE "ReactOS-Stapelverarbeitungsdatei"

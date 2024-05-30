@@ -924,6 +924,9 @@ BEGIN
     IDS_CANTDISCONNECT "Não foi possível desconectar (Código de erro: %lu)."
     IDS_NONE "(Nenhum)"
 
+    IDS_EXPAND "Exp&and"
+    IDS_COLLAPSE "Coll&apse"
+
     /* Friendly File Type Names */
     IDS_DIRECTORY "Pasta"
     IDS_BAT_FILE "Ficheiro em lote do ReactOS"

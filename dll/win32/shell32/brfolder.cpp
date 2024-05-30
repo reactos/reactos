@@ -25,6 +25,7 @@ struct BrFolder
     LAYOUT_DATA*     layout;  // Filled by LayoutInit, used by LayoutUpdate
     SIZE             szMin;
     ULONG            hChangeNotify; // Change notification handle
+    IContextMenu*    pContextMenu; // Active context menu
 };
 
 struct BrItemData
@@ -811,6 +812,87 @@ BrFolder_OnCommand(BrFolder *info, UINT id)
     }
 }
 
+static void
+GetTreeViewItemContextMenuPos(HWND hWnd, HTREEITEM hItem, POINT *ppt)
+{
+    RECT rc;
+    if (TreeView_GetItemRect(hWnd, hItem, &rc, TRUE))
+    {
+        ppt->x = (rc.left + rc.right) / 2;
+        ppt->y = (rc.top + rc.bottom) / 2;
+    }
+    ClientToScreen(hWnd, ppt);
+}
+
+static void
+BrFolder_OnContextMenu(BrFolder &info, LPARAM lParam)
+{
+    enum { IDC_TOGGLE = 1, ID_FIRSTCMD, ID_LASTCMD = 0xffff };
+    HTREEITEM hSelected = TreeView_GetSelection(info.hwndTreeView);
+    CMINVOKECOMMANDINFOEX ici = { sizeof(ici), CMIC_MASK_PTINVOKE, info.hWnd };
+    ici.fMask |= (GetKeyState(VK_SHIFT) < 0) ? CMIC_MASK_SHIFT_DOWN : 0;
+    ici.fMask |= (GetKeyState(VK_CONTROL) < 0) ? CMIC_MASK_CONTROL_DOWN : 0;
+    ici.nShow = SW_SHOW;
+    ici.ptInvoke.x = GET_X_LPARAM(lParam);
+    ici.ptInvoke.y = GET_Y_LPARAM(lParam);
+    if ((int)lParam == -1) // Keyboard
+    {
+        GetTreeViewItemContextMenuPos(info.hwndTreeView, hSelected, &ici.ptInvoke);
+    }
+    else // Get correct item for right-click on not current item
+    {
+        TVHITTESTINFO hti = { ici.ptInvoke };
+        ScreenToClient(info.hwndTreeView, &hti.pt);
+        hSelected = TreeView_HitTest(info.hwndTreeView, &hti);
+    }
+    BrItemData *item = BrFolder_GetItemData(&info, hSelected);
+    if (!item)
+        return; // Not on an item
+
+    TV_ITEM tvi;
+    tvi.mask = TVIF_STATE | TVIF_CHILDREN;
+    tvi.stateMask = TVIS_EXPANDED;
+    tvi.hItem = hSelected;
+    TreeView_GetItem(info.hwndTreeView, &tvi);
+
+    CComPtr<IContextMenu> pcm;
+    HRESULT hr = item->lpsfParent->GetUIObjectOf(info.hWnd, 1, &item->pidlChild,
+                                                 IID_IContextMenu, NULL, (void**)&pcm);
+    if (FAILED(hr))
+        return;
+
+    HMENU hMenu = CreatePopupMenu();
+    if (!hMenu)
+        return;
+    info.pContextMenu = pcm;
+    UINT cmf = ((ici.fMask & CMIC_MASK_SHIFT_DOWN) ? CMF_EXTENDEDVERBS : 0) | CMF_CANRENAME;
+    hr = pcm->QueryContextMenu(hMenu, 0, ID_FIRSTCMD, ID_LASTCMD, CMF_NODEFAULT | cmf);
+    if (hr > 0)
+        _InsertMenuItemW(hMenu, 0, TRUE, 0, MFT_SEPARATOR, NULL, 0);
+    _InsertMenuItemW(hMenu, 0, TRUE, IDC_TOGGLE, MFT_STRING,
+        MAKEINTRESOURCEW((tvi.state & TVIS_EXPANDED) ? IDS_COLLAPSE : IDS_EXPAND),
+        MFS_DEFAULT | (tvi.cChildren ? 0 : MFS_GRAYED));
+
+    UINT cmd = TrackPopupMenuEx(hMenu, TPM_RETURNCMD, ici.ptInvoke.x, ici.ptInvoke.y, info.hWnd, NULL);
+    ici.lpVerb = MAKEINTRESOURCEA(cmd - ID_FIRSTCMD);
+    if (cmd == IDC_TOGGLE)
+    {
+        TreeView_SelectItem(info.hwndTreeView, hSelected);
+        TreeView_Expand(info.hwndTreeView, hSelected, TVE_TOGGLE);
+    }
+    else if (cmd != 0 && GetDfmCmd(pcm, ici.lpVerb) == DFM_CMD_RENAME)
+    {
+        TreeView_SelectItem(info.hwndTreeView, hSelected);
+        TreeView_EditLabel(info.hwndTreeView, hSelected);
+    }
+    else if (cmd != 0)
+    {
+        pcm->InvokeCommand((CMINVOKECOMMANDINFO*)&ici);
+    }
+    info.pContextMenu = NULL;
+    DestroyMenu(hMenu);
+}
+
 static BOOL
 BrFolder_OnSetExpandedPidl(BrFolder *info, LPITEMIDLIST pidlSelection, HTREEITEM *phItem)
 {
@@ -1040,6 +1122,17 @@ BrFolderDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     if (!info)
         return 0;
 
+    if (info->pContextMenu)
+    {
+        LRESULT result;
+        if (SHForwardContextMenuMsg(info->pContextMenu, uMsg, wParam,
+                                    lParam, &result, TRUE) == S_OK)
+        {
+            SetWindowLongPtr(hWnd, DWLP_MSGRESULT, result);
+            return TRUE;
+        }
+    }
+
     switch (uMsg)
     {
         case WM_NOTIFY:
@@ -1048,6 +1141,11 @@ BrFolderDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_COMMAND:
             BrFolder_OnCommand(info, wParam);
+            break;
+
+        case WM_CONTEXTMENU:
+            if (info->hwndTreeView == (HWND)wParam)
+                BrFolder_OnContextMenu(*info, lParam);
             break;
 
         case WM_GETMINMAXINFO:
