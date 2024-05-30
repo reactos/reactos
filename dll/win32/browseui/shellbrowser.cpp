@@ -812,9 +812,11 @@ HRESULT CShellBrowser::ApplyBrowserDefaultFolderSettings(IShellView *pvs)
     {
         m_settings.Save();
         SBFOLDERSETTINGS &sbfs = m_deffoldersettings, defsbfs;
-        defsbfs.InitializeDefaults();
         if (FAILED(pvs->GetCurrentInfo(&sbfs.FolderSettings)))
-            sbfs.FolderSettings = defsbfs.FolderSettings;
+        {
+            defsbfs.InitializeDefaults();
+            sbfs = defsbfs;
+        }
         hr = CGlobalFolderSettings::SaveBrowserSettings(sbfs);
     }
     else
@@ -2152,7 +2154,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::Exec(const GUID *pguidCmdGroup, DWORD n
     {
         switch (nCmdID)
         {
-            case DVCMDID_RESETDEFAULTFOLDERSETTINGS:
+            case DVCMDID_RESET_DEFAULTFOLDER_SETTINGS:
                 IUnknown_Exec(fCurrentShellView, CGID_DefView, nCmdID, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
                 break;
         }
@@ -2669,10 +2671,10 @@ LRESULT STDMETHODCALLTYPE CShellBrowser::WndProcBS(HWND hwnd, UINT uMsg, WPARAM 
 HRESULT STDMETHODCALLTYPE CShellBrowser::SetAsDefFolderSettings()
 {
     HRESULT hr = E_FAIL;
-    if (IShellView *psv = fCurrentShellView)
+    if (fCurrentShellView)
     {
-        hr = ApplyBrowserDefaultFolderSettings(psv);
-        IUnknown_Exec(psv, CGID_DefView, DVCMDID_SETDEFAULTFOLDERSETTINGS, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+        hr = ApplyBrowserDefaultFolderSettings(fCurrentShellView);
+        IUnknown_Exec(fCurrentShellView, CGID_DefView, DVCMDID_SET_DEFAULTFOLDER_SETTINGS, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
     }
     return hr;
 }

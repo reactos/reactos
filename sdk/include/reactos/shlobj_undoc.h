@@ -86,8 +86,8 @@ struct persistState
 /*****************************************************************************
  * CGID_DefView OLECMD IDs
  */
-#define DVCMDID_SETDEFAULTFOLDERSETTINGS 0
-#define DVCMDID_RESETDEFAULTFOLDERSETTINGS 1
+#define DVCMDID_SET_DEFAULTFOLDER_SETTINGS 0
+#define DVCMDID_RESET_DEFAULTFOLDER_SETTINGS 1
 
 /*****************************************************************************
  * IInitializeObject interface

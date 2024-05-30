@@ -3329,11 +3329,11 @@ HRESULT WINAPI CDefView::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCm
         WCHAR SubKey[MAX_PATH];
         switch (nCmdID)
         {
-            case DVCMDID_SETDEFAULTFOLDERSETTINGS:
+            case DVCMDID_SET_DEFAULTFOLDER_SETTINGS:
                 SHDeleteKey(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\ShellNoRoam\\Bags");
                 FIXME("Save current as default\n");
                 break;
-            case DVCMDID_RESETDEFAULTFOLDERSETTINGS:
+            case DVCMDID_RESET_DEFAULTFOLDER_SETTINGS:
                 wsprintfW(SubKey, L"%s\\%s", REGSTR_PATH_EXPLORER, L"Streams\\Default");
                 SHDeleteKey(HKEY_CURRENT_USER, SubKey);
                 SHDeleteKey(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\ShellNoRoam\\Bags");

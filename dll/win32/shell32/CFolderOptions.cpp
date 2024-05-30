@@ -122,7 +122,7 @@ HRESULT CFolderOptions::HandleDefFolderSettings(int Action)
         else if (Action == DFSA_RESET)
         {
             // There does not seem to be a method in IBrowserService2 for this
-            IUnknown_Exec(bs2, CGID_DefView, DVCMDID_RESETDEFAULTFOLDERSETTINGS, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+            IUnknown_Exec(bs2, CGID_DefView, DVCMDID_RESET_DEFAULTFOLDER_SETTINGS, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
         }
         else
         {

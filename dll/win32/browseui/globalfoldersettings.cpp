@@ -49,8 +49,8 @@ static void InitializeDefaults(DEFFOLDERSETTINGS &dfs)
     C_ASSERT(FIELD_OFFSET(DEFFOLDERSETTINGS, ViewPriority) == DEFFOLDERSETTINGS::SIZE_IE4);
     C_ASSERT(sizeof(DEFFOLDERSETTINGS) == DEFFOLDERSETTINGS::SIZE_XP);
 
-    *(UINT*)&dfs = 0; // Set all flags to 0
-    dfs.Statusbar = 1;
+    *(UINT*)&dfs = FALSE; // Set all unknown flags to FALSE
+    dfs.Statusbar = TRUE;
     dfs.FolderSettings.ViewMode = SBFOLDERSETTINGS::DEF_FVM;
     dfs.FolderSettings.fFlags = SBFOLDERSETTINGS::DEF_FWF;
     dfs.vid = DEFAULT_VID;
