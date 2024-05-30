@@ -1104,7 +1104,7 @@ BrFolder_OnChangeEx(
         case SHCNE_UPDATEDIR:
         case SHCNE_UPDATEITEM:
         {
-            // FIXME: Avoid full refresh and optimize for speed
+            // FIXME: Avoid full refresh and optimize for speed. Use pidl0 and pidl1
             BrFolder_Refresh(info);
             break;
         }
