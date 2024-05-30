@@ -110,9 +110,9 @@ BEGIN
             MENUITEM "&Expandable String Τιμή", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Δικαιώματα...", ID_EDIT_PERMISSIONS //FIXME: accelerator collision &Δ. ID_EDIT_PERMISSIONS exists only 1 time, but ID_EDIT_DELETE exists 2 times in this file. Therefore I do recommed to change the accel for ID_EDIT_PERMISSIONS.
+        MENUITEM "&Δικαιώματα...", ID_EDIT_PERMISSIONS //FIXME: accelerator collision &Δ. Attention: there are 3 _DELETE controls and 2 _PERMISSION controls in this file. Try to keep the strings in sync if possible. For the backports I stripped the &Δ accel from all _DELETE controls and left them existing for the _PERMISSION controls
         MENUITEM SEPARATOR
-        MENUITEM "&ΔΙαγραφή\tDel", ID_EDIT_DELETE //FIXME: accelerator collision &Δ. Since ID_EDIT_DELETE exists 2 times in this file and ID_EDIT_PERMISSIONS exists only once, I would recommend to change the accel at ID_EDIT_PERMISSIONS
+        MENUITEM "&ΔΙαγραφή\tDel", ID_EDIT_DELETE //FIXME: accelerator collision &Δ. Attention: there are 3 _DELETE controls and 2 _PERMISSION controls in this file. Try to keep the strings in sync if possible. For the backports I stripped the &Δ accel from all _DELETE controls and left them existing for the _PERMISSION controls
         MENUITEM "&Μετονομασία", ID_EDIT_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Αντιγραφή Ονόματος Κλειδιού", ID_EDIT_COPYKEYNAME
@@ -179,11 +179,11 @@ BEGIN
         END
         MENUITEM "&Εύρεση...", ID_EDIT_FIND
         MENUITEM SEPARATOR
-        MENUITEM "&Διαγραφή", ID_TREE_DELETE
+        MENUITEM "&Διαγραφή", ID_TREE_DELETE //FIXME: accelerator collision &Δ. Attention: there are 3 _DELETE controls and 2 _PERMISSION controls in this file. Try to keep the strings in sync if possible. For the backports I stripped the &Δ accel from all _DELETE controls and left them existing for the _PERMISSION controls
         MENUITEM "&Μετονομασία", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Εξαγωγή", ID_TREE_EXPORT
-        MENUITEM "&Δικαιώματα...", ID_TREE_PERMISSIONS
+        MENUITEM "&Δικαιώματα...", ID_TREE_PERMISSIONS //FIXME: accelerator collision &Δ. Attention: there are 3 _DELETE controls and 2 _PERMISSION controls in this file. Try to keep the strings in sync if possible. For the backports I stripped the &Δ accel from all _DELETE controls and left them existing for the _PERMISSION controls
         MENUITEM SEPARATOR
         MENUITEM "&Αντιγραφή Ονόματος Κλειδιού", ID_EDIT_COPYKEYNAME
     END
