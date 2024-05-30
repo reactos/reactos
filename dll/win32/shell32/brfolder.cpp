@@ -1104,6 +1104,7 @@ BrFolder_OnChangeEx(
         case SHCNE_UPDATEDIR:
         case SHCNE_UPDATEITEM:
         {
+            // FIXME: Optimize for speed
             BrFolder_Refresh(info);
             break;
         }
