@@ -856,8 +856,7 @@ BrFolder_OnContextMenu(BrFolder &info, LPARAM lParam)
     TreeView_GetItem(info.hwndTreeView, &tvi);
 
     CComPtr<IContextMenu> pcm;
-    LPITEMIDLIST child = item->pidlChild; // ATL is stupid and will assert if we take the address of this
-    HRESULT hr = item->lpsfParent->GetUIObjectOf(info.hWnd, 1, &child,
+    HRESULT hr = item->lpsfParent->GetUIObjectOf(info.hWnd, 1, &item->pidlChild,
                                                  IID_IContextMenu, NULL, (void**)&pcm);
     if (FAILED(hr))
         return;
