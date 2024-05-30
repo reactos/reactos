@@ -1983,6 +1983,7 @@ HRESULT CDefView::InvokeContextMenuCommand(CComPtr<IContextMenu>& pCM, LPCSTR lp
     cmi.cbSize = sizeof(cmi);
     cmi.hwnd = m_hWnd;
     cmi.lpVerb = lpVerb;
+    cmi.nShow = SW_SHOW;
 
     if (GetKeyState(VK_SHIFT) < 0)
         cmi.fMask |= CMIC_MASK_SHIFT_DOWN;
