@@ -265,19 +265,16 @@ BrFolder_IsTreeItemInEnum(
 
     pEnum->Reset();
 
-    BOOL ret = FALSE;
     CComHeapPtr<ITEMIDLIST_RELATIVE> pidlTemp;
-    while (S_OK == pEnum->Next(1, &pidlTemp, NULL))
+    while (pEnum->Next(1, &pidlTemp, NULL) == S_OK)
     {
         if (ILIsEqual(pidlTemp, pItemData->pidlChild))
-        {
-            ret = TRUE;
-            break;
-        }
+            return TRUE;
+
         pidlTemp.Free();
     }
 
-    return ret;
+    return FALSE;
 }
 
 static BOOL
@@ -286,11 +283,9 @@ BrFolder_TreeItemHasThisChild(
     _In_ HTREEITEM hItem,
     _Outptr_opt_ PITEMID_CHILD pidlChild)
 {
-    HTREEITEM hNextItem;
-    for (hItem = TreeView_GetChild(info->hwndTreeView, hItem); hItem; hItem = hNextItem)
+    for (hItem = TreeView_GetChild(info->hwndTreeView, hItem); hItem;
+         hItem = TreeView_GetNextSibling(info->hwndTreeView, hItem))
     {
-        hNextItem = TreeView_GetNextSibling(info->hwndTreeView, hItem);
-
         BrItemData *pItemData = BrFolder_GetItemData(info, hItem);
         if (ILIsEqual(pItemData->pidlChild, pidlChild))
             return TRUE;
