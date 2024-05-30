@@ -1347,7 +1347,7 @@ LPCWSTR ParseCommandLine(INT argc, WCHAR **argv, UINT *pfuOptions)
         LPCWSTR arg = argv[iarg];
 
         // ReactOS specific!
-        if (lstrcmpiW(arg, L"/wallpaper") == 0 || lstrcmpiW(arg, L"/wallpaper:fit") == 0)
+        if (lstrcmpiW(arg, L"/wallpaper") == 0 || lstrcmpiW(arg, L"/wallpaper:stretch") == 0)
         {
             *pfuOptions |= OPTION_WALLPAPER;
             continue;
