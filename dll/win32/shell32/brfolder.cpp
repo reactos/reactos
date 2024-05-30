@@ -281,7 +281,10 @@ BrFolder_IsTreeItemInEnum(
 }
 
 static BOOL
-BrFolder_TreeItemHasThisChild(BrFolder *info, HTREEITEM hItem, PITEMID_CHILD pidlChild)
+BrFolder_TreeItemHasThisChild(
+    _In_ BrFolder *info,
+    _In_ HTREEITEM hItem,
+    _Outptr_opt_ PITEMID_CHILD pidlChild)
 {
     HTREEITEM hNextItem;
     for (hItem = TreeView_GetChild(info->hwndTreeView, hItem); hItem; hItem = hNextItem)
@@ -297,7 +300,9 @@ BrFolder_TreeItemHasThisChild(BrFolder *info, HTREEITEM hItem, PITEMID_CHILD pid
 }
 
 static void
-BrFolder_UpdateItem(BrFolder *info, HTREEITEM hItem)
+BrFolder_UpdateItem(
+    _In_ BrFolder *info,
+    _In_ HTREEITEM hItem)
 {
     BrItemData *pItemData = BrFolder_GetItemData(info, hItem);
     if (!pItemData)
