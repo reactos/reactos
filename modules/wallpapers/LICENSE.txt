@@ -67,4 +67,3 @@ History:
 
 2005-02-25 Klemens Friedl
 2005-05-31 Klemens Friedl
-2024-05-30 Katayama Hirofumi MZ
