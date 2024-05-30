@@ -313,11 +313,8 @@ BrFolder_UpdateItem(BrFolder *info, HTREEITEM hItem)
     if (BrFolder_GetChildrenEnum(info, pItemData, &pEnum) == S_OK)
     {
         CComHeapPtr<ITEMIDLIST_RELATIVE> pidlTemp;
-        while (S_OK == pEnum->Next(1, &pidlTemp, NULL))
-        {
+        if (pEnum->Next(1, &pidlTemp, NULL) == S_OK)
             ++item.cChildren;
-            pidlTemp.Free();
-        }
     }
 
     TreeView_SetItem(info->hwndTreeView, &item);
