@@ -599,7 +599,7 @@ BrFolder_Delete(BrFolder *info, HTREEITEM hItem)
 }
 
 static void
-BrFolder_Refresh(
+BrFolder_RefreshRecurse(
     _Inout_ BrFolder *info,
     _In_ HTREEITEM hTarget);
 
@@ -625,14 +625,14 @@ BrFolder_Treeview_Keydown(BrFolder *info, LPNMTVKEYDOWN keydown)
             if (GetKeyState(VK_CONTROL) < 0) // Ctrl+R
             {
                 HTREEITEM hRoot = TreeView_GetRoot(info->hwndTreeView);
-                BrFolder_Refresh(info, hRoot);
+                BrFolder_RefreshRecurse(info, hRoot);
             }
             break;
         }
         case VK_F5:
         {
             HTREEITEM hRoot = TreeView_GetRoot(info->hwndTreeView);
-            BrFolder_Refresh(info, hRoot);
+            BrFolder_RefreshRecurse(info, hRoot);
             break;
         }
     }
@@ -1057,7 +1057,7 @@ BrFolder_FindItemByPidl(BrFolder *info, PCIDLIST_ABSOLUTE pidlFull, HTREEITEM hI
 }
 
 static void
-BrFolder_Refresh(
+BrFolder_RefreshRecurse(
     _Inout_ BrFolder *info,
     _In_ HTREEITEM hTarget)
 {
@@ -1095,7 +1095,7 @@ BrFolder_Refresh(
         }
 
         BrFolder_UpdateItem(info, hItem);
-        BrFolder_Refresh(info, hItem);
+        BrFolder_RefreshRecurse(info, hItem);
     }
 
     if (SUCCEEDED(hrEnum))
@@ -1125,7 +1125,7 @@ BrFolder_OnChangeEx(
         case SHCNE_UPDATEITEM:
         {
             HTREEITEM hRoot = TreeView_GetRoot(info->hwndTreeView);
-            BrFolder_Refresh(info, hRoot);
+            BrFolder_RefreshRecurse(info, hRoot);
             break;
         }
     }
