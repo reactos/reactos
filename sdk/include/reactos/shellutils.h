@@ -98,7 +98,7 @@ static inline UINT
 SHELL_ErrorBoxHelper(HWND hwndOwner, UINT Error)
 {
     WCHAR buf[400];
-    UINT cch, user32_IDS_ERROR = 2;
+    UINT cch;
 
     if (!IsWindowVisible(hwndOwner))
         hwndOwner = NULL;
@@ -109,6 +109,7 @@ SHELL_ErrorBoxHelper(HWND hwndOwner, UINT Error)
                          NULL, Error, 0, buf, _countof(buf), NULL);
     if (!cch)
     {
+        enum { user32_IDS_ERROR = 2 }; // IDS_ERROR from user32 resource.h ("Error" string)
         cch = LoadStringW(LoadLibraryW(L"USER32"), user32_IDS_ERROR, buf, _countof(buf));
         wsprintfW(buf + cch, L"\n\n%#x (%d)", Error, Error);
     }
