@@ -31,7 +31,7 @@ DumpProc(
     _In_opt_ POB_DUMP_CONTROL DumpControl
 )
 {
-    DPRINT("DumpProc() called\n");
+    DPRINT("DumpProc()\n");
 }
 
 static
@@ -45,7 +45,7 @@ OpenProc(
     _In_ ULONG HandleCount
 )
 {
-    DPRINT("OpenProc() 0x%p, OpenReason %d, HandleCount %lu, AccessMask 0x%lX\n",
+    DPRINT("OpenProc(Object 0x%p, OpenReason %d, HandleCount %lu, AccessMask 0x%lX)\n",
            Object,
            OpenReason,
            HandleCount,
@@ -64,7 +64,7 @@ CloseProc(
     _In_ ULONG SystemHandleCount
 )
 {
-    DPRINT("CloseProc() 0x%p, ProcessHandleCount %lu, SystemHandleCount %lu, AccessMask 0x%lX\n",
+    DPRINT("CloseProc(Object 0x%p, ProcessHandleCount %lu, SystemHandleCount %lu, AccessMask 0x%lX)\n",
            Object,
            ProcessHandleCount,
            SystemHandleCount,
@@ -76,7 +76,7 @@ VOID
 NTAPI
 DeleteProc(_In_ PVOID Object)
 {
-    DPRINT("DeleteProc() 0x%p\n", Object);
+    DPRINT("DeleteProc(Object 0x%p)\n", Object);
 }
 
 static
@@ -95,7 +95,7 @@ ParseProc(
     _Out_ PVOID *Object
 )
 {
-    DPRINT("ParseProc() called\n");
+    DPRINT("ParseProc()\n");
     *Object = NULL;
     return STATUS_OBJECT_NAME_NOT_FOUND;
 }
@@ -110,7 +110,7 @@ OkayToCloseProc(
     _In_ KPROCESSOR_MODE AccessMode
 )
 {
-    DPRINT("OkayToCloseProc() 0x%p, Handle 0x%p, AccessMask 0x%lX\n",
+    DPRINT("OkayToCloseProc(Object 0x%p, Handle 0x%p, AccessMask 0x%lX)\n",
            Object,
            Handle,
            AccessMode);
@@ -129,7 +129,7 @@ QueryNameProc(
     _In_ KPROCESSOR_MODE AccessMode
 )
 {
-    DPRINT("QueryNameProc() 0x%p, HasObjectName %d, Len %lu, AccessMask 0x%lX\n",
+    DPRINT("QueryNameProc(Object 0x%p, HasObjectName %d, Len %lu, AccessMask 0x%lX)\n",
            Object,
            HasObjectName,
            Length,
@@ -621,31 +621,21 @@ ObInsert_NameCollision(VOID)
 
 START_TEST(ObInsert)
 {
-    /*
-     * Initialize a dummy object type
-     */
+    /* Initialize a dummy object type */
     ObInsert_CreateDummyType();
 
-    /*
-     * Create a directory where the dummy objects will be stored
-     */
+    /* Create a directory where the dummy objects will be stored */
     ObInsert_CreateTestDirectory();
 
-    /*
-     * Test a success case
-     */
+    /* Test a success case */
     ObInsert_Success();
 
-    /*
-     * Test failure cases
-     */
+    /* Test failure cases */
     ObInsert_PathNotFound();
     ObInsert_NameInvalid();
     ObInsert_PathSyntaxBad();
     ObInsert_NameCollision();
 
-    /*
-     * Clean up resources and objects created during the tests
-     */
+    /* Clean up resources and objects created during the tests */
     ObInsert_Cleanup();
 }
