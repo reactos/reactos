@@ -96,6 +96,10 @@ add_compile_options(-march=${OARCH} -mtune=${TUNE})
 # Warnings, errors
 if((NOT CMAKE_BUILD_TYPE STREQUAL "Release") AND (NOT CMAKE_C_COMPILER_ID STREQUAL Clang))
     add_compile_options(-Werror)
+else()
+    if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-Werror=unknown-warning-option>)
+    endif()
 endif()
 
 add_compile_options(-Wall -Wpointer-arith)
