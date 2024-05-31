@@ -98,7 +98,7 @@ static inline UINT
 SHELL_ErrorBoxHelper(HWND hwndOwner, UINT Error)
 {
     WCHAR buf[400];
-    UINT cch, u32_errstr = 2;
+    UINT cch, user32_IDS_ERROR = 2;
 
     if (!IsWindowVisible(hwndOwner))
         hwndOwner = NULL;
@@ -109,7 +109,7 @@ SHELL_ErrorBoxHelper(HWND hwndOwner, UINT Error)
                          NULL, Error, 0, buf, _countof(buf), NULL);
     if (!cch)
     {
-        cch = LoadStringW(LoadLibraryW(L"USER32"), u32_errstr, buf, _countof(buf));
+        cch = LoadStringW(LoadLibraryW(L"USER32"), user32_IDS_ERROR, buf, _countof(buf));
         wsprintfW(buf + cch, L"\n\n%#x (%d)", Error, Error);
     }
     MessageBoxW(hwndOwner, buf, NULL, MB_OK | MB_ICONSTOP);
