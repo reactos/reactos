@@ -323,15 +323,15 @@ ObInsert_Success(VOID)
                             &DummyObjectAttributes,
                             KernelMode,
                             NULL,
-                            sizeof(DUMMY_TYPE),
+                            sizeof(*Object),
                             0,
                             0,
-                            (PVOID *)&Object);
+                            (PVOID*)&Object);
 
     ok_eq_hex(Status, STATUS_SUCCESS);
 
     /* Initialize the object data */
-    RtlZeroMemory(Object, sizeof(DUMMY_TYPE));
+    RtlZeroMemory(Object, sizeof(*Object));
     Object->Data = 123;
 
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
@@ -391,15 +391,15 @@ ObInsert_PathNotFound(VOID)
                             &DummyObjectAttributes,
                             KernelMode,
                             NULL,
-                            sizeof(DUMMY_TYPE),
+                            sizeof(*Object),
                             0,
                             0,
-                            (PVOID *)&Object);
+                            (PVOID*)&Object);
 
     ok_eq_hex(Status, STATUS_SUCCESS);
 
     /* Initialize the object data */
-    RtlZeroMemory(Object, sizeof(DUMMY_TYPE));
+    RtlZeroMemory(Object, sizeof(*Object));
     Object->Data = 123;
 
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
@@ -457,15 +457,15 @@ ObInsert_NameInvalid(VOID)
                             &DummyObjectAttributes,
                             KernelMode,
                             NULL,
-                            sizeof(DUMMY_TYPE),
+                            sizeof(*Object),
                             0,
                             0,
-                            (PVOID *)&Object);
+                            (PVOID*)&Object);
 
     ok_eq_hex(Status, STATUS_SUCCESS);
 
     /* Initialize the object data */
-    RtlZeroMemory(Object, sizeof(DUMMY_TYPE));
+    RtlZeroMemory(Object, sizeof(*Object));
     Object->Data = 123;
 
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
@@ -521,15 +521,15 @@ ObInsert_PathSyntaxBad(VOID)
                             &DummyObjectAttributes,
                             KernelMode,
                             NULL,
-                            sizeof(DUMMY_TYPE),
+                            sizeof(*Object),
                             0,
                             0,
-                            (PVOID *)&Object);
+                            (PVOID*)&Object);
 
     ok_eq_hex(Status, STATUS_SUCCESS);
 
     /* Initialize the object data */
-    RtlZeroMemory(Object, sizeof(DUMMY_TYPE));
+    RtlZeroMemory(Object, sizeof(*Object));
     Object->Data = 123;
 
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
@@ -586,15 +586,15 @@ ObInsert_NameCollision(VOID)
                             &DummyObjectAttributes,
                             KernelMode,
                             NULL,
-                            sizeof(DUMMY_TYPE),
+                            sizeof(*Object),
                             0,
                             0,
-                            (PVOID *)&Object);
+                            (PVOID*)&Object);
 
     ok_eq_hex(Status, STATUS_SUCCESS);
 
     /* Initialize the object data */
-    RtlZeroMemory(Object, sizeof(DUMMY_TYPE));
+    RtlZeroMemory(Object, sizeof(*Object));
     Object->Data = 123;
 
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
