@@ -4,9 +4,9 @@ ID_ACCEL ACCELERATORS
 BEGIN
     VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
     "^F", ID_EDIT_FIND
-    VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
     VK_F2, ID_EDIT_RENAME, VIRTKEY, NOINVERT
     VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
+    VK_F4, ID_ADDRESS_FOCUS, VIRTKEY, NOINVERT
     VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
 END
 
@@ -31,11 +31,11 @@ BEGIN
         MENUITEM "&Import...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Eksport...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Last inn struktur...", ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "Fjern struktur...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "&Last inn struktur...", ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Fjern str&uktur...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Koble til nettverksregister...", ID_REGISTRY_CONNECTNETWORKREGISTRY
-        MENUITEM "Koble fra nettverksregister......", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
+        MENUITEM "Koble fra nettverksregister...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Skriv ut...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
@@ -63,7 +63,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Kopier nøkkelnavn", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Søk etter...\tCtrl+F", ID_EDIT_FIND
+        MENUITEM "Søk etter...\tCtrl+F", ID_EDIT_FIND
         MENUITEM "Søk neste\tF3", ID_EDIT_FINDNEXT
     END
     POPUP "&Vis"
@@ -74,15 +74,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Oppdater\tF5", ID_VIEW_REFRESH
     END
-    POPUP "&Favoritter"
-    BEGIN
-        MENUITEM "&Legg til i Favoritter", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
-        MENUITEM "&Fjern favoritt", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
-    END
     POPUP "&Hjelp"
     BEGIN
-        MENUITEM "&Emner i Hjelp\tF1", ID_HELP_HELPTOPICS
-        MENUITEM SEPARATOR
         MENUITEM "&Om Registerredigering", ID_HELP_ABOUT
     END
 END
@@ -279,7 +272,6 @@ BEGIN
     ID_REGISTRY_MENU "Inneholder kommandoer for å arbeide med hele registret"
     ID_EDIT_MENU "Inneholder kommandoer for redigering av nøkler eller verdier."
     ID_VIEW_MENU "Inneholder kommandoer for å tilpasse registervinduet."
-    ID_FAVOURITES_MENU "Inneholder kommandoer fo å få tilgang til registernøkler som brukes mye."
     ID_HELP_MENU "Inneholder kommandoer for å vise Hjelp og for å få informasjon om Registerredigering."
     ID_EDIT_NEW_MENU "Inneholder kommandoer for å opprette nye nøkler eller verdier"
 END
@@ -298,15 +290,12 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Kobler til Registret på en annen datamaskin"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Kobler fra Registret på en annen datamaskin"
     ID_REGISTRY_PRINT "Skriver ut hele eller deler av Registret"
-/*    ID_HELP_HELPTOPICS "Opens registry editor help" */
     ID_HELP_ABOUT "Viser informasjon om program, version og opphavsrett"
 END
 
 STRINGTABLE
 BEGIN
     ID_REGISTRY_EXIT "Avslutter Registerredigering"
-    ID_FAVOURITES_ADDTOFAVOURITES "Legger til nøkler i Favoritt-listen"
-    ID_FAVOURITES_REMOVEFAVOURITE "Fjerner nøkler fra Favoritt-listen"
     ID_VIEW_STATUSBAR "Viser eller skjuler statuslinjen"
     ID_VIEW_SPLIT "Endrer delingen mellom to vinduer"
     ID_VIEW_REFRESH "Oppdaterer vinduet"
@@ -479,35 +468,12 @@ END
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Load Hive"
-FONT 8, "Ms Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Key:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
     DEFPUSHBUTTON "OK", IDOK, 140, 17, 50, 14
     PUSHBUTTON "Cancel", IDCANCEL, 89, 17, 50, 14
-END
-
-IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Legg til i Favoritter"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    DEFPUSHBUTTON "OK", IDOK, 129, 7, 50, 14
-    PUSHBUTTON "Avbryt", IDCANCEL, 129, 24, 50, 14
-    LTEXT "&Favorittnavn:", IDC_STATIC, 7, 7, 70, 10
-    EDITTEXT IDC_FAVORITENAME, 7, 26, 110, 13, ES_AUTOHSCROLL
-END
-
-IDD_REMOVEFAVORITES DIALOGEX 0, 0, 164, 135
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Fjern favoritter"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    DEFPUSHBUTTON "OK", IDOK, 107, 114, 50, 14
-    PUSHBUTTON "Avbryt", IDCANCEL, 7, 114, 50, 14
-    CONTROL "List1", IDC_FAVORITESLIST, "SysListView32", LVS_LIST | WS_BORDER |
-            WS_TABSTOP, 7, 20, 150, 90
-    LTEXT "Velg favoritt(er):", IDC_STATIC, 7, 7, 99, 12
 END
 
 IDD_FIND DIALOGEX 0, 0, 254, 82
@@ -538,15 +504,6 @@ CAPTION "Søk"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
-    DEFPUSHBUTTON "&Avbryt", IDCANCEL, 93, 29, 45, 14
+    DEFPUSHBUTTON "Avbryt", IDCANCEL, 93, 29, 45, 14
     LTEXT "Søker i registret...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Åpne registerredigering hjelpen."
- *    ID_HELP_ABOUT "Vis program informasjon, versjon nummer, og enerett."
- *END
- */

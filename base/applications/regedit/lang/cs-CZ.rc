@@ -4,9 +4,9 @@ ID_ACCEL ACCELERATORS
 BEGIN
     VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
     "^F", ID_EDIT_FIND
-    VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
     VK_F2, ID_EDIT_RENAME, VIRTKEY, NOINVERT
     VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
+    VK_F4, ID_ADDRESS_FOCUS, VIRTKEY, NOINVERT
     VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
 END
 
@@ -26,7 +26,7 @@ END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "&Registry"
+    POPUP "&Soubor"
     BEGIN
         MENUITEM "&Importovat soubor registru...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Exportovat do souboru registru...", ID_REGISTRY_EXPORTREGISTRYFILE
@@ -74,15 +74,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Aktualizovat\tF5", ID_VIEW_REFRESH
     END
-    POPUP "&Oblíbené"
-    BEGIN
-        MENUITEM "&Přidat k oblíbeným", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
-        MENUITEM "&Odebrat z oblíbených", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
-    END
     POPUP "&Nápověda"
     BEGIN
-        MENUITEM "&Témata nápovědy\tF1", ID_HELP_HELPTOPICS
-        MENUITEM SEPARATOR
         MENUITEM "&O editoru registru", ID_HELP_ABOUT
     END
 END
@@ -279,7 +272,6 @@ BEGIN
     ID_REGISTRY_MENU "Obsahuje příkazy pro práci s celým registrem"
     ID_EDIT_MENU "Obsahuje příkazy pro úpravu hodnot a klíčů"
     ID_VIEW_MENU "Obsahuje příkazy pro přizpůsobení okna registru"
-    ID_FAVOURITES_MENU "Obsahuje příkazy pro přístup k často používaným klíčům"
     ID_HELP_MENU "Obsahuje příkazy pro zobrazení nápovědy a informací o editoru registru"
     ID_EDIT_NEW_MENU "Obsahuje příkazy pro vytváření nových klíčů a hodnot"
 END
@@ -298,15 +290,12 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Připojí se ke vzdálenému registru jiného počítače"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Odpojí se od vzdálenému registru jiného počítače"
     ID_REGISTRY_PRINT "Vytiskne všechny části registru"
-/*    ID_HELP_HELPTOPICS "Otevře témata nápovědy pro editor registru" */
     ID_HELP_ABOUT "Zobrazí informace o aplikaci, verzi a copyright"
 END
 
 STRINGTABLE
 BEGIN
     ID_REGISTRY_EXIT "Ukončí editor registru"
-    ID_FAVOURITES_ADDTOFAVOURITES "Přidá klíč do seznamu oblíbených"
-    ID_FAVOURITES_REMOVEFAVOURITE "Odebere klíč ze seznamu oblíbených"
     ID_VIEW_STATUSBAR "Zobrazí nebo skryje stavový řádek"
     ID_VIEW_SPLIT "Upravuje polohu rozdělovače obou panelů"
     ID_VIEW_REFRESH "Obnoví okno"
@@ -479,35 +468,12 @@ END
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Načíst registr"
-FONT 8, "Ms Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Klíč:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
     DEFPUSHBUTTON "OK", IDOK, 140, 17, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 89, 17, 50, 14
-END
-
-IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Přidat do Oblíbených"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    DEFPUSHBUTTON "OK", IDOK, 129, 7, 50, 14
-    PUSHBUTTON "Storno", IDCANCEL, 129, 24, 50, 14
-    LTEXT "&Název oblíbené položky:", IDC_STATIC, 7, 7, 70, 10
-    EDITTEXT IDC_FAVORITENAME, 7, 26, 110, 13, ES_AUTOHSCROLL
-END
-
-IDD_REMOVEFAVORITES DIALOGEX 0, 0, 164, 135
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Odebrat z Oblíbených"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    DEFPUSHBUTTON "OK", IDOK, 107, 114, 50, 14
-    PUSHBUTTON "Storno", IDCANCEL, 7, 114, 50, 14
-    CONTROL "List1", IDC_FAVORITESLIST, "SysListView32", LVS_LIST | WS_BORDER |
-            WS_TABSTOP, 7, 20, 150, 90
-    LTEXT "Vyberte Oblíbené:", IDC_STATIC, 7, 7, 99, 12
+    PUSHBUTTON "Storno", IDCANCEL, 89, 17, 50, 14
 END
 
 IDD_FIND DIALOGEX 0, 0, 254, 82
@@ -541,12 +507,3 @@ BEGIN
     DEFPUSHBUTTON "Storno", IDCANCEL, 93, 29, 45, 14
     LTEXT "Probíhá prohledávání registru...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Otevře nápovědu pro editor registru."
- *    ID_HELP_ABOUT "Zobrazí informace o aplikaci, verzi a copyright."
- *END
- */

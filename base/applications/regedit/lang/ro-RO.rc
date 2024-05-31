@@ -6,9 +6,9 @@ ID_ACCEL ACCELERATORS
 BEGIN
     VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
     "^F", ID_EDIT_FIND
-    VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
     VK_F2, ID_EDIT_RENAME, VIRTKEY, NOINVERT
     VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
+    VK_F4, ID_ADDRESS_FOCUS, VIRTKEY, NOINVERT
     VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
 END
 
@@ -76,15 +76,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Împ&rospătează\tF5", ID_VIEW_REFRESH
     END
-    POPUP "Fa&vorite"
-    BEGIN
-        MENUITEM "&Adaugă la favorite", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
-        MENUITEM "&Elimină favorite", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
-    END
     POPUP "Aj&utor"
     BEGIN
-        MENUITEM "&Manual…\tF1", ID_HELP_HELPTOPICS
-        MENUITEM SEPARATOR
         MENUITEM "&Despre…", ID_HELP_ABOUT
     END
 END
@@ -165,8 +158,8 @@ BEGIN
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
     LTEXT "&Date:", IDC_STATIC, 6, 35, 161, 8
     EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 12, ES_AUTOHSCROLL
-    DEFPUSHBUTTON "Con&firmă", IDOK, 142, 64, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 196, 64, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 142, 64, 50, 14
+    PUSHBUTTON "Anulare", IDCANCEL, 196, 64, 50, 14
 END
 
 IDD_EDIT_MULTI_STRING DIALOGEX 32, 24, 252, 174
@@ -179,8 +172,8 @@ BEGIN
     LTEXT "&Date:", IDC_STATIC, 6, 35, 161, 8
     EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 102, ES_AUTOHSCROLL | ES_MULTILINE |
              ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
-    DEFPUSHBUTTON "Con&firmă", IDOK, 142, 154, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 196, 154, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 142, 154, 50, 14
+    PUSHBUTTON "Anulare", IDCANCEL, 196, 154, 50, 14
 END
 
 IDD_EDIT_BIN_DATA DIALOGEX 32, 24, 252, 174
@@ -192,8 +185,8 @@ BEGIN
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
     LTEXT "&Date:", IDC_STATIC, 6, 35, 161, 8
     CONTROL "", IDC_VALUE_DATA, "HexEdit32", WS_VSCROLL | WS_BORDER | WS_TABSTOP, 6, 46, 240, 102
-    DEFPUSHBUTTON "Con&firmă", IDOK, 142, 154, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 196, 154, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 142, 154, 50, 14
+    PUSHBUTTON "Anulare", IDCANCEL, 196, 154, 50, 14
 END
 
 IDD_EDIT_DWORD DIALOGEX 32, 24, 252, 104
@@ -208,8 +201,8 @@ BEGIN
     GROUPBOX "Baza", IDC_STATIC, 130, 35, 116, 39
     AUTORADIOBUTTON "&Hexazecimală", IDC_FORMAT_HEX, 141, 46, 60, 10, WS_GROUP
     AUTORADIOBUTTON "&Zecimală", IDC_FORMAT_DEC, 141, 59, 60, 10
-    DEFPUSHBUTTON "Con&firmă", IDOK, 142, 82, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 196, 82, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 142, 82, 50, 14
+    PUSHBUTTON "Anulare", IDCANCEL, 196, 82, 50, 14
 END
 
 IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
@@ -281,7 +274,6 @@ BEGIN
     ID_REGISTRY_MENU "Conține comenzi de lucru cu întreg registrul"
     ID_EDIT_MENU "Conține comenzi pentru editarea valorilor și cheilor"
     ID_VIEW_MENU "Conține comenzi pentru particularizarea ferestrei editorului de registru"
-    ID_FAVOURITES_MENU "Conține comenzi pentru accesarea cheilor frecvent utilizate"
     ID_HELP_MENU "Conține comenzi pentru reprezentarea manualului și informațiilor despre editorul de registru"
     ID_EDIT_NEW_MENU "Conține comenzi pentru crearea noilor chei sau valori"
 END
@@ -300,15 +292,12 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Conectare la registrul unui calculator din rețea"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Deconectare de la registrul calculatorului din rețea"
     ID_REGISTRY_PRINT "Imprimă toate părțile unui registru"
-/*    ID_HELP_HELPTOPICS "Deschide manualul editorului de registru" */
     ID_HELP_ABOUT "Prezintă informații despre program, numărul versiunii și drepturi de autor"
 END
 
 STRINGTABLE
 BEGIN
     ID_REGISTRY_EXIT "Ieșire din editorul de registru"
-    ID_FAVOURITES_ADDTOFAVOURITES "Adaugă chei către lista de favorite"
-    ID_FAVOURITES_REMOVEFAVOURITE "Elimină chei din lista de favorite"
     ID_VIEW_STATUSBAR "Afișează sau ascunde bara de stare"
     ID_VIEW_SPLIT "Schimbă poziția separatorului dintre două panele"
     ID_VIEW_REFRESH "Împrospătează fereastra"
@@ -481,35 +470,12 @@ END
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Încărcare registru"
-FONT 8, "Ms Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Cheie:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
-    DEFPUSHBUTTON "Con&firmă", IDOK, 140, 17, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 89, 17, 50, 14
-END
-
-IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Adaugă la favorite"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    DEFPUSHBUTTON "Con&firmă", IDOK, 129, 7, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 129, 24, 50, 14
-    LTEXT "Nume &favorit:", IDC_STATIC, 7, 7, 70, 10
-    EDITTEXT IDC_FAVORITENAME, 7, 26, 110, 13, ES_AUTOHSCROLL
-END
-
-IDD_REMOVEFAVORITES DIALOGEX 0, 0, 164, 135
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Eliminare favorite"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    DEFPUSHBUTTON "Con&firmă", IDOK, 107, 114, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 7, 114, 50, 14
-    CONTROL "List1", IDC_FAVORITESLIST, "SysListView32", LVS_LIST | WS_BORDER |
-            WS_TABSTOP, 7, 20, 150, 90
-    LTEXT "Alege favorit(e):", IDC_STATIC, 7, 7, 99, 12
+    DEFPUSHBUTTON "OK", IDOK, 140, 17, 50, 14
+    PUSHBUTTON "Anulare", IDCANCEL, 89, 17, 50, 14
 END
 
 IDD_FIND DIALOGEX 0, 0, 254, 82
@@ -518,7 +484,7 @@ CAPTION "Găsire"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "&Găsește", IDOK, 197, 7, 50, 14
-    PUSHBUTTON "Î&nchide", IDCANCEL, 197, 24, 50, 14
+    PUSHBUTTON "Anulare", IDCANCEL, 197, 24, 50, 14
     GROUPBOX "Caută în", IDC_STATIC, 7, 25, 42, 51
     LTEXT "&Caută conținutul:", IDC_STATIC, 7, 8, 57, 10
     EDITTEXT IDC_FINDWHAT, 67, 7, 120, 13, ES_AUTOHSCROLL
@@ -540,15 +506,6 @@ CAPTION "Găsire"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
-    DEFPUSHBUTTON "A&nulare", IDCANCEL, 93, 29, 45, 14
+    DEFPUSHBUTTON "Anulare", IDCANCEL, 93, 29, 45, 14
     LTEXT "Căutare în registru…", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Opens Registry Editor Help."
- *    ID_HELP_ABOUT "Displays program information, version number, and copyright."
- *END
- */

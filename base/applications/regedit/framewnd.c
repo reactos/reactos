@@ -28,12 +28,6 @@
  * Global and Local Variables:
  */
 
-#define FAVORITES_MENU_POSITION 3
-
-static WCHAR s_szFavoritesRegKey[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit\\Favorites";
-
-static BOOL bInMenuLoop = FALSE;        /* Tells us if we are in the menu loop */
-
 extern WCHAR Suggestions[256];
 /*******************************************************************************
  * Local module support methods
@@ -62,58 +56,6 @@ static void resize_frame_client(HWND hWnd)
 
 /********************************************************************************/
 
-static void OnInitMenu(HWND hWnd)
-{
-    LONG lResult;
-    HKEY hKey = NULL;
-    DWORD dwIndex, cbValueName, cbValueData, dwType;
-    WCHAR szValueName[256];
-    BYTE abValueData[256];
-    static int s_nFavoriteMenuSubPos = -1;
-    HMENU hMenu;
-    BOOL bDisplayedAny = FALSE;
-
-    /* Find Favorites menu and clear it out */
-    hMenu = GetSubMenu(GetMenu(hWnd), FAVORITES_MENU_POSITION);
-    if (!hMenu)
-        goto done;
-    if (s_nFavoriteMenuSubPos < 0)
-    {
-        s_nFavoriteMenuSubPos = GetMenuItemCount(hMenu);
-    }
-    else
-    {
-        while(RemoveMenu(hMenu, s_nFavoriteMenuSubPos, MF_BYPOSITION)) ;
-    }
-
-    lResult = RegOpenKeyW(HKEY_CURRENT_USER, s_szFavoritesRegKey, &hKey);
-    if (lResult != ERROR_SUCCESS)
-        goto done;
-
-    dwIndex = 0;
-    do
-    {
-        cbValueName = COUNT_OF(szValueName);
-        cbValueData = sizeof(abValueData);
-        lResult = RegEnumValueW(hKey, dwIndex, szValueName, &cbValueName, NULL, &dwType, abValueData, &cbValueData);
-        if ((lResult == ERROR_SUCCESS) && (dwType == REG_SZ))
-        {
-            if (!bDisplayedAny)
-            {
-                AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
-                bDisplayedAny = TRUE;
-            }
-            AppendMenu(hMenu, 0, ID_FAVORITES_MIN + GetMenuItemCount(hMenu), szValueName);
-        }
-        dwIndex++;
-    }
-    while(lResult == ERROR_SUCCESS);
-
-done:
-    if (hKey)
-        RegCloseKey(hKey);
-}
-
 static void OnEnterMenuLoop(HWND hWnd)
 {
     int nParts;
@@ -122,13 +64,11 @@ static void OnEnterMenuLoop(HWND hWnd)
     /* Update the status bar pane sizes */
     nParts = -1;
     SendMessageW(hStatusBar, SB_SETPARTS, 1, (LPARAM)&nParts);
-    bInMenuLoop = TRUE;
     SendMessageW(hStatusBar, SB_SETTEXTW, (WPARAM)0, (LPARAM)L"");
 }
 
 static void OnExitMenuLoop(HWND hWnd)
 {
-    bInMenuLoop = FALSE;
     /* Update the status bar pane sizes*/
     SetupStatusBar(hWnd, TRUE);
     UpdateStatusBar();
@@ -759,28 +699,6 @@ BOOL PrintRegistryHive(HWND hWnd, LPWSTR path)
     return TRUE;
 }
 
-static void ChooseFavorite(LPCWSTR pszFavorite)
-{
-    HKEY hKey = NULL;
-    WCHAR szFavoritePath[512];
-    DWORD cbData, dwType;
-
-    if (RegOpenKeyExW(HKEY_CURRENT_USER, s_szFavoritesRegKey, 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
-        goto done;
-
-    cbData = sizeof(szFavoritePath);
-    memset(szFavoritePath, 0, sizeof(szFavoritePath));
-    if (RegQueryValueExW(hKey, pszFavorite, NULL, &dwType, (LPBYTE) szFavoritePath, &cbData) != ERROR_SUCCESS)
-        goto done;
-
-    if (dwType == REG_SZ)
-        SelectNode(g_pChildWnd->hTreeWnd, szFavoritePath);
-
-done:
-    if (hKey)
-        RegCloseKey(hKey);
-}
-
 BOOL CopyKeyName(HWND hWnd, HKEY hRootKey, LPCWSTR keyName)
 {
     BOOL bClipboardOpened = FALSE;
@@ -1091,9 +1009,6 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_VIEW_STATUSBAR:
         toggle_child(hWnd, LOWORD(wParam), hStatusBar);
         return TRUE;
-    case ID_HELP_HELPTOPICS:
-        WinHelpW(hWnd, getAppName(), HELP_FINDER, 0);
-        return TRUE;
     case ID_HELP_ABOUT:
         ShowAboutBox(hWnd);
         return TRUE;
@@ -1284,32 +1199,20 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         RegKeyEditPermissions(hWnd, hKeyRoot, NULL, keyPath);
         break;
     case ID_SWITCH_PANELS:
-        g_pChildWnd->nFocusPanel = !g_pChildWnd->nFocusPanel;
-        SetFocus(g_pChildWnd->nFocusPanel? g_pChildWnd->hListWnd: g_pChildWnd->hTreeWnd);
-        break;
-
-    default:
-        if ((LOWORD(wParam) >= ID_FAVORITES_MIN) && (LOWORD(wParam) <= ID_FAVORITES_MAX))
         {
-            HMENU hMenu;
-            MENUITEMINFOW mii;
-            WCHAR szFavorite[512];
-
-            hMenu = GetSubMenu(GetMenu(hWnd), FAVORITES_MENU_POSITION);
-
-            memset(&mii, 0, sizeof(mii));
-            mii.cbSize = sizeof(mii);
-            mii.fMask = MIIM_TYPE;
-            mii.fType = MFT_STRING;
-            mii.dwTypeData = szFavorite;
-            mii.cch = COUNT_OF(szFavorite);
-
-            if (GetMenuItemInfo(hMenu, LOWORD(wParam) - ID_FAVORITES_MIN, TRUE, &mii))
-            {
-                ChooseFavorite(szFavorite);
-            }
+            BOOL bShiftDown = GetKeyState(VK_SHIFT) < 0;
+            HWND hwndItem = GetNextDlgTabItem(g_pChildWnd->hWnd, GetFocus(), bShiftDown);
+            if (hwndItem == g_pChildWnd->hAddressBarWnd)
+                PostMessageW(hwndItem, EM_SETSEL, 0, -1);
+            SetFocus(hwndItem);
         }
-        else if ((LOWORD(wParam) >= ID_TREE_SUGGESTION_MIN) && (LOWORD(wParam) <= ID_TREE_SUGGESTION_MAX))
+        break;
+    case ID_ADDRESS_FOCUS:
+        SendMessageW(g_pChildWnd->hAddressBarWnd, EM_SETSEL, 0, -1);
+        SetFocus(g_pChildWnd->hAddressBarWnd);
+        break;
+    default:
+        if ((LOWORD(wParam) >= ID_TREE_SUGGESTION_MIN) && (LOWORD(wParam) <= ID_TREE_SUGGESTION_MAX))
         {
             WORD wID = LOWORD(wParam);
             LPCWSTR s = Suggestions;
@@ -1350,8 +1253,6 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
     switch (message)
     {
     case WM_CREATE:
-        // For now, the Help dialog item is disabled because of lacking of HTML Help support
-        EnableMenuItem(GetMenu(hWnd), ID_HELP_HELPTOPICS, MF_BYCOMMAND | MF_GRAYED);
         GetClientRect(hWnd, &rc);
         CreateWindowExW(0, szChildClass, NULL, WS_CHILD | WS_VISIBLE,
                         rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
@@ -1371,7 +1272,6 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
     case WM_TIMER:
         break;
     case WM_INITMENU:
-        OnInitMenu(hWnd);
         break;
     case WM_ENTERMENULOOP:
         OnEnterMenuLoop(hWnd);
@@ -1388,7 +1288,6 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         SendMessageW(g_pChildWnd->hTreeWnd, WM_SYSCOLORCHANGE, 0, 0);
         break;
     case WM_DESTROY:
-        WinHelpW(hWnd, getAppName(), HELP_QUIT, 0);
         SaveSettings();
         PostQuitMessage(0);
     default:

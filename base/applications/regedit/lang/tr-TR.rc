@@ -6,9 +6,9 @@ ID_ACCEL ACCELERATORS
 BEGIN
     VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
     "^F", ID_EDIT_FIND
-    VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
     VK_F2, ID_EDIT_RENAME, VIRTKEY, NOINVERT
     VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
+    VK_F4, ID_ADDRESS_FOCUS, VIRTKEY, NOINVERT
     VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
 END
 
@@ -76,16 +76,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Yenile\tF5", ID_VIEW_REFRESH
     END
-    POPUP "Y&er İmleri"
-    BEGIN
-        MENUITEM "&Yer İmlerine Ekle...", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
-        MENUITEM "Y&er İmlerinden Sil...", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
-    END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Yardım Konuları\tF1", ID_HELP_HELPTOPICS
-        MENUITEM SEPARATOR
-        MENUITEM "&Değer Defteri Düzenleyicisi Üzerine", ID_HELP_ABOUT
+        MENUITEM "&Üzerine", ID_HELP_ABOUT
     END
 END
 
@@ -280,8 +273,7 @@ STRINGTABLE
 BEGIN
     ID_REGISTRY_MENU "Bütün Değer Defteri ile çalışma komutlarını içerir."
     ID_EDIT_MENU "Anahtar veya değerleri düzenleme komutlarını içerir."
-    ID_VIEW_MENU "Değer Defteri penceresinin husûsileştirme komutlarını içerir."
-    ID_FAVOURITES_MENU "Sık kullanılan dizinleri kullanma komutlarını içerir."
+    ID_VIEW_MENU "Değer Defteri penceresinin özelleştirme komutlarını içerir."
     ID_HELP_MENU "Değer Defteri Düzenleyicisi ile ilgili bilgiyi ya da yardımı görüntüleme komutlarını içerir."
     ID_EDIT_NEW_MENU "Yeni bir dizin ya da yeni bir değer oluşturma komutlarını içerir."
 END
@@ -297,25 +289,22 @@ BEGIN
     ID_REGISTRY_EXPORTREGISTRYFILE "Değer Defteri'nin tümünü ya da bir bölümünü bir metin kütüğüne verir."
     ID_REGISTRY_LOADHIVE "Değer Defteri'ne bir yığın kütüğü yükler."
     ID_REGISTRY_UNLOADHIVE "Değer Defteri'nden bir yığın kaldırır."
-    ID_REGISTRY_CONNECTNETWORKREGISTRY "Uzaktaki bir bilgisyarın Değer Defteri'sine bağlanır."
-    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Uzaktaki bir bilgisayarın Değer Defteri'sine olan bağlantıyı keser."
+    ID_REGISTRY_CONNECTNETWORKREGISTRY "Uzaktaki bir bilgisyarın Değer Defteri'ne bağlanır."
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Uzaktaki bir bilgisayarın Değer Defteri'ne olan bağlantıyı keser."
     ID_REGISTRY_PRINT "Değer Defteri'nin tümünü ya da bir bölümünü yazdırır."
-/*  ID_HELP_HELPTOPICS "Değer Defteri Düzenleyicisi Yardımı'nı açar."  */
     ID_HELP_ABOUT "Programla ilgili bilgi, sürüm numarası ve telif hakkı görüntüler."
 END
 
 STRINGTABLE
 BEGIN
     ID_REGISTRY_EXIT "Değer Defteri Düzenleyicisi'nden çıkar."
-    ID_FAVOURITES_ADDTOFAVOURITES "Dizinleri yer imleri dizelgesine ekler."
-    ID_FAVOURITES_REMOVEFAVOURITE "Dizinleri yer imleri dizelgesinden kaldırır."
     ID_VIEW_STATUSBAR "Durum çubuğunu gösterir ya da gizler."
     ID_VIEW_SPLIT "İki levha arasındaki ayırıcının konumunu değiştirir."
     ID_VIEW_REFRESH "Pencereyi yeniler."
     ID_EDIT_DELETE "Seçileni siler."
     ID_EDIT_RENAME "Seçilenin adını değiştirir."
     ID_EDIT_COPYKEYNAME "Seçilen dizinin adını panoya çoğaltır."
-    ID_EDIT_FIND "Bir dizgiyi dizinlerin adlarında, değer adlarında veyâ değer verilerinde arar."
+    ID_EDIT_FIND "Bir dizeyi dizinlerin adlarında, değer adlarında veyâ değer verilerinde arar."
     ID_EDIT_FINDNEXT "Önceki aramada belirtilmiş metni sonraki aramada arar."
 END
 
@@ -347,7 +336,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_BINARY_EMPTY "(Sıfır uzunluktaki ikili değer)"
-    IDS_DEFAULT_VALUE_NAME "(Ön tanımlı)"
+    IDS_DEFAULT_VALUE_NAME "(Varsayılan)"
     IDS_VALUE_NOT_SET "(Değer belirtilmemiştir.)"
     IDS_UNKNOWN_TYPE "Bilinmeyen tür: (0x%lx)"
     IDS_MY_COMPUTER "Bilgisayar"
@@ -481,35 +470,12 @@ END
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Yığın Yükleme"
-FONT 8, "Ms Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Dizin:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
     DEFPUSHBUTTON "Tamam", IDOK, 140, 17, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 89, 17, 50, 14
-END
-
-IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Yer İmlerine Ekleme"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    DEFPUSHBUTTON "Tamam", IDOK, 129, 7, 50, 14
-    PUSHBUTTON "İptal", IDCANCEL, 129, 24, 50, 14
-    LTEXT "Yer İmi Adı:", IDC_STATIC, 7, 7, 70, 10
-    EDITTEXT IDC_FAVORITENAME, 7, 26, 110, 13, ES_AUTOHSCROLL
-END
-
-IDD_REMOVEFAVORITES DIALOGEX 0, 0, 164, 135
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Yer İmlerini Silme"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    DEFPUSHBUTTON "Tamam", IDOK, 107, 114, 50, 14
-    PUSHBUTTON "İptal", IDCANCEL, 7, 114, 50, 14
-    CONTROL "List1", IDC_FAVORITESLIST, "SysListView32", LVS_LIST | WS_BORDER |
-            WS_TABSTOP, 7, 20, 150, 90
-    LTEXT "Yer imlerini seçiniz.", IDC_STATIC, 7, 7, 99, 12
 END
 
 IDD_FIND DIALOGEX 0, 0, 254, 82
@@ -543,12 +509,3 @@ BEGIN
     DEFPUSHBUTTON "İptal", IDCANCEL, 93, 29, 45, 14
     LTEXT "Değer Defteri Aranıyor...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Değer Defteri Düzenleyicisi Yardımı'nı açar."
- *    ID_HELP_ABOUT "İzlenceyle ilgili bilgi, sürüm numarası ve telif hakkı görüntüler."
- *END
- */
