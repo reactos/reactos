@@ -22,6 +22,7 @@ BEGIN
         MENUITEM "&Nou\tF2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Marcaje „?”", IDM_MARKQ
+        MENUITEM "Sound", IDM_SOUND
         MENUITEM SEPARATOR
         MENUITEM "În&cepător", IDM_BEGINNER
         MENUITEM "&Avansat", IDM_ADVANCED

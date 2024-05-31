@@ -32,6 +32,9 @@
 #define IDM_EXPERT     1007
 #define IDM_CUSTOM     1008
 #define IDM_MARKQ      1009
+#ifdef __REACTOS__
+#define IDM_SOUND      1041
+#endif
 
 #define IDC_TIME1      1011
 #define IDC_TIME2      1012

@@ -18,6 +18,7 @@ BEGIN
         MENUITEM "&Yeni\tF2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Soru İşaretiyle İşaretleme", IDM_MARKQ
+        MENUITEM "Sound", IDM_SOUND
         MENUITEM SEPARATOR
         MENUITEM "&Acemi", IDM_BEGINNER
         MENUITEM "&Gelişmiş", IDM_ADVANCED

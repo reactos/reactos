@@ -14,6 +14,7 @@ BEGIN
         MENUITEM "&Új\tF2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "K&érdőjelek engedélyezése", IDM_MARKQ
+        MENUITEM "Sound", IDM_SOUND
         MENUITEM SEPARATOR
         MENUITEM "Kez&dő", IDM_BEGINNER
         MENUITEM "Kö&zéphaladó", IDM_ADVANCED

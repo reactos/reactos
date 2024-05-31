@@ -109,6 +109,15 @@ static void LoadBoard( BOARD *p_board )
     if( RegQueryValueExW( hkey, markW, NULL, &type, (BYTE*) &p_board->IsMarkQ, &size ) )
         p_board->IsMarkQ = TRUE;
 
+#ifdef __REACTOS__
+    /* WinXP SP3: Enabled when value >= 3, disabled when value < 3 */
+    size = sizeof(p_board->IsSoundEnabled);
+    if (RegQueryValueExW(hkey, L"Sound", NULL, &type, (BYTE*)&p_board->IsSoundEnabled, &size) == ERROR_SUCCESS)
+        p_board->IsSoundEnabled = (p_board->IsSoundEnabled >= 3 ? TRUE : FALSE);
+    else
+        p_board->IsSoundEnabled = FALSE;
+#endif
+
     for( i = 0; i < 3; i++ ) {
         wsprintfW( key_name, nameW, i+1 );
         size = sizeof( data );
@@ -145,6 +154,9 @@ static void InitBoard( BOARD *p_board )
         CheckMenuItem( hMenu, IDM_MARKQ, MF_CHECKED );
     else
         CheckMenuItem( hMenu, IDM_MARKQ, MF_UNCHECKED );
+#ifdef __REACTOS__
+    CheckMenuItem(hMenu, IDM_SOUND, p_board->IsSoundEnabled ? MF_CHECKED : MF_UNCHECKED);
+#endif
     CheckLevel( p_board );
 }
 
@@ -168,6 +180,11 @@ static void SaveBoard( BOARD *p_board )
     RegSetValueExW( hkey, widthW, 0, REG_DWORD, (LPBYTE) &p_board->cols, sizeof(p_board->cols) );
     RegSetValueExW( hkey, minesW, 0, REG_DWORD, (LPBYTE) &p_board->mines, sizeof(p_board->mines) );
     RegSetValueExW( hkey, markW, 0, REG_DWORD, (LPBYTE) &p_board->IsMarkQ, sizeof(p_board->IsMarkQ) );
+#ifdef __REACTOS__
+    /* WinXP SP3: Set to 3 when enabled, set to 0 when disabled */
+    p_board->IsSoundEnabled = (p_board->IsSoundEnabled ? 3 : 0);
+    RegSetValueExW(hkey, L"Sound", 0, REG_DWORD, (LPBYTE)&p_board->IsSoundEnabled, sizeof(p_board->IsSoundEnabled));
+#endif
 
     for( i = 0; i < 3; i++ ) {
         wsprintfW( key_name, nameW, i+1 );
@@ -546,9 +563,10 @@ static void DrawBoard( HDC hdc, HDC hMemDC, PAINTSTRUCT *ps, BOARD *p_board )
 
 
 #ifdef __REACTOS__
-static void PlaySoundEffect( UINT id )
+static void PlaySoundEffect(BOARD *p_board, UINT id)
 {
-    PlaySoundW(MAKEINTRESOURCEW(id), GetModuleHandleW(NULL), SND_RESOURCE | SND_ASYNC);
+    if (p_board->IsSoundEnabled)
+        PlaySoundW(MAKEINTRESOURCEW(id), p_board->hInst, SND_RESOURCE | SND_ASYNC);
 }
 #endif
 
@@ -561,7 +579,7 @@ static void AddFlag( BOARD *p_board, unsigned col, unsigned row )
             if( p_board->IsMarkQ ) {
                 p_board->box[col][row].FlagType = QUESTION;
 #ifdef __REACTOS__
-                PlaySoundEffect(IDW_QUESTION);
+                PlaySoundEffect(p_board, IDW_QUESTION);
 #endif
             }
             else
@@ -577,7 +595,7 @@ static void AddFlag( BOARD *p_board, unsigned col, unsigned row )
             p_board->box[col][row].FlagType = FLAG;
             p_board->num_flags++;
 #ifdef __REACTOS__
-            PlaySoundEffect(IDW_FLAG);
+            PlaySoundEffect(p_board, IDW_FLAG);
 #endif
         }
     }
@@ -676,14 +694,14 @@ static void CompleteBox( BOARD *p_board, unsigned col, unsigned row )
             p_board->face_bmp = DEAD_BMP;
             p_board->status = GAMEOVER;
 #ifdef __REACTOS__
-            PlaySoundEffect(IDW_EXPLODE);
+            PlaySoundEffect(p_board, IDW_EXPLODE);
 #endif
         }
         else if( p_board->status != GAMEOVER ) {
             p_board->boxes_left--;
 #ifdef __REACTOS__
             if (is_first_box)
-                PlaySoundEffect(IDW_BOX);
+                PlaySoundEffect(p_board, IDW_BOX);
 #endif
         }
 
@@ -844,7 +862,7 @@ static void TestBoard( HWND hWnd, BOARD *p_board, int x, int y, int msg )
     if( p_board->boxes_left == 0 ) {
 #ifdef __REACTOS__
         if (p_board->status != WON)
-            PlaySoundEffect(IDW_WIN);
+            PlaySoundEffect(p_board, IDW_WIN);
 #endif
         p_board->status = WON;
 
@@ -1002,6 +1020,14 @@ static LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
             else
                 CheckMenuItem( hMenu, IDM_MARKQ, MF_UNCHECKED );
             return 0;
+
+#ifdef __REACTOS__
+        case IDM_SOUND:
+            hMenu = GetMenu(hWnd);
+            board.IsSoundEnabled = !board.IsSoundEnabled;
+            CheckMenuItem(hMenu, IDM_SOUND, board.IsSoundEnabled ? MF_CHECKED : MF_UNCHECKED);
+            return 0;
+#endif
 
         case IDM_BEGINNER:
             SetDifficulty( &board, BEGINNER );

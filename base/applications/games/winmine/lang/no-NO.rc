@@ -14,6 +14,7 @@ BEGIN
         MENUITEM "&Ny\tF2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Merk spørsmål", IDM_MARKQ
+        MENUITEM "Sound", IDM_SOUND
         MENUITEM SEPARATOR
         MENUITEM "Ny&begynner", IDM_BEGINNER
         MENUITEM "&Avansert", IDM_ADVANCED
