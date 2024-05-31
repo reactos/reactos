@@ -6,9 +6,9 @@ ID_ACCEL ACCELERATORS
 BEGIN
     VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
     "^F", ID_EDIT_FIND
-    VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
     VK_F2, ID_EDIT_RENAME, VIRTKEY, NOINVERT
     VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
+    VK_F4, ID_ADDRESS_FOCUS, VIRTKEY, NOINVERT
     VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
 END
 
@@ -76,15 +76,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Оновити\tF5", ID_VIEW_REFRESH
     END
-    POPUP "Обр&ане"
-    BEGIN
-        MENUITEM "&Додати в обране", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
-        MENUITEM "В&идалити з обраного", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
-    END
     POPUP "&Довідка"
     BEGIN
-        MENUITEM "&Зміст\tF1", ID_HELP_HELPTOPICS
-        MENUITEM SEPARATOR
         MENUITEM "&Про редактор реєстру", ID_HELP_ABOUT
     END
 END
@@ -109,7 +102,7 @@ BEGIN
             MENUITEM "&Двійкове значення", ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD значення", ID_EDIT_NEW_DWORDVALUE
             MENUITEM "&Багаторядкове значення", ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Розширюване рядкове значення", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "Роз&ширюване рядкове значення", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
     END
     POPUP ""
@@ -123,7 +116,7 @@ BEGIN
             MENUITEM "&Двійкове значення", ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD значення", ID_EDIT_NEW_DWORDVALUE
             MENUITEM "&Багаторядкове значення", ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Розширюване рядкове значення", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "Роз&ширюване рядкове значення", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "З&найти...", ID_EDIT_FIND
         MENUITEM SEPARATOR
@@ -273,7 +266,6 @@ BEGIN
     ID_REGISTRY_MENU "Містить команди для роботи з реєстром у цілому"
     ID_EDIT_MENU "Містить команди для редагування значень або розділів"
     ID_VIEW_MENU "Містить команди для настроювання вікна реєстра"
-    ID_FAVOURITES_MENU "Містить команди для доступу до розділів, що часто вживаються"
     ID_HELP_MENU "Містить команди для відображення довідки та інформації про редактор реєстра"
     ID_EDIT_NEW_MENU "Містить команди для створення нових розділів або значень"
 END
@@ -292,15 +284,12 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Підключається до реєстру віддаленого комп'ютера"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Відключається від реєстру віддаленого комп'ютера"
     ID_REGISTRY_PRINT "Друкує весь реєстр або його частину"
-/*    ID_HELP_HELPTOPICS "Відкриває довідку редактора реєстра" */
     ID_HELP_ABOUT "Відображає інформацію про програму, номер версії та авторство"
 END
 
 STRINGTABLE
 BEGIN
     ID_REGISTRY_EXIT "Виходить з редактора реєстру"
-    ID_FAVOURITES_ADDTOFAVOURITES "Додає розділ до обраного"
-    ID_FAVOURITES_REMOVEFAVOURITE "Видаляє розділ з обраного"
     ID_VIEW_STATUSBAR "Відображує або ховає рядок стану"
     ID_VIEW_SPLIT "Змінити позицію роздільника між двома панелями"
     ID_VIEW_REFRESH "Оновлює вікно"
@@ -472,35 +461,12 @@ END
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Load Hive"
-FONT 8, "Ms Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Key:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
     DEFPUSHBUTTON "OK", IDOK, 140, 17, 50, 14
     PUSHBUTTON "Cancel", IDCANCEL, 89, 17, 50, 14
-END
-
-IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Додання до обраного"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    DEFPUSHBUTTON "OK", IDOK, 129, 7, 50, 14
-    PUSHBUTTON "Скасувати", IDCANCEL, 129, 24, 50, 14
-    LTEXT "Ім'&я обраного розділу:", IDC_STATIC, 7, 7, 70, 10
-    EDITTEXT IDC_FAVORITENAME, 7, 26, 110, 13, ES_AUTOHSCROLL
-END
-
-IDD_REMOVEFAVORITES DIALOGEX 0, 0, 164, 135
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Видалення до обраного"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    DEFPUSHBUTTON "OK", IDOK, 107, 114, 50, 14
-    PUSHBUTTON "Скасувати", IDCANCEL, 7, 114, 50, 14
-    CONTROL "List1", IDC_FAVORITESLIST, "SysListView32", LVS_LIST | WS_BORDER |
-            WS_TABSTOP, 7, 20, 150, 90
-    LTEXT "Оберіть імена для видалення:", IDC_STATIC, 7, 7, 99, 12
 END
 
 IDD_FIND DIALOGEX 0, 0, 254, 82
@@ -531,15 +497,6 @@ CAPTION "Знайти"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
-    DEFPUSHBUTTON "&Скасувати", IDCANCEL, 93, 29, 45, 14
+    DEFPUSHBUTTON "Скасувати", IDCANCEL, 93, 29, 45, 14
     LTEXT "Пошук у реєстрі...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Відкриває довідку редактора реєстра."
- *    ID_HELP_ABOUT "Відображає інформацію про програму, номер версії, та авторські права."
- *END
- */
