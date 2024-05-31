@@ -88,8 +88,8 @@ BEGIN
         MENUITEM "&Importar archivo...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Exportar archivo...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Cargar subárbol...", ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "Descargar subárbol...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "Cargar subárbol...", ID_REGISTRY_LOADHIVE, GRAYED //FIXME: add accel
+        MENUITEM "Descargar subárbol...", ID_REGISTRY_UNLOADHIVE, GRAYED //FIXME: add accel
         MENUITEM SEPARATOR
         MENUITEM "&Conectar al Registro de red...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Desconectar del Registro de red...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
@@ -182,10 +182,10 @@ BEGIN
         END
         MENUITEM "&Buscar...", ID_EDIT_FIND
         MENUITEM SEPARATOR
-        MENUITEM "&Eliminar", ID_TREE_DELETE
+        MENUITEM "&Eliminar", ID_TREE_DELETE //FIXME: accelerator collision &E
         MENUITEM "&Renombrar", ID_TREE_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Exportar", ID_TREE_EXPORT
+        MENUITEM "&Exportar", ID_TREE_EXPORT //FIXME: accelerator collision &E. Please notice that there is another MENUITEM "&Exportar", ID_TREE_EXPORT ~ 10 lines below and also another MENUITEM "&Eliminar", ID_HEXEDIT_DELETE ~ 20 lines below. If possible keep them harmonizd.
         MENUITEM "&Permisos...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Copiar nombre de clave", ID_EDIT_COPYKEYNAME
@@ -667,7 +667,7 @@ END
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Cargar subárbol"
-FONT 8, "Ms Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Clave:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
@@ -726,7 +726,7 @@ CAPTION "Buscar"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
-    DEFPUSHBUTTON "&Cancelar", IDCANCEL, 93, 29, 45, 14
+    DEFPUSHBUTTON "Cancelar", IDCANCEL, 93, 29, 45, 14
     LTEXT "Buscando en el Registro...", IDC_STATIC, 33, 12, 83, 8
 END
 

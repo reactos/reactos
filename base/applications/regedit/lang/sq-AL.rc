@@ -74,11 +74,11 @@ IDC_REGEDIT MENU
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "dIL", ID_REGISTRY_EXIT
+        MENUITEM "Dil", ID_REGISTRY_EXIT
     END
-    POPUP "nDIHMë"
+    POPUP "Ndihmë"
     BEGIN
-        MENUITEM "rRETH", ID_HELP_ABOUT
+        MENUITEM "rRETH", ID_HELP_ABOUT //FIXME: This string should be synced with the other MENUITEM "Rreth Registry Editor", ID_HELP_ABOUT (part 2 of 2). I did use MENUITEM "Rreth" for both in older releases. //FIXME: It should also have an accelerator.
     END
 END
 
@@ -89,11 +89,11 @@ BEGIN
         MENUITEM "&Importo...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Eksporto...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Ngarko koshere...", ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "Shkarko koshere...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "Ngarko koshere...", ID_REGISTRY_LOADHIVE, GRAYED //FIXME: add accelerator. It is possible to use the same accel for ID_REGISTRY_LOADHIVE and ID_REGISTRY_UNLOADHIVE, because they are never shown both at the same time.
+        MENUITEM "Shkarko koshere...", ID_REGISTRY_UNLOADHIVE, GRAYED //FIXME: add accelerator. It is possible to use the same accel for ID_REGISTRY_LOADHIVE and ID_REGISTRY_UNLOADHIVE, because they are never shown both at the same time.
         MENUITEM SEPARATOR
-        MENUITEM "Lidh regjistrin e Networkut...", ID_REGISTRY_CONNECTNETWORKREGISTRY
-        MENUITEM "Shkeput regjistrin e Networkut...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
+        MENUITEM "Lidh regjistrin e Networkut...", ID_REGISTRY_CONNECTNETWORKREGISTRY //FIXME: acceleraotr is missing
+        MENUITEM "Shkeput regjistrin e Networkut...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED //FIXME: acceleraotr is missing
         MENUITEM SEPARATOR
         MENUITEM "&Printo...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
@@ -132,7 +132,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Rifresko\tF5", ID_VIEW_REFRESH
     END
-    POPUP "&Favorite"
+    POPUP "F&avorite"
     BEGIN
         MENUITEM "Shto tek Favoritet", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
         MENUITEM "Hiq nga Favorite", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
@@ -141,7 +141,7 @@ BEGIN
     BEGIN
         MENUITEM "Ndihmë temë\tF1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "Rreth Registry Editor", ID_HELP_ABOUT
+        MENUITEM "Rreth Registry Editor", ID_HELP_ABOUT //FIXME: This string should be synced with the other MENUITEM "rRETH", ID_HELP_ABOUT (part 2 of 2). I did use MENUITEM "Rreth" for both in older releases. //FIXME: It should also have an accelerator.
     END
 END
 
@@ -668,7 +668,7 @@ END
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Ngarko kosheren"
-FONT 8, "Ms Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Çeles:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13

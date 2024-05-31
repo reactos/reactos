@@ -4,7 +4,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 ID_ACCEL ACCELERATORS
 BEGIN
-    "D", ID_ADDRESS_FOCUS, VIRTKEY, ALT
+    "D", ID_ADDRESS_FOCUS, VIRTKEY, ALT //FIXME: accelerator collision &D
     VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
     "^F", ID_EDIT_FIND
     VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
@@ -70,19 +70,19 @@ END
 
 IDC_REGEDIT MENU
 BEGIN
-    POPUP "&Dosya"
+    POPUP "&Dosya" //FIXME: 3x accelerator collision &D: with POPUP "&Düzen" and also with "D", ID_ADDRESS_FOCUS, VIRTKEY, ALT. I used "&Kütük" for the backport
     BEGIN
         MENUITEM "&Çıkış", ID_REGISTRY_EXIT
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Hakkında", ID_HELP_ABOUT
+        MENUITEM "&Hakkında", ID_HELP_ABOUT //FIXME: There are 2 ID_HELP_ABOUT in here. Sync their text! I just used "&Üzerine" for the backport
     END
 END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "&Dosya" //FIXME: accelerator collision &D. If you decide to change this then please keep it in sync with the "&Dosya" in IDC_REGEDIT MENU
+    POPUP "&Dosya" //FIXME: 3x accelerator collision &D: with POPUP "&Düzen" and also with "D", ID_ADDRESS_FOCUS, VIRTKEY, ALT.  If you decide to change this then please keep it in sync with the IDC_REGEDIT MENU. I used "&Kütük" for the backport
     BEGIN
         MENUITEM "&Al...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Ver...", ID_REGISTRY_EXPORTREGISTRYFILE
@@ -97,7 +97,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", ID_REGISTRY_EXIT
     END
-    POPUP "&Düzen" //FIXME: accelerator collision &D
+    POPUP "&Düzen" //FIXME: 3x accelerator collision &D: with POPUP "&Dosya" and also with "D", ID_ADDRESS_FOCUS, VIRTKEY, ALT.
     BEGIN
         MENUITEM "&Değiştir...", ID_EDIT_MODIFY
         MENUITEM SEPARATOR
@@ -139,7 +139,7 @@ BEGIN
     BEGIN
         MENUITEM "&Yardım Konuları\tF1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Kayıt Defteri Düzenleyicisi Hakkında", ID_HELP_ABOUT
+        MENUITEM "&Kayıt Defteri Düzenleyicisi Hakkında", ID_HELP_ABOUT //FIXME: There are 2 ID_HELP_ABOUT in here. Sync their text! I just used "&Üzerine" for the backport
     END
 END
 
@@ -666,7 +666,7 @@ END
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Yığın Yükleme"
-FONT 8, "Ms Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Anahtar:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13

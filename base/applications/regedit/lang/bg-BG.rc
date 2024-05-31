@@ -90,8 +90,8 @@ BEGIN
         MENUITEM "&Внос...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Износ...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Зареждане на рой...", ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "Изоставяне на рой...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "Зареждане на рой...", ID_REGISTRY_LOADHIVE, GRAYED //FIXME: add accelerator. You can use the same for ID_REGISTRY_LOADHIVE and ID_REGISTRY_UNLOADHIVE
+        MENUITEM "Изоставяне на рой...", ID_REGISTRY_UNLOADHIVE, GRAYED //FIXME: add accelerator. You can use the same for ID_REGISTRY_LOADHIVE and ID_REGISTRY_UNLOADHIVE
         MENUITEM SEPARATOR
         MENUITEM "&Свързване с мрежов регистър...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Разделяне от мрежов регистър...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
@@ -669,7 +669,7 @@ END
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Зареждане на рой"
-FONT 8, "Ms Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Клавиш:", IDC_STATIC, 4, 4, 28, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 41, 2, 145, 13
@@ -728,7 +728,7 @@ CAPTION "Търсене"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
-    DEFPUSHBUTTON "&Отказ", IDCANCEL, 93, 29, 45, 14
+    DEFPUSHBUTTON "Отказ", IDCANCEL, 93, 29, 45, 14
     LTEXT "Претърсване на регистъра...", IDC_STATIC, 33, 12, 105, 8
 END
 

@@ -74,7 +74,7 @@ BEGIN
     END
     POPUP "&Hilfe"
     BEGIN
-        MENUITEM "&Über", ID_HELP_ABOUT
+        MENUITEM "Inf&o", ID_HELP_ABOUT
     END
 END
 
@@ -85,8 +85,8 @@ BEGIN
         MENUITEM "&Importieren...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Exportieren...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Zweig laden...", ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "Zweig entladen...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "Z&weig laden...", ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Z&weig entladen...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Mit Netzwerkregistrierung verbinden...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Von Netzwerkregistrierung trennen...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
@@ -97,17 +97,17 @@ BEGIN
     END
     POPUP "&Bearbeiten"
     BEGIN
-        MENUITEM "&Ändern", ID_EDIT_MODIFY
+        MENUITEM "Än&dern", ID_EDIT_MODIFY
         MENUITEM SEPARATOR
         POPUP "&Neu"
         BEGIN
-            MENUITEM "&Schlüssel", ID_EDIT_NEW_KEY
+            MENUITEM "Sc&hlüssel", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&Zeichenkette", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&String", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Binärwert", ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD-Wert", ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Mehrteilige Zeichenkette", ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Erweiterbare Zeichenkette", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Multi-String", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Erweiterbarer String", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
         MENUITEM "&Berechtigungen...", ID_EDIT_PERMISSIONS
@@ -124,7 +124,7 @@ BEGIN
     BEGIN
         MENUITEM "Status&leiste", ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Trennen", ID_VIEW_SPLIT
+        MENUITEM "&Teilen", ID_VIEW_SPLIT
         MENUITEM SEPARATOR
         MENUITEM "&Aktualisieren\tF5", ID_VIEW_REFRESH
     END
@@ -137,7 +137,7 @@ BEGIN
     BEGIN
         MENUITEM "&Hilfethemen\tF1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Info", ID_HELP_ABOUT
+        MENUITEM "Inf&o", ID_HELP_ABOUT
     END
 END
 
@@ -145,7 +145,7 @@ IDR_POPUP_MENUS MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Ändern", ID_EDIT_MODIFY
+        MENUITEM "Än&dern", ID_EDIT_MODIFY
         MENUITEM "Binäre Daten ändern", ID_EDIT_MODIFY_BIN
         MENUITEM SEPARATOR
         MENUITEM "&Löschen\tEntf", ID_EDIT_DELETE
@@ -155,13 +155,13 @@ BEGIN
     BEGIN
         POPUP "&Neu"
         BEGIN
-            MENUITEM "&Schlüssel", ID_EDIT_NEW_KEY
+            MENUITEM "Sc&hlüssel", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&Zeichenkette", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&String", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Binärwert", ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD-Wert", ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Mehrteilige Zeichenkette", ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Erweiterbare Zeichenkette", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Multi-String", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Erweiterbarer String", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
     END
     POPUP ""
@@ -169,13 +169,13 @@ BEGIN
         MENUITEM "Erweitern/Schließen", ID_TREE_EXPANDBRANCH
         POPUP "&Neu"
         BEGIN
-            MENUITEM "&Schlüssel", ID_EDIT_NEW_KEY
+            MENUITEM "Sc&hlüssel", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "&String-Wert", ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "&Binär-Wert", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&String", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Binärwert", ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD-Wert", ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Multi-String-Wert", ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Expandierbarer String-Wert", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Multi-String", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Erweiterbarer String", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "&Suchen...", ID_EDIT_FIND
         MENUITEM SEPARATOR
@@ -185,7 +185,7 @@ BEGIN
         MENUITEM "&Exportieren", ID_TREE_EXPORT
         MENUITEM "&Berechtigungen...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
-        MENUITEM "S&chlüsselnamen kopieren", ID_EDIT_COPYKEYNAME
+        MENUITEM "Schlüsselnamen &kopieren", ID_EDIT_COPYKEYNAME
     END
     POPUP ""
     BEGIN
@@ -193,7 +193,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Exportieren", ID_TREE_EXPORT
         MENUITEM SEPARATOR
-        MENUITEM "Zweig entladen...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "Z&weig entladen...", ID_REGISTRY_UNLOADHIVE, GRAYED
     END
     POPUP ""
     BEGIN
@@ -202,7 +202,7 @@ BEGIN
         MENUITEM "&Einfügen", ID_HEXEDIT_PASTE
         MENUITEM "&Löschen", ID_HEXEDIT_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "A&lles auswählen", ID_HEXEDIT_SELECT_ALL
+        MENUITEM "Alles &markieren", ID_HEXEDIT_SELECT_ALL
     END
 END
 
@@ -210,10 +210,10 @@ END
 
 IDD_EDIT_STRING DIALOGEX 32, 24, 252, 84
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Zeichenkette ändern"
+CAPTION "String bearbeiten"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Wertname:", IDC_STATIC, 6, 6, 134, 8
+    LTEXT "&Name:", IDC_STATIC, 6, 6, 134, 8
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
     LTEXT "&Wert:", IDC_STATIC, 6, 35, 161, 8
     EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 12, ES_AUTOHSCROLL
@@ -223,10 +223,10 @@ END
 
 IDD_EDIT_MULTI_STRING DIALOGEX 32, 24, 252, 174
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Mehrteilige Zeichenfolge bearbeiten"
+CAPTION "Multi-String bearbeiten"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Wertname:", IDC_STATIC, 6, 6, 134, 8
+    LTEXT "&Name:", IDC_STATIC, 6, 6, 134, 8
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
     LTEXT "&Wert:", IDC_STATIC, 6, 35, 161, 8
     EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 102, ES_AUTOHSCROLL | ES_MULTILINE |
@@ -240,7 +240,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | 
 CAPTION "Binärwert bearbeiten"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Wertname:", IDC_STATIC, 6, 6, 134, 8
+    LTEXT "&Name:", IDC_STATIC, 6, 6, 134, 8
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
     LTEXT "&Wert:", IDC_STATIC, 6, 35, 161, 8
     CONTROL "", IDC_VALUE_DATA, "HexEdit32", WS_VSCROLL | WS_BORDER | WS_TABSTOP, 6, 46, 240, 102
@@ -253,7 +253,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | 
 CAPTION "DWORD-Wert bearbeiten"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Wertname:", IDC_STATIC, 6, 6, 134, 8
+    LTEXT "&Name:", IDC_STATIC, 6, 6, 134, 8
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
     LTEXT "&Wert:", IDC_STATIC, 6, 35, 161, 8
     EDITTEXT IDC_VALUE_DATA, 6, 46, 116, 12, ES_AUTOHSCROLL
@@ -664,12 +664,12 @@ END
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Hive laden"
-FONT 8, "Ms Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Schlüssel:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
+    LTEXT "Sc&hlüssel:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
     DEFPUSHBUTTON "OK", IDOK, 140, 17, 50, 14
-    PUSHBUTTON "A&bbrechen", IDCANCEL, 89, 17, 50, 14
+    PUSHBUTTON "Abbrechen", IDCANCEL, 89, 17, 50, 14
 END
 
 IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
@@ -678,7 +678,7 @@ CAPTION "Zu Favoriten hinzufügen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "OK", IDOK, 129, 7, 50, 14
-    PUSHBUTTON "A&bbrechen", IDCANCEL, 129, 24, 50, 14
+    PUSHBUTTON "Abbrechen", IDCANCEL, 129, 24, 50, 14
     LTEXT "&Favorit:", IDC_STATIC, 7, 7, 70, 10
     EDITTEXT IDC_FAVORITENAME, 7, 26, 110, 13, ES_AUTOHSCROLL
 END
@@ -689,7 +689,7 @@ CAPTION "Favoriten entfernen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "OK", IDOK, 107, 114, 50, 14
-    PUSHBUTTON "A&bbrechen", IDCANCEL, 7, 114, 50, 14
+    PUSHBUTTON "Abbrechen", IDCANCEL, 7, 114, 50, 14
     CONTROL "", IDC_FAVORITESLIST, "SysListView32", LVS_LIST | WS_BORDER |
             WS_TABSTOP, 7, 20, 150, 90
     LTEXT "Favorit(en) auswählen:", IDC_STATIC, 7, 7, 99, 12
@@ -701,11 +701,11 @@ CAPTION "Suchen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "&Weitersuchen", IDOK, 197, 7, 50, 14
-    PUSHBUTTON "A&bbrechen", IDCANCEL, 197, 24, 50, 14
+    PUSHBUTTON "Abbrechen", IDCANCEL, 197, 24, 50, 14
     GROUPBOX "Suche in", IDC_STATIC, 7, 25, 63, 51
     LTEXT "Suche &nach:", IDC_STATIC, 7, 8, 37, 10
     EDITTEXT IDC_FINDWHAT, 47, 7, 142, 13, ES_AUTOHSCROLL
-    CONTROL "&Schlüssel", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
+    CONTROL "Sc&hlüssel", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 14, 36, 45, 8
     CONTROL "&Werte", IDC_LOOKAT_VALUES, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 14, 48, 36, 8
@@ -723,7 +723,7 @@ CAPTION "Suchen"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
-    DEFPUSHBUTTON "&Abbrechen", IDCANCEL, 93, 29, 45, 14
+    DEFPUSHBUTTON "Abbrechen", IDCANCEL, 93, 29, 45, 14
     LTEXT "Durchsuche die Registry...", IDC_STATIC, 33, 12, 85, 8
 END
 

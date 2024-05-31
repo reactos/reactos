@@ -78,7 +78,7 @@ END
 
 IDC_REGEDIT MENU
 BEGIN
-    POPUP "&Plik"
+    POPUP "&Plik" //FIXME: harmonize those strings (part1 of 2). I do recommend to use "&Plik" for both!
     BEGIN
         MENUITEM "Za&kończ", ID_REGISTRY_EXIT
     END
@@ -90,13 +90,13 @@ END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "&Rejestr"
+    POPUP "&Rejestr" //FIXME: harmonize those strings (part2 of 2). I do recommend to use "&Plik" for both!
     BEGIN
         MENUITEM "&Importuj plik rejestru...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Eksportuj plik rejestru...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Ładuj Drzewo....", ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "Wyładuj Drzewo..", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "Ładuj Drzewo...", ID_REGISTRY_LOADHIVE, GRAYED //FIXME: add accelerator. It is possible to use the same for ID_REGISTRY_LOADHIVE and ID_REGISTRY_UNLOADHIVE because both are never shown at the same time.
+        MENUITEM "Wyładuj Drzewo...", ID_REGISTRY_UNLOADHIVE, GRAYED //FIXME: add accelerator. It is possible to use the same for ID_REGISTRY_LOADHIVE and ID_REGISTRY_UNLOADHIVE because both are never shown at the same time.
         MENUITEM SEPARATOR
         MENUITEM "&Podłącz rejestr sieciowy...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Odłącz rejestr sieciowy...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
@@ -674,7 +674,7 @@ END
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Ładuj drzewo"
-FONT 8, "Ms Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Klucz:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
@@ -733,7 +733,7 @@ CAPTION "Znajdź"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
-    DEFPUSHBUTTON "&Anuluj", IDCANCEL, 93, 29, 45, 14
+    DEFPUSHBUTTON "Anuluj", IDCANCEL, 93, 29, 45, 14
     LTEXT "Przeszukiwanie rejestru...", IDC_STATIC, 33, 12, 83, 8
 END
 
