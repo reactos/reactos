@@ -224,4 +224,26 @@ BOOL PathIsValidElement(_In_ LPCWSTR pszPath);
 BOOL PathIsDosDevice(_In_ LPCWSTR pszName);
 HRESULT SHILAppend(_Inout_ LPITEMIDLIST pidl, _Inout_ LPITEMIDLIST *ppidl);
 
+EXTERN_C HRESULT
+IUnknown_InitializeCommand(
+    _In_ IUnknown *pUnk,
+    _In_ PCWSTR pszCommandName,
+    _In_opt_ IPropertyBag *pPB);
+EXTERN_C HRESULT
+InvokeIExecuteCommand(
+    _In_ IExecuteCommand *pEC,
+    _In_ PCWSTR pszCommandName,
+    _In_opt_ IPropertyBag *pPB,
+    _In_opt_ IShellItemArray *pSIA,
+    _In_opt_ LPCMINVOKECOMMANDINFOEX pICI,
+    _In_opt_ IUnknown *pSite);
+EXTERN_C HRESULT
+InvokeIExecuteCommandWithDataObject(
+    _In_ IExecuteCommand *pEC,
+    _In_ PCWSTR pszCommandName,
+    _In_opt_ IPropertyBag *pPB,
+    _In_ IDataObject *pDO,
+    _In_opt_ LPCMINVOKECOMMANDINFOEX pICI,
+    _In_opt_ IUnknown *pSite);
+
 #endif /* _PRECOMP_H__ */

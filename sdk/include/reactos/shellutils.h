@@ -609,34 +609,39 @@ public:
     explicit CDataObjectHIDA(IDataObject* pDataObject)
         : m_cida(nullptr)
     {
-        m_medium.tymed = TYMED_NULL;
-
-        if (g_cfHIDA == NULL)
-        {
-            g_cfHIDA = (CLIPFORMAT)RegisterClipboardFormatW(CFSTR_SHELLIDLISTW);
-        }
-        FORMATETC fmt = { g_cfHIDA, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
-
-        m_hr = pDataObject->GetData(&fmt, &m_medium);
-        if (FAILED(m_hr))
-        {
-            m_medium.tymed = TYMED_NULL;
-            return;
-        }
-
-        m_cida = (CIDA*)::GlobalLock(m_medium.hGlobal);
-        if (m_cida == nullptr)
-        {
-            m_hr = E_UNEXPECTED;
-        }
+        m_hr = CreateCIDA(pDataObject, &m_cida, m_medium);
     }
 
     ~CDataObjectHIDA()
     {
-        if (m_cida)
-            ::GlobalUnlock(m_cida);
+        DestroyCIDA(m_cida, m_medium);
+    }
 
-        ReleaseStgMedium(&m_medium);
+    static void DestroyCIDA(CIDA *pcida, STGMEDIUM &medium)
+    {
+        if (pcida)
+            ::GlobalUnlock(pcida);
+        ReleaseStgMedium(&medium);
+    }
+
+    static HRESULT CreateCIDA(IDataObject* pDataObject, CIDA **ppcida, STGMEDIUM &medium)
+    {
+        *ppcida = NULL;
+        if (g_cfHIDA == NULL)
+            g_cfHIDA = (CLIPFORMAT)RegisterClipboardFormatW(CFSTR_SHELLIDLISTW);
+        
+        FORMATETC fmt = { g_cfHIDA, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+        HRESULT hr = pDataObject->GetData(&fmt, &medium);
+        if (SUCCEEDED(hr))
+        {
+            *ppcida = (CIDA*)::GlobalLock(medium.hGlobal);
+            if (*ppcida)
+                return S_OK;
+            ReleaseStgMedium(&medium);
+            hr = E_UNEXPECTED;
+        }
+        medium.tymed = TYMED_NULL;
+        return hr;
     }
 
     HRESULT hr() const
