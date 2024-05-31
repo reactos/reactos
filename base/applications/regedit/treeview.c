@@ -352,7 +352,7 @@ HTREEITEM InsertNode(HWND hwndTV, HTREEITEM hItem, LPWSTR name)
     if (!TreeView_GetItem(hwndTV, &item))
         return FALSE;
 
-    if ((item.state & TVIS_EXPANDEDONCE) && (item.cChildren > 0))
+    if (item.state & TVIS_EXPANDEDONCE)
     {
         hNewItem = AddEntryToTree(hwndTV, hItem, name, 0, 0);
         SendMessageW(hwndTV, TVM_SORTCHILDREN, 0, (LPARAM) hItem);
@@ -582,6 +582,8 @@ BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem)
     HTREEITEM hNewItem;
 
     pszKeyPath = GetItemPath(hwndTV, hItem, &hRootKey);
+    if (!pszKeyPath)
+        return bSuccess;
     if (pszKeyPath[0] == L'\0')
         hKey = hRootKey;
     else if (RegOpenKeyW(hRootKey, pszKeyPath, &hKey) != ERROR_SUCCESS)
@@ -642,6 +644,7 @@ BOOL TreeWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
             HTREEITEM hParentItem = TreeView_GetParent(g_pChildWnd->hTreeWnd, pnmtv->itemNew.hItem);
             UpdateAddress(pnmtv->itemNew.hItem, NULL, NULL, TRUE);
             EnableMenuItem(hMenuFrame, ID_EDIT_PERMISSIONS, MF_BYCOMMAND | (hParentItem ? MF_ENABLED : MF_GRAYED));
+            EnableMenuItem(hMenuFrame, ID_EDIT_NEW_KEY, MF_BYCOMMAND | (hParentItem ? MF_ENABLED : MF_GRAYED));
             if (!hParentItem || !TreeView_GetParent(g_pChildWnd->hTreeWnd, hParentItem))
             {
                 EnableMenuItem(hMenuFrame , ID_EDIT_DELETE, MF_BYCOMMAND | MF_GRAYED);
