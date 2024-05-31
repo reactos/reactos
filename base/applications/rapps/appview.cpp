@@ -13,6 +13,57 @@
 
 using namespace Gdiplus;
 
+// **** Menu helpers ****
+
+// Helper from shlwapi
+extern "C"
+INT WINAPI
+GetMenuPosFromID(
+    _In_ HMENU hMenu,
+    _In_ UINT  id);
+
+BOOL
+DeleteMenuEx(
+    _In_ HMENU hMenu,
+    _In_ UINT  uPosition,
+    _In_ UINT  uFlags)
+{
+    INT pos;
+    MENUITEMINFOW mii = { sizeof(mii), MIIM_FTYPE, 0 };
+    bool bIsValidItem1, bIsValidItem2;
+    bool bIsSep1, bIsSep2;
+
+    if (uFlags & MF_BYPOSITION)
+        pos = (INT)uPosition;
+    else
+        pos = ::GetMenuPosFromID(hMenu, uPosition);
+    if (pos < 0)
+        return FALSE;
+
+    bIsValidItem1 = ((pos > 0) && ::GetMenuItemInfoW(hMenu, pos - 1, TRUE, &mii));
+    bIsSep1 = bIsValidItem1 && !!(mii.fType & MFT_SEPARATOR);
+
+    bIsValidItem2 = ::GetMenuItemInfoW(hMenu, pos + 1, TRUE, &mii);
+    bIsSep2 = bIsValidItem2 && !!(mii.fType & MFT_SEPARATOR);
+
+    if (bIsSep1 && !bIsSep2 && !bIsValidItem2)
+        pos = pos - 1; // Delete separator only if pos+1 has no item
+    else if (!bIsSep1 && bIsSep2 && !bIsValidItem1)
+        pos = pos + 1; // Delete separator only if pos-1 has no item
+    else if (bIsSep1 && bIsSep2)
+        pos = pos + 1;
+    else
+        pos = -1;
+
+    // Delete one of the separators if necessary
+    if (pos != -1)
+        ::DeleteMenu(hMenu, pos, MF_BYPOSITION);
+
+    // Finally, delete the menu item itself.
+    return ::DeleteMenu(hMenu, uPosition, uFlags);
+}
+// **** Menu helpers ****
+
 // **** CMainToolbar ****
 
 VOID
@@ -146,26 +197,28 @@ CMainToolbar::Create(HWND hwndParent)
 
     AddButtons(_countof(Buttons), Buttons);
 
-    /* Remember ideal width to use as a max width of buttons */
-    SIZE size;
-    GetIdealSize(FALSE, &size);
-    m_dButtonsWidthMax = size.cx;
+    /* Remember the ideal width to use as a max width of buttons */
+    UpdateMaxButtonsWidth();
 
     return m_hWnd;
 }
 
 VOID
-CMainToolbar::HideButtonCaption()
+CMainToolbar::ShowButtonCaption(BOOL bShow)
 {
     DWORD dCurrentExStyle = (DWORD)SendMessageW(TB_GETEXTENDEDSTYLE, 0, 0);
-    SendMessageW(TB_SETEXTENDEDSTYLE, 0, dCurrentExStyle | TBSTYLE_EX_MIXEDBUTTONS);
+    if (bShow)
+        SendMessageW(TB_SETEXTENDEDSTYLE, 0, dCurrentExStyle & ~TBSTYLE_EX_MIXEDBUTTONS);
+    else
+        SendMessageW(TB_SETEXTENDEDSTYLE, 0, dCurrentExStyle | TBSTYLE_EX_MIXEDBUTTONS);
 }
 
 VOID
-CMainToolbar::ShowButtonCaption()
+CMainToolbar::UpdateMaxButtonsWidth()
 {
-    DWORD dCurrentExStyle = (DWORD)SendMessageW(TB_GETEXTENDEDSTYLE, 0, 0);
-    SendMessageW(TB_SETEXTENDEDSTYLE, 0, dCurrentExStyle & ~TBSTYLE_EX_MIXEDBUTTONS);
+    SIZE size;
+    GetIdealSize(FALSE, &size);
+    m_dButtonsWidthMax = size.cx;
 }
 
 DWORD
@@ -1397,6 +1450,31 @@ CApplicationView::ProcessWindowMessage(
             bSuccess &= CreateListView();
             bSuccess &= CreateAppInfoDisplay();
 
+#if 0
+            // APPWIZ-mode: Remove the toolbar buttons we don't need:
+            // ID_INSTALL, ID_CHECK_ALL, ID_RESETDB
+            // We only keep:
+            // ID_UNINSTALL, ID_MODIFY, ID_REFRESH
+            if (m_MainWindow->m_bAppwizMode)
+            {
+                TBBUTTONINFO info = { sizeof(info), 0 };
+                int index;
+
+                index = m_Toolbar->GetButtonInfo(ID_INSTALL, &info);
+                if (index >= 0) m_Toolbar->DeleteButton(index);
+
+                index = m_Toolbar->GetButtonInfo(ID_CHECK_ALL, &info);
+                if (index >= 0) m_Toolbar->DeleteButton(index);
+
+                index = m_Toolbar->GetButtonInfo(ID_RESETDB, &info);
+                if (index >= 0) m_Toolbar->DeleteButton(index);
+
+                /* Update the ideal width to use as a max width of buttons */
+                m_Toolbar->UpdateMaxButtonsWidth();
+            }
+#endif
+
+            /* Resize the toolbar */
             m_Toolbar->AutoSize();
 
             RECT rTop;
@@ -1501,8 +1579,8 @@ CApplicationView::ProcessWindowMessage(
                         break;
                 }
             }
+            break;
         }
-        break;
 
         case WM_SYSCOLORCHANGE:
         {
@@ -1511,8 +1589,8 @@ CApplicationView::ProcessWindowMessage(
             m_ListView->SendMessageW(EM_SETBKGNDCOLOR, 0, GetSysColor(COLOR_BTNFACE));
             m_Toolbar->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
             m_ComboBox->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
+            break;
         }
-        break;
 
         case WM_SIZE:
         {
@@ -1523,8 +1601,8 @@ CApplicationView::ProcessWindowMessage(
         case WM_COMMAND:
         {
             OnCommand(wParam, lParam);
+            break;
         }
-        break;
     }
     return FALSE;
 }
@@ -1620,20 +1698,20 @@ CApplicationView::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
     if (wParam == SIZE_MINIMIZED)
         return;
 
-    /* Size tool bar */
+    /* Resize the toolbar */
     m_Toolbar->AutoSize();
 
     /* Automatically hide captions */
-    DWORD dToolbarTreshold = m_Toolbar->GetMaxButtonsWidth();
+    DWORD dToolbarThreshold = m_Toolbar->GetMaxButtonsWidth();
     DWORD dSearchbarMargin = (LOWORD(lParam) - m_SearchBar->m_Width - m_ComboBox->m_Width - TOOLBAR_PADDING * 2);
 
-    if (dSearchbarMargin > dToolbarTreshold)
+    if (dSearchbarMargin > dToolbarThreshold)
     {
-        m_Toolbar->ShowButtonCaption();
+        m_Toolbar->ShowButtonCaption(TRUE);
     }
-    else if (dSearchbarMargin < dToolbarTreshold)
+    else if (dSearchbarMargin < dToolbarThreshold)
     {
-        m_Toolbar->HideButtonCaption();
+        m_Toolbar->ShowButtonCaption(FALSE);
     }
 
     RECT r = {0, 0, LOWORD(lParam), HIWORD(lParam)};
@@ -1809,7 +1887,18 @@ CApplicationView::Create(HWND hwndParent)
 {
     RECT r = {0, 0, 0, 0};
 
-    HMENU menu = GetSubMenu(LoadMenuW(hInst, MAKEINTRESOURCEW(IDR_APPLICATIONMENU)), 0);
+    // Pick the "Programs" submenu for building our context menu.
+    HMENU menu = GetSubMenu(m_MainWindow->GetMenu(), 1);
+
+#if 0
+    // APPWIZ-mode: Remove the menu buttons we don't need:
+    // ID_INSTALL, ID_RESETDB
+    if (m_MainWindow->m_bAppwizMode)
+    {
+        DeleteMenuEx(menu, ID_INSTALL, MF_BYCOMMAND);
+        DeleteMenuEx(menu, ID_RESETDB, MF_BYCOMMAND);
+    }
+#endif
 
     return CWindowImpl::Create(hwndParent, r, L"", WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, menu);
 }
@@ -1824,30 +1913,71 @@ CApplicationView::SetDisplayAppType(APPLICATION_VIEW_TYPE AppType)
     ApplicationViewType = AppType;
     m_AppsInfo->SetWelcomeText();
 
-    HMENU hMenu = ::GetMenu(m_hWnd);
+    HMENU hMenu = GetMenu();
     switch (AppType)
     {
         case AppViewTypeInstalledApps:
-            EnableMenuItem(hMenu, ID_REGREMOVE, MF_ENABLED);
+        {
             EnableMenuItem(hMenu, ID_INSTALL, MF_GRAYED);
             EnableMenuItem(hMenu, ID_UNINSTALL, MF_ENABLED);
             EnableMenuItem(hMenu, ID_MODIFY, MF_ENABLED);
+            EnableMenuItem(hMenu, ID_REGREMOVE, MF_ENABLED);
 
             m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_INSTALL, FALSE);
             m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_UNINSTALL, TRUE);
             m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_MODIFY, TRUE);
+            m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_CHECK_ALL, FALSE);
+
+            // APPWIZ-mode: Remove menu and toolbar items.
+            if (m_MainWindow->m_bAppwizMode)
+            {
+                // Remove the menu buttons we don't need:
+                // ID_INSTALL, ID_RESETDB
+                DeleteMenuEx(hMenu, ID_INSTALL, MF_BYCOMMAND);
+                DeleteMenuEx(hMenu, ID_RESETDB, MF_BYCOMMAND);
+
+                // Remove the toolbar buttons we don't need:
+                // ID_INSTALL, ID_CHECK_ALL, ID_RESETDB
+                // We only keep:
+                // ID_UNINSTALL, ID_MODIFY, ID_REFRESH
+                TBBUTTONINFO info = { sizeof(info), 0 };
+                int index;
+
+                index = m_Toolbar->GetButtonInfo(ID_INSTALL, &info);
+                if (index >= 0) m_Toolbar->DeleteButton(index);
+
+                index = m_Toolbar->GetButtonInfo(ID_CHECK_ALL, &info);
+                if (index >= 0) m_Toolbar->DeleteButton(index);
+
+                index = m_Toolbar->GetButtonInfo(ID_RESETDB, &info);
+                if (index >= 0) m_Toolbar->DeleteButton(index);
+
+                /* Update the ideal width to use as a max width of buttons */
+                m_Toolbar->UpdateMaxButtonsWidth();
+
+                /* Resize the toolbar */
+                m_Toolbar->AutoSize();
+            }
+
             break;
+        }
 
         case AppViewTypeAvailableApps:
-            EnableMenuItem(hMenu, ID_REGREMOVE, MF_GRAYED);
+        {
+            // We shouldn't get there in APPWIZ-mode
+            ATLASSERT(!m_MainWindow->m_bAppwizMode);
+
             EnableMenuItem(hMenu, ID_INSTALL, MF_ENABLED);
             EnableMenuItem(hMenu, ID_UNINSTALL, MF_GRAYED);
             EnableMenuItem(hMenu, ID_MODIFY, MF_GRAYED);
+            EnableMenuItem(hMenu, ID_REGREMOVE, MF_GRAYED);
 
             m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_INSTALL, TRUE);
             m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_UNINSTALL, FALSE);
             m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_MODIFY, FALSE);
+            m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_CHECK_ALL, TRUE);
             break;
+        }
     }
     return TRUE;
 }
@@ -1864,7 +1994,7 @@ CApplicationView::SetWatermark(const CStringW &Text)
     m_ListView->SetWatermark(Text);
 }
 
-void
+VOID
 CApplicationView::CheckAll()
 {
     m_ListView->CheckAll();
@@ -1904,8 +2034,7 @@ CApplicationView::ItemGetFocus(LPVOID CallbackParam)
 
         if (ApplicationViewType == AppViewTypeInstalledApps)
         {
-            HMENU hMenu = ::GetMenu(m_hWnd);
-
+            HMENU hMenu = GetMenu();
             BOOL CanModify = Info->CanModify();
 
             EnableMenuItem(hMenu, ID_MODIFY, CanModify ? MF_ENABLED : MF_GRAYED);

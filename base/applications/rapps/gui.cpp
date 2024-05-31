@@ -82,7 +82,11 @@ CSideTreeView::~CSideTreeView()
 
 // **** CMainWindow ****
 
-CMainWindow::CMainWindow(CAppDB *db, BOOL bAppwiz) : m_ClientPanel(NULL), m_Db(db), bAppwizMode(bAppwiz), SelectedEnumType(ENUM_ALL_INSTALLED)
+CMainWindow::CMainWindow(CAppDB *db, BOOL bAppwiz) :
+    m_ClientPanel(NULL),
+    m_Db(db),
+    m_bAppwizMode(bAppwiz),
+    SelectedEnumType(ENUM_ALL_INSTALLED)
 {
 }
 
@@ -99,6 +103,10 @@ CMainWindow::InitCategoriesList()
     hRootItemInstalled = m_TreeView->AddCategory(TVI_ROOT, IDS_INSTALLED, IDI_CATEGORY);
     m_TreeView->AddCategory(hRootItemInstalled, IDS_APPLICATIONS, IDI_APPS);
     m_TreeView->AddCategory(hRootItemInstalled, IDS_UPDATES, IDI_APPUPD);
+
+    // Do not show any other categories in APPWIZ mode.
+    if (m_bAppwizMode)
+        goto Finish;
 
     m_TreeView->AddCategory(TVI_ROOT, IDS_SELECTEDFORINST, IDI_SELECTEDFORINST);
 
@@ -120,10 +128,12 @@ CMainWindow::InitCategoriesList()
     m_TreeView->AddCategory(hRootItemAvailable, IDS_CAT_THEMES, IDI_CAT_THEMES);
     m_TreeView->AddCategory(hRootItemAvailable, IDS_CAT_OTHER, IDI_CAT_OTHER);
 
+Finish:
     m_TreeView->SetImageList();
     m_TreeView->Expand(hRootItemInstalled, TVE_EXPAND);
-    m_TreeView->Expand(hRootItemAvailable, TVE_EXPAND);
-    m_TreeView->SelectItem(bAppwizMode ? hRootItemInstalled : hRootItemAvailable);
+    if (!m_bAppwizMode)
+        m_TreeView->Expand(hRootItemAvailable, TVE_EXPAND);
+    m_TreeView->SelectItem(m_bAppwizMode ? hRootItemInstalled : hRootItemAvailable);
 }
 
 BOOL
@@ -431,8 +441,8 @@ CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lPa
                 }
                 break;
             }
+            break;
         }
-        break;
 
         case WM_SIZE:
             OnSize(hwnd, wParam, lParam);
@@ -456,8 +466,8 @@ CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lPa
             /* Forward WM_SYSCOLORCHANGE to common controls */
             m_ApplicationView->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
             m_TreeView->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
+            break;
         }
-        break;
 
         case WM_TIMER:
             if (wParam == SEARCH_TIMER_ID)
@@ -603,13 +613,19 @@ CMainWindow::AddApplicationsToView(CAtlList<CAppInfo *> &List)
 VOID
 CMainWindow::UpdateApplicationsList(AppsCategories EnumType, BOOL bReload, BOOL bCheckAvailable)
 {
+    // Only installed applications should be enumerated in APPWIZ-mode
+    if (m_bAppwizMode && !IsInstalledEnum(EnumType))
+    {
+        ATLASSERT(FALSE && "Should not be called in APPWIZ-mode");
+        return;
+    }
+
     bUpdating = TRUE;
 
     if (bCheckAvailable)
         CheckAvailable();
 
-    if (SelectedEnumType != EnumType)
-        SelectedEnumType = EnumType;
+    SelectedEnumType = EnumType;
 
     if (bReload)
         m_Selected.RemoveAll();
@@ -629,6 +645,9 @@ CMainWindow::UpdateApplicationsList(AppsCategories EnumType, BOOL bReload, BOOL 
     }
     else if (IsAvailableEnum(EnumType))
     {
+        // We shouldn't get there in APPWIZ-mode
+        ATLASSERT(!m_bAppwizMode);
+
         if (bReload)
             m_Db->UpdateAvailable();
 
@@ -649,7 +668,7 @@ CMainWindow::UpdateApplicationsList(AppsCategories EnumType, BOOL bReload, BOOL 
     }
     else
     {
-        ATLASSERT(0 && "This should be unreachable!");
+        ATLASSERT(FALSE && "This should be unreachable!");
     }
     m_ApplicationView->SetRedraw(TRUE);
     m_ApplicationView->RedrawWindow(0, 0, RDW_INVALIDATE | RDW_ALLCHILDREN); // force the child window to repaint

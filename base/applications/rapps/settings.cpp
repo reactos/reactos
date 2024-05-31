@@ -109,7 +109,7 @@ class SettingsFieldString : public SettingsField
     LPCWSTR m_RegName;     // key name in registery
 };
 
-void
+static void
 AddInfoFields(ATL::CAtlList<SettingsField *> &infoFields, SETTINGS_INFO &settings)
 {
     infoFields.AddTail(new SettingsFieldBool(&(settings.bSaveWndPos), L"bSaveWndPos"));

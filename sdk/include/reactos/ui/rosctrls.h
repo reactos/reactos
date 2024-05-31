@@ -349,6 +349,13 @@ public: // Button list management methods
         return SendMessageW(TB_DELETEBUTTON, index, 0);
     }
 
+    DWORD DeleteButtonByCmd(int cmdId)
+    {
+        TBBUTTONINFO info = { sizeof(info), 0 };
+        int index = GetButtonInfo(cmdId, &info);
+        return ((index >= 0) ? DeleteButton(index) : FALSE);
+    }
+
     DWORD GetButtonInfo(int cmdId, TBBUTTONINFO * info)
     {
         return SendMessageW(TB_GETBUTTONINFO, cmdId, reinterpret_cast<LPARAM>(info));
