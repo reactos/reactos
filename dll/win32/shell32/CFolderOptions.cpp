@@ -111,7 +111,7 @@ HRESULT STDMETHODCALLTYPE CFolderOptions::GetSite(REFIID riid, void **ppvSite)
  */
 HRESULT CFolderOptions::HandleDefFolderSettings(int Action)
 {
-    IBrowserService2*bs2;
+    IBrowserService2 *bs2;
     HRESULT hr = IUnknown_QueryService(m_pSite, SID_SShellBrowser, IID_PPV_ARG(IBrowserService2, &bs2));
     if (SUCCEEDED(hr))
     {

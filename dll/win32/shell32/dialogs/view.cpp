@@ -618,7 +618,7 @@ ViewDlg_CreateTreeImageList(VOID)
 }
 
 static BOOL
-ViewDlg_OnInitDialog(HWND hwndDlg, PROPSHEETPAGE*psp)
+ViewDlg_OnInitDialog(HWND hwndDlg, LPPROPSHEETPAGE psp)
 {
     SetWindowLongPtr(hwndDlg, GWL_USERDATA, psp->lParam);
     CFolderOptions *pFO = (CFolderOptions*)psp->lParam;
@@ -951,7 +951,7 @@ FolderOptionsViewDlg(
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            return ViewDlg_OnInitDialog(hwndDlg, (PROPSHEETPAGE*)lParam);
+            return ViewDlg_OnInitDialog(hwndDlg, (LPPROPSHEETPAGE)lParam);
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
