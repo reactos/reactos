@@ -27,8 +27,8 @@ static
 VOID
 NTAPI
 DumpProc(
-    IN PVOID Object,
-    IN POB_DUMP_CONTROL DumpControl
+    _In_ PVOID Object,
+    _In_opt_ POB_DUMP_CONTROL DumpControl
 )
 {
     DPRINT("DumpProc() called\n");
@@ -38,11 +38,11 @@ static
 NTSTATUS
 NTAPI
 OpenProc(
-    IN OB_OPEN_REASON OpenReason,
-    IN PEPROCESS Process,
-    IN PVOID Object,
-    IN ACCESS_MASK GrantedAccess,
-    IN ULONG HandleCount
+    _In_ OB_OPEN_REASON OpenReason,
+    _In_opt_ PEPROCESS Process,
+    _In_ PVOID Object,
+    _In_ ACCESS_MASK GrantedAccess,
+    _In_ ULONG HandleCount
 )
 {
     DPRINT("OpenProc() 0x%p, OpenReason %d, HandleCount %lu, AccessMask 0x%lX\n",
@@ -57,11 +57,11 @@ static
 VOID
 NTAPI
 CloseProc(
-    IN PEPROCESS Process,
-    IN PVOID Object,
-    IN ACCESS_MASK GrantedAccess,
-    IN ULONG ProcessHandleCount,
-    IN ULONG SystemHandleCount
+    _In_opt_ PEPROCESS Process,
+    _In_ PVOID Object,
+    _In_ ACCESS_MASK GrantedAccess,
+    _In_ ULONG ProcessHandleCount,
+    _In_ ULONG SystemHandleCount
 )
 {
     DPRINT("CloseProc() 0x%p, ProcessHandleCount %lu, SystemHandleCount %lu, AccessMask 0x%lX\n",
@@ -74,7 +74,7 @@ CloseProc(
 static
 VOID
 NTAPI
-DeleteProc(IN PVOID Object)
+DeleteProc(_In_ PVOID Object)
 {
     DPRINT("DeleteProc() 0x%p\n", Object);
 }
@@ -83,16 +83,16 @@ static
 NTSTATUS
 NTAPI
 ParseProc(
-    IN PVOID ParseObject,
-    IN PVOID ObjectType,
-    IN OUT PACCESS_STATE AccessState,
-    IN KPROCESSOR_MODE AccessMode,
-    IN ULONG Attributes,
-    IN OUT PUNICODE_STRING CompleteName,
-    IN OUT PUNICODE_STRING RemainingName,
-    IN OUT PVOID Context OPTIONAL,
-    IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
-    OUT PVOID *Object
+    _In_ PVOID ParseObject,
+    _In_ PVOID ObjectType,
+    _Inout_ PACCESS_STATE AccessState,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _In_ ULONG Attributes,
+    _Inout_ PUNICODE_STRING CompleteName,
+    _Inout_ PUNICODE_STRING RemainingName,
+    _Inout_opt_ PVOID Context,
+    _In_opt_ PSECURITY_QUALITY_OF_SERVICE SecurityQos,
+    _Out_ PVOID *Object
 )
 {
     DPRINT("ParseProc() called\n");
@@ -104,10 +104,10 @@ static
 BOOLEAN
 NTAPI
 OkayToCloseProc(
-    IN PEPROCESS Process OPTIONAL,
-    IN PVOID Object,
-    IN HANDLE Handle,
-    IN KPROCESSOR_MODE AccessMode
+    _In_opt_ PEPROCESS Process,
+    _In_ PVOID Object,
+    _In_ HANDLE Handle,
+    _In_ KPROCESSOR_MODE AccessMode
 )
 {
     DPRINT("OkayToCloseProc() 0x%p, Handle 0x%p, AccessMask 0x%lX\n",
@@ -121,12 +121,12 @@ static
 NTSTATUS
 NTAPI
 QueryNameProc(
-    IN PVOID Object,
-    IN BOOLEAN HasObjectName,
-    OUT POBJECT_NAME_INFORMATION ObjectNameInfo,
-    IN ULONG Length,
-    OUT PULONG ReturnLength,
-    IN KPROCESSOR_MODE AccessMode
+    _In_ PVOID Object,
+    _In_ BOOLEAN HasObjectName,
+    _Out_ POBJECT_NAME_INFORMATION ObjectNameInfo,
+    _In_ ULONG Length,
+    _Out_ PULONG ReturnLength,
+    _In_ KPROCESSOR_MODE AccessMode
 )
 {
     DPRINT("QueryNameProc() 0x%p, HasObjectName %d, Len %lu, AccessMask 0x%lX\n",
