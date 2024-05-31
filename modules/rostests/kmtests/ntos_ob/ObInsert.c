@@ -24,17 +24,6 @@ static OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
 static OBJECT_ATTRIBUTES DummyObjectAttributes;
 
 static
-VOID
-NTAPI
-DumpProc(
-    _In_ PVOID Object,
-    _In_opt_ POB_DUMP_CONTROL DumpControl
-)
-{
-    DPRINT("DumpProc()\n");
-}
-
-static
 NTSTATUS
 NTAPI
 OpenProc(
@@ -69,75 +58,6 @@ CloseProc(
            ProcessHandleCount,
            SystemHandleCount,
            GrantedAccess);
-}
-
-static
-VOID
-NTAPI
-DeleteProc(_In_ PVOID Object)
-{
-    DPRINT("DeleteProc(Object 0x%p)\n", Object);
-}
-
-static
-NTSTATUS
-NTAPI
-ParseProc(
-    _In_ PVOID ParseObject,
-    _In_ PVOID ObjectType,
-    _Inout_ PACCESS_STATE AccessState,
-    _In_ KPROCESSOR_MODE AccessMode,
-    _In_ ULONG Attributes,
-    _Inout_ PUNICODE_STRING CompleteName,
-    _Inout_ PUNICODE_STRING RemainingName,
-    _Inout_opt_ PVOID Context,
-    _In_opt_ PSECURITY_QUALITY_OF_SERVICE SecurityQos,
-    _Out_ PVOID *Object
-)
-{
-    DPRINT("ParseProc()\n");
-    *Object = NULL;
-    return STATUS_OBJECT_NAME_NOT_FOUND;
-}
-
-static
-BOOLEAN
-NTAPI
-OkayToCloseProc(
-    _In_opt_ PEPROCESS Process,
-    _In_ PVOID Object,
-    _In_ HANDLE Handle,
-    _In_ KPROCESSOR_MODE AccessMode
-)
-{
-    DPRINT("OkayToCloseProc(Object 0x%p, Handle 0x%p, AccessMask 0x%lX)\n",
-           Object,
-           Handle,
-           AccessMode);
-    return TRUE;
-}
-
-static
-NTSTATUS
-NTAPI
-QueryNameProc(
-    _In_ PVOID Object,
-    _In_ BOOLEAN HasObjectName,
-    _Out_ POBJECT_NAME_INFORMATION ObjectNameInfo,
-    _In_ ULONG Length,
-    _Out_ PULONG ReturnLength,
-    _In_ KPROCESSOR_MODE AccessMode
-)
-{
-    DPRINT("QueryNameProc(Object 0x%p, HasObjectName %d, Len %lu, AccessMask 0x%lX)\n",
-           Object,
-           HasObjectName,
-           Length,
-           AccessMode);
-
-    ObjectNameInfo = NULL;
-    ReturnLength = 0;
-    return STATUS_SUCCESS;
 }
 
 /*!
@@ -184,9 +104,12 @@ ObInsert_CreateDummyType(VOID)
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
     ObjectTypeInitializer.ValidAccessMask = OBJECT_TYPE_ALL_ACCESS;
+    /* Keep track of handles in a handle count database */
     ObjectTypeInitializer.MaintainHandleCount = TRUE;
 
-    /* Create the dummy object type (expected to fail initially) */
+    /* Create the dummy object type.
+       N.B. Initially a failure is expected because MaintainHandleCount is TRUE
+            and requires the open/close procedure to be non-zero */
     Status = ObCreateObjectType(&DummyTypeName,
                                 &ObjectTypeInitializer,
                                 NULL,
@@ -195,12 +118,14 @@ ObInsert_CreateDummyType(VOID)
     ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
 
     ObjectTypeInitializer.CloseProcedure = CloseProc;
-    ObjectTypeInitializer.DeleteProcedure = DeleteProc;
-    ObjectTypeInitializer.DumpProcedure = DumpProc;
     ObjectTypeInitializer.OpenProcedure = OpenProc;
-    ObjectTypeInitializer.ParseProcedure = ParseProc;
-    ObjectTypeInitializer.OkayToCloseProcedure = OkayToCloseProc;
-    ObjectTypeInitializer.QueryNameProcedure = QueryNameProc;
+
+    ObjectTypeInitializer.DeleteProcedure = NULL;
+    ObjectTypeInitializer.DumpProcedure = NULL;
+    ObjectTypeInitializer.ParseProcedure = NULL;
+    ObjectTypeInitializer.OkayToCloseProcedure = NULL;
+    ObjectTypeInitializer.QueryNameProcedure = NULL;
+    ObjectTypeInitializer.SecurityProcedure = NULL;
 
     /* Create the dummy object type again with proper procedures */
     Status = ObCreateObjectType(&DummyTypeName,
@@ -253,12 +178,7 @@ ObInsert_CreateDummyType(VOID)
             {
                 /* Set the procedures for the existing object type */
                 DummyType->TypeInfo.CloseProcedure = CloseProc;
-                DummyType->TypeInfo.DeleteProcedure = DeleteProc;
-                DummyType->TypeInfo.DumpProcedure = DumpProc;
                 DummyType->TypeInfo.OpenProcedure = OpenProc;
-                DummyType->TypeInfo.ParseProcedure = ParseProc;
-                DummyType->TypeInfo.OkayToCloseProcedure = OkayToCloseProc;
-                DummyType->TypeInfo.QueryNameProcedure = QueryNameProc;
             }
 
             /* Close the object type handle */
