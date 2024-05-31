@@ -23,7 +23,6 @@
 #define ID_REGISTRY_MENU              0
 #define ID_EDIT_MENU                  1
 #define ID_VIEW_MENU                  2
-#define ID_FAVOURITES_MENU            3
 #define ID_HELP_MENU                  4
 #define ID_EDIT_NEW_MENU              5
 #define IDS_LIST_COLUMN_FIRST         91
@@ -42,14 +41,10 @@
 #define IDI_STRING                    135
 #define IDI_BIN                       136
 #define IDR_POPUP_MENUS               137
-#define IDD_ADDFAVORITES              138
-#define IDD_REMOVEFAVORITES           139
 #define IDD_FIND                      140
 #define IDD_FINDING                   141
 #define IDC_LICENSE_EDIT              1029
 #define ID_REGISTRY_EXIT              32770
-#define ID_FAVOURITES_ADDTOFAVOURITES 32772
-#define ID_FAVOURITES_REMOVEFAVOURITE 32773
 #define ID_VIEW_STATUSBAR             32774
 #define ID_VIEW_SPLIT                 32775
 #define ID_VIEW_REFRESH               32776
@@ -70,7 +65,6 @@
 #define ID_REGISTRY_DISCONNECTNETWORKREGISTRY 32792
 #define ID_REGISTRY_PRINT                     32793
 
-#define ID_HELP_HELPTOPICS            32794
 #define ID_HELP_ABOUT                 32795
 #define ID_WINDOW_CASCADE             32797
 #define ID_WINDOW_TILE                32798
@@ -154,6 +148,7 @@
 #define IDS_QUERY_DELETE_KEY_CONFIRM 32877
 #define ID_TREE_EXPORT               32888
 #define ID_TREE_PERMISSIONS          32889
+#define ID_ADDRESS_FOCUS             32890
 
 #define IDS_FLT_REGFILE      31000
 #define IDS_FLT_REGFILES     31001
@@ -257,8 +252,6 @@
 #define IDD_LOADHIVE 2500
 #define IDC_EDIT_KEY 2501
 
-#define IDC_FAVORITENAME  2011
-#define IDC_FAVORITESLIST 2012
 #define IDC_FINDWHAT      2013
 #define IDC_LOOKAT_KEYS   2014
 #define IDC_LOOKAT_VALUES 2015
@@ -285,9 +278,6 @@
 #define IDC_VERSION            2034
 #define IDC_REVISION           2035
 #define IDC_SHOW_RESOURCE_DATA 2036
-
-#define ID_FAVORITES_MIN 2100
-#define ID_FAVORITES_MAX 2999
 
 #define ID_ACCEL 3000
 
