@@ -77,7 +77,7 @@ DeleteProc(_In_ PVOID Object)
  * @brief This function creates a test directory.
  */
 static
-VOID
+NTSTATUS
 ObInsert_CreateTestDirectory(VOID)
 {
     NTSTATUS Status;
@@ -98,13 +98,15 @@ ObInsert_CreateTestDirectory(VOID)
                                      &DummyObjectAttributes);
 
     ok_eq_hex(Status, STATUS_SUCCESS);
+
+    return Status;
 }
 
 /*!
  * @brief This function creates dummy object type.
  */
 static
-VOID
+NTSTATUS
 ObInsert_CreateDummyType(VOID)
 {
     NTSTATUS Status;
@@ -204,6 +206,8 @@ ObInsert_CreateDummyType(VOID)
     }
 
     ok_eq_hex(Status, STATUS_SUCCESS);
+
+    return Status;
 }
 
 /*!
@@ -340,8 +344,8 @@ ObInsert_PathNotFound(VOID)
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
 
     /* Check the object handles before insertion */
-    ok_eq_ulong(ObjectHeader->PointerCount, 1LU);
-    ok_eq_ulong(ObjectHeader->HandleCount, 0LU);
+    ok_eq_ulong(ObjectHeader->PointerCount, 1);
+    ok_eq_ulong(ObjectHeader->HandleCount, 0);
 
     /* Save the old deletion counter before insertion */
     PreviousObjectDeletionCounter = ObjectDeletionCounter;
@@ -408,8 +412,8 @@ ObInsert_NameInvalid(VOID)
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
 
     /* Check the object handles before insertion */
-    ok_eq_ulong(ObjectHeader->PointerCount, 1LU);
-    ok_eq_ulong(ObjectHeader->HandleCount, 0LU);
+    ok_eq_ulong(ObjectHeader->PointerCount, 1);
+    ok_eq_ulong(ObjectHeader->HandleCount, 0);
 
     /* Save the old deletion counter before insertion */
     PreviousObjectDeletionCounter = ObjectDeletionCounter;
@@ -474,8 +478,8 @@ ObInsert_PathSyntaxBad(VOID)
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
 
     /* Check the object handles before insertion */
-    ok_eq_ulong(ObjectHeader->PointerCount, 1LU);
-    ok_eq_ulong(ObjectHeader->HandleCount, 0LU);
+    ok_eq_ulong(ObjectHeader->PointerCount, 1);
+    ok_eq_ulong(ObjectHeader->HandleCount, 0);
 
     /* Save the old deletion counter before insertion */
     PreviousObjectDeletionCounter = ObjectDeletionCounter;
@@ -541,8 +545,8 @@ ObInsert_NameCollision(VOID)
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
 
     /* Check the object handles before insertion */
-    ok_eq_ulong(ObjectHeader->PointerCount, 1LU);
-    ok_eq_ulong(ObjectHeader->HandleCount, 0LU);
+    ok_eq_ulong(ObjectHeader->PointerCount, 1);
+    ok_eq_ulong(ObjectHeader->HandleCount, 0);
 
     /* Save the old deletion counter before insertion */
     PreviousObjectDeletionCounter = ObjectDeletionCounter;
@@ -564,10 +568,18 @@ ObInsert_NameCollision(VOID)
 START_TEST(ObInsert)
 {
     /* Initialize a dummy object type */
-    ObInsert_CreateDummyType();
+    if (ObInsert_CreateDummyType() != STATUS_SUCCESS)
+    {
+        trace("Failed to create a test type object\n");
+        goto Cleanup;
+    }
 
     /* Create a directory where the dummy objects will be stored */
-    ObInsert_CreateTestDirectory();
+    if (ObInsert_CreateTestDirectory() != STATUS_SUCCESS)
+    {
+        trace("Failed to create a test directory\n");
+        goto Cleanup;
+    }
 
     /* Test a success case */
     ObInsert_Success();
@@ -578,6 +590,7 @@ START_TEST(ObInsert)
     ObInsert_PathSyntaxBad();
     ObInsert_NameCollision();
 
+Cleanup:
     /* Clean up resources and objects created during the tests */
     ObInsert_Cleanup();
 }
