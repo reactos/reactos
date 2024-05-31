@@ -36,6 +36,125 @@
 
 /* FUNCTIONS *****************************************************************/
 
+VOID
+DebugDumpBuffer(PVOID Buffer, ULONG Length)
+{
+    PUCHAR BufPtr = (PUCHAR)Buffer;
+    ULONG Offset, Count, i;
+
+    // DbgPrint("Dumping buffer at %p with length of %lu bytes:\n", Buffer, Length);
+
+    Offset = 0;
+    while (Offset < Length)
+    {
+        /* Print the offset */
+        DbgPrint("%04x:\t", Offset);
+
+        /* Print either 16 or the remaining number of bytes */
+        Count = min(Length - Offset, 16);
+        for (i = 0; i < Count; i++, Offset++)
+        {
+            DbgPrint("%02x%c", BufPtr[Offset], (i == 7) ? '-' : ' ');
+        }
+
+        DbgPrint("\n");
+    }
+}
+
+//static
+VOID
+DumpMountedDevices(VOID)
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING RegistryPath
+        = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\MountedDevices");
+    HANDLE hKey = NULL;
+    PKEY_VALUE_FULL_INFORMATION Buffer;
+    ULONG BufferSize = sizeof(KEY_VALUE_FULL_INFORMATION) + MAX_PATH * sizeof(WCHAR);
+    ULONG RequiredSize;
+    ULONG i = 0;
+    UNICODE_STRING Name;
+    UNICODE_STRING Data;
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &RegistryPath,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL, NULL);
+    Status = NtOpenKey(&hKey, KEY_QUERY_VALUE, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtOpenKey() failed with status 0x%08lx\n", Status);
+        return;
+    }
+
+    Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferSize);
+    if (!Buffer)
+    {
+        DPRINT1("RtlAllocateHeap() failed\n");
+        NtClose(hKey);
+        return;
+    }
+
+    DbgPrint("\n**** Dumping HKLM\\SYSTEM\\MountedDevices ****\n");
+    while (TRUE)
+    {
+        Status = NtEnumerateValueKey(hKey,
+                                     i,
+                                     KeyValueFullInformation,
+                                     Buffer,
+                                     BufferSize,
+                                     &RequiredSize);
+        if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+            BufferSize = RequiredSize;
+            Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferSize);
+            if (!Buffer)
+            {
+                DPRINT1("RtlAllocateHeap() failed\n");
+                // Status = STATUS_NO_MEMORY;
+                break;
+                // continue;
+            }
+            Status = NtEnumerateValueKey(hKey,
+                                         i,
+                                         KeyValueFullInformation,
+                                         Buffer,
+                                         BufferSize,
+                                         &RequiredSize);
+        }
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("NtEnumerateKey() failed with status 0x%08lx\n", Status);
+            break;
+        }
+        else if (Buffer->Type != REG_BINARY)
+        {
+            DPRINT1("Wrong registry type: got 0x%lx, expected 0x%lx (REG_BINARY)\n",
+                    Buffer->Type, REG_BINARY);
+            /* Continue dumping nonetheless */
+        }
+        i++;
+
+        Name.Length = Name.MaximumLength = Buffer->NameLength;
+        Name.Buffer = Buffer->Name;
+        Data.Length = Data.MaximumLength = Buffer->DataLength;
+        Data.Buffer = (PWCHAR)((ULONG_PTR)Buffer + Buffer->DataOffset);
+        // if (Data.Length > sizeof(WCHAR) && Data.Buffer[Data.Length / sizeof(WCHAR) - 1] == UNICODE_NULL)
+        // // if (Data.Length >= sizeof(WCHAR) && Data.Buffer[Data.Length / sizeof(WCHAR) - 1] == UNICODE_NULL)
+        //     Data.Length -= sizeof(WCHAR);
+
+        DbgPrint("  '%wZ' =>\n", &Name);
+        DebugDumpBuffer(Data.Buffer, Data.Length);
+        DbgPrint("\n");
+    }
+    DbgPrint("**** End Dumping ****\n");
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+    NtClose(hKey);
+}
+
 #ifdef DUMP_PARTITION_TABLE
 static
 VOID
@@ -2425,6 +2544,10 @@ CreatePartitionList(VOID)
     PDISKENTRY SystemDisk;
     NTSTATUS Status;
 
+    __debugbreak();
+    //** Dump the initial list of MountedDevices **//
+    DumpMountedDevices();
+
     List = (PPARTLIST)RtlAllocateHeap(ProcessHeap,
                                       0,
                                       sizeof(PARTLIST));
@@ -2475,6 +2598,9 @@ CreatePartitionList(VOID)
      */
     SystemDisk = GetSystemDisk(List);
     List->SystemPartition = (SystemDisk ? GetActiveDiskPartition(SystemDisk) : NULL);
+
+    //** Re-dump the list of MountedDevices **//
+    DumpMountedDevices();
 
     return List;
 }
@@ -4254,6 +4380,9 @@ WritePartitionsToDisk(
         InitVolumeDeviceName(Volume, NULL);
     }
 
+    //** Re-dump the list of MountedDevices **//
+    DumpMountedDevices();
+
     return TRUE;
 }
 
@@ -4374,6 +4503,9 @@ SetMountedDeviceValues(
 
     if (!List)
         return FALSE;
+
+    //** Last time dumping of the list of MountedDevices **//
+    DumpMountedDevices();
 
     for (Entry = List->VolumesList.Flink;
          Entry != &List->VolumesList;
