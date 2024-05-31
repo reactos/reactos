@@ -14,9 +14,9 @@ ID_ACCEL ACCELERATORS
 BEGIN
     VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
     "^F", ID_EDIT_FIND
-    VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
     VK_F2, ID_EDIT_RENAME, VIRTKEY, NOINVERT
     VK_F3, ID_EDIT_FINDNEXT, VIRTKEY, NOINVERT
+    VK_F4, ID_ADDRESS_FOCUS, VIRTKEY, NOINVERT
     VK_F5, ID_VIEW_REFRESH, VIRTKEY, NOINVERT
 END
 
@@ -36,13 +36,13 @@ END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "&Rejestr"
+    POPUP "&Plik"
     BEGIN
         MENUITEM "&Importuj plik rejestru...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Eksportuj plik rejestru...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Ładuj Drzewo....", ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "Wyładuj Drzewo..", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "Ładuj Drzewo...", ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Wyładuj Drzewo...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Podłącz rejestr sieciowy...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Odłącz rejestr sieciowy...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
@@ -84,15 +84,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Odśwież\tF5", ID_VIEW_REFRESH
     END
-    POPUP "Ulu&bione"
-    BEGIN
-        MENUITEM "&Dodaj do ulubionych", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
-        MENUITEM "&Usuń ulubiony", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
-    END
     POPUP "Pomo&c"
     BEGIN
-        MENUITEM "&Tematy pomocy\tF1", ID_HELP_HELPTOPICS
-        MENUITEM SEPARATOR
         MENUITEM "Edytor rejestru - i&nformacje", ID_HELP_ABOUT
     END
 END
@@ -281,7 +274,6 @@ BEGIN
     ID_REGISTRY_MENU "Zawiera polecenia do pracy z całym rejestrem"
     ID_EDIT_MENU "Zawiera polecenia do edycji wartości lub kluczy"
     ID_VIEW_MENU "Zawiera polecenia do dostosowywania okien rejestru"
-    ID_FAVOURITES_MENU "Zawiera polecenia dla dostępu do często używanych klawiszy"
     ID_HELP_MENU "Zawiera polecenia do wyświetlania Pomocy oraz informacji o Edytorze rejestru"
     ID_EDIT_NEW_MENU "Zawiera polecenia do tworzenia nowych kluczy lub wartości"
 END
@@ -300,15 +292,12 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Połączenie z rejestrem zdalnego komputera"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Odłącza od rejestru zdalnego komputera"
     ID_REGISTRY_PRINT "Drukuje całość lub część rejestru"
-/*    ID_HELP_HELPTOPICS "Otwiera Pomoc Edytora rejestru" */
     ID_HELP_ABOUT "Wyświetla informacje o programie, numerze wersji i prawach autorskich"
 END
 
 STRINGTABLE
 BEGIN
     ID_REGISTRY_EXIT "Kończy działanie Edytora rejestru"
-    ID_FAVOURITES_ADDTOFAVOURITES "Dodaje klawisze do listy elementów ulubionych"
-    ID_FAVOURITES_REMOVEFAVOURITE "Usuwa klawisze z listy elementów ulubionych"
     ID_VIEW_STATUSBAR "Pokazuje lub ukrywa pasek stanu"
     ID_VIEW_SPLIT "Zmienia pozycję podziału pomiędzy dwoma okienkami"
     ID_VIEW_REFRESH "Odświeża okno"
@@ -480,35 +469,12 @@ END
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Ładuj drzewo"
-FONT 8, "Ms Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Klucz:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
     DEFPUSHBUTTON "OK", IDOK, 140, 17, 50, 14
     PUSHBUTTON "Anuluj", IDCANCEL, 89, 17, 50, 14
-END
-
-IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Dodaj do ulubionych"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    DEFPUSHBUTTON "OK", IDOK, 129, 7, 50, 14
-    PUSHBUTTON "Anuluj", IDCANCEL, 129, 24, 50, 14
-    LTEXT "&Nazwa ulubionego:", IDC_STATIC, 7, 7, 70, 10
-    EDITTEXT IDC_FAVORITENAME, 7, 26, 110, 13, ES_AUTOHSCROLL
-END
-
-IDD_REMOVEFAVORITES DIALOGEX 0, 0, 164, 135
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Usuń z ulubionych"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    DEFPUSHBUTTON "OK", IDOK, 107, 114, 50, 14
-    PUSHBUTTON "Anuluj", IDCANCEL, 7, 114, 50, 14
-    CONTROL "List1", IDC_FAVORITESLIST, "SysListView32", LVS_LIST | WS_BORDER |
-            WS_TABSTOP, 7, 20, 150, 90
-    LTEXT "Wybierz ulubione:", IDC_STATIC, 7, 7, 99, 12
 END
 
 IDD_FIND DIALOGEX 0, 0, 254, 82
@@ -539,15 +505,6 @@ CAPTION "Znajdź"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
-    DEFPUSHBUTTON "&Anuluj", IDCANCEL, 93, 29, 45, 14
+    DEFPUSHBUTTON "Anuluj", IDCANCEL, 93, 29, 45, 14
     LTEXT "Przeszukiwanie rejestru...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Otwiera pomoc Edytora Rejestru."
- *    ID_HELP_ABOUT "Wyświetla informacje o programie, numerze wersji, licencji."
- *END
- */
