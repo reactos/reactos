@@ -12,6 +12,9 @@
 #include <wingdi.h>
 #include <winuser.h>
 
+#define NDEBUG
+#include <debug.h>
+
 /*
  * @stub
  */
@@ -35,6 +38,7 @@ WINAPI
 GetDpiForWindow(
     _In_ HWND hWnd)
 {
+    UNIMPLEMENTED_ONCE;
     UNREFERENCED_PARAMETER(hWnd);
     return GetDpiForSystem();
 }
