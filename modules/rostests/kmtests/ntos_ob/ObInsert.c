@@ -23,6 +23,11 @@ static UNICODE_STRING DummyTypeName;
 static OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
 static OBJECT_ATTRIBUTES DummyObjectAttributes;
 
+/* This counter is incremented by 1 in the delete callback procedure.
+   This way we know that the object has been deleted and this is used
+   to test the dereferencing and deletion of the object in case ObInsertObject fails */
+static ULONG ObjectDeletionCounter = 0;
+
 static
 NTSTATUS
 NTAPI
@@ -58,6 +63,14 @@ CloseProc(
            ProcessHandleCount,
            SystemHandleCount,
            GrantedAccess);
+}
+
+static
+VOID
+NTAPI
+DeleteProc(_In_ PVOID Object)
+{
+    ObjectDeletionCounter += 1;
 }
 
 /*!
@@ -120,7 +133,7 @@ ObInsert_CreateDummyType(VOID)
     ObjectTypeInitializer.CloseProcedure = CloseProc;
     ObjectTypeInitializer.OpenProcedure = OpenProc;
 
-    ObjectTypeInitializer.DeleteProcedure = NULL;
+    ObjectTypeInitializer.DeleteProcedure = DeleteProc;
     ObjectTypeInitializer.DumpProcedure = NULL;
     ObjectTypeInitializer.ParseProcedure = NULL;
     ObjectTypeInitializer.OkayToCloseProcedure = NULL;
@@ -179,6 +192,7 @@ ObInsert_CreateDummyType(VOID)
                 /* Set the procedures for the existing object type */
                 DummyType->TypeInfo.CloseProcedure = CloseProc;
                 DummyType->TypeInfo.OpenProcedure = OpenProc;
+                DummyType->TypeInfo.DeleteProcedure = DeleteProc;
             }
 
             /* Close the object type handle */
@@ -256,8 +270,8 @@ ObInsert_Success(VOID)
 
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
 
-    ok_eq_ulong(ObjectHeader->PointerCount, 1LU);
-    ok_eq_ulong(ObjectHeader->HandleCount, 0LU);
+    ok_eq_ulong(ObjectHeader->PointerCount, 1);
+    ok_eq_ulong(ObjectHeader->HandleCount, 0);
 
     /* Insert the object */
     Status = ObInsertObject(Object,
@@ -271,8 +285,8 @@ ObInsert_Success(VOID)
     ok(Object != NULL, "Object is NULL\n");
     ok(Handle != NULL, "Handle is NULL\n");
 
-    ok_eq_ulong(ObjectHeader->PointerCount, 2LU);
-    ok_eq_ulong(ObjectHeader->HandleCount, 1LU);
+    ok_eq_ulong(ObjectHeader->PointerCount, 2);
+    ok_eq_ulong(ObjectHeader->HandleCount, 1);
 
     ObDereferenceObject(Object);
 
@@ -292,6 +306,7 @@ ObInsert_PathNotFound(VOID)
     PDUMMY_TYPE Object;
     HANDLE Handle;
     POBJECT_HEADER ObjectHeader;
+    ULONG PreviousObjectDeletionCounter;
 
     /* Initialize the object name. To simulate STATUS_OBJECT_PATH_NOT_FOUND, provide
        an invalid non-last path component ("ObInsertTestt") */
@@ -328,6 +343,9 @@ ObInsert_PathNotFound(VOID)
     ok_eq_ulong(ObjectHeader->PointerCount, 1LU);
     ok_eq_ulong(ObjectHeader->HandleCount, 0LU);
 
+    /* Save the old deletion counter before insertion */
+    PreviousObjectDeletionCounter = ObjectDeletionCounter;
+
     /* Insert the object */
     Status = ObInsertObject(Object,
                             NULL,
@@ -340,10 +358,8 @@ ObInsert_PathNotFound(VOID)
        remaining components of the path */
     ok_eq_hex(Status, STATUS_OBJECT_PATH_NOT_FOUND);
 
-    /* Check the object handles after invalid insertion. ObInsertObject should've
-       automatically dereferenced the object */
-    ok_eq_ulong(ObjectHeader->PointerCount, 0LU);
-    ok_eq_ulong(ObjectHeader->HandleCount, 0LU);
+    /* ObInsertObject should've automatically dereferenced the object */
+    ok_eq_bool(ObjectDeletionCounter > PreviousObjectDeletionCounter, TRUE);
 }
 
 /*!
@@ -358,6 +374,7 @@ ObInsert_NameInvalid(VOID)
     PDUMMY_TYPE Object;
     HANDLE Handle;
     POBJECT_HEADER ObjectHeader;
+    ULONG PreviousObjectDeletionCounter;
 
     /* Initialize the object name. To simulate STATUS_OBJECT_NAME_INVALID, provide
        an invalid path end component */
@@ -394,6 +411,9 @@ ObInsert_NameInvalid(VOID)
     ok_eq_ulong(ObjectHeader->PointerCount, 1LU);
     ok_eq_ulong(ObjectHeader->HandleCount, 0LU);
 
+    /* Save the old deletion counter before insertion */
+    PreviousObjectDeletionCounter = ObjectDeletionCounter;
+
     /* Insert the object */
     Status = ObInsertObject(Object,
                             NULL,
@@ -404,10 +424,8 @@ ObInsert_NameInvalid(VOID)
 
     ok_eq_hex(Status, STATUS_OBJECT_NAME_INVALID);
 
-    /* Check the object handles after invalid insertion. ObInsertObject should've
-       automatically dereferenced the object */
-    ok_eq_ulong(ObjectHeader->PointerCount, 0LU);
-    ok_eq_ulong(ObjectHeader->HandleCount, 0LU);
+    /* ObInsertObject should've automatically dereferenced the object */
+    ok_eq_bool(ObjectDeletionCounter > PreviousObjectDeletionCounter, TRUE);
 }
 
 /*!
@@ -422,6 +440,7 @@ ObInsert_PathSyntaxBad(VOID)
     PDUMMY_TYPE Object;
     HANDLE Handle;
     POBJECT_HEADER ObjectHeader;
+    ULONG PreviousObjectDeletionCounter;
 
     /* Initialize the object name. To simulate STATUS_OBJECT_PATH_SYNTAX_BAD, provide
        a path that doesn't start with "\" */
@@ -458,6 +477,9 @@ ObInsert_PathSyntaxBad(VOID)
     ok_eq_ulong(ObjectHeader->PointerCount, 1LU);
     ok_eq_ulong(ObjectHeader->HandleCount, 0LU);
 
+    /* Save the old deletion counter before insertion */
+    PreviousObjectDeletionCounter = ObjectDeletionCounter;
+
     /* Insert the object */
     Status = ObInsertObject(Object,
                             NULL,
@@ -468,10 +490,8 @@ ObInsert_PathSyntaxBad(VOID)
 
     ok_eq_hex(Status, STATUS_OBJECT_PATH_SYNTAX_BAD);
 
-    /* Check the object handles after invalid insertion. ObInsertObject should've
-       automatically dereferenced the object */
-    ok_eq_ulong(ObjectHeader->PointerCount, 0LU);
-    ok_eq_ulong(ObjectHeader->HandleCount, 0LU);
+    /* ObInsertObject should've automatically dereferenced the object */
+    ok_eq_bool(ObjectDeletionCounter > PreviousObjectDeletionCounter, TRUE);
 }
 
 /*!
@@ -486,6 +506,7 @@ ObInsert_NameCollision(VOID)
     PDUMMY_TYPE Object;
     HANDLE Handle;
     POBJECT_HEADER ObjectHeader;
+    ULONG PreviousObjectDeletionCounter;
 
     /* Initialize the object name. To simulate STATUS_OBJECT_NAME_COLLISION, provide
        a name that already exists */
@@ -523,6 +544,9 @@ ObInsert_NameCollision(VOID)
     ok_eq_ulong(ObjectHeader->PointerCount, 1LU);
     ok_eq_ulong(ObjectHeader->HandleCount, 0LU);
 
+    /* Save the old deletion counter before insertion */
+    PreviousObjectDeletionCounter = ObjectDeletionCounter;
+
     /* Insert the object */
     Status = ObInsertObject(Object,
                             NULL,
@@ -533,10 +557,8 @@ ObInsert_NameCollision(VOID)
 
     ok_eq_hex(Status, STATUS_OBJECT_NAME_COLLISION);
 
-    /* Check the object handles after invalid insertion. ObInsertObject should've
-       automatically dereferenced the object */
-    ok_eq_ulong(ObjectHeader->PointerCount, 0LU);
-    ok_eq_ulong(ObjectHeader->HandleCount, 0LU);
+    /* ObInsertObject should've automatically dereferenced the object */
+    ok_eq_bool(ObjectDeletionCounter > PreviousObjectDeletionCounter, TRUE);
 }
 
 START_TEST(ObInsert)
