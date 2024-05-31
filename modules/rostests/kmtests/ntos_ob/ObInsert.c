@@ -145,7 +145,7 @@ QueryNameProc(
  */
 static
 VOID
-ObInsert_CreateTestDirectory()
+ObInsert_CreateTestDirectory(VOID)
 {
     NTSTATUS Status;
 
@@ -172,7 +172,7 @@ ObInsert_CreateTestDirectory()
  */
 static
 VOID
-ObInsert_CreateDummyType()
+ObInsert_CreateDummyType(VOID)
 {
     NTSTATUS Status;
 
@@ -277,7 +277,7 @@ ObInsert_CreateDummyType()
  */
 static
 VOID
-ObInsert_Cleanup()
+ObInsert_Cleanup(VOID)
 {
     NTSTATUS Status;
 
@@ -298,7 +298,7 @@ ObInsert_Cleanup()
  */
 static
 VOID
-ObInsert_Success()
+ObInsert_Success(VOID)
 {
     NTSTATUS Status;
     UNICODE_STRING ObjectName;
@@ -365,7 +365,7 @@ ObInsert_Success()
  */
 static
 VOID
-ObInsert_PathNotFound()
+ObInsert_PathNotFound(VOID)
 {
     NTSTATUS Status;
     UNICODE_STRING ObjectName;
@@ -431,7 +431,7 @@ ObInsert_PathNotFound()
  */
 static
 VOID
-ObInsert_NameInvalid()
+ObInsert_NameInvalid(VOID)
 {
     NTSTATUS Status;
     UNICODE_STRING ObjectName;
@@ -495,7 +495,7 @@ ObInsert_NameInvalid()
  */
 static
 VOID
-ObInsert_PathSyntaxBad()
+ObInsert_PathSyntaxBad(VOID)
 {
     NTSTATUS Status;
     UNICODE_STRING ObjectName;
@@ -559,7 +559,7 @@ ObInsert_PathSyntaxBad()
  */
 static
 VOID
-ObInsert_NameCollision()
+ObInsert_NameCollision(VOID)
 {
     NTSTATUS Status;
     UNICODE_STRING ObjectName;
