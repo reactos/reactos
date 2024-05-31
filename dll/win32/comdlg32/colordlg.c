@@ -396,7 +396,11 @@ static BOOL CC_MouseCheckResultWindow( HWND hDlg, LPARAM lParam )
 /***********************************************************************
  *                       CC_CheckDigitsInEdit                 [internal]
  */
+#ifdef __REACTOS__
+static int CC_CheckDigitsInEdit( CCPRIV *infoPtr, HWND hwnd, int maxval )
+#else
 static int CC_CheckDigitsInEdit( HWND hwnd, int maxval )
+#endif
 {
  int i, k, m, result, value;
  long editpos;
@@ -430,7 +434,13 @@ static int CC_CheckDigitsInEdit( HWND hwnd, int maxval )
  if (result)
  {
   editpos = SendMessageA(hwnd, EM_GETSEL, 0, 0);
+#ifdef __REACTOS__
+  infoPtr->updating = TRUE;
+#endif
   SetWindowTextA(hwnd, buffer );
+#ifdef __REACTOS__
+  infoPtr->updating = FALSE;
+#endif
   SendMessageA(hwnd, EM_SETSEL, 0, editpos);
  }
  return value;
@@ -984,7 +994,11 @@ static LRESULT CC_WMCommand(CCPRIV *lpp, WPARAM wParam, LPARAM lParam, WORD noti
         case IDC_COLOR_EDIT_B:
 	       if (notifyCode == EN_UPDATE && !lpp->updating)
 			 {
+#ifdef __REACTOS__
+			   i = CC_CheckDigitsInEdit(lpp, hwndCtl, 255);
+#else
 			   i = CC_CheckDigitsInEdit(hwndCtl, 255);
+#endif
 			   r = GetRValue(lpp->lpcc->rgbResult);
 			   g = GetGValue(lpp->lpcc->rgbResult);
 			   b= GetBValue(lpp->lpcc->rgbResult);
@@ -1005,6 +1019,9 @@ static LRESULT CC_WMCommand(CCPRIV *lpp, WPARAM wParam, LPARAM lParam, WORD noti
 			    CC_EditSetHSL(lpp);
 			    CC_PaintCross(lpp);
 			    CC_PaintTriangle(lpp);
+#ifdef __REACTOS__
+			    CC_PaintLumBar(lpp);
+#endif
 			   }
 			 }
 		 break;
@@ -1014,7 +1031,11 @@ static LRESULT CC_WMCommand(CCPRIV *lpp, WPARAM wParam, LPARAM lParam, WORD noti
         case IDC_COLOR_EDIT_L:
 	       if (notifyCode == EN_UPDATE && !lpp->updating)
 			 {
+#ifdef __REACTOS__
+			   i = CC_CheckDigitsInEdit(lpp, hwndCtl , LOWORD(wParam) == IDC_COLOR_EDIT_H ? 239 : 240);
+#else
 			   i = CC_CheckDigitsInEdit(hwndCtl , LOWORD(wParam) == IDC_COLOR_EDIT_H ? 239 : 240);
+#endif
 			   xx = 0;
 			   switch (LOWORD(wParam))
 			   {
