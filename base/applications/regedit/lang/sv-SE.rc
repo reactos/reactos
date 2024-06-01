@@ -68,32 +68,32 @@ END
 
 IDC_REGEDIT MENU
 BEGIN
-    POPUP "&Arkiv"
+    POPUP "&Arkiv" //FIXME: Harmonize that string with POPUP "R&egistret" (part 1 of 2). I used "&Arkiv" for both locations for the backport.
     BEGIN
         MENUITEM "&Avsluta", ID_REGISTRY_EXIT
     END
     POPUP "&Hjälp"
     BEGIN
-        MENUITEM "&Om", ID_HELP_ABOUT
+        MENUITEM "&Om", ID_HELP_ABOUT //FIXME: Harmonize that string with the 2nd ID_HELP_ABOUT (part 1 of 2). I used "&Om" for both in the backport.
     END
 END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "R&egistret"
+    POPUP "R&egistret" //FIXME: Harmonize that string with POPUP "&Arkiv" (part 2 of 2). I used "&Arkiv" for both locations for the backport.
     BEGIN
         MENUITEM "&Importera registerfil...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Exportera registerfil...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Läs in Registerdata...", ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "Ta bort Registerdata...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "Läs in Registerdata...", ID_REGISTRY_LOADHIVE, GRAYED //FIXME: add accelerator. It is possible to use the same accel for ID_REGISTRY_LOADHIVE and ID_REGISTRY_UNLOADHIVE, because they are never enabled at the same time. Use the one from Windows though!
+        MENUITEM "Ta bort Registerdata...", ID_REGISTRY_UNLOADHIVE, GRAYED //FIXME: add accelerator. It is possible to use the same accel for ID_REGISTRY_LOADHIVE and ID_REGISTRY_UNLOADHIVE, because they are never enabled at the same time. Use the one from Windows though!
         MENUITEM SEPARATOR
-        MENUITEM "&Anslut Nätverksregister...", ID_REGISTRY_CONNECTNETWORKREGISTRY
+        MENUITEM "&Anslut Nätverksregister...", ID_REGISTRY_CONNECTNETWORKREGISTRY //FIXME: accelerator collision &A. Check what swedish Windows does please!
         MENUITEM "&Koppla ifrån Nätverksregister...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Skriv &ut...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Avsluta", ID_REGISTRY_EXIT
+        MENUITEM "&Avsluta", ID_REGISTRY_EXIT //FIXME: accelerator collision &A. Check what swedish Windows does please! Please notice that there is a second MENUITEM "&Avsluta". Therefore I used MENUITEM "Anslut &Nätverksregister...", ID_REGISTRY_CONNECTNETWORKREGISTRY for the backport and left ID_REGISTRY_EXIT untouched.
     END
     POPUP "&Redigera"
     BEGIN
@@ -107,7 +107,7 @@ BEGIN
             MENUITEM "&Binärvärde", ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD-värde", ID_EDIT_NEW_DWORDVALUE
             MENUITEM "&Multisträngvärde", ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Expanderbart Strängvärde", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Expandable Strängvärde", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
         MENUITEM "B&ehörigheter...", ID_EDIT_PERMISSIONS
@@ -137,7 +137,7 @@ BEGIN
     BEGIN
         MENUITEM "&Hjälpavsnitt\tF1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Om Registereditorn", ID_HELP_ABOUT
+        MENUITEM "&Om Registereditorn", ID_HELP_ABOUT //FIXME: Harmonize that string with the 2nd ID_HELP_ABOUT (part 2 of 2). I used "&Om" for both in the backport.
     END
 END
 
@@ -161,7 +161,7 @@ BEGIN
             MENUITEM "&Binärvärde", ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD-värde", ID_EDIT_NEW_DWORDVALUE
             MENUITEM "&Multisträngvärde", ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Expanderbart Strängvalue", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Expandable Strängvärde", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
     END
     POPUP ""
@@ -174,16 +174,16 @@ BEGIN
             MENUITEM "&Strängvärde", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Binärvärde", ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD-värde", ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Multi-String Value", ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Expandable String Value", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Multisträngvärde", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Expandable Strängvärde", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "&Sök...", ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "&Ta bort", ID_TREE_DELETE
-        MENUITEM "&Byt namn", ID_TREE_RENAME
+        MENUITEM "&Byt namn", ID_TREE_RENAME //FIXME: accelerator collision &B. Attention "&Byt namn" does exist 3 times in this file. Therefote I do recommend to change the accel at "&Behörigheter..." instead!
         MENUITEM SEPARATOR
         MENUITEM "&Exportera", ID_TREE_EXPORT
-        MENUITEM "&Behörigheter...", ID_TREE_PERMISSIONS
+        MENUITEM "&Behörigheter...", ID_TREE_PERMISSIONS //FIXME: accelerator collision &B. I used "Be&hörigheter..." for the backport
         MENUITEM SEPARATOR
         MENUITEM "&Kopiera nyckelnamn", ID_EDIT_COPYKEYNAME
     END
@@ -664,7 +664,7 @@ END
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Läs in registerdata"
-FONT 8, "Ms Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Nyckel:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
@@ -723,7 +723,7 @@ CAPTION "Sök"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
-    DEFPUSHBUTTON "&Avbryt", IDCANCEL, 93, 29, 45, 14
+    DEFPUSHBUTTON "Avbryt", IDCANCEL, 93, 29, 45, 14
     LTEXT "Sök i registret...", IDC_STATIC, 33, 12, 83, 8
 END
 

@@ -70,7 +70,7 @@ END
 
 IDC_REGEDIT MENU
 BEGIN
-    POPUP "&Файл"
+    POPUP "&Файл" //FIXME: Harmonize this string (part 1 of 2)
     BEGIN
         MENUITEM "В&ихід", ID_REGISTRY_EXIT
     END
@@ -82,13 +82,13 @@ END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "Фа&йл"
+    POPUP "Фа&йл" //FIXME: Harmonize this string (part 2 of 2)
     BEGIN
         MENUITEM "&Імпорт...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Експорт...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Завантажити файл реєстру...", ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "Вивантажити файл реєстру...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "Завантажити файл реєстру...", ID_REGISTRY_LOADHIVE, GRAYED //FIXME: accelerator missing. You are allowed to use the same for ID_REGISTRY_LOADHIVE and ID_REGISTRY_UNLOADHIVE, since they are never visible at the same time.
+        MENUITEM "Вивантажити файл реєстру...", ID_REGISTRY_UNLOADHIVE, GRAYED //FIXME: accelerator missing. You are allowed to use the same for ID_REGISTRY_LOADHIVE and ID_REGISTRY_UNLOADHIVE, since they are never visible at the same time.
         MENUITEM SEPARATOR
         MENUITEM "&Підключити мережевий реєстр...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Відключити мережевий реєстр...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
@@ -163,7 +163,7 @@ BEGIN
             MENUITEM "&Двійкове значення", ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD значення", ID_EDIT_NEW_DWORDVALUE
             MENUITEM "&Багаторядкове значення", ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Розширюване рядкове значення", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "Роз&ширюване рядкове значення", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
     END
     POPUP ""
@@ -177,7 +177,7 @@ BEGIN
             MENUITEM "&Двійкове значення", ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD значення", ID_EDIT_NEW_DWORDVALUE
             MENUITEM "&Багаторядкове значення", ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Розширюване рядкове значення", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "Роз&ширюване рядкове значення", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "З&найти...", ID_EDIT_FIND
         MENUITEM SEPARATOR
@@ -666,7 +666,7 @@ END
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Load Hive"
-FONT 8, "Ms Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Key:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
@@ -725,7 +725,7 @@ CAPTION "Знайти"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
-    DEFPUSHBUTTON "&Скасувати", IDCANCEL, 93, 29, 45, 14
+    DEFPUSHBUTTON "Скасувати", IDCANCEL, 93, 29, 45, 14
     LTEXT "Пошук у реєстрі...", IDC_STATIC, 33, 12, 83, 8
 END
 

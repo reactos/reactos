@@ -93,8 +93,8 @@ BEGIN
         MENUITEM "&Importa...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Esporta...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Carica Hive...", ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "Scarica Hive...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "Carica Hive...", ID_REGISTRY_LOADHIVE, GRAYED //FIXME: add accelerator
+        MENUITEM "Scarica Hive...", ID_REGISTRY_UNLOADHIVE, GRAYED //FIXME: add accelerator
         MENUITEM SEPARATOR
         MENUITEM "&Connetti a Registro in rete...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Disconnetti da Registro di rete...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
@@ -125,8 +125,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Copia nome chiave", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Trova...\tCtrl+F", ID_EDIT_FIND
-        MENUITEM "&Trova Successivo\tF3", ID_EDIT_FINDNEXT
+        MENUITEM "&Trova...\tCtrl+F", ID_EDIT_FIND //FIXME: accelerator collision &T
+        MENUITEM "&Trova Successivo\tF3", ID_EDIT_FINDNEXT //FIXME: accelerator collision &T
     END
     POPUP "&Visualizza"
     BEGIN
@@ -187,13 +187,13 @@ BEGIN
         END
         MENUITEM "&Trova...", ID_EDIT_FIND
         MENUITEM SEPARATOR
-        MENUITEM "&Cancella", ID_TREE_DELETE
+        MENUITEM "&Cancella", ID_TREE_DELETE //FIXME: accelerator collision &C
         MENUITEM "&Rinomina", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Esporta", ID_TREE_EXPORT
         MENUITEM "&Permessi...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Copia il nome della chiave", ID_EDIT_COPYKEYNAME
+        MENUITEM "&Copia il nome della chiave", ID_EDIT_COPYKEYNAME //FIXME: accelerator collision &C
     END
     POPUP ""
     BEGIN
@@ -206,9 +206,9 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM "&Taglia", ID_HEXEDIT_CUT
-        MENUITEM "&Copia", ID_HEXEDIT_COPY
+        MENUITEM "&Copia", ID_HEXEDIT_COPY //FIXME: accelerator collision &C
         MENUITEM "&Incolla", ID_HEXEDIT_PASTE
-        MENUITEM "&Cancella", ID_HEXEDIT_DELETE
+        MENUITEM "&Cancella", ID_HEXEDIT_DELETE //FIXME: accelerator collision &C
         MENUITEM SEPARATOR
         MENUITEM "&Seleziona tutto", ID_HEXEDIT_SELECT_ALL
     END
@@ -672,7 +672,7 @@ END
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Carica Hive"
-FONT 8, "Ms Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Chiave:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
@@ -731,7 +731,7 @@ CAPTION "Trova"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
-    DEFPUSHBUTTON "&Annulla", IDCANCEL, 93, 29, 45, 14
+    DEFPUSHBUTTON "Annulla", IDCANCEL, 93, 29, 45, 14
     LTEXT "Ricerca in corso nel registro...", IDC_STATIC, 33, 12, 83, 8
 END
 

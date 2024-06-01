@@ -922,6 +922,9 @@ BEGIN
     IDS_CANTDISCONNECT "Tidak bisa memutuskan (Kode Kesalahan: %lu)."
     IDS_NONE "(Tidak ada)"
 
+    IDS_EXPAND "Exp&and"
+    IDS_COLLAPSE "Coll&apse"
+
     /* Friendly File Type Names */
     IDS_DIRECTORY "Folder"
     IDS_BAT_FILE "Berkas Batch ReactOS"

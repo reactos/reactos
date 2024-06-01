@@ -933,6 +933,9 @@ BEGIN
     IDS_CANTDISCONNECT "Imposibil de deconectat (Cod de eroare: %lu)."
     IDS_NONE "(Nimic)"
 
+    IDS_EXPAND "Exp&and"
+    IDS_COLLAPSE "Coll&apse"
+
     /* Friendly File Type Names */
     IDS_DIRECTORY "Folder"
     IDS_BAT_FILE "Fişier de comenzi ReactOS"

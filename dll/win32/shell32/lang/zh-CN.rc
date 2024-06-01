@@ -935,6 +935,9 @@ BEGIN
     IDS_CANTDISCONNECT "无法断开连接（错误代码：%lu）。"
     IDS_NONE "(None)"
 
+    IDS_EXPAND "Exp&and"
+    IDS_COLLAPSE "Coll&apse"
+
     /* Friendly File Type Names */
     IDS_DIRECTORY "文件夹"
     IDS_BAT_FILE "ReactOS 批处理文件"

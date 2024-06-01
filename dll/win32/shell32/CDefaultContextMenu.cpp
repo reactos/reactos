@@ -80,6 +80,16 @@ static const struct _StaticInvokeCommandMap_
     { "moveto",          FCIDM_SHVIEW_MOVETO },
 };
 
+UINT MapVerbToDfmCmd(_In_ LPCSTR verba)
+{
+    for (UINT i = 0; i < _countof(g_StaticInvokeCmdMap); ++i)
+    {
+        if (!lstrcmpiA(g_StaticInvokeCmdMap[i].szStringVerb, verba))
+            return (int)g_StaticInvokeCmdMap[i].DfmCmd;
+    }
+    return 0;
+}
+
 class CDefaultContextMenu :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IContextMenu3,

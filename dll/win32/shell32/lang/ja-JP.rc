@@ -922,6 +922,9 @@ BEGIN
     IDS_CANTDISCONNECT "接続を切れませんでした (エラーコード: %lu)."
     IDS_NONE "(なし)"
 
+    IDS_EXPAND "Exp&and"
+    IDS_COLLAPSE "Coll&apse"
+
     /* Friendly File Type Names */
     IDS_DIRECTORY "フォルダ"
     IDS_BAT_FILE "ReactOS バッチ ファイル"

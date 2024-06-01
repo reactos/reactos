@@ -20,6 +20,7 @@ list(APPEND SOURCE
     GUIDFromString.cpp
     Int64ToString.cpp
     IShellFolderViewCB.cpp
+    ItemIDList.cpp
     OpenAs_RunDLL.cpp
     PathIsEqualOrSubFolder.cpp
     PathIsTemporary.cpp
@@ -32,7 +33,6 @@ list(APPEND SOURCE
     SHCreateFileExtractIconW.cpp
     SHParseDisplayName.cpp
     SHRestricted.cpp
-    SHSimpleIDListFromPath.cpp
     She.cpp
     ShellExecCmdLine.cpp
     ShellExecuteEx.cpp

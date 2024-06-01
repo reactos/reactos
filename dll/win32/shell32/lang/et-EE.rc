@@ -932,6 +932,9 @@ BEGIN
     IDS_CANTDISCONNECT "Ei saa lahti ühendada (Veateade: %lu)."
     IDS_NONE "(None)"
 
+    IDS_EXPAND "Exp&and"
+    IDS_COLLAPSE "Coll&apse"
+
     /* Friendly File Type Names */
     IDS_DIRECTORY "Kaust"
     IDS_BAT_FILE "ReactOS Batch Fail"

@@ -930,6 +930,9 @@ BEGIN
     IDS_CANTDISCONNECT "Ezin izan da deskonektatu (Error kodea: %lu)."
     IDS_NONE "(Ezer)"
 
+    IDS_EXPAND "Exp&and"
+    IDS_COLLAPSE "Coll&apse"
+
     /* Friendly File Type Names */
     IDS_DIRECTORY "Direktorioa"
     IDS_BAT_FILE "ReactOS lote fitxaetgiak"
