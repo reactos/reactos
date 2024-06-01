@@ -196,11 +196,192 @@ typedef BOOL (WINAPI *GetOpenFileNameProc)(OPENFILENAMEW *ofn);
     return ret;
 }
 
+#ifdef __REACTOS__
+BOOL SHELL_GlobalCounterChanged(LONG *pCounter, SHELL_GCOUNTER_DECLAREPARAMETERS(handle, id))
+{
+    LONG count = SHELL_GlobalCounterGet(SHELL_GCOUNTER_PARAMETERS(handle, id));
+    if (*pCounter == count)
+        return FALSE;
+    *pCounter = count;
+    return TRUE;
+}
+
+EXTERN_C void SHELL32_GetDefaultShellState(SHELLSTATE *pss);
+EXTERN_C BOOL SHELL32_ReadRegShellState(void *pregshellstate);
+EXTERN_C LSTATUS SHELL32_WriteRegShellState(void *pregshellstate);
+SHELL_GCOUNTER_DEFINE_GUID(SHGCGUID_ShellState, 0x7cb834f0, 0x527b, 0x11d2, 0x9d, 0x1f, 0x00, 0x00, 0xf8, 0x05, 0xca, 0x57);
+SHELL_GCOUNTER_DEFINE_HANDLE(g_hShellState);
+#define SHELL_GCOUNTER_SHELLSTATE SHELL_GCOUNTER_PARAMETERS(g_hShellState, GLOBALCOUNTER_SHELLSETTINGSCHANGED)
+static LONG g_ShellStateCounter = 0;
+static UINT g_CachedSSF = 0;
+static struct REGSHELLSTATE { DWORD dwSize; SHELLSTATE ss; } g_ShellState;
+enum { ssf_autocheckselect = 0x00800000, ssf_iconsonly = 0x01000000,
+       ssf_showtypeoverlay = 0x02000000, ssf_showstatusbar = 0x04000000 };
+#endif
+
 /*************************************************************************
  * SHGetSetSettings				[SHELL32.68]
  */
 VOID WINAPI SHGetSetSettings(LPSHELLSTATE lpss, DWORD dwMask, BOOL bSet)
 {
+#ifdef __REACTOS__
+    const DWORD inverted = SSF_SHOWEXTENSIONS;
+    SHELLSTATE *gpss = &g_ShellState.ss;
+    HKEY hKeyAdv;
+
+    if (!SHELL_GlobalCounterIsInitialized(g_hShellState))
+    {
+        SHELL_GlobalCounterCreate(&SHGCGUID_ShellState, g_hShellState);
+    }
+
+    if (!lpss)
+    {
+        SHELL_GlobalCounterIncrement(SHELL_GCOUNTER_SHELLSTATE);
+        return;
+    }
+
+    hKeyAdv = SHGetShellKey(SHKEY_Root_HKCU | SHKEY_Key_Explorer, L"Advanced", bSet);
+    if (!hKeyAdv && bSet)
+        return;
+
+#define SSF_STRUCTONLY (SSF_NOCONFIRMRECYCLE | SSF_DOUBLECLICKINWEBVIEW | SSF_DESKTOPHTML | \
+                        SSF_WIN95CLASSIC | SSF_SORTCOLUMNS | SSF_STARTPANELON)
+#define SHGSS_GetSetStruct(getsetmacro) \
+    do { \
+        getsetmacro(fNoConfirmRecycle, SSF_NOCONFIRMRECYCLE); \
+        getsetmacro(fDoubleClickInWebView, SSF_DOUBLECLICKINWEBVIEW); \
+        getsetmacro(fDesktopHTML, SSF_DESKTOPHTML); \
+        getsetmacro(fWin95Classic, SSF_WIN95CLASSIC); \
+        getsetmacro(lParamSort, SSF_SORTCOLUMNS); \
+        getsetmacro(iSortDirection, SSF_SORTCOLUMNS); \
+        getsetmacro(fStartPanelOn, SSF_STARTPANELON); \
+    } while (0)
+#define SHGSS_GetSetAdv(getsetmacro) \
+    do { \
+        getsetmacro(L"HideFileExt", fShowExtensions, SSF_SHOWEXTENSIONS); \
+        getsetmacro(L"ShowCompColor", fShowCompColor, SSF_SHOWCOMPCOLOR); \
+        getsetmacro(L"DontPrettyPath", fDontPrettyPath, SSF_DONTPRETTYPATH); \
+        getsetmacro(L"ShowAttribCol", fShowAttribCol, SSF_SHOWATTRIBCOL); \
+        getsetmacro(L"MapNetDrvBtn", fMapNetDrvBtn, SSF_MAPNETDRVBUTTON); \
+        getsetmacro(L"ShowInfoTip", fShowInfoTip, SSF_SHOWINFOTIP); \
+        getsetmacro(L"HideIcons", fHideIcons, SSF_HIDEICONS); \
+        getsetmacro(L"WebView", fWebView, SSF_WEBVIEW); \
+        getsetmacro(L"Filter", fFilter, SSF_FILTER); \
+        getsetmacro(L"ShowSuperHidden", fShowSuperHidden, SSF_SHOWSUPERHIDDEN); \
+        getsetmacro(L"NoNetCrawling", fNoNetCrawling, SSF_NONETCRAWLING); \
+        getsetmacro(L"SeparateProcess", fSepProcess, SSF_SEPPROCESS); \
+        getsetmacro(L"AutoCheckSelect", fAutoCheckSelect, ssf_autocheckselect); \
+        getsetmacro(L"IconsOnly", fIconsOnly, ssf_iconsonly); \
+        getsetmacro(L"ShowTypeOverlay", fShowTypeOverlay, ssf_showtypeoverlay); \
+        getsetmacro(L"ShowStatusBar", fShowStatusBar, ssf_showstatusbar); \
+    } while (0)
+
+    if (bSet)
+    {
+        DWORD changed = 0;
+
+#define SHGSS_WriteAdv(name, value, SSF) \
+    do { \
+        DWORD val = (value), cb = sizeof(DWORD); \
+        if (SHSetValueW(hKeyAdv, NULL, (name), REG_DWORD, &val, cb) == ERROR_SUCCESS) \
+        { \
+            ++changed; \
+        } \
+    } while (0)
+#define SHGSS_SetAdv(name, field, SSF) \
+    do { \
+        if ((dwMask & (SSF)) && gpss->field != lpss->field) \
+        { \
+            const DWORD bitval = (gpss->field = lpss->field); \
+            SHGSS_WriteAdv((name), ((SSF) & inverted) ? !bitval : !!bitval, (SSF)); \
+        } \
+    } while (0)
+#define SHGSS_SetStruct(field, SSF) \
+    do { \
+        if ((dwMask & (SSF)) && gpss->field != lpss->field) \
+        { \
+            gpss->field = lpss->field; \
+            ++changed; \
+        } \
+    } while (0)
+
+        if ((dwMask & SSF_SHOWALLOBJECTS) && gpss->fShowAllObjects != lpss->fShowAllObjects)
+        {
+            gpss->fShowAllObjects = lpss->fShowAllObjects;
+            SHGSS_WriteAdv(L"Hidden", lpss->fShowAllObjects ? 1 : 2, SSF_SHOWALLOBJECTS);
+        }
+        SHGSS_SetStruct(fShowSysFiles, SSF_SHOWSYSFILES);
+        SHGSS_GetSetAdv(SHGSS_SetAdv);
+        SHGSS_GetSetStruct(SHGSS_SetStruct);
+        if (changed)
+        {
+            extern DWORD WINAPI SHSendMessageBroadcastW(UINT uMsg, WPARAM wParam, LPARAM lParam);
+            if ((dwMask & SSF_SHOWSUPERHIDDEN) && DLL_EXPORT_VERSION < 0x600)
+            {
+                // This is probably a Windows bug but write this alternative name just in case someone reads it
+                DWORD val = gpss->fShowSuperHidden != FALSE;
+                SHSetValueW(hKeyAdv, NULL, L"SuperHidden", REG_DWORD, &val, sizeof(DWORD));
+            }
+            SHELL32_WriteRegShellState(&g_ShellState); // Write the new SHELLSTATE
+            SHGetSetSettings(NULL, 0, TRUE); // Invalidate counter
+            SHSendMessageBroadcastW(WM_SETTINGCHANGE, 0, (LPARAM)L"ShellState"); // Notify everyone
+        }
+    }
+    else
+    {
+        DWORD read = 0, data, cb, dummy = 0;
+        if (SHELL_GlobalCounterChanged(&g_ShellStateCounter, SHELL_GCOUNTER_SHELLSTATE))
+            g_CachedSSF = 0;
+
+#define SHGSS_ReadAdv(name, SSF) ( \
+    (g_CachedSSF & (SSF)) != (SSF) && (cb = sizeof(DWORD)) != 0 && \
+    SHQueryValueEx(hKeyAdv, (name), NULL, NULL, &data, &cb) == ERROR_SUCCESS && \
+    cb == sizeof(DWORD) && (read |= (SSF)) != 0 )
+#define SHGSS_GetFieldHelper(field, SSF, src, dst, cachevar) \
+    do { \
+        if (dwMask & (SSF)) \
+        { \
+            (dst)->field = (src)->field; \
+            cachevar |= (SSF); \
+        } \
+    } while (0)
+#define SHGSS_CacheField(field, SSF) SHGSS_GetFieldHelper(field, (SSF), &rss.ss, gpss, read)
+#define SHGSS_GetField(field, SSF) SHGSS_GetFieldHelper(field, (SSF), gpss, lpss, dummy)
+#define SHGSS_GetAdv(name, field, SSF) \
+    do { \
+        if (SHGSS_ReadAdv((name), (SSF))) \
+            gpss->field = ((SSF) & inverted) ? data == FALSE : data != FALSE; \
+        SHGSS_GetFieldHelper(field, (SSF), gpss, lpss, read); \
+    } while (0)
+
+        if (SHGSS_ReadAdv(L"Hidden", SSF_SHOWALLOBJECTS | SSF_SHOWSYSFILES))
+        {
+            gpss->fShowAllObjects = data == 1;
+            gpss->fShowSysFiles = data > 1;
+        }
+        SHGSS_GetField(fShowAllObjects, SSF_SHOWALLOBJECTS);
+        SHGSS_GetField(fShowSysFiles, SSF_SHOWSYSFILES);
+        SHGSS_GetSetAdv(SHGSS_GetAdv);
+        if (dwMask & ~(read | g_CachedSSF))
+        {
+            struct REGSHELLSTATE rss;
+            if (SHELL32_ReadRegShellState(&rss))
+            {
+                SHGSS_GetSetStruct(SHGSS_CacheField); // Copy the requested items to gpss
+            }
+            else
+            {
+                SHELL32_GetDefaultShellState(gpss);
+                read = 0; // The advanced items we read are no longer valid in gpss
+                g_CachedSSF = SSF_STRUCTONLY;
+            }
+        }
+        SHGSS_GetSetStruct(SHGSS_GetField); // Copy requested items from gpss to output
+        g_CachedSSF |= read;
+    }
+    if (hKeyAdv)
+        RegCloseKey(hKeyAdv);
+#else
   if(bSet)
   {
     FIXME("%p 0x%08x TRUE\n", lpss, dwMask);
@@ -209,6 +390,7 @@ VOID WINAPI SHGetSetSettings(LPSHELLSTATE lpss, DWORD dwMask, BOOL bSet)
   {
     SHGetSettings((LPSHELLFLAGSTATE)lpss,dwMask);
   }
+#endif
 }
 
 /*************************************************************************
@@ -221,6 +403,17 @@ VOID WINAPI SHGetSetSettings(LPSHELLSTATE lpss, DWORD dwMask, BOOL bSet)
  */
 VOID WINAPI SHGetSettings(LPSHELLFLAGSTATE lpsfs, DWORD dwMask)
 {
+#ifdef __REACTOS__
+    SHELLSTATE ss;
+    SHGetSetSettings(&ss, dwMask & ~(SSF_SORTCOLUMNS), FALSE);
+    *lpsfs = *(LPSHELLFLAGSTATE)&ss;
+    if (dwMask & SSF_HIDEICONS)
+        lpsfs->fHideIcons = ss.fHideIcons;
+    if (dwMask & ssf_autocheckselect)
+        lpsfs->fAutoCheckSelect = ss.fAutoCheckSelect;
+    if (dwMask & ssf_iconsonly)
+        lpsfs->fIconsOnly = ss.fIconsOnly;
+#else
 	HKEY	hKey;
 	DWORD	dwData;
 	DWORD	dwDataSize = sizeof (DWORD);
@@ -264,7 +457,7 @@ VOID WINAPI SHGetSettings(LPSHELLFLAGSTATE lpsfs, DWORD dwMask)
 	  }
 	}
 	RegCloseKey (hKey);
-
+#endif
 	TRACE("-- 0x%04x\n", *(WORD*)lpsfs);
 }
 

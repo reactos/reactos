@@ -78,7 +78,11 @@ DWORD g_RestValues[_countof(s_PolicyTable)] = { 0 };
  * @return  The handle of the global counter.
  * @implemented
  */
+#ifdef __REACTOS__
+EXTERN_C HANDLE
+#else
 static HANDLE
+#endif
 SHELL_GetCachedGlobalCounter(_Inout_ HANDLE *phGlobalCounter, _In_ REFGUID rguid)
 {
     HANDLE hGlobalCounter;

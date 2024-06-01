@@ -824,7 +824,7 @@ ScanAdvancedSettings(SHELLSTATE *pSS, DWORD *pdwMask)
         }
         if (lstrcmpiW(pEntry->szKeyName, L"SHOWALL") == 0)
         {
-            pSS->fShowAllObjects = !bChecked ? 1 : 0;
+            pSS->fShowAllObjects = bChecked ? 1 : 0;
             *pdwMask |= SSF_SHOWALLOBJECTS;
             continue;
         }

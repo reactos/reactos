@@ -1394,28 +1394,17 @@ HRESULT CDefView::FillList(BOOL IsRefreshCommand)
     HRESULT       hRes;
     HDPA          hdpa;
     DWORD         dFlags = SHCONTF_NONFOLDERS | SHCONTF_FOLDERS;
-    DWORD dwValue, cbValue;
 
     TRACE("%p\n", this);
 
-    // determine if there is a setting to show all the hidden files/folders
-    dwValue = 1;
-    cbValue = sizeof(dwValue);
-    SHGetValueW(HKEY_CURRENT_USER,
-                L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
-                L"Hidden", NULL, &dwValue, &cbValue);
-    if (dwValue == 1)
+    SHELLSTATE ss;
+    SHGetSetSettings(&ss, SSF_SHOWALLOBJECTS | SSF_SHOWSUPERHIDDEN, FALSE);
+    if (ss.fShowAllObjects)
     {
         dFlags |= SHCONTF_INCLUDEHIDDEN;
         m_ListView.SendMessageW(LVM_SETCALLBACKMASK, LVIS_CUT, 0);
     }
-
-    dwValue = 0;
-    cbValue = sizeof(dwValue);
-    SHGetValueW(HKEY_CURRENT_USER,
-                L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
-                L"ShowSuperHidden", NULL, &dwValue, &cbValue);
-    if (dwValue)
+    if (ss.fShowSuperHidden)
     {
         dFlags |= SHCONTF_INCLUDESUPERHIDDEN;
         m_ListView.SendMessageW(LVM_SETCALLBACKMASK, LVIS_CUT, 0);
