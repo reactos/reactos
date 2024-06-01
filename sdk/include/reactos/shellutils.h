@@ -620,13 +620,14 @@ public:
     static void DestroyCIDA(CIDA *pcida, STGMEDIUM &medium)
     {
         if (pcida)
-            ::GlobalUnlock(pcida);
+            ::GlobalUnlock(medium.hGlobal);
         ReleaseStgMedium(&medium);
     }
 
     static HRESULT CreateCIDA(IDataObject* pDataObject, CIDA **ppcida, STGMEDIUM &medium)
     {
         *ppcida = NULL;
+        medium.pUnkForRelease = NULL;
         if (g_cfHIDA == NULL)
             g_cfHIDA = (CLIPFORMAT)RegisterClipboardFormatW(CFSTR_SHELLIDLISTW);
         
