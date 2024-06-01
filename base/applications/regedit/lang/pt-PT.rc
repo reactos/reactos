@@ -68,7 +68,7 @@ END
 
 IDC_REGEDIT MENU
 BEGIN
-    POPUP "&Ficheiro" 
+    POPUP "&Ficheiro"
     BEGIN
         MENUITEM "Sai&r", ID_REGISTRY_EXIT
     END
@@ -80,13 +80,13 @@ END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "&Ficheiro" 
+    POPUP "&Ficheiro"
     BEGIN
         MENUITEM "I&mportar ficheiro de Registo...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Exportar ficheiro de Registo...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "&Carregar ramo de registo...", ID_REGISTRY_LOADHIVE, GRAYED 
-        MENUITEM "De&scarregar ramo de registo...", ID_REGISTRY_UNLOADHIVE, GRAYED 
+        MENUITEM "&Carregar ramo de registo...", ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "De&scarregar ramo de registo...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Ligar ao Registo de rede...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Desligar do Registo de rede...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
@@ -106,18 +106,18 @@ BEGIN
             MENUITEM "&Valor da cadeia", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "Valor &binário", ID_EDIT_NEW_BINARYVALUE
             MENUITEM "Valor &DWORD", ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "Valor &Multi-cadeia", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "Valor &multi-cadeia", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "Valor de cadeia e&xpansível", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
         MENUITEM "&Permissões...", ID_EDIT_PERMISSIONS
         MENUITEM SEPARATOR
-        MENUITEM "Elimina&r\tDel", ID_EDIT_DELETE
+        MENUITEM "Exclui&r\tDel", ID_EDIT_DELETE
         MENUITEM "M&udar o nome", ID_EDIT_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Copiar nome de chave", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Localizar...\tCtrl+L", ID_EDIT_FIND
+        MENUITEM "&Localizar...\tCtrl+F", ID_EDIT_FIND
         MENUITEM "Localizar &seguinte\tF3", ID_EDIT_FINDNEXT
     END
     POPUP "&Ver"
@@ -157,7 +157,7 @@ BEGIN
         BEGIN
             MENUITEM "&Chave", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "Valor da &cadeia", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Valor da cadeia", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "Valor &binário", ID_EDIT_NEW_BINARYVALUE
             MENUITEM "Valor &DWORD", ID_EDIT_NEW_DWORDVALUE
             MENUITEM "Valor &multi-cadeia", ID_EDIT_NEW_MULTISTRINGVALUE
@@ -171,15 +171,15 @@ BEGIN
         BEGIN
             MENUITEM "&Chave", ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
-            MENUITEM "Valor da &cadeia", ID_EDIT_NEW_STRINGVALUE
-            MENUITEM "Valor &Binário", ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&Valor da cadeia", ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "Valor &binário", ID_EDIT_NEW_BINARYVALUE
             MENUITEM "Valor &DWORD", ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "Valor &Multi-cadeia", ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "Valor c&adeia expansível", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "Valor &multi-cadeia", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "Valor cadeia e&xpansível", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "&Localizar...", ID_EDIT_FIND
         MENUITEM SEPARATOR
-        MENUITEM "Elimina&r", ID_TREE_DELETE
+        MENUITEM "Exclui&r", ID_TREE_DELETE
         MENUITEM "M&udar o nome", ID_TREE_RENAME
         MENUITEM SEPARATOR
         MENUITEM "&Exportar", ID_TREE_EXPORT
@@ -200,9 +200,9 @@ BEGIN
         MENUITEM "Cor&tar", ID_HEXEDIT_CUT
         MENUITEM "&Copiar", ID_HEXEDIT_COPY
         MENUITEM "C&olar", ID_HEXEDIT_PASTE
-        MENUITEM "&Excluir", ID_HEXEDIT_DELETE
+        MENUITEM "Exclui&r", ID_HEXEDIT_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "Seleccionar &Tudo", ID_HEXEDIT_SELECT_ALL
+        MENUITEM "&Seleccionar tudo", ID_HEXEDIT_SELECT_ALL
     END
 END
 
