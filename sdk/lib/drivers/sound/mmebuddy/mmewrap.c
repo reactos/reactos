@@ -365,3 +365,82 @@ MmeGetPosition(
     return Result;
 }
 
+MMRESULT
+MmeGetVolume(
+    _In_ MMDEVICE_TYPE DeviceType,
+    _In_ DWORD DeviceId,
+    _In_ DWORD_PTR PrivateHandle,
+    _Out_ DWORD_PTR pdwVolume)
+{
+    MMRESULT Result;
+    PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
+    PSOUND_DEVICE SoundDevice;
+    PMMFUNCTION_TABLE FunctionTable;
+
+    /* Sanity check */
+    SND_ASSERT(DeviceType == AUX_DEVICE_TYPE ||
+               DeviceType == MIDI_OUT_DEVICE_TYPE ||
+               DeviceType == WAVE_OUT_DEVICE_TYPE);
+
+    VALIDATE_MMSYS_PARAMETER(PrivateHandle);
+    SoundDeviceInstance = (PSOUND_DEVICE_INSTANCE)PrivateHandle;
+
+    if (!IsValidSoundDeviceInstance(SoundDeviceInstance))
+        return MMSYSERR_INVALHANDLE;
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+    if (!MMSUCCESS(Result))
+        return TranslateInternalMmResult(Result);
+
+    Result = GetSoundDeviceFunctionTable(SoundDevice, &FunctionTable);
+    if (!MMSUCCESS(Result))
+        return TranslateInternalMmResult(Result);
+
+    if (!FunctionTable->GetVolume)
+        return MMSYSERR_NOTSUPPORTED;
+
+    /* Call the driver */
+    Result = FunctionTable->GetVolume(SoundDeviceInstance, DeviceId, (PDWORD)pdwVolume);
+
+    return Result;
+}
+
+MMRESULT
+MmeSetVolume(
+    _In_ MMDEVICE_TYPE DeviceType,
+    _In_ DWORD DeviceId,
+    _In_ DWORD_PTR PrivateHandle,
+    _In_ DWORD_PTR dwVolume)
+{
+    MMRESULT Result;
+    PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
+    PSOUND_DEVICE SoundDevice;
+    PMMFUNCTION_TABLE FunctionTable;
+
+    /* Sanity check */
+    SND_ASSERT(DeviceType == AUX_DEVICE_TYPE ||
+               DeviceType == MIDI_OUT_DEVICE_TYPE ||
+               DeviceType == WAVE_OUT_DEVICE_TYPE);
+
+    VALIDATE_MMSYS_PARAMETER(PrivateHandle);
+    SoundDeviceInstance = (PSOUND_DEVICE_INSTANCE)PrivateHandle;
+
+    if (!IsValidSoundDeviceInstance(SoundDeviceInstance))
+        return MMSYSERR_INVALHANDLE;
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+    if (!MMSUCCESS(Result))
+        return TranslateInternalMmResult(Result);
+
+    Result = GetSoundDeviceFunctionTable(SoundDevice, &FunctionTable);
+    if (!MMSUCCESS(Result))
+        return TranslateInternalMmResult(Result);
+
+    if (!FunctionTable->SetVolume)
+        return MMSYSERR_NOTSUPPORTED;
+
+    /* Call the driver */
+    Result = FunctionTable->SetVolume(SoundDeviceInstance, DeviceId, (DWORD)dwVolume);
+
+    return Result;
+}
