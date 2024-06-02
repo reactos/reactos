@@ -3718,18 +3718,9 @@ get_glyph_index(FT_Face ft_face, UINT glyph)
 }
 
 static inline FT_UInt FASTCALL
-get_glyph_index_flagged(FT_Face face, FT_ULong code, BOOL fUseIndex)
+get_glyph_index_flagged(FT_Face face, FT_ULong code, BOOL fCodeAsIndex)
 {
-    FT_UInt glyph_index;
-    if (fUseIndex)
-    {
-        glyph_index = code;
-    }
-    else
-    {
-        glyph_index = get_glyph_index(face, code);
-    }
-    return glyph_index;
+    return (fCodeAsIndex ? code : get_glyph_index(face, code));
 }
 
 /*
