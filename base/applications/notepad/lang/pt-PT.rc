@@ -22,7 +22,7 @@ END
 
 MAIN_MENU MENU
 BEGIN
-    POPUP "&Arquivo"
+    POPUP "&Ficheiro"
     BEGIN
         MENUITEM "&Novo\tCtrl+N", CMD_NEW
         MENUITEM "Nova &janela\tCtrl+Shift+N", CMD_NEW_WINDOW
@@ -37,7 +37,7 @@ BEGIN
     END
     POPUP "&Editar"
     BEGIN
-        MENUITEM "&Desfazer\tCtrl+Z", CMD_UNDO
+        MENUITEM "A&nular\tCtrl+Z", CMD_UNDO
         MENUITEM SEPARATOR
         MENUITEM "&Recortar\tCtrl+X", CMD_CUT
         MENUITEM "&Copiar\tCtrl+C", CMD_COPY
@@ -46,26 +46,26 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Localizar...", CMD_SEARCH
         MENUITEM "Localizar &próxima\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Substituir...\tCtrl+H", CMD_REPLACE
-        MENUITEM "Ir Para...\tCtrl+G", CMD_GOTO
+        MENUITEM "Su&bstituir...\tCtrl+H", CMD_REPLACE
+        MENUITEM "&Ir Para...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Seleccionar &tudo", CMD_SELECT_ALL
-        MENUITEM "&Data/Hora\tF5", CMD_TIME_DATE
+        MENUITEM "Data/&Hora\tF5", CMD_TIME_DATE
     END
     POPUP "F&ormatar"
     BEGIN
         MENUITEM "&Quebra automática de linha", CMD_WRAP
-        MENUITEM "&Fonte...", CMD_FONT
+        MENUITEM "&Tipo de letra...", CMD_FONT
     END
     POPUP "&Visualizar"
     BEGIN
-        MENUITEM "&Barra de status", CMD_STATUSBAR
+        MENUITEM "&Barra de estado", CMD_STATUSBAR
     END
     POPUP "&Ajuda"
     BEGIN
-        MENUITEM "&Conteúdo", CMD_HELP_CONTENTS
+        MENUITEM "&Tópicos de ajuda", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
-        MENUITEM "&Acerca do Notepad", CMD_HELP_ABOUT_NOTEPAD
+        MENUITEM "&Acerca do 'Bloco de notas'", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 
@@ -98,12 +98,12 @@ BEGIN
     EDITTEXT edt7, 190, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
     LTEXT "&Cabeçalho:", 0x140, 8, 132, 40, 15
     EDITTEXT 0x141, 58, 130, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Rodapé:", 0x142, 8, 149, 40, 15
+    LTEXT "Rod&apé:", 0x142, 8, 149, 40, 15
     EDITTEXT 0x143, 58, 147, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
     PUSHBUTTON "Ajuda", IDHELP, 8, 170, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
     PUSHBUTTON "Cancelar", IDCANCEL, 254, 170, 50, 14
-    PUSHBUTTON "P&rinter...", psh3, 310, 170, 50, 14
+    PUSHBUTTON "I&mpressora...", psh3, 310, 170, 50, 14
 END
 
 /* Dialog 'Encoding' */
@@ -131,12 +131,12 @@ BEGIN
 END
 
 DIALOG_PRINTING DIALOG 0, 0, 160, 100
-CAPTION "Now printing"
+CAPTION "A imprimir"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CTEXT "Print job is starting...", IDC_PRINTING_STATUS, 5, 10, 150, 15
-    CTEXT "(Filename)", IDC_PRINTING_FILENAME, 5, 35, 150, 15
+    CTEXT "A iniciar a impressão...", IDC_PRINTING_STATUS, 5, 10, 150, 15
+    CTEXT "(Nome do ficheiro)", IDC_PRINTING_FILENAME, 5, 35, 150, 15
     CTEXT "Página %u", IDC_PRINTING_PAGE, 5, 55, 150, 15
     PUSHBUTTON "Cancelar", IDCANCEL, 50, 75, 60, 20
 END
@@ -145,25 +145,25 @@ STRINGTABLE
 BEGIN
     STRING_PAGESETUP_HEADERVALUE "&f"
     STRING_PAGESETUP_FOOTERVALUE "Página &p"
-    STRING_NOTEPAD "Notepad"
+    STRING_NOTEPAD "Bloco de notas"
     STRING_ERROR "ERRO"
     STRING_WARNING "AVISO"
     STRING_INFO "Informação"
     STRING_UNTITLED "Sem nome"
-    STRING_ALL_FILES "Todos os arquivos (*.*)"
-    STRING_TEXT_FILES_TXT "Arquivos texto (*.txt)"
-    STRING_TOOLARGE "Arquivo '%s' é muito longo para o notepad.\n\
+    STRING_ALL_FILES "Todos os ficheiros (*.*)"
+    STRING_TEXT_FILES_TXT "Ficheiros de texto (*.txt)"
+    STRING_TOOLARGE "O ficheiro '%s' é muito longo para o bloco de notas.\n\
 Por favor use um editor diferente."
-    STRING_NOTEXT "Você não digitou nenhum texto.\
+    STRING_NOTEXT "Não digitou nenhum texto.\
 \nPor favor digite alguma coisa e tente novamente"
-    STRING_DOESNOTEXIST "Arquivo '%s'\nnão existe\n\n\
-Você deseja criar um novo arquivo?"
-    STRING_NOTSAVED "Arquivo '%s'\nfoi modificado\n\n\
-Gostaria de salvar as alteraçÕes?"
+    STRING_DOESNOTEXIST "O ficheiro '%s'\nnão existe\n\n\
+Deseja criar um novo ficheiro?"
+    STRING_NOTSAVED "O ficheiro '%s'\nfoi modificado\n\n\
+Deseja guardar as alteraçÕes?"
     STRING_NOTFOUND "'%s' não pode ser encontrado."
     STRING_OUT_OF_MEMORY "Não há memória suficiente para completar essa \
 tarefa.\nFeche uma ou mais aplicações para aumentar a quantidade de memória livre."
-    STRING_CANNOTFIND "Não foi encontrado '%s'"
+    STRING_CANNOTFIND "Não é possível localizar '%s'"
     STRING_ANSI "ANSI"
     STRING_UNICODE "Unicode"
     STRING_UNICODE_BE "Unicode (big endian)"
@@ -175,12 +175,12 @@ tarefa.\nFeche uma ou mais aplicações para aumentar a quantidade de memória l
     STRING_LINE_COLUMN "Linha %d, coluna %d"
     STRING_PRINTERROR "Impossível imprimir o ficheiro '%s'.\n\nCertifique-se de que a impressora está ligada e correctamente configurada."
     STRING_DEFAULTFONT "Lucida Console"
-    STRING_LINE_NUMBER_OUT_OF_RANGE "The specified line number is out of range."
-    STRING_NOWPRINTING "Now printing page..."
-    STRING_PRINTCANCELING "The print job is being canceled..."
-    STRING_PRINTCOMPLETE "Printing is successfully done."
-    STRING_PRINTCANCELED "Printing has been canceled."
-    STRING_PRINTFAILED "Printing failed."
+    STRING_LINE_NUMBER_OUT_OF_RANGE "O número de linha especificado está fora do intervalo."
+    STRING_NOWPRINTING "A imprimir página..."
+    STRING_PRINTCANCELING "O trabalho de impressão foi cancelado..."
+    STRING_PRINTCOMPLETE "A impressão foi efectuada com sucesso."
+    STRING_PRINTCANCELED "A impressão foi cancelada."
+    STRING_PRINTFAILED "A impressão falhou."
 
     STRING_TEXT_DOCUMENT "Documento de texto"
     STRING_NOTEPAD_AUTHORS "Copyright 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"
