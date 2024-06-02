@@ -3725,7 +3725,6 @@ get_glyph_index_flagged(FT_Face face, FT_ULong code, BOOL fCodeAsIndex)
 
 /*
  * Based on WineEngGetGlyphOutline
- *
  */
 ULONG
 FASTCALL
