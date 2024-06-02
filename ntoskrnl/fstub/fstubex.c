@@ -188,9 +188,8 @@ FstubAdjustPartitionCount(IN ULONG SectorSize,
     }
 
     /* Then, ensure that we will have a round value,
-     * ie, all sectors will be full of entries
-     * There won't be lonely entries
-     */
+     * i.e. all sectors will be full of entries.
+     * There won't be lonely entries. */
     Count = (Count * PARTITION_ENTRY_SIZE) / SectorSize;
     Count = (Count * SectorSize) / PARTITION_ENTRY_SIZE;
     ASSERT(*PartitionCount <= Count);
@@ -1797,7 +1796,7 @@ FstubWriteSector(IN PDEVICE_OBJECT DeviceObject,
     return Status;
 }
 
-/* FUNCTIONS *****************************************************************/
+/* PUBLIC FUNCTIONS **********************************************************/
 
 /*
  * @implemented

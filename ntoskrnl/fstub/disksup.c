@@ -12,27 +12,13 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
-#include <debug.h>
 #include <internal/hal.h>
 
-const WCHAR DiskMountString[] = L"\\DosDevices\\%C:";
+#define NDEBUG
+#include <debug.h>
 
-#define AUTO_DRIVE         MAXULONG
-
-#define PARTITION_MAGIC    0xaa55
-
+/* See fstubex.c */
 #define EFI_PMBR_OSTYPE_EFI 0xEE
-
-#include <pshpack1.h>
-
-typedef struct _REG_DISK_MOUNT_INFO
-{
-    ULONG Signature;
-    LARGE_INTEGER StartingOffset;
-} REG_DISK_MOUNT_INFO, *PREG_DISK_MOUNT_INFO;
-
-#include <poppack.h>
 
 typedef enum _DISK_MANAGER
 {
@@ -51,10 +37,12 @@ typedef enum _PARTITION_TYPE
     DataPartition
 } PARTITION_TYPE, *PPARTITION_TYPE;
 
-NTSTATUS
-FASTCALL
-HalpQueryDriveLayout(IN PUNICODE_STRING DeviceName,
-                     OUT PDRIVE_LAYOUT_INFORMATION *LayoutInfo)
+/* PRIVATE FUNCTIONS *********************************************************/
+
+static NTSTATUS
+HalpQueryDriveLayout(
+    _In_ PUNICODE_STRING DeviceName,
+    _Outptr_ PDRIVE_LAYOUT_INFORMATION* LayoutInfo)
 {
     IO_STATUS_BLOCK StatusBlock;
     PDEVICE_OBJECT DeviceObject = NULL;
@@ -64,6 +52,7 @@ HalpQueryDriveLayout(IN PUNICODE_STRING DeviceName,
     NTSTATUS Status;
     ULONG BufferSize;
     PDRIVE_LAYOUT_INFORMATION Buffer;
+
     PAGED_CODE();
 
     /* Get device pointers */
@@ -93,9 +82,8 @@ HalpQueryDriveLayout(IN PUNICODE_STRING DeviceName,
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
     do
     {
-        /* If we already had a buffer, it means it's not big
-         * enough, so free and multiply size by two
-         */
+        /* If we already had a buffer, it means it's not
+         * big enough, so free and multiply size by two */
         if (Buffer != NULL)
         {
             ExFreePoolWithTag(Buffer, TAG_FSTUB);
@@ -143,7 +131,7 @@ HalpQueryDriveLayout(IN PUNICODE_STRING DeviceName,
     /* We're done with the device */
     ObDereferenceObject(DeviceObject);
 
-    /* If querying worked, then return the buffer to the caller */
+    /* If querying worked, return the buffer to the caller */
     if (NT_SUCCESS(Status))
     {
         ASSERT(Buffer != NULL);
@@ -161,10 +149,11 @@ HalpQueryDriveLayout(IN PUNICODE_STRING DeviceName,
     return Status;
 }
 
-NTSTATUS
-HalpQueryPartitionType(IN PUNICODE_STRING DeviceName,
-                       IN PDRIVE_LAYOUT_INFORMATION LayoutInfo,
-                       OUT PPARTITION_TYPE PartitionType)
+static NTSTATUS
+HalpQueryPartitionType(
+    _In_ PUNICODE_STRING DeviceName,
+    _In_opt_ PDRIVE_LAYOUT_INFORMATION LayoutInfo,
+    _Out_ PPARTITION_TYPE PartitionType)
 {
     USHORT i;
     PIRP Irp;
@@ -232,8 +221,7 @@ HalpQueryPartitionType(IN PUNICODE_STRING DeviceName,
 
     /* If we failed querying partition info, try to return something
      * if caller didn't provide a precise layout, assume logical
-     * partition and fake success. Otherwise, just fail.
-     */
+     * partition and fake success. Otherwise, just fail. */
     if (!NT_SUCCESS(Status))
     {
         if (LayoutInfo == NULL)
@@ -245,7 +233,7 @@ HalpQueryPartitionType(IN PUNICODE_STRING DeviceName,
         return Status;
     }
 
-    /* First, handle non MBR style (easy cases) */
+    /* First, handle non-MBR style (easy case) */
     if (PartitionInfo.PartitionStyle != PARTITION_STYLE_MBR)
     {
         /* If not GPT, we don't know what it is */
@@ -316,8 +304,9 @@ HalpQueryPartitionType(IN PUNICODE_STRING DeviceName,
     return STATUS_SUCCESS;
 }
 
-PULONG
-IopComputeHarddiskDerangements(IN ULONG DiskCount)
+static PULONG
+IopComputeHarddiskDerangements(
+    _In_ ULONG DiskCount)
 {
     PIRP Irp;
     KEVENT Event;
@@ -352,8 +341,13 @@ IopComputeHarddiskDerangements(IN ULONG DiskCount)
         /* Using their ARC name */
         swprintf(Buffer, L"\\ArcName\\multi(0)disk(0)rdisk(%d)", i);
         RtlInitUnicodeString(&ArcName, Buffer);
+
         /* Get the attached DeviceObject */
-        if (NT_SUCCESS(IoGetDeviceObjectPointer(&ArcName, FILE_READ_ATTRIBUTES, &FileObject, &DeviceObject)))
+        Status = IoGetDeviceObjectPointer(&ArcName,
+                                          FILE_READ_ATTRIBUTES,
+                                          &FileObject,
+                                          &DeviceObject);
+        if (NT_SUCCESS(Status))
         {
             DeviceObject = IoGetAttachedDeviceReference(FileObject->DeviceObject);
             ObDereferenceObject(FileObject);
@@ -437,9 +431,10 @@ IopComputeHarddiskDerangements(IN ULONG DiskCount)
     return Devices;
 }
 
-NTSTATUS
-HalpNextMountLetter(IN PUNICODE_STRING DeviceName,
-                    OUT PUCHAR DriveLetter)
+static NTSTATUS
+HalpNextMountLetter(
+    _In_ PUNICODE_STRING DeviceName,
+    _Out_ PUCHAR DriveLetter)
 {
     PIRP Irp;
     KEVENT Event;
@@ -476,7 +471,7 @@ HalpNextMountLetter(IN PUNICODE_STRING DeviceName,
     Target->DeviceNameLength = DeviceName->Length;
     RtlCopyMemory(&Target->DeviceName[0], DeviceName->Buffer, DeviceName->Length);
 
-    /* Call the mount manager */
+    /* Call the MountMgr */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
     Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTMGR_NEXT_DRIVE_LETTER,
                                         DeviceObject,
@@ -518,9 +513,10 @@ HalpNextMountLetter(IN PUNICODE_STRING DeviceName,
     return Status;
 }
 
-NTSTATUS
-HalpSetMountLetter(IN PUNICODE_STRING DeviceName,
-                   UCHAR DriveLetter)
+static NTSTATUS
+HalpSetMountLetter(
+    _In_ PUNICODE_STRING DeviceName,
+    _In_ UCHAR DriveLetter)
 {
     PIRP Irp;
     KEVENT Event;
@@ -603,26 +599,26 @@ HalpSetMountLetter(IN PUNICODE_STRING DeviceName,
     return Status;
 }
 
-UCHAR
-HalpNextDriveLetter(IN PUNICODE_STRING DeviceName,
-                    IN PSTRING NtDeviceName,
-                    OUT PUCHAR NtSystemPath,
-                    BOOLEAN IsRemovable)
+static UCHAR
+HalpNextDriveLetter(
+    _In_ PUNICODE_STRING DeviceName,
+    _In_ PSTRING NtDeviceName,
+    _Out_ PUCHAR NtSystemPath,
+    _In_ BOOLEAN IsRemovable)
 {
     UCHAR i;
     WCHAR Buffer[40];
     UCHAR DriveLetter;
     UNICODE_STRING FloppyString, CdString, NtDeviceNameU, DosDevice;
 
-    /* Quick path, ask directly the mount manager to assign the next
-     * free drive letter
-     */
+    /* Quick path, ask directly the MountMgr
+     * to assign the next free drive letter */
     if (NT_SUCCESS(HalpNextMountLetter(DeviceName, &DriveLetter)))
     {
         return DriveLetter;
     }
 
-    /* We'll allow MountMgr to fail only for non vital path */
+    /* We'll allow the MountMgr to fail only for non vital path */
     if (NtDeviceName == NULL || NtSystemPath == NULL)
     {
         return -1;
@@ -643,7 +639,7 @@ HalpNextDriveLetter(IN PUNICODE_STRING DeviceName,
     {
         DriveLetter = 'A';
     }
-    /* If CD start C */
+    /* If CD start at D */
     else if (RtlPrefixUnicodeString(&CdString, DeviceName, TRUE))
     {
         DriveLetter = 'D';
@@ -677,11 +673,11 @@ HalpNextDriveLetter(IN PUNICODE_STRING DeviceName,
     /* Last fall back, we're not on a PnP device... */
     for (i = DriveLetter; i <= 'Z'; ++i)
     {
-        /* We'll link manually, without MountMgr knowing anything about the device */
+        /* We'll link manually, without the MountMgr knowing anything about the device */
         swprintf(Buffer, L"\\DosDevices\\%c:", i);
         RtlInitUnicodeString(&DosDevice, Buffer);
 
-        /* If linking worked, then the letter was free ;-) */
+        /* If linking worked, the letter was free ;-) */
         if (NT_SUCCESS(IoCreateSymbolicLink(&DosDevice, DeviceName)))
         {
             /* If it worked, if we were managing system path, update manually */
@@ -703,8 +699,9 @@ HalpNextDriveLetter(IN PUNICODE_STRING DeviceName,
     return 0;
 }
 
-BOOLEAN
-HalpIsOldStyleFloppy(PUNICODE_STRING DeviceName)
+static BOOLEAN
+HalpIsOldStyleFloppy(
+    _In_ PUNICODE_STRING DeviceName)
 {
     PIRP Irp;
     KEVENT Event;
@@ -713,21 +710,21 @@ HalpIsOldStyleFloppy(PUNICODE_STRING DeviceName)
     PFILE_OBJECT FileObject;
     PDEVICE_OBJECT DeviceObject;
     IO_STATUS_BLOCK IoStatusBlock;
+
     PAGED_CODE();
 
     /* Get the attached device object to our device */
-    if (!NT_SUCCESS(IoGetDeviceObjectPointer(DeviceName,
-                                             FILE_READ_ATTRIBUTES,
-                                             &FileObject,
-                                             &DeviceObject)))
-    {
+    Status = IoGetDeviceObjectPointer(DeviceName,
+                                      FILE_READ_ATTRIBUTES,
+                                      &FileObject,
+                                      &DeviceObject);
+    if (!NT_SUCCESS(Status))
         return FALSE;
-    }
 
     DeviceObject = IoGetAttachedDeviceReference(FileObject->DeviceObject);
     ObDereferenceObject(FileObject);
 
-    /* Query its device name (ie, check floppy.sys implements MountMgr interface) */
+    /* Query its device name (i.e. check floppy.sys implements MountMgr interface) */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
     Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTDEV_QUERY_DEVICE_NAME,
                                         DeviceObject,
@@ -756,14 +753,14 @@ HalpIsOldStyleFloppy(PUNICODE_STRING DeviceName)
     }
 
     /* If status is not STATUS_BUFFER_OVERFLOW, it means
-     * it's pre-mountmgr driver, aka "Old style".
-     */
+     * it's a pre-MountMgr driver, aka "Old style" */
     ObDereferenceObject(DeviceObject);
     return (Status != STATUS_BUFFER_OVERFLOW);
 }
 
-NTSTATUS
-HalpDeleteMountLetter(UCHAR DriveLetter)
+static NTSTATUS
+HalpDeleteMountLetter(
+    _In_ UCHAR DriveLetter)
 {
     PIRP Irp;
     KEVENT Event;
@@ -781,7 +778,7 @@ HalpDeleteMountLetter(UCHAR DriveLetter)
     swprintf(Buffer, L"\\DosDevices\\%c:", DriveLetter);
     RtlInitUnicodeString(&DosDevice, Buffer);
 
-    /* Allocate the input buffer for MountMgr */
+    /* Allocate the input buffer for the MountMgr */
     InputBufferLength = DosDevice.Length + sizeof(MOUNTMGR_MOUNT_POINT);
     InputBuffer = ExAllocatePoolWithTag(PagedPool, InputBufferLength, TAG_FSTUB);
     if (InputBuffer == NULL)
@@ -816,7 +813,7 @@ HalpDeleteMountLetter(UCHAR DriveLetter)
         return Status;
     }
 
-    /* Call the mount manager to delete the drive letter */
+    /* Call the MountMgr to delete the drive letter */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
     Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTMGR_DELETE_POINTS,
                                         DeviceObject,
@@ -853,7 +850,7 @@ HalpDeleteMountLetter(UCHAR DriveLetter)
     return Status;
 }
 
-VOID
+static VOID
 HalpEnableAutomaticDriveLetterAssignment(VOID)
 {
     PIRP Irp;
@@ -1049,7 +1046,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         }
     }
 
-    /* We done for our buffers */
+    /* We are done with our buffers */
     ExFreePoolWithTag(Buffer1, TAG_FSTUB);
     ExFreePoolWithTag(Buffer2, TAG_FSTUB);
 
@@ -1330,7 +1327,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 *NtSystemPath = DriveLetter;
             }
         }
-        /* If it fails through mount manager, retry manually */
+        /* If it fails through the MountMgr, retry manually */
         else
         {
             RtlInitUnicodeString(&StringU2, L"\\Device\\Floppy");
@@ -1378,16 +1375,14 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         RtlFreeUnicodeString(&StringU1);
     }
 
-    /* Enable auto assignement for mountmgr */
+    /* Enable auto assignment for MountMgr */
     HalpEnableAutomaticDriveLetterAssignment();
 }
 
-/* PRIVATE FUNCTIONS *********************************************************/
-
-NTSTATUS
-NTAPI
-HalpGetFullGeometry(IN PDEVICE_OBJECT DeviceObject,
-                    OUT PDISK_GEOMETRY_EX Geometry)
+static NTSTATUS
+HalpGetFullGeometry(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Out_ PDISK_GEOMETRY_EX Geometry)
 {
     PIRP Irp;
     IO_STATUS_BLOCK IoStatusBlock;
@@ -1436,22 +1431,24 @@ HalpGetFullGeometry(IN PDEVICE_OBJECT DeviceObject,
     return Status;
 }
 
-BOOLEAN
-NTAPI
-HalpIsValidPartitionEntry(IN PPARTITION_DESCRIPTOR Entry,
-                          IN ULONGLONG MaxOffset,
-                          IN ULONGLONG MaxSector)
+static BOOLEAN
+HalpIsValidPartitionEntry(
+    _In_ PPARTITION_DESCRIPTOR Entry,
+    _In_ ULONGLONG MaxOffset,
+    _In_ ULONGLONG MaxSector)
 {
     ULONGLONG EndingSector;
+
     PAGED_CODE();
 
     /* Unused partitions are considered valid */
-    if (Entry->PartitionType == PARTITION_ENTRY_UNUSED) return TRUE;
+    if (Entry->PartitionType == PARTITION_ENTRY_UNUSED)
+        return TRUE;
 
     /* Get the last sector of the partition */
     EndingSector = GET_STARTING_SECTOR(Entry) + GET_PARTITION_LENGTH(Entry);
 
-    /* Check if it's more then the maximum sector */
+    /* Check if it's more than the maximum sector */
     if (EndingSector > MaxSector)
     {
         /* Invalid partition */
@@ -1477,21 +1474,22 @@ HalpIsValidPartitionEntry(IN PPARTITION_DESCRIPTOR Entry,
     return TRUE;
 }
 
-VOID
-NTAPI
-HalpCalculateChsValues(IN PLARGE_INTEGER PartitionOffset,
-                       IN PLARGE_INTEGER PartitionLength,
-                       IN CCHAR ShiftCount,
-                       IN ULONG SectorsPerTrack,
-                       IN ULONG NumberOfTracks,
-                       IN ULONG ConventionalCylinders,
-                       OUT PPARTITION_DESCRIPTOR PartitionDescriptor)
+static VOID
+HalpCalculateChsValues(
+    _In_ PLARGE_INTEGER PartitionOffset,
+    _In_ PLARGE_INTEGER PartitionLength,
+    _In_ CCHAR ShiftCount,
+    _In_ ULONG SectorsPerTrack,
+    _In_ ULONG NumberOfTracks,
+    _In_ ULONG ConventionalCylinders,
+    _Out_ PPARTITION_DESCRIPTOR PartitionDescriptor)
 {
     LARGE_INTEGER FirstSector, SectorCount;
     ULONG LastSector, Remainder, SectorsPerCylinder;
     ULONG StartingCylinder, EndingCylinder;
     ULONG StartingTrack, EndingTrack;
     ULONG StartingSector, EndingSector;
+
     PAGED_CODE();
 
     /* Calculate the number of sectors for each cylinder */
@@ -1616,7 +1614,7 @@ xHalGetPartialGeometry(IN PDEVICE_OBJECT DeviceObject,
         /* Return the cylinder count */
         *ConventionalCylinders = DiskGeometry->Cylinders.LowPart;
 
-        /* Make sure it's not larger then 1024 */
+        /* Make sure it's not larger than 1024 */
         if (DiskGeometry->Cylinders.LowPart >= 1024)
         {
             /* Otherwise, normalize the value */
@@ -1700,7 +1698,7 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
         Status = IoStatusBlock.Status;
     }
 
-    /* Check driver Status */
+    /* Check driver status */
     if (NT_SUCCESS(Status))
     {
         /* Validate the MBR Signature */
@@ -1947,7 +1945,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                 /* Increase the count of containers */
                 if (++k != 1)
                 {
-                    /* More then one table is invalid */
+                    /* More than one table is invalid */
                     DPRINT1("FSTUB: Multiple container partitions found in "
                             "partition table %d\n - table is invalid\n",
                             j);
@@ -2023,7 +2021,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                                                ActiveFlag & 0x80 ?
                                                TRUE : FALSE;
 
-                /* Check if its' a container */
+                /* Check if it's a container */
                 if (IsContainerPartition(PartitionType))
                 {
                     /* Then don't recognize it and use the volume offset */
