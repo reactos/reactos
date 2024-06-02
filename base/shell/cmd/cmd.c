@@ -429,7 +429,7 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
                           NULL,
                           NULL,
                           TRUE,
-                          0,   /* CREATE_NEW_PROCESS_GROUP */
+                          0,
                           NULL,
                           NULL,
                           &stui,
@@ -509,7 +509,7 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 
 /*
  * look through the internal commands and determine whether or not this
- * command is one of them.  If it is, call the command.  If not, call
+ * command is one of them. If it is, call the command. If not, call
  * execute to run it as an external program.
  *
  * first - first word on command line
@@ -1005,11 +1005,9 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
         if (hFind != INVALID_HANDLE_VALUE)
         {
             LPTSTR FixedComponent = w32fd.cFileName;
-            if (*w32fd.cAlternateFileName &&
-                ((Modifiers & M_SHORT) || !_tcsicmp(In, w32fd.cAlternateFileName)))
-            {
+            if ((Modifiers & M_SHORT) && *w32fd.cAlternateFileName)
                 FixedComponent = w32fd.cAlternateFileName;
-            }
+
             FindClose(hFind);
 
             if (Out + _tcslen(FixedComponent) + 1 >= &FixedPath[MAX_PATH])
@@ -1123,7 +1121,7 @@ GetBatchVar(TCHAR *varName, UINT *varNameLen)
 
     *varNameLen = 1;
 
-    switch ( *varName )
+    switch (*varName)
     {
     case _T('~'):
         varNameEnd = varName + 1;
@@ -1148,9 +1146,7 @@ GetBatchVar(TCHAR *varName, UINT *varNameLen)
         return FindArg(*varName, &dummy);
 
     case _T('*'):
-        //
         // Copy over the raw params(not including the batch file name
-        //
         return bc->raw_params;
 
     case _T('%'):
@@ -1385,9 +1381,7 @@ DoDelayedExpansion(LPTSTR Line)
 
 /*
  * do the prompt/input/process loop
- *
  */
-
 BOOL
 ReadLine(TCHAR *commandline, BOOL bMore)
 {
@@ -1457,8 +1451,8 @@ ProcessInput(VOID)
  */
 BOOL WINAPI BreakHandler(DWORD dwCtrlType)
 {
-    DWORD           dwWritten;
-    INPUT_RECORD    rec;
+    DWORD dwWritten;
+    INPUT_RECORD rec;
     static BOOL SelfGenerated = FALSE;
 
     if ((dwCtrlType != CTRL_C_EVENT) &&
@@ -1523,7 +1517,6 @@ VOID RemoveBreakHandler(VOID)
 
 /*
  * show commands and options that are available.
- *
  */
 #if 0
 static VOID
@@ -1564,7 +1557,7 @@ LoadRegistrySettings(HKEY hKeyRoot)
     DWORD dwType, len;
     /*
      * Buffer big enough to hold the string L"4294967295",
-     * corresponding to the literal 0xFFFFFFFF (MAX_ULONG) in decimal.
+     * corresponding to the literal 0xFFFFFFFF (MAXULONG) in decimal.
      */
     DWORD Buffer[6];
 
@@ -1800,8 +1793,6 @@ Initialize(VOID)
     HMODULE NtDllModule;
     TCHAR commandline[CMDLINE_LENGTH];
     TCHAR ModuleName[_MAX_PATH + 1];
-    // INT nExitCode;
-
     HANDLE hIn, hOut;
 
     TCHAR *ptr, *cmdLine, option = 0;
@@ -1875,18 +1866,18 @@ Initialize(VOID)
             }
             else if (option == _T('P'))
             {
-                if (!IsExistingFile (_T("\\autoexec.bat")))
+                if (!IsExistingFile(_T("\\autoexec.bat")))
                 {
 #ifdef INCLUDE_CMD_DATE
-                    cmd_date (_T(""));
+                    cmd_date(_T(""));
 #endif
 #ifdef INCLUDE_CMD_TIME
-                    cmd_time (_T(""));
+                    cmd_time(_T(""));
 #endif
                 }
                 else
                 {
-                    ParseCommandLine (_T("\\autoexec.bat"));
+                    ParseCommandLine(_T("\\autoexec.bat"));
                 }
                 bCanExit = FALSE;
             }
@@ -1985,11 +1976,10 @@ Initialize(VOID)
         /* Do the /C or /K command */
         GetCmdLineCommand(commandline, &ptr[2], AlwaysStrip);
         bWaitForCommand = TRUE;
-        /* nExitCode = */ ParseCommandLine(commandline);
+        ParseCommandLine(commandline);
         bWaitForCommand = FALSE;
         if (option != _T('K'))
         {
-            // nErrorLevel = nExitCode;
             bExit = TRUE;
         }
     }
@@ -2066,7 +2056,6 @@ int _tmain(int argc, const TCHAR *argv[])
 
     /* Do the cleanup */
     Cleanup();
-
     cmd_free(lpOriginalEnvironment);
 
     cmd_exit(nErrorLevel);
