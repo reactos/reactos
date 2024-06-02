@@ -15,53 +15,53 @@ END
 /* Command-line strings */
 STRINGTABLE
 BEGIN
-    STRING_USAGE "Usage:\n\
-  regedit [options] [filename] [reg_key]\n\n\
-Options:\n\
-  [no option]    Launch the graphical version of this program.\n\
-  /L:system.dat  The location of the system.dat file to be modified.\n\
-                 Compatible with any other switch. Ignored.\n\
-  /R:user.dat    The location of the user.dat file to be modified.\n\
-                 Compatible with any other switch. Ignored.\n\
-  /C             Import the contents of a registry file.\n\
-  /D             Delete a specified registry key.\n\
-  /E             Export the contents of a specified registry key to a file.\n\
-                 If no key is specified, the entire registry is exported.\n\
-  /S             Silent mode. No messages will be displayed.\n\
-  /V             Launch the GUI in advanced mode. Ignored.\n\
-  /?             Display this information and exit.\n\
-  [filename]     The location of the file containing registry information to\n\
-                 be imported. When used with [/E], this option specifies the\n\
-                 file location where registry information will be exported.\n\
-  [reg_key]      The registry key to be modified.\n\
+    STRING_USAGE "Uso:\n\
+  regedit [opções] [ficheiro] [chave]\n\n\
+Opções:\n\
+  [sem opções]   Iniciar a versão gráfica deste programa.\n\
+  /L:system.dat  A localização do ficheiro system.dat a ser modificado.\n\
+                 Compatível com qualquer outro switch. Ignorado.\n\
+  /R:user.dat    A localização do ficheiro user.dat a ser modificado.\n\
+                 Compatível com qualquer outro switch. Ignorado.\n\
+  /C             Importar o conteúdo de um ficheiro de registo.\n\
+  /D             Eliminar uma chave de registo especificada.\n\
+  /E             Exportar o conteúdo de uma chave de registo especificada para um ficheiro.\n\
+                 Se nenhuma chave for especificada, exportar todo o registo.\n\
+  /S             Modo silencioso. Nenhuma mensagem será exibida.\n\
+  /V             Iniciar a GUI no modo avançado. Ignorado.\n\
+  /?             Mostrar estas informações e terminar.\n\
+  [ficheiro]     A localização do ficheiro que contém informações do registo a\n\
+                 ser importado. Quando usada com [/E], esta opção especifica o\n\
+                 local do ficheiro para onde as informações do registo serão exportadas.\n\
+  [chave]        A chave do registo a ser modificada.\n\
 \n\
-Usage examples:\n\
+Uso exemplos:\n\
   regedit ""import.reg""\n\
   regedit /E ""export.reg"" ""HKEY_CURRENT_USER\\Console""\n\
   regedit /D ""HKEY_LOCAL_MACHINE\\Error\\Path""\n"
-    STRING_INVALID_SWITCH "regedit: Invalid or unrecognized switch [%1]\n"
-    STRING_HELP "Type ""regedit /?"" for help.\n"
-    STRING_NO_FILENAME "regedit: No filename was specified.\n"
-    STRING_NO_REG_KEY "regedit: No registry key was specified for removal.\n"
-    STRING_FILE_NOT_FOUND "regedit: The file '%1' was not found.\n"
-    STRING_CANNOT_OPEN_FILE "regedit: Unable to open the file '%1'.\n"
-    STRING_UNHANDLED_ACTION "regedit: Unhandled action.\n"
-    STRING_OUT_OF_MEMORY "regedit: Out of memory! (%1!S!, line %2!u!)\n"
-    STRING_INVALID_HEX "regedit: Invalid hexadecimal value.\n"
-    STRING_CSV_HEX_ERROR "regedit: Unable to convert hexadecimal data. An invalid value was encountered at '%1'.\n"
-    STRING_ESCAPE_SEQUENCE "regedit: Unrecognized escape sequence [\\%1!c!]\n"
-    STRING_UNKNOWN_DATA_FORMAT "regedit: Unsupported registry data type [0x%1!x!]\n"
-    STRING_UNEXPECTED_EOL "regedit: Unexpected end of line in '%1'.\n"
-    STRING_UNRECOGNIZED_LINE "regedit: The line '%1' was not recognized.\n"
-    STRING_SETVALUE_FAILED "regedit: Unable to add the registry value '%1' to '%2'.\n"
-    STRING_OPEN_KEY_FAILED "regedit: Unable to open the registry key '%1'.\n"
-    STRING_UNSUPPORTED_TYPE "regedit: Unsupported registry data type [0x%1!x!] encountered in '%2'.\n"
-    STRING_EXPORT_AS_BINARY "regedit: The registry value '%1' will be exported as binary data.\n"
-    STRING_INVALID_SYSTEM_KEY "regedit: Invalid system key [%1]\n"
-    STRING_REG_KEY_NOT_FOUND "regedit: Unable to export '%1'. The specified registry key was not found.\n"
-    STRING_DELETE_FAILED "regedit: Unable to delete the registry key '%1'.\n"
-    STRING_UNKNOWN_TYPE "Unknown Type"
-    STRING_INVALID_LINE_SYNTAX, "regedit: The line contains invalid syntax.\n"
+    STRING_INVALID_SWITCH "regedit: Chave inválida ou não reconhecida [%1]\n"
+    STRING_HELP "Type ""regedit /?"" para ajuda.\n"
+    STRING_NO_FILENAME "regedit: Nenhum nome de ficheiro foi especificado.\n"
+    STRING_NO_REG_KEY "regedit: Nenhuma chave de registo foi especificada para remoção.\n"
+    STRING_FILE_NOT_FOUND "regedit: O ficheiro '%1' não foi encontrado.\n"
+    STRING_CANNOT_OPEN_FILE "regedit: Não é possível abrir o ficheiro '%1'.\n"
+    STRING_UNHANDLED_ACTION "regedit: Acção sem tratamento.\n"
+    STRING_OUT_OF_MEMORY "regedit: Fora da memória! (%1!S!, linha %2!u!)\n"
+    STRING_INVALID_HEX "regedit: Valor hexadecimal inválido.\n"
+    STRING_CSV_HEX_ERROR "regedit: Não é possível converter dados hexadecimais. Um valor inválido foi encontrado em '%1'.\n"
+    STRING_ESCAPE_SEQUENCE "regedit: Sequência de escape não reconhecida [\\%1!c!]\n"
+    STRING_UNKNOWN_DATA_FORMAT "regedit: Tipo de dados de registo não compatível [0x%1!x!]\n"
+    STRING_UNEXPECTED_EOL "regedit: Fim de linha inesperado em '%1'.\n"
+    STRING_UNRECOGNIZED_LINE "regedit: A linha '%1' não foi reconhecida.\n"
+    STRING_SETVALUE_FAILED "regedit: Não é possível adicionar o valor do registo '%1' a '%2'.\n"
+    STRING_OPEN_KEY_FAILED "regedit: Não é possível abrir a chave de registo '%1'.\n"
+    STRING_UNSUPPORTED_TYPE "regedit: Tipo de dados de registro não compatível [0x%1!x!] encontrado em '%2'.\n"
+    STRING_EXPORT_AS_BINARY "regedit: O valor de registo '%1' será exportado como dado binário.\n"
+    STRING_INVALID_SYSTEM_KEY "regedit: Chave de sistema inválida [%1]\n"
+    STRING_REG_KEY_NOT_FOUND "regedit: Não foi possível exportar '%1'. A chave de registro especificada não foi encontrada.\n"
+    STRING_DELETE_FAILED "regedit: Não é possível excluir a chave do registo '%1'.\n"
+    STRING_UNKNOWN_TYPE "Tipo desconhecido"
+    STRING_INVALID_LINE_SYNTAX, "regedit: A linha contém sintaxe inválida.\n"
 END
 
 /* Menus */
@@ -314,83 +314,83 @@ END
 
 IDD_EDIT_REQUIREMENTS_LIST DIALOGEX 32, 24, 220, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Requirements List"
+CAPTION "Lista de requesitos"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_REQUIREMENTS_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 10, 200, 66
-    RTEXT "Interface Type:", IDC_STATIC, 10, 80, 62, 8
+    RTEXT "Tipo de interface:", IDC_STATIC, 10, 80, 62, 8
     LTEXT "", IDC_REQINTERFACETYPE, 77, 80, 76, 8
-    RTEXT "Bus Number:", IDC_STATIC, 10, 90, 62, 8
+    RTEXT "Bus número:", IDC_STATIC, 10, 90, 62, 8
     LTEXT "", IDC_REQBUSNUMBER, 77, 90, 76, 8
-    RTEXT "Slot Type:", IDC_STATIC, 10, 100, 62, 8
+    RTEXT "Tipo de slot:", IDC_STATIC, 10, 100, 62, 8
     LTEXT "", IDC_REQSLOTNUMBER, 77, 100, 76, 8
     DEFPUSHBUTTON "OK", IDOK, 62, 115, 50, 14
-    PUSHBUTTON "Show...", IDC_SHOW_REQUIREMENT, 118, 115, 50, 14, WS_DISABLED
+    PUSHBUTTON "Mostrar...", IDC_SHOW_REQUIREMENT, 118, 115, 50, 14, WS_DISABLED
 END
 
 IDD_EDIT_REQUIREMENTS_PORT DIALOGEX 32, 24, 158, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Port"
+CAPTION "Porta"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    RTEXT "Type:", IDC_STATIC, 10, 10, 61, 8
+    RTEXT "Tipo:", IDC_STATIC, 10, 10, 61, 8
     LTEXT "", IDC_REQ_PORT_TYPE, 77, 10, 76, 8
-    RTEXT "Length:", IDC_STATIC, 10, 20, 61, 8
+    RTEXT "Comprimento:", IDC_STATIC, 10, 20, 61, 8
     LTEXT "", IDC_REQ_PORT_LENGTH, 77, 20, 76, 8
-    RTEXT "Alignment:", IDC_STATIC, 10, 30, 61, 8
+    RTEXT "Alinhamento:", IDC_STATIC, 10, 30, 61, 8
     LTEXT "", IDC_REQ_PORT_ALIGN, 77, 30, 76, 8
-    RTEXT "Minimum Address:", IDC_STATIC, 10, 40, 61, 8
+    RTEXT "Endereço mínimo:", IDC_STATIC, 10, 40, 61, 8
     LTEXT "", IDC_REQ_PORT_MIN, 77, 40, 76, 8
-    RTEXT "Maximum Address:", IDC_STATIC, 10, 50, 61, 8
+    RTEXT "Endereço máximo:", IDC_STATIC, 10, 50, 61, 8
     LTEXT "", IDC_REQ_PORT_MAX, 77, 50, 76, 8
-    RTEXT "Share Disposition:", IDC_STATIC, 10, 60, 61, 8
+    RTEXT "Compartilhamento:", IDC_STATIC, 10, 60, 61, 8
     LTEXT "", IDC_REQ_PORT_SHARE, 77, 60, 76, 8
-    GROUPBOX "Options", IDC_STATIC, 10, 72, 83, 39
-    LTEXT "Alternative", IDC_REQ_PORT_ALTERNATIVE, 34, 86, 37, 8, WS_DISABLED
-    LTEXT "Preferred", IDC_REQ_PORT_PREFERRED, 34, 96, 37, 8, WS_DISABLED
+    GROUPBOX "Opções", IDC_STATIC, 10, 72, 83, 39
+    LTEXT "Alternativo", IDC_REQ_PORT_ALTERNATIVE, 34, 86, 37, 8, WS_DISABLED
+    LTEXT "Preferido", IDC_REQ_PORT_PREFERRED, 34, 96, 37, 8, WS_DISABLED
     DEFPUSHBUTTON "OK", IDOK, 58, 117, 40, 14
 END
 
 IDD_EDIT_REQUIREMENTS_MEMORY DIALOGEX 32, 24, 158, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Memory"
+CAPTION "Memória"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    RTEXT "Access:", IDC_STATIC, 10, 10, 61, 8
+    RTEXT "Acesso:", IDC_STATIC, 10, 10, 61, 8
     LTEXT "", IDC_REQ_MEMORY_ACCESS, 77, 10, 76, 8
-    RTEXT "Length:", IDC_STATIC, 10, 20, 61, 8
+    RTEXT "Comprimento:", IDC_STATIC, 10, 20, 61, 8
     LTEXT "", IDC_REQ_MEMORY_LENGTH, 77, 20, 76, 8
-    RTEXT "Alignment:", IDC_STATIC, 10, 30, 61, 8
+    RTEXT "Alinhamento:", IDC_STATIC, 10, 30, 61, 8
     LTEXT "", IDC_REQ_MEMORY_ALIGN, 77, 30, 76, 8
-    RTEXT "Minimum Address:", IDC_STATIC, 10, 40, 61, 8
+    RTEXT "Endereço mínimo:", IDC_STATIC, 10, 40, 61, 8
     LTEXT "", IDC_REQ_MEMORY_MIN, 77, 40, 76, 8
-    RTEXT "Maximum Address:", IDC_STATIC, 10, 50, 61, 8
+    RTEXT "Endereço máximo:", IDC_STATIC, 10, 50, 61, 8
     LTEXT "", IDC_REQ_MEMORY_MAX, 77, 50, 76, 8
-    RTEXT "Share Disposition:", IDC_STATIC, 10, 60, 61, 8
+    RTEXT "Compartilhamento:", IDC_STATIC, 10, 60, 61, 8
     LTEXT "", IDC_REQ_MEMORY_SHARE, 77, 60, 76, 8
-    GROUPBOX "Options", IDC_STATIC, 10, 72, 83, 39
-    LTEXT "Alternative", IDC_REQ_MEMORY_ALTERNATIVE, 34, 86, 37, 8, WS_DISABLED
-    LTEXT "Preferred", IDC_REQ_MEMORY_PREFERRED, 34, 96, 37, 8, WS_DISABLED
+    GROUPBOX "Opções", IDC_STATIC, 10, 72, 83, 39
+    LTEXT "Alternativo", IDC_REQ_MEMORY_ALTERNATIVE, 34, 86, 37, 8, WS_DISABLED
+    LTEXT "Preferido", IDC_REQ_MEMORY_PREFERRED, 34, 96, 37, 8, WS_DISABLED
     DEFPUSHBUTTON "OK", IDOK, 58, 117, 40, 14
 END
 
 IDD_EDIT_REQUIREMENTS_INT DIALOGEX 32, 24, 158, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Interrupt"
+CAPTION "Interrupção"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    RTEXT "Type:", IDC_STATIC, 10, 10, 61, 8
+    RTEXT "Tipo:", IDC_STATIC, 10, 10, 61, 8
     LTEXT "", IDC_REQ_INT_TYPE, 77, 10, 76, 8
-    RTEXT "Minimum Vector:", IDC_STATIC, 10, 20, 61, 8
+    RTEXT "Vector mínimo:", IDC_STATIC, 10, 20, 61, 8
     LTEXT "", IDC_REQ_INT_MIN, 77, 20, 76, 8
-    RTEXT "Maximum Vector:", IDC_STATIC, 10, 30, 61, 8
+    RTEXT "Vector máximo:", IDC_STATIC, 10, 30, 61, 8
     LTEXT "", IDC_REQ_INT_MAX, 77, 30, 76, 8
-    RTEXT "Share Disposition:", IDC_STATIC, 10, 40, 61, 8
+    RTEXT "Compartilhamento:", IDC_STATIC, 10, 40, 61, 8
     LTEXT "", IDC_REQ_INT_SHARE, 77, 40, 76, 8
-    GROUPBOX "Options", IDC_STATIC, 10, 72, 83, 39
-    LTEXT "Alternative", IDC_REQ_INT_ALTERNATIVE, 34, 86, 37, 8, WS_DISABLED
-    LTEXT "Preferred", IDC_REQ_INT_PREFERRED, 34, 96, 37, 8, WS_DISABLED
+    GROUPBOX "Opções", IDC_STATIC, 10, 72, 83, 39
+    LTEXT "Alternativo", IDC_REQ_INT_ALTERNATIVE, 34, 86, 37, 8, WS_DISABLED
+    LTEXT "Preferido", IDC_REQ_INT_PREFERRED, 34, 96, 37, 8, WS_DISABLED
     DEFPUSHBUTTON "OK", IDOK, 58, 117, 40, 14
 END
 
@@ -399,15 +399,15 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | 
 CAPTION "DMA"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    RTEXT "Minimum Channel:", IDC_STATIC, 10, 10, 61, 8
+    RTEXT "Canal mínimo:", IDC_STATIC, 10, 10, 61, 8
     LTEXT "", IDC_REQ_DMA_MIN, 77, 10, 76, 8
-    RTEXT "Maximum Channel:", IDC_STATIC, 10, 20, 61, 8
+    RTEXT "Canal máximo:", IDC_STATIC, 10, 20, 61, 8
     LTEXT "", IDC_REQ_DMA_MAX, 77, 20, 76, 8
-    RTEXT "Share Disposition:", IDC_STATIC, 10, 30, 61, 8
+    RTEXT "Compartilhamento:", IDC_STATIC, 10, 30, 61, 8
     LTEXT "", IDC_REQ_DMA_SHARE, 77, 30, 76, 8
-    GROUPBOX "Options", IDC_STATIC, 10, 72, 83, 39
-    LTEXT "Alternative", IDC_REQ_DMA_ALTERNATIVE, 34, 86, 37, 8, WS_DISABLED
-    LTEXT "Preferred", IDC_REQ_DMA_PREFERRED, 34, 96, 37, 8, WS_DISABLED
+    GROUPBOX "Opções", IDC_STATIC, 10, 72, 83, 39
+    LTEXT "Alternativo", IDC_REQ_DMA_ALTERNATIVE, 34, 86, 37, 8, WS_DISABLED
+    LTEXT "Preferido", IDC_REQ_DMA_PREFERRED, 34, 96, 37, 8, WS_DISABLED
     DEFPUSHBUTTON "OK", IDOK, 58, 117, 40, 14
 END
 
@@ -451,7 +451,7 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Liga a um registo num computador remoto."
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Desliga um registo de um computador remoto."
     ID_REGISTRY_PRINT "Imprime todo ou parte do registo."
-/*    ID_HELP_HELPTOPICS "Abre a ajuda do Editor do Registro." */
+/*    ID_HELP_HELPTOPICS "Abre a ajuda do Editor do Registo." */
     ID_HELP_ABOUT "Mostra informações do programa, número da versão e copyright."
 END
 
@@ -520,7 +520,7 @@ BEGIN
     IDS_FLT_REGEDIT4_FLT "*.reg"
     IDS_FLT_ALLFILES "Todos os ficheiros (*.*)"
     IDS_FLT_ALLFILES_FLT "*.*"
-    IDS_FLT_TXTFILES "Text Files (*.txt)"
+    IDS_FLT_TXTFILES "Ficheiros de texto (*.txt)"
     IDS_FLT_TXTFILES_FLT "*.txt"
 END
 
@@ -565,40 +565,40 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BUSNUMBER "Bus Number"
+    IDS_BUSNUMBER "Bus número"
     IDS_INTERFACE "Interface"
-    IDS_DMA_CHANNEL "Channel"
-    IDS_DMA_PORT "Port"
+    IDS_DMA_CHANNEL "Canal"
+    IDS_DMA_PORT "Porta"
     IDS_INTERRUPT_VECTOR "Vector"
-    IDS_INTERRUPT_LEVEL "Level"
-    IDS_INTERRUPT_AFFINITY "Affinity"
-    IDS_INTERRUPT_TYPE "Type"
-    IDS_MEMORY_ADDRESS "Physical Address"
-    IDS_MEMORY_LENGTH "Length"
-    IDS_MEMORY_ACCESS "Access"
-    IDS_PORT_ADDRESS "Physical Address"
-    IDS_PORT_LENGTH "Length"
-    IDS_PORT_ACCESS "Access"
-    IDS_SPECIFIC_RESERVED1 "Reserved 1"
-    IDS_SPECIFIC_RESERVED2 "Reserved 2"
-    IDS_SPECIFIC_DATASIZE "Data Size"
+    IDS_INTERRUPT_LEVEL "Nível"
+    IDS_INTERRUPT_AFFINITY "Afinidade"
+    IDS_INTERRUPT_TYPE "Tipo"
+    IDS_MEMORY_ADDRESS "Endereço físico"
+    IDS_MEMORY_LENGTH "Comprimento"
+    IDS_MEMORY_ACCESS "Acesso"
+    IDS_PORT_ADDRESS "Endereço físico"
+    IDS_PORT_LENGTH "Comprimento"
+    IDS_PORT_ACCESS "Acesso"
+    IDS_SPECIFIC_RESERVED1 "Reservado 1"
+    IDS_SPECIFIC_RESERVED2 "Reservado 2"
+    IDS_SPECIFIC_DATASIZE "Tamanho dos dados"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PORT_PORT_IO "Port"
-    IDS_PORT_MEMORY_IO "Memory"
-    IDS_INTERRUPT_EDGE_SENSITIVE "Edge Sensitive"
-    IDS_INTERRUPT_LEVEL_SENSITIVE "Level Sensitive"
-    IDS_MEMORY_READ_ONLY "Read Only"
-    IDS_MEMORY_WRITE_ONLY "Write Only"
-    IDS_MEMORY_READ_WRITE "Read / Write"
+    IDS_PORT_PORT_IO "Porta"
+    IDS_PORT_MEMORY_IO "Memória"
+    IDS_INTERRUPT_EDGE_SENSITIVE "Sensível à Borda"
+    IDS_INTERRUPT_LEVEL_SENSITIVE "Sensível ao nível"
+    IDS_MEMORY_READ_ONLY "Só para leitura"
+    IDS_MEMORY_WRITE_ONLY "Só para escrita"
+    IDS_MEMORY_READ_WRITE "Leituta/Escrita"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BUS_UNDEFINED "Undefined"
-    IDS_BUS_INTERNAL "Internal"
+    IDS_BUS_UNDEFINED "Indefinido"
+    IDS_BUS_INTERNAL "Interno"
     IDS_BUS_ISA "ISA"
     IDS_BUS_EISA "EISA"
     IDS_BUS_MICROCHANNEL "MicroChannel"
@@ -614,37 +614,37 @@ BEGIN
     IDS_BUS_INTERNALPOWERBUS "Internal Power Bus"
     IDS_BUS_PNPISABUS "PnP-ISA Bus"
     IDS_BUS_PNPBUS "PnP Bus"
-    IDS_BUS_UNKNOWNTYPE "Unknown Interface Type"
+    IDS_BUS_UNKNOWNTYPE "Tipo de Interface desconhecido"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FIELD_KEY_NAME "Key Name:"
-    IDS_FIELD_CLASS_NAME "Class Name:"
+    IDS_FIELD_KEY_NAME "Nome da chave:"
+    IDS_FIELD_CLASS_NAME "Nome da classe:"
     IDS_NO_CLASS_NAME "<NO CLASS>"
     IDS_NULL_TIMESTAMP "<NULL>"
-    IDS_FIELD_NAME "  Name:"
-    IDS_FIELD_TYPE "  Type:"
-    IDS_FIELD_DATA "  Data:"
-    IDS_FIELD_LASTWRITE "Last Write Time:"
-    IDS_UNKNOWN "<UNKNOWN>"
-    IDS_VALUE_INDEX "Value %d"
+    IDS_FIELD_NAME "  Nome:"
+    IDS_FIELD_TYPE "  Tipo:"
+    IDS_FIELD_DATA "  Dado:"
+    IDS_FIELD_LASTWRITE "Hora da última gravação:"
+    IDS_UNKNOWN "<DESCONHECIDO>"
+    IDS_VALUE_INDEX "Valor %d"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_REQALTERNATIVELIST "Alternative List"
-    IDS_REQRESOURCELIST "Resource List"
-    IDS_REQDESCRIPTOR "Descriptor"
-    IDS_REQDEVICETYPE "Device Type"
-    IDS_TYPE_PORT "Port"
-    IDS_TYPE_INTERRUPT "Interrupt"
-    IDS_TYPE_MEMORY "Memory"
+    IDS_REQALTERNATIVELIST "Lista alternativa"
+    IDS_REQRESOURCELIST "Lista de recursos"
+    IDS_REQDESCRIPTOR "Descritor"
+    IDS_REQDEVICETYPE "Tipo de dispositivo"
+    IDS_TYPE_PORT "Porta"
+    IDS_TYPE_INTERRUPT "Interrupção"
+    IDS_TYPE_MEMORY "Memória"
     IDS_TYPE_DMA "DMA"
-    IDS_SHARE_DEVICE_EXCLUSIVE "Device Exclusive"
-    IDS_SHARE_DRIVER_EXCLUSIVE "Driver Exclusive"
-    IDS_SHARE_SHARED "Shared"
-    IDS_SHARE_UNDETERMINED "Undetermined"
+    IDS_SHARE_DEVICE_EXCLUSIVE "Exclusivo do dispositivo"
+    IDS_SHARE_DRIVER_EXCLUSIVE "Exclusivo do controlador"
+    IDS_SHARE_SHARED "Compartilhamento"
+    IDS_SHARE_UNDETERMINED "Indeterminado"
 END
 
 /*****************************************************************/
@@ -713,7 +713,7 @@ BEGIN
             WS_TABSTOP, 14, 60, 42, 8
     CONTROL "Corresponder &apenas cadeia completa", IDC_MATCHSTRING, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 83, 40, 144, 13
-    CONTROL "Co&rrespondencia exacta", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |
+    CONTROL "Co&rrespondência exacta", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 83, 56, 120, 12
 END
 
