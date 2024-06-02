@@ -22,7 +22,7 @@ END
 
 MAIN_MENU MENU
 BEGIN
-    POPUP "&Arquivo"
+    POPUP "&Ficheiro"
     BEGIN
         MENUITEM "&Novo\tCtrl+N", CMD_NEW
         MENUITEM "Nova &janela\tCtrl+Shift+N", CMD_NEW_WINDOW
@@ -37,7 +37,7 @@ BEGIN
     END
     POPUP "&Editar"
     BEGIN
-        MENUITEM "&Desfazer\tCtrl+Z", CMD_UNDO
+        MENUITEM "A&nular\tCtrl+Z", CMD_UNDO
         MENUITEM SEPARATOR
         MENUITEM "&Recortar\tCtrl+X", CMD_CUT
         MENUITEM "&Copiar\tCtrl+C", CMD_COPY
@@ -46,26 +46,26 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Localizar...", CMD_SEARCH
         MENUITEM "Localizar &próxima\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Substituir...\tCtrl+H", CMD_REPLACE
-        MENUITEM "Ir Para...\tCtrl+G", CMD_GOTO
+        MENUITEM "Su&bstituir...\tCtrl+H", CMD_REPLACE
+        MENUITEM "&Ir Para...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Seleccionar &tudo", CMD_SELECT_ALL
-        MENUITEM "&Data/Hora\tF5", CMD_TIME_DATE
+        MENUITEM "Data/&Hora\tF5", CMD_TIME_DATE
     END
     POPUP "F&ormatar"
     BEGIN
         MENUITEM "&Quebra automática de linha", CMD_WRAP
-        MENUITEM "&Fonte...", CMD_FONT
+        MENUITEM "&Tipo de letra...", CMD_FONT
     END
     POPUP "&Visualizar"
     BEGIN
-        MENUITEM "&Barra de status", CMD_STATUSBAR
+        MENUITEM "&Barra de estado", CMD_STATUSBAR
     END
     POPUP "&Ajuda"
     BEGIN
-        MENUITEM "&Conteúdo", CMD_HELP_CONTENTS
+        MENUITEM "&Tópicos de ajuda", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
-        MENUITEM "&Acerca do Notepad", CMD_HELP_ABOUT_NOTEPAD
+        MENUITEM "&Acerca do ´Bloco de notas'", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 
