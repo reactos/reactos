@@ -124,7 +124,7 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     target_compile_options(glu32 PRIVATE -Wno-write-strings)
     target_compile_options(glu32 PRIVATE -Wno-unused-but-set-variable)
     # Prevent a warning when comparing 'this' against 0
-    set_source_files_properties(src/libnurbs/internals/arc.cc PROPERTIES COMPILE_FLAGS "-Wno-nonnull-compare")
+    set_source_files_properties(src/libnurbs/internals/arc.cc PROPERTIES COMPILE_OPTIONS "-Wno-nonnull-compare")
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
