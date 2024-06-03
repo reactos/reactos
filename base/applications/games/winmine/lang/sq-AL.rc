@@ -18,6 +18,7 @@ BEGIN
         MENUITEM "&E re\tF2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Marko pyetjen", IDM_MARKQ
+        MENUITEM "Sound", IDM_SOUND
         MENUITEM SEPARATOR
         MENUITEM "&Fillestar", IDM_BEGINNER
         MENUITEM "&I Avancuar", IDM_ADVANCED

@@ -14,6 +14,7 @@ BEGIN
         MENUITEM "&Nová\tF2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Označovat nerozhodnuté", IDM_MARKQ
+        MENUITEM "Sound", IDM_SOUND
         MENUITEM SEPARATOR
         MENUITEM "&Začátečník", IDM_BEGINNER
         MENUITEM "&Pokročilý", IDM_ADVANCED

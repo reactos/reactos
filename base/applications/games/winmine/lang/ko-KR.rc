@@ -14,6 +14,7 @@ BEGIN
         MENUITEM "새 게임(&N)\tF2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "물음표 표시(&M)", IDM_MARKQ
+        MENUITEM "Sound", IDM_SOUND
         MENUITEM SEPARATOR
         MENUITEM "초보자(&B)", IDM_BEGINNER
         MENUITEM "중급자(&A)", IDM_ADVANCED
