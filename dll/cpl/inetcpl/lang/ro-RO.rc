@@ -68,7 +68,7 @@ CAPTION "Eliminare istoric de navigare"
 BEGIN
 
     AUTOCHECKBOX   "Fișierele de internet t&emporare\nCopii ale paginilor temporar stocate, imagini și certificate.",
-                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
+                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE | WS_GROUP | WS_TABSTOP
     AUTOCHECKBOX   "Informațiile de &conexiune (Cookies)\nFișiere cu date precum informații de autentificare sau preferințe, stocate în calculatorul dumneavoastră din paginile vizitate.",
                     IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "Ist&oricul\nLista paginilor pe care le-ați accesat în timp.",
@@ -78,7 +78,7 @@ BEGIN
     AUTOCHECKBOX   "&Parolele\nParolele salvate pe care le-ați introdus prin formulare.",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON  "A&nulează", IDCANCEL, 185, 230, 60, 15, WS_GROUP
-    PUSHBUTTON     "&Elimină", IDOK, 120, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "&Elimină", IDOK, 120, 230, 60, 15
 
 END
 

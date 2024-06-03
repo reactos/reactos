@@ -37,7 +37,7 @@ BEGIN
         MENUITEM "Uppdatera", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Klistra in", FCIDM_SHVIEW_INSERT
-        MENUITEM "Klistra in som genväg", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "Klistra in som genväg", FCIDM_SHVIEW_INSERTLINK //FIXME: should we use "Klistra in &genväg" here to sync it with the same string ~10 lines below? ATTENTION: There is also a IDM_CREATELINK and IDS_CREATELINK "Skapa &genväg" (not sure whether those can happen in the same menu or not)
     END
 END
 
@@ -46,9 +46,9 @@ MENU_003 MENU
 BEGIN
     MENUITEM "&Ångra\tCtrl+Z", FCIDM_SHVIEW_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "Kl&ipp ut\tCtrl+X", FCIDM_SHVIEW_CUT
-    MENUITEM "&Kopiera\tCtrl+C", FCIDM_SHVIEW_COPY
-    MENUITEM "&Klistra in\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "Kl&ipp ut\tCtrl+X", FCIDM_SHVIEW_CUT //FIXME: double-check this accelerator on Windows! Should it be &t maybe?
+    MENUITEM "&Kopiera\tCtrl+C", FCIDM_SHVIEW_COPY //FIXME: accelerator collision &K
+    MENUITEM "&Klistra in\tCtrl+V", FCIDM_SHVIEW_INSERT //FIXME: accelerator collision &K
     MENUITEM "Klistra in &genväg", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
     MENUITEM "Kopiera till &mapp...", FCIDM_SHVIEW_COPYTO
@@ -64,15 +64,15 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "K&lipp ut", IDM_CUT
+        MENUITEM "K&lipp ut", IDM_CUT //FIXME: double-check this accelerator on Windows! Should it be &t maybe? (which is currently used by IDM_DELETE). Don't forget to keep in sync with IDS_CUT!
         MENUITEM "&Kopiera", IDM_COPY
         MENUITEM "Paste", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "Skapa &genväg", IDM_CREATELINK
-        MENUITEM "&Ta bort", IDM_DELETE
-        MENUITEM "&Byt namn", IDM_RENAME
+        MENUITEM "&Ta bort", IDM_DELETE //FIXME: double-check this accelerator on Windows! Don't forget to keep in sync with IDS_DELETE
+        MENUITEM "&Byt namn", IDM_RENAME //FIXME: sync that with IDS_RENAME "Byt namn". Either both should have an accelerator or both not. It's up to you.
         MENUITEM SEPARATOR
-        MENUITEM "&Egenskaper", IDM_PROPERTIES
+        MENUITEM "&Egenskaper", IDM_PROPERTIES //FIXME: sync that with IDS_PROPERTIES regarding the accelerator. Either &E or none, it's your choice!
     END
 END
 
@@ -93,11 +93,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Bläddra efter mapp"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "OK", 1, 60, 175, 60, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Avbryt", 2, 125, 175, 60, 15, WS_GROUP | WS_TABSTOP
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 4, 4, 180, 24
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 4, 25, 180, 12
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
+    DEFPUSHBUTTON "OK", IDOK, 60, 175, 60, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Avbryt", IDCANCEL, 125, 175, 60, 15, WS_TABSTOP
 END
 
 IDD_BROWSE_FOR_FOLDER_NEW DIALOGEX 15, 40, 218, 196
@@ -110,8 +110,8 @@ BEGIN
     EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 12, 38, 194, 14, ES_AUTOHSCROLL | WS_GROUP
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_EDITLABELS | TVS_LINESATROOT | TVS_HASLINES | TVS_HASBUTTONS | WS_BORDER | WS_TABSTOP, 12, 58, 194, 105
     PUSHBUTTON "&Skapa ny mapp", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
-    DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Avbryt", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14
+    PUSHBUTTON "Avbryt", IDCANCEL, 156, 174, 50, 14
 END
 
 IDD_YESTOALL_MSGBOX DIALOGEX 200, 100, 280, 90
@@ -120,9 +120,9 @@ CAPTION "Meddelande"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "&Ja", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Ja till &alla", IDC_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Nej", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Avbryt", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Ja till &alla", IDC_YESTOALL, 92, 69, 65, 14, WS_TABSTOP
+    PUSHBUTTON "&Nej", IDNO, 162, 69, 53, 14, WS_TABSTOP
+    PUSHBUTTON "Avbryt", IDCANCEL, 220, 69, 53, 14
     ICON "", IDC_YESTOALL_ICON, 10, 10, 16, 16
     LTEXT "", IDC_YESTOALL_MESSAGE, 40, 10, 238, 52, 0
 END
@@ -279,25 +279,25 @@ BEGIN
 END
 
 IDD_FILE_VERSION DIALOGEX 0, 0, 235, 215
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Version"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Filversion: ", 14000, 10, 10, 55, 10
+    LTEXT "Filversion:", 14000, 10, 10, 55, 10
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Beskrivning: ", 14002, 10, 27, 45, 10
+    LTEXT "Beskrivning:", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Copyright: ", 14004, 10, 46, 66, 10
+    LTEXT "Copyright:", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    GROUPBOX "Annan versionsinformation: ", 14006, 6, 70, 222, 115
-    LTEXT "Objektnamn: ", 14007, 13, 82, 50, 10
-    LTEXT "Värde: ", 14008, 112, 82, 45, 10
+    GROUPBOX "Annan versionsinformation", 14006, 6, 70, 222, 115
+    LTEXT "Objektnamn:", 14007, 13, 82, 50, 10
+    LTEXT "Värde:", 14008, 112, 82, 45, 10
     LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
     EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END
 
 IDD_DRIVE_PROPERTIES DIALOGEX 0, 0, 240, 220
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Allmänt"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -330,7 +330,7 @@ BEGIN
 END
 
 IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 220
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Verktyg"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -349,14 +349,14 @@ BEGIN
 END
 
 IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 220
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Hårdvara"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 END
 
 IDD_RUN_AS DIALOGEX 0, 0, 240, 190
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Kör som"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -376,7 +376,7 @@ BEGIN
 END
 
 IDD_RECYCLE_BIN_PROPERTIES DIALOGEX 0, 0, 240, 190
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Egenskaper för Papperskorgen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -396,7 +396,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
     LTEXT "Välj ett program att öppna den här filen med:", -1, 44, 12, 211, 10
-    LTEXT "Fil:     ", 14001, 44, 25, 188, 20
+    LTEXT "Fil:    ", 14001, 44, 25, 188, 20
     GROUPBOX "&Program", -1, 7, 42, 249, 187
     CONTROL "Program", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "&Använd alltid the valda programmet för att öppna den här filtypen", 14003, 16, 193, 232, 10
@@ -447,10 +447,10 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Filtyper"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Registrerade fil&typer:", -1, 7, 10, 180, 10
+    LTEXT "Registrerade fil&typer:", -1, 7, 10, 180, 10 //FIXME: accelerator collision &T
     CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 99
     PUSHBUTTON "&Ny", IDC_FILETYPES_NEW, 140, 123, 55, 14, WS_TABSTOP
-    PUSHBUTTON "&Ta bort", IDC_FILETYPES_DELETE, 200, 123, 55, 14, WS_TABSTOP
+    PUSHBUTTON "&Ta bort", IDC_FILETYPES_DELETE, 200, 123, 55, 14, WS_TABSTOP //FIXME: accelerator collision &T
     GROUPBOX "Detaljer för filändelsen '%s'", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 143, 249, 70
     LTEXT "Öppnas med:", -1, 12, 153, 48, 10
     CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 153, 10, 10
@@ -526,7 +526,7 @@ BEGIN
     CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
     GROUPBOX "Åtgärder", -1, 7, 45, 212, 146
     AUTORADIOBUTTON "Välj en åtgärd att &utföra:", 1005, 14, 54, 202, 10, WS_GROUP
-    CONTROL "LIST2", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
+    CONTROL "", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
     AUTORADIOBUTTON "Fråga mig varje gång vilken &åtgärd som ska utföras", 1006, 14, 177, 202, 10
     PUSHBUTTON "&Återställ standardvärde", 1008, 108, 197, 110, 14, WS_DISABLED
 END
@@ -786,9 +786,9 @@ BEGIN
     IDS_OPEN "Öppna"
     IDS_CREATELINK "Skapa &genväg"
     IDS_COPY "&Kopiera"
-    IDS_DELETE "Ta bort"
+    IDS_DELETE "Ta bort" //FIXME: double-check this accelerator on Windows! Don't forget to keep in sync with IDM_DELETE
     IDS_PROPERTIES "Egenskaper"
-    IDS_CUT "K&lipp ut"
+    IDS_CUT "K&lipp ut" //FIXME: double-check this accelerator on Windows! Should it be &t maybe? (which is currently used by IDM_DELETE). Don't forget to keep in sync with IDS_CUT!
     IDS_RESTORE "Återställ"
     IDS_FORMATDRIVE "Formatera..."
     IDS_RENAME "Byt namn"
@@ -797,6 +797,7 @@ BEGIN
     IDS_DISCONNECT "Disconnect"
     IDS_OPENFILELOCATION "Open f&ile location"
     IDS_SENDTO_MENU "Se&nd To"
+    IDS_COPYASPATHMENU "Copy as path"
 
     IDS_MOVEERRORTITLE "Error Moving File or Folder"
     IDS_COPYERRORTITLE "Error Copying File or Folder"
@@ -924,6 +925,9 @@ BEGIN
     IDS_CANTDISCONNECT "Unable to disconnect (Error Code: %lu)."
     IDS_NONE "(None)"
 
+    IDS_EXPAND "Exp&and"
+    IDS_COLLAPSE "Coll&apse"
+
     /* Friendly File Type Names */
     IDS_DIRECTORY "Mapp"
     IDS_BAT_FILE "ReactOS Batch-fil"
@@ -1021,6 +1025,7 @@ BEGIN
     IDS_ADVANCED_EXPAND_NET_CONNECTIONS "Expand Network Connections"
     IDS_ADVANCED_DISPLAY_RUN "Display Run"
     IDS_ADVANCED_DISPLAY_ADMINTOOLS "Display Administrative Tools"
+    IDS_ADVANCED_SMALL_START_MENU "Show Small Icons in Start menu"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< Ad&vanced"
     IDS_NEWEXT_ADVANCED_RIGHT "Ad&vanced >>"

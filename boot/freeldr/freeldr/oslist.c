@@ -44,15 +44,12 @@ static PCSTR CopyString(PCSTR Source)
 
 OperatingSystemItem*
 InitOperatingSystemList(
-    IN ULONG_PTR FrLdrSectionId,
-    OUT PULONG OperatingSystemCount,
-    OUT PULONG DefaultOperatingSystem)
+    _Out_ PULONG OperatingSystemCount,
+    _Out_ PULONG DefaultOperatingSystem)
 {
-    ULONG DefaultOS = 0;
-    PCSTR DefaultOSName = NULL;
-    CHAR  DefaultOSText[80];
-
     OperatingSystemItem* Items;
+    PCSTR DefaultOSName;
+    ULONG DefaultOS = 0;
     ULONG Count;
     ULONG i;
     ULONG_PTR OsSectionId, SectionId;
@@ -63,7 +60,7 @@ InitOperatingSystemList(
     CHAR SettingName[260];
     CHAR SettingValue[260];
     CHAR BootType[80];
-    CHAR TempBuffer[sizeof(SettingValue)/sizeof(CHAR)];
+    CHAR TempBuffer[_countof(SettingValue)];
 
     /* Open the [Operating Systems] section */
     if (!IniOpenSection("Operating Systems", &OsSectionId))
@@ -77,16 +74,8 @@ InitOperatingSystemList(
     if (!Items)
         return NULL;
 
-    /* Retrieve which OS is the default one */
-    DefaultOSName = CmdLineGetDefaultOS();
-    if (!DefaultOSName || !*DefaultOSName)
-    {
-        if ((FrLdrSectionId != 0) &&
-            IniReadSettingByName(FrLdrSectionId, "DefaultOS", DefaultOSText, sizeof(DefaultOSText)))
-        {
-            DefaultOSName = DefaultOSText;
-        }
-    }
+    /* Retrieve the default OS */
+    DefaultOSName = BootMgrInfo.DefaultOs;
 
     /* Now loop through the operating system section and load each item */
     for (i = 0; i < Count; ++i)

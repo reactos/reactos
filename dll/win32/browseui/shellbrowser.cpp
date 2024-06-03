@@ -1355,17 +1355,13 @@ HRESULT CShellBrowser::DoFolderOptions()
     if (FAILED_UNEXPECTEDLY(hResult))
         return E_FAIL;
 
-// CORE-11140 : Disabled this bit, because it prevents the folder options from showing.
-//              It returns 'E_NOTIMPL'
-#if 0
-    if (fCurrentShellView != NULL)
+    if (fCurrentShellView)
     {
         hResult = fCurrentShellView->AddPropertySheetPages(
             0, AddFolderOptionsPage, reinterpret_cast<LPARAM>(&m_PropSheet));
         if (FAILED_UNEXPECTEDLY(hResult))
             return E_FAIL;
     }
-#endif
 
     // show sheet
     CStringW strFolderOptions(MAKEINTRESOURCEW(IDS_FOLDER_OPTIONS));
@@ -1970,7 +1966,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::QueryStatus(const GUID *pguidCmdGroup,
                     if (IsEqualCLSID(CLSID_SH_FavBand, fCurrentVertBar))
                         prgCmds->cmdf |= OLECMDF_LATCHED;
                     break;
-                case 0x23:  // folders
+                case SBCMDID_EXPLORERBARFOLDERS:  // folders
                     prgCmds->cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
                     if (IsEqualCLSID(CLSID_ExplorerBand, fCurrentVertBar))
                         prgCmds->cmdf |= OLECMDF_LATCHED;
@@ -2019,7 +2015,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::Exec(const GUID *pguidCmdGroup, DWORD n
             case 0x1c: //Toggle Search
             case 0x1d: //Toggle History
             case 0x1e: //Toggle Favorites
-            case 0x23: //Toggle Folders
+            case SBCMDID_EXPLORERBARFOLDERS: //Toggle Folders
                 const GUID* pclsid;
                 if (nCmdID == 0x1c) pclsid = &CLSID_FileSearchBand;
                 else if (nCmdID == 0x1d) pclsid = &CLSID_SH_HistBand;
@@ -2270,9 +2266,12 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::GetControlWindow(UINT id, HWND *lphwnd)
             *lphwnd = fStatusBar;
             return S_OK;
         case FCW_TREE:
-            // find the directory browser and return it
-            // this should be used only to determine if a tree is present
-            return S_OK;
+        {
+            BOOL shown;
+            if (SUCCEEDED(IsControlWindowShown(id, &shown)) && shown)
+                return IUnknown_GetWindow(fClientBars[BIVerticalBaseBar].clientBar.p, lphwnd);
+            return S_FALSE;
+        }
         case FCW_PROGRESS:
             // is this a progress dialog?
             return S_OK;
@@ -2309,8 +2308,11 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::QueryActiveShellView(IShellView **ppshv
         return E_POINTER;
     *ppshv = fCurrentShellView;
     if (fCurrentShellView.p != NULL)
+    {
         fCurrentShellView.p->AddRef();
-    return S_OK;
+        return S_OK;
+    }
+    return E_FAIL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::OnViewWindowActive(IShellView *ppshv)
@@ -2459,12 +2461,47 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::GetTravelLog(ITravelLog **pptl)
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::ShowControlWindow(UINT id, BOOL fShow)
 {
+    BOOL shown;
+    if (FAILED(IsControlWindowShown(id, &shown)))
+        return E_NOTIMPL;
+    else if (!shown == !fShow) // Negated for true boolean comparison
+        return S_OK;
+    else switch (id)
+    {
+        case FCW_STATUS:
+            OnToggleStatusBarVisible(0, 0, NULL, shown);
+            return S_OK;
+        case FCW_TREE:
+            return Exec(&CGID_Explorer, SBCMDID_EXPLORERBARFOLDERS, 0, NULL, NULL);
+    }
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::IsControlWindowShown(UINT id, BOOL *pfShown)
 {
-    return E_NOTIMPL;
+    HRESULT hr = S_OK;
+    BOOL shown = FALSE;
+    switch (id)
+    {
+        case FCW_STATUS:
+            shown = m_settings.fStatusBarVisible;
+            break;
+        case FCW_TREE:
+        {
+            OLECMD cmd = { SBCMDID_EXPLORERBARFOLDERS };
+            hr = QueryStatus(&CGID_Explorer, 1, &cmd, NULL);
+            shown = cmd.cmdf & OLECMDF_LATCHED;
+            break;
+        }
+        default:
+            hr = E_NOTIMPL;
+    }
+    if (pfShown)
+    {
+        *pfShown = shown;
+        return hr;
+    }
+    return SUCCEEDED(hr) ? (shown ? S_OK : S_FALSE) : hr;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::IEGetDisplayName(LPCITEMIDLIST pidl, LPWSTR pwszName, UINT uFlags)
@@ -2530,10 +2567,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::CanNavigateNow()
 HRESULT STDMETHODCALLTYPE CShellBrowser::GetPidl(LPITEMIDLIST *ppidl)
 {
     // called by explorer bar to get current pidl
-    if (ppidl == NULL)
-        return E_POINTER;
-    *ppidl = ILClone(fCurrentDirectoryPIDL);
-    return S_OK;
+    return ppidl ? SHILClone(fCurrentDirectoryPIDL, ppidl) : E_POINTER;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::SetReferrer(LPCITEMIDLIST pidl)

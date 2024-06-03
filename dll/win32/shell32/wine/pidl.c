@@ -54,6 +54,15 @@ extern BOOL WINAPI Free(LPVOID);
 static LPSTR _ILGetSTextPointer(LPCITEMIDLIST pidl);
 static LPWSTR _ILGetTextPointerW(LPCITEMIDLIST pidl);
 
+EXTERN_C HWND BindCtx_GetUIWindow(_In_ IBindCtx *pBindCtx);
+
+EXTERN_C HRESULT
+BindCtx_RegisterObjectParam(
+    _In_ IBindCtx *pBindCtx,
+    _In_ LPOLESTR pszKey,
+    _In_opt_ IUnknown *punk,
+    _Out_ LPBC *ppbc);
+
 /*************************************************************************
  * ILGetDisplayNameExA
  *
@@ -738,6 +747,7 @@ LPITEMIDLIST WINAPI ILCombine(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
     return pidlNew;
 }
 
+#ifndef __REACTOS__ /* See ..\utils.cpp */
 /*************************************************************************
  *  SHGetRealIDL [SHELL32.98]
  *
@@ -785,6 +795,7 @@ HRESULT WINAPI SHGetRealIDL(LPSHELLFOLDER lpsf, LPCITEMIDLIST pidlSimple, LPITEM
 
     return hr;
 }
+#endif
 
 /*************************************************************************
  *  SHLogILFromFSIL [SHELL32.95]
@@ -1104,15 +1115,6 @@ LPITEMIDLIST WINAPI SHSimpleIDListFromPathA(LPCSTR lpszPath)
         wPath = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
         MultiByteToWideChar(CP_ACP, 0, lpszPath, -1, wPath, len);
     }
-#ifdef __REACTOS__
-    // FIXME: Needs folder attribute
-    if (PathFileExistsW(wPath))
-    {
-        pidl = ILCreateFromPathW(wPath);
-        HeapFree(GetProcessHeap(), 0, wPath);
-        return pidl;
-    }
-#endif
 
     _ILParsePathW(wPath, NULL, TRUE, &pidl, NULL);
 
@@ -1126,13 +1128,9 @@ LPITEMIDLIST WINAPI SHSimpleIDListFromPathW(LPCWSTR lpszPath)
     LPITEMIDLIST pidl = NULL;
 
     TRACE("%s\n", debugstr_w(lpszPath));
-#ifdef __REACTOS__
-    // FIXME: Needs folder attribute
-    if (PathFileExistsW(lpszPath))
-        return ILCreateFromPathW(lpszPath);
-#endif
 
     _ILParsePathW(lpszPath, NULL, TRUE, &pidl, NULL);
+
     TRACE("%s %p\n", debugstr_w(lpszPath), pidl);
     return pidl;
 }
@@ -1396,38 +1394,58 @@ HRESULT WINAPI SHBindToParent(LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppv, LPCI
 HRESULT WINAPI SHParseDisplayName(LPCWSTR pszName, IBindCtx *pbc,
     LPITEMIDLIST *ppidl, SFGAOF sfgaoIn, SFGAOF *psfgaoOut)
 {
+    HRESULT hr;
+    LPWSTR pszNameDup;
     IShellFolder *psfDesktop;
-    HRESULT         hr=E_FAIL;
-    ULONG           dwAttr=sfgaoIn;
+    IBindCtx *pBindCtx = NULL;
 
-    if(!ppidl)
-        return E_INVALIDARG;
+    TRACE("(%s, %p, %p, 0x%X, %p)\n", pszName, pbc, ppidl, sfgaoIn, psfgaoOut);
 
-    if (!pszName)
-    {
-        *ppidl = NULL;
-        return E_INVALIDARG;
-    }
+    *ppidl = NULL;
 
+    if (psfgaoOut)
+        *psfgaoOut = 0;
+
+    pszNameDup = StrDupW(pszName);
+    if (!pszNameDup)
+        return E_OUTOFMEMORY;
+
+    psfDesktop = NULL;
     hr = SHGetDesktopFolder(&psfDesktop);
     if (FAILED(hr))
     {
-        *ppidl = NULL;
+        LocalFree(pszNameDup);
         return hr;
     }
 
-    hr = IShellFolder_ParseDisplayName(psfDesktop, (HWND)NULL, pbc, (LPOLESTR)pszName, (ULONG *)NULL, ppidl, &dwAttr);
-
-    IShellFolder_Release(psfDesktop);
+    if (!pbc)
+    {
+        hr = BindCtx_RegisterObjectParam(NULL, STR_PARSE_TRANSLATE_ALIASES, NULL, &pBindCtx);
+        pbc = pBindCtx;
+    }
 
     if (SUCCEEDED(hr))
     {
-        if (psfgaoOut) *psfgaoOut = dwAttr;
+        ULONG sfgao = sfgaoIn, cchEaten;
+        HWND hwndUI = BindCtx_GetUIWindow(pbc);
+        hr = psfDesktop->lpVtbl->ParseDisplayName(psfDesktop,
+                                                  hwndUI,
+                                                  pbc,
+                                                  pszNameDup,
+                                                  &cchEaten,
+                                                  ppidl,
+                                                  (psfgaoOut ? &sfgao : NULL));
+        if (SUCCEEDED(hr) && psfgaoOut)
+            *psfgaoOut = (sfgao & sfgaoIn);
     }
-    else
-    {
-        *ppidl = NULL;
-    }
+
+    LocalFree(pszNameDup);
+
+    if (psfDesktop)
+        psfDesktop->lpVtbl->Release(psfDesktop);
+
+    if (pBindCtx)
+        pBindCtx->lpVtbl->Release(pBindCtx);
 
     return hr;
 }
@@ -1664,6 +1682,13 @@ LPITEMIDLIST _ILCreateControlPanel(void)
 
 LPITEMIDLIST _ILCreatePrinters(void)
 {
+#ifdef __REACTOS__
+    // Note: Wine returns the PIDL as it was in Windows 95, NT5 moved it into CSIDL_CONTROLS
+    extern HRESULT SHGetFolderLocationHelper(HWND hwnd, int nFolder, REFCLSID clsid, LPITEMIDLIST *ppidl);
+    LPITEMIDLIST pidl;
+    SHGetFolderLocationHelper(NULL, CSIDL_CONTROLS, &CLSID_Printers, &pidl);
+    return pidl;
+#else
     LPITEMIDLIST parent = _ILCreateGuid(PT_GUID, &CLSID_MyComputer), ret = NULL;
 
     TRACE("()\n");
@@ -1679,6 +1704,7 @@ LPITEMIDLIST _ILCreatePrinters(void)
         SHFree(parent);
     }
     return ret;
+#endif
 }
 
 LPITEMIDLIST _ILCreateNetwork(void)

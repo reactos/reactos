@@ -232,7 +232,7 @@ InstallSetupInfFile(
     IO_STATUS_BLOCK IoStatusBlock;
 #endif
 
-    PINICACHESECTION IniSection;
+    PINI_SECTION IniSection;
     WCHAR PathBuffer[MAX_PATH];
     WCHAR UnattendInfPath[MAX_PATH];
 
@@ -241,35 +241,31 @@ InstallSetupInfFile(
     if (!IniCache)
         return;
 
-    IniSection = IniCacheAppendSection(IniCache, L"SetupParams");
+    IniSection = IniAddSection(IniCache, L"SetupParams");
     if (IniSection)
     {
         /* Key "skipmissingfiles" */
         // RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
                             // L"\"%s\"", L"WinNt5.2");
-        // IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                          // L"Version", PathBuffer);
+        // IniAddKey(IniSection, L"Version", PathBuffer);
     }
 
-    IniSection = IniCacheAppendSection(IniCache, L"Data");
+    IniSection = IniAddSection(IniCache, L"Data");
     if (IniSection)
     {
         RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
                             L"\"%s\"", IsUnattendedSetup ? L"yes" : L"no");
-        IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                          L"UnattendedInstall", PathBuffer);
+        IniAddKey(IniSection, L"UnattendedInstall", PathBuffer);
 
         // "floppylessbootpath" (yes/no)
 
         RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
                             L"\"%s\"", L"winnt");
-        IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                          L"ProductType", PathBuffer);
+        IniAddKey(IniSection, L"ProductType", PathBuffer);
 
         RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
                             L"\"%s\\\"", pSetupData->SourceRootPath.Buffer);
-        IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                          L"SourcePath", PathBuffer);
+        IniAddKey(IniSection, L"SourcePath", PathBuffer);
 
         // "floppyless" ("0")
     }
@@ -349,9 +345,9 @@ Quit:
     Status = OpenAndMapFile(NULL,
                             UnattendInfPath,
                             &UnattendFileHandle,
+                            &FileSize,
                             &SectionHandle,
                             &ViewBase,
-                            &FileSize,
                             FALSE);
     if (!NT_SUCCESS(Status))
     {

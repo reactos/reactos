@@ -1,3 +1,4 @@
+add_subdirectory(makeimg)
 
 list(APPEND SOURCE
     AttachThreadInput.c
@@ -30,6 +31,7 @@ list(APPEND SOURCE
     KbdLayout.c
     keybd_event.c
     LoadImage.c
+    LoadImageGCC.c
     LookupIconIdFromDirectoryEx.c
     MessageStateAnalyzer.c
     NextDlgItem.c

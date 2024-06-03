@@ -14,6 +14,7 @@ BEGIN
         MENUITEM "&Nytt\tF2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Markera fråga", IDM_MARKQ
+        MENUITEM "Sound", IDM_SOUND
         MENUITEM SEPARATOR
         MENUITEM "Ny&börjare", IDM_BEGINNER
         MENUITEM "&Avancerad", IDM_ADVANCED

@@ -3,7 +3,7 @@
  *
  * Copyright 1998 Marcus Meissner
  * Copyright 2002 Eric Pouech
- * Copyright 2018-2019 Katayama Hirofumi MZ
+ * Copyright 2018-2024 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -31,6 +31,20 @@ EXTERN_C BOOL PathIsExeW(LPCWSTR lpszPath);
 
 typedef UINT_PTR (*SHELL_ExecuteW32)(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
                 const SHELLEXECUTEINFOW *sei, LPSHELLEXECUTEINFOW sei_out);
+
+// Is the current process a rundll32.exe?
+static BOOL SHELL_InRunDllProcess(VOID)
+{
+    WCHAR szModule[MAX_PATH];
+    static INT s_bInDllProcess = -1;
+
+    if (s_bInDllProcess != -1)
+        return s_bInDllProcess;
+
+    s_bInDllProcess = GetModuleFileNameW(NULL, szModule, _countof(szModule)) &&
+                      (StrStrIW(PathFindFileNameW(szModule), L"rundll") != NULL);
+    return s_bInDllProcess;
+}
 
 static void ParseNoTildeEffect(PWSTR &res, LPCWSTR &args, DWORD &len, DWORD &used, int argNum)
 {
@@ -1256,29 +1270,52 @@ HINSTANCE WINAPI FindExecutableA(LPCSTR lpFile, LPCSTR lpDirectory, LPSTR lpResu
  */
 HINSTANCE WINAPI FindExecutableW(LPCWSTR lpFile, LPCWSTR lpDirectory, LPWSTR lpResult)
 {
-    UINT_PTR retval = SE_ERR_NOASSOC;
-    WCHAR old_dir[1024];
-    WCHAR res[MAX_PATH];
+    UINT_PTR retval;
+    WCHAR old_dir[MAX_PATH], res[MAX_PATH];
+    DWORD cch = _countof(res);
+    LPCWSTR dirs[2];
 
     TRACE("File %s, Dir %s\n", debugstr_w(lpFile), debugstr_w(lpDirectory));
 
-    lpResult[0] = '\0'; /* Start off with an empty return string */
-    if (lpFile == NULL)
-        return (HINSTANCE)SE_ERR_FNF;
+    *lpResult = UNICODE_NULL;
 
-    if (lpDirectory)
+    GetCurrentDirectoryW(_countof(old_dir), old_dir);
+
+    if (lpDirectory && *lpDirectory)
     {
-        GetCurrentDirectoryW(ARRAY_SIZE(old_dir), old_dir);
         SetCurrentDirectoryW(lpDirectory);
+        dirs[0] = lpDirectory;
+    }
+    else
+    {
+        dirs[0] = old_dir;
+    }
+    dirs[1] = NULL;
+
+    if (!GetShortPathNameW(lpFile, res, _countof(res)))
+        StringCchCopyW(res, _countof(res), lpFile);
+
+    if (PathResolveW(res, dirs, PRF_TRYPROGRAMEXTENSIONS | PRF_FIRSTDIRDEF))
+    {
+        // NOTE: The last parameter of this AssocQueryStringW call is "strange" in Windows.
+        if (PathIsExeW(res) ||
+            SUCCEEDED(AssocQueryStringW(ASSOCF_NONE, ASSOCSTR_EXECUTABLE, res, NULL, res, &cch)))
+        {
+            StringCchCopyW(lpResult, MAX_PATH, res);
+            retval = 42;
+        }
+        else
+        {
+            retval = SE_ERR_NOASSOC;
+        }
+    }
+    else
+    {
+        retval = SE_ERR_FNF;
     }
 
-    retval = SHELL_FindExecutable(lpDirectory, lpFile, L"open", res, MAX_PATH, NULL, NULL, NULL, NULL);
-    if (retval > 32)
-        strcpyW(lpResult, res);
-
     TRACE("returning %s\n", debugstr_w(lpResult));
-    if (lpDirectory)
-        SetCurrentDirectoryW(old_dir);
+    SetCurrentDirectoryW(old_dir);
     return (HINSTANCE)retval;
 }
 
@@ -2308,9 +2345,24 @@ HINSTANCE WINAPI ShellExecuteA(HWND hWnd, LPCSTR lpVerb, LPCSTR lpFile,
     return sei.hInstApp;
 }
 
+static DWORD
+ShellExecute_Normal(_Inout_ LPSHELLEXECUTEINFOW sei)
+{
+    // FIXME
+    return SHELL_execute(sei, SHELL_ExecuteW) ? ERROR_SUCCESS : ERROR_FILE_NOT_FOUND;
+}
+
+static VOID
+ShellExecute_ShowError(
+    _In_ const SHELLEXECUTEINFOW *ExecInfo,
+    _In_opt_ LPCWSTR pszCaption,
+    _In_ DWORD dwError)
+{
+    // FIXME: Show error message
+}
+
 /*************************************************************************
  * ShellExecuteExA                [SHELL32.292]
- *
  */
 BOOL
 WINAPI
@@ -2323,7 +2375,16 @@ ShellExecuteExA(LPSHELLEXECUTEINFOA sei)
 
     TRACE("%p\n", sei);
 
+    if (sei->cbSize != sizeof(SHELLEXECUTEINFOA))
+    {
+        sei->hInstApp = (HINSTANCE)ERROR_ACCESS_DENIED;
+        SetLastError(ERROR_ACCESS_DENIED);
+        return FALSE;
+    }
+
     memcpy(&seiW, sei, sizeof(SHELLEXECUTEINFOW));
+
+    seiW.cbSize = sizeof(SHELLEXECUTEINFOW);
 
     if (sei->lpVerb)
         seiW.lpVerb = __SHCloneStrAtoW(&wVerb, sei->lpVerb);
@@ -2342,7 +2403,7 @@ ShellExecuteExA(LPSHELLEXECUTEINFOA sei)
     else
         seiW.lpClass = NULL;
 
-    ret = SHELL_execute(&seiW, SHELL_ExecuteW);
+    ret = ShellExecuteExW(&seiW);
 
     sei->hInstApp = seiW.hInstApp;
 
@@ -2360,14 +2421,60 @@ ShellExecuteExA(LPSHELLEXECUTEINFOA sei)
 
 /*************************************************************************
  * ShellExecuteExW                [SHELL32.293]
- *
  */
 BOOL
 WINAPI
 DECLSPEC_HOTPATCH
 ShellExecuteExW(LPSHELLEXECUTEINFOW sei)
 {
-    return SHELL_execute(sei, SHELL_ExecuteW);
+    HRESULT hrCoInit;
+    DWORD dwError;
+    ULONG fOldMask;
+
+    if (sei->cbSize != sizeof(SHELLEXECUTEINFOW))
+    {
+        sei->hInstApp = (HINSTANCE)UlongToHandle(SE_ERR_ACCESSDENIED);
+        SetLastError(ERROR_ACCESS_DENIED);
+        return FALSE;
+    }
+
+    hrCoInit = SHCoInitializeAnyApartment();
+
+    if (SHRegGetBoolUSValueW(L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer",
+                             L"MaximizeApps", FALSE, FALSE))
+    {
+        switch (sei->nShow)
+        {
+            case SW_SHOW:
+            case SW_SHOWDEFAULT:
+            case SW_SHOWNORMAL:
+            case SW_RESTORE:
+                sei->nShow = SW_SHOWMAXIMIZED;
+                break;
+            default:
+                break;
+        }
+    }
+
+    fOldMask = sei->fMask;
+
+    if (!(fOldMask & SEE_MASK_NOASYNC) && SHELL_InRunDllProcess())
+        sei->fMask |= SEE_MASK_WAITFORINPUTIDLE | SEE_MASK_NOASYNC;
+
+    dwError = ShellExecute_Normal(sei);
+
+    if (dwError && dwError != ERROR_DLL_NOT_FOUND && dwError != ERROR_CANCELLED)
+        ShellExecute_ShowError(sei, NULL, dwError);
+
+    sei->fMask = fOldMask;
+
+    if (SUCCEEDED(hrCoInit))
+        CoUninitialize();
+
+    if (dwError)
+        SetLastError(dwError);
+
+    return dwError == ERROR_SUCCESS;
 }
 
 /*************************************************************************
@@ -2550,7 +2657,7 @@ HRESULT WINAPI ShellExecCmdLine(
     if (dwSeclFlags & SECL_RUNAS)
     {
         dwSize = 0;
-        hr = AssocQueryStringW(0, ASSOCSTR_COMMAND, lpCommand, L"RunAs", NULL, &dwSize);
+        hr = AssocQueryStringW(ASSOCF_NONE, ASSOCSTR_COMMAND, lpCommand, L"RunAs", NULL, &dwSize);
         if (SUCCEEDED(hr) && dwSize != 0)
         {
             pszVerb = L"runas";
@@ -2649,4 +2756,198 @@ HRESULT WINAPI ShellExecCmdLine(
     SHFree(lpCommand);
 
     return HRESULT_FROM_WIN32(dwError);
+}
+
+/*************************************************************************
+ *                RealShellExecuteExA (SHELL32.266)
+ */
+EXTERN_C
+HINSTANCE WINAPI
+RealShellExecuteExA(
+    _In_opt_ HWND hwnd,
+    _In_opt_ LPCSTR lpOperation,
+    _In_opt_ LPCSTR lpFile,
+    _In_opt_ LPCSTR lpParameters,
+    _In_opt_ LPCSTR lpDirectory,
+    _In_opt_ LPSTR lpReturn,
+    _In_opt_ LPCSTR lpTitle,
+    _In_opt_ LPVOID lpReserved,
+    _In_ INT nCmdShow,
+    _Out_opt_ PHANDLE lphProcess,
+    _In_ DWORD dwFlags)
+{
+    SHELLEXECUTEINFOA ExecInfo;
+
+    TRACE("(%p, %s, %s, %s, %s, %p, %s, %p, %u, %p, %lu)\n",
+          hwnd, debugstr_a(lpOperation), debugstr_a(lpFile), debugstr_a(lpParameters),
+          debugstr_a(lpDirectory), lpReserved, debugstr_a(lpTitle),
+          lpReserved, nCmdShow, lphProcess, dwFlags);
+
+    ZeroMemory(&ExecInfo, sizeof(ExecInfo));
+    ExecInfo.cbSize = sizeof(ExecInfo);
+    ExecInfo.fMask = SEE_MASK_FLAG_NO_UI | SEE_MASK_UNKNOWN_0x1000;
+    ExecInfo.hwnd = hwnd;
+    ExecInfo.lpVerb = lpOperation;
+    ExecInfo.lpFile = lpFile;
+    ExecInfo.lpParameters = lpParameters;
+    ExecInfo.lpDirectory = lpDirectory;
+    ExecInfo.nShow = (WORD)nCmdShow;
+
+    if (lpReserved)
+    {
+        ExecInfo.fMask |= SEE_MASK_USE_RESERVED;
+        ExecInfo.hInstApp = (HINSTANCE)lpReserved;
+    }
+
+    if (lpTitle)
+    {
+        ExecInfo.fMask |= SEE_MASK_HASTITLE;
+        ExecInfo.lpClass = lpTitle;
+    }
+
+    if (dwFlags & 1)
+        ExecInfo.fMask |= SEE_MASK_FLAG_SEPVDM;
+
+    if (dwFlags & 2)
+        ExecInfo.fMask |= SEE_MASK_NO_CONSOLE;
+
+    if (lphProcess == NULL)
+    {
+        ShellExecuteExA(&ExecInfo);
+    }
+    else
+    {
+        ExecInfo.fMask |= SEE_MASK_NOCLOSEPROCESS;
+        ShellExecuteExA(&ExecInfo);
+        *lphProcess = ExecInfo.hProcess;
+    }
+
+    return ExecInfo.hInstApp;
+}
+
+/*************************************************************************
+ *                RealShellExecuteExW (SHELL32.267)
+ */
+EXTERN_C
+HINSTANCE WINAPI
+RealShellExecuteExW(
+    _In_opt_ HWND hwnd,
+    _In_opt_ LPCWSTR lpOperation,
+    _In_opt_ LPCWSTR lpFile,
+    _In_opt_ LPCWSTR lpParameters,
+    _In_opt_ LPCWSTR lpDirectory,
+    _In_opt_ LPWSTR lpReturn,
+    _In_opt_ LPCWSTR lpTitle,
+    _In_opt_ LPVOID lpReserved,
+    _In_ INT nCmdShow,
+    _Out_opt_ PHANDLE lphProcess,
+    _In_ DWORD dwFlags)
+{
+    SHELLEXECUTEINFOW ExecInfo;
+
+    TRACE("(%p, %s, %s, %s, %s, %p, %s, %p, %u, %p, %lu)\n",
+          hwnd, debugstr_w(lpOperation), debugstr_w(lpFile), debugstr_w(lpParameters),
+          debugstr_w(lpDirectory), lpReserved, debugstr_w(lpTitle),
+          lpReserved, nCmdShow, lphProcess, dwFlags);
+
+    ZeroMemory(&ExecInfo, sizeof(ExecInfo));
+    ExecInfo.cbSize = sizeof(ExecInfo);
+    ExecInfo.fMask = SEE_MASK_FLAG_NO_UI | SEE_MASK_UNKNOWN_0x1000;
+    ExecInfo.hwnd = hwnd;
+    ExecInfo.lpVerb = lpOperation;
+    ExecInfo.lpFile = lpFile;
+    ExecInfo.lpParameters = lpParameters;
+    ExecInfo.lpDirectory = lpDirectory;
+    ExecInfo.nShow = (WORD)nCmdShow;
+
+    if (lpReserved)
+    {
+        ExecInfo.fMask |= SEE_MASK_USE_RESERVED;
+        ExecInfo.hInstApp = (HINSTANCE)lpReserved;
+    }
+
+    if (lpTitle)
+    {
+        ExecInfo.fMask |= SEE_MASK_HASTITLE;
+        ExecInfo.lpClass = lpTitle;
+    }
+
+    if (dwFlags & 1)
+        ExecInfo.fMask |= SEE_MASK_FLAG_SEPVDM;
+
+    if (dwFlags & 2)
+        ExecInfo.fMask |= SEE_MASK_NO_CONSOLE;
+
+    if (lphProcess == NULL)
+    {
+        ShellExecuteExW(&ExecInfo);
+    }
+    else
+    {
+        ExecInfo.fMask |= SEE_MASK_NOCLOSEPROCESS;
+        ShellExecuteExW(&ExecInfo);
+        *lphProcess = ExecInfo.hProcess;
+    }
+
+    return ExecInfo.hInstApp;
+}
+
+/*************************************************************************
+ *                RealShellExecuteA (SHELL32.265)
+ */
+EXTERN_C
+HINSTANCE WINAPI
+RealShellExecuteA(
+    _In_opt_ HWND hwnd,
+    _In_opt_ LPCSTR lpOperation,
+    _In_opt_ LPCSTR lpFile,
+    _In_opt_ LPCSTR lpParameters,
+    _In_opt_ LPCSTR lpDirectory,
+    _In_opt_ LPSTR lpReturn,
+    _In_opt_ LPCSTR lpTitle,
+    _In_opt_ LPVOID lpReserved,
+    _In_ INT nCmdShow,
+    _Out_opt_ PHANDLE lphProcess)
+{
+    return RealShellExecuteExA(hwnd,
+                               lpOperation,
+                               lpFile,
+                               lpParameters,
+                               lpDirectory,
+                               lpReturn,
+                               lpTitle,
+                               lpReserved,
+                               nCmdShow,
+                               lphProcess,
+                               0);
+}
+
+/*************************************************************************
+ *                RealShellExecuteW (SHELL32.268)
+ */
+EXTERN_C
+HINSTANCE WINAPI
+RealShellExecuteW(
+    _In_opt_ HWND hwnd,
+    _In_opt_ LPCWSTR lpOperation,
+    _In_opt_ LPCWSTR lpFile,
+    _In_opt_ LPCWSTR lpParameters,
+    _In_opt_ LPCWSTR lpDirectory,
+    _In_opt_ LPWSTR lpReturn,
+    _In_opt_ LPCWSTR lpTitle,
+    _In_opt_ LPVOID lpReserved,
+    _In_ INT nCmdShow,
+    _Out_opt_ PHANDLE lphProcess)
+{
+    return RealShellExecuteExW(hwnd,
+                               lpOperation,
+                               lpFile,
+                               lpParameters,
+                               lpDirectory,
+                               lpReturn,
+                               lpTitle,
+                               lpReserved,
+                               nCmdShow,
+                               lphProcess,
+                               0);
 }

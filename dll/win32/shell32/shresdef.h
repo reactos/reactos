@@ -153,6 +153,9 @@
 #define IDS_CANTDISCONNECT        160
 #define IDS_NONE                  161
 
+#define IDS_EXPAND                170
+#define IDS_COLLAPSE              171
+
 /* Friendly File Type Names */
 #define IDS_DIRECTORY             200
 #define IDS_BAT_FILE              201
@@ -245,6 +248,7 @@
 
 #define IDS_OPENFILELOCATION     341
 #define IDS_SENDTO_MENU          343
+#define IDS_COPYASPATHMENU       30328
 
 #define IDS_MOVEERRORTITLE       344
 #define IDS_COPYERRORTITLE       345
@@ -316,6 +320,7 @@
 #define IDS_ADVANCED_EXPAND_NET_CONNECTIONS         30473
 #define IDS_ADVANCED_DISPLAY_RUN                    30474
 #define IDS_ADVANCED_DISPLAY_ADMINTOOLS             30476
+#define IDS_ADVANCED_SMALL_START_MENU               30477
 
 #define IDS_NEWEXT_ADVANCED_LEFT                    30515
 #define IDS_NEWEXT_ADVANCED_RIGHT                   30516
@@ -595,6 +600,10 @@
 #define IDI_SHELL_UPDATE            47
 #define IDI_SHELL_LOCKED            48
 #define IDI_SHELL_DISCONN           49
+#define IDI_SHELL_NONE_50           50
+#define IDI_SHELL_NONE_51           51
+#define IDI_SHELL_NONE_52           52
+#define IDI_SHELL_NONE_53           53
 #define IDI_SHELL_NOT_CONNECTED_HDD 54
 #define IDI_SHELL_MULTIPLE_FILES   133
 #define IDI_SHELL_OPEN_WITH        134
@@ -904,3 +913,4 @@
 #define IDR_SENDTOMENU          158
 #define IDR_COPYTOMENU          159
 #define IDR_MOVETOMENU          160
+#define IDR_COPYASPATHMENU      161

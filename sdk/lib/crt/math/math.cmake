@@ -240,15 +240,10 @@ list(APPEND CRT_MATH_SOURCE
     math/ldiv.c
     math/logf.c
     math/powf.c
-    math/rand.c
 )
 
 list(APPEND CRT_MATH_ASM_SOURCE
     ${LIBCNTPR_MATH_ASM_SOURCE}
-)
-
-list(APPEND LIBCNTPR_MATH_SOURCE
-    math/rand_nt.c
 )
 
 if(ARCH STREQUAL "i386")

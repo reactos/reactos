@@ -1,26 +1,15 @@
 /*
- * ReactOS Explorer
- *
- * Copyright 2006 - 2007 Thomas Weidenmueller <w3seek@reactos.org>
- *                  2015 Robert Naumann <gonzomdx@gmail.com>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     "Customize Start Menu" dialog
+ * COPYRIGHT:   Copyright 2006-2007 Thomas Weidenmueller <w3seek@reactos.org>
+ *              Copyright 2015 Robert Naumann <gonzomdx@gmail.com>
+ *              Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
 
+// TreeView checkbox state indexes (Use with INDEXTOSTATEIMAGEMASK macro)
 #define I_UNCHECKED 1
 #define I_CHECKED   2
 
@@ -75,58 +64,94 @@ static VOID OnClearRecentItems(HWND hwnd)
     EnableWindow(GetDlgItem(hwnd, IDC_CLASSICSTART_CLEAR), RecentHasShortcut(hwnd));
 }
 
-struct CUSTOMIZE_ENTRY;
-typedef DWORD (CALLBACK *FN_CUSTOMIZE_READ)(const CUSTOMIZE_ENTRY *entry);
-typedef BOOL (CALLBACK *FN_CUSTOMIZE_WRITE)(const CUSTOMIZE_ENTRY *entry, DWORD dwValue);
+struct CUSTOM_ENTRY;
 
-struct CUSTOMIZE_ENTRY
+typedef BOOL (CALLBACK *FN_CUSTOM_GET)(const CUSTOM_ENTRY *entry);
+typedef VOID (CALLBACK *FN_CUSTOM_SET)(const CUSTOM_ENTRY *entry, BOOL bValue);
+
+struct CUSTOM_ENTRY
 {
     LPARAM id;
     LPCWSTR name;
     BOOL bDefaultValue;
+    FN_CUSTOM_GET fnGetValue;
+    FN_CUSTOM_SET fnSetValue;
     RESTRICTIONS policy1, policy2;
 };
 
-static const CUSTOMIZE_ENTRY s_CustomizeEntries[] =
+static BOOL CALLBACK CustomGetAdvanced(const CUSTOM_ENTRY *entry)
+{
+    return GetAdvancedBool(entry->name, entry->bDefaultValue);
+}
+
+static VOID CALLBACK CustomSetAdvanced(const CUSTOM_ENTRY *entry, BOOL bValue)
+{
+    SetAdvancedDword(entry->name, bValue);
+}
+
+static BOOL CALLBACK CustomGetSmallStartMenu(const CUSTOM_ENTRY *entry)
+{
+    return g_TaskbarSettings.sr.SmSmallIcons;
+}
+
+static VOID CALLBACK CustomSetSmallStartMenu(const CUSTOM_ENTRY *entry, BOOL bValue)
+{
+    g_TaskbarSettings.sr.SmSmallIcons = bValue;
+}
+
+static const CUSTOM_ENTRY s_CustomEntries[] =
 {
     {
         IDS_ADVANCED_DISPLAY_ADMINTOOLS, L"StartMenuAdminTools", TRUE,
+        CustomGetAdvanced, CustomSetAdvanced,
     },
     {
         IDS_ADVANCED_DISPLAY_FAVORITES, L"StartMenuFavorites", FALSE,
-        REST_NOFAVORITESMENU
+        CustomGetAdvanced, CustomSetAdvanced,
+        REST_NOFAVORITESMENU,
     },
     {
         IDS_ADVANCED_DISPLAY_LOG_OFF, L"StartMenuLogoff", FALSE,
-        REST_STARTMENULOGOFF
+        CustomGetAdvanced, CustomSetAdvanced,
+        REST_STARTMENULOGOFF,
     },
     {
         IDS_ADVANCED_DISPLAY_RUN, L"StartMenuRun", TRUE,
-        REST_NORUN
+        CustomGetAdvanced, CustomSetAdvanced,
+        REST_NORUN,
     },
     {
         IDS_ADVANCED_EXPAND_MY_DOCUMENTS, L"CascadeMyDocuments", FALSE,
-        REST_NOSMMYDOCS
+        CustomGetAdvanced, CustomSetAdvanced,
+        REST_NOSMMYDOCS,
     },
     {
         IDS_ADVANCED_EXPAND_MY_PICTURES, L"CascadeMyPictures", FALSE,
-        REST_NOSMMYPICS
+        CustomGetAdvanced, CustomSetAdvanced,
+        REST_NOSMMYPICS,
     },
     {
         IDS_ADVANCED_EXPAND_CONTROL_PANEL, L"CascadeControlPanel", FALSE,
+        CustomGetAdvanced, CustomSetAdvanced,
         REST_NOSETFOLDERS, REST_NOCONTROLPANEL,
     },
     {
         IDS_ADVANCED_EXPAND_PRINTERS, L"CascadePrinters", FALSE,
-        REST_NOSETFOLDERS
+        CustomGetAdvanced, CustomSetAdvanced,
+        REST_NOSETFOLDERS,
     },
     {
         IDS_ADVANCED_EXPAND_NET_CONNECTIONS, L"CascadeNetworkConnections", FALSE,
-        REST_NOSETFOLDERS, REST_NONETWORKCONNECTIONS
+        CustomGetAdvanced, CustomSetAdvanced,
+        REST_NOSETFOLDERS, REST_NONETWORKCONNECTIONS,
+    },
+    {
+        IDS_ADVANCED_SMALL_START_MENU, NULL, FALSE,
+        CustomGetSmallStartMenu, CustomSetSmallStartMenu,
     },
 };
 
-static VOID AddCustomizeItem(HWND hTreeView, const CUSTOMIZE_ENTRY *entry)
+static VOID AddCustomItem(HWND hTreeView, const CUSTOM_ENTRY *entry)
 {
     if (SHRestricted(entry->policy1) || SHRestricted(entry->policy2))
     {
@@ -134,17 +159,17 @@ static VOID AddCustomizeItem(HWND hTreeView, const CUSTOMIZE_ENTRY *entry)
         return; // Restricted. Don't show
     }
 
-    TV_INSERTSTRUCT Insert = { TVI_ROOT, TVI_LAST };
-    Insert.item.mask = TVIF_TEXT | TVIF_STATE | TVIF_PARAM;
-
     WCHAR szText[MAX_PATH];
     LoadStringW(GetModuleHandleW(L"shell32.dll"), entry->id, szText, _countof(szText));
+
+    BOOL bChecked = entry->fnGetValue(entry);
+    TRACE("%p: %d\n", entry->id, bChecked);
+
+    TV_INSERTSTRUCT Insert = { TVI_ROOT, TVI_LAST, { TVIF_TEXT | TVIF_STATE | TVIF_PARAM } };
     Insert.item.pszText = szText;
     Insert.item.lParam = entry->id;
     Insert.item.stateMask = TVIS_STATEIMAGEMASK;
-    BOOL bChecked = GetAdvancedBool(entry->name, entry->bDefaultValue);
     Insert.item.state = INDEXTOSTATEIMAGEMASK(bChecked ? I_CHECKED : I_UNCHECKED);
-    TRACE("%p: %d\n", entry->id, bChecked);
     TreeView_InsertItem(hTreeView, &Insert);
 }
 
@@ -157,9 +182,9 @@ static void CustomizeClassic_OnInitDialog(HWND hwnd)
     DWORD_PTR style = GetWindowLongPtrW(hTreeView, GWL_STYLE);
     SetWindowLongPtrW(hTreeView, GWL_STYLE, style | TVS_CHECKBOXES);
 
-    for (auto& entry : s_CustomizeEntries)
+    for (auto& entry : s_CustomEntries)
     {
-        AddCustomizeItem(hTreeView, &entry);
+        AddCustomItem(hTreeView, &entry);
     }
 }
 
@@ -171,13 +196,12 @@ static BOOL CustomizeClassic_OnOK(HWND hwnd)
          hItem != NULL;
          hItem = TreeView_GetNextVisible(hTreeView, hItem))
     {
-        TV_ITEM item = { TVIF_PARAM | TVIF_STATE };
-        item.hItem = hItem;
+        TV_ITEM item = { TVIF_PARAM | TVIF_STATE, hItem };
         item.stateMask = TVIS_STATEIMAGEMASK;
         TreeView_GetItem(hTreeView, &item);
 
         BOOL bChecked = !!(item.state & INDEXTOSTATEIMAGEMASK(I_CHECKED));
-        for (auto& entry : s_CustomizeEntries)
+        for (auto& entry : s_CustomEntries)
         {
             if (SHRestricted(entry.policy1) || SHRestricted(entry.policy2))
                 continue;
@@ -185,7 +209,7 @@ static BOOL CustomizeClassic_OnOK(HWND hwnd)
             if (item.lParam == entry.id)
             {
                 TRACE("%p: %d\n", item.lParam, bChecked);
-                SetAdvancedDword(entry.name, bChecked);
+                entry.fnSetValue(&entry, bChecked);
                 break;
             }
         }
@@ -220,9 +244,7 @@ INT_PTR CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LP
                     break;
                 case IDOK:
                     if (CustomizeClassic_OnOK(hwnd))
-                    {
                         EndDialog(hwnd, IDOK);
-                    }
                     break;
                 case IDCANCEL:
                     EndDialog(hwnd, IDCANCEL);
@@ -230,9 +252,10 @@ INT_PTR CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LP
             }
             break;
         default:
-            return FALSE;
+            break;
     }
-    return TRUE;
+
+    return FALSE;
 }
 
 VOID ShowCustomizeClassic(HINSTANCE hInst, HWND hExplorer)

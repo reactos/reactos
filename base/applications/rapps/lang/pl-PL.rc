@@ -270,3 +270,8 @@ BEGIN
     IDS_CMD_PACKAGE_NOT_FOUND "Nie można odnaleźć pakietu %1.\n"
     IDS_CMD_PACKAGE_INFO "Informacje o pakiecie %1:\n"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
+END

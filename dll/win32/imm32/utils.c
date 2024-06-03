@@ -774,7 +774,7 @@ static BOOL APIENTRY Imm32LoadImeFixedInfo(PIMEINFOEX pInfoEx, LPCVOID pVerInfo)
     /* NOTE: The IME module must contain a version info of input method driver. */
     if (pFixed->dwFileType != VFT_DRV || pFixed->dwFileSubtype != VFT2_DRV_INPUTMETHOD)
     {
-        ERR("DLL is not an IME\n");
+        ERR("DLL %S is not an IME\n", pInfoEx->wszImeFile);
         return FALSE;
     }
 

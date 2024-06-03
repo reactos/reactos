@@ -35,7 +35,7 @@ STRINGTABLE
 是否替换？"
     IDS_INVALID_FILENAME_TITLE "路径中包含无效字符"
     IDS_INVALID_FILENAME    "文件名中不能包含任何以下字符::\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "路径不存在"
     IDS_FILENOTEXISTING     "文件不存在"
     IDS_INVALID_FOLDERNAME  "所选内容包含一个非文件夹物体"
@@ -251,7 +251,7 @@ FONT 9, "宋体"
     COMBOBOX        cmb1, 6,13,94,76,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
     LTEXT           "字体样式(&Y):",stc2 ,108,3,60,9
-    COMBOBOX        cmb2,108,13,64,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+    COMBOBOX        cmb2,108,13,64,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
     LTEXT           "大小(&S)：",stc3,179,3,32,9
     COMBOBOX        cmb3,179,13,32,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
@@ -537,7 +537,7 @@ STRINGTABLE
 您要取代它嗎？"
     IDS_INVALID_FILENAME_TITLE "檔案名稱含有無效的字元"
     IDS_INVALID_FILENAME    "檔案名稱中不能包含以下任何一個字元：\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "路徑不存在"
     IDS_FILENOTEXISTING     "檔案不存在"
     IDS_INVALID_FOLDERNAME  "已選項目包含非資料夾物件"
@@ -753,7 +753,7 @@ FONT 9, "新細明體"
     COMBOBOX        cmb1, 6,13,94,76,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
     LTEXT           "字型樣式(&Y):",stc2 ,108,3,60,9
-    COMBOBOX        cmb2,108,13,64,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+    COMBOBOX        cmb2,108,13,64,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
     LTEXT           "大小(&S):",stc3,179,3,32,9
     COMBOBOX        cmb3,179,13,32,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
@@ -875,7 +875,7 @@ FONT 9, "新細明體"
 
     GROUPBOX        "份數",         grp2, 160, 92, 120,64, WS_GROUP
     LTEXT           "份數(&C)：",stc5,168,105,68,8
-    ICON            "",               ico3, 170,131,  76,24, WS_GROUP | SS_CENTERIMAGE
+    ICON            "",               ico3, 210,131,  76,24, WS_GROUP
     CONTROL         "自動分頁(&O)",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
     EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
 

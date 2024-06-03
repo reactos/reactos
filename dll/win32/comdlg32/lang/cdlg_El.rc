@@ -31,7 +31,7 @@ STRINGTABLE
 Θέλετε να το αντικαταστήσετε;"
     IDS_INVALID_FILENAME_TITLE "Μη έγγυρος(οι) χαρακτήρας(ες) στο μονοπάτι"
     IDS_INVALID_FILENAME    "Ένα όνομα αρχείο δε μπορεί να περιέχει κάποιον από τους παρακάτω χαρακτήρες:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "Το μονοπάτι δεν υπάρχει"
     IDS_FILENOTEXISTING     "Το αρχείο δεν υπάρχει"
     IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
@@ -247,7 +247,7 @@ FONT 8, "MS Shell Dlg"
     COMBOBOX        cmb1, 6,13,94,76,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
     LTEXT           "Στυλ Γρ&αμματοσειράς:",stc2 ,108,3,60,9
-    COMBOBOX        cmb2,108,13,64,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+    COMBOBOX        cmb2,108,13,64,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
     LTEXT           "&Μέγεθος:",stc3,179,3,32,9
     COMBOBOX        cmb3,179,13,32,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |

@@ -1,7 +1,7 @@
 /*
  * TRANSLATORS:      Copyright 2011 Petru Dimitriu <petrimetri@gmail.com>
  *                   Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *                   Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *                   Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -11,11 +11,11 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 SELWINDOW DIALOGEX 20, 20, 220, 140
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Alegere fereastră"
+CAPTION "Fereastră de selectare"
 BEGIN
     LISTBOX 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
-    PUSHBUTTON "Con&firmă", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "A&nulează", 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "OK", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "Revocare", 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 /* Menus */
@@ -24,39 +24,39 @@ EDITMENU MENU
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "Des&face", EM_UNDO
+        MENUITEM "A&nulare", EM_UNDO
         MENUITEM SEPARATOR
-        MENUITEM "&Decupează", WM_CUT
-        MENUITEM "&Copiază", WM_COPY
-        MENUITEM "&Lipește", WM_PASTE
-        MENUITEM "Șt&erge", WM_CLEAR
+        MENUITEM "&Decupare", WM_CUT
+        MENUITEM "&Copiere", WM_COPY
+        MENUITEM "&Lipire", WM_PASTE
+        MENUITEM "Şt&ergere", WM_CLEAR
         MENUITEM SEPARATOR
-        MENUITEM "Selecte&ază tot", EM_SETSEL
+        MENUITEM "Selectare &totală", EM_SETSEL
     END
 END
 
 SYSMENU MENU
 BEGIN
-    MENUITEM "&Restabilește", SC_RESTORE
-    MENUITEM "&Mută", SC_MOVE
-    MENUITEM "Re&dimensionează", SC_SIZE
-    MENUITEM "Mi&nimizează", SC_MINIMIZE
-    MENUITEM "Ma&ximizează", SC_MAXIMIZE
+    MENUITEM "&Restabilire", SC_RESTORE
+    MENUITEM "&Mutare", SC_MOVE
+    MENUITEM "&Dimensiune", SC_SIZE
+    MENUITEM "Mi&nimizare", SC_MINIMIZE
+    MENUITEM "Ma&ximizare", SC_MAXIMIZE
     MENUITEM SEPARATOR
-    MENUITEM "Închid&e\tAlt+F4", SC_CLOSE
+    MENUITEM "&Închidere\tAlt+F4", SC_CLOSE
 END
 
 SYSMENUMDI MENU
 BEGIN
-    MENUITEM "&Restabilește", SC_RESTORE
-    MENUITEM "&Mută", SC_MOVE
-    MENUITEM "Re&dimensionează", SC_SIZE
-    MENUITEM "Mi&nimizează", SC_MINIMIZE
-    MENUITEM "Ma&ximizează", SC_MAXIMIZE
+    MENUITEM "&Restabilire", SC_RESTORE
+    MENUITEM "&Mutare", SC_MOVE
+    MENUITEM "&Dimensiune", SC_SIZE
+    MENUITEM "Mi&nimizare", SC_MINIMIZE
+    MENUITEM "Ma&ximizare", SC_MAXIMIZE
     MENUITEM SEPARATOR
-    MENUITEM "Închid&e\tCtrl+F4", SC_CLOSE
+    MENUITEM "&Închidere\tCtrl+F4", SC_CLOSE
     MENUITEM SEPARATOR
-    MENUITEM "&Următoare\tCtrl+F6", SC_NEXTWINDOW
+    MENUITEM "&Următorul\tCtrl+F6", SC_NEXTWINDOW
 END
 
 /* Strings */
@@ -67,17 +67,17 @@ BEGIN
     IDS_NOT_RESPONDING " (Nu răspunde)"
     IDS_ASK_TERMINATE "Această aplicație nu răspunde. Vreți să o închideți?"
     IDS_HUNG_UP_TITLE "Închide!"
-    IDS_OK "Con&firmă"
-    IDS_CANCEL "A&nulează"
-    IDS_ABORT "Aba&ndon"
-    IDS_RETRY "&Reîncearcă"
-    IDS_IGNORE "Ign&oră"
-    IDS_YES "D&a"
-    IDS_NO "N&u"
-    IDS_CLOSE "Î&nchide"
-    IDS_HELP "&Manual"
-    IDS_TRYAGAIN "&Reîncearcă"
-    IDS_CONTINUE "&Continuă"
+    IDS_OK "OK"
+    IDS_CANCEL "Revocare"
+    IDS_ABORT "&Abandonare"
+    IDS_RETRY "&Reîncercare"
+    IDS_IGNORE "&Ignorare"
+    IDS_YES "&Da"
+    IDS_NO "&Nu"
+    IDS_CLOSE "&Închidere"
+    IDS_HELP "Ajutor"
+    IDS_TRYAGAIN "Înce&rcaţi din nou"
+    IDS_CONTINUE "&Continuare"
 END
 
 STRINGTABLE

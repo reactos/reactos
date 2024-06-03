@@ -513,7 +513,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\HotFix",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IME Compatibility",,0x00000012
 
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IMM","IME File",2,"msctfime.ime"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IMM","LoadIMM",0x00010003,1
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IMM","LoadIMM",0x00010003,0 ; "LoadIMM" means Cicero despite its name
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IMM","LoadCTFIME",0x00010003,0
 
 ; DOS Device ports
@@ -610,6 +610,90 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList","ProfilesDirecto
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,96
+
+; FontLink
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink","FontLinkControl",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink","FontLinkDefaultChar",0x00010001,0x000030FB
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink",,0x00000012
+
+; FontLink (Latin to others)
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","Tahoma",0x00010000,\
+	"msgothic.ttc,MS UI Gothic",\
+	"simsun.ttc,SimSun",\
+	"gulim.ttc,Gulim",\
+	"mingliu.ttc,PMingLiU"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","Microsoft Sans Serif",0x00010000,\
+	"msgothic.ttc,MS UI Gothic",\
+	"mingliu.ttc,PMingLiU",\
+	"simsun.ttc,SimSun",\
+	"gulim.ttc,Gulim"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","Lucida Sans Unicode",0x00010000,\
+	"msgothic.ttc,MS UI Gothic",\
+	"mingliu.ttc,PMingLiU",\
+	"simsun.ttc,SimSun",\
+	"gulim.ttc,Gulim"
+
+; FontLink (Chinese to others)
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","MingLiU",0x00010000,\
+	"micross.ttf,Microsoft Sans Serif",\
+	"simsun.ttc,SimSun",\
+	"msmincho.ttc,MS Mincho",\
+	"batang.ttc,BatangChe"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","SimSun",0x00010000,\
+	"micross.ttf,Microsoft Sans Serif",\
+	"mingliu.ttc,PMingLiU",\
+	"msmincho.ttc,MS PMincho",\
+	"batang.ttc,Batang"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","PMingLiU",0x00010000,\
+	"micross.ttf,Microsoft Sans Serif",\
+	"simsun.ttc,SimSun",\
+	"msmincho.ttc,MS PMincho",\
+	"BATANG.TTC,Batang"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","NSimSun",0x00010000,\
+	"mingliu.ttc,PMingLiU",\
+	"msmincho.ttc,MS Mincho",\
+	"batang.ttc,BatangChe"
+
+; FontLink (Japanese to others)
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","MS Gothic",0x00010000,\
+	"mingliu.ttc,MingLiU",\
+	"simsun.ttc,SimSun",\
+	"gulim.ttc,GulimChe"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","MS Mincho",0x00010000,\
+	"mingliu.ttc,MingLiU",\
+	"simsun.ttc,SimSun",\
+	"batang.ttc,Batang"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","MS PGothic",0x00010000,\
+	"mingliu.ttc,PMingLiU",\
+	"simsun.ttc,SimSun",\
+	"gulim.ttc,Gulim"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","MS PMincho",0x00010000,\
+	"mingliu.ttc,PMingLiU",\
+	"simsun.ttc,SimSun",\
+	"batang.ttc,Batang"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","MS UI Gothic",0x00010000,\
+	"simsun.ttc,SimSun",\
+	"gulim.ttc,Gulim",\
+	"mingliu.ttc,PMingLiU"
+
+; FontLink (Korean to others)
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","Batang",0x00010000,\
+	"msmincho.ttc,MS PMincho",\
+	"mingliu.ttc,PMingLiU",\
+	"simsun.ttc,SimSun"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","BatangChe",0x00010000,\
+	"msmincho.ttc,MS Mincho",\
+	"mingliu.ttc,MingLiU",\
+	"simsun.ttc,SimSun"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","Gulim",0x00010000,\
+	"micross.ttf,Microsoft Sans Serif",\
+	"msgothic.ttc,MS UI Gothic",\
+	"mingliu.ttc,PMingLiU"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","GulimChe",0x00010000,\
+	"msgothic.ttc,MS Gothic",\
+	"mingliu.ttc,MingLiU",\
+	"simsun.ttc,SimSun"
 
 ; Win32k GRE initialization
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\GRE_Initialize",,0x00000012

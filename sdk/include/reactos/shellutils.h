@@ -67,6 +67,12 @@ Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
 #   define IID_NULL_PPV_ARG(Itype, ppType) IID_##Itype, NULL, (void**)(ppType)
 #endif
 
+inline HRESULT HResultFromWin32(DWORD hr)
+{
+     // HRESULT_FROM_WIN32 will evaluate its parameter twice, this function will not.
+    return HRESULT_FROM_WIN32(hr);
+}
+
 #if 1
 
 inline BOOL _ROS_FAILED_HELPER(HRESULT hr, const char* expr, const char* filename, int line)
@@ -221,25 +227,23 @@ public:
 #endif
 
 template<class T>
-void ReleaseCComPtrExpectZero(CComPtr<T>& cptr, BOOL forceRelease = FALSE)
+ULONG ReleaseCComPtrExpectZeroHelper(const char *file, UINT line, CComPtr<T>& cptr, BOOL forceRelease = FALSE)
 {
+    ULONG r = 0;
     if (cptr.p != NULL)
     {
         T *raw = cptr.Detach();
-        int nrc = raw->Release();
+        int nrc = r = raw->Release();
         if (nrc > 0)
+            Win32DbgPrint(file, line, "WARNING: Unexpected RefCount > 0 (%d)\n", nrc);
+        while (nrc > 0 && forceRelease)
         {
-            DbgPrint("WARNING: Unexpected RefCount > 0 (%d)!\n", nrc);
-            if (forceRelease)
-            {
-                while (nrc > 0)
-                {
-                    nrc = raw->Release();
-                }
-            }
+            nrc = raw->Release();
         }
     }
+    return r;
 }
+#define ReleaseCComPtrExpectZero(...) ReleaseCComPtrExpectZeroHelper(__FILE__, __LINE__, __VA_ARGS__)
 
 template<class T, class R>
 HRESULT inline ShellDebugObjectCreator(REFIID riid, R ** ppv)
@@ -572,6 +576,10 @@ struct CCoInit
 #define S_GREATERTHAN S_FALSE
 #define MAKE_COMPARE_HRESULT(x) ((x)>0 ? S_GREATERTHAN : ((x)<0 ? S_LESSTHAN : S_EQUAL))
 
+static inline BOOL ILIsSingle(LPCITEMIDLIST pidl)
+{
+    return pidl == ILFindLastID(pidl);
+}
 
 static inline PCUIDLIST_ABSOLUTE HIDA_GetPIDLFolder(CIDA const* pida)
 {

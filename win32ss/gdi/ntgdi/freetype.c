@@ -35,6 +35,21 @@
 #define NDEBUG
 #include <debug.h>
 
+/* The ranges of the surrogate pairs */
+#define HIGH_SURROGATE_MIN 0xD800U
+#define HIGH_SURROGATE_MAX 0xDBFFU
+#define LOW_SURROGATE_MIN  0xDC00U
+#define LOW_SURROGATE_MAX  0xDFFFU
+
+#define IS_HIGH_SURROGATE(ch0) (HIGH_SURROGATE_MIN <= (ch0) && (ch0) <= HIGH_SURROGATE_MAX)
+#define IS_LOW_SURROGATE(ch1)  (LOW_SURROGATE_MIN  <= (ch1) && (ch1) <=  LOW_SURROGATE_MAX)
+
+static inline DWORD
+Utf32FromSurrogatePair(DWORD ch0, DWORD ch1)
+{
+    return ((ch0 - HIGH_SURROGATE_MIN) << 10) + (ch1 - LOW_SURROGATE_MIN) + 0x10000;
+}
+
 /* TPMF_FIXED_PITCH is confusing; brain-dead api */
 #ifndef _TMPF_VARIABLE_PITCH
     #define _TMPF_VARIABLE_PITCH    TMPF_FIXED_PITCH
@@ -63,7 +78,7 @@ static UNICODE_STRING g_FontRegPath =
    to serialize access to it */
 static PFAST_MUTEX      g_FreeTypeLock;
 
-static LIST_ENTRY       g_FontListHead;
+static RTL_STATIC_LIST_HEAD(g_FontListHead);
 static PFAST_MUTEX      g_FontListLock;
 static BOOL             g_RenderingEnabled = TRUE;
 
@@ -90,7 +105,7 @@ static BOOL             g_RenderingEnabled = TRUE;
 
 #define MAX_FONT_CACHE 256
 
-static LIST_ENTRY g_FontCacheListHead;
+static RTL_STATIC_LIST_HEAD(g_FontCacheListHead);
 static UINT g_FontCacheNumEntries;
 
 static PWCHAR g_ElfScripts[32] =   /* These are in the order of the fsCsb[0] bits */
@@ -461,9 +476,7 @@ VOID DumpFontSubstList(VOID)
          pListEntry != pHead;
          pListEntry = pListEntry->Flink)
     {
-        pSubstEntry =
-            (PFONTSUBST_ENTRY)CONTAINING_RECORD(pListEntry, FONT_ENTRY, ListEntry);
-
+        pSubstEntry = CONTAINING_RECORD(pListEntry, FONTSUBST_ENTRY, ListEntry);
         DumpFontSubstEntry(pSubstEntry);
     }
 }
@@ -658,8 +671,6 @@ InitFontSupport(VOID)
 {
     ULONG ulError;
 
-    InitializeListHead(&g_FontListHead);
-    InitializeListHead(&g_FontCacheListHead);
     g_FontCacheNumEntries = 0;
     /* Fast Mutexes must be allocated from non paged pool */
     g_FontListLock = ExAllocatePoolWithTag(NonPagedPool, sizeof(FAST_MUTEX), TAG_INTERNAL_SYNC);
@@ -698,6 +709,58 @@ InitFontSupport(VOID)
 #endif
 
     return TRUE;
+}
+
+VOID FASTCALL
+FreeFontSupport(VOID)
+{
+    PLIST_ENTRY pHead, pEntry;
+    PFONT_CACHE_ENTRY pFontCache;
+    PFONTSUBST_ENTRY pSubstEntry;
+    PFONT_ENTRY pFontEntry;
+
+    IntLockGlobalFonts();
+
+    // Free font cache list
+    pHead = &g_FontCacheListHead;
+    while (!IsListEmpty(pHead))
+    {
+        pEntry = RemoveHeadList(pHead);
+        pFontCache = CONTAINING_RECORD(pEntry, FONT_CACHE_ENTRY, ListEntry);
+        RemoveCachedEntry(pFontCache);
+    }
+
+    // Free font subst list
+    pHead = &g_FontSubstListHead;
+    while (!IsListEmpty(pHead))
+    {
+        pEntry = RemoveHeadList(pHead);
+        pSubstEntry = CONTAINING_RECORD(pEntry, FONTSUBST_ENTRY, ListEntry);
+        ExFreePoolWithTag(pSubstEntry, TAG_FONT);
+    }
+
+    // Free font list
+    pHead = &g_FontListHead;
+    while (!IsListEmpty(pHead))
+    {
+        pEntry = RemoveHeadList(pHead);
+        pFontEntry = CONTAINING_RECORD(pEntry, FONT_ENTRY, ListEntry);
+        CleanupFontEntry(pFontEntry);
+    }
+
+    if (g_FreeTypeLibrary)
+    {
+        FT_Done_Library(g_FreeTypeLibrary);
+        g_FreeTypeLibrary = NULL;
+    }
+
+    IntUnLockGlobalFonts();
+
+    ExFreePoolWithTag(g_FontListLock, TAG_INTERNAL_SYNC);
+    g_FontListLock = NULL;
+
+    ExFreePoolWithTag(g_FreeTypeLock, TAG_INTERNAL_SYNC);
+    g_FreeTypeLock = NULL;
 }
 
 static LONG IntNormalizeAngle(LONG nTenthsOfDegrees)
@@ -768,8 +831,7 @@ SubstituteFontByList(PLIST_ENTRY        pHead,
          pListEntry != pHead;
          pListEntry = pListEntry->Flink)
     {
-        pSubstEntry =
-            (PFONTSUBST_ENTRY)CONTAINING_RECORD(pListEntry, FONT_ENTRY, ListEntry);
+        pSubstEntry = CONTAINING_RECORD(pListEntry, FONTSUBST_ENTRY, ListEntry);
 
         CharSets[FONTSUBST_FROM] = pSubstEntry->CharSets[FONTSUBST_FROM];
 
@@ -3135,50 +3197,6 @@ IntFindGlyphCache(IN const FONT_CACHE_ENTRY *pCache)
     return FontEntry->BitmapGlyph;
 }
 
-/* no cache */
-static FT_BitmapGlyph
-IntGetBitmapGlyphNoCache(
-    FT_Face Face,
-    FT_GlyphSlot GlyphSlot,
-    FT_Render_Mode RenderMode)
-{
-    FT_Glyph Glyph;
-    INT error;
-    FT_Bitmap AlignedBitmap;
-    FT_BitmapGlyph BitmapGlyph;
-
-    ASSERT_FREETYPE_LOCK_HELD();
-
-    error = FT_Get_Glyph(GlyphSlot, &Glyph);
-    if (error)
-    {
-        DPRINT1("Failure getting glyph.\n");
-        return NULL;
-    }
-
-    error = FT_Glyph_To_Bitmap(&Glyph, RenderMode, 0, 1);
-    if (error)
-    {
-        FT_Done_Glyph(Glyph);
-        DPRINT1("Failure rendering glyph.\n");
-        return NULL;
-    }
-
-    BitmapGlyph = (FT_BitmapGlyph)Glyph;
-    FT_Bitmap_New(&AlignedBitmap);
-    if (FT_Bitmap_Convert(GlyphSlot->library, &BitmapGlyph->bitmap, &AlignedBitmap, 4))
-    {
-        DPRINT1("Conversion failed\n");
-        FT_Done_Glyph((FT_Glyph)BitmapGlyph);
-        return NULL;
-    }
-
-    FT_Bitmap_Done(GlyphSlot->library, &BitmapGlyph->bitmap);
-    BitmapGlyph->bitmap = AlignedBitmap;
-
-    return BitmapGlyph;
-}
-
 static FT_BitmapGlyph
 IntGetBitmapGlyphWithCache(
     IN OUT PFONT_CACHE_ENTRY Cache,
@@ -3700,23 +3718,13 @@ get_glyph_index(FT_Face ft_face, UINT glyph)
 }
 
 static inline FT_UInt FASTCALL
-get_glyph_index_flagged(FT_Face face, FT_ULong code, DWORD indexed_flag, DWORD flags)
+get_glyph_index_flagged(FT_Face face, FT_ULong code, BOOL fCodeAsIndex)
 {
-    FT_UInt glyph_index;
-    if (flags & indexed_flag)
-    {
-        glyph_index = code;
-    }
-    else
-    {
-        glyph_index = get_glyph_index(face, code);
-    }
-    return glyph_index;
+    return (fCodeAsIndex ? code : get_glyph_index(face, code));
 }
 
 /*
  * Based on WineEngGetGlyphOutline
- *
  */
 ULONG
 FASTCALL
@@ -3802,7 +3810,7 @@ ftGdiGetGlyphOutline(
 
     TEXTOBJ_UnlockText(TextObj);
 
-    glyph_index = get_glyph_index_flagged(ft_face, wch, GGO_GLYPH_INDEX, iFormat);
+    glyph_index = get_glyph_index_flagged(ft_face, wch, (iFormat & GGO_GLYPH_INDEX));
     iFormat &= ~GGO_GLYPH_INDEX;
 
     if (orientation || (iFormat != GGO_METRICS && iFormat != GGO_BITMAP) || aveWidth || pmat2)
@@ -4210,42 +4218,28 @@ IntGetRealGlyph(
 
     ASSERT_FREETYPE_LOCK_HELD();
 
-    if (Cache->Hashed.Aspect.EmuBoldItalic)
+    Cache->dwHash = IntGetHash(&Cache->Hashed, sizeof(Cache->Hashed) / sizeof(DWORD));
+
+    realglyph = IntFindGlyphCache(Cache);
+    if (realglyph)
+        return realglyph;
+
+    error = FT_Load_Glyph(Cache->Hashed.Face, Cache->Hashed.GlyphIndex, FT_LOAD_DEFAULT);
+    if (error)
     {
-        error = FT_Load_Glyph(Cache->Hashed.Face, Cache->Hashed.GlyphIndex, FT_LOAD_NO_BITMAP);
-        if (error)
-        {
-            DPRINT1("WARNING: Failed to load and render glyph! [index: %d]\n",
-                    Cache->Hashed.GlyphIndex);
-            return NULL;
-        }
-
-        glyph = Cache->Hashed.Face->glyph;
-
-        if (Cache->Hashed.Aspect.Emu.Bold)
-            FT_GlyphSlot_Embolden(glyph);
-        if (Cache->Hashed.Aspect.Emu.Italic)
-            FT_GlyphSlot_Oblique(glyph);
-        realglyph = IntGetBitmapGlyphNoCache(Cache->Hashed.Face, glyph, Cache->Hashed.Aspect.RenderMode);
+        DPRINT1("WARNING: Failed to load and render glyph! [index: %d]\n", Cache->Hashed.GlyphIndex);
+        return NULL;
     }
-    else
-    {
-        Cache->dwHash = IntGetHash(&Cache->Hashed, sizeof(Cache->Hashed) / sizeof(DWORD));
 
-        realglyph = IntFindGlyphCache(Cache);
-        if (realglyph)
-            return realglyph;
+    glyph = Cache->Hashed.Face->glyph;
 
-        error = FT_Load_Glyph(Cache->Hashed.Face, Cache->Hashed.GlyphIndex, FT_LOAD_DEFAULT);
-        if (error)
-        {
-            DPRINT1("WARNING: Failed to load and render glyph! [index: %d]\n", Cache->Hashed.GlyphIndex);
-            return NULL;
-        }
+    if (Cache->Hashed.Aspect.Emu.Bold)
+        FT_GlyphSlot_Embolden(glyph); /* Emulate Bold */
 
-        glyph = Cache->Hashed.Face->glyph;
-        realglyph = IntGetBitmapGlyphWithCache(Cache, glyph);
-    }
+    if (Cache->Hashed.Aspect.Emu.Italic)
+        FT_GlyphSlot_Oblique(glyph); /* Emulate Italic */
+
+    realglyph = IntGetBitmapGlyphWithCache(Cache, glyph);
 
     if (!realglyph)
         DPRINT1("Failed to render glyph! [index: %d]\n", Cache->Hashed.GlyphIndex);
@@ -4273,6 +4267,7 @@ TextIntGetTextExtentPoint(PDC dc,
     BOOL use_kerning, bVerticalWriting;
     LONG ascender, descender;
     FONT_CACHE_ENTRY Cache;
+    DWORD ch0, ch1;
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
 
@@ -4308,7 +4303,19 @@ TextIntGetTextExtentPoint(PDC dc,
 
     for (i = 0; i < Count; i++)
     {
-        glyph_index = get_glyph_index_flagged(Cache.Hashed.Face, *String, GTEF_INDICES, fl);
+        ch0 = *String++;
+        if (IS_HIGH_SURROGATE(ch0))
+        {
+            ++i;
+            if (i >= Count)
+                break;
+
+            ch1 = *String++;
+            if (IS_LOW_SURROGATE(ch1))
+                ch0 = Utf32FromSurrogatePair(ch0, ch1);
+        }
+
+        glyph_index = get_glyph_index_flagged(Cache.Hashed.Face, ch0, (fl & GTEF_INDICES));
         Cache.Hashed.GlyphIndex = glyph_index;
 
         realglyph = IntGetRealGlyph(&Cache);
@@ -4334,14 +4341,7 @@ TextIntGetTextExtentPoint(PDC dc,
             Dx[i] = (TotalWidth64 + 32) >> 6;
         }
 
-        /* Bold and italic do not use the cache */
-        if (Cache.Hashed.Aspect.EmuBoldItalic)
-        {
-            FT_Done_Glyph((FT_Glyph)realglyph);
-        }
-
         previous = glyph_index;
-        String++;
     }
     ASSERT(FontGDI->Magic == FONTGDI_MAGIC);
     ascender = FontGDI->tmAscent; /* Units above baseline */
@@ -5878,7 +5878,8 @@ IntGetTextDisposition(
     IN INT Count,
     IN OPTIONAL LPINT Dx,
     IN OUT PFONT_CACHE_ENTRY Cache,
-    IN UINT fuOptions)
+    IN UINT fuOptions,
+    IN BOOL bNoTransform)
 {
     LONGLONG X64 = 0, Y64 = 0;
     INT i, glyph_index;
@@ -5886,13 +5887,26 @@ IntGetTextDisposition(
     FT_Face face = Cache->Hashed.Face;
     BOOL use_kerning = FT_HAS_KERNING(face);
     ULONG previous = 0;
-    FT_Vector delta;
+    FT_Vector delta, vec;
+    DWORD ch0, ch1;
 
     ASSERT_FREETYPE_LOCK_HELD();
 
     for (i = 0; i < Count; ++i)
     {
-        glyph_index = get_glyph_index_flagged(face, *String++, ETO_GLYPH_INDEX, fuOptions);
+        ch0 = *String++;
+        if (IS_HIGH_SURROGATE(ch0))
+        {
+            ++i;
+            if (i >= Count)
+                return TRUE;
+
+            ch1 = *String++;
+            if (IS_LOW_SURROGATE(ch1))
+                ch0 = Utf32FromSurrogatePair(ch0, ch1);
+        }
+
+        glyph_index = get_glyph_index_flagged(face, ch0, (fuOptions & ETO_GLYPH_INDEX));
         Cache->Hashed.GlyphIndex = glyph_index;
 
         realglyph = IntGetRealGlyph(Cache);
@@ -5914,21 +5928,22 @@ IntGetTextDisposition(
         }
         else if (fuOptions & ETO_PDY)
         {
-            FT_Vector vec = { Dx[2 * i + 0] << 6, Dx[2 * i + 1] << 6 };
-            FT_Vector_Transform(&vec, &Cache->Hashed.matTransform);
+            vec.x = (Dx[2 * i + 0] << 6);
+            vec.y = (Dx[2 * i + 1] << 6);
+            if (!bNoTransform)
+                FT_Vector_Transform(&vec, &Cache->Hashed.matTransform);
             X64 += vec.x;
             Y64 -= vec.y;
         }
         else
         {
-            FT_Vector vec = { Dx[i] << 6, 0 };
-            FT_Vector_Transform(&vec, &Cache->Hashed.matTransform);
+            vec.x = (Dx[i] << 6);
+            vec.y = 0;
+            if (!bNoTransform)
+                FT_Vector_Transform(&vec, &Cache->Hashed.matTransform);
             X64 += vec.x;
             Y64 -= vec.y;
         }
-
-        if (Cache->Hashed.Aspect.EmuBoldItalic)
-            FT_Done_Glyph((FT_Glyph)realglyph);
 
         previous = glyph_index;
     }
@@ -6056,11 +6071,13 @@ IntExtTextOutW(
     EXLATEOBJ exloRGB2Dst, exloDst2RGB;
     POINT Start;
     PMATRIX pmxWorldToDevice;
-    FT_Vector delta, vecAscent64, vecDescent64;
+    FT_Vector delta, vecAscent64, vecDescent64, vec;
     LOGFONTW *plf;
     BOOL use_kerning, bResult, DoBreak;
     FONT_CACHE_ENTRY Cache;
     FT_Matrix mat;
+    BOOL bNoTransform;
+    DWORD ch0, ch1;
 
     /* Check if String is valid */
     if (Count > 0xFFFF || (Count > 0 && String == NULL))
@@ -6187,6 +6204,10 @@ IntExtTextOutW(
     FT_Matrix_Multiply(&mat, &Cache.Hashed.matTransform);
     FT_Set_Transform(face, &Cache.Hashed.matTransform, NULL);
 
+    /* Is there no transformation? */
+    bNoTransform = ((mat.xy == 0) && (mat.yx == 0) &&
+                    (mat.xx == (1 << 16)) && (mat.yy == (1 << 16)));
+
     /* Calculate the ascent point and the descent point */
     vecAscent64.x = 0;
     vecAscent64.y = (FontGDI->tmAscent << 6);
@@ -6218,7 +6239,8 @@ IntExtTextOutW(
     /* Calculate the text width if necessary */
     if ((fuOptions & ETO_OPAQUE) || (pdcattr->flTextAlign & (TA_CENTER | TA_RIGHT)))
     {
-        if (!IntGetTextDisposition(&DeltaX64, &DeltaY64, String, Count, Dx, &Cache, fuOptions))
+        if (!IntGetTextDisposition(&DeltaX64, &DeltaY64, String, Count, Dx, &Cache,
+                                   fuOptions, bNoTransform))
         {
             IntUnLockFreeType();
             bResult = FALSE;
@@ -6268,9 +6290,6 @@ IntExtTextOutW(
     EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, psurf->ppal, 0, 0, 0);
     EXLATEOBJ_vInitialize(&exloDst2RGB, psurf->ppal, &gpalRGB, 0, 0, 0);
 
-    /* Assume success */
-    bResult = TRUE;
-
     if (pdcattr->ulDirty_ & DIRTY_TEXT)
         DC_vUpdateTextBrush(dc);
 
@@ -6281,9 +6300,22 @@ IntExtTextOutW(
     Y64 = RealYStart64;
     previous = 0;
     DoBreak = FALSE;
+    bResult = TRUE; /* Assume success */
     for (i = 0; i < Count; ++i)
     {
-        glyph_index = get_glyph_index_flagged(face, *String++, ETO_GLYPH_INDEX, fuOptions);
+        ch0 = *String++;
+        if (IS_HIGH_SURROGATE(ch0))
+        {
+            ++i;
+            if (i >= Count)
+                break;
+
+            ch1 = *String++;
+            if (IS_LOW_SURROGATE(ch1))
+                ch0 = Utf32FromSurrogatePair(ch0, ch1);
+        }
+
+        glyph_index = get_glyph_index_flagged(face, ch0, (fuOptions & ETO_GLYPH_INDEX));
         Cache.Hashed.GlyphIndex = glyph_index;
 
         realglyph = IntGetRealGlyph(&Cache);
@@ -6330,8 +6362,6 @@ IntExtTextOutW(
             {
                 DPRINT1("WARNING: EngCreateBitmap() failed!\n");
                 bResult = FALSE;
-                if (Cache.Hashed.Aspect.EmuBoldItalic)
-                    FT_Done_Glyph((FT_Glyph)realglyph);
                 break;
             }
 
@@ -6341,8 +6371,6 @@ IntExtTextOutW(
                 EngDeleteSurface((HSURF)HSourceGlyph);
                 DPRINT1("WARNING: EngLockSurface() failed!\n");
                 bResult = FALSE;
-                if (Cache.Hashed.Aspect.EmuBoldItalic)
-                    FT_Done_Glyph((FT_Glyph)realglyph);
                 break;
             }
 
@@ -6385,11 +6413,7 @@ IntExtTextOutW(
         }
 
         if (DoBreak)
-        {
-            if (Cache.Hashed.Aspect.EmuBoldItalic)
-                FT_Done_Glyph((FT_Glyph)realglyph);
             break;
-        }
 
         if (NULL == Dx)
         {
@@ -6398,15 +6422,19 @@ IntExtTextOutW(
         }
         else if (fuOptions & ETO_PDY)
         {
-            FT_Vector vec = { Dx[2 * i + 0] << 6, Dx[2 * i + 1] << 6 };
-            FT_Vector_Transform(&vec, &Cache.Hashed.matTransform);
+            vec.x = (Dx[2 * i + 0] << 6);
+            vec.y = (Dx[2 * i + 1] << 6);
+            if (!bNoTransform)
+                FT_Vector_Transform(&vec, &Cache.Hashed.matTransform);
             X64 += vec.x;
             Y64 -= vec.y;
         }
         else
         {
-            FT_Vector vec = { Dx[i] << 6, 0 };
-            FT_Vector_Transform(&vec, &Cache.Hashed.matTransform);
+            vec.x = (Dx[i] << 6);
+            vec.y = 0;
+            if (!bNoTransform)
+                FT_Vector_Transform(&vec, &Cache.Hashed.matTransform);
             X64 += vec.x;
             Y64 -= vec.y;
         }
@@ -6414,11 +6442,6 @@ IntExtTextOutW(
         DPRINT("New X64, New Y64: %I64d, %I64d\n", X64, Y64);
 
         previous = glyph_index;
-
-        if (Cache.Hashed.Aspect.EmuBoldItalic)
-        {
-            FT_Done_Glyph((FT_Glyph)realglyph);
-        }
     }
 
     if (pdcattr->flTextAlign & TA_UPDATECP)
@@ -6572,7 +6595,8 @@ GreExtTextOutW(
     return bResult;
 }
 
-#define STACK_TEXT_BUFFER_SIZE 100
+#define STACK_TEXT_BUFFER_SIZE 512
+
 BOOL
 APIENTRY
 NtGdiExtTextOutW(
@@ -6614,7 +6638,7 @@ NtGdiExtTextOutW(
         }
 
         /* Check if our local buffer is large enough */
-        if (BufSize > STACK_TEXT_BUFFER_SIZE)
+        if (BufSize > sizeof(LocalBuffer))
         {
             /* It's not, allocate a temp buffer */
             Buffer = ExAllocatePoolWithTag(PagedPool, BufSize, GDITAG_TEXT);
@@ -6846,11 +6870,11 @@ NtGdiGetCharABCWidthsW(
 
         if (Safepwch)
         {
-            glyph_index = get_glyph_index_flagged(face, Safepwch[i - FirstChar], GCABCW_INDICES, fl);
+            glyph_index = get_glyph_index_flagged(face, Safepwch[i - FirstChar], (fl & GCABCW_INDICES));
         }
         else
         {
-            glyph_index = get_glyph_index_flagged(face, i, GCABCW_INDICES, fl);
+            glyph_index = get_glyph_index_flagged(face, i, (fl & GCABCW_INDICES));
         }
         FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
 
@@ -7033,11 +7057,11 @@ NtGdiGetCharWidthW(
     {
         if (Safepwc)
         {
-            glyph_index = get_glyph_index_flagged(face, Safepwc[i - FirstChar], GCW_INDICES, fl);
+            glyph_index = get_glyph_index_flagged(face, Safepwc[i - FirstChar], (fl & GCW_INDICES));
         }
         else
         {
-            glyph_index = get_glyph_index_flagged(face, i, GCW_INDICES, fl);
+            glyph_index = get_glyph_index_flagged(face, i, (fl & GCW_INDICES));
         }
         FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
         if (!fl)

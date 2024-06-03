@@ -80,6 +80,7 @@ HRESULT WINAPI MayExecForward(IUnknown* lpUnknown, INT iUnk, REFGUID pguidCmdGro
 HRESULT WINAPI IsQSForward(REFGUID pguidCmdGroup,ULONG cCmds, OLECMD *prgCmds);
 BOOL WINAPI SHIsChildOrSelf(HWND hParent, HWND hChild);
 HRESULT WINAPI SHForwardContextMenuMsg(IUnknown* pUnk, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT* pResult, BOOL useIContextMenu2);
+VOID WINAPI SHSetDefaultDialogFont(HWND hWnd, INT id);
 
 HRESULT WINAPI SHRegGetCLSIDKeyW(REFGUID guid, LPCWSTR lpszValue, BOOL bUseHKCU, BOOL bCreate, PHKEY phKey);
 
@@ -282,7 +283,8 @@ ShellMessageBoxWrapW(
   _In_ UINT fuStyle,
   ...);
 
-/* dwWhich flags for PathFileExistsDefExtW and PathFindOnPathExW */
+/* dwWhich flags for PathFileExistsDefExtW, PathFindOnPathExW,
+ * and PathFileExistsDefExtAndAttributesW */
 #define WHICH_PIF       (1 << 0)
 #define WHICH_COM       (1 << 1)
 #define WHICH_EXE       (1 << 2)
@@ -293,9 +295,31 @@ ShellMessageBoxWrapW(
 
 #define WHICH_DEFAULT   (WHICH_PIF | WHICH_COM | WHICH_EXE | WHICH_BAT | WHICH_LNK | WHICH_CMD)
 
+/* dwClass flags for PathIsValidCharA and PathIsValidCharW */
+#define PATH_CHAR_CLASS_LETTER      0x00000001
+#define PATH_CHAR_CLASS_ASTERIX     0x00000002
+#define PATH_CHAR_CLASS_DOT         0x00000004
+#define PATH_CHAR_CLASS_BACKSLASH   0x00000008
+#define PATH_CHAR_CLASS_COLON       0x00000010
+#define PATH_CHAR_CLASS_SEMICOLON   0x00000020
+#define PATH_CHAR_CLASS_COMMA       0x00000040
+#define PATH_CHAR_CLASS_SPACE       0x00000080
+#define PATH_CHAR_CLASS_OTHER_VALID 0x00000100
+#define PATH_CHAR_CLASS_DOUBLEQUOTE 0x00000200
+#define PATH_CHAR_CLASS_INVALID     0x00000000
+#define PATH_CHAR_CLASS_ANY         0xffffffff
+
 BOOL WINAPI PathFileExistsDefExtW(LPWSTR lpszPath, DWORD dwWhich);
+
+BOOL WINAPI
+PathFileExistsDefExtAndAttributesW(
+    _Inout_ LPWSTR pszPath,
+    _In_ DWORD dwWhich,
+    _Out_opt_ LPDWORD pdwFileAttributes);
+
 BOOL WINAPI PathFindOnPathExW(LPWSTR lpszFile, LPCWSTR *lppszOtherDirs, DWORD dwWhich);
 VOID WINAPI FixSlashesAndColonW(LPWSTR);
+BOOL WINAPI PathIsValidCharA(char c, DWORD dwClass);
 BOOL WINAPI PathIsValidCharW(WCHAR c, DWORD dwClass);
 BOOL WINAPI SHGetPathFromIDListWrapW(LPCITEMIDLIST pidl, LPWSTR pszPath);
 
@@ -305,6 +329,43 @@ IContextMenu_Invoke(
     _In_ HWND hwnd,
     _In_ LPCSTR lpVerb,
     _In_ UINT uFlags);
+
+DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid);
+
+/*
+ * HACK! These functions are conflicting with <shobjidl.h> inline functions...
+ * We provide a macro option SHLWAPI_ISHELLFOLDER_HELPERS for using these functions.
+ */
+#ifdef SHLWAPI_ISHELLFOLDER_HELPERS
+HRESULT WINAPI
+IShellFolder_GetDisplayNameOf(
+    _In_ IShellFolder *psf,
+    _In_ LPCITEMIDLIST pidl,
+    _In_ SHGDNF uFlags,
+    _Out_ LPSTRRET lpName,
+    _In_ DWORD dwRetryFlags);
+
+/* Flags for IShellFolder_GetDisplayNameOf */
+#define SFGDNO_RETRYWITHFORPARSING  0x00000001
+#define SFGDNO_RETRYALWAYS          0x80000000
+
+HRESULT WINAPI
+IShellFolder_ParseDisplayName(
+    _In_ IShellFolder *psf,
+    _In_ HWND hwndOwner,
+    _In_ LPBC pbcReserved,
+    _In_ LPOLESTR lpszDisplayName,
+    _Out_ ULONG *pchEaten,
+    _Out_ PIDLIST_RELATIVE *ppidl,
+    _Out_ ULONG *pdwAttributes);
+
+EXTERN_C HRESULT WINAPI
+IShellFolder_CompareIDs(
+    _In_ IShellFolder *psf,
+    _In_ LPARAM lParam,
+    _In_ PCUIDLIST_RELATIVE pidl1,
+    _In_ PCUIDLIST_RELATIVE pidl2);
+#endif /* SHLWAPI_ISHELLFOLDER_HELPERS */
 
 #ifdef __cplusplus
 } /* extern "C" */

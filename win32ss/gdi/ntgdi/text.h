@@ -110,6 +110,7 @@ NTSTATUS FASTCALL TextIntRealizeFont(HFONT,PTEXTOBJ);
 NTSTATUS FASTCALL TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont);
 BYTE FASTCALL IntCharSetFromCodePage(UINT uCodePage);
 BOOL FASTCALL InitFontSupport(VOID);
+VOID FASTCALL FreeFontSupport(VOID);
 BOOL FASTCALL IntIsFontRenderingEnabled(VOID);
 BOOL FASTCALL IntIsFontRenderingEnabled(VOID);
 VOID FASTCALL IntEnableFontRendering(BOOL Enable);

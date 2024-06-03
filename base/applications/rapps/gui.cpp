@@ -275,7 +275,7 @@ CMainWindow::RemoveSelectedAppFromRegistry()
         return FALSE;
 
     if (MessageBoxW(szMsgText, szMsgTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
-        return m_Db->RemoveInstalledAppFromRegistry(InstalledApp);
+        return m_Db->RemoveInstalledAppFromRegistry(InstalledApp) == ERROR_SUCCESS;
 
     return FALSE;
 }
@@ -290,7 +290,7 @@ CMainWindow::UninstallSelectedApp(BOOL bModify)
     if (!InstalledApp)
         return FALSE;
 
-    return InstalledApp->UninstallApplication(bModify);
+    return InstalledApp->UninstallApplication(bModify ? UCF_MODIFY : UCF_NONE);
 }
 
 VOID
@@ -544,7 +544,7 @@ CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
                 break;
 
             case ID_REFRESH:
-                UpdateApplicationsList(SelectedEnumType);
+                UpdateApplicationsList(SelectedEnumType, bReload);
                 break;
 
             case ID_RESETDB:

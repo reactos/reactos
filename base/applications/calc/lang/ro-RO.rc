@@ -153,7 +153,7 @@ BEGIN
                BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON "CE", IDC_BUTTON_CE, 222, 38, 43, 18, BS_CENTER | BS_VCENTER |
                BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON "Înapoi", IDC_BUTTON_BACK, 177, 38, 43, 18, BS_CENTER |
+    PUSHBUTTON "Backspace", IDC_BUTTON_BACK, 177, 38, 43, 18, BS_CENTER |
                BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     RTEXT "", IDC_TEXT_OUTPUT, 5, 1, 305, 14, SS_CENTERIMAGE, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON "", IDC_BUTTON_FOCUS, 0, 0, 5, 5, NOT WS_VISIBLE
@@ -169,7 +169,7 @@ BEGIN
                BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON "CE", IDC_BUTTON_CE, 80, 23, 41, 18, BS_CENTER | BS_VCENTER |
                BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON "Înapoi", IDC_BUTTON_BACK, 36, 23, 42, 18, BS_CENTER | BS_VCENTER |
+    PUSHBUTTON "Backspace", IDC_BUTTON_BACK, 36, 23, 42, 18, BS_CENTER | BS_VCENTER |
                BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     RTEXT "", IDC_TEXT_OUTPUT, 5, 1, 159, 14, SS_CENTERIMAGE, WS_EX_CLIENTEDGE
     PUSHBUTTON "7", IDC_BUTTON_7, 36, 45, 24, 18, BS_CENTER | BS_VCENTER |
@@ -244,7 +244,7 @@ BEGIN
             BS_VCENTER | BS_NOTIFY | WS_TABSTOP, 276, 24, 40, 17
     CONTROL "CE", IDC_BUTTON_CE, "Button", BS_OWNERDRAW | BS_CENTER |
             BS_VCENTER | BS_NOTIFY | WS_TABSTOP, 232, 24, 40, 17
-    CONTROL "Înapoi", IDC_BUTTON_BACK, "Button", BS_OWNERDRAW | BS_CENTER |
+    CONTROL "Backspace", IDC_BUTTON_BACK, "Button", BS_OWNERDRAW | BS_CENTER |
             BS_VCENTER | BS_NOTIFY | WS_TABSTOP, 188, 24, 40,17
     RTEXT "", IDC_TEXT_OUTPUT, 5, 1, 312, 14, SS_CENTERIMAGE, WS_EX_CLIENTEDGE
     CONTROL "7", IDC_BUTTON_7, "Button", BS_OWNERDRAW | BS_CENTER |
@@ -318,31 +318,31 @@ IDR_MENU_SCIENTIFIC_1 MENU
 BEGIN
     POPUP "&Editare"
     BEGIN
-        MENUITEM "&Copiază\tCtrl-C", IDM_EDIT_COPY
-        MENUITEM "&Lipește\tCtrl-V", IDM_EDIT_PASTE
+        MENUITEM "&Copiere\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "&Lipire\tCtrl-V", IDM_EDIT_PASTE
     END
-    POPUP "&Afișare"
+    POPUP "&Vizualizare"
     BEGIN
-        MENUITEM "Mod st&andard", IDM_VIEW_STANDARD
-        MENUITEM "Mod știi&nțific", IDM_VIEW_SCIENTIFIC
-        MENUITEM "Con&versie", IDM_VIEW_CONVERSION
+        MENUITEM "&Standard", IDM_VIEW_STANDARD
+        MENUITEM "&Ştiinţific", IDM_VIEW_SCIENTIFIC
+        MENUITEM "Co&nversie", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "&Hexazecimal\tF5", IDM_VIEW_HEX, CHECKED
         MENUITEM "&Zecimal\tF6", IDM_VIEW_DEC, CHECKED
-        MENUITEM "&Octal\tF7", IDM_VIEW_OCT, CHECKED
+        MENUITEM "O&ctal\tF7", IDM_VIEW_OCT, CHECKED
         MENUITEM "&Binar\tF8", IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "&Grade\tF2", IDM_VIEW_DEG, CHECKED
         MENUITEM "&Radiani\tF3", IDM_VIEW_RAD, CHECKED
         MENUITEM "Gra&diani\tF4", IDM_VIEW_GRAD, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Grupează &cifrele", IDM_VIEW_GROUP, CHECKED
+        MENUITEM "G&ruparea cifrelor", IDM_VIEW_GROUP, CHECKED
     END
     POPUP "Aj&utor"
     BEGIN
-        MENUITEM "&Manual…", IDM_HELP_HELP
+        MENUITEM "&Termeni din Ajutor", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Despre…", IDM_HELP_ABOUT
+        MENUITEM "&Despre Calculator ReactOS", IDM_HELP_ABOUT
     END
 END
 
@@ -350,32 +350,32 @@ IDR_MENU_SCIENTIFIC_2 MENU
 BEGIN
     POPUP "&Editare"
     BEGIN
-        MENUITEM "&Copiază\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "&Lipește\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "&Copiere\tCTRL-C", IDM_EDIT_COPY
+        MENUITEM "&Lipire\tCTRL-V", IDM_EDIT_PASTE
     END
-    POPUP "&Afișare"
+    POPUP "&Vizualizare"
     BEGIN
-        MENUITEM "Mod st&andard", IDM_VIEW_STANDARD
-        MENUITEM "Mod știi&nțific", IDM_VIEW_SCIENTIFIC
-        MENUITEM "Con&versie", IDM_VIEW_CONVERSION
+        MENUITEM "&Standard", IDM_VIEW_STANDARD
+        MENUITEM "&Ştiinţific", IDM_VIEW_SCIENTIFIC
+        MENUITEM "G&ruparea cifrelor", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "&Hexazecimal\tF5", IDM_VIEW_HEX, CHECKED
         MENUITEM "&Zecimal\tF6", IDM_VIEW_DEC, CHECKED
         MENUITEM "&Octal\tF7", IDM_VIEW_OCT, CHECKED
         MENUITEM "&Binar\tF8", IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "&64 biți\tF12", IDM_VIEW_QWORD, CHECKED
-        MENUITEM "&32 biți\tF2", IDM_VIEW_DWORD, CHECKED
+        MENUITEM "&64 de biți\tF12", IDM_VIEW_QWORD, CHECKED
+        MENUITEM "&32 de biți\tF2", IDM_VIEW_DWORD, CHECKED
         MENUITEM "&16 biți\tF3", IDM_VIEW_WORD, CHECKED
         MENUITEM "&8 biți\tF4", IDM_VIEW_BYTE, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Grupează &cifrele", IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Gr&uparea cifrelor", IDM_VIEW_GROUP, CHECKED
     END
     POPUP "Aj&utor"
     BEGIN
-        MENUITEM "&Manual…", IDM_HELP_HELP
+        MENUITEM "&Termeni din Ajutor", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Despre…", IDM_HELP_ABOUT
+        MENUITEM "&Despre Calculator ReactOS", IDM_HELP_ABOUT
     END
 END
 
@@ -383,22 +383,22 @@ IDR_MENU_STANDARD MENU
 BEGIN
     POPUP "&Editare"
     BEGIN
-        MENUITEM "&Copiază\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "&Lipește\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "&Copiere\tCTRL-C", IDM_EDIT_COPY
+        MENUITEM "&Lipire\tCTRL-V", IDM_EDIT_PASTE
     END
-    POPUP "&Afișare"
+    POPUP "&Vizualizare"
     BEGIN
-        MENUITEM "Mod st&andard", IDM_VIEW_STANDARD
-        MENUITEM "Mod știi&nțific", IDM_VIEW_SCIENTIFIC
-        MENUITEM "Con&versie", IDM_VIEW_CONVERSION
+        MENUITEM "&Standard", IDM_VIEW_STANDARD
+        MENUITEM "&Ştiinţific", IDM_VIEW_SCIENTIFIC
+        MENUITEM "Co&nversie", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Grupează &cifre", IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Gr&uparea cifrelor", IDM_VIEW_GROUP, CHECKED
     END
     POPUP "Aj&utor"
     BEGIN
-        MENUITEM "&Manual…", IDM_HELP_HELP
+        MENUITEM "&Termeni din Ajutor", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Despre…", IDM_HELP_ABOUT
+        MENUITEM "&Despre Calculator ReactOS", IDM_HELP_ABOUT
     END
 END
 
@@ -407,7 +407,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_MATH_ERROR "Eroare"
-    IDS_QUICKHELP "Manual"
+    IDS_QUICKHELP "Termeni din Ajutor"
 END
 
 /* About */
@@ -438,8 +438,8 @@ END
 /* Angles */
 STRINGTABLE
 BEGIN
-    IDS_ANGLE_ARCMINUTES "Minute of arc"
-    IDS_ANGLE_ARCSECONDS "Second of arc"
+    IDS_ANGLE_ARCMINUTES "Minut de arc"
+    IDS_ANGLE_ARCSECONDS "Secundă de arc"
     IDS_ANGLE_DEGREES "Grade"
     IDS_ANGLE_GRADIANS "Gradiani"
     IDS_ANGLE_RADIANS "Radiani"
@@ -470,7 +470,7 @@ BEGIN
     IDS_AREA_SQUARE_FATHOMS "Fathomi pătrați"
     IDS_AREA_SQUARE_FATHOMS_HUNGARY "Fathomi pătrați (Ungaria)"
     IDS_AREA_SQUARE_FEET "Picioare pătrate"
-    IDS_AREA_SQUARE_INCHES "Țoli pătrați"
+    IDS_AREA_SQUARE_INCHES "Inci pătrați"
     IDS_AREA_SQUARE_KILOMETERS "Kilometri pătrați"
     IDS_AREA_SQUARE_LAR "Lar pătrați"
     IDS_AREA_SQUARE_METER "Metri pătrați"
@@ -524,7 +524,7 @@ STRINGTABLE
 BEGIN
     IDS_ENERGY_15_C_CALORIES "Calorii 15 °C"
     IDS_ENERGY_BTUS "Unități termale britanice"
-    IDS_ENERGY_ERGS "Erg"
+    IDS_ENERGY_ERGS "Ergi"
     IDS_ENERGY_EVS "Electroni-Volt"
     IDS_ENERGY_FOOT_POUNDS "Picioare-Livră"
     IDS_ENERGY_IT_CALORIES "Calorii Tabel Internațional"
@@ -555,7 +555,7 @@ BEGIN
     IDS_LENGTH_GAN "Gan"
     IDS_LENGTH_HANDS "Palme"
     IDS_LENGTH_HUNH "Hunh"
-    IDS_LENGTH_INCHES "Țoli"
+    IDS_LENGTH_INCHES "Inci"
     IDS_LENGTH_JA "Ja"
     IDS_LENGTH_JEONG "Jeong"
     IDS_LENGTH_KABIET "Kabiet"
@@ -592,7 +592,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_POWER_BTUS_PER_MINUTE "Unități termice britanice pe minut"
-    IDS_POWER_FPS_PER_MINUTE "Picior-livre pe minut"
+    IDS_POWER_FPS_PER_MINUTE "Picior-lire pe minut"
     IDS_POWER_HORSEPOWER "Cai putere"
     IDS_POWER_KILOWATTS "Kilowați"
     IDS_POWER_MEGAWATTS "Megawați"
@@ -608,7 +608,7 @@ BEGIN
     IDS_PRESSURE_KILOPASCALS "Kilopascali"
     IDS_PRESSURE_MM_OF_MERCURY "Milimetri coloană de mercur"
     IDS_PRESSURE_PASCALS "Pascali"
-    IDS_PRESSURE_PSI "Livre-forță pe țol pătrat"
+    IDS_PRESSURE_PSI "Livre-forță pe inci pătrați"
 END
 
 /* Temperatures */
@@ -657,7 +657,7 @@ BEGIN
     IDS_VOLUME_BUSHELS_US "Bushel (SUA)"
     IDS_VOLUME_CUBIC_CENTIMETERS "Centrimetri cubi"
     IDS_VOLUME_CUBIC_FEET "Picioare^3"
-    IDS_VOLUME_CUBIC_INCHES "Țoli cubi"
+    IDS_VOLUME_CUBIC_INCHES "Inci cubi"
     IDS_VOLUME_CUBIC_METERS "Metri cubi"
     IDS_VOLUME_CUBIC_YARDS "Yarzi cubi"
     IDS_VOLUME_DOE "Doe"
@@ -708,11 +708,11 @@ BEGIN
     IDS_WEIGHT_OUNCES_AVOIRDUPOIS "Uncii, avoirdupois"
     IDS_WEIGHT_OUNCES_TROY "Uncii, troy"
     IDS_WEIGHT_POUNDS "Livre"
-    IDS_WEIGHT_QUINTAL_METRIC "Chintale (metric)"
+    IDS_WEIGHT_QUINTAL_METRIC "Quintale (metric)"
     IDS_WEIGHT_SALOUNG "Saloung"
     IDS_WEIGHT_STONES "Stones"
     IDS_WEIGHT_TAMLUNG "Tamlung"
-    IDS_WEIGHT_TONNES "Tonni"
+    IDS_WEIGHT_TONNES "Tone"
     IDS_WEIGHT_TONS_UK "Tone (Marea Britanie)"
     IDS_WEIGHT_TONS_US "Tone (SUA)"
 END

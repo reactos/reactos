@@ -61,7 +61,7 @@ NtGdiAlphaBlend(
     DCDest = apObj[0];
     DCSrc = apObj[1];
 
-    if (DCDest->dctype == DCTYPE_INFO || DCDest->dctype == DCTYPE_INFO)
+    if (DCSrc->dctype == DCTYPE_INFO || DCDest->dctype == DCTYPE_INFO)
     {
         GDIOBJ_vUnlockObject(&DCSrc->BaseObject);
         GDIOBJ_vUnlockObject(&DCDest->BaseObject);
@@ -239,7 +239,7 @@ NtGdiTransparentBlt(
     DCDest = apObj[0];
     DCSrc = apObj[1];
 
-    if (DCDest->dctype == DCTYPE_INFO || DCDest->dctype == DCTYPE_INFO)
+    if (DCSrc->dctype == DCTYPE_INFO || DCDest->dctype == DCTYPE_INFO)
     {
         GDIOBJ_vUnlockObject(&DCSrc->BaseObject);
         GDIOBJ_vUnlockObject(&DCDest->BaseObject);

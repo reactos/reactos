@@ -551,6 +551,9 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetIconSize(THIS_ DWORD* piIcon)
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetBitmap(THIS_ HBITMAP hBitmap)
 {
+    if (m_Banner && m_Banner != hBitmap)
+        ::DeleteObject(m_Banner);
+
     m_Banner = hBitmap;
 
     BOOL bHandled;
@@ -682,7 +685,7 @@ LRESULT CMenuDeskBar::_OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
 
         GetClientRect(&rc);
 
-        if (m_Banner != NULL)
+        if (m_Banner && m_IconSize != BMICON_SMALL)
         {
             BITMAP bm;
             ::GetObject(m_Banner, sizeof(bm), &bm);

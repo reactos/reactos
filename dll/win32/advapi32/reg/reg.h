@@ -54,6 +54,12 @@ DeleteHKCRKey(
 
 LONG
 WINAPI
+DeleteHKCRValue(
+    _In_ HKEY hKey,
+    _In_ PUNICODE_STRING ValueName);
+
+LONG
+WINAPI
 QueryHKCRValue(
     _In_ HKEY hKey,
     _In_ LPCWSTR Name,

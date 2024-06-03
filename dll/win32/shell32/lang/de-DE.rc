@@ -66,7 +66,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Ausschneiden", IDM_CUT
         MENUITEM "&Kopieren", IDM_COPY
-        MENUITEM "Paste", IDM_INSERT
+        MENUITEM "Ei&nfügen", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "&Verknüpfung erstellen", IDM_CREATELINK
         MENUITEM "&Löschen", IDM_DELETE
@@ -93,11 +93,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Verzeichnis auswählen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "OK", 1, 60, 175, 60, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Abbrechen", 2, 125, 175, 60, 15, WS_GROUP | WS_TABSTOP
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 4, 4, 180, 24
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 4, 25, 180, 12
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
+    DEFPUSHBUTTON "OK", IDOK, 60, 175, 60, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Abbrechen", IDCANCEL, 125, 175, 60, 15, WS_TABSTOP
 END
 
 IDD_BROWSE_FOR_FOLDER_NEW DIALOGEX 15, 40, 218, 196
@@ -110,8 +110,8 @@ BEGIN
     EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 12, 38, 194, 14, ES_AUTOHSCROLL | WS_GROUP
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_EDITLABELS | TVS_LINESATROOT | TVS_HASLINES | TVS_HASBUTTONS | WS_BORDER | WS_TABSTOP, 12, 58, 194, 105
     PUSHBUTTON "Neuen &Ordner erstellen", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 85, 14, WS_GROUP | WS_TABSTOP
-    DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Abbrechen", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14
+    PUSHBUTTON "Abbrechen", IDCANCEL, 156, 174, 50, 14
 END
 
 IDD_YESTOALL_MSGBOX DIALOGEX 200, 100, 280, 90
@@ -120,9 +120,9 @@ CAPTION "Meldung"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "&Ja", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Ja zu &allen", IDC_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Nein", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Abbrechen", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Ja zu &allen", IDC_YESTOALL, 92, 69, 65, 14, WS_TABSTOP
+    PUSHBUTTON "&Nein", IDNO, 162, 69, 53, 14, WS_TABSTOP
+    PUSHBUTTON "Abbrechen", IDCANCEL, 220, 69, 53, 14
     ICON "", IDC_YESTOALL_ICON, 10, 10, 16, 16
     LTEXT "", IDC_YESTOALL_MESSAGE, 40, 10, 238, 52, 0
 END
@@ -227,7 +227,7 @@ BEGIN
     EDITTEXT 14009, 58, 56, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Größe:", 14010, 8, 72, 55, 10
     EDITTEXT 14011, 58, 72, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Größe auf Datenträger:", 140101, 8, 83, 55, 20
+    LTEXT "Größe auf Datenträger:", 140101, 8, 83, 55, 20 //FIXME: This displays ok, but is wrong nevertheless. xpos8 + width55 == 63 and that is larger than the right neighbors x of 58. So if you came here to have a peak at how it's done 'properly' then I have to disappoint you! You see: Even the most experienced developers do get this wrong! Please just shrink those strings instead of moving stuff around or making stuff multline. I do hope that everyone who regularly votes for increasing controls sizes, or moving stuff around realizes that this is pure poison that will just make the cancer spread throughout the whole dialog!
     EDITTEXT 14012, 58, 88, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Inhalt:", 14026, 8, 104, 55, 10
     EDITTEXT 14027, 58, 104, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -261,7 +261,7 @@ BEGIN
     EDITTEXT 14009, 58, 75, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Größe:", 14010, 8, 91, 45, 10
     EDITTEXT 14011, 58, 91, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Größe auf Datenträger:", 140112, 8, 102, 55, 20
+    LTEXT "Größe auf Datenträger:", 140112, 8, 102, 55, 20 //FIXME: This displays ok, but is wrong nevertheless. xpos8 + width55 == 63 and that is larger than the right neighbors x of 58. So if you came here to have a peak at how it's done 'properly' then I have to disappoint you! You see: Even the most experienced developers do get this wrong! Please just shrink those strings instead of moving stuff around or making stuff multline. I do hope that everyone who regularly votes for increasing controls sizes, or moving stuff around realizes that this is pure poison that will just make the cancer spread throughout the whole dialog!
     EDITTEXT 14012, 58, 107, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 123, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Erstellt:", 14014, 8, 131, 45, 10
@@ -279,25 +279,25 @@ BEGIN
 END
 
 IDD_FILE_VERSION DIALOGEX 0, 0, 235, 215
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Version"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Dateiversion: ", 14000, 10, 10, 55, 10
+    LTEXT "Dateiversion:", 14000, 10, 10, 55, 10
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Beschreibung: ", 14002, 10, 27, 45, 10
+    LTEXT "Beschreibung:", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Copyright: ", 14004, 10, 46, 66, 10
+    LTEXT "Copyright:", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    GROUPBOX "Weitere Versionsinformationen: ", 14006, 6, 70, 222, 115
-    LTEXT "Elementname: ", 14007, 13, 82, 50, 10
-    LTEXT "Wert: ", 14008, 112, 82, 45, 10
+    GROUPBOX "Weitere Versionsinformationen", 14006, 6, 70, 222, 115
+    LTEXT "Elementname:", 14007, 13, 82, 50, 10
+    LTEXT "Wert:", 14008, 112, 82, 45, 10
     LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
     EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END
 
 IDD_DRIVE_PROPERTIES DIALOGEX 0, 0, 240, 220
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Allgemein"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -330,7 +330,7 @@ BEGIN
 END
 
 IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 220
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Extras"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -349,14 +349,14 @@ BEGIN
 END
 
 IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 220
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Hardware"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 END
 
 IDD_RUN_AS DIALOGEX 0, 0, 240, 190
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Ausführen als"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -376,7 +376,7 @@ BEGIN
 END
 
 IDD_RECYCLE_BIN_PROPERTIES DIALOGEX 0, 0, 240, 190
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Papierkorb-Einstellungen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -420,8 +420,8 @@ BEGIN
     AUTORADIOBUTTON "&Jeden Ordner im eigenen Fenster öffnen", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 210, 10
     GROUPBOX "Markieren von Elementen", -1, 7, 110, 249, 64
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
-    AUTORADIOBUTTON "&Öffnen durch &einfachen Klick (Markieren durch zeigen)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "&Öffnen durch &Doppelklick (Markieren durch einfachen Klick)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
+    AUTORADIOBUTTON "Öffnen durch &einfachen Klick (Markieren durch zeigen)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Öffnen durch &Doppelklick (Markieren durch einfachen Klick)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
     AUTORADIOBUTTON "Symbolbeschriftungen wie im Br&owser unterstreichen", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 200, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Symbolbeschriftungen nur beim Zeigen &unterstreichen", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
     PUSHBUTTON "&Wiederherstellen", IDC_FOLDER_OPTIONS_RESTORE, 167, 178, 90, 14, WS_TABSTOP
@@ -526,7 +526,7 @@ BEGIN
     CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
     GROUPBOX "Aktionen", -1, 7, 45, 212, 146
     AUTORADIOBUTTON "&Durchzuführende Aktion auswählen:", 1005, 14, 54, 202, 10, WS_GROUP
-    CONTROL "LIST2", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
+    CONTROL "", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
     AUTORADIOBUTTON "&Eingabeaufforderung, um Aktion auszuwählen", 1006, 14, 177, 202, 10
     PUSHBUTTON "&Wiederherstellen", 1008, 108, 197, 110, 14, WS_DISABLED
 END
@@ -798,6 +798,7 @@ BEGIN
     IDS_DISCONNECT "Trennen"
     IDS_OPENFILELOCATION "Date&ipfad öffnen"
     IDS_SENDTO_MENU "S&enden an"
+    IDS_COPYASPATHMENU "Copy as path"
 
     IDS_MOVEERRORTITLE "Fehler beim Verschieben der Datei/des Ordners"
     IDS_COPYERRORTITLE "Fehler beim Kopieren der Datei/des Ordners"
@@ -925,6 +926,9 @@ BEGIN
     IDS_CANTDISCONNECT "Trennen nicht möglich (Fehlercode: %lu)."
     IDS_NONE "(Leer)"
 
+    IDS_EXPAND "Exp&and"
+    IDS_COLLAPSE "Coll&apse"
+
     /* Friendly File Type Names */
     IDS_DIRECTORY "Dateiordner"
     IDS_BAT_FILE "ReactOS-Stapelverarbeitungsdatei"
@@ -1022,6 +1026,7 @@ BEGIN
     IDS_ADVANCED_EXPAND_NET_CONNECTIONS "Expand Network Connections"
     IDS_ADVANCED_DISPLAY_RUN "Display Run"
     IDS_ADVANCED_DISPLAY_ADMINTOOLS "Display Administrative Tools"
+    IDS_ADVANCED_SMALL_START_MENU "Kleine Symbole im Startmenü anzeigen"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< Er&weitert"
     IDS_NEWEXT_ADVANCED_RIGHT "&Erweitert >>"

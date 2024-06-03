@@ -10,7 +10,6 @@
 
 #include "precomp.h"
 
-
 /*
     DoWaveStreaming
         Check if there is streaming to be done, and if so, do it.
@@ -52,6 +51,22 @@ DoWaveStreaming(
     {
         SND_TRACE(L"DoWaveStreaming: No work to do - doing nothing\n");
         return;
+    }
+
+    /* Do we need to loop a header? */
+    if (DeviceType == WAVE_OUT_DEVICE_TYPE && (Header->dwFlags & WHDR_BEGINLOOP))
+    {
+        if ((Header->dwFlags & WHDR_ENDLOOP))
+        {
+            /* Get loop count */
+            SoundDeviceInstance->LoopsRemaining = Header->dwLoops;
+        }
+        else
+        {
+            /* Report and help notice such a case */
+            SND_WARN(L"Looping multiple headers is UNIMPLEMENTED. Will play once only\n");
+            SND_ASSERT((Header->dwFlags & (WHDR_BEGINLOOP | WHDR_ENDLOOP)) == (WHDR_BEGINLOOP | WHDR_ENDLOOP));
+        }
     }
 
     while ( ( SoundDeviceInstance->OutstandingBuffers < SoundDeviceInstance->BufferCount ) &&
@@ -105,10 +120,6 @@ DoWaveStreaming(
                 ZeroMemory(Overlap, sizeof(SOUND_OVERLAPPED));
                 Overlap->SoundDeviceInstance = SoundDeviceInstance;
                 Overlap->Header = Header;
-
-                /* Don't complete this header if it's part of a loop */
-                Overlap->PerformCompletion = TRUE;
-//                    ( SoundDeviceInstance->LoopsRemaining > 0 );
 
                 /* Adjust the commit-related counters */
                 HeaderExtension->BytesCommitted += BytesToCommit;
@@ -189,8 +200,8 @@ CompleteIO(
         -- SoundDeviceInstance->OutstandingBuffers;
 
         /* Did we finish a WAVEHDR and aren't looping? */
-        if ( HdrExtension->BytesCompleted + dwNumberOfBytesTransferred >= WaveHdr->dwBufferLength &&
-            SoundOverlapped->PerformCompletion )
+        if (HdrExtension->BytesCompleted + dwNumberOfBytesTransferred >= WaveHdr->dwBufferLength &&
+            SoundDeviceInstance->LoopsRemaining == 0)
         {
             /* Wave buffer fully completed */
             Bytes = WaveHdr->dwBufferLength - HdrExtension->BytesCompleted;
@@ -203,9 +214,24 @@ CompleteIO(
         }
 		else
 		{
-            /* Partially completed */
-            HdrExtension->BytesCompleted += dwNumberOfBytesTransferred;
-            SND_TRACE(L"%d/%d bytes of wavehdr completed\n", HdrExtension->BytesCompleted, WaveHdr->dwBufferLength);
+            /* Do we loop a header? */
+            if (HdrExtension->BytesCommitted == WaveHdr->dwBufferLength &&
+                SoundDeviceInstance->LoopsRemaining != 0)
+            {
+                /* Reset amount of bytes and decrement loop count, to play next iteration */
+                HdrExtension->BytesCommitted = 0;
+
+                if (SoundDeviceInstance->LoopsRemaining != INFINITE)
+                    --SoundDeviceInstance->LoopsRemaining;
+                SND_TRACE(L"Looping the header, remaining loops %u\n", SoundDeviceInstance->LoopsRemaining);
+            }
+            else
+            {
+                /* Partially completed */
+                HdrExtension->BytesCompleted += dwNumberOfBytesTransferred;
+                SND_TRACE(L"%u/%u bytes of wavehdr completed\n", HdrExtension->BytesCompleted, WaveHdr->dwBufferLength);
+            }
+
             break;
 		}
 

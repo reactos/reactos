@@ -21,8 +21,121 @@
  */
 
 #include <precomp.h>
+#include "CFSFolder.h" // Only for CFSFolder::*FSColumn* helpers!
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
+
+STDMETHODIMP
+CDesktopFolder::ShellUrlParseDisplayName(
+    HWND hwndOwner,
+    LPBC pbc,
+    LPOLESTR lpszDisplayName,
+    DWORD *pchEaten,
+    PIDLIST_RELATIVE *ppidl,
+    DWORD *pdwAttributes)
+{
+    LPWSTR pch;
+    INT cch, csidl;
+    HRESULT hr = HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
+    PARSEDURLW ParsedURL = { sizeof(ParsedURL) };
+
+    ::ParseURLW(lpszDisplayName, &ParsedURL);
+
+    DWORD attrs = (pdwAttributes ? *pdwAttributes : 0) | SFGAO_STREAM;
+    if (ParsedURL.pszSuffix[0] == L':' && ParsedURL.pszSuffix[1] == L':') // It begins from "::"
+    {
+        CComPtr<IShellFolder> psfDesktop;
+        hr = SHGetDesktopFolder(&psfDesktop);
+        if (SUCCEEDED(hr))
+        {
+            CComPtr<IBindCtx> pBindCtx;
+            hr = ::CreateBindCtx(0, &pBindCtx);
+            if (SUCCEEDED(hr))
+            {
+                BIND_OPTS BindOps = { sizeof(BindOps) };
+                BindOps.grfMode = STGM_CREATE;
+                pBindCtx->SetBindOptions(&BindOps);
+                hr = psfDesktop->ParseDisplayName(hwndOwner, pBindCtx,
+                                                  (LPWSTR)ParsedURL.pszSuffix,
+                                                  pchEaten, ppidl, &attrs);
+            }
+        }
+    }
+    else
+    {
+        csidl = Shell_ParseSpecialFolder(ParsedURL.pszSuffix, &pch, &cch);
+        if (csidl == -1)
+        {
+            ERR("\n");
+            return hr;
+        }
+
+        CComHeapPtr<ITEMIDLIST> pidlLocation;
+        hr = SHGetFolderLocation(hwndOwner, (csidl | CSIDL_FLAG_CREATE), NULL, 0, &pidlLocation);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        if (pch && *pch)
+        {
+            CComPtr<IShellFolder> psfFolder;
+            hr = SHBindToObject(NULL, pidlLocation, IID_PPV_ARG(IShellFolder, &psfFolder));
+            if (SUCCEEDED(hr))
+            {
+                CComHeapPtr<ITEMIDLIST> pidlNew;
+                hr = psfFolder->ParseDisplayName(hwndOwner, pbc, pch, pchEaten, &pidlNew, &attrs);
+                if (SUCCEEDED(hr))
+                {
+                    hr = SHILCombine(pidlLocation, pidlNew, ppidl);
+                    if (pchEaten)
+                        *pchEaten += cch;
+                }
+            }
+        }
+        else
+        {
+            if (attrs)
+                hr = SHGetNameAndFlagsW(pidlLocation, 0, NULL, 0, &attrs);
+
+            if (SUCCEEDED(hr))
+            {
+                if (pchEaten)
+                    *pchEaten = cch;
+                *ppidl = pidlLocation.Detach();
+            }
+        }
+    }
+
+    // FIXME: SHWindowsPolicy
+    if (SUCCEEDED(hr) && (attrs & SFGAO_STREAM) &&
+        !BindCtx_ContainsObject(pbc, STR_PARSE_SHELL_PROTOCOL_TO_FILE_OBJECTS))
+    {
+        ILFree(*ppidl);
+        *ppidl = NULL;
+        hr = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+    }
+
+    if (pdwAttributes)
+        *pdwAttributes = attrs;
+
+    // FIXME: SHWindowsPolicy
+    if (FAILED(hr) && !Shell_FailForceReturn(hr))
+        hr = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+
+    return hr;
+}
+
+STDMETHODIMP
+CDesktopFolder::HttpUrlParseDisplayName(
+    HWND hwndOwner,
+    LPBC pbc,
+    LPOLESTR lpszDisplayName,
+    DWORD *pchEaten,
+    PIDLIST_RELATIVE *ppidl,
+    DWORD *pdwAttributes)
+{
+    FIXME("\n");
+    return E_NOTIMPL; // FIXME
+}
 
 /*
 CDesktopFolder should create two file system folders internally, one representing the
@@ -172,17 +285,6 @@ class CDesktopFolderEnum :
 
 int SHELL_ConfirmMsgBox(HWND hWnd, LPWSTR lpszText, LPWSTR lpszCaption, HICON hIcon, BOOL bYesToAll);
 
-static const shvheader DesktopSFHeader[] = {
-    {IDS_SHV_COLUMN_NAME, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
-    {IDS_SHV_COLUMN_COMMENTS, SHCOLSTATE_TYPE_STR, LVCFMT_LEFT, 10},
-    {IDS_SHV_COLUMN_TYPE, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 10},
-    {IDS_SHV_COLUMN_SIZE, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
-    {IDS_SHV_COLUMN_MODIFIED, SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 12},
-    {IDS_SHV_COLUMN_ATTRIBUTES, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 10}
-};
-
-#define DESKTOPSHELLVIEWCOLUMNS 6
-
 static const DWORD dwDesktopAttributes =
     SFGAO_HASSUBFOLDER | SFGAO_FILESYSTEM | SFGAO_FOLDER | SFGAO_FILESYSANCESTOR |
     SFGAO_STORAGEANCESTOR | SFGAO_HASPROPSHEET | SFGAO_STORAGE;
@@ -270,6 +372,116 @@ HRESULT CDesktopFolder::_GetSFFromPidl(LPCITEMIDLIST pidl, IShellFolder2** psf)
         return m_DesktopFSFolder->QueryInterface(IID_PPV_ARG(IShellFolder2, psf));
 }
 
+HRESULT CDesktopFolder::_ParseDisplayNameByParent(
+    HWND hwndOwner,
+    LPBC pbc,
+    LPOLESTR lpszDisplayName,
+    DWORD *pchEaten,
+    PIDLIST_RELATIVE *ppidl,
+    DWORD *pdwAttributes)
+{
+    if (pchEaten)
+        *pchEaten = 0;
+
+    CComHeapPtr<ITEMIDLIST> pidlParent;
+    BOOL bPath = FALSE;
+    WCHAR wch = *lpszDisplayName;
+    if (((L'A' <= wch && wch <= L'Z') || (L'a' <= wch && wch <= L'z')) &&
+        (lpszDisplayName[1] == L':'))
+    {
+        // "C:..."
+        bPath = TRUE;
+        pidlParent.Attach(_ILCreateMyComputer());
+    }
+    else if (PathIsUNCW(lpszDisplayName)) // "\\\\..."
+    {
+        bPath = TRUE;
+        pidlParent.Attach(_ILCreateNetwork());
+    }
+
+    if (bPath)
+    {
+        if (!pidlParent)
+            return E_OUTOFMEMORY;
+
+        CComPtr<IShellFolder> pParentFolder;
+        SHBindToObject(NULL, pidlParent, IID_PPV_ARG(IShellFolder, &pParentFolder));
+
+        CComHeapPtr<ITEMIDLIST> pidlChild;
+        HRESULT hr = pParentFolder->ParseDisplayName(hwndOwner, pbc, lpszDisplayName,
+                                                     pchEaten, &pidlChild, pdwAttributes);
+        if (FAILED(hr))
+            return hr;
+
+        *ppidl = ILCombine(pidlParent, pidlChild);
+        return (*ppidl ? S_OK : E_OUTOFMEMORY);
+    }
+
+    if (!UrlIsW(lpszDisplayName, URLIS_URL) || SHSkipJunctionBinding(pbc, NULL))
+        return E_INVALIDARG;
+
+    // Now lpszDisplayName is a URL
+    PARSEDURLW ParsedURL = { sizeof(ParsedURL) };
+    ::ParseURLW(lpszDisplayName, &ParsedURL);
+
+    switch (ParsedURL.nScheme)
+    {
+        case URL_SCHEME_FILE: // "file:..."
+        {
+            // Convert "file://..." to a normal path
+            WCHAR szPath[MAX_PATH];
+            DWORD cchPath = _countof(szPath);
+            HRESULT hr = PathCreateFromUrlW(lpszDisplayName, szPath, &cchPath, 0);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            CComPtr<IShellFolder> psfDesktop;
+            hr = SHGetDesktopFolder(&psfDesktop);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            // Parse by desktop folder
+            return psfDesktop->ParseDisplayName(hwndOwner, pbc, szPath, pchEaten, ppidl,
+                                                pdwAttributes);
+        }
+        case URL_SCHEME_HTTP:  // "http:..."
+        case URL_SCHEME_HTTPS: // "https:..."
+        {
+            if (!BindCtx_ContainsObject(pbc, STR_PARSE_PREFER_FOLDER_BROWSING))
+                return E_INVALIDARG;
+
+            return HttpUrlParseDisplayName(hwndOwner,
+                                           pbc,
+                                           lpszDisplayName,
+                                           pchEaten,
+                                           ppidl,
+                                           pdwAttributes);
+        }
+        case URL_SCHEME_SHELL: // "shell:..."
+        {
+            return ShellUrlParseDisplayName(hwndOwner,
+                                            pbc,
+                                            lpszDisplayName,
+                                            pchEaten,
+                                            ppidl,
+                                            pdwAttributes);
+        }
+        case URL_SCHEME_MSSHELLROOTED:
+        case URL_SCHEME_MSSHELLIDLIST:
+        {
+            WARN("We don't support 'ms-shell-rooted:' and 'ms-shell-idlist:' schemes\n");
+            break;
+        }
+        default:
+        {
+            TRACE("Scheme: %u\n", ParsedURL.nScheme);
+            break;
+        }
+    }
+
+    return E_INVALIDARG;
+}
+
 /**************************************************************************
  *    CDesktopFolder::ParseDisplayName
  *
@@ -285,11 +497,6 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
     PIDLIST_RELATIVE *ppidl,
     DWORD *pdwAttributes)
 {
-    LPCWSTR szNext = NULL;
-    LPITEMIDLIST pidlTemp = NULL;
-    PARSEDURLW urldata;
-    HRESULT hr = S_OK;
-
     TRACE ("(%p)->(HWND=%p,%p,%p=%s,%p,pidl=%p,%p)\n",
            this, hwndOwner, pbc, lpszDisplayName, debugstr_w(lpszDisplayName),
            pchEaten, ppidl, pdwAttributes);
@@ -302,78 +509,85 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
     if (!lpszDisplayName)
         return E_INVALIDARG;
 
-    if (pchEaten)
-        *pchEaten = 0;        /* strange but like the original */
-
-    urldata.cbSize = sizeof(urldata);
+    if (!*lpszDisplayName)
+    {
+        *ppidl = _ILCreateMyComputer();
+        return (*ppidl ? S_OK : E_OUTOFMEMORY);
+    }
 
     if (lpszDisplayName[0] == ':' && lpszDisplayName[1] == ':')
     {
-        return m_regFolder->ParseDisplayName(hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl, pdwAttributes);
-    }
-    else if (PathGetDriveNumberW (lpszDisplayName) >= 0)
-    {
-        /* it's a filesystem path with a drive. Let MyComputer/UnixDosFolder parse it */
-        pidlTemp = _ILCreateMyComputer ();
-        szNext = lpszDisplayName;
-    }
-    else if (PathIsUNCW(lpszDisplayName))
-    {
-        pidlTemp = _ILCreateNetwork();
-        szNext = lpszDisplayName;
-    }
-    else if( (pidlTemp = SHELL32_CreatePidlFromBindCtx(pbc, lpszDisplayName)) )
-    {
-        *ppidl = pidlTemp;
-        return S_OK;
-    }
-    else if (SUCCEEDED(ParseURLW(lpszDisplayName, &urldata)))
-    {
-        if (urldata.nScheme == URL_SCHEME_SHELL) /* handle shell: urls */
-        {
-            TRACE ("-- shell url: %s\n", debugstr_w(urldata.pszSuffix));
-            pidlTemp = _ILCreateGuidFromStrW(urldata.pszSuffix + 2);
-        }
-        else
-            return IEParseDisplayNameWithBCW(CP_ACP, lpszDisplayName, pbc, ppidl);
-    }
-    else
-    {
-        if (*lpszDisplayName)
-        {
-            /* it's a filesystem path on the desktop. Let a FSFolder parse it */
-            hr = m_DesktopFSFolder->ParseDisplayName(hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl, pdwAttributes);
-            if (SUCCEEDED(hr))
-                return hr;
-
-            return m_SharedDesktopFSFolder->ParseDisplayName(hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl, pdwAttributes);
-        }
-        else
-            pidlTemp = _ILCreateMyComputer();
-
-        szNext = NULL;
+        return m_regFolder->ParseDisplayName(hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl,
+                                             pdwAttributes);
     }
 
-    if (SUCCEEDED(hr) && pidlTemp)
+    HRESULT hr = _ParseDisplayNameByParent(hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl,
+                                           pdwAttributes);
+    if (SUCCEEDED(hr))
     {
-        if (szNext && *szNext)
+        if (BindCtx_ContainsObject(pbc, STR_PARSE_TRANSLATE_ALIASES))
         {
-            hr = SHELL32_ParseNextElement(this, hwndOwner, pbc,
-                                          &pidlTemp, (LPOLESTR) szNext, pchEaten, pdwAttributes);
-        }
-        else
-        {
-            if (pdwAttributes && *pdwAttributes)
+            CComHeapPtr<ITEMIDLIST> pidlAlias;
+            if (SUCCEEDED(Shell_TranslateIDListAlias(*ppidl, NULL, &pidlAlias, 0xFFFF)))
             {
-                GetAttributesOf(1, &pidlTemp, pdwAttributes);
+                ILFree(*ppidl);
+                *ppidl = pidlAlias.Detach();
             }
         }
+
+        TRACE ("(%p)->(-- ret=0x%08x)\n", this, hr);
+        return hr;
     }
 
-    if (SUCCEEDED(hr))
-        *ppidl = pidlTemp;
-    else
-        *ppidl = NULL;
+    if (Shell_FailForceReturn(hr))
+        return hr;
+
+    if (BindCtx_ContainsObject(pbc, STR_DONT_PARSE_RELATIVE))
+        return E_INVALIDARG;
+
+    if (SHIsFileSysBindCtx(pbc, NULL) == S_OK)
+        return hr;
+
+    BIND_OPTS BindOps = { sizeof(BindOps) };
+    BOOL bCreate = FALSE;
+    if (pbc && SUCCEEDED(pbc->GetBindOptions(&BindOps)) && (BindOps.grfMode & STGM_CREATE))
+    {
+        BindOps.grfMode &= ~STGM_CREATE;
+        bCreate = TRUE;
+        pbc->SetBindOptions(&BindOps);
+    }
+
+    if (m_DesktopFSFolder)
+    {
+        hr = m_DesktopFSFolder->ParseDisplayName(hwndOwner,
+                                                 pbc,
+                                                 lpszDisplayName,
+                                                 pchEaten,
+                                                 ppidl,
+                                                 pdwAttributes);
+    }
+
+    if (FAILED(hr) && m_SharedDesktopFSFolder)
+    {
+        hr = m_SharedDesktopFSFolder->ParseDisplayName(hwndOwner,
+                                                       pbc,
+                                                       lpszDisplayName,
+                                                       pchEaten,
+                                                       ppidl,
+                                                       pdwAttributes);
+    }
+
+    if (FAILED(hr) && bCreate && m_DesktopFSFolder)
+    {
+        BindOps.grfMode |= STGM_CREATE;
+        pbc->SetBindOptions(&BindOps);
+        hr = m_DesktopFSFolder->ParseDisplayName(hwndOwner,
+                                                 pbc,
+                                                 lpszDisplayName,
+                                                 pchEaten,
+                                                 ppidl,
+                                                 pdwAttributes);
+    }
 
     TRACE ("(%p)->(-- ret=0x%08x)\n", this, hr);
 
@@ -624,7 +838,7 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
             UINT cKeys = 0;
             if (cidl > 0)
             {
-                AddFSClassKeysToArray(apidl[0], hKeys, &cKeys);
+                AddFSClassKeysToArray(cidl, apidl, hKeys, &cKeys);
             }
 
             DEFCONTEXTMENU dcm;
@@ -754,16 +968,25 @@ HRESULT WINAPI CDesktopFolder::GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG
     return S_OK;
 }
 
-HRESULT WINAPI CDesktopFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags)
+HRESULT WINAPI CDesktopFolder::GetDefaultColumnState(UINT iColumn, SHCOLSTATEF *pcsFlags)
 {
+    HRESULT hr;
     TRACE ("(%p)\n", this);
 
-    if (!pcsFlags || iColumn >= DESKTOPSHELLVIEWCOLUMNS)
+    if (!pcsFlags)
         return E_INVALIDARG;
 
-    *pcsFlags = DesktopSFHeader[iColumn].pcsFlags;
-
-    return S_OK;
+    hr = CFSFolder::GetDefaultFSColumnState(iColumn, *pcsFlags);
+    /*
+    // CDesktopFolder may override the flags if desired (future)
+    switch(iColumn)
+    {
+    case SHFSF_COL_FATTS:
+        *pcsFlags &= ~SHCOLSTATE_ONBYDEFAULT;
+        break;
+    }
+    */
+    return hr;
 }
 
 HRESULT WINAPI CDesktopFolder::GetDetailsEx(
@@ -776,19 +999,27 @@ HRESULT WINAPI CDesktopFolder::GetDetailsEx(
     return E_NOTIMPL;
 }
 
+/*************************************************************************
+ * Column info functions.
+ * CFSFolder.h provides defaults for us.
+ */
+HRESULT CDesktopFolder::GetColumnDetails(UINT iColumn, SHELLDETAILS &sd)
+{
+    /* CDesktopFolder may override the flags and/or name if desired */
+    return CFSFolder::GetFSColumnDetails(iColumn, sd);
+}
+
 HRESULT WINAPI CDesktopFolder::GetDetailsOf(
     PCUITEMID_CHILD pidl,
     UINT iColumn,
     SHELLDETAILS *psd)
 {
-    if (!psd || iColumn >= DESKTOPSHELLVIEWCOLUMNS)
+    if (!psd)
         return E_INVALIDARG;
 
     if (!pidl)
     {
-        psd->fmt = DesktopSFHeader[iColumn].fmt;
-        psd->cxChar = DesktopSFHeader[iColumn].cxChar;
-        return SHSetStrRet(&psd->str, DesktopSFHeader[iColumn].colnameid);
+        return GetColumnDetails(iColumn, *psd);
     }
 
     CComPtr<IShellFolder2> psf;
@@ -843,37 +1074,25 @@ HRESULT WINAPI CDesktopFolder::GetCurFolder(PIDLIST_ABSOLUTE * pidl)
 
 HRESULT WINAPI CDesktopFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    if (uMsg != DFM_MERGECONTEXTMENU && uMsg != DFM_INVOKECOMMAND)
-        return S_OK;
-
+    enum { IDC_PROPERTIES };
     /* no data object means no selection */
     if (!pdtobj)
     {
-        if (uMsg == DFM_INVOKECOMMAND && wParam == 0)
+        if (uMsg == DFM_INVOKECOMMAND && wParam == IDC_PROPERTIES)
         {
-            if (32 >= (UINT_PTR)ShellExecuteW(hwndOwner, L"open", L"rundll32.exe",
-                                              L"shell32.dll,Control_RunDLL desk.cpl", NULL, SW_SHOWNORMAL))
-            {
-                return E_FAIL;
-            }
-            return S_OK;
+            return SHELL_ExecuteControlPanelCPL(hwndOwner, L"desk.cpl") ? S_OK : E_FAIL;
         }
         else if (uMsg == DFM_MERGECONTEXTMENU)
         {
             QCMINFO *pqcminfo = (QCMINFO *)lParam;
             HMENU hpopup = CreatePopupMenu();
-            _InsertMenuItemW(hpopup, 0, TRUE, 0, MFT_STRING, MAKEINTRESOURCEW(IDS_PROPERTIES), MFS_ENABLED);
-            Shell_MergeMenus(pqcminfo->hmenu, hpopup, pqcminfo->indexMenu, pqcminfo->idCmdFirst++, pqcminfo->idCmdLast, MM_ADDSEPARATOR);
+            _InsertMenuItemW(hpopup, 0, TRUE, IDC_PROPERTIES, MFT_STRING, MAKEINTRESOURCEW(IDS_PROPERTIES), MFS_ENABLED);
+            pqcminfo->idCmdFirst = Shell_MergeMenus(pqcminfo->hmenu, hpopup, pqcminfo->indexMenu, pqcminfo->idCmdFirst, pqcminfo->idCmdLast, MM_ADDSEPARATOR);
             DestroyMenu(hpopup);
+            return S_OK;
         }
-
-        return S_OK;
     }
-
-    if (uMsg != DFM_INVOKECOMMAND || wParam != DFM_CMD_PROPERTIES)
-        return S_OK;
-
-    return Shell_DefaultContextMenuCallBack(this, pdtobj);
+    return SHELL32_DefaultContextMenuCallBack(psf, pdtobj, uMsg);
 }
 
 /*************************************************************************

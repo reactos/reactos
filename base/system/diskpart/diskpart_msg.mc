@@ -6722,12 +6722,12 @@ Sintaxă:  SELECT VOLUME={<N> | <D>}
 
     VOLUME=<N>  Numărul volumului care urmează să primească marcajul.
 
-    VOLUME=<D>  Litera discului sau calea dosarului montat al volumului
+    VOLUME=<D>  Litera discului sau calea folderului montat al volumului
                 ce urmează să primească marcajul.
 
     Dacă niciun volum nu e specificat, comanda SELECT listează volumul actual
     cu marcaj. Puteți specifica volumul după număr, după litera discului sau
-    după calea dosarului montat. Pe un disc de bază, selectarea unui volum
+    după calea folderului montat. Pe un disc de bază, selectarea unui volum
     oferă de asemenea, marcajul corespunzător pe partiție. Puteți
     vizualiza numărul tuturor volumelor din calculator folosind comanda
     LIST VOLUME.

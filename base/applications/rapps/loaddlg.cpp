@@ -42,12 +42,14 @@
 
 #include <ui/rosctrls.h>
 #include <windowsx.h>
+#include <shlwapi_undoc.h>
 #include <process.h>
 #undef SubclassWindow
 
 #include "rosui.h"
 #include "dialogs.h"
 #include "misc.h"
+#include "unattended.h"
 
 #ifdef USE_CERT_PINNING
 #define CERT_ISSUER_INFO_OLD "US\r\nLet's Encrypt\r\nLet's Encrypt Authority X3"
@@ -80,21 +82,52 @@ LoadStatusString(DownloadStatus StatusParam)
     return szString;
 }
 
+#define FILENAME_VALID_CHAR ( \
+    PATH_CHAR_CLASS_LETTER      | \
+    PATH_CHAR_CLASS_DOT         | \
+    PATH_CHAR_CLASS_SEMICOLON   | \
+    PATH_CHAR_CLASS_COMMA       | \
+    PATH_CHAR_CLASS_SPACE       | \
+    PATH_CHAR_CLASS_OTHER_VALID)
+
+VOID
+UrlUnescapeAndMakeFileNameValid(CStringW& str)
+{
+    WCHAR szPath[MAX_PATH];
+    DWORD cchPath = _countof(szPath);
+    UrlUnescapeW(const_cast<LPWSTR>((LPCWSTR)str), szPath, &cchPath, 0);
+
+    for (PWCHAR pch = szPath; *pch; ++pch)
+    {
+        if (!PathIsValidCharW(*pch, FILENAME_VALID_CHAR))
+            *pch = L'_';
+    }
+
+    str = szPath;
+}
+
 struct DownloadInfo
 {
-    DownloadInfo()
+    DownloadInfo() :  DLType(DLTYPE_APPLICATION), IType(INSTALLER_UNKNOWN), SizeInBytes(0)
     {
     }
     DownloadInfo(const CAppInfo &AppInfo) : DLType(DLTYPE_APPLICATION)
     {
         AppInfo.GetDownloadInfo(szUrl, szSHA1, SizeInBytes);
         szName = AppInfo.szDisplayName;
+        IType = AppInfo.GetInstallerType();
+        if (IType == INSTALLER_GENERATE)
+        {
+            szPackageName = AppInfo.szIdentifier;
+        }
     }
 
     DownloadType DLType;
+    InstallerType IType;
     CStringW szUrl;
     CStringW szName;
     CStringW szSHA1;
+    CStringW szPackageName;
     ULONG SizeInBytes;
 };
 
@@ -375,12 +408,12 @@ CertGetSubjectAndIssuer(HINTERNET hFile, CLocalPtr<char> &subjectInfo, CLocalPtr
 #endif
 
 inline VOID
-MessageBox_LoadString(HWND hMainWnd, INT StringID)
+MessageBox_LoadString(HWND hOwnerWnd, INT StringID)
 {
     CStringW szMsgText;
     if (szMsgText.LoadStringW(StringID))
     {
-        MessageBoxW(hMainWnd, szMsgText.GetString(), NULL, MB_OK | MB_ICONERROR);
+        MessageBoxW(hOwnerWnd, szMsgText.GetString(), NULL, MB_OK | MB_ICONERROR);
     }
 }
 
@@ -710,8 +743,12 @@ CDownloadManager::ThreadFunc(LPVOID param)
                 Path += APPLICATION_DATABASE_NAME;
                 break;
             case DLTYPE_APPLICATION:
-                Path += (LPWSTR)(p + 1); // use the filename retrieved from URL
+            {
+                CStringW str = p + 1; // use the filename retrieved from URL
+                UrlUnescapeAndMakeFileNameValid(str);
+                Path += str;
                 break;
+            }
         }
 
         if ((InfoArray[iAppId].DLType == DLTYPE_APPLICATION) && InfoArray[iAppId].szSHA1[0] &&
@@ -982,6 +1019,7 @@ CDownloadManager::ThreadFunc(LPVOID param)
         // run it
         if (InfoArray[iAppId].DLType == DLTYPE_APPLICATION)
         {
+            CStringW app, params;
             SHELLEXECUTEINFOW shExInfo = {0};
             shExInfo.cbSize = sizeof(shExInfo);
             shExInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
@@ -989,6 +1027,17 @@ CDownloadManager::ThreadFunc(LPVOID param)
             shExInfo.lpFile = Path;
             shExInfo.lpParameters = L"";
             shExInfo.nShow = SW_SHOW;
+
+            if (InfoArray[iAppId].IType == INSTALLER_GENERATE)
+            {
+                params = L"/" + CStringW(CMD_KEY_GENINST) + L" \"" +
+                         InfoArray[iAppId].szPackageName + L"\" \"" +
+                         CStringW(shExInfo.lpFile) + L"\"";
+                shExInfo.lpParameters = params;
+                shExInfo.lpFile = app.GetBuffer(MAX_PATH);
+                GetModuleFileNameW(NULL, const_cast<LPWSTR>(shExInfo.lpFile), MAX_PATH);
+                app.ReleaseBuffer();
+            }
 
             /* FIXME: Do we want to log installer status? */
             WriteLogMessage(EVENTLOG_SUCCESS, MSG_SUCCESS_INSTALL, InfoArray[iAppId].szName);

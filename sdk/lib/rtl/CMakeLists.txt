@@ -10,10 +10,21 @@ if (CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_options(-Wunused-result)
 endif()
 
+list(APPEND RTL_WINE_SOURCE
+    actctx.c
+    timerqueue.c
+    wait.c
+)
+
+if(MSVC)
+    # Silence warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
+    set_source_files_properties(${RTL_WINE_SOURCE} PROPERTIES COMPILE_FLAGS /wd4267)
+endif()
+
 list(APPEND SOURCE
+    ${RTL_WINE_SOURCE}
     access.c
     acl.c
-    actctx.c
     appverifier.c
     assert.c
     atom.c
@@ -64,14 +75,12 @@ list(APPEND SOURCE
     sysvol.c
     thread.c
     time.c
-    timerqueue.c
     timezone.c
     trace.c
     unicode.c
     unicodeprefix.c
     vectoreh.c
     version.c
-    wait.c
     workitem.c
     rtl.h)
 

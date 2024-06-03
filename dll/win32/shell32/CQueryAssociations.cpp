@@ -96,6 +96,14 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::Init(
     {
         WCHAR *progId;
         HRESULT hr;
+        LPCWSTR pchDotExt;
+
+        if (StrChrW(pszAssoc, L'\\'))
+        {
+            pchDotExt = PathFindExtensionW(pszAssoc);
+            if (pchDotExt && *pchDotExt)
+                pszAssoc = pchDotExt;
+        }
 
         LONG ret = RegOpenKeyExW(HKEY_CLASSES_ROOT,
                             pszAssoc,
@@ -216,7 +224,7 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetString(
         case ASSOCSTR_EXECUTABLE:
         {
             hr = this->GetExecutable(pszExtra, path, MAX_PATH, &len);
-            if (FAILED(hr))
+            if (FAILED_UNEXPECTEDLY(hr))
             {
                 return hr;
             }
@@ -535,28 +543,25 @@ HRESULT CQueryAssociations::GetValue(HKEY hkey, const WCHAR *name, void **data, 
 
     ret = RegQueryValueExW(hkey, name, 0, NULL, NULL, &size);
     if (ret != ERROR_SUCCESS)
-    {
         return HRESULT_FROM_WIN32(ret);
-    }
+
     if (!size)
-    {
         return E_FAIL;
-    }
+
     *data = HeapAlloc(GetProcessHeap(), 0, size);
     if (!*data)
-    {
         return E_OUTOFMEMORY;
-    }
+
     ret = RegQueryValueExW(hkey, name, 0, NULL, (LPBYTE)*data, &size);
     if (ret != ERROR_SUCCESS)
     {
         HeapFree(GetProcessHeap(), 0, *data);
         return HRESULT_FROM_WIN32(ret);
     }
-    if(data_size)
-    {
+
+    if (data_size)
         *data_size = size;
-    }
+
     return S_OK;
 }
 
@@ -604,6 +609,8 @@ HRESULT CQueryAssociations::GetCommand(const WCHAR *extra, WCHAR **command)
     {
         /* check for default verb */
         hr = this->GetValue(hkeyShell, NULL, (void**)&extra_from_reg, NULL);
+        if (FAILED(hr))
+            hr = this->GetValue(hkeyShell, L"open", (void**)&extra_from_reg, NULL);
         if (FAILED(hr))
         {
             /* no default verb, try first subkey */
@@ -662,7 +669,7 @@ HRESULT CQueryAssociations::GetExecutable(LPCWSTR pszExtra, LPWSTR path, DWORD p
     WCHAR *pszEnd;
 
     HRESULT hr = this->GetCommand(pszExtra, &pszCommand);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
     {
         return hr;
     }
@@ -765,7 +772,7 @@ HRESULT CQueryAssociations::ReturnString(ASSOCF flags, LPWSTR out, DWORD *outlen
     }
     else
     {
-        len = datalen;
+        *outlen = len = datalen;
     }
 
     if (len)

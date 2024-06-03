@@ -908,6 +908,7 @@ DriverUnload(IN PDRIVER_OBJECT DriverObject)
 {
     // TODO: Do more cleanup!
 
+    FreeFontSupport();
     ResetCsrApiPort();
     ResetCsrProcess();
 }
