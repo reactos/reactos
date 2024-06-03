@@ -31,6 +31,7 @@ typedef struct REGSHELLSTATE
 
 #define REGSHELLSTATE_SIZE 0x24
 #define REGSHELLSTATE_VERSION 0xD
+C_ASSERT(sizeof(REGSHELLSTATE) == REGSHELLSTATE_SIZE);
 
 static const LPCWSTR s_pszExplorerKey =
     L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer";
@@ -39,9 +40,9 @@ static const LPCWSTR s_pszExplorerKey =
 // Shell settings
 
 EXTERN_C void
-SHELL32_GetDefaultShellState(SHELLSTATE *pss)
+SHELL32_GetDefaultShellState(LPSHELLSTATE pss)
 {
-    ZeroMemory(pss, sizeof(SHELLSTATE));
+    ZeroMemory(pss, sizeof(*pss));
     pss->fShowAllObjects = TRUE;
     pss->fShowExtensions = TRUE;
     pss->fShowCompColor = TRUE;
@@ -60,7 +61,6 @@ EXTERN_C LSTATUS
 SHELL32_WriteRegShellState(void *pregshellstate)
 {
     REGSHELLSTATE *prss = (REGSHELLSTATE*)pregshellstate;
-    C_ASSERT(sizeof(REGSHELLSTATE) == REGSHELLSTATE_SIZE);
     prss->dwSize = REGSHELLSTATE_SIZE;
     prss->ss.version = REGSHELLSTATE_VERSION;
     return SHSetValueW(HKEY_CURRENT_USER, s_pszExplorerKey, L"ShellState",
@@ -79,8 +79,8 @@ static BOOL
 IntSetShellStateSettings(BOOL bDoubleClick, BOOL bUseCommonTasks)
 {
     SHELLSTATE ss;
-    ss.fDoubleClickInWebView = (bDoubleClick ? TRUE : FALSE);
-    ss.fWebView = (bUseCommonTasks ? TRUE : FALSE);
+    ss.fDoubleClickInWebView = !!bDoubleClick;
+    ss.fWebView = !!bUseCommonTasks;
     SHGetSetSettings(&ss, SSF_DOUBLECLICKINWEBVIEW | SSF_WEBVIEW, TRUE);
 
     SHSettingsChanged(0, L"ShellState");

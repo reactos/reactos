@@ -1563,13 +1563,13 @@ typedef struct
     int   iSortDirection;
     UINT  version;
     UINT  uNotUsed;
-    BOOL  fSepProcess: 1;
-    BOOL  fStartPanelOn: 1;
-    BOOL  fShowStartPage: 1;
-    BOOL  fAutoCheckSelect:1; // Vista+
-    BOOL  fIconsOnly:1;
-    BOOL  fShowTypeOverlay:1;
-    BOOL  fShowStatusBar:1; // 8+
+    BOOL  fSepProcess : 1;
+    BOOL  fStartPanelOn : 1;
+    BOOL  fShowStartPage : 1;
+    BOOL  fAutoCheckSelect : 1; // Vista+
+    BOOL  fIconsOnly : 1;
+    BOOL  fShowTypeOverlay : 1;
+    BOOL  fShowStatusBar : 1; // 8+
     UINT  fSpareFlags : 9;
     UINT  :15; /* Required for proper binary layout with gcc */
 } SHELLSTATE, *LPSHELLSTATE;
@@ -1601,36 +1601,36 @@ typedef struct
 
 VOID WINAPI SHGetSettings(_Out_ LPSHELLFLAGSTATE lpsfs, DWORD dwMask);
 
-#define SSF_SHOWALLOBJECTS       0x00000001
-#define SSF_SHOWEXTENSIONS       0x00000002
-#define SSF_SHOWCOMPCOLOR        0x00000008
-#define SSF_SORTCOLUMNS          0x00000010
-#define SSF_SHOWSYSFILES         0x00000020
-#define SSF_DOUBLECLICKINWEBVIEW 0x00000080
-#define SSF_SHOWATTRIBCOL        0x00000100
-#define SSF_DESKTOPHTML          0x00000200
-#define SSF_WIN95CLASSIC         0x00000400
-#define SSF_DONTPRETTYPATH       0x00000800
-#define SSF_MAPNETDRVBUTTON      0x00001000
-#define SSF_SHOWINFOTIP          0x00002000
-#define SSF_HIDEICONS            0x00004000
-#define SSF_NOCONFIRMRECYCLE     0x00008000
-#define SSF_FILTER               0x00010000
-#define SSF_WEBVIEW              0x00020000
-#define SSF_SHOWSUPERHIDDEN      0x00040000
-#define SSF_SEPPROCESS           0x00080000
+#define SSF_SHOWALLOBJECTS          0x00000001
+#define SSF_SHOWEXTENSIONS          0x00000002
+#define SSF_SHOWCOMPCOLOR           0x00000008
+#define SSF_SORTCOLUMNS             0x00000010
+#define SSF_SHOWSYSFILES            0x00000020
+#define SSF_DOUBLECLICKINWEBVIEW    0x00000080
+#define SSF_SHOWATTRIBCOL           0x00000100
+#define SSF_DESKTOPHTML             0x00000200
+#define SSF_WIN95CLASSIC            0x00000400
+#define SSF_DONTPRETTYPATH          0x00000800
+#define SSF_MAPNETDRVBUTTON         0x00001000
+#define SSF_SHOWINFOTIP             0x00002000
+#define SSF_HIDEICONS               0x00004000
+#define SSF_NOCONFIRMRECYCLE        0x00008000
+#define SSF_FILTER                  0x00010000
+#define SSF_WEBVIEW                 0x00020000
+#define SSF_SHOWSUPERHIDDEN         0x00040000
+#define SSF_SEPPROCESS              0x00080000
 #if (NTDDI_VERSION >= NTDDI_WINXP)
-#define SSF_NONETCRAWLING        0x00100000
-#define SSF_STARTPANELON         0x00200000
-#define SSF_SHOWSTARTPAGE        0x00400000
+#define SSF_NONETCRAWLING           0x00100000
+#define SSF_STARTPANELON            0x00200000
+#define SSF_SHOWSTARTPAGE           0x00400000
 #endif
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-#define SSF_AUTOCHECKSELECT      0x00800000
-#define SSF_ICONSONLY            0x01000000
-#define SSF_SHOWTYPEOVERLAY      0x02000000
+#define SSF_AUTOCHECKSELECT         0x00800000
+#define SSF_ICONSONLY               0x01000000
+#define SSF_SHOWTYPEOVERLAY         0x02000000
 #endif
 #if (NTDDI_VERSION >= NTDDI_WIN8)
-#define SSF_SHOWSTATUSBAR        0x04000000
+#define SSF_SHOWSTATUSBAR           0x04000000
 #endif
 
 /****************************************************************************

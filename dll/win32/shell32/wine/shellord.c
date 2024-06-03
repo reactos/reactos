@@ -206,7 +206,7 @@ BOOL SHELL_GlobalCounterChanged(LONG *pCounter, SHELL_GCOUNTER_DECLAREPARAMETERS
     return TRUE;
 }
 
-EXTERN_C void SHELL32_GetDefaultShellState(SHELLSTATE *pss);
+EXTERN_C void SHELL32_GetDefaultShellState(LPSHELLSTATE pss);
 EXTERN_C BOOL SHELL32_ReadRegShellState(void *pregshellstate);
 EXTERN_C LSTATUS SHELL32_WriteRegShellState(void *pregshellstate);
 SHELL_GCOUNTER_DEFINE_GUID(SHGCGUID_ShellState, 0x7cb834f0, 0x527b, 0x11d2, 0x9d, 0x1f, 0x00, 0x00, 0xf8, 0x05, 0xca, 0x57);
@@ -217,7 +217,7 @@ static UINT g_CachedSSF = 0;
 static struct REGSHELLSTATE { DWORD dwSize; SHELLSTATE ss; } g_ShellState;
 enum { ssf_autocheckselect = 0x00800000, ssf_iconsonly = 0x01000000,
        ssf_showtypeoverlay = 0x02000000, ssf_showstatusbar = 0x04000000 };
-#endif
+#endif //__REACTOS__
 
 /*************************************************************************
  * SHGetSetSettings				[SHELL32.68]
@@ -226,7 +226,7 @@ VOID WINAPI SHGetSetSettings(LPSHELLSTATE lpss, DWORD dwMask, BOOL bSet)
 {
 #ifdef __REACTOS__
     const DWORD inverted = SSF_SHOWEXTENSIONS;
-    SHELLSTATE *gpss = &g_ShellState.ss;
+    LPSHELLSTATE gpss = &g_ShellState.ss;
     HKEY hKeyAdv;
 
     if (!SHELL_GlobalCounterIsInitialized(g_hShellState))
@@ -315,12 +315,11 @@ VOID WINAPI SHGetSetSettings(LPSHELLSTATE lpss, DWORD dwMask, BOOL bSet)
         SHGSS_GetSetStruct(SHGSS_SetStruct);
         if (changed)
         {
-            extern DWORD WINAPI SHSendMessageBroadcastW(UINT uMsg, WPARAM wParam, LPARAM lParam);
-            if ((dwMask & SSF_SHOWSUPERHIDDEN) && DLL_EXPORT_VERSION < 0x600)
+            if ((dwMask & SSF_SHOWSUPERHIDDEN) && (DLL_EXPORT_VERSION) < _WIN32_WINNT_VISTA)
             {
                 // This is probably a Windows bug but write this alternative name just in case someone reads it
                 DWORD val = gpss->fShowSuperHidden != FALSE;
-                SHSetValueW(hKeyAdv, NULL, L"SuperHidden", REG_DWORD, &val, sizeof(DWORD));
+                SHSetValueW(hKeyAdv, NULL, L"SuperHidden", REG_DWORD, &val, sizeof(val));
             }
             SHELL32_WriteRegShellState(&g_ShellState); // Write the new SHELLSTATE
             SHGetSetSettings(NULL, 0, TRUE); // Invalidate counter
@@ -390,7 +389,7 @@ VOID WINAPI SHGetSetSettings(LPSHELLSTATE lpss, DWORD dwMask, BOOL bSet)
   {
     SHGetSettings((LPSHELLFLAGSTATE)lpss,dwMask);
   }
-#endif
+#endif //__REACTOS__
 }
 
 /*************************************************************************
@@ -405,7 +404,7 @@ VOID WINAPI SHGetSettings(LPSHELLFLAGSTATE lpsfs, DWORD dwMask)
 {
 #ifdef __REACTOS__
     SHELLSTATE ss;
-    SHGetSetSettings(&ss, dwMask & ~(SSF_SORTCOLUMNS), FALSE);
+    SHGetSetSettings(&ss, dwMask & ~(SSF_SORTCOLUMNS | SSF_FILTER), FALSE);
     *lpsfs = *(LPSHELLFLAGSTATE)&ss;
     if (dwMask & SSF_HIDEICONS)
         lpsfs->fHideIcons = ss.fHideIcons;
@@ -457,7 +456,7 @@ VOID WINAPI SHGetSettings(LPSHELLFLAGSTATE lpsfs, DWORD dwMask)
 	  }
 	}
 	RegCloseKey (hKey);
-#endif
+#endif //__REACTOS__
 	TRACE("-- 0x%04x\n", *(WORD*)lpsfs);
 }
 
