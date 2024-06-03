@@ -2939,7 +2939,7 @@ static BOOL MENU_MoveRect(UINT flags, INT* x, INT* y, INT width, INT height, con
 static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT flags,
                               INT x, INT y, const RECT* pExclude)
 {
-    INT width, height, AdjHgt;
+    INT width, height, adjHgt;
     POINT ptx;
     PMONITOR monitor;
     PWND pWnd;
@@ -3024,12 +3024,12 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
             y = monitor->rcMonitor.bottom - height;
         else
         {
-            AdjHgt = y + UserGetSystemMetrics(SM_CYMENUSIZE) +
+            adjHgt = y + UserGetSystemMetrics(SM_CYMENUSIZE) +
                      2 * UserGetSystemMetrics(SM_CYDLGFRAME);
-            if (AdjHgt >= monitor->rcMonitor.bottom)
+            if (adjHgt >= monitor->rcMonitor.bottom)
                 y -= height;
             else
-                y = AdjHgt - height;
+                y = adjHgt - height;
         }
     }
 
