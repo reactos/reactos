@@ -908,6 +908,8 @@ BEGIN
     FCIDM_SHVIEW_NEWFOLDER "フォルダ(&F)"
     FCIDM_SHVIEW_NEWLINK "ショートカット(&L)"
     IDS_FOLDER_OPTIONS "フォルダ オプション"
+    IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
+    IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
     IDS_RECYCLEBIN_LOCATION "ごみ箱の場所"
     IDS_RECYCLEBIN_DISKSPACE "利用できる領域"
     IDS_EMPTY_BITBUCKET "ごみ箱を空にする"

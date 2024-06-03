@@ -913,6 +913,8 @@ BEGIN
     FCIDM_SHVIEW_NEWFOLDER "नया &फोल्डर"
     FCIDM_SHVIEW_NEWLINK "नया &लिंक"
     IDS_FOLDER_OPTIONS "फोल्डर विकल्प"
+    IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
+    IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
     IDS_RECYCLEBIN_LOCATION "रीसायकल बिन स्थान"
     IDS_RECYCLEBIN_DISKSPACE "उपलब्ध जगह"
     IDS_EMPTY_BITBUCKET "रीसायकल बिन खाली करें"

@@ -908,6 +908,8 @@ BEGIN
     FCIDM_SHVIEW_NEWFOLDER "&Folder Baru"
     FCIDM_SHVIEW_NEWLINK "&Tautan Baru"
     IDS_FOLDER_OPTIONS "Opsi Folder"
+    IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
+    IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
     IDS_RECYCLEBIN_LOCATION "Lokasi Tampungan Daur Ulang"
     IDS_RECYCLEBIN_DISKSPACE "Ruang Tersedia"
     IDS_EMPTY_BITBUCKET "Kosongkan Tampungan Daur Ulang"

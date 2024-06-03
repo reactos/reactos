@@ -918,6 +918,8 @@ BEGIN
     FCIDM_SHVIEW_NEWFOLDER "תיקיה חדשה"
     FCIDM_SHVIEW_NEWLINK "&קישור חדש"
     IDS_FOLDER_OPTIONS "אפשרויות תיקיה"
+    IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
+    IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
     IDS_RECYCLEBIN_LOCATION "מיקום סל מחזור"
     IDS_RECYCLEBIN_DISKSPACE "שטח פנוי"
     IDS_EMPTY_BITBUCKET "רוקן את סל המיחזור"

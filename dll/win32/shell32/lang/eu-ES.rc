@@ -916,6 +916,8 @@ BEGIN
     FCIDM_SHVIEW_NEWFOLDER "Karpeta &berria"
     FCIDM_SHVIEW_NEWLINK "&Lasterbide berria"
     IDS_FOLDER_OPTIONS "Karpeta aukera"
+    IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
+    IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
     IDS_RECYCLEBIN_LOCATION "Zakarrontzi lekua"
     IDS_RECYCLEBIN_DISKSPACE "Espacio disponible"
     IDS_EMPTY_BITBUCKET "Hustu zakarontzia"

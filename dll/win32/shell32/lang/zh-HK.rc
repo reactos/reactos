@@ -919,6 +919,8 @@ BEGIN
     FCIDM_SHVIEW_NEWFOLDER "新增資料夾(&F)"
     FCIDM_SHVIEW_NEWLINK "新增捷徑(&L)"
     IDS_FOLDER_OPTIONS "資料夾選項"
+    IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
+    IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
     IDS_RECYCLEBIN_LOCATION "資源回收筒位置"
     IDS_RECYCLEBIN_DISKSPACE "可用空間"
     IDS_EMPTY_BITBUCKET "清空資源回收筒"
