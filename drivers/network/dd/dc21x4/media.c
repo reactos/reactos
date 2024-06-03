@@ -326,7 +326,7 @@ MediaInitDefaultMedia(
     _In_ PDC21X4_ADAPTER Adapter,
     _In_ ULONG MediaNumber)
 {
-    ULONG Csr14, MiiAdvertising, MiiControl, i;
+    ULONG Csr14, MiiAdvertising, i;
     BOOLEAN UseMii;
 
     PAGED_CODE();
@@ -471,12 +471,14 @@ MediaInitDefaultMedia(
         }
         else
         {
+            ULONG MiiControl;
             Adapter->DefaultMedia = MEDIA_MII;
 
             switch (MediaNumber)
             {
                 case MEDIA_10T:
                     MiiAdvertising = MII_ADV_10T_HD;
+                    MiiControl = 0;
                     break;
                 case MEDIA_10T_FD:
                     MiiAdvertising = MII_ADV_10T_FD;
@@ -492,6 +494,7 @@ MediaInitDefaultMedia(
                     break;
                 case MEDIA_100T4:
                     MiiAdvertising = MII_ADV_100T4 | MII_CR_SPEED_SELECTION;
+                    MiiControl = 0;
                     break;
 
                 default:
