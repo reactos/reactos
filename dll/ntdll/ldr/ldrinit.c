@@ -517,6 +517,9 @@ LdrpInitializeThread(IN PCONTEXT Context)
             NtCurrentTeb()->RealClientId.UniqueProcess,
             NtCurrentTeb()->RealClientId.UniqueThread);
 
+    /* Acquire the loader Lock */
+    RtlEnterCriticalSection(&LdrpLoaderLock);
+
     /* Allocate an Activation Context Stack */
     DPRINT("ActivationContextStack %p\n", NtCurrentTeb()->ActivationContextStackPointer);
     Status = RtlAllocateActivationContextStack(&NtCurrentTeb()->ActivationContextStackPointer);
@@ -526,7 +529,7 @@ LdrpInitializeThread(IN PCONTEXT Context)
     }
 
     /* Make sure we are not shutting down */
-    if (LdrpShutdownInProgress) return;
+    if (LdrpShutdownInProgress) goto Exit;
 
     /* Allocate TLS */
     LdrpAllocateTls();
@@ -632,6 +635,11 @@ LdrpInitializeThread(IN PCONTEXT Context)
         /* Deactivate the ActCtx */
         RtlDeactivateActivationContextUnsafeFast(&ActCtx);
     }
+
+Exit:
+
+    /* Release the loader lock */
+    RtlLeaveCriticalSection(&LdrpLoaderLock);
 
     DPRINT("LdrpInitializeThread() done\n");
 }
