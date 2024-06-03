@@ -3718,23 +3718,13 @@ get_glyph_index(FT_Face ft_face, UINT glyph)
 }
 
 static inline FT_UInt FASTCALL
-get_glyph_index_flagged(FT_Face face, FT_ULong code, DWORD indexed_flag, DWORD flags)
+get_glyph_index_flagged(FT_Face face, FT_ULong code, BOOL fCodeAsIndex)
 {
-    FT_UInt glyph_index;
-    if (flags & indexed_flag)
-    {
-        glyph_index = code;
-    }
-    else
-    {
-        glyph_index = get_glyph_index(face, code);
-    }
-    return glyph_index;
+    return (fCodeAsIndex ? code : get_glyph_index(face, code));
 }
 
 /*
  * Based on WineEngGetGlyphOutline
- *
  */
 ULONG
 FASTCALL
@@ -3820,7 +3810,7 @@ ftGdiGetGlyphOutline(
 
     TEXTOBJ_UnlockText(TextObj);
 
-    glyph_index = get_glyph_index_flagged(ft_face, wch, GGO_GLYPH_INDEX, iFormat);
+    glyph_index = get_glyph_index_flagged(ft_face, wch, (iFormat & GGO_GLYPH_INDEX));
     iFormat &= ~GGO_GLYPH_INDEX;
 
     if (orientation || (iFormat != GGO_METRICS && iFormat != GGO_BITMAP) || aveWidth || pmat2)
@@ -4325,7 +4315,7 @@ TextIntGetTextExtentPoint(PDC dc,
                 ch0 = Utf32FromSurrogatePair(ch0, ch1);
         }
 
-        glyph_index = get_glyph_index_flagged(Cache.Hashed.Face, ch0, GTEF_INDICES, fl);
+        glyph_index = get_glyph_index_flagged(Cache.Hashed.Face, ch0, (fl & GTEF_INDICES));
         Cache.Hashed.GlyphIndex = glyph_index;
 
         realglyph = IntGetRealGlyph(&Cache);
@@ -5916,7 +5906,7 @@ IntGetTextDisposition(
                 ch0 = Utf32FromSurrogatePair(ch0, ch1);
         }
 
-        glyph_index = get_glyph_index_flagged(face, ch0, ETO_GLYPH_INDEX, fuOptions);
+        glyph_index = get_glyph_index_flagged(face, ch0, (fuOptions & ETO_GLYPH_INDEX));
         Cache->Hashed.GlyphIndex = glyph_index;
 
         realglyph = IntGetRealGlyph(Cache);
@@ -6325,7 +6315,7 @@ IntExtTextOutW(
                 ch0 = Utf32FromSurrogatePair(ch0, ch1);
         }
 
-        glyph_index = get_glyph_index_flagged(face, ch0, ETO_GLYPH_INDEX, fuOptions);
+        glyph_index = get_glyph_index_flagged(face, ch0, (fuOptions & ETO_GLYPH_INDEX));
         Cache.Hashed.GlyphIndex = glyph_index;
 
         realglyph = IntGetRealGlyph(&Cache);
@@ -6880,11 +6870,11 @@ NtGdiGetCharABCWidthsW(
 
         if (Safepwch)
         {
-            glyph_index = get_glyph_index_flagged(face, Safepwch[i - FirstChar], GCABCW_INDICES, fl);
+            glyph_index = get_glyph_index_flagged(face, Safepwch[i - FirstChar], (fl & GCABCW_INDICES));
         }
         else
         {
-            glyph_index = get_glyph_index_flagged(face, i, GCABCW_INDICES, fl);
+            glyph_index = get_glyph_index_flagged(face, i, (fl & GCABCW_INDICES));
         }
         FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
 
@@ -7067,11 +7057,11 @@ NtGdiGetCharWidthW(
     {
         if (Safepwc)
         {
-            glyph_index = get_glyph_index_flagged(face, Safepwc[i - FirstChar], GCW_INDICES, fl);
+            glyph_index = get_glyph_index_flagged(face, Safepwc[i - FirstChar], (fl & GCW_INDICES));
         }
         else
         {
-            glyph_index = get_glyph_index_flagged(face, i, GCW_INDICES, fl);
+            glyph_index = get_glyph_index_flagged(face, i, (fl & GCW_INDICES));
         }
         FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
         if (!fl)
