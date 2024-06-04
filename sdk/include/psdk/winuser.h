@@ -4924,6 +4924,15 @@ BOOL WINAPI GetWindowInfo(_In_ HWND, _Inout_ PWINDOWINFO);
 BOOL WINAPI GetMonitorInfoA(_In_ HMONITOR, _Inout_ LPMONITORINFO);
 BOOL WINAPI GetMonitorInfoW(_In_ HMONITOR, _Inout_ LPMONITORINFO);
 
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+#define USER_DEFAULT_SCREEN_DPI 96
+#endif /* _WIN32_WINNT >= _WIN32_WINNT_VISTA */
+
+#if (_WIN32_WINNT >= 0x0605) /* Windows 10 pre-Threshold */
+UINT WINAPI GetDpiForSystem(VOID);
+UINT WINAPI GetDpiForWindow(_In_ HWND hwnd);
+#endif /* _WIN32_WINNT >= 0x0605 */
+
 UINT
 WINAPI
 GetWindowModuleFileNameA(
