@@ -97,24 +97,14 @@ HRESULT CGuidItemContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder,
     GUID *pGuid = _ILGetGUIDPointer(apidl[0]);
     if (pGuid)
     {
-        LPOLESTR pwszCLSID;
         WCHAR key[60];
-
         wcscpy(key, L"CLSID\\");
-        HRESULT hr = StringFromCLSID(*pGuid, &pwszCLSID);
-        if (hr == S_OK)
-        {
-            wcscpy(&key[6], pwszCLSID);
-            AddClassKeyToArray(key, hKeys, &cKeys);
-            CoTaskMemFree(pwszCLSID);
-        }
+        StringFromGUID2(*pGuid, &key[6], 39);
+        AddClassKeyToArray(key, hKeys, &cKeys);
     }
-    UINT folderKey = TRUE;
-    SFGAOF att = SFGAO_FOLDER;
-    if (psf && SUCCEEDED(psf->GetAttributesOf(1, apidl, &att)))
-        folderKey = (att & SFGAO_FOLDER);
 
-    if (folderKey)
+    SFGAOF att = (psf && cidl) ? SHGetAttributes(psf, apidl[0], SFGAO_FOLDER) : 0;
+    if (att & SFGAO_FOLDER)
         AddClassKeyToArray(L"Folder", hKeys, &cKeys);
 
     return CDefFolderMenu_Create2(pidlFolder, hwnd, cidl, apidl, psf, RegFolderContextMenuCallback, cKeys, hKeys, ppcm);
