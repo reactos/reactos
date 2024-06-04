@@ -155,6 +155,7 @@ static void SuggestKeys(HKEY hRootKey, LPCWSTR pszKeyPath, LPWSTR pszSuggestions
     size_t i;
     HKEY hOtherKey, hSubKey;
     BOOL bFound;
+    const REGSAM regsam = KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE;
 
     memset(pszSuggestions, 0, iSuggestionsLength * sizeof(*pszSuggestions));
     iSuggestionsLength--;
@@ -174,7 +175,7 @@ static void SuggestKeys(HKEY hRootKey, LPCWSTR pszKeyPath, LPWSTR pszSuggestions
                  * loop back */
                 if ((szBuffer[0] != L'\0') && _wcsicmp(szBuffer, pszKeyPath))
                 {
-                    if (RegOpenKeyW(hRootKey, szBuffer, &hOtherKey) == ERROR_SUCCESS)
+                    if (RegOpenKeyExW(hRootKey, szBuffer, 0, regsam, &hOtherKey) == ERROR_SUCCESS)
                     {
                         lstrcpynW(pszSuggestions, L"HKCR\\", (int) iSuggestionsLength);
                         i = wcslen(pszSuggestions);
@@ -197,7 +198,7 @@ static void SuggestKeys(HKEY hRootKey, LPCWSTR pszKeyPath, LPWSTR pszSuggestions
         while(bFound && (iSuggestionsLength > 0));
 
         /* Check CLSID key */
-        if (RegOpenKeyW(hRootKey, pszKeyPath, &hSubKey) == ERROR_SUCCESS)
+        if (RegOpenKeyExW(hRootKey, pszKeyPath, 0, regsam, &hSubKey) == ERROR_SUCCESS)
         {
             if (QueryStringValue(hSubKey, L"CLSID", NULL, szBuffer,
                                  ARRAY_SIZE(szBuffer)) == ERROR_SUCCESS)
@@ -213,6 +214,19 @@ static void SuggestKeys(HKEY hRootKey, LPCWSTR pszKeyPath, LPWSTR pszSuggestions
                 iSuggestionsLength -= i;
             }
             RegCloseKey(hSubKey);
+        }
+    }
+    else if ((hRootKey == HKEY_CURRENT_USER || hRootKey == HKEY_LOCAL_MACHINE) && *pszKeyPath)
+    {
+        LPCWSTR rootstr = hRootKey == HKEY_CURRENT_USER ? L"HKLM" : L"HKCU";
+        hOtherKey = hRootKey == HKEY_CURRENT_USER ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
+        if (RegOpenKeyExW(hOtherKey, pszKeyPath, 0, regsam, &hSubKey) == ERROR_SUCCESS)
+        {
+            int cch;
+            RegCloseKey(hSubKey);
+            cch = _snwprintf(pszSuggestions, iSuggestionsLength, L"%s\\%s", rootstr, pszKeyPath);
+            if (cch <= 0 || cch > iSuggestionsLength)
+                pszSuggestions[0] = UNICODE_NULL;
         }
     }
 }
@@ -634,7 +648,15 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                         wID = ID_TREE_SUGGESTION_MIN;
                         while(*s && (wID <= ID_TREE_SUGGESTION_MAX))
                         {
-                            _snwprintf(buffer, ARRAY_SIZE(buffer), resource, s);
+                            WCHAR *path = s, buf[MAX_PATH];
+                            if (hRootKey == HKEY_CURRENT_USER || hRootKey == HKEY_LOCAL_MACHINE)
+                            {
+                                // Windows 10 only displays the root name
+                                LPCWSTR next = PathFindNextComponentW(s);
+                                if (next > s)
+                                    lstrcpynW(path = buf, s, min(next - s, _countof(buf)));
+                            }
+                            _snwprintf(buffer, ARRAY_SIZE(buffer), resource, path);
 
                             memset(&mii, 0, sizeof(mii));
                             mii.cbSize = sizeof(mii);
