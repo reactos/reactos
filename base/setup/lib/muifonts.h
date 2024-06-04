@@ -1,5 +1,10 @@
 #pragma once
 
+/*
+ * NOTE: "Droid Sans Fallback" is not a "fixed-pitch" font.
+ *       We don't have Far East Asian "fixed-pitch" fonts yet.
+ */
+
 MUI_SUBFONT LatinFonts[] =
 {
     /*Font                       Substitute  */
@@ -30,7 +35,7 @@ MUI_SUBFONT LatinFonts[] =
     { L"Times New Roman Greek,161",    L"Times New Roman,161" },
     { L"Times New Roman TUR,162",      L"Times New Roman,162" },
     { L"Tms Rmn",                L"Times New Roman" },
-    /* The beginning of Asian fonts */
+    /* The beginning of FE Asian fonts */
     { L"Batang",                 L"Droid Sans Fallback" },
     { L"BatangChe",              L"Droid Sans Fallback" },
     { L"DLCMingBold",            L"Droid Sans Fallback" },
@@ -52,7 +57,7 @@ MUI_SUBFONT LatinFonts[] =
     { L"PMingLiU",               L"Droid Sans Fallback" },
     { L"SimHei",                 L"Droid Sans Fallback" },
     { L"SimSun",                 L"Droid Sans Fallback" },
-    /* The end of Asian fonts */
+    /* The end of FE Asian fonts */
     { NULL, NULL }
 };
 
@@ -85,7 +90,7 @@ MUI_SUBFONT CyrillicFonts[] =
     { L"Times New Roman Greek,161",    L"Times New Roman,161" },
     { L"Times New Roman TUR,162",      L"Times New Roman,162" },
     { L"Tms Rmn",                L"Times New Roman" },
-    /* The beginning of Asian fonts */
+    /* The beginning of FE Asian fonts */
     { L"Batang",                 L"Droid Sans Fallback" },
     { L"BatangChe",              L"Droid Sans Fallback" },
     { L"DLCMingBold",            L"Droid Sans Fallback" },
@@ -107,7 +112,7 @@ MUI_SUBFONT CyrillicFonts[] =
     { L"PMingLiU",               L"Droid Sans Fallback" },
     { L"SimHei",                 L"Droid Sans Fallback" },
     { L"SimSun",                 L"Droid Sans Fallback" },
-    /* The end of Asian fonts */
+    /* The end of FE Asian fonts */
     { NULL, NULL }
 };
 
@@ -140,7 +145,7 @@ MUI_SUBFONT GreekFonts[] =
     { L"Times New Roman Greek,161",    L"Times New Roman,161" },
     { L"Times New Roman TUR,162",      L"Times New Roman,162" },
     { L"Tms Rmn",                L"Times New Roman" },
-    /* The beginning of Asian fonts */
+    /* The beginning of FE Asian fonts */
     { L"Batang",                 L"Droid Sans Fallback" },
     { L"BatangChe",              L"Droid Sans Fallback" },
     { L"DLCMingBold",            L"Droid Sans Fallback" },
@@ -162,7 +167,7 @@ MUI_SUBFONT GreekFonts[] =
     { L"PMingLiU",               L"Droid Sans Fallback" },
     { L"SimHei",                 L"Droid Sans Fallback" },
     { L"SimSun",                 L"Droid Sans Fallback" },
-    /* The end of Asian fonts */
+    /* The end of FE Asian fonts */
     { NULL, NULL }
 };
 
@@ -195,7 +200,7 @@ MUI_SUBFONT HebrewFonts[] =
     { L"Times New Roman Greek,161",    L"Times New Roman,161" },
     { L"Times New Roman TUR,162",      L"Times New Roman,162" },
     { L"Tms Rmn",                L"Times New Roman" },
-    /* The beginning of Asian fonts */
+    /* The beginning of FE Asian fonts */
     { L"Batang",                 L"Droid Sans Fallback" },
     { L"BatangChe",              L"Droid Sans Fallback" },
     { L"DLCMingBold",            L"Droid Sans Fallback" },
@@ -217,7 +222,7 @@ MUI_SUBFONT HebrewFonts[] =
     { L"PMingLiU",               L"Droid Sans Fallback" },
     { L"SimHei",                 L"Droid Sans Fallback" },
     { L"SimSun",                 L"Droid Sans Fallback" },
-    /* The end of Asian fonts */
+    /* The end of FE Asian fonts */
     { NULL, NULL }
 };
 
@@ -265,7 +270,7 @@ MUI_SUBFONT ChineseSimplifiedFonts[] =
     { CSF_LocalName2,            L"Droid Sans Fallback" },
     { CSF_LocalName3,            L"Droid Sans Fallback" },
     { CSF_LocalName4,            L"Droid Sans Fallback" },
-    /* The beginning of Asian fonts */
+    /* The beginning of FE Asian fonts */
     { L"Batang",                 L"Droid Sans Fallback" },
     { L"BatangChe",              L"Droid Sans Fallback" },
     { L"DLCMingBold",            L"Droid Sans Fallback" },
@@ -287,7 +292,7 @@ MUI_SUBFONT ChineseSimplifiedFonts[] =
     { L"PMingLiU",               L"Droid Sans Fallback" },
     { L"SimHei",                 L"Droid Sans Fallback" },
     { L"SimSun",                 L"Droid Sans Fallback" },
-    /* The end of Asian fonts */
+    /* The end of FE Asian fonts */
     { NULL, NULL }
 };
 
@@ -333,7 +338,7 @@ MUI_SUBFONT ChineseTraditionalFonts[] =
     { CTF_LocalName1,            L"Droid Sans Fallback" },
     { CTF_LocalName2,            L"Droid Sans Fallback" },
     { CTF_LocalName3,            L"Droid Sans Fallback" },
-    /* The beginning of Asian fonts */
+    /* The beginning of FE Asian fonts */
     { L"Batang",                 L"Droid Sans Fallback" },
     { L"BatangChe",              L"Droid Sans Fallback" },
     { L"DLCMingBold",            L"Droid Sans Fallback" },
@@ -355,7 +360,7 @@ MUI_SUBFONT ChineseTraditionalFonts[] =
     { L"PMingLiU",               L"Droid Sans Fallback" },
     { L"SimHei",                 L"Droid Sans Fallback" },
     { L"SimSun",                 L"Droid Sans Fallback" },
-    /* The end of Asian fonts */
+    /* The end of FE Asian fonts */
     { NULL, NULL }
 };
 
@@ -401,7 +406,7 @@ MUI_SUBFONT JapaneseFonts[] =
     { JF_LocalName1,             L"Droid Sans Fallback" },
     { JF_LocalName2,             L"Droid Sans Fallback" },
     { JF_LocalName3,             L"Droid Sans Fallback" },
-    /* The beginning of Asian fonts */
+    /* The beginning of FE Asian fonts */
     { L"Batang",                 L"Droid Sans Fallback" },
     { L"BatangChe",              L"Droid Sans Fallback" },
     { L"DLCMingBold",            L"Droid Sans Fallback" },
@@ -423,7 +428,7 @@ MUI_SUBFONT JapaneseFonts[] =
     { L"PMingLiU",               L"Droid Sans Fallback" },
     { L"SimHei",                 L"Droid Sans Fallback" },
     { L"SimSun",                 L"Droid Sans Fallback" },
-    /* The end of Asian fonts */
+    /* The end of FE Asian fonts */
     { NULL, NULL }
 };
 
@@ -473,7 +478,7 @@ MUI_SUBFONT KoreanFonts[] =
     { KF_LocalName3,             L"Droid Sans Fallback" },
     { KF_LocalName4,             L"Droid Sans Fallback" },
     { KF_LocalName5,             L"Droid Sans Fallback" },
-    /* The beginning of Asian fonts */
+    /* The beginning of FE Asian fonts */
     { L"Batang",                 L"Droid Sans Fallback" },
     { L"BatangChe",              L"Droid Sans Fallback" },
     { L"DLCMingBold",            L"Droid Sans Fallback" },
@@ -495,7 +500,7 @@ MUI_SUBFONT KoreanFonts[] =
     { L"PMingLiU",               L"Droid Sans Fallback" },
     { L"SimHei",                 L"Droid Sans Fallback" },
     { L"SimSun",                 L"Droid Sans Fallback" },
-    /* The end of Asian fonts */
+    /* The end of FE Asian fonts */
     { NULL, NULL }
 };
 
@@ -524,7 +529,7 @@ MUI_SUBFONT UnicodeFonts[] =
     { L"Times New Roman Greek,161",    L"Times New Roman,161" },
     { L"Times New Roman TUR,162",      L"Times New Roman,162" },
     { L"Tms Rmn",                L"Times New Roman" },
-    /* The beginning of Asian fonts */
+    /* The beginning of FE Asian fonts */
     { L"Batang",                 L"Droid Sans Fallback" },
     { L"BatangChe",              L"Droid Sans Fallback" },
     { L"DLCMingBold",            L"Droid Sans Fallback" },
@@ -546,7 +551,7 @@ MUI_SUBFONT UnicodeFonts[] =
     { L"PMingLiU",               L"Droid Sans Fallback" },
     { L"SimHei",                 L"Droid Sans Fallback" },
     { L"SimSun",                 L"Droid Sans Fallback" },
-    /* The end of Asian fonts */
+    /* The end of FE Asian fonts */
     { NULL, NULL }
 };
 
@@ -582,7 +587,7 @@ MUI_SUBFONT HindiFonts[] =
     { L"Times New Roman Greek,161",    L"Times New Roman,161" },
     { L"Times New Roman TUR,162",      L"Times New Roman,162" },
     { L"Tms Rmn",                L"Times New Roman" },
-    /* The beginning of Asian fonts */
+    /* The beginning of FE Asian fonts */
     { L"Batang",                 L"Droid Sans Fallback" },
     { L"BatangChe",              L"Droid Sans Fallback" },
     { L"DLCMingBold",            L"Droid Sans Fallback" },
@@ -604,7 +609,7 @@ MUI_SUBFONT HindiFonts[] =
     { L"PMingLiU",               L"Droid Sans Fallback" },
     { L"SimHei",                 L"Droid Sans Fallback" },
     { L"SimSun",                 L"Droid Sans Fallback" },
-    /* The end of Asian fonts */
+    /* The end of FE Asian fonts */
     { NULL, NULL }
 };
 
