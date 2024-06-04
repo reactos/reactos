@@ -23,16 +23,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL (fprop);
 
-typedef struct REGSHELLSTATE
-{
-    DWORD dwSize;
-    SHELLSTATE ss;
-} REGSHELLSTATE, *PREGSHELLSTATE; // Note: SHGetSetSettings needs to stay in sync with this
-
-#define REGSHELLSTATE_SIZE 0x24
-#define REGSHELLSTATE_VERSION 0xD
-C_ASSERT(sizeof(REGSHELLSTATE) == REGSHELLSTATE_SIZE);
-
 static const LPCWSTR s_pszExplorerKey =
     L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer";
 
@@ -58,9 +48,8 @@ SHELL32_GetDefaultShellState(LPSHELLSTATE pss)
 }
 
 EXTERN_C LSTATUS
-SHELL32_WriteRegShellState(void *pregshellstate)
+SHELL32_WriteRegShellState(PREGSHELLSTATE prss)
 {
-    REGSHELLSTATE *prss = (REGSHELLSTATE*)pregshellstate;
     prss->dwSize = REGSHELLSTATE_SIZE;
     prss->ss.version = REGSHELLSTATE_VERSION;
     return SHSetValueW(HKEY_CURRENT_USER, s_pszExplorerKey, L"ShellState",
@@ -93,10 +82,9 @@ IntSetShellStateSettings(BOOL bDoubleClick, BOOL bUseCommonTasks)
 // SHLWAPI.dll	RegQueryValueExW ( 0x000005a8, "ShellState", NULL, 0x0007e474, 0x000c2050, 0x0007e4fc )	ERROR_SUCCESS		0.0000271
 // SHLWAPI.dll	RegCloseKey ( 0x000005a8 )	ERROR_SUCCESS		0.0000112
 EXTERN_C BOOL
-SHELL32_ReadRegShellState(void *pregshellstate)
+SHELL32_ReadRegShellState(PREGSHELLSTATE prss)
 {
     DWORD dwSize = sizeof(REGSHELLSTATE);
-    REGSHELLSTATE *prss = (REGSHELLSTATE*)pregshellstate;
     LSTATUS err = SHGetValueW(HKEY_CURRENT_USER, s_pszExplorerKey,
                               L"ShellState", NULL, prss, &dwSize);
     return err == ERROR_SUCCESS && prss->dwSize >= REGSHELLSTATE_SIZE;

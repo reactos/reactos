@@ -207,14 +207,14 @@ BOOL SHELL_GlobalCounterChanged(LONG *pCounter, SHELL_GCOUNTER_DECLAREPARAMETERS
 }
 
 EXTERN_C void SHELL32_GetDefaultShellState(LPSHELLSTATE pss);
-EXTERN_C BOOL SHELL32_ReadRegShellState(void *pregshellstate);
-EXTERN_C LSTATUS SHELL32_WriteRegShellState(void *pregshellstate);
+EXTERN_C BOOL SHELL32_ReadRegShellState(PREGSHELLSTATE prss);
+EXTERN_C LSTATUS SHELL32_WriteRegShellState(PREGSHELLSTATE prss);
 SHELL_GCOUNTER_DEFINE_GUID(SHGCGUID_ShellState, 0x7cb834f0, 0x527b, 0x11d2, 0x9d, 0x1f, 0x00, 0x00, 0xf8, 0x05, 0xca, 0x57);
 SHELL_GCOUNTER_DEFINE_HANDLE(g_hShellState);
 #define SHELL_GCOUNTER_SHELLSTATE SHELL_GCOUNTER_PARAMETERS(g_hShellState, GLOBALCOUNTER_SHELLSETTINGSCHANGED)
 static LONG g_ShellStateCounter = 0;
 static UINT g_CachedSSF = 0;
-static struct REGSHELLSTATE { DWORD dwSize; SHELLSTATE ss; } g_ShellState;
+static REGSHELLSTATE g_ShellState;
 enum { ssf_autocheckselect = 0x00800000, ssf_iconsonly = 0x01000000,
        ssf_showtypeoverlay = 0x02000000, ssf_showstatusbar = 0x04000000 };
 #endif //__REACTOS__
@@ -363,7 +363,7 @@ VOID WINAPI SHGetSetSettings(LPSHELLSTATE lpss, DWORD dwMask, BOOL bSet)
         SHGSS_GetSetAdv(SHGSS_GetAdv);
         if (dwMask & ~(read | g_CachedSSF))
         {
-            struct REGSHELLSTATE rss;
+            REGSHELLSTATE rss;
             if (SHELL32_ReadRegShellState(&rss))
             {
                 SHGSS_GetSetStruct(SHGSS_CacheField); // Copy the requested items to gpss
