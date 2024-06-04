@@ -2316,7 +2316,7 @@ interface IInitializeCommand : IUnknown
 {
     HRESULT Initialize(
                     [in, string] LPCWSTR pszCommandName,
-                    [in] IPropertyBag *ppb);
+                    [in, optional] IPropertyBag *ppb);
 }
 
 
@@ -2368,6 +2368,39 @@ interface IExplorerCommandProvider : IUnknown
                     [in] REFGUID rguidCommandId,
                     [in] REFIID riid,
                     [out, iid_is(riid)] void **ppv);
+};
+
+
+/*****************************************************************************
+ * IExecuteCommand interface (7+)
+ */
+[
+    uuid(7F9185B0-CB92-43C5-80A9-92277A4F7B54),
+    pointer_default(unique)
+]
+interface IExecuteCommand : IUnknown
+{
+    HRESULT SetKeyState([in] DWORD grfKeyState);
+    HRESULT SetParameters([in, string] LPCWSTR pszParameters);
+    HRESULT SetPosition([in] POINT pt);
+    HRESULT SetShowWindow([in] int nShow);
+    HRESULT SetNoShowUI([in] BOOL fNoShowUI);
+    HRESULT SetDirectory([in, string] LPCWSTR pszDirectory);
+    HRESULT Execute();
+};
+
+
+/*****************************************************************************
+ * IObjectWithSelection interface (Vista+)
+ */
+[
+    uuid(1C9CD5BB-98E9-4491-A60F-31AACC72B83C),
+    pointer_default(unique)
+]
+interface IObjectWithSelection : IUnknown
+{
+    HRESULT SetSelection([in] IShellItemArray *psia);
+    HRESULT GetSelection([in] REFIID riid, [out, iid_is(riid)] void **ppv);
 };
 
 

@@ -1295,6 +1295,74 @@ SHGetRealIDL(
     return hr;
 }
 
+EXTERN_C HRESULT
+IUnknown_InitializeCommand(
+    _In_ IUnknown *pUnk,
+    _In_ PCWSTR pszCommandName,
+    _In_opt_ IPropertyBag *pPB)
+{
+    HRESULT hr;
+    CComPtr<IInitializeCommand> pIC;
+    if (SUCCEEDED(hr = pUnk->QueryInterface(IID_PPV_ARG(IInitializeCommand, &pIC))))
+        hr = pIC->Initialize(pszCommandName, pPB);
+    return hr;
+}
+
+EXTERN_C HRESULT
+InvokeIExecuteCommand(
+    _In_ IExecuteCommand *pEC,
+    _In_ PCWSTR pszCommandName,
+    _In_opt_ IPropertyBag *pPB,
+    _In_opt_ IShellItemArray *pSIA,
+    _In_opt_ LPCMINVOKECOMMANDINFOEX pICI,
+    _In_opt_ IUnknown *pSite)
+{
+    if (!pEC)
+        return E_INVALIDARG;
+
+    if (pSite)
+        IUnknown_SetSite(pEC, pSite);
+    IUnknown_InitializeCommand(pEC, pszCommandName, pPB);
+
+    CComPtr<IObjectWithSelection> pOWS;
+    if (pSIA && SUCCEEDED(pEC->QueryInterface(IID_PPV_ARG(IObjectWithSelection, &pOWS))))
+        pOWS->SetSelection(pSIA);
+
+    DWORD dwKeyState = 0, fMask = pICI ? pICI->fMask : 0;
+    pEC->SetNoShowUI((fMask & CMIC_MASK_FLAG_NO_UI) != 0);
+    pEC->SetShowWindow(pICI ? pICI->nShow : SW_SHOW);
+    if (fMask & CMIC_MASK_SHIFT_DOWN)
+        dwKeyState |= MK_SHIFT;
+    if (fMask & CMIC_MASK_CONTROL_DOWN)
+        dwKeyState |= MK_CONTROL;
+    pEC->SetKeyState(dwKeyState);
+    if ((fMask & CMIC_MASK_UNICODE) && pICI->lpDirectoryW)
+        pEC->SetDirectory(pICI->lpDirectoryW);
+    if ((fMask & CMIC_MASK_UNICODE) && pICI->lpParametersW)
+        pEC->SetParameters(pICI->lpParametersW);
+    if (fMask & CMIC_MASK_PTINVOKE)
+        pEC->SetPosition(pICI->ptInvoke);
+
+    HRESULT hr = pEC->Execute();
+    if (pSite)
+        IUnknown_SetSite(pEC, NULL);
+    return hr;
+}
+
+EXTERN_C HRESULT
+InvokeIExecuteCommandWithDataObject(
+    _In_ IExecuteCommand *pEC,
+    _In_ PCWSTR pszCommandName,
+    _In_opt_ IPropertyBag *pPB,
+    _In_ IDataObject *pDO,
+    _In_opt_ LPCMINVOKECOMMANDINFOEX pICI,
+    _In_opt_ IUnknown *pSite)
+{
+    CComPtr<IShellItemArray> pSIA;
+    HRESULT hr = SHCreateShellItemArrayFromDataObject(pDO, IID_PPV_ARG(IShellItemArray, &pSIA));
+    return SUCCEEDED(hr) ? InvokeIExecuteCommand(pEC, pszCommandName, pPB, pSIA, pICI, pSite) : hr;
+}
+
 static HRESULT
 GetCommandStringA(_In_ IContextMenu *pCM, _In_ UINT_PTR Id, _In_ UINT GCS, _Out_writes_(cchMax) LPSTR Buf, _In_ UINT cchMax)
 {
