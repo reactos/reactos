@@ -103,7 +103,14 @@ HRESULT CGuidItemContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder,
         AddClassKeyToArray(key, hKeys, &cKeys);
     }
 
-    SFGAOF att = (psf && cidl) ? SHGetAttributes(psf, apidl[0], SFGAO_FOLDER) : 0;
+    // FIXME: CRegFolder should be aggregated by its outer folder and should
+    // provide the attributes for all required non-registry folders.
+    // It currently does not so we have to ask the outer folder ourself so
+    // that we get the correct attributes for My Computer etc.
+    CComPtr<IShellFolder> pOuterSF;
+    SHBindToObject(NULL, pidlFolder, IID_PPV_ARG(IShellFolder, &pOuterSF));
+
+    SFGAOF att = (psf && cidl) ? SHGetAttributes(pOuterSF ? pOuterSF.p : psf, apidl[0], SFGAO_FOLDER) : 0;
     if (att & SFGAO_FOLDER)
         AddClassKeyToArray(L"Folder", hKeys, &cKeys);
 
