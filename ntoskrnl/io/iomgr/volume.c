@@ -1411,13 +1411,14 @@ IoVolumeDeviceToDosName(IN PVOID VolumeDeviceObject,
         goto ReleaseMemory;
     }
 
-    /* Set output string */
-    DosName->Length = (USHORT)VolumePathPtr->MultiSzLength;
-    DosName->MaximumLength = (USHORT)VolumePathPtr->MultiSzLength + sizeof(UNICODE_NULL);
-    /* Our MOUNTMGR_VOLUME_PATHS will be used as output buffer */
+    /* Set the output string. Discount the last two
+     * NUL-terminators from the multi-string length. */
+    DosName->Length = (USHORT)VolumePathPtr->MultiSzLength - 2*sizeof(UNICODE_NULL);
+    DosName->MaximumLength = DosName->Length + sizeof(UNICODE_NULL);
+    /* Recycle our MOUNTMGR_VOLUME_PATHS as the output buffer
+     * and move the NUL-terminated string to the beginning */
     DosName->Buffer = (PWSTR)VolumePathPtr;
-    /* Move name at the begin, RtlMoveMemory is OK with overlapping */
-    RtlMoveMemory(DosName->Buffer, VolumePathPtr->MultiSz, VolumePathPtr->MultiSzLength);
+    RtlMoveMemory(DosName->Buffer, VolumePathPtr->MultiSz, DosName->Length);
     DosName->Buffer[DosName->Length / sizeof(WCHAR)] = UNICODE_NULL;
 
     /* DON'T release buffer, just dereference FO, and return success */
