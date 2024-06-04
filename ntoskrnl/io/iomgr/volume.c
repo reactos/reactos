@@ -1367,7 +1367,7 @@ IoVolumeDeviceToDosName(
      * Even if MOUNTMGR_VOLUME_PATHS allows bigger name lengths
      * than MAXUSHORT, we can't use them, because we have to return
      * this in an UNICODE_STRING that stores length in a USHORT. */
-    Length = sizeof(VolumePath) + VolumePath.MultiSzLength;
+    Length = FIELD_OFFSET(MOUNTMGR_VOLUME_PATHS, MultiSz) + VolumePath.MultiSzLength;
     if (Length > MAXUSHORT)
     {
         Status = STATUS_INVALID_BUFFER_SIZE;
@@ -1407,13 +1407,14 @@ IoVolumeDeviceToDosName(
         goto ReleaseMemory;
     }
 
-    /* Set output string */
-    DosName->Length = (USHORT)VolumePathPtr->MultiSzLength;
-    DosName->MaximumLength = (USHORT)VolumePathPtr->MultiSzLength + sizeof(UNICODE_NULL);
-    /* Our MOUNTMGR_VOLUME_PATHS will be used as output buffer */
+    /* Set the output string. Discount the last two
+     * NUL-terminators from the multi-string length. */
+    DosName->Length = (USHORT)VolumePathPtr->MultiSzLength - 2 * sizeof(UNICODE_NULL);
+    DosName->MaximumLength = DosName->Length + sizeof(UNICODE_NULL);
+    /* Recycle our MOUNTMGR_VOLUME_PATHS as the output buffer
+     * and move the NUL-terminated string to the beginning */
     DosName->Buffer = (PWSTR)VolumePathPtr;
-    /* Move name at the begin, RtlMoveMemory is OK with overlapping */
-    RtlMoveMemory(DosName->Buffer, VolumePathPtr->MultiSz, VolumePathPtr->MultiSzLength);
+    RtlMoveMemory(DosName->Buffer, VolumePathPtr->MultiSz, DosName->Length);
     DosName->Buffer[DosName->Length / sizeof(WCHAR)] = UNICODE_NULL;
 
     /* Don't release the buffer, just dereference the FO and return success */
