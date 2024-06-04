@@ -363,41 +363,41 @@ public:
     inline UINT GetCount() const { return m_pCIDA->cidl; }
 
     // IShellItemArray
-    STDMETHODIMP BindToHandler(IBindCtx *pbc, REFGUID rbhid, REFIID riid, void **ppv)
+    STDMETHODIMP BindToHandler(IBindCtx *pbc, REFGUID rbhid, REFIID riid, void **ppv) override
     {
         UNIMPLEMENTED;
         *ppv = NULL;
         return E_NOTIMPL;
     }
 
-    STDMETHODIMP GetPropertyStore(GETPROPERTYSTOREFLAGS flags, REFIID riid, void **ppv)
+    STDMETHODIMP GetPropertyStore(GETPROPERTYSTOREFLAGS flags, REFIID riid, void **ppv) override
     {
         UNIMPLEMENTED;
         *ppv = NULL;
         return E_NOTIMPL;
     }
 
-    STDMETHODIMP GetPropertyDescriptionList(REFPROPERTYKEY keyType, REFIID riid, void **ppv)
+    STDMETHODIMP GetPropertyDescriptionList(REFPROPERTYKEY keyType, REFIID riid, void **ppv) override
     {
         UNIMPLEMENTED;
         *ppv = NULL;
         return E_NOTIMPL;
     }
 
-    STDMETHODIMP GetAttributes(SIATTRIBFLAGS dwAttribFlags, SFGAOF sfgaoMask, SFGAOF *psfgaoAttribs)
+    STDMETHODIMP GetAttributes(SIATTRIBFLAGS dwAttribFlags, SFGAOF sfgaoMask, SFGAOF *psfgaoAttribs) override
     {
         UNIMPLEMENTED;
         *psfgaoAttribs = 0;
         return E_NOTIMPL;
     }
 
-    STDMETHODIMP GetCount(DWORD*pCount)
+    STDMETHODIMP GetCount(DWORD*pCount) override
     {
         *pCount = m_pCIDA ? GetCount() : 0;
         return S_OK;
     }
 
-    STDMETHODIMP GetItemAt(DWORD nIndex, IShellItem **ppItem)
+    STDMETHODIMP GetItemAt(DWORD nIndex, IShellItem **ppItem) override
     {
         if (!ppItem)
             return E_INVALIDARG;
@@ -410,7 +410,7 @@ public:
                                  HIDA_GetPIDLItem(m_pCIDA, nIndex), ppItem);
     }
 
-    STDMETHODIMP EnumItems(IEnumShellItems **ppESI)
+    STDMETHODIMP EnumItems(IEnumShellItems **ppESI) override
     {
         UNIMPLEMENTED;
         *ppESI = NULL;
