@@ -500,7 +500,7 @@ SHELL32_ShowPropertiesDialog(IDataObject *pdtobj)
         return E_INVALIDARG;
 
     pdtobj->AddRef();
-    if (!SHCreateThread(_ShowPropertiesDialogThread, pdtobj, CTF_INSIST | CTF_COINIT, NULL))
+    if (!SHCreateThread(_ShowPropertiesDialogThread, pdtobj, CTF_INSIST | CTF_COINIT | CTF_PROCESS_REF, NULL))
     {
         pdtobj->Release();
         return HResultFromWin32(GetLastError());
