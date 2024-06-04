@@ -1276,8 +1276,10 @@ IoSetSystemPartition(IN PUNICODE_STRING VolumeNameString)
  */
 NTSTATUS
 NTAPI
-IoVolumeDeviceToDosName(IN PVOID VolumeDeviceObject,
-                        OUT PUNICODE_STRING DosName)
+IoVolumeDeviceToDosName(
+    _In_ PVOID VolumeDeviceObject,
+    _Out_ _When_(return==0, _At_(DosName->Buffer, __drv_allocatesMem(Mem)))
+        PUNICODE_STRING DosName)
 {
     NTSTATUS Status;
     ULONG Length;
@@ -1373,7 +1375,7 @@ IoVolumeDeviceToDosName(IN PVOID VolumeDeviceObject,
 
     /* Reallocate the memory, even in case of success, because
      * that's the buffer that will be returned to the caller */
-    VolumePathPtr = ExAllocatePoolWithTag(PagedPool, Length, 'D2d ');
+    VolumePathPtr = ExAllocatePoolWithTag(PagedPool, Length, TAG_DEV2DOS);
     if (!VolumePathPtr)
     {
         Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1418,7 +1420,7 @@ IoVolumeDeviceToDosName(IN PVOID VolumeDeviceObject,
     goto Quit;
 
 ReleaseMemory:
-    ExFreePoolWithTag(VolumePathPtr, 'D2d ');
+    ExFreePoolWithTag(VolumePathPtr, TAG_DEV2DOS);
 
 Quit:
     ObDereferenceObject(FileObject);

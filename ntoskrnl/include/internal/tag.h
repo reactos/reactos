@@ -94,6 +94,7 @@
 #define TAG_VPB                 ' BPV'
 #define TAG_RTLREGISTRY         'vrqR'
 #define TAG_PNP_DEVACTION       'aDpP'
+#define TAG_DEV2DOS             ' d2D'
 
 /* Loader Related Tags */
 #define TAG_MODULE_OBJECT       'omlk' /* klmo - kernel ldr module object */
