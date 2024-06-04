@@ -94,6 +94,36 @@ inline BOOL _ROS_FAILED_HELPER(HRESULT hr, const char* expr, const char* filenam
 } /* extern "C" */
 #endif /* defined(__cplusplus) */
 
+static inline UINT
+SHELL_ErrorBoxHelper(HWND hwndOwner, UINT Error)
+{
+    WCHAR buf[400];
+    UINT cch;
+
+    if (!IsWindowVisible(hwndOwner))
+        hwndOwner = NULL;
+    if (Error == ERROR_SUCCESS)
+        Error = ERROR_INTERNAL_ERROR;
+
+    cch = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                         NULL, Error, 0, buf, _countof(buf), NULL);
+    if (!cch)
+    {
+        enum { user32_IDS_ERROR = 2 }; // IDS_ERROR from user32 resource.h ("Error" string)
+        cch = LoadStringW(LoadLibraryW(L"USER32"), user32_IDS_ERROR, buf, _countof(buf));
+        wsprintfW(buf + cch, L"\n\n%#x (%d)", Error, Error);
+    }
+    MessageBoxW(hwndOwner, buf, NULL, MB_OK | MB_ICONSTOP);
+    return Error;
+}
+#ifdef __cplusplus
+template<class H> static UINT
+SHELL_ErrorBox(H hwndOwner, UINT Error = GetLastError())
+{
+    return SHELL_ErrorBoxHelper(const_cast<HWND>(hwndOwner), Error);
+}
+#endif
+
 #ifdef __cplusplus
 template <typename T>
 class CComCreatorCentralInstance

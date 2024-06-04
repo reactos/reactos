@@ -36,6 +36,7 @@
 #include <powrprof.h>
 #include <winnetwk.h>
 #include <objsafe.h>
+#include <regstr.h>
 
 #include <comctl32_undoc.h>
 #include <shlguid_undoc.h>

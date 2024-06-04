@@ -84,6 +84,12 @@ struct persistState
 #endif
 
 /*****************************************************************************
+ * CGID_DefView OLECMD IDs
+ */
+#define DVCMDID_SET_DEFAULTFOLDER_SETTINGS 0
+#define DVCMDID_RESET_DEFAULTFOLDER_SETTINGS 1
+
+/*****************************************************************************
  * IInitializeObject interface
  */
 #undef  INTERFACE
@@ -144,7 +150,15 @@ DECLARE_INTERFACE_(IBanneredBar, IUnknown)//, "596A9A94-013E-11d1-8D34-00A0C90F2
  */
 struct DEFFOLDERSETTINGS
 {
-	long					offset0;
+    enum { SIZE_NT4 = 8, SIZE_IE4 = 36, SIZE_XP = 40 };
+    enum { VER_98 = 0, VER_2000 = 3, VER_XP = 4 }; // Win98SE with IE5 writes 0, not 3 as the version
+    UINT Statusbar : 1; // "StatusBarOther" is the new location for this
+    UINT Toolbar : 1; // Not used when Explorer uses ReBar
+    FOLDERSETTINGS FolderSettings;
+    SHELLVIEWID vid;
+    UINT Version;
+    UINT Counter; // Incremented every time default folder settings are applied. Invalidates a cache?
+    UINT ViewPriority; // VIEW_PRIORITY_*
 };
 
 #undef  INTERFACE
@@ -152,12 +166,12 @@ struct DEFFOLDERSETTINGS
 DECLARE_INTERFACE_(IGlobalFolderSettings, IUnknown)
 {
     /*** IUnknown ***/
-	STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
-	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-	STDMETHOD_(ULONG,Release)(THIS) PURE;
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IGlobalFolderSettings ***/
-	STDMETHOD(Get)(THIS_ struct DEFFOLDERSETTINGS *buffer, int theSize) PURE;
-	STDMETHOD(Set)(THIS_ const struct DEFFOLDERSETTINGS *buffer, int theSize, unsigned int param14) PURE;
+    STDMETHOD(Get)(THIS_ struct DEFFOLDERSETTINGS *pFDS, UINT cb) PURE;
+    STDMETHOD(Set)(THIS_ const struct DEFFOLDERSETTINGS *pFDS, UINT cb, UINT unknown) PURE;
 };
 #undef INTERFACE
 

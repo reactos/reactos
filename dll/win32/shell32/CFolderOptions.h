@@ -38,6 +38,10 @@ class CFolderOptions :
         //BOOL QueryDrop (DWORD dwKeyState, LPDWORD pdwEffect);
         //BOOL RecycleBinIsEmpty();
 
+    protected:
+        enum DEFFOLDERSETTINGACTION { DFSA_QUERY = -1, DFSA_RESET, DFSA_APPLY };
+        HRESULT HandleDefFolderSettings(int Action);
+
     public:
         CFolderOptions();
         ~CFolderOptions();
@@ -52,6 +56,15 @@ class CFolderOptions :
         // IObjectWithSite
         STDMETHOD(SetSite)(IUnknown *pUnkSite) override;
         STDMETHOD(GetSite)(REFIID riid, void **ppvSite) override;
+
+        bool CanSetDefFolderSettings()
+        {
+            return SUCCEEDED(HandleDefFolderSettings(DFSA_QUERY));
+        }
+        HRESULT ApplyDefFolderSettings(bool ResetToDefault)
+        {
+            return HandleDefFolderSettings(ResetToDefault ? DFSA_RESET : DFSA_APPLY);
+        }
 
         DECLARE_REGISTRY_RESOURCEID(IDR_FOLDEROPTIONS)
         DECLARE_NOT_AGGREGATABLE(CFolderOptions)
