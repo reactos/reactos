@@ -4436,7 +4436,7 @@ ULONG
 NTAPI
 RtlComputeCrc32(
     _In_ ULONG InitialCrc,
-    _In_ PUCHAR Buffer,
+    _In_ const UCHAR *Buffer,
     _In_ ULONG Length
 );
 
