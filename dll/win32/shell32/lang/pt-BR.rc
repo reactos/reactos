@@ -49,7 +49,7 @@ BEGIN
     MENUITEM "Cu&t\tCtrl+X", FCIDM_SHVIEW_CUT
     MENUITEM "&Copy\tCtrl+C", FCIDM_SHVIEW_COPY
     MENUITEM "Co&lar\tCtrl+V", FCIDM_SHVIEW_INSERT
-    MENUITEM "Colar a&talho", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM "C&olar atalho", FCIDM_SHVIEW_INSERTLINK // FIXME: accelerator might not match with Windows
     MENUITEM SEPARATOR
     MENUITEM "Copy to &folder...", FCIDM_SHVIEW_COPYTO
     MENUITEM "Mo&ve to folder...", FCIDM_SHVIEW_MOVETO
