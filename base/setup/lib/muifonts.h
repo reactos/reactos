@@ -1,10 +1,5 @@
 #pragma once
 
-/*
- * NOTE: "Droid Sans Fallback" is not a "fixed-pitch" font.
- *       We don't have Far East Asian "fixed-pitch" fonts yet.
- */
-
 MUI_SUBFONT LatinFonts[] =
 {
     /*Font                       Substitute  */
@@ -133,6 +128,11 @@ MUI_SUBFONT HebrewFonts[] =
     { L"Tms Rmn",                L"Times New Roman" },
     { NULL, NULL }
 };
+
+/*
+ * NOTE: "Droid Sans Fallback" is not a "fixed-pitch" font.
+ *       We don't have Far East Asian "fixed-pitch" fonts yet.
+ */
 
 WCHAR CSF_LocalName0[] = {0x5B8B, 0x4F53, 0};                   /* SimSun */
 WCHAR CSF_LocalName1[] = {0x4E2D, 0x6613, 0x5B8B, 0x4F53, 0};   /* SimSun */
