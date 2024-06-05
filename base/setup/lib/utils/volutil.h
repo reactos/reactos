@@ -38,6 +38,12 @@ typedef struct _VOLINFO
 
 
 NTSTATUS
+GetOrAssignNextVolumeDriveLetter(
+    _In_ PCUNICODE_STRING VolumeName,
+    _Out_ PWCHAR DriveLetter);
+
+// DetectFileSystem()
+NTSTATUS
 MountVolume(
     _Inout_ PVOLINFO Volume,
     _In_opt_ UCHAR MbrPartitionType);

@@ -8,6 +8,7 @@
 /* INCLUDES ******************************************************************/
 
 #include "precomp.h"
+#include <mountdev.h>
 
 #include "volutil.h"
 #include "fsrec.h"
@@ -19,12 +20,238 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/**
+ * @brief
+ * Requests the MountMgr to retrieve the drive letter,
+ * if any, associated to the given volume.
+ *
+ * @param[in]   VolumeName
+ * Device name of the volume.
+ *
+ * @param[out]  DriveLetter
+ * Pointer to a WCHAR buffer receiving the corresponding drive letter,
+ * or UNICODE_NULL if none has been assigned.
+ *
+ * @return  A status code.
+ **/
+NTSTATUS
+GetVolumeDriveLetter(
+    _In_ PCUNICODE_STRING VolumeName,
+    _Out_ PWCHAR DriveLetter)
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE Handle;
+    UNICODE_STRING MountMgrDevice;
+    ULONG Length;
+    MOUNTMGR_MOUNT_POINTS MountPoints;
+    PMOUNTMGR_MOUNT_POINTS MountPointsPtr;
+    /*
+     * This variable is used to store the device name
+     * for the input buffer to IOCTL_MOUNTMGR_QUERY_POINTS.
+     * It's based on MOUNTMGR_MOUNT_POINT (mountmgr.h).
+     * Doing it this way prevents memory allocation.
+     * The device name won't be longer.
+     */
+    struct
+    {
+        MOUNTMGR_MOUNT_POINT;
+        WCHAR DeviceName[256];
+    } DeviceName;
+
+    /* Default to no letter */
+    *DriveLetter = UNICODE_NULL;
+
+    /* First, retrieve the corresponding device name */
+    DeviceName.SymbolicLinkNameOffset = DeviceName.UniqueIdOffset = 0;
+    DeviceName.SymbolicLinkNameLength = DeviceName.UniqueIdLength = 0;
+    DeviceName.DeviceNameOffset = (ULONG_PTR)&DeviceName.DeviceName - (ULONG_PTR)&DeviceName;
+    DeviceName.DeviceNameLength = VolumeName->Length;
+    RtlCopyMemory(&DeviceName.DeviceName, VolumeName->Buffer, VolumeName->Length);
+
+    /* Now, query the MountMgr for the DOS path */
+    RtlInitUnicodeString(&MountMgrDevice, MOUNTMGR_DEVICE_NAME);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &MountMgrDevice,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenFile(&Handle,
+                        FILE_READ_ATTRIBUTES | SYNCHRONIZE, // FILE_READ_DATA
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtOpenFile() failed, Status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    MountPointsPtr = NULL;
+    Status = NtDeviceIoControlFile(Handle,
+                                   NULL, NULL, NULL,
+                                   &IoStatusBlock,
+                                   IOCTL_MOUNTMGR_QUERY_POINTS,
+                                   &DeviceName, sizeof(DeviceName),
+                                   &MountPoints, sizeof(MountPoints));
+
+    /* Only tolerated failure here is buffer too small, which is expected */
+    if (!NT_SUCCESS(Status) && (Status != STATUS_BUFFER_OVERFLOW))
+    {
+        goto Quit;
+    }
+
+    /* Compute the needed size to store the mount points list */
+    Length = MountPoints.Size;
+
+    /* Reallocate the memory, even in case of success, because
+     * that's the buffer that will be returned to the caller */
+    MountPointsPtr = RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, Length);
+    if (!MountPointsPtr)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quit;
+    }
+
+    /* Re-query the mount points list with proper size */
+    Status = NtDeviceIoControlFile(Handle,
+                                   NULL, NULL, NULL,
+                                   &IoStatusBlock,
+                                   IOCTL_MOUNTMGR_QUERY_POINTS,
+                                   &DeviceName, sizeof(DeviceName),
+                                   MountPointsPtr, Length);
+    if (!NT_SUCCESS(Status))
+        goto Quit;
+
+    /* Find the drive letter amongst the mount points */
+    for (MountPointsPtr->Size = 0; // Reuse the Size field to store the current index.
+         MountPointsPtr->Size < MountPointsPtr->NumberOfMountPoints;
+         MountPointsPtr->Size++)
+    {
+        UNICODE_STRING SymLink;
+
+        SymLink.Length = SymLink.MaximumLength = MountPointsPtr->MountPoints[MountPointsPtr->Size].SymbolicLinkNameLength;
+        SymLink.Buffer = (PWCHAR)((ULONG_PTR)MountPointsPtr + MountPointsPtr->MountPoints[MountPointsPtr->Size].SymbolicLinkNameOffset);
+
+        if (MOUNTMGR_IS_DRIVE_LETTER(&SymLink))
+        {
+            /* Return the drive letter, ensuring it's uppercased */
+            *DriveLetter = towupper(SymLink.Buffer[12]);
+            break;
+        }
+    }
+
+    /* We are done, return success */
+    Status = STATUS_SUCCESS;
+
+Quit:
+    if (MountPointsPtr)
+        RtlFreeHeap(ProcessHeap, 0, MountPointsPtr);
+    NtClose(Handle);
+    return Status;
+}
+
+/**
+ * @brief
+ * Requests the MountMgr to either assign the next available drive letter
+ * to the given volume, if none already exists, or to retrieve its existing
+ * associated drive letter.
+ *
+ * @param[in]   VolumeName
+ * Device name of the volume.
+ *
+ * @param[out]  DriveLetter
+ * Pointer to a WCHAR buffer receiving the corresponding drive letter,
+ * or UNICODE_NULL if none has been assigned.
+ *
+ * @return  A status code.
+ **/
+NTSTATUS
+GetOrAssignNextVolumeDriveLetter(
+    _In_ PCUNICODE_STRING VolumeName,
+    _Out_ PWCHAR DriveLetter)
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE Handle;
+    UNICODE_STRING MountMgrDevice;
+    MOUNTMGR_DRIVE_LETTER_INFORMATION LetterInfo;
+    /*
+     * This variable is used to store the device name
+     * for the input buffer to IOCTL_MOUNTMGR_NEXT_DRIVE_LETTER.
+     * It's based on MOUNTMGR_DRIVE_LETTER_TARGET (mountmgr.h).
+     * Doing it this way prevents memory allocation.
+     * The device name won't be longer.
+     */
+    struct
+    {
+        USHORT DeviceNameLength;
+        WCHAR DeviceName[256];
+    } DeviceName;
+
+    /* Default to no letter */
+    *DriveLetter = UNICODE_NULL;
+
+    /* First, retrieve the corresponding device name */
+    DeviceName.DeviceNameLength = VolumeName->Length;
+    RtlCopyMemory(&DeviceName.DeviceName, VolumeName->Buffer, VolumeName->Length);
+
+    /* Now, query the MountMgr for the DOS path */
+    RtlInitUnicodeString(&MountMgrDevice, MOUNTMGR_DEVICE_NAME);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &MountMgrDevice,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenFile(&Handle,
+                        FILE_READ_ATTRIBUTES | SYNCHRONIZE, // FILE_READ_DATA
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtOpenFile() failed, Status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    Status = NtDeviceIoControlFile(Handle,
+                                   NULL, NULL, NULL,
+                                   &IoStatusBlock,
+                                   IOCTL_MOUNTMGR_NEXT_DRIVE_LETTER,
+                                   &DeviceName, sizeof(DeviceName),
+                                   &LetterInfo, sizeof(LetterInfo));
+    if (!NT_SUCCESS(Status))
+        goto Quit;
+
+    DPRINT1("DriveLetterWasAssigned = %s, CurrentDriveLetter = %c\n",
+            LetterInfo.DriveLetterWasAssigned ? "TRUE" : "FALSE",
+            LetterInfo.CurrentDriveLetter ? LetterInfo.CurrentDriveLetter : '-');
+
+    /* Return the drive letter the MountMgr potentially assigned,
+     * ensuring it's uppercased */
+    *DriveLetter = towupper(LetterInfo.CurrentDriveLetter);
+
+Quit:
+    NtClose(Handle);
+    return Status;
+}
+
+/**
+ * @brief
+ * Attempts to mount the designated volume, and retrieve and cache
+ * some of its properties (file system, volume label, ...).
+ **/
 NTSTATUS
 MountVolume(
     _Inout_ PVOLINFO Volume,
     _In_opt_ UCHAR MbrPartitionType)
 {
     NTSTATUS Status;
+    UNICODE_STRING Name;
     HANDLE VolumeHandle;
 
     /* If the volume is already mounted, just return success */
@@ -128,6 +355,12 @@ MountVolume(
         }
     }
 
+    /* Get the volume drive letter */
+    __debugbreak();
+    RtlInitUnicodeString(&Name, Volume->DeviceName);
+    Status = GetVolumeDriveLetter(&Name, &Volume->DriveLetter);
+    UNREFERENCED_PARAMETER(Status);
+
     /* Close the volume */
     if (VolumeHandle)
         NtClose(VolumeHandle);
@@ -215,6 +448,7 @@ DismountVolume(
     /* Reset some data only if dismount succeeded */
     if (NT_SUCCESS(Status))
     {
+        // TODO: Should we notify MountMgr to delete the drive letter?
         Volume->DriveLetter = UNICODE_NULL;
         Volume->VolumeLabel[0] = UNICODE_NULL;
         Volume->FileSystem[0] = UNICODE_NULL;

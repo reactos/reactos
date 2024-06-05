@@ -193,6 +193,7 @@ typedef struct _PARTLIST
     /* (Basic) Volumes management */
     LIST_ENTRY VolumesList;
     LIST_ENTRY PendingUnmountVolumesList; ///< List of volumes to unmount
+    ULONG DriveMap; ///< Drive letters map, used by AssignNextDriveLetter()
 
 } PARTLIST, *PPARTLIST;
 
@@ -398,8 +399,12 @@ SetMBRPartitionType(
     IN PPARTENTRY PartEntry,
     IN UCHAR PartitionType);
 
+
 BOOLEAN
 SetMountedDeviceValues(
     _In_ PPARTLIST List);
+
+NTSTATUS
+ImportMountedDevices(VOID);
 
 /* EOF */
