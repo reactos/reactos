@@ -257,25 +257,128 @@ GetDriverName(
     }
 }
 
+
+#define SET_MAP_LETTER(map, letter) \
+do { \
+    ULONG _i = towupper(letter) - L'A'; \
+    if (0 <= _i && _i <= L'Z'-L'A') \
+        (map) |= (1 << _i); \
+} while (0)
+
+#define REMOVE_MAP_LETTER(map, letter) \
+do { \
+    ULONG _i = towupper(letter) - L'A'; \
+    if (0 <= _i && _i <= L'Z'-L'A') \
+        (map) &= ~(1 << _i); \
+} while (0)
+
+static
+WCHAR
+AssignNextDriveLetter(
+    _In_ PPARTLIST List,
+    _Inout_ PVOLENTRY Volume, // PVOLINFO
+    _In_ BOOLEAN TempAssign)
+{
+    WCHAR Letter = UNICODE_NULL;
+
+    if (TempAssign)
+    {
+        ULONG i;
+
+        /* If the volume already has a drive letter, just return it */
+        if (Volume->Info.DriveLetter)
+            return Volume->Info.DriveLetter;
+
+#if 0
+        /* Browse the existing volumes and flag which letters are taken */
+        PLIST_ENTRY Entry;
+        ULONG DriveMap = 0;
+        for (Entry = List->VolumesList.Flink;
+             Entry != &List->VolumesList;
+             Entry = Entry->Flink)
+        {
+            PVOLENTRY CurrentVolume = CONTAINING_RECORD(Entry, VOLENTRY, ListEntry);
+            Letter = CurrentVolume->Info.DriveLetter;
+            SET_MAP_LETTER(DriveMap, Letter);
+        }
+#endif
+
+        /* Scan the drive letters map and find the first free letter.
+         * Start with the C drive, except on NEC PC-98. */
+        for (i = (IsNEC_98 ? 0 : 2); i <= L'Z'-L'A'; ++i)
+        {
+            if (!(List->DriveMap & (1 << i)))
+            {
+                /* Return the letter */
+                Letter = L'A' + i;
+                break;
+            }
+        }
+    }
+    else
+    {
+        NTSTATUS Status;
+        UNICODE_STRING Name;
+
+        /* Remove the temporary drive letter from the map */
+        REMOVE_MAP_LETTER(List->DriveMap, Volume->Info.DriveLetter);
+
+        /* Re-assign the drive letter */
+        RtlInitUnicodeString(&Name, Volume->Info.DeviceName);
+        Status = GetOrAssignNextVolumeDriveLetter(&Name, &Letter);
+        DBG_UNREFERENCED_PARAMETER(Status);
+    }
+
+    /* Reserve the letter and set it */
+    SET_MAP_LETTER(List->DriveMap, Letter);
+    Volume->Info.DriveLetter = Letter;
+
+    return Letter;
+}
+
+/**
+ * @brief
+ * Assign drive letters to created volumes.
+ *
+ * @param[in]   List
+ * Disks/Partitions/Volumes list.
+ *
+ * @param[in]   TempAssign
+ * Whether to do a temporary assignment (TRUE: letters are maintained by us
+ * and are not reported to the system), or to do a permanent assignment
+ * (FALSE: letters are queried from the MountMgr and assigned to the volumes).
+ *
+ * @note
+ * For the moment, we do it ourselves, by assigning drives to partitions
+ * that are *only on MBR disks*. We first assign letters to each active
+ * partition on each disk, then assign letters to each logical partition,
+ * and finish by assigning letters to the remaining primary partitions.
+ * (This algorithm is the one that can be observed in the Windows Setup.)
+ **/
 static
 VOID
 AssignDriveLetters(
-    IN PPARTLIST List)
+    _In_ PPARTLIST List,
+    _In_ BOOLEAN TempAssign)
 {
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
     PLIST_ENTRY Entry1;
     PLIST_ENTRY Entry2;
-    WCHAR Letter;
+    // WCHAR Letter;
 
-    Letter = L'C';
+__debugbreak();
 
-    /* Assign drive letters to primary partitions */
+    /* Assign drive letters to volumes on primary partitions */
     for (Entry1 = List->DiskListHead.Flink;
          Entry1 != &List->DiskListHead;
          Entry1 = Entry1->Flink)
     {
         DiskEntry = CONTAINING_RECORD(Entry1, DISKENTRY, ListEntry);
+
+        /* Ignore dynamic disks */
+        if (DiskEntry->IsDynamic)
+            continue;
 
         for (Entry2 = DiskEntry->PrimaryPartListHead.Flink;
              Entry2 != &DiskEntry->PrimaryPartListHead;
@@ -285,16 +388,17 @@ AssignDriveLetters(
 
             if (!PartEntry->Volume)
                 continue;
-            PartEntry->Volume->Info.DriveLetter = UNICODE_NULL;
 
-            if (PartEntry->IsPartitioned &&
-                !IsContainerPartition(PartEntry->PartitionType) &&
-                (IsRecognizedPartition(PartEntry->PartitionType) ||
-                 PartEntry->SectorCount.QuadPart != 0LL))
+            if (!(PartEntry->IsPartitioned &&
+                  !IsContainerPartition(PartEntry->PartitionType) &&
+                  (IsRecognizedPartition(PartEntry->PartitionType) ||
+                   PartEntry->SectorCount.QuadPart != 0LL)))
             {
-                if (Letter <= L'Z')
-                    PartEntry->Volume->Info.DriveLetter = Letter++;
+                // PartEntry->Volume->Info.DriveLetter = UNICODE_NULL;
+                ASSERT(PartEntry->Volume->Info.DriveLetter == UNICODE_NULL);
+                continue;
             }
+            AssignNextDriveLetter(List, PartEntry->Volume, TempAssign);
         }
     }
 
@@ -305,6 +409,10 @@ AssignDriveLetters(
     {
         DiskEntry = CONTAINING_RECORD(Entry1, DISKENTRY, ListEntry);
 
+        /* Ignore dynamic disks */
+        if (DiskEntry->IsDynamic)
+            continue;
+
         for (Entry2 = DiskEntry->LogicalPartListHead.Flink;
              Entry2 != &DiskEntry->LogicalPartListHead;
              Entry2 = Entry2->Flink)
@@ -313,18 +421,20 @@ AssignDriveLetters(
 
             if (!PartEntry->Volume)
                 continue;
-            PartEntry->Volume->Info.DriveLetter = UNICODE_NULL;
 
-            if (PartEntry->IsPartitioned &&
-                (IsRecognizedPartition(PartEntry->PartitionType) ||
-                 PartEntry->SectorCount.QuadPart != 0LL))
+            if (!(PartEntry->IsPartitioned &&
+                  (IsRecognizedPartition(PartEntry->PartitionType) ||
+                   PartEntry->SectorCount.QuadPart != 0LL)))
             {
-                if (Letter <= L'Z')
-                    PartEntry->Volume->Info.DriveLetter = Letter++;
+                // PartEntry->Volume->Info.DriveLetter = UNICODE_NULL;
+                ASSERT(PartEntry->Volume->Info.DriveLetter == UNICODE_NULL);
+                continue;
             }
+            AssignNextDriveLetter(List, PartEntry->Volume, TempAssign);
         }
     }
 }
+
 
 static NTSTATUS
 NTAPI
@@ -2371,6 +2481,10 @@ __debugbreak();
     else // !IsUnknown && !IsUnformatted == IsFormatted
         Volume->FormatState = Formatted;
 
+    /* Set the drive letter in the map */
+    // AssignNextDriveLetter(List, Volume, FALSE);
+    SET_MAP_LETTER(List->DriveMap, Volume->Info.DriveLetter);
+
     return STATUS_SUCCESS;
 }
 
@@ -2561,6 +2675,46 @@ CreatePartitionList(VOID)
     InitializeListHead(&List->VolumesList);
     InitializeListHead(&List->PendingUnmountVolumesList);
 
+    /* Get the system drive letters map (seen by this process) */
+    {
+    PROCESS_DEVICEMAP_INFORMATION DeviceMap;
+    ULONG i;
+
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessDeviceMap,
+                                       &DeviceMap.Query,
+                                       sizeof(DeviceMap.Query),
+                                       NULL);
+    /* Zero the map if we failed */
+    if (!NT_SUCCESS(Status))
+        RtlZeroMemory(&DeviceMap, sizeof(DeviceMap)); // DeviceMap.Query.DriveMap = 0;
+
+    /* Keep only the letters used by other resources (remote drives, CD-ROM,
+     * RamDisks, ...) that either we or the MountMgr do not maintain */
+    for (i = 0; i <= 'Z' - 'A'; ++i)
+    {
+        /* Skip the drive if it's not in the map */
+        if (!(DeviceMap.Query.DriveMap & (1 << i)))
+            continue;
+
+        /* Disable unknown drives */
+        if (!((DeviceMap.Query.DriveType[i] >= DOSDEVICE_DRIVE_REMOVABLE) &&
+              (DeviceMap.Query.DriveType[i] <= DOSDEVICE_DRIVE_RAMDISK)))
+        {
+            DeviceMap.Query.DriveMap &= ~(1 << i);
+        }
+#if 0
+        /* Disable letters on fixed drives, these should be handled by MountMgr */
+        if (DeviceMap.Query.DriveType[i] == DOSDEVICE_DRIVE_FIXED)
+        {
+            DeviceMap.Query.DriveMap &= ~(1 << i);
+        }
+#endif
+    }
+
+    List->DriveMap = DeviceMap.Query.DriveMap;
+    }
+
     /*
      * Enumerate the disks seen by the BIOS; this will be used later
      * to map drives seen by NTOS with their corresponding BIOS names.
@@ -2590,7 +2744,6 @@ CreatePartitionList(VOID)
 
     UpdateDiskSignatures(List);
     UpdateHwDiskNumbers(List);
-    AssignDriveLetters(List);
 
     /*
      * Retrieve the system partition: the active partition on the system
@@ -3499,9 +3652,8 @@ CreatePartition(
          * associated with this partition has to be created. */
         PartEntry->Volume = InitVolume(DiskEntry->PartList, PartEntry);
         ASSERT(PartEntry->Volume);
+        AssignNextDriveLetter(List, PartEntry->Volume, TRUE);
     }
-
-    AssignDriveLetters(List);
 
     return TRUE;
 }
@@ -3548,6 +3700,10 @@ DismountPartition(
     /* Dismount the basic volume: link the volume into the list of volumes to unmount */
     // return DismountVolume(&Volume->Info, TRUE);
     InsertTailList(&List->PendingUnmountVolumesList, &Volume->ListEntry);
+
+    /* Remove the drive letter from the map */
+    REMOVE_MAP_LETTER(List->DriveMap, Volume->Info.DriveLetter);
+
     return STATUS_SUCCESS;
 }
 
@@ -3683,7 +3839,7 @@ DeletePartition(
     }
 
     UpdateDiskLayout(DiskEntry);
-    AssignDriveLetters(List);
+    AssignDriveLetters(List, TRUE);
 
     return TRUE;
 }
@@ -4380,6 +4536,9 @@ WritePartitionsToDisk(
         InitVolumeDeviceName(Volume, NULL);
     }
 
+    /* Assign persistent drive letters to volumes */
+    AssignDriveLetters(List, FALSE);
+
     //** Re-dump the list of MountedDevices **//
     DumpMountedDevices();
 
@@ -4428,8 +4587,27 @@ typedef struct _REG_DISK_MOUNT_INFO
  * @brief
  * Assign a "\DosDevices\#:" mount point drive letter to a disk partition or
  * volume, specified by a given disk signature and starting partition offset.
+ *
+ * @note
+ * The association is stored in the registry of the **TARGET**
+ * NT installation, not of the current running one.
+ *
+ * We use it to update the mounted devices list
+ * // FIXME: This should technically be done by mountmgr (if AutoMount is enabled)!
+ *
+ * TODO:
+ * - Make the function more generic for MBR and GPT.
+ *
+ * @note
+ * The stored data actually corresponds to a "unique ID" the partition manager
+ * gives to the mount manager. In this function below, the format is actually
+ * the one used for partitions on MBR disks only.
+ *
+ * @see
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/storage/supporting-mount-manager-requests-in-a-storage-class-driver
+ * https://winreg-kb.readthedocs.io/en/latest/sources/system-keys/Mounted-devices.html
  **/
-static BOOLEAN
+static NTSTATUS
 SetMountedDeviceValue(
     _In_ PVOLENTRY Volume)
 {
@@ -4445,7 +4623,7 @@ SetMountedDeviceValue(
 
     /* Ignore no letter */
     if (!Letter)
-        return TRUE;
+        return STATUS_SUCCESS;
 
     RtlStringCchPrintfW(Buffer, _countof(Buffer),
                         L"\\DosDevices\\%c:", Letter);
@@ -4473,8 +4651,15 @@ SetMountedDeviceValue(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
-        return FALSE;
+        return Status;
     }
+
+    //
+    // NOTE: Alternatively, just ask the MountMgr (if we have it)
+    // for the volume unique ID, via IOCTL_MOUNTDEV_QUERY_UNIQUE_ID !!
+    //
+
+    // _In_ ULONG Signature, // DiskSignature
 
     MountInfo.Signature = PartEntry->DiskEntry->LayoutBuffer->Signature;
     MountInfo.StartingOffset = GetPartEntryOffsetInBytes(PartEntry);
@@ -4488,18 +4673,24 @@ SetMountedDeviceValue(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
-        return FALSE;
+        return Status;
     }
 
-    return TRUE;
+    return STATUS_SUCCESS;
 }
 
+/*
+ * TODO:
+ * - It may actually make sense to just migrate the volume letters database
+ *   from the current active system to the installation TARGET one.
+ */
 BOOLEAN
 SetMountedDeviceValues(
     _In_ PPARTLIST List)
 {
     PLIST_ENTRY Entry;
     PVOLENTRY Volume;
+    NTSTATUS Status;
 
     if (!List)
         return FALSE;
@@ -4514,11 +4705,151 @@ SetMountedDeviceValues(
         Volume = CONTAINING_RECORD(Entry, VOLENTRY, ListEntry);
 
         /* Assign a "\DosDevices\#:" mount point to this volume */
-        if (!SetMountedDeviceValue(Volume))
+        Status = SetMountedDeviceValue(Volume);
+        if (!NT_SUCCESS(Status))
             return FALSE;
     }
 
     return TRUE;
+}
+
+/**
+ * @brief
+ * Imports the \Registry\Machine\SYSTEM\MountedDevices database of the
+ * current running ReactOS installation to the target ReactOS installation.
+ *
+ * Used when both installations are for the same machine.
+ **/
+NTSTATUS
+ImportMountedDevices(VOID)
+{
+    NTSTATUS Status;
+    UNICODE_STRING SrcPath
+        = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\MountedDevices");
+    UNICODE_STRING DstPath
+        = RTL_CONSTANT_STRING(L"SYSTEM\\MountedDevices");
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE SrcKey = NULL;
+    HANDLE DstKey = NULL;
+    PKEY_VALUE_FULL_INFORMATION Buffer;
+    ULONG BufferSize = sizeof(KEY_VALUE_FULL_INFORMATION) + MAX_PATH * sizeof(WCHAR);
+    ULONG RequiredSize;
+    ULONG i = 0;
+    UNICODE_STRING Name;
+
+    /* Open the source key */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &SrcPath,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL, NULL);
+    Status = NtOpenKey(&SrcKey, KEY_QUERY_VALUE, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtOpenKey() failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Open the target key */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &DstPath,
+                               OBJ_CASE_INSENSITIVE,
+                               GetRootKeyByPredefKey(HKEY_LOCAL_MACHINE, NULL),
+                               NULL);
+    Status = NtOpenKey(&DstKey, KEY_ALL_ACCESS, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        Status = NtCreateKey(&DstKey,
+                             KEY_ALL_ACCESS,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             REG_OPTION_NON_VOLATILE,
+                             NULL);
+    }
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
+        goto Quit;
+    }
+
+    /*
+     * Enumerate each value in the source key and copy it into the target key.
+     */
+    Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferSize);
+    if (!Buffer)
+    {
+        DPRINT1("RtlAllocateHeap() failed\n");
+        Status = STATUS_NO_MEMORY;
+        goto Quit;
+    }
+
+    DbgPrint("\n**** Importing HKLM\\SYSTEM\\MountedDevices ****\n");
+    while (TRUE)
+    {
+        Status = NtEnumerateValueKey(SrcKey,
+                                     i,
+                                     KeyValueFullInformation,
+                                     Buffer,
+                                     BufferSize,
+                                     &RequiredSize);
+        if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+            BufferSize = RequiredSize;
+            Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferSize);
+            if (!Buffer)
+            {
+                DPRINT1("RtlAllocateHeap() failed\n");
+                // Status = STATUS_NO_MEMORY;
+                break;
+                // continue;
+            }
+            Status = NtEnumerateValueKey(SrcKey,
+                                         i,
+                                         KeyValueFullInformation,
+                                         Buffer,
+                                         BufferSize,
+                                         &RequiredSize);
+        }
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("NtEnumerateKey() failed with status 0x%08lx\n", Status);
+            break;
+        }
+        i++;
+
+        if (Buffer->Type != REG_BINARY)
+        {
+            DPRINT1("Wrong registry type: got 0x%lx, expected 0x%lx (REG_BINARY)\n",
+                    Buffer->Type, REG_BINARY);
+        }
+
+        Name.Length = Name.MaximumLength = Buffer->NameLength;
+        Name.Buffer = Buffer->Name;
+
+        DbgPrint("  '%wZ' =>\n", &Name);
+        {
+        PVOID Data = (PVOID)((ULONG_PTR)Buffer + Buffer->DataOffset);
+        DebugDumpBuffer(Data, Buffer->DataLength);
+        Status = NtSetValueKey(DstKey,
+                               &Name,
+                               0,
+                               Buffer->Type,
+                               Data,
+                               Buffer->DataLength);
+        }
+        DbgPrint("\n");
+    }
+    DbgPrint("**** End Importing ****\n");
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+
+Quit:
+    if (DstKey)
+        NtClose(DstKey);
+    if (SrcKey)
+        NtClose(SrcKey);
+    return Status;
 }
 
 /*
