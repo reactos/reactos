@@ -42,10 +42,10 @@ BEGIN
             MENUITEM "&Aranjare automată", FCIDM_SHVIEW_AUTOARRANGE
             MENUITEM "Aliniere la &grilă", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "Reîmprospătare", FCIDM_SHVIEW_REFRESH
+        MENUITEM "&Reîmprospătare", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Lipire", FCIDM_SHVIEW_INSERT
-        MENUITEM "Lipire comandă rapidă", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "&Lipire", FCIDM_SHVIEW_INSERT
+        MENUITEM "Lipire c&omandă rapidă", FCIDM_SHVIEW_INSERTLINK
     END
 END
 

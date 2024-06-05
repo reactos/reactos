@@ -41,10 +41,10 @@ BEGIN
             MENUITEM "&Automatikoki antolatu", FCIDM_SHVIEW_AUTOARRANGE
             MENUITEM "&Lerrokatu saretarekin", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "Freskatu", FCIDM_SHVIEW_REFRESH
+        MENUITEM "&Freskatu", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Itsatsi", FCIDM_SHVIEW_INSERT
-        MENUITEM "Itsatsi lasterbidea", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "I&tsatsi", FCIDM_SHVIEW_INSERT
+        MENUITEM "It&satsi lasterbidea", FCIDM_SHVIEW_INSERTLINK
     END
 END
 

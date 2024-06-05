@@ -42,10 +42,10 @@ BEGIN
             MENUITEM "&Rovnat automaticky", FCIDM_SHVIEW_AUTOARRANGE
             MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "Aktualizovat", FCIDM_SHVIEW_REFRESH
+        MENUITEM "A&ktualizovat", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Vložit", FCIDM_SHVIEW_INSERT
-        MENUITEM "Vložit zástupce", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "V&ložit", FCIDM_SHVIEW_INSERT
+        MENUITEM "Vložit zást&upce", FCIDM_SHVIEW_INSERTLINK
     END
 END
 

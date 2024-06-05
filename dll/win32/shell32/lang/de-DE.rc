@@ -34,10 +34,10 @@ BEGIN
             MENUITEM "&Automatisch anordnen", FCIDM_SHVIEW_AUTOARRANGE
             MENUITEM "Am &Raster ausrichten", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "Aktualisieren", FCIDM_SHVIEW_REFRESH
+        MENUITEM "A&ktualisieren", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Einfügen", FCIDM_SHVIEW_INSERT
-        MENUITEM "Verknüpfung einfügen", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "&Einfügen", FCIDM_SHVIEW_INSERT
+        MENUITEM "&Verknüpfung einfügen", FCIDM_SHVIEW_INSERTLINK
     END
 END
 

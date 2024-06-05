@@ -31,13 +31,13 @@ BEGIN
         POPUP "&Упорядкувати значки", FCIDM_SHVIEW_ARRANGE
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
-            MENUITEM "&автоматично", FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "&Автоматично", FCIDM_SHVIEW_AUTOARRANGE
             MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "Оновити", FCIDM_SHVIEW_REFRESH
+        MENUITEM "О&новити", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Вставити", FCIDM_SHVIEW_INSERT
-        MENUITEM "Вставити ярлик", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "Встав&ити", FCIDM_SHVIEW_INSERT
+        MENUITEM "Вставити &ярлик", FCIDM_SHVIEW_INSERTLINK
     END
 END
 

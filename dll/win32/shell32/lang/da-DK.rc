@@ -41,10 +41,10 @@ BEGIN
             MENUITEM "&Arrangere Automatisk", FCIDM_SHVIEW_AUTOARRANGE
             MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "Opfrisk", FCIDM_SHVIEW_REFRESH
+        MENUITEM "&Opfrisk", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Indsæt", FCIDM_SHVIEW_INSERT
-        MENUITEM "Indsæt som Link", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "Ind&sæt", FCIDM_SHVIEW_INSERT
+        MENUITEM "Indsæt som &Link", FCIDM_SHVIEW_INSERTLINK
     END
 END
 

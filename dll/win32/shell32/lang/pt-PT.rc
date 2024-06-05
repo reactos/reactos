@@ -34,10 +34,10 @@ BEGIN
             MENUITEM "Alinhar icones &automaticamente", FCIDM_SHVIEW_AUTOARRANGE
             MENUITEM "Alinhar icones com a &grelha", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "Actualizar", FCIDM_SHVIEW_REFRESH
+        MENUITEM "Actuali&zar", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Colar", FCIDM_SHVIEW_INSERT
-        MENUITEM "Colar atalho", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "&Colar", FCIDM_SHVIEW_INSERT
+        MENUITEM "Colar atal&ho", FCIDM_SHVIEW_INSERTLINK
     END
 END
 
