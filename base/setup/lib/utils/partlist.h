@@ -185,6 +185,7 @@ typedef struct _PARTLIST
 
     /* (Basic) Volumes management */
     LIST_ENTRY VolumesList;
+    ULONG DriveMap; ///< Drive letters map, used by AssignNextDriveLetter()
 
 } PARTLIST, *PPARTLIST;
 
@@ -385,13 +386,17 @@ BOOLEAN
 WritePartitionsToDisk(
     IN PPARTLIST List);
 
-BOOLEAN
-SetMountedDeviceValues(
-    _In_ PPARTLIST List);
-
 VOID
 SetMBRPartitionType(
     IN PPARTENTRY PartEntry,
     IN UCHAR PartitionType);
+
+
+BOOLEAN
+SetMountedDeviceValues(
+    _In_ PPARTLIST List);
+
+NTSTATUS
+ExportMountedDevices(VOID);
 
 /* EOF */
