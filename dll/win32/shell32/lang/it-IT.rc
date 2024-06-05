@@ -37,7 +37,7 @@ BEGIN
         MENUITEM "Aggiorna", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Incolla", FCIDM_SHVIEW_INSERT
-        MENUITEM "Crea Collegamento", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "Incolla collegamento", FCIDM_SHVIEW_INSERTLINK
     END
 END
 

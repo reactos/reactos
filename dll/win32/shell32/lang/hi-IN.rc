@@ -44,7 +44,7 @@ BEGIN
         MENUITEM "रिफ़्रिश", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "पेस्ट", FCIDM_SHVIEW_INSERT
-        MENUITEM "लिंक के रूप में पेस्ट करें", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "शॉर्टकट पेस्ट करें", FCIDM_SHVIEW_INSERTLINK
     END
 END
 

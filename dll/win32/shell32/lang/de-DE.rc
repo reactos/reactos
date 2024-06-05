@@ -37,7 +37,7 @@ BEGIN
         MENUITEM "Aktualisieren", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Einfügen", FCIDM_SHVIEW_INSERT
-        MENUITEM "Einfügen als Verweis", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "Verknüpfung Einfügen", FCIDM_SHVIEW_INSERTLINK
     END
 END
 

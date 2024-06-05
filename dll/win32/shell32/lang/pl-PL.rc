@@ -43,10 +43,10 @@ BEGIN
             MENUITEM "&Autorozmieszczanie", FCIDM_SHVIEW_AUTOARRANGE
             MENUITEM "&Wyrównaj do siatki", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "&Odśwież", FCIDM_SHVIEW_REFRESH
+        MENUITEM "Odśwież", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "W&klej", FCIDM_SHVIEW_INSERT
-        MENUITEM "Wklej s&krót", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "Wklej", FCIDM_SHVIEW_INSERT
+        MENUITEM "Wklej skrót", FCIDM_SHVIEW_INSERTLINK
     END
 END
 
