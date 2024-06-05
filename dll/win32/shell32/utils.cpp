@@ -245,20 +245,16 @@ Shell_DisplayNameOf(
 DWORD
 SHGetAttributes(_In_ IShellFolder *psf, _In_ LPCITEMIDLIST pidl, _In_ DWORD dwAttributes)
 {
-    LPCITEMIDLIST pidlLast;
-
-    if (psf)
-    {
-        psf->AddRef();
-        pidlLast = pidl;
-    }
-    else
-    {
-        SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psf), &pidlLast);
-    }
+    LPCITEMIDLIST pidlLast = pidl;
+    IShellFolder *release = NULL;
 
     if (!psf)
-        return 0;
+    {
+        SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psf), &pidlLast);
+        if (!psf)
+            return 0;
+        release = psf;
+    }
 
     DWORD oldAttrs = dwAttributes;
     if (FAILED(psf->GetAttributesOf(1, &pidlLast, &dwAttributes)))
@@ -276,9 +272,8 @@ SHGetAttributes(_In_ IShellFolder *psf, _In_ LPCITEMIDLIST pidl, _In_ DWORD dwAt
         dwAttributes |= SFGAO_STORAGEANCESTOR;
     }
 
-    if (psf)
-        psf->Release();
-
+    if (release)
+        release->Release();
     return dwAttributes;
 }
 

@@ -97,19 +97,22 @@ HRESULT CGuidItemContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder,
     GUID *pGuid = _ILGetGUIDPointer(apidl[0]);
     if (pGuid)
     {
-        LPOLESTR pwszCLSID;
         WCHAR key[60];
-
         wcscpy(key, L"CLSID\\");
-        HRESULT hr = StringFromCLSID(*pGuid, &pwszCLSID);
-        if (hr == S_OK)
-        {
-            wcscpy(&key[6], pwszCLSID);
-            AddClassKeyToArray(key, hKeys, &cKeys);
-            CoTaskMemFree(pwszCLSID);
-        }
+        StringFromGUID2(*pGuid, &key[6], 39);
+        AddClassKeyToArray(key, hKeys, &cKeys);
     }
-    AddClassKeyToArray(L"Folder", hKeys, &cKeys);
+
+    // FIXME: CRegFolder should be aggregated by its outer folder and should
+    // provide the attributes for all required non-registry folders.
+    // It currently does not so we have to ask the outer folder ourself so
+    // that we get the correct attributes for My Computer etc.
+    CComPtr<IShellFolder> pOuterSF;
+    SHBindToObject(NULL, pidlFolder, IID_PPV_ARG(IShellFolder, &pOuterSF));
+
+    SFGAOF att = (psf && cidl) ? SHGetAttributes(pOuterSF ? pOuterSF.p : psf, apidl[0], SFGAO_FOLDER) : 0;
+    if (att & SFGAO_FOLDER)
+        AddClassKeyToArray(L"Folder", hKeys, &cKeys);
 
     return CDefFolderMenu_Create2(pidlFolder, hwnd, cidl, apidl, psf, RegFolderContextMenuCallback, cKeys, hKeys, ppcm);
 }
@@ -390,10 +393,7 @@ HRESULT CRegFolder::GetGuidItemAttributes (LPCITEMIDLIST pidl, LPDWORD pdwAttrib
     }
 
     /* In any case, links can be created */
-    if (*pdwAttributes == NULL)
-    {
-        *pdwAttributes |= (dwAttributes & SFGAO_CANLINK);
-    }
+    *pdwAttributes |= (dwAttributes & SFGAO_CANLINK);
     return S_OK;
 }
 
