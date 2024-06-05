@@ -12,25 +12,12 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
-#include <debug.h>
 #include <internal/hal.h>
 
-#define AUTO_DRIVE         MAXULONG
-
-#define PARTITION_MAGIC    0xaa55
+#define NDEBUG
+#include <debug.h>
 
 #define EFI_PMBR_OSTYPE_EFI 0xEE
-
-#include <pshpack1.h>
-
-typedef struct _REG_DISK_MOUNT_INFO
-{
-    ULONG Signature;
-    LARGE_INTEGER StartingOffset;
-} REG_DISK_MOUNT_INFO, *PREG_DISK_MOUNT_INFO;
-
-#include <poppack.h>
 
 typedef enum _DISK_MANAGER
 {
@@ -244,7 +231,7 @@ HalpQueryPartitionType(
         return Status;
     }
 
-    /* First, handle non MBR style (easy cases) */
+    /* First, handle non-MBR style (easy case) */
     if (PartitionInfo.PartitionStyle != PARTITION_STYLE_MBR)
     {
         /* If not GPT, we don't know what it is */
@@ -255,9 +242,9 @@ HalpQueryPartitionType(
         }
 
         /* Check whether that's data partition */
-        if (RtlCompareMemory(&PartitionInfo.Gpt.PartitionType,
-                             &PARTITION_BASIC_DATA_GUID,
-                             sizeof(GUID)) == sizeof(GUID))
+        if (RtlEqualMemory(&PartitionInfo.Gpt.PartitionType,
+                           &PARTITION_BASIC_DATA_GUID,
+                           sizeof(GUID)))
         {
             *PartitionType = DataPartition;
             return STATUS_SUCCESS;
@@ -626,7 +613,7 @@ HalpNextDriveLetter(
     /* We'll allow MountMgr to fail only for non vital path */
     if (NtDeviceName == NULL || NtSystemPath == NULL)
     {
-        return -1;
+        return 0xFF;
     }
 
     /* And for removable devices */
@@ -1205,18 +1192,18 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         /* And assign drive letter to anything but system partition */
         for (PartitionCount = 1; ; ++PartitionCount)
         {
-            if (PartitionCount != SystemPartition)
-            {
-                swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition%d", HarddiskCount, PartitionCount);
-                RtlInitUnicodeString(&StringU1, Buffer);
-                Status = HalpQueryPartitionType(&StringU1, LayoutInfo, &PartitionType);
-                if (!NT_SUCCESS(Status))
-                    break;
+            if (PartitionCount == SystemPartition)
+                continue;
 
-                if (PartitionType == PrimaryPartition || PartitionType == FtPartition)
-                {
-                    HalpNextDriveLetter(&StringU1, NtDeviceName, NtSystemPath, FALSE);
-                }
+            swprintf(Buffer, L"\\Device\\Harddisk%d\\Partition%d", HarddiskCount, PartitionCount);
+            RtlInitUnicodeString(&StringU1, Buffer);
+            Status = HalpQueryPartitionType(&StringU1, LayoutInfo, &PartitionType);
+            if (!NT_SUCCESS(Status))
+                break;
+
+            if (PartitionType == PrimaryPartition || PartitionType == FtPartition)
+            {
+                HalpNextDriveLetter(&StringU1, NtDeviceName, NtSystemPath, FALSE);
             }
         }
 
@@ -1629,7 +1616,7 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
         Status = IoStatusBlock.Status;
     }
 
-    /* Check driver Status */
+    /* Check driver status */
     if (NT_SUCCESS(Status))
     {
         /* Validate the MBR Signature */
@@ -1948,11 +1935,9 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
             if (PartitionType != PARTITION_ENTRY_UNUSED)
             {
                 /* Check if it's bootable */
-                PartitionInfo->BootIndicator = PartitionDescriptor->
-                                               ActiveFlag & 0x80 ?
-                                               TRUE : FALSE;
+                PartitionInfo->BootIndicator = !!(PartitionDescriptor->ActiveFlag & 0x80);
 
-                /* Check if its' a container */
+                /* Check if it's a container */
                 if (IsContainerPartition(PartitionType))
                 {
                     /* Then don't recognize it and use the volume offset */
@@ -1985,8 +1970,12 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                                   SectorSize);
 
                 /* Get the partition number */
+#if 0
                 /* FIXME: REACTOS HACK -- Needed for xHalIoAssignDriveLetters() */
                 PartitionInfo->PartitionNumber = (!IsContainerPartition(PartitionType)) ? i + 1 : 0;
+#else
+                PartitionInfo->PartitionNumber = -1;
+#endif
             }
             else
             {
@@ -1997,8 +1986,12 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                 PartitionInfo->PartitionLength.QuadPart = 0;
                 PartitionInfo->HiddenSectors = 0;
 
+#if 0
                 /* FIXME: REACTOS HACK -- Needed for xHalIoAssignDriveLetters() */
                 PartitionInfo->PartitionNumber = 0;
+#else
+                PartitionInfo->PartitionNumber = -1;
+#endif
             }
         }
 
@@ -2091,8 +2084,12 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                 PartitionInfo->StartingOffset.QuadPart = 0;
                 PartitionInfo->PartitionLength = DiskGeometryEx.DiskSize;
 
+#if 0
                 /* FIXME: REACTOS HACK -- Needed for xHalIoAssignDriveLetters() */
                 PartitionInfo->PartitionNumber = 0;
+#else
+                PartitionInfo->PartitionNumber = -1;
+#endif
 
                 /* Set the signature and set the count back to 0 */
                 (*PartitionBuffer)->Signature = 1;
