@@ -37,6 +37,11 @@ typedef struct _VOLINFO
     (!IsUnknown(VolInfo) && !IsUnformatted(VolInfo))
 
 
+NTSTATUS
+GetOrAssignNextVolumeDriveLetter(
+    _In_ PCUNICODE_STRING VolumeName,
+    _Out_ PWCHAR DriveLetter);
+
 // DetectFileSystem()
 NTSTATUS
 MountVolume(
