@@ -674,19 +674,55 @@ CreateInsertBlankRegion(
 }
 
 static
+VOID
+AddLogicalDiskSpace(
+    _In_ PDISKENTRY DiskEntry)
+{
+    ULONGLONG StartSector;
+    ULONGLONG SectorCount;
+    PPARTENTRY NewPartEntry;
+
+    DPRINT("AddLogicalDiskSpace()\n");
+
+    /* Create a partition entry that represents the empty space in the container partition */
+
+    StartSector = DiskEntry->ExtendedPartition->StartSector.QuadPart + (ULONGLONG)DiskEntry->SectorAlignment;
+    SectorCount = DiskEntry->ExtendedPartition->SectorCount.QuadPart - (ULONGLONG)DiskEntry->SectorAlignment;
+
+    NewPartEntry = CreateInsertBlankRegion(DiskEntry,
+                                           &DiskEntry->LogicalPartListHead,
+                                           StartSector,
+                                           SectorCount,
+                                           TRUE);
+    if (!NewPartEntry)
+        DPRINT1("Failed to create a new empty region for full extended partition space!\n");
+}
+
+// TODO: Improve upon the PartitionInfo parameter later
+// (see VDS::CREATE_PARTITION_PARAMETERS and PPARTITION_INFORMATION_MBR/GPT for example)
+// So far we only use it as the optional type of the partition to create.
+//
+// See also CreatePartition().
+static
 BOOLEAN
 InitializePartitionEntry(
     _Inout_ PPARTENTRY PartEntry,
-    _In_opt_ ULONGLONG SizeBytes)
+    _In_opt_ ULONGLONG SizeBytes,
+    _In_opt_ ULONG_PTR PartitionInfo)
 {
     PDISKENTRY DiskEntry = PartEntry->DiskEntry;
     ULONGLONG SectorCount;
+    BOOLEAN isContainer = IsContainerPartition((UCHAR)PartitionInfo);
 
     DPRINT1("Current entry sector count: %I64u\n", PartEntry->SectorCount.QuadPart);
 
     /* The entry must not be already partitioned and not be void */
     ASSERT(!PartEntry->IsPartitioned);
     ASSERT(PartEntry->SectorCount.QuadPart);
+
+    /* Either we create a primary/logical partition, or we create an
+     * extended partition but the entry must not be logical space */
+    ASSERT(!isContainer || !PartEntry->LogicalPartition);
 
     /* Convert the size in bytes to sector count. SizeBytes being
      * zero means the caller wants to use all the empty space. */
@@ -734,7 +770,7 @@ InitializePartitionEntry(
                                                StartSector,
                                                SectorCount2,
                                                PartEntry->LogicalPartition);
-        if (NewPartEntry == NULL)
+        if (!NewPartEntry)
         {
             DPRINT1("Failed to create a new empty region for disk space!\n");
             return FALSE;
@@ -748,15 +784,49 @@ InitializePartitionEntry(
     PartEntry->New = TRUE;
     PartEntry->IsPartitioned = TRUE;
 
+    PartEntry->BootIndicator = FALSE;
+    if (PartitionInfo)
+    {
+        if (!isContainer)
+        {
+            PartEntry->PartitionType = (UCHAR)PartitionInfo;
+        }
+        else
+        {
+            /* Set the correct extended container partition type,
+             * depending on whether it is contained below or above
+             * the 1024-cylinder (usually 8.4GB/7.8GiB) boundary:
+             * - below: INT13h CHS partition;
+             * - above: Extended INT13h LBA partition. */
+            if ((PartEntry->StartSector.QuadPart + PartEntry->SectorCount.QuadPart - 1)
+                  / (DiskEntry->TracksPerCylinder * DiskEntry->SectorsPerTrack) < 1024)
+            {
+                PartEntry->PartitionType = PARTITION_EXTENDED;
+            }
+            else
+            {
+                PartEntry->PartitionType = PARTITION_XINT13_EXTENDED;
+            }
+        }
+    }
+    else
+    {
 // FIXME: Use FileSystemToMBRPartitionType() only for MBR, otherwise use PARTITION_BASIC_DATA_GUID.
-    PartEntry->PartitionType = FileSystemToMBRPartitionType(L"RAW",
-                                                            PartEntry->StartSector.QuadPart,
-                                                            PartEntry->SectorCount.QuadPart);
+        ASSERT(!isContainer);
+        PartEntry->PartitionType = FileSystemToMBRPartitionType(L"RAW",
+                                                                PartEntry->StartSector.QuadPart,
+                                                                PartEntry->SectorCount.QuadPart);
+    }
     ASSERT(PartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
 
     PartEntry->FormatState = Unformatted;
     PartEntry->FileSystem[0] = L'\0';
-    PartEntry->BootIndicator = FALSE;
+
+    if (isContainer)
+    {
+        DiskEntry->ExtendedPartition = PartEntry;
+        AddLogicalDiskSpace(DiskEntry);
+    }
 
     DPRINT1("First Sector : %I64u\n", PartEntry->StartSector.QuadPart);
     DPRINT1("Last Sector  : %I64u\n", PartEntry->StartSector.QuadPart + PartEntry->SectorCount.QuadPart - 1);
@@ -990,7 +1060,7 @@ ScanForUnpartitionedDiskSpace(
                                                StartSector,
                                                SectorCount,
                                                FALSE);
-        if (NewPartEntry == NULL)
+        if (!NewPartEntry)
             DPRINT1("Failed to create a new empty region for full disk space!\n");
 
         return;
@@ -1030,7 +1100,7 @@ ScanForUnpartitionedDiskSpace(
                                                        StartSector,
                                                        SectorCount,
                                                        FALSE);
-                if (NewPartEntry == NULL)
+                if (!NewPartEntry)
                 {
                     DPRINT1("Failed to create a new empty region for disk space!\n");
                     return;
@@ -1060,7 +1130,7 @@ ScanForUnpartitionedDiskSpace(
                                                    StartSector,
                                                    SectorCount,
                                                    FALSE);
-            if (NewPartEntry == NULL)
+            if (!NewPartEntry)
             {
                 DPRINT1("Failed to create a new empty region for trailing disk space!\n");
                 return;
@@ -1075,21 +1145,7 @@ ScanForUnpartitionedDiskSpace(
             DPRINT1("No logical partition!\n");
 
             /* Create a partition entry that represents the empty extended partition */
-
-            StartSector = DiskEntry->ExtendedPartition->StartSector.QuadPart + (ULONGLONG)DiskEntry->SectorAlignment;
-            SectorCount = DiskEntry->ExtendedPartition->SectorCount.QuadPart - (ULONGLONG)DiskEntry->SectorAlignment;
-
-            NewPartEntry = CreateInsertBlankRegion(DiskEntry,
-                                                   &DiskEntry->LogicalPartListHead,
-                                                   StartSector,
-                                                   SectorCount,
-                                                   TRUE);
-            if (NewPartEntry == NULL)
-            {
-                DPRINT1("Failed to create a new empty region for full extended partition space!\n");
-                return;
-            }
-
+            AddLogicalDiskSpace(DiskEntry);
             return;
         }
 
@@ -1124,7 +1180,7 @@ ScanForUnpartitionedDiskSpace(
                                                            StartSector,
                                                            SectorCount,
                                                            TRUE);
-                    if (NewPartEntry == NULL)
+                    if (!NewPartEntry)
                     {
                         DPRINT1("Failed to create a new empty region for extended partition space!\n");
                         return;
@@ -1156,7 +1212,7 @@ ScanForUnpartitionedDiskSpace(
                                                        StartSector,
                                                        SectorCount,
                                                        TRUE);
-                if (NewPartEntry == NULL)
+                if (!NewPartEntry)
                 {
                     DPRINT1("Failed to create a new empty region for extended partition space!\n");
                     return;
@@ -2542,7 +2598,7 @@ UpdateDiskLayout(
     IN PDISKENTRY DiskEntry)
 {
     PPARTITION_INFORMATION PartitionInfo;
-    PPARTITION_INFORMATION LinkInfo = NULL;
+    PPARTITION_INFORMATION LinkInfo;
     PLIST_ENTRY ListEntry;
     PPARTENTRY PartEntry;
     LARGE_INTEGER HiddenSectors64;
@@ -2609,6 +2665,7 @@ UpdateDiskLayout(
     ASSERT(Index <= 4);
 
     /* Update the logical partition table */
+    LinkInfo = NULL;
     Index = 4;
     for (ListEntry = DiskEntry->LogicalPartListHead.Flink;
          ListEntry != &DiskEntry->LogicalPartListHead;
@@ -2641,14 +2698,19 @@ UpdateDiskLayout(
             PartitionInfo->RewritePartition = TRUE;
 
             /* Fill the link entry of the previous partition entry */
-            if (LinkInfo != NULL)
+            if (LinkInfo)
             {
                 LinkInfo->StartingOffset.QuadPart = (PartEntry->StartSector.QuadPart - DiskEntry->SectorAlignment) * DiskEntry->BytesPerSector;
                 LinkInfo->PartitionLength.QuadPart = (PartEntry->StartSector.QuadPart + DiskEntry->SectorAlignment) * DiskEntry->BytesPerSector;
                 HiddenSectors64.QuadPart = PartEntry->StartSector.QuadPart - DiskEntry->SectorAlignment - DiskEntry->ExtendedPartition->StartSector.QuadPart;
                 LinkInfo->HiddenSectors = HiddenSectors64.LowPart;
                 LinkInfo->PartitionNumber = 0;
-                LinkInfo->PartitionType = PARTITION_EXTENDED;
+
+                /* Extended partition links only use type 0x05, as observed
+                 * on Windows NT. Alternatively they could inherit the type
+                 * of the main extended container. */
+                LinkInfo->PartitionType = PARTITION_EXTENDED; // DiskEntry->ExtendedPartition->PartitionType;
+
                 LinkInfo->BootIndicator = FALSE;
                 LinkInfo->RecognizedPartition = FALSE;
                 LinkInfo->RewritePartition = TRUE;
@@ -2850,6 +2912,10 @@ ExtendedPartitionCreationChecks(
     if (PartEntry->IsPartitioned)
         return ERROR_NEW_PARTITION;
 
+    /* Cannot create an extended partition within logical partition space */
+    if (PartEntry->LogicalPartition)
+        return ERROR_ONLY_ONE_EXTENDED;
+
     /* Only one primary partition is allowed on super-floppy */
     if (IsSuperFloppy(DiskEntry))
         return ERROR_PARTITION_TABLE_FULL;
@@ -2859,120 +2925,59 @@ ExtendedPartitionCreationChecks(
         return ERROR_PARTITION_TABLE_FULL;
 
     /* Fail if there is another extended partition in the list */
-    if (DiskEntry->ExtendedPartition != NULL)
+    if (DiskEntry->ExtendedPartition)
         return ERROR_ONLY_ONE_EXTENDED;
 
     return ERROR_SUCCESS;
 }
 
+// TODO: Improve upon the PartitionInfo parameter later
+// (see VDS::CREATE_PARTITION_PARAMETERS and PPARTITION_INFORMATION_MBR/GPT for example)
+// So far we only use it as the optional type of the partition to create.
 BOOLEAN
 CreatePartition(
     _In_ PPARTLIST List,
     _Inout_ PPARTENTRY PartEntry,
-    _In_opt_ ULONGLONG SizeBytes)
+    _In_opt_ ULONGLONG SizeBytes,
+    _In_opt_ ULONG_PTR PartitionInfo)
 {
     ERROR_NUMBER Error;
+    BOOLEAN isContainer = IsContainerPartition((UCHAR)PartitionInfo);
+    PCSTR mainType = "Primary";
 
-    DPRINT1("CreatePartition(%I64u bytes)\n", SizeBytes);
+    if (isContainer)
+        mainType = "Extended";
+    else if (PartEntry && PartEntry->LogicalPartition)
+        mainType = "Logical";
 
-    if (List == NULL || PartEntry == NULL ||
-        PartEntry->DiskEntry == NULL || PartEntry->IsPartitioned)
+    DPRINT1("CreatePartition(%s, %I64u bytes)\n", mainType, SizeBytes);
+
+    if (!List || !PartEntry ||
+        !PartEntry->DiskEntry || PartEntry->IsPartitioned)
     {
         return FALSE;
     }
 
-    Error = PartitionCreationChecks(PartEntry);
-    if (Error != NOT_AN_ERROR)
-    {
-        DPRINT1("PartitionCreationChecks() failed with error %lu\n", Error);
-        return FALSE;
-    }
-
-    /* Initialize the partition entry, inserting a new blank region if needed */
-    if (!InitializePartitionEntry(PartEntry, SizeBytes))
-        return FALSE;
-
-    UpdateDiskLayout(PartEntry->DiskEntry);
-    AssignDriveLetters(List);
-
-    return TRUE;
-}
-
-static
-VOID
-AddLogicalDiskSpace(
-    _In_ PDISKENTRY DiskEntry)
-{
-    ULONGLONG StartSector;
-    ULONGLONG SectorCount;
-    PPARTENTRY NewPartEntry;
-
-    DPRINT1("AddLogicalDiskSpace()\n");
-
-    /* Create a partition entry that represents the empty space in the container partition */
-
-    StartSector = DiskEntry->ExtendedPartition->StartSector.QuadPart + (ULONGLONG)DiskEntry->SectorAlignment;
-    SectorCount = DiskEntry->ExtendedPartition->SectorCount.QuadPart - (ULONGLONG)DiskEntry->SectorAlignment;
-
-    NewPartEntry = CreateInsertBlankRegion(DiskEntry,
-                                           &DiskEntry->LogicalPartListHead,
-                                           StartSector,
-                                           SectorCount,
-                                           TRUE);
-    if (NewPartEntry == NULL)
-    {
-        DPRINT1("Failed to create a new empty region for extended partition space!\n");
-        return;
-    }
-}
-
-BOOLEAN
-CreateExtendedPartition(
-    _In_ PPARTLIST List,
-    _Inout_ PPARTENTRY PartEntry,
-    _In_opt_ ULONGLONG SizeBytes)
-{
-    ERROR_NUMBER Error;
-
-    DPRINT1("CreateExtendedPartition(%I64u bytes)\n", SizeBytes);
-
-    if (List == NULL || PartEntry == NULL ||
-        PartEntry->DiskEntry == NULL || PartEntry->IsPartitioned)
-    {
-        return FALSE;
-    }
-
-    Error = ExtendedPartitionCreationChecks(PartEntry);
-    if (Error != NOT_AN_ERROR)
-    {
-        DPRINT1("ExtendedPartitionCreationChecks() failed with error %lu\n", Error);
-        return FALSE;
-    }
-
-    /* Initialize the partition entry, inserting a new blank region if needed */
-    if (!InitializePartitionEntry(PartEntry, SizeBytes))
-        return FALSE;
-
-    ASSERT(PartEntry->LogicalPartition == FALSE);
-
-    if (PartEntry->StartSector.QuadPart < 1450560)
-    {
-        /* Partition starts below the 8.4GB boundary ==> CHS partition */
-        PartEntry->PartitionType = PARTITION_EXTENDED;
-    }
+    if (isContainer)
+        Error = ExtendedPartitionCreationChecks(PartEntry);
     else
+        Error = PartitionCreationChecks(PartEntry);
+    if (Error != NOT_AN_ERROR)
     {
-        /* Partition starts above the 8.4GB boundary ==> LBA partition */
-        PartEntry->PartitionType = PARTITION_XINT13_EXTENDED;
+        DPRINT1("PartitionCreationChecks(%s) failed with error %lu\n", mainType, Error);
+        return FALSE;
     }
 
-    // FIXME? Possibly to make GetNextUnformattedPartition work (i.e. skip the extended partition container)
-    PartEntry->New = FALSE;
-    PartEntry->FormatState = Formatted;
+    /* Initialize the partition entry, inserting a new blank region if needed */
+    if (!InitializePartitionEntry(PartEntry, SizeBytes, PartitionInfo))
+        return FALSE;
 
-    PartEntry->DiskEntry->ExtendedPartition = PartEntry;
-
-    AddLogicalDiskSpace(PartEntry->DiskEntry);
+    if (isContainer)
+    {
+        // FIXME? Possibly to make GetNextUnformattedPartition work (i.e. skip the extended partition container)
+        PartEntry->New = FALSE;
+        PartEntry->FormatState = Formatted;
+    }
 
     UpdateDiskLayout(PartEntry->DiskEntry);
     AssignDriveLetters(List);
@@ -3089,9 +3094,9 @@ DismountVolume(
 
 BOOLEAN
 DeletePartition(
-    IN PPARTLIST List,
-    IN PPARTENTRY PartEntry,
-    OUT PPARTENTRY* FreeRegion OPTIONAL)
+    _In_ PPARTLIST List,
+    _In_ PPARTENTRY PartEntry,
+    _Out_opt_ PPARTENTRY* FreeRegion)
 {
     PDISKENTRY DiskEntry;
     PPARTENTRY PrevPartEntry;
@@ -3099,8 +3104,8 @@ DeletePartition(
     PPARTENTRY LogicalPartEntry;
     PLIST_ENTRY Entry;
 
-    if (List == NULL || PartEntry == NULL ||
-        PartEntry->DiskEntry == NULL || PartEntry->IsPartitioned == FALSE)
+    if (!List || !PartEntry ||
+        !PartEntry->DiskEntry || !PartEntry->IsPartitioned)
     {
         return FALSE;
     }

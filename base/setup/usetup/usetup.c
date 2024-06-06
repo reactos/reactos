@@ -1615,7 +1615,8 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                  * it will be formatted later with default parameters */
                 CreatePartition(PartitionList,
                                 CurrentPartition,
-                                0ULL);
+                                0ULL,
+                                0);
                 CurrentPartition->New |= PARTITION_NEW_AUTOCREATE;
 
 // FIXME?? Aren't we going to enter an infinite loop, if this test fails??
@@ -1746,7 +1747,8 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                  * it will be formatted later with default parameters */
                 CreatePartition(PartitionList,
                                 CurrentPartition,
-                                0ULL);
+                                0ULL,
+                                0);
                 CurrentPartition->New |= PARTITION_NEW_AUTOCREATE;
             }
 
@@ -2125,18 +2127,13 @@ CreatePartitionPage(PINPUT_RECORD Ir)
 
         ASSERT(PartSize <= MaxPartSize);
 
-        if (PartCreateType == PartTypeData)
-        {
-            CreatePartition(PartitionList,
-                            CurrentPartition,
-                            PartSize);
-        }
-        else // if (PartCreateType == PartTypeExtended)
-        {
-            CreateExtendedPartition(PartitionList,
-                                    CurrentPartition,
-                                    PartSize);
-        }
+        CreatePartition(PartitionList,
+                        CurrentPartition,
+                        PartSize,
+                        (PartCreateType == PartTypeData)
+                            ? 0
+                     // (PartCreateType == PartTypeExtended)
+                            : PARTITION_EXTENDED);
 
         return SELECT_PARTITION_PAGE;
     }
@@ -2396,7 +2393,8 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
             // specified from the TXTSETUP.SIF or unattended setup.
             CreatePartition(PartitionList,
                             SystemPartition,
-                            0ULL);
+                            0ULL,
+                            0);
             SystemPartition->New |= PARTITION_NEW_AUTOCREATE;
             ASSERT(SystemPartition->IsPartitioned);
         }

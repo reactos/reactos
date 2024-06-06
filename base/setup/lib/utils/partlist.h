@@ -313,13 +313,8 @@ BOOLEAN
 CreatePartition(
     _In_ PPARTLIST List,
     _Inout_ PPARTENTRY PartEntry,
-    _In_opt_ ULONGLONG SizeBytes);
-
-BOOLEAN
-CreateExtendedPartition(
-    _In_ PPARTLIST List,
-    _Inout_ PPARTENTRY PartEntry,
-    _In_opt_ ULONGLONG SizeBytes);
+    _In_opt_ ULONGLONG SizeBytes,
+    _In_opt_ ULONG_PTR PartitionInfo);
 
 NTSTATUS
 DismountVolume(
@@ -327,9 +322,9 @@ DismountVolume(
 
 BOOLEAN
 DeletePartition(
-    IN PPARTLIST List,
-    IN PPARTENTRY PartEntry,
-    OUT PPARTENTRY* FreeRegion OPTIONAL);
+    _In_ PPARTLIST List,
+    _In_ PPARTENTRY PartEntry,
+    _Out_opt_ PPARTENTRY* FreeRegion);
 
 PPARTENTRY
 FindSupportedSystemPartition(
