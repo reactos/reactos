@@ -106,7 +106,7 @@ BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 4, 25, 180, 12
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
     DEFPUSHBUTTON "OK", IDOK, 60, 175, 60, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Отмена", IDCANCEL, 125, 175, 60, 15, WS_TABSTOP
+    PUSHBUTTON "Отмена", IDCANCEL, 125, 175, 60, 15
 END
 
 IDD_BROWSE_FOR_FOLDER_NEW DIALOGEX 15, 40, 218, 196
@@ -129,8 +129,8 @@ CAPTION "Уведомление"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "&Да", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Д&а для всех", IDC_YESTOALL, 92, 69, 65, 14, WS_TABSTOP
-    PUSHBUTTON "&Нет", IDNO, 162, 69, 53, 14, WS_TABSTOP
+    PUSHBUTTON "Д&а для всех", IDC_YESTOALL, 92, 69, 65, 14
+    PUSHBUTTON "&Нет", IDNO, 162, 69, 53, 14
     PUSHBUTTON "Отмена", IDCANCEL, 220, 69, 53, 14
     ICON "", IDC_YESTOALL_ICON, 10, 10, 16, 16
     LTEXT "", IDC_YESTOALL_MESSAGE, 40, 10, 238, 52, 0
@@ -175,9 +175,9 @@ BEGIN
     LTEXT "Введите имя программы, папки, документа или ресурс Интернета, и ReactOS откроет их.", 12289, 36, 11, 185, 18
     LTEXT "&Открыть:", 12305, 7, 39, 34, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 43, 37, 177, 100
-    DEFPUSHBUTTON "OK", IDOK, 36, 70, 59, 14, WS_TABSTOP
-    PUSHBUTTON "Отмена", IDCANCEL, 98, 70, 59, 14, WS_TABSTOP
-    PUSHBUTTON "Об&зор...", 12288, 160, 70, 59, 14, WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 36, 70, 59, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 98, 70, 59, 14
+    PUSHBUTTON "Об&зор...", 12288, 160, 70, 59, 14
 END
 
 IDD_SHORTCUT_PROPERTIES DIALOGEX 0, 0, 235, 215
@@ -284,7 +284,7 @@ BEGIN
     AUTOCHECKBOX "Только &чтение", 14021, 58, 188, 67, 10
     AUTOCHECKBOX "Скр&ытый", 14022, 126, 188, 50, 10
     AUTOCHECKBOX "&Архивный", 14023, 181, 188, 49, 10
-    PUSHBUTTON "&Другие...", 14028, 180, 185, 50, 15, WS_TABSTOP
+    PUSHBUTTON "&Другие...", 14028, 180, 185, 50, 15
 END
 
 IDD_FILE_VERSION DIALOGEX 0, 0, 235, 215
@@ -332,7 +332,7 @@ BEGIN
     EDITTEXT 14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 40
     CTEXT "Диск %c", 14009, 95, 162, 50, 10
-    PUSHBUTTON "Очистка &диска", 14010, 160, 159, 70, 15, WS_TABSTOP
+    PUSHBUTTON "Очистка &диска", 14010, 160, 159, 70, 15
     LTEXT "", -1, 8, 176, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     CHECKBOX "&Сжимать для экономии места", 14011, 8, 190, 222, 10, WS_DISABLED
     CHECKBOX "Разрешить &индексирование диска для быстрого поиска", 14012, 8, 204, 222, 10, WS_DISABLED
@@ -346,15 +346,15 @@ BEGIN
     GROUPBOX "Проверка диска", -1, 5, 5, 230, 60
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "Проверка тома на наличие ошибок.", -1, 40, 25, 160, 20
-    PUSHBUTTON "Выполнить &проверку...", 14000, 110, 45, 120, 15, WS_TABSTOP
+    PUSHBUTTON "Выполнить &проверку...", 14000, 110, 45, 120, 15
     GROUPBOX "Дефрагментация диска", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "Дефрагментация файлов, хранящихся на этом томе.", -1, 40, 85, 160, 20
-    PUSHBUTTON "Выполнить д&ефрагментацию...", 14001, 110, 105, 120, 15, WS_TABSTOP
+    PUSHBUTTON "Выполнить д&ефрагментацию...", 14001, 110, 105, 120, 15
     GROUPBOX "Архивация", -1, 5, 130, 230, 60
     ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "Архивация файлов, хранящихся на этом томе.", -1, 40, 150, 160, 20
-    PUSHBUTTON "Выполнить &архивацию...", 14002, 110, 170, 120, 15, WS_TABSTOP
+    PUSHBUTTON "Выполнить &архивацию...", 14002, 110, 170, 120, 15
 END
 
 IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 220
@@ -376,12 +376,12 @@ BEGIN
     CHECKBOX "Запустить от указанного пользователя:", 14002, 10, 100, 175, 10
     LTEXT "Пользователь:", -1, 20, 118, 54, 10
     COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "...", 14004, 180, 115, 30, 14, WS_TABSTOP
+    PUSHBUTTON "...", 14004, 180, 115, 30, 14
     LTEXT "Пароль:", -1, 20, 143, 53, 10
     EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
-    PUSHBUTTON "...", 14006, 180, 140, 30, 14, WS_TABSTOP
-    PUSHBUTTON "OK", 14007, 57, 170, 60, 14, WS_TABSTOP
-    PUSHBUTTON "Отмена", 14008, 122, 170, 60, 14, WS_TABSTOP
+    PUSHBUTTON "...", 14006, 180, 140, 30, 14
+    PUSHBUTTON "OK", 14007, 57, 170, 60, 14
+    PUSHBUTTON "Отмена", 14008, 122, 170, 60, 14
 END
 
 IDD_RECYCLE_BIN_PROPERTIES DIALOGEX 0, 0, 240, 190
@@ -391,11 +391,11 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Установки для выбранного расположения", -1, 10, 72, 220, 70
-    RADIOBUTTON "&Другой размер:", 14001, 20, 90, 80, 10, WS_TABSTOP
+    RADIOBUTTON "&Другой размер:", 14001, 20, 90, 80, 10
     EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "&Максимальный размер (МБ):", -1, 20, 105, 95, 10
     RADIOBUTTON "&Уничтожать файлы сразу после удаления, не помещая их в корзину.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
-    AUTOCHECKBOX "&Запрашивать подтверждение на удаление", 14004, 20, 155, 160, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Запрашивать подтверждение на удаление", 14004, 20, 155, 160, 10
 END
 
 IDD_OPEN_WITH DIALOGEX 0, 0, 264, 256
@@ -433,7 +433,7 @@ BEGIN
     AUTORADIOBUTTON "Откр&ывать двойным, а выделять одним щелчком", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
     AUTORADIOBUTTON "Подчеркив&ать подписи значков", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 200, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Подчеркивать подписи з&начков при наведении", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
-    PUSHBUTTON "&Восстановить умолчания", IDC_FOLDER_OPTIONS_RESTORE, 158, 178, 99, 14, WS_TABSTOP
+    PUSHBUTTON "&Восстановить умолчания", IDC_FOLDER_OPTIONS_RESTORE, 158, 178, 99, 14
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 220
@@ -444,11 +444,11 @@ BEGIN
     GROUPBOX "Представление папок", -1, 7, 10, 249, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 14, 20, 21, 20
     LTEXT "Можно применить вид, выбранный для этой папки, например, ""Таблица"" или ""Плитка"", ко всем папкам.", -1, 40, 20, 213, 20
-    PUSHBUTTON "&Применить к папкам", IDC_VIEW_APPLY_TO_ALL, 15, 50, 115, 14, WS_TABSTOP
-    PUSHBUTTON "&Сброс вида папок", IDC_VIEW_RESET_ALL, 135, 50, 115, 14, WS_TABSTOP
+    PUSHBUTTON "&Применить к папкам", IDC_VIEW_APPLY_TO_ALL, 15, 50, 115, 14
+    PUSHBUTTON "&Сброс вида папок", IDC_VIEW_RESET_ALL, 135, 50, 115, 14
     LTEXT "Дополнительные параметры:", -1, 7, 80, 105, 10
     CONTROL "", IDC_VIEW_TREEVIEW, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 111
-    PUSHBUTTON "&Восстановить умолчания", IDC_VIEW_RESTORE_DEFAULTS, 158, 204, 99, 14, WS_TABSTOP
+    PUSHBUTTON "&Восстановить умолчания", IDC_VIEW_RESTORE_DEFAULTS, 158, 204, 99, 14
 END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 220
@@ -458,15 +458,15 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "&Зарегистрированные типы файлов:", -1, 7, 10, 180, 10
     CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 99
-    PUSHBUTTON "&Создать", IDC_FILETYPES_NEW, 140, 123, 55, 14, WS_TABSTOP
-    PUSHBUTTON "&Удалить", IDC_FILETYPES_DELETE, 200, 123, 55, 14, WS_TABSTOP
+    PUSHBUTTON "&Создать", IDC_FILETYPES_NEW, 140, 123, 55, 14
+    PUSHBUTTON "&Удалить", IDC_FILETYPES_DELETE, 200, 123, 55, 14
     GROUPBOX "Описание расширения '%s'", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 143, 249, 70
     LTEXT "Открывать с:", -1, 12, 153, 48, 10
     CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 153, 10, 10
     LTEXT "", IDC_FILETYPES_APPNAME, 100, 153, 80, 10
-    PUSHBUTTON "&Изменить...", IDC_FILETYPES_CHANGE, 185, 153, 65, 14, WS_TABSTOP
+    PUSHBUTTON "&Изменить...", IDC_FILETYPES_CHANGE, 185, 153, 65, 14
     LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 168, 160, 40
-    PUSHBUTTON "До&полнительно", IDC_FILETYPES_ADVANCED, 185, 188, 65, 14, WS_TABSTOP
+    PUSHBUTTON "До&полнительно", IDC_FILETYPES_ADVANCED, 185, 188, 65, 14
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
