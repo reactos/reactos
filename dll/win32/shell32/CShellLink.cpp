@@ -2794,7 +2794,7 @@ BOOL CShellLink::OnInitDialog(HWND hwndDlg, HWND hwndFocus, LPARAM lParam)
     /* Target path */
     if (m_sPath)
     {
-        WCHAR newpath[2*MAX_PATH];
+        WCHAR newpath[MAX_PATH * 2];
         newpath[0] = UNICODE_NULL;
         if (wcschr(m_sPath, ' '))
             StringCchPrintfExW(newpath, _countof(newpath), NULL, NULL, 0, L"\"%ls\"", m_sPath);
@@ -2838,10 +2838,16 @@ BOOL CShellLink::OnInitDialog(HWND hwndDlg, HWND hwndFocus, LPARAM lParam)
             SendMessageW(hRunCombo, CB_SETCURSEL, index, 0);
     }
 
-    BOOL disablecontrols = darwin;
-    if (!darwin)
+    BOOL disablecontrols = FALSE;
+    if (darwin)
     {
-        WCHAR path[2*MAX_PATH];
+        disablecontrols = TRUE;
+        EnableWindow(GetDlgItem(hwndDlg, IDC_SHORTCUT_FIND), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_SHORTCUT_CHANGE_ICON), FALSE);
+    }
+    else
+    {
+        WCHAR path[MAX_PATH * 2];
         path[0] = UNICODE_NULL;
         HRESULT hr = GetPath(path, _countof(path), NULL, SLGP_RAWPATH);
         if (FAILED(hr))
@@ -2868,17 +2874,14 @@ BOOL CShellLink::OnInitDialog(HWND hwndDlg, HWND hwndFocus, LPARAM lParam)
                 ILFree(pidl);
             }
             EnableWindow(GetDlgItem(hwndDlg, IDC_SHORTCUT_ADVANCED), FALSE);
+            EnableWindow(GetDlgItem(hwndDlg, IDC_SHORTCUT_START_IN_EDIT), FALSE);
         }
         else
         {
             ASSERT(FAILED(hr) || !(path[0] == ':' && path[1] == ':' && path[2] == '{'));
         }
     }
-    if (disablecontrols)
-    {
-        EnableWindow(GetDlgItem(hwndDlg, IDC_SHORTCUT_TARGET_TEXT), FALSE);
-        EnableWindow(GetDlgItem(hwndDlg, IDC_SHORTCUT_START_IN_EDIT), FALSE);
-    }
+    EnableWindow(GetDlgItem(hwndDlg, IDC_SHORTCUT_TARGET_TEXT), !disablecontrols);
 
     /* auto-completion */
     SHAutoComplete(GetDlgItem(hwndDlg, IDC_SHORTCUT_TARGET_TEXT), SHACF_DEFAULT);
