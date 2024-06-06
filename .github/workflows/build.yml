@@ -85,7 +85,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest]
-        toolset: ['14.3','14.2'] # VS 2022, and 2019 (see below)
+        toolset: ['14','14.2'] # VS 2022, and 2019 (see below)
         arch: [i386, amd64]
         config: [Debug, Release]
         dllver: ['0x502', '0x600']
@@ -145,7 +145,7 @@ jobs:
   build-msvc-arm:
     strategy:
       matrix:
-        toolset: ['14.3','14.2'] # VS 2022, 2019
+        toolset: ['14','14.2'] # VS 2022, 2019
         arch: [arm, arm64]
         config: [Debug, Release]
       fail-fast: false
@@ -222,7 +222,7 @@ jobs:
         name: reactos-syms-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: build/msvc_pdb
 
-  # FIXME: Does not boot on toolset 14.1, 14.3 is untested
+  # FIXME: Does not boot on toolset 14.1, 14.3+ is untested
   build-clang-cl:
     strategy:
       matrix:
@@ -249,13 +249,13 @@ jobs:
       uses: ilammy/msvc-dev-cmd@v1
       with:
         arch: amd64_x86
-        toolset: '14.3'
+        toolset: '14'
     - name: Activate VS cmd (amd64)
       if: ${{ matrix.arch == 'amd64' }}
       uses: ilammy/msvc-dev-cmd@v1
       with:
         arch: amd64
-        toolset: '14.3'
+        toolset: '14'
     - name: Add LLVM to PATH
       run: echo "${env:LLVM_PATH}" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
     - name: Source checkout
