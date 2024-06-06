@@ -28,12 +28,7 @@ static_assert(sizeof(DataObjectAttributes) == 0xc, "Unexpected struct size!");
 static
 HRESULT _BindToObject(PCUIDLIST_ABSOLUTE pidl, CComPtr<IShellFolder>& spFolder)
 {
-    CComPtr<IShellFolder> spDesktop;
-    HRESULT hr = SHGetDesktopFolder(&spDesktop);
-    if (FAILED(hr))
-        return hr;
-
-    return spDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &spFolder));
+    return SHBindToObject(NULL, pidl, IID_PPV_ARG(IShellFolder, &spFolder));
 }
 
 EXTERN_C
