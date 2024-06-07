@@ -2031,9 +2031,9 @@ HANDLE WINAPI CopyImage(
             return BITMAP_CopyImage(hImage, cxDesired, cyDesired, fuFlags);
         case IMAGE_CURSOR:
         case IMAGE_ICON:
-     /* HACK: Copying bitmaps with LR_COPYFROMRESOURCE flag fails. CORE-17902.
-     * This is a way to return original bit map it if we want
-     * the icons to show up. We need a simpler test. */
+        /* HACK: Copying bitmaps with LR_COPYFROMRESOURCE flag fails. CORE-17902.
+         * This is a way to return the original bit map if we need
+         * the icons to show up. We need a simpler test. */
         {
             HANDLE handle = CURSORICON_CopyImage(hImage, uType == IMAGE_ICON, cxDesired, cyDesired, fuFlags);
             if (!handle && (fuFlags & (LR_COPYFROMRESOURCE|LR_COPYRETURNORG)))
