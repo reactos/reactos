@@ -388,7 +388,11 @@ class CApplicationView : public CUiWindow<CWindowImpl<CApplicationView>>
     void
     SetRedraw(BOOL bRedraw);
     void
-    SetFocusOnSearchBar();
+    SetFocusOnSearchBar(UINT SetSel = 0);
+    void
+    SetSearchText(LPCWSTR Str);
+    void
+    SelectItem(CAppInfo *pAI);
     BOOL
     SetDisplayAppType(APPLICATION_VIEW_TYPE AppType);
 

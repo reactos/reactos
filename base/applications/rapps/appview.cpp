@@ -1697,9 +1697,44 @@ CApplicationView::SetRedraw(BOOL bRedraw)
 }
 
 void
-CApplicationView::SetFocusOnSearchBar()
+CApplicationView::SetFocusOnSearchBar(UINT SetSel)
 {
     m_SearchBar->SetFocus();
+    if (SetSel)
+    {
+        m_SearchBar->SendMessage(EM_SETSEL, (INT8)LOBYTE(LOWORD(SetSel)), (INT8)HIBYTE(LOWORD(SetSel)));
+        m_SearchBar->SendMessage(EM_SETSEL, (INT8)LOBYTE(HIWORD(SetSel)), (INT8)HIBYTE(HIWORD(SetSel)));
+    }
+}
+
+void
+CApplicationView::SetSearchText(LPCWSTR Str)
+{
+    m_SearchBar->SetWindowText(Str);
+}
+
+void
+CApplicationView::SelectItem(CAppInfo *pAI)
+{
+    int i = -1;
+    if (!pAI)
+    {
+        i = 0;
+    }
+    else
+    {
+        LVFINDINFOW fi;
+        fi.flags = LVFI_PARAM;
+        fi.lParam = (LPARAM)pAI;
+        i = m_ListView->FindItem(-1, &fi);
+    }
+
+    m_ListView->SetItemState(-1, 0, LVIS_SELECTED);
+    if (i != -1 && (pAI || m_ListView->GetItemCount() == 1))
+    {
+        m_ListView->SetFocus();
+        m_ListView->SetItemState(i, -1, LVIS_SELECTED | LVIS_FOCUSED);
+    }
 }
 
 VOID

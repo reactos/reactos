@@ -79,6 +79,25 @@ ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem)
     }
 }
 
+HTREEITEM
+TreeView_Walk(HWND hTree, TVWALKCALLBACK Callback, LPARAM Cookie, BOOL Children, HTREEITEM hRoot)
+{
+    if (!hRoot)
+        hRoot = TreeView_GetRoot(hTree);
+    for (HTREEITEM hItem = hRoot; hItem; hItem = TreeView_GetNextSibling(hTree, hItem))
+    {
+        if (!Callback(hTree, hItem, Cookie))
+            return hItem;
+        if (Children && (hRoot = TreeView_GetChild(hTree, hItem)) != NULL)
+        {
+            hRoot = TreeView_Walk(hTree, Callback, Cookie, Children, hRoot);
+            if (hRoot)
+                return hRoot;
+        }
+    }
+    return NULL;
+}
+
 BOOL
 StartProcess(const CStringW &Path, BOOL Wait)
 {
