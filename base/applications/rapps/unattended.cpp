@@ -259,8 +259,7 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
             {
                 if ((hWindow = FindWindowW(szWindowClass, NULL)) != NULL)
                     break;
-                else
-                    Sleep(inter);
+                Sleep(inter);
             }
 
             if (hWindow)
