@@ -46,9 +46,12 @@ ErrorBox(HWND hOwner, UINT Error = GetLastError());
 VOID
 CopyTextToClipboard(LPCWSTR lpszText);
 VOID
-ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem, POINT *Point = NULL);
-VOID
 EmulateDialogReposition(HWND hwnd);
+VOID
+ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem, POINT *Point = NULL);
+typedef BOOL (CALLBACK*TVWALKCALLBACK)(HWND hTree, HTREEITEM hItem, LPARAM Cookie);
+HTREEITEM
+TreeView_Walk(HWND hTree, TVWALKCALLBACK Callback, LPARAM Cookie = 0, BOOL Children = TRUE, HTREEITEM hRoot = NULL);
 UINT
 ClassifyFile(PCWSTR Path);
 BOOL
@@ -106,8 +109,16 @@ UnixTimeToFileTime(DWORD dwUnixTime, LPFILETIME pFileTime);
 BOOL
 SearchPatternMatch(LPCWSTR szHaystack, LPCWSTR szNeedle);
 
+<<<<<<< HEAD
 BOOL
 IsSameRegKey(HKEY hRoot, LPCWSTR Path1, REGSAM Sam1, LPCWSTR Path2, REGSAM Sam2);
+=======
+template<size_t N, class T> T IsStrPrefixI(T Str, const WCHAR (&Pre)[N])
+{
+    return StrCmpNIW(Str, Pre, N - 1) ? NULL : Str + N - 1;
+}
+
+>>>>>>> 77f5f6c818c ([RAPPS][BOOTDATA] Implement the rapps:// protocol)
 HRESULT
 RegKeyHasValues(HKEY hKey, LPCWSTR Path, REGSAM wowsam = 0);
 LPCWSTR

@@ -11,6 +11,7 @@
 #include "configparser.h"
 #include <setupapi.h>
 #include <conutils.h>
+#include <process.h>
 
 static BOOL
 MatchCmdOption(LPWSTR argvOption, LPCWSTR szOptToMacth)
@@ -330,6 +331,48 @@ HandleInfoCommand(CAppDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
     return TRUE;
 }
 
+static unsigned int CALLBACK
+RunGuiThread(void *nCmdShow)
+{
+    WCHAR fakecmdline[] = L"://";
+    return ParseCmdAndExecute(fakecmdline, PCAEF_WINDOWONLY, (UINT)(SIZE_T)nCmdShow);
+}
+
+static BOOL
+HandleProtocolCommand(CAppDB &db, LPWSTR Url, int nCmdShow)
+{
+    if (Url[0] == '/' && Url[1] == '/')
+        Url += 2;
+
+    LPWSTR p;
+    if ((p = IsStrPrefixI(Url, L"install/")) != NULL)
+    {
+        UrlUnescapeInPlace(p, 0);
+        return HandleInstallCommand(&db, Url, 1, &p);
+    }
+
+    HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, RunGuiThread, (void*)nCmdShow, 0, NULL);
+    if (hThread)
+    {
+        HWND hWindow;
+        for (UINT timeout = 1000 * 5, interval = 250, i = 0; i < timeout; Sleep(interval), i += interval)
+        {
+            hWindow = FindWindowW(szWindowClass, NULL);
+            if (IsWindowVisible(hWindow))
+                break;
+        }
+        if (hWindow)
+        {
+            SwitchToThisWindow(hWindow, TRUE);
+            COPYDATASTRUCT cds = { COPYDATA_PROTOCOLHANDLER, (wcslen(Url) + 1) * sizeof(*Url), (void*)Url };
+            SendMessageW(hWindow, WM_COPYDATA, 0, (LPARAM)&cds);
+        }
+        WaitForSingleObject(hThread, INFINITE); // We are the WinMain thread but not the UI thread, we have to wait here util the UI is done.
+        CloseHandle(hThread);
+    }
+    return TRUE;
+}
+
 static VOID
 PrintHelpCommand()
 {
@@ -342,7 +385,7 @@ PrintHelpCommand()
 }
 
 BOOL
-ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
+ParseCmdAndExecute(LPWSTR lpCmdLine, UINT Flags, int nCmdShow)
 {
     INT argc;
     LPWSTR *argv = CommandLineToArgvW(lpCmdLine, &argc);
@@ -355,7 +398,7 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
     if (!bAppwizMode)
     {
         CUpdateDatabaseMutex lock;
-        if (SettingsInfo.bUpdateAtStart || bIsFirstLaunch)
+        if ((SettingsInfo.bUpdateAtStart || (Flags & PCAEF_FIRSTLAUNCH)) && !(Flags & PCAEF_WINDOWONLY))
             db.RemoveCached();
 
         db.UpdateAvailable();
@@ -363,7 +406,7 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
 
     db.UpdateInstalled();
 
-    if (argc == 1 || bAppwizMode) // RAPPS is launched without options or APPWIZ mode is requested
+    if (argc <= 1 || bAppwizMode) // RAPPS is launched without options or APPWIZ mode is requested
     {
         // Check whether the RAPPS MainWindow is already launched in another process
         CStringW szWindowText(MAKEINTRESOURCEW(bAppwizMode ? IDS_APPWIZ_TITLE : IDS_APPTITLE));
@@ -421,6 +464,10 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
     else if (MatchCmdOption(argv[1], CMD_KEY_GENINST))
     {
         return HandleGenerateInstallerCommand(db, argc - 2, argv + 2);
+    }
+    else if (IsStrPrefixI(argv[1], L"rapps:"))
+    {
+        return HandleProtocolCommand(db, wcschr(lpCmdLine + wcslen(argv[0]), ':') + 1, nCmdShow);
     }
 
     InitRappsConsole();
