@@ -13,4 +13,9 @@
 #include "misc.h"
 #include "configparser.h"
 
+struct CUpdateDatabaseMutex : public CScopedMutex
+{
+    CUpdateDatabaseMutex() : CScopedMutex(UPDATEDBMUTEX, 1000 * 60 * 10, FALSE) { };
+};
+
 #endif /* _RAPPS_H */
