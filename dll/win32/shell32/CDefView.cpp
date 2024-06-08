@@ -1397,14 +1397,14 @@ HRESULT CDefView::FillList(BOOL IsRefreshCommand)
 
     TRACE("%p\n", this);
 
-    SHELLSTATE ss;
-    SHGetSetSettings(&ss, SSF_SHOWALLOBJECTS | SSF_SHOWSUPERHIDDEN, FALSE);
-    if (ss.fShowAllObjects)
+    SHELLSTATE shellstate;
+    SHGetSetSettings(&shellstate, SSF_SHOWALLOBJECTS | SSF_SHOWSUPERHIDDEN, FALSE);
+    if (shellstate.fShowAllObjects)
     {
         dFlags |= SHCONTF_INCLUDEHIDDEN;
         m_ListView.SendMessageW(LVM_SETCALLBACKMASK, LVIS_CUT, 0);
     }
-    if (ss.fShowSuperHidden)
+    if (shellstate.fShowSuperHidden)
     {
         dFlags |= SHCONTF_INCLUDESUPERHIDDEN;
         m_ListView.SendMessageW(LVM_SETCALLBACKMASK, LVIS_CUT, 0);

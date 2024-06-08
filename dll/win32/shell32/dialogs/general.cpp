@@ -67,10 +67,10 @@ SHELL32_WriteRegShellState(PREGSHELLSTATE prss)
 static BOOL
 IntSetShellStateSettings(BOOL bDoubleClick, BOOL bUseCommonTasks)
 {
-    SHELLSTATE ss;
-    ss.fDoubleClickInWebView = !!bDoubleClick;
-    ss.fWebView = !!bUseCommonTasks;
-    SHGetSetSettings(&ss, SSF_DOUBLECLICKINWEBVIEW | SSF_WEBVIEW, TRUE);
+    SHELLSTATE shellstate;
+    shellstate.fDoubleClickInWebView = !!bDoubleClick;
+    shellstate.fWebView = !!bUseCommonTasks;
+    SHGetSetSettings(&shellstate, SSF_DOUBLECLICKINWEBVIEW | SSF_WEBVIEW, TRUE);
 
     SHSettingsChanged(0, L"ShellState");
     return TRUE;
