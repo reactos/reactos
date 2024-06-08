@@ -13,6 +13,6 @@ BEGIN
     BEGIN
         MENUITEM "&Preferências...", ID_PREFERENCES
         MENUITEM SEPARATOR
-        MENUITEM "&Fechar a barra de idiomas", ID_EXIT
+        MENUITEM "&Sair", ID_EXIT
     END
 END
