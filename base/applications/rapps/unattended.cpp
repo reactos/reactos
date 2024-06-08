@@ -338,6 +338,7 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
     BOOL bAppwizMode = (argc > 1 && MatchCmdOption(argv[1], CMD_KEY_APPWIZ));
     if (!bAppwizMode)
     {
+        CUpdateDatabaseMutex lock;
         if (SettingsInfo.bUpdateAtStart || bIsFirstLaunch)
             db.RemoveCached();
 
