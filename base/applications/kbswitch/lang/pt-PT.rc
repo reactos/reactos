@@ -1,8 +1,8 @@
 /*
- * PROJECT:     KBSWITCH for ReactOS
- * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PROJECT:     Keyboard Layout Switcher
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Portuguese (Portugal) resource file
- *              Copyright 2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ * TRANSLATOR:  Copyright 2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
  */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
