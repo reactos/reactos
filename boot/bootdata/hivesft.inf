@@ -627,12 +627,14 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","Microso
 	"msgothic.ttc,MS UI Gothic",\
 	"mingliu.ttc,PMingLiU",\
 	"simsun.ttc,SimSun",\
-	"gulim.ttc,Gulim"
+	"gulim.ttc,Gulim",\
+	"tahoma.ttf,Tahoma"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","Lucida Sans Unicode",0x00010000,\
 	"msgothic.ttc,MS UI Gothic",\
 	"mingliu.ttc,PMingLiU",\
 	"simsun.ttc,SimSun",\
-	"gulim.ttc,Gulim"
+	"gulim.ttc,Gulim",\
+	"tahoma.ttf,Tahoma"
 
 ; FontLink (Chinese to others)
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","MingLiU",0x00010000,\
