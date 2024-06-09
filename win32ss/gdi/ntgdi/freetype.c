@@ -35,6 +35,27 @@
 #define NDEBUG
 #include <debug.h>
 
+typedef struct _FONTLINK
+{
+    LIST_ENTRY ListEntry;
+    PTEXTOBJ pTextObj;
+    HFONT hFont;
+    FONTOBJ *pFontObj;
+    PFONTGDI pFontGDI;
+    PSHARED_FACE pSharedFace;
+} FONTLINK, *PFONTLINK;
+
+#define MAX_FONTLINK 360
+
+typedef struct _FONTLINK_CHAIN
+{
+    LIST_ENTRY FontLinkList;
+    PTEXTOBJ pBaseTextObj;
+    WCHAR szzFontLink[MAX_FONTLINK];
+    FT_Face pDefFace;
+    PDC dc;
+} FONTLINK_CHAIN, *PFONTLINK_CHAIN;
+
 /* The ranges of the surrogate pairs */
 #define HIGH_SURROGATE_MIN 0xD800U
 #define HIGH_SURROGATE_MAX 0xDBFFU
@@ -204,6 +225,108 @@ BYTE FASTCALL IntCharSetFromCodePage(UINT uCodePage)
     }
 
     return DEFAULT_CHARSET;
+}
+
+static FT_Error
+IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight);
+
+static VOID
+FindFontFromListByName(FONTOBJ **FontObj, const LOGFONTW *LogFont, const PLIST_ENTRY Head)
+{
+    PLIST_ENTRY Entry;
+    PFONT_ENTRY FontEntry;
+    FONTGDI *FontGDI;
+    UNICODE_STRING FaceName;
+
+    ASSERT(FontObj);
+    ASSERT(LogFont);
+    ASSERT(Head);
+
+    RtlInitUnicodeString(&FaceName, LogFont->lfFaceName);
+
+    for (Entry = Head->Flink; Entry != Head; Entry = Entry->Flink)
+    {
+        FontEntry = CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
+        ASSERT(FontEntry);
+
+        FontGDI = FontEntry->Font;
+        ASSERT(FontGDI);
+
+        /* Non-localized name only */
+        if (RtlEqualUnicodeString(&FaceName, &FontEntry->FaceName, TRUE))
+        {
+            IntRequestFontSize(NULL, FontGDI, LogFont->lfWidth, LogFont->lfHeight);
+            *FontObj = GDIToObj(FontGDI, FONT);
+            break;
+        }
+    }
+}
+
+NTSTATUS FASTCALL
+TextIntRealizeFontByName(HFONT FontHandle, PTEXTOBJ *ppTextObj);
+
+static PFONTLINK
+FontLink_Create(PFONTLINK_CHAIN pChain, const LOGFONTW *plfBase, LPWSTR pszLink)
+{
+    LPWSTR pch1, pch2;
+    LOGFONTW lf;
+    HFONT hFont;
+    NTSTATUS Status;
+    PFONTLINK pLink;
+    PTEXTOBJ pTextObj;
+
+    pch1 = wcschr(pszLink, L',');
+    if (!pch1)
+        return NULL;
+
+    ++pch1; /* Next of comma */
+
+    pch2 = wcschr(pch1, L',');
+    if (pch2)
+        *pch2 = 0; /* Cut off */
+
+    lf = *plfBase;
+    lf.lfCharSet = DEFAULT_CHARSET;
+    RtlStringCchCopyW(lf.lfFaceName, _countof(lf.lfFaceName), pch1);
+
+    Status = TextIntCreateFontIndirect(&lf, &hFont);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("TextIntCreateFontIndirect failed\n");
+        return NULL;
+    }
+
+    if (!NT_SUCCESS(TextIntRealizeFontByName(hFont, &pTextObj)))
+    {
+        DPRINT("TextIntRealizeFontByName failed\n");
+        GreDeleteObject(hFont);
+        return NULL;
+    }
+
+    pLink = ExAllocatePoolWithTag(PagedPool, sizeof(FONTLINK), TAG_FONT);
+    if (!pLink)
+    {
+        DPRINT1("!pLink\n");
+        TEXTOBJ_UnlockText(pTextObj);
+        GreDeleteObject(hFont);
+        return NULL;
+    }
+
+    pLink->hFont = hFont;
+    pLink->pTextObj = pTextObj;
+    pLink->pFontObj = pTextObj->Font;
+    pLink->pFontGDI = ObjToGDI(pTextObj->Font, FONT);
+    pLink->pSharedFace = pLink->pFontGDI->SharedFace;
+
+    return pLink;
+}
+
+static VOID
+FontLink_Destroy(PFONTLINK pLink)
+{
+    ASSERT(pLink);
+    GreDeleteObject(pLink->hFont);
+    ExFreePoolWithTag(pLink, TAG_FONT);
 }
 
 /* list head */
@@ -944,6 +1067,130 @@ SubstituteFontRecurse(LOGFONTW* pLogFont)
     }
 
     return TRUE;    /* success */
+}
+
+static inline VOID
+FontLink_Chain_Init(PFONTLINK_CHAIN pChain, PTEXTOBJ pTextObj, FT_Face face, PDC dc)
+{
+    RtlZeroMemory(pChain, sizeof(*pChain));
+    pChain->pBaseTextObj = pTextObj;
+    pChain->pDefFace = face;
+    pChain->dc = dc;
+}
+
+static VOID
+FontLink_Chain_Free(PFONTLINK_CHAIN pChain)
+{
+    PLIST_ENTRY Entry;
+    PFONTLINK pLink;
+
+    if (!pChain->szzFontLink[0])
+        return;
+
+    while (!IsListEmpty(&pChain->FontLinkList))
+    {
+        Entry = RemoveHeadList(&pChain->FontLinkList);
+        pLink = CONTAINING_RECORD(Entry, FONTLINK, ListEntry);
+        FontLink_Destroy(pLink);
+    }
+}
+
+static NTSTATUS
+FontLink_Chain_LoadReg(PFONTLINK_CHAIN pChain, LPLOGFONTW pLF)
+{
+    NTSTATUS Status;
+    HKEY hKey;
+    DWORD cbData;
+    static const WCHAR s_szzDefFontLink[MAX_FONTLINK] =
+        L"tahoma.ttf,Tahoma\0"
+        L"msgothic.ttc,MS UI Gothic\0"
+        L"mingliu.ttc,PMingLiU\0"
+        L"simsun.ttc,SimSun\0"
+        L"gulim.ttc,Gulim\0"
+        L"\0";
+    static const WCHAR s_szzDefFixedPitchFontLink[MAX_FONTLINK] =
+        L"cour.ttf,Courier New\0"
+        L"msgothic.ttc,MS Gothic\0"
+        L"mingliu.ttc,PMingLiU\0"
+        L"simsun.ttc,SimSun\0"
+        L"gulim.ttc,Gulim\0"
+        L"\0";
+
+    pChain->szzFontLink[0] = UNICODE_NULL;
+
+    // Open registry key
+    Status = RegOpenKey(
+        L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\FontLink\\SystemLink",
+        &hKey);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    // Load the FontLink entry
+    cbData = sizeof(pChain->szzFontLink);
+    Status = RegQueryValue(hKey, pLF->lfFaceName, REG_MULTI_SZ, pChain->szzFontLink, &cbData);
+    if (!NT_SUCCESS(Status) && SubstituteFontRecurse(pLF)) // Retry with substituted name
+    {
+        cbData = sizeof(pChain->szzFontLink);
+        Status = RegQueryValue(hKey, pLF->lfFaceName, REG_MULTI_SZ, pChain->szzFontLink, &cbData);
+    }
+
+    ZwClose(hKey); // Close the registry key
+
+    ASSERT(sizeof(pChain->szzFontLink) == sizeof(s_szzDefFontLink));
+
+    if (!NT_SUCCESS(Status))
+    {
+        if (!(pLF->lfPitchAndFamily & FIXED_PITCH))
+            RtlCopyMemory(pChain->szzFontLink, s_szzDefFontLink, sizeof(pChain->szzFontLink));
+        else
+            RtlCopyMemory(pChain->szzFontLink, s_szzDefFixedPitchFontLink, sizeof(pChain->szzFontLink));
+    }
+
+    // Avoid buffer overrun
+    pChain->szzFontLink[_countof(pChain->szzFontLink) - 1] = UNICODE_NULL;
+    pChain->szzFontLink[_countof(pChain->szzFontLink) - 2] = UNICODE_NULL;
+
+    return Status;
+}
+
+static NTSTATUS
+FontLink_Chain_Populate(PFONTLINK_CHAIN pChain)
+{
+    NTSTATUS Status;
+    SIZE_T cchLink;
+    PFONTLINK pLink;
+    LOGFONTW lfBase;
+    PTEXTOBJ pTextObj = pChain->pBaseTextObj;
+
+    InitializeListHead(&pChain->FontLinkList);
+
+    if (!pTextObj->TextFace[0])
+        return STATUS_INVALID_PARAMETER;
+
+    lfBase = pTextObj->logfont.elfEnumLogfontEx.elfLogFont;
+
+    // lfBase.lfFaceName <-- pTextObj->TextFace (if lfFaceName was empty)
+    if (!lfBase.lfFaceName[0])
+        RtlStringCchCopyW(lfBase.lfFaceName, _countof(lfBase.lfFaceName), pTextObj->TextFace);
+
+    // Load FontLink entry from registry
+    Status = FontLink_Chain_LoadReg(pChain, &lfBase);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    InitializeListHead(&pChain->FontLinkList);
+    LPWSTR pszzFontLink = pChain->szzFontLink;
+    LPWSTR pchLink = pszzFontLink;
+    while (*pchLink)
+    {
+        cchLink = wcslen(pchLink);
+        pLink = FontLink_Create(pChain, &lfBase, pchLink);
+        if (pLink)
+            InsertTailList(&pChain->FontLinkList, &pLink->ListEntry);
+        pchLink = &pchLink[cchLink + 1];
+    }
+
+    return Status;
 }
 
 /*
@@ -2371,10 +2618,6 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI,
     TM->tmCharSet = FontGDI->CharSet;
 }
 
-static NTSTATUS
-IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
-                        FT_UShort NameID, FT_UShort LangID);
-
 typedef struct FONT_NAMES
 {
     UNICODE_STRING FamilyNameW;     /* family name (TT_NAME_ID_FONT_FAMILY) */
@@ -2383,6 +2626,10 @@ typedef struct FONT_NAMES
     UNICODE_STRING FullNameW;       /* unique name (TT_NAME_ID_UNIQUE_ID) */
     ULONG OtmSize;                  /* size of OUTLINETEXTMETRICW with extra data */
 } FONT_NAMES, *LPFONT_NAMES;
+
+static NTSTATUS
+IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
+                        FT_UShort NameID, FT_UShort LangID);
 
 static __inline void FASTCALL
 IntInitFontNames(FONT_NAMES *Names, PSHARED_FACE SharedFace)
@@ -3724,6 +3971,47 @@ get_glyph_index_flagged(FT_Face face, FT_ULong code, BOOL fCodeAsIndex)
     return (fCodeAsIndex ? code : get_glyph_index(face, code));
 }
 
+static UINT
+FontLink_Chain_Next(
+    PFONTLINK_CHAIN pChain,
+    PFONT_CACHE_ENTRY pCache,
+    FT_Face *pFace,
+    UINT code,
+    BOOL fCodeAsIndex)
+{
+    PFONTLINK pFontLink;
+    PLIST_ENTRY Entry, Head;
+    UINT index;
+    FT_Face LinkFace;
+
+    index = get_glyph_index_flagged(pChain->pDefFace, code, fCodeAsIndex);
+    if (index)
+    {
+        pCache->Hashed.Face = *pFace = pChain->pDefFace;
+        return index;
+    }
+
+    if (!pChain->szzFontLink[0])
+        FontLink_Chain_Populate(pChain);
+
+    Head = &pChain->FontLinkList;
+
+    for (Entry = Head->Flink; Entry != Head; Entry = Entry->Flink)
+    {
+        pFontLink = CONTAINING_RECORD(Entry, FONTLINK, ListEntry);
+        LinkFace = pFontLink->pSharedFace->Face;
+        index = get_glyph_index(LinkFace, code);
+        if (index)
+        {
+            pCache->Hashed.Face = *pFace = LinkFace;
+            return index;
+        }
+    }
+
+    pCache->Hashed.Face = *pFace = pChain->pDefFace;
+    return get_glyph_index(*pFace, 0x30FB);
+}
+
 /*
  * Based on WineEngGetGlyphOutline
  */
@@ -4269,6 +4557,7 @@ TextIntGetTextExtentPoint(PDC dc,
     LONG ascender, descender;
     FONT_CACHE_ENTRY Cache;
     DWORD ch0, ch1;
+    FONTLINK_CHAIN Chain;
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
 
@@ -4299,6 +4588,8 @@ TextIntGetTextExtentPoint(PDC dc,
     Cache.Hashed.matTransform = identityMat;
     FT_Set_Transform(Cache.Hashed.Face, NULL, NULL);
 
+    FontLink_Chain_Init(&Chain, TextObj, Cache.Hashed.Face, dc);
+
     use_kerning = FT_HAS_KERNING(Cache.Hashed.Face);
     previous = 0;
 
@@ -4316,7 +4607,12 @@ TextIntGetTextExtentPoint(PDC dc,
                 ch0 = Utf32FromSurrogatePair(ch0, ch1);
         }
 
+#if 1
+        glyph_index = FontLink_Chain_Next(&Chain, &Cache, &Cache.Hashed.Face, ch0,
+                                          (fl & GTEF_INDICES));
+#else
         glyph_index = get_glyph_index_flagged(Cache.Hashed.Face, ch0, (fl & GTEF_INDICES));
+#endif
         Cache.Hashed.GlyphIndex = glyph_index;
 
         realglyph = IntGetRealGlyph(&Cache);
@@ -4359,6 +4655,8 @@ TextIntGetTextExtentPoint(PDC dc,
         Size->cx = (TotalWidth64 + 32) >> 6;
         Size->cy = ascender + descender;
     }
+
+    FontLink_Chain_Free(&Chain);
 
     return TRUE;
 }
@@ -5106,14 +5404,21 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty,
 static
 VOID
 FASTCALL
-IntFontType(PFONTGDI Font)
+IntFontType(PFONTGDI Font, BOOL bLock)
 {
     PS_FontInfoRec psfInfo;
     FT_ULong tmp_size = 0;
     FT_Face Face = Font->SharedFace->Face;
 
-    ASSERT_FREETYPE_LOCK_NOT_HELD();
-    IntLockFreeType();
+    if (bLock)
+    {
+        ASSERT_FREETYPE_LOCK_NOT_HELD();
+        IntLockFreeType();
+    }
+    else
+    {
+        ASSERT_FREETYPE_LOCK_HELD();
+    }
 
     if (FT_HAS_MULTIPLE_MASTERS(Face))
         Font->FontObj.flFontType |= FO_MULTIPLEMASTER;
@@ -5137,7 +5442,8 @@ IntFontType(PFONTGDI Font)
         Font->FontObj.flFontType |= (FO_CFF|FO_POSTSCRIPT);
     }
 
-    IntUnLockFreeType();
+    if (bLock)
+        IntUnLockFreeType();
 }
 
 static BOOL
@@ -5276,7 +5582,7 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
         // Need hdev, when freetype is loaded need to create DEVOBJ for
         // Consumer and Producer.
         TextObj->Font->iUniq = 1; // Now it can be cached.
-        IntFontType(FontGdi);
+        IntFontType(FontGdi, TRUE);
         FontGdi->flType = TextObj->Font->flFontType;
         FontGdi->RequestUnderline = pLogFont->lfUnderline ? 0xFF : 0;
         FontGdi->RequestStrikeOut = pLogFont->lfStrikeOut ? 0xFF : 0;
@@ -5297,6 +5603,84 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
     return Status;
 }
 
+NTSTATUS
+FASTCALL
+TextIntRealizeFontByName(HFONT FontHandle, PTEXTOBJ *ppTextObj)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PPROCESSINFO Win32Process;
+    LOGFONTW *pLogFont;
+    LOGFONTW SubstitutedLogFont;
+    PTEXTOBJ pTextObj;
+
+    pTextObj = TEXTOBJ_LockText(FontHandle);
+    if (pTextObj == NULL)
+        return STATUS_INVALID_HANDLE;
+
+    if (pTextObj->fl & TEXTOBJECT_INIT)
+    {
+        TEXTOBJ_UnlockText(pTextObj);
+        return STATUS_SUCCESS;
+    }
+
+    pLogFont = &pTextObj->logfont.elfEnumLogfontEx.elfLogFont;
+
+    /* substitute */
+    SubstitutedLogFont = *pLogFont;
+    DPRINT("Font '%S,%u' is substituted by: ", pLogFont->lfFaceName, pLogFont->lfCharSet);
+    SubstituteFontRecurse(&SubstitutedLogFont);
+    DPRINT("'%S,%u'.\n", SubstitutedLogFont.lfFaceName, SubstitutedLogFont.lfCharSet);
+
+    pTextObj->Font = NULL;
+
+    Win32Process = PsGetCurrentProcessWin32Process();
+
+    /* Search private fonts */
+    IntLockProcessPrivateFonts(Win32Process);
+    FindFontFromListByName(&pTextObj->Font, &SubstitutedLogFont,
+                           &Win32Process->PrivateFontListHead);
+    IntUnLockProcessPrivateFonts(Win32Process);
+
+    /* Search system fonts */
+    IntLockGlobalFonts();
+    FindFontFromListByName(&pTextObj->Font, &SubstitutedLogFont, &g_FontListHead);
+    IntUnLockGlobalFonts();
+
+    if (pTextObj->Font == NULL)
+    {
+        DPRINT1("Request font %S not found, no fonts loaded at all\n", pLogFont->lfFaceName);
+        Status = STATUS_NOT_FOUND;
+    }
+    else
+    {
+        PFONTGDI FontGdi = ObjToGDI(pTextObj->Font, FONT);
+
+        RtlStringCchCopyW(pTextObj->TextFace, _countof(pTextObj->TextFace),
+                          SubstitutedLogFont.lfFaceName);
+
+        // Need hdev, when freetype is loaded need to create DEVOBJ for
+        // Consumer and Producer.
+        pTextObj->Font->iUniq = 1; // Now it can be cached.
+        IntFontType(FontGdi, FALSE);
+        FontGdi->flType = pTextObj->Font->flFontType;
+        FontGdi->RequestUnderline = pLogFont->lfUnderline ? 0xFF : 0;
+        FontGdi->RequestStrikeOut = pLogFont->lfStrikeOut ? 0xFF : 0;
+        FontGdi->RequestItalic = pLogFont->lfItalic ? 0xFF : 0;
+        if (pLogFont->lfWeight != FW_DONTCARE)
+            FontGdi->RequestWeight = pLogFont->lfWeight;
+        else
+            FontGdi->RequestWeight = FW_NORMAL;
+
+        pTextObj->fl |= TEXTOBJECT_INIT;
+        Status = STATUS_SUCCESS;
+    }
+
+    *ppTextObj = pTextObj;
+
+    ASSERT((NT_SUCCESS(Status) ^ (NULL == pTextObj->Font)) != 0);
+
+    return Status;
+}
 
 static
 BOOL
@@ -5880,7 +6264,8 @@ IntGetTextDisposition(
     IN OPTIONAL LPINT Dx,
     IN OUT PFONT_CACHE_ENTRY Cache,
     IN UINT fuOptions,
-    IN BOOL bNoTransform)
+    IN BOOL bNoTransform,
+    IN OUT PFONTLINK_CHAIN pChain)
 {
     LONGLONG X64 = 0, Y64 = 0;
     INT i, glyph_index;
@@ -5907,7 +6292,11 @@ IntGetTextDisposition(
                 ch0 = Utf32FromSurrogatePair(ch0, ch1);
         }
 
+#if 1
+        glyph_index = FontLink_Chain_Next(pChain, Cache, &face, ch0, (fuOptions & ETO_GLYPH_INDEX));
+#else
         glyph_index = get_glyph_index_flagged(face, ch0, (fuOptions & ETO_GLYPH_INDEX));
+#endif
         Cache->Hashed.GlyphIndex = glyph_index;
 
         realglyph = IntGetRealGlyph(Cache);
@@ -6079,6 +6468,7 @@ IntExtTextOutW(
     FT_Matrix mat;
     BOOL bNoTransform;
     DWORD ch0, ch1;
+    FONTLINK_CHAIN Chain;
 
     /* Check if String is valid */
     if (Count > 0xFFFF || (Count > 0 && String == NULL))
@@ -6194,6 +6584,8 @@ IntExtTextOutW(
         goto Cleanup;
     }
 
+    FontLink_Chain_Init(&Chain, TextObj, face, dc);
+
     /* Apply lfEscapement */
     if (FT_IS_SCALABLE(face) && plf->lfEscapement != 0)
         IntEscapeMatrix(&Cache.Hashed.matTransform, plf->lfEscapement);
@@ -6241,8 +6633,9 @@ IntExtTextOutW(
     if ((fuOptions & ETO_OPAQUE) || (pdcattr->flTextAlign & (TA_CENTER | TA_RIGHT)))
     {
         if (!IntGetTextDisposition(&DeltaX64, &DeltaY64, String, Count, Dx, &Cache,
-                                   fuOptions, bNoTransform))
+                                   fuOptions, bNoTransform, &Chain))
         {
+            FontLink_Chain_Free(&Chain);
             IntUnLockFreeType();
             bResult = FALSE;
             goto Cleanup;
@@ -6316,7 +6709,11 @@ IntExtTextOutW(
                 ch0 = Utf32FromSurrogatePair(ch0, ch1);
         }
 
+#if 1
+        glyph_index = FontLink_Chain_Next(&Chain, &Cache, &face, ch0, (fuOptions & ETO_GLYPH_INDEX));
+#else
         glyph_index = get_glyph_index_flagged(face, ch0, (fuOptions & ETO_GLYPH_INDEX));
+#endif
         Cache.Hashed.GlyphIndex = glyph_index;
 
         realglyph = IntGetRealGlyph(&Cache);
@@ -6540,6 +6937,8 @@ IntExtTextOutW(
             }
         }
     }
+
+    FontLink_Chain_Free(&Chain);
 
     IntUnLockFreeType();
 
