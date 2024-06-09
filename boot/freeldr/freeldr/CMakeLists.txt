@@ -268,17 +268,14 @@ endif()
 add_dependencies(freeldr_pe asm)
 add_dependencies(freeldr_pe_dbg asm)
 
-# Retrieve the full path to the generated file of the 'freeldr_pe' target
-get_target_property(_freeldr_pe_output_file freeldr_pe LOCATION)
-
 if(NOT ARCH STREQUAL "arm")
     concatenate_files(
         ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys
         ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
-        ${_freeldr_pe_output_file})
+        ${CMAKE_CURRENT_BINARY_DIR}/$<TARGET_FILE_NAME:freeldr_pe>)
     add_custom_target(freeldr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys)
 else()
-    add_custom_target(freeldr ALL DEPENDS ${_freeldr_pe_output_file})
+    add_custom_target(freeldr ALL DEPENDS freeldr_pe)
 endif()
 
 # rename freeldr on livecd to setupldr.sys because isoboot.bin looks for setupldr.sys
@@ -289,10 +286,10 @@ if(NOT ARCH STREQUAL "arm")
     concatenate_files(
         ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys
         ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
-        ${_freeldr_pe_output_file})
+        ${CMAKE_CURRENT_BINARY_DIR}/$<TARGET_FILE_NAME:freeldr_pe>)
     add_custom_target(setupldr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys)
 else()
-    add_custom_target(setupldr ALL DEPENDS ${_freeldr_pe_output_file})
+    add_custom_target(setupldr ALL DEPENDS freeldr_pe)
 endif()
 
 add_cd_file(TARGET setupldr FILE ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys DESTINATION loader NO_CAB FOR bootcd regtest)
