@@ -1,6 +1,6 @@
 /*
- * PROJECT:     Shell32 for ReactOS
- * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PROJECT:     ReactOS Shell32
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Portuguese (Portugal) resource file
  * TRANSLATOR:  Copyright 2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
  */
@@ -679,7 +679,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_EDITTYPE_ICON, 5, 8, 20, 20
     EDITTEXT IDC_EDITTYPE_TEXT, 30, 10, 115, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "Alterar &ícone...", IDC_EDITTYPE_CHANGE_ICON, 150, 10, 70, 14
+    PUSHBUTTON "Alterar í&cone...", IDC_EDITTYPE_CHANGE_ICON, 150, 10, 70, 14
     LTEXT "&Acções:", -1, 5, 37, 70, 10
     LISTBOX IDC_EDITTYPE_LISTBOX, 5, 50, 140, 60, LBS_NOINTEGRALHEIGHT | LBS_HASSTRINGS | LBS_OWNERDRAWFIXED | LBS_NOTIFY | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Novo...", IDC_EDITTYPE_NEW, 150, 50, 70, 14
