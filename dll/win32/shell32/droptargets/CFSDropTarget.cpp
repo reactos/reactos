@@ -38,7 +38,8 @@ static void SHELL_StripIllegalFsNameCharacters(_Inout_ LPWSTR Buf)
     }
 }
 
-static HRESULT SHELL_LimitDropEffectToItemAttributes(IDataObject *pDataObject, DWORD *pdwEffect)
+static HRESULT
+SHELL_LimitDropEffectToItemAttributes(_In_ IDataObject *pDataObject, _Inout_ DWORD *pdwEffect)
 {
     DWORD att = *pdwEffect & (SFGAO_CANCOPY | SFGAO_CANMOVE | SFGAO_CANLINK); // DROPEFFECT maps perfectly to these SFGAO bits
     HRESULT hr = SHGetAttributesFromDataObject(pDataObject, att, &att, NULL);
