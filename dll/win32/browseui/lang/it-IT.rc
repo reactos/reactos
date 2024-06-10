@@ -89,8 +89,8 @@ END
 
 IDM_BAND_MENU MENUEX
 BEGIN
-    MENUITEM "Sho&w Title", IDM_BAND_TITLE
-    MENUITEM "&Close Toolbar", IDM_BAND_CLOSE
+    MENUITEM "Mostr&a Titolo", IDM_BAND_TITLE
+    MENUITEM "&Chiudi barra degli strumenti", IDM_BAND_CLOSE
 END
 
 IDM_POPUPMENU MENUEX DISCARDABLE
@@ -99,11 +99,11 @@ BEGIN
     BEGIN
         POPUP "&View", IDM_VIEW_MENU
         BEGIN
-            MENUITEM "&Large Icons", IDM_LARGE_ICONS
-            MENUITEM "&Small Icons", IDM_SMALL_ICONS
+            MENUITEM "&Icone grandi", IDM_LARGE_ICONS
+            MENUITEM "&Icone piccole", IDM_SMALL_ICONS
         END
-        MENUITEM "&Open Folder", IDM_OPEN_FOLDER
-        MENUITEM "&Show Text", IDM_SHOW_TEXT
+        MENUITEM "&Apri cartella", IDM_OPEN_FOLDER
+        MENUITEM "&Mostra testo", IDM_SHOW_TEXT
     END
 END
 
@@ -150,7 +150,7 @@ BEGIN
     DEFPUSHBUTTON "Sea&rch", IDC_SEARCH_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
     PUSHBUTTON "&Stop", IDC_SEARCH_STOP_BUTTON, 80, 110, 40, 15, WS_GROUP | WS_TABSTOP
 
-    AUTOCHECKBOX "Search Hidden Files and Folders",
+    AUTOCHECKBOX "Cerca file e cartelle nascoste",
                  IDC_SEARCH_HIDDEN, 4, 130, 130, 8, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 
     CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER | PBS_MARQUEE, 10, 155, 200, 8
@@ -298,7 +298,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ADDRESSMENUTEXT "&Address"
+    IDS_ADDRESSMENUTEXT "&Indirizzo"
     IDS_HISTORYTEXT "&Recenti\tCtrl+H"
 END
 
@@ -311,7 +311,7 @@ STRINGTABLE
 BEGIN
     IDS_BACK "Back to %s"
     IDS_FORWARD "Forward to %s"
-    IDS_FOLDER_OPTIONS "Folder Options"
+    IDS_FOLDER_OPTIONS "Opzioni cartella"
 END
 
 STRINGTABLE
@@ -322,24 +322,24 @@ END
 STRINGTABLE
 BEGIN
     IDS_BROWSEFORNEWTOOLAR "Choose a folder"
-    IDS_TOOLBAR_ERR_TITLE "Toolbar"
-    IDS_TOOLBAR_ERR_TEXT "Cannot create toolbar."
+    IDS_TOOLBAR_ERR_TITLE "Barra degli strumenti"
+    IDS_TOOLBAR_ERR_TEXT "Impossibile creare la barra degli strumenti."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SEARCH_RESULTS "Search Results"
-    IDS_SEARCHINVALID "'%1' is not a valid folder."
-    IDS_SEARCH_FOLDER "Searching %s"
-    IDS_SEARCH_FILES_FOUND "%u files found"
+    IDS_SEARCH_RESULTS "Risultati ricerca"
+    IDS_SEARCHINVALID "'%1' non è una cartella valida."
+    IDS_SEARCH_FOLDER "Sto cercando %s"
+    IDS_SEARCH_FILES_FOUND "trovati %u file"
     IDS_SEARCH_OPEN_FOLDER "Open Containing &Folder"
-    IDS_COL_NAME "Name"
+    IDS_COL_NAME "Nome"
     IDS_COL_LOCATION "In Folder"
-    IDS_COL_RELEVANCE "Relevance"
+    IDS_COL_RELEVANCE "Rivelanza"
 END
 
 STRINGTABLE
 BEGIN
     IDS_PARSE_ADDR_ERR_TITLE "ReactOS Explorer"
-    IDS_PARSE_ADDR_ERR_TEXT "ReactOS Explorer cannot find '%1'. Check the spelling and try again."
+    IDS_PARSE_ADDR_ERR_TEXT "ReactOS Explorer non può trovare '%1'. Controlla la digitazione e riprova."
 END
