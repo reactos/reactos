@@ -913,8 +913,6 @@ BEGIN
     IDS_FOLDER_OPTIONS "Folder Options"
     IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
     IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
-    IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
-    IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
     IDS_RECYCLEBIN_LOCATION "Recycle Bin Location"
     IDS_RECYCLEBIN_DISKSPACE "Space Available"
     IDS_EMPTY_BITBUCKET "Empty Recycle Bin"
