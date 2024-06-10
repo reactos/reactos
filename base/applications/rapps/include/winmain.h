@@ -2,10 +2,6 @@
 
 #include "settings.h"
 
-#define MAINWINDOWCLASSNAME L"ROSAPPMGR2"
-#define MAINWINDOWMUTEX szWindowClass
-#define UPDATEDBMUTEX ( MAINWINDOWCLASSNAME L":UpDB" )
-
 extern LPCWSTR szWindowClass;
 
 extern HWND hMainWnd;
