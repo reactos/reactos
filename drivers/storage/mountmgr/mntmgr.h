@@ -19,7 +19,7 @@ typedef struct _DEVICE_EXTENSION
     PVOID NotificationEntry;
     KSEMAPHORE DeviceLock;
     KSEMAPHORE RemoteDatabaseLock;
-    ULONG AutomaticDriveLetter;
+    BOOLEAN AutomaticDriveLetter;
     LIST_ENTRY IrpListHead;
     ULONG EpicNumber;
     LIST_ENTRY SavedLinksListHead;
@@ -238,12 +238,6 @@ QueryDeviceInformation(
 BOOLEAN
 HasDriveLetter(
     IN PDEVICE_INFORMATION DeviceInformation
-);
-
-CODE_SEG("INIT")
-BOOLEAN
-MountmgrReadNoAutoMount(
-    IN PUNICODE_STRING RegistryPath
 );
 
 /* database.c */

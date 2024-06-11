@@ -835,26 +835,27 @@ MountMgrUnload(IN PDRIVER_OBJECT DriverObject)
     IoDeleteDevice(gdeviceObject);
 }
 
-/*
- * @implemented
- */
+/**
+ * @brief   Retrieves the "NoAutoMount" setting.
+ * @return  TRUE if AutoMount is disabled; FALSE if AutoMount is enabled.
+ **/
 CODE_SEG("INIT")
 BOOLEAN
-MountmgrReadNoAutoMount(IN PUNICODE_STRING RegistryPath)
+MountmgrReadNoAutoMount(
+    _In_ PUNICODE_STRING RegistryPath)
 {
     NTSTATUS Status;
     ULONG Result, Default = 0;
     RTL_QUERY_REGISTRY_TABLE QueryTable[2];
 
+    /* Retrieve data from registry */
     RtlZeroMemory(QueryTable, sizeof(QueryTable));
-
-    /* Simply read data from register */
     QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
     QueryTable[0].Name = L"NoAutoMount";
     QueryTable[0].EntryContext = &Result;
-    QueryTable[0].DefaultType = REG_NONE;
+    QueryTable[0].DefaultType = REG_DWORD;
     QueryTable[0].DefaultData = &Default;
-    QueryTable[0].DefaultLength = sizeof(ULONG);
+    QueryTable[0].DefaultLength = sizeof(Default);
 
     Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
                                     RegistryPath->Buffer,
@@ -862,9 +863,7 @@ MountmgrReadNoAutoMount(IN PUNICODE_STRING RegistryPath)
                                     NULL,
                                     NULL);
     if (!NT_SUCCESS(Status))
-    {
-        return (Default != 0);
-    }
+        Result = Default;
 
     return (Result != 0);
 }
@@ -1258,7 +1257,7 @@ MountMgrMountedDeviceArrival(IN PDEVICE_EXTENSION DeviceExtension,
         DeviceInformation->SuggestedDriveLetter = 0;
     }
     /* Else, it's time to set up one */
-    else if ((DeviceExtension->NoAutoMount || DeviceInformation->Removable) &&
+    else if ((!DeviceExtension->NoAutoMount || DeviceInformation->Removable) &&
              DeviceExtension->AutomaticDriveLetter &&
              (HasGptDriveLetter || DeviceInformation->SuggestedDriveLetter) &&
              !HasNoDriveLetterEntry(UniqueId))
@@ -1316,16 +1315,14 @@ MountMgrMountedDeviceArrival(IN PDEVICE_EXTENSION DeviceExtension,
         RtlCopyMemory(NewUniqueId->UniqueId, UniqueId->UniqueId, UniqueId->UniqueIdLength);
     }
 
-    /* If device's offline or valid, skip its notifications */
+    /* If the device is offline or valid, skip its notifications */
     if (IsOff || Valid)
     {
         DeviceInformation->SkipNotifications = TRUE;
     }
 
-    /* In case device is valid and is set to no automount,
-     * set it offline.
-     */
-    if (DeviceExtension->NoAutoMount || IsDrvLetter)
+    /* If automount is enabled or the device already mounted, set it offline */
+    if (!DeviceExtension->NoAutoMount || IsDrvLetter)
     {
         IsOff = !DeviceInformation->SkipNotifications;
     }
@@ -1337,7 +1334,7 @@ MountMgrMountedDeviceArrival(IN PDEVICE_EXTENSION DeviceExtension,
     /* Finally, release the exclusive lock */
     KeReleaseSemaphore(&(DeviceExtension->DeviceLock), IO_NO_INCREMENT, 1, FALSE);
 
-    /* If device is not offline, notify its arrival */
+    /* If the device is not offline, notify its arrival */
     if (!IsOff)
     {
         SendOnlineNotification(SymbolicName);

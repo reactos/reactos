@@ -94,7 +94,6 @@ MountmgrWriteNoAutoMount(IN PDEVICE_EXTENSION DeviceExtension)
                                  REG_DWORD,
                                  &Value,
                                  sizeof(Value));
-
 }
 
 /*
@@ -115,16 +114,17 @@ MountMgrSetAutoMount(IN PDEVICE_EXTENSION DeviceExtension,
         return STATUS_INVALID_PARAMETER;
     }
 
-    /* Only change if there's a real difference */
+    /* Change the state only if there is a real difference
+     * with the user-provided NewState (normalized) */
     SetState = (PMOUNTMGR_SET_AUTO_MOUNT)Irp->AssociatedIrp.SystemBuffer;
-    if (SetState->NewState == !DeviceExtension->NoAutoMount)
+    if ((SetState->NewState != Enabled) == DeviceExtension->NoAutoMount)
     {
         Irp->IoStatus.Information = 0;
         return STATUS_SUCCESS;
     }
 
-    /* Set new state; ! on purpose */
-    DeviceExtension->NoAutoMount = !SetState->NewState;
+    /* Set new state */
+    DeviceExtension->NoAutoMount = (SetState->NewState != Enabled);
     Irp->IoStatus.Information = 0;
     return MountmgrWriteNoAutoMount(DeviceExtension);
 }
@@ -480,7 +480,7 @@ MountMgrNextDriveLetterWorker(IN PDEVICE_EXTENSION DeviceExtension,
         return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
-    /* Now, mark we have assigned a letter (assumption) */
+    /* Now, assume we will assign a letter */
     DeviceInformation->LetterAssigned =
     DriveLetterInfo->DriveLetterWasAssigned = TRUE;
 
@@ -501,39 +501,35 @@ MountMgrNextDriveLetterWorker(IN PDEVICE_EXTENSION DeviceExtension,
         NextEntry = NextEntry->Flink;
     }
 
-    /* If we didn't find a drive letter online
-     * ensure this is not a no drive entry
-    * by querying GPT attributes & database
-     */
+    /* If we didn't find a drive letter online, ensure this is not
+     * a no-drive entry by querying GPT attributes & database */
     if (NextEntry == &(DeviceInformation->SymbolicLinksListHead))
     {
         if (!GptDriveLetter || HasNoDriveLetterEntry(DeviceInformation->UniqueId))
         {
             DriveLetterInfo->DriveLetterWasAssigned = FALSE;
             DriveLetterInfo->CurrentDriveLetter = 0;
-
             goto Release;
         }
     }
 
-    /* No, ensure that the device is not automounted nor removable */
-    if (!DeviceExtension->NoAutoMount && !Removable)
+    /* If automount is disabled, and the device is not removable
+     * but needs a drive letter, don't assign one and bail out */
+    if (DeviceExtension->NoAutoMount && !Removable)
     {
         if (DriveLetterInfo->DriveLetterWasAssigned)
         {
             DriveLetterInfo->DriveLetterWasAssigned = FALSE;
             DriveLetterInfo->CurrentDriveLetter = 0;
-
             goto Release;
         }
     }
 
+    /* Stop now if we don't need to assign the drive a letter */
     if (!DriveLetterInfo->DriveLetterWasAssigned)
-    {
         goto Release;
-    }
 
-    /* Now everything is fine, start processing */
+    /* Now everything is fine, begin drive letter assignment */
 
     if (RtlPrefixUnicodeString(&DeviceFloppy, &TargetDeviceName, TRUE))
     {
@@ -559,7 +555,6 @@ MountMgrNextDriveLetterWorker(IN PDEVICE_EXTENSION DeviceExtension,
     {
         DriveLetterInfo->DriveLetterWasAssigned = FALSE;
         DriveLetterInfo->CurrentDriveLetter = 0;
-
         goto Release;
     }
 
@@ -775,7 +770,7 @@ MountMgrAssignDriveLetters(IN PDEVICE_EXTENSION DeviceExtension)
                                           &DriveLetterInformation);
         }
 
-        /* If it was the system volume */
+        /* If it's the system volume */
         if (NT_SUCCESS(Status) && RtlEqualUnicodeString(&SystemVolumeName, &(DeviceInformation->DeviceName), TRUE))
         {
             /* Keep track of it */
@@ -788,16 +783,19 @@ MountMgrAssignDriveLetters(IN PDEVICE_EXTENSION DeviceExtension)
                               DeviceInformation->UniqueId->UniqueIdLength + sizeof(MOUNTDEV_UNIQUE_ID));
             }
 
-            /* If it was not automount, ensure it gets mounted */
-            if (!DeviceExtension->NoAutoMount)
+            /* Ensure it gets mounted if automount is disabled */
+            if (DeviceExtension->NoAutoMount)
             {
-                DeviceExtension->NoAutoMount = TRUE;
+                /* Temporarily re-enable automount for the
+                 * worker to mount and set a drive letter */
+                DeviceExtension->NoAutoMount = FALSE;
 
                 MountMgrNextDriveLetterWorker(DeviceExtension,
                                               &(DeviceInformation->DeviceName),
                                               &DriveLetterInformation);
 
-                DeviceExtension->NoAutoMount = FALSE;
+                /* And re-disable automount */
+                DeviceExtension->NoAutoMount = TRUE;
             }
         }
     }
@@ -2700,12 +2698,12 @@ MountMgrDeviceControl(IN PDEVICE_OBJECT DeviceObject,
             break;
 
         case IOCTL_MOUNTMGR_AUTO_DL_ASSIGNMENTS:
+        // NOTE: On Win7+, this is handled during driver re-initialization.
             DeviceExtension->AutomaticDriveLetter = TRUE;
-            Status = STATUS_SUCCESS;
-
             MountMgrAssignDriveLetters(DeviceExtension);
             ReconcileAllDatabasesWithMaster(DeviceExtension);
             WaitForOnlinesToComplete(DeviceExtension);
+            Status = STATUS_SUCCESS;
             break;
 
         case IOCTL_MOUNTMGR_VOLUME_MOUNT_POINT_CREATED:
