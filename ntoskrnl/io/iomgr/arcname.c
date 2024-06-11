@@ -946,10 +946,10 @@ IopReassignSystemRoot(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 }
 
 BOOLEAN
-NTAPI
-IopVerifyDiskSignature(IN PDRIVE_LAYOUT_INFORMATION_EX DriveLayout,
-                       IN PARC_DISK_SIGNATURE ArcDiskSignature,
-                       OUT PULONG Signature)
+IopVerifyDiskSignature(
+    _In_ PDRIVE_LAYOUT_INFORMATION_EX DriveLayout,
+    _In_ PARC_DISK_SIGNATURE ArcDiskSignature,
+    _Out_ PULONG Signature)
 {
     /* Fail if the partition table is invalid */
     if (!ArcDiskSignature->ValidPartitionTable)
@@ -972,10 +972,7 @@ IopVerifyDiskSignature(IN PDRIVE_LAYOUT_INFORMATION_EX DriveLayout,
     {
         /* Verify whether the signature is GPT and compare the GUID */
         if (ArcDiskSignature->IsGpt &&
-            (((PULONG)ArcDiskSignature->GptSignature)[0] == DriveLayout->Gpt.DiskId.Data1 &&
-             ((PUSHORT)ArcDiskSignature->GptSignature)[2] == DriveLayout->Gpt.DiskId.Data2 &&
-             ((PUSHORT)ArcDiskSignature->GptSignature)[3] == DriveLayout->Gpt.DiskId.Data3 &&
-             ((PULONGLONG)ArcDiskSignature->GptSignature)[1] == ((PULONGLONG)DriveLayout->Gpt.DiskId.Data4)[0]))
+            IsEqualGUID((PGUID)&ArcDiskSignature->GptSignature, &DriveLayout->Gpt.DiskId))
         {
             /* There is no signature to return, just zero it */
             if (Signature)
