@@ -526,7 +526,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                     Status = IoStatusBlock.Status;
                 }
 
-                /* If we didn't get the appriopriate data, just skip that disk */
+                /* If we didn't get the appropriate data, just skip that disk */
                 if (!NT_SUCCESS(Status))
                 {
                    ObDereferenceObject(FileObject);
@@ -715,7 +715,8 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 (DriveLayout->PartitionStyle == PARTITION_STYLE_MBR))
             {
                 /* Create device name */
-                sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition0", (DeviceNumber.DeviceNumber != ULONG_MAX) ? DeviceNumber.DeviceNumber : DiskNumber);
+                sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition0",
+                        (DeviceNumber.DeviceNumber != ULONG_MAX) ? DeviceNumber.DeviceNumber : DiskNumber);
                 RtlInitAnsiString(&DeviceStringA, Buffer);
                 Status = RtlAnsiStringToUnicodeString(&DeviceStringW, &DeviceStringA, TRUE);
                 if (!NT_SUCCESS(Status))
@@ -736,15 +737,16 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 /* Link both */
                 IoAssignArcName(&ArcNameStringW, &DeviceStringW);
 
-                /* And release resources */
+                /* And release strings */
                 RtlFreeUnicodeString(&ArcNameStringW);
                 RtlFreeUnicodeString(&DeviceStringW);
 
-                /* Now, browse for every partition */
+                /* Now, browse each partition */
                 for (i = 1; i <= DriveLayout->PartitionCount; i++)
                 {
                     /* Create device name */
-                    sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition%lu", (DeviceNumber.DeviceNumber != ULONG_MAX) ? DeviceNumber.DeviceNumber : DiskNumber, i);
+                    sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition%lu",
+                            (DeviceNumber.DeviceNumber != ULONG_MAX) ? DeviceNumber.DeviceNumber : DiskNumber, i);
                     RtlInitAnsiString(&DeviceStringA, Buffer);
                     Status = RtlAnsiStringToUnicodeString(&DeviceStringW, &DeviceStringA, TRUE);
                     if (!NT_SUCCESS(Status))
@@ -807,9 +809,9 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 if (ArcDiskSignature->ValidPartitionTable &&
                     (ArcDiskSignature->Signature == Signature) &&
                     (ArcDiskSignature->CheckSum + CheckSum != 0))
-                 {
-                     DPRINT("Be careful, you have a duplicate disk signature, or a virus altered your MBR!\n");
-                 }
+                {
+                    DPRINT("Be careful, you have a duplicate disk signature, or a virus altered your MBR!\n");
+                }
             }
         }
 
@@ -949,47 +951,40 @@ IopVerifyDiskSignature(IN PDRIVE_LAYOUT_INFORMATION_EX DriveLayout,
                        IN PARC_DISK_SIGNATURE ArcDiskSignature,
                        OUT PULONG Signature)
 {
-    /* First condition: having a valid partition table */
+    /* Fail if the partition table is invalid */
     if (!ArcDiskSignature->ValidPartitionTable)
-    {
         return FALSE;
-    }
 
-    /* If that partition table is the MBR */
+    /* If the partition style is MBR */
     if (DriveLayout->PartitionStyle == PARTITION_STYLE_MBR)
     {
-        /* Then check MBR signature */
+        /* Check the MBR signature */
         if (DriveLayout->Mbr.Signature == ArcDiskSignature->Signature)
         {
             /* And return it */
             if (Signature)
-            {
                 *Signature = DriveLayout->Mbr.Signature;
-            }
-
             return TRUE;
         }
     }
-    /* If that partition table is the GPT */
+    /* If the partition style is GPT */
     else if (DriveLayout->PartitionStyle == PARTITION_STYLE_GPT)
     {
-        /* Check we are using GPT and compare GUID */
+        /* Verify whether the signature is GPT and compare the GUID */
         if (ArcDiskSignature->IsGpt &&
             (((PULONG)ArcDiskSignature->GptSignature)[0] == DriveLayout->Gpt.DiskId.Data1 &&
              ((PUSHORT)ArcDiskSignature->GptSignature)[2] == DriveLayout->Gpt.DiskId.Data2 &&
              ((PUSHORT)ArcDiskSignature->GptSignature)[3] == DriveLayout->Gpt.DiskId.Data3 &&
              ((PULONGLONG)ArcDiskSignature->GptSignature)[1] == ((PULONGLONG)DriveLayout->Gpt.DiskId.Data4)[0]))
         {
-            /* There's no signature to give, so we just zero output */
+            /* There is no signature to return, just zero it */
             if (Signature)
-            {
                 *Signature = 0;
-            }
             return TRUE;
         }
     }
 
-    /* If we fall here, it means that something went wrong, so return that */
+    /* If we get there, something went wrong, so fail */
     return FALSE;
 }
 
