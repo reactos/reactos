@@ -703,16 +703,16 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                                                  ARC_DISK_SIGNATURE,
                                                  ListEntry);
 
-            /* If they match, i.e.
-             * - There's only one disk for both BIOS and detected/enabled
-             * - Signatures are matching
-             * - Checksums are matching
-             * - This is MBR
+            /*
+             * If this is the only MBR disk in the ARC list and detected
+             * in the device tree, just go ahead and create the ArcName link.
+             * Otherwise, check whether the signatures and checksums match
+             * before creating the ArcName link.
              */
-            if (((SingleDisk && DiskCount == 1) ||
+            if ((SingleDisk && (DiskCount == 1) &&
+                 (DriveLayout->PartitionStyle == PARTITION_STYLE_MBR)) ||
                 (IopVerifyDiskSignature(DriveLayout, ArcDiskSignature, &Signature) &&
-                 (ArcDiskSignature->CheckSum + CheckSum == 0))) &&
-                (DriveLayout->PartitionStyle == PARTITION_STYLE_MBR))
+                 (ArcDiskSignature->CheckSum + CheckSum == 0)))
             {
                 /* Create device name */
                 sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition0",
