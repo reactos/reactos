@@ -4693,6 +4693,46 @@ BOOLEAN
 NTAPI
 RtlGetNtProductType(_Out_ PNT_PRODUCT_TYPE ProductType);
 
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+//
+// Synchronization functions
+//
+NTSYSAPI
+VOID
+NTAPI
+RtlInitializeConditionVariable(
+    _Out_ PRTL_CONDITION_VARIABLE ConditionVariable);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlWakeConditionVariable(
+    _Inout_ PRTL_CONDITION_VARIABLE ConditionVariable);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlWakeAllConditionVariable(
+    _Inout_ PRTL_CONDITION_VARIABLE ConditionVariable);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlSleepConditionVariableCS(
+    _Inout_ PRTL_CONDITION_VARIABLE ConditionVariable,
+    _Inout_ PRTL_CRITICAL_SECTION CriticalSection,
+    _In_opt_ PLARGE_INTEGER TimeOut);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlSleepConditionVariableSRW(
+    _Inout_ PRTL_CONDITION_VARIABLE ConditionVariable,
+    _Inout_ PRTL_SRWLOCK SRWLock,
+    _In_opt_ PLARGE_INTEGER TimeOut,
+    _In_ ULONG Flags);
+#endif
+
 //
 // Secure Memory Functions
 //
