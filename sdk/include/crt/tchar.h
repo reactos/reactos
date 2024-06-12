@@ -244,7 +244,6 @@ extern "C" {
 #define _tcscat wcscat
 #define _tcschr wcschr
 #define _tcscpy wcscpy
-#define _tcscpy_s wcscpy_s
 #define _tcscspn wcscspn
 #define _tcslen wcslen
 #define _tcsnlen wcsnlen
@@ -324,13 +323,6 @@ extern "C" {
 #define _tcsftime wcsftime
 #define _tcsftime_l _wcsftime_l
 
-#define _tasctime_s   _wasctime_s
-#define _tctime_s     _wctime_s
-#define _tctime32_s   _wctime32_s
-#define _tctime64_s   _wctime64_s
-#define _tstrdate_s   _wstrdate_s
-#define _tstrtime_s   _wstrtime_s
-
 #define _tchdir _wchdir
 #define _tgetcwd _wgetcwd
 #define _tgetdcwd _wgetdcwd
@@ -346,7 +338,6 @@ extern "C" {
 #define _tputenv _wputenv
 #define _tsearchenv _wsearchenv
 #define _tsplitpath _wsplitpath
-#define _tsplitpath_s _wsplitpath_s
 
 #define _tfdopen _wfdopen
 #define _tfsopen _wfsopen
@@ -621,7 +612,6 @@ extern "C" {
 
 #define _tcscat strcat
 #define _tcscpy strcpy
-#define _tcscpy_s strcpy_s
 #define _tcsdup _strdup
 #define _tcslen strlen
 #define _tcsnlen strnlen
@@ -662,13 +652,6 @@ extern "C" {
 #define _tcsftime strftime
 #define _tcsftime_l _strftime_l
 
-#define _tasctime_s   asctime_s
-#define _tctime_s     ctime_s
-#define _tctime32_s   _ctime32_s
-#define _tctime64_s   _ctime64_s
-#define _tstrdate_s   _strdate_s
-#define _tstrtime_s   _strtime_s
-
 #define _tchdir _chdir
 #define _tgetcwd _getcwd
 #define _tgetdcwd _getdcwd
@@ -684,7 +667,6 @@ extern "C" {
 #define _tputenv _putenv
 #define _tsearchenv _searchenv
 #define _tsplitpath _splitpath
-#define _tsplitpath_s _splitpath_s
 
 #ifdef _POSIX_
 #define _tfdopen fdopen
@@ -1538,5 +1520,8 @@ extern "C" {
 }
 #endif
 
+#if __STDC_WANT_SECURE_LIB__
 #include <sec_api/tchar_s.h>
+#endif /* __STDC_WANT_SECURE_LIB__ */
+
 #endif

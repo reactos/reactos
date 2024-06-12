@@ -446,90 +446,6 @@ extern "C" {
     _In_ size_t _MaxCount,
     _In_opt_ _locale_t _Locale);
 
-#if __STDC_WANT_SECURE_LIB__
-
-  _Check_return_wat_
-  _CRTIMP
-  errno_t
-  __cdecl
-  _strset_s(
-    _Inout_updates_z_(_DstSize) char *_Dst,
-    _In_ size_t _DstSize,
-    _In_ int _Value);
-
-  _Check_return_wat_
-  _CRTIMP
-  errno_t
-  __cdecl
-  _strerror_s(
-    _Out_writes_z_(_SizeInBytes) char *_Buf,
-    _In_ size_t _SizeInBytes,
-    _In_opt_z_ const char *_ErrMsg);
-
-  _Check_return_wat_
-  _CRTIMP
-  errno_t
-  __cdecl
-  _strlwr_s(
-    _Inout_updates_z_(_Size) char *_Str,
-    _In_ size_t _Size);
-
-  _Check_return_wat_
-  _CRTIMP
-  errno_t
-  __cdecl
-  _strlwr_s_l(
-    _Inout_updates_z_(_Size) char *_Str,
-    _In_ size_t _Size,
-    _In_opt_ _locale_t _Locale);
-
-  _Check_return_wat_
-  _CRTIMP
-  errno_t
-  __cdecl
-  _strnset_s(
-    _Inout_updates_z_(_Size) char *_Str,
-    _In_ size_t _Size,
-    _In_ int _Val,
-    _In_ size_t _MaxCount);
-
-  _Check_return_wat_
-  _CRTIMP
-  errno_t
-  __cdecl
-  _strupr_s(
-    _Inout_updates_z_(_Size) char *_Str,
-    _In_ size_t _Size);
-
-  _Check_return_wat_
-  _CRTIMP
-  errno_t
-  __cdecl
-  _strupr_s_l(
-    _Inout_updates_z_(_Size) char *_Str,
-    _In_ size_t _Size,
-    _In_opt_ _locale_t _Locale);
-
-  _Check_return_wat_
-  _CRTIMP
-  errno_t
-  __cdecl
-  strcpy_s(
-    _Out_writes_z_(_Size) char *_Dst,
-    _In_ size_t _Size,
-    _In_z_ const char *_Src);
-
-  _Check_return_wat_
-  _CRTIMP
-  errno_t
-  __cdecl
-  strcat_s(
-    _Inout_updates_z_(_Size) char *_Dst,
-    _In_ size_t _Size,
-    _In_z_ const char *_Src);
-
-#endif /* __STDC_WANT_SECURE_LIB__ */
-
 #ifndef NO_OLDNAMES
 
   _Check_return_
@@ -943,115 +859,6 @@ extern "C" {
     _In_ size_t _MaxCount,
     _In_opt_ _locale_t _Locale);
 
-#if __STDC_WANT_SECURE_LIB__
-
-  _CRTIMP
-  errno_t
-  __cdecl
-  wcscat_s(
-    wchar_t *Dest,
-    size_t SizeInWords,
-    const wchar_t *_Source);
-
-  _Check_return_wat_
-  _CRTIMP
-  errno_t
-  __cdecl
-  wcscpy_s(
-    _Out_writes_z_(SizeInWords) wchar_t *Dest,
-    _In_ size_t SizeInWords,
-    _In_z_ const wchar_t *_Source);
-
-  _CRTIMP
-  errno_t
-  __cdecl
-  wcsnlen_s(
-    wchar_t **_Src,
-    size_t _MaxCount);
-
-  _Check_return_wat_
-  _CRTIMP
-  errno_t
-  __cdecl
-  wcsncpy_s(
-    _Out_writes_z_(_DstSizeInChars) wchar_t *_Dst,
-    _In_ size_t _DstSizeInChars,
-    _In_z_ const wchar_t *_Src,
-    _In_ size_t _MaxCount);
-
-  _Check_return_wat_
-  _CRTIMP
-  errno_t
-  __cdecl
-  _wcserror_s(
-    _Out_writes_opt_z_(_SizeInWords) wchar_t *_Buf,
-    _In_ size_t _SizeInWords,
-    _In_ int _ErrNum);
-
-  _Check_return_wat_
-  _CRTIMP
-  errno_t
-  __cdecl
-  __wcserror_s(
-    _Out_writes_opt_z_(_SizeInWords) wchar_t *_Buffer,
-    _In_ size_t _SizeInWords,
-    _In_z_ const wchar_t *_ErrMsg);
-
-  _Check_return_wat_
-  _CRTIMP
-  errno_t
-  __cdecl
-  _wcsnset_s(
-    _Inout_updates_z_(_DstSizeInWords) wchar_t *_Dst,
-    _In_ size_t _DstSizeInWords,
-    _In_ wchar_t _Val,
-    _In_ size_t _MaxCount);
-
-  _Check_return_wat_
-  _CRTIMP
-  errno_t
-  __cdecl
-  _wcsset_s(
-    _Inout_updates_z_(_SizeInWords) wchar_t *_Str,
-    _In_ size_t _SizeInWords,
-    _In_ wchar_t _Val);
-
-  _Check_return_wat_
-  _CRTIMP
-  errno_t
-  __cdecl
-  _wcslwr_s(
-    _Inout_updates_z_(_SizeInWords) wchar_t *_Str,
-    _In_ size_t _SizeInWords);
-
-  _Check_return_wat_
-  _CRTIMP
-  errno_t
-  __cdecl
-  _wcslwr_s_l(
-    _Inout_updates_z_(_SizeInWords) wchar_t *_Str,
-    _In_ size_t _SizeInWords,
-    _In_opt_ _locale_t _Locale);
-
-  _Check_return_wat_
-  _CRTIMP
-  errno_t
-  __cdecl
-  _wcsupr_s(
-    _Inout_updates_z_(_Size) wchar_t *_Str,
-    _In_ size_t _Size);
-
-  _Check_return_wat_
-  _CRTIMP
-  errno_t
-  __cdecl
-  _wcsupr_s_l(
-    _Inout_updates_z_(_Size) wchar_t *_Str,
-    _In_ size_t _Size,
-    _In_opt_ _locale_t _Locale);
-
-#endif /* __STDC_WANT_SECURE_LIB__ */
-
 #ifndef NO_OLDNAMES
 
   _Check_return_
@@ -1144,5 +951,8 @@ extern "C" {
 #define stricmp _stricmp
 #define wcsicmp _wcsicmp
 
+#if __STDC_WANT_SECURE_LIB__
 #include <sec_api/string_s.h>
+#endif /* __STDC_WANT_SECURE_LIB__ */
+
 #endif
