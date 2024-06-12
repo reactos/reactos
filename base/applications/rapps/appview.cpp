@@ -981,7 +981,7 @@ struct CAsyncLoadIcon {
     bool Parse;
     WCHAR Location[ANYSIZE_ARRAY];
 
-    void Free() { LocalFree(this); }
+    void Free() { free(this); }
     static CAsyncLoadIcon* Queue(HWND hAppsList, CAppInfo &AppInfo, bool Parse);
     static void StartTasks();
 } *g_AsyncIconTasks = NULL;
@@ -1020,7 +1020,7 @@ CAsyncLoadIcon::Queue(HWND hAppsList, CAppInfo &AppInfo, bool Parse)
     if (!AppInfo.RetrieveIcon(szIconPath))
         return NULL;
     SIZE_T cbstr = (szIconPath.GetLength() + 1) * sizeof(WCHAR);
-    CAsyncLoadIcon *task = (CAsyncLoadIcon*)LocalAlloc(LMEM_FIXED, sizeof(CAsyncLoadIcon) + cbstr);
+    CAsyncLoadIcon *task = (CAsyncLoadIcon*)malloc(sizeof(CAsyncLoadIcon) + cbstr);
     if (!task)
         return NULL;
     task->hAppsList = hAppsList;
