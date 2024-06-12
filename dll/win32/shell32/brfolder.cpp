@@ -911,8 +911,6 @@ BrFolder_OnContextMenu(BrFolder &info, LPARAM lParam)
     enum { IDC_TOGGLE = 1, ID_FIRSTCMD, ID_LASTCMD = 0xffff };
     HTREEITEM hSelected = TreeView_GetSelection(info.hwndTreeView);
     CMINVOKECOMMANDINFOEX ici = { sizeof(ici), CMIC_MASK_PTINVOKE, info.hWnd };
-    ici.fMask |= (GetKeyState(VK_SHIFT) < 0) ? CMIC_MASK_SHIFT_DOWN : 0;
-    ici.fMask |= (GetKeyState(VK_CONTROL) < 0) ? CMIC_MASK_CONTROL_DOWN : 0;
     ici.nShow = SW_SHOW;
     ici.ptInvoke.x = GET_X_LPARAM(lParam);
     ici.ptInvoke.y = GET_Y_LPARAM(lParam);
@@ -946,7 +944,7 @@ BrFolder_OnContextMenu(BrFolder &info, LPARAM lParam)
     if (!hMenu)
         return;
     info.pContextMenu = pcm;
-    UINT cmf = ((ici.fMask & CMIC_MASK_SHIFT_DOWN) ? CMF_EXTENDEDVERBS : 0) | CMF_CANRENAME;
+    UINT cmf = ((GetKeyState(VK_SHIFT) < 0) ? CMF_EXTENDEDVERBS : 0) | CMF_CANRENAME;
     hr = pcm->QueryContextMenu(hMenu, 0, ID_FIRSTCMD, ID_LASTCMD, CMF_NODEFAULT | cmf);
     if (hr > 0)
         _InsertMenuItemW(hMenu, 0, TRUE, 0, MFT_SEPARATOR, NULL, 0);
@@ -968,6 +966,10 @@ BrFolder_OnContextMenu(BrFolder &info, LPARAM lParam)
     }
     else if (cmd != 0)
     {
+        if (GetKeyState(VK_SHIFT) < 0)
+            ici.fMask |= CMIC_MASK_SHIFT_DOWN;
+        if (GetKeyState(VK_CONTROL) < 0)
+            ici.fMask |= CMIC_MASK_CONTROL_DOWN;
         pcm->InvokeCommand((CMINVOKECOMMANDINFO*)&ici);
     }
     info.pContextMenu = NULL;
