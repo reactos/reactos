@@ -918,6 +918,8 @@ BEGIN
     FCIDM_SHVIEW_NEWFOLDER "&Dosje E're"
     FCIDM_SHVIEW_NEWLINK "&Lidhje e Re"
     IDS_FOLDER_OPTIONS "Opsione Dosje"
+    IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
+    IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
     IDS_RECYCLEBIN_LOCATION "Vëndndodhja Koshit"
     IDS_RECYCLEBIN_DISKSPACE "Hapësirë Dispozicion"
     IDS_EMPTY_BITBUCKET "Zbraz Koshin"

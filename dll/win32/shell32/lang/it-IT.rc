@@ -911,6 +911,8 @@ BEGIN
     FCIDM_SHVIEW_NEWFOLDER "Nuova &Cartella"
     FCIDM_SHVIEW_NEWLINK "Nuovo &Collegamento"
     IDS_FOLDER_OPTIONS "Opzioni della cartella"
+    IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
+    IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
     IDS_RECYCLEBIN_LOCATION "Posizione del Cestino"
     IDS_RECYCLEBIN_DISKSPACE "Spazio disponibile"
     IDS_EMPTY_BITBUCKET "Svuota cestino"

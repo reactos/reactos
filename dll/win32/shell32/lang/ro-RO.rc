@@ -919,6 +919,8 @@ BEGIN
     FCIDM_SHVIEW_NEWFOLDER "&Folder"
     FCIDM_SHVIEW_NEWLINK "&Comandă rapidă"
     IDS_FOLDER_OPTIONS "Opţiuni foldere"
+    IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
+    IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
     IDS_RECYCLEBIN_LOCATION "Locaţia pentru Coşul de reciclare"
     IDS_RECYCLEBIN_DISKSPACE "Spaţiul disponibil"
     IDS_EMPTY_BITBUCKET "Golire Coş de reciclare"

@@ -911,6 +911,8 @@ BEGIN
     FCIDM_SHVIEW_NEWFOLDER "&Pasta"
     FCIDM_SHVIEW_NEWLINK "&Atalho"
     IDS_FOLDER_OPTIONS "Opções de Pasta"
+    IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
+    IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
     IDS_RECYCLEBIN_LOCATION "Local da Lixeira"
     IDS_RECYCLEBIN_DISKSPACE "Espaço Disponível"
     IDS_EMPTY_BITBUCKET "Esvaziar Lixeira"

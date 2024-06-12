@@ -911,6 +911,8 @@ BEGIN
     FCIDM_SHVIEW_NEWFOLDER "Nouveau d&ossier"
     FCIDM_SHVIEW_NEWLINK "Nouveau &lien"
     IDS_FOLDER_OPTIONS "Options du dossier"
+    IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
+    IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
     IDS_RECYCLEBIN_LOCATION "Emplacement de la corbeille"
     IDS_RECYCLEBIN_DISKSPACE "Espace disponible"
     IDS_EMPTY_BITBUCKET "Vider la Corbeille"

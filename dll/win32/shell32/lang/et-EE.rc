@@ -918,6 +918,8 @@ BEGIN
     FCIDM_SHVIEW_NEWFOLDER "Uus &kaust"
     FCIDM_SHVIEW_NEWLINK "Uus &otsetee"
     IDS_FOLDER_OPTIONS "Kaustasuvandid"
+    IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
+    IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
     IDS_RECYCLEBIN_LOCATION "Prügikasti asukoht"
     IDS_RECYCLEBIN_DISKSPACE "Vaba ruumi"
     IDS_EMPTY_BITBUCKET "Tühjenda prügikast"
