@@ -844,8 +844,10 @@ static BOOL Concatenate(int DirId, LPCWSTR SubDirPart, LPCWSTR NamePart, LPWSTR 
     *pFullName = NULL;
 
     Dir = DIRID_get_string(DirId);
-    if (Dir)
+    if (Dir && *Dir)
         dwRequired += wcslen(Dir) + 1;
+    else
+        Dir = NULL; /* DIRID_get_string returns L"" for DIRID_ABSOLUTE */
     if (SubDirPart)
         dwRequired += wcslen(SubDirPart) + 1;
     if (NamePart)
