@@ -820,7 +820,7 @@ VOID DIALOG_SearchNext(BOOL bDown)
     else
         Globals.find.Flags &= ~FR_DOWN;
 
-    if (Globals.find.lpstrFindWhat != NULL)
+    if (Globals.find.lpstrFindWhat != NULL && *Globals.find.lpstrFindWhat)
         NOTEPAD_FindNext(&Globals.find, FALSE, TRUE);
     else
         DIALOG_Search();
