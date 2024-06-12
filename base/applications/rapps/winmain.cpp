@@ -14,6 +14,8 @@
 #include <conutils.h>
 
 LPCWSTR szWindowClass = L"ROSAPPMGR2";
+LONG g_Busy = 0;
+HWND g_ActiveOperationWindow = NULL;
 
 HWND hMainWnd;
 HINSTANCE hInst;

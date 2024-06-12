@@ -318,6 +318,7 @@ CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lPa
         case WM_CREATE:
             if (!InitControls())
                 ::PostMessageW(hwnd, WM_CLOSE, 0, 0);
+            ::PostMessageW(hwnd, DM_REPOSITION, 0, 0);
             break;
 
         case WM_DESTROY:
@@ -332,6 +333,20 @@ CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lPa
             PostQuitMessage(0);
             return 0;
         }
+
+        case WM_CLOSE:
+            if (g_Busy)
+            {
+                MessageBeep(MB_ICONEXCLAMATION);
+                HWND hActive = ::IsWindow(g_ActiveOperationWindow) ? g_ActiveOperationWindow : GetLastActivePopup();
+                ::SetForegroundWindow(hActive);
+                ::PostMessage(hActive, DM_REPOSITION, 0, 0);
+            }
+            return g_Busy;
+
+        case DM_REPOSITION:
+            EmulateDialogReposition(hwnd); // We are not a real dialog, we need help from a real one
+            break;
 
         case WM_COMMAND:
             OnCommand(wParam, lParam);

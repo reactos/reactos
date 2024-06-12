@@ -470,6 +470,7 @@ CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lPa
     {
         case WM_INITDIALOG:
         {
+            g_Busy++;
             HICON hIconSm, hIconBg;
             CStringW szTempCaption;
 
@@ -533,6 +534,7 @@ CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 
             CloseHandle(Thread);
             AppsDownloadList.RemoveAll();
+            g_ActiveOperationWindow = Dlg;
             return TRUE;
         }
 
@@ -556,6 +558,11 @@ CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                 ::DestroyWindow(Dlg);
             }
             return TRUE;
+
+        case WM_DESTROY:
+            g_ActiveOperationWindow = NULL;
+            g_Busy--;
+            return FALSE;
 
         default:
             return FALSE;
