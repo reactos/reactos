@@ -4,110 +4,110 @@
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
  *              Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_POWERSCHEMESPAGE_ACDC DIALOGEX 0, 0, 252, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Regim de consum"
+CAPTION "Scheme de alimentare"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
-    LTEXT "Alegeți un regim de consum al energiei cât mai potrivit pentru dumneavoastră. Aveți în vedere că modificările aduse vor fi memorate în regimul curent.", -1, 37, 6, 208, 36
-    GROUPBOX "&Regimuri de consum", -1, 6, 43, 240, 50
+    LTEXT "Selectaţi schema de alimentare cu cele mai potrivite setări pentru computer. Reţineţi că modificarea setărilor de mai jos va afecta schema selectată.", -1, 37, 6, 208, 36
+    GROUPBOX "&Scheme de alimentare", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Salvea&ză…", IDC_SAVEAS_BTN, 85, 72, 80, 14, WS_DISABLED
-    PUSHBUTTON "Șt&erge", IDC_DELETE_BTN, 173, 72, 64, 14, WS_DISABLED
+    PUSHBUTTON "Sal&vare ca…", IDC_SAVEAS_BTN, 85, 72, 80, 14, WS_DISABLED
+    PUSHBUTTON "Şt&ergere", IDC_DELETE_BTN, 173, 72, 64, 14, WS_DISABLED
     GROUPBOX "", IDC_GRPDETAIL, 6, 95, 240, 119
-    LTEXT "Când calculatorul este:", IDC_SAT, 12, 110, 60, 15
-    LTEXT "În priză", IDC_SAC, 100, 110, 50, 15
+    LTEXT "Când computerul este alimentat:", IDC_SAT, 12, 110, 60, 15
+    LTEXT "De la reţeaua electrică", IDC_SAC, 100, 110, 50, 15
     ICON IDI_AC, IDC_IAC, 141, 122, 0, 0
-    LTEXT "Pe baterii", IDC_SDC, 173, 110, 50, 15
+    LTEXT "De la baterii", IDC_SDC, 173, 110, 50, 15
     ICON IDI_DC, IDC_IDC, 218, 122, 0, 0
-    LTEXT "Închiderea e&cranului:", IDC_MONITOR, 13, 148, 85, 10
+    LTEXT "Stingere &monitor:", IDC_MONITOR, 13, 148, 85, 10
     COMBOBOX IDC_MONITORACLIST, 100, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_MONITORDCLIST, 173, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Oprirea &discurilor:", IDC_DISK, 13, 163, 85, 10
+    LTEXT "Oprire d&iscuri fixe:", IDC_DISK, 13, 163, 85, 10
     COMBOBOX IDC_DISKACLIST, 100, 160, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_DISKDCLIST, 173, 160, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Starea de &veghe:", IDC_STANDBY, 13, 178, 85, 10
+    LTEXT "St&are de veghe:", IDC_STANDBY, 13, 178, 85, 10
     COMBOBOX IDC_STANDBYACLIST, 100, 175, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_STANDBYDCLIST, 173, 175, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&Hibernarea:", IDC_HIBERNATE, 13, 193, 85, 10
+    LTEXT "Stare de &hibernare:", IDC_HIBERNATE, 13, 193, 85, 10
     COMBOBOX IDC_HIBERNATEACLIST, 100, 190, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_HIBERNATEDCLIST, 173, 190, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_POWERSCHEMESPAGE_AC DIALOGEX 0, 0, 252, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Regim de consum"
+CAPTION "Scheme de alimentare"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
-    LTEXT "Alegeți un regim de consum al energiei cât mai potrivit pentru dumneavoastră. Aveți în vedere că modificările aduse vor fi memorate în regimul curent.", -1, 37, 6, 208, 36
-    GROUPBOX "&Regimuri de consum", -1, 6, 43, 240, 50
+    LTEXT "Selectaţi schema de alimentare cu cele mai potrivite setări pentru computer. Reţineţi că modificarea setărilor de mai jos va afecta schema selectată.", -1, 37, 6, 208, 36
+    GROUPBOX "&Scheme de alimentare", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
-    PUSHBUTTON "Salvea&ză…", IDC_SAVEAS_BTN, 85, 72, 80, 14, WS_DISABLED
-    PUSHBUTTON "Șt&erge", IDC_DELETE_BTN, 173, 72, 64, 14, WS_DISABLED
+    PUSHBUTTON "Sal&vare ca…", IDC_SAVEAS_BTN, 85, 72, 80, 14, WS_DISABLED
+    PUSHBUTTON "Şt&ergere", IDC_DELETE_BTN, 173, 72, 64, 14, WS_DISABLED
     GROUPBOX "", IDC_GRPDETAIL, 6, 95, 240, 119
-    LTEXT "Închiderea e&cranului:", IDC_MONITOR, 13, 148, 85, 10
+    LTEXT "Stingere &monitor:", IDC_MONITOR, 13, 148, 85, 10
     COMBOBOX IDC_MONITORACLIST, 100, 145, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Oprirea &discurilor:", IDC_DISK, 13, 163, 85, 10
+    LTEXT "Oprire d&iscuri fixe:", IDC_DISK, 13, 163, 85, 10
     COMBOBOX IDC_DISKACLIST, 100, 160, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Starea de &veghe:", IDC_STANDBY, 13, 178, 85, 10
+    LTEXT "St&are de veghe:", IDC_STANDBY, 13, 178, 85, 10
     COMBOBOX IDC_STANDBYACLIST, 100, 175, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&Hibernarea:", IDC_HIBERNATE, 13, 193, 85, 10
+    LTEXT "Stare de &hibernare:", IDC_HIBERNATE, 13, 193, 85, 10
     COMBOBOX IDC_HIBERNATEACLIST, 100, 190, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_PROPPAGEALARMS DIALOGEX 0, 0, 252, 220
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Alarme"
+CAPTION "Alertare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Alarmă baterie decongestionată", -1, 6, 7, 239, 99
-    AUTOCHECKBOX "Alarmează „baterie &decongestionată” când va ajunge la:", IDC_ALARM1, 15, 17, 225, 10, WS_TABSTOP
+    GROUPBOX "Alertă baterie slabă", -1, 6, 7, 239, 99
+    AUTOCHECKBOX "Activează alerta pentru baterie &slabă, când nivelul de încărcare atinge:", IDC_ALARM1, 15, 17, 225, 10, WS_TABSTOP
     LTEXT "xxx%", IDC_ALARMVALUE1, 28, 32, 20, 10
     CONTROL "", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 47, 32, 194, 15
-    PUSHBUTTON "A&cțiune alarmă…", -1, 148, 50, 88, 14, WS_DISABLED
+    PUSHBUTTON "A&cţiune de alertare…", -1, 148, 50, 88, 14, WS_DISABLED
     LTEXT "Notificare:", -1, 28, 67, 89, 10
     LTEXT "?", IDC_ALARMMSG1, 118, 67, 125, 10
     LTEXT "Acțiune:", -1, 28, 79, 89, 10
     LTEXT "?", IDC_ALARMAKTION1, 118, 79, 125, 10
-    LTEXT "Exec. program:", -1, 28, 91, 89, 10
+    LTEXT "Executare program:", -1, 28, 91, 89, 10
     LTEXT "?", IDC_ALARMPROG1, 118, 91, 125, 10
-    GROUPBOX "Alarmă baterie descărcată", -1, 6, 115, 239, 99
-    AUTOCHECKBOX "Alarmează „baterie d&escărcată” când va ajunge la:", IDC_ALARM2, 15, 125, 225, 10, WS_TABSTOP
+    GROUPBOX "Alertă baterie critică", -1, 6, 115, 239, 99
+    AUTOCHECKBOX "Acti&vează alerta pentru baterie critică, când nivelul de încărcare atinge:", IDC_ALARM2, 15, 125, 225, 10, WS_TABSTOP
     LTEXT "xxx%", IDC_ALARMVALUE2, 28, 140, 20, 10
     CONTROL "", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 47, 140, 194, 15
-    PUSHBUTTON "Acți&une alarmă…", -1, 148, 158, 88, 14, WS_DISABLED
+    PUSHBUTTON "&Acţiune de alertare…", -1, 148, 158, 88, 14, WS_DISABLED
     LTEXT "Notificare:", -1, 28, 175, 89, 10
     LTEXT "?", IDC_ALARMMSG2, 118, 175, 125, 10
     LTEXT "Acțiune:", -1, 28, 187, 89, 10
     LTEXT "?", IDC_ALARMAKTION2, 118, 187, 125, 10
-    LTEXT "Exec. program:", -1, 28, 199, 89, 10
+    LTEXT "Executare program:", -1, 28, 199, 89, 10
     LTEXT "?", IDC_ALARMPROG2, 118, 199, 125, 10
 END
 
 IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 252, 220
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Avansate"
+CAPTION "Complex"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
-    LTEXT "Specificați opțiunile de economisire ale consumului de energie al calculatorului.", -1, 37, 6, 208, 20
+    LTEXT "Selectaţi setările pentru economisirea energiei.", -1, 37, 6, 208, 20
     GROUPBOX "Opțiuni", -1, 6, 30, 240, 65
-    AUTOCHECKBOX "Afișează pictogramă în &zona de notificare", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
-    AUTOCHECKBOX "Solicită &reautentificare la revenirea din starea de veghe", IDC_PASSWORDLOGON, 17, 60, 220, 10, WS_TABSTOP
-    AUTOCHECKBOX "Înt&unecă ecranul când calculatorul merge pe baterii", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10, WS_TABSTOP
-    GROUPBOX "Consecințe ale acțiunilor de utilizator", -1, 6, 101, 240, 110
-    LTEXT "&Plierea calculatorul portabil determină:", IDC_SLIDCLOSE, 15, 115, 222, 10
+    AUTOCHECKBOX "Afişa&re pictograme pe bara de activităţi", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Solicitare parolă când computerul iese din starea de veghe", IDC_PASSWORDLOGON, 17, 60, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Umbrire afişare când se alimentează de la baterii", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10, WS_TABSTOP
+    GROUPBOX "Butoane alimentare", -1, 6, 101, 240, 110
+    LTEXT "&La închiderea computerului portabil:", IDC_SLIDCLOSE, 15, 115, 222, 10
     COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Apăsarea &butonului de alimentare determină:", IDC_SPOWERBUTTON, 15, 145, 222, 10
+    LTEXT "La apăsarea &butonului de alimentare al computerului:", IDC_SPOWERBUTTON, 15, 145, 222, 10
     COMBOBOX IDC_POWERBUTTON, 15, 157, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Apăsarea butonului stării de &veghe determină:", IDC_SSLEEPBUTTON, 15, 175, 222, 10
+    LTEXT "La a&păsarea butonului de inactivare al computerului:", IDC_SSLEEPBUTTON, 15, 175, 222, 10
     COMBOBOX IDC_SLEEPBUTTON, 15, 187, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
@@ -117,64 +117,64 @@ CAPTION "Hibernare"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 0, 0
-    LTEXT "Intrarea în starea de hibernare presupune stocarea pe disc a întregului conținut de memorie operativă, urmată de închiderea completă a calculatorului. La revenirea din hibernare, calculatorul revine exact la starea anterioară hibernării.", -1, 37, 6, 208, 35
+    LTEXT "Când computerul este în hibernare, el stochează tot ce se află în memorie pe discul fix şi apoi se închide. Când computerul iese din hibernare, el revine la starea anterioară.", -1, 37, 6, 208, 35
     GROUPBOX "Hibernare", -1, 6, 41, 240, 32
-    AUTOCHECKBOX "Doresc folosirea funcționalității &Hibernare", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP
-    GROUPBOX "Spațiul necesar pentru hibernare", -1, 6, 80, 240, 76
-    LTEXT "Spațiul de stocare disponibil:", -1, 15, 95, 150, 10
+    AUTOCHECKBOX "Activare &hibernare", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP
+    GROUPBOX "Spaţiu pe disc pentru hibernare", -1, 6, 80, 240, 76
+    LTEXT "Spaţiu liber pe disc:", -1, 15, 95, 150, 10
     LTEXT "?", IDC_FREESPACE, 170, 95, 70, 10
-    LTEXT "Spațiul necesar pentru hibernare:", -1, 15, 115, 150, 10
+    LTEXT "Spaţiu disc necesar pentru hibernare:", -1, 15, 115, 150, 10
     LTEXT "?", IDC_SPACEFORHIBERNATEFILE, 170, 115, 70, 10
-    LTEXT "Este necesar mai mult spațiu liber pe dispozitivul de stocare înainte de a putea activa funcționalitatea de hibernare.", IDC_TOLESSFREESPACE, 15, 135, 224, 20
+    LTEXT "Trebuie să eliberaţi spaţiu-disc pentru a permite computerului să intre în hibernare.", IDC_TOLESSFREESPACE, 15, 135, 224, 20
 END
 
 IDD_SAVEPOWERSCHEME DIALOGEX 0, 0, 190, 62
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Salvarea schemei de alimentare"
+CAPTION "Salvare schemă"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Salvează schema de alimentare ca:", -1, 7, 7, 180, 8
+    LTEXT "Salvare schemă de alimentare ca:", -1, 7, 7, 180, 8
     EDITTEXT IDC_SCHEMENAME, 7, 18, 176, 14, ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    DEFPUSHBUTTON "Confirmă", IDOK, 79, 40, 50, 14
-    PUSHBUTTON "Anulează", IDCANCEL, 133, 40, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 79, 40, 50, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 133, 40, 50, 14
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME_1 "Alimentare"
-    IDS_CPLDESCRIPTION_1 "Configurarea metodelor de economisire a consumului de energie al calculatorului."
+    IDS_CPLNAME_1 "Opţiuni de alimentare"
+    IDS_CPLDESCRIPTION_1 "Configurează setările de economisire a energiei pentru computer."
     IDS_PERCENT "%i%%"
     IDS_SOUND "sonoră"
     IDS_TEXT "text"
-    IDS_CONFIG1 "Configurare regim %s"
-    IDS_CONFIG2 "Opțiuni avansate pentru %s"
-    IDS_NOACTION "nespecificată"
-    IDS_PowerActionNone1 "acțiune nespecificată"
-    IDS_PowerActionUnknown "acțiune necunoscută"
-    IDS_PowerActionSleep "intrarea în stare de veghe"
-    IDS_PowerActionHibernate "intrarea în hibernare"
-    IDS_PowerActionShutdown "închiderea calculatorului"
+    IDS_CONFIG1 "Setări pentru schema de alimentare %s"
+    IDS_CONFIG2 "Setări complexe pentru %s"
+    IDS_NOACTION "Fără"
+    IDS_PowerActionNone1 "Nici o acţiune"
+    IDS_PowerActionUnknown "Necunoscut"
+    IDS_PowerActionSleep "Stare de veghe"
+    IDS_PowerActionHibernate "Hibernare"
+    IDS_PowerActionShutdown "Închidere"
     IDS_PowerActionRestart "repornirea calculatorului"
     IDS_PowerActionShutdownOff "închiderea și deconectarea de la alimentare"
     IDS_PowerActionWarmEject "solicitarea acțiunii utilizatorului"
-    IDS_PowerActionNone2 "nespecificat"
-    IDS_TIMEOUT1 "după 1 min"
-    IDS_TIMEOUT2 "după 2 min"
-    IDS_TIMEOUT3 "după 3 min"
-    IDS_TIMEOUT4 "după 5 min"
-    IDS_TIMEOUT5 "după 10 min"
-    IDS_TIMEOUT6 "după 15 min"
-    IDS_TIMEOUT7 "după 20 min"
-    IDS_TIMEOUT8 "după 25 min"
-    IDS_TIMEOUT9 "după 30 min"
-    IDS_TIMEOUT10 "după 45 min"
-    IDS_TIMEOUT11 "după 1 oră"
-    IDS_TIMEOUT12 "după 2 ore"
-    IDS_TIMEOUT13 "după 3 ore"
-    IDS_TIMEOUT14 "după 4 ore"
-    IDS_TIMEOUT15 "după 5 ore"
-    IDS_TIMEOUT16 "dezactivată"
-    IDS_DEL_SCHEME "Sigur doriți eliminarea aceastui regim de consum energetic: ""%s""?"
-    IDS_DEL_SCHEME_TITLE "Eliminarea regumului de consum"
-    IDS_DEL_SCHEME_ERROR "Nu poate fi ștearsă schema de alimentare"
+    IDS_PowerActionNone2 "Fără"
+    IDS_TIMEOUT1 "După 1 minut"
+    IDS_TIMEOUT2 "După 2 minute"
+    IDS_TIMEOUT3 "După 3 minute"
+    IDS_TIMEOUT4 "După 5 minute"
+    IDS_TIMEOUT5 "După 10 minute"
+    IDS_TIMEOUT6 "După 15 minute"
+    IDS_TIMEOUT7 "După 20 minute"
+    IDS_TIMEOUT8 "După 25 minute"
+    IDS_TIMEOUT9 "După 30 minute"
+    IDS_TIMEOUT10 "După 45 minute"
+    IDS_TIMEOUT11 "După 1 oră"
+    IDS_TIMEOUT12 "După 2 ore"
+    IDS_TIMEOUT13 "După 3 ore"
+    IDS_TIMEOUT14 "După 4 ore"
+    IDS_TIMEOUT15 "După 5 ore"
+    IDS_TIMEOUT16 "Niciodată"
+    IDS_DEL_SCHEME "Sigur ştergeţi schema de alimentare: ""%s""?"
+    IDS_DEL_SCHEME_TITLE "Ştergere schemă"
+    IDS_DEL_SCHEME_ERROR "Imposibil de șters schema de alimentare"
 END
