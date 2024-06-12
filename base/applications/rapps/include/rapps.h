@@ -13,4 +13,7 @@
 #include "misc.h"
 #include "configparser.h"
 
+extern LONG g_Busy;
+extern HWND g_ActiveOperationWindow;
+
 #endif /* _RAPPS_H */
