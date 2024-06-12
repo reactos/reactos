@@ -207,6 +207,8 @@ if(NOT ARCH STREQUAL "i386")
         math/_copysignf.c
         math/log10f.c
         math/stubs.c
+        math/exp2.c
+        math/exp2f.c
     )
 endif()
 
