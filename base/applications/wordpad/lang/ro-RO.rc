@@ -30,16 +30,16 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "&Fişier"
     BEGIN
-        MENUITEM "&Nou...\tCtrl+N",            ID_FILE_NEW
-        MENUITEM "&Deschidere...\tCtrl+O",     ID_FILE_OPEN
-        MENUITEM "&Salvare\tCtrl+S",         ID_FILE_SAVE
-        MENUITEM "Sal&vare ca...",             ID_FILE_SAVEAS
+        MENUITEM "&Nou…\tCtrl+N",              ID_FILE_NEW
+        MENUITEM "&Deschidere…\tCtrl+O",       ID_FILE_OPEN
+        MENUITEM "&Salvare\tCtrl+S",           ID_FILE_SAVE
+        MENUITEM "Sal&vare ca…",               ID_FILE_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "I&mprimare...\tCtrl+P",      ID_PRINT
+        MENUITEM "I&mprimare…\tCtrl+P",        ID_PRINT
         MENUITEM "E&xaminare înaintea imprimării", ID_PREVIEW
-        MENUITEM "&Iniţializare pagină...",    ID_PRINTSETUP
+        MENUITEM "&Iniţializare pagină…",      ID_PRINTSETUP
         MENUITEM SEPARATOR
-        MENUITEM "I&eşire",                  ID_FILE_EXIT
+        MENUITEM "I&eşire",                    ID_FILE_EXIT
     END
     POPUP "&Editare"
     BEGIN
@@ -52,12 +52,12 @@ BEGIN
         MENUITEM "&Golire\tDel",                ID_EDIT_CLEAR
         MENUITEM "&Selectare totală\tCtrl+A",   ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Că&utare...\tCtrl+F",         ID_FIND
+        MENUITEM "Că&utare…\tCtrl+F",           ID_FIND
         MENUITEM "Ur&mătorul găsit\tF3",        ID_FIND_NEXT
-        MENUITEM "Înlocui&re...\tCtrl+H",       ID_REPLACE
+        MENUITEM "Înlocui&re…\tCtrl+H",         ID_REPLACE
         MENUITEM SEPARATOR
-        MENUITEM "Doar ci&tire",                ID_EDIT_READONLY
-        MENUITEM "&Modificat",                  ID_EDIT_MODIFIED
+        MENUITEM "Doar ci&tire",                  ID_EDIT_READONLY
+        MENUITEM "&Modificat",                    ID_EDIT_MODIFIED
         MENUITEM SEPARATOR
         POPUP "S&uplimente"
         BEGIN
@@ -75,18 +75,18 @@ BEGIN
         MENUITEM "&Riglă",                    ID_TOGGLE_RULER
         MENUITEM "Bară de s&tare",            ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Opţiuni...",               ID_VIEWPROPERTIES
+        MENUITEM "&Opţiuni…",                 ID_VIEWPROPERTIES
     END
     POPUP "&Inserare"
     BEGIN
-        MENUITEM "&Dată şi oră...",  ID_DATETIME
+        MENUITEM "&Dată şi oră…",    ID_DATETIME
     END
     POPUP "F&ormat"
     BEGIN
-        MENUITEM "&Font...",                     ID_FONTSETTINGS
+        MENUITEM "&Font…",                       ID_FONTSETTINGS
         MENUITEM "Stil &marcatori",              ID_BULLET
-        MENUITEM "&Paragraf...",                 ID_PARAFORMAT
-        MENUITEM "&Tabulatori...",               ID_TABSTOPS
+        MENUITEM "&Paragraf…",                   ID_PARAFORMAT
+        MENUITEM "&Tabulatori…",                 ID_TABSTOPS
         POPUP "Fun&dal"
         BEGIN
             MENUITEM "Sist&em\tCtrl+1",          ID_BACK_1
@@ -95,7 +95,7 @@ BEGIN
     END
     POPUP "&Ajutor"
     BEGIN
-        MENUITEM "&Despre Wine Wordpad…",         ID_ABOUT
+        MENUITEM "&Despre Wine Wordpad…",           ID_ABOUT
     END
 END
 
@@ -108,7 +108,7 @@ BEGIN
         MENUITEM "&Lipire",             ID_EDIT_PASTE
         MENUITEM SEPARATOR
         MENUITEM "Stil &marcatori",     ID_BULLET
-        MENUITEM "P&aragraf...",        ID_PARAFORMAT
+        MENUITEM "P&aragraf…",          ID_PARAFORMAT
     END
 END
 
