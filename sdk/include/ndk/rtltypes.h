@@ -1889,6 +1889,10 @@ typedef struct _RTL_UNICODE_STRING_BUFFER
 
 #ifndef NTOS_MODE_USER
 
+#ifndef RT_MESSAGETABLE
+#define RT_MESSAGETABLE 11
+#endif
+
 //
 // Message Resource Entry, Block and Data
 //
