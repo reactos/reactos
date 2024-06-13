@@ -38,6 +38,7 @@ if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
     add_cd_file(TARGET ntfsvbr DESTINATION loader NO_CAB FILE ${CMAKE_CURRENT_BINARY_DIR}/ntfs.bin FOR bootcd regtest)
     add_cd_file(TARGET isoboot DESTINATION loader NO_CAB NOT_IN_HYBRIDCD FILE ${CMAKE_CURRENT_BINARY_DIR}/isoboot.bin FOR all hybridcd)
     add_cd_file(TARGET isobtrt DESTINATION loader NO_CAB NOT_IN_HYBRIDCD FILE ${CMAKE_CURRENT_BINARY_DIR}/isobtrt.bin FOR bootcd regtest)
+    add_cd_file(TARGET isombr DESTINATION loader NO_CAB NOT_IN_HYBRIDCD FILE ${CMAKE_CURRENT_BINARY_DIR}/isombr.bin FOR all hybridcd)
 elseif(ARCH STREQUAL "arm")
     add_custom_target(fat
         COMMAND exit 1
