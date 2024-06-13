@@ -534,7 +534,6 @@ CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 
             CloseHandle(Thread);
             AppsDownloadList.RemoveAll();
-            g_ActiveOperationWindow = Dlg;
             return TRUE;
         }
 
@@ -560,8 +559,9 @@ CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lPa
             return TRUE;
 
         case WM_DESTROY:
-            g_ActiveOperationWindow = NULL;
             g_Busy--;
+            if (hMainWnd)
+                PostMessage(hMainWnd, WM_NOTIFY_OPERATIONCOMPLETED, 0, 0);
             return FALSE;
 
         default:
