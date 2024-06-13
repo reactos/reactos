@@ -69,7 +69,8 @@ static BOOL ExtractResource(
     if (!bSuccess)
     {
         return FALSE;
-    } else if (dwWritten != dwSize)
+    }
+    else if (dwWritten != dwSize)
     {
         trace("Extract resource failed, written size (%lu) is not actual size (%lu)\n", dwWritten, dwSize);
         DeleteFileW(SavePath);
@@ -117,7 +118,8 @@ static VOID NTAPI DllLoadCallback(
     {
         *phNotifiedDllBase = NotificationData->Loaded.DllBase;
         InterlockedIncrement(&g_lDllLoadCount);
-    } else if (NotificationReason == LDR_DLL_NOTIFICATION_REASON_UNLOADED)
+    }
+    else if (NotificationReason == LDR_DLL_NOTIFICATION_REASON_UNLOADED)
     {
         InterlockedDecrement(&g_lDllLoadCount);
     }
@@ -218,7 +220,8 @@ START_TEST(DllLoadNotification)
     {
         /* The count will decrease 1 because the last callback still there */
         ok_eq_long(g_lDllLoadCount, 1L);
-    } else
+    }
+    else
     {
         skip("FreeLibrary failed with 0x%08lX\n", GetLastError());
     }

@@ -7,6 +7,8 @@
 
 #include "ntdll_vista.h"
 
+/* GLOBALS *******************************************************************/
+
 typedef struct _LDR_DLL_NOTIFICATION_ENTRY
 {
     LIST_ENTRY List;
@@ -17,13 +19,10 @@ typedef struct _LDR_DLL_NOTIFICATION_ENTRY
 static RTL_STATIC_LIST_HEAD(LdrpDllNotificationList);
 
 /* Initialize critical section statically */
-
 static RTL_CRITICAL_SECTION LdrpDllNotificationLock;
-
 static RTL_CRITICAL_SECTION_DEBUG LdrpDllNotificationLockDebug = {
     .CriticalSection = &LdrpDllNotificationLock
 };
-
 static RTL_CRITICAL_SECTION LdrpDllNotificationLock = {
     &LdrpDllNotificationLockDebug,
     -1,
@@ -32,6 +31,8 @@ static RTL_CRITICAL_SECTION LdrpDllNotificationLock = {
     0,
     0
 };
+
+/* FUNCTIONS *****************************************************************/
 
 NTSTATUS
 NTAPI
@@ -105,7 +106,9 @@ LdrUnregisterDllNotification(
     return Status;
 }
 
-VOID NTAPI LdrpSendDllNotifications(
+VOID
+NTAPI
+LdrpSendDllNotifications(
     _In_ PLDR_DATA_TABLE_ENTRY DllEntry,
     _In_ ULONG NotificationReason)
 {
@@ -115,13 +118,13 @@ VOID NTAPI LdrpSendDllNotifications(
 
     /*
      * LDR_DLL_LOADED_NOTIFICATION_DATA and LDR_DLL_UNLOADED_NOTIFICATION_DATA
-     * currently are the same, use _STATIC_ASSERT to ensure it then fill either of them.
+     * currently are the same, use C_ASSERT to ensure it then fill either of them.
      */
 #define LdrpAssertDllNotificationDataMember(x)\
-    _STATIC_ASSERT(FIELD_OFFSET(LDR_DLL_NOTIFICATION_DATA, Loaded.x) ==\
-                   FIELD_OFFSET(LDR_DLL_NOTIFICATION_DATA, Unloaded.x))
+    C_ASSERT(FIELD_OFFSET(LDR_DLL_NOTIFICATION_DATA, Loaded.x) ==\
+             FIELD_OFFSET(LDR_DLL_NOTIFICATION_DATA, Unloaded.x))
 
-    _STATIC_ASSERT(sizeof(NotificationData.Loaded) == sizeof(NotificationData.Unloaded));
+    C_ASSERT(sizeof(NotificationData.Loaded) == sizeof(NotificationData.Unloaded));
     LdrpAssertDllNotificationDataMember(Flags);
     LdrpAssertDllNotificationDataMember(FullDllName);
     LdrpAssertDllNotificationDataMember(BaseDllName);

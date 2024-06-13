@@ -1254,7 +1254,7 @@ SkipCheck:
 
 #if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
     LdrpSendDllNotifications(LdrEntry, LDR_DLL_NOTIFICATION_REASON_LOADED);
-#if _WIN32_WINNT >= _WIN32_WINNT_WIN8
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN8)
     LdrEntry->Flags |= LDRP_LOAD_NOTIFICATIONS_SENT; /* LdrEntry->LoadNotificationsSent = TRUE; */
 #endif
 #endif
