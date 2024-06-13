@@ -34,6 +34,7 @@
 #define IDS_BACKGROUND_COMDLG_FILTER 1006
 #define IDC_RESOLUTION_PREVIEW       1007
 #define IDC_DESKTOP_CUSTOM           1008
+#define IDC_GETMOREWALLS             1009
 
 /* Screensaver Page */
 #define IDC_SCREENS_PREVIEW      1010
