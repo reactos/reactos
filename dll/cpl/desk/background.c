@@ -1282,6 +1282,14 @@ BackgroundPageProc(HWND hwndDlg,
                                                                                  g_GlobalData.desktop_color));
                         }
                         break;
+
+                    case NM_RETURN:
+                    case NM_CLICK:
+                        if (lpnm->idFrom == IDC_GETMOREWALLS)
+                        {
+                            ShellExecuteW(hwndDlg, NULL, L"rapps://Search/Wallpaper", NULL, NULL, SW_SHOW);
+                        }
+                        break;
                 }
             }
             break;
