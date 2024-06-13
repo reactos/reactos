@@ -2,10 +2,12 @@
 #define _HIDCLASS_PCH_
 
 #define _HIDPI_NO_FUNCTION_MACROS_
+
 #include <wdm.h>
 #include <hidpddi.h>
 #include <stdio.h>
 #include <hidport.h>
+#include "cyclicbuffer.h"
 
 #define HIDCLASS_TAG 'CdiH'
 
@@ -47,7 +49,6 @@ typedef struct
     // hid attributes
     //
     HID_DEVICE_ATTRIBUTES Attributes;
-
 } HIDCLASS_COMMON_DEVICE_EXTENSION, *PHIDCLASS_COMMON_DEVICE_EXTENSION;
 
 typedef struct
@@ -77,6 +78,11 @@ typedef struct
     //
     PDEVICE_RELATIONS DeviceRelations;
 
+    BOOLEAN IsReadLoopStarted;
+    PUCHAR InputBuffer;
+    USHORT InputBufferSize;
+    PUCHAR InputWriteAddress;
+    PIRP InputIRP;
 } HIDCLASS_FDO_EXTENSION, *PHIDCLASS_FDO_EXTENSION;
 
 typedef struct
@@ -111,70 +117,16 @@ typedef struct
     //
     PHIDCLASS_FDO_EXTENSION FDODeviceExtension;
 
+
+
+    HIDCHASS_CYCLIC_BUFFER InputBuffer;
+
+    LIST_ENTRY PendingIRPList;
+
+    KSPIN_LOCK ReadLock;
 } HIDCLASS_PDO_DEVICE_EXTENSION, *PHIDCLASS_PDO_DEVICE_EXTENSION;
 
-typedef struct __HIDCLASS_FILEOP_CONTEXT__
-{
-    //
-    // device extension
-    //
-    PHIDCLASS_PDO_DEVICE_EXTENSION DeviceExtension;
-
-    //
-    // spin lock
-    //
-    KSPIN_LOCK Lock;
-
-    //
-    // read irp pending list
-    //
-    LIST_ENTRY ReadPendingIrpListHead;
-
-    //
-    // completed irp list
-    //
-    LIST_ENTRY IrpCompletedListHead;
-
-    //
-    // stop in progress indicator
-    //
-    BOOLEAN StopInProgress;
-
-    //
-    // read complete event
-    //
-    KEVENT IrpReadComplete;
-
-} HIDCLASS_FILEOP_CONTEXT, *PHIDCLASS_FILEOP_CONTEXT;
-
-typedef struct
-{
-    //
-    // original request
-    //
-    PIRP OriginalIrp;
-
-    //
-    // file op
-    //
-    PHIDCLASS_FILEOP_CONTEXT FileOp;
-
-    //
-    // buffer for reading report
-    //
-    PVOID InputReportBuffer;
-
-    //
-    // buffer length
-    //
-    ULONG InputReportBufferLength;
-
-    //
-    // work item
-    //
-    PIO_WORKITEM CompletionWorkItem;
-
-} HIDCLASS_IRP_CONTEXT, *PHIDCLASS_IRP_CONTEXT;
+DRIVER_CANCEL HidClassPDO_IrpCancelRoutine;
 
 /* fdo.c */
 NTSTATUS
@@ -191,6 +143,19 @@ NTSTATUS
 HidClassFDO_DispatchRequestSynchronous(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
+
+NTSTATUS
+NTAPI
+HidClassFDO_ReadCompletion(
+    IN PDEVICE_OBJECT  DeviceObject,
+    IN PIRP  Irp,
+    IN PVOID  Context);
+
+NTSTATUS
+HidClassFDO_SubmitRead(IN PHIDCLASS_FDO_EXTENSION DeviceExtension);
+
+NTSTATUS
+HidClassFDO_InitiateRead(IN PHIDCLASS_FDO_EXTENSION DeviceExtension);
 
 /* pdo.c */
 NTSTATUS
