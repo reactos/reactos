@@ -366,7 +366,6 @@ PutChar:
     .PutCharWrite:
         xor ah, ah
         stosw                                   // Write ASCII directly to the VRAM
-
         mov word ptr BP_REL(VramOffset), di
     pop es
     pop di
