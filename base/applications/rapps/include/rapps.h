@@ -14,6 +14,7 @@
 #include "configparser.h"
 
 extern LONG g_Busy;
-extern HWND g_ActiveOperationWindow;
+
+#define WM_NOTIFY_OPERATIONCOMPLETED (WM_APP + 0)
 
 #endif /* _RAPPS_H */
