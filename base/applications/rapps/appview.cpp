@@ -1522,7 +1522,7 @@ CApplicationView::ProcessWindowMessage(
             bool kbd = -1 == (int)(INT_PTR)lParam;
             if ((HWND)wParam == m_ListView->m_hWnd)
             {
-                int item = ListView_GetNextItem((HWND)wParam, -1, LVNI_FOCUSED|LVNI_SELECTED);
+                int item = ListView_GetNextItem((HWND)wParam, -1, LVNI_FOCUSED | LVNI_SELECTED);
                 if (item != -1)
                 {
                     POINT *ppt = NULL, pt;
