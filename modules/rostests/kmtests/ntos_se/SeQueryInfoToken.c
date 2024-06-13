@@ -13,6 +13,19 @@
 #define NDEBUG
 #include <debug.h>
 
+// Copied from PspProcessMapping -- although the values don't matter much for
+// the most part.
+static GENERIC_MAPPING ProcessGenericMapping =
+{
+    STANDARD_RIGHTS_READ    | PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
+    STANDARD_RIGHTS_WRITE   | PROCESS_CREATE_PROCESS    | PROCESS_CREATE_THREAD   |
+    PROCESS_VM_OPERATION    | PROCESS_VM_WRITE          | PROCESS_DUP_HANDLE      |
+    PROCESS_TERMINATE       | PROCESS_SET_QUOTA         | PROCESS_SET_INFORMATION |
+    PROCESS_SUSPEND_RESUME,
+    STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
+    PROCESS_ALL_ACCESS
+};
+
 //------------------------------------------------------------------------------//
 //      Testing Functions                                                       //
 //------------------------------------------------------------------------------//
@@ -216,14 +229,13 @@ START_TEST(SeQueryInfoToken)
     NTSTATUS Status = STATUS_SUCCESS;
     PAUX_ACCESS_DATA AuxData = NULL;
     PPRIVILEGE_SET NewPrivilegeSet;
+    ULONG InitialPrivilegeCount;
     BOOLEAN Checker;
     PPRIVILEGE_SET Privileges = NULL;
     PSECURITY_SUBJECT_CONTEXT SubjectContext = NULL;
     PACCESS_TOKEN Token = NULL;
     PTOKEN_PRIVILEGES TPrivileges;
     PVOID Buffer;
-    POBJECT_TYPE PsProcessType = NULL;
-    PGENERIC_MAPPING GenericMapping;
     ULONG i;
 
     SubjectContext = ExAllocatePool(PagedPool, sizeof(SECURITY_SUBJECT_CONTEXT));
@@ -240,14 +252,14 @@ START_TEST(SeQueryInfoToken)
     //----------------------------------------------------------------//
 
     AccessState = ExAllocatePool(PagedPool, sizeof(ACCESS_STATE));
-    PsProcessType = ExAllocatePool(PagedPool, sizeof(OBJECT_TYPE));
-    AuxData = ExAllocatePool(PagedPool, 0xC8);
-    GenericMapping = ExAllocatePool(PagedPool, sizeof(GENERIC_MAPPING));
+    // AUX_ACCESS_DATA gets larger in newer Windows version.
+    // This is the largest known size, found in Windows 10/11.
+    AuxData = ExAllocatePoolZero(PagedPool, 0xE0, 'QSmK');
 
     Status = SeCreateAccessState(AccessState,
-                                 (PVOID)AuxData,
+                                 AuxData,
                                  DesiredAccess,
-                                 GenericMapping
+                                 &ProcessGenericMapping
                                 );
 
     ok((Status == STATUS_SUCCESS), "SeCreateAccessState failed with Status 0x%08X\n", Status);
@@ -267,43 +279,48 @@ START_TEST(SeQueryInfoToken)
     //      Testing SeAppendPrivileges                                //
     //----------------------------------------------------------------//
 
-    AuxData->PrivilegeSet->PrivilegeCount = 1;
+    InitialPrivilegeCount = AuxData->PrivilegesUsed->PrivilegeCount;
+    trace("Initial privilege count = %lu\n", InitialPrivilegeCount);
 
     //  Testing SeAppendPrivileges. Must change PrivilegeCount to 2 (1 + 1)
 
-    NewPrivilegeSet = ExAllocatePool(PagedPool, sizeof(PRIVILEGE_SET));
+    NewPrivilegeSet = ExAllocatePoolZero(PagedPool,
+                                         FIELD_OFFSET(PRIVILEGE_SET, Privilege[1]),
+                                         'QSmK');
     NewPrivilegeSet->PrivilegeCount = 1;
 
     Status = SeAppendPrivileges(AccessState, NewPrivilegeSet);
     ok(Status == STATUS_SUCCESS, "SeAppendPrivileges failed\n");
-    ok((AuxData->PrivilegeSet->PrivilegeCount == 2),"PrivelegeCount must be 2, but it is %d\n", AuxData->PrivilegeSet->PrivilegeCount);
-    ExFreePool(NewPrivilegeSet);
+    ok_eq_ulong(AuxData->PrivilegesUsed->PrivilegeCount, InitialPrivilegeCount + 1);
+    ExFreePoolWithTag(NewPrivilegeSet, 'QSmK');
 
     //----------------------------------------------------------------//
 
     // Testing SeAppendPrivileges. Must change PrivilegeCount to 6 (2 + 4)
 
-    NewPrivilegeSet = ExAllocatePool(PagedPool, 4*sizeof(PRIVILEGE_SET));
+    NewPrivilegeSet = ExAllocatePoolZero(PagedPool,
+                                         FIELD_OFFSET(PRIVILEGE_SET, Privilege[4]),
+                                         'QSmK');
     NewPrivilegeSet->PrivilegeCount = 4;
 
     Status = SeAppendPrivileges(AccessState, NewPrivilegeSet);
     ok(Status == STATUS_SUCCESS, "SeAppendPrivileges failed\n");
-    ok((AuxData->PrivilegeSet->PrivilegeCount == 6),"PrivelegeCount must be 6, but it is %d\n", AuxData->PrivilegeSet->PrivilegeCount);
-    ExFreePool(NewPrivilegeSet);
+    ok_eq_ulong(AuxData->PrivilegesUsed->PrivilegeCount, InitialPrivilegeCount + 5);
+    ExFreePoolWithTag(NewPrivilegeSet, 'QSmK');
 
     //----------------------------------------------------------------//
     //      Testing SePrivilegeCheck                                  //
     //----------------------------------------------------------------//
 
     // KPROCESSOR_MODE is set to KernelMode ===> Always return TRUE
-    ok(SePrivilegeCheck(AuxData->PrivilegeSet, &(AccessState->SubjectSecurityContext), KernelMode), "SePrivilegeCheck failed with KernelMode mode arg\n");
+    ok(SePrivilegeCheck(AuxData->PrivilegesUsed, &(AccessState->SubjectSecurityContext), KernelMode), "SePrivilegeCheck failed with KernelMode mode arg\n");
     // and call it again
-    ok(SePrivilegeCheck(AuxData->PrivilegeSet, &(AccessState->SubjectSecurityContext), KernelMode), "SePrivilegeCheck failed with KernelMode mode arg\n");
+    ok(SePrivilegeCheck(AuxData->PrivilegesUsed, &(AccessState->SubjectSecurityContext), KernelMode), "SePrivilegeCheck failed with KernelMode mode arg\n");
 
     //----------------------------------------------------------------//
 
     // KPROCESSOR_MODE is set to UserMode. Expect false
-    ok(!SePrivilegeCheck(AuxData->PrivilegeSet, &(AccessState->SubjectSecurityContext), UserMode), "SePrivilegeCheck unexpected success with UserMode arg\n");
+    ok(!SePrivilegeCheck(AuxData->PrivilegesUsed, &(AccessState->SubjectSecurityContext), UserMode), "SePrivilegeCheck unexpected success with UserMode arg\n");
 
     //----------------------------------------------------------------//
 
@@ -311,6 +328,10 @@ START_TEST(SeQueryInfoToken)
     //      Testing SeFreePrivileges                                  //
     //----------------------------------------------------------------//
 
+    // FIXME: KernelMode will automatically get all access granted without
+    // getting Privileges filled in. For UserMode, Privileges will only get
+    // filled if either WRITE_OWNER or ACCESS_SYSTEM_SECURITY is requested
+    // and granted. So this doesn't really test SeFreePrivileges.
     Privileges = NULL;
     Checker = SeAccessCheck(
         AccessState->SecurityDescriptor,
@@ -319,17 +340,17 @@ START_TEST(SeQueryInfoToken)
         AccessState->OriginalDesiredAccess,
         AccessState->PreviouslyGrantedAccess,
         &Privileges,
-        (PGENERIC_MAPPING)((PCHAR*)PsProcessType + 52),
+        &ProcessGenericMapping,
         KernelMode,
         &AccessMask,
         &Status
         );
     ok(Checker, "Checker is NULL\n");
-    ok((Privileges != NULL), "Privileges is NULL\n");
+    ok(Privileges == NULL, "Privileges is not NULL\n");
     if (Privileges)
     {
-        trace("AuxData->PrivilegeSet->PrivilegeCount = %d ; Privileges->PrivilegeCount = %d\n",
-              AuxData->PrivilegeSet->PrivilegeCount, Privileges->PrivilegeCount);
+        trace("AuxData->PrivilegesUsed->PrivilegeCount = %d ; Privileges->PrivilegeCount = %d\n",
+              AuxData->PrivilegesUsed->PrivilegeCount, Privileges->PrivilegeCount);
     }
     if (Privileges) SeFreePrivileges(Privileges);
 
@@ -352,25 +373,29 @@ START_TEST(SeQueryInfoToken)
             TPrivileges = (PTOKEN_PRIVILEGES)(Buffer);
             //trace("TPCount = %u\n\n", TPrivileges->PrivilegeCount);
 
-            NewPrivilegeSet = ExAllocatePool(PagedPool, 14*sizeof(PRIVILEGE_SET));
+            NewPrivilegeSet = ExAllocatePoolZero(PagedPool,
+                                                 FIELD_OFFSET(PRIVILEGE_SET, Privilege[14]),
+                                                 'QSmK');
             NewPrivilegeSet->PrivilegeCount = 14;
 
             ok((SeAppendPrivileges(AccessState, NewPrivilegeSet)) == STATUS_SUCCESS, "SeAppendPrivileges failed\n");
-            ok((AuxData->PrivilegeSet->PrivilegeCount == 20),"PrivelegeCount must be 20, but it is %d\n", AuxData->PrivilegeSet->PrivilegeCount);
-            ExFreePool(NewPrivilegeSet);
-            for (i = 0; i < AuxData->PrivilegeSet->PrivilegeCount; i++)
+            ok_eq_ulong(AuxData->PrivilegesUsed->PrivilegeCount, InitialPrivilegeCount + 19);
+            ExFreePoolWithTag(NewPrivilegeSet, 'QSmK');
+            for (i = 0; i < AuxData->PrivilegesUsed->PrivilegeCount; i++)
             {
-                AuxData->PrivilegeSet->Privilege[i].Attributes = TPrivileges->Privileges[i].Attributes;
-                AuxData->PrivilegeSet->Privilege[i].Luid = TPrivileges->Privileges[i].Luid;
+                AuxData->PrivilegesUsed->Privilege[i].Attributes = TPrivileges->Privileges[i].Attributes;
+                AuxData->PrivilegesUsed->Privilege[i].Luid = TPrivileges->Privileges[i].Luid;
             }
-            //trace("AccessState->privCount = %u\n\n", ((PAUX_ACCESS_DATA)(AccessState->AuxData))->PrivilegeSet->PrivilegeCount);
+            //trace("AccessState->privCount = %u\n\n", ((PAUX_ACCESS_DATA)(AccessState->AuxData))->PrivilegesUsed->PrivilegeCount);
 
-            ok(SePrivilegeCheck(AuxData->PrivilegeSet, &(AccessState->SubjectSecurityContext), UserMode), "SePrivilegeCheck fails in UserMode, but I wish it will success\n");
+            ok(SePrivilegeCheck(AuxData->PrivilegesUsed, &(AccessState->SubjectSecurityContext), UserMode), "SePrivilegeCheck fails in UserMode, but I wish it will success\n");
         }
     }
 
     // Call SeFreePrivileges again
 
+    // FIXME: See other SeAccessCheck call above, we're not really testing
+    // SeFreePrivileges here.
     Privileges = NULL;
     Checker = SeAccessCheck(
         AccessState->SecurityDescriptor,
@@ -379,17 +404,17 @@ START_TEST(SeQueryInfoToken)
         AccessState->OriginalDesiredAccess,
         AccessState->PreviouslyGrantedAccess,
         &Privileges,
-        (PGENERIC_MAPPING)((PCHAR*)PsProcessType + 52),
+        &ProcessGenericMapping,
         KernelMode,
         &AccessMask,
         &Status
         );
     ok(Checker, "Checker is NULL\n");
-    ok((Privileges != NULL), "Privileges is NULL\n");
+    ok(Privileges == NULL, "Privileges is not NULL\n");
     if (Privileges)
     {
-        trace("AuxData->PrivilegeSet->PrivilegeCount = %d ; Privileges->PrivilegeCount = %d\n",
-              AuxData->PrivilegeSet->PrivilegeCount, Privileges->PrivilegeCount);
+        trace("AuxData->PrivilegesUsed->PrivilegeCount = %d ; Privileges->PrivilegeCount = %d\n",
+              AuxData->PrivilegesUsed->PrivilegeCount, Privileges->PrivilegeCount);
     }
     if (Privileges) SeFreePrivileges(Privileges);
 
@@ -402,9 +427,7 @@ START_TEST(SeQueryInfoToken)
 
     SeDeleteAccessState(AccessState);
 
-    if (GenericMapping) ExFreePool(GenericMapping);
-    if (PsProcessType) ExFreePool(PsProcessType);
     if (SubjectContext) ExFreePool(SubjectContext);
-    if (AuxData) ExFreePool(AuxData);
+    if (AuxData) ExFreePoolWithTag(AuxData, 'QSmK');
     if (AccessState) ExFreePool(AccessState);
 }
