@@ -63,10 +63,6 @@ set(OPTIMIZE "4" CACHE STRING
 set(LTCG FALSE CACHE BOOL
 "Whether to build with link-time code generation")
 
-set(GDB FALSE CACHE BOOL
-"Whether to compile for debugging with GDB.
-If you don't use GDB, don't enable this.")
-
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     set(DBG FALSE CACHE BOOL
 "Whether to compile for debugging.")
