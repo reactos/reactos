@@ -34,7 +34,7 @@ STRINGTABLE
     IDS_OVERWRITEFILE       "文件已经存在。\n\
 是否替换？"
     IDS_INVALID_FILENAME_TITLE "路径中包含无效字符"
-    IDS_INVALID_FILENAME    "文件名中不能包含任何以下字符::\n\
+    IDS_INVALID_FILENAME    "文件名不能包含下列任何字符之一:\n\
 / : < > |"
     IDS_PATHNOTEXISTING     "路径不存在"
     IDS_FILENOTEXISTING     "文件不存在"

@@ -1308,4 +1308,45 @@ UNINSTALL="アンインストール"
 REPAIR="修復"
 TEST="テスト"
 
+;------------------------------------------------------------------------
+; LANG_CHINESE SUBLANG_CHINESE_SIMPLIFIED
+[Strings.0804]
+;; In shell32.dll
+CPLFILE_OPENWITH="用控制面板打开"
+
+;; In hhctrl.ocx
+CHMFILE="已编译的 HTML 帮助文件"
+
+;; In msxml3r.dll
+XMLFILE="XML 文档"
+XSLFILE="XSL 样式表"
+
+;; In msi.dll
+MSIPACK="ReactOS Installer 软件包"
+
+;; In themeui.dll
+MSSTYLESFILE="可视化风格文件"
+THEMEFILE="主题文件"
+
+;; In some multimedia exe/dll
+WAVFILE="波形声音"
+MIDFILE="MIDI 序列"
+CDAFILE="CD 音频曲目"
+AVIFILE="视频剪辑"
+
+;; Misc file types without friendly (localized in .dll resources) name
+CSSFILE="层叠样式表文档"
+SCFFILE="ReactOS Explorer Command"
+;WMZFILE="Compressed Enhanced Metafile"
+
+;; For .reg files, right-click menu
+MERGE="合并"
+
+;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
+CONFIGURE="配置"
+INSTALL="安装"
+UNINSTALL="卸载"
+REPAIR="修复"
+TEST="测试"
+
 ; EOF
