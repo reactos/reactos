@@ -1,6 +1,9 @@
-/* Translators:
- * 2008-06-24, Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * 2021-02-15, Václav Zouzalík aka Venca24 (vaclav.zouzalik at seznam dot cz)
+/*
+ * PROJECT:     ReactOS Picture and Fax Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Czech resource file
+ * TRANSLATORS: Copyright 2008 Radek Liška (Black_Fox) <radekliska@gmail.com>
+ *              Copyright 2020-2024 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -21,8 +24,8 @@ BEGIN
     IDS_TOOLTIP_ZOOM_OUT "Oddálit (-)"
     IDS_TOOLTIP_ROT_CLOCKW "Otočit po směru hodinových ručiček (Ctrl+K)"
     IDS_TOOLTIP_ROT_COUNCW "Otočit proti směru hodinových ručiček (Ctrl+L)"
-    IDS_TOOLTIP_ROT_CWSAVE "Rotate Clockwise and Save (Lossy)"
-    IDS_TOOLTIP_ROT_CCWSAVE "Rotate Counterclockwise and Save (Lossy)"
+    IDS_TOOLTIP_ROT_CWSAVE "Otočit po směru hodinových ručiček a uložit (ztrátové)"
+    IDS_TOOLTIP_ROT_CCWSAVE "Otočit proti směru hodinových ručiček a uložit (ztrátové)"
     IDS_TOOLTIP_DELETE "Odstranit (DEL)"
     IDS_TOOLTIP_PRINT "Tisk (Ctrl+P)"
     IDS_TOOLTIP_SAVEAS "Uložit jako... (Ctrl+S)"
@@ -35,7 +38,7 @@ BEGIN
     IDS_EMF_FILE    "Obrázek EMF"
     IDS_GIF_FILE    "Obrázek GIF"
     IDS_JPG_FILE    "Obrázek JPEG"
-    IDS_BMP_FILE    "Obrázek Bitmap"
+    IDS_BMP_FILE    "Bitmapový obrázek"
     IDS_PNG_FILE    "Obrázek PNG"
     IDS_TIF_FILE    "Obrázek TIF"
     IDS_WMF_FILE    "Obrázek WMF"
