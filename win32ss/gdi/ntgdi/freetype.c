@@ -4,7 +4,7 @@
  * PURPOSE:         FreeType font engine interface
  * PROGRAMMERS:     Copyright 2001 Huw D M Davies for CodeWeavers.
  *                  Copyright 2006 Dmitry Timoshkov for CodeWeavers.
- *                  Copyright 2016-2019 Katayama Hirofumi MZ.
+ *                  Copyright 2016-2024 Katayama Hirofumi MZ.
  */
 
 /** Includes ******************************************************************/
