@@ -1217,7 +1217,7 @@ static const WCHAR s_szzDefFontLink[] =
     L"simsun.ttc,SimSun\0"
     L"gulim.ttc,Gulim\0"
     L"\0";
-// The fixed-pitch FontLink data
+// The default fixed-pitch FontLink data
 static const WCHAR s_szzDefFixedFontLink[] =
     L"cour.ttf,Courier New\0"
     L"msgothic.ttc,MS Gothic\0"
