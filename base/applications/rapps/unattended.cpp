@@ -333,7 +333,7 @@ HandleProtocolCommand(CAppDB &db, LPWSTR Url, int nCmdShow)
         return HandleInstallCommand(&db, Url, 1, &p);
     }
 
-    HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, RunGuiThread, (void*)nCmdShow, 0, NULL);
+    HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, RunGuiThread, (void*)(SIZE_T)nCmdShow, 0, NULL);
     if (hThread)
     {
         HWND hWindow;
@@ -346,7 +346,7 @@ HandleProtocolCommand(CAppDB &db, LPWSTR Url, int nCmdShow)
         if (hWindow)
         {
             SwitchToThisWindow(hWindow, TRUE);
-            COPYDATASTRUCT cds = { COPYDATA_PROTOCOLHANDLER, (wcslen(Url) + 1) * sizeof(*Url), (void*)Url };
+            COPYDATASTRUCT cds = { COPYDATA_PROTOCOLHANDLER, UINT((wcslen(Url) + 1) * sizeof(*Url)), (void*)Url };
             SendMessageW(hWindow, WM_COPYDATA, 0, (LPARAM)&cds);
         }
         WaitForSingleObject(hThread, INFINITE); // We are the WinMain thread but not the UI thread, we have to wait here util the UI is done.

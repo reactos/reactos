@@ -58,7 +58,7 @@ IsUrlValid(const WCHAR *Url)
     UrlComponmentInfo.dwStructSize = sizeof(UrlComponmentInfo);
     UrlComponmentInfo.dwSchemeLength = 1;
 
-    BOOL bSuccess = InternetCrackUrlW(Url, wcslen(Url), 0, &UrlComponmentInfo);
+    BOOL bSuccess = InternetCrackUrlW(Url, (UINT)wcslen(Url), 0, &UrlComponmentInfo);
     if (!bSuccess)
     {
         return FALSE;
