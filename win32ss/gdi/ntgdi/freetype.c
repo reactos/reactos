@@ -1288,8 +1288,27 @@ FontLink_Chain_LoadReg(
     return STATUS_SUCCESS;
 }
 
+static BOOL
+FontLink_Chain_FindLinkByLogFont(
+    PFONTLINK_CHAIN pChain,
+    PLOGFONTW plf)
+{
+    PLIST_ENTRY Entry, Head = &pChain->FontLinkList;
+    PFONTLINK pLink;
+
+    for (Entry = Head->Flink; Entry != Head; Entry = Entry->Flink)
+    {
+        pLink = CONTAINING_RECORD(Entry, FONTLINK, ListEntry);
+        if (RtlCompareMemory(&pLink->LogFont, plf, sizeof(*plf)) == 0)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
 static PFONTLINK
-FontLink_CreateOrGet(
+FontLink_Create(
+    _Inout_ PFONTLINK_CHAIN pChain,
     _In_ const LOGFONTW *plfBase,
     _In_ LPCWSTR pszLink)
 {
@@ -1317,6 +1336,9 @@ FontLink_CreateOrGet(
 
     SubstituteFontRecurse(&lf);
     DPRINT1("lfFaceName: %S\n", lf.lfFaceName);
+
+    if (FontLink_Chain_FindLinkByLogFont(pChain, &lf))
+        return NULL;
 
     pLink = ExAllocatePoolZero(PagedPool, sizeof(FONTLINK), TAG_FONT);
     if (!pLink)
@@ -1373,40 +1395,13 @@ FontLink_Chain_Populate(
     while (*pszLink)
     {
         DPRINT("pszLink: '%S'\n", pszLink);
-        pLink = FontLink_CreateOrGet(&lfBase, pszLink);
+        pLink = FontLink_Create(pChain, &lfBase, pszLink);
         if (pLink)
             InsertTailList(&pChain->FontLinkList, &pLink->ListEntry);
         pszLink += wcslen(pszLink) + 1;
     }
 
     return Status;
-}
-
-/// Mark ignore for the FontLink items in the chain, of no use.
-/// @pararm pChain The chain.
-static VOID
-FontLink_Chain_MarkIgnoreForNoUse(
-    _Inout_ PFONTLINK_CHAIN pChain)
-{
-    PLIST_ENTRY Entry0, Entry1, Head = &pChain->FontLinkList;
-    PFONTLINK pLink0, pLink1;
-
-    for (Entry0 = Head->Flink; Entry0 != Head; Entry0 = Entry0->Flink)
-    {
-        pLink0 = CONTAINING_RECORD(Entry0, FONTLINK, ListEntry);
-        if (pLink0->bIgnore)
-            continue;
-
-        for (Entry1 = Entry0->Flink; Entry1 != Head; Entry1 = Entry1->Flink)
-        {
-            pLink1 = CONTAINING_RECORD(Entry1, FONTLINK, ListEntry);
-            if (pLink1->bIgnore)
-                continue;
-
-            if (_wcsicmp(pLink0->LogFont.lfFaceName, pLink1->LogFont.lfFaceName) == 0)
-                pLink1->bIgnore = TRUE;
-        }
-    }
 }
 
 /*
@@ -4246,7 +4241,6 @@ FontLink_Chain_Next(
     if (!pChain->szFaceName[0]) // The chain is not populated yet
     {
         FontLink_Chain_Populate(pChain);
-        FontLink_Chain_MarkIgnoreForNoUse(pChain);
         FontLink_Chain_Dump(pChain);
     }
 
