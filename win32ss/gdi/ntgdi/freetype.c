@@ -1299,7 +1299,7 @@ FontLink_Chain_FindLinkByLogFont(
     for (Entry = Head->Flink; Entry != Head; Entry = Entry->Flink)
     {
         pLink = CONTAINING_RECORD(Entry, FONTLINK, ListEntry);
-        if (RtlCompareMemory(&pLink->LogFont, plf, sizeof(*plf)) == 0)
+        if (RtlEqualMemory(&pLink->LogFont, plf, sizeof(*plf)))
             return TRUE;
     }
 
