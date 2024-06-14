@@ -798,10 +798,10 @@ CDownloadManager::ThreadFunc(LPVOID param)
         urlComponents.dwStructSize = sizeof(urlComponents);
 
         urlLength = InfoArray[iAppId].szUrl.GetLength();
-        urlComponents.dwSchemeLength = UINT(urlLength + 1);
+        urlComponents.dwSchemeLength = urlLength + 1;
         urlComponents.lpszScheme = (LPWSTR)malloc(urlComponents.dwSchemeLength * sizeof(WCHAR));
 
-        if (!InternetCrackUrlW(InfoArray[iAppId].szUrl, UINT(urlLength + 1), ICU_DECODE | ICU_ESCAPE, &urlComponents))
+        if (!InternetCrackUrlW(InfoArray[iAppId].szUrl, urlLength + 1, ICU_DECODE | ICU_ESCAPE, &urlComponents))
         {
             ShowLastError(hMainWnd, TRUE, GetLastError());
             goto end;

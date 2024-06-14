@@ -80,17 +80,17 @@ ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem)
 }
 
 HTREEITEM
-TreeView_Walk(HWND hTree, TVWALKCALLBACK Callback, LPARAM Cookie, BOOL Children, HTREEITEM hRoot)
+TreeView_Walk(HWND hTree, TVWALKCALLBACK Callback, PVOID Context, BOOL Children, HTREEITEM hRoot)
 {
     if (!hRoot)
         hRoot = TreeView_GetRoot(hTree);
     for (HTREEITEM hItem = hRoot; hItem; hItem = TreeView_GetNextSibling(hTree, hItem))
     {
-        if (!Callback(hTree, hItem, Cookie))
+        if (!Callback(hTree, hItem, Context))
             return hItem;
         if (Children && (hRoot = TreeView_GetChild(hTree, hItem)) != NULL)
         {
-            hRoot = TreeView_Walk(hTree, Callback, Cookie, Children, hRoot);
+            hRoot = TreeView_Walk(hTree, Callback, Context, Children, hRoot);
             if (hRoot)
                 return hRoot;
         }
@@ -422,6 +422,33 @@ ExpandEnvStrings(CStringW &Str)
         }
     }
     return false;
+}
+
+BOOL
+LoadLangidString(HINSTANCE hInst, UINT ResId, UINT LangId, LPWSTR Buf, SIZE_T cch)
+{
+    // STRINGTABLE entries are pascal strings in blocks of 16
+    BOOL ret = FALSE;
+    HRSRC hRsrc = FindResourceExW(hInst, RT_STRING, MAKEINTRESOURCEW(ResId / 16 + 1), LangId);
+    HGLOBAL hGlob = hRsrc ? LoadResource(hInst, hRsrc) : NULL;
+    if (hGlob)
+    {
+        if (LPCWSTR p = (LPCWSTR)LockResource(hGlob))
+        {
+            for (UINT i = 0; i < (ResId & 0x0f); ++i)
+                p += 1 + (UINT)*p;
+            UINT len = *p;
+            if (cch > len)
+            {
+                ret = TRUE;
+                StrCpyNW(Buf, p + 1, len + 1);
+                Buf[len] = UNICODE_NULL;
+            }
+            UnlockResource(p);
+        }
+        FreeResource(hGlob);
+    }
+    return ret;
 }
 
 BOOL

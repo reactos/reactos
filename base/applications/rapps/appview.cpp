@@ -1716,7 +1716,7 @@ CApplicationView::SetSearchText(LPCWSTR Str)
 void
 CApplicationView::SelectItem(CAppInfo *pAI)
 {
-    int i = -1;
+    int i;
     if (!pAI)
     {
         i = 0;

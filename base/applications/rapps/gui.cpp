@@ -480,10 +480,10 @@ CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lPa
 
         case WM_COPYDATA:
         {
-            COPYDATASTRUCT *pCDS = (COPYDATASTRUCT*)lParam;
+            PCOPYDATASTRUCT pCDS = (PCOPYDATASTRUCT)lParam;
             if (pCDS && pCDS->dwData == COPYDATA_PROTOCOLHANDLER)
             {
-                theResult = HandleProtocolMessage((LPWSTR)pCDS->lpData);
+                theResult = HandleProtocolMessage((LPCWSTR)pCDS->lpData);
                 return TRUE;
             }
             break;
@@ -776,10 +776,10 @@ CMainWindow::InstallApplication(CAppInfo *Info)
 }
 
 static BOOL CALLBACK
-SwitchToCategoryWalker(HWND hTree, HTREEITEM hItem, LPARAM Cookie)
+SwitchToCategoryWalker(HWND hTree, HTREEITEM hItem, PVOID Context)
 {
-    CSideTreeView *m_TreeView = (CSideTreeView*)((SIZE_T*)Cookie)[0];
-    if (m_TreeView->GetItemData(hItem) == ((SIZE_T*)Cookie)[1])
+    CSideTreeView *m_TreeView = (CSideTreeView*)((SIZE_T*)Context)[0];
+    if (m_TreeView->GetItemData(hItem) == ((SIZE_T*)Context)[1])
     {
         m_TreeView->SelectItem(hItem);
         return FALSE;
@@ -791,7 +791,7 @@ void
 CMainWindow::SwitchToCategoryByStringId(WORD ResId)
 {
     SIZE_T data[] = { (SIZE_T)const_cast<CSideTreeView*>(m_TreeView), ResId };
-    TreeView_Walk(m_TreeView->GetWindow(), SwitchToCategoryWalker, (LPARAM)data);
+    TreeView_Walk(m_TreeView->GetWindow(), SwitchToCategoryWalker, (PVOID)data);
 }
 
 BOOL
@@ -869,6 +869,20 @@ CMainWindow::HandleProtocolMessage(LPCWSTR Url)
         SwitchToCategoryByStringId(IDS_AVAILABLEFORINST); // Update the tree selection
         UpdateApplicationsList(ENUM_ALL_AVAILABLE); // Filter by search term
         m_ApplicationView->SelectItem(NULL); // Select the first list item found
+    }
+    if ((p = IsStrPrefixI(Url, L"category/")) != NULL)
+    {
+        for (int i = CATSTRINGID_FIRST; i <= CATSTRINGID_LAST; ++i)
+        {
+            WCHAR buf[100];
+            // Match the canonical English name or the id from the manifests
+            if ((LoadLangidString(hInst, i, MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), buf, _countof(buf)) && !_wcsicmp(buf, p)) ||
+                (wcstol(p, NULL, 10) == i - CATSTRINGID_FIRST + 1))
+            {
+                m_ApplicationView->SetSearchText(L"");
+                SwitchToCategoryByStringId(i);
+            }
+        }
     }
     if ((p = IsStrPrefixI(Url, L"arp")) != NULL && (!*p || *p == '/'))
     {

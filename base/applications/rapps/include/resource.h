@@ -172,23 +172,25 @@
 #define IDS_AINFO_PACKAGE_NAME       361
 
 
-/* Names of categories */
-#define IDS_CAT_AUDIO            700
-#define IDS_CAT_DEVEL            701
-#define IDS_CAT_DRIVERS          702
-#define IDS_CAT_EDU              703
-#define IDS_CAT_ENGINEER         704
-#define IDS_CAT_FINANCE          705
-#define IDS_CAT_GAMES            706
-#define IDS_CAT_GRAPHICS         707
-#define IDS_CAT_INTERNET         708
-#define IDS_CAT_LIBS             709
-#define IDS_CAT_OFFICE           710
-#define IDS_CAT_OTHER            711
-#define IDS_CAT_SCIENCE          712
-#define IDS_CAT_TOOLS            713
-#define IDS_CAT_VIDEO            714
+/* Names of categories (must match the manifest order) */
+#define IDS_CAT_AUDIO            701
+#define IDS_CAT_VIDEO            702
+#define IDS_CAT_GRAPHICS         703
+#define IDS_CAT_GAMES            704
+#define IDS_CAT_INTERNET         705
+#define IDS_CAT_OFFICE           706
+#define IDS_CAT_DEVEL            707
+#define IDS_CAT_EDU              708
+#define IDS_CAT_ENGINEER         709
+#define IDS_CAT_FINANCE          710
+#define IDS_CAT_SCIENCE          711
+#define IDS_CAT_TOOLS            712
+#define IDS_CAT_DRIVERS          713
+#define IDS_CAT_LIBS             714
 #define IDS_CAT_THEMES           715
+#define IDS_CAT_OTHER            716
+#define CATSTRINGID_FIRST IDS_CAT_AUDIO
+#define CATSTRINGID_LAST IDS_CAT_OTHER
 
 /* App installation status */
 #define IDS_STATUS_INSTALLED          800

@@ -317,7 +317,7 @@ static unsigned int CALLBACK
 RunGuiThread(void *nCmdShow)
 {
     WCHAR fakecmdline[] = L"://";
-    return ParseCmdAndExecute(fakecmdline, PCAEF_WINDOWONLY, (UINT)(SIZE_T)nCmdShow);
+    return ParseCmdAndExecute(fakecmdline, PCAEF_WINDOWONLY, PtrToInt(nCmdShow));
 }
 
 static BOOL
@@ -333,15 +333,16 @@ HandleProtocolCommand(CAppDB &db, LPWSTR Url, int nCmdShow)
         return HandleInstallCommand(&db, Url, 1, &p);
     }
 
-    HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, RunGuiThread, (void*)(SIZE_T)nCmdShow, 0, NULL);
+    HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, RunGuiThread, IntToPtr(nCmdShow), 0, NULL);
     if (hThread)
     {
         HWND hWindow;
-        for (UINT timeout = 1000 * 5, interval = 250, i = 0; i < timeout; Sleep(interval), i += interval)
+        for (UINT timeout = 1000 * 5, interval = 250, i = 0; i < timeout; i += interval)
         {
             hWindow = FindWindowW(szWindowClass, NULL);
             if (IsWindowVisible(hWindow))
                 break;
+            Sleep(interval);
         }
         if (hWindow)
         {
@@ -349,7 +350,7 @@ HandleProtocolCommand(CAppDB &db, LPWSTR Url, int nCmdShow)
             COPYDATASTRUCT cds = { COPYDATA_PROTOCOLHANDLER, UINT((wcslen(Url) + 1) * sizeof(*Url)), (void*)Url };
             SendMessageW(hWindow, WM_COPYDATA, 0, (LPARAM)&cds);
         }
-        WaitForSingleObject(hThread, INFINITE); // We are the WinMain thread but not the UI thread, we have to wait here util the UI is done.
+        WaitForSingleObject(hThread, INFINITE); // We are the WinMain thread, not the UI one, so we have to wait here until the UI is done.
         CloseHandle(hThread);
     }
     return TRUE;
