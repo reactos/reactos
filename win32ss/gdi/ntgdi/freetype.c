@@ -83,7 +83,7 @@ SZZ_GetSize(_In_ PCZZWSTR pszz)
     return ret * sizeof(WCHAR);
 }
 
-static NTSTATUS
+static inline NTSTATUS
 FontLink_LoadSettings(VOID)
 {
     NTSTATUS Status;
@@ -170,7 +170,7 @@ FontLink_AddCache(
     }
 }
 
-static VOID
+static inline VOID
 IntRebaseList(
     _Inout_ PLIST_ENTRY pNewHead,
     _Inout_ PLIST_ENTRY pOldHead)
@@ -187,20 +187,20 @@ IntRebaseList(
     }
 }
 
-/// Add the chain to the cache (g_FontLinkCache) if the chain was populated.
+/// Add the chain to the cache (g_FontLinkCache) if the chain had been populated.
 /// @param pChain The chain.
-static VOID
+static inline VOID
 FontLink_Chain_Finish(
     _Inout_ PFONTLINK_CHAIN pChain)
 {
     PFONTLINK_CACHE pCache;
 
-    if (!FontLink_Chain_IsPopulated(pChain)) // The chain is not populated yet
-        return;
+    if (!FontLink_Chain_IsPopulated(pChain))
+        return; // The chain is not populated yet
 
     pCache = ExAllocatePoolWithTag(PagedPool, sizeof(FONTLINK_CACHE), TAG_FONT);
     if (!pCache)
-        return;
+        return; // Out of memory
 
     pCache->LogFont = pChain->LogFont;
     pCache->Chain = *pChain;
@@ -209,7 +209,7 @@ FontLink_Chain_Finish(
     FontLink_AddCache(pCache);
 }
 
-static PFONTLINK_CACHE
+static inline PFONTLINK_CACHE
 FontLink_FindCache(
     _In_ const LOGFONTW* pLogFont)
 {
@@ -224,11 +224,12 @@ FontLink_FindCache(
     return NULL;
 }
 
-static VOID
+static inline VOID
 FontLink_CleanupCache(VOID)
 {
     PLIST_ENTRY Entry;
     PFONTLINK_CACHE pLinkCache;
+
     while (!IsListEmpty(&g_FontLinkCache))
     {
         Entry = RemoveHeadList(&g_FontLinkCache);
@@ -1261,7 +1262,7 @@ FontLink_Chain_LoadReg(
 
     if ((Status == STATUS_BUFFER_OVERFLOW) || (Status == STATUS_BUFFER_TOO_SMALL))
     {
-        // Buffer is too small. Retry RegQueryValue with larger buffer
+        // Buffer is too small. Retry with larger buffer
         if (cbData >= 2 * sizeof(WCHAR)) // Sanity check
         {
             FontLinkSize = cbData;
@@ -1284,6 +1285,7 @@ FontLink_Chain_LoadReg(
 
     if (!NT_SUCCESS(Status)) // Failed to get registry value
     {
+        // Use default value
         ASSERT(sizeof(szzFontLink) >= sizeof(s_szzDefFontLink));
         ASSERT(sizeof(szzFontLink) >= sizeof(s_szzDefFixedFontLink));
         if (!(pLF->lfPitchAndFamily & FIXED_PITCH))
@@ -1316,7 +1318,7 @@ FontLink_Chain_LoadReg(
     return STATUS_SUCCESS;
 }
 
-static BOOL
+static inline PFONTLINK
 FontLink_Chain_FindLink(
     PFONTLINK_CHAIN pChain,
     PLOGFONTW plf)
@@ -1328,19 +1330,19 @@ FontLink_Chain_FindLink(
     {
         pLink = CONTAINING_RECORD(Entry, FONTLINK, ListEntry);
         if (RtlEqualMemory(&pLink->LogFont, plf, sizeof(*plf)))
-            return TRUE;
+            return pLink;
     }
 
-    return FALSE;
+    return NULL;
 }
 
-static PFONTLINK
+static inline PFONTLINK
 FontLink_Create(
     _Inout_ PFONTLINK_CHAIN pChain,
     _In_ const LOGFONTW *plfBase,
     _In_ LPCWSTR pszLink)
 {
-    LPWSTR pch1, pch2;
+    LPWSTR pch0, pch1;
     LOGFONTW lf;
     PFONTLINK pLink;
 
@@ -1348,19 +1350,19 @@ FontLink_Create(
     lf.lfCharSet = DEFAULT_CHARSET;
 
     // pszLink: "<FontFileName>,<FaceName>[,...]"
-    pch1 = wcschr(pszLink, L',');
-    if (!pch1)
+    pch0 = wcschr(pszLink, L',');
+    if (!pch0)
     {
         DPRINT1("%S\n", pszLink);
-        return NULL; // Invalid FontLink
+        return NULL; // Invalid FontLink data
     }
-    ++pch1;
+    ++pch0;
 
-    pch2 = wcschr(pch1, L',');
-    if (pch2)
-        RtlStringCchCopyNW(lf.lfFaceName, _countof(lf.lfFaceName), pch1, pch2 - pch1);
+    pch1 = wcschr(pch0, L',');
+    if (pch1)
+        RtlStringCchCopyNW(lf.lfFaceName, _countof(lf.lfFaceName), pch0, pch1 - pch0);
     else
-        RtlStringCchCopyW(lf.lfFaceName, _countof(lf.lfFaceName), pch1);
+        RtlStringCchCopyW(lf.lfFaceName, _countof(lf.lfFaceName), pch0);
 
     SubstituteFontRecurse(&lf);
     DPRINT("lfFaceName: %S\n", lf.lfFaceName);
@@ -1388,8 +1390,6 @@ FontLink_Chain_Populate(
     PWSTR pszLink;
     PFONTLINK_CACHE pLinkCache;
 
-    ASSERT(pTextObj->TextFace[0]);
-
     InitializeListHead(&pChain->FontLinkList);
 
     lfBase = pTextObj->logfont.elfEnumLogfontEx.elfLogFont;
@@ -1397,12 +1397,15 @@ FontLink_Chain_Populate(
     lfBase.lfHeight = pFontGDI->lfHeight;
     lfBase.lfWidth = pFontGDI->lfWidth;
 
-    // lfBase.lfFaceName <-- pTextObj->TextFace (if lfFaceName was empty)
+    // Use pTextObj->TextFace if lfFaceName was empty
     if (!lfBase.lfFaceName[0])
+    {
+        ASSERT(pTextObj->TextFace[0]);
         RtlStringCchCopyW(lfBase.lfFaceName, _countof(lfBase.lfFaceName), pTextObj->TextFace);
+    }
 
     pLinkCache = FontLink_FindCache(&lfBase);
-    if (pLinkCache) // Use cache if any cache
+    if (pLinkCache) // Use cache if any
     {
         RemoveEntryList(&pLinkCache->ListEntry);
         *pChain = pLinkCache->Chain;
