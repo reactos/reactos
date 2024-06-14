@@ -40,19 +40,16 @@ typedef struct _FONTLINK
     LIST_ENTRY ListEntry; //< Entry in the FONTLINK_CHAIN::FontLinkList
     BOOL bIgnore;
     LOGFONTW LogFont;
-    PFONTGDI pFontGDI;
     PSHARED_FACE SharedFace;
 } FONTLINK, *PFONTLINK;
 
 typedef struct _FONTLINK_CHAIN
 {
     LIST_ENTRY FontLinkList; //< List of FONTLINK's
-    WCHAR szFaceName[LF_FACESIZE];
     LOGFONTW LogFont;
     PZZWSTR pszzFontLink;
     PTEXTOBJ pBaseTextObj;
     FT_Face pDefFace;
-    PDC dc;
 } FONTLINK_CHAIN, *PFONTLINK_CHAIN;
 
 typedef struct _FONTLINK_CACHE
@@ -93,21 +90,23 @@ FontLink_LoadSettings(VOID)
     HKEY hKey;
     DWORD cbData, dwValue;
 
+    // Set the default values
     s_nFontLinkControl = 0;
     s_chFontLinkDefaultChar = FONTLINK_DEFAULT_CHAR;
 
+    // Open the registry key
     Status = RegOpenKey(
         L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\FontLink",
         &hKey);
     if (!NT_SUCCESS(Status))
         return Status;
 
-    cbData = sizeof(s_nFontLinkControl);
+    cbData = sizeof(dwValue);
     Status = RegQueryValue(hKey, L"FontLinkControl", REG_DWORD, &dwValue, &cbData);
     if (NT_SUCCESS(Status) && cbData == sizeof(dwValue))
         s_nFontLinkControl = dwValue;
 
-    cbData = sizeof(s_chFontLinkDefaultChar);
+    cbData = sizeof(dwValue);
     Status = RegQueryValue(hKey, L"FontLinkDefaultChar", REG_DWORD, &dwValue, &cbData);
     if (NT_SUCCESS(Status) && cbData == sizeof(dwValue))
         s_chFontLinkDefaultChar = dwValue;
@@ -116,11 +115,17 @@ FontLink_LoadSettings(VOID)
     return STATUS_SUCCESS;
 }
 
-static VOID
+static inline VOID
 FontLink_Destroy(_Inout_ PFONTLINK pLink)
 {
     ASSERT(pLink);
     ExFreePoolWithTag(pLink, TAG_FONT);
+}
+
+static inline BOOL
+FontLink_Chain_IsPopulated(const FONTLINK_CHAIN *pChain)
+{
+    return pChain->LogFont.lfFaceName[0];
 }
 
 static VOID
@@ -130,7 +135,7 @@ FontLink_Chain_Free(
     PLIST_ENTRY Entry;
     PFONTLINK pLink;
 
-    if (!pChain->szFaceName[0]) // Not populated yet
+    if (!FontLink_Chain_IsPopulated(pChain)) // The chain is not populated yet
         return;
 
     ExFreePoolWithTag(pChain->pszzFontLink, TAG_FONT);
@@ -190,7 +195,7 @@ FontLink_Chain_Finish(
 {
     PFONTLINK_CACHE pCache;
 
-    if (!pChain->szFaceName[0]) // Not populated yet
+    if (!FontLink_Chain_IsPopulated(pChain)) // The chain is not populated yet
         return;
 
     pCache = ExAllocatePoolWithTag(PagedPool, sizeof(FONTLINK_CACHE), TAG_FONT);
@@ -418,6 +423,7 @@ FontLink_PrepareFontInfo(
     ULONG MatchPenalty;
     UNICODE_STRING FaceName;
     PPROCESSINFO Win32Process;
+    PFONTGDI pFontGDI;
 
     ASSERT_FREETYPE_LOCK_HELD();
 
@@ -445,8 +451,8 @@ FontLink_PrepareFontInfo(
         return FALSE;
     }
 
-    pFontLink->pFontGDI = ObjToGDI(pFontObj, FONT);
-    pFontLink->SharedFace = pFontLink->pFontGDI->SharedFace;
+    pFontGDI = ObjToGDI(pFontObj, FONT);
+    pFontLink->SharedFace = pFontGDI->SharedFace;
 
     // FontLink uses English family name
     RtlInitUnicodeString(&FaceName, pFontLink->LogFont.lfFaceName);
@@ -1190,19 +1196,20 @@ SubstituteFontRecurse(PLOGFONTW pLogFont)
     return TRUE;    /* success */
 }
 
+// Quickly initialize a FONTLINK_CHAIN
 static inline VOID
 FontLink_Chain_Init(
     _Out_ PFONTLINK_CHAIN pChain,
     _Inout_ PTEXTOBJ pTextObj,
-    _In_ FT_Face face,
-    _In_ PDC dc)
+    _In_ FT_Face face)
 {
     RtlZeroMemory(pChain, sizeof(*pChain));
     pChain->pBaseTextObj = pTextObj;
     pChain->pDefFace = face;
-    pChain->dc = dc;
+    ASSERT(!FontLink_Chain_IsPopulated(pChain));
 }
 
+// The default FontLink data
 static const WCHAR s_szzDefFontLink[] =
     L"tahoma.ttf,Tahoma\0"
     L"msgothic.ttc,MS UI Gothic\0"
@@ -1210,7 +1217,8 @@ static const WCHAR s_szzDefFontLink[] =
     L"simsun.ttc,SimSun\0"
     L"gulim.ttc,Gulim\0"
     L"\0";
-static const WCHAR s_szzDefFixedPitchFontLink[] =
+// The fixed-pitch FontLink data
+static const WCHAR s_szzDefFixedFontLink[] =
     L"cour.ttf,Courier New\0"
     L"msgothic.ttc,MS Gothic\0"
     L"mingliu.ttc,MingLiU\0"
@@ -1230,26 +1238,28 @@ FontLink_Chain_LoadReg(
     SIZE_T FontLinkSize;
     PZZWSTR pszzFontLink = NULL;
 
-    // Open registry key
+    ASSERT(pLF->lfFaceName[0]);
+
+    // Open the registry key
     Status = RegOpenKey(
         L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\FontLink\\SystemLink",
         &hKey);
     if (!NT_SUCCESS(Status))
         return Status;
 
-    SubstituteFontRecurse(pLF);
-
     // Load the FontLink entry
     cbData = sizeof(szzFontLink);
     Status = RegQueryValue(hKey, pLF->lfFaceName, REG_MULTI_SZ, szzFontLink, &cbData);
-
-    if (NT_SUCCESS(Status)) // Found
+    if (!NT_SUCCESS(Status) &&
+        (Status != STATUS_BUFFER_OVERFLOW) && (Status != STATUS_BUFFER_TOO_SMALL))
     {
-        // Ensure double-NUL-terminated
-        szzFontLink[_countof(szzFontLink) - 1] = UNICODE_NULL;
-        szzFontLink[_countof(szzFontLink) - 2] = UNICODE_NULL;
+        // Retry with substituted
+        SubstituteFontRecurse(pLF);
+        cbData = sizeof(szzFontLink);
+        Status = RegQueryValue(hKey, pLF->lfFaceName, REG_MULTI_SZ, szzFontLink, &cbData);
     }
-    else if ((Status == STATUS_BUFFER_OVERFLOW) || (Status == STATUS_BUFFER_TOO_SMALL))
+
+    if ((Status == STATUS_BUFFER_OVERFLOW) || (Status == STATUS_BUFFER_TOO_SMALL))
     {
         // Buffer is too small. Retry RegQueryValue with larger buffer
         if (cbData >= 2 * sizeof(WCHAR)) // Sanity check
@@ -1262,36 +1272,45 @@ FontLink_Chain_LoadReg(
                 return STATUS_NO_MEMORY;
             }
             Status = RegQueryValue(hKey, pLF->lfFaceName, REG_MULTI_SZ, pszzFontLink, &cbData);
-
-            // Ensure double-NUL-terminated
-            pszzFontLink[FontLinkSize / sizeof(WCHAR) - 1] = UNICODE_NULL;
-            pszzFontLink[FontLinkSize / sizeof(WCHAR) - 2] = UNICODE_NULL;
+            if (!NT_SUCCESS(Status))
+            {
+                ExFreePoolWithTag(pszzFontLink, TAG_FONT);
+                pszzFontLink = NULL;
+            }
         }
     }
 
     ZwClose(hKey); // Close the registry key
 
-    RtlStringCchCopyW(pChain->szFaceName, _countof(pChain->szFaceName), pLF->lfFaceName);
-
     if (!NT_SUCCESS(Status)) // Failed to get registry value
     {
         ASSERT(sizeof(szzFontLink) >= sizeof(s_szzDefFontLink));
-        ASSERT(sizeof(szzFontLink) >= sizeof(s_szzDefFixedPitchFontLink));
+        ASSERT(sizeof(szzFontLink) >= sizeof(s_szzDefFixedFontLink));
         if (!(pLF->lfPitchAndFamily & FIXED_PITCH))
             RtlCopyMemory(szzFontLink, s_szzDefFontLink, sizeof(s_szzDefFontLink));
         else
-            RtlCopyMemory(szzFontLink, s_szzDefFixedPitchFontLink, sizeof(s_szzDefFixedPitchFontLink));
+            RtlCopyMemory(szzFontLink, s_szzDefFixedFontLink, sizeof(s_szzDefFixedFontLink));
     }
 
-    if (!pszzFontLink)
+    if (pszzFontLink)
     {
+        // Ensure double-NUL-terminated
+        ASSERT(FontLinkSize / sizeof(WCHAR) >= 2);
+        pszzFontLink[FontLinkSize / sizeof(WCHAR) - 1] = UNICODE_NULL;
+        pszzFontLink[FontLinkSize / sizeof(WCHAR) - 2] = UNICODE_NULL;
+    }
+    else
+    {
+        // Ensure double-NUL-terminated
+        szzFontLink[_countof(szzFontLink) - 1] = UNICODE_NULL;
+        szzFontLink[_countof(szzFontLink) - 2] = UNICODE_NULL;
+
         FontLinkSize = SZZ_GetSize(szzFontLink);
         pszzFontLink = ExAllocatePoolWithTag(PagedPool, FontLinkSize, TAG_FONT);
         if (!pszzFontLink)
             return STATUS_NO_MEMORY;
         RtlCopyMemory(pszzFontLink, szzFontLink, FontLinkSize);
     }
-
     pChain->pszzFontLink = pszzFontLink;
 
     return STATUS_SUCCESS;
@@ -1395,7 +1414,7 @@ FontLink_Chain_Populate(
     pChain->LogFont = lfBase;
 
     // Load FontLink entry from registry
-    Status = FontLink_Chain_LoadReg(pChain, &lfBase);
+    Status = FontLink_Chain_LoadReg(pChain, &pChain->LogFont);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -1409,6 +1428,7 @@ FontLink_Chain_Populate(
         pszLink += wcslen(pszLink) + 1;
     }
 
+    ASSERT(FontLink_Chain_IsPopulated(pChain));
     return Status;
 }
 
@@ -4208,7 +4228,7 @@ FontLink_Chain_Dump(
     PFONTLINK pFontLink;
     INT iLink = 0;
 
-    DPRINT1("%S, %p, %p\n", pChain->szFaceName, pChain->pBaseTextObj, pChain->pDefFace);
+    DPRINT1("%S, %p, %p\n", pChain->LogFont.lfFaceName, pChain->pBaseTextObj, pChain->pDefFace);
 
     Head = &pChain->FontLinkList;
     for (Entry = Head->Flink; Entry != Head; Entry = Entry->Flink)
@@ -4246,7 +4266,7 @@ FontLink_Chain_FindGlyph(
         return index; // The glyph is found on the default font
     }
 
-    if (!pChain->szFaceName[0]) // The chain is not populated yet
+    if (!FontLink_Chain_IsPopulated(pChain)) // The chain is not populated yet
     {
         FontLink_Chain_Populate(pChain);
         FontLink_Chain_Dump(pChain);
@@ -4857,7 +4877,7 @@ TextIntGetTextExtentPoint(PDC dc,
     Cache.Hashed.matTransform = identityMat;
     FT_Set_Transform(Cache.Hashed.Face, NULL, NULL);
 
-    FontLink_Chain_Init(&Chain, TextObj, Cache.Hashed.Face, dc);
+    FontLink_Chain_Init(&Chain, TextObj, Cache.Hashed.Face);
 
     use_kerning = FT_HAS_KERNING(Cache.Hashed.Face);
     previous = 0;
@@ -6763,7 +6783,7 @@ IntExtTextOutW(
         goto Cleanup;
     }
 
-    FontLink_Chain_Init(&Chain, TextObj, face, dc);
+    FontLink_Chain_Init(&Chain, TextObj, face);
 
     /* Apply lfEscapement */
     if (FT_IS_SCALABLE(face) && plf->lfEscapement != 0)
