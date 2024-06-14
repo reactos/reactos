@@ -109,16 +109,13 @@ UnixTimeToFileTime(DWORD dwUnixTime, LPFILETIME pFileTime);
 BOOL
 SearchPatternMatch(LPCWSTR szHaystack, LPCWSTR szNeedle);
 
-<<<<<<< HEAD
-BOOL
-IsSameRegKey(HKEY hRoot, LPCWSTR Path1, REGSAM Sam1, LPCWSTR Path2, REGSAM Sam2);
-=======
 template<size_t N, class T> T IsStrPrefixI(T Str, const WCHAR (&Pre)[N])
 {
     return StrCmpNIW(Str, Pre, N - 1) ? NULL : Str + N - 1;
 }
 
->>>>>>> 77f5f6c818c ([RAPPS][BOOTDATA] Implement the rapps:// protocol)
+BOOL
+IsSameRegKey(HKEY hRoot, LPCWSTR Path1, REGSAM Sam1, LPCWSTR Path2, REGSAM Sam2);
 HRESULT
 RegKeyHasValues(HKEY hKey, LPCWSTR Path, REGSAM wowsam = 0);
 LPCWSTR
