@@ -225,15 +225,14 @@ MountMgrFreeDeadDeviceInfo(
 
 NTSTATUS
 QueryDeviceInformation(
-    IN PUNICODE_STRING SymbolicName,
-    OUT PUNICODE_STRING DeviceName OPTIONAL,
-    OUT PMOUNTDEV_UNIQUE_ID * UniqueId OPTIONAL,
-    OUT PBOOLEAN Removable OPTIONAL,
-    OUT PBOOLEAN GptDriveLetter OPTIONAL,
-    OUT PBOOLEAN HasGuid OPTIONAL,
-    IN OUT LPGUID StableGuid OPTIONAL,
-    OUT PBOOLEAN Valid OPTIONAL
-);
+    _In_ PUNICODE_STRING SymbolicName,
+    _Out_opt_ PUNICODE_STRING DeviceName,
+    _Out_opt_ PMOUNTDEV_UNIQUE_ID* UniqueId,
+    _Out_opt_ PBOOLEAN Removable,
+    _Out_opt_ PBOOLEAN GptDriveLetter,
+    _Out_opt_ PBOOLEAN HasGuid,
+    _Inout_opt_ LPGUID StableGuid,
+    _Out_opt_ PBOOLEAN IsFT);
 
 BOOLEAN
 HasDriveLetter(
