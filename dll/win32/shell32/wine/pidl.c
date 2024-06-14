@@ -1899,7 +1899,7 @@ DWORD _ILGetDrive(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uSize)
         pidl = ILGetNext(pidl);
 
     if (pidl && _ILIsDrive(pidl))
-        return _ILSimpleGetText(pidl, pOut, uSize);
+        return _ILSimpleGetTextW(pidl, pOut, uSize);
 
     return 0;
 }
@@ -2071,13 +2071,13 @@ BOOL _ILIsPidlSimple(LPCITEMIDLIST pidl)
  *
  * returns the length of the string
  */
-DWORD _ILSimpleGetText(LPCITEMIDLIST pidl, LPWSTR szOut, UINT uOutSize)
+DWORD _ILSimpleGetText(LPCITEMIDLIST pidl, LPSTR szOut, UINT uOutSize)
 {
     DWORD        dwReturn=0;
     LPSTR        szSrc;
     LPWSTR       szSrcW;
     GUID const * riid;
-    WCHAR szTemp[MAX_PATH];
+    CHAR szTemp[MAX_PATH];
 
     TRACE("(%p %p %x)\n",pidl,szOut,uOutSize);
 
@@ -2090,39 +2090,36 @@ DWORD _ILSimpleGetText(LPCITEMIDLIST pidl, LPWSTR szOut, UINT uOutSize)
     if (_ILIsDesktop(pidl))
     {
         /* desktop */
-        if (HCR_GetClassNameW(&CLSID_ShellDesktop, szTemp, _countof(szTemp)))
+        if (HCR_GetClassNameA(&CLSID_ShellDesktop, szTemp, _countof(szTemp)))
         {
             if (szOut)
-                lstrcpynW(szOut, szTemp, uOutSize);
+                lstrcpynA(szOut, szTemp, uOutSize);
 
-            dwReturn = lstrlenW(szTemp);
+            dwReturn = lstrlenA(szTemp);
         }
     }
     else if ((szSrc = _ILGetTextPointer(pidl)))
     {
         /* filesystem */
-        MultiByteToWideChar(CP_ACP, 0, szSrc, -1, szTemp, _countof(szTemp));
-        szTemp[_countof(szTemp) - 1] = UNICODE_NULL;
         if (szOut)
-            lstrcpynW(szOut, szTemp, uOutSize);
-        dwReturn = lstrlenW(szTemp);
+            lstrcpynA(szOut, szSrc, uOutSize);
+        dwReturn = lstrlenA(szSrc);
     }
     else if ((szSrcW = _ILGetTextPointerW(pidl)))
     {
+        WideCharToMultiByte(CP_ACP, 0, szSrcW, -1, szTemp, _countof(szTemp), NULL, NULL);
         if (szOut)
-            lstrcpynW(szOut, szSrcW, uOutSize);
-
-        dwReturn = lstrlenW(szSrcW);
+            lstrcpynA(szOut, szTemp, uOutSize);
+        dwReturn = lstrlenA(szTemp);
     }
     else if (( riid = _ILGetGUIDPointer(pidl) ))
     {
         /* special folder */
-        if (HCR_GetClassNameW(riid, szTemp, _countof(szTemp)))
+        if (HCR_GetClassNameA(riid, szTemp, _countof(szTemp)))
         {
             if (szOut)
-                lstrcpynW(szOut, szTemp, uOutSize);
-
-            dwReturn = lstrlenW(szTemp);
+                lstrcpynA(szOut, szTemp, uOutSize);
+            dwReturn = lstrlenA(szTemp);
         }
     }
     else
@@ -2130,7 +2127,7 @@ DWORD _ILSimpleGetText(LPCITEMIDLIST pidl, LPWSTR szOut, UINT uOutSize)
         ERR("-- no text\n");
     }
 
-    TRACE("-- (%p=%s 0x%08x)\n", szOut, debugstr_w(szOut), dwReturn);
+    TRACE("-- (%p=%s 0x%08x)\n", szOut, debugstr_a(szOut), dwReturn);
     return dwReturn;
 }
 
@@ -2536,7 +2533,7 @@ BOOL _ILGetExtension(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize)
 
     if (!_ILIsValue(pidlTemp))
         return FALSE;
-    if (!_ILSimpleGetText(pidlTemp, szTemp, _countof(szTemp)))
+    if (!_ILSimpleGetTextW(pidlTemp, szTemp, _countof(szTemp)))
         return FALSE;
 
     pPoint = PathFindExtensionW(szTemp);

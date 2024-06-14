@@ -218,7 +218,7 @@ typedef struct tagPIDLDATA
 /*
  * getting special values from simple pidls
  */
-DWORD   _ILSimpleGetText    (LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize) DECLSPEC_HIDDEN;
+DWORD   _ILSimpleGetText    (LPCITEMIDLIST pidl, LPSTR  pOut, UINT uOutSize) DECLSPEC_HIDDEN;
 DWORD   _ILSimpleGetTextW   (LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize) DECLSPEC_HIDDEN;
 BOOL    _ILGetFileDate      (LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize) DECLSPEC_HIDDEN;
 DWORD   _ILGetFileSize      (LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize) DECLSPEC_HIDDEN;
