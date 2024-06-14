@@ -37,7 +37,7 @@ CopyTextToClipboard(LPCWSTR lpszText)
     HRESULT hr;
     HGLOBAL ClipBuffer;
     LPWSTR Buffer;
-    DWORD cchBuffer;
+    SIZE_T cchBuffer;
 
     EmptyClipboard();
     cchBuffer = wcslen(lpszText) + 1;
