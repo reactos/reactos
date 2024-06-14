@@ -2103,6 +2103,7 @@ DWORD _ILSimpleGetText (LPCITEMIDLIST pidl, LPSTR szOut, UINT uOutSize)
         /* filesystem */
         if (szOut)
             lstrcpynA(szOut, szSrc, uOutSize);
+
         dwReturn = lstrlenA(szSrc);
     }
     else if ((szSrcW = _ILGetTextPointerW(pidl)))
@@ -2111,6 +2112,7 @@ DWORD _ILSimpleGetText (LPCITEMIDLIST pidl, LPSTR szOut, UINT uOutSize)
         WideCharToMultiByte(CP_ACP, 0, szSrcW, -1, szTemp, _countof(szTemp), NULL, NULL);
         if (szOut)
             lstrcpynA(szOut, szTemp, uOutSize);
+
         dwReturn = lstrlenA(szTemp);
     }
     else if (( riid = _ILGetGUIDPointer(pidl) ))
@@ -2120,6 +2122,7 @@ DWORD _ILSimpleGetText (LPCITEMIDLIST pidl, LPSTR szOut, UINT uOutSize)
         {
             if (szOut)
                 lstrcpynA(szOut, szTemp, uOutSize);
+
             dwReturn = lstrlenA(szTemp);
         }
     }
@@ -2128,7 +2131,7 @@ DWORD _ILSimpleGetText (LPCITEMIDLIST pidl, LPSTR szOut, UINT uOutSize)
         ERR("-- no text\n");
     }
 
-    TRACE("-- (%p=%s 0x%08x)\n", szOut, debugstr_a(szOut), dwReturn);
+    TRACE("-- (%p=%s 0x%08x)\n",szOut,debugstr_a(szOut),dwReturn);
     return dwReturn;
 }
 
@@ -2569,9 +2572,9 @@ void _ILGetFileType(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize)
 {
     WCHAR sType[64], sTemp[64];
 
-    if (_ILIsValue(pidl))
+    if(_ILIsValue(pidl))
     {
-        if (uOutSize > 0)
+        if(uOutSize > 0)
             pOut[0] = 0;
         if (_ILGetExtension(pidl, sType, _countof(sType)))
         {
