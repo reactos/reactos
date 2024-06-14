@@ -4225,7 +4225,7 @@ FontLink_Chain_Dump(
 /// Search the target glyph and update the current font info.
 /// @return The glyph index
 static UINT
-FontLink_Chain_Next(
+FontLink_Chain_FindGlyph(
     _Inout_ PFONTLINK_CHAIN pChain,
     _Out_ PFONT_CACHE_ENTRY pCache,
     _Inout_ FT_Face *pFace,
@@ -4876,8 +4876,8 @@ TextIntGetTextExtentPoint(PDC dc,
                 ch0 = Utf32FromSurrogatePair(ch0, ch1);
         }
 
-        glyph_index = FontLink_Chain_Next(&Chain, &Cache, &Cache.Hashed.Face, ch0,
-                                          (fl & GTEF_INDICES));
+        glyph_index = FontLink_Chain_FindGlyph(&Chain, &Cache, &Cache.Hashed.Face, ch0,
+                                               (fl & GTEF_INDICES));
         Cache.Hashed.GlyphIndex = glyph_index;
 
         realglyph = IntGetRealGlyph(&Cache);
@@ -6474,7 +6474,8 @@ IntGetTextDisposition(
                 ch0 = Utf32FromSurrogatePair(ch0, ch1);
         }
 
-        glyph_index = FontLink_Chain_Next(pChain, Cache, &face, ch0, (fuOptions & ETO_GLYPH_INDEX));
+        glyph_index = FontLink_Chain_FindGlyph(pChain, Cache, &face, ch0,
+                                               (fuOptions & ETO_GLYPH_INDEX));
         Cache->Hashed.GlyphIndex = glyph_index;
 
         realglyph = IntGetRealGlyph(Cache);
@@ -6887,7 +6888,8 @@ IntExtTextOutW(
                 ch0 = Utf32FromSurrogatePair(ch0, ch1);
         }
 
-        glyph_index = FontLink_Chain_Next(&Chain, &Cache, &face, ch0, (fuOptions & ETO_GLYPH_INDEX));
+        glyph_index = FontLink_Chain_FindGlyph(&Chain, &Cache, &face, ch0,
+                                               (fuOptions & ETO_GLYPH_INDEX));
         Cache.Hashed.GlyphIndex = glyph_index;
 
         realglyph = IntGetRealGlyph(&Cache);
