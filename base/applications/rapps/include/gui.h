@@ -131,7 +131,7 @@ class CMainWindow : public CWindowImpl<CMainWindow, CWindow, CFrameWinTraits>
     BOOL
     InstallApplication(CAppInfo *Info);
     void
-    SetCategoryByStringId(WORD ResId);
+    SwitchToCategoryByStringId(WORD ResId);
 
     // this function is called when search text is changed
     BOOL

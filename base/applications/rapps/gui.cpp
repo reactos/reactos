@@ -776,7 +776,7 @@ CMainWindow::InstallApplication(CAppInfo *Info)
 }
 
 static BOOL CALLBACK
-SetCategoryWalker(HWND hTree, HTREEITEM hItem, LPARAM Cookie)
+SwitchToCategoryWalker(HWND hTree, HTREEITEM hItem, LPARAM Cookie)
 {
     CSideTreeView *m_TreeView = (CSideTreeView*)((SIZE_T*)Cookie)[0];
     if (m_TreeView->GetItemData(hItem) == ((SIZE_T*)Cookie)[1])
@@ -788,10 +788,10 @@ SetCategoryWalker(HWND hTree, HTREEITEM hItem, LPARAM Cookie)
 }
 
 void
-CMainWindow::SetCategoryByStringId(WORD ResId)
+CMainWindow::SwitchToCategoryByStringId(WORD ResId)
 {
     SIZE_T data[] = { (SIZE_T)const_cast<CSideTreeView*>(m_TreeView), ResId };
-    TreeView_Walk(m_TreeView->GetWindow(), SetCategoryWalker, (LPARAM)data);
+    TreeView_Walk(m_TreeView->GetWindow(), SwitchToCategoryWalker, (LPARAM)data);
 }
 
 BOOL
@@ -864,17 +864,17 @@ CMainWindow::HandleProtocolMessage(LPCWSTR Url)
     if ((p = IsStrPrefixI(Url, L"search/")) != NULL)
     {
         m_ApplicationView->SetSearchText(p);
-        g_IgnoreSearchTimer = true; // Prevent the timer from erasing our selection
+        g_IgnoreSearchTimer = true; // Prevent the timer from erasing our list selection
         m_ApplicationView->SetFocusOnSearchBar(MAKELONG(MAKEWORD(0, -1), MAKEWORD(-1, 0)));
-        SetCategoryByStringId(IDS_AVAILABLEFORINST); // Update the tree selection
+        SwitchToCategoryByStringId(IDS_AVAILABLEFORINST); // Update the tree selection
         UpdateApplicationsList(ENUM_ALL_AVAILABLE); // Filter by search term
-        m_ApplicationView->SelectItem(NULL); // Select the first item found
+        m_ApplicationView->SelectItem(NULL); // Select the first list item found
     }
     if ((p = IsStrPrefixI(Url, L"arp")) != NULL && (!*p || *p == '/'))
     {
         m_ApplicationView->SetSearchText(p + (*p == '/'));
         m_ApplicationView->SetFocusOnSearchBar(MAKELONG(MAKEWORD(0, -1), MAKEWORD(-1, 0)));
-        SetCategoryByStringId(IDS_INSTALLED);
+        SwitchToCategoryByStringId(IDS_INSTALLED);
     }
     return 0;
 }
