@@ -2064,78 +2064,7 @@ BOOL _ILIsPidlSimple(LPCITEMIDLIST pidl)
  *    ### 3. section getting values from pidls ###
  */
 
- /**************************************************************************
- *  _ILSimpleGetText
- *
- * gets the text for the first item in the pidl (eg. simple pidl)
- *
- * returns the length of the string
- */
-DWORD _ILSimpleGetText (LPCITEMIDLIST pidl, LPSTR szOut, UINT uOutSize)
-{
-    DWORD        dwReturn=0;
-    LPSTR        szSrc;
-    LPWSTR       szSrcW;
-    GUID const * riid;
-    char szTemp[MAX_PATH];
-
-    TRACE("(%p %p %x)\n",pidl,szOut,uOutSize);
-
-    if (!pidl)
-        return 0;
-
-    if (szOut)
-        *szOut = 0;
-
-    if (_ILIsDesktop(pidl))
-    {
-        /* desktop */
-        if (HCR_GetClassNameA(&CLSID_ShellDesktop, szTemp, _countof(szTemp)))
-        {
-            if (szOut)
-                lstrcpynA(szOut, szTemp, uOutSize);
-
-            dwReturn = lstrlenA(szTemp);
-        }
-    }
-    else if ((szSrc = _ILGetTextPointer(pidl)))
-    {
-        /* filesystem */
-        if (szOut)
-            lstrcpynA(szOut, szSrc, uOutSize);
-
-        dwReturn = lstrlenA(szSrc);
-    }
-    else if ((szSrcW = _ILGetTextPointerW(pidl)))
-    {
-        /* unicode filesystem */
-        WideCharToMultiByte(CP_ACP, 0, szSrcW, -1, szTemp, _countof(szTemp), NULL, NULL);
-        if (szOut)
-            lstrcpynA(szOut, szTemp, uOutSize);
-
-        dwReturn = lstrlenA(szTemp);
-    }
-    else if (( riid = _ILGetGUIDPointer(pidl) ))
-    {
-        /* special folder */
-        if (HCR_GetClassNameA(riid, szTemp, _countof(szTemp)))
-        {
-            if (szOut)
-                lstrcpynA(szOut, szTemp, uOutSize);
-
-            dwReturn = lstrlenA(szTemp);
-        }
-    }
-    else
-    {
-        ERR("-- no text\n");
-    }
-
-    TRACE("-- (%p=%s 0x%08x)\n",szOut,debugstr_a(szOut),dwReturn);
-    return dwReturn;
-}
-
- /**************************************************************************
+/**************************************************************************
  *  _ILSimpleGetTextW
  *
  * gets the text for the first item in the pidl (eg. simple pidl)
@@ -2524,10 +2453,9 @@ DWORD _ILGetFileSize(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize)
 
 BOOL _ILGetExtension(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize)
 {
-    CHAR szTempA[MAX_PATH];
-    WCHAR szTempW[MAX_PATH];
+    WCHAR szTemp[MAX_PATH];
     LPCWSTR pPoint;
-    LPCITEMIDLIST  pidlTemp=pidl;
+    LPCITEMIDLIST pidlTemp = pidl;
 
     TRACE("pidl=%p\n",pidl);
 
@@ -2538,12 +2466,10 @@ BOOL _ILGetExtension(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize)
 
     if (!_ILIsValue(pidlTemp))
         return FALSE;
-    if (!_ILSimpleGetText(pidlTemp, szTempA, _countof(szTempA)))
+    if (!_ILSimpleGetTextW(pidlTemp, szTemp, _countof(szTemp)))
         return FALSE;
 
-    MultiByteToWideChar(CP_ACP, 0, szTempA, -1, szTempW, _countof(szTempW));
-    szTempW[_countof(szTempW) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
-    pPoint = PathFindExtensionW(szTempW);
+    pPoint = PathFindExtensionW(szTemp);
 
     if (!*pPoint)
         return FALSE;
