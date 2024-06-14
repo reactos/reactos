@@ -2547,7 +2547,7 @@ BOOL _ILGetExtension(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize)
 
     pPoint++;
     lstrcpynW(pOut, pPoint, uOutSize);
-    TRACE("%s\n",pOut);
+    TRACE("%s\n", debugstr_w(pOut));
 
     return TRUE;
 }
