@@ -63,6 +63,12 @@ typedef struct _FONTLINK_CACHE
 
 static DWORD s_nFontLinkControl = 0; // FIXME: What to do?
 static DWORD s_chFontLinkDefaultChar = FONTLINK_DEFAULT_CHAR;
+static WCHAR s_szDefFontLinkFileName[MAX_PATH] = L"";
+static WCHAR s_szDefFontLinkFontName[MAX_PATH] = L"";
+static BOOL s_fFontLinkUseAnsi = FALSE;
+static BOOL s_fFontLinkUseOem = FALSE;
+static BOOL s_fFontLinkUseSymbol = FALSE;
+static BOOL s_fFontLinkUseGB2312 = FALSE;
 
 #define MAX_FONTLINK_CACHE 128
 static RTL_STATIC_LIST_HEAD(g_FontLinkCache); // The list of FONTLINK_CACHE
@@ -110,6 +116,98 @@ FontLink_LoadSettings(VOID)
     Status = RegQueryValue(hKey, L"FontLinkDefaultChar", REG_DWORD, &dwValue, &cbData);
     if (NT_SUCCESS(Status) && cbData == sizeof(dwValue))
         s_chFontLinkDefaultChar = dwValue;
+
+    ZwClose(hKey); // Close the registry key
+    return STATUS_SUCCESS;
+}
+
+static inline NTSTATUS
+FontLink_LoadDefaultFonts(VOID)
+{
+    NTSTATUS Status;
+    HKEY hKey;
+    DWORD cbData;
+    WCHAR szValue[MAX_PATH];
+
+    // Set the default values
+    s_szDefFontLinkFileName[0] = s_szDefFontLinkFontName[0] = UNICODE_NULL;
+
+    // Open the registry key
+    Status = RegOpenKey(
+        L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\FontAssoc\\Associated DefaultFonts",
+        &hKey);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    cbData = sizeof(szValue);
+    Status = RegQueryValue(hKey, L"AssocSystemFont", REG_SZ, szValue, &cbData);
+    if (NT_SUCCESS(Status))
+    {
+        szValue[_countof(szValue) - 1] = UNICODE_NULL; // Avoid buffer overrun
+        RtlStringCchCopyW(s_szDefFontLinkFileName, _countof(s_szDefFontLinkFileName), szValue);
+    }
+
+    cbData = sizeof(szValue);
+    Status = RegQueryValue(hKey, L"FontPackage", REG_SZ, szValue, &cbData);
+    if (NT_SUCCESS(Status))
+    {
+        szValue[_countof(szValue) - 1] = UNICODE_NULL; // Avoid buffer overrun
+        RtlStringCchCopyW(s_szDefFontLinkFontName, _countof(s_szDefFontLinkFontName), szValue);
+    }
+
+    ZwClose(hKey); // Close the registry key
+    return STATUS_SUCCESS;
+}
+
+static inline NTSTATUS
+FontLink_LoadDefaultCharset(VOID)
+{
+    NTSTATUS Status;
+    HKEY hKey;
+    DWORD cbData;
+    WCHAR szValue[8];
+
+    // Set the default values
+    s_fFontLinkUseAnsi = s_fFontLinkUseOem = s_fFontLinkUseSymbol = s_fFontLinkUseGB2312 = FALSE;
+
+    // Open the registry key
+    Status = RegOpenKey(
+        L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\FontAssoc\\Associated Charset",
+        &hKey);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    cbData = sizeof(szValue);
+    Status = RegQueryValue(hKey, L"ANSI(00)", REG_SZ, szValue, &cbData);
+    if (NT_SUCCESS(Status))
+    {
+        szValue[_countof(szValue) - 1] = UNICODE_NULL; // Avoid buffer overrun
+        s_fFontLinkUseAnsi = !_wcsicmp(szValue, L"YES");
+    }
+
+    cbData = sizeof(szValue);
+    Status = RegQueryValue(hKey, L"OEM(FF)", REG_SZ, szValue, &cbData);
+    if (NT_SUCCESS(Status))
+    {
+        szValue[_countof(szValue) - 1] = UNICODE_NULL; // Avoid buffer overrun
+        s_fFontLinkUseOem = !_wcsicmp(szValue, L"YES");
+    }
+
+    cbData = sizeof(szValue);
+    Status = RegQueryValue(hKey, L"SYMBOL(02)", REG_SZ, szValue, &cbData);
+    if (NT_SUCCESS(Status))
+    {
+        szValue[_countof(szValue) - 1] = UNICODE_NULL; // Avoid buffer overrun
+        s_fFontLinkUseSymbol = !_wcsicmp(szValue, L"YES");
+    }
+
+    cbData = sizeof(szValue);
+    Status = RegQueryValue(hKey, L"GB2312(86)", REG_SZ, szValue, &cbData);
+    if (NT_SUCCESS(Status))
+    {
+        szValue[_countof(szValue) - 1] = UNICODE_NULL; // Avoid buffer overrun
+        s_fFontLinkUseGB2312 = !_wcsicmp(szValue, L"YES");
+    }
 
     ZwClose(hKey); // Close the registry key
     return STATUS_SUCCESS;
@@ -455,9 +553,10 @@ FontLink_PrepareFontInfo(
     pFontGDI = ObjToGDI(pFontObj, FONT);
     pFontLink->SharedFace = pFontGDI->SharedFace;
 
-    // FontLink uses English family name
+    // FontLink uses family name
     RtlInitUnicodeString(&FaceName, pFontLink->LogFont.lfFaceName);
-    if (!MatchFontName(pFontLink->SharedFace, &FaceName, TT_NAME_ID_FONT_FAMILY, LANG_ENGLISH))
+    if (!MatchFontName(pFontLink->SharedFace, &FaceName, TT_NAME_ID_FONT_FAMILY, LANG_ENGLISH) &&
+        !MatchFontName(pFontLink->SharedFace, &FaceName, TT_NAME_ID_FONT_FAMILY, gusLanguageID))
     {
         pFontLink->bIgnore = TRUE;
         return FALSE;
@@ -962,6 +1061,8 @@ InitFontSupport(VOID)
 #endif
 
     FontLink_LoadSettings();
+    FontLink_LoadDefaultFonts();
+    FontLink_LoadDefaultCharset();
 
     return TRUE;
 }
@@ -1347,7 +1448,6 @@ FontLink_Create(
     PFONTLINK pLink;
 
     lf = *plfBase;
-    lf.lfCharSet = DEFAULT_CHARSET;
 
     // pszLink: "<FontFileName>,<FaceName>[,...]"
     pch0 = wcschr(pszLink, L',');
@@ -1389,6 +1489,8 @@ FontLink_Chain_Populate(
     PFONTGDI pFontGDI;
     PWSTR pszLink;
     PFONTLINK_CACHE pLinkCache;
+    WCHAR szEntry[MAX_PATH];
+    BOOL bFixCharSet;
 
     InitializeListHead(&pChain->FontLinkList);
 
@@ -1404,8 +1506,21 @@ FontLink_Chain_Populate(
         RtlStringCchCopyW(lfBase.lfFaceName, _countof(lfBase.lfFaceName), pTextObj->TextFace);
     }
 
+    // Fix lfCharSet
+    bFixCharSet = FALSE;
+    switch (lfBase.lfCharSet)
+    {
+        case ANSI_CHARSET:   bFixCharSet = !s_fFontLinkUseAnsi;    break;
+        case OEM_CHARSET:    bFixCharSet = !s_fFontLinkUseOem;     break;
+        case SYMBOL_CHARSET: bFixCharSet = !s_fFontLinkUseSymbol;  break;
+        case GB2312_CHARSET: bFixCharSet = !s_fFontLinkUseGB2312;  break;
+    }
+    if (bFixCharSet)
+        lfBase.lfCharSet = DEFAULT_CHARSET;
+
+    // Use cache if any
     pLinkCache = FontLink_FindCache(&lfBase);
-    if (pLinkCache) // Use cache if any
+    if (pLinkCache)
     {
         RemoveEntryList(&pLinkCache->ListEntry);
         *pChain = pLinkCache->Chain;
@@ -1429,6 +1544,18 @@ FontLink_Chain_Populate(
         if (pLink)
             InsertTailList(&pChain->FontLinkList, &pLink->ListEntry);
         pszLink += wcslen(pszLink) + 1;
+    }
+
+    // Use default settings (if any)
+    if (s_szDefFontLinkFileName[0] && s_szDefFontLinkFontName[0])
+    {
+        RtlStringCchCopyW(szEntry, _countof(szEntry), s_szDefFontLinkFileName);
+        RtlStringCchCatW(szEntry, _countof(szEntry), L",");
+        RtlStringCchCatW(szEntry, _countof(szEntry), s_szDefFontLinkFontName);
+        DPRINT("szEntry: '%S'\n", szEntry);
+        pLink = FontLink_Create(pChain, &lfBase, szEntry);
+        if (pLink)
+            InsertTailList(&pChain->FontLinkList, &pLink->ListEntry);
     }
 
     ASSERT(FontLink_Chain_IsPopulated(pChain));
