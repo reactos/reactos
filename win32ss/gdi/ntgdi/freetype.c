@@ -165,6 +165,23 @@ FontLink_AddCache(
     }
 }
 
+static VOID
+IntRebaseList(
+    _Inout_ PLIST_ENTRY pNewHead,
+    _Inout_ PLIST_ENTRY pOldHead)
+{
+    PLIST_ENTRY Entry;
+
+    ASSERT(pNewHead != pOldHead);
+
+    InitializeListHead(pNewHead);
+    while (!IsListEmpty(pOldHead))
+    {
+        Entry = RemoveTailList(pOldHead);
+        InsertHeadList(pNewHead, Entry);
+    }
+}
+
 /// Add the chain to the cache (g_FontLinkCache) if the chain was populated.
 /// @param pChain The chain.
 static VOID
@@ -172,7 +189,6 @@ FontLink_Chain_Finish(
     _Inout_ PFONTLINK_CHAIN pChain)
 {
     PFONTLINK_CACHE pCache;
-    PLIST_ENTRY Entry;
 
     if (!pChain->szFaceName[0]) // Not populated yet
         return;
@@ -181,16 +197,9 @@ FontLink_Chain_Finish(
     if (!pCache)
         return;
 
-    pCache->Chain = *pChain;
     pCache->LogFont = pChain->LogFont;
-
-    // Re-build FontLinkList (since pCache->Chain.FontLinkList became invalid pointers)
-    InitializeListHead(&pCache->Chain.FontLinkList);
-    while (!IsListEmpty(&pChain->FontLinkList))
-    {
-        Entry = RemoveTailList(&pChain->FontLinkList);
-        InsertHeadList(&pCache->Chain.FontLinkList, Entry);
-    }
+    pCache->Chain = *pChain;
+    IntRebaseList(&pCache->Chain.FontLinkList, &pChain->FontLinkList);
 
     FontLink_AddCache(pCache);
 }
@@ -1289,7 +1298,7 @@ FontLink_Chain_LoadReg(
 }
 
 static BOOL
-FontLink_Chain_FindLinkByLogFont(
+FontLink_Chain_FindLink(
     PFONTLINK_CHAIN pChain,
     PLOGFONTW plf)
 {
@@ -1324,7 +1333,7 @@ FontLink_Create(
     if (!pch1)
     {
         DPRINT1("%S\n", pszLink);
-        return NULL;
+        return NULL; // Invalid FontLink
     }
     ++pch1;
 
@@ -1337,12 +1346,12 @@ FontLink_Create(
     SubstituteFontRecurse(&lf);
     DPRINT1("lfFaceName: %S\n", lf.lfFaceName);
 
-    if (FontLink_Chain_FindLinkByLogFont(pChain, &lf))
-        return NULL;
+    if (FontLink_Chain_FindLink(pChain, &lf))
+        return NULL; // Already exists
 
     pLink = ExAllocatePoolZero(PagedPool, sizeof(FONTLINK), TAG_FONT);
     if (!pLink)
-        return NULL;
+        return NULL; // Out of memory
 
     pLink->LogFont = lf;
 
@@ -1382,7 +1391,10 @@ FontLink_Chain_Populate(
     pLinkCache = FontLink_FindCache(&lfBase);
     if (pLinkCache)
     {
+        RemoveEntryList(&pLinkCache->ListEntry);
         *pChain = pLinkCache->Chain;
+        IntRebaseList(&pChain->FontLinkList, &pLinkCache->Chain.FontLinkList);
+        ExFreePoolWithTag(pLinkCache, TAG_FONT);
         return STATUS_SUCCESS;
     }
 
