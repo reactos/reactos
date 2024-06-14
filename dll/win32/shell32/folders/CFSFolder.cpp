@@ -657,9 +657,9 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
 
     if (SFGAO_LINK & *pdwAttributes)
     {
-        char ext[MAX_PATH];
+        WCHAR ext[MAX_PATH];
 
-        if (_ILGetExtension(pidl, ext, MAX_PATH) && !lstrcmpiA(ext, "lnk"))
+        if (_ILGetExtension(pidl, ext, _countof(ext)) && !lstrcmpiW(ext, L"lnk"))
             dwShellAttributes |= SFGAO_LINK;
     }
 
@@ -1598,7 +1598,8 @@ HRESULT WINAPI CFSFolder::GetDetailsOf(PCUITEMID_CHILD pidl,
     else
     {
         hr = S_OK;
-        psd->str.uType = STRRET_CSTR;
+        psd->str.uType = STRRET_WSTR;
+        psd->str.pOleStr = (LPWSTR)CoTaskMemAlloc(MAX_PATH * sizeof(WCHAR));
         /* the data from the pidl */
         switch (iColumn)
         {
@@ -1606,19 +1607,19 @@ HRESULT WINAPI CFSFolder::GetDetailsOf(PCUITEMID_CHILD pidl,
                 hr = GetDisplayNameOf (pidl, SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
                 break;
             case SHFSF_COL_SIZE:
-                _ILGetFileSize(pidl, psd->str.cStr, MAX_PATH);
+                _ILGetFileSize(pidl, psd->str.pOleStr, MAX_PATH);
                 break;
             case SHFSF_COL_TYPE:
-                _ILGetFileType(pidl, psd->str.cStr, MAX_PATH);
+                _ILGetFileType(pidl, psd->str.pOleStr, MAX_PATH);
                 break;
             case SHFSF_COL_MDATE:
-                _ILGetFileDate(pidl, psd->str.cStr, MAX_PATH);
+                _ILGetFileDate(pidl, psd->str.pOleStr, MAX_PATH);
                 break;
             case SHFSF_COL_FATTS:
-                _ILGetFileAttributes(pidl, psd->str.cStr, MAX_PATH);
+                _ILGetFileAttributes(pidl, psd->str.pOleStr, MAX_PATH);
                 break;
             case SHFSF_COL_COMMENT:
-                psd->str.cStr[0] = '\0'; // TODO: Extract comment from .lnk files? desktop.ini?
+                psd->str.pOleStr[0] = UNICODE_NULL; // TODO: Extract comment from .lnk files? desktop.ini?
                 break;
 #if DBG
             default:
