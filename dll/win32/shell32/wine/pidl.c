@@ -2071,13 +2071,13 @@ BOOL _ILIsPidlSimple(LPCITEMIDLIST pidl)
  *
  * returns the length of the string
  */
-DWORD _ILSimpleGetText(LPCITEMIDLIST pidl, LPSTR szOut, UINT uOutSize)
+DWORD _ILSimpleGetText (LPCITEMIDLIST pidl, LPSTR szOut, UINT uOutSize)
 {
     DWORD        dwReturn=0;
     LPSTR        szSrc;
     LPWSTR       szSrcW;
     GUID const * riid;
-    CHAR szTemp[MAX_PATH];
+    char szTemp[MAX_PATH];
 
     TRACE("(%p %p %x)\n",pidl,szOut,uOutSize);
 
@@ -2107,6 +2107,7 @@ DWORD _ILSimpleGetText(LPCITEMIDLIST pidl, LPSTR szOut, UINT uOutSize)
     }
     else if ((szSrcW = _ILGetTextPointerW(pidl)))
     {
+        /* unicode filesystem */
         WideCharToMultiByte(CP_ACP, 0, szSrcW, -1, szTemp, _countof(szTemp), NULL, NULL);
         if (szOut)
             lstrcpynA(szOut, szTemp, uOutSize);
@@ -2464,8 +2465,8 @@ BOOL _ILGetFileDate(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize)
         FileTimeToLocalFileTime(&ft, &lft);
         FileTimeToSystemTime (&lft, &time);
 
-        ret = GetDateFormatW(LOCALE_USER_DEFAULT,DATE_SHORTDATE, &time, NULL, pOut, uOutSize);
-        if (ret) 
+        ret = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &time, NULL, pOut, uOutSize);
+        if (ret)
         {
             /* Append space + time without seconds */
             pOut[ret - 1] = L' ';
