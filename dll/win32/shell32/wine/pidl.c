@@ -1855,12 +1855,12 @@ LPITEMIDLIST _ILCreateDrive(LPCWSTR lpszNew)
     pidlOut = _ILAlloc(PT_DRIVE, sizeof(DriveStruct));
     if (pidlOut)
     {
-        LPWSTR pszDest = _ILGetTextPointerW(pidlOut);
+        LPSTR pszDest = _ILGetTextPointer(pidlOut);
         if (pszDest)
         {
-            lstrcpyW(pszDest, L"x:\\");
-            pszDest[0] = toupperW(lpszNew[0]);
-            TRACE("-- create Drive: %s\n", debugstr_w(pszDest));
+            lstrcpyA(pszDest, "x:\\");
+            pszDest[0] = toupper(lpszNew[0]);
+            TRACE("-- create Drive: %s\n", debugstr_a(pszDest));
         }
     }
     return pidlOut;
@@ -2168,7 +2168,7 @@ DWORD _ILSimpleGetTextW (LPCITEMIDLIST pidl, LPWSTR szOut, UINT uOutSize)
         if (_ILIsDesktop(pidl))
         {
             /* desktop */
-            if (HCR_GetClassNameW(&CLSID_ShellDesktop, szTemp, MAX_PATH))
+            if (HCR_GetClassNameW(&CLSID_ShellDesktop, szTemp, _countof(szTemp)))
             {
                 if (szOut)
                     lstrcpynW(szOut, szTemp, uOutSize);
@@ -2187,7 +2187,7 @@ DWORD _ILSimpleGetTextW (LPCITEMIDLIST pidl, LPWSTR szOut, UINT uOutSize)
         else if (( szSrc = _ILGetTextPointer(pidl) ))
         {
             /* filesystem */
-            MultiByteToWideChar(CP_ACP, 0, szSrc, -1, szTemp, MAX_PATH);
+            MultiByteToWideChar(CP_ACP, 0, szSrc, -1, szTemp, _countof(szTemp));
 
             if (szOut)
                 lstrcpynW(szOut, szTemp, uOutSize);
@@ -2197,7 +2197,7 @@ DWORD _ILSimpleGetTextW (LPCITEMIDLIST pidl, LPWSTR szOut, UINT uOutSize)
         else if (( riid = _ILGetGUIDPointer(pidl) ))
         {
             /* special folder */
-            if ( HCR_GetClassNameW(riid, szTemp, MAX_PATH) )
+            if ( HCR_GetClassNameW(riid, szTemp, _countof(szTemp)))
             {
                 if (szOut)
                     lstrcpynW(szOut, szTemp, uOutSize);
@@ -2524,7 +2524,8 @@ DWORD _ILGetFileSize(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize)
 
 BOOL _ILGetExtension(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize)
 {
-    WCHAR szTemp[MAX_PATH];
+    CHAR szTempA[MAX_PATH];
+    WCHAR szTempW[MAX_PATH];
     LPCWSTR pPoint;
     LPCITEMIDLIST  pidlTemp=pidl;
 
@@ -2537,10 +2538,12 @@ BOOL _ILGetExtension(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize)
 
     if (!_ILIsValue(pidlTemp))
         return FALSE;
-    if (!_ILSimpleGetTextW(pidlTemp, szTemp, _countof(szTemp)))
+    if (!_ILSimpleGetText(pidlTemp, szTempA, _countof(szTempA)))
         return FALSE;
 
-    pPoint = PathFindExtensionW(szTemp);
+    MultiByteToWideChar(CP_ACP, 0, szTempA, -1, szTempW, _countof(szTempW));
+    szTempW[_countof(szTempW) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
+    pPoint = PathFindExtensionW(szTempW);
 
     if (!*pPoint)
         return FALSE;
