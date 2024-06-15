@@ -425,28 +425,14 @@ ExpandEnvStrings(CStringW &Str)
 }
 
 BOOL
-LoadLangidString(HINSTANCE hInst, UINT ResId, UINT LangId, LPWSTR Buf, SIZE_T cch)
+LoadString(HINSTANCE hInst, UINT ResId, WORD LangId, LPWSTR Buf, SIZE_T cch)
 {
-    // STRINGTABLE entries are pascal strings in blocks of 16
-    BOOL ret = FALSE;
-    HRSRC hRsrc = FindResourceExW(hInst, RT_STRING, MAKEINTRESOURCEW(ResId / 16 + 1), LangId);
-    HGLOBAL hGlob = hRsrc ? LoadResource(hInst, hRsrc) : NULL;
-    if (hGlob)
+    const ATLSTRINGRESOURCEIMAGE *pSRI = AtlGetStringResourceImage(hInst, ResId, LangId);
+    BOOL ret = pSRI && cch > pSRI->nLength;
+    if (ret)
     {
-        if (LPCWSTR p = (LPCWSTR)LockResource(hGlob))
-        {
-            for (UINT i = 0; i < (ResId & 0x0f); ++i)
-                p += 1 + (UINT)*p;
-            UINT len = *p;
-            if (cch > len)
-            {
-                ret = TRUE;
-                StrCpyNW(Buf, p + 1, len + 1);
-                Buf[len] = UNICODE_NULL;
-            }
-            UnlockResource(p);
-        }
-        FreeResource(hGlob);
+        StrCpyNW(Buf, pSRI->achString, pSRI->nLength + 1);
+        Buf[pSRI->nLength] = UNICODE_NULL;
     }
     return ret;
 }

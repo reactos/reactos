@@ -80,7 +80,7 @@ void
 UnixTimeToFileTime(DWORD dwUnixTime, LPFILETIME pFileTime);
 
 BOOL
-LoadLangidString(HINSTANCE hInst, UINT ResId, UINT LangId, LPWSTR Buf, SIZE_T cch);
+LoadString(HINSTANCE hInst, UINT ResId, WORD LangId, LPWSTR Buf, SIZE_T cch);
 BOOL
 SearchPatternMatch(LPCWSTR szHaystack, LPCWSTR szNeedle);
 

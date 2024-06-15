@@ -865,7 +865,7 @@ CMainWindow::HandleProtocolMessage(LPCWSTR Url)
     {
         m_ApplicationView->SetSearchText(p);
         g_IgnoreSearchTimer = true; // Prevent the timer from erasing our list selection
-        m_ApplicationView->SetFocusOnSearchBar(MAKELONG(MAKEWORD(0, -1), MAKEWORD(-1, 0)));
+        m_ApplicationView->SetFocusOnSearchBar(CApplicationView::FocusSelectNoneCaretEnd);
         SwitchToCategoryByStringId(IDS_AVAILABLEFORINST); // Update the tree selection
         UpdateApplicationsList(ENUM_ALL_AVAILABLE); // Filter by search term
         m_ApplicationView->SelectItem(NULL); // Select the first list item found
@@ -876,7 +876,7 @@ CMainWindow::HandleProtocolMessage(LPCWSTR Url)
         {
             WCHAR buf[100];
             // Match the canonical English name or the id from the manifests
-            if ((LoadLangidString(hInst, i, MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), buf, _countof(buf)) && !_wcsicmp(buf, p)) ||
+            if ((LoadString(hInst, i, MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), buf, _countof(buf)) && !_wcsicmp(buf, p)) ||
                 (wcstol(p, NULL, 10) == i - CATSTRINGID_FIRST + 1))
             {
                 SwitchToCategoryByStringId(i);
@@ -888,7 +888,7 @@ CMainWindow::HandleProtocolMessage(LPCWSTR Url)
     {
         SwitchToCategoryByStringId(IDS_INSTALLED);
         m_ApplicationView->SetSearchText(p + (*p == '/'));
-        m_ApplicationView->SetFocusOnSearchBar(MAKELONG(MAKEWORD(0, -1), MAKEWORD(-1, 0)));
+        m_ApplicationView->SetFocusOnSearchBar(CApplicationView::FocusSelectNoneCaretEnd);
     }
     return 0;
 }

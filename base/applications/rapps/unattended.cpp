@@ -316,7 +316,7 @@ HandleInfoCommand(CAppDB *db, LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
 static unsigned int CALLBACK
 RunGuiThread(void *nCmdShow)
 {
-    WCHAR fakecmdline[] = L"://";
+    WCHAR fakecmdline[] = L"";
     return ParseCmdAndExecute(fakecmdline, PCAEF_WINDOWONLY, PtrToInt(nCmdShow));
 }
 

@@ -1697,13 +1697,12 @@ CApplicationView::SetRedraw(BOOL bRedraw)
 }
 
 void
-CApplicationView::SetFocusOnSearchBar(UINT SetSel)
+CApplicationView::SetFocusOnSearchBar(FocusSelectionMode SetSel)
 {
     m_SearchBar->SetFocus();
     if (SetSel)
     {
-        m_SearchBar->SendMessage(EM_SETSEL, (INT8)LOBYTE(LOWORD(SetSel)), (INT8)HIBYTE(LOWORD(SetSel)));
-        m_SearchBar->SendMessage(EM_SETSEL, (INT8)LOBYTE(HIWORD(SetSel)), (INT8)HIBYTE(HIWORD(SetSel)));
+        m_SearchBar->SendMessage(EM_SETSEL, LOWORD(SetSel), HIWORD(SetSel));
     }
 }
 
