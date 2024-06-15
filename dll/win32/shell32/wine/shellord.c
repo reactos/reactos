@@ -2314,7 +2314,6 @@ INT WINAPI SHHandleUpdateImage(PCIDLIST_ABSOLUTE pidlExtra)
 
 BOOL WINAPI SHObjectProperties(HWND hwnd, DWORD dwType, LPCWSTR szObject, LPCWSTR szPage)
 {
-#ifdef __REACTOS__
     LPITEMIDLIST pidl = NULL;
     switch (dwType)
     {
@@ -2328,7 +2327,7 @@ BOOL WINAPI SHObjectProperties(HWND hwnd, DWORD dwType, LPCWSTR szObject, LPCWST
         ILFree(pidl);
         return result;
     }
-#endif //__REACTOS__
+
     FIXME("%p, 0x%08x, %s, %s - stub\n", hwnd, dwType, debugstr_w(szObject), debugstr_w(szPage));
 
     return TRUE;
