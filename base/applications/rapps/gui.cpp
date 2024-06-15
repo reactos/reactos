@@ -879,16 +879,16 @@ CMainWindow::HandleProtocolMessage(LPCWSTR Url)
             if ((LoadLangidString(hInst, i, MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), buf, _countof(buf)) && !_wcsicmp(buf, p)) ||
                 (wcstol(p, NULL, 10) == i - CATSTRINGID_FIRST + 1))
             {
-                m_ApplicationView->SetSearchText(L"");
                 SwitchToCategoryByStringId(i);
+                m_ApplicationView->SetSearchText(L"");
             }
         }
     }
     if ((p = IsStrPrefixI(Url, L"arp")) != NULL && (!*p || *p == '/'))
     {
+        SwitchToCategoryByStringId(IDS_INSTALLED);
         m_ApplicationView->SetSearchText(p + (*p == '/'));
         m_ApplicationView->SetFocusOnSearchBar(MAKELONG(MAKEWORD(0, -1), MAKEWORD(-1, 0)));
-        SwitchToCategoryByStringId(IDS_INSTALLED);
     }
     return 0;
 }
