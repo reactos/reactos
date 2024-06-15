@@ -1,5 +1,15 @@
 #pragma once
 
+#ifndef LWS_NOPREFIX
+#define LWS_NOPREFIX        0x0004
+#endif
+#ifndef LWS_USEVISUALSTYLE
+#define LWS_USEVISUALSTYLE  0x0008
+#endif
+#ifndef LWS_RIGHT
+#define LWS_RIGHT           0x0020
+#endif
+
 /* ids */
 #define IDC_DESK_ICON  40
 #define IDC_DESK_ICON2 100 /* Needed for theme compatability with Windows. */
