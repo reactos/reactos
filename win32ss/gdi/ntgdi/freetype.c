@@ -934,6 +934,7 @@ SubstituteFontRecurse(LOGFONTW* pLogFont)
             break;
 
         IntUnicodeStringToBuffer(pLogFont->lfFaceName, sizeof(pLogFont->lfFaceName), &OutputNameW);
+        RtlInitUnicodeString(&InputNameW, pLogFont->lfFaceName);
 
         if (CharSetMap[FONTSUBST_FROM] == DEFAULT_CHARSET ||
             CharSetMap[FONTSUBST_FROM] == pLogFont->lfCharSet)
