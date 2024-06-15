@@ -627,6 +627,18 @@ static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style )
     else
     {
         DrawTextW( hdc, text, -1, &rc, format );
+        if(style & WS_DISABLED)
+        {
+            COLORREF oldTextColor=GetTextColor(hdc);
+            SetBkMode(hdc, TRANSPARENT);
+            SetTextColor(hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
+            rc.left++;rc.top++;
+            DrawTextW( hdc, text, -1, &rc, format );
+            SetTextColor(hdc, oldTextColor);
+            rc.left--;rc.top--;
+            DrawTextW( hdc, text, -1, &rc, format );
+            SetBkMode(hdc, OPAQUE);
+        }
     }
 
 no_TextOut:
