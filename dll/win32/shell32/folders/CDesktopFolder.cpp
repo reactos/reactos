@@ -849,7 +849,7 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
 
             DEFCONTEXTMENU dcm;
             dcm.hwnd = hwndOwner;
-            dcm.pcmcb = self ? this : NULL; // Only our own Properties item needs callback handling
+            dcm.pcmcb = this;
             dcm.pidlFolder = pidlRoot;
             dcm.psf = this;
             dcm.cidl = cidl;
