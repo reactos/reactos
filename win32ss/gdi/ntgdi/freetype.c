@@ -1507,13 +1507,13 @@ FontLink_Chain_Populate(
     }
 
     // Fix lfCharSet
-    bFixCharSet = FALSE;
     switch (lfBase.lfCharSet)
     {
         case ANSI_CHARSET:   bFixCharSet = !s_fFontLinkUseAnsi;    break;
         case OEM_CHARSET:    bFixCharSet = !s_fFontLinkUseOem;     break;
         case SYMBOL_CHARSET: bFixCharSet = !s_fFontLinkUseSymbol;  break;
         case GB2312_CHARSET: bFixCharSet = !s_fFontLinkUseGB2312;  break;
+        default:             bFixCharSet = FALSE;                  break;
     }
     if (bFixCharSet)
         lfBase.lfCharSet = DEFAULT_CHARSET;
