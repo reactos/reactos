@@ -146,7 +146,7 @@ SHMultiFileProperties(IDataObject *pDataObject, DWORD dwFlags)
 {
     FIXME("SHMultiFileProperties() stub\n");
 
-    // Temporary workaround to display a property sheet when possible
+    // Temporary workaround to display a property sheet if possible
     if (DataObject_GetHIDACount(pDataObject) == 1)
         return SHELL32_ShowPropertiesDialog(pDataObject);
 
