@@ -68,7 +68,6 @@ static WCHAR s_szDefFontLinkFontName[MAX_PATH] = L"";
 static BOOL s_fFontLinkUseAnsi = FALSE;
 static BOOL s_fFontLinkUseOem = FALSE;
 static BOOL s_fFontLinkUseSymbol = FALSE;
-static BOOL s_fFontLinkUseGB2312 = FALSE;
 
 #define MAX_FONTLINK_CACHE 128
 static RTL_STATIC_LIST_HEAD(g_FontLinkCache); // The list of FONTLINK_CACHE
@@ -168,7 +167,7 @@ FontLink_LoadDefaultCharset(VOID)
     WCHAR szValue[8];
 
     // Set the default values
-    s_fFontLinkUseAnsi = s_fFontLinkUseOem = s_fFontLinkUseSymbol = s_fFontLinkUseGB2312 = FALSE;
+    s_fFontLinkUseAnsi = s_fFontLinkUseOem = s_fFontLinkUseSymbol = FALSE;
 
     // Open the registry key
     Status = RegOpenKey(
@@ -199,14 +198,6 @@ FontLink_LoadDefaultCharset(VOID)
     {
         szValue[_countof(szValue) - 1] = UNICODE_NULL; // Avoid buffer overrun
         s_fFontLinkUseSymbol = !_wcsicmp(szValue, L"YES");
-    }
-
-    cbData = sizeof(szValue);
-    Status = RegQueryValue(hKey, L"GB2312(86)", REG_SZ, szValue, &cbData);
-    if (NT_SUCCESS(Status))
-    {
-        szValue[_countof(szValue) - 1] = UNICODE_NULL; // Avoid buffer overrun
-        s_fFontLinkUseGB2312 = !_wcsicmp(szValue, L"YES");
     }
 
     ZwClose(hKey); // Close the registry key
@@ -1512,8 +1503,7 @@ FontLink_Chain_Populate(
         case ANSI_CHARSET:   bFixCharSet = !s_fFontLinkUseAnsi;    break;
         case OEM_CHARSET:    bFixCharSet = !s_fFontLinkUseOem;     break;
         case SYMBOL_CHARSET: bFixCharSet = !s_fFontLinkUseSymbol;  break;
-        case GB2312_CHARSET: bFixCharSet = !s_fFontLinkUseGB2312;  break;
-        default:             bFixCharSet = FALSE;                  break;
+        default:             bFixCharSet = TRUE;                   break;
     }
     if (bFixCharSet)
         lfBase.lfCharSet = DEFAULT_CHARSET;
