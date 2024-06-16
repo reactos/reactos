@@ -2048,7 +2048,7 @@ static LRESULT OnNotify( HWND hWnd, LPARAM lParam)
 
         sprintf( buf,"selection = %d..%d, line count=%ld",
                  pSC->chrg.cpMin, pSC->chrg.cpMax,
-                SendMessageW(hwndEditor, EM_GETLINECOUNT, 0, 0));
+                (LONG)SendMessageW(hwndEditor, EM_GETLINECOUNT, 0, 0));
         SetWindowTextA(GetDlgItem(hWnd, IDC_STATUSBAR), buf);
         SendMessageW(hWnd, WM_USER, 0, 0);
         return 1;
