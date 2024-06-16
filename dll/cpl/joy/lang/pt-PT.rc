@@ -15,7 +15,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLSYSTEM, -1, 7, 7, 20, 20
     LTEXT "Estas configurações ajudam-no a configurar os controladores de jogos instalados no computador.", -1, 33, 7, 214, 20, NOT WS_GROUP
-    GROUPBOX "Controladores de jogos instalados", -1, 7, 34, 238, 117
+    GROUPBOX "&Controladores de jogos instalados", -1, 7, 34, 238, 117
     CONTROL "List1", IDC_CONTROLLER_LIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000808D, 14, 44, 224, 80
     PUSHBUTTON "&Adicionar...", IDC_ADD_BUTTON, 35, 129, 65, 14
     PUSHBUTTON "&Remover", IDC_REMOVE_BUTTON, 104, 129, 65, 14, WS_DISABLED
@@ -33,7 +33,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLSYSTEM, -1, 8, 7, 20, 20
     LTEXT "Seleccione um controlador de jogos na lista abaixo e em seguida clique em ""OK"". Se o controlador não aparecer na lista, clique em ""Personalizar"".", -1, 35, 7, 210, 33
-    LTEXT "Controladores de jogos:", -1, 8, 45, 126, 8
+    LTEXT "&Controladores de jogos:", -1, 8, 45, 126, 8
     LISTBOX IDC_GAME_CONTROLLERS_LIST, 7, 55, 251, 57, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | LBS_WANTKEYBOARDINPUT | WS_HSCROLL | WS_TABSTOP
     AUTOCHECKBOX "&Activar lemes de direcção e pedais", IDC_ENABLE_RUDDERS_CHECKBOX, 7, 114, 130, 10, WS_GROUP
     LTEXT "Porta de jogos:", -1, 7, 134, 38, 8, NOT WS_VISIBLE
@@ -53,16 +53,16 @@ BEGIN
     GROUPBOX "Características especiais", -1, 7, 7, 245, 52
     AUTORADIOBUTTON "&Joystick", IDC_JOYSTICK_RADIO, 17, 23, 55, 10
     AUTORADIOBUTTON "&Manche ou punho", IDC_FLIGHT_YOKE_RADIO, 130, 23, 89, 10
-    AUTORADIOBUTTON "Consola de j&ogos", IDC_GAME_PAD_RADIO, 17, 40, 65, 10
+    AUTORADIOBUTTON "&Consola de jogos", IDC_GAME_PAD_RADIO, 17, 40, 65, 10
     AUTORADIOBUTTON "Contro&lador de carro de corrida", IDC_RACE_CAR_RADIO, 130, 40, 115, 10
-    GROUPBOX "Eixos", -1, 7, 67, 116, 44, WS_GROUP
+    GROUPBOX "&Eixos", -1, 7, 67, 116, 44, WS_GROUP
     COMBOBOX IDC_AXES_COMBO, 37, 79, 48, 50, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     AUTORADIOBUTTON "Leme/pedais", IDC_RUDDER_PEDALS_RADIO, 14, 97, 63, 10, NOT WS_VISIBLE
     AUTORADIOBUTTON "Eixo Z", IDC_Z_AXIS_RADIO, 81, 97, 35, 10, NOT WS_VISIBLE
-    GROUPBOX "Botões", -1, 137, 67, 116, 44
+    GROUPBOX "&Botões", -1, 137, 67, 116, 44
     COMBOBOX IDC_BUTTONS_COMBO, 178, 79, 48, 50, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL, WS_EX_CLIENTEDGE
-    AUTOCHECKBOX "Inclui um controle de ponto de &mira", IDC_INC_POINT_CHECKBOX, 7, 123, 125, 10
-    LTEXT "Nome do controlador:", -1, 7, 139, 200, 9
+    AUTOCHECKBOX "Inclui um controle de &ponto de mira", IDC_INC_POINT_CHECKBOX, 7, 123, 125, 10
+    LTEXT "&Nome do controlador:", -1, 7, 139, 200, 9
     EDITTEXT IDC_CONTROLLER_NAME_EDIT, 7, 150, 116, 15, ES_AUTOHSCROLL, WS_EX_CLIENTEDGE | WS_EX_STATICEDGE
     DEFPUSHBUTTON "OK", IDOK, 137, 150, 50, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 203, 150, 50, 14
@@ -78,7 +78,7 @@ BEGIN
     DEFPUSHBUTTON "OK", IDOK, 106, 65, 50, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 163, 65, 50, 14
     LTEXT "Seleccione o dispositivo que pretende utilizar com programas mais antigos.", -1, 7, 7, 228, 10
-    LTEXT "Dispositivo perferencial:", -1, 34, 24, 70, 10
+    LTEXT "&Dispositivo perferencial:", -1, 34, 24, 70, 10
     COMBOBOX IDC_PREFERRED_DEV_COMBO, 34, 38, 179, 75, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
 END
 
