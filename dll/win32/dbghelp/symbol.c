@@ -19,7 +19,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef NONAMELESSUNION
 #define NONAMELESSUNION
+#endif
 
 #include <stdlib.h>
 #include <stdio.h>

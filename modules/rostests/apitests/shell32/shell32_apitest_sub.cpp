@@ -179,6 +179,8 @@ static BOOL InitSHCN(HWND hwnd)
         default:
         {
             assert(0);
+            sources = 0;
+            events = EVENTS;
             break;
         }
     }
