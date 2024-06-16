@@ -611,15 +611,6 @@ static void STATIC_PaintOwnerDrawfn( HWND hwnd, HDC hdc, DWORD style )
   if (font) SelectObject( hdc, oldFont );
 }
 
-static BOOL CALLBACK STATIC_DrawTextCallback(HDC hdc, LPARAM lp, WPARAM wp, int cx, int cy)
-{
-    RECT rc;
-
-    SetRect(&rc, 0, 0, cx, cy);
-    DrawTextW(hdc, (LPCWSTR)lp, -1, &rc, (UINT)wp);
-    return TRUE;
-}
-
 static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style )
 {
     RECT rc;
@@ -719,7 +710,7 @@ static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style )
         if (format & DT_HIDEPREFIX)
             flags |= DSS_HIDEPREFIX;
         hBrush = GetSysColorBrush(COLOR_GRAYTEXT);
-        DrawStateW(hdc, hBrush, STATIC_DrawTextCallback,
+        DrawStateW(hdc, hBrush, NULL,
                    (LPARAM)text, (WPARAM)wcslen(text),
                    rc.left, rc.top,
                    rc.right - rc.left, rc.bottom - rc.top,
