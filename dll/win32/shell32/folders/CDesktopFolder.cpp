@@ -843,9 +843,14 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
             HKEY hKeys[16];
             UINT cKeys = 0;
             if (self)
+            {
+                AddClsidKeyToArray(CLSID_ShellDesktop, hKeys, &cKeys);
                 AddClassKeyToArray(L"Folder", hKeys, &cKeys);
+            }
             else if (cidl > 0)
+            {
                 AddFSClassKeysToArray(cidl, apidl, hKeys, &cKeys);
+            }
 
             DEFCONTEXTMENU dcm;
             dcm.hwnd = hwndOwner;

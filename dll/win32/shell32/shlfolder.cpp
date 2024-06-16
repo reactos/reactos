@@ -289,6 +289,13 @@ LSTATUS AddClassKeyToArray(const WCHAR* szClass, HKEY* array, UINT* cKeys)
     return result;
 }
 
+LSTATUS AddClsidKeyToArray(REFCLSID clsid, HKEY* array, UINT* cKeys)
+{
+    WCHAR path[6 + 38 + 1] = L"CLSID\\";
+    StringFromGUID2(clsid, path + 6, 38 + 1);
+    return AddClassKeyToArray(path, array, cKeys);
+}
+
 void AddFSClassKeysToArray(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, HKEY* array, UINT* cKeys)
 {
     // This function opens the association array keys in canonical order for filesystem items.

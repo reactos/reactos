@@ -945,7 +945,7 @@ BrFolder_OnContextMenu(BrFolder &info, LPARAM lParam)
         return;
     info.pContextMenu = pcm;
     UINT cmf = ((GetKeyState(VK_SHIFT) < 0) ? CMF_EXTENDEDVERBS : 0) | CMF_CANRENAME;
-    hr = pcm->QueryContextMenu(hMenu, 0, ID_FIRSTCMD, ID_LASTCMD, CMF_NODEFAULT | cmf);
+    hr = pcm->QueryContextMenu(hMenu, 0, ID_FIRSTCMD, ID_LASTCMD, CMF_EXPLORE | cmf);
     if (hr > 0)
         _InsertMenuItemW(hMenu, 0, TRUE, 0, MFT_SEPARATOR, NULL, 0);
     _InsertMenuItemW(hMenu, 0, TRUE, IDC_TOGGLE, MFT_STRING,
