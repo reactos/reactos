@@ -3,9 +3,12 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ps/job.c
  * PURPOSE:         Job Native Functions
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net) (stubs)
- *                  Thomas Weidenmueller <w3seek@reactos.com>
- *                  Pierre Schweitzer (pierre@reactos.org)
+ * PROGRAMMERS:     2004-2012 Alex Ionescu (alex@relsoft.net) (stubs)
+ *                  2004-2005 Thomas Weidenmueller <w3seek@reactos.com>
+ *                  2015-2016 Samuel Serapión Vega (encoded@reactos.org)
+ *                  2017 Mark Jansen (mark.jansen@reactos.org)
+ *                  2018 Pierre Schweitzer (pierre@reactos.org)
+ *                  2024 Gleb Surikov (glebs.surikovs@gmail.com)
  */
 
 /* INCLUDES *****************************************************************/
@@ -248,15 +251,30 @@ NtCreateJobSet(IN ULONG NumJob,
     return STATUS_NOT_IMPLEMENTED;
 }
 
-/*
- * @unimplemented
+/*!
+ * Creates a job object.
+ *
+ * @param[out] JobHandle
+ *     A pointer to a handle that will receive the handle of the created job object.
+ *     The caller must have write access to this memory.
+ *
+ * @param[in] DesiredAccess
+ *     Specifies the desired access rights for the job object.
+ *
+ * @param[in, optional] ObjectAttributes
+ *     An optional pointer to an object attributes block
+ *
+* @returns
+ *     STATUS_SUCCESS if the job object is successfully created.
+ *     An appropriate NTSTATUS error code otherwise.
  */
 NTSTATUS
 NTAPI
-NtCreateJobObject (
-    PHANDLE JobHandle,
-    ACCESS_MASK DesiredAccess,
-    POBJECT_ATTRIBUTES ObjectAttributes )
+NtCreateJobObject(
+    _Out_ PHANDLE JobHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes
+)
 {
     HANDLE hJob;
     PEJOB Job;
@@ -269,7 +287,7 @@ NtCreateJobObject (
     PreviousMode = ExGetPreviousMode();
     CurrentProcess = PsGetCurrentProcess();
 
-    /* check for valid buffers */
+    /* Check for valid buffers */
     if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
@@ -284,35 +302,35 @@ NtCreateJobObject (
     }
 
     Status = ObCreateObject(PreviousMode,
-        PsJobType,
-        ObjectAttributes,
-        PreviousMode,
-        NULL,
-        sizeof(EJOB),
-        0,
-        0,
-        (PVOID*)&Job);
+                            PsJobType,
+                            ObjectAttributes,
+                            PreviousMode,
+                            NULL,
+                            sizeof(EJOB),
+                            0,
+                            0,
+                            (PVOID *)&Job);
 
-    if(NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status))
     {
         /* FIXME - Zero all fields as we don't yet implement all of them */
         RtlZeroMemory(Job, sizeof(EJOB));
 
-        /* make sure that early destruction doesn't attempt to remove the object from
-        the list before it even gets added! */
-        Job->JobLinks.Flink = NULL;
+        /* Make sure that early destruction doesn't attempt to remove the object
+           from the list before it even gets added */
+        InitializeListHead(&Job->JobLinks);
 
-        /* setup the job object - FIXME: More to do! */
+        /* Set up the job object - FIXME: More to do */
         InitializeListHead(&Job->JobSetLinks);
         InitializeListHead(&Job->ProcessListHead);
 
-        /* inherit the session id from the caller */
+        /* Inherit the session id from the caller */
         Job->SessionId = PsGetProcessSessionId(CurrentProcess);
 
         KeInitializeGuardedMutex(&Job->MemoryLimitsLock);
 
         Status = ExInitializeResource(&Job->JobLock);
-        if(!NT_SUCCESS(Status))
+        if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to initialize job lock!!!\n");
             ObDereferenceObject(Job);
@@ -320,25 +338,25 @@ NtCreateJobObject (
         }
         KeInitializeEvent(&Job->Event, NotificationEvent, FALSE);
 
-        /* link the object into the global job list */
+        /* Link the object into the global job list */
         ExAcquireFastMutex(&PsJobListLock);
         InsertTailList(&PsJobListHead, &Job->JobLinks);
         ExReleaseFastMutex(&PsJobListLock);
 
         Status = ObInsertObject(Job,
-            NULL,
-            DesiredAccess,
-            0,
-            NULL,
-            &hJob);
-        if(NT_SUCCESS(Status))
+                                NULL,
+                                DesiredAccess,
+                                0,
+                                NULL,
+                                &hJob);
+        if (NT_SUCCESS(Status))
         {
-            /* pass the handle back to the caller */
+            /* Pass the handle back to the caller */
             _SEH2_TRY
             {
                 /* NOTE: if the caller passed invalid buffers to receive the handle it's his
-                own fault! the object will still be created and live... It's possible
-                to find the handle using ObFindHandleForObject()! */
+                   own fault! the object will still be created and live... It's possible
+                   to find the handle using ObFindHandleForObject()! */
                 *JobHandle = hJob;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -351,7 +369,6 @@ NtCreateJobObject (
 
     return Status;
 }
-
 
 /*
  * @implemented
