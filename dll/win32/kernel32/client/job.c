@@ -23,8 +23,8 @@
  */
 HANDLE
 WINAPI
-CreateJobObjectA(IN LPSECURITY_ATTRIBUTES lpJobAttributes,
-                 IN LPCSTR lpName)
+CreateJobObjectA(_In_ LPSECURITY_ATTRIBUTES lpJobAttributes,
+                 _In_ LPCSTR lpName)
 {
     /* Call the W(ide) function */
     ConvertWin32AnsiObjectApiToUnicodeApi(JobObject, lpName, lpJobAttributes);
@@ -35,8 +35,8 @@ CreateJobObjectA(IN LPSECURITY_ATTRIBUTES lpJobAttributes,
  */
 HANDLE
 WINAPI
-CreateJobObjectW(IN LPSECURITY_ATTRIBUTES lpJobAttributes,
-                 IN LPCWSTR lpName)
+CreateJobObjectW(_In_ LPSECURITY_ATTRIBUTES lpJobAttributes,
+                 _In_ LPCWSTR lpName)
 {
     /* Create the NT object */
     CreateNtObjectFromWin32Api(JobObject, JobObject, JOB_OBJECT_ALL_ACCESS, lpJobAttributes, lpName);
@@ -47,9 +47,9 @@ CreateJobObjectW(IN LPSECURITY_ATTRIBUTES lpJobAttributes,
  */
 HANDLE
 WINAPI
-OpenJobObjectW(IN DWORD dwDesiredAccess,
-               IN BOOL bInheritHandle,
-               IN LPCWSTR lpName)
+OpenJobObjectW(_In_ DWORD dwDesiredAccess,
+               _In_ BOOL bInheritHandle,
+               _In_ LPCWSTR lpName)
 {
     /* Open the NT object */
     OpenNtObjectFromWin32Api(JobObject, dwDesiredAccess, bInheritHandle, lpName);
@@ -61,9 +61,9 @@ OpenJobObjectW(IN DWORD dwDesiredAccess,
  */
 HANDLE
 WINAPI
-OpenJobObjectA(IN DWORD dwDesiredAccess,
-               IN BOOL bInheritHandle,
-               IN LPCSTR lpName)
+OpenJobObjectA(_In_ DWORD dwDesiredAccess,
+               _In_ BOOL bInheritHandle,
+               _In_ LPCSTR lpName)
 {
     /* Call the W(ide) function */
     ConvertOpenWin32AnsiObjectApiToUnicodeApi(JobObject, dwDesiredAccess, bInheritHandle, lpName);

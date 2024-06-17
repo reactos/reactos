@@ -256,7 +256,6 @@ NtCreateJobSet(IN ULONG NumJob,
  *
  * @param[out] JobHandle
  *     A pointer to a handle that will receive the handle of the created job object.
- *     The caller must have write access to this memory.
  *
  * @param[in] DesiredAccess
  *     Specifies the desired access rights for the job object.
@@ -264,7 +263,7 @@ NtCreateJobSet(IN ULONG NumJob,
  * @param[in, optional] ObjectAttributes
  *     An optional pointer to an object attributes block
  *
-* @returns
+ * @returns
  *     STATUS_SUCCESS if the job object is successfully created.
  *     An appropriate NTSTATUS error code otherwise.
  */
@@ -276,7 +275,7 @@ NtCreateJobObject(
     _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes
 )
 {
-    HANDLE hJob;
+    HANDLE Handle;
     PEJOB Job;
     KPROCESSOR_MODE PreviousMode;
     PEPROCESS CurrentProcess;
@@ -348,7 +347,7 @@ NtCreateJobObject(
                                 DesiredAccess,
                                 0,
                                 NULL,
-                                &hJob);
+                                &Handle);
         if (NT_SUCCESS(Status))
         {
             /* Pass the handle back to the caller */
@@ -357,7 +356,7 @@ NtCreateJobObject(
                 /* NOTE: if the caller passed invalid buffers to receive the handle it's his
                    own fault! the object will still be created and live... It's possible
                    to find the handle using ObFindHandleForObject()! */
-                *JobHandle = hJob;
+                *JobHandle = Handle;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -437,26 +436,39 @@ NtIsProcessInJob (
     return Status;
 }
 
-
-/*
- * @implemented
+/*!
+ * Opens a handle to an existing job object.
+ *
+ * @param JobHandle
+ *     A pointer to a handle that will receive the handle of the created job object.
+ *
+ * @param DesiredAccess
+ *     Specifies the desired access rights for the job object.
+ *
+ * @param ObjectAttributes
+ *     Pointer to the OBJECT_ATTRIBUTES structure specifying the object name and attributes.
+ *
+ * @returns
+ *     STATUS_SUCCESS if the job object is successfully created.
+ *     An appropriate NTSTATUS error code otherwise.
  */
 NTSTATUS
 NTAPI
-NtOpenJobObject (
-    PHANDLE JobHandle,
-    ACCESS_MASK DesiredAccess,
-    POBJECT_ATTRIBUTES ObjectAttributes)
+NtOpenJobObject(
+    _Out_ PHANDLE JobHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
+)
 {
     KPROCESSOR_MODE PreviousMode;
-    HANDLE hJob;
+    HANDLE Handle;
     NTSTATUS Status;
 
     PAGED_CODE();
 
     PreviousMode = ExGetPreviousMode();
 
-    /* check for valid buffers */
+    /* Check for valid buffers */
     if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
@@ -471,17 +483,17 @@ NtOpenJobObject (
     }
 
     Status = ObOpenObjectByName(ObjectAttributes,
-        PsJobType,
-        PreviousMode,
-        NULL,
-        DesiredAccess,
-        NULL,
-        &hJob);
-    if(NT_SUCCESS(Status))
+                                PsJobType,
+                                PreviousMode,
+                                NULL,
+                                DesiredAccess,
+                                NULL,
+                                &Handle);
+    if (NT_SUCCESS(Status))
     {
         _SEH2_TRY
         {
-            *JobHandle = hJob;
+            *JobHandle = Handle;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -492,7 +504,6 @@ NtOpenJobObject (
 
     return Status;
 }
-
 
 /*
  * @implemented
