@@ -219,82 +219,92 @@ typedef struct _PREVENT_MEDIA_REMOVAL {
 #define IOCTL_DISK_UPDATE_DRIVE_SIZE CTL_CODE(IOCTL_DISK_BASE, 0x0032, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
 
 
-#define PARTITION_ENTRY_UNUSED        0
-#define PARTITION_FAT_12              1
-#define PARTITION_XENIX_1             2
-#define PARTITION_XENIX_2             3
-#define PARTITION_FAT_16              4
-#define PARTITION_EXTENDED            5
-#define PARTITION_HUGE                6
-#define PARTITION_IFS                 7
-#define PARTITION_FAT32               0x0B
-#define PARTITION_FAT32_XINT13        0x0C
-#define PARTITION_XINT13              0x0E
-#define PARTITION_XINT13_EXTENDED     0x0F
-#define PARTITION_PREP                0x41
-#define PARTITION_LDM                 0x42
-#define PARTITION_UNIX                0x63
-#define PARTITION_NTFT                0x80
-#define VALID_NTFT                    0xC0
-#ifdef __REACTOS__
-#define PARTITION_OLD_LINUX           0x43
-#define PARTITION_LINUX               0x83
-#define PARTITION_FREEBSD             0xA5
-#define PARTITION_OPENBSD             0xA6
-#define PARTITION_NETBSD              0xA9
-#endif
+#define PARTITION_ENTRY_UNUSED          0x00
+#define PARTITION_FAT_12                0x01
+#define PARTITION_XENIX_1               0x02
+#define PARTITION_XENIX_2               0x03
+#define PARTITION_FAT_16                0x04
+#define PARTITION_EXTENDED              0x05
+#define PARTITION_HUGE                  0x06
+#define PARTITION_IFS                   0x07
+#define PARTITION_OS2BOOTMGR            0x0A
+#define PARTITION_FAT32                 0x0B
+#define PARTITION_FAT32_XINT13          0x0C
+#define PARTITION_XINT13                0x0E
+#define PARTITION_XINT13_EXTENDED       0x0F
+#define PARTITION_MSFT_RECOVERY         0x27
+#define PARTITION_MAIN_OS               0x28
+#define PARTIITON_OS_DATA               0x29
+#define PARTITION_PRE_INSTALLED         0x2a
+#define PARTITION_BSP                   0x2b
+#define PARTITION_DPP                   0x2c
+#define PARTITION_WINDOWS_SYSTEM        0x2d
+#define PARTITION_PREP                  0x41
+#define PARTITION_LDM                   0x42
+#define PARTITION_DM                    0x54
+#define PARTITION_EZDRIVE               0x55
+#define PARTITION_UNIX                  0x63
+#define PARTITION_SPACES_DATA           0xD7
+#define PARTITION_SPACES                0xE7
+#define PARTITION_GPT                   0xEE
+#define PARTITION_SYSTEM                0xEF
+
+#define VALID_NTFT                      0xC0
+#define PARTITION_NTFT                  0x80
 
 #ifdef __REACTOS__
-#define IsRecognizedPartition(t)\
-  (((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_FAT_12))||\
-   ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_FAT_16))||\
-   ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_HUGE))||\
-   ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_IFS))||\
-   ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_FAT32))||\
-   ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_FAT32_XINT13))||\
-   ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_XINT13))||\
-   ((t)==PARTITION_FAT_12)||\
-   ((t)==PARTITION_FAT_16)||\
-   ((t)==PARTITION_HUGE)||\
-   ((t)==PARTITION_IFS)||\
-   ((t)==PARTITION_FAT32)||\
-   ((t)==PARTITION_FAT32_XINT13)||\
-   ((t)==PARTITION_XINT13)||\
-   ((t)==PARTITION_LINUX)||\
-   ((t)==PARTITION_OLD_LINUX)||\
-   ((t)==PARTITION_FREEBSD)||\
-   ((t)==PARTITION_OPENBSD)||\
-   ((t)==PARTITION_NETBSD))
+#define PARTITION_OLD_LINUX             0x43
+#define PARTITION_LINUX                 0x83
+#define PARTITION_ISO9660               0x96
+#define PARTITION_FREEBSD               0xA5
+#define PARTITION_OPENBSD               0xA6
+#define PARTITION_NETBSD                0xA9
+#endif
+
+/*
+ * NOTE: Support for partition types removed from IsFTPartition() and
+ * IsRecognizedPartition() because they conflict with 3rd-party types:
+ * PARTITION_NTFT | PARTITION_FAT_12 : Conflict with 0x81 "Linux or MINIX"
+ * PARTITION_NTFT | PARTITION_FAT_16 : Conflict with 0x84 "Hibernation"
+ * PARTITION_NTFT | PARTITION_XINT13 : Conflict with 0x8E "Linux LVM"
+ */
+#define IsFTPartition(PartitionType) \
+  ( ((PartitionType) & PARTITION_NTFT) && ((((PartitionType) & ~VALID_NTFT) == PARTITION_HUGE)  || \
+                                           (((PartitionType) & ~VALID_NTFT) == PARTITION_IFS)   || \
+                                           (((PartitionType) & ~VALID_NTFT) == PARTITION_FAT32) || \
+                                           (((PartitionType) & ~VALID_NTFT) == PARTITION_FAT32_XINT13)) )
+
+#define IsContainerPartition(PartitionType) \
+  ( ((PartitionType) == PARTITION_EXTENDED) || \
+    ((PartitionType) == PARTITION_XINT13_EXTENDED) )
+
+#ifdef __REACTOS__
+#define IsRecognizedPartition(PartitionType) \
+  ( IsFTPartition(PartitionType) || \
+    ((PartitionType) == PARTITION_FAT_12) || \
+    ((PartitionType) == PARTITION_FAT_16) || \
+    ((PartitionType) == PARTITION_HUGE)   || \
+    ((PartitionType) == PARTITION_IFS)    || \
+    ((PartitionType) == PARTITION_FAT32)  || \
+    ((PartitionType) == PARTITION_FAT32_XINT13) || \
+    ((PartitionType) == PARTITION_XINT13) || \
+    ((PartitionType) == PARTITION_LINUX)  || \
+    ((PartitionType) == PARTITION_OLD_LINUX) || \
+    ((PartitionType) == PARTITION_ISO9660) || \
+    ((PartitionType) == PARTITION_FREEBSD) || \
+    ((PartitionType) == PARTITION_OPENBSD) || \
+    ((PartitionType) == PARTITION_NETBSD) )
 #else
-#define IsRecognizedPartition(t)\
-  (((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_FAT_12))||\
-   ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_FAT_16))||\
-   ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_HUGE))||\
-   ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_IFS))||\
-   ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_FAT32))||\
-   ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_FAT32_XINT13))||\
-   ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_XINT13))||\
-   ((t)==PARTITION_FAT_12)||\
-   ((t)==PARTITION_FAT_16)||\
-   ((t)==PARTITION_HUGE)||\
-   ((t)==PARTITION_IFS)||\
-   ((t)==PARTITION_FAT32)||\
-   ((t)==PARTITION_FAT32_XINT13)||\
-   ((t)==PARTITION_XINT13))
+#define IsRecognizedPartition(PartitionType) \
+  ( IsFTPartition(PartitionType) || \
+    ((PartitionType) == PARTITION_FAT_12) || \
+    ((PartitionType) == PARTITION_FAT_16) || \
+    ((PartitionType) == PARTITION_HUGE)   || \
+    ((PartitionType) == PARTITION_IFS)    || \
+    ((PartitionType) == PARTITION_FAT32)  || \
+    ((PartitionType) == PARTITION_FAT32_XINT13) || \
+    ((PartitionType) == PARTITION_XINT13) )
 #endif
-
-#define IsContainerPartition(t)\
-  (((t)==PARTITION_EXTENDED)||\
-   ((t)==PARTITION_XINT13_EXTENDED))
-
-#define IsFTPartition(t)\
-  (((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_FAT_12))||\
-   ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_FAT_16))||\
-   ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_HUGE))||\
-   ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_IFS))||\
-   ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_FAT32))||\
-   ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_FAT32_XINT13))||\
-   ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_XINT13)))
 
 
 #define DISK_LOGGING_START   0
