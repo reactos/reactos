@@ -28,6 +28,7 @@ extern void func_lstrcpynW(void);
 extern void func_lstrlen(void);
 extern void func_Mailslot(void);
 extern void func_MultiByteToWideChar(void);
+extern void func_Pipes(void);
 extern void func_PrivMoveFileIdentityW(void);
 extern void func_QueueUserAPC(void);
 extern void func_SetComputerNameExW(void);
@@ -39,7 +40,6 @@ extern void func_TerminateProcess(void);
 extern void func_TunnelCache(void);
 extern void func_UEFIFirmware(void);
 extern void func_WideCharToMultiByte(void);
-extern void func_Pipes(void);
 
 const struct test winetest_testlist[] =
 {
@@ -67,6 +67,7 @@ const struct test winetest_testlist[] =
     { "lstrlen",                     func_lstrlen },
     { "MailslotRead",                func_Mailslot },
     { "MultiByteToWideChar",         func_MultiByteToWideChar },
+    { "Pipes",                       func_Pipes },
     { "PrivMoveFileIdentityW",       func_PrivMoveFileIdentityW },
     { "QueueUserAPC",                func_QueueUserAPC },
     { "SetComputerNameExW",          func_SetComputerNameExW },
@@ -79,6 +80,5 @@ const struct test winetest_testlist[] =
     { "UEFIFirmware",                func_UEFIFirmware },
     { "WideCharToMultiByte",         func_WideCharToMultiByte },
     { "ActCtxWithXmlNamespaces",     func_ActCtxWithXmlNamespaces },
-    { "Pipes",                       func_Pipes },
     { 0, 0 }
 };

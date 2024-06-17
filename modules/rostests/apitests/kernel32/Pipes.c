@@ -17,26 +17,26 @@ static DWORD dReadBufferSize;
 DWORD
 WINAPI
 PipeWriter(
-        LPVOID lpParam)
+        _In_ PVOID Param)
 {
     DWORD cbWritten;
     HANDLE hPipe;
-    NTSTATUS lastError;
-    BOOL returnStatus;
-    LPSTR lpsInMsg  = "Test";
+    DWORD dwLastError;
+    BOOL Success;
+    PCSTR pszInMsg = "Test";
 
     hPipe = CreateFile(LP, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
             NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     ok(hPipe != INVALID_HANDLE_VALUE, "CreateFile failed, results might not be accurate\n");
     if (hPipe != INVALID_HANDLE_VALUE)
     {
-        Sleep(1000);
-        returnStatus = WriteFile(hPipe, &lpsInMsg, 4, &cbWritten, (LPOVERLAPPED) NULL);
-        lastError = GetLastError();
+        Sleep(0);
+        Success = WriteFile(hPipe, &pszInMsg, 4, &cbWritten, NULL);
+        dwLastError = GetLastError();
 
-        ok(returnStatus, "Pipe's WriteFile returned FALSE, instead of expected TRUE\n");
-        if(lastError != 0)
-            trace("Last Error = 0x%lX\n",lastError);
+        ok(Success, "Pipe's WriteFile returned FALSE, instead of expected TRUE\n");
+        if(dwLastError != 0)
+            trace("Last Error = 0x%lX\n",dwLastError);
 
         ok(cbWritten > 0,"Pipe's Writefile has lpNumberOfBytesWritten <= 0\n");
 
@@ -48,16 +48,25 @@ PipeWriter(
 DWORD
 WINAPI
 PipeReader(
-        LPVOID lpParam)
+        _In_ PVOID Param)
 {
     HANDLE hPipe;
     DWORD cbRead;
     HANDLE hThread;
-    NTSTATUS lastError;
-    BOOL returnStatus;
-    char lpsOutMsg[MAXBUFFERSIZE];
+    DWORD dwLastError;
+    BOOL Success;
+    CHAR szOutMsg[MAXBUFFERSIZE];
 
-    hPipe = CreateNamedPipeA(LP, PIPE_ACCESS_DUPLEX, PIPE_TYPE_MESSAGE|PIPE_READMODE_MESSAGE,1,MAXBUFFERSIZE,MAXBUFFERSIZE,0,NULL);
+    hPipe = CreateNamedPipeA( 
+        LP,
+        PIPE_ACCESS_DUPLEX,
+        PIPE_TYPE_MESSAGE|PIPE_READMODE_MESSAGE,
+        1,
+        MAXBUFFERSIZE,
+        MAXBUFFERSIZE,
+        0,
+        NULL
+    );
     ok(hPipe != INVALID_HANDLE_VALUE, "CreateNamedPipeA failed\n");
     if (hPipe != INVALID_HANDLE_VALUE)
     {
@@ -65,22 +74,22 @@ PipeReader(
         ok(hThread != INVALID_HANDLE_VALUE, "CreateThread failed\n");
         if (hThread != INVALID_HANDLE_VALUE)
         {
-            Sleep(1000);
-            returnStatus = ReadFile(hPipe, &lpsOutMsg, dReadBufferSize, &cbRead, NULL);
-            lastError = GetLastError();
+            Sleep(0);
+            Success = ReadFile(hPipe, &szOutMsg, dReadBufferSize, &cbRead, NULL);
+            dwLastError = GetLastError();
 
             if(dReadBufferSize == MINBUFFERSIZE)
-                ok(!returnStatus, "Pipe's ReadFile returned TRUE, instead of expected FALSE\n");
+                ok(!Success, "Pipe's ReadFile returned TRUE, instead of expected FALSE\n");
             else{
-                ok(returnStatus, "Pipe's ReadFile returned FALSE, instead of expected TRUE\n");
-                if(lastError != 0)
-                    trace("Last Error = 0x%lX\n",lastError);
+                ok(Success, "Pipe's ReadFile returned FALSE, instead of expected TRUE\n");
+                if(dwLastError != 0)
+                    trace("Last Error = 0x%lX\n",dwLastError);
             }
 
             ok(cbRead > 0,"Pipe's Readfile has lpNumberOfBytesRead <= 0\n");
 
             if(dReadBufferSize == MINBUFFERSIZE)
-                ok(lastError == ERROR_MORE_DATA, "Pipe's ReadFile last error is unexpected\n");
+                ok(dwLastError == ERROR_MORE_DATA, "Pipe's ReadFile last error is unexpected\n");
 
             WaitForSingleObject(hThread, INFINITE);
             CloseHandle(hThread);
@@ -91,11 +100,12 @@ PipeReader(
 }
 
 VOID
-StartTestCORE17376(DWORD adReadBufferSize)
+StartTestCORE17376(
+     _In_ DWORD adReadBufferSize)
 {
-    HANDLE  hThread;
+    HANDLE hThread;
 
-    trace("adReadBufferSize = %ld - START\n",adReadBufferSize);
+    trace("adReadBufferSize = %ld - START\n", adReadBufferSize);
 
     dReadBufferSize = adReadBufferSize;
 
@@ -107,7 +117,7 @@ StartTestCORE17376(DWORD adReadBufferSize)
         CloseHandle(hThread);
     }
 
-    trace("adReadBufferSize = %ld - COMPLETED\n",adReadBufferSize);
+    trace("adReadBufferSize = %ld - COMPLETED\n", adReadBufferSize);
 }
 
 START_TEST(Pipes)

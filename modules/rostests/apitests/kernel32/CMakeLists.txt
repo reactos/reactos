@@ -28,6 +28,7 @@ list(APPEND SOURCE
     lstrlen.c
     Mailslot.c
     MultiByteToWideChar.c
+    Pipes.c
     PrivMoveFileIdentityW.c
     QueueUserAPC.c
     SetComputerNameExW.c
@@ -38,8 +39,7 @@ list(APPEND SOURCE
     TerminateProcess.c
     TunnelCache.c
     UEFIFirmware.c
-    WideCharToMultiByte.c
-    Pipes.c)
+    WideCharToMultiByte.c)
 
 list(APPEND PCH_SKIP_SOURCE
     testlist.c)
