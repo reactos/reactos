@@ -263,7 +263,6 @@ HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm, LPFND
         CComPtr<IPersistFolder2> pf = NULL;
         if (SUCCEEDED(m_psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &pf))))
         {
-            // FIXME: It is not supposed to do this? m_pidlFolder can be NULL
             if (FAILED(pf->GetCurFolder(&m_pidlFolder)))
                 ERR("GetCurFolder failed\n");
         }

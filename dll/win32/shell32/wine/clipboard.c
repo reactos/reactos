@@ -90,8 +90,9 @@ HGLOBAL RenderHDROP(LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl)
 	for (i=0; i<cidl;i++)
 	{
 #ifdef __REACTOS__
-          /* The Windows default shell IDataObject::GetData fails with DV_E_CLIPFORMAT if the desktop is present. */
-          /* 7-Zip 23.01 relies on this to fail in its IShellExtInit when called on the desktop folder. */
+          /* The Windows default shell IDataObject::GetData fails with DV_E_CLIPFORMAT if the desktop is present.
+           * Windows does return HDROP in EnumFormatEtc and does not fail until GetData is called.
+           * Failing GetData causes 7-Zip 23.01 to not add its menu to the desktop folder. */
           if (ILIsEmpty(apidl[i]) && ILIsEmpty(pidlRoot))
               goto cleanup;
 
