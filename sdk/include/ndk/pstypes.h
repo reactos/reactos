@@ -1004,6 +1004,74 @@ typedef struct _THREAD_BASIC_INFORMATION
 #ifndef NTOS_MODE_USER
 
 //
+// Job message flags
+//
+
+#define JOB_OBJECT_MSG_END_OF_JOB_TIME          1
+#define JOB_OBJECT_MSG_END_OF_PROCESS_TIME      2
+#define JOB_OBJECT_MSG_ACTIVE_PROCESS_LIMIT     3
+#define JOB_OBJECT_MSG_ACTIVE_PROCESS_ZERO      4
+#define JOB_OBJECT_MSG_NEW_PROCESS              6
+#define JOB_OBJECT_MSG_EXIT_PROCESS             7
+#define JOB_OBJECT_MSG_ABNORMAL_EXIT_PROCESS    8
+#define JOB_OBJECT_MSG_PROCESS_MEMORY_LIMIT     9
+#define JOB_OBJECT_MSG_JOB_MEMORY_LIMIT         10
+#define JOB_OBJECT_MSG_NOTIFICATION_LIMIT       11
+#define JOB_OBJECT_MSG_JOB_CYCLE_TIME_LIMIT     12
+
+//
+// Job Information Structures for NtQuery/SetInformationJobObject
+//
+
+typedef struct _JOBOBJECT_BASIC_ACCOUNTING_INFORMATION
+{
+    LARGE_INTEGER TotalUserTime;
+    LARGE_INTEGER TotalKernelTime;
+    LARGE_INTEGER ThisPeriodTotalUserTime;
+    LARGE_INTEGER ThisPeriodTotalKernelTime;
+    ULONG TotalPageFaultCount;
+    ULONG TotalProcesses;
+    ULONG ActiveProcesses;
+    ULONG TotalTerminatedProcesses;
+} JOBOBJECT_BASIC_ACCOUNTING_INFORMATION, *PJOBOBJECT_BASIC_ACCOUNTING_INFORMATION;
+
+typedef struct _JOBOBJECT_BASIC_LIMIT_INFORMATION
+{
+    LARGE_INTEGER PerProcessUserTimeLimit;
+    LARGE_INTEGER PerJobUserTimeLimit;
+    ULONG LimitFlags;
+    SIZE_T MinimumWorkingSetSize;
+    SIZE_T MaximumWorkingSetSize;
+    ULONG ActiveProcessLimit;
+    ULONG_PTR Affinity;
+    ULONG PriorityClass;
+    ULONG SchedulingClass;
+} JOBOBJECT_BASIC_LIMIT_INFORMATION, *PJOBOBJECT_BASIC_LIMIT_INFORMATION;
+
+typedef struct _JOBOBJECT_EXTENDED_LIMIT_INFORMATION
+{
+    JOBOBJECT_BASIC_LIMIT_INFORMATION BasicLimitInformation;
+    IO_COUNTERS IoInfo;
+    SIZE_T ProcessMemoryLimit;
+    SIZE_T JobMemoryLimit;
+    SIZE_T PeakProcessMemoryUsed;
+    SIZE_T PeakJobMemoryUsed;
+} JOBOBJECT_EXTENDED_LIMIT_INFORMATION, *PJOBOBJECT_EXTENDED_LIMIT_INFORMATION;
+
+typedef struct _JOBOBJECT_BASIC_PROCESS_ID_LIST
+{
+    ULONG NumberOfAssignedProcesses;
+    ULONG NumberOfProcessIdsInList;
+    ULONG_PTR ProcessIdList[1];
+} JOBOBJECT_BASIC_PROCESS_ID_LIST, *PJOBOBJECT_BASIC_PROCESS_ID_LIST;
+
+typedef struct _JOBOBJECT_ASSOCIATE_COMPLETION_PORT
+{
+    PVOID CompletionKey;
+    HANDLE CompletionPort;
+} JOBOBJECT_ASSOCIATE_COMPLETION_PORT, *PJOBOBJECT_ASSOCIATE_COMPLETION_PORT;
+
+//
 // Job Set Array
 //
 typedef struct _JOB_SET_ARRAY
