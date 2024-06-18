@@ -1855,13 +1855,11 @@ LPITEMIDLIST _ILCreateDrive(LPCWSTR lpszNew)
     pidlOut = _ILAlloc(PT_DRIVE, sizeof(DriveStruct));
     if (pidlOut)
     {
-        LPSTR pszDest;
-
-        pszDest = _ILGetTextPointer(pidlOut);
+        LPSTR pszDest = _ILGetTextPointer(pidlOut);
         if (pszDest)
         {
-            strcpy(pszDest, "x:\\");
-            pszDest[0]=toupperW(lpszNew[0]);
+            lstrcpyA(pszDest, "x:\\");
+            pszDest[0] = toupper(lpszNew[0]);
             TRACE("-- create Drive: %s\n", debugstr_a(pszDest));
         }
     }
@@ -1893,7 +1891,7 @@ LPITEMIDLIST _ILCreateEntireNetwork(void)
  * RETURNS
  *  strlen (lpszText)
  */
-DWORD _ILGetDrive(LPCITEMIDLIST pidl,LPSTR pOut, UINT uSize)
+DWORD _ILGetDrive(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uSize)
 {
     TRACE("(%p,%p,%u)\n",pidl,pOut,uSize);
 
@@ -1901,7 +1899,7 @@ DWORD _ILGetDrive(LPCITEMIDLIST pidl,LPSTR pOut, UINT uSize)
         pidl = ILGetNext(pidl);
 
     if (pidl && _ILIsDrive(pidl))
-        return _ILSimpleGetText(pidl, pOut, uSize);
+        return _ILSimpleGetTextW(pidl, pOut, uSize);
 
     return 0;
 }
@@ -2066,79 +2064,7 @@ BOOL _ILIsPidlSimple(LPCITEMIDLIST pidl)
  *    ### 3. section getting values from pidls ###
  */
 
- /**************************************************************************
- *  _ILSimpleGetText
- *
- * gets the text for the first item in the pidl (eg. simple pidl)
- *
- * returns the length of the string
- */
-DWORD _ILSimpleGetText (LPCITEMIDLIST pidl, LPSTR szOut, UINT uOutSize)
-{
-    DWORD        dwReturn=0;
-    LPSTR        szSrc;
-    LPWSTR       szSrcW;
-    GUID const * riid;
-    char szTemp[MAX_PATH];
-
-    TRACE("(%p %p %x)\n",pidl,szOut,uOutSize);
-
-    if (!pidl)
-        return 0;
-
-    if (szOut)
-        *szOut = 0;
-
-    if (_ILIsDesktop(pidl))
-    {
-        /* desktop */
-        if (HCR_GetClassNameA(&CLSID_ShellDesktop, szTemp, MAX_PATH))
-        {
-            if (szOut)
-                lstrcpynA(szOut, szTemp, uOutSize);
-
-            dwReturn = strlen (szTemp);
-        }
-    }
-    else if (( szSrc = _ILGetTextPointer(pidl) ))
-    {
-        /* filesystem */
-        if (szOut)
-            lstrcpynA(szOut, szSrc, uOutSize);
-
-        dwReturn = strlen(szSrc);
-    }
-    else if (( szSrcW = _ILGetTextPointerW(pidl) ))
-    {
-        /* unicode filesystem */
-        WideCharToMultiByte(CP_ACP,0,szSrcW, -1, szTemp, MAX_PATH, NULL, NULL);
-
-        if (szOut)
-            lstrcpynA(szOut, szTemp, uOutSize);
-
-        dwReturn = strlen (szTemp);
-    }
-    else if (( riid = _ILGetGUIDPointer(pidl) ))
-    {
-        /* special folder */
-        if ( HCR_GetClassNameA(riid, szTemp, MAX_PATH) )
-        {
-            if (szOut)
-                lstrcpynA(szOut, szTemp, uOutSize);
-
-            dwReturn = strlen (szTemp);
-        }
-    }
-    else
-    {
-        ERR("-- no text\n");
-    }
-
-    TRACE("-- (%p=%s 0x%08x)\n",szOut,debugstr_a(szOut),dwReturn);
-    return dwReturn;
-}
-
- /**************************************************************************
+/**************************************************************************
  *  _ILSimpleGetTextW
  *
  * gets the text for the first item in the pidl (eg. simple pidl)
@@ -2171,7 +2097,7 @@ DWORD _ILSimpleGetTextW (LPCITEMIDLIST pidl, LPWSTR szOut, UINT uOutSize)
         if (_ILIsDesktop(pidl))
         {
             /* desktop */
-            if (HCR_GetClassNameW(&CLSID_ShellDesktop, szTemp, MAX_PATH))
+            if (HCR_GetClassNameW(&CLSID_ShellDesktop, szTemp, _countof(szTemp)))
             {
                 if (szOut)
                     lstrcpynW(szOut, szTemp, uOutSize);
@@ -2190,7 +2116,7 @@ DWORD _ILSimpleGetTextW (LPCITEMIDLIST pidl, LPWSTR szOut, UINT uOutSize)
         else if (( szSrc = _ILGetTextPointer(pidl) ))
         {
             /* filesystem */
-            MultiByteToWideChar(CP_ACP, 0, szSrc, -1, szTemp, MAX_PATH);
+            MultiByteToWideChar(CP_ACP, 0, szSrc, -1, szTemp, _countof(szTemp));
 
             if (szOut)
                 lstrcpynW(szOut, szTemp, uOutSize);
@@ -2200,7 +2126,7 @@ DWORD _ILSimpleGetTextW (LPCITEMIDLIST pidl, LPWSTR szOut, UINT uOutSize)
         else if (( riid = _ILGetGUIDPointer(pidl) ))
         {
             /* special folder */
-            if ( HCR_GetClassNameW(riid, szTemp, MAX_PATH) )
+            if ( HCR_GetClassNameW(riid, szTemp, _countof(szTemp)))
             {
                 if (szOut)
                     lstrcpynW(szOut, szTemp, uOutSize);
@@ -2460,7 +2386,7 @@ BOOL _ILGetFileDateTime(LPCITEMIDLIST pidl, FILETIME *pFt)
     return TRUE;
 }
 
-BOOL _ILGetFileDate (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize)
+BOOL _ILGetFileDate(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize)
 {
     FILETIME ft,lft;
     SYSTEMTIME time;
@@ -2471,17 +2397,17 @@ BOOL _ILGetFileDate (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize)
         FileTimeToLocalFileTime(&ft, &lft);
         FileTimeToSystemTime (&lft, &time);
 
-        ret = GetDateFormatA(LOCALE_USER_DEFAULT,DATE_SHORTDATE,&time, NULL,  pOut, uOutSize);
-        if (ret) 
+        ret = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &time, NULL, pOut, uOutSize);
+        if (ret)
         {
             /* Append space + time without seconds */
-            pOut[ret-1] = ' ';
-            GetTimeFormatA(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &time, NULL, &pOut[ret], uOutSize - ret);
+            pOut[ret - 1] = L' ';
+            GetTimeFormatW(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &time, NULL, &pOut[ret], uOutSize - ret);
         }
     }
     else
     {
-        pOut[0] = '\0';
+        pOut[0] = UNICODE_NULL;
         ret = FALSE;
     }
     return ret;
@@ -2504,7 +2430,7 @@ BOOL _ILGetFileDate (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize)
  *    pOut can be null when no string is needed
  *
  */
-DWORD _ILGetFileSize (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize)
+DWORD _ILGetFileSize(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize)
 {
     LPPIDLDATA pdata = _ILGetDataPointer(pidl);
     DWORD dwSize;
@@ -2517,19 +2443,19 @@ DWORD _ILGetFileSize (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize)
     case PT_VALUE:
         dwSize = pdata->u.file.dwFileSize;
         if (pOut)
-            StrFormatKBSizeA(dwSize, pOut, uOutSize);
+            StrFormatKBSizeW(dwSize, pOut, uOutSize);
         return dwSize;
     }
     if (pOut)
-        *pOut = 0x00;
+        *pOut = UNICODE_NULL;
     return 0;
 }
 
-BOOL _ILGetExtension (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize)
+BOOL _ILGetExtension(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize)
 {
-    char szTemp[MAX_PATH];
-    const char * pPoint;
-    LPCITEMIDLIST  pidlTemp=pidl;
+    WCHAR szTemp[MAX_PATH];
+    LPCWSTR pPoint;
+    LPCITEMIDLIST pidlTemp = pidl;
 
     TRACE("pidl=%p\n",pidl);
 
@@ -2540,17 +2466,17 @@ BOOL _ILGetExtension (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize)
 
     if (!_ILIsValue(pidlTemp))
         return FALSE;
-    if (!_ILSimpleGetText(pidlTemp, szTemp, MAX_PATH))
+    if (!_ILSimpleGetTextW(pidlTemp, szTemp, _countof(szTemp)))
         return FALSE;
 
-    pPoint = PathFindExtensionA(szTemp);
+    pPoint = PathFindExtensionW(szTemp);
 
     if (!*pPoint)
         return FALSE;
 
     pPoint++;
-    lstrcpynA(pOut, pPoint, uOutSize);
-    TRACE("%s\n",pOut);
+    lstrcpynW(pOut, pPoint, uOutSize);
+    TRACE("%s\n", debugstr_w(pOut));
 
     return TRUE;
 }
@@ -2571,60 +2497,41 @@ BOOL _ILGetExtension (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize)
  * NOTES
  *    This function copies as much as possible into the buffer.
  */
-void _ILGetFileType(LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize)
+void _ILGetFileType(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize)
 {
-#ifdef __REACTOS__ /* r32966 */
-    char sType[64];
-#endif
+    WCHAR sType[64], sTemp[64];
 
     if(_ILIsValue(pidl))
     {
-        char sTemp[64];
-
         if(uOutSize > 0)
             pOut[0] = 0;
-#ifdef __REACTOS__ /* r32966 */
-        if (_ILGetExtension (pidl, sType, 64))
+        if (_ILGetExtension(pidl, sType, _countof(sType)))
         {
-            if (HCR_MapTypeToValueA(sType, sTemp, 64, TRUE))
+            if (HCR_MapTypeToValueW(sType, sTemp, _countof(sTemp), TRUE))
             {
                 /* retrieve description */
-                if(HCR_MapTypeToValueA(sTemp, pOut, uOutSize, FALSE ))
+                if (HCR_MapTypeToValueW(sTemp, pOut, uOutSize, FALSE))
                     return;
             }
+
             /* display Ext-file as description */
-            _strupr(sType);
+            CharUpperW(sType);
             /* load localized file string */
-            sTemp[0] = '\0';
-            if(LoadStringA(shell32_hInstance, IDS_ANY_FILE, sTemp, 64))
+            sTemp[0] = UNICODE_NULL;
+            if (LoadStringW(shell32_hInstance, IDS_ANY_FILE, sTemp, _countof(sTemp)))
             {
-                sTemp[63] = '\0';
-                StringCchPrintfA(pOut, uOutSize, sTemp, sType);
+                sTemp[_countof(sTemp) - 1] = UNICODE_NULL;
+                StringCchPrintfW(pOut, uOutSize, sTemp, sType);
             }
         }
-#else
-        if (_ILGetExtension (pidl, sTemp, 64))
-        {
-            if (!( HCR_MapTypeToValueA(sTemp, sTemp, 64, TRUE)
-                && HCR_MapTypeToValueA(sTemp, pOut, uOutSize, FALSE )))
-            {
-                lstrcpynA (pOut, sTemp, uOutSize - 6);
-                strcat (pOut, "-file");
-            }
-        }
-#endif
     }
     else
-#ifdef __REACTOS__ /* r32966 */
     {
-        pOut[0] = '\0';
-        LoadStringA(shell32_hInstance, IDS_DIRECTORY, pOut, uOutSize);
+        pOut[0] = UNICODE_NULL;
+        LoadStringW(shell32_hInstance, IDS_DIRECTORY, pOut, uOutSize);
         /* make sure its null terminated */
-        pOut[uOutSize-1] = '\0';
+        pOut[uOutSize - 1] = UNICODE_NULL;
     }
-#else
-        lstrcpynA(pOut, "Folder", uOutSize);
-#endif
 }
 
 /*************************************************************************
@@ -2644,7 +2551,7 @@ void _ILGetFileType(LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize)
  *  return value 0 in case of error is a valid return value
  *
  */
-DWORD _ILGetFileAttributes(LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize)
+DWORD _ILGetFileAttributes(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize)
 {
     LPPIDLDATA pData = _ILGetDataPointer(pidl);
     WORD wAttrib = 0;
@@ -2665,16 +2572,16 @@ DWORD _ILGetFileAttributes(LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize)
     {
         i=0;
         if(wAttrib & FILE_ATTRIBUTE_READONLY)
-            pOut[i++] = 'R';
+            pOut[i++] = L'R';
         if(wAttrib & FILE_ATTRIBUTE_HIDDEN)
-            pOut[i++] = 'H';
+            pOut[i++] = L'H';
         if(wAttrib & FILE_ATTRIBUTE_SYSTEM)
-            pOut[i++] = 'S';
+            pOut[i++] = L'S';
         if(wAttrib & FILE_ATTRIBUTE_ARCHIVE)
-            pOut[i++] = 'A';
+            pOut[i++] = L'A';
         if(wAttrib & FILE_ATTRIBUTE_COMPRESSED)
-            pOut[i++] = 'C';
-        pOut[i] = 0x00;
+            pOut[i++] = L'C';
+        pOut[i] = UNICODE_NULL;
     }
     return wAttrib;
 }

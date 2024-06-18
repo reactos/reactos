@@ -57,13 +57,13 @@ static int iDriveTypeIds[7] = { IDS_DRIVE_FIXED,       /* DRIVE_UNKNOWN */
 
 BOOL _ILGetDriveType(LPCITEMIDLIST pidl)
 {
-    char szDrive[8];
+    WCHAR szDrive[8];
     if (!_ILGetDrive(pidl, szDrive, _countof(szDrive)))
     {
         ERR("pidl %p is not a drive\n", pidl);
         return DRIVE_UNKNOWN;
     }
-    return ::GetDriveTypeA(szDrive);
+    return ::GetDriveTypeW(szDrive);
 }
 
 /***********************************************************************
@@ -285,16 +285,16 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    char szDrive[8] = {0};
-    if (!_ILGetDrive(apidl[0], szDrive, sizeof(szDrive)))
+    WCHAR szDrive[8] = {0};
+    if (!_ILGetDrive(apidl[0], szDrive, _countof(szDrive)))
     {
         ERR("pidl is not a drive\n");
         SHFree(pidlFolder);
         _ILFreeaPidl(apidl, cidl);
         return E_FAIL;
     }
-    nDriveType = GetDriveTypeA(szDrive);
-    GetVolumeInformationA(szDrive, NULL, 0, NULL, NULL, &dwFlags, NULL, 0);
+    nDriveType = GetDriveTypeW(szDrive);
+    GetVolumeInformationW(szDrive, NULL, 0, NULL, NULL, &dwFlags, NULL, 0);
 
 // custom command IDs
 #if 0 // Disabled until our menu building system is fixed
