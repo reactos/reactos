@@ -94,29 +94,6 @@ PspInitializeJobStructures(VOID)
     ExInitializeFastMutex(&PsJobListLock);
 }
 
-VOID
-NTAPI
-PspDeleteJob ( PVOID ObjectBody )
-{
-    PEJOB Job = (PEJOB)ObjectBody;
-
-    /* remove the reference to the completion port if associated */
-    if(Job->CompletionPort != NULL)
-    {
-        ObDereferenceObject(Job->CompletionPort);
-    }
-
-    /* unlink the job object */
-    if(Job->JobLinks.Flink != NULL)
-    {
-        ExAcquireFastMutex(&PsJobListLock);
-        RemoveEntryList(&Job->JobLinks);
-        ExReleaseFastMutex(&PsJobListLock);
-    }
-
-    ExDeleteResource(&Job->JobLock);
-}
-
 /*!
  * Assigns a process to a job object.
  *
@@ -198,16 +175,6 @@ PspAssignProcessToJob(
     return Status;
 }
 
-NTSTATUS
-NTAPI
-PspTerminateJobObject(PEJOB Job,
-    KPROCESSOR_MODE AccessMode,
-    NTSTATUS ExitStatus )
-{
-    DPRINT("PspTerminateJobObject() is unimplemented!\n");
-    return STATUS_NOT_IMPLEMENTED;
-}
-
 VOID
 NTAPI
 PspRemoveProcessFromJob(IN PEPROCESS Process,
@@ -224,117 +191,83 @@ PspExitProcessFromJob(IN PEJOB Job,
     /* FIXME */
 }
 
-/*!
- * Assigns a process to a job object.
- *
- * @param[in] JobHandle
- *     Handle to the job object.
- *
- * @param[in] ProcessHandle
- *     Handle to the process to be assigned.
- *
- * @returns
- *     STATUS_SUCCESS if the process is successfully assigned to the job.
- *     An appropriate NTSTATUS error code otherwise.
- */
 NTSTATUS
 NTAPI
-NtAssignProcessToJobObject(
-    _In_ HANDLE JobHandle,
-    _In_ HANDLE ProcessHandle
-)
+PspTerminateJobObject(PEJOB Job,
+    KPROCESSOR_MODE AccessMode,
+    NTSTATUS ExitStatus )
 {
-    PEPROCESS Process;
-    PEJOB Job;
-    KPROCESSOR_MODE PreviousMode;
-    ULONG SessionId;
-    NTSTATUS Status;
-
-    PAGED_CODE();
-
-    PreviousMode = ExGetPreviousMode();
-
-    /* Reference the job. JOB_OBJECT_ASSIGN_PROCESS rights are required for assignment */
-    Status = ObReferenceObjectByHandle(JobHandle,
-                                       JOB_OBJECT_ASSIGN_PROCESS,
-                                       PsJobType,
-                                       PreviousMode,
-                                       (PVOID *)&Job,
-                                       NULL);
-    if (!(NT_SUCCESS(Status)))
-    {
-        return Status;
-    }
-
-    /* Reference the process. Make sure we have enough rights, especially to
-       terminate the process. Otherwise, one could abuse job objects to terminate
-       processes without having the rights to do so */
-    Status = ObReferenceObjectByHandle(ProcessHandle,
-                                       PROCESS_TERMINATE,
-                                       PsProcessType,
-                                       PreviousMode,
-                                       (PVOID *)&Process,
-                                       NULL);
-    if (!(NT_SUCCESS(Status)))
-    {
-        ObDereferenceObject(Job);
-        return Status;
-    }
-
-    /* Get the session ID - it must match the process and the job creator */
-    SessionId = PsGetProcessSessionId(Process);
-
-    if (Process->Job != NULL || SessionId != Job->SessionId)
-    {
-        /* Return STATUS_ACCESS_DENIED if the process is already assigned to a job or
-           the session ID is different */
-        ObDereferenceObject(Job);
-        ObDereferenceObject(Process);
-        return STATUS_ACCESS_DENIED;
-    }
-
-    /* TODO: Security checks */
-
-    if (ExAcquireRundownProtection(&Process->RundownProtect))
-    {
-        /* Capture a reference for the process lifetime */
-        ObReferenceObject(Job);
-
-        /* Try to atomically compare-and-exchange the job pointer */
-        if (InterlockedCompareExchangePointer((PVOID)&Process->Job, Job, NULL))
-        {
-            ObDereferenceObject(Job);
-            Status = STATUS_ACCESS_DENIED;
-        }
-        else
-        {
-            /* Assign the process to the job */
-            Status = PspAssignProcessToJob(Process, Job);
-        }
-
-        /* TODO: UI restrictions class */
-
-        ExReleaseRundownProtection(&Process->RundownProtect);
-    }
-    else
-    {
-        Status = STATUS_PROCESS_IS_TERMINATING;
-    }
-
-    ObDereferenceObject(Job);
-    ObDereferenceObject(Process);
-
-    return Status;
+    DPRINT("PspTerminateJobObject() is unimplemented!\n");
+    return STATUS_NOT_IMPLEMENTED;
 }
 
-NTSTATUS
+VOID
 NTAPI
-NtCreateJobSet(IN ULONG NumJob,
-               IN PJOB_SET_ARRAY UserJobSet,
-               IN ULONG Flags)
+PspDeleteJob ( PVOID ObjectBody )
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PEJOB Job = (PEJOB)ObjectBody;
+
+    /* remove the reference to the completion port if associated */
+    if(Job->CompletionPort != NULL)
+    {
+        ObDereferenceObject(Job->CompletionPort);
+    }
+
+    /* unlink the job object */
+    if(Job->JobLinks.Flink != NULL)
+    {
+        ExAcquireFastMutex(&PsJobListLock);
+        RemoveEntryList(&Job->JobLinks);
+        ExReleaseFastMutex(&PsJobListLock);
+    }
+
+    ExDeleteResource(&Job->JobLock);
+}
+
+/*
+ * @implemented
+ */
+PVOID
+NTAPI
+PsGetJobLock(PEJOB Job)
+{
+    ASSERT(Job);
+    return (PVOID)&Job->JobLock;
+}
+
+/*
+ * @implemented
+ */
+ULONG
+NTAPI
+PsGetJobSessionId(PEJOB Job)
+{
+    ASSERT(Job);
+    return Job->SessionId;
+}
+
+/*
+ * @implemented
+ */
+ULONG
+NTAPI
+PsGetJobUIRestrictionsClass(PEJOB Job)
+{
+    ASSERT(Job);
+    return Job->UIRestrictionsClass;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+NTAPI
+PsSetJobUIRestrictionsClass(PEJOB Job,
+    ULONG UIRestrictionsClass)
+{
+    ASSERT(Job);
+    (void)InterlockedExchangeUL(&Job->UIRestrictionsClass, UIRestrictionsClass);
+    /* FIXME - walk through the job process list and update the restrictions? */
 }
 
 /*!
@@ -455,6 +388,188 @@ NtCreateJobObject(
     return Status;
 }
 
+NTSTATUS
+NTAPI
+NtCreateJobSet(IN ULONG NumJob,
+               IN PJOB_SET_ARRAY UserJobSet,
+               IN ULONG Flags)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*!
+ * Opens a handle to an existing job object.
+ *
+ * @param JobHandle
+ *     A pointer to a handle that will receive the handle of the created job object.
+ *
+ * @param DesiredAccess
+ *     Specifies the desired access rights for the job object.
+ *
+ * @param ObjectAttributes
+ *     Pointer to the OBJECT_ATTRIBUTES structure specifying the object name and attributes.
+ *
+ * @returns
+ *     STATUS_SUCCESS if the job object is successfully created.
+ *     An appropriate NTSTATUS error code otherwise.
+ */
+NTSTATUS
+NTAPI
+NtOpenJobObject(
+    _Out_ PHANDLE JobHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
+)
+{
+    KPROCESSOR_MODE PreviousMode;
+    HANDLE Handle;
+    NTSTATUS Status;
+
+    PAGED_CODE();
+
+    PreviousMode = ExGetPreviousMode();
+
+    /* Check for valid buffers */
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            ProbeForWriteHandle(JobHandle);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+
+    Status = ObOpenObjectByName(ObjectAttributes,
+                                PsJobType,
+                                PreviousMode,
+                                NULL,
+                                DesiredAccess,
+                                NULL,
+                                &Handle);
+    if (NT_SUCCESS(Status))
+    {
+        _SEH2_TRY
+        {
+            *JobHandle = Handle;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+    }
+
+    return Status;
+}
+
+/*!
+ * Assigns a process to a job object.
+ *
+ * @param[in] JobHandle
+ *     Handle to the job object.
+ *
+ * @param[in] ProcessHandle
+ *     Handle to the process to be assigned.
+ *
+ * @returns
+ *     STATUS_SUCCESS if the process is successfully assigned to the job.
+ *     An appropriate NTSTATUS error code otherwise.
+ */
+NTSTATUS
+NTAPI
+NtAssignProcessToJobObject(
+    _In_ HANDLE JobHandle,
+    _In_ HANDLE ProcessHandle
+)
+{
+    PEPROCESS Process;
+    PEJOB Job;
+    KPROCESSOR_MODE PreviousMode;
+    ULONG SessionId;
+    NTSTATUS Status;
+
+    PAGED_CODE();
+
+    PreviousMode = ExGetPreviousMode();
+
+    /* Reference the job. JOB_OBJECT_ASSIGN_PROCESS rights are required for assignment */
+    Status = ObReferenceObjectByHandle(JobHandle,
+                                       JOB_OBJECT_ASSIGN_PROCESS,
+                                       PsJobType,
+                                       PreviousMode,
+                                       (PVOID *)&Job,
+                                       NULL);
+    if (!(NT_SUCCESS(Status)))
+    {
+        return Status;
+    }
+
+    /* Reference the process. Make sure we have enough rights, especially to
+       terminate the process. Otherwise, one could abuse job objects to terminate
+       processes without having the rights to do so */
+    Status = ObReferenceObjectByHandle(ProcessHandle,
+                                       PROCESS_TERMINATE,
+                                       PsProcessType,
+                                       PreviousMode,
+                                       (PVOID *)&Process,
+                                       NULL);
+    if (!(NT_SUCCESS(Status)))
+    {
+        ObDereferenceObject(Job);
+        return Status;
+    }
+
+    /* Get the session ID - it must match the process and the job creator */
+    SessionId = PsGetProcessSessionId(Process);
+
+    if (Process->Job != NULL || SessionId != Job->SessionId)
+    {
+        /* Return STATUS_ACCESS_DENIED if the process is already assigned to a job or
+           the session ID is different */
+        ObDereferenceObject(Job);
+        ObDereferenceObject(Process);
+        return STATUS_ACCESS_DENIED;
+    }
+
+    /* TODO: Security checks */
+
+    if (ExAcquireRundownProtection(&Process->RundownProtect))
+    {
+        /* Capture a reference for the process lifetime */
+        ObReferenceObject(Job);
+
+        /* Try to atomically compare-and-exchange the job pointer */
+        if (InterlockedCompareExchangePointer((PVOID)&Process->Job, Job, NULL))
+        {
+            ObDereferenceObject(Job);
+            Status = STATUS_ACCESS_DENIED;
+        }
+        else
+        {
+            /* Assign the process to the job */
+            Status = PspAssignProcessToJob(Process, Job);
+        }
+
+        /* TODO: UI restrictions class */
+
+        ExReleaseRundownProtection(&Process->RundownProtect);
+    }
+    else
+    {
+        Status = STATUS_PROCESS_IS_TERMINATING;
+    }
+
+    ObDereferenceObject(Job);
+    ObDereferenceObject(Process);
+
+    return Status;
+}
+
 /*!
  * Determines if a specified process is associated with a specified job or any job.
  *
@@ -559,70 +674,37 @@ NtIsProcessInJob(
     return Status;
 }
 
-/*!
- * Opens a handle to an existing job object.
- *
- * @param JobHandle
- *     A pointer to a handle that will receive the handle of the created job object.
- *
- * @param DesiredAccess
- *     Specifies the desired access rights for the job object.
- *
- * @param ObjectAttributes
- *     Pointer to the OBJECT_ATTRIBUTES structure specifying the object name and attributes.
- *
- * @returns
- *     STATUS_SUCCESS if the job object is successfully created.
- *     An appropriate NTSTATUS error code otherwise.
+/*
+ * @unimplemented
  */
 NTSTATUS
 NTAPI
-NtOpenJobObject(
-    _Out_ PHANDLE JobHandle,
-    _In_ ACCESS_MASK DesiredAccess,
-    _In_ POBJECT_ATTRIBUTES ObjectAttributes
-)
+NtTerminateJobObject (
+    HANDLE JobHandle,
+    NTSTATUS ExitStatus )
 {
     KPROCESSOR_MODE PreviousMode;
-    HANDLE Handle;
+    PEJOB Job;
     NTSTATUS Status;
 
     PAGED_CODE();
 
     PreviousMode = ExGetPreviousMode();
 
-    /* Check for valid buffers */
-    if (PreviousMode != KernelMode)
+    Status = ObReferenceObjectByHandle(
+        JobHandle,
+        JOB_OBJECT_TERMINATE,
+        PsJobType,
+        PreviousMode,
+        (PVOID*)&Job,
+        NULL);
+    if(NT_SUCCESS(Status))
     {
-        _SEH2_TRY
-        {
-            ProbeForWriteHandle(JobHandle);
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            _SEH2_YIELD(return _SEH2_GetExceptionCode());
-        }
-        _SEH2_END;
-    }
-
-    Status = ObOpenObjectByName(ObjectAttributes,
-                                PsJobType,
-                                PreviousMode,
-                                NULL,
-                                DesiredAccess,
-                                NULL,
-                                &Handle);
-    if (NT_SUCCESS(Status))
-    {
-        _SEH2_TRY
-        {
-            *JobHandle = Handle;
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            Status = _SEH2_GetExceptionCode();
-        }
-        _SEH2_END;
+        Status = PspTerminateJobObject(
+            Job,
+            PreviousMode,
+            ExitStatus);
+        ObDereferenceObject(Job);
     }
 
     return Status;
@@ -894,7 +976,6 @@ NtQueryInformationJobObject (
     return Status;
 }
 
-
 /*
  * @unimplemented
  */
@@ -990,93 +1071,6 @@ NtSetInformationJobObject (
     ObDereferenceObject(Job);
 
     return Status;
-}
-
-
-/*
- * @unimplemented
- */
-NTSTATUS
-NTAPI
-NtTerminateJobObject (
-    HANDLE JobHandle,
-    NTSTATUS ExitStatus )
-{
-    KPROCESSOR_MODE PreviousMode;
-    PEJOB Job;
-    NTSTATUS Status;
-
-    PAGED_CODE();
-
-    PreviousMode = ExGetPreviousMode();
-
-    Status = ObReferenceObjectByHandle(
-        JobHandle,
-        JOB_OBJECT_TERMINATE,
-        PsJobType,
-        PreviousMode,
-        (PVOID*)&Job,
-        NULL);
-    if(NT_SUCCESS(Status))
-    {
-        Status = PspTerminateJobObject(
-            Job,
-            PreviousMode,
-            ExitStatus);
-        ObDereferenceObject(Job);
-    }
-
-    return Status;
-}
-
-
-/*
- * @implemented
- */
-PVOID
-NTAPI
-PsGetJobLock(PEJOB Job)
-{
-    ASSERT(Job);
-    return (PVOID)&Job->JobLock;
-}
-
-
-/*
- * @implemented
- */
-ULONG
-NTAPI
-PsGetJobSessionId ( PEJOB Job )
-{
-    ASSERT(Job);
-    return Job->SessionId;
-}
-
-
-/*
- * @implemented
- */
-ULONG
-NTAPI
-PsGetJobUIRestrictionsClass ( PEJOB Job )
-{
-    ASSERT(Job);
-    return Job->UIRestrictionsClass;
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-NTAPI
-PsSetJobUIRestrictionsClass(PEJOB Job,
-    ULONG UIRestrictionsClass)
-{
-    ASSERT(Job);
-    (void)InterlockedExchangeUL(&Job->UIRestrictionsClass, UIRestrictionsClass);
-    /* FIXME - walk through the job process list and update the restrictions? */
 }
 
 /* EOF */
