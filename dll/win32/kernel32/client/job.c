@@ -96,8 +96,8 @@ IsProcessInJob(IN HANDLE ProcessHandle,
  */
 BOOL
 WINAPI
-AssignProcessToJobObject(IN HANDLE hJob,
-                         IN HANDLE hProcess)
+AssignProcessToJobObject(_In_ HANDLE hJob,
+                         _In_ HANDLE hProcess)
 {
     NTSTATUS Status;
 

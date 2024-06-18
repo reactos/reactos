@@ -117,13 +117,69 @@ PspInitializeJobStructures(VOID)
     ExInitializeFastMutex(&PsJobListLock);
 }
 
+/*!
+ * Assigns a process to a job object.
+ *
+ * @param[in] Process
+ *     Pointer to the process to be assigned to the job.
+ *
+ * @param[in] Job
+ *     Pointer to the job object to which the process is to be assigned.
+ *
+ * @returns
+ *     STATUS_SUCCESS if the process is successfully assigned to the job.
+ *     An appropriate NTSTATUS error code otherwise.
+ */
 NTSTATUS
 NTAPI
-PspAssignProcessToJob(PEPROCESS Process,
-    PEJOB Job)
+PspAssignProcessToJob(
+    _In_ PEPROCESS Process,
+    _In_ PEJOB Job
+)
 {
-    DPRINT("PspAssignProcessToJob() is unimplemented!\n");
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Ensure the process is not already assigned to a job */
+    ASSERT(Process->Job == NULL);
+
+    /* Check if the job has a limit on the number of active processes */
+    if (Job->LimitFlags & JOB_OBJECT_LIMIT_ACTIVE_PROCESS)
+    {
+        if (Job->ActiveProcesses >= Job->ActiveProcessLimit)
+        {
+            /* Job limit on active processes has been reached */
+            /* TODO */
+        }
+    }
+
+    /* Ensure we are not interrupted by acquiring the job lock */
+    ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
+
+    /* Assign process to job object by inserting into the job's process list */
+    InsertTailList(&Job->ProcessListHead, &Process->JobLinks);
+
+    /* Increment the job's process counters */
+    Job->TotalProcesses++;
+    Job->ActiveProcesses++;
+
+    if (Job->CompletionPort && Process->UniqueProcessId)
+    {
+        /* If the job has a completion port and the process has a unique ID,
+           notify the job of the new process */
+        Status = IoSetIoCompletion(Job->CompletionPort,
+                                   Job->CompletionKey,
+                                   Process->UniqueProcessId,
+                                   STATUS_SUCCESS,
+                                   JOB_OBJECT_MSG_NEW_PROCESS,
+                                   FALSE);
+    }
+
+    /* Resume APCs and release the job lock */
+    ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
+
+    /* TODO: Ensure that job limits are respected */
+
+    return Status;
 }
 
 NTSTATUS
@@ -152,91 +208,105 @@ PspExitProcessFromJob(IN PEJOB Job,
     /* FIXME */
 }
 
-/*
- * @unimplemented
+/*!
+ * Assigns a process to a job object.
+ *
+ * @param[in] JobHandle
+ *     Handle to the job object.
+ *
+ * @param[in] ProcessHandle
+ *     Handle to the process to be assigned.
+ *
+ * @returns
+ *     STATUS_SUCCESS if the process is successfully assigned to the job.
+ *     An appropriate NTSTATUS error code otherwise.
  */
 NTSTATUS
 NTAPI
-NtAssignProcessToJobObject (
-    HANDLE JobHandle,
-    HANDLE ProcessHandle)
+NtAssignProcessToJobObject(
+    _In_ HANDLE JobHandle,
+    _In_ HANDLE ProcessHandle
+)
 {
     PEPROCESS Process;
+    PEJOB Job;
     KPROCESSOR_MODE PreviousMode;
+    ULONG SessionId;
     NTSTATUS Status;
 
     PAGED_CODE();
 
     PreviousMode = ExGetPreviousMode();
 
-    /* make sure we're having a handle with enough rights, especially the to
-    terminate the process. otherwise one could abuse the job objects to
-    terminate processes without having rights granted to do so! The reason
-    I open the process handle before the job handle is that a simple test showed
-    that it first complains about a invalid process handle! The other way around
-    would be simpler though... */
-    Status = ObReferenceObjectByHandle(
-        ProcessHandle,
-        PROCESS_TERMINATE,
-        PsProcessType,
-        PreviousMode,
-        (PVOID*)&Process,
-        NULL);
-    if(NT_SUCCESS(Status))
+    /* Reference the job. JOB_OBJECT_ASSIGN_PROCESS rights are required for assignment */
+    Status = ObReferenceObjectByHandle(JobHandle,
+                                       JOB_OBJECT_ASSIGN_PROCESS,
+                                       PsJobType,
+                                       PreviousMode,
+                                       (PVOID *)&Job,
+                                       NULL);
+    if (!(NT_SUCCESS(Status)))
     {
-        if(Process->Job == NULL)
+        return Status;
+    }
+
+    /* Reference the process. Make sure we have enough rights, especially to
+       terminate the process. Otherwise, one could abuse job objects to terminate
+       processes without having the rights to do so */
+    Status = ObReferenceObjectByHandle(ProcessHandle,
+                                       PROCESS_TERMINATE,
+                                       PsProcessType,
+                                       PreviousMode,
+                                       (PVOID *)&Process,
+                                       NULL);
+    if (!(NT_SUCCESS(Status)))
+    {
+        ObDereferenceObject(Job);
+        return Status;
+    }
+
+    /* Get the session ID - it must match the process and the job creator */
+    SessionId = PsGetProcessSessionId(Process);
+
+    if (Process->Job != NULL || SessionId != Job->SessionId)
+    {
+        /* Return STATUS_ACCESS_DENIED if the process is already assigned to a job or
+           the session ID is different */
+        ObDereferenceObject(Job);
+        ObDereferenceObject(Process);
+        return STATUS_ACCESS_DENIED;
+    }
+
+    /* TODO: Security checks */
+
+    if (ExAcquireRundownProtection(&Process->RundownProtect))
+    {
+        /* Capture a reference for the process lifetime */
+        ObReferenceObject(Job);
+
+        /* Try to atomically compare-and-exchange the job pointer */
+        if (InterlockedCompareExchangePointer((PVOID)&Process->Job, Job, NULL))
         {
-            PEJOB Job;
-
-            Status = ObReferenceObjectByHandle(
-                JobHandle,
-                JOB_OBJECT_ASSIGN_PROCESS,
-                PsJobType,
-                PreviousMode,
-                (PVOID*)&Job,
-                NULL);
-            if(NT_SUCCESS(Status))
-            {
-                /* lock the process so we can safely assign the process. Note that in the
-                meanwhile another thread could have assigned this process to a job! */
-
-                if(ExAcquireRundownProtection(&Process->RundownProtect))
-                {
-                    if(Process->Job == NULL && PsGetProcessSessionId(Process) == Job->SessionId)
-                    {
-                        /* Just store the pointer to the job object in the process, we'll
-                        assign it later. The reason we can't do this here is that locking
-                        the job object might require it to wait, which is a bad thing
-                        while holding the process lock! */
-                        Process->Job = Job;
-                        ObReferenceObject(Job);
-                    }
-                    else
-                    {
-                        /* process is already assigned to a job or session id differs! */
-                        Status = STATUS_ACCESS_DENIED;
-                    }
-                    ExReleaseRundownProtection(&Process->RundownProtect);
-
-                    if(NT_SUCCESS(Status))
-                    {
-                        /* let's actually assign the process to the job as we're not holding
-                        the process lock anymore! */
-                        Status = PspAssignProcessToJob(Process, Job);
-                    }
-                }
-
-                ObDereferenceObject(Job);
-            }
+            ObDereferenceObject(Job);
+            Status = STATUS_ACCESS_DENIED;
         }
         else
         {
-            /* process is already assigned to a job or session id differs! */
-            Status = STATUS_ACCESS_DENIED;
+            /* Assign the process to the job */
+            Status = PspAssignProcessToJob(Process, Job);
         }
 
-        ObDereferenceObject(Process);
+        /* TODO: UI restrictions class */
+
+        ExReleaseRundownProtection(&Process->RundownProtect);
     }
+    else
+    {
+        Status = STATUS_PROCESS_IS_TERMINATING;
+    }
+
+    ObDereferenceObject(Job);
+    ObDereferenceObject(Process);
 
     return Status;
 }
