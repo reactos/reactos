@@ -315,8 +315,8 @@ SetInformationJobObject(IN HANDLE hJob,
  */
 BOOL
 WINAPI
-TerminateJobObject(IN HANDLE hJob,
-                   IN UINT uExitCode)
+TerminateJobObject(_In_ HANDLE hJob,
+                   _In_ UINT uExitCode)
 {
     NTSTATUS Status;
 

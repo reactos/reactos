@@ -191,14 +191,75 @@ PspExitProcessFromJob(IN PEJOB Job,
     /* FIXME */
 }
 
+/*!
+ * Terminates all processes currently associated with the specified job object.
+ *
+ * @param[in] Job
+ *     A pointer to the job object to be terminated.
+ *
+ * @param[in] ExitStatus
+ *     The exit status to be used for all terminated processes.
+ *
+ * @returns
+ *     STATUS_SUCCESS if the job object was successfully terminated.
+ *     Otherwise, an appropriate NTSTATUS error code.
+ */
 NTSTATUS
 NTAPI
-PspTerminateJobObject(PEJOB Job,
-    KPROCESSOR_MODE AccessMode,
-    NTSTATUS ExitStatus )
+PspTerminateJobObject(
+    _In_ PEJOB Job,
+    _In_ NTSTATUS ExitStatus
+)
 {
-    DPRINT("PspTerminateJobObject() is unimplemented!\n");
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PEPROCESS Process;
+    PLIST_ENTRY Entry;
+
+    /* Enter critical region and acquire exclusive lock on the job object */
+    ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
+
+    /* Initialize entry to the first process in the job's process list */
+    Entry = Job->ProcessListHead.Flink;
+
+    /* For each process in job process list */
+    while (Entry != Job->ProcessListHead.Flink)
+    {
+        /* Get process object */
+        Process = CONTAINING_RECORD(Entry, EPROCESS, JobLinks);
+
+        /* Move to the next process in the list */
+        Entry = Entry->Flink;
+
+        /* Increase the reference count of the process object.
+           We use the safe variant here because it returns FALSE if the object
+           is being deleted */
+        if (ObReferenceObjectSafe(Process))
+        {
+            continue;
+        }
+
+        /* Terminate the process */
+        Status = PsTerminateProcess(Process, ExitStatus);
+        ASSERT(NT_SUCCESS(Status));
+
+        /* Decrement the job's active process counter */
+        Job->ActiveProcesses--;
+
+        /* Check if there are no active processes left in the job */
+        if (Job->ActiveProcesses == 0)
+        {
+            /* If so, notify anyone waiting for the job object */
+            KeSetEvent(&Job->Event, IO_NO_INCREMENT, FALSE);
+        }
+
+        /* Decrease the reference count */
+        ObDereferenceObject(Process);
+    }
+
+    /* Resume APCs and release lock */
+    ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
+
+    return Status;
 }
 
 VOID
@@ -674,14 +735,25 @@ NtIsProcessInJob(
     return Status;
 }
 
-/*
- * @unimplemented
+/*!
+ * Terminates all processes currently associated with the specified job object.
+ *
+ * @param[in] JobHandle
+ *     A handle to the job object to be terminated.
+ *
+ * @param[in] ExitStatus
+ *     The exit status to be used for all terminated processes.
+ *
+ * @returns
+ *     STATUS_SUCCESS if the job object was successfully terminated.
+ *     Otherwise, an appropriate NTSTATUS error code.
  */
 NTSTATUS
 NTAPI
-NtTerminateJobObject (
-    HANDLE JobHandle,
-    NTSTATUS ExitStatus )
+NtTerminateJobObject(
+    _In_ HANDLE JobHandle,
+    _In_ NTSTATUS ExitStatus
+)
 {
     KPROCESSOR_MODE PreviousMode;
     PEJOB Job;
@@ -691,19 +763,15 @@ NtTerminateJobObject (
 
     PreviousMode = ExGetPreviousMode();
 
-    Status = ObReferenceObjectByHandle(
-        JobHandle,
-        JOB_OBJECT_TERMINATE,
-        PsJobType,
-        PreviousMode,
-        (PVOID*)&Job,
-        NULL);
-    if(NT_SUCCESS(Status))
+    Status = ObReferenceObjectByHandle(JobHandle,
+                                       JOB_OBJECT_TERMINATE,
+                                       PsJobType,
+                                       PreviousMode,
+                                       (PVOID *)&Job,
+                                       NULL);
+    if (NT_SUCCESS(Status))
     {
-        Status = PspTerminateJobObject(
-            Job,
-            PreviousMode,
-            ExitStatus);
+        Status = PspTerminateJobObject(Job, ExitStatus);
         ObDereferenceObject(Job);
     }
 
