@@ -79,7 +79,9 @@ PipeReader(
             dwLastError = GetLastError();
 
             if(dReadBufferSize == MINBUFFERSIZE)
+            {
                 ok(!Success, "Pipe's ReadFile returned TRUE, instead of expected FALSE\n");
+            }
             else
             {
                 ok(Success, "Pipe's ReadFile returned FALSE, instead of expected TRUE\n");
