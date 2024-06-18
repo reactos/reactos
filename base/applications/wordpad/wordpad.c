@@ -2046,9 +2046,9 @@ static LRESULT OnNotify( HWND hWnd, LPARAM lParam)
 
         update_font_list();
 
-        sprintf( buf,"selection = %d..%d, line count=%ld",
+        sprintf( buf,"Selection: %d..%d | Lines: %u",
                  pSC->chrg.cpMin, pSC->chrg.cpMax,
-                (long int)SendMessageW(hwndEditor, EM_GETLINECOUNT, 0, 0));
+                (UINT)SendMessageW(hwndEditor, EM_GETLINECOUNT, 0, 0));
         SetWindowTextA(GetDlgItem(hWnd, IDC_STATUSBAR), buf);
         SendMessageW(hWnd, WM_USER, 0, 0);
         return 1;

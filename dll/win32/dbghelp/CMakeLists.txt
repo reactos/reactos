@@ -1,6 +1,6 @@
 
 if(NOT CMAKE_CROSSCOMPILING)
-    add_definitions(-DDBGHELP_STATIC_LIB -DNONAMELESSUNION)
+    add_definitions(-DDBGHELP_STATIC_LIB)
 
     include_directories(
         ${REACTOS_SOURCE_DIR}/tools)
