@@ -145,10 +145,26 @@ PspAssignProcessToJob(
     /* Check if the job has a limit on the number of active processes */
     if (Job->LimitFlags & JOB_OBJECT_LIMIT_ACTIVE_PROCESS)
     {
-        if (Job->ActiveProcesses >= Job->ActiveProcessLimit)
+        /* Check if job limit on active processes has been reached */
+        if (Job->ActiveProcesses > Job->ActiveProcessLimit)
         {
-            /* Job limit on active processes has been reached */
-            /* TODO */
+            if (Job->CompletionPort)
+            {
+                /* If the job has a completion port, notify the job that the limit
+                   on the number of active processes has been exceeded */
+                Status = IoSetIoCompletion(Job->CompletionPort,
+                                           Job->CompletionKey,
+                                           NULL,
+                                           STATUS_SUCCESS,
+                                           JOB_OBJECT_MSG_ACTIVE_PROCESS_LIMIT,
+                                           TRUE);
+            }
+            else
+            {
+                Status = STATUS_QUOTA_EXCEEDED;
+            }
+
+            return Status;
         }
     }
 
