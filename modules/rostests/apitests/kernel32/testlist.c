@@ -43,6 +43,7 @@ extern void func_WideCharToMultiByte(void);
 
 const struct test winetest_testlist[] =
 {
+    { "ActCtxWithXmlNamespaces",     func_ActCtxWithXmlNamespaces },
     { "ConsoleCP",                   func_ConsoleCP },
     { "CreateProcess",               func_CreateProcess },
     { "DefaultActCtx",               func_DefaultActCtx },
@@ -79,6 +80,5 @@ const struct test winetest_testlist[] =
     { "TunnelCache",                 func_TunnelCache },
     { "UEFIFirmware",                func_UEFIFirmware },
     { "WideCharToMultiByte",         func_WideCharToMultiByte },
-    { "ActCtxWithXmlNamespaces",     func_ActCtxWithXmlNamespaces },
     { 0, 0 }
 };
