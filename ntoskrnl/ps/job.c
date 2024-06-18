@@ -85,6 +85,15 @@ ULONG PspJobInfoAlign[] =
 
 /* FUNCTIONS *****************************************************************/
 
+CODE_SEG("INIT")
+VOID
+NTAPI
+PspInitializeJobStructures(VOID)
+{
+    InitializeListHead(&PsJobListHead);
+    ExInitializeFastMutex(&PsJobListLock);
+}
+
 VOID
 NTAPI
 PspDeleteJob ( PVOID ObjectBody )
@@ -106,15 +115,6 @@ PspDeleteJob ( PVOID ObjectBody )
     }
 
     ExDeleteResource(&Job->JobLock);
-}
-
-CODE_SEG("INIT")
-VOID
-NTAPI
-PspInitializeJobStructures(VOID)
-{
-    InitializeListHead(&PsJobListHead);
-    ExInitializeFastMutex(&PsJobListLock);
 }
 
 /*!
@@ -455,67 +455,104 @@ NtCreateJobObject(
     return Status;
 }
 
-/*
- * @implemented
+/*!
+ * Determines if a specified process is associated with a specified job or any job.
+ *
+ * @param[in] ProcessHandle
+ *     A handle to the process being queried.
+ *
+ * @param[in, optional] JobHandle
+ *     An optional handle to the job object being compared. If NULL, the function
+ *     checks if the process is associated with any job.
+ *
+ * @returns
+ *     STATUS_PROCESS_IN_JOB if the process is in the job or any job (when JobHandle is NULL).
+ *     STATUS_PROCESS_NOT_IN_JOB if the process is not in the job or any job.
+ *     Otherwise, an appropriate NTSTATUS error code.
  */
 NTSTATUS
 NTAPI
-NtIsProcessInJob (
-    IN HANDLE ProcessHandle,
-    IN HANDLE JobHandle OPTIONAL )
+NtIsProcessInJob(
+    _In_ HANDLE ProcessHandle,
+    _In_opt_ HANDLE JobHandle
+)
 {
     KPROCESSOR_MODE PreviousMode;
     PEPROCESS Process;
+    PEJOB ProcessJob;
+    PEJOB JobObjectFromHandle;
     NTSTATUS Status;
 
     PreviousMode = ExGetPreviousMode();
 
     PAGED_CODE();
 
-    Status = ObReferenceObjectByHandle(
-        ProcessHandle,
-        PROCESS_QUERY_INFORMATION,
-        PsProcessType,
-        PreviousMode,
-        (PVOID*)&Process,
-        NULL);
-    if(NT_SUCCESS(Status))
+    /* Check if the process handle is the current process */
+    if (ProcessHandle == PsGetCurrentProcess())
     {
-        /* FIXME - make sure the job object doesn't get exchanged or deleted while trying to
-        reference it, e.g. by locking it somehow until it is referenced... */
-
-        PEJOB ProcessJob = Process->Job;
-
-        if(ProcessJob != NULL)
+        /* If so, directly use the current process object */
+        Process = PsGetCurrentProcess();
+    }
+    else
+    {
+        /* Reference the process object by handle */
+        Status = ObReferenceObjectByHandle(ProcessHandle,
+                                           PROCESS_QUERY_INFORMATION,
+                                           PsProcessType,
+                                           PreviousMode,
+                                           (PVOID *)&Process,
+                                           NULL);
+        if (!(NT_SUCCESS(Status)))
         {
-            if(JobHandle == NULL)
-            {
-                /* the process is assigned to a job */
-                Status = STATUS_PROCESS_IN_JOB;
-            }
-            else /* JobHandle != NULL */
-            {
-                PEJOB JobObject;
+            return Status;
+        }
+    }
 
-                /* get the job object and compare the object pointer with the one assigned to the process */
-                Status = ObReferenceObjectByHandle(JobHandle,
-                    JOB_OBJECT_QUERY,
-                    PsJobType,
-                    PreviousMode,
-                    (PVOID*)&JobObject,
-                    NULL);
-                if(NT_SUCCESS(Status))
-                {
-                    Status = ((ProcessJob == JobObject) ? STATUS_PROCESS_IN_JOB : STATUS_PROCESS_NOT_IN_JOB);
-                    ObDereferenceObject(JobObject);
-                }
-            }
+    /* Get the job object associated with the process */
+    ProcessJob = Process->Job;
+
+    if (ProcessJob != NULL)
+    {
+        /* If no specific job handle is provided, the process is assigned to a job */
+        if (JobHandle == NULL)
+        {
+            Status = STATUS_PROCESS_IN_JOB;
         }
         else
         {
-            /* the process is not assigned to any job */
-            Status = STATUS_PROCESS_NOT_IN_JOB;
+            /* Get the job object from the provided job handle and compare it with the process job */
+            Status = ObReferenceObjectByHandle(JobHandle,
+                                               JOB_OBJECT_QUERY,
+                                               PsJobType,
+                                               PreviousMode,
+                                               (PVOID *)&JobObjectFromHandle,
+                                               NULL);
+            if (NT_SUCCESS(Status))
+            {
+                /* Compare the job objects */
+                if ((ProcessJob == JobObjectFromHandle))
+                {
+                    Status = STATUS_PROCESS_IN_JOB;
+                }
+                else
+                {
+                    Status = STATUS_PROCESS_NOT_IN_JOB;
+                }
+
+                /* Dereference the job object handle */
+                ObDereferenceObject(JobObjectFromHandle);
+            }
         }
+    }
+    else
+    {
+        /* The process is not assigned to any job */
+        Status = STATUS_PROCESS_NOT_IN_JOB;
+    }
+
+    /* Dereference the process object if it was referenced */
+    if (ProcessHandle == PsGetCurrentProcess())
+    {
         ObDereferenceObject(Process);
     }
 
@@ -998,7 +1035,7 @@ NtTerminateJobObject (
  */
 PVOID
 NTAPI
-PsGetJobLock ( PEJOB Job )
+PsGetJobLock(PEJOB Job)
 {
     ASSERT(Job);
     return (PVOID)&Job->JobLock;

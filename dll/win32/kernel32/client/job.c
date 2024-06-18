@@ -74,9 +74,9 @@ OpenJobObjectA(_In_ DWORD dwDesiredAccess,
  */
 BOOL
 WINAPI
-IsProcessInJob(IN HANDLE ProcessHandle,
-               IN HANDLE JobHandle,
-               OUT PBOOL Result)
+IsProcessInJob(_In_ HANDLE ProcessHandle,
+               _In_opt_ HANDLE JobHandle,
+               _Out_ PBOOL Result)
 {
     NTSTATUS Status;
 
