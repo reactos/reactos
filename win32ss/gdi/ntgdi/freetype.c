@@ -2492,10 +2492,10 @@ IntGdiAddFontMemResource(PVOID Buffer, DWORD dwSize, PDWORD pNumAdded)
         {
             PPROCESSINFO Win32Process = PsGetCurrentProcessWin32Process();
             EntryCollection->Entry = LoadFont.PrivateEntry;
-            IntLockFreeType();
+            IntLockProcessPrivateFonts(Win32Process);
             EntryCollection->Handle = ULongToHandle(++Win32Process->PrivateMemFontHandleCount);
             InsertTailList(&Win32Process->PrivateMemFontListHead, &EntryCollection->ListEntry);
-            IntUnLockFreeType();
+            IntUnLockProcessPrivateFonts(Win32Process);
             Ret = EntryCollection->Handle;
         }
     }
@@ -2550,7 +2550,7 @@ IntGdiRemoveFontMemResource(HANDLE hMMFont)
     PFONT_ENTRY_COLL_MEM EntryCollection = NULL;
     PPROCESSINFO Win32Process = PsGetCurrentProcessWin32Process();
 
-    IntLockFreeType();
+    IntLockProcessPrivateFonts(Win32Process);
     for (Entry = Win32Process->PrivateMemFontListHead.Flink;
          Entry != &Win32Process->PrivateMemFontListHead;
          Entry = Entry->Flink)
@@ -2564,7 +2564,7 @@ IntGdiRemoveFontMemResource(HANDLE hMMFont)
             break;
         }
     }
-    IntUnLockFreeType();
+    IntUnLockProcessPrivateFonts(Win32Process);
 
     if (EntryCollection)
     {
@@ -3730,10 +3730,10 @@ GetFontFamilyInfoForSubstitutes(const LOGFONTW *LogFont,
         IntUnLockFreeType();
 
         /* search in private fonts */
-        IntLockFreeType();
+        IntLockProcessPrivateFonts(Win32Process);
         GetFontFamilyInfoForList(&lf, Info, pFromW->Buffer, pCount, MaxCount,
                                  &Win32Process->PrivateFontListHead);
-        IntUnLockFreeType();
+        IntUnLockProcessPrivateFonts(Win32Process);
 
         if (LogFont->lfFaceName[0] != UNICODE_NULL)
         {
@@ -6442,14 +6442,14 @@ IntGetFontFamilyInfo(HDC Dc,
 
     /* Enumerate font families in the process local list */
     Win32Process = PsGetCurrentProcessWin32Process();
-    IntLockFreeType();
+    IntLockProcessPrivateFonts(Win32Process);
     if (!GetFontFamilyInfoForList(SafeLogFont, SafeInfo, NULL, &AvailCount, InfoCount,
                                   &Win32Process->PrivateFontListHead))
     {
         IntUnLockProcessPrivateFonts(Win32Process);
         return -1;
     }
-    IntUnLockFreeType();
+    IntUnLockProcessPrivateFonts(Win32Process);
 
     /* Enumerate font families in the registry */
     if (!GetFontFamilyInfoForSubstitutes(SafeLogFont, SafeInfo, &AvailCount, InfoCount))
