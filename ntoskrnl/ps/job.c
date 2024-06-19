@@ -184,7 +184,7 @@ PspAssignProcessToJob(
  * @param[in] Job
  *     A pointer to the job object from which the process is to be removed.
  *
- * @remark This function is called as the process is destroyed from PspDeleteProcess().
+ * @remark This function is called from PspDeleteProcess() as the process is destroyed.
  */
 VOID
 NTAPI
@@ -207,6 +207,8 @@ PspRemoveProcessFromJob(
 
         /* Decrement the job's active process count */
         Job->ActiveProcesses--;
+
+        /* TODO: Ensure that job limits are respected */
     }
     else
     {
@@ -217,12 +219,63 @@ PspRemoveProcessFromJob(
     ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
 }
 
+/*!
+ * Handles the exit of a process from the specified job object.
+ *
+ * @param[in] Job
+ *     A pointer to the job object from which the process is exiting.
+ *
+ * @param[in] Process
+ *     A pointer to the process that is exiting the job.
+ *
+ * @remark This function is called from PspExitThread() as the last thread exits.
+ */
 VOID
 NTAPI
-PspExitProcessFromJob(IN PEJOB Job,
-                      IN PEPROCESS Process)
+PspExitProcessFromJob(
+    _In_ PEJOB Job,
+    _In_ PEPROCESS Process
+)
 {
-    /* FIXME */
+    /* Make sure we are not interrupted */
+    ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
+
+    /* Check if the process is part of the specified job */
+    if (Process->Job == Job)
+    {
+        /* Assert that the job's active process count does not underflow */
+        ASSERT((Job->ActiveProcesses - 1) < Job->ActiveProcesses);
+
+        /* Decrement the job's active process count */
+        Job->ActiveProcesses--;
+
+        /* If the job has a completion port, notify it of the process exit */
+        if (Job->CompletionPort)
+        {
+            IoSetIoCompletion(Job->CompletionPort,
+                              Job->CompletionKey,
+                              NULL,
+                              STATUS_SUCCESS,
+                              JOB_OBJECT_MSG_EXIT_PROCESS,
+                              FALSE);
+        }
+
+        /* If no active processes remain, notify the job completion port */
+        if (Job->ActiveProcesses == 0 && Job->CompletionPort)
+        {
+            IoSetIoCompletion(Job->CompletionPort,
+                              Job->CompletionKey,
+                              NULL,
+                              STATUS_SUCCESS,
+                              JOB_OBJECT_MSG_ACTIVE_PROCESS_ZERO,
+                              FALSE);
+        }
+    }
+
+    /* TODO: Ensure that job limits are respected */
+
+    /* Resume APCs and release lock */
+    ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
 }
 
 /*!
