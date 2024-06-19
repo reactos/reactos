@@ -5937,10 +5937,10 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
     Win32Process = PsGetCurrentProcessWin32Process();
 
     /* Search private fonts */
-    IntLockFreeType();
+    IntLockProcessPrivateFonts(Win32Process);
     FindBestFontFromList(&TextObj->Font, &MatchPenalty, &SubstitutedLogFont,
                          &Win32Process->PrivateFontListHead);
-    IntUnLockFreeType();
+    IntUnLockProcessPrivateFonts(Win32Process);
 
     /* Search system fonts */
     IntLockFreeType();
