@@ -374,15 +374,15 @@ PspQueryDescriptorThread(
 VOID
 NTAPI
 PspExitProcessFromJob(
-    IN PEJOB Job,
-    IN PEPROCESS Process
+    _In_ PEJOB Job,
+    _In_ PEPROCESS Process
 );
 
 VOID
 NTAPI
 PspRemoveProcessFromJob(
-    IN PEPROCESS Process,
-    IN PEJOB Job
+    _In_ PEPROCESS Process,
+    _In_ PEJOB Job
 );
 
 CODE_SEG("INIT")
@@ -394,8 +394,18 @@ PspInitializeJobStructures(
 
 VOID
 NTAPI
+PspCloseJob(
+    _In_ PEPROCESS Process,
+    _In_ PVOID ObjectBody,
+    _In_ ACCESS_MASK GrantedAccess,
+    _In_ ULONG HandleCount,
+    _In_ ULONG SystemHandleCount
+);
+
+VOID
+NTAPI
 PspDeleteJob(
-    IN PVOID ObjectBody
+    _In_ PVOID ObjectBody
 );
 
 //

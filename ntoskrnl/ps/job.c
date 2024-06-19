@@ -350,26 +350,97 @@ PspTerminateJobObject(
     return Status;
 }
 
+/*!
+ * Handles the closing of a job object.
+ *
+ * @param[in] Process
+ *     Unused.
+ *
+ * @param[in] ObjectBody
+ *     A pointer to the job object being closed.
+ *
+ * @param[in] GrantedAccess
+ *     Unused.
+ *
+ * @param[in] HandleCount
+ *     Unused.
+ *
+ * @param[in] SystemHandleCount
+ *     The number of system handles currently open for the job object.
+ *
+ * @remark
+ *     This function terminates the job if the JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE flag is set.
+ */
 VOID
 NTAPI
-PspDeleteJob ( PVOID ObjectBody )
+PspCloseJob(
+    _In_ PEPROCESS Process,
+    _In_ PVOID ObjectBody,
+    _In_ ACCESS_MASK GrantedAccess,
+    _In_ ULONG HandleCount,
+    _In_ ULONG SystemHandleCount
+)
 {
     PEJOB Job = (PEJOB)ObjectBody;
 
-    /* remove the reference to the completion port if associated */
-    if(Job->CompletionPort != NULL)
+    PAGED_CODE();
+
+    UNREFERENCED_PARAMETER(Process);
+    UNREFERENCED_PARAMETER(GrantedAccess);
+    UNREFERENCED_PARAMETER(HandleCount);
+
+    /* Proceed only when the last handle is left */
+    if (SystemHandleCount != 1)
+    {
+        return;
+    }
+
+    /* If the job is set to kill on close, terminate all associated processes */
+    if (Job->LimitFlags & JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE)
+    {
+        PspTerminateJobObject(Job, STATUS_SUCCESS);
+    }
+
+    /* Set the completion port to NULL to clean up */
+    Job->CompletionPort = NULL;
+}
+
+/*!
+ * Deletes the specified job object and cleans up associated resources.
+ *
+ * @param[in] ObjectBody
+ *     A pointer to the job object to be deleted.
+ */
+VOID
+NTAPI
+PspDeleteJob(_In_ PVOID ObjectBody)
+{
+    PEJOB Job = (PEJOB)ObjectBody;
+
+    PAGED_CODE();
+
+    /* Remove the reference to the completion port if associated */
+    if (Job->CompletionPort != NULL)
     {
         ObDereferenceObject(Job->CompletionPort);
     }
 
-    /* unlink the job object */
-    if(Job->JobLinks.Flink != NULL)
+    /* TODO: Ensure that job sets are respected */
+
+    /* Unlink the job object */
+    if (Job->JobLinks.Flink != NULL)
     {
         ExAcquireFastMutex(&PsJobListLock);
+
+        /* Remove the job from the list */
         RemoveEntryList(&Job->JobLinks);
+
         ExReleaseFastMutex(&PsJobListLock);
     }
 
+    /* TODO: Clean up security information */
+
+    /* Delete the resource associated with the job object */
     ExDeleteResource(&Job->JobLock);
 }
 
