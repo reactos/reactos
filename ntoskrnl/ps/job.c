@@ -175,12 +175,46 @@ PspAssignProcessToJob(
     return Status;
 }
 
+/*!
+ * Removes a process from the specified job object.
+ *
+ * @param[in] Process
+ *     A pointer to the process to be removed from the job.
+ *
+ * @param[in] Job
+ *     A pointer to the job object from which the process is to be removed.
+ *
+ * @remark This function is called as the process is destroyed from PspDeleteProcess().
+ */
 VOID
 NTAPI
-PspRemoveProcessFromJob(IN PEPROCESS Process,
-                        IN PEJOB Job)
+PspRemoveProcessFromJob(
+    _In_ PEPROCESS Process,
+    _In_ PEJOB Job
+)
 {
-    /* FIXME */
+    ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
+
+    /* Attempt to atomically set the process's job pointer to NULL if it is currently
+       set to the specified job */
+    if (InterlockedCompareExchangePointer((PVOID)&Process->Job, NULL, Job) == Job)
+    {
+        /* Remove the process from the job's process list */
+        RemoveEntryList(&Process->JobLinks);
+
+        /* Assert that the job's active process count does not underflow */
+        ASSERT((Job->ActiveProcesses - 1) < Job->ActiveProcesses);
+
+        /* Decrement the job's active process count */
+        Job->ActiveProcesses--;
+    }
+    else
+    {
+        /* The process is not in the specified job */
+        DPRINT1("PspRemoveProcessFromJob(%p,%p) Process not in job\n", Process, Job);
+    }
+
+    ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
 }
 
 VOID
@@ -235,6 +269,7 @@ PspTerminateJobObject(
            is being deleted */
         if (ObReferenceObjectSafe(Process))
         {
+            /* The process is being deleted, continue on to the next one */
             continue;
         }
 
