@@ -61,7 +61,6 @@ typedef struct _FONTLINK_CACHE
 
 #define FONTLINK_DEFAULT_CHAR 0x30FB // U+30FB (KATAKANA MIDDLE DOT)
 
-static DWORD s_nFontLinkControl = 0; // FIXME: What to do?
 static DWORD s_chFontLinkDefaultChar = FONTLINK_DEFAULT_CHAR;
 static WCHAR s_szDefFontLinkFileName[MAX_PATH] = L"";
 static WCHAR s_szDefFontLinkFontName[MAX_PATH] = L"";
@@ -96,7 +95,6 @@ FontLink_LoadSettings(VOID)
     DWORD cbData, dwValue;
 
     // Set the default values
-    s_nFontLinkControl = 0;
     s_chFontLinkDefaultChar = FONTLINK_DEFAULT_CHAR;
 
     // Open the registry key
@@ -105,11 +103,6 @@ FontLink_LoadSettings(VOID)
         &hKey);
     if (!NT_SUCCESS(Status))
         return Status;
-
-    cbData = sizeof(dwValue);
-    Status = RegQueryValue(hKey, L"FontLinkControl", REG_DWORD, &dwValue, &cbData);
-    if (NT_SUCCESS(Status) && cbData == sizeof(dwValue))
-        s_nFontLinkControl = dwValue;
 
     cbData = sizeof(dwValue);
     Status = RegQueryValue(hKey, L"FontLinkDefaultChar", REG_DWORD, &dwValue, &cbData);
