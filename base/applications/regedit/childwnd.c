@@ -137,6 +137,7 @@ static void finish_splitbar(HWND hWnd, int x)
     GetClientRect(hWnd, &rt);
     g_pChildWnd->nSplitPos = x;
     ResizeWnd(rt.right, rt.bottom);
+    InvalidateRect(hWnd, &rt, FALSE); // HACK: See CORE-19576
     ReleaseCapture();
 }
 
