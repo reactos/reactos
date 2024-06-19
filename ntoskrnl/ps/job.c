@@ -11,7 +11,7 @@
  *                  2024 Gleb Surikov (glebs.surikovs@gmail.com)
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
@@ -539,6 +539,7 @@ NtCreateJobObject(
         _SEH2_END;
     }
 
+    /* Create the job object */
     Status = ObCreateObject(PreviousMode,
                             PsJobType,
                             ObjectAttributes,
@@ -551,42 +552,51 @@ NtCreateJobObject(
 
     if (NT_SUCCESS(Status))
     {
-        /* FIXME - Zero all fields as we don't yet implement all of them */
+        /* Initialize the job object */
+
         RtlZeroMemory(Job, sizeof(EJOB));
+
+        InitializeListHead(&Job->JobSetLinks);
+        InitializeListHead(&Job->ProcessListHead);
 
         /* Make sure that early destruction doesn't attempt to remove the object
            from the list before it even gets added */
         InitializeListHead(&Job->JobLinks);
 
-        /* Set up the job object - FIXME: More to do */
-        InitializeListHead(&Job->JobSetLinks);
-        InitializeListHead(&Job->ProcessListHead);
-
-        /* Inherit the session id from the caller */
+        /* Inherit the session ID from the caller */
         Job->SessionId = PsGetProcessSessionId(CurrentProcess);
 
+        /* Initialize the job limits lock */
         KeInitializeGuardedMutex(&Job->MemoryLimitsLock);
 
+        /* Initialize the job lock */
         Status = ExInitializeResource(&Job->JobLock);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Failed to initialize job lock!!!\n");
+            DPRINT1("Failed to initialize job lock\n");
             ObDereferenceObject(Job);
             return Status;
         }
+
+        /* Initialize the event object within the job */
         KeInitializeEvent(&Job->Event, NotificationEvent, FALSE);
+
+        /* Set the scheduling class. The default is '5' per Windows 10 System Programming (Yosifovich, P.) */
+        Job->SchedulingClass = 5;
 
         /* Link the object into the global job list */
         ExAcquireFastMutex(&PsJobListLock);
         InsertTailList(&PsJobListHead, &Job->JobLinks);
         ExReleaseFastMutex(&PsJobListLock);
 
+        /* Insert the job object into the object table  */
         Status = ObInsertObject(Job,
                                 NULL,
                                 DesiredAccess,
                                 0,
                                 NULL,
                                 &Handle);
+
         if (NT_SUCCESS(Status))
         {
             /* Pass the handle back to the caller */
