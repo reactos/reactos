@@ -3023,7 +3023,14 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
         if ((y - height) < monitor->rcMonitor.top || y >= monitor->rcMonitor.bottom)
             y = monitor->rcMonitor.bottom - height;
         else
-            y -= height;
+        {
+            INT adjHgt = y + UserGetSystemMetrics(SM_CYMENUSIZE) +
+                         2 * UserGetSystemMetrics(SM_CYDLGFRAME);
+            if (adjHgt >= monitor->rcMonitor.bottom)
+                y -= height;
+            else
+                y = adjHgt - height;
+        }
     }
 
     if (pExclude)
