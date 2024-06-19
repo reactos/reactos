@@ -2113,8 +2113,8 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::Exec(const GUID *pguidCmdGroup, DWORD n
             case 40994:
                 return NavigateToParent();
             case IDM_NOTIFYITBARDIRTY:
-                    SaveITBarLayout();
-                    break;
+                SaveITBarLayout();
+                break;
         }
     }
     else if (IsEqualIID(*pguidCmdGroup, CGID_IExplorerToolbar))
@@ -3978,21 +3978,21 @@ void CShellBrowser::UpdateWindowTitle()
 void CShellBrowser::SaveITBarLayout()
 {
     if (!gCabinetState.fSaveLocalView)
-        return ;
+        return;
 #if 0 // If CDesktopBrowser aggregates us, skip saving
     FOLDERSETTINGS fs;
     if (fCurrentShellView && SUCCEEDED(fCurrentShellView->GetCurrentInfo(&fs)) && (fs.fFlags & FWF_DESKTOP))
-        return ;
+        return;
 #endif
 
     CComPtr<IPersistStreamInit> pPSI;
     CComPtr<IStream> pITBarStream;
     if (!fClientBars[BIInternetToolbar].clientBar.p)
-        return ;
+        return;
     HRESULT hr = fClientBars[BIInternetToolbar].clientBar->QueryInterface(IID_PPV_ARG(IPersistStreamInit, &pPSI));
     if (FAILED(hr))
-        return ;
+        return;
     if (FAILED(hr = CInternetToolbar::GetStream(ITBARSTREAM_EXPLORER, STGM_WRITE, &pITBarStream)))
-        return ;
+        return;
     pPSI->Save(pITBarStream, TRUE);
 }

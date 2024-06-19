@@ -78,11 +78,13 @@ extern HRESULT WINAPI SHBindToFolder(LPCITEMIDLIST path, IShellFolder **newFolde
 struct ITBARSTATE
 {
     static const UINT SIG = ('R' << 0) | ('O' << 8) | ('S' << 16) | (('i' ^ 't' ^ 'b') << 24);
-    UINT Signature;
-    UINT Menubar : 1; // ..\Explorer\Advanced\AlwaysShowMenus for NT6?
+    UINT cbSize;
+    UINT Signature; // Note: Windows has something else here (12 bytes)
     UINT StdToolbar : 1;
     UINT Addressbar : 1;
     UINT Linksbar : 1;
+    UINT Throbber : 1; // toastytech.com/files/throboff.html
+    UINT Menubar : 1; // ..\Explorer\Advanced\AlwaysShowMenus for NT6?
     // Note: Windows 8/10 stores the Ribbon state in ..\Explorer\Ribbon
 };
 
@@ -905,7 +907,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::ShowDW(BOOL fShow)
             return hResult;
     }
 
-#if 0 // Why should showing the IDockingWindow change all bands?
+#if 0 // Why should showing the IDockingWindow change all bands? Related to CORE-17236
     if (fMenuBar)
     {
         hResult = IUnknown_ShowDW(fMenuBar, fShow);
@@ -1043,6 +1045,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::Load(IStream *pStm)
             SetBandVisibility(ITBBID_TOOLSBAND, state.StdToolbar);
             SetBandVisibility(ITBBID_ADDRESSBAND, state.Addressbar);
             //SetBandVisibility(ITBBID_?, state.Linksbar);
+            //SetBandVisibility(ITBBID_?, state.Throbber);
             hr = S_OK;
         }
     }
@@ -1052,7 +1055,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::Load(IStream *pStm)
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::Save(IStream *pStm, BOOL fClearDirty)
 {
-    ITBARSTATE state = { state.SIG };
+    ITBARSTATE state = { sizeof(state), state.SIG };
     state.Menubar = IsBandVisible(ITBBID_MENUBAND) == S_OK;
     state.StdToolbar = IsBandVisible(ITBBID_TOOLSBAND) == S_OK;
     state.Addressbar = IsBandVisible(ITBBID_ADDRESSBAND) == S_OK;
