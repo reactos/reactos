@@ -839,12 +839,12 @@ VOID DumpPrivateFontList(BOOL bDoLock)
         return;
 
     if (bDoLock)
-        IntLockFreeType();
+        IntLockProcessPrivateFonts(Win32Process);
 
     DumpFontList(&Win32Process->PrivateFontListHead);
 
     if (bDoLock)
-        IntUnLockFreeType();
+        IntUnLockProcessPrivateFonts(Win32Process);
 }
 
 VOID DumpGlobalFontList(BOOL bDoLock)
@@ -1047,7 +1047,7 @@ InitFontSupport(VOID)
 
     IntLoadFontSubstList(&g_FontSubstListHead);
 
-#if DBG
+#if 0
     DumpFontInfo(TRUE);
 #endif
 
@@ -1972,9 +1972,9 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     {
         /* private font */
         PPROCESSINFO Win32Process = PsGetCurrentProcessWin32Process();
-        IntLockFreeType();
+        IntLockProcessPrivateFonts(Win32Process);
         InsertTailList(&Win32Process->PrivateFontListHead, &Entry->ListEntry);
-        IntUnLockFreeType();
+        IntUnLockProcessPrivateFonts(Win32Process);
     }
     else
     {
@@ -2588,14 +2588,14 @@ IntGdiCleanupPrivateFontsForProcess(VOID)
         Entry = NULL;
         EntryCollection = NULL;
 
-        IntLockFreeType();
+        IntLockProcessPrivateFonts(Win32Process);
         if (!IsListEmpty(&Win32Process->PrivateMemFontListHead))
         {
             Entry = Win32Process->PrivateMemFontListHead.Flink;
             EntryCollection = CONTAINING_RECORD(Entry, FONT_ENTRY_COLL_MEM, ListEntry);
             UnlinkFontMemCollection(EntryCollection);
         }
-        IntUnLockFreeType();
+        IntUnLockProcessPrivateFonts(Win32Process);
 
         if (EntryCollection)
         {
@@ -2606,12 +2606,12 @@ IntGdiCleanupPrivateFontsForProcess(VOID)
         {
             /* No Mem fonts anymore, see if we have any other private fonts left */
             Entry = NULL;
-            IntLockFreeType();
+            IntLockProcessPrivateFonts(Win32Process);
             if (!IsListEmpty(&Win32Process->PrivateFontListHead))
             {
                 Entry = RemoveHeadList(&Win32Process->PrivateFontListHead);
             }
-            IntUnLockFreeType();
+            IntUnLockProcessPrivateFonts(Win32Process);
 
             if (Entry)
             {
