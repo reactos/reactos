@@ -1,0 +1,10 @@
+# These files are text and should be normalized
+*.txt     text
+*.c       text
+*.h       text
+
+# For git archive
+.gitignore              export-ignore
+.gitattributes          export-ignore
+.github                 export-ignore
+.vscode                 export-ignore

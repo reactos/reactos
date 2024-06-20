@@ -1,0 +1,140 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{CBE20411-5DB7-487D-825D-7694267BB6F5}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Lextm.SharpSnmpLib</RootNamespace>
+    <AssemblyName>SharpSnmpLib.Mib</AssemblyName>
+    <DocumentationFile>..\bin\SharpSnmpLib.Mib.xml</DocumentationFile>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+    <SignAssembly>True</SignAssembly>
+    <AssemblyOriginatorKeyFile>sharpsnmplib.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>False</DelaySign>
+    <AssemblyOriginatorKeyMode>File</AssemblyOriginatorKeyMode>
+    <SccProjectName>
+    </SccProjectName>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccProvider>
+    </SccProvider>
+    <RunSourceAnalysis>False</RunSourceAnalysis>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>
+    </DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>
+    </DocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Mib\DisplayHint.cs" />
+    <Compile Include="Mib\Elements\Entities\AgentCapabilities.cs" />
+    <Compile Include="Mib\Elements\Entities\EntityBase.cs" />
+    <Compile Include="Mib\Elements\Entities\IEntity.cs" />
+    <Compile Include="Mib\Elements\Entities\ModuleCompliance.cs" />
+    <Compile Include="Mib\Elements\Entities\ModuleIdentity.cs" />
+    <Compile Include="Mib\Elements\Entities\NotificationGroup.cs" />
+    <Compile Include="Mib\Elements\Entities\NotificationType.cs" />
+    <Compile Include="Mib\Elements\Entities\ObjectGroup.cs" />
+    <Compile Include="Mib\Elements\Entities\ObjectIdentity.cs" />
+    <Compile Include="Mib\Elements\Entities\ObjectType.cs" />
+    <Compile Include="Mib\Elements\Entities\OidValueAssignment.cs" />
+    <Compile Include="Mib\Elements\Exports.cs" />
+    <Compile Include="Mib\Elements\IElement.cs" />
+    <Compile Include="Mib\Elements\Imports.cs" />
+    <Compile Include="Mib\Elements\ImportsFrom.cs" />
+    <Compile Include="Mib\Elements\IDeclaration.cs" />
+    <Compile Include="Mib\Elements\TrapType.cs" />
+    <Compile Include="Mib\Elements\Types\BaseType.cs" />
+    <Compile Include="Mib\Elements\Types\BitsType.cs" />
+    <Compile Include="Mib\Elements\Types\Choice.cs" />
+    <Compile Include="Mib\Elements\Types\IntegerType.cs" />
+    <Compile Include="Mib\Elements\Types\IpAddressType.cs" />
+    <Compile Include="Mib\Elements\Types\ITypeAssignment.cs" />
+    <Compile Include="Mib\Elements\ITypeReferrer.cs" />
+    <Compile Include="Mib\Elements\Types\Macro.cs" />
+    <Compile Include="Mib\Elements\Types\ObjectIdentifierType.cs" />
+    <Compile Include="Mib\Elements\Types\OctetStringType.cs" />
+    <Compile Include="Mib\Elements\Types\OpaqueType.cs" />
+    <Compile Include="Mib\Elements\Types\Sequence.cs" />
+    <Compile Include="Mib\Elements\Types\SequenceOf.cs" />
+    <Compile Include="Mib\Elements\Types\TextualConvention.cs" />
+    <Compile Include="Mib\Elements\Types\TypeAssignment.cs" />
+    <Compile Include="Mib\Elements\Types\UnsignedType.cs" />
+    <Compile Include="Mib\IModule.cs" />
+    <Compile Include="Mib\ISymbolEnumerator.cs" />
+    <Compile Include="Mib\MaxAccess.cs" />
+    <Compile Include="Mib\MibResolver.cs" />
+    <Compile Include="Mib\MibTree.cs" />
+    <Compile Include="Mib\MibTreeNode.cs" />
+    <Compile Include="Mib\MibTypesResolver.cs" />
+    <Compile Include="Mib\ObjectIdentifier.cs" />
+    <Compile Include="Mib\Status.cs" />
+    <Compile Include="Mib\SymbolList.cs" />
+    <Compile Include="Mib\Lexer.cs" />
+    <Compile Include="Mib\MibDocument.cs" />
+    <Compile Include="Mib\MibModule.cs" />
+    <Compile Include="Mib\MibException.cs" />
+    <Compile Include="Mib\Symbol.cs" />
+    <Compile Include="Mib\ValueMap.cs" />
+    <Compile Include="Mib\ValueRange.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="sharpsnmplib.snk" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="license.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>Lextm.SharpSnmpLib.Mib</CustomToolNamespace>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

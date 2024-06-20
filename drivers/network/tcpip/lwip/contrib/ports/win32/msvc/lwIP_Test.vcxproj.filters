@@ -1,0 +1,252 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{e858c3d0-1558-4d47-bc6a-9d4a55ce3d3a}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="Source Files\apps">
+      <UniqueIdentifier>{0582eefd-a68e-45f8-b93c-f828c4794f30}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\addons">
+      <UniqueIdentifier>{ed0627c2-099a-4da8-af0c-142003828f9f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\addons\tcp_isn">
+      <UniqueIdentifier>{4ffb2268-6fc6-44d7-8e3b-2a3f68b8d5a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\addons\ipv6_static_routing">
+      <UniqueIdentifier>{93b36161-88b2-448c-9c45-ac6f27b98290}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\examples">
+      <UniqueIdentifier>{6456d2d6-61e6-4c99-9f1f-1f225437a642}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\examples\httpd">
+      <UniqueIdentifier>{75bb877e-aa45-4e2e-82fe-946ddadc6a64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\examples\snmp">
+      <UniqueIdentifier>{78411edf-fe39-4edb-a6bd-2833755e0342}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\examples\httpd\fs_example">
+      <UniqueIdentifier>{531dd0cf-ec13-42b7-a3bb-b837382d4ecd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\examples\httpd\ssi_example">
+      <UniqueIdentifier>{d71bdb12-c5ed-4823-99f0-2d537765a2eb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\examples\snmp\snmp_private_mib">
+      <UniqueIdentifier>{0b9db8c7-f352-4ca6-86c6-1a6c58482c5d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\examples\snmp\snmp_v3">
+      <UniqueIdentifier>{97f0ea5c-16cf-4640-a6b3-ace059ed2388}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\examples\httpd\cgi_example">
+      <UniqueIdentifier>{24079d2d-aab1-49f9-b0fa-57910a18b93a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\examples\httpd\genfiles_example">
+      <UniqueIdentifier>{d38ed32b-9498-429e-a02c-08332c463725}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\examples\httpd\post_example">
+      <UniqueIdentifier>{672a49fd-94ff-4126-8de3-e96c9c32dfb8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\examples\mdns">
+      <UniqueIdentifier>{e5276e3f-3e2a-4376-aee3-85aafd12c77b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\examples\tftp">
+      <UniqueIdentifier>{f6d95ce0-df4f-4988-8654-624468dd4ecd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\examples\sntp">
+      <UniqueIdentifier>{a37e5539-232e-4d91-9c10-3d7a851b8c4c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\examples\ppp">
+      <UniqueIdentifier>{a2a65260-5055-4a0d-bd0b-4a3ca3560918}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\examples\lwiperf">
+      <UniqueIdentifier>{aa359e5e-131e-4f20-9e5d-416f9ae76abd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\examples\mqtt">
+      <UniqueIdentifier>{bd6f1fcc-c88f-4b96-a267-401f6bf9898b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\examples\httpd\https_example">
+      <UniqueIdentifier>{1098bc59-6867-48a3-afa4-b896510241d1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\apps\chargen\chargen.c">
+      <Filter>Source Files\apps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\apps\httpserver\httpserver-netconn.c">
+      <Filter>Source Files\apps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\apps\netio\netio.c">
+      <Filter>Source Files\apps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\apps\ping\ping.c">
+      <Filter>Source Files\apps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\apps\rtp\rtp.c">
+      <Filter>Source Files\apps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\apps\shell\shell.c">
+      <Filter>Source Files\apps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\apps\socket_examples\socket_examples.c">
+      <Filter>Source Files\apps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\apps\tcpecho\tcpecho.c">
+      <Filter>Source Files\apps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\apps\udpecho\udpecho.c">
+      <Filter>Source Files\apps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\apps\tcpecho_raw\tcpecho_raw.c">
+      <Filter>Source Files\apps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\apps\udpecho_raw\udpecho_raw.c">
+      <Filter>Source Files\apps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\addons\tcp_isn\tcp_isn.c">
+      <Filter>Source Files\addons\tcp_isn</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\addons\ipv6_static_routing\ip6_route_table.c">
+      <Filter>Source Files\addons\ipv6_static_routing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\examples\httpd\fs_example\fs_example.c">
+      <Filter>Source Files\examples\httpd\fs_example</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\examples\httpd\ssi_example\ssi_example.c">
+      <Filter>Source Files\examples\httpd\ssi_example</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\examples\snmp\snmp_private_mib\lwip_prvmib.c">
+      <Filter>Source Files\examples\snmp\snmp_private_mib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\examples\snmp\snmp_v3\snmpv3_dummy.c">
+      <Filter>Source Files\examples\snmp\snmp_v3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\examples\httpd\cgi_example\cgi_example.c">
+      <Filter>Source Files\examples\httpd\cgi_example</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\examples\httpd\genfiles_example\genfiles_example.c">
+      <Filter>Source Files\examples\httpd\genfiles_example</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\examples\httpd\post_example\post_example.c">
+      <Filter>Source Files\examples\httpd\post_example</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\examples\mdns\mdns_example.c">
+      <Filter>Source Files\examples\mdns</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\examples\tftp\tftp_example.c">
+      <Filter>Source Files\examples\tftp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\examples\snmp\snmp_example.c">
+      <Filter>Source Files\examples\snmp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\examples\sntp\sntp_example.c">
+      <Filter>Source Files\examples\sntp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\examples\ppp\pppos_example.c">
+      <Filter>Source Files\examples\ppp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\examples\lwiperf\lwiperf_example.c">
+      <Filter>Source Files\examples\lwiperf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\examples\mqtt\mqtt_example.c">
+      <Filter>Source Files\examples\mqtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\examples\example_app\test.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\example_app\default_netif.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\examples\httpd\https_example\https_example.c">
+      <Filter>Source Files\examples\httpd\https_example</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\apps\chargen\chargen.h">
+      <Filter>Source Files\apps</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\apps\httpserver\httpserver-netconn.h">
+      <Filter>Source Files\apps</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\apps\netio\netio.h">
+      <Filter>Source Files\apps</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\apps\ping\ping.h">
+      <Filter>Source Files\apps</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\apps\rtp\rtp.h">
+      <Filter>Source Files\apps</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\apps\shell\shell.h">
+      <Filter>Source Files\apps</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\apps\socket_examples\socket_examples.h">
+      <Filter>Source Files\apps</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\apps\tcpecho\tcpecho.h">
+      <Filter>Source Files\apps</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\apps\udpecho\udpecho.h">
+      <Filter>Source Files\apps</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\apps\tcpecho_raw\tcpecho_raw.h">
+      <Filter>Source Files\apps</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\apps\udpecho_raw\udpecho_raw.h">
+      <Filter>Source Files\apps</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\addons\tcp_isn\tcp_isn.h">
+      <Filter>Source Files\addons\tcp_isn</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\addons\ipv6_static_routing\ip6_route_table.h">
+      <Filter>Source Files\addons\ipv6_static_routing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\examples\httpd\fs_example\fs_example.h">
+      <Filter>Source Files\examples\httpd\fs_example</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\examples\httpd\ssi_example\ssi_example.h">
+      <Filter>Source Files\examples\httpd\ssi_example</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\examples\snmp\snmp_private_mib\private_mib.h">
+      <Filter>Source Files\examples\snmp\snmp_private_mib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\examples\snmp\snmp_v3\snmpv3_dummy.h">
+      <Filter>Source Files\examples\snmp\snmp_v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\examples\httpd\cgi_example\cgi_example.h">
+      <Filter>Source Files\examples\httpd\cgi_example</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\examples\httpd\genfiles_example\genfiles_example.h">
+      <Filter>Source Files\examples\httpd\genfiles_example</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\examples\mdns\mdns_example.h">
+      <Filter>Source Files\examples\mdns</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\examples\tftp\tftp_example.h">
+      <Filter>Source Files\examples\tftp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\examples\snmp\snmp_example.h">
+      <Filter>Source Files\examples\snmp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\examples\sntp\sntp_example.h">
+      <Filter>Source Files\examples\sntp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\examples\ppp\pppos_example.h">
+      <Filter>Source Files\examples\ppp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\examples\lwiperf\lwiperf_example.h">
+      <Filter>Source Files\examples\lwiperf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\examples\mqtt\mqtt_example.h">
+      <Filter>Source Files\examples\mqtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\examples\httpd\https_example\https_example.h">
+      <Filter>Source Files\examples\httpd\https_example</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\addons\ipv6_static_routing\README">
+      <Filter>Source Files\addons\ipv6_static_routing</Filter>
+    </None>
+  </ItemGroup>
+</Project>

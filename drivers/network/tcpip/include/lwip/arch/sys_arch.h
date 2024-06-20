@@ -27,6 +27,9 @@ typedef struct _LWIP_MESSAGE_CONTAINER
 
 #define sys_jiffies() sys_now()
 
+/* There is no such thing as "from ISR" for us */
+#define sys_mbox_trypost_fromisr sys_mbox_trypost
+
 /* NULL definitions */
 #define SYS_MBOX_NULL NULL
 #define SYS_SEM_NULL NULL

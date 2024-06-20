@@ -1,5 +1,5 @@
-#ifndef __TEST_UDP_H__
-#define __TEST_UDP_H__
+#ifndef LWIP_HDR_TEST_UDP_H
+#define LWIP_HDR_TEST_UDP_H
 
 #include "../lwip_check.h"
 

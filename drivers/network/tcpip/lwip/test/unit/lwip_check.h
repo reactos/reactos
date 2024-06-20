@@ -1,5 +1,5 @@
-#ifndef __LWIP_CHECK_H__
-#define __LWIP_CHECK_H__
+#ifndef LWIP_HDR_LWIP_CHECK_H
+#define LWIP_HDR_LWIP_CHECK_H
 
 /* Common header file for lwIP unit tests using the check framework */
 
@@ -13,25 +13,40 @@
 #define EXPECT_RETX(x, y) do { fail_unless(x); if(!(x)) { return y; }} while(0)
 #define EXPECT_RETNULL(x) EXPECT_RETX(x, NULL)
 
+#if (CHECK_MAJOR_VERSION == 0 && CHECK_MINOR_VERSION < 13)
+typedef struct {
+  TFun func;
+  const char *name;
+} testfunc;
+
+#define TESTFUNC(x) {(x), "" # x "" }
+
+/* Modified function from check.h, supplying function name */
+#define tcase_add_named_test(tc,tf) \
+   _tcase_add_test((tc),(tf).func,(tf).name,0, 0, 0, 1)
+
+#else
+/* From 0.13.0 check keeps track of the method name internally */
+typedef const TTest * testfunc;
+
+#define TESTFUNC(x) x
+
+#define tcase_add_named_test(tc,tf) tcase_add_test(tc,tf)
+#endif
+
 /** typedef for a function returning a test suite */
 typedef Suite* (suite_getter_fn)(void);
 
 /** Create a test suite */
-static Suite* create_suite(const char* name, TFun *tests, size_t num_tests, SFun setup, SFun teardown)
-{
-  size_t i;
-  Suite *s = suite_create(name);
+Suite* create_suite(const char* name, testfunc *tests, size_t num_tests, SFun setup, SFun teardown);
 
-  for(i = 0; i < num_tests; i++) {
-    /* Core test case */
-    TCase *tc_core = tcase_create("Core");
-    if ((setup != NULL) || (teardown != NULL)) {
-      tcase_add_checked_fixture(tc_core, setup, teardown);
-    }
-    tcase_add_test(tc_core, tests[i]);
-    suite_add_tcase(s, tc_core);
-  }
-  return s;
-}
+#ifdef LWIP_UNITTESTS_LIB
+int lwip_unittests_run(void)
+#endif
 
-#endif /* __LWIP_CHECK_H__ */
+/* helper functions */
+#define SKIP_POOL(x) (1 << x)
+#define SKIP_HEAP    (1 << MEMP_MAX)
+void lwip_check_ensure_no_alloc(unsigned int skip);
+
+#endif /* LWIP_HDR_LWIP_CHECK_H */

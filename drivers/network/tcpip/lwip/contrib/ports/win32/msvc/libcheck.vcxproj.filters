@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Win32">
+      <UniqueIdentifier>{05d172f9-8ca6-4d9c-96e4-2b0480a8222f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Win32\sys">
+      <UniqueIdentifier>{eb9ccf88-7e08-4202-bb4f-5a51443fa480}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{3f044d95-ab52-45ce-b4ae-27797eb221b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libcompat">
+      <UniqueIdentifier>{abb21abe-51c2-45df-bdc9-8e00ce7fe404}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\check\config.h">
+      <Filter>Win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\check\unistd.h">
+      <Filter>Win32</Filter>
+    </ClInclude>
+    <ClInclude Include="..\check\sys\time.h">
+      <Filter>Win32\sys</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\check\src\check.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\check\src\check_error.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\check\src\check_impl.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\check\src\check_list.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\check\src\check_log.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\check\src\check_msg.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\check\src\check_pack.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\check\src\check_print.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\check\src\check_str.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\check\lib\libcompat.h">
+      <Filter>libcompat</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\check\time.c">
+      <Filter>Win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\check\src\check.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\check\src\check_error.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\check\src\check_list.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\check\src\check_log.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\check\src\check_msg.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\check\src\check_pack.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\check\src\check_print.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\check\src\check_run.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\check\src\check_str.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\check\lib\libcompat.c">
+      <Filter>libcompat</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\check\lib\clock_gettime.c">
+      <Filter>libcompat</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

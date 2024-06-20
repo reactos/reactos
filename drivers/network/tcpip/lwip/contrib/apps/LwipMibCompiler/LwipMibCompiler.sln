@@ -1,0 +1,47 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LwipMibCompiler", "LwipMibCompiler\LwipMibCompiler.csproj", "{C25D5640-D999-49BD-82E0-A1975296A91E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LwipSnmpCodeGeneration", "LwipSnmpCodeGeneration\LwipSnmpCodeGeneration.csproj", "{AABCAB90-1540-45D4-A159-14831A54E9A3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CCodeGeneration", "CCodeGeneration\CCodeGeneration.csproj", "{7DA7C0AB-0982-4BF5-9324-F59A7A08D65B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpSnmpLib.Mib", "SharpSnmpLib\SharpSnmpLib.Mib.csproj", "{CBE20411-5DB7-487D-825D-7694267BB6F5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MibViewer", "MibViewer\MibViewer.csproj", "{86CC0B65-7985-4017-A252-0A7A18DCAEF3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7DA7C0AB-0982-4BF5-9324-F59A7A08D65B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7DA7C0AB-0982-4BF5-9324-F59A7A08D65B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7DA7C0AB-0982-4BF5-9324-F59A7A08D65B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7DA7C0AB-0982-4BF5-9324-F59A7A08D65B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{86CC0B65-7985-4017-A252-0A7A18DCAEF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{86CC0B65-7985-4017-A252-0A7A18DCAEF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{86CC0B65-7985-4017-A252-0A7A18DCAEF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{86CC0B65-7985-4017-A252-0A7A18DCAEF3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AABCAB90-1540-45D4-A159-14831A54E9A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AABCAB90-1540-45D4-A159-14831A54E9A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AABCAB90-1540-45D4-A159-14831A54E9A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AABCAB90-1540-45D4-A159-14831A54E9A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C25D5640-D999-49BD-82E0-A1975296A91E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C25D5640-D999-49BD-82E0-A1975296A91E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C25D5640-D999-49BD-82E0-A1975296A91E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C25D5640-D999-49BD-82E0-A1975296A91E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CBE20411-5DB7-487D-825D-7694267BB6F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CBE20411-5DB7-487D-825D-7694267BB6F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CBE20411-5DB7-487D-825D-7694267BB6F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CBE20411-5DB7-487D-825D-7694267BB6F5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = LwipMibCompiler\LwipMibCompiler.csproj
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

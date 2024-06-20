@@ -36,7 +36,7 @@ void
 LibTCPDumpPcb(PVOID SocketContext)
 {
     struct tcp_pcb *pcb = (struct tcp_pcb*)SocketContext;
-    unsigned int addr = ntohl(pcb->remote_ip.addr);
+    unsigned int addr = lwip_ntohl(pcb->remote_ip.addr);
 
     DbgPrint("\tState: %s\n", tcp_state_str[pcb->state]);
     DbgPrint("\tRemote: (%d.%d.%d.%d, %d)\n",
@@ -405,14 +405,14 @@ LibTCPBindCallback(void *arg)
 
     msg->Output.Bind.Error = tcp_bind(pcb,
                                       msg->Input.Bind.IpAddress,
-                                      ntohs(msg->Input.Bind.Port));
+                                      lwip_ntohs(msg->Input.Bind.Port));
 
 done:
     KeSetEvent(&msg->Event, IO_NO_INCREMENT, FALSE);
 }
 
 err_t
-LibTCPBind(PCONNECTION_ENDPOINT Connection, struct ip_addr *const ipaddr, const u16_t port)
+LibTCPBind(PCONNECTION_ENDPOINT Connection, ip4_addr_t *const ipaddr, const u16_t port)
 {
     struct lwip_callback_msg *msg;
     err_t ret;
@@ -554,7 +554,7 @@ done:
 }
 
 err_t
-LibTCPSend(PCONNECTION_ENDPOINT Connection, void *const dataptr, const u16_t len, u32_t *sent, const int safe)
+LibTCPSend(PCONNECTION_ENDPOINT Connection, void *const dataptr, const u16_t len, ULONG *sent, const int safe)
 {
     err_t ret;
     struct lwip_callback_msg *msg;
@@ -609,7 +609,7 @@ LibTCPConnectCallback(void *arg)
     tcp_sent((PTCP_PCB)msg->Input.Connect.Connection->SocketContext, InternalSendEventHandler);
 
     Error = tcp_connect((PTCP_PCB)msg->Input.Connect.Connection->SocketContext,
-                        msg->Input.Connect.IpAddress, ntohs(msg->Input.Connect.Port),
+                        msg->Input.Connect.IpAddress, lwip_ntohs(msg->Input.Connect.Port),
                         InternalConnectEventHandler);
 
     msg->Output.Connect.Error = Error == ERR_OK ? ERR_INPROGRESS : Error;
@@ -619,7 +619,7 @@ done:
 }
 
 err_t
-LibTCPConnect(PCONNECTION_ENDPOINT Connection, struct ip_addr *const ipaddr, const u16_t port)
+LibTCPConnect(PCONNECTION_ENDPOINT Connection, ip_addr_t *const ipaddr, const u16_t port)
 {
     struct lwip_callback_msg *msg;
     err_t ret;
@@ -841,7 +841,7 @@ LibTCPAccept(PTCP_PCB pcb, struct tcp_pcb *listen_pcb, void *arg)
 }
 
 err_t
-LibTCPGetHostName(PTCP_PCB pcb, struct ip_addr *const ipaddr, u16_t *const port)
+LibTCPGetHostName(PTCP_PCB pcb, ip_addr_t *const ipaddr, u16_t *const port)
 {
     if (!pcb)
         return ERR_CLSD;
@@ -853,7 +853,7 @@ LibTCPGetHostName(PTCP_PCB pcb, struct ip_addr *const ipaddr, u16_t *const port)
 }
 
 err_t
-LibTCPGetPeerName(PTCP_PCB pcb, struct ip_addr * const ipaddr, u16_t * const port)
+LibTCPGetPeerName(PTCP_PCB pcb, ip_addr_t * const ipaddr, u16_t * const port)
 {
     if (!pcb)
         return ERR_CLSD;

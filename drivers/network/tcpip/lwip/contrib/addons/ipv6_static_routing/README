@@ -1,0 +1,43 @@
+A simple routing table implementation for addition, deletion and lookup of IPv6 routes. 
+
+APIs are:
+1) s8_t ip6_add_route_entry(struct ip6_prefix *ip6_prefix,
+                            struct netif *netif,
+                            ip6_addr_t *gateway,
+                            s8_t *index);
+
+2) err_t ip6_remove_route_entry(struct ip6_prefix *ip6_prefix);
+
+3) s8_t ip6_find_route_entry(ip6_addr_t *ip6_dest_addr);
+
+4) struct netif *ip6_static_route(ip6_addr_t *src, ip6_addr_t *dest);
+
+5) ip6_addr_t *ip6_get_gateway(struct netif *netif, ip6_addr_t *dest);
+
+6) struct ip6_route_entry *ip6_get_route_table(void);
+
+For route lookup from the table, The LWIP_HOOK_IP6_ROUTE hook in ip6_route(..) of ip6.c
+could be assigned to the ip6_static_route() API of this implementation to return the 
+appropriate netif.
+
+-- The application can add routes using the API ip6_add_route_entry(..). 
+   This API adds the ip6 prefix route into the static route table while
+   keeping all entries sorted in decreasing order of prefix length.
+   Subsequently, a linear search down the list can be performed to retrieve a
+   matching route entry for a Longest Prefix Match.
+   The prefix length is expected to be at an 8-bit boundary. While this is 
+   a limitation, it would serve most practical purposes.
+
+-- The application can remove routes using the API ip6_remove_route_entry(..).
+
+-- The application can find a route entry for a specific address using the 
+   ip6_find_route_entry() function which returns the index of the found entry. 
+   This is used internally by the route lookup function ip6_static_route() API.
+
+-- To fetch the gateway IPv6 address for a specific destination IPv6 
+   address and target netif, the application can call ip6_get_gateway(..).
+   This API could be assigned to the LWIP_HOOK_ND6_GET_GW() if a gateway has
+   been added as part of the ip6_add_route_entry().
+
+-- To fetch a pointer to the head of the table, the application can call 
+   ip6_get_route_table().

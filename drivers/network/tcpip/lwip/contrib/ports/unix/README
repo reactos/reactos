@@ -1,0 +1,25 @@
+This port contains infrastructure and examples for running lwIP on Unix-like
+operating systems (Linux, OpenBSD, cygwin). Much of this is targeted towards
+testing lwIP applications.
+
+* port/sys_arch.c, port/perf.c, port/include/arch/: Generic platform porting,
+  for both states of NO_SYS. (Mapping debugging to printf, providing 
+  sys_now & co from the system time etc.)
+
+* check: Runs the unit tests shipped with main lwIP on the Unix port.
+
+* port/netif, port/include/netif: Various network interface implementations and
+  their helpers, some explicitly for Unix infrastructure, some generic (but most
+  useful on an easy to debug system):
+
+  * fifo: Helper for sio
+
+  * list: Helper for unixif
+
+  * pcapif: Network interface that replays packages from a PCAP dump file, and
+    discards packages sent out from it
+
+  * sio: Mapping Unix character devices to lwIP's sio mechanisms
+
+  * tapif: Network interface that is mapped to a tap interface (Unix user
+    space layer 2 network device). Uses lwIP threads.
