@@ -358,25 +358,29 @@ BOOL Initialize(HINSTANCE hInstance)
     hSemaphore = CreateSemaphoreW(NULL, 0, 1, L"MSConfigRunning");
     if (!hSemaphore || GetLastError() == ERROR_ALREADY_EXISTS)
     {
-        CloseHandle(hSemaphore);
-
-        /*
-         * A semaphore with the same name already exist. It should have been
-         * created by another instance of MSConfig. Try to find its window
-         * and bring it to front.
-         */
-        if ( (hSingleWnd && IsWindow(hSingleWnd))                         ||
-             ( (hSingleWnd = FindWindowW(L"#32770", szAppName)) != NULL ) ||
-             (!bIsPreVistaOSVersion ? ( (hSingleWnd = FindWindowW(L"#32770", lpszVistaAppName)) != NULL ) : FALSE) )
+        if (hSemaphore)
         {
-            /* Found it. Show the window. */
-            ShowWindow(hSingleWnd, SW_SHOWNORMAL);
-            SetForegroundWindow(hSingleWnd);
+            CloseHandle(hSemaphore);
+
+            /*
+             * A semaphore with the same name already exist. It should have been
+             * created by another instance of MSConfig. Try to find its window
+             * and bring it to front.
+             */
+            if ((hSingleWnd && IsWindow(hSingleWnd))                     ||
+                (hSingleWnd = FindWindowW(L"#32770", szAppName)) != NULL ||
+                (!bIsPreVistaOSVersion ? (hSingleWnd = FindWindowW(L"#32770", lpszVistaAppName)) != NULL : FALSE))
+            {
+                /* Found it. Show the window. */
+                ShowWindow(hSingleWnd, SW_SHOWNORMAL);
+                SetForegroundWindow(hSingleWnd);
+            }
         }
 
         /* Quit this instance of MSConfig */
         Success = FALSE;
     }
+
     if (!bIsPreVistaOSVersion) MemFree(lpszVistaAppName);
 
     /* Quit now if we failed */
