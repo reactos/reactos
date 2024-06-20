@@ -4,7 +4,6 @@
 
 [Version]
 Signature  = "$Windows NT$"
-;Signature  = "$ReactOS$"
 LayoutFile = layout.inf
 Class      = Net
 ClassGUID  = {4D36E972-E325-11CE-BFC1-08002BE10318}
@@ -24,8 +23,6 @@ DefaultDestDir = 12
 [RealtekMfg]
 %*RTL8019.DeviceDesc% = NE2000_Inst_Isa.ndi,*RTL8019
 %PCI\VEN_10EC&DEV_8029.DeviceDesc% = NE2000_Inst_Pci.ndi,PCI\VEN_10EC&DEV_8029
-
-;---------------------------- NE2000 DRIVER -----------------------------
 
 [NE2000_Inst_Isa.ndi.NT]
 Characteristics = 0x4 ; NCF_PHYSICAL
@@ -59,10 +56,10 @@ ErrorControl  = 1
 ServiceBinary = %12%\ne2000.sys
 LoadOrderGroup = NDIS
 
-;-------------------------------- STRINGS -------------------------------
-
 [Strings]
 ReactOS = "ReactOS Team"
-
+RealtekMfg = "Realtek"
 GenericMfg = "(Generic network cards)"
-*PNP80D6.DeviceDesc = "NE2000 compatible"
+*PNP80D6.DeviceDesc = "NE2000-compatible Ethernet Adapter"
+*RTL8019.DeviceDesc = "Realtek RTL8019AS Ethernet Adapter"
+PCI\VEN_10EC&DEV_8029.DeviceDesc = "Realtek RTL8029 Ethernet Adapter"
