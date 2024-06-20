@@ -108,7 +108,7 @@ else()
     target_compile_options(libschily PRIVATE "-Wno-format")
 
     # MATCHES must be used here because on macOS, CMake uses the compiler ID "AppleClang".
-    if(CMAKE_C_COMPILER_ID MATCHES "Clang" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL "15")
+    if(CMAKE_C_COMPILER_ID MATCHES "Clang$" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL "15")
         # mkisofs uses K&R-style function definitions to support very old compilers.
         # This causes warnings with modern compilers.
         target_compile_options(libmdigest PRIVATE "-Wno-deprecated-non-prototype")
