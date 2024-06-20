@@ -12,6 +12,6 @@ list(APPEND HAL_LEGACY_SOURCE
     legacy/halpcat.c
     smp/mps/mps.c)
 
-add_library(lib_hal_legacy OBJECT ${HAL_LEGACY_SOURCE})
-add_dependencies(lib_hal_legacy bugcodes xdk)
+#add_library(lib_hal_legacy OBJECT ${HAL_LEGACY_SOURCE})
+#add_dependencies(lib_hal_legacy bugcodes xdk)
 #add_pch(lib_hal_legacy include/hal.h)
