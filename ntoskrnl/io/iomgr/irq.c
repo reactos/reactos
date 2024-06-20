@@ -189,7 +189,8 @@ IopConnectInterruptExFullySpecific(
                                 Parameters->FullySpecified.ShareVector,
                                 Parameters->FullySpecified.ProcessorEnableMask,
                                 Parameters->FullySpecified.FloatingSave);
-    DPRINT("IopConnectInterruptEx_FullySpecific: has failed with status %X", Status);
+    if (!NT_SUCCESS(Status))
+        DPRINT1("IopConnectInterruptExFullySpecific() failed: 0x%lx\n", Status);
     return Status;
 }
 
