@@ -1743,7 +1743,9 @@ static void COMBO_LButtonUp( LPHEADCOMBO lphc )
 static void COMBO_MouseMove( LPHEADCOMBO lphc, WPARAM wParam, LPARAM lParam )
 {
    POINT  pt;
+#ifndef __REACTOS__  // CORE-18769
    RECT   lbRect;
+#endif
 
    pt.x = (short)LOWORD(lParam);
    pt.y = (short)HIWORD(lParam);
@@ -1761,6 +1763,7 @@ static void COMBO_MouseMove( LPHEADCOMBO lphc, WPARAM wParam, LPARAM lParam )
      }
    }
 
+#ifndef __REACTOS__  // CORE-18769
    GetClientRect( lphc->hWndLBox, &lbRect );
    MapWindowPoints( lphc->self, lphc->hWndLBox, &pt, 1 );
    if( PtInRect(&lbRect, pt) )
@@ -1772,6 +1775,7 @@ static void COMBO_MouseMove( LPHEADCOMBO lphc, WPARAM wParam, LPARAM lParam )
        /* hand over pointer tracking */
        SendMessageW(lphc->hWndLBox, WM_LBUTTONDOWN, wParam, lParam);
    }
+#endif
 }
 
 static LRESULT COMBO_GetComboBoxInfo(const HEADCOMBO *lphc, COMBOBOXINFO *pcbi)
