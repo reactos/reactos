@@ -40,7 +40,7 @@ CopyTextToClipboard(LPCWSTR lpszText)
 }
 
 VOID
-ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem)
+ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem, POINT *Point)
 {
     HMENU hMenu = NULL;
     HMENU hPopupMenu;
@@ -68,10 +68,13 @@ ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem)
         SetMenuDefaultItem(hPopupMenu, DefaultItem, FALSE);
     }
 
-    GetCursorPos(&pt);
+    if (!Point)
+    {
+        GetCursorPos(Point = &pt);
+    }
 
     SetForegroundWindow(hwnd);
-    TrackPopupMenu(hPopupMenu, 0, pt.x, pt.y, 0, hwndOwner, NULL);
+    TrackPopupMenu(hPopupMenu, 0, Point->x, Point->y, 0, hwndOwner, NULL);
 
     if (hMenu)
     {
