@@ -285,6 +285,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    }
    else  /* SC_SIZE */
    {
+      RECTL_vSetEmptyRect(&pwnd->InternalPos.NormalRect);
       if (!thickframe) return;
       if (hittest && (syscommand != SC_MOUSEMENU))
       {
