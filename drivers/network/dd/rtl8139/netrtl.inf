@@ -4,7 +4,6 @@
 
 [Version]
 Signature  = "$Windows NT$"
-;Signature  = "$ReactOS$"
 LayoutFile = layout.inf
 Class      = Net
 ClassGUID  = {4D36E972-E325-11CE-BFC1-08002BE10318}
@@ -38,8 +37,6 @@ DefaultDestDir = 12
 [CompaqMfg]
 %CompaqHNE300.DeviceDesc% = RTL8139_Inst.ndi,PCI\VEN_021B&DEV_8139
 
-;----------------------------- RTL8139 DRIVER -----------------------------
-
 [RTL8139_Inst.ndi.NT]
 Characteristics = 0x4 ; NCF_PHYSICAL
 BusType = 5 ; PCIBus
@@ -57,8 +54,6 @@ StartType     = 3
 ErrorControl  = 0
 ServiceBinary = %12%\rtl8139.sys
 LoadOrderGroup = NDIS
-
-;-------------------------------- STRINGS -------------------------------
 
 [Strings]
 ReactOS = "ReactOS Team"
