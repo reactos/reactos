@@ -1463,7 +1463,7 @@ CViewStatePropertyBag::_GetMRUSlots(
         return hr;
 
     hr = pMruList->QueryPidl(pidl, cSlots, puSlots, pcSlots);
-    if (hr == S_OK && MODE_CAN_WRITE(dwMode))
+    if (hr == S_OK || MODE_CAN_WRITE(dwMode))
         hr = pMruList->UsePidl(pidl, puSlots);
     else if (cSlots == 1)
         hr = E_FAIL;
@@ -1917,13 +1917,9 @@ SHGetViewStatePropertyBag(
         ::LeaveCriticalSection(&g_csBagCacheLock);
         return hr;
     }
-
-    g_pCachedBag.Attach(pBag);
-
-    hr = g_pCachedBag->QueryInterface(riid, ppv);
-
+    g_pCachedBag = pBag;
     ::LeaveCriticalSection(&g_csBagCacheLock);
-    return hr;
+    return pBag->QueryInterface(riid, ppv);
 }
 
 EXTERN_C VOID FreeViewStatePropertyBagCache(VOID)
