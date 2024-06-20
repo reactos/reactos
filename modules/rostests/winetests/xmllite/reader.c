@@ -538,7 +538,7 @@ static void test_reader_create(void)
     IUnknown *input, *unk;
     IXmlReader *reader;
 #ifdef __REACTOS__
-    ULONG_PTR dtd;
+    LONG_PTR dtd;
 #else
     DtdProcessing dtd;
 #endif
@@ -607,7 +607,11 @@ static void test_reader_create(void)
     dtd = 2;
     hr = IXmlReader_GetProperty(reader, XmlReaderProperty_DtdProcessing, (LONG_PTR*)&dtd);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+#ifdef __REACTOS__
     ok(dtd == DtdProcessing_Prohibit, "got %Id\n", dtd);
+#else
+    ok(dtd == DtdProcessing_Prohibit, "got %d\n", dtd);
+#endif
 
     dtd = 2;
     hr = IXmlReader_SetProperty(reader, XmlReaderProperty_DtdProcessing, dtd);
