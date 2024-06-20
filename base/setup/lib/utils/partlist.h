@@ -251,45 +251,36 @@ DestroyPartitionList(
 
 PDISKENTRY
 GetDiskByBiosNumber(
-    IN PPARTLIST List,
-    IN ULONG HwDiskNumber);
+    _In_ PPARTLIST List,
+    _In_ ULONG HwDiskNumber);
 
 PDISKENTRY
 GetDiskByNumber(
-    IN PPARTLIST List,
-    IN ULONG DiskNumber);
+    _In_ PPARTLIST List,
+    _In_ ULONG DiskNumber);
 
 PDISKENTRY
 GetDiskBySCSI(
-    IN PPARTLIST List,
-    IN USHORT Port,
-    IN USHORT Bus,
-    IN USHORT Id);
+    _In_ PPARTLIST List,
+    _In_ USHORT Port,
+    _In_ USHORT Bus,
+    _In_ USHORT Id);
 
 PDISKENTRY
 GetDiskBySignature(
-    IN PPARTLIST List,
-    IN ULONG Signature);
+    _In_ PPARTLIST List,
+    _In_ ULONG Signature);
 
 PPARTENTRY
 GetPartition(
-    // IN PPARTLIST List,
-    IN PDISKENTRY DiskEntry,
-    IN ULONG PartitionNumber);
-
-BOOLEAN
-GetDiskOrPartition(
-    IN PPARTLIST List,
-    IN ULONG DiskNumber,
-    IN ULONG PartitionNumber OPTIONAL,
-    OUT PDISKENTRY* pDiskEntry,
-    OUT PPARTENTRY* pPartEntry OPTIONAL);
+    _In_ PDISKENTRY DiskEntry,
+    _In_ ULONG PartitionNumber);
 
 PPARTENTRY
 SelectPartition(
-    IN PPARTLIST List,
-    IN ULONG DiskNumber,
-    IN ULONG PartitionNumber);
+    _In_ PPARTLIST List,
+    _In_ ULONG DiskNumber,
+    _In_ ULONG PartitionNumber);
 
 PPARTENTRY
 GetNextPartition(

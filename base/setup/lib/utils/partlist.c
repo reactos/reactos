@@ -2062,8 +2062,8 @@ DestroyPartitionList(
 
 PDISKENTRY
 GetDiskByBiosNumber(
-    IN PPARTLIST List,
-    IN ULONG HwDiskNumber)
+    _In_ PPARTLIST List,
+    _In_ ULONG HwDiskNumber)
 {
     PDISKENTRY DiskEntry;
     PLIST_ENTRY Entry;
@@ -2076,10 +2076,7 @@ GetDiskByBiosNumber(
         DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
 
         if (DiskEntry->HwDiskNumber == HwDiskNumber)
-        {
-            /* Disk found */
-            return DiskEntry;
-        }
+            return DiskEntry; /* Disk found, return it */
     }
 
     /* Disk not found, stop there */
@@ -2088,8 +2085,8 @@ GetDiskByBiosNumber(
 
 PDISKENTRY
 GetDiskByNumber(
-    IN PPARTLIST List,
-    IN ULONG DiskNumber)
+    _In_ PPARTLIST List,
+    _In_ ULONG DiskNumber)
 {
     PDISKENTRY DiskEntry;
     PLIST_ENTRY Entry;
@@ -2102,10 +2099,7 @@ GetDiskByNumber(
         DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
 
         if (DiskEntry->DiskNumber == DiskNumber)
-        {
-            /* Disk found */
-            return DiskEntry;
-        }
+            return DiskEntry; /* Disk found, return it */
     }
 
     /* Disk not found, stop there */
@@ -2114,10 +2108,10 @@ GetDiskByNumber(
 
 PDISKENTRY
 GetDiskBySCSI(
-    IN PPARTLIST List,
-    IN USHORT Port,
-    IN USHORT Bus,
-    IN USHORT Id)
+    _In_ PPARTLIST List,
+    _In_ USHORT Port,
+    _In_ USHORT Bus,
+    _In_ USHORT Id)
 {
     PDISKENTRY DiskEntry;
     PLIST_ENTRY Entry;
@@ -2133,7 +2127,7 @@ GetDiskBySCSI(
             DiskEntry->Bus  == Bus  &&
             DiskEntry->Id   == Id)
         {
-            /* Disk found */
+            /* Disk found, return it */
             return DiskEntry;
         }
     }
@@ -2144,8 +2138,8 @@ GetDiskBySCSI(
 
 PDISKENTRY
 GetDiskBySignature(
-    IN PPARTLIST List,
-    IN ULONG Signature)
+    _In_ PPARTLIST List,
+    _In_ ULONG Signature)
 {
     PDISKENTRY DiskEntry;
     PLIST_ENTRY Entry;
@@ -2158,10 +2152,7 @@ GetDiskBySignature(
         DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
 
         if (DiskEntry->LayoutBuffer->Signature == Signature)
-        {
-            /* Disk found */
-            return DiskEntry;
-        }
+            return DiskEntry; /* Disk found, return it */
     }
 
     /* Disk not found, stop there */
@@ -2170,20 +2161,13 @@ GetDiskBySignature(
 
 PPARTENTRY
 GetPartition(
-    // IN PPARTLIST List,
-    IN PDISKENTRY DiskEntry,
-    IN ULONG PartitionNumber)
+    _In_ PDISKENTRY DiskEntry,
+    _In_ ULONG PartitionNumber)
 {
     PPARTENTRY PartEntry;
     PLIST_ENTRY Entry;
 
-    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
-    {
-        DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
-        return NULL;
-    }
-
-    /* Disk found, loop over the primary partitions first... */
+    /* Loop over the primary partitions first... */
     for (Entry = DiskEntry->PrimaryPartListHead.Flink;
          Entry != &DiskEntry->PrimaryPartListHead;
          Entry = Entry->Flink)
@@ -2191,11 +2175,11 @@ GetPartition(
         PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
 
         if (PartEntry->PartitionNumber == PartitionNumber)
-        {
-            /* Partition found */
-            return PartEntry;
-        }
+            return PartEntry; /* Partition found, return it */
     }
+
+    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+        return NULL;
 
     /* ... then over the logical partitions if needed */
     for (Entry = DiskEntry->LogicalPartListHead.Flink;
@@ -2205,75 +2189,33 @@ GetPartition(
         PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
 
         if (PartEntry->PartitionNumber == PartitionNumber)
-        {
-            /* Partition found */
-            return PartEntry;
-        }
+            return PartEntry; /* Partition found, return it */
     }
 
     /* The partition was not found on the disk, stop there */
     return NULL;
 }
 
-BOOLEAN
-GetDiskOrPartition(
-    IN PPARTLIST List,
-    IN ULONG DiskNumber,
-    IN ULONG PartitionNumber OPTIONAL,
-    OUT PDISKENTRY* pDiskEntry,
-    OUT PPARTENTRY* pPartEntry OPTIONAL)
-{
-    PDISKENTRY DiskEntry;
-    PPARTENTRY PartEntry = NULL;
-
-    /* Find the disk */
-    DiskEntry = GetDiskByNumber(List, DiskNumber);
-    if (!DiskEntry)
-        return FALSE;
-
-    /* If we have a partition (PartitionNumber != 0), find it */
-    if (PartitionNumber != 0)
-    {
-        if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
-        {
-            DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
-            return FALSE;
-        }
-
-        PartEntry = GetPartition(/*List,*/ DiskEntry, PartitionNumber);
-        if (!PartEntry)
-            return FALSE;
-        ASSERT(PartEntry->DiskEntry == DiskEntry);
-    }
-
-    /* Return the disk (and optionally the partition) */
-    *pDiskEntry = DiskEntry;
-    if (pPartEntry) *pPartEntry = PartEntry;
-    return TRUE;
-}
-
-//
-// NOTE: Was introduced broken in r6258 by Casper
-//
 PPARTENTRY
 SelectPartition(
-    IN PPARTLIST List,
-    IN ULONG DiskNumber,
-    IN ULONG PartitionNumber)
+    _In_ PPARTLIST List,
+    _In_ ULONG DiskNumber,
+    _In_ ULONG PartitionNumber)
 {
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
 
+    /* Find the disk */
     DiskEntry = GetDiskByNumber(List, DiskNumber);
     if (!DiskEntry)
         return NULL;
+    ASSERT(DiskEntry->DiskNumber == DiskNumber);
 
-    PartEntry = GetPartition(/*List,*/ DiskEntry, PartitionNumber);
+    /* Find the partition */
+    PartEntry = GetPartition(DiskEntry, PartitionNumber);
     if (!PartEntry)
         return NULL;
-
     ASSERT(PartEntry->DiskEntry == DiskEntry);
-    ASSERT(DiskEntry->DiskNumber == DiskNumber);
     ASSERT(PartEntry->PartitionNumber == PartitionNumber);
 
     return PartEntry;
