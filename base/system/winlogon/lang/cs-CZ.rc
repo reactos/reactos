@@ -60,7 +60,7 @@ BEGIN
     IDS_SAVEYOURSETTINGS "Ukládání osobního nastavení..."
     IDS_REACTOSISSTARTINGUP "ReactOS se spouští..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
-    IDS_TIMEOUTLONGFORMAT "%d dny/dní"
+    IDS_TIMEOUTLONGFORMAT "%d dní"
 END
 
 STRINGTABLE
