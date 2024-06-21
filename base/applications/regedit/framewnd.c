@@ -1480,7 +1480,6 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
  *  WM_COMMAND  - process the application menu
  *  WM_DESTROY  - post a quit message and return
  */
-
 LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     RECT rc;
