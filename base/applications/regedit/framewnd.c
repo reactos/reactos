@@ -1146,10 +1146,7 @@ FreeObjectPicker(IN IDsObjectPicker *pDsObjectPicker)
     pDsObjectPicker->lpVtbl->Release(pDsObjectPicker);
 }
 
-/*
- *  FUNCTION: _CmdWndProc(HWND, unsigned, WORD, LONG)
- *
- *  PURPOSE:  Processes WM_COMMAND messages for the main frame window.
+/* PURPOSE: Processes WM_COMMAND messages for the main frame window.
  */
 static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -1472,13 +1469,10 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return result;
 }
 
-/********************************************************************************
- *  FUNCTION: FrameWndProc(HWND, unsigned, WORD, LONG)
+/* PURPOSE: Processes messages for the main frame window
  *
- *  PURPOSE:  Processes messages for the main frame window.
- *
- *  WM_COMMAND  - process the application menu
- *  WM_DESTROY  - post a quit message and return
+ * WM_COMMAND - process the application menu
+ * WM_DESTROY - post a quit message and return
  */
 LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
