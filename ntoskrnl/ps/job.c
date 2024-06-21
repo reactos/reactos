@@ -83,6 +83,24 @@ ULONG PspJobInfoAlign[] =
     sizeof(ULONG)
 };
 
+/* DATA TYPE DEFINITIONS *****************************************************/
+
+/*!
+ * Context structure used to pass the job object and exit status to
+ * the process termination callback.
+ *
+ * @param[in] Job
+ *     A pointer to the job object.
+ *
+ * @param[in] ExitStatus
+ *     The exit status to be used for all terminated processes.
+ */
+typedef struct _TERMINATE_PROCESS_CONTEXT
+{
+    PEJOB Job;
+    NTSTATUS ExitStatus;
+} TERMINATE_PROCESS_CONTEXT, *PTERMINATE_PROCESS_CONTEXT;
+
 /* FUNCTIONS *****************************************************************/
 
 CODE_SEG("INIT")
@@ -92,6 +110,83 @@ PspInitializeJobStructures(VOID)
 {
     InitializeListHead(&PsJobListHead);
     ExInitializeFastMutex(&PsJobListLock);
+}
+
+/*!
+ * Enumerates all processes currently associated with the specified job object
+ * and calls the provided callback function for each process.
+ *
+ * @param[in] Job
+ *     A pointer to the job object whose processes are to be enumerated.
+ *
+ * @param[in] Callback
+ *     A pointer to the PJOB_ENUMERATOR_CALLBACK callback function to be
+ *     called for each process.
+ *
+ * @param[in, optional] Context
+ *     An optional pointer to a context to be passed to the callback function.
+ *
+ * @returns
+ *     STATUS_SUCCESS if the enumeration completed successfully.
+ *     An appropriate NTSTATUS error code otherwise.
+ *
+ * @remark
+ *     When the callback function is executed, the job lock is held.
+ */
+NTSTATUS
+NTAPI
+PspEnumerateProcessesInJob(
+    _In_ PEJOB Job,
+    _In_ PJOB_ENUMERATOR_CALLBACK Callback,
+    _In_opt_ PVOID Context
+)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PEPROCESS Process;
+    PLIST_ENTRY Entry;
+
+    /* Enter critical region and acquire exclusive lock on the job object */
+    ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
+
+    /* Initialize entry to the first process in the job's process list */
+    Entry = Job->ProcessListHead.Flink;
+
+    /* For each process in job process list */
+    while (Entry != &Job->ProcessListHead)
+    {
+        /* Get process object */
+        Process = CONTAINING_RECORD(Entry, EPROCESS, JobLinks);
+
+        /* Move to the next process in the list */
+        Entry = Entry->Flink;
+
+        /* Increase the reference count of the process object.
+           We use the safe variant here because it returns FALSE if the object
+           is being deleted */
+        if (!ObReferenceObjectSafe(Process))
+        {
+            /* The process is being deleted, continue on to the next one */
+            continue;
+        }
+
+        /* Call the callback function */
+        Status = Callback(Process, Context);
+
+        /* Decrease the reference count */
+        ObDereferenceObject(Process);
+
+        /* Check if the callback returned an error */
+        if (!NT_SUCCESS(Status))
+        {
+            /* Exit the loop on error */
+            break;
+        }
+    }
+
+    /* Resume APCs and release lock */
+    ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
+
+    return Status;
 }
 
 /*!
@@ -115,6 +210,8 @@ PspAssignProcessToJob(
 )
 {
     NTSTATUS Status = STATUS_SUCCESS;
+
+    DPRINT("PspAssignProcessToJob(Process: %p, Job: %p)\n", Process, Job);
 
     /* Ensure the process is not already assigned to a job */
     ASSERT(Process->Job == NULL);
@@ -193,6 +290,8 @@ PspRemoveProcessFromJob(
     _In_ PEJOB Job
 )
 {
+    DPRINT("PspRemoveProcessFromJob(Process: %p, Job: %p)\n", Process, Job);
+
     ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
 
     /* Attempt to atomically set the process's job pointer to NULL if it is currently
@@ -237,6 +336,8 @@ PspExitProcessFromJob(
     _In_ PEPROCESS Process
 )
 {
+    DPRINT("PspExitProcessFromJob(Job: %p, Process: %p)\n", Job, Process);
+
     /* Make sure we are not interrupted */
     ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
 
@@ -279,6 +380,54 @@ PspExitProcessFromJob(
 }
 
 /*!
+ * Callback function to terminate a process and update the job's
+ * active process counter.
+ *
+ * @param[in] Process
+ *     A pointer to the process object to be terminated.
+ *
+ * @param[in, optional] Context
+ *     An optional pointer to a context, in this case, a structure containing
+ *     the job object and the exit status.
+ *
+ * @returns
+ *     STATUS_SUCCESS if the process was successfully terminated.
+ *     Otherwise, an appropriate NTSTATUS error code.
+ *
+ * @remark
+ *     When this callback function is executed, the job lock is held by
+ *     PspEnumerateProcessesInJob(). It releases the lock after the callback returns.
+ */
+NTSTATUS
+NTAPI
+PspTerminateProcessCallback(
+    _In_ PEPROCESS Process,
+    _In_opt_ PVOID Context
+)
+{
+    NTSTATUS Status;
+    PTERMINATE_PROCESS_CONTEXT TerminateContext = (PTERMINATE_PROCESS_CONTEXT)Context;
+    PEJOB Job = TerminateContext->Job;
+    NTSTATUS ExitStatus = TerminateContext->ExitStatus;
+
+    /* Terminate the process */
+    Status = PsTerminateProcess(Process, ExitStatus);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Decrement the job's active process counter */
+    Job->ActiveProcesses--;
+
+    /* Check if there are no active processes left in the job */
+    if (Job->ActiveProcesses == 0)
+    {
+        /* If so, notify anyone waiting for the job object */
+        KeSetEvent(&Job->Event, IO_NO_INCREMENT, FALSE);
+    }
+
+    return Status;
+}
+
+/*!
  * Terminates all processes currently associated with the specified job object.
  *
  * @param[in] Job
@@ -298,56 +447,15 @@ PspTerminateJobObject(
     _In_ NTSTATUS ExitStatus
 )
 {
-    NTSTATUS Status = STATUS_SUCCESS;
-    PEPROCESS Process;
-    PLIST_ENTRY Entry;
+    TERMINATE_PROCESS_CONTEXT Context;
+    Context.Job = Job;
+    Context.ExitStatus = ExitStatus;
 
-    /* Enter critical region and acquire exclusive lock on the job object */
-    ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
+    DPRINT("PspTerminateJobObject(Job: %p, ExitStatus: %x)\n", Job, ExitStatus);
 
-    /* Initialize entry to the first process in the job's process list */
-    Entry = Job->ProcessListHead.Flink;
-
-    /* For each process in job process list */
-    while (Entry != Job->ProcessListHead.Flink)
-    {
-        /* Get process object */
-        Process = CONTAINING_RECORD(Entry, EPROCESS, JobLinks);
-
-        /* Move to the next process in the list */
-        Entry = Entry->Flink;
-
-        /* Increase the reference count of the process object.
-           We use the safe variant here because it returns FALSE if the object
-           is being deleted */
-        if (ObReferenceObjectSafe(Process))
-        {
-            /* The process is being deleted, continue on to the next one */
-            continue;
-        }
-
-        /* Terminate the process */
-        Status = PsTerminateProcess(Process, ExitStatus);
-        ASSERT(NT_SUCCESS(Status));
-
-        /* Decrement the job's active process counter */
-        Job->ActiveProcesses--;
-
-        /* Check if there are no active processes left in the job */
-        if (Job->ActiveProcesses == 0)
-        {
-            /* If so, notify anyone waiting for the job object */
-            KeSetEvent(&Job->Event, IO_NO_INCREMENT, FALSE);
-        }
-
-        /* Decrease the reference count */
-        ObDereferenceObject(Process);
-    }
-
-    /* Resume APCs and release lock */
-    ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
-
-    return Status;
+    return PspEnumerateProcessesInJob(Job,
+                                      PspTerminateProcessCallback,
+                                      &Context);
 }
 
 /*!
@@ -389,6 +497,13 @@ PspCloseJob(
     UNREFERENCED_PARAMETER(GrantedAccess);
     UNREFERENCED_PARAMETER(HandleCount);
 
+    DPRINT("PspCloseJob(Process: %p, ObjectBody: %p, GrantedAccess: %x, HandleCount: %u, SystemHandleCount: %u)\n",
+           Process,
+           ObjectBody,
+           GrantedAccess,
+           HandleCount,
+           SystemHandleCount);
+
     /* Proceed only when the last handle is left */
     if (SystemHandleCount != 1)
     {
@@ -416,6 +531,8 @@ NTAPI
 PspDeleteJob(_In_ PVOID ObjectBody)
 {
     PEJOB Job = (PEJOB)ObjectBody;
+
+    DPRINT("PspDeleteJob(ObjectBody: %p)\n", ObjectBody);
 
     PAGED_CODE();
 
@@ -520,6 +637,8 @@ NtCreateJobObject(
     PEPROCESS CurrentProcess;
     NTSTATUS Status;
 
+    DPRINT("NtCreateJobObject(JobHandle: %p)\n", JobHandle);
+
     PAGED_CODE();
 
     PreviousMode = ExGetPreviousMode();
@@ -581,7 +700,8 @@ NtCreateJobObject(
         /* Initialize the event object within the job */
         KeInitializeEvent(&Job->Event, NotificationEvent, FALSE);
 
-        /* Set the scheduling class. The default is '5' per Windows 10 System Programming (Yosifovich, P.) */
+        /* Set the scheduling class. The default is '5'
+           per Windows 10 System Programming (Yosifovich, P.), p.264 */
         Job->SchedulingClass = 5;
 
         /* Link the object into the global job list */
@@ -827,6 +947,8 @@ NtIsProcessInJob(
     PEJOB ProcessJob;
     PEJOB JobObjectFromHandle;
     NTSTATUS Status;
+
+    DPRINT("NtIsProcessInJob(ProcessHandle: %p, JobHandle: %p)\n", ProcessHandle, JobHandle);
 
     PreviousMode = ExGetPreviousMode();
 
