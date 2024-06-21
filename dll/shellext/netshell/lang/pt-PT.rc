@@ -22,7 +22,7 @@ BEGIN
     PUSHBUTTON "&Propriedades", IDC_PROPERTIES, 174, 105, 65, 14
     GROUPBOX "Descrição", -1, 9, 128, 230, 46, BS_GROUPBOX
     LTEXT "", IDC_DESCRIPTION, 15, 140, 217, 28, WS_GROUP
-    AUTOCHECKBOX "&Mostrar icon na área de notificação quando ligado", IDC_SHOWTASKBAR, 9, 181, 230, 12, WS_TABSTOP
+    AUTOCHECKBOX "&Mostrar ícone na área de notificação quando ligado", IDC_SHOWTASKBAR, 9, 181, 230, 12, WS_TABSTOP
     AUTOCHECKBOX "&Notificar-me quando a conectividade desta ligação for limitada ou nula", IDC_NOTIFYNOCONNECTION, 9, 195, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
 
@@ -136,7 +136,7 @@ BEGIN
     IDS_LEASE_EXPIRES "Permissão expirada"
     IDS_DNS_SERVERS "Servidor DNS"
     IDS_WINS_SERVERS "Servidor WINS"
-    IDS_PROPERTY "Propriedades"
+    IDS_PROPERTY "Proprietário"
     IDS_VALUE "Valor"
     IDS_NETWORKCONNECTION "Ligações de rede"
     IDS_SHV_COLUMN_NAME "Nome"
@@ -145,7 +145,7 @@ BEGIN
     IDS_SHV_COLUMN_DEVNAME "Nome do dispositivo"
     IDS_SHV_COLUMN_PHONE "Número de telefone ou endereço do hospedeiro"
     IDS_SHV_COLUMN_OWNER "Administrador"
-    IDS_TYPE_ETHERNET "LAN ou Internet de alta velocidade"
+    IDS_TYPE_ETHERNET "LAN ou internet de alta velocidade"
     IDS_STATUS_NON_OPERATIONAL "Desabilitado"
     IDS_STATUS_UNREACHABLE "Desligado"
     IDS_STATUS_DISCONNECTED "Cabo de rede desligado"
@@ -174,7 +174,7 @@ STRINGTABLE
 BEGIN
     IDS_NETWORKSETTINGSTITLE "Definições de rede"
     IDS_NETWORKSETTINGSSUBTITLE "Instala aplicações de rede necessárias para ligar a outras redes, equipamentos, e à internet."
-    IDS_NETWORKCOMPONENTTITLE "Componetes de rede"
+    IDS_NETWORKCOMPONENTTITLE "Componentes de rede"
     IDS_NETWORKCOMPONENTSUBTITLE "Determina quais os componentes de rede a utilizar neste equipamento. Para adicionar novos componentes, clique em ""Instalar""."
     IDS_NETWORKDOMAINTITLE "Grupo de trabalho ou domínio"
     IDS_NETWORKDOMAINSUBTITLE "Um grupo de trabalho é um grupo de computadores que partilham o mesmo nome. Um domínio é um grupo de computadores gerido por um administrador de rede."
