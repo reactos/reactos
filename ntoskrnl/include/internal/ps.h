@@ -371,6 +371,20 @@ PspQueryDescriptorThread(
 //
 // Job Routines
 //
+typedef NTSTATUS
+(*PJOB_ENUMERATOR_CALLBACK)(
+    _In_ PEPROCESS Process,
+    _In_opt_ PVOID Context
+);
+
+NTSTATUS
+NTAPI
+PspEnumerateProcessesInJob(
+    _In_ PEJOB Job,
+    _In_ PJOB_ENUMERATOR_CALLBACK Callback,
+    _In_opt_ PVOID Context
+);
+
 VOID
 NTAPI
 PspExitProcessFromJob(
