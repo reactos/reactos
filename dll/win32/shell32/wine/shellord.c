@@ -2317,7 +2317,9 @@ BOOL WINAPI SHObjectProperties(HWND hwnd, DWORD dwType, LPCWSTR szObject, LPCWST
     LPITEMIDLIST pidl = NULL;
     switch (dwType)
     {
-        case SHOP_FILEPATH: pidl = ILCreateFromPathW(szObject); break;
+        case SHOP_FILEPATH:
+            pidl = ILCreateFromPathW(szObject);
+            break;
     }
     if (pidl)
     {
