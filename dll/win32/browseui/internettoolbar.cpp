@@ -75,6 +75,19 @@ TODO:
 
 extern HRESULT WINAPI SHBindToFolder(LPCITEMIDLIST path, IShellFolder **newFolder);
 
+struct ITBARSTATE
+{
+    static const UINT SIG = ('R' << 0) | ('O' << 8) | ('S' << 16) | (('i' ^ 't' ^ 'b') << 24);
+    UINT cbSize;
+    UINT Signature; // Note: Windows has something else here (12 bytes)
+    UINT StdToolbar : 1;
+    UINT Addressbar : 1;
+    UINT Linksbar : 1;
+    UINT Throbber : 1; // toastytech.com/files/throboff.html
+    UINT Menubar : 1; // ..\Explorer\Advanced\AlwaysShowMenus for NT6?
+    // Note: Windows 8/10 stores the Ribbon state in ..\Explorer\Ribbon
+};
+
 HRESULT IUnknown_RelayWinEvent(IUnknown * punk, HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
     CComPtr<IWinEventHandler> menuWinEventHandler;
@@ -614,6 +627,7 @@ CInternetToolbar::CInternetToolbar()
     fToolbarWindow = NULL;
     fAdviseCookie = 0;
     pSettings = NULL;
+    fIgnoreChanges = FALSE;
 }
 
 CInternetToolbar::~CInternetToolbar()
@@ -893,6 +907,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::ShowDW(BOOL fShow)
             return hResult;
     }
 
+#if 0 // Why should showing the IDockingWindow change all bands? Related to CORE-17236
     if (fMenuBar)
     {
         hResult = IUnknown_ShowDW(fMenuBar, fShow);
@@ -918,6 +933,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::ShowDW(BOOL fShow)
         if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
     }
+#endif
     return S_OK;
 }
 
@@ -1001,6 +1017,14 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::GetClassID(CLSID *pClassID)
     return S_OK;
 }
 
+HRESULT CInternetToolbar::SetDirty()
+{
+    if (fIgnoreChanges)
+        return S_OK;
+    IUnknown_Exec(fSite, CGID_ShellBrowser, IDM_NOTIFYITBARDIRTY, 0, NULL, NULL);
+    return S_OK;
+}
+
 HRESULT STDMETHODCALLTYPE CInternetToolbar::IsDirty()
 {
     return E_NOTIMPL;
@@ -1008,12 +1032,35 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::IsDirty()
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::Load(IStream *pStm)
 {
-    return E_NOTIMPL;
+    fIgnoreChanges = TRUE;
+    HRESULT hr = InitNew();
+    ITBARSTATE state;
+    if (SUCCEEDED(hr))
+    {
+        hr = S_FALSE;
+        ULONG cb = sizeof(state);
+        if (pStm->Read(&state, cb, &cb) == S_OK && state.Signature == state.SIG)
+        {
+            SetBandVisibility(ITBBID_MENUBAND, state.Menubar);
+            SetBandVisibility(ITBBID_TOOLSBAND, state.StdToolbar);
+            SetBandVisibility(ITBBID_ADDRESSBAND, state.Addressbar);
+            //SetBandVisibility(ITBBID_?, state.Linksbar);
+            //SetBandVisibility(ITBBID_?, state.Throbber);
+            hr = S_OK;
+        }
+    }
+    fIgnoreChanges = FALSE;
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::Save(IStream *pStm, BOOL fClearDirty)
 {
-    return E_NOTIMPL;
+    ITBARSTATE state = { sizeof(state), state.SIG };
+    state.Menubar = IsBandVisible(ITBBID_MENUBAND) == S_OK;
+    state.StdToolbar = IsBandVisible(ITBBID_TOOLSBAND) == S_OK;
+    state.Addressbar = IsBandVisible(ITBBID_ADDRESSBAND) == S_OK;
+    state.Linksbar = FALSE;
+    return pStm->Write(&state, sizeof(state), NULL);
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::GetSizeMax(ULARGE_INTEGER *pcbSize)
@@ -1080,22 +1127,32 @@ HRESULT CInternetToolbar::IsBandVisible(int BandID)
     return (bandInfo.fStyle & RBBS_HIDDEN) ? S_FALSE : S_OK;
 }
 
-HRESULT CInternetToolbar::ToggleBandVisibility(int BandID)
+HRESULT CInternetToolbar::SetBandVisibility(int BandID, int Show)
 {
     int index = (int)SendMessage(fMainReBar, RB_IDTOINDEX, BandID, 0);
+    REBARBANDINFOW bandInfo = {sizeof(REBARBANDINFOW), RBBIM_STYLE | RBBIM_CHILD};
+    if (!SendMessage(fMainReBar, RB_GETBANDINFOW, index, (LPARAM)&bandInfo))
+        return E_FAIL;
 
-    REBARBANDINFOW bandInfo = {sizeof(REBARBANDINFOW), RBBIM_STYLE};
-    SendMessage(fMainReBar, RB_GETBANDINFOW, index, (LPARAM)&bandInfo);
-
-    if (bandInfo.fStyle & RBBS_HIDDEN)
+    if (Show < 0)
+        bandInfo.fStyle ^= RBBS_HIDDEN; // Toggle
+    else if (Show)
         bandInfo.fStyle &= ~RBBS_HIDDEN;
     else
         bandInfo.fStyle |= RBBS_HIDDEN;
 
+    bandInfo.fMask &= ~RBBIM_CHILD;
+    ::ShowWindow(bandInfo.hwndChild, (bandInfo.fStyle & RBBS_HIDDEN) ? SW_HIDE : SW_SHOW); // CORE-17236
     SendMessage(fMainReBar, RB_SETBANDINFOW, index, (LPARAM)&bandInfo);
 
     ReserveBorderSpace(0);
+    SetDirty();
     return S_OK;
+}
+
+HRESULT CInternetToolbar::ToggleBandVisibility(int BandID)
+{
+    return SetBandVisibility(BandID, -1);
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::QueryStatus(const GUID *pguidCmdGroup,
@@ -1685,7 +1742,6 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
     if (hitTestInfo.iBand == -1)
         return 0;
 
-    pSettings->Load();
     rebarBandInfo.cbSize = sizeof(rebarBandInfo);
     rebarBandInfo.fMask = RBBIM_ID;
     SendMessage(fMainReBar, RB_GETBANDINFOW, hitTestInfo.iBand, (LPARAM)&rebarBandInfo);
@@ -1929,4 +1985,20 @@ LRESULT CInternetToolbar::OnSettingsChange(UINT uMsg, WPARAM wParam, LPARAM lPar
     RefreshLockedToolbarState();
 
     return 0;
+}
+
+HRESULT CInternetToolbar::GetStream(UINT StreamFor, DWORD Stgm, IStream **ppS)
+{
+    WCHAR path[MAX_PATH];
+    LPCWSTR subkey = NULL;
+    switch (StreamFor)
+    {
+    case ITBARSTREAM_SHELLBROWSER: subkey = L"ShellBrowser"; break;
+    case ITBARSTREAM_WEBBROWSER: subkey = L"WebBrowser"; break;
+    case ITBARSTREAM_EXPLORER: subkey = L"Explorer"; break;
+    default: return E_INVALIDARG;
+    }
+    wsprintfW(path, L"Software\\Microsoft\\Internet Explorer\\Toolbar\\%s", subkey);
+    *ppS = SHOpenRegStream2W(HKEY_CURRENT_USER, path, L"RosITBarLayout", Stgm); // ROS prefix until we figure out the correct format
+    return *ppS ? S_OK : E_FAIL;
 }

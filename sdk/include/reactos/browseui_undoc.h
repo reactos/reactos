@@ -25,6 +25,8 @@
 extern "C" {
 #endif /* defined(__cplusplus) */
 
+#define FCW_ADDRESSBAR 9 // GetControlWindow/IsControlWindowShown
+
 // Name is IETHREADPARAM according to symbols / mangled function names
 #ifdef _WIN64
 typedef struct IEThreadParamBlock

@@ -35,6 +35,7 @@ void ShellSettings::Load()
 
 void CabinetStateSettings::Load()
 {
+    this->cLength = sizeof(CABINETSTATE);
     ReadCabinetState(this, this->cLength);
 
     /* Overrides */
