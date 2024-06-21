@@ -76,6 +76,7 @@ typedef struct _PARTENTRY
     ULONG OnDiskPartitionNumber; /* Enumerated partition number (primary partitions first, excluding the extended partition container, then the logical partitions) */
     ULONG PartitionNumber;       /* Current partition number, only valid for the currently running NTOS instance */
     ULONG PartitionIndex;        /* Index in the LayoutBuffer->PartitionEntry[] cached array of the corresponding DiskEntry */
+    WCHAR DeviceName[MAX_PATH]; // NT device name: "\Device\HarddiskM\PartitionN"
 
 /** The following properties may be replaced by flags **/
 
