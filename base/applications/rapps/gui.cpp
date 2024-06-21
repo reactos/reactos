@@ -298,6 +298,7 @@ CMainWindow::CheckAvailable()
 {
     if (m_Db->GetAvailableCount() == 0)
     {
+        CUpdateDatabaseMutex lock;
         m_Db->RemoveCached();
         m_Db->UpdateAvailable();
     }
@@ -556,9 +557,12 @@ CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
                 break;
 
             case ID_RESETDB:
+            {
+                CUpdateDatabaseMutex lock;
                 m_Db->RemoveCached();
                 UpdateApplicationsList(SelectedEnumType, bReload);
                 break;
+            }
 
             case ID_HELP:
                 MessageBoxW(L"Help not implemented yet", NULL, MB_OK);

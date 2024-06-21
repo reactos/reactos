@@ -13,4 +13,13 @@
 #include "misc.h"
 #include "configparser.h"
 
+#define MAINWINDOWCLASSNAME L"ROSAPPMGR2"
+#define MAINWINDOWMUTEX szWindowClass
+#define UPDATEDBMUTEX ( MAINWINDOWCLASSNAME L":UpDB" )
+
+struct CUpdateDatabaseMutex : public CScopedMutex
+{
+    CUpdateDatabaseMutex() : CScopedMutex(UPDATEDBMUTEX, 1000 * 60 * 10, FALSE) { };
+};
+
 #endif /* _RAPPS_H */
