@@ -385,6 +385,13 @@ PspEnumerateProcessesInJob(
     _In_opt_ PVOID Context
 );
 
+NTSTATUS
+NTAPI
+PspAssignProcessToJob(
+    _In_ PEPROCESS Process,
+    _In_ PEJOB Job
+);
+
 VOID
 NTAPI
 PspExitProcessFromJob(
