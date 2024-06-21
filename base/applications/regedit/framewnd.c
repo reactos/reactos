@@ -1147,11 +1147,9 @@ FreeObjectPicker(IN IDsObjectPicker *pDsObjectPicker)
 }
 
 /*******************************************************************************
- *
  *  FUNCTION: _CmdWndProc(HWND, unsigned, WORD, LONG)
  *
  *  PURPOSE:  Processes WM_COMMAND messages for the main frame window.
- *
  */
 static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -1382,7 +1380,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath, TRUE);
         break;
         /*case ID_OPTIONS_TOOLBAR:*/
-        /*	toggle_child(hWnd, LOWORD(wParam), hToolBar);*/
+        /* toggle_child(hWnd, LOWORD(wParam), hToolBar);*/
         /*    break;*/
     case ID_EDIT_NEW_KEY:
         CreateNewKey(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd));
@@ -1475,14 +1473,12 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 }
 
 /********************************************************************************
- *
  *  FUNCTION: FrameWndProc(HWND, unsigned, WORD, LONG)
  *
  *  PURPOSE:  Processes messages for the main frame window.
  *
  *  WM_COMMAND  - process the application menu
  *  WM_DESTROY  - post a quit message and return
- *
  */
 
 LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -1508,8 +1504,6 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         break;
     case WM_SIZE:
         resize_frame_client(hWnd);
-        break;
-    case WM_TIMER:
         break;
     case WM_INITMENU:
         OnInitMenu(hWnd);
