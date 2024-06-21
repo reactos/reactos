@@ -1146,7 +1146,7 @@ FreeObjectPicker(IN IDsObjectPicker *pDsObjectPicker)
     pDsObjectPicker->lpVtbl->Release(pDsObjectPicker);
 }
 
-/*******************************************************************************
+/*
  *  FUNCTION: _CmdWndProc(HWND, unsigned, WORD, LONG)
  *
  *  PURPOSE:  Processes WM_COMMAND messages for the main frame window.
