@@ -207,6 +207,11 @@ CDefaultContextMenu::CDefaultContextMenu() :
 
 CDefaultContextMenu::~CDefaultContextMenu()
 {
+    for (POSITION it = m_DynamicEntries.GetHeadPosition(); it != NULL;)
+    {
+        const DynamicShellEntry& info = m_DynamicEntries.GetNext(it);
+        IUnknown_SetSite(info.pCM.p, NULL);
+    }
     m_DynamicEntries.RemoveAll();
     m_StaticEntries.RemoveAll();
 
@@ -389,7 +394,7 @@ CDefaultContextMenu::LoadDynamicContextMenuHandler(HKEY hKey, REFCLSID clsid)
         return hr;
     }
 
-    hr = pExtInit->Initialize(m_pidlFolder, m_pDataObj, hKey);
+    hr = pExtInit->Initialize(m_pDataObj ? NULL : m_pidlFolder, m_pDataObj, hKey);
     if (FAILED(hr))
     {
         WARN("IShellExtInit::Initialize failed.clsid %s hr 0x%x\n", wine_dbgstr_guid(&clsid), hr);
@@ -459,7 +464,7 @@ CDefaultContextMenu::EnumerateDynamicContextHandlerForKey(HKEY hRootKey)
             }
         }
 
-        hr = LoadDynamicContextMenuHandler(hKey, clsid);
+        hr = LoadDynamicContextMenuHandler(hRootKey, clsid);
         if (FAILED(hr))
             WARN("Failed to get context menu entires from shell extension! clsid: %S\n", pwszClsid);
     }
