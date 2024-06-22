@@ -315,6 +315,8 @@ wWinMain(HINSTANCE hInstance,
         goto done;
     }
 
+    // TODO: Handle SafeBoot mode
+
     /* Create the services database */
     dwError = ScmCreateServiceDatabase();
     if (dwError != ERROR_SUCCESS)
@@ -364,10 +366,13 @@ wWinMain(HINSTANCE hInstance,
     /* Start auto-start services */
     ScmAutoStartServices();
 
+    /* FIXME: more to do ? */
+
+    // TODO: Run the optional user-specific boot verification program
+    // from HKLM\SYSTEM\CurrentControlSet\Control\BootVerificationProgram
+
     /* Signal auto-start complete event */
     SetEvent(hScmAutoStartCompleteEvent);
-
-    /* FIXME: more to do ? */
 
     /* Release the service start lock */
     ScmReleaseServiceStartLock(&Lock);
