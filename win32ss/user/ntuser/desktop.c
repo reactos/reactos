@@ -28,7 +28,11 @@ IntFreeDesktopHeap(IN PDESKTOP pdesk);
 /* GLOBALS *******************************************************************/
 
 /* These can be changed via CSRSS startup, these are defaults */
+#ifdef _WIN64 // FIXME: Workaround for CORE-19563 (there is probably a class leak)
+DWORD gdwDesktopSectionSize = 2048;
+#else
 DWORD gdwDesktopSectionSize = 512;
+#endif
 DWORD gdwNOIOSectionSize    = 128; // A guess, for one or more of the first three system desktops.
 
 /* Currently active desktop */
