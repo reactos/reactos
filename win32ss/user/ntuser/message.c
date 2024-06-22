@@ -481,41 +481,42 @@ CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEnt
         /* Copy data if required */
         if (0 != (MsgMemoryEntry->Flags & MMS_FLAG_READ))
         {
-            WCHAR lParamMsg[_countof(StrUserKernel[0]) + 1] = { 0 };
-
             TRACE("Copy Message %u from usermode buffer\n", KernelModeMsg->message);
+            /* Don't do extra testing for 1 word messages. For examples see
+             * https://wiki.winehq.org/List_Of_Windows_Messages. */
+            if (Size > 1)
+            {
+                WCHAR lParamMsg[_countof(StrUserKernel[0]) + 1] = { 0 };
+                _SEH2_TRY
+                {
+                    if (UserModeMsg->lParam)
+                        RtlCopyMemory(lParamMsg, (WCHAR*)UserModeMsg->lParam, sizeof(lParamMsg));
+                        /* Make sure that the last WCHAR is a UNICODE_NULL */
+                        for (i = 0; i < ARRAYSIZE(lParamMsg); ++i)
+                        {
+                            if (lParamMsg[i] == 0)
+                                break;
+                        }
+                        /* If we did not find a UNICODE_NULL, then set last WCHAR to one */
+                        if (i == ARRAYSIZE(lParamMsg))
+                            lParamMsg[_countof(StrUserKernel[0])] = UNICODE_NULL;
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    _SEH2_YIELD(return STATUS_ACCESS_VIOLATION);
+                }
+                _SEH2_END;
 
-            _SEH2_TRY
-            {
-                if (UserModeMsg->lParam)
-                    RtlCopyMemory(lParamMsg, (WCHAR*)UserModeMsg->lParam, sizeof(lParamMsg));
-                    /* Make sure that the last WCHAR is a UNICODE_NULL */
-                    for (i = 0; i < ARRAYSIZE(lParamMsg); ++i)
-                    {
-                        if (lParamMsg[i] == 0)
-                            break;
-                    }
-                    /* If we did not find a UNICODE_NULL, then set last WCHAR to one */
-                    if (i == ARRAYSIZE(lParamMsg))
-                        lParamMsg[_countof(StrUserKernel[0])] = UNICODE_NULL;
+                if (UserModeMsg->lParam && !UserModeMsg->wParam &&
+                    PosInArray(lParamMsg) >= 0)
+                {
+                    TRACE("Copy String '%S' from usermode buffer\n", lParamMsg);
+                    wcscpy(KernelMem, lParamMsg);
+                    return STATUS_SUCCESS;
+                }
             }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                _SEH2_YIELD(return STATUS_ACCESS_VIOLATION);
-            }
-            _SEH2_END;
 
-            if (UserModeMsg->lParam && !UserModeMsg->wParam &&
-                PosInArray(lParamMsg) >= 0)
-            {
-                TRACE("Copy String '%S' from usermode buffer\n", lParamMsg);
-                wcscpy(KernelMem, lParamMsg);
-                return STATUS_SUCCESS;
-            }
-            else
-            {
-                Status = MmCopyFromCaller(KernelMem, (PVOID)UserModeMsg->lParam, Size);
-            }
+            Status = MmCopyFromCaller(KernelMem, (PVOID)UserModeMsg->lParam, Size);
             if (!NT_SUCCESS(Status))
             {
                 ERR("Failed to copy message to kernel: invalid usermode lParam buffer\n");
