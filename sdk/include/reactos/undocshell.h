@@ -539,7 +539,7 @@ BOOL WINAPI PathIsTemporaryW(_In_ LPCWSTR Str);
  * Shell settings
  */
 
-typedef struct REGSHELLSTATE
+typedef struct _REGSHELLSTATE
 {
     DWORD dwSize;
     SHELLSTATE ss;
