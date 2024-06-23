@@ -1,8 +1,8 @@
 /*
- * PROJECT:     ReactOS Regional Options Control Panel
+ * PROJECT:     ReactOS International Control Panel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Portuguese (Portugal) resource file
- * TRANSLATOR:  Copyright 2020-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ * TRANSLATOR:  Copyright 2019-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
  */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
@@ -59,7 +59,7 @@ BEGIN
     GROUPBOX "&Tabelas de conversão de páginas de código", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
     GROUPBOX "Predefinições de conta de utilizador", -1, 5, 193, 234, 32
-    AUTOCHECKBOX "&Aplicar todas as definições à conta de utilizador actual e ao perfil de utilizador &predefinido", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE | BS_TOP
+    AUTOCHECKBOX "Aplicar todas as definições à conta de utilizador actual e ao perfil de utilizador &predefinido", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
