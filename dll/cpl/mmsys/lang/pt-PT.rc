@@ -20,7 +20,7 @@ BEGIN
     LTEXT "Fraco", IDC_VOLUME_LOW, 62, 66, 30, 9
     LTEXT "Forte", IDC_VOLUME_HIGH, 195, 66, 30, 9
     AUTOCHECKBOX "&Sem som", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
-    AUTOCHECKBOX "Colocar um &ícone de volume na barra de tarefas", IDC_ICON_IN_TASKBAR, 50, 92, 190, 10
+    AUTOCHECKBOX "Colocar um &ícone de volume na barra de tarefas", IDC_ICON_IN_TASKBAR, 50, 92, 185, 10
     PUSHBUTTON "A&vançadas...", IDC_ADVANCED_BTN, 150, 105, 75, 15
     GROUPBOX "Definições dos altifalantes", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80, WS_GROUP
     CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 15, 155, 48, 45
