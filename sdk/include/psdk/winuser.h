@@ -714,6 +714,9 @@ extern "C" {
 #define IDI_EXCLAMATION 32515
 #define IDI_ASTERISK 32516
 #define IDI_WINLOGO 32517
+#if(WINVER >= 0x0600)
+#define IDI_SHIELD  32518
+#endif /* WINVER >= 0x0600 */
 #endif
 #define IDI_WARNING IDI_EXCLAMATION
 #define IDI_ERROR IDI_HAND

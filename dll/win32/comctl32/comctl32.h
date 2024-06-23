@@ -88,6 +88,9 @@ extern HBRUSH  COMCTL32_hPattern55AABrush DECLSPEC_HIDDEN;
 
 #define IDT_CHECK        401
 
+/* Command Link arrow */
+#define IDB_CMDLINK      402
+
 
 /* Cursors */
 #define IDC_MOVEBUTTON                  102
@@ -114,6 +117,9 @@ extern HBRUSH  COMCTL32_hPattern55AABrush DECLSPEC_HIDDEN;
 #define IDS_BUTTON_OK     3003
 #define IDS_BUTTON_CANCEL 3004
 #define IDS_BUTTON_CLOSE  3005
+
+#define IDS_TD_EXPANDED   3020
+#define IDS_TD_COLLAPSED  3021
 
 #ifndef __REACTOS__
 #define WM_SYSTIMER     0x0118
@@ -153,8 +159,8 @@ typedef struct
    RECT           droppedRect;
    INT            droppedIndex;
    INT            fixedOwnerDrawHeight;
-   INT            droppedWidth;   /* last two are not used unless set */
-   INT            editHeight;     /* explicitly */
+   INT            droppedWidth;   /* not used unless set explicitly */
+   INT            item_height;
    INT            visibleItems;
 } HEADCOMBO, *LPHEADCOMBO;
 
@@ -299,6 +305,11 @@ extern void THEMING_Initialize(void) DECLSPEC_HIDDEN;
 #endif
 extern void THEMING_Uninitialize(void) DECLSPEC_HIDDEN;
 extern LRESULT THEMING_CallOriginalClass(HWND, UINT, WPARAM, LPARAM) DECLSPEC_HIDDEN;
-extern void THEMING_SetSubclassData(HWND, ULONG_PTR) DECLSPEC_HIDDEN;
+
+#ifdef __REACTOS__
+#define IDI_SHIELD  32518
+#define wcsnicmp _wcsnicmp
+#define GetDpiForWindow(PVOID) 96
+#endif
 
 #endif  /* __WINE_COMCTL32_H */
