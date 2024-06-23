@@ -160,6 +160,7 @@ public:
     ~CDockSite();
     HRESULT Initialize(IUnknown *containedBand, CInternetToolbar *browser, HWND hwnd, int bandID, int flags);
     HRESULT GetRBBandInfo(REBARBANDINFOW &bandInfo);
+    IUnknown* GetContainedBand() const { return fContainedBand.p; } // Not ref. counted
 private:
 
     // *** IOleWindow methods ***
@@ -287,7 +288,7 @@ HRESULT CDockSite::GetRBBandInfo(REBARBANDINFOW &bandInfo)
     bandInfo.cyMaxChild = fDeskBandInfo.ptMaxSize.y;
     bandInfo.cyIntegral = fDeskBandInfo.ptIntegral.y;
     bandInfo.cxIdeal = fDeskBandInfo.ptActual.x;
-    bandInfo.lParam = reinterpret_cast<LPARAM>(this);
+    bandInfo.lParam = reinterpret_cast<LPARAM>(static_cast<CDockSite*>(this));
     return S_OK;
 }
 
@@ -642,6 +643,21 @@ void CInternetToolbar::AddDockItem(IUnknown *newItem, int bandID, int flags)
     newSite->Initialize(newItem, this, fMainReBar, bandID, flags);
 }
 
+HRESULT CInternetToolbar::EnumBands(UINT Index, int *pBandId, IUnknown **ppUnkBand)
+{
+    REBARBANDINFOW rbbi;
+    rbbi.cbSize = sizeof(rbbi);
+    rbbi.fMask = RBBIM_ID | RBBIM_LPARAM;
+    rbbi.cch = 0;
+    if (!::SendMessageW(fMainReBar, RB_GETBANDINFOW, Index, (LPARAM)&rbbi))
+        return HRESULT_FROM_WIN32(ERROR_NO_MORE_ITEMS);
+    *pBandId = rbbi.wID;
+    if (!rbbi.lParam)
+        return E_UNEXPECTED;
+    *ppUnkBand = ((CDockSite*)(rbbi.lParam))->GetContainedBand(); // Not ref. counted
+    return *ppUnkBand ? S_OK : S_FALSE;
+}
+
 HRESULT CInternetToolbar::ReserveBorderSpace(LONG maxHeight)
 {
     CComPtr<IDockingWindowSite>             dockingWindowSite;
@@ -907,33 +923,17 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::ShowDW(BOOL fShow)
             return hResult;
     }
 
-#if 0 // Why should showing the IDockingWindow change all bands? Related to CORE-17236
-    if (fMenuBar)
+    // TODO: Why should showing the IDockingWindow change all bands? Related to CORE-17236
+    int id;
+    IUnknown *pUnk;
+    for (UINT i = 0; SUCCEEDED(EnumBands(i, &id, &pUnk)); ++i)
     {
-        hResult = IUnknown_ShowDW(fMenuBar, fShow);
-        if (FAILED_UNEXPECTEDLY(hResult))
-            return hResult;
+        if (!pUnk)
+            continue;
+        BOOL visible = fShow && IsBandVisible(id) != S_FALSE;
+        hResult = IUnknown_ShowDW(pUnk, visible);
+        FAILED_UNEXPECTEDLY(hResult);
     }
-
-    if (fControlsBar)
-    {
-        hResult = IUnknown_ShowDW(fControlsBar, fShow);
-        if (FAILED_UNEXPECTEDLY(hResult))
-            return hResult;
-    }
-    if (fNavigationBar)
-    {
-        hResult = IUnknown_ShowDW(fNavigationBar, fShow);
-        if (FAILED_UNEXPECTEDLY(hResult))
-            return hResult;
-    }
-    if (fLogoBar)
-    {
-        hResult = IUnknown_ShowDW(fLogoBar, fShow);
-        if (FAILED_UNEXPECTEDLY(hResult))
-            return hResult;
-    }
-#endif
     return S_OK;
 }
 
@@ -1504,8 +1504,14 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::AddBand(IUnknown *punk)
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::EnumBands(UINT uBand, DWORD *pdwBandID)
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    if (uBand == ~0ul)
+        return ::SendMessage(fMainReBar, RB_GETBANDCOUNT, 0, 0);
+    int id;
+    IUnknown *pUnk;
+    HRESULT hr = EnumBands(uBand, &id, &pUnk);
+    if (SUCCEEDED(hr))
+        *pdwBandID = id;
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::QueryBand(DWORD dwBandID,
