@@ -20,7 +20,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifdef __REACTOS__
 #pragma once
+#endif
 
 #ifdef __i386__
 #define ARCH "x86"
@@ -60,7 +62,7 @@ static const CHAR manifest[] =
     "</dependency>\n"
     "</assembly>\n";
 
-static inline void unload_v6_module(ULONG_PTR cookie, HANDLE hCtx)
+static void unload_v6_module(ULONG_PTR cookie, HANDLE hCtx)
 {
     DeactivateActCtx(0, cookie);
     ReleaseActCtx(hCtx);
@@ -68,7 +70,7 @@ static inline void unload_v6_module(ULONG_PTR cookie, HANDLE hCtx)
     DeleteFileA(manifest_name);
 }
 
-static inline BOOL load_v6_module(ULONG_PTR *pcookie, HANDLE *hCtx)
+static BOOL load_v6_module(ULONG_PTR *pcookie, HANDLE *hCtx)
 {
     ACTCTX_SECTION_KEYED_DATA data;
     DWORD written;

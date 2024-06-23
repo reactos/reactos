@@ -30,6 +30,7 @@
 #include "msg.h"
 
 #ifdef __REACTOS__
+#undef WM_KEYF1
 #define WM_KEYF1 0x004d
 #endif
 

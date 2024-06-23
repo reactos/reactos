@@ -38,7 +38,6 @@
 #include "uxtheme.h"
 #include "vsstyle.h"
 #include "vssym32.h"
-#include "wine/unicode.h"
 #include "wine/debug.h"
 #include "wine/heap.h"
 
@@ -83,12 +82,12 @@ static void IPADDRESS_UpdateText (const IPADDRESS_INFO *infoPtr)
 
     for (i = 0; i < 4; i++) {
         if (GetWindowTextW (infoPtr->Part[i].EditHwnd, field, 4))
-            strcatW(ip, field);
+            lstrcatW(ip, field);
         else
             /* empty edit treated as zero */
-            strcatW(ip, zero);
+            lstrcatW(ip, zero);
         if (i != 3)
-            strcatW(ip, dot);
+            lstrcatW(ip, dot);
     }
 
     SetWindowTextW(infoPtr->Self, ip);
@@ -245,7 +244,7 @@ static LRESULT IPADDRESS_Create (HWND hwnd, const CREATESTRUCTA *lpCreate)
     hSysFont = GetStockObject(ANSI_VAR_FONT);
     GetObjectW(hSysFont, sizeof(LOGFONTW), &logSysFont);
     SystemParametersInfoW(SPI_GETICONTITLELOGFONT, 0, &logFont, 0);
-    strcpyW(logFont.lfFaceName, logSysFont.lfFaceName);
+    lstrcpyW(logFont.lfFaceName, logSysFont.lfFaceName);
     hFont = CreateFontIndirectW(&logFont);
 
     for (i = 0; i < 4; i++) {
@@ -344,7 +343,7 @@ static int IPADDRESS_GetAddress (const IPADDRESS_INFO *infoPtr, LPDWORD ip_addre
     for (i = 0; i < 4; i++) {
         ip_addr *= 256;
         if (GetWindowTextW (infoPtr->Part[i].EditHwnd, field, 4))
-  	    ip_addr += atolW(field);
+	    ip_addr += wcstol(field, NULL, 10);
 	else
 	    invalid++;
     }
@@ -426,7 +425,7 @@ static BOOL IPADDRESS_ConstrainField (const IPADDRESS_INFO *infoPtr, int current
     part = &infoPtr->Part[currentfield];
     if (!GetWindowTextW (part->EditHwnd, field, 4)) return FALSE;
 
-    curValue = atoiW(field);
+    curValue = wcstol(field, NULL, 10);
     TRACE("  curValue=%d\n", curValue);
 
     newValue = IPADDRESS_IPNotify(infoPtr, currentfield, curValue);

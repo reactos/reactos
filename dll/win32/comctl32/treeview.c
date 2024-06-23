@@ -40,9 +40,6 @@
  *   Scroll (instead of repaint) as much as possible.
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include <assert.h>
 #include <ctype.h>
 #include <stdarg.h>
@@ -61,7 +58,6 @@
 #include "comctl32.h"
 #include "uxtheme.h"
 #include "vssym32.h"
-#include "wine/unicode.h"
 #include "wine/debug.h"
 #include "wine/exception.h"
 #include "wine/heap.h"
@@ -758,7 +754,7 @@ TREEVIEW_UpdateDispInfo(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item,
 	else {
 	    int len = max(lstrlenW(callback.item.pszText) + 1,
 			  TEXT_CALLBACK_SIZE);
-	    LPWSTR newText = heap_realloc(item->pszText, len);
+	    LPWSTR newText = heap_realloc(item->pszText, len*sizeof(WCHAR));
 
 	    TRACE("returned wstr %s, len=%d\n",
 		  debugstr_w(callback.item.pszText), len);
@@ -766,7 +762,7 @@ TREEVIEW_UpdateDispInfo(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item,
 	    if (newText)
 	    {
 		item->pszText = newText;
-		strcpyW(item->pszText, callback.item.pszText);
+		lstrcpyW(item->pszText, callback.item.pszText);
 		item->cchTextMax = len;
 	    }
 	    /* If realloc fails we have nothing to do, but keep original text */
@@ -901,7 +897,7 @@ TREEVIEW_ComputeTextWidth(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item, HDC
 	hOldFont = SelectObject(hdc, TREEVIEW_FontForItem(infoPtr, item));
     }
 
-    GetTextExtentPoint32W(hdc, item->pszText, strlenW(item->pszText), &sz);
+    GetTextExtentPoint32W(hdc, item->pszText, lstrlenW(item->pszText), &sz);
     item->textWidth = sz.cx;
 
     if (hDC == 0)
@@ -950,7 +946,7 @@ TREEVIEW_RecalculateVisibleOrder(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *start)
 
     infoPtr->maxVisibleOrder = order;
 
-    for (item = start; item != NULL;
+    for (item = infoPtr->root->firstChild; item != NULL;
 	 item = TREEVIEW_GetNextListItem(infoPtr, item))
     {
 	TREEVIEW_ComputeItemRect(infoPtr, item);
@@ -1125,8 +1121,10 @@ TREEVIEW_DoSetItemT(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item,
     if (tvItem->mask & TVIF_TEXT)
     {
         item->textWidth = 0; /* force width recalculation */
-	if (tvItem->pszText != LPSTR_TEXTCALLBACKW && tvItem->pszText != NULL) /* covers != TEXTCALLBACKA too, and undocumented: pszText of NULL also means TEXTCALLBACK */
-	{
+
+        /* Covers != TEXTCALLBACKA too, and undocumented: pszText of NULL also means TEXTCALLBACK */
+        if (tvItem->pszText != LPSTR_TEXTCALLBACKW && tvItem->pszText != NULL)
+        {
             int len;
             LPWSTR newText;
             if (isW)
@@ -1134,12 +1132,14 @@ TREEVIEW_DoSetItemT(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item,
             else
                 len = MultiByteToWideChar(CP_ACP, 0, (LPSTR)tvItem->pszText, -1, NULL, 0);
 
-            newText  = heap_realloc(item->pszText, len * sizeof(WCHAR));
+            /* Allocate new block to make pointer comparison in item_changed() work. */
+            newText = heap_alloc(len * sizeof(WCHAR));
 
             if (newText == NULL) return FALSE;
 
             callbackClear |= TVIF_TEXT;
 
+            heap_free(item->pszText);
             item->pszText = newText;
             item->cchTextMax = len;
             if (isW)
@@ -2199,7 +2199,7 @@ TREEVIEW_SetItemT(TREEVIEW_INFO *infoPtr, const TVITEMEXW *tvItem, BOOL isW)
     if (!TREEVIEW_ValidItem(infoPtr, item))
 	return FALSE;
 
-    /* store the original item values */
+    /* Store the original item values. Text buffer will be freed in TREEVIEW_DoSetItemT() below. */
     originalItem = *item;
 
     if (!TREEVIEW_DoSetItemT(infoPtr, item, tvItem, isW))
@@ -2653,7 +2653,9 @@ TREEVIEW_DrawItem(const TREEVIEW_INFO *infoPtr, HDC hdc, TREEVIEW_ITEM *item)
 
             ImageList_DrawEx(infoPtr->himlNormal, imageIndex, hdc,
                          item->imageOffset, centery - infoPtr->normalImageHeight / 2,
-                         0, 0, infoPtr->clrBk, item->state & TVIS_CUT ? GETBKCOLOR(infoPtr->clrBk) : CLR_DEFAULT,
+                         0, 0,
+                         TREEVIEW_IsFullRowSelect(infoPtr) ? nmcdhdr.clrTextBk : infoPtr->clrBk,
+                         item->state & TVIS_CUT ? GETBKCOLOR(infoPtr->clrBk) : CLR_DEFAULT,
                          style);
 	}
     }
@@ -2681,7 +2683,7 @@ TREEVIEW_DrawItem(const TREEVIEW_INFO *infoPtr, HDC hdc, TREEVIEW_ITEM *item)
                   debugstr_w(item->pszText), wine_dbgstr_rect(&rcText));
 
 	    /* Draw it */
-	    GetTextExtentPoint32W(hdc, item->pszText, strlenW(item->pszText), &sz);
+	    GetTextExtentPoint32W(hdc, item->pszText, lstrlenW(item->pszText), &sz);
 
 	    align = SetTextAlign(hdc, TA_LEFT | TA_TOP);
 	    ExtTextOutW(hdc, rcText.left + 2, (rcText.top + rcText.bottom - sz.cy) / 2,
@@ -3859,7 +3861,7 @@ TREEVIEW_Command(TREEVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 		hOldFont = SelectObject(hdc, hFont);
 	    }
 
-	    if (GetTextExtentPoint32W(hdc, buffer, strlenW(buffer), &sz))
+	    if (GetTextExtentPoint32W(hdc, buffer, lstrlenW(buffer), &sz))
 	    {
 		TEXTMETRICW textMetric;
 
@@ -3939,7 +3941,7 @@ TREEVIEW_EditLabel(TREEVIEW_INFO *infoPtr, HTREEITEM hItem)
 
     /* Get string length in pixels */
     if (hItem->pszText)
-        GetTextExtentPoint32W(hdc, hItem->pszText, strlenW(hItem->pszText),
+        GetTextExtentPoint32W(hdc, hItem->pszText, lstrlenW(hItem->pszText),
                         &sz);
     else
         GetTextExtentPoint32A(hdc, "", 0, &sz);
@@ -3985,6 +3987,7 @@ TREEVIEW_EditLabel(TREEVIEW_INFO *infoPtr, HTREEITEM hItem)
     infoPtr->wpEditOrig = (WNDPROC)SetWindowLongPtrW(hwndEdit, GWLP_WNDPROC,
 						  (DWORD_PTR)
 						  TREEVIEW_Edit_SubclassProc);
+    SendMessageW(hwndEdit, EM_SETLIMITTEXT, MAX_PATH - 1, 0);
     if (hItem->pszText)
         SetWindowTextW(hwndEdit, hItem->pszText);
 
@@ -4010,8 +4013,8 @@ TREEVIEW_EndEditLabelNow(TREEVIEW_INFO *infoPtr, BOOL bCancel)
     TREEVIEW_ITEM *editedItem = infoPtr->editItem;
     NMTVDISPINFOW tvdi;
     BOOL bCommit;
-    WCHAR tmpText[1024] = { '\0' };
-    WCHAR *newText = tmpText;
+    WCHAR tmpText[MAX_PATH] = { '\0' };
+    WCHAR *newText;
     int iLength = 0;
 
     if (!IsWindow(infoPtr->hwndEdit)) return FALSE;
@@ -4024,18 +4027,13 @@ TREEVIEW_EndEditLabelNow(TREEVIEW_INFO *infoPtr, BOOL bCancel)
     if (!bCancel)
     {
         if (!infoPtr->bNtfUnicode)
-            iLength = GetWindowTextA(infoPtr->hwndEdit, (LPSTR)tmpText, 1023);
+            iLength = GetWindowTextA(infoPtr->hwndEdit, (LPSTR)tmpText, ARRAY_SIZE(tmpText));
         else
-            iLength = GetWindowTextW(infoPtr->hwndEdit, tmpText, 1023);
-
-	if (iLength >= 1023)
-	{
-	    ERR("Insufficient space to retrieve new item label\n");
-	}
+            iLength = GetWindowTextW(infoPtr->hwndEdit, tmpText, ARRAY_SIZE(tmpText));
 
         tvdi.item.mask = TVIF_TEXT;
 	tvdi.item.pszText = tmpText;
-	tvdi.item.cchTextMax = iLength + 1;
+	tvdi.item.cchTextMax = ARRAY_SIZE(tmpText);
     }
     else
     {
@@ -4049,13 +4047,15 @@ TREEVIEW_EndEditLabelNow(TREEVIEW_INFO *infoPtr, BOOL bCancel)
     {
         if (!infoPtr->bNtfUnicode)
         {
-            DWORD len = MultiByteToWideChar( CP_ACP, 0, (LPSTR)tmpText, -1, NULL, 0 );
+            DWORD len = MultiByteToWideChar( CP_ACP, 0, (LPSTR)tvdi.item.pszText, -1, NULL, 0 );
             newText = heap_alloc(len * sizeof(WCHAR));
-            MultiByteToWideChar( CP_ACP, 0, (LPSTR)tmpText, -1, newText, len );
+            MultiByteToWideChar( CP_ACP, 0, (LPSTR)tvdi.item.pszText, -1, newText, len );
             iLength = len - 1;
         }
+        else
+            newText = tvdi.item.pszText;
 
-        if (strcmpW(newText, editedItem->pszText) != 0)
+        if (lstrcmpW(newText, editedItem->pszText) != 0)
         {
             WCHAR *ptr = heap_realloc(editedItem->pszText, sizeof(WCHAR)*(iLength + 1));
             if (ptr == NULL)
@@ -4071,7 +4071,7 @@ TREEVIEW_EndEditLabelNow(TREEVIEW_INFO *infoPtr, BOOL bCancel)
             {
                 editedItem->pszText = ptr;
                 editedItem->cchTextMax = iLength + 1;
-                strcpyW(editedItem->pszText, newText);
+                lstrcpyW(editedItem->pszText, newText);
                 TREEVIEW_ComputeTextWidth(infoPtr, editedItem, 0);
             }
         }
@@ -4431,7 +4431,7 @@ TREEVIEW_CreateDragImage(TREEVIEW_INFO *infoPtr, LPARAM lParam)
     hOldFont = SelectObject(hdc, infoPtr->hFont);
 
     if (dragItem->pszText)
-        GetTextExtentPoint32W(hdc, dragItem->pszText, strlenW(dragItem->pszText),
+        GetTextExtentPoint32W(hdc, dragItem->pszText, lstrlenW(dragItem->pszText),
 			  &size);
     else
         GetTextExtentPoint32A(hdc, "", 0, &size);
@@ -4459,7 +4459,7 @@ TREEVIEW_CreateDragImage(TREEVIEW_INFO *infoPtr, LPARAM lParam)
     SetRect(&rc, cx, 0, size.cx, size.cy);
 
     if (dragItem->pszText)
-        DrawTextW(hdc, dragItem->pszText, strlenW(dragItem->pszText), &rc,
+        DrawTextW(hdc, dragItem->pszText, lstrlenW(dragItem->pszText), &rc,
                   DT_LEFT);
 
     SelectObject(hdc, hOldFont);
@@ -4708,16 +4708,16 @@ static INT TREEVIEW_ProcessLetterKeys(TREEVIEW_INFO *infoPtr, WPARAM charCode, L
         item.mask = TVIF_TEXT;
         item.hItem = idx;
         item.pszText = buffer;
-        item.cchTextMax = sizeof(buffer);
+        item.cchTextMax = ARRAY_SIZE(buffer);
         TREEVIEW_GetItemT( infoPtr, &item, TRUE );
 
         /* check for a match */
-        if (strncmpiW(item.pszText,infoPtr->szSearchParam,infoPtr->nSearchParamLength) == 0) {
+        if (wcsnicmp(item.pszText,infoPtr->szSearchParam,infoPtr->nSearchParamLength) == 0) {
             nItem=idx;
             break;
         } else if ( (charCode != 0) && (nItem == NULL) &&
                     (nItem != infoPtr->selectedItem) &&
-                    (strncmpiW(item.pszText,infoPtr->szSearchParam,1) == 0) ) {
+                    (wcsnicmp(item.pszText,infoPtr->szSearchParam,1) == 0) ) {
             /* This would work but we must keep looking for a longer match */
             nItem=idx;
         }
@@ -5045,7 +5045,7 @@ static LRESULT
 TREEVIEW_MouseWheel(TREEVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
     short wheelDelta;
-    UINT pulScrollLines = 3;
+    INT pulScrollLines = 3;
 
     if (wParam & (MK_SHIFT | MK_CONTROL))
         return DefWindowProcW(infoPtr->hwnd, WM_MOUSEWHEEL, wParam, lParam);
@@ -5069,8 +5069,8 @@ TREEVIEW_MouseWheel(TREEVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 	int maxDy;
 	int lineScroll;
 
-	lineScroll = pulScrollLines * (float)infoPtr->wheelRemainder / WHEEL_DELTA;
-	infoPtr->wheelRemainder -= WHEEL_DELTA * lineScroll / (int)pulScrollLines;
+	lineScroll = pulScrollLines * infoPtr->wheelRemainder / WHEEL_DELTA;
+	infoPtr->wheelRemainder -= WHEEL_DELTA * lineScroll / pulScrollLines;
 
 	newDy = infoPtr->firstVisible->visibleOrder - lineScroll;
 	maxDy = infoPtr->maxVisibleOrder;
