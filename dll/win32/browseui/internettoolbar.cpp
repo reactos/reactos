@@ -1507,8 +1507,8 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::EnumBands(UINT uBand, DWORD *pdwBand
     if (uBand == ~0ul)
         return ::SendMessage(fMainReBar, RB_GETBANDCOUNT, 0, 0);
     int id;
-    IUnknown *pUnk;
-    HRESULT hr = EnumBands(uBand, &id, &pUnk);
+    IUnknown *pUnkUnused;
+    HRESULT hr = EnumBands(uBand, &id, &pUnkUnused);
     if (SUCCEEDED(hr))
         *pdwBandID = id;
     return hr;
