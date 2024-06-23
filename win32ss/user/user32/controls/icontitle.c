@@ -20,6 +20,10 @@
 
 #include <user32.h>
 
+#ifdef __REACTOS__
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+#endif
+
 static BOOL bMultiLineTitle;
 static HFONT hIconTitleFont;
 
@@ -37,34 +41,6 @@ const struct builtin_class_descr ICONTITLE_builtin_class =
     0                 /* brush */
 };
 
-
-
-#ifndef __REACTOS__
-/***********************************************************************
- *           ICONTITLE_Create
- */
-HWND ICONTITLE_Create( HWND owner )
-{
-    HWND hWnd;
-    HINSTANCE instance = (HINSTANCE)GetWindowLongPtrA( owner, GWLP_HINSTANCE );
-    LONG style = WS_CLIPSIBLINGS;
-
-    if (!IsWindowEnabled(owner)) style |= WS_DISABLED;
-    if( GetWindowLongPtrA( owner, GWL_STYLE ) & WS_CHILD )
-	hWnd = CreateWindowExA( 0, (LPCSTR)ICONTITLE_CLASS_ATOM, NULL,
-                                style | WS_CHILD, 0, 0, 1, 1,
-                                GetParent(owner), 0, instance, NULL );
-    else
-	hWnd = CreateWindowExA( 0, (LPCSTR)ICONTITLE_CLASS_ATOM, NULL,
-                                style, 0, 0, 1, 1,
-                                owner, 0, instance, NULL );
-    WIN_SetOwner( hWnd, owner );  /* MDI depends on this */
-    SetWindowLongPtrW( hWnd, GWL_STYLE,
-                       GetWindowLongPtrW( hWnd, GWL_STYLE ) & ~(WS_CAPTION | WS_BORDER) );
-    return hWnd;
-}
-#endif
-
 /***********************************************************************
  *           ICONTITLE_SetTitlePos
  */
@@ -78,7 +54,7 @@ static BOOL ICONTITLE_SetTitlePos( HWND hwnd, HWND owner )
     INT cx, cy;
     POINT pt;
 
-    int length = GetWindowTextW( owner, str, sizeof(str)/sizeof(WCHAR) );
+    int length = GetWindowTextW( owner, str, ARRAY_SIZE( str ));
 
     while (length && str[length - 1] == ' ') /* remove trailing spaces */
         str[--length] = 0;
@@ -166,7 +142,7 @@ static BOOL ICONTITLE_Paint( HWND hwnd, HWND owner, HDC hDC, BOOL bActive )
     {
 	WCHAR buffer[80];
 
-        INT length = GetWindowTextW( owner, buffer, sizeof(buffer)/sizeof(buffer[0]) );
+        INT length = GetWindowTextW( owner, buffer, ARRAY_SIZE( buffer ));
         SetTextColor( hDC, textColor );
         SetBkMode( hDC, TRANSPARENT );
 
