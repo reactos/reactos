@@ -42,7 +42,7 @@ BEGIN
     LTEXT "קצר", -1, 50, 35, 27, 10
     LTEXT "ארוך", -1, 157, 35, 27, 10
     CONTROL "", IDC_SLIDER_CLICK_LOCK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 78, 35, 70, 17
-    PUSHBUTTON "אישור", IDOK, 110, 59, 60, 14
+    DEFPUSHBUTTON "אישור", IDOK, 110, 59, 60, 14
     PUSHBUTTON "ביטול", IDCANCEL, 174, 59, 60, 14
     LTEXT "&Adjust how long you need to hold down a mouse or trackball button before your click is locked", -1, 37, 5, 200, 27
     ICON IDI_LOCK_KEY, IDC_ICON_CLICK_LOCK, 5, 5, 15, 15
@@ -93,7 +93,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Save this cursor scheme as:", -1, 5, 5, 181, 10
     EDITTEXT IDC_EDIT_SCHEME_NAME, 5, 15, 180, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
-    PUSHBUTTON "אישור", IDOK, 63, 35, 60, 14
+    DEFPUSHBUTTON "אישור", IDOK, 63, 35, 60, 14
     PUSHBUTTON "ביטול", IDCANCEL, 126, 35, 60, 14
 END
 
