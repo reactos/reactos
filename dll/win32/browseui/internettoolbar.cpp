@@ -923,7 +923,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::ShowDW(BOOL fShow)
             return hResult;
     }
 
-    // TODO: Why should showing the IDockingWindow change all bands? Related to CORE-17236
+    // TODO: Why should showing the IDockingWindow change all bands? Related to CORE-17236 and CORE-19659.
     int id;
     IUnknown *pUnk;
     for (UINT i = 0; SUCCEEDED(EnumBands(i, &id, &pUnk)); ++i)
