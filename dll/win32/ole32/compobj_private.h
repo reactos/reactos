@@ -151,6 +151,8 @@ struct apartment
   HWND win;                /* message window (LOCK) */
   LPMESSAGEFILTER filter;  /* message filter (CS cs) */
   BOOL main;               /* is this a main-threaded-apartment? (RO) */
+  /* MTA-only */
+  struct list usage_cookies; /* Used for refcount control with CoIncrementMTAUsage()/CoDecrementMTAUsage(). */
 };
 
 struct init_spy
@@ -165,7 +167,7 @@ struct oletls
 {
     struct apartment *apt;
     IErrorInfo       *errorinfo;   /* see errorinfo.c */
-    IUnknown         *state;       /* see CoSetState */
+    DWORD             thread_seqid;/* returned with CoGetCurrentProcess */
     DWORD             apt_mask;    /* apartment mask (+0Ch on x86) */
     void            *unknown0;
     DWORD            inits;        /* number of times CoInitializeEx called */
@@ -178,6 +180,7 @@ struct oletls
     IUnknown        *call_state;    /* current call context (+3Ch on x86) */
     DWORD            unknown2[46];
     IUnknown        *cancel_object; /* cancel object set by CoSetCancelObject (+F8h on x86) */
+    IUnknown        *state;       /* see CoSetState */
     struct list      spies;         /* Spies installed with CoRegisterInitializeSpy */
     DWORD            spies_lock;
 };
@@ -354,5 +357,7 @@ static inline HRESULT copy_formatetc(FORMATETC *dst, const FORMATETC *src)
 
 extern HRESULT EnumSTATDATA_Construct(IUnknown *holder, ULONG index, DWORD array_len, STATDATA *data,
                                       BOOL copy, IEnumSTATDATA **ppenum) DECLSPEC_HIDDEN;
+
+extern DWORD rpcss_get_next_seqid(void) DECLSPEC_HIDDEN;
 
 #endif /* __WINE_OLE_COMPOBJ_H */

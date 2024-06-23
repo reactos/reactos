@@ -25,6 +25,30 @@ cpp_quote("#ifdef WINE_NO_UNICODE_MACROS")
 cpp_quote("#undef LoadLibrary")
 cpp_quote("#endif")
 
+typedef enum
+{
+    METAHOST_POLICY_HIGHCOMPAT              = 0,
+    METAHOST_POLICY_APPLY_UPGRADE_POLICY    = 0x08,
+    METAHOST_POLICY_EMULATE_EXE_LAUNCH      = 0x10,
+    METAHOST_POLICY_SHOW_ERROR_DIALOG       = 0x20,
+    METAHOST_POLICY_USE_PROCESS_IMAGE_PATH  = 0x40,
+    METAHOST_POLICY_ENSURE_SKU_SUPPORTED    = 0x80
+} METAHOST_POLICY_FLAGS;
+
+typedef enum
+{
+    CLR_DEBUGGING_MANAGED_EVENT_PENDING     = 1
+} CLR_DEBUGGING_PROCESS_FLAGS;
+
+typedef struct _CLR_DEBUGGING_VERSION
+{
+    WORD wStructVersion;
+    WORD wMajor;
+    WORD wMinor;
+    WORD wBuild;
+    WORD wRevision;
+} CLR_DEBUGGING_VERSION;
+
 [
     object,
     local,
@@ -80,7 +104,7 @@ interface ICLRRuntimeInfo : IUnknown
     HRESULT IsStarted(
         [out] BOOL *pbStarted,
         [out] DWORD *pdwStartupFlags);
-};
+}
 
 typedef HRESULT (__stdcall *CallbackThreadSetFnPtr)();
 typedef HRESULT (__stdcall *CallbackThreadUnsetFnPtr)();
@@ -126,6 +150,57 @@ interface ICLRMetaHost : IUnknown
 
     HRESULT ExitProcess(
         [in] INT32 iExitCode);
-};
+}
+
+[
+    object,
+    local,
+    uuid(e2190695-77b2-492e-8e14-c4b3a7fdd593)
+]
+interface ICLRMetaHostPolicy : IUnknown
+{
+    HRESULT GetRequestedRuntime([in] METAHOST_POLICY_FLAGS dwPolicyFlags,
+        [in] LPCWSTR pwzBinary, [in] IStream *pCfgStream,
+        [in, out] LPWSTR pwzVersion, [in, out] DWORD *pcchVersion,
+        [out] LPWSTR pwzImageVersion, [out, in] DWORD *pcchImageVersion,
+        [out] DWORD *pdwConfigFlags, [in] REFIID riid, [retval, out] LPVOID *ppRuntime);
+}
+
+[
+    uuid(2ebcd49a-1b47-4a61-b13a-4a03701e594b)
+]
+coclass CLRMetaHostPolicy
+{
+    [default] interface ICLRMetaHostPolicy;
+}
+
+[
+    object,
+    local,
+    uuid(3151c08d-4d09-4f9b-8838-2880bf18fe51)
+]
+interface ICLRDebuggingLibraryProvider : IUnknown
+{
+    HRESULT ProvideLibrary([in] const WCHAR *pwszFileName,
+            [in] DWORD dwTimestamp, [in] DWORD dwSizeOfImage,
+            [out] HMODULE *phModule);
+}
+
+[
+    object,
+    local,
+    uuid(d28f3c5a-9634-4206-a509-477552eefb10)
+]
+interface ICLRDebugging : IUnknown
+{
+    HRESULT OpenVirtualProcess([in] ULONG64 moduleBaseAddress,
+            [in] IUnknown *pDataTarget, [in] ICLRDebuggingLibraryProvider *pLibraryProvider,
+            [in] CLR_DEBUGGING_VERSION *pMaxDebuggerSupportedVersion,
+            [in] REFIID riidProcess, [out] IUnknown **ppProcess,
+            [out, in] CLR_DEBUGGING_VERSION *pVersion,
+            [out] CLR_DEBUGGING_PROCESS_FLAGS *pdwFlags);
+
+    HRESULT CanUnloadNow(HMODULE hModule);
+}
 
 cpp_quote("HRESULT WINAPI CLRCreateInstance(REFCLSID clsid, REFIID riid, LPVOID *ppInterface);")

@@ -556,15 +556,14 @@ StgStreamImpl* StgStreamImpl_Construct(
  * worry about bit order
  */
 void StorageUtl_ReadWord(const BYTE* buffer, ULONG offset, WORD* value) DECLSPEC_HIDDEN;
-void StorageUtl_WriteWord(BYTE* buffer, ULONG offset, WORD value) DECLSPEC_HIDDEN;
+void StorageUtl_WriteWord(void *buffer, ULONG offset, WORD value) DECLSPEC_HIDDEN;
 void StorageUtl_ReadDWord(const BYTE* buffer, ULONG offset, DWORD* value) DECLSPEC_HIDDEN;
-void StorageUtl_WriteDWord(BYTE* buffer, ULONG offset, DWORD value) DECLSPEC_HIDDEN;
+void StorageUtl_WriteDWord(void *buffer, ULONG offset, DWORD value) DECLSPEC_HIDDEN;
 void StorageUtl_ReadULargeInteger(const BYTE* buffer, ULONG offset,
  ULARGE_INTEGER* value) DECLSPEC_HIDDEN;
-void StorageUtl_WriteULargeInteger(BYTE* buffer, ULONG offset,
- const ULARGE_INTEGER *value) DECLSPEC_HIDDEN;
+void StorageUtl_WriteULargeInteger(void *buffer, ULONG offset, const ULARGE_INTEGER *value) DECLSPEC_HIDDEN;
 void StorageUtl_ReadGUID(const BYTE* buffer, ULONG offset, GUID* value) DECLSPEC_HIDDEN;
-void StorageUtl_WriteGUID(BYTE* buffer, ULONG offset, const GUID* value) DECLSPEC_HIDDEN;
+void StorageUtl_WriteGUID(void *buffer, ULONG offset, const GUID* value) DECLSPEC_HIDDEN;
 void StorageUtl_CopyDirEntryToSTATSTG(StorageBaseImpl *storage,STATSTG* destination,
  const DirEntry* source, int statFlags) DECLSPEC_HIDDEN;
 
