@@ -1497,6 +1497,11 @@ LdrUnloadDll(
             DPRINT1("LDR: Unmapping [%ws]\n", LdrEntry->BaseDllName.Buffer);
         }
 
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || (DLL_EXPORT_VERSION >= _WIN32_WINNT_VISTA)
+        /* Send shutdown notification */
+        LdrpSendDllNotifications(CurrentEntry, LDR_DLL_NOTIFICATION_REASON_UNLOADED);
+#endif
+
         /* Check if this is a .NET executable */
         CorImageData = RtlImageDirectoryEntryToData(LdrEntry->DllBase,
                                                     TRUE,
@@ -1519,9 +1524,6 @@ LdrUnloadDll(
 
         /* Unload the alternate resource module, if any */
         LdrUnloadAlternateResourceModule(CurrentEntry->DllBase);
-
-        /* FIXME: Send shutdown notification */
-        //LdrpSendDllNotifications(CurrentEntry, 2, LdrpShutdownInProgress);
 
         /* Check if a Hotpatch is active */
         if (LdrEntry->PatchInformation)

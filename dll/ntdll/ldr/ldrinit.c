@@ -56,9 +56,7 @@ ULONG LdrpNumberOfProcessors;
 PVOID NtDllBase;
 extern LARGE_INTEGER RtlpTimeout;
 extern BOOLEAN RtlpTimeoutDisable;
-PVOID LdrpHeap;
 LIST_ENTRY LdrpHashTable[LDR_HASH_TABLE_ENTRIES];
-LIST_ENTRY LdrpDllNotificationList;
 HANDLE LdrpKnownDllObjectDirectory;
 UNICODE_STRING LdrpKnownDllPath;
 WCHAR LdrpKnownDllPathBuffer[128];
@@ -1998,9 +1996,8 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     //Peb->FastPebLockRoutine = (PPEBLOCKROUTINE)RtlEnterCriticalSection;
     //Peb->FastPebUnlockRoutine = (PPEBLOCKROUTINE)RtlLeaveCriticalSection;
 
-    /* Setup Callout Lock and Notification list */
+    /* Setup Callout Lock */
     //RtlInitializeCriticalSection(&RtlpCalloutEntryLock);
-    InitializeListHead(&LdrpDllNotificationList);
 
     /* For old executables, use 16-byte aligned heap */
     if ((NtHeader->OptionalHeader.MajorSubsystemVersion <= 3) &&
