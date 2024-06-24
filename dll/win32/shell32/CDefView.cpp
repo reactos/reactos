@@ -727,13 +727,13 @@ void CDefView::UpdateStatusbar()
     SFGAOF att = 0;
     if (cSelectedItems > 0)
     {
-        UINT maxquery = 42; // Don't waste too much time here (_DoCopyToMoveToFolder will verify the full array)
+        UINT maxquery = 42; // Checking the attributes can be slow, only check small selections (_DoCopyToMoveToFolder will verify the full array)
         att = SFGAO_CANCOPY | SFGAO_CANMOVE;
         if (cSelectedItems <= maxquery && (!GetSelections() || FAILED(m_pSFParent->GetAttributesOf(m_cidl, m_apidl, &att))))
             att = 0;
     }
-    m_pShellBrowser->SendControlMsg(FCW_TOOLBAR, TB_ENABLEBUTTON, FCIDM_SHVIEW_COPYTO, att & SFGAO_CANCOPY, &lResult);
-    m_pShellBrowser->SendControlMsg(FCW_TOOLBAR, TB_ENABLEBUTTON, FCIDM_SHVIEW_MOVETO, att & SFGAO_CANMOVE, &lResult);
+    m_pShellBrowser->SendControlMsg(FCW_TOOLBAR, TB_ENABLEBUTTON, FCIDM_SHVIEW_COPYTO, (att & SFGAO_CANCOPY) != 0, &lResult);
+    m_pShellBrowser->SendControlMsg(FCW_TOOLBAR, TB_ENABLEBUTTON, FCIDM_SHVIEW_MOVETO, (att & SFGAO_CANMOVE) != 0, &lResult);
 }
 
 LRESULT CDefView::OnUpdateStatusbar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
