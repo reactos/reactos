@@ -101,3 +101,16 @@ HRESULT WINAPI SHGetAttributesFromDataObject(IDataObject* pDataObject, DWORD dwA
 
     return hr;
 }
+
+PIDLIST_ABSOLUTE SHELL_CIDA_ILCloneFull(_In_ const CIDA *pCIDA, _In_ UINT Index)
+{
+    if (Index < pCIDA->cidl)
+        return ILCombine(HIDA_GetPIDLFolder(pCIDA), HIDA_GetPIDLItem(pCIDA, Index));
+    return NULL;
+}
+
+PIDLIST_ABSOLUTE SHELL_DataObject_ILCloneFullItem(_In_ IDataObject *pDO, _In_ UINT Index)
+{
+    CDataObjectHIDA cida(pDO);
+    return SUCCEEDED(cida.hr()) ? SHELL_CIDA_ILCloneFull(cida, Index) : NULL;
+}
