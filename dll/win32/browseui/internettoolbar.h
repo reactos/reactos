@@ -102,6 +102,7 @@ public:
     CInternetToolbar();
     virtual ~CInternetToolbar();
     void AddDockItem(IUnknown *newItem, int bandID, int flags);
+    HRESULT EnumBands(UINT Index, int *pBandId, IUnknown **ppUnkBand);
     HRESULT ReserveBorderSpace(LONG maxHeight = -1);
     HRESULT CreateMenuBar(IShellMenu **menuBar);
     HRESULT CreateToolsBar(IUnknown **toolsBar);
