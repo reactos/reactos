@@ -365,7 +365,7 @@ WSPRecv(SOCKET Handle,
     {
         /* It's up to the protocol to time out recv. We must wait
          * until the protocol decides it's had enough. */
-        WaitForSingleObject(SockEvent, INFINITE);
+        MsafdWaitForBlockingIo(SockEvent, INFINITE);
         Status = IOSB->Status;
     }
 
@@ -605,7 +605,7 @@ WSPRecvFrom(SOCKET Handle,
     if (!lpOverlapped && Status == STATUS_PENDING)
     {
         /* FIXME: Shouldn't wait infinitely for receive... */
-        WaitForSingleObject(SockEvent, INFINITE);
+        MsafdWaitForBlockingIo(SockEvent, INFINITE);
         Status = IOSB->Status;
     }
 
@@ -803,7 +803,7 @@ WSPSend(SOCKET Handle,
     if (!lpOverlapped && Status == STATUS_PENDING)
     {
         /* FIXME: Shouldn't wait infinitely for send... */
-        WaitForSingleObject(SockEvent, INFINITE);
+        MsafdWaitForBlockingIo(SockEvent, INFINITE);
         Status = IOSB->Status;
     }
 
@@ -1017,7 +1017,7 @@ WSPSendTo(SOCKET Handle,
     if (!lpOverlapped && Status == STATUS_PENDING)
     {
         /* FIXME: Shouldn't wait infinitely for send... */
-        WaitForSingleObject(SockEvent, INFINITE);
+        MsafdWaitForBlockingIo(SockEvent, INFINITE);
         Status = IOSB->Status;
     }
 

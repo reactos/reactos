@@ -592,4 +592,9 @@ MsafdReturnWithErrno(
     }
 }
 
+VOID
+MsafdWaitForBlockingIo(
+    _In_ HANDLE hEvent,
+    _In_ DWORD dwMilliseconds);
+
 #endif /* __MSAFD_H */

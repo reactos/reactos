@@ -610,6 +610,21 @@ TranslateNtStatusError(NTSTATUS Status)
     }
 }
 
+VOID
+MsafdWaitForBlockingIo(
+    _In_ HANDLE hEvent,
+    _In_ DWORD dwMilliseconds)
+{
+    DWORD Result;
+
+    for (;;)
+    {
+        Result = WaitForSingleObjectEx(hEvent, dwMilliseconds, TRUE);
+        if (Result != WAIT_IO_COMPLETION)
+            break;
+    }
+}
+
 /*
  * FUNCTION: Closes an open socket
  * ARGUMENTS:
@@ -775,7 +790,7 @@ WSPCloseSocket(IN SOCKET Handle,
                 /* Wait for return */
                 if (Status == STATUS_PENDING)
                 {
-                    WaitForSingleObject(SockEvent, INFINITE);
+                    MsafdWaitForBlockingIo(SockEvent, INFINITE);
                     Status = IoStatusBlock.Status;
                 }
             }
@@ -943,7 +958,7 @@ WSPBind(SOCKET Handle,
     /* Wait for return */
     if (Status == STATUS_PENDING)
     {
-        WaitForSingleObject(SockEvent, INFINITE);
+        MsafdWaitForBlockingIo(SockEvent, INFINITE);
         Status = IOSB.Status;
     }
 
@@ -1028,7 +1043,7 @@ WSPListen(SOCKET Handle,
     /* Wait for return */
     if (Status == STATUS_PENDING)
     {
-        WaitForSingleObject(SockEvent, INFINITE);
+        MsafdWaitForBlockingIo(SockEvent, INFINITE);
         Status = IOSB.Status;
     }
 
@@ -1304,7 +1319,7 @@ WSPSelect(IN int nfds,
     /* Wait for Completion */
     if (Status == STATUS_PENDING)
     {
-        WaitForSingleObject(SockEvent, INFINITE);
+        MsafdWaitForBlockingIo(SockEvent, INFINITE);
         Status = IOSB.Status;
     }
 
@@ -1388,9 +1403,6 @@ WSPSelect(IN int nfds,
 
     HeapFree( GlobalHeap, 0, PollBuffer );
     NtClose( SockEvent );
-
-    /* HACK: Allow APC to be processed */
-    SleepEx(0, TRUE);
 
     if( lpErrno )
     {
@@ -1534,7 +1546,7 @@ WSPAccept(
     /* Wait for return */
     if (Status == STATUS_PENDING)
     {
-        WaitForSingleObject(SockEvent, INFINITE);
+        MsafdWaitForBlockingIo(SockEvent, INFINITE);
         Status = IOSB.Status;
     }
 
@@ -1567,7 +1579,7 @@ WSPAccept(
             /* Wait for return */
             if (Status == STATUS_PENDING)
             {
-                WaitForSingleObject(SockEvent, INFINITE);
+                MsafdWaitForBlockingIo(SockEvent, INFINITE);
                 Status = IOSB.Status;
             }
 
@@ -1607,7 +1619,7 @@ WSPAccept(
                 /* Wait for return */
                 if (Status == STATUS_PENDING)
                 {
-                    WaitForSingleObject(SockEvent, INFINITE);
+                    MsafdWaitForBlockingIo(SockEvent, INFINITE);
                     Status = IOSB.Status;
                 }
 
@@ -1712,7 +1724,7 @@ WSPAccept(
             /* Wait for return */
             if (Status == STATUS_PENDING)
             {
-                WaitForSingleObject(SockEvent, INFINITE);
+                MsafdWaitForBlockingIo(SockEvent, INFINITE);
                 Status = IOSB.Status;
             }
 
@@ -1766,7 +1778,7 @@ WSPAccept(
     /* Wait for return */
     if (Status == STATUS_PENDING)
     {
-        WaitForSingleObject(SockEvent, INFINITE);
+        MsafdWaitForBlockingIo(SockEvent, INFINITE);
         Status = IOSB.Status;
     }
 
@@ -1960,7 +1972,7 @@ WSPConnect(SOCKET Handle,
         /* Wait for return */
         if (Status == STATUS_PENDING)
         {
-            WaitForSingleObject(SockEvent, INFINITE);
+            MsafdWaitForBlockingIo(SockEvent, INFINITE);
             Status = IOSB->Status;
         }
 
@@ -2018,7 +2030,7 @@ WSPConnect(SOCKET Handle,
         /* Wait for return */
         if (Status == STATUS_PENDING)
         {
-            WaitForSingleObject(SockEvent, INFINITE);
+            MsafdWaitForBlockingIo(SockEvent, INFINITE);
             Status = IOSB->Status;
         }
 
@@ -2079,7 +2091,7 @@ WSPConnect(SOCKET Handle,
         /* Wait for completion if blocking */
         if (Status == STATUS_PENDING)
         {
-            WaitForSingleObject(SockEvent, INFINITE);
+            MsafdWaitForBlockingIo(SockEvent, INFINITE);
             Status = IOSB->Status;
         }
 
@@ -2109,7 +2121,7 @@ WSPConnect(SOCKET Handle,
         /* Wait for return */
         if (Status == STATUS_PENDING)
         {
-            WaitForSingleObject(SockEvent, INFINITE);
+            MsafdWaitForBlockingIo(SockEvent, INFINITE);
             Status = IOSB->Status;
         }
     }
@@ -2228,7 +2240,7 @@ WSPShutdown(SOCKET Handle,
     /* Wait for return */
     if (Status == STATUS_PENDING)
     {
-        WaitForSingleObject(SockEvent, INFINITE);
+        MsafdWaitForBlockingIo(SockEvent, INFINITE);
         Status = IOSB.Status;
     }
 
@@ -2308,7 +2320,7 @@ WSPGetSockName(IN SOCKET Handle,
     /* Wait for return */
     if (Status == STATUS_PENDING)
     {
-        WaitForSingleObject(SockEvent, INFINITE);
+        MsafdWaitForBlockingIo(SockEvent, INFINITE);
         Status = IOSB.Status;
     }
 
@@ -2412,7 +2424,7 @@ WSPGetPeerName(IN SOCKET s,
     /* Wait for return */
     if (Status == STATUS_PENDING)
     {
-        WaitForSingleObject(SockEvent, INFINITE);
+        MsafdWaitForBlockingIo(SockEvent, INFINITE);
         Status = IOSB.Status;
     }
 
@@ -3457,7 +3469,7 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
     /* Wait for completion if not overlapped */
     if (!Overlapped && Status == STATUS_PENDING)
     {
-        WaitForSingleObject(SockEvent, INFINITE);
+        MsafdWaitForBlockingIo(SockEvent, INFINITE);
         Status = IOSB->Status;
     }
 
@@ -3597,7 +3609,7 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
     /* Wait for completion if not overlapped */
     if (!Overlapped && Status == STATUS_PENDING)
     {
-        WaitForSingleObject(SockEvent, INFINITE);
+        MsafdWaitForBlockingIo(SockEvent, INFINITE);
         Status = IOSB->Status;
     }
 
@@ -3678,7 +3690,7 @@ int CreateContext(PSOCKET_INFORMATION Socket)
     /* Wait for Completion */
     if (Status == STATUS_PENDING)
     {
-        WaitForSingleObject(SockEvent, INFINITE);
+        MsafdWaitForBlockingIo(SockEvent, INFINITE);
         Status = IOSB.Status;
     }
 
