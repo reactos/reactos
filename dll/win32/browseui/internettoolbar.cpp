@@ -1362,6 +1362,13 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::GetBitmapSize(long *paramC)
 HRESULT STDMETHODCALLTYPE CInternetToolbar::SendToolbarMsg(const GUID *pguidCmdGroup, UINT uMsg,
     WPARAM wParam, LPARAM lParam, LRESULT *result)
 {
+    if (fToolbarWindow)
+    {
+        LRESULT res = ::SendMessageW(fToolbarWindow, uMsg, wParam, lParam);
+        if (result)
+            *result = res;
+        return S_OK;
+    }
     return E_NOTIMPL;
 }
 
