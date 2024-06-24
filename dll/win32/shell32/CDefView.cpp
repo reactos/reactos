@@ -1959,7 +1959,7 @@ LRESULT CDefView::DoColumnContextMenu(LPARAM lParam)
 UINT CDefView::GetSelections()
 {
     UINT count = m_ListView.GetSelectedCount();
-    if (count > m_cidl || !m_apidl)
+    if (count > m_cidl || !count || !m_apidl) // !count to free possibly large cache, !m_apidl to make sure m_apidl is a valid pointer
     {
         SHFree(m_apidl);
         m_apidl = static_cast<PCUITEMID_CHILD*>(SHAlloc(count * sizeof(PCUITEMID_CHILD)));

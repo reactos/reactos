@@ -221,7 +221,7 @@ HRESULT CCopyMoveToMenu::DoAction(LPCMINVOKECOMMANDINFO lpici)
     if (!SHGetPathFromIDListW(m_pidlFolder, wszPath))
     {
         ERR("SHGetPathFromIDListW failed\n");
-        return hr;
+        return E_FAIL;
     }
 
     CStringW strFileTitle;
