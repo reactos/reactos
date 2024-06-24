@@ -31,7 +31,7 @@ public:
     virtual UINT GetActionTitleStringID() const = 0;
     virtual UINT GetFileOp() const = 0;
     virtual LPCSTR GetVerb() const = 0;
-    STDMETHODIMP QueryContextMenuImp(BOOL IsCopyOp, HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
+    STDMETHODIMP QueryContextMenuImpl(BOOL IsCopyOp, HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
 
     // IContextMenu
     STDMETHODIMP GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen) override;

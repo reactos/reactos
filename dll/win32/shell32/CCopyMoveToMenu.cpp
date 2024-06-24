@@ -17,25 +17,6 @@ CCopyMoveToMenu::CCopyMoveToMenu() :
 {
 }
 
-#if 0 // TODO: BFFM_IUNKNOWN IFolderFilterSite: devblogs.microsoft.com/oldnewthing/20131014-00/?p=2943
-static HRESULT ShouldShow(IShellFolder *pDesktop, PCUIDLIST_ABSOLUTE pidlItem)
-{
-    static const BYTE csidls[] = { CSIDL_BITBUCKET, CSIDL_CONTROLS };
-    for (UINT i = 0; i < _countof(csidls) && pDesktop; ++i)
-    {
-        PIDLIST_ABSOLUTE pidlFolder;
-        if (SUCCEEDED(SHGetSpecialFolderLocation(NULL, csidls[i], &pidlFolder)))
-        {
-            HRESULT hr = pDesktop->CompareIDs(SHCIDS_CANONICALONLY, pidlFolder, pidlItem);
-            ILFree(pidlFolder);
-            if (SUCCEEDED(hr) && ShortFromResult(hr) == 0)
-                return S_FALSE;
-        }
-    }
-    return S_OK;
-}
-#endif
-
 static LRESULT CALLBACK
 WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -188,7 +169,7 @@ CCopyMoveToMenu::DoRealFileOp(const CIDA *pCIDA, LPCMINVOKECOMMANDINFO lpici, PC
 }
 
 static HRESULT
-DoGetFileTitle(const CIDA *pCIDA, CStringW& strTitle, IDataObject *pDataObject)
+DoGetFileTitle(const CIDA *pCIDA, CStringW& strTitle)
 {
     CComHeapPtr<ITEMIDLIST> pidlCombine(SHELL_CIDA_ILCloneFull(pCIDA, 0));
     if (!pidlCombine)
@@ -225,7 +206,7 @@ HRESULT CCopyMoveToMenu::DoAction(LPCMINVOKECOMMANDINFO lpici)
     }
 
     CStringW strFileTitle;
-    hr = DoGetFileTitle(pCIDA, strFileTitle, m_pDataObject);
+    hr = DoGetFileTitle(pCIDA, strFileTitle);
     if (FAILED(hr))
         return hr;
 
@@ -269,7 +250,7 @@ CCopyToMenu::QueryContextMenu(HMENU hMenu,
 {
     TRACE("CCopyToMenu::QueryContextMenu(%p, %u, %u, %u, %u)\n",
           hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
-    return QueryContextMenuImp(TRUE, hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
+    return QueryContextMenuImpl(TRUE, hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 }
 
 STDMETHODIMP
@@ -281,11 +262,11 @@ CMoveToMenu::QueryContextMenu(HMENU hMenu,
 {
     TRACE("CMoveToMenu::QueryContextMenu(%p, %u, %u, %u, %u)\n",
           hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
-    return QueryContextMenuImp(FALSE, hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
+    return QueryContextMenuImpl(FALSE, hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 }
 
 STDMETHODIMP
-CCopyMoveToMenu::QueryContextMenuImp(BOOL IsCopyOp, HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
+CCopyMoveToMenu::QueryContextMenuImpl(BOOL IsCopyOp, HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
 {
     if (uFlags & (CMF_NOVERBS | CMF_VERBSONLY))
         return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 0);
@@ -359,14 +340,14 @@ CCopyMoveToMenu::GetCommandString(
     LPSTR pszName,
     UINT cchMax)
 {
-    FIXME("%p %lu %u %p %p %u\n", this,
-          idCmd, uType, pwReserved, pszName, cchMax);
-
     if ((uType | GCS_UNICODE) == GCS_VALIDATEW)
         return idCmd == IDC_ACTION ? S_OK : S_FALSE;
 
-    if (uType == GCS_VERBW)
+    if (uType == GCS_VERBW && idCmd == IDC_ACTION)
         return SHAnsiToUnicode(GetVerb(), (LPWSTR)pszName, cchMax);
+
+    FIXME("%p %lu %u %p %p %u\n", this,
+          idCmd, uType, pwReserved, pszName, cchMax);
 
     return E_NOTIMPL;
 }
