@@ -26,25 +26,232 @@ const PULONG KiNtVdmState = (PULONG)FIXED_NTVDMSTATE_LINEAR_PC_AT;
 
 /* UNHANDLED OPCODES **********************************************************/
 
-KiVdmUnhandledOpcode(F);
-KiVdmUnhandledOpcode(OUTSW);
-KiVdmUnhandledOpcode(OUTSB);
-KiVdmUnhandledOpcode(INSB);
-KiVdmUnhandledOpcode(INSW);
-KiVdmUnhandledOpcode(NPX);
-KiVdmUnhandledOpcode(INBimm);
-KiVdmUnhandledOpcode(INWimm);
-KiVdmUnhandledOpcode(OUTBimm);
-KiVdmUnhandledOpcode(OUTWimm);
-KiVdmUnhandledOpcode(INB);
-KiVdmUnhandledOpcode(INW);
-KiVdmUnhandledOpcode(OUTB);
-KiVdmUnhandledOpcode(OUTW);
-KiVdmUnhandledOpcode(HLT);
-KiVdmUnhandledOpcode(INTO);
-KiVdmUnhandledOpcode(INV);
+VOID
+KiVdmDumpTrapFrame(_In_ PKTRAP_FRAME TrapFrame)
+{
+    ULONG FlatIp = (TrapFrame->SegCs << 4) + TrapFrame->Eip;
+    UCHAR Bytes[8];
+
+
+    DbgPrint("Trap information:\n");
+
+    DbgPrint("Eip=%08x Esp=%08x Ebp=%08x EFlags=%08x ErrCode=%08x\n",
+             TrapFrame->Eip,
+             TrapFrame->HardwareEsp,
+             TrapFrame->Ebp,
+             TrapFrame->EFlags,
+             TrapFrame->ErrCode);
+
+    DbgPrint("CS=%04x DS=%04x ES=%04x FS=%04x GS=%04x SS=%04x\n",
+             TrapFrame->SegCs,
+             TrapFrame->SegDs,
+             TrapFrame->SegEs,
+             TrapFrame->SegFs,
+             TrapFrame->SegGs,
+             TrapFrame->HardwareSegSs);
+
+    DbgPrint("V86Ds=%04x V86Es=%04x V86Fs=%04x V86Gs=%04x\n",
+             TrapFrame->V86Ds,
+             TrapFrame->V86Es,
+             TrapFrame->V86Fs,
+             TrapFrame->V86Gs);
+
+    DbgPrint("DR0=%08x DR1=%08x DR2=%08x DR3=%08x DR6=%08x DR7=%08x\n",
+             TrapFrame->Dr0,
+             TrapFrame->Dr1,
+             TrapFrame->Dr2,
+             TrapFrame->Dr3,
+             TrapFrame->Dr6,
+             TrapFrame->Dr7);
+
+    DbgPrint("Eax=%08x Ebx=%08x Ecx=%08x Edx=%08x Esi=%08x Edi=%08x\n",
+             TrapFrame->Eax,
+             TrapFrame->Ebx,
+             TrapFrame->Ecx,
+             TrapFrame->Edx,
+             TrapFrame->Esi,
+             TrapFrame->Edi);
+
+    _SEH2_TRY
+    {
+        RtlCopyMemory(Bytes, (const UCHAR*)FlatIp, sizeof(Bytes));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DPRINT1("Failed to copy instruction bytes!\n");
+        return;
+    }
+    _SEH2_END;
+
+    DbgPrint("Instruction bytes: %02x %02x %02x %02x %02x %02x %02x %02x\n",
+             Bytes[0], Bytes[1], Bytes[2], Bytes[3],
+             Bytes[4], Bytes[5], Bytes[6], Bytes[7]);
+}
 
 /* OPCODE HANDLERS ************************************************************/
+
+static
+BOOLEAN
+FASTCALL
+KiVdmUnhandledOpcode(IN PKTRAP_FRAME TrapFrame,
+                     IN ULONG Flags)
+{
+    ULONG Eip;
+
+    /* Get flat EIP of the *current* instruction (not the original EIP) */
+    Eip = (TrapFrame->SegCs << 4) + TrapFrame->Eip;
+    Eip += KiVdmGetInstructionSize(Flags) - 1;
+
+    DPRINT1("Unhandled VDM Opcode 0x%2x @ 0x%08x\n", *(PUCHAR)Eip, Eip);
+
+    KiVdmDumpTrapFrame(TrapFrame);
+    UNIMPLEMENTED_DBGBREAK();
+    return FALSE;
+}
+
+static
+BOOLEAN
+FASTCALL
+KiVdmOpcodeF(IN PKTRAP_FRAME TrapFrame,
+             IN ULONG Flags)
+{
+    return KiVdmUnhandledOpcode(TrapFrame, Flags);
+}
+
+static
+BOOLEAN
+FASTCALL
+KiVdmOpcodeINSB(IN PKTRAP_FRAME TrapFrame,
+             IN ULONG Flags)
+{
+    return KiVdmUnhandledOpcode(TrapFrame, Flags);
+}
+
+static
+BOOLEAN
+FASTCALL
+KiVdmOpcodeINSW(IN PKTRAP_FRAME TrapFrame,
+                IN ULONG Flags)
+{
+    return KiVdmUnhandledOpcode(TrapFrame, Flags);
+}
+
+static
+BOOLEAN
+FASTCALL
+KiVdmOpcodeOUTSB(IN PKTRAP_FRAME TrapFrame,
+                IN ULONG Flags)
+{
+    return KiVdmUnhandledOpcode(TrapFrame, Flags);
+}
+
+static
+BOOLEAN
+FASTCALL
+KiVdmOpcodeOUTSW(IN PKTRAP_FRAME TrapFrame,
+                IN ULONG Flags)
+{
+    return KiVdmUnhandledOpcode(TrapFrame, Flags);
+}
+
+static
+BOOLEAN
+FASTCALL
+KiVdmOpcodeNPX(IN PKTRAP_FRAME TrapFrame,
+                IN ULONG Flags)
+{
+    return KiVdmUnhandledOpcode(TrapFrame, Flags);
+}
+
+static
+BOOLEAN
+FASTCALL
+KiVdmOpcodeINTO(IN PKTRAP_FRAME TrapFrame,
+                IN ULONG Flags)
+{
+    return KiVdmUnhandledOpcode(TrapFrame, Flags);
+}
+
+static
+BOOLEAN
+FASTCALL
+KiVdmOpcodeINBimm(IN PKTRAP_FRAME TrapFrame,
+                IN ULONG Flags)
+{
+    return KiVdmUnhandledOpcode(TrapFrame, Flags);
+}
+
+static
+BOOLEAN
+FASTCALL
+KiVdmOpcodeINWimm(IN PKTRAP_FRAME TrapFrame,
+                IN ULONG Flags)
+{
+    return KiVdmUnhandledOpcode(TrapFrame, Flags);
+}
+
+static
+BOOLEAN
+FASTCALL
+KiVdmOpcodeOUTBimm(IN PKTRAP_FRAME TrapFrame,
+                IN ULONG Flags)
+{
+    return KiVdmUnhandledOpcode(TrapFrame, Flags);
+}
+
+static
+BOOLEAN
+FASTCALL
+KiVdmOpcodeOUTWimm(IN PKTRAP_FRAME TrapFrame,
+                IN ULONG Flags)
+{
+    return KiVdmUnhandledOpcode(TrapFrame, Flags);
+}
+
+static
+BOOLEAN
+FASTCALL
+KiVdmOpcodeINB(IN PKTRAP_FRAME TrapFrame,
+                   IN ULONG Flags)
+{
+    return KiVdmUnhandledOpcode(TrapFrame, Flags);
+}
+
+static
+BOOLEAN
+FASTCALL
+KiVdmOpcodeINW(IN PKTRAP_FRAME TrapFrame,
+                   IN ULONG Flags)
+{
+    return KiVdmUnhandledOpcode(TrapFrame, Flags);
+}
+
+static
+BOOLEAN
+FASTCALL
+KiVdmOpcodeOUTB(IN PKTRAP_FRAME TrapFrame,
+                   IN ULONG Flags)
+{
+    return KiVdmUnhandledOpcode(TrapFrame, Flags);
+}
+
+static
+BOOLEAN
+FASTCALL
+KiVdmOpcodeOUTW(IN PKTRAP_FRAME TrapFrame,
+                   IN ULONG Flags)
+{
+    return KiVdmUnhandledOpcode(TrapFrame, Flags);
+}
+
+static
+BOOLEAN
+FASTCALL
+KiVdmOpcodeHLT(IN PKTRAP_FRAME TrapFrame,
+                IN ULONG Flags)
+{
+    return KiVdmUnhandledOpcode(TrapFrame, Flags);
+}
 
 BOOLEAN
 FASTCALL
@@ -429,10 +636,10 @@ KiVdmHandleOpcode(IN PKTRAP_FRAME TrapFrame,
         case 0xF4:              return KiCallVdmHandler(HLT);
         case 0xFA:              return KiCallVdmHandler(CLI);
         case 0xFB:              return KiCallVdmHandler(STI);
-        default:
-            DPRINT1("Unhandled instruction: 0x%02x.\n", *(PUCHAR)Eip);
-            return KiCallVdmHandler(INV);
+        default:                break;
     }
+
+    return KiVdmUnhandledOpcode(TrapFrame, Flags);
 }
 
 /* PREFIX HANDLER *************************************************************/
