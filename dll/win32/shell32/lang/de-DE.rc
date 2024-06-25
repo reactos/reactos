@@ -34,10 +34,10 @@ BEGIN
             MENUITEM "&Automatisch anordnen", FCIDM_SHVIEW_AUTOARRANGE
             MENUITEM "Am &Raster ausrichten", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "Aktualisieren", FCIDM_SHVIEW_REFRESH
+        MENUITEM "A&ktualisieren", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Einfügen", FCIDM_SHVIEW_INSERT
-        MENUITEM "Einfügen als Verweis", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "&Einfügen", FCIDM_SHVIEW_INSERT
+        MENUITEM "&Verknüpfung einfügen", FCIDM_SHVIEW_INSERTLINK
     END
 END
 
@@ -49,7 +49,7 @@ BEGIN
     MENUITEM "&Ausschneiden\tStrg+X", FCIDM_SHVIEW_CUT
     MENUITEM "&Kopieren\tStrg+C", FCIDM_SHVIEW_COPY
     MENUITEM "&Einfügen\tStrg+V", FCIDM_SHVIEW_INSERT
-    MENUITEM "Verknüp&fung Einfügen", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM "Verknüp&fung einfügen", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
     MENUITEM "In &Ordner kopieren...", FCIDM_SHVIEW_COPYTO
     MENUITEM "In Ordner &verschieben...", FCIDM_SHVIEW_MOVETO

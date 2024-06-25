@@ -34,10 +34,10 @@ BEGIN
             MENUITEM "T&ri automatique", FCIDM_SHVIEW_AUTOARRANGE
             MENUITEM "Aligner sur la &grille", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "Rafraîchir", FCIDM_SHVIEW_REFRESH
+        MENUITEM "&Rafraîchir", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Coll&er", FCIDM_SHVIEW_INSERT
-        MENUITEM "Coller comme un lien", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "Coller comme un &lien", FCIDM_SHVIEW_INSERTLINK
     END
 END
 
@@ -49,7 +49,7 @@ BEGIN
     MENUITEM "C&ouper\tCtrl+X", FCIDM_SHVIEW_CUT
     MENUITEM "&Copier\tCtrl+C", FCIDM_SHVIEW_COPY
     MENUITEM "Coll&er\tCtrl+V", FCIDM_SHVIEW_INSERT
-    MENUITEM "Créer un &lien", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM "Coller comme un &lien", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
     MENUITEM "Co&pier vers le dossier...", FCIDM_SHVIEW_COPYTO
     MENUITEM "&Déplacer vers le dossier...", FCIDM_SHVIEW_MOVETO

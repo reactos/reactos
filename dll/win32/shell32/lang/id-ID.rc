@@ -34,10 +34,10 @@ BEGIN
             MENUITEM "Otomatis &Urutkan", FCIDM_SHVIEW_AUTOARRANGE
             MENUITEM "Sejajarkan dengan &Kisi", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "Segarkan", FCIDM_SHVIEW_REFRESH
+        MENUITEM "&Segarkan", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Tempel", FCIDM_SHVIEW_INSERT
-        MENUITEM "Tempel Pintasan", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "Te&mpel", FCIDM_SHVIEW_INSERT
+        MENUITEM "Tempel &pintasan", FCIDM_SHVIEW_INSERTLINK
     END
 END
 

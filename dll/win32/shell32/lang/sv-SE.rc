@@ -34,10 +34,10 @@ BEGIN
             MENUITEM "&Ordna automatiskt", FCIDM_SHVIEW_AUTOARRANGE
             MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "Uppdatera", FCIDM_SHVIEW_REFRESH
+        MENUITEM "&Uppdatera", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Klistra in", FCIDM_SHVIEW_INSERT
-        MENUITEM "Klistra in som genväg", FCIDM_SHVIEW_INSERTLINK //FIXME: should we use "Klistra in &genväg" here to sync it with the same string ~10 lines below? ATTENTION: There is also a IDM_CREATELINK and IDS_CREATELINK "Skapa &genväg" (not sure whether those can happen in the same menu or not)
+        MENUITEM "K&listra in", FCIDM_SHVIEW_INSERT
+        MENUITEM "Klistra in &genväg", FCIDM_SHVIEW_INSERTLINK
     END
 END
 
@@ -47,8 +47,8 @@ BEGIN
     MENUITEM "&Ångra\tCtrl+Z", FCIDM_SHVIEW_UNDO
     MENUITEM SEPARATOR
     MENUITEM "Kl&ipp ut\tCtrl+X", FCIDM_SHVIEW_CUT //FIXME: double-check this accelerator on Windows! Should it be &t maybe?
-    MENUITEM "&Kopiera\tCtrl+C", FCIDM_SHVIEW_COPY //FIXME: accelerator collision &K
-    MENUITEM "&Klistra in\tCtrl+V", FCIDM_SHVIEW_INSERT //FIXME: accelerator collision &K
+    MENUITEM "&Kopiera\tCtrl+C", FCIDM_SHVIEW_COPY
+    MENUITEM "K&listra in\tCtrl+V", FCIDM_SHVIEW_INSERT
     MENUITEM "Klistra in &genväg", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
     MENUITEM "Kopiera till &mapp...", FCIDM_SHVIEW_COPYTO

@@ -34,10 +34,10 @@ BEGIN
             MENUITEM "アイコンの自動整列(&A)", FCIDM_SHVIEW_AUTOARRANGE
             MENUITEM "アイコンを等間隔に整列(&G)", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "最新の情報に更新", FCIDM_SHVIEW_REFRESH
+        MENUITEM "最新の情報に更新(&E)", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "貼り付け", FCIDM_SHVIEW_INSERT
-        MENUITEM "ショートカットの貼り付け", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "貼り付け(&P)", FCIDM_SHVIEW_INSERT
+        MENUITEM "ショートカットを貼り付け(&S)", FCIDM_SHVIEW_INSERTLINK
     END
 END
 

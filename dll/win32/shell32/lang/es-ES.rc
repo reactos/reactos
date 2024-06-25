@@ -43,10 +43,10 @@ BEGIN
             MENUITEM "&Ordenar automáticamente", FCIDM_SHVIEW_AUTOARRANGE
             MENUITEM "Alinear a la &cuadrícula", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "Actualizar", FCIDM_SHVIEW_REFRESH
+        MENUITEM "A&ctualizar", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Pegar", FCIDM_SHVIEW_INSERT
-        MENUITEM "Pegar acceso directo", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "&Pegar", FCIDM_SHVIEW_INSERT
+        MENUITEM "Pegar &acceso directo", FCIDM_SHVIEW_INSERTLINK
     END
 END
 

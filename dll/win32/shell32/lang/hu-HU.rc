@@ -34,10 +34,10 @@ BEGIN
             MENUITEM "&Automatikus elrendezés", FCIDM_SHVIEW_AUTOARRANGE
             MENUITEM "&Rácshoz igazítás", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "Frissítés", FCIDM_SHVIEW_REFRESH
+        MENUITEM "&Frissítés", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Beillesztés", FCIDM_SHVIEW_INSERT
-        MENUITEM "Parancsikon beillesztése", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "&Beillesztés", FCIDM_SHVIEW_INSERT
+        MENUITEM "&Parancsikon beillesztése", FCIDM_SHVIEW_INSERTLINK
     END
 END
 

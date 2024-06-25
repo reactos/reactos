@@ -48,8 +48,8 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "Cu&t\tCtrl+X", FCIDM_SHVIEW_CUT
     MENUITEM "&Copy\tCtrl+C", FCIDM_SHVIEW_COPY
-    MENUITEM "&Paste\tCtrl+V", FCIDM_SHVIEW_INSERT
-    MENUITEM "Paste &shortcut", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM "Co&lar\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "C&olar atalho", FCIDM_SHVIEW_INSERTLINK // FIXME: accelerator might not match with Windows
     MENUITEM SEPARATOR
     MENUITEM "Copy to &folder...", FCIDM_SHVIEW_COPYTO
     MENUITEM "Mo&ve to folder...", FCIDM_SHVIEW_MOVETO
