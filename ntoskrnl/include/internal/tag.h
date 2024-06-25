@@ -59,7 +59,6 @@
 #define TAG_IO_TIMER            'MTOI'
 #define TAG_DRIVER              'RVRD'
 #define TAG_DRIVER_EXTENSION    'EVRD'
-#define TAG_SYSB                'BSYS'
 #define TAG_LOCK                'kclF'
 #define TAG_FILE_NAME           'MANF'
 #define TAG_FILE_SYSTEM         'SYSF'
