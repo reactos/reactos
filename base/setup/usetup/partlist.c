@@ -92,10 +92,10 @@ GetPartitionTypeString(
     }
 }
 
-VOID
+static VOID
 PrettifySize1(
-    IN OUT PULONGLONG Size,
-    OUT PCSTR* Unit)
+    _Inout_ PULONGLONG Size,
+    _Out_ PCSTR* Unit)
 {
     ULONGLONG DiskSize = *Size;
 
@@ -115,10 +115,10 @@ PrettifySize1(
     *Size = DiskSize;
 }
 
-VOID
+static VOID
 PrettifySize2(
-    IN OUT PULONGLONG Size,
-    OUT PCSTR* Unit)
+    _Inout_ PULONGLONG Size,
+    _Out_ PCSTR* Unit)
 {
     ULONGLONG PartSize = *Size;
 
@@ -519,6 +519,7 @@ PrintDiskData(
     coPos.X = ListUi->Left + 1;
     coPos.Y = ListUi->Top + 1 + ListUi->Line;
 
+    /* Fill the list background */
     if (ListUi->Line >= 0 && ListUi->Line <= Height)
     {
         FillConsoleOutputAttribute(StdOutput,
@@ -534,6 +535,7 @@ PrintDiskData(
                                     &Written);
     }
 
+    /* Print the disk description */
     coPos.X++;
     if (ListUi->Line >= 0 && ListUi->Line <= Height)
     {
@@ -612,11 +614,10 @@ DrawPartitionList(
     {
         DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
 
+        /* Counts disk description + empty line */
         LastLine += 2;
-        if (CurrentPartLineFound == FALSE)
-        {
+        if (!CurrentPartLineFound)
             CurrentPartLine += 2;
-        }
 
         for (Entry2 = DiskEntry->PrimaryPartListHead.Flink;
              Entry2 != &DiskEntry->PrimaryPartListHead;
@@ -624,19 +625,15 @@ DrawPartitionList(
         {
             PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
             if (PartEntry == ListUi->CurrentPartition)
-            {
                 CurrentPartLineFound = TRUE;
-            }
 
-            if (CurrentPartLineFound == FALSE)
-            {
-                CurrentPartLine++;
-            }
-
+            /* Counts partition description line */
             LastLine++;
+            if (!CurrentPartLineFound)
+                CurrentPartLine++;
         }
 
-        if (CurrentPartLineFound == FALSE)
+        if (!CurrentPartLineFound)
         {
             for (Entry2 = DiskEntry->LogicalPartListHead.Flink;
                  Entry2 != &DiskEntry->LogicalPartListHead;
@@ -644,41 +641,36 @@ DrawPartitionList(
             {
                 PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
                 if (PartEntry == ListUi->CurrentPartition)
-                {
                     CurrentPartLineFound = TRUE;
-                }
 
-                if (CurrentPartLineFound == FALSE)
-                {
-                    CurrentPartLine++;
-                }
-
+                /* Counts partition description line */
                 LastLine++;
+                if (!CurrentPartLineFound)
+                    CurrentPartLine++;
             }
         }
 
         if (DiskEntry == ListUi->CurrentDisk)
-        {
             CurrentDiskLineFound = TRUE;
-        }
 
+        /* If next disk entry exists, update current lines */
         if (Entry->Flink != &List->DiskListHead)
         {
-            if (CurrentDiskLineFound == FALSE)
+            LastLine++;
+            if (!CurrentDiskLineFound)
             {
                 CurrentPartLine++;
                 CurrentDiskLine = CurrentPartLine;
             }
-
-            LastLine++;
         }
+        /* Otherwise don't */
         else
         {
             LastLine--;
         }
     }
 
-    /* If it possible, make the disk name visible */
+    /* If possible, make the disk name visible */
     if (CurrentPartLine < ListUi->Offset)
     {
         ListUi->Offset = CurrentPartLine;
@@ -803,12 +795,12 @@ DrawPartitionList(
                                          coPos,
                                          &Written);
         }
-       coPos.X = ListUi->Right - 2;
-       FillConsoleOutputCharacterA(StdOutput,
-                                   CharHorizontalLine, // '-',
-                                   2,
-                                   coPos,
-                                   &Written);
+        coPos.X = ListUi->Right - 2;
+        FillConsoleOutputCharacterA(StdOutput,
+                                    CharHorizontalLine, // '-',
+                                    2,
+                                    coPos,
+                                    &Written);
     }
 
     /* Draw lower right corner */
