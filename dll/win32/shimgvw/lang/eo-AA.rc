@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Picture and Fax Viewer
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Esperanto resource file
- * TRANSLATORS: Copyright 2024 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
+ * TRANSLATOR:  Copyright 2024 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
  */
 
 LANGUAGE LANG_ESPERANTO, SUBLANG_DEFAULT
