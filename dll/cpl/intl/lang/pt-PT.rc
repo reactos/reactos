@@ -1,4 +1,11 @@
- LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+/*
+ * PROJECT:     ReactOS International Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATOR:  Copyright 2019-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 IDD_GENERALPAGE DIALOGEX 0, 0, 246, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -6,7 +13,7 @@ CAPTION "Opções regionais"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Padrões e formatos", -1, 5, 5, 234, 162
-    LTEXT "Esta opção influência a forma como alguns programas formatam números, unidades monetárias, datas e horas.", -1, 14, 17, 220, 25
+    LTEXT "Esta opção influencia a forma como alguns programas formatam números, unidades monetárias, datas e horas.", -1, 14, 17, 220, 25
     LTEXT "Selecci&one um item para definir as suas preferências ou clique em 'Personalizar' para escolher seus próprios formatos:", -1, 14, 37, 220, 22
     COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     PUSHBUTTON "&Personalizar...", IDC_SETUP_BUTTON, 178, 56, 52, 13
@@ -95,7 +102,7 @@ BEGIN
     EDITTEXT IDC_CURRENCYPOSSAMPLE, 43, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     LTEXT "Negativo:", -1, 120, 21, 30, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_CURRENCYNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "&Símbolo da unidade monetária:", -1, 10, 51, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Símbolo da unidade &monetária:", -1, 10, 51, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYSYMBOL, 134, 49, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "Formato monetário &positivo:", -1, 10, 68, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYPOSVALUE, 134, 66, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
@@ -186,7 +193,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Opções regionais e de idioma"
-    IDS_CPLDESCRIPTION "Personalizar as configurações para a exibição de idiomas, números, horas e datas."
+    IDS_CPLDESCRIPTION "Personalizar as definições para a apresentação de idiomas, números, horas e datas."
 END
 
 STRINGTABLE
@@ -200,7 +207,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_ERROR "Erro"
-    IDS_ERROR_SYMBOL_SEPARATE "Um ou mais caracteres digitados para Separador de data são inválidos."
+    IDS_ERROR_SYMBOL_SEPARATE "Um ou mais caracteres digitados para separador de data são inválidos."
     IDS_ERROR_SYMBOL_FORMAT_SHORT "Um ou mais caracteres que digitou para o formato Data abreviada são inválidos."
     IDS_ERROR_SYMBOL_FORMAT_LONG "Um ou mais caracteres que digitou para o formato Data por extenso são inválidos."
     IDS_ERROR_OEM_CODE_PAGE "Erro ao ler a tabela de conversão de página de código OEM"
