@@ -42,7 +42,7 @@ typedef enum _FORMATSTATE
 typedef struct _PARTENTRY PARTENTRY, *PPARTENTRY;
 typedef struct _VOLENTRY
 {
-    LIST_ENTRY ListEntry; ///< Entry in VolumesList
+    LIST_ENTRY ListEntry; ///< Entry in VolumesList or PendingUnmountVolumesList
 
     VOLINFO Info;
     FORMATSTATE FormatState;
@@ -184,7 +184,8 @@ typedef struct _PARTLIST
     LIST_ENTRY BiosDiskListHead;
 
     /* (Basic) Volumes management */
-    LIST_ENTRY VolumesList;
+    LIST_ENTRY VolumesList;               ///< List of active volumes
+    LIST_ENTRY PendingUnmountVolumesList; ///< List of volumes to unmount
 
 } PARTLIST, *PPARTLIST;
 
