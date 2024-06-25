@@ -1,17 +1,19 @@
-/* Portuguese Language resource file
- *
- * Traduzido por: Jose Carlos Jesus 05-08-2019 zecarlos1957@hotmail.com
+/*
+ * PROJECT:     ReactOS Display Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATOR:  Copyright 2019-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
  */
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 IDD_THEMES DIALOGEX 0, 0, 246, 210
 CAPTION "Temas"
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Um tema é um plano de fundo, além de um conjunto de sons, ícones e outros elementos para ajudá-lo a personalizar o seu computador com um clique.", IDC_STATIC, 5, 5, 235, 30
-    LTEXT "Tema:", IDC_STATIC, 5, 42, 55, 10
+    LTEXT "Um tema é um plano de fundo, juntamente com um conjunto de sons, ícones e outros elementos para ajudá-lo a personalizar o computador com apenas um clique.", IDC_STATIC, 5, 5, 235, 30
+    LTEXT "&Tema:", IDC_STATIC, 5, 42, 55, 10
     COMBOBOX IDC_THEMES_COMBOBOX, 5, 52, 160, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Guardar &como...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
     PUSHBUTTON "&Eliminar", IDC_THEMES_DELETE, 170, 70, 70, 14
@@ -26,7 +28,7 @@ BEGIN
     CONTROL "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74
     CONTROL "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 8, 104, 174, 86
-    LTEXT "&Plano de fundo:", IDC_STATIC, 8, 93, 230, 9
+    LTEXT "Plano de &fundo:", IDC_STATIC, 8, 93, 230, 9
     PUSHBUTTON "Proc&urar...", IDC_BROWSE_BUTTON, 188, 104, 55, 15
     PUSHBUTTON "&Cor...", IDC_COLOR_BUTTON, 188, 167, 55, 15
     LTEXT "Po&sição:", IDC_STATIC, 188, 128, 55, 9
@@ -40,7 +42,7 @@ CAPTION "Protecção de ecrã"
 FONT 8, "MS Shell Dlg", 0, 0
 BEGIN
     CONTROL "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74
-    GROUPBOX "Protecção de &ecrã", IDC_SCREENS_DUMMY, 8, 92, 230, 64
+    GROUPBOX "Pro&tecção de ecrã", IDC_SCREENS_DUMMY, 8, 92, 230, 64
     COMBOBOX IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Definições", IDC_SCREENS_SETTINGS, 120, 102, 50, 15, WS_GROUP
     PUSHBUTTON "&Pré-visualizar", IDC_SCREENS_TESTSC, 175, 102, 50, 15
@@ -49,7 +51,7 @@ BEGIN
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 56, 123, 12, 13
     LTEXT "minutos", IDC_MINTEXT, 80, 125, 26, 9
-    CONTROL "Ao reiniciar, &proteger por palavra-passe", IDC_SCREENS_USEPASSCHK, "button",
+    CONTROL "Ao &reiniciar, proteger por palavra-passe", IDC_SCREENS_USEPASSCHK, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 30, 140, 200, 11
     GROUPBOX "Energia do monitor", IDC_SCREENS_DUMMY2, 8, 164, 230, 41
     LTEXT "Para ajustar as definições de energia do monitor e poupar energia, clique em 'Energia'.", IDC_STATIC, 16, 174, 146, 27
@@ -82,7 +84,7 @@ CAPTION "Aspecto avançado"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "Se seleccionar um tema que não seja o ReactOS classic, ele substituirá as seguintes configurações, excepto em alguns programas mais antigos.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
+    LTEXT "Se seleccionar um tema que não seja o ReactOS classic, serão substituidas as seguintes definições, excepto em alguns programas mais antigos.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
     LTEXT "&Item:", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
@@ -94,7 +96,7 @@ BEGIN
     CHECKBOX "-", IDC_ADVAPPEARANCE_COLOR1_B, 184, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
     LTEXT "Cor &2:", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
     CHECKBOX "-", IDC_ADVAPPEARANCE_COLOR2_B, 216, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
-    LTEXT "&Tipo de letra:", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9
+    LTEXT "Tipo de &letra:", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "&Tamanho:", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9
@@ -117,7 +119,7 @@ BEGIN
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL "Utilizar o seguinte método para suavizar as arestas dos tipos de letra do ecrã:", IDC_EFFAPPEARANCE_SMOOTHING,
+    CONTROL "Utili&zar o seguinte método para suavizar as arestas dos tipos de letra do ecrã:", IDC_EFFAPPEARANCE_SMOOTHING,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
@@ -129,7 +131,7 @@ BEGIN
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
     CONTROL "&Ocultar letras sublinhadas para navegação por teclado até que a tecla Alt seja premida",
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
-    CONTROL "Utilizar menus planos", IDC_EFFAPPEARANCE_FLATMENUS,
+    CONTROL "Utilizar menus &planos", IDC_EFFAPPEARANCE_FLATMENUS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
     PUSHBUTTON "Cancelar", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
@@ -162,10 +164,10 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Geral"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Icones", IDC_STATIC, 6, 4, 212, 40
+    GROUPBOX "Ícones da área de trabalho", IDC_STATIC, 6, 4, 212, 40
     CONTROL "Os Meus &Documentos", IDC_ICONS_MYDOCS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 14, 14, 100, 12
-    CONTROL "Os Meus Locais da &Rede", IDC_ICONS_MYNET, "button",
+    CONTROL "Os Meus Locais na &Rede", IDC_ICONS_MYNET, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 116, 14, 100, 12
     CONTROL "O Meu &Computador", IDC_ICONS_MYCOMP, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 14, 28, 100, 12
@@ -174,7 +176,7 @@ BEGIN
     CONTROL "", IDC_ICONS_LISTVIEW, "SysListView32",
             LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP | WS_HSCROLL,
             6, 60, 212, 56
-    PUSHBUTTON "&Alterar Icone...", IDC_ICONS_CHANGEICON, 86, 120, 64, 15
+    PUSHBUTTON "&Alterar ícone...", IDC_ICONS_CHANGEICON, 86, 120, 64, 15
     PUSHBUTTON "&Predefinições", IDC_ICONS_SETDEFAULT, 154, 120, 64, 15
 END
 
@@ -185,7 +187,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Visualização", -1, 7, 6, 237, 56, WS_GROUP
     //LTEXT "Se a resolução do ecrã tornar os items demasiado pequenos para ver confortavelmente, pode aumentar o valor ppp para compensar. Para alterar apenas o tamanho do tipo de letra, clique em ""Cancelar"" e vá até ao separador ""Aspecto"".", -1, 14, 20, 220, 45
-    LTEXT "Definição do valor ppp:", -1, 14, 20, 222, 9
+    LTEXT "&Definição do valor ppp:", -1, 14, 20, 222, 9
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Compatibilidade", -1, 7, 67, 237, 100
