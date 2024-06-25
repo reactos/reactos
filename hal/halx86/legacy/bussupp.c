@@ -1561,6 +1561,17 @@ HalGetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
                                  Offset,
                                  Length);
 
+    /* Log unexpected size. 0 (no bus) and PCI_INVALID_VENDORID (no data) are valid results */
+    if (Status != Length &&
+        Status != 0 &&
+        (BusDataType != PCIConfiguration ||
+         Status != RTL_SIZEOF_THROUGH_FIELD(PCI_COMMON_CONFIG, VendorID) ||
+         ((PPCI_COMMON_CONFIG)Buffer)->VendorID != PCI_INVALID_VENDORID))
+    {
+       DPRINT1("HalGetBusDataByOffset(%d, %lu, 0x%lX) failed (%lu != %lu)\n",
+               BusDataType, BusNumber, SlotNumber, Status, Length);
+    }
+
     /* Dereference the handler and return */
     HalDereferenceBusHandler(Handler);
     return Status;
@@ -1659,6 +1670,13 @@ HalSetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
                                  Buffer,
                                  Offset,
                                  Length);
+
+    /* Log unexpected size */
+    if (Status != Length)
+    {
+       DPRINT1("HalSetBusDataByOffset(%d, %lu, 0x%lX) failed (%lu != %lu)\n",
+               BusDataType, BusNumber, SlotNumber, Status, Length);
+    }
 
     /* Dereference the handler and return */
     HalDereferenceBusHandler(Handler);
