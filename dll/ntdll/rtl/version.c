@@ -17,6 +17,8 @@
 
 /* FUNCTIONS ******************************************************************/
 
+static signed char g_ReportProductType = 0;
+
 /* HACK: ReactOS specific changes, see bug-reports CORE-6611 and CORE-4620 (aka. #5003) */
 static VOID NTAPI
 SetRosSpecificInfo(IN OUT PRTL_OSVERSIONINFOEXW VersionInformation)
@@ -24,7 +26,6 @@ SetRosSpecificInfo(IN OUT PRTL_OSVERSIONINFOEXW VersionInformation)
     CHAR Buffer[sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(ULONG)];
     PKEY_VALUE_PARTIAL_INFORMATION kvpInfo = (PVOID)Buffer;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    ULONG ReportAsWorkstation = 0;
     HANDLE hKey;
     ULONG Length;
     NTSTATUS Status;
@@ -38,7 +39,7 @@ SetRosSpecificInfo(IN OUT PRTL_OSVERSIONINFOEXW VersionInformation)
                                NULL);
 
     /* Don't change anything if the key doesn't exist */
-    Status = NtOpenKey(&hKey, KEY_READ, &ObjectAttributes);
+    Status = (g_ReportProductType == 0) ? NtOpenKey(&hKey, KEY_READ, &ObjectAttributes) : STATUS_CANCELLED;
     if (NT_SUCCESS(Status))
     {
         /* Get the value from the registry and make sure it's a 32-bit value */
@@ -52,19 +53,27 @@ SetRosSpecificInfo(IN OUT PRTL_OSVERSIONINFOEXW VersionInformation)
             (kvpInfo->Type == REG_DWORD) &&
             (kvpInfo->DataLength == sizeof(ULONG)))
         {
-            /* Is the value set? */
-            ReportAsWorkstation = *(PULONG)kvpInfo->Data;
-            if ((VersionInformation->wProductType == VER_NT_SERVER) &&
-                (ReportAsWorkstation != 0))
+            ULONG IsWorkstation = SharedUserData->NtProductType == NtProductWinNt;
+            ULONG ReportAsWorkstation = (*(PULONG)kvpInfo->Data) != 0;
+            if (IsWorkstation != ReportAsWorkstation)
             {
-                /* It is, modify the product type to report a workstation */
-                VersionInformation->wProductType = VER_NT_WORKSTATION;
-                DPRINT("We modified the reported OS from NtProductServer to NtProductWinNt\n");
+                g_ReportProductType = ReportAsWorkstation ? NtProductWinNt : NtProductServer;
             }
         }
 
         /* Close the handle */
         NtClose(hKey);
+    }
+
+    if (g_ReportProductType > 0)
+    {
+        VersionInformation->wProductType = g_ReportProductType;
+        DPRINT("We modified the reported OS product type from %d to %d\n",
+                SharedUserData->NtProductType, VersionInformation->wProductType);
+    }
+    else
+    {
+        g_ReportProductType = -1;
     }
 }
 
@@ -96,6 +105,21 @@ BOOLEAN NTAPI
 RtlGetNtProductType(_Out_ PNT_PRODUCT_TYPE ProductType)
 {
     *ProductType = SharedUserData->NtProductType;
+
+    if (g_ReportProductType == 0)
+    {
+        /* Initialize cached value */
+        RTL_OSVERSIONINFOEXW ovi;
+        ovi.dwOSVersionInfoSize = sizeof(ovi);
+        ovi.wProductType = *ProductType;
+        SetRosSpecificInfo(&ovi);
+    }
+
+    if (g_ReportProductType > 0)
+    {
+        *ProductType = g_ReportProductType;
+        DPRINT("Overriding RtlGetNtProductType to return %d\n", *ProductType);
+    }
     return TRUE;
 }
 
