@@ -81,6 +81,9 @@ IDI_NPICON ICON "res/notepad.ico"
 #ifdef LANGUAGE_JA_JP
     #include "lang/ja-JP.rc"
 #endif
+#ifdef LANGUAGE_KO_KR
+    #include "lang/ko-KR.rc"
+#endif
 #ifdef LANGUAGE_LT_LT
     #include "lang/lt-LT.rc"
 #endif
