@@ -76,7 +76,7 @@ InitializeFileSystemList(
     Index = 0;
     while (GetRegisteredFileSystems(Index++, &FileSystemName))
     {
-        if (wcsicmp(FileSystemName, L"FAT") == 0)
+        if (_wcsicmp(FileSystemName, L"FAT") == 0)
         {
             FatPresent = TRUE;
             break;
@@ -92,7 +92,7 @@ InitializeFileSystemList(
         /* USETUP only: If the FAT filesystem is present, show it, but
          * don't display FAT32. The FAT formatter will automatically
          * determine whether to use FAT12/16 or FAT32. */
-        if (FatPresent && wcsicmp(FileSystemName, L"FAT32") == 0)
+        if (FatPresent && _wcsicmp(FileSystemName, L"FAT32") == 0)
             continue;
 #endif
         AddProvider(List, FileSystemName);
@@ -132,7 +132,7 @@ CreateFileSystemList(
     while (ListEntry != &List->ListHead)
     {
         Item = CONTAINING_RECORD(ListEntry, FILE_SYSTEM_ITEM, ListEntry);
-        if (Item->FileSystem && wcsicmp(SelectFileSystem, Item->FileSystem) == 0)
+        if (Item->FileSystem && _wcsicmp(SelectFileSystem, Item->FileSystem) == 0)
         {
             List->Selected = Item;
             break;
