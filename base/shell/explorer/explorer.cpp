@@ -49,39 +49,27 @@ static VOID InitializeAtlModule(HINSTANCE hInstance, BOOL bInitialize)
     }
 }
 
-static BOOL
-GetServerAdminUIDefault()
-{
-    BOOL server;
-    DWORD value = 0, size = sizeof(value);
-    LPCWSTR rosregpath = L"SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version";
-    if (SHGetValueW(HKEY_LOCAL_MACHINE, rosregpath, L"ReportAsWorkstation", NULL, &value, &size) == NO_ERROR)
-        server = value == 0;
-    else
-        server = IsOS(OS_ANYSERVER);
-    return server && IsUserAnAdmin();
-}
-
 static void
 InitializeServerAdminUI()
 {
     HKEY hKey = SHGetShellKey(SHKEY_Root_HKCU | SHKEY_Key_Explorer, L"Advanced", TRUE);
-    if (hKey)
+    if (!hKey)
+        return ;
+
+    DWORD value, size = sizeof(value), type;
+    DWORD error = SHGetValueW(hKey, NULL, L"ServerAdminUI", &type, &value, &size);
+    if (error || type != REG_DWORD || size != sizeof(value))
     {
-        DWORD value, size = sizeof(value), type;
-        DWORD error = SHGetValueW(hKey, NULL, L"ServerAdminUI", &type, &value, &size);
-        if (error || type != REG_DWORD || size != sizeof(value))
+        // The value doesn't exist or is invalid, calculate and apply a default value
+        value = IsOS(OS_ANYSERVER) && IsUserAnAdmin();
+        if (value)
         {
-            value = GetServerAdminUIDefault();
-            if (value)
-            {
-                // TODO: Apply registry tweaks with RegInstallW; RegServerAdmin in the REGINST resource in shell32.
-                SystemParametersInfo(SPI_SETKEYBOARDCUES, 0, IntToPtr(TRUE), SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
-            }
-            SHSetValueW(hKey, NULL, L"ServerAdminUI", REG_DWORD, &value, sizeof(value));
+            // TODO: Apply registry tweaks with RegInstallW; RegServerAdmin in the REGINST resource in shell32.
+            SystemParametersInfo(SPI_SETKEYBOARDCUES, 0, IntToPtr(TRUE), SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
         }
-        RegCloseKey(hKey);
+        SHSetValueW(hKey, NULL, L"ServerAdminUI", REG_DWORD, &value, sizeof(value));
     }
+    RegCloseKey(hKey);
 }
 
 #if !WIN7_DEBUG_MODE
