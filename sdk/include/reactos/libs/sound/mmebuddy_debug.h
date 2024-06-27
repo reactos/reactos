@@ -13,7 +13,7 @@
         MessageBox(0, dbg_popup_msg, dbg_popup_title, MB_OK | MB_TASKMODAL); \
     }
 
-#ifndef NDEBUG
+#if DBG && !defined(NDEBUG)
     #define SND_ERR(...) \
         { \
             WCHAR dbg_popup_msg[1024]; \
@@ -55,7 +55,6 @@
                 CurrDumpHdr = CurrDumpHdr->lpNext; \
             } \
         }
-
 #else
     #define SND_ERR(...) do {} while ( 0 )
     #define SND_WARN(...) do {} while ( 0 )
