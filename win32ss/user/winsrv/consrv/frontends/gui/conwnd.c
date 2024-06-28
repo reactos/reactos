@@ -150,7 +150,7 @@ RegisterConWndClass(IN HINSTANCE hInstance)
                                  GetSystemMetrics(SM_CXSMICON),
                                  GetSystemMetrics(SM_CYSMICON),
                                  LR_SHARED);
-    ghDefaultCursor = LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_ARROW));
+    ghDefaultCursor = LoadCursorW(NULL, IDC_ARROW);
 
     WndClass.cbSize = sizeof(WNDCLASSEXW);
     WndClass.lpszClassName = GUI_CONWND_CLASS;

@@ -5812,7 +5812,11 @@ TOOLBAR_LButtonDown (TOOLBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
             /* If drag cursor has not been loaded, load it.
              * Note: it doesn't need to be freed */
             if (!hCursorDrag)
+#ifndef __REACTOS__
                 hCursorDrag = LoadCursorW(COMCTL32_hModule, (LPCWSTR)IDC_MOVEBUTTON);
+#else
+                hCursorDrag = LoadCursorW(COMCTL32_hModule, MAKEINTRESOURCEW(IDC_MOVEBUTTON));
+#endif
             SetCursor(hCursorDrag);
         }
         else
