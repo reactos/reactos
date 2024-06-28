@@ -34,6 +34,12 @@
  */
 // #define REACTOS_FANCY_BOOT
 
+#if SOS_UI == SOS_UI_LEGACY || SOS_UI == SOS_UI_NONE
+#define SOS_HEADER_MARGIN_TOP 0
+#else
+#define SOS_HEADER_MARGIN_TOP 12
+#endif
+
 /*
  * BitBltAligned() alignments
  */
@@ -507,7 +513,13 @@ NTAPI
 DisplayBootBitmap(
     _In_ BOOLEAN TextMode)
 {
-    PVOID BootCopy = NULL, BootProgress = NULL, BootLogo = NULL, Header = NULL, Footer = NULL;
+    PVOID BootCopy = NULL, BootProgress = NULL, BootLogo = NULL;
+#if SOS_UI != SOS_UI_NONE
+    PVOID Header = NULL;
+#endif
+#if SOS_UI == SOS_UI_LEGACY
+    PVOID Footer = NULL;
+#endif
 
 #ifdef INBV_ROTBAR_IMPLEMENTED
     UCHAR Buffer[RTL_NUMBER_OF(RotBarBuffer)];
@@ -543,6 +555,13 @@ DisplayBootBitmap(
          */
         MmChangeKernelResourceSectionProtection(MM_READWRITE);
 
+        /* Set the scrolling region */
+        InbvSetScrollRegion(VID_SCROLL_AREA_LEFT, VID_SCROLL_AREA_TOP,
+                            VID_SCROLL_AREA_RIGHT, VID_SCROLL_AREA_BOTTOM);
+
+#if SOS_UI == SOS_UI_NONE
+        InbvResetDisplay();
+#elif SOS_UI == SOS_UI_LEGACY
         /* Check the type of the OS: workstation or server */
         if (SharedUserData->NtProductType == NtProductWinNt)
         {
@@ -566,27 +585,32 @@ DisplayBootBitmap(
             Header = InbvGetResourceAddress(IDB_SERVER_HEADER);
             Footer = InbvGetResourceAddress(IDB_SERVER_FOOTER);
         }
-
-        /* Set the scrolling region */
-        InbvSetScrollRegion(VID_SCROLL_AREA_LEFT, VID_SCROLL_AREA_TOP,
-                            VID_SCROLL_AREA_RIGHT, VID_SCROLL_AREA_BOTTOM);
-
+#else
+        Header = InbvGetResourceAddress(IDB_HEADER_NEW);
+#endif
         /* Make sure we have resources */
-        if (Header && Footer)
+#if SOS_UI == SOS_UI_LEGACY
+        if (Footer)
         {
-            /* BitBlt them on the screen */
+            /* BitBlt the footer on the screen */
             BitBltAligned(Footer,
                           TRUE,
                           AL_HORIZONTAL_CENTER,
                           AL_VERTICAL_BOTTOM,
                           0, 0, 0, 59);
+        }
+#endif
+#if SOS_UI != SOS_UI_NONE
+        if (Header)
+        {
+            /* BitBlt the header on the screen */
             BitBltAligned(Header,
                           FALSE,
                           AL_HORIZONTAL_CENTER,
                           AL_VERTICAL_TOP,
-                          0, 0, 0, 0);
+                          0, SOS_HEADER_MARGIN_TOP, 0, 0);
         }
-
+#endif
         /* Restore the kernel resource section protection to be read-only */
         MmChangeKernelResourceSectionProtection(MM_READONLY);
     }

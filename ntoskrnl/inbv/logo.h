@@ -11,10 +11,17 @@
 // Positions of areas and images
 //
 
+#if SOS_UI == SOS_UI_NONE
+#define VID_SCROLL_AREA_LEFT        0
+#define VID_SCROLL_AREA_TOP         0
+#define VID_SCROLL_AREA_RIGHT     SCREEN_WIDTH - 1
+#define VID_SCROLL_AREA_BOTTOM    SCREEN_HEIGHT
+#else
 #define VID_SCROLL_AREA_LEFT       32
 #define VID_SCROLL_AREA_TOP        80
 #define VID_SCROLL_AREA_RIGHT     631
 #define VID_SCROLL_AREA_BOTTOM    400
+#endif
 
 #define VID_PROGRESS_BAR_LEFT     259
 #define VID_PROGRESS_BAR_TOP      352
