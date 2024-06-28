@@ -1160,6 +1160,7 @@ CcFlushCache (
                 Status = CcRosFlushVacb(vacb, &VacbIosb);
                 if (!NT_SUCCESS(Status))
                 {
+                    CcRosReleaseVacb(SharedCacheMap, vacb, FALSE, FALSE);
                     goto quit;
                 }
                 DirtyVacb = TRUE;
