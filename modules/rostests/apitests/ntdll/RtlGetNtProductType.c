@@ -91,7 +91,7 @@ ChangeNtProductType(DWORD NtProductType)
     }
     else
     {
-        ok(FALSE, "Passed invalid product type to CHangeNtProduct: %lu", NtProductType);
+        ok(FALSE, "Passed invalid product type to ChangeNtProduct: %lu", NtProductType);
     }
 
     Result = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -129,6 +129,19 @@ START_TEST(RtlGetNtProductType)
     DWORD ProductNtType;
     NT_PRODUCT_TYPE ProductType = NtProductWinNt, ProductType2;
 
+    /* Remove ReportAsWorkstation override during tests */
+    DWORD ReportAsWorkstation = 0xbaadf00d;
+    HKEY hKey;
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version",
+                      0, KEY_READ | KEY_WRITE, &hKey) == ERROR_SUCCESS)
+    {
+        DWORD cb = sizeof(DWORD);
+        if (RegQueryValueExW(hKey, L"ReportAsWorkstation", NULL, NULL, (PBYTE)&ReportAsWorkstation, &cb))
+            ReportAsWorkstation = 0xbaadf00d;
+        RegDeleteValueW(hKey, L"ReportAsWorkstation");
+        RegCloseKey(hKey);
+    }
+
     /*
      * Wrap the call in SEH. This ensures the testcase won't crash but also
      * it proves to us that RtlGetNtProductType() throws an exception if a NULL
@@ -164,4 +177,14 @@ START_TEST(RtlGetNtProductType)
     ok_long(ProductType2, ProductType);
 
     ok_char(ChangeNtProductType(ProductType), TRUE);
+
+
+    /* Restore ReportAsWorkstation */
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version",
+                      0, KEY_WRITE, &hKey) == ERROR_SUCCESS)
+    {
+        if (ReportAsWorkstation != 0xbaadf00d)
+            RegSetValueExW(hKey, L"ReportAsWorkstation", 0, REG_DWORD, (PBYTE)&ReportAsWorkstation, sizeof(DWORD));
+        RegCloseKey(hKey);
+    }
 }
