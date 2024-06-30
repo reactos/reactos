@@ -2,7 +2,8 @@
  * PROJECT:     ReactOS Multimedia Control Panel
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Portuguese (Portugal) resource file
- * TRANSLATOR:  Copyright 2019-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ * TRANSLATORS: Copyright 2020-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ *              Copyright 2021 Gabriel Aguiar <fgsoftwarestudio@gmail.com>
  */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
@@ -20,8 +21,8 @@ BEGIN
     LTEXT "Fraco", IDC_VOLUME_LOW, 62, 66, 30, 9
     LTEXT "Forte", IDC_VOLUME_HIGH, 195, 66, 30, 9
     AUTOCHECKBOX "&Sem som", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
-    AUTOCHECKBOX "Colocar um &ícone de volume na barra de tarefas", IDC_ICON_IN_TASKBAR, 50, 92, 185, 10
-    PUSHBUTTON "A&vançadas...", IDC_ADVANCED_BTN, 150, 105, 75, 15
+    AUTOCHECKBOX "Colocar um í&cone de volume na barra de tarefas", IDC_ICON_IN_TASKBAR, 50, 92, 185, 10
+    PUSHBUTTON "Avança&das...", IDC_ADVANCED_BTN, 150, 105, 75, 15
     GROUPBOX "Definições dos altifalantes", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80, WS_GROUP
     CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 15, 155, 48, 45
     LTEXT "Utilize as definições abaixo, para modificar o volume dos altifalantas individualmente e outras definições.", -1, 70, 155, 150, 36
@@ -40,7 +41,7 @@ BEGIN
     PUSHBUTTON "&Guardar como...", IDC_SAVEAS_BTN, 125, 70, 59, 15
     PUSHBUTTON "Eli&minar", IDC_DELETE_BTN, 188, 70, 50, 15
     LTEXT "Para modificar sons, clique num evento de programa na seguinte lista e, em seguida, seleccione um som a aplicar. Pode guardar as alterações como um novo esquema de som.", -1, 8, 90, 230, 27
-    LTEXT "Eventos de &programas:", -1, 8, 118, 150, 9
+    LTEXT "E&ventos de programas:", -1, 8, 118, 150, 9
     CONTROL "", IDC_SCHEME_LIST, "SysTreeView32", TVS_DISABLEDRAGDROP| TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE| WS_BORDER | WS_TABSTOP, 8, 130, 230, 60
     LTEXT "&Sons:", IDC_TEXT_SOUND, 8, 194, 80, 9, WS_DISABLED
     COMBOBOX IDC_SOUND_LIST, 8, 205, 155, 146, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
