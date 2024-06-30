@@ -1376,8 +1376,8 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath, TRUE);
         break;
         //case ID_OPTIONS_TOOLBAR:
-        //   toggle_child(hWnd, LOWORD(wParam), hToolBar);
-        //   break;
+        //    toggle_child(hWnd, LOWORD(wParam), hToolBar);
+        //    break;
     case ID_EDIT_NEW_KEY:
         CreateNewKey(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd));
         break;
