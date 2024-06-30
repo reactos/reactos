@@ -134,4 +134,167 @@ pOpenDevice(
     return pOpenDevice_UStr(&Name, DeviceHandle);
 }
 
+
+/* PnP ENUMERATION SUPPORT HELPERS *******************************************/
+
+#define _CFGMGR32_
+#include <cfgmgr32.h>
+
+/**
+ * @brief
+ * Enumerates devices using PnP support.
+ * The type of devices to be enumerated is specified by an interface
+ * class GUID. A user-provided callback is invoked for each device found.
+ *
+ * @param[in]   InterfaceClassGuid
+ * The interface class GUID designating the devices to enumerate.
+ *
+ * @param[in]   Callback
+ * A user-provided callback function of type PENUM_DEVICES_PROC.
+ *
+ * @param[in]   Context
+ * An optional context for the callback function.
+ *
+ * @note
+ * This function uses the lower-level user-mode CM_* PnP API,
+ * that are more widely available than the more common Win32
+ * SetupDi* functions.
+ * See
+ * https://learn.microsoft.com/en-us/windows-hardware/drivers/install/porting-from-setupapi-to-cfgmgr32#get-a-list-of-interfaces-get-the-device-exposing-each-interface-and-get-a-property-from-the-device
+ * for more details.
+ **/
+NTSTATUS
+pNtEnumDevicesPnP(
+    _In_ const GUID* InterfaceClassGuid,
+    _In_ PENUM_DEVICES_PROC Callback,
+    _In_opt_ PVOID Context)
+{
+    NTSTATUS Status;
+    CONFIGRET cr;
+    ULONG DevIFaceListLength = 0;
+    PWSTR DevIFaceList = NULL;
+    PWSTR CurrentIFace;
+
+    /*
+     * Retrieve a list of device interface instances belonging to the given interface class.
+     * Equivalent to:
+     * hDevInfo = SetupDiGetClassDevs(pGuid, NULL, NULL, DIGCF_DEVICEINTERFACE | DIGCF_PRESENT);
+     * and SetupDiEnumDeviceInterfaces(hDevInfo, NULL, pGuid, i, &DevIFaceData);
+     */
+    do
+    {
+        cr = CM_Get_Device_Interface_List_SizeW(&DevIFaceListLength,
+                                                (GUID*)InterfaceClassGuid,
+                                                NULL,
+                                                CM_GET_DEVICE_INTERFACE_LIST_PRESENT);
+        if (cr != CR_SUCCESS)
+            break;
+
+        if (DevIFaceList) RtlFreeHeap(ProcessHeap, 0, DevIFaceList);
+        DevIFaceList = RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY,
+                                       DevIFaceListLength * sizeof(WCHAR));
+        if (!DevIFaceList)
+        {
+            cr = CR_OUT_OF_MEMORY;
+            break;
+        }
+
+        cr = CM_Get_Device_Interface_ListW((GUID*)InterfaceClassGuid,
+                                           NULL,
+                                           DevIFaceList,
+                                           DevIFaceListLength,
+                                           CM_GET_DEVICE_INTERFACE_LIST_PRESENT);
+    } while (cr == CR_BUFFER_SMALL);
+
+    if (cr != CR_SUCCESS)
+    {
+        if (DevIFaceList) RtlFreeHeap(ProcessHeap, 0, DevIFaceList);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Enumerate each device for the given interface class.
+     * NOTE: This gives the proper interface names with the correct casing,
+     * contrary to SetupDiGetDeviceInterfaceDetailW(...) that gives them
+     * in all lower-case letters. */
+    for (CurrentIFace = DevIFaceList;
+         *CurrentIFace;
+         CurrentIFace += wcslen(CurrentIFace) + 1)
+    {
+        UNICODE_STRING Name;
+        HANDLE DeviceHandle;
+
+// TESTING
+#if 0
+        WCHAR DevInstPath[MAX_DEVICE_ID_LEN];
+        PWSTR buffer = NULL;
+        ULONG buffersize = 0;
+
+        cr = CM_Locate_DevNodeW(&DevInst,
+                                CurrentDevice, // ????
+                                CM_LOCATE_DEVNODE_NORMAL);
+        if (cr != CR_SUCCESS)
+            break;
+
+        cr = CM_Get_Device_IDW(DevInst,
+                               DevInstPath,
+                               _countof(DevInstPath),
+                               0);
+
+        for (;;)
+        {
+            // SetupDiGetDeviceRegistryPropertyW(..., SPDRP_PHYSICAL_DEVICE_OBJECT_NAME, ...);
+            cr = CM_Get_DevNode_Registry_PropertyW(DevInst,
+                                                   CM_DRP_PHYSICAL_DEVICE_OBJECT_NAME,
+                                                   NULL, // PULONG pulRegDataType
+                                                   (PBYTE)buffer,
+                                                   &buffersize,
+                                                   0);
+            if (cr != CR_BUFFER_SMALL)
+                break;
+
+            if (buffer) RtlFreeHeap(ProcessHeap, 0, buffer);
+            buffer = RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, buffersize);
+            if (!buffer)
+            {
+                cr = CR_OUT_OF_MEMORY;
+                break;
+            }
+        }
+        if (cr != CR_SUCCESS)
+            continue;
+#endif
+
+        RtlInitUnicodeString(&Name, CurrentIFace);
+
+        /* Normalize the interface path in case it is of Win32-style */
+        if (Name.Length > 4 * sizeof(WCHAR) &&
+            Name.Buffer[0] == '\\' && Name.Buffer[1] == '\\' &&
+            Name.Buffer[2] == '?'  && Name.Buffer[3] == '\\')
+        {
+            Name.Buffer[1] = '?';
+        }
+
+        Status = pOpenDevice(/*Name*/CurrentIFace, &DeviceHandle);
+        if (NT_SUCCESS(Status))
+        {
+            /* Do the callback */
+            if (Callback)
+            {
+                (void)Callback(InterfaceClassGuid,
+                               CurrentIFace, DeviceHandle, Context);
+            }
+
+            NtClose(DeviceHandle);
+        }
+
+#if 0
+        if (buffer) RtlFreeHeap(ProcessHeap, 0, buffer);
+#endif
+    }
+
+    if (DevIFaceList) RtlFreeHeap(ProcessHeap, 0, DevIFaceList);
+
+    return STATUS_SUCCESS;
+}
+
 /* EOF */
