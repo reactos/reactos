@@ -434,8 +434,9 @@ RtlpRemoveFreeBlock(PHEAP Heap,
     SIZE_T Result, RealSize;
     ULONG HintIndex;
 
-    if (FreeEntry->Size == 0)
-        return;
+    /* This was a problem before we handled segments > MAXUSHORT.
+     * It may not be needed now, but is left just for safety. */
+    ASSERT(FreeEntry->Size != 0);
 
     /* Remove the free block */
     if (FreeEntry->Size > Heap->DeCommitFreeBlockThreshold)
@@ -1119,7 +1120,6 @@ RtlpInitializeHeapSegment(IN OUT PHEAP Heap,
             FreeEntry->Flags = HEAP_ENTRY_LAST_ENTRY;
             FreeEntry->Size = (SegmentCommit >> HEAP_ENTRY_SHIFT) - Segment->Entry.Size;
 
-
             /* Register the Free Heap Entry */
             RtlpInsertFreeBlock(Heap, (PHEAP_FREE_ENTRY)FreeEntry, FreeEntry->Size);
         }
@@ -1181,8 +1181,7 @@ RtlpCoalesceFreeBlocks (PHEAP Heap,
         !(CurrentEntry->Flags & HEAP_ENTRY_BUSY) &&
         (*FreeSize + CurrentEntry->Size) <= HEAP_MAX_BLOCK_SIZE)
     {
-        if (CurrentEntry->Size)
-            ASSERT(FreeEntry->PreviousSize == CurrentEntry->Size);
+        ASSERT(FreeEntry->PreviousSize == CurrentEntry->Size);
 
         /* Remove it if asked for */
         if (Remove)
