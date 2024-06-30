@@ -1225,6 +1225,14 @@ If this is the first time you have seen this error screen, read
 If problems continue, remove all nonfree software from your computer.
 .
 
+MessageId=0x9F
+Severity=Success
+Facility=System
+SymbolicName=DRIVER_POWER_STATE_FAILURE
+Language=English
+DRIVER_POWER_STATE_FAILURE
+.
+
 MessageId=0xA0
 Severity=Success
 Facility=System

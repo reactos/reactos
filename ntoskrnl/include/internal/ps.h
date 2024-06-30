@@ -90,17 +90,17 @@ typedef struct _GET_SET_CTX_CONTEXT
 //
 // Initialization Functions
 //
-VOID
-NTAPI
-PspShutdownProcessManager(
-    VOID
-);
-
 CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 PsInitSystem(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+VOID
+NTAPI
+PsShutdownSystem(
+    VOID
 );
 
 //

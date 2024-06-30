@@ -434,4 +434,11 @@ ObPostPhase0:
     return TRUE;
 }
 
+VOID
+NTAPI
+ObShutdownSystem(VOID)
+{
+    UNIMPLEMENTED;
+}
+
 /* EOF */

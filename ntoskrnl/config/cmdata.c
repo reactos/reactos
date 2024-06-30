@@ -550,6 +550,13 @@ DATA_SEG("INITDATA") CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL
     },
     {
+        L"Session Manager\\Kernel",
+        L"PoCleanShutdownFlags",
+        &PopShutdownCleanly,
+        NULL,
+        NULL
+    },
+    {
         L"Session Manager\\I/O System",
         L"CountOperations",
         &DummyData,
@@ -609,6 +616,13 @@ DATA_SEG("INITDATA") CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         L"Session Manager",
         L"HeapDeCommitFreeBlockThreshold",
         &MmHeapDeCommitFreeBlockThreshold,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager",
+        L"PowerPolicySimulate",
+        &PopSimulate,
         NULL,
         NULL
     },
