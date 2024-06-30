@@ -129,6 +129,7 @@ UCHAR    TuiTextToFillStyle(PCSTR FillStyleText);                // Converts the
 
 VOID    TuiFadeInBackdrop(VOID);                                // Draws the backdrop and fades the screen in
 VOID    TuiFadeOut(VOID);                                        // Fades the screen out
+VOID    TuiDisplayThermalScreen(VOID);                          // Display the Red Screen of Hell informing the user of a thermal condition
 
 /* Menu Functions ************************************************************/
 
