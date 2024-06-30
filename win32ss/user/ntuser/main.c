@@ -911,6 +911,7 @@ DriverUnload(IN PDRIVER_OBJECT DriverObject)
     FreeFontSupport();
     ResetCsrApiPort();
     ResetCsrProcess();
+    IntWin32PowerManagementCleanup();
 }
 
 // Return on failure
@@ -978,8 +979,8 @@ DriverEntry(
     CalloutData.ProcessCallout = Win32kProcessCallback;
     CalloutData.ThreadCallout = Win32kThreadCallback;
     // CalloutData.GlobalAtomTableCallout = NULL;
-    // CalloutData.PowerEventCallout = NULL;
-    // CalloutData.PowerStateCallout = NULL;
+    CalloutData.PowerEventCallout = IntHandlePowerEvent;
+    CalloutData.PowerStateCallout = IntHandlePowerState;
     // CalloutData.JobCallout = NULL;
     CalloutData.BatchFlushRoutine = NtGdiFlushUserBatch;
     CalloutData.DesktopOpenProcedure = IntDesktopObjectOpen;
