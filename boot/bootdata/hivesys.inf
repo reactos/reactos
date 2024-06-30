@@ -2227,6 +2227,13 @@ HKLM,"SYSTEM\Setup","SystemSetupInProgress",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Control\PriorityControl",,0x00000012
 HKLM,"SYSTEM\CurrentControlSet\Control\PriorityControl","Win32PrioritySeparation",0x00010001,0x2
 
+; FontLink settings
+HKLM,"SYSTEM\CurrentControlSet\Control\FontAssoc\Associated Charset","ANSI(00)",0x00000000,"NO"
+HKLM,"SYSTEM\CurrentControlSet\Control\FontAssoc\Associated Charset","OEM(FF)",0x00000000,"NO"
+HKLM,"SYSTEM\CurrentControlSet\Control\FontAssoc\Associated Charset","SYMBOL(02)",0x00000000,"NO"
+HKLM,"SYSTEM\CurrentControlSet\Control\FontAssoc\Associated DefaultFonts","AssocSystemFont",0x00000000,"DroidSansFallback.ttf"
+HKLM,"SYSTEM\CurrentControlSet\Control\FontAssoc\Associated DefaultFonts","FontPackage",0x00000000,"Droid Sans Fallback"
+
 [AddReg.NTarm]
 ; RAM Disk class driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Disk","ErrorControl",0x00010001,0x00000000
