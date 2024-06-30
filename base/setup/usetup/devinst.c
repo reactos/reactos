@@ -15,7 +15,7 @@
 #include <guiddef.h>
 #include <libs/umpnpmgr/sysguid.h>
 
-/* LOCALS *******************************************************************/
+/* LOCALS ********************************************************************/
 
 static HANDLE hEnumKey = NULL;
 static HANDLE hServicesKey = NULL;
@@ -36,7 +36,7 @@ typedef struct
     WCHAR DeviceIds[ANYSIZE_ARRAY];
 } DeviceInstallParams;
 
-/* FUNCTIONS ****************************************************************/
+/* FUNCTIONS *****************************************************************/
 
 static BOOLEAN
 AreDriversLoaded(
@@ -727,3 +727,145 @@ TerminateUserModePnpManager(VOID)
         NtClose(hDeviceInstallListNotEmpty);
     hDeviceInstallListNotEmpty = NULL;
 }
+
+
+/* PnP Configuration Manager ENUMERATION API *********************************/
+
+#define _CFGMGR32_
+#include <cfgmgr32.h>
+
+static CONFIGRET
+NtStatusToCrError(
+    _In_ NTSTATUS Status)
+{
+    switch (Status)
+    {
+        case STATUS_NOT_IMPLEMENTED:
+            return CR_CALL_NOT_IMPLEMENTED;
+
+        case STATUS_INVALID_PARAMETER:
+            return CR_INVALID_DATA;
+
+        case STATUS_NO_SUCH_DEVICE:
+            return CR_NO_SUCH_DEVINST;
+
+        case STATUS_ACCESS_DENIED:
+            return CR_ACCESS_DENIED;
+
+        case STATUS_BUFFER_TOO_SMALL:
+            return CR_BUFFER_SMALL;
+
+        case STATUS_OBJECT_NAME_NOT_FOUND:
+            return CR_NO_SUCH_VALUE;
+
+        default:
+            return CR_FAILURE;
+    }
+}
+
+// CMAPI
+CONFIGRET
+WINAPI
+CM_Get_Device_Interface_List_SizeW(
+    _Out_ PULONG pulLen,
+    _In_ LPGUID InterfaceClassGuid,
+    _In_opt_ DEVINSTID_W pDeviceID,
+    _In_ ULONG ulFlags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    if (!pulLen)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags & ~CM_GET_DEVICE_INTERFACE_LIST_BITS)
+        return CR_INVALID_FLAG;
+
+    *pulLen = 0;
+
+    // PNP_GetInterfaceDeviceListSize()
+    do
+    {
+        NTSTATUS Status;
+        PLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA PlugPlayData;
+
+#if 0
+        if (!IsValidDeviceInstanceID(pDeviceID))
+        {
+            ret = CR_INVALID_DEVINST;
+            break;
+        }
+#endif
+
+        RtlInitUnicodeString(&PlugPlayData.DeviceInstance, pDeviceID);
+
+        PlugPlayData.FilterGuid = InterfaceClassGuid;
+        PlugPlayData.Flags = ulFlags;
+        PlugPlayData.Buffer = NULL;
+        PlugPlayData.BufferSize = 0;
+
+        Status = NtPlugPlayControl(PlugPlayControlGetInterfaceDeviceList,
+                                   &PlugPlayData,
+                                   sizeof(PlugPlayData));
+        if (NT_SUCCESS(Status))
+            *pulLen = PlugPlayData.BufferSize;
+        else
+            ret = NtStatusToCrError(Status);
+    } while (0);
+
+    return ret;
+}
+
+// CMAPI
+CONFIGRET
+WINAPI
+CM_Get_Device_Interface_ListW(
+    _In_ LPGUID InterfaceClassGuid,
+    _In_opt_ DEVINSTID_W pDeviceID,
+    _Out_writes_(BufferLen) PWCHAR Buffer,
+    _In_ ULONG BufferLen,
+    _In_ ULONG ulFlags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    if (!Buffer || BufferLen == 0)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags & ~CM_GET_DEVICE_INTERFACE_LIST_BITS)
+        return CR_INVALID_FLAG;
+
+    *Buffer = UNICODE_NULL;
+
+    // PNP_GetInterfaceDeviceList()
+    do
+    {
+        NTSTATUS Status;
+        PLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA PlugPlayData;
+
+#if 0
+        if (!IsValidDeviceInstanceID(pDeviceID))
+        {
+            ret = CR_INVALID_DEVINST;
+            break;
+        }
+#endif
+
+        RtlInitUnicodeString(&PlugPlayData.DeviceInstance, pDeviceID);
+
+        PlugPlayData.FilterGuid = InterfaceClassGuid;
+        PlugPlayData.Flags = ulFlags;
+        PlugPlayData.Buffer = Buffer;
+        PlugPlayData.BufferSize = BufferLen;
+
+        Status = NtPlugPlayControl(PlugPlayControlGetInterfaceDeviceList,
+                                   &PlugPlayData,
+                                   sizeof(PlugPlayData));
+        if (NT_SUCCESS(Status))
+            BufferLen = PlugPlayData.BufferSize;
+        else
+            ret = NtStatusToCrError(Status);
+    } while (0);
+
+    return ret;
+}
+
+/* EOF */
