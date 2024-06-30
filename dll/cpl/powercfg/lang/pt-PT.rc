@@ -13,7 +13,7 @@ CAPTION "Esquemas de energia"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
-    LTEXT "Seleccione o esquema de energia com as definições mais apropriadas para este computador. Note que a alteração às definições abaixo, modificará o esquema seleccionado.", -1, 37, 6, 208, 36
+    LTEXT "Seleccione o esquema de energia com as definições mais apropriadas para este computador. Note que a alteração das definições abaixo, modificará o esquema seleccionado.", -1, 37, 6, 208, 36
     GROUPBOX "&Esquemas de energia", -1, 6, 43, 240, 50 //FIXME: accelerator collision &e
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Guardar como...", IDC_SAVEAS_BTN, 85, 72, 80, 14, WS_DISABLED
@@ -66,7 +66,7 @@ CAPTION "Alarmes"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Alarme de bateria fraca", -1, 6, 7, 239, 99
-    AUTOCHECKBOX "Ative o a&larme quando o nível de energia atingir:", IDC_ALARM1, 15, 17, 225, 10, WS_TABSTOP
+    AUTOCHECKBOX "Activar o a&larme quando o nível de energia atingir:", IDC_ALARM1, 15, 17, 225, 10, WS_TABSTOP
     LTEXT "xxx%", IDC_ALARMVALUE1, 28, 32, 20, 10
     CONTROL "", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 47, 32, 194, 15
     PUSHBUTTON "&Acção do alarme...", -1, 148, 50, 88, 14, WS_DISABLED
@@ -77,7 +77,7 @@ BEGIN
     LTEXT "Executar programa:", -1, 28, 91, 89, 10
     LTEXT "?", IDC_ALARMPROG1, 118, 91, 125, 10
     GROUPBOX "Alarme de bateria muito fraca", -1, 6, 115, 239, 99
-    AUTOCHECKBOX "Ative o alar&me quando o nível de energia atingir:", IDC_ALARM2, 15, 125, 225, 10, WS_TABSTOP
+    AUTOCHECKBOX "Activar o alar&me quando o nível de energia atingir:", IDC_ALARM2, 15, 125, 225, 10, WS_TABSTOP
     LTEXT "xxx%", IDC_ALARMVALUE2, 28, 140, 20, 10
     CONTROL "", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 47, 140, 194, 15
     PUSHBUTTON "Acção do alarme...", -1, 148, 158, 88, 14, WS_DISABLED
@@ -97,7 +97,7 @@ BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Seleccione as definições de poupança de energia que deseja utilizar.", -1, 37, 6, 208, 20
     GROUPBOX "Opções", -1, 6, 30, 240, 65
-    AUTOCHECKBOX "Mostrar sempre o &icone na barra de tarefas", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "Mostrar sempre o &ícone na barra de tarefas", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
     AUTOCHECKBOX "&Perguntar a palavra-passe quando o computador reiniciar", IDC_PASSWORDLOGON, 17, 60, 220, 10, WS_TABSTOP
     AUTOCHECKBOX "&Ajustar o brilho quando ligado a baterias", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10, WS_TABSTOP
     GROUPBOX "Botões de energia", -1, 6, 101, 240, 110
@@ -166,11 +166,11 @@ BEGIN
     IDS_TIMEOUT8 "Após 25 mins"
     IDS_TIMEOUT9 "Após 30 mins"
     IDS_TIMEOUT10 "Após 45 mins"
-    IDS_TIMEOUT11 "Após 1 hour"
-    IDS_TIMEOUT12 "Após 2 hours"
-    IDS_TIMEOUT13 "Após 3 hours"
-    IDS_TIMEOUT14 "Após 4 hours"
-    IDS_TIMEOUT15 "Após 5 hours"
+    IDS_TIMEOUT11 "Após 1 hora"
+    IDS_TIMEOUT12 "Após 2 horas"
+    IDS_TIMEOUT13 "Após 3 horas"
+    IDS_TIMEOUT14 "Após 4 horas"
+    IDS_TIMEOUT15 "Após 5 horas"
     IDS_TIMEOUT16 "Nunca"
     IDS_DEL_SCHEME "Pretende eliminar o esquema de energia: ""%s""?"
     IDS_DEL_SCHEME_TITLE "Eliminar esquema"
