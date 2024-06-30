@@ -191,7 +191,15 @@ KiVdmOpcodeINTnn(IN PKTRAP_FRAME TrapFrame,
     V86EFlags &= (EFLAGS_ALIGN_CHECK | EFLAGS_INTERRUPT_MASK);
 
     /* Check for VME support */
-    ASSERT(KeI386VirtualIntExtensions == FALSE);
+    if (KeI386VirtualIntExtensions)
+    {
+        /* Set IF based on VIF */
+        V86EFlags &= ~EFLAGS_INTERRUPT_MASK;
+        if (V86EFlags & EFLAGS_VIF)
+        {
+            V86EFlags |= EFLAGS_INTERRUPT_MASK;
+        }
+    }
 
     /* Mask in the relevant V86 EFlags into the trap flags */
     V86EFlags |= (TrapEFlags & ~EFLAGS_INTERRUPT_MASK);
@@ -303,7 +311,13 @@ KiVdmOpcodeIRET(IN PKTRAP_FRAME TrapFrame,
     V86EFlags = EFlags;
 
     /* Check for VME support */
-    ASSERT(KeI386VirtualIntExtensions == FALSE);
+    if (KeI386VirtualIntExtensions)
+    {
+        if (EFlags & EFLAGS_INTERRUPT_MASK)
+        {
+            EFlags |= EFLAGS_VIF;
+        }
+    }
 
     /* Add V86 and Interrupt flag */
     EFlags |= EFLAGS_V86_MASK | EFLAGS_INTERRUPT_MASK;
