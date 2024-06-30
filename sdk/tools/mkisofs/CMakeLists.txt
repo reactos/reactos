@@ -57,6 +57,7 @@ add_library(libschily
     schilytools/libschily/strlcat.c
     schilytools/libschily/strlcpy.c
     schilytools/libschily/uid.c
+    schilytools/libschily/wctype.c
     schilytools/libschily/zerobytes.c)
 
 add_library(libsiconv

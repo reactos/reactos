@@ -46,7 +46,7 @@
 
 #if	defined(HAVE_ISWPRINT) && defined(USE_WCHAR)
 #ifndef	USE_WCTYPE
-#undef	USE_WCTYPE
+#undef	USE_WCTYPE //FIXME: bug! This is #define USE_WCTYPE in newer versions, see https://github.com/roytam1/schilytools/tree/master/include/schily/wctype.h for surrounding changes also
 #endif
 #endif
 
