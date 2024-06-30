@@ -1,7 +1,10 @@
-/* Portuguese Language resource file
- *
- * Traduzido por: Jose Carlos Jesus 20-06-2019 zecarlos1957@hotmail.com
+/*
+ * PROJECT:     ReactOS System Control Panel Applet
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATOR:  Copyright 2019-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
  */
+
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 256, 218
