@@ -1151,6 +1151,9 @@ typedef struct _ETHREAD
     struct _EPROCESS *ThreadsProcess;
 #endif
     PVOID Win32StartAddress;
+#if (NTDDI_VERSION >= NTDDI_WIN7) || defined(__REACTOS__)
+    PVOID LegacyPowerObject;
+#endif
     union
     {
         PKSTART_ROUTINE StartAddress;
