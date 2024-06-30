@@ -37,11 +37,11 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Gestor de dispositivos", IDC_STATIC, 6, 7, 244, 61
     ICON IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
-    LTEXT "O Gestor de dispositivos lista todos os dispositivos de hardware instalados no seu computador. Use o ""Gestor de dispositivos"" para alterar as propriedades de qualquer dispositivo.", IDC_STATIC, 42, 18, 204, 24
+    LTEXT "O Gestor de dispositivos lista todos os dispositivos de hardware instalados no computador. Utilize o ""Gestor de dispositivos"" para alterar as propriedades de cada dispositivo.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "&Gestor de dispositivos", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
     GROUPBOX "Assistente de Hardware", IDC_STATIC, 6, 79, 244, 61
     ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
-    LTEXT "O Assistente de hardware irá ajuda-lo a instalar, desinstalar, reparar, e configurar o hardware.", IDC_STATIC, 42, 90, 204, 24
+    LTEXT "O Assistente de hardware ajuda-o a instalar, desinstalar, reparar, e configurar o hardware.", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON "&Assistente de Hardware", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
     GROUPBOX "Perfis de Hardware", IDC_STATIC, 6, 149, 244, 61
     ICON IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
@@ -62,7 +62,7 @@ BEGIN
     LTEXT "Definições de ambiente de trabalho para o início de sessão", IDC_STATIC, 16, 98, 228, 20
     PUSHBUTTON "D&efinições", IDC_USERPROFILE, 194, 113, 50, 15
     GROUPBOX "Arranque e Recuperação", IDC_STATIC, 6, 141, 244, 52
-    LTEXT "Informação de arranque do sistema, falha do sistema e depuração.", IDC_STATIC, 16, 154, 228, 19
+    LTEXT "Informação de arranque, falha do sistema e depuração.", IDC_STATIC, 16, 154, 228, 19
     PUSHBUTTON "De&finições", IDC_STAREC, 194, 172, 50, 15
     PUSHBUTTON "Definições do &sistema", IDC_SYSSETTINGS, 6, 202, 80, 15
     PUSHBUTTON "&Variáveis de ambiente", IDC_ENVVAR, 88, 202, 80, 15
@@ -159,7 +159,7 @@ CAPTION "Perfis de utilizador"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT "Os perfis de utilizador contêm definições para o ambiente de trabalho e outras informações relacionadas ao início de sessão. Crie um perfil novo, ou restaure um perfil do servidor por cada computador.", IDC_STATIC, 40, 11, 211, 35
+    LTEXT "Os perfis de utilizador contêm definições para o ambiente de trabalho e outras informações relacionadas ao início de sessão. Pode criar um novo perfil, ou seleccionar um perfil do servidor para cada computador que utiliza.", IDC_STATIC, 40, 11, 211, 35
     LTEXT "Perfis armazenados neste computador:", IDC_STATIC, 16, 51, 204, 9
     CONTROL "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 6, 66, 244, 85, WS_EX_CLIENTEDGE
@@ -217,7 +217,7 @@ BEGIN
     CONTROL "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
             UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT "seg.", IDC_STATIC, 223, 70, 18, 8
-    LTEXT "Para editar o ficheiro de opções de iniciação manualmente, clique em ""Editar"".", IDC_STATIC, 14, 89, 187, 8
+    LTEXT "Para editar o ficheiro de opções de arranque manualmente, clique em ""Editar"".", IDC_STATIC, 14, 89, 187, 8
     PUSHBUTTON "&Editar...", IDC_STRRECEDIT, 188, 87, 50, 14
     GROUPBOX "Falha do sistema", IDC_STATIC, 7, 111, 238, 140
     AUTOCHECKBOX "&Escrever um evento no ficheiro de registo do sistema", IDC_STRRECWRITEEVENT, 14, 124, 190, 10
@@ -333,14 +333,14 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Sistema"
-    IDS_CPLSYSTEMDESCRIPTION "Veja informações sobre o seu computador e altere várias configurações do sistema e hardware."
+    IDS_CPLSYSTEMDESCRIPTION "Veja informações sobre o computador e altere várias definições do sistema e hardware."
     IDS_MEGABYTE "MB de RAM"
     IDS_GIGABYTE "GB de RAM"
     IDS_TERABYTE "TB de RAM"
     IDS_PETABYTE "PB de RAM"
     IDS_MEGAHERTZ "MHz"
     IDS_GIGAHERTZ "GHz"
-    IDS_UPTIME_FORMAT "%lu Dias, %02lu:%02lu:%02lu"
+    IDS_UPTIME_FORMAT "%lu dias, %02lu:%02lu:%02lu"
     IDS_VARIABLE "Variável"
     IDS_VALUE "Valor"
     IDS_NO_DUMP "(Nenhum)"
