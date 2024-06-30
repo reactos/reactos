@@ -126,7 +126,10 @@
 #define TAG_OB_HANDLE           'dHbO'
 
 /* Power Manager Tag */
-#define TAG_PO_DOPE 'EPOD'
+#define TAG_PO                  '  oP'
+#define TAG_PO_DOPE             'EPOD'
+#define TAG_IRP_WATCHDOG        'aWrI'
+#define TAG_PO_REGISTRY         'eRoP'
 
 /* Process Manager Tags */
 #define TAG_CIDOBJECT           'ODIC'
