@@ -86,33 +86,36 @@ $endif (_WDMDDK_)
 
 $if (_NTIFS_)
 #if (NTDDI_VERSION >= NTDDI_WINXP)
+
 _IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 PoQueueShutdownWorkItem(
   _Inout_ __drv_aliasesMem PWORK_QUEUE_ITEM WorkItem);
+
 #endif
 $endif (_NTIFS_)
+
 $if (_WDMDDK_)
-#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_VISTA) || defined(__REACTOS__)
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTKRNLVISTAAPI
+NTKERNELAPI
 VOID
 NTAPI
 PoSetSystemWake(
   _Inout_ struct _IRP *Irp);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTKRNLVISTAAPI
+NTKERNELAPI
 BOOLEAN
 NTAPI
 PoGetSystemWake(
   _In_ struct _IRP *Irp);
 
 _IRQL_requires_max_(APC_LEVEL)
-NTKRNLVISTAAPI
+NTKERNELAPI
 NTSTATUS
 NTAPI
 PoRegisterPowerSettingCallback(
@@ -123,23 +126,25 @@ PoRegisterPowerSettingCallback(
   _Outptr_opt_ PVOID *Handle);
 
 _IRQL_requires_max_(APC_LEVEL)
-NTKRNLVISTAAPI
+NTKERNELAPI
 NTSTATUS
 NTAPI
 PoUnregisterPowerSettingCallback(
   _Inout_ PVOID Handle);
 
-#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) || defined(__REACTOS__) */
 
-#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+#if (NTDDI_VERSION >= NTDDI_VISTASP1) || defined(__REACTOS__)
+
 NTKERNELAPI
 VOID
 NTAPI
 PoSetDeviceBusyEx(
   _Inout_ PULONG IdlePointer);
-#endif /* (NTDDI_VERSION >= NTDDI_VISTASP1) */
 
-#if (NTDDI_VERSION >= NTDDI_WIN7)
+#endif /* (NTDDI_VERSION >= NTDDI_VISTASP1) || defined(__REACTOS__) */
+
+#if (NTDDI_VERSION >= NTDDI_WIN7) || defined(__REACTOS__)
 
 NTKERNELAPI
 VOID
@@ -193,15 +198,36 @@ PoCreatePowerRequest(
   _In_ PDEVICE_OBJECT DeviceObject,
   _In_opt_ PCOUNTED_REASON_CONTEXT Context);
 
-#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) || defined(__REACTOS__) */
+
+#if (NTDDI_VERSION >= NTDDI_WINTHRESHOLD) || defined(__REACTOS__)
+
+_IRQL_requires_max_(APC_LEVEL)
+NTKERNELAPI
+NTSTATUS
+PoCreateThermalRequest(
+  _Outptr_ PVOID *ThermalRequest,
+  _In_ PDEVICE_OBJECT TargetDeviceObject,
+  _In_ PDEVICE_OBJECT PolicyDeviceObject,
+  _In_ PCOUNTED_REASON_CONTEXT Context,
+  _In_ ULONG Flags);
+
+_IRQL_requires_max_(APC_LEVEL)
+NTKERNELAPI
+VOID
+PoDeleteThermalRequest(
+  _Inout_ PVOID ThermalRequest);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINTHRESHOLD) || defined(__REACTOS__) */
 
 /******************************************************************************
  *                               PoFx Functions                               *
  ******************************************************************************/
 
-#if (NTDDI_VERSION >= NTDDI_WIN8)
+#if (NTDDI_VERSION >= NTDDI_WIN8) || defined(__REACTOS__)
+
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTKRNLVISTAAPI
+NTKERNELAPI
 NTSTATUS
 NTAPI
 PoFxRegisterDevice(
@@ -210,21 +236,21 @@ PoFxRegisterDevice(
     _Out_ POHANDLE *Handle);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTKRNLVISTAAPI
+NTKERNELAPI
 VOID
 NTAPI
 PoFxUnregisterDevice(
     _In_ POHANDLE Handle);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTKRNLVISTAAPI
+NTKERNELAPI
 VOID
 NTAPI
 PoFxStartDevicePowerManagement(
     _In_ POHANDLE Handle);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTKRNLVISTAAPI
+NTKERNELAPI
 VOID
 NTAPI
 PoFxActivateComponent(
@@ -233,14 +259,14 @@ PoFxActivateComponent(
     _In_ ULONG Flags);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTKRNLVISTAAPI
+NTKERNELAPI
 VOID
 NTAPI
 PoFxCompleteDevicePowerNotRequired(
     _In_ POHANDLE Handle);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTKRNLVISTAAPI
+NTKERNELAPI
 VOID
 NTAPI
 PoFxIdleComponent(
@@ -249,7 +275,7 @@ PoFxIdleComponent(
     _In_ ULONG Flags);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTKRNLVISTAAPI
+NTKERNELAPI
 VOID
 NTAPI
 PoFxCompleteIdleCondition(
@@ -257,7 +283,7 @@ PoFxCompleteIdleCondition(
     _In_ ULONG Component);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTKRNLVISTAAPI
+NTKERNELAPI
 VOID
 NTAPI
 PoFxCompleteIdleState(
@@ -265,7 +291,7 @@ PoFxCompleteIdleState(
     _In_ ULONG Component);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTKRNLVISTAAPI
+NTKERNELAPI
 VOID
 NTAPI
 PoFxSetDeviceIdleTimeout(
@@ -273,10 +299,11 @@ PoFxSetDeviceIdleTimeout(
     _In_ ULONGLONG IdleTimeout);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTKRNLVISTAAPI
+NTKERNELAPI
 VOID
 NTAPI
 PoFxReportDevicePoweredOn(
     _In_ POHANDLE Handle);
 
-#endif /* (NTDDI_VERSION >= NTDDI_WIN8) */
+#endif /* (NTDDI_VERSION >= NTDDI_WIN8) || defined(__REACTOS__) */
+$endif (_WDMDDK_)
