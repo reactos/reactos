@@ -38,4 +38,19 @@ pOpenDevice(
     _In_ PCWSTR DevicePath,
     _Out_ PHANDLE DeviceHandle);
 
+/* PnP ENUMERATION SUPPORT HELPERS *******************************************/
+
+typedef NTSTATUS
+(NTAPI *PENUM_DEVICES_PROC)(
+    _In_ const GUID* InterfaceClassGuid,
+    _In_ PCWSTR DevicePath,
+    _In_ HANDLE DeviceHandle,
+    _In_opt_ PVOID Context);
+
+NTSTATUS
+pNtEnumDevicesPnP(
+    _In_ const GUID* InterfaceClassGuid,
+    _In_ PENUM_DEVICES_PROC Callback,
+    _In_opt_ PVOID Context);
+
 /* EOF */
