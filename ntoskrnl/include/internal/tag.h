@@ -125,7 +125,19 @@
 #define TAG_OB_HANDLE           'dHbO'
 
 /* Power Manager Tag */
-#define TAG_PO_DOPE 'EPOD'
+#define TAG_PO                             '  oP'
+#define TAG_PO_DOPE                        'EPOD'
+#define TAG_IRP_WATCHDOG                   'aWrI'
+#define TAG_PO_REGISTRY                    'eRoP'
+#define TAG_PO_CONTROL_SWITCH              'sCoP'
+#define TAG_PO_POLICY_DEVICE_WORKITEM_DATA 'aDiW'
+#define TAG_PO_SHUTDOWN_EVENT              'eSoP'
+#define TAG_PO_INPUT_INFO_CLASS_BUFFER     'uBcI'
+#define TAG_PO_IRP_DATA                    'aDrI'
+#define TAG_PO_IRP_QUEUE_ENTRY             'nEuQ'
+#define TAG_PO_COMPOSITE_BATTERY           'aBoC'
+#define TAG_PO_BATTERY_IO_DATA             'aDaB'
+#define TAG_PO_CONTROL_SWITCH_IO_DATA      'aDsC'
 
 /* Process Manager Tags */
 #define TAG_CIDOBJECT           'ODIC'
