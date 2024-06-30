@@ -14,10 +14,10 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Seleccione o esquema de energia com as definições mais apropriadas para este computador. Note que a alteração das definições abaixo, modificará o esquema seleccionado.", -1, 37, 6, 208, 36
-    GROUPBOX "&Esquemas de energia", -1, 6, 43, 240, 50 //FIXME: accelerator collision &e
+    GROUPBOX "&Esquemas de energia", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Guardar como...", IDC_SAVEAS_BTN, 85, 72, 80, 14, WS_DISABLED
-    PUSHBUTTON "&Eliminar", IDC_DELETE_BTN, 173, 72, 64, 14, WS_DISABLED //FIXME: accelerator collision &e
+    PUSHBUTTON "E&liminar", IDC_DELETE_BTN, 173, 72, 64, 14, WS_DISABLED
     GROUPBOX "", IDC_GRPDETAIL, 6, 95, 240, 119
     LTEXT "Quando o computador está:", IDC_SAT, 12, 110, 60, 15
     LTEXT "ligado à corrente", IDC_SAC, 100, 110, 50, 15
@@ -30,7 +30,7 @@ BEGIN
     LTEXT "Desligar &discos rígidos:", IDC_DISK, 13, 163, 85, 10
     COMBOBOX IDC_DISKACLIST, 100, 160, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_DISKDCLIST, 173, 160, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Entra em modo de &espera:", IDC_STANDBY, 13, 178, 85, 10 //FIXME: accelerator collision &e
+    LTEXT "Entra em modo de es&pera:", IDC_STANDBY, 13, 178, 85, 10
     COMBOBOX IDC_STANDBYACLIST, 100, 175, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_STANDBYDCLIST, 173, 175, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "Entra em &hibernação:", IDC_HIBERNATE, 13, 193, 85, 10
@@ -45,16 +45,16 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Seleccione o esquema de energia com as definições mais apropriadas para este computador. Note que a alteração das definições abaixo, modificará o esquema seleccionado.", -1, 37, 6, 208, 36
-    GROUPBOX "&Esquemas de energia", -1, 6, 43, 240, 50 //FIXME: accelerator collision &e
+    GROUPBOX "&Esquemas de energia", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
     PUSHBUTTON "&Guardar como...", IDC_SAVEAS_BTN, 85, 72, 80, 14, WS_DISABLED
-    PUSHBUTTON "&Eliminar", IDC_DELETE_BTN, 173, 72, 64, 14, WS_DISABLED //FIXME: accelerator collision &e
+    PUSHBUTTON "E&liminar", IDC_DELETE_BTN, 173, 72, 64, 14, WS_DISABLED
     GROUPBOX "", IDC_GRPDETAIL, 6, 95, 240, 119
     LTEXT "Desligar o &monitor:", IDC_MONITOR, 13, 148, 85, 10
     COMBOBOX IDC_MONITORACLIST, 100, 145, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "Desligar &discos rígidos:", IDC_DISK, 13, 163, 85, 10
     COMBOBOX IDC_DISKACLIST, 100, 160, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Entra em modo de &espera:", IDC_STANDBY, 13, 178, 85, 10 //FIXME: accelerator collision &e
+    LTEXT "Entra em modo de es&pera:", IDC_STANDBY, 13, 178, 85, 10
     COMBOBOX IDC_STANDBYACLIST, 100, 175, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "Entra em &hibernação:", IDC_HIBERNATE, 13, 193, 85, 10
     COMBOBOX IDC_HIBERNATEACLIST, 100, 190, 140, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
@@ -80,7 +80,7 @@ BEGIN
     AUTOCHECKBOX "Activar o alar&me quando o nível de energia atingir:", IDC_ALARM2, 15, 125, 225, 10, WS_TABSTOP
     LTEXT "xxx%", IDC_ALARMVALUE2, 28, 140, 20, 10
     CONTROL "", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 47, 140, 194, 15
-    PUSHBUTTON "Acção do alarme...", -1, 148, 158, 88, 14, WS_DISABLED
+    PUSHBUTTON "Acção &do alarme...", -1, 148, 158, 88, 14, WS_DISABLED
     LTEXT "Notificação:", -1, 28, 175, 89, 10
     LTEXT "?", IDC_ALARMMSG2, 118, 175, 125, 10
     LTEXT "Acção:", -1, 28, 187, 89, 10
