@@ -1095,7 +1095,7 @@ int WINAPI wWinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPWSTR cmdline, int c
 #ifndef __REACTOS__
     wc.hCursor = LoadCursorW( 0, (LPWSTR)IDI_APPLICATION );
 #else
-    wc.hCursor = LoadCursorW(NULL, (LPWSTR)IDC_ARROW);
+    wc.hCursor = LoadCursorW(NULL, IDC_ARROW);
 #endif
     wc.hbrBackground = GetSysColorBrush(COLOR_BTNFACE); //MOD for ROS
     wc.lpszMenuName = MAKEINTRESOURCEW(IDM_WINEMINE);
