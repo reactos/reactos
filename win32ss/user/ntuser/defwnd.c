@@ -189,6 +189,7 @@ DefWndHandleSysCommand(PWND pWnd, WPARAM wParam, LPARAM lParam)
            }
         }
         break;
+
 //      case SC_DEFAULT:
       case SC_MOUSEMENU:
         {
@@ -197,15 +198,14 @@ DefWndHandleSysCommand(PWND pWnd, WPARAM wParam, LPARAM lParam)
           Pt.y = (short)HIWORD(lParam);
           MENU_TrackMouseMenuBar(pWnd, wParam & 0x000f, Pt);
         }
-	break;
+        break;
 
       case SC_KEYMENU:
         MENU_TrackKbdMenuBar(pWnd, wParam, (WCHAR)lParam);
-	break;
-
+        break;
 
       default:
-   // We do not support anything else here so we should return normal even when sending a hook.
+        // We do not support anything else here so we should return normal even when sending a hook.
         return 0;
    }
 
@@ -284,9 +284,9 @@ DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
             }
          }
          ////
-	 if (Msg == WM_LBUTTONDOWN || Msg == WM_MBUTTONDOWN ||
-	     Msg == WM_RBUTTONDOWN || Msg == WM_XBUTTONDOWN)
-	 {
+         if (Msg == WM_LBUTTONDOWN || Msg == WM_MBUTTONDOWN ||
+             Msg == WM_RBUTTONDOWN || Msg == WM_XBUTTONDOWN)
+         {
              if (pwndPopUP)
              {
                  FLASHWINFO fwi =
@@ -299,9 +299,9 @@ DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
                  // Now shake that window!
                  IntFlashWindowEx(pwndPopUP, &fwi);
              }
-	     UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_MESSAGE_BEEP, 0);
-	 }
-	 break;
+             UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_MESSAGE_BEEP, 0);
+         }
+         break;
       }
 
       case HTCLIENT:
@@ -309,8 +309,8 @@ DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
          if (pWnd->pcls->spcur)
          {
             IntSystemSetCursor(pWnd->pcls->spcur);
-	 }
-	 return FALSE;
+         }
+         return FALSE;
       }
 
       case HTLEFT:
@@ -566,7 +566,6 @@ IntDefWindowProc(
                     lResult = (LRESULT) (Wnd->strName.Length / sizeof(WCHAR));
                 }
             }
-            else lResult = 0L;
 
             break;
       }
@@ -716,7 +715,7 @@ IntDefWindowProc(
            * "If it is appropriate to do so, the system sends the WM_SYSCOMMAND
            * message to the window". When is it appropriate?
            */
-           ERR("WM_NCRBUTTONUP\n");
+          ERR("WM_NCRBUTTONUP\n");
           break;
 
       case WM_XBUTTONUP:
@@ -773,7 +772,7 @@ IntDefWindowProc(
                 {
                    WARN("Scroll Menu Not Supported\n");
                 }
-	    }
+            }
             break;
       }
 
@@ -1038,12 +1037,15 @@ IntDefWindowProc(
       case WM_MOUSEACTIVATE:
          if (Wnd->style & WS_CHILD)
          {
-             LONG Ret;
              HWND hwndParent;
              PWND pwndParent = IntGetParent(Wnd);
              hwndParent = pwndParent ? UserHMGetHandle(pwndParent) : NULL;
-             if (hwndParent) Ret = co_IntSendMessage(hwndParent, WM_MOUSEACTIVATE, wParam, lParam);
-             if (Ret) return (Ret);
+             if (hwndParent)
+             {
+                 lResult = co_IntSendMessage(hwndParent, WM_MOUSEACTIVATE, wParam, lParam);
+                 if (lResult)
+                     break;
+             }
          }
          return ( (HIWORD(lParam) == WM_LBUTTONDOWN && LOWORD(lParam) == HTCAPTION) ? MA_NOACTIVATE : MA_ACTIVATE );
 
@@ -1286,12 +1288,12 @@ IntDefWindowProc(
                }
                if (!lResult)
                   lResult = co_HOOK_CallHooks(WH_CBT, HCBT_MOVESIZE, (WPARAM)UserHMGetHandle(Wnd), lParam ? (LPARAM)&rt : 0);
-           }
-            break;
+
+               break;
+            }
          }
          break;
       }
-      break;
    }
    return lResult;
 }
