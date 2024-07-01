@@ -19,7 +19,7 @@ BEGIN
     PUSHBUTTON "&Adicionar...", IDC_USERS_ADD, 87, 98, 50, 14
     PUSHBUTTON "&Remover", IDC_USERS_REMOVE, 141, 98, 50, 14
     PUSHBUTTON "Pr&opriedades", IDC_USERS_PROPERTIES, 195, 98, 50, 14
-    AUTOCHECKBOX "Requer um nome de utilizador e uma palavra-passe ao iniciar o sistema.", IDC_USERS_STARTUP_REQUIRE, 10, 118, 200, 14, WS_DISABLED
+    AUTOCHECKBOX "Requer um nome de utilizador e uma palavra-passe ao iniciar o sistema.", IDC_USERS_STARTUP_REQUIRE, 10, 118, 240, 14, WS_DISABLED
     PUSHBUTTON "Redefinir palavra-passe", IDC_USERS_RESET, 165, 200, 80, 14, WS_DISABLED
 END
 
@@ -53,7 +53,7 @@ BEGIN
     EDITTEXT IDC_USER_GENERAL_FULL_NAME, 77, 43, 168, 13, ES_AUTOHSCROLL
     LTEXT "Descrição:", -1, 7, 64, 63, 8
     EDITTEXT IDC_USER_GENERAL_DESCRIPTION, 77, 61, 168, 13, ES_AUTOHSCROLL
-    AUTOCHECKBOX "O utilizador deve alterar a palavra-passe no primeiro início de sessão", IDC_USER_GENERAL_FORCE_CHANGE, 7, 82, 220, 10
+    AUTOCHECKBOX "O utilizador deve alterar a palavra-passe no primeiro início de sessão", IDC_USER_GENERAL_FORCE_CHANGE, 7, 82, 240, 10
     AUTOCHECKBOX "O utilizador não pode alterar a palavra-passe", IDC_USER_GENERAL_CANNOT_CHANGE, 7, 95, 210, 10
     AUTOCHECKBOX "A palavra-passe nunca expira", IDC_USER_GENERAL_NEVER_EXPIRES, 7, 108, 210, 10
     AUTOCHECKBOX "A conta está desactivada", IDC_USER_GENERAL_DISABLED, 7, 121, 210, 10
@@ -135,7 +135,7 @@ BEGIN
     RTEXT "Palavra-passe:", -1, 7, 70, 96, 8
     EDITTEXT IDC_USER_NEW_PASSWORD2, 107, 85, 153, 14, ES_AUTOHSCROLL | ES_PASSWORD
     RTEXT "Repetir palavra-passe:", -1, 7, 88, 96, 8
-    AUTOCHECKBOX "O utilizador deve alterar a palavra-passe no primeiro início de sessão", IDC_USER_NEW_FORCE_CHANGE, 7, 109, 220, 10
+    AUTOCHECKBOX "O utilizador deve alterar a palavra-passe no primeiro início de sessão", IDC_USER_NEW_FORCE_CHANGE, 7, 109, 240, 10
     AUTOCHECKBOX "O utilizador não pode alterar a palavra-passe", IDC_USER_NEW_CANNOT_CHANGE, 7, 123, 200, 10, WS_DISABLED
     AUTOCHECKBOX "Palavra-passe nunca expira", IDC_USER_NEW_NEVER_EXPIRES, 7, 137, 200, 10, WS_DISABLED
     AUTOCHECKBOX "A conta está bloqueada", IDC_USER_NEW_DISABLED, 7, 151, 200, 10
