@@ -62,6 +62,15 @@ typedef struct _HOOKPROC_CALLBACK_ARGUMENTS
   WCHAR ModuleName[512];
 } HOOKPROC_CALLBACK_ARGUMENTS, *PHOOKPROC_CALLBACK_ARGUMENTS;
 
+typedef struct _LOADIMAGE_CALLBACK_ARGUMENTS
+{
+    UINT ImageType;
+    int cxDesired;
+    int cyDesired;
+    UINT fuFlags;
+    WCHAR ImageName[MAX_PATH];
+} LOADIMAGE_CALLBACK_ARGUMENTS, *PLOADIMAGE_CALLBACK_ARGUMENTS;
+
 typedef struct _HOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS
 {
   CREATESTRUCTW Cs; /* lpszName and lpszClass replaced by offsets */
@@ -128,6 +137,26 @@ typedef struct _GET_CHARSET_INFO
     CHARSETINFO Cs;
 } GET_CHARSET_INFO, *PGET_CHARSET_INFO;
 
+typedef struct _LOADCURSORS_CALLBACK_ARGUMENTS
+{
+    HCURSOR hCursorArrow;
+    HCURSOR hCursorIbeam;
+    HCURSOR hCursorWait;
+    HCURSOR hCursorCross;
+    HCURSOR hCursorUp;
+    HCURSOR hCursorIcon;
+    HCURSOR hCursorSize;
+    HCURSOR hCursorSizeNwse;
+    HCURSOR hCursorSizeNesw;
+    HCURSOR hCursorSizeWe;
+    HCURSOR hCursorSizeNs;
+    HCURSOR hCursorSizeAll;
+    HCURSOR hCursorNo;
+    HCURSOR hCursorHand;
+    HCURSOR hCursorAppStarting;
+    HCURSOR hCursorHelp;
+} LOADCURSORS_CALLBACK_ARGUMENTS, *PLOADCURSORS_CALLBACK_ARGUMENTS;
+
 typedef struct _SETWNDICONS_CALLBACK_ARGUMENTS
 {
     HICON hIconSample;
@@ -185,6 +214,8 @@ typedef struct _IMMLOADLAYOUT_CALLBACK_OUTPUT
     IMEINFOEX iiex;
 } IMMLOADLAYOUT_CALLBACK_OUTPUT, *PIMMLOADLAYOUT_CALLBACK_OUTPUT;
 
+NTSTATUS WINAPI
+User32CallLoadImageFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
 User32CallCopyImageFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI

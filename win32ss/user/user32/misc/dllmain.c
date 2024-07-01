@@ -213,6 +213,9 @@ PVOID apfnDispatch[USER32_CALLBACK_COUNT] =
 #undef DEFINE_USER32_CALLBACK
 
 VOID
+LoadSystemCursors(VOID);
+
+VOID
 WINAPI
 GdiProcessSetup(VOID);
 
@@ -306,6 +309,11 @@ ClientThreadSetupHelper(BOOL IsCallback)
             TRACE("Checkpoint (MenuInit)\n");
             if (MenuInit())
             {
+                /* Load system cursors */
+                TRACE("Checkpoint (CursorsInit)\n");
+                //if (gfServerProcess) // FIXME
+                LoadSystemCursors();
+
                 TRACE("Checkpoint initialization done OK\n");
                 InitializeCriticalSection(&U32AccelCacheLock);
                 LoadAppInitDlls();
