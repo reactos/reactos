@@ -718,7 +718,7 @@ static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style )
         UINT flags = DST_COMPLEX;
         if (style & WS_DISABLED)
             flags |= DSS_DISABLED;
-        DrawStateW(hdc, GetSysColorBrush(COLOR_GRAYTEXT), STATIC_DrawTextCallback,
+        DrawStateW(hdc, hBrush, STATIC_DrawTextCallback,
                    (LPARAM)text, (WPARAM)format,
                    rc.left, rc.top,
                    rc.right - rc.left, rc.bottom - rc.top,
