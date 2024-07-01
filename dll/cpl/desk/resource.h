@@ -1,5 +1,15 @@
 #pragma once
 
+#ifndef LWS_NOPREFIX
+#define LWS_NOPREFIX        0x0004
+#endif
+#ifndef LWS_USEVISUALSTYLE
+#define LWS_USEVISUALSTYLE  0x0008
+#endif
+#ifndef LWS_RIGHT
+#define LWS_RIGHT           0x0020
+#endif
+
 /* ids */
 #define IDC_DESK_ICON  40
 #define IDC_DESK_ICON2 100 /* Needed for theme compatability with Windows. */
@@ -34,6 +44,7 @@
 #define IDS_BACKGROUND_COMDLG_FILTER 1006
 #define IDC_RESOLUTION_PREVIEW       1007
 #define IDC_DESKTOP_CUSTOM           1008
+#define IDC_GETMOREWALLS             1009
 
 /* Screensaver Page */
 #define IDC_SCREENS_PREVIEW      1010
@@ -101,6 +112,7 @@
 #define IDC_APPEARANCE_ADVANCED     1504
 #define IDC_APPEARANCE_VISUAL_STYLE 1505
 #define IDC_APPEARANCE_SIZE         1506
+#define IDC_APPEARANCE_GETMORE      1507
 
 #define IDS_INACTWIN      1510
 #define IDS_ACTWIN        1511

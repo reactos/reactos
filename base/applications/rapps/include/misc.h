@@ -30,6 +30,9 @@ VOID
 CopyTextToClipboard(LPCWSTR lpszText);
 VOID
 ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem);
+typedef BOOL (CALLBACK*TVWALKCALLBACK)(HWND hTree, HTREEITEM hItem, PVOID Context);
+HTREEITEM
+TreeView_Walk(HWND hTree, TVWALKCALLBACK Callback, PVOID Context = 0, BOOL Children = TRUE, HTREEITEM hRoot = NULL);
 BOOL
 StartProcess(const CStringW &Path, BOOL Wait);
 BOOL
@@ -77,7 +80,14 @@ void
 UnixTimeToFileTime(DWORD dwUnixTime, LPFILETIME pFileTime);
 
 BOOL
+LoadString(HINSTANCE hInst, UINT ResId, WORD LangId, LPWSTR Buf, SIZE_T cch);
+BOOL
 SearchPatternMatch(LPCWSTR szHaystack, LPCWSTR szNeedle);
+
+template<size_t N, class T> T IsStrPrefixI(T Str, const WCHAR (&Prefix)[N])
+{
+    return StrCmpNIW(const_cast<LPWSTR>(Str), Prefix, N - 1) ? NULL : Str + N - 1;
+}
 
 HRESULT
 RegKeyHasValues(HKEY hKey, LPCWSTR Path, REGSAM wowsam = 0);

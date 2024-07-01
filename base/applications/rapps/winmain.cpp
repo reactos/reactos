@@ -49,10 +49,10 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nSh
 
     InitLogs();
     InitCommonControls();
-    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL); // Give UI higher priority than background threads
 
     // parse cmd-line and perform the corresponding operation
-    BOOL bSuccess = ParseCmdAndExecute(GetCommandLineW(), bIsFirstLaunch, SW_SHOWNORMAL);
+    UINT flags = bIsFirstLaunch ? PCAEF_FIRSTLAUNCH : 0;
+    BOOL bSuccess = ParseCmdAndExecute(GetCommandLineW(), flags, SW_SHOWNORMAL);
 
     Gdiplus::GdiplusShutdown(gdiplusToken);
     gModule.Term();
