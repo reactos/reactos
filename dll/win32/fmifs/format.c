@@ -5,7 +5,7 @@
  * PURPOSE:         Volume format
  *
  * PROGRAMMERS:     Emanuele Aliberti
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
 #include "precomp.h"
@@ -83,7 +83,7 @@ FormatEx(
     RtlInitUnicodeString(&usLabel, Label);
 
     /* Set the BackwardCompatible flag in case we format with older FAT12/16 */
-    if (wcsicmp(Format, L"FAT") == 0)
+    if (_wcsicmp(Format, L"FAT") == 0)
         BackwardCompatible = TRUE;
     // else if (wcsicmp(Format, L"FAT32") == 0)
         // BackwardCompatible = FALSE;

@@ -1046,7 +1046,7 @@ FileCopyCallback(PVOID Context,
                 else DstFileName = FilePathInfo->Target;
 
                 // STRING_MOVING or STRING_RENAMING
-                if (!wcsicmp(SrcFileName, DstFileName))
+                if (!_wcsicmp(SrcFileName, DstFileName))
                     StringCchPrintfW(Status, ARRAYSIZE(Status), L"Moving %s to %s", SrcFileName, DstFileName);
                 else
                     StringCchPrintfW(Status, ARRAYSIZE(Status), L"Renaming %s to %s", SrcFileName, DstFileName);
@@ -1465,7 +1465,7 @@ BOOL LoadSetupData(
          ListEntry = GetNextListEntry(ListEntry))
     {
         PCWSTR LocaleId = ((PGENENTRY)GetListEntryData(ListEntry))->Id;
-        if (!wcsicmp(pSetupData->DefaultLanguage, LocaleId))
+        if (!_wcsicmp(pSetupData->DefaultLanguage, LocaleId))
         {
             DPRINT("found %S in LanguageList\n", LocaleId);
             SetCurrentListEntry(LanguageList, ListEntry);
@@ -1478,7 +1478,7 @@ BOOL LoadSetupData(
          ListEntry = GetNextListEntry(ListEntry))
     {
         PCWSTR pszLayoutId = ((PGENENTRY)GetListEntryData(ListEntry))->Id;
-        if (!wcsicmp(pSetupData->DefaultKBLayout, pszLayoutId))
+        if (!_wcsicmp(pSetupData->DefaultKBLayout, pszLayoutId))
         {
             DPRINT("Found %S in LayoutList\n", pszLayoutId);
             SetCurrentListEntry(LayoutList, ListEntry);

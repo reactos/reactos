@@ -1475,11 +1475,11 @@ FileTypesDlg_CompareItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
     Entry1 = (PFILE_TYPE_ENTRY)lParam1;
     Entry2 = (PFILE_TYPE_ENTRY)lParam2;
 
-    x = wcsicmp(Entry1->FileExtension, Entry2->FileExtension);
+    x = _wcsicmp(Entry1->FileExtension, Entry2->FileExtension);
     if (x != 0)
         return x;
 
-    return wcsicmp(Entry1->FileDescription, Entry2->FileDescription);
+    return _wcsicmp(Entry1->FileDescription, Entry2->FileDescription);
 }
 
 static VOID

@@ -399,12 +399,12 @@ GetPrinterDataExA(HANDLE hPrinter, LPCSTR pKeyName, LPCSTR pValueName, LPDWORD p
     }
     else if (*pType == REG_NONE)
     {
-        if (cbUnicodeData == sizeof(OSVERSIONINFOW) && wcsicmp(pwszValueName, SPLREG_OS_VERSION) == 0)
+        if (cbUnicodeData == sizeof(OSVERSIONINFOW) && _wcsicmp(pwszValueName, SPLREG_OS_VERSION) == 0)
         {
             // This is a Unicode OSVERSIONINFOW structure that needs to be converted to an ANSI OSVERSIONINFOA.
             *pcbNeeded = sizeof(OSVERSIONINFOA);
         }
-        else if (cbUnicodeData == sizeof(OSVERSIONINFOEXW) && wcsicmp(pwszValueName, SPLREG_OS_VERSIONEX) == 0)
+        else if (cbUnicodeData == sizeof(OSVERSIONINFOEXW) && _wcsicmp(pwszValueName, SPLREG_OS_VERSIONEX) == 0)
         {
             // This is a Unicode OSVERSIONINFOEXW structure that needs to be converted to an ANSI OSVERSIONINFOEXA.
             *pcbNeeded = sizeof(OSVERSIONINFOEXA);

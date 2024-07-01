@@ -22,7 +22,7 @@
 
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 
-int __cdecl _tstreamout(FILE *stream, const TCHAR *format, va_list argptr);
+int __cdecl _tstreamout(FILE *stream, const _TCHAR *format, va_list argptr);
 
 int
 #if defined(USER32_WSPRINTF) && defined(_M_IX86)
@@ -31,14 +31,14 @@ __stdcall
 __cdecl
 #endif
 _sxprintf(
-    TCHAR *buffer,
+    _TCHAR *buffer,
 #if IS_SECAPI
     size_t sizeOfBuffer,
 #endif
 #if USE_COUNT
    size_t count,
 #endif
-    const TCHAR *format,
+    const _TCHAR *format,
 #if USE_VARARGS
     va_list argptr)
 #else
@@ -74,7 +74,7 @@ _sxprintf(
     stream._base = (char*)buffer;
     stream._ptr = stream._base;
     stream._charbuf = 0;
-    stream._cnt = (int)(sizeOfBuffer * sizeof(TCHAR));
+    stream._cnt = (int)(sizeOfBuffer * sizeof(_TCHAR));
     stream._bufsiz = 0;
     stream._flag = _IOSTRG | _IOWRT;
     stream._tmpfname = 0;
@@ -112,8 +112,8 @@ _sxprintf(
     buffer[result] = _T('\0');
 #else
     /* Only zero terminate if there is enough space left */
-    if ((stream._cnt >= sizeof(TCHAR)) && (stream._ptr))
-        *(TCHAR*)stream._ptr = _T('\0');
+    if ((stream._cnt >= sizeof(_TCHAR)) && (stream._ptr))
+        *(_TCHAR*)stream._ptr = _T('\0');
 #endif
 
     return result;

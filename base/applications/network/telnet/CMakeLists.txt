@@ -27,12 +27,7 @@ set_target_cpp_properties(telnet WITH_EXCEPTIONS)
 
 if (MSVC)
     # C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
-    # C4996: 'strnicmp': Deprecated POSIX name, Try _strnicmp instead!
-    target_compile_options(telnet PRIVATE /wd4838 /wd4996)
-endif()
-
-if (NOT MSVC)
-    target_compile_definitions(telnet PRIVATE _CRT_NONSTDC_NO_DEPRECATE)
+    target_compile_options(telnet PRIVATE /wd4838)
 endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")

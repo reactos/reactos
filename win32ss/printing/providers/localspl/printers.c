@@ -93,7 +93,7 @@ _PrinterListCompareRoutine(PVOID FirstStruct, PVOID SecondStruct)
     PLOCAL_PRINTER A = (PLOCAL_PRINTER)FirstStruct;
     PLOCAL_PRINTER B = (PLOCAL_PRINTER)SecondStruct;
 
-    return wcsicmp(A->pwszPrinterName, B->pwszPrinterName);
+    return _wcsicmp(A->pwszPrinterName, B->pwszPrinterName);
 }
 
 /**
@@ -406,7 +406,7 @@ _LocalEnumPrintersCheckName(DWORD Flags, PCWSTR Name, PWSTR pwszComputerName, PD
             // Print Provider Name or the local Computer Name.
 
             // Compare with the Print Provider Name.
-            if (wcsicmp(Name, wszPrintProviderInfo[0]) == 0)
+            if (_wcsicmp(Name, wszPrintProviderInfo[0]) == 0)
                 return ERROR_SUCCESS;
 
             // Dismiss anything else.
