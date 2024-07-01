@@ -646,6 +646,10 @@ CcRosLookupVacb (
                            VACB_MAPPING_GRANULARITY,
                            FileOffset))
         {
+            /* HACK ? */
+            if (CcRosVacbGetRefCount(current) == 0)
+                break;
+
             CcRosVacbIncRefCount(current);
             KeReleaseSpinLockFromDpcLevel(&SharedCacheMap->CacheMapLock);
             KeReleaseQueuedSpinLock(LockQueueMasterLock, oldIrql);
@@ -1160,6 +1164,7 @@ CcFlushCache (
                 Status = CcRosFlushVacb(vacb, &VacbIosb);
                 if (!NT_SUCCESS(Status))
                 {
+                    CcRosReleaseVacb(SharedCacheMap, vacb, FALSE, FALSE);
                     goto quit;
                 }
                 DirtyVacb = TRUE;
