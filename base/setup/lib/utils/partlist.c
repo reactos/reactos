@@ -3701,6 +3701,12 @@ SetActivePartition(
 
     ASSERT(PartEntry->DiskEntry);
 
+    if (PartEntry->DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+    {
+        DPRINT1("GPT-partitioned disk detected, not currently supported by SETUP!\n");
+        return FALSE;
+    }
+
     /* Ensure that the partition's disk is in the list */
     ASSERT(PartEntry->DiskEntry->PartList == List);
 
@@ -3759,6 +3765,9 @@ WritePartitions(
     /* If the disk is not dirty, there is nothing to do */
     if (!DiskEntry->Dirty)
         return STATUS_SUCCESS;
+
+    // GPT-partitioned disks not currently supported!
+    ASSERT(DiskEntry->DiskStyle == PARTITION_STYLE_MBR);
 
     RtlStringCchPrintfW(DstPath, ARRAYSIZE(DstPath),
                         L"\\Device\\Harddisk%lu\\Partition0",
@@ -3935,13 +3944,7 @@ WritePartitionsToDisk(
     {
         DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
 
-        if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
-        {
-            DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
-            continue;
-        }
-
-        if (DiskEntry->Dirty != FALSE)
+        if (DiskEntry->Dirty)
         {
             Status = WritePartitions(DiskEntry);
             if (!NT_SUCCESS(Status))
