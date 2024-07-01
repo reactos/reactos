@@ -68,7 +68,7 @@ static BOOL s_fFontLinkUseAnsi = FALSE;
 static BOOL s_fFontLinkUseOem = FALSE;
 static BOOL s_fFontLinkUseSymbol = FALSE;
 
-#define MAX_FONTLINK_CACHE 128
+#define MAX_FONTLINK_CACHE 32
 static RTL_STATIC_LIST_HEAD(g_FontLinkCache); // The list of FONTLINK_CACHE
 static LONG g_nFontLinkCacheCount = 0;
 
