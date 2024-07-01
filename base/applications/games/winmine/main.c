@@ -1092,7 +1092,11 @@ int WINAPI wWinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPWSTR cmdline, int c
     wc.cbWndExtra = 0;
     wc.hInstance = hInst;
     wc.hIcon = LoadIconW( hInst, MAKEINTRESOURCEW(IDI_WINEMINE) );
+#ifndef __REACTOS__
     wc.hCursor = LoadCursorW( 0, (LPWSTR)IDI_APPLICATION );
+#else
+    wc.hCursor = LoadCursorW(NULL, (LPWSTR)IDC_ARROW);
+#endif
     wc.hbrBackground = GetSysColorBrush(COLOR_BTNFACE); //MOD for ROS
     wc.lpszMenuName = MAKEINTRESOURCEW(IDM_WINEMINE);
     wc.lpszClassName = appname;
