@@ -895,148 +895,15 @@ InitPartitionDeviceName(
     ASSERT(NT_SUCCESS(Status));
 }
 
-static
-VOID
-InitVolumeDeviceName(
-    _Inout_ PVOLENTRY Volume)
-{
-    NTSTATUS Status;
-    PPARTENTRY PartEntry;
-    UNICODE_STRING Name;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK Iosb; // IoStatusBlock
-    HANDLE VolumeHandle;
-    /*
-     * This variable is used to store the device name
-     * for the input buffer to IOCTL_MOUNTMGR_QUERY_POINTS.
-     * It's based on MOUNTDEV_NAME (mountmgr.h).
-     * Doing it this way prevents memory allocation.
-     * The device name won't be longer.
-     */
-    struct
-    {
-        USHORT NameLength;
-        WCHAR DeviceName[256];
-    } DeviceName;
-
-    /* If we already have a volume device name, do nothing more */
-    if (*Volume->Info.DeviceName)
-        return;
-
-    PartEntry = Volume->PartEntry;
-    ASSERT(PartEntry);
-    ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
-
-    /* Make a temporary device name for the volume */
-    Status = RtlStringCchCopyW(Volume->Info.DeviceName,
-                               _countof(Volume->Info.DeviceName),
-                               PartEntry->DeviceName);
-    ASSERT(NT_SUCCESS(Status));
-
-    /* Try to open the volume (if it is valid, this will also mount it) */
-    RtlInitUnicodeString(&Name, Volume->Info.DeviceName);
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-    Status = NtOpenFile(&VolumeHandle,
-                        FILE_READ_DATA | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &Iosb,
-                        FILE_SHARE_READ | FILE_SHARE_WRITE,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtOpenFile() failed, Status 0x%08lx\n", Status);
-        return;
-    }
-
-#if 1
-    /* Retrieve the non-persistent volume device name */
-    Status = NtDeviceIoControlFile(VolumeHandle,
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   &Iosb,
-                                   IOCTL_MOUNTDEV_QUERY_DEVICE_NAME,
-                                   NULL, 0,
-                                   &DeviceName, sizeof(DeviceName));
-    NtClose(VolumeHandle);
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME failed, Status 0x%08lx\n", Status);
-        return;
-    }
-
-    /* Copy the volume device name */
-    Status = RtlStringCchCopyNW(Volume->Info.DeviceName,
-                                _countof(Volume->Info.DeviceName),
-                                DeviceName.DeviceName,
-                                DeviceName.NameLength / sizeof(WCHAR));
-    ASSERT(NT_SUCCESS(Status));
-
-#else
-
-    {
-    size_t mdnsize;
-    MOUNTDEV_NAME mdn;
-    PMOUNTDEV_NAME mdn2;
-
-    Status = NtDeviceIoControlFile(VolumeHandle,
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   &Iosb,
-                                   IOCTL_MOUNTDEV_QUERY_DEVICE_NAME,
-                                   NULL, 0,
-                                   &mdn, sizeof(mdn));
-    if (!NT_SUCCESS(Status) && (Status != STATUS_BUFFER_OVERFLOW))
-        goto Quit;
-
-    mdnsize = FIELD_OFFSET(MOUNTDEV_NAME, Name[0]) + mdn.NameLength;
-
-    mdn2 = (PMOUNTDEV_NAME)RtlAllocateHeap(ProcessHeap, 0, mdnsize);
-    if (!mdn2)
-        goto Quit;
-
-    /* Retrieve the non-persistent volume device name */
-    Status = NtDeviceIoControlFile(VolumeHandle,
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   &Iosb,
-                                   IOCTL_MOUNTDEV_QUERY_DEVICE_NAME,
-                                   NULL, 0,
-                                   mdn2, (ULONG)mdnsize);
-    if (!NT_SUCCESS(Status))
-        goto Quit;
-
-    /* Copy the volume device name */
-    Status = RtlStringCchCopyNW(Volume->Info.DeviceName,
-                                _countof(Volume->Info.DeviceName),
-                                mdn2->Name,
-                                mdn2->NameLength / sizeof(WCHAR));
-    ASSERT(NT_SUCCESS(Status));
-
-    RtlFreeHeap(ProcessHeap, 0, mdn2);
-    }
-
-Quit:
-    NtClose(VolumeHandle);
-#endif
-}
-
 // Old name: CreateVolume
 static
 PVOLENTRY
 InitVolume(
-    _In_ PPARTENTRY PartEntry)
+    _In_ PPARTLIST List,
+    _In_opt_ PPARTENTRY PartEntry)
 {
     PVOLENTRY Volume;
 
-    /* No volume initially */
     Volume = RtlAllocateHeap(ProcessHeap,
                              HEAP_ZERO_MEMORY,
                              sizeof(VOLENTRY));
@@ -1059,9 +926,12 @@ InitVolume(
     Volume->NeedsCheck = FALSE;
     Volume->New = TRUE;
 
-    /**/Volume->PartEntry = PartEntry;/**/
-    InsertTailList(&PartEntry->DiskEntry->PartList->VolumesList,
-                   &Volume->ListEntry);
+    if (PartEntry)
+    {
+        ASSERT(PartEntry->DiskEntry->PartList == List);
+        /**/Volume->PartEntry = PartEntry;/**/
+    }
+    InsertTailList(&List->VolumesList, &Volume->ListEntry);
     return Volume;
 }
 
@@ -1193,7 +1063,7 @@ InitializePartitionEntry(
          * volume entry. When the partition will actually be written onto
          * the disk, the PARTMGR will notify the MOUNTMGR that a volume
          * associated with this partition has to be created. */
-        PartEntry->Volume = InitVolume(PartEntry);
+        PartEntry->Volume = InitVolume(DiskEntry->PartList, PartEntry);
         ASSERT(PartEntry->Volume);
     }
 
@@ -1208,72 +1078,6 @@ InitializePartitionEntry(
     DPRINT1("Total Sectors: %I64u\n", PartEntry->SectorCount.QuadPart);
 
     return TRUE;
-}
-
-/**
- * @brief
- * Returns TRUE if the partition is a simple LDM (*not basic*) volume.
- **/
-static
-BOOLEAN
-IsPartitionSimpleVolume(
-    _In_ PPARTENTRY PartEntry)
-{
-    NTSTATUS Status;
-    UNICODE_STRING Name;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK Iosb; // IoStatusBlock
-    HANDLE PartHandle;
-
-    if (!(PartEntry->PartitionType == PARTITION_LDM /* ||
-          PartEntry->PartitionType == 0x8E || // Linux LVM
-          PartEntry->PartitionType == PARTITION_SPACES_DATA ||
-          PartEntry->PartitionType == PARTITION_SPACES */))
-    {
-        return FALSE; // TRUE;
-    }
-
-    ASSERT(PartEntry->DiskEntry->IsDynamic);
-    ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
-
-    /* Don't ever attempt to open the disk as a whole */
-    if (PartEntry->PartitionNumber == 0)
-        return FALSE;
-
-    /* Try to open the partition (if it's a valid volume this will also mount it) */
-    RtlInitUnicodeString(&Name, PartEntry->DeviceName);
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-    Status = NtOpenFile(&PartHandle,
-                        FILE_READ_DATA | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &Iosb,
-                        FILE_SHARE_READ | FILE_SHARE_WRITE,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtOpenFile() failed, Status 0x%08lx\n", Status);
-        return FALSE;
-    }
-
-    /* Check whether the partition is a volume */
-    // NOTE: Vista+ IOCTL_VOLUME_IS_DYNAMIC would return success as well
-    // (a boolean buffer needs to be passed in OutputBuffer, though)
-    // since this volume lies on an LDM partition.
-    Status = NtDeviceIoControlFile(PartHandle,
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   &Iosb,
-                                   IOCTL_VOLUME_IS_PARTITION,
-                                   NULL, 0,
-                                   NULL, 0);
-    NtClose(PartHandle);
-
-    return NT_SUCCESS(Status);
 }
 
 static
@@ -1333,49 +1137,9 @@ AddPartitionToDisk(
         if (!LogicalPartition && DiskEntry->ExtendedPartition == NULL)
             DiskEntry->ExtendedPartition = PartEntry;
     }
-    else if (IsRecognizedPartition(PartEntry->PartitionType) || // PartitionInfo->RecognizedPartition
-             IsOEMPartition(PartEntry->PartitionType) ||
-             IsPartitionSimpleVolume(PartEntry))
-    {
-        NTSTATUS Status;
-
-        ASSERT(PartEntry->PartitionNumber != 0);
-
-        /* The PARTMGR should have notified the MOUNTMGR that a volume
-         * associated with this partition had to be created */
-        PartEntry->Volume = InitVolume(PartEntry);
-        ASSERT(PartEntry->Volume);
-        InitVolumeDeviceName(PartEntry->Volume);
-        // PartEntry->Volume->New = FALSE;
-
-        /* Attach and mount the volume */
-        Status = MountVolume(&PartEntry->Volume->Info, PartEntry->PartitionType);
-        UNREFERENCED_PARAMETER(Status); // FIXME
-
-        //
-        // FIXME: TEMP Backward-compatibility: Set the FormatState
-        // flag in accordance with the FileSystem volume value.
-        //
-        /*
-         * MountVolume() determines whether the given volume is actually
-         * unformatted, if it was mounted with RawFS and the partition
-         * type has specific values for FAT volumes. If so, the volume
-         * stays mounted with RawFS (the FileSystem is "RAW"). However,
-         * if the partition type has different values, the volume is
-         * considered as having an unknown format (it may or may not be
-         * formatted) and the FileSystem value has been emptied.
-         */
-        if (IsUnknown(&PartEntry->Volume->Info)) // (!*...Info.FileSystem)
-            PartEntry->Volume->FormatState = UnknownFormat;
-        else if (IsUnformatted(&PartEntry->Volume->Info)) // (_wcsicmp(...Info.FileSystem, L"RAW") == 0)
-            PartEntry->Volume->FormatState = Unformatted;
-        else // !IsUnknown && !IsUnformatted == IsFormatted
-            PartEntry->Volume->FormatState = Formatted;
-    }
     else
     {
-        /* Unknown partition (may or may not be actually formatted):
-         * the partition is hidden, hence no volume */
+        ASSERT(PartEntry->PartitionNumber != 0);
     }
 
     InsertDiskRegion(DiskEntry, PartEntry, LogicalPartition);
@@ -2395,6 +2159,468 @@ GetActiveDiskPartition(
     return ActivePartition;
 }
 
+
+
+
+/**
+ * @brief
+ * Returns TRUE if the partition is a simple LDM (*not basic*) volume.
+ **/
+static
+BOOLEAN
+IsPartitionSimpleVolume(
+    _In_ PPARTENTRY PartEntry)
+{
+    NTSTATUS Status;
+    UNICODE_STRING Name;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK Iosb; // IoStatusBlock
+    HANDLE PartHandle;
+
+    if (!(PartEntry->PartitionType == PARTITION_LDM /* ||
+          PartEntry->PartitionType == 0x8E || // Linux LVM
+          PartEntry->PartitionType == PARTITION_SPACES_DATA ||
+          PartEntry->PartitionType == PARTITION_SPACES */))
+    {
+        return FALSE; // TRUE;
+    }
+
+    ASSERT(PartEntry->DiskEntry->IsDynamic);
+    ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
+
+    /* Don't ever attempt to open the disk as a whole */
+    if (PartEntry->PartitionNumber == 0)
+        return FALSE;
+
+    /* Try to open the partition (if it's a valid volume this will also mount it) */
+    RtlInitUnicodeString(&Name, PartEntry->DeviceName);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenFile(&PartHandle,
+                        FILE_READ_DATA | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &Iosb,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtOpenFile() failed, Status 0x%08lx\n", Status);
+        return FALSE;
+    }
+
+    /* Check whether the partition is a volume */
+    // NOTE: Vista+ IOCTL_VOLUME_IS_DYNAMIC would return success as well
+    // (a boolean buffer needs to be passed in OutputBuffer, though)
+    // since this volume lies on an LDM partition.
+    Status = NtDeviceIoControlFile(PartHandle,
+                                   NULL, NULL, NULL,
+                                   &Iosb,
+                                   IOCTL_VOLUME_IS_PARTITION,
+                                   NULL, 0,
+                                   NULL, 0);
+    NtClose(PartHandle);
+
+    return NT_SUCCESS(Status);
+}
+
+
+static
+VOID
+InitVolumeDeviceName(
+    _Inout_ PVOLENTRY Volume,
+    _In_opt_ PCWSTR AltDeviceName)
+{
+    NTSTATUS Status;
+    UNICODE_STRING Name;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK Iosb; // IoStatusBlock
+    HANDLE VolumeHandle;
+    /*
+     * This variable is used to store the device name
+     * for the input buffer to IOCTL_MOUNTMGR_QUERY_POINTS.
+     * It's based on MOUNTDEV_NAME (mountmgr.h).
+     * Doing it this way prevents memory allocation.
+     * The device name won't be longer.
+     */
+    struct
+    {
+        USHORT NameLength;
+        WCHAR DeviceName[256];
+    } DeviceName;
+
+    /* If we already have a volume device name, do nothing more */
+    if (*Volume->Info.DeviceName)
+        return;
+
+    if (!AltDeviceName)
+    {
+        PPARTENTRY PartEntry;
+        PartEntry = Volume->PartEntry;
+        ASSERT(PartEntry);
+        ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
+        AltDeviceName = PartEntry->DeviceName;
+    }
+
+    /* Make a temporary device name for the volume */
+    Status = RtlStringCchCopyW(Volume->Info.DeviceName,
+                               _countof(Volume->Info.DeviceName),
+                               AltDeviceName);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Try to open the volume (if it is valid, this will also mount it) */
+    RtlInitUnicodeString(&Name, Volume->Info.DeviceName);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenFile(&VolumeHandle,
+                        FILE_READ_DATA | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &Iosb,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtOpenFile() failed, Status 0x%08lx\n", Status);
+        return;
+    }
+
+#if 1
+    /* Retrieve the non-persistent volume device name */
+    Status = NtDeviceIoControlFile(VolumeHandle,
+                                   NULL, NULL, NULL,
+                                   &Iosb,
+                                   IOCTL_MOUNTDEV_QUERY_DEVICE_NAME,
+                                   NULL, 0,
+                                   &DeviceName, sizeof(DeviceName));
+    NtClose(VolumeHandle);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME failed, Status 0x%08lx\n", Status);
+        return;
+    }
+
+    /* Copy the volume device name */
+    Status = RtlStringCchCopyNW(Volume->Info.DeviceName,
+                                _countof(Volume->Info.DeviceName),
+                                DeviceName.DeviceName,
+                                DeviceName.NameLength / sizeof(WCHAR));
+    ASSERT(NT_SUCCESS(Status));
+
+#else
+
+    {
+    size_t mdnsize;
+    MOUNTDEV_NAME mdn;
+    PMOUNTDEV_NAME mdn2;
+
+    Status = NtDeviceIoControlFile(VolumeHandle,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   &Iosb,
+                                   IOCTL_MOUNTDEV_QUERY_DEVICE_NAME,
+                                   NULL, 0,
+                                   &mdn, sizeof(mdn));
+    if (!NT_SUCCESS(Status) && (Status != STATUS_BUFFER_OVERFLOW))
+        goto Quit;
+
+    mdnsize = FIELD_OFFSET(MOUNTDEV_NAME, Name[0]) + mdn.NameLength;
+
+    mdn2 = (PMOUNTDEV_NAME)RtlAllocateHeap(ProcessHeap, 0, mdnsize);
+    if (!mdn2)
+        goto Quit;
+
+    /* Retrieve the non-persistent volume device name */
+    Status = NtDeviceIoControlFile(VolumeHandle,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   &Iosb,
+                                   IOCTL_MOUNTDEV_QUERY_DEVICE_NAME,
+                                   NULL, 0,
+                                   mdn2, (ULONG)mdnsize);
+    if (!NT_SUCCESS(Status))
+        goto Quit;
+
+    /* Copy the volume device name */
+    Status = RtlStringCchCopyNW(Volume->Info.DeviceName,
+                                _countof(Volume->Info.DeviceName),
+                                mdn2->Name,
+                                mdn2->NameLength / sizeof(WCHAR));
+    ASSERT(NT_SUCCESS(Status));
+
+    RtlFreeHeap(ProcessHeap, 0, mdn2);
+    }
+
+Quit:
+    NtClose(VolumeHandle);
+#endif
+}
+
+// PENUM_DEVICES_PROC
+static
+NTSTATUS
+NTAPI
+AddVolumeToList(
+    _In_ const GUID* InterfaceClassGuid,
+    _In_ PCWSTR DevicePath,
+    _In_ HANDLE DeviceHandle,
+    _In_opt_ PVOID Context)
+{
+    PPARTLIST List = (PPARTLIST)Context;
+    NTSTATUS Status;
+    STORAGE_DEVICE_NUMBER DeviceNumber;
+    PPARTENTRY PartEntry;
+    IO_STATUS_BLOCK Iosb;
+    PVOLENTRY Volume;
+
+__debugbreak();
+
+    /* Retrieve the disk number */
+    Status = NtDeviceIoControlFile(DeviceHandle,
+                                   NULL, NULL, NULL,
+                                   &Iosb,
+                                   IOCTL_STORAGE_GET_DEVICE_NUMBER,
+                                   NULL, 0,
+                                   &DeviceNumber, sizeof(DeviceNumber));
+    if (!NT_SUCCESS(Status))
+        return Status; // FIXME: This may be a dynamic volume....
+    if (DeviceNumber.DeviceNumber == ULONG_MAX)
+    {
+        DPRINT1("Invalid disk number reported, bail out\n");
+        return STATUS_NOT_FOUND; // STATUS_NO_MEDIA;
+    }
+
+    /* For now, ignore volumes that are NOT on usual disks */
+    if (DeviceNumber.DeviceType != FILE_DEVICE_DISK)
+    {
+        DPRINT1("Skip volume on device type %lu\n", DeviceNumber.DeviceType);
+        return STATUS_NOT_SUPPORTED;
+    }
+
+    // NOTE: PartEntry is already known in the Legacy case...
+    // NOTE 2: The calls below can handle PartEntry == NULL.
+    PartEntry = SelectPartition(List,
+                                DeviceNumber.DeviceNumber,
+                                DeviceNumber.PartitionNumber);
+
+    Volume = InitVolume(List, PartEntry);
+    if (!Volume)
+    {
+        DPRINT1("Couldn't allocate a volume for device '%S'\n", DevicePath);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    if (PartEntry) PartEntry->Volume = Volume;
+    InitVolumeDeviceName(Volume, DevicePath); // (PartEntry ? NULL : DevicePath)
+    // Volume->New = FALSE;
+
+    /* Attach and mount the volume */
+    Status = MountVolume(&Volume->Info,
+                         PartEntry ? PartEntry->PartitionType : 0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to mount volume '%S', Status 0x%08lx\n",
+                Volume->Info.DeviceName, Status);
+    }
+
+    //
+    // FIXME: TEMP Backward-compatibility: Set the FormatState
+    // flag in accordance with the FileSystem volume value.
+    //
+    /*
+     * MountVolume() determines whether the given volume is actually
+     * unformatted, if it was mounted with RawFS and the partition
+     * type has specific values for FAT volumes. If so, the volume
+     * stays mounted with RawFS (the FileSystem is "RAW"). However,
+     * if the partition type has different values, the volume is
+     * considered as having an unknown format (it may or may not be
+     * formatted) and the FileSystem value has been emptied.
+     */
+    if (IsUnknown(&Volume->Info)) // (!*...Info.FileSystem)
+        Volume->FormatState = UnknownFormat;
+    else if (IsUnformatted(&Volume->Info)) // (_wcsicmp(...Info.FileSystem, L"RAW") == 0)
+        Volume->FormatState = Unformatted;
+    else // !IsUnknown && !IsUnformatted == IsFormatted
+        Volume->FormatState = Formatted;
+
+    return STATUS_SUCCESS;
+}
+
+#ifdef PNP_ENUMERATION
+
+/*
+ * Interfaces used to discover volumes that are
+ * not reported by Win32 APIs. This includes those
+ * with an unrecognized partition type/id and ones
+ * with the hidden attribute.
+ */
+// Service_Volume introduced in WinSDK 10.0.16299.0
+// DEFINE_GUID(GUID_DEVINTERFACE_SERVICE_VOLUME,
+//     0x6ead3d82L, 0x25ec, 0x46bc, 0xb7, 0xfd, 0xc1, 0xf0, 0xdf, 0x8f, 0x50, 0x37);
+// DEFINE_GUID(GUID_DEVINTERFACE_HIDDEN_VOLUME,
+//     0x7f108a28L, 0x9833, 0x4b3b, 0xb7, 0x80, 0x2c, 0x6b, 0x5f, 0xa5, 0xc0, 0x62);
+// #define HiddenVolumeClassGuid GUID_DEVINTERFACE_HIDDEN_VOLUME
+
+static NTSTATUS
+_pNtEnumVolumesPnP(
+    // _Out_opt_ PULONG pNumberOfVolumes,
+    // _Out_opt_ PULONG pNumberOfHiddenVolumes,
+    _In_ PENUM_DEVICES_PROC Callback,
+    _In_opt_ PVOID Context)
+{
+    NTSTATUS Status, Status2;
+
+    Status = pNtEnumDevicesPnP(&GUID_DEVINTERFACE_VOLUME,
+                               Callback, Context);
+    if (!NT_SUCCESS(Status))
+        DPRINT1("Enumerating volumes failed, Status 0x%08lx\n", Status);
+
+    /* Enumerating optional hidden volumes */
+    Status2 = pNtEnumDevicesPnP(&GUID_DEVINTERFACE_HIDDEN_VOLUME,
+                                Callback, Context);
+    if (!NT_SUCCESS(Status2))
+        DPRINT1("Enumerating hidden volumes failed, Status 0x%08lx\n", Status2);
+    // GUID_DEVINTERFACE_SERVICE_VOLUME: New in Windows 10.0.16299.0
+
+    return Status;
+}
+
+#define pEnumVolumes    _pNtEnumVolumesPnP
+
+#else // PNP_ENUMERATION
+
+static NTSTATUS
+LegacyRecognizeVolumeInPartition(
+    _In_ PPARTENTRY PartEntry,
+    _In_ PENUM_DEVICES_PROC Callback,
+    _In_opt_ PVOID Context)
+{
+    NTSTATUS Status;
+    BOOLEAN IsHandled, IsHidden;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK Iosb;
+    HANDLE DeviceHandle;
+    UNICODE_STRING Name;
+
+    ASSERT(PartitionInfo->PartitionType != PARTITION_ENTRY_UNUSED);
+    ASSERT(!IsContainerPartition(PartEntry->PartitionType));
+    ASSERT(PartEntry->PartitionNumber != 0);
+    ASSERT(PartEntry->IsPartitioned);
+
+    IsHandled = (IsRecognizedPartition(PartEntry->PartitionType) ||
+                 IsOEMPartition(PartEntry->PartitionType) ||
+                 IsPartitionSimpleVolume(PartEntry));
+    IsHidden = IsOEMPartition(PartEntry->PartitionType);
+
+    if (!bHandled)
+    {
+        /* Unknown partition (may or may not be actually formatted):
+         * the partition is hidden, hence no volume */
+        return STATUS_SUCCESS;
+    }
+
+    /* The PARTMGR should have notified the MOUNTMGR that a volume
+     * associated with this partition had to be created */
+
+    //
+    // INVESTIGATE: Note that in this case, we already know
+    // the corresponding PartEntry, so, should we recalculate it
+    // in the callback?
+    //
+
+    RtlInitUnicodeString(&Name, PartEntry->DeviceName);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenFile(&DeviceHandle,
+                        FILE_READ_DATA | FILE_READ_ATTRIBUTES | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &Iosb,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (NT_SUCCESS(Status))
+    {
+        /* Do the callback */
+        if (Callback)
+        {
+            (void)Callback(!IsHidden ? &GUID_DEVINTERFACE_VOLUME
+                                     : &GUID_DEVINTERFACE_HIDDEN_VOLUME,
+                           Buffer, DeviceHandle, Context);
+        }
+
+        NtClose(DeviceHandle);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS
+_pNtEnumVolumesLegacy(
+    // _Out_opt_ PULONG pNumberOfVolumes,
+    // _Out_opt_ PULONG pNumberOfHiddenVolumes,
+    _In_ PENUM_DEVICES_PROC Callback,
+    _In_opt_ PVOID Context)
+{
+    /* In the legacy method, we enumerate all available disks, and for each,
+     * we enumerate their partitions and check whether they can contain a volume */
+
+    NTSTATUS Status;
+    PLIST_ENTRY Entry, Entry2;
+    PDISKENTRY DiskEntry;
+    PPARTENTRY PartEntry;
+
+    /* For all disks */
+    for (Entry = List->DiskListHead.Flink;
+         Entry != &List->DiskListHead;
+         Entry = Entry->Flink)
+    {
+        DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
+
+        /* For all primary partitions */
+        for (Entry2 = DiskEntry->PrimaryPartListHead.Flink;
+             Entry2 != &DiskEntry->PrimaryPartListHead;
+             Entry2 = Entry2->Flink)
+        {
+            PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
+            if (!PartEntry->IsPartitioned)
+                continue;
+            ASSERT(PartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
+
+            (void)LegacyRecognizeVolumeInPartition(PartEntry, Callback, Context);
+        }
+
+        /* For all logical partitions */
+        for (Entry2 = DiskEntry->LogicalPartListHead.Flink;
+             Entry2 != &DiskEntry->LogicalPartListHead;
+             Entry2 = Entry2->Flink)
+        {
+            PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
+            if (!PartEntry->IsPartitioned)
+                continue;
+            ASSERT(PartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
+
+            (void)LegacyRecognizeVolumeInPartition(PartEntry, Callback, Context);
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
+#define pEnumVolumes    _pNtEnumVolumesLegacy
+
+#endif // PNP_ENUMERATION
+
+
 PPARTLIST
 CreatePartitionList(VOID)
 {
@@ -2431,6 +2657,16 @@ CreatePartitionList(VOID)
         return NULL;
     }
     // DPRINT1("Detected %lu disks\n", NumberOfDisks);
+
+    /* Enumerate volumes on the system */
+    Status = pEnumVolumes(AddVolumeToList, List);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to enumerate volumes on the system, Status 0x%08lx\n", Status);
+        // RtlFreeHeap(ProcessHeap, 0, List);
+        // return NULL;
+    }
+    // DPRINT1("Detected %lu volumes\n", NumberOfVolumes);
 
     UpdateDiskSignatures(List);
     UpdateHwDiskNumbers(List);
@@ -4231,7 +4467,7 @@ WritePartitionsToDisk(
          Entry = Entry->Flink)
     {
         Volume = CONTAINING_RECORD(Entry, VOLENTRY, ListEntry);
-        InitVolumeDeviceName(Volume);
+        InitVolumeDeviceName(Volume, NULL);
     }
 
     return TRUE;
