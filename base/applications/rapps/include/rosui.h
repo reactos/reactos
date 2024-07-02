@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * FILE:        base/applications/rapps/include/rosui.h
  * PURPOSE:     ATL Layout engine for RAPPS
- * COPYRIGHT:   Copyright 2015 David Quintana           (gigaherz@gmail.com)
+ * COPYRIGHT:   Copyright 2015 David Quintana (gigaherz@gmail.com)
  */
 #pragma once
 
@@ -29,23 +29,23 @@ public:
 private:
     static INT CALLBACK s_OnRemoveItem(PVOID ptr, PVOID context)
     {
-        CPointerArray * self = (CPointerArray*) context;
-        return (INT) self->OnRemoveItem(reinterpret_cast<T*>(ptr));
+        CPointerArray *self = (CPointerArray*)context;
+        return (INT)self->OnRemoveItem(reinterpret_cast<T*>(ptr));
     }
 
     static INT CALLBACK s_OnCompareItems(PVOID p1, PVOID p2, LPARAM lParam)
     {
-        CPointerArray * self = (CPointerArray*) lParam;
+        CPointerArray *self = (CPointerArray*)lParam;
         return self->OnCompareItems(reinterpret_cast<T*>(p1), reinterpret_cast<T*>(p2));
     }
 
 public:
-    virtual BOOL OnRemoveItem(T * ptr)
+    virtual BOOL OnRemoveItem(T *ptr)
     {
         return TRUE;
     }
 
-    virtual INT OnCompareItems(T * p1, T * p2)
+    virtual INT OnCompareItems(T *p1, T *p2)
     {
         INT_PTR t = (reinterpret_cast<INT_PTR>(p2) - reinterpret_cast<INT_PTR>(p1));
         if (t > 0)
@@ -63,7 +63,7 @@ public:
 
     T* Get(INT i) const
     {
-        return (T*) DPA_GetPtr(m_hDpa, i);
+        return (T*)DPA_GetPtr(m_hDpa, i);
     }
 
     BOOL Set(INT i, T* ptr)
@@ -96,7 +96,7 @@ public:
 
     BOOL RemoveAt(INT i)
     {
-        T* ptr = (T*) DPA_GetPtr(m_hDpa, i);
+        T* ptr = (T*)DPA_GetPtr(m_hDpa, i);
         OnRemoveItem(ptr);
         return DPA_DeletePtr(m_hDpa, i);
     }
@@ -118,8 +118,7 @@ public:
     }
 };
 
-class CUiRect
-    : public RECT
+class CUiRect : public RECT
 {
 public:
     CUiRect()
@@ -136,21 +135,18 @@ public:
     }
 };
 
-class CUiMargin
-    : public CUiRect
+class CUiMargin : public CUiRect
 {
 public:
     CUiMargin()
     {
     }
 
-    CUiMargin(INT all)
-        : CUiRect(all, all, all, all)
+    CUiMargin(INT all) : CUiRect(all, all, all, all)
     {
     }
 
-    CUiMargin(INT horz, INT vert)
-        : CUiRect(horz, vert, horz, vert)
+    CUiMargin(INT horz, INT vert) : CUiRect(horz, vert, horz, vert)
     {
     }
 };
@@ -298,7 +294,6 @@ protected:
         *newRect = currentRect;
     }
 
-
 public:
     virtual VOID ComputeMinimalSize(SIZE* size)
     {
@@ -328,7 +323,7 @@ public:
 class CUiPrimitive
 {
 protected:
-    CUiPrimitive * m_Parent;
+    CUiPrimitive *m_Parent;
 
 public:
     virtual ~CUiPrimitive() {}
@@ -336,10 +331,9 @@ public:
     virtual CUiBox * AsBox() { return NULL; }
 };
 
-class CUiCollection :
-    public CPointerArray < CUiPrimitive >
+class CUiCollection : public CPointerArray<CUiPrimitive>
 {
-    virtual BOOL OnRemoveItem(CUiPrimitive * ptr)
+    virtual BOOL OnRemoveItem(CUiPrimitive *ptr)
     {
         delete ptr;
         return TRUE;
@@ -355,10 +349,7 @@ public:
     CUiCollection& Children() { return m_Children; }
 };
 
-class CUiPanel :
-    public CUiPrimitive,
-    public CUiBox,
-    public CUiContainer
+class CUiPanel : public CUiPrimitive, public CUiBox, public CUiContainer
 {
 public:
     CUiMeasure m_Width;
@@ -380,7 +371,7 @@ public:
     {
         for (INT i = 0; i < m_Children.GetCount(); i++)
         {
-            CUiBox * box = m_Children.Get(i)->AsBox();
+            CUiBox *box = m_Children.Get(i)->AsBox();
             if (box)
             {
                 box->ComputeMinimalSize(size);
@@ -392,7 +383,7 @@ public:
     {
         for (INT i = 0; i < m_Children.GetCount(); i++)
         {
-            CUiBox * box = m_Children.Get(i)->AsBox();
+            CUiBox *box = m_Children.Get(i)->AsBox();
             if (box)
             {
                 box->ComputeContentBounds(rect);
@@ -405,7 +396,7 @@ public:
         INT count = 0;
         for (INT i = 0; i < m_Children.GetCount(); i++)
         {
-            CUiBox * box = m_Children.Get(i)->AsBox();
+            CUiBox *box = m_Children.Get(i)->AsBox();
             if (box)
             {
                 count += box->CountSizableChildren();
@@ -431,7 +422,7 @@ public:
 
         for (INT i = 0; i < m_Children.GetCount(); i++)
         {
-            CUiBox * box = m_Children.Get(i)->AsBox();
+            CUiBox *box = m_Children.Get(i)->AsBox();
             if (box)
             {
                 hDwp = box->OnParentSize(rect, hDwp);
@@ -442,11 +433,7 @@ public:
     }
 };
 
-template<class T = CWindow>
-class CUiWindow :
-    public CUiPrimitive,
-    public CUiBox,
-    public T
+template<class T = CWindow> class CUiWindow : public CUiPrimitive, public CUiBox, public T
 {
 public:
     virtual CUiBox * AsBox() { return this; }
@@ -506,15 +493,11 @@ public:
     }
 };
 
-class CUiSplitPanel :
-    public CUiPrimitive,
-    public CUiBox,
-    public CWindowImpl<CUiSplitPanel>
+class CUiSplitPanel : public CUiPrimitive, public CUiBox, public CWindowImpl<CUiSplitPanel>
 {
     static const INT THICKNESS = 4;
 
 protected:
-
     HCURSOR m_hCursor;
 
     CUiPanel m_First;
@@ -678,19 +661,15 @@ public:
 
         if (hDwp)
         {
-            return DeferWindowPos(hDwp, NULL,
-                                  splitter.left, splitter.top,
-                                  splitter.right - splitter.left,
-                                  splitter.bottom - splitter.top,
-                                  SWP_NOACTIVATE | SWP_NOZORDER);
+            return DeferWindowPos(
+                hDwp, NULL, splitter.left, splitter.top, splitter.right - splitter.left, splitter.bottom - splitter.top,
+                SWP_NOACTIVATE | SWP_NOZORDER);
         }
         else
         {
-            SetWindowPos(NULL,
-                         splitter.left, splitter.top,
-                         splitter.right - splitter.left,
-                         splitter.bottom - splitter.top,
-                         SWP_NOACTIVATE | SWP_NOZORDER);
+            SetWindowPos(
+                NULL, splitter.left, splitter.top, splitter.right - splitter.left, splitter.bottom - splitter.top,
+                SWP_NOACTIVATE | SWP_NOZORDER);
             return NULL;
         }
     };

@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013-2016 Erdem Ersoy <erdemersoy@erdemersoy.net> */
+// COPYRIGHT: 2013-2016 Erdem Ersoy
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -144,13 +144,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_AINFO_VERSION "\nSürümü: "
-    IDS_AINFO_AVAILABLEVERSION "\nAvailable Version: "
+    IDS_AINFO_AVAILABLEVERSION "\nMevcut Sürüm: "
     IDS_AINFO_DESCRIPTION "\nAçıklaması: "
     IDS_AINFO_SIZE "\nBüyüklüğü: "
     IDS_AINFO_URLSITE "\nAna Sayfası: "
     IDS_AINFO_LICENSE "\nLisansı: "
     IDS_AINFO_URLDOWNLOAD "\nİndir: "
-    IDS_AINFO_LANGUAGES "\nLanguages: "
+    IDS_AINFO_LANGUAGES "\nDiller: "
 END
 
 STRINGTABLE
@@ -192,23 +192,21 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD "Paket indirilemez! Adres bulunamadı!"
     IDS_UNABLE_TO_DOWNLOAD2 "Paket indirilemez! İnternet bağlantınızı yoklayınız!"
     IDS_UNABLE_TO_REMOVE "Programın girişi kayıt defterinden silinemiyor."
-    IDS_UNABLE_TO_INSTALL "Unable to open installer!"
-    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
+    IDS_UNABLE_TO_INSTALL "Yükleyici açılamıyor!"
     IDS_INTEG_CHECK_TITLE "Paket bütünlüğü doğrulanıyor…"
     IDS_INTEG_CHECK_FAIL "Paket bütünlük denetimini geçmedi, bozulmuş veya indirme esnasında oynanmış olabilir. Yazılımı çalıştırmak önerilmez."
     IDS_INTERRUPTED_DOWNLOAD "İndirme kesildi. İnternet bağlantınızı denetleyiniz."
     IDS_UNABLE_TO_WRITE "Diske yazılamıyor. Disk dolu olabilir."
-    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALLED "Installed"
-    IDS_STATUS_NOTINSTALLED "Not installed"
+    IDS_STATUS_INSTALLED "Kuruldu"
+    IDS_STATUS_NOTINSTALLED "Kurulmadı"
     IDS_STATUS_DOWNLOADED "Downloaded"
     IDS_STATUS_UPDATE_AVAILABLE "Update available"
     IDS_STATUS_DOWNLOADING "Downloading…"
-    IDS_STATUS_INSTALLING "Installing…"
+    IDS_STATUS_INSTALLING "Kuruluyor…"
     IDS_STATUS_WAITING "Waiting to install…"
     IDS_STATUS_FINISHED "Finished"
 END
@@ -222,12 +220,12 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LANGUAGE_AVAILABLE_TRANSLATION "Supports your language"
+    IDS_LANGUAGE_AVAILABLE_TRANSLATION "Dilinizi destekliyor"
     IDS_LANGUAGE_NO_TRANSLATION "Supports other languages"
     IDS_LANGUAGE_ENGLISH_TRANSLATION "Supports English"
-    IDS_LANGUAGE_SINGLE "Single language"
+    IDS_LANGUAGE_SINGLE "Tek dil"
     IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d more)"
-    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d available)"
+    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d mevcut)"
 END
 
 STRINGTABLE
