@@ -19,7 +19,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef NONAMELESSUNION /* Required to avoid a warning because ROS CMake sometimes defines it on the command line */
 #define NONAMELESSUNION
+#endif
 
 #include <stdlib.h>
 #include <stdio.h>
