@@ -2202,7 +2202,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
             wcmd = wcmdAlloc;
             wcmdLen = len;
         }
-        swprintf(wcmd, L"\"%s\"", wszApplicationName);
+        swprintf(wcmd, L"\"%s\"", (LPWSTR)wszApplicationName);
         if (sei_tmp.lpParameters[0])
         {
             strcatW(wcmd, L" ");
