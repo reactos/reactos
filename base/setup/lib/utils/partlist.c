@@ -2167,6 +2167,10 @@ GetPartition(
     PPARTENTRY PartEntry;
     PLIST_ENTRY Entry;
 
+    /* Forbid whole-disk or extended container partition access */
+    if (PartitionNumber == 0)
+        return NULL;
+
     /* Loop over the primary partitions first... */
     for (Entry = DiskEntry->PrimaryPartListHead.Flink;
          Entry != &DiskEntry->PrimaryPartListHead;
