@@ -193,14 +193,12 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD2 "Tidak bisa mengunduh paket! Cek sambungan internet!"
     IDS_UNABLE_TO_REMOVE "Tidak bisa menghapus data program dari registri!"
     IDS_UNABLE_TO_INSTALL "Tidak bisa membuka pemasang!"
-    IDS_UNABLE_TO_QUERY_CERT "Tidak bisa mengambil info terkait sertifikat.\n\nTetap lanjutkan?"
     IDS_INTEG_CHECK_TITLE "Verifikasi integritas paket…"
     IDS_INTEG_CHECK_FAIL "Paket tersebut tidak lulus pemeriksaan integritas, bisa jadi rusak atau terkena gangguan ketika mengunduh. Menjalankan perangkat lunak ini tidak disarankan."
     IDS_INTERRUPTED_DOWNLOAD "Pengunduhan terganggu. Mengecek sambungan ke internet."
     IDS_UNABLE_TO_WRITE "Tidak bisa menulis ke cakram. Cakram mungkin penuh."
     IDS_INSTALL_SELECTED "Pasang terpilih"
     IDS_SELECTEDFORINST "dipilih untuk pemasangan"
-    IDS_MISMATCH_CERT_INFO "Sertifikat yang dipakai tidak dikenal:\nSubyek: %s\nIssuer: %s\nYakin ingin lanjut?"
 END
 
 STRINGTABLE

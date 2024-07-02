@@ -1,16 +1,13 @@
 /*
  * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * FILE:        base/applications/rapps/winmain.cpp
  * PURPOSE:     Main program
- * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev            (dmitry@reactos.org)
- *              Copyright 2015 Ismael Ferreras Morezuelas  (swyterzone+ros@gmail.com)
- *              Copyright 2017 Alexander Shaposhnikov      (sanchaez@reactos.org)
+ * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev (dmitry@reactos.org)
+ *              Copyright 2015 Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
+ *              Copyright 2017 Alexander Shaposhnikov (sanchaez@reactos.org)
  */
 #include "rapps.h"
-
 #include "unattended.h"
-
 #include <atlcom.h>
 
 HWND hMainWnd;
@@ -31,13 +28,9 @@ CAtlWinModule gWinModule;
 static VOID InitializeAtlModule(HINSTANCE hInstance, BOOL bInitialize)
 {
     if (bInitialize)
-    {
         gModule.Init(ObjectMap, hInstance, NULL);
-    }
     else
-    {
         gModule.Term();
-    }
 }
 
 VOID FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
@@ -84,7 +77,7 @@ static BOOL LoadSettings()
     if (RegKey.Open(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", KEY_READ) == ERROR_SUCCESS)
     {
         dwSize = sizeof(SettingsInfo);
-        bResult = (RegKey.QueryBinaryValue(L"Settings", (PVOID) &SettingsInfo, &dwSize) == ERROR_SUCCESS);
+        bResult = (RegKey.QueryBinaryValue(L"Settings", (PVOID)&SettingsInfo, &dwSize) == ERROR_SUCCESS);
 
         RegKey.Close();
     }
@@ -114,7 +107,7 @@ VOID SaveSettings(HWND hwnd)
     if (RegKey.Create(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", NULL,
                       REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, NULL) == ERROR_SUCCESS)
     {
-        RegKey.SetBinaryValue(L"Settings", (const PVOID) &SettingsInfo, sizeof(SettingsInfo));
+        RegKey.SetBinaryValue(L"Settings", (const PVOID)&SettingsInfo, sizeof(SettingsInfo));
         RegKey.Close();
     }
 }
@@ -137,10 +130,10 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     hMutex = CreateMutexW(NULL, FALSE, szWindowClass);
     if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
     {
-        /* If already started, it is found its window */
+        // If already started, it is found its window
         HWND hWindow = FindWindowW(szWindowClass, NULL);
 
-        /* Activate window */
+        // Activate window
         ShowWindow(hWindow, SW_SHOWNORMAL);
         SetForegroundWindow(hWindow);
         return 1;
