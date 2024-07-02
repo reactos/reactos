@@ -379,7 +379,7 @@ static void test_Extract(void)
     session.Operation = EXTRACT_FILLFILELIST | EXTRACT_EXTRACTFILES;
     res = pExtract(&session, "extract.cab");
     node = session.FileList;
-    ok(res == S_OK, "Expected S_OK, got %d\n", res);
+    ok(res == S_OK, "Expected S_OK, got %ld\n", res);
     ok(session.FileSize == 40, "Expected 40, got %d\n", session.FileSize);
     ok(session.Error.erfOper == FDIERROR_NONE,
        "Expected FDIERROR_NONE, got %d\n", session.Error.erfOper);
@@ -410,7 +410,7 @@ static void test_Extract(void)
     session.Operation = EXTRACT_FILLFILELIST;
     res = pExtract(&session, "extract.cab");
     node = session.FileList;
-    ok(res == S_OK, "Expected S_OK, got %d\n", res);
+    ok(res == S_OK, "Expected S_OK, got %ld\n", res);
     ok(session.FileSize == 40, "Expected 40, got %d\n", session.FileSize);
     ok(session.Error.erfOper == FDIERROR_NONE,
        "Expected FDIERROR_NONE, got %d\n", session.Error.erfOper);
@@ -435,7 +435,7 @@ static void test_Extract(void)
     session.Operation = EXTRACT_EXTRACTFILES;
     res = pExtract(&session, "extract.cab");
     node = session.FileList;
-    ok(res == S_OK, "Expected S_OK, got %d\n", res);
+    ok(res == S_OK, "Expected S_OK, got %ld\n", res);
     ok(session.FileSize == 40, "Expected 40, got %d\n", session.FileSize);
     ok(session.Error.erfOper == FDIERROR_NONE,
        "Expected FDIERROR_NONE, got %d\n", session.Error.erfOper);
@@ -463,7 +463,7 @@ static void test_Extract(void)
     /* Extract does not extract files if the dest dir does not exist */
     res = pExtract(&session, "extract.cab");
     node = session.FileList;
-    ok(res == S_OK, "Expected S_OK, got %d\n", res);
+    ok(res == S_OK, "Expected S_OK, got %ld\n", res);
     ok(session.FileSize == 40, "Expected 40, got %d\n", session.FileSize);
     ok(session.Error.erfOper == FDIERROR_NONE,
        "Expected FDIERROR_NONE, got %d\n", session.Error.erfOper);
@@ -496,7 +496,7 @@ static void test_Extract(void)
     CreateDirectoryA("dest", NULL);
     res = pExtract(&session, "extract.cab");
     node = session.FileList;
-    ok(res == S_OK, "Expected S_OK, got %d\n", res);
+    ok(res == S_OK, "Expected S_OK, got %ld\n", res);
     ok(session.FileSize == 40, "Expected 40, got %d\n", session.FileSize);
     ok(session.Error.erfOper == FDIERROR_NONE,
        "Expected FDIERROR_NONE, got %d\n", session.Error.erfOper);
@@ -524,7 +524,7 @@ static void test_Extract(void)
     session.FileList = NULL;
     res = pExtract(&session, "extract.cab");
     node = session.FileList;
-    ok(res == S_OK, "Expected S_OK, got %d\n", res);
+    ok(res == S_OK, "Expected S_OK, got %ld\n", res);
     ok(session.FileSize == 40, "Expected 40, got %d\n", session.FileSize);
     ok(session.Error.erfOper == FDIERROR_NONE,
        "Expected FDIERROR_NONE, got %d\n", session.Error.erfOper);
@@ -550,7 +550,7 @@ static void test_Extract(void)
     session.Operation = 0;
     res = pExtract(&session, "extract.cab");
     node = session.FileList;
-    ok(res == S_OK, "Expected S_OK, got %d\n", res);
+    ok(res == S_OK, "Expected S_OK, got %ld\n", res);
     ok(session.FileSize == 40, "Expected 40, got %d\n", session.FileSize);
     ok(session.Error.erfOper == FDIERROR_NONE,
        "Expected FDIERROR_NONE, got %d\n", session.Error.erfOper);
@@ -576,7 +576,7 @@ static void test_Extract(void)
     session.FilterList = session.FileList;
     res = pExtract(&session, "extract.cab");
     node = session.FileList;
-    ok(res == S_OK, "Expected S_OK, got %d\n", res);
+    ok(res == S_OK, "Expected S_OK, got %ld\n", res);
     ok(session.FileSize == 40, "Expected 40, got %d\n", session.FileSize);
     ok(session.Error.erfOper == FDIERROR_NONE,
        "Expected FDIERROR_NONE, got %d\n", session.Error.erfOper);
@@ -610,7 +610,7 @@ static void test_Extract(void)
     res = pExtract(&session, "nonexistent.cab");
     node = session.FileList;
     ok(res == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND),
-       "Expected HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), got %08x\n", res);
+       "Expected HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), got %08lx\n", res);
     ok(session.Error.erfOper == FDIERROR_CABINET_NOT_FOUND,
        "Expected FDIERROR_CABINET_NOT_FOUND, got %d\n", session.Error.erfOper);
     ok(session.FileSize == 0, "Expected 0, got %d\n", session.FileSize);
@@ -643,7 +643,7 @@ static void test_Extract(void)
     res = pExtract(&session, "extract.cab");
     node = session.FileList;
     ok(res == HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED) || res == E_FAIL,
-       "Expected HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED) or E_FAIL, got %08x\n", res);
+       "Expected HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED) or E_FAIL, got %08lx\n", res);
     ok(session.FileSize == 6, "Expected 6, got %d\n", session.FileSize);
     ok(session.Error.erfOper == FDIERROR_USER_ABORT,
        "Expected FDIERROR_USER_ABORT, got %d\n", session.Error.erfOper);
@@ -681,7 +681,7 @@ static void test_Extract(void)
     res = pExtract(&session, "extract.cab");
     node = session.FileList;
     ok(res == HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED) || res == E_FAIL,
-       "Expected HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED) or E_FAIL, got %08x\n", res);
+       "Expected HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED) or E_FAIL, got %08lx\n", res);
     ok(session.FileSize == 26, "Expected 26, got %d\n", session.FileSize);
     ok(session.Error.erfOper == FDIERROR_USER_ABORT,
        "Expected FDIERROR_USER_ABORT, got %d\n", session.Error.erfOper);
