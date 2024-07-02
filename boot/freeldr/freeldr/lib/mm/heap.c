@@ -559,6 +559,8 @@ ExAllocatePoolWithTag(
     return FrLdrHeapAllocateEx(FrLdrDefaultHeap, NumberOfBytes, Tag);
 }
 
+// Deprecated.
+#if 0
 PVOID
 NTAPI
 ExAllocatePool(
@@ -567,7 +569,10 @@ ExAllocatePool(
 {
     return FrLdrHeapAllocateEx(FrLdrDefaultHeap, NumberOfBytes, 0);
 }
+#endif
 
+// 1 call remains.
+#if 1
 VOID
 NTAPI
 ExFreePool(
@@ -575,6 +580,7 @@ ExFreePool(
 {
     FrLdrHeapFreeEx(FrLdrDefaultHeap, P, 0);
 }
+#endif
 
 VOID
 NTAPI
@@ -613,4 +619,3 @@ RtlFreeHeap(
     FrLdrHeapFreeEx(FrLdrDefaultHeap, HeapBase, ' ltR');
     return TRUE;
 }
-

@@ -17,8 +17,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __FREELDR_H
-#define __FREELDR_H
+#pragma once
 
 /* Enabled for supporting the deprecated boot options
  * that will be removed in a future FreeLdr version */
@@ -128,6 +127,14 @@
 #include <arch/mips/arcbios.h>
 #endif
 
+/* Tags for Ex*PoolWithTag() */
+#define TAG_FLDR_CMNBUF     'bcLF'
+#define TAG_FLDR_DISKCTX    'cdLF'
+#define TAG_FLDR_MBR        'bmLF'
+#define TAG_FLDR_PART       ' pLF'
+#define TAG_FLDR_SECTOR     ' sLF'
+#define TAG_FLDR_SRB        'rsLF'
+
 VOID __cdecl BootMain(IN PCCH CmdLine);
 
 #ifdef HAS_DEPRECATED_OPTIONS
@@ -149,5 +156,3 @@ EditOperatingSystemEntry(
 
 VOID RunLoader(VOID);
 VOID FrLdrCheckCpuCompatibility(VOID);
-
-#endif  /* __FREELDR_H */
