@@ -1,7 +1,5 @@
-/*
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * TRANSLATOR:  Joann Mõndresku <joannmondresku@gmail.com>
- */
+// LICENSE:   GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+// COPYRIGHT: Joann Mõndresku <joannmondresku@gmail.com>
 
 LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
 
@@ -198,14 +196,12 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD2 "Pakendi allalaadimine ebaõnnestus! Kontrolli interneti ühendust!"
     IDS_UNABLE_TO_REMOVE "Programmi andmete registrist eemaldamine ebaõnnestus!"
     IDS_UNABLE_TO_INSTALL "Installeri avamine ebaõnnestus!"
-    IDS_UNABLE_TO_QUERY_CERT "Sertifikaadi informatsiooni hankimine ebaõnnestus.\n\nKas soovid siiski jätkata?"
     IDS_INTEG_CHECK_TITLE "Kinnitab pakendi terviklust…"
     IDS_INTEG_CHECK_FAIL "Pakend ei läbinud tervikluse testi, pakend võib olla vigane või omavoliliselt muudetud olla keset allalaadimist. Tarkvara kasutamist ei ole soovitatud."
     IDS_INTERRUPTED_DOWNLOAD "Allalaadimist katkestati. Kontrolli interneti ühendust."
     IDS_UNABLE_TO_WRITE "Kettale kirjutamine ebaõnnetus. Ketas võib täis olla."
     IDS_INSTALL_SELECTED "Installi valitud"
     IDS_SELECTEDFORINST "Installimiseks valitud"
-    IDS_MISMATCH_CERT_INFO "Kasutatud sertifikaat on tundmatu:\nSubject: %s\nIssuer: %s\nKas soovid siiski jätkata?"
 END
 
 STRINGTABLE

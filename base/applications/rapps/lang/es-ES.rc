@@ -1,5 +1,4 @@
-/*
- * TRANSLATORS: 2014 Ismael Ferreras Morezuelas (Swyter), 2020 Julen Urizar Compains */
+// COPYRIGHT: 2014 Ismael Ferreras Morezuelas (Swyter), 2020 Julen Urizar Compains
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -152,7 +151,7 @@ BEGIN
     IDS_AINFO_URLSITE "\nPágina Web: "
     IDS_AINFO_LICENSE "\nLicencia: "
     IDS_AINFO_URLDOWNLOAD "\nDescargar: "
-    IDS_AINFO_LANGUAGES "\nLanguages: "
+    IDS_AINFO_LANGUAGES "\nIdiomas: "
 END
 
 STRINGTABLE
@@ -172,7 +171,7 @@ BEGIN
     IDS_CAT_SCIENCE "Ciencia"
     IDS_CAT_TOOLS "Herramientas"
     IDS_CAT_VIDEO "Vídeo"
-    IDS_CAT_THEMES "Themes"
+    IDS_CAT_THEMES "Temas"
 END
 
 STRINGTABLE
@@ -196,14 +195,12 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD2 "¡Imposible descargar el paquete! Compruebe que está conectado a Internet."
     IDS_UNABLE_TO_REMOVE "No se pudieron borrar del Registro los datos de instalación del programa."
     IDS_UNABLE_TO_INSTALL "No se pudo abrir el instalador"
-    IDS_UNABLE_TO_QUERY_CERT "No se pudo recabar la información de certificado.\n\n¿Quiere continuar a pesar de esto?"
     IDS_INTEG_CHECK_TITLE "Verificando integridad del paquete…"
     IDS_INTEG_CHECK_FAIL "El paquete no ha pasado la comprobación de integridad, puede haber sido alterado o estar corrupto. No se recomienda ejecutarlo."
     IDS_INTERRUPTED_DOWNLOAD "Se ha interrumpido la descarga por un error de red. Compruebe la conexión a Internet."
     IDS_UNABLE_TO_WRITE "No se ha podido escribir en el disco duro, es posible que no quede espacio libre."
     IDS_INSTALL_SELECTED "Instalar selección"
     IDS_SELECTEDFORINST "Seleccionados para instalar"
-    IDS_MISMATCH_CERT_INFO "El certificado que usa es desconocido:\nSujeto: %s\nEmisor: %s\n¿Quiere continuar a pesar de ello?"
 END
 
 STRINGTABLE

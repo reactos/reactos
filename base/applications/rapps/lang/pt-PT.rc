@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2011 mkbu95 <mkbu95@gmail.com> */
+// COPYRIGHT: 2011 mkbu95 <mkbu95@gmail.com>
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
@@ -20,7 +20,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Actualizar\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "actualizar Da&tabase\tCtrl+F5", ID_RESETDB
+        MENUITEM "Actualizar Da&tabase\tCtrl+F5", ID_RESETDB
     END
     POPUP "Aj&uda"
     BEGIN
@@ -126,26 +126,26 @@ BEGIN
     IDS_INFO_VERSION "\nVersão: "
     IDS_INFO_DESCRIPTION "\nDescrição: "
     IDS_INFO_PUBLISHER "\nAutor: "
-    IDS_INFO_HELPLINK "\nPágina de Ajuda: "
-    IDS_INFO_HELPPHONE "\nTelefone de Contacto: "
+    IDS_INFO_HELPLINK "\nPágina de ajuda: "
+    IDS_INFO_HELPPHONE "\nTelefone de contacto: "
     IDS_INFO_README "\nLeia-me: "
-    IDS_INFO_REGOWNER "\nProprietário Registado: "
-    IDS_INFO_PRODUCTID "\nID do Produto: "
+    IDS_INFO_REGOWNER "\nProprietário registado: "
+    IDS_INFO_PRODUCTID "\nID do produto: "
     IDS_INFO_CONTACT "\nContacto: "
-    IDS_INFO_UPDATEINFO "\nInformações de Actualização: "
-    IDS_INFO_INFOABOUT "\nInformações Sobre: "
+    IDS_INFO_UPDATEINFO "\nInformações de actualização: "
+    IDS_INFO_INFOABOUT "\nInformações sobre: "
     IDS_INFO_COMMENTS "\nComentários: "
-    IDS_INFO_INSTLOCATION "\nLocal de Instalação: "
-    IDS_INFO_INSTALLSRC "\nInstalar Código-Fonte: "
-    IDS_INFO_UNINSTALLSTR "\nDesinstalar String: "
-    IDS_INFO_MODIFYPATH "\nModificar Caminho: "
-    IDS_INFO_INSTALLDATE "\nData de Instalação: "
+    IDS_INFO_INSTLOCATION "\nLocal da instalação: "
+    IDS_INFO_INSTALLSRC "\nInstalar código-fonte: "
+    IDS_INFO_UNINSTALLSTR "\nDesinstalar cadeia: "
+    IDS_INFO_MODIFYPATH "\nModificar caminho: "
+    IDS_INFO_INSTALLDATE "\nData da instalação: "
 END
 
 STRINGTABLE
 BEGIN
     IDS_AINFO_VERSION "\nVersão: "
-    IDS_AINFO_AVAILABLEVERSION "\nVersion disponível: "
+    IDS_AINFO_AVAILABLEVERSION "\nVersão disponível: "
     IDS_AINFO_DESCRIPTION "\nDescrição: "
     IDS_AINFO_SIZE "\nTamanho: "
     IDS_AINFO_URLSITE "\nPágina: "
@@ -171,22 +171,22 @@ BEGIN
     IDS_CAT_SCIENCE "Ciência"
     IDS_CAT_TOOLS "Ferramentas"
     IDS_CAT_VIDEO "Vídeo"
-    IDS_CAT_THEMES "Themes"
+    IDS_CAT_THEMES "Temas"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "Central de Aplicativos ReactOS"
+    IDS_APPTITLE "Central de aplicações ReactOS"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "Procurar…"
-    IDS_APPS_COUNT "Número de aplicativos: %d; Seleccionados: %d"
-    IDS_WELCOME_TITLE "Bem-vindo(a) a Central de Aplicativos ReactOS!\n\n"
+    IDS_APPS_COUNT "Número de aplicações: %d; Seleccionadas: %d"
+    IDS_WELCOME_TITLE "Bem-vindo(a) a Central de aplicações ReactOS!\n\n"
     IDS_WELCOME_TEXT "Escolha uma categoria à esquerda, então escolha um aplicativo para instalar ou desinstalar.\nWeb Site ReactOS: "
     IDS_WELCOME_URL "https://reactos.org"
     IDS_INSTALLED "Instalado"
     IDS_AVAILABLEFORINST "Disponível para instalação"
     IDS_UPDATES "Actualizações"
-    IDS_APPLICATIONS "Aplicativos"
+    IDS_APPLICATIONS "Aplicações"
     IDS_CHOOSE_FOLDER_TEXT "Escolha uma pasta para armazenar os Downloads:"
     IDS_CHOOSE_FOLDER_ERROR "A pasta especificada não existe. Deseja criá-la?"
     IDS_APP_REG_REMOVE "Tem certeza que deseja apagar as informações do programa instalado do registo?"
@@ -194,15 +194,13 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD "Não é possível fazer o download do pacote! Endereço não encontrado!"
     IDS_UNABLE_TO_DOWNLOAD2 "Não é possível fazer o download do pacote! Verifique a ligação à Internet!"
     IDS_UNABLE_TO_REMOVE "Não foi possível remover as informações do programa do registro!"
-    IDS_UNABLE_TO_INSTALL "Não é possivel abrir o Instalador!"
-    IDS_UNABLE_TO_QUERY_CERT "Não é possível recuperar as informações do certificado.\n\nDeseja continuar mesmo assim?"
+    IDS_UNABLE_TO_INSTALL "Não é possivel abrir o instalador!"
     IDS_INTEG_CHECK_TITLE "A verificar a integridade do pacote…"
     IDS_INTEG_CHECK_FAIL "O pacote não passou na verificação de integridade, pode ter sido corrompido ou adulterado durante o download. A execução do software não é recomendada."
     IDS_INTERRUPTED_DOWNLOAD "O download foi interrompido. Verifique a ligação com a Internet."
     IDS_UNABLE_TO_WRITE "Não é possível gravar no disco. O disco pode estar cheio."
     IDS_INSTALL_SELECTED "Instalar selecção"
     IDS_SELECTEDFORINST "Seleccionados para instalação"
-    IDS_MISMATCH_CERT_INFO "O certificado usado é desconhecido:\nAssunto: %s\nIssuer: %s\nDeseja continuar mesmo assim?"
 END
 
 STRINGTABLE
@@ -228,7 +226,7 @@ STRINGTABLE
 BEGIN
     IDS_LANGUAGE_AVAILABLE_TRANSLATION "Suporte para a sua língua"
     IDS_LANGUAGE_NO_TRANSLATION "Suporte para outras linguagens"
-    IDS_LANGUAGE_ENGLISH_TRANSLATION "Suporte English"
+    IDS_LANGUAGE_ENGLISH_TRANSLATION "Suporte Inglês"
     IDS_LANGUAGE_SINGLE "Languagem única"
     IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d mais)"
     IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d disponível)"
@@ -236,6 +234,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DL_DIALOG_DB_DISP "Base de dados de aplicativos"
+    IDS_DL_DIALOG_DB_DISP "Base de dados de aplicações"
     IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Actualizar base de dados…"
 END
