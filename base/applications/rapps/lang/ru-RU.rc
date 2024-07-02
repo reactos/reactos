@@ -191,12 +191,10 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD2 "Не удалось скачать приложение! Проверьте подключение к сети Интернет!"
     IDS_UNABLE_TO_REMOVE "Не удалось удалить данные о программе из реестра!"
     IDS_UNABLE_TO_INSTALL "Не удалось завершить установку!"
-    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
     IDS_INTEG_CHECK_TITLE "Проверка целостности приложения…"
     IDS_INTEG_CHECK_FAIL "Приложение не прошло проверку целостности, возможно оно было повреждено или подменено. Запуск приложения не рекомендуется."
     IDS_INTERRUPTED_DOWNLOAD "Загрузка была прервана. Проверьте подключение к сети Интернет."
     IDS_UNABLE_TO_WRITE "Не удалось записать данные на диск. Возможно, недостаточно свободного места на диске."
-    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
 END
 
 STRINGTABLE
@@ -224,7 +222,7 @@ BEGIN
     IDS_LANGUAGE_NO_TRANSLATION "Доступно на других языках"
     IDS_LANGUAGE_ENGLISH_TRANSLATION "Доступно на Английском"
     IDS_LANGUAGE_SINGLE "Один язык"
-    IDS_LANGUAGE_MORE_PLACEHOLDER " (+еще %d)"
+    IDS_LANGUAGE_MORE_PLACEHOLDER " (+ещё %d)"
     IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d доступно)"
 END
 

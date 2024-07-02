@@ -1,9 +1,8 @@
 /*
 * PROJECT:     ReactOS Applications Manager
 * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
-* FILE:        base/applications/rapps/cabinet.cpp
 * PURPOSE:     Cabinet extraction using FDI API
-* COPYRIGHT:   Copyright 2018 Alexander Shaposhnikov     (sanchaez@reactos.org)
+* COPYRIGHT:   Copyright 2018 Alexander Shaposhnikov (sanchaez@reactos.org)
 */
 #include "rapps.h"
 
@@ -22,58 +21,30 @@
 /* String conversion helper functions */
 
 // converts CStringW to CStringA using a given codepage
-inline BOOL WideToMultiByte(const CStringW& szSource,
-                            CStringA& szDest,
-                            UINT Codepage)
+inline BOOL WideToMultiByte(const CStringW &szSource, CStringA &szDest, UINT Codepage)
 {
     // determine the needed size
-    INT sz = WideCharToMultiByte(Codepage,
-                                    0,
-                                    szSource,
-                                    -1,
-                                    NULL,
-                                    NULL,
-                                    NULL,
-                                    NULL);
+    INT sz = WideCharToMultiByte(Codepage, 0, szSource, -1, NULL, NULL, NULL, NULL);
     if (!sz)
         return FALSE;
 
     // do the actual conversion
-    sz = WideCharToMultiByte(Codepage,
-                                0,
-                                szSource,
-                                -1,
-                                szDest.GetBuffer(sz),
-                                sz,
-                                NULL,
-                                NULL);
+    sz = WideCharToMultiByte(Codepage, 0, szSource, -1, szDest.GetBuffer(sz), sz, NULL, NULL);
 
     szDest.ReleaseBuffer();
     return sz != 0;
 }
 
 // converts CStringA to CStringW using a given codepage
-inline BOOL MultiByteToWide(const CStringA& szSource,
-                            CStringW& szDest,
-                            UINT Codepage)
+inline BOOL MultiByteToWide(const CStringA &szSource, CStringW &szDest, UINT Codepage)
 {
     // determine the needed size
-    INT sz = MultiByteToWideChar(Codepage,
-                                    0,
-                                    szSource,
-                                    -1,
-                                    NULL,
-                                    NULL);
+    INT sz = MultiByteToWideChar(Codepage, 0, szSource, -1, NULL, NULL);
     if (!sz)
         return FALSE;
 
     // do the actual conversion
-    sz = MultiByteToWideChar(CP_UTF8,
-                                0,
-                                szSource,
-                                -1,
-                                szDest.GetBuffer(sz),
-                                sz);
+    sz = MultiByteToWideChar(CP_UTF8, 0, szSource, -1, szDest.GetBuffer(sz), sz);
 
     szDest.ReleaseBuffer();
     return sz != 0;
@@ -124,24 +95,19 @@ FNOPEN(fnFileOpen)
 
     MultiByteToWide(pszFile, szFileName, CP_UTF8);
 
-    hFile = CreateFileW(szFileName,
-                        dwDesiredAccess,
-                        FILE_SHARE_READ,
-                        NULL,
-                        dwCreationDisposition,
-                        FILE_ATTRIBUTE_NORMAL,
-                        NULL);
+    hFile = CreateFileW(
+        szFileName, dwDesiredAccess, FILE_SHARE_READ, NULL, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, NULL);
 
-    return (INT_PTR) hFile;
+    return (INT_PTR)hFile;
 }
 
 FNREAD(fnFileRead)
 {
     DWORD dwBytesRead = 0;
 
-    if (ReadFile((HANDLE) hf, pv, cb, &dwBytesRead, NULL) == FALSE)
+    if (ReadFile((HANDLE)hf, pv, cb, &dwBytesRead, NULL) == FALSE)
     {
-        dwBytesRead = (DWORD) -1L;
+        dwBytesRead = (DWORD)-1L;
     }
 
     return dwBytesRead;
@@ -151,9 +117,9 @@ FNWRITE(fnFileWrite)
 {
     DWORD dwBytesWritten = 0;
 
-    if (WriteFile((HANDLE) hf, pv, cb, &dwBytesWritten, NULL) == FALSE)
+    if (WriteFile((HANDLE)hf, pv, cb, &dwBytesWritten, NULL) == FALSE)
     {
-        dwBytesWritten = (DWORD) -1;
+        dwBytesWritten = (DWORD)-1;
     }
 
     return dwBytesWritten;
@@ -161,12 +127,12 @@ FNWRITE(fnFileWrite)
 
 FNCLOSE(fnFileClose)
 {
-    return (CloseHandle((HANDLE) hf) != FALSE) ? 0 : -1;
+    return (CloseHandle((HANDLE)hf) != FALSE) ? 0 : -1;
 }
 
 FNSEEK(fnFileSeek)
 {
-    return SetFilePointer((HANDLE) hf, dist, NULL, seektype);
+    return SetFilePointer((HANDLE)hf, dist, NULL, seektype);
 }
 
 /* FDICopy callbacks */
@@ -183,7 +149,7 @@ FNFDINOTIFY(fnNotify)
         ATL::CStringA szFilePathUTF8;
 
         // Append the destination directory to the file name.
-        MultiByteToWide((LPCSTR) pfdin->pv, szExtractDir, CP_UTF8);
+        MultiByteToWide((LPCSTR)pfdin->pv, szExtractDir, CP_UTF8);
         MultiByteToWide(pfdin->psz1, szCabFileName, CP_ACP);
 
         szNewFileName = szExtractDir + L"\\" + szCabFileName;
@@ -191,9 +157,7 @@ FNFDINOTIFY(fnNotify)
         WideToMultiByte(szNewFileName, szFilePathUTF8, CP_UTF8);
 
         // Copy file
-        iResult = fnFileOpen((LPSTR) szFilePathUTF8.GetString(),
-                             _O_WRONLY | _O_CREAT,
-                             0);
+        iResult = fnFileOpen((LPSTR)szFilePathUTF8.GetString(), _O_WRONLY | _O_CREAT, 0);
     }
     break;
 
@@ -230,23 +194,9 @@ FNFDINOTIFY(fnNotify)
 
 /* cabinet.dll FDI function pointers */
 
-typedef HFDI(*fnFDICreate)(PFNALLOC,
-                           PFNFREE,
-                           PFNOPEN,
-                           PFNREAD,
-                           PFNWRITE,
-                           PFNCLOSE,
-                           PFNSEEK,
-                           int,
-                           PERF);
+typedef HFDI(*fnFDICreate)(PFNALLOC, PFNFREE, PFNOPEN, PFNREAD, PFNWRITE, PFNCLOSE, PFNSEEK, int, PERF);
 
-typedef BOOL(*fnFDICopy)(HFDI,
-                         LPSTR,
-                         LPSTR,
-                         INT,
-                         PFNFDINOTIFY,
-                         PFNFDIDECRYPT,
-                         void FAR *pvUser);
+typedef BOOL(*fnFDICopy)(HFDI, LPSTR, LPSTR, INT, PFNFDINOTIFY, PFNFDIDECRYPT, void FAR *pvUser);
 
 typedef BOOL(*fnFDIDestroy)(HFDI);
 
@@ -275,9 +225,9 @@ BOOL ExtractFilesFromCab(const ATL::CStringW& szCabName,
         return FALSE;
     }
 
-    pfnFDICreate = (fnFDICreate) GetProcAddress(hCabinetDll, "FDICreate");
-    pfnFDICopy = (fnFDICopy) GetProcAddress(hCabinetDll, "FDICopy");
-    pfnFDIDestroy = (fnFDIDestroy) GetProcAddress(hCabinetDll, "FDIDestroy");
+    pfnFDICreate = (fnFDICreate)GetProcAddress(hCabinetDll, "FDICreate");
+    pfnFDICopy = (fnFDICopy)GetProcAddress(hCabinetDll, "FDICopy");
+    pfnFDIDestroy = (fnFDIDestroy)GetProcAddress(hCabinetDll, "FDIDestroy");
 
     if (!pfnFDICreate || !pfnFDICopy || !pfnFDIDestroy)
     {
@@ -286,15 +236,9 @@ BOOL ExtractFilesFromCab(const ATL::CStringW& szCabName,
     }
 
     // Create FDI context
-    ExtractHandler = pfnFDICreate(fnMemAlloc,
-                                  fnMemFree,
-                                  fnFileOpen,
-                                  fnFileRead,
-                                  fnFileWrite,
-                                  fnFileClose,
-                                  fnFileSeek,
-                                  cpuUNKNOWN,
-                                  &ExtractErrors);
+    ExtractHandler = pfnFDICreate(
+        fnMemAlloc, fnMemFree, fnFileOpen, fnFileRead, fnFileWrite, fnFileClose, fnFileSeek, cpuUNKNOWN,
+        &ExtractErrors);
 
     if (!ExtractHandler)
     {
@@ -319,13 +263,9 @@ BOOL ExtractFilesFromCab(const ATL::CStringW& szCabName,
         // Add a slash to cab name as required by the api
         szCabNameUTF8 = "\\" + szCabNameUTF8;
 
-        bResult = pfnFDICopy(ExtractHandler,
-                             (LPSTR) szCabNameUTF8.GetString(),
-                             (LPSTR) szCabDirUTF8.GetString(),
-                             0,
-                             fnNotify,
-                             NULL,
-                             (void FAR *) szOutputDirUTF8.GetString());
+        bResult = pfnFDICopy(
+            ExtractHandler, (LPSTR)szCabNameUTF8.GetString(), (LPSTR)szCabDirUTF8.GetString(), 0, fnNotify, NULL,
+            (void FAR *)szOutputDirUTF8.GetString());
     }
 
     pfnFDIDestroy(ExtractHandler);
