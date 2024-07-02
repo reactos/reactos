@@ -1,33 +1,32 @@
 /*
  * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * FILE:        base/applications/rapps/loaddlg.cpp
  * PURPOSE:     Displaying a download dialog
- * COPYRIGHT:   Copyright 2001 John R. Sheets             (for CodeWeavers)
- *              Copyright 2004 Mike McCormack             (for CodeWeavers)
- *              Copyright 2005 Ge van Geldorp             (gvg@reactos.org)
- *              Copyright 2009 Dmitry Chapyshev           (dmitry@reactos.org)
+ * COPYRIGHT:   Copyright 2001 John R. Sheets (for CodeWeavers)
+ *              Copyright 2004 Mike McCormack (for CodeWeavers)
+ *              Copyright 2005 Ge van Geldorp (gvg@reactos.org)
+ *              Copyright 2009 Dmitry Chapyshev (dmitry@reactos.org)
  *              Copyright 2015 Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
- *              Copyright 2017 Alexander Shaposhnikov     (sanchaez@reactos.org)
+ *              Copyright 2017 Alexander Shaposhnikov (sanchaez@reactos.org)
  */
 
- /*
-  * Based on Wine dlls/shdocvw/shdocvw_main.c
-  *
-  * This library is free software; you can redistribute it and/or
-  * modify it under the terms of the GNU Lesser General Public
-  * License as published by the Free Software Foundation; either
-  * version 2.1 of the License, or (at your option) any later version.
-  *
-  * This library is distributed in the hope that it will be useful,
-  * but WITHOUT ANY WARRANTY; without even the implied warranty of
-  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  * Lesser General Public License for more details.
-  *
-  * You should have received a copy of the GNU Lesser General Public
-  * License along with this library; if not, write to the Free Software
-  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-  */
+/*
+ * Based on Wine dlls/shdocvw/shdocvw_main.c
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 #include "rapps.h"
 
 #include <shlobj_undoc.h>
@@ -45,12 +44,6 @@
 #include "rosui.h"
 #include "dialogs.h"
 #include "misc.h"
-
-#ifdef USE_CERT_PINNING
-#define CERT_ISSUER_INFO_OLD "US\r\nLet's Encrypt\r\nLet's Encrypt Authority X3"
-#define CERT_ISSUER_INFO_NEW "US\r\nLet's Encrypt\r\nR3"
-#define CERT_SUBJECT_INFO "rapps.reactos.org"
-#endif
 
 enum DownloadStatus
 {
@@ -95,10 +88,7 @@ struct DownloadParam
     LPCWSTR szCaption;
 };
 
-
-class CDownloadDialog :
-    public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IBindStatusCallback
+class CDownloadDialog : public CComObjectRootEx<CComMultiThreadModelNoCS>, public IBindStatusCallback
 {
     HWND m_hDialog;
     PBOOL m_pbCancelled;
@@ -107,7 +97,6 @@ class CDownloadDialog :
 public:
     ~CDownloadDialog()
     {
-        //DestroyWindow(m_hDialog);
     }
 
     HRESULT Initialize(HWND Dlg, BOOL *pbCancelled)
@@ -170,10 +159,7 @@ public:
                 StrFormatByteSizeW(ulProgressMax, szProgressMax, _countof(szProgressMax));
 
                 /* generate the text on progress bar */
-                m_ProgressText.Format(L"%u%% \x2014 %ls / %ls",
-                                      uiPercentage,
-                                      szProgress,
-                                      szProgressMax);
+                m_ProgressText.Format(L"%u%% \x2014 %ls / %ls", uiPercentage, szProgress, szProgressMax);
             }
             else
             {
@@ -181,11 +167,10 @@ public:
                 SendMessageW(Item, PBM_SETPOS, 0, 0);
 
                 /* total size is not known, display only current size */
-                m_ProgressText.Format(L"%ls...",
-                                      szProgress);
+                m_ProgressText.Format(L"%ls...", szProgress);
             }
             /* and finally display it */
-            SendMessageW(Item, WM_SETTEXT, 0, (LPARAM) m_ProgressText.GetString());
+            SendMessageW(Item, WM_SETTEXT, 0, (LPARAM)m_ProgressText.GetString());
         }
 
         Item = GetDlgItem(m_hDialog, IDC_DOWNLOAD_STATUS);
@@ -208,7 +193,7 @@ public:
             }
 
             /* paste it into our dialog and don't do it again in this instance */
-            SendMessageW(Item, WM_SETTEXT, 0, (LPARAM) buf.GetString());
+            SendMessageW(Item, WM_SETTEXT, 0, (LPARAM)buf.GetString());
             m_UrlHasBeenCopied = TRUE;
         }
 
@@ -254,12 +239,11 @@ public:
     }
 
     BEGIN_COM_MAP(CDownloadDialog)
-        COM_INTERFACE_ENTRY_IID(IID_IBindStatusCallback, IBindStatusCallback)
+    COM_INTERFACE_ENTRY_IID(IID_IBindStatusCallback, IBindStatusCallback)
     END_COM_MAP()
 };
 
-class CDowloadingAppsListView
-    : public CUiWindow<CListView>
+class CDowloadingAppsListView : public CUiWindow<CListView>
 {
 public:
     HWND Create(HWND hwndParent)
@@ -307,8 +291,7 @@ public:
     VOID AddRow(INT RowIndex, LPCWSTR szAppName, const DownloadStatus Status)
     {
         ATL::CStringW szStatus = LoadStatusString(Status);
-        AddItem(RowIndex,
-                const_cast<LPWSTR>(szAppName));
+        AddItem(RowIndex, const_cast<LPWSTR>(szAppName));
         SetDownloadStatus(RowIndex, Status);
     }
 
@@ -332,50 +315,6 @@ HRESULT WINAPI CDownloadDialog_Constructor(HWND Dlg, BOOL *pbCancelled, REFIID r
     return ShellObjectCreatorInit<CDownloadDialog>(Dlg, pbCancelled, riid, ppv);
 }
 
-#ifdef USE_CERT_PINNING
-typedef CHeapPtr<char, CLocalAllocator> CLocalPtr;
-
-static BOOL CertGetSubjectAndIssuer(HINTERNET hFile, CLocalPtr& subjectInfo, CLocalPtr& issuerInfo)
-{
-    DWORD certInfoLength;
-    INTERNET_CERTIFICATE_INFOA certInfo;
-    DWORD size, flags;
-
-    size = sizeof(flags);
-    if (!InternetQueryOptionA(hFile, INTERNET_OPTION_SECURITY_FLAGS, &flags, &size))
-    {
-        return FALSE;
-    }
-
-    if (!flags & SECURITY_FLAG_SECURE)
-    {
-        return FALSE;
-    }
-
-    /* Despite what the header indicates, the implementation of INTERNET_CERTIFICATE_INFO is not Unicode-aware. */
-    certInfoLength = sizeof(certInfo);
-    if (!InternetQueryOptionA(hFile,
-                              INTERNET_OPTION_SECURITY_CERTIFICATE_STRUCT,
-                              &certInfo,
-                              &certInfoLength))
-    {
-        return FALSE;
-    }
-
-    subjectInfo.Attach(certInfo.lpszSubjectInfo);
-    issuerInfo.Attach(certInfo.lpszIssuerInfo);
-
-    if (certInfo.lpszProtocolName)
-        LocalFree(certInfo.lpszProtocolName);
-    if (certInfo.lpszSignatureAlgName)
-        LocalFree(certInfo.lpszSignatureAlgName);
-    if (certInfo.lpszEncryptionAlgName)
-        LocalFree(certInfo.lpszEncryptionAlgName);
-
-    return certInfo.lpszSubjectInfo && certInfo.lpszIssuerInfo;
-}
-#endif
-
 inline VOID MessageBox_LoadString(HWND hMainWnd, INT StringID)
 {
     ATL::CStringW szMsgText;
@@ -386,8 +325,8 @@ inline VOID MessageBox_LoadString(HWND hMainWnd, INT StringID)
 }
 
 // CDownloadManager
-ATL::CSimpleArray<DownloadInfo>         CDownloadManager::AppsToInstallList;
-CDowloadingAppsListView                 CDownloadManager::DownloadsListView;
+ATL::CSimpleArray<DownloadInfo> CDownloadManager::AppsToInstallList;
+CDowloadingAppsListView CDownloadManager::DownloadsListView;
 
 VOID CDownloadManager::Download(const DownloadInfo &DLInfo, BOOL bIsModal)
 {
@@ -407,13 +346,13 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
         HICON hIconSm, hIconBg;
         ATL::CStringW szTempCaption;
 
-        hIconBg = (HICON) GetClassLongPtrW(hMainWnd, GCLP_HICON);
-        hIconSm = (HICON) GetClassLongPtrW(hMainWnd, GCLP_HICONSM);
+        hIconBg = (HICON)GetClassLongPtrW(hMainWnd, GCLP_HICON);
+        hIconSm = (HICON)GetClassLongPtrW(hMainWnd, GCLP_HICONSM);
 
         if (hIconBg && hIconSm)
         {
-            SendMessageW(Dlg, WM_SETICON, ICON_BIG, (LPARAM) hIconBg);
-            SendMessageW(Dlg, WM_SETICON, ICON_SMALL, (LPARAM) hIconSm);
+            SendMessageW(Dlg, WM_SETICON, ICON_BIG, (LPARAM)hIconBg);
+            SendMessageW(Dlg, WM_SETICON, ICON_SMALL, (LPARAM)hIconSm);
         }
 
         SetWindowLongW(Dlg, GWLP_USERDATA, 0);
@@ -449,8 +388,7 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
         // Start download process
         DownloadParam *param = new DownloadParam(Dlg, AppsToInstallList, szCaption);
         DWORD ThreadId;
-        HANDLE Thread = CreateThread(NULL, 0, ThreadFunc, (LPVOID) param, 0, &ThreadId);
-
+        HANDLE Thread = CreateThread(NULL, 0, ThreadFunc, (LPVOID)param, 0, &ThreadId);
         if (!Thread)
         {
             return FALSE;
@@ -471,7 +409,6 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
 
     case WM_CLOSE:
         EndDialog(Dlg, 0);
-        //DestroyWindow(Dlg);
         return TRUE;
 
     default:
@@ -479,12 +416,13 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
     }
 }
 
-LRESULT CALLBACK CDownloadManager::DownloadProgressProc(HWND hWnd,
-                                                        UINT uMsg,
-                                                        WPARAM wParam,
-                                                        LPARAM lParam,
-                                                        UINT_PTR uIdSubclass,
-                                                        DWORD_PTR dwRefData)
+LRESULT CALLBACK CDownloadManager::DownloadProgressProc(
+    HWND hWnd,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam,
+    UINT_PTR uIdSubclass,
+    DWORD_PTR dwRefData)
 {
     static ATL::CStringW szProgressText;
 
@@ -494,15 +432,14 @@ LRESULT CALLBACK CDownloadManager::DownloadProgressProc(HWND hWnd,
     {
         if (lParam)
         {
-            szProgressText = (PCWSTR) lParam;
+            szProgressText = (PCWSTR)lParam;
         }
         return TRUE;
     }
-
     case WM_ERASEBKGND:
     case WM_PAINT:
     {
-        PAINTSTRUCT  ps;
+        PAINTSTRUCT ps;
         HDC hDC = BeginPaint(hWnd, &ps), hdcMem;
         HBITMAP hbmMem;
         HANDLE hOld;
@@ -522,16 +459,14 @@ LRESULT CALLBACK CDownloadManager::DownloadProgressProc(HWND hWnd,
         hOld = SelectObject(hdcMem, hbmMem);
 
         /* call the original draw code and redirect it to our memory buffer */
-        DefSubclassProc(hWnd, uMsg, (WPARAM) hdcMem, lParam);
+        DefSubclassProc(hWnd, uMsg, (WPARAM)hdcMem, lParam);
 
         /* draw our nifty progress text over it */
         SelectFont(hdcMem, GetStockFont(DEFAULT_GUI_FONT));
-        DrawShadowText(hdcMem, szProgressText.GetString(), szProgressText.GetLength(),
-                       &myRect,
-                       DT_CENTER | DT_VCENTER | DT_NOPREFIX | DT_SINGLELINE,
-                       GetSysColor(COLOR_CAPTIONTEXT),
-                       GetSysColor(COLOR_3DSHADOW),
-                       1, 1);
+        DrawShadowText(
+            hdcMem, szProgressText.GetString(), szProgressText.GetLength(), &myRect,
+            DT_CENTER | DT_VCENTER | DT_NOPREFIX | DT_SINGLELINE, GetSysColor(COLOR_CAPTIONTEXT),
+            GetSysColor(COLOR_3DSHADOW), 1, 1);
 
         /* transfer the off-screen DC to the screen */
         BitBlt(hDC, 0, 0, win_width, win_height, hdcMem, 0, 0, SRCCOPY);
@@ -639,13 +574,9 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
         // Change caption to show the currently downloaded app
         if (!bCab)
-        {
             szNewCaption.Format(szCaption, InfoArray[iAppId].szName.GetString());
-        }
         else
-        {
             szNewCaption.LoadStringW(IDS_DL_DIALOG_DB_DOWNLOAD_DISP);
-        }
 
         SetWindowTextW(hDlg, szNewCaption.GetString());
 
@@ -691,7 +622,6 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         // download it
         bTempfile = TRUE;
         CDownloadDialog_Constructor(hDlg, &bCancelled, IID_PPV_ARG(IBindStatusCallback, &dl));
-
         if (dl == NULL)
             goto end;
 
@@ -719,10 +649,6 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         urlComponents.dwStructSize = sizeof(urlComponents);
 
         urlLength = InfoArray[iAppId].szUrl.GetLength();
-        urlComponents.dwSchemeLength = urlLength + 1;
-        urlComponents.lpszScheme = (LPWSTR) malloc(urlComponents.dwSchemeLength * sizeof(WCHAR));
-        urlComponents.dwHostNameLength = urlLength + 1;
-        urlComponents.lpszHostName = (LPWSTR) malloc(urlComponents.dwHostNameLength * sizeof(WCHAR));
 
         if (!InternetCrackUrlW(InfoArray[iAppId].szUrl, urlLength + 1, ICU_DECODE | ICU_ESCAPE, &urlComponents))
             goto end;
@@ -731,9 +657,7 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
         if (urlComponents.nScheme == INTERNET_SCHEME_HTTP || urlComponents.nScheme == INTERNET_SCHEME_HTTPS)
         {
-            hFile = InternetOpenUrlW(hOpen, InfoArray[iAppId].szUrl.GetString(), NULL, 0,
-                                     dwUrlConnectFlags,
-                                     0);
+            hFile = InternetOpenUrlW(hOpen, InfoArray[iAppId].szUrl.GetString(), NULL, 0, dwUrlConnectFlags, 0);
             if (!hFile)
             {
                 MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_DOWNLOAD2);
@@ -774,43 +698,6 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             // content-length is not known, enable marquee mode
             SetProgressMarquee(Item, TRUE);
         }
-
-        free(urlComponents.lpszScheme);
-        free(urlComponents.lpszHostName);
-
-#ifdef USE_CERT_PINNING
-        // are we using HTTPS to download the RAPPS update package? check if the certificate is original
-        if ((urlComponents.nScheme == INTERNET_SCHEME_HTTPS) &&
-            (wcscmp(InfoArray[iAppId].szUrl, APPLICATION_DATABASE_URL) == 0))
-        {
-            CLocalPtr subjectName, issuerName;
-            CStringA szMsgText;
-            bool bAskQuestion = false;
-            if (!CertGetSubjectAndIssuer(hFile, subjectName, issuerName))
-            {
-                szMsgText.LoadStringW(IDS_UNABLE_TO_QUERY_CERT);
-                bAskQuestion = true;
-            }
-            else
-            {
-                if (strcmp(subjectName, CERT_SUBJECT_INFO) ||
-                    (strcmp(issuerName, CERT_ISSUER_INFO_OLD) &&
-                    strcmp(issuerName, CERT_ISSUER_INFO_NEW)))
-                {
-                    szMsgText.Format(IDS_MISMATCH_CERT_INFO, (char*)subjectName, (const char*)issuerName);
-                    bAskQuestion = true;
-                }
-            }
-
-            if (bAskQuestion)
-            {
-                if (MessageBoxA(hMainWnd, szMsgText.GetString(), NULL, MB_YESNO | MB_ICONERROR) != IDYES)
-                {
-                    goto end;
-                }
-            }
-        }
-#endif
 
         hOut = CreateFileW(Path.GetString(), GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, 0, NULL);
 
@@ -862,7 +749,7 @@ DWORD WINAPI CDownloadManager::ThreadFunc(LPVOID param)
                 goto end;
 
             SetWindowTextW(hDlg, szMsgText.GetString());
-            SendMessageW(GetDlgItem(hDlg, IDC_DOWNLOAD_STATUS), WM_SETTEXT, 0, (LPARAM) Path.GetString());
+            SendMessageW(GetDlgItem(hDlg, IDC_DOWNLOAD_STATUS), WM_SETTEXT, 0, (LPARAM)Path.GetString());
 
             // this may take a while, depending on the file size
             if (!VerifyInteg(InfoArray[iAppId].szSHA1.GetString(), Path.GetString()))
@@ -968,17 +855,11 @@ VOID CDownloadManager::LaunchDownloadDialog(BOOL bIsModal)
 {
     if (bIsModal)
     {
-        DialogBoxW(hInst,
-                   MAKEINTRESOURCEW(IDD_DOWNLOAD_DIALOG),
-                   hMainWnd,
-                   DownloadDlgProc);
+        DialogBoxW(hInst, MAKEINTRESOURCEW(IDD_DOWNLOAD_DIALOG), hMainWnd, DownloadDlgProc);
     }
     else
     {
-        CreateDialogW(hInst,
-                      MAKEINTRESOURCEW(IDD_DOWNLOAD_DIALOG),
-                      hMainWnd,
-                      DownloadDlgProc);
+        CreateDialogW(hInst, MAKEINTRESOURCEW(IDD_DOWNLOAD_DIALOG), hMainWnd, DownloadDlgProc);
     }
 }
 // CDownloadManager

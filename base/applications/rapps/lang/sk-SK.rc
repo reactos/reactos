@@ -1,5 +1,4 @@
-/* TRANSLATOR: 2009-2010 Mario Kacmar <kario@szm.sk>
- */
+// COPYRIGHT: 2009-2010 Mario Kacmar <kario@szm.sk>
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
@@ -95,7 +94,7 @@ END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
 STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
-CAPTION "Sťahujem %ls…" // Stiahnuť ???
+CAPTION "Sťahujem %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
@@ -158,19 +157,19 @@ END
 STRINGTABLE
 BEGIN
     IDS_CAT_AUDIO "Audio"
-    IDS_CAT_DEVEL "Vývojárske" // Development, vývoj??
-    IDS_CAT_DRIVERS "Ovládače" // Drivers
-    IDS_CAT_EDU "Vzdelávacie" // Edutainment
-    IDS_CAT_ENGINEER "Inžinierske" // Engineering, konštrukčné??
-    IDS_CAT_FINANCE "Finančné" // Finance, peňažníctvo??
-    IDS_CAT_GAMES "Hry & zábava" // Games & Fun, zábavné??
-    IDS_CAT_GRAPHICS "Grafické" // Graphics
+    IDS_CAT_DEVEL "Vývojárske"
+    IDS_CAT_DRIVERS "Ovládače"
+    IDS_CAT_EDU "Vzdelávacie"
+    IDS_CAT_ENGINEER "Inžinierske"
+    IDS_CAT_FINANCE "Finančné"
+    IDS_CAT_GAMES "Hry & zábava"
+    IDS_CAT_GRAPHICS "Grafické"
     IDS_CAT_INTERNET "Internet & sieť"
     IDS_CAT_LIBS "Knižnice"
-    IDS_CAT_OFFICE "Kancelárske" // Office
+    IDS_CAT_OFFICE "Kancelárske"
     IDS_CAT_OTHER "Iné"
-    IDS_CAT_SCIENCE "Vedecké" // Science
-    IDS_CAT_TOOLS "Nástroje" // Tools
+    IDS_CAT_SCIENCE "Vedecké"
+    IDS_CAT_TOOLS "Nástroje"
     IDS_CAT_VIDEO "Video"
     IDS_CAT_THEMES "Themes"
 END
@@ -181,7 +180,7 @@ BEGIN
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "Hľadať…"
     IDS_APPS_COUNT "Počet programov: %d; Selected: %d"
-    IDS_WELCOME_TITLE "Víta Vás Manažér aplikácií systému ReactOS!\n\n" // ReactOS Application Manager
+    IDS_WELCOME_TITLE "Víta Vás Manažér aplikácií systému ReactOS!\n\n"
     IDS_WELCOME_TEXT "Vyberte si kategóriu na ľavej strane, potom vyberte aplikáciu, ktorú chcete nainštalovať alebo odinštalovať.\nWebstránka projektu ReactOS: "
     IDS_WELCOME_URL "https://reactos.org"
     IDS_INSTALLED "Nainštalované"
@@ -196,14 +195,12 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
     IDS_UNABLE_TO_REMOVE "Nie je možné odstrániť z registrov údaje o programe!"
     IDS_UNABLE_TO_INSTALL "Unable to open installer!"
-    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
     IDS_INTEG_CHECK_TITLE "Verifying package integrity…"
     IDS_INTEG_CHECK_FAIL "The package did not pass the integrity check, it may have been corrupted or tampered with during downloading. Running the software is not recommended."
     IDS_INTERRUPTED_DOWNLOAD "The download was interrupted. Check connection to Internet."
     IDS_UNABLE_TO_WRITE "Unable to write to disk. Disk may be at capacity."
     IDS_INSTALL_SELECTED "Install Selected"
     IDS_SELECTEDFORINST "Selected for installation"
-    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
 END
 
 STRINGTABLE

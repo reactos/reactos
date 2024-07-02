@@ -1,5 +1,4 @@
-/*
- * TRANSLATOR: 2014 Ismael Ferreras Morezuelas (Swyter) */
+// COPYRIGHT: 2014 Ismael Ferreras Morezuelas (Swyter)
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -152,7 +151,7 @@ BEGIN
     IDS_AINFO_URLSITE "\nPágina Web: "
     IDS_AINFO_LICENSE "\nLicencia: "
     IDS_AINFO_URLDOWNLOAD "\nDescargar: "
-    IDS_AINFO_LANGUAGES "\nLanguages: "
+    IDS_AINFO_LANGUAGES "\nIdiomas: "
 END
 
 STRINGTABLE
@@ -172,7 +171,7 @@ BEGIN
     IDS_CAT_SCIENCE "Ciencia"
     IDS_CAT_TOOLS "Herramientas"
     IDS_CAT_VIDEO "Vídeo"
-    IDS_CAT_THEMES "Themes"
+    IDS_CAT_THEMES "Temas"
 END
 
 STRINGTABLE
@@ -196,20 +195,18 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
     IDS_UNABLE_TO_REMOVE "No se pudieron borrar del Registro los datos de instalación del programa."
     IDS_UNABLE_TO_INSTALL "Unable to open installer!"
-    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
     IDS_INTEG_CHECK_TITLE "Verificando integridad del paquete…"
     IDS_INTEG_CHECK_FAIL "El paquete no ha pasado la comprobación de integridad, puede haber sido alterado o estar corrupto. No se recomienda ejecutarlo."
     IDS_INTERRUPTED_DOWNLOAD "Se ha interrumpido la descarga por un error de red. Comprueba la conexión a Internet."
     IDS_UNABLE_TO_WRITE "No se ha podido escribir en el disco duro, es posible que no quede espacio libre."
     IDS_INSTALL_SELECTED "Install Selected"
     IDS_SELECTEDFORINST "Selected for installation"
-    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
 END
 
 STRINGTABLE
 BEGIN
     IDS_STATUS_INSTALLED "Installed"
-    IDS_STATUS_NOTINSTALLED "Not installed"
+    IDS_STATUS_NOTINSTALLED "No instalado"
     IDS_STATUS_DOWNLOADED "Downloaded"
     IDS_STATUS_UPDATE_AVAILABLE "Update available"
     IDS_STATUS_DOWNLOADING "Downloading…"
@@ -230,8 +227,8 @@ BEGIN
     IDS_LANGUAGE_AVAILABLE_TRANSLATION "Supports your language"
     IDS_LANGUAGE_NO_TRANSLATION "Supports other languages"
     IDS_LANGUAGE_ENGLISH_TRANSLATION "Supports English"
-    IDS_LANGUAGE_SINGLE "Single language"
-    IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d more)"
+    IDS_LANGUAGE_SINGLE "Idioma único"
+    IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d más)"
     IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d available)"
 END
 

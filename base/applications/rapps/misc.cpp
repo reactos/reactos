@@ -1,14 +1,12 @@
 /*
  * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * FILE:        base/applications/rapps/misc.cpp
  * PURPOSE:     Misc functions
- * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev           (dmitry@reactos.org)
+ * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev (dmitry@reactos.org)
  *              Copyright 2015 Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
- *              Copyright 2017 Alexander Shaposhnikov     (sanchaez@reactos.org)
+ *              Copyright 2017 Alexander Shaposhnikov (sanchaez@reactos.org)
  */
 #include "rapps.h"
-
 #include "gui.h"
 #include "misc.h"
 
@@ -62,7 +60,7 @@ VOID CopyTextToClipboard(LPCWSTR lpszText)
     cchBuffer = wcslen(lpszText) + 1;
     ClipBuffer = GlobalAlloc(GMEM_DDESHARE, cchBuffer * sizeof(WCHAR));
 
-    Buffer = (PWCHAR) GlobalLock(ClipBuffer);
+    Buffer = (PWCHAR)GlobalLock(ClipBuffer);
     hr = StringCchCopyW(Buffer, cchBuffer, lpszText);
     GlobalUnlock(ClipBuffer);
 
@@ -222,27 +220,18 @@ VOID InitLogs()
         return;
     }
 
-    dwData = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE |
-        EVENTLOG_INFORMATION_TYPE;
+    dwData = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE | EVENTLOG_INFORMATION_TYPE;
 
-    if ((key.SetStringValue(L"EventMessageFile",
-                            szPath,
-                            REG_EXPAND_SZ) == ERROR_SUCCESS)
-        && (key.SetStringValue(L"CategoryMessageFile",
-                               szPath,
-                               REG_EXPAND_SZ) == ERROR_SUCCESS)
-        && (key.SetDWORDValue(L"TypesSupported",
-                              dwData) == ERROR_SUCCESS)
-        && (key.SetDWORDValue(L"CategoryCount",
-                              dwCategoryNum) == ERROR_SUCCESS))
-
+    if ((key.SetStringValue(L"EventMessageFile", szPath, REG_EXPAND_SZ) == ERROR_SUCCESS) &&
+        (key.SetStringValue(L"CategoryMessageFile", szPath, REG_EXPAND_SZ) == ERROR_SUCCESS) &&
+        (key.SetDWORDValue(L"TypesSupported", dwData) == ERROR_SUCCESS) &&
+        (key.SetDWORDValue(L"CategoryCount", dwCategoryNum) == ERROR_SUCCESS))
     {
         hLog = RegisterEventSourceW(NULL, L"ReactOS Application Manager");
     }
 
     key.Close();
 }
-
 
 VOID FreeLogs()
 {
@@ -252,7 +241,6 @@ VOID FreeLogs()
     }
 }
 
-
 BOOL WriteLogMessage(WORD wType, DWORD dwEventID, LPCWSTR lpMsg)
 {
     if (!SettingsInfo.bLogEnabled)
@@ -260,8 +248,7 @@ BOOL WriteLogMessage(WORD wType, DWORD dwEventID, LPCWSTR lpMsg)
         return TRUE;
     }
 
-    if (!ReportEventW(hLog, wType, 0, dwEventID,
-                      NULL, 1, 0, &lpMsg, NULL))
+    if (!ReportEventW(hLog, wType, 0, dwEventID, NULL, 1, 0, &lpMsg, NULL))
     {
         return FALSE;
     }
@@ -269,19 +256,16 @@ BOOL WriteLogMessage(WORD wType, DWORD dwEventID, LPCWSTR lpMsg)
     return TRUE;
 }
 
-BOOL GetInstalledVersion_WowUser(ATL::CStringW* szVersionResult,
-                                 const ATL::CStringW& szRegName,
-                                 BOOL IsUserKey,
-                                 REGSAM keyWow)
+BOOL
+GetInstalledVersion_WowUser(ATL::CStringW* szVersionResult, const ATL::CStringW& szRegName, BOOL IsUserKey, REGSAM keyWow)
 {
     BOOL bHasSucceded = FALSE;
     ATL::CRegKey key;
     ATL::CStringW szVersion;
     ATL::CStringW szPath = ATL::CStringW(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%ls") + szRegName;
 
-    if (key.Open(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
-                 szPath.GetString(),
-                 keyWow | KEY_READ) != ERROR_SUCCESS)
+    if (key.Open(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE, szPath.GetString(), keyWow | KEY_READ) !=
+        ERROR_SUCCESS)
     {
         return FALSE;
     }
@@ -290,9 +274,7 @@ BOOL GetInstalledVersion_WowUser(ATL::CStringW* szVersionResult,
     {
         ULONG dwSize = MAX_PATH * sizeof(WCHAR);
 
-        if (key.QueryStringValue(L"DisplayVersion",
-                                 szVersion.GetBuffer(MAX_PATH),
-                                 &dwSize) == ERROR_SUCCESS)
+        if (key.QueryStringValue(L"DisplayVersion", szVersion.GetBuffer(MAX_PATH), &dwSize) == ERROR_SUCCESS)
         {
             szVersion.ReleaseBuffer();
             *szVersionResult = szVersion;
@@ -315,14 +297,12 @@ BOOL GetInstalledVersion_WowUser(ATL::CStringW* szVersionResult,
 
 BOOL GetInstalledVersion(ATL::CStringW *pszVersion, const ATL::CStringW &szRegName)
 {
-    return (!szRegName.IsEmpty()
-            && (GetInstalledVersion_WowUser(pszVersion, szRegName, TRUE, KEY_WOW64_32KEY)
-                || GetInstalledVersion_WowUser(pszVersion, szRegName, FALSE, KEY_WOW64_32KEY)
-                || GetInstalledVersion_WowUser(pszVersion, szRegName, TRUE, KEY_WOW64_64KEY)
-                || GetInstalledVersion_WowUser(pszVersion, szRegName, FALSE, KEY_WOW64_64KEY)));
+    return (!szRegName.IsEmpty() &&
+        (GetInstalledVersion_WowUser(pszVersion, szRegName, TRUE, KEY_WOW64_32KEY) ||
+         GetInstalledVersion_WowUser(pszVersion, szRegName, FALSE, KEY_WOW64_32KEY) ||
+         GetInstalledVersion_WowUser(pszVersion, szRegName, TRUE, KEY_WOW64_64KEY) ||
+         GetInstalledVersion_WowUser(pszVersion, szRegName, FALSE, KEY_WOW64_64KEY)));
 }
-
-// CConfigParser
 
 CConfigParser::CConfigParser(const ATL::CStringW& FileName) : szConfigPath(GetINIFullPath(FileName))
 {
@@ -411,4 +391,3 @@ BOOL CConfigParser::GetInt(const ATL::CStringW& KeyName, INT& iResult)
     // we only care about values > 0
     return (iResult > 0);
 }
-// CConfigParser
