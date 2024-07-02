@@ -27,7 +27,7 @@ list(APPEND SOURCE
 if(MSVC)
     # FIXME: http://www.cmake.org/Bug/view.php?id=12998
     #target_compile_options(ddraw PRIVATE "/FIwine/typeof.h")
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "/FIwine/typeof.h")
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_OPTIONS "/FIwine/typeof.h")
 endif()
 
 add_library(ddraw MODULE

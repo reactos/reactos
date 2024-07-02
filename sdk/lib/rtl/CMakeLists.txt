@@ -18,7 +18,7 @@ list(APPEND RTL_WINE_SOURCE
 
 if(MSVC)
     # Silence warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
-    set_source_files_properties(${RTL_WINE_SOURCE} PROPERTIES COMPILE_FLAGS /wd4267)
+    set_source_files_properties(${RTL_WINE_SOURCE} PROPERTIES COMPILE_OPTIONS "/wd4267")
 endif()
 
 list(APPEND SOURCE

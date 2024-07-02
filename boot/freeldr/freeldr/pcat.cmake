@@ -82,7 +82,7 @@ if(ARCH STREQUAL "i386")
             arch/i386/xbox/xboxvideo.c)
         if(NOT MSVC)
             # Prevent a warning when doing a memcmp with address 0
-            set_source_files_properties(arch/i386/xbox/xboxmem.c PROPERTIES COMPILE_FLAGS "-Wno-nonnull")
+            set_source_files_properties(arch/i386/xbox/xboxmem.c PROPERTIES COMPILE_OPTIONS "-Wno-nonnull")
         endif()
 
     elseif(SARCH STREQUAL "pc98")

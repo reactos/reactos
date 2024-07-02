@@ -37,7 +37,7 @@ target_compile_definitions(rtl_test_lib PRIVATE _RTL_TEST _NTSYSTEM_)
 add_dependencies(rtl_test_lib asm)
 
 if(NOT MSVC)
-    set_source_files_properties(RtlGetFullPathName_UstrEx.c PROPERTIES COMPILE_FLAGS "-Wno-format")
+    set_source_files_properties(RtlGetFullPathName_UstrEx.c PROPERTIES COMPILE_OPTIONS "-Wno-format")
 endif()
 
 # RTL tests with static linkage (called unittest, so it won't run in rosautotest)

@@ -94,13 +94,13 @@ list(APPEND SOURCE
 
 if(MSVC)
     # Disable warning C4146: unary minus operator applied to unsigned type, result still unsigned
-    set_source_files_properties(wine/res.c PROPERTIES COMPILE_FLAGS /wd4146)
+    set_source_files_properties(wine/res.c PROPERTIES COMPILE_OPTIONS "/wd4146")
 
     # Disable warning C4267: 'initializing': conversion from 'size_t' to 'DWORD', possible loss of data
-    set_source_files_properties(winnls/string/locale.c PROPERTIES COMPILE_FLAGS /wd4267)
+    set_source_files_properties(winnls/string/locale.c PROPERTIES COMPILE_OPTIONS "/wd4267")
 else()
     # Disable warning: 'variable' defined but not used
-    set_source_files_properties(winnls/string/locale.c PROPERTIES COMPILE_FLAGS -Wno-unused-variable)
+    set_source_files_properties(winnls/string/locale.c PROPERTIES COMPILE_OPTIONS "-Wno-unused-variable")
 endif()
 
 if(ARCH STREQUAL "i386")
