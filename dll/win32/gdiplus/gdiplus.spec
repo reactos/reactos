@@ -100,7 +100,7 @@
 100 stdcall GdipCreateMatrix3I(ptr ptr ptr)
 101 stdcall GdipCreateMatrix(ptr)
 102 stdcall GdipCreateMetafileFromEmf(ptr long ptr)
-103 stdcall GdipCreateMetafileFromFile(ptr ptr)
+103 stdcall GdipCreateMetafileFromFile(wstr ptr)
 104 stdcall GdipCreateMetafileFromStream(ptr ptr)
 105 stdcall GdipCreateMetafileFromWmf(ptr long ptr ptr)
 106 stdcall GdipCreateMetafileFromWmfFile(wstr ptr ptr)
@@ -200,8 +200,8 @@
 200 stub GdipEnumerateMetafileSrcRectDestPointI
 201 stdcall GdipEnumerateMetafileSrcRectDestPoints(ptr ptr ptr long ptr long ptr ptr ptr)
 202 stub GdipEnumerateMetafileSrcRectDestPointsI
-203 stub GdipEnumerateMetafileSrcRectDestRect
-204 stub GdipEnumerateMetafileSrcRectDestRectI
+203 stdcall GdipEnumerateMetafileSrcRectDestRect(ptr ptr ptr ptr long ptr ptr ptr)
+204 stdcall GdipEnumerateMetafileSrcRectDestRectI(ptr ptr ptr ptr long ptr ptr ptr)
 205 stdcall GdipFillClosedCurve2(ptr ptr ptr long float long)
 206 stdcall GdipFillClosedCurve2I(ptr ptr ptr long float long)
 207 stdcall GdipFillClosedCurve(ptr ptr ptr long)
@@ -298,7 +298,7 @@
 298 stdcall GdipGetLogFontA(ptr ptr ptr)
 299 stdcall GdipGetLogFontW(ptr ptr ptr)
 300 stdcall GdipGetMatrixElements(ptr ptr)
-301 stub GdipGetMetafileDownLevelRasterizationLimit
+301 stdcall GdipGetMetafileDownLevelRasterizationLimit(ptr ptr)
 302 stdcall GdipGetMetafileHeaderFromEmf(ptr ptr)
 303 stdcall GdipGetMetafileHeaderFromFile(wstr ptr)
 304 stdcall GdipGetMetafileHeaderFromMetafile(ptr ptr)
@@ -451,7 +451,7 @@
 451 stdcall GdipRecordMetafileFileNameI(wstr long long ptr long wstr ptr)
 452 stdcall GdipRecordMetafileI(long long ptr long wstr ptr)
 453 stdcall GdipRecordMetafileStream(ptr long long ptr long wstr ptr)
-454 stub GdipRecordMetafileStreamI
+454 stdcall GdipRecordMetafileStreamI(ptr long long ptr long wstr ptr)
 455 stdcall GdipReleaseDC(ptr ptr)
 456 stdcall GdipRemovePropertyItem(ptr long)
 457 stdcall GdipResetClip(ptr)
@@ -472,7 +472,7 @@
 472 stdcall GdipRotateTextureTransform(ptr float long)
 473 stdcall GdipRotateWorldTransform(ptr float long)
 474 stdcall GdipSaveAdd(ptr ptr)
-475 stub GdipSaveAddImage
+475 stdcall GdipSaveAddImage(ptr ptr ptr)
 476 stdcall GdipSaveGraphics(ptr ptr)
 477 stdcall GdipSaveImageToFile(ptr wstr ptr ptr)
 478 stdcall GdipSaveImageToStream(ptr ptr ptr ptr)
@@ -506,7 +506,7 @@
 506 stdcall GdipSetImageAttributesGamma(ptr long long float)
 507 stdcall GdipSetImageAttributesNoOp(ptr long long)
 508 stdcall GdipSetImageAttributesOutputChannel(ptr long long long)
-509 stdcall GdipSetImageAttributesOutputChannelColorProfile(ptr long long ptr)
+509 stdcall GdipSetImageAttributesOutputChannelColorProfile(ptr long long wstr)
 510 stdcall GdipSetImageAttributesRemapTable(ptr long long long ptr)
 511 stdcall GdipSetImageAttributesThreshold(ptr long long float)
 512 stdcall GdipSetImageAttributesToIdentity(ptr long)
@@ -624,7 +624,7 @@
 624 stdcall GdipImageSetAbort(ptr ptr)
 625 stdcall GdipGraphicsSetAbort(ptr ptr)
 626 stub GdipDrawImageFX
-627 stdcall GdipConvertToEmfPlus(ptr ptr ptr long ptr ptr)
-628 stdcall GdipConvertToEmfPlusToFile(ptr ptr ptr ptr long ptr ptr)
+627 stdcall GdipConvertToEmfPlus(ptr ptr ptr long wstr ptr)
+628 stdcall GdipConvertToEmfPlusToFile(ptr ptr ptr wstr long wstr ptr)
 629 stub GdipConvertToEmfPlusToStream
 630 stub GdipPlayTSClientRecord

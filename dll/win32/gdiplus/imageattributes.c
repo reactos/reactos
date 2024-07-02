@@ -129,7 +129,7 @@ GpStatus WINGDIPAPI GdipGetImageAttributesAdjustedPalette(GpImageAttributes *ima
 GpStatus WINGDIPAPI GdipSetImageAttributesColorKeys(GpImageAttributes *imageattr,
     ColorAdjustType type, BOOL enableFlag, ARGB colorLow, ARGB colorHigh)
 {
-    TRACE("(%p,%u,%i,%08x,%08x)\n", imageattr, type, enableFlag, colorLow, colorHigh);
+    TRACE("(%p,%u,%i,%08lx,%08lx)\n", imageattr, type, enableFlag, colorLow, colorHigh);
 
     if(!imageattr || type >= ColorAdjustTypeCount)
         return InvalidParameter;
@@ -176,7 +176,7 @@ GpStatus WINGDIPAPI GdipSetImageAttributesColorMatrix(GpImageAttributes *imageat
 GpStatus WINGDIPAPI GdipSetImageAttributesWrapMode(GpImageAttributes *imageAttr,
     WrapMode wrap, ARGB argb, BOOL clamp)
 {
-    TRACE("(%p,%u,%08x,%i)\n", imageAttr, wrap, argb, clamp);
+    TRACE("(%p,%u,%08lx,%i)\n", imageAttr, wrap, argb, clamp);
 
     if(!imageAttr || wrap > WrapModeClamp)
         return InvalidParameter;

@@ -57,9 +57,9 @@ extern INT arc2polybezier(GpPointF * points, REAL x1, REAL y1, REAL x2, REAL y2,
     REAL startAngle, REAL sweepAngle) DECLSPEC_HIDDEN;
 extern REAL gdiplus_atan2(REAL dy, REAL dx) DECLSPEC_HIDDEN;
 extern GpStatus hresult_to_status(HRESULT res) DECLSPEC_HIDDEN;
-extern REAL units_to_pixels(REAL units, GpUnit unit, REAL dpi) DECLSPEC_HIDDEN;
-extern REAL pixels_to_units(REAL pixels, GpUnit unit, REAL dpi) DECLSPEC_HIDDEN;
-extern REAL units_scale(GpUnit from, GpUnit to, REAL dpi) DECLSPEC_HIDDEN;
+extern REAL units_to_pixels(REAL units, GpUnit unit, REAL dpi, BOOL printer_display) DECLSPEC_HIDDEN;
+extern REAL pixels_to_units(REAL pixels, GpUnit unit, REAL dpi, BOOL printer_display) DECLSPEC_HIDDEN;
+extern REAL units_scale(GpUnit from, GpUnit to, REAL dpi, BOOL printer_display) DECLSPEC_HIDDEN;
 
 #define WineCoordinateSpaceGdiDevice ((GpCoordinateSpace)4)
 
@@ -72,6 +72,7 @@ extern GpStatus gdip_transform_points(GpGraphics *graphics, GpCoordinateSpace ds
 
 extern GpStatus graphics_from_image(GpImage *image, GpGraphics **graphics) DECLSPEC_HIDDEN;
 extern GpStatus encode_image_png(GpImage *image, IStream* stream, GDIPCONST EncoderParameters* params) DECLSPEC_HIDDEN;
+extern GpStatus terminate_encoder_wic(GpImage *image) DECLSPEC_HIDDEN;
 
 extern GpStatus METAFILE_GetGraphicsContext(GpMetafile* metafile, GpGraphics **result) DECLSPEC_HIDDEN;
 extern GpStatus METAFILE_GetDC(GpMetafile* metafile, HDC *hdc) DECLSPEC_HIDDEN;
@@ -103,7 +104,23 @@ extern GpStatus METAFILE_DrawImagePointsRect(GpMetafile* metafile, GpImage *imag
 extern GpStatus METAFILE_AddSimpleProperty(GpMetafile *metafile, SHORT prop, SHORT val) DECLSPEC_HIDDEN;
 extern GpStatus METAFILE_DrawPath(GpMetafile *metafile, GpPen *pen, GpPath *path) DECLSPEC_HIDDEN;
 extern GpStatus METAFILE_FillPath(GpMetafile *metafile, GpBrush *brush, GpPath *path) DECLSPEC_HIDDEN;
+extern GpStatus METAFILE_DrawDriverString(GpMetafile *metafile, GDIPCONST UINT16 *text, INT length,
+    GDIPCONST GpFont *font, GDIPCONST GpStringFormat *format, GDIPCONST GpBrush *brush,
+    GDIPCONST PointF *positions, INT flags, GDIPCONST GpMatrix *matrix) DECLSPEC_HIDDEN;
+extern GpStatus METAFILE_FillRegion(GpMetafile* metafile, GpBrush* brush,
+    GpRegion* region) DECLSPEC_HIDDEN;
 extern void METAFILE_Free(GpMetafile *metafile) DECLSPEC_HIDDEN;
+extern GpStatus METAFILE_DrawEllipse(GpMetafile *metafile, GpPen *pen, GpRectF *rect) DECLSPEC_HIDDEN;
+extern GpStatus METAFILE_FillEllipse(GpMetafile *metafile, GpBrush *brush, GpRectF *rect) DECLSPEC_HIDDEN;
+extern GpStatus METAFILE_DrawRectangles(GpMetafile *metafile, GpPen *pen, const GpRectF *rects, INT count) DECLSPEC_HIDDEN;
+extern GpStatus METAFILE_FillPie(GpMetafile *metafile, GpBrush *brush, const GpRectF *rect,
+    REAL startAngle, REAL sweepAngle) DECLSPEC_HIDDEN;
+extern GpStatus METAFILE_DrawArc(GpMetafile *metafile, GpPen *pen, const GpRectF *rect,
+    REAL startAngle, REAL sweepAngle) DECLSPEC_HIDDEN;
+extern GpStatus METAFILE_OffsetClip(GpMetafile *metafile, REAL dx, REAL dy) DECLSPEC_HIDDEN;
+extern GpStatus METAFILE_ResetClip(GpMetafile *metafile) DECLSPEC_HIDDEN;
+extern GpStatus METAFILE_SetClipPath(GpMetafile *metafile, GpPath *path, CombineMode mode) DECLSPEC_HIDDEN;
+extern GpStatus METAFILE_SetRenderingOrigin(GpMetafile *metafile, INT x, INT y) DECLSPEC_HIDDEN;
 
 extern void calc_curve_bezier(const GpPointF *pts, REAL tension, REAL *x1,
     REAL *y1, REAL *x2, REAL *y2) DECLSPEC_HIDDEN;
@@ -122,7 +139,7 @@ extern GpStatus trace_path(GpGraphics *graphics, GpPath *path) DECLSPEC_HIDDEN;
 typedef struct region_element region_element;
 extern void delete_element(region_element *element) DECLSPEC_HIDDEN;
 
-extern GpStatus get_hatch_data(GpHatchStyle hatchstyle, const char **result) DECLSPEC_HIDDEN;
+extern GpStatus get_hatch_data(GpHatchStyle hatchstyle, const unsigned char **result) DECLSPEC_HIDDEN;
 
 static inline INT gdip_round(REAL x)
 {
@@ -190,8 +207,8 @@ extern void convert_32bppARGB_to_32bppPARGB(UINT width, UINT height,
     BYTE *dst_bits, INT dst_stride, const BYTE *src_bits, INT src_stride) DECLSPEC_HIDDEN;
 
 extern GpStatus convert_pixels(INT width, INT height,
-    INT dst_stride, BYTE *dst_bits, PixelFormat dst_format,
-    INT src_stride, const BYTE *src_bits, PixelFormat src_format, ColorPalette *palette) DECLSPEC_HIDDEN;
+    INT dst_stride, BYTE *dst_bits, PixelFormat dst_format, ColorPalette *dst_palette,
+    INT src_stride, const BYTE *src_bits, PixelFormat src_format, ColorPalette *src_palette) DECLSPEC_HIDDEN;
 
 extern PixelFormat apply_image_attributes(const GpImageAttributes *attributes, LPBYTE data,
     UINT width, UINT height, INT stride, ColorAdjustType type, PixelFormat fmt) DECLSPEC_HIDDEN;
@@ -225,6 +242,7 @@ struct GpGraphics{
     HWND hwnd;
     BOOL owndc;
     BOOL alpha_hdc;
+    BOOL printer_display;
     GpImage *image;
     ImageType image_type;
     SmoothingMode smoothing;
@@ -346,6 +364,7 @@ struct GpAdjustableArrowCap{
 
 struct GpImage{
     IWICBitmapDecoder *decoder;
+    IWICBitmapEncoder *encoder;
     ImageType type;
     GUID format;
     UINT flags;
@@ -405,6 +424,10 @@ struct GpMetafile{
     BOOL auto_frame; /* If true, determine the frame automatically */
     GpPointF auto_frame_min, auto_frame_max;
     DWORD next_object_id;
+    UINT limit_dpi;
+    BOOL printer_display;
+    REAL logical_dpix;
+    REAL logical_dpiy;
 
     /* playback */
     GpGraphics *playback_graphics;
@@ -413,7 +436,6 @@ struct GpMetafile{
     GpRectF src_rect;
     HANDLETABLE *handle_table;
     int handle_count;
-    XFORM gdiworldtransform;
     GpMatrix *world_transform;
     GpUnit page_unit;
     REAL page_scale;
@@ -521,6 +543,8 @@ struct GpFontFamily{
     WCHAR FamilyName[LF_FACESIZE];
     UINT16 em_height, ascent, descent, line_spacing; /* in font units */
     int dpi;
+    BOOL installed;
+    LONG ref;
 };
 
 /* internal use */
@@ -600,6 +624,14 @@ static inline BOOL image_lock(GpImage *image, BOOL *unlock)
 static inline void image_unlock(GpImage *image, BOOL unlock)
 {
     if (unlock) image->busy = 0;
+}
+
+static inline void set_rect(GpRectF *rect, REAL x, REAL y, REAL width, REAL height)
+{
+    rect->X = x;
+    rect->Y = y;
+    rect->Width = width;
+    rect->Height = height;
 }
 
 #endif

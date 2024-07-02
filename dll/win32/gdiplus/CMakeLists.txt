@@ -1,8 +1,8 @@
 
 add_definitions(
     -D__WINESRC__
-    -D__ROS_LONG64__
     -D_USE_MATH_DEFINES)
+remove_definitions(-D__ROS_LONG64__)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(gdiplus.dll gdiplus.spec ADD_IMPORTLIB)
@@ -14,7 +14,6 @@ list(APPEND SOURCE
     gdiplus.c
     graphics.c
     graphicspath.c
-    image.c
     imageattributes.c
     matrix.c
     metafile.c
@@ -24,6 +23,7 @@ list(APPEND SOURCE
     stringformat.c)
 
 list(APPEND PCH_SKIP_SOURCE
+    image.c
     guid.c
     ${CMAKE_CURRENT_BINARY_DIR}/gdiplus_stubs.c)
 

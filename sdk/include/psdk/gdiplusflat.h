@@ -611,6 +611,8 @@ extern "C"
     GpStatus WINGDIPAPI
     GdipSaveAdd(GpImage *, GDIPCONST EncoderParameters *);
     GpStatus WINGDIPAPI
+    GdipSaveAddImage(GpImage*,GpImage*,GDIPCONST EncoderParameters*);
+    GpStatus WINGDIPAPI
     GdipSaveGraphics(GpGraphics *, GraphicsState *);
     GpStatus WINGDIPAPI
     GdipScaleWorldTransform(GpGraphics *, REAL, REAL, GpMatrixOrder);
@@ -1100,6 +1102,8 @@ extern "C"
     GdipGetMetafileHeaderFromMetafile(GpMetafile *, MetafileHeader *);
     GpStatus WINGDIPAPI
     GdipGetMetafileHeaderFromStream(IStream *, MetafileHeader *);
+    GpStatus WINGDIPAPI
+    GdipGetMetafileDownLevelRasterizationLimit(GDIPCONST GpMetafile*,UINT*);
     GpStatus WINGDIPAPI
     GdipGetMetafileHeaderFromWmf(HMETAFILE, GDIPCONST WmfPlaceableFileHeader *, MetafileHeader *);
 

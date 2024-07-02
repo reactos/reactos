@@ -56,15 +56,21 @@ static GpStatus (WINGDIPAPI *pGdipInitializePalette)(ColorPalette*,PaletteType,I
 #define expect(expected, got) ok((got) == (expected), "Expected %d, got %d\n", (UINT)(expected), (UINT)(got))
 #define expectf(expected, got) ok(fabs((expected) - (got)) < 0.0001, "Expected %f, got %f\n", (expected), (got))
 
-static BOOL color_match(ARGB c1, ARGB c2, BYTE max_diff)
+static BOOL compare_uint(unsigned int x, unsigned int y, unsigned int max_diff)
 {
-    if (abs((c1 & 0xff) - (c2 & 0xff)) > max_diff) return FALSE;
+    unsigned int diff = x > y ? x - y : y - x;
+    return diff <= max_diff;
+}
+
+BOOL color_match(ARGB c1, ARGB c2, BYTE max_diff)
+{
+    if (!compare_uint(c1 & 0xff, c2 & 0xff, max_diff)) return FALSE;
     c1 >>= 8; c2 >>= 8;
-    if (abs((c1 & 0xff) - (c2 & 0xff)) > max_diff) return FALSE;
+    if (!compare_uint(c1 & 0xff, c2 & 0xff, max_diff)) return FALSE;
     c1 >>= 8; c2 >>= 8;
-    if (abs((c1 & 0xff) - (c2 & 0xff)) > max_diff) return FALSE;
+    if (!compare_uint(c1 & 0xff, c2 & 0xff, max_diff)) return FALSE;
     c1 >>= 8; c2 >>= 8;
-    if (abs((c1 & 0xff) - (c2 & 0xff)) > max_diff) return FALSE;
+    if (!compare_uint(c1 & 0xff, c2 & 0xff, max_diff)) return FALSE;
     return TRUE;
 }
 
@@ -91,6 +97,36 @@ static void expect_rawformat(REFGUID expected, GpImage *img, int line, BOOL todo
     ok_(__FILE__, line)(stat == Ok, "GdipGetImageRawFormat failed with %d\n", stat);
     if(stat != Ok) return;
     expect_guid(expected, &raw, line, todo);
+}
+
+static BOOL get_encoder_clsid(LPCWSTR mime, GUID *format, CLSID *clsid)
+{
+    GpStatus status;
+    UINT n_codecs, info_size, i;
+    ImageCodecInfo *info;
+    BOOL ret = FALSE;
+
+    status = GdipGetImageEncodersSize(&n_codecs, &info_size);
+    expect(Ok, status);
+
+    info = GdipAlloc(info_size);
+
+    status = GdipGetImageEncoders(n_codecs, info_size, info);
+    expect(Ok, status);
+
+    for (i = 0; i < n_codecs; i++)
+    {
+        if (!lstrcmpW(info[i].MimeType, mime))
+        {
+            *format = info[i].FormatID;
+            *clsid = info[i].Clsid;
+            ret = TRUE;
+            break;
+        }
+    }
+
+    GdipFree(info);
+    return ret;
 }
 
 static void test_bufferrawformat(void* buff, int size, REFGUID expected, int line, BOOL todo)
@@ -398,7 +434,6 @@ static void test_LoadingImages(void)
     GpStatus stat;
     GpBitmap *bm;
     GpImage *img;
-    static const WCHAR nonexistentW[] = {'n','o','n','e','x','i','s','t','e','n','t',0};
 
     stat = GdipCreateBitmapFromFile(0, 0);
     expect(InvalidParameter, stat);
@@ -409,7 +444,7 @@ static void test_LoadingImages(void)
     ok(bm == (GpBitmap *)0xdeadbeef, "returned %p\n", bm);
 
     bm = (GpBitmap *)0xdeadbeef;
-    stat = GdipCreateBitmapFromFile(nonexistentW, &bm);
+    stat = GdipCreateBitmapFromFile(L"nonexistent", &bm);
     todo_wine expect(InvalidParameter, stat);
     ok(!bm, "returned %p\n", bm);
 
@@ -422,7 +457,7 @@ static void test_LoadingImages(void)
     ok(img == (GpImage *)0xdeadbeef, "returned %p\n", img);
 
     img = (GpImage *)0xdeadbeef;
-    stat = GdipLoadImageFromFile(nonexistentW, &img);
+    stat = GdipLoadImageFromFile(L"nonexistent", &img);
     todo_wine expect(OutOfMemory, stat);
     ok(!img, "returned %p\n", img);
 
@@ -435,7 +470,7 @@ static void test_LoadingImages(void)
     ok(img == (GpImage *)0xdeadbeef, "returned %p\n", img);
 
     img = (GpImage *)0xdeadbeef;
-    stat = GdipLoadImageFromFileICM(nonexistentW, &img);
+    stat = GdipLoadImageFromFileICM(L"nonexistent", &img);
     todo_wine expect(OutOfMemory, stat);
     ok(!img, "returned %p\n", img);
 }
@@ -450,7 +485,7 @@ static void test_SavingImages(void)
     REAL w, h;
     ImageCodecInfo *codecs;
     static const CHAR filenameA[] = "a.bmp";
-    static const WCHAR filename[] = { 'a','.','b','m','p',0 };
+    static const WCHAR filename[] = L"a.bmp";
 
     codecs = NULL;
 
@@ -502,6 +537,188 @@ static void test_SavingImages(void)
     if (bm)
         GdipDisposeImage((GpImage*)bm);
     ok(DeleteFileA(filenameA), "Delete failed.\n");
+}
+
+static void test_SavingMultiPageTiff(void)
+{
+    GpStatus stat;
+    BOOL result;
+    GpBitmap *bm1 = NULL, *bm2 = NULL, *check_bm = NULL;
+    const REAL WIDTH = 10.0, HEIGHT = 20.0;
+    REAL w, h;
+    GUID format, tiff_clsid;
+    EncoderParameters params;
+    ULONG32 paramValue = EncoderValueFrameDimensionPage;
+    UINT frame_count;
+    static const CHAR filename1A[] = "1.tif";
+    static const CHAR filename2A[] = "2.tif";
+    static const WCHAR filename1[] = L"1.tif";
+    static const WCHAR filename2[] = L"2.tif";
+
+    params.Count = 1;
+    params.Parameter[0].Guid = EncoderSaveFlag;
+    params.Parameter[0].Type = EncoderParameterValueTypeLong;
+    params.Parameter[0].NumberOfValues = 1;
+    params.Parameter[0].Value = &paramValue;
+
+    stat = GdipCreateBitmapFromScan0(WIDTH, HEIGHT, 0, PixelFormat24bppRGB, NULL, &bm1);
+    expect(Ok, stat);
+    stat = GdipCreateBitmapFromScan0(2 * WIDTH, 2 * HEIGHT, 0, PixelFormat24bppRGB, NULL, &bm2);
+    expect(Ok, stat);
+    result = get_encoder_clsid(L"image/tiff", &format, &tiff_clsid);
+    ok(result, "getting TIFF encoding clsid failed");
+
+    if (!bm1 || !bm2 || !result)
+        return;
+
+    /* invalid params: NULL */
+    stat = GdipSaveAdd(0, &params);
+    expect(InvalidParameter, stat);
+    stat = GdipSaveAdd((GpImage*)bm1, 0);
+    expect(InvalidParameter, stat);
+
+    stat = GdipSaveAddImage((GpImage*)bm1, (GpImage*)bm2, 0);
+    expect(InvalidParameter, stat);
+    stat = GdipSaveAddImage((GpImage*)bm1, 0, &params);
+    expect(InvalidParameter, stat);
+    stat = GdipSaveAddImage(0, (GpImage*)bm2, &params);
+    expect(InvalidParameter, stat);
+
+    /* win32 error: SaveAdd() can only be called after Save() with the MultiFrame param */
+    stat = GdipSaveAdd((GpImage*)bm1, &params);
+    expect(Win32Error, stat);
+    stat = GdipSaveAddImage((GpImage*)bm1, (GpImage*)bm2, &params);
+    expect(Win32Error, stat);
+
+    stat = GdipSaveImageToFile((GpImage*)bm1, filename1, &tiff_clsid, 0); /* param not set! */
+    expect(Ok, stat);
+    if (stat != Ok) goto cleanup;
+
+    stat = GdipSaveAdd((GpImage*)bm1, &params);
+    expect(Win32Error, stat);
+    stat = GdipSaveAddImage((GpImage*)bm1, (GpImage*)bm2, &params);
+    expect(Win32Error, stat);
+
+    /* win32 error: can't flush before starting the encoding process */
+    paramValue = EncoderValueFlush;
+    stat = GdipSaveAdd((GpImage*)bm1, &params);
+    expect(Win32Error, stat);
+
+    /* win32 error: can't start encoding process through SaveAdd(), only Save() */
+    paramValue = EncoderValueMultiFrame;
+    stat = GdipSaveAdd((GpImage*)bm1, &params);
+    expect(Win32Error, stat);
+
+    /* start encoding process: add first frame (bm1) */
+    paramValue = EncoderValueMultiFrame;
+    stat = GdipSaveImageToFile((GpImage*)bm1, filename1, &tiff_clsid, &params);
+    expect(Ok, stat);
+
+    /* re-start encoding process: add first frame (bm1), should re-create the file */
+    stat = GdipSaveImageToFile((GpImage*)bm1, filename1, &tiff_clsid, &params);
+    expect(Ok, stat);
+
+    /* add second frame (bm2) */
+    paramValue = EncoderValueFrameDimensionPage;
+    stat = GdipSaveAddImage((GpImage*)bm1, (GpImage*)bm2, &params);
+    expect(Ok, stat);
+    if (stat != Ok) goto cleanup;
+
+    /* finish encoding process */
+    paramValue = EncoderValueFlush;
+    stat = GdipSaveAdd((GpImage*)bm1, &params);
+    expect(Ok, stat);
+
+    /* bm1 should be unchanged, only the saved file on disk has multiple frames */
+    stat = GdipImageGetFrameCount((GpImage*)bm1, &FrameDimensionPage, &frame_count);
+    expect(Ok, stat);
+    expect(1, frame_count);
+
+    /* win32 error: encoding process already finished */
+    paramValue = EncoderValueFrameDimensionPage;
+    stat = GdipSaveAddImage((GpImage*)bm1, (GpImage*)bm2, &params);
+    expect(Win32Error, stat);
+
+    stat = GdipSaveAdd((GpImage*)bm1, &params);
+    expect(Win32Error, stat);
+
+    GdipDisposeImage((GpImage*)bm1);
+    bm1 = 0;
+    GdipDisposeImage((GpImage*)bm2);
+    bm2 = 0;
+
+    /* re-load and check image stats */
+    stat = GdipLoadImageFromFile(filename1, (GpImage**)&check_bm);
+    expect(Ok, stat);
+
+    stat = GdipImageGetFrameCount((GpImage*)check_bm, &FrameDimensionPage, &frame_count);
+    expect(Ok, stat);
+    expect(2, frame_count);
+    if (stat != Ok || frame_count != 2) goto cleanup;
+
+    stat = GdipGetImageDimension((GpImage*)check_bm, &w, &h);
+    expect(Ok, stat);
+    expectf(WIDTH, w); /* frame index 0: bm1 stats */
+    expectf(HEIGHT, h);
+
+    stat = GdipImageSelectActiveFrame((GpImage*)check_bm, &FrameDimensionPage, 1);
+    expect(Ok, stat);
+
+    stat = GdipGetImageDimension((GpImage*)check_bm, &w, &h);
+    expectf(2 * WIDTH, w); /* frame index 1: bm2 stats */
+    expectf(2 * HEIGHT, h);
+
+    /* now proper API use for SaveAdd() to swap the frames in check_bm */
+    paramValue = EncoderValueMultiFrame;
+    stat = GdipSaveImageToFile((GpImage*)check_bm, filename2, &tiff_clsid, &params);
+    expect(Ok, stat); /* second frame is active: bm2 */
+
+    stat = GdipImageSelectActiveFrame((GpImage*)check_bm, &FrameDimensionPage, 0);
+    expect(Ok, stat);
+
+    paramValue = EncoderValueFrameDimensionPage;
+    stat = GdipSaveAdd((GpImage*)check_bm, &params);
+    expect(Ok, stat); /* first frame is active: bm1 */
+
+    paramValue = EncoderValueFlush;
+    stat = GdipSaveAdd((GpImage*)check_bm, &params);
+    expect(Ok, stat); /* flushed encoder (finished encoding process) */
+
+    GdipDisposeImage((GpImage*)check_bm);
+    check_bm = 0;
+
+    /* re-load and check image stats */
+    stat = GdipLoadImageFromFile(filename2, (GpImage**)&check_bm);
+    expect(Ok, stat);
+
+    stat = GdipImageGetFrameCount((GpImage*)check_bm, &FrameDimensionPage, &frame_count);
+    expect(Ok, stat);
+    expect(2, frame_count);
+
+    stat = GdipGetImageDimension((GpImage*)check_bm, &w, &h);
+    expect(Ok, stat);
+    expectf(2 * WIDTH, w); /* frame index 0: bm2 stats */
+    expectf(2 * HEIGHT, h);
+
+    stat = GdipImageSelectActiveFrame((GpImage*)check_bm, &FrameDimensionPage, 1);
+    expect(Ok, stat);
+
+    stat = GdipGetImageDimension((GpImage*)check_bm, &w, &h);
+    expectf(WIDTH, w); /* frame index 1: bm1 stats */
+    expectf(HEIGHT, h);
+
+ cleanup:
+    if (bm1)
+        GdipDisposeImage((GpImage*)bm1);
+    if (bm2)
+        GdipDisposeImage((GpImage*)bm2);
+    ok(DeleteFileA(filename1A), "Delete 1.tif failed.\n");
+
+    if (check_bm)
+    {
+        GdipDisposeImage((GpImage*)check_bm);
+        ok(DeleteFileA(filename2A), "Delete 2.tif failed.\n");
+    }
 }
 
 static void test_encoders(void)
@@ -883,7 +1100,7 @@ static void test_LockBits_UserBuf(void)
 struct BITMAPINFOWITHBITFIELDS
 {
     BITMAPINFOHEADER bmiHeader;
-    DWORD masks[3];
+    DWORD masks[255];
 };
 
 union BITMAPINFOUNION
@@ -899,7 +1116,10 @@ static void test_GdipCreateBitmapFromHBITMAP(void)
     HPALETTE hpal = NULL;
     GpStatus stat;
     BYTE buff[1000];
-    LOGPALETTE* LogPal = NULL;
+    char logpalette_buf[sizeof(LOGPALETTE) + sizeof(PALETTEENTRY) * 255];
+    LOGPALETTE *LogPal = (LOGPALETTE *)logpalette_buf;
+    char colorpalette_buf[sizeof(ColorPalette) + sizeof(ARGB) * 255];
+    ColorPalette *palette = (ColorPalette *)colorpalette_buf;
     REAL width, height;
     const REAL WIDTH1 = 5;
     const REAL HEIGHT1 = 15;
@@ -909,6 +1129,7 @@ static void test_GdipCreateBitmapFromHBITMAP(void)
     union BITMAPINFOUNION bmi;
     BYTE *bits;
     PixelFormat format;
+    int i;
 
     stat = GdipCreateBitmapFromHBITMAP(NULL, NULL, NULL);
     expect(InvalidParameter, stat);
@@ -922,6 +1143,9 @@ static void test_GdipCreateBitmapFromHBITMAP(void)
     expect(Ok, GdipGetImageDimension((GpImage*) gpbm, &width, &height));
     expectf(WIDTH1,  width);
     expectf(HEIGHT1, height);
+    stat = GdipGetImagePixelFormat((GpImage*)gpbm, &format);
+    expect(Ok, stat);
+    expect(PixelFormat1bppIndexed, format);
     if (stat == Ok)
         GdipDisposeImage((GpImage*)gpbm);
     DeleteObject(hbm);
@@ -932,6 +1156,10 @@ static void test_GdipCreateBitmapFromHBITMAP(void)
     expect(Ok, stat);
     /* raw format */
     expect_rawformat(&ImageFormatMemoryBMP, (GpImage*)gpbm, __LINE__, FALSE);
+
+    stat = GdipGetImagePixelFormat((GpImage*)gpbm, &format);
+    expect(Ok, stat);
+    expect(PixelFormat1bppIndexed, format);
 
     expect(Ok, GdipGetImageDimension((GpImage*) gpbm, &width, &height));
     expectf(WIDTH2,  width);
@@ -960,6 +1188,9 @@ static void test_GdipCreateBitmapFromHBITMAP(void)
     expect(Ok, GdipGetImageDimension((GpImage*) gpbm, &width, &height));
     expectf(WIDTH1,  width);
     expectf(HEIGHT1, height);
+    stat = GdipGetImagePixelFormat((GpImage*)gpbm, &format);
+    expect(Ok, stat);
+    expect(PixelFormat24bppRGB, format);
     if (stat == Ok)
     {
         /* test whether writing to the bitmap affects the original */
@@ -971,21 +1202,77 @@ static void test_GdipCreateBitmapFromHBITMAP(void)
         GdipDisposeImage((GpImage*)gpbm);
     }
 
-    LogPal = GdipAlloc(sizeof(LOGPALETTE));
-    ok(LogPal != NULL, "unable to allocate LOGPALETTE\n");
     LogPal->palVersion = 0x300;
-    LogPal->palNumEntries = 1;
+    LogPal->palNumEntries = 8;
+    for (i = 0; i < 8; i++)
+    {
+        LogPal->palPalEntry[i].peRed = i;
+        LogPal->palPalEntry[i].peGreen = i;
+        LogPal->palPalEntry[i].peBlue = i;
+        LogPal->palPalEntry[i].peFlags = 0;
+    }
+
     hpal = CreatePalette(LogPal);
     ok(hpal != NULL, "CreatePalette failed\n");
-    GdipFree(LogPal);
 
     stat = GdipCreateBitmapFromHBITMAP(hbm, hpal, &gpbm);
     expect(Ok, stat);
+    stat = GdipGetImagePalette((GpImage *)gpbm, palette, sizeof(colorpalette_buf));
+    expect(Ok, stat);
+    expect(0, palette->Count);
+    GdipDisposeImage((GpImage*)gpbm);
+    DeleteObject(hbm);
 
-    if (stat == Ok)
-        GdipDisposeImage((GpImage*)gpbm);
+    for (i = 0; i < 16; i++)
+    {
+        RGBQUAD *colors = bmi.bi.bmiColors;
+        BYTE clr = 255 - i;
+        colors[i].rgbBlue = clr;
+        colors[i].rgbGreen = clr;
+        colors[i].rgbRed = clr;
+        colors[i].rgbReserved = 0;
+    }
+
+    bmi.bi.bmiHeader.biBitCount = 8;
+    bmi.bi.bmiHeader.biClrUsed = 16;
+    bmi.bi.bmiHeader.biClrImportant = 16;
+    hbm = CreateDIBSection(hdc, &bmi.bi, DIB_RGB_COLORS, (void**)&bits, NULL, 0);
+    ok(hbm != NULL, "CreateDIBSection failed\n");
+
+    stat = GdipCreateBitmapFromHBITMAP(hbm, hpal, &gpbm);
+    expect(Ok, stat);
+    stat = GdipGetImagePixelFormat((GpImage*)gpbm, &format);
+    expect(Ok, stat);
+    expect(PixelFormat8bppIndexed, format);
+    stat = GdipGetImagePalette((GpImage *)gpbm, palette, sizeof(colorpalette_buf));
+    expect(Ok, stat);
+    expect(256, palette->Count);
+    for (i = 0; i < 16; i++)
+    {
+        BYTE clr = 255 - i;
+        ARGB argb = 0xff000000 | (clr << 16) | (clr << 8) | clr;
+        ok(palette->Entries[i] == argb, "got %08lx, expected %08lx\n", palette->Entries[i], argb);
+    }
+    GdipDisposeImage((GpImage*)gpbm);
 
     DeleteObject(hpal);
+
+    stat = GdipCreateBitmapFromHBITMAP(hbm, 0, &gpbm);
+    expect(Ok, stat);
+    stat = GdipGetImagePixelFormat((GpImage*)gpbm, &format);
+    expect(Ok, stat);
+    expect(PixelFormat8bppIndexed, format);
+    stat = GdipGetImagePalette((GpImage *)gpbm, palette, sizeof(colorpalette_buf));
+    expect(Ok, stat);
+    expect(256, palette->Count);
+    for (i = 0; i < 16; i++)
+    {
+        BYTE clr = 255 - i;
+        ARGB argb = 0xff000000 | (clr << 16) | (clr << 8) | clr;
+        ok(palette->Entries[i] == argb, "got %08lx, expected %08lx\n", palette->Entries[i], argb);
+    }
+    GdipDisposeImage((GpImage*)gpbm);
+
     DeleteObject(hbm);
 
     /* 16-bit 555 dib, rgb */
@@ -1016,7 +1303,7 @@ static void test_GdipCreateBitmapFromHBITMAP(void)
     DeleteObject(hbm);
 
     /* 16-bit 555 dib, with bitfields */
-    bmi.bi.bmiHeader.biSize = sizeof(bmi);
+    bmi.bi.bmiHeader.biSize = sizeof(bmi.bi.bmiHeader);
     bmi.bi.bmiHeader.biCompression = BI_BITFIELDS;
     bmi.bf.masks[0] = 0x7c00;
     bmi.bf.masks[1] = 0x3e0;
@@ -1243,7 +1530,7 @@ static void test_testcontrol(void)
     param = 0;
     stat = GdipTestControl(TestControlGetBuildNumber, &param);
     expect(Ok, stat);
-    ok(param != 0, "Build number expected, got %u\n", param);
+    ok(param != 0, "Build number expected, got %lu\n", param);
 }
 
 static void test_fromhicon(void)
@@ -1721,7 +2008,7 @@ static void test_createhbitmap(void)
         if (bm.bmBits)
         {
             DWORD val = *(DWORD*)bm.bmBits;
-            ok(val == 0xff686868, "got %x, expected 0xff686868\n", val);
+            ok(val == 0xff686868, "got %lx, expected 0xff686868\n", val);
         }
 
         hdc = CreateCompatibleDC(NULL);
@@ -1768,9 +2055,9 @@ static void test_createhbitmap(void)
         if (bm.bmBits)
         {
             DWORD val = *(DWORD*)bm.bmBits;
-            ok(val == 0x682a2a2a, "got %x, expected 0x682a2a2a\n", val);
+            ok(val == 0x682a2a2a, "got %lx, expected 0x682a2a2a\n", val);
             val = *((DWORD*)bm.bmBits + (bm.bmHeight-1) * bm.bmWidthBytes/4 + 1);
-            ok(val == 0x0, "got %x, expected 0x682a2a2a\n", val);
+            ok(val == 0x0, "got %lx, expected 0x682a2a2a\n", val);
         }
 
         hdc = CreateCompatibleDC(NULL);
@@ -1810,20 +2097,20 @@ static void test_createhbitmap(void)
         if (bm.bmBits)
         {
             DWORD val = *(DWORD*)bm.bmBits;
-            ok(val == 0x68c12ac1 || broken(val == 0x682a2ac1), "got %x, expected 0x68c12ac1\n", val);
+            ok(val == 0x68c12ac1 || broken(val == 0x682a2ac1), "got %lx, expected 0x68c12ac1\n", val);
             val = *((DWORD*)bm.bmBits + (bm.bmHeight-1) * bm.bmWidthBytes/4 + 1);
-            ok(val == 0xff00ff || broken(val == 0xff), "got %x, expected 0xff00ff\n", val);
+            ok(val == 0xff00ff || broken(val == 0xff), "got %lx, expected 0xff00ff\n", val);
         }
 
         hdc = CreateCompatibleDC(NULL);
 
         oldhbitmap = SelectObject(hdc, hbitmap);
         pixel = GetPixel(hdc, 5, 5);
-        ok(pixel == 0xc12ac1 || broken(pixel == 0xc12a2a), "got %x, expected 0xc12ac1\n", pixel);
+        ok(pixel == 0xc12ac1 || broken(pixel == 0xc12a2a), "got %lx, expected 0xc12ac1\n", pixel);
         pixel = GetPixel(hdc, 1, 0);
-        ok(pixel == 0xff00ff || broken(pixel == 0xff0000), "got %x, expected 0xff00ff\n", pixel);
+        ok(pixel == 0xff00ff || broken(pixel == 0xff0000), "got %lx, expected 0xff00ff\n", pixel);
         pixel = GetPixel(hdc, 2, 0);
-        ok(pixel == 0xb12ac1 || broken(pixel == 0xb12a2a), "got %x, expected 0xb12ac1\n", pixel);
+        ok(pixel == 0xb12ac1 || broken(pixel == 0xb12a2a), "got %lx, expected 0xb12ac1\n", pixel);
 
         SelectObject(hdc, oldhbitmap);
         DeleteDC(hdc);
@@ -1850,20 +2137,20 @@ static void test_createhbitmap(void)
         if (bm.bmBits)
         {
             DWORD val = *(DWORD*)bm.bmBits;
-            ok(val == 0x68c12ac1 || broken(val == 0x682a2ac1), "got %x, expected 0x68c12ac1\n", val);
+            ok(val == 0x68c12ac1 || broken(val == 0x682a2ac1), "got %lx, expected 0x68c12ac1\n", val);
             val = *((DWORD*)bm.bmBits + (bm.bmHeight-1) * bm.bmWidthBytes/4 + 1);
-            ok(val == 0xff00ff || broken(val == 0xff), "got %x, expected 0xff00ff\n", val);
+            ok(val == 0xff00ff || broken(val == 0xff), "got %lx, expected 0xff00ff\n", val);
         }
 
         hdc = CreateCompatibleDC(NULL);
 
         oldhbitmap = SelectObject(hdc, hbitmap);
         pixel = GetPixel(hdc, 5, 5);
-        ok(pixel == 0xc12ac1 || broken(pixel == 0xc12a2a), "got %x, expected 0xc12ac1\n", pixel);
+        ok(pixel == 0xc12ac1 || broken(pixel == 0xc12a2a), "got %lx, expected 0xc12ac1\n", pixel);
         pixel = GetPixel(hdc, 1, 0);
-        ok(pixel == 0xff00ff || broken(pixel == 0xff0000), "got %x, expected 0xff00ff\n", pixel);
+        ok(pixel == 0xff00ff || broken(pixel == 0xff0000), "got %lx, expected 0xff00ff\n", pixel);
         pixel = GetPixel(hdc, 2, 0);
-        ok(pixel == 0xb12ac1 || broken(pixel == 0xb12a2a), "got %x, expected 0xb12ac1\n", pixel);
+        ok(pixel == 0xb12ac1 || broken(pixel == 0xb12a2a), "got %lx, expected 0xb12ac1\n", pixel);
 
         SelectObject(hdc, oldhbitmap);
         DeleteDC(hdc);
@@ -2084,7 +2371,7 @@ static void check_halftone_palette(ColorPalette *palette)
             expected |= halftone_values[((i-40)/6)%6] << 8;
             expected |= halftone_values[((i-40)/36)%6] << 16;
         }
-        ok(expected == palette->Entries[i], "Expected %.8x, got %.8x, i=%u/%u\n",
+        ok(expected == palette->Entries[i], "Expected %.8lx, got %.8lx, i=%u/%u\n",
             expected, palette->Entries[i], i, palette->Count);
     }
 }
@@ -2392,7 +2679,7 @@ static void test_colormatrix(void)
 
     stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
     expect(Ok, stat);
-    ok(color_match(0xeeff40cc, color, 3), "expected 0xeeff40cc, got 0x%08x\n", color);
+    ok(color_match(0xeeff40cc, color, 3), "expected 0xeeff40cc, got 0x%08lx\n", color);
 
     /* Toggle NoOp */
     stat = GdipSetImageAttributesNoOp(imageattr, ColorAdjustTypeDefault, FALSE);
@@ -2404,7 +2691,7 @@ static void test_colormatrix(void)
 
     stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
     expect(Ok, stat);
-    ok(color_match(0xfefe40cc, color, 3), "expected 0xfefe40cc, got 0x%08x\n", color);
+    ok(color_match(0xfefe40cc, color, 3), "expected 0xfefe40cc, got 0x%08lx\n", color);
 
     stat = GdipSetImageAttributesNoOp(imageattr, ColorAdjustTypeDefault, TRUE);
     expect(Ok, stat);
@@ -2415,7 +2702,7 @@ static void test_colormatrix(void)
 
     stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
     expect(Ok, stat);
-    ok(color_match(0xff40ccee, color, 3), "expected 0xff40ccee, got 0x%08x\n", color);
+    ok(color_match(0xff40ccee, color, 3), "expected 0xff40ccee, got 0x%08lx\n", color);
 
     stat = GdipResetImageAttributes(imageattr, ColorAdjustTypeDefault);
     expect(Ok, stat);
@@ -2429,7 +2716,7 @@ static void test_colormatrix(void)
 
     stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
     expect(Ok, stat);
-    ok(color_match(0xff40ccee, color, 3), "expected 0xff40ccee, got 0x%08x\n", color);
+    ok(color_match(0xff40ccee, color, 3), "expected 0xff40ccee, got 0x%08lx\n", color);
 
     stat = GdipDrawImageRectRectI(graphics, (GpImage *)bitmap1, 0, 0, 1, 1, 0, 0, 1, 1,
         UnitPixel, imageattr, NULL, NULL);
@@ -2437,7 +2724,7 @@ static void test_colormatrix(void)
 
     stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
     expect(Ok, stat);
-    ok(color_match(0xff40ccee, color, 1), "Expected ff40ccee, got %.8x\n", color);
+    ok(color_match(0xff40ccee, color, 1), "Expected ff40ccee, got %.8lx\n", color);
 
     /* Disable adjustment, toggle NoOp */
     stat = GdipSetImageAttributesColorMatrix(imageattr, ColorAdjustTypeDefault,
@@ -2453,7 +2740,7 @@ static void test_colormatrix(void)
 
     stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
     expect(Ok, stat);
-    ok(color_match(0xff40ccee, color, 3), "expected 0xff40ccee, got 0x%08x\n", color);
+    ok(color_match(0xff40ccee, color, 3), "expected 0xff40ccee, got 0x%08lx\n", color);
 
     stat = GdipSetImageAttributesNoOp(imageattr, ColorAdjustTypeDefault, TRUE);
     expect(Ok, stat);
@@ -2464,7 +2751,7 @@ static void test_colormatrix(void)
 
     stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
     expect(Ok, stat);
-    ok(color_match(0xff40ccee, color, 3), "expected 0xff40ccee, got 0x%08x\n", color);
+    ok(color_match(0xff40ccee, color, 3), "expected 0xff40ccee, got 0x%08lx\n", color);
 
     /* Reset with NoOp on, enable adjustment. */
     stat = GdipResetImageAttributes(imageattr, ColorAdjustTypeDefault);
@@ -2480,7 +2767,7 @@ static void test_colormatrix(void)
 
     stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
     expect(Ok, stat);
-    ok(color_match(0xfff24ace, color, 3), "expected 0xfff24ace, got 0x%08x\n", color);
+    ok(color_match(0xfff24ace, color, 3), "expected 0xfff24ace, got 0x%08lx\n", color);
 
     /* Now inhibit specific category. */
     stat = GdipResetImageAttributes(imageattr, ColorAdjustTypeDefault);
@@ -2496,7 +2783,7 @@ static void test_colormatrix(void)
 
     stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
     expect(Ok, stat);
-    ok(color_match(0xfffe41cc, color, 3), "expected 0xfffe41cc, got 0x%08x\n", color);
+    ok(color_match(0xfffe41cc, color, 3), "expected 0xfffe41cc, got 0x%08lx\n", color);
 
     stat = GdipSetImageAttributesNoOp(imageattr, ColorAdjustTypeBitmap, TRUE);
     expect(Ok, stat);
@@ -2507,7 +2794,7 @@ static void test_colormatrix(void)
 
     stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
     expect(Ok, stat);
-    ok(color_match(0xff40ccee, color, 3), "expected 0xff40ccee, got 0x%08x\n", color);
+    ok(color_match(0xff40ccee, color, 3), "expected 0xff40ccee, got 0x%08lx\n", color);
 
     stat = GdipSetImageAttributesNoOp(imageattr, ColorAdjustTypeBitmap, FALSE);
     expect(Ok, stat);
@@ -2521,7 +2808,7 @@ static void test_colormatrix(void)
 
     stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
     expect(Ok, stat);
-    ok(color_match(0xfff24ace, color, 3), "expected 0xfff24ace, got 0x%08x\n", color);
+    ok(color_match(0xfff24ace, color, 3), "expected 0xfff24ace, got 0x%08lx\n", color);
 
     stat = GdipResetImageAttributes(imageattr, ColorAdjustTypeBitmap);
     expect(Ok, stat);
@@ -2532,7 +2819,7 @@ static void test_colormatrix(void)
 
     stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
     expect(Ok, stat);
-    ok(color_match(0xff40ccee, color, 3), "expected 0xff40ccee, got 0x%08x\n", color);
+    ok(color_match(0xff40ccee, color, 3), "expected 0xff40ccee, got 0x%08lx\n", color);
 
     GdipDeleteGraphics(graphics);
     GdipDisposeImage((GpImage*)bitmap1);
@@ -2594,7 +2881,7 @@ static void test_gamma(void)
 
     stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
     expect(Ok, stat);
-    ok(color_match(0xff20ffff, color, 1), "Expected ff20ffff, got %.8x\n", color);
+    ok(color_match(0xff20ffff, color, 1), "Expected ff20ffff, got %.8lx\n", color);
 
     stat = GdipResetImageAttributes(imageattr, ColorAdjustTypeDefault);
     expect(Ok, stat);
@@ -2605,7 +2892,7 @@ static void test_gamma(void)
 
     stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
     expect(Ok, stat);
-    ok(color_match(0xff80ffff, color, 1), "Expected ff80ffff, got %.8x\n", color);
+    ok(color_match(0xff80ffff, color, 1), "Expected ff80ffff, got %.8lx\n", color);
 
     GdipDeleteGraphics(graphics);
     GdipDisposeImage((GpImage*)bitmap1);
@@ -2896,7 +3183,7 @@ static void test_multiframegif(void)
     expect(Ok, stat);
     stat = GdipBitmapGetPixel(bmp, 2, 0, &color);
     expect(Ok, stat);
-    ok(color==0 || broken(color==0xff0000ff), "color = %x\n", color);
+    ok(color==0 || broken(color==0xff0000ff), "color = %lx\n", color);
     if(color != 0) {
         win_skip("broken animated gif support\n");
         GdipDisposeImage((GpImage*)bmp);
@@ -2910,7 +3197,7 @@ static void test_multiframegif(void)
         for(j=0; j<4; j++) {
             stat = GdipBitmapGetPixel(bmp, j*2, 0, &color);
             expect(Ok, stat);
-            ok(gifanimation2_pixels[i%5][j] == color, "at %d,%d got %x, expected %x\n", i, j, color, gifanimation2_pixels[i%5][j]);
+            ok(gifanimation2_pixels[i%5][j] == color, "at %d,%d got %lx, expected %lx\n", i, j, color, gifanimation2_pixels[i%5][j]);
         }
     }
 
@@ -3093,7 +3380,7 @@ static void test_remaptable(void)
 
     stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
     expect(Ok, stat);
-    ok(color_match(0xffff00ff, color, 1), "Expected ffff00ff, got %.8x\n", color);
+    ok(color_match(0xffff00ff, color, 1), "Expected ffff00ff, got %.8lx\n", color);
 
     stat = GdipResetImageAttributes(imageattr, ColorAdjustTypeDefault);
     expect(Ok, stat);
@@ -3104,7 +3391,7 @@ static void test_remaptable(void)
 
     stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
     expect(Ok, stat);
-    ok(color_match(0xff00ff00, color, 1), "Expected ff00ff00, got %.8x\n", color);
+    ok(color_match(0xff00ff00, color, 1), "Expected ff00ff00, got %.8lx\n", color);
 
     GdipDeleteGraphics(graphics);
     GdipDisposeImage((GpImage*)bitmap1);
@@ -3163,19 +3450,19 @@ static void test_colorkey(void)
 
     stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
     expect(Ok, stat);
-    ok(color_match(0x00000000, color, 1), "Expected 00000000, got %.8x\n", color);
+    ok(color_match(0x00000000, color, 1), "Expected 00000000, got %.8lx\n", color);
 
     stat = GdipBitmapGetPixel(bitmap2, 0, 1, &color);
     expect(Ok, stat);
-    ok(color_match(0x00000000, color, 1), "Expected 00000000, got %.8x\n", color);
+    ok(color_match(0x00000000, color, 1), "Expected 00000000, got %.8lx\n", color);
 
     stat = GdipBitmapGetPixel(bitmap2, 1, 0, &color);
     expect(Ok, stat);
-    ok(color_match(0x00000000, color, 1), "Expected 00000000, got %.8x\n", color);
+    ok(color_match(0x00000000, color, 1), "Expected 00000000, got %.8lx\n", color);
 
     stat = GdipBitmapGetPixel(bitmap2, 1, 1, &color);
     expect(Ok, stat);
-    ok(color_match(0xffffffff, color, 1), "Expected ffffffff, got %.8x\n", color);
+    ok(color_match(0xffffffff, color, 1), "Expected ffffffff, got %.8lx\n", color);
 
     stat = GdipResetImageAttributes(imageattr, ColorAdjustTypeDefault);
     expect(Ok, stat);
@@ -3186,19 +3473,19 @@ static void test_colorkey(void)
 
     stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
     expect(Ok, stat);
-    ok(color_match(0x20405060, color, 1), "Expected 20405060, got %.8x\n", color);
+    ok(color_match(0x20405060, color, 1), "Expected 20405060, got %.8lx\n", color);
 
     stat = GdipBitmapGetPixel(bitmap2, 0, 1, &color);
     expect(Ok, stat);
-    ok(color_match(0x40506070, color, 1), "Expected 40506070, got %.8x\n", color);
+    ok(color_match(0x40506070, color, 1), "Expected 40506070, got %.8lx\n", color);
 
     stat = GdipBitmapGetPixel(bitmap2, 1, 0, &color);
     expect(Ok, stat);
-    ok(color_match(0x60708090, color, 1), "Expected 60708090, got %.8x\n", color);
+    ok(color_match(0x60708090, color, 1), "Expected 60708090, got %.8lx\n", color);
 
     stat = GdipBitmapGetPixel(bitmap2, 1, 1, &color);
     expect(Ok, stat);
-    ok(color_match(0xffffffff, color, 1), "Expected ffffffff, got %.8x\n", color);
+    ok(color_match(0xffffffff, color, 1), "Expected ffffffff, got %.8lx\n", color);
 
 
     GdipDeleteGraphics(graphics);
@@ -3222,8 +3509,11 @@ static void test_dispose(void)
     stat = GdipDisposeImage(image);
     expect(Ok, stat);
 
+    if (0) {
+    /* Can crash with page heap or if the heap region is decommitted. */
     stat = GdipDisposeImage(image);
     expect(ObjectBusy, stat);
+    }
 
     memset(invalid_image, 0, 256);
     stat = GdipDisposeImage((GpImage*)invalid_image);
@@ -3253,11 +3543,11 @@ static GpImage *load_image(const BYTE *image_data, UINT image_size, BOOL valid_d
     GlobalUnlock(hmem);
 
     hr = CreateStreamOnHGlobal(hmem, TRUE, &stream);
-    ok(hr == S_OK, "CreateStreamOnHGlobal error %#x\n", hr);
+    ok(hr == S_OK, "CreateStreamOnHGlobal error %#lx\n", hr);
     if (hr != S_OK) return NULL;
 
     refcount = obj_refcount(stream);
-    ok(refcount == 1, "expected stream refcount 1, got %d\n", refcount);
+    ok(refcount == 1, "expected stream refcount 1, got %ld\n", refcount);
 
     status = GdipLoadImageFromStream(stream, &image);
     todo_wine_if(todo_load)
@@ -3277,25 +3567,25 @@ static GpImage *load_image(const BYTE *image_data, UINT image_size, BOOL valid_d
 
     refcount = obj_refcount(stream);
     if (image_type == ImageTypeBitmap)
-        ok(refcount > 1, "expected stream refcount > 1, got %d\n", refcount);
+        ok(refcount > 1, "expected stream refcount > 1, got %ld\n", refcount);
     else
-        ok(refcount == 1, "expected stream refcount 1, got %d\n", refcount);
+        ok(refcount == 1, "expected stream refcount 1, got %ld\n", refcount);
     old_refcount = refcount;
 
     status = GdipCloneImage(image, &clone);
     ok(status == Ok, "GdipCloneImage error %d\n", status);
     refcount = obj_refcount(stream);
-    ok(refcount == old_refcount, "expected stream refcount %d, got %d\n", old_refcount, refcount);
+    ok(refcount == old_refcount, "expected stream refcount %ld, got %ld\n", old_refcount, refcount);
     status = GdipDisposeImage(clone);
     ok(status == Ok, "GdipDisposeImage error %d\n", status);
     refcount = obj_refcount(stream);
-    ok(refcount == old_refcount, "expected stream refcount %d, got %d\n", old_refcount, refcount);
+    ok(refcount == old_refcount, "expected stream refcount %ld, got %ld\n", old_refcount, refcount);
 
     refcount = IStream_Release(stream);
     if (image_type == ImageTypeBitmap)
         ok(refcount >= 1, "expected stream refcount != 0\n");
     else
-        ok(refcount == 0, "expected stream refcount 0, got %d\n", refcount);
+        ok(refcount == 0, "expected stream refcount 0, got %ld\n", refcount);
 
     return image;
 }
@@ -3314,20 +3604,22 @@ static void test_image_properties(void)
         UINT prop_size2; /* if win7 behaves differently */
         UINT prop_id;
         UINT prop_id2; /* if win7 behaves differently */
+        INT palette_size;
     }
     td[] =
     {
-        { pngimage, sizeof(pngimage), ImageTypeBitmap, 4, ~0, 1, 20, 0x5110, 0x132 },
-        { jpgimage, sizeof(jpgimage), ImageTypeBitmap, 2, ~0, 128, 0, 0x5090, 0x5091 },
-        { tiffimage, sizeof(tiffimage), ImageTypeBitmap, 16, 0, 4, 0, 0xfe, 0 },
-        { bmpimage, sizeof(bmpimage), ImageTypeBitmap, 0, 0, 0, 0, 0, 0 },
-        { wmfimage, sizeof(wmfimage), ImageTypeMetafile, 0, 0, 0, 0, 0, 0 }
+        { pngimage, sizeof(pngimage), ImageTypeBitmap, 4, ~0, 1, 20, 0x5110, 0x132, 12 },
+        { jpgimage, sizeof(jpgimage), ImageTypeBitmap, 2, ~0, 128, 0, 0x5090, 0x5091, 12 },
+        { tiffimage, sizeof(tiffimage), ImageTypeBitmap, 16, 0, 4, 0, 0xfe, 0, 12 },
+        { bmpimage, sizeof(bmpimage), ImageTypeBitmap, 0, 0, 0, 0, 0, 0, 16 },
+        { wmfimage, sizeof(wmfimage), ImageTypeMetafile, 0, 0, 0, 0, 0, 0, -GenericError }
     };
     GpStatus status;
     GpImage *image;
     UINT prop_count, prop_size, i;
     PROPID prop_id[16] = { 0 };
     ImageType image_type;
+    INT palette_size;
     union
     {
         PropertyItem data;
@@ -3347,6 +3639,21 @@ static void test_image_properties(void)
         ok(status == Ok, "%u: GdipGetImageType error %d\n", i, status);
         ok(td[i].image_type == image_type, "%u: expected image_type %d, got %d\n",
            i, td[i].image_type, image_type);
+
+        palette_size = -1;
+        status = GdipGetImagePaletteSize(image, &palette_size);
+        if (td[i].palette_size >= 0)
+        {
+            ok(status == Ok, "%u: GdipGetImagePaletteSize error %d\n", i, status);
+            ok(td[i].palette_size == palette_size, "%u: expected palette_size %d, got %d\n",
+               i, td[i].palette_size, palette_size);
+        }
+        else
+        {
+            ok(status == -td[i].palette_size, "%u: GdipGetImagePaletteSize returned %d\n", i, status);
+            ok(palette_size == 0, "%u: expected palette_size 0, got %d\n",
+               i, palette_size);
+        }
 
         status = GdipGetPropertyCount(image, &prop_count);
         ok(status == Ok, "%u: GdipGetPropertyCount error %d\n", i, status);
@@ -3411,7 +3718,7 @@ static void test_image_properties(void)
             expect(Ok, status);
             if (prop_count != 0)
                 ok(td[i].prop_id == prop_id[0] || td[i].prop_id2 == prop_id[0],
-                   " %u: expected property id %#x or %#x, got %#x\n",
+                   " %u: expected property id %#x or %#x, got %#lx\n",
                    i, td[i].prop_id, td[i].prop_id2, prop_id[0]);
         }
 
@@ -3444,7 +3751,7 @@ static void test_image_properties(void)
                 status = GdipGetPropertyItem(image, prop_id[0], prop_size, &item.data);
                 expect(Ok, status);
                 ok(prop_id[0] == item.data.id,
-                   "%u: expected property id %#x, got %#x\n", i, prop_id[0], item.data.id);
+                   "%u: expected property id %#lx, got %#lx\n", i, prop_id[0], item.data.id);
             }
         }
 
@@ -3677,14 +3984,14 @@ static void test_tiff_properties(void)
               looks broken since TypeFloat and TypeDouble now reported as
               TypeUndefined, and signed types reported as unsigned. */
            broken(prop_item->type == documented_type(td[i].type)),
-            "%u: expected type %u, got %u\n", i, td[i].type, prop_item->type);
-        ok(td[i].id == prop_item->id, "%u: expected id %#x, got %#x\n", i, td[i].id, prop_item->id);
+            "%u: expected type %lu, got %u\n", i, td[i].type, prop_item->type);
+        ok(td[i].id == prop_item->id, "%u: expected id %#lx, got %#lx\n", i, td[i].id, prop_item->id);
         prop_size -= sizeof(*prop_item);
-        ok(prop_item->length == prop_size, "%u: expected length %u, got %u\n", i, prop_size, prop_item->length);
+        ok(prop_item->length == prop_size, "%u: expected length %u, got %lu\n", i, prop_size, prop_item->length);
         ok(td[i].length == prop_item->length || broken(td[i].id == 0xf00f && td[i].length == prop_item->length+1) /* XP */,
-           "%u: expected length %u, got %u\n", i, td[i].length, prop_item->length);
+           "%u: expected length %lu, got %lu\n", i, td[i].length, prop_item->length);
         ok(td[i].length == prop_size || broken(td[i].id == 0xf00f && td[i].length == prop_size+1) /* XP */,
-           "%u: expected length %u, got %u\n", i, td[i].length, prop_size);
+           "%u: expected length %lu, got %u\n", i, td[i].length, prop_size);
         if (td[i].length == prop_item->length)
         {
             int match = memcmp(td[i].value, prop_item->value, td[i].length) == 0;
@@ -3693,7 +4000,7 @@ static void test_tiff_properties(void)
             {
                 UINT j;
                 BYTE *data = prop_item->value;
-                trace("id %#x:", prop_item->id);
+                trace("id %#lx:", prop_item->id);
                 for (j = 0; j < prop_item->length; j++)
                     trace(" %02x", data[j]);
                 trace("\n");
@@ -3786,11 +4093,11 @@ static void test_GdipGetAllPropertyItems(void)
         expect(Ok, status);
         ok(prop_item->value == prop_item + 1, "expected item->value %p, got %p\n", prop_item + 1, prop_item->value);
         ok(td[i].type == prop_item->type,
-            "%u: expected type %u, got %u\n", i, td[i].type, prop_item->type);
-        ok(td[i].id == prop_item->id, "%u: expected id %#x, got %#x\n", i, td[i].id, prop_item->id);
+            "%u: expected type %lu, got %u\n", i, td[i].type, prop_item->type);
+        ok(td[i].id == prop_item->id, "%u: expected id %#lx, got %#lx\n", i, td[i].id, prop_item->id);
         size -= sizeof(*prop_item);
-        ok(prop_item->length == size, "%u: expected length %u, got %u\n", i, size, prop_item->length);
-        ok(td[i].length == prop_item->length, "%u: expected length %u, got %u\n", i, td[i].length, prop_item->length);
+        ok(prop_item->length == size, "%u: expected length %u, got %lu\n", i, size, prop_item->length);
+        ok(td[i].length == prop_item->length, "%u: expected length %lu, got %lu\n", i, td[i].length, prop_item->length);
         if (td[i].length == prop_item->length)
         {
             int match = memcmp(td[i].value, prop_item->value, td[i].length) == 0;
@@ -3799,7 +4106,7 @@ static void test_GdipGetAllPropertyItems(void)
             {
                 UINT j;
                 BYTE *data = prop_item->value;
-                trace("id %#x:", prop_item->id);
+                trace("id %#lx:", prop_item->id);
                 for (j = 0; j < prop_item->length; j++)
                     trace(" %02x", data[j]);
                 trace("\n");
@@ -3850,9 +4157,9 @@ static void test_GdipGetAllPropertyItems(void)
         ok(prop_item[i].value == item_data, "%u: expected value %p, got %p\n",
            i, item_data, prop_item[i].value);
         ok(td[i].type == prop_item[i].type,
-            "%u: expected type %u, got %u\n", i, td[i].type, prop_item[i].type);
-        ok(td[i].id == prop_item[i].id, "%u: expected id %#x, got %#x\n", i, td[i].id, prop_item[i].id);
-        ok(td[i].length == prop_item[i].length, "%u: expected length %u, got %u\n", i, td[i].length, prop_item[i].length);
+            "%u: expected type %lu, got %u\n", i, td[i].type, prop_item[i].type);
+        ok(td[i].id == prop_item[i].id, "%u: expected id %#lx, got %#lx\n", i, td[i].id, prop_item[i].id);
+        ok(td[i].length == prop_item[i].length, "%u: expected length %lu, got %lu\n", i, td[i].length, prop_item[i].length);
         if (td[i].length == prop_item[i].length)
         {
             int match = memcmp(td[i].value, prop_item[i].value, td[i].length) == 0;
@@ -3861,7 +4168,7 @@ static void test_GdipGetAllPropertyItems(void)
             {
                 UINT j;
                 BYTE *data = prop_item[i].value;
-                trace("id %#x:", prop_item[i].id);
+                trace("id %#lx:", prop_item[i].id);
                 for (j = 0; j < prop_item[i].length; j++)
                     trace(" %02x", data[j]);
                 trace("\n");
@@ -3916,8 +4223,8 @@ static void test_tiff_palette(void)
     expect(2, palette.pal.Count);
     if (palette.pal.Count == 2)
     {
-        ok(entries[0] == 0xff000000, "expected 0xff000000, got %#x\n", entries[0]);
-        ok(entries[1] == 0xffffffff, "expected 0xffffffff, got %#x\n", entries[1]);
+        ok(entries[0] == 0xff000000, "expected 0xff000000, got %#lx\n", entries[0]);
+        ok(entries[1] == 0xffffffff, "expected 0xffffffff, got %#lx\n", entries[1]);
     }
 
     GdipDisposeImage(image);
@@ -4222,10 +4529,10 @@ static void test_DrawImage_SourceCopy(void)
     status = GdipDrawImageI(graphics, u2.image, 0, 0);
     expect(Ok, status);
 
-    todo_wine expect(0, dst_pixels[0]);
+    expect(0, dst_pixels[0]);
     expect(0xffff0000, dst_pixels[1]);
-    todo_wine expect(0, dst_pixels[2]);
-    todo_wine expect(0, dst_pixels[3]);
+    expect(0, dst_pixels[2]);
+    expect(0, dst_pixels[3]);
 
     status = GdipDeleteGraphics(graphics);
     expect(Ok, status);
@@ -4594,11 +4901,11 @@ static void test_gif_properties(void)
         expect(Ok, status);
         ok(prop_item->value == prop_item + 1, "expected item->value %p, got %p\n", prop_item + 1, prop_item->value);
         ok(td[i].type == prop_item->type,
-            "%u: expected type %u, got %u\n", i, td[i].type, prop_item->type);
-        ok(td[i].id == prop_item->id, "%u: expected id %#x, got %#x\n", i, td[i].id, prop_item->id);
+            "%u: expected type %lu, got %u\n", i, td[i].type, prop_item->type);
+        ok(td[i].id == prop_item->id, "%u: expected id %#lx, got %#lx\n", i, td[i].id, prop_item->id);
         size -= sizeof(*prop_item);
-        ok(prop_item->length == size, "%u: expected length %u, got %u\n", i, size, prop_item->length);
-        ok(td[i].length == prop_item->length, "%u: expected length %u, got %u\n", i, td[i].length, prop_item->length);
+        ok(prop_item->length == size, "%u: expected length %u, got %lu\n", i, size, prop_item->length);
+        ok(td[i].length == prop_item->length, "%u: expected length %lu, got %lu\n", i, td[i].length, prop_item->length);
         if (td[i].length == prop_item->length)
         {
             int match = memcmp(td[i].value, prop_item->value, td[i].length) == 0;
@@ -4607,7 +4914,7 @@ static void test_gif_properties(void)
             {
                 UINT j;
                 BYTE *data = prop_item->value;
-                trace("id %#x:", prop_item->id);
+                trace("id %#lx:", prop_item->id);
                 for (j = 0; j < prop_item->length; j++)
                     trace(" %02x", data[j]);
                 trace("\n");
@@ -4658,9 +4965,9 @@ static void test_gif_properties(void)
         ok(prop_item[i].value == item_data, "%u: expected value %p, got %p\n",
            i, item_data, prop_item[i].value);
         ok(td[i].type == prop_item[i].type,
-            "%u: expected type %u, got %u\n", i, td[i].type, prop_item[i].type);
-        ok(td[i].id == prop_item[i].id, "%u: expected id %#x, got %#x\n", i, td[i].id, prop_item[i].id);
-        ok(td[i].length == prop_item[i].length, "%u: expected length %u, got %u\n", i, td[i].length, prop_item[i].length);
+            "%u: expected type %lu, got %u\n", i, td[i].type, prop_item[i].type);
+        ok(td[i].id == prop_item[i].id, "%u: expected id %#lx, got %#lx\n", i, td[i].id, prop_item[i].id);
+        ok(td[i].length == prop_item[i].length, "%u: expected length %lu, got %lu\n", i, td[i].length, prop_item[i].length);
         if (td[i].length == prop_item[i].length)
         {
             int match = memcmp(td[i].value, prop_item[i].value, td[i].length) == 0;
@@ -4669,7 +4976,7 @@ static void test_gif_properties(void)
             {
                 UINT j;
                 BYTE *data = prop_item[i].value;
-                trace("id %#x:", prop_item[i].id);
+                trace("id %#lx:", prop_item[i].id);
                 for (j = 0; j < prop_item[i].length; j++)
                     trace(" %02x", data[j]);
                 trace("\n");
@@ -4753,12 +5060,103 @@ static void test_ARGB_conversion(void)
     GdipDisposeImage((GpImage *)bitmap);
 }
 
+static void test_PARGB_conversion(void)
+{
+    BYTE pargb[8] = { 0x62,0x77,0x99,0x77, 0x62,0x77,0x99,0 };
+    BYTE argb[8] = { 0xd1,0xfe,0xff,0x77, 0x62,0x77,0x99,0 };
+    BYTE pargb2[8] = { 0x01,0x01,0x00,0x01, 0xfe,0x7f,0x7f,0xfe };
+    BYTE *bits;
+    GpBitmap *bitmap;
+    BitmapData data;
+    GpStatus status;
+    int match;
+
+    status = GdipCreateBitmapFromScan0(2, 1, 8, PixelFormat32bppPARGB, pargb, &bitmap);
+    expect(Ok, status);
+
+    status = GdipBitmapLockBits(bitmap, NULL, ImageLockModeRead, PixelFormat32bppARGB, &data);
+    expect(Ok, status);
+    ok(data.Width == 2, "expected 2, got %d\n", data.Width);
+    ok(data.Height == 1, "expected 1, got %d\n", data.Height);
+    ok(data.Stride == 8, "expected 8, got %d\n", data.Stride);
+    ok(data.PixelFormat == PixelFormat32bppARGB, "expected PixelFormat32bppARGB, got %d\n", data.PixelFormat);
+    match = !memcmp(data.Scan0, argb, sizeof(argb));
+    ok(match, "bits don't match\n");
+    if (!match)
+    {
+        bits = data.Scan0;
+        trace("format %#x, bits %02x,%02x,%02x,%02x %02x,%02x,%02x,%02x\n", PixelFormat32bppARGB,
+               bits[0], bits[1], bits[2], bits[3], bits[4], bits[5], bits[6], bits[7]);
+    }
+    status = GdipBitmapUnlockBits(bitmap, &data);
+    expect(Ok, status);
+
+    /* Testing SetPixel 32-bit ARGB to PARGB */
+    status = GdipBitmapSetPixel(bitmap, 0, 0, 0x017f80ff);
+    expect(Ok, status);
+    status = GdipBitmapSetPixel(bitmap, 1, 0, 0xfe7f80ff);
+    expect(Ok, status);
+    status = GdipBitmapLockBits(bitmap, NULL, ImageLockModeRead, PixelFormat32bppPARGB, &data);
+    expect(Ok, status);
+    ok(data.Width == 2, "expected 2, got %d\n", data.Width);
+    ok(data.Height == 1, "expected 1, got %d\n", data.Height);
+    ok(data.Stride == 8, "expected 8, got %d\n", data.Stride);
+    ok(data.PixelFormat == PixelFormat32bppPARGB, "expected PixelFormat32bppPARGB, got %d\n", data.PixelFormat);
+    match = !memcmp(data.Scan0, pargb2, sizeof(pargb2));
+    ok(match, "bits don't match\n");
+    if (!match)
+    {
+        bits = data.Scan0;
+        trace("format %#x, bits %02x,%02x,%02x,%02x %02x,%02x,%02x,%02x\n", PixelFormat32bppPARGB,
+               bits[0], bits[1], bits[2], bits[3], bits[4], bits[5], bits[6], bits[7]);
+    }
+    status = GdipBitmapUnlockBits(bitmap, &data);
+    expect(Ok, status);
+
+    GdipDisposeImage((GpImage *)bitmap);
+}
+
 
 static void test_CloneBitmapArea(void)
 {
+    /* 3x3 pixeldata in various formats: red, green, blue, yellow, turquoise, pink, black, gray, white */
+    static BYTE bmp_3x3_data_32bpp_argb[] = {
+    0xff,0x00,0x00,0xff, 0x00,0xff,0x00,0xff, 0x00,0x00,0xff,0xff,
+    0xff,0xff,0x00,0xff, 0x00,0xff,0xff,0xff, 0xff,0x00,0xff,0xff,
+    0xff,0xff,0xff,0xff, 0x80,0x80,0x80,0xff, 0x00,0x00,0x00,0xff
+    };
+    static BYTE bmp_3x3_data_32bpp_rgb[] = {
+    0xff,0x00,0x00,0x00, 0x00,0xff,0x00,0x00, 0x00,0x00,0xff,0x00,
+    0xff,0xff,0x00,0x00, 0x00,0xff,0xff,0x00, 0xff,0x00,0xff,0x00,
+    0xff,0xff,0xff,0x00, 0x80,0x80,0x80,0x00, 0x00,0x00,0x00,0x00
+    };
+    static BYTE bmp_3x3_data_24bpp_rgb[] = {
+    0xff,0x00,0x00, 0x00,0xff,0x00, 0x00,0x00,0xff,
+    0xff,0xff,0x00, 0x00,0xff,0xff, 0xff,0x00,0xff,
+    0xff,0xff,0xff, 0x80,0x80,0x80, 0x00,0x00,0x00
+    };
+
+    static const struct test_data {
+        BYTE *src_pixeldata;
+        PixelFormat src_format;
+        PixelFormat dst_format;
+    } td[] =
+    {
+        { bmp_3x3_data_32bpp_argb, PixelFormat32bppARGB, PixelFormat8bppIndexed },
+        { bmp_3x3_data_32bpp_argb, PixelFormat32bppARGB, PixelFormat4bppIndexed },
+        { bmp_3x3_data_32bpp_argb, PixelFormat32bppARGB, PixelFormat1bppIndexed },
+        { bmp_3x3_data_32bpp_rgb, PixelFormat32bppRGB, PixelFormat8bppIndexed },
+        { bmp_3x3_data_32bpp_rgb, PixelFormat32bppRGB, PixelFormat4bppIndexed },
+        { bmp_3x3_data_32bpp_rgb, PixelFormat32bppRGB, PixelFormat1bppIndexed },
+        { bmp_3x3_data_24bpp_rgb, PixelFormat24bppRGB, PixelFormat8bppIndexed },
+        { bmp_3x3_data_24bpp_rgb, PixelFormat24bppRGB, PixelFormat4bppIndexed },
+        { bmp_3x3_data_24bpp_rgb, PixelFormat24bppRGB, PixelFormat1bppIndexed },
+    };
+
     GpStatus status;
     GpBitmap *bitmap, *copy;
     BitmapData data, data2;
+    INT x, y, i;
 
     status = GdipCreateBitmapFromScan0(1, 1, 0, PixelFormat24bppRGB, NULL, &bitmap);
     expect(Ok, status);
@@ -4777,56 +5175,55 @@ static void test_CloneBitmapArea(void)
 
     GdipDisposeImage((GpImage *)copy);
     GdipDisposeImage((GpImage *)bitmap);
-}
 
-static BOOL get_encoder_clsid(LPCWSTR mime, GUID *format, CLSID *clsid)
-{
-    GpStatus status;
-    UINT n_codecs, info_size, i;
-    ImageCodecInfo *info;
-    BOOL ret = FALSE;
-
-    status = GdipGetImageEncodersSize(&n_codecs, &info_size);
-    expect(Ok, status);
-
-    info = GdipAlloc(info_size);
-
-    status = GdipGetImageEncoders(n_codecs, info_size, info);
-    expect(Ok, status);
-
-    for (i = 0; i < n_codecs; i++)
+    for(i=0; i<ARRAY_SIZE(td); i++)
     {
-        if (!lstrcmpW(info[i].MimeType, mime))
-        {
-            *format = info[i].FormatID;
-            *clsid = info[i].Clsid;
-            ret = TRUE;
-            break;
-        }
-    }
+        status = GdipCreateBitmapFromScan0(3, 3, 4*3, td[i].src_format, td[i].src_pixeldata, &bitmap);
+        expect(Ok, status);
 
-    GdipFree(info);
-    return ret;
+        status = GdipCloneBitmapAreaI(0, 0, 3, 3, td[i].dst_format, bitmap, &copy);
+        expect(Ok, status);
+
+        for (y=0; y<3; y++)
+            for (x=0; x<3; x++)
+            {
+                BOOL match;
+                ARGB color_orig;
+                ARGB color_copy;
+
+                status = GdipBitmapGetPixel(bitmap, x, y, &color_orig);
+                expect(Ok, status);
+
+                status = GdipBitmapGetPixel(copy, x, y, &color_copy);
+                expect(Ok, status);
+
+                if(td[i].dst_format == PixelFormat1bppIndexed)
+                    color_orig = (color_orig >> 16 & 0xff) + (color_orig >> 8 & 0xff) + (color_orig & 0xff)
+                      > 0x17d ? 0xffffffff : 0xff000000;
+
+                match = color_match(color_orig, color_copy, 0x00);
+                ok(match == TRUE, "Colors 0x%08lx and 0x%08lx do not match! (Conversion from %x to %x)\n",
+                  color_orig, color_copy, td[i].src_format, td[i].dst_format);
+            }
+
+        GdipDisposeImage((GpImage *)copy);
+        GdipDisposeImage((GpImage *)bitmap);
+    }
 }
 
 static void test_supported_encoders(void)
 {
-    static const WCHAR bmp_mimetype[] = { 'i', 'm', 'a','g', 'e', '/', 'b', 'm', 'p',0 };
-    static const WCHAR jpeg_mimetype[] = { 'i','m','a','g','e','/','j','p','e','g',0 };
-    static const WCHAR gif_mimetype[] = { 'i','m','a','g','e','/','g','i','f',0 };
-    static const WCHAR tiff_mimetype[] = { 'i','m','a','g','e','/','t','i','f','f',0 };
-    static const WCHAR png_mimetype[] = { 'i','m','a','g','e','/','p','n','g',0 };
     static const struct test_data
     {
         LPCWSTR mime;
         const GUID *format;
     } td[] =
     {
-        { bmp_mimetype, &ImageFormatBMP },
-        { jpeg_mimetype, &ImageFormatJPEG },
-        { gif_mimetype, &ImageFormatGIF },
-        { tiff_mimetype, &ImageFormatTIFF },
-        { png_mimetype, &ImageFormatPNG }
+        { L"image/bmp", &ImageFormatBMP },
+        { L"image/jpeg", &ImageFormatJPEG },
+        { L"image/gif", &ImageFormatGIF },
+        { L"image/tiff", &ImageFormatTIFF },
+        { L"image/png", &ImageFormatPNG }
     };
     GUID format, clsid;
     BOOL ret;
@@ -4849,10 +5246,10 @@ static void test_supported_encoders(void)
         hmem = GlobalAlloc(GMEM_MOVEABLE | GMEM_NODISCARD, 16);
 
         hr = CreateStreamOnHGlobal(hmem, TRUE, &stream);
-        ok(hr == S_OK, "CreateStreamOnHGlobal error %#x\n", hr);
+        ok(hr == S_OK, "CreateStreamOnHGlobal error %#lx\n", hr);
 
         status = GdipSaveImageToStream((GpImage *)bm, stream, &clsid, NULL);
-        ok(status == Ok, "GdipSaveImageToStream error %d\n", status);
+        ok(status == Ok, "%s encoder, GdipSaveImageToStream error %d\n", wine_dbgstr_w(td[i].mime), status);
 
         IStream_Release(stream);
     }
@@ -5325,6 +5722,75 @@ static void test_png_color_formats(void)
 #undef PNG_COLOR_TYPE_GRAY_ALPHA
 #undef PNG_COLOR_TYPE_RGB_ALPHA
 
+static void test_png_save_palette(void)
+{
+    GpStatus status;
+    GpBitmap *bitmap;
+    HGLOBAL hglob;
+    BOOL result;
+    IStream *stream;
+    GUID enc_format, clsid;
+    LARGE_INTEGER seek;
+    ULARGE_INTEGER pos;
+    UINT i, ptr;
+    BYTE *data;
+
+    PixelFormat formats[] = {
+        PixelFormat1bppIndexed,
+        PixelFormat4bppIndexed,
+        PixelFormat8bppIndexed,
+        PixelFormat16bppGrayScale,
+        PixelFormat16bppRGB555,
+        PixelFormat16bppRGB565,
+        PixelFormat16bppARGB1555,
+        PixelFormat24bppRGB,
+        PixelFormat32bppRGB,
+        PixelFormat32bppARGB,
+        PixelFormat32bppPARGB,
+    };
+
+    result = get_encoder_clsid(L"image/png", &enc_format, &clsid);
+    ok(result, "getting PNG encoding clsid failed");
+
+    hglob = GlobalAlloc(GMEM_MOVEABLE | GMEM_NODISCARD | GMEM_ZEROINIT, 1024);
+
+    for (i = 0; i < ARRAY_SIZE(formats); i++)
+    {
+        status = GdipCreateBitmapFromScan0(8, 8, 0, formats[i], NULL, &bitmap);
+        ok(status == Ok, "Unexpected return value %d creating bitmap for PixelFormat %#x\n", status, formats[i]);
+
+        CreateStreamOnHGlobal(hglob, FALSE, &stream);
+        status = GdipSaveImageToStream((GpImage *)bitmap, stream, &clsid, NULL);
+        GdipDisposeImage((GpImage*)bitmap);
+
+        todo_wine_if(formats[i] == PixelFormat16bppGrayScale)
+        ok(formats[i] == PixelFormat16bppGrayScale ?
+                (status == GenericError || status == Win32Error) : status == Ok,
+            "Unexpected return value %d saving image for PixelFormat %#x\n", status, formats[i]);
+
+        if (status == Ok)
+        {
+            data = GlobalLock(hglob);
+            seek.QuadPart = 0;
+            IStream_Seek(stream, seek, STREAM_SEEK_CUR, &pos);
+            for (ptr = 0; ptr < pos.QuadPart - 4; ptr++)
+                if (!memcmp(data + ptr, "PLTE", 4))
+                    break;
+            memset(data, 0, 1024);
+            GlobalUnlock(hglob);
+
+            if (IsIndexedPixelFormat(formats[i]))
+                ok(ptr < pos.QuadPart - 4, "Expected palette not found for PixelFormat %#x\n", formats[i]);
+            else
+                ok(ptr >= pos.QuadPart - 4, "Unexpected palette found for PixelFormat %#x\n", formats[i]);
+        }
+
+        IStream_Release(stream);
+    }
+
+    GlobalFree(hglob);
+}
+
 static void test_GdipLoadImageFromStream(void)
 {
     IStream *stream;
@@ -5432,7 +5898,7 @@ static void test_GdipInitializePalette(void)
     palette->Count = 256;
     status = pGdipInitializePalette(palette, PaletteTypeFixedBW, 0, FALSE, bitmap);
     expect(Ok, status);
-todo_wine
+    todo_wine
     expect(0x200, palette->Flags);
     expect(2, palette->Count);
     expect(0xff000000, palette->Entries[0]);
@@ -5443,7 +5909,7 @@ todo_wine
     palette->Count = 256;
     status = pGdipInitializePalette(palette, PaletteTypeFixedHalftone8, 1, FALSE, NULL);
     expect(Ok, status);
-todo_wine
+    todo_wine
     expect(0x300, palette->Flags);
     expect(16, palette->Count);
     expect(0xff000000, palette->Entries[0]);
@@ -5455,7 +5921,7 @@ todo_wine
     palette->Count = 256;
     status = pGdipInitializePalette(palette, PaletteTypeFixedHalftone8, 1, FALSE, bitmap);
     expect(Ok, status);
-todo_wine
+    todo_wine
     expect(0x300, palette->Flags);
     expect(16, palette->Count);
     expect(0xff000000, palette->Entries[0]);
@@ -5467,7 +5933,7 @@ todo_wine
     palette->Count = 256;
     status = pGdipInitializePalette(palette, PaletteTypeFixedHalftone252, 1, FALSE, bitmap);
     expect(Ok, status);
-todo_wine
+    todo_wine
     expect(0x800, palette->Flags);
     expect(252, palette->Count);
     expect(0xff000000, palette->Entries[0]);
@@ -5496,6 +5962,49 @@ todo_wine
     /* passing invalid enumeration palette type crashes under most Windows versions */
 
     GdipFree(palette);
+    GdipDisposeImage((GpImage *)bitmap);
+    HeapFree(GetProcessHeap(), 0, data);
+}
+
+static void test_graphics_clear(void)
+{
+    BYTE argb[8] = { 0x11,0x22,0x33,0x80, 0xff,0xff,0xff,0 };
+    BYTE cleared[8] = { 0,0,0,0, 0,0,0,0 };
+    BYTE *bits;
+    GpBitmap *bitmap;
+    GpGraphics *graphics;
+    BitmapData data;
+    GpStatus status;
+    int match;
+
+    status = GdipCreateBitmapFromScan0(2, 1, 8, PixelFormat32bppARGB, argb, &bitmap);
+    expect(Ok, status);
+
+    status = GdipGetImageGraphicsContext((GpImage*)bitmap, &graphics);
+    expect(Ok, status);
+
+    status = GdipGraphicsClear(graphics, 0x00000000);
+    expect(Ok, status);
+
+    status = GdipBitmapLockBits(bitmap, NULL, ImageLockModeRead, PixelFormat32bppARGB, &data);
+    expect(Ok, status);
+    ok(data.Width == 2, "expected 2, got %d\n", data.Width);
+    ok(data.Height == 1, "expected 1, got %d\n", data.Height);
+    ok(data.Stride == 8, "expected 8, got %d\n", data.Stride);
+    ok(data.PixelFormat == PixelFormat32bppARGB, "expected PixelFormat32bppARGB, got %d\n", data.PixelFormat);
+    match = !memcmp(data.Scan0, cleared, sizeof(cleared));
+    ok(match, "bits don't match\n");
+    if (!match)
+    {
+        bits = data.Scan0;
+        trace("format %#x, bits %02x,%02x,%02x,%02x %02x,%02x,%02x,%02x\n", PixelFormat32bppARGB,
+               bits[0], bits[1], bits[2], bits[3], bits[4], bits[5], bits[6], bits[7]);
+    }
+    status = GdipBitmapUnlockBits(bitmap, &data);
+    expect(Ok, status);
+
+    status = GdipDeleteGraphics(graphics);
+    expect(Ok, status);
     GdipDisposeImage((GpImage *)bitmap);
 }
 
@@ -5724,9 +6233,11 @@ START_TEST(image)
     test_tiff_color_formats();
     test_GdipInitializePalette();
     test_png_color_formats();
+    test_png_save_palette();
     test_supported_encoders();
     test_CloneBitmapArea();
     test_ARGB_conversion();
+    test_PARGB_conversion();
     test_DrawImage_scale();
     test_image_format();
     test_DrawImage();
@@ -5744,6 +6255,7 @@ START_TEST(image)
     test_GdipImageGetFrameDimensionsCount();
     test_LoadingImages();
     test_SavingImages();
+    test_SavingMultiPageTiff();
     test_encoders();
     test_LockBits();
     test_LockBits_UserBuf();
@@ -5773,6 +6285,7 @@ START_TEST(image)
     test_histogram();
     test_imageabort();
     test_GdipLoadImageFromStream();
+    test_graphics_clear();
 
     GdiplusShutdown(gdiplusToken);
 }

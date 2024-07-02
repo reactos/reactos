@@ -33,11 +33,15 @@
 #define RGNDATA_MAGIC           0xdbc01001
 #define RGNDATA_MAGIC2          0xdbc01002
 
-#define expect(expected, got) ok((got) == (expected), "Expected %.8x, got %.8x\n", (expected), (got))
+#define expect(expected,got) expect_(__LINE__, expected, got)
+static inline void expect_(unsigned line, DWORD expected, DWORD got)
+{
+    ok_(__FILE__, line)(expected == got, "Expected %ld, got %ld\n", expected, got);
+}
 #define expectf_(expected, got, precision) ok(fabs((expected) - (got)) < (precision), "Expected %f, got %f\n", (expected), (got))
 #define expectf(expected, got) expectf_((expected), (got), 0.001)
 
-#define expect_magic(value) ok(broken(*(value) == RGNDATA_MAGIC) || *(value) == RGNDATA_MAGIC2, "Expected a known magic value, got %8x\n", *(value))
+#define expect_magic(value) ok(broken(*(value) == RGNDATA_MAGIC) || *(value) == RGNDATA_MAGIC2, "Expected a known magic value, got %8lx\n", *(value))
 #define expect_dword(value, expected) expect((expected), *(value))
 #define expect_float(value, expected) expectf((expected), *(FLOAT *)(value))
 
@@ -59,19 +63,19 @@ static void verify_region(HRGN hrgn, const RECT *rc)
 
     ret = GetRegionData(hrgn, 0, NULL);
     if (IsRectEmpty(rc))
-        ok(ret == sizeof(rgn.data.rdh), "expected sizeof(rdh), got %u\n", ret);
+        ok(ret == sizeof(rgn.data.rdh), "expected sizeof(rdh), got %lu\n", ret);
     else
-        ok(ret == sizeof(rgn.data.rdh) + sizeof(RECT), "expected sizeof(rgn), got %u\n", ret);
+        ok(ret == sizeof(rgn.data.rdh) + sizeof(RECT), "expected sizeof(rgn), got %lu\n", ret);
 
     if (!ret) return;
 
     ret = GetRegionData(hrgn, sizeof(rgn), &rgn.data);
     if (IsRectEmpty(rc))
-        ok(ret == sizeof(rgn.data.rdh), "expected sizeof(rdh), got %u\n", ret);
+        ok(ret == sizeof(rgn.data.rdh), "expected sizeof(rdh), got %lu\n", ret);
     else
-        ok(ret == sizeof(rgn.data.rdh) + sizeof(RECT), "expected sizeof(rgn), got %u\n", ret);
+        ok(ret == sizeof(rgn.data.rdh) + sizeof(RECT), "expected sizeof(rgn), got %lu\n", ret);
 
-    trace("size %u, type %u, count %u, rgn size %u, bound %s\n",
+    trace("size %lu, type %lu, count %lu, rgn size %lu, bound %s\n",
           rgn.data.rdh.dwSize, rgn.data.rdh.iType,
           rgn.data.rdh.nCount, rgn.data.rdh.nRgnSize,
           wine_dbgstr_rect(&rgn.data.rdh.rcBound));
@@ -83,17 +87,17 @@ static void verify_region(HRGN hrgn, const RECT *rc)
            wine_dbgstr_rect(rc), wine_dbgstr_rect(rect));
     }
 
-    ok(rgn.data.rdh.dwSize == sizeof(rgn.data.rdh), "expected sizeof(rdh), got %u\n", rgn.data.rdh.dwSize);
-    ok(rgn.data.rdh.iType == RDH_RECTANGLES, "expected RDH_RECTANGLES, got %u\n", rgn.data.rdh.iType);
+    ok(rgn.data.rdh.dwSize == sizeof(rgn.data.rdh), "expected sizeof(rdh), got %lu\n", rgn.data.rdh.dwSize);
+    ok(rgn.data.rdh.iType == RDH_RECTANGLES, "expected RDH_RECTANGLES, got %lu\n", rgn.data.rdh.iType);
     if (IsRectEmpty(rc))
     {
-        ok(rgn.data.rdh.nCount == 0, "expected 0, got %u\n", rgn.data.rdh.nCount);
-        ok(rgn.data.rdh.nRgnSize == 0,  "expected 0, got %u\n", rgn.data.rdh.nRgnSize);
+        ok(rgn.data.rdh.nCount == 0, "expected 0, got %lu\n", rgn.data.rdh.nCount);
+        ok(rgn.data.rdh.nRgnSize == 0,  "expected 0, got %lu\n", rgn.data.rdh.nRgnSize);
     }
     else
     {
-        ok(rgn.data.rdh.nCount == 1, "expected 1, got %u\n", rgn.data.rdh.nCount);
-        ok(rgn.data.rdh.nRgnSize == sizeof(RECT),  "expected sizeof(RECT), got %u\n", rgn.data.rdh.nRgnSize);
+        ok(rgn.data.rdh.nCount == 1, "expected 1, got %lu\n", rgn.data.rdh.nCount);
+        ok(rgn.data.rdh.nRgnSize == sizeof(RECT),  "expected sizeof(RECT), got %lu\n", rgn.data.rdh.nRgnSize);
     }
     ok(EqualRect(&rgn.data.rdh.rcBound, rc), "expected %s, got %s\n",
        wine_dbgstr_rect(rc), wine_dbgstr_rect(&rgn.data.rdh.rcBound));
@@ -142,11 +146,11 @@ static void test_region_data(DWORD *data, UINT size, INT line)
     for (i = 0; i < size - 1; i++)
     {
         if (i == 1) continue; /* data[1] never matches */
-        ok_(__FILE__, line)(data[i] == buf[i], "off %u: %#x != %#x\n", i, data[i], buf[i]);
+        ok_(__FILE__, line)(data[i] == buf[i], "off %u: %#lx != %#lx\n", i, data[i], buf[i]);
     }
     /* some Windows versions fail to properly clear the aligned DWORD */
     ok_(__FILE__, line)(data[size - 1] == buf[size - 1] || broken(data[size - 1] != buf[size - 1]),
-        "off %u: %#x != %#x\n", size - 1, data[size - 1], buf[size - 1]);
+        "off %u: %#lx != %#lx\n", size - 1, data[size - 1], buf[size - 1]);
 
     GdipDeleteRegion(region);
 }
@@ -187,7 +191,7 @@ static void test_getregiondata(void)
     ok(status == Ok, "status %08x\n", status);
     expect(20, needed);
     expect_dword(buf, 12);
-    trace("buf[1] = %08x\n", buf[1]);
+    trace("buf[1] = %08lx\n", buf[1]);
     expect_magic(buf + 2);
     expect_dword(buf + 3, 0);
     expect_dword(buf + 4, RGNDATA_INFINITE_RECT);
@@ -205,7 +209,7 @@ static void test_getregiondata(void)
     ok(status == Ok, "status %08x\n", status);
     expect(20, needed);
     expect_dword(buf, 12);
-    trace("buf[1] = %08x\n", buf[1]);
+    trace("buf[1] = %08lx\n", buf[1]);
     expect_magic(buf + 2);
     expect_dword(buf + 3, 0);
     expect_dword(buf + 4, RGNDATA_EMPTY_RECT);
@@ -223,7 +227,7 @@ static void test_getregiondata(void)
     ok(status == Ok, "status %08x\n", status);
     expect(20, needed);
     expect_dword(buf, 12);
-    trace("buf[1] = %08x\n", buf[1]);
+    trace("buf[1] = %08lx\n", buf[1]);
     expect_magic(buf + 2);
     expect_dword(buf + 3, 0);
     expect_dword(buf + 4, RGNDATA_INFINITE_RECT);
@@ -248,7 +252,7 @@ static void test_getregiondata(void)
     ok(status == Ok, "status %08x\n", status);
     expect(36, needed);
     expect_dword(buf, 28);
-    trace("buf[1] = %08x\n", buf[1]);
+    trace("buf[1] = %08lx\n", buf[1]);
     expect_magic(buf + 2);
     expect_dword(buf + 3, 0);
     expect_dword(buf + 4, RGNDATA_RECT);
@@ -304,7 +308,7 @@ static void test_getregiondata(void)
     ok(status == Ok, "status %08x\n", status);
     expect(156, needed);
     expect_dword(buf, 148);
-    trace("buf[1] = %08x\n", buf[1]);
+    trace("buf[1] = %08lx\n", buf[1]);
     expect_magic(buf + 2);
     expect_dword(buf + 3, 10);
     expect_dword(buf + 4, CombineModeExclude);
@@ -367,7 +371,7 @@ static void test_getregiondata(void)
     ok(status == Ok, "status %08x\n", status);
     expect(72, needed);
     expect_dword(buf, 64);
-    trace("buf[1] = %08x\n", buf[1]);
+    trace("buf[1] = %08lx\n", buf[1]);
     expect_magic(buf + 2);
     expect_dword(buf + 3, 0);
     expect_dword(buf + 4, RGNDATA_PATH);
@@ -402,7 +406,7 @@ static void test_getregiondata(void)
     ok(status == Ok, "status %08x\n", status);
     expect(96, needed);
     expect_dword(buf, 88);
-    trace("buf[1] = %08x\n", buf[1]);
+    trace("buf[1] = %08lx\n", buf[1]);
     expect_magic(buf + 2);
     expect_dword(buf + 3, 2);
     expect_dword(buf + 4, CombineModeIntersect);
@@ -447,7 +451,7 @@ static void test_getregiondata(void)
     expect(Ok, status);
     expect(36, needed);
     expect_dword(buf, 28);
-    trace("buf[1] = %08x\n", buf[1]);
+    trace("buf[1] = %08lx\n", buf[1]);
     expect_magic(buf + 2);
     expect_dword(buf + 3, 0);
     expect_dword(buf + 4, RGNDATA_PATH);
@@ -457,7 +461,7 @@ static void test_getregiondata(void)
     expect_dword(buf + 7, 0);
     /* flags 0 means that a path is an array of FLOATs */
     ok(*(buf + 8) == 0x4000 /* before win7 */ || *(buf + 8) == 0,
-       "expected 0x4000 or 0, got %08x\n", *(buf + 8));
+       "expected 0x4000 or 0, got %08lx\n", *(buf + 8));
     expect_dword(buf + 10, 0xeeeeeeee);
     test_region_data(buf, needed, __LINE__);
 
@@ -489,7 +493,7 @@ static void test_getregiondata(void)
     expect(Ok, status);
     expect(56, needed);
     expect_dword(buf, 48);
-    trace("buf[1] = %08x\n", buf[1]);
+    trace("buf[1] = %08lx\n", buf[1]);
     expect_magic(buf + 2);
     expect_dword(buf + 3 , 0);
     expect_dword(buf + 4 , RGNDATA_PATH);
@@ -563,7 +567,7 @@ static void test_getregiondata(void)
     expect(Ok, status);
     expect(72, needed);
     expect_dword(buf, 64);
-    trace("buf[1] = %08x\n", buf[1]);
+    trace("buf[1] = %08lx\n", buf[1]);
     expect_magic(buf + 2);
     expect_dword(buf + 3, 0);
     expect_dword(buf + 4, RGNDATA_PATH);
@@ -614,7 +618,7 @@ static void test_getregiondata(void)
     expect(Ok, status);
     expect(116, needed);
     expect_dword(buf, 108);
-    trace("buf[1] = %08x\n", buf[1]);
+    trace("buf[1] = %08lx\n", buf[1]);
     expect_magic(buf + 2);
     expect_dword(buf + 3, 2);
     expect_dword(buf + 4, CombineModeUnion);
@@ -641,8 +645,8 @@ static void test_getregiondata(void)
     expect_float(buf + 25, 50.0);
     expect_float(buf + 26, 70.2);
     expect_dword(buf + 27, 0x01010100);
-    ok(*(buf + 28) == 0x00000101 || *(buf + 28) == 0x43050101 /* Win 7 */,
-       "expected 00000101 or 43050101 got %08x\n", *(buf + 28));
+    ok((*(buf + 28) & 0xffff) == 0x0101,
+       "expected ????0101 got %08lx\n", *(buf + 28));
     expect_dword(buf + 29, 0xeeeeeeee);
     test_region_data(buf, needed, __LINE__);
 
@@ -668,7 +672,7 @@ static void test_getregiondata(void)
     ok(status == Ok, "status %08x\n", status);
     expect(56, needed);
     expect_dword(buf, 48);
-    trace("buf[1] = %08x\n", buf[1]);
+    trace("buf[1] = %08lx\n", buf[1]);
     expect_magic(buf + 2);
     expect_dword(buf + 3, 0);
     expect_dword(buf + 4, RGNDATA_PATH);
@@ -712,7 +716,7 @@ static void test_getregiondata(void)
     ok(status == Ok, "status %08x\n", status);
     expect(72, needed);
     expect_dword(buf, 64);
-    trace("buf[1] = %08x\n", buf[1]);
+    trace("buf[1] = %08lx\n", buf[1]);
     expect_magic(buf + 2);
     expect_dword(buf + 3, 0);
     expect_dword(buf + 4, RGNDATA_PATH);
@@ -758,7 +762,7 @@ static void test_getregiondata(void)
     ok(status == Ok, "status %08x\n", status);
     expect(136, needed);
     expect_dword(buf, 128);
-    trace("buf[1] = %08x\n", buf[1]);
+    trace("buf[1] = %08lx\n", buf[1]);
     expect_magic(buf + 2);
     expect_dword(buf + 3, 0);
     expect_dword(buf + 4, RGNDATA_PATH);
@@ -791,9 +795,8 @@ static void test_getregiondata(void)
     expect_float(buf + 30, 789.799561);
     expect_dword(buf + 31, 0x03030300);
     expect_dword(buf + 32, 0x03030301);
-    ok(*(buf + 33) == 0x00030303 /* before win7 */ ||
-       *(buf + 33) == 0x43030303 /* 32-bit win7 */ || *(buf + 33) == 0x4c030303 /* 64-bit win7 */,
-       "expected 0x00030303 or 0x43030303 or 0x4c030303 got %08x\n", *(buf + 33));
+    ok((*(buf + 33) & 0xffffff) == 0x030303,
+       "expected 0x??030303 got %08lx\n", *(buf + 33));
     expect_dword(buf + 34, 0xeeeeeeee);
     test_region_data(buf, needed, __LINE__);
 
@@ -921,7 +924,7 @@ static void test_combinereplace(void)
     expect(Ok, status);
     expect(36, needed);
     expect_dword(buf, 28);
-    trace("buf[1] = %08x\n", buf[1]);
+    trace("buf[1] = %08lx\n", buf[1]);
     expect_magic(buf + 2);
     expect_dword(buf + 3, 0);
     expect_dword(buf + 4, RGNDATA_RECT);
@@ -941,7 +944,7 @@ static void test_combinereplace(void)
     expect(Ok, status);
     expect(156, needed);
     expect_dword(buf, 148);
-    trace("buf[1] = %08x\n", buf[1]);
+    trace("buf[1] = %08lx\n", buf[1]);
     expect_magic(buf + 2);
     expect_dword(buf + 3, 0);
     expect_dword(buf + 4, RGNDATA_PATH);
@@ -960,7 +963,7 @@ static void test_combinereplace(void)
     expect(Ok, status);
     expect(20, needed);
     expect_dword(buf, 12);
-    trace("buf[1] = %08x\n", buf[1]);
+    trace("buf[1] = %08lx\n", buf[1]);
     expect_magic(buf + 2);
     expect_dword(buf + 3, 0);
     expect_dword(buf + 4, RGNDATA_INFINITE_RECT);
@@ -987,7 +990,7 @@ static void test_combinereplace(void)
     expect(Ok, status);
     expect(180, needed);
     expect_dword(buf, 172);
-    trace("buf[1] = %08x\n", buf[1]);
+    trace("buf[1] = %08lx\n", buf[1]);
     expect_magic(buf + 2);
     expect_dword(buf + 3, 2);
     expect_dword(buf + 4, CombineModeUnion);
@@ -1446,14 +1449,14 @@ static void test_translate(void)
 static DWORD get_region_type(GpRegion *region)
 {
     DWORD *data;
-    DWORD size;
+    UINT size;
     DWORD result;
     DWORD status;
     status = GdipGetRegionDataSize(region, &size);
     expect(Ok, status);
     data = GdipAlloc(size);
     status = GdipGetRegionData(region, (BYTE*)data, size, NULL);
-    ok(status == Ok || status == InsufficientBuffer, "unexpected status 0x%x\n", status);
+    ok(status == Ok || status == InsufficientBuffer, "unexpected status 0x%lx\n", status);
     result = data[4];
     GdipFree(data);
     return result;
@@ -1594,7 +1597,7 @@ static void test_scans(void)
     GpMatrix *matrix;
     GpRectF rectf;
     GpStatus status;
-    ULONG count=80085;
+    UINT count=80085;
     INT icount;
     GpRectF scans[2];
     GpRect scansi[2];
