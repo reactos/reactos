@@ -39,6 +39,29 @@ PVOID WINAPI SHInterlockedCompareExchange(PVOID *dest, PVOID xchg, PVOID compare
 LONG WINAPI SHGlobalCounterGetValue(HANDLE hGlobalCounter);
 LONG WINAPI SHGlobalCounterIncrement(HANDLE hGlobalCounter);
 
+#if FALSE && ((DLL_EXPORT_VERSION) >= _WIN32_WINNT_VISTA)
+#define SHELL_GCOUNTER_DEFINE_GUID(name, a, b, c, d, e, f, g, h, i, j, k) enum { SHELLUNUSEDCOUNTERGUID_##name }
+#define SHELL_GCOUNTER_DEFINE_HANDLE(name) enum { SHELLUNUSEDCOUNTERHANDLE_##name }
+#define SHELL_GCOUNTER_PARAMETERS(handle, id) id
+#define SHELL_GlobalCounterCreate(refguid, handle) ( (refguid), (handle), (void)0 )
+#define SHELL_GlobalCounterIsInitialized(handle) ( (handle), TRUE )
+#define SHELL_GlobalCounterGet(id) SHGlobalCounterGetValue_Vista(id)
+#define SHELL_GlobalCounterIncrement(id) SHGlobalCounterIncrement_Vista(id)
+#else
+#define SHELL_GCOUNTER_DEFINE_GUID(name, a, b, c, d, e, f, g, h, i, j, k) const GUID name = { a, b, c, { d, e, f, g, h, i, j, k } }
+#define SHELL_GCOUNTER_DEFINE_HANDLE(name) HANDLE name = NULL
+#define SHELL_GCOUNTER_PARAMETERS(handle, id) handle
+#define SHELL_GlobalCounterCreate(refguid, handle) \
+  do { \
+    EXTERN_C HANDLE SHELL_GetCachedGlobalCounter(HANDLE *phGlobalCounter, REFGUID rguid); \
+    SHELL_GetCachedGlobalCounter(&(handle), (refguid)); \
+  } while (0)
+#define SHELL_GlobalCounterIsInitialized(handle) ( (handle) != NULL )
+#define SHELL_GlobalCounterGet(handle) SHGlobalCounterGetValue(handle)
+#define SHELL_GlobalCounterIncrement(handle) SHGlobalCounterIncrement(handle)
+#endif
+#define SHELL_GCOUNTER_DECLAREPARAMETERS(handle, id) SHELL_GCOUNTER_PARAMETERS(HANDLE handle, SHGLOBALCOUNTER id)
+
 DWORD WINAPI
 SHRestrictionLookup(
     _In_ DWORD policy,
@@ -71,6 +94,7 @@ BOOL WINAPI SHSimulateDrop(IDropTarget *pDrop, IDataObject *pDataObj, DWORD grfK
 HMENU WINAPI SHGetMenuFromID(HMENU hMenu, UINT uID);
 DWORD WINAPI SHGetCurColorRes(void);
 DWORD WINAPI SHWaitForSendMessageThread(HANDLE hand, DWORD dwTimeout);
+DWORD WINAPI SHSendMessageBroadcastW(UINT uMsg, WPARAM wParam, LPARAM lParam);
 HRESULT WINAPI SHIsExpandableFolder(LPSHELLFOLDER lpFolder, LPCITEMIDLIST pidl);
 DWORD WINAPI SHFillRectClr(HDC hDC, LPCRECT pRect, COLORREF cRef);
 int WINAPI SHSearchMapInt(const int *lpKeys, const int *lpValues, int iLen, int iKey);
