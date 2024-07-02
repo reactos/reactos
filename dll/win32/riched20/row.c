@@ -24,69 +24,132 @@
 
 #include "editor.h"
 
-/* I'm sure these functions would simplify some code in caret ops etc,
- * I just didn't remember them when I wrote that code
- */ 
-
-ME_DisplayItem *ME_RowStart(ME_DisplayItem *item) {
-  return ME_FindItemBackOrHere(item, diStartRow);
-}
-
-/*
-ME_DisplayItem *ME_RowEnd(ME_DisplayItem *item) {
-  ME_DisplayItem *item2 = ME_FindItemFwd(item, diStartRowOrParagraphOrEnd);
-  if (!item2) return NULL;
-  return ME_FindItemBack(item, diRun);
-}
-*/
-
-ME_DisplayItem *
-ME_FindRowWithNumber(ME_TextEditor *editor, int nRow)
+ME_Row *row_next( ME_Row *row )
 {
-  ME_DisplayItem *item = ME_FindItemFwd(editor->pBuffer->pFirst, diParagraph);
-  int nCount = 0;
+    ME_DisplayItem *item;
 
-  while (item->type == diParagraph &&
-         nCount + item->member.para.nRows <= nRow)
-  {
-    nCount += item->member.para.nRows;
-    item = item->member.para.next_para;
-  }
-  if (item->type != diParagraph)
-    return NULL;
-  for (item = ME_FindItemFwd(item, diStartRow); item && nCount < nRow; nCount++)
-    item = ME_FindItemFwd(item, diStartRow);
-  return item;
+    item = ME_FindItemFwd( row_get_di( row ), diStartRowOrParagraphOrEnd );
+    if (!item || item->type != diStartRow) return NULL;
+    return &item->member.row;
 }
 
-
-int
-ME_RowNumberFromCharOfs(ME_TextEditor *editor, int nOfs)
+ME_Row *row_next_all_paras( ME_Row *row )
 {
-  ME_DisplayItem *item = ME_FindItemFwd(editor->pBuffer->pFirst, diParagraph);
-  int nRow = 0;
+    ME_DisplayItem *item;
 
-  while (item->type == diParagraph &&
-         item->member.para.next_para->member.para.nCharOfs <= nOfs)
-  {
-    nRow += item->member.para.nRows;
-    item = item->member.para.next_para;
-  }
-  if (item->type == diParagraph)
-  {
-    ME_DisplayItem *next_para = item->member.para.next_para;
+    item = ME_FindItemFwd( row_get_di( row ), diStartRow );
+    if (!item) return NULL;
+    return &item->member.row;
+}
 
-    nOfs -= item->member.para.nCharOfs;
-    item = ME_FindItemFwd(item, diRun);
-    while ((item = ME_FindItemFwd(item, diStartRowOrParagraph)) != NULL)
+ME_Row *row_prev_all_paras( ME_Row *row )
+{
+    ME_DisplayItem *item;
+
+    item = ME_FindItemBack( row_get_di( row ), diStartRow );
+    if (!item) return NULL;
+    return &item->member.row;
+}
+
+ME_Run *row_first_run( ME_Row *row )
+{
+    ME_DisplayItem *item;
+
+    item = ME_FindItemFwd( row_get_di( row ), diRunOrStartRow );
+    assert( item->type == diRun );
+    return &item->member.run;
+}
+
+ME_Run *row_next_run( ME_Row *row, ME_Run *run )
+{
+    ME_DisplayItem *item;
+
+    assert( row == &ME_FindItemBack( run_get_di( run ), diStartRow )->member.row );
+
+    item = ME_FindItemFwd( run_get_di( run ), diRunOrStartRow );
+    if (!item || item->type == diStartRow) return NULL;
+    return &item->member.run;
+}
+
+ME_Row *row_from_cursor( ME_Cursor *cursor )
+{
+    ME_DisplayItem *item;
+
+    item = ME_FindItemBack( run_get_di( cursor->run ), diStartRow );
+    return &item->member.row;
+}
+
+void row_first_cursor( ME_Row *row, ME_Cursor *cursor )
+{
+    ME_DisplayItem *item;
+
+    item = ME_FindItemFwd( row_get_di( row ), diRun );
+    cursor->run = &item->member.run;
+    cursor->para = cursor->run->para;
+    cursor->nOffset = 0;
+}
+
+void row_end_cursor( ME_Row *row, ME_Cursor *cursor, BOOL include_eop )
+{
+    ME_DisplayItem *item, *run;
+
+    item = ME_FindItemFwd( row_get_di( row ), diStartRowOrParagraphOrEnd );
+    run = ME_FindItemBack( item, diRun );
+    cursor->run = &run->member.run;
+    cursor->para = cursor->run->para;
+    cursor->nOffset = (item->type == diStartRow || include_eop) ? cursor->run->len : 0;
+}
+
+ME_Paragraph *row_para( ME_Row *row )
+{
+    ME_Cursor cursor;
+
+    row_first_cursor( row, &cursor );
+    return cursor.para;
+}
+
+ME_Row *row_from_row_number( ME_TextEditor *editor, int row_num )
+{
+    ME_Paragraph *para = editor_first_para( editor );
+    ME_Row *row;
+    int count = 0;
+
+    while (para_next( para ) && count + para->nRows <= row_num)
     {
-      if (item == next_para)
-        break;
-      item = ME_FindItemFwd(item, diRun);
-      if (item->member.run.nCharOfs > nOfs)
-        break;
-      nRow++;
+        count += para->nRows;
+        para = para_next( para );
     }
-  }
-  return nRow;
+    if (!para_next( para )) return NULL;
+
+    for (row = para_first_row( para ); row && count < row_num; count++)
+        row = row_next( row );
+
+    return row;
+}
+
+
+int row_number_from_char_ofs( ME_TextEditor *editor, int ofs )
+{
+    ME_Paragraph *para = editor_first_para( editor );
+    ME_Row *row;
+    ME_Cursor cursor;
+    int row_num = 0;
+
+    while (para_next( para ) && para_next( para )->nCharOfs <= ofs)
+    {
+        row_num += para->nRows;
+        para = para_next( para );
+    }
+
+    if (para_next( para ))
+    {
+        for (row = para_first_row( para ); row; row = row_next( row ))
+        {
+            row_end_cursor( row, &cursor, TRUE );
+            if (ME_GetCursorOfs( &cursor ) > ofs ) break;
+            row_num++;
+        }
+    }
+
+    return row_num;
 }

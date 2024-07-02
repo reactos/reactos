@@ -63,51 +63,6 @@ static BOOL ME_DITypesEqual(ME_DIType type, ME_DIType nTypeOrClass)
   }
 }
 
-/* Modifies run pointer to point to the next run.
- * If all_para is FALSE constrain the search to the current para,
- * otherwise modify the paragraph pointer if moving into the next paragraph.
- *
- * Returns TRUE if next run is found, otherwise returns FALSE. */
-BOOL ME_NextRun(ME_DisplayItem **para, ME_DisplayItem **run, BOOL all_para)
-{
-  ME_DisplayItem *p = (*run)->next;
-  while (p->type != diTextEnd)
-  {
-    if (p->type == diParagraph) {
-      if (!all_para) return FALSE;
-      *para = p;
-    } else if (p->type == diRun) {
-      *run = p;
-      return TRUE;
-    }
-    p = p->next;
-  }
-  return FALSE;
-}
-
-/* Modifies run pointer to point to the previous run.
- * If all_para is FALSE constrain the search to the current para,
- * otherwise modify the paragraph pointer if moving into the previous paragraph.
- *
- * Returns TRUE if previous run is found, otherwise returns FALSE. */
-BOOL ME_PrevRun(ME_DisplayItem **para, ME_DisplayItem **run, BOOL all_para)
-{
-  ME_DisplayItem *p = (*run)->prev;
-  while (p->type != diTextStart)
-  {
-    if (p->type == diParagraph) {
-      if (!all_para) return FALSE;
-      if (para && p->member.para.prev_para->type == diParagraph)
-        *para = p->member.para.prev_para;
-    } else if (p->type == diRun) {
-      *run = p;
-      return TRUE;
-    }
-    p = p->prev;
-  }
-  return FALSE;
-}
-
 ME_DisplayItem *ME_FindItemBack(ME_DisplayItem *di, ME_DIType nTypeOrClass)
 {
   if (!di)
@@ -168,16 +123,16 @@ void ME_DestroyDisplayItem(ME_DisplayItem *item)
       list_remove(&item->member.run.reobj->entry);
       ME_DeleteReObject(item->member.run.reobj);
     }
-    heap_free( item->member.run.glyphs );
-    heap_free( item->member.run.clusters );
+    free(item->member.run.glyphs);
+    free(item->member.run.clusters);
     ME_ReleaseStyle(item->member.run.style);
   }
-  heap_free(item);
+  free(item);
 }
 
 ME_DisplayItem *ME_MakeDI(ME_DIType type)
 {
-  ME_DisplayItem *item = heap_alloc_zero(sizeof(*item));
+  ME_DisplayItem *item = calloc(1, sizeof(*item));
 
   item->type = type;
   item->prev = item->next = NULL;
