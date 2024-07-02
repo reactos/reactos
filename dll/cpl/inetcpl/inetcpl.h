@@ -26,11 +26,15 @@
 #include <winuser.h>
 #include <commctrl.h>
 
+#ifdef __REACTOS__
+#include <stdlib.h>
+#endif
+
 extern HMODULE hcpl;
-INT_PTR CALLBACK connections_dlgproc(HWND, UINT, WPARAM, LPARAM) DECLSPEC_HIDDEN;
-INT_PTR CALLBACK content_dlgproc(HWND, UINT, WPARAM, LPARAM) DECLSPEC_HIDDEN;
-INT_PTR CALLBACK general_dlgproc(HWND, UINT, WPARAM, LPARAM) DECLSPEC_HIDDEN;
-INT_PTR CALLBACK security_dlgproc(HWND, UINT, WPARAM, LPARAM) DECLSPEC_HIDDEN;
+INT_PTR CALLBACK connections_dlgproc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK content_dlgproc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK general_dlgproc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK security_dlgproc(HWND, UINT, WPARAM, LPARAM);
 
 #define NUM_PROPERTY_PAGES 8
 

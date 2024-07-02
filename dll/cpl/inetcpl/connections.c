@@ -27,106 +27,17 @@
 
 #include "inetcpl.h"
 #include "wine/debug.h"
-#include "wine/heap.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(inetcpl);
 
-static const WCHAR auto_config_url[] = {'A','u','t','o','C','o','n','f','i','g','U','R','L',0};
-static const WCHAR internet_settings[] = {'S','o','f','t','w','a','r','e','\\',
-    'M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\',
-    'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-    'I','n','t','e','r','n','e','t',' ','S','e','t','t','i','n','g','s',0};
-static const WCHAR proxy_enable[] = {'P','r','o','x','y','E','n','a','b','l','e',0};
-static const WCHAR proxy_server[] = {'P','r','o','x','y','S','e','r','v','e','r',0};
-static const WCHAR connections[] = {'C','o','n','n','e','c','t','i','o','n','s',0};
-static const WCHAR default_connection_settings[] = {'D','e','f','a','u','l','t',
-    'C','o','n','n','e','c','t','i','o','n','S','e','t','t','i','n','g','s',0};
-
 static BOOL initdialog_done;
-
-#define CONNECTION_SETTINGS_VERSION 0x46
-#define CONNECTION_SETTINGS_MANUAL_PROXY 0x2
-#define CONNECTION_SETTINGS_PAC_SCRIPT 0x4
-#define CONNECTION_SETTINGS_WPAD 0x8
-
-typedef struct {
-    DWORD version;
-    DWORD id;
-    DWORD flags;
-    BYTE data[1];
-    /* DWORD proxy_server_len; */
-    /* UTF8 proxy_server[proxy_server_len]; */
-    /* DWORD bypass_list_len; */
-    /* UTF8 bypass_list[bypass_list_len]; */
-    /* DWORD configuration_script_len; */
-    /* UTF8 configuration_script[configuration_script_len]; */
-    /* DWORD unk[8]; set to 0 */
-} connection_settings;
-
-static DWORD create_connection_settings(BOOL manual_proxy, const WCHAR *proxy_server,
-        BOOL use_wpad, BOOL use_pac_script, const WCHAR *pac_url, connection_settings **ret)
-{
-    DWORD size = FIELD_OFFSET(connection_settings, data), pos;
-    DWORD proxy_server_len;
-    DWORD pac_url_len;
-
-    size += sizeof(DWORD);
-    if(proxy_server)
-    {
-        proxy_server_len = WideCharToMultiByte(CP_UTF8, 0, proxy_server, -1,
-                NULL, 0, NULL, NULL);
-        if(!proxy_server_len) return 0;
-        proxy_server_len--;
-    }
-    else
-        proxy_server_len = 0;
-    size += proxy_server_len;
-    if(pac_url)
-    {
-        pac_url_len = WideCharToMultiByte(CP_UTF8, 0, pac_url, -1,
-                NULL, 0, NULL, NULL);
-        if(!pac_url_len) return 0;
-        pac_url_len--;
-    }
-    else
-        pac_url_len = 0;
-    size += sizeof(DWORD)*10;
-
-    *ret = heap_alloc_zero(size);
-    if(!*ret) return 0;
-
-    (*ret)->version = CONNECTION_SETTINGS_VERSION;
-    (*ret)->flags = 1;
-    if(manual_proxy) (*ret)->flags |= CONNECTION_SETTINGS_MANUAL_PROXY;
-    if(use_pac_script) (*ret)->flags |= CONNECTION_SETTINGS_PAC_SCRIPT;
-    if(use_wpad) (*ret)->flags |= CONNECTION_SETTINGS_WPAD;
-    ((DWORD*)(*ret)->data)[0] = proxy_server_len;
-    pos = sizeof(DWORD);
-    if(proxy_server_len)
-    {
-        WideCharToMultiByte(CP_UTF8, 0, proxy_server, -1,
-                (char*)(*ret)->data+pos, proxy_server_len, NULL, NULL);
-        pos += proxy_server_len;
-    }
-    pos += sizeof(DWORD); /* skip proxy bypass list */
-    ((DWORD*)((*ret)->data+pos))[0] = pac_url_len;
-    pos += sizeof(DWORD);
-    if(pac_url_len)
-    {
-        WideCharToMultiByte(CP_UTF8, 0, pac_url, -1,
-                (char*)(*ret)->data+pos, pac_url_len, NULL, NULL);
-        pos += pac_url_len;
-    }
-    return size;
-}
 
 static void connections_on_initdialog(HWND hwnd)
 {
-    DWORD type, size, enabled;
-    WCHAR address[INTERNET_MAX_URL_LENGTH], *port;
-    WCHAR pac_url[INTERNET_MAX_URL_LENGTH];
-    HKEY hkey, con;
-    LONG res;
+    INTERNET_PER_CONN_OPTION_LISTW list;
+    INTERNET_PER_CONN_OPTIONW options[3];
+    WCHAR *address, *port, *pac_url;
+    DWORD size, flags;
 
     SendMessageW(GetDlgItem(hwnd, IDC_EDIT_PAC_SCRIPT),
             EM_LIMITTEXT, INTERNET_MAX_URL_LENGTH, 0);
@@ -134,82 +45,59 @@ static void connections_on_initdialog(HWND hwnd)
             EM_LIMITTEXT, INTERNET_MAX_URL_LENGTH-10, 0);
     SendMessageW(GetDlgItem(hwnd, IDC_EDIT_PROXY_PORT), EM_LIMITTEXT, 8, 0);
 
-    res = RegOpenKeyW(HKEY_CURRENT_USER, internet_settings, &hkey);
-    if(res)
+    list.dwSize = sizeof(list);
+    list.pszConnection = NULL;
+    list.dwOptionCount = ARRAY_SIZE(options);
+    list.pOptions = options;
+
+    options[0].dwOption = INTERNET_PER_CONN_FLAGS;
+    options[1].dwOption = INTERNET_PER_CONN_PROXY_SERVER;
+    options[2].dwOption = INTERNET_PER_CONN_AUTOCONFIG_URL;
+    size = sizeof(list);
+    if(!InternetQueryOptionW(NULL, INTERNET_OPTION_PER_CONNECTION_OPTION, &list, &size))
         return;
 
-    size = sizeof(enabled);
-    res = RegQueryValueExW(hkey, proxy_enable, NULL, &type, (BYTE*)&enabled, &size);
-    if(res || type != REG_DWORD)
-        enabled = 0;
-    size = sizeof(address);
-    res = RegQueryValueExW(hkey, proxy_server, NULL, &type, (BYTE*)address, &size);
-    if(res || type != REG_SZ)
-        address[0] = 0;
-    size = sizeof(pac_url);
-    res = RegQueryValueExW(hkey, auto_config_url, NULL, &type, (BYTE*)pac_url, &size);
-    if(res || type != REG_SZ)
-        pac_url[0] = 0;
+    flags = options[0].Value.dwValue;
+    address = options[1].Value.pszValue;
+    pac_url = options[2].Value.pszValue;
 
-    res = RegOpenKeyW(hkey, connections, &con);
-    RegCloseKey(hkey);
-    if(!res)
-    {
-        connection_settings *settings = NULL;
-        size = 0;
-
-        while((res = RegQueryValueExW(con, default_connection_settings, NULL, &type,
-                        (BYTE*)settings, &size)) == ERROR_MORE_DATA || !settings)
-        {
-            connection_settings *new_settings = heap_realloc(settings, size);
-            if(!new_settings)
-            {
-                RegCloseKey(con);
-                heap_free(settings);
-                return;
-            }
-            settings = new_settings;
-        }
-        RegCloseKey(con);
-
-        if(!res && type == REG_BINARY)
-        {
-            if(settings->version != CONNECTION_SETTINGS_VERSION)
-                FIXME("unexpected structure version (%x)\n", settings->version);
-            else if(settings->flags & CONNECTION_SETTINGS_WPAD)
-                CheckDlgButton(hwnd, IDC_USE_WPAD, BST_CHECKED);
-        }
-        heap_free(settings);
-    }
-
-    TRACE("ProxyEnable = %x\n", enabled);
+    TRACE("flags = %lx\n", flags);
     TRACE("ProxyServer = %s\n", wine_dbgstr_w(address));
-    TRACE("AutoConfigURL = %s\n", wine_dbgstr_w(auto_config_url));
+    TRACE("AutoConfigURL = %s\n", wine_dbgstr_w(pac_url));
 
-    if(enabled)
+    if (flags & PROXY_TYPE_AUTO_DETECT)
+        CheckDlgButton(hwnd, IDC_USE_WPAD, BST_CHECKED);
+
+    if(flags & PROXY_TYPE_PROXY)
     {
         CheckDlgButton(hwnd, IDC_USE_PROXY_SERVER, BST_CHECKED);
         EnableWindow(GetDlgItem(hwnd, IDC_EDIT_PROXY_SERVER), TRUE);
         EnableWindow(GetDlgItem(hwnd, IDC_EDIT_PROXY_PORT), TRUE);
     }
 
-    port = wcschr(address, ':');
-    if(port)
+    if(address)
     {
-        *port = 0;
-        port++;
+        port = wcschr(address, ':');
+        if(port)
+        {
+            *port = 0;
+            port++;
+        }
+        SetDlgItemTextW(hwnd, IDC_EDIT_PROXY_SERVER, address);
+        if(port)
+            SetDlgItemTextW(hwnd, IDC_EDIT_PROXY_PORT, port);
     }
-    SetDlgItemTextW(hwnd, IDC_EDIT_PROXY_SERVER, address);
-    if(port)
-        SetDlgItemTextW(hwnd, IDC_EDIT_PROXY_PORT, port);
 
-    if(pac_url[0])
+    if(flags & PROXY_TYPE_AUTO_PROXY_URL)
     {
         CheckDlgButton(hwnd, IDC_USE_PAC_SCRIPT, BST_CHECKED);
         EnableWindow(GetDlgItem(hwnd, IDC_EDIT_PAC_SCRIPT), TRUE);
-        SetDlgItemTextW(hwnd, IDC_EDIT_PAC_SCRIPT, pac_url);
     }
+    if(pac_url)
+        SetDlgItemTextW(hwnd, IDC_EDIT_PAC_SCRIPT, pac_url);
 
+    GlobalFree(address);
+    GlobalFree(pac_url);
     return;
 }
 
@@ -247,31 +135,18 @@ static INT_PTR connections_on_command(HWND hwnd, WPARAM wparam)
 
 static INT_PTR connections_on_notify(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
-    connection_settings *default_connection;
     WCHAR proxy[INTERNET_MAX_URL_LENGTH];
     WCHAR pac_script[INTERNET_MAX_URL_LENGTH];
     PSHNOTIFY *psn = (PSHNOTIFY*)lparam;
     DWORD proxy_len, port_len, pac_script_len;
-    DWORD use_proxy, use_pac_script, use_wpad, size;
-    LRESULT res;
-    HKEY hkey, con;
+    INTERNET_PER_CONN_OPTION_LISTW list;
+    INTERNET_PER_CONN_OPTIONW options[3];
+    DWORD flags;
 
     if(psn->hdr.code != PSN_APPLY)
         return FALSE;
 
-    res = RegOpenKeyW(HKEY_CURRENT_USER, internet_settings, &hkey);
-    if(res)
-        return FALSE;
-
-    use_proxy = IsDlgButtonChecked(hwnd, IDC_USE_PROXY_SERVER);
-    res = RegSetValueExW(hkey, proxy_enable, 0, REG_DWORD,
-            (BYTE*)&use_proxy, sizeof(use_proxy));
-    if(res)
-    {
-        RegCloseKey(hkey);
-        return FALSE;
-    }
-    TRACE("ProxyEnable set to %x\n", use_proxy);
+    flags = IsDlgButtonChecked(hwnd, IDC_USE_PROXY_SERVER) ? PROXY_TYPE_PROXY : PROXY_TYPE_DIRECT;
 
     proxy_len = GetDlgItemTextW(hwnd, IDC_EDIT_PROXY_SERVER, proxy, ARRAY_SIZE(proxy));
     if(proxy_len)
@@ -285,65 +160,36 @@ static INT_PTR connections_on_notify(HWND hwnd, WPARAM wparam, LPARAM lparam)
             proxy[proxy_len++] = '0';
             proxy[proxy_len] = 0;
         }
-
-        res = RegSetValueExW(hkey, proxy_server, 0, REG_SZ,
-                (BYTE*)proxy, (proxy_len+port_len)*sizeof(WCHAR));
     }
     else
     {
-        res = RegDeleteValueW(hkey, proxy_server);
-        if(res == ERROR_FILE_NOT_FOUND)
-            res = ERROR_SUCCESS;
+        flags = PROXY_TYPE_DIRECT;
     }
-    if(res)
-    {
-        RegCloseKey(hkey);
-        return FALSE;
-    }
-    TRACE("ProxtServer set to %s\n", wine_dbgstr_w(proxy));
 
-    use_pac_script = IsDlgButtonChecked(hwnd, IDC_USE_PAC_SCRIPT);
     pac_script_len = GetDlgItemTextW(hwnd, IDC_EDIT_PAC_SCRIPT,
             pac_script, ARRAY_SIZE(pac_script));
-    if(!pac_script_len) use_pac_script = FALSE;
-    if(use_pac_script)
-    {
-        res = RegSetValueExW(hkey, auto_config_url, 0, REG_SZ,
-                (BYTE*)pac_script, pac_script_len*sizeof(WCHAR));
-    }
-    else
-    {
-        res = RegDeleteValueW(hkey, auto_config_url);
-        if(res == ERROR_FILE_NOT_FOUND)
-            res = ERROR_SUCCESS;
-    }
-    if(res)
-    {
-        RegCloseKey(hkey);
-        return FALSE;
-    }
-    TRACE("AutoConfigURL set to %s\n", wine_dbgstr_w(use_pac_script ? pac_script : NULL));
+    if(pac_script_len && IsDlgButtonChecked(hwnd, IDC_USE_PAC_SCRIPT))
+        flags |= PROXY_TYPE_AUTO_PROXY_URL;
 
-    use_wpad = IsDlgButtonChecked(hwnd, IDC_USE_WPAD);
+    if(IsDlgButtonChecked(hwnd, IDC_USE_WPAD))
+        flags |= PROXY_TYPE_AUTO_DETECT;
 
-    res = RegCreateKeyExW(hkey, connections, 0, NULL, 0, KEY_WRITE, NULL, &con, NULL);
-    RegCloseKey(hkey);
-    if(res)
-        return FALSE;
+    TRACE("flags = %lx\n", flags);
+    TRACE("ProxyServer = %s\n", wine_dbgstr_w(proxy));
+    TRACE("AutoConfigURL = %s\n", wine_dbgstr_w(pac_script));
 
-    size = create_connection_settings(use_proxy, proxy, use_wpad,
-        use_pac_script, pac_script, &default_connection);
-    if(!size)
-    {
-        RegCloseKey(con);
-        return FALSE;
-    }
+    list.dwSize = sizeof(list);
+    list.pszConnection = NULL;
+    list.dwOptionCount = ARRAY_SIZE(options);
+    list.pOptions = options;
 
-    res = RegSetValueExW(con, default_connection_settings, 0, REG_BINARY,
-            (BYTE*)default_connection, size);
-    heap_free(default_connection);
-    RegCloseKey(con);
-    return !res;
+    options[0].dwOption = INTERNET_PER_CONN_FLAGS;
+    options[0].Value.dwValue = flags;
+    options[1].dwOption = INTERNET_PER_CONN_PROXY_SERVER;
+    options[1].Value.pszValue = proxy;
+    options[2].dwOption = INTERNET_PER_CONN_AUTOCONFIG_URL;
+    options[2].Value.pszValue = pac_script;
+    return InternetSetOptionW(NULL, INTERNET_OPTION_PER_CONNECTION_OPTION, &list, sizeof(list));
 }
 
 INT_PTR CALLBACK connections_dlgproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)

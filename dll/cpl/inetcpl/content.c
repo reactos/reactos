@@ -40,7 +40,7 @@ static BOOL display_cert_manager(HWND parent, DWORD flags)
 {
     CRYPTUI_CERT_MGR_STRUCT dlg;
 
-    TRACE("(%p, 0x%x)\n", parent, flags);
+    TRACE("(%p, 0x%lx)\n", parent, flags);
 
     ZeroMemory(&dlg, sizeof(CRYPTUI_CERT_MGR_STRUCT));
     dlg.dwSize = sizeof(CRYPTUI_CERT_MGR_STRUCT);
@@ -78,7 +78,7 @@ BOOL WINAPI LaunchSiteCertDialog(HWND parent)
 INT_PTR CALLBACK content_dlgproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     if ((msg != WM_SETCURSOR) && (msg != WM_NCHITTEST) && (msg != WM_MOUSEMOVE))
-        TRACE("(%p, 0x%08x/%d, 0x%lx, 0x%lx)\n", hwnd, msg, msg, wparam, lparam);
+        TRACE("(%p, 0x%08x/%d, 0x%Ix, 0x%Ix)\n", hwnd, msg, msg, wparam, lparam);
 
     if (msg == WM_COMMAND)
     {
