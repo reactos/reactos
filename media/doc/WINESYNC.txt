@@ -57,7 +57,6 @@ dll/win32/browseui            # Out of sync
 dll/win32/cabinet             # Synced to WineStaging-4.18
 dll/win32/clusapi             # Synced to WineStaging-3.3
 dll/win32/comcat              # Synced to WineStaging-3.3
-dll/win32/comctl32            # Synced to WineStaging-3.3
 dll/win32/comdlg32            # Synced to WineStaging-4.18
 dll/win32/compstui            # Synced to WineStaging-4.18
 dll/win32/credui              # Synced to WineStaging-4.18
@@ -232,6 +231,9 @@ dll/win32/xinput9_1_0         # Synced to WineStaging-2.9
 dll/win32/xmllite             # Synced to WineStaging-4.18
 dll/win32/xolehlp             # Synced to WineStaging-3.21
 
+dll/win32/comctl32            # Synced to Wine-5.0
+# comctl32/button.c is forked
+# comctl32/datetime.c         # Synced to Wine-6.0
 dll/cpl/inetcpl               # Synced to WineStaging-4.18
 
 win32ss/printing/monitors/localmon/ui/  # Synced to WineStaging-4.18 (known there as /dll/win32/localui)
