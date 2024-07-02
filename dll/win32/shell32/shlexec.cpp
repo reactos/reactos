@@ -2186,8 +2186,8 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         lpFile = sei_tmp.lpFile;
 
     WCHAR wcmdBuffer[1024];
-    DWORD wcmdLen = ARRAY_SIZE(wcmdBuffer);
     LPWSTR wcmd = wcmdBuffer;
+    DWORD wcmdLen = _countof(wcmdBuffer);
     CHeapPtr<WCHAR, CHeapAllocator> wcmdAlloc;
 
     /* Only execute if it has an executable extension */
