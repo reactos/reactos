@@ -1,4 +1,4 @@
-/* TRANSLATOR: Baruch Rutman */
+// COPYRIGHT: Baruch Rutman
 
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
@@ -161,9 +161,9 @@ BEGIN
     IDS_CAT_AUDIO "שמע"
     IDS_CAT_DEVEL "פיתוח"
     IDS_CAT_DRIVERS "מנהלי התקנים"
-    IDS_CAT_EDU "בידור"
+    IDS_CAT_EDU "חינוך"
     IDS_CAT_ENGINEER "הנדסה"
-    IDS_CAT_FINANCE "כלכלי"
+    IDS_CAT_FINANCE "כלכלה"
     IDS_CAT_GAMES "משחקים וכיף"
     IDS_CAT_GRAPHICS "גרפיקה"
     IDS_CAT_INTERNET "אינטרנט ורשת"
@@ -182,26 +182,24 @@ BEGIN
     IDS_SEARCH_TEXT "חפש…"
     IDS_APPS_COUNT "ספירת יישומים: %d"
     IDS_WELCOME_TITLE "ברוכים הבאים למנהל היישומים של ReactOS!\n\n"
-    IDS_WELCOME_TEXT "Choose a category on the left, then choose an application to install or uninstall.\nReactOS Web Site: "
+    IDS_WELCOME_TEXT "בחר קטגוריה בצד שמאל, לאחר מכן בחר יישום להתקנה או להסרה.\nהאתר של ReactOS: "
     IDS_WELCOME_URL "https://reactos.org"
     IDS_INSTALLED "מותקן"
     IDS_AVAILABLEFORINST "זמין להתקנה"
     IDS_UPDATES "עדכונים"
     IDS_APPLICATIONS "יישומים"
-    IDS_CHOOSE_FOLDER_TEXT "Choose a folder which will store Downloads:"
-    IDS_CHOOSE_FOLDER_ERROR "The folder you have specified does not exist. Create it?"
+    IDS_CHOOSE_FOLDER_TEXT "בחר תקייה שתשמור הורדות:"
+    IDS_CHOOSE_FOLDER_ERROR "התקייה שהזנת לא קיימת, ליצור אותה?"
     IDS_APP_REG_REMOVE "Are you sure you want to delete the data on the installed program from the registry?"
     IDS_INFORMATION "מידע"
     IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
     IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
     IDS_UNABLE_TO_REMOVE "Unable to remove data on the program from the registry!"
     IDS_UNABLE_TO_INSTALL "Unable to open installer!"
-    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
     IDS_INTEG_CHECK_TITLE "Verifying package integrity…"
     IDS_INTEG_CHECK_FAIL "The package did not pass the integrity check, it may have been corrupted or tampered with during downloading. Running the software is not recommended."
     IDS_INTERRUPTED_DOWNLOAD "The download was interrupted. Check connection to Internet."
     IDS_UNABLE_TO_WRITE "Unable to write to disk. Disk may be at capacity."
-    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
 END
 
 STRINGTABLE
@@ -225,12 +223,12 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LANGUAGE_AVAILABLE_TRANSLATION "Supports your language"
-    IDS_LANGUAGE_NO_TRANSLATION "Supports other languages"
+    IDS_LANGUAGE_AVAILABLE_TRANSLATION "עם תמיכה בשפה שלך"
+    IDS_LANGUAGE_NO_TRANSLATION "עם תמיכה בשפות אחרות"
     IDS_LANGUAGE_ENGLISH_TRANSLATION "Supports English"
-    IDS_LANGUAGE_SINGLE "Single language"
-    IDS_LANGUAGE_MORE_PLACEHOLDER " (+%d more)"
-    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d available)"
+    IDS_LANGUAGE_SINGLE "שפה יחידה"
+    IDS_LANGUAGE_MORE_PLACEHOLDER " (עוד +%d)"
+    IDS_LANGUAGE_AVAILABLE_PLACEHOLDER " (+%d זמינה)"
 END
 
 STRINGTABLE

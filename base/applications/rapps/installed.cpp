@@ -1,10 +1,9 @@
 /*
  * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * FILE:        base/applications/rapps/installed.cpp
  * PURPOSE:     Functions for working with installed applications
- * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev         (dmitry@reactos.org)
- *              Copyright 2017 Alexander Shaposhnikov   (sanchaez@reactos.org)
+ * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev (dmitry@reactos.org)
+ *              Copyright 2017 Alexander Shaposhnikov (sanchaez@reactos.org)
  */
 #include "rapps.h"
 
@@ -55,7 +54,7 @@ BOOL UninstallApplication(INT Index, BOOL bModify)
 
     if (Index == -1)
     {
-        ItemIndex = (INT) SendMessageW(hListView, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
+        ItemIndex = (INT)SendMessageW(hListView, LVM_GETNEXTITEM, -1, LVNI_FOCUSED);
         if (ItemIndex == -1)
             return FALSE;
     }
@@ -74,7 +73,7 @@ BOOL UninstallApplication(INT Index, BOOL bModify)
     if (!ListView_GetItem(hListView, &Item))
         return FALSE;
 
-    ItemInfo = (PINSTALLED_INFO) Item.lParam;
+    ItemInfo = (PINSTALLED_INFO)Item.lParam;
     hKey = ItemInfo->hSubKey;
 
     dwType = REG_SZ;
@@ -96,7 +95,7 @@ BOOL ShowInstalledAppInfo(INT Index)
 {
     ATL::CStringW szText;
     ATL::CStringW szInfo;
-    PINSTALLED_INFO Info = (PINSTALLED_INFO) ListViewGetlParam(Index);
+    PINSTALLED_INFO Info = (PINSTALLED_INFO)ListViewGetlParam(Index);
 
     if (!Info || !Info->hSubKey) return FALSE;
 

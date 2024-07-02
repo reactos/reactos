@@ -1,4 +1,4 @@
-/* TRANSLATORS: 2013-2016 Erdem Ersoy <erdemersoy@erdemersoy.net>, 2018 Ercan Ersoy <ercanersoy@ercanersoy.net> */
+// COPYRIGHT: 2013-2016 Erdem Ersoy, 2018 Ercan Ersoy <ercanersoy@ercanersoy.net>
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -193,12 +193,10 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD2 "Paket indirilemez! İnternet bağlantınızı yoklayınız!"
     IDS_UNABLE_TO_REMOVE "Programın girişi kayıt defterinden silinemiyor."
     IDS_UNABLE_TO_INSTALL "Yükleyici açılamıyor!"
-    IDS_UNABLE_TO_QUERY_CERT "Sertifika bilgisi alınamıyor.\n\nYine de sürdürülsün mü?"
     IDS_INTEG_CHECK_TITLE "Paket bütünlüğü doğrulanıyor…"
     IDS_INTEG_CHECK_FAIL "Paket bütünlük denetimini geçmedi, bozulmuş veya indirme esnasında oynanmış olabilir. Yazılımı çalıştırmak önerilmez."
     IDS_INTERRUPTED_DOWNLOAD "İndirme kesildi. İnternet bağlantınızı denetleyiniz."
     IDS_UNABLE_TO_WRITE "Diske yazılamıyor. Disk dolu olabilir."
-    IDS_MISMATCH_CERT_INFO "Kullanılan sertifika bilimmiyor:\nAçıklama: %s\nSertifikayı Veren: %s\nYine de sürdürmek istiyor musunuz?"
 END
 
 STRINGTABLE
@@ -217,7 +215,7 @@ STRINGTABLE
 BEGIN
     IDS_LICENSE_OPENSOURCE "Açık Kaynak"
     IDS_LICENSE_FREEWARE "Ücretsiz"
-    IDS_LICENSE_TRIAL "Sınama/Tanıtım"
+    IDS_LICENSE_TRIAL "Deneme/Tanıtım"
 END
 
 STRINGTABLE
