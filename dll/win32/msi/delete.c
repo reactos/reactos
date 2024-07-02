@@ -48,16 +48,16 @@ WINE_DEFAULT_DEBUG_CHANNEL(msidb);
  * that's a bug in the way I'm running the query, or a just a bug.
  */
 
-typedef struct tagMSIDELETEVIEW
+struct delete_view
 {
     MSIVIEW        view;
     MSIDATABASE   *db;
     MSIVIEW       *table;
-} MSIDELETEVIEW;
+};
 
 static UINT DELETE_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT *val )
 {
-    MSIDELETEVIEW *dv = (MSIDELETEVIEW*)view;
+    struct delete_view *dv = (struct delete_view *)view;
 
     TRACE("%p %d %d %p\n", dv, row, col, val );
 
@@ -66,7 +66,7 @@ static UINT DELETE_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT 
 
 static UINT DELETE_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, IStream **stm)
 {
-    MSIDELETEVIEW *dv = (MSIDELETEVIEW*)view;
+    struct delete_view *dv = (struct delete_view *)view;
 
     TRACE("%p %d %d %p\n", dv, row, col, stm );
 
@@ -75,7 +75,7 @@ static UINT DELETE_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, IS
 
 static UINT DELETE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
 {
-    MSIDELETEVIEW *dv = (MSIDELETEVIEW*)view;
+    struct delete_view *dv = (struct delete_view *)view;
     UINT r, i, rows = 0, cols = 0;
 
     TRACE("%p %p\n", dv, record);
@@ -102,7 +102,7 @@ static UINT DELETE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
 
 static UINT DELETE_close( struct tagMSIVIEW *view )
 {
-    MSIDELETEVIEW *dv = (MSIDELETEVIEW*)view;
+    struct delete_view *dv = (struct delete_view *)view;
 
     TRACE("%p\n", dv );
 
@@ -114,7 +114,7 @@ static UINT DELETE_close( struct tagMSIVIEW *view )
 
 static UINT DELETE_get_dimensions( struct tagMSIVIEW *view, UINT *rows, UINT *cols )
 {
-    MSIDELETEVIEW *dv = (MSIDELETEVIEW*)view;
+    struct delete_view *dv = (struct delete_view *)view;
 
     TRACE("%p %p %p\n", dv, rows, cols );
 
@@ -129,7 +129,7 @@ static UINT DELETE_get_dimensions( struct tagMSIVIEW *view, UINT *rows, UINT *co
 static UINT DELETE_get_column_info( struct tagMSIVIEW *view, UINT n, LPCWSTR *name,
                                     UINT *type, BOOL *temporary, LPCWSTR *table_name )
 {
-    MSIDELETEVIEW *dv = (MSIDELETEVIEW*)view;
+    struct delete_view *dv = (struct delete_view *)view;
 
     TRACE("%p %d %p %p %p %p\n", dv, n, name, type, temporary, table_name );
 
@@ -143,7 +143,7 @@ static UINT DELETE_get_column_info( struct tagMSIVIEW *view, UINT n, LPCWSTR *na
 static UINT DELETE_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,
                            MSIRECORD *rec, UINT row )
 {
-    MSIDELETEVIEW *dv = (MSIDELETEVIEW*)view;
+    struct delete_view *dv = (struct delete_view *)view;
 
     TRACE("%p %d %p\n", dv, eModifyMode, rec );
 
@@ -152,14 +152,14 @@ static UINT DELETE_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,
 
 static UINT DELETE_delete( struct tagMSIVIEW *view )
 {
-    MSIDELETEVIEW *dv = (MSIDELETEVIEW*)view;
+    struct delete_view *dv = (struct delete_view *)view;
 
     TRACE("%p\n", dv );
 
     if( dv->table )
         dv->table->ops->delete( dv->table );
 
-    msi_free( dv );
+    free( dv );
 
     return ERROR_SUCCESS;
 }
@@ -189,11 +189,11 @@ static const MSIVIEWOPS delete_ops =
 
 UINT DELETE_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table )
 {
-    MSIDELETEVIEW *dv = NULL;
+    struct delete_view *dv = NULL;
 
     TRACE("%p\n", dv );
 
-    dv = msi_alloc_zero( sizeof *dv );
+    dv = calloc( 1, sizeof *dv );
     if( !dv )
         return ERROR_FUNCTION_FAILED;
 

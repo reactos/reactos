@@ -87,13 +87,13 @@ static void append_productcode( MSIPACKAGE *package, const WCHAR *action_prop, c
     if (find_product( prop, product ))
     {
         TRACE( "related product property %s already contains %s\n", debugstr_w(action_prop), debugstr_w(product) );
-        msi_free( prop );
+        free( prop );
         return;
     }
 
     if (prop) len += lstrlenW( prop );
     len += lstrlenW( product ) + 2;
-    if (!(newprop = msi_alloc( len * sizeof(WCHAR) ))) return;
+    if (!(newprop = malloc( len * sizeof(WCHAR) ))) return;
     if (prop)
     {
         lstrcpyW( newprop, prop );
@@ -108,8 +108,8 @@ static void append_productcode( MSIPACKAGE *package, const WCHAR *action_prop, c
 
     TRACE( "related product property %s now %s\n", debugstr_w(action_prop), debugstr_w(newprop) );
 
-    msi_free( prop );
-    msi_free( newprop );
+    free( prop );
+    free( newprop );
 }
 
 static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)

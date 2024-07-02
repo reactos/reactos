@@ -54,12 +54,12 @@ struct transform_desc
 
 static void free_transform_desc( struct transform_desc *desc )
 {
-    msi_free( desc->product_code_from );
-    msi_free( desc->product_code_to );
-    msi_free( desc->version_from );
-    msi_free( desc->version_to );
-    msi_free( desc->upgrade_code );
-    msi_free( desc );
+    free( desc->product_code_from );
+    free( desc->product_code_to );
+    free( desc->version_from );
+    free( desc->version_to );
+    free( desc->upgrade_code );
+    free( desc );
 }
 
 static struct transform_desc *parse_transform_desc( const WCHAR *str )
@@ -68,20 +68,20 @@ static struct transform_desc *parse_transform_desc( const WCHAR *str )
     const WCHAR *p = str, *q;
     UINT len;
 
-    if (!(ret = msi_alloc_zero( sizeof(*ret) ))) return NULL;
+    if (!(ret = calloc( 1, sizeof(*ret) ))) return NULL;
 
     q = wcschr( p, '}' );
     if (*p != '{' || !q) goto error;
 
     len = q - p + 1;
-    if (!(ret->product_code_from = msi_alloc( (len + 1) * sizeof(WCHAR) ))) goto error;
+    if (!(ret->product_code_from = malloc( (len + 1) * sizeof(WCHAR) ))) goto error;
     memcpy( ret->product_code_from, p, len * sizeof(WCHAR) );
     ret->product_code_from[len] = 0;
 
     p = q + 1;
     if (!(q = wcschr( p, ';' ))) goto error;
     len = q - p;
-    if (!(ret->version_from = msi_alloc( (len + 1) * sizeof(WCHAR) ))) goto error;
+    if (!(ret->version_from = malloc( (len + 1) * sizeof(WCHAR) ))) goto error;
     memcpy( ret->version_from, p, len * sizeof(WCHAR) );
     ret->version_from[len] = 0;
 
@@ -90,14 +90,14 @@ static struct transform_desc *parse_transform_desc( const WCHAR *str )
     if (*p != '{' || !q) goto error;
 
     len = q - p + 1;
-    if (!(ret->product_code_to = msi_alloc( (len + 1) * sizeof(WCHAR) ))) goto error;
+    if (!(ret->product_code_to = malloc( (len + 1) * sizeof(WCHAR) ))) goto error;
     memcpy( ret->product_code_to, p, len * sizeof(WCHAR) );
     ret->product_code_to[len] = 0;
 
     p = q + 1;
     if (!(q = wcschr( p, ';' ))) goto error;
     len = q - p;
-    if (!(ret->version_to = msi_alloc( (len + 1) * sizeof(WCHAR) ))) goto error;
+    if (!(ret->version_to = malloc( (len + 1) * sizeof(WCHAR) ))) goto error;
     memcpy( ret->version_to, p, len * sizeof(WCHAR) );
     ret->version_to[len] = 0;
 
@@ -106,7 +106,7 @@ static struct transform_desc *parse_transform_desc( const WCHAR *str )
     if (*p != '{' || !q) goto error;
 
     len = q - p + 1;
-    if (!(ret->upgrade_code = msi_alloc( (len + 1) * sizeof(WCHAR) ))) goto error;
+    if (!(ret->upgrade_code = malloc( (len + 1) * sizeof(WCHAR) ))) goto error;
     memcpy( ret->upgrade_code, p, len * sizeof(WCHAR) );
     ret->upgrade_code[len] = 0;
 
@@ -157,18 +157,18 @@ static UINT check_transform_applicable( MSIPACKAGE *package, IStorage *transform
     if (!(product = msi_get_suminfo_product( transform )))
     {
         WARN("no product property!\n");
-        msi_free( template );
+        free( template );
         msiobj_release( &si->hdr );
         return ERROR_FUNCTION_FAILED;
     }
     TRACE("product property: %s\n", debugstr_w(product));
     if (!(desc = parse_transform_desc( product )))
     {
-        msi_free( template );
+        free( template );
         msiobj_release( &si->hdr );
         return ERROR_FUNCTION_FAILED;
     }
-    msi_free( product );
+    free( product );
 
     if (wanted_flags & MSITRANSFORM_VALIDATE_LANGUAGE)
     {
@@ -183,7 +183,7 @@ static UINT check_transform_applicable( MSIPACKAGE *package, IStorage *transform
 
         if (!product_code_installed)
         {
-            msi_free( template );
+            free( template );
             free_transform_desc( desc );
             msiobj_release( &si->hdr );
             return ERROR_INSTALL_PACKAGE_INVALID;
@@ -192,9 +192,9 @@ static UINT check_transform_applicable( MSIPACKAGE *package, IStorage *transform
         {
             valid_flags |= MSITRANSFORM_VALIDATE_PRODUCT;
         }
-        msi_free( product_code_installed );
+        free( product_code_installed );
     }
-    msi_free( template );
+    free( template );
     if (wanted_flags & MSITRANSFORM_VALIDATE_MAJORVERSION)
     {
         WCHAR *product_version_installed = msi_dup_property( package->db, L"ProductVersion" );
@@ -214,7 +214,7 @@ static UINT check_transform_applicable( MSIPACKAGE *package, IStorage *transform
             valid_flags |= MSITRANSFORM_VALIDATE_MAJORVERSION;
             wanted_flags &= ~MSITRANSFORM_VALIDATE_MINORVERSION;
         }
-        msi_free( product_version_installed );
+        free( product_version_installed );
     }
     else if (wanted_flags & MSITRANSFORM_VALIDATE_MINORVERSION)
     {
@@ -232,7 +232,7 @@ static UINT check_transform_applicable( MSIPACKAGE *package, IStorage *transform
 
         if (major_installed == major && minor_installed == minor)
             valid_flags |= MSITRANSFORM_VALIDATE_MINORVERSION;
-        msi_free( product_version_installed );
+        free( product_version_installed );
     }
     if (wanted_flags & MSITRANSFORM_VALIDATE_UPGRADECODE)
     {
@@ -246,7 +246,7 @@ static UINT check_transform_applicable( MSIPACKAGE *package, IStorage *transform
         }
         if (!wcscmp( desc->upgrade_code, upgrade_code_installed ))
             valid_flags |= MSITRANSFORM_VALIDATE_UPGRADECODE;
-        msi_free( upgrade_code_installed );
+        free( upgrade_code_installed );
     }
 
     free_transform_desc( desc );
@@ -309,38 +309,38 @@ UINT msi_check_patch_applicable( MSIPACKAGE *package, MSISUMMARYINFO *si )
     {
         if (!wcscmp( guids[i], product_code )) ret = ERROR_SUCCESS;
     }
-    msi_free( guids );
-    msi_free( guid_list );
-    msi_free( product_code );
+    free( guids );
+    free( guid_list );
+    free( product_code );
     return ret;
 }
 
-static UINT msi_parse_patch_summary( MSISUMMARYINFO *si, MSIPATCHINFO **patch )
+static UINT parse_patch_summary( MSISUMMARYINFO *si, MSIPATCHINFO **patch )
 {
     MSIPATCHINFO *pi;
     UINT r = ERROR_SUCCESS;
     WCHAR *p;
 
-    if (!(pi = msi_alloc_zero( sizeof(MSIPATCHINFO) )))
+    if (!(pi = calloc( 1, sizeof(MSIPATCHINFO) )))
     {
         return ERROR_OUTOFMEMORY;
     }
     if (!(pi->patchcode = msi_suminfo_dup_string( si, PID_REVNUMBER )))
     {
-        msi_free( pi );
+        free( pi );
         return ERROR_OUTOFMEMORY;
     }
     p = pi->patchcode;
     if (*p != '{')
     {
-        msi_free( pi->patchcode );
-        msi_free( pi );
+        free( pi->patchcode );
+        free( pi );
         return ERROR_PATCH_PACKAGE_INVALID;
     }
     if (!(p = wcschr( p + 1, '}' )))
     {
-        msi_free( pi->patchcode );
-        msi_free( pi );
+        free( pi->patchcode );
+        free( pi );
         return ERROR_PATCH_PACKAGE_INVALID;
     }
     if (p[1])
@@ -351,15 +351,15 @@ static UINT msi_parse_patch_summary( MSISUMMARYINFO *si, MSIPATCHINFO **patch )
     TRACE("patch code %s\n", debugstr_w(pi->patchcode));
     if (!(pi->products = msi_suminfo_dup_string( si, PID_TEMPLATE )))
     {
-        msi_free( pi->patchcode );
-        msi_free( pi );
+        free( pi->patchcode );
+        free( pi );
         return ERROR_OUTOFMEMORY;
     }
     if (!(pi->transforms = msi_suminfo_dup_string( si, PID_LASTAUTHOR )))
     {
-        msi_free( pi->patchcode );
-        msi_free( pi->products );
-        msi_free( pi );
+        free( pi->patchcode );
+        free( pi->products );
+        free( pi );
         return ERROR_OUTOFMEMORY;
     }
     *patch = pi;
@@ -387,7 +387,7 @@ static UINT patch_set_media_source_prop( MSIPACKAGE *package )
         property = MSI_RecordGetString( rec, 1 );
         patch = msi_dup_property( package->db, L"PATCH" );
         msi_set_property( package->db, property, patch, -1 );
-        msi_free( patch );
+        free( patch );
         msiobj_release( &rec->hdr );
     }
 
@@ -413,7 +413,7 @@ struct patch_offset_list
 
 static struct patch_offset_list *patch_offset_list_create( void )
 {
-    struct patch_offset_list *pos = msi_alloc( sizeof(struct patch_offset_list) );
+    struct patch_offset_list *pos = malloc( sizeof(struct patch_offset_list) );
     list_init( &pos->files );
     list_init( &pos->patches );
     pos->count = pos->max = 0;
@@ -427,15 +427,15 @@ static void patch_offset_list_free( struct patch_offset_list *pos )
 
     LIST_FOR_EACH_ENTRY_SAFE( po, po2, &pos->files, struct patch_offset, entry )
     {
-        msi_free( po->name );
-        msi_free( po );
+        free( po->name );
+        free( po );
     }
     LIST_FOR_EACH_ENTRY_SAFE( po, po2, &pos->patches, struct patch_offset, entry )
     {
-        msi_free( po->name );
-        msi_free( po );
+        free( po->name );
+        free( po );
     }
-    msi_free( pos );
+    free( pos );
 }
 
 static void patch_offset_get_filepatches( MSIDATABASE *db, UINT last_sequence, struct patch_offset_list *pos )
@@ -458,7 +458,7 @@ static void patch_offset_get_filepatches( MSIDATABASE *db, UINT last_sequence, s
 
     while (MSI_ViewFetch( view, &rec ) == ERROR_SUCCESS)
     {
-        struct patch_offset *po = msi_alloc( sizeof(struct patch_offset) );
+        struct patch_offset *po = malloc( sizeof(struct patch_offset) );
 
         po->name     = msi_dup_record_field( rec, 1 );
         po->sequence = MSI_RecordGetInteger( rec, 2 );
@@ -495,7 +495,7 @@ static void patch_offset_get_files( MSIDATABASE *db, UINT last_sequence, struct 
         UINT attributes = MSI_RecordGetInteger( rec, 7 );
         if (attributes & msidbFileAttributesPatchAdded)
         {
-            struct patch_offset *po = msi_alloc( sizeof(struct patch_offset) );
+            struct patch_offset *po = malloc( sizeof(struct patch_offset) );
 
             po->name     = msi_dup_record_field( rec, 1 );
             po->sequence = MSI_RecordGetInteger( rec, 8 );
@@ -669,7 +669,7 @@ static UINT patch_add_media( MSIPACKAGE *package, IStorage *storage, MSIPATCHINF
             msiobj_release( &rec->hdr );
             continue;
         }
-        if (!(media = msi_alloc( sizeof( *media ))))
+        if (!(media = malloc( sizeof( *media ))))
         {
             msiobj_release( &rec->hdr );
             goto done;
@@ -739,11 +739,11 @@ done:
     LIST_FOR_EACH_ENTRY_SAFE( media, next, &media_list, struct patch_media, entry )
     {
         list_remove( &media->entry );
-        msi_free( media->prompt );
-        msi_free( media->cabinet );
-        msi_free( media->volume );
-        msi_free( media->source );
-        msi_free( media );
+        free( media->prompt );
+        free( media->cabinet );
+        free( media->volume );
+        free( media->source );
+        free( media );
     }
     return r;
 }
@@ -831,7 +831,7 @@ static DWORD is_uninstallable( MSIDATABASE *db )
     return ret;
 }
 
-static UINT msi_apply_patch_db( MSIPACKAGE *package, MSIDATABASE *patch_db, MSIPATCHINFO *patch )
+static UINT apply_patch_db( MSIPACKAGE *package, MSIDATABASE *patch_db, MSIPATCHINFO *patch )
 {
     UINT i, r = ERROR_SUCCESS;
     WCHAR **substorage;
@@ -848,7 +848,7 @@ static UINT msi_apply_patch_db( MSIPACKAGE *package, MSIDATABASE *patch_db, MSIP
                 r = patch_add_media( package, patch_db->storage, patch );
         }
     }
-    msi_free( substorage );
+    free( substorage );
     if (r != ERROR_SUCCESS)
         return r;
 
@@ -864,15 +864,15 @@ static UINT msi_apply_patch_db( MSIPACKAGE *package, MSIDATABASE *patch_db, MSIP
 
 void msi_free_patchinfo( MSIPATCHINFO *patch )
 {
-    msi_free( patch->patchcode );
-    msi_free( patch->products );
-    msi_free( patch->transforms );
-    msi_free( patch->filename );
-    msi_free( patch->localfile );
-    msi_free( patch );
+    free( patch->patchcode );
+    free( patch->products );
+    free( patch->transforms );
+    free( patch->filename );
+    free( patch->localfile );
+    free( patch );
 }
 
-static UINT msi_apply_patch_package( MSIPACKAGE *package, const WCHAR *file )
+static UINT apply_patch_package( MSIPACKAGE *package, const WCHAR *file )
 {
     MSIDATABASE *patch_db = NULL;
     WCHAR localfile[MAX_PATH];
@@ -901,7 +901,7 @@ static UINT msi_apply_patch_package( MSIPACKAGE *package, const WCHAR *file )
         r = ERROR_SUCCESS;
         goto done;
     }
-    r = msi_parse_patch_summary( si, &patch );
+    r = parse_patch_summary( si, &patch );
     if ( r != ERROR_SUCCESS )
         goto done;
 
@@ -911,10 +911,10 @@ static UINT msi_apply_patch_package( MSIPACKAGE *package, const WCHAR *file )
 
     r = ERROR_OUTOFMEMORY;
     patch->registered = FALSE;
-    if (!(patch->filename = strdupW( file ))) goto done;
-    if (!(patch->localfile = strdupW( localfile ))) goto done;
+    if (!(patch->filename = wcsdup( file ))) goto done;
+    if (!(patch->localfile = wcsdup( localfile ))) goto done;
 
-    r = msi_apply_patch_db( package, patch_db, patch );
+    r = apply_patch_db( package, patch_db, patch );
     if (r != ERROR_SUCCESS) WARN("patch failed to apply %u\n", r);
 
 done:
@@ -940,10 +940,10 @@ UINT msi_apply_patches( MSIPACKAGE *package )
 
     patches = msi_split_string( patch_list, ';' );
     for (i = 0; patches && patches[i] && r == ERROR_SUCCESS; i++)
-        r = msi_apply_patch_package( package, patches[i] );
+        r = apply_patch_package( package, patches[i] );
 
-    msi_free( patches );
-    msi_free( patch_list );
+    free( patches );
+    free( patch_list );
     return r;
 }
 
@@ -969,21 +969,21 @@ UINT msi_apply_transforms( MSIPACKAGE *package )
                 WCHAR *p = wcsrchr( package->PackagePath, '\\' );
                 DWORD len = p - package->PackagePath + 1;
 
-                if (!(transform = msi_alloc( (len + lstrlenW( xforms[i] ) + 1) * sizeof(WCHAR)) ))
+                if (!(transform = malloc( (len + wcslen( xforms[i] ) + 1) * sizeof(WCHAR)) ))
                 {
-                    msi_free( xforms );
-                    msi_free( xform_list );
+                    free( xforms );
+                    free( xform_list );
                     return ERROR_OUTOFMEMORY;
                 }
                 memcpy( transform, package->PackagePath, len * sizeof(WCHAR) );
                 memcpy( transform + len, xforms[i], (lstrlenW( xforms[i] ) + 1) * sizeof(WCHAR) );
             }
             r = MSI_DatabaseApplyTransformW( package->db, transform, 0 );
-            if (transform != xforms[i]) msi_free( transform );
+            if (transform != xforms[i]) free( transform );
         }
     }
-    msi_free( xforms );
-    msi_free( xform_list );
+    free( xforms );
+    free( xform_list );
     return r;
 }
 
@@ -1018,7 +1018,7 @@ UINT msi_apply_registered_patch( MSIPACKAGE *package, LPCWSTR patch_code )
         msiobj_release( &patch_db->hdr );
         return r;
     }
-    r = msi_parse_patch_summary( si, &patch_info );
+    r = parse_patch_summary( si, &patch_info );
     msiobj_release( &si->hdr );
     if (r != ERROR_SUCCESS)
     {
@@ -1027,14 +1027,14 @@ UINT msi_apply_registered_patch( MSIPACKAGE *package, LPCWSTR patch_code )
         return r;
     }
     patch_info->registered = TRUE;
-    patch_info->localfile = strdupW( patch_file );
+    patch_info->localfile = wcsdup( patch_file );
     if (!patch_info->localfile)
     {
         msiobj_release( &patch_db->hdr );
         msi_free_patchinfo( patch_info );
         return ERROR_OUTOFMEMORY;
     }
-    r = msi_apply_patch_db( package, patch_db, patch_info );
+    r = apply_patch_db( package, patch_db, patch_info );
     msiobj_release( &patch_db->hdr );
     if (r != ERROR_SUCCESS)
     {

@@ -1,7 +1,7 @@
 /*
- * DLL for testing self-registration
+ * msiexec.exe internal definitions
  *
- * Copyright 2018 Zebediah Figura
+ * Copyright 2023 Eric Pouech for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,25 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#if 0
-#pragma makedep testdll
+#ifdef __WINE_CRT_PRINTF_ATTR
+extern void report_error(const char* msg, ...) __WINE_CRT_PRINTF_ATTR(1, 2);
+#else
+extern void report_error(const char* msg, ...);
 #endif
-
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-
-HRESULT WINAPI DllRegisterServer(void)
-{
-    HKEY key;
-    RegCreateKeyA(HKEY_CLASSES_ROOT, "selfreg_test", &key);
-    RegCloseKey(key);
-    return S_OK;
-}
-
-HRESULT WINAPI DllUnregisterServer(void)
-{
-    RegDeleteKeyA(HKEY_CLASSES_ROOT, "selfreg_test");
-    return S_OK;
-}

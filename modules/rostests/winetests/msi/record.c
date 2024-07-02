@@ -244,11 +244,11 @@ static void test_msirecord(void)
     i = MsiRecordSetStringA(h,0,"42");
     ok(i == ERROR_SUCCESS, "Failed to set string at 0\n");
     i = MsiRecordGetInteger(h, 0);
-    ok(i == 42, "should get invalid integer\n");
+    ok(i == 42, "should get 42\n");
     i = MsiRecordSetStringA(h,0,"-42");
     ok(i == ERROR_SUCCESS, "Failed to set string at 0\n");
     i = MsiRecordGetInteger(h, 0);
-    ok(i == -42, "should get invalid integer\n");
+    ok(i == -42, "should get -42\n");
     i = MsiRecordSetStringA(h,0," 42");
     ok(i == ERROR_SUCCESS, "Failed to set string at 0\n");
     i = MsiRecordGetInteger(h, 0);
@@ -349,7 +349,7 @@ static void test_msirecord(void)
     ok(r == ERROR_SUCCESS, "failed to add stream to record\n");
     r = MsiRecordReadStream(h, 1, buf, NULL);
     ok(r == ERROR_INVALID_PARAMETER, "should return error\n");
-    DeleteFileA(filename); /* Windows 98 doesn't like this at all, so don't check return. */
+    DeleteFileA(filename);
     r = MsiRecordReadStream(h, 1, NULL, NULL);
     ok(r == ERROR_INVALID_PARAMETER, "should return error\n");
     sz = sizeof buf;

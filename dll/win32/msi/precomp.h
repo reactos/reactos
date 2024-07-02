@@ -13,8 +13,6 @@
 #endif
 
 #define COBJMACROS
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
 
 #include "msipriv.h"
 #include "query.h"

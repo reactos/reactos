@@ -26,10 +26,9 @@
 #include <msi.h>
 #include <winsvc.h>
 #include <objbase.h>
-#include <stdio.h>
 
 #include "wine/debug.h"
-#include "wine/heap.h"
+#include "msiexec_internal.h"
 
 #include "initguid.h"
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
@@ -40,12 +39,28 @@ typedef HRESULT (WINAPI *DLLREGISTERSERVER)(void);
 typedef HRESULT (WINAPI *DLLUNREGISTERSERVER)(void);
 
 DWORD DoService(void);
+static BOOL silent;
 
 struct string_list
 {
 	struct string_list *next;
 	WCHAR str[1];
 };
+
+void report_error(const char* msg, ...)
+{
+    char buffer[2048];
+    va_list va_args;
+
+    va_start(va_args, msg);
+    vsnprintf(buffer, sizeof(buffer), msg, va_args);
+    va_end(va_args);
+
+    if (silent)
+        MESSAGE("%s", buffer);
+    else
+        MsiMessageBoxA(NULL, buffer, "MsiExec", 0, GetUserDefaultLangID(), 0);
+}
 
 static void ShowUsage(int ExitCode)
 {
@@ -73,8 +88,8 @@ static void ShowUsage(int ExitCode)
        No typo: The LPWSTR parameter must be a LPWSTR * for this mode */
     len = LoadStringW(hmsi, 10, (LPWSTR) &msi_res, 0);
 
-    msi_res = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR));
-    msiexec_help = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR) + sizeof(msiexec_version));
+    msi_res = malloc((len + 1) * sizeof(WCHAR));
+    msiexec_help = malloc((len + 1) * sizeof(WCHAR) + sizeof(msiexec_version));
     if (msi_res && msiexec_help) {
         *msi_res = 0;
         LoadStringW(hmsi, 10, msi_res, len + 1);
@@ -82,8 +97,8 @@ static void ShowUsage(int ExitCode)
         swprintf(msiexec_help, len + 1 + ARRAY_SIZE(msiexec_version), msi_res, msiexec_version);
         MsiMessageBoxW(0, msiexec_help, NULL, 0, GetUserDefaultLangID(), 0);
     }
-    HeapFree(GetProcessHeap(), 0, msi_res);
-    HeapFree(GetProcessHeap(), 0, msiexec_help);
+    free(msi_res);
+    free(msiexec_help);
     ExitProcess(ExitCode);
 }
 
@@ -101,7 +116,7 @@ static VOID StringListAppend(struct string_list **list, LPCWSTR str)
 {
 	struct string_list *entry;
 
-	entry = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(struct string_list, str[lstrlenW(str) + 1]));
+	entry = malloc(FIELD_OFFSET(struct string_list, str[wcslen(str) + 1]));
 	if(!entry)
 	{
 		WINE_ERR("Out of memory!\n");
@@ -134,7 +149,7 @@ static LPWSTR build_properties(struct string_list *property_list)
 	for(list = property_list; list; list = list->next)
 		len += lstrlenW(list->str) + 3;
 
-	ret = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
+	ret = malloc(len * sizeof(WCHAR));
 
 	/* add a space before each string, and quote the value */
 	p = ret;
@@ -178,7 +193,7 @@ static LPWSTR build_transforms(struct string_list *transform_list)
 	for(list = transform_list; list; list = list->next)
 		len += lstrlenW(list->str) + 1;
 
-	ret = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
+	ret = malloc(len * sizeof(WCHAR));
 
 	/* add all the transforms with a semicolon between each one */
 	p = ret;
@@ -218,10 +233,10 @@ static BOOL msi_strequal(LPCWSTR str1, LPCSTR str2)
 		return FALSE;
 	if( lstrlenW(str1) != (len-1) )
 		return FALSE;
-	strW = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR)*len);
+	strW = malloc(sizeof(WCHAR) * len);
 	MultiByteToWideChar( CP_ACP, 0, str2, -1, strW, len);
 	ret = CompareStringW(GetThreadLocale(), NORM_IGNORECASE, str1, len, strW, len);
-	HeapFree(GetProcessHeap(), 0, strW);
+	free(strW);
 	return (ret == CSTR_EQUAL);
 }
 
@@ -246,10 +261,10 @@ static BOOL msi_strprefix(LPCWSTR str1, LPCSTR str2)
 		return FALSE;
 	if( lstrlenW(str1) < (len-1) )
 		return FALSE;
-	strW = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR)*len);
+	strW = malloc(sizeof(WCHAR) * len);
 	MultiByteToWideChar( CP_ACP, 0, str2, -1, strW, len);
 	ret = CompareStringW(GetThreadLocale(), NORM_IGNORECASE, str1, len-1, strW, len-1);
-	HeapFree(GetProcessHeap(), 0, strW);
+	free(strW);
 	return (ret == CSTR_EQUAL);
 }
 
@@ -270,14 +285,14 @@ static VOID *LoadProc(LPCWSTR DllName, LPCSTR ProcName, HMODULE* DllHandle)
 	*DllHandle = LoadLibraryExW(DllName, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
 	if(!*DllHandle)
 	{
-		fprintf(stderr, "Unable to load dll %s\n", wine_dbgstr_w(DllName));
+		report_error("Unable to load dll %s\n", wine_dbgstr_w(DllName));
 		ExitProcess(1);
 	}
 	proc = (VOID *) GetProcAddress(*DllHandle, ProcName);
 	if(!proc)
 	{
-		fprintf(stderr, "Dll %s does not implement function %s\n",
-			wine_dbgstr_w(DllName), ProcName);
+		report_error("Dll %s does not implement function %s\n",
+			     wine_dbgstr_w(DllName), ProcName);
 		FreeLibrary(*DllHandle);
 		ExitProcess(1);
 	}
@@ -296,10 +311,10 @@ static DWORD DoDllRegisterServer(LPCWSTR DllName)
 	hr = pfDllRegisterServer();
 	if(FAILED(hr))
 	{
-		fprintf(stderr, "Failed to register dll %s\n", wine_dbgstr_w(DllName));
+		report_error("Failed to register dll %s\n", wine_dbgstr_w(DllName));
 		return 1;
 	}
-	printf("Successfully registered dll %s\n", wine_dbgstr_w(DllName));
+	MESSAGE("Successfully registered dll %s\n", wine_dbgstr_w(DllName));
 	if(DllHandle)
 		FreeLibrary(DllHandle);
 	return 0;
@@ -316,10 +331,10 @@ static DWORD DoDllUnregisterServer(LPCWSTR DllName)
 	hr = pfDllUnregisterServer();
 	if(FAILED(hr))
 	{
-		fprintf(stderr, "Failed to unregister dll %s\n", wine_dbgstr_w(DllName));
+		report_error("Failed to unregister dll %s\n", wine_dbgstr_w(DllName));
 		return 1;
 	}
-	printf("Successfully unregistered dll %s\n", wine_dbgstr_w(DllName));
+	MESSAGE("Successfully unregistered dll %s\n", wine_dbgstr_w(DllName));
 	if(DllHandle)
 		FreeLibrary(DllHandle);
 	return 0;
@@ -333,7 +348,7 @@ static DWORD DoRegServer(void)
 
     if (!(scm = OpenSCManagerW(NULL, SERVICES_ACTIVE_DATABASEW, SC_MANAGER_CREATE_SERVICE)))
     {
-        fprintf(stderr, "Failed to open the service control manager.\n");
+        report_error("Failed to open the service control manager.\n");
         return 1;
     }
     len = GetSystemDirectoryW(path, MAX_PATH);
@@ -346,7 +361,7 @@ static DWORD DoRegServer(void)
     }
     else if (GetLastError() != ERROR_SERVICE_EXISTS)
     {
-        fprintf(stderr, "Failed to create MSI service\n");
+        report_error("Failed to create MSI service\n");
         ret = 1;
     }
     CloseServiceHandle(scm);
@@ -360,21 +375,21 @@ static DWORD DoUnregServer(void)
 
     if (!(scm = OpenSCManagerW(NULL, SERVICES_ACTIVE_DATABASEW, SC_MANAGER_CONNECT)))
     {
-        fprintf(stderr, "Failed to open service control manager\n");
+        report_error("Failed to open service control manager\n");
         return 1;
     }
     if ((service = OpenServiceW(scm, L"MSIServer", DELETE)))
     {
         if (!DeleteService(service))
         {
-            fprintf(stderr, "Failed to delete MSI service\n");
+            report_error("Failed to delete MSI service\n");
             ret = 1;
         }
         CloseServiceHandle(service);
     }
     else if (GetLastError() != ERROR_SERVICE_DOES_NOT_EXIST)
     {
-        fprintf(stderr, "Failed to open MSI service\n");
+        report_error("Failed to open MSI service\n");
         ret = 1;
     }
     CloseServiceHandle(scm);
@@ -388,7 +403,7 @@ static DWORD client_pid;
 static DWORD CALLBACK custom_action_thread(void *arg)
 {
     GUID guid = *(GUID *)arg;
-    heap_free(arg);
+    free(arg);
     return __wine_msi_call_dll_function(client_pid, &guid);
 }
 
@@ -429,7 +444,7 @@ static int custom_action_server(const WCHAR *arg)
             return 0;
         }
 
-        thread_guid = heap_alloc(sizeof(GUID));
+        thread_guid = malloc(sizeof(GUID));
         memcpy(thread_guid, &guid, sizeof(GUID));
         thread = CreateThread(NULL, 0, custom_action_thread, thread_guid, 0, NULL);
 
@@ -533,13 +548,13 @@ static void process_args( WCHAR *cmdline, int *pargc, WCHAR ***pargv )
     *pargv = NULL;
 
     count = chomp( cmdline, NULL );
-    if (!(p = HeapAlloc( GetProcessHeap(), 0, (lstrlenW(cmdline) + count + 1) * sizeof(WCHAR) )))
+    if (!(p = malloc( (wcslen(cmdline) + count + 1) * sizeof(WCHAR) )))
         return;
 
     count = chomp( cmdline, p );
-    if (!(argv = HeapAlloc( GetProcessHeap(), 0, (count + 1) * sizeof(WCHAR *) )))
+    if (!(argv = malloc( (count + 1) * sizeof(WCHAR *) )))
     {
-        HeapFree( GetProcessHeap(), 0, p );
+        free( p );
         return;
     }
     for (i = 0; i < count; i++)
@@ -569,7 +584,7 @@ static BOOL process_args_from_reg( const WCHAR *ident, int *pargc, WCHAR ***parg
 	if(r == ERROR_SUCCESS && type == REG_SZ)
 	{
 		int len = lstrlenW( *pargv[0] );
-		if (!(buf = HeapAlloc( GetProcessHeap(), 0, sz + (len + 1) * sizeof(WCHAR) )))
+		if (!(buf = malloc( (len + 1) * sizeof(WCHAR) )))
 		{
 			RegCloseKey( hkey );
 			return FALSE;
@@ -582,7 +597,7 @@ static BOOL process_args_from_reg( const WCHAR *ident, int *pargc, WCHAR ***parg
 			process_args(buf, pargc, pargv);
 			ret = TRUE;
 		}
-		HeapFree(GetProcessHeap(), 0, buf);
+		free(buf);
 	}
 	RegCloseKey(hkey);
 	return ret;
@@ -594,7 +609,7 @@ static WCHAR *get_path_with_extension(const WCHAR *package_name)
     unsigned int p;
     WCHAR *path;
 
-    if (!(path = heap_alloc(lstrlenW(package_name) * sizeof(WCHAR) + sizeof(ext))))
+    if (!(path = malloc(wcslen(package_name) * sizeof(WCHAR) + sizeof(ext))))
     {
         WINE_ERR("No memory.\n");
         return NULL;
@@ -606,7 +621,7 @@ static WCHAR *get_path_with_extension(const WCHAR *package_name)
         --p;
     if (path[p] == '.')
     {
-        heap_free(path);
+        free(path);
         return NULL;
     }
     lstrcatW(path, ext);
@@ -766,7 +781,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 						RepairMode |= REINSTALLMODE_PACKAGE;
 						break;
 					default:
-						fprintf(stderr, "Unknown option \"%c\" in Repair mode\n", argvW[i][j]);
+						report_error("Unknown option \"%c\" in Repair mode\n", argvW[i][j]);
 						break;
 				}
 			}
@@ -816,7 +831,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 						AdvertiseMode = ADVERTISEFLAGS_MACHINEASSIGN;
 						break;
 					default:
-						fprintf(stderr, "Unknown option \"%c\" in Advertise mode\n", argvW[i][j]);
+						report_error("Unknown option \"%c\" in Advertise mode\n", argvW[i][j]);
 						break;
 				}
 			}
@@ -948,8 +963,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			LogFileName = argvW[i];
 			if(MsiEnableLogW(LogMode, LogFileName, LogAttributes) != ERROR_SUCCESS)
 			{
-				fprintf(stderr, "Logging in %s (0x%08x, %u) failed\n",
-					 wine_dbgstr_w(LogFileName), LogMode, LogAttributes);
+				report_error("Logging in %s (0x%08lx, %lu) failed\n",
+					     wine_dbgstr_w(LogFileName), LogMode, LogAttributes);
 				ExitProcess(1);
 			}
 		}
@@ -967,6 +982,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			if(lstrlenW(argvW[i]) == 2 || msi_strequal(argvW[i]+2, "n") ||
 			   msi_strequal(argvW[i] + 2, "uiet"))
 			{
+				silent = TRUE;
 				InstallUILevel = INSTALLUILEVEL_NONE;
 			}
 			else if(msi_strequal(argvW[i]+2, "r"))
@@ -1003,8 +1019,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 			else
 			{
-				fprintf(stderr, "Unknown option \"%s\" for UI level\n",
-					 wine_dbgstr_w(argvW[i]+2));
+				report_error("Unknown option \"%s\" for UI level\n",
+					     wine_dbgstr_w(argvW[i]+2));
 			}
 		}
                 else if(msi_option_equal(argvW[i], "passive"))
@@ -1071,7 +1087,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 					&& (path = get_path_with_extension(PackageName)))
 			{
 				ReturnCode = MsiInstallProductW(path, Properties);
-				heap_free(path);
+				free(path);
 			}
 		}
 	}
@@ -1085,7 +1101,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 					&& (path = get_path_with_extension(PackageName)))
 			{
 				ReturnCode = MsiReinstallProductW(path, RepairMode);
-				heap_free(path);
+				free(path);
 			}
 		}
 	}

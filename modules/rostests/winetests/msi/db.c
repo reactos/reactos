@@ -29,6 +29,7 @@
 #include <msiquery.h>
 
 #include "wine/test.h"
+#include "utils.h"
 
 static const char *msifile = "winetest-db.msi";
 static const char *msifile2 = "winetst2-db.msi";
@@ -210,22 +211,6 @@ static UINT do_query(MSIHANDLE hdb, const char *query, MSIHANDLE *phrec)
     if (r != ERROR_SUCCESS)
         return r;
     return ret;
-}
-
-static UINT run_query( MSIHANDLE hdb, MSIHANDLE hrec, const char *query )
-{
-    MSIHANDLE hview = 0;
-    UINT r;
-
-    r = MsiDatabaseOpenViewA(hdb, query, &hview);
-    if( r != ERROR_SUCCESS )
-        return r;
-
-    r = MsiViewExecute(hview, hrec);
-    if( r == ERROR_SUCCESS )
-        r = MsiViewClose(hview);
-    MsiCloseHandle(hview);
-    return r;
 }
 
 static UINT run_queryW( MSIHANDLE hdb, MSIHANDLE hrec, const WCHAR *query )
@@ -1502,29 +1487,6 @@ static void test_longstrings(void)
     DeleteFileA(msifile);
 }
 
-static void create_file_data(LPCSTR name, LPCSTR data, DWORD size)
-{
-    HANDLE file;
-    DWORD written;
-
-    file = CreateFileA(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
-    if (file == INVALID_HANDLE_VALUE)
-        return;
-
-    WriteFile(file, data, strlen(data), &written, NULL);
-    WriteFile(file, "\n", strlen("\n"), &written, NULL);
-
-    if (size)
-    {
-        SetFilePointer(file, size, NULL, FILE_BEGIN);
-        SetEndOfFile(file);
-    }
-
-    CloseHandle(file);
-}
-
-#define create_file(name) create_file_data(name, name, 0)
-
 static void test_streamtable(void)
 {
     MSIHANDLE hdb = 0, rec, view, hsi;
@@ -1607,7 +1569,7 @@ static void test_streamtable(void)
     MsiCloseHandle( view );
 
     /* insert a file into the _Streams table */
-    create_file( "test.txt" );
+    create_file( "test.txt", 0 );
 
     rec = MsiCreateRecord( 2 );
     MsiRecordSetStringA( rec, 1, "data" );
@@ -1629,7 +1591,7 @@ static void test_streamtable(void)
     MsiCloseHandle( view );
 
     /* insert another one */
-    create_file( "test1.txt" );
+    create_file( "test1.txt", 0 );
 
     rec = MsiCreateRecord( 2 );
     MsiRecordSetStringA( rec, 1, "data1" );
@@ -1651,7 +1613,7 @@ static void test_streamtable(void)
     MsiCloseHandle( view );
 
     /* try again */
-    create_file( "test1.txt" );
+    create_file( "test1.txt", 0 );
 
     rec = MsiCreateRecord( 2 );
     MsiRecordSetStringA( rec, 1, "data1" );
@@ -1691,7 +1653,7 @@ static void test_streamtable(void)
     memset(buf, 0, MAX_PATH);
     r = MsiRecordReadStream( rec, 2, buf, &size );
     ok( r == ERROR_SUCCESS, "Failed to get stream: %d\n", r);
-    ok( !lstrcmpA(buf, "test.txt\n"), "Expected 'test.txt\\n', got %s\n", buf);
+    ok( !lstrcmpA(buf, "test.txt"), "Expected 'test.txt', got %s\n", buf);
 
     MsiCloseHandle( rec );
     MsiViewClose( view );
@@ -1716,14 +1678,14 @@ static void test_streamtable(void)
     memset(buf, 0, MAX_PATH);
     r = MsiRecordReadStream( rec, 2, buf, &size );
     ok( r == ERROR_SUCCESS, "Failed to get stream: %d\n", r);
-    ok( !lstrcmpA(buf, "test1.txt\n"), "Expected 'test1.txt\\n', got %s\n", buf);
+    ok( !lstrcmpA(buf, "test1.txt"), "Expected 'test1.txt', got %s\n", buf);
 
     MsiCloseHandle( rec );
     MsiViewClose( view );
     MsiCloseHandle( view );
 
     /* perform an update */
-    create_file( "test2.txt" );
+    create_file( "test2.txt", 0 );
     rec = MsiCreateRecord( 1 );
 
     r = MsiRecordSetStreamA( rec, 1, "test2.txt" );
@@ -1761,7 +1723,7 @@ static void test_streamtable(void)
     memset(buf, 0, MAX_PATH);
     r = MsiRecordReadStream( rec, 2, buf, &size );
     ok( r == ERROR_SUCCESS, "Failed to get stream: %d\n", r);
-    ok( !lstrcmpA(buf, "test2.txt\n"), "Expected 'test2.txt\\n', got %s\n", buf);
+    ok( !lstrcmpA(buf, "test2.txt"), "Expected 'test2.txt', got %s\n", buf);
 
     MsiCloseHandle( rec );
     MsiViewClose( view );
@@ -1773,7 +1735,7 @@ static void test_streamtable(void)
     r = MsiOpenDatabaseW(msifileW, MSIDBOPEN_CREATEDIRECT, &hdb);
     ok(r == ERROR_SUCCESS, "Failed to create database\n");
     ok( hdb, "failed to create db\n");
-    create_file( "test.txt" );
+    create_file( "test.txt", 0 );
     rec = MsiCreateRecord( 2 );
     MsiRecordSetStringA( rec, 1, "data" );
     r = MsiRecordSetStreamA( rec, 2, "test.txt" );
@@ -1809,7 +1771,7 @@ static void test_streamtable(void)
     memset(buf, 0, MAX_PATH);
     r = MsiRecordReadStream( rec, 2, buf, &size );
     ok( r == ERROR_SUCCESS, "Failed to get stream: %d\n", r);
-    ok( !lstrcmpA(buf, "test.txt\n"), "Expected 'test.txt\\n', got '%s' (%lu)\n", buf, size);
+    ok( !lstrcmpA(buf, "test.txt"), "Expected 'test.txt', got '%s' (%lu)\n", buf, size);
     MsiCloseHandle( rec );
 
     /* open a handle to the "data" stream (and keep it open during removal) */
@@ -1865,7 +1827,7 @@ static void test_binary(void)
     r = run_query( hdb, 0, query );
     ok( r == ERROR_SUCCESS, "Cannot create Binary table: %d\n", r );
 
-    create_file( "test.txt" );
+    create_file( "test.txt", 0 );
     rec = MsiCreateRecord( 1 );
     r = MsiRecordSetStreamA( rec, 1, "test.txt" );
     ok( r == ERROR_SUCCESS, "Failed to add stream data to the record: %d\n", r);
@@ -1892,7 +1854,7 @@ static void test_binary(void)
     r = run_query( hdb, 0, query );
     ok( r == ERROR_SUCCESS, "Cannot create Binary table: %d\n", r );
 
-    create_file( "test.txt" );
+    create_file( "test.txt", 0 );
     rec = MsiCreateRecord( 1 );
     r = MsiRecordSetStreamA( rec, 1, "test.txt" );
     ok( r == ERROR_SUCCESS, "Failed to add stream data to the record: %d\n", r );
@@ -1932,7 +1894,7 @@ static void test_binary(void)
     memset( buf, 0, MAX_PATH );
     r = MsiRecordReadStream( rec, 2, buf, &size );
     ok( r == ERROR_SUCCESS, "Failed to get stream: %d\n", r );
-    ok( !lstrcmpA(buf, "test.txt\n"), "Expected 'test.txt\\n', got %s\n", buf );
+    ok( !lstrcmpA(buf, "test.txt"), "Expected 'test.txt', got %s\n", buf );
 
     r = MsiCloseHandle( rec );
     ok( r == ERROR_SUCCESS , "Failed to close record handle\n" );
@@ -1951,7 +1913,7 @@ static void test_binary(void)
     memset( buf, 0, MAX_PATH );
     r = MsiRecordReadStream( rec, 3, buf, &size );
     ok( r == ERROR_SUCCESS, "Failed to get stream: %d\n", r );
-    ok( !lstrcmpA(buf, "test.txt\n"), "Expected 'test.txt\\n', got %s\n", buf );
+    ok( !lstrcmpA(buf, "test.txt"), "Expected 'test.txt', got %s\n", buf );
 
     r = MsiCloseHandle( rec );
     ok( r == ERROR_SUCCESS , "Failed to close record handle\n" );
@@ -2177,8 +2139,6 @@ static void test_where(void)
     MsiCloseHandle( hdb );
     DeleteFileA(msifile);
 }
-
-static CHAR CURR_DIR[MAX_PATH];
 
 static const CHAR test_data[] = "FirstPrimaryColumn\tSecondPrimaryColumn\tShortInt\tShortIntNullable\tLongInt\tLongIntNullable\tString\tLocalizableString\tLocalizableStringNullable\n"
                                 "s255\ti2\ti2\tI2\ti4\tI4\tS255\tS0\ts0\n"
@@ -7992,7 +7952,7 @@ static void test_dbmerge(void)
     r = run_query(href, 0, query);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
-    create_file("binary.dat");
+    create_file("binary.dat", 0);
     hrec = MsiCreateRecord(1);
     MsiRecordSetStreamA(hrec, 1, "binary.dat");
 
@@ -8017,8 +7977,7 @@ static void test_dbmerge(void)
     ZeroMemory(buf, MAX_PATH);
     r = MsiRecordReadStream(hrec, 2, buf, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrcmpA(buf, "binary.dat\n"),
-       "Expected \"binary.dat\\n\", got \"%s\"\n", buf);
+    ok(!lstrcmpA(buf, "binary.dat"), "Expected \"binary.dat\", got \"%s\"\n", buf);
 
     MsiCloseHandle(hrec);
 
@@ -8584,6 +8543,18 @@ static void test_embedded_nulls(void)
         "s72\tL0\n"
         "Control\tDialog\n"
         "LicenseAgreementDlg\ttext\x11\x19text\0text";
+    static const char export_expected[] =
+        "Dialog\tText\r\n"
+        "s72\tL0\r\n"
+        "Control\tDialog\r\n"
+        "LicenseAgreementDlg\ttext\x11\x19text\x19text";
+    /* newlines have alternate representation in idt files */
+    static const char control_table2[] =
+        "Dialog\tText\n"
+        "s72\tL0\n"
+        "Control\tDialog\n"
+        "LicenseAgreementDlg\ttext\x11\x19te\nxt\0text";
+    char data[1024];
     UINT r;
     DWORD sz;
     MSIHANDLE hdb, hrec;
@@ -8607,7 +8578,25 @@ static void test_embedded_nulls(void)
     ok( r == ERROR_SUCCESS, "failed to get string %u\n", r );
     ok( !memcmp( "text\r\ntext\ntext", buffer, sizeof("text\r\ntext\ntext") - 1 ), "wrong buffer contents \"%s\"\n", buffer );
 
+    r = MsiDatabaseExportA( hdb, "Control", CURR_DIR, "temp_file1");
+    ok( r == ERROR_SUCCESS, "failed to export table %u\n", r );
+    read_file_data( "temp_file1", data );
+    ok( !memcmp( data, export_expected, sizeof(export_expected) - 1), "expected: \"%s\" got: \"%s\"\n", export_expected, data );
+    DeleteFileA( "temp_file1" );
+
     MsiCloseHandle( hrec );
+    MsiCloseHandle( hdb );
+    DeleteFileA( msifile );
+
+    r = MsiOpenDatabaseW( msifileW, MSIDBOPEN_CREATE, &hdb );
+    ok( r == ERROR_SUCCESS, "failed to open database %u\n", r );
+
+    GetCurrentDirectoryA( MAX_PATH, CURR_DIR );
+    write_file( "temp_file", control_table2, sizeof(control_table2) );
+    r = MsiDatabaseImportA( hdb, CURR_DIR, "temp_file" );
+    ok( r == ERROR_FUNCTION_FAILED, "failed to import table %u\n", r );
+    DeleteFileA( "temp_file" );
+
     MsiCloseHandle( hdb );
     DeleteFileA( msifile );
 }

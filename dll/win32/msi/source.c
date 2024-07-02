@@ -42,13 +42,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
  * These apis are defined in MSI 3.0
  */
 
-typedef struct tagMediaInfo
+struct media_info
 {
     struct list entry;
     LPWSTR  path;
     WCHAR   szIndex[10];
     DWORD   index;
-} media_info;
+};
 
 static UINT OpenSourceKey(LPCWSTR szProduct, HKEY* key, DWORD dwOptions,
                           MSIINSTALLCONTEXT context, BOOL create)
@@ -162,10 +162,10 @@ UINT WINAPI MsiSourceListEnumMediaDisksA( const char *szProductCodeOrPatchCode, 
     /* FIXME: add tests for an invalid format */
 
     if (pcchVolumeLabel)
-        volume = msi_alloc(*pcchVolumeLabel * sizeof(WCHAR));
+        volume = malloc(*pcchVolumeLabel * sizeof(WCHAR));
 
     if (pcchDiskPrompt)
-        prompt = msi_alloc(*pcchDiskPrompt * sizeof(WCHAR));
+        prompt = malloc(*pcchDiskPrompt * sizeof(WCHAR));
 
     if (volume) *volume = '\0';
     if (prompt) *prompt = '\0';
@@ -184,10 +184,10 @@ UINT WINAPI MsiSourceListEnumMediaDisksA( const char *szProductCodeOrPatchCode, 
                             *pcchDiskPrompt + 1, NULL, NULL);
 
 done:
-    msi_free(product);
-    msi_free(usersid);
-    msi_free(volume);
-    msi_free(prompt);
+    free(product);
+    free(usersid);
+    free(volume);
+    free(prompt);
 
     return r;
 }
@@ -249,8 +249,8 @@ UINT WINAPI MsiSourceListEnumMediaDisksW( const WCHAR *szProductCodeOrPatchCode,
         goto done;
     }
 
-    value = msi_alloc(++valuesz * sizeof(WCHAR));
-    data = msi_alloc(++datasz * sizeof(WCHAR));
+    value = malloc(++valuesz * sizeof(WCHAR));
+    data = malloc(++datasz * sizeof(WCHAR));
     if (!value || !data)
     {
         r = ERROR_OUTOFMEMORY;
@@ -316,8 +316,8 @@ UINT WINAPI MsiSourceListEnumMediaDisksW( const WCHAR *szProductCodeOrPatchCode,
     index++;
 
 done:
-    msi_free(value);
-    msi_free(data);
+    free(value);
+    free(data);
     RegCloseKey(source);
 
     return r;
@@ -355,7 +355,7 @@ UINT WINAPI MsiSourceListEnumSourcesA( const char *szProductCodeOrPatch, const c
     if (r != ERROR_SUCCESS)
         goto done;
 
-    source = msi_alloc(++len * sizeof(WCHAR));
+    source = malloc(++len * sizeof(WCHAR));
     if (!source)
     {
         r = ERROR_OUTOFMEMORY;
@@ -378,9 +378,9 @@ UINT WINAPI MsiSourceListEnumSourcesA( const char *szProductCodeOrPatch, const c
         *pcchSource = len - 1;
 
 done:
-    msi_free(product);
-    msi_free(usersid);
-    msi_free(source);
+    free(product);
+    free(usersid);
+    free(source);
 
     if (r == ERROR_SUCCESS)
     {
@@ -491,7 +491,7 @@ UINT WINAPI MsiSourceListGetInfoA( LPCSTR szProduct, LPCSTR szUserSid,
     if (ret != ERROR_SUCCESS)
         goto done;
 
-    value = msi_alloc(++len * sizeof(WCHAR));
+    value = malloc(++len * sizeof(WCHAR));
     if (!value)
         return ERROR_OUTOFMEMORY;
 
@@ -510,10 +510,10 @@ UINT WINAPI MsiSourceListGetInfoA( LPCSTR szProduct, LPCSTR szUserSid,
     *pcchValue = len - 1;
 
 done:
-    msi_free(product);
-    msi_free(usersid);
-    msi_free(property);
-    msi_free(value);
+    free(product);
+    free(usersid);
+    free(property);
+    free(value);
     return ret;
 }
 
@@ -583,13 +583,13 @@ UINT WINAPI MsiSourceListGetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
             goto output_out;
         }
 
-        source = msi_alloc(size);
+        source = malloc(size);
         RegQueryValueExW(sourcekey, INSTALLPROPERTY_LASTUSEDSOURCEW,
                          0, 0, (LPBYTE)source, &size);
 
         if (!*source)
         {
-            msi_free(source);
+            free(source);
             RegCloseKey(sourcekey);
             return ERROR_SUCCESS;
         }
@@ -598,7 +598,7 @@ UINT WINAPI MsiSourceListGetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
         {
             if (*source != 'n' && *source != 'u' && *source != 'm')
             {
-                msi_free(source);
+                free(source);
                 RegCloseKey(sourcekey);
                 return ERROR_SUCCESS;
             }
@@ -624,7 +624,7 @@ output_out:
         }
 
         *pcchValue = lstrlenW(ptr);
-        msi_free(source);
+        free(source);
     }
     else if (!wcscmp( szProperty, INSTALLPROPERTY_PACKAGENAMEW ))
     {
@@ -675,10 +675,10 @@ UINT WINAPI MsiSourceListSetInfoA(LPCSTR szProduct, LPCSTR szUserSid,
     ret = MsiSourceListSetInfoW(product, usersid, dwContext, dwOptions,
                                 property, value);
 
-    msi_free(product);
-    msi_free(usersid);
-    msi_free(property);
-    msi_free(value);
+    free(product);
+    free(usersid);
+    free(property);
+    free(value);
 
     return ret;
 }
@@ -720,14 +720,14 @@ UINT msi_set_last_used_source(LPCWSTR product, LPCWSTR usersid,
     }
 
     size = lstrlenW(L"%c;%d;%s") + lstrlenW(value) + 7;
-    buffer = msi_alloc(size * sizeof(WCHAR));
+    buffer = malloc(size * sizeof(WCHAR));
     if (!buffer)
         return ERROR_OUTOFMEMORY;
 
     r = OpenSourceKey(product, &source, MSICODE_PRODUCT, context, FALSE);
     if (r != ERROR_SUCCESS)
     {
-        msi_free(buffer);
+        free(buffer);
         return r;
     }
 
@@ -736,7 +736,7 @@ UINT msi_set_last_used_source(LPCWSTR product, LPCWSTR usersid,
     size = (lstrlenW(buffer) + 1) * sizeof(WCHAR);
     r = RegSetValueExW(source, INSTALLPROPERTY_LASTUSEDSOURCEW, 0,
                        REG_SZ, (LPBYTE)buffer, size);
-    msi_free(buffer);
+    free(buffer);
 
     RegCloseKey(source);
     return r;
@@ -851,12 +851,12 @@ UINT WINAPI MsiSourceListAddSourceW( LPCWSTR szProduct, LPCWSTR szUserName,
     {
         if (LookupAccountNameW(NULL, szUserName, NULL, &sidsize, NULL, &domsize, NULL))
         {
-            PSID psid = msi_alloc(sidsize);
+            PSID psid = malloc(sidsize);
 
             if (LookupAccountNameW(NULL, szUserName, psid, &sidsize, NULL, &domsize, NULL))
                 ConvertSidToStringSidW(psid, &sidstr);
 
-            msi_free(psid);
+            free(psid);
         }
 
         r = MSIREG_OpenProductKey(szProduct, NULL,
@@ -903,9 +903,9 @@ UINT WINAPI MsiSourceListAddSourceA( LPCSTR szProduct, LPCSTR szUserName,
 
     ret = MsiSourceListAddSourceW(szwproduct, szwusername, dwReserved, szwsource);
 
-    msi_free(szwproduct);
-    msi_free(szwusername);
-    msi_free(szwsource);
+    free(szwproduct);
+    free(szwusername);
+    free(szwsource);
 
     return ret;
 }
@@ -926,9 +926,9 @@ UINT WINAPI MsiSourceListAddSourceExA(LPCSTR szProduct, LPCSTR szUserSid,
     ret = MsiSourceListAddSourceExW(product, usersid, dwContext,
                                     dwOptions, source, dwIndex);
 
-    msi_free(product);
-    msi_free(usersid);
-    msi_free(source);
+    free(product);
+    free(usersid);
+    free(source);
 
     return ret;
 }
@@ -937,17 +937,16 @@ static void free_source_list(struct list *sourcelist)
 {
     while (!list_empty(sourcelist))
     {
-        media_info *info = LIST_ENTRY(list_head(sourcelist), media_info, entry);
+        struct media_info *info = LIST_ENTRY(list_head(sourcelist), struct media_info, entry);
         list_remove(&info->entry);
-        msi_free(info->path);
-        msi_free(info);
+        free(info->path);
+        free(info);
     }
 }
 
-static void add_source_to_list(struct list *sourcelist, media_info *info,
-                               DWORD *index)
+static void add_source_to_list(struct list *sourcelist, struct media_info *info, DWORD *index)
 {
-    media_info *iter;
+    struct media_info *iter;
     BOOL found = FALSE;
 
     if (index) *index = 0;
@@ -958,7 +957,7 @@ static void add_source_to_list(struct list *sourcelist, media_info *info,
         return;
     }
 
-    LIST_FOR_EACH_ENTRY(iter, sourcelist, media_info, entry)
+    LIST_FOR_EACH_ENTRY(iter, sourcelist, struct media_info, entry)
     {
         if (!found && info->index < iter->index)
         {
@@ -983,7 +982,7 @@ static UINT fill_source_list(struct list *sourcelist, HKEY sourcekey, DWORD *cou
     DWORD index = 0;
     WCHAR name[10];
     DWORD size, val_size;
-    media_info *entry;
+    struct media_info *entry;
 
     *count = 0;
 
@@ -994,14 +993,14 @@ static UINT fill_source_list(struct list *sourcelist, HKEY sourcekey, DWORD *cou
         if (r != ERROR_SUCCESS)
             return r;
 
-        entry = msi_alloc(sizeof(media_info));
+        entry = malloc(sizeof(*entry));
         if (!entry)
             goto error;
 
-        entry->path = msi_alloc(val_size);
+        entry->path = malloc(val_size);
         if (!entry->path)
         {
-            msi_free(entry);
+            free(entry);
             goto error;
         }
 
@@ -1013,8 +1012,8 @@ static UINT fill_source_list(struct list *sourcelist, HKEY sourcekey, DWORD *cou
                           NULL, (LPBYTE)entry->path, &val_size);
         if (r != ERROR_SUCCESS)
         {
-            msi_free(entry->path);
-            msi_free(entry);
+            free(entry->path);
+            free(entry);
             goto error;
         }
 
@@ -1037,7 +1036,7 @@ UINT WINAPI MsiSourceListAddSourceExW( const WCHAR *szProduct, const WCHAR *szUs
     HKEY sourcekey, typekey;
     UINT rc;
     struct list sourcelist;
-    media_info *info;
+    struct media_info *info;
     WCHAR *source, squashed_pc[SQUASHED_GUID_SIZE], name[10];
     LPCWSTR postfix;
     DWORD size, count, index;
@@ -1088,11 +1087,11 @@ UINT WINAPI MsiSourceListAddSourceExW( const WCHAR *szProduct, const WCHAR *szUs
 
     postfix = (dwOptions & MSISOURCETYPE_NETWORK) ? L"\\" : L"/";
     if (szSource[lstrlenW(szSource) - 1] == *postfix)
-        source = strdupW(szSource);
+        source = wcsdup(szSource);
     else
     {
         size = lstrlenW(szSource) + 2;
-        source = msi_alloc(size * sizeof(WCHAR));
+        source = malloc(size * sizeof(WCHAR));
         lstrcpyW(source, szSource);
         lstrcatW(source, postfix);
     }
@@ -1118,19 +1117,19 @@ UINT WINAPI MsiSourceListAddSourceExW( const WCHAR *szProduct, const WCHAR *szUs
     else
     {
         swprintf(name, ARRAY_SIZE(name), L"%d", dwIndex);
-        info = msi_alloc(sizeof(media_info));
+        info = malloc(sizeof(*info));
         if (!info)
         {
             rc = ERROR_OUTOFMEMORY;
             goto done;
         }
 
-        info->path = strdupW(source);
+        info->path = wcsdup(source);
         lstrcpyW(info->szIndex, name);
         info->index = dwIndex;
         add_source_to_list(&sourcelist, info, &index);
 
-        LIST_FOR_EACH_ENTRY(info, &sourcelist, media_info, entry)
+        LIST_FOR_EACH_ENTRY(info, &sourcelist, struct media_info, entry)
         {
             if (info->index < index)
                 continue;
@@ -1145,7 +1144,7 @@ UINT WINAPI MsiSourceListAddSourceExW( const WCHAR *szProduct, const WCHAR *szUs
 
 done:
     free_source_list(&sourcelist);
-    msi_free(source);
+    free(source);
     RegCloseKey(typekey);
     RegCloseKey(sourcekey);
     return rc;
@@ -1172,10 +1171,10 @@ UINT WINAPI MsiSourceListAddMediaDiskA(LPCSTR szProduct, LPCSTR szUserSid,
     r = MsiSourceListAddMediaDiskW(product, usersid, dwContext, dwOptions,
                                      dwDiskId, volume, prompt);
 
-    msi_free(product);
-    msi_free(usersid);
-    msi_free(volume);
-    msi_free(prompt);
+    free(product);
+    free(usersid);
+    free(volume);
+    free(prompt);
 
     return r;
 }
@@ -1226,7 +1225,7 @@ UINT WINAPI MsiSourceListAddMediaDiskW( const WCHAR *szProduct, const WCHAR *szU
     if (szDiskPrompt) size += lstrlenW(szDiskPrompt);
 
     size *= sizeof(WCHAR);
-    buffer = msi_alloc(size);
+    buffer = malloc(size);
     *buffer = '\0';
 
     if (szVolumeLabel) lstrcpyW(buffer, szVolumeLabel);
@@ -1234,7 +1233,7 @@ UINT WINAPI MsiSourceListAddMediaDiskW( const WCHAR *szProduct, const WCHAR *szU
     if (szDiskPrompt) lstrcatW(buffer, szDiskPrompt);
 
     RegSetValueExW(mediakey, szIndex, 0, REG_SZ, (LPBYTE)buffer, size);
-    msi_free(buffer);
+    free(buffer);
 
     RegCloseKey(sourcekey);
     RegCloseKey(mediakey);

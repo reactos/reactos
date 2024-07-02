@@ -20,11 +20,11 @@
 
 #define WIN32_LEAN_AND_MEAN
 
-#include <stdio.h>
 #include <windows.h>
 #include <winsvc.h>
 
 #include "wine/debug.h"
+#include "msiexec_internal.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msiexec);
 
@@ -73,7 +73,7 @@ static BOOL UpdateSCMStatus(DWORD dwCurrentState, DWORD dwWin32ExitCode,
 
     if (!SetServiceStatus(hstatus, &status))
     {
-        fprintf(stderr, "Failed to set service status\n");
+        report_error("Failed to set service status\n");
         KillService();
         return FALSE;
     }
@@ -83,7 +83,7 @@ static BOOL UpdateSCMStatus(DWORD dwCurrentState, DWORD dwWin32ExitCode,
 
 static void WINAPI ServiceCtrlHandler(DWORD code)
 {
-    WINE_TRACE("%u\n", code);
+    WINE_TRACE("%ld\n", code);
 
     switch (code)
     {
@@ -93,7 +93,7 @@ static void WINAPI ServiceCtrlHandler(DWORD code)
             KillService();
             break;
         default:
-            fprintf(stderr, "Unhandled service control code: %u\n", code);
+            report_error("Unhandled service control code: %ld\n", code);
             UpdateSCMStatus(SERVICE_RUNNING, NO_ERROR, 0);
             break;
     }
@@ -113,7 +113,7 @@ static BOOL StartServiceThread(void)
     thread = CreateThread(0, 0, ServiceExecutionThread, 0, 0, &id);
     if (!thread)
     {
-        fprintf(stderr, "Failed to create thread\n");
+        report_error("Failed to create thread\n");
         return FALSE;
     }
 
@@ -125,7 +125,7 @@ static void WINAPI ServiceMain(DWORD argc, LPSTR *argv)
     hstatus = RegisterServiceCtrlHandlerA("MSIServer", ServiceCtrlHandler);
     if (!hstatus)
     {
-        fprintf(stderr, "Failed to register service ctrl handler\n");
+        report_error("Failed to register service ctrl handler\n");
         return;
     }
 
@@ -134,7 +134,7 @@ static void WINAPI ServiceMain(DWORD argc, LPSTR *argv)
     kill_event = CreateEventW(0, TRUE, FALSE, 0);
     if (!kill_event)
     {
-        fprintf(stderr, "Failed to create event\n");
+        report_error("Failed to create event\n");
         KillService();
         UpdateSCMStatus(SERVICE_STOPPED, NO_ERROR, 0);
         return;
@@ -166,7 +166,7 @@ DWORD DoService(void)
 
     if (!StartServiceCtrlDispatcherA(service))
     {
-        fprintf(stderr, "Failed to start MSIServer service\n");
+        report_error("Failed to start MSIServer service\n");
         return 1;
     }
 
