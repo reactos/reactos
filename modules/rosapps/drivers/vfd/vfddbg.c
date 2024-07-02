@@ -9,9 +9,11 @@
 
 #if !DBG
 
+#if !defined(__REACTOS__) || defined(_MSC_VER)
 //	suppress empty compile unit warning
 #pragma warning (disable: 4206)
 #pragma message ("Debug feature is disabled.")
+#endif
 
 #else	// DBG
 
@@ -514,7 +516,7 @@ GetIoControlName(
 	CASE_RETURN_STR(IOCTL_DISK_GROW_PARTITION);
 	CASE_RETURN_STR(IOCTL_DISK_GET_CACHE_INFORMATION);
 	CASE_RETURN_STR(IOCTL_DISK_SET_CACHE_INFORMATION);
-#if (NTDDI_VERSION < NTDDI_WS03)
+#if !defined(__REACTOS__) || (NTDDI_VERSION < NTDDI_WS03)
 	CASE_RETURN_STR(IOCTL_DISK_GET_WRITE_CACHE_STATE);
 #else
     CASE_RETURN_STR(OBSOLETE_DISK_GET_WRITE_CACHE_STATE);

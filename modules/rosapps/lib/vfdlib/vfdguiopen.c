@@ -14,11 +14,11 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#ifdef _MSC_VER
+#if !defined(__REACTOS__) || defined(_MSC_VER)
 #pragma warning(push,3)
 #endif
 #include <commdlg.h>
-#ifdef _MSC_VER
+#if !defined(__REACTOS__) || defined(_MSC_VER)
 #pragma warning(pop)
 #endif
 
@@ -404,7 +404,11 @@ void OnBrowse(
 	ofn.nMaxFile	= sizeof(file);
 	ofn.lpstrInitialDir = dir;
 	ofn.lpstrTitle	= title ? title : FALLBACK_IMAGE_TITLE;
+#ifndef __REACTOS__
+	ofn.Flags		= OFN_ENABLESIZING | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
+#else
 	ofn.Flags		= OFN_EXPLORER | OFN_ENABLESIZING | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
+#endif
 
 	//	show the open file dialog box
 
