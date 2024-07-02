@@ -25,7 +25,6 @@
 #include "winerror.h"
 #include "wincrypt.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
@@ -39,30 +38,15 @@ WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 #define X509_HEADER          "-----BEGIN X509 CRL-----"
 #define X509_TRAILER         "-----END X509 CRL-----"
 
-static const WCHAR CERT_HEADER_W[] = {
-'-','-','-','-','-','B','E','G','I','N',' ','C','E','R','T','I','F','I','C',
-'A','T','E','-','-','-','-','-',0 };
-static const WCHAR CERT_HEADER_START_W[] = {
-'-','-','-','-','-','B','E','G','I','N',' ',0 };
-static const WCHAR CERT_DELIMITER_W[] = {
-'-','-','-','-','-',0 };
-static const WCHAR CERT_TRAILER_W[] = {
-'-','-','-','-','-','E','N','D',' ','C','E','R','T','I','F','I','C','A','T',
-'E','-','-','-','-','-',0 };
-static const WCHAR CERT_TRAILER_START_W[] = {
-'-','-','-','-','-','E','N','D',' ',0 };
-static const WCHAR CERT_REQUEST_HEADER_W[] = {
-'-','-','-','-','-','B','E','G','I','N',' ','N','E','W',' ','C','E','R','T',
-'I','F','I','C','A','T','E',' ','R','E','Q','U','E','S','T','-','-','-','-','-',0 };
-static const WCHAR CERT_REQUEST_TRAILER_W[] = {
-'-','-','-','-','-','E','N','D',' ','N','E','W',' ','C','E','R','T','I','F',
-'I','C','A','T','E',' ','R','E','Q','U','E','S','T','-','-','-','-','-',0 };
-static const WCHAR X509_HEADER_W[] = {
-'-','-','-','-','-','B','E','G','I','N',' ','X','5','0','9',' ','C','R','L',
-'-','-','-','-','-',0 };
-static const WCHAR X509_TRAILER_W[] = {
-'-','-','-','-','-','E','N','D',' ','X','5','0','9',' ','C','R','L','-','-',
-'-','-','-',0 };
+static const WCHAR CERT_HEADER_W[] = L"-----BEGIN CERTIFICATE-----";
+static const WCHAR CERT_HEADER_START_W[] = L"-----BEGIN ";
+static const WCHAR CERT_DELIMITER_W[] = L"-----";
+static const WCHAR CERT_TRAILER_W[] = L"-----END CERTIFICATE-----";
+static const WCHAR CERT_TRAILER_START_W[] = L"-----END ";
+static const WCHAR CERT_REQUEST_HEADER_W[] = L"-----BEGIN NEW CERTIFICATE REQUEST-----";
+static const WCHAR CERT_REQUEST_TRAILER_W[] = L"-----END NEW CERTIFICATE REQUEST-----";
+static const WCHAR X509_HEADER_W[] = L"-----BEGIN X509 CRL-----";
+static const WCHAR X509_TRAILER_W[] = L"-----END X509 CRL-----";
 
 static const char b64[] =
 "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -93,50 +77,53 @@ static BOOL EncodeBinaryToBinaryA(const BYTE *pbBinary,
     return ret;
 }
 
-static LONG encodeBase64A(const BYTE *in_buf, int in_len, LPCSTR sep,
+static DWORD stradd(LPSTR ptr, LPCSTR end, LPCSTR s, DWORD slen)
+{
+    if (ptr + slen > end)
+        slen = end - ptr;
+    memcpy(ptr, s, slen);
+    return slen;
+}
+
+static DWORD encodeBase64A(const BYTE *in_buf, int in_len, LPCSTR sep,
  char* out_buf, DWORD *out_len)
 {
     int div, i;
     const BYTE *d = in_buf;
     int bytes = (in_len*8 + 5)/6, pad_bytes = (bytes % 4) ? 4 - (bytes % 4) : 0;
-    DWORD needed;
     LPSTR ptr;
+    LPCSTR end;
+    char chunk[4];
 
-    TRACE("bytes is %d, pad bytes is %d\n", bytes, pad_bytes);
-    needed = bytes + pad_bytes;
-    needed += (needed / 64 + (needed % 64 ? 1 : 0)) * strlen(sep);
-    needed++;
-
-    if (needed > *out_len)
+    if (!out_buf)
     {
-        *out_len = needed;
-        return ERROR_INSUFFICIENT_BUFFER;
+        TRACE("bytes is %d, pad bytes is %d\n", bytes, pad_bytes);
+        *out_len = bytes + pad_bytes;
+        *out_len += (*out_len / 64 + (*out_len % 64 ? 1 : 0)) * strlen(sep) + 1;
+        return 0;
     }
-    else
-        *out_len = needed;
 
     /* Three bytes of input give 4 chars of output */
     div = in_len / 3;
 
     ptr = out_buf;
+    end = ptr + *out_len;
     i = 0;
-    while (div > 0)
+    while (div > 0 && ptr < end)
     {
         if (i && i % 64 == 0)
-        {
-            strcpy(ptr, sep);
-            ptr += strlen(sep);
-        }
+            ptr += stradd(ptr, end, sep, strlen(sep));
         /* first char is the first 6 bits of the first byte*/
-        *ptr++ = b64[ ( d[0] >> 2) & 0x3f ];
+        chunk[0] = b64[ ( d[0] >> 2) & 0x3f ];
         /* second char is the last 2 bits of the first byte and the first 4
          * bits of the second byte */
-        *ptr++ = b64[ ((d[0] << 4) & 0x30) | (d[1] >> 4 & 0x0f)];
+        chunk[1] = b64[ ((d[0] << 4) & 0x30) | (d[1] >> 4 & 0x0f)];
         /* third char is the last 4 bits of the second byte and the first 2
          * bits of the third byte */
-        *ptr++ = b64[ ((d[1] << 2) & 0x3c) | (d[2] >> 6 & 0x03)];
+        chunk[2] = b64[ ((d[1] << 2) & 0x3c) | (d[2] >> 6 & 0x03)];
         /* fourth char is the remaining 6 bits of the third byte */
-        *ptr++ = b64[   d[2]       & 0x3f];
+        chunk[3] = b64[   d[2]       & 0x3f];
+        ptr += stradd(ptr, end, chunk, 4);
         i += 4;
         d += 3;
         div--;
@@ -146,31 +133,33 @@ static LONG encodeBase64A(const BYTE *in_buf, int in_len, LPCSTR sep,
     {
         case 1:
             /* first char is the first 6 bits of the first byte*/
-            *ptr++ = b64[ ( d[0] >> 2) & 0x3f ];
+            chunk[0] = b64[ ( d[0] >> 2) & 0x3f ];
             /* second char is the last 2 bits of the first byte and the first 4
              * bits of the second byte */
-            *ptr++ = b64[ ((d[0] << 4) & 0x30) | (d[1] >> 4 & 0x0f)];
+            chunk[1] = b64[ ((d[0] << 4) & 0x30) | (d[1] >> 4 & 0x0f)];
             /* third char is the last 4 bits of the second byte padded with
              * two zeroes */
-            *ptr++ = b64[ ((d[1] << 2) & 0x3c) ];
+            chunk[2] = b64[ ((d[1] << 2) & 0x3c) ];
             /* fourth char is a = to indicate one byte of padding */
-            *ptr++ = '=';
+            chunk[3] = '=';
+            ptr += stradd(ptr, end, chunk, 4);
             break;
         case 2:
             /* first char is the first 6 bits of the first byte*/
-            *ptr++ = b64[ ( d[0] >> 2) & 0x3f ];
+            chunk[0] = b64[ ( d[0] >> 2) & 0x3f ];
             /* second char is the last 2 bits of the first byte padded with
              * four zeroes*/
-            *ptr++ = b64[ ((d[0] << 4) & 0x30)];
+            chunk[1] = b64[ ((d[0] << 4) & 0x30)];
             /* third char is = to indicate padding */
-            *ptr++ = '=';
+            chunk[2] = '=';
             /* fourth char is = to indicate padding */
-            *ptr++ = '=';
+            chunk[3] = '=';
+            ptr += stradd(ptr, end, chunk, 4);
             break;
     }
-    strcpy(ptr, sep);
+    ptr += stradd(ptr, end, sep, strlen(sep));
 
-    return ERROR_SUCCESS;
+    return ptr - out_buf;
 }
 
 static BOOL BinaryToBase64A(const BYTE *pbBinary,
@@ -215,32 +204,34 @@ static BOOL BinaryToBase64A(const BYTE *pbBinary,
 
     if (pszString)
     {
+        LPSTR ptr = pszString;
+        DWORD size = *pcchString;
+        LPSTR end = ptr + size;
+
+        if (header)
+        {
+            ptr += stradd(ptr, end, header, strlen(header));
+            ptr += stradd(ptr, end, sep, strlen(sep));
+            size = end - ptr;
+        }
+        ptr += encodeBase64A(pbBinary, cbBinary, sep, ptr, &size);
+        if (trailer)
+        {
+            ptr += stradd(ptr, end, trailer, strlen(trailer));
+            ptr += stradd(ptr, end, sep, strlen(sep));
+        }
+
+        if (ptr < end)
+            *ptr = '\0';
+
         if (charsNeeded <= *pcchString)
         {
-            LPSTR ptr = pszString;
-            DWORD size = charsNeeded;
-
-            if (header)
-            {
-                strcpy(ptr, header);
-                ptr += strlen(ptr);
-                strcpy(ptr, sep);
-                ptr += strlen(sep);
-            }
-            encodeBase64A(pbBinary, cbBinary, sep, ptr, &size);
-            ptr += size - 1;
-            if (trailer)
-            {
-                strcpy(ptr, trailer);
-                ptr += strlen(ptr);
-               strcpy(ptr, sep);
-            }
             *pcchString = charsNeeded - 1;
         }
         else
         {
             *pcchString = charsNeeded;
-            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            SetLastError(ERROR_MORE_DATA);
             ret = FALSE;
         }
     }
@@ -324,7 +315,7 @@ static LONG encodeBase64W(const BYTE *in_buf, int in_len, LPCWSTR sep,
 
     TRACE("bytes is %d, pad bytes is %d\n", bytes, pad_bytes);
     needed = bytes + pad_bytes;
-    needed += (needed / 64 + (needed % 64 ? 1 : 0)) * strlenW(sep);
+    needed += (needed / 64 + (needed % 64 ? 1 : 0)) * lstrlenW(sep);
     needed++;
 
     if (needed > *out_len)
@@ -344,8 +335,8 @@ static LONG encodeBase64W(const BYTE *in_buf, int in_len, LPCWSTR sep,
     {
         if (i && i % 64 == 0)
         {
-            strcpyW(ptr, sep);
-            ptr += strlenW(sep);
+            lstrcpyW(ptr, sep);
+            ptr += lstrlenW(sep);
         }
         /* first char is the first 6 bits of the first byte*/
         *ptr++ = b64[ ( d[0] >> 2) & 0x3f ];
@@ -388,7 +379,7 @@ static LONG encodeBase64W(const BYTE *in_buf, int in_len, LPCWSTR sep,
             *ptr++ = '=';
             break;
     }
-    strcpyW(ptr, sep);
+    lstrcpyW(ptr, sep);
 
     return ERROR_SUCCESS;
 }
@@ -396,17 +387,16 @@ static LONG encodeBase64W(const BYTE *in_buf, int in_len, LPCWSTR sep,
 static BOOL BinaryToBase64W(const BYTE *pbBinary,
  DWORD cbBinary, DWORD dwFlags, LPWSTR pszString, DWORD *pcchString)
 {
-    static const WCHAR crlf[] = { '\r','\n',0 }, lf[] = { '\n',0 }, empty[] = {0};
     BOOL ret = TRUE;
     LPCWSTR header = NULL, trailer = NULL, sep;
     DWORD charsNeeded;
 
     if (dwFlags & CRYPT_STRING_NOCR)
-        sep = lf;
+        sep = L"\n";
     else if (dwFlags & CRYPT_STRING_NOCRLF)
-        sep = empty;
+        sep = L"";
     else
-        sep = crlf;
+        sep = L"\r\n";
     switch (dwFlags & 0x0fffffff)
     {
     case CRYPT_STRING_BASE64:
@@ -429,9 +419,9 @@ static BOOL BinaryToBase64W(const BYTE *pbBinary,
     charsNeeded = 0;
     encodeBase64W(pbBinary, cbBinary, sep, NULL, &charsNeeded);
     if (header)
-        charsNeeded += strlenW(header) + strlenW(sep);
+        charsNeeded += lstrlenW(header) + lstrlenW(sep);
     if (trailer)
-        charsNeeded += strlenW(trailer) + strlenW(sep);
+        charsNeeded += lstrlenW(trailer) + lstrlenW(sep);
 
     if (pszString)
     {
@@ -442,25 +432,25 @@ static BOOL BinaryToBase64W(const BYTE *pbBinary,
 
             if (header)
             {
-                strcpyW(ptr, header);
-                ptr += strlenW(ptr);
-                strcpyW(ptr, sep);
-                ptr += strlenW(sep);
+                lstrcpyW(ptr, header);
+                ptr += lstrlenW(ptr);
+                lstrcpyW(ptr, sep);
+                ptr += lstrlenW(sep);
             }
             encodeBase64W(pbBinary, cbBinary, sep, ptr, &size);
             ptr += size - 1;
             if (trailer)
             {
-                strcpyW(ptr, trailer);
-                ptr += strlenW(ptr);
-                strcpyW(ptr, sep);
+                lstrcpyW(ptr, trailer);
+                ptr += lstrlenW(ptr);
+                lstrcpyW(ptr, sep);
             }
             *pcchString = charsNeeded - 1;
         }
         else
         {
             *pcchString = charsNeeded;
-            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            SetLastError(ERROR_MORE_DATA);
             ret = FALSE;
         }
     }
@@ -468,6 +458,125 @@ static BOOL BinaryToBase64W(const BYTE *pbBinary,
         *pcchString = charsNeeded;
 
     return ret;
+}
+
+static BOOL BinaryToHexRawW(const BYTE *bin, DWORD nbin, DWORD flags, LPWSTR str, DWORD *nstr)
+{
+    static const WCHAR hex[] = L"0123456789abcdef";
+    DWORD needed;
+
+    if (flags & CRYPT_STRING_NOCRLF)
+        needed = 0;
+    else if (flags & CRYPT_STRING_NOCR)
+        needed = 1;
+    else
+        needed = 2;
+
+    needed += nbin * 2 + 1;
+
+    if (!str)
+    {
+        *nstr = needed;
+        return TRUE;
+    }
+
+    if (needed > *nstr)
+    {
+        SetLastError(ERROR_MORE_DATA);
+        return FALSE;
+    }
+
+    while (nbin--)
+    {
+        *str++ = hex[(*bin >> 4) & 0xf];
+        *str++ = hex[*bin & 0xf];
+        bin++;
+    }
+
+    if (flags & CRYPT_STRING_NOCR)
+        *str++ = '\n';
+    else if (!(flags & CRYPT_STRING_NOCRLF))
+    {
+        *str++ = '\r';
+        *str++ = '\n';
+    }
+
+    *str = 0;
+    *nstr = needed - 1;
+    return TRUE;
+}
+
+static BOOL binary_to_hexW(const BYTE *bin, DWORD nbin, DWORD flags, LPWSTR str, DWORD *nstr)
+{
+    static const WCHAR hex[] = L"0123456789abcdef";
+    DWORD needed, i;
+
+    needed = nbin * 3; /* spaces + terminating \0 */
+
+    if (flags & CRYPT_STRING_NOCR)
+    {
+        needed += (nbin + 7) / 16; /* space every 16 characters */
+        needed += 1; /* terminating \n */
+    }
+    else if (!(flags & CRYPT_STRING_NOCRLF))
+    {
+        needed += (nbin + 7) / 16; /* space every 16 characters */
+        needed += nbin / 16 + 1; /* LF every 16 characters + terminating \r */
+
+        if (nbin % 16)
+            needed += 1; /* terminating \n */
+    }
+
+    if (!str)
+    {
+        *nstr = needed;
+        return TRUE;
+    }
+
+    if (needed > *nstr)
+    {
+        SetLastError(ERROR_MORE_DATA);
+        return FALSE;
+    }
+
+    for (i = 0; i < nbin; i++)
+    {
+        *str++ = hex[(bin[i] >> 4) & 0xf];
+        *str++ = hex[bin[i] & 0xf];
+
+        if (i >= nbin - 1) break;
+
+        if (i && !(flags & CRYPT_STRING_NOCRLF))
+        {
+            if (!((i + 1) % 16))
+            {
+                if (flags & CRYPT_STRING_NOCR)
+                    *str++ = '\n';
+                else
+                {
+                    *str++ = '\r';
+                    *str++ = '\n';
+                }
+                continue;
+            }
+            else if (!((i + 1) % 8))
+                *str++ = ' ';
+        }
+
+        *str++ = ' ';
+    }
+
+    if (flags & CRYPT_STRING_NOCR)
+        *str++ = '\n';
+    else if (!(flags & CRYPT_STRING_NOCRLF))
+    {
+        *str++ = '\r';
+        *str++ = '\n';
+    }
+
+    *str = 0;
+    *nstr = needed - 1;
+    return TRUE;
 }
 
 BOOL WINAPI CryptBinaryToStringW(const BYTE *pbBinary,
@@ -500,7 +609,12 @@ BOOL WINAPI CryptBinaryToStringW(const BYTE *pbBinary,
     case CRYPT_STRING_BASE64X509CRLHEADER:
         encoder = BinaryToBase64W;
         break;
+    case CRYPT_STRING_HEXRAW:
+        encoder = BinaryToHexRawW;
+        break;
     case CRYPT_STRING_HEX:
+        encoder = binary_to_hexW;
+        break;
     case CRYPT_STRING_HEXASCII:
     case CRYPT_STRING_HEXADDR:
     case CRYPT_STRING_HEXASCIIADDR:
@@ -856,27 +970,27 @@ static LONG Base64WithHeaderAndTrailerToBinaryW(LPCWSTR pszString,
     LPCWSTR trailerBegins;
     size_t dataLength;
 
-    if ((strlenW(header) + strlenW(trailer)) > cchString)
+    if ((lstrlenW(header) + lstrlenW(trailer)) > cchString)
     {
         return ERROR_INVALID_DATA;
     }
 
-    if (!(headerBegins = strstrW(pszString, header)))
+    if (!(headerBegins = wcsstr(pszString, header)))
     {
         TRACE("Can't find %s in %s.\n", debugstr_w(header), debugstr_wn(pszString, cchString));
         return ERROR_INVALID_DATA;
     }
 
-    dataBegins = headerBegins + strlenW(header);
-    if (!(dataBegins = strstrW(dataBegins, CERT_DELIMITER_W)))
+    dataBegins = headerBegins + lstrlenW(header);
+    if (!(dataBegins = wcsstr(dataBegins, CERT_DELIMITER_W)))
     {
         return ERROR_INVALID_DATA;
     }
-    dataBegins += strlenW(CERT_DELIMITER_W);
+    dataBegins += lstrlenW(CERT_DELIMITER_W);
     if (*dataBegins == '\r') dataBegins++;
     if (*dataBegins == '\n') dataBegins++;
 
-    if (!(trailerBegins = strstrW(dataBegins, trailer)))
+    if (!(trailerBegins = wcsstr(dataBegins, trailer)))
     {
         return ERROR_INVALID_DATA;
     }
@@ -1035,7 +1149,7 @@ BOOL WINAPI CryptStringToBinaryW(LPCWSTR pszString,
         return FALSE;
     }
     if (!cchString)
-        cchString = strlenW(pszString);
+        cchString = lstrlenW(pszString);
     ret = decoder(pszString, cchString, pbBinary, pcbBinary, pdwSkip, pdwFlags);
     if (ret)
         SetLastError(ret);

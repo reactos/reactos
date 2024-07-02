@@ -25,7 +25,6 @@
 #include "winuser.h"
 #include "wincrypt.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "crypt32_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
@@ -233,10 +232,10 @@ static DWORD quote_rdn_value_to_str_a(DWORD dwValueType,
     case CERT_RDN_UTF8_STRING:
         len = WideCharToMultiByte(CP_ACP, 0, (LPCWSTR)pValue->pbData,
          pValue->cbData / sizeof(WCHAR), NULL, 0, NULL, NULL);
-        if (pValue->cbData && isspaceW(((LPCWSTR)pValue->pbData)[0]))
+        if (pValue->cbData && iswspace(((LPCWSTR)pValue->pbData)[0]))
             needsQuotes = TRUE;
         if (pValue->cbData &&
-         isspaceW(((LPCWSTR)pValue->pbData)[pValue->cbData / sizeof(WCHAR)-1]))
+         iswspace(((LPCWSTR)pValue->pbData)[pValue->cbData / sizeof(WCHAR)-1]))
             needsQuotes = TRUE;
         for (i = 0; i < pValue->cbData / sizeof(WCHAR); i++)
         {
@@ -561,7 +560,7 @@ static DWORD CRYPT_AddPrefixW(LPCWSTR prefix, LPWSTR psz, DWORD csz)
 
     if (psz)
     {
-        chars = min(strlenW(prefix), csz);
+        chars = min(lstrlenW(prefix), csz);
         memcpy(psz, prefix, chars * sizeof(WCHAR));
         *(psz + chars) = '=';
         chars++;
@@ -571,18 +570,13 @@ static DWORD CRYPT_AddPrefixW(LPCWSTR prefix, LPWSTR psz, DWORD csz)
     return chars;
 }
 
-static const WCHAR indent[] = { ' ',' ',' ',' ',' ',0 };
+static const WCHAR indent[] = L"     ";
 
 DWORD cert_name_to_str_with_indent(DWORD dwCertEncodingType, DWORD indentLevel,
  const CERT_NAME_BLOB *pName, DWORD dwStrType, LPWSTR psz, DWORD csz)
 {
     static const DWORD unsupportedFlags = CERT_NAME_STR_NO_QUOTING_FLAG |
      CERT_NAME_STR_ENABLE_T61_UNICODE_FLAG;
-    static const WCHAR commaSep[] = { ',',' ',0 };
-    static const WCHAR semiSep[] = { ';',' ',0 };
-    static const WCHAR crlfSep[] = { '\r','\n',0 };
-    static const WCHAR plusSep[] = { ' ','+',' ',0 };
-    static const WCHAR spaceSep[] = { ' ',0 };
     DWORD ret = 0, bytes = 0;
     BOOL bRet;
     CERT_NAME_INFO *info;
@@ -602,16 +596,16 @@ DWORD cert_name_to_str_with_indent(DWORD dwCertEncodingType, DWORD indentLevel,
         if(reverse && info->cRDN > 1) rdn += (info->cRDN - 1);
 
         if (dwStrType & CERT_NAME_STR_SEMICOLON_FLAG)
-            sep = semiSep;
+            sep = L"; ";
         else if (dwStrType & CERT_NAME_STR_CRLF_FLAG)
-            sep = crlfSep;
+            sep = L"\r\n";
         else
-            sep = commaSep;
+            sep = L", ";
         sepLen = lstrlenW(sep);
         if (dwStrType & CERT_NAME_STR_NO_PLUS_FLAG)
-            rdnSep = spaceSep;
+            rdnSep = L" ";
         else
-            rdnSep = plusSep;
+            rdnSep = L" + ";
         rdnSepLen = lstrlenW(rdnSep);
         for (i = 0; (!psz || ret < csz) && i < info->cRDN; i++)
         {
@@ -643,11 +637,11 @@ DWORD cert_name_to_str_with_indent(DWORD dwCertEncodingType, DWORD indentLevel,
                     {
                         if (psz)
                         {
-                            chars = min(strlenW(indent), csz - ret - 1);
+                            chars = min(lstrlenW(indent), csz - ret - 1);
                             memcpy(psz + ret, indent, chars * sizeof(WCHAR));
                         }
                         else
-                            chars = strlenW(indent);
+                            chars = lstrlenW(indent);
                         ret += chars;
                     }
                 }
@@ -812,14 +806,14 @@ static BOOL CRYPT_GetNextKeyW(LPCWSTR str, struct X500TokenW *token,
 {
     BOOL ret = TRUE;
 
-    while (*str && isspaceW(*str))
+    while (*str && iswspace(*str))
         str++;
     if (*str)
     {
         token->start = str;
-        while (*str && *str != '=' && !isspaceW(*str))
+        while (*str && *str != '=' && !iswspace(*str))
             str++;
-        if (*str && (*str == '=' || isspaceW(*str)))
+        if (*str && (*str == '=' || iswspace(*str)))
             token->end = str;
         else
         {
@@ -845,7 +839,7 @@ static BOOL CRYPT_GetNextValueW(LPCWSTR str, DWORD dwFlags, LPCWSTR separators,
      ppszError);
 
     *separator_used = 0;
-    while (*str && isspaceW(*str))
+    while (*str && iswspace(*str))
         str++;
     if (*str)
     {
@@ -1059,7 +1053,7 @@ BOOL WINAPI CertStrToNameW(DWORD dwCertEncodingType, LPCWSTR pszX500,
             else
             {
                 str = token.end;
-                while (isspaceW(*str))
+                while (iswspace(*str))
                     str++;
                 if (*str != '=')
                 {
@@ -1070,25 +1064,20 @@ BOOL WINAPI CertStrToNameW(DWORD dwCertEncodingType, LPCWSTR pszX500,
                 }
                 else
                 {
-                    static const WCHAR commaSep[] = { ',',0 };
-                    static const WCHAR semiSep[] = { ';',0 };
-                    static const WCHAR crlfSep[] = { '\r','\n',0 };
-                    static const WCHAR allSepsWithoutPlus[] = { ',',';','\r','\n',0 };
-                    static const WCHAR allSeps[] = { '+',',',';','\r','\n',0 };
                     LPCWSTR sep;
                     WCHAR sep_used;
 
                     str++;
                     if (dwStrType & CERT_NAME_STR_COMMA_FLAG)
-                        sep = commaSep;
+                        sep = L",";
                     else if (dwStrType & CERT_NAME_STR_SEMICOLON_FLAG)
-                        sep = semiSep;
+                        sep = L";";
                     else if (dwStrType & CERT_NAME_STR_CRLF_FLAG)
-                        sep = crlfSep;
+                        sep = L"\r\n";
                     else if (dwStrType & CERT_NAME_STR_NO_PLUS_FLAG)
-                        sep = allSepsWithoutPlus;
+                        sep = L",;\r\n";
                     else
-                        sep = allSeps;
+                        sep = L"+,;\r\n";
                     ret = CRYPT_GetNextValueW(str, dwStrType, sep, &sep_used, &token,
                      ppszError);
                     if (ret)
@@ -1260,10 +1249,10 @@ DWORD WINAPI CertGetNameStringW(PCCERT_CONTEXT pCertContext, DWORD dwType,
         if (entry)
         {
             if (!pszNameString)
-                ret = strlenW(entry->u.pwszRfc822Name) + 1;
+                ret = lstrlenW(entry->u.pwszRfc822Name) + 1;
             else if (cchNameString)
             {
-                ret = min(strlenW(entry->u.pwszRfc822Name), cchNameString - 1);
+                ret = min(lstrlenW(entry->u.pwszRfc822Name), cchNameString - 1);
                 memcpy(pszNameString, entry->u.pwszRfc822Name,
                  ret * sizeof(WCHAR));
                 pszNameString[ret++] = 0;
@@ -1347,10 +1336,10 @@ DWORD WINAPI CertGetNameStringW(PCCERT_CONTEXT pCertContext, DWORD dwType,
                 if (entry)
                 {
                     if (!pszNameString)
-                        ret = strlenW(entry->u.pwszRfc822Name) + 1;
+                        ret = lstrlenW(entry->u.pwszRfc822Name) + 1;
                     else if (cchNameString)
                     {
-                        ret = min(strlenW(entry->u.pwszRfc822Name),
+                        ret = min(lstrlenW(entry->u.pwszRfc822Name),
                          cchNameString - 1);
                         memcpy(pszNameString, entry->u.pwszRfc822Name,
                          ret * sizeof(WCHAR));
@@ -1384,10 +1373,10 @@ DWORD WINAPI CertGetNameStringW(PCCERT_CONTEXT pCertContext, DWORD dwType,
         if (entry)
         {
             if (!pszNameString)
-                ret = strlenW(entry->u.pwszDNSName) + 1;
+                ret = lstrlenW(entry->u.pwszDNSName) + 1;
             else if (cchNameString)
             {
-                ret = min(strlenW(entry->u.pwszDNSName), cchNameString - 1);
+                ret = min(lstrlenW(entry->u.pwszDNSName), cchNameString - 1);
                 memcpy(pszNameString, entry->u.pwszDNSName, ret * sizeof(WCHAR));
                 pszNameString[ret++] = 0;
             }
@@ -1408,10 +1397,10 @@ DWORD WINAPI CertGetNameStringW(PCCERT_CONTEXT pCertContext, DWORD dwType,
         if (entry)
         {
             if (!pszNameString)
-                ret = strlenW(entry->u.pwszURL) + 1;
+                ret = lstrlenW(entry->u.pwszURL) + 1;
             else if (cchNameString)
             {
-                ret = min(strlenW(entry->u.pwszURL), cchNameString - 1);
+                ret = min(lstrlenW(entry->u.pwszURL), cchNameString - 1);
                 memcpy(pszNameString, entry->u.pwszURL, ret * sizeof(WCHAR));
                 pszNameString[ret++] = 0;
             }

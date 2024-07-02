@@ -30,9 +30,6 @@
  * MSDN, especially "Constants for CryptEncodeObject and CryptDecodeObject"
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -43,10 +40,12 @@
 #include "windef.h"
 #include "winbase.h"
 #include "wincrypt.h"
+#ifdef __REACTOS__
+#include "winnls.h"
+#endif
 #include "snmp.h"
 #include "wine/debug.h"
 #include "wine/exception.h"
-#include "wine/unicode.h"
 #include "crypt32_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(cryptasn);
@@ -1015,7 +1014,7 @@ static BOOL CRYPT_AsnEncodeUTF8String(const CERT_NAME_VALUE *value,
     if (value->Value.cbData)
         strLen = value->Value.cbData / sizeof(WCHAR);
     else if (str)
-        strLen = strlenW(str);
+        strLen = lstrlenW(str);
     else
         strLen = 0;
     encodedLen = WideCharToMultiByte(CP_UTF8, 0, str, strLen, NULL, 0, NULL,
@@ -1186,7 +1185,7 @@ static BOOL CRYPT_AsnEncodeRdnAttr(DWORD dwCertEncodingType,
     return ret;
 }
 
-static int BLOBComp(const void *l, const void *r)
+static int __cdecl BLOBComp(const void *l, const void *r)
 {
     const CRYPT_DER_BLOB *a = l, *b = r;
     int ret;
@@ -1999,7 +1998,7 @@ static BOOL CRYPT_AsnEncodeUnicodeStringCoerce(const CERT_NAME_VALUE *value,
     if (value->Value.cbData)
         encodedLen = value->Value.cbData / sizeof(WCHAR);
     else if (str)
-        encodedLen = strlenW(str);
+        encodedLen = lstrlenW(str);
     else
         encodedLen = 0;
     CRYPT_EncodeLen(encodedLen, NULL, &lenBytes);
@@ -2036,7 +2035,7 @@ static BOOL CRYPT_AsnEncodeNumericString(const CERT_NAME_VALUE *value,
     if (value->Value.cbData)
         encodedLen = value->Value.cbData / sizeof(WCHAR);
     else if (str)
-        encodedLen = strlenW(str);
+        encodedLen = lstrlenW(str);
     else
         encodedLen = 0;
     CRYPT_EncodeLen(encodedLen, NULL, &lenBytes);
@@ -2060,7 +2059,7 @@ static BOOL CRYPT_AsnEncodeNumericString(const CERT_NAME_VALUE *value,
             ptr += lenBytes;
             for (i = 0; ret && i < encodedLen; i++)
             {
-                if (isdigitW(str[i]))
+                if ('0' <= str[i] && str[i] <= '9')
                     *ptr++ = (BYTE)str[i];
                 else
                 {
@@ -2078,9 +2077,7 @@ static BOOL CRYPT_AsnEncodeNumericString(const CERT_NAME_VALUE *value,
 
 static inline BOOL isprintableW(WCHAR wc)
 {
-    return isalnumW(wc) || isspaceW(wc) || wc == '\'' || wc == '(' ||
-     wc == ')' || wc == '+' || wc == ',' || wc == '-' || wc == '.' ||
-     wc == '/' || wc == ':' || wc == '=' || wc == '?';
+    return wc && wcschr( L"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 '()+,-./:=?", wc );
 }
 
 static BOOL CRYPT_AsnEncodePrintableString(const CERT_NAME_VALUE *value,
@@ -2094,7 +2091,7 @@ static BOOL CRYPT_AsnEncodePrintableString(const CERT_NAME_VALUE *value,
     if (value->Value.cbData)
         encodedLen = value->Value.cbData / sizeof(WCHAR);
     else if (str)
-        encodedLen = strlenW(str);
+        encodedLen = lstrlenW(str);
     else
         encodedLen = 0;
     CRYPT_EncodeLen(encodedLen, NULL, &lenBytes);
@@ -2145,7 +2142,7 @@ static BOOL CRYPT_AsnEncodeIA5String(const CERT_NAME_VALUE *value,
     if (value->Value.cbData)
         encodedLen = value->Value.cbData / sizeof(WCHAR);
     else if (str)
-        encodedLen = strlenW(str);
+        encodedLen = lstrlenW(str);
     else
         encodedLen = 0;
     CRYPT_EncodeLen(encodedLen, NULL, &lenBytes);
@@ -2197,7 +2194,7 @@ static BOOL CRYPT_AsnEncodeUniversalString(const CERT_NAME_VALUE *value,
     if (value->Value.cbData)
         strLen = value->Value.cbData / sizeof(WCHAR);
     else if (str)
-        strLen = strlenW(str);
+        strLen = lstrlenW(str);
     else
         strLen = 0;
     CRYPT_EncodeLen(strLen * 4, NULL, &lenBytes);
@@ -4758,20 +4755,6 @@ BOOL WINAPI CryptEncodeObjectEx(DWORD dwCertEncodingType, LPCSTR lpszStructType,
     return ret;
 }
 
-BOOL WINAPI PFXExportCertStore(HCERTSTORE hStore, CRYPT_DATA_BLOB *pPFX,
- LPCWSTR szPassword, DWORD dwFlags)
-{
-    return PFXExportCertStoreEx(hStore, pPFX, szPassword, NULL, dwFlags);
-}
-
-BOOL WINAPI PFXExportCertStoreEx(HCERTSTORE hStore, CRYPT_DATA_BLOB *pPFX,
- LPCWSTR szPassword, void *pvReserved, DWORD dwFlags)
-{
-    FIXME_(crypt)("(%p, %p, %p, %p, %08x): stub\n", hStore, pPFX, szPassword,
-     pvReserved, dwFlags);
-    return FALSE;
-}
-
 BOOL WINAPI CryptExportPublicKeyInfo(HCRYPTPROV_OR_NCRYPT_KEY_HANDLE hCryptProv, DWORD dwKeySpec,
  DWORD dwCertEncodingType, PCERT_PUBLIC_KEY_INFO pInfo, DWORD *pcbInfo)
 {
@@ -5064,4 +5047,17 @@ BOOL WINAPI CryptImportPublicKeyInfoEx(HCRYPTPROV hCryptProv,
     if (hFunc)
         CryptFreeOIDFunctionAddress(hFunc, 0);
     return ret;
+}
+
+BOOL WINAPI CryptImportPublicKeyInfoEx2(DWORD dwCertEncodingType,
+ PCERT_PUBLIC_KEY_INFO pInfo, DWORD dwFlags, void *pvAuxInfo,
+ BCRYPT_KEY_HANDLE *phKey)
+{
+    TRACE_(crypt)("(%d, %p, %08x, %p, %p)\n", dwCertEncodingType, pInfo,
+     dwFlags, pvAuxInfo, phKey);
+
+    if (dwFlags)
+        FIXME("flags %#x ignored\n", dwFlags);
+
+    return CNG_ImportPubKey(pInfo, phKey);
 }

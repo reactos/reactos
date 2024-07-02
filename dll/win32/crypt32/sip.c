@@ -35,32 +35,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
-static const WCHAR szOID[] = {
-    'S','o','f','t','w','a','r','e','\\',
-    'M','i','c','r','o','s','o','f','t','\\',
-    'C','r','y','p','t','o','g','r','a','p','h','y','\\',
-    'O','I','D','\\',
-    'E','n','c','o','d','i','n','g','T','y','p','e',' ','0','\\',
-    'C','r','y','p','t','S','I','P','D','l','l', 0 };
-
-static const WCHAR szPutSigned[] = {
-    'P','u','t','S','i','g','n','e','d','D','a','t','a','M','s','g','\\',0};
-static const WCHAR szGetSigned[] = {
-    'G','e','t','S','i','g','n','e','d','D','a','t','a','M','s','g','\\',0};
-static const WCHAR szRemoveSigned[] = {
-    'R','e','m','o','v','e','S','i','g','n','e','d','D','a','t','a','M','s','g','\\',0};
-static const WCHAR szCreate[] = {
-    'C','r','e','a','t','e','I','n','d','i','r','e','c','t','D','a','t','a','\\',0};
-static const WCHAR szVerify[] = {
-    'V','e','r','i','f','y','I','n','d','i','r','e','c','t','D','a','t','a','\\',0};
-static const WCHAR szIsMyFile[] = {
-    'I','s','M','y','F','i','l','e','T','y','p','e','\\',0};
-static const WCHAR szIsMyFile2[] = {
-    'I','s','M','y','F','i','l','e','T','y','p','e','2','\\',0};
-
-static const WCHAR szDllName[] = { 'D','l','l',0 };
-static const WCHAR szFuncName[] = { 'F','u','n','c','N','a','m','e',0 };
-
 /* convert a guid to a wide character string */
 static void CRYPT_guid2wstr( const GUID *guid, LPWSTR wstr )
 {
@@ -84,7 +58,7 @@ static LONG CRYPT_SIPDeleteFunction( const GUID *guid, LPCWSTR szKey )
     LONG r = ERROR_SUCCESS;
 
     /* max length of szFullKey depends on our code only, so we won't overrun */
-    lstrcpyW( szFullKey, szOID );
+    lstrcpyW( szFullKey, L"Software\\Microsoft\\Cryptography\\OID\\EncodingType 0\\CryptSIPDll" );
     lstrcatW( szFullKey, szKey );
     CRYPT_guid2wstr( guid, &szFullKey[ lstrlenW( szFullKey ) ] );
 
@@ -127,13 +101,13 @@ BOOL WINAPI CryptSIPRemoveProvider(GUID *pgProv)
     r = CRYPT_SIPDeleteFunction( pgProv, key); \
     if (r != ERROR_SUCCESS) remove_error = r
 
-    CRYPT_SIPREMOVEPROV( szPutSigned);
-    CRYPT_SIPREMOVEPROV( szGetSigned);
-    CRYPT_SIPREMOVEPROV( szRemoveSigned);
-    CRYPT_SIPREMOVEPROV( szCreate);
-    CRYPT_SIPREMOVEPROV( szVerify);
-    CRYPT_SIPREMOVEPROV( szIsMyFile);
-    CRYPT_SIPREMOVEPROV( szIsMyFile2);
+    CRYPT_SIPREMOVEPROV( L"PutSignedDataMsg\\" );
+    CRYPT_SIPREMOVEPROV( L"GetSignedDataMsg\\" );
+    CRYPT_SIPREMOVEPROV( L"RemoveSignedDataMsg\\" );
+    CRYPT_SIPREMOVEPROV( L"CreateIndirectData\\" );
+    CRYPT_SIPREMOVEPROV( L"VerifyIndirectData\\" );
+    CRYPT_SIPREMOVEPROV( L"IsMyFileType\\" );
+    CRYPT_SIPREMOVEPROV( L"IsMyFileType2\\" );
 
 #undef CRYPT_SIPREMOVEPROV
 
@@ -163,7 +137,7 @@ static LONG CRYPT_SIPWriteFunction( const GUID *guid, LPCWSTR szKey,
          return ERROR_SUCCESS;
 
     /* max length of szFullKey depends on our code only, so we won't overrun */
-    lstrcpyW( szFullKey, szOID );
+    lstrcpyW( szFullKey, L"Software\\Microsoft\\Cryptography\\OID\\EncodingType 0\\CryptSIPDll" );
     lstrcatW( szFullKey, szKey );
     CRYPT_guid2wstr( guid, &szFullKey[ lstrlenW( szFullKey ) ] );
 
@@ -173,10 +147,10 @@ static LONG CRYPT_SIPWriteFunction( const GUID *guid, LPCWSTR szKey,
     if( r != ERROR_SUCCESS ) goto error_close_key;
 
     /* write the values */
-    r = RegSetValueExW( hKey, szFuncName, 0, REG_SZ, (const BYTE*) szFunction,
+    r = RegSetValueExW( hKey, L"FuncName", 0, REG_SZ, (const BYTE*) szFunction,
                         ( lstrlenW( szFunction ) + 1 ) * sizeof (WCHAR) );
     if( r != ERROR_SUCCESS ) goto error_close_key;
-    r = RegSetValueExW( hKey, szDllName, 0, REG_SZ, (const BYTE*) szDll,
+    r = RegSetValueExW( hKey, L"Dll", 0, REG_SZ, (const BYTE*) szDll,
                         ( lstrlenW( szDll ) + 1) * sizeof (WCHAR) );
 
 error_close_key:
@@ -234,13 +208,13 @@ BOOL WINAPI CryptSIPAddProvider(SIP_ADD_NEWPROVIDER *psNewProv)
            psNewProv->pwszDLLFileName, psNewProv->field); \
     if (r != ERROR_SUCCESS) goto end_function
 
-    CRYPT_SIPADDPROV( szPutSigned, pwszPutFuncName );
-    CRYPT_SIPADDPROV( szGetSigned, pwszGetFuncName );
-    CRYPT_SIPADDPROV( szRemoveSigned, pwszRemoveFuncName );
-    CRYPT_SIPADDPROV( szCreate, pwszCreateFuncName );
-    CRYPT_SIPADDPROV( szVerify, pwszVerifyFuncName );
-    CRYPT_SIPADDPROV( szIsMyFile, pwszIsFunctionName );
-    CRYPT_SIPADDPROV( szIsMyFile2, pwszIsFunctionNameFmt2 );
+    CRYPT_SIPADDPROV( L"PutSignedDataMsg\\", pwszPutFuncName );
+    CRYPT_SIPADDPROV( L"GetSignedDataMsg\\", pwszGetFuncName );
+    CRYPT_SIPADDPROV( L"RemoveSignedDataMsg\\", pwszRemoveFuncName );
+    CRYPT_SIPADDPROV( L"CreateIndirectData\\", pwszCreateFuncName );
+    CRYPT_SIPADDPROV( L"VerifyIndirectData\\", pwszVerifyFuncName );
+    CRYPT_SIPADDPROV( L"IsMyFileType\\", pwszIsFunctionName );
+    CRYPT_SIPADDPROV( L"IsMyFileType2\\", pwszIsFunctionNameFmt2 );
 
 #undef CRYPT_SIPADDPROV
 
@@ -266,7 +240,7 @@ static void *CRYPT_LoadSIPFuncFromKey(HKEY key, HMODULE *pLib)
 
     /* Read the DLL entry */
     size = sizeof(dllName);
-    r = RegQueryValueExW(key, szDllName, NULL, NULL, (LPBYTE)dllName, &size);
+    r = RegQueryValueExW(key, L"Dll", NULL, NULL, (LPBYTE)dllName, &size);
     if (r) goto end;
 
     /* Read the Function entry */
@@ -320,7 +294,6 @@ BOOL WINAPI CryptSIPRetrieveSubjectGuid
     static const WORD dosHdr = IMAGE_DOS_SIGNATURE;
     static const BYTE cabHdr[] = { 'M','S','C','F' };
     BYTE hdr[SIP_MAX_MAGIC_NUMBER];
-    WCHAR szFullKey[ 0x100 ];
     LONG r = ERROR_SUCCESS;
     HKEY key;
 
@@ -431,10 +404,7 @@ BOOL WINAPI CryptSIPRetrieveSubjectGuid
     }
 
     /* Check for supported functions using CryptSIPDllIsMyFileType */
-    /* max length of szFullKey depends on our code only, so we won't overrun */
-    lstrcpyW(szFullKey, szOID);
-    lstrcatW(szFullKey, szIsMyFile);
-    r = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szFullKey, 0, KEY_READ, &key);
+    r = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Cryptography\\OID\\EncodingType 0\\CryptSIPDllIsMyFileType\\", 0, KEY_READ, &key);
     if (r == ERROR_SUCCESS)
     {
         DWORD index = 0, size;
@@ -470,9 +440,7 @@ BOOL WINAPI CryptSIPRetrieveSubjectGuid
     /* Check for supported functions using CryptSIPDllIsMyFileType2 */
     if (!bRet)
     {
-        lstrcpyW(szFullKey, szOID);
-        lstrcatW(szFullKey, szIsMyFile2);
-        r = RegOpenKeyExW(HKEY_LOCAL_MACHINE, szFullKey, 0, KEY_READ, &key);
+        r = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Cryptography\\OID\\EncodingType 0\\CryptSIPDllIsMyFileType2\\", 0, KEY_READ, &key);
         if (r == ERROR_SUCCESS)
         {
             DWORD index = 0, size;
@@ -526,7 +494,7 @@ static LONG CRYPT_OpenSIPFunctionKey(const GUID *guid, LPCWSTR function,
 {
     WCHAR szFullKey[ 0x100 ];
 
-    lstrcpyW(szFullKey, szOID);
+    lstrcpyW(szFullKey, L"Software\\Microsoft\\Cryptography\\OID\\EncodingType 0\\CryptSIPDll");
     lstrcatW(szFullKey, function);
     CRYPT_guid2wstr(guid, &szFullKey[lstrlenW(szFullKey)]);
     return RegOpenKeyExW(HKEY_LOCAL_MACHINE, szFullKey, 0, KEY_READ, key);
@@ -628,25 +596,25 @@ static BOOL CRYPT_LoadSIP(const GUID *pgSubject)
     SIP_DISPATCH_INFO sip = { 0 };
     HMODULE lib = NULL, temp = NULL;
 
-    sip.pfGet = CRYPT_LoadSIPFunc(pgSubject, szGetSigned, &lib);
+    sip.pfGet = CRYPT_LoadSIPFunc(pgSubject, L"GetSignedDataMsg\\", &lib);
     if (!sip.pfGet)
         goto error;
-    sip.pfPut = CRYPT_LoadSIPFunc(pgSubject, szPutSigned, &temp);
+    sip.pfPut = CRYPT_LoadSIPFunc(pgSubject, L"PutSignedDataMsg\\", &temp);
     if (!sip.pfPut || temp != lib)
         goto error;
     FreeLibrary(temp);
     temp = NULL;
-    sip.pfCreate = CRYPT_LoadSIPFunc(pgSubject, szCreate, &temp);
+    sip.pfCreate = CRYPT_LoadSIPFunc(pgSubject, L"CreateIndirectData\\", &temp);
     if (!sip.pfCreate || temp != lib)
         goto error;
     FreeLibrary(temp);
     temp = NULL;
-    sip.pfVerify = CRYPT_LoadSIPFunc(pgSubject, szVerify, &temp);
+    sip.pfVerify = CRYPT_LoadSIPFunc(pgSubject, L"VerifyIndirectData\\", &temp);
     if (!sip.pfVerify || temp != lib)
         goto error;
     FreeLibrary(temp);
     temp = NULL;
-    sip.pfRemove = CRYPT_LoadSIPFunc(pgSubject, szRemoveSigned, &temp);
+    sip.pfRemove = CRYPT_LoadSIPFunc(pgSubject, L"RemoveSignedDataMsg\\", &temp);
     if (!sip.pfRemove || temp != lib)
         goto error;
     FreeLibrary(temp);
