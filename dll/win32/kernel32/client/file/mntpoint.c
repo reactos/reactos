@@ -61,7 +61,7 @@ GetVolumeNameForRoot(IN LPCWSTR lpszRootPath,
     {
         if (NtPathName.Buffer[(NtPathName.Length / sizeof(WCHAR)) - 1] == L':')
         {
-            NtPathName.Buffer[(NtPathName.Length / sizeof(WCHAR)) - 2] = _toupper(NtPathName.Buffer[(NtPathName.Length / sizeof(WCHAR)) - 2]);
+            NtPathName.Buffer[(NtPathName.Length / sizeof(WCHAR)) - 2] = towupper(NtPathName.Buffer[(NtPathName.Length / sizeof(WCHAR)) - 2]);
         }
     }
 
