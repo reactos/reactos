@@ -1,8 +1,7 @@
 #pragma once
 #include <rosctrls.h>
 
-class CRichEdit :
-    public CWindow
+class CRichEdit : public CWindow
 {
     HMODULE m_LoadedLibrary;
 
@@ -17,7 +16,7 @@ class CRichEdit :
             SetText.flags = ST_SELECTION;
             SetText.codepage = 1200;
 
-            SendMessageW(EM_SETTEXTEX, (WPARAM) &SetText, (LPARAM) lpszText);
+            SendMessageW(EM_SETTEXTEX, (WPARAM)&SetText, (LPARAM)lpszText);
 
             if ((dwEffects == CFM_LINK) && !PathIsURLW(lpszText))
             {
@@ -46,7 +45,7 @@ public:
         CharFormat.dwMask = dwEffects;
         CharFormat.dwEffects = dwEffects;
 
-        SendMessageW(EM_SETCHARFORMAT, SCF_WORD | SCF_SELECTION, (LPARAM) &CharFormat);
+        SendMessageW(EM_SETCHARFORMAT, SCF_WORD | SCF_SELECTION, (LPARAM)&CharFormat);
 
         SendMessageW(EM_SETSEL, End, End + 1);
     }
@@ -58,7 +57,7 @@ public:
         TxtLenStruct.flags = GTL_NUMCHARS;
         TxtLenStruct.codepage = 1200;
 
-        return (LONG) SendMessageW(EM_GETTEXTLENGTHEX, (WPARAM) &TxtLenStruct, 0);
+        return (LONG)SendMessageW(EM_GETTEXTLENGTHEX, (WPARAM)&TxtLenStruct, 0);
     }
 
     /*
@@ -96,21 +95,14 @@ public:
     {
         m_LoadedLibrary = LoadLibraryW(L"riched20.dll");
 
-        m_hWnd = CreateWindowExW(0,
-                                 L"RichEdit20W",
-                                 NULL,
-                                 WS_CHILD | WS_VISIBLE | ES_MULTILINE |
-                                 ES_LEFT | ES_READONLY,
-                                 205, 28, 465, 100,
-                                 hwndParent,
-                                 NULL,
-                                 _AtlBaseModule.GetModuleInstance(),
-                                 NULL);
+        m_hWnd = CreateWindowExW(
+            0, L"RichEdit20W", NULL, WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_LEFT | ES_READONLY, 205, 28, 465, 100,
+            hwndParent, NULL, _AtlBaseModule.GetModuleInstance(), NULL);
 
         if (m_hWnd)
         {
             SendMessageW(EM_SETBKGNDCOLOR, 0, GetSysColor(COLOR_BTNFACE));
-            SendMessageW(WM_SETFONT, (WPARAM) GetStockObject(DEFAULT_GUI_FONT), 0);
+            SendMessageW(WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), 0);
             SendMessageW(EM_SETEVENTMASK, 0, ENM_LINK | ENM_MOUSEEVENTS);
             SendMessageW(EM_SHOWSCROLLBAR, SB_VERT, TRUE);
         }
@@ -129,5 +121,4 @@ public:
             FreeLibrary(m_LoadedLibrary);
         }
     }
-
 };

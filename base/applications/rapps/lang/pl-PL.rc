@@ -1,7 +1,5 @@
-/*
- * TRANSLATORS: 2009 Olaf Siejka
- *              2011 Adam Stachowicz <saibamenppl@gmail.com>
- */
+// COPYRIGHT: 2009 Olaf Siejka
+//            2011 Adam Stachowicz <saibamenppl@gmail.com>
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
@@ -196,12 +194,10 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD2 "Nie można pobrać pakietu! Sprawdź połączenie z siecią!"
     IDS_UNABLE_TO_REMOVE "Nie można było usunąć wpisu z rejestru!"
     IDS_UNABLE_TO_INSTALL "Nie można uruchomić instalatora!"
-    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
     IDS_INTEG_CHECK_TITLE "Weryfikowanie integralności pakietu…"
     IDS_INTEG_CHECK_FAIL "Pakiet nie przeszedł kontroli integralności, mógł zostać uszkodzony lub naruszony podczas pobierania. Uruchamianie tego programu nie jest zalecane."
     IDS_INTERRUPTED_DOWNLOAD "Pobieranie zostało przerwane. Sprawdź połączenie z siecią"
     IDS_UNABLE_TO_WRITE "Nie można zapisać na dysku. Dysk może być pełny."
-    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
 END
 
 STRINGTABLE
