@@ -242,12 +242,21 @@ co_IntFindChildWindowToOwner(PWND Root, PWND Owner)
 LRESULT
 DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
 {
-   PWND pwndPopUP = NULL;
+   PWND pwndCur, pwndPopUP = NULL;
    WORD Msg = HIWORD(lParam);
+   HWND hwndCur = (HWND)wParam;
 
-   /* Not for child windows. */
-   if (UserHMGetHandle(pWnd) != (HWND)wParam)
+   /* Validate the window */
+   if (!hwndCur)
+       return FALSE;
+   pwndCur = UserGetWindowObject(hwndCur);
+   if (!pwndCur)
+       return FALSE;
+
+   /* Handle window menu mode */
+   if (Msg == 0)
    {
+      IntSystemSetCursor(SYSTEMCUR(ARROW));
       return FALSE;
    }
 
@@ -306,9 +315,9 @@ DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
 
       case HTCLIENT:
       {
-         if (pWnd->pcls->spcur)
+         if (pwndCur->pcls->spcur)
          {
-            IntSystemSetCursor(pWnd->pcls->spcur);
+            IntSystemSetCursor(pwndCur->pcls->spcur);
 	 }
 	 return FALSE;
       }
@@ -356,8 +365,24 @@ DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
          IntSystemSetCursor(SYSTEMCUR(SIZENESW));
          return TRUE;
        }
+       case HTGROWBOX:
+       {
+         IntSystemSetCursor(SYSTEMCUR(SIZEALL));
+         return TRUE;
+       }
+       case HTHELP:
+       {
+         if (pWnd->style & WS_MAXIMIZE)
+         {
+             break;
+         }
+         IntSystemSetCursor(SYSTEMCUR(HELP));
+         return TRUE;
+       }
+       default:
+         IntSystemSetCursor(SYSTEMCUR(ARROW));
+         break;
    }
-   IntSystemSetCursor(SYSTEMCUR(ARROW));
    return FALSE;
 }
 

@@ -465,27 +465,33 @@ co_IntLoadSysMenuTemplate(VOID)
    return (HMENU)Result;
 }
 
-extern HCURSOR gDesktopCursor;
-
 BOOL APIENTRY
 co_IntLoadDefaultCursors(VOID)
 {
    NTSTATUS Status;
-   PVOID ResultPointer;
-   ULONG ResultLength;
-   BOOL DefaultCursor = TRUE;
+   PVOID Argument, ResultPointer;
+   ULONG ArgumentLength, ResultLength;
+   PLOADCURSORS_CALLBACK_ARGUMENTS Common;
 
    /* Do not allow the desktop thread to do callback to user mode */
    ASSERT(PsGetCurrentThreadWin32Thread() != gptiDesktopThread);
 
    ResultPointer = NULL;
-   ResultLength = sizeof(HCURSOR);
+   ResultLength = ArgumentLength = sizeof(LOADCURSORS_CALLBACK_ARGUMENTS);
+
+   Argument = IntCbAllocateMemory(ArgumentLength);
+   if (!Argument)
+   {
+      ERR("Load Default Cursors callback failed: out of memory\n");
+      return FALSE;
+   }
+   Common = (PLOADCURSORS_CALLBACK_ARGUMENTS)Argument;
 
    UserLeaveCo();
 
    Status = KeUserModeCallback(USER32_CALLBACK_LOADDEFAULTCURSORS,
-                               &DefaultCursor,
-                               sizeof(BOOL),
+                               Argument,
+                               ArgumentLength,
                                &ResultPointer,
                                &ResultLength);
 
@@ -493,11 +499,31 @@ co_IntLoadDefaultCursors(VOID)
 
    if (!NT_SUCCESS(Status))
    {
+      ERR("Load Default Cursors callback failed!\n");
+      IntCbFreeMemory(Argument);
       return FALSE;
    }
 
-   /* HACK: The desktop class doen't have a proper cursor yet, so set it here */
-    gDesktopCursor = *((HCURSOR*)ResultPointer);
+   RtlMoveMemory(Common, ResultPointer, ArgumentLength);
+
+   NtUserSetSystemCursor(Common->hCursorArrow,       OCR_NORMAL);
+   NtUserSetSystemCursor(Common->hCursorIbeam,       OCR_IBEAM);
+   NtUserSetSystemCursor(Common->hCursorWait,        OCR_WAIT);
+   NtUserSetSystemCursor(Common->hCursorCross,       OCR_CROSS);
+   NtUserSetSystemCursor(Common->hCursorUp,          OCR_UP);
+   NtUserSetSystemCursor(Common->hCursorIcon,        OCR_ICON);
+   NtUserSetSystemCursor(Common->hCursorSize,        OCR_SIZE);
+   NtUserSetSystemCursor(Common->hCursorSizeAll,     OCR_SIZEALL);
+   NtUserSetSystemCursor(Common->hCursorSizeNwse,    OCR_SIZENWSE);
+   NtUserSetSystemCursor(Common->hCursorSizeNesw,    OCR_SIZENESW);
+   NtUserSetSystemCursor(Common->hCursorSizeWe,      OCR_SIZEWE);
+   NtUserSetSystemCursor(Common->hCursorSizeNs,      OCR_SIZENS);
+   NtUserSetSystemCursor(Common->hCursorNo,          OCR_NO);
+   NtUserSetSystemCursor(Common->hCursorHand,        OCR_HAND);
+   NtUserSetSystemCursor(Common->hCursorAppStarting, OCR_APPSTARTING);
+   NtUserSetSystemCursor(Common->hCursorHelp,        OCR_HELP);
+
+   IntCbFreeMemory(Argument);
 
    return TRUE;
 }
@@ -979,6 +1005,61 @@ co_IntClientThreadSetup(VOID)
    UserEnterCo();
 
    return Status;
+}
+
+HANDLE FASTCALL
+co_IntLoadImage(LPCWSTR name, UINT type, INT desiredx, INT desiredy, UINT flags)
+{
+   HANDLE Handle;
+   NTSTATUS Status;
+   ULONG ArgumentLength, ResultLength;
+   PVOID Argument, ResultPointer;
+   PLOADIMAGE_CALLBACK_ARGUMENTS Common;
+
+   ArgumentLength = ResultLength = 0;
+   Argument = ResultPointer = NULL;
+
+   ArgumentLength = sizeof(LOADIMAGE_CALLBACK_ARGUMENTS);
+
+   Argument = IntCbAllocateMemory(ArgumentLength);
+   if (!Argument)
+   {
+      ERR("LoadImage callback failed: out of memory\n");
+      return 0;
+   }
+   Common = (PLOADIMAGE_CALLBACK_ARGUMENTS) Argument;
+
+   RtlStringCchCopyW(Common->ImageName, wcslen(name) + 1, name);
+
+   Common->ImageType = type;
+   Common->cxDesired = desiredx;
+   Common->cyDesired = desiredy;
+   Common->fuFlags = flags;
+
+   UserLeaveCo();
+
+   Status = KeUserModeCallback(USER32_CALLBACK_LOADIMAGE,
+                               Argument,
+                               ArgumentLength,
+                               &ResultPointer,
+                               &ResultLength);
+
+
+   UserEnterCo();
+
+   if (NT_SUCCESS(Status))
+   {
+      Handle = *(HANDLE*)ResultPointer;
+   }
+   else
+   {
+      ERR("LoadImage callback failed\n");
+      Handle = NULL;
+   }
+
+   IntCbFreeMemory(Argument);
+
+   return Handle;
 }
 
 HANDLE FASTCALL

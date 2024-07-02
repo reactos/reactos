@@ -24,6 +24,8 @@ static RTL_BITMAP     WindowLessTimersBitMap;
 static PVOID          WindowLessTimersBitMapBuffer;
 static ULONG          HintIndex = 1;
 
+extern PACON gAniCursor;
+
 ERESOURCE TimerLock;
 
 #define IntLockWindowlessTimerBitmap() \
@@ -353,6 +355,28 @@ SystemTimerProc(HWND hwnd,
              FLASHW_SYSTIMER,0,0};
 
           IntFlashWindowEx(pWnd, &fwi);
+       }
+       return;
+
+     case ID_EVENT_SYSTIMER_ANIMATECURSOR:
+       {
+          PACON pacon = gAniCursor;
+          PCURICON_OBJECT pcurFrame;
+          if (!pacon || !pacon->aspcur || !pacon->aicur || pacon->iicur < 0)
+          {
+             ERR("Killing the timer... ;(\n");
+             break;
+          }
+          pcurFrame = pacon->aspcur[pacon->aicur[pacon->iicur]];
+          if (!pcurFrame)
+          {
+             ERR("Killing the timer... ;(\n");
+             break;
+          }
+          IntSystemSetCursor(pcurFrame);
+          pacon->iicur += 1;
+          if (pacon->iicur >= pacon->cicur)
+              pacon->iicur = 0;
        }
        return;
 
