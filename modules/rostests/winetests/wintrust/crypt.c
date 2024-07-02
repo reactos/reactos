@@ -200,25 +200,25 @@ static void test_context(void)
     ret = pCryptCATAdminAcquireContext(NULL, NULL, 0);
     ok(!ret, "Expected failure\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+       "Expected ERROR_INVALID_PARAMETER, got %ld\n", GetLastError());
 
     /* NULL GUID */
     if (0) { /* crashes on 64-bit win10 */
     ret = pCryptCATAdminAcquireContext(&hca, NULL, 0);
-    ok(ret, "Expected success, got FALSE with %d\n", GetLastError());
+    ok(ret, "Expected success, got FALSE with %ld\n", GetLastError());
     ok(hca != NULL, "Expected a context handle, got NULL\n");
 
     /* Proper release */
     SetLastError(0xdeadbeef);
     ret = pCryptCATAdminReleaseContext(hca, 0);
-    ok(ret, "Expected success, got FALSE with %d\n", GetLastError());
+    ok(ret, "Expected success, got FALSE with %ld\n", GetLastError());
 
     /* Try to release a second time */
     SetLastError(0xdeadbeef);
     ret = pCryptCATAdminReleaseContext(hca, 0);
     ok(!ret, "Expected failure\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+       "Expected ERROR_INVALID_PARAMETER, got %ld\n", GetLastError());
     }
 
     /* All NULL */
@@ -226,14 +226,14 @@ static void test_context(void)
     ret = pCryptCATAdminReleaseContext(NULL, 0);
     ok(!ret, "Expected failure\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+       "Expected ERROR_INVALID_PARAMETER, got %ld\n", GetLastError());
 
     /* NULL context handle and dummy GUID */
     SetLastError(0xdeadbeef);
     ret = pCryptCATAdminAcquireContext(NULL, &dummy, 0);
     ok(!ret, "Expected failure\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+       "Expected ERROR_INVALID_PARAMETER, got %ld\n", GetLastError());
 
     /* Correct context handle and dummy GUID
      *
@@ -246,7 +246,7 @@ static void test_context(void)
      */
 
     ret = pCryptCATAdminAcquireContext(&hca, &dummy, 0);
-    ok(ret || GetLastError() == ERROR_ACCESS_DENIED, "CryptCATAdminAcquireContext failed %u\n", GetLastError());
+    ok(ret || GetLastError() == ERROR_ACCESS_DENIED, "CryptCATAdminAcquireContext failed %lu\n", GetLastError());
     if (!ret && GetLastError() == ERROR_ACCESS_DENIED)
     {
         win_skip("Not running as administrator\n");
@@ -276,15 +276,15 @@ static void test_context(void)
     }
 
     ret = pCryptCATAdminReleaseContext(hca, 0);
-    ok(ret, "Expected success, got FALSE with %d\n", GetLastError());
+    ok(ret, "Expected success, got FALSE with %ld\n", GetLastError());
 
     /* Correct context handle and GUID */
     ret = pCryptCATAdminAcquireContext(&hca, &unknown, 0);
-    ok(ret, "Expected success, got FALSE with %d\n", GetLastError());
+    ok(ret, "Expected success, got FALSE with %ld\n", GetLastError());
     ok(hca != NULL, "Expected a context handle, got NULL\n");
 
     ret = pCryptCATAdminReleaseContext(hca, 0);
-    ok(ret, "Expected success, got FALSE with %d\n", GetLastError());
+    ok(ret, "Expected success, got FALSE with %ld\n", GetLastError());
 
     hca = (void *) 0xdeadbeef;
     SetLastError(0xdeadbeef);
@@ -292,14 +292,14 @@ static void test_context(void)
     ret = pCryptCATAdminAcquireContext(&hca, &unknown, 1);
     ok((!ret && (GetLastError() == ERROR_INVALID_PARAMETER) && (hca == (void *) 0xdeadbeef)) ||
         broken(ret && hca != NULL && hca != (void *) 0xdeadbeef),
-        "Expected FALSE and ERROR_INVALID_PARAMETER with untouched handle, got %d and %u with %p\n",
+        "Expected FALSE and ERROR_INVALID_PARAMETER with untouched handle, got %d and %lu with %p\n",
         ret, GetLastError(), hca);
 
     if (ret && hca)
     {
         SetLastError(0xdeadbeef);
         ret = pCryptCATAdminReleaseContext(hca, 0);
-        ok(ret, "Expected success, got FALSE with %d\n", GetLastError());
+        ok(ret, "Expected success, got FALSE with %ld\n", GetLastError());
     }
 }
 
@@ -319,14 +319,14 @@ static void test_calchash(void)
     ret = pCryptCATAdminCalcHashFromFileHandle(NULL, NULL, NULL, 0);
     ok(!ret, "Expected failure\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+       "Expected ERROR_INVALID_PARAMETER, got %ld\n", GetLastError());
 
     /* NULL filehandle, rest is legal */
     SetLastError(0xdeadbeef);
     ret = pCryptCATAdminCalcHashFromFileHandle(NULL, &hashsize, NULL, 0);
     ok(!ret, "Expected failure\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+       "Expected ERROR_INVALID_PARAMETER, got %ld\n", GetLastError());
 
     /* Correct filehandle, rest is NULL */
     file = CreateFileA(selfname, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
@@ -334,7 +334,7 @@ static void test_calchash(void)
     ret = pCryptCATAdminCalcHashFromFileHandle(file, NULL, NULL, 0);
     ok(!ret, "Expected failure\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+       "Expected ERROR_INVALID_PARAMETER, got %ld\n", GetLastError());
     CloseHandle(file);
 
     /* All OK, but dwFlags set to 1 */
@@ -343,18 +343,18 @@ static void test_calchash(void)
     ret = pCryptCATAdminCalcHashFromFileHandle(file, &hashsize, NULL, 1);
     ok(!ret, "Expected failure\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+       "Expected ERROR_INVALID_PARAMETER, got %ld\n", GetLastError());
     CloseHandle(file);
 
     /* All OK, requesting the size of the hash */
     file = CreateFileA(selfname, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-    ok(file != INVALID_HANDLE_VALUE, "CreateFile failed %u\n", GetLastError());
+    ok(file != INVALID_HANDLE_VALUE, "CreateFile failed %lu\n", GetLastError());
     SetLastError(0xdeadbeef);
     ret = pCryptCATAdminCalcHashFromFileHandle(file, &hashsize, NULL, 0);
-    ok(ret, "Expected success, got FALSE with %d\n", GetLastError());
-    ok(hashsize == 20," Expected a hash size of 20, got %d\n", hashsize);
+    ok(ret, "Expected success, got FALSE with %ld\n", GetLastError());
+    ok(hashsize == 20," Expected a hash size of 20, got %ld\n", hashsize);
     ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER,
-       "Expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
+       "Expected ERROR_INSUFFICIENT_BUFFER, got %ld\n", GetLastError());
     CloseHandle(file);
 
     /* All OK, retrieve the hash
@@ -365,10 +365,10 @@ static void test_calchash(void)
     hash = HeapAlloc(GetProcessHeap(), 0, hashsize);
     SetLastError(0xdeadbeef);
     ret = pCryptCATAdminCalcHashFromFileHandle(file, &hashsize, hash, 0);
-    ok(ret, "Expected success, got FALSE with %d\n", GetLastError());
-    ok(hashsize == 20," Expected a hash size of 20, got %d\n", hashsize);
+    ok(ret, "Expected success, got FALSE with %ld\n", GetLastError());
+    ok(hashsize == 20," Expected a hash size of 20, got %ld\n", hashsize);
     ok(GetLastError() == ERROR_SUCCESS,
-       "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+       "Expected ERROR_SUCCESS, got %ld\n", GetLastError());
     CloseHandle(file);
     HeapFree(GetProcessHeap(), 0, hash);
 
@@ -387,9 +387,9 @@ static void test_calchash(void)
     hash = HeapAlloc(GetProcessHeap(), 0, hashsize);
     SetLastError(0xdeadbeef);
     ret = pCryptCATAdminCalcHashFromFileHandle(file, &hashsize, hash, 0);
-    ok(ret, "Expected success, got FALSE with %d\n", GetLastError());
+    ok(ret, "Expected success, got FALSE with %ld\n", GetLastError());
     ok(GetLastError() == ERROR_SUCCESS,
-       "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+       "Expected ERROR_SUCCESS, got %ld\n", GetLastError());
     ok(hashsize == sizeof(expectedhash) &&
        !memcmp(hash, expectedhash, sizeof(expectedhash)),
        "Hashes didn't match\n");
@@ -401,33 +401,64 @@ static void test_calchash(void)
 
 static void test_CryptCATOpen(void)
 {
-    HANDLE hcat;
-    char empty[MAX_PATH];
-    WCHAR emptyW[MAX_PATH];
-    HANDLE file;
+    WCHAR filename[MAX_PATH], temp_path[MAX_PATH];
+    HANDLE cat;
+    DWORD flags;
     BOOL ret;
+    FILE *file;
+    char buffer[10];
+
+    GetTempPathW(ARRAY_SIZE(temp_path), temp_path);
+    GetTempFileNameW(temp_path, L"cat", 0, filename);
 
     SetLastError(0xdeadbeef);
-    hcat = pCryptCATOpen(NULL, 0, 0, 0, 0);
-    ok(hcat == INVALID_HANDLE_VALUE, "CryptCATOpen succeeded\n");
-    ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected ERROR_INVALID_PARAMETER, got %08x\n", GetLastError());
+    cat = pCryptCATOpen(NULL, 0, 0, 0, 0);
+    ok(cat == INVALID_HANDLE_VALUE, "expected failure\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "got error %lu\n", GetLastError());
 
-    if (!GetTempFileNameA(CURR_DIR, "cat", 0, empty)) return;
+    for (flags = 0; flags < 8; ++flags)
+    {
+        SetLastError(0xdeadbeef);
+        cat = pCryptCATOpen(filename, flags, 0, 0, 0);
+        if (flags == CRYPTCAT_OPEN_EXISTING)
+        {
+            ok(cat == INVALID_HANDLE_VALUE, "flags %#lx: expected failure\n", flags);
+            ok(GetLastError() == ERROR_FILE_NOT_FOUND, "flags %#lx: got error %lu\n", flags, GetLastError());
+            ret = DeleteFileW(filename);
+            ok(!ret, "flags %#lx: expected failure\n", flags);
+        }
+        else
+        {
+            ok(cat != INVALID_HANDLE_VALUE, "flags %#lx: expected success\n", flags);
+            ok(!GetLastError(), "flags %#lx: got error %lu\n", flags, GetLastError());
+            ret = pCryptCATClose(cat);
+            ok(ret, "flags %#lx: failed to close file\n", flags);
+            ret = DeleteFileW(filename);
+            ok(ret, "flags %#lx: failed to delete file, error %lu\n", flags, GetLastError());
+        }
 
-    file = CreateFileA(empty, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-    ok(file != INVALID_HANDLE_VALUE, "CreateFileA failed %u\n", GetLastError());
-    CloseHandle(file);
-    MultiByteToWideChar(CP_ACP, 0, empty, -1, emptyW, MAX_PATH);
+        file = _wfopen(filename, L"w");
+        fputs("test text", file);
+        fclose(file);
 
-    hcat = pCryptCATOpen(emptyW, 0, 0, 0, 0);
-    todo_wine
-    ok(hcat != INVALID_HANDLE_VALUE, "Expected a correct handle\n");
+        SetLastError(0xdeadbeef);
+        cat = pCryptCATOpen(filename, flags, 0, 0, 0);
+        ok(cat != INVALID_HANDLE_VALUE, "flags %#lx: expected success\n", flags);
+        ok(!GetLastError(), "flags %#lx: got error %lu\n", flags, GetLastError());
+        ret = pCryptCATClose(cat);
+        ok(ret, "flags %#lx: failed to close file\n", flags);
 
-    ret = pCryptCATClose(hcat);
-    todo_wine
-    ok(ret, "CryptCATClose failed\n");
-    DeleteFileA(empty);
+        file = _wfopen(filename, L"r");
+        ret = fread(buffer, 1, sizeof(buffer), file);
+        if (flags & CRYPTCAT_OPEN_CREATENEW)
+            ok(!ret, "flags %#lx: got %s\n", flags, debugstr_an(buffer, ret));
+        else
+            ok(ret == 9 && !strncmp(buffer, "test text", ret), "flags %#lx: got %s\n", flags, debugstr_an(buffer, ret));
+        fclose(file);
+
+        ret = DeleteFileW(filename);
+        ok(ret, "flags %#lx: failed to delete file, error %lu\n", flags, GetLastError());
+    }
 }
 
 static DWORD error_area;
@@ -435,7 +466,7 @@ static DWORD local_error;
 
 static void WINAPI cdf_callback(DWORD area, DWORD error, WCHAR* line)
 {
-    ok(error_area != -2, "Didn't expect cdf_callback() to be called (%08x, %08x)\n",
+    ok(error_area != -2, "Didn't expect cdf_callback() to be called (%08lx, %08lx)\n",
        area, error);
 
     error_area = area;
@@ -458,33 +489,33 @@ static void test_CryptCATCDF_params(void)
     catcdf = pCryptCATCDFOpen(NULL, NULL);
     ok(catcdf == NULL, "CryptCATCDFOpen succeeded\n");
     todo_wine
-    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %ld\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     catcdf = pCryptCATCDFOpen(NULL, cdf_callback);
     ok(catcdf == NULL, "CryptCATCDFOpen succeeded\n");
     todo_wine
-    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %ld\n", GetLastError());
 
     /* File doesn't exist */
     SetLastError(0xdeadbeef);
     catcdf = pCryptCATCDFOpen(nonexistent, cdf_callback);
     ok(catcdf == NULL, "CryptCATCDFOpen succeeded\n");
     todo_wine
-    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %ld\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     ret = pCryptCATCDFClose(NULL);
     ok(!ret, "Expected failure\n");
     todo_wine
-    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %ld\n", GetLastError());
 
     catcdf = NULL;
     SetLastError(0xdeadbeef);
     ret = pCryptCATCDFClose(catcdf);
     ok(!ret, "Expected failure\n");
     todo_wine
-    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %ld\n", GetLastError());
 }
 
 /* FIXME: Once Wine can create catalog files we should use the created catalog file in this test */
@@ -514,11 +545,11 @@ static void test_CryptCATAdminAddRemoveCatalog(void)
     if (!GetTempFileNameA(CURR_DIR, "cat", 0, tmpfile)) return;
     DeleteFileA(tmpfile);
     file = CreateFileA(tmpfile, GENERIC_WRITE, 0, NULL, CREATE_NEW, 0, NULL);
-    ok(file != INVALID_HANDLE_VALUE, "CreateFileA failed %u\n", GetLastError());
+    ok(file != INVALID_HANDLE_VALUE, "CreateFileA failed %lu\n", GetLastError());
     CloseHandle(file);
 
     ret = pCryptCATAdminAcquireContext(&hcatadmin, &dummy, 0);
-    ok(ret || GetLastError() == ERROR_ACCESS_DENIED, "CryptCATAdminAcquireContext failed %u\n", GetLastError());
+    ok(ret || GetLastError() == ERROR_ACCESS_DENIED, "CryptCATAdminAcquireContext failed %lu\n", GetLastError());
     if (!ret && GetLastError() == ERROR_ACCESS_DENIED)
     {
         win_skip("Not running as administrator\n");
@@ -529,13 +560,13 @@ static void test_CryptCATAdminAddRemoveCatalog(void)
     hcatinfo = pCryptCATAdminAddCatalog(NULL, NULL, NULL, 0);
     error = GetLastError();
     ok(hcatinfo == NULL, "CryptCATAdminAddCatalog succeeded\n");
-    ok(error == ERROR_INVALID_PARAMETER, "got %u expected ERROR_INVALID_PARAMETER\n", GetLastError());
+    ok(error == ERROR_INVALID_PARAMETER, "got %lu expected ERROR_INVALID_PARAMETER\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     hcatinfo = pCryptCATAdminAddCatalog(hcatadmin, NULL, NULL, 0);
     error = GetLastError();
     ok(hcatinfo == NULL, "CryptCATAdminAddCatalog succeeded\n");
-    ok(error == ERROR_INVALID_PARAMETER, "got %u expected ERROR_INVALID_PARAMETER\n", GetLastError());
+    ok(error == ERROR_INVALID_PARAMETER, "got %lu expected ERROR_INVALID_PARAMETER\n", GetLastError());
 
     MultiByteToWideChar(CP_ACP, 0, tmpfile, -1, tmpfileW, MAX_PATH);
 
@@ -544,7 +575,7 @@ static void test_CryptCATAdminAddRemoveCatalog(void)
     error = GetLastError();
     todo_wine {
     ok(hcatinfo == NULL, "CryptCATAdminAddCatalog succeeded\n");
-    ok(error == ERROR_BAD_FORMAT, "got %u expected ERROR_BAD_FORMAT\n", GetLastError());
+    ok(error == ERROR_BAD_FORMAT, "got %lu expected ERROR_BAD_FORMAT\n", GetLastError());
     }
     if (hcatinfo != NULL)
         pCryptCATAdminReleaseCatalogContext(hcatadmin, hcatinfo, 0);
@@ -555,17 +586,17 @@ static void test_CryptCATAdminAddRemoveCatalog(void)
     ok(hcatinfo == NULL, "CryptCATAdminAddCatalog succeeded\n");
     ok(error == ERROR_INVALID_PARAMETER ||
        error == ERROR_BAD_FORMAT, /* win 8 */
-       "got %u\n", GetLastError());
+       "got %lu\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     hcatinfo = pCryptCATAdminAddCatalog(hcatadmin, tmpfileW, NULL, 0);
     error = GetLastError();
     ok(hcatinfo == NULL, "CryptCATAdminAddCatalog succeeded\n");
-    todo_wine ok(error == ERROR_BAD_FORMAT, "got %u expected ERROR_BAD_FORMAT\n", GetLastError());
+    todo_wine ok(error == ERROR_BAD_FORMAT, "got %lu expected ERROR_BAD_FORMAT\n", GetLastError());
 
     DeleteFileA(tmpfile);
     file = CreateFileA(tmpfile, GENERIC_WRITE, 0, NULL, CREATE_NEW, 0, NULL);
-    ok(file != INVALID_HANDLE_VALUE, "CreateFileA failed %u\n", GetLastError());
+    ok(file != INVALID_HANDLE_VALUE, "CreateFileA failed %lu\n", GetLastError());
     WriteFile(file, test_catalog, sizeof(test_catalog), &written, NULL);
     CloseHandle(file);
 
@@ -576,14 +607,14 @@ static void test_CryptCATAdminAddRemoveCatalog(void)
         win_skip("Not enough rights\n");
         goto cleanup;
     }
-    todo_wine ok(hcatinfo != NULL, "CryptCATAdminAddCatalog failed %u\n", GetLastError());
+    todo_wine ok(hcatinfo != NULL, "CryptCATAdminAddCatalog failed %lu\n", GetLastError());
 
     info.cbStruct = sizeof(info);
     info.wszCatalogFile[0] = 0;
     ret = pCryptCATCatalogInfoFromContext(hcatinfo, &info, 0);
     todo_wine
     {
-    ok(ret, "CryptCATCatalogInfoFromContext failed %u\n", GetLastError());
+    ok(ret, "CryptCATCatalogInfoFromContext failed %lu\n", GetLastError());
     ok(info.wszCatalogFile[0] != 0, "Expected a filename\n");
     }
     WideCharToMultiByte(CP_ACP, 0, info.wszCatalogFile, -1, catfile, MAX_PATH, NULL, NULL);
@@ -594,11 +625,11 @@ static void test_CryptCATAdminAddRemoveCatalog(void)
     /* Set the file attributes so we can check what happens with them during the 'copy' */
     attrs = FILE_ATTRIBUTE_READONLY;
     ret = SetFileAttributesA(tmpfile, attrs);
-    ok(ret, "SetFileAttributesA failed : %u\n", GetLastError());
+    ok(ret, "SetFileAttributesA failed : %lu\n", GetLastError());
 
     /* winetest.cat will be created */
     hcatinfo = pCryptCATAdminAddCatalog(hcatadmin, tmpfileW, basenameW, 0);
-    ok(hcatinfo != NULL, "CryptCATAdminAddCatalog failed %u\n", GetLastError());
+    ok(hcatinfo != NULL, "CryptCATAdminAddCatalog failed %lu\n", GetLastError());
 
     lstrcpyA(catfilepath, catroot);
     lstrcatA(catfilepath, "\\{DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF}\\winetest.cat");
@@ -607,45 +638,45 @@ static void test_CryptCATAdminAddRemoveCatalog(void)
     todo_wine
     ok(attrs == FILE_ATTRIBUTE_SYSTEM ||
        attrs == (FILE_ATTRIBUTE_NOT_CONTENT_INDEXED | FILE_ATTRIBUTE_SYSTEM), /* Vista */
-       "File has wrong attributes : %08x\n", attrs);
+       "File has wrong attributes : %08lx\n", attrs);
 
     info.cbStruct = sizeof(info);
     info.wszCatalogFile[0] = 0;
     ret = pCryptCATCatalogInfoFromContext(hcatinfo, &info, 0);
-    ok(ret, "CryptCATCatalogInfoFromContext failed %u\n", GetLastError());
+    ok(ret, "CryptCATCatalogInfoFromContext failed %lu\n", GetLastError());
     ok(info.wszCatalogFile[0] != 0, "Expected a filename\n");
     WideCharToMultiByte(CP_ACP, 0, info.wszCatalogFile, -1, catfile, MAX_PATH, NULL, NULL);
     if ((p = strrchr(catfile, '\\'))) p++;
     ok(!lstrcmpA(basename, p), "Expected %s, got %s\n", basename, p);
 
     ret = pCryptCATAdminReleaseCatalogContext(hcatadmin, hcatinfo, 0);
-    ok(ret, "CryptCATAdminReleaseCatalogContext failed %u\n", GetLastError());
+    ok(ret, "CryptCATAdminReleaseCatalogContext failed %lu\n", GetLastError());
 
     /* Remove the catalog file with the unique name */
     ret = pCryptCATAdminRemoveCatalog(hcatadmin, catfileW, 0);
-    ok(ret, "CryptCATAdminRemoveCatalog failed %u\n", GetLastError());
+    ok(ret, "CryptCATAdminRemoveCatalog failed %lu\n", GetLastError());
 
     /* Remove the winetest.cat catalog file, first with the full path. This should not succeed
      * according to MSDN */
     ret = pCryptCATAdminRemoveCatalog(hcatadmin, info.wszCatalogFile, 0);
-    ok(ret, "CryptCATAdminRemoveCatalog failed %u\n", GetLastError());
+    ok(ret, "CryptCATAdminRemoveCatalog failed %lu\n", GetLastError());
     /* The call succeeded with the full path but the file is not removed */
     attrs = GetFileAttributesA(catfilepath);
     ok(attrs != INVALID_FILE_ATTRIBUTES, "Expected %s to exist\n", catfilepath);
     /* Given only the filename the file is removed */
     ret = pCryptCATAdminRemoveCatalog(hcatadmin, basenameW, 0);
-    ok(ret, "CryptCATAdminRemoveCatalog failed %u\n", GetLastError());
+    ok(ret, "CryptCATAdminRemoveCatalog failed %lu\n", GetLastError());
     attrs = GetFileAttributesA(catfilepath);
     ok(attrs == INVALID_FILE_ATTRIBUTES, "Expected %s to be removed\n", catfilepath);
 
 cleanup:
     ret = pCryptCATAdminReleaseContext(hcatadmin, 0);
-    ok(ret, "CryptCATAdminReleaseContext failed %u\n", GetLastError());
+    ok(ret, "CryptCATAdminReleaseContext failed %lu\n", GetLastError());
 
     /* Set the attributes so we can delete the file */
     attrs = FILE_ATTRIBUTE_NORMAL;
     ret = SetFileAttributesA(tmpfile, attrs);
-    ok(ret, "SetFileAttributesA failed %u\n", GetLastError());
+    ok(ret, "SetFileAttributesA failed %lu\n", GetLastError());
     DeleteFileA(tmpfile);
 }
 
@@ -674,7 +705,7 @@ static void test_catalog_properties(const char *catfile, int attributes, int mem
         trace("Creating the catalog file\n");
         if (!GetTempFileNameA(CURR_DIR, "cat", 0, catalog)) return;
         file = CreateFileA(catalog, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-        ok(file != INVALID_HANDLE_VALUE, "CreateFileA failed %u\n", GetLastError());
+        ok(file != INVALID_HANDLE_VALUE, "CreateFileA failed %lu\n", GetLastError());
         WriteFile(file, test_catalog, sizeof(test_catalog), &written, NULL);
         CloseHandle(file);
 
@@ -694,7 +725,7 @@ static void test_catalog_properties(const char *catfile, int attributes, int mem
         win_skip("CryptCATOpen on W2K can't handle catalog files with no members\n");
         return;
     }
-    ok(hcat != INVALID_HANDLE_VALUE, "CryptCATOpen failed %u\n", GetLastError());
+    ok(hcat != INVALID_HANDLE_VALUE, "CryptCATOpen failed %lu\n", GetLastError());
 
     m = pCryptCATEnumerateMember(NULL, NULL);
     ok(m == NULL, "CryptCATEnumerateMember succeeded\n");
@@ -702,12 +733,12 @@ static void test_catalog_properties(const char *catfile, int attributes, int mem
     m = NULL;
     while ((m = pCryptCATEnumerateMember(hcat, m)))
     {
-        ok(m->cbStruct == sizeof(CRYPTCATMEMBER), "unexpected size %u\n", m->cbStruct);
+        ok(m->cbStruct == sizeof(CRYPTCATMEMBER), "unexpected size %lu\n", m->cbStruct);
         todo_wine ok(!lstrcmpW(m->pwszReferenceTag, hashmeW), "unexpected tag\n");
         ok(!memcmp(&m->gSubjectType, &subject, sizeof(subject)), "guid differs\n");
-        ok(!m->fdwMemberFlags, "got %x expected 0\n", m->fdwMemberFlags);
-        ok(m->dwCertVersion == 0x200, "got %x expected 0x200\n", m->dwCertVersion);
-        ok(!m->dwReserved, "got %x expected 0\n", m->dwReserved);
+        ok(!m->fdwMemberFlags, "got %lx expected 0\n", m->fdwMemberFlags);
+        ok(m->dwCertVersion == 0x200, "got %lx expected 0x200\n", m->dwCertVersion);
+        ok(!m->dwReserved, "got %lx expected 0\n", m->dwReserved);
         ok(m->hReserved == NULL, "got %p expected NULL\n", m->hReserved);
 
         attr = pCryptCATEnumerateAttr(hcat, m, NULL);
@@ -762,7 +793,7 @@ static void test_create_catalog_file(void)
 
     /* Create the cdf file */
     file = CreateFileA(cdffileA, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    ok(file != INVALID_HANDLE_VALUE, "CreateFileA failed %u\n", GetLastError());
+    ok(file != INVALID_HANDLE_VALUE, "CreateFileA failed %lu\n", GetLastError());
     WriteFile(file, test_cdf, sizeof(test_cdf) - 1, &written, NULL);
     CloseHandle(file);
 
@@ -773,14 +804,14 @@ static void test_create_catalog_file(void)
     todo_wine
     {
     ok(catcdf != NULL, "CryptCATCDFOpen failed\n");
-    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", GetLastError());
     }
 
     ret = pCryptCATCDFClose(catcdf);
     todo_wine
     {
-    ok(ret, "Expected success, got FALSE with %d\n", GetLastError());
-    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+    ok(ret, "Expected success, got FALSE with %ld\n", GetLastError());
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", GetLastError());
     }
 
     attrs = GetFileAttributesA(catfileA);
@@ -862,15 +893,15 @@ static void create_cdf_file(const CHAR *filename, const CHAR *contents)
     DWORD written;
 
     file = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    ok(file != INVALID_HANDLE_VALUE, "CreateFileA failed %u\n", GetLastError());
+    ok(file != INVALID_HANDLE_VALUE, "CreateFileA failed %lu\n", GetLastError());
     WriteFile(file, contents, lstrlenA(contents), &written, NULL);
     CloseHandle(file);
 }
 
 #define CHECK_EXPECT(a, b) \
     do { \
-        ok(a == error_area, "Expected %08x, got %08x\n", a, error_area); \
-        ok(b == local_error, "Expected %08x, got %08x\n", b, local_error); \
+        ok(a == error_area, "Expected %08x, got %08lx\n", a, error_area); \
+        ok(b == local_error, "Expected %08x, got %08lx\n", b, local_error); \
     } while (0)
 
 /* Clear the variables (can't use 0) */
@@ -909,7 +940,7 @@ static void test_cdf_parsing(void)
     CHECK_EXPECT(CRYPTCAT_E_AREA_HEADER, CRYPTCAT_E_CDF_TAGNOTFOUND);
     ok(catcdf == NULL, "CryptCATCDFOpen succeeded\n");
     todo_wine
-    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", GetLastError());
     DeleteFileA(cdffileA);
     ok(!DeleteFileA(catfileA), "Didn't expect a catalog file to be created\n");
 
@@ -923,7 +954,7 @@ static void test_cdf_parsing(void)
     ok(catcdf == NULL, "CryptCATCDFOpen succeeded\n");
     todo_wine
     ok(GetLastError() == ERROR_SHARING_VIOLATION,
-        "Expected ERROR_SHARING_VIOLATION, got %d\n", GetLastError());
+        "Expected ERROR_SHARING_VIOLATION, got %ld\n", GetLastError());
     DeleteFileA(cdffileA);
 
     /* Header and member only */
@@ -938,7 +969,7 @@ static void test_cdf_parsing(void)
     ok(catcdf == NULL, "CryptCATCDFOpen succeeded\n");
     todo_wine
     ok(GetLastError() == ERROR_SHARING_VIOLATION,
-        "Expected ERROR_SHARING_VIOLATION, got %d\n", GetLastError());
+        "Expected ERROR_SHARING_VIOLATION, got %ld\n", GetLastError());
     DeleteFileA(cdffileA);
     ok(!DeleteFileA(catfileA), "Didn't expect a catalog file to be created\n");
 
@@ -953,7 +984,7 @@ static void test_cdf_parsing(void)
     ok(catcdf == NULL, "CryptCATCDFOpen succeeded\n");
     todo_wine
     ok(GetLastError() == ERROR_SHARING_VIOLATION,
-        "Expected ERROR_SHARING_VIOLATION, got %d\n", GetLastError());
+        "Expected ERROR_SHARING_VIOLATION, got %ld\n", GetLastError());
     DeleteFileA(cdffileA);
     ok(!DeleteFileA(catfileA), "Didn't expect a catalog file to be created\n");
 
@@ -968,7 +999,7 @@ static void test_cdf_parsing(void)
     todo_wine
     {
     ok(catcdf != NULL, "CryptCATCDFOpen failed\n");
-    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", GetLastError());
     }
     pCryptCATCDFClose(catcdf);
     DeleteFileA(cdffileA);
@@ -988,7 +1019,7 @@ static void test_cdf_parsing(void)
     todo_wine
     {
     ok(catcdf != NULL, "CryptCATCDFOpen failed\n");
-    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", GetLastError());
     }
     /* Loop through the members */
     CLEAR_EXPECT;
@@ -1015,7 +1046,7 @@ static void test_cdf_parsing(void)
     todo_wine
     {
     ok(catcdf != NULL, "CryptCATCDFOpen failed\n");
-    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", GetLastError());
     }
     /* Loop through the members */
     CLEAR_EXPECT;
@@ -1023,9 +1054,9 @@ static void test_cdf_parsing(void)
     catmembertag = NULL;
     while ((catmembertag = pCryptCATCDFEnumMembersByCDFTagEx(catcdf, catmembertag, cdf_callback, &catmember, FALSE, NULL))) ;
     ok(error_area == 0xffffffff || broken(error_area == CRYPTCAT_E_AREA_MEMBER) /* < win81 */,
-       "Expected area 0xffffffff, got %08x\n", error_area);
+       "Expected area 0xffffffff, got %08lx\n", error_area);
     ok(local_error == 0xffffffff || broken(local_error == CRYPTCAT_E_CDF_MEMBER_FILE_PATH) /* < win81 */,
-       "Expected error 0xffffffff, got %08x\n", local_error);
+       "Expected error 0xffffffff, got %08lx\n", local_error);
 
     pCryptCATCDFClose(catcdf);
     DeleteFileA(cdffileA);
@@ -1046,7 +1077,7 @@ static void test_cdf_parsing(void)
     todo_wine
     {
     ok(catcdf != NULL, "CryptCATCDFOpen failed\n");
-    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", GetLastError());
     }
     /* Loop through the members */
     SET_UNEXPECTED;
@@ -1071,7 +1102,7 @@ static void test_cdf_parsing(void)
     todo_wine
     {
     ok(catcdf != NULL, "CryptCATCDFOpen failed\n");
-    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", GetLastError());
     }
     /* Loop through the attributes */
     CLEAR_EXPECT;
@@ -1099,7 +1130,7 @@ static void test_cdf_parsing(void)
     todo_wine
     {
     ok(catcdf != NULL, "CryptCATCDFOpen failed\n");
-    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", GetLastError());
     }
     /* Loop through the members */
     SET_UNEXPECTED;
@@ -1131,7 +1162,7 @@ static void test_cdf_parsing(void)
     todo_wine
     {
     ok(catcdf != NULL, "CryptCATCDFOpen failed\n");
-    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %ld\n", GetLastError());
     }
     /* Loop through the members */
     SET_UNEXPECTED;
@@ -1235,26 +1266,26 @@ static void test_sip(void)
     info.cbSize = sizeof(SIP_SUBJECTINFO);
     info.pgSubjectType = &guid;
     ret = CryptSIPRetrieveSubjectGuid(NULL, file, info.pgSubjectType);
-    ok(ret, "CryptSIPRetrieveSubjectGuid failed (%x)\n", GetLastError());
+    ok(ret, "CryptSIPRetrieveSubjectGuid failed (%lx)\n", GetLastError());
 
     ret = pPutSignedDataMsg(&info, X509_ASN_ENCODING, &index, 4, (BYTE*)"test");
     ok(!ret, "CryptSIPPutSignedDataMsg succeeded\n");
     index = GetLastError();
-    ok(index == ERROR_PATH_NOT_FOUND, "GetLastError returned %x\n", index);
+    ok(index == ERROR_PATH_NOT_FOUND, "GetLastError returned %lx\n", index);
 
     info.hFile = file;
     info.pwsFileName = nameW;
     ret = pPutSignedDataMsg(&info, X509_ASN_ENCODING, &index, 4, (BYTE*)"test");
     ok(!ret, "CryptSIPPutSignedDataMsg succeeded\n");
     index = GetLastError();
-    todo_wine ok(index == ERROR_INVALID_PARAMETER, "GetLastError returned %x\n", index);
+    todo_wine ok(index == ERROR_INVALID_PARAMETER, "GetLastError returned %lx\n", index);
 
     info.hFile = INVALID_HANDLE_VALUE;
     info.pwsFileName = nameW;
     ret = pPutSignedDataMsg(&info, X509_ASN_ENCODING, &index, 4, (BYTE*)"test");
     ok(!ret, "CryptSIPPutSignedDataMsg succeeded\n");
     index = GetLastError();
-    ok(index == ERROR_SHARING_VIOLATION, "GetLastError returned %x\n", index);
+    ok(index == ERROR_SHARING_VIOLATION, "GetLastError returned %lx\n", index);
 
     CloseHandle(file);
     file= CreateFileW(nameW, GENERIC_READ|GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -1262,8 +1293,8 @@ static void test_sip(void)
     info.hFile = file;
     info.pwsFileName = (void*)0xdeadbeef;
     ret = pPutSignedDataMsg(&info, X509_ASN_ENCODING, &index, 4, (BYTE*)"test");
-    ok(ret, "CryptSIPPutSignedDataMsg failed (%x)\n", GetLastError());
-    ok(index == 0, "index = %x\n", index);
+    ok(ret, "CryptSIPPutSignedDataMsg failed (%lx)\n", GetLastError());
+    ok(index == 0, "index = %lx\n", index);
 
     CloseHandle(file);
     file= CreateFileW(nameW, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -1271,33 +1302,33 @@ static void test_sip(void)
     info.hFile = INVALID_HANDLE_VALUE;
     info.pwsFileName = nameW;
     ret = pPutSignedDataMsg(&info, X509_ASN_ENCODING, &index, 14, (BYTE*)"longer message");
-    ok(ret, "CryptSIPPutSignedDataMsg failed (%x)\n", GetLastError());
-    ok(index == 1, "index = %x\n", index);
+    ok(ret, "CryptSIPPutSignedDataMsg failed (%lx)\n", GetLastError());
+    ok(index == 1, "index = %lx\n", index);
 
     size = 0;
     encoding = 0xdeadbeef;
     ret = pGetSignedDataMsg(&info, &encoding, 0, &size, NULL);
-    ok(ret, "CryptSIPGetSignedDataMsg failed (%x)\n", GetLastError());
-    ok(encoding == 0xdeadbeef, "encoding = %x\n", encoding);
-    ok(size == 16, "size = %d\n", size);
+    ok(ret, "CryptSIPGetSignedDataMsg failed (%lx)\n", GetLastError());
+    ok(encoding == 0xdeadbeef, "encoding = %lx\n", encoding);
+    ok(size == 16, "size = %ld\n", size);
 
     ret = pGetSignedDataMsg(&info, &encoding, 0, &size, (BYTE*)buf);
-    ok(ret, "CryptSIPGetSignedDataMsg failed (%x)\n", GetLastError());
-    ok(encoding == (X509_ASN_ENCODING|PKCS_7_ASN_ENCODING), "encoding = %x\n", encoding);
-    ok(size == 8, "size = %d\n", size);
+    ok(ret, "CryptSIPGetSignedDataMsg failed (%lx)\n", GetLastError());
+    ok(encoding == (X509_ASN_ENCODING|PKCS_7_ASN_ENCODING), "encoding = %lx\n", encoding);
+    ok(size == 8, "size = %ld\n", size);
     ok(!memcmp(buf, "test\0\0\0\0", 8), "buf = %s\n", buf);
 
     size = 0;
     encoding = 0xdeadbeef;
     ret = pGetSignedDataMsg(&info, &encoding, 1, &size, NULL);
-    ok(ret, "CryptSIPGetSignedDataMsg failed (%x)\n", GetLastError());
-    ok(encoding == 0xdeadbeef, "encoding = %x\n", encoding);
-    ok(size == 24, "size = %d\n", size);
+    ok(ret, "CryptSIPGetSignedDataMsg failed (%lx)\n", GetLastError());
+    ok(encoding == 0xdeadbeef, "encoding = %lx\n", encoding);
+    ok(size == 24, "size = %ld\n", size);
 
     ret = pGetSignedDataMsg(&info, &encoding, 1, &size, (BYTE*)buf);
-    ok(ret, "CryptSIPGetSignedDataMsg failed (%x)\n", GetLastError());
-    ok(encoding == (X509_ASN_ENCODING|PKCS_7_ASN_ENCODING), "encoding = %x\n", encoding);
-    ok(size == 16, "size = %d\n", size);
+    ok(ret, "CryptSIPGetSignedDataMsg failed (%lx)\n", GetLastError());
+    ok(encoding == (X509_ASN_ENCODING|PKCS_7_ASN_ENCODING), "encoding = %lx\n", encoding);
+    ok(size == 16, "size = %ld\n", size);
     ok(!strcmp(buf, "longer message"), "buf = %s\n", buf);
 
     CryptReleaseContext(info.hProv, 0);
