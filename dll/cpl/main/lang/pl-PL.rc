@@ -48,8 +48,8 @@ BEGIN
     LTEXT "Krótko", -1, 35, 50, 30, 10
     LTEXT "Długo", -1, 140, 50, 30, 10
     CONTROL "", IDC_SLIDER_CLICK_LOCK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 50, 70, 17
-    PUSHBUTTON "&Ok", IDOK, 120, 75, 50, 15
-    PUSHBUTTON "&Anuluj", IDCANCEL, 175, 75, 50, 15
+    DEFPUSHBUTTON "Ok", IDOK, 120, 75, 50, 15
+    PUSHBUTTON "Anuluj", IDCANCEL, 175, 75, 50, 15
     LTEXT "&Dopasuj czas potrzebny do przytrzymania wciśniętego przycisku myszy lub urządzenia wskazującego przed „zablokowaniem” kliknięcia.", -1, 60, 15, 170, 30
     ICON IDI_LOCK_KEY, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
 END
@@ -99,8 +99,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Zapisz ten schemat kursorów jako:", -1, 5, 5, 144, 9
     EDITTEXT IDC_EDIT_SCHEME_NAME, 5, 15, 180, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
-    PUSHBUTTON "&Ok", IDOK, 60, 45, 50, 14
-    PUSHBUTTON "&Anuluj", IDCANCEL, 115, 45, 50, 14
+    DEFPUSHBUTTON "Ok", IDOK, 60, 45, 50, 14
+    PUSHBUTTON "Anuluj", IDCANCEL, 115, 45, 50, 14
 END
 
 IDD_PAGE_OPTION DIALOGEX 0, 0, 246, 228

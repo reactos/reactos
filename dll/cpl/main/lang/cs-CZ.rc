@@ -46,7 +46,7 @@ BEGIN
     LTEXT "Krátká", -1, 35, 50, 30, 10
     LTEXT "Dlouhá", -1, 140, 50, 30, 10
     CONTROL "", IDC_SLIDER_CLICK_LOCK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 50, 70, 17
-    PUSHBUTTON "Ok", IDOK, 120, 75, 50, 15
+    DEFPUSHBUTTON "Ok", IDOK, 120, 75, 50, 15
     PUSHBUTTON "Storno", IDCANCEL, 175, 75, 50, 15
     LTEXT "&Nastavte dobu, po kterou musíte držet tlačítko myši stisknuté, než se funkce ClickLock aktivuje.", -1, 60, 15, 170, 30
     ICON IDI_LOCK_KEY, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
@@ -97,7 +97,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Uložit toto schéma jako:", -1, 5, 5, 100, 10
     EDITTEXT IDC_EDIT_SCHEME_NAME, 5, 15, 180, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
-    PUSHBUTTON "Ok", IDOK, 60, 45, 50, 15
+    DEFPUSHBUTTON "Ok", IDOK, 60, 45, 50, 15
     PUSHBUTTON "Storno", IDCANCEL, 115, 45, 50, 15
 END
 
