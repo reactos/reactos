@@ -135,7 +135,10 @@ typedef enum {
   PowerActionShutdown,
   PowerActionShutdownReset,
   PowerActionShutdownOff,
-  PowerActionWarmEject
+  PowerActionWarmEject,
+#if (NTDDI_VERSION >= NTDDI_WINTHRESHOLD) || defined(__REACTOS__)
+  PowerActionDisplayOff
+#endif
 } POWER_ACTION, *PPOWER_ACTION;
 
 typedef enum _DEVICE_POWER_STATE {
@@ -163,7 +166,23 @@ typedef enum _POWER_STATE_TYPE {
   DevicePowerState
 } POWER_STATE_TYPE, *PPOWER_STATE_TYPE;
 
-#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_VISTA) || defined(__REACTOS__)
+typedef enum _POWER_POLICY_DEVICE_TYPE
+{
+  PolicyDeviceSystemButton = 0,
+  PolicyDeviceThermalZone,
+  PolicyDeviceBattery,
+  PolicyDeviceMemory,
+  PolicyInitiatePowerActionAPI,
+  PolicySetPowerStateAPI,
+  PolicyImmediateDozeS4,
+  PolicySystemIdle,
+  PolicyDeviceWakeAlarm,
+  PolicyDeviceFan,
+  PolicyCsBatterySaver,
+  PolicyDeviceMax
+} POWER_POLICY_DEVICE_TYPE;
+
 typedef struct _SYSTEM_POWER_STATE_CONTEXT {
   _ANONYMOUS_UNION union {
     _ANONYMOUS_STRUCT struct {
@@ -180,7 +199,7 @@ typedef struct _SYSTEM_POWER_STATE_CONTEXT {
 } SYSTEM_POWER_STATE_CONTEXT, *PSYSTEM_POWER_STATE_CONTEXT;
 #endif
 
-#if (NTDDI_VERSION >= NTDDI_WIN7)
+#if (NTDDI_VERSION >= NTDDI_WIN7) || defined(__REACTOS__)
 typedef struct _COUNTED_REASON_CONTEXT {
   ULONG Version;
   ULONG Flags;
@@ -194,6 +213,40 @@ typedef struct _COUNTED_REASON_CONTEXT {
     UNICODE_STRING SimpleString;
   } DUMMYUNIONNAME;
 } COUNTED_REASON_CONTEXT, *PCOUNTED_REASON_CONTEXT;
+#endif
+
+//
+// Thermal Information (Extended version)
+//
+#if (NTDDI_VERSION >= NTDDI_WINBLUE) || defined(__REACTOS__)
+typedef struct _THERMAL_INFORMATION_EX
+{
+    ULONG ThermalStamp;
+    ULONG ThermalConstant1;
+    ULONG ThermalConstant2;
+    ULONG SamplingPeriod;
+    ULONG CurrentTemperature;
+    ULONG PassiveTripPoint;
+    ULONG CriticalTripPoint;
+    UCHAR ActiveTripPointCount;
+    ULONG ActiveTripPoint[10];
+    ULONG S4TransitionTripPoint;
+    ULONG MinimumThrottle;
+} THERMAL_INFORMATION_EX, *PTHERMAL_INFORMATION_EX;
+
+//
+// Thermal zone policy
+//
+typedef struct _THERMAL_POLICY
+{
+    ULONG Version;
+    BOOLEAN WaitForUpdate;
+    BOOLEAN Hibernate;
+    BOOLEAN Critical;
+    ULONG ActivationReasons;
+    ULONG PassiveLimit;
+    ULONG ActiveLevel;
+} THERMAL_POLICY, *PTHERMAL_POLICY;
 #endif
 
 #define IOCTL_QUERY_DEVICE_POWER_STATE  \
@@ -320,6 +373,15 @@ typedef struct _POWER_PLATFORM_INFORMATION
 {
   BOOLEAN AoAc;
 } POWER_PLATFORM_INFORMATION, *PPOWER_PLATFORM_INFORMATION;
+
+typedef struct _ADMINISTRATOR_POWER_POLICY {
+  SYSTEM_POWER_STATE MinSleep;
+  SYSTEM_POWER_STATE MaxSleep;
+  ULONG MinVideoTimeout;
+  ULONG MaxVideoTimeout;
+  ULONG MinSpindownTimeout;
+  ULONG MaxSpindownTimeout;
+} ADMINISTRATOR_POWER_POLICY, *PADMINISTRATOR_POWER_POLICY;
 
 #if (NTDDI_VERSION >= NTDDI_WINXP) || !defined(_BATCLASS_)
 typedef struct {
