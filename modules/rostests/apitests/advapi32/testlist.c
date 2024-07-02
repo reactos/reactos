@@ -31,7 +31,9 @@ const struct test winetest_testlist[] =
     { "Hash", func_Hash },
     { "HKEY_CLASSES_ROOT", func_HKEY_CLASSES_ROOT },
     { "IsTextUnicode" , func_IsTextUnicode },
+#ifndef _M_AMD64 // FIXME: Too slow and doesn't provide much value, see ROSTESTS-392
     { "LockServiceDatabase" , func_LockServiceDatabase },
+#endif
     { "QueryServiceConfig2", func_QueryServiceConfig2 },
     { "RegCreateKeyEx", func_RegCreateKeyEx },
     { "RegEnumKey", func_RegEnumKey },
