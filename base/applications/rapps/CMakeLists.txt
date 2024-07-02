@@ -42,8 +42,10 @@ list(APPEND SOURCE
     ${ZLIB_SOURCE}
 )
 
-add_definitions(
-    -DUSE_CERT_PINNING)
+# USE_CERT_PINNING is disabled, not sustainable, because it breaks remotely every few years
+# and requires us to change our hard-codes in the binary recurrently.
+#add_definitions(
+#    -DUSE_CERT_PINNING)
 
 file(GLOB_RECURSE rapps_rc_deps res/*.*)
 add_rc_deps(rapps.rc ${rapps_rc_deps})
