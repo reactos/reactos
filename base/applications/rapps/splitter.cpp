@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Applications Manager
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/rapps/splitter.cpp
  * PURPOSE:         SplitterBar functions
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  */
@@ -131,7 +130,7 @@ CreateHSplitBar(HWND hwnd)
     WndClass.hCursor       = LoadCursor(0, IDC_SIZENS);
     WndClass.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
 
-    if (RegisterClassExW(&WndClass) == (ATOM) 0)
+    if (RegisterClassExW(&WndClass) == (ATOM)0)
     {
         /* TODO: Show error message */
         return FALSE;
@@ -271,7 +270,7 @@ CreateVSplitBar(HWND hwnd)
     WndClass.hCursor       = LoadCursor(0, IDC_SIZEWE);
     WndClass.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
 
-    if (RegisterClassExW(&WndClass) == (ATOM) 0)
+    if (RegisterClassExW(&WndClass) == (ATOM)0)
     {
         /* TODO: Show error message */
         return FALSE;

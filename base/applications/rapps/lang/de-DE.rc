@@ -191,12 +191,10 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD2 "Paket konnte nicht geladen werden! Prüfen Sie Ihre Internetverbindung!"
     IDS_UNABLE_TO_REMOVE "Konnte die Daten nicht aus der Registry löschen!"
     IDS_UNABLE_TO_INSTALL "Paket konnte nicht installiert werden!"
-    IDS_UNABLE_TO_QUERY_CERT "Zertifikatsinformationen können nicht abgerufen werden.\n\nMöchten Sie trotzdem fortfahren?"
     IDS_INTEG_CHECK_TITLE "Integritätsprüfung…"
     IDS_INTEG_CHECK_FAIL "Das Paket hat die Integritätsprüfung nicht bestanden. Mögliche Ursachen sind Übertragungsfehler, Datenbankfehler oder Manipulation durch einen Angreifer. Sie sollten die Software nicht ausführen."
     IDS_INTERRUPTED_DOWNLOAD "Übertragung unterbrochen. Prüfen Sie Ihre Internetverbindung!"
     IDS_UNABLE_TO_WRITE "Schreibfehler. Prüfen Sie die Kapazität des Datenträgers!"
-    IDS_MISMATCH_CERT_INFO "Das verwendete Zertifikat ist unbekannt:\nTitel: %s\nAussteller: %s\nMöchten Sie trotzdem fortfahren?"
 END
 
 STRINGTABLE
@@ -213,7 +211,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE_OPENSOURCE "Open Source"
+    IDS_LICENSE_OPENSOURCE "quelloffen"
     IDS_LICENSE_FREEWARE "Freeware"
     IDS_LICENSE_TRIAL "Trial/Demo"
 END
