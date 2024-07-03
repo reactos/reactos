@@ -17,7 +17,7 @@ BEGIN
     END
     POPUP "&Programok"
     BEGIN
-        MENUITEM "&Telepítés\tCtrl+Enter", ID_INSTALL
+        MENUITEM "Telep&ítés\tCtrl+Enter", ID_INSTALL
         MENUITEM "&Eltávolítás\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Módosítás", ID_MODIFY
         MENUITEM SEPARATOR
@@ -47,7 +47,7 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Telepítés\tCtrl+Enter", ID_INSTALL
+        MENUITEM "Telep&ítés\tCtrl+Enter", ID_INSTALL
         MENUITEM "&Eltávolítás\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Módosítás", ID_MODIFY
         MENUITEM SEPARATOR
