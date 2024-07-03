@@ -19,9 +19,9 @@ BEGIN
     BEGIN
         MENUITEM "&Inštalovať\tCtrl+Enter", ID_INSTALL
         MENUITEM "O&dinštalovať\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "&Zmeniť", ID_MODIFY
+        MENUITEM "Z&meniť", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "Odst&rániť z Registrov", ID_REGREMOVE
+        MENUITEM "Odstrániť z R&egistrov", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "&Obnoviť\tF5", ID_REFRESH
         MENUITEM SEPARATOR
@@ -49,9 +49,9 @@ BEGIN
     BEGIN
         MENUITEM "&Inštalovať\tCtrl+Enter", ID_INSTALL
         MENUITEM "O&dinštalovať\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "&Zmeniť", ID_MODIFY
+        MENUITEM "Z&meniť", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "Odst&rániť z Registrov", ID_REGREMOVE
+        MENUITEM "Odstrániť z R&egistrov", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "&Obnoviť\tF5", ID_REFRESH
         MENUITEM SEPARATOR

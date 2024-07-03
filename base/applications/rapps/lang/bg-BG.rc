@@ -21,7 +21,7 @@ BEGIN
         MENUITEM "&Махане\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Промяна", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "Пре&махване от регистъра", ID_REGREMOVE
+        MENUITEM "Пр&емахване от регистъра", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "О&пресняване\tF5", ID_REFRESH
         MENUITEM SEPARATOR
@@ -51,7 +51,7 @@ BEGIN
         MENUITEM "&Махане\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Промяна", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "Пре&махване от регистъра", ID_REGREMOVE
+        MENUITEM "Пр&емахване от регистъра", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "О&пресняване\tF5", ID_REFRESH
         MENUITEM SEPARATOR

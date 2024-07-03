@@ -19,7 +19,7 @@ BEGIN
     END
     POPUP "&Programe"
     BEGIN
-        MENUITEM "Instalea&ză\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Instalează\tCtrl+Enter", ID_INSTALL
         MENUITEM "&Dezinstalează\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modifică", ID_MODIFY
         MENUITEM SEPARATOR
@@ -27,7 +27,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Împ&rospătează\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "&Actualizează baza de date\tCtrl+F5", ID_RESETDB
+        MENUITEM "Ac&tualizează baza de date\tCtrl+F5", ID_RESETDB
     END
     POPUP "Aj&utor"
     BEGIN
@@ -49,7 +49,7 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "Instalea&ză\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Instalează\tCtrl+Enter", ID_INSTALL
         MENUITEM "&Dezinstalează\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modifică", ID_MODIFY
         MENUITEM SEPARATOR
@@ -57,7 +57,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Împ&rospătează\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "&Actualizează baza de date\tCtrl+F5", ID_RESETDB
+        MENUITEM "Ac&tualizează baza de date\tCtrl+F5", ID_RESETDB
     END
 END
 

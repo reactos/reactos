@@ -24,7 +24,7 @@ BEGIN
         MENUITEM "&Désinstaller\tCtrl+Suppr", ID_UNINSTALL
         MENUITEM "&Modifier", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Supprimer du registre", ID_REGREMOVE
+        MENUITEM "Supprim&er du registre", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "&Rafraîchir\tF5", ID_REFRESH
         MENUITEM SEPARATOR
@@ -54,7 +54,7 @@ BEGIN
         MENUITEM "&Désinstaller\tCtrl+Suppr", ID_UNINSTALL
         MENUITEM "&Modifier", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Supprimer du registre", ID_REGREMOVE
+        MENUITEM "Supprim&er du registre", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "&Rafraîchir\tF5", ID_REFRESH
         MENUITEM SEPARATOR

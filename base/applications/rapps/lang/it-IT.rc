@@ -20,10 +20,10 @@ BEGIN
     POPUP "&Programmi"
     BEGIN
         MENUITEM "&Installa\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Rimuovi\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "Rim&uovi\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modifica", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Cancella dal registro", ID_REGREMOVE
+        MENUITEM "Canc&ella dal registro", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "&Aggiorna\tF5", ID_REFRESH
         MENUITEM SEPARATOR
@@ -32,7 +32,7 @@ BEGIN
     POPUP "?"
     BEGIN
         MENUITEM "Guida\tF1", ID_HELP, GRAYED
-        MENUITEM "Informazioni", ID_ABOUT
+        MENUITEM "&Informazioni", ID_ABOUT
     END
 END
 
@@ -50,10 +50,10 @@ BEGIN
     POPUP "popup"
     BEGIN
         MENUITEM "&Installa\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Rimuovi\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "Rim&uovi\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modifica", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Cancella dal registro", ID_REGREMOVE
+        MENUITEM "Canc&ella dal registro", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "&Aggiorna\tF5", ID_REFRESH
         MENUITEM SEPARATOR

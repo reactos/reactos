@@ -21,9 +21,9 @@ BEGIN
         MENUITEM "&Avinstallere\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Endre", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Remove from Registry", ID_REGREMOVE
+        MENUITEM "R&emove from Registry", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Oppdatere\tF5", ID_REFRESH
+        MENUITEM "Oppdate&r\tF5", ID_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
@@ -51,9 +51,9 @@ BEGIN
         MENUITEM "&Avinstallere\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Endre", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Remove from Registry", ID_REGREMOVE
+        MENUITEM "R&emove from Registry", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Oppdater\tF5", ID_REFRESH
+        MENUITEM "Oppdate&r\tF5", ID_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
