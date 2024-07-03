@@ -23,7 +23,7 @@ BEGIN
         MENUITEM "アンインストール(&U)\tCtrl+Del", ID_UNINSTALL
         MENUITEM "変更(&M)", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "レジストリから削除(&R)\tF5", ID_REGREMOVE
+        MENUITEM "レジストリから削除(&E)\tF5", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "更新(&R)", ID_REFRESH
         MENUITEM SEPARATOR
@@ -32,7 +32,7 @@ BEGIN
     POPUP "ヘルプ"
     BEGIN
         MENUITEM "ヘルプ\tF1", ID_HELP, GRAYED
-        MENUITEM "バージョン情報", ID_ABOUT
+        MENUITEM "バージョン情報(&A)", ID_ABOUT
     END
 END
 
@@ -53,7 +53,7 @@ BEGIN
         MENUITEM "アンインストール(&U)\tCtrl+Del", ID_UNINSTALL
         MENUITEM "変更(&M)", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "レジストリから削除(&R)\tF5", ID_REGREMOVE
+        MENUITEM "レジストリから削除(&E)\tF5", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "更新(&R)", ID_REFRESH
         MENUITEM SEPARATOR
