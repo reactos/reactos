@@ -52,7 +52,7 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Установить\tCtrl+Enter", ID_INSTALL
+        MENUITEM "У&становить\tCtrl+Enter", ID_INSTALL
         MENUITEM "&Удалить\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Изменить", ID_MODIFY
         MENUITEM SEPARATOR
