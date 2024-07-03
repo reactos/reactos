@@ -11,7 +11,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-    POPUP "&Plik"
+    POPUP "Pli&k"
     BEGIN
         MENUITEM "&Ustawienia", ID_SETTINGS
         MENUITEM SEPARATOR
@@ -20,10 +20,10 @@ BEGIN
     POPUP "&Programy"
     BEGIN
         MENUITEM "&Instaluj\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Odinstaluj\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "Odinstal&uj\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modyfikuj", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Usuń z rejestru", ID_REGREMOVE
+        MENUITEM "Usuń z r&ejestru", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "O&dśwież\tF5", ID_REFRESH
         MENUITEM SEPARATOR
@@ -50,10 +50,10 @@ BEGIN
     POPUP "popup"
     BEGIN
         MENUITEM "&Instaluj\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Odinstaluj\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "Odinstal&uj\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modyfikuj", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Usuń z rejestru", ID_REGREMOVE
+        MENUITEM "Usuń z r&ejestru", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "&Odśwież\tF5", ID_REFRESH
         MENUITEM SEPARATOR
