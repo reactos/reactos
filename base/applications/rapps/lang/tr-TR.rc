@@ -27,7 +27,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Yenile\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Uyg&ulama Veri Tabanını Yenile\tCtrl+F5", ID_RESETDB
+        MENUITEM "Uygulama Veri &Tabanını Yenile\tCtrl+F5", ID_RESETDB
     END
     POPUP "&Yardım"
     BEGIN
@@ -57,7 +57,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Yenile\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Uy&gulama Veri Tabanını Yenile\tCtrl+F5", ID_RESETDB
+        MENUITEM "Uygulama Veri &Tabanını Yenile\tCtrl+F5", ID_RESETDB
     END
 END
 
