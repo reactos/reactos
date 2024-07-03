@@ -1052,6 +1052,7 @@ VOID COpenWithDialog::Accept()
         if (IsDlgButtonChecked(m_hDialog, 14003) == BST_CHECKED)
         {
             m_pAppList->SetDefaultHandler(pApp, m_pInfo->pcszFile);
+            // FIXME: Update DefaultIcon registry
             SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSHNOWAIT, NULL, NULL);
         }
 
