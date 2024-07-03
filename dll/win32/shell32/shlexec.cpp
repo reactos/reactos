@@ -1900,9 +1900,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
     else
     {
         DWORD l = strlenW(sei_tmp.lpFile) + 1;
-        if (l > dwApplicationNameLen)
-            dwApplicationNameLen = l + 1;
-
+        if(l > dwApplicationNameLen) dwApplicationNameLen = l + 1;
         wszApplicationName.Allocate(dwApplicationNameLen);
         memcpy(wszApplicationName, sei_tmp.lpFile, l * sizeof(WCHAR));
 
@@ -2049,8 +2047,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
     {
         CHeapPtr<WCHAR, CLocalAllocator> buf;
         DWORD size = MAX_PATH;
-        buf.Allocate(size);
-        if (!buf || FAILED(PathCreateFromUrlW(sei_tmp.lpFile, buf, &size, 0)))
+        if (!buf.Allocate(size) || FAILED(PathCreateFromUrlW(sei_tmp.lpFile, buf, &size, 0)))
             return SE_ERR_OOM;
 
         wszApplicationName.Attach(buf.Detach());
@@ -2200,8 +2197,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
     {
         WCHAR wExec[MAX_PATH];
         CHeapPtr<WCHAR, CLocalAllocator> lpQuotedFile;
-        lpQuotedFile.Allocate(strlenW(lpFile) + 3);
-        if (lpQuotedFile)
+        if (lpQuotedFile.Allocate(strlenW(lpFile) + 3))
         {
             retval = SHELL_FindExecutable(sei_tmp.lpDirectory, L"explorer",
                                           L"open", wExec, MAX_PATH,
