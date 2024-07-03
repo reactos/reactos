@@ -1,0 +1,35 @@
+TESTDLL   = comctl32.dll
+IMPORTS   = ole32 user32 gdi32 advapi32
+
+C_SRCS = \
+	animate.c \
+	button.c \
+	combo.c \
+	datetime.c \
+	dpa.c \
+	edit.c \
+	header.c \
+	imagelist.c \
+	ipaddress.c \
+	listbox.c \
+	listview.c \
+	misc.c \
+	monthcal.c \
+	mru.c \
+	pager.c \
+	progress.c \
+	propsheet.c \
+	rebar.c \
+	static.c \
+	status.c \
+	subclass.c \
+	syslink.c \
+	tab.c \
+	taskdialog.c \
+	toolbar.c \
+	tooltips.c \
+	trackbar.c \
+	treeview.c \
+	updown.c
+
+RC_SRCS = rsrc.rc

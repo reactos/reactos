@@ -20,9 +20,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#ifndef __REACTOS__
 #define STRICT
-#endif
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include "commctrl.h"

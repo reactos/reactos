@@ -29,10 +29,6 @@
 #include "v6util.h"
 #include "msg.h"
 
-#ifdef __REACTOS__
-#define WM_KEYF1 0x004d
-#endif
-
 #define WM_TD_CALLBACK (WM_APP) /* Custom dummy message to wrap callback notifications */
 
 #define NUM_MSG_SEQUENCES     1

@@ -26,10 +26,6 @@
 
 #include "wine/test.h"
 
-#ifdef __REACTOS__
-#include <reactos/undocuser.h>
-#endif
-
 static HWND parenthwnd;
 static HWND sheethwnd;
 
@@ -1168,10 +1164,8 @@ static void test_bad_control_class(void)
     psh.hwndParent = GetDesktopWindow();
     U3(psh).phpage = &hpsp;
 
-#ifndef __REACTOS__ /* FIXME: Inspect why this causes a hang */
     ret = pPropertySheetA(&psh);
     ok(ret == 0, "got %ld\n", ret);
-#endif
 
     /* Need to recreate hpsp otherwise the test fails under Windows */
     hpsp = pCreatePropertySheetPageA(&psp);
