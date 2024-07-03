@@ -1673,6 +1673,19 @@ FileTypesDlg_OnItemChanging(HWND hwndDlg, PFILE_TYPE_ENTRY pEntry)
         EnableWindow(GetDlgItem(hwndDlg, IDC_FILETYPES_DELETE), TRUE);
 }
 
+static VOID
+FileTypesDlg_UpdateAppInfo(HWND hwndDlg, PFILE_TYPE_ENTRY pEntry)
+{
+    pEntry->ProgramPath[0] = pEntry->AppName[0] = UNICODE_NULL;
+
+    DWORD cch = _countof(pEntry->ProgramPath);
+    if (S_OK == AssocQueryStringW(ASSOCF_INIT_IGNOREUNKNOWN, ASSOCSTR_EXECUTABLE,
+                                  pEntry->FileExtension, NULL, pEntry->ProgramPath, &cch))
+    {
+        QueryFileDescription(pEntry->ProgramPath, pEntry->AppName, _countof(pEntry->AppName));
+    }
+}
+
 // IDD_FOLDER_OPTIONS_FILETYPES
 INT_PTR CALLBACK
 FolderOptionsFileTypesDlg(
@@ -1719,10 +1732,15 @@ FolderOptionsFileTypesDlg(
                     if (pEntry)
                     {
                         ZeroMemory(&Info, sizeof(Info));
-                        Info.oaifInFlags = OAIF_ALLOW_REGISTRATION | OAIF_REGISTER_EXT;
+                        Info.oaifInFlags = OAIF_FORCE_REGISTRATION | OAIF_REGISTER_EXT;
                         Info.pcszFile = pEntry->FileExtension;
                         Info.pcszClass = NULL;
-                        SHOpenWithDialog(hwndDlg, &Info);
+                        if (SHOpenWithDialog(hwndDlg, &Info) == S_OK)
+                        {
+                            FileTypesDlg_UpdateAppInfo(hwndDlg, pEntry);
+                            FileTypesDlg_OnItemChanging(hwndDlg, pEntry);
+                            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                        }
                     }
                     break;
 

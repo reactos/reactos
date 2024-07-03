@@ -1049,8 +1049,11 @@ VOID COpenWithDialog::Accept()
     if (pApp)
     {
         /* Set programm as default handler */
-        if (SendDlgItemMessage(m_hDialog, 14003, BM_GETCHECK, 0, 0) == BST_CHECKED)
+        if (IsDlgButtonChecked(m_hDialog, 14003) == BST_CHECKED)
+        {
             m_pAppList->SetDefaultHandler(pApp, m_pInfo->pcszFile);
+            SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSHNOWAIT, NULL, NULL);
+        }
 
         /* Execute program */
         if (m_pInfo->oaifInFlags & OAIF_EXEC)
