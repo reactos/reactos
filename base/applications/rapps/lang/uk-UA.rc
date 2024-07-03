@@ -21,7 +21,7 @@ BEGIN
     POPUP "&Програми"
     BEGIN
         MENUITEM "&Встановити\tCtrl+Enter", ID_INSTALL
-        MENUITEM "Вид&алити\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "В&идалити\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Змінити", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "Вида&лити з реєстру", ID_REGREMOVE
