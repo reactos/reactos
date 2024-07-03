@@ -21,9 +21,9 @@ BEGIN
         MENUITEM "&Avinstallera\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Ändra", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Ta bort från Registret", ID_REGREMOVE
+        MENUITEM "Ta bort från R&egistret", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Uppdatera\tF5", ID_REFRESH
+        MENUITEM "Uppdate&ra\tF5", ID_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
@@ -51,9 +51,9 @@ BEGIN
         MENUITEM "&Avinstallera\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Ändra", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Ta bort från Registret", ID_REGREMOVE
+        MENUITEM "Ta bort från R&egistret", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Uppdatera\tF5", ID_REFRESH
+        MENUITEM "Uppdate&ra\tF5", ID_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
