@@ -1842,10 +1842,8 @@ static WCHAR *expand_environment( const WCHAR *str )
 
     len = ExpandEnvironmentStringsW(str, buf, len);
     if (!len)
-    {
-        HeapFree(GetProcessHeap(), 0, buf);
         return NULL;
-    }
+
     return buf.Detach();
 }
 
