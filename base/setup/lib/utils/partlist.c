@@ -2432,59 +2432,39 @@ IsSamePrimaryLayoutEntry(
 //        PartitionInfo->PartitionType == PartEntry->PartitionType
 }
 
+
+/**
+ * @brief
+ * Counts the number of partitioned disk regions in a given partition list.
+ **/
 static
 ULONG
-GetPrimaryPartitionCount(
-    IN PDISKENTRY DiskEntry)
+GetPartitionCount(
+    _In_ PLIST_ENTRY PartListHead)
 {
     PLIST_ENTRY Entry;
     PPARTENTRY PartEntry;
     ULONG Count = 0;
 
-    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
-    {
-        DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
-        return 0;
-    }
-
-    for (Entry = DiskEntry->PrimaryPartListHead.Flink;
-         Entry != &DiskEntry->PrimaryPartListHead;
+    for (Entry = PartListHead->Flink;
+         Entry != PartListHead;
          Entry = Entry->Flink)
     {
         PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
         if (PartEntry->IsPartitioned)
-            Count++;
+            ++Count;
     }
 
     return Count;
 }
 
-static
-ULONG
-GetLogicalPartitionCount(
-    IN PDISKENTRY DiskEntry)
-{
-    PLIST_ENTRY ListEntry;
-    PPARTENTRY PartEntry;
-    ULONG Count = 0;
+#define GetPrimaryPartitionCount(DiskEntry) \
+    GetPartitionCount(&(DiskEntry)->PrimaryPartListHead)
 
-    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
-    {
-        DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
-        return 0;
-    }
+#define GetLogicalPartitionCount(DiskEntry) \
+    (((DiskEntry)->DiskStyle == PARTITION_STYLE_MBR) \
+        ? GetPartitionCount(&(DiskEntry)->LogicalPartListHead) : 0)
 
-    for (ListEntry = DiskEntry->LogicalPartListHead.Flink;
-         ListEntry != &DiskEntry->LogicalPartListHead;
-         ListEntry = ListEntry->Flink)
-    {
-        PartEntry = CONTAINING_RECORD(ListEntry, PARTENTRY, ListEntry);
-        if (PartEntry->IsPartitioned)
-            Count++;
-    }
-
-    return Count;
-}
 
 static
 BOOLEAN
@@ -2727,73 +2707,53 @@ UpdateDiskLayout(
 #endif
 }
 
+/**
+ * @brief
+ * Retrieves, if any, the unpartitioned disk region that is adjacent
+ * (next or previous) to the specified partition.
+ *
+ * @param[in]   PartEntry
+ * Partition from where to find the adjacent unpartitioned region.
+ *
+ * @param[in]   Direction
+ * TRUE or FALSE to search the next or previous region, respectively.
+ *
+ * @return  The adjacent unpartitioned region, if it exists, or NULL.
+ **/
 static
 PPARTENTRY
-GetPrevUnpartitionedEntry(
-    IN PPARTENTRY PartEntry)
+GetAdjUnpartitionedEntry(
+    _In_ PPARTENTRY PartEntry,
+    _In_ BOOLEAN Direction)
 {
     PDISKENTRY DiskEntry = PartEntry->DiskEntry;
-    PPARTENTRY PrevPartEntry;
-    PLIST_ENTRY ListHead;
+    PLIST_ENTRY ListHead, AdjEntry;
 
-    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+    /* In case of MBR disks only, check the logical partitions if necessary */
+    if ((DiskEntry->DiskStyle == PARTITION_STYLE_MBR) &&
+        PartEntry->LogicalPartition)
     {
-        DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
-        return NULL;
+        ListHead = &DiskEntry->LogicalPartListHead;
+    }
+    else
+    {
+        ListHead = &DiskEntry->PrimaryPartListHead;
     }
 
-    if (PartEntry->LogicalPartition)
-        ListHead = &DiskEntry->LogicalPartListHead;
+    if (Direction)
+        AdjEntry = PartEntry->ListEntry.Flink; // Next region.
     else
-        ListHead = &DiskEntry->PrimaryPartListHead;
+        AdjEntry = PartEntry->ListEntry.Blink; // Previous region.
 
-    if (PartEntry->ListEntry.Blink != ListHead)
+    if (AdjEntry != ListHead)
     {
-        PrevPartEntry = CONTAINING_RECORD(PartEntry->ListEntry.Blink,
-                                          PARTENTRY,
-                                          ListEntry);
-        if (!PrevPartEntry->IsPartitioned)
+        PartEntry = CONTAINING_RECORD(AdjEntry, PARTENTRY, ListEntry);
+        if (!PartEntry->IsPartitioned)
         {
-            ASSERT(PrevPartEntry->PartitionType == PARTITION_ENTRY_UNUSED);
-            return PrevPartEntry;
+            ASSERT(PartEntry->PartitionType == PARTITION_ENTRY_UNUSED);
+            return PartEntry;
         }
     }
-
-    return NULL;
-}
-
-static
-PPARTENTRY
-GetNextUnpartitionedEntry(
-    IN PPARTENTRY PartEntry)
-{
-    PDISKENTRY DiskEntry = PartEntry->DiskEntry;
-    PPARTENTRY NextPartEntry;
-    PLIST_ENTRY ListHead;
-
-    if (DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
-    {
-        DPRINT("GPT-partitioned disk detected, not currently supported by SETUP!\n");
-        return NULL;
-    }
-
-    if (PartEntry->LogicalPartition)
-        ListHead = &DiskEntry->LogicalPartListHead;
-    else
-        ListHead = &DiskEntry->PrimaryPartListHead;
-
-    if (PartEntry->ListEntry.Flink != ListHead)
-    {
-        NextPartEntry = CONTAINING_RECORD(PartEntry->ListEntry.Flink,
-                                          PARTENTRY,
-                                          ListEntry);
-        if (!NextPartEntry->IsPartitioned)
-        {
-            ASSERT(NextPartEntry->PartitionType == PARTITION_ENTRY_UNUSED);
-            return NextPartEntry;
-        }
-    }
-
     return NULL;
 }
 
@@ -3094,8 +3054,8 @@ DeletePartition(
     /* Adjust the unpartitioned disk space entries */
 
     /* Get pointer to previous and next unpartitioned entries */
-    PrevPartEntry = GetPrevUnpartitionedEntry(PartEntry);
-    NextPartEntry = GetNextUnpartitionedEntry(PartEntry);
+    PrevPartEntry = GetAdjUnpartitionedEntry(PartEntry, FALSE);
+    NextPartEntry = GetAdjUnpartitionedEntry(PartEntry, TRUE);
 
     if (PrevPartEntry != NULL && NextPartEntry != NULL)
     {
