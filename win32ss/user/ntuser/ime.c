@@ -1797,10 +1797,7 @@ NtUserQueryInputContext(HIMC hIMC, DWORD dwType)
     UserEnterExclusive();
 
     if (!IS_IMM_MODE())
-    {
-        ERR("!IS_IMM_MODE()\n");
         goto Quit;
-    }
 
     pIMC = UserGetObject(gHandleTable, hIMC, TYPE_INPUTCONTEXT);
     if (!pIMC)

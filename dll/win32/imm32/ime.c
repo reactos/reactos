@@ -1585,7 +1585,7 @@ BOOL WINAPI ImmSetCompositionWindow(HIMC hIMC, LPCOMPOSITIONFORM lpCompForm)
     LPINPUTCONTEXTDX pIC;
     HWND hWnd;
 
-    if (IS_CROSS_THREAD_HIMC(hIMC))
+    if (Imm32IsCrossThreadAccess(hIMC))
         return FALSE;
 
     pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);
