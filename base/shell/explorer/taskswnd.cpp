@@ -1602,7 +1602,8 @@ public:
 
             if (!bIsMinimized && bIsActive)
             {
-                ::ShowWindowAsync(TaskItem->hWnd, SW_MINIMIZE);
+                if (!::IsHungAppWindow(TaskItem->hWnd))
+                    ::ShowWindowAsync(TaskItem->hWnd, SW_MINIMIZE);
                 TRACE("Valid button clicked. App window Minimized.\n");
             }
             else
