@@ -337,17 +337,21 @@ NtGdiMaskBlt(
     BOOL Status = FALSE;
     EXLATEOBJ exlo;
     XLATEOBJ *XlateObj = NULL;
-    BOOL UsesSource;
+    BOOL UsesSource, UsesPattern;
     ROP4 rop4;
 
     rop4 = WIN32_ROP4_TO_ENG_ROP4(dwRop4);
 
-    UsesSource = ROP4_USES_SOURCE(rop4);
-    if (!hdcDest || (UsesSource && !hdcSrc))
+    if (!hdcDest)
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
+
+    UsesSource = ROP4_USES_SOURCE(rop4);
+    UsesPattern = ROP4_USES_PATTERN(rop4);
+    if (!hdcSrc && (UsesSource || UsesPattern))
+        return FALSE;
 
     /* Check if we need a mask and have a mask bitmap */
     if (ROP4_USES_MASK(rop4) && (hbmMask != NULL))
@@ -363,8 +367,8 @@ NtGdiMaskBlt(
         /* Make sure the mask bitmap is 1 BPP */
         if (gajBitsPerFormat[psurfMask->SurfObj.iBitmapFormat] != 1)
         {
-            EngSetLastError(ERROR_INVALID_PARAMETER);
             SURFACE_ShareUnlockSurface(psurfMask);
+            EngSetLastError(ERROR_INVALID_HANDLE);
             return FALSE;
         }
     }
@@ -398,6 +402,7 @@ NtGdiMaskBlt(
         if(DCSrc) DC_UnlockDc(DCSrc);
         WARN("Invalid destination dc handle (0x%p) passed to NtGdiMaskBlt\n", hdcDest);
         if(psurfMask) SURFACE_ShareUnlockSurface(psurfMask);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
@@ -532,6 +537,9 @@ cleanup:
     }
     DC_UnlockDc(DCDest);
     if(psurfMask) SURFACE_ShareUnlockSurface(psurfMask);
+
+    if (!Status)
+        EngSetLastError(ERROR_INVALID_PARAMETER);
 
     return Status;
 }
