@@ -97,7 +97,7 @@ BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 0, 0
     LTEXT "Seleccione as definições de poupança de energia que deseja utilizar.", -1, 37, 6, 208, 20
     GROUPBOX "Opções", -1, 6, 30, 240, 65
-    AUTOCHECKBOX "Mostrar sempre o &ícone na barra de tarefas", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "Mostrar sempre o í&cone na barra de tarefas", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
     AUTOCHECKBOX "&Perguntar a palavra-passe quando o computador reiniciar", IDC_PASSWORDLOGON, 17, 60, 220, 10, WS_TABSTOP
     AUTOCHECKBOX "&Ajustar o brilho quando ligado a baterias", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10, WS_TABSTOP
     GROUPBOX "Botões de energia", -1, 6, 101, 240, 110
