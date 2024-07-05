@@ -54,7 +54,7 @@ InitializeServerAdminUI()
 {
     HKEY hKey = SHGetShellKey(SHKEY_Root_HKCU | SHKEY_Key_Explorer, L"Advanced", TRUE);
     if (!hKey)
-        return ;
+        return;
 
     DWORD value, size = sizeof(value), type;
     DWORD error = SHGetValueW(hKey, NULL, L"ServerAdminUI", &type, &value, &size);
@@ -62,12 +62,12 @@ InitializeServerAdminUI()
     {
         // The value doesn't exist or is invalid, calculate and apply a default value
         value = IsOS(OS_ANYSERVER) && IsUserAnAdmin();
+        SHSetValueW(hKey, NULL, L"ServerAdminUI", REG_DWORD, &value, sizeof(value));
         if (value)
         {
             // TODO: Apply registry tweaks with RegInstallW; RegServerAdmin in the REGINST resource in shell32.
             SystemParametersInfo(SPI_SETKEYBOARDCUES, 0, IntToPtr(TRUE), SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
         }
-        SHSetValueW(hKey, NULL, L"ServerAdminUI", REG_DWORD, &value, sizeof(value));
     }
     RegCloseKey(hKey);
 }
