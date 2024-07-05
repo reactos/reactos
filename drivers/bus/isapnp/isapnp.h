@@ -111,6 +111,8 @@ FORCEINLINE
 VOID
 IsaPnpAcquireBusDataLock(VOID)
 {
+    ASSERT(PsGetCurrentProcess() == PsInitialSystemProcess);
+
     KeWaitForSingleObject(&BusSyncEvent, Executive, KernelMode, FALSE, NULL);
 }
 
@@ -129,6 +131,8 @@ VOID
 IsaPnpAcquireDeviceDataLock(
     _In_ PISAPNP_FDO_EXTENSION FdoExt)
 {
+    ASSERT(PsGetCurrentProcess() == PsInitialSystemProcess);
+
     KeWaitForSingleObject(&FdoExt->DeviceSyncEvent, Executive, KernelMode, FALSE, NULL);
 }
 
