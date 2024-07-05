@@ -214,7 +214,6 @@ static void AddEntryToList(HWND hwndLV, LPWSTR Name, DWORD dwValType, void* ValB
         }
         break;
         case REG_DWORD:
-        case REG_NONE:
         {
             WCHAR buf[200];
             if(dwCount == sizeof(DWORD))
@@ -229,7 +228,7 @@ static void AddEntryToList(HWND hwndLV, LPWSTR Name, DWORD dwValType, void* ValB
         }
         /*            lpsRes = convertHexToDWORDStr(lpbData, dwLen); */
         break;
-        default:
+        default: /* REG_BINARY, REG_NONE etc. */
         {
             unsigned int i;
             LPBYTE pData = (LPBYTE)ValBuf;
