@@ -101,7 +101,8 @@ VOID RestoreWindowPos()
 
 BOOL CanBeMinimized(HWND hwnd)
 {
-    if (::IsWindowVisible(hwnd) && !::IsIconic(hwnd) && ::IsWindowEnabled(hwnd))
+    if (::IsWindowVisible(hwnd) && !::IsIconic(hwnd) && ::IsWindowEnabled(hwnd) &&
+        !::IsHungAppWindow(hwnd))
     {
         if (::GetClassLongPtrW(hwnd, GCW_ATOM) == (ULONG_PTR)WC_DIALOG)
             return TRUE;
