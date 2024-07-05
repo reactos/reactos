@@ -802,7 +802,8 @@ BOOL CDefView::CreateList()
     if (m_FolderSettings.fFlags & FWF_FULLROWSELECT)
         ListExStyle |= LVS_EX_FULLROWSELECT;
 
-    if (m_FolderSettings.fFlags & FWF_SINGLECLICKACTIVATE)
+    if ((m_FolderSettings.fFlags & FWF_SINGLECLICKACTIVATE) ||
+        (!SHELL_GetSetting(SSF_DOUBLECLICKINWEBVIEW, fDoubleClickInWebView) && !SHELL_GetSetting(SSF_WIN95CLASSIC, fWin95Classic)))
         ListExStyle |= LVS_EX_TRACKSELECT | LVS_EX_ONECLICKACTIVATE;
 
     if (m_FolderSettings.fFlags & FWF_NOCOLUMNHEADER)
