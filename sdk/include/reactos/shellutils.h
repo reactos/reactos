@@ -783,5 +783,17 @@ DataObject_SetOffset(IDataObject* pDataObject, POINT* point)
 
 #endif
 
+#ifdef __cplusplus
+struct SHELL_GetSettingImpl
+{
+    SHELLSTATE ss;
+    SHELL_GetSettingImpl(DWORD ssf) { SHGetSetSettings(&ss, ssf, FALSE); }
+    const SHELLSTATE* operator ->() { return &ss; }
+};
+#define SHELL_GetSetting(ssf, field) ( SHELL_GetSettingImpl(ssf)->field )
+#else
+#define SHELL_GetSetting(pss, ssf, field) ( SHGetSetSettings((pss), (ssf), FALSE), (pss)->field )
+#endif
+
 
 #endif /* __ROS_SHELL_UTILS_H */

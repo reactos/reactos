@@ -536,6 +536,19 @@ BOOL WINAPI PathIsTemporaryW(_In_ LPCWSTR Str);
 #define ERRORONDEST         0x10000
 
 /****************************************************************************
+ * Shell settings
+ */
+
+typedef struct _REGSHELLSTATE
+{
+    DWORD dwSize;
+    SHELLSTATE ss;
+} REGSHELLSTATE, *PREGSHELLSTATE;
+#define REGSHELLSTATE_SIZE 0x24
+#define REGSHELLSTATE_VERSION 0xD
+C_ASSERT(sizeof(REGSHELLSTATE) == REGSHELLSTATE_SIZE);
+
+/****************************************************************************
  * Shell Namespace Routines
  */
 
