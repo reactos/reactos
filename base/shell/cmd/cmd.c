@@ -180,6 +180,74 @@ CON_STREAM_MODE OutputStreamMode = UTF8Text; // AnsiText;
 WORD wDefColor = 0;     /* Default color */
 #endif
 
+/* Dynamic tracing */
+#ifdef FEATURE_DYNAMIC_TRACE
+
+BOOL g_bDynamicTracing = FALSE;
+struct __wine_debug_functions g_debug_functions;
+
+VOID CmdTrace(INT type, LPCSTR file, INT line, LPCSTR func, LPCSTR format, ...)
+{
+    va_list va;
+    int cch;
+    char szTextA[800];
+#ifdef _UNICODE
+    wchar_t szTextW[800];
+#endif
+
+    if (!g_bDynamicTracing)
+        return;
+
+    va_start(va, format);
+    StringCchPrintfA(szTextA, _countof(szTextA), "%s (%d): ", file, line);
+    cch = lstrlenA(szTextA);
+    StringCchVPrintfA(&szTextA[cch], _countof(szTextA) - cch, format, va);
+
+    /* Console output */
+#ifdef _UNICODE
+    MultiByteToWideChar(OutputCodePage, 0, szTextA, -1, szTextW, _countof(szTextW));
+    szTextW[_countof(szTextW) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
+    ConOutPuts(szTextW);
+#else
+    ConOutPuts(szTextA);
+#endif
+
+    /* Debug logging */
+    switch (type)
+    {
+        case __WINE_DBCL_FIXME:
+        {
+            g_debug_functions.dbg_vlog(__WINE_DBCL_FIXME, __wine_dbch___default,
+                                       file, func, line, format, va);
+            break;
+        }
+        case __WINE_DBCL_ERR:
+        {
+            g_debug_functions.dbg_vlog(__WINE_DBCL_ERR, __wine_dbch___default,
+                                       file, func, line, format, va);
+            break;
+        }
+        case __WINE_DBCL_WARN:
+        {
+            g_debug_functions.dbg_vlog(__WINE_DBCL_WARN, __wine_dbch___default,
+                                       file, func, line, format, va);
+            break;
+        }
+        case __WINE_DBCL_TRACE:
+        {
+            g_debug_functions.dbg_vlog(__WINE_DBCL_TRACE, __wine_dbch___default,
+                                       file, func, line, format, va);
+            break;
+        }
+        default:
+            break;
+    }
+
+    va_end(va);
+}
+
+#endif /* def FEATURE_DYNAMIC_TRACE */
+
 /*
  * convert
  *
@@ -2315,6 +2383,10 @@ Initialize(VOID)
         ExecuteAutoRunFile(HKEY_LOCAL_MACHINE);
         ExecuteAutoRunFile(HKEY_CURRENT_USER);
     }
+
+#ifdef FEATURE_DYNAMIC_TRACE
+    __wine_dbg_set_functions(NULL, &g_debug_functions, sizeof(g_debug_functions));
+#endif
 
     /* Returns the rest of the command line */
     return ptr;

@@ -175,6 +175,13 @@ INT cmd_set(LPTSTR param)
         }
 
         *p++ = _T('\0');
+
+#ifdef FEATURE_DYNAMIC_TRACE
+        /* Check for dynamic TRACE ON/OFF */
+        if (!_tcsicmp(param, _T("CMDTRACE")))
+            g_bDynamicTracing = !_tcsicmp(p, _T("ON"));
+#endif
+
         if (!SetEnvironmentVariable(param, *p ? p : NULL))
         {
             retval = 1;
