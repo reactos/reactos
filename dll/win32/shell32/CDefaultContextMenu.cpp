@@ -14,6 +14,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(dmenu);
 
 // FIXME: 260 is correct, but should this be part of the SDK or just MAX_PATH?
 #define MAX_VERB 260
+#define VERBKEY_CCHMAX 64 // Note: 63+\0 seems to be the limit on XP
 
 static HRESULT
 SHELL_GetRegCLSID(HKEY hKey, LPCWSTR SubKey, LPCWSTR Value, CLSID &clsid)
@@ -90,6 +91,26 @@ UINT MapVerbToDfmCmd(_In_ LPCSTR verba)
     return 0;
 }
 
+static bool IsVerbListSeparator(int Ch)
+{
+    return Ch == ' ' || Ch == ','; // learn.microsoft.com/en-us/windows/win32/shell/context-menu-handlers
+}
+
+static int FindVerbInDefaultVerbList(LPCWSTR List, LPCWSTR Verb)
+{
+    for (UINT index = 0; *List; ++index)
+    {
+        while (IsVerbListSeparator(*List))
+            List++;
+        LPCWSTR Start = List;
+        while (*List && !IsVerbListSeparator(*List))
+            List++;
+        if (!_wcsnicmp(Verb, Start, List - Start) && List > Start)
+            return index;
+    }
+    return -1;
+}
+
 class CDefaultContextMenu :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IContextMenu3,
@@ -119,6 +140,7 @@ class CDefaultContextMenu :
         UINT m_iIdDfltFirst; /* first default part id */
         UINT m_iIdDfltLast; /* last default part id */
         HWND m_hwnd; /* window passed to callback */
+        WCHAR m_DefVerbs[MAX_PATH];
 
         HRESULT _DoCallback(UINT uMsg, WPARAM wParam, LPVOID lParam);
         void AddStaticEntry(const HKEY hkeyClass, const WCHAR *szVerb, UINT uFlags);
@@ -203,6 +225,7 @@ CDefaultContextMenu::CDefaultContextMenu() :
     m_iIdDfltLast(0),
     m_hwnd(NULL)
 {
+    *m_DefVerbs = UNICODE_NULL;
 }
 
 CDefaultContextMenu::~CDefaultContextMenu()
@@ -314,13 +337,19 @@ void CDefaultContextMenu::AddStaticEntry(const HKEY hkeyClass, const WCHAR *szVe
 
 void CDefaultContextMenu::AddStaticEntriesForKey(HKEY hKey, UINT uFlags)
 {
-    WCHAR wszName[40];
+    WCHAR wszName[VERBKEY_CCHMAX];
     DWORD cchName, dwIndex = 0;
     HKEY hShellKey;
 
     LRESULT lres = RegOpenKeyExW(hKey, L"shell", 0, KEY_READ, &hShellKey);
     if (lres != STATUS_SUCCESS)
         return;
+
+    if (!*m_DefVerbs)
+    {
+        DWORD cb = sizeof(m_DefVerbs);
+        RegGetValueW(hShellKey, NULL, NULL, RRF_RT_REG_SZ, NULL, m_DefVerbs, &cb);
+    }
 
     while(TRUE)
     {
@@ -513,9 +542,10 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
     UINT ntver = RosGetProcessEffectiveVersion();
     MENUITEMINFOW mii = { sizeof(mii) };
     UINT idResource;
-    WCHAR wszVerb[40];
+    WCHAR wszDispVerb[80]; // The limit on XP. If the friendly string is longer, it falls back to the verb key.
     UINT fState;
-    UINT cIds = 0, indexFirst = *pIndexMenu;
+    UINT cIds = 0, indexFirst = *pIndexMenu, indexDefault;
+    int defverbindex = -1;
 
     mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE | MIIM_DATA;
     mii.fType = MFT_STRING;
@@ -582,8 +612,8 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
         {
             if (!(uFlags & CMF_OPTIMIZEFORINVOKE))
             {
-                if (LoadStringW(shell32_hInstance, idResource, wszVerb, _countof(wszVerb)))
-                    mii.dwTypeData = wszVerb; /* use translated verb */
+                if (LoadStringW(shell32_hInstance, idResource, wszDispVerb, _countof(wszDispVerb)))
+                    mii.dwTypeData = wszDispVerb; /* use translated verb */
                 else
                     ERR("Failed to load string\n");
             }
@@ -597,16 +627,15 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
             {
                 if (!(uFlags & CMF_OPTIMIZEFORINVOKE))
                 {
-                    DWORD cbVerb = sizeof(wszVerb);
+                    DWORD cbVerb = sizeof(wszDispVerb);
+                    LONG res = RegLoadMUIStringW(hkVerb, L"MUIVerb", wszDispVerb, cbVerb, NULL, 0, NULL);
+                    if (res || !*wszDispVerb)
+                        res = RegLoadMUIStringW(hkVerb, NULL, wszDispVerb, cbVerb, NULL, 0, NULL);
 
-                    LONG res = RegLoadMUIStringW(hkVerb, L"MUIVerb", wszVerb, cbVerb, NULL, 0, NULL);
-                    if (res || !*wszVerb)
-                        res = RegLoadMUIStringW(hkVerb, NULL, wszVerb, cbVerb, NULL, 0, NULL);
-
-                    if (res == ERROR_SUCCESS && *wszVerb)
+                    if (res == ERROR_SUCCESS && *wszDispVerb)
                     {
                         /* use description for the menu entry */
-                        mii.dwTypeData = wszVerb;
+                        mii.dwTypeData = wszDispVerb;
                     }
                 }
             }
@@ -652,9 +681,33 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
                     (*pIndexMenu)++;
             }
 
+            UINT pos = *pIndexMenu;
+            int verbindex = hkVerb ? FindVerbInDefaultVerbList(m_DefVerbs, info.Verb) : -1;
+            if (verbindex >= 0)
+            {
+                if (verbindex < defverbindex || defverbindex < 0)
+                {
+                    defverbindex = verbindex;
+                    fState |= MFS_DEFAULT;
+                    forceFirstPos = TRUE;
+                }
+                else
+                {
+                    fState &= ~MFS_DEFAULT; // We have already set a better default
+                    pos = indexDefault;
+                }
+            }
+            else if (defverbindex >= 0)
+            {
+                fState &= ~MFS_DEFAULT; // We have already set the default
+                if (forceFirstPos)
+                    pos = indexDefault;
+                forceFirstPos = FALSE;
+            }
+
             mii.fState = fState;
             mii.wID = iIdCmdFirst + cIds;
-            if (InsertMenuItemW(hMenu, forceFirstPos ? indexFirst : *pIndexMenu, TRUE, &mii))
+            if (InsertMenuItemW(hMenu, forceFirstPos ? indexFirst : pos, TRUE, &mii))
                 (*pIndexMenu)++;
 
             if (cmdFlags & ECF_SEPARATORAFTER)
@@ -662,6 +715,9 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
                 if (InsertMenuItemAt(hMenu, *pIndexMenu, MF_SEPARATOR))
                     (*pIndexMenu)++;
             }
+
+            if (fState & MFS_DEFAULT)
+                indexDefault = *pIndexMenu; // This is where we want to insert "high priority" verbs
         }
         cIds++; // Always increment the id because it acts as the index into m_StaticEntries
 
