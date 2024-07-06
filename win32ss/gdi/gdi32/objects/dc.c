@@ -1057,7 +1057,9 @@ SetBkMode(
     _In_ HDC hdc,
     _In_ int iBkMode)
 {
-    if(iBkMode!=TRANSPARENT)iBkMode=OPAQUE;//fix for bad mode setting
+    /* Avoid bad mode setting */
+    if(iBkMode!=TRANSPARENT)
+        iBkMode=OPAQUE;
 	
     PDC_ATTR pdcattr;
     INT iOldMode;
