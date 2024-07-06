@@ -5,6 +5,7 @@ list(APPEND SOURCE
     ../include/msgtrace.c
     CharFuncs.c
     CloseWindow.c
+    CopyImage.c
     CreateDialog.c
     CreateIconFromResourceEx.c
     CreateWindowEx.c
