@@ -245,7 +245,7 @@ BEGIN
     LTEXT "%s", IDC_DRIVE, 88, 80, 100, 9
     LTEXT "Espaço disponível:", IDC_STATIC, 20, 92, 60, 9
     LTEXT "%s", IDC_SPACEAVAIL, 88, 92, 104, 9
-    LTEXT "Tamanho &inicial (MB):", -1, 22, 118, 75, 9
+    LTEXT "&Tamanho inicial (MB):", -1, 22, 118, 75, 9
     LTEXT "Tamanho &máximo (MB):", -1, 22, 131, 75, 9
     AUTORADIOBUTTON "Tamanho &personalizado", IDC_CUSTOM, 20, 105, 88, 9, WS_GROUP
     AUTORADIOBUTTON "Tamanho gerido pelo &sistema", IDC_SYSMANSIZE, 20, 145, 110, 9
