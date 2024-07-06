@@ -726,7 +726,7 @@ BEGIN
     GROUPBOX "Ícones", IDC_STATIC, 5, 165, 230, 50, WS_TABSTOP
     LTEXT "Para todas as vistas, excepto miniaturas, pode alterar o ícone padrão 'pasta' para outro ícone.", IDC_STATIC, 15, 175, 210, 25
     ICON 0, IDC_FOLDERCUST_ICON, 175, 194, 32, 30
-    PUSHBUTTON "Alterar &ícone...", IDC_FOLDERCUST_CHANGE_ICON, 15, 195, 75, 15
+    PUSHBUTTON "Alterar í&cone...", IDC_FOLDERCUST_CHANGE_ICON, 15, 195, 75, 15
 END
 
 IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
