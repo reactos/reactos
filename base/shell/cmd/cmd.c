@@ -195,22 +195,23 @@ VOID CmdTrace(INT type, LPCSTR file, INT line, LPCSTR func, LPCSTR format, ...)
     wchar_t szTextW[800];
 #endif
 
-    if (!g_bDynamicTrace)
-        return;
-
     va_start(va, format);
-    StringCchPrintfA(szTextA, _countof(szTextA), "%s (%d): ", file, line);
-    cch = lstrlenA(szTextA);
-    StringCchVPrintfA(&szTextA[cch], _countof(szTextA) - cch, format, va);
+
+    if (g_bDynamicTrace)
+    {
+        StringCchPrintfA(szTextA, _countof(szTextA), "%s (%d): ", file, line);
+        cch = lstrlenA(szTextA);
+        StringCchVPrintfA(&szTextA[cch], _countof(szTextA) - cch, format, va);
 
     /* Console output */
 #ifdef _UNICODE
-    MultiByteToWideChar(OutputCodePage, 0, szTextA, -1, szTextW, _countof(szTextW));
-    szTextW[_countof(szTextW) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
-    ConOutPuts(szTextW);
+        MultiByteToWideChar(OutputCodePage, 0, szTextA, -1, szTextW, _countof(szTextW));
+        szTextW[_countof(szTextW) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
+        ConOutPuts(szTextW);
 #else
-    ConOutPuts(szTextA);
+        ConOutPuts(szTextA);
 #endif
+    }
 
     /* Debug logging */
     switch (type)
