@@ -2,7 +2,10 @@
  * PROJECT:     ReactOS Shell32
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Portuguese (Portugal) resource file
- * TRANSLATOR:  Copyright 2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ * TRANSLATORS: Copyright 2003 Marcelo Duarte <wine-devel@bol.com.br>
+ *              Copyright 2006-2007 Américo José Melo <mmodem00@netvisao.pt>
+ *              Copyright 2010 Manuel Dulcidio Valente da Silva (mds) <manueldulcidio@gmail.com>
+ *              Copyright 2019-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
  */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
