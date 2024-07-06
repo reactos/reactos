@@ -147,4 +147,12 @@
 
 #endif  /* __i386__ */
 
+#if !defined(__GNUC__) && !defined(__clang__)
+# define __ASM_BLOCK_BEGIN(name) void __asm_dummy_##name(void) {
+# define __ASM_BLOCK_END         }
+#else
+# define __ASM_BLOCK_BEGIN(name)
+# define __ASM_BLOCK_END
+#endif
+
 #endif  /* __WINE_WINE_ASM_H */
