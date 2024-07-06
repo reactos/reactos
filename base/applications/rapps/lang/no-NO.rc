@@ -19,7 +19,7 @@ BEGIN
     BEGIN
         MENUITEM "&Installere\tCtrl+Enter", ID_INSTALL
         MENUITEM "&Avinstallere\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "&Endre", ID_MODIFY
+        MENUITEM "E&ndre", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "R&emove from Registry", ID_REGREMOVE
         MENUITEM SEPARATOR
@@ -49,7 +49,7 @@ BEGIN
     BEGIN
         MENUITEM "&Installere\tCtrl+Enter", ID_INSTALL
         MENUITEM "&Avinstallere\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "&Endre", ID_MODIFY
+        MENUITEM "E&ndre", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "R&emove from Registry", ID_REGREMOVE
         MENUITEM SEPARATOR
