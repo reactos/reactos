@@ -1464,7 +1464,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return result;
 }
 
-/*
+/**
  * PURPOSE: Processes messages for the main frame window
  *
  * WM_COMMAND - process the application menu
