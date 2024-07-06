@@ -14,13 +14,31 @@
     LR_COPYDELETEORG | LR_COPYRETURNORG | LR_COLOR | LR_MONOCHROME \
 )
 
-static VOID
-Test_CopyImage_Flags(VOID)
+static HANDLE CreateTestImage(UINT uType)
 {
+    HANDLE hImage;
     HDC hDC = CreateCompatibleDC(NULL);
-    HBITMAP hbm = CreateCompatibleBitmap(hDC, 10, 10);
+    switch (uType)
+    {
+    case IMAGE_BITMAP:
+        hImage = (HANDLE)CreateCompatibleBitmap(hDC, 10, 10);
+        break;
+    case IMAGE_CURSOR:
+        hImage = (HANDLE)LoadCursor(NULL, IDC_ARROW);
+        break;
+    case IMAGE_ICON:
+        hImage = (HANDLE)LoadIcon(NULL, IDI_APPLICATION);
+        break;
+    }
+    DeleteDC(hDC);
+    return hImage;
+}
+
+static VOID
+Test_CopyImage_Flags(UINT uType)
+{
     UINT iBit, uBit, uValidFlags = COPYIMAGE_VALID_FLAGS;
-    HBITMAP hbmCopyed;
+    HANDLE hImage = CreateTestImage(uType), hCopyedImage;
 
     if (IsWindowsVistaOrGreater())
         uValidFlags |= 0x10000;
@@ -31,30 +49,31 @@ Test_CopyImage_Flags(VOID)
 
         if (uValidFlags & uBit) // Valid flag?
         {
-            hbmCopyed = CopyImage(hbm, IMAGE_BITMAP, 0, 0, uBit);
-            ok(hbmCopyed != NULL, "iBit %u: hbmCopyed was NULL\n", iBit);
-            if (hbmCopyed)
-                DeleteObject(hbmCopyed);
+            hCopyedImage = CopyImage(hImage, uType, 0, 0, uBit);
+            ok(hCopyedImage != NULL, "iBit %u: uType %u: hCopyedImage was NULL\n", iBit, uType);
+            if (hCopyedImage)
+                DeleteObject(hCopyedImage);
         }
         else
         {
             SetLastError(0xDEADFACE);
-            hbmCopyed = CopyImage(hbm, IMAGE_BITMAP, 0, 0, uBit);
-            ok(hbmCopyed == NULL, "iBit %u: hbmCopyed was %p\n", iBit, hbmCopyed);
+            hCopyedImage = CopyImage(hImage, uType, 0, 0, uBit);
+            ok(hCopyedImage == NULL, "iBit %u: uType %u: hCopyedImage was %p\n", iBit, uType, hCopyedImage);
             ok_err(ERROR_INVALID_PARAMETER);
-            if (hbmCopyed)
-                DeleteObject(hbmCopyed);
+            if (hCopyedImage)
+                DeleteObject(hCopyedImage);
         }
 
-        if (uBit & LR_COPYDELETEORG) // The original is deleted. Re-create
-            hbm = CreateCompatibleBitmap(hDC, 10, 10);
+        if (uBit & LR_COPYDELETEORG) // Is the original image deleted?
+            hImage = CreateTestImage(uType); // Re-create
     }
 
-    DeleteObject(hbm);
-    DeleteDC(hDC);
+    DeleteObject(hImage);
 }
 
 START_TEST(CopyImage)
 {
-    Test_CopyImage_Flags();
+    Test_CopyImage_Flags(IMAGE_BITMAP);
+    Test_CopyImage_Flags(IMAGE_CURSOR);
+    Test_CopyImage_Flags(IMAGE_ICON);
 }
