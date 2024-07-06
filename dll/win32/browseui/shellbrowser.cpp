@@ -307,7 +307,7 @@ private:
     HACCEL m_hAccel;
     ShellSettings m_settings;
     SBFOLDERSETTINGS m_deffoldersettings;
-    DWORD m_BSF; // BrowserServiceFlags
+    DWORD m_BrowserSvcFlags;
 public:
 #if 0
     ULONG InternalAddRef()
@@ -326,9 +326,9 @@ public:
     ~CShellBrowser();
     HRESULT Initialize();
 public:
-    UINT GetNewBrowserFlag(UINT SBSP);
-    HRESULT OpenNewBrowserWindow(LPCITEMIDLIST pidl, UINT SBSP);
-    HRESULT CreateRelativeBrowsePIDL(LPCITEMIDLIST relative, UINT SBSP, LPITEMIDLIST *ppidl);
+    UINT GetNewBrowserFlag(UINT Flags);
+    HRESULT OpenNewBrowserWindow(LPCITEMIDLIST pidl, UINT SbspFlags);
+    HRESULT CreateRelativeBrowsePIDL(LPCITEMIDLIST relative, UINT SbspFlags, LPITEMIDLIST *ppidl);
     HRESULT BrowseToPIDL(LPCITEMIDLIST pidl, long flags);
     HRESULT BrowseToPath(IShellFolder *newShellFolder, LPCITEMIDLIST absolutePIDL,
         FOLDERSETTINGS *folderSettings, long flags);
@@ -724,7 +724,7 @@ extern HRESULT CreateProgressDialog(REFIID riid, void **ppv);
 
 CShellBrowser::CShellBrowser()
 {
-    m_BSF = BSF_RESIZABLE | BSF_CANMAXIMIZE;
+    m_BrowserSvcFlags = BSF_RESIZABLE | BSF_CANMAXIMIZE;
     fCurrentShellViewWindow = NULL;
     fCurrentDirectoryPIDL = NULL;
     fStatusBar = NULL;
@@ -828,37 +828,41 @@ HRESULT CShellBrowser::ApplyBrowserDefaultFolderSettings(IShellView *pvs)
     return hr;
 }
 
-UINT CShellBrowser::GetNewBrowserFlag(UINT SBSP)
+UINT CShellBrowser::GetNewBrowserFlag(UINT Flags)
 {
-    if ((SBSP & (SBSP_SAMEBROWSER | SBSP_NEWBROWSER)) == SBSP_DEFBROWSER)
+    if ((Flags & (SBSP_SAMEBROWSER | SBSP_NEWBROWSER)) == SBSP_DEFBROWSER)
     {
         if (!fCurrentDirectoryPIDL || IsControlWindowShown(FCW_TREE, NULL) == S_OK)
-            SBSP |= SBSP_SAMEBROWSER; // Force if this is the first navigation or the folder tree is present
+            Flags |= SBSP_SAMEBROWSER; // Force if this is the first navigation or the folder tree is present
         else
-            SBSP |= (!!gCabinetState.fNewWindowMode) ^ (GetAsyncKeyState(VK_CONTROL) < 0) ? SBSP_NEWBROWSER : SBSP_SAMEBROWSER;
+            Flags |= (!!gCabinetState.fNewWindowMode) ^ (GetAsyncKeyState(VK_CONTROL) < 0) ? SBSP_NEWBROWSER : SBSP_SAMEBROWSER;
     }
-    if (SBSP & (SBSP_NAVIGATEBACK | SBSP_NAVIGATEFORWARD))
+    if (Flags & (SBSP_NAVIGATEBACK | SBSP_NAVIGATEFORWARD))
         return SBSP_SAMEBROWSER; // Force same browser for now
-    return SBSP;
+    return Flags;
 }
 
-HRESULT CShellBrowser::OpenNewBrowserWindow(LPCITEMIDLIST pidl, UINT SBSP)
+HRESULT CShellBrowser::OpenNewBrowserWindow(LPCITEMIDLIST pidl, UINT SbspFlags)
 {
     SaveITBarLayout(); // Do this now so the new window inherits the current layout
     // TODO: www.geoffchappell.com/studies/windows/ie/shdocvw/interfaces/inotifyappstart.htm
-    DWORD flags = (SBSP & SBSP_EXPLOREMODE) ? SH_EXPLORER_CMDLINE_FLAG_E : 0;
-    if ((SBSP & (SBSP_OPENMODE | SBSP_EXPLOREMODE)) == SBSP_DEFMODE)
+    DWORD flags = (SbspFlags & SBSP_EXPLOREMODE) ? SH_EXPLORER_CMDLINE_FLAG_E : 0;
+    if ((SbspFlags & (SBSP_OPENMODE | SBSP_EXPLOREMODE)) == SBSP_DEFMODE)
         flags |= IsControlWindowShown(FCW_TREE, NULL) == S_OK ? SH_EXPLORER_CMDLINE_FLAG_E : 0;
+    LPITEMIDLIST pidlDir;
+    HRESULT hr = SHILClone(pidl, &pidlDir);
+    if (FAILED(hr))
+        return hr;
     // TODO: !SBSP_NOTRANSFERHIST means we are supposed to pass the history here somehow?
-    return SHOpenNewFrame(const_cast<LPITEMIDLIST>(pidl), NULL, 0, flags | SH_EXPLORER_CMDLINE_FLAG_NEWWND | SH_EXPLORER_CMDLINE_FLAG_NOREUSE);
+    return SHOpenNewFrame(pidlDir, NULL, 0, flags | SH_EXPLORER_CMDLINE_FLAG_NEWWND | SH_EXPLORER_CMDLINE_FLAG_NOREUSE);
 }
 
-HRESULT CShellBrowser::CreateRelativeBrowsePIDL(LPCITEMIDLIST relative, UINT SBSP, LPITEMIDLIST *ppidl)
+HRESULT CShellBrowser::CreateRelativeBrowsePIDL(LPCITEMIDLIST relative, UINT SbspFlags, LPITEMIDLIST *ppidl)
 {
-    if (SBSP & SBSP_RELATIVE)
+    if (SbspFlags & SBSP_RELATIVE)
         return SHILCombine(fCurrentDirectoryPIDL, relative, ppidl);
 
-    if (SBSP & SBSP_PARENT)
+    if (SbspFlags & SBSP_PARENT)
     {
         HRESULT hr = GetPidl(ppidl);
         if (FAILED(hr))
@@ -1004,7 +1008,7 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
     wchar_t                                 newTitle[MAX_PATH];
     SHGDNF                                  nameFlags;
     HRESULT                                 hResult;
-    //TODO: BOOL                            nohistory = m_BSF & BSF_NAVNOHISTORY;
+    //TODO: BOOL                            nohistory = m_BrowserSvcFlags & BSF_NAVNOHISTORY;
 
     if (newShellFolder == NULL)
         return E_INVALIDARG;
@@ -2658,14 +2662,13 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::UpdateBackForwardState()
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::SetFlags(DWORD dwFlags, DWORD dwFlagMask)
 {
-    m_BSF &= ~dwFlagMask;
-    m_BSF |= (dwFlagMask & dwFlags);
+    m_BrowserSvcFlags = (m_BrowserSvcFlags & ~dwFlagMask) | (dwFlagMask & dwFlags);
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::GetFlags(DWORD *pdwFlags)
 {
-    *pdwFlags = m_BSF;
+    *pdwFlags = m_BrowserSvcFlags;
     return S_OK;
 }
 
@@ -2847,7 +2850,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::InitializeTravelLog(ITravelLog *ptl, DW
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::SetTopBrowser()
 {
-    m_BSF |= BSF_TOPBROWSER;
+    m_BrowserSvcFlags |= BSF_TOPBROWSER;
     return S_OK;
 }
 
@@ -4088,7 +4091,7 @@ void CShellBrowser::UpdateWindowTitle()
 
 void CShellBrowser::SaveITBarLayout()
 {
-    if (!gCabinetState.fSaveLocalView || (m_BSF & (BSF_THEATERMODE | BSF_UISETBYAUTOMATION)))
+    if (!gCabinetState.fSaveLocalView || (m_BrowserSvcFlags & (BSF_THEATERMODE | BSF_UISETBYAUTOMATION)))
         return;
 #if 0 // If CDesktopBrowser aggregates us, skip saving
     FOLDERSETTINGS fs;
