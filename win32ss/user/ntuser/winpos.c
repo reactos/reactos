@@ -3734,7 +3734,8 @@ NtUserSetWindowPlacement(HWND hWnd,
    _SEH2_END
 
     /* Backwards-compatibility: NT3.x doesn't check the length */
-    if (Safepl.length == sizeof(WINDOWPLACEMENT) || LOWORD(gptiCurrent->dwExpWinVer) < WINVER_WINNT4)
+    if (Safepl.length == sizeof(WINDOWPLACEMENT) ||
+        LOWORD(gptiCurrent->dwExpWinVer) < WINVER_WINNT4)
     {
         Flags = PLACE_MAX | PLACE_RECT;
         if (Safepl.flags & WPF_SETMINPOSITION)
