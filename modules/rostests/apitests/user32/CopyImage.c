@@ -17,20 +17,21 @@
 static HANDLE CreateTestImage(UINT uType)
 {
     HANDLE hImage;
-    HDC hDC = CreateCompatibleDC(NULL);
+    HDC hDC;
     switch (uType)
     {
-    case IMAGE_BITMAP:
-        hImage = (HANDLE)CreateCompatibleBitmap(hDC, 10, 10);
-        break;
-    case IMAGE_CURSOR:
-        hImage = (HANDLE)LoadCursor(NULL, IDC_ARROW);
-        break;
-    case IMAGE_ICON:
-        hImage = (HANDLE)LoadIcon(NULL, IDI_APPLICATION);
-        break;
+        case IMAGE_BITMAP:
+            hDC = CreateCompatibleDC(NULL);
+            hImage = (HANDLE)CreateCompatibleBitmap(hDC, 10, 10);
+            DeleteDC(hDC);
+            break;
+        case IMAGE_CURSOR:
+            hImage = (HANDLE)LoadCursor(NULL, IDC_ARROW);
+            break;
+        case IMAGE_ICON:
+            hImage = (HANDLE)LoadIcon(NULL, IDI_APPLICATION);
+            break;
     }
-    DeleteDC(hDC);
     return hImage;
 }
 
