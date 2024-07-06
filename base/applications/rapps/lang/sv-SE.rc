@@ -36,7 +36,7 @@ END
 
 IDR_LINKMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "&Öppna länk i webläsare", ID_OPEN_LINK
         MENUITEM "&Kopiera länk till urklipp", ID_COPY_LINK
@@ -45,7 +45,7 @@ END
 
 IDR_APPLICATIONMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "&Installera\tCtrl+Enter", ID_INSTALL
         MENUITEM "&Avinstallera\tCtrl+Del", ID_UNINSTALL

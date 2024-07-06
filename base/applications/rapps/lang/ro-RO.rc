@@ -38,7 +38,7 @@ END
 
 IDR_LINKMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "&Deschide în navigator", ID_OPEN_LINK
         MENUITEM "&Copiază în memorie", ID_COPY_LINK
@@ -47,7 +47,7 @@ END
 
 IDR_APPLICATIONMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "&Instalează\tCtrl+Enter", ID_INSTALL
         MENUITEM "&Dezinstalează\tCtrl+Del", ID_UNINSTALL

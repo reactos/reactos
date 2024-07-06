@@ -38,7 +38,7 @@ END
 
 IDR_LINKMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "ブラウザでリンクを開く(&O)", ID_OPEN_LINK
         MENUITEM "クリップボードにコピーする(&C)", ID_COPY_LINK
@@ -47,7 +47,7 @@ END
 
 IDR_APPLICATIONMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "インストール(&I)\tCtrl+Enter", ID_INSTALL
         MENUITEM "アンインストール(&U)\tCtrl+Del", ID_UNINSTALL

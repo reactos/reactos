@@ -36,7 +36,7 @@ END
 
 IDR_LINKMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "&Ava link brauseris", ID_OPEN_LINK
         MENUITEM "&Kopeeri link lõikelauale", ID_COPY_LINK
@@ -45,7 +45,7 @@ END
 
 IDR_APPLICATIONMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "&Installi\tCtrl+Enter", ID_INSTALL
         MENUITEM "&Desinstalli\tCtrl+Del", ID_UNINSTALL

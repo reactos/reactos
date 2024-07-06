@@ -38,7 +38,7 @@ END
 
 IDR_LINKMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "&Apri il collegamento in un browser", ID_OPEN_LINK
         MENUITEM "&Copia il collegamento negli appunti", ID_COPY_LINK
@@ -47,7 +47,7 @@ END
 
 IDR_APPLICATIONMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "&Installa\tCtrl+Enter", ID_INSTALL
         MENUITEM "Rim&uovi\tCtrl+Del", ID_UNINSTALL

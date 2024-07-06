@@ -38,7 +38,7 @@ END
 
 IDR_LINKMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "פתח קישור בדפדפן", ID_OPEN_LINK
         MENUITEM "העתק קישור", ID_COPY_LINK
@@ -47,7 +47,7 @@ END
 
 IDR_APPLICATIONMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "התקנה\tCtrl+Enter", ID_INSTALL
         MENUITEM "הסרה\tCtrl+Del", ID_UNINSTALL

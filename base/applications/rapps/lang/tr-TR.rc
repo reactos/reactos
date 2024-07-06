@@ -38,7 +38,7 @@ END
 
 IDR_LINKMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "&Bağlantıyı Tarayıcıda Aç", ID_OPEN_LINK
         MENUITEM "&Bağlantıyı Panoya Kopyala", ID_COPY_LINK
@@ -47,7 +47,7 @@ END
 
 IDR_APPLICATIONMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "&Kur\tCtrl+Enter", ID_INSTALL
         MENUITEM "K&aldır\tCtrl+Del", ID_UNINSTALL

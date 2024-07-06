@@ -37,7 +37,7 @@ END
 
 IDR_LINKMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "在瀏覽器中開啟連結(&O)", ID_OPEN_LINK
         MENUITEM "複製連結到剪貼簿(&C)", ID_COPY_LINK
@@ -46,7 +46,7 @@ END
 
 IDR_APPLICATIONMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "安裝(&I)\tCtrl+Enter", ID_INSTALL
         MENUITEM "解除安裝(&U)\tCtrl+Del", ID_UNINSTALL

@@ -36,7 +36,7 @@ END
 
 IDR_LINKMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "&Отваряне на връзката в обзорник", ID_OPEN_LINK
         MENUITEM "&Запомняне на връзката в кошницата", ID_COPY_LINK
@@ -45,7 +45,7 @@ END
 
 IDR_APPLICATIONMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "&Слагане\tCtrl+Enter", ID_INSTALL
         MENUITEM "&Махане\tCtrl+Del", ID_UNINSTALL
