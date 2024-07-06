@@ -29,10 +29,6 @@ Test_CopyImage_Flags(VOID)
     {
         uBit = (1 << iBit);
 
-        // We don't delete original at here
-        if (uBit & LR_COPYDELETEORG)
-            continue;
-
         if (uValidFlags & uBit) // Valid flag?
         {
             hbmCopyed = CopyImage(hbm, IMAGE_BITMAP, 0, 0, uBit);
@@ -49,8 +45,12 @@ Test_CopyImage_Flags(VOID)
             if (hbmCopyed)
                 DeleteObject(hbmCopyed);
         }
+
+        if (uBit & LR_COPYDELETEORG) // The original is deleted. Re-create
+            hbm = CreateCompatibleBitmap(hDC, 10, 10);
     }
 
+    DeleteObject(hbm);
     DeleteDC(hDC);
 }
 
