@@ -46,7 +46,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(cmd);
 
 #ifdef FEATURE_DYNAMIC_TRACE
 
-extern BOOL g_bDynamicTracing;
+extern BOOL g_bDynamicTrace;
 extern struct __wine_debug_functions g_debug_functions;
 
 void CmdTrace(INT type, LPCSTR file, INT line, LPCSTR func, LPCSTR format, ...);

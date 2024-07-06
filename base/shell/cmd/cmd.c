@@ -183,7 +183,7 @@ WORD wDefColor = 0;     /* Default color */
 /* Dynamic tracing */
 #ifdef FEATURE_DYNAMIC_TRACE
 
-BOOL g_bDynamicTracing = FALSE;
+BOOL g_bDynamicTrace = FALSE;
 struct __wine_debug_functions g_debug_functions;
 
 VOID CmdTrace(INT type, LPCSTR file, INT line, LPCSTR func, LPCSTR format, ...)
@@ -195,7 +195,7 @@ VOID CmdTrace(INT type, LPCSTR file, INT line, LPCSTR func, LPCSTR format, ...)
     wchar_t szTextW[800];
 #endif
 
-    if (!g_bDynamicTracing)
+    if (!g_bDynamicTrace)
         return;
 
     va_start(va, format);
@@ -216,29 +216,21 @@ VOID CmdTrace(INT type, LPCSTR file, INT line, LPCSTR func, LPCSTR format, ...)
     switch (type)
     {
         case __WINE_DBCL_FIXME:
-        {
             g_debug_functions.dbg_vlog(__WINE_DBCL_FIXME, __wine_dbch___default,
                                        file, func, line, format, va);
             break;
-        }
         case __WINE_DBCL_ERR:
-        {
             g_debug_functions.dbg_vlog(__WINE_DBCL_ERR, __wine_dbch___default,
                                        file, func, line, format, va);
             break;
-        }
         case __WINE_DBCL_WARN:
-        {
             g_debug_functions.dbg_vlog(__WINE_DBCL_WARN, __wine_dbch___default,
                                        file, func, line, format, va);
             break;
-        }
         case __WINE_DBCL_TRACE:
-        {
             g_debug_functions.dbg_vlog(__WINE_DBCL_TRACE, __wine_dbch___default,
                                        file, func, line, format, va);
             break;
-        }
         default:
             break;
     }
