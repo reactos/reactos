@@ -43,7 +43,7 @@ Test_CopyImage_Flags(UINT uType)
     if (IsWindowsVistaOrGreater())
         uValidFlags |= 0x10000;
 
-    for (iBit = 0; iBit < sizeof(DWORD) * 8; ++iBit)
+    for (iBit = 0; iBit < sizeof(UINT) * CHAR_BIT; ++iBit)
     {
         uBit = (1 << iBit);
 
