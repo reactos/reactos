@@ -1057,12 +1057,12 @@ SetBkMode(
     _In_ HDC hdc,
     _In_ int iBkMode)
 {
+    PDC_ATTR pdcattr;
+    INT iOldMode;
+
     /* Avoid bad mode setting */
     if (iBkMode != TRANSPARENT)
         iBkMode = OPAQUE;
-	
-    PDC_ATTR pdcattr;
-    INT iOldMode;
 
     HANDLE_METADC(INT, SetBkMode, 0, hdc, iBkMode);
 
