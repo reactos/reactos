@@ -25,7 +25,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Värskenda\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "&Uuenda andmebaasi\tCtrl+F5", ID_RESETDB
+        MENUITEM "Uuenda andme&baasi\tCtrl+F5", ID_RESETDB
     END
     POPUP "Abi"
     BEGIN
@@ -55,7 +55,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Värskenda\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "&Uuenda andmebaasi\tCtrl+F5", ID_RESETDB
+        MENUITEM "Uuenda andme&baasi\tCtrl+F5", ID_RESETDB
     END
 END
 

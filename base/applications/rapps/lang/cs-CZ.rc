@@ -25,7 +25,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Ob&novit\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "&Aktualizovat databázi\tCtrl+F5", ID_RESETDB
+        MENUITEM "Aktualizovat data&bázi\tCtrl+F5", ID_RESETDB
     END
     POPUP "Nápověda"
     BEGIN
@@ -55,7 +55,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Ob&novit\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "&Aktualizovat databázi\tCtrl+F5", ID_RESETDB
+        MENUITEM "Aktualizovat data&bázi\tCtrl+F5", ID_RESETDB
     END
 END
 

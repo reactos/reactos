@@ -27,7 +27,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "O&dśwież\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Ak&tualizuj bazę programów\tCtrl+F5", ID_RESETDB
+        MENUITEM "Aktualizuj &bazę programów\tCtrl+F5", ID_RESETDB
     END
     POPUP "Pomoc"
     BEGIN
@@ -57,7 +57,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Odśwież\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Ak&tualizuj bazę programów\tCtrl+F5", ID_RESETDB
+        MENUITEM "Aktualizuj &bazę programów\tCtrl+F5", ID_RESETDB
     END
 END
 

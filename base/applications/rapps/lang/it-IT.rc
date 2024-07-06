@@ -27,7 +27,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Aggiorna\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Aggiorna Da&tabase", ID_RESETDB
+        MENUITEM "Aggiorna Data&base", ID_RESETDB
     END
     POPUP "?"
     BEGIN
@@ -57,7 +57,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Aggiorna\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Aggiorna Da&tabase\tCtrl+F5", ID_RESETDB
+        MENUITEM "Aggiorna Data&base\tCtrl+F5", ID_RESETDB
     END
 END
 

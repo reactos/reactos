@@ -25,7 +25,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "F&rissítés\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Ada&tbázis frissítése\tCtrl+F5", ID_RESETDB
+        MENUITEM "Adat&bázis frissítése\tCtrl+F5", ID_RESETDB
     END
     POPUP "Súgó"
     BEGIN
@@ -55,7 +55,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "F&rissítés\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Ada&tbázis frissítése\tCtrl+F5", ID_RESETDB
+        MENUITEM "Adat&bázis frissítése\tCtrl+F5", ID_RESETDB
     END
 END
 

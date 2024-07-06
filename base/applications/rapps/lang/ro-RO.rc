@@ -27,7 +27,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Împ&rospătează\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Ac&tualizează baza de date\tCtrl+F5", ID_RESETDB
+        MENUITEM "Actualizează &baza de date\tCtrl+F5", ID_RESETDB
     END
     POPUP "Aj&utor"
     BEGIN
@@ -57,7 +57,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Împ&rospătează\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Ac&tualizează baza de date\tCtrl+F5", ID_RESETDB
+        MENUITEM "Actualizează &baza de date\tCtrl+F5", ID_RESETDB
     END
 END
 

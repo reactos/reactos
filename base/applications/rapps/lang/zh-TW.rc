@@ -26,7 +26,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "重新整理(&R)\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "更新資料庫(&T)\tCtrl+F5", ID_RESETDB
+        MENUITEM "更新資料庫(&B)\tCtrl+F5", ID_RESETDB
     END
     POPUP "說明"
     BEGIN
@@ -56,7 +56,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "重新整理(&R)\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "更新資料庫(&T)\tCtrl+F5", ID_RESETDB
+        MENUITEM "更新資料庫(&B)\tCtrl+F5", ID_RESETDB
     END
 END
 

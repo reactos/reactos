@@ -28,7 +28,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Rafraîchir\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Me&ttre à jour la base\tCtrl+F5", ID_RESETDB
+        MENUITEM "Mettre à jour la &base\tCtrl+F5", ID_RESETDB
     END
     POPUP "Aide"
     BEGIN
@@ -58,7 +58,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Rafraîchir\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Me&ttre à jour la base\tCtrl+F5", ID_RESETDB
+        MENUITEM "Mettre à jour la &base\tCtrl+F5", ID_RESETDB
     END
 END
 

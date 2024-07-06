@@ -27,7 +27,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "更新(&R)", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "データベースの更新(&T)\tCtrl+F5", ID_RESETDB
+        MENUITEM "データベースの更新(&B)\tCtrl+F5", ID_RESETDB
     END
     POPUP "ヘルプ"
     BEGIN
@@ -57,7 +57,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "更新(&R)", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "データベースの更新(&T)\tCtrl+F5", ID_RESETDB
+        MENUITEM "データベースの更新(&B)\tCtrl+F5", ID_RESETDB
     END
 END
 

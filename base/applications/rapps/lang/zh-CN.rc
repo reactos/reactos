@@ -29,7 +29,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "刷新(&R)\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "更新数据库(&T)\tCtrl+F5", ID_RESETDB
+        MENUITEM "更新数据库(&B)\tCtrl+F5", ID_RESETDB
     END
     POPUP "帮助"
     BEGIN
@@ -59,7 +59,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "刷新(&R)\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "更新数据库(&T)\tCtrl+F5", ID_RESETDB
+        MENUITEM "更新数据库(&B)\tCtrl+F5", ID_RESETDB
     END
 END
 
