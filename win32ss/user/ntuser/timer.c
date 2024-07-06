@@ -19,10 +19,12 @@ static LONG TimeLast = 0;
 /* Windows 2000 has room for 32768 window-less timers */
 #define NUM_WINDOW_LESS_TIMERS   32768
 
+#define HINTINDEX_BEGIN_VALUE   1
+
 static PFAST_MUTEX    Mutex;
 static RTL_BITMAP     WindowLessTimersBitMap;
 static PVOID          WindowLessTimersBitMapBuffer;
-static ULONG          HintIndex = 1;
+static ULONG          HintIndex = HINTINDEX_BEGIN_VALUE;
 
 ERESOURCE TimerLock;
 
@@ -219,8 +221,12 @@ IntSetTimer( PWND Window,
   {
       IntLockWindowlessTimerBitmap();
 
-      IDEvent = RtlFindClearBitsAndSet(&WindowLessTimersBitMap, 1, HintIndex);
-
+      IDEvent = RtlFindClearBitsAndSet(&WindowLessTimersBitMap, 1, HintIndex++);
+      if (IDEvent == (UINT_PTR) -1)
+	  {
+		  HintIndex = HINTINDEX_BEGIN_VALUE;
+		  IDEvent = RtlFindClearBitsAndSet(&WindowLessTimersBitMap, 1, HintIndex++);
+	  }
       if (IDEvent == (UINT_PTR) -1)
       {
          IntUnlockWindowlessTimerBitmap();
