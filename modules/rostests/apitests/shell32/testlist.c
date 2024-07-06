@@ -21,6 +21,7 @@ extern void func_GUIDFromString(void);
 extern void func_ILCreateFromPath(void);
 extern void func_Int64ToString(void);
 extern void func_IShellFolderViewCB(void);
+extern void func_LocaleTests(void);
 extern void func_menu(void);
 extern void func_OpenAs_RunDLL(void);
 extern void func_PathIsEqualOrSubFolder(void);
@@ -65,6 +66,7 @@ const struct test winetest_testlist[] =
     { "ILCreateFromPath", func_ILCreateFromPath },
     { "Int64ToString", func_Int64ToString },
     { "IShellFolderViewCB", func_IShellFolderViewCB },
+    { "LocaleTests", func_LocaleTests },
     { "menu", func_menu },
     { "OpenAs_RunDLL", func_OpenAs_RunDLL },
     { "PathIsEqualOrSubFolder", func_PathIsEqualOrSubFolder },
