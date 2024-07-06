@@ -4,7 +4,7 @@
  * PURPOSE:     German resource file
  * TRANSLATORS: Copyright 2009-2010 Matthias Kupfer <mkupfer@reactos.org>
  *              Copyright 2010 Sven Knurr (tux.) <forenkrams@tuxproject.de>
- *              Copyright 2017 Joachim Henze <joachim.henze@reactos.org>
+ *              Copyright 2017-2024 Joachim Henze <joachim.henze@reactos.org>
  *              Copyright 2021 Robert Naumann <gonzomdx@gmail.com>
  */
 
@@ -22,7 +22,7 @@ BEGIN
     BEGIN
         MENUITEM "&Installieren\tCtrl+Enter", ID_INSTALL
         MENUITEM "&Deinstallieren\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "&Ändern", ID_MODIFY
+        MENUITEM "Ä&ndern", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "Aus R&egistry entfernen", ID_REGREMOVE
         MENUITEM SEPARATOR
@@ -41,7 +41,7 @@ IDR_LINKMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Öffne den Link in einem Browser", ID_OPEN_LINK
+        MENUITEM "Öffne den Link in einem &Browser", ID_OPEN_LINK
         MENUITEM "&Kopiere den Link in die Zwischenablage", ID_COPY_LINK
     END
 END
@@ -52,7 +52,7 @@ BEGIN
     BEGIN
         MENUITEM "&Installieren\tCtrl+Enter", ID_INSTALL
         MENUITEM "&Deinstallieren\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "&Ändern", ID_MODIFY
+        MENUITEM "Ä&ndern", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "Aus R&egistry entfernen", ID_REGREMOVE
         MENUITEM SEPARATOR
