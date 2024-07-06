@@ -120,6 +120,7 @@ static const unsigned int                   folderOptionsPageCountMax = 20;
 static const long                           BTP_DONT_UPDATE_HISTORY = 0;
 static const long                           BTP_UPDATE_CUR_HISTORY = 1;
 static const long                           BTP_UPDATE_NEXT_HISTORY = 2;
+static const long                           BTP_ACTIVATE_NOFOCUS = 0x04;
 
 BOOL                                        createNewStuff = false;
 
@@ -1085,7 +1086,7 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
     saveCurrentShellView.Release();
     saveCurrentShellFolder.Release();
 
-    hResult = newShellView->UIActivate(SVUIA_ACTIVATE_FOCUS);
+    hResult = newShellView->UIActivate((flags & BTP_ACTIVATE_NOFOCUS) ? SVUIA_ACTIVATE_NOFOCUS : SVUIA_ACTIVATE_FOCUS);
 
     // leave updating section
     if (windowUpdateIsLocked)
@@ -2333,6 +2334,8 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::BrowseObject(LPCITEMIDLIST pidl, UINT w
     long flags = BTP_UPDATE_NEXT_HISTORY;
     if (fTravelLog)
         flags |= BTP_UPDATE_CUR_HISTORY;
+    if (wFlags & SBSP_ACTIVATE_NOFOCUS)
+        flags |= BTP_ACTIVATE_NOFOCUS;
     return BrowseToPIDL(pidl, flags);
 }
 
