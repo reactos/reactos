@@ -11,13 +11,13 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-    POPUP "Pli&k"
+    POPUP "&Plik"
     BEGIN
         MENUITEM "&Ustawienia", ID_SETTINGS
         MENUITEM SEPARATOR
         MENUITEM "&Wyjście", ID_EXIT
     END
-    POPUP "&Programy"
+    POPUP "Progra&my"
     BEGIN
         MENUITEM "&Instaluj\tCtrl+Enter", ID_INSTALL
         MENUITEM "Odinstal&uj\tCtrl+Del", ID_UNINSTALL
