@@ -24,11 +24,11 @@ BEGIN
         MENUITEM "&Uninstall\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modify", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Remove from Registry", ID_REGREMOVE
+        MENUITEM "R&emove from Registry", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "&Refresh\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
+        MENUITEM "Update Data&base\tCtrl+F5", ID_RESETDB
     END
     POPUP "Help"
     BEGIN
@@ -54,11 +54,11 @@ BEGIN
         MENUITEM "&Uninstall\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modify", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Remove from Registry", ID_REGREMOVE
+        MENUITEM "R&emove from Registry", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "&Refresh\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
+        MENUITEM "Update Data&base\tCtrl+F5", ID_RESETDB
     END
 END
 

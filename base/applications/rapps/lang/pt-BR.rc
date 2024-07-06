@@ -21,11 +21,11 @@ BEGIN
         MENUITEM "&Desinstalar\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modificar", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Remover do Registro", ID_REGREMOVE
+        MENUITEM "R&emover do Registro", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "A&tualizar\tF5", ID_REFRESH
+        MENUITEM "Atualiza&r\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
+        MENUITEM "Update Data&base\tCtrl+F5", ID_RESETDB
     END
     POPUP "Aj&uda"
     BEGIN
@@ -51,11 +51,11 @@ BEGIN
         MENUITEM "&Desinstalar\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modificar", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Remover do Registro", ID_REGREMOVE
+        MENUITEM "R&emover do Registro", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Atualizar\tF5", ID_REFRESH
+        MENUITEM "Atualiza&r\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
+        MENUITEM "Update Data&base\tCtrl+F5", ID_RESETDB
     END
 END
 

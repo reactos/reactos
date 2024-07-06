@@ -18,14 +18,14 @@ BEGIN
     POPUP "&Program"
     BEGIN
         MENUITEM "P&asang\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Bongkar\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "Bong&kar\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Ubah", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Hapus dari Registri", ID_REGREMOVE
+        MENUITEM "Hapus dari R&egistri", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Segarkan\tF5", ID_REFRESH
+        MENUITEM "Sega&rkan\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Perbarui Da&tabase\tCtrl+F5", ID_RESETDB
+        MENUITEM "Perbarui Data&base\tCtrl+F5", ID_RESETDB
     END
     POPUP "&Bantuan"
     BEGIN
@@ -51,11 +51,11 @@ BEGIN
         MENUITEM "&Bongkar\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Ubah", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Hapus dari Registri", ID_REGREMOVE
+        MENUITEM "Hapus dari R&egistri", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Segarkan\tF5", ID_REFRESH
+        MENUITEM "Sega&rkan\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Perbarui Da&tabase\tCtrl+F5", ID_RESETDB
+        MENUITEM "Perbarui Data&base\tCtrl+F5", ID_RESETDB
     END
 END
 

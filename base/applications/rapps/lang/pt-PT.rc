@@ -17,13 +17,13 @@ BEGIN
     END
     POPUP "&Programas"
     BEGIN
-        MENUITEM "I&nstalar\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Instalar\tCtrl+Enter", ID_INSTALL
         MENUITEM "&Desinstalar\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modificar", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Remover do Registo", ID_REGREMOVE
+        MENUITEM "R&emover do Registo", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Actualizar\tF5", ID_REFRESH
+        MENUITEM "Actualiza&r\tF5", ID_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "Actualizar &Base de dados\tCtrl+F5", ID_RESETDB
     END
@@ -51,9 +51,9 @@ BEGIN
         MENUITEM "&Desinstalar\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modificar", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Remover do Registo", ID_REGREMOVE
+        MENUITEM "R&emover do Registo", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Actualizar\tF5", ID_REFRESH
+        MENUITEM "Actualiza&r\tF5", ID_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "Actualizar &Base de dados\tCtrl+F5", ID_RESETDB
     END

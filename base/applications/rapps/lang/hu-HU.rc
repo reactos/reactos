@@ -17,15 +17,15 @@ BEGIN
     END
     POPUP "&Programok"
     BEGIN
-        MENUITEM "&Telepítés\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Eltávolítás\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "Telep&ítés\tCtrl+Enter", ID_INSTALL
+        MENUITEM "Eltá&volítás\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Módosítás", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "Eltávolítás a &registryből", ID_REGREMOVE
+        MENUITEM "&Eltávolítás a registryből", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Frissítés\tF5", ID_REFRESH
+        MENUITEM "F&rissítés\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Ada&tbázis frissítése\tCtrl+F5", ID_RESETDB
+        MENUITEM "Adat&bázis frissítése\tCtrl+F5", ID_RESETDB
     END
     POPUP "Súgó"
     BEGIN
@@ -47,15 +47,15 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Telepítés\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Eltávolítás\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "Telep&ítés\tCtrl+Enter", ID_INSTALL
+        MENUITEM "Eltá&volítás\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Módosítás", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "Eltávolítás a &registryből", ID_REGREMOVE
+        MENUITEM "&Eltávolítás a registryből", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Frissítés\tF5", ID_REFRESH
+        MENUITEM "F&rissítés\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Ada&tbázis frissítése\tCtrl+F5", ID_RESETDB
+        MENUITEM "Adat&bázis frissítése\tCtrl+F5", ID_RESETDB
     END
 END
 

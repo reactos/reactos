@@ -21,11 +21,11 @@ BEGIN
         MENUITEM "&Махане\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Промяна", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "Пре&махване от регистъра", ID_REGREMOVE
+        MENUITEM "Пр&емахване от регистъра", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "О&пресняване\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
+        MENUITEM "Update Data&base\tCtrl+F5", ID_RESETDB
     END
     POPUP "Помощ"
     BEGIN
@@ -51,11 +51,11 @@ BEGIN
         MENUITEM "&Махане\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Промяна", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "Пре&махване от регистъра", ID_REGREMOVE
+        MENUITEM "Пр&емахване от регистъра", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "О&пресняване\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
+        MENUITEM "Update Data&base\tCtrl+F5", ID_RESETDB
     END
 END
 

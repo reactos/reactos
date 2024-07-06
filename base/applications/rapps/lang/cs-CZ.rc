@@ -21,11 +21,11 @@ BEGIN
         MENUITEM "&Odinstalovat\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Změnit", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "Odstranit z &registru", ID_REGREMOVE
+        MENUITEM "Odstranit z r&egistru", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "Ob&novit\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "&Aktualizovat databázi\tCtrl+F5", ID_RESETDB
+        MENUITEM "Aktualizovat data&bázi\tCtrl+F5", ID_RESETDB
     END
     POPUP "Nápověda"
     BEGIN
@@ -51,11 +51,11 @@ BEGIN
         MENUITEM "&Odinstalovat\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Změnit", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "Odstranit z &registru", ID_REGREMOVE
+        MENUITEM "Odstranit z r&egistru", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "Ob&novit\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "&Aktualizovat databázi\tCtrl+F5", ID_RESETDB
+        MENUITEM "Aktualizovat data&bázi\tCtrl+F5", ID_RESETDB
     END
 END
 
