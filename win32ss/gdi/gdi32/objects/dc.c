@@ -1058,7 +1058,7 @@ SetBkMode(
     _In_ int iBkMode)
 {
     /* Avoid bad mode setting */
-    if(iBkMode != TRANSPARENT)
+    if (iBkMode != TRANSPARENT)
         iBkMode = OPAQUE;
 	
     PDC_ATTR pdcattr;
