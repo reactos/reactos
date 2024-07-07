@@ -276,10 +276,10 @@ BOOL test5(void)
 
 START_TEST(NtUserSetTimer)
 {
-    // TEST WITH MESSAGES WITHOUT WINDOW - test count sended messages
+    // TEST WITH MESSAGES WITHOUT WINDOW - test count of sent messages
     TEST(test1());
 
-    // TEST WITH MESSAGES WITH WINDOW - test count sended messages
+    // TEST WITH MESSAGES WITH WINDOW - test count of sent messages
     TEST(test2());
 
     // TEST WITH MESSAGES WITHOUT WINDOW - create many timers
