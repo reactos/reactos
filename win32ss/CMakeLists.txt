@@ -164,8 +164,8 @@ list(APPEND SOURCE
     user/ntuser/winpos.c
     user/ntuser/winsta.c
     user/ntuser/object.c
-    user/rtl/text.c
     user/rtl/image.c
+    user/rtl/text.c
     gdi/ntgdi/arc.c
     gdi/ntgdi/bezier.c
     gdi/ntgdi/bitblt.c
