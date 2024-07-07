@@ -458,7 +458,7 @@ DWORD WINAPI RtlGetExpWinVer(HMODULE hModule)
     PVOID BaseAddress = (PVOID)hModule;
 
     if (((ULONG_PTR)BaseAddress) & 1)
-        BaseAddress = (PVOID)((ULONG_PTR)BaseAddress & ~1);
+        BaseAddress = (PVOID)(((ULONG_PTR)BaseAddress) & ~1);
 
     if (BaseAddress && !LOWORD(BaseAddress))
     {
