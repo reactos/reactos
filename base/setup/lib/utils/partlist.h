@@ -53,10 +53,17 @@ typedef struct _VOLENTRY
     VOLINFO Info;
     FORMATSTATE FormatState;
 
-    /* Volume must be checked */
-    BOOLEAN NeedsCheck;
-    /* Volume is new and has not yet been actually formatted and mounted */
-    BOOLEAN New;
+    /* Volume state flags */
+    union
+    {
+        UCHAR AsByte;
+        struct
+        {
+            BOOLEAN New         : 1; ///< New volume, not yet formatted and mounted.
+            BOOLEAN NeedsCheck  : 1; ///< Volume must be checked.
+            UCHAR Reserved      : 6;
+        };
+    };
 
     // union {
     //     PVOLUME_DISK_EXTENTS pExtents;
