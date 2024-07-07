@@ -6,15 +6,12 @@
  */
 
 #ifdef _WIN32K_
-    #include <win32k.h>
-
-    #define NDEBUG
-    #include <debug.h>
+#include <win32k.h>
+DBG_DEFAULT_CHANNEL(UserMisc);
 #else
-    #include <user32.h>
-    #include <wine/debug.h>
-
-    WINE_DEFAULT_DEBUG_CHANNEL(user32);
+#include <user32.h>
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(user32);
 #endif
 
 /* Get the expected OS version from the application module */
