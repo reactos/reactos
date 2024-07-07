@@ -1061,8 +1061,11 @@ SetBkMode(
     INT iOldMode;
 
     /* Avoid bad mode setting */
-    if (iBkMode != TRANSPARENT)
-        iBkMode = OPAQUE;
+    if((iBkMode != TRANSPARENT) & (iBkMode != TRANSPARENT))
+    {
+        DPRINT1("SetBkMode - incorrect value");
+        return 0;
+    }
 
     HANDLE_METADC(INT, SetBkMode, 0, hdc, iBkMode);
 
