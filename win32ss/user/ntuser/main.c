@@ -451,33 +451,6 @@ UserThreadDestroy(PETHREAD Thread)
     return STATUS_SUCCESS;
 }
 
-/* Get the expected OS version from the application module */
-DWORD WINAPI RtlGetExpWinVer(HMODULE hModule)
-{
-    DWORD dwMajorVersion = 3, dwMinorVersion = 10; /* Set default to Windows 3.10 */
-    PIMAGE_NT_HEADERS pNT;
-    ULONG_PTR BaseAddress = (ULONG_PTR)hModule;
-
-    /* Fix alignment */
-    if (BaseAddress & 1)
-        BaseAddress = (BaseAddress & ~1);
-
-    if (BaseAddress && !LOWORD(BaseAddress))
-    {
-        pNT = RtlImageNtHeader((PVOID)BaseAddress);
-        if (pNT)
-        {
-            dwMajorVersion = pNT->OptionalHeader.MajorSubsystemVersion;
-            if (dwMajorVersion == 1)
-                dwMajorVersion = 3;
-            else
-                dwMinorVersion = pNT->OptionalHeader.MinorSubsystemVersion;
-        }
-    }
-
-    return MAKEWORD(dwMinorVersion, dwMajorVersion);
-}
-
 NTSTATUS NTAPI
 InitThreadCallback(PETHREAD Thread)
 {
@@ -584,7 +557,7 @@ InitThreadCallback(PETHREAD Thread)
 
     /* Populate dwExpWinVer */
     if (Process->Peb)
-        ptiCurrent->dwExpWinVer = RtlGetExpWinVer((HMODULE)Process->SectionBaseAddress);
+        ptiCurrent->dwExpWinVer = RtlGetExpWinVer(Process->SectionBaseAddress);
     else
         ptiCurrent->dwExpWinVer = WINVER_WINNT4;
     pci->dwExpWinVer = ptiCurrent->dwExpWinVer;

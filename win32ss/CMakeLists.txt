@@ -165,6 +165,7 @@ list(APPEND SOURCE
     user/ntuser/winsta.c
     user/ntuser/object.c
     user/rtl/text.c
+    user/rtl/image.c
     gdi/ntgdi/arc.c
     gdi/ntgdi/bezier.c
     gdi/ntgdi/bitblt.c

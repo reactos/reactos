@@ -3986,6 +3986,10 @@ LdrRelocateImageWithBias(
     _In_ ULONG Invalid
 );
 
+ULONG
+NTAPI
+RtlGetExpWinVer(_In_ PVOID BaseAddress);
+
 //
 // Activation Context Functions
 //
