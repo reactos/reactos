@@ -44,7 +44,6 @@ list(APPEND SOURCE
     prompt.c
     redir.c
     ren.c
-    replace.c
     screen.c
     set.c
     setlocal.c

@@ -6,13 +6,7 @@
  * PROGRAMMERS:     Samuel Erdtman (samuel@erdtman.se)
  */
 
-/* INCLUDES ******************************************************************/
-
-#include "precomp.h"
-
-#ifdef INCLUDE_CMD_REPLACE
-
-/* GLOBALS *******************************************************************/
+#include "replace.h"
 
 enum
 {
@@ -24,13 +18,13 @@ enum
     REPLACE_UPDATE    = 0x020,   /* /U */
 };
 
-/* FUNCTIONS *****************************************************************/
+INT  nErrorLevel = 0;     /* Errorlevel of last launched external program */
 
 /* just makes a print out if there is a problem with the switches */
 void invalid_switch(LPTSTR is)
 {
     ConOutResPrintf(STRING_REPLACE_ERROR1,is);
-    ConOutResPaging(TRUE,STRING_REPLACE_HELP3);
+    ConOutResPrintf(STRING_REPLACE_HELP3);
 }
 
 /* retrieves the path dependent on the input file name */
@@ -41,7 +35,6 @@ void getPath(TCHAR* out, LPTSTR in)
     else
         GetFullPathName (in, MAX_PATH, out, NULL);
 }
-
 
 /* makes the replace */
 INT replace(TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], DWORD dwFlags, BOOL *doMore)
@@ -147,7 +140,7 @@ INT replace(TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], DWORD dwFlags, BOOL *d
     /* Make sure source and destination is not the same */
     if (!_tcscmp(s, d))
     {
-        ConOutResPaging(TRUE, STRING_REPLACE_ERROR7);
+        ConOutResPrintf(STRING_REPLACE_ERROR7);
         CloseHandle (hFileSrc);
         *doMore = FALSE;
         return 0;
@@ -158,7 +151,7 @@ INT replace(TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], DWORD dwFlags, BOOL *d
     if (hFileDest == INVALID_HANDLE_VALUE)
     {
         CloseHandle (hFileSrc);
-        ConOutResPaging(TRUE, STRING_REPLACE_ERROR7);
+        ConOutResPrintf(STRING_REPLACE_ERROR7);
         *doMore = FALSE;
         return 0;
     }
@@ -169,7 +162,7 @@ INT replace(TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], DWORD dwFlags, BOOL *d
     {
         CloseHandle (hFileDest);
         CloseHandle (hFileSrc);
-        ConOutResPaging(TRUE, STRING_ERROR_OUT_OF_MEMORY);
+        ConOutResPrintf(STRING_ERROR_OUT_OF_MEMORY);
         return 0;
     }
 
@@ -189,7 +182,7 @@ INT replace(TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], DWORD dwFlags, BOOL *d
         WriteFile (hFileDest, buffer, dwRead, &dwWritten, NULL);
 
         /* Done! or ctrl break! */
-        if (dwWritten != dwRead || CheckCtrlBreak(BREAK_INPUT))
+        if (dwWritten != dwRead)
         {
             ConOutResPuts(STRING_COPY_ERROR3);
             VirtualFree (buffer, 0, MEM_RELEASE);
@@ -242,11 +235,6 @@ INT recReplace(DWORD dwFlags,
     /* Go through all the sourcefiles and copy/replace them */
     do
     {
-        if (CheckCtrlBreak(BREAK_INPUT))
-        {
-            return filesReplaced;
-        }
-
         /* Problem with file handler */
         if (hFile == INVALID_HANDLE_VALUE)
             return filesReplaced;
@@ -389,23 +377,26 @@ INT recFindSubDirs(DWORD dwFlags,
     return filesReplaced;
 }
 
-INT cmd_replace (LPTSTR param)
+INT cmd_replace (int argc, WCHAR **argvW)
 {
     LPTSTR *arg;
-    INT argc, i,filesReplaced = 0, nFiles, srcIndex = -1, destIndex = -1;
+    INT i, filesReplaced = 0, nFiles, srcIndex = -1, destIndex = -1;
     DWORD dwFlags = 0;
     TCHAR szDestPath[MAX_PATH], szSrcPath[MAX_PATH], tmpSrcPath[MAX_PATH];
     BOOL doMore = TRUE;
 
+    --argc;
+    ++argvW;
+
     /* Help wanted? */
-    if (!_tcsncmp (param, _T("/?"), 2))
+    if (argc == 1 && !_tcsncmp(argvW[0], _T("/?"), 2))
     {
-        ConOutResPaging(TRUE,STRING_REPLACE_HELP1);
+        ConOutResPrintf(STRING_REPLACE_HELP1);
         return 0;
     }
 
     /* Divide the argument in to an array of c-strings */
-    arg = split (param, &argc, FALSE, FALSE);
+    arg = argvW;
     nFiles = argc;
 
     /* Read options */
@@ -437,14 +428,12 @@ INT cmd_replace (LPTSTR param)
                     break;
                 default:
                     invalid_switch(arg[i]);
-                    freep(arg);
                     return 0;
                 }
             }
             else
             {
                 invalid_switch(arg[i]);
-                freep(arg);
                 return 0;
             }
             nFiles--;
@@ -462,7 +451,6 @@ INT cmd_replace (LPTSTR param)
             else
             {
                 invalid_switch(arg[i]);
-                freep(arg);
                 return 0;
             }
         }
@@ -471,17 +459,15 @@ INT cmd_replace (LPTSTR param)
     /* See so that at least source is there */
     if (nFiles < 1)
     {
-        ConOutResPaging(TRUE,STRING_REPLACE_HELP2);
-        ConOutResPaging(TRUE,STRING_REPLACE_HELP3);
-        freep(arg);
+        ConOutResPrintf(STRING_REPLACE_HELP2);
+        ConOutResPrintf(STRING_REPLACE_HELP3);
         return 1;
     }
     /* Check so that not both update and add switch is added and subdir */
     if ((dwFlags & REPLACE_UPDATE || dwFlags & REPLACE_SUBDIR) && (dwFlags & REPLACE_ADD))
     {
-        ConOutResPaging(TRUE,STRING_REPLACE_ERROR4);
-        ConOutResPaging(TRUE,STRING_REPLACE_HELP7);
-        freep(arg);
+        ConOutResPrintf(STRING_REPLACE_ERROR4);
+        ConOutResPrintf(STRING_REPLACE_HELP7);
         return 1;
     }
 
@@ -497,8 +483,7 @@ INT cmd_replace (LPTSTR param)
                 _tcschr (arg[destIndex], _T('?')) != NULL)
             {
                 ConOutResPrintf(STRING_REPLACE_ERROR2,arg[destIndex]);
-                ConOutResPaging(TRUE,STRING_REPLACE_HELP3);
-                freep(arg);
+                ConOutResPrintf(STRING_REPLACE_HELP3);
                 return 1;
             }
             getPath(szDestPath, arg[destIndex]);
@@ -506,8 +491,7 @@ INT cmd_replace (LPTSTR param)
             if (!IsExistingDirectory(szDestPath))
             {
                 ConOutResPrintf(STRING_REPLACE_ERROR2, szDestPath);
-                ConOutResPaging(TRUE,STRING_REPLACE_HELP3);
-                freep(arg);
+                ConOutResPrintf(STRING_REPLACE_HELP3);
                 return 1;
             }
         }
@@ -532,15 +516,13 @@ INT cmd_replace (LPTSTR param)
         if (IsExistingDirectory(szSrcPath))
         {
             ConOutResPrintf(STRING_REPLACE_ERROR6, szSrcPath);
-            ConOutResPaging(TRUE,STRING_REPLACE_HELP3);
-            freep(arg);
+            ConOutResPrintf(STRING_REPLACE_HELP3);
             return 1;
         }
         /* Check if the file exists */
         if (!IsExistingFile(szSrcPath))
         {
-            ConOutResPaging(TRUE,STRING_REPLACE_HELP3);
-            freep(arg);
+            ConOutResPrintf(STRING_REPLACE_HELP3);
             return 1;
         }
     }
@@ -573,9 +555,9 @@ INT cmd_replace (LPTSTR param)
         {
             /* Add switch dependent output */
             if (dwFlags & REPLACE_ADD)
-                ConOutResPaging(TRUE,STRING_REPLACE_HELP7);
+                ConOutResPrintf(STRING_REPLACE_HELP7);
             else
-                ConOutResPaging(TRUE,STRING_REPLACE_HELP3);
+                ConOutResPrintf(STRING_REPLACE_HELP3);
         }
         /* Some files replaced */
         else
@@ -587,8 +569,15 @@ INT cmd_replace (LPTSTR param)
                 ConOutResPrintf(STRING_REPLACE_HELP4, filesReplaced);
         }
     }
+
     /* Return memory */
-    freep(arg);
     return 1;
 }
-#endif /* INCLUDE_CMD_REPLACE */
+
+int wmain (int argc, WCHAR **argvW)
+{
+    /* Initialize the Console Standard Streams */
+    ConInitStdStreams();
+
+    return cmd_replace(argc, argvW);
+}
