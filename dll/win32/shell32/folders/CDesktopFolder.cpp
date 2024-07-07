@@ -913,7 +913,7 @@ HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFl
     }
     else if (_ILIsDesktop(pidl))
     {
-        if ((GET_SHGDN_RELATION(dwFlags) == SHGDN_NORMAL) && (GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING))
+        if (IS_SHGDN_DESKTOPABSOLUTEPARSING(dwFlags))
             return SHSetStrRet(strRet, sPathTarget);
         else
             return m_regFolder->GetDisplayNameOf(pidl, dwFlags, strRet);

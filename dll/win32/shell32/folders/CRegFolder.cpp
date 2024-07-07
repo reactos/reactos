@@ -614,20 +614,21 @@ HRESULT WINAPI CRegFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags,
 
     if (!pidl || !pidl->mkid.cb)
     {
-        if ((GET_SHGDN_RELATION(dwFlags) == SHGDN_NORMAL) && (GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING))
+        if (IS_SHGDN_FOR_PARSING(dwFlags))
         {
-            LPWSTR pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH + 1) * sizeof(WCHAR));
+            if (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER)
+            {
+                TRACE("GDNO returning INFOLDER instead of %#x\n", GET_SHGDN_RELATION(dwFlags));
+            }
+            LPWSTR pszPath = (LPWSTR)CoTaskMemAlloc((2 + 38 + 1) * sizeof(WCHAR));
             if (!pszPath)
                 return E_OUTOFMEMORY;
-
             /* parsing name like ::{...} */
             pszPath[0] = ':';
             pszPath[1] = ':';
             SHELL32_GUIDToStringW(m_guid, &pszPath[2]);
-
             strRet->uType = STRRET_WSTR;
             strRet->pOleStr = pszPath;
-
             return S_OK;
         }
         else
@@ -639,7 +640,6 @@ HRESULT WINAPI CRegFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags,
                 return E_FAIL;
 
             return SHSetStrRet(strRet, wstrName);
-
         }
     }
 

@@ -254,6 +254,7 @@ private:
     void _HandleStatusBarResize(int width);
     void _ForceStatusBarResize();
     void _DoCopyToMoveToFolder(BOOL bCopy);
+    BOOL IsDesktop() const { return m_FolderSettings.fFlags & FWF_DESKTOP; }
 
 public:
     CDefView();
@@ -1675,7 +1676,7 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
     // A folder is special if it is the Desktop folder,
     // a network folder, or a Control Panel folder
-    m_isParentFolderSpecial = _ILIsDesktop(m_pidlParent) || _ILIsNetHood(m_pidlParent)
+    m_isParentFolderSpecial = IsDesktop() || _ILIsNetHood(m_pidlParent)
         || _ILIsControlPanel(ILFindLastID(m_pidlParent));
 
     // Only force StatusBar part refresh if the state
