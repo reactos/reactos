@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Command shell
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Implements 'replace' command
+ * COPYRIGHT:   Copyright Samuel Erdtman (samuel@erdtman.se)
+ * COPYRIGHT:   Copyright 2024 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ */
 
 #include "replace.h"
 
