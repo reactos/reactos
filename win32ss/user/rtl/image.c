@@ -19,7 +19,6 @@
 
 /* Get the expected OS version from the application module */
 ULONG
-NTAPI
 RtlGetExpWinVer(_In_ PVOID BaseAddress)
 {
     ULONG dwMajorVersion = 3, dwMinorVersion = 10; /* Set default to Windows 3.10 */
