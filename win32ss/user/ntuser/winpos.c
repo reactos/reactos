@@ -562,6 +562,7 @@ IntGetWindowPlacement(PWND Wnd, WINDOWPLACEMENT *lpwndpl)
 
    if(lpwndpl->length != sizeof(WINDOWPLACEMENT))
    {
+      ERR("length mismatch: %u\n", lpwndpl->length);
       return FALSE;
    }
 
@@ -3398,9 +3399,7 @@ NtUserGetWindowPlacement(HWND hWnd,
    UserEnterShared();
 
    if (!(Wnd = UserGetWindowObject(hWnd)))
-   {
       goto Exit; // Return FALSE
-   }
 
    Status = MmCopyFromCaller(&Safepl, lpwndpl, sizeof(WINDOWPLACEMENT));
    if (!NT_SUCCESS(Status))
@@ -3409,6 +3408,7 @@ NtUserGetWindowPlacement(HWND hWnd,
       goto Exit; // Return FALSE
    }
 
+   // This function doesn't check the length. Just overwrite it
    Safepl.length = sizeof(WINDOWPLACEMENT);
 
    IntGetWindowPlacement(Wnd, &Safepl);
@@ -3709,35 +3709,41 @@ NtUserSetWindowPlacement(HWND hWnd,
    TRACE("Enter NtUserSetWindowPlacement\n");
    UserEnterExclusive();
 
-   if (!(Wnd = UserGetWindowObject(hWnd)) ||
-        UserIsDesktopWindow(Wnd) || UserIsMessageWindow(Wnd))
-   {
-      goto Exit; // Return FALSE
-   }
+    _SEH2_TRY
+    {
+        ProbeForRead(lpwndpl, sizeof(WINDOWPLACEMENT), 1);
+        Safepl = *lpwndpl;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastNtError(_SEH2_GetExceptionCode());
+        _SEH2_YIELD(goto Exit); // Return FALSE
+    }
+    _SEH2_END
 
-   _SEH2_TRY
-   {
-      ProbeForRead(lpwndpl, sizeof(WINDOWPLACEMENT), 1);
-      RtlCopyMemory(&Safepl, lpwndpl, sizeof(WINDOWPLACEMENT));
-   }
-   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-   {
-      SetLastNtError(_SEH2_GetExceptionCode());
-      _SEH2_YIELD(goto Exit); // Return FALSE
-   }
-   _SEH2_END
+    /* Backwards-compatibility: NT3.x doesn't check the length */
+    if (Safepl.length == sizeof(WINDOWPLACEMENT) ||
+        LOWORD(gptiCurrent->dwExpWinVer) < WINVER_WINNT4)
+    {
+        ERR("0x%lX, 0x%lX\n", gptiCurrent->dwExpWinVer, WINVER_WINNT4);
+        Flags = PLACE_MAX | PLACE_RECT;
+        if (Safepl.flags & WPF_SETMINPOSITION)
+            Flags |= PLACE_MIN;
+    }
+    else
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        goto Exit;
+    }
 
-   if(Safepl.length != sizeof(WINDOWPLACEMENT))
-   {
-      goto Exit; // Return FALSE
-   }
+    Wnd = UserGetWindowObject(hWnd);
+    if (!Wnd)
+        goto Exit; // Return FALSE
 
-   Flags = PLACE_MAX | PLACE_RECT;
-   if (Safepl.flags & WPF_SETMINPOSITION) Flags |= PLACE_MIN;
-   UserRefObjectCo(Wnd, &Ref);
-   IntSetWindowPlacement(Wnd, &Safepl, Flags);
-   UserDerefObjectCo(Wnd);
-   Ret = TRUE;
+    UserRefObjectCo(Wnd, &Ref);
+    if (!UserIsDesktopWindow(Wnd) && !UserIsMessageWindow(Wnd))
+        Ret = IntSetWindowPlacement(Wnd, &Safepl, Flags);
+    UserDerefObjectCo(Wnd);
 
 Exit:
    TRACE("Leave NtUserSetWindowPlacement, ret=%i\n", Ret);
