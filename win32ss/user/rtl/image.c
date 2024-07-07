@@ -26,11 +26,7 @@ RtlGetExpWinVer(_In_ PVOID BaseAddress)
     PIMAGE_NT_HEADERS pNT;
     ULONG_PTR AlignedAddress = (ULONG_PTR)BaseAddress;
 
-#ifdef _WIN32K_
-    DPRINT("(%p)\n", BaseAddress);
-#else
     TRACE("(%p)\n", BaseAddress);
-#endif
 
     if (AlignedAddress & 1)
         AlignedAddress = (AlignedAddress & ~1);
