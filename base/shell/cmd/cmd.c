@@ -184,9 +184,8 @@ WORD wDefColor = 0;     /* Default color */
 #ifdef FEATURE_DYNAMIC_TRACE
 
 BOOL g_bDynamicTrace = FALSE;
-struct __wine_debug_functions g_debug_functions;
 
-VOID CmdTrace(INT type, LPCSTR file, INT line, LPCSTR func, LPCSTR format, ...)
+VOID CmdTrace(INT type, LPCSTR file, INT line, LPCSTR func, LPCSTR fmt, ...)
 {
     va_list va;
     int cch;
@@ -194,14 +193,15 @@ VOID CmdTrace(INT type, LPCSTR file, INT line, LPCSTR func, LPCSTR format, ...)
 #ifdef _UNICODE
     wchar_t szTextW[800];
 #endif
+    static struct __wine_debug_functions s_Debug;
 
-    va_start(va, format);
+    va_start(va, fmt);
 
     if (g_bDynamicTrace)
     {
         StringCchPrintfA(szTextA, _countof(szTextA), "%s (%d): ", file, line);
         cch = lstrlenA(szTextA);
-        StringCchVPrintfA(&szTextA[cch], _countof(szTextA) - cch, format, va);
+        StringCchVPrintfA(&szTextA[cch], _countof(szTextA) - cch, fmt, va);
 
     /* Console output */
 #ifdef _UNICODE
@@ -213,24 +213,27 @@ VOID CmdTrace(INT type, LPCSTR file, INT line, LPCSTR func, LPCSTR format, ...)
 #endif
     }
 
+    if (!s_Debug.dbg_vlog)
+        __wine_dbg_set_functions(NULL, &s_Debug, sizeof(s_Debug));
+
     /* Debug logging */
     switch (type)
     {
         case __WINE_DBCL_FIXME:
-            g_debug_functions.dbg_vlog(__WINE_DBCL_FIXME, __wine_dbch___default,
-                                       file, func, line, format, va);
+            if (__WINE_IS_DEBUG_ON(_FIXME, __wine_dbch___default))
+                s_Debug.dbg_vlog(__WINE_DBCL_FIXME, __wine_dbch___default, file, func, line, fmt, va);
             break;
         case __WINE_DBCL_ERR:
-            g_debug_functions.dbg_vlog(__WINE_DBCL_ERR, __wine_dbch___default,
-                                       file, func, line, format, va);
+            if (__WINE_IS_DEBUG_ON(_ERR, __wine_dbch___default))
+                s_Debug.dbg_vlog(__WINE_DBCL_ERR, __wine_dbch___default, file, func, line, fmt, va);
             break;
         case __WINE_DBCL_WARN:
-            g_debug_functions.dbg_vlog(__WINE_DBCL_WARN, __wine_dbch___default,
-                                       file, func, line, format, va);
+            if (__WINE_IS_DEBUG_ON(_WARN, __wine_dbch___default))
+                s_Debug.dbg_vlog(__WINE_DBCL_WARN, __wine_dbch___default, file, func, line, fmt, va);
             break;
         case __WINE_DBCL_TRACE:
-            g_debug_functions.dbg_vlog(__WINE_DBCL_TRACE, __wine_dbch___default,
-                                       file, func, line, format, va);
+            if (__WINE_IS_DEBUG_ON(_TRACE, __wine_dbch___default))
+                s_Debug.dbg_vlog(__WINE_DBCL_TRACE, __wine_dbch___default, file, func, line, fmt, va);
             break;
         default:
             break;
@@ -2376,10 +2379,6 @@ Initialize(VOID)
         ExecuteAutoRunFile(HKEY_LOCAL_MACHINE);
         ExecuteAutoRunFile(HKEY_CURRENT_USER);
     }
-
-#ifdef FEATURE_DYNAMIC_TRACE
-    __wine_dbg_set_functions(NULL, &g_debug_functions, sizeof(g_debug_functions));
-#endif
 
     /* Returns the rest of the command line */
     return ptr;
