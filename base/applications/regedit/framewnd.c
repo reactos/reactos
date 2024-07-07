@@ -1146,12 +1146,8 @@ FreeObjectPicker(IN IDsObjectPicker *pDsObjectPicker)
     pDsObjectPicker->lpVtbl->Release(pDsObjectPicker);
 }
 
-/*******************************************************************************
- *
- *  FUNCTION: _CmdWndProc(HWND, unsigned, WORD, LONG)
- *
- *  PURPOSE:  Processes WM_COMMAND messages for the main frame window.
- *
+/**
+ * PURPOSE: Processes WM_COMMAND messages for the main frame window.
  */
 static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -1368,26 +1364,24 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         RegKeyEditPermissions(hWnd, hKeyRoot, NULL, keyPath);
         break;
     case ID_REGISTRY_PRINTERSETUP:
-        /*PRINTDLG pd;*/
-        /*PrintDlg(&pd);*/
-        /*PAGESETUPDLG psd;*/
-        /*PageSetupDlg(&psd);*/
+        //PRINTDLG pd;
+        //PrintDlg(&pd);
+        //PAGESETUPDLG psd;
+        //PageSetupDlg(&psd);
         break;
     case ID_REGISTRY_OPENLOCAL:
         break;
-
     case ID_VIEW_REFRESH:
         RefreshTreeView(g_pChildWnd->hTreeWnd);
         keyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
         RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath, TRUE);
         break;
-        /*case ID_OPTIONS_TOOLBAR:*/
-        /*	toggle_child(hWnd, LOWORD(wParam), hToolBar);*/
-        /*    break;*/
+        //case ID_OPTIONS_TOOLBAR:
+        //    toggle_child(hWnd, LOWORD(wParam), hToolBar);
+        //    break;
     case ID_EDIT_NEW_KEY:
         CreateNewKey(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd));
         break;
-
     case ID_TREE_EXPANDBRANCH:
         TreeView_Expand(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd), TVE_EXPAND);
         break;
@@ -1401,9 +1395,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_TREE_DELETE:
         keyPath = GetItemPath(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd), &hKeyRoot);
         if (keyPath == 0 || *keyPath == 0)
-        {
             MessageBeep(MB_ICONHAND);
-        }
         else if (DeleteKey(hWnd, hKeyRoot, keyPath))
             DeleteNode(g_pChildWnd->hTreeWnd, 0);
         break;
@@ -1423,12 +1415,10 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             SetFocus(hwndItem);
         }
         break;
-
     case ID_ADDRESS_FOCUS:
         SendMessageW(g_pChildWnd->hAddressBarWnd, EM_SETSEL, 0, -1);
         SetFocus(g_pChildWnd->hAddressBarWnd);
         break;
-
     default:
         if ((LOWORD(wParam) >= ID_FAVORITES_MIN) && (LOWORD(wParam) <= ID_FAVORITES_MAX))
         {
@@ -1474,17 +1464,12 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return result;
 }
 
-/********************************************************************************
+/**
+ * PURPOSE: Processes messages for the main frame window
  *
- *  FUNCTION: FrameWndProc(HWND, unsigned, WORD, LONG)
- *
- *  PURPOSE:  Processes messages for the main frame window.
- *
- *  WM_COMMAND  - process the application menu
- *  WM_DESTROY  - post a quit message and return
- *
+ * WM_COMMAND - process the application menu
+ * WM_DESTROY - post a quit message and return
  */
-
 LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     RECT rc;
@@ -1508,8 +1493,6 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         break;
     case WM_SIZE:
         resize_frame_client(hWnd);
-        break;
-    case WM_TIMER:
         break;
     case WM_INITMENU:
         OnInitMenu(hWnd);
