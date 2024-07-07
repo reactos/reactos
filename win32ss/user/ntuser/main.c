@@ -451,12 +451,14 @@ UserThreadDestroy(PETHREAD Thread)
     return STATUS_SUCCESS;
 }
 
+/* Get the expected OS version from the application module */
 DWORD WINAPI RtlGetExpWinVer(HMODULE hModule)
 {
     DWORD dwMajorVersion = 3, dwMinorVersion = 10; /* Set default to Windows 3.10 */
     PIMAGE_NT_HEADERS pNT;
     PVOID BaseAddress = (PVOID)hModule;
 
+    /* Fix alignment */
     if (((ULONG_PTR)BaseAddress) & 1)
         BaseAddress = (PVOID)(((ULONG_PTR)BaseAddress) & ~1);
 
