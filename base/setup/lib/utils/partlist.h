@@ -89,13 +89,21 @@ typedef struct _PARTENTRY
     ULONG PartitionIndex;        /* Index in the LayoutBuffer->PartitionEntry[] cached array of the corresponding DiskEntry */
     WCHAR DeviceName[MAX_PATH];  ///< NT device name: "\Device\HarddiskM\PartitionN"
 
-    BOOLEAN LogicalPartition;
-
-    /* Partition is partitioned disk space */
-    BOOLEAN IsPartitioned;
-
-    /* Partition is new, table does not exist on disk yet */
-    BOOLEAN New;
+    /* Partition state flags */
+    union
+    {
+        UCHAR AsByte;
+        struct
+        {
+            BOOLEAN New               : 1; ///< New partition, its table entry does not exist on disk yet.
+            // NOTE: See comment for the PARTLIST::SystemPartition member.
+            // MBR: BootIndicator == TRUE / GPT: PARTITION_SYSTEM_GUID.
+            // BOOLEAN IsSystemPartition : 1; // FIXME: Re-enable when BootIndicator gets deprecated.
+            BOOLEAN LogicalPartition  : 1; ///< MBR-specific logical partition.
+            BOOLEAN IsPartitioned     : 1; ///< Partitioned disk space.
+            UCHAR Reserved            : 5;
+        };
+    };
 
     /*
      * Volume-related properties:
