@@ -223,10 +223,10 @@ IntSetTimer( PWND Window,
 
       IDEvent = RtlFindClearBitsAndSet(&WindowLessTimersBitMap, 1, HintIndex++);
       if (IDEvent == (UINT_PTR) -1)
-	  {
-		  HintIndex = HINTINDEX_BEGIN_VALUE;
-		  IDEvent = RtlFindClearBitsAndSet(&WindowLessTimersBitMap, 1, HintIndex++);
-	  }
+      {
+         HintIndex = HINTINDEX_BEGIN_VALUE;
+         IDEvent = RtlFindClearBitsAndSet(&WindowLessTimersBitMap, 1, HintIndex++);
+      }
       if (IDEvent == (UINT_PTR) -1)
       {
          IntUnlockWindowlessTimerBitmap();
