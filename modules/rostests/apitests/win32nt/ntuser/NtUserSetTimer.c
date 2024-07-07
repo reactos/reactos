@@ -44,7 +44,7 @@ void CALLBACK TimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
             timerId1[i].counter++;
 }
 
-void MessageLoop()
+void MessageLoop(void)
 {
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0))
@@ -65,7 +65,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-BOOL test1()
+BOOL test1(void)
 {
     int countErrors = 0;
 
@@ -121,7 +121,7 @@ BOOL test1()
     return FALSE;
 }
 
-BOOL test2()
+BOOL test2(void)
 {
     int countErrors = 0;
 
@@ -194,7 +194,7 @@ BOOL test2()
     return FALSE;
 }
 
-BOOL test3()
+BOOL test3(void)
 {
     int countErrors = 0;
 
@@ -216,7 +216,7 @@ BOOL test3()
     return FALSE;
 }
 
-BOOL test4()
+BOOL test4(void)
 {
     int countErrors = 0;
 
@@ -252,7 +252,7 @@ BOOL test4()
     return FALSE;
 }
 
-BOOL test5()
+BOOL test5(void)
 {
     int countErrors = 0;
 
