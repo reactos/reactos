@@ -197,13 +197,13 @@ VOID CmdTrace(INT type, LPCSTR file, INT line, LPCSTR func, LPCSTR fmt, ...)
 
     va_start(va, fmt);
 
+    /* Console output */
     if (g_bDynamicTrace)
     {
         StringCchPrintfA(szTextA, _countof(szTextA), "%s (%d): ", file, line);
         cch = lstrlenA(szTextA);
         StringCchVPrintfA(&szTextA[cch], _countof(szTextA) - cch, fmt, va);
 
-    /* Console output */
 #ifdef _UNICODE
         MultiByteToWideChar(OutputCodePage, 0, szTextA, -1, szTextW, _countof(szTextW));
         szTextW[_countof(szTextW) - 1] = UNICODE_NULL; /* Avoid buffer overrun */
