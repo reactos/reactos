@@ -40,7 +40,7 @@ END
 
 IDR_LINKMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "在浏览器中打开链接(&O)", ID_OPEN_LINK
         MENUITEM "复制链接到剪贴板(&C)", ID_COPY_LINK
@@ -49,7 +49,7 @@ END
 
 IDR_APPLICATIONMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "安装(&I)\tCtrl+Enter", ID_INSTALL
         MENUITEM "卸载(&U)\tCtrl+Del", ID_UNINSTALL

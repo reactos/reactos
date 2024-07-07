@@ -39,7 +39,7 @@ END
 
 IDR_LINKMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "&Відкрити посилання в браузері", ID_OPEN_LINK
         MENUITEM "&Копіювати посилання в буфер обміну", ID_COPY_LINK
@@ -48,7 +48,7 @@ END
 
 IDR_APPLICATIONMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "&Встановити\tCtrl+Enter", ID_INSTALL
         MENUITEM "В&идалити\tCtrl+Del", ID_UNINSTALL
