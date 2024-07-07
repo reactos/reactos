@@ -3735,12 +3735,7 @@ NtUserSetWindowPlacement(HWND hWnd,
 
     /* Backwards-compatibility: NT3.x doesn't check the length */
     if (Safepl.length == sizeof(WINDOWPLACEMENT) ||
-#if 1 // FIXME: CORE-19675: We have to populate dwExpWinVer
-        FALSE
-#else
-        LOWORD(gptiCurrent->dwExpWinVer) < WINVER_WINNT4
-#endif
-    )
+        LOWORD(gptiCurrent->dwExpWinVer) < WINVER_WINNT4)
     {
         ERR("0x%lX, 0x%lX\n", gptiCurrent->dwExpWinVer, WINVER_WINNT4);
         Flags = PLACE_MAX | PLACE_RECT;

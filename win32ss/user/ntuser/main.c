@@ -451,7 +451,31 @@ UserThreadDestroy(PETHREAD Thread)
     return STATUS_SUCCESS;
 }
 
-/* Win: xxxCreateThreadInfo */
+DWORD WINAPI RtlGetExpWinVer(HMODULE hModule)
+{
+    DWORD dwMajorVersion = 3, dwMinorVersion = 10; /* Set default to Windows 3.10 */
+    PIMAGE_NT_HEADERS pNT;
+    PVOID BaseAddress = (PVOID)hModule;
+
+    if (((ULONG_PTR)BaseAddress) & 1)
+        BaseAddress = (PVOID)((ULONG_PTR)BaseAddress & ~1);
+
+    if (BaseAddress && !LOWORD(BaseAddress))
+    {
+        pNT = RtlImageNtHeader(BaseAddress);
+        if (pNT)
+        {
+            dwMajorVersion = pNT->OptionalHeader.MajorSubsystemVersion;
+            if (dwMajorVersion == 1)
+                dwMajorVersion = 3;
+            else
+                dwMinorVersion = pNT->OptionalHeader.MinorSubsystemVersion;
+        }
+    }
+
+    return MAKEWORD(dwMinorVersion, dwMajorVersion);
+}
+
 NTSTATUS NTAPI
 InitThreadCallback(PETHREAD Thread)
 {
@@ -555,6 +579,13 @@ InitThreadCallback(PETHREAD Thread)
         pci->hKL = pDefKL->hkl;
         pci->CodePage = pDefKL->CodePage;
     }
+
+    /* Populate dwExpWinVer */
+    if (Process->Peb)
+        ptiCurrent->dwExpWinVer = RtlGetExpWinVer((HMODULE)Process->SectionBaseAddress);
+    else
+        ptiCurrent->dwExpWinVer = WINVER_WINNT4;
+    pci->dwExpWinVer = ptiCurrent->dwExpWinVer;
 
     /* Need to pass the user Startup Information to the current process. */
     if ( ProcessParams )
