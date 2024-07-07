@@ -1,8 +1,9 @@
 /*
- * PROJECT:         ReactOS api tests
- * LICENSE:         GPL - See COPYING in the top level directory
- * PURPOSE:         Test for NtUserSetTimer
- * PROGRAMMERS:
+ * PROJECT:     ReactOS API tests
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Tests for NtUserSetTimer
+ * COPYRIGHT:   Copyright 2008 Timo Kreuzer <timo.kreuzer@reactos.org>
+ *              Copyright 2024 Tomas Vesely <turican0@gmail.com>
  */
 
 #include "../win32nt.h"
