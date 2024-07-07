@@ -34,9 +34,11 @@ START_TEST(SetWindowPlacement)
     ok_int(ret, FALSE);
     ok_err(ERROR_INVALID_PARAMETER);
 
+    SetLastError(0xDEADFACE);
     wndpl.length = sizeof(wndpl);
     ret = SetWindowPlacement(hwnd, &wndpl);
     ok_int(ret, TRUE);
+    ok_err(ERROR_SUCCESS);
 
     DestroyWindow(hwnd);
 }
