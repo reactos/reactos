@@ -456,15 +456,15 @@ DWORD WINAPI RtlGetExpWinVer(HMODULE hModule)
 {
     DWORD dwMajorVersion = 3, dwMinorVersion = 10; /* Set default to Windows 3.10 */
     PIMAGE_NT_HEADERS pNT;
-    PVOID BaseAddress = (PVOID)hModule;
+    ULONG_PTR BaseAddress = (ULONG_PTR)hModule;
 
     /* Fix alignment */
-    if (((ULONG_PTR)BaseAddress) & 1)
-        BaseAddress = (PVOID)(((ULONG_PTR)BaseAddress) & ~1);
+    if (BaseAddress & 1)
+        BaseAddress = (BaseAddress & ~1);
 
     if (BaseAddress && !LOWORD(BaseAddress))
     {
-        pNT = RtlImageNtHeader(BaseAddress);
+        pNT = RtlImageNtHeader((PVOID)BaseAddress);
         if (pNT)
         {
             dwMajorVersion = pNT->OptionalHeader.MajorSubsystemVersion;
