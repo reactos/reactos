@@ -49,7 +49,7 @@ void MessageLoop(void)
 {
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0))
-	{
+    {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
@@ -83,7 +83,7 @@ BOOL test1(void)
     {
         timerId1[i].index = SetTimer(NULL, 0, TEST1_INTERVAL, TimerProc);
         if (timerId1[i].index == 0)
-		{
+        {
             countErrors++;
         }
     }
@@ -113,7 +113,7 @@ BOOL test1(void)
     for (int i = 0; i < TEST1_COUNT; i++)
     {
         if (KillTimer(NULL, timerId1[i].index) == 0)
-		{
+        {
             countErrors++;
         }
     }
@@ -153,7 +153,7 @@ BOOL test2(void)
     {
         UINT_PTR locIndex = SetTimer(hwnd, i, TEST2_INTERVAL, NULL);
         if (locIndex == 0)
-		{
+        {
             countErrors++;
         }
     }
@@ -183,7 +183,7 @@ BOOL test2(void)
     for (int i = 0; i < TEST2_COUNT; i++)
     {
         if (KillTimer(hwnd, i) == 0)
-		{
+        {
             countErrors++;
         }
     }
@@ -203,11 +203,11 @@ BOOL test3(void)
     {
         UINT_PTR locIndex = SetTimer(NULL, 0, TEST3_INTERVAL, TimerProc);
         if (locIndex == 0)
-		{
+        {
             countErrors++;
         }
         if (KillTimer(NULL, locIndex) == 0)
-		{
+        {
             countErrors++;
         }
     }
