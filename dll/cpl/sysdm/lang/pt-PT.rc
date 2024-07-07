@@ -1,7 +1,10 @@
-/* Portuguese Language resource file
- *
- * Traduzido por: Jose Carlos Jesus 20-06-2019 zecarlos1957@hotmail.com
+/*
+ * PROJECT:     ReactOS System Control Panel Applet
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATOR:  Copyright 2019-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
  */
+
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 256, 218
@@ -34,11 +37,11 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Gestor de dispositivos", IDC_STATIC, 6, 7, 244, 61
     ICON IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
-    LTEXT "O Gestor de dispositivos lista todos os dispositivos de hardware instalados no seu computador. Use o ""Gestor de dispositivos"" para alterar as propriedades de qualquer dispositivo.", IDC_STATIC, 42, 18, 204, 24
+    LTEXT "O Gestor de dispositivos lista todos os dispositivos de hardware instalados no computador. Utilize o ""Gestor de dispositivos"" para alterar as propriedades de cada dispositivo.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "&Gestor de dispositivos", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
     GROUPBOX "Assistente de Hardware", IDC_STATIC, 6, 79, 244, 61
     ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
-    LTEXT "O Assistente de hardware irá ajuda-lo a instalar, desinstalar, reparar, e configurar o hardware.", IDC_STATIC, 42, 90, 204, 24
+    LTEXT "O Assistente de hardware ajuda-o a instalar, desinstalar, reparar, e configurar o hardware.", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON "&Assistente de Hardware", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
     GROUPBOX "Perfis de Hardware", IDC_STATIC, 6, 149, 244, 61
     ICON IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
@@ -59,7 +62,7 @@ BEGIN
     LTEXT "Definições de ambiente de trabalho para o início de sessão", IDC_STATIC, 16, 98, 228, 20
     PUSHBUTTON "D&efinições", IDC_USERPROFILE, 194, 113, 50, 15
     GROUPBOX "Arranque e Recuperação", IDC_STATIC, 6, 141, 244, 52
-    LTEXT "Informação de arranque do sistema, falha do sistema e depuração.", IDC_STATIC, 16, 154, 228, 19
+    LTEXT "Informação de arranque, falha do sistema e depuração.", IDC_STATIC, 16, 154, 228, 19
     PUSHBUTTON "De&finições", IDC_STAREC, 194, 172, 50, 15
     PUSHBUTTON "Definições do &sistema", IDC_SYSSETTINGS, 6, 202, 80, 15
     PUSHBUTTON "&Variáveis de ambiente", IDC_ENVVAR, 88, 202, 80, 15
@@ -74,7 +77,7 @@ BEGIN
     GROUPBOX "Informações de versão", IDC_STATIC, 6, 3, 210, 73
     LTEXT "O ReactOS é construído como um sistema operativo servidor e responde como tal. Marque esta opção para aplicar isso apenas a aplicações.", IDC_STATIC, 15, 15, 183, 41
     CONTROL "&Comportamento de estação de trabalho", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
-    PUSHBUTTON "&OK", IDOK, 166, 83, 50, 14
+    PUSHBUTTON "OK", IDOK, 166, 83, 50, 14
 END
 
 IDD_HARDWAREPROFILES DIALOGEX 6, 18, 254, 234
@@ -117,11 +120,11 @@ BEGIN
     LTEXT "", IDC_HWPPROP_SERIAL, 64, 45, 135, 8
     GROUPBOX "", IDC_STATIC, 10, 55, 192, 75
     AUTOCHECKBOX "Este computador é &portátil", IDC_HWPPROP_PORTABLE, 17, 68, 115, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "O estado de ancoragem é desconhecido", IDC_HWPPROP_UNKNOWN, 22, 85, 160, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "O computador está ancorado", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
-    AUTORADIOBUTTON "O computador está desancorado", IDC_HWPPROP_UNDOCKED, 22, 109, 160, 10
+    AUTORADIOBUTTON "O &estado de ancoragem é desconhecido", IDC_HWPPROP_UNKNOWN, 22, 85, 160, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "O computador está &ancorado", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
+    AUTORADIOBUTTON "O computador está &desancorado", IDC_HWPPROP_UNDOCKED, 22, 109, 160, 10
     GROUPBOX "Selecção de perfis de hardware", IDC_STATIC, 10, 138, 192, 42
-    AUTOCHECKBOX "Incluir sempre este perfil como opção no arranque do ReactOS", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
+    AUTOCHECKBOX "&Incluir sempre este perfil como opção no arranque do ReactOS", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
 END
 
 IDD_COPYPROFILE DIALOGEX 12, 26, 256, 52
@@ -156,7 +159,7 @@ CAPTION "Perfis de utilizador"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT "Os perfis de utilizador contêm definições para o ambiente de trabalho e outras informações relacionadas ao início de sessão. Crie um perfil novo, ou restaure um perfil do servidor por cada computador.", IDC_STATIC, 40, 11, 211, 35
+    LTEXT "Os perfis de utilizador contêm definições para o ambiente de trabalho e outras informações relacionadas ao início de sessão. Pode criar um novo perfil, ou seleccionar um perfil do servidor para cada computador que utiliza.", IDC_STATIC, 40, 11, 211, 35
     LTEXT "Perfis armazenados neste computador:", IDC_STATIC, 16, 51, 204, 9
     CONTROL "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 6, 66, 244, 85, WS_EX_CLIENTEDGE
@@ -165,8 +168,8 @@ BEGIN
     PUSHBUTTON "Copiar &para...", IDC_USERPROFILE_COPY, 200, 155, 50, 15
     CONTROL "Para criar novas contas de utilizador, abra <A>Contas de Utilizador</A> no Painel de Control.",
             IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 245, 18
-    DEFPUSHBUTTON "&OK", IDOK, 134, 198, 54, 15
-    PUSHBUTTON "&Cancelar", IDCANCEL, 196, 198, 54, 15
+    DEFPUSHBUTTON "OK", IDOK, 134, 198, 54, 15
+    PUSHBUTTON "Cancelar", IDCANCEL, 196, 198, 54, 15
 END
 
 IDD_USERPROFILE_TYPE DIALOGEX 6, 18, 225, 103
@@ -177,8 +180,8 @@ BEGIN
     LTEXT "", IDC_USERPROFILE_TYPE_TEXT, 7, 11, 206, 28
     AUTORADIOBUTTON "Perfil guardado no &servidor", IDC_USERPROFILE_TYPE_ROAMING, 60, 49, 145, 10
     AUTORADIOBUTTON "Perfil &local", IDC_USERPROFILE_TYPE_LOCAL, 60, 63, 145, 10
-    DEFPUSHBUTTON "&OK", IDOK, 60, 82, 50, 14
-    PUSHBUTTON "&Cancelar", IDCANCEL, 122, 82, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 60, 82, 50, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 122, 82, 50, 14
 END
 
 IDD_USERPROFILE_COPY DIALOGEX 6, 18, 261, 133
@@ -186,14 +189,14 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Copiar para"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Copiar o perfil para", -1, 8, 9, 185, 52
+    GROUPBOX "&Copiar o perfil para", -1, 8, 9, 185, 52
     EDITTEXT IDC_USERPROFILE_COPY_PATH, 15, 23, 167, 12, ES_AUTOHSCROLL
     PUSHBUTTON "&Procurar", IDC_USERPROFILE_COPY_BROWSE, 15, 41, 50, 14
     GROUPBOX "É permitido usar", -1, 8, 77, 185, 48
     LTEXT "", IDC_USERPROFILE_COPY_USER, 15, 91, 167, 8
     PUSHBUTTON "&Alterar", IDC_USERPROFILE_COPY_CHANGE, 15, 105, 50, 14
-    DEFPUSHBUTTON "&OK", IDOK, 204, 13, 50, 14
-    PUSHBUTTON "&Cancelar", IDCANCEL, 204, 30, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 204, 13, 50, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 204, 30, 50, 14
 END
 
 IDD_STARTUPRECOVERY DIALOGEX 6, 18, 252, 280
@@ -202,31 +205,31 @@ CAPTION "Arranque e Recuperação"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Arranque do sistema", IDC_STATIC, 7, 12, 238, 95
-    LTEXT "Sistema operativo predefinido:", IDC_STATIC, 14, 26, 100, 8
+    LTEXT "Sistema &operativo predefinido:", IDC_STATIC, 14, 26, 100, 8
     COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "Mostrar a lista de &sistemas operativos durante:", IDC_STRECLIST, 14, 56, 160, 8
     EDITTEXT IDC_STRRECLISTEDIT, 185, 54, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
             UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT "seg.", IDC_STATIC, 223, 56, 18, 8
-    AUTOCHECKBOX "Tempo a apresentar as &opções de recuperação:", IDC_STRRECREC, 14, 70, 170, 8
+    AUTOCHECKBOX "Tempo a apresentar as opções de &recuperação:", IDC_STRRECREC, 14, 70, 170, 8
     EDITTEXT IDC_STRRECRECEDIT, 185, 68, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
             UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT "seg.", IDC_STATIC, 223, 70, 18, 8
-    LTEXT "Para editar o ficheiro de opções de iniciação manualmente, clique em ""Editar"".", IDC_STATIC, 14, 89, 187, 8
+    LTEXT "Para editar o ficheiro de opções de arranque manualmente, clique em ""Editar"".", IDC_STATIC, 14, 89, 187, 8
     PUSHBUTTON "&Editar...", IDC_STRRECEDIT, 188, 87, 50, 14
     GROUPBOX "Falha do sistema", IDC_STATIC, 7, 111, 238, 140
-    AUTOCHECKBOX "&Escrever um evento no ficheiro de registo do sistema", IDC_STRRECWRITEEVENT, 14, 124, 190, 10
+    AUTOCHECKBOX "Escrever um e&vento no ficheiro de registo do sistema", IDC_STRRECWRITEEVENT, 14, 124, 190, 10
     AUTOCHECKBOX "Enviar um &alerta administrativo", IDC_STRRECSENDALERT, 14, 138, 148, 10
-    AUTOCHECKBOX "&Reiniciar automaticamente", IDC_STRRECRESTART, 14, 152, 145, 10
+    AUTOCHECKBOX "Reiniciar a&utomaticamente", IDC_STRRECRESTART, 14, 152, 145, 10
     GROUPBOX "Escrever informações de depuração", IDC_STATIC, 12, 167, 227, 76
     COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST | WS_TABSTOP
-    LTEXT "Ficheiro de imagem de erro:", IDC_STATIC, 17, 202, 150, 8
+    LTEXT "&Ficheiro de imagem de erro:", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
-    AUTOCHECKBOX "&Substituir ficheiro existente", IDC_STRRECOVERWRITE, 17, 228, 125, 10
-    DEFPUSHBUTTON "&OK", IDOK, 141, 258, 50, 15
-    PUSHBUTTON "&Cancelar", IDCANCEL, 195, 258, 50, 15
+    AUTOCHECKBOX "Su&bstituir ficheiro existente", IDC_STRRECOVERWRITE, 17, 228, 125, 10
+    DEFPUSHBUTTON "OK", IDOK, 141, 258, 50, 15
+    PUSHBUTTON "Cancelar", IDCANCEL, 195, 258, 50, 15
 END
 
 IDD_VIRTMEM DIALOGEX 6, 6, 233, 248
@@ -242,14 +245,14 @@ BEGIN
     LTEXT "%s", IDC_DRIVE, 88, 80, 100, 9
     LTEXT "Espaço disponível:", IDC_STATIC, 20, 92, 60, 9
     LTEXT "%s", IDC_SPACEAVAIL, 88, 92, 104, 9
-    LTEXT "Tamanho inicial (MB):", -1, 22, 118, 75, 9
-    LTEXT "Tamanho máximo (MB):", -1, 22, 131, 75, 9
+    LTEXT "&Tamanho inicial (MB):", -1, 22, 118, 75, 9
+    LTEXT "Tamanho &máximo (MB):", -1, 22, 131, 75, 9
     AUTORADIOBUTTON "Tamanho &personalizado", IDC_CUSTOM, 20, 105, 88, 9, WS_GROUP
     AUTORADIOBUTTON "Tamanho gerido pelo &sistema", IDC_SYSMANSIZE, 20, 145, 110, 9
     AUTORADIOBUTTON "Sem &ficheiro de paginação", IDC_NOPAGEFILE, 20, 158, 100, 9
     EDITTEXT IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     EDITTEXT IDC_MAXSIZE, 100, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
-    PUSHBUTTON "&Definir", IDC_SET, 158, 154, 50, 15
+    PUSHBUTTON "Definir", IDC_SET, 158, 154, 50, 15
     GROUPBOX "Tamanho total do ficheiro de paginação para todas as unidades", IDC_TOTALGROUP, 10, 177, 214, 46
     LTEXT "Mínimo permitido:", IDC_STATIC, 18, 188, 58, 9
     LTEXT "%s", IDC_MINIMUM, 88, 188, 100, 9
@@ -257,8 +260,8 @@ BEGIN
     LTEXT "%s", IDC_RECOMMENDED, 88, 199, 100, 9
     LTEXT "Actualmente:", IDC_STATIC, 18, 210, 66, 9
     LTEXT "%s", IDC_CURRENT, 88, 210, 100, 9
-    DEFPUSHBUTTON "&OK", IDOK, 114, 230, 48, 15
-    PUSHBUTTON "&Cancelar", IDCANCEL, 168, 230, 48, 15
+    DEFPUSHBUTTON "OK", IDOK, 114, 230, 48, 15
+    PUSHBUTTON "Cancelar", IDCANCEL, 168, 230, 48, 15
 END
 
 IDD_ENVIRONMENT_VARIABLES DIALOGEX 6, 18, 252, 245
@@ -279,8 +282,8 @@ BEGIN
     PUSHBUTTON "N&ovo...", IDC_SYSTEM_VARIABLE_NEW, 80, 194, 50, 14
     PUSHBUTTON "Ed&itar...", IDC_SYSTEM_VARIABLE_EDIT, 134, 194, 50, 14
     PUSHBUTTON "Eli&minar", IDC_SYSTEM_VARIABLE_DELETE, 188, 194, 50, 14
-    DEFPUSHBUTTON "&OK", IDOK, 141, 224, 50, 14, WS_GROUP
-    PUSHBUTTON "&Cancelar", IDCANCEL, 195, 224, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 141, 224, 50, 14, WS_GROUP
+    PUSHBUTTON "Cancelar", IDCANCEL, 195, 224, 50, 14
 END
 
 IDD_EDIT_VARIABLE DIALOGEX 10, 15, 372, 71
@@ -330,14 +333,14 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Sistema"
-    IDS_CPLSYSTEMDESCRIPTION "Veja informações sobre o seu computador e altere várias configurações do sistema e hardware."
+    IDS_CPLSYSTEMDESCRIPTION "Veja informações sobre o computador e altere várias definições do sistema e hardware."
     IDS_MEGABYTE "MB de RAM"
     IDS_GIGABYTE "GB de RAM"
     IDS_TERABYTE "TB de RAM"
     IDS_PETABYTE "PB de RAM"
     IDS_MEGAHERTZ "MHz"
     IDS_GIGAHERTZ "GHz"
-    IDS_UPTIME_FORMAT "%lu Dias, %02lu:%02lu:%02lu"
+    IDS_UPTIME_FORMAT "%lu dias, %02lu:%02lu:%02lu"
     IDS_VARIABLE "Variável"
     IDS_VALUE "Valor"
     IDS_NO_DUMP "(Nenhum)"
