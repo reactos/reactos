@@ -18,8 +18,6 @@ enum
     REPLACE_UPDATE    = 0x020,   /* /U */
 };
 
-INT  nErrorLevel = 0;     /* Errorlevel of last launched external program */
-
 /* just makes a print out if there is a problem with the switches */
 void invalid_switch(LPTSTR is)
 {
@@ -188,7 +186,7 @@ INT replace(TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], DWORD dwFlags, BOOL *d
             VirtualFree (buffer, 0, MEM_RELEASE);
             CloseHandle (hFileDest);
             CloseHandle (hFileSrc);
-            nErrorLevel = 1;
+            SetEnvironmentVariable(_T("ERRORLEVEL"), _T("1"));
             return 0;
         }
     }
@@ -389,7 +387,7 @@ INT cmd_replace (int argc, WCHAR **argvW)
     ++argvW;
 
     /* Help wanted? */
-    if (argc == 1 && !_tcsncmp(argvW[0], _T("/?"), 2))
+    if (argc == 1 && !_tcscmp(argvW[0], _T("/?")))
     {
         ConOutResPrintf(STRING_REPLACE_HELP1);
         return 0;
