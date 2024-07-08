@@ -67,8 +67,9 @@ Test_CopyImage_Flags(UINT uType)
                 DeleteObject(hCopyedImage);
         }
 
-        if (uBit & LR_COPYDELETEORG) // Is the original image deleted?
-            hImage = CreateTestImage(uType); // Re-create
+        /* If the original image was deleted,  re-create it */
+        if (uBit & LR_COPYDELETEORG)
+            hImage = CreateTestImage(uType);
     }
 
     DeleteObject(hImage);
