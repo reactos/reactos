@@ -249,9 +249,7 @@ BOOL test4(void)
     DestroyWindow(hwnd);
     UnregisterClass("TimerWindowClass", GetModuleHandle(NULL));
 
-    if (countErrors == 0)
-        return TRUE;
-    return FALSE;
+    return (countErrors == 0);
 }
 
 BOOL test5(void)
