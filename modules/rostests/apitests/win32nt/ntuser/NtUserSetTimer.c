@@ -106,7 +106,8 @@ static BOOL test1(void)
     return (countErrors == 0);
 }
 
-BOOL test2(void)
+// TEST WITH MESSAGES WITHOUT WINDOW - create many timers
+static BOOL test2(void)
 {
     UINT i, countErrors = 0;
 
