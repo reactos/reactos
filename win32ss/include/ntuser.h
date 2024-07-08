@@ -3628,6 +3628,9 @@ NtUserSetScrollBarInfo(
     LONG idObject,
     SETSCROLLBARINFO *info);
 
+ULONG
+RtlGetExpWinVer(_In_ PVOID BaseAddress);
+
 #endif /* __WIN32K_NTUSER_H */
 
 /* EOF */

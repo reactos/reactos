@@ -18,7 +18,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 ULONG
 RtlGetExpWinVer(_In_ PVOID BaseAddress)
 {
-    ULONG dwMajorVersion = 3, dwMinorVersion = 10; /* Set default to Windows 3.10 */
+    ULONG dwMajorVersion = 3, dwMinorVersion = 10; /* Set default to Windows 3.10 (WINVER_WIN31) */
     PIMAGE_NT_HEADERS pNTHeader;
     ULONG_PTR AlignedAddress = (ULONG_PTR)BaseAddress;
 
