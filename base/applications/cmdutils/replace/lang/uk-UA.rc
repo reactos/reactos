@@ -1,7 +1,6 @@
 /*
- * PROJECT:     Command-line interface
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/shell/cmd/lang/uk-UA.rc
+ * PROJECT:     ReactOS Replace Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Ukraianian Language File for Command-line interface
  * TRANSLATORS: Artem Reznikov, Igor Paliychuk
  */

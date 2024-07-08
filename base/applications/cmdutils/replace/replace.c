@@ -374,7 +374,7 @@ INT recFindSubDirs(DWORD dwFlags,
     return filesReplaced;
 }
 
-INT cmd_replace (int argc, WCHAR **argvW)
+INT cmd_replace(INT argc, WCHAR **argv)
 {
     LPTSTR *arg;
     INT i, filesReplaced = 0, nFiles, srcIndex = -1, destIndex = -1;
@@ -383,17 +383,17 @@ INT cmd_replace (int argc, WCHAR **argvW)
     BOOL doMore = TRUE;
 
     --argc;
-    ++argvW;
+    ++argv;
 
     /* Help wanted? */
-    if (argc == 1 && !_tcscmp(argvW[0], _T("/?")))
+    if (argc == 1 && !_tcscmp(argv[0], _T("/?")))
     {
         ConOutResPrintf(STRING_REPLACE_HELP1);
-        return 0; /* OK */
+        return EXIT_SUCCESS;
     }
 
     /* Divide the argument in to an array of c-strings */
-    arg = argvW;
+    arg = argv;
     nFiles = argc;
 
     /* Read options */
@@ -425,13 +425,13 @@ INT cmd_replace (int argc, WCHAR **argvW)
                     break;
                 default:
                     invalid_switch(arg[i]);
-                    return 1; /* Error */
+                    return 11; /* Error */
                 }
             }
             else
             {
                 invalid_switch(arg[i]);
-                return 1; /* Error */
+                return 11; /* Error */
             }
             nFiles--;
         }
@@ -448,7 +448,7 @@ INT cmd_replace (int argc, WCHAR **argvW)
             else
             {
                 invalid_switch(arg[i]);
-                return 1; /* Error */
+                return 11; /* Error */
             }
         }
     }
@@ -458,14 +458,15 @@ INT cmd_replace (int argc, WCHAR **argvW)
     {
         ConOutResPrintf(STRING_REPLACE_HELP2);
         ConOutResPrintf(STRING_REPLACE_HELP3);
-        return 1; /* Error */
+        return 11; /* Error */
     }
+
     /* Check so that not both update and add switch is added and subdir */
     if ((dwFlags & REPLACE_UPDATE || dwFlags & REPLACE_SUBDIR) && (dwFlags & REPLACE_ADD))
     {
         ConOutResPrintf(STRING_REPLACE_ERROR4);
         ConOutResPrintf(STRING_REPLACE_HELP7);
-        return 1; /* Error */
+        return 11; /* Error */
     }
 
     /* If we have a destination get the full path */
@@ -481,7 +482,7 @@ INT cmd_replace (int argc, WCHAR **argvW)
             {
                 ConOutResPrintf(STRING_REPLACE_ERROR2,arg[destIndex]);
                 ConOutResPrintf(STRING_REPLACE_HELP3);
-                return 1; /* Error */
+                return 3; /* Error */
             }
             getPath(szDestPath, arg[destIndex]);
             /* Make sure that destination exists */
@@ -489,7 +490,7 @@ INT cmd_replace (int argc, WCHAR **argvW)
             {
                 ConOutResPrintf(STRING_REPLACE_ERROR2, szDestPath);
                 ConOutResPrintf(STRING_REPLACE_HELP3);
-                return 1; /* Error */
+                return 3; /* Error */
             }
         }
     }
@@ -514,15 +515,16 @@ INT cmd_replace (int argc, WCHAR **argvW)
         {
             ConOutResPrintf(STRING_REPLACE_ERROR6, szSrcPath);
             ConOutResPrintf(STRING_REPLACE_HELP3);
-            return 1; /* Error */
+            return 2; /* Error */
         }
         /* Check if the file exists */
         if (!IsExistingFile(szSrcPath))
         {
             ConOutResPrintf(STRING_REPLACE_HELP3);
-            return 1; /* Error */
+            return 2; /* Error */
         }
     }
+
     /* /w switch is set so wait for any key to be pressed */
     if (dwFlags & REPLACE_DISK)
     {
@@ -568,7 +570,7 @@ INT cmd_replace (int argc, WCHAR **argvW)
     }
 
     /* Return memory */
-    return 0; /* OK */
+    return EXIT_SUCCESS;
 }
 
 int wmain(int argc, WCHAR **argvW)

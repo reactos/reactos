@@ -43,7 +43,7 @@ REPLACE [drive1:][rrugë1]emri [drive2:][rrugë2] [/P] [/R] [/S] [/W] [/U]\n\n\
     STRING_REPLACE_ERROR6 "Nuk u gjet dokumenti - %s\n"
     STRING_REPLACE_ERROR7 "Error i zgjatur 32\n"
 
-    STRING_COPY_OPTION "YNA"
+    STRING_COPY_OPTION "PJT"
     STRING_COPY_ERROR1 "Error: Nuk mund të hapni burim - %s!\n"
     STRING_COPY_ERROR3 "Gabim gjatë shkrimit në destinacion!\n"
     STRING_ERROR_D_PAUSEMSG "Shtypni një buton për të vazhduar . . . "
