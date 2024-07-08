@@ -25,7 +25,7 @@ REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
                            archivos no protegidos.\n\
   /S                       Reemplaza todos los archivos en todos los\n\
                            subdirectorios\n\
-                           del directorio destino. No se puede usar con la opción /A\n\
+                           del directorio destino. No se puede usar con la opción /A.\n\
   /W                       Espera que insertes un disco antes de empezar.\n\
   /U                       Reemplaza (actualiza) solo los archivos que son más\n\
                            antiguos que los de origen. No se puede usar con\n\
