@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Tests for NtUserSetTimer
  * COPYRIGHT:   Copyright 2008 Timo Kreuzer <timo.kreuzer@reactos.org>
- *              Copyright 2024 Tomas Vesely <turican0@gmail.com>
+ *              Copyright 2024 Tomaš Veselý <turican0@gmail.com>
  */
 
 #include "../win32nt.h"
@@ -66,6 +66,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         timerIdW1[wParam].counter++;
         return 0;
     }
+
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
@@ -86,60 +87,48 @@ BOOL test1(void)
     {
         timerId1[i].index = SetTimer(NULL, 0, TEST1_INTERVAL, TimerProc);
         if (timerId1[i].index == 0)
-        {
             countErrors++;
-        }
     }
 
     ULONGLONG startTime = GetTickCount();
 
-    MSG msg = {};
+    MSG msg = { NULL };
     while (GetMessage(&msg, NULL, 0, 0))
     {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
 
         if (GetTickCount() - startTime >= SLEEP_TIME)
-        {
             PostQuitMessage(0);
-        }
     }
 
     for (i = 0; i < TEST1_COUNT; i++)
     {
         if ((timerId1[i].counter < minMessages) || (timerId1[i].counter > maxMessages))
-        {
             countErrors++;
-        }
     }
 
     for (i = 0; i < TEST1_COUNT; i++)
     {
         if (KillTimer(NULL, timerId1[i].index) == 0)
-        {
             countErrors++;
-        }
     }
-    if (countErrors == 0)
-        return TRUE;
-    return FALSE;
+
+    return (countErrors == 0);
 }
 
 BOOL test2(void)
 {
-    int countErrors = 0;
+    UINT countErrors = 0;
 
     for (long i = 0; i < TEST2_COUNT; i++)
     {
         UINT_PTR locIndex = SetTimer(NULL, 0, TEST2_INTERVAL, TimerProc);
+
         if (locIndex == 0)
-        {
             countErrors++;
-        }
         if (KillTimer(NULL, locIndex) == 0)
-        {
             countErrors++;
-        }
     }
 
     return (countErrors == 0);
@@ -147,7 +136,7 @@ BOOL test2(void)
 
 BOOL test3(void)
 {
-    int countErrors = 0;
+    UINT countErrors = 0;
 
     UINT_PTR locIndex1 = SetTimer(NULL, 0, TEST1_INTERVAL, TimerProc);
     if (locIndex1 == 0)
@@ -159,7 +148,7 @@ BOOL test3(void)
         countErrors++;
     if (KillTimer(NULL, locIndex2) == 0)
         countErrors++;
-    if(locIndex1 == locIndex2)
+    if (locIndex1 == locIndex2)
         countErrors++;
 
     return (countErrors == 0);
@@ -168,6 +157,9 @@ BOOL test3(void)
 BOOL testW1(HWND hwnd)
 {
     UINT i, countErrors = 0;
+
+    if (hwnd == NULL)
+        return FALSE;
 
     int minMessages = ((float)SLEEP_TIME / (float)TESTW1_INTERVAL) * (1 - TIME_TOLERANCE);
     int maxMessages = ((float)SLEEP_TIME / (float)TESTW1_INTERVAL) * (1 + TIME_TOLERANCE);
@@ -188,7 +180,7 @@ BOOL testW1(HWND hwnd)
 
     ULONGLONG startTime = GetTickCount();
 
-    MSG msg = {};
+    MSG msg = { NULL };
     while (GetMessage(&msg, NULL, 0, 0))
     {
         TranslateMessage(&msg);
@@ -203,34 +195,26 @@ BOOL testW1(HWND hwnd)
     for (i = 0; i < TESTW1_COUNT; i++)
     {
         if ((timerIdW1[i].counter < minMessages) || (timerIdW1[i].counter > maxMessages))
-        {
             countErrors++;
-        }
     }
 
-    for ( i = 0; i < TESTW1_COUNT; i++)
+    for (i = 0; i < TESTW1_COUNT; i++)
     {
         if (KillTimer(hwnd, i) == 0)
-        {
             countErrors++;
-        }
     }
 
-    if (countErrors == 0)
-        return TRUE;
-    return FALSE;
+    return (countErrors == 0);
 }
 
 BOOL testW2(HWND hwnd)
 {
-    int countErrors = 0;
+    UINT i, countErrors = 0;
 
     if (hwnd == NULL)
-    {
         return FALSE;
-    }
 
-    for (int i = 0; i < TESTW2_COUNT; i++)
+    for (i = 0; i < TESTW2_COUNT; i++)
     {
         UINT_PTR result = SetTimer(hwnd, 1, TESTW2_INTERVAL, NULL);
         if (result == 0)
@@ -253,7 +237,7 @@ START_TEST(NtUserSetTimer)
     // TEST WITH MESSAGES WITHOUT WINDOW - test different ids
     TEST(test3());
     
-    WNDCLASS wc = {};
+    WNDCLASS wc = { 0 };
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = GetModuleHandle(NULL);
     wc.lpszClassName = "TimerWindowClass";
@@ -263,19 +247,13 @@ START_TEST(NtUserSetTimer)
         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
         HWND_MESSAGE, NULL, GetModuleHandle(NULL), NULL);
 
-    if (hwnd == NULL)
-    {
-        TEST(FALSE);
-        TEST(FALSE);
-        return;
-    }
-    
     // TEST WITH MESSAGES WITH WINDOW - test count of sent messages
     TEST(testW1(hwnd));
 
     // TEST WITH MESSAGES WITH WINDOW - create many timers
     TEST(testW2(hwnd));
 
-    DestroyWindow(hwnd);
+    if (hwnd != NULL)
+        DestroyWindow(hwnd);
     UnregisterClass("TimerWindowClass", GetModuleHandle(NULL));
 }
