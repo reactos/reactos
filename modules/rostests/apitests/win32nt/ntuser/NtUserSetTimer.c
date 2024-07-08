@@ -33,7 +33,7 @@ TIMER_MESSAGE_STATE1 timerId1[TEST1_COUNT];
 
 typedef struct TIMER_MESSAGE_STATE2
 {
-    int counter;
+    UINT counter;
 } TIMER_MESSAGE_STATE2;
 
 TIMER_MESSAGE_STATE2 timerId2[TEST2_COUNT];
