@@ -64,9 +64,9 @@ Test_CopyImage_Flags(UINT uType)
             hCopyedImage = CopyImage(hImage, uType, 0, 0, uBit);
             ok(hCopyedImage == NULL, "iBit %u: uType %u: hCopyedImage was %p\n", iBit, uType, hCopyedImage);
             ok_err(ERROR_INVALID_PARAMETER);
-            if (hCopyedImage)
-                DeleteObject(hCopyedImage);
         }
+        if (hCopyedImage)
+            DeleteObject(hCopyedImage);
 
         /* If the original image was deleted,  re-create it */
         if (uBit & LR_COPYDELETEORG)
