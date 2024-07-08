@@ -274,8 +274,8 @@ SH_ShowDriveProperties(WCHAR *pwszDrive, IDataObject *pDataObj)
 
         pData->pStream->Release();
     }
-    SHFree(pwszDrive);
     SHFree(pData);
+    SHFree(pwszDrive);
     return FALSE; // Failed
 }
 
