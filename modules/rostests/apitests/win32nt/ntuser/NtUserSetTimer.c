@@ -215,9 +215,7 @@ BOOL test3(void)
         }
     }
 
-    if (countErrors == 0)
-        return TRUE;
-    return FALSE;
+    return (countErrors == 0);
 }
 
 BOOL test4(void)
