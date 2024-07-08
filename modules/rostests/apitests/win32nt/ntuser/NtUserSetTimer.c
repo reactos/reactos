@@ -123,7 +123,8 @@ BOOL test2(void)
     return (countErrors == 0);
 }
 
-BOOL test3(void)
+// TEST WITH MESSAGES WITHOUT WINDOW - test different ids
+static BOOL test3(void)
 {
     UINT countErrors = 0;
 
