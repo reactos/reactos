@@ -268,9 +268,8 @@ BOOL test5(void)
         countErrors++;
     if(locIndex1 == locIndex2)
         countErrors++;
-    if (countErrors == 0)
-        return TRUE;
-    return FALSE;
+
+    return (countErrors == 0);
 }
 
 START_TEST(NtUserSetTimer)
