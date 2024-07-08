@@ -16,7 +16,7 @@ REPLACE [unidade1:][caminho1]ficheiro [unidade2:][caminho2][/P][/R][/S][/W][/U]\
                    um ficheiro.\n\
   /R               Substitui ficheiros só de leitura e ficheiros desprotegidos\n\
   /S               Substitui os ficheiros em todos os subdiretórios do\n\
-                   directório de destino. Não é possível usar com a opção /A\n\
+                   directório de destino. Não é possível usar com a opção /A.\n\
   /W               Espera que insira um disco antes de começar.\n\
   /U               Substitui (atualiza) apenas os ficheiros mais antigos que os\n\
                    arquivos fonte. Não é possível usar com a opção /A.\n"
