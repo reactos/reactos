@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Command Shell
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Dynamic trace (generates debugging output to console output)
- * COPYRIGHT:   Copyright 2011 Hans Harder
+ * COPYRIGHT:   Copyright 2011 Hans Harder <hans@atbas.org>
  *              Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
