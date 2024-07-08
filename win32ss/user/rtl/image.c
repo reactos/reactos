@@ -1,8 +1,8 @@
 /*
- * PROJECT:   ReactOS RTL
- * LICENSE:   LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:   RtlGetExpWinVer function
- * COPYRIGHT: Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * PROJECT:     ReactOS Win32ss RTL
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     RtlGetExpWinVer function
+ * COPYRIGHT:   Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #ifdef _WIN32K_
