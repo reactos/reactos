@@ -166,7 +166,7 @@ typedef struct _DRIVE_PROP_PAGE
     UINT DriveType;
 } DRIVE_PROP_PAGE;
 
-struct SHOW_DRIVE_PROP_DATA
+struct DRIVE_PROP_DATA
 {
     LPWSTR pwszDrive;
     IDataObject *pDataObj;
@@ -175,7 +175,7 @@ struct SHOW_DRIVE_PROP_DATA
 static DWORD WINAPI
 SH_ShowDrivePropThreadProc(LPVOID pParam)
 {
-    CHeapPtr<SHOW_DRIVE_PROP_DATA, CComAllocator> pPropData((SHOW_DRIVE_PROP_DATA *)pParam);
+    CHeapPtr<DRIVE_PROP_DATA, CComAllocator> pPropData((DRIVE_PROP_DATA *)pParam);
     CHeapPtr<WCHAR, CComAllocator> pwszDrive(pPropData->pwszDrive);
     CComPtr<IDataObject> pDataObj;
     pDataObj.Attach(pPropData->pDataObj); // We have already AddRef'ed. Use Attach
@@ -252,7 +252,7 @@ SH_ShowDriveProperties(WCHAR *pwszDrive, IDataObject *pDataObj)
         return FALSE;
 
     // Prepare data for thread
-    SHOW_DRIVE_PROP_DATA *pData = (SHOW_DRIVE_PROP_DATA *)SHAlloc(sizeof(*pData));
+    DRIVE_PROP_DATA *pData = (DRIVE_PROP_DATA *)SHAlloc(sizeof(*pData));
     if (!pData)
     {
         SHFree(pwszDrive);
