@@ -17,7 +17,6 @@
 static HANDLE CreateTestImage(UINT uType)
 {
     HANDLE hImage;
-    HDC hDC;
     switch (uType)
     {
         case IMAGE_BITMAP:
