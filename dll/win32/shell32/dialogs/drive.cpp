@@ -168,7 +168,7 @@ typedef struct _DRIVE_PROP_PAGE
 
 struct DRIVE_PROP_DATA
 {
-    PCWSTR pwszDrive;
+    PWSTR pwszDrive;
     IStream *pStream;
 };
 
