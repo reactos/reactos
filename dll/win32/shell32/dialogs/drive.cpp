@@ -166,16 +166,28 @@ typedef struct _DRIVE_PROP_PAGE
     UINT DriveType;
 } DRIVE_PROP_PAGE;
 
-BOOL
-SH_ShowDriveProperties(WCHAR *pwszDrive, IDataObject *pDataObj)
+struct SHOW_DRIVE_PROP_DATA
 {
+    LPWSTR pwszDrive;
+    IDataObject *pDataObj;
+};
+
+static DWORD CALLBACK
+SH_ShowDrivePropThreadProc(LPVOID pParam)
+{
+    CHeapPtr<SHOW_DRIVE_PROP_DATA, CLocalAllocator> pPropData((SHOW_DRIVE_PROP_DATA *)pParam);
+    CHeapPtr<WCHAR, CLocalAllocator> pwszDrive(pPropData->pwszDrive);
+    CComPtr<IDataObject> pDataObj(pPropData->pDataObj);
+
     HPSXA hpsx = NULL;
     HPROPSHEETPAGE hpsp[MAX_PROPERTY_SHEET_PAGE];
     CComObject<CDrvDefExt> *pDrvDefExt = NULL;
 
     CDataObjectHIDA cida(pDataObj);
     if (FAILED_UNEXPECTEDLY(cida.hr()))
+    {
         return FAILED(cida.hr());
+    }
 
     RECT rcPosition = {CW_USEDEFAULT, CW_USEDEFAULT, 0, 0};
     POINT pt;
@@ -232,6 +244,30 @@ SH_ShowDriveProperties(WCHAR *pwszDrive, IDataObject *pDataObj)
     stub.DestroyWindow();
 
     return ret != -1;
+}
+
+BOOL
+SH_ShowDriveProperties(WCHAR *pwszDrive, IDataObject *pDataObj)
+{
+    if (FAILED_UNEXPECTEDLY(SHStrDupW(pwszDrive, &pwszDrive)))
+        return FALSE;
+
+    SHOW_DRIVE_PROP_DATA *pData = (SHOW_DRIVE_PROP_DATA *)LocalAlloc(LPTR, sizeof(SHOW_DRIVE_PROP_DATA));
+    if (!pData)
+        return FALSE;
+
+    *pData = { pwszDrive, pDataObj };
+    pDataObj->AddRef();
+
+    // Run a property sheet in another thread
+    if (SHCreateThread(SH_ShowDrivePropThreadProc, pData, CTF_COINIT, NULL))
+        return TRUE; // Success
+
+    // Failed
+    pDataObj->Release();
+    LocalFree(pwszDrive);
+    LocalFree(pData);
+    return FALSE;
 }
 
 static VOID
