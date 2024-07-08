@@ -3724,7 +3724,7 @@ NtUserSetWindowPlacement(HWND hWnd,
     if (LOWORD(gptiCurrent->dwExpWinVer) < WINVER_WINNT4)
         Safepl.length = sizeof(Safepl);
 
-    if (Safepl.length != sizeof(WINDOWPLACEMENT))
+    if (Safepl.length != sizeof(Safepl))
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         goto Exit;
