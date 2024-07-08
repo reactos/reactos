@@ -14,6 +14,8 @@
     LR_COPYDELETEORG | LR_COPYRETURNORG | LR_COLOR | LR_MONOCHROME \
 )
 
+#define LR_UNKNOWN_0x10000 0x10000
+
 static HANDLE CreateTestImage(UINT uType)
 {
     HANDLE hImage;
@@ -43,7 +45,7 @@ Test_CopyImage_Flags(UINT uType)
     HANDLE hImage, hCopiedImage;
 
     if (IsWindowsVistaOrGreater())
-        uValidFlags |= 0x10000;
+        uValidFlags |= LR_UNKNOWN_0x10000;
 
     hImage = CreateTestImage(uType);
     for (iBit = 0; iBit < sizeof(UINT) * CHAR_BIT; ++iBit)
