@@ -45,6 +45,7 @@ void CALLBACK TimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
     {
         if (timerId1[i].index == idEvent)
             timerId1[i].counter++;
+    }
 }
 
 void MessageLoop(void)
