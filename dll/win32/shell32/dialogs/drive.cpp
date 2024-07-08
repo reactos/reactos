@@ -185,9 +185,7 @@ SH_ShowDrivePropThreadProc(LPVOID pParam)
 
     CDataObjectHIDA cida(pDataObj);
     if (FAILED_UNEXPECTEDLY(cida.hr()))
-    {
         return FAILED(cida.hr());
-    }
 
     RECT rcPosition = {CW_USEDEFAULT, CW_USEDEFAULT, 0, 0};
     POINT pt;
