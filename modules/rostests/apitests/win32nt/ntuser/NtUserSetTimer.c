@@ -62,7 +62,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-BOOL test1(void)
+// TEST WITH MESSAGES WITHOUT WINDOW - test count of sent messages
+static BOOL test1(void)
 {
     UINT i, countErrors = 0;
 
