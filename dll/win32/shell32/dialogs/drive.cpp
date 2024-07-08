@@ -250,10 +250,10 @@ SH_ShowDriveProperties(WCHAR *pwszDrive, IDataObject *pDataObj)
     if (FAILED_UNEXPECTEDLY(SHStrDupW(pwszDrive, &pwszDrive)))
         return FALSE;
 
+    // Prepare data for thread
     SHOW_DRIVE_PROP_DATA *pData = (SHOW_DRIVE_PROP_DATA *)LocalAlloc(LPTR, sizeof(*pData));
     if (!pData)
         return FALSE;
-
     *pData = { pwszDrive, pDataObj };
     pDataObj->AddRef();
 
