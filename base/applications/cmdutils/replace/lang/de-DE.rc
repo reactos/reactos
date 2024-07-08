@@ -27,7 +27,7 @@ REPLACE [Laufwerk1:][Pfad1]Dateiname [Laufwerk2:][Pfad2] [/P] [/R] [/S] [/W] [/U
                                eingelegt wurde.\n\
   /U                           Ersetzt (aktualisiert) nur Dateien, die älter\n\
                                sind als die Quelldaten. Kann nicht mit Parameter\n\
-                               /A genutzt werden\n"
+                               /A genutzt werden.\n"
     STRING_REPLACE_HELP2 "Quellpfad benötigt\n"
     STRING_REPLACE_HELP3 "Keine Dateien ersetzt\n"
     STRING_REPLACE_HELP4 "%lu Datei(en) ersetzt\n"
