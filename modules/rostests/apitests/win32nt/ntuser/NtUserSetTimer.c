@@ -115,9 +115,9 @@ BOOL test1(void)
 
 BOOL test2(void)
 {
-    UINT countErrors = 0;
+    UINT i, countErrors = 0;
 
-    for (long i = 0; i < TEST2_COUNT; i++)
+    for (i = 0; i < TEST2_COUNT; i++)
     {
         UINT_PTR locIndex = SetTimer(NULL, 0, TEST2_INTERVAL, TimerProc);
 
@@ -219,13 +219,13 @@ START_TEST(NtUserSetTimer)
 {
     // TEST WITH MESSAGES WITHOUT WINDOW - test count of sent messages
     TEST(test1());
-    
+
     // TEST WITH MESSAGES WITHOUT WINDOW - create many timers
     TEST(test2());
-    
+
     // TEST WITH MESSAGES WITHOUT WINDOW - test different ids
     TEST(test3());
-    
+
     WNDCLASS wc = { 0 };
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = GetModuleHandle(NULL);
