@@ -139,7 +139,7 @@ BEGIN
     LTEXT "Pokud je dosažena maximální velikost:", IDC_STATIC, 17, 140, 219, 8
     AUTORADIOBUTTON "&Přepsat události podle potřeby", IDC_OVERWRITE_AS_NEEDED, 17, 155, 219, 10, WS_GROUP | WS_TABSTOP//FIXME: accelerator collision &P
     AUTORADIOBUTTON "Př&epsat události starší než", IDC_OVERWRITE_OLDER_THAN, 17, 168, 102, 10
-    AUTORADIOBUTTON "&Nepřepisovat události\n(vyčistit protokol ručně)", IDC_NO_OVERWRITE, 17, 180, 143, 20, BS_MULTILINE | WS_TABSTOP
+    AUTORADIOBUTTON "&Nepřepisovat události\n(vyčistit protokol ručně)", IDC_NO_OVERWRITE, 17, 180, 143, 20, BS_MULTILINE | WS_TABSTOP//FIXME: accelerator collision &N
     EDITTEXT IDC_EDIT_EVENTS_AGE, 122, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_EVENTS_AGE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS, 157, 165, 10, 14
