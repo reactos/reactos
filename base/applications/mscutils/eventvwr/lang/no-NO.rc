@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Event Log Viewer
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Norwegian resource file
- * TRANSLATORS: Copyright 2008 Lars Martin Hambro (lars_martin4@hotmail.com)
+ * TRANSLATORS: Copyright 2008 Lars Martin Hambro <lars_martin4@hotmail.com>
  */
 
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
@@ -24,20 +24,20 @@ BEGIN
     POPUP "&Vis"
     BEGIN
         MENUITEM "&Newest first", IDM_LIST_NEWEST
-        MENUITEM "&Oldest first", IDM_LIST_OLDEST
+        MENUITEM "&Oldest first", IDM_LIST_OLDEST//FIXME: accelerator collision &O
         MENUITEM SEPARATOR
         MENUITEM "&Details...\tEnter", IDM_EVENT_DETAILS
         MENUITEM SEPARATOR
-        MENUITEM "&Oppdater\tF5", IDM_REFRESH
+        MENUITEM "&Oppdater\tF5", IDM_REFRESH//FIXME: accelerator collision &O
     END
-    POPUP "&Handling"
+    POPUP "&Handling"//FIXME: accelerator collision &H
     BEGIN
         MENUITEM "Event details &view", IDM_EVENT_DETAILS_VIEW
         MENUITEM "&Grid lines", IDM_LIST_GRID_LINES
         MENUITEM SEPARATOR
         MENUITEM "&Save settings on exit", IDM_SAVE_SETTINGS
     END
-    POPUP "&Hjelp"
+    POPUP "&Hjelp"//FIXME: accelerator collision &H
     BEGIN
         MENUITEM "Hj&elp", IDM_HELP
         MENUITEM SEPARATOR
@@ -105,9 +105,9 @@ BEGIN
     LTEXT "&Beskrivelse:", IDC_STATIC, 8, 65, 39, 8
     CONTROL "", IDC_EVENTTEXTEDIT, RICHEDIT_CLASS, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER, 8, 76, 250, 60
 
-    LTEXT "D&ata", IDC_DETAILS_STATIC, 8, 140, 20, 8
-    CONTROL "&Tegn", IDC_BYTESRADIO, "Button", BS_AUTORADIOBUTTON, 39, 140, 34, 8
-    CONTROL "&Ord", IDC_WORDRADIO, "Button", BS_AUTORADIOBUTTON, 77, 140, 34, 8
+    LTEXT "D&ata:", IDC_DETAILS_STATIC, 8, 140, 20, 8
+    AUTORADIOBUTTON "&Tegn", IDC_BYTESRADIO, 39, 140, 34, 8
+    AUTORADIOBUTTON "&Ord", IDC_WORDRADIO, 77, 140, 34, 8
     EDITTEXT IDC_EVENTDATAEDIT, 8, 150, 250, 60, ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER
 END
 
@@ -137,9 +137,9 @@ BEGIN
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 119, 10, 14
     LTEXT "KB", IDC_STATIC, 130, 122, 20, 8
     LTEXT "When maximum log size is reached:", IDC_STATIC, 17, 140, 219, 8
-    CONTROL "&Overwrite events as needed", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
-    CONTROL "O&verwrite events older than", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 17, 168, 102, 10
-    CONTROL "Do &not overwrite events\n(clear log manually)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_TABSTOP, 17, 180, 143, 20
+    AUTORADIOBUTTON "&Overwrite events as needed", IDC_OVERWRITE_AS_NEEDED, 17, 155, 219, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "O&verwrite events older than", IDC_OVERWRITE_OLDER_THAN, 17, 168, 102, 10
+    AUTORADIOBUTTON "Do &not overwrite events\n(clear log manually)", IDC_NO_OVERWRITE, 17, 180, 143, 20, BS_MULTILINE | WS_TABSTOP
     EDITTEXT IDC_EDIT_EVENTS_AGE, 122, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_EVENTS_AGE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS, 157, 165, 10, 14
