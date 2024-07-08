@@ -40,7 +40,7 @@ static VOID
 Test_CopyImage_Flags(UINT uType)
 {
     UINT iBit, uBit, uValidFlags = COPYIMAGE_VALID_FLAGS;
-    HANDLE hImage, hCopyedImage;
+    HANDLE hImage, hCopiedImage;
 
     if (IsWindowsVistaOrGreater())
         uValidFlags |= 0x10000;
@@ -50,20 +50,21 @@ Test_CopyImage_Flags(UINT uType)
     {
         uBit = (1 << iBit);
 
+        SetLastError(0xDEADFACE);
+        hCopiedImage = CopyImage(hImage, uType, 0, 0, uBit);
+
         if (uValidFlags & uBit) // Valid flag?
         {
-            hCopyedImage = CopyImage(hImage, uType, 0, 0, uBit);
-            ok(hCopyedImage != NULL, "iBit %u: uType %u: hCopyedImage was NULL\n", iBit, uType);
+            ok(hCopiedImage != NULL, "iBit %u: uType %u: hCopiedImage was NULL\n", iBit, uType);
         }
         else
         {
-            SetLastError(0xDEADFACE);
-            hCopyedImage = CopyImage(hImage, uType, 0, 0, uBit);
-            ok(hCopyedImage == NULL, "iBit %u: uType %u: hCopyedImage was %p\n", iBit, uType, hCopyedImage);
+            ok(hCopiedImage == NULL, "iBit %u: uType %u: hCopiedImage was %p\n", iBit, uType, hCopiedImage);
             ok_err(ERROR_INVALID_PARAMETER);
         }
-        if (hCopyedImage)
-            DeleteObject(hCopyedImage);
+
+        if (hCopiedImage)
+            DeleteObject(hCopiedImage);
 
         /* If the original image was deleted,  re-create it */
         if (uBit & LR_COPYDELETEORG)
