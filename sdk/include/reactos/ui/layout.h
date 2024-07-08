@@ -85,6 +85,7 @@ LayoutShowGrip(LAYOUT_DATA *pData, BOOL bShow)
 
     if (pData->m_hwndGrip == NULL)
     {
+        /* CORE-19585: WS_GROUP set to avoid navigation over the grip control */
         DWORD style = WS_GROUP | WS_CHILD | WS_CLIPSIBLINGS | SBS_SIZEGRIP;
         pData->m_hwndGrip = CreateWindowExW(0, L"SCROLLBAR", NULL, style,
                                             0, 0, 0, 0, pData->m_hwndParent,
