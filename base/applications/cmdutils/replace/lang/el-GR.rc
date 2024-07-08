@@ -1,6 +1,8 @@
 /*
- * Αρχική έκδοση - Ημιτελής.
- * Ελληνική μετάφραση - Απόστολος Αλεξιάδης
+ * PROJECT:     ReactOS Replace Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Greek resource file
+ * TRANSLATOR:  Copyright 2008 Apostolos Alexiadis <djapal@gmail.com>
  */
 
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT

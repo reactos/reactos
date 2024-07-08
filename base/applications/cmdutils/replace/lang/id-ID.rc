@@ -1,8 +1,9 @@
 /*
  * PROJECT:     ReactOS Replace Command
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Indonesian (Indonesia) resource file
- * TRANSLATOR:  Copyright 2007 Zaenal Mutaqin <ade999 at gmail dot com>
+ * PURPOSE:     Indonesian resource file
+ * TRANSLATORS: Copyright 2007 Zaenal Mutaqin <ade999@gmail.com>
+ *              Copyright 2021 Reinhart Previano Koentjoro <reinhart_previano@yahoo.com>
  */
 
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT

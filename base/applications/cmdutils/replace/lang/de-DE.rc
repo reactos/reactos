@@ -2,7 +2,8 @@
  * PROJECT:     ReactOS Replace Command
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     German (Germany) resource file
- * TRANSLATOR:  Copyright 2005 Klemens Friedl <frik85>
+ * TRANSLATORS: Copyright 2005 Klemens Friedl <frik85@gmail.com>
+ *              Copyright 2007 Daniel Reimer <reimer.daniel@freenet.de>
  */
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL

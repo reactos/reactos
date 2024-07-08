@@ -1,8 +1,9 @@
 /*
  * PROJECT:     ReactOS Replace Command
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Ukraianian Language File for Command-line interface
- * TRANSLATORS: Artem Reznikov, Igor Paliychuk
+ * PURPOSE:     Ukrainian resource file
+ * TRANSLATORS: Copyright 2007 Artem Reznikov <temarez@yandex.ru>
+ *              Copyright 2011 Igor Paliychuk <mansonigor@gmail.com>
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT

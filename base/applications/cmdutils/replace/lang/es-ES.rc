@@ -2,9 +2,9 @@
  * PROJECT:     ReactOS Replace Command
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Spanish (Spain) resource file
- * TRANSLATOR:  HUMA2000
- *              Jose Pedro Fernández Pascual
- *              Ismael Ferreras Morezuelas (Swyter) e Catalin Gabriel Draghita
+ * TRANSLATORS: Copyright 2005 Jose Pedro Fernández Pascual <huma2000@terra.es>
+ *              Copyright 2015 Ismael Ferreras Morezuelas <swyterzone+ros@gmail.com>
+ *              Copyright 2020 Catalin Gabriel Draghita <catalin.draghita@hotmail.es>
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL

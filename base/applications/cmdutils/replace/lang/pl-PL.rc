@@ -1,11 +1,8 @@
 /*
- *    Translated by Caemyr - Olaf Siejka (Jan, 2008)
- *    Updated by niski - Maciej Bialas (Mar, 2010)
- *    Use ReactOS forum PM or IRC to contact me
- *    https://reactos.org
- *    IRC: irc.freenode.net #reactos-pl;
- *    UTF-8 conversion by Caemyr (May, 2011)
- *    Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (April, 2020)
+ * PROJECT:     ReactOS Replace Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATOR:  Copyright 2007-2011 Olaf Siejka <caemyr@gmail.com>
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -16,7 +13,7 @@ BEGIN
 REPLACE [napęd1:][ścieżka1] pliki [napęd2:][ścieżka2] [/A] [/P] [/R] [/W]\n\
 REPLACE [napęd1:][ścieżka1] pliki [napęd2:][ścieżka2] [/P] [/R] [/S] [/W] [/U]\n\n\
   [napęd1:][ścieżka1]nazwa_pliku Wyznacza źródło pliku bądź plików.\n\
-  [napęd2:][ścieżka2]         Wyznacza lokalizacje gdzie pliki mają być\n\
+  [napęd2:][ścieżka2]      Wyznacza lokalizacje gdzie pliki mają być\n\
                            zamienione.\n\
   /A                       Dodaje nowe pliki do lokalizacji docelowej. Nie można\n\
                            łączyć z opcjami /S lub /U.\n\
@@ -26,7 +23,7 @@ REPLACE [napęd1:][ścieżka1] pliki [napęd2:][ścieżka2] [/P] [/R] [/S] [/W] 
                            pieczonymi.\n\
   /S                       Zamienia pliki we wszystkich podkatalogach w lokazlizacji\n\
                            docelowej. Nie można łączyć z opcją /A.\n\
-  /W                      Czeka na włożenie dyskietki przed rozpoczęciem zamiany.\n\
+  /W                       Czeka na włożenie dyskietki przed rozpoczęciem zamiany.\n\
   /U                       Zamienia (aktualizuje) wyłącznie pliki starsze od\n\
                            źródłowych. Nie można łączyć z opcją /A.\n"
     STRING_REPLACE_HELP2 "Brak ścieżki do źródła\n"

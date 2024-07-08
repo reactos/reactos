@@ -2,8 +2,9 @@
  * PROJECT:     ReactOS Replace Command
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     French (France) resource file
- * TRANSLATOR:  Sylvain Pétréolle
- *              Pierre Schweitzer
+ * TRANSLATORS: Copyright 2005 Sylvain Pétréolle <spetreolle@yahoo.fr>
+ *              Copyright 2007 Pierre Schweitzer <heis_spiter@hotmail.com>
+ *              Copyright 2018 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL

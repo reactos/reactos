@@ -1,9 +1,9 @@
 /*
  * PROJECT:     ReactOS Replace Command
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Hungarian (Hungary) resource file
- * TRANSLATOR:  Copyright 2005 Robert Horvath (talley at cubeclub.hu)
- *              Copyright 2020 Tibor Lajos Füzi
+ * PURPOSE:     Hungarian resource file
+ * TRANSLATORS: Copyright 2005 Robert Horvath <talley@cubeclub.hu>
+ *              Copyright 2020 Tibor Lajos Füzi <tibor.fuzi@gmail.com>
  */
 
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
