@@ -16,7 +16,7 @@ REPLACE [disc1:][cale1]fișier [disc2:][cale2] [/P] [/R] [/S] [/W] [/U]\n\n\
   [disc1:][cale1]fișier    Specifică fișierul sau fișierele sursă.\n\
   [disc2:][cale2]          Specifică directorul unde vor fi înlocuite fișiere.\n\
   /A                       Adaugă fișiere noi în directorul destinație. Nu se\n\
-                           poate folosi cu argumentele /S sau /U\n\
+                           poate folosi cu argumentele /S sau /U.\n\
   /P                       Cere confirmare înaintea înlocuirii unui fișier sau\n\
                            a adăugării unui fișier sursă.\n\
   /R                       Înlocuiește atât fișierele modificabile, cât și\n\
