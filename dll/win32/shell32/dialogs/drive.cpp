@@ -169,16 +169,19 @@ typedef struct _DRIVE_PROP_PAGE
 struct DRIVE_PROP_DATA
 {
     LPWSTR pwszDrive;
-    IDataObject *pDataObj;
+    IStream *pStream;
 };
 
 static DWORD WINAPI
-SH_ShowDrivePropThreadProc(LPVOID pParam)
+ShowDrivePropThreadProc(LPVOID pParam)
 {
     CHeapPtr<DRIVE_PROP_DATA, CComAllocator> pPropData((DRIVE_PROP_DATA *)pParam);
     CHeapPtr<WCHAR, CComAllocator> pwszDrive(pPropData->pwszDrive);
+    CComPtr<IStream> pStream(pPropData->pStream);
+
+    // Unmarshall IDataObject from IStream
     CComPtr<IDataObject> pDataObj;
-    pDataObj.Attach(pPropData->pDataObj); // We have already AddRef'ed. Use Attach
+    CoGetInterfaceAndReleaseStream(pPropData->pStream, IID_PPV_ARG(IDataObject, &pDataObj));
 
     HPSXA hpsx = NULL;
     HPROPSHEETPAGE hpsp[MAX_PROPERTY_SHEET_PAGE];
@@ -248,7 +251,8 @@ SH_ShowDrivePropThreadProc(LPVOID pParam)
 BOOL
 SH_ShowDriveProperties(WCHAR *pwszDrive, IDataObject *pDataObj)
 {
-    if (FAILED_UNEXPECTEDLY(SHStrDupW(pwszDrive, &pwszDrive)))
+    HRESULT hr = SHStrDupW(pwszDrive, &pwszDrive);
+    if (FAILED_UNEXPECTEDLY(hr))
         return FALSE;
 
     // Prepare data for thread
@@ -258,14 +262,22 @@ SH_ShowDriveProperties(WCHAR *pwszDrive, IDataObject *pDataObj)
         SHFree(pwszDrive);
         return FALSE;
     }
-    *pData = { pwszDrive, pDataObj };
+    pData->pwszDrive = pwszDrive;
+
+    // Marshall IDataObject to IStream
+    hr = CoMarshalInterThreadInterfaceInStream(IID_IDataObject, pDataObj, &pData->pStream);
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        SHFree(pwszDrive);
+        SHFree(pData);
+        return FALSE;
+    }
 
     // Run a property sheet in another thread
-    pDataObj->AddRef(); // Keep alive
-    if (SHCreateThread(SH_ShowDrivePropThreadProc, pData, CTF_COINIT, NULL))
+    if (SHCreateThread(ShowDrivePropThreadProc, pData, CTF_COINIT, NULL))
         return TRUE; // Success
 
-    pDataObj->Release();
+    pData->pStream->Release();
     SHFree(pwszDrive);
     SHFree(pData);
     return FALSE; // Failed
