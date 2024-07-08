@@ -175,8 +175,8 @@ struct SHOW_DRIVE_PROP_DATA
 static DWORD WINAPI
 SH_ShowDrivePropThreadProc(LPVOID pParam)
 {
-    CHeapPtr<SHOW_DRIVE_PROP_DATA, CLocalAllocator> pPropData((SHOW_DRIVE_PROP_DATA *)pParam);
-    CHeapPtr<WCHAR, CLocalAllocator> pwszDrive(pPropData->pwszDrive);
+    CHeapPtr<SHOW_DRIVE_PROP_DATA, CComAllocator> pPropData((SHOW_DRIVE_PROP_DATA *)pParam);
+    CHeapPtr<WCHAR, CComAllocator> pwszDrive(pPropData->pwszDrive);
     CComPtr<IDataObject> pDataObj;
     pDataObj.Attach(pPropData->pDataObj); // We have already AddRef'ed. Use Attach
 
@@ -252,9 +252,12 @@ SH_ShowDriveProperties(WCHAR *pwszDrive, IDataObject *pDataObj)
         return FALSE;
 
     // Prepare data for thread
-    SHOW_DRIVE_PROP_DATA *pData = (SHOW_DRIVE_PROP_DATA *)LocalAlloc(LPTR, sizeof(*pData));
+    SHOW_DRIVE_PROP_DATA *pData = (SHOW_DRIVE_PROP_DATA *)SHAlloc(sizeof(*pData));
     if (!pData)
+    {
+        SHFree(pwszDrive);
         return FALSE;
+    }
     *pData = { pwszDrive, pDataObj };
 
     // Run a property sheet in another thread
@@ -262,11 +265,10 @@ SH_ShowDriveProperties(WCHAR *pwszDrive, IDataObject *pDataObj)
     if (SHCreateThread(SH_ShowDrivePropThreadProc, pData, CTF_COINIT, NULL))
         return TRUE; // Success
 
-    // Failed
     pDataObj->Release();
-    LocalFree(pwszDrive);
-    LocalFree(pData);
-    return FALSE;
+    SHFree(pwszDrive);
+    SHFree(pData);
+    return FALSE; // Failed
 }
 
 static VOID
