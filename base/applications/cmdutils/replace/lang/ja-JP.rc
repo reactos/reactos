@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Replace Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Japanese (Japan) resource file
+ * TRANSLATOR:  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ */
+
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 STRINGTABLE

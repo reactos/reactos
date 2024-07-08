@@ -1,7 +1,8 @@
-/* Slovak translation for CMD
- * TRANSLATOR: Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
- * DATE OF TR: 21-03-2009
- * LastChange: 10-08-2010
+/*
+ * PROJECT:     ReactOS Replace Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Slovak resource file
+ * TRANSLATOR:  Copyright 2009-2010 Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT

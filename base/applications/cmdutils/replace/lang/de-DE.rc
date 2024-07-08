@@ -1,4 +1,9 @@
-/* German language file by Klemens Friedl <frik85> 2005-06-03 */
+/*
+ * PROJECT:     ReactOS Replace Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     German (Germany) resource file
+ * TRANSLATOR:  Copyright 2005 Klemens Friedl <frik85>
+ */
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 

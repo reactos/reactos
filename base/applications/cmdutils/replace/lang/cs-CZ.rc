@@ -1,6 +1,8 @@
-/* FILE:       base/shell/cmd/lang/cs-CZ.rc
- * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2015-04-12
+/*
+ * PROJECT:     ReactOS Replace Command
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Czech resource file
+ * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
