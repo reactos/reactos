@@ -24,7 +24,7 @@ REPLACE [lecteur1:][chemin1]nomdefichier [lecteur2:][chemin2] [/P] [/R] [/S] [/W
   /R                               Remplace les fichiers en lecture-seule aussi bien que les\n\
                                    fichiers sans protection.\n\
   /S                               Remplace les fichiers dans tous les sous-répertoires du\n\
-                                   répertoire de destination. Ne peut être utilisé avec /A\n\
+                                   répertoire de destination. Ne peut être utilisé avec /A.\n\
   /W                               Attend que vous insériez un disque avant de commencer.\n\
   /U                               Remplace (met à jour) uniquement les fichiers qui sont plus anciens que\n\
                                    les fichiers sources. Ne peut être utilisé avec /A.\n"
