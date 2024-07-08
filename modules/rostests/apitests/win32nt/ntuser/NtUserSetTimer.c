@@ -73,16 +73,16 @@ BOOL test1(void)
 {
     UINT i, countErrors = 0;
 
-    int minMessages = (SLEEP_TIME / TEST1_INTERVAL) * (1 - TIME_TOLERANCE);
-    int maxMessages = (SLEEP_TIME / TEST1_INTERVAL) * (1 + TIME_TOLERANCE);
+    int minMessages = ((float)SLEEP_TIME / (float)TEST1_INTERVAL) * (1 - TIME_TOLERANCE);
+    int maxMessages = ((float)SLEEP_TIME / (float)TEST1_INTERVAL) * (1 + TIME_TOLERANCE);
 
-    for (int i = 0; i < TEST1_COUNT; i++)
+    for (i = 0; i < TEST1_COUNT; i++)
     {
         timerId1[i].index = 0;
         timerId1[i].counter = 0;
     }
 
-    for (int i = 0; i < TEST1_COUNT; i++)
+    for (i = 0; i < TEST1_COUNT; i++)
     {
         timerId1[i].index = SetTimer(NULL, 0, TEST1_INTERVAL, TimerProc);
         if (timerId1[i].index == 0)
@@ -105,7 +105,7 @@ BOOL test1(void)
         }
     }
 
-    for (int i = 0; i < TEST1_COUNT; i++)
+    for (i = 0; i < TEST1_COUNT; i++)
     {
         if ((timerId1[i].counter < minMessages) || (timerId1[i].counter > maxMessages))
         {
@@ -113,7 +113,7 @@ BOOL test1(void)
         }
     }
 
-    for (int i = 0; i < TEST1_COUNT; i++)
+    for (i = 0; i < TEST1_COUNT; i++)
     {
         if (KillTimer(NULL, timerId1[i].index) == 0)
         {
@@ -125,34 +125,19 @@ BOOL test1(void)
     return FALSE;
 }
 
-BOOL test2(void)
+BOOL test2(HWND hwnd)
 {
-    int countErrors = 0;
+    UINT i, countErrors = 0;
 
     int minMessages = (SLEEP_TIME / TEST2_INTERVAL) * (1 - TIME_TOLERANCE);
     int maxMessages = (SLEEP_TIME / TEST2_INTERVAL) * (1 + TIME_TOLERANCE);
     
-    for (int i = 0; i < TEST2_COUNT; i++)
+    for (i = 0; i < TEST2_COUNT; i++)
     {
         timerId2[i].counter = 0;
     }
 
-    WNDCLASS wc = {};
-    wc.lpfnWndProc = WindowProc;
-    wc.hInstance = GetModuleHandle(NULL);
-    wc.lpszClassName = "TimerWindowClass";
-    RegisterClass(&wc);
-
-    HWND hwnd = CreateWindowEx(0, "TimerWindowClass", "Timer Window", 0,
-        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-        HWND_MESSAGE, NULL, GetModuleHandle(NULL), NULL);
-
-    if (hwnd == NULL)
-    {
-        return FALSE;
-    }
-
-    for (int i = 0; i < TEST2_COUNT; i++)
+    for (i = 0; i < TEST2_COUNT; i++)
     {
         UINT_PTR locIndex = SetTimer(hwnd, i, TEST2_INTERVAL, NULL);
         if (locIndex == 0)
@@ -175,7 +160,7 @@ BOOL test2(void)
         }
     }
 
-    for (int i = 0; i < TEST2_COUNT; i++)
+    for (i = 0; i < TEST2_COUNT; i++)
     {
         if ((timerId2[i].counter < minMessages) || (timerId2[i].counter > maxMessages))
         {
@@ -183,15 +168,13 @@ BOOL test2(void)
         }
     }
 
-    for (int i = 0; i < TEST2_COUNT; i++)
+    for ( i = 0; i < TEST2_COUNT; i++)
     {
         if (KillTimer(hwnd, i) == 0)
         {
             countErrors++;
         }
     }
-    DestroyWindow(hwnd);
-    UnregisterClass("TimerWindowClass", GetModuleHandle(NULL));
 
     if (countErrors == 0)
         return TRUE;
@@ -218,19 +201,9 @@ BOOL test3(void)
     return (countErrors == 0);
 }
 
-BOOL test4(void)
+BOOL test4(HWND hwnd)
 {
     int countErrors = 0;
-
-    WNDCLASS wc = {};
-    wc.lpfnWndProc = WindowProc;
-    wc.hInstance = GetModuleHandle(NULL);
-    wc.lpszClassName = "TimerWindowClass";
-    RegisterClass(&wc);
-
-    HWND hwnd = CreateWindowEx(0, "TimerWindowClass", "Timer Window", 0,
-        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-        HWND_MESSAGE, NULL, GetModuleHandle(NULL), NULL);
 
     if (hwnd == NULL)
     {
@@ -245,9 +218,6 @@ BOOL test4(void)
         if (KillTimer(hwnd, 1) == 0)
             countErrors++;
     }
-
-    DestroyWindow(hwnd);
-    UnregisterClass("TimerWindowClass", GetModuleHandle(NULL));
 
     return (countErrors == 0);
 }
@@ -274,18 +244,41 @@ BOOL test5(void)
 
 START_TEST(NtUserSetTimer)
 {
+    WNDCLASS wc = {};
+    wc.lpfnWndProc = WindowProc;
+    wc.hInstance = GetModuleHandle(NULL);
+    wc.lpszClassName = "TimerWindowClass";
+    RegisterClass(&wc);
+
+    HWND hwnd = CreateWindowEx(0, "TimerWindowClass", "Timer Window", 0,
+        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+        HWND_MESSAGE, NULL, GetModuleHandle(NULL), NULL);
+
+    if (hwnd == NULL)
+    {
+        TEST(FALSE);
+        TEST(FALSE);
+        TEST(FALSE);
+        TEST(FALSE);
+        TEST(FALSE);
+        return;
+    }
+    
     // TEST WITH MESSAGES WITHOUT WINDOW - test count of sent messages
     TEST(test1());
 
     // TEST WITH MESSAGES WITH WINDOW - test count of sent messages
-    TEST(test2());
+    TEST(test2(hwnd));
 
     // TEST WITH MESSAGES WITHOUT WINDOW - create many timers
     TEST(test3());
 
     // TEST WITH MESSAGES WITH WINDOW - create many timers
-    TEST(test4());
+    TEST(test4(hwnd));
 
     // TEST WITH MESSAGES WITHOUT WINDOW - test different ids
     TEST(test5());
+    
+    DestroyWindow(hwnd);
+    UnregisterClass("TimerWindowClass", GetModuleHandle(NULL));
 }
