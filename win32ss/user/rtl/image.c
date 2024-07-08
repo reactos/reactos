@@ -19,7 +19,7 @@ ULONG
 RtlGetExpWinVer(_In_ PVOID BaseAddress)
 {
     ULONG dwMajorVersion = 3, dwMinorVersion = 10; /* Set default to Windows 3.10 */
-    PIMAGE_NT_HEADERS pNT;
+    PIMAGE_NT_HEADERS pNTHeader;
     ULONG_PTR AlignedAddress = (ULONG_PTR)BaseAddress;
 
     TRACE("(%p)\n", BaseAddress);
@@ -29,14 +29,14 @@ RtlGetExpWinVer(_In_ PVOID BaseAddress)
 
     if (AlignedAddress && !LOWORD(AlignedAddress))
     {
-        pNT = RtlImageNtHeader((PVOID)AlignedAddress);
-        if (pNT)
+        pNTHeader = RtlImageNtHeader((PVOID)AlignedAddress);
+        if (pNTHeader)
         {
-            dwMajorVersion = pNT->OptionalHeader.MajorSubsystemVersion;
+            dwMajorVersion = pNTHeader->OptionalHeader.MajorSubsystemVersion;
             if (dwMajorVersion == 1)
                 dwMajorVersion = 3;
             else
-                dwMinorVersion = pNT->OptionalHeader.MinorSubsystemVersion;
+                dwMinorVersion = pNTHeader->OptionalHeader.MinorSubsystemVersion;
         }
     }
 
