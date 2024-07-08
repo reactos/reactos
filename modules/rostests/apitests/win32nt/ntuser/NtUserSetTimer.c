@@ -77,11 +77,7 @@ BOOL test1(void)
     int minMessages = ((float)SLEEP_TIME / (float)TEST1_INTERVAL) * (1 - TIME_TOLERANCE);
     int maxMessages = ((float)SLEEP_TIME / (float)TEST1_INTERVAL) * (1 + TIME_TOLERANCE);
 
-    for (i = 0; i < TEST1_COUNT; i++)
-    {
-        timerId1[i].index = 0;
-        timerId1[i].counter = 0;
-    }
+    ZeroMemory(timerId1, sizeof(timerId1));
 
     for (i = 0; i < TEST1_COUNT; i++)
     {
@@ -163,9 +159,8 @@ BOOL testW1(HWND hwnd)
 
     int minMessages = ((float)SLEEP_TIME / (float)TESTW1_INTERVAL) * (1 - TIME_TOLERANCE);
     int maxMessages = ((float)SLEEP_TIME / (float)TESTW1_INTERVAL) * (1 + TIME_TOLERANCE);
-    
-    for (i = 0; i < TESTW1_COUNT; i++)
-        timerIdW1[i].counter = 0;
+
+    ZeroMemory(timerIdW1, sizeof(timerIdW1));
 
     for (i = 0; i < TESTW1_COUNT; i++)
     {
