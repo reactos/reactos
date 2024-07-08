@@ -165,17 +165,13 @@ BOOL testW1(HWND hwnd)
     int maxMessages = ((float)SLEEP_TIME / (float)TESTW1_INTERVAL) * (1 + TIME_TOLERANCE);
     
     for (i = 0; i < TESTW1_COUNT; i++)
-    {
         timerIdW1[i].counter = 0;
-    }
 
     for (i = 0; i < TESTW1_COUNT; i++)
     {
         UINT_PTR locIndex = SetTimer(hwnd, i, TESTW1_INTERVAL, NULL);
         if (locIndex == 0)
-        {
             countErrors++;
-        }
     }
 
     ULONGLONG startTime = GetTickCount();
@@ -187,9 +183,7 @@ BOOL testW1(HWND hwnd)
         DispatchMessage(&msg);
 
         if (GetTickCount() - startTime >= SLEEP_TIME)
-        {
             PostQuitMessage(0);
-        }
     }
 
     for (i = 0; i < TESTW1_COUNT; i++)
