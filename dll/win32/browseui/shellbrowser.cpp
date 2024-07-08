@@ -326,7 +326,7 @@ public:
     ~CShellBrowser();
     HRESULT Initialize();
 public:
-    UINT GetNewBrowserFlag(UINT Flags);
+    UINT ApplyNewBrowserFlag(UINT Flags);
     HRESULT OpenNewBrowserWindow(LPCITEMIDLIST pidl, UINT SbspFlags);
     HRESULT CreateRelativeBrowsePIDL(LPCITEMIDLIST relative, UINT SbspFlags, LPITEMIDLIST *ppidl);
     HRESULT BrowseToPIDL(LPCITEMIDLIST pidl, long flags);
@@ -634,6 +634,7 @@ public:
     LRESULT OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnExplorerBar(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnCabinetStateChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSettingsChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnGetSettingsPtr(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnAppCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -688,6 +689,7 @@ public:
         COMMAND_RANGE_HANDLER(IDM_GOTO_TRAVEL_FIRSTTARGET, IDM_GOTO_TRAVEL_LASTTARGET, OnGoTravel)
         COMMAND_RANGE_HANDLER(IDM_EXPLORERBAND_BEGINCUSTOM, IDM_EXPLORERBAND_ENDCUSTOM, OnExplorerBar)
         MESSAGE_HANDLER(WM_COMMAND, RelayCommands)
+        MESSAGE_HANDLER(CWM_STATECHANGE, OnCabinetStateChange)
         MESSAGE_HANDLER(BWM_SETTINGCHANGE, OnSettingsChange)
         MESSAGE_HANDLER(BWM_GETSETTINGSPTR, OnGetSettingsPtr)
         MESSAGE_HANDLER(WM_APPCOMMAND, OnAppCommand)
@@ -828,7 +830,7 @@ HRESULT CShellBrowser::ApplyBrowserDefaultFolderSettings(IShellView *pvs)
     return hr;
 }
 
-UINT CShellBrowser::GetNewBrowserFlag(UINT Flags)
+UINT CShellBrowser::ApplyNewBrowserFlag(UINT Flags)
 {
     if ((Flags & (SBSP_SAMEBROWSER | SBSP_NEWBROWSER)) == SBSP_DEFBROWSER)
     {
@@ -838,7 +840,7 @@ UINT CShellBrowser::GetNewBrowserFlag(UINT Flags)
             Flags |= (!!gCabinetState.fNewWindowMode) ^ (GetAsyncKeyState(VK_CONTROL) < 0) ? SBSP_NEWBROWSER : SBSP_SAMEBROWSER;
     }
     if (Flags & (SBSP_NAVIGATEBACK | SBSP_NAVIGATEFORWARD))
-        return SBSP_SAMEBROWSER; // Force same browser for now
+        Flags = (Flags & ~SBSP_NEWBROWSER) | SBSP_SAMEBROWSER; // Force same browser for now
     return Flags;
 }
 
@@ -2311,9 +2313,9 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::TranslateAcceleratorSB(MSG *pmsg, WORD 
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::BrowseObject(LPCITEMIDLIST pidl, UINT wFlags)
 {
-    UINT newbrowser = GetNewBrowserFlag(wFlags);
+    wFlags = ApplyNewBrowserFlag(wFlags);
     // FIXME: Should not automatically show the Explorer band
-    if ((wFlags & SBSP_EXPLOREMODE) && !(newbrowser & SBSP_NEWBROWSER))
+    if ((wFlags & SBSP_EXPLOREMODE) && !(wFlags & SBSP_NEWBROWSER))
         ShowBand(CLSID_ExplorerBand, true);
 
     CComHeapPtr<ITEMIDLIST> pidlResolved;
@@ -2325,14 +2327,18 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::BrowseObject(LPCITEMIDLIST pidl, UINT w
         pidl = pidlResolved;
     }
 
-    if (newbrowser & SBSP_NEWBROWSER)
+    if (wFlags & SBSP_NEWBROWSER)
         return OpenNewBrowserWindow(pidl, wFlags);
-    if (wFlags & SBSP_PARENT)
-        return NavigateToParent();
-    if (wFlags & SBSP_NAVIGATEBACK)
-        return GoBack();
-    if (wFlags & SBSP_NAVIGATEFORWARD)
-        return GoForward();
+
+    switch (wFlags & (SBSP_ABSOLUTE | SBSP_RELATIVE | SBSP_PARENT | SBSP_NAVIGATEBACK | SBSP_NAVIGATEFORWARD))
+    {
+        case SBSP_PARENT:
+            return NavigateToParent();
+        case SBSP_NAVIGATEBACK:
+            return GoBack();
+        case SBSP_NAVIGATEFORWARD:
+            return GoForward();
+    }
 
     // TODO: SBSP_WRITENOHISTORY? SBSP_CREATENOHISTORY?
     long flags = BTP_UPDATE_NEXT_HISTORY;
@@ -2662,7 +2668,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::UpdateBackForwardState()
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::SetFlags(DWORD dwFlags, DWORD dwFlagMask)
 {
-    m_BrowserSvcFlags = (m_BrowserSvcFlags & ~dwFlagMask) | (dwFlagMask & dwFlags);
+    m_BrowserSvcFlags = (m_BrowserSvcFlags & ~dwFlagMask) | (dwFlags & dwFlagMask);
     return S_OK;
 }
 
@@ -2919,12 +2925,12 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::_NavigateToPidl(LPCITEMIDLIST pidl, DWO
     const UINT navflags = HLNF_NAVIGATINGBACK | HLNF_NAVIGATINGFORWARD;
     if ((grfHLNF & navflags) && grfHLNF != ~0ul)
     {
-        UINT SBSP = (grfHLNF & HLNF_NAVIGATINGBACK) ? SBSP_NAVIGATEBACK : SBSP_NAVIGATEFORWARD;
+        UINT SbspFlags = (grfHLNF & HLNF_NAVIGATINGBACK) ? SBSP_NAVIGATEBACK : SBSP_NAVIGATEFORWARD;
         if (grfHLNF & SHHLNF_WRITENOHISTORY)
-            SBSP |= SBSP_WRITENOHISTORY;
+            SbspFlags |= SBSP_WRITENOHISTORY;
         if (grfHLNF & SHHLNF_NOAUTOSELECT)
-            SBSP |= SBSP_NOAUTOSELECT;
-        return BrowseObject(pidl, SBSP);
+            SbspFlags |= SBSP_NOAUTOSELECT;
+        return BrowseObject(pidl, SbspFlags);
     }
     return E_NOTIMPL;
 }
@@ -4018,6 +4024,12 @@ LRESULT CShellBrowser::RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 {
     if (HIWORD(wParam) == 0 && LOWORD(wParam) < FCIDM_SHVIEWLAST && fCurrentShellViewWindow != NULL)
         return SendMessage(fCurrentShellViewWindow, uMsg, wParam, lParam);
+    return 0;
+}
+
+LRESULT CShellBrowser::OnCabinetStateChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    RefreshCabinetState();
     return 0;
 }
 

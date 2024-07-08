@@ -366,10 +366,10 @@ static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
     }
 
     CComPtr<IShellBrowser> psb;
-#if 0 // TODO
+#if 0
     if (!(parameters->dwFlags & (SH_EXPLORER_CMDLINE_FLAG_E | SH_EXPLORER_CMDLINE_FLAG_NOREUSE)))
     {
-        IShellWindows::FindWindowSW(...)
+        // TODO: IShellWindows::FindWindowSW(...) and reuse the existing IShellBrowser
     }
 #endif
     hResult = CShellBrowser_CreateInstance(IID_PPV_ARG(IShellBrowser, &psb));

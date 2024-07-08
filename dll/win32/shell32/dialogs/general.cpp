@@ -126,14 +126,15 @@ static BOOL IntGetUnderlineState(VOID)
 // SHELL32.dll	RegSetValueExW ( 0x00000854, "Settings", 0, REG_BINARY, 0x0210f170, 12 )	ERROR_SUCCESS		0.0001472
 // SHELL32.dll	RegSetValueExW ( 0x00000854, "FullPath", 0, REG_DWORD, 0x00d2f2ac, 4 )	ERROR_SUCCESS		0.0000168
 // SHELL32.dll	RegCloseKey ( 0x00000854 )	ERROR_SUCCESS		0.0000000
-static BOOL IntSetNewWindowMode(BOOL bNewWindowMode)
+static HRESULT IntSetNewWindowMode(BOOL bNewWindowMode)
 {
     CABINETSTATE cs;
     if (!ReadCabinetState(&cs, sizeof(cs)))
-        return FALSE;
+        return E_FAIL;
 
-    cs.fNewWindowMode = (bNewWindowMode ? TRUE : FALSE);
-    return WriteCabinetState(&cs);
+    BOOL changed = !!cs.fNewWindowMode != !!bNewWindowMode;
+    cs.fNewWindowMode = !!bNewWindowMode;
+    return WriteCabinetState(&cs) ? (changed ? S_OK : S_FALSE) : E_FAIL;
 }
 
 static BOOL IntGetNewWindowMode(VOID)
@@ -319,8 +320,10 @@ GeneralDlg_OnApply(HWND hwndDlg, PGENERAL_DIALOG pGeneral)
     BOOL bNewWindowMode = !(IsDlgButtonChecked(hwndDlg, IDC_FOLDER_OPTIONS_SAMEWINDOW) == BST_CHECKED);
 
     IntSetUnderlineState(bUnderline);
-    IntSetNewWindowMode(bNewWindowMode);
+    BOOL updateCabinets = IntSetNewWindowMode(bNewWindowMode) == S_OK;
     IntSetShellStateSettings(bDoubleClick, bUseCommonTasks);
+    if (updateCabinets)
+        PostCabinetMessage(CWM_STATECHANGE, 0, 0);
     return TRUE;
 }
 

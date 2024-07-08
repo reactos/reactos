@@ -1865,6 +1865,9 @@ BOOL WINAPI WriteCabinetState(CABINETSTATE *cs)
 		RegCloseKey( hkey );
 	}
 
+#ifdef __REACTOS__
+	/* TODO: if (r==ERROR_SUCCESS) Increment GLOBALCOUNTER_FOLDERSETTINGSCHANGE */
+#endif
 	return (r==ERROR_SUCCESS);
 }
 
