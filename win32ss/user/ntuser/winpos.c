@@ -3722,7 +3722,7 @@ NtUserSetWindowPlacement(HWND hWnd,
 
     /* Backwards-compatibility: Win 3.x doesn't check the length */
     if (LOWORD(gptiCurrent->dwExpWinVer) < WINVER_WINNT4)
-        Safepl.length = sizeof(WINDOWPLACEMENT);
+        Safepl.length = sizeof(Safepl);
 
     if (Safepl.length != sizeof(WINDOWPLACEMENT))
     {
