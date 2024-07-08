@@ -2015,6 +2015,12 @@ User32CallCopyImageFromKernel(PVOID Arguments, ULONG ArgumentLength)
 
 /************* PUBLIC FUNCTIONS *******************/
 
+#define COPYIMAGE_VALID_FLAGS ( \
+    LR_SHARED | LR_COPYFROMRESOURCE | LR_CREATEDIBSECTION | LR_LOADMAP3DCOLORS | 0x800 | \
+    LR_VGACOLOR | LR_LOADREALSIZE | LR_DEFAULTSIZE | LR_LOADTRANSPARENT | LR_LOADFROMFILE | \
+    LR_COPYDELETEORG | LR_COPYRETURNORG | LR_COLOR | LR_MONOCHROME \
+)
+
 HANDLE WINAPI CopyImage(
   _In_  HANDLE hImage,
   _In_  UINT uType,
@@ -2025,6 +2031,13 @@ HANDLE WINAPI CopyImage(
 {
     TRACE("hImage=%p, uType=%u, cxDesired=%d, cyDesired=%d, fuFlags=%x\n",
         hImage, uType, cxDesired, cyDesired, fuFlags);
+
+    if (fuFlags & ~COPYIMAGE_VALID_FLAGS)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+
     switch(uType)
     {
         case IMAGE_BITMAP:
