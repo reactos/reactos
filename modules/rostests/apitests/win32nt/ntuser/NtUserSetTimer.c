@@ -40,7 +40,9 @@ TIMER_MESSAGE_STATE2 timerId2[TEST2_COUNT];
 
 void CALLBACK TimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
-    for (int i = 0; i < TEST1_COUNT; i++)
+    UINT i;
+    for (i = 0; i < TEST1_COUNT; i++)
+    {
         if (timerId1[i].index == idEvent)
             timerId1[i].counter++;
 }
