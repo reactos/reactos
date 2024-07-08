@@ -71,7 +71,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 BOOL test1(void)
 {
-    int countErrors = 0;
+    UINT i, countErrors = 0;
 
     int minMessages = (SLEEP_TIME / TEST1_INTERVAL) * (1 - TIME_TOLERANCE);
     int maxMessages = (SLEEP_TIME / TEST1_INTERVAL) * (1 + TIME_TOLERANCE);
