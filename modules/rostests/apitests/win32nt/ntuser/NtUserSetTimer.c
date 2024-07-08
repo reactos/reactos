@@ -190,7 +190,8 @@ static BOOL testW1(HWND hwnd)
     return (countErrors == 0);
 }
 
-BOOL testW2(HWND hwnd)
+// TEST WITH MESSAGES WITH WINDOW - create many timers
+static BOOL testW2(HWND hwnd)
 {
     UINT i, countErrors = 0;
 
