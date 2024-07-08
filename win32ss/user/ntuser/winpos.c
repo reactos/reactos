@@ -3724,18 +3724,15 @@ NtUserSetWindowPlacement(HWND hWnd,
     if (LOWORD(gptiCurrent->dwExpWinVer) < WINVER_WINNT4)
         Safepl.length = sizeof(WINDOWPLACEMENT);
 
-    if (Safepl.length == sizeof(WINDOWPLACEMENT))
-    {
-        ERR("0x%lX, 0x%lX\n", gptiCurrent->dwExpWinVer, WINVER_WINNT4);
-        Flags = PLACE_MAX | PLACE_RECT;
-        if (Safepl.flags & WPF_SETMINPOSITION)
-            Flags |= PLACE_MIN;
-    }
-    else
+    if (Safepl.length != sizeof(WINDOWPLACEMENT))
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         goto Exit;
     }
+
+    Flags = PLACE_MAX | PLACE_RECT;
+    if (Safepl.flags & WPF_SETMINPOSITION)
+        Flags |= PLACE_MIN;
 
     Wnd = UserGetWindowObject(hWnd);
     if (!Wnd)
