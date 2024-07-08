@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Tests for NtUserSetTimer
  * COPYRIGHT:   Copyright 2008 Timo Kreuzer <timo.kreuzer@reactos.org>
- *              Copyright 2024 Tomaš Veselý <turican0@gmail.com>
+ *              Copyright 2024 Tomáš Veselý <turican0@gmail.com>
  */
 
 #include "../win32nt.h"
