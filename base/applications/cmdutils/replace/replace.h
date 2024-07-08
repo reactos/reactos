@@ -50,3 +50,5 @@ GetRootPath(
     IN LPCTSTR InPath,
     OUT LPTSTR OutPath,
     IN INT size);
+
+extern BOOL bCtrlBreak;

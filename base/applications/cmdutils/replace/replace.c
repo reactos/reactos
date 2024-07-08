@@ -180,7 +180,7 @@ INT replace(TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], DWORD dwFlags, BOOL *d
         WriteFile (hFileDest, buffer, dwRead, &dwWritten, NULL);
 
         /* Done! or ctrl break! */
-        if (dwWritten != dwRead)
+        if (dwWritten != dwRead || bCtrlBreak)
         {
             ConOutResPuts(STRING_COPY_ERROR3);
             VirtualFree (buffer, 0, MEM_RELEASE);
@@ -232,6 +232,9 @@ INT recReplace(DWORD dwFlags,
     /* Go through all the sourcefiles and copy/replace them */
     do
     {
+        if (bCtrlBreak)
+            return filesReplaced;
+
         /* Problem with file handler */
         if (hFile == INVALID_HANDLE_VALUE)
             return filesReplaced;
@@ -573,8 +576,29 @@ INT cmd_replace(INT argc, WCHAR **argv)
     return EXIT_SUCCESS;
 }
 
+static BOOL CALLBACK
+CtrlHandlerRoutine(DWORD dwCtrlType)
+{
+    switch (dwCtrlType)
+    {
+        case CTRL_C_EVENT: /* Ctrl+C */
+            bCtrlBreak = TRUE;
+            return TRUE; /* Handled */
+
+        case CTRL_CLOSE_EVENT: /* Closing console? */
+            bCtrlBreak = TRUE;
+            return TRUE; /* Handled */
+
+        default:
+            return FALSE; /* Ignored */
+    }
+}
+
 int wmain(int argc, WCHAR **argvW)
 {
+    /* Handle Ctrl+C and console closing */
+    SetConsoleCtrlHandler(CtrlHandlerRoutine, TRUE);
+
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
 
