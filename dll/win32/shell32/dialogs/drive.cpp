@@ -172,12 +172,13 @@ struct SHOW_DRIVE_PROP_DATA
     IDataObject *pDataObj;
 };
 
-static DWORD CALLBACK
+static DWORD WINAPI
 SH_ShowDrivePropThreadProc(LPVOID pParam)
 {
     CHeapPtr<SHOW_DRIVE_PROP_DATA, CLocalAllocator> pPropData((SHOW_DRIVE_PROP_DATA *)pParam);
     CHeapPtr<WCHAR, CLocalAllocator> pwszDrive(pPropData->pwszDrive);
-    CComPtr<IDataObject> pDataObj(pPropData->pDataObj);
+    CComPtr<IDataObject> pDataObj;
+    pDataObj.Attach(pPropData->pDataObj); // We have already AddRef'ed. Use Attach
 
     HPSXA hpsx = NULL;
     HPROPSHEETPAGE hpsp[MAX_PROPERTY_SHEET_PAGE];
@@ -255,9 +256,9 @@ SH_ShowDriveProperties(WCHAR *pwszDrive, IDataObject *pDataObj)
     if (!pData)
         return FALSE;
     *pData = { pwszDrive, pDataObj };
-    pDataObj->AddRef();
 
     // Run a property sheet in another thread
+    pDataObj->AddRef(); // Keep alive
     if (SHCreateThread(SH_ShowDrivePropThreadProc, pData, CTF_COINIT, NULL))
         return TRUE; // Success
 
