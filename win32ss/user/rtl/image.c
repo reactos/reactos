@@ -1,6 +1,6 @@
 /*
- * PROJECT:     ReactOS Win32ss RTL
- * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PROJECT:     ReactOS user32.dll
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     RtlGetExpWinVer function
  * COPYRIGHT:   Copyright 2019 James Tabor <james.tabor@reactos.org>
  *              Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
