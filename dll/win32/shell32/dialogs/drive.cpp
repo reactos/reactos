@@ -177,7 +177,6 @@ ShowDrivePropThreadProc(LPVOID pParam)
 {
     CHeapPtr<DRIVE_PROP_DATA, CComAllocator> pPropData((DRIVE_PROP_DATA *)pParam);
     CHeapPtr<WCHAR, CComAllocator> pwszDrive(pPropData->pwszDrive);
-    CComPtr<IStream> pStream(pPropData->pStream);
 
     // Unmarshall IDataObject from IStream
     CComPtr<IDataObject> pDataObj;
