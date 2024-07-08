@@ -40,7 +40,7 @@ static VOID
 Test_CopyImage_Flags(UINT uType)
 {
     UINT iBit, uBit, uValidFlags = COPYIMAGE_VALID_FLAGS;
-    HANDLE hImage = CreateTestImage(uType), hCopyedImage;
+    HANDLE hImage, hCopyedImage;
 
     if (IsWindowsVistaOrGreater())
         uValidFlags |= 0x10000;
