@@ -143,7 +143,8 @@ BOOL test3(void)
     return (countErrors == 0);
 }
 
-BOOL testW1(HWND hwnd)
+// TEST WITH MESSAGES WITH WINDOW - test count of sent messages
+static BOOL testW1(HWND hwnd)
 {
     UINT i, countErrors = 0;
 
