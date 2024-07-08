@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Hungarian (Hungary) resource file
  * TRANSLATOR:  Copyright 2005 Robert Horvath (talley at cubeclub.hu)
- * TRANSLATOR:  Copyright 2020 Tibor Lajos Füzi
+ *              Copyright 2020 Tibor Lajos Füzi
  */
 
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT

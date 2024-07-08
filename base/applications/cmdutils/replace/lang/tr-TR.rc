@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Turkish resource file
  * TRANSLATOR:  Copyright 2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
- * TRANSLATOR:  Copyright 2021 Süleyman Poyraz (zaryob [dot] dev [at] gmail [dot] com)
+ *              Copyright 2021 Süleyman Poyraz (zaryob [dot] dev [at] gmail [dot] com)
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT

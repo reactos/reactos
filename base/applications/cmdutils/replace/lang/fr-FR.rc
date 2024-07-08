@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     French (France) resource file
  * TRANSLATOR:  Sylvain Pétréolle
- * TRANSLATOR:  Pierre Schweitzer
+ *              Pierre Schweitzer
  */
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
