@@ -10,6 +10,13 @@
 
 BOOL bCtrlBreak = FALSE;  /* Ctrl-Break or Ctrl-C hit */
 
+/*
+ * Helper function for getting the current path from drive
+ * without changing the drive. Return code: 0 = ok, 1 = fail.
+ * 'InPath' can have any size; if the two first letters are
+ * not a drive with ':' it will get the current path on
+ * the current drive exactly as GetCurrentDirectory() does.
+ */
 INT
 GetRootPath(
     IN LPCTSTR InPath,
