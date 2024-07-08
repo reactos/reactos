@@ -3710,7 +3710,7 @@ NtUserSetWindowPlacement(HWND hWnd,
 
     _SEH2_TRY
     {
-        ProbeForRead(lpwndpl, sizeof(WINDOWPLACEMENT), 1);
+        ProbeForRead(lpwndpl, sizeof(*lpwndpl), 1);
         Safepl = *lpwndpl;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
