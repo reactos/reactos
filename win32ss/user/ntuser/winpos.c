@@ -553,7 +553,6 @@ WinPosInitInternalPos(PWND Wnd, RECTL *RestoreRect)
    }
 }
 
-// Win: _GetWindowPlacement
 BOOL
 FASTCALL
 IntGetWindowPlacement(PWND Wnd, WINDOWPLACEMENT *lpwndpl)
@@ -3721,9 +3720,11 @@ NtUserSetWindowPlacement(HWND hWnd,
     }
     _SEH2_END
 
-    /* Backwards-compatibility: NT3.x doesn't check the length */
-    if (Safepl.length == sizeof(WINDOWPLACEMENT) ||
-        LOWORD(gptiCurrent->dwExpWinVer) < WINVER_WINNT4)
+    /* Backwards-compatibility: Win 3.x doesn't check the length */
+    if (LOWORD(gptiCurrent->dwExpWinVer) < WINVER_WINNT4)
+        Safepl.length = sizeof(WINDOWPLACEMENT);
+
+    if (Safepl.length == sizeof(WINDOWPLACEMENT))
     {
         ERR("0x%lX, 0x%lX\n", gptiCurrent->dwExpWinVer, WINVER_WINNT4);
         Flags = PLACE_MAX | PLACE_RECT;
