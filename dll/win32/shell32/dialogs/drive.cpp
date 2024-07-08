@@ -250,7 +250,7 @@ SH_ShowDriveProperties(WCHAR *pwszDrive, IDataObject *pDataObj)
     if (FAILED_UNEXPECTEDLY(SHStrDupW(pwszDrive, &pwszDrive)))
         return FALSE;
 
-    SHOW_DRIVE_PROP_DATA *pData = (SHOW_DRIVE_PROP_DATA *)LocalAlloc(LPTR, sizeof(SHOW_DRIVE_PROP_DATA));
+    SHOW_DRIVE_PROP_DATA *pData = (SHOW_DRIVE_PROP_DATA *)LocalAlloc(LPTR, sizeof(*pData));
     if (!pData)
         return FALSE;
 
