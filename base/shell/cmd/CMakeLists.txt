@@ -54,6 +54,7 @@ list(APPEND SOURCE
     time.c
     timer.c
     title.c
+    trace.c
     type.c
     ver.c
     verify.c

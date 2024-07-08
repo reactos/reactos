@@ -37,10 +37,34 @@
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(cmd);
+
 #ifdef UNICODE
 #define debugstr_aw debugstr_w
 #else
 #define debugstr_aw debugstr_a
 #endif
+
+#ifdef FEATURE_DYNAMIC_TRACE
+
+extern BOOL g_bDynamicTrace;
+void CmdTrace(INT type, LPCSTR file, INT line, LPCSTR func, LPCSTR fmt, ...);
+
+#undef FIXME
+#define FIXME(fmt, ...) \
+    CmdTrace(__WINE_DBCL_FIXME, __FILE__, __LINE__, __FUNCTION__, fmt, ## __VA_ARGS__)
+
+#undef ERR
+#define ERR(fmt, ...) \
+    CmdTrace(__WINE_DBCL_ERR, __FILE__, __LINE__, __FUNCTION__, fmt, ## __VA_ARGS__)
+
+#undef WARN
+#define WARN(fmt, ...) \
+    CmdTrace(__WINE_DBCL_WARN, __FILE__, __LINE__, __FUNCTION__, fmt, ## __VA_ARGS__)
+
+#undef TRACE
+#define TRACE(fmt, ...) \
+    CmdTrace(__WINE_DBCL_TRACE, __FILE__, __LINE__, __FUNCTION__, fmt, ## __VA_ARGS__)
+
+#endif /* def FEATURE_DYNAMIC_TRACE */
 
 #endif /* __CMD_PRECOMP_H */
