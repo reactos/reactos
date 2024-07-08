@@ -107,7 +107,7 @@ BOOL test1(void)
 
     for (int i = 0; i < TEST1_COUNT; i++)
     {
-        if((timerId1[i].counter < minMessages) || (timerId1[i].counter > maxMessages))
+        if ((timerId1[i].counter < minMessages) || (timerId1[i].counter > maxMessages))
         {
             countErrors++;
         }
