@@ -2,7 +2,6 @@ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    STRING_CONSOLE_ERROR "Okänt fel: %d\n"
     STRING_REPLACE_HELP1 "Ersätter filer.\n\n\
 REPLACE [drive1:][path1]filnamn [drive2:][path2] [/A] [/P] [/R] [/W]\n\
 REPLACE [drive1:][path1]filnamn [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
@@ -44,5 +43,6 @@ REPLACE [drive1:][path1]filnamn [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
     STRING_COPY_ERROR1 "Fel: kan inte öppna källan - %s!\n"
     STRING_COPY_ERROR3 "Fel vid skriving till destinationen!\n"
     STRING_ERROR_D_PAUSEMSG "Tryck på valfri tangent för att fortsätta . . . "
+    STRING_CONSOLE_ERROR "Okänt fel: %d\n"
     STRING_ERROR_OUT_OF_MEMORY "Fel: Minnet fullt.\n"
 END

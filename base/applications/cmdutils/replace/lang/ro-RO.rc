@@ -10,7 +10,6 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    STRING_CONSOLE_ERROR "Eroare necunoscută: %d\n"
     STRING_REPLACE_HELP1 "Înlocuiește fișiere.\n\n\
 REPLACE [disc1:][cale1]fișier [disc2:][cale2] [/A] [/P] [/R] [/W]\n\
 REPLACE [disc1:][cale1]fișier [disc2:][cale2] [/P] [/R] [/S] [/W] [/U]\n\n\
@@ -51,5 +50,6 @@ REPLACE [disc1:][cale1]fișier [disc2:][cale2] [/P] [/R] [/S] [/W] [/U]\n\n\
     STRING_COPY_ERROR1 "Eroare: Nu se poate deschide sursa - %s!\n"
     STRING_COPY_ERROR3 "Eroare de scriere în destinație!\n"
     STRING_ERROR_D_PAUSEMSG "Tastați pentru a continua... "
+    STRING_CONSOLE_ERROR "Eroare necunoscută: %d\n"
     STRING_ERROR_OUT_OF_MEMORY "Eroare de exces de memorie.\n"
 END

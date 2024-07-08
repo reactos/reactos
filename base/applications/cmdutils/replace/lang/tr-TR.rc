@@ -7,7 +7,6 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_CONSOLE_ERROR "Bilinmeyen Hata: %d\n"
     STRING_REPLACE_HELP1 "Replaces files.\n\n\
 REPLACE [sürücü1:][yol1]filename [sürücü2:][yol2] [/A] [/P] [/R] [/W]\n\
 REPLACE [sürücü1:][yol1]filename [sürücü2:][yol2] [/P] [/R] [/S] [/W] [/U]\n\n\
@@ -46,5 +45,6 @@ REPLACE [sürücü1:][yol1]filename [sürücü2:][yol2] [/P] [/R] [/S] [/W] [/U]
     STRING_COPY_ERROR1 "Hata: Kaynak açılamadı - %s!\n"
     STRING_COPY_ERROR3 "Hata: Hedefe yazılırken hata oluştu!\n"
     STRING_ERROR_D_PAUSEMSG "Devam etmek için herhangi bir tuşa basın . . . "
+    STRING_CONSOLE_ERROR "Bilinmeyen Hata: %d\n"
     STRING_ERROR_OUT_OF_MEMORY "Yetersiz bellek.\n"
 END

@@ -7,7 +7,6 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_CONSOLE_ERROR "Ismeretlen hiba: %d\n"
     STRING_REPLACE_HELP1 "Fájlok cseréje.\n\n\
 REPLACE [meghajt1:][útvonal1]fájl [meghajt2:][útvonal2] [/A] [/P] [/R] [/W]\n\
 REPLACE [meghajt1:][útvonal1]fájl [meghajt2:][útvonal2] [/P] [/R] [/S] [/W] [/U]\n\n\
@@ -47,5 +46,6 @@ REPLACE [meghajt1:][útvonal1]fájl [meghajt2:][útvonal2] [/P] [/R] [/S] [/W] [
     STRING_COPY_ERROR1 "Hiba: a forrás nem nyitható meg - %s!\n"
     STRING_COPY_ERROR3 "Hiba a cél írása közben!\n"
     STRING_ERROR_D_PAUSEMSG "A folytatáshoz nyomjon meg egy billentyűt . . . "
+    STRING_CONSOLE_ERROR "Ismeretlen hiba: %d\n"
     STRING_ERROR_OUT_OF_MEMORY "Nincs elég memória.\n"
 END

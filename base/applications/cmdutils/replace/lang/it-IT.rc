@@ -2,7 +2,6 @@ LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    STRING_CONSOLE_ERROR "Errore sconosciuto: %d\n"
     STRING_REPLACE_HELP1 "Sostituisce i file.\n\n\
 REPLACE [disco1:][percorso1]nomefile [disco2:][percorso2] [/A] [/P] [/R] [/W]\n\
 REPLACE [disco1:][percorso1]nomefile [disco2:][percorso2] [/P] [/R] [/S] [/W] [/U]\n\n\
@@ -44,5 +43,6 @@ REPLACE [disco1:][percorso1]nomefile [disco2:][percorso2] [/P] [/R] [/S] [/W] [/
     STRING_COPY_ERROR1 "Errore: Impossibile aprire il file sorgente - %s!\n"
     STRING_COPY_ERROR3 "Errore durante la scrittura della destinazione!\n"
     STRING_ERROR_D_PAUSEMSG "Premi un tasto per continuare . . . "
+    STRING_CONSOLE_ERROR "Errore sconosciuto: %d\n"
     STRING_ERROR_OUT_OF_MEMORY "Errore di memoria esaurita.\n"
 END

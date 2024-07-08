@@ -4,7 +4,6 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    STRING_CONSOLE_ERROR "Erreur inconnue : %d\n"
     STRING_REPLACE_HELP1 "Remplace les fichiers.\n\n\
 REPLACE [lecteur1:][chemin1]nomdefichier [lecteur2:][chemin2] [/A] [/P] [/R] [/W]\n\
 REPLACE [lecteur1:][chemin1]nomdefichier [lecteur2:][chemin2] [/P] [/R] [/S] [/W] [/U]\n\n\
@@ -45,5 +44,6 @@ REPLACE [lecteur1:][chemin1]nomdefichier [lecteur2:][chemin2] [/P] [/R] [/S] [/W
     STRING_COPY_ERROR1 "Erreur : Ne peut ouvrir la source - %s !\n"
     STRING_COPY_ERROR3 "Erreur à l'écriture de la destination !\n"
     STRING_ERROR_D_PAUSEMSG "Appuyez sur une touche pour continuer . . . "
+    STRING_CONSOLE_ERROR "Erreur inconnue : %d\n"
     STRING_ERROR_OUT_OF_MEMORY "Pas assez de mémoire.\n"
 END

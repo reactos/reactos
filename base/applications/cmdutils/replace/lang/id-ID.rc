@@ -4,7 +4,6 @@ LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_CONSOLE_ERROR "Kesalahan tidak dikenal: %d\n"
     STRING_REPLACE_HELP1 "Replaces files.\n\n\
 REPLACE [drive1:][path1]filename [drive2:][path2] [/A] [/P] [/R] [/W]\n\
 REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
@@ -46,5 +45,6 @@ REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
     STRING_COPY_ERROR1 "Salah: Tidak dapat membuka sumber - %s!\n"
     STRING_COPY_ERROR3 "Kesalahan menulis tujuan!\n"
     STRING_ERROR_D_PAUSEMSG "Tekan tombol untuk melanjutkan . . . "
+    STRING_CONSOLE_ERROR "Kesalahan tidak dikenal: %d\n"
     STRING_ERROR_OUT_OF_MEMORY "Kesalahan kekurangan memori.\n"
 END

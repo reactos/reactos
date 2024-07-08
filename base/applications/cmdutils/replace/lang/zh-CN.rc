@@ -11,7 +11,6 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-    STRING_CONSOLE_ERROR "未知错误：%d\n"
     STRING_REPLACE_HELP1 "替换文件。\n\n\
 REPLACE [驱动器1:][路径1]文件名 [驱动器2:][路径2] [/A] [/P] [/R] [/W]\n\
 REPLACE [驱动器1:][路径1]文件名 [驱动器2:][路径2] [/P] [/R] [/S] [/W] [/U]\n\n\
@@ -46,5 +45,6 @@ REPLACE [驱动器1:][路径1]文件名 [驱动器2:][路径2] [/P] [/R] [/S] [/
     STRING_COPY_ERROR1 "错误：无法打开源文件 -  %s！\n"
     STRING_COPY_ERROR3 "写入目标文件时出错！\n"
     STRING_ERROR_D_PAUSEMSG "按任意键继续... "
+    STRING_CONSOLE_ERROR "未知错误：%d\n"
     STRING_ERROR_OUT_OF_MEMORY "内存不足。\n"
 END

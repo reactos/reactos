@@ -4,7 +4,6 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    STRING_CONSOLE_ERROR "Error desconocido: %d\n"
     STRING_REPLACE_HELP1 "Reemplaza archivos.\n\n\
 REPLACE [drive1:][path1]filename [drive2:][path2] [/A] [/P] [/R] [/W]\n\
 REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
@@ -47,5 +46,6 @@ REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
     STRING_COPY_ERROR1 "Error: No se puede abrir el origen - %s!\n"
     STRING_COPY_ERROR3 "¡Error escribiendo destino!\n"
     STRING_ERROR_D_PAUSEMSG "Pulse una tecla para continuar ... "
+    STRING_CONSOLE_ERROR "Error desconocido: %d\n"
     STRING_ERROR_OUT_OF_MEMORY "Error fuera de memoria.\n"
 END

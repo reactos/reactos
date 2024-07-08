@@ -9,7 +9,6 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 STRINGTABLE
 BEGIN
-    STRING_CONSOLE_ERROR "Erro desconhecido: %d\n"
     STRING_REPLACE_HELP1 "Substitui arquivos.\n\n\
 REPLACE [unidade1:][caminho1]arquivo [unidade2:][caminho2][/A][/P][/R][/W]\n\
 REPLACE [unidade1:][caminho1]arquivo [unidade2:][caminho2][/P][/R][/S][/W][/U]\n\n\
@@ -51,5 +50,6 @@ REPLACE [unidade1:][caminho1]arquivo [unidade2:][caminho2][/P][/R][/S][/W][/U]\n
     STRING_COPY_ERROR1 "Erro: Não é possível abrir o código - %s!\n"
     STRING_COPY_ERROR3 "Erro ao escrever destino!\n"
     STRING_ERROR_D_PAUSEMSG "Pressione qualquer tecla para continuar..."
+    STRING_CONSOLE_ERROR "Erro desconhecido: %d\n"
     STRING_ERROR_OUT_OF_MEMORY "Erro de falta de memória.\n"
 END

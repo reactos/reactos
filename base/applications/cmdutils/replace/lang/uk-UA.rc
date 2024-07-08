@@ -10,7 +10,6 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_CONSOLE_ERROR "Невiдома помилка: %d\n"
     STRING_REPLACE_HELP1 "Замiна файлiв.\n\n\
 REPLACE [диск1:][шлях1]iм'я_файлу [диск2:][шлях2] [/A] [/P] [/R] [/W]\n\
 REPLACE [диск1:][шлях1]iм'я_файлу [диск2:][шлях2] [/P] [/R] [/S] [/W] [/U]\n\n\
@@ -51,5 +50,6 @@ REPLACE [диск1:][шлях1]iм'я_файлу [диск2:][шлях2] [/P] [/
     STRING_COPY_ERROR1 "Помилка: Неможливо вiдкрити джерело - %s!\n"
     STRING_COPY_ERROR3 "Помилка запису призначення!\n"
     STRING_ERROR_D_PAUSEMSG "Натиснiть будь-яку клавiшу для продовження . . . "
+    STRING_CONSOLE_ERROR "Невiдома помилка: %d\n"
     STRING_ERROR_OUT_OF_MEMORY "Недостатньо пам'ятi.\n"
 END

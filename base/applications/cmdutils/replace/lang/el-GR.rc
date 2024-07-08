@@ -7,7 +7,6 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_CONSOLE_ERROR "Άγνωστο σφάλμα: %d\n"
     STRING_REPLACE_HELP1 "Replaces files.\n\n\
 REPLACE [drive1:][path1]filename [drive2:][path2] [/A] [/P] [/R] [/W]\n\
 REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
@@ -49,5 +48,6 @@ REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
     STRING_COPY_ERROR1 "Σφάλμα: Δεν ήταν δυνατό το άνοιγμα της πηγής - %s!\n"
     STRING_COPY_ERROR3 "Σφάλμα: writing destination!\n"
     STRING_ERROR_D_PAUSEMSG "Πατήστε οποιοδήποτε πλήκτρο για συνέχεια . . . "
+    STRING_CONSOLE_ERROR "Άγνωστο σφάλμα: %d\n"
     STRING_ERROR_OUT_OF_MEMORY "Out of memory error.\n"
 END

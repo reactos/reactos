@@ -11,7 +11,6 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    STRING_CONSOLE_ERROR "未知錯誤：%d\n"
     STRING_REPLACE_HELP1 "取代檔案。\n\n\
 REPLACE [磁碟機1:][路徑1]檔案名稱 [磁碟機2:][路徑2] [/A] [/P] [/R] [/W]\n\
 REPLACE [磁碟機1:][路徑1]檔案名稱 [磁碟機2:][路徑2] [/P] [/R] [/S] [/W] [/U]\n\n\
@@ -46,5 +45,6 @@ REPLACE [磁碟機1:][路徑1]檔案名稱 [磁碟機2:][路徑2] [/P] [/R] [/S]
     STRING_COPY_ERROR1 "錯誤：無法開啟來源 - %s！\n"
     STRING_COPY_ERROR3 "寫入目的時出錯！\n"
     STRING_ERROR_D_PAUSEMSG "按任意鍵繼續... "
+    STRING_CONSOLE_ERROR "未知錯誤：%d\n"
     STRING_ERROR_OUT_OF_MEMORY "記憶體不足。\n"
 END

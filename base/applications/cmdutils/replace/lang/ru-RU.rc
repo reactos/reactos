@@ -11,7 +11,6 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_CONSOLE_ERROR "Неизвестная ошибка: %d\n"
     STRING_REPLACE_HELP1 "Замена файлов.\n\n\
 REPLACE [диск1:][путь1]имя_файла [диск2:][путь2] [/A] [/P] [/R] [/W]\n\
 REPLACE [диск1:][путь1]имя_файла [диск2:][путь2] [/P] [/R] [/S] [/W] [/U]\n\n\
@@ -53,5 +52,6 @@ REPLACE [диск1:][путь1]имя_файла [диск2:][путь2] [/P] [/
     STRING_COPY_ERROR1 "Ошибка: Невозможно открыть источник - %s!\n"
     STRING_COPY_ERROR3 "Ошибка записи!\n"
     STRING_ERROR_D_PAUSEMSG "Для продолжения нажмите любую клавишу . . . "
+    STRING_CONSOLE_ERROR "Неизвестная ошибка: %d\n"
     STRING_ERROR_OUT_OF_MEMORY "Нехватка памяти.\n"
 END

@@ -4,7 +4,6 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    STRING_CONSOLE_ERROR "Unbekannter Fehler: %d\n"
     STRING_REPLACE_HELP1 "Ersetzt Dateien.\n\n\
 REPLACE [Laufwerk1:][Pfad1]Dateiname [Laufwerk2:][Pfad2] [/A] [/P] [/R] [/W]\n\
 REPLACE [Laufwerk1:][Pfad1]Dateiname [Laufwerk2:][Pfad2] [/P] [/R] [/S] [/W] [/U]\n\n\
@@ -47,5 +46,6 @@ REPLACE [Laufwerk1:][Pfad1]Dateiname [Laufwerk2:][Pfad2] [/P] [/R] [/S] [/W] [/U
     STRING_COPY_ERROR1 "Fehler: Quelle kann nicht geöffnet werden - %s!\n"
     STRING_COPY_ERROR3 "Fehler: Schreibziel!\n"
     STRING_ERROR_D_PAUSEMSG "Drücken Sie eine beliebige Taste . . . "
+    STRING_CONSOLE_ERROR "Unbekannter Fehler: %d\n"
     STRING_ERROR_OUT_OF_MEMORY "Fehler: Zu wenig Speicher verfügbar.\n"
 END

@@ -2,7 +2,6 @@ LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    STRING_CONSOLE_ERROR "Ukjent feil: %d\n"
     STRING_REPLACE_HELP1 "Replaces files.\n\n\
 REPLACE [drive1:][path1]filename [drive2:][path2] [/A] [/P] [/R] [/W]\n\
 REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
@@ -44,5 +43,6 @@ REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
     STRING_COPY_ERROR1 "Feil: kan ikke åpne kilden - %s!\n"
     STRING_COPY_ERROR3 "Feil ved skriving til destinasjon!\n"
     STRING_ERROR_D_PAUSEMSG "Trykk en tast for å fortsette . . . "
+    STRING_CONSOLE_ERROR "Ukjent feil: %d\n"
     STRING_ERROR_OUT_OF_MEMORY "Feil: Minne fullt.\n"
 END

@@ -7,7 +7,6 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_CONSOLE_ERROR "Neznámá chyba: %d\n"
     STRING_REPLACE_HELP1 "Replaces files.\n\n\
 REPLACE [drive1:][path1]filename [drive2:][path2] [/A] [/P] [/R] [/W]\n\
 REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
@@ -48,6 +47,7 @@ REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
     STRING_COPY_OPTION "ANV"
     STRING_COPY_ERROR1 "Chyba: Nelze otevřít zdroj - %s!\n"
     STRING_COPY_ERROR3 "Chyba při zápisu do cíle!\n"
+    STRING_CONSOLE_ERROR "Neznámá chyba: %d\n"
     STRING_ERROR_OUT_OF_MEMORY "Chyba - nedostatek paměti.\n"
     STRING_ERROR_D_PAUSEMSG "Pokračujte stisknutím libovolné klávesy . . . "
 END

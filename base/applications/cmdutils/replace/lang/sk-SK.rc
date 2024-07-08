@@ -8,7 +8,6 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_CONSOLE_ERROR "Neznáma chyba: %d\n"
     STRING_REPLACE_HELP1 "Replaces files.\n\n\
 REPLACE [drive1:][path1]filename [drive2:][path2] [/A] [/P] [/R] [/W]\n\
 REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
@@ -50,5 +49,6 @@ REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
     STRING_COPY_ERROR1 "Chyba: Cannot open source - %s!\n"
     STRING_COPY_ERROR3 "Error writing destination!\n"
     STRING_ERROR_D_PAUSEMSG "Pokračujte stlačením ľubovoľného klávesu ... "
+    STRING_CONSOLE_ERROR "Neznáma chyba: %d\n"
     STRING_ERROR_OUT_OF_MEMORY "Chyba (z) nedostatku pamäte.\n"
 END

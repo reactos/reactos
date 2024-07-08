@@ -12,7 +12,6 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_CONSOLE_ERROR "Nieznany błąd: %d\n"
     STRING_REPLACE_HELP1 "Zamienia pliki.\n\n\
 REPLACE [napęd1:][ścieżka1] pliki [napęd2:][ścieżka2] [/A] [/P] [/R] [/W]\n\
 REPLACE [napęd1:][ścieżka1] pliki [napęd2:][ścieżka2] [/P] [/R] [/S] [/W] [/U]\n\n\
@@ -53,5 +52,6 @@ REPLACE [napęd1:][ścieżka1] pliki [napęd2:][ścieżka2] [/P] [/R] [/S] [/W] 
     STRING_COPY_ERROR1 "Błąd: Nie można otworzyć źródła - %s!\n"
     STRING_COPY_ERROR3 "Błąd zapisu na miejscu docelowym!\n"
     STRING_ERROR_D_PAUSEMSG "Naciśnij dowolny klawisz, aby kontynuować . . . "
+    STRING_CONSOLE_ERROR "Nieznany błąd: %d\n"
     STRING_ERROR_OUT_OF_MEMORY "Błąd - brak pamięci.\n"
 END
