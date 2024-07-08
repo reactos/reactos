@@ -582,9 +582,6 @@ CtrlHandlerRoutine(DWORD dwCtrlType)
     switch (dwCtrlType)
     {
         case CTRL_C_EVENT: /* Ctrl+C */
-            bCtrlBreak = TRUE;
-            return TRUE; /* Handled */
-
         case CTRL_CLOSE_EVENT: /* Closing console? */
             bCtrlBreak = TRUE;
             return TRUE; /* Handled */
