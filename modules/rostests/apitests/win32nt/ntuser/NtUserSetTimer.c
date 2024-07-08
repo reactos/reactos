@@ -26,7 +26,7 @@
 typedef struct TIMER_MESSAGE_STATE1
 {
     UINT_PTR index;
-    int counter;
+    UINT counter;
 } TIMER_MESSAGE_STATE1;
 
 TIMER_MESSAGE_STATE1 timerId1[TEST1_COUNT];
