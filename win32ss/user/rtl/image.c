@@ -24,6 +24,7 @@ RtlGetExpWinVer(_In_ PVOID BaseAddress)
 
     TRACE("(%p)\n", BaseAddress);
 
+    /* Remove the magic flag for non-mapped images */
     if (AlignedAddress & 1)
         AlignedAddress = (AlignedAddress & ~1);
 
