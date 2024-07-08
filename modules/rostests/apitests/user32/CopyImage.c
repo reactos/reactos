@@ -21,10 +21,12 @@ static HANDLE CreateTestImage(UINT uType)
     switch (uType)
     {
         case IMAGE_BITMAP:
-            hDC = CreateCompatibleDC(NULL);
+        {
+            HDC hDC = CreateCompatibleDC(NULL);
             hImage = (HANDLE)CreateCompatibleBitmap(hDC, 10, 10);
             DeleteDC(hDC);
             break;
+        }
         case IMAGE_CURSOR:
             hImage = (HANDLE)LoadCursor(NULL, IDC_ARROW);
             break;
