@@ -127,6 +127,7 @@ SettingsDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
             NewSettingsInfo = SettingsInfo;
             InitSettingsControls(hDlg, &SettingsInfo);
             return TRUE;
+
         case WM_COMMAND:
         {
             switch (LOWORD(wParam))
