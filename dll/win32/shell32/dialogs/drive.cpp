@@ -266,18 +266,14 @@ SH_ShowDriveProperties(WCHAR *pwszDrive, IDataObject *pDataObj)
 
     // Marshall IDataObject to IStream
     hr = CoMarshalInterThreadInterfaceInStream(IID_IDataObject, pDataObj, &pData->pStream);
-    if (FAILED_UNEXPECTEDLY(hr))
+    if (SUCCEEDED(hr))
     {
-        SHFree(pwszDrive);
-        SHFree(pData);
-        return FALSE;
+        // Run a property sheet in another thread
+        if (SHCreateThread(ShowDrivePropThreadProc, pData, CTF_COINIT, NULL))
+            return TRUE; // Success
+
+        pData->pStream->Release();
     }
-
-    // Run a property sheet in another thread
-    if (SHCreateThread(ShowDrivePropThreadProc, pData, CTF_COINIT, NULL))
-        return TRUE; // Success
-
-    pData->pStream->Release();
     SHFree(pwszDrive);
     SHFree(pData);
     return FALSE; // Failed
