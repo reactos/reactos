@@ -91,9 +91,9 @@ UINT MapVerbToDfmCmd(_In_ LPCSTR verba)
     return 0;
 }
 
-static bool IsVerbListSeparator(int Ch)
+static inline bool IsVerbListSeparator(WCHAR Ch)
 {
-    return Ch == ' ' || Ch == ','; // learn.microsoft.com/en-us/windows/win32/shell/context-menu-handlers
+    return Ch == L' ' || Ch == L','; // learn.microsoft.com/en-us/windows/win32/shell/context-menu-handlers
 }
 
 static int FindVerbInDefaultVerbList(LPCWSTR List, LPCWSTR Verb)
@@ -105,6 +105,7 @@ static int FindVerbInDefaultVerbList(LPCWSTR List, LPCWSTR Verb)
         LPCWSTR Start = List;
         while (*List && !IsVerbListSeparator(*List))
             List++;
+        // "List > Start" to verify that the list item is non-empty to avoid the edge case where Verb is "" and the list contains ",,"
         if (!_wcsnicmp(Verb, Start, List - Start) && List > Start)
             return index;
     }
@@ -545,7 +546,7 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
     WCHAR wszDispVerb[80]; // The limit on XP. If the friendly string is longer, it falls back to the verb key.
     UINT fState;
     UINT cIds = 0, indexFirst = *pIndexMenu, indexDefault;
-    int defverbindex = -1;
+    int iDefVerbIndex = -1;
 
     mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE | MIIM_DATA;
     mii.fType = MFT_STRING;
@@ -682,12 +683,12 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
             }
 
             UINT pos = *pIndexMenu;
-            int verbindex = hkVerb ? FindVerbInDefaultVerbList(m_DefVerbs, info.Verb) : -1;
-            if (verbindex >= 0)
+            int verbIndex = hkVerb ? FindVerbInDefaultVerbList(m_DefVerbs, info.Verb) : -1;
+            if (verbIndex >= 0)
             {
-                if (verbindex < defverbindex || defverbindex < 0)
+                if (verbIndex < iDefVerbIndex || iDefVerbIndex < 0)
                 {
-                    defverbindex = verbindex;
+                    iDefVerbIndex = verbIndex;
                     fState |= MFS_DEFAULT;
                     forceFirstPos = TRUE;
                 }
@@ -697,7 +698,7 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
                     pos = indexDefault;
                 }
             }
-            else if (defverbindex >= 0)
+            else if (iDefVerbIndex >= 0)
             {
                 fState &= ~MFS_DEFAULT; // We have already set the default
                 if (forceFirstPos)
