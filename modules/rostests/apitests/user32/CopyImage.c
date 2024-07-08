@@ -55,8 +55,6 @@ Test_CopyImage_Flags(UINT uType)
         {
             hCopyedImage = CopyImage(hImage, uType, 0, 0, uBit);
             ok(hCopyedImage != NULL, "iBit %u: uType %u: hCopyedImage was NULL\n", iBit, uType);
-            if (hCopyedImage)
-                DeleteObject(hCopyedImage);
         }
         else
         {
