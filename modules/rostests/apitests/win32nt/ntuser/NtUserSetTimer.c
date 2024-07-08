@@ -38,7 +38,9 @@ typedef struct TIMER_MESSAGE_STATEW1
 
 TIMER_MESSAGE_STATEW1 timerIdW1[TESTW1_COUNT];
 
-void CALLBACK TimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+/* TIMERPROC for the test1,2,3() with messages without window */
+static void CALLBACK
+TimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
     UINT i;
     for (i = 0; i < TEST1_COUNT; i++)
