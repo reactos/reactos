@@ -1222,7 +1222,6 @@ VOID COpenWithMenu::AddApp(PVOID pApp)
     mii.fState = MFS_ENABLED;
     mii.wID = m_idCmdLast;
     mii.dwTypeData = const_cast<LPWSTR>(pwszName);
-    mii.cch = wcslen(mii.dwTypeData);
     mii.dwItemData = (ULONG_PTR)pApp;
 
     HICON hIcon = m_pAppList->GetIcon((COpenWithList::SApp*)pApp);
@@ -1259,7 +1258,7 @@ HRESULT WINAPI COpenWithMenu::QueryContextMenu(
     m_idCmdFirst = m_idCmdLast = idCmdFirst;
     m_hSubMenu = NULL;
 
-    /* If we are going to be default item, we shouldn't be submenu */
+    /* We can only be a submenu if we are not the default */
     if (DefaultPos != -1)
     {
         /* Load applications list */
@@ -1298,13 +1297,14 @@ HRESULT WINAPI COpenWithMenu::QueryContextMenu(
 
     mii.fType = MFT_STRING;
     mii.dwTypeData = (LPWSTR)wszName;
-    mii.cch = wcslen(wszName);
-
     mii.fState = MFS_ENABLED;
     if (DefaultPos == -1)
+    {
         mii.fState |= MFS_DEFAULT;
+        indexMenu = 0;
+    }
 
-    if (!InsertMenuItemW(hMenu, DefaultPos + 1, TRUE, &mii))
+    if (!InsertMenuItemW(hMenu, indexMenu, TRUE, &mii))
         return E_FAIL;
 
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, m_idCmdLast - m_idCmdFirst + 1);
