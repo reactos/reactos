@@ -83,9 +83,9 @@ BEGIN
     POPUP "&Файл"
     BEGIN
         MENUITEM "&Импортировать из файла...", ID_REGISTRY_IMPORTREGISTRYFILE
-        MENUITEM "&Экспортировать в файл...", ID_REGISTRY_EXPORTREGISTRYFILE //FIXME: accelerator collision &Э
+        MENUITEM "&Экспортировать в файл...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "&Загрузить куст...", ID_REGISTRY_LOADHIVE, GRAYED //FIXME: accelerator collision &Э. I decided to use "З&агрузить куст..." to fix the collision in the older releases. But I don't have a russian Windows.
+        MENUITEM "&Загрузить куст...", ID_REGISTRY_LOADHIVE, GRAYED
         MENUITEM "&Выгрузить куст...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Подключить сетевой реестр...", ID_REGISTRY_CONNECTNETWORKREGISTRY
