@@ -88,8 +88,8 @@ BEGIN
         MENUITEM "&Last inn struktur...", ID_REGISTRY_LOADHIVE, GRAYED
         MENUITEM "Fjern str&uktur...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Koble til nettverksregister...", ID_REGISTRY_CONNECTNETWORKREGISTRY //FIXME: accelerator is missing
-        MENUITEM "Koble fra nettverksregister...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED //FIXME: accelerator is missing
+        MENUITEM "Koble til nettverksregister...", ID_REGISTRY_CONNECTNETWORKREGISTRY//FIXME: accelerator is missing
+        MENUITEM "Koble fra nettverksregister...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED//FIXME: accelerator is missing
         MENUITEM SEPARATOR
         MENUITEM "&Skriv ut...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
