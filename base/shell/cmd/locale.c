@@ -61,7 +61,7 @@ GetDateString(VOID)
     SYSTEMTIME t;
 
     GetLocalTime(&t);
-    GetDateFormat(LOCALE_USER_DEFAULT, 0, &t, NULL, szDate, ARRAYSIZE(szDate));
+    GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &t, NULL, szDate, ARRAYSIZE(szDate));
     return szDate;
 }
 
