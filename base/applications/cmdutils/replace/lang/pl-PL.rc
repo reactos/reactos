@@ -30,7 +30,6 @@ REPLACE [napęd1:][ścieżka1] pliki [napęd2:][ścieżka2] [/P] [/R] [/S] [/W] 
     STRING_REPLACE_HELP3 "Nie zamieniono żadnego pliku\n"
     STRING_REPLACE_HELP4 "Zamieniono %lu plik(i/ów)\n"
     STRING_REPLACE_HELP5 "Zamiana %s\n"
-    STRING_REPLACE_HELP6 "Zamieniony %s\n"
     STRING_REPLACE_HELP7 "Nie dodano nowych plików\n"
     STRING_REPLACE_HELP8 "Dodano %lu plik(i/ów)\n"
     STRING_REPLACE_HELP9 "Czy dodać %s (T/N)? "

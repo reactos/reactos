@@ -30,7 +30,6 @@ REPLACE [meghajt1:][útvonal1]fájl [meghajt2:][útvonal2] [/P] [/R] [/S] [/W] [
     STRING_REPLACE_HELP3 "Egy fájl sem lett cserélve\n"
     STRING_REPLACE_HELP4 "%lu fájl lett cserélve\n"
     STRING_REPLACE_HELP5 "Csere: %s\n"
-    STRING_REPLACE_HELP6 "Csere: %s\n"
     STRING_REPLACE_HELP7 "Egy fájl sem lett hozzáadva\n"
     STRING_REPLACE_HELP8 "%lu fájl lett hozzáadva\n"
     STRING_REPLACE_HELP9 "Hozzáadja %s (I/N)? "

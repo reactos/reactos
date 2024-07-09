@@ -25,7 +25,6 @@ REPLACE [驱动器1:][路径1]文件名 [驱动器2:][路径2] [/P] [/R] [/S] [/
     STRING_REPLACE_HELP3 "没有文件被替换\n"
     STRING_REPLACE_HELP4 "%lu 个文件已被替换\n"
     STRING_REPLACE_HELP5 "正在替换 %s\n"
-    STRING_REPLACE_HELP6 "替换 %s\n"
     STRING_REPLACE_HELP7 "没有文件被添加\n"
     STRING_REPLACE_HELP8 "%lu 个文件已被添加\n"
     STRING_REPLACE_HELP9 "添加 %s 吗 (Y/N)？ "

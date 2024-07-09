@@ -33,7 +33,6 @@ REPLACE [Laufwerk1:][Pfad1]Dateiname [Laufwerk2:][Pfad2] [/P] [/R] [/S] [/W] [/U
     STRING_REPLACE_HELP3 "Keine Dateien ersetzt\n"
     STRING_REPLACE_HELP4 "%lu Datei(en) ersetzt\n"
     STRING_REPLACE_HELP5 "Ersetze %s\n"
-    STRING_REPLACE_HELP6 "Ersetze %s\n"
     STRING_REPLACE_HELP7 "Keine Dateien hinzugefügt\n"
     STRING_REPLACE_HELP8 "%lu Datei(en) hinzugefügt\n"
     STRING_REPLACE_HELP9 "Füge %s hinzu (J/N)? "

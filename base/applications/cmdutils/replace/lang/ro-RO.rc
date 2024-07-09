@@ -31,7 +31,6 @@ REPLACE [disc1:][cale1]fișier [disc2:][cale2] [/P] [/R] [/S] [/W] [/U]\n\n\
     STRING_REPLACE_HELP3 "Nu a fost înlocuit nici un fișier\n"
     STRING_REPLACE_HELP4 "A(u) fost înlocuit(e) %lu fișier(e)\n"
     STRING_REPLACE_HELP5 "Înlocuire «%s»\n"
-    STRING_REPLACE_HELP6 "Înlocuiește «%s»\n"
     STRING_REPLACE_HELP7 "Nu au fost adăugate fișiere\n"
     STRING_REPLACE_HELP8 "A(u) fost adăugat(e) %lu fișier(e)\n"
     STRING_REPLACE_HELP9 "Adaugă «%s» (Da/Nu)? "

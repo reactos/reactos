@@ -32,7 +32,6 @@ REPLACE [drive1:][path1]filnamn [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
     STRING_REPLACE_HELP3 "No files replaced\n"
     STRING_REPLACE_HELP4 "%lu file(s) replaced\n"
     STRING_REPLACE_HELP5 "Replacing %s\n"
-    STRING_REPLACE_HELP6 "Replace %s\n"
     STRING_REPLACE_HELP7 "No files added\n"
     STRING_REPLACE_HELP8 "%lu file(s) added\n"
     STRING_REPLACE_HELP9 "Add %s (Y/N)? "

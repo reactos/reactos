@@ -29,7 +29,6 @@ REPLACE [sürücü1:][yol1]filename [sürücü2:][yol2] [/P] [/R] [/S] [/W] [/U]
     STRING_REPLACE_HELP3 "Herhangi bir dosya değiştirilmedi\n"
     STRING_REPLACE_HELP4 "%lu dosya değiştirildi\n"
     STRING_REPLACE_HELP5 "Değiştiriliyor: %s\n"
-    STRING_REPLACE_HELP6 "Değiştir: %s\n"
     STRING_REPLACE_HELP7 "Herhangi bir dosya eklenemedi\n"
     STRING_REPLACE_HELP8 "%lu dosya(lar) eklendi\n"
     STRING_REPLACE_HELP9 "Şunu ekle %s (E/H)? "

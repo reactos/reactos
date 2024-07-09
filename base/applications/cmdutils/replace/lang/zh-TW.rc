@@ -25,7 +25,6 @@ REPLACE [磁碟機1:][路徑1]檔案名稱 [磁碟機2:][路徑2] [/P] [/R] [/S]
     STRING_REPLACE_HELP3 "沒有檔案被取代\n"
     STRING_REPLACE_HELP4 "%lu 個檔案已被取代\n"
     STRING_REPLACE_HELP5 "正在取代 %s\n"
-    STRING_REPLACE_HELP6 "取代 %s\n"
     STRING_REPLACE_HELP7 "沒有檔案被新增\n"
     STRING_REPLACE_HELP8 "%lu 個檔案已被新增\n"
     STRING_REPLACE_HELP9 "新增 %s 嗎 (Y/N)？"

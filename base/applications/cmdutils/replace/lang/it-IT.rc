@@ -31,7 +31,6 @@ REPLACE [disco1:][percorso1]nomefile [disco2:][percorso2] [/P] [/R] [/S] [/W] [/
     STRING_REPLACE_HELP3 "Nessun file sostituito\n"
     STRING_REPLACE_HELP4 "%lu file sostituiti\n"
     STRING_REPLACE_HELP5 "Sostituzione di %s in corso\n"
-    STRING_REPLACE_HELP6 "Sostituzione di %s\n"
     STRING_REPLACE_HELP7 "Nessun file aggiunto\n"
     STRING_REPLACE_HELP8 "%lu file aggiunti\n"
     STRING_REPLACE_HELP9 "Aggiungere %s (S/N)? "

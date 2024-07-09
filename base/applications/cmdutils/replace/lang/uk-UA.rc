@@ -31,7 +31,6 @@ REPLACE [диск1:][шлях1]iм'я_файлу [диск2:][шлях2] [/P] [/
     STRING_REPLACE_HELP3 "Не замiнено жодних файлiв\n"
     STRING_REPLACE_HELP4 "%lu файл(iв) замiнено\n"
     STRING_REPLACE_HELP5 "Замiна %s\n"
-    STRING_REPLACE_HELP6 "Замiнити %s\n"
     STRING_REPLACE_HELP7 "Не додано жодних файлiв\n"
     STRING_REPLACE_HELP8 "%lu файл(iв) додано\n"
     STRING_REPLACE_HELP9 "Додати %s (Y/N)? "

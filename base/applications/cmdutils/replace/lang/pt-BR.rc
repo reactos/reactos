@@ -31,7 +31,6 @@ REPLACE [unidade1:][caminho1]arquivo [unidade2:][caminho2][/P][/R][/S][/W][/U]\n
     STRING_REPLACE_HELP3 "Nenhum arquivo substituído\n"
     STRING_REPLACE_HELP4 "%lu arquivo(s) substituído(s)\n"
     STRING_REPLACE_HELP5 "A substituir %s\n"
-    STRING_REPLACE_HELP6 "Substitua %s\n"
     STRING_REPLACE_HELP7 "Nenhum arquivo adicionado\n"
     STRING_REPLACE_HELP8 "%lu arquivo(s) adicionado(s)\n"
     STRING_REPLACE_HELP9 "Adicionar %s (S/N)?"

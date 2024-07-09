@@ -31,7 +31,6 @@ REPLACE [drive1:][rrugë1]emri [drive2:][rrugë2] [/P] [/R] [/S] [/W] [/U]\n\n\
     STRING_REPLACE_HELP3 "Nuk zëvendësohen dokumentat\n"
     STRING_REPLACE_HELP4 "%lu dokumenta(t) zëvendësohen\n"
     STRING_REPLACE_HELP5 "Zëvendësohen %s\n"
-    STRING_REPLACE_HELP6 "Zëvendësoh %s\n"
     STRING_REPLACE_HELP7 "S'ka dokumentat te shtuar\n"
     STRING_REPLACE_HELP8 "%lu dokumenta(t) u shtuan\n"
     STRING_REPLACE_HELP9 "Shto %s (P/J)? "

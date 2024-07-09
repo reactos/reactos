@@ -32,7 +32,6 @@ REPLACE [ドライブ1:][パス1]ファイル名 [ドライブ2:][パス2] [/P] 
     STRING_REPLACE_HELP3 "何も置き換えていません。\n"
     STRING_REPLACE_HELP4 "%lu 個のファイルを置き換えました。\n"
     STRING_REPLACE_HELP5 "置き換え中: %s\n"
-    STRING_REPLACE_HELP6 "置き換え: %s\n"
     STRING_REPLACE_HELP7 "何も追加していません。\n"
     STRING_REPLACE_HELP8 "%lu 個のファイルを追加しました。\n"
     STRING_REPLACE_HELP9 "%s を追加しますか (Y/N) ?"

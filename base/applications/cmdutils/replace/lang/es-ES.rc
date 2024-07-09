@@ -34,7 +34,6 @@ REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
     STRING_REPLACE_HELP3 "No se han reemplazado archivos\n"
     STRING_REPLACE_HELP4 "Se han reemplazado %lu archivo(s)\n"
     STRING_REPLACE_HELP5 "Reemplazando %s\n"
-    STRING_REPLACE_HELP6 "Reemplazar %s\n"
     STRING_REPLACE_HELP7 "No se han añadido archivos\n"
     STRING_REPLACE_HELP8 "%lu archivo(s) añadidos\n"
     STRING_REPLACE_HELP9 "Añadir %s (S/N)? "

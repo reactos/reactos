@@ -33,7 +33,6 @@ REPLACE [диск1:][путь1]имя_файла [диск2:][путь2] [/P] [/
     STRING_REPLACE_HELP3 "Ни один файл не заменен\n"
     STRING_REPLACE_HELP4 "%lu файл(ов) заменено\n"
     STRING_REPLACE_HELP5 "Замена %s\n"
-    STRING_REPLACE_HELP6 "Замена %s\n"
     STRING_REPLACE_HELP7 "Нет новых файлов\n"
     STRING_REPLACE_HELP8 "%lu файл(ов) добавлено\n"
     STRING_REPLACE_HELP9 "Добавить %s (Y/N)? "
