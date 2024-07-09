@@ -220,7 +220,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Тип события:        %s\r\n\
+    IDS_COPY "\
+Тип события:        %s\r\n\
 Источник события:   %s\r\n\
 Категория события:  %s\r\n\
 ID события:         %s\r\n\
