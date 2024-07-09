@@ -469,10 +469,10 @@ HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\BitBucket\Volume",,0x00
 
 ; CMD Settings
 HKLM,"SOFTWARE\Microsoft\Command Processor","AutoRun",0x00020000,""
-HKLM,"SOFTWARE\Microsoft\Command Processor","CompletionChar",0x00010001,0x00000040
-HKLM,"SOFTWARE\Microsoft\Command Processor","DefaultColor",0x00010001,0x00000000
-HKLM,"SOFTWARE\Microsoft\Command Processor","EnableExtensions",0x00010001,0x00000001
-HKLM,"SOFTWARE\Microsoft\Command Processor","PathCompletionChar",0x00010001,0x00000040
+HKLM,"SOFTWARE\Microsoft\Command Processor","CompletionChar",0x00010001,64
+HKLM,"SOFTWARE\Microsoft\Command Processor","DefaultColor",0x00010001,0
+HKLM,"SOFTWARE\Microsoft\Command Processor","EnableExtensions",0x00010001,1
+HKLM,"SOFTWARE\Microsoft\Command Processor","PathCompletionChar",0x00010001,64
 
 ; Uninstall Application list
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",,0x00000012
