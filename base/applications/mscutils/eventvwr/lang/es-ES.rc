@@ -1,4 +1,4 @@
-/* Spanish translation by Marc Piulachs, proofread by Ismael Ferreras Morezuelas, revised in 2020 by Julen Urizar Compains */
+// COPYRIGHT: Marc Piulachs, Ismael Ferreras Morezuelas, 2020 Julen Urizar Compains
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -7,19 +7,19 @@ BEGIN
     POPUP "&Registros"
     BEGIN
         MENUITEM "&Abrir...", IDM_OPEN_EVENTLOG
-        MENUITEM "Guardar &registros de Eventos como...", IDM_SAVE_EVENTLOG
+        MENUITEM "&Guardar registros de Eventos como...", IDM_SAVE_EVENTLOG
         MENUITEM "&Cerrar", IDM_CLOSE_EVENTLOG
         MENUITEM SEPARATOR
         MENUITEM "&Borrar todos los eventos", IDM_CLEAR_EVENTS
         MENUITEM "&Renombrar\tF2", IDM_RENAME_EVENTLOG
         MENUITEM "C&onfiguración del diario...", IDM_EVENTLOG_SETTINGS
         MENUITEM SEPARATOR
-        MENUITEM "S&alir", IDM_EXIT
+        MENUITEM "&Salir", IDM_EXIT
     END
     POPUP "&Ver"
     BEGIN
         MENUITEM "Lo &nuevo primero", IDM_LIST_NEWEST
-        MENUITEM "Lo &antiguo primero", IDM_LIST_OLDEST
+        MENUITEM "L&o antiguo primero", IDM_LIST_OLDEST
         MENUITEM SEPARATOR
         MENUITEM "&Detalles...\tEnter", IDM_EVENT_DETAILS
         MENUITEM SEPARATOR
@@ -88,8 +88,8 @@ BEGIN
     CONTROL "", IDC_EVENTTEXTEDIT, RICHEDIT_CLASS, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER, 8, 76, 250, 60
 
     LTEXT "D&atos:", IDC_DETAILS_STATIC, 8, 140, 25, 8
-    CONTROL "&Bytes", IDC_BYTESRADIO, "Button", BS_AUTORADIOBUTTON, 39, 140, 34, 8
-    CONTROL "&Word", IDC_WORDRADIO, "Button", BS_AUTORADIOBUTTON, 77, 140, 34, 8
+    AUTORADIOBUTTON "&Bytes", IDC_BYTESRADIO, 39, 140, 34, 8
+    AUTORADIOBUTTON "&Word", IDC_WORDRADIO, 77, 140, 34, 8
     EDITTEXT IDC_EVENTDATAEDIT, 8, 150, 250, 60, ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER
 END
 
@@ -119,15 +119,15 @@ BEGIN
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 119, 10, 14
     LTEXT "KB", IDC_STATIC, 130, 122, 20, 8
     LTEXT "Cuando se alcance el límite máximo del log:", IDC_STATIC, 17, 140, 219, 8
-    CONTROL "&Sobreescribir los eventos por necesidad", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
-    CONTROL "Sobreescribir &eventos más viejos que", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 102, 10
+    AUTORADIOBUTTON "&Sobreescribir los eventos por necesidad", IDC_OVERWRITE_AS_NEEDED, 17, 155, 219, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Sobreescribir &eventos más viejos que", IDC_OVERWRITE_OLDER_THAN, 17, 168, 102, 10
+    AUTORADIOBUTTON "&No sobreescribir eventos\n(borrar log manualmente)", IDC_NO_OVERWRITE, 17, 180, 143, 20, BS_MULTILINE | WS_TABSTOP
     EDITTEXT IDC_EDIT_EVENTS_AGE, 122, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_EVENTS_AGE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
-            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 157, 165, 10, 14
+            UDS_AUTOBUDDY | UDS_ARROWKEYS, 157, 165, 10, 14
     LTEXT "días", IDC_STATIC, 162, 168, 20, 8
-    CONTROL "&No sobreescribir eventos\n(borrar log manualmente)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 143, 20
     PUSHBUTTON "&Restaurar configuración", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
-    AUTOCHECKBOX "Usando una conexión de b&aja velocidad", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
+    AUTOCHECKBOX "&Usando una conexión de baja velocidad", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
     PUSHBUTTON "&Borrar Log", ID_CLEARLOG, 195, 213, 50, 14
 END
 
@@ -138,7 +138,7 @@ BEGIN
     IDS_APP_TITLE_EX "%s - Registro de %s en \\\\"
     IDS_STATUS_MSG "%s tiene %lu evento(s) (listed: %lu)"
     IDS_LOADING_WAIT "Recuperando eventos. Espere un momento..."
-    IDS_NO_ITEMS "No hay elementos para enseñar en esta vista." // "No hay eventos en los registros."
+    IDS_NO_ITEMS "No hay elementos para enseñar en esta vista."
     IDS_EVENTLOG_SYSTEM "Registros de Sistema"
     IDS_EVENTLOG_APP "Registros de Aplicaciones"
     IDS_EVENTLOG_USER "Registros de Usuario"
@@ -152,13 +152,13 @@ BEGIN
 /* Please note that explicit TAB characters '\t' are used to fix the alignment of the message in the MessageBox */
     IDS_USAGE "ReactOS Event Viewer\n\
 \n\
-EventVwr [computer name] [/l:<event log file>] [/?]\n\
+EventVwr [computer name] [/L:<event log file>] [/?]\n\
 \n\
 ""computer name"" : Specifies the remote computer where to connect\n\
 \tto retrieve the events to display. If no name is specified, the\n\
 \tlocal computer is used.\n\
 \n\
-/l:<event log file> : Specifies which event log file to open.\n\
+/L:<event log file> : Specifies which event log file to open.\n\
 \tOnly files in the .evt format (NT ≤ 5.2) are supported.\n\
 \n\
 /? : Displays this help message.\n\
@@ -179,8 +179,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BYTES_FORMAT "bytes" // "%s bytes"
-    // "%1!ls! (%2!ls! bytes)"
+    IDS_BYTES_FORMAT "bytes"
 END
 
 STRINGTABLE
@@ -197,14 +196,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Tipo de evento:    %s\r\n\
-Fuente del evento:  %s\r\n\
-Categ. del evento:  %s\r\n\
-ID del evento:      %s\r\n\
-Fecha:              %s\r\n\
-Hora:               %s\r\n\
-Usuario:            %s\r\n\
-Equipo:             %s\r\n\
+    IDS_COPY "\
+Tipo de evento:    %s\r\n\
+Fuente del evento: %s\r\n\
+Categ. del evento: %s\r\n\
+ID del evento:     %s\r\n\
+Fecha:             %s\r\n\
+Hora:              %s\r\n\
+Usuario:           %s\r\n\
+Equipo:            %s\r\n\
 Descripción:\r\n%s"
 END
 

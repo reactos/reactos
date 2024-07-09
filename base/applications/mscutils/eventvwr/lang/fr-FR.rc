@@ -1,4 +1,4 @@
-/* French translation by Pierre Schweitzer */
+// COPYRIGHT: Pierre Schweitzer
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
@@ -88,8 +88,8 @@ BEGIN
     CONTROL "", IDC_EVENTTEXTEDIT, RICHEDIT_CLASS, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER, 8, 76, 250, 60
 
     LTEXT "Données :", IDC_DETAILS_STATIC, 8, 140, 35, 8
-    CONTROL "&Octets", IDC_BYTESRADIO, "Button", BS_AUTORADIOBUTTON, 50, 140, 34, 8
-    CONTROL "&Mots", IDC_WORDRADIO, "Button", BS_AUTORADIOBUTTON, 88, 140, 34, 8
+    AUTORADIOBUTTON "&Octets", IDC_BYTESRADIO, 50, 140, 34, 8
+    AUTORADIOBUTTON "&Mots", IDC_WORDRADIO, 88, 140, 34, 8
     EDITTEXT IDC_EVENTDATAEDIT, 8, 150, 250, 60, ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER
 END
 
@@ -119,13 +119,13 @@ BEGIN
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 150, 119, 10, 14
     LTEXT "Ko", IDC_STATIC, 160, 122, 20, 8
     LTEXT "Lorsque la taille maximale du journal est atteinte :", IDC_STATIC, 17, 140, 219, 8
-    CONTROL "Remplacer les événements si &nécessaire", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
-    CONTROL "Remplacer les é&vénements datant de plus de", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 155, 10
+    AUTORADIOBUTTON "Remplacer les événements si &nécessaire", IDC_OVERWRITE_AS_NEEDED, 17, 155, 219, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Remplacer les é&vénements datant de plus de", IDC_OVERWRITE_OLDER_THAN, 17, 168, 155, 10
+    AUTORADIOBUTTON "Ne &pas remplacer les événements\n(nettoyage manuel du journal)", IDC_NO_OVERWRITE, 17, 180, 133, 20, BS_MULTILINE | WS_TABSTOP
     EDITTEXT IDC_EDIT_EVENTS_AGE, 175, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_EVENTS_AGE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
-            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 210, 165, 10, 14
+            UDS_AUTOBUDDY | UDS_ARROWKEYS, 210, 165, 10, 14
     LTEXT "jours", IDC_STATIC, 215, 168, 20, 8
-    CONTROL "Ne &pas remplacer les événements\n(nettoyage manuel du journal)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 133, 20
     PUSHBUTTON "Paramètres par &défaut", IDC_RESTOREDEFAULTS, 156, 183, 80, 14
     AUTOCHECKBOX "Utiliser une connection à &basse vitesse", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
     PUSHBUTTON "&Effacer le journal", ID_CLEARLOG, 180, 213, 65, 14
@@ -138,7 +138,7 @@ BEGIN
     IDS_APP_TITLE_EX "%s - Journal %s sur \\\\"
     IDS_STATUS_MSG "%s contient %lu événement(s) (listés : %lu)"
     IDS_LOADING_WAIT "Chargement des journaux d'événements. Veuillez patienter..."
-    IDS_NO_ITEMS "Aucun élément à afficher dans cet aperçu." // "No events in this log."
+    IDS_NO_ITEMS "Aucun élément à afficher dans cet aperçu."
     IDS_EVENTLOG_SYSTEM "Journaux système"
     IDS_EVENTLOG_APP "Journaux d'application"
     IDS_EVENTLOG_USER "Journaux de l'utilisateur"
@@ -152,13 +152,13 @@ BEGIN
 /* Please note that explicit TAB characters '\t' are used to fix the alignment of the message in the MessageBox */
     IDS_USAGE "Visionneuse d'événements ReactOS\n\
 \n\
-EventVwr [nom ordinateur] [/l:<fichier journal>] [/?]\n\
+EventVwr [nom ordinateur] [/L:<fichier journal>] [/?]\n\
 \n\
 ""nom ordinateur"" : Spécifie l'ordinateur distant auquel se connecter\n\
 \tpour récupérer les événements à afficher. Si aucun nom n'est spécifié,\n\
 \tl'ordinateur local est utilisé.\n\
 \n\
-/l:<fichier journal> : Spécifie quel fichier journal ouvrir.\n\
+/L:<fichier journal> : Spécifie quel fichier journal ouvrir.\n\
 \tSeuls les fichiers au format .evt (NT ≤ 5.2) sont supportés.\n\
 \n\
 /? : Affiche ce message d'aide.\n\
@@ -179,8 +179,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BYTES_FORMAT "octets" // "%s bytes"
-    // "%1!ls! (%2!ls! bytes)"
+    IDS_BYTES_FORMAT "octets"
 END
 
 STRINGTABLE
@@ -197,14 +196,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Type d'événement :          %s\r\n\
-Source de l'événement :     %s\r\n\
-Catégorie de l'événement :  %s\r\n\
-ID de l'événement :         %s\r\n\
-Date :                      %s\r\n\
-Heure :                     %s\r\n\
-Utilisateur :               %s\r\n\
-Ordinateur :                %s\r\n\
+    IDS_COPY "\
+Type d'événement :         %s\r\n\
+Source de l'événement :    %s\r\n\
+Catégorie de l'événement : %s\r\n\
+ID de l'événement :        %s\r\n\
+Date :                     %s\r\n\
+Heure :                    %s\r\n\
+Utilisateur :              %s\r\n\
+Ordinateur :               %s\r\n\
 Description :\r\n%s"
 END
 
