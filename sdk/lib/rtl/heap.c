@@ -353,7 +353,7 @@ RtlpInsertFreeBlockHelper(PHEAP Heap,
     Heap->FreeHints[HintIndex] = &FreeEntry->FreeList;
 }
 
-VOID NTAPI
+PHEAP_FREE_ENTRY NTAPI
 RtlpInsertFreeBlock(PHEAP Heap,
                     PHEAP_FREE_ENTRY FreeEntry,
                     SIZE_T BlockSize)
@@ -361,6 +361,7 @@ RtlpInsertFreeBlock(PHEAP Heap,
     USHORT Size, PreviousSize;
     UCHAR SegmentOffset, Flags;
     PHEAP_SEGMENT Segment;
+    PHEAP_FREE_ENTRY LastEntry;
 
     DPRINT("RtlpInsertFreeBlock(%p %p %x)\n", Heap, FreeEntry, BlockSize);
 
@@ -368,6 +369,7 @@ RtlpInsertFreeBlock(PHEAP Heap,
     Heap->TotalFreeSize += BlockSize;
 
     /* Remember certain values */
+    LastEntry = FreeEntry;
     Flags = FreeEntry->Flags;
     PreviousSize = FreeEntry->PreviousSize;
     SegmentOffset = FreeEntry->SegmentOffset;
@@ -406,15 +408,21 @@ RtlpInsertFreeBlock(PHEAP Heap,
         BlockSize -= Size;
 
         /* Go to the next entry */
+        LastEntry = FreeEntry;
         FreeEntry = (PHEAP_FREE_ENTRY)((PHEAP_ENTRY)FreeEntry + Size);
 
         /* Check if that's all */
-        if ((PHEAP_ENTRY)FreeEntry >= Segment->LastValidEntry) return;
+        if ((PHEAP_ENTRY)FreeEntry >= Segment->LastValidEntry)
+        {
+            return LastEntry;
+        }
     }
 
     /* Update previous size if needed */
     if (!(Flags & HEAP_ENTRY_LAST_ENTRY))
         FreeEntry->PreviousSize = PreviousSize;
+
+    return LastEntry;
 }
 
 static
@@ -952,6 +960,7 @@ RtlpDeCommitFreeBlock(PHEAP Heap,
             break;
         default:
             /* We can insert this as a free entry */
+            ASSERT(PrecedingSize <= MAXUSHORT);
             GuardEntry->PreviousSize = PrecedingSize;
             FreeEntry->Size = PrecedingSize;
             FreeEntry->Flags &= ~HEAP_ENTRY_LAST_ENTRY;
@@ -1060,23 +1069,27 @@ RtlpInitializeHeapSegment(IN OUT PHEAP Heap,
         {
             /* Ensure we put our guard entry at the end of the last committed page */
             PHEAP_ENTRY GuardEntry = &Segment->Entry + (SegmentCommit >> HEAP_ENTRY_SHIFT) - 1;
+            SIZE_T PreviousSize;
 
             ASSERT(GuardEntry > &Segment->Entry);
             GuardEntry->Size = 1;
             GuardEntry->Flags = HEAP_ENTRY_BUSY | HEAP_ENTRY_LAST_ENTRY;
             GuardEntry->SegmentOffset = SegmentIndex;
-            GuardEntry->PreviousSize = GuardEntry - Segment->FirstEntry;
+            PreviousSize = GuardEntry - Segment->FirstEntry;
 
             /* Chack what is left behind us */
-            switch (GuardEntry->PreviousSize)
+            switch (PreviousSize)
             {
                 case 1:
+                    GuardEntry->PreviousSize = PreviousSize;
+
                     /* There is not enough space for a free entry. Double the guard entry */
                     GuardEntry--;
                     GuardEntry->Size = 1;
                     GuardEntry->Flags = HEAP_ENTRY_BUSY | HEAP_ENTRY_LAST_ENTRY;
                     GuardEntry->SegmentOffset = SegmentIndex;
                     DPRINT1("Setting %p as UCR guard entry.\n", GuardEntry);
+
                     /* Fall through */
                 case 0:
                     ASSERT(GuardEntry == Segment->FirstEntry);
@@ -1087,8 +1100,19 @@ RtlpInitializeHeapSegment(IN OUT PHEAP Heap,
                     FreeEntry = Segment->FirstEntry;
                     FreeEntry->PreviousSize = Segment->Entry.Size;
                     FreeEntry->SegmentOffset = SegmentIndex;
-                    FreeEntry->Size = GuardEntry->PreviousSize;
+                    FreeEntry->Size = PreviousSize;
                     FreeEntry->Flags = 0;
+
+                    /* Register the Free Heap Entry */
+                    FreeEntry = (PHEAP_ENTRY)RtlpInsertFreeBlock(Heap, (PHEAP_FREE_ENTRY)FreeEntry, PreviousSize);
+
+                    /* Fill guard entry */
+                    ASSERT(FreeEntry->Size != 0);
+                    ASSERT(FreeEntry != GuardEntry);
+                    ASSERT(FreeEntry->Size != 1); /* FIXME: we need to double the guard entry */
+                    ASSERT(GuardEntry == FreeEntry + FreeEntry->Size);
+                    ASSERT(GuardEntry->Size == 1);
+                    GuardEntry->PreviousSize = FreeEntry->Size;
                     break;
             }
         }
@@ -1100,11 +1124,10 @@ RtlpInitializeHeapSegment(IN OUT PHEAP Heap,
             FreeEntry->SegmentOffset = SegmentIndex;
             FreeEntry->Flags = HEAP_ENTRY_LAST_ENTRY;
             FreeEntry->Size = (SegmentCommit >> HEAP_ENTRY_SHIFT) - Segment->Entry.Size;
-        }
 
-        /* Register the Free Heap Entry */
-        if (FreeEntry)
+            /* Register the Free Heap Entry */
             RtlpInsertFreeBlock(Heap, (PHEAP_FREE_ENTRY)FreeEntry, FreeEntry->Size);
+        }
     }
 
     /* Register the UnCommitted Range of the Heap Segment */
