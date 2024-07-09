@@ -21,6 +21,7 @@
  */
 
 #include "precomp.h"
+#include <imm.h> // For IMN_OPENCANDIDATE
 #include <process.h> // _beginthreadex
 
 /*
@@ -342,6 +343,10 @@ LRESULT CAutoComplete::EditWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
             // hide the list if lost focus
             hwndGotFocus = (HWND)wParam;
             if (hwndGotFocus != m_hwndEdit && hwndGotFocus != m_hWnd)
+                HideDropDown();
+            break;
+        case WM_IME_NOTIFY:
+            if (wParam == IMN_OPENCANDIDATE)
                 HideDropDown();
             break;
         case WM_SETTEXT:
