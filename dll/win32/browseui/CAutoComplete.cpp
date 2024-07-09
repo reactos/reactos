@@ -21,7 +21,7 @@
  */
 
 #include "precomp.h"
-#include <imm.h>
+#include <imm.h> // For IMN_OPENCANDIDATE
 #include <process.h> // _beginthreadex
 
 /*
