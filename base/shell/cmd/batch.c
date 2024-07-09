@@ -409,8 +409,9 @@ INT Batch(LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
     /* Perform top-level batch initialization */
     if (bTopLevel)
     {
-        /* Is the top-level batch context type .CMD or .BAT? */
-        TCHAR *dotext = _tcsrchr(bc->BatchFilePath, _T('.'));
+        /* Default the top-level batch context type
+         * to .BAT, unless this is a .CMD file */
+        PTCHAR dotext = _tcsrchr(bc->BatchFilePath, _T('.'));
         BatType = (dotext && (!_tcsicmp(dotext, _T(".cmd")))) ? CMD_TYPE : BAT_TYPE;
 
 #ifdef MSCMD_BATCH_ECHO
