@@ -40,7 +40,7 @@ BEGIN
     END
     POPUP "&Hilfe"
     BEGIN
-        MENUITEM "H&ilfe", IDM_HELP
+        MENUITEM "&Hilfe", IDM_HELP
         MENUITEM SEPARATOR
         MENUITEM "Ü&ber", IDM_ABOUT
     END

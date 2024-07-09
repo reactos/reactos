@@ -21,7 +21,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Έ&ξοδος", IDM_EXIT
     END
-    POPUP "&Εμφάνιση"
+    POPUP "&Εμφάνιση"//FIXME: accelerator collision &E
     BEGIN
         MENUITEM "&Newest first", IDM_LIST_NEWEST
         MENUITEM "&Oldest first", IDM_LIST_OLDEST
@@ -30,7 +30,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Ανανέωση\tF5", IDM_REFRESH
     END
-    POPUP "&Επιλογές"
+    POPUP "&Επιλογές"//FIXME: accelerator collision &E
     BEGIN
         MENUITEM "Event details &view", IDM_EVENT_DETAILS_VIEW
         MENUITEM "&Grid lines", IDM_LIST_GRID_LINES
