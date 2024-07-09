@@ -478,6 +478,7 @@ RESTORE       ウィンドウを元のサイズに戻します。\n\
     STRING_GOTO_ERROR2 "ラベル '%s' が見つかりませんでした。\n"
     STRING_MD_ERROR "%s すでにディレクトリ内にサブディレクトリかファイルが存在しています。\n"
     STRING_MD_ERROR2 "新しいフォルダへのパスが存在していません。\n"
+    STRING_DATE_CURRENT_DATE "The current date is: "
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[エラー]\n"
     STRING_REN_ERROR "MoveFile() failed. エラー: %lu\n"

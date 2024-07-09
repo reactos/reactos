@@ -455,6 +455,7 @@ RESTORE       恢復視窗\n\
     STRING_GOTO_ERROR2 "標籤 '%s' 未找到\n"
     STRING_MD_ERROR "%s 一個子目錄或檔案已存在。\n"
     STRING_MD_ERROR2 "新資料夾的路徑不存在。\n"
+    STRING_DATE_CURRENT_DATE "The current date is: "
     STRING_MOVE_ERROR1 "[成功]\n"
     STRING_MOVE_ERROR2 "[錯誤]\n"
     STRING_REN_ERROR "MoveFile() 失敗。錯誤碼：%lu\n"

@@ -451,6 +451,7 @@ RESTORE       恢复窗口\n\
     STRING_GOTO_ERROR2 "标签“%s”未找到\n"
     STRING_MD_ERROR "一个名为“%s”的子目录或文件已存在。\n"
     STRING_MD_ERROR2 "到新文件夹的路径不存在。\n"
+    STRING_DATE_CURRENT_DATE "The current date is: "
     STRING_MOVE_ERROR1 "[成功]\n"
     STRING_MOVE_ERROR2 "[错误]\n"
     STRING_REN_ERROR "MoveFile() 失败。错误码：%lu\n"

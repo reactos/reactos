@@ -488,6 +488,7 @@ RESTORE       восстанавливает окно\n\
     STRING_GOTO_ERROR2 "Метка '%s' не найдена\n"
     STRING_MD_ERROR "Подкаталог или файл %s уже существует.\n"
     STRING_MD_ERROR2 "Путь к новому каталогу не существует.\n"
+    STRING_DATE_CURRENT_DATE "The current date is: "
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Ошибка]\n"
     STRING_REN_ERROR "Выполнение MoveFile() было неудачным. Ошибка: %lu\n"
