@@ -161,7 +161,7 @@ HKCU,"Control Panel\Cursors",,,"ReactOS Default"
 HKCU,"Control Panel\Cursors","Scheme Source",0x00010001,0x00000002
 
 ; CMD Settings
-HKCU,"SOFTWARE\Microsoft\Command Processor","CompletionChar",0x00010001,9
+HKCU,"SOFTWARE\Microsoft\Command Processor","CompletionChar",0x00010001,0x09
 HKCU,"SOFTWARE\Microsoft\Command Processor","DefaultColor",0x00010001,0
 HKCU,"SOFTWARE\Microsoft\Command Processor","EnableExtensions",0x00010001,1
 
