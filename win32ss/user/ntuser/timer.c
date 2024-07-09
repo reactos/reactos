@@ -19,7 +19,7 @@ static LONG TimeLast = 0;
 /* Windows 2000 has room for 32768 window-less timers */
 #define NUM_WINDOW_LESS_TIMERS   32768
 
-#define HINTINDEX_BEGIN_VALUE   1
+#define HINTINDEX_BEGIN_VALUE   0
 
 static PFAST_MUTEX    Mutex;
 static RTL_BITMAP     WindowLessTimersBitMap;
