@@ -74,7 +74,7 @@
 #define IDM_LIST_OLDEST         32779
 #define IDM_EVENT_DETAILS       32780
 #define IDM_REFRESH             32781
-#define IDM_SHOW_EVENT_DETAILS_VIEW 32782
+#define IDM_EVENT_DETAILS_VIEW  32782
 #define IDM_HELP                32783
 #define IDM_ABOUT               32784
 

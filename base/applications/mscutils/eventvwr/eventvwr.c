@@ -1,29 +1,10 @@
 /*
- *  ReactOS Win32 Applications
- *  Copyright (C) 2007 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-/*
- * PROJECT:         ReactOS Event Log Viewer
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/mscutils/eventvwr/eventvwr.c
- * PURPOSE:         Event Log Viewer main file
- * PROGRAMMERS:     Marc Piulachs (marc.piulachs at codexchange [dot] net)
- *                  Eric Kohl
- *                  Hermes Belusca-Maito
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * PURPOSE:     Event Log Viewer main file
+ * COPYRIGHT:   Marc Piulachs <marc.piulachs@codexchange.net>
+ *              Eric Kohl
+ *              Hermes Belusca-Maito
  */
 
 #include "eventvwr.h"
@@ -2409,8 +2390,7 @@ FreeLogFilterList(VOID)
 }
 
 BOOL
-InitInstance(HINSTANCE hInstance,
-             int nCmdShow)
+InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     RECT rcClient, rs;
     LONG StatusHeight;
@@ -2507,11 +2487,8 @@ InitInstance(HINSTANCE hInstance,
 
     /* Create the Event details pane (optional) */
     hwndEventDetails = CreateEventDetailsCtrl(hInst, hwndMainWindow, (LPARAM)NULL);
-    // hwndEventDetails = NULL;
     if (hwndEventDetails)
     {
-    // SetWindowLongPtrW(hwndEventDetails, GWL_STYLE,
-                      // GetWindowLongPtrW(hwndEventDetails, GWL_STYLE) | WS_BORDER);
     SetWindowLongPtrW(hwndEventDetails, GWL_EXSTYLE,
                       GetWindowLongPtrW(hwndEventDetails, GWL_EXSTYLE) | WS_EX_CLIENTEDGE);
     SetWindowPos(hwndEventDetails, NULL,
@@ -2776,7 +2753,7 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         {
                             LPWSTR pszText = item.pszText;
 
-                            /* Trim all whitespace */
+                            /* Trim leading whitespace */
                             while (*pszText && iswspace(*pszText))
                                 ++pszText;
 
@@ -3168,11 +3145,9 @@ InitPropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
     // dwRetention = ROUND_UP(dwRetention, 24*3600) / (24*3600);
     dwRetention = (dwRetention + 24*3600 - 1) / (24*3600);
 
-
     RegCloseKey(hLogKey);
 
     }
-
 
 Quit:
 
@@ -3193,7 +3168,6 @@ Quit:
      * shared access. To retrieve file information for those we need
      * to use something else: FindFirstFile, on the full file name.
      */
-
     Success = GetFileAttributesExW(FileName,
                                    GetFileExInfoStandard,
                                    (LPWIN32_FILE_ATTRIBUTE_DATA)&FileInfo);
@@ -3432,7 +3406,7 @@ EventDetails(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
             /* Create a size grip if the dialog has a sizing border */
             GetClientRect(hDlg, &rcWnd);
-            dwStyle  = GetWindowLongPtrW(hDlg, GWL_STYLE);
+            dwStyle = GetWindowLongPtrW(hDlg, GWL_STYLE);
             sbVXSize = GetSystemMetrics(SM_CXVSCROLL);
             sbHYSize = GetSystemMetrics(SM_CYHSCROLL);
             if (dwStyle & WS_THICKFRAME /* == WS_SIZEBOX */)
