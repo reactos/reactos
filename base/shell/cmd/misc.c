@@ -85,7 +85,7 @@ cgetchar (VOID)
  */
 VOID GetPathCase(IN LPCTSTR Path, OUT LPTSTR OutPath)
 {
-    UINT i;
+    SIZE_T i;
     UINT cchPath = _tcslen(Path);
     TCHAR TempPath[MAX_PATH];
     LPTSTR pchTemp = TempPath;
