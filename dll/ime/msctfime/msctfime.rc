@@ -33,3 +33,6 @@ IDI_DOWN ICON     "res/down.ico"
 #ifdef LANGUAGE_PT_PT
     #include "lang/pt-PT.rc"
 #endif
+#ifdef LANGUAGE_RU_RU
+    #include "lang/ru-RU.rc"
+#endif
