@@ -160,6 +160,11 @@ HKCU,"Control Panel\International\Geo",,0x00000012
 HKCU,"Control Panel\Cursors",,,"ReactOS Default"
 HKCU,"Control Panel\Cursors","Scheme Source",0x00010001,0x00000002
 
+; CMD Settings
+HKCU,"SOFTWARE\Microsoft\Command Processor","CompletionChar",0x00010001,0x09
+HKCU,"SOFTWARE\Microsoft\Command Processor","DefaultColor",0x00010001,0
+HKCU,"SOFTWARE\Microsoft\Command Processor","EnableExtensions",0x00010001,1
+
 ; PowerCfg
 HKCU,"Control Panel\PowerCfg","CurrentPowerPolicy",2,"0"
 HKCU,"Control Panel\PowerCfg\GlobalPowerPolicy","Policies",0x00030003,01,00,00,00,00,\
