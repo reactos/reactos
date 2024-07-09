@@ -122,13 +122,16 @@ BEGIN
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "Soubor &protokolu:", IDC_STATIC, 7, 41, 60, 8//FIXME: accelerator collision &P
     EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Velikost:", IDC_STATIC, 7, 57, 60, 8
+// The following 4 IDC_STATIC shall have an accelerator in ReactOS, although MS doesn't have accels for them.
+// Dear Translators: First fill out ALL accels that MS brings as well in this dialog for your language,
+// and only then as a final step use some remaining unused letters for those 4 controls!
+    LTEXT "Veliko&st:", IDC_STATIC, 7, 57, 60, 8
     EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Vytvořeno:", IDC_STATIC, 7, 69, 60, 8
+    LTEXT "&Vytvořeno:", IDC_STATIC, 7, 69, 60, 8
     EDITTEXT IDC_CREATED_LABEL, 67, 69, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Změněno:", IDC_STATIC, 7, 81, 60, 8
+    LTEXT "Změněno:", IDC_STATIC, 7, 81, 60, 8//FIXME: add accel
     EDITTEXT IDC_MODIFIED_LABEL, 67, 81, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Poslední přístup:", IDC_STATIC, 7, 93, 60, 8
+    LTEXT "Posle&dní přístup:", IDC_STATIC, 7, 93, 60, 8
     EDITTEXT IDC_ACCESSED_LABEL, 67, 93, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     GROUPBOX "Velikost výpisu", IDC_STATIC, 7, 106, 238, 99
     LTEXT "&Maximální velikost:", IDC_STATIC, 17, 122, 58, 8
