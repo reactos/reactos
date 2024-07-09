@@ -1,4 +1,4 @@
-/* Chinese translation by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> */
+// COPYRIGHT: Song Fuchang (0xfc) <sfc_0@yahoo.com.cn>
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -27,10 +27,10 @@ BEGIN
     END
     POPUP "选项(&O)"
     BEGIN
-        MENUITEM "Event details &view", IDM_EVENT_DETAILS_VIEW
-        MENUITEM "&Grid lines", IDM_LIST_GRID_LINES
+        MENUITEM "事件详情视图(&V)", IDM_EVENT_DETAILS_VIEW
+        MENUITEM "网格线(&G)", IDM_LIST_GRID_LINES
         MENUITEM SEPARATOR
-        MENUITEM "&Save settings on exit", IDM_SAVE_SETTINGS
+        MENUITEM "退出时保存设置(&S)", IDM_SAVE_SETTINGS
     END
     POPUP "帮助(&H)"
     BEGIN
@@ -84,12 +84,12 @@ BEGIN
     PUSHBUTTON "", IDC_NEXT, 230, 21, 28, 14, BS_ICON
     PUSHBUTTON "", IDC_COPY, 230, 37, 28, 14, BS_ICON
 
-    LTEXT "描述(&D)：", IDC_STATIC, 8, 65, 39, 8
+    LTEXT "描述(&D):", IDC_STATIC, 8, 65, 39, 8
     CONTROL "", IDC_EVENTTEXTEDIT, RICHEDIT_CLASS, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER, 8, 76, 250, 60
 
-    LTEXT "数据(&A)", IDC_DETAILS_STATIC, 8, 140, 20, 8
-    CONTROL "字节(&B)", IDC_BYTESRADIO, "Button", BS_AUTORADIOBUTTON, 39, 140, 34, 8
-    CONTROL "字(&W)", IDC_WORDRADIO, "Button", BS_AUTORADIOBUTTON, 77, 140, 34, 8
+    LTEXT "数据(&A):", IDC_DETAILS_STATIC, 8, 140, 25, 8
+    AUTORADIOBUTTON "字节(&B)", IDC_BYTESRADIO, 39, 140, 34, 8
+    AUTORADIOBUTTON "字(&W)", IDC_WORDRADIO, 77, 140, 34, 8
     EDITTEXT IDC_EVENTDATAEDIT, 8, 150, 250, 60, ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER
 END
 
@@ -118,14 +118,14 @@ BEGIN
     CONTROL "", IDC_UPDOWN_MAXLOGSIZE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_NOTHOUSANDS | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 119, 10, 14
     LTEXT "KB", IDC_STATIC, 130, 122, 20, 8
-    LTEXT "达到日志大小上限时：", IDC_STATIC, 17, 140, 219, 8
-    CONTROL "按需要覆盖事件(&O)", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
-    CONTROL "覆盖时间超过(&V)", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 102, 10
+    LTEXT "达到日志大小上限时:", IDC_STATIC, 17, 140, 219, 8
+    AUTORADIOBUTTON "按需要覆盖事件(&O)", IDC_OVERWRITE_AS_NEEDED, 17, 155, 219, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "覆盖时间超过(&V)", IDC_OVERWRITE_OLDER_THAN, 17, 168, 102, 10
+    AUTORADIOBUTTON "不覆盖事件(&N)\n（手动清除日志）", IDC_NO_OVERWRITE, 17, 180, 143, 20, BS_MULTILINE | WS_TABSTOP
     EDITTEXT IDC_EDIT_EVENTS_AGE, 122, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_EVENTS_AGE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
-            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 157, 165, 10, 14
+            UDS_AUTOBUDDY | UDS_ARROWKEYS, 157, 165, 10, 14
     LTEXT "天的事件", IDC_STATIC, 162, 168, 20, 8
-    CONTROL "不覆盖事件(&N)\n（手动清除日志）", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 143, 20
     PUSHBUTTON "还原为默认值(&R)", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
     AUTOCHECKBOX "使用低速连接(&W)", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
     PUSHBUTTON "清除日志(&C)", ID_CLEARLOG, 195, 213, 50, 14
@@ -136,15 +136,15 @@ BEGIN
     IDS_COPYRIGHT "版权所有 (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)"
     IDS_APP_TITLE "事件查看器"
     IDS_APP_TITLE_EX "%s - %s 已登录 \\\\"
-    IDS_STATUS_MSG "%s 中有 %lu 个事件（已列出：%lu）"
+    IDS_STATUS_MSG "%s 中有 %lu 个事件(已列出:%lu)"
     IDS_LOADING_WAIT "正在载入日志。请稍候..."
-    IDS_NO_ITEMS "视图中没有可供显示的项目。" // "日志中没有事件。"
+    IDS_NO_ITEMS "日志中没有事件。"
     IDS_EVENTLOG_SYSTEM "系统日志"
     IDS_EVENTLOG_APP "程序日志"
     IDS_EVENTLOG_USER "用户日志"
     IDS_SAVE_FILTER "事件日志 (*.evt)\0*.evt\0"
     IDS_CLEAREVENTS_MSG "你想要在清除之前保存此事件日志吗？"
-    IDS_EVENTSTRINGIDNOTFOUND "来源 ( %s ) 中的事件 ID ( %lu ) 的描述无法找到。本地计算机可能没有显示来自远程计算机消息所必需的注册表信息或消息 DLL 文件。\n\nThe following information is part of the event:\n\n"
+    IDS_EVENTSTRINGIDNOTFOUND "无法找到来源(%s)中的事件 ID(%lu)的描述。本地计算机可能没有显示来自远程计算机的消息所必需的注册表信息或消息 DLL 文件。\n\n下面的信息是事件的一部分:\n\n"
 END
 
 STRINGTABLE
@@ -152,16 +152,15 @@ BEGIN
 /* Please note that explicit TAB characters '\t' are used to fix the alignment of the message in the MessageBox */
     IDS_USAGE "ReactOS Event Viewer\n\
 \n\
-EventVwr [computer name] [/l:<event log file>] [/?]\n\
+EventVwr [计算机名] [/L:<事件日志文件>] [/?]\n\
 \n\
-""computer name"" : Specifies the remote computer where to connect\n\
-\tto retrieve the events to display. If no name is specified, the\n\
-\tlocal computer is used.\n\
+""计算机名"" ：指定从哪台远程计算机上获取要查看的日志。\n\
+\t如果没有指定名称，则使用本地计算机。\n\
 \n\
-/l:<event log file> : Specifies which event log file to open.\n\
-\tOnly files in the .evt format (NT ≤ 5.2) are supported.\n\
+/L:<事件日志文件> ：指定要查看的事件日志文件/\n\
+\t只支持 .evt 格式的事件日志文件（NT ≤ 5.2）。\n\
 \n\
-/? : Displays this help message.\n\
+/? ：显示这条帮助。\n\
 "
     IDS_EVENTLOGFILE "Event Log File"
 END
@@ -179,8 +178,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BYTES_FORMAT "bytes" // "%s bytes"
-    // "%1!ls! (%2!ls! bytes)"
+    IDS_BYTES_FORMAT "字节"
 END
 
 STRINGTABLE
@@ -197,14 +195,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "事件类型:       %s\r\n\
-事件源:        %s\r\n\
-事件类别:       %s\r\n\
-事件 ID:      %s\r\n\
-日期:         %s\r\n\
-时间:         %s\r\n\
-用户:         %s\r\n\
-电脑:         %s\r\n\
+    IDS_COPY "\
+事件类型： %s\r\n\
+事件源：  %s\r\n\
+事件类别： %s\r\n\
+事件 ID：%s\r\n\
+日期：   %s\r\n\
+时间：   %s\r\n\
+用户：   %s\r\n\
+电脑：   %s\r\n\
 描述:\r\n%s"
 END
 
