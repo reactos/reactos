@@ -217,7 +217,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Typ:            %s\r\n\
+    IDS_COPY "\
+Typ:            %s\r\n\
 Quelle:         %s\r\n\
 Kategorie:      %s\r\n\
 Ereignis-ID:    %s\r\n\
