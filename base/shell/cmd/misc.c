@@ -112,7 +112,7 @@ VOID GetPathCase(IN LPCTSTR Path, OUT LPTSTR OutPath)
         /* Handle the base part of the path different.
            Because if you put it into findfirstfile, it will
            return your current folder */
-        if (!TempPath[2] && TempPath[0] && TempPath[1] == _T(':')) /* "C:", "X:" etc. */
+        if (TempPath[0] && TempPath[1] == _T(':') && !TempPath[2]) /* "C:", "D:" etc. */
         {
             StringCchCat(OutPath, MAX_PATH, TempPath);
             StringCchCat(OutPath, MAX_PATH, _T("\\"));
