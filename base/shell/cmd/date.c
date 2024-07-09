@@ -205,7 +205,7 @@ INT cmd_date(LPTSTR param)
 
     if (nDateString == -1)
     {
-        ConOutResPrintf(STRING_DATE_CURRENT_DATE); /* "The current date is: " */
+        ConOutResPuts(STRING_DATE_CURRENT_DATE);
         ConOutPrintf(_T("%s\n"), GetDateString());
     }
 
