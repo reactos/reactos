@@ -15,11 +15,11 @@ BEGIN
     POPUP "&Registros"
     BEGIN
         MENUITEM "&Abrir...", IDM_OPEN_EVENTLOG//FIXME: accelerator collision &A
-        MENUITEM "Guardar &registros de Eventos como...", IDM_SAVE_EVENTLOG
+        MENUITEM "Guardar &registros de Eventos como...", IDM_SAVE_EVENTLOG//FIXME: accelerator collision &R
         MENUITEM "&Cerrar", IDM_CLOSE_EVENTLOG
         MENUITEM SEPARATOR
         MENUITEM "&Borrar todos los eventos", IDM_CLEAR_EVENTS
-        MENUITEM "&Renombrar\tF2", IDM_RENAME_EVENTLOG
+        MENUITEM "&Renombrar\tF2", IDM_RENAME_EVENTLOG//FIXME: accelerator collision &R
         MENUITEM "C&onfiguración del diario...", IDM_EVENTLOG_SETTINGS
         MENUITEM SEPARATOR
         MENUITEM "S&alir", IDM_EXIT//FIXME: accelerator collision &A
