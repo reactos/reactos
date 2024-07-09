@@ -2179,7 +2179,7 @@ Initialize(VOID)
         SetEnvironmentVariable (_T("COMSPEC"), ModuleName);
     }
 
-    /* Add ctrl break handler */
+    /* Add Ctrl-Break handler */
     AddBreakHandler();
 
     /* Set the default console mode */
@@ -2189,107 +2189,145 @@ Initialize(VOID)
     SetConsoleMode(hOut, ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
     SetConsoleMode(hIn , ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
 
+    /* Parse the command-line */
     cmdLine = GetCommandLine();
     TRACE ("[command args: %s]\n", debugstr_aw(cmdLine));
 
-    for (ptr = cmdLine; *ptr; ++ptr)
+    ptr = cmdLine;
+    while (ptr && /* *ptr && */ (ptr = _tcschr(ptr, _T('/'))))
     {
-        if (*ptr == _T('/'))
+        option = _totupper(ptr[1]);
+        if (!option)
+            break;
+
+        if (option == _T('?'))
         {
-            option = _totupper(ptr[1]);
-            if (option == _T('?'))
+            ConOutResPaging(TRUE, STRING_CMD_HELP8);
+            nErrorLevel = 1;
+            bExit = TRUE;
+            return NULL;
+        }
+        else if (option == _T('P'))
+        {
+            ptr += 2;
+            if (!IsExistingFile(_T("\\autoexec.bat")))
             {
-                ConOutResPaging(TRUE, STRING_CMD_HELP8);
-                nErrorLevel = 1;
-                bExit = TRUE;
-                return NULL;
-            }
-            else if (option == _T('P'))
-            {
-                if (!IsExistingFile(_T("\\autoexec.bat")))
-                {
 #ifdef INCLUDE_CMD_DATE
-                    cmd_date(_T(""));
+                cmd_date(_T(""));
 #endif
 #ifdef INCLUDE_CMD_TIME
-                    cmd_time(_T(""));
+                cmd_time(_T(""));
 #endif
-                }
-                else
-                {
-                    ParseCommandLine(_T("\\autoexec.bat"));
-                }
-                bCanExit = FALSE;
             }
-            else if (option == _T('A'))
+            else
             {
-                OutputStreamMode = AnsiText;
+                ParseCommandLine(_T("\\autoexec.bat"));
             }
-            else if (option == _T('C') || option == _T('K') || option == _T('R'))
-            {
-                /* Remainder of command line is a command to be run */
-                fSingleCommand = ((option == _T('K')) << 1) | 1;
-                break;
-            }
-            else if (option == _T('D'))
-            {
-                AutoRun = FALSE;
-            }
-            else if (option == _T('Q'))
-            {
-                bDisableBatchEcho = TRUE;
-            }
-            else if (option == _T('S'))
-            {
-                bAlwaysStrip = TRUE;
-            }
+            bCanExit = FALSE;
+        }
+        else if (option == _T('A'))
+        {
+            ptr += 2;
+            OutputStreamMode = AnsiText;
+        }
+        else if (option == _T('U'))
+        {
+            ptr += 2;
+            OutputStreamMode = UTF16Text;
+        }
+        else if (option == _T('C') || option == _T('K') || option == _T('R'))
+        {
+            ptr += 2;
+            /* The remainder of the command line is a command to be run */
+            fSingleCommand = ((option == _T('K')) << 1) | 1;
+            break;
+        }
+        else if (option == _T('D'))
+        {
+            ptr += 2;
+            AutoRun = FALSE;
+        }
+        else if (option == _T('Q'))
+        {
+            ptr += 2;
+            bDisableBatchEcho = TRUE;
+        }
+        else if (option == _T('S'))
+        {
+            ptr += 2;
+            bAlwaysStrip = TRUE;
+        }
 #ifdef INCLUDE_CMD_COLOR
-            else if (!_tcsnicmp(ptr, _T("/T:"), 3))
+        else if (option == _T('T') && (ptr[2] == _T(':')))
+        {
+            /* Process /T:(color) argument; overwrite any previous settings */
+            wDefColor = (WORD)_tcstoul(ptr+3, &ptr, 16);
+        }
+#endif
+        else if (option == _T('F'))
+        {
+            ptr += 2;
+            if (!_tcsnicmp(ptr, _T(":OFF"), 4))
             {
-                /* Process /T (color) argument; overwrite any previous settings */
-                wDefColor = (WORD)_tcstoul(&ptr[3], &ptr, 16);
+                ptr += 4;
+
+                /* Disable file and path completion */
+                AutoCompletionChar = 0x20;
+                PathCompletionChar = 0x20;
+            }
+            else /* /F or /F:ON */
+            {
+                if (!_tcsnicmp(ptr, _T(":ON"), 3))
+                    ptr += 3;
+
+                /* Enable (and replace) file and path completion
+                 * characters with Ctrl-F and Ctrl-D respectively */
+                AutoCompletionChar = 0x06; // Ctrl-F
+                PathCompletionChar = 0x04; // Ctrl-D
+            }
+        }
+        else if (option == _T('V'))
+        {
+            ptr += 2;
+#if 0
+            if (!_tcsnicmp(ptr, _T(":OFF"), 4))
+            {
+                ptr += 4;
+
+                bDelayedExpansion = FALSE;
+            }
+            else /* /V or /V:ON */
+            {
+                if (!_tcsnicmp(ptr, _T(":ON"), 3))
+                    ptr += 3;
+
+                bDelayedExpansion = TRUE;
             }
 #endif
-            else if (option == _T('U'))
-            {
-                OutputStreamMode = UTF16Text;
-            }
-            else if (option == _T('F'))
-            {
-                if (!_tcsnicmp(&ptr[2], _T(":OFF"), 4))
-                {
-                    /* Disable file and path completion */
-                    AutoCompletionChar = 0x20;
-                    PathCompletionChar = 0x20;
-                }
-                else /* Enable completion by default */
-                {
-                    /* Enable (and replace) file and path completion
-                     * characters with Ctrl-F and Ctrl-D respectively */
-                    AutoCompletionChar = 0x06; // Ctrl-F
-                    PathCompletionChar = 0x04; // Ctrl-D
-                }
-            }
-            else if (option == _T('V'))
-            {
-                // FIXME: Check validity of the parameter given to V !
-                bDelayedExpansion = _tcsnicmp(&ptr[2], _T(":OFF"), 4);
-            }
-            else if (option == _T('E'))
-            {
-                // FIXME: Check validity of the parameter given to E !
-                bEnableExtensions = _tcsnicmp(&ptr[2], _T(":OFF"), 4);
-            }
-            else if (option == _T('X'))
-            {
-                /* '/X' is identical to '/E:ON' */
-                bEnableExtensions = TRUE;
-            }
-            else if (option == _T('Y'))
-            {
-                /* '/Y' is identical to '/E:OFF' */
-                bEnableExtensions = FALSE;
-            }
+            bDelayedExpansion = _tcsnicmp(ptr, _T(":OFF"), 4);
+
+            if (!_tcsnicmp(ptr, _T(":ON"), 3))
+                ptr += 3;
+        }
+        else if (option == _T('E'))
+        {
+            ptr += 2;
+            bEnableExtensions = _tcsnicmp(ptr, _T(":OFF"), 4);
+
+            if (!_tcsnicmp(ptr, _T(":ON"), 3))
+                ptr += 3;
+        }
+        else if (option == _T('X'))
+        {
+            ptr += 2;
+            /* '/X' is identical to '/E:ON' */
+            bEnableExtensions = TRUE;
+        }
+        else if (option == _T('Y'))
+        {
+            ptr += 2;
+            /* '/Y' is identical to '/E:OFF' */
+            bEnableExtensions = FALSE;
         }
     }
 
@@ -2312,7 +2350,7 @@ Initialize(VOID)
     ConStreamSetMode(StdOut, OutputStreamMode, OutputCodePage);
     ConStreamSetMode(StdErr, OutputStreamMode, OutputCodePage);
 
-    if (!*ptr)
+    if (!ptr || !*ptr)
     {
         /* If neither /C or /K was given, display a simple version string */
 
@@ -2332,7 +2370,7 @@ Initialize(VOID)
         ExecuteAutoRunFile(HKEY_CURRENT_USER);
     }
 
-    /* Returns the rest of the command line */
+    /* Return the rest of the command line */
     return ptr;
 }
 
@@ -2351,7 +2389,7 @@ static VOID Cleanup(VOID)
         ParseCommandLine(_T("\\cmdexit.bat"));
     }
 
-    /* Remove ctrl break handler */
+    /* Remove Ctrl-Break handler */
     RemoveBreakHandler();
 
     /* Restore the default console mode */
