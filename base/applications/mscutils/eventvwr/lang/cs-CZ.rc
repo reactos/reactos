@@ -216,7 +216,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Typ události:     %s\r\n\
+    IDS_COPY "Typ:       %s\r\n\
 Zdroj:     %s\r\n\
 Kategorie: %s\r\n\
 ID:        %s\r\n\
