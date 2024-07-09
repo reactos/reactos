@@ -1,29 +1,10 @@
 /*
- *  ReactOS Win32 Applications
- *  Copyright (C) 2007 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-/*
- * PROJECT:         ReactOS Event Log Viewer
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/mscutils/eventvwr/eventvwr.c
- * PURPOSE:         Event Log Viewer main file
- * PROGRAMMERS:     Marc Piulachs (marc.piulachs at codexchange [dot] net)
- *                  Eric Kohl
- *                  Hermes Belusca-Maito
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * PURPOSE:     Event Log Viewer main file
+ * COPYRIGHT:   Marc Piulachs <marc.piulachs@codexchange.net>
+ *              Eric Kohl
+ *              Hermes Belusca-Maito
  */
 
 #include "eventvwr.h"
@@ -3886,11 +3867,9 @@ InitPropertiesDlg(HWND hDlg, PEVENTLOG EventLog)
     // dwRetention = ROUND_UP(dwRetention, 24*3600) / (24*3600);
     dwRetention = (dwRetention + 24*3600 - 1) / (24*3600);
 
-
     RegCloseKey(hLogKey);
 
     }
-
 
 Quit:
 
@@ -4161,7 +4140,7 @@ EventDetails(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
             /* Create a size grip if the dialog has a sizing border */
             GetClientRect(hDlg, &rcWnd);
-            dwStyle  = GetWindowLongPtrW(hDlg, GWL_STYLE);
+            dwStyle = GetWindowLongPtrW(hDlg, GWL_STYLE);
             sbVXSize = GetSystemMetrics(SM_CXVSCROLL);
             sbHYSize = GetSystemMetrics(SM_CYHSCROLL);
             if (dwStyle & WS_THICKFRAME /* == WS_SIZEBOX */)
