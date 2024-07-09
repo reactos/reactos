@@ -2,7 +2,8 @@
  * PROJECT:     ReactOS Replace Command
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Japanese resource file
- * TRANSLATOR:  Copyright 2005 tsk <tsk_n@mail.goo.ne.jp>
+ * TRANSLATORS: Copyright 2005 tsk <tsk_n@mail.goo.ne.jp>
+ *              Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
