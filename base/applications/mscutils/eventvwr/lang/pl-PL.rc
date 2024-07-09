@@ -219,7 +219,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Typ zdarzenia:            %s\r\n\
+    IDS_COPY "\
+Typ zdarzenia:            %s\r\n\
 Źródło zdarzenia:         %s\r\n\
 Kategoria zdarzenia:      %s\r\n\
 Idnetyfikator Zdarzenia:  %s\r\n\

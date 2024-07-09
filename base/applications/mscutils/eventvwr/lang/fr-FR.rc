@@ -217,7 +217,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Type d'événement :          %s\r\n\
+    IDS_COPY "\
+Type d'événement :          %s\r\n\
 Source de l'événement :     %s\r\n\
 Catégorie de l'événement :  %s\r\n\
 ID de l'événement :         %s\r\n\

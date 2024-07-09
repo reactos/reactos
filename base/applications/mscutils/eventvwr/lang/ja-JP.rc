@@ -220,7 +220,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "イベントの種類:     %s\r\n\
+    IDS_COPY "\
+イベントの種類:     %s\r\n\
 イベントのソース:   %s\r\n\
 イベントのカテゴリ: %s\r\n\
 イベント ID:        %s\r\n\
