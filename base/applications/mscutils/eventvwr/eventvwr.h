@@ -1,11 +1,10 @@
 /*
- * PROJECT:         ReactOS Event Log Viewer
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/mscutils/eventvwr/eventvwr.h
- * PURPOSE:         Event Log Viewer header
- * PROGRAMMERS:     Marc Piulachs (marc.piulachs at codexchange [dot] net)
- *                  Eric Kohl
- *                  Hermes Belusca-Maito
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * PURPOSE:     Event Log Viewer header
+ * COPYRIGHT:   Marc Piulachs <marc.piulachs@codexchange.net>
+ *              Eric Kohl
+ *              Hermes Belusca-Maito
  */
 
 #ifndef _EVENTVWR_PCH_
@@ -17,7 +16,6 @@
 #include <stdlib.h>
 
 #define WIN32_NO_STATUS
-
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>

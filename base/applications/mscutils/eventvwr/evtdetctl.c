@@ -1,11 +1,10 @@
 /*
- * PROJECT:         ReactOS Event Log Viewer
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/mscutils/eventvwr/evtdetctl.c
- * PURPOSE:         Event Details Control
- * PROGRAMMERS:     Marc Piulachs (marc.piulachs at codexchange [dot] net)
- *                  Eric Kohl
- *                  Hermes Belusca-Maito
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * PURPOSE:     Event Details Control
+ * COPYRIGHT:   Marc Piulachs <marc.piulachs@codexchange.net>
+ *              Eric Kohl
+ *              Hermes Belusca-Maito
  */
 
 #include "eventvwr.h"
@@ -66,7 +65,6 @@ DisplayEvent(HWND hDlg, PEVENTLOGFILTER EventLogFilter)
     li.mask = LVIF_PARAM;
     li.iItem = iIndex;
     li.iSubItem = 0;
-
     ListView_GetItem(hwndListView, &li);
 
     pevlr = (PEVENTLOGRECORD)li.lParam;
@@ -204,7 +202,6 @@ DisplayEventData(HWND hDlg, BOOL bDisplayWords)
     li.mask = LVIF_PARAM;
     li.iItem = iIndex;
     li.iSubItem = 0;
-
     ListView_GetItem(hwndListView, &li);
 
     pevlr = (PEVENTLOGRECORD)li.lParam;
@@ -769,12 +766,6 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             pData->scPos.x = pData->scPos.y = 0;
 
             InitDetailsDlgCtrl(hDlg, pData);
-
-#if 0
-            /* Show event info on dialog box */
-            DisplayEvent(hDlg, pData->EventLogFilter);
-            DisplayEventData(hDlg, pData->bDisplayWords);
-#endif
 
             // OnSize(hDlg, pData, pData->cxOld, pData->cyOld);
             return (INT_PTR)TRUE;

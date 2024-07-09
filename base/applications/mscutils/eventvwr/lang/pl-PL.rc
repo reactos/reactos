@@ -1,6 +1,4 @@
-/* Polish translation by Caemyr - Olaf Siejka
- * PL update by wojo664 (June 2014)
- */
+// COPYRIGHT: Olaf Siejka, 2014 wojo664
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
@@ -13,7 +11,7 @@ BEGIN
         MENUITEM "&Zamknij", IDM_CLOSE_EVENTLOG
         MENUITEM SEPARATOR
         MENUITEM "W&yczyść wszystkie zdarzenia", IDM_CLEAR_EVENTS
-        MENUITEM "&Zmień nazwę\tF2", IDM_RENAME_EVENTLOG
+        MENUITEM "Zmień &nazwę\tF2", IDM_RENAME_EVENTLOG
         MENUITEM "Wł&aściwości dziennika...", IDM_EVENTLOG_SETTINGS
         MENUITEM SEPARATOR
         MENUITEM "&Wyjście", IDM_EXIT
@@ -29,7 +27,7 @@ BEGIN
     END
     POPUP "Op&cje"
     BEGIN
-        MENUITEM "&Pokaż szczegóły zdarzenia ", IDM_SHOW_EVENT_DETAILS_VIEW
+        MENUITEM "&Pokaż szczegóły zdarzenia", IDM_EVENT_DETAILS_VIEW
     END
     POPUP "Po&moc"
     BEGIN
@@ -86,9 +84,9 @@ BEGIN
     LTEXT "&Opis:", IDC_STATIC, 8, 65, 39, 8
     CONTROL "", IDC_EVENTTEXTEDIT, RICHEDIT_CLASS, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER, 8, 76, 250, 60
 
-    LTEXT "D&ane", IDC_DETAILS_STATIC, 8, 140, 20, 8
-    CONTROL "&Bajty", IDC_BYTESRADIO, "Button", BS_AUTORADIOBUTTON, 39, 140, 34, 8
-    CONTROL "&Słowa", IDC_WORDRADIO, "Button", BS_AUTORADIOBUTTON, 77, 140, 34, 8
+    LTEXT "D&ane:", IDC_DETAILS_STATIC, 8, 140, 20, 8
+    AUTORADIOBUTTON "&Bajty", IDC_BYTESRADIO, 39, 140, 34, 8
+    AUTORADIOBUTTON "&Słowa", IDC_WORDRADIO, 77, 140, 34, 8
     EDITTEXT IDC_EVENTDATAEDIT, 8, 150, 250, 60, ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER
 END
 
@@ -118,13 +116,13 @@ BEGIN
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 119, 10, 14
     LTEXT "KB", IDC_STATIC, 130, 122, 20, 8
     LTEXT "Po osiągnięciu maksymalnego rozmiaru pliku dziennika:", IDC_STATIC, 17, 140, 219, 8
-    CONTROL "&Zastąp zdarzenia w razie potrzeby", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
-    CONTROL "Z&astąp zdarzenia starsze niż", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 102, 10
+    AUTORADIOBUTTON "&Zastąp zdarzenia w razie potrzeby", IDC_OVERWRITE_AS_NEEDED, 17, 155, 219, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Z&astąp zdarzenia starsze niż", IDC_OVERWRITE_OLDER_THAN, 17, 168, 102, 10
+    AUTORADIOBUTTON "Nie za&stępuj zdarzeń\n(ręczne czyszczenie dziennika)", IDC_NO_OVERWRITE, 17, 180, 143, 20, BS_MULTILINE | WS_TABSTOP
     EDITTEXT IDC_EDIT_EVENTS_AGE, 122, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_EVENTS_AGE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
-            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 157, 165, 10, 14
+            UDS_AUTOBUDDY | UDS_ARROWKEYS, 157, 165, 10, 14
     LTEXT "dni", IDC_STATIC, 162, 168, 20, 8
-    CONTROL "&Nie zastępuj zdarzeń\n(ręczne czyszczenie dziennika)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 143, 20
     PUSHBUTTON "&Przywróć domyślne", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
     AUTOCHECKBOX "&Użyj połączenia o małej szybkości", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
     PUSHBUTTON "&Wyczyść dziennik", ID_CLEARLOG, 175, 213, 70, 14
@@ -137,13 +135,13 @@ BEGIN
     IDS_APP_TITLE_EX "%s - %s Log na \\\\"
     IDS_STATUS_MSG "%s posiada %lu zdarzeń (listed: %lu)"
     IDS_LOADING_WAIT "Ładowanie logów zdarzeń. Proszę czekać..."
-    IDS_NO_ITEMS "Brak elementów do wyświetlenia w tym widoku." // "No events in this log."
+    IDS_NO_ITEMS "Brak elementów do wyświetlenia w tym widoku."
     IDS_EVENTLOG_SYSTEM "Dzienniki systemu"
     IDS_EVENTLOG_APP "Dzienniki aplikacji"
     IDS_EVENTLOG_USER "Dzienniki użytkownika"
-    IDS_EVENTSTRINGIDNOTFOUND "Opis zdarzenia dla danego numeru ID ( %lu ) nie został odnaleziony w źródle ( %s ). Ten komputer może nie miec wystarczających informacji w rejestrze, albo bibliotek DLL, aby wyświetlić wiadomości z komputera zdalnego.\n\nThe following information is part of the event:\n\n"
-    IDS_CLEAREVENTS_MSG "Czy chcesz zapisać dziennik zdarzeń przed czyszczeniem?"
     IDS_SAVE_FILTER "Dziennik zdarzeń (*.evt)\0*.evt\0"
+    IDS_CLEAREVENTS_MSG "Czy chcesz zapisać dziennik zdarzeń przed czyszczeniem?"
+    IDS_EVENTSTRINGIDNOTFOUND "Opis zdarzenia dla danego numeru ID ( %lu ) nie został odnaleziony w źródle ( %s ). Ten komputer może nie miec wystarczających informacji w rejestrze, albo bibliotek DLL, aby wyświetlić wiadomości z komputera zdalnego.\n\nThe following information is part of the event:\n\n"
 END
 
 STRINGTABLE
@@ -159,8 +157,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BYTES_FORMAT "bytes" // "%s bytes"
-    // "%1!ls! (%2!ls! bytes)"
+    IDS_BYTES_FORMAT "bytes"
 END
 
 STRINGTABLE
@@ -177,15 +174,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Event Type:     %s\r\n\
-Event Source:   %s\r\n\
-Event Category: %s\r\n\
-Event ID:       %s\r\n\
-Date:           %s\r\n\
-Time:           %s\r\n\
-User:           %s\r\n\
-Computer:       %s\r\n\
-Description:\r\n%s"
+    IDS_COPY "\
+Typ:       %s\r\n\
+Źródło:    %s\r\n\
+Kategoria: %s\r\n\
+ID:        %s\r\n\
+Data:      %s\r\n\
+Czas:      %s\r\n\
+User:      %s\r\n\
+Komputer:  %s\r\n\
+Opis:\r\n%s"
 END
 
 STRINGTABLE
