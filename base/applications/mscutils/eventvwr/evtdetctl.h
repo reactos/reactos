@@ -1,11 +1,10 @@
 /*
- * PROJECT:         ReactOS Event Log Viewer
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/mscutils/eventvwr/evtdetctl.h
- * PURPOSE:         Event Details Control
- * PROGRAMMERS:     Marc Piulachs (marc.piulachs at codexchange [dot] net)
- *                  Eric Kohl
- *                  Hermes Belusca-Maito
+ * PROJECT:     ReactOS Event Log Viewer
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * PURPOSE:     Event Details Control
+ * COPYRIGHT:   Marc Piulachs <marc.piulachs@codexchange.net>
+ *              Eric Kohl
+ *              Hermes Belusca-Maito
  */
 
 #ifndef _EVTDETCTL_H_
