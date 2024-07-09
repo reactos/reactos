@@ -344,6 +344,10 @@ LRESULT CAutoComplete::EditWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
             if (hwndGotFocus != m_hwndEdit && hwndGotFocus != m_hWnd)
                 HideDropDown();
             break;
+        case WM_IME_NOTIFY:
+            if (wParam == IMN_OPENCANDIDATE)
+                HideDropDown();
+            break;
         case WM_SETTEXT:
             if (!m_bInSetText)
                 HideDropDown(); // it's mechanical WM_SETTEXT
