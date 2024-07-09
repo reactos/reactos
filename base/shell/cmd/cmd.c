@@ -2254,6 +2254,22 @@ Initialize(VOID)
             {
                 OutputStreamMode = UTF16Text;
             }
+            else if (option == _T('F'))
+            {
+                if (!_tcsnicmp(&ptr[2], _T(":OFF"), 4))
+                {
+                    /* Disable file and path completion */
+                    AutoCompletionChar = 0x20;
+                    PathCompletionChar = 0x20;
+                }
+                else /* Enable completion by default */
+                {
+                    /* Enable (and replace) file and path completion
+                     * characters with Ctrl-F and Ctrl-D respectively */
+                    AutoCompletionChar = 0x06; // Ctrl-F
+                    PathCompletionChar = 0x04; // Ctrl-D
+                }
+            }
             else if (option == _T('V'))
             {
                 // FIXME: Check validity of the parameter given to V !
