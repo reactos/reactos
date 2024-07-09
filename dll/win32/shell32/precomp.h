@@ -164,6 +164,8 @@ public:
     END_MSG_MAP()
 };
 
+void PostCabinetMessage(UINT Msg, WPARAM wParam, LPARAM lParam);
+
 HRESULT
 Shell_TranslateIDListAlias(
     _In_ LPCITEMIDLIST pidl,

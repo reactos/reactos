@@ -120,6 +120,7 @@ static const unsigned int                   folderOptionsPageCountMax = 20;
 static const long                           BTP_DONT_UPDATE_HISTORY = 0;
 static const long                           BTP_UPDATE_CUR_HISTORY = 1;
 static const long                           BTP_UPDATE_NEXT_HISTORY = 2;
+static const long                           BTP_ACTIVATE_NOFOCUS = 0x04;
 
 BOOL                                        createNewStuff = false;
 
@@ -306,6 +307,7 @@ private:
     HACCEL m_hAccel;
     ShellSettings m_settings;
     SBFOLDERSETTINGS m_deffoldersettings;
+    DWORD m_BrowserSvcFlags;
 public:
 #if 0
     ULONG InternalAddRef()
@@ -324,6 +326,9 @@ public:
     ~CShellBrowser();
     HRESULT Initialize();
 public:
+    UINT ApplyNewBrowserFlag(UINT Flags);
+    HRESULT OpenNewBrowserWindow(LPCITEMIDLIST pidl, UINT SbspFlags);
+    HRESULT CreateRelativeBrowsePIDL(LPCITEMIDLIST relative, UINT SbspFlags, LPITEMIDLIST *ppidl);
     HRESULT BrowseToPIDL(LPCITEMIDLIST pidl, long flags);
     HRESULT BrowseToPath(IShellFolder *newShellFolder, LPCITEMIDLIST absolutePIDL,
         FOLDERSETTINGS *folderSettings, long flags);
@@ -629,6 +634,7 @@ public:
     LRESULT OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnExplorerBar(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnCabinetStateChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSettingsChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnGetSettingsPtr(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnAppCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -683,6 +689,7 @@ public:
         COMMAND_RANGE_HANDLER(IDM_GOTO_TRAVEL_FIRSTTARGET, IDM_GOTO_TRAVEL_LASTTARGET, OnGoTravel)
         COMMAND_RANGE_HANDLER(IDM_EXPLORERBAND_BEGINCUSTOM, IDM_EXPLORERBAND_ENDCUSTOM, OnExplorerBar)
         MESSAGE_HANDLER(WM_COMMAND, RelayCommands)
+        MESSAGE_HANDLER(CWM_STATECHANGE, OnCabinetStateChange)
         MESSAGE_HANDLER(BWM_SETTINGCHANGE, OnSettingsChange)
         MESSAGE_HANDLER(BWM_GETSETTINGSPTR, OnGetSettingsPtr)
         MESSAGE_HANDLER(WM_APPCOMMAND, OnAppCommand)
@@ -719,6 +726,7 @@ extern HRESULT CreateProgressDialog(REFIID riid, void **ppv);
 
 CShellBrowser::CShellBrowser()
 {
+    m_BrowserSvcFlags = BSF_RESIZABLE | BSF_CANMAXIMIZE;
     fCurrentShellViewWindow = NULL;
     fCurrentDirectoryPIDL = NULL;
     fStatusBar = NULL;
@@ -729,6 +737,7 @@ CShellBrowser::CShellBrowser()
     m_settings.Load();
     m_deffoldersettings.Load();
     gCabinetState.Load();
+    SetTopBrowser();
 }
 
 CShellBrowser::~CShellBrowser()
@@ -819,6 +828,52 @@ HRESULT CShellBrowser::ApplyBrowserDefaultFolderSettings(IShellView *pvs)
         hr = CGlobalFolderSettings::ResetBrowserSettings();
     }
     return hr;
+}
+
+UINT CShellBrowser::ApplyNewBrowserFlag(UINT Flags)
+{
+    if ((Flags & (SBSP_SAMEBROWSER | SBSP_NEWBROWSER)) == SBSP_DEFBROWSER)
+    {
+        if (!fCurrentDirectoryPIDL || IsControlWindowShown(FCW_TREE, NULL) == S_OK)
+            Flags |= SBSP_SAMEBROWSER; // Force if this is the first navigation or the folder tree is present
+        else
+            Flags |= (!!gCabinetState.fNewWindowMode) ^ (GetAsyncKeyState(VK_CONTROL) < 0) ? SBSP_NEWBROWSER : SBSP_SAMEBROWSER;
+    }
+    if (Flags & (SBSP_NAVIGATEBACK | SBSP_NAVIGATEFORWARD))
+        Flags = (Flags & ~SBSP_NEWBROWSER) | SBSP_SAMEBROWSER; // Force same browser for now
+    return Flags;
+}
+
+HRESULT CShellBrowser::OpenNewBrowserWindow(LPCITEMIDLIST pidl, UINT SbspFlags)
+{
+    SaveITBarLayout(); // Do this now so the new window inherits the current layout
+    // TODO: www.geoffchappell.com/studies/windows/ie/shdocvw/interfaces/inotifyappstart.htm
+    DWORD flags = (SbspFlags & SBSP_EXPLOREMODE) ? SH_EXPLORER_CMDLINE_FLAG_E : 0;
+    if ((SbspFlags & (SBSP_OPENMODE | SBSP_EXPLOREMODE)) == SBSP_DEFMODE)
+        flags |= IsControlWindowShown(FCW_TREE, NULL) == S_OK ? SH_EXPLORER_CMDLINE_FLAG_E : 0;
+    LPITEMIDLIST pidlDir;
+    HRESULT hr = SHILClone(pidl, &pidlDir);
+    if (FAILED(hr))
+        return hr;
+    // TODO: !SBSP_NOTRANSFERHIST means we are supposed to pass the history here somehow?
+    return SHOpenNewFrame(pidlDir, NULL, 0, flags | SH_EXPLORER_CMDLINE_FLAG_NEWWND | SH_EXPLORER_CMDLINE_FLAG_NOREUSE);
+}
+
+HRESULT CShellBrowser::CreateRelativeBrowsePIDL(LPCITEMIDLIST relative, UINT SbspFlags, LPITEMIDLIST *ppidl)
+{
+    if (SbspFlags & SBSP_RELATIVE)
+        return SHILCombine(fCurrentDirectoryPIDL, relative, ppidl);
+
+    if (SbspFlags & SBSP_PARENT)
+    {
+        HRESULT hr = GetPidl(ppidl);
+        if (FAILED(hr))
+            return hr;
+        ILRemoveLastID(*ppidl);
+        return S_OK;
+    }
+    // TODO: SBSP_NAVIGATEBACK and SBSP_NAVIGATEFORWARD?
+    return E_UNEXPECTED;
 }
 
 HRESULT CShellBrowser::BrowseToPIDL(LPCITEMIDLIST pidl, long flags)
@@ -955,6 +1010,7 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
     wchar_t                                 newTitle[MAX_PATH];
     SHGDNF                                  nameFlags;
     HRESULT                                 hResult;
+    //TODO: BOOL                            nohistory = m_BrowserSvcFlags & BSF_NAVNOHISTORY;
 
     if (newShellFolder == NULL)
         return E_INVALIDARG;
@@ -1036,7 +1092,7 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
     saveCurrentShellView.Release();
     saveCurrentShellFolder.Release();
 
-    hResult = newShellView->UIActivate(SVUIA_ACTIVATE_FOCUS);
+    hResult = newShellView->UIActivate((flags & BTP_ACTIVATE_NOFOCUS) ? SVUIA_ACTIVATE_NOFOCUS : SVUIA_ACTIVATE_FOCUS);
 
     // leave updating section
     if (windowUpdateIsLocked)
@@ -2257,12 +2313,39 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::TranslateAcceleratorSB(MSG *pmsg, WORD 
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::BrowseObject(LPCITEMIDLIST pidl, UINT wFlags)
 {
-    if ((wFlags & SBSP_EXPLOREMODE) != NULL)
+    wFlags = ApplyNewBrowserFlag(wFlags);
+    // FIXME: Should not automatically show the Explorer band
+    if ((wFlags & SBSP_EXPLOREMODE) && !(wFlags & SBSP_NEWBROWSER))
         ShowBand(CLSID_ExplorerBand, true);
 
+    CComHeapPtr<ITEMIDLIST> pidlResolved;
+    if (wFlags & (SBSP_RELATIVE | SBSP_PARENT))
+    {
+        HRESULT hr = CreateRelativeBrowsePIDL(pidl, wFlags, &pidlResolved);
+        if (FAILED(hr))
+            return hr;
+        pidl = pidlResolved;
+    }
+
+    if (wFlags & SBSP_NEWBROWSER)
+        return OpenNewBrowserWindow(pidl, wFlags);
+
+    switch (wFlags & (SBSP_ABSOLUTE | SBSP_RELATIVE | SBSP_PARENT | SBSP_NAVIGATEBACK | SBSP_NAVIGATEFORWARD))
+    {
+        case SBSP_PARENT:
+            return NavigateToParent();
+        case SBSP_NAVIGATEBACK:
+            return GoBack();
+        case SBSP_NAVIGATEFORWARD:
+            return GoForward();
+    }
+
+    // TODO: SBSP_WRITENOHISTORY? SBSP_CREATENOHISTORY?
     long flags = BTP_UPDATE_NEXT_HISTORY;
     if (fTravelLog)
         flags |= BTP_UPDATE_CUR_HISTORY;
+    if (wFlags & SBSP_ACTIVATE_NOFOCUS)
+        flags |= BTP_ACTIVATE_NOFOCUS;
     return BrowseToPIDL(pidl, flags);
 }
 
@@ -2555,7 +2638,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::DisplayParseError(HRESULT hres, LPCWSTR
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::NavigateToPidl(LPCITEMIDLIST pidl, DWORD grfHLNF)
 {
-    return E_NOTIMPL;
+    return _NavigateToPidl(pidl, grfHLNF, 0);
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::SetNavigateState(BNSTATE bnstate)
@@ -2585,12 +2668,14 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::UpdateBackForwardState()
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::SetFlags(DWORD dwFlags, DWORD dwFlagMask)
 {
-    return E_NOTIMPL;
+    m_BrowserSvcFlags = (m_BrowserSvcFlags & ~dwFlagMask) | (dwFlags & dwFlagMask);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::GetFlags(DWORD *pdwFlags)
 {
-    return E_NOTIMPL;
+    *pdwFlags = m_BrowserSvcFlags;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::CanNavigateNow()
@@ -2771,7 +2856,8 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::InitializeTravelLog(ITravelLog *ptl, DW
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::SetTopBrowser()
 {
-    return E_NOTIMPL;
+    m_BrowserSvcFlags |= BSF_TOPBROWSER;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::Offline(int iCmd)
@@ -2836,6 +2922,16 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::_DisableModeless()
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::_NavigateToPidl(LPCITEMIDLIST pidl, DWORD grfHLNF, DWORD dwFlags)
 {
+    const UINT navflags = HLNF_NAVIGATINGBACK | HLNF_NAVIGATINGFORWARD;
+    if ((grfHLNF & navflags) && grfHLNF != ~0ul)
+    {
+        UINT SbspFlags = (grfHLNF & HLNF_NAVIGATINGBACK) ? SBSP_NAVIGATEBACK : SBSP_NAVIGATEFORWARD;
+        if (grfHLNF & SHHLNF_WRITENOHISTORY)
+            SbspFlags |= SBSP_WRITENOHISTORY;
+        if (grfHLNF & SHHLNF_NOAUTOSELECT)
+            SbspFlags |= SBSP_NOAUTOSELECT;
+        return BrowseObject(pidl, SbspFlags);
+    }
     return E_NOTIMPL;
 }
 
@@ -3931,6 +4027,12 @@ LRESULT CShellBrowser::RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
     return 0;
 }
 
+LRESULT CShellBrowser::OnCabinetStateChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    RefreshCabinetState();
+    return 0;
+}
+
 LRESULT CShellBrowser::OnSettingsChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     /* Refresh child windows */
@@ -4001,7 +4103,7 @@ void CShellBrowser::UpdateWindowTitle()
 
 void CShellBrowser::SaveITBarLayout()
 {
-    if (!gCabinetState.fSaveLocalView)
+    if (!gCabinetState.fSaveLocalView || (m_BrowserSvcFlags & (BSF_THEATERMODE | BSF_UISETBYAUTOMATION)))
         return;
 #if 0 // If CDesktopBrowser aggregates us, skip saving
     FOLDERSETTINGS fs;

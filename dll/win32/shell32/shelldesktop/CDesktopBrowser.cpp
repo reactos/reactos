@@ -76,6 +76,9 @@ public:
     STDMETHOD(OnViewWindowActive)(struct IShellView *ppshv) override;
     STDMETHOD(SetToolbarItems)(LPTBBUTTON lpButtons, UINT nButtons, UINT uFlags) override;
 
+    // *** IBrowserService2 methods (fake for now) ***
+    inline void SetTopBrowser() const {}
+
     // *** IServiceProvider methods ***
     STDMETHOD(QueryService)(REFGUID guidService, REFIID riid, void **ppvObject) override;
 
@@ -120,6 +123,7 @@ CDesktopBrowser::CDesktopBrowser():
     m_hwndChangeNotifyServer(NULL),
     m_dwDrives(::GetLogicalDrives())
 {
+    SetTopBrowser();
 }
 
 CDesktopBrowser::~CDesktopBrowser()

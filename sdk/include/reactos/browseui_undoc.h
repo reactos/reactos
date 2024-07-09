@@ -115,7 +115,7 @@ typedef struct ExplorerCommandLineParseResults
     // TODO: 'ULONG                   Padding[0x100];'?
 } EXPLORER_CMDLINE_PARSE_RESULTS, *PEXPLORER_CMDLINE_PARSE_RESULTS;
 
-#define SH_EXPLORER_CMDLINE_FLAG_ONE      0x00000001
+#define SH_EXPLORER_CMDLINE_FLAG_NEWWND   0x00000001
 #define SH_EXPLORER_CMDLINE_FLAG_S        0x00000002
 // unknown/unused                         0x00000004
 #define SH_EXPLORER_CMDLINE_FLAG_E        0x00000008
@@ -129,7 +129,7 @@ typedef struct ExplorerCommandLineParseResults
 // unknown/unused                         0x00000800
 #define SH_EXPLORER_CMDLINE_FLAG_NOUI     0x00001000
 // unknown/unused                         0x00002000
-#define SH_EXPLORER_CMDLINE_FLAG_N        0x00004000
+#define SH_EXPLORER_CMDLINE_FLAG_NOREUSE  0x00004000 // Don't use IShellWindows
 // unknown/unused                         0x00008000
 // unknown/unused                         0x00010000
 #define SH_EXPLORER_CMDLINE_FLAG_SEPARATE 0x00020000

@@ -860,8 +860,9 @@ ScanAdvancedSettings(SHELLSTATE *pSS, DWORD *pdwMask)
 }
 
 static BOOL CALLBACK
-RefreshBrowsersCallback(HWND hWnd, LPARAM msg)
+PostCabinetMessageCallback(HWND hWnd, LPARAM param)
 {
+    MSG &data = *(MSG*)param;
     WCHAR ClassName[100];
     if (GetClassNameW(hWnd, ClassName, _countof(ClassName)))
     {
@@ -869,10 +870,20 @@ RefreshBrowsersCallback(HWND hWnd, LPARAM msg)
             !wcscmp(ClassName, L"CabinetWClass") ||
             !wcscmp(ClassName, L"ExploreWClass"))
         {
-            PostMessage(hWnd, WM_COMMAND, FCIDM_DESKBROWSER_REFRESH, 0);
+            PostMessage(hWnd, data.message, data.wParam, data.lParam);
         }
     }
     return TRUE;
+}
+
+void
+PostCabinetMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+    MSG data;
+    data.message = Msg;
+    data.wParam = wParam;
+    data.lParam = lParam;
+    EnumWindows(PostCabinetMessageCallback, (LPARAM)&data);
 }
 
 static VOID
@@ -934,7 +945,7 @@ ViewDlg_Apply(HWND hwndDlg)
     // notify all
     SendMessage(HWND_BROADCAST, WM_WININICHANGE, 0, 0);
 
-    EnumWindows(RefreshBrowsersCallback, NULL);
+    PostCabinetMessage(WM_COMMAND, FCIDM_DESKBROWSER_REFRESH, 0);
 }
 
 // IDD_FOLDER_OPTIONS_VIEW
