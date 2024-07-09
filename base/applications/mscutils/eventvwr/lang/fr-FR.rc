@@ -218,14 +218,14 @@ END
 STRINGTABLE
 BEGIN
     IDS_COPY "\
-Type d'événement :          %s\r\n\
-Source de l'événement :     %s\r\n\
-Catégorie de l'événement :  %s\r\n\
-ID de l'événement :         %s\r\n\
-Date :                      %s\r\n\
-Heure :                     %s\r\n\
-Utilisateur :               %s\r\n\
-Ordinateur :                %s\r\n\
+Type d'événement :         %s\r\n\
+Source de l'événement :    %s\r\n\
+Catégorie de l'événement : %s\r\n\
+ID de l'événement :        %s\r\n\
+Date :                     %s\r\n\
+Heure :                    %s\r\n\
+Utilisateur :              %s\r\n\
+Ordinateur :               %s\r\n\
 Description :\r\n%s"
 END
 
