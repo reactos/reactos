@@ -132,7 +132,7 @@ VOID GetPathCase(IN LPCTSTR Path, OUT LPTSTR OutPath)
             StringCchCat(OutPath, MAX_PATH, _T("\\"));
             StringCchCopy(TempPath, _countof(TempPath), OutPath);
         }
-        pchTemp = TempPath + lstrlen(TempPath);
+        pchTemp = TempPath + _tcslen(TempPath);
     }
 }
 
