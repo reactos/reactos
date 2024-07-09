@@ -40,7 +40,7 @@ STYLE WS_POPUPWINDOW | WS_CAPTION | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 {
     LTEXT "Fechou a barra de idiomas.\n\nPara utilizar a barra de idiomas posteriormente, marque ""Mostrar a barra de idiomas na área de trabalho"" na caixa de diálogo Configurações da barra de idiomas, no painel de controle dos Serviços de Texto.", -1, 5, 5, 190, 60
-    AUTOCHECKBOX "&Não mostrar esta mensagem novamente.", IDC_CLOSELANGBAR_CHECK, 5, 70, 145, 10
+    AUTOCHECKBOX "&Não mostrar esta mensagem novamente", IDC_CLOSELANGBAR_CHECK, 5, 70, 145, 10
     DEFPUSHBUTTON "OK", IDOK, 80, 85, 55, 15
     PUSHBUTTON "Cancelar", IDCANCEL, 140, 85, 55, 15
 }
@@ -51,7 +51,7 @@ STYLE WS_POPUPWINDOW | WS_CAPTION | DS_MODALFRAME
 FONT 8, "MS Shell Dlg"
 {
     LTEXT "Fechou a barra de idiomas.\n\nPara utilizar a barra de idiomas posteriormente, marque ""Mostrar a barra de idiomas na área de trabalho"" na caixa de diálogo Configurações da barra de idiomas, no painel de controle Opções regionais e de idioma.", -1, 5, 5, 190, 60
-    AUTOCHECKBOX "&Não mostrar esta mensagem novamente.", IDC_CLOSELANGBAR_CHECK, 5, 70, 145, 10
+    AUTOCHECKBOX "&Não mostrar esta mensagem novamente", IDC_CLOSELANGBAR_CHECK, 5, 70, 145, 10
     DEFPUSHBUTTON "OK", IDOK, 80, 85, 55, 15
     PUSHBUTTON "Cancelar", IDCANCEL, 140, 85, 55, 15
 }
@@ -63,7 +63,7 @@ FONT 8, "MS Shell Dlg"
 {
     LTEXT "Minimizou a barra de idiomas. Para restaurá-la, click no ícone da barra de idiomas (próximo ao relógio) e seleccione ""Restaurar a barra de idiomas"" no menu pop-up.", -1, 5, 5, 190, 50
     CONTROL IDB_BITMAP154, -1, "STATIC", SS_BITMAP, 72, 63, 60, 60, WS_EX_STATICEDGE
-    AUTOCHECKBOX "Não mostrar esta mensagem novamente.", IDC_MINIMIZELANGBAR_CHECK, 5, 105, 125, 10
+    AUTOCHECKBOX "Não mostrar esta mensagem novamente", IDC_MINIMIZELANGBAR_CHECK, 5, 95, 142, 10
     DEFPUSHBUTTON "OK", IDOK, 140, 105, 60, 15
 }
 
@@ -74,6 +74,6 @@ FONT 8, "MS Shell Dlg"
 {
     LTEXT "Minimizou a barra de idiomas. Para restaurá-la, click no ícone da barra de idiomas (próximo ao relógio) e seleccione ""Restaurar a barra de idiomas"" no menu pop-up.", -1, 5, 5, 190, 50
     CONTROL IDB_BITMAP155, -1, "STATIC", SS_BITMAP, 53, 67, 60, 60, WS_EX_STATICEDGE
-    AUTOCHECKBOX "Não mostrar esta mensagem novamente.", IDC_MINIMIZELANGBAR_CHECK, 5, 105, 125, 10
+    AUTOCHECKBOX "Não mostrar esta mensagem novamente", IDC_MINIMIZELANGBAR_CHECK, 5, 95, 142, 10
     DEFPUSHBUTTON "OK", IDOK, 140, 105, 60, 15
 }
