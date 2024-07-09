@@ -87,7 +87,8 @@ VOID GetPathCase(IN LPCTSTR Path, OUT LPTSTR OutPath)
 {
     UINT i, cchPath = lstrlen(Path);
     TCHAR TempPath[MAX_PATH];
-    LPTSTR pchTemp = TempPath, pchTempEnd = TempPath + _countof(TempPath);
+    LPTSTR pchTemp = TempPath;
+    LPTSTR pchTempEnd = TempPath + _countof(TempPath);
     WIN32_FIND_DATA FindFileData;
     HANDLE hFind;
 
