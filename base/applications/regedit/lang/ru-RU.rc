@@ -1,3 +1,16 @@
+/*
+ * PROJECT:     ReactOS Registry Editor
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Russian resource file
+ * TRANSLATORS: Copyright 2003 Igor Stepin <is@istudio.ru>
+ *              Copyright 2006 Anton Belitsky (bmoof) <fidoworld@mail.ru>
+ *              Copyright 2008 Dmitry Chapyshev <dmitry@reactos.org>
+ *              Copyright 2011 Igor Paliychuk <mansonigor@gmail.com>
+ *              Copyright 2014 Alexey Gorgurov <leha-bot@ya.ru>
+ *              Copyright 2014 Kudratov Olimjon <olim98@bk.ru>
+ *              Copyright 2020-2024 Stanislav Motylkov <binarymaster@mail.ru>
+ */
+
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 ID_ACCEL ACCELERATORS
