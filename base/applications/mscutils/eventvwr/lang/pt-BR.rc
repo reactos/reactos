@@ -1,4 +1,4 @@
-/* Portuguese Brazilian translation by Matheus Macabu */
+// COPYRIGHT: Matheus Macabu
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
@@ -55,7 +55,7 @@ CAPTION "Detalhes do Evento"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "EvtDetailsCtrl", IDC_STATIC, 0, 0, 266, 215
-    PUSHBUTTON "A&juda", IDHELP, 8, 220, 50, 14
+    PUSHBUTTON "&Ajuda", IDHELP, 8, 220, 50, 14
     DEFPUSHBUTTON "&Fechar", IDOK, 208, 220, 50, 14
 END
 
@@ -87,9 +87,9 @@ BEGIN
     LTEXT "&Descrição:", IDC_STATIC, 8, 65, 39, 8
     CONTROL "", IDC_EVENTTEXTEDIT, RICHEDIT_CLASS, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER, 8, 76, 250, 60
 
-    LTEXT "Dad&os:", IDC_DETAILS_STATIC, 8, 140, 20, 8
-    CONTROL "&Bytes", IDC_BYTESRADIO, "Button", BS_AUTORADIOBUTTON, 39, 140, 34, 8
-    CONTROL "&Word", IDC_WORDRADIO, "Button", BS_AUTORADIOBUTTON, 77, 140, 34, 8
+    LTEXT "Dad&os:", IDC_DETAILS_STATIC, 8, 140, 25, 8
+    AUTORADIOBUTTON "&Bytes", IDC_BYTESRADIO, 39, 140, 34, 8
+    AUTORADIOBUTTON "&Word", IDC_WORDRADIO, 77, 140, 34, 8
     EDITTEXT IDC_EVENTDATAEDIT, 8, 150, 250, 60, ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | WS_BORDER
 END
 
@@ -119,13 +119,13 @@ BEGIN
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 119, 10, 14
     LTEXT "KB", IDC_STATIC, 130, 122, 20, 8
     LTEXT "When maximum log size is reached:", IDC_STATIC, 17, 140, 219, 8
-    CONTROL "&Overwrite events as needed", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
-    CONTROL "O&verwrite events older than", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 102, 10
+    AUTORADIOBUTTON "&Overwrite events as needed", IDC_OVERWRITE_AS_NEEDED, 17, 155, 219, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "O&verwrite events older than", IDC_OVERWRITE_OLDER_THAN, 17, 168, 102, 10
+    AUTORADIOBUTTON "Do &not overwrite events\n(clear log manually)", IDC_NO_OVERWRITE, 17, 180, 143, 20, BS_MULTILINE | WS_TABSTOP
     EDITTEXT IDC_EDIT_EVENTS_AGE, 122, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_EVENTS_AGE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
-            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 157, 165, 10, 14
+            UDS_AUTOBUDDY | UDS_ARROWKEYS, 157, 165, 10, 14
     LTEXT "days", IDC_STATIC, 162, 168, 20, 8
-    CONTROL "Do &not overwrite events\n(clear log manually)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 143, 20
     PUSHBUTTON "&Restore Defaults", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
     AUTOCHECKBOX "Using a lo&w-speed connection", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
     PUSHBUTTON "&Clear Log", ID_CLEARLOG, 195, 213, 50, 14
@@ -138,7 +138,7 @@ BEGIN
     IDS_APP_TITLE_EX "%s - %s Log on \\\\"
     IDS_STATUS_MSG "%s has %lu event(s) (listed: %lu)"
     IDS_LOADING_WAIT "Carregando Registros de Eventos. Por favor aguarde..."
-    IDS_NO_ITEMS "There are no items to show in this view." // "No events in this log."
+    IDS_NO_ITEMS "No events in this log."
     IDS_EVENTLOG_SYSTEM "System Logs"
     IDS_EVENTLOG_APP "Application Logs"
     IDS_EVENTLOG_USER "User Logs"
@@ -152,13 +152,13 @@ BEGIN
 /* Please note that explicit TAB characters '\t' are used to fix the alignment of the message in the MessageBox */
     IDS_USAGE "ReactOS Event Viewer\n\
 \n\
-EventVwr [computer name] [/l:<event log file>] [/?]\n\
+EventVwr [computer name] [/L:<event log file>] [/?]\n\
 \n\
 ""computer name"" : Specifies the remote computer where to connect\n\
 \tto retrieve the events to display. If no name is specified, the\n\
 \tlocal computer is used.\n\
 \n\
-/l:<event log file> : Specifies which event log file to open.\n\
+/L:<event log file> : Specifies which event log file to open.\n\
 \tOnly files in the .evt format (NT ≤ 5.2) are supported.\n\
 \n\
 /? : Displays this help message.\n\
@@ -179,8 +179,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BYTES_FORMAT "bytes" // "%s bytes"
-    // "%1!ls! (%2!ls! bytes)"
+    IDS_BYTES_FORMAT "bytes"
 END
 
 STRINGTABLE
@@ -197,7 +196,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Event Type:     %s\r\n\
+    IDS_COPY "\
+Event Type:     %s\r\n\
 Event Source:   %s\r\n\
 Event Category: %s\r\n\
 Event ID:       %s\r\n\
