@@ -1,8 +1,8 @@
 /*
- * PROJECT:     ReactOS Network Configuration Shell Extension
+ * PROJECT:     ReactOS Network Shell
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Portuguese (Portugal) resource file
- * TRANSLATOR   Copyright 2020-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ * TRANSLATOR:  Copyright 2019-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
  */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
@@ -92,7 +92,7 @@ BEGIN
     LTEXT "Seleccione  configuração típica ou personalizada:", IDC_STATIC, 53, 7, 240, 20
     AUTORADIOBUTTON "Configuração &típica", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Configuração &personalizada", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
-    LTEXT "Cria ligações de rede utilizando O ""Cliente para Redes ReactOS"". ""Partilha de ficheiros e de impressão para redes ReactOS"", e o protocolo TCP/IP com endereçamento automático.", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "Cria ligações de rede utilizando o ""Cliente para Redes ReactOS"". ""Partilha de ficheiros e de impressão para redes ReactOS"", e o protocolo TCP/IP com endereçamento automático.", IDC_STATIC, 65, 45, 240, 30
     LTEXT "Permite configurar manualmente os componentes de rede.", IDC_STATIC, 65, 90, 243, 20
 END
 
@@ -118,8 +118,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Deseja que este computador seja membro de um domínio?\n\
 (Pode obter esta informação no seu administrador de rede.)", IDC_STATIC, 33, 2, 263, 50
-    AUTORADIOBUTTON "Não; fazer este computador membro do seguinte grupo de trabalho.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Sim; fazer este computador membro do seguinte domínio.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
+    AUTORADIOBUTTON "Não; fazer este computador membro do seguinte grupo de &trabalho.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Sim; fazer este computador membro do seguinte &domínio.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
     LTEXT "Nome do domínio ou grupo de trabalho:", IDC_STATIC, 33, 72, 152, 20
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "NOTA: Se este computador não fizer parte de uma rede, não terá privilégios suficientes para se juntar a um domínio, ou se simplesmente não sabe que escolher, então seleccione ""Grupo de trabalho"" por agora. Ésta opção pode ser alterada mais tarde.", IDC_STATIC, 33, 107, 263, 50
