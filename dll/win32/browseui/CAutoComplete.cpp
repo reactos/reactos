@@ -1393,7 +1393,7 @@ VOID CAutoComplete::RepositionDropDown()
     // If Edit has no focus, don't open auto-complete
     if (!m_bEditHasFocus)
     {
-        ERR("!m_bEditHasFocus\n");
+        TRACE("!m_bEditHasFocus\n");
         return;
     }
 
