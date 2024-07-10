@@ -1399,7 +1399,7 @@ FontLink_Chain_LoadReg(
         szzFontLink[_countof(szzFontLink) - 2] = UNICODE_NULL;
 
         FontLinkSize = SZZ_GetSize(szzFontLink);
-        pszzFontLink = ExAllocatePoolWithTag(PagedPool, FontLinkSize, TAG_FONT);
+        pszzFontLink = ExAllocatePoolWithTag(NonPagedPool, FontLinkSize, TAG_FONT);
         if (!pszzFontLink)
             return STATUS_NO_MEMORY;
         RtlCopyMemory(pszzFontLink, szzFontLink, FontLinkSize);
