@@ -220,7 +220,8 @@ FontLink_Chain_Free(
     if (!FontLink_Chain_IsPopulated(pChain)) // The chain is not populated yet
         return;
 
-    ExFreePoolWithTag(pChain->pszzFontLink, TAG_FONT);
+    if (pChain->pszzFontLink)
+        ExFreePoolWithTag(pChain->pszzFontLink, TAG_FONT);
 
     while (!IsListEmpty(&pChain->FontLinkList))
     {
