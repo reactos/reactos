@@ -567,10 +567,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_IMPORT_PROMPT              "Adăugarea de informații poate în mod neintenționat modifica sau șterge valori (de registru) și cauza funcționare incorectă. Dacă nu aveți încredere în sursa acestei informații din „%s”, nu o adăugați în registru.\n\nSigur doriți să continuați?"
-    IDS_IMPORT_OK                  "Cheile și valorile conținute în „%s” au fost adăugate cu succes în registru."
-    IDS_IMPORT_ERROR               "„%s” nu a putut fi importat: Eroare la deschiderea fișierului. Poate fi o problemă a mediului de stocare, a sistemului de fișiere sau fișierul în cauză să nu existe."
-    IDS_EXPORT_ERROR               "„%s” nu a putut fi exportat: Eroare la crearea sau scrierea în fișier. Poate fi o problemă a mediului de stocare sau a sistemului de fișiere."
+    IDS_IMPORT_PROMPT "Adăugarea de informații poate în mod neintenționat modifica sau șterge valori (de registru) și cauza funcționare incorectă. Dacă nu aveți încredere în sursa acestei informații din „%s”, nu o adăugați în registru.\n\nSigur doriți să continuați?"
+    IDS_IMPORT_OK "Cheile și valorile conținute în „%s” au fost adăugate cu succes în registru."
+    IDS_IMPORT_ERROR "„%s” nu a putut fi importat: Eroare la deschiderea fișierului. Poate fi o problemă a mediului de stocare, a sistemului de fișiere sau fișierul în cauză să nu existe."
+    IDS_EXPORT_ERROR "„%s” nu a putut fi exportat: Eroare la crearea sau scrierea în fișier. Poate fi o problemă a mediului de stocare sau a sistemului de fișiere."
 END
 
 STRINGTABLE
@@ -666,8 +666,8 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_B
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Domeniul de export", IDC_STATIC, 2, 0, 366, 48
-    CONTROL "T&ot registrul", IDC_EXPORT_ALL, "Button", BS_AUTORADIOBUTTON, 10, 10, 65, 11
-    CONTROL "&Doar ramura selectată", IDC_EXPORT_BRANCH, "Button", BS_AUTORADIOBUTTON, 10, 22, 100, 11
+    AUTORADIOBUTTON "T&ot registrul", IDC_EXPORT_ALL, 10, 10, 99, 11, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Doar ramura selectată", IDC_EXPORT_BRANCH, 10, 22, 99, 11
     EDITTEXT IDC_EXPORT_BRANCH_TEXT, 30, 34, 335, 12
 END
 
