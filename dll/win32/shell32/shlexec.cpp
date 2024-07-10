@@ -491,7 +491,7 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
 
     /* make sure we don't fail the CreateProcess if the calling app passes in
      * a bad working directory */
-    if (psei->lpDirectory && psei->lpDirectory[0])
+    if (!StrIsNullOrEmpty(psei->lpDirectory))
     {
         DWORD attr = GetFileAttributesW(psei->lpDirectory);
         if (attr != INVALID_FILE_ATTRIBUTES && attr & FILE_ATTRIBUTE_DIRECTORY)
@@ -1558,8 +1558,7 @@ static HRESULT ShellExecute_ContextMenuVerb(LPSHELLEXECUTEINFOW sei)
     __SHCloneStrWtoA(&parameters, sei->lpParameters);
 
     BOOL fDefault = !sei->lpVerb || !sei->lpVerb[0];
-    CMINVOKECOMMANDINFOEX ici = { sizeof(ici) };
-    ici.fMask = (sei->fMask & (SEE_MASK_NO_CONSOLE | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI)) | CMIC_MASK_UNICODE;
+    CMINVOKECOMMANDINFOEX ici = { sizeof(ici), SeeFlagsToCmicFlags(sei->fMask) | CMIC_MASK_UNICODE };
     ici.nShow = sei->nShow;
     if (!fDefault)
     {
@@ -1574,15 +1573,18 @@ static HRESULT ShellExecute_ContextMenuVerb(LPSHELLEXECUTEINFOW sei)
         ici.fMask |= CMIC_MASK_HASLINKNAME;
         ici.lpTitleW = sei->lpClass;
     }
+    ici.dwHotKey = sei->dwHotKey;
+    ici.hIcon = sei->hIcon;
 
+    enum { idFirst = 1, idLast = 0x7fff };
     HMENU hMenu = CreatePopupMenu();
-    hr = cm->QueryContextMenu(hMenu, 0, 1, 0x7fff, fDefault ? CMF_DEFAULTONLY : 0);
+    hr = cm->QueryContextMenu(hMenu, 0, idFirst, idLast, fDefault ? CMF_DEFAULTONLY : 0);
     if (!FAILED_UNEXPECTEDLY(hr))
     {
         if (fDefault)
         {
             INT uDefault = GetMenuDefaultItem(hMenu, FALSE, 0);
-            uDefault = (uDefault != -1) ? uDefault - 1 : 0;
+            uDefault = (uDefault != -1) ? uDefault - idFirst : 0;
             ici.lpVerb = MAKEINTRESOURCEA(uDefault);
             ici.lpVerbW = MAKEINTRESOURCEW(uDefault);
         }
@@ -1596,7 +1598,6 @@ static HRESULT ShellExecute_ContextMenuVerb(LPSHELLEXECUTEINFOW sei)
 
     return hr;
 }
-
 
 
 /*************************************************************************
@@ -1674,6 +1675,8 @@ static UINT_PTR SHELL_execute_class(LPCWSTR wszApplicationName, LPSHELLEXECUTEIN
                              &resultLen, (psei->lpDirectory && *psei->lpDirectory) ? psei->lpDirectory : NULL);
         if (!done && wszApplicationName[0])
         {
+#if 0       // Given HKCR\.test=SZ:"test" and HKCR\test\shell\open\command=SZ:"cmd.exe /K echo.Hello", no filename is
+            // appended on Windows when there is no %1 nor %L when executed with: shlextdbg.exe /shellexec=c:\file.test /INVOKE
             strcatW(wcmd, L" ");
             if (*wszApplicationName != '"')
             {
@@ -1683,6 +1686,7 @@ static UINT_PTR SHELL_execute_class(LPCWSTR wszApplicationName, LPSHELLEXECUTEIN
             }
             else
                 strcatW(wcmd, wszApplicationName);
+#endif
         }
         if (resultLen > ARRAY_SIZE(wcmd))
             ERR("Argify buffer not large enough... truncating\n");

@@ -609,6 +609,12 @@ struct CCoInit
 #define S_GREATERTHAN S_FALSE
 #define MAKE_COMPARE_HRESULT(x) ((x)>0 ? S_GREATERTHAN : ((x)<0 ? S_LESSTHAN : S_EQUAL))
 
+#define SEE_CMIC_COMMON_BASICFLAGS (SEE_MASK_NOASYNC | SEE_MASK_ASYNCOK | SEE_MASK_UNICODE | \
+                                    SEE_MASK_NO_CONSOLE | SEE_MASK_FLAG_NO_UI | SEE_MASK_FLAG_SEPVDM | \
+                                    SEE_MASK_FLAG_LOG_USAGE | SEE_MASK_NOZONECHECKS)
+#define SEE_CMIC_COMMON_FLAGS      (SEE_CMIC_COMMON_BASICFLAGS | SEE_MASK_HOTKEY | SEE_MASK_ICON | \
+                                    SEE_MASK_HASLINKNAME | SEE_MASK_HASTITLE)
+
 static inline BOOL ILIsSingle(LPCITEMIDLIST pidl)
 {
     return pidl == ILFindLastID(pidl);
@@ -784,7 +790,18 @@ DataObject_SetOffset(IDataObject* pDataObject, POINT* point)
     return DataObject_SetData(pDataObject, g_cfShellIdListOffsets, point, sizeof(point[0]));
 }
 
-#endif
+static inline bool IsUnicode(CMINVOKECOMMANDINFOEX &ici)
+{
+    const UINT minsize = FIELD_OFFSET(CMINVOKECOMMANDINFOEX, ptInvoke);
+    return (ici.fMask & CMIC_MASK_UNICODE) && ici.cbSize >= minsize;
+}
+
+static inline bool IsUnicode(CMINVOKECOMMANDINFO &ici)
+{
+    return IsUnicode(*(CMINVOKECOMMANDINFOEX*)&ici);
+}
+
+#endif // __cplusplus
 
 #ifdef __cplusplus
 struct SHELL_GetSettingImpl
