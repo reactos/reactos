@@ -1,9 +1,9 @@
 /*
-+ * PROJECT:     ReactOS Adapter Shell Extension
-+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
-+ * PURPOSE:     Portuguese (Portugal) resource translation
-+ * COPYRIGHT:   Copyright 2019 2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
-+ */
+ * PROJECT:     ReactOS Adapter Shell Extension
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Portuguese (Portugal) resource translation
+ * COPYRIGHT:   Copyright 2019 - 2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
@@ -37,7 +37,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     DEFPUSHBUTTON "OK", IDOK, 112, 115, 50, 15
     PUSHBUTTON "Cancelar", IDCANCEL, 167, 115, 50, 15
-    GROUPBOX "Lista de modos válidos", -1, 6, 7, 212, 98
+    GROUPBOX "&Lista de modos válidos", -1, 6, 7, 212, 98
     LISTBOX IDC_ALLVALIDMODES, 10, 20, 204, 87, LBS_NOTIFY | WS_VSCROLL
 END
 
