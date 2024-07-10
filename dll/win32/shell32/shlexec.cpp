@@ -1738,6 +1738,54 @@ static BOOL SHELL_translate_idlist(LPSHELLEXECUTEINFOW sei, LPWSTR wszParameters
     return appKnownSingular;
 }
 
+BOOL SHELL_OpenPIDL(LPSHELLEXECUTEINFOW sei, LPCITEMIDLIST pidl)
+{
+    CComPtr<IShellFolder> psfFolder;
+    LPCITEMIDLIST ppidlLast;
+    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psfFolder), &ppidlLast);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return FALSE;
+
+    CComPtr<IContextMenu> pCM;
+    hr = psfFolder->GetUIObjectOf(NULL, 1, &ppidlLast, IID_NULL_PPV_ARG(IContextMenu, &pCM));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return FALSE;
+
+    HMENU hMenu = CreatePopupMenu();
+    const INT idCmdFirst = 1, idCmdLast = 0x7FFF;
+    hr = pCM->QueryContextMenu(hMenu, 0, idCmdFirst, idCmdLast, CMF_NORMAL);
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        DestroyMenu(hMenu);
+        return FALSE;
+    }
+
+    INT nDefaultID = GetMenuDefaultItem(hMenu, FALSE, 0);
+    if (nDefaultID == -1)
+        nDefaultID = idCmdFirst;
+
+    DestroyMenu(hMenu);
+
+    CMINVOKECOMMANDINFO ici = { sizeof(ici) };
+    ici.fMask = (sei->fMask & (SEE_MASK_NO_CONSOLE | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI));
+    ici.nShow = sei->nShow;
+    ici.hwnd = sei->hwnd;
+    char szVerb[64];
+    if (sei->lpVerb)
+    {
+        WideCharToMultiByte(CP_ACP, 0, sei->lpVerb, -1, szVerb, _countof(szVerb), NULL, NULL);
+        szVerb[_countof(szVerb) - 1] = ANSI_NULL;
+        ici.lpVerb = szVerb;
+    }
+    else
+    {
+        ici.lpVerb = MAKEINTRESOURCEA(nDefaultID - idCmdFirst);
+    }
+
+    hr = pCM->InvokeCommand(&ici);
+    return !FAILED_UNEXPECTEDLY(hr);
+}
+
 static UINT_PTR SHELL_quote_and_execute(LPCWSTR wcmd, LPCWSTR wszParameters, LPCWSTR wszKeyname, LPCWSTR wszApplicationName, LPWSTR env, LPSHELLEXECUTEINFOW psei, LPSHELLEXECUTEINFOW psei_out, SHELL_ExecuteW32 execfunc)
 {
     UINT_PTR retval;
@@ -2029,6 +2077,14 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
             do_error_dialog(retval, sei_tmp.hwnd, wszApplicationName);
         }
         return retval > 32;
+    }
+
+    if (!(sei_tmp.fMask & SEE_MASK_IDLIST))
+    {
+        CComHeapPtr<ITEMIDLIST> pidlParsed;
+        HRESULT hr = SHParseDisplayName(sei_tmp.lpFile, NULL, &pidlParsed, SFGAO_STORAGECAPMASK, NULL);
+        if (SUCCEEDED(hr))
+            return SHELL_OpenPIDL(&sei_tmp, pidlParsed);
     }
 
     /* Has the IDList not yet been translated? */
