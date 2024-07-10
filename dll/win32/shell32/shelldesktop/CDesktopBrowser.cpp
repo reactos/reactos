@@ -235,13 +235,12 @@ HRESULT CDesktopBrowser::Initialize(IShellDesktopTray *ShellDesk)
     if (FAILED_UNEXPECTEDLY(hRet))
         return hRet;
 
-    SHELLSTATE shellstate;
-    shellstate.fHideIcons = FALSE;
-    SHGetSetSettings(&shellstate, SSF_HIDEICONS, FALSE);
+    BOOL fHideIcons = SHELL_GetSetting(SSF_HIDEICONS, fHideIcons);
     FOLDERSETTINGS fs;
     RECT rcShellView = {0,0,0,0};
     fs.ViewMode = FVM_ICON;
-    fs.fFlags = FWF_DESKTOP | FWF_NOCLIENTEDGE | FWF_NOSCROLL | FWF_TRANSPARENT | FWF_AUTOARRANGE | (shellstate.fHideIcons ? FWF_NOICONS : 0);
+    fs.fFlags = FWF_DESKTOP | FWF_NOCLIENTEDGE | FWF_NOSCROLL | FWF_TRANSPARENT |
+                FWF_AUTOARRANGE | (fHideIcons ? FWF_NOICONS : 0);
     hRet = m_ShellView->CreateViewWindow(NULL, &fs, (IShellBrowser *)this, &rcShellView, &m_hWndShellView);
     if (FAILED_UNEXPECTEDLY(hRet))
         return hRet;
@@ -361,8 +360,8 @@ HRESULT STDMETHODCALLTYPE CDesktopBrowser::SetToolbarItems(LPTBBUTTON lpButtons,
 
 HRESULT STDMETHODCALLTYPE CDesktopBrowser::GetPropertyBag(long flags, REFIID riid, void **ppv)
 {
-    DWORD deskpidl = 0;
-    return SHGetViewStatePropertyBag((LPITEMIDLIST)&deskpidl, L"Desktop", flags | SHGVSPB_ROAM, riid, ppv);
+    ITEMIDLIST deskpidl = {};
+    return SHGetViewStatePropertyBag(&deskpidl, L"Desktop", flags | SHGVSPB_ROAM, riid, ppv);
 }
 
 HRESULT STDMETHODCALLTYPE CDesktopBrowser::QueryService(REFGUID guidService, REFIID riid, PVOID *ppv)

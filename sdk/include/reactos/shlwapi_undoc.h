@@ -187,6 +187,7 @@ HRESULT WINAPI SHPropertyBag_WritePOINTS(IPropertyBag *ppb, LPCWSTR pszPropName,
 HRESULT WINAPI SHPropertyBag_WriteRECTL(IPropertyBag *ppb, LPCWSTR pszPropName, const RECTL *prcl);
 
 HRESULT WINAPI SHCreatePropertyBagOnMemory(_In_ DWORD dwMode, _In_ REFIID riid, _Out_ void **ppvObj);
+
 HRESULT WINAPI
 SHCreatePropertyBagOnRegKey(
     _In_ HKEY hKey,
@@ -202,6 +203,7 @@ SHCreatePropertyBagOnProfileSection(
     _In_ DWORD dwMode,
     _In_ REFIID riid,
     _Out_ void **ppvObj);
+
 EXTERN_C HRESULT WINAPI
 IUnknown_QueryServicePropertyBag(
     _In_ IUnknown *punk,

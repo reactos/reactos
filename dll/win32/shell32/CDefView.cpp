@@ -3205,7 +3205,7 @@ HRESULT CDefView::LoadViewState()
         {
             for (UINT i = 0; i < cols.Count; ++i)
             {
-                failed |= !DPA_SetPtr(m_LoadColumnsList, i, (void*)(SIZE_T)cols.Columns[i]);
+                failed |= !DPA_SetPtr(m_LoadColumnsList, i, UlongToPtr(cols.Columns[i]));
             }
         }
         if (failed || !cols.Count)
@@ -3254,14 +3254,14 @@ HRESULT CDefView::SaveViewState(IStream *pStream)
     hr = IUnknown_QueryServicePropertyBag(m_pShellBrowser, SHGVSPB_FOLDER, IID_PPV_ARG(IPropertyBag, &pPB));
     if (SUCCEEDED(hr))
     {
-        UINT u32;
-        GetCurrentViewMode(&u32);
-        hr = SHPropertyBag_WriteDWORD(pPB, L"Mode", u32);
+        UINT uViewMode;
+        GetCurrentViewMode(&uViewMode);
+        hr = SHPropertyBag_WriteDWORD(pPB, L"Mode", uViewMode);
         SHPropertyBag_WriteDWORD(pPB, L"FFlags", m_FolderSettings.fFlags);
         SHPropertyBag_WriteDWORD(pPB, L"Sort", cvs.SortColId);
         SHPropertyBag_WriteDWORD(pPB, L"SortDir", cvs.SortDir);
         pStream = cols.Count ? SHCreateMemStream((LPBYTE)&cols, cbColumns) : NULL;
-        if (!pStream|| FAILED(SHPropertyBag_WriteStream(pPB, L"ColInfo", pStream)))
+        if (!pStream || FAILED(SHPropertyBag_WriteStream(pPB, L"ColInfo", pStream)))
             SHPropertyBag_Delete(pPB, L"ColInfo");
 #if 0 // TODO
         WCHAR name[MAX_PATH];
@@ -3298,7 +3298,7 @@ HRESULT WINAPI CDefView::SaveViewState()
     return S_FALSE;
 }
 
-#define UPDATEFOLDERVIEWFLAGS(bits, bit, on) ( (bits) = ((bits) & ~(bit)) | ((on) ? (bit) : 0) )
+#define UPDATEFOLDERVIEWFLAGS(bits, bit, set) ( (bits) = ((bits) & ~(bit)) | ((set) ? (bit) : 0) )
 void CDefView::UpdateFolderViewFlags()
 {
     UPDATEFOLDERVIEWFLAGS(m_FolderSettings.fFlags, FWF_AUTOARRANGE, GetAutoArrange() == S_OK);
@@ -3416,11 +3416,8 @@ FOLDERVIEWMODE CDefView::GetDefaultViewMode()
 {
     FOLDERVIEWMODE mode = ((m_FolderSettings.fFlags & FWF_DESKTOP) || !IsOS(OS_SERVERADMINUI)) ? FVM_ICON : FVM_DETAILS;
     FOLDERVIEWMODE temp;
-    if (SUCCEEDED(_DoFolderViewCB(SFVM_DEFVIEWMODE, 0, (LPARAM)&temp)))
-    {
-        if (temp >= FVM_FIRST && temp <= FVM_LAST)
-            mode = temp;
-    }
+    if (SUCCEEDED(_DoFolderViewCB(SFVM_DEFVIEWMODE, 0, (LPARAM)&temp)) && temp >= FVM_FIRST && temp <= FVM_LAST)
+        mode = temp;
     return mode;
 }
 
@@ -3703,7 +3700,7 @@ HRESULT STDMETHODCALLTYPE CDefView::CreateViewWindow3(IShellBrowser *psb, IShell
         else
             FIXME("Ignoring unrecognized VID %s\n", debugstr_guid(view_id));
     }
-    const UINT requestedviewmode = m_FolderSettings.ViewMode;
+    const UINT requestedViewMode = m_FolderSettings.ViewMode;
 
     /* Get our parent window */
     m_pShellBrowser->GetWindow(&m_hWndParent);
@@ -3717,7 +3714,7 @@ HRESULT STDMETHODCALLTYPE CDefView::CreateViewWindow3(IShellBrowser *psb, IShell
 
     LoadViewState();
     if (view_flags & SV3CVW3_FORCEVIEWMODE)
-        m_FolderSettings.ViewMode = requestedviewmode;
+        m_FolderSettings.ViewMode = requestedViewMode;
     if (view_flags & SV3CVW3_FORCEFOLDERFLAGS)
         m_FolderSettings.fFlags = (mask & flags) & ~IGNORE_FWF;
 
