@@ -153,7 +153,7 @@ public:
     static LPCWSTR GetWndClassName() { return WC_DROPDOWNW; }
     BOOL m_bInSetText; // this flag avoids subsequent action in WM_SETTEXT
     BOOL m_bInSelectItem; // this flag avoids subsequent action in LVN_ITEMCHANGED
-    BOOL m_bEditHasFocus; // This flag watchs the focus status
+    BOOL m_bEditHasFocus;
 
     // public methods
     CAutoComplete();
