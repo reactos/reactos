@@ -126,8 +126,8 @@ BEGIN
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "Файл &журнала:", IDC_STATIC, 7, 41, 60, 8
     EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-// The following 4 IDC_STATIC shall have an accelerator in ReactOS, although MS doesn't have accels for them.
-// Dear Translators: First fill out ALL accels that MS brings as well in this dialog for your language,
+// The following 4 IDC_STATIC shall have accels in ReactOS, although MS doesn't have accels for them.
+// Translation note: First fill out ALL accels that MS has in this dialog for your language,
 // and only then as a final step use some remaining unused letters for those 4 controls!
     LTEXT "&Размер:", IDC_STATIC, 7, 57, 60, 8
     EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
