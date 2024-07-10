@@ -1,8 +1,8 @@
 /*
- * PROJECT:     ReactOS Network wizard Shell extension
+ * PROJECT:     ReactOS Network Places Wizard
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Portuguese (Portugal) resource file
- * COPYRIGHT:   Copyright 2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ * TRANSLATOR:  Copyright 2020-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
  */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
