@@ -3269,7 +3269,7 @@ HRESULT CDefView::SaveViewState(IStream *pStream)
         if (SHGetPerScreenResName(name + 7, _countof(name) - 7, 0))
         {
             if (GetAutoArrange() == S_FALSE)
-                ...
+                // TODO: Save listview item positions
             else
                 SHPropertyBag_Delete(pPB, name);
         }

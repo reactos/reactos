@@ -663,7 +663,7 @@ public:
     void SaveState()
     {
         if (SHRestricted(REST_NOSAVESET))
-            return ;
+            return;
 
         SendMessage(m_DesktopWnd, WM_PROGMAN_SAVESTATE, 0, 0);
     }
