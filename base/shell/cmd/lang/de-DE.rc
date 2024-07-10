@@ -243,6 +243,7 @@ Variable1==Variable2\n\
 EXIST Dateiname   Bedingung ist erfüllt, wenn die angegebene Datei existiert.\n\
 DEFINED Variable  Bedingung ist erfüllt, wenn die angegebene Datei definiert\n\
                   wurde."
+    STRING_DATE_NOW "Aktuelles Datum: "
     STRING_TIME_NOW "Aktuelle Zeit: "
     STRING_MKDIR_HELP "Erzeugt ein Verzeichnis.\n\n\
 MKDIR [Laufwerk:]Pfad\nMD [Laufwerk:]Pfad"

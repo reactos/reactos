@@ -239,6 +239,7 @@ parancs           Ezt a parancsot hajtsa végre, ha igaz a feltétel.\n\
 string1==string2  Igaz a feltétel, ha a megadott sztringek egyenlőek.\n\
 EXIST fájlnév     Igaz a feltétel, ha a megadott fájl létezik.\n\
 DEFINED változó   Igaz a feltétel, ha a megadott változó definiálva van.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "Az aktuális idő: "
     STRING_MKDIR_HELP "Létrehoz egy új mappát.\n\n\
 MKDIR [meghajtó:]útvonal\nMD [meghajtó:]útvonal"

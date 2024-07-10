@@ -251,6 +251,7 @@ komenda           Komenda do wykonania, gdy warunek będzie spełniony.\n\
 ciąg1==ciąg2      Zwraca PRAWDA, gdy oba ciągi znaków są identyczne\n\
 EXIST plik        Zwraca PRAWDA, jeśli podany plik istnieje.\n\
 DEFINED zmienna   Zwraca PRAWDA, jeśli podana zmienna została zdefiniowana\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "Czas bieżący: "
     STRING_MKDIR_HELP "Tworzy katalog.\n\n\
 MKDIR [napęd:]ścieżka\nMD [napęd:]ścieżka"

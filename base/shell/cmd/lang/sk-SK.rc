@@ -250,6 +250,7 @@ string1==string2  Specifies a true condition if the specified text strings\n\
 EXIST filename    Specifies a true condition if the specified filename exists.\n\
 DEFINED variable  Specifies a true condition if the specified variable is\n\
                   defined.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "Aktuálny čas je: "
     STRING_MKDIR_HELP "Creates a directory.\n\n\
 MKDIR [drive:]path\nMD [drive:]path"

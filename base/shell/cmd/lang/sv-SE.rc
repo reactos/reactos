@@ -243,6 +243,7 @@ sträng1==sträng2  Anger ett uppfyllt villkor om textsträngarna är lika\n\
 EXIST filnamn     Anger ett uppfyllt villkor om angivet filnamn existerar.\n\
 DEFINED variabel  Anger ett uppfyllt villkor om angiven variabel är\n\
                   definerad.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "Aktuell tid är: "
     STRING_MKDIR_HELP "Skapar en mapp.\n\n\
 MKDIR [enhet:]mapp\nMD [enhet:]mapp"

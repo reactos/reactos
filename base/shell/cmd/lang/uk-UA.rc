@@ -255,6 +255,7 @@ ERRORLEVEL число  Ця умова є iстинною, якщо код, що
 EXIST iм'я_файлу  Умова є iстинною, якщо файл з вказаним iменем iснує.\n\
 DEFINED змiнна    Ця умова є iстинною, якщо вказана змiнна\n\
                   задана.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "Поточний час: "
     STRING_MKDIR_HELP "Створення каталогу.\n\n\
 MKDIR [диск:]шлях\nMD [диск:]шлях"

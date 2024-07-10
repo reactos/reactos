@@ -244,6 +244,7 @@ command           Koşul karşılanırsa yürütülecek komutu belirtir.\n\
 dizi1==dizi2      Belirtilen metin dizeleri eşleşirse doğru bir koşul belirtir\n\
 EXIST dosya_adi   Belirtilen dosya adı mevcutsa doğru bir koşul belirtir.\n\
 DEFINED variable  Belirtilen değişken tanımlanmışsa doğru bir koşul belirtir\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "Şimdiki zaman: "
     STRING_MKDIR_HELP "Bir dizin oluşturur.\n\n\
 MKDIR [sürücü:]yol\nMD [sürücü:]yol"

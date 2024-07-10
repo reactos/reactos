@@ -248,6 +248,7 @@ string1==string2  Përcakton një kusht të vërtetë nëse vargjet e specifikua
 EXIST filename    Përcakton një kusht të vërtetë, nëse ekziston dokumenti i specifikuar.\n\
 DEFINED variable  Përcakton një kusht të vërtetë nëse variabli është specifikuar\n\
                   dhe karakterizuar.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "Koha e tanishme është: "
     STRING_MKDIR_HELP "Krijon një skedë.\n\n\
 MKDIR [drive:]rrugë\nMD [drive:]rrugë"

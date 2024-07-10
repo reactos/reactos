@@ -237,6 +237,7 @@ ERRORLEVEL 数字    当上一个程序返回一个大于或等于指定数字�
 字符串1==字符串2   当所指定的字符串相匹配时为真。\n\
 EXIST 文件名       当指定的文件名存在时为真。\n\
 DEFINED 变量       当指定的变量已被定义时为真。\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "当前时间是： "
     STRING_MKDIR_HELP "创建一个目录。\n\n\
 MKDIR [驱动器:]路径\nMD [驱动器:]路径"

@@ -258,6 +258,7 @@ commande          Indique la commande à lancer si la condition est vérifiée.\
 chaine1==chaine2  La condition sera vraie si les deux chaines sont identiques.\n\
 EXIST nomfichier  La condition sera vraie si le fichier spécifié existe.\n\
 DEFINED variable  La condition sera vraie si la variable indiquée est définie."
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "L'heure actuelle est : "
     STRING_MKDIR_HELP "Crée un répertoire.\n\n\
 MKDIR [lecteur:]chemin\nMD [lecteur:]chemin"

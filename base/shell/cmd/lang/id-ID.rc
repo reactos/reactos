@@ -245,6 +245,7 @@ string1==string2  Menetapkan kondisi benar jika string teks yang ditetapkan\n\
                   sama.\n\
 EXIST filename    Menetapkan kondisi benar jika nama file ada.\n\
 DEFINED variable  Menetapkan kondisi benar jika variabel didefinisikan.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "Waktu saat ini: "
     STRING_MKDIR_HELP "Membuat direktori.\n\n\
 MKDIR [drive:]path\nMD [drive:]path"

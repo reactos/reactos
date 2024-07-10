@@ -260,6 +260,7 @@ EXIST ficheiro     Especifica uma condição verdadeira se o nome do ficheiro\n\
                    especificado existir.\n\
 DEFINED variável   Especifica uma condição verdadeira se a variável especificada\n\
                    for definida.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "A hora actual é: "
     STRING_MKDIR_HELP "Cria um directório.\n\n\
 MKDIR [unidade:] caminho\nMD [unidade:] caminho"

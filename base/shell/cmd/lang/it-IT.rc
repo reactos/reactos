@@ -245,6 +245,7 @@ command           E' il comando da eseguire se la condizione è verificata.\n\
 string1==string2  E' verificata se sono uguali le due stringhe\n\
 EXIST nomefile    E' verificata se il file esiste.\n\
 DEFINED variabile E' verificata se la variabile è definita.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "L'ora attuale è: "
     STRING_MKDIR_HELP "Crea una cartella.\n\n\
 MKDIR [disco:]percorso\nMD    [disco:]percorso"

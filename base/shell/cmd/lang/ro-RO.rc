@@ -280,6 +280,7 @@ O etichetă va fi definită pe un rând întreg, începând cu două puncte (:).
                     fișierului specificat.\n\
   DEFINED variablă  Determină o condiție satisfăcută dacă «variabilă»\n\
                     a fost anterior definită.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "Ora curentă este: "
     STRING_MKDIR_HELP "Crează un director.\n\n\
 MD [disc:]cale\nMKDIR [disc:]cale\n"

@@ -251,6 +251,7 @@ EXIST ファイル名  指定したファイル名が存在するときに条件
                   指定します。\n\
 DEFINED 変数      指定した変数が定義されているときに条件が真になるように\n\
                   指定します。\n"
+    STRING_DATE_NOW "現在の日付は: "
     STRING_TIME_NOW "現在時刻は: "
     STRING_MKDIR_HELP "ディレクトリを作成します。\n\n\
 MKDIR [ドライブ:]パス\n\
