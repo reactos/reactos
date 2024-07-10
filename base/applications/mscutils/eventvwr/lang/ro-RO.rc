@@ -222,14 +222,14 @@ END
 STRINGTABLE
 BEGIN
     IDS_COPY "\
-Tip eveniment:       %s\r\n\
-Sursă eveniment:     %s\r\n\
-Categorie eveniment: %s\r\n\
-ID eveniment:        %s\r\n\
-Dată:                %s\r\n\
-Oră:                 %s\r\n\
-Utilizator:          %s\r\n\
-Calculator:          %s\r\n\
+Tip eveniment:          %s\r\n\
+Sursă eveniment:        %s\r\n\
+Categorie eveniment:    %s\r\n\
+ID eveniment:           %s\r\n\
+Dată:                   %s\r\n\
+Oră:                    %s\r\n\
+Utilizator:             %s\r\n\
+Calculator:             %s\r\n\
 Descriere:\r\n%s"
 END
 

@@ -220,15 +220,15 @@ END
 STRINGTABLE
 BEGIN
     IDS_COPY "\
-Typ:       %s\r\n\
-Zdroj:     %s\r\n\
-Kategorie: %s\r\n\
-ID:        %s\r\n\
-Datum:     %s\r\n\
-Čas:       %s\r\n\
-Uživatel:  %s\r\n\
-Počítač:   %s\r\n\
-Popis:     \r\n%s"
+Typ:        %s\r\n\
+Zdroj:      %s\r\n\
+Kategorie:  %s\r\n\
+ID:         %s\r\n\
+Datum:      %s\r\n\
+Čas:        %s\r\n\
+Uživatel:   %s\r\n\
+Počítač:    %s\r\n\
+Popis:\r\n%s"
 END
 
 STRINGTABLE

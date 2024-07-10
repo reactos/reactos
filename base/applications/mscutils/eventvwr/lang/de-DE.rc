@@ -221,14 +221,14 @@ END
 STRINGTABLE
 BEGIN
     IDS_COPY "\
-Typ:         %s\r\n\
-Quelle:      %s\r\n\
-Kategorie:   %s\r\n\
-Ereignis-ID: %s\r\n\
-Datum:       %s\r\n\
-Zeit:        %s\r\n\
-Benutzer:    %s\r\n\
-Computer:    %s\r\n\
+Typ:            %s\r\n\
+Quelle:         %s\r\n\
+Kategorie:      %s\r\n\
+Ereignis-ID:    %s\r\n\
+Datum:          %s\r\n\
+Zeit:           %s\r\n\
+Benutzer:       %s\r\n\
+Computer:       %s\r\n\
 Beschreibung:\r\n%s"
 END
 
