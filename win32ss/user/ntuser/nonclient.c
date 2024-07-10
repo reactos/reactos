@@ -1478,7 +1478,7 @@ NC_DoButton(PWND pWnd, WPARAM wParam, LPARAM lParam)
       case HTCLOSE:
          SysMenu = IntGetSystemMenu(pWnd, FALSE);
          MenuState = IntGetMenuState(SysMenu ? UserHMGetHandle(SysMenu) : NULL, SC_CLOSE, MF_BYCOMMAND); /* in case of error MenuState==0xFFFFFFFF */
-         if (!(Style & WS_SYSMENU) || (MenuState & (MF_GRAYED|MF_DISABLED)) || (pWnd->style & CS_NOCLOSE))
+         if (!(Style & WS_SYSMENU) || (MenuState & (MF_GRAYED|MF_DISABLED)) || (pWnd->pcls->style & CS_NOCLOSE))
             return;
          ButtonType = DFCS_CAPTIONCLOSE;
          SCMsg = SC_CLOSE;
