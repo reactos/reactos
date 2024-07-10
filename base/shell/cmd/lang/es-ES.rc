@@ -247,6 +247,7 @@ comando           Especifica el comando a ejecutar si se cumple la condición.\n
 string1==string2  Especifica una condición verdadera si las cadenas de texto coinciden.\n\
 EXIST archivo     Especifica una condición verdadera si existe el archivo especificado.\n\
 DEFINED variable  Especifica una condición verdadera si la variable está definida.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "La hora actual es: "
     STRING_MKDIR_HELP "Crea un directorio.\n\n\
 MKDIR [unidad:]ruta\nMD [unidad:]ruta"
@@ -478,7 +479,6 @@ title         Nuevo título\n"
     STRING_GOTO_ERROR2 "La etiqueta '%s' no se encuentra\n"
     STRING_MD_ERROR "A subdirectory or file %s already exists.\n"
     STRING_MD_ERROR2 "The path to the new folder does not exist.\n"
-    STRING_DATE_CURRENT_DATE "The current date is: "
     STRING_MOVE_ERROR1 "[Correcto]\n"
     STRING_MOVE_ERROR2 "[Error]\n"
     STRING_REN_ERROR "MoveFile() falló. Error: %lu\n"

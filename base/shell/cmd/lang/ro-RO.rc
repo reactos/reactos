@@ -280,6 +280,7 @@ O etichetă va fi definită pe un rând întreg, începând cu două puncte (:).
                     fișierului specificat.\n\
   DEFINED variablă  Determină o condiție satisfăcută dacă «variabilă»\n\
                     a fost anterior definită.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "Ora curentă este: "
     STRING_MKDIR_HELP "Crează un director.\n\n\
 MD [disc:]cale\nMKDIR [disc:]cale\n"
@@ -511,7 +512,6 @@ titlu         Noul titlu.\n"
     STRING_GOTO_ERROR2 "Eticheta «%s» nu a fost găsită\n"
     STRING_MD_ERROR "Există deja un fișier sau un subdirector %s cu acest nume.\n"
     STRING_MD_ERROR2 "Calea către noul director nu există.\n"
-    STRING_DATE_CURRENT_DATE "The current date is: "
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Eroare]\n"
     STRING_REN_ERROR "A eșuat MoveFile(). Eroarea: %lu\n"

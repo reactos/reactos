@@ -260,6 +260,7 @@ EXIST ficheiro     Especifica uma condição verdadeira se o nome do ficheiro\n\
                    especificado existir.\n\
 DEFINED variável   Especifica uma condição verdadeira se a variável especificada\n\
                    for definida.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "A hora actual é: "
     STRING_MKDIR_HELP "Cria um directório.\n\n\
 MKDIR [unidade:] caminho\nMD [unidade:] caminho"
@@ -492,7 +493,6 @@ título      Novo título\n"
     STRING_GOTO_ERROR2 "Etiqueta '%s' não encontrada\n"
     STRING_MD_ERROR "Um ​​subdirectório ou ficheiro %s já existe.\n"
     STRING_MD_ERROR2 "O caminho para a nova pasta não existe.\n"
-    STRING_DATE_CURRENT_DATE "The current date is: "
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Erro]\n"
     STRING_REN_ERROR "MoveFile () falhou. Erro: %lu\n"

@@ -239,6 +239,7 @@ parancs           Ezt a parancsot hajtsa végre, ha igaz a feltétel.\n\
 string1==string2  Igaz a feltétel, ha a megadott sztringek egyenlőek.\n\
 EXIST fájlnév     Igaz a feltétel, ha a megadott fájl létezik.\n\
 DEFINED változó   Igaz a feltétel, ha a megadott változó definiálva van.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "Az aktuális idő: "
     STRING_MKDIR_HELP "Létrehoz egy új mappát.\n\n\
 MKDIR [meghajtó:]útvonal\nMD [meghajtó:]útvonal"
@@ -465,7 +466,6 @@ title         új cím\n"
     STRING_GOTO_ERROR2 "A(z) '%s' címke nem található\n"
     STRING_MD_ERROR "Egy %s nevű almappa vagy fájl már létezik.\n"
     STRING_MD_ERROR2 "Az útvonal az új mappához nem létezik.\n"
-    STRING_DATE_CURRENT_DATE "The current date is: "
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[HIBA]\n"
     STRING_REN_ERROR "MoveFile() sikertelen. Hiba: %lu\n"

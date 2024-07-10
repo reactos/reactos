@@ -250,6 +250,7 @@ string1==string2  Specifies a true condition if the specified text strings\n\
 EXIST filename    Specifies a true condition if the specified filename exists.\n\
 DEFINED variable  Specifies a true condition if the specified variable is\n\
                   defined.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "Aktuálny čas je: "
     STRING_MKDIR_HELP "Creates a directory.\n\n\
 MKDIR [drive:]path\nMD [drive:]path"
@@ -477,7 +478,6 @@ title         new title\n"
     STRING_GOTO_ERROR2 "Label '%s' not found\n"
     STRING_MD_ERROR "A subdirectory or file %s already exists.\n"
     STRING_MD_ERROR2 "The path to the new folder does not exist.\n"
-    STRING_DATE_CURRENT_DATE "The current date is: "
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Chyba]\n"
     STRING_REN_ERROR "MoveFile() failed. Error: %lu\n"

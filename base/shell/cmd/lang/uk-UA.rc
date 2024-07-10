@@ -255,6 +255,7 @@ ERRORLEVEL число  Ця умова є iстинною, якщо код, що
 EXIST iм'я_файлу  Умова є iстинною, якщо файл з вказаним iменем iснує.\n\
 DEFINED змiнна    Ця умова є iстинною, якщо вказана змiнна\n\
                   задана.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "Поточний час: "
     STRING_MKDIR_HELP "Створення каталогу.\n\n\
 MKDIR [диск:]шлях\nMD [диск:]шлях"
@@ -482,7 +483,6 @@ title         новий заголовок\n"
     STRING_GOTO_ERROR2 "Мiтка '%s' не знайдена\n"
     STRING_MD_ERROR "Пiдкаталог чи файл %s вже iснує.\n"
     STRING_MD_ERROR2 "Шлях до нового каталогу не iснує.\n"
-    STRING_DATE_CURRENT_DATE "The current date is: "
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Помилка]\n"
     STRING_REN_ERROR "Невдачне виконання MoveFile(). Помилка: %lu\n"

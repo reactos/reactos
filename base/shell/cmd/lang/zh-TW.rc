@@ -237,6 +237,7 @@ ERRORLEVEL 數字    當上一個程式返回一個大於或等於指定數字�
 字元串1==字元串2   當所指定的字元串相匹配時為 TRUE。\n\
 EXIST 檔案名稱     當指定的檔案名稱存在時為 TRUE。\n\
 DEFINED 變數       當指定的變數已被定義時為 TRUE。\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "目前的時間是： "
     STRING_MKDIR_HELP "建立一個目錄。\n\n\
 MKDIR [磁碟機:]路徑\nMD [磁碟機:]路徑"
@@ -455,7 +456,6 @@ RESTORE       恢復視窗\n\
     STRING_GOTO_ERROR2 "標籤 '%s' 未找到\n"
     STRING_MD_ERROR "%s 一個子目錄或檔案已存在。\n"
     STRING_MD_ERROR2 "新資料夾的路徑不存在。\n"
-    STRING_DATE_CURRENT_DATE "The current date is: "
     STRING_MOVE_ERROR1 "[成功]\n"
     STRING_MOVE_ERROR2 "[錯誤]\n"
     STRING_REN_ERROR "MoveFile() 失敗。錯誤碼：%lu\n"

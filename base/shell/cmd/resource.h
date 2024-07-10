@@ -128,6 +128,7 @@
 
 #define STRING_GOTO_HELP1 659
 
+#define STRING_DATE_NOW 665
 #define STRING_TIME_NOW 666
 
 #define STRING_MKDIR_HELP 667
@@ -213,7 +214,6 @@
 #define STRING_RMDIR_HELP2                 724
 #define STRING_MD_ERROR                    725
 #define STRING_MD_ERROR2                   726
-#define STRING_DATE_CURRENT_DATE           727
 
 #define STRING_MKLINK_CREATED_SYMBOLIC 738
 #define STRING_MKLINK_CREATED_HARD     739

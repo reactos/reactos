@@ -257,6 +257,7 @@ GOTO метка\n\n\
                       За этой командой может следовать ключевое слово ELSE,\n\
                       служащее для указания команды, которая должна\n\
                       выполняться в том случае, если условие ложно.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "Текущее время: "
     STRING_MKDIR_HELP "Создание каталога.\n\n\
 MKDIR [диск:]путь\nMD [диск:]путь"
@@ -488,7 +489,6 @@ RESTORE       восстанавливает окно\n\
     STRING_GOTO_ERROR2 "Метка '%s' не найдена\n"
     STRING_MD_ERROR "Подкаталог или файл %s уже существует.\n"
     STRING_MD_ERROR2 "Путь к новому каталогу не существует.\n"
-    STRING_DATE_CURRENT_DATE "The current date is: "
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Ошибка]\n"
     STRING_REN_ERROR "Выполнение MoveFile() было неудачным. Ошибка: %lu\n"

@@ -243,6 +243,7 @@ Variable1==Variable2\n\
 EXIST Dateiname   Bedingung ist erfüllt, wenn die angegebene Datei existiert.\n\
 DEFINED Variable  Bedingung ist erfüllt, wenn die angegebene Datei definiert\n\
                   wurde."
+    STRING_DATE_NOW "Aktuelles Datum: "
     STRING_TIME_NOW "Aktuelle Zeit: "
     STRING_MKDIR_HELP "Erzeugt ein Verzeichnis.\n\n\
 MKDIR [Laufwerk:]Pfad\nMD [Laufwerk:]Pfad"
@@ -471,7 +472,6 @@ Titel         neuer Titel"
     STRING_GOTO_ERROR2 "Sprungmarke '%s' wurde nicht gefunden\n"
     STRING_MD_ERROR "Unterverzeichnis oder Datei %s existiert bereits.\n"
     STRING_MD_ERROR2 "Der Pfad zum neuen Ordner existiert nicht.\n"//FIXME
-    STRING_DATE_CURRENT_DATE "Aktuelles Datum: "
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[FEHLER]\n"
     STRING_REN_ERROR "MoveFile() ist fehlgeschlagen. Fehler: %lu\n"

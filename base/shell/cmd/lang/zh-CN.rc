@@ -237,6 +237,7 @@ ERRORLEVEL 数字    当上一个程序返回一个大于或等于指定数字�
 字符串1==字符串2   当所指定的字符串相匹配时为真。\n\
 EXIST 文件名       当指定的文件名存在时为真。\n\
 DEFINED 变量       当指定的变量已被定义时为真。\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "当前时间是： "
     STRING_MKDIR_HELP "创建一个目录。\n\n\
 MKDIR [驱动器:]路径\nMD [驱动器:]路径"
@@ -451,7 +452,6 @@ RESTORE       恢复窗口\n\
     STRING_GOTO_ERROR2 "标签“%s”未找到\n"
     STRING_MD_ERROR "一个名为“%s”的子目录或文件已存在。\n"
     STRING_MD_ERROR2 "到新文件夹的路径不存在。\n"
-    STRING_DATE_CURRENT_DATE "The current date is: "
     STRING_MOVE_ERROR1 "[成功]\n"
     STRING_MOVE_ERROR2 "[错误]\n"
     STRING_REN_ERROR "MoveFile() 失败。错误码：%lu\n"

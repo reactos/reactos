@@ -251,6 +251,7 @@ komenda           Komenda do wykonania, gdy warunek będzie spełniony.\n\
 ciąg1==ciąg2      Zwraca PRAWDA, gdy oba ciągi znaków są identyczne\n\
 EXIST plik        Zwraca PRAWDA, jeśli podany plik istnieje.\n\
 DEFINED zmienna   Zwraca PRAWDA, jeśli podana zmienna została zdefiniowana\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "Czas bieżący: "
     STRING_MKDIR_HELP "Tworzy katalog.\n\n\
 MKDIR [napęd:]ścieżka\nMD [napęd:]ścieżka"
@@ -477,7 +478,6 @@ title         nowy tytuł okna\n"
     STRING_GOTO_ERROR2 "Etykieta '%s' nie została znaleziona\n"
     STRING_MD_ERROR "Istnieje już plik lub podkatalog %s o tej nazwie.\n"
     STRING_MD_ERROR2 "Ścieżka do nowego katalogu nie jest prawidłowa.\n"
-    STRING_DATE_CURRENT_DATE "The current date is: "
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Błąd]\n"
     STRING_REN_ERROR "MoveFile() nieudane. Błąd: %lu\n"

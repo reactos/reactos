@@ -243,6 +243,7 @@ streng1==streng2  Angir et oppfylt vilkår hvis tekststrengene er like\n\
 EXIST filnavn     Angir et oppfylt vilkår hvis spesifisert filnavn eksisterer.\n\
 DEFINED variabel  Angir et oppfylt vilkår hvis spesifisert variabel er\n\
                   definert.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "Gjeldende tid er: "
     STRING_MKDIR_HELP "Oppretter en mappe.\n\n\
 MKDIR [stasjon:]mappe\nMD [stasjon:]mappe"
@@ -469,7 +470,6 @@ tittel        ny tittel\n"
     STRING_GOTO_ERROR2 "Merke '%s' ikke funnet\n"
     STRING_MD_ERROR "En undermappe eller fil %s finnes allerede.\n"
     STRING_MD_ERROR2 "Stien til den nye mappen eksisterer ikke.\n"
-    STRING_DATE_CURRENT_DATE "The current date is: "
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Feil]\n"
     STRING_REN_ERROR "MoveFile() mislykkes. Feil: %lu\n"

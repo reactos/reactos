@@ -245,6 +245,7 @@ string1==string2  Menetapkan kondisi benar jika string teks yang ditetapkan\n\
                   sama.\n\
 EXIST filename    Menetapkan kondisi benar jika nama file ada.\n\
 DEFINED variable  Menetapkan kondisi benar jika variabel didefinisikan.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "Waktu saat ini: "
     STRING_MKDIR_HELP "Membuat direktori.\n\n\
 MKDIR [drive:]path\nMD [drive:]path"
@@ -470,7 +471,6 @@ title         judul baru\n"
     STRING_GOTO_ERROR2 "Label '%s' tidak ditemukan\n"
     STRING_MD_ERROR "Subdirektori atau file %s sudah ada.\n"
     STRING_MD_ERROR2 "Path ke folder baru tidak ada.\n"
-    STRING_DATE_CURRENT_DATE "The current date is: "
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Salah]\n"
     STRING_REN_ERROR "MoveFile() gagal. Kesalahan: %lu\n"

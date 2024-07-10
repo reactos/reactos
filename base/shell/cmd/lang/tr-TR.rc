@@ -244,6 +244,7 @@ command           Koşul karşılanırsa yürütülecek komutu belirtir.\n\
 dizi1==dizi2      Belirtilen metin dizeleri eşleşirse doğru bir koşul belirtir\n\
 EXIST dosya_adi   Belirtilen dosya adı mevcutsa doğru bir koşul belirtir.\n\
 DEFINED variable  Belirtilen değişken tanımlanmışsa doğru bir koşul belirtir\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "Şimdiki zaman: "
     STRING_MKDIR_HELP "Bir dizin oluşturur.\n\n\
 MKDIR [sürücü:]yol\nMD [sürücü:]yol"
@@ -467,7 +468,6 @@ başlık        pencere için yeni başlık\n"
     STRING_GOTO_ERROR2 "'%s' etiketi bulunamadı\n"
     STRING_MD_ERROR "%s adında bir alt dizin veya dosya zaten var.\n"
     STRING_MD_ERROR2 "Yeni dizinin yolu mevcut değil.\n"
-    STRING_DATE_CURRENT_DATE "The current date is: "
     STRING_MOVE_ERROR1 "[TAMAM]\n"
     STRING_MOVE_ERROR2 "[Hata]\n"
     STRING_REN_ERROR "MoveFile() hatayla sonuçlandı. Hata: %lu\n"
