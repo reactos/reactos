@@ -38,7 +38,7 @@ BEGIN
     PUSHBUTTON      "<",IDC_REMOVE,144,60,18,14,WS_DISABLED
     PUSHBUTTON      "&OK",IDOK,174,114,60,14
     PUSHBUTTON      "&Storno",IDCANCEL,240,114,60,14
-    LTEXT           "Dostupné režimy",-1,6,6,52,8
+    LTEXT           "Dostupné režimy",-1,6,6,53,8
     LTEXT           "Vybrané režimy",-1,168,6,51,8
 END
 
