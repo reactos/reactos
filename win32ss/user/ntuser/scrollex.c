@@ -409,11 +409,16 @@ IntScrollWindowEx(
 
    if (flags & (SW_INVALIDATE | SW_ERASE))
    {
-      co_UserRedrawWindow( Window,
+      PREGION RgnClip = IntSysCreateRectpRgnIndirect(&rcClip);
+      if (RgnClip)
+      {
+          co_UserRedrawWindow( Window,
                            NULL,
-                           RgnUpdate,
+                           RgnClip,
                            rdw_flags |                                    /*    HACK    */
                           ((flags & SW_SCROLLCHILDREN) ? RDW_ALLCHILDREN : RDW_NOCHILDREN) );
+          REGION_Delete(RgnClip);
+      }
    }
 
    if (hwndCaret && (CaretWnd = UserGetWindowObject(hwndCaret)))
