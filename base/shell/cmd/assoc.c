@@ -279,8 +279,7 @@ INT CommandAssoc(LPTSTR param)
         {
             if (retval != ERROR_FILE_NOT_FOUND)
             {
-                // FIXME: Localize
-                ConErrPrintf(_T("Error occurred while processing: %s.\n"), param);
+                ConErrResPrintf(STRING_ERROR_WHILE_PROCESSING, param);
             }
             // retval = 1; /* Fixup the error value */
         }
