@@ -164,6 +164,7 @@ pOpenDevice(
  * for more details.
  **/
 NTSTATUS
+// pNtEnumDevicesByInterfaceClass
 pNtEnumDevicesPnP(
     _In_ const GUID* InterfaceClassGuid,
     _In_ PENUM_DEVICES_PROC Callback,
@@ -296,5 +297,161 @@ pNtEnumDevicesPnP(
 
     return STATUS_SUCCESS;
 }
+
+#if 0 // FIXME!
+
+// FIXME: This is actually Win7+
+#define CM_GETIDLIST_FILTER_PRESENT             (0x00000100)
+#define CM_GETIDLIST_FILTER_CLASS               (0x00000200)
+
+NTSTATUS
+// pNtEnumDevicesBySetupClass
+pNtEnumDevicesPnP_Alt(
+    _In_ const GUID* SetupClassGuid,
+    _In_ PENUM_DEVICES_PROC Callback,
+    _In_opt_ PVOID Context)
+{
+    NTSTATUS Status;
+    CONFIGRET cr;
+
+    WCHAR guidString[MAX_GUID_STRING_LEN];
+
+    ULONG DevIDListLength = 0;
+    PWSTR DevIDList = NULL;
+    PWSTR CurrentID;
+
+    // GuidToString(), UuidToStringW(), RtlStringFromGUID()
+    Status = RtlStringCchPrintfW(guidString, _countof(guidString),
+                              // L"{%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}"
+                                 L"{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
+                                 SetupClassGuid->Data1, SetupClassGuid->Data2, SetupClassGuid->Data3,
+                                 SetupClassGuid->Data4[0], SetupClassGuid->Data4[1],
+                                 SetupClassGuid->Data4[2], SetupClassGuid->Data4[3],
+                                 SetupClassGuid->Data4[4], SetupClassGuid->Data4[5],
+                                 SetupClassGuid->Data4[6], SetupClassGuid->Data4[7]);
+    ASSERT(NT_SUCCESS(Status));
+
+    /*
+     * Retrieve a list of device interface instances belonging to the given interface class.
+     * Equivalent to:
+     * hDevInfo = SetupDiGetClassDevs(pGuid, NULL, NULL, DIGCF_DEVICEINTERFACE | DIGCF_PRESENT);
+     * and SetupDiEnumDeviceInterfaces(hDevInfo, NULL, pGuid, i, &DevIFaceData);
+     */
+    do
+    {
+        cr = CM_Get_Device_ID_List_SizeW(&DevIDListLength,
+                                         guidString,
+                                         CM_GETIDLIST_FILTER_CLASS |
+                                         CM_GETIDLIST_FILTER_PRESENT);
+        if (cr != CR_SUCCESS)
+            break;
+
+        if (DevIDList) RtlFreeHeap(ProcessHeap, 0, DevIDList);
+        DevIDList = RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY,
+                                    DevIDListLength * sizeof(WCHAR));
+        if (!DevIDList)
+        {
+            cr = CR_OUT_OF_MEMORY;
+            break;
+        }
+
+        cr = CM_Get_Device_ID_ListW(guidString,
+                                    DevIDList,
+                                    DevIDListLength,
+                                    CM_GETIDLIST_FILTER_CLASS |
+                                    CM_GETIDLIST_FILTER_PRESENT);
+    } while (cr == CR_BUFFER_SMALL);
+
+    if (cr != CR_SUCCESS)
+    {
+        if (DevIDList) RtlFreeHeap(ProcessHeap, 0, DevIDList);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Enumerate each device for the given interface class.
+     * NOTE: This gives the proper interface names with the correct casing,
+     * contrary to SetupDiGetDeviceInterfaceDetailW(...) that gives them
+     * in all lower-case letters. */
+    for (CurrentID = DevIDList;
+         *CurrentID;
+         CurrentID += wcslen(CurrentID) + 1)
+    {
+        UNICODE_STRING Name;
+        HANDLE DeviceHandle;
+
+        WCHAR DevInstPath[MAX_DEVICE_ID_LEN];
+        DEVINST DevInst;
+        PWSTR buffer = NULL;
+        ULONG buffersize = 0;
+
+        cr = CM_Locate_DevNodeW(&DevInst,
+                                CurrentID, // CurrentDevice,
+                                CM_LOCATE_DEVNODE_NORMAL);
+        if (cr != CR_SUCCESS)
+            break;
+
+#if 1 // TEST: DevInstPath should get back CurrentID
+        cr = CM_Get_Device_IDW(DevInst,
+                               DevInstPath,
+                               _countof(DevInstPath),
+                               0);
+#endif
+
+        for (;;)
+        {
+            // SetupDiGetDeviceRegistryPropertyW(..., SPDRP_PHYSICAL_DEVICE_OBJECT_NAME, ...);
+            cr = CM_Get_DevNode_Registry_PropertyW(DevInst,
+                                                   CM_DRP_PHYSICAL_DEVICE_OBJECT_NAME,
+                                                   NULL, // PULONG pulRegDataType
+                                                   (PBYTE)buffer,
+                                                   &buffersize,
+                                                   0);
+            if (cr != CR_BUFFER_SMALL)
+                break;
+
+            if (buffer) RtlFreeHeap(ProcessHeap, 0, buffer);
+            buffer = RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, buffersize);
+            if (!buffer)
+            {
+                cr = CR_OUT_OF_MEMORY;
+                break;
+            }
+        }
+        if (cr != CR_SUCCESS)
+            continue;
+
+
+        RtlInitUnicodeString(&Name, buffer);
+
+        /* Normalize the interface path in case it is of Win32-style */
+        if (Name.Length > 4 * sizeof(WCHAR) &&
+            Name.Buffer[0] == '\\' && Name.Buffer[1] == '\\' &&
+            Name.Buffer[2] == '?'  && Name.Buffer[3] == '\\')
+        {
+            Name.Buffer[1] = '?';
+        }
+
+        Status = pOpenDevice(/*Name*/buffer, &DeviceHandle);
+        if (NT_SUCCESS(Status))
+        {
+            /* Do the callback */
+            if (Callback)
+            {
+                (void)Callback(SetupClassGuid,
+                               buffer, DeviceHandle, Context);
+            }
+
+            NtClose(DeviceHandle);
+        }
+
+        if (buffer) RtlFreeHeap(ProcessHeap, 0, buffer);
+    }
+
+    if (DevIDList) RtlFreeHeap(ProcessHeap, 0, DevIDList);
+
+    return STATUS_SUCCESS;
+}
+
+#endif
 
 /* EOF */
