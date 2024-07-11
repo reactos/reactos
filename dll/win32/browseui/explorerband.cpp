@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Explorer bar
- * COPYRIGHT:   Copyright 2016 Sylvain Deverre <deverre dot sylv at gmail dot com>
+ * COPYRIGHT:   Copyright 2016 Sylvain Deverre <deverre.sylv@gmail.com>
  *              Copyright 2020-2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
