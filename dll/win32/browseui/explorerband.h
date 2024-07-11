@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Explorer bar
+ * PROJECT:     ReactOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Explorer bar
  * COPYRIGHT:   Copyright 2016 Sylvain Deverre <deverre dot sylv at gmail dot com>
