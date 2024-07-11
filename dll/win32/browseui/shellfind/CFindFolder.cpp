@@ -428,11 +428,11 @@ static UINT RecursiveFind(LPCWSTR lpPath, _SearchData *pSearchData)
                 FileNameMatch(FindData.cFileName, pSearchData) &&
                 AttribHiddenMatch(FindData.dwFileAttributes, pSearchData))
             {
-                PostMessageW(pSearchData->hwnd, WM_SEARCH_ADD_RESULT, 0, (LPARAM) StrDupW(szPath));
+                PostMessageW(pSearchData->hwnd, WM_SEARCH_ADD_RESULT, 0, (LPARAM)SHStrDupW(szPath));
                 uTotalFound++;
             }
             status.Format(IDS_SEARCH_FOLDER, FindData.cFileName);
-            PostMessageW(pSearchData->hwnd, WM_SEARCH_UPDATE_STATUS, 0, (LPARAM) StrDupW(status.GetBuffer()));
+            PostMessageW(pSearchData->hwnd, WM_SEARCH_UPDATE_STATUS, 0, (LPARAM)SHStrDupW(status.GetBuffer()));
 
             uTotalFound += RecursiveFind(szPath, pSearchData);
         }
@@ -441,7 +441,7 @@ static UINT RecursiveFind(LPCWSTR lpPath, _SearchData *pSearchData)
                 && ContentsMatch(szPath, pSearchData))
         {
             uTotalFound++;
-            PostMessageW(pSearchData->hwnd, WM_SEARCH_ADD_RESULT, 0, (LPARAM) StrDupW(szPath));
+            PostMessageW(pSearchData->hwnd, WM_SEARCH_ADD_RESULT, 0, (LPARAM)SHStrDupW(szPath));
         }
     }
 
@@ -465,7 +465,7 @@ DWORD WINAPI CFindFolder::SearchThreadProc(LPVOID lpParameter)
 
     CStringW status;
     status.Format(IDS_SEARCH_FILES_FOUND, uTotalFound);
-    ::PostMessageW(data->hwnd, WM_SEARCH_UPDATE_STATUS, 0, (LPARAM) StrDupW(status.GetBuffer()));
+    ::PostMessageW(data->hwnd, WM_SEARCH_UPDATE_STATUS, 0, (LPARAM)SHStrDupW(status.GetBuffer()));
     ::SendMessageW(data->hwnd, WM_SEARCH_STOP, 0, 0);
 
     CloseHandle(data->hStopEvent);
