@@ -386,13 +386,13 @@ BOOLEAN
 WritePartitionsToDisk(
     IN PPARTLIST List);
 
-BOOLEAN
-SetMountedDeviceValues(
-    _In_ PPARTLIST List);
-
 VOID
 SetMBRPartitionType(
     IN PPARTENTRY PartEntry,
     IN UCHAR PartitionType);
+
+BOOLEAN
+SetMountedDeviceValues(
+    _In_ PPARTLIST List);
 
 /* EOF */
