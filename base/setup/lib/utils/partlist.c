@@ -20,6 +20,13 @@
 
 // #define DUMP_PARTITION_TABLE
 
+/* Helper ASSERT to verify that a partition where a volume is mounted is valid */
+#define ASSERT_IS_VOLUME_PARTITION_VALID(PartEntry) \
+    ASSERT(PartEntry->IsPartitioned && \
+           !IsContainerPartition(PartEntry->PartitionType) && \
+           (PartEntry->SectorCount.QuadPart != 0LL))
+
+
 #include <pshpack1.h>
 typedef struct _REG_DISK_MOUNT_INFO
 {
@@ -2971,26 +2978,33 @@ DismountPartition(
 
     ASSERT(PartEntry->DiskEntry->PartList == List);
 
-    /* Check whether the partition is valid and was mounted by the system */
-    if (!PartEntry->IsPartitioned ||
-        IsContainerPartition(PartEntry->PartitionType)   ||
-        !IsRecognizedPartition(PartEntry->PartitionType) ||
-        !Volume || Volume->FormatState == UnknownFormat  ||
+    if (Volume)
+    {
+        /* The partition is mounted on the system */
+
+        ASSERT(Volume->PartEntry == PartEntry);
+        ASSERT_IS_VOLUME_PARTITION_VALID(PartEntry);
+
+        /* Dismount the basic volume: unlink the volume from the volumes list */
+        PartEntry->Volume = NULL;
+        Volume->PartEntry = NULL;
+        RemoveEntryList(&Volume->ListEntry);
+
         // NOTE: If FormatState == Unformatted but *FileSystem != 0 this means
         // it has been usually mounted with RawFS and thus needs to be dismounted.
-        PartEntry->PartitionNumber == 0)
+        if (Volume->FormatState == UnknownFormat)
+        {
+            RtlFreeHeap(ProcessHeap, 0, Volume);
+            Volume = NULL;
+        }
+    }
+    if (!Volume)
     {
         /* The partition is not mounted, so just return success */
         return STATUS_SUCCESS;
     }
 
-    ASSERT(PartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
-    ASSERT(Volume->PartEntry == PartEntry);
-
-    /* Unlink the basic volume from the volumes list and dismount it */
-    PartEntry->Volume = NULL;
-    Volume->PartEntry = NULL;
-    RemoveEntryList(&Volume->ListEntry);
+    /* Dismount the basic volume */
     Status = DismountVolume(&Volume->Info, TRUE);
     RtlFreeHeap(ProcessHeap, 0, Volume);
     return Status;
