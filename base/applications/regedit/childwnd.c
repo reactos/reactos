@@ -20,12 +20,71 @@
  */
 
 #include "regedit.h"
+#include <shldisp.h>
+#include <shlguid.h>
 
 ChildWnd* g_pChildWnd;
 static int last_split;
 HBITMAP SizingPattern = 0;
 HBRUSH  SizingBrush = 0;
 WCHAR Suggestions[256];
+
+static HRESULT WINAPI DummyEnumStringsQI(LPVOID This, REFIID riid, void**ppv)
+{
+    if (ppv)
+        *ppv = NULL;
+    if (IsEqualIID(riid, &IID_IEnumString) || IsEqualIID(riid, &IID_IUnknown))
+    {
+        *ppv = This;
+        return S_OK;
+    }
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI DummyEnumStringsAddRefRelease(LPVOID This)
+{
+    return 1;
+}
+
+static HRESULT WINAPI DummyEnumStringsNext(LPVOID This, ULONG celt, LPWSTR *parr, ULONG *pceltFetched)
+{
+    if (pceltFetched)
+        *pceltFetched = 0;
+    return S_FALSE;
+}
+
+static HRESULT WINAPI DummyEnumStringsSkip(LPVOID This, ULONG celt)
+{
+    return S_OK;
+}
+
+static HRESULT WINAPI DummyEnumStringsReset(LPVOID This)
+{
+    return S_OK;
+}
+
+static HRESULT WINAPI DummyEnumStringsClone(LPVOID This, void**ppv)
+{
+    return E_NOTIMPL;
+}
+
+struct DummyEnumStringsVtbl {
+    LPVOID QI, AddRef, Release, Next, Skip, Reset, Clone;
+} g_DummyEnumStringsVtbl = {
+    &DummyEnumStringsQI,
+    &DummyEnumStringsAddRefRelease,
+    &DummyEnumStringsAddRefRelease,
+    &DummyEnumStringsNext,
+    &DummyEnumStringsSkip,
+    &DummyEnumStringsReset,
+    &DummyEnumStringsClone
+};
+
+struct DummyEnumStrings {
+    struct DummyEnumStringsVtbl *lpVtbl;
+} g_DummyEnumStrings = {
+    &g_DummyEnumStringsVtbl
+};
 
 extern LPCWSTR get_root_key_name(HKEY hRootKey)
 {
@@ -338,6 +397,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         HFONT hFont;
         WCHAR buffer[MAX_PATH];
         DWORD style;
+        IAutoComplete *pAutoComplete;
 
         /* Load "My Computer" string */
         LoadStringW(hInst, IDS_MY_COMPUTER, buffer, ARRAY_SIZE(buffer));
@@ -362,6 +422,12 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         g_pChildWnd->hArrowIcon = (HICON)LoadImageW(hInst, MAKEINTRESOURCEW(IDI_ARROW),
                                                     IMAGE_ICON, 12, 12, 0);
         SendMessageW(g_pChildWnd->hAddressBtnWnd, BM_SETIMAGE, IMAGE_ICON, (LPARAM)g_pChildWnd->hArrowIcon);
+
+        if (SUCCEEDED(CoCreateInstance(&CLSID_AutoComplete, NULL, CLSCTX_INPROC_SERVER, &IID_IAutoComplete, (void**)&pAutoComplete)))
+        {
+            pAutoComplete->lpVtbl->Init(pAutoComplete, g_pChildWnd->hAddressBarWnd, (IUnknown*)&g_DummyEnumStrings, NULL, NULL);
+            pAutoComplete->lpVtbl->Release(pAutoComplete);
+        }
 
         GetClientRect(hWnd, &rc);
         g_pChildWnd->hTreeWnd = CreateTreeView(hWnd, g_pChildWnd->szPath, (HMENU) TREE_WINDOW);
