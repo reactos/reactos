@@ -414,10 +414,6 @@ IntScrollWindowEx(
                            RgnUpdate,
                            rdw_flags |                                    /*    HACK    */
                           ((flags & SW_SCROLLCHILDREN) ? RDW_ALLCHILDREN : RDW_NOCHILDREN) );
-
-      PREGION RgnClip = IntSysCreateRectpRgnIndirect(&rcClip);
-      IntInvalidateWindows(Window, RgnClip, rdw_flags);
-      REGION_Delete(RgnClip);
    }
 
    if (hwndCaret && (CaretWnd = UserGetWindowObject(hwndCaret)))
