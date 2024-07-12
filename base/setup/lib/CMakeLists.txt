@@ -11,6 +11,7 @@ list(APPEND SOURCE
     spapisup/infsupp.c
     utils/arcname.c
     utils/bldrsup.c
+    utils/devutils.c
     utils/filesup.c
     utils/fsrec.c
     utils/genlist.c
