@@ -42,7 +42,7 @@ typedef enum _FORMATSTATE
 typedef struct _PARTENTRY PARTENTRY, *PPARTENTRY;
 typedef struct _VOLENTRY
 {
-    LIST_ENTRY ListEntry; ///< Entry in VolumesList
+    LIST_ENTRY ListEntry; ///< Entry in VolumesList or PendingUnmountVolumesList
 
     VOLINFO Info;
     FORMATSTATE FormatState;
@@ -185,6 +185,7 @@ typedef struct _PARTLIST
 
     /* (Basic) Volumes management */
     LIST_ENTRY VolumesList;
+    LIST_ENTRY PendingUnmountVolumesList; ///< List of volumes to unmount
 
 } PARTLIST, *PPARTLIST;
 
@@ -385,13 +386,13 @@ BOOLEAN
 WritePartitionsToDisk(
     IN PPARTLIST List);
 
-BOOLEAN
-SetMountedDeviceValues(
-    _In_ PPARTLIST List);
-
 VOID
 SetMBRPartitionType(
     IN PPARTENTRY PartEntry,
     IN UCHAR PartitionType);
+
+BOOLEAN
+SetMountedDeviceValues(
+    _In_ PPARTLIST List);
 
 /* EOF */
