@@ -938,8 +938,8 @@ co_UserRedrawWindow(
           {
              REGION_bOffsetRgn(TmpRgn, Window->rcClient.left, Window->rcClient.top);
           }
-		  
-		  REGION_SetRectRgn(TmpRgn, Window->rcClient.left, Window->rcClient.top, Window->rcClient.right, Window->rcClient.bottom);
+        
+          REGION_SetRectRgn(TmpRgn, Window->rcClient.left, Window->rcClient.top, Window->rcClient.right, Window->rcClient.bottom);
       }
       else
       {
