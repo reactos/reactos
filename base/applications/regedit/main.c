@@ -176,23 +176,89 @@ void ExitInstance(HINSTANCE hInstance)
     UnloadAclUiDll();
 }
 
+static BOOL InLabelEdit(HWND hWnd, UINT Msg)
+{
+    HWND hEdit = (HWND)SendMessageW(hWnd, Msg, 0, 0);
+    return hEdit && IsWindowVisible(hEdit);
+}
+
+static BOOL IsAddressBarSpecialChar(WCHAR c)
+{
+    return c && c <= 127 && !iswalnum(c);
+}
+
+static BOOL HandleAddressBarMessage(PMSG msg)
+{
+    BOOL handled = FALSE, ctrl = FALSE;
+    if (msg->message != WM_KEYDOWN || msg->hwnd != g_pChildWnd->hAddressBarWnd)
+        return handled;
+
+    ctrl = GetKeyState(VK_CONTROL) < 0;
+    if (ctrl && msg->wParam == VK_BACK)
+    {
+        LPWSTR text;
+        UINT cch = GetWindowTextLengthW(msg->hwnd);
+        UINT iSelStart = 0, iSelEnd;
+        SendMessageW(msg->hwnd, EM_GETSEL, (WPARAM)&iSelStart, (LPARAM)&iSelEnd);
+        text = (cch && iSelStart && iSelStart == iSelEnd) ? malloc(++cch * sizeof(*text)) : NULL;
+        if (text)
+        {
+            if (GetWindowTextW(msg->hwnd, text, cch))
+            {
+                LPWSTR any = NULL, start, end;
+                start = end = &text[iSelStart];
+
+                /* Delete special and/or normal characters backwards from the caret */
+                if (IsAddressBarSpecialChar(start[-1]))
+                {
+                    --start;
+                    while (start > text && IsAddressBarSpecialChar(*start))
+                        --start;
+                }
+                while (start > text && !IsAddressBarSpecialChar(*start))
+                        any = --start;
+                /* "undelete" the character we just skipped (unless it's the first character) */
+                start += any != NULL && start > text;
+
+                if (start != end)
+                {
+                    MoveMemory(start, end, (wcslen(end) + 1) * sizeof(*end));
+                    SetWindowText(msg->hwnd, text);
+                    SendMessageW(msg->hwnd, EM_SETSEL, start - text, start - text);
+                    handled = TRUE;
+                }
+            }
+            free(text);
+        }
+    }
+
+    return handled;
+}
+
 BOOL TranslateChildTabMessage(PMSG msg)
 {
     if (msg->message != WM_KEYDOWN) return FALSE;
-
-    /* Allow Ctrl+A on address bar */
-    if ((msg->hwnd == g_pChildWnd->hAddressBarWnd) &&
-        (msg->message == WM_KEYDOWN) &&
-        (msg->wParam == L'A') && (GetKeyState(VK_CONTROL) < 0))
-    {
-        SendMessageW(msg->hwnd, EM_SETSEL, 0, -1);
-        return TRUE;
-    }
-
     if (msg->wParam != VK_TAB) return FALSE;
     if (GetParent(msg->hwnd) != g_pChildWnd->hWnd) return FALSE;
     PostMessageW(hFrameWnd, WM_COMMAND, ID_SWITCH_PANELS, 0);
     return TRUE;
+}
+
+static BOOL TranslateRegeditAccelerator(HWND hWnd, HACCEL hAccTable, PMSG msg)
+{
+    if (msg->message == WM_KEYDOWN)
+    {
+        if (HandleAddressBarMessage(msg))
+            return TRUE;
+        if (msg->wParam == VK_DELETE)
+        {
+            if (g_pChildWnd->hAddressBarWnd == msg->hwnd)
+                return FALSE;
+            if (InLabelEdit(g_pChildWnd->hTreeWnd, TVM_GETEDITCONTROL) || InLabelEdit(g_pChildWnd->hListWnd, LVM_GETEDITCONTROL))
+                return FALSE;
+        }
+    }
+    return TranslateAcceleratorW(hWnd, hAccTable, msg);
 }
 
 int WINAPI wWinMain(HINSTANCE hInstance,
@@ -237,7 +303,7 @@ int WINAPI wWinMain(HINSTANCE hInstance,
     /* Main message loop */
     while (GetMessageW(&msg, NULL, 0, 0))
     {
-        if (!TranslateAcceleratorW(hFrameWnd, hAccel, &msg) &&
+        if (!TranslateRegeditAccelerator(hFrameWnd, hAccel, &msg) &&
             !TranslateChildTabMessage(&msg))
         {
             TranslateMessage(&msg);
