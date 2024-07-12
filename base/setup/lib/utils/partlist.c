@@ -8,10 +8,12 @@
 
 #include "precomp.h"
 #include <ntddscsi.h>
+#include <mountdev.h> // For IOCTL_MOUNTDEV_QUERY_DEVICE_NAME
 
 #include "partlist.h"
 #include "volutil.h"
 #include "fsrec.h" // For FileSystemToMBRPartitionType()
+#include "devutils.h"
 
 #include "registry.h"
 
@@ -917,28 +919,82 @@ InitPartitionDeviceName(
 }
 
 static
-VOID
+NTSTATUS
 InitVolumeDeviceName(
-    _Inout_ PVOLENTRY Volume)
+    _Inout_ PVOLENTRY Volume,
+    _In_opt_ PCWSTR AltDeviceName)
 {
     NTSTATUS Status;
-    PPARTENTRY PartEntry;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE VolumeHandle;
+    /*
+     * This variable is used to store the device name for
+     * the output buffer to IOCTL_MOUNTDEV_QUERY_DEVICE_NAME.
+     * It's based on MOUNTDEV_NAME (mountmgr.h).
+     * Doing it this way prevents memory allocation.
+     * The device name won't be longer.
+     */
+    struct
+    {
+        USHORT NameLength;
+        WCHAR Name[256];
+    } DeviceName;
 
-    /* If we already have a volume device name, do nothing more */
+    /* If the volume already has a device name, do nothing more */
     if (*Volume->Info.DeviceName)
-        return;
+        return STATUS_SUCCESS;
 
-    /* Use the partition device name as a temporary volume device name */
-    // TODO: Ask instead the MOUNTMGR for the name.
-    PartEntry = Volume->PartEntry;
-    ASSERT(PartEntry);
-    ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
+    if (!AltDeviceName)
+    {
+        PPARTENTRY PartEntry;
+        PartEntry = Volume->PartEntry;
+        ASSERT(PartEntry);
+        ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
+        AltDeviceName = PartEntry->DeviceName;
+    }
 
-    /* Copy the volume device name */
+    /* Make a temporary volume device name */
     Status = RtlStringCchCopyW(Volume->Info.DeviceName,
                                _countof(Volume->Info.DeviceName),
-                               PartEntry->DeviceName);
+                               AltDeviceName);
     ASSERT(NT_SUCCESS(Status));
+
+    /* Try to open the volume (if it is valid, this will also mount it) */
+    Status = pOpenDevice(Volume->Info.DeviceName, &VolumeHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("pOpenDevice() failed, Status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Retrieve the non-persistent volume device name */
+    Status = NtDeviceIoControlFile(VolumeHandle,
+                                   NULL, NULL, NULL,
+                                   &IoStatusBlock,
+                                   IOCTL_MOUNTDEV_QUERY_DEVICE_NAME,
+                                   NULL, 0,
+                                   &DeviceName, sizeof(DeviceName));
+    NtClose(VolumeHandle);
+
+    // NOTE: If a memory allocation were needed, Status would be
+    // equal to STATUS_BUFFER_OVERFLOW, and one would allocate
+    // a buffer of size
+    //     FIELD_OFFSET(MOUNTDEV_NAME, Name[0]) + DeviceName.NameLength
+    // before calling the IOCTL again on the new buffer and size.
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME failed, Status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Copy the volume device name */
+    Status = RtlStringCchCopyNW(Volume->Info.DeviceName,
+                                _countof(Volume->Info.DeviceName),
+                                DeviceName.Name,
+                                DeviceName.NameLength / sizeof(WCHAR));
+    ASSERT(NT_SUCCESS(Status));
+    return STATUS_SUCCESS;
 }
 
 static
@@ -1046,7 +1102,7 @@ AddPartitionToDisk(
             goto SkipVolume;
         }
         PartEntry->Volume = Volume;
-        InitVolumeDeviceName(Volume);
+        InitVolumeDeviceName(Volume, NULL);
         Volume->New = FALSE;
 
         /* Attach and mount the volume */
@@ -3825,7 +3881,7 @@ WritePartitionsToDisk(
          Entry = Entry->Flink)
     {
         Volume = CONTAINING_RECORD(Entry, VOLENTRY, ListEntry);
-        InitVolumeDeviceName(Volume);
+        InitVolumeDeviceName(Volume, NULL);
     }
 
     return TRUE;
