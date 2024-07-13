@@ -943,6 +943,7 @@ RtlWalkFrameChain(OUT PVOID *Callers,
     PVOID HandlerData;
     ULONG i, FramesToSkip;
     PRUNTIME_FUNCTION FunctionEntry;
+    MODE CurrentMode = RtlpGetMode();
 
     DPRINT("Enter RtlWalkFrameChain\n");
 
@@ -955,11 +956,6 @@ RtlWalkFrameChain(OUT PVOID *Callers,
 
     /* Get the stack limits */
     RtlpGetStackLimits(&StackLow, &StackHigh);
-
-    /* Check if we want the user-mode stack frame */
-    if (Flags & 1)
-    {
-    }
 
     _SEH2_TRY
     {
@@ -990,15 +986,26 @@ RtlWalkFrameChain(OUT PVOID *Callers,
             }
 
             /* Check if we are in kernel mode */
-            if (RtlpGetMode() == KernelMode)
+            if (CurrentMode == KernelMode)
             {
                 /* Check if we left the kernel range */
-                if (!(Flags & 1) && (Context.Rip < 0xFFFF800000000000ULL))
+                if (Context.Rip < 0xFFFF800000000000ULL)
                 {
-                    break;
+                    /* Bail out, unless user mode was requested */
+                    if ((Flags & 1) == 0)
+                    {
+                        break;
+                    }
+
+                    /* We are in user mode now, get UM stack bounds */
+                    CurrentMode = UserMode;
+                    StackLow = (ULONG64)NtCurrentTeb()->NtTib.StackLimit;
+                    StackHigh = (ULONG64)NtCurrentTeb()->NtTib.StackBase;
                 }
             }
-            else
+
+            /* Check (again) if we are in user mode now */
+            if (CurrentMode == UserMode)
             {
                 /* Check if we left the user range */
                 if ((Context.Rip < 0x10000) ||
