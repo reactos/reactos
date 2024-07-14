@@ -988,6 +988,7 @@ FstubReadPartitionTableEFI(IN PDISK_INFORMATION Disk,
     ULONGLONG PartitionEntryLBA;
 #endif
     PDRIVE_LAYOUT_INFORMATION_EX DriveLayoutEx = NULL;
+    PPARTITION_INFORMATION_EX PartitionInfo;
     ULONG i, PartitionCount, PartitionIndex, PartitionsPerSector;
 
     PAGED_CODE();
@@ -1079,28 +1080,24 @@ FstubReadPartitionTableEFI(IN PDISK_INFORMATION Disk,
         PartitionEntry = ((PEFI_PARTITION_ENTRY)Disk->Buffer)[PartitionIndex];
         PartitionIndex++;
 
-        /* If partition GUID is 00000000-0000-0000-0000-000000000000, then it's unused, skip it */
-        if (PartitionEntry.PartitionType.Data1 == 0 &&
-            PartitionEntry.PartitionType.Data2 == 0 &&
-            PartitionEntry.PartitionType.Data3 == 0 &&
-            ((PULONGLONG)PartitionEntry.PartitionType.Data4)[0] == 0)
-        {
+        /* Skip unused partition */
+        if (IsEqualGUID(&PartitionEntry.PartitionType, &PARTITION_ENTRY_UNUSED_GUID))
             continue;
-        }
 
         /* Write data to structure. Don't forget GPT is using sectors, Windows offsets */
-        DriveLayoutEx->PartitionEntry[PartitionCount].StartingOffset.QuadPart = PartitionEntry.StartingLBA * Disk->SectorSize;
-        DriveLayoutEx->PartitionEntry[PartitionCount].PartitionLength.QuadPart = (PartitionEntry.EndingLBA -
-                                                                                  PartitionEntry.StartingLBA + 1) *
-                                                                                 Disk->SectorSize;
+        PartitionInfo = &DriveLayoutEx->PartitionEntry[PartitionCount];
+
+        PartitionInfo->StartingOffset.QuadPart = PartitionEntry.StartingLBA * Disk->SectorSize;
+        PartitionInfo->PartitionLength.QuadPart = (PartitionEntry.EndingLBA -
+                                                   PartitionEntry.StartingLBA + 1) * Disk->SectorSize;
         /* This number starts from 1 */
-        DriveLayoutEx->PartitionEntry[PartitionCount].PartitionNumber = PartitionCount + 1;
-        DriveLayoutEx->PartitionEntry[PartitionCount].RewritePartition = FALSE;
-        DriveLayoutEx->PartitionEntry[PartitionCount].PartitionStyle = PARTITION_STYLE_GPT;
-        DriveLayoutEx->PartitionEntry[PartitionCount].Gpt.PartitionType = PartitionEntry.PartitionType;
-        DriveLayoutEx->PartitionEntry[PartitionCount].Gpt.PartitionId = PartitionEntry.UniquePartition;
-        DriveLayoutEx->PartitionEntry[PartitionCount].Gpt.Attributes = PartitionEntry.Attributes;
-        RtlCopyMemory(DriveLayoutEx->PartitionEntry[PartitionCount].Gpt.Name,
+        PartitionInfo->PartitionNumber = PartitionCount + 1;
+        PartitionInfo->RewritePartition = FALSE;
+        PartitionInfo->PartitionStyle = PARTITION_STYLE_GPT;
+        PartitionInfo->Gpt.PartitionType = PartitionEntry.PartitionType;
+        PartitionInfo->Gpt.PartitionId = PartitionEntry.UniquePartition;
+        PartitionInfo->Gpt.Attributes = PartitionEntry.Attributes;
+        RtlCopyMemory(PartitionInfo->Gpt.Name,
                       PartitionEntry.Name, sizeof(PartitionEntry.Name));
 
         /* Update partition count */
@@ -1659,14 +1656,9 @@ FstubWritePartitionTableEFI(IN PDISK_INFORMATION Disk,
 
     for (i = 0, WrittenPartitions = 0; i < PartitionCount; i++)
     {
-        /* If partition GUID is 00000000-0000-0000-0000-000000000000, then it's unused, skip it */
-        if (PartitionEntries[i].Gpt.PartitionType.Data1 == 0 &&
-            PartitionEntries[i].Gpt.PartitionType.Data2 == 0 &&
-            PartitionEntries[i].Gpt.PartitionType.Data3 == 0 &&
-            ((PULONGLONG)PartitionEntries[i].Gpt.PartitionType.Data4)[0] == 0)
-        {
+        /* Skip unused partition */
+        if (IsEqualGUID(&PartitionEntries[i].Gpt.PartitionType, &PARTITION_ENTRY_UNUSED_GUID))
             continue;
-        }
 
         /* Copy the entry in the partition entry format */
         FstubCopyEntryEFI(&Entry, &PartitionEntries[i], Disk->SectorSize);
