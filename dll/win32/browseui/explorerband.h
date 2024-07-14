@@ -95,7 +95,6 @@ private:
     BOOL InsertSubitems(HTREEITEM hItem, NodeInfo *pNodeInfo);
     BOOL NavigateToPIDL(LPCITEMIDLIST dest, HTREEITEM *item, BOOL bExpand, BOOL bInsert, BOOL bSelect);
     BOOL DeleteItem(LPCITEMIDLIST toDelete);
-    BOOL RefreshTreePidl(HTREEITEM tree, LPCITEMIDLIST pidlParent);
     BOOL NavigateToCurrentFolder();
     HRESULT GetCurrentLocation(PIDLIST_ABSOLUTE &pidl);
     HRESULT IsCurrentLocation(PCIDLIST_ABSOLUTE pidl);

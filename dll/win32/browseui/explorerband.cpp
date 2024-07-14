@@ -1037,47 +1037,6 @@ BOOL CExplorerBand::DeleteItem(LPCITEMIDLIST idl)
     return TRUE;
 }
 
-BOOL CExplorerBand::RefreshTreePidl(HTREEITEM tree, LPCITEMIDLIST pidlParent)
-{
-    HTREEITEM                           tmp;
-    NodeInfo                            *pInfo;
-
-    // Update our node data
-    pInfo = GetNodeInfo(tree);
-    if (!pInfo)
-    {
-        WARN("No tree info !\n");
-        return FALSE;
-    }
-    ILFree(pInfo->absolutePidl);
-    pInfo->absolutePidl = ILCombine(pidlParent, pInfo->relativePidl);
-    if (!pInfo->absolutePidl)
-    {
-        WARN("PIDL allocation failed\n");
-        return FALSE;
-    }
-    // Recursively update children
-    if ((tmp = TreeView_GetChild(m_hWnd, tree)) != NULL)
-    {
-        RefreshTreePidl(tmp, pInfo->absolutePidl);
-    }
-
-    tmp = TreeView_GetNextSibling(m_hWnd, tree);
-    while(tmp != NULL)
-    {
-        pInfo = GetNodeInfo(tmp);
-        if(!pInfo)
-        {
-            WARN("No tree info !\n");
-            continue;
-        }
-        ILFree(pInfo->absolutePidl);
-        pInfo->absolutePidl = ILCombine(pidlParent, pInfo->relativePidl);
-        tmp = TreeView_GetNextSibling(m_hWnd, tmp);
-    }
-    return TRUE;
-}
-
 // *** Tree item sorting callback ***
 int CALLBACK CExplorerBand::CompareTreeItems(LPARAM p1, LPARAM p2, LPARAM p3)
 {
