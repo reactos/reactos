@@ -425,8 +425,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
         if (SUCCEEDED(CoCreateInstance(&CLSID_AutoComplete, NULL, CLSCTX_INPROC_SERVER, &IID_IAutoComplete, (void**)&pAutoComplete)))
         {
-            pAutoComplete->lpVtbl->Init(pAutoComplete, g_pChildWnd->hAddressBarWnd, (IUnknown*)&g_DummyEnumStrings, NULL, NULL);
-            pAutoComplete->lpVtbl->Release(pAutoComplete);
+            IAutoComplete_Init(pAutoComplete, g_pChildWnd->hAddressBarWnd, (IUnknown*)&g_DummyEnumStrings, NULL, NULL);
+            IAutoComplete_Release(pAutoComplete);
         }
 
         GetClientRect(hWnd, &rc);
