@@ -193,19 +193,17 @@ void CExplorerBand::InitializeExplorerBand()
     NavigateToCurrentFolder();
 
     // Register shell notification
-    shcne.pidl = pidl;
-    shcne.fRecursive = TRUE;
-    m_shellRegID = SHChangeNotifyRegister(
-        m_hWnd,
-        SHCNRF_NewDelivery | SHCNRF_ShellLevel | SHCNRF_InterruptLevel | SHCNRF_RecursiveInterrupt,
-        SHCNE_DISKEVENTS | SHCNE_RENAMEFOLDER | SHCNE_RMDIR | SHCNE_MKDIR,
-        WM_USER_SHELLEVENT,
-        1,
-        &shcne);
+    shcne = { pidl, TRUE };
+    m_shellRegID = SHChangeNotifyRegister(m_hWnd,
+                                          SHCNRF_NewDelivery | SHCNRF_ShellLevel,
+                                          SHCNE_DISKEVENTS,
+                                          WM_USER_SHELLEVENT,
+                                          1, &shcne);
     if (!m_shellRegID)
     {
         ERR("Something went wrong, error %08x\n", GetLastError());
     }
+
     // Register browser connection endpoint
     hr = IUnknown_QueryService(m_pSite, SID_SWebBrowserApp, IID_PPV_ARG(IWebBrowser2, &browserService));
     if (FAILED_UNEXPECTEDLY(hr))
@@ -591,46 +589,176 @@ LRESULT CExplorerBand::OnShellEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
     return 0;
 }
 
+BOOL
+CExplorerBand::IsTreeItemInEnum(
+    HTREEITEM hItem,
+    IEnumIDList *pEnum)
+{
+    NodeInfo* pNodeInfo = GetNodeInfo(hItem);
+    if (!pNodeInfo)
+        return FALSE;
+
+    pEnum->Reset();
+
+    CComHeapPtr<ITEMIDLIST_RELATIVE> pidlTemp;
+    while (pEnum->Next(1, &pidlTemp, NULL) == S_OK)
+    {
+        if (ILIsEqual(pidlTemp, pNodeInfo->relativePidl))
+            return TRUE;
+
+        pidlTemp.Free();
+    }
+
+    return FALSE;
+}
+
+BOOL
+CExplorerBand::TreeItemHasThisChild(
+    HTREEITEM hItem,
+    PITEMID_CHILD pidlChild)
+{
+    for (hItem = TreeView_GetChild(m_hWnd, hItem); hItem;
+         hItem = TreeView_GetNextSibling(m_hWnd, hItem))
+    {
+        NodeInfo* pNodeInfo = GetNodeInfo(hItem);
+        if (ILIsEqual(pNodeInfo->relativePidl, pidlChild))
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+HRESULT CExplorerBand::GetItemEnum(CComPtr<IEnumIDList>& pEnum, HTREEITEM hItem)
+{
+    NodeInfo* pNodeInfo = GetNodeInfo(hItem);
+
+    CComPtr<IShellFolder> psfDesktop;
+    HRESULT hr = SHGetDesktopFolder(&psfDesktop);
+    if (FAILED(hr))
+        return hr;
+
+    CComPtr<IShellFolder> pFolder;
+    hr = psfDesktop->BindToObject(pNodeInfo->absolutePidl, NULL, IID_PPV_ARG(IShellFolder, &pFolder));
+    if (FAILED(hr))
+        return hr;
+
+    return pFolder->EnumObjects(NULL, SHCONTF_FOLDERS, &pEnum);
+}
+
+BOOL CExplorerBand::ItemHasAnyChild(HTREEITEM hItem)
+{
+    CComPtr<IEnumIDList> pEnum;
+    HRESULT hr = GetItemEnum(pEnum, hItem);
+    if (FAILED(hr))
+        return FALSE;
+
+    CComHeapPtr<ITEMIDLIST_RELATIVE> pidlTemp;
+    hr = pEnum->Next(1, &pidlTemp, NULL);
+    return SUCCEEDED(hr);
+}
+
+void CExplorerBand::RefreshRecurse(HTREEITEM hTarget)
+{
+    NodeInfo* pNodeInfo = GetNodeInfo(hTarget);
+
+    CComPtr<IEnumIDList> pEnum;
+    HRESULT hrEnum = GetItemEnum(pEnum, hTarget);
+
+    // Delete zombie items
+    HTREEITEM hItem, hNextItem;
+    for (hItem = TreeView_GetChild(m_hWnd, hTarget); hItem; hItem = hNextItem)
+    {
+        hNextItem = TreeView_GetNextSibling(m_hWnd, hItem);
+
+        if (SUCCEEDED(hrEnum) && !IsTreeItemInEnum(hItem, pEnum))
+        {
+            TreeView_DeleteItem(m_hWnd, hItem);
+            continue;
+        }
+    }
+
+    pEnum = NULL;
+    hrEnum = GetItemEnum(pEnum, hTarget);
+
+    // Insert new items and update items
+    if (SUCCEEDED(hrEnum))
+    {
+        CComHeapPtr<ITEMIDLIST_RELATIVE> pidlTemp;
+        while (pEnum->Next(1, &pidlTemp, NULL) == S_OK)
+        {
+            if (!TreeItemHasThisChild(hTarget, pidlTemp))
+            {
+                CComHeapPtr<ITEMIDLIST> pidlAbsolute(ILCombine(pNodeInfo->absolutePidl, pidlTemp));
+                InsertItem(hTarget, pidlAbsolute, pidlTemp, TRUE);
+            }
+            pidlTemp.Free();
+        }
+    }
+
+    // Update children and recurse
+    for (hItem = TreeView_GetChild(m_hWnd, hTarget); hItem; hItem = hNextItem)
+    {
+        hNextItem = TreeView_GetNextSibling(m_hWnd, hItem);
+
+        TV_ITEMW item = { TVIF_HANDLE | TVIF_CHILDREN };
+        item.hItem = hItem;
+        item.cChildren = ItemHasAnyChild(hItem);
+        TreeView_SetItem(m_hWnd, &item);
+
+        if (TreeView_GetItemState(m_hWnd, hItem, TVIS_EXPANDED) & TVIS_EXPANDED)
+        {
+            RefreshRecurse(hItem);
+            continue;
+        }
+    }
+}
+
+void CExplorerBand::Refresh()
+{
+    SendMessage(WM_SETREDRAW, FALSE, 0);
+    RefreshRecurse(m_hRoot);
+    SendMessage(WM_SETREDRAW, TRUE, 0);
+    InvalidateRect(NULL, TRUE);
+}
+
+#define TIMER_ID_REFRESH 9999
+
+LRESULT CExplorerBand::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    if (wParam != TIMER_ID_REFRESH)
+        return 0;
+
+    KillTimer(TIMER_ID_REFRESH);
+
+    // FIXME: Avoid full refresh and optimize for speed
+    Refresh();
+
+    return 0;
+}
+
 void
 CExplorerBand::OnChangeNotify(
     _In_opt_ LPCITEMIDLIST pidl0,
     _In_opt_ LPCITEMIDLIST pidl1,
     _In_ LONG lEvent)
 {
-    LPITEMIDLIST clean;
-    HTREEITEM pItem;
-
-    /* TODO: handle shell notifications */
     switch (lEvent)
     {
-    case SHCNE_MKDIR:
-        if (!SUCCEEDED(_ReparsePIDL(pidl0, &clean)))
+        case SHCNE_DRIVEADD:
+        case SHCNE_MKDIR:
+        case SHCNE_CREATE:
+        case SHCNE_DRIVEREMOVED:
+        case SHCNE_RMDIR:
+        case SHCNE_DELETE:
+        case SHCNE_RENAMEFOLDER:
+        case SHCNE_RENAMEITEM:
+        case SHCNE_UPDATEDIR:
+        case SHCNE_UPDATEITEM:
         {
-            ERR("Can't reparse PIDL to a valid one\n");
+            KillTimer(TIMER_ID_REFRESH);
+            SetTimer(TIMER_ID_REFRESH, 500, NULL);
             break;
         }
-        NavigateToPIDL(clean, &pItem, FALSE, TRUE, FALSE);
-        ILFree(clean);
-        break;
-    case SHCNE_RMDIR:
-        DeleteItem(pidl0);
-        break;
-    case SHCNE_RENAMEFOLDER:
-        if (!SUCCEEDED(_ReparsePIDL(pidl1, &clean)))
-        {
-            ERR("Can't reparse PIDL to a valid one\n");
-            break;
-        }
-        if (NavigateToPIDL(pidl0, &pItem, FALSE, FALSE, FALSE))
-            RenameItem(pItem, clean);
-        ILFree(clean);
-        break;
-    case SHCNE_UPDATEDIR:
-        // We don't take care of this message
-        TRACE("Directory updated\n");
-        break;
-    default:
-        TRACE("Unhandled message\n");
     }
 }
 

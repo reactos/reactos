@@ -27,7 +27,6 @@ class CExplorerBand :
     public IDropTarget,
     public CWindowImpl<CExplorerBand, CWindow, CControlWinTraits>
 {
-
 private:
     class NodeInfo
     {
@@ -77,6 +76,7 @@ private:
     LRESULT OnShellEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
     // *** Helper functions ***
     NodeInfo* GetNodeInfo(HTREEITEM hItem);
@@ -104,6 +104,12 @@ private:
         _In_opt_ LPCITEMIDLIST pidl0,
         _In_opt_ LPCITEMIDLIST pidl1,
         _In_ LONG lEvent);
+    void Refresh();
+    void RefreshRecurse(HTREEITEM hItem);
+    BOOL IsTreeItemInEnum(HTREEITEM hItem, IEnumIDList *pEnum);
+    BOOL TreeItemHasThisChild(HTREEITEM hItem, PITEMID_CHILD pidlChild);
+    HRESULT GetItemEnum(CComPtr<IEnumIDList>& pEnum, HTREEITEM hItem);
+    BOOL ItemHasAnyChild(HTREEITEM hItem);
 
     // *** Tree item sorting callback ***
     static int CALLBACK CompareTreeItems(LPARAM p1, LPARAM p2, LPARAM p3);
@@ -205,6 +211,7 @@ public:
         MESSAGE_HANDLER(WM_USER_SHELLEVENT, OnShellEvent)
         MESSAGE_HANDLER(WM_RBUTTONDOWN, ContextMenuHack)
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
+        MESSAGE_HANDLER(WM_TIMER, OnTimer)
         // MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
     END_MSG_MAP()
 };
