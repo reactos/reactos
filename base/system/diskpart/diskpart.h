@@ -48,6 +48,8 @@
 #include <ndk/setypes.h>
 #include <ndk/umfuncs.h>
 
+#include <fmifs/fmifs.h>
+
 #include "resource.h"
 
 /* DEFINES *******************************************************************/
