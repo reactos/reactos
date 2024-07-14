@@ -631,7 +631,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 
         /* Check MBR type against EZ Drive type */
         StartingOffset.QuadPart = 0;
-        HalExamineMBR(DeviceObject, DiskGeometry.BytesPerSector, 0x55, &Data);
+        HalExamineMBR(DeviceObject, DiskGeometry.BytesPerSector, PARTITION_EZDRIVE, &Data);
         if (Data)
         {
             /* If MBR is of the EZ Drive type, we'll read after it */
