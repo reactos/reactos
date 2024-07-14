@@ -1,28 +1,14 @@
 /*
- * ReactOS Explorer
- *
- * Copyright 2016 Sylvain Deverre <deverre dot sylv at gmail dot com>
- * Copyright 2020 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Explorer bar
+ * COPYRIGHT:   Copyright 2016 Sylvain Deverre <deverre dot sylv at gmail dot com>
+ *              Copyright 2020-2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #pragma once
 
-#define WM_USER_SHELLEVENT WM_USER+88
-#define WM_USER_FOLDEREVENT WM_USER+88
+#define WM_USER_SHELLEVENT (WM_USER + 88)
 
 class CExplorerBand :
     public CComCoClass<CExplorerBand, &CLSID_ExplorerBand>,
@@ -95,16 +81,29 @@ private:
     // *** Helper functions ***
     NodeInfo* GetNodeInfo(HTREEITEM hItem);
     HRESULT UpdateBrowser(LPITEMIDLIST pidlGoto);
-    HTREEITEM InsertItem(HTREEITEM hParent, IShellFolder *psfParent, LPITEMIDLIST pElt, LPITEMIDLIST pEltRelative, BOOL bSort);
-    HTREEITEM InsertItem(HTREEITEM hParent, LPITEMIDLIST pElt, LPITEMIDLIST pEltRelative, BOOL bSort);
+    HTREEITEM InsertItem(
+        _In_opt_ HTREEITEM hParent,
+        _Inout_ IShellFolder *psfParent,
+        _In_ LPCITEMIDLIST pElt,
+        _In_ LPCITEMIDLIST pEltRelative,
+        _In_ BOOL bSort);
+    HTREEITEM InsertItem(
+        _In_opt_ HTREEITEM hParent,
+        _In_ LPCITEMIDLIST pElt,
+        _In_ LPCITEMIDLIST pEltRelative,
+        _In_ BOOL bSort);
     BOOL InsertSubitems(HTREEITEM hItem, NodeInfo *pNodeInfo);
-    BOOL NavigateToPIDL(LPITEMIDLIST dest, HTREEITEM *item, BOOL bExpand, BOOL bInsert, BOOL bSelect);
-    BOOL DeleteItem(LPITEMIDLIST toDelete);
-    BOOL RenameItem(HTREEITEM toRename, LPITEMIDLIST newPidl);
-    BOOL RefreshTreePidl(HTREEITEM tree, LPITEMIDLIST pidlParent);
+    BOOL NavigateToPIDL(LPCITEMIDLIST dest, HTREEITEM *item, BOOL bExpand, BOOL bInsert, BOOL bSelect);
+    BOOL DeleteItem(LPCITEMIDLIST toDelete);
+    BOOL RenameItem(HTREEITEM toRename, LPCITEMIDLIST newPidl);
+    BOOL RefreshTreePidl(HTREEITEM tree, LPCITEMIDLIST pidlParent);
     BOOL NavigateToCurrentFolder();
     HRESULT GetCurrentLocation(PIDLIST_ABSOLUTE &pidl);
     HRESULT IsCurrentLocation(PCIDLIST_ABSOLUTE pidl);
+    void OnChangeNotify(
+        _In_opt_ LPCITEMIDLIST pidl0,
+        _In_opt_ LPCITEMIDLIST pidl1,
+        _In_ LONG lEvent);
 
     // *** Tree item sorting callback ***
     static int CALLBACK CompareTreeItems(LPARAM p1, LPARAM p2, LPARAM p3);

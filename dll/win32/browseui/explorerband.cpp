@@ -1,22 +1,9 @@
 /*
- * ReactOS Explorer
- *
- * Copyright 2016 Sylvain Deverre <deverre dot sylv at gmail dot com>
- * Copyright 2020 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Explorer bar
+ * COPYRIGHT:   Copyright 2016 Sylvain Deverre <deverre.sylv@gmail.com>
+ *              Copyright 2020-2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
@@ -87,7 +74,9 @@ HRESULT GetDisplayName(LPCITEMIDLIST pidlDirectory,TCHAR *szDisplayName,UINT cch
  ill-formed PIDL stripped from useful data that parses incorrectly with SHGetFileInfo.
  So we need to re-enumerate subfolders until we find one with the same name.
  */
-HRESULT _ReparsePIDL(LPITEMIDLIST buggyPidl, LPITEMIDLIST *cleanPidl)
+HRESULT _ReparsePIDL(
+    _In_ LPCITEMIDLIST buggyPidl,
+    _Out_ LPITEMIDLIST *cleanPidl)
 {
     HRESULT                             hr;
     CComPtr<IShellFolder>               folder;
@@ -187,7 +176,7 @@ void CExplorerBand::InitializeExplorerBand()
     TreeView_SetImageList(m_hWnd, (HIMAGELIST)piml, TVSIL_NORMAL);
 
     // Insert the root node
-    m_hRoot = InsertItem(0, m_pDesktop, pidl, pidl, FALSE);
+    m_hRoot = InsertItem(NULL, m_pDesktop, pidl, pidl, FALSE);
     if (!m_hRoot)
     {
         ERR("Failed to create root item\n");
@@ -208,7 +197,7 @@ void CExplorerBand::InitializeExplorerBand()
     shcne.fRecursive = TRUE;
     m_shellRegID = SHChangeNotifyRegister(
         m_hWnd,
-        SHCNRF_ShellLevel | SHCNRF_InterruptLevel | SHCNRF_RecursiveInterrupt,
+        SHCNRF_NewDelivery | SHCNRF_ShellLevel | SHCNRF_InterruptLevel | SHCNRF_RecursiveInterrupt,
         SHCNE_DISKEVENTS | SHCNE_RENAMEFOLDER | SHCNE_RMDIR | SHCNE_MKDIR,
         WM_USER_SHELLEVENT,
         1,
@@ -580,35 +569,59 @@ LRESULT CExplorerBand::ContextMenuHack(UINT uMsg, WPARAM wParam, LPARAM lParam, 
     return FALSE; /* let the wndproc process the message */
 }
 
+// WM_USER_SHELLEVENT
 LRESULT CExplorerBand::OnShellEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    LPITEMIDLIST *dest;
+    // We use SHCNRF_NewDelivery method
+    HANDLE hChange = (HANDLE)wParam;
+    DWORD dwProcID = (DWORD)lParam;
+
+    PIDLIST_ABSOLUTE *ppidl = NULL;
+    LONG lEvent;
+    HANDLE hLock = SHChangeNotification_Lock(hChange, dwProcID, &ppidl, &lEvent);
+    if (hLock == NULL)
+    {
+        ERR("hLock == NULL\n");
+        return 0;
+    }
+
+    OnChangeNotify(ppidl[0], ppidl[1], (lEvent & ~SHCNE_INTERRUPT));
+
+    SHChangeNotification_Unlock(hLock);
+    return 0;
+}
+
+void
+CExplorerBand::OnChangeNotify(
+    _In_opt_ LPCITEMIDLIST pidl0,
+    _In_opt_ LPCITEMIDLIST pidl1,
+    _In_ LONG lEvent)
+{
     LPITEMIDLIST clean;
     HTREEITEM pItem;
 
-    dest = (LPITEMIDLIST*)wParam;
     /* TODO: handle shell notifications */
-    switch(lParam & ~SHCNE_INTERRUPT)
+    switch (lEvent)
     {
     case SHCNE_MKDIR:
-        if (!SUCCEEDED(_ReparsePIDL(dest[0], &clean)))
+        if (!SUCCEEDED(_ReparsePIDL(pidl0, &clean)))
         {
             ERR("Can't reparse PIDL to a valid one\n");
-            return FALSE;
+            break;
         }
         NavigateToPIDL(clean, &pItem, FALSE, TRUE, FALSE);
         ILFree(clean);
         break;
     case SHCNE_RMDIR:
-        DeleteItem(dest[0]);
+        DeleteItem(pidl0);
         break;
     case SHCNE_RENAMEFOLDER:
-        if (!SUCCEEDED(_ReparsePIDL(dest[1], &clean)))
+        if (!SUCCEEDED(_ReparsePIDL(pidl1, &clean)))
         {
             ERR("Can't reparse PIDL to a valid one\n");
-            return FALSE;
+            break;
         }
-        if (NavigateToPIDL(dest[0], &pItem, FALSE, FALSE, FALSE))
+        if (NavigateToPIDL(pidl0, &pItem, FALSE, FALSE, FALSE))
             RenameItem(pItem, clean);
         ILFree(clean);
         break;
@@ -619,7 +632,6 @@ LRESULT CExplorerBand::OnShellEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
     default:
         TRACE("Unhandled message\n");
     }
-    return TRUE;
 }
 
 LRESULT CExplorerBand::OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -638,7 +650,13 @@ LRESULT CExplorerBand::OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 }
 
 // *** Helper functions ***
-HTREEITEM CExplorerBand::InsertItem(HTREEITEM hParent, IShellFolder *psfParent, LPITEMIDLIST pElt, LPITEMIDLIST pEltRelative, BOOL bSort)
+HTREEITEM
+CExplorerBand::InsertItem(
+    _In_opt_ HTREEITEM hParent,
+    _Inout_ IShellFolder *psfParent,
+    _In_ LPCITEMIDLIST pElt,
+    _In_ LPCITEMIDLIST pEltRelative,
+    _In_ BOOL bSort)
 {
     TV_INSERTSTRUCT                     tvInsert;
     HTREEITEM                           htiCreated;
@@ -707,7 +725,12 @@ HTREEITEM CExplorerBand::InsertItem(HTREEITEM hParent, IShellFolder *psfParent, 
 }
 
 /* This is the slow version of the above method */
-HTREEITEM CExplorerBand::InsertItem(HTREEITEM hParent, LPITEMIDLIST pElt, LPITEMIDLIST pEltRelative, BOOL bSort)
+HTREEITEM
+CExplorerBand::InsertItem(
+    _In_opt_ HTREEITEM hParent,
+    _In_ LPCITEMIDLIST pElt,
+    _In_ LPCITEMIDLIST pEltRelative,
+    _In_ BOOL bSort)
 {
     CComPtr<IShellFolder> psfFolder;
     HRESULT hr = SHBindToParent(pElt, IID_PPV_ARG(IShellFolder, &psfFolder), NULL);
@@ -805,7 +828,7 @@ BOOL CExplorerBand::InsertSubitems(HTREEITEM hItem, NodeInfo *pNodeInfo)
  *  - bInsert: insert the element at the right place if we don't find it
  *  - bSelect: select the item after we found it
  */
-BOOL CExplorerBand::NavigateToPIDL(LPITEMIDLIST dest, HTREEITEM *item, BOOL bExpand, BOOL bInsert,
+BOOL CExplorerBand::NavigateToPIDL(LPCITEMIDLIST dest, HTREEITEM *item, BOOL bExpand, BOOL bInsert,
         BOOL bSelect)
 {
     HTREEITEM                           current;
@@ -917,7 +940,7 @@ BOOL CExplorerBand::NavigateToCurrentFolder()
     return result;
 }
 
-BOOL CExplorerBand::DeleteItem(LPITEMIDLIST idl)
+BOOL CExplorerBand::DeleteItem(LPCITEMIDLIST idl)
 {
     HTREEITEM                           toDelete;
     TVITEM                              tvItem;
@@ -950,7 +973,7 @@ BOOL CExplorerBand::DeleteItem(LPITEMIDLIST idl)
     return TRUE;
 }
 
-BOOL CExplorerBand::RenameItem(HTREEITEM toRename, LPITEMIDLIST newPidl)
+BOOL CExplorerBand::RenameItem(HTREEITEM toRename, LPCITEMIDLIST newPidl)
 {
     WCHAR                               wszDisplayName[MAX_PATH];
     TVITEM                              itemInfo;
@@ -1000,7 +1023,7 @@ BOOL CExplorerBand::RenameItem(HTREEITEM toRename, LPITEMIDLIST newPidl)
     return TRUE;
 }
 
-BOOL CExplorerBand::RefreshTreePidl(HTREEITEM tree, LPITEMIDLIST pidlParent)
+BOOL CExplorerBand::RefreshTreePidl(HTREEITEM tree, LPCITEMIDLIST pidlParent)
 {
     HTREEITEM                           tmp;
     NodeInfo                            *pInfo;
@@ -1339,7 +1362,6 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::GetSizeMax(ULARGE_INTEGER *pcbSize)
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
-
 
 // *** IWinEventHandler methods ***
 HRESULT STDMETHODCALLTYPE CExplorerBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
