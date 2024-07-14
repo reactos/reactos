@@ -607,8 +607,7 @@ void CExplorerBand::RefreshRecurse(HTREEITEM hTarget)
 
         if (SUCCEEDED(hrEnum) && !IsTreeItemInEnum(hItem, pEnum))
         {
-            NodeInfo* pNode = GetNodeInfo(hItem);
-            DeleteItem(pNode->absolutePidl);
+            DeleteItem(hItem);
             continue;
         }
     }
@@ -1004,37 +1003,28 @@ BOOL CExplorerBand::NavigateToCurrentFolder()
     return result;
 }
 
-BOOL CExplorerBand::DeleteItem(LPCITEMIDLIST idl)
+void CExplorerBand::DeleteItem(HTREEITEM toDelete)
 {
-    HTREEITEM                           toDelete;
-    TVITEM                              tvItem;
-    HTREEITEM                           parentNode;
+    NodeInfo* pNode = GetNodeInfo(toDelete);
+    if (!pNode)
+        return;
 
-    if (!NavigateToPIDL(idl, &toDelete, FALSE, FALSE, FALSE))
-        return FALSE;
-
-    // TODO: check that the treeview item is really deleted
-
-    parentNode = TreeView_GetParent(m_hWnd, toDelete);
     // Navigate to parent when deleting child item
-    if (!m_pDesktop->CompareIDs(0, idl, m_pidlCurrent))
-    {
+    HTREEITEM parentNode = TreeView_GetParent(m_hWnd, toDelete);
+    if (!m_pDesktop->CompareIDs(0, pNode->absolutePidl, m_pidlCurrent))
         TreeView_SelectItem(m_hWnd, parentNode);
-    }
 
     // Remove the child item
-    TreeView_DeleteItem(m_hWnd, toDelete);
+    if (!TreeView_DeleteItem(m_hWnd, toDelete))
+        return;
+
     // Probe parent to see if it has children
     if (!TreeView_GetChild(m_hWnd, parentNode))
     {
         // Decrement parent's child count
-        ZeroMemory(&tvItem, sizeof(tvItem));
-        tvItem.mask = TVIF_CHILDREN;
-        tvItem.hItem = parentNode;
-        tvItem.cChildren = 0;
+        TVITEMW tvItem = { TVIF_CHILDREN, parentNode };
         TreeView_SetItem(m_hWnd, &tvItem);
     }
-    return TRUE;
 }
 
 // *** Tree item sorting callback ***

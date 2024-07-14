@@ -94,7 +94,7 @@ private:
         _In_ BOOL bSort);
     BOOL InsertSubitems(HTREEITEM hItem, NodeInfo *pNodeInfo);
     BOOL NavigateToPIDL(LPCITEMIDLIST dest, HTREEITEM *item, BOOL bExpand, BOOL bInsert, BOOL bSelect);
-    BOOL DeleteItem(LPCITEMIDLIST toDelete);
+    void DeleteItem(HTREEITEM toDelete);
     BOOL NavigateToCurrentFolder();
     HRESULT GetCurrentLocation(PIDLIST_ABSOLUTE &pidl);
     HRESULT IsCurrentLocation(PCIDLIST_ABSOLUTE pidl);
