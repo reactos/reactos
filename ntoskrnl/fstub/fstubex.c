@@ -100,12 +100,6 @@ C_ASSERT(sizeof(MASTER_BOOT_RECORD) == 512);
     ((Disk)->Buffer)       &&    \
     ((Disk)->SectorCount))
 
-VOID
-NTAPI
-FstubDbgPrintPartitionEx(IN PPARTITION_INFORMATION_EX PartitionEntry,
-                         IN ULONG PartitionNumber
-);
-
 NTSTATUS
 NTAPI
 FstubDetectPartitionStyle(IN PDISK_INFORMATION Disk,
@@ -529,34 +523,32 @@ FstubCreateDiskRaw(IN PDEVICE_OBJECT DeviceObject)
     return Status;
 }
 
-PCHAR
-NTAPI
-FstubDbgGuidToString(IN PGUID Guid,
-                     OUT PCHAR String)
+#ifndef NDEBUG
+static __inline
+VOID
+FstubDbgGuidToString(
+    _In_ PGUID Guid,
+    _Out_ PCHAR String)
 {
     sprintf(String,
             "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
-            Guid->Data1,
-            Guid->Data2,
-            Guid->Data3,
-            Guid->Data4[0],
-            Guid->Data4[1],
-            Guid->Data4[2],
-            Guid->Data4[3],
-            Guid->Data4[4],
-            Guid->Data4[5],
-            Guid->Data4[6],
-            Guid->Data4[7]);
-
-    return String;
+            Guid->Data1, Guid->Data2, Guid->Data3,
+            Guid->Data4[0], Guid->Data4[1], Guid->Data4[2], Guid->Data4[3],
+            Guid->Data4[4], Guid->Data4[5], Guid->Data4[6], Guid->Data4[7]);
 }
 
-VOID
-NTAPI
-FstubDbgPrintDriveLayoutEx(IN PDRIVE_LAYOUT_INFORMATION_EX DriveLayout)
+static VOID
+FstubDbgPrintPartitionEx(
+    _In_ PPARTITION_INFORMATION_EX PartitionEntry,
+    _In_ ULONG PartitionNumber);
+#endif // !NDEBUG
+
+static VOID
+FstubDbgPrintDriveLayoutEx(
+    _In_ PDRIVE_LAYOUT_INFORMATION_EX DriveLayout)
 {
+#ifndef NDEBUG
     ULONG i;
-    CHAR Guid[EFI_GUID_STRING_SIZE];
 
     PAGED_CODE();
 
@@ -564,104 +556,116 @@ FstubDbgPrintDriveLayoutEx(IN PDRIVE_LAYOUT_INFORMATION_EX DriveLayout)
     switch (DriveLayout->PartitionStyle)
     {
         case PARTITION_STYLE_MBR:
+        {
             if (DriveLayout->PartitionCount % NUM_PARTITION_TABLE_ENTRIES != 0)
             {
-                DPRINT("Warning: Partition count isn't a 4-factor: %lu!\n", DriveLayout->PartitionCount);
+                DbgPrint("  Warning: Partition count isn't a 4-factor: %lu!\n", DriveLayout->PartitionCount);
             }
-
-            DPRINT("Signature: %8.8x\n", DriveLayout->Mbr.Signature);
+            DbgPrint("  Signature: %8.8x\n", DriveLayout->Mbr.Signature);
             for (i = 0; i < DriveLayout->PartitionCount; i++)
             {
                 FstubDbgPrintPartitionEx(DriveLayout->PartitionEntry, i);
             }
-
             break;
+        }
+
         case PARTITION_STYLE_GPT:
+        {
+            CHAR Guid[EFI_GUID_STRING_SIZE];
             FstubDbgGuidToString(&(DriveLayout->Gpt.DiskId), Guid);
-            DPRINT("DiskId: %s\n", Guid);
-            DPRINT("StartingUsableOffset: %I64x\n", DriveLayout->Gpt.StartingUsableOffset.QuadPart);
-            DPRINT("UsableLength: %I64x\n", DriveLayout->Gpt.UsableLength.QuadPart);
-            DPRINT("MaxPartitionCount: %lu\n", DriveLayout->Gpt.MaxPartitionCount);
+            DbgPrint("  DiskId: %s\n", Guid);
+            DbgPrint("  StartingUsableOffset: %I64x\n", DriveLayout->Gpt.StartingUsableOffset.QuadPart);
+            DbgPrint("  UsableLength: %I64x\n", DriveLayout->Gpt.UsableLength.QuadPart);
+            DbgPrint("  MaxPartitionCount: %lu\n", DriveLayout->Gpt.MaxPartitionCount);
             for (i = 0; i < DriveLayout->PartitionCount; i++)
             {
                 FstubDbgPrintPartitionEx(DriveLayout->PartitionEntry, i);
             }
-
             break;
+        }
+
         default:
-            DPRINT("Unsupported partition style: %lu\n", DriveLayout->PartitionStyle);
+            DbgPrint("  Unsupported partition style: %lu\n", DriveLayout->PartitionStyle);
     }
+#endif // !NDEBUG
 }
 
-VOID
-NTAPI
-FstubDbgPrintPartitionEx(IN PPARTITION_INFORMATION_EX PartitionEntry,
-                         IN ULONG PartitionNumber)
+#ifndef NDEBUG
+static VOID
+FstubDbgPrintPartitionEx(
+    _In_ PPARTITION_INFORMATION_EX PartitionEntry,
+    _In_ ULONG PartitionNumber)
 {
-    CHAR Guid[EFI_GUID_STRING_SIZE];
-
     PAGED_CODE();
 
     DPRINT("Printing partition %lu\n", PartitionNumber);
-
     switch (PartitionEntry[PartitionNumber].PartitionStyle)
     {
         case PARTITION_STYLE_MBR:
-            DPRINT("  StartingOffset: %I64x\n", PartitionEntry[PartitionNumber].StartingOffset.QuadPart);
-            DPRINT("  PartitionLength: %I64x\n", PartitionEntry[PartitionNumber].PartitionLength.QuadPart);
-            DPRINT("  RewritePartition: %u\n", PartitionEntry[PartitionNumber].RewritePartition);
-            DPRINT("  PartitionType: %02x\n", PartitionEntry[PartitionNumber].Mbr.PartitionType);
-            DPRINT("  BootIndicator: %u\n", PartitionEntry[PartitionNumber].Mbr.BootIndicator);
-            DPRINT("  RecognizedPartition: %u\n", PartitionEntry[PartitionNumber].Mbr.RecognizedPartition);
-            DPRINT("  HiddenSectors: %lu\n", PartitionEntry[PartitionNumber].Mbr.HiddenSectors);
-
+        {
+            DbgPrint("  StartingOffset: %I64x\n", PartitionEntry[PartitionNumber].StartingOffset.QuadPart);
+            DbgPrint("  PartitionLength: %I64x\n", PartitionEntry[PartitionNumber].PartitionLength.QuadPart);
+            DbgPrint("  RewritePartition: %u\n", PartitionEntry[PartitionNumber].RewritePartition);
+            DbgPrint("  PartitionType: %02x\n", PartitionEntry[PartitionNumber].Mbr.PartitionType);
+            DbgPrint("  BootIndicator: %u\n", PartitionEntry[PartitionNumber].Mbr.BootIndicator);
+            DbgPrint("  RecognizedPartition: %u\n", PartitionEntry[PartitionNumber].Mbr.RecognizedPartition);
+            DbgPrint("  HiddenSectors: %lu\n", PartitionEntry[PartitionNumber].Mbr.HiddenSectors);
             break;
+        }
+
         case PARTITION_STYLE_GPT:
-            DPRINT("  StartingOffset: %I64x\n", PartitionEntry[PartitionNumber].StartingOffset.QuadPart);
-            DPRINT("  PartitionLength: %I64x\n", PartitionEntry[PartitionNumber].PartitionLength.QuadPart);
-            DPRINT("  RewritePartition: %u\n", PartitionEntry[PartitionNumber].RewritePartition);
+        {
+            CHAR Guid[EFI_GUID_STRING_SIZE];
+            DbgPrint("  StartingOffset: %I64x\n", PartitionEntry[PartitionNumber].StartingOffset.QuadPart);
+            DbgPrint("  PartitionLength: %I64x\n", PartitionEntry[PartitionNumber].PartitionLength.QuadPart);
+            DbgPrint("  RewritePartition: %u\n", PartitionEntry[PartitionNumber].RewritePartition);
             FstubDbgGuidToString(&(PartitionEntry[PartitionNumber].Gpt.PartitionType), Guid);
-            DPRINT("  PartitionType: %s\n", Guid);
+            DbgPrint("  PartitionType: %s\n", Guid);
             FstubDbgGuidToString(&(PartitionEntry[PartitionNumber].Gpt.PartitionId), Guid);
-            DPRINT("  PartitionId: %s\n", Guid);
-            DPRINT("  Attributes: %I64x\n", PartitionEntry[PartitionNumber].Gpt.Attributes);
-            DPRINT("  Name: %ws\n", PartitionEntry[PartitionNumber].Gpt.Name);
-
+            DbgPrint("  PartitionId: %s\n", Guid);
+            DbgPrint("  Attributes: %I64x\n", PartitionEntry[PartitionNumber].Gpt.Attributes);
+            DbgPrint("  Name: %ws\n", PartitionEntry[PartitionNumber].Gpt.Name);
             break;
+        }
+
         default:
-            DPRINT("  Unsupported partition style: %ld\n", PartitionEntry[PartitionNumber].PartitionStyle);
+            DbgPrint("  Unsupported partition style: %ld\n", PartitionEntry[PartitionNumber].PartitionStyle);
     }
 }
+#endif // !NDEBUG
 
-VOID
-NTAPI
-FstubDbgPrintSetPartitionEx(IN PSET_PARTITION_INFORMATION_EX PartitionEntry,
-                            IN ULONG PartitionNumber)
+static VOID
+FstubDbgPrintSetPartitionEx(
+    _In_ PSET_PARTITION_INFORMATION_EX PartitionEntry,
+    _In_ ULONG PartitionNumber)
 {
-    CHAR Guid[EFI_GUID_STRING_SIZE];
-
+#ifndef NDEBUG
     PAGED_CODE();
 
     DPRINT("FSTUB: SET_PARTITION_INFORMATION_EX: %p\n", PartitionEntry);
-    DPRINT("Modifying partition %lu\n", PartitionNumber);
+    DbgPrint("Modifying partition %lu\n", PartitionNumber);
     switch (PartitionEntry->PartitionStyle)
     {
         case PARTITION_STYLE_MBR:
-            DPRINT("  PartitionType: %02x\n", PartitionEntry->Mbr.PartitionType);
-
+            DbgPrint("  PartitionType: %02x\n", PartitionEntry->Mbr.PartitionType);
             break;
+
         case PARTITION_STYLE_GPT:
+        {
+            CHAR Guid[EFI_GUID_STRING_SIZE];
             FstubDbgGuidToString(&(PartitionEntry->Gpt.PartitionType), Guid);
-            DPRINT("  PartitionType: %s\n", Guid);
+            DbgPrint("  PartitionType: %s\n", Guid);
             FstubDbgGuidToString(&(PartitionEntry->Gpt.PartitionId), Guid);
-            DPRINT("  PartitionId: %s\n", Guid);
-            DPRINT("  Attributes: %I64x\n", PartitionEntry->Gpt.Attributes);
-            DPRINT("  Name: %ws\n", PartitionEntry->Gpt.Name);
-
+            DbgPrint("  PartitionId: %s\n", Guid);
+            DbgPrint("  Attributes: %I64x\n", PartitionEntry->Gpt.Attributes);
+            DbgPrint("  Name: %ws\n", PartitionEntry->Gpt.Name);
             break;
+        }
+
         default:
-            DPRINT("  Unsupported partition style: %ld\n", PartitionEntry[PartitionNumber].PartitionStyle);
+            DbgPrint("  Unsupported partition style: %ld\n", PartitionEntry->PartitionStyle);
     }
+#endif // !NDEBUG
 }
 
 NTSTATUS
