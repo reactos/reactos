@@ -1828,6 +1828,7 @@ BOOL WINAPI ReadCabinetState(CABINETSTATE *cs, int length)
 		SHGetSetSettings(&shellstate, SSF_WIN95CLASSIC, FALSE);
 
 		TRACE("Initializing shell cabinet settings\n");
+		memset(cs, 0, sizeof(*cs));
 		cs->cLength          = sizeof(*cs);
 		cs->nVersion         = 2;
 		cs->fFullPathTitle   = FALSE;
@@ -1839,7 +1840,6 @@ BOOL WINAPI ReadCabinetState(CABINETSTATE *cs, int length)
 		cs->fShowCompColor   = FALSE;
 		cs->fDontPrettyNames = FALSE;
 		cs->fAdminsCreateCommonGroups = TRUE;
-		cs->fUnusedFlags = 0;
 		cs->fMenuEnumFilter  = SHCONTF_FOLDERS | SHCONTF_NONFOLDERS;
 	}
 
