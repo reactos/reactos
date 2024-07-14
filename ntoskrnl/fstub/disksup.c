@@ -278,8 +278,8 @@ HalpQueryPartitionType(
         return STATUS_SUCCESS;
     }
 
-    /* Now, evaluate the partition to the 4 in the input layout */
-    for (i = 0; i < 4; ++i)
+    /* Now, evaluate the partition to those in the input layout */
+    for (i = 0; i < NUM_PARTITION_TABLE_ENTRIES; ++i)
     {
         /* If we find a partition matching */
         if (LayoutInfo->PartitionEntry[i].StartingOffset.QuadPart == PartitionInfo.StartingOffset.QuadPart)

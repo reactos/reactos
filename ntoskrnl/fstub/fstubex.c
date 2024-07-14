@@ -564,7 +564,7 @@ FstubDbgPrintDriveLayoutEx(IN PDRIVE_LAYOUT_INFORMATION_EX DriveLayout)
     switch (DriveLayout->PartitionStyle)
     {
         case PARTITION_STYLE_MBR:
-            if (DriveLayout->PartitionCount % 4 != 0)
+            if (DriveLayout->PartitionCount % NUM_PARTITION_TABLE_ENTRIES != 0)
             {
                 DPRINT("Warning: Partition count isn't a 4-factor: %lu!\n", DriveLayout->PartitionCount);
             }
