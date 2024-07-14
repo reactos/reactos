@@ -672,7 +672,8 @@ void CExplorerBand::RefreshRecurse(HTREEITEM hTarget)
 
         if (SUCCEEDED(hrEnum) && !IsTreeItemInEnum(hItem, pEnum))
         {
-            TreeView_DeleteItem(m_hWnd, hItem);
+            NodeInfo* pNode = GetNodeInfo(hItem);
+            DeleteItem(pNode->absolutePidl);
             continue;
         }
     }
@@ -705,7 +706,7 @@ void CExplorerBand::RefreshRecurse(HTREEITEM hTarget)
         item.cChildren = ItemHasAnyChild(hItem);
         TreeView_SetItem(m_hWnd, &item);
 
-        if (TreeView_GetItemState(m_hWnd, hItem, TVIS_EXPANDED) & TVIS_EXPANDED)
+        if (TreeView_GetItemState(m_hWnd, hItem, TVIS_EXPANDEDONCE) & TVIS_EXPANDEDONCE)
         {
             RefreshRecurse(hItem);
             continue;
@@ -1098,56 +1099,6 @@ BOOL CExplorerBand::DeleteItem(LPCITEMIDLIST idl)
         tvItem.cChildren = 0;
         TreeView_SetItem(m_hWnd, &tvItem);
     }
-    return TRUE;
-}
-
-BOOL CExplorerBand::RenameItem(HTREEITEM toRename, LPCITEMIDLIST newPidl)
-{
-    WCHAR                               wszDisplayName[MAX_PATH];
-    TVITEM                              itemInfo;
-    LPCITEMIDLIST                       relPidl;
-    NodeInfo                            *treeInfo;
-    TVSORTCB                            sortCallback;
-    HTREEITEM                           child;
-
-    ZeroMemory(&itemInfo, sizeof(itemInfo));
-    itemInfo.mask = TVIF_PARAM;
-    itemInfo.hItem = toRename;
-
-    // Change PIDL associated to the item
-    relPidl = ILFindLastID(newPidl);
-    TreeView_GetItem(m_hWnd, &itemInfo);
-    if (!itemInfo.lParam)
-    {
-        ERR("Unable to fetch lParam\n");
-        return FALSE;
-    }
-    SendMessage(WM_SETREDRAW, FALSE, 0);
-    treeInfo = (NodeInfo*)itemInfo.lParam;
-    ILFree(treeInfo->absolutePidl);
-    ILFree(treeInfo->relativePidl);
-    treeInfo->absolutePidl = ILClone(newPidl);
-    treeInfo->relativePidl = ILClone(relPidl);
-
-    // Change the display name
-    GetDisplayName(newPidl, wszDisplayName, MAX_PATH, SHGDN_INFOLDER);
-    ZeroMemory(&itemInfo, sizeof(itemInfo));
-    itemInfo.hItem = toRename;
-    itemInfo.mask = TVIF_TEXT;
-    itemInfo.pszText = wszDisplayName;
-    TreeView_SetItem(m_hWnd, &itemInfo);
-
-    if((child = TreeView_GetChild(m_hWnd, toRename)) != NULL)
-    {
-        RefreshTreePidl(child, newPidl);
-    }
-
-    // Sorting
-    sortCallback.hParent = TreeView_GetParent(m_hWnd, toRename);
-    sortCallback.lpfnCompare = CompareTreeItems;
-    sortCallback.lParam = (LPARAM)this;
-    SendMessage(TVM_SORTCHILDRENCB, 0, (LPARAM)&sortCallback);
-    SendMessage(WM_SETREDRAW, TRUE, 0);
     return TRUE;
 }
 
