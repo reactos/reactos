@@ -243,10 +243,8 @@ HalpQueryPartitionType(
             return STATUS_SUCCESS;
         }
 
-        /* Check whether that's data partition */
-        if (RtlCompareMemory(&PartitionInfo.Gpt.PartitionType,
-                             &PARTITION_BASIC_DATA_GUID,
-                             sizeof(GUID)) == sizeof(GUID))
+        /* Check whether this is a data partition */
+        if (IsEqualGUID(&PartitionInfo.Gpt.PartitionType, &PARTITION_BASIC_DATA_GUID))
         {
             *PartitionType = DataPartition;
             return STATUS_SUCCESS;
