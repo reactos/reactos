@@ -123,14 +123,16 @@ void CExplorerBand::InitializeExplorerBand()
     // Navigate to current folder position
     NavigateToCurrentFolder();
 
-#define WATCH_EVENT (SHCNE_ALLEVENTS & ~(SHCNE_FREESPACE | SHCNE_ATTRIBUTES | SHCNE_NETSHARE | \
-                     SHCNE_NETUNSHARE | SHCNE_EXTENDED_EVENT))
-
+#define TARGET_EVENTS ( \
+    SHCNE_DRIVEADD | SHCNE_MKDIR | SHCNE_CREATE | SHCNE_DRIVEREMOVED | SHCNE_RMDIR | \
+    SHCNE_DELETE | SHCNE_RENAMEFOLDER | SHCNE_RENAMEITEM | SHCNE_UPDATEDIR | \
+    SHCNE_UPDATEITEM | SHCNE_ASSOCCHANGED \
+)
     // Register shell notification
     SHChangeNotifyEntry shcne = { pidl, TRUE };
     m_shellRegID = SHChangeNotifyRegister(m_hWnd,
                                           SHCNRF_NewDelivery | SHCNRF_ShellLevel,
-                                          WATCH_EVENT,
+                                          TARGET_EVENTS,
                                           WM_USER_SHELLEVENT,
                                           1, &shcne);
     if (!m_shellRegID)
