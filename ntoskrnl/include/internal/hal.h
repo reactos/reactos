@@ -240,36 +240,36 @@ xKdUnmapVirtualAddress(
 //
 // Various offsets in the boot record
 //
-#define DISK_SIGNATURE_OFFSET                       0x1B8
-#define PARTITION_TABLE_OFFSET                      0x1BE
-#define BOOT_SIGNATURE_OFFSET                       (0x200 - 2)
+#define DISK_SIGNATURE_OFFSET           0x1B8
+#define PARTITION_TABLE_OFFSET          0x1BE
+#define BOOT_SIGNATURE_OFFSET           (0x200 - 2)
 
-#define BOOT_RECORD_SIGNATURE                       0xAA55
-#define NUM_PARTITION_TABLE_ENTRIES                 4
+#define BOOT_RECORD_SIGNATURE           0xAA55
+#define NUM_PARTITION_TABLE_ENTRIES     4
 
 //
 // Helper Macros
 //
-#define GET_STARTING_SECTOR(p)                      \
-    ((ULONG)(p->StartingSectorLsb0) +               \
-     (ULONG)(p->StartingSectorLsb1 << 8 ) +         \
-     (ULONG)(p->StartingSectorMsb0 << 16) +         \
-     (ULONG)(p->StartingSectorMsb1 << 24))
+#define GET_STARTING_SECTOR(p)                  \
+    ((ULONG)((p)->StartingSectorLsb0) +         \
+     (ULONG)((p)->StartingSectorLsb1 << 8 ) +   \
+     (ULONG)((p)->StartingSectorMsb0 << 16) +   \
+     (ULONG)((p)->StartingSectorMsb1 << 24))
 
-#define GET_ENDING_S_OF_CHS(p)                      \
-    ((UCHAR)(p->EndingCylinderLsb & 0x3F))
+#define GET_ENDING_S_OF_CHS(p)  \
+    ((UCHAR)((p)->EndingCylinderLsb & 0x3F))
 
 #define GET_PARTITION_LENGTH(p)                     \
-    ((ULONG)(p->PartitionLengthLsb0) +              \
-     (ULONG)(p->PartitionLengthLsb1 << 8) +         \
-     (ULONG)(p->PartitionLengthMsb0 << 16) +        \
-     (ULONG)(p->PartitionLengthMsb1 << 24))
+    ((ULONG)((p)->PartitionLengthLsb0) +            \
+     (ULONG)((p)->PartitionLengthLsb1 << 8 ) +      \
+     (ULONG)((p)->PartitionLengthMsb0 << 16) +      \
+     (ULONG)((p)->PartitionLengthMsb1 << 24))
 
 #define SET_PARTITION_LENGTH(p, l)                  \
-    p->PartitionLengthLsb0 = l & 0xFF;              \
-    p->PartitionLengthLsb1 = (l >> 8) & 0xFF;       \
-    p->PartitionLengthMsb0 = (l >> 16) & 0xFF;      \
-    p->PartitionLengthMsb1 = (l >> 24) & 0xFF
+    ((p)->PartitionLengthLsb0 =  (l) & 0xFF,        \
+     (p)->PartitionLengthLsb1 = ((l) >> 8 ) & 0xFF, \
+     (p)->PartitionLengthMsb0 = ((l) >> 16) & 0xFF, \
+     (p)->PartitionLengthMsb1 = ((l) >> 24) & 0xFF)
 
 //
 // Structure describing a partition

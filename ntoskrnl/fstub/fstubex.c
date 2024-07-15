@@ -94,11 +94,11 @@ C_ASSERT(sizeof(MASTER_BOOT_RECORD) == 512);
 #define EFI_GUID_STRING_SIZE 0x27
 
 #define IS_VALID_DISK_INFO(Disk) \
-  (Disk)               &&        \
-  (Disk->DeviceObject) &&        \
-  (Disk->SectorSize)   &&        \
-  (Disk->Buffer)       &&        \
-  (Disk->SectorCount)
+    ((Disk)                &&    \
+    ((Disk)->DeviceObject) &&    \
+    ((Disk)->SectorSize)   &&    \
+    ((Disk)->Buffer)       &&    \
+    ((Disk)->SectorCount))
 
 VOID
 NTAPI
