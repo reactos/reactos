@@ -97,12 +97,21 @@ typedef struct _PARTITION_EXTENSION
     UINT64 PartitionLength;
     SINGLE_LIST_ENTRY ListEntry;
 
-    UINT32 VolumeNumber; // Volume number in the "\Device\HarddiskVolumeN" device name
+    /* Volume number in the "\Device\HarddiskVolumeN" name */
+    UINT32 VolumeNumber;
+
+    /* Partition number in the "\Device\HarddiskX\PartitionN" symlink name;
+     * it is assigned to a partition in order to identify it to the system
+     * and corresponds to the PDO number given to PartitionCreateDevice() */
     UINT32 DetectedNumber;
-    UINT32 OnDiskNumber; // partition number for issuing Io requests to the kernel
-    BOOLEAN IsEnumerated; // reported via IRP_MN_QUERY_DEVICE_RELATIONS
+
+    /* Partition ordinal (i.e. the order of the partition on a disk),
+     * used for calling IoSetPartitionInformation(Ex)() API */
+    UINT32 OnDiskNumber;
+
+    BOOLEAN IsEnumerated;   //< Reported via IRP_MN_QUERY_DEVICE_RELATIONS
     BOOLEAN SymlinkCreated;
-    BOOLEAN Attached; // attached to PartitionList of the FDO
+    BOOLEAN Attached;       //< Attached to PartitionList of the FDO
     union
     {
         struct
@@ -130,7 +139,7 @@ NTSTATUS
 PartitionCreateDevice(
     _In_ PDEVICE_OBJECT FDObject,
     _In_ PPARTITION_INFORMATION_EX PartitionEntry,
-    _In_ UINT32 OnDiskNumber,
+    _In_ UINT32 PdoNumber,
     _In_ PARTITION_STYLE PartitionStyle,
     _Out_ PDEVICE_OBJECT *PDO);
 
