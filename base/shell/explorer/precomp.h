@@ -255,6 +255,8 @@ HRESULT ShutdownShellServices(HDPA hdpa);
 BOOL DoStartStartupItems(ITrayWindow *Tray);
 INT ProcessStartupItems(VOID);
 BOOL DoFinishStartupItems(VOID);
+VOID ProcessRunOnceItems(VOID);
+VOID ReleaseStartupMutex(VOID);
 
 /*
  * trayprop.h
