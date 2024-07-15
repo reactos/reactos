@@ -510,12 +510,7 @@ INT ProcessStartupItems(BOOL bRunOnce)
     return res ? 0 : 101;
 }
 
-INT ProcessStartupItems(VOID)
-{
-    return ProcessStartupItems(FALSE);
-}
-
-VOID ReleaseStartupMutex(VOID)
+VOID ReleaseStartupMutex()
 {
     if (s_hStartupMutex)
     {
@@ -525,7 +520,7 @@ VOID ReleaseStartupMutex(VOID)
     }
 }
 
-static BOOL InitializeStartupMutex(VOID)
+static BOOL InitializeStartupMutex()
 {
     if (!bExplorerIsShell)
         return FALSE;
@@ -548,12 +543,6 @@ static BOOL InitializeStartupMutex(VOID)
         ReleaseStartupMutex();
         return FALSE;
     }
-    return TRUE;
-}
-
-BOOL DoFinishStartupItems(VOID)
-{
-    ReleaseStartupMutex();
     return TRUE;
 }
 
@@ -596,8 +585,8 @@ BOOL DoStartStartupItems(ITrayWindow *Tray)
     return TRUE;
 }
 
-VOID ProcessRunOnceItems(VOID)
+VOID ProcessRunOnceItems()
 {
-    if (IsUserAnAdmin() && InitializeStartupMutex())
+    if (bExplorerIsShell && IsUserAnAdmin() && InitializeStartupMutex())
         ProcessStartupItems(TRUE);
 }

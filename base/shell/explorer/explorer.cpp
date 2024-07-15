@@ -169,7 +169,7 @@ StartWithDesktop(IN HINSTANCE hInstance)
         ProcessStartupItems();
         DoFinishStartupItems();
     }
-    ReleaseStartupMutex();
+    ReleaseStartupMutex(); // For ProcessRunOnceItems
 #endif
 
     if (Tray != NULL)
