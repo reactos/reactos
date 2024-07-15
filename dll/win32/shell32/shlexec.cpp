@@ -1900,12 +1900,6 @@ static WCHAR *expand_environment( const WCHAR *str )
     return buf.Detach();
 }
 
-static inline BOOL
-PathIsShortcutFile(LPCWSTR pszFileName)
-{
-    return lstrcmpiW(PathFindExtensionW(pszFileName), L".lnk") == 0;
-}
-
 /*************************************************************************
  *    SHELL_execute [Internal]
  */
@@ -2091,7 +2085,8 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
     }
 
     if (!(sei_tmp.fMask & SEE_MASK_IDLIST) && // Not an ID List
-        !PathIsShortcutFile(sei_tmp.lpFile)) // CShellLink::InvokeCommand depends on ShellExecute
+        (StrCmpNIW(sei_tmp.lpFile, L"shell:", 6) == 0 ||
+         StrCmpNW(sei_tmp.lpFile, L"::{", 3) == 0))
     {
         CComHeapPtr<ITEMIDLIST> pidlParsed;
         HRESULT hr = SHParseDisplayName(sei_tmp.lpFile, NULL, &pidlParsed, 0, NULL);
