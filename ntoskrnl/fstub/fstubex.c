@@ -1090,8 +1090,10 @@ FstubReadPartitionTableEFI(IN PDISK_INFORMATION Disk,
         PartitionInfo->StartingOffset.QuadPart = PartitionEntry.StartingLBA * Disk->SectorSize;
         PartitionInfo->PartitionLength.QuadPart = (PartitionEntry.EndingLBA -
                                                    PartitionEntry.StartingLBA + 1) * Disk->SectorSize;
-        /* This number starts from 1 */
-        PartitionInfo->PartitionNumber = PartitionCount + 1;
+
+        /* Invalidate the partition number (recalculated by the PartMgr) */
+        PartitionInfo->PartitionNumber = -1;
+
         PartitionInfo->RewritePartition = FALSE;
         PartitionInfo->PartitionStyle = PARTITION_STYLE_GPT;
         PartitionInfo->Gpt.PartitionType = PartitionEntry.PartitionType;
