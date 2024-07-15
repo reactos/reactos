@@ -103,11 +103,11 @@ private:
         _In_opt_ LPCITEMIDLIST pidl1,
         _In_ LONG lEvent);
     void Refresh();
-    void RefreshRecurse(HTREEITEM hItem);
-    BOOL IsTreeItemInEnum(HTREEITEM hItem, IEnumIDList *pEnum);
-    BOOL TreeItemHasThisChild(HTREEITEM hItem, PITEMID_CHILD pidlChild);
-    HRESULT GetItemEnum(CComPtr<IEnumIDList>& pEnum, HTREEITEM hItem);
-    BOOL ItemHasAnyChild(HTREEITEM hItem);
+    void RefreshRecurse(_In_ HTREEITEM hItem);
+    BOOL IsTreeItemInEnum(_In_ HTREEITEM hItem, _In_ IEnumIDList *pEnum);
+    BOOL TreeItemHasThisChild(_In_ HTREEITEM hItem, _In_ PCITEMID_CHILD pidlChild);
+    HRESULT GetItemEnum(_Out_ CComPtr<IEnumIDList>& pEnum, _In_ HTREEITEM hItem);
+    BOOL ItemHasAnyChild(_In_ HTREEITEM hItem);
 
     // *** Tree item sorting callback ***
     static int CALLBACK CompareTreeItems(LPARAM p1, LPARAM p2, LPARAM p3);

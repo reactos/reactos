@@ -90,15 +90,11 @@ CExplorerBand::~CExplorerBand()
 void CExplorerBand::InitializeExplorerBand()
 {
     // Init the treeview here
-    HRESULT                             hr;
-    LPITEMIDLIST                        pidl;
-    CComPtr<IWebBrowser2>               browserService;
-    SHChangeNotifyEntry                 shcne;
-
-    hr = SHGetDesktopFolder(&m_pDesktop);
+    HRESULT hr = SHGetDesktopFolder(&m_pDesktop);
     if (FAILED_UNEXPECTEDLY(hr))
         return;
 
+    LPITEMIDLIST pidl;
     hr = SHGetFolderLocation(m_hWnd, CSIDL_DESKTOP, NULL, 0, &pidl);
     if (FAILED_UNEXPECTEDLY(hr))
         return;
@@ -128,7 +124,7 @@ void CExplorerBand::InitializeExplorerBand()
     NavigateToCurrentFolder();
 
     // Register shell notification
-    shcne = { pidl, TRUE };
+    SHChangeNotifyEntry shcne = { pidl, TRUE };
     m_shellRegID = SHChangeNotifyRegister(m_hWnd,
                                           SHCNRF_NewDelivery | SHCNRF_ShellLevel,
                                           SHCNE_DISKEVENTS,
@@ -140,6 +136,7 @@ void CExplorerBand::InitializeExplorerBand()
     }
 
     // Register browser connection endpoint
+    CComPtr<IWebBrowser2> browserService;
     hr = IUnknown_QueryService(m_pSite, SID_SWebBrowserApp, IID_PPV_ARG(IWebBrowser2, &browserService));
     if (FAILED_UNEXPECTEDLY(hr))
         return;
@@ -526,8 +523,8 @@ LRESULT CExplorerBand::OnShellEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 
 BOOL
 CExplorerBand::IsTreeItemInEnum(
-    HTREEITEM hItem,
-    IEnumIDList *pEnum)
+    _In_ HTREEITEM hItem,
+    _In_ IEnumIDList *pEnum)
 {
     NodeInfo* pNodeInfo = GetNodeInfo(hItem);
     if (!pNodeInfo)
@@ -549,8 +546,8 @@ CExplorerBand::IsTreeItemInEnum(
 
 BOOL
 CExplorerBand::TreeItemHasThisChild(
-    HTREEITEM hItem,
-    PITEMID_CHILD pidlChild)
+    _In_ HTREEITEM hItem,
+    _In_ PCITEMID_CHILD pidlChild)
 {
     for (hItem = TreeView_GetChild(m_hWnd, hItem); hItem;
          hItem = TreeView_GetNextSibling(m_hWnd, hItem))
@@ -563,7 +560,10 @@ CExplorerBand::TreeItemHasThisChild(
     return FALSE;
 }
 
-HRESULT CExplorerBand::GetItemEnum(CComPtr<IEnumIDList>& pEnum, HTREEITEM hItem)
+HRESULT
+CExplorerBand::GetItemEnum(
+    _Out_ CComPtr<IEnumIDList>& pEnum,
+    _In_ HTREEITEM hItem)
 {
     NodeInfo* pNodeInfo = GetNodeInfo(hItem);
 
@@ -580,7 +580,7 @@ HRESULT CExplorerBand::GetItemEnum(CComPtr<IEnumIDList>& pEnum, HTREEITEM hItem)
     return pFolder->EnumObjects(NULL, SHCONTF_FOLDERS, &pEnum);
 }
 
-BOOL CExplorerBand::ItemHasAnyChild(HTREEITEM hItem)
+BOOL CExplorerBand::ItemHasAnyChild(_In_ HTREEITEM hItem)
 {
     CComPtr<IEnumIDList> pEnum;
     HRESULT hr = GetItemEnum(pEnum, hItem);
@@ -592,7 +592,7 @@ BOOL CExplorerBand::ItemHasAnyChild(HTREEITEM hItem)
     return SUCCEEDED(hr);
 }
 
-void CExplorerBand::RefreshRecurse(HTREEITEM hTarget)
+void CExplorerBand::RefreshRecurse(_In_ HTREEITEM hTarget)
 {
     NodeInfo* pNodeInfo = GetNodeInfo(hTarget);
 
@@ -606,10 +606,7 @@ void CExplorerBand::RefreshRecurse(HTREEITEM hTarget)
         hNextItem = TreeView_GetNextSibling(m_hWnd, hItem);
 
         if (SUCCEEDED(hrEnum) && !IsTreeItemInEnum(hItem, pEnum))
-        {
             DeleteItem(hItem);
-            continue;
-        }
     }
 
     pEnum = NULL;
@@ -641,10 +638,7 @@ void CExplorerBand::RefreshRecurse(HTREEITEM hTarget)
         TreeView_SetItem(m_hWnd, &item);
 
         if (TreeView_GetItemState(m_hWnd, hItem, TVIS_EXPANDEDONCE) & TVIS_EXPANDEDONCE)
-        {
             RefreshRecurse(hItem);
-            continue;
-        }
     }
 }
 
