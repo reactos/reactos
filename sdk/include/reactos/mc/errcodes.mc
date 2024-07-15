@@ -43133,7 +43133,7 @@ Language=Romanian
 General access denied error
 .
 Language=Japanese
-WIN32のアクセス拒否エラーです。
+一般的なアクセス拒否エラーです。
 .
 
 
