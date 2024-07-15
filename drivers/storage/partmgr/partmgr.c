@@ -269,8 +269,8 @@ PartMgrUpdatePartitionDevices(
                 RtlCopyMemory(partExt->Gpt.Name, partEntry->Gpt.Name, sizeof(partExt->Gpt.Name));
             }
 
-            partExt->OnDiskNumber = partNumber;
-            partEntry->PartitionNumber = partNumber; // mark it as a found one
+            partExt->OnDiskNumber = partNumber; // HACK??
+            partEntry->PartitionNumber = partNumber; // HACK?? // mark it as a found one
             totalPartitions++;
         }
         else
@@ -332,7 +332,7 @@ PartMgrUpdatePartitionDevices(
             }
         }
 
-        partEntry->PartitionNumber = partNumber;
+        partEntry->PartitionNumber = partNumber; // HACK for the partition ordinal
 
         PDEVICE_OBJECT partitionDevice;
         status = PartitionCreateDevice(FdoExtension->DeviceObject,
@@ -352,7 +352,7 @@ PartMgrUpdatePartitionDevices(
 
         totalPartitions++;
 
-        // insert the structure to the partition list
+        // insert the structure in the partition list
         curEntry = FdoExtension->PartitionList.Next;
         prevEntry = NULL;
         while (curEntry != NULL)
@@ -360,7 +360,7 @@ PartMgrUpdatePartitionDevices(
             PPARTITION_EXTENSION curPart = CONTAINING_RECORD(curEntry,
                                                              PARTITION_EXTENSION,
                                                              ListEntry);
-            if (curPart->OnDiskNumber < partNumber)
+            if (curPart->OnDiskNumber < partNumber) // HACK: Investigate: should this be OnDiskNumber, or DetectedNumber/PdoNumber?
             {
                 prevEntry = curEntry;
                 curEntry = curPart->ListEntry.Next;
