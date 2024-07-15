@@ -2274,7 +2274,7 @@ Cleanup:
 NTSTATUS
 NTAPI
 IoReadPartitionTableEx(IN PDEVICE_OBJECT DeviceObject,
-                       IN PDRIVE_LAYOUT_INFORMATION_EX* DriveLayout)
+                       OUT PDRIVE_LAYOUT_INFORMATION_EX* DriveLayout)
 {
     NTSTATUS Status;
     PDISK_INFORMATION Disk;

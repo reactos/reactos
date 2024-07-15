@@ -31,7 +31,7 @@ FASTCALL
 xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                          IN ULONG SectorSize,
                          IN BOOLEAN ReturnRecognizedPartitions,
-                         IN OUT PDRIVE_LAYOUT_INFORMATION *PartitionBuffer);
+                         OUT PDRIVE_LAYOUT_INFORMATION *PartitionBuffer);
 
 NTSTATUS
 FASTCALL
