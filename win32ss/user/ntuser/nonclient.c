@@ -563,7 +563,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
               //
               unmodRect = newRect;
 
-              /* determine the hit location */
+              /* Determine the hit location */
               if (syscommand == SC_SIZE)
               {
                   WPARAM wpSizingHit = 0;
