@@ -43124,13 +43124,13 @@ Language=English
 General access denied error
 .
 Language=Russian
-WIN32 access denied error
+General access denied error
 .
 Language=Polish
-WIN32 access denied error
+General access denied error
 .
 Language=Romanian
-WIN32 access denied error
+General access denied error
 .
 Language=Japanese
 WIN32のアクセス拒否エラーです。
