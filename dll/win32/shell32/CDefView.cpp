@@ -2587,13 +2587,17 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             break;
         case LVN_ITEMCHANGED:
             TRACE("-- LVN_ITEMCHANGED %p\n", this);
-            OnStateChange(CDBOSC_SELCHANGE); // browser will get the IDataObject
-            if (!m_ScheduledStatusbarUpdate)
+            if ((lpnmlv->uOldState ^ lpnmlv->uNewState) & (LVIS_SELECTED | LVIS_FOCUSED))
             {
-                m_ScheduledStatusbarUpdate = true;
-                PostMessage(SHV_UPDATESTATUSBAR, 0, 0);
+                OnStateChange(CDBOSC_SELCHANGE); // browser will get the IDataObject
+                // FIXME: Use LVIS_DROPHILITED instead in drag_notify_subitem
+                if (!m_ScheduledStatusbarUpdate && (m_iDragOverItem == -1 || m_pCurDropTarget == NULL))
+                {
+                    m_ScheduledStatusbarUpdate = true;
+                    PostMessage(SHV_UPDATESTATUSBAR, 0, 0);
+                }
+                _DoFolderViewCB(SFVM_SELECTIONCHANGED, NULL/* FIXME */, NULL/* FIXME */);
             }
-            _DoFolderViewCB(SFVM_SELECTIONCHANGED, NULL/* FIXME */, NULL/* FIXME */);
             break;
         case LVN_BEGINDRAG:
         case LVN_BEGINRDRAG:
