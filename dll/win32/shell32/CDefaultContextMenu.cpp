@@ -11,10 +11,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(dmenu);
 
-
 // FIXME: 260 is correct, but should this be part of the SDK or just MAX_PATH?
 #define MAX_VERB 260
-#define VERBKEY_CCHMAX 64 // Note: 63+\0 seems to be the limit on XP
 
 static HRESULT
 SHELL_GetRegCLSID(HKEY hKey, LPCWSTR SubKey, LPCWSTR Value, CLSID &clsid)

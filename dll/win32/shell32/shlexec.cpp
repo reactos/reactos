@@ -1738,6 +1738,59 @@ static BOOL SHELL_translate_idlist(LPSHELLEXECUTEINFOW sei, LPWSTR wszParameters
     return appKnownSingular;
 }
 
+static BOOL
+SHELL_InvokePidl(
+    _In_ LPSHELLEXECUTEINFOW sei,
+    _In_ LPCITEMIDLIST pidl)
+{
+    // Bind pidl
+    CComPtr<IShellFolder> psfFolder;
+    LPCITEMIDLIST pidlLast;
+    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psfFolder), &pidlLast);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return FALSE;
+
+    // Get the context menu to invoke a command
+    CComPtr<IContextMenu> pCM;
+    hr = psfFolder->GetUIObjectOf(NULL, 1, &pidlLast, IID_NULL_PPV_ARG(IContextMenu, &pCM));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return FALSE;
+
+    // Invoke a command
+    CMINVOKECOMMANDINFO ici = { sizeof(ici) };
+    ici.fMask = (sei->fMask & (SEE_MASK_NO_CONSOLE | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI));
+    ici.nShow = sei->nShow;
+    ici.hwnd = sei->hwnd;
+    char szVerb[VERBKEY_CCHMAX];
+    if (sei->lpVerb && sei->lpVerb[0])
+    {
+        WideCharToMultiByte(CP_ACP, 0, sei->lpVerb, -1, szVerb, _countof(szVerb), NULL, NULL);
+        szVerb[_countof(szVerb) - 1] = ANSI_NULL; // Avoid buffer overrun
+        ici.lpVerb = szVerb;
+    }
+    else // The default verb?
+    {
+        HMENU hMenu = CreatePopupMenu();
+        const INT idCmdFirst = 1, idCmdLast = 0x7FFF;
+        hr = pCM->QueryContextMenu(hMenu, 0, idCmdFirst, idCmdLast, CMF_DEFAULTONLY);
+        if (FAILED_UNEXPECTEDLY(hr))
+        {
+            DestroyMenu(hMenu);
+            return FALSE;
+        }
+
+        INT nDefaultID = GetMenuDefaultItem(hMenu, FALSE, 0);
+        DestroyMenu(hMenu);
+        if (nDefaultID == -1)
+            nDefaultID = idCmdFirst;
+
+        ici.lpVerb = MAKEINTRESOURCEA(nDefaultID - idCmdFirst);
+    }
+    hr = pCM->InvokeCommand(&ici);
+
+    return !FAILED_UNEXPECTEDLY(hr);
+}
+
 static UINT_PTR SHELL_quote_and_execute(LPCWSTR wcmd, LPCWSTR wszParameters, LPCWSTR wszKeyname, LPCWSTR wszApplicationName, LPWSTR env, LPSHELLEXECUTEINFOW psei, LPSHELLEXECUTEINFOW psei_out, SHELL_ExecuteW32 execfunc)
 {
     UINT_PTR retval;
@@ -2029,6 +2082,19 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
             do_error_dialog(retval, sei_tmp.hwnd, wszApplicationName);
         }
         return retval > 32;
+    }
+
+    if (!(sei_tmp.fMask & SEE_MASK_IDLIST) && // Not an ID List
+        (StrCmpNIW(sei_tmp.lpFile, L"shell:", 6) == 0 ||
+         StrCmpNW(sei_tmp.lpFile, L"::{", 3) == 0))
+    {
+        CComHeapPtr<ITEMIDLIST> pidlParsed;
+        HRESULT hr = SHParseDisplayName(sei_tmp.lpFile, NULL, &pidlParsed, 0, NULL);
+        if (SUCCEEDED(hr) && SHELL_InvokePidl(&sei_tmp, pidlParsed))
+        {
+            sei_tmp.hInstApp = (HINSTANCE)UlongToHandle(42);
+            return TRUE;
+        }
     }
 
     /* Has the IDList not yet been translated? */

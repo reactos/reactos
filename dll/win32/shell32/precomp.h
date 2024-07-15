@@ -127,6 +127,8 @@ extern const GUID SHELL32_AdvtShortcutComponent;
 
 #define MAX_PROPERTY_SHEET_PAGE 32
 
+#define VERBKEY_CCHMAX 64 // Note: 63+\0 seems to be the limit on XP
+
 extern inline
 BOOL
 CALLBACK
