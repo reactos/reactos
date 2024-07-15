@@ -123,11 +123,14 @@ void CExplorerBand::InitializeExplorerBand()
     // Navigate to current folder position
     NavigateToCurrentFolder();
 
+#define WATCH_EVENT (SHCNE_ALLEVENTS & ~(SHCNE_FREESPACE | SHCNE_ATTRIBUTES | SHCNE_NETSHARE | \
+                     SHCNE_NETUNSHARE | SHCNE_EXTENDED_EVENT))
+
     // Register shell notification
     SHChangeNotifyEntry shcne = { pidl, TRUE };
     m_shellRegID = SHChangeNotifyRegister(m_hWnd,
                                           SHCNRF_NewDelivery | SHCNRF_ShellLevel,
-                                          SHCNE_DISKEVENTS,
+                                          WATCH_EVENT,
                                           WM_USER_SHELLEVENT,
                                           1, &shcne);
     if (!m_shellRegID)
@@ -305,14 +308,21 @@ BOOL CExplorerBand::OnTreeItemExpanding(LPNMTREEVIEW pnmtv)
 
 BOOL CExplorerBand::OnTreeItemDeleted(LPNMTREEVIEW pnmtv)
 {
+    // Navigate to parent when deleting selected item
+    HTREEITEM hItem = pnmtv->itemOld.hItem;
+    HTREEITEM hParent = TreeView_GetParent(m_hWnd, hItem);
+    if (hParent && TreeView_GetSelection(m_hWnd) == hItem)
+        TreeView_SelectItem(m_hWnd, hParent);
+
     /* Destroy memory associated to our node */
-    NodeInfo* ptr = GetNodeInfo(pnmtv->itemOld.hItem);
-    if (ptr)
-    {
-        ILFree(ptr->relativePidl);
-        ILFree(ptr->absolutePidl);
-        delete ptr;
-    }
+    NodeInfo* pNode = GetNodeInfo(hItem);
+    if (!pNode)
+        return FALSE;
+
+    ILFree(pNode->relativePidl);
+    ILFree(pNode->absolutePidl);
+    delete pNode;
+
     return TRUE;
 }
 
@@ -606,7 +616,7 @@ void CExplorerBand::RefreshRecurse(_In_ HTREEITEM hTarget)
         hNextItem = TreeView_GetNextSibling(m_hWnd, hItem);
 
         if (SUCCEEDED(hrEnum) && !IsTreeItemInEnum(hItem, pEnum))
-            DeleteItem(hItem);
+            TreeView_DeleteItem(m_hWnd, hItem);
     }
 
     pEnum = NULL;
@@ -683,9 +693,15 @@ CExplorerBand::OnChangeNotify(
         case SHCNE_RENAMEITEM:
         case SHCNE_UPDATEDIR:
         case SHCNE_UPDATEITEM:
+        case SHCNE_ASSOCCHANGED:
         {
             KillTimer(TIMER_ID_REFRESH);
             SetTimer(TIMER_ID_REFRESH, 500, NULL);
+            break;
+        }
+        default:
+        {
+            TRACE("lEvent: 0x%08lX\n", lEvent);
             break;
         }
     }
@@ -995,30 +1011,6 @@ BOOL CExplorerBand::NavigateToCurrentFolder()
     --m_mtxBlockNavigate;
     ILFree(explorerPidl);
     return result;
-}
-
-void CExplorerBand::DeleteItem(HTREEITEM toDelete)
-{
-    NodeInfo* pNode = GetNodeInfo(toDelete);
-    if (!pNode)
-        return;
-
-    // Navigate to parent when deleting child item
-    HTREEITEM parentNode = TreeView_GetParent(m_hWnd, toDelete);
-    if (!m_pDesktop->CompareIDs(0, pNode->absolutePidl, m_pidlCurrent))
-        TreeView_SelectItem(m_hWnd, parentNode);
-
-    // Remove the child item
-    if (!TreeView_DeleteItem(m_hWnd, toDelete))
-        return;
-
-    // Probe parent to see if it has children
-    if (!TreeView_GetChild(m_hWnd, parentNode))
-    {
-        // Decrement parent's child count
-        TVITEMW tvItem = { TVIF_CHILDREN, parentNode };
-        TreeView_SetItem(m_hWnd, &tvItem);
-    }
 }
 
 // *** Tree item sorting callback ***
