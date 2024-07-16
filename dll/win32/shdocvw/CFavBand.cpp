@@ -32,9 +32,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 #define ID_ADD          100
 #define ID_ORGANIZE     101
 
-// Borrowed from browseui.dll
-#define IDB_SHELL_EXPLORER_SM 216
-
 void *operator new(size_t size)
 {
     return ::LocalAlloc(LPTR, size);
@@ -91,11 +88,13 @@ VOID CFavBand::OnFinalMessage(HWND)
 
 BOOL CFavBand::CreateToolbar()
 {
+#define IDB_SHELL_EXPLORER_SM 216 // Borrowed from browseui.dll
     HINSTANCE hinstBrowseUI = LoadLibraryExW(L"browseui.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
     ATLASSERT(hinstBrowseUI);
     HBITMAP hbmToolbar = LoadBitmapW(hinstBrowseUI, MAKEINTRESOURCEW(IDB_SHELL_EXPLORER_SM));
     ATLASSERT(hbmToolbar);
     FreeLibrary(hinstBrowseUI);
+#undef IDB_SHELL_EXPLORER_SM
     if (!hbmToolbar)
         return FALSE;
 
@@ -233,6 +232,8 @@ LRESULT CFavBand::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
     {
         case ID_ADD:
         {
+            UNIMPLEMENTED;
+            MessageBox(L"Not implemented yet", NULL, MB_ICONERROR);
             break;
         }
         case ID_ORGANIZE:
@@ -241,7 +242,7 @@ LRESULT CFavBand::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
             sei.hwnd = m_hWnd;
             sei.nShow = SW_SHOWNORMAL;
             sei.lpIDList = m_pidlFav;
-            ShellExecuteExW(&sei);
+            ::ShellExecuteExW(&sei);
             break;
         }
     }
@@ -313,9 +314,17 @@ STDMETHODIMP CFavBand::GetBandInfo(DWORD dwBandID, DWORD dwViewMode, DESKBANDINF
         pdbi->ptActual.y = 30;
     }
 
-    // FIXME: Localize
     if (pdbi->dwMask & DBIM_TITLE)
-        lstrcpyn(pdbi->wszTitle, L"Favorites", _countof(pdbi->wszTitle));
+    {
+#define IDS_FAVORITES 47 // Borrowed from shell32.dll
+        HINSTANCE hShell32 = LoadLibraryExW(L"shell32.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
+        if (hShell32)
+        {
+            LoadStringW(hShell32, IDS_FAVORITES, pdbi->wszTitle, _countof(pdbi->wszTitle));
+            FreeLibrary(hShell32);
+        }
+#undef IDS_FAVORITES
+    }
 
     if (pdbi->dwMask & DBIM_MODEFLAGS)
         pdbi->dwModeFlags = DBIMF_NORMAL | DBIMF_VARIABLEHEIGHT;
