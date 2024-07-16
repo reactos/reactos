@@ -26,12 +26,6 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
-#define IDW_TOOLBAR  2
-#define IDW_TREEVIEW 100
-
-#define ID_ADD          100
-#define ID_ORGANIZE     101
-
 void *operator new(size_t size)
 {
     return ::LocalAlloc(LPTR, size);

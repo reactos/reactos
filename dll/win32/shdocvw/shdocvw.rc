@@ -17,12 +17,13 @@
  */
 
 #include "windef.h"
+#include "resource.h"
 
-1 WINE_REGISTRY "shdocvw_v1.rgs"
+IDR_SHDOCVW WINE_REGISTRY "shdocvw_v1.rgs"
 
-2 REGISTRY "favband.rgs"
+IDR_FAVBAND REGISTRY "favband.rgs"
 
-1 TYPELIB "shdocvw_v1.tlb"
+IDR_TYPELIB TYPELIB "shdocvw_v1.tlb"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
