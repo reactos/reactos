@@ -39,7 +39,7 @@ static void SHELL_StripIllegalFsNameCharacters(_Inout_ LPWSTR Buf)
 }
 
 static HRESULT
-SHELL_LimitDropEffectToItemAttributes(_In_ IDataObject *pDataObject, _Inout_ DWORD *pdwEffect)
+SHELL_LimitDropEffectToItemAttributes(_In_ IDataObject *pDataObject, _Inout_ PDWORD pdwEffect)
 {
     DWORD att = *pdwEffect & (SFGAO_CANCOPY | SFGAO_CANMOVE | SFGAO_CANLINK); // DROPEFFECT maps perfectly to these SFGAO bits
     HRESULT hr = SHGetAttributesFromDataObject(pDataObject, att, &att, NULL);
@@ -232,7 +232,6 @@ HRESULT CFSDropTarget::_GetEffectFromMenu(IDataObject *pDataObject, POINTL pt, D
         DeleteMenu(hpopupmenu, IDM_LINKHERE, MF_BYCOMMAND);
 
     GetDefaultCopyMoveEffect();
-    // TODO: Why is this checking *pdwEffect?
     if (*pdwEffect & dwAvailableEffects & DROPEFFECT_COPY)
         SetMenuDefaultItem(hpopupmenu, IDM_COPYHERE, FALSE);
     else if (*pdwEffect & dwAvailableEffects & DROPEFFECT_MOVE)
