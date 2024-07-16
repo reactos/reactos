@@ -99,6 +99,7 @@ VOID GetPathCase(IN LPCTSTR Path, OUT LPTSTR OutPath)
     {
         if (pchTemp + 1 >= pchTempEnd)
         {
+            // On failure, copy the original path for an error message
             StringCchCopy(OutPath, MAX_PATH, Path);
             return;
         }
