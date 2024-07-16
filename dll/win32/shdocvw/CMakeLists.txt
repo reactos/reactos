@@ -22,7 +22,7 @@ add_library(shdocvw MODULE
 
 target_include_directories(shdocvw BEFORE PRIVATE
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
-    ${REACTOS_SOURCE_DIR}/sdk/lib/atl)
+)
 
 set_module_type(shdocvw win32dll UNICODE)
 target_link_libraries(shdocvw uuid wine)
