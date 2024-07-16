@@ -16,10 +16,6 @@ EXTERN_C HRESULT CFavBand_DllUnregisterServer(VOID);
 #define FAVBANDCLASSNAME L"ReactOS Favorites Band"
 
 #ifdef __cplusplus
-void *operator new(size_t size);
-void operator delete(void *ptr);
-void operator delete(void *ptr, size_t size);
-
 class CFavBand
     : public CComCoClass<CFavBand, &CLSID_SH_FavBand>
     , public CComObjectRootEx<CComMultiThreadModelNoCS>
@@ -156,6 +152,7 @@ public:
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
         MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
+        MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
     END_MSG_MAP()
 
 protected:
@@ -163,12 +160,17 @@ protected:
     BOOL m_bFocused;
     DWORD m_dwBandID;
     CComPtr<IUnknown> m_pSite;
-    CComHeapPtr<ITEMIDLIST> m_pidlCurrent;
+    CComHeapPtr<ITEMIDLIST> m_pidlFav;
+    HIMAGELIST m_hToolbarImageList;
+    HIMAGELIST m_hTreeViewImageList;
+    CToolbar<> m_hwndToolbar;
+    CTreeView m_hwndTreeView;
 
     VOID OnFinalMessage(HWND) override;
 
     // *** helper methods ***
-    HRESULT UpdateLocation();
+    BOOL CreateToolbar();
+    BOOL CreateTreeView();
 
     // *** message handlers ***
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -176,5 +178,6 @@ protected:
     LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 };
 #endif // def __cplusplus

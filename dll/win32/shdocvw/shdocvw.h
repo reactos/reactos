@@ -64,6 +64,12 @@ EXTERN_C HRESULT CMruLongList_CreateInstance(DWORD_PTR dwUnused1, void **ppv, DW
 EXTERN_C HRESULT CMruPidlList_CreateInstance(DWORD_PTR dwUnused1, void **ppv, DWORD_PTR dwUnused3);
 EXTERN_C HRESULT CMruClassFactory_CreateInstance(REFIID riid, void **ppv);
 #define ARRAY_SIZE(array) _countof(array)
+#ifdef __cplusplus
+void *operator new(size_t size);
+void operator delete(void *ptr);
+void operator delete(void *ptr, size_t size);
 #endif
+#endif // def __REACTOS__
+
 
 #endif /* __WINE_SHDOCVW_H */

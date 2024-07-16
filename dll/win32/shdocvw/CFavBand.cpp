@@ -19,11 +19,21 @@
 #include <olectlid.h>
 #include <exdispid.h>
 #include <shellutils.h>
+#include <ui/rosctrls.h>
 #include "shdocvw.h"
 #include "CFavBand.h"
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
+
+#define IDW_TOOLBAR  2
+#define IDW_TREEVIEW 100
+
+#define ID_ADD          100
+#define ID_ORGANIZE     101
+
+// Borrowed from browseui.dll
+#define IDB_SHELL_EXPLORER_SM 216
 
 void *operator new(size_t size)
 {
@@ -49,12 +59,25 @@ CFavBand::CFavBand()
     : m_fVisible(FALSE)
     , m_bFocused(FALSE)
     , m_dwBandID(0)
+    , m_hToolbarImageList(NULL)
+    , m_hTreeViewImageList(NULL)
 {
     ::InterlockedIncrement(&SHDOCVW_refCount);
+    SHGetSpecialFolderLocation(NULL, CSIDL_FAVORITES, &m_pidlFav);
 }
 
 CFavBand::~CFavBand()
 {
+    if (m_hToolbarImageList)
+    {
+        ImageList_Destroy(m_hToolbarImageList);
+        m_hToolbarImageList = NULL;
+    }
+    if (m_hTreeViewImageList)
+    {
+        ImageList_Destroy(m_hTreeViewImageList);
+        m_hTreeViewImageList = NULL;
+    }
     ::InterlockedDecrement(&SHDOCVW_refCount);
 }
 
@@ -65,40 +88,138 @@ VOID CFavBand::OnFinalMessage(HWND)
 }
 
 // *** helper methods ***
-HRESULT CFavBand::UpdateLocation()
+
+#undef SubclassWindow
+
+BOOL CFavBand::CreateToolbar()
 {
-    m_pidlCurrent.Free();
+    HINSTANCE hinstBrowseUI = LoadLibraryExW(L"browseui.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
+    ATLASSERT(hinstBrowseUI);
+    HBITMAP hbmToolbar = LoadBitmapW(hinstBrowseUI, MAKEINTRESOURCEW(IDB_SHELL_EXPLORER_SM));
+    ATLASSERT(hbmToolbar);
+    FreeLibrary(hinstBrowseUI);
+    if (!hbmToolbar)
+        return FALSE;
 
-    CComPtr<IShellBrowser> psb;
-    HRESULT hr = IUnknown_QueryService(m_pSite, SID_STopLevelBrowser, IID_PPV_ARG(IShellBrowser, &psb));
-    if (FAILED(hr))
-        return hr;
+    ERR("OK2\n");
+    InitCommonControls();
+    ERR("OK2.1\n");
+    m_hToolbarImageList = ImageList_Create(16, 16, ILC_COLOR32, 0, 8);
+    ERR("OK2.2\n");
+    ATLASSERT(m_hToolbarImageList);
+    ERR("OK2.3\n");
+    if (!m_hToolbarImageList)
+        return FALSE;
 
-    CComPtr<IBrowserService> pbs;
-    hr = psb->QueryInterface(IID_PPV_ARG(IBrowserService, &pbs));
-    if (FAILED(hr))
-        return hr;
+    ERR("OK2.4\n");
+    ImageList_Add(m_hToolbarImageList, hbmToolbar, NULL);
+    ERR("OK2.5\n");
+    DeleteObject(hbmToolbar);
 
-    return pbs->GetPidl(&m_pidlCurrent);
+    ERR("OK3\n");
+    DWORD style;
+    style = WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_LIST | CCS_NODIVIDER | TBSTYLE_WRAPABLE;
+    HWND hwndTB = ::CreateWindowExW(0, TOOLBARCLASSNAMEW, NULL, style, 0, 0, 0, 0, m_hWnd,
+                                    (HMENU)(LONG_PTR)IDW_TOOLBAR, ::GetModuleHandleW(NULL), NULL);
+    ATLASSERT(hwndTB);
+    if (!hwndTB)
+        return FALSE;
+
+    ERR("OK4\n");
+    m_hwndToolbar.Attach(hwndTB);
+    m_hwndToolbar.SendMessage(TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
+    m_hwndToolbar.SendMessage(TB_SETIMAGELIST, 0, (LPARAM)m_hToolbarImageList);
+    m_hwndToolbar.SendMessage(TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
+
+    // FIXME: Localize
+    WCHAR szzAdd[MAX_PATH], szzOrganize[MAX_PATH];
+    ZeroMemory(szzAdd, sizeof(szzAdd));
+    ZeroMemory(szzOrganize, sizeof(szzOrganize));
+    lstrcpynW(szzAdd, L"Add", _countof(szzAdd));
+    lstrcpynW(szzOrganize, L"Organize", _countof(szzOrganize));
+
+    ERR("OK5\n");
+    TBBUTTON tbb[2] = { { 0 } };
+    INT iButton = 0;
+    tbb[iButton].iBitmap = 3;
+    tbb[iButton].idCommand = ID_ADD;
+    tbb[iButton].fsState = TBSTATE_ENABLED;
+    tbb[iButton].fsStyle = BTNS_BUTTON | BTNS_AUTOSIZE | BTNS_SHOWTEXT;
+    tbb[iButton].iString = (INT)m_hwndToolbar.SendMessage(TB_ADDSTRING, 0, (LPARAM)szzAdd);
+    ++iButton;
+    tbb[iButton].iBitmap = 42;
+    tbb[iButton].idCommand = ID_ORGANIZE;
+    tbb[iButton].fsState = TBSTATE_ENABLED;
+    tbb[iButton].fsStyle = BTNS_BUTTON | BTNS_AUTOSIZE | BTNS_SHOWTEXT;
+    tbb[iButton].iString = (INT)m_hwndToolbar.SendMessage(TB_ADDSTRING, 0, (LPARAM)szzOrganize);
+    ++iButton;
+    ATLASSERT(iButton == _countof(tbb));
+    LRESULT ret = m_hwndToolbar.SendMessage(TB_ADDBUTTONS, iButton, (LPARAM)&tbb);
+    ATLASSERT(ret);
+    ERR("OK6\n");
+    return ret;
+}
+
+BOOL CFavBand::CreateTreeView()
+{
+    m_hTreeViewImageList = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 64, 0);
+    ATLASSERT(m_hTreeViewImageList);
+    if (!m_hTreeViewImageList)
+        return FALSE;
+
+    DWORD style, exstyle;
+    style = TVS_NOHSCROLL | TVS_NONEVENHEIGHT | TVS_FULLROWSELECT | TVS_INFOTIP |
+            TVS_SINGLEEXPAND | TVS_TRACKSELECT | TVS_SHOWSELALWAYS | TVS_EDITLABELS |
+            WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP;
+    exstyle = WS_EX_CLIENTEDGE;
+
+    HWND hwndTV = ::CreateWindowExW(exstyle, WC_TREEVIEWW, NULL, style,
+                                    0, 0, 0, 0,
+                                    m_hWnd, (HMENU)(ULONG_PTR)IDW_TREEVIEW,
+                                    ::GetModuleHandleW(NULL), NULL);
+    ATLASSERT(hwndTV);
+    if (!hwndTV)
+        return FALSE;
+
+    m_hwndTreeView.Attach(hwndTV);
+    TreeView_SetImageList(m_hwndTreeView, m_hTreeViewImageList, TVSIL_NORMAL);
+
+    return TRUE;
 }
 
 // *** message handlers ***
 
 LRESULT CFavBand::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    UpdateLocation();
+    if (!CreateToolbar() || !CreateTreeView())
+        return -1;
+
     return 0;
 }
 
 LRESULT CFavBand::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    m_hwndTreeView.DestroyWindow();
+    m_hwndToolbar.DestroyWindow();
     return 0;
 }
 
 LRESULT CFavBand::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    if (!m_hwndTreeView)
+        return 0;
+
     RECT rc;
     GetClientRect(&rc);
+    LONG cx = rc.right, cy = rc.bottom;
+
+    RECT rcTB;
+    m_hwndToolbar.SendMessage(TB_AUTOSIZE, 0, 0);
+    m_hwndToolbar.GetWindowRect(&rcTB);
+
+    LONG cyTB = rcTB.bottom - rcTB.top;
+    m_hwndTreeView.MoveWindow(0, cyTB, cx, cy - cyTB);
+
     return 0;
 }
 
@@ -113,6 +234,11 @@ LRESULT CFavBand::OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
 {
     IUnknown_OnFocusChangeIS(m_pSite, reinterpret_cast<IUnknown*>(this), FALSE);
     m_bFocused = FALSE;
+    return 0;
+}
+
+LRESULT CFavBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
     return 0;
 }
 
@@ -181,6 +307,10 @@ STDMETHODIMP CFavBand::GetBandInfo(DWORD dwBandID, DWORD dwViewMode, DESKBANDINF
         pdbi->ptActual.y = 30;
     }
 
+    // FIXME: Localize
+    if (pdbi->dwMask & DBIM_TITLE)
+        lstrcpyn(pdbi->wszTitle, L"Favorites", _countof(pdbi->wszTitle));
+
     if (pdbi->dwMask & DBIM_MODEFLAGS)
         pdbi->dwModeFlags = DBIMF_NORMAL | DBIMF_VARIABLEHEIGHT;
 
@@ -200,6 +330,7 @@ STDMETHODIMP CFavBand::SetSite(IUnknown *pUnkSite)
         return S_OK;
 
     TRACE("SetSite called\n");
+
     if (!pUnkSite)
     {
         DestroyWindow();
@@ -461,7 +592,7 @@ STDMETHODIMP CFavBand::Invoke(
     {
         case DISPID_DOWNLOADCOMPLETE:
         case DISPID_NAVIGATECOMPLETE2:
-            UpdateLocation();
+            // FIXME
             return S_OK;
     }
     return E_INVALIDARG;
