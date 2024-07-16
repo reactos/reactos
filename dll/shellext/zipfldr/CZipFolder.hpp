@@ -380,7 +380,6 @@ public:
             ici.lpVerb = MAKEINTRESOURCEA(wParam);
             return spContextMenu->InvokeCommand(&ici);
         }
-        case DFM_INVOKECOMMANDEX:
         case DFM_GETDEFSTATICID: // Required for Windows 7 to pick a default
             return S_FALSE;
         }

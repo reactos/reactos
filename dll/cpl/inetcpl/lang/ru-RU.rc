@@ -69,7 +69,7 @@ CAPTION "Очистка истории"
 BEGIN
 
     AUTOCHECKBOX   "Временные файлы\nКэшированные копии страниц, изображений и сертификатов.",
-                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
+                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE | WS_GROUP | WS_TABSTOP
     AUTOCHECKBOX   "Файлы cookies\nФайлы, сохранённые на вашем компьютере, могут содержать пользовательские настройки и информацию для авторизации.",
                     IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "История\nПеречень сайтов, к которым осуществлялся доступ.",
@@ -79,7 +79,7 @@ BEGIN
     AUTOCHECKBOX   "Пароли\nСохранённые пароли, которые были указаны в веб-формах.",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON  "Отмена", IDCANCEL, 185, 230, 60, 15, WS_GROUP
-    PUSHBUTTON     "Удалить", IDOK, 120, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "Удалить", IDOK, 120, 230, 60, 15
 
 END
 

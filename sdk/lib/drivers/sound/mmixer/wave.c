@@ -113,25 +113,44 @@ MMixerGetWaveInfoByIndexAndType(
 
 VOID
 MMixerInitializeDataFormat(
-    IN PKSDATAFORMAT_WAVEFORMATEX DataFormat,
-    LPWAVEFORMATEX WaveFormatEx)
+    _Inout_ PKSDATAFORMAT_WAVEFORMATEX DataFormat,
+    _In_ LPWAVEFORMATEX WaveFormatEx,
+    _In_ DWORD cbSize)
 {
-
     DataFormat->WaveFormatEx.wFormatTag = WaveFormatEx->wFormatTag;
     DataFormat->WaveFormatEx.nChannels = WaveFormatEx->nChannels;
     DataFormat->WaveFormatEx.nSamplesPerSec = WaveFormatEx->nSamplesPerSec;
     DataFormat->WaveFormatEx.nBlockAlign = WaveFormatEx->nBlockAlign;
     DataFormat->WaveFormatEx.nAvgBytesPerSec = WaveFormatEx->nAvgBytesPerSec;
     DataFormat->WaveFormatEx.wBitsPerSample = WaveFormatEx->wBitsPerSample;
-    DataFormat->WaveFormatEx.cbSize = 0;
-    DataFormat->DataFormat.FormatSize = sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX);
+    DataFormat->WaveFormatEx.cbSize = cbSize;
+    DataFormat->DataFormat.FormatSize = sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX) + cbSize;
     DataFormat->DataFormat.Flags = 0;
     DataFormat->DataFormat.Reserved = 0;
     DataFormat->DataFormat.MajorFormat = KSDATAFORMAT_TYPE_AUDIO;
-
     DataFormat->DataFormat.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
     DataFormat->DataFormat.Specifier = KSDATAFORMAT_SPECIFIER_WAVEFORMATEX;
     DataFormat->DataFormat.SampleSize = 4;
+
+    /* Write additional fields for Extensible audio format */
+    if (WaveFormatEx->wFormatTag == WAVE_FORMAT_EXTENSIBLE)
+    {
+        PWAVEFORMATEXTENSIBLE WaveFormatExt = (PWAVEFORMATEXTENSIBLE)&DataFormat->WaveFormatEx;
+        WaveFormatExt->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+        WaveFormatExt->Samples.wValidBitsPerSample = WaveFormatEx->wBitsPerSample;
+        if (WaveFormatEx->nChannels == 0)
+            WaveFormatExt->dwChannelMask = KSAUDIO_SPEAKER_DIRECTOUT;
+        else if (WaveFormatEx->nChannels == 1)
+            WaveFormatExt->dwChannelMask = KSAUDIO_SPEAKER_MONO;
+        else if (WaveFormatEx->nChannels == 2)
+            WaveFormatExt->dwChannelMask = KSAUDIO_SPEAKER_STEREO;
+        else if (WaveFormatEx->nChannels == 4)
+            WaveFormatExt->dwChannelMask = KSAUDIO_SPEAKER_QUAD;
+        else if (WaveFormatEx->nChannels == 5)
+            WaveFormatExt->dwChannelMask = KSAUDIO_SPEAKER_5POINT1;
+        else if (WaveFormatEx->nChannels == 7)
+            WaveFormatExt->dwChannelMask = KSAUDIO_SPEAKER_7POINT1;
+    }
 }
 
 MIXER_STATUS
@@ -226,13 +245,17 @@ MMixerOpenWavePin(
     LPMIXER_DATA MixerData;
     NTSTATUS Status;
     MIXER_STATUS MixerStatus;
+    DWORD cbSize;
 
     MixerData = MMixerGetDataByDeviceId(MixerList, DeviceId);
     if (!MixerData)
         return MM_STATUS_INVALID_PARAMETER;
 
+    /* Enforce 0 for WAVE_FORMAT_PCM, which ignores extra information size */
+    cbSize = WaveFormatEx->wFormatTag == WAVE_FORMAT_PCM ? 0 : WaveFormatEx->cbSize;
+
     /* allocate pin connect */
-    PinConnect = MMixerAllocatePinConnect(MixerContext, sizeof(KSDATAFORMAT_WAVEFORMATEX));
+    PinConnect = MMixerAllocatePinConnect(MixerContext, sizeof(KSDATAFORMAT_WAVEFORMATEX) + cbSize);
     if (!PinConnect)
     {
         /* no memory */
@@ -245,7 +268,7 @@ MMixerOpenWavePin(
     /* get offset to dataformat */
     DataFormat = (PKSDATAFORMAT_WAVEFORMATEX) (PinConnect + 1);
     /* initialize with requested wave format */
-    MMixerInitializeDataFormat(DataFormat, WaveFormatEx);
+    MMixerInitializeDataFormat(DataFormat, WaveFormatEx, cbSize);
 
     if (CreateCallback)
     {
@@ -453,12 +476,6 @@ MMixerOpenWave(
     /* grab mixer list */
     MixerList = (PMIXER_LIST)MixerContext->MixerContext;
 
-    if (WaveFormat->wFormatTag != WAVE_FORMAT_PCM)
-    {
-        /* not implemented */
-        return MM_STATUS_NOT_IMPLEMENTED;
-    }
-
     /* find destination wave */
     Status = MMixerGetWaveInfoByIndexAndType(MixerList, DeviceIndex, bWaveIn, &WaveInfo);
     if (Status != MM_STATUS_SUCCESS)
@@ -595,6 +612,40 @@ MMixerGetWaveOutCount(
     MixerList = (PMIXER_LIST)MixerContext->MixerContext;
 
     return MixerList->WaveOutListCount;
+}
+
+MIXER_STATUS
+MMixerGetWavePosition(
+    _In_ PMIXER_CONTEXT MixerContext,
+    _In_ HANDLE PinHandle,
+    _Out_ PDWORD Position)
+{
+    KSAUDIO_POSITION AudioPosition;
+    KSPROPERTY Property;
+    MIXER_STATUS Status;
+    ULONG Length;
+
+    /* Validate mixer context */
+    Status = MMixerVerifyContext(MixerContext);
+
+    if (Status != MM_STATUS_SUCCESS)
+        return Status;
+
+    Property.Id = KSPROPERTY_AUDIO_POSITION;
+    Property.Set = KSPROPSETID_Audio;
+    Property.Flags = KSPROPERTY_TYPE_GET;
+
+    Status = MixerContext->Control(PinHandle, IOCTL_KS_PROPERTY,
+                                   &Property, sizeof(Property),
+                                   &AudioPosition, sizeof(AudioPosition),
+                                   &Length);
+    if (Status == MM_STATUS_SUCCESS)
+    {
+        /* store audio position */
+        *Position = (DWORD)AudioPosition.PlayOffset;
+    }
+
+    return Status;
 }
 
 MIXER_STATUS

@@ -31,6 +31,29 @@ typedef struct _DISK_GEOMETRY_EX_INTERNAL
     DISK_DETECTION_INFO Detection;
 } DISK_GEOMETRY_EX_INTERNAL, *PDISK_GEOMETRY_EX_INTERNAL;
 
+// Unique ID data for basic (disk partition-based) volumes.
+// It is stored in the MOUNTDEV_UNIQUE_ID::UniqueId member
+// as an array of bytes.
+#include <pshpack1.h>
+typedef union _BASIC_VOLUME_UNIQUE_ID
+{
+    struct
+    {
+        ULONG Signature;
+        ULONGLONG StartingOffset;
+    } Mbr;
+    struct
+    {
+        ULONGLONG Signature; // UCHAR[8] // "DMIO:ID:"
+        GUID PartitionGuid;
+    } Gpt;
+} BASIC_VOLUME_UNIQUE_ID, *PBASIC_VOLUME_UNIQUE_ID;
+#include <poppack.h>
+C_ASSERT(RTL_FIELD_SIZE(BASIC_VOLUME_UNIQUE_ID, Mbr) == 0x0C);
+C_ASSERT(RTL_FIELD_SIZE(BASIC_VOLUME_UNIQUE_ID, Gpt) == 0x18);
+
+#define DMIO_ID_SIGNATURE   (*(ULONGLONG*)"DMIO:ID:")
+
 typedef struct _FDO_EXTENSION
 {
     BOOLEAN IsFDO;
@@ -44,7 +67,7 @@ typedef struct _FDO_EXTENSION
 
     SINGLE_LIST_ENTRY PartitionList;
     UINT32 EnumeratedPartitionsTotal;
-    UNICODE_STRING DiskInterfaceName;
+    BOOLEAN IsSuperFloppy;
 
     struct {
         UINT64 DiskSize;
@@ -60,6 +83,7 @@ typedef struct _FDO_EXTENSION
             } Gpt;
         };
     } DiskData;
+    UNICODE_STRING DiskInterfaceName;
 } FDO_EXTENSION, *PFDO_EXTENSION;
 
 typedef struct _PARTITION_EXTENSION
@@ -73,6 +97,7 @@ typedef struct _PARTITION_EXTENSION
     UINT64 PartitionLength;
     SINGLE_LIST_ENTRY ListEntry;
 
+    UINT32 VolumeNumber; // Volume number in the "\Device\HarddiskVolumeN" device name
     UINT32 DetectedNumber;
     UINT32 OnDiskNumber; // partition number for issuing Io requests to the kernel
     BOOLEAN IsEnumerated; // reported via IRP_MN_QUERY_DEVICE_RELATIONS

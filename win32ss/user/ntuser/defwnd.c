@@ -920,7 +920,7 @@ IntDefWindowProc(
                 if (wParam == VK_F4) /* Try to close the window */
                 {
                    PWND top = UserGetAncestor(Wnd, GA_ROOT);
-                   if (!(top->style & CS_NOCLOSE))
+                   if (!(top->pcls->style & CS_NOCLOSE))
                       UserPostMessage(UserHMGetHandle(top), WM_SYSCOMMAND, SC_CLOSE, 0);
                 }
                 else if (wParam == VK_SNAPSHOT) // Alt-VK_SNAPSHOT?

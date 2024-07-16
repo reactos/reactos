@@ -32,9 +32,9 @@ BEGIN
     ICON IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
     LTEXT "Gestione dispositivi elenca tutti i dispositivi installati nel computer. Usate la gestione dispositivi per modificare le impostazioni di un dispositivo.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "&Gestione dispositivi...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 14
-    GROUPBOX "Hardware Wizard", IDC_STATIC, 6, 79, 244, 61
+    GROUPBOX "Procedura Guidata Hardware", IDC_STATIC, 6, 79, 244, 61
     ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
-    LTEXT "Hardware wizard aiuta ad installare, disinstallare, ripristinare, scollegare, estrarre e configurare l'hardware.", IDC_STATIC, 42, 90, 204, 24
+    LTEXT "Procedura Guidata Hardware aiuta ad installare, disinstallare, ripristinare, scollegare, estrarre e configurare l'hardware.", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON "&Hardware Wizard...", IDC_HARDWARE_WIZARD, 154, 120, 90, 14
     GROUPBOX "Profili Hardware", IDC_STATIC, 6, 149, 244, 61
     ICON IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
@@ -90,7 +90,7 @@ BEGIN
     PUSHBUTTON "C&ancella", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
     GROUPBOX "Selezione dei Profili Hardware", IDC_STATIC, 7, 130, 240, 75
     LTEXT "All'avvio di ReactOS:", IDC_STATIC, 14, 142, 210, 8
-    AUTORADIOBUTTON "&Aspetta finche non viene scelto un profilo", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
+    AUTORADIOBUTTON "&Aspetta finché non viene scelto un profilo", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
     AUTORADIOBUTTON "&Scegli il primo profilo in elenco se non avviene una scelta in ", IDC_HRDPROFSELECT, 14, 173, 190, 8
     LTEXT "Secondi", IDC_STATIC, 65, 187, 35, 8
     EDITTEXT IDC_HRDPROFEDIT, 25, 185, 35, 12
@@ -167,14 +167,14 @@ END
 
 IDD_USERPROFILE_TYPE DIALOGEX 6, 18, 225, 103
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Change Profile Type"
+CAPTION "Cambia tipo di profilo"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_USERPROFILE_TYPE_TEXT, 7, 11, 206, 28
     AUTORADIOBUTTON "&Roaming profile", IDC_USERPROFILE_TYPE_ROAMING, 60, 49, 145, 10
     AUTORADIOBUTTON "&Local profile", IDC_USERPROFILE_TYPE_LOCAL, 60, 63, 145, 10
     DEFPUSHBUTTON "OK", IDOK, 60, 82, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 122, 82, 50, 14
+    PUSHBUTTON "Annulla", IDCANCEL, 122, 82, 50, 14
 END
 
 IDD_USERPROFILE_COPY DIALOGEX 6, 18, 261, 133
@@ -259,7 +259,7 @@ END
 
 IDD_ENVIRONMENT_VARIABLES DIALOGEX 6, 18, 252, 245
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME | WS_VISIBLE
-CAPTION "Variabili di ambiente"
+CAPTION "Variabili d'ambiente"
 FONT 8, "MS Shell Dlg"
 BEGIN
     SCROLLBAR IDC_DIALOG_GRIP, 245, 238, 7, 7, SBS_SIZEGRIP
@@ -333,10 +333,10 @@ BEGIN
     IDS_PETABYTE "PB di RAM"
     IDS_MEGAHERTZ "MHz"
     IDS_GIGAHERTZ "GHz"
-    IDS_UPTIME_FORMAT "%lu Giorno, %02lu:%02lu:%02lu"
+    IDS_UPTIME_FORMAT "%lu Giorno(i), %02lu:%02lu:%02lu"
     IDS_VARIABLE "Variabile"
     IDS_VALUE "Valore"
-    IDS_NO_DUMP "(None)"
+    IDS_NO_DUMP "(Nessuno)"
     IDS_MINI_DUMP "Minidump (64KB)"
     IDS_KERNEL_DUMP "Kernel dump"
     IDS_FULL_DUMP "Dump completo"
@@ -345,13 +345,13 @@ BEGIN
     IDS_USERPROFILE_TYPE "Tipo"
     IDS_USERPROFILE_STATUS "Stato"
     IDS_USERPROFILE_MODIFIED "Modificato"
-    IDS_USERPROFILE_LOCAL "Local"
+    IDS_USERPROFILE_LOCAL "Locale"
     IDS_USERPROFILE_ROAMING "Roaming"
     IDS_USERPROFILE_MANDATORY "Mandatory"
-    IDS_USERPROFILE_CONFIRM_DELETE "Are you sure you want to delete %s's profile?"
-    IDS_USERPROFILE_CONFIRM_DELETE_TITLE "Confirm Delete"
-    IDS_USERPROFILE_ACCOUNT_UNKNOWN "Account Unknown"
-    IDS_USERPROFILE_ACCOUNT_DELETED "Account Deleted"
+    IDS_USERPROFILE_CONFIRM_DELETE "Eliminare il profilo di %s?"
+    IDS_USERPROFILE_CONFIRM_DELETE_TITLE "Conferma eliminazione"
+    IDS_USERPROFILE_ACCOUNT_UNKNOWN "Account sconosciuto"
+    IDS_USERPROFILE_ACCOUNT_DELETED "Account eliminato"
     IDS_USERPROFILE_TYPE_TEXT "When %s logs onto this computer, should the operating system use the roaming profile or just the locally cached copy of the roaming profile."
     IDS_MESSAGEBOXTITLE "Applet di sistema del pannello di controllo"
     IDS_WARNINITIALSIZE "Immettere la dimensione iniziale del file di paging."
@@ -361,13 +361,13 @@ BEGIN
     IDS_PAGEFILE_MB "%lu MB"
     IDS_PAGEFILE_NONE "None"
     IDS_PAGEFILE_SYSTEM "System Managed"
-    IDS_INFOREBOOT "You have to reboot the computer in order to apply the changes."
+    IDS_INFOREBOOT "Bisogna riavviare il computer per applicare le modifiche."
     IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Confirm Profile Delete"
-    IDS_HWPROFILE_CONFIRM_DELETE "Are you sure you want to delete the hardware profile ""%s""?"
-    IDS_HWPROFILE_ALREADY_IN_USE "The profile name is already in use."
-    IDS_HWPROFILE_PROFILE "Profile"
-    IDS_HWPROFILE_WARNING "Warning"
-    IDS_ENVIRONMENT_WARNING "Any changes that have been done will be discarded and the variable's value will be edited as text."
-    IDS_ENVIRONMENT_WARNING_TITLE "System Properties"
+    IDS_HWPROFILE_CONFIRM_DELETE "Eliminare il profilo hardware ""%s""?"
+    IDS_HWPROFILE_ALREADY_IN_USE "Il nome del profilo è già in uso."
+    IDS_HWPROFILE_PROFILE "Profilo"
+    IDS_HWPROFILE_WARNING "Attenzione"
+    IDS_ENVIRONMENT_WARNING "Tutte le modifiche effettuate verranno scartate e il valore della variabile verrà modificata come testo."
+    IDS_ENVIRONMENT_WARNING_TITLE "Propietà di sistema"
     IDS_FILE_BROWSE_FILTER "All Files (*.*)\0*.*\0"
 END

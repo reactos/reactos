@@ -23,8 +23,6 @@
 
 EXTERN _DiskStopFloppyMotor:PROC
 EXTERN _Relocator16Boot:PROC
-EXTERN _FrldrBootDrive:BYTE
-EXTERN _FrldrBootPartition:DWORD
 
 .code32
 
@@ -32,12 +30,11 @@ Regs:
     .space REGS_SIZE
 
 /*
- * VOID __cdecl BootLinuxKernel(
- *     IN ULONG KernelSize,
- *     IN PVOID KernelCurrentLoadAddress,
- *     IN PVOID KernelTargetLoadAddress,
- *     IN UCHAR DriveNumber,
- *     IN ULONG PartitionNumber);
+ * VOID __cdecl
+ * BootLinuxKernel(
+ *     _In_ ULONG KernelSize,
+ *     _In_ PVOID KernelCurrentLoadAddress,
+ *     _In_ PVOID KernelTargetLoadAddress);
  */
 PUBLIC _BootLinuxKernel
 _BootLinuxKernel:
@@ -51,25 +48,6 @@ _BootLinuxKernel:
     mov word ptr [Regs + REGS_ES], ax
     mov word ptr [Regs + REGS_FS], ax
     mov word ptr [Regs + REGS_GS], ax
-
-    /* Set the boot drive */
-    xor edx, edx
-    mov dl, byte ptr [esp + 16]
-    test dl, dl
-    jnz set_part
-    mov dl, byte ptr ds:[_FrldrBootDrive]
-
-    /* Set the boot partition */
-set_part:
-    mov eax, dword ptr [esp + 20]
-    test eax, eax
-    jnz continue
-    mov eax, dword ptr ds:[_FrldrBootPartition]
-continue:
-    /* Store the 1-byte truncated partition number in DH */
-    mov dh, al
-
-    mov dword ptr [Regs + REGS_EDX], edx
 
     /*
      * Relocate the kernel image to its final destination (can be as low as 0x10000).

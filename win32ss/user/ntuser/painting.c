@@ -698,6 +698,12 @@ IntInvalidateWindows(PWND Wnd, PREGION Rgn, ULONG Flags)
       RgnType = NULLREGION;
    }
 
+   /* Nothing to paint, just return */
+   if ((RgnType == NULLREGION && (Flags & RDW_INVALIDATE)) || RgnType == ERROR)
+   {
+      return;
+   }
+
    /*
     * Save current state of pending updates
     */

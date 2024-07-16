@@ -42,6 +42,34 @@ class CDesktopFolder :
 
         HRESULT _GetSFFromPidl(LPCITEMIDLIST pidl, IShellFolder2** psf);
 
+        static HRESULT GetColumnDetails(UINT iColumn, SHELLDETAILS &sd);
+
+        HRESULT _ParseDisplayNameByParent(
+            HWND hwndOwner,
+            LPBC pbc,
+            LPOLESTR pszPath,
+            DWORD *pchEaten,
+            PIDLIST_RELATIVE *ppidl,
+            DWORD *pdwAttributes);
+
+        STDMETHODIMP
+        ShellUrlParseDisplayName(
+            HWND hwndOwner,
+            LPBC pbc,
+            LPOLESTR lpszDisplayName,
+            DWORD *pchEaten,
+            PIDLIST_RELATIVE *ppidl,
+            DWORD *pdwAttributes);
+
+        STDMETHODIMP
+        HttpUrlParseDisplayName(
+            HWND hwndOwner,
+            LPBC pbc,
+            LPOLESTR lpszDisplayName,
+            DWORD *pchEaten,
+            PIDLIST_RELATIVE *ppidl,
+            DWORD *pdwAttributes);
+
     public:
         CDesktopFolder();
         ~CDesktopFolder();

@@ -1060,6 +1060,13 @@ SetBkMode(
     PDC_ATTR pdcattr;
     INT iOldMode;
 
+    /* Avoid bad mode setting */
+    if ((iBkMode != TRANSPARENT) && (iBkMode != OPAQUE))
+    {
+        DPRINT1("SetBkMode: Incorrect value\n");
+        return 0;
+    }
+
     HANDLE_METADC(INT, SetBkMode, 0, hdc, iBkMode);
 
     /* Get the DC attribute */

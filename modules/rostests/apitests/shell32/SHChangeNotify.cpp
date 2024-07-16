@@ -2,942 +2,607 @@
  * PROJECT:     ReactOS api tests
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Test for SHChangeNotify
- * COPYRIGHT:   Copyright 2020-2021 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * COPYRIGHT:   Copyright 2020-2024 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
-// NOTE: This test program closes the Explorer windows before tests.
+// NOTE: This testcase requires shell32_apitest_sub.exe.
 
 #include "shelltest.h"
 #include "shell32_apitest_sub.h"
-#include <time.h>
-#include <process.h>
-#include <versionhelpers.h>
+#include <assert.h>
 
-// --- The selection of tests ---
-#define DISABLE_THIS_TESTCASE
-#define NO_TRIVIAL
-//#define NO_INTERRUPT_LEVEL
-//#define NO_SHELL_LEVEL
-#define NEW_DELIVERY_ONLY
-//#define RANDOM_HALF
-#define RANDOM_QUARTER
+#define NUM_STEP        8
+#define NUM_CHECKS      12
+#define INTERVAL        0
+#define MAX_EVENT_TYPE  6
 
-// --- Show the elapsed time by GetTickCount() ---
-//#define ENTRY_TICK
-#define GROUP_TICK
-#define TOTAL_TICK
-
-static HWND s_hwnd = NULL;
-static WCHAR s_szSubProgram[MAX_PATH];
+static HWND s_hMainWnd = NULL, s_hSubWnd = NULL;
+static WCHAR s_szSubProgram[MAX_PATH]; // shell32_apitest_sub.exe
 static HANDLE s_hThread = NULL;
-static HANDLE s_hEvent = NULL;
+static INT s_iStage = -1, s_iStep = -1;
+static BYTE s_abChecks[NUM_CHECKS] = { 0 }; // Flags for testing
+static BOOL s_bGotUpdateDir = FALSE; // Got SHCNE_UPDATEDIR?
 
-static BOOL DoCreateEmptyFile(LPCWSTR pszFileName)
+static BOOL DoCreateFile(LPCWSTR pszFileName)
 {
-    FILE *fp = _wfopen(pszFileName, L"wb");
-    if (fp)
-        fclose(fp);
-    return fp != NULL;
+    HANDLE hFile = ::CreateFileW(pszFileName, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                                 CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    ::CloseHandle(hFile);
+    return hFile != INVALID_HANDLE_VALUE;
 }
 
-struct TEST_ENTRY;
-
-typedef BOOL (*ACTION)(const struct TEST_ENTRY *entry);
-
-typedef struct TEST_ENTRY
+static void DoDeleteDirectory(LPCWSTR pszDir)
 {
-    INT line;
-    DIRTYPE iWriteDir;
-    LPCSTR pattern;
-    LPCWSTR path1;
-    LPCWSTR path2;
-    ACTION action;
-} TEST_ENTRY;
-
-#define TEST_FILE      L"_TEST_.txt"
-#define TEST_FILE_KAI  L"_TEST_KAI_.txt"
-#define TEST_DIR       L"_TESTDIR_"
-#define TEST_DIR_KAI   L"_TESTDIR_KAI_"
-#define MOVE_FILE(from, to) MoveFileW((from), (to))
-
-static BOOL DoAction1(const TEST_ENTRY *entry)
-{
-    LPWSTR pszPath = DoGetDir(entry->iWriteDir);
-    PathAppendW(pszPath, TEST_FILE);
-    ok(DoCreateEmptyFile(pszPath), "Line %d: DoCreateEmptyFile failed\n", entry->line);
-    return TRUE;
+    WCHAR szPath[MAX_PATH];
+    ZeroMemory(szPath, sizeof(szPath));
+    StringCchCopyW(szPath, _countof(szPath), pszDir); // Double-NULL terminated
+    SHFILEOPSTRUCTW FileOp = { NULL, FO_DELETE, szPath, NULL, FOF_NOCONFIRMATION | FOF_SILENT };
+    SHFileOperation(&FileOp);
 }
 
-static BOOL DoAction2(const TEST_ENTRY *entry)
+static INT GetEventType(LONG lEvent)
 {
-    LPWSTR pszPath1 = DoGetDir(entry->iWriteDir), pszPath2 = DoGetDir(entry->iWriteDir);
-    PathAppendW(pszPath1, TEST_FILE);
-    PathAppendW(pszPath2, TEST_FILE_KAI);
-    ok(MOVE_FILE(pszPath1, pszPath2), "Line %d: MOVE_FILE(%ls, %ls) failed (%ld)\n",
-       entry->line, pszPath1, pszPath2, GetLastError());
-    return TRUE;
+    switch (lEvent)
+    {
+        case SHCNE_CREATE:          return 0;
+        case SHCNE_DELETE:          return 1;
+        case SHCNE_RENAMEITEM:      return 2;
+        case SHCNE_MKDIR:           return 3;
+        case SHCNE_RMDIR:           return 4;
+        case SHCNE_RENAMEFOLDER:    return 5;
+        C_ASSERT(5 + 1 == MAX_EVENT_TYPE);
+        default:                    return -1;
+    }
 }
 
-static BOOL DoAction3(const TEST_ENTRY *entry)
-{
-    LPWSTR pszPath1 = DoGetDir(entry->iWriteDir), pszPath2 = DoGetDir(entry->iWriteDir);
-    PathAppendW(pszPath1, TEST_FILE_KAI);
-    PathAppendW(pszPath2, TEST_FILE);
-    ok(MOVE_FILE(pszPath1, pszPath2), "Line %d: MOVE_FILE(%ls, %ls) failed (%ld)\n",
-       entry->line, pszPath1, pszPath2, GetLastError());
-    return TRUE;
-}
+#define FILE_1  L"_TESTFILE_1_.txt"
+#define FILE_2  L"_TESTFILE_2_.txt"
+#define DIR_1   L"_TESTDIR_1_"
+#define DIR_2   L"_TESTDIR_2_"
 
-static BOOL DoAction4(const TEST_ENTRY *entry)
-{
-    LPWSTR pszPath = DoGetDir(entry->iWriteDir);
-    PathAppendW(pszPath, TEST_FILE);
-    ok(DeleteFileW(pszPath), "Line %d: DeleteFileW(%ls) failed (%ld)\n",
-       entry->line, pszPath, GetLastError());
-    return TRUE;
-}
-
-static BOOL DoAction5(const TEST_ENTRY *entry)
-{
-    LPWSTR pszPath = DoGetDir(entry->iWriteDir);
-    PathAppendW(pszPath, TEST_DIR);
-    ok(CreateDirectoryW(pszPath, NULL), "Line %d: CreateDirectoryW(%ls) failed (%ld)\n",
-       entry->line, pszPath, GetLastError());
-    return TRUE;
-}
-
-static BOOL DoAction6(const TEST_ENTRY *entry)
-{
-    LPWSTR pszPath1 = DoGetDir(entry->iWriteDir), pszPath2 = DoGetDir(entry->iWriteDir);
-    PathAppendW(pszPath1, TEST_DIR);
-    PathAppendW(pszPath2, TEST_DIR_KAI);
-    ok(MOVE_FILE(pszPath1, pszPath2), "Line %d: MOVE_FILE(%ls, %ls) failed (%ld)\n",
-       entry->line, pszPath1, pszPath2, GetLastError());
-    return TRUE;
-}
-
-static BOOL DoAction7(const TEST_ENTRY *entry)
-{
-    LPWSTR pszPath1 = DoGetDir(entry->iWriteDir), pszPath2 = DoGetDir(entry->iWriteDir);
-    PathAppendW(pszPath1, TEST_DIR_KAI);
-    PathAppendW(pszPath2, TEST_DIR);
-    ok(MOVE_FILE(pszPath1, pszPath2), "Line %d: MOVE_FILE(%ls, %ls) failed (%ld)\n",
-       entry->line, pszPath1, pszPath2, GetLastError());
-    return TRUE;
-}
-
-static BOOL DoAction8(const TEST_ENTRY *entry)
-{
-    LPWSTR pszPath = DoGetDir(entry->iWriteDir);
-    PathAppendW(pszPath, TEST_DIR);
-    ok(RemoveDirectoryW(pszPath), "Line %d: RemoveDirectoryW(%ls) failed (%ld)\n",
-       entry->line, pszPath, GetLastError());
-    return TRUE;
-}
-
-static BOOL DoAction9(const TEST_ENTRY *entry)
-{
-    LPWSTR pszPath = DoGetDir(entry->iWriteDir);
-    PathAppendW(pszPath, TEST_FILE);
-    SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW | SHCNF_FLUSH, pszPath, NULL);
-    return FALSE;
-}
-
-static BOOL DoAction10(const TEST_ENTRY *entry)
-{
-    LPWSTR pszPath = DoGetDir(entry->iWriteDir);
-    PathAppendW(pszPath, TEST_FILE);
-    SHChangeNotify(SHCNE_DELETE, SHCNF_PATHW | SHCNF_FLUSH, pszPath, NULL);
-    return FALSE;
-}
-
-static BOOL DoAction11(const TEST_ENTRY *entry)
-{
-    LPWSTR pszPath = DoGetDir(entry->iWriteDir);
-    PathAppendW(pszPath, TEST_DIR);
-    SHChangeNotify(SHCNE_MKDIR, SHCNF_PATHW | SHCNF_FLUSH, pszPath, NULL);
-    return FALSE;
-}
-
-static BOOL DoAction12(const TEST_ENTRY *entry)
-{
-    LPWSTR pszPath = DoGetDir(entry->iWriteDir);
-    PathAppendW(pszPath, TEST_DIR);
-    SHChangeNotify(SHCNE_RMDIR, SHCNF_PATHW | SHCNF_FLUSH, pszPath, NULL);
-    return FALSE;
-}
-
-#define WRITEDIR_0 DIRTYPE_DESKTOP
-static WCHAR s_szDesktop[MAX_PATH];
-static WCHAR s_szTestFile0[MAX_PATH];
-static WCHAR s_szTestFile0Kai[MAX_PATH];
-static WCHAR s_szTestDir0[MAX_PATH];
-static WCHAR s_szTestDir0Kai[MAX_PATH];
-
-#define WRITEDIR_1 DIRTYPE_MYDOCUMENTS
-static WCHAR s_szDocuments[MAX_PATH];
-static WCHAR s_szTestFile1[MAX_PATH];
-static WCHAR s_szTestFile1Kai[MAX_PATH];
-static WCHAR s_szTestDir1[MAX_PATH];
-static WCHAR s_szTestDir1Kai[MAX_PATH];
+static WCHAR s_szDir1[MAX_PATH];
+static WCHAR s_szDir1InDir1[MAX_PATH];
+static WCHAR s_szDir2InDir1[MAX_PATH];
+static WCHAR s_szFile1InDir1InDir1[MAX_PATH];
+static WCHAR s_szFile1InDir1[MAX_PATH];
+static WCHAR s_szFile2InDir1[MAX_PATH];
 
 static void DoDeleteFilesAndDirs(void)
 {
-    DeleteFileW(TEMP_FILE);
-    DeleteFileW(s_szTestFile0);
-    DeleteFileW(s_szTestFile0Kai);
-    DeleteFileW(s_szTestFile1);
-    DeleteFileW(s_szTestFile1Kai);
-    RemoveDirectoryW(s_szTestDir0);
-    RemoveDirectoryW(s_szTestDir0Kai);
-    RemoveDirectoryW(s_szTestDir1);
-    RemoveDirectoryW(s_szTestDir1Kai);
+    ::DeleteFileW(s_szFile1InDir1);
+    ::DeleteFileW(s_szFile2InDir1);
+    ::DeleteFileW(s_szFile1InDir1InDir1);
+    DoDeleteDirectory(s_szDir1InDir1);
+    DoDeleteDirectory(s_szDir2InDir1);
+    DoDeleteDirectory(s_szDir1);
 }
 
-static const TEST_ENTRY s_group_00[] =
+static void TEST_Quit(void)
 {
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction1 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction2 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction3 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction4 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction5 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction6 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction7 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction9 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction10 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction11 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction12 },
+    CloseHandle(s_hThread);
+    s_hThread = NULL;
 
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction1 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction2 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction3 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction4 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction5 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction6 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction7 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction9 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction10 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction11 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction12 },
-};
+    PostMessageW(s_hSubWnd, WM_COMMAND, IDNO, 0); // Finish
+    DoWaitForWindow(SUB_CLASSNAME, SUB_CLASSNAME, TRUE, TRUE); // Close sub-windows
 
-static const TEST_ENTRY s_group_01[] =
-{
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction1 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction2 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction3 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction4 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction5 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction6 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction7 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_0, "0100000", s_szTestFile0, L"", DoAction9 },
-    { __LINE__, WRITEDIR_0, "0010000", s_szTestFile0, L"", DoAction10 },
-    { __LINE__, WRITEDIR_0, "0001000", s_szTestDir0, L"", DoAction11 },
-    { __LINE__, WRITEDIR_0, "0000100", s_szTestDir0, L"", DoAction12 },
-
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction1 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction2 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction3 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction4 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction5 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction6 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction7 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_1, "0100000", s_szTestFile1, L"", DoAction9 },
-    { __LINE__, WRITEDIR_1, "0010000", s_szTestFile1, L"", DoAction10 },
-    { __LINE__, WRITEDIR_1, "0001000", s_szTestDir1, L"", DoAction11 },
-    { __LINE__, WRITEDIR_1, "0000100", s_szTestDir1, L"", DoAction12 },
-};
-
-static const TEST_ENTRY s_group_02[] =
-{
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction1 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction2 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction3 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction4 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction5 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction6 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction7 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction9 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction10 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction11 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction12 },
-
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction1 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction2 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction3 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction4 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction5 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction6 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction7 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_1, "0100000", s_szTestFile1, L"", DoAction9 },
-    { __LINE__, WRITEDIR_1, "0010000", s_szTestFile1, L"", DoAction10 },
-    { __LINE__, WRITEDIR_1, "0001000", s_szTestDir1, L"", DoAction11 },
-    { __LINE__, WRITEDIR_1, "0000100", s_szTestDir1, L"", DoAction12 },
-};
-
-static const TEST_ENTRY s_group_03[] =
-{
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction1 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction2 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction3 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction4 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction5 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction6 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction7 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_0, "0100000", s_szTestFile0, L"", DoAction9 },
-    { __LINE__, WRITEDIR_0, "0010000", s_szTestFile0, L"", DoAction10 },
-    { __LINE__, WRITEDIR_0, "0001000", s_szTestDir0, L"", DoAction11 },
-    { __LINE__, WRITEDIR_0, "0000100", s_szTestDir0, L"", DoAction12 },
-
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction1 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction2 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction3 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction4 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction5 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction6 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction7 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction9 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction10 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction11 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction12 },
-};
-
-static const TEST_ENTRY s_group_04[] =
-{
-    { __LINE__, WRITEDIR_0, "0100000", s_szTestFile0, L"", DoAction1 },
-    { __LINE__, WRITEDIR_0, "1000000", s_szTestFile0, s_szTestFile0Kai, DoAction2 },
-    { __LINE__, WRITEDIR_0, "1000000", s_szTestFile0Kai, s_szTestFile0, DoAction3 },
-    { __LINE__, WRITEDIR_0, "0010000", s_szTestFile0, L"", DoAction4 },
-    { __LINE__, WRITEDIR_0, "0001000", s_szTestDir0, L"", DoAction5 },
-    { __LINE__, WRITEDIR_0, "0000010", s_szTestDir0, s_szTestDir0Kai, DoAction6 },
-    { __LINE__, WRITEDIR_0, "0000010", s_szTestDir0Kai, s_szTestDir0, DoAction7 },
-    { __LINE__, WRITEDIR_0, "0000100", s_szTestDir0, L"", DoAction8 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction9 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction10 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction11 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction12 },
-
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction1 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction2 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction3 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction4 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction5 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction6 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction7 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction9 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction10 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction11 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction12 },
-};
-
-static const TEST_ENTRY s_group_05[] =
-{
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction1 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction2 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction3 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction4 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction5 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction6 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction7 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction9 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction10 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction11 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction12 },
-
-    { __LINE__, WRITEDIR_1, "0100000", s_szTestFile1, L"", DoAction1 },
-    { __LINE__, WRITEDIR_1, "1000000", s_szTestFile1, s_szTestFile1Kai, DoAction2 },
-    { __LINE__, WRITEDIR_1, "1000000", s_szTestFile1Kai, s_szTestFile1, DoAction3 },
-    { __LINE__, WRITEDIR_1, "0010000", s_szTestFile1, L"", DoAction4 },
-    { __LINE__, WRITEDIR_1, "0001000", s_szTestDir1, L"", DoAction5 },
-    { __LINE__, WRITEDIR_1, "0000010", s_szTestDir1, s_szTestDir1Kai, DoAction6 },
-    { __LINE__, WRITEDIR_1, "0000010", s_szTestDir1Kai, s_szTestDir1, DoAction7 },
-    { __LINE__, WRITEDIR_1, "0000100", s_szTestDir1, L"", DoAction8 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction9 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction10 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction11 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction12 },
-};
-
-static const TEST_ENTRY s_group_06[] =
-{
-    { __LINE__, WRITEDIR_0, "0100000", s_szTestFile0, L"", DoAction1 },
-    { __LINE__, WRITEDIR_0, "1000000", s_szTestFile0, s_szTestFile0Kai, DoAction2 },
-    { __LINE__, WRITEDIR_0, "1000000", s_szTestFile0Kai, s_szTestFile0, DoAction3 },
-    { __LINE__, WRITEDIR_0, "0010000", s_szTestFile0, L"", DoAction4 },
-    { __LINE__, WRITEDIR_0, "0001000", s_szTestDir0, L"", DoAction5 },
-    { __LINE__, WRITEDIR_0, "0000010", s_szTestDir0, s_szTestDir0Kai, DoAction6 },
-    { __LINE__, WRITEDIR_0, "0000010", s_szTestDir0Kai, s_szTestDir0, DoAction7 },
-    { __LINE__, WRITEDIR_0, "0000100", s_szTestDir0, L"", DoAction8 },
-    { __LINE__, WRITEDIR_0, "0100000", s_szTestFile0, L"", DoAction9 },
-    { __LINE__, WRITEDIR_0, "0010000", s_szTestFile0, L"", DoAction10 },
-    { __LINE__, WRITEDIR_0, "0001000", s_szTestDir0, L"", DoAction11 },
-    { __LINE__, WRITEDIR_0, "0000100", s_szTestDir0, L"", DoAction12 },
-
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction1 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction2 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction3 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction4 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction5 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction6 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction7 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_1, "0100000", s_szTestFile1, L"", DoAction9 },
-    { __LINE__, WRITEDIR_1, "0010000", s_szTestFile1, L"", DoAction10 },
-    { __LINE__, WRITEDIR_1, "0001000", s_szTestDir1, L"", DoAction11 },
-    { __LINE__, WRITEDIR_1, "0000100", s_szTestDir1, L"", DoAction12 },
-};
-
-static const TEST_ENTRY s_group_07[] =
-{
-    { __LINE__, WRITEDIR_0, "0100000", s_szTestFile0, L"", DoAction1 },
-    { __LINE__, WRITEDIR_0, "1000000", s_szTestFile0, s_szTestFile0Kai, DoAction2 },
-    { __LINE__, WRITEDIR_0, "1000000", s_szTestFile0Kai, s_szTestFile0, DoAction3 },
-    { __LINE__, WRITEDIR_0, "0010000", s_szTestFile0, L"", DoAction4 },
-    { __LINE__, WRITEDIR_0, "0001000", s_szTestDir0, L"", DoAction5 },
-    { __LINE__, WRITEDIR_0, "0000010", s_szTestDir0, s_szTestDir0Kai, DoAction6 },
-    { __LINE__, WRITEDIR_0, "0000010", s_szTestDir0Kai, s_szTestDir0, DoAction7 },
-    { __LINE__, WRITEDIR_0, "0000100", s_szTestDir0, L"", DoAction8 },
-    { __LINE__, WRITEDIR_0, "0100000", s_szTestFile0, L"", DoAction9 },
-    { __LINE__, WRITEDIR_0, "0010000", s_szTestFile0, L"", DoAction10 },
-    { __LINE__, WRITEDIR_0, "0001000", s_szTestDir0, L"", DoAction11 },
-    { __LINE__, WRITEDIR_0, "0000100", s_szTestDir0, L"", DoAction12 },
-
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction1 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction2 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction3 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction4 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction5 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction6 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction7 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction9 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction10 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction11 },
-    { __LINE__, WRITEDIR_1, "0000000", L"", L"", DoAction12 },
-};
-
-static const TEST_ENTRY s_group_08[] =
-{
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction1 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction2 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction3 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction4 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction5 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction6 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction7 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction8 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction9 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction10 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction11 },
-    { __LINE__, WRITEDIR_0, "0000000", L"", L"", DoAction12 },
-
-    { __LINE__, WRITEDIR_1, "0100000", s_szTestFile1, L"", DoAction1 },
-    { __LINE__, WRITEDIR_1, "1000000", s_szTestFile1, s_szTestFile1Kai, DoAction2 },
-    { __LINE__, WRITEDIR_1, "1000000", s_szTestFile1Kai, s_szTestFile1, DoAction3 },
-    { __LINE__, WRITEDIR_1, "0010000", s_szTestFile1, L"", DoAction4 },
-    { __LINE__, WRITEDIR_1, "0001000", s_szTestDir1, L"", DoAction5 },
-    { __LINE__, WRITEDIR_1, "0000010", s_szTestDir1, s_szTestDir1Kai, DoAction6 },
-    { __LINE__, WRITEDIR_1, "0000010", s_szTestDir1Kai, s_szTestDir1, DoAction7 },
-    { __LINE__, WRITEDIR_1, "0000100", s_szTestDir1, L"", DoAction8 },
-    { __LINE__, WRITEDIR_1, "0100000", s_szTestFile1, L"", DoAction9 },
-    { __LINE__, WRITEDIR_1, "0010000", s_szTestFile1, L"", DoAction10 },
-    { __LINE__, WRITEDIR_1, "0001000", s_szTestDir1, L"", DoAction11 },
-    { __LINE__, WRITEDIR_1, "0000100", s_szTestDir1, L"", DoAction12 },
-};
-
-static LPCSTR PatternFromFlags(DWORD flags)
-{
-    static CHAR s_buf[(TYPE_MAX + 1) + 1];
-    for (INT i = 0; i < (TYPE_MAX + 1); ++i)
-        s_buf[i] = (char)('0' + !!(flags & (1 << i)));
-
-    s_buf[TYPE_MAX + 1] = 0;
-    return s_buf;
+    DoDeleteFilesAndDirs();
 }
 
-static BOOL DoGetPaths(LPWSTR pszPath1, LPWSTR pszPath2)
+static void DoBuildFilesAndDirs(void)
 {
-    pszPath1[0] = pszPath2[0] = 0;
+    WCHAR szPath1[MAX_PATH];
+    SHGetSpecialFolderPathW(NULL, szPath1, CSIDL_PERSONAL, FALSE); // My Documents
+    PathAppendW(szPath1, DIR_1);
+    StringCchCopyW(s_szDir1, _countof(s_szDir1), szPath1);
 
-    WCHAR szText[MAX_PATH * 2];
-    szText[0] = 0;
-    FILE *fp = _wfopen(TEMP_FILE, L"rb");
-    if (fp)
+    PathAppendW(szPath1, DIR_1);
+    StringCchCopyW(s_szDir1InDir1, _countof(s_szDir1InDir1), szPath1);
+    PathRemoveFileSpecW(szPath1);
+
+    PathAppendW(szPath1, DIR_2);
+    StringCchCopyW(s_szDir2InDir1, _countof(s_szDir2InDir1), szPath1);
+    PathRemoveFileSpecW(szPath1);
+
+    PathAppendW(szPath1, DIR_1);
+    PathAppendW(szPath1, FILE_1);
+    StringCchCopyW(s_szFile1InDir1InDir1, _countof(s_szFile1InDir1InDir1), szPath1);
+    PathRemoveFileSpecW(szPath1);
+    PathRemoveFileSpecW(szPath1);
+
+    PathAppendW(szPath1, FILE_1);
+    StringCchCopyW(s_szFile1InDir1, _countof(s_szFile1InDir1), szPath1);
+    PathRemoveFileSpecW(szPath1);
+
+    PathAppendW(szPath1, FILE_2);
+    StringCchCopyW(s_szFile2InDir1, _countof(s_szFile2InDir1), szPath1);
+    PathRemoveFileSpecW(szPath1);
+
+#define TRACE_PATH(path) trace(#path ": %ls\n", path)
+    TRACE_PATH(s_szDir1);
+    TRACE_PATH(s_szDir1InDir1);
+    TRACE_PATH(s_szFile1InDir1);
+    TRACE_PATH(s_szFile1InDir1InDir1);
+    TRACE_PATH(s_szFile2InDir1);
+#undef TRACE_PATH
+
+    DoDeleteFilesAndDirs();
+
+    ::CreateDirectoryW(s_szDir1, NULL);
+    ok_int(!!PathIsDirectoryW(s_szDir1), TRUE);
+
+    DoDeleteDirectory(s_szDir1InDir1);
+    ok_int(!PathIsDirectoryW(s_szDir1InDir1), TRUE);
+}
+
+static void DoTestEntry(LONG lEvent, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+{
+    WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
+
+    szPath1[0] = szPath2[0] = 0;
+    SHGetPathFromIDListW(pidl1, szPath1);
+    SHGetPathFromIDListW(pidl2, szPath2);
+
+    trace("(0x%lX, '%ls', '%ls')\n", lEvent, szPath1, szPath2);
+
+    if (lEvent == SHCNE_UPDATEDIR)
     {
-        fread(szText, 1, sizeof(szText), fp);
-        fclose(fp);
+        trace("Got SHCNE_UPDATEDIR\n");
+        s_bGotUpdateDir = TRUE;
+        return;
     }
 
-    LPWSTR pch = wcschr(szText, L'|');
-    if (pch == NULL)
-        return FALSE;
+    INT iEventType = GetEventType(lEvent);
+    if (iEventType < 0)
+        return;
+
+    assert(iEventType < MAX_EVENT_TYPE);
+
+    INT i = 0;
+    s_abChecks[i++] |= (lstrcmpiW(szPath1, L"") == 0) << iEventType;
+    s_abChecks[i++] |= (lstrcmpiW(szPath1, s_szDir1) == 0) << iEventType;
+    s_abChecks[i++] |= (lstrcmpiW(szPath1, s_szDir2InDir1) == 0) << iEventType;
+    s_abChecks[i++] |= (lstrcmpiW(szPath1, s_szFile1InDir1) == 0) << iEventType;
+    s_abChecks[i++] |= (lstrcmpiW(szPath1, s_szFile2InDir1) == 0) << iEventType;
+    s_abChecks[i++] |= (lstrcmpiW(szPath1, s_szFile1InDir1InDir1) == 0) << iEventType;
+    s_abChecks[i++] |= (lstrcmpiW(szPath2, L"") == 0) << iEventType;
+    s_abChecks[i++] |= (lstrcmpiW(szPath2, s_szDir1) == 0) << iEventType;
+    s_abChecks[i++] |= (lstrcmpiW(szPath2, s_szDir2InDir1) == 0) << iEventType;
+    s_abChecks[i++] |= (lstrcmpiW(szPath2, s_szFile1InDir1) == 0) << iEventType;
+    s_abChecks[i++] |= (lstrcmpiW(szPath2, s_szFile2InDir1) == 0) << iEventType;
+    s_abChecks[i++] |= (lstrcmpiW(szPath2, s_szFile1InDir1InDir1) == 0) << iEventType;
+    assert(i == NUM_CHECKS);
+}
+
+static LPCSTR StringFromChecks(void)
+{
+    static char s_sz[2 * NUM_CHECKS + 1];
+
+    char *pch = s_sz;
+    for (INT i = 0; i < NUM_CHECKS; ++i)
+    {
+        WCHAR sz[3];
+        StringCchPrintfW(sz, _countof(sz), L"%02X", s_abChecks[i]);
+        *pch++ = sz[0];
+        *pch++ = sz[1];
+    }
+
+    assert((pch - s_sz) + 1 == sizeof(s_sz));
 
     *pch = 0;
-    StringCchCopyW(pszPath1, MAX_PATH, szText);
-    StringCchCopyW(pszPath2, MAX_PATH, pch + 1);
-    return TRUE;
+    return s_sz;
 }
 
-static void DoTestEntry(INT iEntry, const TEST_ENTRY *entry, INT nSources)
+struct TEST_ANSWER
 {
-#ifdef ENTRY_TICK
-    DWORD dwOldTick = GetTickCount();
-#endif
+    INT lineno;
+    LPCSTR answer;
+};
 
-    BOOL bInterrupting = FALSE;
-    if (entry->action)
-        bInterrupting = entry->action(entry);
+static void DoStepCheck(INT iStage, INT iStep, LPCSTR checks)
+{
+    assert(0 <= iStep);
+    assert(iStep < NUM_STEP);
 
-    DWORD flags;
-    LPCSTR pattern;
-    if ((nSources & SHCNRF_InterruptLevel) && bInterrupting)
+    assert(0 <= iStage);
+    assert(iStage < NUM_STAGE);
+
+    if (s_bGotUpdateDir)
     {
-        // The event won't work at here. Manually waiting...
-        UINT cTry = ((iEntry == 0) ? 100 : 60);
-        for (UINT iTry = 0; iTry < cTry; ++iTry)
+        ok_int(TRUE, TRUE);
+        return;
+    }
+
+    LPCSTR answer = NULL;
+    INT lineno;
+    switch (iStage)
+    {
+        case 0:
+        case 1:
+        case 3:
+        case 6:
+        case 9:
         {
-            flags = SendMessageW(s_hwnd, WM_GET_NOTIFY_FLAGS, 0, 0);
-            pattern = PatternFromFlags(flags);
-            if (strcmp(pattern, "0000000") != 0)
-                break;
-
-            Sleep(1);
-        }
-    }
-    else
-    {
-        if (WaitForSingleObject(s_hEvent, 100) == WAIT_OBJECT_0)
-            Sleep(1);
-
-        flags = SendMessageW(s_hwnd, WM_GET_NOTIFY_FLAGS, 0, 0);
-        pattern = PatternFromFlags(flags);
-    }
-
-    SendMessageW(s_hwnd, WM_SET_PATHS, 0, 0);
-
-    WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
-    szPath1[0] = szPath2[0] = 0;
-    BOOL bOK = DoGetPaths(szPath1, szPath2);
-
-    static UINT s_cCalmDown = 0;
-
-    if (pattern[TYPE_UPDATEDIR] == '1')
-    {
-        trace("Line %d: SHCNE_UPDATEDIR: Calm down (%u)...\n", entry->line, s_cCalmDown);
-
-        if (++s_cCalmDown < 3)
-            Sleep(3000);
-
-        if (entry->pattern)
-            ok(TRUE, "Line %d:\n", entry->line);
-        if (entry->path1)
-            ok(TRUE, "Line %d:\n", entry->line);
-        if (entry->path2)
-            ok(TRUE, "Line %d:\n", entry->line);
-    }
-    else
-    {
-        s_cCalmDown = 0;
-        if (entry->pattern)
-        {
-            ok(strcmp(pattern, entry->pattern) == 0,
-               "Line %d: pattern mismatch '%s', tick=0x%08lX\n",
-               entry->line, pattern, GetTickCount());
-        }
-        if (entry->path1)
-            ok(bOK && lstrcmpiW(entry->path1, szPath1) == 0,
-               "Line %d: path1 mismatch '%S' (%d)\n", entry->line, szPath1, bOK);
-        if (entry->path2)
-            ok(bOK && lstrcmpiW(entry->path2, szPath2) == 0,
-               "Line %d: path2 mismatch '%S' (%d)\n", entry->line, szPath2, bOK);
-    }
-
-    SendMessageW(s_hwnd, WM_CLEAR_FLAGS, 0, 0);
-    ResetEvent(s_hEvent);
-
-#ifdef ENTRY_TICK
-    DWORD dwNewTick = GetTickCount();
-    DWORD dwTick = dwNewTick - dwOldTick;
-    trace("DoTestEntry: Line %d: tick=%lu.%lu sec\n", entry->line,
-          (dwTick / 1000), (dwTick / 100 % 10));
-#endif
-}
-
-static void DoQuitTest(BOOL bForce)
-{
-    PostMessageW(s_hwnd, WM_COMMAND, IDOK, 0);
-
-    DoWaitForWindow(CLASSNAME, CLASSNAME, TRUE, bForce);
-    s_hwnd = NULL;
-
-    if (s_hEvent)
-    {
-        CloseHandle(s_hEvent);
-        s_hEvent = NULL;
-    }
-
-    DoDeleteFilesAndDirs();
-}
-
-static void DoAbortThread(void)
-{
-    skip("Aborting the thread...\n");
-    if (s_hThread)
-    {
-        TerminateThread(s_hThread, -1);
-        s_hThread = NULL;
-    }
-}
-
-static BOOL CALLBACK HandlerRoutine(DWORD dwCtrlType)
-{
-    switch (dwCtrlType)
-    {
-        case CTRL_C_EVENT:
-        case CTRL_BREAK_EVENT:
-            DoAbortThread();
-            DoQuitTest(TRUE);
-            return TRUE;
-    }
-    return FALSE;
-}
-
-static BOOL DoInitTest(void)
-{
-    // DIRTYPE_DESKTOP
-    LPWSTR psz = DoGetDir(DIRTYPE_DESKTOP);
-    StringCchCopyW(s_szDesktop, _countof(s_szDesktop), psz);
-
-    PathAppendW(psz, TEST_FILE);
-    StringCchCopyW(s_szTestFile0, _countof(s_szTestFile0), psz);
-
-    PathRemoveFileSpecW(psz);
-    PathAppendW(psz, TEST_FILE_KAI);
-    StringCchCopyW(s_szTestFile0Kai, _countof(s_szTestFile0Kai), psz);
-
-    PathRemoveFileSpecW(psz);
-    PathAppendW(psz, TEST_DIR);
-    StringCchCopyW(s_szTestDir0, _countof(s_szTestDir0), psz);
-
-    PathRemoveFileSpecW(psz);
-    PathAppendW(psz, TEST_DIR_KAI);
-    StringCchCopyW(s_szTestDir0Kai, _countof(s_szTestDir0Kai), psz);
-
-    // DIRTYPE_MYDOCUMENTS
-    psz = DoGetDir(DIRTYPE_MYDOCUMENTS);
-    StringCchCopyW(s_szDocuments, _countof(s_szDocuments), psz);
-
-    PathAppendW(psz, TEST_FILE);
-    StringCchCopyW(s_szTestFile1, _countof(s_szTestFile1), psz);
-
-    PathRemoveFileSpecW(psz);
-    PathAppendW(psz, TEST_FILE_KAI);
-    StringCchCopyW(s_szTestFile1Kai, _countof(s_szTestFile1Kai), psz);
-
-    PathRemoveFileSpecW(psz);
-    PathAppendW(psz, TEST_DIR);
-    StringCchCopyW(s_szTestDir1, _countof(s_szTestDir1), psz);
-
-    PathRemoveFileSpecW(psz);
-    PathAppendW(psz, TEST_DIR_KAI);
-    StringCchCopyW(s_szTestDir1Kai, _countof(s_szTestDir1Kai), psz);
-
-    // prepare for files and dirs
-    DoDeleteFilesAndDirs();
-    DoCreateEmptyFile(TEMP_FILE);
-
-    // Ctrl+C
-    SetConsoleCtrlHandler(HandlerRoutine, TRUE);
-
-    // close Explorer windows
-    trace("Closing Explorer windows...\n");
-    DoWaitForWindow(L"CabinetWClass", NULL, TRUE, TRUE);
-
-    // close the CLASSNAME windows
-    return DoWaitForWindow(CLASSNAME, CLASSNAME, TRUE, TRUE) == NULL;
-}
-
-static BOOL
-GetSubProgramPath(void)
-{
-    GetModuleFileNameW(NULL, s_szSubProgram, _countof(s_szSubProgram));
-    PathRemoveFileSpecW(s_szSubProgram);
-    PathAppendW(s_szSubProgram, L"shell32_apitest_sub.exe");
-
-    if (!PathFileExistsW(s_szSubProgram))
-    {
-        PathRemoveFileSpecW(s_szSubProgram);
-        PathAppendW(s_szSubProgram, L"testdata\\shell32_apitest_sub.exe");
-
-        if (!PathFileExistsW(s_szSubProgram))
-            return FALSE;
-    }
-
-    return TRUE;
-}
-
-#define SRC_00 0
-#define SRC_01 SHCNRF_ShellLevel
-#define SRC_02 (SHCNRF_NewDelivery)
-#define SRC_03 (SHCNRF_NewDelivery | SHCNRF_ShellLevel)
-#define SRC_04 SHCNRF_InterruptLevel
-#define SRC_05 (SHCNRF_InterruptLevel | SHCNRF_ShellLevel)
-#define SRC_06 (SHCNRF_InterruptLevel | SHCNRF_NewDelivery)
-#define SRC_07 (SHCNRF_InterruptLevel | SHCNRF_NewDelivery | SHCNRF_ShellLevel)
-#define SRC_08 (SHCNRF_RecursiveInterrupt | SHCNRF_InterruptLevel)
-#define SRC_09 (SHCNRF_RecursiveInterrupt | SHCNRF_InterruptLevel | SHCNRF_ShellLevel)
-#define SRC_10 (SHCNRF_RecursiveInterrupt | SHCNRF_InterruptLevel | SHCNRF_NewDelivery)
-#define SRC_11 (SHCNRF_RecursiveInterrupt | SHCNRF_InterruptLevel | SHCNRF_NewDelivery | SHCNRF_ShellLevel)
-
-#define WATCHDIR_0 DIRTYPE_NULL
-#define WATCHDIR_1 DIRTYPE_DESKTOP
-#define WATCHDIR_2 DIRTYPE_MYCOMPUTER
-#define WATCHDIR_3 DIRTYPE_MYDOCUMENTS
-
-static void
-DoTestGroup(INT line, UINT cEntries, const TEST_ENTRY *pEntries, BOOL fRecursive,
-            INT nSources, DIRTYPE iWatchDir)
-{
-#ifdef NO_INTERRUPT_LEVEL
-    if (nSources & SHCNRF_InterruptLevel)
-        return;
-#endif
-#ifdef NO_SHELL_LEVEL
-    if (nSources & SHCNRF_ShellLevel)
-        return;
-#endif
-#ifdef NEW_DELIVERY_ONLY
-    if (!(nSources & SHCNRF_NewDelivery))
-        return;
-#endif
-#ifdef GROUP_TICK
-    DWORD dwOldTick = GetTickCount();
-#endif
-#ifdef RANDOM_QUARTER
-    if ((rand() & 3) == 0)
-        return;
-#elif defined(RANDOM_HALF)
-    if (rand() & 1)
-        return;
-#endif
-
-    trace("DoTestGroup: Line %d: fRecursive:%u, iWatchDir:%u, nSources:0x%X\n",
-          line, fRecursive, iWatchDir, nSources);
-
-    if (s_hEvent)
-    {
-        CloseHandle(s_hEvent);
-        s_hEvent = NULL;
-    }
-    s_hEvent = CreateEventW(NULL, TRUE, FALSE, EVENT_NAME);
-
-    WCHAR szParams[64];
-    StringCchPrintfW(szParams, _countof(szParams), L"%u,%u,%u", fRecursive, iWatchDir, nSources);
-
-    HINSTANCE hinst = ShellExecuteW(NULL, NULL, s_szSubProgram, szParams, NULL, SW_SHOWNORMAL);
-    if ((INT_PTR)hinst <= 32)
-    {
-        skip("Unable to run shell32_apitest_sub.exe.\n");
-        return;
-    }
-
-    s_hwnd = DoWaitForWindow(CLASSNAME, CLASSNAME, FALSE, FALSE);
-    if (!s_hwnd)
-    {
-        skip("Unable to find window.\n");
-        return;
-    }
-
-    for (UINT i = 0; i < cEntries; ++i)
-    {
-        if (!IsWindow(s_hwnd))
-        {
-            DoAbortThread();
-            DoQuitTest(TRUE);
+            static const TEST_ANSWER c_answers[] =
+            {
+                { __LINE__, "000000010000010000000000" }, // 0
+                { __LINE__, "000000040000000000000400" }, // 1
+                { __LINE__, "000000000200020000000000" }, // 2
+                { __LINE__, "000000000000080000000000" }, // 3
+                { __LINE__, "000000000001010000000000" }, // 4
+                { __LINE__, "000000000002020000000000" }, // 5
+                { __LINE__, "000000000000000020000000" }, // 6
+                { __LINE__, "000010000000100000000000" }, // 7
+            };
+            C_ASSERT(_countof(c_answers) == NUM_STEP);
+            lineno = c_answers[iStep].lineno;
+            answer = c_answers[iStep].answer;
             break;
         }
-
-        DoTestEntry(i, &pEntries[i], nSources);
+        case 2:
+        case 4:
+        case 5:
+        case 7:
+        {
+            static const TEST_ANSWER c_answers[] =
+            {
+                { __LINE__, "000000000000000000000000" }, // 0
+                { __LINE__, "000000000000000000000000" }, // 1
+                { __LINE__, "000000000000000000000000" }, // 2
+                { __LINE__, "000000000000000000000000" }, // 3
+                { __LINE__, "000000000000000000000000" }, // 4
+                { __LINE__, "000000000000000000000000" }, // 5
+                { __LINE__, "000000000000000000000000" }, // 6
+                { __LINE__, "000000000000000000000000" }, // 7
+            };
+            C_ASSERT(_countof(c_answers) == NUM_STEP);
+            lineno = c_answers[iStep].lineno;
+            answer = c_answers[iStep].answer;
+            break;
+        }
+        case 8:
+        {
+            static const TEST_ANSWER c_answers[] =
+            {
+                { __LINE__, "000000010000010000000000" }, // 0
+                { __LINE__, "000000040000000000000400" }, // 1
+                { __LINE__, "000000000200020000000000" }, // 2
+                { __LINE__, "000000000000080000000000" }, // 3
+                { __LINE__, "000000000001010000000000" }, // 4 // Recursive case
+                { __LINE__, "000000000002020000000000" }, // 5 // Recursive case
+                { __LINE__, "000000000000000020000000" }, // 6
+                { __LINE__, "000010000000100000000000" }, // 7
+            };
+            C_ASSERT(_countof(c_answers) == NUM_STEP);
+            lineno = c_answers[iStep].lineno;
+            answer = c_answers[iStep].answer;
+            if (iStep == 4 || iStep == 5) // Recursive cases
+            {
+                if (lstrcmpA(checks, "000000000000000000000000") == 0)
+                {
+                    trace("Warning! Recursive cases...\n");
+                    answer = "000000000000000000000000";
+                }
+            }
+            break;
+        }
+        default:
+        {
+            assert(0);
+            break;
+        }
     }
 
-    DoQuitTest(FALSE);
-
-#ifdef GROUP_TICK
-    DWORD dwNewTick = GetTickCount();
-    DWORD dwTick = dwNewTick - dwOldTick;
-    trace("DoTestGroup: Line %d: %lu.%lu sec\n", line, (dwTick / 1000), (dwTick / 100 % 10));
-#endif
+    ok(lstrcmpA(checks, answer) == 0,
+       "Line %d: '%s' vs '%s' at Stage %d, Step %d\n", lineno, checks, answer, iStage, iStep);
 }
 
-static unsigned __stdcall TestThreadProc(void *)
+static DWORD WINAPI StageThreadFunc(LPVOID arg)
 {
-    srand(time(NULL));
-#ifdef RANDOM_QUARTER
-    skip("RANDOM_QUARTER\n");
-#elif defined(RANDOM_HALF)
-    skip("RANDOM_HALF\n");
-#endif
+    BOOL ret;
 
-    // fRecursive == FALSE.
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_00, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, FALSE, SRC_01, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_02, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, FALSE, SRC_03, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, FALSE, SRC_04, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, FALSE, SRC_05, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, FALSE, SRC_06, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, FALSE, SRC_07, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, FALSE, SRC_08, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, FALSE, SRC_09, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, FALSE, SRC_10, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, FALSE, SRC_11, WATCHDIR_0);
+    trace("Stage %d\n", s_iStage);
 
-    BOOL bTarget = IsWindowsXPOrGreater() && !IsWindowsVistaOrGreater();
+    // 0: Create file1 in dir1
+    s_iStep = 0;
+    trace("Step %d\n", s_iStep);
+    SHChangeNotify(0, SHCNF_PATHW | SHCNF_FLUSH, NULL, NULL);
+    ZeroMemory(s_abChecks, sizeof(s_abChecks));
+    ret = DoCreateFile(s_szFile1InDir1);
+    ok_int(ret, TRUE);
+    SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW | SHCNF_FLUSH, s_szFile1InDir1, 0);
+    ::Sleep(INTERVAL);
+    DoStepCheck(s_iStage, s_iStep, StringFromChecks());
 
-#define SWITCH(x, y) (bTarget ? (x) : (y))
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_00, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_03), s_group_03, FALSE, SRC_01, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_02, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_03), s_group_03, FALSE, SRC_03, WATCHDIR_1);
-    DoTestGroup(__LINE__, SWITCH(_countof(s_group_00), _countof(s_group_04)), SWITCH(s_group_00, s_group_04), FALSE, SRC_04, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_07), s_group_07, FALSE, SRC_05, WATCHDIR_1);
-    DoTestGroup(__LINE__, SWITCH(_countof(s_group_00), _countof(s_group_04)), SWITCH(s_group_00, s_group_04), FALSE, SRC_06, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_07), s_group_07, FALSE, SRC_07, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, FALSE, SRC_08, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_07), s_group_07, FALSE, SRC_09, WATCHDIR_1);
-    DoTestGroup(__LINE__, SWITCH(_countof(s_group_00), _countof(s_group_04)), SWITCH(s_group_00, s_group_04), FALSE, SRC_06, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_07), s_group_07, FALSE, SRC_11, WATCHDIR_1);
-#undef SWITCH
+    // 1: Rename file1 as file2 in dir1
+    ++s_iStep;
+    trace("Step %d\n", s_iStep);
+    ZeroMemory(s_abChecks, sizeof(s_abChecks));
+    ret = MoveFileW(s_szFile1InDir1, s_szFile2InDir1);
+    ok_int(ret, TRUE);
+    SHChangeNotify(SHCNE_RENAMEITEM, SHCNF_PATHW | SHCNF_FLUSH, s_szFile1InDir1, s_szFile2InDir1);
+    ::Sleep(INTERVAL);
+    DoStepCheck(s_iStage, s_iStep, StringFromChecks());
 
-#ifndef NO_TRIVIAL
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_00, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_01, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_02, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_03, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_04, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_05, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_06, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_07, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_08, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_09, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_10, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_11, WATCHDIR_2);
-#endif
+    // 2: Delete file2 in dir1
+    ++s_iStep;
+    trace("Step %d\n", s_iStep);
+    ZeroMemory(s_abChecks, sizeof(s_abChecks));
+    ret = DeleteFileW(s_szFile2InDir1);
+    ok_int(ret, TRUE);
+    SHChangeNotify(SHCNE_DELETE, SHCNF_PATHW | SHCNF_FLUSH, s_szFile2InDir1, NULL);
+    ::Sleep(INTERVAL);
+    DoStepCheck(s_iStage, s_iStep, StringFromChecks());
 
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_00, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_02), s_group_02, FALSE, SRC_01, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, FALSE, SRC_02, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_02), s_group_02, FALSE, SRC_03, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, FALSE, SRC_04, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, FALSE, SRC_05, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, FALSE, SRC_06, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, FALSE, SRC_07, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, FALSE, SRC_08, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, FALSE, SRC_09, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, FALSE, SRC_10, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, FALSE, SRC_11, WATCHDIR_3);
+    // 3: Create dir1 in dir1
+    ++s_iStep;
+    trace("Step %d\n", s_iStep);
+    ZeroMemory(s_abChecks, sizeof(s_abChecks));
+    ret = CreateDirectoryExW(s_szDir1, s_szDir1InDir1, NULL);
+    ok_int(ret, TRUE);
+    SHChangeNotify(SHCNE_MKDIR, SHCNF_PATHW | SHCNF_FLUSH, s_szDir1InDir1, NULL);
+    ::Sleep(INTERVAL);
+    DoStepCheck(s_iStage, s_iStep, StringFromChecks());
 
-    // fRecursive == TRUE.
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SRC_00, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, TRUE, SRC_01, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SRC_02, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, TRUE, SRC_03, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SRC_04, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SRC_05, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SRC_06, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SRC_07, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SRC_08, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SRC_09, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SRC_10, WATCHDIR_0);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SRC_11, WATCHDIR_0);
+    // 4: Create file1 in dir1 in dir1
+    ++s_iStep;
+    trace("Step %d\n", s_iStep);
+    ZeroMemory(s_abChecks, sizeof(s_abChecks));
+    ret = DoCreateFile(s_szFile1InDir1InDir1);
+    ok_int(ret, TRUE);
+    SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW | SHCNF_FLUSH, s_szFile1InDir1InDir1, NULL);
+    ::Sleep(INTERVAL);
+    DoStepCheck(s_iStage, s_iStep, StringFromChecks());
 
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SRC_00, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, TRUE, SRC_01, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SRC_02, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, TRUE, SRC_03, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SRC_04, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SRC_05, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SRC_06, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SRC_07, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SRC_08, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SRC_09, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SRC_10, WATCHDIR_1);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SRC_11, WATCHDIR_1);
+    // 5: Delete file1 in dir1 in dir1
+    ++s_iStep;
+    trace("Step %d\n", s_iStep);
+    ZeroMemory(s_abChecks, sizeof(s_abChecks));
+    ret = DeleteFileW(s_szFile1InDir1InDir1);
+    ok_int(ret, TRUE);
+    SHChangeNotify(SHCNE_DELETE, SHCNF_PATHW | SHCNF_FLUSH, s_szFile1InDir1InDir1, NULL);
+    ::Sleep(INTERVAL);
+    DoStepCheck(s_iStage, s_iStep, StringFromChecks());
 
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SRC_00, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, TRUE, SRC_01, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SRC_02, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_01), s_group_01, TRUE, SRC_03, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SRC_04, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SRC_05, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SRC_06, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SRC_07, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SRC_08, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SRC_09, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_04), s_group_04, TRUE, SRC_10, WATCHDIR_2);
-    DoTestGroup(__LINE__, _countof(s_group_06), s_group_06, TRUE, SRC_11, WATCHDIR_2);
+    // 6: Rename dir1 as dir2 in dir1
+    ++s_iStep;
+    trace("Step %d\n", s_iStep);
+    ZeroMemory(s_abChecks, sizeof(s_abChecks));
+    ret = ::MoveFileW(s_szDir1InDir1, s_szDir2InDir1);
+    ok_int(ret, TRUE);
+    SHChangeNotify(SHCNE_RENAMEFOLDER, SHCNF_PATHW | SHCNF_FLUSH, s_szDir1InDir1, s_szDir2InDir1);
+    ::Sleep(INTERVAL);
+    DoStepCheck(s_iStage, s_iStep, StringFromChecks());
 
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SRC_00, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_02), s_group_02, TRUE, SRC_01, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_00), s_group_00, TRUE, SRC_02, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_02), s_group_02, TRUE, SRC_03, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, TRUE, SRC_04, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, TRUE, SRC_05, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, TRUE, SRC_06, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, TRUE, SRC_07, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, TRUE, SRC_08, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, TRUE, SRC_09, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_05), s_group_05, TRUE, SRC_10, WATCHDIR_3);
-    DoTestGroup(__LINE__, _countof(s_group_08), s_group_08, TRUE, SRC_11, WATCHDIR_3);
+    // 7: Remove dir2 in dir1
+    ++s_iStep;
+    trace("Step %d\n", s_iStep);
+    ZeroMemory(s_abChecks, sizeof(s_abChecks));
+    ret = RemoveDirectoryW(s_szDir2InDir1);
+    ok_int(ret, TRUE);
+    SHChangeNotify(SHCNE_RMDIR, SHCNF_PATHW | SHCNF_FLUSH, s_szDir2InDir1, NULL);
+    ::Sleep(INTERVAL);
+    DoStepCheck(s_iStage, s_iStep, StringFromChecks());
+
+    // 8: Finish
+    ++s_iStep;
+    assert(s_iStep == NUM_STEP);
+    C_ASSERT(NUM_STEP == 8);
+    if (s_iStage + 1 < NUM_STAGE)
+    {
+        ::PostMessage(s_hSubWnd, WM_COMMAND, IDRETRY, 0); // Next stage
+    }
+    else
+    {
+        // Finish
+        ::PostMessage(s_hSubWnd, WM_COMMAND, IDNO, 0);
+        ::PostMessage(s_hMainWnd, WM_COMMAND, IDNO, 0);
+    }
+
+    s_iStep = -1;
 
     return 0;
 }
 
-START_TEST(SHChangeNotify)
+// WM_COPYDATA
+static BOOL OnCopyData(HWND hwnd, HWND hwndSender, COPYDATASTRUCT *pCopyData)
 {
-#ifdef TOTAL_TICK
-    DWORD dwOldTick = GetTickCount();
-#endif
-#ifdef DISABLE_THIS_TESTCASE
-    skip("This testcase is disabled by DISABLE_THIS_TESTCASE macro.\n");
-    return;
-#endif
+    if (pCopyData->dwData != 0xBEEFCAFE)
+        return FALSE;
 
-    trace("Please don't operate your PC while testing...\n");
+    LPBYTE pbData = (LPBYTE)pCopyData->lpData;
+    LPBYTE pb = pbData;
 
-    if (!GetSubProgramPath())
+    LONG cbTotal = pCopyData->cbData;
+    assert(cbTotal >= LONG(sizeof(LONG) + sizeof(DWORD) + sizeof(DWORD)));
+
+    LONG lEvent = *(LONG*)pb;
+    pb += sizeof(lEvent);
+
+    DWORD cbPidl1 = *(DWORD*)pb;
+    pb += sizeof(cbPidl1);
+
+    DWORD cbPidl2 = *(DWORD*)pb;
+    pb += sizeof(cbPidl2);
+
+    LPITEMIDLIST pidl1 = NULL;
+    if (cbPidl1)
+    {
+        pidl1 = (LPITEMIDLIST)CoTaskMemAlloc(cbPidl1);
+        CopyMemory(pidl1, pb, cbPidl1);
+        pb += cbPidl1;
+    }
+
+    LPITEMIDLIST pidl2 = NULL;
+    if (cbPidl2)
+    {
+        pidl2 = (LPITEMIDLIST)CoTaskMemAlloc(cbPidl2);
+        CopyMemory(pidl2, pb, cbPidl2);
+        pb += cbPidl2;
+    }
+
+    assert((pb - pbData) == cbTotal);
+
+    DoTestEntry(lEvent, pidl1, pidl2);
+
+    CoTaskMemFree(pidl1);
+    CoTaskMemFree(pidl2);
+
+    return TRUE;
+}
+
+static LRESULT CALLBACK
+MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_CREATE:
+            s_hMainWnd = hwnd;
+            return 0;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDYES: // Start testing
+                {
+                    s_iStage = 0;
+                    s_bGotUpdateDir = FALSE;
+                    s_hThread = ::CreateThread(NULL, 0, StageThreadFunc, hwnd, 0, NULL);
+                    if (!s_hThread)
+                    {
+                        skip("!s_hThread\n");
+                        DestroyWindow(hwnd);
+                    }
+                    break;
+                }
+                case IDRETRY: // New stage
+                {
+                    ::CloseHandle(s_hThread);
+                    ++s_iStage;
+                    s_bGotUpdateDir = FALSE;
+                    s_hThread = ::CreateThread(NULL, 0, StageThreadFunc, hwnd, 0, NULL);
+                    if (!s_hThread)
+                    {
+                        skip("!s_hThread\n");
+                        DestroyWindow(hwnd);
+                    }
+                    break;
+                }
+                case IDNO: // Quit
+                {
+                    s_iStage = -1;
+                    DestroyWindow(hwnd);
+                    break;
+                }
+            }
+            break;
+
+        case WM_COPYDATA:
+            if (s_iStage < 0 || s_iStep < 0)
+                break;
+
+            OnCopyData(hwnd, (HWND)wParam, (COPYDATASTRUCT*)lParam);
+            break;
+
+        case WM_DESTROY:
+            ::PostQuitMessage(0);
+            break;
+
+        default:
+            return ::DefWindowProcW(hwnd, uMsg, wParam, lParam);
+    }
+    return 0;
+}
+
+static BOOL TEST_Init(void)
+{
+    if (!FindSubProgram(s_szSubProgram, _countof(s_szSubProgram)))
     {
         skip("shell32_apitest_sub.exe not found\n");
-        return;
+        return FALSE;
     }
 
-    if (!DoInitTest())
+    // close the SUB_CLASSNAME windows
+    DoWaitForWindow(SUB_CLASSNAME, SUB_CLASSNAME, TRUE, TRUE);
+
+    // Execute sub program
+    HINSTANCE hinst = ShellExecuteW(NULL, NULL, s_szSubProgram, L"---", NULL, SW_SHOWNORMAL);
+    if ((INT_PTR)hinst <= 32)
     {
-        skip("Unable to initialize.\n");
-        DoQuitTest(TRUE);
+        skip("Unable to run shell32_apitest_sub.exe.\n");
+        return FALSE;
+    }
+
+    // prepare for files and dirs
+    DoBuildFilesAndDirs();
+
+    // Register main window
+    WNDCLASSW wc = { 0, MainWndProc };
+    wc.hInstance = GetModuleHandleW(NULL);
+    wc.hIcon = LoadIconW(NULL, IDI_APPLICATION);
+    wc.hCursor = LoadCursorW(NULL, IDC_ARROW);
+    wc.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
+    wc.lpszClassName = MAIN_CLASSNAME;
+    if (!RegisterClassW(&wc))
+    {
+        skip("RegisterClassW failed\n");
+        return FALSE;
+    }
+
+    // Create main window
+    HWND hwnd = CreateWindowW(MAIN_CLASSNAME, MAIN_CLASSNAME, WS_OVERLAPPEDWINDOW,
+                              CW_USEDEFAULT, CW_USEDEFAULT, 400, 100,
+                              NULL, NULL, GetModuleHandleW(NULL), NULL);
+    if (!hwnd)
+    {
+        skip("CreateWindowW failed\n");
+        return FALSE;
+    }
+    ::ShowWindow(hwnd, SW_SHOWNORMAL);
+    ::UpdateWindow(hwnd);
+
+    // Find sub-window
+    s_hSubWnd = DoWaitForWindow(SUB_CLASSNAME, SUB_CLASSNAME, FALSE, FALSE);
+    if (!s_hSubWnd)
+    {
+        skip("Unable to find sub-program window.\n");
+        return FALSE;
+    }
+
+    // Start testing
+    SendMessageW(s_hSubWnd, WM_COMMAND, IDYES, 0);
+
+    return TRUE;
+}
+
+static void TEST_Main(void)
+{
+    if (!TEST_Init())
+    {
+        skip("Unable to start testing.\n");
+        TEST_Quit();
         return;
     }
 
-    s_hThread = (HANDLE)_beginthreadex(NULL, 0, TestThreadProc, NULL, 0, NULL);
-    WaitForSingleObject(s_hThread, INFINITE);
-    CloseHandle(s_hThread);
+    // Message loop
+    MSG msg;
+    while (GetMessageW(&msg, NULL, 0, 0))
+    {
+        ::TranslateMessage(&msg);
+        ::DispatchMessage(&msg);
+    }
 
-#ifdef TOTAL_TICK
+    TEST_Quit();
+}
+
+START_TEST(SHChangeNotify)
+{
+    trace("Please close all Explorer windows before testing.\n");
+    trace("Please don't operate your PC while testing.\n");
+
+    DWORD dwOldTick = GetTickCount();
+    TEST_Main();
     DWORD dwNewTick = GetTickCount();
+
     DWORD dwTick = dwNewTick - dwOldTick;
     trace("SHChangeNotify: Total %lu.%lu sec\n", (dwTick / 1000), (dwTick / 100 % 10));
-#endif
-
-    DoWaitForWindow(CLASSNAME, CLASSNAME, TRUE, TRUE);
-    Sleep(100);
 }

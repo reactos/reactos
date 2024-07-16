@@ -818,7 +818,7 @@ typedef LONG KPRIORITY;
 PIMAGE_NT_HEADERS __RtlImageNtHeader(void *data);
 PVOID __RtlImageRvaToVa (const IMAGE_NT_HEADERS* NtHeader, PVOID BaseAddress, ULONG Rva, PIMAGE_SECTION_HEADER *SectionHeader);
 PVOID __RtlImageDirectoryEntryToData(PVOID BaseAddress, BOOLEAN MappedAsImage, USHORT Directory, PULONG Size);
-ULONG __RtlComputeCrc32(ULONG Initial, PUCHAR Data, ULONG Length);
+ULONG __RtlComputeCrc32(ULONG Initial, const UCHAR *Data, ULONG Length);
 
 typedef struct _CLIENT_ID
 {

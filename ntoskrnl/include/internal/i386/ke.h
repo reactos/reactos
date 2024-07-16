@@ -668,6 +668,31 @@ KiConvertToGuiThread(
     VOID
 );
 
+DECLSPEC_NORETURN
+VOID
+FASTCALL
+KiServiceExit(
+    IN PKTRAP_FRAME TrapFrame,
+    IN NTSTATUS Status
+);
+
+DECLSPEC_NORETURN
+VOID
+FASTCALL
+KiServiceExit2(
+    IN PKTRAP_FRAME TrapFrame
+);
+
+FORCEINLINE
+DECLSPEC_NORETURN
+VOID
+KiExceptionExit(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ PKEXCEPTION_FRAME ExceptionFrame)
+{
+    KiServiceExit2(TrapFrame);
+}
+
 //
 // Global x86 only Kernel data
 //

@@ -45,7 +45,7 @@ CAPTION "Hapus Riwayat Penjelajahan"
 BEGIN
 
     AUTOCHECKBOX   "&Berkas internet sementara\nSalinan halaman web, gambar, dan sertifikat dalam cache.",
-                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
+                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE | WS_GROUP | WS_TABSTOP
     AUTOCHECKBOX   "&Cookie\nBerkas disimpan di komputer anda oleh situs web, yakni beberapa hal-hal seperti preferensi pengguna dan informasi masuk.",
                     IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "&Riwayat\nDaftar situs web yang telah anda akses.",
@@ -55,7 +55,7 @@ BEGIN
     AUTOCHECKBOX   "&Kata sandi\nKata sandi tersimpan yang telah Anda masukkan ke dalam formulir.",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON  "Batal", IDCANCEL, 185, 230, 60, 15, WS_GROUP
-    PUSHBUTTON     "&Hapus", IDOK, 120, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "&Hapus", IDOK, 120, 230, 60, 15
 
 END
 

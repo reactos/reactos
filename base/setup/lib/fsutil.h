@@ -1,9 +1,9 @@
 /*
  * PROJECT:     ReactOS Setup Library
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Filesystem Format and ChkDsk support functions.
- * COPYRIGHT:   Copyright 2003-2019 Casper S. Hornstrup (chorns@users.sourceforge.net)
- *              Copyright 2017-2020 Hermes Belusca-Maito
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Filesystem Format and ChkDsk support functions
+ * COPYRIGHT:   Copyright 2003-2019 Casper S. Hornstrup <chorns@users.sourceforge.net>
+ *              Copyright 2017-2024 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 #pragma once
@@ -20,45 +20,45 @@ GetRegisteredFileSystems(
 /** ChkdskEx() **/
 NTSTATUS
 ChkdskFileSystem_UStr(
-    IN PUNICODE_STRING DriveRoot,
-    IN PCWSTR FileSystemName,
-    IN BOOLEAN FixErrors,
-    IN BOOLEAN Verbose,
-    IN BOOLEAN CheckOnlyIfDirty,
-    IN BOOLEAN ScanDrive,
-    IN PFMIFSCALLBACK Callback);
+    _In_ PUNICODE_STRING DriveRoot,
+    _In_ PCWSTR FileSystemName,
+    _In_ BOOLEAN FixErrors,
+    _In_ BOOLEAN Verbose,
+    _In_ BOOLEAN CheckOnlyIfDirty,
+    _In_ BOOLEAN ScanDrive,
+    _In_opt_ PFMIFSCALLBACK Callback);
 
 NTSTATUS
 ChkdskFileSystem(
-    IN PCWSTR DriveRoot,
-    IN PCWSTR FileSystemName,
-    IN BOOLEAN FixErrors,
-    IN BOOLEAN Verbose,
-    IN BOOLEAN CheckOnlyIfDirty,
-    IN BOOLEAN ScanDrive,
-    IN PFMIFSCALLBACK Callback);
+    _In_ PCWSTR DriveRoot,
+    _In_ PCWSTR FileSystemName,
+    _In_ BOOLEAN FixErrors,
+    _In_ BOOLEAN Verbose,
+    _In_ BOOLEAN CheckOnlyIfDirty,
+    _In_ BOOLEAN ScanDrive,
+    _In_opt_ PFMIFSCALLBACK Callback);
 
 
 /** FormatEx() **/
 NTSTATUS
 FormatFileSystem_UStr(
-    IN PUNICODE_STRING DriveRoot,
-    IN PCWSTR FileSystemName,
-    IN FMIFS_MEDIA_FLAG MediaFlag,
-    IN PUNICODE_STRING Label,
-    IN BOOLEAN QuickFormat,
-    IN ULONG ClusterSize,
-    IN PFMIFSCALLBACK Callback);
+    _In_ PUNICODE_STRING DriveRoot,
+    _In_ PCWSTR FileSystemName,
+    _In_ FMIFS_MEDIA_FLAG MediaFlag,
+    _In_opt_ PUNICODE_STRING Label,
+    _In_ BOOLEAN QuickFormat,
+    _In_ ULONG ClusterSize,
+    _In_opt_ PFMIFSCALLBACK Callback);
 
 NTSTATUS
 FormatFileSystem(
-    IN PCWSTR DriveRoot,
-    IN PCWSTR FileSystemName,
-    IN FMIFS_MEDIA_FLAG MediaFlag,
-    IN PCWSTR Label,
-    IN BOOLEAN QuickFormat,
-    IN ULONG ClusterSize,
-    IN PFMIFSCALLBACK Callback);
+    _In_ PCWSTR DriveRoot,
+    _In_ PCWSTR FileSystemName,
+    _In_ FMIFS_MEDIA_FLAG MediaFlag,
+    _In_opt_ PCWSTR Label,
+    _In_ BOOLEAN QuickFormat,
+    _In_ ULONG ClusterSize,
+    _In_opt_ PFMIFSCALLBACK Callback);
 
 
 //
@@ -110,21 +110,101 @@ InstallNtfsBootCode(
 
 NTSTATUS
 ChkdskPartition(
-    IN PPARTENTRY PartEntry,
-    IN BOOLEAN FixErrors,
-    IN BOOLEAN Verbose,
-    IN BOOLEAN CheckOnlyIfDirty,
-    IN BOOLEAN ScanDrive,
-    IN PFMIFSCALLBACK Callback);
+    _In_ PPARTENTRY PartEntry,
+    _In_ BOOLEAN FixErrors,
+    _In_ BOOLEAN Verbose,
+    _In_ BOOLEAN CheckOnlyIfDirty,
+    _In_ BOOLEAN ScanDrive,
+    _In_opt_ PFMIFSCALLBACK Callback);
 
 NTSTATUS
 FormatPartition(
-    IN PPARTENTRY PartEntry,
-    IN PCWSTR FileSystemName,
-    IN FMIFS_MEDIA_FLAG MediaFlag,
-    IN PCWSTR Label,
-    IN BOOLEAN QuickFormat,
-    IN ULONG ClusterSize,
-    IN PFMIFSCALLBACK Callback);
+    _In_ PPARTENTRY PartEntry,
+    _In_ PCWSTR FileSystemName,
+    _In_ FMIFS_MEDIA_FLAG MediaFlag,
+    _In_opt_ PCWSTR Label,
+    _In_ BOOLEAN QuickFormat,
+    _In_ ULONG ClusterSize,
+    _In_opt_ PFMIFSCALLBACK Callback);
+
+
+//
+// FileSystem Volume Operations Queue
+//
+
+typedef enum _FSVOLNOTIFY
+{
+    FSVOLNOTIFY_STARTQUEUE = 0,
+    FSVOLNOTIFY_ENDQUEUE,
+    FSVOLNOTIFY_STARTSUBQUEUE,
+    FSVOLNOTIFY_ENDSUBQUEUE,
+// FSVOLNOTIFY_STARTPARTITION, FSVOLNOTIFY_ENDPARTITION,
+    FSVOLNOTIFY_PARTITIONERROR,
+    FSVOLNOTIFY_STARTFORMAT,
+    FSVOLNOTIFY_ENDFORMAT,
+    FSVOLNOTIFY_FORMATERROR,
+    FSVOLNOTIFY_STARTCHECK,
+    FSVOLNOTIFY_ENDCHECK,
+    FSVOLNOTIFY_CHECKERROR,
+    /**/ChangeSystemPartition/**/ // FIXME: Deprecate!
+} FSVOLNOTIFY;
+
+typedef enum _FSVOL_OP
+{
+/* Operations ****/
+    FSVOL_FORMAT = 0,
+    FSVOL_CHECK,
+/* Response actions ****/
+    FSVOL_ABORT = 0,
+    FSVOL_DOIT,
+    FSVOL_RETRY = FSVOL_DOIT,
+    FSVOL_SKIP,
+} FSVOL_OP;
+
+typedef struct _FORMAT_VOLUME_INFO
+{
+    PPARTENTRY PartEntry;
+    // PCWSTR NtPathPartition;
+    NTSTATUS ErrorStatus;
+
+/* Input information given by the 'FSVOLNOTIFY_STARTFORMAT' step ****/
+    PCWSTR FileSystemName;
+    FMIFS_MEDIA_FLAG MediaFlag;
+    PCWSTR Label;
+    BOOLEAN QuickFormat;
+    ULONG ClusterSize;
+    PFMIFSCALLBACK Callback;
+
+} FORMAT_VOLUME_INFO, *PFORMAT_VOLUME_INFO;
+
+typedef struct _CHECK_VOLUME_INFO
+{
+    PPARTENTRY PartEntry;
+    // PCWSTR NtPathPartition;
+    NTSTATUS ErrorStatus;
+
+/* Input information given by the 'FSVOLNOTIFY_STARTCHECK' step ****/
+    BOOLEAN FixErrors;
+    BOOLEAN Verbose;
+    BOOLEAN CheckOnlyIfDirty;
+    BOOLEAN ScanDrive;
+    PFMIFSCALLBACK Callback;
+
+} CHECK_VOLUME_INFO, *PCHECK_VOLUME_INFO;
+
+typedef FSVOL_OP
+(CALLBACK *PFSVOL_CALLBACK)(
+    _In_opt_ PVOID Context,
+    _In_ FSVOLNOTIFY FormatStatus,
+    _In_ ULONG_PTR Param1,
+    _In_ ULONG_PTR Param2);
+
+BOOLEAN
+FsVolCommitOpsQueue(
+    _In_ PPARTLIST PartitionList,
+    _In_ PPARTENTRY SystemPartition,
+    _In_ PPARTENTRY InstallPartition,
+    _In_opt_ PFSVOL_CALLBACK FsVolCallback,
+    _In_opt_ PVOID Context);
 
 /* EOF */

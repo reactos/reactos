@@ -249,8 +249,10 @@ static BOOL DoSaveFile(VOID)
 
     WaitCursor(TRUE);
 
-    hFile = CreateFileW(Globals.szFileName, GENERIC_WRITE, FILE_SHARE_WRITE,
-                        NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    /* Use OPEN_ALWAYS instead of CREATE_ALWAYS in order to succeed
+     * even if the file has HIDDEN or SYSTEM attributes */
+    hFile = CreateFileW(Globals.szFileName, GENERIC_WRITE, FILE_SHARE_READ,
+                        NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
     {
         ShowLastError();
@@ -281,6 +283,8 @@ static BOOL DoSaveFile(VOID)
         }
     }
 
+    /* Truncate the file and close it */
+    SetEndOfFile(hFile);
     CloseHandle(hFile);
 
     if (bRet)
@@ -816,7 +820,7 @@ VOID DIALOG_SearchNext(BOOL bDown)
     else
         Globals.find.Flags &= ~FR_DOWN;
 
-    if (Globals.find.lpstrFindWhat != NULL)
+    if (Globals.find.lpstrFindWhat != NULL && *Globals.find.lpstrFindWhat)
         NOTEPAD_FindNext(&Globals.find, FALSE, TRUE);
     else
         DIALOG_Search();
@@ -924,7 +928,7 @@ VOID DIALOG_StatusBarUpdateCaretPos(VOID)
     DWORD dwStart, dwSize;
 
     SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwSize);
-    line = SendMessage(Globals.hEdit, EM_LINEFROMCHAR, (WPARAM)dwStart, 0);
+    line = (int)SendMessage(Globals.hEdit, EM_LINEFROMCHAR, (WPARAM)dwStart, 0);
     ich = (int)SendMessage(Globals.hEdit, EM_LINEINDEX, (WPARAM)line, 0);
 
     /* EM_LINEINDEX can return -1 on failure */

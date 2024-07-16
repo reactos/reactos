@@ -316,7 +316,7 @@ LdrLoadDll(
     _Out_ PVOID *BaseAddress)
 {
     WCHAR StringBuffer[MAX_PATH];
-    UNICODE_STRING DllString1, DllString2;
+    UNICODE_STRING StaticString, DynamicString;
     BOOLEAN RedirectedDll = FALSE;
     NTSTATUS Status;
     ULONG_PTR Cookie;
@@ -324,32 +324,10 @@ LdrLoadDll(
     PTEB Teb = NtCurrentTeb();
 
     /* Initialize the strings */
-    RtlInitEmptyUnicodeString(&DllString1, StringBuffer, sizeof(StringBuffer));
-    RtlInitEmptyUnicodeString(&DllString2, NULL, 0);
+    RtlInitEmptyUnicodeString(&StaticString, StringBuffer, sizeof(StringBuffer));
+    RtlInitEmptyUnicodeString(&DynamicString, NULL, 0);
 
-    /* Check if the SxS Assemblies specify another file */
-    Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
-                                                      DllName,
-                                                      &LdrApiDefaultExtension,
-                                                      &DllString1,
-                                                      &DllString2,
-                                                      &DllName,
-                                                      NULL,
-                                                      NULL,
-                                                      NULL);
-
-    /* Check success */
-    if (NT_SUCCESS(Status))
-    {
-        /* Let Ldrp know */
-        RedirectedDll = TRUE;
-    }
-    else if (Status != STATUS_SXS_KEY_NOT_FOUND)
-    {
-        /* Unrecoverable SxS failure; did we get a string? */
-        if (DllString2.Buffer) RtlFreeUnicodeString(&DllString2);
-        return Status;
-    }
+    Status = LdrpApplyFileNameRedirection(DllName, &LdrApiDefaultExtension, &StaticString, &DynamicString, &DllName, &RedirectedDll);
 
     /* Lock the loader lock */
     LdrLockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, NULL, &Cookie);
@@ -432,7 +410,8 @@ LdrLoadDll(
     _SEH2_END;
 
     /* Do we have a redirect string? */
-    if (DllString2.Buffer) RtlFreeUnicodeString(&DllString2);
+    if (DynamicString.Buffer)
+        RtlFreeUnicodeString(&DynamicString);
 
     /* Return */
     return Status;
@@ -532,7 +511,7 @@ LdrGetDllHandleEx(
 {
     NTSTATUS Status;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
-    UNICODE_STRING RedirectName, DllString1, RawDllName;
+    UNICODE_STRING RedirectName, DynamicString, RawDllName;
     PUNICODE_STRING pRedirectName, CompareName;
     PWCHAR p1, p2, p3;
     BOOLEAN Locked, RedirectedDll;
@@ -540,7 +519,7 @@ LdrGetDllHandleEx(
     ULONG LoadFlag, Length;
 
     /* Initialize the strings */
-    RtlInitEmptyUnicodeString(&DllString1, NULL, 0);
+    RtlInitEmptyUnicodeString(&DynamicString, NULL, 0);
     RtlInitEmptyUnicodeString(&RawDllName, NULL, 0);
     RedirectName = *DllName;
     pRedirectName = &RedirectName;
@@ -573,31 +552,12 @@ LdrGetDllHandleEx(
         Locked = TRUE;
     }
 
-    /* Check if the SxS Assemblies specify another file */
-    Status = RtlDosApplyFileIsolationRedirection_Ustr(TRUE,
-                                                      pRedirectName,
-                                                      &LdrApiDefaultExtension,
-                                                      NULL,
-                                                      &DllString1,
-                                                      &pRedirectName,
-                                                      NULL,
-                                                      NULL,
-                                                      NULL);
-
-    /* Check success */
-    if (NT_SUCCESS(Status))
+    Status = LdrpApplyFileNameRedirection(
+        pRedirectName, &LdrApiDefaultExtension, NULL, &DynamicString, &pRedirectName, &RedirectedDll);
+    if (!NT_SUCCESS(Status))
     {
-        /* Let Ldrp know */
-        RedirectedDll = TRUE;
-    }
-    else if (Status != STATUS_SXS_KEY_NOT_FOUND)
-    {
-        /* Unrecoverable SxS failure */
+        DPRINT1("LdrpApplyFileNameRedirection FAILED: (Status 0x%x)\n", Status);
         goto Quickie;
-    }
-    else
-    {
-        ASSERT(pRedirectName == &RedirectName);
     }
 
     /* Set default failure code */
@@ -781,7 +741,7 @@ Quickie:
     }
 
     /* Free string if needed */
-    if (DllString1.Buffer) RtlFreeUnicodeString(&DllString1);
+    if (DynamicString.Buffer) RtlFreeUnicodeString(&DynamicString);
 
     /* Free the raw DLL Name if needed */
     if (RawDllName.Buffer)

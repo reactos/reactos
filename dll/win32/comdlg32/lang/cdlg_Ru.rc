@@ -31,7 +31,7 @@ STRINGTABLE
 Заменить его?"
     IDS_INVALID_FILENAME_TITLE "Некорректный символ(ы) в записи пути"
     IDS_INVALID_FILENAME    "Имя файла не может содержать следующие символы:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "Путь не существует"
     IDS_FILENOTEXISTING     "Файл не существует"
     IDS_INVALID_FOLDERNAME  "Выбор содержит объект не являющийся папкой"
@@ -247,7 +247,7 @@ FONT 8, "MS Shell Dlg"
     COMBOBOX        cmb1, 6,13,94,76,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
     LTEXT           "&Начертание:",stc2 ,108,3,60,9
-    COMBOBOX        cmb2,108,13,64,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+    COMBOBOX        cmb2,108,13,64,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
     LTEXT           "Размер:",stc3,179,3,32,9
     COMBOBOX        cmb3,179,13,32,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |

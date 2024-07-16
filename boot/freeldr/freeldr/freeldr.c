@@ -42,10 +42,11 @@ CCHAR FrLdrBootPath[MAX_PATH] = "";
 
 VOID __cdecl BootMain(IN PCCH CmdLine)
 {
-    CmdLineParse(CmdLine);
+    /* Load the default settings from the command-line */
+    LoadSettings(CmdLine);
 
     /* Debugger pre-initialization */
-    DebugInit(0);
+    DebugInit(BootMgrInfo.DebugString);
 
     MachInit(CmdLine);
 

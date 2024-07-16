@@ -100,11 +100,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Karpeta esploratu"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "Ados", 1, 80, 176, 50, 12, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Utzi", 2, 134, 176, 50, 12, WS_GROUP | WS_TABSTOP
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 4, 4, 180, 24
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 4, 25, 180, 12
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
+    DEFPUSHBUTTON "Ados", IDOK, 80, 176, 50, 12, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Utzi", IDCANCEL, 134, 176, 50, 12
 END
 
 IDD_BROWSE_FOR_FOLDER_NEW DIALOGEX 15, 40, 218, 196
@@ -117,8 +117,8 @@ BEGIN
     EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 12, 38, 194, 14, ES_AUTOHSCROLL | WS_GROUP
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_EDITLABELS | TVS_LINESATROOT | TVS_HASLINES | TVS_HASBUTTONS | WS_BORDER | WS_TABSTOP, 12, 58, 194, 105
     PUSHBUTTON "Sortu karpeta &berria", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
-    DEFPUSHBUTTON "Ados", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Utzi", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "Ados", IDOK, 102, 174, 50, 14
+    PUSHBUTTON "Utzi", IDCANCEL, 156, 174, 50, 14
 END
 
 IDD_YESTOALL_MSGBOX DIALOGEX 200, 100, 280, 90
@@ -127,14 +127,14 @@ CAPTION "Mezu"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "&Bai", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Guztiari bai", IDC_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Ez", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Utzi", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&Guztiari bai", IDC_YESTOALL, 92, 69, 65, 14
+    PUSHBUTTON "&Ez", IDNO, 162, 69, 53, 14
+    PUSHBUTTON "Utzi", IDCANCEL, 220, 69, 53, 14
     ICON "", IDC_YESTOALL_ICON, 10, 10, 16, 16
     LTEXT "", IDC_YESTOALL_MESSAGE, 40, 10, 238, 52, 0
 END
 
-IDD_ABOUT DIALOGEX 0, 0, 275, 198
+IDD_ABOUT DIALOGEX 20, 20, 275, 198
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Honi buruz: %s"
 FONT 8, "MS Shell Dlg"
@@ -173,9 +173,9 @@ BEGIN
     LTEXT "Idatzi programa, karpeta, dokumentu edo Interneteko baliabide baten izena eta Windows-ek irekiko dizu.", 12289, 36, 11, 185, 24
     LTEXT "&Ireki:", 12305, 7, 39, 24, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 184, 100
-    DEFPUSHBUTTON "Ados", IDOK, 62, 70, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Utzi", IDCANCEL, 116, 70, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Arakatu...", 12288, 170, 70, 50, 14, WS_TABSTOP
+    DEFPUSHBUTTON "Ados", IDOK, 62, 70, 50, 14
+    PUSHBUTTON "Utzi", IDCANCEL, 116, 70, 50, 14
+    PUSHBUTTON "&Arakatu...", 12288, 170, 70, 50, 14
 END
 
 IDD_SHORTCUT_PROPERTIES DIALOGEX 0, 0, 235, 215
@@ -282,7 +282,7 @@ BEGIN
     AUTOCHECKBOX "&Irakurtzeko soilik", 14021, 58, 188, 67, 10
     AUTOCHECKBOX "&Ezkutukoa", 14022, 126, 188, 50, 10
     AUTOCHECKBOX "Art&xiboa", 14023, 181, 188, 49, 10
-    PUSHBUTTON "Au&rreratua...", 14028, 180, 185, 50, 15, WS_TABSTOP
+    PUSHBUTTON "Au&rreratua...", 14028, 180, 185, 50, 15
 END
 
 IDD_FILE_VERSION DIALOGEX 0, 0, 235, 215
@@ -330,7 +330,7 @@ BEGIN
     EDITTEXT 14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 40
     CTEXT "%c: unitatea", 14009, 95, 162, 50, 10
-    PUSHBUTTON "&Garbitu diskoa", 14010, 160, 159, 70, 15, WS_TABSTOP
+    PUSHBUTTON "&Garbitu diskoa", 14010, 160, 159, 70, 15
     LTEXT "", -1, 8, 176, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     CHECKBOX "&Konprimatu unitatea diskoan leku gehiago egiteko", 14011, 8, 190, 222, 10, WS_DISABLED
     CHECKBOX "&Fitxategiak bizkor bilatzeko, eman baimena Indexatze-zerbitzuari disko hau indexatzeko", 14012, 8, 204, 222, 10, WS_DISABLED
@@ -344,15 +344,15 @@ BEGIN
     GROUPBOX "Erroreak bilatzea", -1, 5, 5, 230, 60
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "Aukera honekin erroreak bilatuko dira bolumenean.", -1, 40, 25, 160, 20
-    PUSHBUTTON "&Bilatu orain...", 14000, 130, 45, 90, 15, WS_TABSTOP
+    PUSHBUTTON "&Bilatu orain...", 14000, 130, 45, 90, 15
     GROUPBOX "Desfragmentazioa", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "Aukera honekin bolumeneko fitxategiak desfragmentatuko dira.", -1, 40, 85, 160, 20
-    PUSHBUTTON "&Desfragmentatu orain...", 14001, 130, 105, 90, 15, WS_TABSTOP
+    PUSHBUTTON "&Desfragmentatu orain...", 14001, 130, 105, 90, 15
     GROUPBOX "Babeskopia", -1, 5, 130, 230, 60
     ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "Aukera honekin bolumeneko fitxategien babeskopia egingo da.", -1, 40, 150, 160, 20
-    PUSHBUTTON "&Egin babeskopia orain...", 14002, 90, 170, 130, 15, WS_TABSTOP
+    PUSHBUTTON "&Egin babeskopia orain...", 14002, 90, 170, 130, 15
 END
 
 IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 220
@@ -374,12 +374,12 @@ BEGIN
     CHECKBOX "&Erabiltzaile hau:", 14002, 10, 100, 90, 10
     LTEXT "Erabiltzaile:", -1, 20, 118, 54, 10
     COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "...", 14004, 180, 115, 30, 14, WS_TABSTOP
+    PUSHBUTTON "...", 14004, 180, 115, 30, 14
     LTEXT "Pasahitza:", -1, 20, 143, 53, 10
     EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
-    PUSHBUTTON "...", 14006, 180, 140, 30, 14, WS_TABSTOP
-    PUSHBUTTON "Ados", 14007, 57, 170, 60, 14, WS_TABSTOP
-    PUSHBUTTON "Utzi", 14008, 122, 170, 60, 14, WS_TABSTOP
+    PUSHBUTTON "...", 14006, 180, 140, 30, 14
+    PUSHBUTTON "Ados", 14007, 57, 170, 60, 14
+    PUSHBUTTON "Utzi", 14008, 122, 170, 60, 14
 END
 
 IDD_RECYCLE_BIN_PROPERTIES DIALOGEX 0, 0, 240, 190
@@ -389,11 +389,11 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Konfiguratu unitateak independenteki", -1, 10, 72, 220, 70
-    RADIOBUTTON "Hautatu &tamaina:", 14001, 20, 90, 88, 10, WS_TABSTOP
+    RADIOBUTTON "Hautatu &tamaina:", 14001, 20, 90, 88, 10
     EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "&Gehienezko tamaina (MB):", -1, 20, 105, 70, 10
     RADIOBUTTON "&Ez eraman fitxategirik zakarrontzira. Kendu fitxategiak ezabatutakoan", 14003, 20, 117, 185, 20, BS_MULTILINE | WS_TABSTOP
-    AUTOCHECKBOX "&Bistaratu ezabatzea berresteko elkarrizketa", 14004, 20, 155, 200, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Bistaratu ezabatzea berresteko elkarrizketa", 14004, 20, 155, 200, 10
 END
 
 IDD_OPEN_WITH DIALOGEX 0, 0, 264, 256
@@ -431,7 +431,7 @@ BEGIN
     AUTORADIOBUTTON "Klik &bikoitza elementu bat irekitzeko (klik bakarra hautatzeko)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
     AUTORADIOBUTTON "Az&pimarratu nire arakatzailearekin bat datozen ikono-tituluak", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 220, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "&Seinalatzen ditudanean bakarrik azpimarratu ikono-tituluak", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
-    PUSHBUTTON "Berre&zarri lehenetsiak", IDC_FOLDER_OPTIONS_RESTORE, 157, 178, 130, 14, WS_TABSTOP
+    PUSHBUTTON "Berre&zarri lehenetsiak", IDC_FOLDER_OPTIONS_RESTORE, 157, 178, 130, 14
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 294, 220
@@ -442,11 +442,11 @@ BEGIN
     GROUPBOX "Karpetaren ikuspegiak", -1, 7, 10, 279, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 14, 20, 21, 20
     LTEXT "Karpeta honentzat erabiltzen duzun ikuspegia (Xehetasunak edo Lauza moduan, adibidez) karpeta guztiei aplika diezaiekezu.", -1, 40, 20, 243, 20
-    PUSHBUTTON "A&plikatu karpeta guztiei", IDC_VIEW_APPLY_TO_ALL, 45, 50, 115, 14, WS_TABSTOP
-    PUSHBUTTON "&Berrezarri karpeta guztiak", IDC_VIEW_RESET_ALL, 165, 50, 115, 14, WS_TABSTOP
+    PUSHBUTTON "A&plikatu karpeta guztiei", IDC_VIEW_APPLY_TO_ALL, 45, 50, 115, 14
+    PUSHBUTTON "&Berrezarri karpeta guztiak", IDC_VIEW_RESET_ALL, 165, 50, 115, 14
     LTEXT "Ezarpen aurreratuak:", -1, 7, 80, 100, 10
     CONTROL "", IDC_VIEW_TREEVIEW, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 279, 111
-    PUSHBUTTON "Be&rrezarri lehenetsiak", IDC_VIEW_RESTORE_DEFAULTS, 157, 204, 130, 14, WS_TABSTOP
+    PUSHBUTTON "Be&rrezarri lehenetsiak", IDC_VIEW_RESTORE_DEFAULTS, 157, 204, 130, 14
 END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 294, 220
@@ -456,15 +456,15 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Erregistratutako &fitxategi-motak:", -1, 7, 10, 180, 10
     CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 279, 99
-    PUSHBUTTON "&Berria", IDC_FILETYPES_NEW, 170, 123, 55, 14, WS_TABSTOP
-    PUSHBUTTON "Ez&abatu", IDC_FILETYPES_DELETE, 230, 123, 55, 14, WS_TABSTOP
+    PUSHBUTTON "&Berria", IDC_FILETYPES_NEW, 170, 123, 55, 14
+    PUSHBUTTON "Ez&abatu", IDC_FILETYPES_DELETE, 230, 123, 55, 14
     GROUPBOX "Detalles para el tipo de archivo «%s»", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 143, 279, 70
     LTEXT "Honek irekitzen du:", -1, 12, 153, 62, 10
     CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 153, 10, 10
     LTEXT "", IDC_FILETYPES_APPNAME, 100, 153, 80, 10
-    PUSHBUTTON "Alda&tu...", IDC_FILETYPES_CHANGE, 230, 153, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Alda&tu...", IDC_FILETYPES_CHANGE, 230, 153, 50, 14
     LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 168, 160, 40
-    PUSHBUTTON "Au&rreratua", IDC_FILETYPES_ADVANCED, 230, 188, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Au&rreratua", IDC_FILETYPES_ADVANCED, 230, 188, 50, 14
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
@@ -509,7 +509,7 @@ BEGIN
     PUSHBUTTON "Ama&itu saioa", IDC_LOG_OFF_BUTTON, 132, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Utzi", IDCANCEL, 162, 103, 40, 12, WS_GROUP | BS_FLAT
     LTEXT "Amaitu ReactOS saioa", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 165, 19
-    CTEXT "Aldatu erabiltzailea", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
+    CTEXT "Aldatu erabiltzailea", IDC_SWITCH_USER_STATIC, 31, 70, 71, 11
     CTEXT "Amaitu saioa", IDC_LOG_OFF_STATIC, 118, 70, 51, 11
 END
 
@@ -804,6 +804,7 @@ BEGIN
     IDS_DISCONNECT "Deskonektatu"
     IDS_OPENFILELOCATION "Ireki &fitxategi kokalekua"
     IDS_SENDTO_MENU "&Bidali hona"
+    IDS_COPYASPATHMENU "Copy as path"
 
     IDS_MOVEERRORTITLE "Errore bat gertatu da fitxategia edo karpeta lekuz aldatzean"
     IDS_COPYERRORTITLE "Errore bat gertatu da fitxategia edo karpeta kopiatzean"
@@ -915,6 +916,8 @@ BEGIN
     FCIDM_SHVIEW_NEWFOLDER "Karpeta &berria"
     FCIDM_SHVIEW_NEWLINK "&Lasterbide berria"
     IDS_FOLDER_OPTIONS "Karpeta aukera"
+    IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
+    IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
     IDS_RECYCLEBIN_LOCATION "Zakarrontzi lekua"
     IDS_RECYCLEBIN_DISKSPACE "Espacio disponible"
     IDS_EMPTY_BITBUCKET "Hustu zakarontzia"
@@ -928,6 +931,9 @@ BEGIN
     IDS_CANTSHOWPROPERTIES "Ezin dira propietateak bistaratu (Error kodea: %lu)."
     IDS_CANTDISCONNECT "Ezin izan da deskonektatu (Error kodea: %lu)."
     IDS_NONE "(Ezer)"
+
+    IDS_EXPAND "Exp&and"
+    IDS_COLLAPSE "Coll&apse"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Direktorioa"

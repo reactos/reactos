@@ -232,7 +232,7 @@ InstallSetupInfFile(
     IO_STATUS_BLOCK IoStatusBlock;
 #endif
 
-    PINICACHESECTION IniSection;
+    PINI_SECTION IniSection;
     WCHAR PathBuffer[MAX_PATH];
     WCHAR UnattendInfPath[MAX_PATH];
 
@@ -241,35 +241,31 @@ InstallSetupInfFile(
     if (!IniCache)
         return;
 
-    IniSection = IniCacheAppendSection(IniCache, L"SetupParams");
+    IniSection = IniAddSection(IniCache, L"SetupParams");
     if (IniSection)
     {
         /* Key "skipmissingfiles" */
         // RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
                             // L"\"%s\"", L"WinNt5.2");
-        // IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                          // L"Version", PathBuffer);
+        // IniAddKey(IniSection, L"Version", PathBuffer);
     }
 
-    IniSection = IniCacheAppendSection(IniCache, L"Data");
+    IniSection = IniAddSection(IniCache, L"Data");
     if (IniSection)
     {
         RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
                             L"\"%s\"", IsUnattendedSetup ? L"yes" : L"no");
-        IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                          L"UnattendedInstall", PathBuffer);
+        IniAddKey(IniSection, L"UnattendedInstall", PathBuffer);
 
         // "floppylessbootpath" (yes/no)
 
         RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
                             L"\"%s\"", L"winnt");
-        IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                          L"ProductType", PathBuffer);
+        IniAddKey(IniSection, L"ProductType", PathBuffer);
 
         RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
                             L"\"%s\\\"", pSetupData->SourceRootPath.Buffer);
-        IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                          L"SourcePath", PathBuffer);
+        IniAddKey(IniSection, L"SourcePath", PathBuffer);
 
         // "floppyless" ("0")
     }
@@ -349,9 +345,9 @@ Quit:
     Status = OpenAndMapFile(NULL,
                             UnattendInfPath,
                             &UnattendFileHandle,
+                            &FileSize,
                             &SectionHandle,
                             &ViewBase,
-                            &FileSize,
                             FALSE);
     if (!NT_SUCCESS(Status))
     {
@@ -621,6 +617,99 @@ LoadSetupInf(
     }
 
     return ERROR_SUCCESS;
+}
+
+/**
+ * @brief   Find or set the active system partition.
+ **/
+BOOLEAN
+InitSystemPartition(
+    /**/_In_ PPARTLIST PartitionList,       /* HACK HACK! */
+    /**/_In_ PPARTENTRY InstallPartition,   /* HACK HACK! */
+    /**/_Out_ PPARTENTRY* pSystemPartition, /* HACK HACK! */
+    _In_opt_ PFSVOL_CALLBACK FsVolCallback,
+    _In_opt_ PVOID Context)
+{
+    FSVOL_OP Result;
+    PPARTENTRY SystemPartition;
+    PPARTENTRY OldActivePart;
+
+    /*
+     * If we install on a fixed disk, try to find a supported system
+     * partition on the system. Otherwise if we install on a removable disk
+     * use the install partition as the system partition.
+     */
+    if (InstallPartition->DiskEntry->MediaType == FixedMedia)
+    {
+        SystemPartition = FindSupportedSystemPartition(PartitionList,
+                                                       FALSE,
+                                                       InstallPartition->DiskEntry,
+                                                       InstallPartition);
+        /* Use the original system partition as the old active partition hint */
+        OldActivePart = PartitionList->SystemPartition;
+
+        if ( SystemPartition && PartitionList->SystemPartition &&
+            (SystemPartition != PartitionList->SystemPartition) )
+        {
+            DPRINT1("We are using a different system partition!!\n");
+
+            Result = FsVolCallback(Context,
+                                   ChangeSystemPartition,
+                                   (ULONG_PTR)SystemPartition,
+                                   0);
+            if (Result != FSVOL_DOIT)
+                return FALSE;
+        }
+    }
+    else // if (InstallPartition->DiskEntry->MediaType == RemovableMedia)
+    {
+        SystemPartition = InstallPartition;
+        /* Don't specify any old active partition hint */
+        OldActivePart = NULL;
+    }
+
+    if (!SystemPartition)
+    {
+        FsVolCallback(Context,
+                      FSVOLNOTIFY_PARTITIONERROR,
+                      ERROR_SYSTEM_PARTITION_NOT_FOUND,
+                      0);
+        return FALSE;
+    }
+
+    *pSystemPartition = SystemPartition;
+
+    /*
+     * If the system partition can be created in some
+     * non-partitioned space, create it now.
+     */
+    if (!SystemPartition->IsPartitioned)
+    {
+        /* Automatically create the partition; it will be
+         * formatted later with default parameters */
+        // FIXME: Don't use the whole empty space, but a minimal size
+        // specified from the TXTSETUP.SIF or unattended setup.
+        CreatePartition(PartitionList,
+                        SystemPartition,
+                        0ULL,
+                        0);
+        ASSERT(SystemPartition->IsPartitioned);
+    }
+
+    /* Set it as such */
+    if (!SetActivePartition(PartitionList, SystemPartition, OldActivePart))
+    {
+        DPRINT1("SetActivePartition(0x%p) failed?!\n", SystemPartition);
+        ASSERT(FALSE);
+    }
+
+    /*
+     * In all cases, whether or not we are going to perform a formatting,
+     * we must perform a filesystem check of the system partition.
+     */
+    SystemPartition->NeedsCheck = TRUE;
+
+    return TRUE;
 }
 
 NTSTATUS

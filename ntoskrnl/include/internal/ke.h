@@ -883,21 +883,6 @@ KiContinue(
     IN PKTRAP_FRAME TrapFrame
 );
 
-DECLSPEC_NORETURN
-VOID
-FASTCALL
-KiServiceExit(
-    IN PKTRAP_FRAME TrapFrame,
-    IN NTSTATUS Status
-);
-
-DECLSPEC_NORETURN
-VOID
-FASTCALL
-KiServiceExit2(
-    IN PKTRAP_FRAME TrapFrame
-);
-
 #ifndef _M_AMD64
 VOID
 FASTCALL
@@ -982,6 +967,16 @@ VOID
 NTAPI
 KiInitMachineDependent(VOID);
 
+VOID
+NTAPI
+KxFreezeExecution(
+    VOID);
+
+VOID
+NTAPI
+KxThawExecution(
+    VOID);
+
 BOOLEAN
 NTAPI
 KeFreezeExecution(IN PKTRAP_FRAME TrapFrame,
@@ -990,6 +985,11 @@ KeFreezeExecution(IN PKTRAP_FRAME TrapFrame,
 VOID
 NTAPI
 KeThawExecution(IN BOOLEAN Enable);
+
+KCONTINUE_STATUS
+NTAPI
+KxSwitchKdProcessor(
+    _In_ ULONG ProcessorIndex);
 
 _IRQL_requires_min_(DISPATCH_LEVEL)
 _Acquires_nonreentrant_lock_(*LockHandle->Lock)
@@ -1024,9 +1024,14 @@ KiSaveProcessorControlState(
 VOID
 NTAPI
 KiSaveProcessorState(
-    IN PKTRAP_FRAME TrapFrame,
-    IN PKEXCEPTION_FRAME ExceptionFrame
-);
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ PKEXCEPTION_FRAME ExceptionFrame);
+
+VOID
+NTAPI
+KiRestoreProcessorState(
+    _Out_ PKTRAP_FRAME TrapFrame,
+    _Out_ PKEXCEPTION_FRAME ExceptionFrame);
 
 VOID
 FASTCALL

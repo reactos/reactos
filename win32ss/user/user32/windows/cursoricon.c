@@ -152,6 +152,8 @@ static BOOL is_dib_monochrome( const BITMAPINFO* info )
     }
 }
 
+/* Return the size of the bitmap info structure including color table and
+ * the bytes required for 3 DWORDS if this is a BI_BITFIELDS bmp. */
 static int bitmap_info_size( const BITMAPINFO * info, WORD coloruse )
 {
     unsigned int colors, size, masks = 0;
@@ -170,8 +172,21 @@ static int bitmap_info_size( const BITMAPINFO * info, WORD coloruse )
                 colors = 256;
         if (!colors && (info->bmiHeader.biBitCount <= 8))
             colors = 1 << info->bmiHeader.biBitCount;
+        /* Account for BI_BITFIELDS in BITMAPINFOHEADER(v1-v3) bmp's. The
+         * 'max' selection using biSize below will exclude v4 & v5's. */
         if (info->bmiHeader.biCompression == BI_BITFIELDS) masks = 3;
         size = max( info->bmiHeader.biSize, sizeof(BITMAPINFOHEADER) + masks * sizeof(DWORD) );
+        /* Test for BI_BITFIELDS format and either 16 or 32 bpp.
+         * If so, account for the 3 DWORD masks (RGB Order).
+         * BITMAPCOREHEADER tested above has no 16 or 32 bpp types.
+         * See table "All of the possible pixel formats in a DIB"
+         * at https://en.wikipedia.org/wiki/BMP_file_format. */
+        if (info->bmiHeader.biSize >= sizeof(BITMAPV4HEADER) &&
+            info->bmiHeader.biCompression == BI_BITFIELDS &&
+            (info->bmiHeader.biBitCount == 16 || info->bmiHeader.biBitCount == 32))
+        {
+            size += 3 * sizeof(DWORD);  // BI_BITFIELDS
+        }
         return size + colors * ((coloruse == DIB_RGB_COLORS) ? sizeof(RGBQUAD) : sizeof(WORD));
     }
 }
@@ -1099,7 +1114,7 @@ BITMAP_LoadImageW(
     HBITMAP hbmpOld, hbmpRet = NULL;
     LONG width, height;
     WORD bpp;
-    DWORD compr;
+    DWORD compr, ResSize = 0;
 
     /* Map the bitmap info */
     if(fuLoad & LR_LOADFROMFILE)
@@ -1137,6 +1152,7 @@ BITMAP_LoadImageW(
         pbmi = LockResource(hgRsrc);
         if(!pbmi)
             return NULL;
+        ResSize = SizeofResource(hinst, hrsrc);
     }
 
     /* Fix up values */
@@ -1161,6 +1177,21 @@ BITMAP_LoadImageW(
     if(!pbmiCopy)
         goto end;
     CopyMemory(pbmiCopy, pbmi, iBMISize);
+
+    TRACE("Size Image %d, Size Header %d, ResSize %d\n",
+        pbmiCopy->bmiHeader.biSizeImage, pbmiCopy->bmiHeader.biSize, ResSize);
+
+    /* HACK: If this is a binutils' windres.exe compiled 16 or 32 bpp bitmap
+     * using BI_BITFIELDS, then a bug causes it to fail to include
+     * the bytes for the bitfields. So, we have to substract out the
+     * size of the bitfields previously included from bitmap_info_size. */
+    if (compr == BI_BITFIELDS && (bpp == 16 || bpp == 32) &&
+        pbmiCopy->bmiHeader.biSizeImage + pbmiCopy->bmiHeader.biSize == ResSize)
+    {
+        /* GCC pointer to the image data has 12 less bytes than MSVC */
+        pvBits = (char*)pvBits - 12;
+        WARN("Found GCC Resource Compiled 16-bpp or 32-bpp error\n");
+    }
 
     /* Fix it up, if needed */
     if(fuLoad & (LR_LOADTRANSPARENT | LR_LOADMAP3DCOLORS))
@@ -1984,6 +2015,12 @@ User32CallCopyImageFromKernel(PVOID Arguments, ULONG ArgumentLength)
 
 /************* PUBLIC FUNCTIONS *******************/
 
+#define COPYIMAGE_VALID_FLAGS ( \
+    LR_SHARED | LR_COPYFROMRESOURCE | LR_CREATEDIBSECTION | LR_LOADMAP3DCOLORS | 0x800 | \
+    LR_VGACOLOR | LR_LOADREALSIZE | LR_DEFAULTSIZE | LR_LOADTRANSPARENT | LR_LOADFROMFILE | \
+    LR_COPYDELETEORG | LR_COPYRETURNORG | LR_COLOR | LR_MONOCHROME \
+)
+
 HANDLE WINAPI CopyImage(
   _In_  HANDLE hImage,
   _In_  UINT uType,
@@ -1994,6 +2031,13 @@ HANDLE WINAPI CopyImage(
 {
     TRACE("hImage=%p, uType=%u, cxDesired=%d, cyDesired=%d, fuFlags=%x\n",
         hImage, uType, cxDesired, cyDesired, fuFlags);
+
+    if (fuFlags & ~COPYIMAGE_VALID_FLAGS)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+
     switch(uType)
     {
         case IMAGE_BITMAP:
