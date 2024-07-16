@@ -216,7 +216,7 @@ int WINAPI wWinMain(HINSTANCE hInstance,
 
     UNREFERENCED_PARAMETER(hPrevInstance);
 
-    OleInitialize(0);
+    OleInitialize(NULL);
 
     /* Initialize global strings */
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, ARRAY_SIZE(szTitle));
