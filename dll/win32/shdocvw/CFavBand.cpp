@@ -89,8 +89,6 @@ VOID CFavBand::OnFinalMessage(HWND)
 
 // *** helper methods ***
 
-#undef SubclassWindow
-
 BOOL CFavBand::CreateToolbar()
 {
     HINSTANCE hinstBrowseUI = LoadLibraryExW(L"browseui.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
@@ -101,22 +99,15 @@ BOOL CFavBand::CreateToolbar()
     if (!hbmToolbar)
         return FALSE;
 
-    ERR("OK2\n");
     InitCommonControls();
-    ERR("OK2.1\n");
     m_hToolbarImageList = ImageList_Create(16, 16, ILC_COLOR32, 0, 8);
-    ERR("OK2.2\n");
     ATLASSERT(m_hToolbarImageList);
-    ERR("OK2.3\n");
     if (!m_hToolbarImageList)
         return FALSE;
 
-    ERR("OK2.4\n");
     ImageList_Add(m_hToolbarImageList, hbmToolbar, NULL);
-    ERR("OK2.5\n");
     DeleteObject(hbmToolbar);
 
-    ERR("OK3\n");
     DWORD style;
     style = WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_LIST | CCS_NODIVIDER | TBSTYLE_WRAPABLE;
     HWND hwndTB = ::CreateWindowExW(0, TOOLBARCLASSNAMEW, NULL, style, 0, 0, 0, 0, m_hWnd,
@@ -125,7 +116,6 @@ BOOL CFavBand::CreateToolbar()
     if (!hwndTB)
         return FALSE;
 
-    ERR("OK4\n");
     m_hwndToolbar.Attach(hwndTB);
     m_hwndToolbar.SendMessage(TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
     m_hwndToolbar.SendMessage(TB_SETIMAGELIST, 0, (LPARAM)m_hToolbarImageList);
@@ -138,7 +128,6 @@ BOOL CFavBand::CreateToolbar()
     lstrcpynW(szzAdd, L"Add", _countof(szzAdd));
     lstrcpynW(szzOrganize, L"Organize", _countof(szzOrganize));
 
-    ERR("OK5\n");
     TBBUTTON tbb[2] = { { 0 } };
     INT iButton = 0;
     tbb[iButton].iBitmap = 3;
@@ -154,9 +143,10 @@ BOOL CFavBand::CreateToolbar()
     tbb[iButton].iString = (INT)m_hwndToolbar.SendMessage(TB_ADDSTRING, 0, (LPARAM)szzOrganize);
     ++iButton;
     ATLASSERT(iButton == _countof(tbb));
+
     LRESULT ret = m_hwndToolbar.SendMessage(TB_ADDBUTTONS, iButton, (LPARAM)&tbb);
     ATLASSERT(ret);
-    ERR("OK6\n");
+
     return ret;
 }
 
@@ -237,8 +227,24 @@ LRESULT CFavBand::OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
     return 0;
 }
 
-LRESULT CFavBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+LRESULT CFavBand::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
+    switch (LOWORD(wParam))
+    {
+        case ID_ADD:
+        {
+            break;
+        }
+        case ID_ORGANIZE:
+        {
+            SHELLEXECUTEINFOW sei = { sizeof(sei), SEE_MASK_IDLIST };
+            sei.hwnd = m_hWnd;
+            sei.nShow = SW_SHOWNORMAL;
+            sei.lpIDList = m_pidlFav;
+            ShellExecuteExW(&sei);
+            break;
+        }
+    }
     return 0;
 }
 
