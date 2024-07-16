@@ -35,6 +35,11 @@ void operator delete(void *ptr)
     ::LocalFree(ptr);
 }
 
+void operator delete(void *ptr, size_t size)
+{
+    ::LocalFree(ptr);
+}
+
 #if 1
 #undef UNIMPLEMENTED
 #define UNIMPLEMENTED ERR("%s is UNIMPLEMENTED!\n", __FUNCTION__)
