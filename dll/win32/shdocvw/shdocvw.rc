@@ -20,6 +20,8 @@
 
 1 WINE_REGISTRY "shdocvw_v1.rgs"
 
+2 REGISTRY "favband.rgs"
+
 1 TYPELIB "shdocvw_v1.tlb"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
