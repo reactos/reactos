@@ -1,0 +1,24 @@
+box.wav
+License: CC0 1.0 Universal
+URL: https://freesound.org/people/amitYunger123/sounds/737638/
+Date: 30-May-2024
+
+explode.wav
+License: CC0 1.0 Universal
+URL: https://freesound.org/people/hoffy1138/sounds/276968/
+Date: 31-May-2024
+
+flag.wav
+License: CC0 1.0 Universal
+URL: https://freesound.org/people/profoundsounds/sounds/733230/
+Date: 30-May-2024
+
+question.wav
+License: CC0 1.0 Universal
+URL: https://freesound.org/people/Irolan/sounds/737510/
+Date: 30-May-2024
+
+win.wav
+License: CC0 1.0 Universal
+URL: https://freesound.org/people/David819/sounds/668436/
+Date: 31-May-2024

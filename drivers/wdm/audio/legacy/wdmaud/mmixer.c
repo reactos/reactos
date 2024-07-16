@@ -769,6 +769,28 @@ WdmAudMidiCapabilities(
         return STATUS_UNSUCCESSFUL;
 }
 
+NTSTATUS
+NTAPI
+WdmAudGetPosition(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp,
+    _In_ PWDMAUD_DEVICE_INFO DeviceInfo)
+{
+    MIXER_STATUS Status;
+    ULONG Position;
+
+    /* Get position */
+    Status = MMixerGetWavePosition(&MixerContext, DeviceInfo->hDevice, &Position);
+
+    if (Status == MM_STATUS_SUCCESS)
+    {   
+        DeviceInfo->u.Position = (ULONGLONG)Position;
+        return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
+    }
+    else
+        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, sizeof(WDMAUD_DEVICE_INFO));
+}
+
 
 MIXER_STATUS
 CreatePinCallback(

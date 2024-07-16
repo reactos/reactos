@@ -32,7 +32,7 @@ Czy chcesz go utworzyć?"
 Czy chcesz go zastąpić?"
     IDS_INVALID_FILENAME_TITLE "Błędny(e) znak(i) w nazwie"
     IDS_INVALID_FILENAME    "Nazwa pliku nie może zawierać znaków:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "Katalog nie istnieje"
     IDS_FILENOTEXISTING     "Plik nie istnieje"
     IDS_INVALID_FOLDERNAME  "Wybór nie zawiera folderu"
@@ -148,7 +148,7 @@ STRINGTABLE
 
 OPEN_FILE DIALOG 36, 24, 285, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Otwieranie"
+CAPTION "Otwórz"
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "&Nazwa pliku:", stc3, 6, 6, 76, 9
@@ -248,7 +248,7 @@ FONT 8, "MS Shell Dlg"
     COMBOBOX        cmb1, 7,16,98,76,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
     LTEXT           "&Styl:",stc2 ,110,7,44,9
-    COMBOBOX        cmb2,110,16,101,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+    COMBOBOX        cmb2,110,16,101,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
     LTEXT           "Rozmiar:",stc3,216,7,30,9
     COMBOBOX        cmb3,217,16,36,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
@@ -462,7 +462,7 @@ FONT 8, "MS Shell Dlg"
 
 NEWFILEOPENV2ORD DIALOG 0, 0, 370, 237
 STYLE DS_MODALFRAME | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN
-CAPTION "Otwieranie"
+CAPTION "Otwórz"
 FONT 8, "MS Shell Dlg"
 {
     LTEXT "&Szukaj w:", IDC_LOOKINSTATIC, 4, 6, 57, 8, SS_NOTIFY

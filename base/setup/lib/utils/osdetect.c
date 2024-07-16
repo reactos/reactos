@@ -78,7 +78,6 @@ EnumerateInstallations(
 
     ULONG DiskNumber = 0, PartitionNumber = 0;
     PCWSTR PathComponent = NULL;
-    PDISKENTRY DiskEntry = NULL;
     PPARTENTRY PartEntry = NULL;
 
     UNICODE_STRING SystemRootPath;
@@ -184,10 +183,11 @@ EnumerateInstallations(
         DPRINT("SystemRootPath = '%wZ' points to disk #%d, partition #%d, path '%S'\n",
                &SystemRootPath, DiskNumber, PartitionNumber, PathComponent);
 
-        /* Retrieve the corresponding disk and partition */
-        if (!GetDiskOrPartition(Data->PartList, DiskNumber, PartitionNumber, &DiskEntry, &PartEntry))
+        /* Retrieve the corresponding partition */
+        PartEntry = SelectPartition(Data->PartList, DiskNumber, PartitionNumber);
+        if (!PartEntry)
         {
-            DPRINT1("GetDiskOrPartition(disk #%d, partition #%d) failed\n",
+            DPRINT1("SelectPartition(disk #%d, partition #%d) failed\n",
                     DiskNumber, PartitionNumber);
         }
     }
@@ -263,8 +263,8 @@ CheckForValidPEAndVendor(
     VendorName->Length = 0;
 
     Status = OpenAndMapFile(RootDirectory, PathNameToFile,
-                            &FileHandle, &SectionHandle, &ViewBase,
-                            NULL, FALSE);
+                            &FileHandle, NULL,
+                            &SectionHandle, &ViewBase, FALSE);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to open and map file '%S', Status 0x%08lx\n", PathNameToFile, Status);
@@ -743,7 +743,8 @@ FindNTOSInstallations(
         DPRINT("Analyze the OS installations for loader type '%d' in disk #%d, partition #%d\n",
                Type, DiskNumber, PartitionNumber);
 
-        Status = OpenBootStoreByHandle(&BootStoreHandle, PartitionDirectoryHandle, Type, FALSE);
+        Status = OpenBootStoreByHandle(&BootStoreHandle, PartitionDirectoryHandle, Type,
+                                       BS_OpenExisting, BS_ReadAccess);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Could not open the NTOS boot store of type '%d' (Status 0x%08lx), continue with another one...\n",

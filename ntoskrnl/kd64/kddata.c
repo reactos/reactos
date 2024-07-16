@@ -72,7 +72,6 @@ BOOLEAN KdpContextSent;
 // Debug Trap Handlers
 //
 PKDEBUG_ROUTINE KiDebugRoutine = KdpStub;
-PKDEBUG_SWITCH_ROUTINE KiDebugSwitchRoutine;
 
 //
 // Debugger Configuration Settings

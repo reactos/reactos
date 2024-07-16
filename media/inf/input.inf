@@ -147,8 +147,10 @@ HID_DEVICE="HID Uyumlu Aygıt"
 HID_DEVICE="HID-сумісний пристрій"
 
 [Strings.0804]
-StdMfg="(标准人机接口设备)"
-HID.DeviceDesc="USB 人机接口设备"
+HID.ClassName="人体学接口设备"
+
+StdMfg="(标准人体学接口设备)"
+HID.DeviceDesc="USB 人体学接口设备"
 HID_DEVICE="HID 兼容设备"
 
 [Strings.0816]

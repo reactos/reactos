@@ -1,3 +1,13 @@
+/*
+ * PROJECT:     ReactOS Timedate Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Czech resource file
+ * TRANSLATORS: Copyright 2005 Jirka Ďoubek (potapnik) <jirka@studioprojekt.cz>
+ *              Copyright 2007 Kamil Hornícek <tykef@atlas.cz>
+ *              Copyright 2008 Radek Liška (Black_Fox) <radekliska@gmail.com>
+ *              Copyright 2024 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
+ */
+
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
@@ -54,6 +64,6 @@ BEGIN
     IDS_INETTIMENEXTSYNC "Další synchronizace: %s v %s"
     IDS_INETTIMESYNCING "Prosím čekejte, zatímco systém ReactOS synchronizuje čas s %s"
     IDS_INETTIMEERROR "Při synchronizaci času s %s nastala chyba"
-    IDS_INETTIMESUCFILL "Please type a NTP server name in order to synchronize the time"
-    IDS_INETTIMEWELCOME "Select a NTP server from the list or type a NTP server name to synchronize the computer's time"
+    IDS_INETTIMESUCFILL "Zadejte prosím název NTP serveru, který se použije pro synchronizaci času"
+    IDS_INETTIMEWELCOME "Pro synchronizaci času počítače vyberte NTP server ze seznamu, nebo zadejte jeho název"
 END

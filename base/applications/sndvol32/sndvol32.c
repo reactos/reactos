@@ -971,6 +971,7 @@ MainWindowProc(HWND hwnd,
                 case IDM_EXIT:
                 {
                     PostQuitMessage(0);
+                    UnregisterHotKey(hwnd, HOTKEY_CTRL_S);
                     break;
                 }
 
@@ -1248,6 +1249,8 @@ MainWindowProc(HWND hwnd,
                     Result = -1;
                 }
             }
+
+            RegisterHotKey(hwnd, HOTKEY_CTRL_S, MOD_CONTROL, 'S');
             break;
         }
 
@@ -1272,6 +1275,16 @@ MainWindowProc(HWND hwnd,
         {
             SaveXYCoordWnd(hwnd, &Preferences);
             PostQuitMessage(0);
+            break;
+        }
+
+        case WM_HOTKEY:
+        {
+            if (wParam == HOTKEY_CTRL_S) 
+            {
+                Preferences.MixerWindow->Mode = (Preferences.MixerWindow->Mode == NORMAL_MODE ? SMALL_MODE : NORMAL_MODE);
+                RebuildMixerWindowControls(&Preferences);
+            }
             break;
         }
 

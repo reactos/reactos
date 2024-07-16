@@ -30,8 +30,10 @@
 #include "npapi.h"
 #include "winreg.h"
 #include "winuser.h"
+#ifndef __REACTOS__
 #define WINE_MOUNTMGR_EXTENSIONS
 #include "ddk/mountmgr.h"
+#endif
 #include "wine/debug.h"
 #include "mprres.h"
 #include "wnetpriv.h"

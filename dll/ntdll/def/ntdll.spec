@@ -10,9 +10,9 @@
 @ stdcall -arch=i386 ExpInterlockedPopEntrySListEnd()
 @ stdcall -arch=i386 ExpInterlockedPopEntrySListFault()
 @ stdcall -arch=i386 ExpInterlockedPopEntrySListResume()
-@ stdcall -stub -version=0x600+ A_SHAFinal(ptr ptr)
-@ stdcall -stub -version=0x600+ A_SHAInit(ptr)
-@ stdcall -stub -version=0x600+ A_SHAUpdate(ptr ptr long)
+@ stdcall -version=0x600+ A_SHAFinal(ptr ptr)
+@ stdcall -version=0x600+ A_SHAInit(ptr)
+@ stdcall -version=0x600+ A_SHAUpdate(ptr ptr long)
 @ stdcall -stub -version=0x600+ AlpcAdjustCompletionListConcurrencyCount(ptr long)
 @ stdcall -stub -version=0x600+ AlpcFreeCompletionListMessage(ptr ptr)
 @ stdcall -stub -version=0x600+ AlpcGetCompletionListLastMessageInformation(ptr ptr ptr)
@@ -191,12 +191,12 @@
 @ stub -version=0x600+ LdrpResGetMappingSize
 @ stub -version=0x600+ LdrpResGetRCConfig
 @ stub -version=0x600+ LdrpResGetResourceDirectory
-@ stdcall -stub -version=0x600+ MD4Final(ptr)
-@ stdcall -stub -version=0x600+ MD4Init(ptr)
-@ stdcall -stub -version=0x600+ MD4Update(ptr ptr long)
-@ stdcall -stub -version=0x600+ MD5Final(ptr)
-@ stdcall -stub -version=0x600+ MD5Init(ptr)
-@ stdcall -stub -version=0x600+ MD5Update(ptr ptr long)
+@ stdcall -version=0x600+ MD4Final(ptr)
+@ stdcall -version=0x600+ MD4Init(ptr)
+@ stdcall -version=0x600+ MD4Update(ptr ptr long)
+@ stdcall -version=0x600+ MD5Final(ptr)
+@ stdcall -version=0x600+ MD5Init(ptr)
+@ stdcall -version=0x600+ MD5Update(ptr ptr long)
 @ extern NlsAnsiCodePage
 @ extern NlsMbCodePageTag
 @ extern NlsMbOemCodePageTag
@@ -1066,7 +1066,7 @@
 @ stub -version=0x600+ RtlProcessFlsData
 @ stdcall RtlProtectHeap(ptr long)
 @ stdcall RtlPushFrame(ptr)
-@ stub -version=0x600+ RtlQueryActivationContextApplicationSettings
+@ stdcall -version=0x600+ RtlQueryActivationContextApplicationSettings(long ptr wstr wstr ptr ptr ptr)
 @ stdcall RtlQueryAtomInAtomTable(ptr long ptr ptr ptr ptr)
 @ stub -version=0x600+ RtlQueryCriticalSectionOwner
 @ stdcall RtlQueryDepthSList(ptr)
@@ -1801,7 +1801,8 @@
 @ cdecl _strlwr(str)
 @ cdecl _strnicmp(str str long)
 @ cdecl _strupr(str)
-@ stub -version=0x600+ _swprintf
+@ cdecl -version=0x400-0x502 -impsym _swprintf() swprintf # Compatibility for pre NT6
+@ cdecl -version=0x600+ _swprintf(ptr str)
 @ cdecl -version=0x502 _tolower(long)
 @ cdecl -version=0x502 _toupper(long)
 @ cdecl _ui64toa(double ptr long)

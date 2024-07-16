@@ -270,9 +270,12 @@ HRESULT WINAPI CNetworkConnections::SetNameOf (
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    *pPidlOut = ILCreateNetConnectItem(pCon);
-    if (*pPidlOut == NULL)
-        return E_FAIL;
+    if (pPidlOut)
+    {
+        *pPidlOut = ILCreateNetConnectItem(pCon);
+        if (*pPidlOut == NULL)
+            return E_FAIL;
+    }
 
     return S_OK;
 }

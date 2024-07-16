@@ -14,6 +14,7 @@ BEGIN
         MENUITEM "&Новая игра\tF2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Вопросительные знаки", IDM_MARKQ
+        MENUITEM "Зв&ук", IDM_SOUND
         MENUITEM SEPARATOR
         MENUITEM "Нови&чок", IDM_BEGINNER
         MENUITEM "&Любитель", IDM_ADVANCED

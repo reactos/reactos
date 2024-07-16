@@ -31,7 +31,7 @@ Létrehozza a fájlt?"
 Cseréli a fájlt?"
     IDS_INVALID_FILENAME_TITLE "Érvénytelen karakter(ek) van(nak) az útvonalban"
     IDS_INVALID_FILENAME    "A fájlnév nem tartalmazhatja ezeket a karaktereket:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "Útvonal nem létezik"
     IDS_FILENOTEXISTING     "Fájl nem létezik"
     IDS_INVALID_FOLDERNAME  "A kijelölés egy mappától eltérő objektumot tartalmaz"
@@ -247,7 +247,7 @@ FONT 8, "MS Shell Dlg"
     COMBOBOX        cmb1, 6,13,94,76,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
     LTEXT           "Betű&stílus:",stc2 ,108,3,60,9
-    COMBOBOX        cmb2,108,13,64,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+    COMBOBOX        cmb2,108,13,64,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
     LTEXT           "Méret:",stc3,179,3,32,9
     COMBOBOX        cmb3,179,13,32,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |

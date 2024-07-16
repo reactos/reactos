@@ -1,4 +1,11 @@
-LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+/*
+ * PROJECT:     ReactOS Accessibility Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATOR:  Copyright 2019-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 IDD_PROPPAGEKEYBOARD DIALOGEX 0, 0, 246, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -6,21 +13,21 @@ CAPTION "Teclado"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Teclas presas", -1, 6, 11, 234, 57
-    LTEXT "Utilize as ""Teclas presas"" se deseja utilizar SHIFT, CTRL, ALT pressionando uma tecla de cada vez.",
+    LTEXT "Utilize as ""Teclas presas"" se deseja utilizar SHIFT, CTRL, ou ALT pressionando uma tecla de cada vez.",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "&Utilizar ""Teclas presas""", IDC_STICKY_BOX, 12, 49, 126, 14
+    AUTOCHECKBOX "Utilizar ""Teclas &presas""", IDC_STICKY_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Definições", IDC_STICKY_BUTTON, 144, 49, 90, 14
     GROUPBOX "Teclas lentas", -1, 6, 79, 234, 62
     LTEXT "Utilize as ""Teclas lentas"" para que o ReactOS ignore os batimentos breves ou repetidos de teclas ou diminua a taxa de repetição.",
           -1, 12, 89, 222, 29
-    AUTOCHECKBOX "Utilizar as ""Teclas lentas""", IDC_FILTER_BOX, 12, 121, 126, 14
+    AUTOCHECKBOX "Utilizar ""Teclas &lentas""", IDC_FILTER_BOX, 12, 121, 126, 14
     PUSHBUTTON "D&efinições", IDC_FILTER_BUTTON, 144, 121, 90, 14
     GROUPBOX "Teclas sonoras", -1, 6, 148, 234, 55
-    LTEXT "Utilize ""Teclas sonoras"" para ouvir sinais quando pressionar CAPS LOCK, NUM LOCK e SCROLL LOCK.",
+    LTEXT "Utilize as ""Teclas sonoras"" para ouvir sinais quando pressionar CAPS LOCK, NUM LOCK ou SCROLL LOCK.",
           -1, 12, 161, 222, 20
-    AUTOCHECKBOX "Utilizar ""Teclas sonoras""", IDC_TOGGLE_BOX, 12, 184, 126, 14
+    AUTOCHECKBOX "Utilizar ""Teclas &sonoras""", IDC_TOGGLE_BOX, 12, 184, 126, 14
     PUSHBUTTON "De&finições", IDC_TOGGLE_BUTTON, 144, 184, 90, 14
-    AUTOCHECKBOX "Fornecer a&juda adicional do teclado nos programas", IDC_KEYBOARD_EXTRA,
+    AUTOCHECKBOX "&Mostrar ajuda adicional do teclado nos programas", IDC_KEYBOARD_EXTRA,
                  6, 207, 234, 14
 END
 
@@ -32,14 +39,14 @@ BEGIN
     GROUPBOX "Sons visuais", -1, 6, 11, 234, 98
     LTEXT "Utilize ""Sons visuais"" se pretender que o ReactOS crie avisos visuais quando o sistema emitir um som.",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "&Utilizar ""Sons visuais""", IDC_SENTRY_BOX, 12, 49, 90, 14
+    AUTOCHECKBOX "Utilizar ""&Sons visuais""", IDC_SENTRY_BOX, 12, 49, 90, 14
     LTEXT "Escolha o aviso visual:", IDC_SENTRY_TEXT, 12, 72, 222, 11
     COMBOBOX IDC_SENTRY_COMBO, 12, 83, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "Legendas para sons", -1, 6, 115, 234, 67
-    LTEXT "Utilize este recurso para que os programas mostrem legendas da fala e dos sons emitidos.",
+    LTEXT "Utilize ""Sons visuais"" para que os programas mostrem legendas da fala e dos sons emitidos.",
           -1, 12, 125, 222, 29
-    AUTOCHECKBOX "&Utilizar ""Legendas para sons""", IDC_SSHOW_BOX, 12, 148, 222, 14
+    AUTOCHECKBOX "Utilizar ""&Legendas para sons""", IDC_SSHOW_BOX, 12, 148, 222, 14
 END
 
 IDD_PROPPAGEDISPLAY DIALOGEX 0, 0, 246, 220
@@ -48,7 +55,7 @@ CAPTION "Visualização"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Alto contraste", -1, 6, 11, 234, 62
-    LTEXT "Use esta opção para que o ReactOS utilize cores e tipos de letra concebidos para uma leitura fácil.",
+    LTEXT "Utilize esta opção se pretender que o ReactOS utilize cores e tipos de letra concebidos para uma leitura fácil.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Utilizar ""Alto contraste""", IDC_CONTRAST_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Definições", IDC_CONTRAST_BUTTON, 144, 49, 90, 14
@@ -60,7 +67,7 @@ BEGIN
     LTEXT "Rápida", -1, 192, 130, 36, 11
     CONTROL "", IDC_CURSOR_BLINK_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             60, 124, 126, 20
-    CTEXT "La&rgura:", -1, 12, 151, 222, 11
+    CTEXT "&Largura:", -1, 12, 151, 222, 11
     LTEXT "Estreita", -1, 18, 171, 36, 11
     LTEXT "Larga", -1, 192, 171, 36, 11
     CONTROL "", IDC_CURSOR_WIDTH_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
@@ -74,9 +81,9 @@ CAPTION "Rato"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Rato por teclado", -1, 6, 11, 234, 62
-    LTEXT "Use ""Rato por teclado"" para controlar o ponteiro com o teclado numérico.",
+    LTEXT "Utilize ""Rato por teclado"" para controlar o ponteiro com o teclado numérico.",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "Utilizar ""Rato por teclado""", IDC_MOUSE_BOX, 12, 49, 126, 14
+    AUTOCHECKBOX "Utilizar ""&Rato por teclado""", IDC_MOUSE_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Definições", IDC_MOUSE_BUTTON, 144, 49, 90, 14
 END
 
@@ -86,24 +93,24 @@ CAPTION "Geral"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Repor automáticamente", -1, 6, 11, 234, 47
-    AUTOCHECKBOX "&Desactivar recursos de acessibilidade se inactivas durante:",
+    AUTOCHECKBOX "Desacti&var recursos de acessibilidade se inactivas durante:",
                  IDC_RESET_BOX, 12, 18, 222, 14
     COMBOBOX IDC_RESET_COMBO, 24, 38, 60, 47,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "Notificação", -1, 6, 63, 234, 47
-    AUTOCHECKBOX "&Emitir uma mensagem de aviso ao activar um recurso", IDC_NOTIFICATION_MESSAGE,
+    AUTOCHECKBOX "&Mostrar uma mensagem de aviso ao activar um recurso", IDC_NOTIFICATION_MESSAGE,
                  12, 72, 222, 14
     AUTOCHECKBOX "Emitir um &som ao activar ou desactivar um recurso", IDC_NOTIFICATION_SOUND,
                  12, 90, 222, 14
     GROUPBOX "Dispositivos ""Teclas série""", -1, 6, 115, 234, 47
     LTEXT "Os dispositivos ""Teclas série"" permitem o acesso alternativo aos recursos do teclado e do rato.",
           -1, 12, 124, 222, 20
-    AUTOCHECKBOX "&Utilizar as ""Teclas série""", IDC_SERIAL_BOX, 12, 142, 126, 14
+    AUTOCHECKBOX "Utilizar ""&Teclas série""", IDC_SERIAL_BOX, 12, 142, 126, 14
     PUSHBUTTON "&Definições", IDC_SERIAL_BUTTON, 144, 142, 90, 14
     GROUPBOX "Opções administrativas", -1, 6, 169, 234, 47
-    AUTOCHECKBOX "&Aplicar todas as definições ao ambiente de trabalho do início de sessão", IDC_ADMIN_LOGON_BOX,
+    AUTOCHECKBOX "&Aplicar as definições ao ambiente de trabalho do início de sessão", IDC_ADMIN_LOGON_BOX,
                  12, 178, 222, 14
-    AUTOCHECKBOX "Aplicar &todas as predefinições para novos utilizadores", IDC_ADMIN_USERS_BOX,
+    AUTOCHECKBOX "Ap&licar as predefinições para novos utilizadores", IDC_ADMIN_USERS_BOX,
                  12, 196, 222, 14
 END
 
@@ -124,7 +131,7 @@ BEGIN
     GROUPBOX "Notificação", -1, 6, 133, 234, 44
     AUTOCHECKBOX "&Emitir sons quando a tecla modificadora for pressionada", IDC_STICKY_SOUND_CHECK,
                  12, 148, 222, 14
-    AUTOCHECKBOX "Mostrar no ecrã o &estado de ""Teclas de presas""", IDC_STICKY_STATUS_CHECK,
+    AUTOCHECKBOX "&Mostrar no ecrã o estado de ""Teclas de presas""", IDC_STICKY_STATUS_CHECK,
                  12, 160, 222, 14
     DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 189, 207, 50, 14
@@ -146,7 +153,7 @@ BEGIN
                     12, 106, 152, 20, BS_TOP | BS_MULTILINE
     PUSHBUTTON "&Definições", IDC_FILTER_BOUNCE_BUTTON, 168, 88, 66, 14, WS_GROUP
     PUSHBUTTON "De&finições", IDC_FILTER_REPEAT_BUTTON, 168, 106, 66, 14, WS_GROUP
-    LTEXT "C&lique e digite para testar as definições de ""Teclas lentas"":", -1, 12, 129, 222, 11
+    LTEXT "&Clique e digite para testar as definições de ""Teclas lentas"":", -1, 12, 129, 222, 11
     EDITTEXT IDC_FILTER_TEST_EDIT, 12, 138, 222, 14, WS_GROUP | ES_AUTOHSCROLL
     GROUPBOX "Notificação", -1, 6, 161, 234, 41
     AUTOCHECKBOX "&Emitir alarme sonoro quando as teclas são premidas ou aceites", IDC_FILTER_SOUND_CHECK,
@@ -282,7 +289,7 @@ STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Acessibilidade"
     IDS_CPLSYSTEMDESCRIPTION "Ajustar as definições do computador para visão, audição e mobilidade."
-    IDS_SENTRY_NONE "[Nenhuma]"
+    IDS_SENTRY_NONE "[Nenhum]"
     IDS_SENTRY_TITLE "Piscar a barra de legenda activa"
     IDS_SENTRY_WINDOW "Piscar a janela activa"
     IDS_SENTRY_DISPLAY "Piscar a área de trabalho"

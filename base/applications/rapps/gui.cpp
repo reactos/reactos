@@ -275,7 +275,7 @@ CMainWindow::RemoveSelectedAppFromRegistry()
         return FALSE;
 
     if (MessageBoxW(szMsgText, szMsgTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
-        return m_Db->RemoveInstalledAppFromRegistry(InstalledApp);
+        return m_Db->RemoveInstalledAppFromRegistry(InstalledApp) == ERROR_SUCCESS;
 
     return FALSE;
 }
@@ -290,7 +290,7 @@ CMainWindow::UninstallSelectedApp(BOOL bModify)
     if (!InstalledApp)
         return FALSE;
 
-    return InstalledApp->UninstallApplication(bModify);
+    return InstalledApp->UninstallApplication(bModify ? UCF_MODIFY : UCF_NONE);
 }
 
 VOID
@@ -459,6 +459,14 @@ CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lPa
         }
         break;
 
+        case WM_SETTINGCHANGE:
+            if (wParam == SPI_SETNONCLIENTMETRICS || wParam == SPI_SETICONMETRICS)
+            {
+                DestroyIcon(g_hDefaultPackageIcon);
+                g_hDefaultPackageIcon = NULL; // Trigger imagelist recreation on next load
+            }
+            break;
+
         case WM_TIMER:
             if (wParam == SEARCH_TIMER_ID)
             {
@@ -544,7 +552,7 @@ CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
                 break;
 
             case ID_REFRESH:
-                UpdateApplicationsList(SelectedEnumType);
+                UpdateApplicationsList(SelectedEnumType, bReload);
                 break;
 
             case ID_RESETDB:
@@ -598,12 +606,20 @@ CMainWindow::AddApplicationsToView(CAtlList<CAppInfo *> &List)
             m_ApplicationView->AddApplication(Info, bSelected);
         }
     }
+    m_ApplicationView->AddApplication(NULL, FALSE); // Tell the list we are done
 }
 
 VOID
 CMainWindow::UpdateApplicationsList(AppsCategories EnumType, BOOL bReload, BOOL bCheckAvailable)
 {
     bUpdating = TRUE;
+
+    if (HCURSOR hCursor = LoadCursor(NULL, IDC_APPSTARTING))
+    {
+        // The database (.ini files) is parsed on the UI thread, let the user know we are busy
+        SetCursor(hCursor);
+        PostMessage(WM_SETCURSOR, (WPARAM)m_hWnd, MAKELONG(HTCLIENT, WM_MOUSEMOVE));
+    }
 
     if (bCheckAvailable)
         CheckAvailable();

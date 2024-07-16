@@ -84,6 +84,46 @@ KiDpcInterruptHandler(VOID)
     KeLowerIrql(OldIrql);
 }
 
+VOID
+KiNmiInterruptHandler(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ PKEXCEPTION_FRAME ExceptionFrame)
+{
+    BOOLEAN ManualSwapGs = FALSE;
+
+    /* Check if the NMI came from kernel mode */
+    if ((TrapFrame->SegCs & MODE_MASK) == 0)
+    {
+        /* Check if GS base is already kernel mode. This is needed, because
+           we might be interrupted during an interrupt/exception from user-mode
+           before the swapgs instruction. */
+        if ((LONG64)__readmsr(MSR_GS_BASE) >= 0)
+        {
+            /* Swap GS to kernel */
+            __swapgs();
+            ManualSwapGs = TRUE;
+        }
+    }
+
+    /* Check if this is a freeze */
+    if (KiProcessorFreezeHandler(TrapFrame, ExceptionFrame))
+    {
+        /* NMI was handled */
+        goto Exit;
+    }
+
+    /* Handle the NMI */
+    KiHandleNmi();
+
+Exit:
+    /* Check if we need to swap GS back */
+    if (ManualSwapGs)
+    {
+        /* Swap GS back to user */
+        __swapgs();
+    }
+}
+
 #define MAX_SYSCALL_PARAMS 16
 
 NTSTATUS

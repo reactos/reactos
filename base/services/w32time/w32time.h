@@ -16,6 +16,7 @@
 
 #define MAX_VALUE_NAME 16383
 #define NTPPORT 123
+#define W32TIME_POLL_INTERVAL (4 * 60 * 60) // 4 hours.
 
 
 /* ntpclient.c */

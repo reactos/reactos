@@ -297,7 +297,7 @@ ThemeDrawCaptionButton(PDRAW_CONTEXT pcontext,
     case CLOSEBUTTON:
         SysMenu = GetSystemMenu(pcontext->hWnd, FALSE);
         MenuState = GetMenuState(SysMenu, SC_CLOSE, MF_BYCOMMAND);
-        if (!(pcontext->wi.dwStyle & WS_SYSMENU) || (MenuState & (MF_GRAYED | MF_DISABLED)) || pcontext->wi.dwStyle & CS_NOCLOSE)
+        if (!(pcontext->wi.dwStyle & WS_SYSMENU) || (MenuState & (MF_GRAYED | MF_DISABLED)) || (GetClassLongPtrW(pcontext->hWnd, GCL_STYLE) & CS_NOCLOSE))
         {
             iStateId = (pcontext->Active ? BUTTON_DISABLED : BUTTON_INACTIVE_DISABLED);
         }

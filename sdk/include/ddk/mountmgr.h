@@ -1,27 +1,46 @@
+/*
+ * mountmgr.h
+ *
+ * Mount Manager driver interface
+ *
+ * This file is part of the ReactOS DDK package.
+ *
+ * Contributors:
+ *   Magnus Olsen <greatlord@reactos.org>
+ *   Amine Khaldi <amine.khaldi@reactos.org>
+ *   Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ *
+ * THIS SOFTWARE IS NOT COPYRIGHTED
+ *
+ * This source code is offered for use in the public domain. You may
+ * use, modify or distribute it freely.
+ *
+ * This code is distributed in the hope that it will be useful but
+ * WITHOUT ANY WARRANTY. ALL WARRANTIES, EXPRESS OR IMPLIED ARE HEREBY
+ * DISCLAIMED. This includes but is not limited to warranties of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ */
+
 #ifndef _MOUNTMGR_
 #define _MOUNTMGR_
 
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
+#pragma once
 
-#if defined(DEFINE_GUID)
-DEFINE_GUID(MOUNTDEV_MOUNTED_DEVICE_GUID, 0x53F5630D, 0xB6BF, 0x11D0, 0x94, 0xF2, 0x00, 0xA0, 0xC9, 0x1E, 0xFB, 0x8B);
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#define MOUNTMGR_DEVICE_NAME L"\\Device\\MountPointManager"
-#define MOUNTMGR_DOS_DEVICE_NAME L"\\\\.\\MountPointManager"
-#define MOUNTMGRCONTROLTYPE ((ULONG) 'm')
-#define MOUNTDEVCONTROLTYPE ((ULONG) 'M')
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
 
-#define IOCTL_MOUNTMGR_DEFINE_UNIX_DRIVE CTL_CODE(MOUNTMGRCONTROLTYPE, 32, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
-#define IOCTL_MOUNTMGR_QUERY_UNIX_DRIVE  CTL_CODE(MOUNTMGRCONTROLTYPE, 33, METHOD_BUFFERED, FILE_READ_ACCESS)
+#define MOUNTMGR_DEVICE_NAME        L"\\Device\\MountPointManager"
+#define MOUNTMGR_DOS_DEVICE_NAME    L"\\\\.\\MountPointManager"
+#define MOUNTMGRCONTROLTYPE     ((ULONG)'m')
+#define MOUNTDEVCONTROLTYPE     ((ULONG)'M')
 
-struct mountmgr_unix_drive {
-  ULONG size;
-  ULONG type;
-  WCHAR letter;
-  USHORT mount_point_offset;
-  USHORT device_offset;
-};
+#ifdef DEFINE_GUID
+DEFINE_GUID(MOUNTDEV_MOUNTED_DEVICE_GUID, 0x53F5630D, 0xB6BF, 0x11D0, 0x94, 0xF2, 0x00, 0xA0, 0xC9, 0x1E, 0xFB, 0x8B);
+#endif
 
 #define IOCTL_MOUNTMGR_CREATE_POINT \
   CTL_CODE(MOUNTMGRCONTROLTYPE, 0, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
@@ -47,18 +66,19 @@ struct mountmgr_unix_drive {
   CTL_CODE(MOUNTMGRCONTROLTYPE, 10, METHOD_BUFFERED, FILE_READ_ACCESS)
 #define IOCTL_MOUNTMGR_VOLUME_ARRIVAL_NOTIFICATION \
   CTL_CODE(MOUNTMGRCONTROLTYPE, 11, METHOD_BUFFERED, FILE_READ_ACCESS)
+
 #define IOCTL_MOUNTDEV_QUERY_DEVICE_NAME \
   CTL_CODE(MOUNTDEVCONTROLTYPE, 2, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
-#define MOUNTMGR_IS_DRIVE_LETTER(s)                                             \
-  ((s)->Length == 28 && (s)->Buffer[0] == '\\' && (s)->Buffer[1] == 'D' &&      \
-   (s)->Buffer[2] == 'o' && (s)->Buffer[3] == 's' && (s)->Buffer[4] == 'D' &&   \
-   (s)->Buffer[5] == 'e' && (s)->Buffer[6] == 'v' && (s)->Buffer[7] == 'i' && \
-   (s)->Buffer[8] == 'c' && (s)->Buffer[9] == 'e' && (s)->Buffer[10] == 's' &&  \
-   (s)->Buffer[11] == '\\' && (s)->Buffer[12] >= 'A' &&                         \
+#define MOUNTMGR_IS_DRIVE_LETTER(s) \
+  ((s)->Length == 28 && (s)->Buffer[0] == '\\' && (s)->Buffer[1] == 'D' &&     \
+   (s)->Buffer[2] == 'o' && (s)->Buffer[3] == 's' && (s)->Buffer[4] == 'D' &&  \
+   (s)->Buffer[5] == 'e' && (s)->Buffer[6] == 'v' && (s)->Buffer[7] == 'i' &&  \
+   (s)->Buffer[8] == 'c' && (s)->Buffer[9] == 'e' && (s)->Buffer[10] == 's' && \
+   (s)->Buffer[11] == '\\' && (s)->Buffer[12] >= 'A' && \
    (s)->Buffer[12] <= 'Z' && (s)->Buffer[13] == ':')
 
-#define MOUNTMGR_IS_VOLUME_NAME(s)                                               \
+#define MOUNTMGR_IS_VOLUME_NAME(s) \
   (((s)->Length == 96 || ((s)->Length == 98 && (s)->Buffer[48] == '\\')) &&      \
    (s)->Buffer[0] == '\\'&& ((s)->Buffer[1] == '?' || (s)->Buffer[1] == '\\') && \
    (s)->Buffer[2] == '?' && (s)->Buffer[3] == '\\' && (s)->Buffer[4] == 'V' &&   \
@@ -178,5 +198,8 @@ typedef struct _MOUNTMGR_SET_AUTO_MOUNT {
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
-#endif /* _MOUNTMGR_ */
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
+#endif /* _MOUNTMGR_ */

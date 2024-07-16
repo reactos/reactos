@@ -340,8 +340,10 @@ NtUserGetThreadState(
          ret = (ULONG_PTR)pti->hklPrev;
          break;
       case THREADSTATE_ISWINLOGON:
-      case THREADSTATE_ISWINLOGON2:
          ret = (gpidLogon == PsGetCurrentProcessId());
+         break;
+      case THREADSTATE_UNKNOWN_0x10:
+         FIXME("stub\n");
          break;
       case THREADSTATE_CHECKCONIME:
          ret = (IntTID2PTI(UlongToHandle(pti->rpdesk->dwConsoleThreadId)) == pti);

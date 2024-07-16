@@ -28,6 +28,15 @@
 #define NDEBUG
 #include <debug.h>
 
+/* Deprecated Windows 2000/XP versions of IOCTL_MOUNTDEV_LINK_[CREATED|DELETED]
+ * without access protection, that were updated in Windows 2003.
+ * They are sent to MountMgr clients if they do not recognize the new IOCTLs
+ * (e.g. they are for an older NT version). */
+#if (NTDDI_VERSION >= NTDDI_WS03)
+#define IOCTL_MOUNTDEV_LINK_CREATED_UNSECURE_DEPRECATED     CTL_CODE(MOUNTDEVCONTROLTYPE, 4, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define IOCTL_MOUNTDEV_LINK_DELETED_UNSECURE_DEPRECATED     CTL_CODE(MOUNTDEVCONTROLTYPE, 5, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#endif
+
 UNICODE_STRING DeviceMount = RTL_CONSTANT_STRING(MOUNTMGR_DEVICE_NAME);
 UNICODE_STRING DosDevicesMount = RTL_CONSTANT_STRING(L"\\DosDevices\\MountPointManager");
 UNICODE_STRING DosDevices = RTL_CONSTANT_STRING(L"\\DosDevices\\");
@@ -159,15 +168,11 @@ GlobalDeleteSymbolicLink(IN PUNICODE_STRING DosName)
 VOID
 SendLinkCreated(IN PUNICODE_STRING SymbolicName)
 {
-    PIRP Irp;
-    KEVENT Event;
-    ULONG NameSize;
     NTSTATUS Status;
+    ULONG NameSize;
     PFILE_OBJECT FileObject;
-    PIO_STACK_LOCATION Stack;
     PMOUNTDEV_NAME Name = NULL;
     PDEVICE_OBJECT DeviceObject;
-    IO_STATUS_BLOCK IoStatusBlock;
 
     /* Get the device associated with the name */
     Status = IoGetDeviceObjectPointer(SymbolicName,
@@ -175,82 +180,49 @@ SendLinkCreated(IN PUNICODE_STRING SymbolicName)
                                       &FileObject,
                                       &DeviceObject);
     if (!NT_SUCCESS(Status))
-    {
         return;
-    }
 
     /* Get attached device (will notify it) */
     DeviceObject = IoGetAttachedDeviceReference(FileObject->DeviceObject);
 
-    /* NameSize is the size of the whole MOUNTDEV_NAME struct */
+    /* NameSize is the size of the whole MOUNTDEV_NAME structure */
     NameSize = sizeof(USHORT) + SymbolicName->Length;
     Name = AllocatePool(NameSize);
     if (!Name)
-    {
         goto Cleanup;
-    }
 
-    /* Initialize struct */
+    /* Initialize structure */
     Name->NameLength = SymbolicName->Length;
     RtlCopyMemory(Name->Name, SymbolicName->Buffer, SymbolicName->Length);
 
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    /* Microsoft does it twice... Once with limited access, second with any
-     * So, first one here
-     */
-    Irp = IoBuildDeviceIoControlRequest(CTL_CODE(MOUNTDEVCONTROLTYPE, 4, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS),
-                                        DeviceObject,
-                                        Name,
-                                        NameSize,
-                                        NULL,
-                                        0,
-                                        FALSE,
-                                        &Event,
-                                        &IoStatusBlock);
+    /* Send the notification, using the new (Windows 2003+) IOCTL definition
+     * (with limited access) first. If this fails, the called driver may be
+     * for an older NT version, and so, we send again the notification using
+     * the old (Windows 2000) IOCTL definition (with any access). */
+    Status = MountMgrSendSyncDeviceIoCtl(IOCTL_MOUNTDEV_LINK_CREATED,
+                                         DeviceObject,
+                                         Name,
+                                         NameSize,
+                                         NULL,
+                                         0,
+                                         FileObject);
     /* This one can fail, no one matters */
-    if (Irp)
-    {
-        Stack = IoGetNextIrpStackLocation(Irp);
-        Stack->FileObject = FileObject;
-
-        Status = IoCallDriver(DeviceObject, Irp);
-        if (Status == STATUS_PENDING)
-        {
-            KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-        }
-    }
-
+    UNREFERENCED_PARAMETER(Status);
+#if (NTDDI_VERSION >= NTDDI_WS03)
     /* Then, second one */
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTDEV_LINK_CREATED,
-                                        DeviceObject,
-                                        Name,
-                                        NameSize,
-                                        NULL,
-                                        0,
-                                        FALSE,
-                                        &Event,
-                                        &IoStatusBlock);
-    if (!Irp)
-    {
-        goto Cleanup;
-    }
-
-    Stack = IoGetNextIrpStackLocation(Irp);
-    Stack->FileObject = FileObject;
-
-    /* Really notify */
-    Status = IoCallDriver(DeviceObject, Irp);
-    if (Status == STATUS_PENDING)
-    {
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-    }
+    Status = MountMgrSendSyncDeviceIoCtl(IOCTL_MOUNTDEV_LINK_CREATED_UNSECURE_DEPRECATED,
+                                         DeviceObject,
+                                         Name,
+                                         NameSize,
+                                         NULL,
+                                         0,
+                                         FileObject);
+    UNREFERENCED_PARAMETER(Status);
+#endif // (NTDDI_VERSION >= NTDDI_WS03)
 
 Cleanup:
     if (Name)
-    {
         FreePool(Name);
-    }
 
     ObDereferenceObject(DeviceObject);
     ObDereferenceObject(FileObject);
@@ -265,15 +237,11 @@ VOID
 SendLinkDeleted(IN PUNICODE_STRING DeviceName,
                 IN PUNICODE_STRING SymbolicName)
 {
-    PIRP Irp;
-    KEVENT Event;
-    ULONG NameSize;
     NTSTATUS Status;
+    ULONG NameSize;
     PFILE_OBJECT FileObject;
-    PIO_STACK_LOCATION Stack;
     PMOUNTDEV_NAME Name = NULL;
     PDEVICE_OBJECT DeviceObject;
-    IO_STATUS_BLOCK IoStatusBlock;
 
     /* Get the device associated with the name */
     Status = IoGetDeviceObjectPointer(DeviceName,
@@ -281,80 +249,49 @@ SendLinkDeleted(IN PUNICODE_STRING DeviceName,
                                       &FileObject,
                                       &DeviceObject);
     if (!NT_SUCCESS(Status))
-    {
         return;
-    }
 
     /* Get attached device (will notify it) */
     DeviceObject = IoGetAttachedDeviceReference(FileObject->DeviceObject);
 
-    /* NameSize is the size of the whole MOUNTDEV_NAME struct */
+    /* NameSize is the size of the whole MOUNTDEV_NAME structure */
     NameSize = sizeof(USHORT) + SymbolicName->Length;
     Name = AllocatePool(NameSize);
     if (!Name)
-    {
         goto Cleanup;
-    }
 
-    /* Initialize struct */
+    /* Initialize structure */
     Name->NameLength = SymbolicName->Length;
     RtlCopyMemory(Name->Name, SymbolicName->Buffer, SymbolicName->Length);
 
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    /* Cf: SendLinkCreated comment */
-    Irp = IoBuildDeviceIoControlRequest(CTL_CODE(MOUNTDEVCONTROLTYPE, 5, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS),
-                                        DeviceObject,
-                                        Name,
-                                        NameSize,
-                                        NULL,
-                                        0,
-                                        FALSE,
-                                        &Event,
-                                        &IoStatusBlock);
+    /* Send the notification, using the new (Windows 2003+) IOCTL definition
+     * (with limited access) first. If this fails, the called driver may be
+     * for an older NT version, and so, we send again the notification using
+     * the old (Windows 2000) IOCTL definition (with any access). */
+    Status = MountMgrSendSyncDeviceIoCtl(IOCTL_MOUNTDEV_LINK_DELETED,
+                                         DeviceObject,
+                                         Name,
+                                         NameSize,
+                                         NULL,
+                                         0,
+                                         FileObject);
     /* This one can fail, no one matters */
-    if (Irp)
-    {
-        Stack = IoGetNextIrpStackLocation(Irp);
-        Stack->FileObject = FileObject;
-
-        Status = IoCallDriver(DeviceObject, Irp);
-        if (Status == STATUS_PENDING)
-        {
-            KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-        }
-    }
-
+    UNREFERENCED_PARAMETER(Status);
+#if (NTDDI_VERSION >= NTDDI_WS03)
     /* Then, second one */
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTDEV_LINK_DELETED,
-                                        DeviceObject,
-                                        Name,
-                                        NameSize,
-                                        NULL,
-                                        0,
-                                        FALSE,
-                                        &Event,
-                                        &IoStatusBlock);
-    if (!Irp)
-    {
-        goto Cleanup;
-    }
-
-    Stack = IoGetNextIrpStackLocation(Irp);
-    Stack->FileObject = FileObject;
-
-    /* Really notify */
-    Status = IoCallDriver(DeviceObject, Irp);
-    if (Status == STATUS_PENDING)
-    {
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-    }
+    Status = MountMgrSendSyncDeviceIoCtl(IOCTL_MOUNTDEV_LINK_DELETED_UNSECURE_DEPRECATED,
+                                         DeviceObject,
+                                         Name,
+                                         NameSize,
+                                         NULL,
+                                         0,
+                                         FileObject);
+    UNREFERENCED_PARAMETER(Status);
+#endif // (NTDDI_VERSION >= NTDDI_WS03)
 
 Cleanup:
     if (Name)
-    {
         FreePool(Name);
-    }
 
     ObDereferenceObject(DeviceObject);
     ObDereferenceObject(FileObject);
@@ -685,14 +622,10 @@ QuerySuggestedLinkName(IN PUNICODE_STRING SymbolicName,
                        OUT PUNICODE_STRING SuggestedLinkName,
                        OUT PBOOLEAN UseOnlyIfThereAreNoOtherLinks)
 {
-    PIRP Irp;
-    KEVENT Event;
     NTSTATUS Status;
     USHORT NameLength;
     PFILE_OBJECT FileObject;
     PDEVICE_OBJECT DeviceObject;
-    IO_STATUS_BLOCK IoStatusBlock;
-    PIO_STACK_LOCATION IoStackLocation;
     PMOUNTDEV_SUGGESTED_LINK_NAME IoCtlSuggested;
 
     /* First, get device */
@@ -717,35 +650,14 @@ QuerySuggestedLinkName(IN PUNICODE_STRING SymbolicName,
     }
 
     /* Prepare request */
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTDEV_QUERY_SUGGESTED_LINK_NAME,
-                                        DeviceObject,
-                                        NULL,
-                                        0,
-                                        IoCtlSuggested,
-                                        sizeof(MOUNTDEV_SUGGESTED_LINK_NAME),
-                                        FALSE,
-                                        &Event,
-                                        &IoStatusBlock);
-    if (!Irp)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto Release;
-    }
-
-    IoStackLocation = IoGetNextIrpStackLocation(Irp);
-    IoStackLocation->FileObject = FileObject;
-
-    /* And ask */
-    Status = IoCallDriver(DeviceObject, Irp);
-    if (Status == STATUS_PENDING)
-    {
-        KeWaitForSingleObject(&Event, Executive, KernelMode,
-                              FALSE, NULL);
-        Status = IoStatusBlock.Status;
-    }
-
-    /* Overflow? Normal */
+    Status = MountMgrSendSyncDeviceIoCtl(IOCTL_MOUNTDEV_QUERY_SUGGESTED_LINK_NAME,
+                                         DeviceObject,
+                                         NULL,
+                                         0,
+                                         IoCtlSuggested,
+                                         sizeof(MOUNTDEV_SUGGESTED_LINK_NAME),
+                                         FileObject);
+    /* Retry with appropriate length */
     if (Status == STATUS_BUFFER_OVERFLOW)
     {
         /* Reallocate big enough buffer */
@@ -759,39 +671,17 @@ QuerySuggestedLinkName(IN PUNICODE_STRING SymbolicName,
             goto Dereference;
         }
 
-        /* And reask */
-        KeInitializeEvent(&Event, NotificationEvent, FALSE);
-        Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTDEV_QUERY_SUGGESTED_LINK_NAME,
-                                            DeviceObject,
-                                            NULL,
-                                            0,
-                                            IoCtlSuggested,
-                                            NameLength,
-                                            FALSE,
-                                            &Event,
-                                            &IoStatusBlock);
-        if (!Irp)
-        {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            goto Release;
-        }
-
-        IoStackLocation = IoGetNextIrpStackLocation(Irp);
-        IoStackLocation->FileObject = FileObject;
-
-        Status = IoCallDriver(DeviceObject, Irp);
-        if (Status == STATUS_PENDING)
-        {
-            KeWaitForSingleObject(&Event, Executive, KernelMode,
-                                  FALSE, NULL);
-            Status = IoStatusBlock.Status;
-        }
+        /* And re-ask */
+        Status = MountMgrSendSyncDeviceIoCtl(IOCTL_MOUNTDEV_QUERY_SUGGESTED_LINK_NAME,
+                                             DeviceObject,
+                                             NULL,
+                                             0,
+                                             IoCtlSuggested,
+                                             NameLength,
+                                             FileObject);
     }
-
     if (!NT_SUCCESS(Status))
-    {
         goto Release;
-    }
 
     /* Now we have suggested name, copy it */
     SuggestedLinkName->Length = IoCtlSuggested->NameLength;

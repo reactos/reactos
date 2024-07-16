@@ -248,6 +248,7 @@ string1==string2  Përcakton një kusht të vërtetë nëse vargjet e specifikua
 EXIST filename    Përcakton një kusht të vërtetë, nëse ekziston dokumenti i specifikuar.\n\
 DEFINED variable  Përcakton një kusht të vërtetë nëse variabli është specifikuar\n\
                   dhe karakterizuar.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "Koha e tanishme është: "
     STRING_MKDIR_HELP "Krijon një skedë.\n\n\
 MKDIR [drive:]rrugë\nMD [drive:]rrugë"
@@ -339,34 +340,6 @@ Vini re se ju nuk mund të specifikoni një drive të ri ose rrugën për në de
 komandën MOVE për këtë qëllim.\n"
     STRING_REN_HELP2 "    %lu dokumenti u rimërua\n"
     STRING_REN_HELP3 "    %lu dokumenti u rimërua\n"
-    STRING_REPLACE_HELP1 "zëvendëson dokumentat.\n\n\
-REPLACE [drive1:][rrugë1]emri [drive2:][rrugë2] [/A] [/P] [/R] [/W]\n\
-REPLACE [drive1:][rrugë1]emri [drive2:][rrugë2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [drive1:][rrugë1]emri Specifikon e dokumentit ose dokumentëve.\n\
-  [drive2:][rrugë2]         Specifikon directorine ku dokumentet do të\n\
-                           zëvendësohen.\n\
-  /A                       Shton dokumente të reja tek directoria e destinacionit. Nuk\n\
-                           përdoret me /S ose /U.\n\
-  /P                       Shfaw konfirmimim para se të zëvendësosh një dokument apo\n\
-                           shtimit të burimit të dokumentit.\n\
-  /R                       Zëvendëso dokumentat vetëm-lexohet, si dhe dokumentet e\n\
-                           pambrojtur.\n\
-  /S                       Zëvendëson dokumentet në të gjitha nën-direktoritë e\n\
-                           directorite. Nuk mund të përdorë me/A\n\
-                           parametra.\n\
-  /W                       Pret për ju për të futur një disk para fillimit të.\n\
-  /U                       Zëvendëso (update) vetem dokumenta që janë më të vjetër se\n\
-                           dokumentat e burimit. Nuk mund ta përdorësh me /A.\n"
-    STRING_REPLACE_HELP2 "Rruga e Burimi kërkohet\n"
-    STRING_REPLACE_HELP3 "Nuk zëvendësohen dokumentat\n"
-    STRING_REPLACE_HELP4 "%lu dokumenta(t) zëvendësohen\n"
-    STRING_REPLACE_HELP5 "Zëvendësohen %s\n"
-    STRING_REPLACE_HELP6 "Zëvendësoh %s\n"
-    STRING_REPLACE_HELP7 "S'ka dokumentat te shtuar\n"
-    STRING_REPLACE_HELP8 "%lu dokumenta(t) u shtuan\n"
-    STRING_REPLACE_HELP9 "Shto %s (P/J)? "
-    STRING_REPLACE_HELP10 "Zëvendëso %s (P/J)? "
-    STRING_REPLACE_HELP11 "Shtim %s\n"
     STRING_SHIFT_HELP "Ndryshon pozitën e parametrave në një dokument batch.\n\n\
 SHIFT [DOWN]"
     STRING_SCREEN_HELP "lëvizin kursorin opsionale dhe printoni tekstin\n\n\
@@ -522,15 +495,16 @@ title         titull i ri\n"
     STRING_ERROR_CANNOTPIPE "Error!  Nuk mund të pipoj!  Nuk mund të hape dokumentet e perkohshem!\n"
     STRING_ERROR_D_PAUSEMSG "Shtypni një buton për të vazhduar . . . "
     STRING_ERROR_DRIVER_NOT_READY "Drive nuk është gati"
+    STRING_ERROR_INVALID_NUMBER1 "Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"
+    STRING_ERROR_INVALID_NUMBER2 "Invalid number. Numbers are limited to 32-bits of precision.\n"
+    STRING_ERROR_DIVISION_BY_ZERO "Division by zero error.\n"
+    STRING_ERROR_INVALID_DEVICE L"Invalid device '%s'\n"
+    STRING_ERROR_CALL_BAD_LABEL "Invalid attempt to call batch label outside of batch script.\n"
+    STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
+    STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
-    STRING_REPLACE_ERROR1 "Qeles invalid - %s\n"
-    STRING_REPLACE_ERROR2 "Rruga nuk u gjet - %s\n"
-    STRING_REPLACE_ERROR3 "Dokumenti, emri i direktorise, ose syntaksi i etiketes volumetrike eshte gabim.\n"
-    STRING_REPLACE_ERROR4 "Kombimi i parametrave invalid\n"
-    STRING_REPLACE_ERROR5 "Refuzot hyrja - %s\n"
-    STRING_REPLACE_ERROR6 "Nuk u gjet dokumenti - %s\n"
-    STRING_REPLACE_ERROR7 "Error i zgjatur 32\n"
     STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
     STRING_REACTOS_VERSION "ReactOS [Versioni %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Interpretuesi i komandave\nVersioni %s %s"
     STRING_VERSION_RUNNING_ON "Funksionon në: "

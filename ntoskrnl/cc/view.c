@@ -469,8 +469,6 @@ CcRosTrimCache(
     ULONG PagesFreed;
     KIRQL oldIrql;
     LIST_ENTRY FreeList;
-    PFN_NUMBER Page;
-    ULONG i;
     BOOLEAN FlushedPages = FALSE;
 
     DPRINT("CcRosTrimCache(Target %lu)\n", Target);
@@ -490,7 +488,6 @@ retry:
         current = CONTAINING_RECORD(current_entry,
                                     ROS_VACB,
                                     VacbLruListEntry);
-        current_entry = current_entry->Flink;
 
         KeAcquireSpinLockAtDpcLevel(&current->SharedCacheMap->CacheMapLock);
 
@@ -500,6 +497,18 @@ retry:
         /* Check if it's mapped and not dirty */
         if (InterlockedCompareExchange((PLONG)&current->MappedCount, 0, 0) > 0 && !current->Dirty)
         {
+            /* This code is never executed. It is left for reference only. */
+#if 1
+            DPRINT1("MmPageOutPhysicalAddress unexpectedly called\n");
+            ASSERT(FALSE);
+#else
+            ULONG i;
+            PFN_NUMBER Page;
+
+            /* We have to break these locks to call MmPageOutPhysicalAddress */
+            KeReleaseSpinLockFromDpcLevel(&current->SharedCacheMap->CacheMapLock);
+            KeReleaseQueuedSpinLock(LockQueueMasterLock, oldIrql);
+
             /* Page out the VACB */
             for (i = 0; i < VACB_MAPPING_GRANULARITY / PAGE_SIZE; i++)
             {
@@ -507,7 +516,15 @@ retry:
 
                 MmPageOutPhysicalAddress(Page);
             }
+
+            /* Reacquire the locks */
+            oldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+            KeAcquireSpinLockAtDpcLevel(&current->SharedCacheMap->CacheMapLock);
+#endif
         }
+
+        /* Only keep iterating though the loop while the lock is held */
+        current_entry = current_entry->Flink;
 
         /* Dereference the VACB */
         Refs = CcRosVacbDecRefCount(current);

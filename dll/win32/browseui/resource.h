@@ -73,6 +73,7 @@
 
 /* Random id for band close button, feel free to change it */
 #define IDM_BASEBAR_CLOSE                0xA200
+#define IDM_NOTIFYITBARDIRTY             0xA239 /* Arbitrary id */
 
 /* User-installed explorer band IDs according to API Monitor traces */
 #define IDM_EXPLORERBAND_BEGINCUSTOM     0xA240

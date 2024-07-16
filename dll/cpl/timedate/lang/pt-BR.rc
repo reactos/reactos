@@ -54,6 +54,6 @@ BEGIN
     IDS_INETTIMENEXTSYNC "Próxima sincronização: %s às %s"
     IDS_INETTIMESYNCING "Aguarde enquanto o ReactOS é sincronizado com %s"
     IDS_INETTIMEERROR "Erro enquanto o ReactOS estava sincronizando com %s"
-    IDS_INETTIMESUCFILL "Please type a NTP server name in order to synchronize the time"
-    IDS_INETTIMEWELCOME "Select a NTP server from the list or type a NTP server name to synchronize the computer's time"
+    IDS_INETTIMESUCFILL "Please type an NTP server name in order to synchronize the time"
+    IDS_INETTIMEWELCOME "Select an NTP server from the list or type an NTP server name to synchronize the computer's time"
 END

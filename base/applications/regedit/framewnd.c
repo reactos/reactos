@@ -39,6 +39,16 @@ extern WCHAR Suggestions[256];
  * Local module support methods
  */
 
+static UINT ErrorBox(HWND hWnd, UINT Error)
+{
+    WCHAR buf[400];
+    if (!FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                        NULL, Error, 0, buf, _countof(buf), NULL))
+        *(UINT*)buf = L'?';
+    MessageBoxW(hWnd, buf, NULL, MB_ICONSTOP);
+    return Error;
+}
+
 static void resize_frame_rect(HWND hWnd, PRECT prect)
 {
     if (IsWindowVisible(hStatusBar))
@@ -72,6 +82,8 @@ static void OnInitMenu(HWND hWnd)
     static int s_nFavoriteMenuSubPos = -1;
     HMENU hMenu;
     BOOL bDisplayedAny = FALSE;
+    HTREEITEM hSelTreeItem;
+    BOOL bCanAddFav;
 
     /* Find Favorites menu and clear it out */
     hMenu = GetSubMenu(GetMenu(hWnd), FAVORITES_MENU_POSITION);
@@ -85,6 +97,11 @@ static void OnInitMenu(HWND hWnd)
     {
         while(RemoveMenu(hMenu, s_nFavoriteMenuSubPos, MF_BYPOSITION)) ;
     }
+
+    hSelTreeItem = TreeView_GetSelection(g_pChildWnd->hTreeWnd);
+    bCanAddFav = TreeView_GetParent(g_pChildWnd->hTreeWnd, hSelTreeItem) != NULL;
+    EnableMenuItem(GetMenu(hWnd), ID_FAVOURITES_ADDTOFAVOURITES,
+                   MF_BYCOMMAND | (bCanAddFav ? MF_ENABLED : MF_GRAYED));
 
     lResult = RegOpenKeyW(HKEY_CURRENT_USER, s_szFavoritesRegKey, &hKey);
     if (lResult != ERROR_SUCCESS)
@@ -807,6 +824,89 @@ done:
         RegCloseKey(hKey);
 }
 
+static LPWSTR GetItemFullPath(HTREEITEM hTI)
+{
+    HKEY hRoot;
+    WCHAR rootname[MAX_PATH], *buffer;
+    SIZE_T rootlen, subkeylen;
+    LPCWSTR subkey = GetItemPath(g_pChildWnd->hTreeWnd, hTI, &hRoot);
+    if (!subkey || !hRoot)
+        return NULL;
+    if (!GetKeyName(rootname, ARRAY_SIZE(rootname), hRoot, L""))
+        return NULL;
+    rootlen = lstrlenW(rootname) + 1; // + 1 for '\\'
+    subkeylen = lstrlenW(subkey);
+    buffer = (WCHAR*)malloc((rootlen + subkeylen + 1) * sizeof(WCHAR));
+    if (buffer)
+    {
+        lstrcpyW(buffer, rootname);
+        buffer[rootlen - 1] = '\\';
+        lstrcpyW(buffer + rootlen, subkey);
+    }
+    return buffer;
+}
+
+static INT_PTR CALLBACK AddToFavoritesDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    HWND hName = GetDlgItem(hWnd, IDC_FAVORITENAME);
+    WCHAR name[MAX_PATH];
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            TVITEM tvi;
+            tvi.mask = TVIF_HANDLE | TVIF_TEXT;
+            tvi.hItem = TreeView_GetSelection(g_pChildWnd->hTreeWnd);
+            tvi.pszText = name;
+            tvi.cchTextMax = _countof(name);
+            if (!TreeView_GetItem(g_pChildWnd->hTreeWnd, &tvi))
+                tvi.pszText[0] = UNICODE_NULL;
+            SetWindowTextW(hName, tvi.pszText);
+            SendMessageW(hName, EM_LIMITTEXT, _countof(name) - 1, 0);
+            return TRUE;
+        }
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                    {
+                        LPWSTR path;
+                        HKEY hKey;
+                        DWORD err;
+                        if (!GetWindowTextW(hName, name, _countof(name)))
+                        {
+                            err = GetLastError();
+                            goto failed;
+                        }
+                        path = GetItemFullPath(NULL);
+                        if (!path)
+                        {
+                            err = ERROR_NOT_ENOUGH_MEMORY;
+                            goto failed;
+                        }
+                        err = RegCreateKeyExW(HKEY_CURRENT_USER, s_szFavoritesRegKey, 0,
+                                              NULL, 0, KEY_SET_VALUE, NULL, &hKey, NULL);
+                        if (err)
+                            goto failed;
+                        err = RegSetValueExW(hKey, name, 0, REG_SZ, (BYTE*)path, (lstrlenW(path) + 1) * sizeof(WCHAR));
+                        RegCloseKey(hKey);
+                        if (err) failed:
+                            ErrorBox(hWnd, err);
+                        free(path);
+                        return EndDialog(hWnd, err);
+                    }
+                case IDCANCEL:
+                    return EndDialog(hWnd, ERROR_CANCELLED);
+                case IDC_FAVORITENAME:
+                    if (HIWORD(wParam) == EN_UPDATE)
+                        EnableWindow(GetDlgItem(hWnd, IDOK), GetWindowTextLengthW(hName) != 0);
+                    break;
+            }
+            break;
+    }
+    return FALSE;
+}
+
 BOOL CopyKeyName(HWND hWnd, HKEY hRootKey, LPCWSTR keyName)
 {
     BOOL bClipboardOpened = FALSE;
@@ -1046,12 +1146,8 @@ FreeObjectPicker(IN IDsObjectPicker *pDsObjectPicker)
     pDsObjectPicker->lpVtbl->Release(pDsObjectPicker);
 }
 
-/*******************************************************************************
- *
- *  FUNCTION: _CmdWndProc(HWND, unsigned, WORD, LONG)
- *
- *  PURPOSE:  Processes WM_COMMAND messages for the main frame window.
- *
+/**
+ * PURPOSE: Processes WM_COMMAND messages for the main frame window.
  */
 static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -1118,6 +1214,9 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return TRUE;
     case ID_VIEW_STATUSBAR:
         toggle_child(hWnd, LOWORD(wParam), hStatusBar);
+        return TRUE;
+    case ID_FAVOURITES_ADDTOFAVOURITES:
+        DialogBoxW(hInst, MAKEINTRESOURCEW(IDD_ADDFAVORITES), hWnd, AddToFavoritesDlgProc);
         return TRUE;
     case ID_HELP_HELPTOPICS:
         WinHelpW(hWnd, L"regedit", HELP_FINDER, 0);
@@ -1265,26 +1364,24 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         RegKeyEditPermissions(hWnd, hKeyRoot, NULL, keyPath);
         break;
     case ID_REGISTRY_PRINTERSETUP:
-        /*PRINTDLG pd;*/
-        /*PrintDlg(&pd);*/
-        /*PAGESETUPDLG psd;*/
-        /*PageSetupDlg(&psd);*/
+        //PRINTDLG pd;
+        //PrintDlg(&pd);
+        //PAGESETUPDLG psd;
+        //PageSetupDlg(&psd);
         break;
     case ID_REGISTRY_OPENLOCAL:
         break;
-
     case ID_VIEW_REFRESH:
         RefreshTreeView(g_pChildWnd->hTreeWnd);
         keyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
         RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath, TRUE);
         break;
-        /*case ID_OPTIONS_TOOLBAR:*/
-        /*	toggle_child(hWnd, LOWORD(wParam), hToolBar);*/
-        /*    break;*/
+        //case ID_OPTIONS_TOOLBAR:
+        //    toggle_child(hWnd, LOWORD(wParam), hToolBar);
+        //    break;
     case ID_EDIT_NEW_KEY:
         CreateNewKey(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd));
         break;
-
     case ID_TREE_EXPANDBRANCH:
         TreeView_Expand(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd), TVE_EXPAND);
         break;
@@ -1298,9 +1395,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_TREE_DELETE:
         keyPath = GetItemPath(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd), &hKeyRoot);
         if (keyPath == 0 || *keyPath == 0)
-        {
             MessageBeep(MB_ICONHAND);
-        }
         else if (DeleteKey(hWnd, hKeyRoot, keyPath))
             DeleteNode(g_pChildWnd->hTreeWnd, 0);
         break;
@@ -1320,12 +1415,10 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             SetFocus(hwndItem);
         }
         break;
-
     case ID_ADDRESS_FOCUS:
         SendMessageW(g_pChildWnd->hAddressBarWnd, EM_SETSEL, 0, -1);
         SetFocus(g_pChildWnd->hAddressBarWnd);
         break;
-
     default:
         if ((LOWORD(wParam) >= ID_FAVORITES_MIN) && (LOWORD(wParam) <= ID_FAVORITES_MAX))
         {
@@ -1371,17 +1464,12 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return result;
 }
 
-/********************************************************************************
+/**
+ * PURPOSE: Processes messages for the main frame window
  *
- *  FUNCTION: FrameWndProc(HWND, unsigned, WORD, LONG)
- *
- *  PURPOSE:  Processes messages for the main frame window.
- *
- *  WM_COMMAND  - process the application menu
- *  WM_DESTROY  - post a quit message and return
- *
+ * WM_COMMAND - process the application menu
+ * WM_DESTROY - post a quit message and return
  */
-
 LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     RECT rc;
@@ -1400,13 +1488,11 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             return DefWindowProcW(hWnd, message, wParam, lParam);
         break;
     case WM_ACTIVATE:
-        if (LOWORD(hWnd) && g_pChildWnd)
+        if (LOWORD(wParam) != WA_INACTIVE && g_pChildWnd)
             SetFocus(g_pChildWnd->hWnd);
         break;
     case WM_SIZE:
         resize_frame_client(hWnd);
-        break;
-    case WM_TIMER:
         break;
     case WM_INITMENU:
         OnInitMenu(hWnd);

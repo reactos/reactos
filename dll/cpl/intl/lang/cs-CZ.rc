@@ -1,6 +1,9 @@
-/* FILE:       dll/cpl/intl/lang/cs-CZ.rc
- * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2010-05-22
+/*
+ * PROJECT:     ReactOS International Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Czech resource file
+ * TRANSLATORS: Copyright 2010 Radek Liška (Black_Fox) <radekliska@gmail.com>
+ *              Copyright 2024 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -218,5 +221,5 @@ BEGIN
     IDS_ERROR_NLS_KEY_REG "Problém při otevírání klíče: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
     IDS_ERROR_NLS_CODE_REG "Problém při otevírání klíče: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
     IDS_ERROR_INPUT_DLL "Nebylo možné spustit input.dll"
-    IDS_ERROR_UNICODE "Unable to install a new language for programs that don't support Unicode!"
+    IDS_ERROR_UNICODE "Nebylo možné nainstalovat nový jazyk pro programy, které nepodporují Unicode!"
 END

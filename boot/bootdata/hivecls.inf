@@ -555,6 +555,16 @@ HKCR,"AVIFile","",0x00000000,%AVIFILE%
 HKCR,"AVIFile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-224"
 HKCR,"AVIFile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe ""%1"""
 
+; WSH
+HKCR,".wsf","",0x00000000,"WSFFile"
+HKCR,".wsf","PerceivedType",0x00000000,"text"
+HKCR,"WSFFile","",0x00000000,%WSFFILE%
+HKCR,"WSFFile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153"
+HKCR,"WSFFile\shell\Open\command","",0x00020000,"""%SystemRoot%\system32\WScript.exe"" ""%1"" %*"
+HKCR,"WSFFile\shell\Open2","",0x00000000,"Open &with Command Prompt"
+HKCR,"WSFFile\shell\Open2\command","",0x00020000,"""%SystemRoot%\system32\CScript.exe"" ""%1"" %*"
+
+
 HKCR,"CLSID",,0x00000012
 
 ; For Shell32.dll
@@ -791,6 +801,7 @@ AVIFILE="Video Clip"
 CSSFILE="Cascading Style Sheet"
 SCFFILE="ReactOS Explorer Command"
 WMZFILE="Compressed Enhanced Metafile"
+WSFFILE="Windows Script File"
 
 ;; For .reg files, right-click menu
 MERGE="Merge"
@@ -1296,5 +1307,46 @@ INSTALL="インストール"
 UNINSTALL="アンインストール"
 REPAIR="修復"
 TEST="テスト"
+
+;------------------------------------------------------------------------
+; LANG_CHINESE SUBLANG_CHINESE_SIMPLIFIED
+[Strings.0804]
+;; In shell32.dll
+CPLFILE_OPENWITH="用控制面板打开"
+
+;; In hhctrl.ocx
+CHMFILE="已编译的 HTML 帮助文件"
+
+;; In msxml3r.dll
+XMLFILE="XML 文档"
+XSLFILE="XSL 样式表"
+
+;; In msi.dll
+MSIPACK="ReactOS Installer 软件包"
+
+;; In themeui.dll
+MSSTYLESFILE="可视化风格文件"
+THEMEFILE="主题文件"
+
+;; In some multimedia exe/dll
+WAVFILE="波形声音"
+MIDFILE="MIDI 序列"
+CDAFILE="CD 音频曲目"
+AVIFILE="视频剪辑"
+
+;; Misc file types without friendly (localized in .dll resources) name
+CSSFILE="层叠样式表文档"
+SCFFILE="ReactOS Explorer Command"
+;WMZFILE="Compressed Enhanced Metafile"
+
+;; For .reg files, right-click menu
+MERGE="合并"
+
+;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
+CONFIGURE="配置"
+INSTALL="安装"
+UNINSTALL="卸载"
+REPAIR="修复"
+TEST="测试"
 
 ; EOF

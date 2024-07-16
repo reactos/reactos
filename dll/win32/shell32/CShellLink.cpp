@@ -2595,9 +2595,10 @@ HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
     HRESULT hr;
     LPWSTR args = NULL;
     LPWSTR path = strdupW(m_sPath);
+    BOOL unicode = lpici->cbSize >= FIELD_OFFSET(CMINVOKECOMMANDINFOEX, ptInvoke) &&
+                   (lpici->fMask & CMIC_MASK_UNICODE);
 
-    if ( lpici->cbSize == sizeof(CMINVOKECOMMANDINFOEX) &&
-        (lpici->fMask & CMIC_MASK_UNICODE) )
+    if (unicode)
     {
         LPCMINVOKECOMMANDINFOEX iciex = (LPCMINVOKECOMMANDINFOEX)lpici;
         SIZE_T len = 2;

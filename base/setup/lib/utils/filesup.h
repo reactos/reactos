@@ -92,18 +92,25 @@ NtPathToDiskPartComponents(
 
 NTSTATUS
 OpenAndMapFile(
-    IN  HANDLE RootDirectory OPTIONAL,
-    IN  PCWSTR PathNameToFile,
-    OUT PHANDLE FileHandle,         // IN OUT PHANDLE OPTIONAL
-    OUT PHANDLE SectionHandle,
-    OUT PVOID* BaseAddress,
-    OUT PULONG FileSize OPTIONAL,
-    IN  BOOLEAN ReadWriteAccess);
+    _In_opt_ HANDLE RootDirectory,
+    _In_ PCWSTR PathNameToFile,
+    _Out_opt_ PHANDLE FileHandle,
+    _Out_opt_ PULONG FileSize,
+    _Out_ PHANDLE SectionHandle,
+    _Out_ PVOID* BaseAddress,
+    _In_ BOOLEAN ReadWriteAccess);
+
+NTSTATUS
+MapFile(
+    _In_ HANDLE FileHandle,
+    _Out_ PHANDLE SectionHandle,
+    _Out_ PVOID* BaseAddress,
+    _In_ BOOLEAN ReadWriteAccess);
 
 BOOLEAN
 UnMapFile(
-    IN HANDLE SectionHandle,
-    IN PVOID BaseAddress);
+    _In_ HANDLE SectionHandle,
+    _In_ PVOID BaseAddress);
 
 #define UnMapAndCloseFile(FileHandle, SectionHandle, BaseAddress)   \
 do {    \

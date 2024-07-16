@@ -96,6 +96,17 @@ NTSTATUS NTAPI
 LdrpWalkImportDescriptor(IN LPWSTR DllPath OPTIONAL,
                          IN PLDR_DATA_TABLE_ENTRY LdrEntry);
 
+/* libsupp.c */
+NTSYSAPI
+NTSTATUS
+NTAPI
+LdrpApplyFileNameRedirection(
+    _In_ PUNICODE_STRING OriginalName,
+    _In_ PUNICODE_STRING Extension,
+    _Inout_opt_ PUNICODE_STRING StaticString,
+    _Inout_opt_ PUNICODE_STRING DynamicString,
+    _Inout_ PUNICODE_STRING *NewName,
+    _Inout_ PBOOLEAN RedirectedDll);
 
 /* ldrutils.c */
 NTSTATUS

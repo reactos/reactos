@@ -83,11 +83,9 @@ function(generate_idl_iids)
     foreach(_idl_file ${ARGN})
         get_includes(_includes)
         get_defines(_defines)
-
         if(NOT IS_ABSOLUTE ${_idl_file})
             set(_idl_file "${CMAKE_CURRENT_SOURCE_DIR}/${_idl_file}")
         endif()
-
         get_filename_component(_name_we ${_idl_file} NAME_WE)
         add_custom_command(
             OUTPUT ${_name_we}_i.c ${_name_we}_i.h
@@ -98,7 +96,6 @@ function(generate_idl_iids)
 endfunction()
 
 function(add_iid_library _target)
-
     foreach(_idl_file ${ARGN})
         generate_idl_iids(${_idl_file})
         get_filename_component(_name_we ${_idl_file} NAME_WE)

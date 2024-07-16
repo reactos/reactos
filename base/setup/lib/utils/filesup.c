@@ -854,26 +854,52 @@ Quit:
     return TRUE;
 }
 
+/**
+ * @brief
+ * Opens and maps a file in memory.
+ *
+ * @param[in]   RootDirectory
+ * @param[in]   PathNameToFile
+ * Path to the file, either in absolute form, or relative to the opened
+ * root directory given by the RootDirectory handle.
+ *
+ * @param[out]  FileHandle
+ * An optional pointer to a variable receiving a handle to the opened file.
+ * If NULL, the underlying file handle is closed.
+ *
+ * @param[out]  FileSize
+ * An optional pointer to a variable receiving the size of the opened file.
+ *
+ * @param[out]  SectionHandle
+ * A pointer to a variable receiving a handle to a section mapping the file.
+ *
+ * @param[out]  BaseAddress
+ * A pointer to a variable receiving the address where the file is mapped.
+ *
+ * @param[in]   ReadWriteAccess
+ * A boolean variable specifying whether to map the file for read and write
+ * access (TRUE), or read-only access (FALSE).
+ *
+ * @return
+ * STATUS_SUCCESS in case of success, or a status code in case of error.
+ **/
 NTSTATUS
 OpenAndMapFile(
-    IN  HANDLE RootDirectory OPTIONAL,
-    IN  PCWSTR PathNameToFile,
-    OUT PHANDLE FileHandle,         // IN OUT PHANDLE OPTIONAL
-    OUT PHANDLE SectionHandle,
-    OUT PVOID* BaseAddress,
-    OUT PULONG FileSize OPTIONAL,
-    IN  BOOLEAN ReadWriteAccess)
+    _In_opt_ HANDLE RootDirectory,
+    _In_ PCWSTR PathNameToFile,
+    _Out_opt_ PHANDLE FileHandle,
+    _Out_opt_ PULONG FileSize,
+    _Out_ PHANDLE SectionHandle,
+    _Out_ PVOID* BaseAddress,
+    _In_ BOOLEAN ReadWriteAccess)
 {
     NTSTATUS Status;
     UNICODE_STRING FileName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
-    ULONG SectionPageProtection;
-    SIZE_T ViewSize;
-    PVOID ViewBase;
+    HANDLE LocalFileHandle;
 
     /* Open the file */
-
     RtlInitUnicodeString(&FileName, PathNameToFile);
     InitializeObjectAttributes(&ObjectAttributes,
                                &FileName,
@@ -881,10 +907,8 @@ OpenAndMapFile(
                                RootDirectory,
                                NULL);
 
-    *FileHandle = NULL;
-    *SectionHandle = NULL;
-
-    Status = NtOpenFile(FileHandle,
+    if (FileHandle) *FileHandle = NULL;
+    Status = NtOpenFile(&LocalFileHandle,
                         FILE_GENERIC_READ | // Contains SYNCHRONIZE
                             (ReadWriteAccess ? FILE_GENERIC_WRITE : 0),
                         &ObjectAttributes,
@@ -893,7 +917,7 @@ OpenAndMapFile(
                         FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to open file '%wZ', Status 0x%08lx\n", &FileName, Status);
+        DPRINT1("Failed to open file '%wZ' (Status 0x%08lx)\n", &FileName, Status);
         return Status;
     }
 
@@ -901,32 +925,82 @@ OpenAndMapFile(
     {
         /* Query the file size */
         FILE_STANDARD_INFORMATION FileInfo;
-        Status = NtQueryInformationFile(*FileHandle,
+        Status = NtQueryInformationFile(LocalFileHandle,
                                         &IoStatusBlock,
                                         &FileInfo,
                                         sizeof(FileInfo),
                                         FileStandardInformation);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT("NtQueryInformationFile() failed (Status %lx)\n", Status);
-            NtClose(*FileHandle);
-            *FileHandle = NULL;
-            return Status;
+            DPRINT("NtQueryInformationFile() failed (Status 0x%08lx)\n", Status);
+            goto Quit;
         }
 
         if (FileInfo.EndOfFile.HighPart != 0)
             DPRINT1("WARNING!! The file '%wZ' is too large!\n", &FileName);
 
         *FileSize = FileInfo.EndOfFile.LowPart;
-
         DPRINT("File size: %lu\n", *FileSize);
     }
 
-    /* Map the file in memory */
+    /* Map the whole file into memory */
+    Status = MapFile(LocalFileHandle,
+                     SectionHandle,
+                     BaseAddress,
+                     ReadWriteAccess);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to map file '%wZ' (Status 0x%08lx)\n", &FileName, Status);
+        goto Quit;
+    }
+
+Quit:
+    /* If we succeeded, return the opened file handle if needed.
+     * If we failed or the caller does not need the handle, close it now. */
+    if (NT_SUCCESS(Status) && FileHandle)
+        *FileHandle = LocalFileHandle;
+    else
+        NtClose(LocalFileHandle);
+
+    return Status;
+}
+
+/**
+ * @brief
+ * Maps an opened file in memory.
+ *
+ * @param[in]   FileHandle
+ * A handle to an opened file to map.
+ *
+ * @param[out]  SectionHandle
+ * A pointer to a variable receiving a handle to a section mapping the file.
+ *
+ * @param[out]  BaseAddress
+ * A pointer to a variable receiving the address where the file is mapped.
+ *
+ * @param[in]   ReadWriteAccess
+ * A boolean variable specifying whether to map the file for read and write
+ * access (TRUE), or read-only access (FALSE).
+ *
+ * @return
+ * STATUS_SUCCESS in case of success, or a status code in case of error.
+ **/
+NTSTATUS
+MapFile(
+    _In_ HANDLE FileHandle,
+    _Out_ PHANDLE SectionHandle,
+    _Out_ PVOID* BaseAddress,
+    _In_ BOOLEAN ReadWriteAccess)
+{
+    NTSTATUS Status;
+    ULONG SectionPageProtection;
+    SIZE_T ViewSize;
+    PVOID ViewBase;
 
     SectionPageProtection = (ReadWriteAccess ? PAGE_READWRITE : PAGE_READONLY);
 
     /* Create the section */
+    *SectionHandle = NULL;
     Status = NtCreateSection(SectionHandle,
                              STANDARD_RIGHTS_REQUIRED | SECTION_QUERY |
                              SECTION_MAP_READ |
@@ -935,12 +1009,11 @@ OpenAndMapFile(
                              NULL,
                              SectionPageProtection,
                              SEC_COMMIT /* | SEC_IMAGE (_NO_EXECUTE) */,
-                             *FileHandle);
+                             FileHandle);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to create a memory section for file '%wZ', Status 0x%08lx\n", &FileName, Status);
-        NtClose(*FileHandle);
-        *FileHandle = NULL;
+        DPRINT1("Failed to create a memory section for file 0x%p (Status 0x%08lx)\n",
+                FileHandle, Status);
         return Status;
     }
 
@@ -958,11 +1031,10 @@ OpenAndMapFile(
                                 SectionPageProtection);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to map a view for file '%wZ', Status 0x%08lx\n", &FileName, Status);
+        DPRINT1("Failed to map a view for file 0x%p (Status 0x%08lx)\n",
+                FileHandle, Status);
         NtClose(*SectionHandle);
         *SectionHandle = NULL;
-        NtClose(*FileHandle);
-        *FileHandle = NULL;
         return Status;
     }
 
@@ -970,10 +1042,23 @@ OpenAndMapFile(
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Unmaps a mapped file by section.
+ *
+ * @param[in]   SectionHandle
+ * The handle to the section mapping the file.
+ *
+ * @param[in]   BaseAddress
+ * The base address where the file is mapped.
+ *
+ * @return
+ * TRUE if the file was successfully unmapped; FALSE if an error occurred.
+ **/
 BOOLEAN
 UnMapFile(
-    IN HANDLE SectionHandle,
-    IN PVOID BaseAddress)
+    _In_ HANDLE SectionHandle,
+    _In_ PVOID BaseAddress)
 {
     NTSTATUS Status;
     BOOLEAN Success = TRUE;
@@ -981,14 +1066,14 @@ UnMapFile(
     Status = NtUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("UnMapFile: NtUnmapViewOfSection(0x%p) failed with Status 0x%08lx\n",
+        DPRINT1("NtUnmapViewOfSection(0x%p) failed (Status 0x%08lx)\n",
                 BaseAddress, Status);
         Success = FALSE;
     }
     Status = NtClose(SectionHandle);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("UnMapFile: NtClose(0x%p) failed with Status 0x%08lx\n",
+        DPRINT1("NtClose(0x%p) failed (Status 0x%08lx)\n",
                 SectionHandle, Status);
         Success = FALSE;
     }

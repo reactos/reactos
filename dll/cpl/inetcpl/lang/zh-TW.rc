@@ -66,7 +66,7 @@ CAPTION "刪除瀏覽歷史記錄"
 BEGIN
 
     AUTOCHECKBOX   "暫時的網際網路檔案\n已快取的網頁、影像和憑證。",
-                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
+                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE | WS_GROUP | WS_TABSTOP
     AUTOCHECKBOX   "Cookie\n由網站儲存於您電腦的檔案，其存有諸如使用者偏好設定和登入資訊。",
                     IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "歷程記錄\n您曾存取過的網站清單。",
@@ -76,7 +76,7 @@ BEGIN
     AUTOCHECKBOX   "密碼\n您曾輸入表單的已儲存密碼。",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON  "取消", IDCANCEL, 185, 230, 60, 15, WS_GROUP
-    PUSHBUTTON     "刪除", IDOK, 120, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "刪除", IDOK, 120, 230, 60, 15
 
 END
 

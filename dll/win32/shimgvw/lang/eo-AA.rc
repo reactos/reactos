@@ -1,0 +1,44 @@
+/*
+ * PROJECT:     ReactOS Picture and Fax Viewer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Esperanto resource file
+ * TRANSLATOR:  Copyright 2024 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
+ */
+
+LANGUAGE LANG_ESPERANTO, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "Montrilo de Bildoj kaj Faksoj de ReactOS"
+    IDS_SETASDESKBG "Agordi kiel fono de labortablo"
+    IDS_NOPREVIEW "Antaŭrigardo nedisponebla."
+    IDS_PREVIEW "Antaŭrigardo"
+    /* Tooltips */
+    IDS_TOOLTIP_NEXT_PIC "Sekva bildo"
+    IDS_TOOLTIP_PREV_PIC "Antaŭa bildo"
+    IDS_TOOLTIP_BEST_FIT "Adapti al la grandeco de la fenestro (Ctrl+B)"
+    IDS_TOOLTIP_REAL_SIZE "Origina grandeco (Ctrl+A)"
+    IDS_TOOLTIP_SLIDE_SHOW "Komenci bildoprezenton (F11)"
+    IDS_TOOLTIP_ZOOM_IN "Pligrandigi (+)"
+    IDS_TOOLTIP_ZOOM_OUT "Malpligrandigi (-)"
+    IDS_TOOLTIP_ROT_CLOCKW "Rotacii horloĝdirekte (Ctrl+K)"
+    IDS_TOOLTIP_ROT_COUNCW "Rotacii kontraŭhorloĝdirekte (Ctrl+L)"
+    IDS_TOOLTIP_ROT_CWSAVE "Rotacii horloĝdirekte kaj konservi (perda)"
+    IDS_TOOLTIP_ROT_CCWSAVE "Rotacii kontraŭhorloĝdirekte kaj konservi (perda)"
+    IDS_TOOLTIP_DELETE "Forigi (DEL)"
+    IDS_TOOLTIP_PRINT "Printi (Ctrl+P)"
+    IDS_TOOLTIP_SAVEAS "Konservi kiel... (Ctrl+S)"
+    IDS_TOOLTIP_MODIFY "Ŝanĝi (Ctrl+E)"
+    IDS_TOOLTIP_HELP_TOC "Helpilo (F1)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_EMF_FILE    "EMF-Bildo"
+    IDS_GIF_FILE    "GIF-Bildo"
+    IDS_JPG_FILE    "JPEG-Bildo"
+    IDS_BMP_FILE    "Rastruma bildo"
+    IDS_PNG_FILE    "PNG-Bildo"
+    IDS_TIF_FILE    "TIF-Bildo"
+    IDS_WMF_FILE    "WMF-Bildo"
+END
