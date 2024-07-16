@@ -70,7 +70,7 @@ void *operator new(size_t size);
 void operator delete(void *ptr);
 void operator delete(void *ptr, size_t size);
 #endif
-extern HINSTANCE instance;
+EXTERN_C HINSTANCE instance;
 #endif // def __REACTOS__
 
 #endif /* __WINE_SHDOCVW_H */
