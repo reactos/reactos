@@ -95,7 +95,7 @@ CAPTION "General"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Revenire automată", -1, 6, 11, 234, 47
-    AUTOCHECKBOX "Se a&plică modificările doar pentru această sesiune Windows",
+    AUTOCHECKBOX "Se a&plică modificările doar pentru această sesiune ReactOS",
                  IDC_RESET_BOX, 12, 18, 222, 14
     COMBOBOX IDC_RESET_COMBO, 24, 38, 60, 47,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
