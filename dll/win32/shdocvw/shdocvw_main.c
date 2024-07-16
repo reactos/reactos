@@ -47,7 +47,7 @@ LONG SHDOCVW_refCount = 0;
 static HMODULE SHDOCVW_hshell32 = 0;
 static HINSTANCE ieframe_instance;
 #ifdef __REACTOS__
-static HINSTANCE instance;
+HINSTANCE instance;
 #endif
 
 static HINSTANCE get_ieframe_instance(void)

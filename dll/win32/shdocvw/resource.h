@@ -7,3 +7,6 @@
 
 #define ID_ADD          100
 #define ID_ORGANIZE     101
+
+#define IDS_ADD         1000
+#define IDS_ORGANIZE    1001

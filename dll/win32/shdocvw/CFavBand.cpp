@@ -114,12 +114,11 @@ BOOL CFavBand::CreateToolbar()
     m_hwndToolbar.SendMessage(TB_SETIMAGELIST, 0, (LPARAM)m_hToolbarImageList);
     m_hwndToolbar.SendMessage(TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
 
-    // FIXME: Localize
     WCHAR szzAdd[MAX_PATH], szzOrganize[MAX_PATH];
     ZeroMemory(szzAdd, sizeof(szzAdd));
     ZeroMemory(szzOrganize, sizeof(szzOrganize));
-    lstrcpynW(szzAdd, L"Add", _countof(szzAdd));
-    lstrcpynW(szzOrganize, L"Organize", _countof(szzOrganize));
+    LoadStringW(instance, IDS_ADD, szzAdd, _countof(szzAdd));
+    LoadStringW(instance, IDS_ORGANIZE, szzOrganize, _countof(szzOrganize));
 
     TBBUTTON tbb[2] = { { 0 } };
     INT iButton = 0;
