@@ -7,12 +7,38 @@
 
 #include <windows.h>
 #include <shlobj.h>
+#include <shlwapi.h>
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlwin.h>
 #include <undocshell.h>
+#include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
+#include <shlwapi_undoc.h>
+#include <shdeprecated.h>
+#include <olectlid.h>
+#include <exdispid.h>
+#include <shellutils.h>
+#include "shdocvw.h"
 #include "CFavBand.h"
+
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
+
+void *operator new(size_t size)
+{
+    return ::LocalAlloc(LPTR, size);
+}
+
+void operator delete(void *ptr)
+{
+    ::LocalFree(ptr);
+}
+
+#if 1
+#undef UNIMPLEMENTED
+#define UNIMPLEMENTED ERR("%s is UNIMPLEMENTED!\n", __FUNCTION__)
+#endif
 
 CFavBand::CFavBand()
     : m_fVisible(FALSE)
@@ -27,18 +53,25 @@ CFavBand::~CFavBand()
     ::InterlockedDecrement(&SHDOCVW_refCount);
 }
 
+VOID CFavBand::OnFinalMessage(HWND)
+{
+    // The message loop is finished, now we can safely destruct!
+    Release();
+}
+
+// *** helper methods ***
 HRESULT CFavBand::UpdateLocation()
 {
-    m_pidlCurrent = NULL;
+    m_pidlCurrent.Free();
 
     CComPtr<IShellBrowser> psb;
     HRESULT hr = IUnknown_QueryService(m_pSite, SID_STopLevelBrowser, IID_PPV_ARG(IShellBrowser, &psb));
-    if (FAILED_UNEXPECTEDLY(hr))
+    if (FAILED(hr))
         return hr;
 
     CComPtr<IBrowserService> pbs;
     hr = psb->QueryInterface(IID_PPV_ARG(IBrowserService, &pbs));
-    if (FAILED_UNEXPECTEDLY(hr))
+    if (FAILED(hr))
         return hr;
 
     return pbs->GetPidl(&m_pidlCurrent);
@@ -190,8 +223,7 @@ STDMETHODIMP CFavBand::SetSite(IUnknown *pUnkSite)
     }
     else
     {
-        DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
-        Create(hwndParent, 0, NULL, dwStyle);
+        this->Create(hwndParent, NULL, NULL, WS_CHILD | WS_VISIBLE, 0, (UINT)0, NULL);
     }
 
     return S_OK;
@@ -410,7 +442,7 @@ STDMETHODIMP CFavBand::GetIDsOfNames(
     return E_NOTIMPL;
 }
 
-STDMETHODSTDMETHODIMP CFavBand::Invoke(
+STDMETHODIMP CFavBand::Invoke(
     DISPID dispIdMember,
     REFIID riid,
     LCID lcid,
@@ -430,31 +462,16 @@ STDMETHODSTDMETHODIMP CFavBand::Invoke(
     return E_INVALIDARG;
 }
 
-EXTERN_C HRESULT
-CFavBand_CreateInstance(DWORD_PTR dwUnused1, void **ppv, DWORD_PTR dwUnused3)
-{
-    UNREFERENCED_PARAMETER(dwUnused1);
-    UNREFERENCED_PARAMETER(dwUnused3);
-
-    if (!ppv)
-        return E_POINTER;
-
-    CFavBand *pFavBand = new CFavBand();
-    *ppv = static_cast<IUnknown *>(pFavBand);
-    TRACE("%p\n", *ppv);
-    return S_OK;
-}
-
 BEGIN_OBJECT_MAP(ObjectMap)
-    OBJECT_ENTRY(CLSID_ExplorerBand, CExplorerBand)
+    OBJECT_ENTRY(CLSID_SH_FavBand, CFavBand)
 END_OBJECT_MAP()
 
-class CExplorerBandModule : public CComModule
+class CFavBandModule : public CComModule
 {
 public:
 };
 
-static CExplorerBandModule gModule;
+static CFavBandModule gModule;
 
 EXTERN_C VOID
 CFavBand_Init(HINSTANCE hInstance)
