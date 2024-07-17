@@ -1678,25 +1678,25 @@ SHELL_InvokePidl(
     CComHeapPtr<char> pszParams;
     if (sei->lpParameters && sei->lpParameters[0])
     {
-        ici.lpParametersW = sei->lpParameters;
         __SHCloneStrWtoA(&pszParams, sei->lpParameters);
         ici.lpParameters = pszParams;
+        ici.lpParametersW = sei->lpParameters;
     }
 
     CComHeapPtr<char> pszDir;
     if (sei->lpDirectory && sei->lpDirectory[0])
     {
-        ici.lpDirectoryW = sei->lpDirectory;
         __SHCloneStrWtoA(&pszDir, sei->lpDirectory);
         ici.lpDirectory = pszDir;
+        ici.lpDirectoryW = sei->lpDirectory;
     }
 
     CComHeapPtr<char> pszVerb;
     if (sei->lpVerb && sei->lpVerb[0])
     {
-        ici.lpVerbW = sei->lpVerb;
         __SHCloneStrWtoA(&pszVerb, sei->lpVerb);
         ici.lpVerb = pszVerb;
+        ici.lpVerbW = sei->lpVerb;
     }
     else // The default verb?
     {
@@ -1715,6 +1715,7 @@ SHELL_InvokePidl(
             nDefaultID = idCmdFirst;
 
         ici.lpVerb = MAKEINTRESOURCEA(nDefaultID - idCmdFirst);
+        ici.lpVerbW = MAKEINTRESOURCEW(nDefaultID - idCmdFirst);
     }
 
     hr = pCM->InvokeCommand((CMINVOKECOMMANDINFO*)&ici);
