@@ -145,7 +145,7 @@ GetSnapActivationPoint(PWND Wnd, POINT pt)
     if (pt.x <= wa.left) return HTLEFT;
     if (pt.x >= wa.right-1) return HTRIGHT;
     if (pt.y <= wa.top) return HTTOP; /* Maximize */
-    return 0;
+    return HTNOWHERE;
 }
 
 LONG FASTCALL
@@ -252,7 +252,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
 {
    MSG msg;
    RECT sizingRect, mouseRect, origRect, unmodRect, snapPreviewRect;
-   RECT *frameRect = &sizingRect;
+   PRECT pFrameRect = &sizingRect;
    HDC hdc;
    LONG hittest = (LONG)(wParam & 0x0f);
    PCURICON_OBJECT DragCursor = NULL, OldCursor = NULL;
@@ -470,7 +470,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
               OldCursor = UserSetCursor(DragCursor, FALSE);
               UserShowCursor(TRUE);
           }
-          else if(!DragFullWindows)
+          else if (!DragFullWindows)
              UserDrawMovingFrame(hdc, &sizingRect, thickframe);
       }
 
@@ -484,39 +484,39 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
 
           if (!iconic && !DragFullWindows)
           {
-              UserDrawMovingFrame(hdc, frameRect, thickframe);
-              frameRect = &sizingRect;
+              UserDrawMovingFrame(hdc, pFrameRect, thickframe);
+              pFrameRect = &sizingRect;
           }
           if (hittest == HTCAPTION)
           {
               /* Restore window size if it is snapped */
-              RECT *r = &newRect;
+              PRECT pr = &newRect;
               LONG width, height, capcy, snapTo;
               if (snap && syscommand == SC_MOVE && !iconic &&
                   !RECTL_bIsEmptyRect(&pwnd->InternalPos.NormalRect))
               {
-                  *r = pwnd->InternalPos.NormalRect;
-                  origRect = *r; /* Save normal size - is required when window unsnapped from one side and snapped to another holding mouse down */
+                  *pr = pwnd->InternalPos.NormalRect;
+                  origRect = *pr; /* Save normal size - is required when window unsnapped from one side and snapped to another holding mouse down */
 
                   /* Try to position the center of the caption where the mouse is horizontally */
                   capcy = UserGetSystemMetrics((ExStyle & WS_EX_TOPMOST) ? SM_CYSMCAPTION : SM_CYCAPTION); /* No border, close enough */
-                  width = r->right - r->left;
-                  height = r->bottom - r->top;
-                  r->left = pt.x - width / 2;
-                  r->right = r->left + width;
-                  r->top = mouseRect.top;
-                  r->bottom = r->top + height;
-                  if (r->left < mouseRect.left)
+                  width = pr->right - pr->left;
+                  height = pr->bottom - pr->top;
+                  pr->left = pt.x - width / 2;
+                  pr->right = pr->left + width;
+                  pr->top = mouseRect.top;
+                  pr->bottom = pr->top + height;
+                  if (pr->left < mouseRect.left)
                   {
-                      r->left = mouseRect.left;
-                      r->right = r->left + width;
+                      pr->left = mouseRect.left;
+                      pr->right = pr->left + width;
                   }
-                  if ((pwnd->ExStyle & WS_EX_LAYOUTRTL) && r->right > mouseRect.right)
+                  if ((pwnd->ExStyle & WS_EX_LAYOUTRTL) && pr->right > mouseRect.right)
                   {
-                      r->left = mouseRect.right - width;
-                      r->right = r->left + width;
+                      pr->left = mouseRect.right - width;
+                      pr->right = pr->left + width;
                   }
-                  UserSetCursorPos(pt.x, r->top + capcy / 2, 0, 0, FALSE);
+                  UserSetCursorPos(pt.x, pr->top + capcy / 2, 0, 0, FALSE);
                   snap = FALSE;
                   dx = dy = 0; /* Don't offset this move */
                   if (DragFullWindows)
@@ -525,7 +525,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
                       IntSetSnapEdge(pwnd, HTNOWHERE);
 
                       /* Have to move and size it now because we don't want SWP_NOSIZE */
-                      co_WinPosSetWindowPos(pwnd, NULL, r->left, r->top, width, height, SWP_NOACTIVATE);
+                      co_WinPosSetWindowPos(pwnd, HWND_TOP, pr->left, pr->top, width, height, SWP_NOACTIVATE);
                   }
               }
               else if (!snap && syscommand == SC_MOVE && !iconic)
@@ -539,8 +539,8 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
                       }
                       else
                       {
-                          frameRect = &snapPreviewRect;
-                          UserDrawMovingFrame(hdc, frameRect, thickframe);
+                          pFrameRect = &snapPreviewRect;
+                          UserDrawMovingFrame(hdc, pFrameRect, thickframe);
                           continue;
                       }
                   }
@@ -649,7 +649,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    {
       UINT eraseFinalFrame = moved && !DragFullWindows;
       if (eraseFinalFrame)
-         UserDrawMovingFrame(hdc, frameRect, thickframe);
+         UserDrawMovingFrame(hdc, pFrameRect, thickframe); // Undo the XOR drawing
    }
 
    UserReleaseDC(NULL, hdc, FALSE);
@@ -674,7 +674,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    /* window moved or resized */
    if (moved)
    {
-      UINT forceSizing = !iconic && hittest == HTCAPTION && (!!orgSnap != !!snap);
+      BOOL forceSizing = !iconic && hittest == HTCAPTION && (!!orgSnap != !!snap);
       UINT swp = (!forceSizing && hittest == HTCAPTION) ? SWP_NOSIZE : 0;
 
       /* if the moving/resizing isn't canceled call SetWindowPos
@@ -696,7 +696,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
                   IntSetStyle(pwnd, 0, WS_MAXIMIZE);
                   IntSetSnapInfo(pwnd, HTNOWHERE, NULL);
                }
-               co_WinPosSetWindowPos(pwnd, 0, sizingRect.left, sizingRect.top,
+               co_WinPosSetWindowPos(pwnd, HWND_TOP, sizingRect.left, sizingRect.top,
                                      sizingRect.right - sizingRect.left,
                                      sizingRect.bottom - sizingRect.top, swp);
             }
@@ -706,23 +706,24 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
       {
          /* restore previous size/position */
          if (orgSnap)
+         {
             co_IntSnapWindow(pwnd, orgSnap);
+         }
          else if (DragFullWindows)
-            co_WinPosSetWindowPos(pwnd, 0, origRect.left, origRect.top,
+         {
+            co_WinPosSetWindowPos(pwnd, HWND_TOP, origRect.left, origRect.top,
                                   origRect.right - origRect.left,
                                   origRect.bottom - origRect.top, swp);
+         }
       }
    }
 
    if (IntIsWindow(UserHMGetHandle(pwnd)))
    {
-      if (iconic)
+      /* Single click brings up the system menu when iconized */
+      if (iconic && !moved && (Style & WS_SYSMENU))
       {
-         /* Single click brings up the system menu when iconized */
-         if (!moved && (Style & WS_SYSMENU))
-         {
-            co_IntSendMessage(UserHMGetHandle(pwnd), WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU, MAKELONG(pt.x, pt.y));
-         }
+         co_IntSendMessage(UserHMGetHandle(pwnd), WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU, MAKELONG(pt.x, pt.y));
       }
    }
 }

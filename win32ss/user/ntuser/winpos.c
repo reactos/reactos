@@ -3904,7 +3904,7 @@ IntGetWindowSnapEdge(PWND Wnd)
 {
     if (Wnd->ExStyle2 & WS_EX2_VERTICALLYMAXIMIZEDLEFT) return HTLEFT;
     if (Wnd->ExStyle2 & WS_EX2_VERTICALLYMAXIMIZEDRIGHT) return HTRIGHT;
-    return 0;
+    return HTNOWHERE;
 }
 
 VOID FASTCALL
@@ -3920,7 +3920,7 @@ co_IntCalculateSnapPosition(PWND Wnd, UINT Edge, OUT RECT *Pos)
     height = Pos->bottom - Pos->top;
     height = min(max(height, mint.y), maxt.y);
 
-    switch(Edge)
+    switch (Edge)
     {
     case HTTOP: /* Maximized (Calculate RECT snap preview for SC_MOVE) */
         height = min(Pos->bottom - Pos->top, maxs.y);
@@ -3974,7 +3974,7 @@ co_IntSnapWindow(PWND Wnd, UINT Edge)
     }
 
     TRACE("WindowSnap: %d->%d\n", IntGetWindowSnapEdge(Wnd), Edge);
-    co_WinPosSetWindowPos(Wnd, NULL,
+    co_WinPosSetWindowPos(Wnd, HWND_TOP,
                           newPos.left,
                           newPos.top,
                           newPos.right - newPos.left,
@@ -3989,7 +3989,7 @@ IntSetSnapEdge(PWND Wnd, UINT Edge)
 {
     UINT styleMask = WS_EX2_VERTICALLYMAXIMIZEDLEFT | WS_EX2_VERTICALLYMAXIMIZEDRIGHT;
     UINT style = 0;
-    switch(Edge)
+    switch (Edge)
     {
     case HTNOWHERE:
         style = 0;
@@ -4010,11 +4010,11 @@ IntSetSnapEdge(PWND Wnd, UINT Edge)
 }
 
 VOID FASTCALL
-IntSetSnapInfo(PWND Wnd, UINT Edge, IN const RECT *Pos)
+IntSetSnapInfo(PWND Wnd, UINT Edge, IN const RECT *Pos OPTIONAL)
 {
     RECT r;
     IntSetSnapEdge(Wnd, Edge);
-    if (!Edge)
+    if (Edge != HTNOWHERE)
     {
         RECTL_vSetEmptyRect(&r);
         Pos = (Wnd->style & WS_MINIMIZE) ? NULL : &r;

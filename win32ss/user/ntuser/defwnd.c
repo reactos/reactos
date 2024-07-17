@@ -792,14 +792,14 @@ IntDefWindowProc(
          {
             HWND hwndTop = UserGetForegroundWindow();
             PWND topWnd = UserGetWindowObject(hwndTop);
-            BOOL allowSnap = FALSE;
+            BOOL allowSnap;
 
             // MS Doc: foreground window can be NULL, e.g. when window is losing activation
             if (!topWnd)
                return 0;
 
             allowSnap = IntIsSnapAllowedForWindow(topWnd);
-            /* Allow the minimize action if it has a minimize button, even if the window cannot be snapped (eg. Calc.exe) */
+            /* Allow the minimize action if it has a minimize button, even if the window cannot be snapped (e.g. Calc.exe) */
             if (!allowSnap && (topWnd->style & (WS_MINIMIZEBOX|WS_THICKFRAME)) == WS_MINIMIZEBOX)
                 allowSnap = wParam == VK_DOWN;
 
@@ -832,7 +832,7 @@ IntDefWindowProc(
                   {
                      /* SC_RESTORE + Snap causes the window to visually move twice, place it manually in the snap position */
                      RECT normalRect = topWnd->InternalPos.NormalRect;
-                     co_IntCalculateSnapPosition(topWnd, edge, &topWnd->InternalPos.NormalRect); /* Place us here please */
+                     co_IntCalculateSnapPosition(topWnd, edge, &topWnd->InternalPos.NormalRect); /* Calculate edge position */
                      IntSetSnapEdge(topWnd, edge); /* Tell everyone the edge we are snapped to */
                      co_IntSendMessage(hwndTop, WM_SYSCOMMAND, SC_RESTORE, MAKELONG(0, 1));
                      IntSetSnapInfo(topWnd, edge, &normalRect); /* Reset the real place to unsnap to */
