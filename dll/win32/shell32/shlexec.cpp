@@ -454,24 +454,6 @@ static BOOL SHELL_ArgifyW(WCHAR* out, DWORD len, const WCHAR* fmt, const WCHAR* 
     return found_p1;
 }
 
-static HRESULT SHELL_GetPathFromIDListForExecuteW(LPCITEMIDLIST pidl, LPWSTR pszPath, UINT uOutSize)
-{
-    STRRET strret;
-    CComPtr<IShellFolder> desktop;
-
-    HRESULT hr = SHGetDesktopFolder(&desktop);
-
-    if (SUCCEEDED(hr))
-    {
-        hr = desktop->GetDisplayNameOf(pidl, SHGDN_FORPARSING, &strret);
-
-        if (SUCCEEDED(hr))
-            StrRetToStrNW(pszPath, uOutSize, &strret, pidl);
-    }
-
-    return hr;
-}
-
 /*************************************************************************
  *    SHELL_ExecuteW [Internal]
  *
@@ -1603,52 +1585,6 @@ static UINT_PTR SHELL_execute_class(LPCWSTR wszApplicationName, LPSHELLEXECUTEIN
 
 }
 
-static BOOL SHELL_translate_idlist(LPSHELLEXECUTEINFOW sei, LPWSTR wszParameters, DWORD parametersLen, LPWSTR wszApplicationName, DWORD dwApplicationNameLen)
-{
-    WCHAR buffer[MAX_PATH];
-    BOOL appKnownSingular = FALSE;
-
-    /* last chance to translate IDList: now also allow CLSID paths */
-    if (SUCCEEDED(SHELL_GetPathFromIDListForExecuteW((LPCITEMIDLIST)sei->lpIDList, buffer, ARRAY_SIZE(buffer)))) {
-        if (buffer[0] == ':' && buffer[1] == ':') {
-            /* open shell folder for the specified class GUID */
-            if (strlenW(buffer) + 1 > parametersLen)
-                ERR("parameters len exceeds buffer size (%i > %i), truncating\n",
-                    lstrlenW(buffer) + 1, parametersLen);
-            lstrcpynW(wszParameters, buffer, parametersLen);
-            if (strlenW(L"explorer.exe") > dwApplicationNameLen)
-                ERR("application len exceeds buffer size (%i), truncating\n",
-                    dwApplicationNameLen);
-            lstrcpynW(wszApplicationName, L"explorer.exe", dwApplicationNameLen);
-            appKnownSingular = TRUE;
-
-            sei->fMask &= ~SEE_MASK_INVOKEIDLIST;
-        } else {
-            WCHAR target[MAX_PATH];
-            DWORD attribs;
-            DWORD resultLen;
-            /* Check if we're executing a directory and if so use the
-               handler for the Folder class */
-            strcpyW(target, buffer);
-            attribs = GetFileAttributesW(buffer);
-            if (attribs != INVALID_FILE_ATTRIBUTES &&
-                    (attribs & FILE_ATTRIBUTE_DIRECTORY) &&
-                    HCR_GetExecuteCommandW(0, L"Folder",
-                                           sei->lpVerb,
-                                           buffer, sizeof(buffer))) {
-                SHELL_ArgifyW(wszApplicationName, dwApplicationNameLen,
-                              buffer, target, (LPITEMIDLIST)sei->lpIDList, NULL, &resultLen,
-                              (sei->lpDirectory && *sei->lpDirectory) ? sei->lpDirectory : NULL);
-                if (resultLen > dwApplicationNameLen)
-                    ERR("Argify buffer not large enough... truncating\n");
-                appKnownSingular = FALSE;
-            }
-            sei->fMask &= ~SEE_MASK_INVOKEIDLIST;
-        }
-    }
-    return appKnownSingular;
-}
-
 static BOOL
 SHELL_InvokePidl(
     _In_ LPSHELLEXECUTEINFOW sei,
@@ -1942,7 +1878,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
     }
 
     /* process the IDList */
-    if (sei_tmp.fMask & SEE_MASK_IDLIST &&
+    if ((sei_tmp.fMask & SEE_MASK_IDLIST) &&
         (sei_tmp.fMask & SEE_MASK_INVOKEIDLIST) != SEE_MASK_INVOKEIDLIST)
     {
         CComPtr<IShellExecuteHookW> pSEH;
@@ -2015,7 +1951,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         return retval > 32;
     }
 
-    if (!(sei_tmp.fMask & SEE_MASK_IDLIST) && // Not an ID List
+    if ((!(sei_tmp.fMask & SEE_MASK_IDLIST) || !sei_tmp.lpIDList) && // Not an ID List
         (StrCmpNIW(sei_tmp.lpFile, L"shell:", 6) == 0 ||
          StrCmpNW(sei_tmp.lpFile, L"::{", 3) == 0))
     {
@@ -2028,13 +1964,13 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         }
     }
 
-    /* Has the IDList not yet been translated? */
-    if (sei_tmp.fMask & SEE_MASK_IDLIST)
+    if ((sei_tmp.fMask & SEE_MASK_IDLIST) && sei_tmp.lpIDList)
     {
-        appKnownSingular = SHELL_translate_idlist( &sei_tmp, wszParameters,
-                           parametersLen,
-                           wszApplicationName,
-                           dwApplicationNameLen );
+        if (SHELL_InvokePidl(&sei_tmp, (LPCITEMIDLIST)sei_tmp.lpIDList))
+        {
+            sei_tmp.hInstApp = (HINSTANCE)UlongToHandle(42);
+            return TRUE;
+        }
     }
 
     /* convert file URLs */
