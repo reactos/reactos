@@ -2637,7 +2637,7 @@ HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
     sei.lpVerb = L"open";
 
     // HACK for ShellExecuteExW
-    if (m_sPath && lstrcmpiW(PathFindExtensionW(m_sPath), L".cpl") == 0) // Control Panel applet?
+    if (m_sPath && lstrcmpiW(PathFindExtensionW(m_sPath), L".cpl") == 0)
         sei.lpVerb = L"cplopen";
 
     return (ShellExecuteExW(&sei) ? S_OK : E_FAIL);
