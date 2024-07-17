@@ -2569,7 +2569,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     // as the parent window handle... ?
     /* FIXME: get using interface set from IObjectWithSite?? */
     // NOTE: We might need an extended version of Resolve that provides us with paths...
-    HRESULT hr = Resolve(lpici->hwnd, 0);
+    HRESULT hr = Resolve(lpici->hwnd, (lpici->fMask & CMIC_MASK_FLAG_NO_UI) ? SLR_NO_UI : 0);
     if (FAILED(hr))
     {
         TRACE("failed to resolve component error 0x%08x\n", hr);
@@ -2624,7 +2624,7 @@ HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
     if (m_pPidl)
     {
         sei.lpIDList = m_pPidl;
-        sei.fMask |= SEE_MASK_IDLIST;
+        sei.fMask |= SEE_MASK_INVOKEIDLIST;
     }
     else
     {
@@ -2633,12 +2633,9 @@ HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
     sei.lpParameters = args;
     sei.lpClass = m_sLinkPath;
     sei.nShow = m_Header.nShowCommand;
+    if (lpici->nShow != SW_SHOWNORMAL && lpici->nShow != SW_SHOW)
+        sei.nShow = lpici->nShow; // Allow invoker to override .lnk show mode
     sei.lpDirectory = m_sWorkDir;
-    sei.lpVerb = L"open";
-
-    // HACK for ShellExecuteExW: Change the default verb if this is a Control Panel applet
-    if (m_sPath && lstrcmpiW(PathFindExtensionW(m_sPath), L".cpl") == 0)
-        sei.lpVerb = L"cplopen";
 
     return (ShellExecuteExW(&sei) ? S_OK : E_FAIL);
 }
