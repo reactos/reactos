@@ -1986,6 +1986,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
     // Get the working directory.
     WCHAR dirBuffer[MAX_PATH];
     LPWSTR wszDir = dirBuffer;
+    ::GetCurrentDirectoryW(_countof(dirBuffer), dirBuffer);
     CHeapPtr<WCHAR, CLocalAllocator> wszDirAlloc;
     if (sei_tmp.lpDirectory && *sei_tmp.lpDirectory)
     {
@@ -2004,22 +2005,19 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
             wszDir = wszDirAlloc;
         }
     }
-    else
-    {
-        ::GetCurrentDirectoryW(_countof(dirBuffer), dirBuffer);
-    }
-
-    // NOTE: ShellExecute should accept an invalid working directory
+    // NOTE: ShellExecute should accept the invalid working directory
     if (!PathIsDirectoryW(wszDir) || lstrcmpiW(wszDir, L".\\") == 0)
     {
         INT iDrive = PathGetDriveNumberW(wszDir);
         if (iDrive >= 0)
+        {
             PathStripToRootW(wszDir);
-    }
-    if (!PathIsDirectoryW(wszDir))
-    {
-        ::GetWindowsDirectoryW(dirBuffer, _countof(dirBuffer));
-        wszDir = dirBuffer;
+            if (!PathIsDirectoryW(wszDir))
+            {
+                ::GetWindowsDirectoryW(dirBuffer, _countof(dirBuffer));
+                wszDir = dirBuffer;
+            }
+        }
     }
 
     /* adjust string pointers to point to the new buffers */
