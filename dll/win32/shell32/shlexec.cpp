@@ -1500,95 +1500,6 @@ static HRESULT shellex_load_object_and_run(HKEY hkey, LPCGUID guid, LPSHELLEXECU
     return shellex_run_context_menu_default(obj, sei);
 }
 
-static HRESULT shellex_get_contextmenu(LPSHELLEXECUTEINFOW sei, CComPtr<IContextMenu>& cm)
-{
-    CComHeapPtr<ITEMIDLIST> allocatedPidl;
-    LPITEMIDLIST pidl = NULL;
-
-    if (sei->lpIDList)
-    {
-        pidl = (LPITEMIDLIST)sei->lpIDList;
-    }
-    else
-    {
-        SFGAOF sfga = 0;
-        HRESULT hr = SHParseDisplayName(sei->lpFile, NULL, &allocatedPidl, SFGAO_STORAGECAPMASK, &sfga);
-        if (FAILED(hr))
-        {
-            WCHAR Buffer[MAX_PATH] = {};
-            // FIXME: MAX_PATH.....
-            UINT retval = SHELL_FindExecutable(sei->lpDirectory, sei->lpFile, sei->lpVerb, Buffer, _countof(Buffer), NULL, NULL, NULL, sei->lpParameters);
-            if (retval <= 32)
-                return HRESULT_FROM_WIN32(retval);
-
-            hr = SHParseDisplayName(Buffer, NULL, &allocatedPidl, SFGAO_STORAGECAPMASK, &sfga);
-            // This should not happen, we found it...
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
-        }
-
-        pidl = allocatedPidl;
-    }
-
-    CComPtr<IShellFolder> shf;
-    LPCITEMIDLIST pidllast = NULL;
-    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &shf), &pidllast);
-    if (FAILED(hr))
-        return hr;
-
-    return shf->GetUIObjectOf(NULL, 1, &pidllast, IID_NULL_PPV_ARG(IContextMenu, &cm));
-}
-
-static HRESULT ShellExecute_ContextMenuVerb(LPSHELLEXECUTEINFOW sei)
-{
-    TRACE("%p\n", sei);
-
-    CCoInit coInit;
-
-    if (FAILED_UNEXPECTEDLY(coInit.hr))
-        return coInit.hr;
-
-    CComPtr<IContextMenu> cm;
-    HRESULT hr = shellex_get_contextmenu(sei, cm);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    CComHeapPtr<char> verb, parameters;
-    __SHCloneStrWtoA(&verb, sei->lpVerb);
-    __SHCloneStrWtoA(&parameters, sei->lpParameters);
-
-    CMINVOKECOMMANDINFOEX ici = {};
-    ici.cbSize = sizeof ici;
-    ici.fMask = (sei->fMask & (SEE_MASK_NO_CONSOLE | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI));
-    ici.nShow = sei->nShow;
-    ici.lpVerb = verb;
-    ici.hwnd = sei->hwnd;
-    ici.lpParameters = parameters;
-
-    HMENU hMenu = CreatePopupMenu();
-    BOOL fDefault = !ici.lpVerb || !ici.lpVerb[0];
-    hr = cm->QueryContextMenu(hMenu, 0, 1, 0x7fff, fDefault ? CMF_DEFAULTONLY : 0);
-    if (!FAILED_UNEXPECTEDLY(hr))
-    {
-        if (fDefault)
-        {
-            INT uDefault = GetMenuDefaultItem(hMenu, FALSE, 0);
-            uDefault = (uDefault != -1) ? uDefault - 1 : 0;
-            ici.lpVerb = MAKEINTRESOURCEA(uDefault);
-        }
-
-        hr = cm->InvokeCommand((LPCMINVOKECOMMANDINFO)&ici);
-        if (!FAILED_UNEXPECTEDLY(hr))
-            hr = S_OK;
-    }
-
-    DestroyMenu(hMenu);
-
-    return hr;
-}
-
-
-
 /*************************************************************************
  *    ShellExecute_FromContextMenu [Internal]
  */
@@ -1757,16 +1668,35 @@ SHELL_InvokePidl(
         return FALSE;
 
     // Invoke a command
-    CMINVOKECOMMANDINFO ici = { sizeof(ici) };
-    ici.fMask = (sei->fMask & (SEE_MASK_NO_CONSOLE | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI));
+    CMINVOKECOMMANDINFOEX ici = { sizeof(ici) };
+    ici.fMask = SEE_MASK_UNICODE |
+                (sei->fMask & (SEE_MASK_NO_CONSOLE | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI));
     ici.nShow = sei->nShow;
     ici.hwnd = sei->hwnd;
-    char szVerb[VERBKEY_CCHMAX];
+
+    // Convert Unicode strings to ANSI
+    CComHeapPtr<char> pszParams;
+    ici.lpParametersW = sei->lpParameters;
+    if (sei->lpParameters && sei->lpParameters[0])
+    {
+        __SHCloneStrWtoA(&pszParams, sei->lpParameters);
+        ici.lpParameters = pszParams;
+    }
+
+    CComHeapPtr<char> pszDir;
+    ici.lpDirectoryW = sei->lpDirectory;
+    if (sei->lpDirectory && sei->lpDirectory[0])
+    {
+        __SHCloneStrWtoA(&pszDir, sei->lpDirectory);
+        ici.lpDirectory = pszDir;
+    }
+
+    CComHeapPtr<char> pszVerb;
+    ici.lpVerbW = sei->lpVerb;
     if (sei->lpVerb && sei->lpVerb[0])
     {
-        WideCharToMultiByte(CP_ACP, 0, sei->lpVerb, -1, szVerb, _countof(szVerb), NULL, NULL);
-        szVerb[_countof(szVerb) - 1] = ANSI_NULL; // Avoid buffer overrun
-        ici.lpVerb = szVerb;
+        __SHCloneStrWtoA(&pszVerb, sei->lpVerb);
+        ici.lpVerb = pszVerb;
     }
     else // The default verb?
     {
@@ -1786,7 +1716,8 @@ SHELL_InvokePidl(
 
         ici.lpVerb = MAKEINTRESOURCEA(nDefaultID - idCmdFirst);
     }
-    hr = pCM->InvokeCommand(&ici);
+
+    hr = pCM->InvokeCommand((CMINVOKECOMMANDINFO*)&ici);
 
     return !FAILED_UNEXPECTEDLY(hr);
 }
@@ -2048,14 +1979,13 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
 
     if ((sei_tmp.fMask & SEE_MASK_INVOKEIDLIST) == SEE_MASK_INVOKEIDLIST)
     {
-        HRESULT hr = ShellExecute_ContextMenuVerb(&sei_tmp);
+        HRESULT hr = SHELL_InvokePidl(&sei_tmp, (LPCITEMIDLIST)sei_tmp.lpIDList);
         if (SUCCEEDED(hr))
         {
             sei->hInstApp = (HINSTANCE)42;
             return TRUE;
         }
     }
-
 
     if (ERROR_SUCCESS == ShellExecute_FromContextMenuHandlers(&sei_tmp))
     {
