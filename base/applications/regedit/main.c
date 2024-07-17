@@ -176,23 +176,34 @@ void ExitInstance(HINSTANCE hInstance)
     UnloadAclUiDll();
 }
 
-BOOL TranslateChildTabMessage(PMSG msg)
+static BOOL InLabelEdit(HWND hWnd, UINT Msg)
+{
+    HWND hEdit = (HWND)SendMessageW(hWnd, Msg, 0, 0);
+    return hEdit && IsWindowVisible(hEdit);
+}
+
+static BOOL TranslateChildTabMessage(PMSG msg)
 {
     if (msg->message != WM_KEYDOWN) return FALSE;
-
-    /* Allow Ctrl+A on address bar */
-    if ((msg->hwnd == g_pChildWnd->hAddressBarWnd) &&
-        (msg->message == WM_KEYDOWN) &&
-        (msg->wParam == L'A') && (GetKeyState(VK_CONTROL) < 0))
-    {
-        SendMessageW(msg->hwnd, EM_SETSEL, 0, -1);
-        return TRUE;
-    }
-
     if (msg->wParam != VK_TAB) return FALSE;
     if (GetParent(msg->hwnd) != g_pChildWnd->hWnd) return FALSE;
     PostMessageW(hFrameWnd, WM_COMMAND, ID_SWITCH_PANELS, 0);
     return TRUE;
+}
+
+static BOOL TranslateRegeditAccelerator(HWND hWnd, HACCEL hAccTable, PMSG msg)
+{
+    if (msg->message == WM_KEYDOWN)
+    {
+        if (msg->wParam == VK_DELETE)
+        {
+            if (g_pChildWnd->hAddressBarWnd == msg->hwnd)
+                return FALSE;
+            if (InLabelEdit(g_pChildWnd->hTreeWnd, TVM_GETEDITCONTROL) || InLabelEdit(g_pChildWnd->hListWnd, LVM_GETEDITCONTROL))
+                return FALSE;
+        }
+    }
+    return TranslateAcceleratorW(hWnd, hAccTable, msg);
 }
 
 int WINAPI wWinMain(HINSTANCE hInstance,
@@ -204,6 +215,8 @@ int WINAPI wWinMain(HINSTANCE hInstance,
     HACCEL hAccel;
 
     UNREFERENCED_PARAMETER(hPrevInstance);
+
+    OleInitialize(NULL);
 
     /* Initialize global strings */
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, ARRAY_SIZE(szTitle));
@@ -237,7 +250,7 @@ int WINAPI wWinMain(HINSTANCE hInstance,
     /* Main message loop */
     while (GetMessageW(&msg, NULL, 0, 0))
     {
-        if (!TranslateAcceleratorW(hFrameWnd, hAccel, &msg) &&
+        if (!TranslateRegeditAccelerator(hFrameWnd, hAccel, &msg) &&
             !TranslateChildTabMessage(&msg))
         {
             TranslateMessage(&msg);
