@@ -252,9 +252,12 @@ HRESULT ShutdownShellServices(HDPA hdpa);
  * startup.cpp
  */
 
+VOID ReleaseStartupMutex();
+VOID ProcessRunOnceItems();
 BOOL DoStartStartupItems(ITrayWindow *Tray);
-INT ProcessStartupItems(VOID);
-BOOL DoFinishStartupItems(VOID);
+INT ProcessStartupItems(BOOL bRunOnce);
+static inline INT ProcessStartupItems() { return ProcessStartupItems(FALSE); }
+static inline VOID DoFinishStartupItems() { ReleaseStartupMutex(); }
 
 /*
  * trayprop.h
