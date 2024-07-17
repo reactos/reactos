@@ -1568,13 +1568,10 @@ static HRESULT ShellExecute_ContextMenuVerb(LPSHELLEXECUTEINFOW sei)
     ici.hwnd = sei->hwnd;
     ici.lpParameters = parameters;
     ici.lpParametersW = sei->lpParameters;
-    if ((sei->fMask & (SEE_MASK_HASLINKNAME | SEE_MASK_CLASSNAME)) == SEE_MASK_HASLINKNAME)
-    {
-        ici.fMask |= CMIC_MASK_HASLINKNAME;
-        ici.lpTitleW = sei->lpClass;
-    }
     ici.dwHotKey = sei->dwHotKey;
     ici.hIcon = sei->hIcon;
+    if (ici.fMask & (CMIC_MASK_HASLINKNAME | CMIC_MASK_HASTITLE))
+        ici.lpTitleW = sei->lpClass;
 
     enum { idFirst = 1, idLast = 0x7fff };
     HMENU hMenu = CreatePopupMenu();

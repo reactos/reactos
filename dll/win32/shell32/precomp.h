@@ -163,6 +163,7 @@ static inline UINT SeeFlagsToCmicFlags(UINT flags)
     return flags & SEE_CMIC_COMMON_FLAGS;
 }
 
+
 // CStubWindow32 --- The owner window of file property sheets.
 // This window hides taskbar button of property sheet.
 class CStubWindow32 : public CWindowImpl<CStubWindow32>
