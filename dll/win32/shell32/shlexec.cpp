@@ -1983,7 +1983,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
     else
         *wszParameters = L'\0';
 
-    // Get the working directory.
+    // Get the working directory
     WCHAR dirBuffer[MAX_PATH];
     LPWSTR wszDir = dirBuffer;
     ::GetCurrentDirectoryW(_countof(dirBuffer), dirBuffer);
@@ -2002,7 +2002,8 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         else
         {
             __SHCloneStrW(&wszDirAlloc, sei_tmp.lpDirectory);
-            wszDir = wszDirAlloc;
+            if (wszDirAlloc)
+                wszDir = wszDirAlloc;
         }
     }
     // NOTE: ShellExecute should accept the invalid working directory
