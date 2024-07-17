@@ -85,14 +85,17 @@ BOOL CFavBand::CreateToolbar()
 #define IDB_SHELL_EXPLORER_SM 216 // Borrowed from browseui.dll
     HINSTANCE hinstBrowseUI = LoadLibraryExW(L"browseui.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
     ATLASSERT(hinstBrowseUI);
-    HBITMAP hbmToolbar = LoadBitmapW(hinstBrowseUI, MAKEINTRESOURCEW(IDB_SHELL_EXPLORER_SM));
-    ATLASSERT(hbmToolbar);
-    FreeLibrary(hinstBrowseUI);
+    HBITMAP hbmToolbar = NULL;
+    if (hinstBrowseUI)
+    {
+        hbmToolbar = LoadBitmapW(hinstBrowseUI, MAKEINTRESOURCEW(IDB_SHELL_EXPLORER_SM));
+        FreeLibrary(hinstBrowseUI);
+    }
 #undef IDB_SHELL_EXPLORER_SM
+    ATLASSERT(hbmToolbar);
     if (!hbmToolbar)
         return FALSE;
 
-    InitCommonControls();
     m_hToolbarImageList = ImageList_Create(16, 16, ILC_COLOR32, 0, 8);
     ATLASSERT(m_hToolbarImageList);
     if (!m_hToolbarImageList)
@@ -101,10 +104,10 @@ BOOL CFavBand::CreateToolbar()
     ImageList_Add(m_hToolbarImageList, hbmToolbar, NULL);
     DeleteObject(hbmToolbar);
 
-    DWORD style;
-    style = WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_LIST | CCS_NODIVIDER | TBSTYLE_WRAPABLE;
+    DWORD style = WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_LIST | CCS_NODIVIDER |
+                  TBSTYLE_WRAPABLE;
     HWND hwndTB = ::CreateWindowExW(0, TOOLBARCLASSNAMEW, NULL, style, 0, 0, 0, 0, m_hWnd,
-                                    (HMENU)(LONG_PTR)IDW_TOOLBAR, ::GetModuleHandleW(NULL), NULL);
+                                    (HMENU)(LONG_PTR)IDW_TOOLBAR, instance, NULL);
     ATLASSERT(hwndTB);
     if (!hwndTB)
         return FALSE;
@@ -149,16 +152,11 @@ BOOL CFavBand::CreateTreeView()
     if (!m_hTreeViewImageList)
         return FALSE;
 
-    DWORD style, exstyle;
-    style = TVS_NOHSCROLL | TVS_NONEVENHEIGHT | TVS_FULLROWSELECT | TVS_INFOTIP |
-            TVS_SINGLEEXPAND | TVS_TRACKSELECT | TVS_SHOWSELALWAYS | TVS_EDITLABELS |
-            WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP;
-    exstyle = WS_EX_CLIENTEDGE;
-
-    HWND hwndTV = ::CreateWindowExW(exstyle, WC_TREEVIEWW, NULL, style,
-                                    0, 0, 0, 0,
-                                    m_hWnd, (HMENU)(ULONG_PTR)IDW_TREEVIEW,
-                                    ::GetModuleHandleW(NULL), NULL);
+    DWORD style = TVS_NOHSCROLL | TVS_NONEVENHEIGHT | TVS_FULLROWSELECT | TVS_INFOTIP |
+                  TVS_SINGLEEXPAND | TVS_TRACKSELECT | TVS_SHOWSELALWAYS | TVS_EDITLABELS |
+                  WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP;
+    HWND hwndTV = ::CreateWindowExW(WS_EX_CLIENTEDGE, WC_TREEVIEWW, NULL, style, 0, 0, 0, 0,
+                                    m_hWnd, (HMENU)(ULONG_PTR)IDW_TREEVIEW, instance, NULL);
     ATLASSERT(hwndTV);
     if (!hwndTV)
         return FALSE;
@@ -173,7 +171,8 @@ BOOL CFavBand::CreateTreeView()
 
 LRESULT CFavBand::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    if (!CreateToolbar() || !CreateTreeView())
+    INITCOMMONCONTROLSEX iccx = { sizeof(iccx), ICC_TREEVIEW_CLASSES | ICC_BAR_CLASSES };
+    if (!::InitCommonControlsEx(&iccx) || !CreateToolbar() || !CreateTreeView())
         return -1;
 
     return 0;
