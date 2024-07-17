@@ -1676,25 +1676,25 @@ SHELL_InvokePidl(
 
     // Convert Unicode strings to ANSI
     CComHeapPtr<char> pszParams;
-    ici.lpParametersW = sei->lpParameters;
     if (sei->lpParameters && sei->lpParameters[0])
     {
+        ici.lpParametersW = sei->lpParameters;
         __SHCloneStrWtoA(&pszParams, sei->lpParameters);
         ici.lpParameters = pszParams;
     }
 
     CComHeapPtr<char> pszDir;
-    ici.lpDirectoryW = sei->lpDirectory;
     if (sei->lpDirectory && sei->lpDirectory[0])
     {
+        ici.lpDirectoryW = sei->lpDirectory;
         __SHCloneStrWtoA(&pszDir, sei->lpDirectory);
         ici.lpDirectory = pszDir;
     }
 
     CComHeapPtr<char> pszVerb;
-    ici.lpVerbW = sei->lpVerb;
     if (sei->lpVerb && sei->lpVerb[0])
     {
+        ici.lpVerbW = sei->lpVerb;
         __SHCloneStrWtoA(&pszVerb, sei->lpVerb);
         ici.lpVerb = pszVerb;
     }
