@@ -226,7 +226,7 @@ LRESULT CFavBand::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
         case ID_ADD:
         {
             UNIMPLEMENTED;
-            MessageBox(L"Not implemented yet", NULL, MB_ICONERROR);
+            SHELL_ErrorBox(m_hWnd, ERROR_NOT_SUPPORTED);
             break;
         }
         case ID_ORGANIZE:
@@ -276,7 +276,7 @@ STDMETHODIMP CFavBand::ResizeBorderDW(const RECT *prcBorder, IUnknown *punkToolb
 STDMETHODIMP CFavBand::ShowDW(BOOL fShow)
 {
     m_fVisible = fShow;
-    ShowWindow(fShow ? SW_SHOWNORMAL : SW_HIDE);
+    ShowWindow(fShow ? SW_SHOW : SW_HIDE);
     return S_OK;
 }
 
@@ -476,7 +476,7 @@ STDMETHODIMP CFavBand::GetClassID(CLSID *pClassID)
 {
     if (!pClassID)
         return E_POINTER;
-    memcpy(pClassID, &CLSID_SH_FavBand, sizeof(CLSID));
+    *pClassID = CLSID_SH_FavBand;
     return S_OK;
 }
 
@@ -600,7 +600,7 @@ STDMETHODIMP CFavBand::Invoke(
     {
         case DISPID_DOWNLOADCOMPLETE:
         case DISPID_NAVIGATECOMPLETE2:
-            // FIXME
+            // FIXME: Update current location
             return S_OK;
     }
     return E_INVALIDARG;
