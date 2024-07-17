@@ -2636,7 +2636,7 @@ HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
     sei.lpDirectory = m_sWorkDir;
     sei.lpVerb = L"open";
 
-    // HACK for ShellExecuteExW
+    // HACK for ShellExecuteExW: Change the default verb if this is a Control Panel applet
     if (m_sPath && lstrcmpiW(PathFindExtensionW(m_sPath), L".cpl") == 0)
         sei.lpVerb = L"cplopen";
 
