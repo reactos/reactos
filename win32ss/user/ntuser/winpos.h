@@ -93,12 +93,12 @@ IntIsWindowSnapped(PWND Wnd)
 FORCEINLINE BOOLEAN
 IntIsSnapAllowedForWindow(PWND Wnd)
 {
-    /* We want to forbid snapping operations on the TaskBar and on child windows */
-    /* We use a heuristic for detecting the TaskBar by its typical Style & ExStyle */
+    /* We want to forbid snapping operations on the TaskBar and on child windows.
+     * We use a heuristic for detecting the TaskBar by its typical Style & ExStyle. */
     const UINT style = Wnd->style;
     const UINT tbws = WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
     const UINT tbes = WS_EX_TOOLWINDOW;
-    BOOLEAN istb = (style & tbws) == tbws && (Wnd->ExStyle & (tbes|WS_EX_APPWINDOW)) == tbes;
-    BOOLEAN thickframe = (style & WS_THICKFRAME) && (style & (WS_DLGFRAME|WS_BORDER)) != WS_DLGFRAME;
+    BOOLEAN istb = (style & tbws) == tbws && (Wnd->ExStyle & (tbes | WS_EX_APPWINDOW)) == tbes;
+    BOOLEAN thickframe = (style & WS_THICKFRAME) && (style & (WS_DLGFRAME | WS_BORDER)) != WS_DLGFRAME;
     return thickframe && !(style & WS_CHILD) && !istb;
 }

@@ -550,7 +550,8 @@ WinPosInitInternalPos(PWND Wnd, RECTL *RestoreRect)
    }
    else
    {
-      /* Lie about the snap */
+      /* Lie about the snap; Windows does this so applications don't save their
+       * position as a snap but rather the unsnapped "real" position. */
       if (!IntIsWindowSnapped(Wnd) ||
           RECTL_bIsEmptyRect(&Wnd->InternalPos.NormalRect))
       {
