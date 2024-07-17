@@ -2007,6 +2007,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         }
     }
     // NOTE: ShellExecute should accept the invalid working directory
+    // NOTE: ".\\" is a special case
     if (!PathIsDirectoryW(wszDir) || lstrcmpiW(wszDir, L".\\") == 0)
     {
         INT iDrive = PathGetDriveNumberW(wszDir);
