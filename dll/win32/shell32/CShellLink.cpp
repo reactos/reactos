@@ -2592,15 +2592,14 @@ HRESULT STDMETHODCALLTYPE CShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 
 HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
 {
-    HRESULT hr;
-    CStringW args;
-    CComHeapPtr<WCHAR> pszParams;
     BOOL unicode = lpici->cbSize >= FIELD_OFFSET(CMINVOKECOMMANDINFOEX, ptInvoke) &&
                    (lpici->fMask & CMIC_MASK_UNICODE);
 
+    CStringW args;
     if (m_sArgs)
         args = m_sArgs;
 
+    CComHeapPtr<WCHAR> pszParams;
     if (unicode)
     {
         LPCMINVOKECOMMANDINFOEX iciex = (LPCMINVOKECOMMANDINFOEX)lpici;
@@ -2638,15 +2637,10 @@ HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
     sei.lpVerb = L"open";
 
     // HACK for ShellExecuteExW
-    if (m_sPath && wcsstr(m_sPath, L".cpl"))
+    if (m_sPath && lstrcmpiW(PathFindExtensionW(m_sPath), L".cpl") == 0) // Control Panel applet?
         sei.lpVerb = L"cplopen";
 
-    if (ShellExecuteExW(&sei))
-        hr = S_OK;
-    else
-        hr = E_FAIL;
-
-    return hr;
+    return (ShellExecuteExW(&sei) ? S_OK : E_FAIL);
 }
 
 HRESULT STDMETHODCALLTYPE CShellLink::GetCommandString(UINT_PTR idCmd, UINT uType, UINT* pwReserved, LPSTR pszName, UINT cchMax)
