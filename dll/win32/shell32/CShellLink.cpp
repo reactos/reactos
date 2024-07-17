@@ -6,7 +6,7 @@
  *      Copyright 2009  Andrew Hill
  *      Copyright 2013  Dominik Hornung
  *      Copyright 2017  Hermes Belusca-Maito
- *      Copyright 2018-2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *      Copyright 2018-2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -2593,39 +2593,33 @@ HRESULT STDMETHODCALLTYPE CShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
 {
     HRESULT hr;
-    LPWSTR args = NULL;
-    LPWSTR path = strdupW(m_sPath);
+    CStringW args;
+    CComHeapPtr<WCHAR> pszParams;
     BOOL unicode = lpici->cbSize >= FIELD_OFFSET(CMINVOKECOMMANDINFOEX, ptInvoke) &&
                    (lpici->fMask & CMIC_MASK_UNICODE);
+
+    if (m_sArgs)
+        args = m_sArgs;
 
     if (unicode)
     {
         LPCMINVOKECOMMANDINFOEX iciex = (LPCMINVOKECOMMANDINFOEX)lpici;
-        SIZE_T len = 2;
-
-        if (m_sArgs)
-            len += wcslen(m_sArgs);
-        if (iciex->lpParametersW)
-            len += wcslen(iciex->lpParametersW);
-
-        args = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-        *args = 0;
-        if (m_sArgs)
-            wcscat(args, m_sArgs);
         if (iciex->lpParametersW)
         {
-            wcscat(args, L" ");
-            wcscat(args, iciex->lpParametersW);
+            args += L' ';
+            args += iciex->lpParametersW;
         }
     }
-    else if (m_sArgs != NULL)
+    else
     {
-        args = strdupW(m_sArgs);
+        if (lpici->lpParameters && __SHCloneStrAtoW(&pszParams, lpici->lpParameters))
+        {
+            args += L' ';
+            args += pszParams;
+        }
     }
 
-    SHELLEXECUTEINFOW sei;
-    ZeroMemory(&sei, sizeof(sei));
-    sei.cbSize = sizeof(sei);
+    SHELLEXECUTEINFOW sei = { sizeof(sei) };
     sei.fMask = SEE_MASK_HASLINKNAME | SEE_MASK_UNICODE |
                (lpici->fMask & (SEE_MASK_NOASYNC | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI));
     if (m_pPidl)
@@ -2635,7 +2629,7 @@ HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
     }
     else
     {
-        sei.lpFile = path;
+        sei.lpFile = m_sPath;
     }
     sei.lpParameters = args;
     sei.lpClass = m_sLinkPath;
@@ -2651,9 +2645,6 @@ HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
         hr = S_OK;
     else
         hr = E_FAIL;
-
-    HeapFree(GetProcessHeap(), 0, args);
-    HeapFree(GetProcessHeap(), 0, path);
 
     return hr;
 }
