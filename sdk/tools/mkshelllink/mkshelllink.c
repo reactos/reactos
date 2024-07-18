@@ -210,8 +210,9 @@ int main(int argc, const char *argv[])
         return 0;
     }
 
-    // The icon of text files
-    if (strstr(pszIcon, ".txt"))
+    // Translate the icon of text files
+    ich = strlen(pszIcon);
+    if (ich > 4 && (strcmp(&pszIcon[ich - 4], ".txt") == 0 || strcmp(&pszIcon[ich - 4], ".TXT") == 0))
     {
         pszIcon = "%SystemRoot%/system32/shell32.dll";
         IconNr = -152;
