@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     ReactOS Multimedia Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATORS: Copyright 2020-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ *              Copyright 2021 Gabriel Aguiar <fgsoftwarestudio@gmail.com>
+ */
+
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 IDD_VOLUME DIALOGEX 0, 0, 246, 228
@@ -13,8 +21,8 @@ BEGIN
     LTEXT "Fraco", IDC_VOLUME_LOW, 62, 66, 30, 9
     LTEXT "Forte", IDC_VOLUME_HIGH, 195, 66, 30, 9
     AUTOCHECKBOX "&Sem som", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
-    AUTOCHECKBOX "Colocar um &icone de volume na barra de tarefas", IDC_ICON_IN_TASKBAR, 50, 92, 190, 10
-    PUSHBUTTON "A&vançadas...", IDC_ADVANCED_BTN, 150, 105, 75, 15
+    AUTOCHECKBOX "Colocar um í&cone de volume na barra de tarefas", IDC_ICON_IN_TASKBAR, 50, 92, 185, 10
+    PUSHBUTTON "Avança&das...", IDC_ADVANCED_BTN, 150, 105, 75, 15
     GROUPBOX "Definições dos altifalantes", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80, WS_GROUP
     CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 15, 155, 48, 45
     LTEXT "Utilize as definições abaixo, para modificar o volume dos altifalantas individualmente e outras definições.", -1, 70, 155, 150, 36
@@ -31,9 +39,9 @@ BEGIN
     LTEXT "&Esquema de sons:", -1, 8, 42, 150, 9
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Guardar como...", IDC_SAVEAS_BTN, 125, 70, 59, 15
-    PUSHBUTTON "&Apagar", IDC_DELETE_BTN, 188, 70, 50, 15
+    PUSHBUTTON "Eli&minar", IDC_DELETE_BTN, 188, 70, 50, 15
     LTEXT "Para modificar sons, clique num evento de programa na seguinte lista e, em seguida, seleccione um som a aplicar. Pode guardar as alterações como um novo esquema de som.", -1, 8, 90, 230, 27
-    LTEXT "Eventos de &programas:", -1, 8, 118, 150, 9
+    LTEXT "E&ventos de programas:", -1, 8, 118, 150, 9
     CONTROL "", IDC_SCHEME_LIST, "SysTreeView32", TVS_DISABLEDRAGDROP| TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE| WS_BORDER | WS_TABSTOP, 8, 130, 230, 60
     LTEXT "&Sons:", IDC_TEXT_SOUND, 8, 194, 80, 9, WS_DISABLED
     COMBOBOX IDC_SOUND_LIST, 8, 205, 155, 146, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
@@ -43,16 +51,16 @@ END
 
 IDD_AUDIO DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Audio"
+CAPTION "Áudio"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Reprodução de audio", -1, 7, 7, 230, 60, WS_GROUP
+    GROUPBOX "Reprodução de áudio", -1, 7, 7, 230, 60, WS_GROUP
     ICON IDI_CPLICON, IDI_CPLICON, 15, 20, 32, 32
     LTEXT "&Dispositivo predefinido:", -1, 50, 20, 80, 9
     COMBOBOX IDC_DEVICE_PLAY_LIST, 50, 30, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
     PUSHBUTTON "&Volume...", IDC_VOLUME1_BTN, 85, 47, 70, 15
     PUSHBUTTON "Ava&nçadas...", IDC_ADV2_BTN, 160, 47, 70, 15
-    GROUPBOX "Gravação de audio", -1, 7, 75, 230, 60, WS_GROUP
+    GROUPBOX "Gravação de áudio", -1, 7, 75, 230, 60, WS_GROUP
     ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 88, 32, 32
     LTEXT "D&ispositivo predefinido:", -1, 50, 88, 80, 9
     COMBOBOX IDC_DEVICE_REC_LIST, 50, 98, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
@@ -63,7 +71,7 @@ BEGIN
     LTEXT "Dispositivo predefinido:", -1, 50, 158, 80, 9
     COMBOBOX IDC_DEVICE_MIDI_LIST, 50, 168, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
     PUSHBUTTON "Volu&me...", IDC_VOLUME3_BTN, 85, 185, 70, 15
-    PUSHBUTTON "A&cerca...", IDC_ADV3_BTN, 160, 185, 70, 15
+    PUSHBUTTON "A&cerca de...", IDC_ADV3_BTN, 160, 185, 70, 15
     AUTOCHECKBOX "&Utilizar apenas dispositivos predefinidos", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10, WS_GROUP | WS_TABSTOP
 END
 
@@ -123,8 +131,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Desempanho"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Estas definições controlam como o ReactOS reproduz o audio, e podem ajudar a resolver problemas de audio.", 8492, 34, 7, 218, 23
-    GROUPBOX "Reprodução de audio", 8494, 7, 32, 243, 152
+    LTEXT "Estas definições controlam como o ReactOS reproduz o áudio, e podem ser úteis a resolver problemas de áudio.", 8492, 34, 7, 218, 23
+    GROUPBOX "Reprodução de áudio", 8494, 7, 32, 243, 152
     ICON 4379, 8512, 8, 8, 20, 20
     LTEXT "Aceleração de &hardware:", 8495, 13, 56, 111, 14
     CONTROL "Slider1", 5395, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000401, 150, 54, 62, 18
@@ -144,8 +152,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Desempanho"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Estas definições controlam como o ReactOS grava o audio, e podem ajudar a resolver problemas de audio.", 8492, 34, 7, 217, 20
-    GROUPBOX "Gravação de audio", 8494, 7, 29, 242, 122
+    LTEXT "Estas definições controlam como o ReactOS grava o áudio, e podem ser úteis a resolver problemas de áudio.", 8492, 34, 7, 217, 20
+    GROUPBOX "Gravação de áudio", 8494, 7, 29, 242, 122
     ICON 4380, 8512, 8, 7, 20, 20
     LTEXT "Aceleração de &hardware:", 8495, 13, 46, 103, 9
     CONTROL "Slider1", 5395, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000401, 150, 43, 62, 18
@@ -162,16 +170,16 @@ END
 
 IDD_SETUP1 DIALOGEX 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Configuração"
+CAPTION "Definições"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "ReactOS Audio", 10243, 7, 5, 213, 192
+    GROUPBOX "ReactOS Áudio", 10243, 7, 5, 213, 192
     ICON 4393, 10241, 26, 26, 20, 20
-    LTEXT "Este computador não pode reproduzir áudio porque o serviço ReactOS Audio não está activado.", 10245, 60, 25, 150, 40
-    AUTOCHECKBOX "&Habilitar ReactOS Audio", 10253, 60, 68, 150, 9
+    LTEXT "Este computador não pode reproduzir áudio porque o serviço ReactOS Áudio não está activado.", 10245, 60, 25, 150, 40
+    AUTOCHECKBOX "&Habilitar ReactOS Áudio", 10253, 60, 68, 150, 9
     LTEXT "Notas", 10246, 58, 87, 150, 11
-    LTEXT "1. Só um administrador pode activar este serviço. Se não estiver ligado como administrador, será solicitado um nome e password de administrador.", 10247, 60, 100, 150, 40
-    LTEXT "2. Depois de activar o ReactOS Audio, terá de reiniciar o computador.", 10248, 60, 140, 150, 40
+    LTEXT "1. Só um administrador pode activar este serviço. Se não estiver ligado como administrador, será solicitado um nome e palavra-passe de administrador.", 10247, 60, 100, 150, 40
+    LTEXT "2. Depois de activar o ReactOS Áudio, terá de reiniciar o computador.", 10248, 60, 140, 150, 40
 END
 
 IDD_MULTICHANNEL DIALOGEX 0, 0, 227, 218
@@ -218,36 +226,36 @@ END
 
 IDD_SETUP2 DIALOGEX 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Configurações"
+CAPTION "Definições"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "ReactOS Audio", 10259, 7, 5, 213, 192
+    GROUPBOX "ReactOS Áudio", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "O serviço ReactOS Audio está agora activado. No entanto, o áudio pode não funcionar correctamente até que reinicie o computador. Para reiniciar agora, guarde o seu trabalho e feche todos os programas.", 10261, 60, 25, 150, 50
+    LTEXT "O serviço ReactOS Áudio está agora activado. No entanto, o áudio pode não funcionar correctamente até que reinicie o computador. Para reiniciar agora, guarde o seu trabalho e feche todos os programas.", 10261, 60, 25, 150, 50
     LTEXT "Para reiniciar o ReactOS, clique em OK.", 10262, 60, 75, 150, 20
-    LTEXT "Se cancelar, será necessário reiniciar mais tarde para que o ReactOS Audio funcione correctamente.", 10263, 60, 100, 150, 40
+    LTEXT "Se cancelar, será necessário reiniciar mais tarde para que o ReactOS Áudio funcione correctamente.", 10263, 60, 100, 150, 40
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Sons e dispositivos de audio"
+    IDS_CPLNAME "Sons e dispositivos de áudio"
     IDS_CPLDESCRIPTION "Altera o esquema de som para o seu computador ou define as configurações para os altifalantes e dispositivos de gravação."
     IDS_NO_SOUND "(Nenhum)"
     IDS_NO_DEVICES "Sem dispositivo"
     IDS_SPEAKER_VOLUME "Volume"
-    IDS_SPEAKER_LEFT "&Esquerda frente:"
-    IDS_SPEAKER_RIGHT "&Direita frente:"
+    IDS_SPEAKER_LEFT "Frente &esquerda:"
+    IDS_SPEAKER_RIGHT "Frente &direita:"
     IDS_SPEAKER_CENTER "&Centro:"
-    IDS_SPEAKER_BACK_LEFT "E&squerda trás:"
-    IDS_SPEAKER_BACK_RIGHT "D&ireita trás:"
-    IDS_SPEAKER_LOW_FREQUENCY "Saida de &graves:"
+    IDS_SPEAKER_BACK_LEFT "Trás e&squerda:"
+    IDS_SPEAKER_BACK_RIGHT "Trás d&ireita:"
+    IDS_SPEAKER_LOW_FREQUENCY "Saída de &graves:"
     5825 "Erro no programa"
     5826 "Fechar programa"
     5827 "Alarme de bateria muito fraca"
     5828 "Dispositivo ligado"
     5829 "Dispositivo desligado"
     5830 "Falha na ligação ao dispositivo"
-    5831 "Esvaziar Reciclagem"
+    5831 "Esvaziar reciclagem"
     5832 "Alarme de bateria fraca"
     5833 "Maximizar"
     5834 "Comando de Menu"
@@ -263,7 +271,7 @@ BEGIN
     5844 "Alarme predefinido"
     5845 "Exclamação"
     5846 "Sair do ReactOS"
-    5847 "Paragem Crítica"
+    5847 "Paragem crítica"
     5848 "Notificação do sistema"
     5849 "Pergunta"
     5850 "Iniciar o ReactOS"
