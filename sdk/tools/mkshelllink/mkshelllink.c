@@ -144,6 +144,9 @@ int main(int argc, const char *argv[])
     uint16_t uhTmp;
     uint32_t dwTmp;
     char szIcon[260];
+    char szTarget[260];
+    size_t ich;
+    char *endptr;
 
     for (i = 1; i < argc; ++i)
     {
@@ -161,9 +164,6 @@ int main(int argc, const char *argv[])
             pszCmdLineArgs = argv[++i];
         else if (!strcmp(argv[i] + 1, "i") && i + 1 < argc)
         {
-            size_t ich;
-            char *endptr;
-
             pszIcon = strcpy(szIcon, argv[++i]);
 
             /* Replace '!' with '%' */
@@ -209,6 +209,13 @@ int main(int argc, const char *argv[])
                "-g guid\tSets GUID to which target path is relative. Default value is MyComputer GUID.\n"
                "target\tAbsolute or relative to guid specified with -g option path\n", argv[0]);
         return 0;
+    }
+
+    // The icon of text files
+    if (strstr(pszIcon, ".txt"))
+    {
+        pszIcon = "%SystemRoot%/system32/shell32.dll";
+        IconNr = -152;
     }
 
     pFile = fopen(pszOutputPath, "wb");
