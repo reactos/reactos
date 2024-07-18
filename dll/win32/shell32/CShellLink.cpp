@@ -2603,7 +2603,7 @@ HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
     if (unicode)
     {
         LPCMINVOKECOMMANDINFOEX iciex = (LPCMINVOKECOMMANDINFOEX)lpici;
-        if (iciex->lpParametersW)
+        if (iciex->lpParametersW && iciex->lpParametersW[0])
         {
             args += L' ';
             args += iciex->lpParametersW;
