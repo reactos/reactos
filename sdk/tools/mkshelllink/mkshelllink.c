@@ -161,8 +161,12 @@ int main(int argc, const char *argv[])
         else if (!strcmp(argv[i] + 1, "i") && i + 1 < argc)
         {
             pszIcon = argv[++i];
-            if (i + 1 < argc && (argv[i + 1][0] == '-' || isdigit(argv[i + 1][0])))
-                IconNr = atoi(argv[++i]);
+            if (i + 1 < argc)
+            {
+                const char *arg = argv[i + 1];
+                if (isdigit(arg[0]) || (arg[0] == '-' && isdigit(arg[1])))
+                    IconNr = atoi(argv[++i]);
+            }
         }
         else if (!strcmp(argv[i] + 1, "m"))
             bMinimized = 1;
