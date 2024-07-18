@@ -144,7 +144,6 @@ int main(int argc, const char *argv[])
     uint16_t uhTmp;
     uint32_t dwTmp;
     char szIcon[260];
-    char szTarget[260];
     size_t ich;
     char *endptr;
 
