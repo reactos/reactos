@@ -69,11 +69,20 @@ macro(add_livecd_shortcut name app dest)
                 DESTINATION ${dest}
                 FOR livecd)
 endmacro(add_livecd_shortcut)
+# Extended with icon and icon_index
+macro(add_livecd_shortcut_ex name app dest icon icon_index)
+    add_link(NAME ${name} CMD_LINE_ARGS ${app} ICON ${icon} ICON_INDEX ${icon_index} PATH livecd_start.cmd GUID "{450D8FBA-AD25-11D0-98A8-0800361B1103}" MINIMIZE)
+    list(APPEND LIVECD_SHORTCUTS "${CMAKE_CURRENT_BINARY_DIR}/${name}.lnk")
+    add_cd_file(FILE "${CMAKE_CURRENT_BINARY_DIR}/${name}.lnk"
+                TARGET livecd_links
+                DESTINATION ${dest}
+                FOR livecd)
+endmacro(add_livecd_shortcut_ex)
 
 ## NOTE: What would be nice is to create this list using /media/inf/shortcuts.inf
 ## and taking their default english translation!
 add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/livecd_start.cmd" DESTINATION "Profiles/Default User/My Documents" FOR livecd)
-add_livecd_shortcut("Read Me" readme.txt "Profiles/All Users/Desktop")
+add_livecd_shortcut_ex("Read Me" readme.txt "Profiles/All Users/Desktop" "X:/ReactOS/system32/shell32.dll" -152)
 add_livecd_shortcut("Command Prompt" cmd.exe "Profiles/All Users/Desktop")
 add_livecd_shortcut("Device Manager" devmgmt.exe "Profiles/All Users/Start Menu/Programs/Administrative Tools")
 add_livecd_shortcut("Event Viewer" eventvwr.exe "Profiles/All Users/Start Menu/Programs/Administrative Tools")

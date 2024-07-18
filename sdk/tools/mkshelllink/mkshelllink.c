@@ -161,7 +161,7 @@ int main(int argc, const char *argv[])
         else if (!strcmp(argv[i] + 1, "i") && i + 1 < argc)
         {
             pszIcon = argv[++i];
-            if (i + 1 < argc && isdigit(argv[i + 1][0]))
+            if (i + 1 < argc && (argv[i + 1][0] == '-' || isdigit(argv[i + 1][0])))
                 IconNr = atoi(argv[++i]);
         }
         else if (!strcmp(argv[i] + 1, "m"))
