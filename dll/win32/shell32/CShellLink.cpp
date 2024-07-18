@@ -2611,7 +2611,7 @@ HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
     }
     else
     {
-        if (lpici->lpParameters && __SHCloneStrAtoW(&pszParams, lpici->lpParameters))
+        if (lpici->lpParameters && lpici->lpParameters[0] && __SHCloneStrAtoW(&pszParams, lpici->lpParameters))
         {
             args += L' ';
             args += pszParams;
