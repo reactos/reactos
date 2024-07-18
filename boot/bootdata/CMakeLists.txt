@@ -82,7 +82,7 @@ endmacro(add_livecd_shortcut_ex)
 ## NOTE: What would be nice is to create this list using /media/inf/shortcuts.inf
 ## and taking their default english translation!
 add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/livecd_start.cmd" DESTINATION "Profiles/Default User/My Documents" FOR livecd)
-add_livecd_shortcut_ex("Read Me" readme.txt "Profiles/All Users/Desktop" "X:/ReactOS/system32/shell32.dll" -152)
+add_livecd_shortcut_ex("Read Me" readme.txt "Profiles/All Users/Desktop" "!SystemRoot!/system32/shell32.dll" -152)
 add_livecd_shortcut("Command Prompt" cmd.exe "Profiles/All Users/Desktop")
 add_livecd_shortcut("Device Manager" devmgmt.exe "Profiles/All Users/Start Menu/Programs/Administrative Tools")
 add_livecd_shortcut("Event Viewer" eventvwr.exe "Profiles/All Users/Start Menu/Programs/Administrative Tools")

@@ -143,6 +143,7 @@ int main(int argc, const char *argv[])
     LNK_HEADER Header;
     uint16_t uhTmp;
     uint32_t dwTmp;
+    char szIcon[260];
 
     for (i = 1; i < argc; ++i)
     {
@@ -160,11 +161,22 @@ int main(int argc, const char *argv[])
             pszCmdLineArgs = argv[++i];
         else if (!strcmp(argv[i] + 1, "i") && i + 1 < argc)
         {
-            pszIcon = argv[++i];
+            size_t ich;
+            char *endptr;
+
+            pszIcon = strcpy(szIcon, argv[++i]);
+
+            /* Replace '!' with '%' */
+            for (ich = 0; szIcon[ich]; ++ich)
+            {
+                if (szIcon[ich] == '!')
+                    szIcon[ich] = '%';
+            }
+
             if (i + 1 < argc)
             {
-                const char *arg = argv[i + 1];
-                if (isdigit(arg[0]) || (arg[0] == '-' && isdigit(arg[1])))
+                strtol(argv[i + 1], &endptr, 0);
+                if (!*endptr)
                     IconNr = atoi(argv[++i]);
             }
         }
