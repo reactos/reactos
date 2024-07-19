@@ -225,7 +225,7 @@ START_TEST(NtUserSetTimer)
     // TEST WITH MESSAGES WITHOUT WINDOW - test different ids
     TEST(test3());
 
-    WNDCLASS wc = { 0 };
+    WNDCLASSW wc = { 0 };
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = GetModuleHandle(NULL);
     wc.lpszClassName = "TimerWindowClass";
