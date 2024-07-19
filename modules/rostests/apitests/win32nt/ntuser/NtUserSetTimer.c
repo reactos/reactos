@@ -228,8 +228,8 @@ START_TEST(NtUserSetTimer)
     WNDCLASSW wc = { 0 };
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = GetModuleHandle(NULL);
-    wc.lpszClassName = "TimerWindowClass";
-    RegisterClass(&wc);
+    wc.lpszClassName = L"TimerWindowClass";
+    RegisterClassW(&wc);
 
     HWND hwnd = CreateWindowExW(0, L"TimerWindowClass", L"Timer Window", 0,
         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
