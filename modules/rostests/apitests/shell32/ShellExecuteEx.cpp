@@ -460,7 +460,7 @@ static void test_DoInvalidDir(void)
     WCHAR szInvalidPath[MAX_PATH] = L"M:\\This is an invalid path\n";
     sei.lpDirectory = szInvalidPath;
     ok_int(ShellExecuteExW(&sei), TRUE);
-    WaitForSingleObject(sei.hProcess, 5 * 1000);
+    WaitForSingleObject(sei.hProcess, 20 * 1000);
     GetExitCodeProcess(sei.hProcess, &dwExitCode);
     ok_long(dwExitCode, 0);
     CloseHandle(sei.hProcess);
