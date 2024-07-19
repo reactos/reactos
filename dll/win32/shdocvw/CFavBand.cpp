@@ -530,6 +530,7 @@ STDMETHODIMP CFavBand::Select(long paramC)
 
 // *** INamespaceProxy ***
 
+/// Returns the ITEMIDLIST that should be navigated when an item is invoked.
 STDMETHODIMP CFavBand::GetNavigateTarget(
     IN PCIDLIST_ABSOLUTE pidl,
     OUT PIDLIST_ABSOLUTE ppidlTarget,
@@ -539,18 +540,21 @@ STDMETHODIMP CFavBand::GetNavigateTarget(
     return E_NOTIMPL;
 }
 
+/// Handles a user action on an item.
 STDMETHODIMP CFavBand::Invoke(IN PCIDLIST_ABSOLUTE pidl)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
+/// Called when the user has selected an item.
 STDMETHODIMP CFavBand::OnSelectionChanged(IN PCIDLIST_ABSOLUTE pidl)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
+/// Returns flags used to update the tree control.
 STDMETHODIMP CFavBand::RefreshFlags(
     OUT DWORD *pdwStyle,
     OUT DWORD *pdwExStyle,

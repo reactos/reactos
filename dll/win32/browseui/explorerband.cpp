@@ -1455,6 +1455,8 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::Select(long paramC)
 }
 
 // *** INamespaceProxy ***
+
+/// Returns the ITEMIDLIST that should be navigated when an item is invoked.
 STDMETHODIMP CExplorerBand::GetNavigateTarget(
     IN PCIDLIST_ABSOLUTE pidl,
     OUT PIDLIST_ABSOLUTE ppidlTarget,
@@ -1464,18 +1466,21 @@ STDMETHODIMP CExplorerBand::GetNavigateTarget(
     return E_NOTIMPL;
 }
 
+/// Handles a user action on an item.
 STDMETHODIMP CExplorerBand::Invoke(IN PCIDLIST_ABSOLUTE pidl)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
+/// Called when the user has selected an item.
 STDMETHODIMP CExplorerBand::OnSelectionChanged(IN PCIDLIST_ABSOLUTE pidl)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
+/// Returns flags used to update the tree control.
 STDMETHODIMP CExplorerBand::RefreshFlags(
     OUT DWORD *pdwStyle,
     OUT DWORD *pdwExStyle,
