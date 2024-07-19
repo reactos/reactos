@@ -900,7 +900,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::Save(IStream *stm, BOOL fClearDirty)
 
     if (m_pPidl)
         m_Header.dwFlags |= SLDF_HAS_ID_LIST;
-    if (m_sPath)
+    if (m_sPath && *m_sPath && !(m_Header.dwFlags & SLDF_FORCE_NO_LINKINFO))
         m_Header.dwFlags |= SLDF_HAS_LINK_INFO;
     if (m_sDescription && *m_sDescription)
         m_Header.dwFlags |= SLDF_HAS_NAME;
@@ -936,7 +936,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::Save(IStream *stm, BOOL fClearDirty)
         }
     }
 
-    if (m_sPath)
+    if (m_Header.dwFlags & SLDF_HAS_LINK_INFO)
     {
         hr = Stream_WriteLocationInfo(stm, m_sPath, &volume);
         if (FAILED(hr))
