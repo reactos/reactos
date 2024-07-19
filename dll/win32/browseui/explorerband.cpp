@@ -1455,31 +1455,37 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::Select(long paramC)
 }
 
 // *** INamespaceProxy ***
-HRESULT STDMETHODCALLTYPE CExplorerBand::GetNavigateTarget(long paramC, long param10, long param14)
+STDMETHODIMP CExplorerBand::GetNavigateTarget(
+    PCIDLIST_ABSOLUTE pidl,
+    PIDLIST_ABSOLUTE ppidlTarget,
+    PULONG pulAttrib)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CExplorerBand::Invoke(long paramC)
+STDMETHODIMP CExplorerBand::Invoke(PCIDLIST_ABSOLUTE pidl)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CExplorerBand::OnSelectionChanged(long paramC)
+STDMETHODIMP CExplorerBand::OnSelectionChanged(PCIDLIST_ABSOLUTE pidl)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CExplorerBand::RefreshFlags(long paramC, long param10, long param14)
+STDMETHODIMP CExplorerBand::RefreshFlags(
+    PULONG pdwStyle,
+    PULONG pdwExStyle,
+    PULONG dwEnum)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CExplorerBand::CacheItem(long paramC)
+STDMETHODIMP CExplorerBand::Reserved1(PCIDLIST_ABSOLUTE pidl)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
