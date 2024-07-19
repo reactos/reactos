@@ -243,5 +243,5 @@ START_TEST(NtUserSetTimer)
 
     if (hwnd != NULL)
         DestroyWindow(hwnd);
-    UnregisterClass("TimerWindowClass", GetModuleHandle(NULL));
+    UnregisterClassW(L"TimerWindowClass", NULL);
 }
