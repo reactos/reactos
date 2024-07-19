@@ -1553,14 +1553,12 @@ static HRESULT ShellExecute_ContextMenuVerb(LPSHELLEXECUTEINFOW sei)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    BOOL fDefault = !sei->lpVerb || !sei->lpVerb[0];
-
     CComHeapPtr<char> verb, parameters;
     __SHCloneStrWtoA(&verb, sei->lpVerb);
     __SHCloneStrWtoA(&parameters, sei->lpParameters);
 
-    CMINVOKECOMMANDINFOEX ici = {};
-    ici.cbSize = sizeof ici;
+    BOOL fDefault = !sei->lpVerb || !sei->lpVerb[0];
+    CMINVOKECOMMANDINFOEX ici = { sizeof(ici) };
     ici.fMask = (sei->fMask & (SEE_MASK_NO_CONSOLE | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI)) | CMIC_MASK_UNICODE;
     ici.nShow = sei->nShow;
     if (!fDefault)
