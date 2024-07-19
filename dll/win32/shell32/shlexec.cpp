@@ -1983,21 +1983,48 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
     else
         *wszParameters = L'\0';
 
+    // Get the working directory
     WCHAR dirBuffer[MAX_PATH];
     LPWSTR wszDir = dirBuffer;
+    wszDir[0] = UNICODE_NULL;
     CHeapPtr<WCHAR, CLocalAllocator> wszDirAlloc;
-    if (sei_tmp.lpDirectory)
+    if (sei_tmp.lpDirectory && *sei_tmp.lpDirectory)
     {
-        len = lstrlenW(sei_tmp.lpDirectory) + 1;
-        if (len > _countof(dirBuffer))
+        if (sei_tmp.fMask & SEE_MASK_DOENVSUBST)
         {
-            wszDirAlloc.Allocate(len);
-            wszDir = wszDirAlloc;
+            LPWSTR tmp = expand_environment(sei_tmp.lpDirectory);
+            if (tmp)
+            {
+                wszDirAlloc.Attach(tmp);
+                wszDir = wszDirAlloc;
+            }
         }
-        strcpyW(wszDir, sei_tmp.lpDirectory);
+        else
+        {
+            __SHCloneStrW(&wszDirAlloc, sei_tmp.lpDirectory);
+            if (wszDirAlloc)
+                wszDir = wszDirAlloc;
+        }
     }
-    else
-        *wszDir = L'\0';
+    if (!wszDir[0])
+    {
+        ::GetCurrentDirectoryW(_countof(dirBuffer), dirBuffer);
+        wszDir = dirBuffer;
+    }
+    // NOTE: ShellExecute should accept the invalid working directory for historical reason.
+    if (!PathIsDirectoryW(wszDir))
+    {
+        INT iDrive = PathGetDriveNumberW(wszDir);
+        if (iDrive >= 0)
+        {
+            PathStripToRootW(wszDir);
+            if (!PathIsDirectoryW(wszDir))
+            {
+                ::GetWindowsDirectoryW(dirBuffer, _countof(dirBuffer));
+                wszDir = dirBuffer;
+            }
+        }
+    }
 
     /* adjust string pointers to point to the new buffers */
     sei_tmp.lpFile = wszApplicationName;
@@ -2125,16 +2152,6 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
             wszApplicationName.Attach(tmp);
             /* appKnownSingular unmodified */
             sei_tmp.lpFile = wszApplicationName;
-        }
-    }
-
-    if (*sei_tmp.lpDirectory)
-    {
-        LPWSTR tmp = expand_environment(sei_tmp.lpDirectory);
-        if (tmp)
-        {
-            wszDirAlloc.Attach(tmp);
-            sei_tmp.lpDirectory = wszDir = wszDirAlloc;
         }
     }
 
