@@ -83,6 +83,25 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","PMingLiU",0
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","SimHei",0x00000000,"Droid Sans Fallback"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","SimSun",0x00000000,"Droid Sans Fallback"
 
+; For "Internet Browser" icon.
+; CLSID_Internet == {871C5380-42A0-1069-A2EA-08002B30309D}
+; FIXME: Implement CLSID_Internet in ieframe.dll (see CORE-18625)
+; https://git.reactos.org/?p=reactos.git;a=blob;f=modules/rostests/apitests/com/ieframe.c;hb=bf2cec186cc7655e062ec0e53ccfac860bcae70d#l35
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}",,,"Internet Browser"
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}","InfoTip",0x00020000,"@%SystemRoot%\system32\ieframe.dll,-881"
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}","LocalizedString",0x00020000,"@%SystemRoot%\system32\ieframe.dll,-880"
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}\DefaultIcon",,0x00020000,"%SystemRoot%\system32\shell32.dll,-512"
+; FIXME: should be "OpenHomePage" action
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}\Shell",,,"open"
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}\Shell\open",,,""
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}\Shell\open\Command",,,"rundll32.exe url,OpenURL https://google.com"
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}\ShellFolder","",,"@%SystemRoot%\system32\shell32.dll,-512"
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}\ShellFolder","Attributes",0x10001,0x24
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}\ShellFolder","HideAsDeletePerUser",,""
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}\ShellFolder","HideFolderVerbs",,""
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}\ShellFolder","HideOnDesktopPerUser",,""
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}\ShellFolder","WantsParseDisplayName",,""
+
 ; FIXME: Registration
 
 ; IRemUnknown
