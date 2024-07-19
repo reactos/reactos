@@ -2,7 +2,11 @@
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-add_definitions(-D__WINESRC__)
+add_definitions(
+    -D__WINESRC__
+    -Dstrcasecmp=_stricmp
+    -Dstrncasecmp=_strnicmp
+)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(inseng.dll inseng.spec)
 

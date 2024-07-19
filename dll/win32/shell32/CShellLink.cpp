@@ -2929,7 +2929,7 @@ LRESULT CShellLink::OnNotify(HWND hwndDlg, int idFrom, LPNMHDR pnmhdr)
             PathUnquoteSpacesW(unquoted);
 
         WCHAR *pwszExt = PathFindExtensionW(unquoted);
-        if (!wcsicmp(pwszExt, L".lnk"))
+        if (!_wcsicmp(pwszExt, L".lnk"))
         {
             // FIXME load localized error msg
             MessageBoxW(hwndDlg, L"You cannot create a link to a shortcut", L"Error", MB_ICONERROR);

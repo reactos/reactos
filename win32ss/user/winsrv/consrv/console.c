@@ -397,7 +397,7 @@ LoadShellLinkConsoleInfo(IN OUT PCONSOLE_STATE_INFO ConsoleInfo,
 
     /* 2- Check for the link extension. The name ".lnk" is considered invalid. */
     Length = wcslen(LinkName);
-    if ( (Length <= 4) || (wcsicmp(LinkName + (Length - 4), L".lnk") != 0) )
+    if ( (Length <= 4) || (_wcsicmp(LinkName + (Length - 4), L".lnk") != 0) )
         return FALSE;
 
     /* 3- It may be a link. Try to retrieve some properties */

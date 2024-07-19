@@ -21,3 +21,8 @@ else()
     add_library(oldnames ${oldnames_asm})
     set_target_properties(oldnames PROPERTIES LINKER_LANGUAGE "C")
 endif()
+
+target_compile_definitions(oldnames INTERFACE
+    _CRT_DECLARE_NONSTDC_NAMES=1 # This must be set to 1
+    _CRT_NONSTDC_NO_DEPRECATE
+)

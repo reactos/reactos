@@ -413,8 +413,8 @@ CheckForChangedNames(
 {
     INT nShow = SW_HIDE;
 
-    if ((wcsicmp(pNetIdData->szOldHostName, pNetIdData->szHostName) != 0) ||
-        (wcsicmp(pNetIdData->szOldDomainName, pNetIdData->szDomainName) != 0))
+    if ((_wcsicmp(pNetIdData->szOldHostName, pNetIdData->szHostName) != 0) ||
+        (_wcsicmp(pNetIdData->szOldDomainName, pNetIdData->szDomainName) != 0))
     {
         nShow = SW_SHOW;
     }

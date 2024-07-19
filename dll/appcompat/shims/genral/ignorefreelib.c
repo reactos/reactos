@@ -51,7 +51,7 @@ BOOL WINAPI SHIM_OBJ_NAME(FreeLibrary)(HMODULE hModule)
         }
         for (n = 0; n < g_NameCount; ++n)
         {
-            if (!stricmp(g_Names[n], ModuleName))
+            if (!_stricmp(g_Names[n], ModuleName))
             {
                 SHIM_INFO("Prevented unload of %s\n", ModuleName);
                 if (Ptr && Ptr != Buffer)

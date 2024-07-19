@@ -21,7 +21,7 @@ if(MSVC)
 endif()
 
 set_module_type(xmllite win32dll)
-target_link_libraries(xmllite uuid wine)
+target_link_libraries(xmllite uuid wine oldnames)
 add_importlibs(xmllite msvcrt kernel32 ntdll)
 add_pch(xmllite precomp.h SOURCE)
 add_cd_file(TARGET xmllite DESTINATION reactos/system32 FOR all)

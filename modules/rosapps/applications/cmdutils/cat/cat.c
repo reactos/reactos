@@ -5,7 +5,7 @@
  * PURPOSE:         Concatenates STDIN or an arbitrary number of files to STDOUT
  * PROGRAMMERS:     David Welch
  *                  Semyon Novikov (tappak)
- *                  Hermès Bélusca - Maïto
+ *                  HermÃ¨s BÃ©lusca - MaÃ¯to
  */
 
 #include <stdio.h>
@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
     }
 
     /* Set STDOUT to binary */
-    _setmode(_fileno(stdout), O_BINARY);
+    _setmode(_fileno(stdout), _O_BINARY);
 
     /* Special case where we run 'cat' without any argument: we use STDIN */
     if (argc <= 1)
@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
         unsigned int ch;
 
         /* Set STDIN to binary */
-        _setmode(_fileno(stdin), O_BINARY);
+        _setmode(_fileno(stdin), _O_BINARY);
 
 #if 0 // Version using feof()
         ch = fgetc(stdin);

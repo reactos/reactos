@@ -962,7 +962,7 @@ ParseLogonHours(
         goto done;
     }
 
-    if (wcsicmp(pszParams, L"all") == 0)
+    if (_wcsicmp(pszParams, L"all") == 0)
     {
         FillMemory(pLogonBitmap, UNITS_PER_WEEK / 8, 0xFF);
         goto done;

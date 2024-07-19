@@ -45,7 +45,7 @@ if(MSVC)
 endif()
 
 set_module_type(vbscript win32dll)
-target_link_libraries(vbscript uuid wine)
+target_link_libraries(vbscript uuid wine oldnames)
 add_importlibs(vbscript oleaut32 ole32 user32 msvcrt kernel32 ntdll)
 add_dependencies(vbscript vbscript_idlheader stdole2)
 add_pch(vbscript precomp.h "${PCH_SKIP_SOURCE}")
