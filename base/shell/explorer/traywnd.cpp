@@ -660,8 +660,18 @@ public:
         return S_OK;
     }
 
+    void SaveState()
+    {
+        if (SHRestricted(REST_NOSAVESET))
+            return;
+
+        SendMessage(m_DesktopWnd, WM_PROGMAN_SAVESTATE, 0, 0);
+    }
+
     LRESULT DoExitWindows()
     {
+        SaveState();
+
         /* Display the ReactOS Shutdown Dialog */
         ExitWindowsDialog(m_hWnd);
 
@@ -983,6 +993,7 @@ public:
                 DisplayRunFileDlg();
                 break;
             case TRAYCMD_LOGOFF_DIALOG:
+                SaveState();
                 LogoffWindowsDialog(m_hWnd); // FIXME: Maybe handle it in a similar way as DoExitWindows?
                 break;
             case TRAYCMD_CASCADE:
@@ -2629,6 +2640,13 @@ ChangePos:
         return 0;
     }
 
+    LRESULT OnEndSession(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        if (wParam)
+            SaveState();
+        return 0;
+    }
+
     LRESULT OnThemeChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         if (m_Theme)
@@ -3581,6 +3599,7 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
+        MESSAGE_HANDLER(WM_ENDSESSION, OnEndSession)
         MESSAGE_HANDLER(WM_NCHITTEST, OnNcHitTest)
         MESSAGE_HANDLER(WM_COMMAND, OnCommand)
         MESSAGE_HANDLER(WM_SYSCOMMAND, OnSysCommand)

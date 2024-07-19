@@ -37,6 +37,7 @@ class CDesktopBrowser :
     public CWindowImpl<CDesktopBrowser, CWindow, CFrameWinTraits>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellBrowser,
+    public IShellBrowserService,
     public IServiceProvider
 {
 private:
@@ -76,6 +77,9 @@ public:
     STDMETHOD(OnViewWindowActive)(struct IShellView *ppshv) override;
     STDMETHOD(SetToolbarItems)(LPTBBUTTON lpButtons, UINT nButtons, UINT uFlags) override;
 
+    // *** IShellBrowserService methods ***
+    STDMETHOD(GetPropertyBag)(long flags, REFIID riid, void **ppv) override;
+
     // *** IBrowserService2 methods (fake for now) ***
     inline void SetTopBrowser() const {}
 
@@ -93,6 +97,7 @@ public:
     LRESULT OnGetChangeNotifyServer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnDeviceChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnShowOptionsDlg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnSaveState(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
 DECLARE_WND_CLASS_EX(szProgmanClassName, CS_DBLCLKS, COLOR_DESKTOP)
 
@@ -108,11 +113,13 @@ BEGIN_MSG_MAP(CBaseBar)
     MESSAGE_HANDLER(WM_DESKTOP_GET_CNOTIFY_SERVER, OnGetChangeNotifyServer)
     MESSAGE_HANDLER(WM_DEVICECHANGE, OnDeviceChange)
     MESSAGE_HANDLER(WM_PROGMAN_OPENSHELLSETTINGS, OnShowOptionsDlg)
+    MESSAGE_HANDLER(WM_PROGMAN_SAVESTATE, OnSaveState)
 END_MSG_MAP()
 
 BEGIN_COM_MAP(CDesktopBrowser)
     COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
     COM_INTERFACE_ENTRY_IID(IID_IShellBrowser, IShellBrowser)
+    COM_INTERFACE_ENTRY_IID(IID_IShellBrowserService, IShellBrowserService)
     COM_INTERFACE_ENTRY_IID(IID_IServiceProvider, IServiceProvider)
 END_COM_MAP()
 };
@@ -228,10 +235,12 @@ HRESULT CDesktopBrowser::Initialize(IShellDesktopTray *ShellDesk)
     if (FAILED_UNEXPECTEDLY(hRet))
         return hRet;
 
+    BOOL fHideIcons = SHELL_GetSetting(SSF_HIDEICONS, fHideIcons);
     FOLDERSETTINGS fs;
     RECT rcShellView = {0,0,0,0};
     fs.ViewMode = FVM_ICON;
-    fs.fFlags = FWF_DESKTOP | FWF_NOCLIENTEDGE | FWF_NOSCROLL | FWF_TRANSPARENT;
+    fs.fFlags = FWF_DESKTOP | FWF_NOCLIENTEDGE | FWF_NOSCROLL | FWF_TRANSPARENT |
+                FWF_AUTOARRANGE | (fHideIcons ? FWF_NOICONS : 0);
     hRet = m_ShellView->CreateViewWindow(NULL, &fs, (IShellBrowser *)this, &rcShellView, &m_hWndShellView);
     if (FAILED_UNEXPECTEDLY(hRet))
         return hRet;
@@ -349,9 +358,15 @@ HRESULT STDMETHODCALLTYPE CDesktopBrowser::SetToolbarItems(LPTBBUTTON lpButtons,
     return E_NOTIMPL;
 }
 
+HRESULT STDMETHODCALLTYPE CDesktopBrowser::GetPropertyBag(long flags, REFIID riid, void **ppv)
+{
+    ITEMIDLIST deskpidl = {};
+    return SHGetViewStatePropertyBag(&deskpidl, L"Desktop", flags | SHGVSPB_ROAM, riid, ppv);
+}
+
 HRESULT STDMETHODCALLTYPE CDesktopBrowser::QueryService(REFGUID guidService, REFIID riid, PVOID *ppv)
 {
-    /* FIXME - handle guidService */
+    /* FIXME - handle guidService (SID_STopLevelBrowser for IShellBrowserService etc) */
     return QueryInterface(riid, ppv);
 }
 
@@ -514,6 +529,13 @@ LRESULT CDesktopBrowser::OnShowOptionsDlg(UINT uMsg, WPARAM wParam, LPARAM lPara
             _NotifyTray(WM_COMMAND, TRAYCMD_TASKBAR_PROPERTIES, 0);
             break;
     }
+    return 0;
+}
+
+LRESULT CDesktopBrowser::OnSaveState(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    if (m_ShellView && !SHRestricted(REST_NOSAVESET))
+        m_ShellView->SaveViewState();
     return 0;
 }
 
