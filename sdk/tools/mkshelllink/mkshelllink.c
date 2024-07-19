@@ -211,15 +211,18 @@ int main(int argc, const char *argv[])
     }
 
     // Translate the icon of text files
-    ich = strlen(pszIcon);
-#ifdef _WIN32
-    if (ich > 4 && _stricmp(&pszIcon[ich - 4], ".txt") == 0)
-#else
-    if (ich > 4 && strcasecmp(&pszIcon[ich - 4], ".txt") == 0)
-#endif
+    if (pszIcon)
     {
-        pszIcon = "%SystemRoot%/system32/shell32.dll";
-        IconNr = -152;
+        ich = strlen(pszIcon);
+#ifdef _WIN32
+        if (ich > 4 && _stricmp(&pszIcon[ich - 4], ".txt") == 0)
+#else
+        if (ich > 4 && strcasecmp(&pszIcon[ich - 4], ".txt") == 0)
+#endif
+        {
+            pszIcon = "%SystemRoot%/system32/shell32.dll";
+            IconNr = -152;
+        }
     }
 
     pFile = fopen(pszOutputPath, "wb");
