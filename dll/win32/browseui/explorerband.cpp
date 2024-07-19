@@ -1456,36 +1456,36 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::Select(long paramC)
 
 // *** INamespaceProxy ***
 STDMETHODIMP CExplorerBand::GetNavigateTarget(
-    PCIDLIST_ABSOLUTE pidl,
-    PIDLIST_ABSOLUTE ppidlTarget,
-    PULONG pulAttrib)
+    IN PCIDLIST_ABSOLUTE pidl,
+    OUT PIDLIST_ABSOLUTE ppidlTarget,
+    OUT ULONG *pulAttrib)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
-STDMETHODIMP CExplorerBand::Invoke(PCIDLIST_ABSOLUTE pidl)
+STDMETHODIMP CExplorerBand::Invoke(IN PCIDLIST_ABSOLUTE pidl)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
-STDMETHODIMP CExplorerBand::OnSelectionChanged(PCIDLIST_ABSOLUTE pidl)
+STDMETHODIMP CExplorerBand::OnSelectionChanged(IN PCIDLIST_ABSOLUTE pidl)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
 STDMETHODIMP CExplorerBand::RefreshFlags(
-    PULONG pdwStyle,
-    PULONG pdwExStyle,
-    PULONG dwEnum)
+    OUT DWORD *pdwStyle,
+    OUT DWORD *pdwExStyle,
+    OUT DWORD *dwEnum)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
-STDMETHODIMP CExplorerBand::Reserved1(PCIDLIST_ABSOLUTE pidl)
+STDMETHODIMP CExplorerBand::CacheItem(IN PCIDLIST_ABSOLUTE pidl)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;

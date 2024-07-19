@@ -100,13 +100,16 @@ public:
 
     // *** INamespaceProxy methods ***
     STDMETHODIMP GetNavigateTarget(
-        PCIDLIST_ABSOLUTE pidl,
-        PIDLIST_ABSOLUTE ppidlTarget,
-        PULONG pulAttrib) override;
-    STDMETHODIMP Invoke(PCIDLIST_ABSOLUTE pidl) override;
-    STDMETHODIMP OnSelectionChanged(PCIDLIST_ABSOLUTE pidl) override;
-    STDMETHODIMP RefreshFlags(PULONG pdwStyle, PULONG pdwExStyle, PULONG dwEnum) override;
-    STDMETHODIMP Reserved1(PCIDLIST_ABSOLUTE pidl) override;
+        IN PCIDLIST_ABSOLUTE pidl,
+        OUT PIDLIST_ABSOLUTE ppidlTarget,
+        OUT ULONG *pulAttrib) override;
+    STDMETHODIMP Invoke(IN PCIDLIST_ABSOLUTE pidl) override;
+    STDMETHODIMP OnSelectionChanged(IN PCIDLIST_ABSOLUTE pidl) override;
+    STDMETHODIMP RefreshFlags(
+        OUT DWORD *pdwStyle,
+        OUT DWORD *pdwExStyle,
+        OUT DWORD *dwEnum) override;
+    STDMETHODIMP CacheItem(IN PCIDLIST_ABSOLUTE pidl) override;
 
     // *** IDispatch methods ***
     STDMETHODIMP GetTypeInfoCount(UINT *pctinfo) override;

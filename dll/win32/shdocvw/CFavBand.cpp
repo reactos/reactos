@@ -531,37 +531,37 @@ STDMETHODIMP CFavBand::Select(long paramC)
 // *** INamespaceProxy ***
 
 STDMETHODIMP CFavBand::GetNavigateTarget(
-    PCIDLIST_ABSOLUTE pidl,
-    PIDLIST_ABSOLUTE ppidlTarget,
-    PULONG pulAttrib)
+    IN PCIDLIST_ABSOLUTE pidl,
+    OUT PIDLIST_ABSOLUTE ppidlTarget,
+    OUT ULONG *pulAttrib)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
-STDMETHODIMP CFavBand::Invoke(PCIDLIST_ABSOLUTE pidl)
+STDMETHODIMP CFavBand::Invoke(IN PCIDLIST_ABSOLUTE pidl)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
-STDMETHODIMP CFavBand::OnSelectionChanged(PCIDLIST_ABSOLUTE pidl)
+STDMETHODIMP CFavBand::OnSelectionChanged(IN PCIDLIST_ABSOLUTE pidl)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
 STDMETHODIMP CFavBand::RefreshFlags(
-    PULONG pdwStyle,
-    PULONG pdwExStyle,
-    PULONG dwEnum)
+    OUT DWORD *pdwStyle,
+    OUT DWORD *pdwExStyle,
+    OUT DWORD *dwEnum)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
-STDMETHODIMP CFavBand::Reserved1(
-    PCIDLIST_ABSOLUTE pidl)
+STDMETHODIMP CFavBand::CacheItem(
+    IN PCIDLIST_ABSOLUTE pidl)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;

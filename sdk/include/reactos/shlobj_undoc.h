@@ -528,11 +528,11 @@ DECLARE_INTERFACE_(INamespaceProxy, IUnknown)
 	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
 	 /*** INamespaceProxy ***/
-	STDMETHOD(GetNavigateTarget)(THIS_ PCIDLIST_ABSOLUTE pidl, PIDLIST_ABSOLUTE ppidlTarget, PULONG pulAttrib) PURE;
-	STDMETHOD(Invoke)(THIS_ PCIDLIST_ABSOLUTE pidl) PURE;
-	STDMETHOD(OnSelectionChanged)(THIS_ PCIDLIST_ABSOLUTE pidl) PURE;
-	STDMETHOD(RefreshFlags)(THIS_ PULONG pdwStyle, PULONG pdwExStyle, PULONG dwEnum) PURE;
-	STDMETHOD(Reserved1)(THIS_ PCIDLIST_ABSOLUTE pidl) PURE;
+	STDMETHOD(GetNavigateTarget)(THIS_ IN PCIDLIST_ABSOLUTE pidl, OUT PIDLIST_ABSOLUTE ppidlTarget, OUT ULONG *pulAttrib) PURE;
+	STDMETHOD(Invoke)(THIS_ IN PCIDLIST_ABSOLUTE pidl) PURE;
+	STDMETHOD(OnSelectionChanged)(THIS_ IN PCIDLIST_ABSOLUTE pidl) PURE;
+	STDMETHOD(RefreshFlags)(THIS_ OUT DWORD *pdwStyle, OUT DWORD *pdwExStyle, OUT DWORD *dwEnum) PURE;
+	STDMETHOD(CacheItem)(THIS_ IN PCIDLIST_ABSOLUTE pidl) PURE;
 };
 #undef INTERFACE
 
@@ -544,7 +544,7 @@ DECLARE_INTERFACE_(INamespaceProxy, IUnknown)
 #define INamespaceProxy_Invoke(T,a) (T)->lpVtbl->Invoke(T,a)
 #define INamespaceProxy_OnSelectionChanged(T,a) (T)->lpVtbl->OnSelectionChanged(T,a)
 #define INamespaceProxy_RefreshFlags(T,a,b,c) (T)->lpVtbl->RefreshFlags(T,a,b,c)
-#define INamespaceProxy_Reserved1(T,a) (T)->lpVtbl->Reserved1(T,a)
+#define INamespaceProxy_CacheItem(T,a) (T)->lpVtbl->CacheItem(T,a)
 #endif
 
 /*****************************************************************************

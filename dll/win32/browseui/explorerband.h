@@ -161,16 +161,16 @@ public:
 
     // *** INamespaceProxy ***
     STDMETHOD(GetNavigateTarget)(
-        PCIDLIST_ABSOLUTE pidl,
-        PIDLIST_ABSOLUTE ppidlTarget,
-        PULONG pulAttrib) override;
-    STDMETHOD(Invoke)(PCIDLIST_ABSOLUTE pidl) override;
-    STDMETHOD(OnSelectionChanged)(PCIDLIST_ABSOLUTE pidl) override;
+        IN PCIDLIST_ABSOLUTE pidl,
+        OUT PIDLIST_ABSOLUTE ppidlTarget,
+        OUT ULONG *pulAttrib) override;
+    STDMETHOD(Invoke)(IN PCIDLIST_ABSOLUTE pidl) override;
+    STDMETHOD(OnSelectionChanged)(IN PCIDLIST_ABSOLUTE pidl) override;
     STDMETHOD(RefreshFlags)(
-        PULONG pdwStyle,
-        PULONG pdwExStyle,
-        PULONG dwEnum) override;
-    STDMETHOD(Reserved1)(PCIDLIST_ABSOLUTE pidl) override;
+        OUT DWORD *pdwStyle,
+        OUT DWORD *pdwExStyle,
+        OUT DWORD *dwEnum) override;
+    STDMETHOD(CacheItem)(IN PCIDLIST_ABSOLUTE pidl) override;
 
     // *** IDispatch methods ***
     STDMETHOD(GetTypeInfoCount)(UINT *pctinfo) override;
