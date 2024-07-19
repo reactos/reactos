@@ -457,13 +457,10 @@ static void test_DoInvalidDir(void)
     sei.nShow = SW_SHOWNORMAL;
 
     // Test invalid path on sei.lpDirectory
-    WCHAR szInvalidPath[MAX_PATH];
-    GetWindowsDirectoryW(szInvalidPath, _countof(szInvalidPath));
-    PathAppendW(szInvalidPath, L"M:\\This is an invalid path\n");
+    WCHAR szInvalidPath[MAX_PATH] = L"M:\\This is an invalid path\n";
     sei.lpDirectory = szInvalidPath;
     ok_int(ShellExecuteExW(&sei), TRUE);
-    if (WaitForSingleObject(sei.hProcess, 5 * 1000) == WAIT_TIMEOUT)
-        TerminateProcess(sei.hProcess, -1);
+    WaitForSingleObject(sei.hProcess, 5 * 1000);
     GetExitCodeProcess(sei.hProcess, &dwExitCode);
     ok_long(dwExitCode, 0);
     CloseHandle(sei.hProcess);
