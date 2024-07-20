@@ -949,6 +949,7 @@ ClassDispatchPnp(
 
             case IRP_MN_START_DEVICE: {
 
+__debugbreak();
                 //
                 // if this is sent to the FDO we should forward it down the
                 // attachment chain before we start the FDO.
