@@ -596,13 +596,34 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
 
     BOOL bDirectory = (dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 
+    if (SFGAO_VALIDATE & *pdwAttributes)
+    {
+        STRRET strret;
+        if (SUCCEEDED(psf->GetDisplayNameOf(pidl, SHGDN_FORPARSING, &strret)))
+        {
+            LPWSTR path;
+            if (SUCCEEDED(StrRetToStrW(&strret, pidl, &path)))
+            {
+                BOOL exists = PathFileExistsW(path);
+                SHFree(path);
+                if (!exists)
+                    return E_FAIL;
+            }
+        }
+    }
+
     if (!bDirectory)
     {
         // https://git.reactos.org/?p=reactos.git;a=blob;f=dll/shellext/zipfldr/res/zipfldr.rgs;hb=032b5aacd233cd7b83ab6282aad638c161fdc400#l9
         WCHAR szFileName[MAX_PATH];
         LPWSTR pExtension;
+        BOOL hasName = _ILSimpleGetTextW(pidl, szFileName, _countof(szFileName));
 
-        if (_ILSimpleGetTextW(pidl, szFileName, _countof(szFileName)) && (pExtension = PathFindExtensionW(szFileName)))
+        // Hidden files with a leading tilde treated as super-hidden (devblogs.microsoft.com/oldnewthing/20170526-00/?p=96235#)
+        if (hasName && szFileName[0] == '~' && (dwFileAttributes & FILE_ATTRIBUTE_HIDDEN))
+            dwShellAttributes |= SFGAO_HIDDEN | SFGAO_SYSTEM;
+
+        if (hasName && (pExtension = PathFindExtensionW(szFileName)))
         {
             CLSID clsidFile;
             // FIXME: Cache this?
@@ -626,7 +647,7 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
                     ::RegCloseKey(hkey);
 
                     // This should be presented as directory!
-                    bDirectory = TRUE;
+                    bDirectory = (dwAttributes & SFGAO_FOLDER) != 0 || dwAttributes == 0;
                     TRACE("Treating '%S' as directory!\n", szFileName);
                 }
             }
@@ -650,10 +671,26 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
     }
 
     if (dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
-        dwShellAttributes |=  SFGAO_HIDDEN;
+        dwShellAttributes |= SFGAO_HIDDEN | SFGAO_GHOSTED;
 
     if (dwFileAttributes & FILE_ATTRIBUTE_READONLY)
-        dwShellAttributes |=  SFGAO_READONLY;
+        dwShellAttributes |= SFGAO_READONLY;
+
+    if (dwFileAttributes & FILE_ATTRIBUTE_SYSTEM)
+        dwShellAttributes |= SFGAO_SYSTEM;
+
+    if (dwFileAttributes & FILE_ATTRIBUTE_COMPRESSED)
+        dwShellAttributes |= SFGAO_COMPRESSED;
+
+    if (dwFileAttributes & FILE_ATTRIBUTE_ENCRYPTED)
+        dwShellAttributes |= SFGAO_ENCRYPTED;
+
+    if ((SFGAO_NONENUMERATED & *pdwAttributes) && (dwFileAttributes & FILE_ATTRIBUTE_HIDDEN))
+    {
+        SHCONTF shcf = SHELL_GetDefaultFolderEnumSHCONTF();
+        if ((!(shcf & SHCONTF_INCLUDEHIDDEN)) || ((dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) && !(shcf & SHCONTF_INCLUDESUPERHIDDEN)))
+            dwShellAttributes |= SFGAO_NONENUMERATED;
+    }
 
     if (SFGAO_LINK & *pdwAttributes)
     {

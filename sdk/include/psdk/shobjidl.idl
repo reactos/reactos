@@ -195,6 +195,7 @@ interface IShellFolder : IUnknown
     cpp_quote("#define SFGAO_HASPROPSHEET      0x00000040L")
     cpp_quote("#define SFGAO_DROPTARGET        0x00000100L")
     cpp_quote("#define SFGAO_CAPABILITYMASK    0x00000177L")
+    cpp_quote("#define SFGAO_SYSTEM            0x00001000L")
     cpp_quote("#define SFGAO_ENCRYPTED         0x00002000L")
     cpp_quote("#define SFGAO_ISSLOW            0x00004000L")
     cpp_quote("#define SFGAO_GHOSTED           0x00008000L")
