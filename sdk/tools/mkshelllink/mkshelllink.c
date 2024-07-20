@@ -185,6 +185,7 @@ int main(int argc, const char *argv[])
     const char *pszWorkingDir = NULL;
     const char *pszCmdLineArgs = NULL;
     const char *pszIcon = NULL;
+    char targetpath[260];
     int IconNr = 0;
     GUID Guid = CLSID_MyComputer;
     int bHelp = 0, bMinimized = 0;
@@ -289,9 +290,8 @@ int main(int argc, const char *argv[])
             CsidlBlock.dwSignature = EXP_SPECIAL_FOLDER_SIG;
             CsidlBlock.idSpecialFolder = special->csidl;
             specialindex = 3; // Skip GUID, drive and fake windows/reactos folder
-            pszTarget += sizeof("shell:") - 1 + strlen(special->name) - 10;
-            memcpy((char*)pszTarget, "x:\\reactos\\", 11); // cast away const (we are really writing to argv)
-            pszName = pszTarget;
+            sprintf(targetpath, "x:\\reactos\\%s", pszTarget + sizeof("shell:") + strlen(special->name));
+            pszName = pszTarget = targetpath;
         }
 
         if (pszName[0] && pszName[0] != ':' && pszName[1] == ':')

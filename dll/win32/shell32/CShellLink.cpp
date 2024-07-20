@@ -746,20 +746,17 @@ HRESULT STDMETHODCALLTYPE CShellLink::Load(IStream *stm)
     if (FAILED(hr)) // FIXME: Should we fail?
         return hr;
 
-    if (DATABLOCK_HEADER *pDB = SHFindDataBlock(m_pDBList, EXP_SPECIAL_FOLDER_SIG))
+    LPEXP_SPECIAL_FOLDER pSpecial = (LPEXP_SPECIAL_FOLDER)SHFindDataBlock(m_pDBList, EXP_SPECIAL_FOLDER_SIG);
+    if (pSpecial && pSpecial->cbSize == sizeof(*pSpecial) && ILGetSize(m_pPidl) > pSpecial->cbOffset)
     {
-        EXP_SPECIAL_FOLDER &special = *(EXP_SPECIAL_FOLDER*)pDB;
-        if (LPITEMIDLIST folder = SHCloneSpecialIDList(NULL, special.idSpecialFolder, FALSE))
+        if (LPITEMIDLIST folder = SHCloneSpecialIDList(NULL, pSpecial->idSpecialFolder, FALSE))
         {
-            if (special.cbSize == sizeof(special) && ILGetSize(m_pPidl) > special.cbOffset)
+            LPITEMIDLIST pidl = ILCombine(folder, (LPITEMIDLIST)((char*)m_pPidl + pSpecial->cbOffset));
+            if (pidl)
             {
-                LPITEMIDLIST pidl = ILCombine(folder, (LPITEMIDLIST)((char*)m_pPidl + special.cbOffset));
-                if (pidl)
-                {
-                    ILFree(m_pPidl);
-                    m_pPidl = pidl;
-                    TRACE("Replaced pidl base with CSIDL %u up to %ub.\n", special.idSpecialFolder, special.cbOffset);
-                }
+                ILFree(m_pPidl);
+                m_pPidl = pidl;
+                TRACE("Replaced pidl base with CSIDL %u up to %ub.\n", pSpecial->idSpecialFolder, pSpecial->cbOffset);
             }
             ILFree(folder);
         }
