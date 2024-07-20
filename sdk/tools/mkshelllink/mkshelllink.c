@@ -139,7 +139,7 @@ typedef struct _EXP_SPECIAL_FOLDER
 
 #pragma pack(pop)
 
-struct SPECIALFOLDER {
+static const struct SPECIALFOLDER {
     unsigned char csidl;
     const char* name;
 } g_specialfolders[] = {
@@ -153,7 +153,7 @@ static unsigned int is_path_separator(unsigned int c)
     return c == '\\' || c == '/';
 }
 
-static struct SPECIALFOLDER* get_special_folder(const char *target)
+static const struct SPECIALFOLDER* get_special_folder(const char *target)
 {
     char buf[256];
     strncpy(buf, target, sizeof(buf));
@@ -165,7 +165,7 @@ static struct SPECIALFOLDER* get_special_folder(const char *target)
     for (unsigned long i = 0;; ++i)
     {
         unsigned long len;
-        struct SPECIALFOLDER *special = &g_specialfolders[i];
+        const struct SPECIALFOLDER *special = &g_specialfolders[i];
         if (!special->name)
             return NULL;
         len = strlen(special->name);
@@ -277,7 +277,7 @@ int main(int argc, const char *argv[])
         unsigned cbListSize = sizeof(IdListGuid) + sizeof(uint16_t), cchName;
         const char *pszName = pszTarget;
         int index = 1, specialindex = -1;
-        struct SPECIALFOLDER *special = get_special_folder(pszTarget);
+        const struct SPECIALFOLDER *special = get_special_folder(pszTarget);
 
         // ID list
         // It seems explorer does not accept links without id list. List is relative to desktop.

@@ -14,7 +14,7 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
 static HRESULT SHELL32_GetCLSIDForDirectory(LPCWSTR pwszDir, LPCWSTR KeyName, CLSID* pclsidFolder);
 
-static LPCWSTR GetItemFileNamePtrW(PCUITEMID_CHILD pidl)
+static LPCWSTR GetItemFileName(PCUITEMID_CHILD pidl, LPWSTR Buf, UINT cchMax)
 {
     FileStructW* pDataW = _ILGetFileStructW(pidl);
     if (pDataW)
@@ -22,15 +22,9 @@ static LPCWSTR GetItemFileNamePtrW(PCUITEMID_CHILD pidl)
     LPPIDLDATA pdata = _ILGetDataPointer(pidl);
     if ((pdata->type & PT_VALUEW) == PT_VALUEW)
         return (LPWSTR)pdata->u.file.szNames;
-    return NULL;
-}
-
-static LPCWSTR GetItemFileName(PCUITEMID_CHILD pidl, LPWSTR Buf, UINT cchMax)
-{
-    LPCWSTR name = GetItemFileNamePtrW(pidl);
-    if (!name && _ILSimpleGetTextW(pidl, Buf, cchMax))
+    if (_ILSimpleGetTextW(pidl, Buf, cchMax))
         return Buf;
-    return name;
+    return NULL;
 }
 
 static HKEY OpenKeyFromFileType(LPCWSTR pExtension, LPCWSTR KeyName)
