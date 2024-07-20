@@ -125,7 +125,6 @@
 #define IDS_SEARCHLABEL          12897
 #define IDS_STANDARD_TOOLBAR     12624
 #define IDS_ADDRESSBANDLABEL     12902
-#define IDS_FOLDERSLABEL         12919
 #define IDS_ADDRESSMENUTEXT      13137
 #define IDS_HISTORYTEXT          13169
 #define IDS_UP                   58434

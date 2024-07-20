@@ -32,7 +32,7 @@
 #include "winnls.h"
 #include <shlguid_undoc.h>
 #include <rpcproxy.h> /* for __wine_register_resources / __wine_unregister_resources */
-#include "CFavBand.h"
+#include "objects.h"
 #endif
 #include "shlwapi.h"
 #include "wininet.h"
@@ -95,7 +95,7 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv)
 
 #ifdef __REACTOS__
     {
-        HRESULT hr = CFavBand_DllGetClassObject(rclsid, riid, ppv);
+        HRESULT hr = SHDOCVW_DllGetClassObject(rclsid, riid, ppv);
         if (hr != CLASS_E_CLASSNOTAVAILABLE)
             return hr;
     }
@@ -128,7 +128,7 @@ HRESULT WINAPI DllRegisterServer(void)
 {
     TRACE("\n");
 #ifdef __REACTOS__
-    CFavBand_DllRegisterServer();
+    SHDOCVW_DllRegisterServer();
     return __wine_register_resources(instance);
 #else
     return S_OK;
@@ -142,7 +142,7 @@ HRESULT WINAPI DllUnregisterServer(void)
 {
     TRACE("\n");
 #ifdef __REACTOS__
-    CFavBand_DllUnregisterServer();
+    SHDOCVW_DllUnregisterServer();
     return __wine_unregister_resources(instance);
 #else
     return S_OK;
@@ -189,7 +189,7 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD fdwReason, LPVOID fImpLoad)
     case DLL_PROCESS_ATTACH:
 #ifdef __REACTOS__
         instance = hinst;
-        CFavBand_Init(hinst);
+        SHDOCVW_Init(hinst);
 #endif
         DisableThreadLibraryCalls(hinst);
         break;
@@ -208,7 +208,7 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD fdwReason, LPVOID fImpLoad)
 HRESULT WINAPI DllCanUnloadNow(void)
 {
 #ifdef __REACTOS__
-    if (CFavBand_DllCanUnloadNow() != S_OK)
+    if (SHDOCVW_DllCanUnloadNow() != S_OK)
         return S_FALSE;
 #endif
     return SHDOCVW_refCount ? S_FALSE : S_OK;

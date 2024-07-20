@@ -17,6 +17,7 @@
 #include <shlguid_undoc.h>
 #include <shlwapi.h>
 #include <shlwapi_undoc.h>
+#include <tchar.h>
 #include <strsafe.h>
 #include "shdocvw.h"
 

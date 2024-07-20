@@ -6,16 +6,12 @@
  *              Copyright 2020-2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include "precomp.h"
+#include "Objects.h"
 #include <commoncontrols.h>
 #include <undocshell.h>
-#include "utility.h"
 
-#if 1
-#undef UNIMPLEMENTED
-
-#define UNIMPLEMENTED DbgPrint("%s is UNIMPLEMENTED!\n", __FUNCTION__)
-#endif
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
 /*
  * TODO:

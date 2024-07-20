@@ -1,22 +1,8 @@
-#include "precomp.h"
+#include "Objects.h"
+
 #ifndef SHCIDS_CANONICALONLY
 #define SHCIDS_CANONICALONLY 0x10000000L
 #endif
-
-void *operator new(size_t size)
-{
-    return LocalAlloc(LMEM_ZEROINIT, size);
-}
-
-void operator delete(void *p)
-{
-    LocalFree(p);
-}
-
-void operator delete(void *p, UINT_PTR)
-{
-    LocalFree(p);
-}
 
 HRESULT SHELL_GetIDListFromObject(IUnknown *punk, PIDLIST_ABSOLUTE *ppidl)
 {

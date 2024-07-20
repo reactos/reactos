@@ -1,0 +1,56 @@
+/*
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     shdocvw.dll objects
+ * COPYRIGHT:   Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ */
+
+#pragma once
+
+#include <windows.h>
+#include <shlobj.h>
+#include <shlwapi.h>
+#ifdef __cplusplus
+#include <atlbase.h>
+#include <atlcom.h>
+#include <atlwin.h>
+#include <undocshell.h>
+#include <shlobj_undoc.h>
+#include <shlguid_undoc.h>
+#include <shlwapi_undoc.h>
+#include <shdeprecated.h>
+#endif
+#include <olectlid.h>
+#include <exdispid.h>
+#ifdef __cplusplus
+#include <shellutils.h>
+#include <ui/rosctrls.h>
+#endif
+#include "shdocvw.h"
+#include "resource.h"
+#ifdef __cplusplus
+#include "CExplorerBand.h"
+#include "CFavBand.h"
+#include "utility.h"
+
+extern inline BOOL _ILIsDesktop(LPCITEMIDLIST pidl)
+{
+    return (pidl == NULL || pidl->mkid.cb == 0);
+}
+#endif
+
+#ifdef __cplusplus
+void *operator new(size_t size);
+void operator delete(void *ptr);
+void operator delete(void *ptr, size_t size);
+#endif
+
+EXTERN_C VOID SHDOCVW_Init(HINSTANCE hInstance);
+EXTERN_C HRESULT SHDOCVW_DllCanUnloadNow(VOID);
+EXTERN_C HRESULT SHDOCVW_DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv);
+EXTERN_C HRESULT SHDOCVW_DllRegisterServer(VOID);
+EXTERN_C HRESULT SHDOCVW_DllUnregisterServer(VOID);
+
+EXTERN_C HRESULT CMruLongList_CreateInstance(DWORD_PTR dwUnused1, void **ppv, DWORD_PTR dwUnused3);
+EXTERN_C HRESULT CMruPidlList_CreateInstance(DWORD_PTR dwUnused1, void **ppv, DWORD_PTR dwUnused3);
+EXTERN_C HRESULT CMruClassFactory_CreateInstance(REFIID riid, void **ppv);
