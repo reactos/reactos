@@ -55,6 +55,17 @@ static int iDriveTypeIds[7] = { IDS_DRIVE_FIXED,       /* DRIVE_UNKNOWN */
                                 IDS_DRIVE_FIXED        /* DRIVE_RAMDISK*/
                                 };
 
+static const REQUIREDREGITEM g_RequiredItems[] = 
+{
+    { CLSID_ControlPanel, 0, 0x50 },
+};
+static const REGFOLDERINFO g_RegFolderInfo = {
+    PT_COMPUTER_REGITEM,
+    _countof(g_RequiredItems), g_RequiredItems,
+    CLSID_MyComputer,
+    L"MyComputer",
+};
+
 BOOL _ILGetDriveType(LPCITEMIDLIST pidl)
 {
     WCHAR szDrive[8];
@@ -643,10 +654,10 @@ HRESULT WINAPI CDrivesFolder::FinalConstruct()
     if (pidlRoot == NULL)
         return E_OUTOFMEMORY;
 
-    HRESULT hr = CRegFolder_CreateInstance(&CLSID_MyComputer,
+    REGFOLDERINITDATA RegInit = { static_cast<IShellFolder*>(this), &g_RegFolderInfo };
+    HRESULT hr = CRegFolder_CreateInstance(&RegInit,
                                            pidlRoot,
                                            L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}",
-                                           L"MyComputer",
                                            IID_PPV_ARG(IShellFolder2, &m_regFolder));
 
     return hr;
@@ -937,7 +948,9 @@ HRESULT WINAPI CDrivesFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY a
                     *rgfInOut &= ~SFGAO_CANRENAME; // CD-ROM drive cannot rename
             }
             else if (_ILIsControlPanel(apidl[i]))
+            {
                 *rgfInOut &= dwControlPanelAttributes;
+            }
             else if (_ILIsSpecialFolder(*apidl))
                 m_regFolder->GetAttributesOf(1, &apidl[i], rgfInOut);
             else

@@ -25,6 +25,19 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+static const REQUIREDREGITEM g_RequiredItems[] = 
+{
+    { CLSID_MyComputer, "sysdm.cpl", 0x50 },
+    { CLSID_NetworkPlaces, "ncpa.cpl", 0x58 },
+    { CLSID_Internet, "inetcpl.cpl", 0x68 },
+};
+static const REGFOLDERINFO g_RegFolderInfo = {
+    PT_DESKTOP_REGITEM,
+    _countof(g_RequiredItems), g_RequiredItems,
+    CLSID_ShellDesktop,
+    L"Desktop",
+};
+
 static BOOL IsSelf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
 {
     return cidl == 0 || (cidl == 1 && apidl && _ILIsEmpty(apidl[0]));
@@ -241,7 +254,17 @@ class CDesktopFolderEnum :
             RegCloseKey(hkey);
         }
 
-        HRESULT WINAPI Initialize(DWORD dwFlags,IEnumIDList * pRegEnumerator, IEnumIDList *pDesktopEnumerator, IEnumIDList *pCommonDesktopEnumerator)
+        void TryAddRegItemToEnumList(IShellFolder *pSF, LPITEMIDLIST pidl, SHCONTF Flags)
+        {
+            SFGAOF query = SHELL_CreateFolderEnumItemAttributeQuery(Flags, TRUE);
+            if (SHELL_IncludeItemInFolderEnum(pSF, (PCUITEMID_CHILD)pidl, query, Flags))
+                AddToEnumList(pidl);
+            else
+                ILFree(pidl);
+        }
+
+        HRESULT WINAPI Initialize(IShellFolder *pRegFolder, DWORD dwFlags,IEnumIDList * pRegEnumerator,
+                                  IEnumIDList *pDesktopEnumerator, IEnumIDList *pCommonDesktopEnumerator)
         {
             BOOL ret = TRUE;
             LPITEMIDLIST pidl;
@@ -258,7 +281,7 @@ class CDesktopFolderEnum :
                 if (IsNamespaceExtensionHidden(MyDocumentsClassString) < 1)
                     AddToEnumList(_ILCreateMyDocuments());
                 if (IsNamespaceExtensionHidden(InternetClassString) < 1)
-                    AddToEnumList(_ILCreateIExplore());
+                    TryAddRegItemToEnumList(pRegFolder, _ILCreateIExplore(), (SHCONTF)dwFlags);
 
                 DWORD dwFetched;
                 while((S_OK == pRegEnumerator->Next(1, &pidl, &dwFetched)) && dwFetched)
@@ -337,10 +360,10 @@ HRESULT WINAPI CDesktopFolder::FinalConstruct()
         return hr;
 
     /* Create the inner reg folder */
-    hr = CRegFolder_CreateInstance(&CLSID_ShellDesktop,
+    REGFOLDERINITDATA RegInit = { static_cast<IShellFolder*>(this), &g_RegFolderInfo };
+    hr = CRegFolder_CreateInstance(&RegInit,
                                    pidlRoot,
                                    L"",
-                                   L"Desktop",
                                    IID_PPV_ARG(IShellFolder2, &m_regFolder));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
@@ -621,7 +644,8 @@ HRESULT WINAPI CDesktopFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUM
     if (FAILED(hr))
         ERR("EnumObjects for shared desktop fs folder failed\n");
 
-    return ShellObjectCreatorInit<CDesktopFolderEnum>(dwFlags,pRegEnumerator, pDesktopEnumerator, pCommonDesktopEnumerator, IID_PPV_ARG(IEnumIDList, ppEnumIDList));
+    return ShellObjectCreatorInit<CDesktopFolderEnum>(m_regFolder, dwFlags,pRegEnumerator, pDesktopEnumerator,
+                                                      pCommonDesktopEnumerator, IID_PPV_ARG(IEnumIDList, ppEnumIDList));
 }
 
 /**************************************************************************

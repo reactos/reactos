@@ -1457,7 +1457,7 @@ HRESULT CDefView::FillList(BOOL IsRefreshCommand)
     DWORD         dwFetched;
     HRESULT       hRes;
     HDPA          hdpa;
-    DWORD         dFlags = SHCONTF_NONFOLDERS | SHCONTF_FOLDERS;
+    DWORD         dFlags = SHCONTF_NONFOLDERS | ((m_FolderSettings.fFlags & FWF_NOSUBFOLDERS) ? 0 : SHCONTF_FOLDERS);
 
     TRACE("%p\n", this);
 
