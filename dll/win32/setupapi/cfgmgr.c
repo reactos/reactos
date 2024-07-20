@@ -70,6 +70,17 @@ typedef struct _LOG_CONF_INFO
 
 #define LOG_CONF_MAGIC 0x464E434C  /* "LCNF" */
 
+typedef struct _RES_DES_INFO
+{
+    ULONG ulMagic;
+    DEVINST dnDevInst;
+    ULONG ulLogConfType;
+    ULONG ulLogConfTag;
+    ULONG ulResDesType;
+    ULONG ulResDesTag;
+} RES_DES_INFO, *PRES_DES_INFO;
+
+#define RES_DES_MAGIC 0x53445352  /* "RSDS" */
 
 typedef struct _NOTIFY_DATA
 {
@@ -422,6 +433,30 @@ IsValidLogConf(
     _SEH2_TRY
     {
         if (pLogConfInfo->ulMagic != LOG_CONF_MAGIC)
+            bValid = FALSE;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        bValid = FALSE;
+    }
+    _SEH2_END;
+
+    return bValid;
+}
+
+
+BOOL
+IsValidResDes(
+    _In_opt_ PRES_DES_INFO pResDesInfo)
+{
+    BOOL bValid = TRUE;
+
+    if (pResDesInfo == NULL)
+        return FALSE;
+
+    _SEH2_TRY
+    {
+        if (pResDesInfo->ulMagic != RES_DES_MAGIC)
             bValid = FALSE;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -2490,9 +2525,17 @@ WINAPI
 CM_Free_Res_Des_Handle(
     _In_ RES_DES rdResDes)
 {
+    PRES_DES_INFO pResDesInfo;
+
     FIXME("CM_Free_Res_Des_Handle(%p)\n", rdResDes);
 
-    return CR_CALL_NOT_IMPLEMENTED;
+    pResDesInfo = (PRES_DES_INFO)rdResDes;
+    if (!IsValidResDes(pResDesInfo))
+        return CR_INVALID_RES_DES;
+
+    HeapFree(GetProcessHeap(), 0, pResDesInfo);
+
+    return CR_SUCCESS;
 }
 
 
@@ -5175,7 +5218,7 @@ CM_Get_Next_Log_Conf_Ex(
 
 
 /***********************************************************************
- * CM_Get_Next_Re_Des [SETUPAPI.@]
+ * CM_Get_Next_Res_Des [SETUPAPI.@]
  */
 CONFIGRET
 WINAPI
@@ -5209,8 +5252,9 @@ CM_Get_Next_Res_Des_Ex(
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
-    ULONG ulInTag, ulOutTag = 0;
-    ULONG ulInType, ulOutType = 0;
+    PRES_DES_INFO pNewResDesInfo = NULL;
+    ULONG ulLogConfTag, ulLogConfType, ulResDesTag;
+    ULONG ulNextResDesType = 0, ulNextResDesTag = 0;
     LPWSTR lpDevInst;
     DEVINST dnDevInst;
     CONFIGRET ret;
@@ -5225,22 +5269,28 @@ CM_Get_Next_Res_Des_Ex(
     {
         FIXME("LogConf found!\n");
         dnDevInst = ((PLOG_CONF_INFO)rdResDes)->dnDevInst;
-        ulInTag = ((PLOG_CONF_INFO)rdResDes)->ulTag;
-        ulInType = ((PLOG_CONF_INFO)rdResDes)->ulType;
+        ulLogConfTag = ((PLOG_CONF_INFO)rdResDes)->ulTag;
+        ulLogConfType = ((PLOG_CONF_INFO)rdResDes)->ulType;
+        ulResDesTag = (ULONG)-1;
     }
-#if 0
     else if (IsValidResDes((PRES_DES_INFO)rdResDes))
     {
         FIXME("ResDes found!\n");
         dnDevInst = ((PRES_DES_INFO)rdResDes)->dnDevInst;
-        ulInTag = ((PRES_DES_INFO)rdResDes)->ulTag;
-        ulInType = ((PRES_DES_INFO)rdResDes)->ulType;
+        ulLogConfTag = ((PRES_DES_INFO)rdResDes)->ulLogConfTag;
+        ulLogConfType = ((PRES_DES_INFO)rdResDes)->ulLogConfType;
+        ulResDesTag = ((PRES_DES_INFO)rdResDes)->ulResDesTag;
     }
-#endif
     else
     {
         return CR_INVALID_RES_DES;
     }
+
+    if ((ForResource == ResType_All) && (pResourceID == NULL))
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
 
     if (hMachine != NULL)
     {
@@ -5266,12 +5316,12 @@ CM_Get_Next_Res_Des_Ex(
     {
         ret = PNP_GetNextResDes(BindingHandle,
                                 lpDevInst,
-                                ulInTag,
-                                ulInType,
+                                ulLogConfTag,
+                                ulLogConfType,
                                 ForResource,
-                                0, /* unsigned long ulResourceTag, */
-                                &ulOutTag,
-                                &ulOutType,
+                                ulResDesTag,
+                                &ulNextResDesTag,
+                                &ulNextResDesType,
                                 0);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -5283,7 +5333,24 @@ CM_Get_Next_Res_Des_Ex(
     if (ret != CR_SUCCESS)
         return ret;
 
-    /* FIXME: Create the ResDes handle */
+    if (ForResource == ResType_All)
+        *pResourceID = ulNextResDesType;
+
+    if (prdResDes)
+    {
+        pNewResDesInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(RES_DES_INFO));
+        if (pNewResDesInfo == NULL)
+            return CR_OUT_OF_MEMORY;
+
+        pNewResDesInfo->ulMagic = LOG_CONF_MAGIC;
+        pNewResDesInfo->dnDevInst = dnDevInst;
+        pNewResDesInfo->ulLogConfType = ulLogConfType;
+        pNewResDesInfo->ulLogConfTag = ulLogConfTag;
+        pNewResDesInfo->ulResDesType = ulNextResDesType;
+        pNewResDesInfo->ulResDesTag = ulNextResDesTag;
+
+        *prdResDes = (RES_DES)pNewResDesInfo;
+    }
 
     return CR_SUCCESS;
 }
