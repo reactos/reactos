@@ -234,6 +234,7 @@ Return Value:
 
     PAGED_CODE();
 
+__debugbreak();
     //
     // Build the lookaside list for srb's for the physical disk. Should only
     // need a couple.  If this fails then we don't have an emergency SRB so
@@ -448,6 +449,7 @@ Return Value:
 
     if(!TEST_FLAG(Fdo->Characteristics, FILE_REMOVABLE_MEDIA)) {
 
+__debugbreak();
         DiskReadSignature(Fdo);
         DiskReadDriveCapacity(Fdo);
 

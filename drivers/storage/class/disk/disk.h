@@ -184,11 +184,13 @@ typedef enum _DISK_USER_WRITE_CACHE_SETTING
 
 typedef struct _DISK_DATA {
 
+#if 0
     //
     // This field is the ordinal of a partition as it appears on a disk.
     //
 
     ULONG PartitionOrdinal;
+#endif
 
     //
     // How has this disk been partitioned? Either EFI or MBR.
@@ -212,6 +214,7 @@ typedef struct _DISK_DATA {
 
             ULONG MbrCheckSum;
 
+#if 0
             //
             // Number of hidden sectors for BPB.
             //
@@ -243,6 +246,7 @@ typedef struct _DISK_DATA {
             //
 
             BOOLEAN BootIndicator;
+#endif
 
         } Mbr;
 
@@ -254,6 +258,7 @@ typedef struct _DISK_DATA {
 
             GUID DiskId;
 
+#if 0
             //
             // Partition type of this device object.
             //
@@ -277,6 +282,7 @@ typedef struct _DISK_DATA {
             //
 
             WCHAR PartitionName[36];
+#endif
 
         } Efi;
 

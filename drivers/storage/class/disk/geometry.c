@@ -1649,6 +1649,7 @@ Return Value:
 
     PAGED_CODE();
 
+__debugbreak();
     Status = IoReadDiskSignature (Fdo,
                                   fdoExtension->DiskGeometry.BytesPerSector,
                                   &Signature);
