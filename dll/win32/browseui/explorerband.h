@@ -160,11 +160,17 @@ public:
     STDMETHOD(Select)(long paramC) override;
 
     // *** INamespaceProxy ***
-    STDMETHOD(GetNavigateTarget)(long paramC, long param10, long param14) override;
-    STDMETHOD(Invoke)(long paramC) override;
-    STDMETHOD(OnSelectionChanged)(long paramC) override;
-    STDMETHOD(RefreshFlags)(long paramC, long param10, long param14) override;
-    STDMETHOD(CacheItem)(long paramC) override;
+    STDMETHOD(GetNavigateTarget)(
+        _In_ PCIDLIST_ABSOLUTE pidl,
+        _Out_ PIDLIST_ABSOLUTE ppidlTarget,
+        _Out_ ULONG *pulAttrib) override;
+    STDMETHOD(Invoke)(_In_ PCIDLIST_ABSOLUTE pidl) override;
+    STDMETHOD(OnSelectionChanged)(_In_ PCIDLIST_ABSOLUTE pidl) override;
+    STDMETHOD(RefreshFlags)(
+        _Out_ DWORD *pdwStyle,
+        _Out_ DWORD *pdwExStyle,
+        _Out_ DWORD *dwEnum) override;
+    STDMETHOD(CacheItem)(_In_ PCIDLIST_ABSOLUTE pidl) override;
 
     // *** IDispatch methods ***
     STDMETHOD(GetTypeInfoCount)(UINT *pctinfo) override;

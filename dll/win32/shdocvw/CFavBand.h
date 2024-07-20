@@ -99,11 +99,17 @@ public:
     STDMETHODIMP Select(long paramC) override;
 
     // *** INamespaceProxy methods ***
-    STDMETHODIMP GetNavigateTarget(long paramC, long param10, long param14) override;
-    STDMETHODIMP Invoke(long paramC) override;
-    STDMETHODIMP OnSelectionChanged(long paramC) override;
-    STDMETHODIMP RefreshFlags(long paramC, long param10, long param14) override;
-    STDMETHODIMP CacheItem(long paramC) override;
+    STDMETHODIMP GetNavigateTarget(
+        _In_ PCIDLIST_ABSOLUTE pidl,
+        _Out_ PIDLIST_ABSOLUTE ppidlTarget,
+        _Out_ ULONG *pulAttrib) override;
+    STDMETHODIMP Invoke(_In_ PCIDLIST_ABSOLUTE pidl) override;
+    STDMETHODIMP OnSelectionChanged(_In_ PCIDLIST_ABSOLUTE pidl) override;
+    STDMETHODIMP RefreshFlags(
+        _Out_ DWORD *pdwStyle,
+        _Out_ DWORD *pdwExStyle,
+        _Out_ DWORD *dwEnum) override;
+    STDMETHODIMP CacheItem(_In_ PCIDLIST_ABSOLUTE pidl) override;
 
     // *** IDispatch methods ***
     STDMETHODIMP GetTypeInfoCount(UINT *pctinfo) override;
