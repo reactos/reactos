@@ -532,23 +532,23 @@ STDMETHODIMP CFavBand::Select(long paramC)
 
 /// Returns the ITEMIDLIST that should be navigated when an item is invoked.
 STDMETHODIMP CFavBand::GetNavigateTarget(
-    IN PCIDLIST_ABSOLUTE pidl,
-    OUT PIDLIST_ABSOLUTE ppidlTarget,
-    OUT ULONG *pulAttrib)
+    _In_ PCIDLIST_ABSOLUTE pidl,
+    _Out_ PIDLIST_ABSOLUTE ppidlTarget,
+    _Out_ ULONG *pulAttrib)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
 /// Handles a user action on an item.
-STDMETHODIMP CFavBand::Invoke(IN PCIDLIST_ABSOLUTE pidl)
+STDMETHODIMP CFavBand::Invoke(_In_ PCIDLIST_ABSOLUTE pidl)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
 /// Called when the user has selected an item.
-STDMETHODIMP CFavBand::OnSelectionChanged(IN PCIDLIST_ABSOLUTE pidl)
+STDMETHODIMP CFavBand::OnSelectionChanged(_In_ PCIDLIST_ABSOLUTE pidl)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
@@ -556,16 +556,16 @@ STDMETHODIMP CFavBand::OnSelectionChanged(IN PCIDLIST_ABSOLUTE pidl)
 
 /// Returns flags used to update the tree control.
 STDMETHODIMP CFavBand::RefreshFlags(
-    OUT DWORD *pdwStyle,
-    OUT DWORD *pdwExStyle,
-    OUT DWORD *dwEnum)
+    _Out_ DWORD *pdwStyle,
+    _Out_ DWORD *pdwExStyle,
+    _Out_ DWORD *dwEnum)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
 STDMETHODIMP CFavBand::CacheItem(
-    IN PCIDLIST_ABSOLUTE pidl)
+    _In_ PCIDLIST_ABSOLUTE pidl)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;

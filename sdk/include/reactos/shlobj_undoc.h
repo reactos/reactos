@@ -528,11 +528,11 @@ DECLARE_INTERFACE_(INamespaceProxy, IUnknown)
 	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
 	 /*** INamespaceProxy ***/
-	STDMETHOD(GetNavigateTarget)(THIS_ IN PCIDLIST_ABSOLUTE pidl, OUT PIDLIST_ABSOLUTE ppidlTarget, OUT ULONG *pulAttrib) PURE;
-	STDMETHOD(Invoke)(THIS_ IN PCIDLIST_ABSOLUTE pidl) PURE;
-	STDMETHOD(OnSelectionChanged)(THIS_ IN PCIDLIST_ABSOLUTE pidl) PURE;
-	STDMETHOD(RefreshFlags)(THIS_ OUT DWORD *pdwStyle, OUT DWORD *pdwExStyle, OUT DWORD *dwEnum) PURE;
-	STDMETHOD(CacheItem)(THIS_ IN PCIDLIST_ABSOLUTE pidl) PURE;
+	STDMETHOD(GetNavigateTarget)(THIS_ _In_ PCIDLIST_ABSOLUTE pidl, _Out_ PIDLIST_ABSOLUTE ppidlTarget, _Out_ ULONG *pulAttrib) PURE;
+	STDMETHOD(Invoke)(THIS_ _In_ PCIDLIST_ABSOLUTE pidl) PURE;
+	STDMETHOD(OnSelectionChanged)(THIS_ _In_ PCIDLIST_ABSOLUTE pidl) PURE;
+	STDMETHOD(RefreshFlags)(THIS_ _Out_ DWORD *pdwStyle, _Out_ DWORD *pdwExStyle, _Out_ DWORD *dwEnum) PURE;
+	STDMETHOD(CacheItem)(THIS_ _In_ PCIDLIST_ABSOLUTE pidl) PURE;
 };
 #undef INTERFACE
 
