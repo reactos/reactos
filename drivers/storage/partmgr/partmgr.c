@@ -217,7 +217,7 @@ PartMgrUpdatePartitionDevices(
         PPARTITION_EXTENSION partExt = CONTAINING_RECORD(curEntry, PARTITION_EXTENSION, ListEntry);
         UINT32 partNumber = 0; // count detected partitions for device symlinks
         BOOLEAN found = FALSE;
-        PPARTITION_INFORMATION_EX partEntry;
+        PPARTITION_INFORMATION_EX partEntry = NULL;
 
         // trying to find this partition in returned layout
         for (UINT32 i = 0; i < NewLayout->PartitionCount; i++)
@@ -269,8 +269,8 @@ PartMgrUpdatePartitionDevices(
                 RtlCopyMemory(partExt->Gpt.Name, partEntry->Gpt.Name, sizeof(partExt->Gpt.Name));
             }
 
-            partExt->OnDiskNumber = partNumber; // HACK??
-            partEntry->PartitionNumber = partNumber; // HACK?? // mark it as a found one
+            partExt->OnDiskNumber = partNumber; // HACK??  No, here it looks OK; partNumber counted the valid partitions in order of appearance (-> ordinal)
+            partEntry->PartitionNumber = partNumber; // mark it as a found one // HACK?? Here I think so (should be the PDO number)
             totalPartitions++;
         }
         else
@@ -373,18 +373,11 @@ PartMgrUpdatePartitionDevices(
 
         PPARTITION_EXTENSION partExt = partitionDevice->DeviceExtension;
 
-        if (prevEntry)
-        {
-            // insert after prevEntry
-            partExt->ListEntry.Next = prevEntry->Next;
-            prevEntry->Next = &partExt->ListEntry;
-        }
-        else
-        {
-            // insert at the beginning
-            partExt->ListEntry.Next = FdoExtension->PartitionList.Next;
-            FdoExtension->PartitionList.Next = &partExt->ListEntry;
-        }
+        /* Insert after prevEntry (if != NULL) or at the beginning */
+        if (!prevEntry)
+            prevEntry = &FdoExtension->PartitionList;
+        partExt->ListEntry.Next = prevEntry->Next;
+        prevEntry->Next = &partExt->ListEntry;
 
         partExt->Attached = TRUE;
     }
@@ -509,15 +502,12 @@ PartMgrDiskSetDriveLayoutEx(
     RtlCopyMemory(layoutEx, layoutUser, layoutSize);
 #endif
 
-    //// PartMgrAcquireLayoutLock(FdoExtension);
-
     /* If the current disk is super-floppy but the user changes either
      * the disk type or the number of partitions to > 1, fail the call */
     if (FdoExtension->IsSuperFloppy &&
         ((layoutEx->PartitionStyle != PARTITION_STYLE_MBR) ||
          (layoutEx->PartitionCount > 1)))
     {
-        //// PartMgrReleaseLayoutLock(FdoExtension);
         return STATUS_INVALID_DEVICE_REQUEST;
     }
 
@@ -536,7 +526,6 @@ PartMgrDiskSetDriveLayoutEx(
             if (EndOffset >= 0x20000000000)
             {
                 ERR("Partition crosses 2TB boundary! Failing request.\n");
-                //// PartMgrReleaseLayoutLock(FdoExtension);
                 return STATUS_INVALID_DEVICE_REQUEST;
             }
         }
@@ -582,8 +571,6 @@ PartMgrDiskSetDriveLayoutEx(
         FdoExtension->LayoutValid = FALSE;
     }
 
-    //// PartMgrReleaseLayoutLock(FdoExtension);
-
     PartMgrInvalidatePartitionTableCache(FdoExtension);
 
     // return the layoutSize value?
@@ -591,6 +578,13 @@ PartMgrDiskSetDriveLayoutEx(
 }
 
 
+//
+// This is kind of a HACK: we patch what the disk.sys has read and cached
+// as the base partition style with our own information and return it to
+// the caller; however, disk.sys still has the old cached information.
+// Instead we should always ensure that disk.sys has the correct cached data
+// and this means, that this information has to be sent to the disk...
+//
 static
 CODE_SEG("PAGE")
 NTSTATUS
@@ -599,30 +593,28 @@ FdoIoctlDiskGetDriveGeometryEx(
     _In_ PIRP Irp)
 {
     PIO_STACK_LOCATION ioStack = IoGetCurrentIrpStackLocation(Irp);
+    PDISK_GEOMETRY_EX_INTERNAL geometryEx = Irp->AssociatedIrp.SystemBuffer;
+    ULONG outBufferLength = ioStack->Parameters.DeviceIoControl.OutputBufferLength;
+    NTSTATUS status;
 
     PAGED_CODE();
 
     // We're patching the DISK_PARTITION_INFO part of the returned structure
     // as disk.sys doesn't really know about the partition table on a disk
 
-    PDISK_GEOMETRY_EX_INTERNAL geometryEx = Irp->AssociatedIrp.SystemBuffer;
-    ULONG outBufferLength = ioStack->Parameters.DeviceIoControl.OutputBufferLength;
-    NTSTATUS status;
+    ASSERT(ioStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_DISK_GET_DRIVE_GEOMETRY_EX);
 
-    status = IssueSyncIoControlRequest(IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
-                                       FdoExtension->LowerDevice,
-                                       NULL,
-                                       0,
-                                       geometryEx,
-                                       outBufferLength,
-                                       FALSE);
-
+    /* Forward the IOCTL_DISK_GET_DRIVE_GEOMETRY_EX to the disk.sys driver
+     * before patching the DISK_PARTITION_INFO part of the returned structure.
+     * Indeed, it doesn't really know about the partition table on a disk. */
+    status = STATUS_UNSUCCESSFUL;
+    if (IoForwardIrpSynchronously(FdoExtension->LowerDevice, Irp))
+        status = Irp->IoStatus.Status;
     if (!NT_SUCCESS(status))
-    {
         return status;
-    }
 
-    // if DISK_PARTITION_INFO fits the output size
+    /* If the DISK_PARTITION_INFO part fits the output size,
+     * patch it with up-to-date disk partition layout information */
     if (outBufferLength >= FIELD_OFFSET(DISK_GEOMETRY_EX_INTERNAL, Detection))
     {
         PartMgrAcquireLayoutLock(FdoExtension);
@@ -672,6 +664,7 @@ FdoIoctlDiskGetPartitionInfo(
 
     PartMgrAcquireLayoutLock(FdoExtension);
 
+// Alternatively, get the disk size via IOCTL_DISK_GET_LENGTH_INFO
     *partInfo = (PARTITION_INFORMATION){
         .PartitionType = PARTITION_ENTRY_UNUSED,
         .StartingOffset.QuadPart = 0,
@@ -707,6 +700,7 @@ FdoIoctlDiskGetPartitionInfoEx(
 
     PartMgrAcquireLayoutLock(FdoExtension);
 
+// Alternatively, get the disk size via IOCTL_DISK_GET_LENGTH_INFO
     // most of the fields a zeroed for Partition0
     *partInfoEx = (PARTITION_INFORMATION_EX){
         .PartitionLength.QuadPart = FdoExtension->DiskData.DiskSize,
@@ -832,11 +826,6 @@ FdoIoctlDiskSetDriveLayout(
         return STATUS_INFO_LENGTH_MISMATCH;
     }
 
-//
-// TODO?? Layout-non-ex: fail if layoutInfo->PartitionCount == 0 ??
-// (i.e. we won't implicitly call IoCreateDisk() via the helper)
-//
-
     PDRIVE_LAYOUT_INFORMATION_EX layoutEx = PartMgrConvertLayoutToExtended(layoutInfo);
     if (!layoutEx)
     {
@@ -871,6 +860,8 @@ FdoIoctlDiskSetDriveLayout(
         }
     }
 
+    /* In case of failure, free the converted layout; otherwise don't
+     * do anything because it has been used as the cached layout */
     if (!NT_SUCCESS(status))
         ExFreePoolWithTag(layoutEx, TAG_PARTMGR);
 
@@ -929,6 +920,8 @@ FdoIoctlDiskSetDriveLayoutEx(
             Irp->IoStatus.Information = layoutSize;
     }
 
+    /* In case of failure, free the captured layout; otherwise don't
+     * do anything because it has been used as the cached layout */
     if (!NT_SUCCESS(status))
         ExFreePoolWithTag(layoutEx, TAG_PARTMGR);
 
@@ -948,8 +941,7 @@ FdoIoctlDiskUpdateProperties(
     FdoExtension->LayoutValid = FALSE;
     PartMgrReleaseLayoutLock(FdoExtension);
 
-    // FIXME: PartMgrInvalidatePartitionTableCache(FdoExtension); instead?
-    IoInvalidateDeviceRelations(FdoExtension->PhysicalDiskDO, BusRelations);
+    PartMgrInvalidatePartitionTableCache(FdoExtension);
     return STATUS_SUCCESS;
 }
 
@@ -1288,6 +1280,10 @@ PartMgrAddDevice(
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * IOCTL dispatcher for disk device objects (filter).
+ **/
 static
 NTSTATUS
 NTAPI
@@ -1312,7 +1308,6 @@ PartMgrDeviceControl(
 
     switch (ioStack->Parameters.DeviceIoControl.IoControlCode)
     {
-        // case IOCTL_DISK_GET_DRIVE_GEOMETRY: // TODO?
         case IOCTL_DISK_GET_DRIVE_GEOMETRY_EX:
             status = FdoIoctlDiskGetDriveGeometryEx(fdoExtension, Irp);
             break;
@@ -1458,6 +1453,7 @@ PartMgrReadWrite(
         }
     }
 
+    // return ForwardIrpAndForget(DeviceObject, Irp);
     IoSkipCurrentIrpStackLocation(Irp);
     return IoCallDriver(partExt->LowerDevice, Irp);
 }
@@ -1496,11 +1492,10 @@ PartMgrPower(
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return status;
     }
-    else
-    {
-        IoSkipCurrentIrpStackLocation(Irp);
-        return PoCallDriver(partExt->LowerDevice, Irp);
-    }
+
+    // return ForwardIrpAndForget(DeviceObject, Irp);
+    IoSkipCurrentIrpStackLocation(Irp);
+    return PoCallDriver(partExt->LowerDevice, Irp);
 }
 
 DRIVER_DISPATCH PartMgrShutdownFlush;
