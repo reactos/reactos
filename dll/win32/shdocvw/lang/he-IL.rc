@@ -5,5 +5,5 @@ STRINGTABLE
 BEGIN
     IDS_ADD "Add"
     IDS_ORGANIZE "Organize..."
-    IDS_FOLDERSLABEL "??????"
+    IDS_FOLDERSLABEL "תיקיות"
 END
