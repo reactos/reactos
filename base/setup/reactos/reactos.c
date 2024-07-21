@@ -1769,7 +1769,7 @@ PrepareAndDoCopyThread(
     NTSTATUS Status;
     FSVOL_CONTEXT FsVolContext;
     COPYCONTEXT CopyContext;
-    // WCHAR PathBuffer[MAX_PATH];
+    WCHAR PathBuffer[RTL_NUMBER_OF_FIELD(PARTENTRY, DeviceName) + 1];
 
     /* Retrieve pointer to the global setup data */
     pSetupData = (PSETUPDATA)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
@@ -1985,6 +1985,139 @@ PrepareAndDoCopyThread(
                                  NULL /* SubstSettings */);
     DBG_UNREFERENCED_PARAMETER(ErrorNumber);
     SendMessageW(UiContext.hWndProgress, PBM_SETPOS, 100, 0);
+
+    /*
+     * And finally, install the bootloader
+     */
+
+    /* Set status text */
+    SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"Installing the bootloader...");
+    SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
+
+    RtlFreeUnicodeString(&pSetupData->USetupData.SystemRootPath);
+    StringCchPrintfW(PathBuffer, _countof(PathBuffer),
+                     L"%s\\", SystemPartition->DeviceName);
+    RtlCreateUnicodeString(&pSetupData->USetupData.SystemRootPath, PathBuffer);
+    DPRINT1("SystemRootPath: %wZ\n", &pSetupData->USetupData.SystemRootPath);
+
+    switch (pSetupData->USetupData.BootLoaderLocation)
+    {
+        /* Install on removable disk */
+        case 1:
+        {
+            // TODO: So far SETUP only supports the 1st floppy.
+            // Use a simple UI like comdlg32's DlgDirList* to show
+            // a list of drives that the user could select.
+            static const UNICODE_STRING FloppyDrive = RTL_CONSTANT_STRING(L"\\Device\\Floppy0\\");
+            static const WCHAR DriveLetter = L'A';
+
+            INT nRet;
+        RetryCancel:
+            nRet = DisplayMessage(GetParent(hwndDlg),
+                                  MB_ICONINFORMATION | MB_OKCANCEL,
+                                  L"Bootloader installation",
+                                  L"Please insert a blank floppy disk in drive %c: .\n"
+                                  L"All data in the floppy disk will be erased!\n"
+                                  L"\nClick on OK to continue."
+                                  L"\nClick on CANCEL to skip bootloader installation.",
+                                  DriveLetter);
+            if (nRet != IDOK)
+                break; /* Skip installation */
+
+        Retry:
+            Status = InstallBootcodeToRemovable(pSetupData->USetupData.ArchType,
+                                                &FloppyDrive,
+                                                &pSetupData->USetupData.SourceRootPath,
+                                                &pSetupData->USetupData.DestinationArcPath);
+            if (Status == STATUS_SUCCESS)
+                break; /* Successful installation */
+
+            if (Status == STATUS_DEVICE_NOT_READY)
+            {
+                // ERROR_NO_FLOPPY
+                nRet = DisplayMessage(GetParent(hwndDlg),
+                                      MB_ICONWARNING | MB_RETRYCANCEL,
+                                      NULL, // Default to "Error"
+                                      L"No disk detected in drive %c: .",
+                                      DriveLetter);
+                if (nRet == IDRETRY)
+                    goto Retry;
+            }
+            else if ((Status == ERROR_WRITE_BOOT) ||
+                     (Status == ERROR_INSTALL_BOOTCODE))
+            {
+                /* Error when writing the boot code */
+                DisplayError(GetParent(hwndDlg),
+                             0, // Default to "Error"
+                             IDS_ERROR_INSTALL_BOOTCODE_REMOVABLE);
+            }
+            else if (!NT_SUCCESS(Status))
+            {
+                /* Any other NTSTATUS failure code */
+                DPRINT1("InstallBootcodeToRemovable() failed: Status 0x%lx\n", Status);
+                DisplayError(GetParent(hwndDlg),
+                             0, // Default to "Error"
+                             IDS_ERROR_BOOTLDR_FAILED,
+                             Status);
+            }
+            goto RetryCancel;
+        }
+
+        /* Install on hard-disk */
+        case 2: // System partition / MBR and VBR (on BIOS-based PC)
+        case 3: // VBR only (on BIOS-based PC)
+        {
+            /* Copy FreeLoader to the disk and save the boot entries */
+            Status = InstallBootManagerAndBootEntries(
+                        pSetupData->USetupData.ArchType,
+                        &pSetupData->USetupData.SystemRootPath,
+                        &pSetupData->USetupData.SourceRootPath,
+                        &pSetupData->USetupData.DestinationArcPath,
+                        (pSetupData->USetupData.BootLoaderLocation == 2)
+                           ? 1 /* Install MBR and VBR */
+                           : 0 /* Install VBR only */);
+            if (Status == STATUS_SUCCESS)
+                break; /* Successful installation */
+
+            if (Status == ERROR_WRITE_BOOT)
+            {
+                /* Error when writing the VBR */
+                DisplayError(GetParent(hwndDlg),
+                             0, // Default to "Error"
+                             IDS_ERROR_WRITE_BOOT,
+                             SystemVolume->Info.FileSystem);
+            }
+            else if (Status == ERROR_INSTALL_BOOTCODE)
+            {
+                /* Error when writing the MBR */
+                DisplayError(GetParent(hwndDlg),
+                             0, // Default to "Error"
+                             IDS_ERROR_INSTALL_BOOTCODE,
+                             L"MBR");
+            }
+            else if (Status == STATUS_NOT_SUPPORTED)
+            {
+                DisplayError(GetParent(hwndDlg),
+                             0, // Default to "Error"
+                             IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED);
+            }
+            else if (!NT_SUCCESS(Status))
+            {
+                /* Any other NTSTATUS failure code */
+                DPRINT1("InstallBootManagerAndBootEntries() failed: Status 0x%lx\n", Status);
+                DisplayError(GetParent(hwndDlg),
+                             0, // Default to "Error"
+                             IDS_ERROR_BOOTLDR_FAILED,
+                             Status);
+            }
+            break;
+        }
+
+        /* Skip installation */
+        case 0:
+        default:
+            break;
+    }
 
 
     /* We are done! Switch to the Terminate page */

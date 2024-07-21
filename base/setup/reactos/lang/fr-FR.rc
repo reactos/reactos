@@ -280,4 +280,11 @@ the Setup program cannot install ReactOS.\
 \nClick on CANCEL to quit Setup."
 
     IDS_ERROR_CHECKING_PARTITION "ChkDsk detected some disk errors.\n(Status 0x%08lx)."
+
+    IDS_ERROR_WRITE_BOOT "Échec de l'installation du code de démarrage %s sur la partition système."
+    IDS_ERROR_INSTALL_BOOTCODE "Échec de l'installation du code de démarrage %s sur le disque système."
+    IDS_ERROR_INSTALL_BOOTCODE_REMOVABLE "Échec de l'installation du code de démarrage sur le média amovible."
+    IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED "Le programme d'installation ne supporte pas actuellement l'installation du chargeur de démarrage sur l'ordinateur que vous utilisez.\
+\nCliquez sur OK pour continuer quand même."
+    IDS_ERROR_BOOTLDR_FAILED "Le programme d'installation n'a pas pu installer le chargeur de démarrage (Status 0x%08lx)."
 END
