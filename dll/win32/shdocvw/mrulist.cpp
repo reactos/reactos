@@ -22,12 +22,6 @@ class CMruBase;
             class CMruPidlList;
 class CMruClassFactory;
 
-extern "C" void __cxa_pure_virtual(void)
-{
-    ERR("__cxa_pure_virtual\n");
-    ::DebugBreak();
-}
-
 BOOL IEILIsEqual(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2, BOOL bUnknown)
 {
     UINT cb1 = ILGetSize(pidl1), cb2 = ILGetSize(pidl2);

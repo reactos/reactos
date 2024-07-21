@@ -7,9 +7,12 @@
 
 #include "Objects.h"
 
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
+
 void *operator new(size_t size)
 {
-    return ::LocalAlloc(LPTR, size);
+    return ::LocalAlloc(LMEM_FIXED, size);
 }
 
 void operator delete(void *ptr)
@@ -20,6 +23,12 @@ void operator delete(void *ptr)
 void operator delete(void *ptr, size_t size)
 {
     ::LocalFree(ptr);
+}
+
+extern "C" void __cxa_pure_virtual(void)
+{
+    ERR("__cxa_pure_virtual\n");
+    ::DebugBreak();
 }
 
 BEGIN_OBJECT_MAP(ObjectMap)

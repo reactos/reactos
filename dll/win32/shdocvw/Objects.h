@@ -38,6 +38,7 @@ extern inline BOOL _ILIsDesktop(LPCITEMIDLIST pidl)
 void *operator new(size_t size);
 void operator delete(void *ptr);
 void operator delete(void *ptr, size_t size);
+extern "C" void __cxa_pure_virtual(void);
 #endif /* def C++ */
 
 EXTERN_C VOID SHDOCVW_Init(HINSTANCE hInstance);
