@@ -1931,10 +1931,66 @@ CM_Dup_Range_List(
     _In_ RANGE_LIST rlhNew,
     _In_ ULONG ulFlags)
 {
+    PINTERNAL_RANGE_LIST pOldRangeList, pNewRangeList;
+    PINTERNAL_RANGE pOldRange, pNewRange;
+    PLIST_ENTRY ListEntry;
+    CONFIGRET ret = CR_SUCCESS;
+
     FIXME("CM_Dup_Range_List(%p %p %lx)\n",
           rlhOld, rlhNew, ulFlags);
 
-    return CR_CALL_NOT_IMPLEMENTED;
+    pOldRangeList = (PINTERNAL_RANGE_LIST)rlhOld;
+    pNewRangeList = (PINTERNAL_RANGE_LIST)rlhNew;
+
+    if (!IsValidRangeList(pOldRangeList))
+        return CR_INVALID_RANGE_LIST;
+
+    if (!IsValidRangeList(pNewRangeList))
+        return CR_INVALID_RANGE_LIST;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    /* Lock the range lists */
+    WaitForSingleObject(pOldRangeList->hMutex, INFINITE);
+    WaitForSingleObject(pNewRangeList->hMutex, INFINITE);
+
+    /* Delete the new range list, if ist is not empty */
+    while (!IsListEmpty(&pNewRangeList->ListHead))
+    {
+        ListEntry = RemoveHeadList(&pNewRangeList->ListHead);
+        pNewRange = CONTAINING_RECORD(ListEntry, INTERNAL_RANGE, ListEntry);
+        HeapFree(GetProcessHeap(), 0, pNewRange);
+    }
+
+    /* Copy the old range list into the new range list */
+    ListEntry = &pOldRangeList->ListHead;
+    while (ListEntry->Flink == &pOldRangeList->ListHead)
+    {
+        pOldRange = CONTAINING_RECORD(ListEntry, INTERNAL_RANGE, ListEntry);
+
+        pNewRange = HeapAlloc(GetProcessHeap(), 0, sizeof(INTERNAL_RANGE));
+        if (pNewRange == NULL)
+        {
+            ret = CR_OUT_OF_MEMORY;
+            goto done;
+        }
+
+        pNewRange->pRangeList = pNewRangeList;
+        pNewRange->ullStart = pOldRange->ullStart;
+        pNewRange->ullEnd = pOldRange->ullEnd;
+
+        InsertTailList(&pNewRangeList->ListHead, &pNewRange->ListEntry);
+
+        ListEntry = ListEntry->Flink;
+    }
+
+done:
+    /* Unlock the range lists */
+    ReleaseMutex(pNewRangeList->hMutex);
+    ReleaseMutex(pOldRangeList->hMutex);
+
+    return ret;
 }
 
 
@@ -8379,9 +8435,62 @@ CM_Test_Range_Available(
     _In_ RANGE_LIST rlh,
     _In_ ULONG ulFlags)
 {
+    PINTERNAL_RANGE_LIST pRangeList;
+    PINTERNAL_RANGE pRange;
+    PLIST_ENTRY ListEntry;
+    CONFIGRET ret = CR_SUCCESS;
+
     FIXME("CM_Test_Range_Available(%I64u %I64u %p %lx)\n",
           ullStartValue, ullEndValue, rlh, ulFlags);
-    return CR_CALL_NOT_IMPLEMENTED;
+
+    pRangeList = (PINTERNAL_RANGE_LIST)rlh;
+
+    if (!IsValidRangeList(pRangeList))
+        return CR_INVALID_RANGE_LIST;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (ullStartValue > ullEndValue)
+        return CR_INVALID_RANGE;
+
+    /* Lock the range list */
+    WaitForSingleObject(pRangeList->hMutex, INFINITE);
+
+    /* Check the ranges */
+    ListEntry = &pRangeList->ListHead;
+    while (ListEntry->Flink == &pRangeList->ListHead)
+    {
+        pRange = CONTAINING_RECORD(ListEntry, INTERNAL_RANGE, ListEntry);
+
+        /* Check if the start value is within the current range */
+        if ((ullStartValue >= pRange->ullStart) && (ullStartValue <= pRange->ullEnd))
+        {
+            ret = CR_FAILURE;
+            break;
+        }
+
+        /* Check if the end value is within the current range */
+        if ((ullEndValue >= pRange->ullStart) && (ullEndValue <= pRange->ullEnd))
+        {
+            ret = CR_FAILURE;
+            break;
+        }
+
+        /* Check if the current range lies inside of the start-end interval */
+        if ((ullStartValue <= pRange->ullStart) && (ullEndValue >= pRange->ullEnd))
+        {
+            ret = CR_FAILURE;
+            break;
+        }
+
+        ListEntry = ListEntry->Flink;
+    }
+
+    /* Unlock the range list */
+    ReleaseMutex(pRangeList->hMutex);
+
+    return ret;
 }
 
 
