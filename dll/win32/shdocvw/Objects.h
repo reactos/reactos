@@ -10,6 +10,10 @@
 #include <windows.h>
 #include <shlobj.h>
 #include <shlwapi.h>
+#include <olectlid.h>
+#include <exdispid.h>
+#include "shdocvw.h"
+
 #ifdef __cplusplus
 #include <atlbase.h>
 #include <atlcom.h>
@@ -19,26 +23,15 @@
 #include <shlguid_undoc.h>
 #include <shlwapi_undoc.h>
 #include <shdeprecated.h>
-#endif
-#include <olectlid.h>
-#include <exdispid.h>
-#include "shdocvw.h"
-#ifdef __cplusplus
 #include <shellutils.h>
 #include <ui/rosctrls.h>
 #include "CExplorerBand.h"
 #include "CFavBand.h"
 #include "utility.h"
-
-extern inline BOOL _ILIsDesktop(LPCITEMIDLIST pidl)
-{
-    return (pidl == NULL || pidl->mkid.cb == 0);
-}
-
 void *operator new(size_t size);
 void operator delete(void *ptr);
 void operator delete(void *ptr, size_t size);
-extern "C" void __cxa_pure_virtual(void);
+EXTERN_C void __cxa_pure_virtual(void);
 #endif /* def C++ */
 
 EXTERN_C VOID SHDOCVW_Init(HINSTANCE hInstance);

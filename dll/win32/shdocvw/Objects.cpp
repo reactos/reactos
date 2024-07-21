@@ -25,7 +25,7 @@ void operator delete(void *ptr, size_t size)
     ::LocalFree(ptr);
 }
 
-extern "C" void __cxa_pure_virtual(void)
+EXTERN_C void __cxa_pure_virtual(void)
 {
     ERR("__cxa_pure_virtual\n");
     ::DebugBreak();

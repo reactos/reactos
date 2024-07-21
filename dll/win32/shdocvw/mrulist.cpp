@@ -22,16 +22,6 @@ class CMruBase;
             class CMruPidlList;
 class CMruClassFactory;
 
-BOOL IEILIsEqual(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2, BOOL bUnknown)
-{
-    UINT cb1 = ILGetSize(pidl1), cb2 = ILGetSize(pidl2);
-    if (cb1 == cb2 && memcmp(pidl1, pidl2, cb1) == 0)
-        return TRUE;
-
-    FIXME("%p, %p\n", pidl1, pidl2);
-    return FALSE;
-}
-
 // The flags for SLOTITEMDATA.dwFlags
 #define SLOT_LOADED         0x1
 #define SLOT_SET            0x2
