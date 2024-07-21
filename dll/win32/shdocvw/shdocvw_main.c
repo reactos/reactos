@@ -96,24 +96,8 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv)
 #ifdef __REACTOS__
     {
         HRESULT hr = SHDOCVW_DllGetClassObject(rclsid, riid, ppv);
-        if (hr != CLASS_E_CLASSNOTAVAILABLE)
+        if (SUCCEEDED(hr))
             return hr;
-    }
-    if (IsEqualGUID(riid, &IID_IClassFactory) || IsEqualGUID(riid, &IID_IUnknown))
-    {
-        if (IsEqualGUID(rclsid, &CLSID_MruLongList) ||
-            IsEqualGUID(rclsid, &CLSID_MruPidlList))
-        {
-            return CMruClassFactory_CreateInstance(riid, ppv);
-        }
-    }
-    else if (IsEqualGUID(riid, &IID_IMruDataList))
-    {
-        return CMruLongList_CreateInstance(0, ppv, 0);
-    }
-    else if (IsEqualGUID(riid, &IID_IMruPidlList))
-    {
-        return CMruPidlList_CreateInstance(0, ppv, 0);
     }
 #endif
 

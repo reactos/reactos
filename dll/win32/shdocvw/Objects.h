@@ -50,7 +50,3 @@ EXTERN_C HRESULT SHDOCVW_DllCanUnloadNow(VOID);
 EXTERN_C HRESULT SHDOCVW_DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv);
 EXTERN_C HRESULT SHDOCVW_DllRegisterServer(VOID);
 EXTERN_C HRESULT SHDOCVW_DllUnregisterServer(VOID);
-
-EXTERN_C HRESULT CMruLongList_CreateInstance(DWORD_PTR dwUnused1, void **ppv, DWORD_PTR dwUnused3);
-EXTERN_C HRESULT CMruPidlList_CreateInstance(DWORD_PTR dwUnused1, void **ppv, DWORD_PTR dwUnused3);
-EXTERN_C HRESULT CMruClassFactory_CreateInstance(REFIID riid, void **ppv);
