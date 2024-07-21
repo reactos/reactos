@@ -7,22 +7,12 @@
 
 #define COBJMACROS
 
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <objbase.h>
-#include <oleauto.h>
-#include <shlobj.h>
-#include <shlobj_undoc.h>
-#include <shlguid_undoc.h>
-#include <shlwapi.h>
-#include <shlwapi_undoc.h>
+#include "Objects.h"
 #include <tchar.h>
 #include <strsafe.h>
 #include "shdocvw.h"
 
 #include <wine/debug.h>
-
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
 class CSafeMutex;
