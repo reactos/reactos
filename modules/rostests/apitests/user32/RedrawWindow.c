@@ -1159,7 +1159,7 @@ void FlagsRedrawWindowTest()
     testRWcompare.resultColorPre2 = 0x000000FF;
     testRWcompare.resultColorPost1 = 0x000000FF;
     testRWcompare.resultColorPost2 = 0x0000FF00;
-    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600 );
+    InitRect(&testRWcompare.resultUpdateRect, 0, 500, 800, 600);
     testRWcompare.resultNeedsUpdate = TRUE;
     testRWcompare.resultWmEraseGnd = FALSE;
     testRWcompare.resultWmNcPaint = FALSE;
