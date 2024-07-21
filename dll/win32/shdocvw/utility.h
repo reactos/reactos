@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:     shdocvw.dll objects
+ * PURPOSE:     Utility for shdocvw.dll
  * COPYRIGHT:   Copyright 2024 Whindmar Saksit <whindsaks@proton.me>
  */
 
