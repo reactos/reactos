@@ -8,6 +8,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "precomp.h"
+#include "inline.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -25,7 +26,6 @@ PortCreatePdo(
 {
     PPDO_DEVICE_EXTENSION DeviceExtension = NULL;
     PDEVICE_OBJECT Pdo = NULL;
-    KLOCK_QUEUE_HANDLE LockHandle;
     NTSTATUS Status;
 
     DPRINT("PortCreatePdo(%p %p)\n",
@@ -59,12 +59,10 @@ PortCreatePdo(
     DeviceExtension->PnpState = dsStopped;
 
     /* Add the PDO to the PDO list*/
-    KeAcquireInStackQueuedSpinLock(&FdoDeviceExtension->PdoListLock,
-                                   &LockHandle);
-    InsertHeadList(&FdoDeviceExtension->PdoListHead,
-                   &DeviceExtension->PdoListEntry);
-    FdoDeviceExtension->PdoCount++;
-    KeReleaseInStackQueuedSpinLock(&LockHandle);
+    StorpInterlockedInsertHeadListCounted(&FdoDeviceExtension->PdoListLock,
+                                          &FdoDeviceExtension->PdoListHead, 
+                                          &DeviceExtension->PdoListEntry,
+                                          &FdoDeviceExtension->PdoCount);
 
     DeviceExtension->Bus = Bus;
     DeviceExtension->Target = Target;
@@ -87,16 +85,12 @@ NTSTATUS
 PortDeletePdo(
     _In_ PPDO_DEVICE_EXTENSION PdoExtension)
 {
-    KLOCK_QUEUE_HANDLE LockHandle;
-
     DPRINT("PortDeletePdo(%p)\n", PdoExtension);
 
     /* Remove the PDO from the PDO list*/
-    KeAcquireInStackQueuedSpinLock(&PdoExtension->FdoExtension->PdoListLock,
-                                   &LockHandle);
-    RemoveEntryList(&PdoExtension->PdoListEntry);
-    PdoExtension->FdoExtension->PdoCount--;
-    KeReleaseInStackQueuedSpinLock(&LockHandle);
+    StorpInterlockedRemoveEntryListCounted(&PdoExtension->FdoExtension->PdoListLock,
+                                           &PdoExtension->PdoListEntry,
+                                           &PdoExtension->FdoExtension->PdoCount);
 
     if (PdoExtension->InquiryBuffer)
     {
