@@ -7,6 +7,7 @@
 
 /* INCLUDES *******************************************************************/
 
+#include "inline.h"
 #include "intsafe.h"
 #include "precomp.h"
 #include "wdm.h"
@@ -178,7 +179,6 @@ PortAddDevice(
     WCHAR NameBuffer[80];
     UNICODE_STRING DeviceName;
     PDEVICE_OBJECT Fdo = NULL;
-    KLOCK_QUEUE_HANDLE LockHandle;
     NTSTATUS Status;
 
     DPRINT1("PortAddDevice(%p %p)\n",
@@ -250,14 +250,10 @@ PortAddDevice(
 
     DeviceExtension->DriverExtension = DriverObjectExtension;
 
-    KeAcquireInStackQueuedSpinLock(&DriverObjectExtension->AdapterListLock,
-                                   &LockHandle);
-
-    InsertHeadList(&DriverObjectExtension->AdapterListHead,
-                   &DeviceExtension->AdapterListEntry);
-    DriverObjectExtension->AdapterCount++;
-
-    KeReleaseInStackQueuedSpinLock(&LockHandle);
+    StorpInterlockedInsertHeadListCounted(&DriverObjectExtension->AdapterListLock,
+                                          &DriverObjectExtension->AdapterListHead,
+                                          &DeviceExtension->AdapterListEntry,
+                                          &DriverObjectExtension->AdapterCount);
 
     /* The device has been initialized */
     Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
@@ -677,7 +673,6 @@ StorPortExtendedFunction(
         case ExtFunctionInitializeTimer: {
             /* Allocate a timer for an HBA */
             PTIMER_ENTRY TimerEntry;
-            KLOCK_QUEUE_HANDLE LockHandle;
             PVOID* TimerHandle = va_arg(va, PVOID*);
 
             if (TimerHandle == NULL) {
@@ -704,10 +699,10 @@ StorPortExtendedFunction(
             DeviceExtension = MiniportExtension->Miniport->DeviceExtension;
 
             /* Insert into timer list and increment counter */
-            KeAcquireInStackQueuedSpinLock(&DeviceExtension->TimerListLock, &LockHandle);
-            InsertHeadList(&DeviceExtension->TimerListHead, &TimerEntry->ListEntry);
-            DeviceExtension->TimerCount++;
-            KeReleaseInStackQueuedSpinLock(&LockHandle);
+            StorpInterlockedInsertHeadListCounted(&DeviceExtension->TimerListLock,
+                                                  &DeviceExtension->TimerListHead,
+                                                  &TimerEntry->ListEntry,
+                                                  &DeviceExtension->TimerCount);
             
             /* Return list entry of the timer as its handle */
             *TimerHandle = (PVOID)&TimerEntry->ListEntry;
