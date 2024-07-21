@@ -370,15 +370,12 @@ InstallFiles(const CStringW &SourceDirBase, const CStringW &Spec,
                 {
                     success = !ErrorBox(Info.Error);
                 }
-                else
-                {
-                    success = AddEntry(UNOP_EMPTYDIR, uninstpath);
-                }
 
                 if (success)
                 {
                     success = InstallFiles(from, filespec, to);
                 }
+                AddEntry(UNOP_EMPTYDIR, uninstpath);
             }
         }
         else
