@@ -22,6 +22,7 @@
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
 #include <shlwapi_undoc.h>
+#include <shdocvw_undoc.h>
 #include <shdeprecated.h>
 #include <shellutils.h>
 #include <ui/rosctrls.h>
