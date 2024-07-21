@@ -17,7 +17,7 @@ CFavBand::CFavBand()
     , m_hToolbarImageList(NULL)
     , m_hTreeViewImageList(NULL)
 {
-    ::InterlockedIncrement(&SHDOCVW_refCount);
+    SHDOCVW_LockModule();
     SHGetSpecialFolderLocation(NULL, CSIDL_FAVORITES, &m_pidlFav);
 }
 
@@ -33,7 +33,7 @@ CFavBand::~CFavBand()
         ImageList_Destroy(m_hTreeViewImageList);
         m_hTreeViewImageList = NULL;
     }
-    ::InterlockedDecrement(&SHDOCVW_refCount);
+    SHDOCVW_UnlockModule();
 }
 
 VOID CFavBand::OnFinalMessage(HWND)

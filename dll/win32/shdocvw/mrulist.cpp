@@ -10,7 +10,6 @@
 #include "Objects.h"
 #include <tchar.h>
 #include <strsafe.h>
-#include "shdocvw.h"
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
@@ -146,7 +145,7 @@ public:
 
 CMruBase::CMruBase()
 {
-    ::InterlockedIncrement(&SHDOCVW_refCount);
+    SHDOCVW_LockModule();
 }
 
 CMruBase::~CMruBase()
@@ -167,7 +166,7 @@ CMruBase::~CMruBase()
         m_pSlots = (SLOTITEMDATA*)::LocalFree(m_pSlots);
     }
 
-    ::InterlockedDecrement(&SHDOCVW_refCount);
+    SHDOCVW_UnlockModule();
 }
 
 STDMETHODIMP CMruBase::QueryInterface(REFIID riid, void **ppvObj)
@@ -1312,11 +1311,11 @@ protected:
 public:
     CMruClassFactory()
     {
-        ::InterlockedIncrement(&SHDOCVW_refCount);
+        SHDOCVW_LockModule();
     }
     virtual ~CMruClassFactory()
     {
-        ::InterlockedDecrement(&SHDOCVW_refCount);
+        SHDOCVW_UnlockModule();
     }
 
     // IUnknown methods
@@ -1380,9 +1379,9 @@ STDMETHODIMP CMruClassFactory::CreateInstance(IUnknown *pUnkOuter, REFIID riid, 
 STDMETHODIMP CMruClassFactory::LockServer(BOOL fLock)
 {
     if (fLock)
-        ::InterlockedIncrement(&SHDOCVW_refCount);
+        SHDOCVW_LockModule();
     else
-        ::InterlockedDecrement(&SHDOCVW_refCount);
+        SHDOCVW_UnlockModule();
     return S_OK;
 }
 
