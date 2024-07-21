@@ -32,7 +32,7 @@
 #include "winnls.h"
 #include <shlguid_undoc.h>
 #include <rpcproxy.h> /* for __wine_register_resources / __wine_unregister_resources */
-#include "objects.h"
+#include "Objects.h"
 #endif
 #include "shlwapi.h"
 #include "wininet.h"
