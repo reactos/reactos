@@ -7,7 +7,7 @@
 
 #define COBJMACROS
 
-#include "Objects.h"
+#include "objects.h"
 #include <tchar.h>
 #include <strsafe.h>
 

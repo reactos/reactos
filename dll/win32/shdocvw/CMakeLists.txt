@@ -35,7 +35,7 @@ add_library(shdocvw_sublib OBJECT
     CExplorerBand.cpp
     CFavBand.cpp
     mrulist.cpp
-    Objects.cpp
+    objects.cpp
     utility.cpp)
 target_link_libraries(shdocvw_sublib PRIVATE atl_classes)
 target_compile_definitions(shdocvw_sublib PRIVATE $<TARGET_PROPERTY:shdocvw,COMPILE_DEFINITIONS>)

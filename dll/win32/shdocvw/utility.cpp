@@ -5,7 +5,7 @@
  * COPYRIGHT:   Copyright 2024 Whindmar Saksit <whindsaks@proton.me>
  */
 
-#include "Objects.h"
+#include "objects.h"
 
 #ifndef SHCIDS_CANONICALONLY
 #define SHCIDS_CANONICALONLY 0x10000000L

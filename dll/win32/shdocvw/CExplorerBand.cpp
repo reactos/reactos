@@ -6,7 +6,7 @@
  *              Copyright 2020-2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include "Objects.h"
+#include "objects.h"
 #include <commoncontrols.h>
 #include <undocshell.h>
 
