@@ -344,7 +344,6 @@ UINT TestRedrawWindow2(STRUCT_TestRedrawWindow* ptestRW, STRUCT_TestRedrawWindow
     {
         if (ptestRWcompare->resultColorPre1 != ptestRW->resultColorPre1)
         {
-            trace("aa");
             trace("ERROR-resultColorPre1 %x %x\n", (int)ptestRW->resultColorPre1, (int)ptestRWcompare->resultColorPre1);
             countErrors++;
         }
