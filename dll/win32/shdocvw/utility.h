@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Explorer
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     shdocvw.dll objects
+ * COPYRIGHT:   Copyright 2024 Whindmar Saksit <whindsaks@proton.me>
+ */
+
 #pragma once
 
 HRESULT SHELL_GetIDListFromObject(IUnknown *punk, PIDLIST_ABSOLUTE *ppidl);
