@@ -9,9 +9,6 @@
 
 #include <fdi.h>
 #include <fcntl.h>
-#ifndef cffile_A_NAME_IS_UTF
-#define cffile_A_NAME_IS_UTF (0x80)
-#endif
 
 /*
  * HACK: treat any input strings as Unicode (UTF-8)
@@ -163,7 +160,7 @@ FNFDINOTIFY(fnNotify)
 
             // Append the destination directory to the file name.
             MultiByteToWide(pND->OutputDir, szExtractDir, CP_UTF8);
-            UINT codepage = (pfdin->attribs & cffile_A_NAME_IS_UTF) ? CP_UTF8 : CP_ACP;
+            UINT codepage = (pfdin->attribs & _A_NAME_IS_UTF) ? CP_UTF8 : CP_ACP;
             MultiByteToWide(pfdin->psz1, szCabFileName, codepage);
 
             if (!NotifyFileExtractCallback(szCabFileName, pfdin->cb, pfdin->attribs,
