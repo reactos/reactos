@@ -533,9 +533,7 @@ static BOOL do_register_dll( const struct register_dll_info *info, const WCHAR *
     HMODULE module;
     HRESULT res;
     SP_REGISTER_CONTROL_STATUSW status;
-#ifdef __WINESRC__
     IMAGE_NT_HEADERS *nt;
-#endif
 
     status.cbSize = sizeof(status);
     status.FileName = path;
@@ -565,7 +563,6 @@ static BOOL do_register_dll( const struct register_dll_info *info, const WCHAR *
         goto done;
     }
 
-#ifdef __WINESRC__
     if ((nt = RtlImageNtHeader( module )) && !(nt->FileHeader.Characteristics & IMAGE_FILE_DLL))
     {
         /* file is an executable, not a dll */
@@ -604,7 +601,6 @@ static BOOL do_register_dll( const struct register_dll_info *info, const WCHAR *
         CloseHandle( info.hProcess );
         goto done;
     }
-#endif // __WINESRC__
 
     if (flags & FLG_REGSVR_DLLREGISTER)
     {

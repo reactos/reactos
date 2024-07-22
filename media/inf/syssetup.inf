@@ -144,3 +144,21 @@ Control="System\CurrentControlSet\Control"
 
 [Classes]
 HKLM,%CurrentVersion%\Installer,"InstallerLocation",,"%11%"
+
+[DestinationDirs]
+IECopy=16422,Internet Explorer
+
+[Finalize] ; Executed by RunOnce on first normal boot
+AddReg=FinalizeAddReg
+CopyFiles=IECopy
+RegisterDlls=IEReg
+
+[FinalizeAddReg]
+HKLM,SOFTWARE\Microsoft\.NETFramework,InstallRoot,,"%10%\Microsoft.NET\Framework\"
+
+[IECopy]
+iexplore.exe,..\iexplore.exe,,0x00002000
+
+[IEReg]
+16422,Internet Explorer,iexplore.exe
+11,,rundll32.exe,,99,"advpack.dll,DelNodeRunDLL32 ""%10%\iexplore.exe"""
