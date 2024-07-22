@@ -3227,6 +3227,8 @@ HRESULT CDefView::LoadViewState()
 
 HRESULT CDefView::SaveViewState(IStream *pStream)
 {
+    if (!m_ListView.m_hWnd)
+        return E_UNEXPECTED;
     int sortcol = MapListColumnToFolderColumn(m_sortInfo.ListColumn);
     PERSISTCLASSICVIEWSTATE cvs;
     cvs.SortColId = sortcol >= 0 ? (WORD)sortcol : 0;

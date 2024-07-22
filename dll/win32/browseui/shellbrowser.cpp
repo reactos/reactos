@@ -308,6 +308,7 @@ private:
     ShellSettings m_settings;
     SBFOLDERSETTINGS m_deffoldersettings;
     DWORD m_BrowserSvcFlags;
+    bool m_Destroyed;
 public:
 #if 0
     ULONG InternalAddRef()
@@ -728,6 +729,7 @@ extern HRESULT CreateProgressDialog(REFIID riid, void **ppv);
 CShellBrowser::CShellBrowser()
 {
     m_BrowserSvcFlags = BSF_RESIZABLE | BSF_CANMAXIMIZE;
+    m_Destroyed = false;
     fCurrentShellViewWindow = NULL;
     fCurrentDirectoryPIDL = NULL;
     fStatusBar = NULL;
@@ -1021,6 +1023,9 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
     SHGDNF                                  nameFlags;
     HRESULT                                 hResult;
     //TODO: BOOL                            nohistory = m_BrowserSvcFlags & BSF_NAVNOHISTORY;
+
+    if (m_Destroyed)
+        return S_FALSE;
 
     if (newShellFolder == NULL)
         return E_INVALIDARG;
@@ -3619,15 +3624,15 @@ LRESULT CShellBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 LRESULT CShellBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     HRESULT hr;
+    SaveViewState();
 
     /* The current thread is about to go down so render any IDataObject that may be left in the clipboard */
     OleFlushClipboard();
 
     // TODO: rip down everything
     {
+        m_Destroyed = true; // Ignore browse requests from Explorer band TreeView during destruction
         fToolbarProxy.Destroy();
-
-        SaveViewState();
         fCurrentShellView->DestroyViewWindow();
         fCurrentShellView->UIActivate(SVUIA_DEACTIVATE);
 
