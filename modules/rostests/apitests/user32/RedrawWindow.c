@@ -344,71 +344,71 @@ UINT TestRedrawWindow2(STRUCT_TestRedrawWindow* ptestRW, STRUCT_TestRedrawWindow
     {
         if (ptestRWcompare->resultColorPre1 != ptestRW->resultColorPre1)
         {
-            trace("ERROR-resultColorPre1 %x %x\n", (int)ptestRW->resultColorPre1, (int)ptestRWcompare->resultColorPre1);
+            trace("DIFFERENCE-resultColorPre1 0x%06x 0x%06x\n", (int)ptestRW->resultColorPre1, (int)ptestRWcompare->resultColorPre1);
             countErrors++;
         }
         if (ptestRWcompare->resultColorPre2 != ptestRW->resultColorPre2)
         {
-            trace("ERROR-resultColorPre2 %x %x\n", (int)ptestRW->resultColorPre2, (int)ptestRWcompare->resultColorPre2);
+            trace("DIFFERENCE-resultColorPre2 0x%06x 0x%06x\n", (int)ptestRW->resultColorPre2, (int)ptestRWcompare->resultColorPre2);
             countErrors++;
         }
         if (ptestRWcompare->resultColorPost1 != ptestRW->resultColorPost1)
         {
-            trace("ERROR-resultColorPost1 %x %x\n", (int)ptestRW->resultColorPost1, (int)ptestRWcompare->resultColorPost1);
+            trace("DIFFERENCE-resultColorPost1 0x%06x 0x%06x\n", (int)ptestRW->resultColorPost1, (int)ptestRWcompare->resultColorPost1);
             countErrors++;
         }
         if (ptestRWcompare->resultColorPost2 != ptestRW->resultColorPost2)
         {
-            trace("ERROR-resultColorPost2 %x %x\n", (int)ptestRW->resultColorPost2, (int)ptestRWcompare->resultColorPost2);
+            trace("DIFFERENCE-resultColorPost2 0x%06x 0x%06x\n", (int)ptestRW->resultColorPost2, (int)ptestRWcompare->resultColorPost2);
             countErrors++;
         }
         if (ptestRWcompare->resultNeedsUpdate != ptestRW->resultNeedsUpdate)
         {
-            trace("ERROR-resultNeedsUpdate %d %d\n", ptestRW->resultNeedsUpdate, ptestRWcompare->resultNeedsUpdate);
+            trace("DIFFERENCE-resultNeedsUpdate %d %d\n", ptestRW->resultNeedsUpdate, ptestRWcompare->resultNeedsUpdate);
             countErrors++;
         }
         if (ptestRW->resultNeedsUpdate)
         {
             if (ptestRWcompare->resultUpdateRect.left != ptestRW->resultUpdateRect.left)
             {
-                trace("ERROR-resultUpdateRect.left %d %d\n", (int)ptestRW->resultUpdateRect.left, (int)ptestRWcompare->resultUpdateRect.left);
+                trace("DIFFERENCE-resultUpdateRect.left %d %d\n", (int)ptestRW->resultUpdateRect.left, (int)ptestRWcompare->resultUpdateRect.left);
                 countErrors++;
             }
             if (ptestRWcompare->resultUpdateRect.top != ptestRW->resultUpdateRect.top)
             {
-                trace("ERROR-resultUpdateRect.top %d %d\n", (int)ptestRW->resultUpdateRect.top, (int)ptestRWcompare->resultUpdateRect.top);
+                trace("DIFFERENCE-resultUpdateRect.top %d %d\n", (int)ptestRW->resultUpdateRect.top, (int)ptestRWcompare->resultUpdateRect.top);
                 countErrors++;
             }
             if (ptestRWcompare->resultUpdateRect.right != ptestRW->resultUpdateRect.right)
             {
-                trace("ERROR-resultUpdateRect.right %d %d\n", (int)ptestRW->resultUpdateRect.right, (int)ptestRWcompare->resultUpdateRect.right);
+                trace("DIFFERENCE-resultUpdateRect.right %d %d\n", (int)ptestRW->resultUpdateRect.right, (int)ptestRWcompare->resultUpdateRect.right);
                 countErrors++;
             }
             if (ptestRWcompare->resultUpdateRect.bottom != ptestRW->resultUpdateRect.bottom)
             {
-                trace("ERROR-resultUpdateRect.bottom %d %d\n", (int)ptestRW->resultUpdateRect.bottom, (int)ptestRWcompare->resultUpdateRect.bottom);
+                trace("DIFFERENCE-resultUpdateRect.bottom %d %d\n", (int)ptestRW->resultUpdateRect.bottom, (int)ptestRWcompare->resultUpdateRect.bottom);
                 countErrors++;
             }
         }
         if (ptestRWcompare->resultWmEraseGnd != ptestRW->resultWmEraseGnd)
         {
-            trace("ERROR-resultWmEraseGnd %d %d\n", ptestRW->resultWmEraseGnd, ptestRWcompare->resultWmEraseGnd);
+            trace("DIFFERENCE-resultWmEraseGnd %d %d\n", ptestRW->resultWmEraseGnd, ptestRWcompare->resultWmEraseGnd);
             countErrors++;
         }
         if (ptestRWcompare->resultWmNcPaint != ptestRW->resultWmNcPaint)
         {
-            trace("ERROR-resultWmNcPaint %d %d\n", ptestRW->resultWmNcPaint, ptestRWcompare->resultWmNcPaint);
+            trace("DIFFERENCE-resultWmNcPaint %d %d\n", ptestRW->resultWmNcPaint, ptestRWcompare->resultWmNcPaint);
             countErrors++;
         }
         if (ptestRWcompare->resultPaintIndex != ptestRW->resultPaintIndex)
         {
-            trace("ERROR-resultPaintIndex %d %d\n", ptestRW->resultPaintIndex, ptestRWcompare->resultPaintIndex);
+            trace("DIFFERENCE-resultPaintIndex %d %d\n", ptestRW->resultPaintIndex, ptestRWcompare->resultPaintIndex);
             countErrors++;
         }
     }
     if (countErrors > 0)
     {
-        trace("ERRORS - %d\n", countErrors);
+        trace("COUNT OF DIFFERENCES - %d\n", countErrors);
     }
 
     return countErrors;
