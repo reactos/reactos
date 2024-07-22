@@ -7,7 +7,7 @@ add_definitions(
 list(APPEND SOURCE
     recyclebin.c
     recyclebin_generic.c
-    recyclebin_generic_enumerator.c
+    recyclebin_generic_enumerator.cpp
     recyclebin_v5.c
     recyclebin_v5_enumerator.c
     recyclebin_private.h)
