@@ -110,6 +110,21 @@ static int FindVerbInDefaultVerbList(LPCWSTR List, LPCWSTR Verb)
     return -1;
 }
 
+EXTERN_C HRESULT SHELL32_EnumDefaultVerbList(LPCWSTR List, UINT Index, LPWSTR Verb, SIZE_T cchMax)
+{
+    for (UINT i = 0; *List; ++i)
+    {
+        while (IsVerbListSeparator(*List))
+            List++;
+        LPCWSTR Start = List;
+        while (*List && !IsVerbListSeparator(*List))
+            List++;
+        if (List > Start && i == Index)
+            return StringCchCopyNW(Verb, cchMax, Start, List - Start);
+    }
+    return HRESULT_FROM_WIN32(ERROR_NO_MORE_ITEMS);
+}
+
 class CDefaultContextMenu :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IContextMenu3,

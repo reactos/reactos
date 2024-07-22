@@ -1557,16 +1557,25 @@ static HRESULT ShellExecute_ContextMenuVerb(LPSHELLEXECUTEINFOW sei)
     __SHCloneStrWtoA(&verb, sei->lpVerb);
     __SHCloneStrWtoA(&parameters, sei->lpParameters);
 
-    CMINVOKECOMMANDINFOEX ici = {};
-    ici.cbSize = sizeof ici;
-    ici.fMask = (sei->fMask & (SEE_MASK_NO_CONSOLE | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI));
+    BOOL fDefault = !sei->lpVerb || !sei->lpVerb[0];
+    CMINVOKECOMMANDINFOEX ici = { sizeof(ici) };
+    ici.fMask = (sei->fMask & (SEE_MASK_NO_CONSOLE | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI)) | CMIC_MASK_UNICODE;
     ici.nShow = sei->nShow;
-    ici.lpVerb = verb;
+    if (!fDefault)
+    {
+        ici.lpVerb = verb;
+        ici.lpVerbW = sei->lpVerb;
+    }
     ici.hwnd = sei->hwnd;
     ici.lpParameters = parameters;
+    ici.lpParametersW = sei->lpParameters;
+    if ((sei->fMask & (SEE_MASK_HASLINKNAME | SEE_MASK_CLASSNAME)) == SEE_MASK_HASLINKNAME)
+    {
+        ici.fMask |= CMIC_MASK_HASLINKNAME;
+        ici.lpTitleW = sei->lpClass;
+    }
 
     HMENU hMenu = CreatePopupMenu();
-    BOOL fDefault = !ici.lpVerb || !ici.lpVerb[0];
     hr = cm->QueryContextMenu(hMenu, 0, 1, 0x7fff, fDefault ? CMF_DEFAULTONLY : 0);
     if (!FAILED_UNEXPECTEDLY(hr))
     {
@@ -1575,6 +1584,7 @@ static HRESULT ShellExecute_ContextMenuVerb(LPSHELLEXECUTEINFOW sei)
             INT uDefault = GetMenuDefaultItem(hMenu, FALSE, 0);
             uDefault = (uDefault != -1) ? uDefault - 1 : 0;
             ici.lpVerb = MAKEINTRESOURCEA(uDefault);
+            ici.lpVerbW = MAKEINTRESOURCEW(uDefault);
         }
 
         hr = cm->InvokeCommand((LPCMINVOKECOMMANDINFO)&ici);
