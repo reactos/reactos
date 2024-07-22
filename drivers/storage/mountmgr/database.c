@@ -255,8 +255,8 @@ DeleteRemoteDatabaseEntry(IN HANDLE Database,
         return STATUS_INVALID_PARAMETER;
     }
 
-    /* Validate parameters: ensure we won't get negative size */
-    if (Entry->EntrySize + StartingOffset > DatabaseSize)
+    /* Validate parameters: ensure we won't get zero or negative size */
+    if (Entry->EntrySize + StartingOffset >= DatabaseSize)
     {
         /* If we get invalid parameters, truncate the whole database
          * starting the wrong entry. We can't rely on the rest
