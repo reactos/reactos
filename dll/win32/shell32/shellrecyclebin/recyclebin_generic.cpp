@@ -4,83 +4,78 @@
  * FILE:        lib/recyclebin/recyclebin_generic.c
  * PURPOSE:     Deals with a system-wide recycle bin
  * PROGRAMMERS: Copyright 2007 Hervé Poussineau (hpoussin@reactos.org)
+ *              Copyright 2024 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "recyclebin_private.h"
 
-struct RecycleBinGeneric
+class RecycleBinGeneric
+    : public IRecycleBin
 {
-    ULONG ref;
-    IRecycleBin recycleBinImpl;
+public:
+    RecycleBinGeneric();
+    virtual ~RecycleBinGeneric();
+
+    /* IUnknown methods */
+    STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject) override;
+    STDMETHODIMP_(ULONG) AddRef() override;
+    STDMETHODIMP_(ULONG) Release() override;
+
+    /* IRecycleBin methods */
+    STDMETHODIMP DeleteFile(LPCWSTR szFileName) override;
+    STDMETHODIMP EmptyRecycleBin() override;
+    STDMETHODIMP EnumObjects(IRecycleBinEnumList **ppEnumList) override;
+
+protected:
+    LONG m_ref;
 };
 
-static HRESULT STDMETHODCALLTYPE
-RecycleBinGeneric_RecycleBin_QueryInterface(
-    IRecycleBin *This,
-    REFIID riid,
-    void **ppvObject)
+STDMETHODIMP RecycleBinGeneric::QueryInterface(REFIID riid, void **ppvObject)
 {
-    struct RecycleBinGeneric *s = CONTAINING_RECORD(This, struct RecycleBinGeneric, recycleBinImpl);
-
-    TRACE("(%p, %s, %p)\n", This, debugstr_guid(riid), ppvObject);
+    TRACE("(%p, %s, %p)\n", this, debugstr_guid(&riid), ppvObject);
 
     if (!ppvObject)
         return E_POINTER;
 
-    if (IsEqualIID(riid, &IID_IUnknown))
-        *ppvObject = &s->recycleBinImpl;
-    else if (IsEqualIID(riid, &IID_IRecycleBin))
-        *ppvObject = &s->recycleBinImpl;
+    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_IRecycleBin))
+        *ppvObject = static_cast<IRecycleBin *>(this);
     else
     {
         *ppvObject = NULL;
         return E_NOINTERFACE;
     }
 
-    IUnknown_AddRef(This);
+    AddRef();
     return S_OK;
 }
 
-static ULONG STDMETHODCALLTYPE
-RecycleBinGeneric_RecycleBin_AddRef(
-    IRecycleBin *This)
+STDMETHODIMP_(ULONG) RecycleBinGeneric::AddRef()
 {
-    struct RecycleBinGeneric *s = CONTAINING_RECORD(This, struct RecycleBinGeneric, recycleBinImpl);
-    ULONG refCount = InterlockedIncrement((PLONG)&s->ref);
-    TRACE("(%p)\n", This);
+    ULONG refCount = InterlockedIncrement(&m_ref);
+    TRACE("(%p)\n", this);
     return refCount;
 }
 
-static VOID
-RecycleBinGeneric_Destructor(
-    struct RecycleBinGeneric *s)
+RecycleBinGeneric::~RecycleBinGeneric()
 {
-    TRACE("(%p)\n", s);
-
-    CoTaskMemFree(s);
+    TRACE("(%p)\n", this);
 }
 
-static ULONG STDMETHODCALLTYPE
-RecycleBinGeneric_RecycleBin_Release(
-    IRecycleBin *This)
+STDMETHODIMP_(ULONG) RecycleBinGeneric::Release()
 {
-    struct RecycleBinGeneric *s = CONTAINING_RECORD(This, struct RecycleBinGeneric, recycleBinImpl);
     ULONG refCount;
 
-    TRACE("(%p)\n", This);
+    TRACE("(%p)\n", this);
 
-    refCount = InterlockedDecrement((PLONG)&s->ref);
+    refCount = InterlockedDecrement(&m_ref);
 
     if (refCount == 0)
-        RecycleBinGeneric_Destructor(s);
+        delete this;
 
     return refCount;
 }
 
-static HRESULT STDMETHODCALLTYPE
-RecycleBinGeneric_RecycleBin_DeleteFile(
-    IN IRecycleBin *This,
-    IN LPCWSTR szFileName)
+STDMETHODIMP RecycleBinGeneric::DeleteFile(LPCWSTR szFileName)
 {
     IRecycleBin *prb;
     LPWSTR szFullName = NULL;
@@ -89,7 +84,7 @@ RecycleBinGeneric_RecycleBin_DeleteFile(
     WCHAR szVolume[MAX_PATH];
     HRESULT hr;
 
-    TRACE("(%p, %s)\n", This, debugstr_w(szFileName));
+    TRACE("(%p, %s)\n", this, debugstr_w(szFileName));
 
     /* Get full file name */
     while (TRUE)
@@ -106,7 +101,7 @@ RecycleBinGeneric_RecycleBin_DeleteFile(
         if (szFullName)
             CoTaskMemFree(szFullName);
         dwBufferLength = len;
-        szFullName = CoTaskMemAlloc(dwBufferLength * sizeof(WCHAR));
+        szFullName = (LPWSTR)CoTaskMemAlloc(dwBufferLength * sizeof(WCHAR));
         if (!szFullName)
             return HRESULT_FROM_WIN32(ERROR_NOT_ENOUGH_MEMORY);
     }
@@ -138,22 +133,20 @@ RecycleBinGeneric_RecycleBin_DeleteFile(
         return hr;
     }
 
-    hr = IRecycleBin_DeleteFile(prb, szFullName);
+    hr = prb->DeleteFile(szFullName);
     CoTaskMemFree(szFullName);
-    IRecycleBin_Release(prb);
+    prb->Release();
     return hr;
 }
 
-static HRESULT STDMETHODCALLTYPE
-RecycleBinGeneric_RecycleBin_EmptyRecycleBin(
-    IN IRecycleBin *This)
+STDMETHODIMP RecycleBinGeneric::EmptyRecycleBin()
 {
     WCHAR szVolumeName[MAX_PATH];
     DWORD dwLogicalDrives, i;
     IRecycleBin *prb;
     HRESULT hr;
 
-    TRACE("(%p)\n", This);
+    TRACE("(%p)\n", this);
 
     dwLogicalDrives = GetLogicalDrives();
     if (dwLogicalDrives == 0)
@@ -171,44 +164,33 @@ RecycleBinGeneric_RecycleBin_EmptyRecycleBin(
         if (!SUCCEEDED(hr))
             return hr;
 
-        hr = IRecycleBin_EmptyRecycleBin(prb);
-        IRecycleBin_Release(prb);
+        hr = prb->EmptyRecycleBin();
+        prb->Release();
     }
 
     return S_OK;
 }
 
-static HRESULT STDMETHODCALLTYPE
-RecycleBinGeneric_RecycleBin_EnumObjects(
-    IN IRecycleBin *This,
-    OUT IRecycleBinEnumList **ppEnumList)
+STDMETHODIMP RecycleBinGeneric::EnumObjects(IRecycleBinEnumList **ppEnumList)
 {
-    TRACE("(%p, %p)\n", This, ppEnumList);
+    TRACE("(%p, %p)\n", this, ppEnumList);
     return RecycleBinGenericEnum_Constructor(ppEnumList);
 }
 
-CONST_VTBL struct IRecycleBinVtbl RecycleBinGenericVtbl =
+RecycleBinGeneric::RecycleBinGeneric()
 {
-    RecycleBinGeneric_RecycleBin_QueryInterface,
-    RecycleBinGeneric_RecycleBin_AddRef,
-    RecycleBinGeneric_RecycleBin_Release,
-    RecycleBinGeneric_RecycleBin_DeleteFile,
-    RecycleBinGeneric_RecycleBin_EmptyRecycleBin,
-    RecycleBinGeneric_RecycleBin_EnumObjects,
-};
+    m_ref = 1;
+}
 
+EXTERN_C
 HRESULT RecycleBinGeneric_Constructor(OUT IUnknown **ppUnknown)
 {
     /* This RecycleBin implementation was introduced to be able to manage all
      * drives at once, and instanciate the 'real' implementations when needed */
-    struct RecycleBinGeneric *s;
-
-    s = CoTaskMemAlloc(sizeof(struct RecycleBinGeneric));
-    if (!s)
+    RecycleBinGeneric *pThis = new RecycleBinGeneric();
+    if (!pThis)
         return E_OUTOFMEMORY;
-    s->ref = 1;
-    s->recycleBinImpl.lpVtbl = &RecycleBinGenericVtbl;
 
-    *ppUnknown = (IUnknown *)&s->recycleBinImpl;
+    *ppUnknown = static_cast<IUnknown *>(static_cast<IRecycleBin *>(pThis));
     return S_OK;
 }
