@@ -2710,6 +2710,10 @@ HRESULT WINAPI ShellExecCmdLine(
         {
             StringCchCopyW(szFile, _countof(szFile), szFile2);
         }
+        else if (SearchPathW(NULL, szFile, NULL, _countof(szFile2), szFile2, NULL))
+        {
+            StringCchCopyW(szFile, _countof(szFile), szFile2);
+        }
 
         apPathList[0] = pwszStartDir;
         apPathList[1] = NULL;
