@@ -2704,13 +2704,10 @@ HRESULT WINAPI ShellExecCmdLine(
             SetCurrentDirectoryW(pwszStartDir);
         }
 
-        if (PathIsRelativeW(szFile) &&
-            GetFullPathNameW(szFile, _countof(szFile2), szFile2, NULL) &&
-            PathFileExistsW(szFile2))
-        {
-            StringCchCopyW(szFile, _countof(szFile), szFile2);
-        }
-        else if (SearchPathW(NULL, szFile, NULL, _countof(szFile2), szFile2, NULL))
+        if ((PathIsRelativeW(szFile) &&
+             GetFullPathNameW(szFile, _countof(szFile2), szFile2, NULL) &&
+             PathFileExistsW(szFile2)) ||
+            SearchPathW(NULL, szFile, NULL, _countof(szFile2), szFile2, NULL))
         {
             StringCchCopyW(szFile, _countof(szFile), szFile2);
         }
