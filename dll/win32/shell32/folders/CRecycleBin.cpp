@@ -768,7 +768,12 @@ HRESULT WINAPI CRecycleBin::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, LPS
             pszBackslash = wcsrchr(pFileDetails->szName, L'\\');
             Length = (pszBackslash - pFileDetails->szName);
             memcpy((LPVOID)buffer, pFileDetails->szName, Length * sizeof(WCHAR));
-            buffer[Length] = L'\0';
+            buffer[Length] = UNICODE_NULL;
+            if (buffer[0] && buffer[1] == L':' && !buffer[2])
+            {
+                buffer[2] = L'\\';
+                buffer[3] = UNICODE_NULL;
+            }
             break;
         case COLUMN_SIZE:
             StrFormatKBSizeW(pFileDetails->FileSize.QuadPart, buffer, MAX_PATH);
