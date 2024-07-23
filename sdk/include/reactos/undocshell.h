@@ -93,6 +93,9 @@ HRESULT WINAPI SHILCreateFromPathW (
     LPITEMIDLIST * ppidl,
     DWORD *attributes);
 
+HRESULT WINAPI SHInvokeCommand(
+    HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST lpApidl, LPCSTR lpVerb);
+
 /*
     string functions
 */
