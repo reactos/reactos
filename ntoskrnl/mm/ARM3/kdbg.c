@@ -75,6 +75,11 @@ ExpKdbgExtPool(
             KdbpPrint("Invalid parameter: %s\n", Argv[2]);
             return TRUE;
         }
+
+#ifdef _WIN64
+        ASSERT(Flags <= 0xFFFFFFFFULL);
+#endif
+        ASSERT((Flags & 0x7FFFFFFE) == 0);
     }
 
     /* Check if we got an address */
@@ -211,7 +216,10 @@ ExpKdbgExtPoolUsed(
     }
 
     /* Call the dumper */
-    MiDumpPoolConsumers(TRUE, Tag, Mask, Flags);
+#ifdef _WIN64
+    ASSERT(Flags <= 0xFFFFFFFFULL);
+#endif
+    MiDumpPoolConsumers(TRUE, Tag, Mask, (ULONG)Flags);
 
     return TRUE;
 }
