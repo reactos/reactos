@@ -148,7 +148,8 @@ HKLM,%CurrentVersion%\Installer,"InstallerLocation",,"%11%"
 [DestinationDirs]
 IECopy=16422,Internet Explorer
 
-[Finalize] ; Executed by RunOnce on first normal boot
+[Finalize] ; Executed by RunOnceEx on first normal boot
+; FIXME: This should be moved to ie.inf,DefaultInstall and executed by [Infs.Always]
 AddReg=FinalizeAddReg
 CopyFiles=IECopy
 RegisterDlls=IEReg
