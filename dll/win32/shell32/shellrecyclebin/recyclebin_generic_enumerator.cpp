@@ -1,9 +1,8 @@
 /*
  * PROJECT:     Recycle bin management
- * LICENSE:     GPL v2 - See COPYING in the top level directory
- * FILE:        lib/recyclebin/recyclebin_generic_enumerator.c
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Enumerates contents of all recycle bins
- * PROGRAMMERS: Copyright 2007 Hervé Poussineau (hpoussin@reactos.org)
+ * COPYRIGHT:   Copyright 2007 Hervé Poussineau (hpoussin@reactos.org)
  *              Copyright 2024 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
