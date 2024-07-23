@@ -60,22 +60,18 @@ typedef struct PART_MATCH
 LCID curLcid = 0;
 std::set<LANGID> langs;
 std::map<E_MODULE, HMODULE> mod;
-std::map<E_STRING, PART_TEST> parts =
+std::map<E_STRING, PART_TEST> parts;
+
+static void InitParts(void)
 {
-    { SH32_PROGRAMS, { shell32, 45 /* IDS_PROGRAMS "Start Menu\Programs" */, 2 } },
-    { SH32_STARTUP, { shell32, 48 /* IDS_STARTUP "Start Menu\Programs\StartUp" */, 3 } },
-    { SH32_STARTMENU, { shell32, 51 /* IDS_STARTMENU "Start Menu" */, 1 } },
-    { SH32_PROGRAM_FILES, { shell32, 63 /* IDS_PROGRAM_FILES "Program Files" */, 1 } },
-    { SH32_PROGRAM_FILES_COMMON, { shell32, 65 /* IDS_PROGRAM_FILES_COMMON "Program Files\Common Files" */, 2 } },
-    { SH32_ADMINTOOLS, { shell32, 67 /* IDS_ADMINTOOLS "Start Menu\Programs\Administrative Tools" */, 3 } },
-    { UENV_STARTMENU, { userenv, 11 /* IDS_STARTMENU "Start Menu" */, 1 } },
-    { UENV_PROGRAMS, { userenv, 12 /* IDS_PROGRAMS "Start Menu\Programs" */, 2 } },
-    { UENV_STARTUP, { userenv, 13 /* IDS_STARTUP "Start Menu\Programs\StartUp" */, 3 } },
-    { SYSS_PROGRAMFILES, { syssetup, 3600 /* IDS_PROGRAMFILES "%SystemDrive%\Program Files" */, 2 } },
-    { SYSS_COMMONFILES, { syssetup, 3601 /* IDS_COMMONFILES "Common Files" */, 1 } },
-    { MMSY_STARTMENU, { mmsys, 5851 /* IDS_STARTMENU "Start Menu" */, 1 } },
-    { EOLD_PROGRAMS, { explorer_old, 10 /* IDS_PROGRAMS "Programs" */, 1 } },
-};
+    PART_TEST part_test;
+#define DEFINE_PART(eString, eModule, id, nParts) do { \
+        part_test = { eModule, id, nParts }; \
+        parts.insert(std::make_pair(eString, part_test)); \
+    } while (0);
+#include "parts.h"
+#undef DEFINE_PART
+}
 
 static PART_MATCH PartMatches[] =
 {
@@ -214,6 +210,8 @@ static void TEST_PartMatches(void)
 static void TEST_LocaleTests(void)
 {
     // Initialization
+    InitParts();
+
     WCHAR szOldDir[MAX_PATH], szBuffer[MAX_PATH];
     GetCurrentDirectoryW(_countof(szOldDir), szOldDir);
 
@@ -229,23 +227,15 @@ static void TEST_LocaleTests(void)
         StringCchCopyNW(szNewDir, _countof(szNewDir), szBuffer, pszFind - szBuffer);
         SetCurrentDirectoryW(szNewDir);
 
-        lib = {
-            {shell32, L"dll\\win32\\shell32\\shell32.dll"},
-            {userenv, L"dll\\win32\\userenv\\userenv.dll"},
-            {syssetup, L"dll\\win32\\syssetup\\syssetup.dll"},
-            {mmsys, L"dll\\cpl\\mmsys\\mmsys.cpl"},
-            {explorer_old, L"modules\\rosapps\\applications\\explorer-old\\explorer_old.exe"},
-        };
+#define DEFINE_MODULE(eModule, pszPath) lib.insert(std::make_pair(eModule, pszPath));
+#include "modules1.h"
+#undef DEFINE_MODULE
     }
     else
     {
-        lib = {
-            {shell32, L"shell32.dll"},
-            {userenv, L"userenv.dll"},
-            {syssetup, L"syssetup.dll"},
-            {mmsys, L"mmsys.cpl"},
-            {explorer_old, L"explorer_old.exe"},
-        };
+#define DEFINE_MODULE(eModule, pszPath) lib.insert(std::make_pair(eModule, pszPath));
+#include "modules2.h"
+#undef DEFINE_MODULE
     }
 
     for (auto& lb : lib)
