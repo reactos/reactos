@@ -456,6 +456,8 @@ template<class B, class R> static HRESULT SHILCombine(B base, PCUIDLIST_RELATIVE
     return r ? S_OK : E_OUTOFMEMORY;
 }
 
+template<class T> static inline bool StrIsNullOrEmpty(T str) { return !str || !*str; }
+
 HRESULT inline SHSetStrRet(LPSTRRET pStrRet, LPCSTR pstrValue)
 {
     pStrRet->uType = STRRET_CSTR;

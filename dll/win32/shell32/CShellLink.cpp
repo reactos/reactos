@@ -2602,7 +2602,7 @@ HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
     if (unicode)
     {
         LPCMINVOKECOMMANDINFOEX iciex = (LPCMINVOKECOMMANDINFOEX)lpici;
-        if (iciex->lpParametersW && iciex->lpParametersW[0])
+        if (!StrIsNullOrEmpty(iciex->lpParametersW))
         {
             args += L' ';
             args += iciex->lpParametersW;
@@ -2611,7 +2611,7 @@ HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
     else
     {
         CComHeapPtr<WCHAR> pszParams;
-        if (lpici->lpParameters && lpici->lpParameters[0] && __SHCloneStrAtoW(&pszParams, lpici->lpParameters))
+        if (!StrIsNullOrEmpty(lpici->lpParameters) && __SHCloneStrAtoW(&pszParams, lpici->lpParameters))
         {
             args += L' ';
             args += pszParams;

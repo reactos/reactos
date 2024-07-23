@@ -1302,6 +1302,9 @@ CDefaultContextMenu::TryToBrowse(
 HRESULT
 CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFOEX lpcmi, LPCITEMIDLIST pidl, PStaticShellEntry pEntry)
 {
+    BOOL unicode = lpcmi->cbSize >= FIELD_OFFSET(CMINVOKECOMMANDINFOEX, ptInvoke) &&
+                   (lpcmi->fMask & CMIC_MASK_UNICODE);
+
     LPITEMIDLIST pidlFull = ILCombine(m_pidlFolder, pidl);
     if (pidlFull == NULL)
     {
@@ -1323,9 +1326,8 @@ CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFOEX lpcmi, LPCITEMIDLIST pid
             *wszDir = UNICODE_NULL;
     }
 
-    SHELLEXECUTEINFOW sei;
-    ZeroMemory(&sei, sizeof(sei));
-    sei.cbSize = sizeof(sei);
+    CComHeapPtr<WCHAR> pszParamsW;
+    SHELLEXECUTEINFOW sei = { sizeof(sei) };
     sei.hwnd = lpcmi->hwnd;
     sei.nShow = SW_SHOWNORMAL;
     sei.lpVerb = pEntry->Verb;
@@ -1334,9 +1336,12 @@ CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFOEX lpcmi, LPCITEMIDLIST pid
     sei.hkeyClass = pEntry->hkClass;
     sei.fMask = SEE_MASK_CLASSKEY | SEE_MASK_IDLIST;
     if (bHasPath)
-    {
         sei.lpFile = wszPath;
-    }
+
+    if (unicode && !StrIsNullOrEmpty(lpcmi->lpParametersW))
+        sei.lpParameters = lpcmi->lpParametersW;
+    else if (!StrIsNullOrEmpty(lpcmi->lpParameters) && __SHCloneStrAtoW(&pszParamsW, lpcmi->lpParameters))
+        sei.lpParameters = pszParamsW;
 
     ShellExecuteExW(&sei);
 
