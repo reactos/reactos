@@ -108,8 +108,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
         case WM_DESTROY:
+        {
             PostQuitMessage(0);
             return 0;
+        }
         case WM_PAINT:
         {
             PAINTSTRUCT ps;
@@ -140,25 +142,31 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 LRESULT CALLBACK ChildWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg) {
-    case WM_SYNCPAINT: {
-        PAINTSTRUCT ps;
-        HDC hdc = BeginPaint(hwnd, &ps);
-        HBRUSH brush = CreateSolidBrush(RGB(0, 0, 255));
-        FillRect(hdc, &ps.rcPaint, brush);
-        DeleteObject(brush);
-        EndPaint(hwnd, &ps);
-    } break;
-    case WM_PAINT: {
-        PAINTSTRUCT ps;
-        HDC hdc = BeginPaint(hwnd, &ps);
-        HBRUSH brush = CreateSolidBrush(RGB(0, 0, 255));
-        FillRect(hdc, &ps.rcPaint, brush);
-        DeleteObject(brush);
-        EndPaint(hwnd, &ps);
-    } break;
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        return 0;
+        case WM_SYNCPAINT:
+        {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
+            HBRUSH brush = CreateSolidBrush(RGB(0, 0, 255));
+            FillRect(hdc, &ps.rcPaint, brush);
+            DeleteObject(brush);
+            EndPaint(hwnd, &ps);
+            break;
+        }
+        case WM_PAINT:
+        {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
+            HBRUSH brush = CreateSolidBrush(RGB(0, 0, 255));
+            FillRect(hdc, &ps.rcPaint, brush);
+            DeleteObject(brush);
+            EndPaint(hwnd, &ps);
+            break;
+        }
+        case WM_DESTROY:
+        {
+            PostQuitMessage(0);
+            return 0;
+        }
     }
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
@@ -285,12 +293,14 @@ void TestRedrawWindow(STRUCT_TestRedrawWindow* ptestRW) {
     ReleaseDC(hwnd, hdc);
 
     RgnUpdate = NULL;
-    if (ptestRW->useRegion) {
+    if (ptestRW->useRegion)
+    {
         RgnUpdate = CreateRectRgn(ptestRW->regRect.left, ptestRW->regRect.top, ptestRW->regRect.right, ptestRW->regRect.bottom);
     }
 
     prect=NULL;
-    if (ptestRW->useRect) {
+    if (ptestRW->useRect)
+    {
         prect = &ptestRW->rectRect;
     }
 
@@ -313,7 +323,8 @@ void TestRedrawWindow(STRUCT_TestRedrawWindow* ptestRW) {
 
     ptestRW->resultNeedsUpdate = GetUpdateRect(hwnd, &ptestRW->resultUpdateRect, FALSE);
 
-    if (ptestRW->forcePaint) {
+    if (ptestRW->forcePaint)
+    {
         UpdateWindow(hwnd);
     }
 
