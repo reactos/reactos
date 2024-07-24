@@ -124,7 +124,7 @@ protected:
     HANDLE m_hInfo;
     HANDLE m_hInfoMapped;
     DWORD m_EnumeratorCount;
-    LPWSTR m_VolumePath;
+    CStringW m_VolumePath;
     CStringW m_Folder; /* [drive]:\[RECYCLE_BIN_DIRECTORY]\{SID} */
 };
 
@@ -653,7 +653,6 @@ RecycleBin5::RecycleBin5()
     , m_hInfo(NULL)
     , m_hInfoMapped(NULL)
     , m_EnumeratorCount(0)
-    , m_VolumePath(NULL)
 {
 }
 
@@ -665,12 +664,10 @@ HRESULT RecycleBin5::Init(_In_ LPCWSTR VolumePath)
     PTOKEN_USER TokenUserInfo = NULL;
     LPWSTR StringSid = NULL;
     DWORD Needed;
-    HRESULT hr;
     INT len;
+    HRESULT hr;
 
-    hr = SHStrDup(VolumePath, &m_VolumePath);
-    if (FAILED(hr))
-        goto cleanup;
+    m_VolumePath = VolumePath;
 
     /* Get information about file system */
     if (!GetVolumeInformationW(VolumePath, NULL, 0, NULL, NULL, &FileSystemFlags, NULL, 0))
