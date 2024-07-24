@@ -7,7 +7,8 @@
  */
 
 #include "recyclebin_private.h"
-
+#include <atlstr.h>
+#include <shlwapi.h>
 #include "sddl.h"
 
 static BOOL
@@ -94,13 +95,10 @@ cleanup:
 class RecycleBin5 : public IRecycleBin, public IRecycleBin5
 {
 public:
-    RecycleBin5(
-        LPCWSTR VolumePath,
-        LPCWSTR RecycleBinDirectory,
-        LPWSTR StringSid,
-        PTOKEN_USER TokenUserInfo,
-        LPWSTR pszFolder);
+    RecycleBin5();
     virtual ~RecycleBin5();
+
+    HRESULT Init(_In_ LPCWSTR VolumePath);
 
     /* IUnknown interface */
     STDMETHODIMP QueryInterface(IN REFIID riid, OUT void **ppvObject) override;
@@ -128,9 +126,6 @@ protected:
     DWORD m_EnumeratorCount;
     LPWSTR m_VolumePath;
     LPWSTR m_Folder; /* [drive]:\[RECYCLE_BIN_DIRECTORY]\{SID} */
-
-public:
-    HRESULT m_hr;
 };
 
 STDMETHODIMP RecycleBin5::QueryInterface(IN REFIID riid, OUT void **ppvObject)
@@ -645,77 +640,27 @@ cleanup:
     return hr;
 }
 
-RecycleBin5::RecycleBin5(
-    LPCWSTR VolumePath,
-    LPCWSTR RecycleBinDirectory,
-    LPWSTR StringSid,
-    PTOKEN_USER TokenUserInfo,
-    LPWSTR pszFolder)
+RecycleBin5::RecycleBin5()
     : m_ref(1)
     , m_hInfo(NULL)
     , m_hInfoMapped(NULL)
     , m_EnumeratorCount(0)
     , m_VolumePath(NULL)
-    , m_Folder(pszFolder)
-    , m_hr(S_OK)
+    , m_Folder(NULL)
 {
-    INT len;
-    LPWSTR p;
-    HRESULT hr;
-
-    if (StringSid)
-        len = swprintf(m_Folder, L"%s%s\\%s", VolumePath, RecycleBinDirectory, StringSid);
-    else
-        len = swprintf(m_Folder, L"%s%s", VolumePath, RecycleBinDirectory);
-
-    p = &m_Folder[len];
-    wcscpy(p, L"\\" RECYCLE_BIN_FILE_NAME);
-
-    m_hInfo = CreateFileW(m_Folder, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-    if (m_hInfo == INVALID_HANDLE_VALUE &&
-        (GetLastError() == ERROR_PATH_NOT_FOUND || GetLastError() == ERROR_FILE_NOT_FOUND))
-    {
-        *p = UNICODE_NULL;
-        hr = RecycleBin5_Create(m_Folder, TokenUserInfo ? TokenUserInfo->User.Sid : NULL);
-        *p = L'\\';
-        if (!SUCCEEDED(hr))
-        {
-            m_hr = hr;
-            return;
-        }
-        m_hInfo = CreateFileW(m_Folder, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-    }
-    if (m_hInfo == INVALID_HANDLE_VALUE)
-    {
-        m_hr = HRESULT_FROM_WIN32(GetLastError());
-        return;
-    }
-    m_hInfoMapped = CreateFileMappingW(m_hInfo, NULL, PAGE_READWRITE | SEC_COMMIT, 0, 0, NULL);
-    if (!m_hInfoMapped)
-    {
-        m_hr = HRESULT_FROM_WIN32(GetLastError());
-        return;
-    }
-    *p = UNICODE_NULL;
-    m_VolumePath = p + 1;
-    wcscpy(m_VolumePath, VolumePath);
 }
 
-EXTERN_C
-HRESULT RecycleBin5_Constructor(IN LPCWSTR VolumePath, OUT IUnknown **ppUnknown)
+HRESULT RecycleBin5::Init(_In_ LPCWSTR VolumePath)
 {
-    RecycleBin5 *pThis;
     DWORD FileSystemFlags;
     LPCWSTR RecycleBinDirectory;
     HANDLE tokenHandle = INVALID_HANDLE_VALUE;
     PTOKEN_USER TokenUserInfo = NULL;
     LPWSTR StringSid = NULL;
-    DWORD Needed, DirectoryLength;
+    DWORD Needed;
     HRESULT hr;
-    LPWSTR pszFolder;
-
-    if (!ppUnknown)
-        return E_POINTER;
+    LPWSTR p;
+    CStringW strFolder;
 
     /* Get information about file system */
     if (!GetVolumeInformationW(VolumePath, NULL, 0, NULL, NULL, &FileSystemFlags, NULL, 0))
@@ -723,8 +668,11 @@ HRESULT RecycleBin5_Constructor(IN LPCWSTR VolumePath, OUT IUnknown **ppUnknown)
         hr = HRESULT_FROM_WIN32(GetLastError());
         goto cleanup;
     }
+
     if (!(FileSystemFlags & FILE_PERSISTENT_ACLS))
+    {
         RecycleBinDirectory = RECYCLE_BIN_DIRECTORY_WITHOUT_ACL;
+    }
     else
     {
         RecycleBinDirectory = RECYCLE_BIN_DIRECTORY_WITH_ACL;
@@ -763,35 +711,46 @@ HRESULT RecycleBin5_Constructor(IN LPCWSTR VolumePath, OUT IUnknown **ppUnknown)
         }
     }
 
-    DirectoryLength = wcslen(VolumePath) + wcslen(RecycleBinDirectory) + 1;
+    strFolder = VolumePath;
+    strFolder += RecycleBinDirectory;
     if (StringSid)
-        DirectoryLength += wcslen(StringSid) + 1;
-    DirectoryLength += 1 + wcslen(RECYCLE_BIN_FILE_NAME);
-    DirectoryLength += wcslen(VolumePath) + 1;
-    Needed = (DirectoryLength + 1) * sizeof(WCHAR);
-
-    pszFolder = (LPWSTR)SHAlloc(Needed);
-    if (!pszFolder)
     {
-        hr = E_OUTOFMEMORY;
+        strFolder += L'\\';
+        strFolder += StringSid;
+    }
+    strFolder += L"\\" RECYCLE_BIN_FILE_NAME;
+    hr = SHStrDup(strFolder, &m_Folder);
+    if (FAILED(hr))
+        goto cleanup;
+
+    m_hInfo = CreateFileW(m_Folder, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+    if (m_hInfo == INVALID_HANDLE_VALUE &&
+        (GetLastError() == ERROR_PATH_NOT_FOUND || GetLastError() == ERROR_FILE_NOT_FOUND))
+    {
+        *p = UNICODE_NULL;
+        hr = RecycleBin5_Create(m_Folder, TokenUserInfo ? TokenUserInfo->User.Sid : NULL);
+        *p = L'\\';
+        if (!SUCCEEDED(hr))
+            goto cleanup;
+        m_hInfo = CreateFileW(m_Folder, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+    }
+
+    if (m_hInfo == INVALID_HANDLE_VALUE)
+    {
+        hr = HRESULT_FROM_WIN32(GetLastError());
         goto cleanup;
     }
 
-    pThis = new RecycleBin5(VolumePath, RecycleBinDirectory, StringSid, TokenUserInfo, pszFolder);
-    if (!pThis)
+    m_hInfoMapped = CreateFileMappingW(m_hInfo, NULL, PAGE_READWRITE | SEC_COMMIT, 0, 0, NULL);
+    if (!m_hInfoMapped)
     {
-        hr = E_OUTOFMEMORY;
+        hr = HRESULT_FROM_WIN32(GetLastError());
         goto cleanup;
     }
 
-    if (FAILED(pThis->m_hr))
-    {
-        hr = pThis->m_hr;
-        goto cleanup;
-    }
-
-    *ppUnknown = static_cast<IRecycleBin5 *>(pThis);
-    hr = S_OK;
+    *p = UNICODE_NULL;
+    m_VolumePath = p + 1;
+    wcscpy(m_VolumePath, VolumePath);
 
 cleanup:
     if (tokenHandle != INVALID_HANDLE_VALUE)
@@ -799,10 +758,28 @@ cleanup:
     HeapFree(GetProcessHeap(), 0, TokenUserInfo);
     if (StringSid)
         LocalFree(StringSid);
-    if (!SUCCEEDED(hr))
-    {
-        if (pThis)
-            delete pThis;
-    }
     return hr;
+}
+
+EXTERN_C
+HRESULT RecycleBin5_Constructor(_In_ LPCWSTR VolumePath, _Out_ IUnknown **ppUnknown)
+{
+    if (!ppUnknown)
+        return E_POINTER;
+
+    *ppUnknown = NULL;
+
+    RecycleBin5 *pThis = new RecycleBin5();
+    if (!pThis)
+        return E_OUTOFMEMORY;
+
+    HRESULT hr = pThis->Init(VolumePath);
+    if (FAILED(hr))
+    {
+        delete pThis;
+        return hr;
+    }
+
+    *ppUnknown = static_cast<IRecycleBin5 *>(pThis);
+    return S_OK;
 }
