@@ -153,7 +153,7 @@ RecycleBinGenericEnum::Next(DWORD celt, IRecycleBinFile **rgelt, DWORD *pceltFet
             fetched += newFetched;
         if (hr == S_FALSE || newFetched == 0)
         {
-            hr = m_current->Release();
+            m_current->Release();
             m_current = NULL;
         }
         else if (!SUCCEEDED(hr))
