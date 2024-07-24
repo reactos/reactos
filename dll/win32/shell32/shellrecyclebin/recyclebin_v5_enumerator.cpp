@@ -263,17 +263,13 @@ RecycleBin5File::Init(
 
     CStringW strFullName(Folder);
     strFullName += L"\\D";
-    strFullName += (WCHAR)(pDeletedFile->dwDriveNumber + 'a');
+    strFullName += (WCHAR)(L'a' + pDeletedFile->dwDriveNumber);
     strFullName += szUniqueId;
     strFullName += PathFindExtensionW(pDeletedFile->FileNameW);
     if (GetFileAttributesW(strFullName) == INVALID_FILE_ATTRIBUTES)
         return E_FAIL;
 
-    HRESULT hr = SHStrDup(strFullName, &m_FullName);
-    if (FAILED(hr))
-        return hr;
-
-    return S_OK;
+    return SHStrDup(strFullName, &m_FullName);
 }
 
 static HRESULT
@@ -285,6 +281,8 @@ RecycleBin5File_Constructor(
 {
     if (!ppFile)
         return E_POINTER;
+
+    *ppFile = NULL;
 
     RecycleBin5File *pThis = new RecycleBin5File();
     if (!pThis)
@@ -471,6 +469,8 @@ RecycleBin5Enum_Constructor(
 {
     if (!ppUnknown)
         return E_POINTER;
+
+    *ppUnknown = NULL;
 
     RecycleBin5Enum *pThis = new RecycleBin5Enum();
     if (!pThis)
