@@ -557,7 +557,13 @@ BOOL WINAPI ILIsEqual(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
      * so we can only check here
      */
     if (!pcheck(pidl1) || !pcheck (pidl2))
+#ifdef __REACTOS__
+    {
+        /* We don't understand the PIDL content but that does not mean it's invalid */
+    }
+#else
         return FALSE;
+#endif
 
     pdump (pidl1);
     pdump (pidl2);

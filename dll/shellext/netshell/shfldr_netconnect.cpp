@@ -6,6 +6,7 @@
  */
 
 #include "precomp.h"
+#include <shellfolderutils.h>
 
 #define MAX_PROPERTY_SHEET_PAGE (10)
 
@@ -99,11 +100,26 @@ HRESULT WINAPI CNetworkConnections::BindToStorage(
 /**************************************************************************
 * 	ISF_NetConnect_fnCompareIDs
 */
-
 HRESULT WINAPI CNetworkConnections::CompareIDs(
                LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
-    return E_NOTIMPL;
+    const UINT colcount = NETCONNECTSHELLVIEWCOLUMNS;
+
+    if (ILGetNext(pidl1) || ILGetNext(pidl2))
+        return E_NOTIMPL; // FIXME: Can the connection folder have subfolders?
+
+    if (lParam & SHCIDS_CANONICALONLY)
+    {
+        PNETCONIDSTRUCT p1 = ILGetConnData(pidl1);
+        PNETCONIDSTRUCT p2 = ILGetConnData(pidl2);
+        if (p1 && p2)
+        {
+            int res = memcmp(&p1->guidId, &p2->guidId, sizeof(GUID));
+            return MAKE_COMPARE_HRESULT(res);
+        }
+    }
+    IShellFolder2 *psf = static_cast<IShellFolder2*>(this);
+    return ShellFolderImpl_CompareItemIDs<colcount, -1>(psf, lParam, (PCUITEMID_CHILD)pidl1, (PCUITEMID_CHILD)pidl2);
 }
 
 /**************************************************************************
@@ -140,6 +156,7 @@ HRESULT WINAPI CNetworkConnections::GetAttributesOf(
                UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD * rgfInOut)
 {
     //IGenericSFImpl *This = (IGenericSFImpl *)iface;
+    // FIXME: Why are these reporting SFGAO_FILESYSTEM and SFGAO_FILESYSANCESTOR?
     HRESULT hr = S_OK;
     static const DWORD dwNetConnectAttributes = SFGAO_STORAGE | SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR |
         SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER | SFGAO_CANRENAME | SFGAO_CANDELETE;
@@ -155,6 +172,9 @@ HRESULT WINAPI CNetworkConnections::GetAttributesOf(
 
     if (*rgfInOut == 0)
         *rgfInOut = ~0;
+
+    if (cidl > 1)
+        *rgfInOut &= ~SFGAO_HASPROPSHEET;
 
     if (cidl == 0)
     {
@@ -610,19 +630,22 @@ ShowNetConnectionProperties(
 */
 HRESULT WINAPI CNetConUiObject::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 {
-    UINT CmdId;
+    UINT CmdId = LOWORD(lpcmi->lpVerb) + IDS_NET_ACTIVATE;
 
     /* We should get this when F2 is pressed in explorer */
-    if (HIWORD(lpcmi->lpVerb) && !strcmp(lpcmi->lpVerb, "rename"))
-        lpcmi->lpVerb = MAKEINTRESOURCEA(IDS_NET_RENAME);
-
-    if (HIWORD(lpcmi->lpVerb) || LOWORD(lpcmi->lpVerb) > 7)
+    if (!IS_INTRESOURCE(lpcmi->lpVerb) && !strcmp(lpcmi->lpVerb, "rename"))
+    {
+        CmdId = IDS_NET_RENAME;
+    }
+    else if (!IS_INTRESOURCE(lpcmi->lpVerb) && !strcmp(lpcmi->lpVerb, "properties"))
+    {
+        CmdId = IDS_NET_PROPERTIES;
+    }
+    else if (!IS_INTRESOURCE(lpcmi->lpVerb) || LOWORD(lpcmi->lpVerb) > 7)
     {
         FIXME("Got invalid command\n");
         return E_NOTIMPL;
     }
-
-    CmdId = LOWORD(lpcmi->lpVerb) + IDS_NET_ACTIVATE;
 
     switch(CmdId)
     {
