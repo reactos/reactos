@@ -693,7 +693,12 @@ static BOOL register_dlls_callback( HINF hinf, PCWSTR field, void *arg )
         if (!SetupGetIntField( &context, 4, &flags )) flags = 0;
 
         /* get timeout */
+#ifdef __REACTOS__
+        /* "11,,cmd.exe,,,/K dir" means default timeout, not a timeout of zero */
+        if (!SetupGetIntField( &context, 5, &timeout ) || timeout == 0) timeout = 60;
+#else
         if (!SetupGetIntField( &context, 5, &timeout )) timeout = 60;
+#endif
 
         /* get command line */
         args = NULL;
