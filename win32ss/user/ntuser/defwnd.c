@@ -1079,7 +1079,7 @@ IntDefWindowProc(
          }
          if (Wnd->pcls->style & CS_PARENTDC)
          {
-             can't use GetClipBox with a parent DC or we fill the whole parent 
+            /* can't use GetClipBox with a parent DC or we fill the whole parent */
             IntGetClientRect(Wnd, &Rect);
             GreDPtoLP((HDC)wParam, (LPPOINT)&Rect, 2);
          }
