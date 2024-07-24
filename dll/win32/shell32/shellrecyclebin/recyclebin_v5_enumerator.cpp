@@ -365,8 +365,9 @@ STDMETHODIMP RecycleBin5Enum::Next(DWORD celt, IRecycleBinFile **rgelt, DWORD *p
     if (!pceltFetched && celt > 1)
         return E_INVALIDARG;
 
-    LARGE_INTEGER FileSize;
-    if (!::GetFileSizeEx(m_hInfo, &FileSize))
+    ULARGE_INTEGER FileSize;
+    FileSize.u.LowPart = GetFileSize(m_hInfo, &FileSize.u.HighPart);
+    if (FileSize.u.LowPart == 0)
         return HRESULT_FROM_WIN32(GetLastError());
 
     DWORD dwEntries =
