@@ -214,7 +214,7 @@ FONT 8, "MS Shell Dlg"
 
 PRINT_SETUP DIALOG 36, 24, 264, 134
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Postavke &štampe..."
+CAPTION "Postavke &štampe"
 FONT 8, "MS Shell Dlg"
 {
  GROUPBOX "Štampanje", grp1, 6, 6, 180, 72, BS_GROUPBOX
@@ -314,8 +314,8 @@ FONT 8, "MS Shell Dlg"
  CHECKBOX "Match &Whole Word Only", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "Match &Case", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
  GROUPBOX "Opis", grp1, 147, 21, 58, 38
- CONTROL "&Up", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 151, 30, 48, 12
- CONTROL "&Down", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 151, 44, 48, 12
+ AUTORADIOBUTTON "&Up", rad1, 151, 30, 48, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
+ AUTORADIOBUTTON "&Down", rad2, 151, 44, 48, 12, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 
  DEFPUSHBUTTON "&Find Next", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "Otkaži", IDCANCEL	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
@@ -353,18 +353,18 @@ FONT 8, "MS Shell Dlg"
     PUSHBUTTON      "Otkaži", IDCANCEL, 230,164, 50,14, WS_GROUP
     PUSHBUTTON      "&Pomoć",  pshHelp,  50, 161, 50,14, WS_GROUP
 
-    GROUPBOX        "Štampanje",        grp4,   8,  4, 272,84, WS_GROUP
+    GROUPBOX        "Štampanje",      grp4,   8,  4, 272,84, WS_GROUP
     CONTROL         "Štampanje na datoteku", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,185,36,90,16
     PUSHBUTTON      "&Svojstva",    psh2, 212, 17,  60,14, WS_GROUP
-    LTEXT           "&Naziv:",         stc6,  16, 20,  36,8
+    LTEXT           "&Naziv:",        stc6,  16, 20,  36,8
     COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Stanje",        stc8,  16, 36,  47,10, SS_NOPREFIX
     LTEXT           "",               stc12, 65, 36, 120,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "&Ukucaj:",          stc7,  16, 48,  47,10, SS_NOPREFIX
+    LTEXT           "&Ukucaj:",       stc7,  16, 48,  47,10, SS_NOPREFIX
     LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Where:",         stc10, 16, 60,  47,10, SS_NOPREFIX
     LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Komentari:",       stc9,  16, 72,  47,10, SS_NOPREFIX
+    LTEXT           "Komentari:",     stc9,  16, 72,  47,10, SS_NOPREFIX
     LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
     GROUPBOX        "Copies",         grp2, 160, 92, 120,64, WS_GROUP
@@ -373,10 +373,10 @@ FONT 8, "MS Shell Dlg"
     CONTROL         "C&ollate",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
     EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
 
-    GROUPBOX        "&Štampaj objekat",    grp1,   8,92,  144,64, WS_GROUP
-    CONTROL         "&All",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
-    CONTROL         "Pa&ges",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
-    CONTROL         "&Izaberi",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
+    GROUPBOX        "&Štampaj objekat", grp1,   8,92,  144,64, WS_GROUP
+    AUTORADIOBUTTON "&All",           rad1,16,106,64,12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Pa&ges",         rad3,16,122,36,12
+    AUTORADIOBUTTON "&Izaberi",       rad2,16,138,64,12
     EDITTEXT                          edt1,  73,122,  26,12, WS_GROUP | ES_NUMBER
     EDITTEXT                          edt2, 120,122,  26,12, WS_GROUP | ES_NUMBER
     RTEXT           "&from:",         stc2,  52,124,  20,8
@@ -385,36 +385,36 @@ FONT 8, "MS Shell Dlg"
 
 PRINT32_SETUP DIALOG  32, 32, 288, 178
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
-CAPTION "Postavke &štampe..."
+CAPTION "Postavke &štampe"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "U redu",IDOK,176,156,50,14,WS_GROUP
     PUSHBUTTON      "Otkaži",IDCANCEL,230,156,50,14
 /*    PUSHBUTTON      "Network...", psh5, 284,156,48,14 */
 
-    GROUPBOX        "Štampanje",        grp4,   8,  4, 272,84, WS_GROUP
+    GROUPBOX        "Štampanje",      grp4,   8,  4, 272,84, WS_GROUP
     PUSHBUTTON      "&Svojstva",    psh2, 212, 17,  60,14, WS_GROUP
-    LTEXT           "&Naziv:",         stc6,  16, 20,  36,8
+    LTEXT           "&Naziv:",        stc6,  16, 20,  36,8
     COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Stanje",        stc8,  16, 36,  47,10, SS_NOPREFIX
     LTEXT           "",               stc12, 65, 36, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "&Ukucaj:",          stc7,  16, 48,  47,10, SS_NOPREFIX
+    LTEXT           "&Ukucaj:",       stc7,  16, 48,  47,10, SS_NOPREFIX
     LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Where:",         stc10, 16, 60,  47,10, SS_NOPREFIX
     LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Komentari:",       stc9,  16, 72,  47,10, SS_NOPREFIX
+    LTEXT           "Komentari:",     stc9,  16, 72,  47,10, SS_NOPREFIX
     LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
-    GROUPBOX        "Ulaz za papir; ",          grp2,   8, 92, 164,56, WS_GROUP
-    LTEXT           "Veli&čina:",         stc2,  16,108,  36, 8
+    GROUPBOX        "Ulaz za papir; ", grp2,   8, 92, 164,56, WS_GROUP
+    LTEXT           "Veli&čina:",     stc2,  16,108,  36, 8
     COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Izvor:",       stc3,  16,128,  36, 8
     COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
 
-    GROUPBOX        "Beleške...",    grp1, 180, 92, 100,56, WS_GROUP
+    GROUPBOX        "Beleške",        grp1, 180, 92, 100,56, WS_GROUP
     ICON            "",               ico1, 195,112,  18,20, WS_GROUP
-    CONTROL         "P&ortrait",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
-    CONTROL         "L&andscape",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+    AUTORADIOBUTTON "P&ortrait",      rad1, 224,106,52,12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "L&andscape",     rad2, 224,126,52,12
 END
 
 PAGESETUPDLGORD DIALOG 32, 32, 240, 240
@@ -425,14 +425,14 @@ BEGIN
   CONTROL "", rct1, "Static", SS_WHITERECT, 80, 8, 80, 80
   CONTROL "", rct2, "Static", SS_GRAYRECT, 160, 12, 4, 80
   CONTROL "", rct3, "Static", SS_GRAYRECT,  84, 88, 80, 4
-  GROUPBOX "Ulaz za papir; ", grp2, 8, 96, 224, 56, BS_GROUPBOX
+  GROUPBOX "Ulaz za papir", grp2, 8, 96, 224, 56, BS_GROUPBOX
   LTEXT "&Veličina:", stc2, 16, 112, 36, 8
   COMBOBOX cmb2, 64, 110, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
   LTEXT "&Tray:", stc3, 16, 132, 36, 8
   COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
-  GROUPBOX "Beleške...", grp1, 8, 156, 64, 56, BS_GROUPBOX
-  AUTORADIOBUTTON "&Portrait", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "&Landscape", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  GROUPBOX "Beleške", grp1, 8, 156, 64, 56, BS_GROUPBOX
+  AUTORADIOBUTTON "&Portrait", rad1, 16, 170, 52, 12
+  AUTORADIOBUTTON "&Landscape", rad2, 16, 190, 52, 12
   GROUPBOX "", grp4, 80, 156, 152, 56, BS_GROUPBOX
   LTEXT "&Levo:", stc15, 88, 172, 30, 8
   EDITTEXT edt4, 119, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER

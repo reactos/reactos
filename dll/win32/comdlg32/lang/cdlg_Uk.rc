@@ -314,8 +314,8 @@ FONT 8, "MS Shell Dlg"
  CHECKBOX "&Лише слово цілком", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "Враховувати &реґістр", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
  GROUPBOX "Напрям", grp1, 147, 21, 58, 38
- CONTROL "В&верх", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 131, 38, 35, 12
- CONTROL "В&низ", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 163, 38, 35, 12
+ AUTORADIOBUTTON "В&верх", rad1, 131, 38, 35, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
+ AUTORADIOBUTTON "В&низ", rad2, 163, 38, 35, 12, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 
  DEFPUSHBUTTON "З&найти далі", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "Скасувати", IDCANCEL	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
@@ -355,7 +355,7 @@ FONT 8, "MS Shell Dlg"
 
     GROUPBOX        "Принтер",        grp4,   8,  4, 272,84, WS_GROUP
     CONTROL         "Друк у фай&л", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,185,36,90,16
-    PUSHBUTTON      "В&ластивості",    psh2, 212, 17,  60,14, WS_GROUP
+    PUSHBUTTON      "В&ластивості",   psh2, 212, 17,  60,14, WS_GROUP
     LTEXT           "&Ім'я:",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Статус:",        stc8,  16, 36,  47,10, SS_NOPREFIX
@@ -364,7 +364,7 @@ FONT 8, "MS Shell Dlg"
     LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Місце:",         stc10, 16, 60,  47,10, SS_NOPREFIX
     LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Примітка:",       stc9,  16, 72,  47,10, SS_NOPREFIX
+    LTEXT           "Примітка:",      stc9,  16, 72,  47,10, SS_NOPREFIX
     LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
     GROUPBOX        "Копії",         grp2, 160, 92, 120,64, WS_GROUP
@@ -374,9 +374,9 @@ FONT 8, "MS Shell Dlg"
     EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
 
     GROUPBOX        "Друкувати",    grp1,   8,92,  144,64, WS_GROUP
-    CONTROL         "&Все",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
-    CONTROL         "&Сторінки",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
-    CONTROL         "&Виділення",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
+    AUTORADIOBUTTON "&Все",           rad1,16,106,64,12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Сторінки",      rad3,16,122,36,12
+    AUTORADIOBUTTON "&Виділення",     rad2,16,138,64,12
     EDITTEXT                          edt1,  73,122,  26,12, WS_GROUP | ES_NUMBER
     EDITTEXT                          edt2, 120,122,  26,12, WS_GROUP | ES_NUMBER
     RTEXT           "&від:",         stc2,  52,124,  20,8
@@ -393,7 +393,7 @@ BEGIN
 /*    PUSHBUTTON      "Network...", psh5, 284,156,48,14 */
 
     GROUPBOX        "Принтер",        grp4,   8,  4, 272,84, WS_GROUP
-    PUSHBUTTON      "В&ластивості",    psh2, 212, 17,  60,14, WS_GROUP
+    PUSHBUTTON      "В&ластивості",   psh2, 212, 17,  60,14, WS_GROUP
     LTEXT           "&Ім'я:",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Статус:",        stc8,  16, 36,  47,10, SS_NOPREFIX
@@ -402,19 +402,19 @@ BEGIN
     LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Місце:",         stc10, 16, 60,  47,10, SS_NOPREFIX
     LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Примітка:",       stc9,  16, 72,  47,10, SS_NOPREFIX
+    LTEXT           "Примітка:",      stc9,  16, 72,  47,10, SS_NOPREFIX
     LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
     GROUPBOX        "Папір",          grp2,   8, 92, 164,56, WS_GROUP
-    LTEXT           "Ро&змір:",         stc2,  16,108,  36, 8
+    LTEXT           "Ро&змір:",       stc2,  16,108,  36, 8
     COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "&Джерело:",       stc3,  16,128,  36, 8
+    LTEXT           "&Джерело:",      stc3,  16,128,  36, 8
     COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
 
     GROUPBOX        "Орієнтація",    grp1, 180, 92, 100,56, WS_GROUP
     ICON            "",               ico1, 195,112,  18,20, WS_GROUP
-    CONTROL         "&Книжкова",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
-    CONTROL         "&Альбомна",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+    AUTORADIOBUTTON "&Книжкова",      rad1, 224,106,52,12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Альбомна",      rad2, 224,126,52,12
 END
 
 PAGESETUPDLGORD DIALOG 32, 32, 240, 240
@@ -431,8 +431,8 @@ BEGIN
   LTEXT "Ло&ток:", stc3, 16, 132, 36, 8
   COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
   GROUPBOX "Орієнтація", grp1, 8, 156, 64, 56, BS_GROUPBOX
-  AUTORADIOBUTTON "&Книжкова", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "&Альбомна", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "&Книжкова", rad1, 16, 170, 52, 12
+  AUTORADIOBUTTON "&Альбомна", rad2, 16, 190, 52, 12
   GROUPBOX "", grp4, 80, 156, 152, 56, BS_GROUPBOX
   LTEXT "&Ліве:", stc15, 88, 172, 30, 8
   EDITTEXT edt4, 119, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
