@@ -100,10 +100,14 @@ STDMETHODIMP RecycleBin5File::GetLastModificationTime(FILETIME *pLastModificatio
         return HRESULT_FROM_WIN32(GetLastError());
 
     HANDLE hFile;
-    if (dwAttributes & FILE_ATTRIBUTE_DIRECTORY)
-        hFile = CreateFileW(m_FullName, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-    else
-        hFile = CreateFileW(m_FullName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    hFile = CreateFileW(m_FullName,
+                        GENERIC_READ,
+                        FILE_SHARE_READ |
+                            ((dwAttributes & FILE_ATTRIBUTE_DIRECTORY) ? (FILE_SHARE_WRITE | FILE_SHARE_DELETE) : 0),
+                        NULL,
+                        OPEN_EXISTING,
+                        (dwAttributes & FILE_ATTRIBUTE_DIRECTORY) ? FILE_FLAG_BACKUP_SEMANTICS : 0,
+                        NULL);
     if (hFile == INVALID_HANDLE_VALUE)
         return HRESULT_FROM_WIN32(GetLastError());
 
