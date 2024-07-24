@@ -8,8 +8,7 @@
 
 #include "recyclebin_private.h"
 
-class RecycleBinGeneric
-    : public IRecycleBin
+class RecycleBinGeneric : public IRecycleBin
 {
 public:
     RecycleBinGeneric();
@@ -62,15 +61,11 @@ RecycleBinGeneric::~RecycleBinGeneric()
 
 STDMETHODIMP_(ULONG) RecycleBinGeneric::Release()
 {
-    ULONG refCount;
-
     TRACE("(%p)\n", this);
 
-    refCount = InterlockedDecrement(&m_ref);
-
+    ULONG refCount = InterlockedDecrement(&m_ref);
     if (refCount == 0)
         delete this;
-
     return refCount;
 }
 
@@ -151,7 +146,7 @@ STDMETHODIMP RecycleBinGeneric::EmptyRecycleBin()
     if (dwLogicalDrives == 0)
         return HRESULT_FROM_WIN32(GetLastError());
 
-    for (i = 0; i < 26; i++)
+    for (i = 0; i < L'Z' - L'A' + 1; i++)
     {
         if (!(dwLogicalDrives & (1 << i)))
             continue;
@@ -177,8 +172,8 @@ STDMETHODIMP RecycleBinGeneric::EnumObjects(IRecycleBinEnumList **ppEnumList)
 }
 
 RecycleBinGeneric::RecycleBinGeneric()
+    : m_ref(1)
 {
-    m_ref = 1;
 }
 
 EXTERN_C
@@ -190,6 +185,6 @@ HRESULT RecycleBinGeneric_Constructor(OUT IUnknown **ppUnknown)
     if (!pThis)
         return E_OUTOFMEMORY;
 
-    *ppUnknown = static_cast<IUnknown *>(static_cast<IRecycleBin *>(pThis));
+    *ppUnknown = static_cast<IRecycleBin *>(pThis);
     return S_OK;
 }
