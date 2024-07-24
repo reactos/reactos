@@ -457,9 +457,7 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellServiceObjectDelayLoad",,0x00000012
 
 ; FIXME - Setup doesn't handle extra paths
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce","",0x00000000,"cmd /c md ""%programfiles%\Internet Explorer\"" && move %windir%\iexplore.exe ""%programfiles%\Internet Explorer\"" && ""%programfiles%\Internet Explorer\iexplore.exe"" /RegServer"
-; Create .NET Framework InstallRoot key, reg_sz & full path
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce","InstallRoot.NET",0x00000000,"cmd /c reg add HKLM\SOFTWARE\Microsoft\.NETFramework /v InstallRoot /t REG_SZ /d %SystemRoot%\Microsoft.NET\Framework\"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnceEx\Finalize","1",,"||rundll32.exe setupapi.dll,InstallHinfSection Finalize 128 %systemroot%\inf\syssetup.inf"
 
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu",,0x00000012
