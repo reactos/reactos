@@ -62,15 +62,24 @@ std::set<LANGID> langs;
 std::map<E_MODULE, HMODULE> mod;
 std::map<E_STRING, PART_TEST> parts;
 
+struct PART_PAIR
+{
+    E_STRING eString;
+    PART_TEST part_test;
+};
+
 static void InitParts(void)
 {
-    PART_TEST part_test;
-#define DEFINE_PART(eString, eModule, id, nParts) do { \
-        part_test = { eModule, id, nParts }; \
-        parts.insert(std::make_pair(eString, part_test)); \
-    } while (0);
+    static const PART_PAIR s_pairs[] =
+    {
+#define DEFINE_PART(eString, eModule, id, nParts) { eString, { eModule, id, nParts } },
 #include "parts.h"
 #undef DEFINE_PART
+    };
+    for (auto& pair : s_pairs)
+    {
+        parts.insert(std::make_pair(pair.eString, pair.part_test));
+    }
 }
 
 static PART_MATCH PartMatches[] =
