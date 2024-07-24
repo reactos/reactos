@@ -365,16 +365,15 @@ STDMETHODIMP RecycleBin5Enum::Next(DWORD celt, IRecycleBinFile **rgelt, DWORD *p
     if (!pceltFetched && celt > 1)
         return E_INVALIDARG;
 
-    ULARGE_INTEGER FileSize;
-    FileSize.u.LowPart = GetFileSize(m_hInfo, &FileSize.u.HighPart);
-    if (FileSize.u.LowPart == 0)
+    LARGE_INTEGER FileSize;
+    if (!::GetFileSizeEx(m_hInfo, &FileSize))
         return HRESULT_FROM_WIN32(GetLastError());
 
     DWORD dwEntries =
         (DWORD)((FileSize.QuadPart - sizeof(INFO2_HEADER)) / sizeof(DELETED_FILE_RECORD));
 
     DWORD iEntry = m_dwCurrent, fetched = 0;
-    DELETED_FILE_RECORD *pDeletedFile = (DELETED_FILE_RECORD *)(m_pInfo + 1) + iEntry;
+    PDELETED_FILE_RECORD pDeletedFile = (PDELETED_FILE_RECORD)(m_pInfo + 1) + iEntry;
     for (; iEntry < dwEntries && fetched < celt; ++iEntry)
     {
         hr = RecycleBin5File_Constructor(m_recycleBin, m_pszPrefix, pDeletedFile, &rgelt[fetched]);
@@ -438,7 +437,7 @@ RecycleBin5Enum_Constructor(
     if (FAILED(hr))
         return hr;
 
-    INFO2_HEADER *pInfo = (INFO2_HEADER *)MapViewOfFile(hInfoMapped, FILE_MAP_READ, 0, 0, 0);
+    PINFO2_HEADER pInfo = (PINFO2_HEADER)MapViewOfFile(hInfoMapped, FILE_MAP_READ, 0, 0, 0);
     if (!pInfo)
     {
         DWORD dwError = GetLastError();
