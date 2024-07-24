@@ -181,7 +181,8 @@ STDMETHODIMP RecycleBin5::DeleteFile(_In_ LPCWSTR szFileName)
     DWORD dwBufferLength = 0;
     LPWSTR lpFilePart;
     LPCWSTR Extension;
-    WCHAR DeletedFileName[MAX_PATH];
+    CStringW DeletedFileName;
+    WCHAR szUniqueId[64];
     DWORD len;
     HANDLE hFile = INVALID_HANDLE_VALUE;
     PINFO2_HEADER pHeader = NULL;
@@ -293,7 +294,7 @@ STDMETHODIMP RecycleBin5::DeleteFile(_In_ LPCWSTR szFileName)
     pHeader->dwTotalLogicalSize += FileSize.u.LowPart;
 
     /* Generate new name */
-    Extension = wcsrchr(szFullName, '.');
+    Extension = PathFindExtensionW(szFullName);
     ZeroMemory(pDeletedFile, sizeof(DELETED_FILE_RECORD));
     if (dwEntries == 0)
         pDeletedFile->dwRecordUniqueId = 0;
@@ -302,8 +303,16 @@ STDMETHODIMP RecycleBin5::DeleteFile(_In_ LPCWSTR szFileName)
         PDELETED_FILE_RECORD pLastDeleted = ((PDELETED_FILE_RECORD)(pHeader + 1)) + dwEntries - 1;
         pDeletedFile->dwRecordUniqueId = pLastDeleted->dwRecordUniqueId + 1;
     }
+
     pDeletedFile->dwDriveNumber = tolower(szFullName[0]) - 'a';
-    _snwprintf(DeletedFileName, _countof(DeletedFileName), L"%s\\D%c%lu%s", (LPCWSTR)m_Folder, pDeletedFile->dwDriveNumber + 'a', pDeletedFile->dwRecordUniqueId, Extension);
+
+    _snwprintf(szUniqueId, _countof(szUniqueId), L"%lu", pDeletedFile->dwRecordUniqueId);
+
+    DeletedFileName = m_Folder;
+    DeletedFileName += L"\\D";
+    DeletedFileName += (WCHAR)(L'a' + pDeletedFile->dwDriveNumber);
+    DeletedFileName += szUniqueId;
+    DeletedFileName += Extension;
 
     /* Get cluster size */
     if (!GetDiskFreeSpaceW(m_VolumePath, &SectorsPerCluster, &BytesPerSector, NULL, NULL))
