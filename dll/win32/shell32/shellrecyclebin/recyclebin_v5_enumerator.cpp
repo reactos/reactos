@@ -284,10 +284,10 @@ class RecycleBin5Enum : public IRecycleBinEnumList
 {
 public:
     RecycleBin5Enum(
-        IN IRecycleBin5 *prb,
-        IN HANDLE hInfo,
-        IN OUT INFO2_HEADER *pInfo,
-        IN OUT LPWSTR pszPrefix);
+        _In_ IRecycleBin5 *prb,
+        _In_ HANDLE hInfo,
+        _Inout_ PINFO2_HEADER pInfo,
+        _Inout_ LPWSTR pszPrefix);
     virtual ~RecycleBin5Enum();
 
     /* IUnknown methods */
