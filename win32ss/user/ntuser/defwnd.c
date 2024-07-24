@@ -1068,6 +1068,7 @@ IntDefWindowProc(
          }
          break;
 
+      case WM_CREATE:
       case WM_ERASEBKGND:
       case WM_ICONERASEBKGND:
       {
