@@ -13,10 +13,10 @@ class RecycleBin5File : public IRecycleBinFile
 {
 public:
     RecycleBin5File(
-        IN IRecycleBin5 *prb,
-        IN LPCWSTR Folder,
-        IN PDELETED_FILE_RECORD pDeletedFile,
-        IN OUT LPWSTR pszFullName);
+        _In_ IRecycleBin5 *prb,
+        _In_ LPCWSTR Folder,
+        _In_ PDELETED_FILE_RECORD pDeletedFile,
+        _Inout_ LPWSTR pszFullName);
     virtual ~RecycleBin5File();
 
     /* IUnknown methods */
@@ -403,10 +403,10 @@ STDMETHODIMP RecycleBin5Enum::Reset()
 }
 
 RecycleBin5Enum::RecycleBin5Enum(
-    IN IRecycleBin5 *prb,
-    IN HANDLE hInfo,
-    IN OUT INFO2_HEADER *pInfo,
-    IN OUT LPWSTR pszPrefix)
+    _In_ IRecycleBin5 *prb,
+    _In_ HANDLE hInfo,
+    _Inout_ PINFO2_HEADER pInfo,
+    _Inout_ LPWSTR pszPrefix)
     : m_ref(1)
     , m_recycleBin(prb)
     , m_hInfo(hInfo)
@@ -420,11 +420,11 @@ RecycleBin5Enum::RecycleBin5Enum(
 EXTERN_C
 HRESULT
 RecycleBin5Enum_Constructor(
-    IN IRecycleBin5 *prb,
-    IN HANDLE hInfo,
-    IN HANDLE hInfoMapped,
-    IN LPCWSTR szPrefix,
-    OUT IUnknown **ppUnknown)
+    _In_ IRecycleBin5 *prb,
+    _In_ HANDLE hInfo,
+    _In_ HANDLE hInfoMapped,
+    _In_ LPCWSTR szPrefix,
+    _Out_ IUnknown **ppUnknown)
 {
     if (!ppUnknown)
         return E_POINTER;
