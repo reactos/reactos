@@ -1069,6 +1069,28 @@ IntDefWindowProc(
          break;
 
       case WM_CREATE:
+      {
+         RECT Rect;
+         HBRUSH hBrush = Wnd->pcls->hbrBackground;
+         if (!hBrush) return 0;
+         if (hBrush <= (HBRUSH)COLOR_MENUBAR)
+         {
+            hBrush = IntGetSysColorBrush(HandleToUlong(hBrush));
+         }
+         if (Wnd->pcls->style & CS_PARENTDC)
+         {
+             can't use GetClipBox with a parent DC or we fill the whole parent 
+            IntGetClientRect(Wnd, &Rect);
+            GreDPtoLP((HDC)wParam, (LPPOINT)&Rect, 2);
+         }
+         else
+         {
+            GdiGetClipBox((HDC)wParam, &Rect);
+         }
+         FillRect((HDC)wParam, &Rect, hBrush);
+         return (0);
+      }
+
       case WM_ERASEBKGND:
       case WM_ICONERASEBKGND:
       {
