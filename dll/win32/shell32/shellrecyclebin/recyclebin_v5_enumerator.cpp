@@ -437,8 +437,9 @@ RecycleBin5Enum_Constructor(
     INFO2_HEADER *pInfo = (INFO2_HEADER *)MapViewOfFile(hInfoMapped, FILE_MAP_READ, 0, 0, 0);
     if (!pInfo)
     {
+        DWORD dwError = GetLastError();
         SHFree(pszPrefix);
-        return HRESULT_FROM_WIN32(GetLastError());
+        return HRESULT_FROM_WIN32(dwError);
     }
 
     if (pInfo->dwVersion != 5 || pInfo->dwRecordSize != sizeof(DELETED_FILE_RECORD))
