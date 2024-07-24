@@ -2,7 +2,7 @@
  * PROJECT:     Recycle bin management
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Enumerates contents of all recycle bins
- * COPYRIGHT:   Copyright 2007 Hervé Poussineau (hpoussin@reactos.org)
+ * COPYRIGHT:   Copyright 2007 HervÃ© Poussineau (hpoussin@reactos.org)
  *              Copyright 2024 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
@@ -81,11 +81,6 @@ RecycleBinGenericEnum::Release()
 STDMETHODIMP
 RecycleBinGenericEnum::Next(DWORD celt, IRecycleBinFile **rgelt, DWORD *pceltFetched)
 {
-    IRecycleBin *prb;
-    DWORD i;
-    DWORD fetched = 0, newFetched;
-    HRESULT hr;
-
     TRACE("(%p, %u, %p, %p)\n", this, celt, rgelt, pceltFetched);
 
     if (!rgelt)
@@ -93,37 +88,44 @@ RecycleBinGenericEnum::Next(DWORD celt, IRecycleBinFile **rgelt, DWORD *pceltFet
     if (!pceltFetched && celt > 1)
         return E_INVALIDARG;
 
+    HRESULT hr;
+    DWORD fetched = 0;
     while (TRUE)
     {
         /* Get enumerator implementation */
         if (!m_current && m_dwLogicalDrives)
         {
-            for (i = 0; i < 'Z' - 'A' + 1; i++)
+            for (DWORD i = 0; i < L'Z' - L'A' + 1; ++i)
             {
                 if (m_dwLogicalDrives & (1 << i))
                 {
                     WCHAR szVolumeName[4];
-                    szVolumeName[0] = (WCHAR)('A' + i);
-                    szVolumeName[1] = ':';
-                    szVolumeName[2] = '\\';
+                    szVolumeName[0] = (WCHAR)(L'A' + i);
+                    szVolumeName[1] = L':';
+                    szVolumeName[2] = L'\\';
                     szVolumeName[3] = UNICODE_NULL;
                     if (GetDriveTypeW(szVolumeName) != DRIVE_FIXED)
                     {
                         m_dwLogicalDrives &= ~(1 << i);
                         continue;
                     }
+
+                    IRecycleBin *prb;
                     hr = GetDefaultRecycleBin(szVolumeName, &prb);
                     if (!SUCCEEDED(hr))
                         return hr;
                     hr = prb->EnumObjects(&m_current);
                     prb->Release();
+
                     if (!SUCCEEDED(hr))
                         return hr;
+
                     m_dwLogicalDrives &= ~(1 << i);
                     break;
                 }
             }
         }
+
         if (!m_current)
         {
             /* Nothing more to enumerate */
@@ -144,13 +146,16 @@ RecycleBinGenericEnum::Next(DWORD celt, IRecycleBinFile **rgelt, DWORD *pceltFet
             else if (!SUCCEEDED(hr))
                 return hr;
         }
+
         if (m_skip > 0)
             continue;
 
         /* Fill area */
+        DWORD newFetched;
         hr = m_current->Next(celt - fetched, &rgelt[fetched], &newFetched);
         if (SUCCEEDED(hr))
             fetched += newFetched;
+
         if (hr == S_FALSE || newFetched == 0)
         {
             m_current->Release();
@@ -158,6 +163,7 @@ RecycleBinGenericEnum::Next(DWORD celt, IRecycleBinFile **rgelt, DWORD *pceltFet
         }
         else if (!SUCCEEDED(hr))
             return hr;
+
         if (fetched == celt)
         {
             if (pceltFetched)
