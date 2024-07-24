@@ -101,23 +101,23 @@ public:
     HRESULT Init(_In_ LPCWSTR VolumePath);
 
     /* IUnknown interface */
-    STDMETHODIMP QueryInterface(IN REFIID riid, OUT void **ppvObject) override;
+    STDMETHODIMP QueryInterface(_In_ REFIID riid, _Out_ void **ppvObject) override;
     STDMETHODIMP_(ULONG) AddRef() override;
     STDMETHODIMP_(ULONG) Release() override;
 
     /* IRecycleBin interface */
-    STDMETHODIMP DeleteFile(IN LPCWSTR szFileName) override;
+    STDMETHODIMP DeleteFile(_In_ LPCWSTR szFileName) override;
     STDMETHODIMP EmptyRecycleBin() override;
-    STDMETHODIMP EnumObjects(OUT IRecycleBinEnumList **ppEnumList) override;
+    STDMETHODIMP EnumObjects(_Out_ IRecycleBinEnumList **ppEnumList) override;
 
     /* IRecycleBin5 interface */
     STDMETHODIMP Delete(
-        IN LPCWSTR pDeletedFileName,
-        IN DELETED_FILE_RECORD *pDeletedFile) override;
+        _In_ LPCWSTR pDeletedFileName,
+        _In_ DELETED_FILE_RECORD *pDeletedFile) override;
     STDMETHODIMP Restore(
-        IN LPCWSTR pDeletedFileName,
-        IN DELETED_FILE_RECORD *pDeletedFile) override;
-    STDMETHODIMP OnClosing(IN IRecycleBinEnumList *prbel) override;
+        _In_ LPCWSTR pDeletedFileName,
+        _In_ DELETED_FILE_RECORD *pDeletedFile) override;
+    STDMETHODIMP OnClosing(_In_ IRecycleBinEnumList *prbel) override;
 
 protected:
     LONG m_ref;
@@ -128,7 +128,7 @@ protected:
     CStringW m_Folder; /* [drive]:\[RECYCLE_BIN_DIRECTORY]\{SID} */
 };
 
-STDMETHODIMP RecycleBin5::QueryInterface(IN REFIID riid, OUT void **ppvObject)
+STDMETHODIMP RecycleBin5::QueryInterface(_In_ REFIID riid, _Out_ void **ppvObject)
 {
     TRACE("(%p, %s, %p)\n", this, debugstr_guid(&riid), ppvObject);
 
@@ -175,7 +175,7 @@ STDMETHODIMP_(ULONG) RecycleBin5::Release()
     return refCount;
 }
 
-STDMETHODIMP RecycleBin5::DeleteFile(IN LPCWSTR szFileName)
+STDMETHODIMP RecycleBin5::DeleteFile(_In_ LPCWSTR szFileName)
 {
     LPWSTR szFullName = NULL;
     DWORD dwBufferLength = 0;
@@ -369,7 +369,7 @@ STDMETHODIMP RecycleBin5::EmptyRecycleBin()
     }
 }
 
-STDMETHODIMP RecycleBin5::EnumObjects(OUT IRecycleBinEnumList **ppEnumList)
+STDMETHODIMP RecycleBin5::EnumObjects(_Out_ IRecycleBinEnumList **ppEnumList)
 {
     TRACE("(%p, %p)\n", this, ppEnumList);
 
@@ -391,8 +391,8 @@ STDMETHODIMP RecycleBin5::EnumObjects(OUT IRecycleBinEnumList **ppEnumList)
 }
 
 STDMETHODIMP RecycleBin5::Delete(
-    IN LPCWSTR pDeletedFileName,
-    IN DELETED_FILE_RECORD *pDeletedFile)
+    _In_ LPCWSTR pDeletedFileName,
+    _In_ DELETED_FILE_RECORD *pDeletedFile)
 {
     ULARGE_INTEGER FileSize;
     PINFO2_HEADER pHeader;
@@ -450,8 +450,8 @@ STDMETHODIMP RecycleBin5::Delete(
 }
 
 STDMETHODIMP RecycleBin5::Restore(
-    IN LPCWSTR pDeletedFileName,
-    IN DELETED_FILE_RECORD *pDeletedFile)
+    _In_ LPCWSTR pDeletedFileName,
+    _In_ DELETED_FILE_RECORD *pDeletedFile)
 {
     ULARGE_INTEGER FileSize;
     PINFO2_HEADER pHeader;
@@ -518,7 +518,7 @@ STDMETHODIMP RecycleBin5::Restore(
     return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 }
 
-STDMETHODIMP RecycleBin5::OnClosing(IN IRecycleBinEnumList *prbel)
+STDMETHODIMP RecycleBin5::OnClosing(_In_ IRecycleBinEnumList *prbel)
 {
     TRACE("(%p, %p)\n", this, prbel);
     m_EnumeratorCount--;
@@ -527,8 +527,8 @@ STDMETHODIMP RecycleBin5::OnClosing(IN IRecycleBinEnumList *prbel)
 
 static HRESULT
 RecycleBin5_Create(
-    IN LPCWSTR Folder,
-    IN PSID OwnerSid OPTIONAL)
+    _In_ LPCWSTR Folder,
+    _In_ PSID OwnerSid OPTIONAL)
 {
     LPWSTR BufferName = NULL;
     LPWSTR Separator; /* Pointer into BufferName buffer */
