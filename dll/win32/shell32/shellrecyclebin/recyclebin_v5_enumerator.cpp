@@ -93,15 +93,13 @@ STDMETHODIMP_(ULONG) RecycleBin5File::Release()
 
 STDMETHODIMP RecycleBin5File::GetLastModificationTime(FILETIME *pLastModificationTime)
 {
-    HRESULT hr;
-    DWORD dwAttributes;
-    HANDLE hFile;
-
     TRACE("(%p, %p)\n", this, pLastModificationTime);
 
-    dwAttributes = ::GetFileAttributesW(m_FullName);
+    DWORD dwAttributes = ::GetFileAttributesW(m_FullName);
     if (dwAttributes == INVALID_FILE_ATTRIBUTES)
         return HRESULT_FROM_WIN32(GetLastError());
+
+    HANDLE hFile;
     if (dwAttributes & FILE_ATTRIBUTE_DIRECTORY)
         hFile = CreateFileW(m_FullName, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
     else
@@ -109,6 +107,7 @@ STDMETHODIMP RecycleBin5File::GetLastModificationTime(FILETIME *pLastModificatio
     if (hFile == INVALID_HANDLE_VALUE)
         return HRESULT_FROM_WIN32(GetLastError());
 
+    HRESULT hr;
     if (GetFileTime(hFile, NULL, NULL, pLastModificationTime))
         hr = S_OK;
     else
@@ -126,13 +125,9 @@ STDMETHODIMP RecycleBin5File::GetDeletionTime(FILETIME *pDeletionTime)
 
 STDMETHODIMP RecycleBin5File::GetFileSize(ULARGE_INTEGER *pFileSize)
 {
-    HRESULT hr;
-    DWORD dwAttributes;
-    HANDLE hFile;
-
     TRACE("(%p, %p)\n", this, pFileSize);
 
-    dwAttributes = GetFileAttributesW(m_FullName);
+    DWORD dwAttributes = GetFileAttributesW(m_FullName);
     if (dwAttributes == INVALID_FILE_ATTRIBUTES)
         return HRESULT_FROM_WIN32(GetLastError());
     if (dwAttributes & FILE_ATTRIBUTE_DIRECTORY)
@@ -141,14 +136,17 @@ STDMETHODIMP RecycleBin5File::GetFileSize(ULARGE_INTEGER *pFileSize)
         return S_OK;
     }
 
-    hFile = CreateFileW(m_FullName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    HANDLE hFile = CreateFileW(m_FullName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
         return HRESULT_FROM_WIN32(GetLastError());
     pFileSize->u.LowPart = ::GetFileSize(hFile, &pFileSize->u.HighPart);
+
+    HRESULT hr;
     if (pFileSize->u.LowPart != INVALID_FILE_SIZE)
         hr = S_OK;
     else
         hr = HRESULT_FROM_WIN32(GetLastError());
+
     CloseHandle(hFile);
     return hr;
 }
