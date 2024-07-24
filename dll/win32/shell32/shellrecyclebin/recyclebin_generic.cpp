@@ -71,19 +71,14 @@ STDMETHODIMP_(ULONG) RecycleBinGeneric::Release()
 
 STDMETHODIMP RecycleBinGeneric::DeleteFile(LPCWSTR szFileName)
 {
-    IRecycleBin *prb;
-    LPWSTR szFullName = NULL;
-    DWORD dwBufferLength = 0;
-    DWORD len;
-    WCHAR szVolume[MAX_PATH];
-    HRESULT hr;
-
     TRACE("(%p, %s)\n", this, debugstr_w(szFileName));
 
     /* Get full file name */
+    LPWSTR szFullName = NULL;
+    DWORD dwBufferLength = 0;
     while (TRUE)
     {
-        len = GetFullPathNameW(szFileName, dwBufferLength, szFullName, NULL);
+        DWORD len = GetFullPathNameW(szFileName, dwBufferLength, szFullName, NULL);
         if (len == 0)
         {
             if (szFullName)
@@ -101,26 +96,20 @@ STDMETHODIMP RecycleBinGeneric::DeleteFile(LPCWSTR szFileName)
     }
 
     /* Get associated volume path */
-#ifndef __REACTOS__
-    if (!GetVolumePathNameW(szFullName, szVolume, MAX_PATH))
-    {
-        CoTaskMemFree(szFullName);
-        return HRESULT_FROM_WIN32(GetLastError());
-    }
-#else
+    WCHAR szVolume[MAX_PATH];
     swprintf(szVolume, L"%c:\\", szFullName[0]);
-#endif
 
-    /* Skip namespace (if any) */
-    if (szVolume[0] == '\\'
-     && szVolume[1] == '\\'
-     && (szVolume[2] == '.' || szVolume[2] == '?')
-     && szVolume[3] == '\\')
+    /* Skip namespace (if any): "\\.\" or "\\?\" */
+    if (szVolume[0] == '\\' &&
+        szVolume[1] == '\\' &&
+        (szVolume[2] == '.' || szVolume[2] == '?') &&
+        szVolume[3] == '\\')
     {
-        MoveMemory(szVolume, &szVolume[4], (MAX_PATH - 4) * sizeof(WCHAR));
+        MoveMemory(szVolume, &szVolume[4], (_countof(szVolume) - 4) * sizeof(WCHAR));
     }
 
-    hr = GetDefaultRecycleBin(szVolume, &prb);
+    IRecycleBin *prb;
+    HRESULT hr = GetDefaultRecycleBin(szVolume, &prb);
     if (!SUCCEEDED(hr))
     {
         CoTaskMemFree(szFullName);
@@ -135,26 +124,24 @@ STDMETHODIMP RecycleBinGeneric::DeleteFile(LPCWSTR szFileName)
 
 STDMETHODIMP RecycleBinGeneric::EmptyRecycleBin()
 {
-    WCHAR szVolumeName[MAX_PATH];
-    DWORD dwLogicalDrives, i;
-    IRecycleBin *prb;
-    HRESULT hr;
-
     TRACE("(%p)\n", this);
 
-    dwLogicalDrives = GetLogicalDrives();
+    DWORD dwLogicalDrives = GetLogicalDrives();
     if (dwLogicalDrives == 0)
         return HRESULT_FROM_WIN32(GetLastError());
 
-    for (i = 0; i < L'Z' - L'A' + 1; i++)
+    for (DWORD i = 0; i < 'Z' - 'A' + 1; i++)
     {
         if (!(dwLogicalDrives & (1 << i)))
             continue;
+
+        WCHAR szVolumeName[MAX_PATH];
         swprintf(szVolumeName, L"%c:\\", 'A' + i);
         if (GetDriveTypeW(szVolumeName) != DRIVE_FIXED)
             continue;
 
-        hr = GetDefaultRecycleBin(szVolumeName, &prb);
+        IRecycleBin *prb;
+        HRESULT hr = GetDefaultRecycleBin(szVolumeName, &prb);
         if (!SUCCEEDED(hr))
             return hr;
 
