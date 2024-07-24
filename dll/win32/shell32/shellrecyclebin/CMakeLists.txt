@@ -8,7 +8,7 @@ list(APPEND SOURCE
     recyclebin.c
     recyclebin_generic.cpp
     recyclebin_generic_enumerator.cpp
-    recyclebin_v5.c
+    recyclebin_v5.cpp
     recyclebin_v5_enumerator.cpp
     recyclebin_private.h)
 

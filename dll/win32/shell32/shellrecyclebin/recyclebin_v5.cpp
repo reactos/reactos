@@ -1,9 +1,9 @@
 /*
  * PROJECT:     Recycle bin management
- * LICENSE:     GPL v2 - See COPYING in the top level directory
- * FILE:        lib/recyclebin/recyclebin_v5.c
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Deals with recycle bins of Windows 2000/XP/2003
- * PROGRAMMERS: Copyright 2006-2007 Hervé Poussineau (hpoussin@reactos.org)
+ * COPYRIGHT:   Copyright 2006-2007 Hervé Poussineau (hpoussin@reactos.org)
+ *              Copyright 2024 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "recyclebin_private.h"
@@ -38,7 +38,7 @@ IntDeleteRecursive(
     {
         /* Prepare file specification */
         dwLength = wcslen(FullName);
-        FullPath = HeapAlloc(GetProcessHeap(), 0, (dwLength + 1 + MAX_PATH + 1) * sizeof(WCHAR));
+        FullPath = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (dwLength + 1 + MAX_PATH + 1) * sizeof(WCHAR));
         if (!FullPath)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -91,94 +91,98 @@ cleanup:
     return ret;
 }
 
-struct RecycleBin5
+class RecycleBin5 : public IRecycleBin, public IRecycleBin5
 {
-    ULONG ref;
-    IRecycleBin5 recycleBinImpl;
-    HANDLE hInfo;
-    HANDLE hInfoMapped;
+public:
+    RecycleBin5(
+        LPCWSTR VolumePath,
+        LPCWSTR RecycleBinDirectory,
+        LPWSTR StringSid,
+        PTOKEN_USER TokenUserInfo,
+        LPWSTR pszFolder);
+    virtual ~RecycleBin5();
 
-    DWORD EnumeratorCount;
+    /* IUnknown interface */
+    STDMETHODIMP QueryInterface(IN REFIID riid, OUT void **ppvObject) override;
+    STDMETHODIMP_(ULONG) AddRef() override;
+    STDMETHODIMP_(ULONG) Release() override;
 
-    LPWSTR VolumePath;
-    WCHAR Folder[ANY_SIZE]; /* [drive]:\[RECYCLE_BIN_DIRECTORY]\{SID} */
+    /* IRecycleBin interface */
+    STDMETHODIMP DeleteFile(IN LPCWSTR szFileName) override;
+    STDMETHODIMP EmptyRecycleBin() override;
+    STDMETHODIMP EnumObjects(OUT IRecycleBinEnumList **ppEnumList) override;
+
+    /* IRecycleBin5 interface */
+    STDMETHODIMP Delete(
+        IN LPCWSTR pDeletedFileName,
+        IN DELETED_FILE_RECORD *pDeletedFile) override;
+    STDMETHODIMP Restore(
+        IN LPCWSTR pDeletedFileName,
+        IN DELETED_FILE_RECORD *pDeletedFile) override;
+    STDMETHODIMP OnClosing(IN IRecycleBinEnumList *prbel) override;
+
+protected:
+    LONG m_ref;
+    HANDLE m_hInfo;
+    HANDLE m_hInfoMapped;
+    DWORD m_EnumeratorCount;
+    LPWSTR m_VolumePath;
+    LPWSTR m_Folder; /* [drive]:\[RECYCLE_BIN_DIRECTORY]\{SID} */
+
+public:
+    HRESULT m_hr;
 };
 
-static HRESULT STDMETHODCALLTYPE
-RecycleBin5_RecycleBin5_QueryInterface(
-    IRecycleBin5 *This,
-    REFIID riid,
-    void **ppvObject)
+STDMETHODIMP RecycleBin5::QueryInterface(IN REFIID riid, OUT void **ppvObject)
 {
-    struct RecycleBin5 *s = CONTAINING_RECORD(This, struct RecycleBin5, recycleBinImpl);
-
-    TRACE("(%p, %s, %p)\n", This, debugstr_guid(riid), ppvObject);
+    TRACE("(%p, %s, %p)\n", this, debugstr_guid(&riid), ppvObject);
 
     if (!ppvObject)
         return E_POINTER;
 
-    if (IsEqualIID(riid, &IID_IUnknown))
-        *ppvObject = &s->recycleBinImpl;
-    else if (IsEqualIID(riid, &IID_IRecycleBin))
-        *ppvObject = &s->recycleBinImpl;
-    else if (IsEqualIID(riid, &IID_IRecycleBin5))
-        *ppvObject = &s->recycleBinImpl;
+    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_IRecycleBin))
+        *ppvObject = static_cast<IRecycleBin *>(this);
+    else if (IsEqualIID(riid, IID_IRecycleBin5))
+        *ppvObject = static_cast<IRecycleBin5 *>(this);
     else
     {
         *ppvObject = NULL;
         return E_NOINTERFACE;
     }
 
-    IUnknown_AddRef(This);
+    AddRef();
     return S_OK;
 }
 
-static ULONG STDMETHODCALLTYPE
-RecycleBin5_RecycleBin5_AddRef(
-    IRecycleBin5 *This)
+STDMETHODIMP_(ULONG) RecycleBin5::AddRef()
 {
-    struct RecycleBin5 *s = CONTAINING_RECORD(This, struct RecycleBin5, recycleBinImpl);
-    ULONG refCount = InterlockedIncrement((PLONG)&s->ref);
-    TRACE("(%p)\n", This);
-    return refCount;
+    TRACE("(%p)\n", this);
+    return InterlockedIncrement(&m_ref);
 }
 
-static VOID
-RecycleBin5_Destructor(
-    struct RecycleBin5 *s)
+RecycleBin5::~RecycleBin5()
 {
-    TRACE("(%p)\n", s);
+    TRACE("(%p)\n", this);
 
-    if (s->hInfo && s->hInfo != INVALID_HANDLE_VALUE)
-        CloseHandle(s->hInfo);
-    if (s->hInfoMapped)
-        CloseHandle(s->hInfoMapped);
-    CoTaskMemFree(s);
+    if (m_hInfo && m_hInfo != INVALID_HANDLE_VALUE)
+        CloseHandle(m_hInfo);
+    if (m_hInfoMapped)
+        CloseHandle(m_hInfoMapped);
+    SHFree(m_Folder);
 }
 
-static ULONG STDMETHODCALLTYPE
-RecycleBin5_RecycleBin5_Release(
-    IRecycleBin5 *This)
+STDMETHODIMP_(ULONG) RecycleBin5::Release()
 {
-    struct RecycleBin5 *s = CONTAINING_RECORD(This, struct RecycleBin5, recycleBinImpl);
-    ULONG refCount;
+    TRACE("(%p)\n", this);
 
-    TRACE("(%p)\n", This);
-
-    refCount = InterlockedDecrement((PLONG)&s->ref);
-
+    ULONG refCount = InterlockedDecrement(&m_ref);
     if (refCount == 0)
-        RecycleBin5_Destructor(s);
-
+        delete this;
     return refCount;
 }
 
-static HRESULT STDMETHODCALLTYPE
-RecycleBin5_RecycleBin5_DeleteFile(
-    IN IRecycleBin5 *This,
-    IN LPCWSTR szFileName)
+STDMETHODIMP RecycleBin5::DeleteFile(IN LPCWSTR szFileName)
 {
-    struct RecycleBin5 *s = CONTAINING_RECORD(This, struct RecycleBin5, recycleBinImpl);
     LPWSTR szFullName = NULL;
     DWORD dwBufferLength = 0;
     LPWSTR lpFilePart;
@@ -194,9 +198,9 @@ RecycleBin5_RecycleBin5_DeleteFile(
     DWORD ClusterSize, BytesPerSector, SectorsPerCluster;
     HRESULT hr;
 
-    TRACE("(%p, %s)\n", This, debugstr_w(szFileName));
+    TRACE("(%p, %s)\n", this, debugstr_w(szFileName));
 
-    if (s->EnumeratorCount != 0)
+    if (m_EnumeratorCount != 0)
         return HRESULT_FROM_WIN32(ERROR_SHARING_VIOLATION);
 
     /* Get full file name */
@@ -214,7 +218,7 @@ RecycleBin5_RecycleBin5_DeleteFile(
         if (szFullName)
             CoTaskMemFree(szFullName);
         dwBufferLength = len;
-        szFullName = CoTaskMemAlloc(dwBufferLength * sizeof(WCHAR));
+        szFullName = (LPWSTR)CoTaskMemAlloc(dwBufferLength * sizeof(WCHAR));
         if (!szFullName)
             return HRESULT_FROM_WIN32(ERROR_NOT_ENOUGH_MEMORY);
     }
@@ -242,18 +246,18 @@ RecycleBin5_RecycleBin5_DeleteFile(
     }
 
     /* Increase INFO2 file size */
-    CloseHandle(s->hInfoMapped);
-    SetFilePointer(s->hInfo, sizeof(DELETED_FILE_RECORD), NULL, FILE_END);
-    SetEndOfFile(s->hInfo);
-    s->hInfoMapped = CreateFileMappingW(s->hInfo, NULL, PAGE_READWRITE | SEC_COMMIT, 0, 0, NULL);
-    if (!s->hInfoMapped)
+    CloseHandle(m_hInfoMapped);
+    SetFilePointer(m_hInfo, sizeof(DELETED_FILE_RECORD), NULL, FILE_END);
+    SetEndOfFile(m_hInfo);
+    m_hInfoMapped = CreateFileMappingW(m_hInfo, NULL, PAGE_READWRITE | SEC_COMMIT, 0, 0, NULL);
+    if (!m_hInfoMapped)
     {
         hr = HRESULT_FROM_WIN32(GetLastError());
         goto cleanup;
     }
 
     /* Open INFO2 file */
-    pHeader = MapViewOfFile(s->hInfoMapped, FILE_MAP_WRITE, 0, 0, 0);
+    pHeader = (PINFO2_HEADER)MapViewOfFile(m_hInfoMapped, FILE_MAP_WRITE, 0, 0, 0);
     if (!pHeader)
     {
         hr = HRESULT_FROM_WIN32(GetLastError());
@@ -261,7 +265,7 @@ RecycleBin5_RecycleBin5_DeleteFile(
     }
 
     /* Get number of entries */
-    FileSize.u.LowPart = GetFileSize(s->hInfo, &FileSize.u.HighPart);
+    FileSize.u.LowPart = GetFileSize(m_hInfo, &FileSize.u.HighPart);
     if (FileSize.u.LowPart < sizeof(INFO2_HEADER))
     {
         hr = HRESULT_FROM_WIN32(GetLastError());
@@ -305,10 +309,10 @@ RecycleBin5_RecycleBin5_DeleteFile(
         pDeletedFile->dwRecordUniqueId = pLastDeleted->dwRecordUniqueId + 1;
     }
     pDeletedFile->dwDriveNumber = tolower(szFullName[0]) - 'a';
-    _snwprintf(DeletedFileName, MAX_PATH, L"%s\\D%c%lu%s", s->Folder, pDeletedFile->dwDriveNumber + 'a', pDeletedFile->dwRecordUniqueId, Extension);
+    _snwprintf(DeletedFileName, MAX_PATH, L"%s\\D%c%lu%s", m_Folder, pDeletedFile->dwDriveNumber + 'a', pDeletedFile->dwRecordUniqueId, Extension);
 
     /* Get cluster size */
-    if (!GetDiskFreeSpaceW(s->VolumePath, &SectorsPerCluster, &BytesPerSector, NULL, NULL))
+    if (!GetDiskFreeSpaceW(m_VolumePath, &SectorsPerCluster, &BytesPerSector, NULL, NULL))
     {
         hr = HRESULT_FROM_WIN32(GetLastError());
         goto cleanup;
@@ -348,80 +352,69 @@ cleanup:
     return hr;
 }
 
-static HRESULT STDMETHODCALLTYPE
-RecycleBin5_RecycleBin5_EmptyRecycleBin(
-    IN IRecycleBin5 *This)
+STDMETHODIMP RecycleBin5::EmptyRecycleBin()
 {
-    IRecycleBinEnumList *prbel;
-    IRecycleBinFile *prbf;
-    HRESULT hr;
-
-    TRACE("(%p)\n", This);
+    TRACE("(%p)\n", this);
 
     while (TRUE)
     {
-        hr = IRecycleBin5_EnumObjects(This, &prbel);
+        IRecycleBinEnumList *prbel;
+        HRESULT hr = EnumObjects(&prbel);
         if (!SUCCEEDED(hr))
             return hr;
-        hr = IRecycleBinEnumList_Next(prbel, 1, &prbf, NULL);
-        IRecycleBinEnumList_Release(prbel);
+
+        IRecycleBinFile *prbf;
+        hr = prbel->Next(1, &prbf, NULL);
+        prbel->Release();
         if (hr == S_FALSE)
             return S_OK;
-        hr = IRecycleBinFile_Delete(prbf);
-        IRecycleBinFile_Release(prbf);
+        hr = prbf->Delete();
+        prbf->Release();
         if (!SUCCEEDED(hr))
             return hr;
     }
 }
 
-static HRESULT STDMETHODCALLTYPE
-RecycleBin5_RecycleBin5_EnumObjects(
-    IN IRecycleBin5 *This,
-    OUT IRecycleBinEnumList **ppEnumList)
+STDMETHODIMP RecycleBin5::EnumObjects(OUT IRecycleBinEnumList **ppEnumList)
 {
-    struct RecycleBin5 *s = CONTAINING_RECORD(This, struct RecycleBin5, recycleBinImpl);
-    IRecycleBinEnumList *prbel;
-    HRESULT hr;
+    TRACE("(%p, %p)\n", this, ppEnumList);
+
     IUnknown *pUnk;
-
-    TRACE("(%p, %p)\n", This, ppEnumList);
-
-    hr = RecycleBin5Enum_Constructor(This, s->hInfo, s->hInfoMapped, s->Folder, &pUnk);
+    HRESULT hr = RecycleBin5Enum_Constructor(this, m_hInfo, m_hInfoMapped, m_Folder, &pUnk);
     if (!SUCCEEDED(hr))
         return hr;
 
-    hr = IUnknown_QueryInterface(pUnk, &IID_IRecycleBinEnumList, (void **)&prbel);
+    IRecycleBinEnumList *prbel;
+    hr = pUnk->QueryInterface(IID_IRecycleBinEnumList, (void **)&prbel);
     if (SUCCEEDED(hr))
     {
-        s->EnumeratorCount++;
+        m_EnumeratorCount++;
         *ppEnumList = prbel;
     }
-    IUnknown_Release(pUnk);
+
+    pUnk->Release();
     return hr;
 }
 
-static HRESULT STDMETHODCALLTYPE
-RecycleBin5_RecycleBin5_Delete(
-    IN IRecycleBin5 *This,
+STDMETHODIMP RecycleBin5::Delete(
     IN LPCWSTR pDeletedFileName,
     IN DELETED_FILE_RECORD *pDeletedFile)
 {
-    struct RecycleBin5 *s = CONTAINING_RECORD(This, struct RecycleBin5, recycleBinImpl);
     ULARGE_INTEGER FileSize;
     PINFO2_HEADER pHeader;
     DELETED_FILE_RECORD *pRecord, *pLast;
     DWORD dwEntries, i;
 
-    TRACE("(%p, %s, %p)\n", This, debugstr_w(pDeletedFileName), pDeletedFile);
+    TRACE("(%p, %s, %p)\n", this, debugstr_w(pDeletedFileName), pDeletedFile);
 
-    if (s->EnumeratorCount != 0)
+    if (m_EnumeratorCount != 0)
         return HRESULT_FROM_WIN32(ERROR_SHARING_VIOLATION);
 
-    pHeader = MapViewOfFile(s->hInfoMapped, FILE_MAP_WRITE, 0, 0, 0);
+    pHeader = (PINFO2_HEADER)MapViewOfFile(m_hInfoMapped, FILE_MAP_WRITE, 0, 0, 0);
     if (!pHeader)
         return HRESULT_FROM_WIN32(GetLastError());
 
-    FileSize.u.LowPart = GetFileSize(s->hInfo, &FileSize.u.HighPart);
+    FileSize.u.LowPart = GetFileSize(m_hInfo, &FileSize.u.HighPart);
     if (FileSize.u.LowPart == 0)
     {
         UnmapViewOfFile(pHeader);
@@ -448,11 +441,11 @@ RecycleBin5_RecycleBin5_Delete(
             UnmapViewOfFile(pHeader);
 
             /* Resize file */
-            CloseHandle(s->hInfoMapped);
-            SetFilePointer(s->hInfo, -(LONG)sizeof(DELETED_FILE_RECORD), NULL, FILE_END);
-            SetEndOfFile(s->hInfo);
-            s->hInfoMapped = CreateFileMappingW(s->hInfo, NULL, PAGE_READWRITE | SEC_COMMIT, 0, 0, NULL);
-            if (!s->hInfoMapped)
+            CloseHandle(m_hInfoMapped);
+            SetFilePointer(m_hInfo, -(LONG)sizeof(DELETED_FILE_RECORD), NULL, FILE_END);
+            SetEndOfFile(m_hInfo);
+            m_hInfoMapped = CreateFileMappingW(m_hInfo, NULL, PAGE_READWRITE | SEC_COMMIT, 0, 0, NULL);
+            if (!m_hInfoMapped)
                 return HRESULT_FROM_WIN32(GetLastError());
             return S_OK;
         }
@@ -462,13 +455,10 @@ RecycleBin5_RecycleBin5_Delete(
     return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 }
 
-static HRESULT STDMETHODCALLTYPE
-RecycleBin5_RecycleBin5_Restore(
-    IN IRecycleBin5 *This,
+STDMETHODIMP RecycleBin5::Restore(
     IN LPCWSTR pDeletedFileName,
     IN DELETED_FILE_RECORD *pDeletedFile)
 {
-    struct RecycleBin5 *s = CONTAINING_RECORD(This, struct RecycleBin5, recycleBinImpl);
     ULARGE_INTEGER FileSize;
     PINFO2_HEADER pHeader;
     DELETED_FILE_RECORD *pRecord, *pLast;
@@ -476,16 +466,16 @@ RecycleBin5_RecycleBin5_Restore(
     SHFILEOPSTRUCTW op;
     int res;
 
-    TRACE("(%p, %s, %p)\n", This, debugstr_w(pDeletedFileName), pDeletedFile);
+    TRACE("(%p, %s, %p)\n", this, debugstr_w(pDeletedFileName), pDeletedFile);
 
-    if (s->EnumeratorCount != 0)
+    if (m_EnumeratorCount != 0)
         return HRESULT_FROM_WIN32(ERROR_SHARING_VIOLATION);
 
-    pHeader = MapViewOfFile(s->hInfoMapped, FILE_MAP_WRITE, 0, 0, 0);
+    pHeader = (PINFO2_HEADER)MapViewOfFile(m_hInfoMapped, FILE_MAP_WRITE, 0, 0, 0);
     if (!pHeader)
         return HRESULT_FROM_WIN32(GetLastError());
 
-    FileSize.u.LowPart = GetFileSize(s->hInfo, &FileSize.u.HighPart);
+    FileSize.u.LowPart = GetFileSize(m_hInfo, &FileSize.u.HighPart);
     if (FileSize.u.LowPart == 0)
     {
         UnmapViewOfFile(pHeader);
@@ -519,11 +509,11 @@ RecycleBin5_RecycleBin5_Restore(
             UnmapViewOfFile(pHeader);
 
             /* Resize file */
-            CloseHandle(s->hInfoMapped);
-            SetFilePointer(s->hInfo, -(LONG)sizeof(DELETED_FILE_RECORD), NULL, FILE_END);
-            SetEndOfFile(s->hInfo);
-            s->hInfoMapped = CreateFileMappingW(s->hInfo, NULL, PAGE_READWRITE | SEC_COMMIT, 0, 0, NULL);
-            if (!s->hInfoMapped)
+            CloseHandle(m_hInfoMapped);
+            SetFilePointer(m_hInfo, -(LONG)sizeof(DELETED_FILE_RECORD), NULL, FILE_END);
+            SetEndOfFile(m_hInfo);
+            m_hInfoMapped = CreateFileMappingW(m_hInfo, NULL, PAGE_READWRITE | SEC_COMMIT, 0, 0, NULL);
+            if (!m_hInfoMapped)
                 return HRESULT_FROM_WIN32(GetLastError());
             return S_OK;
         }
@@ -534,29 +524,12 @@ RecycleBin5_RecycleBin5_Restore(
     return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 }
 
-static HRESULT STDMETHODCALLTYPE
-RecycleBin5_RecycleBin5_OnClosing(
-    IN IRecycleBin5 *This,
-    IN IRecycleBinEnumList *prbel)
+STDMETHODIMP RecycleBin5::OnClosing(IN IRecycleBinEnumList *prbel)
 {
-    struct RecycleBin5 *s = CONTAINING_RECORD(This, struct RecycleBin5, recycleBinImpl);
-    TRACE("(%p, %p)\n", This, prbel);
-    s->EnumeratorCount--;
+    TRACE("(%p, %p)\n", this, prbel);
+    m_EnumeratorCount--;
     return S_OK;
 }
-
-CONST_VTBL struct IRecycleBin5Vtbl RecycleBin5Vtbl =
-{
-    RecycleBin5_RecycleBin5_QueryInterface,
-    RecycleBin5_RecycleBin5_AddRef,
-    RecycleBin5_RecycleBin5_Release,
-    RecycleBin5_RecycleBin5_DeleteFile,
-    RecycleBin5_RecycleBin5_EmptyRecycleBin,
-    RecycleBin5_RecycleBin5_EnumObjects,
-    RecycleBin5_RecycleBin5_Delete,
-    RecycleBin5_RecycleBin5_Restore,
-    RecycleBin5_RecycleBin5_OnClosing,
-};
 
 static HRESULT
 RecycleBin5_Create(
@@ -573,7 +546,7 @@ RecycleBin5_Create(
     HRESULT hr;
 
     Needed = (wcslen(Folder) + 1 + max(wcslen(RECYCLE_BIN_FILE_NAME), wcslen(L"desktop.ini")) + 1) * sizeof(WCHAR);
-    BufferName = HeapAlloc(GetProcessHeap(), 0, Needed);
+    BufferName = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, Needed);
     if (!BufferName)
     {
         hr = ERROR_NOT_ENOUGH_MEMORY;
@@ -672,31 +645,80 @@ cleanup:
     return hr;
 }
 
+RecycleBin5::RecycleBin5(
+    LPCWSTR VolumePath,
+    LPCWSTR RecycleBinDirectory,
+    LPWSTR StringSid,
+    PTOKEN_USER TokenUserInfo,
+    LPWSTR pszFolder)
+    : m_ref(1)
+    , m_hInfo(NULL)
+    , m_hInfoMapped(NULL)
+    , m_EnumeratorCount(0)
+    , m_VolumePath(NULL)
+    , m_Folder(pszFolder)
+    , m_hr(S_OK)
+{
+    INT len;
+    LPWSTR p;
+    HRESULT hr;
+
+    if (StringSid)
+        len = swprintf(m_Folder, L"%s%s\\%s", VolumePath, RecycleBinDirectory, StringSid);
+    else
+        len = swprintf(m_Folder, L"%s%s", VolumePath, RecycleBinDirectory);
+
+    p = &m_Folder[len];
+    wcscpy(p, L"\\" RECYCLE_BIN_FILE_NAME);
+
+    m_hInfo = CreateFileW(m_Folder, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+    if (m_hInfo == INVALID_HANDLE_VALUE &&
+        (GetLastError() == ERROR_PATH_NOT_FOUND || GetLastError() == ERROR_FILE_NOT_FOUND))
+    {
+        *p = UNICODE_NULL;
+        hr = RecycleBin5_Create(m_Folder, TokenUserInfo ? TokenUserInfo->User.Sid : NULL);
+        *p = L'\\';
+        if (!SUCCEEDED(hr))
+        {
+            m_hr = hr;
+            return;
+        }
+        m_hInfo = CreateFileW(m_Folder, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+    }
+    if (m_hInfo == INVALID_HANDLE_VALUE)
+    {
+        m_hr = HRESULT_FROM_WIN32(GetLastError());
+        return;
+    }
+    m_hInfoMapped = CreateFileMappingW(m_hInfo, NULL, PAGE_READWRITE | SEC_COMMIT, 0, 0, NULL);
+    if (!m_hInfoMapped)
+    {
+        m_hr = HRESULT_FROM_WIN32(GetLastError());
+        return;
+    }
+    *p = UNICODE_NULL;
+    m_VolumePath = p + 1;
+    wcscpy(m_VolumePath, VolumePath);
+}
+
+EXTERN_C
 HRESULT RecycleBin5_Constructor(IN LPCWSTR VolumePath, OUT IUnknown **ppUnknown)
 {
-    struct RecycleBin5 *s = NULL;
+    RecycleBin5 *pThis;
     DWORD FileSystemFlags;
     LPCWSTR RecycleBinDirectory;
     HANDLE tokenHandle = INVALID_HANDLE_VALUE;
     PTOKEN_USER TokenUserInfo = NULL;
-    LPWSTR StringSid = NULL, p;
+    LPWSTR StringSid = NULL;
     DWORD Needed, DirectoryLength;
-    INT len;
     HRESULT hr;
+    LPWSTR pszFolder;
 
     if (!ppUnknown)
         return E_POINTER;
 
     /* Get information about file system */
-    if (!GetVolumeInformationW(
-        VolumePath,
-        NULL,
-        0,
-        NULL,
-        NULL,
-        &FileSystemFlags,
-        NULL,
-        0))
+    if (!GetVolumeInformationW(VolumePath, NULL, 0, NULL, NULL, &FileSystemFlags, NULL, 0))
     {
         hr = HRESULT_FROM_WIN32(GetLastError());
         goto cleanup;
@@ -723,7 +745,7 @@ HRESULT RecycleBin5_Constructor(IN LPCWSTR VolumePath, OUT IUnknown **ppUnknown)
             hr = HRESULT_FROM_WIN32(GetLastError());
             goto cleanup;
         }
-        TokenUserInfo = HeapAlloc(GetProcessHeap(), 0, Needed);
+        TokenUserInfo = (PTOKEN_USER)HeapAlloc(GetProcessHeap(), 0, Needed);
         if (!TokenUserInfo)
         {
             hr = E_OUTOFMEMORY;
@@ -748,48 +770,27 @@ HRESULT RecycleBin5_Constructor(IN LPCWSTR VolumePath, OUT IUnknown **ppUnknown)
     DirectoryLength += wcslen(VolumePath) + 1;
     Needed = (DirectoryLength + 1) * sizeof(WCHAR);
 
-    s = CoTaskMemAlloc(sizeof(struct RecycleBin5) + Needed);
-    if (!s)
+    pszFolder = (LPWSTR)SHAlloc(Needed);
+    if (!pszFolder)
     {
         hr = E_OUTOFMEMORY;
         goto cleanup;
     }
-    ZeroMemory(s, sizeof(struct RecycleBin5));
-    s->recycleBinImpl.lpVtbl = &RecycleBin5Vtbl;
-    s->ref = 1;
-    if (StringSid)
-        len = swprintf(s->Folder, L"%s%s\\%s", VolumePath, RecycleBinDirectory, StringSid);
-    else
-        len = swprintf(s->Folder, L"%s%s", VolumePath, RecycleBinDirectory);
-    p = &s->Folder[len];
-    wcscpy(p, L"\\" RECYCLE_BIN_FILE_NAME);
-    s->hInfo = CreateFileW(s->Folder, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-    if (s->hInfo == INVALID_HANDLE_VALUE && (GetLastError() == ERROR_PATH_NOT_FOUND || GetLastError() == ERROR_FILE_NOT_FOUND))
+
+    pThis = new RecycleBin5(VolumePath, RecycleBinDirectory, StringSid, TokenUserInfo, pszFolder);
+    if (!pThis)
     {
-        *p = UNICODE_NULL;
-        hr = RecycleBin5_Create(s->Folder, TokenUserInfo ? TokenUserInfo->User.Sid : NULL);
-        *p = L'\\';
-        if (!SUCCEEDED(hr))
-            goto cleanup;
-        s->hInfo = CreateFileW(s->Folder, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-    }
-    if (s->hInfo == INVALID_HANDLE_VALUE)
-    {
-        hr = HRESULT_FROM_WIN32(GetLastError());
+        hr = E_OUTOFMEMORY;
         goto cleanup;
     }
-    s->hInfoMapped = CreateFileMappingW(s->hInfo, NULL, PAGE_READWRITE | SEC_COMMIT, 0, 0, NULL);
-    if (!s->hInfoMapped)
+
+    if (FAILED(pThis->m_hr))
     {
-        hr = HRESULT_FROM_WIN32(GetLastError());
+        hr = pThis->m_hr;
         goto cleanup;
     }
-    *p = UNICODE_NULL;
-    s->VolumePath = p + 1;
-    wcscpy(s->VolumePath, VolumePath);
 
-    *ppUnknown = (IUnknown *)&s->recycleBinImpl;
-
+    *ppUnknown = static_cast<IRecycleBin5 *>(pThis);
     hr = S_OK;
 
 cleanup:
@@ -800,8 +801,8 @@ cleanup:
         LocalFree(StringSid);
     if (!SUCCEEDED(hr))
     {
-        if (s)
-            RecycleBin5_Destructor(s);
+        if (pThis)
+            delete pThis;
     }
     return hr;
 }
