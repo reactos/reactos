@@ -413,7 +413,7 @@ BEGIN
 
     GROUPBOX        "Orientació",    grp1, 180, 92, 100,56, WS_GROUP
     ICON            "",               ico1, 195,112,  18,20, WS_GROUP
-    AUTORADIOBUTTON "&Vertical",      rad1,224,106,52,12, WS_GROUP |WS_TABSTOP
+    AUTORADIOBUTTON "&Vertical",      rad1,224,106,52,12, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "&Horizontal",    rad2,224,126,52,12
 END
 
