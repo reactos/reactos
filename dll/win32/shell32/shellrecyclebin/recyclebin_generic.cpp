@@ -130,13 +130,13 @@ STDMETHODIMP RecycleBinGeneric::EmptyRecycleBin()
     if (dwLogicalDrives == 0)
         return HRESULT_FROM_WIN32(GetLastError());
 
-    for (DWORD i = 0; i < 'Z' - 'A' + 1; i++)
+    for (DWORD i = 0; i < L'Z' - L'A' + 1; i++)
     {
         if (!(dwLogicalDrives & (1 << i)))
             continue;
 
         WCHAR szVolumeName[MAX_PATH];
-        swprintf(szVolumeName, L"%c:\\", 'A' + i);
+        swprintf(szVolumeName, L"%c:\\", L'A' + i);
         if (GetDriveTypeW(szVolumeName) != DRIVE_FIXED)
             continue;
 
