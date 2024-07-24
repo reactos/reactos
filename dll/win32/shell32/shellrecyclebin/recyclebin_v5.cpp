@@ -309,7 +309,7 @@ STDMETHODIMP RecycleBin5::DeleteFile(IN LPCWSTR szFileName)
         pDeletedFile->dwRecordUniqueId = pLastDeleted->dwRecordUniqueId + 1;
     }
     pDeletedFile->dwDriveNumber = tolower(szFullName[0]) - 'a';
-    _snwprintf(DeletedFileName, MAX_PATH, L"%s\\D%c%lu%s", m_Folder, pDeletedFile->dwDriveNumber + 'a', pDeletedFile->dwRecordUniqueId, Extension);
+    _snwprintf(DeletedFileName, _countof(DeletedFileName), L"%s\\D%c%lu%s", m_Folder, pDeletedFile->dwDriveNumber + 'a', pDeletedFile->dwRecordUniqueId, Extension);
 
     /* Get cluster size */
     if (!GetDiskFreeSpaceW(m_VolumePath, &SectorsPerCluster, &BytesPerSector, NULL, NULL))
