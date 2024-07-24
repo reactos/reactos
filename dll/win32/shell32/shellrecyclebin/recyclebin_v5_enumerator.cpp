@@ -14,12 +14,13 @@
 class RecycleBin5File : public IRecycleBinFile
 {
 public:
-    RecycleBin5File(
+    RecycleBin5File();
+    virtual ~RecycleBin5File();
+
+    HRESULT Init(
         _In_ IRecycleBin5 *prb,
         _In_ LPCWSTR Folder,
-        _In_ PDELETED_FILE_RECORD pDeletedFile,
-        _Inout_ LPWSTR pszFullName);
-    virtual ~RecycleBin5File();
+        _In_ PDELETED_FILE_RECORD pDeletedFile);
 
     /* IUnknown methods */
     STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject) override;
@@ -240,30 +241,22 @@ STDMETHODIMP RecycleBin5File::Restore()
     return m_recycleBin->Restore(m_FullName, &m_deletedFile);
 }
 
-RecycleBin5File::RecycleBin5File(
-    IN IRecycleBin5 *prb,
-    IN LPCWSTR Folder,
-    IN PDELETED_FILE_RECORD pDeletedFile,
-    IN OUT LPWSTR pszFullName)
+RecycleBin5File::RecycleBin5File()
     : m_ref(1)
-    , m_recycleBin(prb)
-    , m_deletedFile(*pDeletedFile)
-    , m_FullName(pszFullName)
+    , m_recycleBin(NULL)
+    , m_FullName(NULL)
 {
-    m_recycleBin->AddRef();
+    ZeroMemory(&m_deletedFile, sizeof(m_deletedFile));
 }
 
-static HRESULT
-RecycleBin5File_Constructor(
-    IN IRecycleBin5 *prb,
-    IN LPCWSTR Folder,
-    IN PDELETED_FILE_RECORD pDeletedFile,
-    OUT IRecycleBinFile **ppFile)
+HRESULT
+RecycleBin5File::Init(
+    _In_ IRecycleBin5 *prb,
+    _In_ LPCWSTR Folder,
+    _In_ PDELETED_FILE_RECORD pDeletedFile)
 {
-    if (!ppFile)
-        return E_POINTER;
-
-    LPCWSTR Extension = PathFindExtensionW(pDeletedFile->FileNameW);
+    m_recycleBin = prb;
+    m_recycleBin->AddRef();
 
     WCHAR szUniqueId[32];
     StringCchPrintfW(szUniqueId, _countof(szUniqueId), L"%lu", pDeletedFile->dwRecordUniqueId);
@@ -272,18 +265,34 @@ RecycleBin5File_Constructor(
     strFullName += L"\\D";
     strFullName += (WCHAR)(pDeletedFile->dwDriveNumber + 'a');
     strFullName += szUniqueId;
-    strFullName += Extension;
+    strFullName += PathFindExtensionW(pDeletedFile->FileNameW);
     if (GetFileAttributesW(strFullName) == INVALID_FILE_ATTRIBUTES)
         return E_FAIL;
 
-    LPWSTR pszFullName;
-    HRESULT hr = SHStrDup(strFullName, &pszFullName);
+    HRESULT hr = SHStrDup(strFullName, &m_FullName);
     if (FAILED(hr))
         return hr;
 
-    RecycleBin5File *pThis = new RecycleBin5File(prb, Folder, pDeletedFile, pszFullName);
+    return S_OK;
+}
+
+static HRESULT
+RecycleBin5File_Constructor(
+    _In_ IRecycleBin5 *prb,
+    _In_ LPCWSTR Folder,
+    _In_ PDELETED_FILE_RECORD pDeletedFile,
+    _Out_ IRecycleBinFile **ppFile)
+{
+    if (!ppFile)
+        return E_POINTER;
+
+    RecycleBin5File *pThis = new RecycleBin5File();
     if (!pThis)
         return E_OUTOFMEMORY;
+
+    HRESULT hr = pThis->Init(prb, Folder, pDeletedFile);
+    if (FAILED(hr))
+        return hr;
 
     *ppFile = static_cast<IRecycleBinFile *>(pThis);
     return S_OK;
@@ -292,12 +301,14 @@ RecycleBin5File_Constructor(
 class RecycleBin5Enum : public IRecycleBinEnumList
 {
 public:
-    RecycleBin5Enum(
+    RecycleBin5Enum();
+    virtual ~RecycleBin5Enum();
+
+    HRESULT Init(
         _In_ IRecycleBin5 *prb,
         _In_ HANDLE hInfo,
-        _Inout_ PINFO2_HEADER pInfo,
-        _Inout_ LPWSTR pszPrefix);
-    virtual ~RecycleBin5Enum();
+        _In_ HANDLE hInfoMapped,
+        _In_ LPCWSTR pszPrefix);
 
     /* IUnknown methods */
     STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject) override;
@@ -415,19 +426,38 @@ STDMETHODIMP RecycleBin5Enum::Reset()
     return S_OK;
 }
 
-RecycleBin5Enum::RecycleBin5Enum(
+RecycleBin5Enum::RecycleBin5Enum()
+    : m_ref(1)
+    , m_recycleBin(NULL)
+    , m_hInfo(NULL)
+    , m_pInfo(NULL)
+    , m_dwCurrent(0)
+    , m_pszPrefix(NULL)
+{
+}
+
+HRESULT
+RecycleBin5Enum::Init(
     _In_ IRecycleBin5 *prb,
     _In_ HANDLE hInfo,
-    _Inout_ PINFO2_HEADER pInfo,
-    _Inout_ LPWSTR pszPrefix)
-    : m_ref(1)
-    , m_recycleBin(prb)
-    , m_hInfo(hInfo)
-    , m_pInfo(pInfo)
-    , m_dwCurrent(0)
-    , m_pszPrefix(pszPrefix)
+    _In_ HANDLE hInfoMapped,
+    _In_ LPCWSTR pszPrefix)
 {
+    m_recycleBin = prb;
     m_recycleBin->AddRef();
+
+    HRESULT hr = SHStrDup(pszPrefix, &m_pszPrefix);
+    if (FAILED(hr))
+        return hr;
+
+    m_pInfo = (PINFO2_HEADER)MapViewOfFile(hInfoMapped, FILE_MAP_READ, 0, 0, 0);
+    if (!m_pInfo)
+        return HRESULT_FROM_WIN32(GetLastError());
+
+    if (m_pInfo->dwVersion != 5 || m_pInfo->dwRecordSize != sizeof(DELETED_FILE_RECORD))
+        return E_FAIL;
+
+    return S_OK;
 }
 
 EXTERN_C
@@ -442,32 +472,15 @@ RecycleBin5Enum_Constructor(
     if (!ppUnknown)
         return E_POINTER;
 
-    LPWSTR pszPrefix;
-    HRESULT hr = SHStrDup(szPrefix, &pszPrefix);
-    if (FAILED(hr))
-        return hr;
-
-    PINFO2_HEADER pInfo = (PINFO2_HEADER)MapViewOfFile(hInfoMapped, FILE_MAP_READ, 0, 0, 0);
-    if (!pInfo)
-    {
-        DWORD dwError = GetLastError();
-        SHFree(pszPrefix);
-        return HRESULT_FROM_WIN32(dwError);
-    }
-
-    if (pInfo->dwVersion != 5 || pInfo->dwRecordSize != sizeof(DELETED_FILE_RECORD))
-    {
-        UnmapViewOfFile(pInfo);
-        SHFree(pszPrefix);
-        return E_FAIL;
-    }
-
-    RecycleBin5Enum *pThis = new RecycleBin5Enum(prb, hInfo, pInfo, pszPrefix);
+    RecycleBin5Enum *pThis = new RecycleBin5Enum();
     if (!pThis)
-    {
-        UnmapViewOfFile(pInfo);
-        SHFree(pszPrefix);
         return E_OUTOFMEMORY;
+
+    HRESULT hr = pThis->Init(prb, hInfo, hInfoMapped, szPrefix);
+    if (FAILED(hr))
+    {
+        delete pThis;
+        return hr;
     }
 
     *ppUnknown = static_cast<IRecycleBinEnumList *>(pThis);
