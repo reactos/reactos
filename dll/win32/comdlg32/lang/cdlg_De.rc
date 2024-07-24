@@ -376,10 +376,10 @@ FONT 8, "MS Shell Dlg"
     GROUPBOX        "Druck Bereich",  grp1,   8,92,  144,64, WS_GROUP
     AUTORADIOBUTTON "&Alles",         rad1,16,106,64,12, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "&Seiten",        rad3,16,122,36,12
-    AUTORADIOBUTTON "Aus&wahl",     rad2,16,138,64,12
+    AUTORADIOBUTTON "Aus&wahl",       rad2,16,138,64,12
     EDITTEXT                          edt1,  73,122,  26,12, WS_GROUP | ES_NUMBER
     EDITTEXT                          edt2, 120,122,  26,12, WS_GROUP | ES_NUMBER
-    RTEXT           "&von:",         stc2,  52,124,  20,8
+    RTEXT           "&von:",          stc2,  52,124,  20,8
     RTEXT           "&bis:",          stc3,  99,124,  20,8
 }
 
