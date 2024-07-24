@@ -260,7 +260,7 @@ void TestRedrawWindow(STRUCT_TestRedrawWindow* ptestRW) {
 
     if (ptestRW->testChild)
     {
-        WNDCLASSW wcChild = { };
+        WNDCLASSW wcChild = { 0 };
         wcChild.lpfnWndProc = ChildWindowProc;
         wcChild.hInstance = GetModuleHandle(NULL);
         wcChild.lpszClassName = CHILD_CLASS_NAME;
