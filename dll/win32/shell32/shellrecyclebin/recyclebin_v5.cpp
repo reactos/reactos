@@ -125,7 +125,7 @@ protected:
     HANDLE m_hInfoMapped;
     DWORD m_EnumeratorCount;
     LPWSTR m_VolumePath;
-    LPWSTR m_Folder; /* [drive]:\[RECYCLE_BIN_DIRECTORY]\{SID} */
+    CStringW m_Folder; /* [drive]:\[RECYCLE_BIN_DIRECTORY]\{SID} */
 };
 
 STDMETHODIMP RecycleBin5::QueryInterface(IN REFIID riid, OUT void **ppvObject)
@@ -163,7 +163,6 @@ RecycleBin5::~RecycleBin5()
         CloseHandle(m_hInfo);
     if (m_hInfoMapped)
         CloseHandle(m_hInfoMapped);
-    SHFree(m_Folder);
 }
 
 STDMETHODIMP_(ULONG) RecycleBin5::Release()
@@ -646,7 +645,6 @@ RecycleBin5::RecycleBin5()
     , m_hInfoMapped(NULL)
     , m_EnumeratorCount(0)
     , m_VolumePath(NULL)
-    , m_Folder(NULL)
 {
 }
 
@@ -659,8 +657,11 @@ HRESULT RecycleBin5::Init(_In_ LPCWSTR VolumePath)
     LPWSTR StringSid = NULL;
     DWORD Needed;
     HRESULT hr;
-    LPWSTR p;
-    CStringW strFolder;
+    INT len;
+
+    hr = SHStrDup(VolumePath, &m_VolumePath);
+    if (FAILED(hr))
+        goto cleanup;
 
     /* Get information about file system */
     if (!GetVolumeInformationW(VolumePath, NULL, 0, NULL, NULL, &FileSystemFlags, NULL, 0))
@@ -711,25 +712,23 @@ HRESULT RecycleBin5::Init(_In_ LPCWSTR VolumePath)
         }
     }
 
-    strFolder = VolumePath;
-    strFolder += RecycleBinDirectory;
+    m_Folder = VolumePath;
+    m_Folder += RecycleBinDirectory;
     if (StringSid)
     {
-        strFolder += L'\\';
-        strFolder += StringSid;
+        m_Folder += L'\\';
+        m_Folder += StringSid;
     }
-    strFolder += L"\\" RECYCLE_BIN_FILE_NAME;
-    hr = SHStrDup(strFolder, &m_Folder);
-    if (FAILED(hr))
-        goto cleanup;
+    len = m_Folder.GetLength();
+    m_Folder += L"\\" RECYCLE_BIN_FILE_NAME;
 
     m_hInfo = CreateFileW(m_Folder, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
     if (m_hInfo == INVALID_HANDLE_VALUE &&
         (GetLastError() == ERROR_PATH_NOT_FOUND || GetLastError() == ERROR_FILE_NOT_FOUND))
     {
-        *p = UNICODE_NULL;
+        m_Folder = m_Folder.Left(len);
         hr = RecycleBin5_Create(m_Folder, TokenUserInfo ? TokenUserInfo->User.Sid : NULL);
-        *p = L'\\';
+        m_Folder += L"\\" RECYCLE_BIN_FILE_NAME;
         if (!SUCCEEDED(hr))
             goto cleanup;
         m_hInfo = CreateFileW(m_Folder, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
@@ -747,10 +746,6 @@ HRESULT RecycleBin5::Init(_In_ LPCWSTR VolumePath)
         hr = HRESULT_FROM_WIN32(GetLastError());
         goto cleanup;
     }
-
-    *p = UNICODE_NULL;
-    m_VolumePath = p + 1;
-    wcscpy(m_VolumePath, VolumePath);
 
 cleanup:
     if (tokenHandle != INVALID_HANDLE_VALUE)
