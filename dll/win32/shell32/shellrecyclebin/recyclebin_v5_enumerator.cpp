@@ -7,7 +7,9 @@
  */
 
 #include "recyclebin_private.h"
+#include <atlstr.h>
 #include <shlwapi.h>
+#include <strsafe.h>
 
 class RecycleBin5File : public IRecycleBinFile
 {
@@ -261,14 +263,21 @@ RecycleBin5File_Constructor(
     if (!ppFile)
         return E_POINTER;
 
-    LPCWSTR Extension = wcsrchr(pDeletedFile->FileNameW, '.');
-    WCHAR szFullName[MAX_PATH];
-    wsprintfW(szFullName, L"%s\\D%c%lu%s", Folder, pDeletedFile->dwDriveNumber + 'a', pDeletedFile->dwRecordUniqueId, Extension);
-    if (GetFileAttributesW(szFullName) == INVALID_FILE_ATTRIBUTES)
+    LPCWSTR Extension = PathFindExtensionW(pDeletedFile->FileNameW);
+
+    WCHAR szUniqueId[32];
+    StringCchPrintfW(szUniqueId, _countof(szUniqueId), L"%lu", pDeletedFile->dwRecordUniqueId);
+
+    CStringW strFullName(Folder);
+    strFullName += L"\\D";
+    strFullName += (WCHAR)(pDeletedFile->dwDriveNumber + 'a');
+    strFullName += szUniqueId;
+    strFullName += Extension;
+    if (GetFileAttributesW(strFullName) == INVALID_FILE_ATTRIBUTES)
         return E_FAIL;
 
     LPWSTR pszFullName;
-    HRESULT hr = SHStrDup(szFullName, &pszFullName);
+    HRESULT hr = SHStrDup(strFullName, &pszFullName);
     if (FAILED(hr))
         return hr;
 
