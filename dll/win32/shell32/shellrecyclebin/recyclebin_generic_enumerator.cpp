@@ -70,15 +70,11 @@ RecycleBinGenericEnum::~RecycleBinGenericEnum()
 STDMETHODIMP_(ULONG)
 RecycleBinGenericEnum::Release()
 {
-    ULONG refCount;
-
     TRACE("(%p)\n", this);
 
-    refCount = InterlockedDecrement(&m_ref);
-
+    ULONG refCount = InterlockedDecrement(&m_ref);
     if (refCount == 0)
         delete this;
-
     return refCount;
 }
 
@@ -102,7 +98,8 @@ RecycleBinGenericEnum::Next(DWORD celt, IRecycleBinFile **rgelt, DWORD *pceltFet
         /* Get enumerator implementation */
         if (!m_current && m_dwLogicalDrives)
         {
-            for (i = 0; i < ('Z' - 'A' + 1); i++)
+            for (i = 0; i < 'Z' - 'A' + 1; i++)
+            {
                 if (m_dwLogicalDrives & (1 << i))
                 {
                     WCHAR szVolumeName[4];
@@ -125,6 +122,7 @@ RecycleBinGenericEnum::Next(DWORD celt, IRecycleBinFile **rgelt, DWORD *pceltFet
                     m_dwLogicalDrives &= ~(1 << i);
                     break;
                 }
+            }
         }
         if (!m_current)
         {
@@ -169,6 +167,7 @@ RecycleBinGenericEnum::Next(DWORD celt, IRecycleBinFile **rgelt, DWORD *pceltFet
     }
 
     /* Never go here */
+    UNREACHABLE;
 }
 
 STDMETHODIMP RecycleBinGenericEnum::Skip(DWORD celt)
@@ -186,8 +185,8 @@ STDMETHODIMP RecycleBinGenericEnum::Reset()
     {
         m_current->Release();
         m_current = NULL;
-        m_skip = 0;
     }
+    m_skip = 0;
     m_dwLogicalDrives = ::GetLogicalDrives();
     return S_OK;
 }
