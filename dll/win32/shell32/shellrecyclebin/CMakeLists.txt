@@ -9,7 +9,7 @@ list(APPEND SOURCE
     recyclebin_generic.cpp
     recyclebin_generic_enumerator.cpp
     recyclebin_v5.c
-    recyclebin_v5_enumerator.c
+    recyclebin_v5_enumerator.cpp
     recyclebin_private.h)
 
 add_library(recyclebin ${SOURCE} guid.c)

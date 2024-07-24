@@ -80,6 +80,7 @@ DECLARE_INTERFACE_(IRecycleBin5, IUnknown)
     (This)->lpVtbl->OnClosing(This, prb5el)
 #endif
 
+EXTERN_C
 HRESULT
 RecycleBin5Enum_Constructor(
     IN IRecycleBin5 *prb,
