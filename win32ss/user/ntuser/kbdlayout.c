@@ -45,7 +45,7 @@ PKL FASTCALL IntHKLtoPKL(_Inout_ PTHREADINFO pti, _In_ HKL hKL)
     pKL = pFirstKL;
 
     /* hKL can have special value HKL_NEXT or HKL_PREV */
-    if (hKL == (HKL)UlongToHandle(HKL_NEXT)) /* Looking forward */
+    if (hKL == UlongToHandle(HKL_NEXT)) /* Looking forward */
     {
         do
         {
@@ -54,7 +54,7 @@ PKL FASTCALL IntHKLtoPKL(_Inout_ PTHREADINFO pti, _In_ HKL hKL)
                 return pKL;
         } while (pKL != pFirstKL);
     }
-    else if (hKL == (HKL)UlongToHandle(HKL_PREV)) /* Looking backward */
+    else if (hKL == UlongToHandle(HKL_PREV)) /* Looking backward */
     {
         do
         {
@@ -859,7 +859,7 @@ co_IntUnloadKeyboardLayoutEx(
 
     if (!(dwFlags & 0x80000000) && pti->KeyboardLayout == pKL)
     {
-        pNextKL = IntHKLtoPKL(pti, (HKL)UlongToHandle(HKL_NEXT));
+        pNextKL = IntHKLtoPKL(pti, UlongToHandle(HKL_NEXT));
         if (pNextKL)
         {
             UserRefObjectCo(pNextKL, &Ref2); /* Add reference */
@@ -1244,7 +1244,7 @@ NtUserLoadKeyboardLayoutEx(
                                         hSafeFile,
                                         hOldKL,
                                         &uszSafeKLID,
-                                        (HKL)UlongToHandle(dwNewKL),
+                                        UlongToHandle(dwNewKL),
                                         Flags);
     if (hSafeFile)
         ZwClose(hSafeFile);
