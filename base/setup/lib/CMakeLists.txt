@@ -33,3 +33,9 @@ list(APPEND SOURCE
 add_library(setuplib ${SOURCE})
 add_pch(setuplib precomp.h SOURCE)
 add_dependencies(setuplib xdk) # psdk
+
+
+## Unit-tests
+if(ENABLE_ROSTESTS)
+    add_subdirectory(unittests)
+endif()
