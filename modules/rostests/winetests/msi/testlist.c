@@ -17,7 +17,9 @@ extern void func_suminfo(void);
 
 const struct test winetest_testlist[] =
 {
+#ifndef _M_AMD64 // FIXME: Too slow and times out often, see ROSTESTS-392
     { "action", func_action },
+#endif
     { "automation", func_automation },
     { "db", func_db },
     { "format", func_format },
