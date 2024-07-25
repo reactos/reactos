@@ -297,7 +297,7 @@ PIMEDPI APIENTRY Imm32LoadImeDpi(HKL hKL, BOOL bLock)
     pImeDpiNew->hKL = hKL;
 
     lcid = LOWORD(hKL);
-    if (TranslateCharsetInfo((LPDWORD)UlongToPtr(lcid), &ci, TCI_SRCLOCALE))
+    if (TranslateCharsetInfo(UlongToPtr(lcid), &ci, TCI_SRCLOCALE))
         uCodePage = ci.ciACP;
     else
         uCodePage = CP_ACP;

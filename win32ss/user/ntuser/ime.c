@@ -1976,7 +1976,7 @@ PWND FASTCALL co_IntCreateDefaultImeWindow(PWND pwndTarget, HINSTANCE hInst)
 
     RtlInitLargeUnicodeString(&WindowName, L"Default IME", 0);
 
-    ClassName.Buffer = (PWCH)UlongToPtr(gpsi->atomSysClass[ICLS_IME]);
+    ClassName.Buffer = UlongToPtr(gpsi->atomSysClass[ICLS_IME]);
     ClassName.Length = 0;
     ClassName.MaximumLength = 0;
 
