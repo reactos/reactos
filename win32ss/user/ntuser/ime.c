@@ -939,7 +939,7 @@ NtUserGetAppImeLevel(HWND hWnd)
 
     pti = PsGetCurrentThreadWin32Thread();
     if (pWnd->head.pti->ppi == pti->ppi)
-        ret = PtrToUlong(UserGetProp(pWnd, AtomImeLevel, TRUE));
+        ret = HandleToUlong(UserGetProp(pWnd, AtomImeLevel, TRUE));
 
 Quit:
     UserLeave();
