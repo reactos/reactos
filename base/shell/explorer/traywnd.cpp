@@ -3243,10 +3243,11 @@ HandleTrayContextMenu:
             }
         }
 
-        g_MinimizedAll.RemoveAll();
-
-        if (!bDestroyed)
+        if (bDestroyed)
+            g_MinimizedAll.RemoveAll();
+        else
             ::SetForegroundWindow(hwndActive);
+
     }
 
     LRESULT OnPulse(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
