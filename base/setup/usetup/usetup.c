@@ -3043,6 +3043,14 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
                 CONSOLE_SetCursorXY(8 + Pos, 11);
             }
         }
+        else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)  /* ESC */
+        {
+            /* Erase the whole line */
+            *InstallDir = UNICODE_NULL;
+            Pos = Length = 0;
+            CONSOLE_SetInputTextXY(8, 11, 51, InstallDir);
+            CONSOLE_SetCursorXY(8 + Pos, 11);
+        }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
         {
             CONSOLE_SetCursorType(TRUE, FALSE);
