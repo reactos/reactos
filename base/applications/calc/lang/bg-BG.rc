@@ -315,8 +315,8 @@ IDR_MENU_SCIENTIFIC_1 MENU
 BEGIN
     POPUP "&Обработка"
     BEGIN
-        MENUITEM "Запомняне\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Поставяне\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Запомняне\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Поставяне\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "Изглед"
     BEGIN
@@ -347,8 +347,8 @@ IDR_MENU_SCIENTIFIC_2 MENU
 BEGIN
     POPUP "&Обработка"
     BEGIN
-        MENUITEM "Запомняне\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Поставяне\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Запомняне\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Поставяне\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "Изглед"
     BEGIN
@@ -380,8 +380,8 @@ IDR_MENU_STANDARD MENU
 BEGIN
     POPUP "&Обработка"
     BEGIN
-        MENUITEM "Запомняне\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Поставяне\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Запомняне\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Поставяне\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "Изглед"
     BEGIN

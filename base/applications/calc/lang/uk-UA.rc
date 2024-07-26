@@ -317,8 +317,8 @@ IDR_MENU_SCIENTIFIC_1 MENU
 BEGIN
     POPUP "Правка"
     BEGIN
-        MENUITEM "Копіювати\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Вставити\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Копіювати\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Вставити\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "Вигляд"
     BEGIN
@@ -349,8 +349,8 @@ IDR_MENU_SCIENTIFIC_2 MENU
 BEGIN
     POPUP "Правка"
     BEGIN
-        MENUITEM "Копіювати\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Вставити\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Копіювати\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Вставити\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "Вигляд"
     BEGIN
@@ -382,8 +382,8 @@ IDR_MENU_STANDARD MENU
 BEGIN
     POPUP "Правка"
     BEGIN
-        MENUITEM "Копіювати\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Вставити\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Копіювати\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Вставити\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "Вигляд"
     BEGIN

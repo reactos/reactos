@@ -309,8 +309,8 @@ IDR_MENU_SCIENTIFIC_1 MENU
 BEGIN
     POPUP "Modifica"
     BEGIN
-        MENUITEM "Copia\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Incolla\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Copia\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Incolla\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "Visualizza"
     BEGIN
@@ -341,8 +341,8 @@ IDR_MENU_SCIENTIFIC_2 MENU
 BEGIN
     POPUP "Modifica"
     BEGIN
-        MENUITEM "Copia\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Incolla\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Copia\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Incolla\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "Visualizza"
     BEGIN
@@ -374,8 +374,8 @@ IDR_MENU_STANDARD MENU
 BEGIN
     POPUP "Modifica"
     BEGIN
-        MENUITEM "Copia\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Incolla\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Copia\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Incolla\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "Visualizza"
     BEGIN

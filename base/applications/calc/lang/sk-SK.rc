@@ -316,8 +316,8 @@ IDR_MENU_SCIENTIFIC_1 MENU
 BEGIN
     POPUP "Úpravy"
     BEGIN
-        MENUITEM "Kopírovať\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Prilepiť\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Kopírovať\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Prilepiť\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "Zobraziť"
     BEGIN
@@ -348,8 +348,8 @@ IDR_MENU_SCIENTIFIC_2 MENU
 BEGIN
     POPUP "Úpravy"
     BEGIN
-        MENUITEM "Kopírovať\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Prilepiť\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Kopírovať\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Prilepiť\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "Zobraziť"
     BEGIN
@@ -381,8 +381,8 @@ IDR_MENU_STANDARD MENU
 BEGIN
     POPUP "Úpravy"
     BEGIN
-        MENUITEM "Kopírovať\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Prilepiť\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Kopírovať\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Prilepiť\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "Zobraziť"
     BEGIN

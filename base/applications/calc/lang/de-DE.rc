@@ -307,89 +307,89 @@ END
 
 IDR_MENU_SCIENTIFIC_1 MENU
 BEGIN
-    POPUP "Bearbeiten"
+    POPUP "&Bearbeiten"
     BEGIN
-        MENUITEM "Kopieren\tSTRG-C", IDM_EDIT_COPY
-        MENUITEM "Einfügen\tSTRG-V", IDM_EDIT_PASTE
+        MENUITEM "&Kopieren\tStrg-C", IDM_EDIT_COPY
+        MENUITEM "&Einfügen\tStrg-V", IDM_EDIT_PASTE
     END
-    POPUP "Ansicht"
+    POPUP "&Ansicht"
     BEGIN
-        MENUITEM "Standard", IDM_VIEW_STANDARD
-        MENUITEM "Wissenschaftlich", IDM_VIEW_SCIENTIFIC
-        MENUITEM "Konversion", IDM_VIEW_CONVERSION
+        MENUITEM "&Standard", IDM_VIEW_STANDARD
+        MENUITEM "&Wissenschaftlich", IDM_VIEW_SCIENTIFIC
+        MENUITEM "&Konversion", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Hex\tF5", IDM_VIEW_HEX, CHECKED
-        MENUITEM "Dezimal\tF6", IDM_VIEW_DEC, CHECKED
-        MENUITEM "Oktal\tF7", IDM_VIEW_OCT, CHECKED
-        MENUITEM "Binär\tF8", IDM_VIEW_BIN, CHECKED
+        MENUITEM "&Hex\tF5", IDM_VIEW_HEX, CHECKED
+        MENUITEM "De&zimal\tF6", IDM_VIEW_DEC, CHECKED
+        MENUITEM "O&ktal\tF7", IDM_VIEW_OCT, CHECKED
+        MENUITEM "&Binär\tF8", IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Degree\tF2", IDM_VIEW_DEG, CHECKED
-        MENUITEM "Radiant\tF3", IDM_VIEW_RAD, CHECKED
-        MENUITEM "Grad\tF4", IDM_VIEW_GRAD, CHECKED
+        MENUITEM "&Deg\tF2", IDM_VIEW_DEG, CHECKED
+        MENUITEM "&Rad\tF3", IDM_VIEW_RAD, CHECKED
+        MENUITEM "&Grad\tF4", IDM_VIEW_GRAD, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Zifferngruppierung", IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Zifferngr&uppierung", IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Hilfe"
+    POPUP "&?"
     BEGIN
-        MENUITEM "Hilfethemen", IDM_HELP_HELP
+        MENUITEM "&Hilfethemen", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Info", IDM_HELP_ABOUT
+        MENUITEM "&Info", IDM_HELP_ABOUT
     END
 END
 
 IDR_MENU_SCIENTIFIC_2 MENU
 BEGIN
-    POPUP "Bearbeiten"
+    POPUP "&Bearbeiten"
     BEGIN
-        MENUITEM "Kopieren\tSTRG-C", IDM_EDIT_COPY
-        MENUITEM "Einfügen\tSTRG-V", IDM_EDIT_PASTE
+        MENUITEM "&Kopieren\tStrg-C", IDM_EDIT_COPY
+        MENUITEM "&Einfügen\tStrg-V", IDM_EDIT_PASTE
     END
-    POPUP "Ansicht"
+    POPUP "&Ansicht"
     BEGIN
-        MENUITEM "Standard", IDM_VIEW_STANDARD
-        MENUITEM "Wissenschaftlich", IDM_VIEW_SCIENTIFIC
-        MENUITEM "Konversion", IDM_VIEW_CONVERSION
+        MENUITEM "&Standard", IDM_VIEW_STANDARD
+        MENUITEM "&Wissenschaftlich", IDM_VIEW_SCIENTIFIC
+        MENUITEM "&Konversion", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Hex\tF5", IDM_VIEW_HEX, CHECKED
-        MENUITEM "Dezimal\tF6", IDM_VIEW_DEC, CHECKED
-        MENUITEM "Oktal\tF7", IDM_VIEW_OCT, CHECKED
-        MENUITEM "Binär\tF8", IDM_VIEW_BIN, CHECKED
+        MENUITEM "&Hex\tF5", IDM_VIEW_HEX, CHECKED
+        MENUITEM "&Dezimal\tF6", IDM_VIEW_DEC, CHECKED
+        MENUITEM "O&ktal\tF7", IDM_VIEW_OCT, CHECKED
+        MENUITEM "Bi&när\tF8", IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Qword\tF12", IDM_VIEW_QWORD, CHECKED
-        MENUITEM "Dword\tF2", IDM_VIEW_DWORD, CHECKED
-        MENUITEM "Word\tF3", IDM_VIEW_WORD, CHECKED
-        MENUITEM "Byte\tF4", IDM_VIEW_BYTE, CHECKED
+        MENUITEM "&Qword\tF12", IDM_VIEW_QWORD, CHECKED
+        MENUITEM "Dw&ord\tF2", IDM_VIEW_DWORD, CHECKED
+        MENUITEM "Wo&rd\tF3", IDM_VIEW_WORD, CHECKED
+        MENUITEM "&Byte\tF4", IDM_VIEW_BYTE, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Zifferngruppierung", IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Zifferngr&uppierung", IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Hilfe"
+    POPUP "&?"
     BEGIN
-        MENUITEM "Hilfethemen", IDM_HELP_HELP
+        MENUITEM "&Hilfethemen", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Über ReactOS Rechner", IDM_HELP_ABOUT
+        MENUITEM "&Info", IDM_HELP_ABOUT
     END
 END
 
 IDR_MENU_STANDARD MENU
 BEGIN
-    POPUP "Bearbeiten"
+    POPUP "&Bearbeiten"
     BEGIN
-        MENUITEM "Kopieren\tSTRG-C", IDM_EDIT_COPY
-        MENUITEM "Einfügen\tSTRG-V", IDM_EDIT_PASTE
+        MENUITEM "&Kopieren\tStrg-C", IDM_EDIT_COPY
+        MENUITEM "&Einfügen\tStrg-V", IDM_EDIT_PASTE
     END
-    POPUP "Ansicht"
+    POPUP "&Ansicht"
     BEGIN
-        MENUITEM "Standard", IDM_VIEW_STANDARD
-        MENUITEM "Wissenschaftlich", IDM_VIEW_SCIENTIFIC
-        MENUITEM "Konversion", IDM_VIEW_CONVERSION
+        MENUITEM "&Standard", IDM_VIEW_STANDARD
+        MENUITEM "&Wissenschaftlich", IDM_VIEW_SCIENTIFIC
+        MENUITEM "&Konversion", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Zifferngruppierung", IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Zifferngr&uppierung", IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Hilfe"
+    POPUP "&?"
     BEGIN
-        MENUITEM "Hilfethemen", IDM_HELP_HELP
+        MENUITEM "&Hilfethemen", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Über ReactOS Rechner", IDM_HELP_ABOUT
+        MENUITEM "&Info", IDM_HELP_ABOUT
     END
 END
 

@@ -350,8 +350,8 @@ IDR_MENU_SCIENTIFIC_2 MENU
 BEGIN
     POPUP "&Editare"
     BEGIN
-        MENUITEM "&Copiere\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "&Lipire\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "&Copiere\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "&Lipire\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "&Vizualizare"
     BEGIN
@@ -383,8 +383,8 @@ IDR_MENU_STANDARD MENU
 BEGIN
     POPUP "&Editare"
     BEGIN
-        MENUITEM "&Copiere\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "&Lipire\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "&Copiere\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "&Lipire\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "&Vizualizare"
     BEGIN
