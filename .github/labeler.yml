@@ -47,6 +47,7 @@ Win32SS:
 "input method":
 - changed-files:
   - any-glob-to-any-file:
+    - base/applications/ctfmon/**
     - dll/ime/**
     - dll/win32/imm32/**
     - dll/win32/msctf/**
