@@ -316,7 +316,7 @@ BEGIN
     BEGIN
         MENUITEM "&Standard", IDM_VIEW_STANDARD
         MENUITEM "&Wissenschaftlich", IDM_VIEW_SCIENTIFIC
-        MENUITEM "&Konversion", IDM_VIEW_CONVERSION
+        MENUITEM "Kon&version", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "&Hex\tF5", IDM_VIEW_HEX, CHECKED
         MENUITEM "De&zimal\tF6", IDM_VIEW_DEC, CHECKED
@@ -348,7 +348,7 @@ BEGIN
     BEGIN
         MENUITEM "&Standard", IDM_VIEW_STANDARD
         MENUITEM "&Wissenschaftlich", IDM_VIEW_SCIENTIFIC
-        MENUITEM "&Konversion", IDM_VIEW_CONVERSION
+        MENUITEM "Kon&version", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "&Hex\tF5", IDM_VIEW_HEX, CHECKED
         MENUITEM "&Dezimal\tF6", IDM_VIEW_DEC, CHECKED
@@ -381,7 +381,7 @@ BEGIN
     BEGIN
         MENUITEM "&Standard", IDM_VIEW_STANDARD
         MENUITEM "&Wissenschaftlich", IDM_VIEW_SCIENTIFIC
-        MENUITEM "&Konversion", IDM_VIEW_CONVERSION
+        MENUITEM "Kon&version", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Zifferngr&uppierung", IDM_VIEW_GROUP, CHECKED
     END
