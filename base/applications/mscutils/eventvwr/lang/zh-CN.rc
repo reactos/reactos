@@ -124,13 +124,16 @@ BEGIN
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "日志文件(&F)：", IDC_STATIC, 7, 41, 60, 8
     EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "大小：", IDC_STATIC, 7, 57, 60, 8
+// The following 4 IDC_STATIC shall have accels in ReactOS, although MS doesn't have accels for them.
+// Translation note: First fill out ALL accels that MS has in this dialog for your language,
+// and only then as a final step use some remaining unused letters for those 4 controls!
+    LTEXT "大小(&S)：", IDC_STATIC, 7, 57, 60, 8
     EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "创建时间：", IDC_STATIC, 7, 69, 60, 8
+    LTEXT "创建时间(&C)：", IDC_STATIC, 7, 69, 60, 8
     EDITTEXT IDC_CREATED_LABEL, 67, 69, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "修改时间：", IDC_STATIC, 7, 81, 60, 8
+    LTEXT "修改时间(&E)：", IDC_STATIC, 7, 81, 60, 8
     EDITTEXT IDC_MODIFIED_LABEL, 67, 81, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "访问时间：", IDC_STATIC, 7, 93, 60, 8
+    LTEXT "访问时间(&A)：", IDC_STATIC, 7, 93, 60, 8
     EDITTEXT IDC_ACCESSED_LABEL, 67, 93, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     GROUPBOX "日志大小", IDC_STATIC, 7, 106, 238, 99
     LTEXT "日志大小上限(&M)：", IDC_STATIC, 17, 122, 58, 8
@@ -217,14 +220,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "事件类型：      %s\r\n\
-事件源：       %s\r\n\
-事件类别：      %s\r\n\
-事件 ID：     %s\r\n\
-日期：        %s\r\n\
-时间：        %s\r\n\
-用户：        %s\r\n\
-电脑：        %s\r\n\
+    IDS_COPY "\
+事件类型：   %s\r\n\
+事件源：    %s\r\n\
+事件类别：   %s\r\n\
+事件 ID：  %s\r\n\
+日期：     %s\r\n\
+时间：     %s\r\n\
+用户：     %s\r\n\
+电脑：     %s\r\n\
 描述：\r\n%s"
 END
 

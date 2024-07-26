@@ -40,7 +40,7 @@ BEGIN
     END
     POPUP "&Hilfe"
     BEGIN
-        MENUITEM "H&ilfe", IDM_HELP
+        MENUITEM "&Hilfe", IDM_HELP
         MENUITEM SEPARATOR
         MENUITEM "Ü&ber", IDM_ABOUT
     END
@@ -123,13 +123,16 @@ BEGIN
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "&Dateiname:", IDC_STATIC, 7, 41, 60, 8
     EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Größe:", IDC_STATIC, 7, 57, 60, 8
+// The following 4 IDC_STATIC shall have accels in ReactOS, although MS doesn't have accels for them.
+// Translation note: First fill out ALL accels that MS has in this dialog for your language,
+// and only then as a final step use some remaining unused letters for those 4 controls!
+    LTEXT "Gr&öße:", IDC_STATIC, 7, 57, 60, 8
     EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Erstellt:", IDC_STATIC, 7, 69, 60, 8
+    LTEXT "Er&stellt:", IDC_STATIC, 7, 69, 60, 8
     EDITTEXT IDC_CREATED_LABEL, 67, 69, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Geändert:", IDC_STATIC, 7, 81, 60, 8
+    LTEXT "Geänder&t:", IDC_STATIC, 7, 81, 60, 8
     EDITTEXT IDC_MODIFIED_LABEL, 67, 81, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Letzter Zugriff:", IDC_STATIC, 7, 93, 60, 8
+    LTEXT "&Letzter Zugriff:", IDC_STATIC, 7, 93, 60, 8
     EDITTEXT IDC_ACCESSED_LABEL, 67, 93, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     GROUPBOX "Protokollgröße", IDC_STATIC, 7, 106, 238, 99
     LTEXT "&Maximal:", IDC_STATIC, 17, 122, 58, 8
@@ -217,7 +220,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Typ:            %s\r\n\
+    IDS_COPY "\
+Typ:            %s\r\n\
 Quelle:         %s\r\n\
 Kategorie:      %s\r\n\
 Ereignis-ID:    %s\r\n\
