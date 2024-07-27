@@ -66,18 +66,6 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&Datei"
-    BEGIN
-        MENUITEM "&Beenden", ID_REGISTRY_EXIT
-    END
-    POPUP "&Hilfe"
-    BEGIN
-        MENUITEM "Inf&o", ID_HELP_ABOUT
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Datei"
@@ -441,7 +429,7 @@ STRINGTABLE
 BEGIN
     ID_EDIT_MODIFY "Ändert die Daten eines Wertes"
     ID_EDIT_NEW_KEY "Fügt einen neuen Schlüssel hinzu"
-    ID_EDIT_NEW_STRINGVALUE "Fügt eine neue Zeichenkette hinzu "
+    ID_EDIT_NEW_STRINGVALUE "Fügt eine neue Zeichenkette hinzu"
     ID_EDIT_NEW_BINARYVALUE "Fügt einen neuen Binärwärt hinzu"
     ID_EDIT_NEW_DWORDVALUE "Fügt einen neuen DWORD-Wert hinzu"
     ID_REGISTRY_IMPORTREGISTRYFILE "Importiert eine Textddatei in die Registry"

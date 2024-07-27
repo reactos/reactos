@@ -66,18 +66,6 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&Αρχείο"
-    BEGIN
-        MENUITEM "Έ&ξοδος", ID_REGISTRY_EXIT
-    END
-    POPUP "&Βοήθεια"
-    BEGIN
-        MENUITEM "&Σχετικά", ID_HELP_ABOUT
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Αρχείο"

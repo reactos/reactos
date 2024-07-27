@@ -1,7 +1,5 @@
 /* Превод на Български/ Bulgarian translation */
 /* https://reactos.org/wiki/Bulgarian_translation */
-/* LOCATION: base/applications/regedit/lang */
-/* НЕДОВЪРШЕН/ INCOMPLETE */
 
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
@@ -70,18 +68,6 @@ Usage examples:\n\
 END
 
 /* Menus */
-
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&Файл"
-    BEGIN
-        MENUITEM "Из&ход", ID_REGISTRY_EXIT
-    END
-    POPUP "Помо&щ"
-    BEGIN
-        MENUITEM "&За", ID_HELP_ABOUT
-    END
-END
 
 IDR_REGEDIT_MENU MENU
 BEGIN

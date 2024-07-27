@@ -68,18 +68,6 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "แ&ฟ้ม"
-    BEGIN
-        MENUITEM "&ออกจากโปรแกรม", ID_REGISTRY_EXIT
-    END
-    POPUP "&ช่วยเหลือ"
-    BEGIN
-        MENUITEM "เ&กี่ยวกับ", ID_HELP_ABOUT
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "แ&ฟ้ม"
@@ -135,7 +123,7 @@ BEGIN
         MENUITEM "&Add to Favorites", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
         MENUITEM "&Remove Favorite", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
-    POPUP "&Help"
+    POPUP "&ช่วยเหลือ"
     BEGIN
         MENUITEM "&Help Topics\tF1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR

@@ -66,18 +66,6 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "ファイル(&F)"
-    BEGIN
-        MENUITEM "レジストリ エディタの終了(&X)", ID_REGISTRY_EXIT
-    END
-    POPUP "ヘルプ(&H)"
-    BEGIN
-        MENUITEM "バージョン情報(&A)", ID_HELP_ABOUT
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "ファイル(&F)"

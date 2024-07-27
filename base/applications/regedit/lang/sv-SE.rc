@@ -66,21 +66,9 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&Arkiv" //FIXME: Harmonize that string with POPUP "R&egistret" (part 1 of 2). I used "&Arkiv" for both locations for the backport.
-    BEGIN
-        MENUITEM "&Avsluta", ID_REGISTRY_EXIT
-    END
-    POPUP "&Hjälp"
-    BEGIN
-        MENUITEM "&Om", ID_HELP_ABOUT //FIXME: Harmonize that string with the 2nd ID_HELP_ABOUT (part 1 of 2). I used "&Om" for both in the backport.
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "R&egistret" //FIXME: Harmonize that string with POPUP "&Arkiv" (part 2 of 2). I used "&Arkiv" for both locations for the backport.
+    POPUP "&Arkiv"
     BEGIN
         MENUITEM "&Importera registerfil...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Exportera registerfil...", ID_REGISTRY_EXPORTREGISTRYFILE
@@ -137,7 +125,7 @@ BEGIN
     BEGIN
         MENUITEM "&Hjälpavsnitt\tF1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Om Registereditorn", ID_HELP_ABOUT //FIXME: Harmonize that string with the 2nd ID_HELP_ABOUT (part 2 of 2). I used "&Om" for both in the backport.
+        MENUITEM "&Om Registereditorn", ID_HELP_ABOUT
     END
 END
 
