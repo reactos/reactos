@@ -243,7 +243,8 @@ DllMain(IN HINSTANCE hinstDLL,
         ClbWndClass.lpfnWndProc = ClbWndProc;
         ClbWndClass.cbClsExtra = 0;
         ClbWndClass.cbWndExtra = sizeof(PCLB_PRIVATEDATA);
-        ClbWndClass.hInstance = hinstDLL, ClbWndClass.hIcon = NULL;
+        ClbWndClass.hInstance = hinstDLL;
+        ClbWndClass.hIcon = NULL;
         ClbWndClass.hCursor = LoadCursor(NULL, (LPWSTR)IDC_ARROW);
         ClbWndClass.hbrBackground = NULL;
         ClbWndClass.lpszMenuName = NULL;
