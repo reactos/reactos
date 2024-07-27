@@ -2,20 +2,7 @@
  * Regedit frame window
  *
  * Copyright (C) 2002 Robert Dickenson <robd@reactos.org>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * LICENSE: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  */
 
 #include "regedit.h"
@@ -24,20 +11,10 @@
 #include <cderr.h>
 #include <objsel.h>
 
-/********************************************************************************
- * Global and Local Variables:
- */
-
 #define FAVORITES_MENU_POSITION 3
-
 static WCHAR s_szFavoritesRegKey[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit\\Favorites";
-
 static BOOL bInMenuLoop = FALSE;        /* Tells us if we are in the menu loop */
-
 extern WCHAR Suggestions[256];
-/*******************************************************************************
- * Local module support methods
- */
 
 static UINT ErrorBox(HWND hWnd, UINT Error)
 {
@@ -69,8 +46,6 @@ static void resize_frame_client(HWND hWnd)
     GetClientRect(hWnd, &rect);
     resize_frame_rect(hWnd, &rect);
 }
-
-/********************************************************************************/
 
 static void OnInitMenu(HWND hWnd)
 {
@@ -1193,7 +1168,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                                                         ARRAY_SIZE(szComputerName));
                 if (hRet == S_OK)
                 {
-                    /* FIXME - connect to the registry */
+                    // FIXME - connect to the registry
                 }
 
                 FreeObjectPicker(ObjectPicker);
