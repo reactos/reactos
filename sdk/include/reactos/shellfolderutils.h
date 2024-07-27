@@ -14,21 +14,17 @@ static HRESULT ShellFolderImpl_CompareItemColumn(IShellFolder2 *psf, UINT column
     SHELLDETAILS details1, details2;
     LPWSTR str1, str2;
     HRESULT hr;
-    if (SUCCEEDED(hr = psf->GetDetailsOf(pidl1, column, &details1)))
+    if (SUCCEEDED(hr = psf->GetDetailsOf(pidl1, column, &details1)) &&
+        SUCCEEDED(hr = StrRetToStrW(&details1.str, pidl1, &str1)))
     {
-        if (SUCCEEDED(hr = StrRetToStrW(&details1.str, pidl1, &str1)))
+        if (SUCCEEDED(hr = psf->GetDetailsOf(pidl2, column, &details2)) &&
+            SUCCEEDED(hr = StrRetToStrW(&details2.str, pidl2, &str2)))
         {
-            if (SUCCEEDED(hr = psf->GetDetailsOf(pidl2, column, &details2)))
-            {
-                if (SUCCEEDED(hr = StrRetToStrW(&details2.str, pidl2, &str2)))
-                {
-                    int res = LOGICALCMP ? StrCmpLogicalW(str1, str2) : lstrcmpiW(str1, str2);
-                    hr = MAKE_COMPARE_HRESULT(res);
-                    SHFree(str2);
-                }
-            }
-            SHFree(str1);
+            int res = LOGICALCMP ? StrCmpLogicalW(str1, str2) : lstrcmpiW(str1, str2);
+            hr = MAKE_COMPARE_HRESULT(res);
+            SHFree(str2);
         }
+        SHFree(str1);
     }
     return hr;
 }
