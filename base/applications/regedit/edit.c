@@ -2,20 +2,7 @@
  * Registry editing UI functions.
  *
  * Copyright (C) 2003 Dimitrie O. Paun
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * LICENSE: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  */
 
 #include "regedit.h"
@@ -163,7 +150,6 @@ INT_PTR CALLBACK modify_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
     return FALSE;
 }
 
-
 INT_PTR CALLBACK modify_multi_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     WCHAR* valueData;
@@ -231,7 +217,6 @@ INT_PTR CALLBACK modify_multi_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wPa
     return FALSE;
 }
 
-
 LRESULT CALLBACK DwordEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     WNDPROC oldwndproc;
@@ -271,7 +256,6 @@ LRESULT CALLBACK DwordEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 
     return CallWindowProcW(oldwndproc, hwnd, uMsg, wParam, lParam);
 }
-
 
 INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -386,7 +370,6 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
     return FALSE;
 }
 
-
 INT_PTR CALLBACK modify_binary_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     HWND hwndValue;
@@ -436,7 +419,6 @@ INT_PTR CALLBACK modify_binary_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
     }
     return FALSE;
 }
-
 
 static BOOL CreateResourceColumns(HWND hwnd)
 {
@@ -661,7 +643,6 @@ GetInterfaceType(INTERFACE_TYPE InterfaceType,
 //    wcscpy(pBuffer, lpInterfaceType);
 }
 
-
 static VOID
 ParseResources(HWND hwnd)
 {
@@ -859,7 +840,6 @@ ParseResources(HWND hwnd)
     }
 }
 
-
 static BOOL
 OnResourceNotify(HWND hwndDlg, NMHDR *phdr)
 {
@@ -915,7 +895,6 @@ OnResourceNotify(HWND hwndDlg, NMHDR *phdr)
 
     return FALSE;
 }
-
 
 static INT_PTR CALLBACK modify_resource_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -1036,7 +1015,6 @@ OnResourceListNotify(HWND hwndDlg, NMHDR *phdr)
 
     return FALSE;
 }
-
 
 static INT_PTR CALLBACK modify_resource_list_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
