@@ -192,13 +192,11 @@ CustomControlInfoW(OUT LPCUSTOM_CONTROL_INFO CustomControlInfo OPTIONAL)
 {
     if (CustomControlInfo != NULL)
     {
-        wcscpy(CustomControlInfo->ClassName,
-               ClbClassName);
+        wcscpy(CustomControlInfo->ClassName, ClbClassName);
 
         CustomControlInfo->Zero1 = 0;
 
-        wcscpy(CustomControlInfo->ClassName2,
-               ClbClassName);
+        wcscpy(CustomControlInfo->ClassName2, ClbClassName);
 
         CustomControlInfo->Unknown1 = 0x60; // FIXME - ???
         CustomControlInfo->Unknown2 = 0x50; // FIXME - ???
@@ -210,8 +208,7 @@ CustomControlInfoW(OUT LPCUSTOM_CONTROL_INFO CustomControlInfo OPTIONAL)
         CustomControlInfo->StylesCount = _countof(ClbsSupportedStyles);
         CustomControlInfo->SupportedStyles = ClbsSupportedStyles;
 
-        wcscpy(CustomControlInfo->Columns,
-               ClbColumns);
+        wcscpy(CustomControlInfo->Columns, ClbColumns);
 
         CustomControlInfo->ClbStyleW = ClbStyleW;
 
