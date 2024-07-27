@@ -693,7 +693,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Buscar &siguiente", IDOK, 187, 7, 60, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 187, 24, 60, 14
-    GROUPBOX "Buscar en ", IDC_STATIC, 7, 25, 63, 51
+    GROUPBOX "Buscar en", IDC_STATIC, 7, 25, 63, 51
     LTEXT "&Buscar:", IDC_STATIC, 7, 8, 30, 10
     EDITTEXT IDC_FINDWHAT, 40, 7, 142, 13, ES_AUTOHSCROLL
     CONTROL "&Claves", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
