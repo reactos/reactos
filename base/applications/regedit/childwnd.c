@@ -168,11 +168,8 @@ static void draw_splitbar(HWND hWnd, int x)
     ReleaseDC(hWnd, hdc);
 }
 
-/*******************************************************************************
- * finish_splitbar [internal]
- *
- * make the splitbar invisible and resize the windows
- * (helper for ChildWndProc)
+/**
+ * make the splitbar invisible and resize the windows (helper for ChildWndProc)
  */
 static void finish_splitbar(HWND hWnd, int x)
 {
