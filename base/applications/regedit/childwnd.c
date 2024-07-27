@@ -12,8 +12,8 @@
 
 ChildWnd* g_pChildWnd;
 static int last_split;
-HBITMAP SizingPattern = 0;
-HBRUSH  SizingBrush = 0;
+HBITMAP SizingPattern;
+HBRUSH  SizingBrush;
 WCHAR Suggestions[256];
 
 static HRESULT WINAPI DummyEnumStringsQI(LPVOID This, REFIID riid, void**ppv)
@@ -361,10 +361,10 @@ UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath, BOOL bSelectNone)
 }
 
 /**
- * PURPOSE:  Processes messages for the child windows.
+ * PURPOSE: Processes messages for the child windows.
  *
- * WM_COMMAND  - process the application menu
- * WM_DESTROY  - post a quit message and return
+ * WM_COMMAND - process the application menu
+ * WM_DESTROY - post a quit message and return
  */
 LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
