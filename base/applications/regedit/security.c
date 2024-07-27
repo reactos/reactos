@@ -1,7 +1,7 @@
 /*
  * Regedit ACL Editor for Registry Keys
  *
- * Copyright (C) 2004 - 2006 Thomas Weidenmueller <w3seek@reactos.com>
+ * Copyright (C) 2004-2006 Thomas Weidenmueller <w3seek@reactos.com>
  * LICENSE: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  */
 
@@ -668,14 +668,10 @@ ISecurityObjectTypeInfo_fnGetInheritSource(struct ISecurityObjectTypeInfo *this,
     if (ErrorCode == ERROR_SUCCESS)
     {
         /* Calculate the size of the buffer to return */
-        for (i = 0;
-             i < pACL->AceCount;
-             i++)
+        for (i = 0; i < pACL->AceCount; i++)
         {
             if (pif[i].AncestorName != NULL)
-            {
                 pifSize += (wcslen(pif[i].AncestorName) + 1) * sizeof(WCHAR);
-            }
         }
 
         /* Allocate enough space for the array and the strings */
@@ -688,9 +684,7 @@ ISecurityObjectTypeInfo_fnGetInheritSource(struct ISecurityObjectTypeInfo *this,
 
         /* copy the array and strings to the buffer */
         lpBuf = (LPWSTR)((ULONG_PTR)pif2 + (pACL->AceCount * sizeof(INHERITED_FROM)));
-        for (i = 0;
-             i < pACL->AceCount;
-             i++)
+        for (i = 0; i < pACL->AceCount; i++)
         {
             pif2[i].GenerationGap = pif[i].GenerationGap;
             if (pif[i].AncestorName != NULL)
