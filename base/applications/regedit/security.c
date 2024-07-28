@@ -724,7 +724,7 @@ CRegKeySecurity_fnConstructor(LPWSTR lpRegKey,
     obj = (PCRegKeySecurity)HeapAlloc(GetProcessHeap(),
                                       HEAP_ZERO_MEMORY,
                                       FIELD_OFFSET(CRegKeySecurity,
-                                      szRegKey[wcslen(lpRegKey) + 1]));
+                                                   szRegKey[wcslen(lpRegKey) + 1]));
     if (obj != NULL)
     {
         obj->ref = 1;
