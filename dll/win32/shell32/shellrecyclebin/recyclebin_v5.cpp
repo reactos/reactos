@@ -305,8 +305,7 @@ STDMETHODIMP RecycleBin5::DeleteFile(_In_ LPCWSTR szFileName)
     }
 
     pDeletedFile->dwDriveNumber = tolower(szFullName[0]) - 'a';
-
-    _snwprintf(szUniqueId, _countof(szUniqueId), L"%lu", pDeletedFile->dwRecordUniqueId);
+    _ultow(pDeletedFile->dwRecordUniqueId, szUniqueId, 10);
 
     DeletedFileName = m_Folder;
     DeletedFileName += L"\\D";
