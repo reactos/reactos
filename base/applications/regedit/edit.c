@@ -228,7 +228,7 @@ LRESULT CALLBACK DwordEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
     case WM_CHAR:
         if (dwordEditMode == EDIT_MODE_DEC)
         {
-            if (isdigit((int) wParam & 0xff) || iscntrl((int) wParam & 0xff))
+            if (isdigit((int)wParam & 0xff) || iscntrl((int)wParam & 0xff))
             {
                 break;
             }
@@ -239,7 +239,7 @@ LRESULT CALLBACK DwordEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
         }
         else if (dwordEditMode == EDIT_MODE_HEX)
         {
-            if (isxdigit((int) wParam & 0xff) || iscntrl((int) wParam & 0xff))
+            if (isxdigit((int)wParam & 0xff) || iscntrl((int)wParam & 0xff))
             {
                 break;
             }
@@ -402,7 +402,7 @@ INT_PTR CALLBACK modify_binary_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
         case IDOK:
             if ((hwndValue = GetDlgItem(hwndDlg, IDC_VALUE_DATA)))
             {
-                len = (UINT) HexEdit_GetBufferSize(hwndValue);
+                len = (UINT)HexEdit_GetBufferSize(hwndValue);
                 if (len > 0 && binValueData)
                     binValueData = HeapReAlloc(GetProcessHeap(), 0, binValueData, len);
                 else
@@ -1414,7 +1414,7 @@ static INT_PTR CALLBACK show_requirements_dma_dlgproc(HWND hwndDlg, UINT uMsg, W
         {
         case IDOK:
         case IDCANCEL:
-           EndDialog(hwndDlg, IDOK);
+            EndDialog(hwndDlg, IDOK);
             break;
         }
     }
@@ -1571,7 +1571,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCWSTR valueName, BOOL EditBin)
         {
             if (stringValueData)
             {
-                lRet = RegSetValueExW(hKey, valueName, 0, type, (LPBYTE)stringValueData, (DWORD) (wcslen(stringValueData) + 1) * sizeof(WCHAR));
+                lRet = RegSetValueExW(hKey, valueName, 0, type, (LPBYTE)stringValueData, (DWORD)(wcslen(stringValueData) + 1) * sizeof(WCHAR));
             }
             else
             {
@@ -1675,7 +1675,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCWSTR valueName, BOOL EditBin)
                     warning(hwnd, IDS_MULTI_SZ_EMPTY_STRING);
                 }
 
-                lRet = RegSetValueExW(hKey, valueName, 0, type, (LPBYTE)lines, (DWORD) buflen);
+                lRet = RegSetValueExW(hKey, valueName, 0, type, (LPBYTE)lines, (DWORD)buflen);
                 HeapFree(GetProcessHeap(), 0, lines);
             }
             else
@@ -1876,7 +1876,7 @@ static LONG CopyKey(HKEY hDestKey, LPCWSTR lpDestSubKey, HKEY hSrcKey, LPCWSTR l
     dwIndex = 0;
     do
     {
-        cbName = sizeof(szSubKey) / sizeof(szSubKey[0]);
+        cbName = ARRAY_SIZE(szSubKey);
         lResult = RegEnumKeyExW(hSrcKey, dwIndex++, szSubKey, &cbName, NULL, NULL, NULL, &ft);
         if (lResult == ERROR_SUCCESS)
         {
@@ -1891,8 +1891,8 @@ static LONG CopyKey(HKEY hDestKey, LPCWSTR lpDestSubKey, HKEY hSrcKey, LPCWSTR l
     dwIndex = 0;
     do
     {
-        cbName = sizeof(szValueName) / sizeof(szValueName[0]);
-        cbData = sizeof(szValueData) / sizeof(szValueData[0]);
+        cbName = ARRAY_SIZE(szValueName);
+        cbData = ARRAY_SIZE(szValueData);
         lResult = RegEnumValueW(hSrcKey, dwIndex++, szValueName, &cbName, NULL, &dwType, szValueData, &cbData);
         if (lResult == ERROR_SUCCESS)
         {
@@ -1983,7 +1983,7 @@ LONG RenameKey(HKEY hKey, LPCWSTR lpSubKey, LPCWSTR lpNewName)
     {
         s++;
         cbNewSubKey = (s - lpSubKey + wcslen(lpNewName) + 1) * sizeof(WCHAR);
-        lpNewSubKey = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, cbNewSubKey);
+        lpNewSubKey = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, cbNewSubKey);
         if (lpNewSubKey != NULL)
         {
             StringCbCopyNW(lpNewSubKey, cbNewSubKey, lpSubKey, (s - lpSubKey) * sizeof(WCHAR));
@@ -2050,7 +2050,7 @@ LONG QueryStringValue(HKEY hKey, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPWSTR p
     }
 
     cbData = (dwBufferLen - 1) * sizeof(*pszBuffer);
-    lResult = RegQueryValueExW(hKey, lpValueName, NULL, &dwType, (LPBYTE) pszBuffer, &cbData);
+    lResult = RegQueryValueExW(hKey, lpValueName, NULL, &dwType, (LPBYTE)pszBuffer, &cbData);
     if (lResult != ERROR_SUCCESS)
         goto done;
     if (dwType != REG_SZ)
