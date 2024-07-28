@@ -171,7 +171,7 @@ Retry:
     }
     else
     {
-        hNewKL = (HKL)(DWORD_PTR)dwUnknown;
+        hNewKL = UlongToHandle(dwUnknown);
         if (IS_IME_HKL(hNewKL) && hNewKL != hOldKL)
             Imm32ReleaseIME(hNewKL);
     }
@@ -865,7 +865,7 @@ LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
     {
         hOldKL = GetKeyboardLayout(0);
         LangID = LOWORD(hOldKL);
-        hNewKL = (HKL)(DWORD_PTR)MAKELONG(LangID, LangID);
+        hNewKL = UlongToHandle(MAKELONG(LangID, LangID));
 
         pImeDpi = Imm32FindOrLoadImeDpi(hNewKL);
         if (pImeDpi)

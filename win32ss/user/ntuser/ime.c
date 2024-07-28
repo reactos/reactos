@@ -939,7 +939,7 @@ NtUserGetAppImeLevel(HWND hWnd)
 
     pti = PsGetCurrentThreadWin32Thread();
     if (pWnd->head.pti->ppi == pti->ppi)
-        ret = (DWORD)(ULONG_PTR)UserGetProp(pWnd, AtomImeLevel, TRUE);
+        ret = HandleToUlong(UserGetProp(pWnd, AtomImeLevel, TRUE));
 
 Quit:
     UserLeave();
@@ -1078,7 +1078,7 @@ NtUserSetAppImeLevel(HWND hWnd, DWORD dwLevel)
 
     pti = PsGetCurrentThreadWin32Thread();
     if (pWnd->head.pti->ppi == pti->ppi)
-        ret = UserSetProp(pWnd, AtomImeLevel, (HANDLE)(ULONG_PTR)dwLevel, TRUE);
+        ret = UserSetProp(pWnd, AtomImeLevel, UlongToHandle(dwLevel), TRUE);
 
 Quit:
     UserLeave();
@@ -1976,7 +1976,7 @@ PWND FASTCALL co_IntCreateDefaultImeWindow(PWND pwndTarget, HINSTANCE hInst)
 
     RtlInitLargeUnicodeString(&WindowName, L"Default IME", 0);
 
-    ClassName.Buffer = (PWCH)(ULONG_PTR)gpsi->atomSysClass[ICLS_IME];
+    ClassName.Buffer = UlongToPtr(gpsi->atomSysClass[ICLS_IME]);
     ClassName.Length = 0;
     ClassName.MaximumLength = 0;
 
