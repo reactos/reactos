@@ -83,7 +83,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Sair", ID_REGISTRY_EXIT
     END
-    POPUP "&Editar"
+    POPUP "&Editar"//FIXME: accelerator collision &E
     BEGIN
         MENUITEM "&Modificar", ID_EDIT_MODIFY
         MENUITEM SEPARATOR
@@ -108,7 +108,7 @@ BEGIN
         MENUITEM "Locali&zar...\tCtrl+F", ID_EDIT_FIND
         MENUITEM "Localizar pró&ximo\tF3", ID_EDIT_FINDNEXT
     END
-    POPUP "&Exibir"
+    POPUP "&Exibir"//FIXME: accelerator collision &E
     BEGIN
         MENUITEM "Barra de &status", ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
