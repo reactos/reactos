@@ -290,7 +290,10 @@ RecycleBin5File_Constructor(
 
     HRESULT hr = pThis->Init(prb, Folder, pDeletedFile);
     if (FAILED(hr))
+    {
+        delete pThis;
         return hr;
+    }
 
     *ppFile = static_cast<IRecycleBinFile *>(pThis);
     return S_OK;
@@ -448,6 +451,7 @@ RecycleBin5Enum::Init(
     if (FAILED(hr))
         return hr;
 
+    m_hInfo = hInfo;
     m_pInfo = (PINFO2_HEADER)MapViewOfFile(hInfoMapped, FILE_MAP_READ, 0, 0, 0);
     if (!m_pInfo)
         return HRESULT_FROM_WIN32(GetLastError());
