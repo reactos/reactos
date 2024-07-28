@@ -92,7 +92,7 @@ cleanup:
     return ret;
 }
 
-class RecycleBin5 : public IRecycleBin, public IRecycleBin5
+class RecycleBin5 : public IRecycleBin5
 {
 public:
     RecycleBin5();
@@ -136,7 +136,7 @@ STDMETHODIMP RecycleBin5::QueryInterface(_In_ REFIID riid, _Out_ void **ppvObjec
         return E_POINTER;
 
     if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_IRecycleBin))
-        *ppvObject = static_cast<IRecycleBin *>(this);
+        *ppvObject = static_cast<IRecycleBin5 *>(this);
     else if (IsEqualIID(riid, IID_IRecycleBin5))
         *ppvObject = static_cast<IRecycleBin5 *>(this);
     else
@@ -752,6 +752,9 @@ HRESULT RecycleBin5::Init(_In_ LPCWSTR VolumePath)
         hr = HRESULT_FROM_WIN32(GetLastError());
         goto cleanup;
     }
+
+    m_Folder = m_Folder.Left(len);
+    hr = S_OK;
 
 cleanup:
     if (tokenHandle != INVALID_HANDLE_VALUE)
