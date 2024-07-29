@@ -40,6 +40,24 @@ HRESULT FormatGUIDKey(LPWSTR KeyName, SIZE_T KeySize, LPCWSTR RegPath, const GUI
     return StringCchPrintfW(KeyName, KeySize, RegPath, xriid);
 }
 
+static DWORD SHELL_QueryCLSIDValue(REFCLSID clsid, LPCWSTR SubKey, LPCWSTR Value, void *pData, DWORD *pSize)
+{
+    WCHAR Path[MAX_PATH];
+    wcscpy(Path, L"CLSID\\");
+    StringFromGUID2(clsid, Path + 6, 39);
+    if (SubKey)
+    {
+        wcscpy(Path + 6 + 38, L"\\");
+        wcscpy(Path + 6 + 39, SubKey);
+    }
+    return RegGetValueW(HKEY_CLASSES_ROOT, Path, Value, RRF_RT_ANY, NULL, pData, pSize);
+}
+
+static bool HasCLSIDShellFolderValue(REFCLSID clsid, LPCWSTR Value)
+{
+    return SHELL_QueryCLSIDValue(clsid, L"ShellFolder", Value, NULL, NULL) == ERROR_SUCCESS;
+}
+
 HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVOID * ppvOut)
 {
     CComPtr<IDefaultExtractIconInit>    initIcon;
@@ -861,7 +879,7 @@ static HRESULT CRegItemContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder, 
     HKEY hKeys[10];
     UINT cKeys = 0;
 
-    GUID *pGuid = _ILGetGUIDPointer(apidl[0]);
+    const GUID *pGuid = _ILGetGUIDPointer(apidl[0]);
     if (pGuid)
     {
         WCHAR key[60];
@@ -878,7 +896,7 @@ static HRESULT CRegItemContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder, 
     SHBindToObject(NULL, pidlFolder, IID_PPV_ARG(IShellFolder, &pOuterSF));
 
     SFGAOF att = (psf && cidl) ? SHGetAttributes(pOuterSF ? pOuterSF.p : psf, apidl[0], SFGAO_FOLDER) : 0;
-    if (att & SFGAO_FOLDER)
+    if ((att & SFGAO_FOLDER) && (!pGuid || !HasCLSIDShellFolderValue(*pGuid, L"HideFolderVerbs")))
         AddClassKeyToArray(L"Folder", hKeys, &cKeys);
 
     return CDefFolderMenu_Create2(pidlFolder, hwnd, cidl, apidl, psf, RegFolderContextMenuCallback, cKeys, hKeys, ppcm);
