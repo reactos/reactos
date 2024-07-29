@@ -24,7 +24,7 @@ extern "C" {
 #define IS_IME_KLID(dwKLID)     ((((ULONG)(dwKLID)) & 0xF0000000) == IME_MASK)
 #define IS_SUBST_KLID(dwKLID)   ((((ULONG)(dwKLID)) & 0xF0000000) == SUBST_MASK)
 
-/* dwUnknown for ImmFreeLayout */
+/* dwHKLorIFL for ImmFreeLayout */
 #define IFL_OFF     1
 #define IFL_UNLOAD  2
 
