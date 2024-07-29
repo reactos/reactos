@@ -2,20 +2,7 @@
  * Regedit resource definitions
  *
  * Copyright 2002 Robert Dickenson
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * LICENSE: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  */
 
 #pragma once
@@ -271,7 +258,6 @@
 #define IDS_SHARE_SHARED           31620
 #define IDS_SHARE_UNDETERMINED     31621
 
-
 #define IDD_EDIT_STRING 2000
 #define IDC_VALUE_NAME  2001
 #define IDC_VALUE_DATA  2002
@@ -346,17 +332,17 @@
 #define IDC_REQ_MEMORY_ALTERNATIVE   2059
 #define IDC_REQ_MEMORY_PREFERRED     2060
 
-#define IDD_EDIT_REQUIREMENTS_INT    2061
-#define IDC_REQ_INT_TYPE             2062
+#define IDD_EDIT_REQUIREMENTS_INT 2061
+#define IDC_REQ_INT_TYPE          2062
 #define IDC_REQ_INT_MIN           2063
 #define IDC_REQ_INT_MAX           2064
 #define IDC_REQ_INT_SHARE         2065
 #define IDC_REQ_INT_ALTERNATIVE   2066
 #define IDC_REQ_INT_PREFERRED     2067
 
-#define IDD_EDIT_REQUIREMENTS_DMA    2068
-#define IDC_REQ_DMA_MIN              2069
-#define IDC_REQ_DMA_MAX              2070
+#define IDD_EDIT_REQUIREMENTS_DMA 2068
+#define IDC_REQ_DMA_MIN           2069
+#define IDC_REQ_DMA_MAX           2070
 #define IDC_REQ_DMA_SHARE         2071
 #define IDC_REQ_DMA_ALTERNATIVE   2072
 #define IDC_REQ_DMA_PREFERRED     2073

@@ -66,21 +66,9 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&Datoteka" //FIXME: Harmonize those 2 strings (part 1 of 2). I do recommend to use "&Register" for both. Attention: &D would collide with "D", ID_ADDRESS_FOCUS, VIRTKEY, ALT
-    BEGIN
-        MENUITEM "Iz&hod", ID_REGISTRY_EXIT
-    END
-    POPUP "&Pomoè"
-    BEGIN
-        MENUITEM "&O", ID_HELP_ABOUT
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "&Register" //FIXME: Harmonize those 2 strings (part 2 of 2). I do recommend to use "&Register" for both. Attention: &D would collide with "D", ID_ADDRESS_FOCUS, VIRTKEY, ALT
+    POPUP "&Register"
     BEGIN
         MENUITEM "&Uvozi registrsko datoteko...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Izvozi registrsko datoteko...", ID_REGISTRY_EXPORTREGISTRYFILE

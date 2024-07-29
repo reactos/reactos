@@ -76,18 +76,6 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&Ficheiro"
-    BEGIN
-        MENUITEM "Sai&r", ID_REGISTRY_EXIT
-    END
-    POPUP "Aj&uda"
-    BEGIN
-        MENUITEM "&Acerca do 'Editor de registo'", ID_HELP_ABOUT
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Ficheiro"
@@ -223,9 +211,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | 
 CAPTION "Editar texto"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Nome do valor:", IDC_STATIC, 5, 5, 119, 8
+    LTEXT "&Nome do valor:", IDC_STATIC, 5, 5, 119, 8
     EDITTEXT IDC_VALUE_NAME, 5, 15, 200, 12, ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Dados do valor:", IDC_STATIC, 5, 30, 119, 8
+    LTEXT "&Dados do valor:", IDC_STATIC, 5, 30, 119, 8
     EDITTEXT IDC_VALUE_DATA, 5, 40, 200, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 140, 60, 30, 11
     PUSHBUTTON "Cancelar", IDCANCEL, 175, 60, 30, 11

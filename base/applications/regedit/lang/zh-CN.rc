@@ -76,18 +76,6 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "文件(&F)"
-    BEGIN
-        MENUITEM "退出(&X)", ID_REGISTRY_EXIT
-    END
-    POPUP "帮助(&H)"
-    BEGIN
-        MENUITEM "关于注册表编辑器(&A)", ID_HELP_ABOUT
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "文件(&F)"

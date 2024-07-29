@@ -1,5 +1,4 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
- * DATE OF TR:  29-11-2013
+/* TRANSLATOR: 2013 Ardit Dani (Ard1t) <ardit.dani@gmail.com>
 */
 
 LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
@@ -70,18 +69,6 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&File"
-    BEGIN
-        MENUITEM "Dil", ID_REGISTRY_EXIT
-    END
-    POPUP "Ndihmë"
-    BEGIN
-        MENUITEM "rRETH", ID_HELP_ABOUT //FIXME: This string should be synced with the other MENUITEM "Rreth Registry Editor", ID_HELP_ABOUT (part 2 of 2). I did use MENUITEM "Rreth" for both in older releases. //FIXME: It should also have an accelerator.
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&File"
@@ -97,7 +84,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Printo...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Dil", ID_REGISTRY_EXIT
+        MENUITEM "Dil", ID_REGISTRY_EXIT//FIXME: missing accelerator
     END
     POPUP "Modifiko"
     BEGIN
@@ -137,11 +124,11 @@ BEGIN
         MENUITEM "Shto tek Favoritet", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
         MENUITEM "Hiq nga Favorite", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
-    POPUP "Ndihmë"
+    POPUP "Ndihmë"//FIXME: missing accelerator
     BEGIN
-        MENUITEM "Ndihmë temë\tF1", ID_HELP_HELPTOPICS
+        MENUITEM "Ndihmë temë\tF1", ID_HELP_HELPTOPICS//FIXME: missing accelerator
         MENUITEM SEPARATOR
-        MENUITEM "Rreth Registry Editor", ID_HELP_ABOUT //FIXME: This string should be synced with the other MENUITEM "rRETH", ID_HELP_ABOUT (part 2 of 2). I did use MENUITEM "Rreth" for both in older releases. //FIXME: It should also have an accelerator.
+        MENUITEM "Rreth Registry Editor", ID_HELP_ABOUT//FIXME: missing accelerator
     END
 END
 

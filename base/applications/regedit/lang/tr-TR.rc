@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013-2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATOR: 2013-2015 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net> */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -68,21 +68,9 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&Dosya" //FIXME: 3x accelerator collision &D: with POPUP "&Düzen" and also with "D", ID_ADDRESS_FOCUS, VIRTKEY, ALT. I used "&Kütük" for the backport
-    BEGIN
-        MENUITEM "&Çıkış", ID_REGISTRY_EXIT
-    END
-    POPUP "&Yardım"
-    BEGIN
-        MENUITEM "&Hakkında", ID_HELP_ABOUT //FIXME: There are 2 ID_HELP_ABOUT in here. Sync their text! I just used "&Üzerine" for the backport
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "&Dosya" //FIXME: 3x accelerator collision &D: with POPUP "&Düzen" and also with "D", ID_ADDRESS_FOCUS, VIRTKEY, ALT.  If you decide to change this then please keep it in sync with the IDC_REGEDIT MENU. I used "&Kütük" for the backport
+    POPUP "&Kütük"
     BEGIN
         MENUITEM "&Al...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Ver...", ID_REGISTRY_EXPORTREGISTRYFILE
@@ -97,7 +85,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", ID_REGISTRY_EXIT
     END
-    POPUP "&Düzen" //FIXME: 3x accelerator collision &D: with POPUP "&Dosya" and also with "D", ID_ADDRESS_FOCUS, VIRTKEY, ALT.
+    POPUP "&Düzen" //FIXME: 2x accelerator collision &D: with "D", ID_ADDRESS_FOCUS, VIRTKEY, ALT.
     BEGIN
         MENUITEM "&Değiştir...", ID_EDIT_MODIFY
         MENUITEM SEPARATOR
@@ -139,7 +127,7 @@ BEGIN
     BEGIN
         MENUITEM "&Yardım Konuları\tF1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Kayıt Defteri Düzenleyicisi Hakkında", ID_HELP_ABOUT //FIXME: There are 2 ID_HELP_ABOUT in here. Sync their text! I just used "&Üzerine" for the backport
+        MENUITEM "&Kayıt Defteri Düzenleyicisi Hakkında", ID_HELP_ABOUT
     END
 END
 

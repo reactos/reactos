@@ -66,18 +66,6 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&File"
-    BEGIN
-        MENUITEM "&Kilépés", ID_REGISTRY_EXIT
-    END
-    POPUP "&Súgó"
-    BEGIN
-        MENUITEM "&Névjegy", ID_HELP_ABOUT //FIXME: There are 2 ID_HELP_ABOUT and their text should be synced
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&File"
@@ -133,11 +121,11 @@ BEGIN
         MENUITEM "&Add to Favorites", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
         MENUITEM "&Remove Favorite", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
-    POPUP "&Help"
+    POPUP "&Súgó"
     BEGIN
         MENUITEM "&Help Topics\tF1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&About Registry Editor", ID_HELP_ABOUT //FIXME: There are 2 ID_HELP_ABOUT and their text should be synced
+        MENUITEM "&Névjegy", ID_HELP_ABOUT
     END
 END
 
