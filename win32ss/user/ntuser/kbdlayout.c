@@ -848,7 +848,7 @@ co_IntUnloadKeyboardLayoutEx(
     USER_REFERENCE_ENTRY Ref1, Ref2;
     PTHREADINFO pti = gptiCurrent;
 
-    if (pKL == gspklBaseLayout && !(dwFlags & 0x80000000))
+    if (pKL == gspklBaseLayout && !(dwFlags & KL_NOACTIVATENEXT))
         return FALSE;
 
     UserRefObjectCo(pKL, &Ref1); /* Add reference */
@@ -857,7 +857,7 @@ co_IntUnloadKeyboardLayoutEx(
     UserMarkObjectDestroy(pKL);
     pKL->dwKL_Flags |= KL_UNLOAD;
 
-    if (!(dwFlags & 0x80000000) && pti->KeyboardLayout == pKL)
+    if (!(dwFlags & KL_NOACTIVATENEXT) && pti->KeyboardLayout == pKL)
     {
         pNextKL = IntHKLtoPKL(pti, UlongToHandle(HKL_NEXT));
         if (pNextKL)
