@@ -32,7 +32,6 @@ typedef PVOID (*PFN_KBDLAYERDESCRIPTOR)(VOID);
 /*
  * Retrieves a PKL by an input locale identifier (HKL).
  * @implemented
- * Win: HKLtoPKL
  */
 PKL FASTCALL IntHKLtoPKL(_Inout_ PTHREADINFO pti, _In_ HKL hKL)
 {
@@ -92,7 +91,6 @@ PKL FASTCALL IntHKLtoPKL(_Inout_ PTHREADINFO pti, _In_ HKL hKL)
 /*
  * A helper function for NtUserGetKeyboardLayoutList.
  * @implemented
- * Win: _GetKeyboardLayoutList
  */
 static UINT APIENTRY
 IntGetKeyboardLayoutList(
@@ -556,7 +554,6 @@ UserHklToKbl(HKL hKl)
     return NULL;
 }
 
-// Win: ReorderKeyboardLayouts
 VOID FASTCALL
 IntReorderKeyboardLayouts(
     _Inout_ PWINSTATION_OBJECT pWinSta,
@@ -813,7 +810,6 @@ co_UserActivateKeyboardLayout(
     return hOldKL;
 }
 
-/* Win: xxxActivateKeyboardLayout */
 HKL APIENTRY
 co_IntActivateKeyboardLayout(
     _Inout_ PWINSTATION_OBJECT pWinSta,
@@ -837,7 +833,6 @@ co_IntActivateKeyboardLayout(
     return co_UserActivateKeyboardLayout(pKL, uFlags, pWnd);
 }
 
-// Win: xxxInternalUnloadKeyboardLayout
 static BOOL APIENTRY
 co_IntUnloadKeyboardLayoutEx(
     _Inout_ PWINSTATION_OBJECT pWinSta,
@@ -885,7 +880,6 @@ co_IntUnloadKeyboardLayoutEx(
     return TRUE;
 }
 
-// Win: xxxUnloadKeyboardLayout
 static BOOL APIENTRY
 IntUnloadKeyboardLayout(_Inout_ PWINSTATION_OBJECT pWinSta, _In_ HKL hKL)
 {
