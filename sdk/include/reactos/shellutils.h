@@ -633,6 +633,7 @@ static inline PCUIDLIST_RELATIVE HIDA_GetPIDLItem(CIDA const* pida, SIZE_T i)
 
 #ifdef __cplusplus
 
+#ifdef CMIC_MASK_UNICODE
 static inline bool IsUnicode(const CMINVOKECOMMANDINFOEX &ici)
 {
     const UINT minsize = FIELD_OFFSET(CMINVOKECOMMANDINFOEX, ptInvoke);
@@ -643,6 +644,7 @@ static inline bool IsUnicode(const CMINVOKECOMMANDINFO &ici)
 {
     return IsUnicode(*(CMINVOKECOMMANDINFOEX*)&ici);
 }
+#endif // CMIC_MASK_UNICODE
 
 DECLSPEC_SELECTANY CLIPFORMAT g_cfHIDA = NULL;
 DECLSPEC_SELECTANY CLIPFORMAT g_cfShellIdListOffsets = NULL;
