@@ -633,7 +633,7 @@ static inline PCUIDLIST_RELATIVE HIDA_GetPIDLItem(CIDA const* pida, SIZE_T i)
 
 #ifdef __cplusplus
 
-#ifdef CMIC_MASK_UNICODE
+#if defined(CMIC_MASK_UNICODE) && defined(SEE_MASK_UNICODE)
 static inline bool IsUnicode(const CMINVOKECOMMANDINFOEX &ici)
 {
     const UINT minsize = FIELD_OFFSET(CMINVOKECOMMANDINFOEX, ptInvoke);
