@@ -24,9 +24,9 @@ extern "C" {
 #define IS_IME_KLID(dwKLID)     ((((ULONG)(dwKLID)) & 0xF0000000) == IME_MASK)
 #define IS_SUBST_KLID(dwKLID)   ((((ULONG)(dwKLID)) & 0xF0000000) == SUBST_MASK)
 
-/* dwHKLorIFL for ImmFreeLayout */
-#define IFL_OFF     1
-#define IFL_UNLOAD  2
+/* The special values for ImmFreeLayout hKL */
+#define IFL_OFF     ((HKL)UlongToHandle(1))
+#define IFL_UNLOAD  ((HKL)UlongToHandle(2))
 
 typedef struct tagIMEINFOEX
 {
