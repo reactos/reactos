@@ -633,6 +633,17 @@ static inline PCUIDLIST_RELATIVE HIDA_GetPIDLItem(CIDA const* pida, SIZE_T i)
 
 #ifdef __cplusplus
 
+static inline bool IsUnicode(const CMINVOKECOMMANDINFOEX &ici)
+{
+    const UINT minsize = FIELD_OFFSET(CMINVOKECOMMANDINFOEX, ptInvoke);
+    return (ici.fMask & CMIC_MASK_UNICODE) && ici.cbSize >= minsize;
+}
+
+static inline bool IsUnicode(const CMINVOKECOMMANDINFO &ici)
+{
+    return IsUnicode(*(CMINVOKECOMMANDINFOEX*)&ici);
+}
+
 DECLSPEC_SELECTANY CLIPFORMAT g_cfHIDA = NULL;
 DECLSPEC_SELECTANY CLIPFORMAT g_cfShellIdListOffsets = NULL;
 
@@ -788,17 +799,6 @@ DataObject_SetOffset(IDataObject* pDataObject, POINT* point)
     }
 
     return DataObject_SetData(pDataObject, g_cfShellIdListOffsets, point, sizeof(point[0]));
-}
-
-static inline bool IsUnicode(CMINVOKECOMMANDINFOEX &ici)
-{
-    const UINT minsize = FIELD_OFFSET(CMINVOKECOMMANDINFOEX, ptInvoke);
-    return (ici.fMask & CMIC_MASK_UNICODE) && ici.cbSize >= minsize;
-}
-
-static inline bool IsUnicode(CMINVOKECOMMANDINFO &ici)
-{
-    return IsUnicode(*(CMINVOKECOMMANDINFOEX*)&ici);
 }
 
 #endif // __cplusplus
