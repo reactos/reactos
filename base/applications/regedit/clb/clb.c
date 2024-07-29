@@ -151,7 +151,7 @@ ClbpStyleDlgProc(IN HWND hwndDlg,
         {
         case IDOK:
         case IDCANCEL:
-            EndDialog(hwndDlg, (INT_PTR)LOWORD(wParam));
+            EndDialog(hwndDlg, LOWORD(wParam));
             break;
         }
         break;
