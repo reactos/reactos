@@ -94,7 +94,7 @@ BEGIN
             MENUITEM "&Strengverdi", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Binær verdi", ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD-verdi", ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Multistreng verdi", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Multistrengverdi", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "&Utvidbar strengverdi", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
