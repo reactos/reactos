@@ -145,7 +145,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Apelare inversă"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Aveţi pe server privilegiul de apelare inversă 'Stabilit de apelant'. Apăsaţi pe OK, iar serverul vă va apela la numărul de mai jos.  Pentru a ignora apelarea inversă, apăsaţi pe Revocare.", 1066, 5, 5, 221, 39, SS_NOPREFIX
+    LTEXT "Aveţi pe server privilegiul de apelare inversă 'Stabilit de apelant'. Apăsaţi pe OK, iar serverul vă va apela la numărul de mai jos. Pentru a ignora apelarea inversă, apăsaţi pe Revocare.", 1066, 5, 5, 221, 39, SS_NOPREFIX
     LTEXT "&Introduceţi numărul de telefon al modemului:", 1067, 5, 46, 222, 8, NOT WS_GROUP
     EDITTEXT 1065, 5, 57, 221, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", 1, 100, 85, 60, 14, WS_GROUP
@@ -423,7 +423,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Formarea manuală a numărului"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Ridicaţi receptorul şi formaţi numărul (sau cereţi operatorului să îl formeze).  După ce apelarea s-a terminat, faceţi clic pe OK. Ascultaţi la receptor până devine silenţios, apoi suspendaţi.", 1281, 8, 8, 219, 32
+    LTEXT "Ridicaţi receptorul şi formaţi numărul (sau cereţi operatorului să îl formeze). După ce apelarea s-a terminat, faceţi clic pe OK. Ascultaţi la receptor până devine silenţios, apoi suspendaţi.", 1281, 8, 8, 219, 32
     LTEXT "Număr de telefon:", 1282, 8, 46, 91, 8
     LTEXT "", 1283, 103, 46, 126, 8, NOT WS_GROUP
     DEFPUSHBUTTON "OK", 1, 104, 70, 60, 14, WS_GROUP
@@ -505,7 +505,7 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Este necesar să stabiliţi acreditările pentru apeluri dinspre exterior, pe care le vor utiliza distribuitoarele la distanţă când se conectează la interfaţă. Cu informaţiile pe care le introduceţi aici se creează un cont utilizator pentru acest distribuitor.", 1094, 8, 5, 307, 35
+    LTEXT "Este necesară stabilirea datelor de autentificare pe care serverul de redirecţionare le va folosi pentru conectarea la această interfaţă. În consecinţă, din informaţiile oferite aici va fi creat un nou cont de utilizator în serverul de redirecţionare.", 1094, 8, 5, 307, 35
     LTEXT "Nume &utilizator:", 1078, 8, 47, 124, 8, NOT WS_GROUP
     EDITTEXT 1074, 135, 45, 175, 12, ES_AUTOHSCROLL | WS_DISABLED
     LTEXT "&Parolă:", 1077, 8, 68, 124, 8, NOT WS_GROUP
@@ -518,7 +518,7 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Este necesar să stabiliţi acreditările pentru apeluri dinspre interior, pe care le va utiliza interfaţa când se conectează la distribuitorul la distanţă. Aceste acreditări trebuie să concorde cu acreditările pentru apeluri dinspre exterior configurate pe distribuitorul la distanţă.", 1094, 8, 5, 308, 33
+    LTEXT "Este necesară stabilirea datelor de autentificare pe care această interfaţă le va folosi pentru conectarea la serverul de redirecţionare. Aceste date trebuie să corespundă cu datele de autentificare configurate în serverul de redirecţionare.", 1094, 8, 5, 308, 33
     LTEXT "Nume &utilizator:", 1096, 8, 43, 130, 8, NOT WS_GROUP
     EDITTEXT 1091, 140, 40, 175, 12, ES_AUTOHSCROLL
     LTEXT "&Domeniu:", 1093, 8, 63, 130, 8, NOT WS_GROUP
@@ -1865,7 +1865,7 @@ BEGIN
     215 "Fişiere de comandă rapidă pentru apelare (*.rnk)\0"
     216 "*.rnk\0"
     217 "Creare comandă rapidă pentru apelare\0"
-    218 "Legarea la %1 nu a reuşit.  Reconectare în aşteptare…\0"
+    218 "Legarea la %1 nu a reuşit. Reconectare în aşteptare…\0"
     219 "Imposibil de regăsit informaţiile de încadrare.\0"
     220 "Imposibil de regăsit informaţiile port-ului.\0"
     221 "Imposibil de regăsit informaţiile proiecţiei.\0"
@@ -1955,7 +1955,7 @@ BEGIN
     305 "Nu s-a selectat nici o agendă telefonică alternativă.\0"
     306 "Imposibil de configurat dinamic acel dispozitiv.\0"
     307 "Imposibil de şters intrarea deoarece este conectată.\0"
-    308 "Nu este selectată nici o intrare.  Pentru a crea o intrare apăsaţi pe butonul Nou.\0"
+    308 "Nu este selectată nici o intrare. Pentru a crea o intrare apăsaţi pe butonul Nou.\0"
     309 "Când se selectează 'specificarea unei adrese IP' este necesar să furnizaţi o adresă IP diferită de zero.\0"
     310 "Se solicită o adresă X.25 atunci când se selectează o reţea de apelare X.25 sau un dispozitiv X.25.\0"
     311 "(nici una)\0"
@@ -2213,11 +2213,11 @@ BEGIN
     1567 " (criptare activată)\0"
     1568 "Informaţii cont Internet\0"
     1569 "Aveţi nevoie de nume de cont şi parolă pentru a semna la intrarea în contul Internet.\0"
-    1570 "Pachetul EAP selectat nu oferă chei de criptare.  Selectaţi un pachet EAP care furnizează chei sau selectaţi să nu se cripteze.\0"
+    1570 "Pachetul EAP selectat nu oferă chei de criptare. Selectaţi un pachet EAP care furnizează chei sau selectaţi să nu se cripteze.\0"
     1571 "Selecţia curentă de criptare solicită metode de securitate la Log on de tip EAP sau unele versiuni ale MS-CHAP.\0"
     1572 "Protocoale şi securitate\0"
     1573 "Selectaţi opţiunile de transport şi securitate pentru această conexiune.\0"
-    1574 "Protocoalele selectate includ PAP, SPAP şi/sau CHAP.  Dacă se trece peste unul din ele, nu se va face criptarea datelor. Păstraţi aceste setări?\0"
+    1574 "Protocoalele selectate includ PAP, SPAP şi/sau CHAP. Dacă se trece peste unul din ele, nu se va face criptarea datelor. Păstraţi aceste setări?\0"
     1575 "Pentru a vă conecta la '%1', mai întâi trebuie să fiţi conectat la '%2'. Vă conectaţi la '%2' acum?\0"
     1576 "Conectare pe cablu paralel…\0"
     1577 "Conectare pe infraroşu…\0"
@@ -2244,7 +2244,7 @@ BEGIN
     1612 "Aţi selectat utilizarea unei chei pre-distribuite dar nu aţi introdus nici una.\nIntroduceţi cheia pre-distribuită.\0"
     1613 "Imposibil de angajat acreditările\0"
     1634 "Deoarece serviciul Instrumentaţie de management ReactOS (WMI) s-a dezactivat, ReactOS nu afişează proprietăţile acestei conexiuni sau reţeaua de pornire.\n\nPentru a configura proprietăţile acestei conexiuni sau ale reţelei de la domiciliu, este necesar să activaţi mai întâi serviciul WMI. Pentru a realiza acest lucru, în Instrumente administrative din Panoul de control faceţi dublu clic pe Servicii, faceţi clic cu butonul din dreapta pe Instrumentaţia de management ReactOS, apoi faceţi clic pe Start.\0"
-    1635 "ReactOS nu afişează proprietăţile acestei conexiuni. Este posibil ca informaţiile din Instrumentaţia de management ReactOS (WMI) să fie deteriorate. Pentru a corecta aceasta, utilizaţi Restabilire sistem pentru a restabili ReactOS la un moment anterior (numit punct de restabilire).  Restabilire sistem este amplasat în folderul Instrumente sistem din Accesorii.\0"
+    1635 "ReactOS nu afişează proprietăţile acestei conexiuni. Este posibil ca informaţiile din Instrumentaţia de management ReactOS (WMI) să fie deteriorate. Pentru a corecta aceasta, utilizaţi Restabilire sistem pentru a restabili ReactOS la un moment anterior (numit punct de restabilire). Restabilire sistem este amplasat în folderul Instrumente sistem din Accesorii.\0"
     1646 "Se permite solicitare ecou la sosire\0"
     1647 "Se permite solicitare marcă de timp de intrare\0"
     1648 "Se permite solicitare mască de intrare\0"
@@ -2270,7 +2270,7 @@ BEGIN
     1672 "Când computerul renunţă la o transmisie de date incompletă deoarece transmisia completă a solicitat mai mult timp decât este permis, el va răspunde expeditorului cu un mesaj ""timp expirat"".\0"
     1673 "Datele trimise din acest computer vor fi redistribuite dacă se schimbă calea implicită.\0"
     1675 "Valoarea introdusă pentru dimensiunea fişierului jurnal nu este corectă. Introduceţi o valoare între 1 şi 32767 k.\0"
-    1685 "Contul utilizator nu are permisiunea de a utiliza această conexiune.  De obicei, acest lucru se întâmplă deoarece aţi făcut Log on ca Vizitator.\0"
+    1685 "Contul utilizator nu are permisiunea de a utiliza această conexiune. De obicei, acest lucru se întâmplă deoarece aţi făcut Log on ca Vizitator.\0"
     1686 "Tastaţi numele contului şi parola. (Dacă aţi uitat numele contului sau parola, contactaţi administratorul reţelei.)\0"
     1687 "&Nume computer\0"
     1688 "&Nume furnizor ISP\0"
