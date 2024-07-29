@@ -50,6 +50,7 @@ HRESULT RecycleBinGenericEnum_Constructor(OUT IRecycleBinEnumList **pprbel);
 
 /* recyclebin_v5.c */
 
-HRESULT RecycleBin5_Constructor(IN LPCWSTR VolumePath, OUT IUnknown **ppUnknown);
+EXTERN_C
+HRESULT RecycleBin5_Constructor(_In_ LPCWSTR VolumePath, _Out_ IUnknown **ppUnknown);
 
 #endif /* _RECYCLEBIN_PRIVATE_H_ */
