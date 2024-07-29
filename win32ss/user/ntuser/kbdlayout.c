@@ -50,7 +50,7 @@ PKL FASTCALL IntHKLtoPKL(_Inout_ PTHREADINFO pti, _In_ HKL hKL)
         do
         {
             pKL = pKL->pklNext;
-            if (!(pKL->dwKL_Flags & KLF_UNLOAD))
+            if (!(pKL->dwKL_Flags & KL_UNLOAD))
                 return pKL;
         } while (pKL != pFirstKL);
     }
@@ -59,13 +59,13 @@ PKL FASTCALL IntHKLtoPKL(_Inout_ PTHREADINFO pti, _In_ HKL hKL)
         do
         {
             pKL = pKL->pklPrev;
-            if (!(pKL->dwKL_Flags & KLF_UNLOAD))
+            if (!(pKL->dwKL_Flags & KL_UNLOAD))
                 return pKL;
         } while (pKL != pFirstKL);
     }
     else if (HIWORD(hKL)) /* hKL is a full input locale identifier */
     {
-        /* No KLF_UNLOAD check */
+        /* No KL_UNLOAD check */
         do
         {
             if (pKL->hkl == hKL)
@@ -76,7 +76,7 @@ PKL FASTCALL IntHKLtoPKL(_Inout_ PTHREADINFO pti, _In_ HKL hKL)
     }
     else  /* Language only specified */
     {
-        /* No KLF_UNLOAD check */
+        /* No KL_UNLOAD check */
         do
         {
             if (LOWORD(pKL->hkl) == LOWORD(hKL)) /* Low word is language ID */
@@ -114,7 +114,7 @@ IntGetKeyboardLayoutList(
         /* Count the effective PKLs */
         do
         {
-            if (!(pKL->dwKL_Flags & KLF_UNLOAD))
+            if (!(pKL->dwKL_Flags & KL_UNLOAD))
                 ++ret;
             pKL = pKL->pklNext;
         } while (pKL != pFirstKL);
@@ -124,7 +124,7 @@ IntGetKeyboardLayoutList(
         /* Copy the effective HKLs to pHklBuff */
         do
         {
-            if (!(pKL->dwKL_Flags & KLF_UNLOAD))
+            if (!(pKL->dwKL_Flags & KL_UNLOAD))
             {
                 *pHklBuff = pKL->hkl;
                 ++pHklBuff;
@@ -489,7 +489,7 @@ UserUnloadKbl(PKL pKl)
     if (pKl->head.cLockObj > 1)
     {
         /* Layout is used by other threads */
-        pKl->dwKL_Flags |= KLF_UNLOAD;
+        pKl->dwKL_Flags |= KL_UNLOAD;
         return FALSE;
     }
 
@@ -521,7 +521,7 @@ W32kGetDefaultKeyLayout(VOID)
     /* Return not unloaded layout */
     do
     {
-        if (!(pKl->dwKL_Flags & KLF_UNLOAD))
+        if (!(pKl->dwKL_Flags & KL_UNLOAD))
             return pKl;
 
         pKl = pKl->pklPrev; /* Confirmed on Win2k */
@@ -855,7 +855,7 @@ co_IntUnloadKeyboardLayoutEx(
 
     /* Regard as unloaded */
     UserMarkObjectDestroy(pKL);
-    pKL->dwKL_Flags |= KLF_UNLOAD;
+    pKL->dwKL_Flags |= KL_UNLOAD;
 
     if (!(dwFlags & 0x80000000) && pti->KeyboardLayout == pKL)
     {
@@ -957,7 +957,7 @@ co_IntLoadKeyboardLayoutEx(
         {
             /* Find last not unloaded layout */
             PKL pLastKL = gspklBaseLayout->pklPrev;
-            while (pLastKL != gspklBaseLayout && (pLastKL->dwKL_Flags & KLF_UNLOAD))
+            while (pLastKL != gspklBaseLayout && (pLastKL->dwKL_Flags & KL_UNLOAD))
                 pLastKL = pLastKL->pklPrev;
 
             /* Add new layout to the list */
@@ -978,7 +978,7 @@ co_IntLoadKeyboardLayoutEx(
     }
 
     /* If this layout was prepared to unload, undo it */
-    pNewKL->dwKL_Flags &= ~KLF_UNLOAD;
+    pNewKL->dwKL_Flags &= ~KL_UNLOAD;
 
     /* Reorder if necessary */
     if (Flags & KLF_REORDER)
