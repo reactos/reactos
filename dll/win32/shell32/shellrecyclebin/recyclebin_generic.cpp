@@ -97,7 +97,15 @@ STDMETHODIMP RecycleBinGeneric::DeleteFile(LPCWSTR szFileName)
 
     /* Get associated volume path */
     WCHAR szVolume[MAX_PATH];
+#ifndef __REACTOS__
+    if (!GetVolumePathNameW(szFullName, szVolume, _countof(szVolume)))
+    {
+        CoTaskMemFree(szFullName);
+        return HRESULT_FROM_WIN32(GetLastError());
+    }
+#else
     swprintf(szVolume, L"%c:\\", szFullName[0]);
+#endif
 
     /* Skip namespace (if any): "\\.\" or "\\?\" */
     if (szVolume[0] == '\\' &&
@@ -130,7 +138,7 @@ STDMETHODIMP RecycleBinGeneric::EmptyRecycleBin()
     if (dwLogicalDrives == 0)
         return HRESULT_FROM_WIN32(GetLastError());
 
-    for (DWORD i = 0; i < L'Z' - L'A' + 1; i++)
+    for (DWORD i = 0; i < 'Z' - 'A' + 1; i++)
     {
         if (!(dwLogicalDrives & (1 << i)))
             continue;
