@@ -112,7 +112,7 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 /***********************************************************************
  *		ImmFreeLayout (IMM32.@)
  */
-BOOL WINAPI ImmFreeLayout(DWORD dwUnknown)
+BOOL WINAPI ImmFreeLayout(DWORD_PTR dwUnknown)
 {
     WCHAR szKBD[KL_NAMELENGTH];
     UINT iKL, cKLs;
@@ -124,7 +124,7 @@ BOOL WINAPI ImmFreeLayout(DWORD dwUnknown)
 
     hOldKL = GetKeyboardLayout(0);
 
-    if (dwUnknown == 1)
+    if (dwUnknown == IFL_OFF)
     {
         if (!IS_IME_HKL(hOldKL))
             return TRUE;
@@ -158,7 +158,7 @@ BOOL WINAPI ImmFreeLayout(DWORD dwUnknown)
             LoadKeyboardLayoutW(L"00000409", KLF_ACTIVATE | 0x200);
         }
     }
-    else if (dwUnknown == 2)
+    else if (dwUnknown == IFL_UNLOAD)
     {
         RtlEnterCriticalSection(&gcsImeDpi);
 Retry:
