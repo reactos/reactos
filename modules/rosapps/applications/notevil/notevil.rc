@@ -21,6 +21,9 @@
  *
  */
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 STRINGTABLE MOVEABLE
 BEGIN
     1,   "Aleksandar Andrejevic"
@@ -50,7 +53,7 @@ BEGIN
     21,  "Claudiu Mihail"
     22,  "Colin Finck"
     23,  "Daniel Reimer"
-    24,  "Danny Götte"
+    24,  "Danny GÃ¶tte"
     25,  "David Quintana"
     26,  "David Welch"
     27,  "Dmitry Chapyshev"
@@ -69,7 +72,7 @@ BEGIN
     36,  "Frederik Leemans"
     37,  "Gabriel Ilardi"
     38,  "Ged Murphy"
-    39,  "Gé van Geldorp"
+    39,  "GÃ© van Geldorp"
     40,  "Gero Kuehn"
     41,  "Giannis Adamopoulos"
     42,  "Gregor Anich"
@@ -83,9 +86,9 @@ BEGIN
     46,  "Gunnar Andre' Dalsnes"
     47,  "Hans Kremer"
     48,  "Hartmut Birr"
-    49,  "Hermès Bélusca-Maïto"
+    49,  "HermÃ¨s BÃ©lusca-MaÃ¯to"
     50,  "Hernan Ochoa"
-    51,  "Hervé Poussineau"
+    51,  "HervÃ© Poussineau"
     52,  "Iwan Fatahi"
     53,  "James Tabor"
     54,  "Jan Roeloffzen"
@@ -100,7 +103,7 @@ END
 STRINGTABLE MOVEABLE
 BEGIN
     61,  "Jens Collin"
-    62,  "Jérôme Gardou"
+    62,  "JÃ©rÃ´me Gardou"
     63,  "Jim Noeth"
     64,  "Johannes Anderwald"
     65,  "Jonathan Wilson"
@@ -151,7 +154,7 @@ BEGIN
     102, "Robert Kopferl"
     103, "Roel Messiant"
     104, "Royce Mitchell III"
-    105, "Samuel Serapión"
+    105, "Samuel SerapiÃ³n"
 END
 
 STRINGTABLE MOVEABLE
