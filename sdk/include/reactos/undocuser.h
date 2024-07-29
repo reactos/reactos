@@ -177,7 +177,9 @@ extern "C" {
 
 // Keyboard Layout undocumented flags
 #define KL_UNLOAD 0x20000000
-#define KL_NOACTIVATENEXT 0x80000000
+
+// co_IntUnloadKeyboardLayoutEx undocumented flags
+#define UKL_NOACTIVATENEXT 0x80000000
 
 BOOL WINAPI UpdatePerUserSystemParameters(DWORD dwReserved, BOOL bEnable);
 BOOL WINAPI SetLogonNotifyWindow(HWND Wnd);
