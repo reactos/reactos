@@ -122,7 +122,7 @@ BOOL WINAPI ImmFreeLayout(HKL hKL)
     PIMEDPI pImeDpi;
     LANGID LangID;
 
-    TRACE("(0x%lX)\n", hKL);
+    TRACE("(%p)\n", hKL);
 
     hOldKL = GetKeyboardLayout(0);
 
