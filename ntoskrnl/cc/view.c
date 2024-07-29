@@ -741,14 +741,14 @@ CcRosFreeOneUnusedVacb(
     KIRQL oldIrql;
     PLIST_ENTRY current_entry;
     PROS_VACB to_free = NULL;
+    ULONG Refs;
 
     oldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
 
-    /* Browse all the available VACB */
+    /* Browse all the available VACBs */
     current_entry = VacbLruListHead.Flink;
     while ((current_entry != &VacbLruListHead) && (to_free == NULL))
     {
-        ULONG Refs;
         PROS_VACB current;
 
         current = CONTAINING_RECORD(current_entry,
@@ -757,7 +757,10 @@ CcRosFreeOneUnusedVacb(
 
         KeAcquireSpinLockAtDpcLevel(&current->SharedCacheMap->CacheMapLock);
 
-        /* Only deal with unused VACB, we will free them */
+        /* Only keep iterating though the loop while the lock is held */
+        current_entry = current_entry->Flink;
+
+        /* Only deal with unused VACBs, we will free them */
         Refs = CcRosVacbGetRefCount(current);
         if (Refs < 2)
         {
@@ -765,30 +768,29 @@ CcRosFreeOneUnusedVacb(
             ASSERT(!current->MappedCount);
             ASSERT(Refs == 1);
 
-            /* Reset it, this is the one we want to free */
-            RemoveEntryList(&current->CacheMapVacbListEntry);
-            InitializeListHead(&current->CacheMapVacbListEntry);
+            /* Unlink it, this is the one we want to free */
             RemoveEntryList(&current->VacbLruListEntry);
             InitializeListHead(&current->VacbLruListEntry);
+            RemoveEntryList(&current->CacheMapVacbListEntry);
+            InitializeListHead(&current->CacheMapVacbListEntry);
 
             to_free = current;
         }
 
         KeReleaseSpinLockFromDpcLevel(&current->SharedCacheMap->CacheMapLock);
-
-        current_entry = current_entry->Flink;
     }
 
     KeReleaseQueuedSpinLock(LockQueueMasterLock, oldIrql);
 
-    /* And now, free the VACB that we found, if any. */
+    /* And now, free the VACB that we found, if any */
     if (to_free == NULL)
     {
         return FALSE;
     }
+    Refs = CcRosVacbDecRefCount(to_free);
 
     /* This must be its last ref */
-    NT_VERIFY(CcRosVacbDecRefCount(to_free) == 0);
+    ASSERT(Refs == 0);
 
     return TRUE;
 }
