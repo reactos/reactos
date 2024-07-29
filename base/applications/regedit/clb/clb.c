@@ -1,8 +1,8 @@
 /*
- * PROJECT:    ReactOS Column List Box
- * LICENSE:    LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
- * PURPOSE:    Column List Box
- * PROGRAMMER: 2005 Thomas Weidenmueller <w3seek@reactos.com>
+ * PROJECT:     ReactOS Column List Box
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Column List Box
+ * COPYRIGHT:   Copyright 2005 Thomas Weidenmueller <w3seek@reactos.com>
  */
 #include <precomp.h>
 
