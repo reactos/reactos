@@ -112,7 +112,7 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 /***********************************************************************
  *		ImmFreeLayout (IMM32.@)
  *
- * NOTE: HKL_USE_NON_IME and HKL_FREE_ALL are special values for hKL.
+ * NOTE: HKL_DISABLE_IME and HKL_RELEASE_IME are special values for hKL.
  */
 BOOL WINAPI ImmFreeLayout(HKL hKL)
 {
@@ -126,7 +126,7 @@ BOOL WINAPI ImmFreeLayout(HKL hKL)
 
     hOldKL = GetKeyboardLayout(0);
 
-    if (hKL == HKL_USE_NON_IME)
+    if (hKL == HKL_DISABLE_IME)
     {
         if (!IS_IME_HKL(hOldKL))
             return TRUE;
@@ -160,7 +160,7 @@ BOOL WINAPI ImmFreeLayout(HKL hKL)
             LoadKeyboardLayoutW(L"00000409", KLF_ACTIVATE | 0x200);
         }
     }
-    else if (hKL == HKL_FREE_ALL)
+    else if (hKL == HKL_RELEASE_IME)
     {
         RtlEnterCriticalSection(&gcsImeDpi);
 Retry:

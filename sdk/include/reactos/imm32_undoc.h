@@ -25,8 +25,8 @@ extern "C" {
 #define IS_SUBST_KLID(dwKLID)   ((((ULONG)(dwKLID)) & 0xF0000000) == SUBST_MASK)
 
 /* The special values for ImmFreeLayout hKL */
-#define HKL_USE_NON_IME  ((HKL)UlongToHandle(1))
-#define HKL_FREE_ALL     ((HKL)UlongToHandle(2))
+#define HKL_DISABLE_IME  ((HKL)UlongToHandle(1))
+#define HKL_RELEASE_IME  ((HKL)UlongToHandle(2))
 
 typedef struct tagIMEINFOEX
 {
