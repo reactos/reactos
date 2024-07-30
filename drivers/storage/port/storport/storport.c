@@ -1334,7 +1334,7 @@ StorPortNotification(
 
             KeInitializeDpc((PRKDPC)&Dpc->Dpc,
                             (PKDEFERRED_ROUTINE)HwDpcRoutine,
-                            (PVOID)DeviceExtension);
+                            (PVOID)(DeviceExtension->Miniport.MiniportExtension->HwDeviceExtension));
             KeInitializeSpinLock(&Dpc->Lock);
             break;
 
