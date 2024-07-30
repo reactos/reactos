@@ -28,14 +28,14 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 SHCONTF SHELL_GetDefaultFolderEnumSHCONTF()
 {
-    DWORD Flags = SHCONTF_FOLDERS | SHCONTF_NONFOLDERS;
+    SHCONTF Flags = SHCONTF_FOLDERS | SHCONTF_NONFOLDERS;
     SHELLSTATE ss;
     SHGetSetSettings(&ss, SSF_SHOWALLOBJECTS | SSF_SHOWSUPERHIDDEN, FALSE);
     if (ss.fShowAllObjects)
         Flags |= SHCONTF_INCLUDEHIDDEN;
     if (ss.fShowSuperHidden)
         Flags |= SHCONTF_INCLUDESUPERHIDDEN;
-     return (SHCONTF)Flags;
+     return Flags;
 }
 
 BOOL SHELL_IncludeItemInFolderEnum(IShellFolder *pSF, PCUITEMID_CHILD pidl, SFGAOF Query, SHCONTF Flags)

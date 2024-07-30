@@ -599,16 +599,14 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
     if (SFGAO_VALIDATE & *pdwAttributes)
     {
         STRRET strret;
-        if (SUCCEEDED(psf->GetDisplayNameOf(pidl, SHGDN_FORPARSING, &strret)))
+        LPWSTR path;
+        if (SUCCEEDED(psf->GetDisplayNameOf(pidl, SHGDN_FORPARSING, &strret)) &&
+            SUCCEEDED(StrRetToStrW(&strret, pidl, &path)))
         {
-            LPWSTR path;
-            if (SUCCEEDED(StrRetToStrW(&strret, pidl, &path)))
-            {
-                BOOL exists = PathFileExistsW(path);
-                SHFree(path);
-                if (!exists)
-                    return E_FAIL;
-            }
+            BOOL exists = PathFileExistsW(path);
+            SHFree(path);
+            if (!exists)
+                return E_FAIL;
         }
     }
 
@@ -619,7 +617,8 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
         LPWSTR pExtension;
         BOOL hasName = _ILSimpleGetTextW(pidl, szFileName, _countof(szFileName));
 
-        // Hidden files with a leading tilde treated as super-hidden (devblogs.microsoft.com/oldnewthing/20170526-00/?p=96235#)
+        // Vista+ feature: Hidden files with a leading tilde treated as super-hidden
+        // See https://devblogs.microsoft.com/oldnewthing/20170526-00/?p=96235
         if (hasName && szFileName[0] == '~' && (dwFileAttributes & FILE_ATTRIBUTE_HIDDEN))
             dwShellAttributes |= SFGAO_HIDDEN | SFGAO_SYSTEM;
 
