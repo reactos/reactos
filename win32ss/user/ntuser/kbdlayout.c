@@ -23,7 +23,7 @@ PKL gspklBaseLayout = NULL; /* FIXME: Please move this to pWinSta->spklList */
 PKBDFILE gpkfList = NULL;
 DWORD gSystemFS = 0;
 UINT gSystemCPCharSet = 0;
-DWORD gLCIDSentToShell = 0;
+HKL ghKLSentToShell = NULL;
 
 typedef PVOID (*PFN_KBDLAYERDESCRIPTOR)(VOID);
 
@@ -670,7 +670,7 @@ co_UserActivateKeyboardLayout(
     _Inout_opt_ PWND pWnd)
 {
     HKL hOldKL = NULL;
-    PKL pOldKL = NULL;
+    PKL pOldKL;
     PTHREADINFO pti = GetW32ThreadInfo();
     PWND pTargetWnd, pImeWnd;
     HWND hTargetWnd, hImeWnd;
@@ -681,12 +681,9 @@ co_UserActivateKeyboardLayout(
     IntReferenceThreadInfo(pti);
     ClientInfo = pti->pClientInfo;
 
-    if (pti->KeyboardLayout)
-    {
-        pOldKL = pti->KeyboardLayout;
-        if (pOldKL)
-            hOldKL = pOldKL->hkl;
-    }
+    pOldKL = pti->KeyboardLayout;
+    if (pOldKL)
+        hOldKL = pOldKL->hkl;
 
     if (uFlags & KLF_RESET)
     {
@@ -699,7 +696,7 @@ co_UserActivateKeyboardLayout(
         return hOldKL;
     }
 
-    pKL->wchDiacritic = 0;
+    pKL->wchDiacritic = UNICODE_NULL;
 
     if (pOldKL)
         UserRefObjectCo(pOldKL, &Ref1);
@@ -725,10 +722,14 @@ co_UserActivateKeyboardLayout(
         ClientInfo->hKL = pKL->hkl;
     }
 
-    if (gptiForeground && (gptiForeground->ppi == pti->ppi))
+    // Send shell message if necessary
+    if (gptiForeground && (gptiForeground->ppi == pti->ppi) && ISITHOOKED(WH_SHELL))
     {
-        /* Send shell message */
-        co_IntShellHookNotify(HSHELL_LANGUAGE, 0, (LPARAM)pKL->hkl);
+        if (ghKLSentToShell != pKL->hkl) // Already sent HKL?
+        {
+            co_IntShellHookNotify(HSHELL_LANGUAGE, 0, (LPARAM)pKL->hkl);
+            ghKLSentToShell = pKL->hkl; // Remember
+        }
     }
 
     if (pti->MessageQueue)
@@ -752,14 +753,15 @@ co_UserActivateKeyboardLayout(
         }
     }
 
-    /* Send WM_IME_SYSTEM:IMS_SENDNOTIFICATION message if necessary */
-    if (pti && !(pti->TIF_flags & TIF_CSRSSTHREAD))
+    // Refresh IME UI via WM_IME_SYSTEM:IMS_SENDNOTIFICATION messaging
+    if (!(pti->TIF_flags & TIF_CSRSSTHREAD))
     {
-        if (IS_IME_HKL(pKL->hkl) || IS_CICERO_MODE())
+        if (IS_IME_HKL(pKL->hkl) || (IS_CICERO_MODE() && !IS_16BIT_MODE()))
         {
             pImeWnd = pti->spwndDefaultIme;
             if (pImeWnd)
             {
+                bSetForProcess &= !IS_16BIT_MODE();
                 UserRefObjectCo(pImeWnd, &Ref2);
                 hImeWnd = UserHMGetHandle(pImeWnd);
                 co_IntSendMessage(hImeWnd, WM_IME_SYSTEM, IMS_SENDNOTIFICATION, bSetForProcess);
@@ -836,10 +838,10 @@ co_IntUnloadKeyboardLayoutEx(
 
     UserDerefObjectCo(pKL); /* Release reference */
 
-    if (pti->pDeskInfo->fsHooks)
+    if (ISITHOOKED(WH_SHELL))
     {
         co_IntShellHookNotify(HSHELL_LANGUAGE, 0, 0);
-        gLCIDSentToShell = 0;
+        ghKLSentToShell = NULL;
     }
 
     return TRUE;
