@@ -725,7 +725,8 @@ co_UserActivateKeyboardLayout(
     /* Send shell message if necessary */
     if (gptiForeground && (gptiForeground->ppi == pti->ppi) && ISITHOOKED(WH_SHELL))
     {
-        if (ghKLSentToShell != pKL->hkl) // Already sent HKL?
+        /* Send the HKL if needed and remember it */
+        if (ghKLSentToShell != pKL->hkl)
         {
             co_IntShellHookNotify(HSHELL_LANGUAGE, 0, (LPARAM)pKL->hkl);
             ghKLSentToShell = pKL->hkl; // Remember
