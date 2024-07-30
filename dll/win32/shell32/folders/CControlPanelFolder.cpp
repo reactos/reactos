@@ -23,7 +23,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-static const REGFOLDERINFO g_RegFolderInfo = {
+static const REGFOLDERINFO g_RegFolderInfo =
+{
     PT_CONTROLS_NEWREGITEM,
     0, NULL,
     CLSID_ControlPanel,

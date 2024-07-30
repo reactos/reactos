@@ -265,7 +265,7 @@ class CDesktopFolderEnum :
                 ILFree(pidl);
         }
 
-        HRESULT WINAPI Initialize(IShellFolder *pRegFolder, DWORD dwFlags, IEnumIDList *pRegEnumerator,
+        HRESULT WINAPI Initialize(IShellFolder *pRegFolder, SHCONTF dwFlags, IEnumIDList *pRegEnumerator,
                                   IEnumIDList *pDesktopEnumerator, IEnumIDList *pCommonDesktopEnumerator)
         {
             BOOL ret = TRUE;
@@ -283,7 +283,7 @@ class CDesktopFolderEnum :
                 if (IsNamespaceExtensionHidden(MyDocumentsClassString) < 1)
                     AddToEnumList(_ILCreateMyDocuments());
                 if (IsNamespaceExtensionHidden(InternetClassString) < 1)
-                    TryAddRegItemToEnumList(pRegFolder, _ILCreateIExplore(), (SHCONTF)dwFlags);
+                    TryAddRegItemToEnumList(pRegFolder, _ILCreateIExplore(), dwFlags);
 
                 DWORD dwFetched;
                 while((S_OK == pRegEnumerator->Next(1, &pidl, &dwFetched)) && dwFetched)
@@ -645,7 +645,7 @@ HRESULT WINAPI CDesktopFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUM
     if (FAILED(hr))
         ERR("EnumObjects for shared desktop fs folder failed\n");
 
-    return ShellObjectCreatorInit<CDesktopFolderEnum>(m_regFolder, dwFlags,pRegEnumerator, pDesktopEnumerator,
+    return ShellObjectCreatorInit<CDesktopFolderEnum>(m_regFolder, dwFlags, pRegEnumerator, pDesktopEnumerator,
                                                       pCommonDesktopEnumerator, IID_PPV_ARG(IEnumIDList, ppEnumIDList));
 }
 
