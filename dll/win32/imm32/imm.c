@@ -112,7 +112,7 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 /***********************************************************************
  *		ImmFreeLayout (IMM32.@)
  *
- * NOTE: HKL_DISABLE_IME and HKL_RELEASE_IME are special values for hKL.
+ * NOTE: HKL_SWITCH_TO_NON_IME and HKL_RELEASE_IME are special values for hKL.
  */
 BOOL WINAPI ImmFreeLayout(HKL hKL)
 {
@@ -126,7 +126,7 @@ BOOL WINAPI ImmFreeLayout(HKL hKL)
 
     hOldKL = GetKeyboardLayout(0);
 
-    if (hKL == HKL_DISABLE_IME)
+    if (hKL == HKL_SWITCH_TO_NON_IME)
     {
         if (!IS_IME_HKL(hOldKL))
             return TRUE;
