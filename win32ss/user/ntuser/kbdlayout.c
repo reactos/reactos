@@ -729,7 +729,7 @@ co_UserActivateKeyboardLayout(
         if (ghKLSentToShell != pKL->hkl)
         {
             co_IntShellHookNotify(HSHELL_LANGUAGE, 0, (LPARAM)pKL->hkl);
-            ghKLSentToShell = pKL->hkl; // Remember
+            ghKLSentToShell = pKL->hkl;
         }
     }
 
