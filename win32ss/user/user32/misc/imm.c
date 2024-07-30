@@ -717,7 +717,7 @@ static LRESULT ImeWnd_OnImeSystem(PIMEUI pimeui, WPARAM wParam, LPARAM lParam)
             break;
 
         case IMS_FREELAYOUT:
-            ret = IMM_FN(ImmFreeLayout)((DWORD)lParam);
+            ret = IMM_FN(ImmFreeLayout)((HKL)lParam);
             break;
 
         case 0x13:
