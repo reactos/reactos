@@ -722,7 +722,7 @@ co_UserActivateKeyboardLayout(
         ClientInfo->hKL = pKL->hkl;
     }
 
-    // Send shell message if necessary
+    /* Send shell message if necessary */
     if (gptiForeground && (gptiForeground->ppi == pti->ppi) && ISITHOOKED(WH_SHELL))
     {
         if (ghKLSentToShell != pKL->hkl) // Already sent HKL?
