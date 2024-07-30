@@ -452,7 +452,7 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Подключается к реестру удалённого компьютера"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Отключается от реестра удалённого компьютера"
     ID_REGISTRY_PRINT "Печатает весь реестр или его часть"
-/*    ID_HELP_HELPTOPICS "Открывает справку редактора реестра" */
+//    ID_HELP_HELPTOPICS "Открывает справку редактора реестра"
     ID_HELP_ABOUT "Отображает информацию о программе, номер версии и авторские права"
 END
 
@@ -727,12 +727,3 @@ BEGIN
     DEFPUSHBUTTON "Отмена", IDCANCEL, 93, 29, 45, 14
     LTEXT "Поиск в реестре...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Открывает справку редактора реестра."
- *    ID_HELP_ABOUT "Отображает информацию о программе, номер версии и авторские права."
- *END
- */

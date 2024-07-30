@@ -439,7 +439,7 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Een verbinding maken met het register van een externe computer"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "De verbinding met het register van een externe computer verbreken"
     ID_REGISTRY_PRINT "Het register of een gedeelte ervan afdrukken"
-/*    ID_HELP_HELPTOPICS "Help voor de Register-editor openen" */
+//    ID_HELP_HELPTOPICS "Help voor de Register-editor openen"
     ID_HELP_ABOUT "Programmagegevens, versienummer en copyrightgegevens weergeven"
 END
 
@@ -714,12 +714,3 @@ BEGIN
     DEFPUSHBUTTON "Cancel", IDCANCEL, 93, 29, 45, 14
     LTEXT "Searching the registry...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Opens Registry Editor Help."
- *    ID_HELP_ABOUT "Displays program information, version number, and copyright."
- *END
- */

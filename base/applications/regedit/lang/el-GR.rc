@@ -439,7 +439,7 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Συνδέεεται στη registry ενός απομακρυσμένου υπολογιστή"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Αποσυνδέεεται από τη registry ενός απομακρυσμένου υπολογιστή"
     ID_REGISTRY_PRINT "Εκτυπώνει όλο το κομμάτι της registry"
-/*    ID_HELP_HELPTOPICS "Opens registry editor help" */
+//    ID_HELP_HELPTOPICS "Opens registry editor help"
     ID_HELP_ABOUT "Εμφανίζει τις πληροφορίες προγράμματος, τον αριθμό έκδοσης και τα δικαιώματα"
 END
 
@@ -714,12 +714,3 @@ BEGIN
     DEFPUSHBUTTON "Ακύρωση", IDCANCEL, 93, 29, 45, 14
     LTEXT "Γίνεται αναζήτηση στη registry...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Opens Registry Editor Help."
- *    ID_HELP_ABOUT "Displays program information, version number, and copyright."
- *END
- */

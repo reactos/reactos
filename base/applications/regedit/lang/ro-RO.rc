@@ -449,7 +449,7 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Conectare la registrul unui calculator din rețea"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Deconectare de la registrul calculatorului din rețea"
     ID_REGISTRY_PRINT "Imprimă toate părțile unui registru"
-/*    ID_HELP_HELPTOPICS "Deschide manualul editorului de registru" */
+//    ID_HELP_HELPTOPICS "Deschide manualul editorului de registru"
     ID_HELP_ABOUT "Prezintă informații despre program, numărul versiunii și drepturi de autor"
 END
 
@@ -724,12 +724,3 @@ BEGIN
     DEFPUSHBUTTON "Anulare", IDCANCEL, 93, 29, 45, 14
     LTEXT "Căutare în registru…", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Deschide Ajutor pentru Editorul de registru."
- *    ID_HELP_ABOUT "Afișează informații despre program, numărul versiunii și marca înregistrată."
- *END
- */
