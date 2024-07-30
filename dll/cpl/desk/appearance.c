@@ -10,6 +10,8 @@
 
 #include "desk.h"
 
+#include <shellapi.h>
+
 /******************************************************************************/
 
 static void
@@ -354,6 +356,12 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         g->Scheme.crColor[COLOR_DESKTOP] = g_GlobalData.desktop_color;
                         AppearancePage_UpdateThemePreview(hwndDlg, g);
                     }
+                    break;
+
+                case NM_RETURN:
+                case NM_CLICK:
+                    if (lpnm->idFrom == IDC_APPEARANCE_GETMORE)
+                        ShellExecuteW(hwndDlg, NULL, L"rapps://Category/Themes", NULL, NULL, SW_SHOW);
                     break;
             }
             break;

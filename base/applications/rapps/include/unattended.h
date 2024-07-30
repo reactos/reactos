@@ -19,4 +19,6 @@ const WCHAR UsageString[] = L"RAPPS \
 [/" CMD_KEY_FIND L" string] \
 [/" CMD_KEY_INFO L" packagename]";
 
-BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow);
+#define PCAEF_FIRSTLAUNCH 0x01
+#define PCAEF_WINDOWONLY  0x02
+BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, UINT Flags, int nCmdShow);

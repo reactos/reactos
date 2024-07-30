@@ -21,6 +21,8 @@
 #define SEARCH_TIMER_ID 'SR'
 #define TREEVIEW_ICON_SIZE 24
 
+#define COPYDATA_PROTOCOLHANDLER 42 // Arbitrary
+
 class CSideTreeView : public CUiWindow<CTreeView>
 {
     HIMAGELIST hImageTreeView;
@@ -128,13 +130,18 @@ class CMainWindow : public CWindowImpl<CMainWindow, CWindow, CFrameWinTraits>
     // if Info is not zero, this app should be installed. otherwise those checked apps should be installed
     BOOL
     InstallApplication(CAppInfo *Info);
+    void
+    SwitchToCategoryByStringId(WORD ResId);
 
     // this function is called when search text is changed
     BOOL
-    SearchTextChanged(CStringW &SearchText);
+    SearchTextChanged(const CStringW &SearchText);
 
     void
     HandleTabOrder(int direction);
+
+    LRESULT
+    HandleProtocolMessage(LPCWSTR Url);
 };
 
 // Main window
