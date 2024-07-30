@@ -953,9 +953,13 @@ HRESULT WINAPI CDrivesFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY a
                 *rgfInOut &= dwControlPanelAttributes;
             }
             else if (_ILIsSpecialFolder(*apidl))
+            {
                 m_regFolder->GetAttributesOf(1, &apidl[i], rgfInOut);
+            }
             else
+            {
                 ERR("Got unknown pidl type!\n");
+            }
         }
     }
 

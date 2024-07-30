@@ -40,7 +40,7 @@ HRESULT FormatGUIDKey(LPWSTR KeyName, SIZE_T KeySize, LPCWSTR RegPath, const GUI
     return StringCchPrintfW(KeyName, KeySize, RegPath, xriid);
 }
 
-static DWORD SHELL_QueryCLSIDValue(REFCLSID clsid, LPCWSTR SubKey, LPCWSTR Value, void *pData, DWORD *pSize)
+static DWORD SHELL_QueryCLSIDValue(_In_ REFCLSID clsid, _In_opt_ LPCWSTR SubKey, _In_opt_ LPCWSTR Value, _In_opt_ PVOID pData, _In_opt_ PDWORD pSize)
 {
     WCHAR Path[MAX_PATH];
     wcscpy(Path, L"CLSID\\");
@@ -262,10 +262,10 @@ class CRegFolder :
         HRESULT WINAPI Initialize(PREGFOLDERINITDATA pInit, LPCITEMIDLIST pidlRoot);
 
         inline LPCWSTR GetParsingPath() const { return m_pInfo->pszParsingPath; }
-        inline UINT GetCLSIDOffset() { return GetRegItemCLSIDOffset(m_pInfo->PidlType); }
-        const CLSID* IsRegItem(LPCITEMIDLIST pidl)
+        inline UINT GetCLSIDOffset() const { return GetRegItemCLSIDOffset(m_pInfo->PidlType); }
+        const CLSID* IsRegItem(LPCITEMIDLIST pidl) const
         {
-            if (pidl && pidl->mkid.cb >= 4 + sizeof(GUID))
+            if (pidl && pidl->mkid.cb >= sizeof(WORD) + 1 + 1 + sizeof(GUID))
             {
                 if (pidl->mkid.abID[0] == m_pInfo->PidlType)
                     return (CLSID*)(SIZE_T(pidl) + GetCLSIDOffset());
@@ -275,11 +275,11 @@ class CRegFolder :
             if (const IID* pIID = _ILGetGUIDPointer(pidl))
             {
                 FIXME("Unexpected GUID PIDL type %#x\n", pidl->mkid.abID[0]);
-                return pIID;
+                return pIID; // FIXME: Remove this when all folders have been fixed
             }
             return NULL;
         }
-        const REQUIREDREGITEM* IsRequiredItem(LPCITEMIDLIST pidl)
+        const REQUIREDREGITEM* IsRequiredItem(LPCITEMIDLIST pidl) const
         {
             const CLSID* const pCLSID = IsRegItem(pidl);
             for (UINT i = 0; pCLSID && i < m_pInfo->Count; ++i)
