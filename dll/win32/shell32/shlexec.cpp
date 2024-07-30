@@ -1557,7 +1557,7 @@ static HRESULT ShellExecute_ContextMenuVerb(LPSHELLEXECUTEINFOW sei)
     __SHCloneStrWtoA(&verb, sei->lpVerb);
     __SHCloneStrWtoA(&parameters, sei->lpParameters);
 
-    BOOL fDefault = !sei->lpVerb || !sei->lpVerb[0];
+    BOOL fDefault = StrIsNullOrEmpty(sei->lpVerb);
     CMINVOKECOMMANDINFOEX ici = { sizeof(ici), SeeFlagsToCmicFlags(sei->fMask) | CMIC_MASK_UNICODE };
     ici.nShow = sei->nShow;
     if (!fDefault)

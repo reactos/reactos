@@ -1302,8 +1302,7 @@ CDefaultContextMenu::TryToBrowse(
 HRESULT
 CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFOEX lpcmi, LPCITEMIDLIST pidl, PStaticShellEntry pEntry)
 {
-    BOOL unicode = lpcmi->cbSize >= FIELD_OFFSET(CMINVOKECOMMANDINFOEX, ptInvoke) &&
-                   (lpcmi->fMask & CMIC_MASK_UNICODE);
+    const BOOL unicode = IsUnicode(*lpcmi);
 
     LPITEMIDLIST pidlFull = ILCombine(m_pidlFolder, pidl);
     if (pidlFull == NULL)
@@ -1327,7 +1326,7 @@ CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFOEX lpcmi, LPCITEMIDLIST pid
     sei.hIcon = lpcmi->hIcon;
     sei.lpDirectory = wszDir;
 
-    if (IsUnicode(*lpcmi) && !StrIsNullOrEmpty(lpcmi->lpDirectoryW))
+    if (unicode && !StrIsNullOrEmpty(lpcmi->lpDirectoryW))
     {
         sei.lpDirectory = lpcmi->lpDirectoryW;
     }
