@@ -55,14 +55,16 @@ static int iDriveTypeIds[7] = { IDS_DRIVE_FIXED,       /* DRIVE_UNKNOWN */
                                 IDS_DRIVE_FIXED        /* DRIVE_RAMDISK*/
                                 };
 
-static const REQUIREDREGITEM g_RequiredItems[] = 
+static const REQUIREDREGITEM g_RequiredItems[] =
 {
     { CLSID_ControlPanel, 0, 0x50 },
 };
-static const REGFOLDERINFO g_RegFolderInfo = {
+static const REGFOLDERINFO g_RegFolderInfo =
+{
     PT_COMPUTER_REGITEM,
     _countof(g_RequiredItems), g_RequiredItems,
     CLSID_MyComputer,
+    L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}",
     L"MyComputer",
 };
 
@@ -657,7 +659,6 @@ HRESULT WINAPI CDrivesFolder::FinalConstruct()
     REGFOLDERINITDATA RegInit = { static_cast<IShellFolder*>(this), &g_RegFolderInfo };
     HRESULT hr = CRegFolder_CreateInstance(&RegInit,
                                            pidlRoot,
-                                           L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}",
                                            IID_PPV_ARG(IShellFolder2, &m_regFolder));
 
     return hr;

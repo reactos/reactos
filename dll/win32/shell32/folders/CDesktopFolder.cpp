@@ -25,16 +25,18 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-static const REQUIREDREGITEM g_RequiredItems[] = 
+static const REQUIREDREGITEM g_RequiredItems[] =
 {
     { CLSID_MyComputer, "sysdm.cpl", 0x50 },
     { CLSID_NetworkPlaces, "ncpa.cpl", 0x58 },
     { CLSID_Internet, "inetcpl.cpl", 0x68 },
 };
-static const REGFOLDERINFO g_RegFolderInfo = {
+static const REGFOLDERINFO g_RegFolderInfo =
+{
     PT_DESKTOP_REGITEM,
     _countof(g_RequiredItems), g_RequiredItems,
     CLSID_ShellDesktop,
+    L"",
     L"Desktop",
 };
 
@@ -263,7 +265,7 @@ class CDesktopFolderEnum :
                 ILFree(pidl);
         }
 
-        HRESULT WINAPI Initialize(IShellFolder *pRegFolder, DWORD dwFlags,IEnumIDList * pRegEnumerator,
+        HRESULT WINAPI Initialize(IShellFolder *pRegFolder, DWORD dwFlags, IEnumIDList *pRegEnumerator,
                                   IEnumIDList *pDesktopEnumerator, IEnumIDList *pCommonDesktopEnumerator)
         {
             BOOL ret = TRUE;
@@ -363,7 +365,6 @@ HRESULT WINAPI CDesktopFolder::FinalConstruct()
     REGFOLDERINITDATA RegInit = { static_cast<IShellFolder*>(this), &g_RegFolderInfo };
     hr = CRegFolder_CreateInstance(&RegInit,
                                    pidlRoot,
-                                   L"",
                                    IID_PPV_ARG(IShellFolder2, &m_regFolder));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;

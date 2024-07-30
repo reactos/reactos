@@ -27,6 +27,7 @@ static const REGFOLDERINFO g_RegFolderInfo = {
     PT_CONTROLS_NEWREGITEM,
     0, NULL,
     CLSID_ControlPanel,
+    L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}",
     L"ControlPanel",
 };
 
@@ -638,7 +639,6 @@ HRESULT WINAPI CControlPanelFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
     HRESULT hr;
     hr = CRegFolder_CreateInstance(&RegInit,
                                    pidlRoot,
-                                   L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}",
                                    IID_PPV_ARG(IShellFolder2, &m_regFolder));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;

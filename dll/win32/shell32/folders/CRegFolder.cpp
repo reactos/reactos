@@ -184,7 +184,8 @@ HRESULT CRegFolderEnum::Initialize(IShellFolder *pSF, LPCWSTR lpszEnumKeyName, D
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    (m_SF = pSF)->AddRef();
+    pSF->AddRef();
+    m_SF = pSF;
     AddItemsFromKey(HKEY_LOCAL_MACHINE, KeyName);
     AddItemsFromKey(HKEY_CURRENT_USER, KeyName);
 
@@ -250,7 +251,6 @@ class CRegFolder :
     private:
         const REGFOLDERINFO *m_pInfo;
         IShellFolder *m_pOuterFolder; // Not ref-counted
-        CAtlStringW m_rootPath;
         CComHeapPtr<ITEMIDLIST> m_pidlRoot;
 
         HRESULT GetGuidItemAttributes (LPCITEMIDLIST pidl, LPDWORD pdwAttributes);
@@ -259,8 +259,9 @@ class CRegFolder :
     public:
         CRegFolder();
         ~CRegFolder();
-        HRESULT WINAPI Initialize(LPREGFOLDERINITDATA pInit, LPCITEMIDLIST pidlRoot, LPCWSTR lpszPath);
+        HRESULT WINAPI Initialize(PREGFOLDERINITDATA pInit, LPCITEMIDLIST pidlRoot);
 
+        inline LPCWSTR GetParsingPath() const { return m_pInfo->pszParsingPath; }
         inline UINT GetCLSIDOffset() { return GetRegItemCLSIDOffset(m_pInfo->PidlType); }
         const CLSID* IsRegItem(LPCITEMIDLIST pidl)
         {
@@ -328,14 +329,10 @@ CRegFolder::~CRegFolder()
 {
 }
 
-HRESULT WINAPI CRegFolder::Initialize(LPREGFOLDERINITDATA pInit, LPCITEMIDLIST pidlRoot, LPCWSTR lpszPath)
+HRESULT WINAPI CRegFolder::Initialize(PREGFOLDERINITDATA pInit, LPCITEMIDLIST pidlRoot)
 {
     m_pOuterFolder = pInit->psfOuter;
     m_pInfo = pInit->pInfo;
-
-    m_rootPath = lpszPath;
-    if (!m_rootPath)
-        return E_OUTOFMEMORY;
 
     m_pidlRoot.Attach(ILClone(pidlRoot));
     if (!m_pidlRoot)
@@ -668,7 +665,7 @@ HRESULT WINAPI CRegFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags,
         PWCHAR pItemName = pszPath; // GET_SHGDN_RELATION(dwFlags) == SHGDN_INFOLDER
         if (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER)
         {
-            hr = StringCchCopyW(pszPath, cchPath, m_rootPath);
+            hr = StringCchCopyW(pszPath, cchPath, GetParsingPath());
             if (SUCCEEDED(hr))
             {
                 pathlen = wcslen(pszPath);
@@ -876,13 +873,13 @@ static HRESULT CALLBACK RegFolderContextMenuCallback(IShellFolder *psf, HWND hwn
 static HRESULT CRegItemContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder, HWND hwnd, UINT cidl,
                                                   PCUITEMID_CHILD_ARRAY apidl, IShellFolder *psf, IContextMenu **ppcm)
 {
-    HKEY hKeys[10];
+    HKEY hKeys[3];
     UINT cKeys = 0;
 
     const GUID *pGuid = _ILGetGUIDPointer(apidl[0]);
     if (pGuid)
     {
-        WCHAR key[60];
+        WCHAR key[sizeof("CLSID\\") + 38];
         wcscpy(key, L"CLSID\\");
         StringFromGUID2(*pGuid, &key[6], 39);
         AddClassKeyToArray(key, hKeys, &cKeys);
@@ -903,7 +900,7 @@ static HRESULT CRegItemContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder, 
 }
 
 /* In latest windows version this is exported but it takes different arguments! */
-HRESULT CRegFolder_CreateInstance(LPREGFOLDERINITDATA pInit, LPCITEMIDLIST pidlRoot, LPCWSTR lpszPath, REFIID riid, void **ppv)
+HRESULT CRegFolder_CreateInstance(PREGFOLDERINITDATA pInit, LPCITEMIDLIST pidlRoot, REFIID riid, void **ppv)
 {
-    return ShellObjectCreatorInit<CRegFolder>(pInit, pidlRoot, lpszPath, riid, ppv);
+    return ShellObjectCreatorInit<CRegFolder>(pInit, pidlRoot, riid, ppv);
 }
