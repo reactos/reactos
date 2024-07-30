@@ -1,14 +1,16 @@
 /*
- * PROJECT:     ReactOS API tests
- * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
+ * PROJECT:     ReactOS interoperability tests
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Formal locale verification tests
  * COPYRIGHT:   Copyright 2024 Stanislav Motylkov <x86corez@gmail.com>
+ *              Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include "shelltest.h"
+#include "interop.h"
 
 #include <winnls.h>
 #include <strsafe.h>
+#include <shlwapi.h>
 
 #include <set>
 #include <map>
@@ -239,7 +241,7 @@ static void TEST_LocaleTests(void)
 #define ADD_LIB(eModule, pszPath) lib.insert(std::make_pair(eModule, pszPath));
 
     GetModuleFileNameW(NULL, szBuffer, _countof(szBuffer));
-    LPCWSTR pszFind = StrStrW(szBuffer, L"modules\\rostests\\apitests");
+    LPCWSTR pszFind = StrStrW(szBuffer, L"modules\\rostests\\win32");
     if (pszFind)
     {
         // We're running in ReactOS output folder
