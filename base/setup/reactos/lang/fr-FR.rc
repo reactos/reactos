@@ -1,5 +1,7 @@
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
+/* Dialogs */
+
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Installation de ReactOS"
@@ -138,6 +140,8 @@ BEGIN
     LTEXT "S'il y a un CD dans le lecteur, retirez le. Appuyez ensuite sur Terminer pour redémarrer votre ordinateur.", IDC_STATIC, 115, 169, 195, 17
 END
 
+/* Strings */
+
 STRINGTABLE
 BEGIN
     IDS_TYPETITLE "Bienvenue dans l'installation de ReactOS"
@@ -180,4 +184,19 @@ BEGIN
     IDS_BOOTLOADER_SYSTEM "Partition système (par défaut)"
     IDS_BOOTLOADER_MBRVBR "MBR et VBR (par défaut)"
     IDS_BOOTLOADER_VBRONLY "VBR seulement"
+END
+
+/* Error Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR_TITLE "Caractère invalide"
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR "Les seuls caractères valides sont :\n\
+alphanumériques (a-z, A-Z, 0-9), et\n . \\ - _\n\
+Les caractères d'espacement ne sont pas autorisés."
+
+// ERROR_DIRECTORY_NAME
+    IDS_ERROR_DIRECTORY_NAME_TITLE "Chemin d'installation invalide"
+    IDS_ERROR_DIRECTORY_NAME "Le chemin d'installation de ReactOS doit être au format DOS de noms 8.3, \
+et contenir seulement des lettres, chiffres, tirets et points. Les caractères d'espacement ne sont pas autorisés."
 END

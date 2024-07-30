@@ -1,5 +1,7 @@
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
+/* Dialogs */
+
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Установка ReactOS"
@@ -138,6 +140,8 @@ BEGIN
     LTEXT "Вы можете извлечь установочный диск. Для перезагрузки компьютера нажмите клавишу ""Завершить"".", IDC_STATIC, 115, 169, 195, 17
 END
 
+/* Strings */
+
 STRINGTABLE
 BEGIN
     IDS_TYPETITLE "Вас приветствует программа установки ReactOS"
@@ -180,4 +184,19 @@ BEGIN
     IDS_BOOTLOADER_SYSTEM "System partition (Default)"
     IDS_BOOTLOADER_MBRVBR "MBR и VBR (Default)"
     IDS_BOOTLOADER_VBRONLY "Только VBR"
+END
+
+/* Error Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR_TITLE "Invalid character"
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR "The only valid characters are:\n\
+alphanumericals (a-z, A-Z, 0-9), and\n . \\ - _\n\
+Spaces are not allowed."
+
+// ERROR_DIRECTORY_NAME
+    IDS_ERROR_DIRECTORY_NAME_TITLE "Invalid installation path"
+    IDS_ERROR_DIRECTORY_NAME "The ReactOS installation path must follow the DOS 8.3 naming scheme, \
+and only contain letters, digits, dashes and periods. Spaces are not allowed."
 END

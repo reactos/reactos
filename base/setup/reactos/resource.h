@@ -105,3 +105,12 @@
 #define IDS_BOOTLOADER_SYSTEM       5302    // For non-MBR disks
 #define IDS_BOOTLOADER_MBRVBR       5303    // For MBR disks only
 #define IDS_BOOTLOADER_VBRONLY      5304    // ""
+
+
+/* Error Strings */
+#define IDS_ERROR_INVALID_INSTALLDIR_CHAR_TITLE 5400
+#define IDS_ERROR_INVALID_INSTALLDIR_CHAR       5401
+
+// ERROR_DIRECTORY_NAME
+#define IDS_ERROR_DIRECTORY_NAME_TITLE          5402
+#define IDS_ERROR_DIRECTORY_NAME                5403
