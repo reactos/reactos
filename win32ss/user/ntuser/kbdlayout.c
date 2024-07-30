@@ -592,41 +592,6 @@ UserSetDefaultInputLang(HKL hKl)
     return TRUE;
 }
 
-/*
- * co_UserActivateKbl
- *
- * Activates given layout in specified thread
- */
-static PKL
-co_UserActivateKbl(PTHREADINFO pti, PKL pKl, UINT Flags)
-{
-    PKL pklPrev;
-    PWND pWnd;
-
-    pklPrev = pti->KeyboardLayout;
-
-    UserAssignmentLock((PVOID*)&(pti->KeyboardLayout), pKl);
-    pti->pClientInfo->hKL = pKl->hkl;
-
-    if (Flags & KLF_SETFORPROCESS)
-    {
-        FIXME("KLF_SETFORPROCESS\n");
-    }
-
-    if (!(pWnd = pti->MessageQueue->spwndFocus))
-    {
-         pWnd = pti->MessageQueue->spwndActive;
-    }
-
-    // Send WM_INPUTLANGCHANGE to thread's focus window
-    co_IntSendMessage( pWnd ? UserHMGetHandle(pWnd) : 0,
-                      WM_INPUTLANGCHANGE,
-                      (WPARAM)pKl->iBaseCharset, // FIXME: How to set it?
-                      (LPARAM)pKl->hkl); // hkl
-
-    return pklPrev;
-}
-
 VOID APIENTRY
 IntImmActivateLayout(
     _Inout_ PTHREADINFO pti,
@@ -702,7 +667,7 @@ HKL APIENTRY
 co_UserActivateKeyboardLayout(
     _Inout_ PKL     pKL,
     _In_    ULONG   uFlags,
-    _Inout_ PWND    pWnd)
+    _Inout_opt_ PWND pWnd)
 {
     HKL hOldKL = NULL;
     PKL pOldKL = NULL;
@@ -815,7 +780,7 @@ co_IntActivateKeyboardLayout(
     _Inout_ PWINSTATION_OBJECT pWinSta,
     _In_ HKL hKL,
     _In_ ULONG uFlags,
-    _Inout_ PWND pWnd)
+    _Inout_opt_ PWND pWnd)
 {
     PKL pKL;
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
@@ -892,6 +857,7 @@ IntUnloadKeyboardLayout(_Inout_ PWINSTATION_OBJECT pWinSta, _In_ HKL hKL)
     return co_IntUnloadKeyboardLayoutEx(pWinSta, pKL, 0);
 }
 
+/// Invokes imm32!ImmLoadLayout and returns PIMEINFOEX
 PIMEINFOEX FASTCALL co_UserImmLoadLayout(_In_ HKL hKL)
 {
     PIMEINFOEX piiex;
@@ -980,7 +946,7 @@ co_IntLoadKeyboardLayoutEx(
 
     /* Activate this layout in current thread */
     if (Flags & KLF_ACTIVATE)
-        co_UserActivateKbl(PsGetCurrentThreadWin32Thread(), pNewKL, Flags);
+        co_UserActivateKeyboardLayout(pNewKL, Flags, NULL);
 
     /* Send shell message */
     if (!(Flags & KLF_NOTELLSHELL))
