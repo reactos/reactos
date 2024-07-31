@@ -1,29 +1,8 @@
 /*
- * ReactOS Column List Box
- * Copyright (C) 2005 Thomas Weidenmueller
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- */
-/*
- * PROJECT:         ReactOS Column List Box
- * FILE:            base/applications/regedit/clb/clb.c
- * PURPOSE:         Column List Box
- * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
- *
- * UPDATE HISTORY:
- *      10/29/2005  Created
+ * PROJECT:     ReactOS Column List Box
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Column List Box
+ * COPYRIGHT:   Copyright 2005 Thomas Weidenmueller <w3seek@reactos.com>
  */
 #include <precomp.h>
 
@@ -94,7 +73,6 @@ ClbAddData(IN DWORD Unknown1,
     return 0;
 }
 
-
 /*
  * @unimplemented
  */
@@ -107,7 +85,6 @@ ClbSetColumnWidths(IN DWORD Unknown1,
     DPRINT1("ClbSetColumnWidths(0x%x, 0x%x, 0x%x)\n", Unknown1, Unknown2, Unknown3);
     return 0;
 }
-
 
 /*
  * @unimplemented
@@ -124,8 +101,7 @@ ClbWndProc(IN HWND hwnd,
 
     DPRINT1("ClbWndProc(0x%p, 0x%x, 0x%p, 0x%p)\n", hwnd, uMsg, wParam, lParam);
 
-    PrivData = (PCLB_PRIVATEDATA)GetWindowLongPtr(hwnd,
-               0);
+    PrivData = (PCLB_PRIVATEDATA)GetWindowLongPtr(hwnd, 0);
     if (PrivData == NULL && uMsg != WM_CREATE)
     {
         goto HandleDefMsg;
@@ -146,23 +122,17 @@ ClbWndProc(IN HWND hwnd,
         break;
 
     case WM_DESTROY:
-        HeapFree(GetProcessHeap(),
-                 0,
-                 PrivData);
+        HeapFree(GetProcessHeap(), 0, PrivData);
         break;
 
     default:
 HandleDefMsg:
-        Ret = DefWindowProc(hwnd,
-                            uMsg,
-                            wParam,
-                            lParam);
+        Ret = DefWindowProc(hwnd, uMsg, wParam, lParam);
         break;
     }
 
     return Ret;
 }
-
 
 static INT_PTR CALLBACK
 ClbpStyleDlgProc(IN HWND hwndDlg,
@@ -181,15 +151,13 @@ ClbpStyleDlgProc(IN HWND hwndDlg,
         {
         case IDOK:
         case IDCANCEL:
-            EndDialog(hwndDlg,
-                      (INT_PTR)LOWORD(wParam));
+            EndDialog(hwndDlg, LOWORD(wParam));
             break;
         }
         break;
 
     case WM_CLOSE:
-        EndDialog(hwndDlg,
-                  IDCANCEL);
+        EndDialog(hwndDlg, IDCANCEL);
         break;
 
     case WM_INITDIALOG:
@@ -199,7 +167,6 @@ ClbpStyleDlgProc(IN HWND hwndDlg,
 
     return Ret;
 }
-
 
 /*
  * @implemented
@@ -216,36 +183,32 @@ ClbStyleW(IN HWND hWndParent,
                           dwInitParam);
 }
 
-
 /*
  * @implemented
  */
 BOOL
 WINAPI
-CustomControlInfoW(OUT LPCUSTOM_CONTROL_INFO CustomControlInfo  OPTIONAL)
+CustomControlInfoW(OUT LPCUSTOM_CONTROL_INFO CustomControlInfo OPTIONAL)
 {
     if (CustomControlInfo != NULL)
     {
-        wcscpy(CustomControlInfo->ClassName,
-               ClbClassName);
+        wcscpy(CustomControlInfo->ClassName, ClbClassName);
 
         CustomControlInfo->Zero1 = 0;
 
-        wcscpy(CustomControlInfo->ClassName2,
-               ClbClassName);
+        wcscpy(CustomControlInfo->ClassName2, ClbClassName);
 
-        CustomControlInfo->Unknown1 = 0x60; /* FIXME - ??? */
-        CustomControlInfo->Unknown2 = 0x50; /* FIXME - ??? */
-        CustomControlInfo->Unknown3 = 0x50A10013; /* FIXME - ??? */
+        CustomControlInfo->Unknown1 = 0x60; // FIXME - ???
+        CustomControlInfo->Unknown2 = 0x50; // FIXME - ???
+        CustomControlInfo->Unknown3 = 0x50A10013; // FIXME - ???
 
         CustomControlInfo->Zero2 = 0;
         CustomControlInfo->Zero3 = 0;
 
-        CustomControlInfo->StylesCount = sizeof(ClbsSupportedStyles) / sizeof(ClbsSupportedStyles[0]);
+        CustomControlInfo->StylesCount = _countof(ClbsSupportedStyles);
         CustomControlInfo->SupportedStyles = ClbsSupportedStyles;
 
-        wcscpy(CustomControlInfo->Columns,
-               ClbColumns);
+        wcscpy(CustomControlInfo->Columns, ClbColumns);
 
         CustomControlInfo->ClbStyleW = ClbStyleW;
 
@@ -280,10 +243,9 @@ DllMain(IN HINSTANCE hinstDLL,
         ClbWndClass.lpfnWndProc = ClbWndProc;
         ClbWndClass.cbClsExtra = 0;
         ClbWndClass.cbWndExtra = sizeof(PCLB_PRIVATEDATA);
-        ClbWndClass.hInstance = hinstDLL,
-                    ClbWndClass.hIcon = NULL;
-        ClbWndClass.hCursor = LoadCursor(NULL,
-                                         (LPWSTR)IDC_ARROW);
+        ClbWndClass.hInstance = hinstDLL;
+        ClbWndClass.hIcon = NULL;
+        ClbWndClass.hCursor = LoadCursor(NULL, (LPWSTR)IDC_ARROW);
         ClbWndClass.hbrBackground = NULL;
         ClbWndClass.lpszMenuName = NULL;
         ClbWndClass.lpszClassName = ClbClassName;
@@ -301,8 +263,7 @@ DllMain(IN HINSTANCE hinstDLL,
         break;
 
     case DLL_PROCESS_DETACH:
-        UnregisterClass(ClbClassName,
-                        hinstDLL);
+        UnregisterClass(ClbClassName, hinstDLL);
         break;
     }
     return Ret;

@@ -297,7 +297,7 @@ PIMEDPI APIENTRY Imm32LoadImeDpi(HKL hKL, BOOL bLock)
     pImeDpiNew->hKL = hKL;
 
     lcid = LOWORD(hKL);
-    if (TranslateCharsetInfo((LPDWORD)(DWORD_PTR)lcid, &ci, TCI_SRCLOCALE))
+    if (TranslateCharsetInfo(UlongToPtr(lcid), &ci, TCI_SRCLOCALE))
         uCodePage = ci.ciACP;
     else
         uCodePage = CP_ACP;
@@ -859,7 +859,7 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
         if (Imm32WriteImeLayout(hNewKL, pchFilePart, lpszLayoutText))
         {
             /* Load the keyboard layout */
-            StringCchPrintfW(szImeKey, _countof(szImeKey), L"%08X", (DWORD)(DWORD_PTR)hNewKL);
+            StringCchPrintfW(szImeKey, _countof(szImeKey), L"%08X", HandleToUlong(hNewKL));
             hNewKL = LoadKeyboardLayoutW(szImeKey, KLF_REPLACELANG);
         }
         else

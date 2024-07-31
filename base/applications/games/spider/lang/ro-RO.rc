@@ -11,7 +11,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 /* Dialoguri */
 
 IDD_CARDBACK DIALOGEX 6, 6, 345, 185
-CAPTION "Selectare culoare dorsală"
+CAPTION "Modificare aspect"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -27,20 +27,20 @@ BEGIN
     CONTROL "", IDC_CARDBACK10, "Static", SS_NOTIFY, 175, 89, 50, 71
     CONTROL "", IDC_CARDBACK11, "Static", SS_NOTIFY, 232, 89, 50, 71
     CONTROL "", IDC_CARDBACK12, "Static", SS_NOTIFY, 289, 89, 50, 71
-    DEFPUSHBUTTON "Con&firmă", IDOK, 114, 165, 54, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 176, 165, 54, 14
+    DEFPUSHBUTTON "OK", IDOK, 114, 165, 54, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 176, 165, 54, 14
 END
 
 IDD_DIFFICULTY DIALOGEX 100, 100, 106, 80
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "Joc la categoria"
+CAPTION "Dificultate"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "&Ușoară (o culoare)", IDC_DIF_ONECOLOR, 8, 10, 80, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "&Medie (două culori)", IDC_DIF_TWOCOLORS, 8, 23, 80, 10
-    AUTORADIOBUTTON "&Grea (patru culori)", IDC_DIF_FOURCOLORS, 8, 36, 80, 10
-    DEFPUSHBUTTON "Con&firmă", IDOK, 8, 58, 40, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 58, 58, 40, 14
+    AUTORADIOBUTTON "&Facil: O culoare", IDC_DIF_ONECOLOR, 8, 10, 80, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Mediu: Două culori", IDC_DIF_TWOCOLORS, 8, 23, 80, 10
+    AUTORADIOBUTTON "&Dificil: Patru culori", IDC_DIF_FOURCOLORS, 8, 36, 80, 10
+    DEFPUSHBUTTON "OK", IDOK, 8, 58, 40, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 58, 58, 40, 14
 END
 
 /* Șiruri */
@@ -49,27 +49,27 @@ STRINGTABLE
 BEGIN
     IDS_SPI_NAME "Spider Solitaire"
     IDS_SPI_ABOUT "Spider Solitaire de Gregor Schneider\nCardLib versiune 1.0"
-    IDS_SPI_QUIT "Abandonați jocul curent?"
+    IDS_SPI_QUIT "Ieșiți din jocul actual?"
     IDS_SPI_WIN "Felicitări, ați câștigat!"
-    IDS_SPI_DEAL "O nouă rundă?"
+    IDS_SPI_DEAL "Începeţi un alt joc?"
 END
 
 /* Meniuri */
 
 IDR_MENU1 MENU
 BEGIN
-    POPUP "J&oc"
+    POPUP "&Joc"
     BEGIN
-        MENUITEM "Rundă &nouă\tF2", IDM_GAME_NEW
+        MENUITEM "Joc &nou\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "Culoare &dorsală…", IDM_GAME_DECK
+        MENUITEM "&Modificare aspect…", IDM_GAME_DECK
         MENUITEM SEPARATOR
-        MENUITEM "I&eșire", IDM_GAME_EXIT
+        MENUITEM "I&eşire", IDM_GAME_EXIT
     END
     POPUP "Aj&utor"
     BEGIN
-        MENUITEM "&Manual…\tF1", IDM_HELP_CONTENTS
-        MENUITEM "&Despre…", IDM_HELP_ABOUT
+        MENUITEM "&Cuprins\tF1", IDM_HELP_CONTENTS
+        MENUITEM "&Despre Spider Solitaire", IDM_HELP_ABOUT
     END
 END
 

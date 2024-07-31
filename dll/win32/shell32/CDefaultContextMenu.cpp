@@ -11,10 +11,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(dmenu);
 
-
 // FIXME: 260 is correct, but should this be part of the SDK or just MAX_PATH?
 #define MAX_VERB 260
-#define VERBKEY_CCHMAX 64 // Note: 63+\0 seems to be the limit on XP
 
 static HRESULT
 SHELL_GetRegCLSID(HKEY hKey, LPCWSTR SubKey, LPCWSTR Value, CLSID &clsid)
@@ -110,6 +108,21 @@ static int FindVerbInDefaultVerbList(LPCWSTR List, LPCWSTR Verb)
             return index;
     }
     return -1;
+}
+
+EXTERN_C HRESULT SHELL32_EnumDefaultVerbList(LPCWSTR List, UINT Index, LPWSTR Verb, SIZE_T cchMax)
+{
+    for (UINT i = 0; *List; ++i)
+    {
+        while (IsVerbListSeparator(*List))
+            List++;
+        LPCWSTR Start = List;
+        while (*List && !IsVerbListSeparator(*List))
+            List++;
+        if (List > Start && i == Index)
+            return StringCchCopyNW(Verb, cchMax, Start, List - Start);
+    }
+    return HRESULT_FROM_WIN32(ERROR_NO_MORE_ITEMS);
 }
 
 class CDefaultContextMenu :
@@ -1289,6 +1302,9 @@ CDefaultContextMenu::TryToBrowse(
 HRESULT
 CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFOEX lpcmi, LPCITEMIDLIST pidl, PStaticShellEntry pEntry)
 {
+    BOOL unicode = lpcmi->cbSize >= FIELD_OFFSET(CMINVOKECOMMANDINFOEX, ptInvoke) &&
+                   (lpcmi->fMask & CMIC_MASK_UNICODE);
+
     LPITEMIDLIST pidlFull = ILCombine(m_pidlFolder, pidl);
     if (pidlFull == NULL)
     {
@@ -1310,9 +1326,8 @@ CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFOEX lpcmi, LPCITEMIDLIST pid
             *wszDir = UNICODE_NULL;
     }
 
-    SHELLEXECUTEINFOW sei;
-    ZeroMemory(&sei, sizeof(sei));
-    sei.cbSize = sizeof(sei);
+    CComHeapPtr<WCHAR> pszParamsW;
+    SHELLEXECUTEINFOW sei = { sizeof(sei) };
     sei.hwnd = lpcmi->hwnd;
     sei.nShow = SW_SHOWNORMAL;
     sei.lpVerb = pEntry->Verb;
@@ -1321,9 +1336,12 @@ CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFOEX lpcmi, LPCITEMIDLIST pid
     sei.hkeyClass = pEntry->hkClass;
     sei.fMask = SEE_MASK_CLASSKEY | SEE_MASK_IDLIST;
     if (bHasPath)
-    {
         sei.lpFile = wszPath;
-    }
+
+    if (unicode && !StrIsNullOrEmpty(lpcmi->lpParametersW))
+        sei.lpParameters = lpcmi->lpParametersW;
+    else if (!StrIsNullOrEmpty(lpcmi->lpParameters) && __SHCloneStrAtoW(&pszParamsW, lpcmi->lpParameters))
+        sei.lpParameters = pszParamsW;
 
     ShellExecuteExW(&sei);
 

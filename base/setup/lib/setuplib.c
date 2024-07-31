@@ -712,6 +712,99 @@ InitSystemPartition(
     return TRUE;
 }
 
+
+#define IS_PATH_SEPARATOR(c)    ((c) == L'\\' || (c) == L'/')
+
+/**
+ * @brief
+ * Verify whether the given directory is suitable for ReactOS installation.
+ * Each path component must be a valid 8.3 name.
+ **/
+BOOLEAN
+IsValidInstallDirectory(
+    _In_ PCWSTR InstallDir)
+{
+    PCWCH p;
+
+    /* As with the NT installer, fail if the path is empty or "\\" */
+    p = InstallDir;
+    if (!*p || (IS_PATH_SEPARATOR(*p) && !*(p + 1)))
+        return FALSE;
+
+    /* The path must contain only valid characters (alpha-numeric,
+     * '.', '\\', '-' and '_'). Spaces are not accepted. */
+    for (p = InstallDir; *p; ++p)
+    {
+        if (!IS_VALID_INSTALL_PATH_CHAR(*p))
+            return FALSE;
+    }
+
+    /*
+     * Loop over each path component and verify that each is a valid 8.3 name.
+     */
+    for (p = InstallDir; *p;)
+    {
+        PCWSTR Path;
+        SIZE_T Length;
+        UNICODE_STRING Name;
+        BOOLEAN IsNameLegal, SpacesInName;
+
+        /* Skip any first separator */
+        if (IS_PATH_SEPARATOR(*p))
+            ++p;
+
+        /* Now skip past the path component until we reach the next separator */
+        Path = p;
+        while (*p && !IS_PATH_SEPARATOR(*p))
+            ++p;
+        if (p == Path)
+        {
+            /* Succeed if nothing else follows this separator; otherwise
+             * it's a separator and consecutive ones are not supported */
+            return (!*p);
+        }
+
+        /* Calculate the path component length */
+        Length = p - Path;
+
+        /* As with the NT installer, fail for '.' and '..';
+         * RtlIsNameLegalDOS8Dot3() would succeed otherwise */
+        if ((Length == 1 && *Path == '.') || (Length == 2 && *Path == '.' && *(Path + 1) == '.'))
+            return FALSE;
+
+        /* As with the NT installer, allow _only ONE trailing_ dot in
+         * the path component (but not 2 or more), by reducing Length
+         * in that case; RtlIsNameLegalDOS8Dot3() would fail otherwise */
+        if (Length > 1 && *(p - 2) != L'.' && *(p - 1) == L'.')
+            --Length;
+
+        if (Length == 0)
+            return FALSE;
+
+        /* Verify that the path component is a valid 8.3 name */
+        // if (Length > 8+1+3)
+        //     return FALSE;
+        Name.Length = Name.MaximumLength = (USHORT)(Length * sizeof(WCHAR));
+        Name.Buffer = (PWCHAR)Path;
+        SpacesInName = FALSE;
+        IsNameLegal = RtlIsNameLegalDOS8Dot3(&Name, NULL, &SpacesInName);
+
+        /* If it isn't legal or contain spaces, fail */
+        if (!IsNameLegal || SpacesInName)
+        {
+            DPRINT("'%wZ' is %s 8.3 filename %s spaces\n",
+                   &Name,
+                   (IsNameLegal ? "a valid" : "an invalid"),
+                   (SpacesInName ? "with" : "without"));
+            return FALSE;
+        }
+        /* Go to the next path component */
+    }
+
+    return TRUE;
+}
+
+
 NTSTATUS
 InitDestinationPaths(
     IN OUT PUSETUP_DATA pSetupData,

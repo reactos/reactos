@@ -121,15 +121,18 @@ BEGIN
     EDITTEXT IDC_DISPLAYNAME, 67, 7, 178, 12, ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "&Kayıt Adı:", IDC_STATIC, 7, 25, 60, 8
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "K&ayıt Dosyası:", IDC_STATIC, 7, 41, 60, 8
+    LTEXT "K&ayıt Dosyası:", IDC_STATIC, 7, 41, 60, 8//FIXME: accelerator collision &A
     EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Boyut:", IDC_STATIC, 7, 57, 60, 8
+// The following 4 IDC_STATIC shall have accels in ReactOS, although MS doesn't have accels for them.
+// Translation note: First fill out ALL accels that MS has in this dialog for your language,
+// and only then as a final step use some remaining unused letters for those 4 controls!
+    LTEXT "&Boyut:", IDC_STATIC, 7, 57, 60, 8
     EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Oluşturuldu:", IDC_STATIC, 7, 69, 60, 8
+    LTEXT "Oluşturuld&u:", IDC_STATIC, 7, 69, 60, 8
     EDITTEXT IDC_CREATED_LABEL, 67, 69, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Değiştirildi:", IDC_STATIC, 7, 81, 60, 8
+    LTEXT "Değiş&tirildi:", IDC_STATIC, 7, 81, 60, 8
     EDITTEXT IDC_MODIFIED_LABEL, 67, 81, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Erişildi:", IDC_STATIC, 7, 93, 60, 8
+    LTEXT "E&rişildi:", IDC_STATIC, 7, 93, 60, 8
     EDITTEXT IDC_ACCESSED_LABEL, 67, 93, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     GROUPBOX "Günlük Boyutu", IDC_STATIC, 7, 106, 238, 99
     LTEXT "&En Büyük Günlük Boyutu:", IDC_STATIC, 17, 122, 58, 8
@@ -145,7 +148,7 @@ BEGIN
     CONTROL "", IDC_UPDOWN_EVENTS_AGE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS, 157, 165, 10, 14
     LTEXT "gün", IDC_STATIC, 162, 168, 20, 8
-    PUSHBUTTON "V&arsayılanları Geri Getir", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
+    PUSHBUTTON "V&arsayılanları Geri Getir", IDC_RESTOREDEFAULTS, 166, 183, 70, 14//FIXME: accelerator collision &A
     AUTOCHECKBOX "&Düşük Hızlı Bir Bağlantı Kullan", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
     PUSHBUTTON "Ka&yıtları Sil", ID_CLEARLOG, 195, 213, 50, 14
 END
@@ -172,7 +175,7 @@ BEGIN
 /* Please note that explicit TAB characters '\t' are used to fix the alignment of the message in the MessageBox */
     IDS_USAGE "ReactOS Olay Göstericisi\n\
 \n\
-EventVwr [bilgisayar adı] [/l:<etkinlik günlüğü dosyası>] [/?]\n\
+EventVwr [bilgisayar adı] [/L:<etkinlik günlüğü dosyası>] [/?]\n\
 \n\
 ""bilgisayar adı"" : Görüntülenecek olayların alınacağı uzak\n\
 \tbilgisayarı belirtir. İsim belirtilmezse yerel bilgisayar\n\
@@ -217,14 +220,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Olay Türü:           %s\r\n\
-Olay Kaynağı:        %s\r\n\
-Olay Kategorisi:     %s\r\n\
-Olay Kimliği:        %s\r\n\
-Tarih:               %s\r\n\
-Saat:                %s\r\n\
-Kullanıcı:           %s\r\n\
-Bilgisayar:          %s\r\n\
+    IDS_COPY "\
+Olay Türü:          %s\r\n\
+Olay Kaynağı:       %s\r\n\
+Olay Kategorisi:    %s\r\n\
+Olay Kimliği:       %s\r\n\
+Tarih:              %s\r\n\
+Saat:               %s\r\n\
+Kullanıcı:          %s\r\n\
+Bilgisayar:         %s\r\n\
 Tanım:\r\n%s"
 END
 

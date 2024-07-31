@@ -819,7 +819,7 @@ BOOL APIENTRY Imm32LoadImeLangAndDesc(PIMEINFOEX pInfoEx, LPCVOID pVerInfo)
     }
 
     if (pInfoEx->hkl == NULL)
-        pInfoEx->hkl = (HKL)(DWORD_PTR)*pw;
+        pInfoEx->hkl = UlongToHandle(*pw);
 
     /* Try the current language and the Unicode codepage (0x04B0) */
     LangID = LANGIDFROMLCID(GetThreadLocale());
@@ -941,7 +941,7 @@ HKL APIENTRY Imm32AssignNewLayout(UINT cKLs, const REG_IME *pLayouts, WORD wLang
     if (!wNextID)
         return NULL;
 
-    return (HKL)(DWORD_PTR)MAKELONG(wLangID, wNextID);
+    return UlongToHandle(MAKELONG(wLangID, wNextID));
 }
 
 // Win: GetImeLayout
@@ -999,7 +999,7 @@ UINT APIENTRY Imm32GetImeLayout(PREG_IME pLayouts, UINT cLayouts)
         }
 
         Imm32StrToUInt(szImeKey, &Value, 16);
-        hKL = (HKL)(DWORD_PTR)Value;
+        hKL = UlongToHandle(Value);
         if (!IS_IME_HKL(hKL)) /* Not an IME */
         {
             WARN("\n");
@@ -1036,7 +1036,7 @@ BOOL APIENTRY Imm32WriteImeLayout(HKL hKL, LPCWSTR pchFilePart, LPCWSTR pszLayou
         return FALSE;
 
     /* Get the IME key from hKL */
-    StringCchPrintf(szImeKey, _countof(szImeKey), L"%08X", (DWORD)(DWORD_PTR)hKL);
+    StringCchPrintf(szImeKey, _countof(szImeKey), L"%08X", HandleToUlong(hKL));
 
     /* Create a registry IME key */
     lError = RegCreateKeyW(hkeyLayouts, szImeKey, &hkeyIME);

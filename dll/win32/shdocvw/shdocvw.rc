@@ -17,10 +17,13 @@
  */
 
 #include "windef.h"
+#include "resource.h"
 
-1 WINE_REGISTRY "shdocvw_v1.rgs"
+IDR_SHDOCVW WINE_REGISTRY "shdocvw_v1.rgs"
 
-1 TYPELIB "shdocvw_v1.tlb"
+IDR_FAVBAND REGISTRY "favband.rgs"
+
+IDR_TYPELIB TYPELIB "shdocvw_v1.tlb"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
@@ -33,3 +36,10 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define WINE_EXTRAVALUES VALUE "OLESelfRegister",""
 
 #include "wine/wine_common_ver.rc"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif

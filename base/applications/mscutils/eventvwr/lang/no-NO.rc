@@ -30,14 +30,14 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Oppdater\tF5", IDM_REFRESH//FIXME: accelerator collision &O
     END
-    POPUP "&Handling"//FIXME: accelerator collision &H
+    POPUP "&Handling"//FIXME: accelerator collision &H. I would recommend to change the one for Handling, and not the one for Help
     BEGIN
         MENUITEM "Event details &view", IDM_EVENT_DETAILS_VIEW
         MENUITEM "&Grid lines", IDM_LIST_GRID_LINES
         MENUITEM SEPARATOR
         MENUITEM "&Save settings on exit", IDM_SAVE_SETTINGS
     END
-    POPUP "&Hjelp"//FIXME: accelerator collision &H
+    POPUP "&Hjelp"//FIXME: accelerator collision &H. I would recommend to change the one for Handling, and not the one for Help
     BEGIN
         MENUITEM "Hj&elp", IDM_HELP
         MENUITEM SEPARATOR
@@ -122,13 +122,16 @@ BEGIN
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "Log &file:", IDC_STATIC, 7, 41, 60, 8
     EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Size:", IDC_STATIC, 7, 57, 60, 8
+// The following 4 IDC_STATIC shall have accels in ReactOS, although MS doesn't have accels for them.
+// Translation note: First fill out ALL accels that MS has in this dialog for your language,
+// and only then as a final step use some remaining unused letters for those 4 controls!
+    LTEXT "&Size:", IDC_STATIC, 7, 57, 60, 8
     EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Created:", IDC_STATIC, 7, 69, 60, 8
+    LTEXT "&Created:", IDC_STATIC, 7, 69, 60, 8
     EDITTEXT IDC_CREATED_LABEL, 67, 69, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Modified:", IDC_STATIC, 7, 81, 60, 8
+    LTEXT "Modifi&ed:", IDC_STATIC, 7, 81, 60, 8
     EDITTEXT IDC_MODIFIED_LABEL, 67, 81, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Accessed:", IDC_STATIC, 7, 93, 60, 8
+    LTEXT "&Accessed:", IDC_STATIC, 7, 93, 60, 8
     EDITTEXT IDC_ACCESSED_LABEL, 67, 93, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     GROUPBOX "Log size", IDC_STATIC, 7, 106, 238, 99
     LTEXT "&Maximum log size:", IDC_STATIC, 17, 122, 58, 8
@@ -216,7 +219,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Event Type:     %s\r\n\
+    IDS_COPY "\
+Event Type:     %s\r\n\
 Event Source:   %s\r\n\
 Event Category: %s\r\n\
 Event ID:       %s\r\n\

@@ -66,18 +66,6 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&Fil"
-    BEGIN
-        MENUITEM "&Avslutt", ID_REGISTRY_EXIT
-    END
-    POPUP "&Hjelp"
-    BEGIN
-        MENUITEM "&Om", ID_HELP_ABOUT
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Fil"
@@ -106,7 +94,7 @@ BEGIN
             MENUITEM "&Strengverdi", ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Binær verdi", ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD-verdi", ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Multistreng verdi", ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Multistrengverdi", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "&Utvidbar strengverdi", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR

@@ -171,8 +171,7 @@ INT cmd_call(LPTSTR param)
     if (!Cmd || (Cmd->Type == C_FOR) || (Cmd->Type == C_IF) ||
         ((Cmd->Type != C_COMMAND) && (Cmd->Type != C_REM)))
     {
-        // FIXME: Localize
-        ConErrPrintf(_T("%s was unexpected.\n"), first);
+        ConErrResPrintf(STRING_ERROR_UNEXPECTED, first);
 
 #ifdef MSCMD_CALL_QUIRKS
         if (first != param)
@@ -198,8 +197,7 @@ INT cmd_call(LPTSTR param)
         /* A batch context must be present */
         if (!bc)
         {
-            // FIXME: Localize
-            ConErrPuts(_T("Invalid attempt to call batch label outside of batch script.\n"));
+            ConErrResPuts(STRING_ERROR_CALL_BAD_LABEL);
             FreeCommand(Cmd);
             return (nErrorLevel = 1);
         }

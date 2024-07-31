@@ -308,6 +308,7 @@ private:
     ShellSettings m_settings;
     SBFOLDERSETTINGS m_deffoldersettings;
     DWORD m_BrowserSvcFlags;
+    bool m_Destroyed;
 public:
 #if 0
     ULONG InternalAddRef()
@@ -332,6 +333,7 @@ public:
     HRESULT BrowseToPIDL(LPCITEMIDLIST pidl, long flags);
     HRESULT BrowseToPath(IShellFolder *newShellFolder, LPCITEMIDLIST absolutePIDL,
         FOLDERSETTINGS *folderSettings, long flags);
+    void SaveViewState();
     HRESULT GetMenuBand(REFIID riid, void **shellMenu);
     HRESULT GetBaseBar(bool vertical, REFIID riid, void **theBaseBar);
     BOOL IsBandLoaded(const CLSID clsidBand, bool vertical, DWORD *pdwBandID);
@@ -406,7 +408,7 @@ public:
     // *** IServiceProvider methods ***
     STDMETHOD(QueryService)(REFGUID guidService, REFIID riid, void **ppvObject) override;
 
-    // *** IShellBowserService methods ***
+    // *** IShellBrowserService methods ***
     STDMETHOD(GetPropertyBag)(long flags, REFIID riid, void **ppvObject) override;
 
     // *** IDispatch methods ***
@@ -727,6 +729,7 @@ extern HRESULT CreateProgressDialog(REFIID riid, void **ppv);
 CShellBrowser::CShellBrowser()
 {
     m_BrowserSvcFlags = BSF_RESIZABLE | BSF_CANMAXIMIZE;
+    m_Destroyed = false;
     fCurrentShellViewWindow = NULL;
     fCurrentDirectoryPIDL = NULL;
     fStatusBar = NULL;
@@ -826,6 +829,8 @@ HRESULT CShellBrowser::ApplyBrowserDefaultFolderSettings(IShellView *pvs)
     {
         m_settings.Reset();
         hr = CGlobalFolderSettings::ResetBrowserSettings();
+        if (SUCCEEDED(hr))
+            m_deffoldersettings.Load();
     }
     return hr;
 }
@@ -995,6 +1000,13 @@ HRESULT IEGetNameAndFlags(LPITEMIDLIST pidl, SHGDNF uFlags, LPWSTR pszBuf, UINT 
     return IEGetNameAndFlagsEx(pidl, uFlags, 0, pszBuf, cchBuf, rgfInOut);
 }
 
+void CShellBrowser::SaveViewState()
+{
+    // TODO: Also respect EBO_NOPERSISTVIEWSTATE?
+    if (gCabinetState.fSaveLocalView && fCurrentShellView && !SHRestricted(REST_NOSAVESET))
+        fCurrentShellView->SaveViewState();
+}
+
 HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
     LPCITEMIDLIST absolutePIDL, FOLDERSETTINGS *folderSettings, long flags)
 {
@@ -1011,6 +1023,9 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
     SHGDNF                                  nameFlags;
     HRESULT                                 hResult;
     //TODO: BOOL                            nohistory = m_BrowserSvcFlags & BSF_NAVNOHISTORY;
+
+    if (m_Destroyed)
+        return S_FALSE;
 
     if (newShellFolder == NULL)
         return E_INVALIDARG;
@@ -1029,6 +1044,7 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
 
     if (fCurrentShellView)
     {
+        SaveViewState();
         fCurrentShellView->UIActivate(SVUIA_DEACTIVATE);
     }
 
@@ -2204,6 +2220,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::Exec(const GUID *pguidCmdGroup, DWORD n
         switch (nCmdID)
         {
             case DVCMDID_RESET_DEFAULTFOLDER_SETTINGS:
+                ApplyBrowserDefaultFolderSettings(NULL);
                 IUnknown_Exec(fCurrentShellView, CGID_DefView, nCmdID, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
                 break;
         }
@@ -3607,14 +3624,15 @@ LRESULT CShellBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 LRESULT CShellBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     HRESULT hr;
+    SaveViewState();
 
     /* The current thread is about to go down so render any IDataObject that may be left in the clipboard */
     OleFlushClipboard();
 
     // TODO: rip down everything
     {
+        m_Destroyed = true; // Ignore browse requests from Explorer band TreeView during destruction
         fToolbarProxy.Destroy();
-
         fCurrentShellView->DestroyViewWindow();
         fCurrentShellView->UIActivate(SVUIA_DEACTIVATE);
 

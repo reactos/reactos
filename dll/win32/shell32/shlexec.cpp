@@ -1557,16 +1557,25 @@ static HRESULT ShellExecute_ContextMenuVerb(LPSHELLEXECUTEINFOW sei)
     __SHCloneStrWtoA(&verb, sei->lpVerb);
     __SHCloneStrWtoA(&parameters, sei->lpParameters);
 
-    CMINVOKECOMMANDINFOEX ici = {};
-    ici.cbSize = sizeof ici;
-    ici.fMask = (sei->fMask & (SEE_MASK_NO_CONSOLE | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI));
+    BOOL fDefault = !sei->lpVerb || !sei->lpVerb[0];
+    CMINVOKECOMMANDINFOEX ici = { sizeof(ici) };
+    ici.fMask = (sei->fMask & (SEE_MASK_NO_CONSOLE | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI)) | CMIC_MASK_UNICODE;
     ici.nShow = sei->nShow;
-    ici.lpVerb = verb;
+    if (!fDefault)
+    {
+        ici.lpVerb = verb;
+        ici.lpVerbW = sei->lpVerb;
+    }
     ici.hwnd = sei->hwnd;
     ici.lpParameters = parameters;
+    ici.lpParametersW = sei->lpParameters;
+    if ((sei->fMask & (SEE_MASK_HASLINKNAME | SEE_MASK_CLASSNAME)) == SEE_MASK_HASLINKNAME)
+    {
+        ici.fMask |= CMIC_MASK_HASLINKNAME;
+        ici.lpTitleW = sei->lpClass;
+    }
 
     HMENU hMenu = CreatePopupMenu();
-    BOOL fDefault = !ici.lpVerb || !ici.lpVerb[0];
     hr = cm->QueryContextMenu(hMenu, 0, 1, 0x7fff, fDefault ? CMF_DEFAULTONLY : 0);
     if (!FAILED_UNEXPECTEDLY(hr))
     {
@@ -1575,6 +1584,7 @@ static HRESULT ShellExecute_ContextMenuVerb(LPSHELLEXECUTEINFOW sei)
             INT uDefault = GetMenuDefaultItem(hMenu, FALSE, 0);
             uDefault = (uDefault != -1) ? uDefault - 1 : 0;
             ici.lpVerb = MAKEINTRESOURCEA(uDefault);
+            ici.lpVerbW = MAKEINTRESOURCEW(uDefault);
         }
 
         hr = cm->InvokeCommand((LPCMINVOKECOMMANDINFO)&ici);
@@ -1660,8 +1670,8 @@ static UINT_PTR SHELL_execute_class(LPCWSTR wszApplicationName, LPSHELLEXECUTEIN
         TRACE("SEE_MASK_CLASSNAME->%s, doc->%s\n", debugstr_w(execCmd), debugstr_w(wszApplicationName));
 
         wcmd[0] = '\0';
-        done = SHELL_ArgifyW(wcmd, ARRAY_SIZE(wcmd), execCmd, wszApplicationName, (LPITEMIDLIST)psei->lpIDList, NULL, &resultLen,
-                             (psei->lpDirectory && *psei->lpDirectory) ? psei->lpDirectory : NULL);
+        done = SHELL_ArgifyW(wcmd, ARRAY_SIZE(wcmd), execCmd, wszApplicationName, (LPITEMIDLIST)psei->lpIDList, psei->lpParameters,
+                             &resultLen, (psei->lpDirectory && *psei->lpDirectory) ? psei->lpDirectory : NULL);
         if (!done && wszApplicationName[0])
         {
             strcatW(wcmd, L" ");
@@ -1736,6 +1746,59 @@ static BOOL SHELL_translate_idlist(LPSHELLEXECUTEINFOW sei, LPWSTR wszParameters
         }
     }
     return appKnownSingular;
+}
+
+static BOOL
+SHELL_InvokePidl(
+    _In_ LPSHELLEXECUTEINFOW sei,
+    _In_ LPCITEMIDLIST pidl)
+{
+    // Bind pidl
+    CComPtr<IShellFolder> psfFolder;
+    LPCITEMIDLIST pidlLast;
+    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psfFolder), &pidlLast);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return FALSE;
+
+    // Get the context menu to invoke a command
+    CComPtr<IContextMenu> pCM;
+    hr = psfFolder->GetUIObjectOf(NULL, 1, &pidlLast, IID_NULL_PPV_ARG(IContextMenu, &pCM));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return FALSE;
+
+    // Invoke a command
+    CMINVOKECOMMANDINFO ici = { sizeof(ici) };
+    ici.fMask = (sei->fMask & (SEE_MASK_NO_CONSOLE | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI));
+    ici.nShow = sei->nShow;
+    ici.hwnd = sei->hwnd;
+    char szVerb[VERBKEY_CCHMAX];
+    if (sei->lpVerb && sei->lpVerb[0])
+    {
+        WideCharToMultiByte(CP_ACP, 0, sei->lpVerb, -1, szVerb, _countof(szVerb), NULL, NULL);
+        szVerb[_countof(szVerb) - 1] = ANSI_NULL; // Avoid buffer overrun
+        ici.lpVerb = szVerb;
+    }
+    else // The default verb?
+    {
+        HMENU hMenu = CreatePopupMenu();
+        const INT idCmdFirst = 1, idCmdLast = 0x7FFF;
+        hr = pCM->QueryContextMenu(hMenu, 0, idCmdFirst, idCmdLast, CMF_DEFAULTONLY);
+        if (FAILED_UNEXPECTEDLY(hr))
+        {
+            DestroyMenu(hMenu);
+            return FALSE;
+        }
+
+        INT nDefaultID = GetMenuDefaultItem(hMenu, FALSE, 0);
+        DestroyMenu(hMenu);
+        if (nDefaultID == -1)
+            nDefaultID = idCmdFirst;
+
+        ici.lpVerb = MAKEINTRESOURCEA(nDefaultID - idCmdFirst);
+    }
+    hr = pCM->InvokeCommand(&ici);
+
+    return !FAILED_UNEXPECTEDLY(hr);
 }
 
 static UINT_PTR SHELL_quote_and_execute(LPCWSTR wcmd, LPCWSTR wszParameters, LPCWSTR wszKeyname, LPCWSTR wszApplicationName, LPWSTR env, LPSHELLEXECUTEINFOW psei, LPSHELLEXECUTEINFOW psei_out, SHELL_ExecuteW32 execfunc)
@@ -1930,21 +1993,48 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
     else
         *wszParameters = L'\0';
 
+    // Get the working directory
     WCHAR dirBuffer[MAX_PATH];
     LPWSTR wszDir = dirBuffer;
+    wszDir[0] = UNICODE_NULL;
     CHeapPtr<WCHAR, CLocalAllocator> wszDirAlloc;
-    if (sei_tmp.lpDirectory)
+    if (sei_tmp.lpDirectory && *sei_tmp.lpDirectory)
     {
-        len = lstrlenW(sei_tmp.lpDirectory) + 1;
-        if (len > _countof(dirBuffer))
+        if (sei_tmp.fMask & SEE_MASK_DOENVSUBST)
         {
-            wszDirAlloc.Allocate(len);
-            wszDir = wszDirAlloc;
+            LPWSTR tmp = expand_environment(sei_tmp.lpDirectory);
+            if (tmp)
+            {
+                wszDirAlloc.Attach(tmp);
+                wszDir = wszDirAlloc;
+            }
         }
-        strcpyW(wszDir, sei_tmp.lpDirectory);
+        else
+        {
+            __SHCloneStrW(&wszDirAlloc, sei_tmp.lpDirectory);
+            if (wszDirAlloc)
+                wszDir = wszDirAlloc;
+        }
     }
-    else
-        *wszDir = L'\0';
+    if (!wszDir[0])
+    {
+        ::GetCurrentDirectoryW(_countof(dirBuffer), dirBuffer);
+        wszDir = dirBuffer;
+    }
+    // NOTE: ShellExecute should accept the invalid working directory for historical reason.
+    if (!PathIsDirectoryW(wszDir))
+    {
+        INT iDrive = PathGetDriveNumberW(wszDir);
+        if (iDrive >= 0)
+        {
+            PathStripToRootW(wszDir);
+            if (!PathIsDirectoryW(wszDir))
+            {
+                ::GetWindowsDirectoryW(dirBuffer, _countof(dirBuffer));
+                wszDir = dirBuffer;
+            }
+        }
+    }
 
     /* adjust string pointers to point to the new buffers */
     sei_tmp.lpFile = wszApplicationName;
@@ -2031,6 +2121,19 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         return retval > 32;
     }
 
+    if (!(sei_tmp.fMask & SEE_MASK_IDLIST) && // Not an ID List
+        (StrCmpNIW(sei_tmp.lpFile, L"shell:", 6) == 0 ||
+         StrCmpNW(sei_tmp.lpFile, L"::{", 3) == 0))
+    {
+        CComHeapPtr<ITEMIDLIST> pidlParsed;
+        HRESULT hr = SHParseDisplayName(sei_tmp.lpFile, NULL, &pidlParsed, 0, NULL);
+        if (SUCCEEDED(hr) && SHELL_InvokePidl(&sei_tmp, pidlParsed))
+        {
+            sei_tmp.hInstApp = (HINSTANCE)UlongToHandle(42);
+            return TRUE;
+        }
+    }
+
     /* Has the IDList not yet been translated? */
     if (sei_tmp.fMask & SEE_MASK_IDLIST)
     {
@@ -2059,16 +2162,6 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
             wszApplicationName.Attach(tmp);
             /* appKnownSingular unmodified */
             sei_tmp.lpFile = wszApplicationName;
-        }
-    }
-
-    if (*sei_tmp.lpDirectory)
-    {
-        LPWSTR tmp = expand_environment(sei_tmp.lpDirectory);
-        if (tmp)
-        {
-            wszDirAlloc.Attach(tmp);
-            sei_tmp.lpDirectory = wszDir = wszDirAlloc;
         }
     }
 
@@ -2621,9 +2714,10 @@ HRESULT WINAPI ShellExecCmdLine(
             SetCurrentDirectoryW(pwszStartDir);
         }
 
-        if (PathIsRelativeW(szFile) &&
-            GetFullPathNameW(szFile, _countof(szFile2), szFile2, NULL) &&
-            PathFileExistsW(szFile2))
+        if ((PathIsRelativeW(szFile) &&
+             GetFullPathNameW(szFile, _countof(szFile2), szFile2, NULL) &&
+             PathFileExistsW(szFile2)) ||
+            SearchPathW(NULL, szFile, NULL, _countof(szFile2), szFile2, NULL))
         {
             StringCchCopyW(szFile, _countof(szFile), szFile2);
         }

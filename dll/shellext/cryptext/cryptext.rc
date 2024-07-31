@@ -14,6 +14,9 @@
 /* UTF-8 */
 #pragma code_page(65001)
 
+#ifdef LANGUAGE_CS_CZ
+    #include "lang/cs-CZ.rc"
+#endif
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"
 #endif
@@ -46,6 +49,9 @@
 #endif
 #ifdef LANGUAGE_RU_RU
     #include "lang/ru-RU.rc"
+#endif
+#ifdef LANGUAGE_SK_SK
+    #include "lang/sk-SK.rc"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/tr-TR.rc"

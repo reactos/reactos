@@ -1,5 +1,4 @@
-/* TRANSLATOR : Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
- * DATE OF TR.: 07-07-2008
+/* TRANSLATOR: 2008 Mário Kačmár /Mario Kacmar/ aka Kario <kario@szm.sk>
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -69,18 +68,6 @@ Usage examples:\n\
 END
 
 /* Menus */
-
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&Súbor"
-    BEGIN
-        MENUITEM "S&končiť", ID_REGISTRY_EXIT
-    END
-    POPUP "&Pomocník"
-    BEGIN
-        MENUITEM "Č&o je", ID_HELP_ABOUT
-    END
-END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
@@ -241,7 +228,7 @@ END
 
 IDD_EDIT_BIN_DATA DIALOGEX 32, 24, 252, 174
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Úprava binárnej hodnoty" //upraviť, upravenie
+CAPTION "Úprava binárnej hodnoty"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Value &name:", IDC_STATIC, 6, 6, 134, 8

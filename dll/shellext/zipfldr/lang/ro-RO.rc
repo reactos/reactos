@@ -13,10 +13,10 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Selectați o destinație"
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    LTEXT           "Selectați folderul de destinație",IDC_STATIC,86,12,154,8
+    LTEXT           "Selectați un folder de destinație",IDC_STATIC,86,12,154,8
     EDITTEXT        IDC_DIRECTORY,86,24,157,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "Răsfoiți...",IDC_BROWSE,189,42,54,14
-    PUSHBUTTON      "Parolă",IDC_PASSWORD,189,66,54,14
+    PUSHBUTTON      "&Răsfoire...",IDC_BROWSE,189,42,54,14
+    PUSHBUTTON      "&Parolă:",IDC_PASSWORD,189,66,54,14
     LTEXT           "Apăsați Înainte pentru a extrage",IDC_STATUSTEXT,86,114,100,8
     CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,86,126,157,6
     CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
@@ -27,21 +27,21 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Extragere Completă"
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    LTEXT           "Fișierele au fost extrase în folderul respectiv:",IDC_STATIC,86,12,157,18
+    LTEXT           "Fişierele s-au extras în următorul director:",IDC_STATIC,86,12,157,18
     LTEXT           "%s",IDC_DESTDIR,86,36,157,8
-    CONTROL         "Afișează fișierele extrase",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,86,66,95,10
-    LTEXT           "Apăsați pe Termină pentru a continua.",IDC_STATIC,86,84,124,8
+    CONTROL         "A&fişare fişiere extrase",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,86,66,95,10
+    LTEXT           "Apăsaţi pe Terminare pentru a continua.",IDC_STATIC,86,84,124,8
     CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 273, 56
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Confirmați înlocuirea fișierelor"
+CAPTION "Confirmare înlocuire fişier"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "&Da",IDYES,6,36,62,14
-    PUSHBUTTON      "Anulează",IDCANCEL,204,36,62,14
-    PUSHBUTTON      "Da &toate",IDYESALL,72,36,62,14
+    PUSHBUTTON      "Revocare",IDCANCEL,204,36,62,14
+    PUSHBUTTON      "D&a pentru tot",IDYESALL,72,36,62,14
     PUSHBUTTON      "&Nu",IDNO,138,36,62,14
     ICON            "",IDC_EXCLAMATION_ICON,6,6,24,22
     LTEXT           "",IDC_MESSAGE,36,6,228,24
@@ -53,9 +53,9 @@ CAPTION "Parolă necesară"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     EDITTEXT        IDC_PASSWORD,72,42,108,13,ES_PASSWORD | ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "Confirmă",IDOK,186,6,57,14
-    PUSHBUTTON      "Sari peste fișier",IDSKIP,186,24,57,14
-    PUSHBUTTON      "Anulează",IDCANCEL,186,42,57,14
+    DEFPUSHBUTTON   "OK",IDOK,186,6,57,14
+    PUSHBUTTON      "&Ignorare fişier",IDSKIP,186,24,57,14
+    PUSHBUTTON      "Revocare",IDCANCEL,186,42,57,14
     LTEXT           "Static",IDC_MESSAGE,24,6,156,30
     LTEXT           "Parolă:",IDC_STATIC,24,44,44,8
 END
@@ -63,17 +63,17 @@ END
 STRINGTABLE
 BEGIN
     IDS_COL_NAME "Nume"
-    IDS_COL_TYPE "Tip"
-    IDS_COL_COMPRSIZE "Dimensiune comprimată"
+    IDS_COL_TYPE "Metodă"
+    IDS_COL_COMPRSIZE "Dimensiune comprimat"
     IDS_COL_PASSWORD "Parolă"
     IDS_COL_SIZE "Dimensiune"
-    IDS_COL_RATIO "Raport"
-    IDS_COL_DATE_MOD "Data modificată"
+    IDS_COL_RATIO "Proporţie"
+    IDS_COL_DATE_MOD "Dată"
     IDS_YES "Da"
     IDS_NO "Nu"
-    IDS_ERRORTITLE "Eroare de foldere comprimate (zipate)."
-    IDS_CANTSTARTTHREAD "Nu se poate porni firul de execuție pentru a comprima fișierele."
-    IDS_NOFILES "Directorul specificat '%s' este gol, deci Folderele comprimate (zipate) nu îl pot adăuga în arhivă."
+    IDS_ERRORTITLE "Eroare foldere comprimate (ZIP)"
+    IDS_CANTSTARTTHREAD "Eroare la deschiderea fişierului comprimat."
+    IDS_NOFILES "Directorul specificat, '%s' este gol, deci Folderele comprimate (zipate) nu îl pot adăuga în arhivă."
     IDS_CANTCREATEZIP "Nu s-a putut crea un folder comprimat '%s' (cod de eroare: %d)."
     IDS_CANTREADFILE "Nu s-a putut citi fișierul '%s'."
     IDS_EXTRACTING "Extragere..."
@@ -81,18 +81,18 @@ BEGIN
     IDS_DECOMPRESSERROR "Metoda de compresie %d nu este suportată. Doriți să continuați?"
     IDS_UNKNOWNERROR "Eroare necunoscută 0x%08x."
 
-    IDS_WIZ_TITLE "Expert de extragere"
-    IDS_WIZ_DEST_TITLE "Selectați o destinație"
-    IDS_WIZ_DEST_SUBTITLE "Fișierele din arhiva zip vor fi extrase în destinația specificată."
-    IDS_WIZ_COMPL_TITLE "Extragere completă"
-    IDS_WIZ_COMPL_SUBTITLE "Fișierele din arhiva zip au fost extrase."
-    IDS_WIZ_BROWSE_TITLE "Selectați destinația unde doriți să extrageți elementele selectate."
+    IDS_WIZ_TITLE "Expert extragere"
+    IDS_WIZ_DEST_TITLE "Selectare destinaţie"
+    IDS_WIZ_DEST_SUBTITLE "Fişierele din arhiva ZIP vor fi extrase în amplasarea aleasă."
+    IDS_WIZ_COMPL_TITLE "Extragere terminată"
+    IDS_WIZ_COMPL_SUBTITLE "Fişierele s-au extras cu succes din arhiva ZIP."
+    IDS_WIZ_BROWSE_TITLE "Selectaţi locul unde să fie extrase elementele selectate."
 
-    IDS_OVERWRITEFILE_TEXT "Acest folder deja conține un fișier numit '%1'.\nDoriți să o înlocuiți?"
-    IDS_PASSWORD_FILE_TEXT "Fișierul '%1' este protejat de parolă. Vă rugăm, introduceți parola."
+    IDS_OVERWRITEFILE_TEXT "Acest folder conţine deja un fişier denumit '%1'.\nÎnlocuiţi fişierul existent?"
+    IDS_PASSWORD_FILE_TEXT "Fișierul '%1' este protejat prin parolă. Introduceţi parola în caseta de mai jos."
     IDS_PASSWORD_ZIP_TEXT "Vă rugăm să specificați parola pe care doriți să o folosiți când extrageți acest fișier zip."
 
-    IDS_MENUITEM "Extrage &tot..."
-    IDS_HELPTEXT "Extrage conținutul folderului"
+    IDS_MENUITEM "E&xtragere totală..."
+    IDS_HELPTEXT "Se extrage conţinutul folderului"
     IDS_FRIENDLYNAME "Folder comprimat (zip)"
 END

@@ -2866,52 +2866,6 @@ FsVolCallback(
 }
 
 
-static BOOLEAN
-IsValidPath(
-    IN PCWSTR InstallDir)
-{
-    UINT i, Length;
-
-    Length = wcslen(InstallDir);
-
-    // TODO: Add check for 8.3 too.
-
-    /* Path must be at least 2 characters long */
-//    if (Length < 2)
-//        return FALSE;
-
-    /* Path must start with a backslash */
-//    if (InstallDir[0] != L'\\')
-//        return FALSE;
-
-    /* Path must not end with a backslash */
-    if (InstallDir[Length - 1] == L'\\')
-        return FALSE;
-
-    /* Path must not contain whitespace characters */
-    for (i = 0; i < Length; i++)
-    {
-        if (iswspace(InstallDir[i]))
-            return FALSE;
-    }
-
-    /* Path component must not end with a dot */
-    for (i = 0; i < Length; i++)
-    {
-        if (InstallDir[i] == L'\\' && i > 0)
-        {
-            if (InstallDir[i - 1] == L'.')
-                return FALSE;
-        }
-    }
-
-    if (InstallDir[Length - 1] == L'.')
-        return FALSE;
-
-    return TRUE;
-}
-
-
 /*
  * Displays the InstallDirectoryPage.
  *
@@ -2951,7 +2905,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
      * of an invalid path, or we are in regular setup), display the UI and allow
      * the user to specify a new installation path.
      */
-    if ((RepairUpdateFlag || IsUnattendedSetup) && IsValidPath(InstallDir))
+    if ((RepairUpdateFlag || IsUnattendedSetup) && IsValidInstallDirectory(InstallDir))
     {
         Status = InitDestinationPaths(&USetupData, InstallDir, InstallPartition);
         if (!NT_SUCCESS(Status))
@@ -3043,6 +2997,14 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
                 CONSOLE_SetCursorXY(8 + Pos, 11);
             }
         }
+        else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)  /* ESC */
+        {
+            /* Erase the whole line */
+            *InstallDir = UNICODE_NULL;
+            Pos = Length = 0;
+            CONSOLE_SetInputTextXY(8, 11, 51, InstallDir);
+            CONSOLE_SetCursorXY(8 + Pos, 11);
+        }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
         {
             CONSOLE_SetCursorType(TRUE, FALSE);
@@ -3051,7 +3013,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
              * Check for the validity of the installation directory and pop up
              * an error if it is not the case. Then the user can fix its input.
              */
-            if (!IsValidPath(InstallDir))
+            if (!IsValidInstallDirectory(InstallDir))
             {
                 MUIDisplayError(ERROR_DIRECTORY_NAME, Ir, POPUP_WAIT_ENTER);
                 return INSTALL_DIRECTORY_PAGE;
@@ -3098,8 +3060,11 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
         {
             if (Length < 50)
             {
+                /* Only accept valid characters for installation path
+                 * (alpha-numeric, '.', '\', '-' and '_'). Note that
+                 * spaces are not accepted. */
                 c = (WCHAR)Ir->Event.KeyEvent.uChar.AsciiChar;
-                if (iswalpha(c) || iswdigit(c) || c == '.' || c == '\\' || c == '-' || c == '_')
+                if (IS_VALID_INSTALL_PATH_CHAR(c))
                 {
                     if (Pos < Length)
                         memmove(&InstallDir[Pos + 1],

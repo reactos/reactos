@@ -122,15 +122,15 @@ PartitionHandleStartDevice(
 
     INFO("Symlink created %wZ -> %wZ\n", &partitionSymlink, &PartExt->DeviceName);
 
-    // our partition device will have two interfaces:
+    // Our partition device will have two interfaces:
     // GUID_DEVINTERFACE_PARTITION and GUID_DEVINTERFACE_VOLUME
-    // the former one is used to notify mountmgr about new device
+    // (aka. MOUNTDEV_MOUNTED_DEVICE_GUID).
+    // The latter one is used to notify MountMgr about the new volume.
 
     status = IoRegisterDeviceInterface(PartExt->DeviceObject,
                                        &GUID_DEVINTERFACE_PARTITION,
                                        NULL,
                                        &interfaceName);
-
     if (!NT_SUCCESS(status))
     {
         return status;
@@ -152,7 +152,6 @@ PartitionHandleStartDevice(
                                        &GUID_DEVINTERFACE_VOLUME,
                                        NULL,
                                        &interfaceName);
-
     if (!NT_SUCCESS(status))
     {
         return status;
@@ -171,6 +170,105 @@ PartitionHandleStartDevice(
     }
 
     return STATUS_SUCCESS;
+}
+
+/**
+ * @brief
+ * Notifies MountMgr to delete all mount points
+ * associated with the given volume.
+ *
+ * @note    This should belong to volmgr.sys and act on a PVOLUME_EXTENSION.
+ **/
+static
+CODE_SEG("PAGE")
+NTSTATUS
+VolumeDeleteMountPoints(
+    _In_ PPARTITION_EXTENSION PartExt)
+{
+    NTSTATUS Status;
+    UNICODE_STRING MountMgr;
+    ULONG InputSize, OutputSize;
+    LOGICAL Retry;
+    PUNICODE_STRING DeviceName;
+    PDEVICE_OBJECT DeviceObject;
+    PFILE_OBJECT FileObject = NULL;
+    PMOUNTMGR_MOUNT_POINT InputBuffer = NULL;
+    PMOUNTMGR_MOUNT_POINTS OutputBuffer = NULL;
+
+    PAGED_CODE();
+
+    /* Get the device pointer to the MountMgr */
+    RtlInitUnicodeString(&MountMgr, MOUNTMGR_DEVICE_NAME);
+    Status = IoGetDeviceObjectPointer(&MountMgr,
+                                      FILE_READ_ATTRIBUTES,
+                                      &FileObject,
+                                      &DeviceObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Setup the volume device name for deleting its mount points */
+    DeviceName = &PartExt->DeviceName;
+
+    /* Allocate the input buffer */
+    InputSize = sizeof(*InputBuffer) + DeviceName->Length;
+    InputBuffer = ExAllocatePoolWithTag(PagedPool, InputSize, TAG_PARTMGR);
+    if (!InputBuffer)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quit;
+    }
+
+    /* Fill it in */
+    RtlZeroMemory(InputBuffer, sizeof(*InputBuffer));
+    InputBuffer->DeviceNameOffset = sizeof(*InputBuffer);
+    InputBuffer->DeviceNameLength = DeviceName->Length;
+    RtlCopyMemory(&InputBuffer[1], DeviceName->Buffer, DeviceName->Length);
+
+    /*
+     * IOCTL_MOUNTMGR_DELETE_POINTS needs a large-enough scratch output buffer
+     * to work with. (It uses it to query the mount points, before deleting
+     * them.) Start with a guessed size and call the IOCTL. If the buffer is
+     * not big enough, use the value retrieved in MOUNTMGR_MOUNT_POINTS::Size
+     * to re-allocate a larger buffer and call the IOCTL once more.
+     */
+    OutputSize = max(PAGE_SIZE, sizeof(*OutputBuffer));
+    for (Retry = 0; Retry < 2; ++Retry)
+    {
+        OutputBuffer = ExAllocatePoolWithTag(PagedPool, OutputSize, TAG_PARTMGR);
+        if (!OutputBuffer)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            break;
+        }
+
+        /* Call the MountMgr to delete the drive letter */
+        Status = IssueSyncIoControlRequest(IOCTL_MOUNTMGR_DELETE_POINTS,
+                                           DeviceObject,
+                                           InputBuffer,
+                                           InputSize,
+                                           OutputBuffer,
+                                           OutputSize,
+                                           FALSE);
+
+        /* Adjust the allocation size if it was too small */
+        if (Status == STATUS_BUFFER_OVERFLOW)
+        {
+            OutputSize = OutputBuffer->Size;
+            ExFreePoolWithTag(OutputBuffer, TAG_PARTMGR);
+            continue;
+        }
+        /* Success or failure: stop the loop */
+        break;
+    }
+
+Quit:
+    if (OutputBuffer)
+        ExFreePoolWithTag(OutputBuffer, TAG_PARTMGR);
+    if (InputBuffer)
+        ExFreePoolWithTag(InputBuffer, TAG_PARTMGR);
+    if (FileObject)
+        ObDereferenceObject(FileObject);
+    return Status;
 }
 
 CODE_SEG("PAGE")
@@ -220,6 +318,19 @@ PartitionHandleRemove(
 
     if (PartExt->VolumeInterfaceName.Buffer)
     {
+        /* Notify MountMgr to delete all associated mount points.
+         * MountMgr does not automatically remove these in order to support
+         * drive letter persistence for online/offline volume transitions,
+         * or volumes arrival/removal on removable devices. */
+        status = VolumeDeleteMountPoints(PartExt);
+        if (!NT_SUCCESS(status))
+        {
+            ERR("VolumeDeleteMountPoints(%wZ) failed with status 0x%08lx\n",
+                &PartExt->DeviceName, status);
+            /* Failure isn't major, continue proceeding with volume removal */
+        }
+
+        /* Notify MountMgr of volume removal */
         status = IoSetDeviceInterfaceState(&PartExt->VolumeInterfaceName, FALSE);
         if (!NT_SUCCESS(status))
         {
@@ -867,6 +978,23 @@ PartitionHandleDeviceControl(
 
             status = STATUS_SUCCESS;
             Irp->IoStatus.Information = headerSize + uniqueId->UniqueIdLength;
+            break;
+        }
+        case IOCTL_MOUNTDEV_QUERY_SUGGESTED_LINK_NAME:
+        case IOCTL_MOUNTDEV_LINK_CREATED:
+        case IOCTL_MOUNTDEV_LINK_DELETED:
+#if (NTDDI_VERSION >= NTDDI_WS03)
+        /* Deprecated Windows 2000/XP versions of IOCTL_MOUNTDEV_LINK_[CREATED|DELETED]
+         * without access protection, that were updated in Windows 2003 */
+        case CTL_CODE(MOUNTDEVCONTROLTYPE, 4, METHOD_BUFFERED, FILE_ANY_ACCESS):
+        case CTL_CODE(MOUNTDEVCONTROLTYPE, 5, METHOD_BUFFERED, FILE_ANY_ACCESS):
+#endif
+        case IOCTL_MOUNTDEV_QUERY_STABLE_GUID:
+        case IOCTL_MOUNTDEV_UNIQUE_ID_CHANGE_NOTIFY:
+        {
+            WARN("Ignored MountMgr notification: 0x%lX\n",
+                 ioStack->Parameters.DeviceIoControl.IoControlCode);
+            status = STATUS_NOT_IMPLEMENTED;
             break;
         }
         default:

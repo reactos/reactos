@@ -4,40 +4,40 @@
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2011 Petru Dimitriu <petrimetri@gmail.com>
  *              Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_NETPROPERTIES DIALOGEX 0, 0, 246, 216
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Generale"
+CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 51, 230, 52
-    LTEXT "Conexiune realizată prin:", -1, 9, 9, 217, 8
+    LTEXT "Conectare utilizând:", -1, 9, 9, 217, 8
     EDITTEXT IDC_NETCARDNAME, 9, 21, 165, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
     PUSHBUTTON "&Configurare…", IDC_CONFIGURE, 179, 20, 60, 14
-    LTEXT "Componente utilizate în această conexiune:", -1, 9, 39, 217, 8
-    PUSHBUTTON "Instala&re…", IDC_INSTALL, 9, 105, 65, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "&Dezinstalează", IDC_UNINSTALL, 90, 105, 65, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "&Proprietăți…", IDC_PROPERTIES, 174, 105, 65, 14
+    LTEXT "C&onexiunea utilizează următoarele elemente:", -1, 9, 39, 217, 8
+    PUSHBUTTON "&Instalare…", IDC_INSTALL, 9, 105, 65, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "De&zinstalare", IDC_UNINSTALL, 90, 105, 65, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&Proprietăți", IDC_PROPERTIES, 174, 105, 65, 14
     GROUPBOX "Descriere", -1, 9, 128, 230, 46, BS_GROUPBOX
     LTEXT "", IDC_DESCRIPTION, 15, 140, 217, 28, WS_GROUP
-    AUTOCHECKBOX "&Afișează pictogramă în zona de notificare", IDC_SHOWTASKBAR, 9, 181, 230, 12, WS_TABSTOP
-    AUTOCHECKBOX "N&otifică problemele de conectivitate", IDC_NOTIFYNOCONNECTION, 9, 195, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
+    AUTOCHECKBOX "Se a&fişează pictogramă în zona de notificare, când e conectat", IDC_SHOWTASKBAR, 9, 181, 230, 12, WS_TABSTOP
+    AUTOCHECKBOX "Se n&otifică problemele de conectivitate", IDC_NOTIFYNOCONNECTION, 9, 195, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
-CAPTION "Generale"
+CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
 END
 
 IDD_LAN_NETSTATUS DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Generale"
+CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Conexiune", -1, 9, 8, 190, 58, BS_GROUPBOX
@@ -51,8 +51,8 @@ BEGIN
     LTEXT "Octeți:", -1, 22, 115, 32, 8
     LTEXT "000.000.000", IDC_SEND, 60, 115, 44, 8
     RTEXT "000.000.000", IDC_RECEIVED, 146, 115, 44, 8
-    PUSHBUTTON "&Proprietăți…", IDC_STATUS_PROPERTIES, 10, 150, 60, 14
-    PUSHBUTTON "&Dezactivează", IDC_ENDISABLE, 76, 150, 60, 14
+    PUSHBUTTON "&Proprietăți", IDC_STATUS_PROPERTIES, 10, 150, 60, 14
+    PUSHBUTTON "&Dezactivare", IDC_ENDISABLE, 76, 150, 60, 14
     RTEXT "", IDC_STATUS, 90, 20, 100, 8
     RTEXT "", IDC_DURATION, 90, 34, 100, 8
     RTEXT "", IDC_SPEED, 90, 48, 100, 8
@@ -60,14 +60,14 @@ END
 
 IDD_LAN_NETSTATUSADVANCED DIALOGEX 0, 0, 200, 180
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Suport"
+CAPTION "Asistență"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Stare conexiune", -1, 9, 8, 190, 88, BS_GROUPBOX
     LTEXT "Tip adresă:", -1, 22, 20, 80, 8
     LTEXT "Adresă IP:", -1, 22, 34, 80, 8
     LTEXT "Mască subrețea:", -1, 22, 48, 80, 8
-    LTEXT "Server „poartă” implicit:", -1, 22, 62, 80, 8
+    LTEXT "Gateway implicit:", -1, 22, 62, 80, 8
     RTEXT "fără", IDC_DETAILSTYPE, 110, 20, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSIP, 110, 34, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 110, 48, 80, 8
@@ -80,9 +80,9 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | DS_MODALFRAME
 CAPTION "Detalii conexiune rețea"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Detalii de conexiune:", -1, 10, 4, 170, 12
+    LTEXT "&Detalii conexiune rețea:", -1, 10, 4, 170, 12
     CONTROL "", IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 10, 15, 170, 130
-    PUSHBUTTON "Î&nchide", IDC_CLOSE, 120, 155, 60, 14
+    PUSHBUTTON "Î&nchidere", IDC_CLOSE, 120, 155, 60, 14
 END
 
 IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
@@ -91,11 +91,11 @@ CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
-    LTEXT "Alegeți o setare tipică sau una particularizată:", IDC_STATIC, 53, 7, 240, 20
-    AUTORADIOBUTTON "Setări tipice", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
+    LTEXT "Alegeți setările obișnuite sau pe cele particularizate:", IDC_STATIC, 53, 7, 240, 20
+    AUTORADIOBUTTON "Setări obișnuite", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Setări particularizate", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
-    LTEXT "Crează conexiuni de rețea utilizând Clientul de rețele ReactOS, Partajarea de fișiere și imprimante pentru rețele ReactOS, și (protocolul) TCP/IP pentru adresare automată.", IDC_STATIC, 65, 45, 240, 30
-    LTEXT "Permite configurarea manuală a componentelor de rețea.", IDC_STATIC, 65, 90, 243, 20
+    LTEXT "Se crează conexiuni de rețea utilizând Clientul pentru rețele ReactOS, Partajarea de fișiere și imprimante pentru rețelele ReactOS și protocolul de transport TCP/IP pentru adresare automată.", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "Vă permite să configurați manual componentele de rețea.", IDC_STATIC, 65, 90, 243, 20
 END
 
 IDD_NETWORKCOMPONENTPAGE DIALOGEX 0, 0, 317, 143
@@ -104,11 +104,11 @@ CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Pentru dispozitiv:", IDC_STATIC, 33, 2, 160, 20
-    LTEXT "nespecificat", IDC_NETWORK_DEVICE, 135, 2, 253, 20
-    LTEXT "Această conexiune utilizează următoarele componente bifate:", IDC_STATIC, 33, 12, 253, 20
+    LTEXT "fără", IDC_NETWORK_DEVICE, 135, 2, 253, 20
+    LTEXT "Componentele bifate sunt folosite pentru ac eastă conexiune:", IDC_STATIC, 33, 12, 253, 20
     CONTROL "", IDC_COMPONENT_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 33, 22, 250, 50
     PUSHBUTTON "&Instalare…", IDC_NETWORK_INSTALL, 122, 75, 50, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "&Dezinstalează", IDC_NETWORK_UNINSTALL, 177, 75, 50, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&Dezinstalare", IDC_NETWORK_UNINSTALL, 177, 75, 50, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "&Proprietăți", IDC_NETWORK_PROPERTIES, 232, 75, 50, 14, WS_DISABLED | WS_TABSTOP
     GROUPBOX "Descriere", IDC_STATIC, 33, 90, 250, 50, BS_GROUPBOX
 END
@@ -119,12 +119,12 @@ CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Doriți ca acest calculator să fie membru al unui domeniu?\n\
-(Puteți afla această informație de la administratorul de rețea.)", IDC_STATIC, 33, 2, 263, 50
-    AUTORADIOBUTTON "Nu, acest calculator va fi parte a unui grup de lucru.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
+(Puteți afla aceste informații de la administratorul de rețea.)", IDC_STATIC, 33, 2, 263, 50
+    AUTORADIOBUTTON "Nu, acest calculator va fi în schimb, parte a unui grup de lucru.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Da, acest calculator va fi parte a unui domeniu.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
-    LTEXT "Grup de Lucru sau Nume de Domeniu:", IDC_STATIC, 33, 72, 126, 14
+    LTEXT "Grup de Lucru sau Nume de domeniu:", IDC_STATIC, 33, 72, 126, 14
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "NOTĂ: Dacă acest calculator nu va fi parte a unei rețele, nu sunt disponibile privelegiile necesare apartenenței la un domeniu, sau nu cunoașteți ce să specificați, lăsați valoarea implicită. Veți putea modifica această opțiune mai târziu.", IDC_STATIC, 33, 107, 263, 50
+    LTEXT "NOTĂ: Dacă acest calculator nu va fi parte a unei rețele, nu aveți suficiente drepturi de a vă alătura unui domeniu sau nu știți ce să introduceți, atunci alegeți deocamdată grupul de lucru. Aceste opțiuni pot fi schimbate mai târziu.", IDC_STATIC, 33, 107, 263, 50
 END
 
 STRINGTABLE
@@ -132,35 +132,35 @@ BEGIN
     IDS_PHYSICAL_ADDRESS "Adresă fizică"
     IDS_IP_ADDRESS "Adresă IP"
     IDS_SUBNET_MASK "Mască subrețea"
-    IDS_DEF_GATEWAY "Server „poartă” implicit"
+    IDS_DEF_GATEWAY "Gateway implicit"
     IDS_DHCP_SERVER "Server DHCP"
-    IDS_LEASE_OBTAINED "Permis obținut"
-    IDS_LEASE_EXPIRES "Permis expiră"
+    IDS_LEASE_OBTAINED "Atribuire obținută"
+    IDS_LEASE_EXPIRES "Atribuirea expiră"
     IDS_DNS_SERVERS "Servere DNS"
     IDS_WINS_SERVERS "Servere WINS"
     IDS_PROPERTY "Proprietate"
     IDS_VALUE "Valoare"
-    IDS_NETWORKCONNECTION "Conexiuni la rețea"
+    IDS_NETWORKCONNECTION "Conexiuni de rețea"
     IDS_SHV_COLUMN_NAME "Nume"
-    IDS_SHV_COLUMN_TYPE "Tipe"
+    IDS_SHV_COLUMN_TYPE "Tip"
     IDS_SHV_COLUMN_STATE "Stare"
     IDS_SHV_COLUMN_DEVNAME "Nume dispozitiv"
-    IDS_SHV_COLUMN_PHONE "Tel. sau adresa gazdei"
-    IDS_SHV_COLUMN_OWNER "Posesor"
+    IDS_SHV_COLUMN_PHONE "Adresă de telefon # sau gazdă"
+    IDS_SHV_COLUMN_OWNER "Proprietar"
     IDS_TYPE_ETHERNET "LAN sau Internet de mare viteză"
     IDS_STATUS_NON_OPERATIONAL "Dezactivat"
     IDS_STATUS_UNREACHABLE "Neconectat"
-    IDS_STATUS_DISCONNECTED "Cablu de rețea deconectat"
-    IDS_STATUS_CONNECTING "Determinare adresă rețea"
+    IDS_STATUS_DISCONNECTED "Cablu de rețea neconectat"
+    IDS_STATUS_CONNECTING "Se obține adresa de rețea"
     IDS_STATUS_CONNECTED "Conectat"
     IDS_STATUS_OPERATIONAL "Operațional"
     IDS_NET_ACTIVATE "Activare"
     IDS_NET_DEACTIVATE "Dezactivare"
     IDS_NET_STATUS "Stare"
     IDS_NET_REPAIR "Repară"
-    IDS_NET_CREATELINK "Crează legătură"
-    IDS_NET_DELETE "Șterge"
-    IDS_NET_RENAME "Redenumește"
+    IDS_NET_CREATELINK "Creare legătură"
+    IDS_NET_DELETE "Ștergere"
+    IDS_NET_RENAME "Redenumire"
     IDS_NET_PROPERTIES "Proprietăți"
     IDS_FORMAT_BIT "%u biți/s"
     IDS_FORMAT_KBIT "%u kbiți/s"
@@ -168,18 +168,18 @@ BEGIN
     IDS_FORMAT_GBIT "%u Gbiți/s"
     IDS_DURATION_DAY "%d zi %s"
     IDS_DURATION_DAYS "%d zile %s"
-    IDS_ASSIGNED_DHCP "Alocată de DHCP"
+    IDS_ASSIGNED_DHCP "Atribuit de DHCP"
     IDS_ASSIGNED_MANUAL "Configurat manual"
 END
 
 STRINGTABLE
 BEGIN
     IDS_NETWORKSETTINGSTITLE "Setări de rețea"
-    IDS_NETWORKSETTINGSSUBTITLE "Instalează software-ul de rețea folosit pentru conectarea la alte rețele, calculatoare și Internet."
+    IDS_NETWORKSETTINGSSUBTITLE "Instalarea software-ului de rețea permite conectarea la alte computere, rețele şi la Internet."
     IDS_NETWORKCOMPONENTTITLE "Componente de rețea"
-    IDS_NETWORKCOMPONENTSUBTITLE "Determină ce componente de rețea sunt folosite la calculatorul dvs. Pentru adăugare de noi componente, apăsați „Instalare”."
-    IDS_NETWORKDOMAINTITLE "Grup de lucru sau domeniu de calculator"
-    IDS_NETWORKDOMAINSUBTITLE "Specifică felul în care va fi folosit calculatorul - ca parte a unui grup de lucru sau ca parte a unui domeniu de rețea."
+    IDS_NETWORKCOMPONENTSUBTITLE "Determină ce componente de rețea sunt folosite la calculatorul dvs. Pentru a adăuga noi componente, faceți clic pe Instalare."
+    IDS_NETWORKDOMAINTITLE "Grup de lucru sau domeniu computer"
+    IDS_NETWORKDOMAINSUBTITLE "Un grup de lucru este o colecție de computere care au acelaşi nume de grup de lucru. Un domeniu este o colecție de computere definită de un administrator de rețea."
     IDS_REACTOS_SETUP "Expert de instalare ReactOS"
-    IDS_WZD_DOMAIN_NAME "Expertul nu poate continua până\nnu veți introduce un nume de domeniu\nsau grup de lucru."
+    IDS_WZD_DOMAIN_NAME "Expertul nu poate continua până\ncând nu introduceți un nume de domeniu\nsau grupul de lucru."
 END

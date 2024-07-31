@@ -1,11 +1,9 @@
 /*
- *    Update by Caemyr - Olaf Siejka (Jan, 2007; May, 2011)
- *    Use ReactOS forum PM or IRC to contact me
- *    https://reactos.org
- *    IRC: irc.freenode.net #reactos-pl;
- *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2011)
- *    UTF-8 conversion by Caemyr (May, 2011)
- *    Update by wojo664 (04.08.2011)
+ * 2007-2011 Caemyr - Olaf Siejka
+ * Use ReactOS forum PM or IRC to contact me
+ * IRC: irc.freenode.net #reactos-pl;
+ * 2011 Adam Stachowicz (Saibamen) <saibamenppl@gmail.com>
+ * 2011 wojo664
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -76,21 +74,9 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&Plik" //FIXME: harmonize those strings (part1 of 2). I do recommend to use "&Plik" for both!
-    BEGIN
-        MENUITEM "Za&kończ", ID_REGISTRY_EXIT
-    END
-    POPUP "Pomo&c"
-    BEGIN
-        MENUITEM "&Informacje", ID_HELP_ABOUT
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "&Rejestr" //FIXME: harmonize those strings (part2 of 2). I do recommend to use "&Plik" for both!
+    POPUP "&Plik"
     BEGIN
         MENUITEM "&Importuj plik rejestru...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Eksportuj plik rejestru...", ID_REGISTRY_EXPORTREGISTRYFILE

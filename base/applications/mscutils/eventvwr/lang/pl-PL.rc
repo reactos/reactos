@@ -16,10 +16,10 @@ BEGIN
     BEGIN
         MENUITEM "&Otwórz...", IDM_OPEN_EVENTLOG
         MENUITEM "Zapisz dziennik zdarzeń jako...", IDM_SAVE_EVENTLOG//FIXME: add accelerator. en-US uses &E and could be used here as well
-        MENUITEM "&Zamknij", IDM_CLOSE_EVENTLOG
+        MENUITEM "&Zamknij", IDM_CLOSE_EVENTLOG//FIXME: accelerator collision &Z
         MENUITEM SEPARATOR
         MENUITEM "W&yczyść wszystkie zdarzenia", IDM_CLEAR_EVENTS
-        MENUITEM "&Zmień nazwę\tF2", IDM_RENAME_EVENTLOG
+        MENUITEM "&Zmień nazwę\tF2", IDM_RENAME_EVENTLOG//FIXME: accelerator collision &Z
         MENUITEM "Wł&aściwości dziennika...", IDM_EVENTLOG_SETTINGS
         MENUITEM SEPARATOR
         MENUITEM "&Wyjście", IDM_EXIT
@@ -125,13 +125,16 @@ BEGIN
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     LTEXT "Plik &dziennika:", IDC_STATIC, 7, 41, 60, 8
     EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Rozmiar:", IDC_STATIC, 7, 57, 60, 8
+// The following 4 IDC_STATIC shall have accels in ReactOS, although MS doesn't have accels for them.
+// Translation note: First fill out ALL accels that MS has in this dialog for your language,
+// and only then as a final step use some remaining unused letters for those 4 controls!
+    LTEXT "&Rozmiar:", IDC_STATIC, 7, 57, 60, 8
     EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Utworzony:", IDC_STATIC, 7, 69, 60, 8
+    LTEXT "U&tworzony:", IDC_STATIC, 7, 69, 60, 8
     EDITTEXT IDC_CREATED_LABEL, 67, 69, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Zmodyfikowany:", IDC_STATIC, 7, 81, 60, 8
+    LTEXT "Zmodyfi&kowany:", IDC_STATIC, 7, 81, 60, 8
     EDITTEXT IDC_MODIFIED_LABEL, 67, 81, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Ostatnio używany:", IDC_STATIC, 7, 93, 80, 8
+    LTEXT "&Ostatnio używany:", IDC_STATIC, 7, 93, 80, 8
     EDITTEXT IDC_ACCESSED_LABEL, 67, 93, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     GROUPBOX "Rozmiar dziennika", IDC_STATIC, 7, 106, 238, 99
     LTEXT "&Maksymalny rozmiar dziennika:", IDC_STATIC, 17, 122, 58, 8
@@ -219,7 +222,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Typ zdarzenia:             %s\r\n\
+    IDS_COPY "\
+Typ zdarzenia:            %s\r\n\
 Źródło zdarzenia:         %s\r\n\
 Kategoria zdarzenia:      %s\r\n\
 Idnetyfikator Zdarzenia:  %s\r\n\

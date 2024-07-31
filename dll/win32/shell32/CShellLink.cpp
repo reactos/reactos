@@ -6,7 +6,7 @@
  *      Copyright 2009  Andrew Hill
  *      Copyright 2013  Dominik Hornung
  *      Copyright 2017  Hermes Belusca-Maito
- *      Copyright 2018-2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *      Copyright 2018-2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -900,7 +900,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::Save(IStream *stm, BOOL fClearDirty)
 
     if (m_pPidl)
         m_Header.dwFlags |= SLDF_HAS_ID_LIST;
-    if (m_sPath)
+    if (m_sPath && *m_sPath && !(m_Header.dwFlags & SLDF_FORCE_NO_LINKINFO))
         m_Header.dwFlags |= SLDF_HAS_LINK_INFO;
     if (m_sDescription && *m_sDescription)
         m_Header.dwFlags |= SLDF_HAS_NAME;
@@ -936,7 +936,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::Save(IStream *stm, BOOL fClearDirty)
         }
     }
 
-    if (m_sPath)
+    if (m_Header.dwFlags & SLDF_HAS_LINK_INFO)
     {
         hr = Stream_WriteLocationInfo(stm, m_sPath, &volume);
         if (FAILED(hr))
@@ -2569,7 +2569,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     // as the parent window handle... ?
     /* FIXME: get using interface set from IObjectWithSite?? */
     // NOTE: We might need an extended version of Resolve that provides us with paths...
-    HRESULT hr = Resolve(lpici->hwnd, 0);
+    HRESULT hr = Resolve(lpici->hwnd, (lpici->fMask & CMIC_MASK_FLAG_NO_UI) ? SLR_NO_UI : 0);
     if (FAILED(hr))
     {
         TRACE("failed to resolve component error 0x%08x\n", hr);
@@ -2592,70 +2592,52 @@ HRESULT STDMETHODCALLTYPE CShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 
 HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
 {
-    HRESULT hr;
-    LPWSTR args = NULL;
-    LPWSTR path = strdupW(m_sPath);
     BOOL unicode = lpici->cbSize >= FIELD_OFFSET(CMINVOKECOMMANDINFOEX, ptInvoke) &&
                    (lpici->fMask & CMIC_MASK_UNICODE);
+
+    CStringW args;
+    if (m_sArgs)
+        args = m_sArgs;
 
     if (unicode)
     {
         LPCMINVOKECOMMANDINFOEX iciex = (LPCMINVOKECOMMANDINFOEX)lpici;
-        SIZE_T len = 2;
-
-        if (m_sArgs)
-            len += wcslen(m_sArgs);
-        if (iciex->lpParametersW)
-            len += wcslen(iciex->lpParametersW);
-
-        args = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-        *args = 0;
-        if (m_sArgs)
-            wcscat(args, m_sArgs);
-        if (iciex->lpParametersW)
+        if (!StrIsNullOrEmpty(iciex->lpParametersW))
         {
-            wcscat(args, L" ");
-            wcscat(args, iciex->lpParametersW);
+            args += L' ';
+            args += iciex->lpParametersW;
         }
     }
-    else if (m_sArgs != NULL)
+    else
     {
-        args = strdupW(m_sArgs);
+        CComHeapPtr<WCHAR> pszParams;
+        if (!StrIsNullOrEmpty(lpici->lpParameters) && __SHCloneStrAtoW(&pszParams, lpici->lpParameters))
+        {
+            args += L' ';
+            args += pszParams;
+        }
     }
 
-    SHELLEXECUTEINFOW sei;
-    ZeroMemory(&sei, sizeof(sei));
-    sei.cbSize = sizeof(sei);
+    SHELLEXECUTEINFOW sei = { sizeof(sei) };
     sei.fMask = SEE_MASK_HASLINKNAME | SEE_MASK_UNICODE |
                (lpici->fMask & (SEE_MASK_NOASYNC | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI));
     if (m_pPidl)
     {
         sei.lpIDList = m_pPidl;
-        sei.fMask |= SEE_MASK_IDLIST;
+        sei.fMask |= SEE_MASK_INVOKEIDLIST;
     }
     else
     {
-        sei.lpFile = path;
+        sei.lpFile = m_sPath;
     }
     sei.lpParameters = args;
     sei.lpClass = m_sLinkPath;
     sei.nShow = m_Header.nShowCommand;
+    if (lpici->nShow != SW_SHOWNORMAL && lpici->nShow != SW_SHOW)
+        sei.nShow = lpici->nShow; // Allow invoker to override .lnk show mode
     sei.lpDirectory = m_sWorkDir;
-    sei.lpVerb = L"open";
 
-    // HACK for ShellExecuteExW
-    if (m_sPath && wcsstr(m_sPath, L".cpl"))
-        sei.lpVerb = L"cplopen";
-
-    if (ShellExecuteExW(&sei))
-        hr = S_OK;
-    else
-        hr = E_FAIL;
-
-    HeapFree(GetProcessHeap(), 0, args);
-    HeapFree(GetProcessHeap(), 0, path);
-
-    return hr;
+    return (ShellExecuteExW(&sei) ? S_OK : E_FAIL);
 }
 
 HRESULT STDMETHODCALLTYPE CShellLink::GetCommandString(UINT_PTR idCmd, UINT uType, UINT* pwReserved, LPSTR pszName, UINT cchMax)

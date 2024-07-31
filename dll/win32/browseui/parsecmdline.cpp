@@ -402,7 +402,8 @@ SHExplorerParseCmdLine(_Out_ PEXPLORER_CMDLINE_PARSE_RESULTS pInfo)
                     // The path could not be parsed into an ID List,
                     // so pass it on as a plain string.
 
-                    PWSTR field = StrDupW(strField);
+                    PWSTR field;
+                    SHStrDupW(strField, &field);
                     pInfo->strPath = field;
                     if (field)
                     {

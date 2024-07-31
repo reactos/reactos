@@ -214,7 +214,7 @@ DECLARE_INTERFACE_(IRecycleBinEnumList, IUnknown)
     STDMETHOD_(ULONG, Release)(THIS) PURE;
 
     /* IRecycleBinEnumList methods */
-    STDMETHOD(Next)(THIS_ DWORD celt, IRecycleBinFile **rgelt, DWORD *pceltFetched);
+    STDMETHOD(Next)(THIS_ DWORD celt, IRecycleBinFile **rgelt, DWORD *pceltFetched) PURE;
     STDMETHOD(Skip)(THIS_ DWORD celt) PURE;
     STDMETHOD(Reset)(THIS) PURE;
 

@@ -204,6 +204,13 @@ SHCreatePropertyBagOnProfileSection(
     _In_ REFIID riid,
     _Out_ void **ppvObj);
 
+EXTERN_C HRESULT WINAPI
+IUnknown_QueryServicePropertyBag(
+    _In_ IUnknown *punk,
+    _In_ long flags,
+    _In_ REFIID riid,
+    _Outptr_ void **ppvObj);
+
 HWND WINAPI SHCreateWorkerWindowA(WNDPROC wndProc, HWND hWndParent, DWORD dwExStyle,
                                   DWORD dwStyle, HMENU hMenu, LONG_PTR wnd_extra);
 

@@ -435,7 +435,7 @@ NtUserGetGUIThreadInfo(
       pti = PsGetCurrentThreadWin32Thread();
 
       // Validate Tread ID
-      W32Thread = IntTID2PTI((HANDLE)(DWORD_PTR)idThread);
+      W32Thread = IntTID2PTI(UlongToHandle(idThread));
 
       if ( !W32Thread )
       {

@@ -1,5 +1,5 @@
 /* Spanish Language resource file.
- * Translated by: ?? and Ismael Ferreras Morezuelas <2014-11-07> */
+ * TRANSLATOR: 2014 Ismael Ferreras Morezuelas */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -68,18 +68,6 @@ Usage examples:\n\
 END
 
 /* Menus */
-
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&Archivo"
-    BEGIN
-        MENUITEM "&Salir", ID_REGISTRY_EXIT
-    END
-    POPUP "Ay&uda"
-    BEGIN
-        MENUITEM "&Acerca de", ID_HELP_ABOUT
-    END
-END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
@@ -705,7 +693,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Buscar &siguiente", IDOK, 187, 7, 60, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 187, 24, 60, 14
-    GROUPBOX "Buscar en ", IDC_STATIC, 7, 25, 63, 51
+    GROUPBOX "Buscar en", IDC_STATIC, 7, 25, 63, 51
     LTEXT "&Buscar:", IDC_STATIC, 7, 8, 30, 10
     EDITTEXT IDC_FINDWHAT, 40, 7, 142, 13, ES_AUTOHSCROLL
     CONTROL "&Claves", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |

@@ -177,6 +177,13 @@ InitSystemPartition(
     _In_opt_ PFSVOL_CALLBACK FsVolCallback,
     _In_opt_ PVOID Context);
 
+#define IS_VALID_INSTALL_PATH_CHAR(c) \
+    (iswalnum(c) || (c) == L'.' || (c) == L'\\' || (c) == L'-' || (c) == L'_')
+
+BOOLEAN
+IsValidInstallDirectory(
+    _In_ PCWSTR InstallDir);
+
 NTSTATUS
 InitDestinationPaths(
     IN OUT PUSETUP_DATA pSetupData,
