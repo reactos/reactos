@@ -19,11 +19,10 @@
 
 #include <windef.h>
 #include <winbase.h>
-//#include <strsafe.h>
 
 #define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>
 
-#include <../setuplib.h>
+#include <setuplib.h>
 
 /* EOF */
