@@ -254,7 +254,7 @@ STDMETHODIMP CACListISF::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
             LPCITEMIDLIST pidlRef = pidlChild;
             hr = m_pShellFolder->GetAttributesOf(1, &pidlRef, &attrs);
             if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
+                continue;
 
             if ((m_dwOptions & ACLO_FILESYSDIRS) && !(attrs & SFGAO_FOLDER))
                 continue;
