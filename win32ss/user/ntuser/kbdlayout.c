@@ -667,7 +667,7 @@ HKL APIENTRY
 co_UserActivateKeyboardLayout(
     _Inout_ PKL     pKL,
     _In_    ULONG   uFlags,
-    _Inout_opt_ PWND pWnd)
+    _In_opt_ PWND pWnd)
 {
     HKL hOldKL = NULL;
     PKL pOldKL;
@@ -783,7 +783,7 @@ co_IntActivateKeyboardLayout(
     _Inout_ PWINSTATION_OBJECT pWinSta,
     _In_ HKL hKL,
     _In_ ULONG uFlags,
-    _Inout_opt_ PWND pWnd)
+    _In_opt_ PWND pWnd)
 {
     PKL pKL;
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
