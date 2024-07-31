@@ -241,7 +241,7 @@ static void TEST_LocaleTests(void)
 #define ADD_LIB(eModule, pszPath) lib.insert(std::make_pair(eModule, pszPath));
 
     GetModuleFileNameW(NULL, szBuffer, _countof(szBuffer));
-    LPCWSTR pszFind = StrStrW(szBuffer, L"modules\\rostests\\win32");
+    LPCWSTR pszFind = StrStrW(szBuffer, L"modules\\rostests\\unittests");
     if (pszFind)
     {
         // We're running in ReactOS output folder
