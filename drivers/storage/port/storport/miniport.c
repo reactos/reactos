@@ -87,6 +87,9 @@ InitializeConfiguration(
         PortConfig->InitiatorBusId[i] = (CCHAR)SP_UNINITIALIZED_VALUE;
     }
 
+    /* Default per-adapter outstanding IO limit, as per storport documentation. */
+    PortConfig->MaxNumberOfIO = 1000;
+
     return STATUS_SUCCESS;
 }
 
