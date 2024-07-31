@@ -147,13 +147,13 @@ HRESULT CACListISF::SetLocation(LPITEMIDLIST pidl)
         ERR("EnumObjects failed: 0x%lX\n", hr);
         hr = E_FAIL;
     }
+
     return hr;
 }
 
 HRESULT CACListISF::GetDisplayName(
     _In_ LPCITEMIDLIST pidlChild,
-    _Out_ CComHeapPtr<WCHAR>& pszChild,
-    _Inout_ DWORD& attrs)
+    _Out_ CComHeapPtr<WCHAR>& pszChild)
 {
     TRACE("(%p, %p)\n", this, pidlChild);
     pszChild.Free();
@@ -173,23 +173,18 @@ HRESULT CACListISF::GetDisplayName(
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    LPCITEMIDLIST *ppidls = &pidlChild;
-    hr = m_pShellFolder->GetAttributesOf(1, ppidls, &attrs);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
     TRACE("pszChild: '%S'\n", static_cast<LPCWSTR>(pszChild));
     return hr;
 }
 
 HRESULT
 CACListISF::GetPaths(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& pszRaw,
-                     CComHeapPtr<WCHAR>& pszExpanded, DWORD& attrs)
+                     CComHeapPtr<WCHAR>& pszExpanded)
 {
     TRACE("(%p, %p)\n", this, pidlChild);
 
     CComHeapPtr<WCHAR> pszChild;
-    HRESULT hr = GetDisplayName(pidlChild, pszChild, attrs);
+    HRESULT hr = GetDisplayName(pidlChild, pszChild);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -251,10 +246,15 @@ STDMETHODIMP CACListISF::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
             pszRawPath.Free();
             pszExpanded.Free();
 
-            DWORD attrs = SFGAO_FOLDER | SFGAO_FILESYSTEM;
-            GetPaths(pidlChild, pszRawPath, pszExpanded, attrs);
+            GetPaths(pidlChild, pszRawPath, pszExpanded);
             if (!pszRawPath || !pszExpanded)
                 continue;
+
+            DWORD attrs = SFGAO_FOLDER | SFGAO_FILESYSTEM;
+            LPCITEMIDLIST pidlRef = pidlChild;
+            hr = m_pShellFolder->GetAttributesOf(1, &pidlRef, &attrs);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
 
             if ((m_dwOptions & ACLO_FILESYSDIRS) && !(attrs & SFGAO_FOLDER))
                 continue;
@@ -349,7 +349,8 @@ STDMETHODIMP CACListISF::Expand(LPCOLESTR pszExpand)
     {
         if (PathIsRelativeW(pszExpand) &&
             SHGetPathFromIDListW(m_pidlCurDir, szPath1) &&
-            PathCombineW(szPath2, szPath1, pszExpand))
+            PathCombineW(szPath2, szPath1, pszExpand) &&
+            PathFileExistsW(pszExpand))
         {
             pszExpand = szPath2;
         }

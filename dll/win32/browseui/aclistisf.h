@@ -57,12 +57,9 @@ public:
 
     HRESULT NextLocation();
     HRESULT SetLocation(LPITEMIDLIST pidl);
-    HRESULT GetDisplayName(
-        _In_ LPCITEMIDLIST pidlChild,
-        _Out_ CComHeapPtr<WCHAR>& pszChild,
-        _Inout_ DWORD& attrs);
+    HRESULT GetDisplayName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& pszChild);
     HRESULT GetPaths(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& pszRaw,
-                     CComHeapPtr<WCHAR>& pszExpanded, DWORD& attrs);
+                     CComHeapPtr<WCHAR>& pszExpanded);
 
     // *** IEnumString methods ***
     STDMETHOD(Next)(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched) override;
