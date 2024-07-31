@@ -147,13 +147,10 @@ HRESULT CACListISF::SetLocation(LPITEMIDLIST pidl)
         ERR("EnumObjects failed: 0x%lX\n", hr);
         hr = E_FAIL;
     }
-
     return hr;
 }
 
-HRESULT CACListISF::GetDisplayName(
-    _In_ LPCITEMIDLIST pidlChild,
-    _Out_ CComHeapPtr<WCHAR>& pszChild)
+HRESULT CACListISF::GetDisplayName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& pszChild)
 {
     TRACE("(%p, %p)\n", this, pidlChild);
     pszChild.Free();
@@ -245,7 +242,6 @@ STDMETHODIMP CACListISF::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
 
             pszRawPath.Free();
             pszExpanded.Free();
-
             GetPaths(pidlChild, pszRawPath, pszExpanded);
             if (!pszRawPath || !pszExpanded)
                 continue;
@@ -350,11 +346,11 @@ STDMETHODIMP CACListISF::Expand(LPCOLESTR pszExpand)
         if (PathIsRelativeW(pszExpand) &&
             SHGetPathFromIDListW(m_pidlCurDir, szPath1) &&
             PathCombineW(szPath2, szPath1, pszExpand) &&
-            PathFileExistsW(pszExpand))
+            PathFileExistsW(szPath2))
         {
             pszExpand = szPath2;
         }
-        if (PathFileExistsW(pszExpand))
+        else if (PathFileExistsW(pszExpand))
         {
             GetFullPathNameW(pszExpand, _countof(szPath1), szPath1, NULL);
             pszExpand = szPath1;
