@@ -150,7 +150,10 @@ HRESULT CACListISF::SetLocation(LPITEMIDLIST pidl)
     return hr;
 }
 
-HRESULT CACListISF::GetDisplayName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& pszChild)
+HRESULT CACListISF::GetDisplayName(
+    _In_ LPCITEMIDLIST pidlChild,
+    _Out_ CComHeapPtr<WCHAR>& pszChild,
+    _Inout_ DWORD& attrs)
 {
     TRACE("(%p, %p)\n", this, pidlChild);
     pszChild.Free();
@@ -170,18 +173,23 @@ HRESULT CACListISF::GetDisplayName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& 
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
+    LPCITEMIDLIST *ppidls = &pidlChild;
+    hr = m_pShellFolder->GetAttributesOf(1, ppidls, &attrs);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
     TRACE("pszChild: '%S'\n", static_cast<LPCWSTR>(pszChild));
     return hr;
 }
 
 HRESULT
 CACListISF::GetPaths(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& pszRaw,
-                     CComHeapPtr<WCHAR>& pszExpanded)
+                     CComHeapPtr<WCHAR>& pszExpanded, DWORD& attrs)
 {
     TRACE("(%p, %p)\n", this, pidlChild);
 
     CComHeapPtr<WCHAR> pszChild;
-    HRESULT hr = GetDisplayName(pidlChild, pszChild);
+    HRESULT hr = GetDisplayName(pidlChild, pszChild, attrs);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -242,13 +250,15 @@ STDMETHODIMP CACListISF::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
 
             pszRawPath.Free();
             pszExpanded.Free();
-            GetPaths(pidlChild, pszRawPath, pszExpanded);
+
+            DWORD attrs = SFGAO_FOLDER | SFGAO_FILESYSTEM;
+            GetPaths(pidlChild, pszRawPath, pszExpanded, attrs);
             if (!pszRawPath || !pszExpanded)
                 continue;
 
-            if ((m_dwOptions & ACLO_FILESYSDIRS) && !PathIsDirectoryW(pszExpanded))
+            if ((m_dwOptions & ACLO_FILESYSDIRS) && !(attrs & SFGAO_FOLDER))
                 continue;
-            else if ((m_dwOptions & ACLO_FILESYSONLY) && !PathFileExistsW(pszExpanded))
+            if ((m_dwOptions & (ACLO_FILESYSONLY | ACLO_FILESYSDIRS)) && !(attrs & SFGAO_FILESYSTEM))
                 continue;
 
             hr = S_OK;
@@ -343,8 +353,11 @@ STDMETHODIMP CACListISF::Expand(LPCOLESTR pszExpand)
         {
             pszExpand = szPath2;
         }
-        GetFullPathNameW(pszExpand, _countof(szPath1), szPath1, NULL);
-        pszExpand = szPath1;
+        if (PathFileExistsW(pszExpand))
+        {
+            GetFullPathNameW(pszExpand, _countof(szPath1), szPath1, NULL);
+            pszExpand = szPath1;
+        }
     }
 
     CComHeapPtr<ITEMIDLIST> pidl;
