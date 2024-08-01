@@ -2182,6 +2182,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
             if (parametersLen < _countof(parametersBuffer))
             {
                 StringCchCopyW(parametersBuffer, _countof(parametersBuffer), pszArgs);
+                parametersLen = _countof(parametersBuffer);
                 wszParameters = parametersBuffer;
             }
             else
