@@ -2066,7 +2066,7 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         TRACE("-- idlist=%p (%s)\n", sei_tmp.lpIDList, debugstr_w(wszApplicationName));
     }
 
-    if ((sei_tmp.fMask & SEE_MASK_DOENVSUBST) && sei_tmp.lpFile && sei_tmp.lpFile[0])
+    if ((sei_tmp.fMask & SEE_MASK_DOENVSUBST) && !StrIsNullOrEmpty(sei_tmp.lpFile))
     {
         WCHAR *tmp = expand_environment(sei_tmp.lpFile);
         if (tmp)
