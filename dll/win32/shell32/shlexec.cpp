@@ -2154,16 +2154,6 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         wszApplicationName.Attach(buf.Detach());
         sei_tmp.lpFile = wszApplicationName;
     }
-    else /* or expand environment strings (not both!) */
-    {
-        LPWSTR tmp = expand_environment(sei_tmp.lpFile);
-        if (tmp)
-        {
-            wszApplicationName.Attach(tmp);
-            /* appKnownSingular unmodified */
-            sei_tmp.lpFile = wszApplicationName;
-        }
-    }
 
     /* Else, try to execute the filename */
     TRACE("execute: %s,%s,%s\n", debugstr_w(wszApplicationName), debugstr_w(wszParameters), debugstr_w(wszDir));
