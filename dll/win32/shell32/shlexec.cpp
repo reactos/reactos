@@ -2066,20 +2066,13 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         TRACE("-- idlist=%p (%s)\n", sei_tmp.lpIDList, debugstr_w(wszApplicationName));
     }
 
-    if (sei_tmp.fMask & SEE_MASK_DOENVSUBST)
+    if ((sei_tmp.fMask & SEE_MASK_DOENVSUBST) && sei_tmp.lpFile && sei_tmp.lpFile[0])
     {
         WCHAR *tmp = expand_environment(sei_tmp.lpFile);
         if (tmp)
         {
             wszApplicationName.Attach(tmp);
             sei_tmp.lpFile = wszApplicationName;
-        }
-
-        tmp = expand_environment(sei_tmp.lpDirectory);
-        if (tmp)
-        {
-            wszDirAlloc.Attach(tmp);
-            sei_tmp.lpDirectory = wszDir = wszDirAlloc;
         }
     }
 
@@ -2092,7 +2085,6 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
             return TRUE;
         }
     }
-
 
     if (ERROR_SUCCESS == ShellExecute_FromContextMenuHandlers(&sei_tmp))
     {
