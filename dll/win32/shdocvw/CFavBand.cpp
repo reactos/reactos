@@ -5,46 +5,10 @@
  * COPYRIGHT:   Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-#include <windows.h>
-#include <shlobj.h>
-#include <shlwapi.h>
-#include <atlbase.h>
-#include <atlcom.h>
-#include <atlwin.h>
-#include <undocshell.h>
-#include <shlobj_undoc.h>
-#include <shlguid_undoc.h>
-#include <shlwapi_undoc.h>
-#include <shdeprecated.h>
-#include <olectlid.h>
-#include <exdispid.h>
-#include <shellutils.h>
-#include <ui/rosctrls.h>
-#include "shdocvw.h"
-#include "CFavBand.h"
+#include "objects.h"
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
-
-void *operator new(size_t size)
-{
-    return ::LocalAlloc(LPTR, size);
-}
-
-void operator delete(void *ptr)
-{
-    ::LocalFree(ptr);
-}
-
-void operator delete(void *ptr, size_t size)
-{
-    ::LocalFree(ptr);
-}
-
-#if 1
-#undef UNIMPLEMENTED
-#define UNIMPLEMENTED ERR("%s is UNIMPLEMENTED!\n", __FUNCTION__)
-#endif
 
 CFavBand::CFavBand()
     : m_fVisible(FALSE)
@@ -53,7 +17,7 @@ CFavBand::CFavBand()
     , m_hToolbarImageList(NULL)
     , m_hTreeViewImageList(NULL)
 {
-    ::InterlockedIncrement(&SHDOCVW_refCount);
+    SHDOCVW_LockModule();
     SHGetSpecialFolderLocation(NULL, CSIDL_FAVORITES, &m_pidlFav);
 }
 
@@ -69,7 +33,7 @@ CFavBand::~CFavBand()
         ImageList_Destroy(m_hTreeViewImageList);
         m_hTreeViewImageList = NULL;
     }
-    ::InterlockedDecrement(&SHDOCVW_refCount);
+    SHDOCVW_UnlockModule();
 }
 
 VOID CFavBand::OnFinalMessage(HWND)
@@ -614,45 +578,4 @@ STDMETHODIMP CFavBand::Invoke(
             return S_OK;
     }
     return E_INVALIDARG;
-}
-
-BEGIN_OBJECT_MAP(ObjectMap)
-    OBJECT_ENTRY(CLSID_SH_FavBand, CFavBand)
-END_OBJECT_MAP()
-
-class CFavBandModule : public CComModule
-{
-public:
-};
-
-static CFavBandModule gModule;
-
-EXTERN_C VOID
-CFavBand_Init(HINSTANCE hInstance)
-{
-    gModule.Init(ObjectMap, hInstance, NULL);
-}
-
-EXTERN_C HRESULT
-CFavBand_DllCanUnloadNow(VOID)
-{
-    return gModule.DllCanUnloadNow();
-}
-
-EXTERN_C HRESULT
-CFavBand_DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
-{
-    return gModule.DllGetClassObject(rclsid, riid, ppv);
-}
-
-EXTERN_C HRESULT
-CFavBand_DllRegisterServer(VOID)
-{
-    return gModule.DllRegisterServer(FALSE);
-}
-
-EXTERN_C HRESULT
-CFavBand_DllUnregisterServer(VOID)
-{
-    return gModule.DllUnregisterServer(FALSE);
 }

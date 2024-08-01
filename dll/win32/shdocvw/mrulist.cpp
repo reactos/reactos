@@ -7,21 +7,11 @@
 
 #define COBJMACROS
 
-#include <windef.h>
-#include <winbase.h>
-#include <winreg.h>
-#include <objbase.h>
-#include <oleauto.h>
-#include <shlobj.h>
-#include <shlobj_undoc.h>
-#include <shlguid_undoc.h>
-#include <shlwapi.h>
-#include <shlwapi_undoc.h>
+#include "objects.h"
+#include <tchar.h>
 #include <strsafe.h>
-#include "shdocvw.h"
 
 #include <wine/debug.h>
-
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
 class CSafeMutex;
@@ -31,22 +21,6 @@ class CMruBase;
         class CMruNode;
             class CMruPidlList;
 class CMruClassFactory;
-
-extern "C" void __cxa_pure_virtual(void)
-{
-    ERR("__cxa_pure_virtual\n");
-    ::DebugBreak();
-}
-
-BOOL IEILIsEqual(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2, BOOL bUnknown)
-{
-    UINT cb1 = ILGetSize(pidl1), cb2 = ILGetSize(pidl2);
-    if (cb1 == cb2 && memcmp(pidl1, pidl2, cb1) == 0)
-        return TRUE;
-
-    FIXME("%p, %p\n", pidl1, pidl2);
-    return FALSE;
-}
 
 // The flags for SLOTITEMDATA.dwFlags
 #define SLOT_LOADED         0x1
@@ -155,7 +129,7 @@ public:
 
 CMruBase::CMruBase()
 {
-    ::InterlockedIncrement(&SHDOCVW_refCount);
+    SHDOCVW_LockModule();
 }
 
 CMruBase::~CMruBase()
@@ -176,7 +150,7 @@ CMruBase::~CMruBase()
         m_pSlots = (SLOTITEMDATA*)::LocalFree(m_pSlots);
     }
 
-    ::InterlockedDecrement(&SHDOCVW_refCount);
+    SHDOCVW_UnlockModule();
 }
 
 STDMETHODIMP CMruBase::QueryInterface(REFIID riid, void **ppvObj)
@@ -1321,11 +1295,11 @@ protected:
 public:
     CMruClassFactory()
     {
-        ::InterlockedIncrement(&SHDOCVW_refCount);
+        SHDOCVW_LockModule();
     }
     virtual ~CMruClassFactory()
     {
-        ::InterlockedDecrement(&SHDOCVW_refCount);
+        SHDOCVW_UnlockModule();
     }
 
     // IUnknown methods
@@ -1389,9 +1363,9 @@ STDMETHODIMP CMruClassFactory::CreateInstance(IUnknown *pUnkOuter, REFIID riid, 
 STDMETHODIMP CMruClassFactory::LockServer(BOOL fLock)
 {
     if (fLock)
-        ::InterlockedIncrement(&SHDOCVW_refCount);
+        SHDOCVW_LockModule();
     else
-        ::InterlockedDecrement(&SHDOCVW_refCount);
+        SHDOCVW_UnlockModule();
     return S_OK;
 }
 
