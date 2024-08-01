@@ -7,6 +7,12 @@
 
 #pragma once
 
+EXTERN_C VOID CFavBand_Init(HINSTANCE hInstance);
+EXTERN_C HRESULT CFavBand_DllCanUnloadNow(VOID);
+EXTERN_C HRESULT CFavBand_DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv);
+EXTERN_C HRESULT CFavBand_DllRegisterServer(VOID);
+EXTERN_C HRESULT CFavBand_DllUnregisterServer(VOID);
+
 #define FAVBANDCLASSNAME L"ReactOS Favorites Band"
 
 #ifdef __cplusplus

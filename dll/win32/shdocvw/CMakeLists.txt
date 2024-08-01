@@ -10,11 +10,12 @@ list(APPEND SOURCE
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/shdocvw_stubs.c)
 
-add_typelib(res/shdocvw_v1.idl)
+add_typelib(shdocvw_v1.idl)
 set_source_files_properties(shdocvw.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/shdocvw_v1.tlb)
 
 add_library(shdocvw MODULE
     ${SOURCE}
+    mrulist.cpp
     shdocvw.rc
     $<TARGET_OBJECTS:shdocvw_sublib>
     ${CMAKE_CURRENT_BINARY_DIR}/shdocvw.def)
@@ -31,12 +32,7 @@ add_dependencies(shdocvw stdole2)
 add_pch(shdocvw precomp.h SOURCE)
 add_cd_file(TARGET shdocvw DESTINATION reactos/system32 FOR all)
 
-add_library(shdocvw_sublib OBJECT
-    CExplorerBand.cpp
-    CFavBand.cpp
-    mrulist.cpp
-    objects.cpp
-    utility.cpp)
+add_library(shdocvw_sublib OBJECT CFavBand.cpp)
 target_link_libraries(shdocvw_sublib PRIVATE atl_classes)
 target_compile_definitions(shdocvw_sublib PRIVATE $<TARGET_PROPERTY:shdocvw,COMPILE_DEFINITIONS>)
 target_compile_options(shdocvw_sublib PRIVATE $<TARGET_PROPERTY:shdocvw,COMPILE_OPTIONS>)

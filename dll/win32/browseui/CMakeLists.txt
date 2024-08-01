@@ -25,6 +25,7 @@ list(APPEND SOURCE
     CTaskbarList.h
     commonbrowser.cpp
     desktopipc.cpp
+    explorerband.cpp
     globalfoldersettings.cpp
     internettoolbar.cpp
     parsecmdline.cpp
@@ -33,6 +34,7 @@ list(APPEND SOURCE
     shellbrowser.cpp
     toolsband.cpp
     travellog.cpp
+    utility.cpp
     CProgressDialog.cpp
     CUserAssist.cpp
     CUserAssist.h)
