@@ -23,7 +23,7 @@ PKL gspklBaseLayout = NULL; /* FIXME: Please move this to pWinSta->spklList */
 PKBDFILE gpkfList = NULL;
 DWORD gSystemFS = 0;
 UINT gSystemCPCharSet = 0;
-DWORD gLCIDSentToShell = 0;
+HKL ghKLSentToShell = NULL;
 
 typedef PVOID (*PFN_KBDLAYERDESCRIPTOR)(VOID);
 
@@ -592,41 +592,6 @@ UserSetDefaultInputLang(HKL hKl)
     return TRUE;
 }
 
-/*
- * co_UserActivateKbl
- *
- * Activates given layout in specified thread
- */
-static PKL
-co_UserActivateKbl(PTHREADINFO pti, PKL pKl, UINT Flags)
-{
-    PKL pklPrev;
-    PWND pWnd;
-
-    pklPrev = pti->KeyboardLayout;
-
-    UserAssignmentLock((PVOID*)&(pti->KeyboardLayout), pKl);
-    pti->pClientInfo->hKL = pKl->hkl;
-
-    if (Flags & KLF_SETFORPROCESS)
-    {
-        FIXME("KLF_SETFORPROCESS\n");
-    }
-
-    if (!(pWnd = pti->MessageQueue->spwndFocus))
-    {
-         pWnd = pti->MessageQueue->spwndActive;
-    }
-
-    // Send WM_INPUTLANGCHANGE to thread's focus window
-    co_IntSendMessage( pWnd ? UserHMGetHandle(pWnd) : 0,
-                      WM_INPUTLANGCHANGE,
-                      (WPARAM)pKl->iBaseCharset, // FIXME: How to set it?
-                      (LPARAM)pKl->hkl); // hkl
-
-    return pklPrev;
-}
-
 VOID APIENTRY
 IntImmActivateLayout(
     _Inout_ PTHREADINFO pti,
@@ -702,10 +667,10 @@ HKL APIENTRY
 co_UserActivateKeyboardLayout(
     _Inout_ PKL     pKL,
     _In_    ULONG   uFlags,
-    _Inout_ PWND    pWnd)
+    _In_opt_ PWND pWnd)
 {
     HKL hOldKL = NULL;
-    PKL pOldKL = NULL;
+    PKL pOldKL;
     PTHREADINFO pti = GetW32ThreadInfo();
     PWND pTargetWnd, pImeWnd;
     HWND hTargetWnd, hImeWnd;
@@ -716,12 +681,9 @@ co_UserActivateKeyboardLayout(
     IntReferenceThreadInfo(pti);
     ClientInfo = pti->pClientInfo;
 
-    if (pti->KeyboardLayout)
-    {
-        pOldKL = pti->KeyboardLayout;
-        if (pOldKL)
-            hOldKL = pOldKL->hkl;
-    }
+    pOldKL = pti->KeyboardLayout;
+    if (pOldKL)
+        hOldKL = pOldKL->hkl;
 
     if (uFlags & KLF_RESET)
     {
@@ -734,7 +696,7 @@ co_UserActivateKeyboardLayout(
         return hOldKL;
     }
 
-    pKL->wchDiacritic = 0;
+    pKL->wchDiacritic = UNICODE_NULL;
 
     if (pOldKL)
         UserRefObjectCo(pOldKL, &Ref1);
@@ -760,10 +722,15 @@ co_UserActivateKeyboardLayout(
         ClientInfo->hKL = pKL->hkl;
     }
 
-    if (gptiForeground && (gptiForeground->ppi == pti->ppi))
+    /* Send shell message if necessary */
+    if (gptiForeground && (gptiForeground->ppi == pti->ppi) && ISITHOOKED(WH_SHELL))
     {
-        /* Send shell message */
-        co_IntShellHookNotify(HSHELL_LANGUAGE, 0, (LPARAM)pKL->hkl);
+        /* Send the HKL if needed and remember it */
+        if (ghKLSentToShell != pKL->hkl)
+        {
+            co_IntShellHookNotify(HSHELL_LANGUAGE, 0, (LPARAM)pKL->hkl);
+            ghKLSentToShell = pKL->hkl;
+        }
     }
 
     if (pti->MessageQueue)
@@ -787,14 +754,15 @@ co_UserActivateKeyboardLayout(
         }
     }
 
-    /* Send WM_IME_SYSTEM:IMS_SENDNOTIFICATION message if necessary */
-    if (pti && !(pti->TIF_flags & TIF_CSRSSTHREAD))
+    // Refresh IME UI via WM_IME_SYSTEM:IMS_SENDNOTIFICATION messaging
+    if (!(pti->TIF_flags & TIF_CSRSSTHREAD))
     {
-        if (IS_IME_HKL(pKL->hkl) || IS_CICERO_MODE())
+        if (IS_IME_HKL(pKL->hkl) || (IS_CICERO_MODE() && !IS_16BIT_MODE()))
         {
             pImeWnd = pti->spwndDefaultIme;
             if (pImeWnd)
             {
+                bSetForProcess &= !IS_16BIT_MODE();
                 UserRefObjectCo(pImeWnd, &Ref2);
                 hImeWnd = UserHMGetHandle(pImeWnd);
                 co_IntSendMessage(hImeWnd, WM_IME_SYSTEM, IMS_SENDNOTIFICATION, bSetForProcess);
@@ -815,7 +783,7 @@ co_IntActivateKeyboardLayout(
     _Inout_ PWINSTATION_OBJECT pWinSta,
     _In_ HKL hKL,
     _In_ ULONG uFlags,
-    _Inout_ PWND pWnd)
+    _In_opt_ PWND pWnd)
 {
     PKL pKL;
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
@@ -871,10 +839,10 @@ co_IntUnloadKeyboardLayoutEx(
 
     UserDerefObjectCo(pKL); /* Release reference */
 
-    if (pti->pDeskInfo->fsHooks)
+    if (ISITHOOKED(WH_SHELL))
     {
         co_IntShellHookNotify(HSHELL_LANGUAGE, 0, 0);
-        gLCIDSentToShell = 0;
+        ghKLSentToShell = NULL;
     }
 
     return TRUE;
@@ -892,6 +860,7 @@ IntUnloadKeyboardLayout(_Inout_ PWINSTATION_OBJECT pWinSta, _In_ HKL hKL)
     return co_IntUnloadKeyboardLayoutEx(pWinSta, pKL, 0);
 }
 
+/// Invokes imm32!ImmLoadLayout and returns PIMEINFOEX
 PIMEINFOEX FASTCALL co_UserImmLoadLayout(_In_ HKL hKL)
 {
     PIMEINFOEX piiex;
@@ -980,7 +949,7 @@ co_IntLoadKeyboardLayoutEx(
 
     /* Activate this layout in current thread */
     if (Flags & KLF_ACTIVATE)
-        co_UserActivateKbl(PsGetCurrentThreadWin32Thread(), pNewKL, Flags);
+        co_UserActivateKeyboardLayout(pNewKL, Flags, NULL);
 
     /* Send shell message */
     if (!(Flags & KLF_NOTELLSHELL))
