@@ -767,7 +767,6 @@ WinLdrAddDriverToList(
                 DriverEntry->FilePath.MaximumLength);
     }
     DriverEntry->FilePath = FilePath;
-    FilePath.Buffer = NULL;
 
     /* Set or replace the driver node's registry path */
     if (DriverEntry->RegistryPath.Buffer)
@@ -776,7 +775,6 @@ WinLdrAddDriverToList(
                 DriverEntry->RegistryPath.MaximumLength);
     }
     DriverEntry->RegistryPath = RegistryString;
-    RegistryString.Buffer = NULL;
 
     /* Set or replace the driver node's group */
     if (DriverNode->Group.Buffer)
@@ -805,7 +803,6 @@ WinLdrAddDriverToList(
         }
     }
     DriverNode->Group = GroupString;
-    GroupString.Buffer = NULL;
 
     /* ErrorControl and Tag */
     DriverNode->ErrorControl = ErrorControl;
@@ -823,8 +820,6 @@ WinLdrAddDriverToList(
     return TRUE;
 
 Failure:
-    if (GroupString.Buffer)
-        RtlFreeUnicodeString(&GroupString);
     if (RegistryString.Buffer)
         CmpFree(RegistryString.Buffer, RegistryString.MaximumLength);
     if (FilePath.Buffer)
@@ -834,16 +829,6 @@ Failure:
      * driver node, otherwise keep the original one in place. */
     if (!AlreadyInserted)
     {
-        if (DriverEntry->RegistryPath.Buffer)
-        {
-            CmpFree(DriverEntry->RegistryPath.Buffer,
-                    DriverEntry->RegistryPath.MaximumLength);
-        }
-        if (DriverEntry->FilePath.Buffer)
-        {
-            CmpFree(DriverEntry->FilePath.Buffer,
-                    DriverEntry->FilePath.MaximumLength);
-        }
         if (DriverNode->Name.Buffer)
         {
             CmpFree(DriverNode->Name.Buffer,
