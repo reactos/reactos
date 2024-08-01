@@ -7,7 +7,7 @@
 #define USE_CUSTOM_BANDPROXY 1
 #define USE_CUSTOM_BRANDBAND 1
 #define USE_CUSTOM_EXPLORERBAND 0 // Moved to shdocvw.dll
-#define USE_CUSTOM_SEARCHBAND 1
+#define USE_CUSTOM_SEARCHBAND 0 // Moved to shdocvw.dll
 #define USE_CUSTOM_INTERNETTOOLBAR 1
 
 HRESULT CAddressBand_CreateInstance(REFIID riid, void **ppv);
