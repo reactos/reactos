@@ -11,7 +11,7 @@
 UINT    ColumnDataHints[COLUMN_NMAX];
 
 #define DECLARE_COLUMN_PRESET(_name, _size, _state, _align) \
-    { IDS_TAB_##_name, IDC_##_name, _size, _state, _align},
+    { IDS_TAB_##_name, IDC_##_name, _size, _state, _align },
 
 const PresetColumnEntry ColumnPresets[COLUMN_NMAX] = {
     DECLARE_COLUMN_PRESET(IMAGENAME,        105,  TRUE, LVCFMT_LEFT)
