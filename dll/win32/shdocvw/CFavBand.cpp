@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Explorer
+ * PROJECT:     ReactOS shdocvw
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Favorites bar
  * COPYRIGHT:   Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>

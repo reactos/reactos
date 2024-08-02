@@ -1,3 +1,9 @@
+/*
+ * PROJECT:     ReactOS shdocvw
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Hindi (India) resource file
+ * TRANSLATOR:  Copyright 2019 Arnav Bhatt <arnavbhatt288@gmail.com>
+ */
 
 LANGUAGE LANG_HINDI, SUBLANG_HINDI_INDIA
 

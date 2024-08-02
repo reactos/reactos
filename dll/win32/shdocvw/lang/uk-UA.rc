@@ -1,3 +1,9 @@
+/*
+ * PROJECT:     ReactOS shdocvw
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Ukrainian resource file
+ * TRANSLATOR:  Copyright 2010 Igor Paliychuk <igor-hkr@mail.ru>
+ */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 

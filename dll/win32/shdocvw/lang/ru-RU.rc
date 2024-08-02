@@ -1,3 +1,9 @@
+/*
+ * PROJECT:     ReactOS shdocvw
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Russian resource file
+ * TRANSLATOR:  Copyright 2014 Petr Akhlamov <petr-akhlamov@yandex.ru>
+ */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
