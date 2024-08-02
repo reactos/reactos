@@ -18,15 +18,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
- * NOTES
- *
- * This code was audited for completeness against the documented features
- * of Comctl32.dll version 6.0 on Oct. 3, 2004, by Dimitrie O. Paun.
- * 
- * Unless otherwise noted, we believe this code to be complete, as per
- * the specification mentioned above.
- * If you discover missing features, or bugs, please note them below.
- * 
  * TODO
  *  Styles
  *  - BS_NOTIFY: is it complete?
@@ -37,30 +28,14 @@
  *  - WM_SETFOCUS: For (manual or automatic) radio buttons, send the parent window BN_CLICKED
  *  - WM_NCCREATE: Turns any BS_OWNERDRAW button into a BS_PUSHBUTTON button.
  *  - WM_SYSKEYUP
- *  - BCM_GETIDEALSIZE
- *  - BCM_GETIMAGELIST
- *  - BCM_GETTEXTMARGIN
- *  - BCM_SETIMAGELIST
- *  - BCM_SETTEXTMARGIN
  *  
  *  Notifications
- *  - BCN_HOTITEMCHANGE
  *  - BN_DISABLE
  *  - BN_PUSHED/BN_HILITE
  *  + BN_KILLFOCUS: is it OK?
  *  - BN_PAINT
  *  + BN_SETFOCUS: is it OK?
  *  - BN_UNPUSHED/BN_UNHILITE
- *  - NM_CUSTOMDRAW
- *
- *  Structures/Macros/Definitions
- *  - BUTTON_IMAGELIST
- *  - NMBCHOTITEM
- *  - Button_GetIdealSize
- *  - Button_GetImageList
- *  - Button_GetTextMargin
- *  - Button_SetImageList
- *  - Button_SetTextMargin
  */
 
 #include <user32.h>
@@ -208,7 +183,7 @@ static inline void paint_button( HWND hwnd, LONG style, UINT action )
 /* retrieve the button text; returned buffer must be freed by caller */
 static inline WCHAR *get_button_text( HWND hwnd )
 {
-    INT len = 512;
+    static const INT len = 512;
     WCHAR *buffer = HeapAlloc( GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR) );
     if (buffer) InternalGetWindowText( hwnd, buffer, len + 1 );
     return buffer;
@@ -1066,9 +1041,15 @@ static void CB_Paint( HWND hwnd, HDC hDC, UINT action )
 
     GetClientRect(hwnd, &client);
     rbox = rtext = client;
-
-    checkBoxWidth  = 12 * GetDeviceCaps( hDC, LOGPIXELSX ) / 96 + 1;
-    checkBoxHeight = 12 * GetDeviceCaps( hDC, LOGPIXELSY ) / 96 + 1;
+    
+#ifdef __REACTOS__
+    //TODO: Let's actually fix this stupid thing at some point
+    checkBoxWidth  = 12 * 96 / 96 + 1;
+    checkBoxHeight = 12 * 96 / 96 + 1;
+#else
+    checkBoxWidth  = 12 * GetDpiForWindow( hwnd ) / 96 + 1;
+    checkBoxHeight = 12 * GetDpiForWindow( hwnd ) / 96 + 1;
+#endif
 
     if ((hFont = get_button_font( hwnd ))) SelectObject( hDC, hFont );
     GetCharWidthW( hDC, '0', '0', &text_offset );
@@ -1133,14 +1114,14 @@ static void CB_Paint( HWND hwnd, HDC hDC, UINT action )
 	/* rbox must have the correct height */
 	delta = rbox.bottom - rbox.top - checkBoxHeight;
 	
-	if (style & BS_TOP) {
+	if ((style & BS_VCENTER) == BS_TOP) {
 	    if (delta > 0) {
 		rbox.bottom = rbox.top + checkBoxHeight;
 	    } else { 
 		rbox.top -= -delta/2 + 1;
 		rbox.bottom = rbox.top + checkBoxHeight;
 	    }
-	} else if (style & BS_BOTTOM) {
+	} else if ((style & BS_VCENTER) == BS_BOTTOM) {
 	    if (delta > 0) {
 		rbox.top = rbox.bottom - checkBoxHeight;
 	    } else {
@@ -1336,7 +1317,7 @@ static void OB_Paint( HWND hwnd, HDC hDC, UINT action )
     DRAWITEMSTRUCT dis;
     LONG_PTR id = GetWindowLongPtrW( hwnd, GWLP_ID );
     HWND parent;
-    HFONT hFont, hPrevFont = 0;
+    HFONT hFont;
     HRGN hrgn;
 
     dis.CtlType    = ODT_BUTTON;
@@ -1351,7 +1332,7 @@ static void OB_Paint( HWND hwnd, HDC hDC, UINT action )
     dis.itemData   = 0;
     GetClientRect( hwnd, &dis.rcItem );
 
-    if ((hFont = get_button_font( hwnd ))) hPrevFont = SelectObject( hDC, hFont );
+    if ((hFont = get_button_font( hwnd ))) SelectObject( hDC, hFont );
     parent = GetParent(hwnd);
     if (!parent) parent = hwnd;
 #ifdef __REACTOS__
@@ -1363,7 +1344,6 @@ static void OB_Paint( HWND hwnd, HDC hDC, UINT action )
     hrgn = set_control_clipping( hDC, &dis.rcItem );
 
     SendMessageW( GetParent(hwnd), WM_DRAWITEM, id, (LPARAM)&dis );
-    if (hPrevFont) SelectObject(hDC, hPrevFont);
     SelectClipRgn( hDC, hrgn );
     if (hrgn) DeleteObject( hrgn );
 }
