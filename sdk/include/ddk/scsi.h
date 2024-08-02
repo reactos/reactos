@@ -1238,21 +1238,23 @@ typedef union _CDB {
     UCHAR CMSF:1;
     UCHAR ExpectedSectorType:3;
     UCHAR Lun:3;
+    struct _LBA {
+      UCHAR StartingBlockAddress[4];
+      UCHAR PlayLength[4];
+    };
+    struct _MSF {
+      UCHAR Reserved1;
+      UCHAR StartingM;
+      UCHAR StartingS;
+      UCHAR StartingF;
+      UCHAR EndingM;
+      UCHAR EndingS;
+      UCHAR EndingF;
+      UCHAR Reserved2;
+    };
     _ANONYMOUS_UNION union {
-      struct _LBA {
-        UCHAR StartingBlockAddress[4];
-        UCHAR PlayLength[4];
-      } LBA;
-      struct _MSF {
-        UCHAR Reserved1;
-        UCHAR StartingM;
-        UCHAR StartingS;
-        UCHAR StartingF;
-        UCHAR EndingM;
-        UCHAR EndingS;
-        UCHAR EndingF;
-        UCHAR Reserved2;
-      } MSF;
+      struct _LBA LBA;
+      struct _MSF MSF;
     } DUMMYUNIONNAME;
     UCHAR Audio:1;
     UCHAR Composite:1;
@@ -3287,58 +3289,62 @@ typedef struct _LOG_PARAMETER_HEADER {
 
 typedef struct _LOG_PARAMETER {
   LOG_PARAMETER_HEADER Header;
+  struct _THRESHOLD_RESOURCE_COUNT {
+    UCHAR ResourceCount[4];
+    UCHAR Scope : 2;
+    UCHAR Reserved1 : 6;
+    UCHAR Reserved2[3];
+  };
+  struct _TEMPERATURE {
+    UCHAR Reserved;
+    UCHAR Temperature;
+  };
+  struct _DATE_OF_MANUFACTURE {
+    UCHAR Year[4];
+    UCHAR Week[2];
+  };
+  struct _SELF_TEST_RESULTS {
+    UCHAR SelfTestResults : 4;
+    UCHAR Reserved1 : 1;
+    UCHAR SelfTestCode : 3;
+    UCHAR SelfTestNumber;
+    UCHAR PowerOnHours[2];
+    UCHAR AddressOfFirstFailure[8];
+    UCHAR SenseKey : 4;
+    UCHAR Reserved2 : 4;
+    UCHAR AdditionalSenseCode;
+    UCHAR AdditionalSenseCodeQualifier;
+    UCHAR VendorSpecific;
+  };
+  struct _SOLID_STATE_MEDIA {
+    UCHAR Reserved[3];
+    UCHAR PercentageUsed;
+  };
+  struct _BACKGROUND_SCAN_STATUS {
+    UCHAR PowerOnMinutes[4];
+    UCHAR Reserved;
+    UCHAR ScanStatus;
+    UCHAR ScansPerformed[2];
+    UCHAR ScanProgress[2];
+    UCHAR MediumScansPerformed[2];
+  };
+  struct _INFORMATIONAL_EXCEPTIONS {
+    UCHAR ASC;
+    UCHAR ASCQ;
+    UCHAR MostRecentTemperature;
+    UCHAR VendorSpecific[ANYSIZE_ARRAY];
+  };
   union {
 #if !defined(__midl)
     UCHAR AsByte[0];
 #endif
-    struct _THRESHOLD_RESOURCE_COUNT {
-      UCHAR ResourceCount[4];
-      UCHAR Scope : 2;
-      UCHAR Reserved1 : 6;
-      UCHAR Reserved2[3];
-    } THRESHOLD_RESOURCE_COUNT;
-    struct _TEMPERATURE {
-      UCHAR Reserved;
-      UCHAR Temperature;
-    } TEMPERATURE;
-    struct _DATE_OF_MANUFACTURE {
-      UCHAR Year[4];
-      UCHAR Week[2];
-    } DATE_OF_MANUFACTURE;
-    struct _SELF_TEST_RESULTS {
-      UCHAR SelfTestResults : 4;
-      UCHAR Reserved1 : 1;
-      UCHAR SelfTestCode : 3;
-      UCHAR SelfTestNumber;
-      UCHAR PowerOnHours[2];
-      UCHAR AddressOfFirstFailure[8];
-      UCHAR SenseKey : 4;
-      UCHAR Reserved2 : 4;
-      UCHAR AdditionalSenseCode;
-      UCHAR AdditionalSenseCodeQualifier;
-      UCHAR VendorSpecific;
-    } SELF_TEST_RESULTS;
-
-    struct _SOLID_STATE_MEDIA {
-      UCHAR Reserved[3];
-      UCHAR PercentageUsed;
-    } SOLID_STATE_MEDIA;
-
-    struct _BACKGROUND_SCAN_STATUS {
-      UCHAR PowerOnMinutes[4];
-      UCHAR Reserved;
-      UCHAR ScanStatus;
-      UCHAR ScansPerformed[2];
-      UCHAR ScanProgress[2];
-      UCHAR MediumScansPerformed[2];
-    } BACKGROUND_SCAN_STATUS;
-
-    struct _INFORMATIONAL_EXCEPTIONS {
-      UCHAR ASC;
-      UCHAR ASCQ;
-      UCHAR MostRecentTemperature;
-      UCHAR VendorSpecific[ANYSIZE_ARRAY];
-    } INFORMATIONAL_EXCEPTIONS;
+    struct _THRESHOLD_RESOURCE_COUNT THRESHOLD_RESOURCE_COUNT;
+    struct _TEMPERATURE TEMPERATURE;
+    struct _DATE_OF_MANUFACTURE DATE_OF_MANUFACTURE;
+    struct _SELF_TEST_RESULTS SELF_TEST_RESULTS;
+    struct _SOLID_STATE_MEDIA SOLID_STATE_MEDIA;
+    struct _BACKGROUND_SCAN_STATUS BACKGROUND_SCAN_STATUS;
+    struct _INFORMATIONAL_EXCEPTIONS INFORMATIONAL_EXCEPTIONS;
   };
 } LOG_PARAMETER, *PLOG_PARAMETER;
 
