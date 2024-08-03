@@ -27,20 +27,7 @@ WINE_DEFAULT_DEBUG_CHANNEL (fprop);
 
 /////////////////////////////////////////////////////////////////////////////
 
-#ifndef FTA_OpenIsSafe
-#define FTA_Exclude      0x00000001
-#define FTA_NoEdit       0x00000008
-#define FTA_NoRemove     0x00000010
-#define FTA_NoNewVerb    0x00000020
-#define FTA_NoEditVerb   0x00000040
-#define FTA_NoRemoveVerb 0x00000080
-#define FTA_NoEditDesc   0x00000100
-#define FTA_NoEditIcon   0x00000200
-#define FTA_NoEditDflt   0x00000400
-#define FTA_OpenIsSafe   0x00010000
-#endif
 #define FTA_MODIFYMASK (FTA_OpenIsSafe) // Bits modified by EditTypeDlg
-
 #define NOASSOCRESID IDI_SHELL_DOCUMENT
 #define SUPPORT_EXTENSIONWITHOUTPROGID 1 // NT5 does not support these but NT6 does
 
@@ -49,7 +36,7 @@ WINE_DEFAULT_DEBUG_CHANNEL (fprop);
 #define VERBKEY_CCHMAX (127 + 1)
 #define ICONLOCATION_CCHMAX (MAX_PATH + 1 + 11)
 
-typedef struct FILE_TYPE_ENTRY
+typedef struct _FILE_TYPE_ENTRY
 {
     WCHAR FileExtension[ASSOC_CCHMAX];
     WCHAR FileDescription[TYPENAME_CCHMAX];
@@ -93,7 +80,8 @@ typedef struct FILE_TYPE_ENTRY
     }
 } FILE_TYPE_ENTRY, *PFILE_TYPE_ENTRY;
 
-typedef struct {
+typedef struct _FILE_TYPE_GLOBALS
+{
     HIMAGELIST himlSmall;
     UINT IconSize;
     HICON hDefExtIconSmall;
@@ -105,14 +93,14 @@ typedef struct {
 } FILE_TYPE_GLOBALS, *PFILE_TYPE_GLOBALS;
 
 static DWORD
-GetRegDW(HKEY hKey, LPCWSTR Name, DWORD &Value, DWORD DefaultValue = 0, BOOL Strict = FALSE)
+GetRegDWORD(HKEY hKey, LPCWSTR Name, DWORD &Value, DWORD DefaultValue = 0, BOOL Strict = FALSE)
 {
     DWORD cb = sizeof(DWORD), type;
     LRESULT ec = RegQueryValueExW(hKey, Name, 0, &type, (BYTE*)&Value, &cb);
     if (ec == ERROR_SUCCESS)
     {
-        if ((type == REG_DWORD && cb == sizeof(REG_DWORD)) ||
-            (!Strict && type == REG_BINARY && (cb && cb <= sizeof(REG_DWORD))))
+        if ((type == REG_DWORD && cb == sizeof(DWORD)) ||
+            (!Strict && type == REG_BINARY && (cb && cb <= sizeof(DWORD))))
         {
             Value &= (0xffffffffUL >> (32 - cb * 8));
             return ec;
@@ -123,9 +111,9 @@ GetRegDW(HKEY hKey, LPCWSTR Name, DWORD &Value, DWORD DefaultValue = 0, BOOL Str
 }
 
 static DWORD
-GetRegDW(HKEY hKey, LPCWSTR Name, DWORD DefaultValue = 0)
+GetRegDWORD(HKEY hKey, LPCWSTR Name, DWORD DefaultValue = 0)
 {
-    GetRegDW(hKey, Name, DefaultValue, DefaultValue, FALSE);
+    GetRegDWORD(hKey, Name, DefaultValue, DefaultValue, FALSE);
     return DefaultValue;
 }
 
@@ -302,9 +290,9 @@ GetTypeName(PFILE_TYPE_ENTRY Entry, PFILE_TYPE_GLOBALS pG)
             }
             else
             {
-                // FIXME: Remove this hack when SHGetFileInfo is fixed
-                StringCbPrintfW(Entry->FileDescription, sizeof(Entry->FileDescription),
-                                pG->DefExtTypeNameFmt, &Entry->FileExtension[1]);
+                // FIXME: Remove this hack when SHGetFileInfo is able to handle extensions without a ProgId (.ASM etc)
+                StringCchPrintfW(Entry->FileDescription, _countof(Entry->FileDescription),
+                                 pG->DefExtTypeNameFmt, &Entry->FileExtension[1]);
             }
         }
         else
@@ -336,7 +324,7 @@ InitializeDefaultIcons(PFILE_TYPE_GLOBALS pG)
     if (!pG->hDefExtIconSmall)
     {
         pG->hDefExtIconSmall = HICON(LoadImageW(shell32_hInstance, MAKEINTRESOURCEW(ResId),
-                                               IMAGE_ICON, pG->IconSize, pG->IconSize, 0));
+                                                IMAGE_ICON, pG->IconSize, pG->IconSize, 0));
     }
 
     if (!ImageList_GetImageCount(pG->himlSmall))
@@ -672,9 +660,7 @@ NewExtDlg_OnOK(HWND hwndDlg, PNEWEXT_DIALOG pNewExt)
         strExt += find.psz;
         strExt.MakeLower();
         if (DeleteExt(hwndDlg, strExt))
-        {
             ListView_DeleteItem(pNewExt->hwndLV, iItem);
-        }
     }
 
     EndDialog(hwndDlg, IDOK);
@@ -1172,7 +1158,7 @@ EditTypeDlg_WriteClass(HWND hwndDlg, PEDITTYPE_DIALOG pEditType,
 
     // Refresh the EditFlags
     DWORD dw;
-    if (GetRegDW(hClassKey, L"EditFlags", dw, 0, FALSE) == ERROR_SUCCESS)
+    if (GetRegDWORD(hClassKey, L"EditFlags", dw, 0, FALSE) == ERROR_SUCCESS)
         pEntry->EditFlags = (dw & ~FTA_MODIFYMASK) | (pEntry->EditFlags & FTA_MODIFYMASK);
 
     if (!OnlyExt)
@@ -1185,11 +1171,11 @@ EditTypeDlg_WriteClass(HWND hwndDlg, PEDITTYPE_DIALOG pEditType,
         }
         if (RegKeyExists(hClassKey, L"DocObject"))
         {
-            LRESULT ec = GetRegDW(hClassKey, L"BrowserFlags", dw, 0, TRUE);
+            LRESULT ec = GetRegDWORD(hClassKey, L"BrowserFlags", dw, 0, TRUE);
             if (ec == ERROR_SUCCESS || ec == ERROR_FILE_NOT_FOUND)
             {
                 dw = (dw & ~8) | ((Etf & ETF_BROWSESAME) ? 0 : 8); // Note: 8 means NOT
-                RegSetOrDelete(hClassKey, L"BrowserFlags", REG_DWORD, dw ? &dw : NULL, sizeof(DWORD));
+                RegSetOrDelete(hClassKey, L"BrowserFlags", REG_DWORD, dw ? &dw : NULL, sizeof(dw));
             }
         }
         if (!(pEntry->EditFlags & FTA_NoEditDesc))
@@ -1308,7 +1294,7 @@ EditTypeDlg_ReadClass(HWND hwndDlg, PEDITTYPE_DIALOG pEditType, EDITTYPEFLAGS &E
     // 8 in BrowserFlags listed in KB 162059 seems to be our bit
     BOOL docobj = RegKeyExists(hClassKey, L"DocObject");
     EnableWindow(GetDlgItem(hwndDlg, IDC_EDITTYPE_SAME_WINDOW), docobj);
-    etfbits |= (docobj && (GetRegDW(hClassKey, L"BrowserFlags") & 8)) ? 0 : ETF_BROWSESAME;
+    etfbits |= (docobj && (GetRegDWORD(hClassKey, L"BrowserFlags") & 8)) ? 0 : ETF_BROWSESAME;
 
     Etf = EDITTYPEFLAGS(etfbits);
 
@@ -1642,12 +1628,12 @@ static INT CALLBACK
 FileTypesDlg_CompareItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
     PFILE_TYPE_GLOBALS pG = (PFILE_TYPE_GLOBALS)lParamSort;
-    PFILE_TYPE_ENTRY p1 = (PFILE_TYPE_ENTRY)lParam1, p2 = (PFILE_TYPE_ENTRY)lParam2;
+    PFILE_TYPE_ENTRY entry1 = (PFILE_TYPE_ENTRY)lParam1, entry2 = (PFILE_TYPE_ENTRY)lParam2;
     int x = 0;
     if (pG->SortCol == 1)
-        x = wcsicmp(GetTypeName(p1, pG), GetTypeName(p2, pG));
-    if (!x && !(x = p1->IsExtension() - p2->IsExtension()))
-        x = wcsicmp(p1->FileExtension, p2->FileExtension);
+        x = wcsicmp(GetTypeName(entry1, pG), GetTypeName(entry2, pG));
+    if (!x && !(x = entry1->IsExtension() - entry2->IsExtension()))
+        x = wcsicmp(entry1->FileExtension, entry2->FileExtension);
     return x * pG->SortReverse;
 }
 
@@ -1675,10 +1661,7 @@ FileTypesDlg_InitListView(HWND hwndDlg, HWND hListView)
 
     columnName = L"Extensions"; // Default to English
     if (LoadStringW(shell32_hInstance, IDS_COLUMN_EXTENSION, szBuf, _countof(szBuf)))
-    {
         columnName = szBuf;
-        szBuf[_countof(szBuf) - 1] = UNICODE_NULL; // Make sure it's null terminated
-    }
     col.pszText     = const_cast<LPWSTR>(columnName);
     col.iSubItem    = 0;
     col.cx          = column0Size;
@@ -1688,7 +1671,6 @@ FileTypesDlg_InitListView(HWND hwndDlg, HWND hListView)
     if (LoadStringW(shell32_hInstance, IDS_FILE_TYPES, szBuf, _countof(szBuf)))
     {
         columnName = szBuf;
-        szBuf[_countof(szBuf) - 1] = UNICODE_NULL; // Make sure it's null terminated
     }
     else
     {
@@ -1977,13 +1959,13 @@ FolderOptionsFileTypesDlg(
             {
                 case LVN_GETDISPINFO:
                 {
-                    NMLVDISPINFO *pLVDI = (NMLVDISPINFO*)lParam;
-                    PFILE_TYPE_ENTRY p = (PFILE_TYPE_ENTRY) pLVDI->item.lParam;
-                    if (p && (pLVDI->item.mask & LVIF_TEXT))
+                    LPNMLVDISPINFOW pLVDI = (LPNMLVDISPINFOW)lParam;
+                    PFILE_TYPE_ENTRY entry = (PFILE_TYPE_ENTRY)pLVDI->item.lParam;
+                    if (entry && (pLVDI->item.mask & LVIF_TEXT))
                     {
                         if (pLVDI->item.iSubItem == 1)
                         {
-                            pLVDI->item.pszText = GetTypeName(p, pGlobals);
+                            pLVDI->item.pszText = GetTypeName(entry, pGlobals);
                             pLVDI->item.mask |= LVIF_DI_SETITEM;
                         }
                     }
