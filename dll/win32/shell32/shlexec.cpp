@@ -512,6 +512,8 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
     dwCreationFlags = CREATE_UNICODE_ENVIRONMENT;
     if (!(psei->fMask & SEE_MASK_NO_CONSOLE))
         dwCreationFlags |= CREATE_NEW_CONSOLE;
+    if (psei->fMask & SEE_MASK_FLAG_SEPVDM)
+        dwCreationFlags |= CREATE_SEPARATE_WOW_VDM;
     startup.lpTitle = (LPWSTR)(psei->fMask & (SEE_MASK_HASLINKNAME | SEE_MASK_HASTITLE) ? psei->lpClass : NULL);
 
     if (psei->fMask & SEE_MASK_HASLINKNAME)
@@ -2066,20 +2068,13 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         TRACE("-- idlist=%p (%s)\n", sei_tmp.lpIDList, debugstr_w(wszApplicationName));
     }
 
-    if (sei_tmp.fMask & SEE_MASK_DOENVSUBST)
+    if ((sei_tmp.fMask & SEE_MASK_DOENVSUBST) && !StrIsNullOrEmpty(sei_tmp.lpFile))
     {
         WCHAR *tmp = expand_environment(sei_tmp.lpFile);
         if (tmp)
         {
             wszApplicationName.Attach(tmp);
             sei_tmp.lpFile = wszApplicationName;
-        }
-
-        tmp = expand_environment(sei_tmp.lpDirectory);
-        if (tmp)
-        {
-            wszDirAlloc.Attach(tmp);
-            sei_tmp.lpDirectory = wszDir = wszDirAlloc;
         }
     }
 
@@ -2092,7 +2087,6 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
             return TRUE;
         }
     }
-
 
     if (ERROR_SUCCESS == ShellExecute_FromContextMenuHandlers(&sei_tmp))
     {
@@ -2154,54 +2148,31 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         wszApplicationName.Attach(buf.Detach());
         sei_tmp.lpFile = wszApplicationName;
     }
-    else /* or expand environment strings (not both!) */
-    {
-        LPWSTR tmp = expand_environment(sei_tmp.lpFile);
-        if (tmp)
-        {
-            wszApplicationName.Attach(tmp);
-            /* appKnownSingular unmodified */
-            sei_tmp.lpFile = wszApplicationName;
-        }
-    }
 
     /* Else, try to execute the filename */
     TRACE("execute: %s,%s,%s\n", debugstr_w(wszApplicationName), debugstr_w(wszParameters), debugstr_w(wszDir));
 
     /* separate out command line arguments from executable file name */
-    LPCWSTR lpFile;
-    WCHAR wfileName[MAX_PATH];
+    LPCWSTR lpFile = sei_tmp.lpFile;
     if (!*sei_tmp.lpParameters && !appKnownSingular)
     {
         /* If the executable path is quoted, handle the rest of the command line as parameters. */
         if (sei_tmp.lpFile[0] == L'"')
         {
-            LPWSTR src = wszApplicationName/*sei_tmp.lpFile*/ + 1;
-            LPWSTR dst = wfileName;
-            LPWSTR end;
-
-            /* copy the unquoted executable path to 'wfileName' */
-            while(*src && *src != L'"')
-                *dst++ = *src++;
-
-            *dst = L'\0';
-
-            if (*src == L'"')
+            LPWSTR pszArgs = PathGetArgsW(wszApplicationName);
+            PathRemoveArgsW(wszApplicationName);
+            PathUnquoteSpacesW(wszApplicationName);
+            parametersLen = lstrlenW(pszArgs);
+            if (parametersLen < _countof(parametersBuffer))
             {
-                end = ++src;
-
-                while(isspaceW(*src))
-                    ++src;
+                StringCchCopyW(parametersBuffer, _countof(parametersBuffer), pszArgs);
+                wszParameters = parametersBuffer;
             }
             else
-                end = src;
-
-            /* copy the parameter string to 'wszParameters' */
-            strcpyW(wszParameters, src);
-
-            /* terminate previous command string after the quote character */
-            *end = L'\0';
-            lpFile = wfileName;
+            {
+                wszParamAlloc.Attach(StrDupW(pszArgs));
+                wszParameters = wszParamAlloc;
+            }
         }
         /* We have to test sei instead of sei_tmp because sei_tmp had its
          * input fMask modified above in SHELL_translate_idlist.
@@ -2234,15 +2205,8 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
                     break;
                 }
             }
-            lpFile = sei_tmp.lpFile;
-        }
-        else
-        {
-            lpFile = sei_tmp.lpFile;
         }
     }
-    else
-        lpFile = sei_tmp.lpFile;
 
     WCHAR wcmdBuffer[1024];
     LPWSTR wcmd = wcmdBuffer;

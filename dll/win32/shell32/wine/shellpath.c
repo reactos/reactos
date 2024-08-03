@@ -1866,7 +1866,7 @@ INT Shell_ParseSpecialFolder(_In_ LPCWSTR pszStart, _Out_ LPWSTR *ppch, _Out_ IN
     {
         *ppch = (LPWSTR)(pchBackslash + 1);
         *pcch = (pchBackslash - pszStart) + 1;
-        StrCpyNW(szPath, pszStart, max(*pcch, _countof(szPath)));
+        StrCpyNW(szPath, pszStart, min(*pcch, _countof(szPath)));
         pszPath = szPath;
     }
     else

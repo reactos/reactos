@@ -1,17 +1,11 @@
 /*
- * PROJECT:     ReactOS Explorer
+ * PROJECT:     ReactOS shdocvw
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Favorites bar
  * COPYRIGHT:   Copyright 2024 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #pragma once
-
-EXTERN_C VOID CFavBand_Init(HINSTANCE hInstance);
-EXTERN_C HRESULT CFavBand_DllCanUnloadNow(VOID);
-EXTERN_C HRESULT CFavBand_DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv);
-EXTERN_C HRESULT CFavBand_DllRegisterServer(VOID);
-EXTERN_C HRESULT CFavBand_DllUnregisterServer(VOID);
 
 #define FAVBANDCLASSNAME L"ReactOS Favorites Band"
 

@@ -3049,9 +3049,9 @@ HandleTrayContextMenu:
             }
         }
 
-        g_MinimizedAll.RemoveAll();
-
-        if (!bDestroyed)
+        if (bDestroyed)
+            g_MinimizedAll.RemoveAll();
+        else
             ::SetForegroundWindow(hwndActive);
     }
 
