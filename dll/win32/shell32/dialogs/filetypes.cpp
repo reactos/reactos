@@ -33,7 +33,6 @@ WINE_DEFAULT_DEBUG_CHANNEL (fprop);
 
 #define ASSOC_CCHMAX (32 + 1) // Extension or protocol (INTERNET_MAX_SCHEME_LENGTH)
 #define TYPENAME_CCHMAX max(100, RTL_FIELD_SIZE(SHFILEINFOA, szTypeName))
-#define VERBKEY_CCHMAX (127 + 1)
 #define ICONLOCATION_CCHMAX (MAX_PATH + 1 + 11)
 
 typedef struct _FILE_TYPE_ENTRY
@@ -1862,19 +1861,6 @@ FileTypesDlg_OnItemChanging(HWND hwndDlg, PFILE_TYPE_ENTRY pEntry, PFILE_TYPE_GL
                  !(pEntry->EditFlags & FTA_NoEdit) && !pG->Restricted);
     EnableWindow(GetDlgItem(hwndDlg, IDC_FILETYPES_DELETE),
                  !(pEntry->EditFlags & FTA_NoRemove) && !pG->Restricted && pEntry->IsExtension());
-}
-
-static VOID
-FileTypesDlg_UpdateAppInfo(HWND hwndDlg, PFILE_TYPE_ENTRY pEntry)
-{
-    pEntry->ProgramPath[0] = pEntry->AppName[0] = UNICODE_NULL;
-
-    DWORD cch = _countof(pEntry->ProgramPath);
-    if (S_OK == AssocQueryStringW(ASSOCF_INIT_IGNOREUNKNOWN, ASSOCSTR_EXECUTABLE,
-                                  pEntry->FileExtension, NULL, pEntry->ProgramPath, &cch))
-    {
-        QueryFileDescription(pEntry->ProgramPath, pEntry->AppName, _countof(pEntry->AppName));
-    }
 }
 
 // IDD_FOLDER_OPTIONS_FILETYPES
