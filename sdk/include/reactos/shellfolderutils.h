@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "shellutils.h"
+
 #ifdef __cplusplus
 
 template <BOOL LOGICALCMP = TRUE>
@@ -36,7 +38,7 @@ static HRESULT ShellFolderImpl_CompareItemIDs(IShellFolder2 *psf, LPARAM lParam,
     if (CANONICAL >= 0 && (lParam & SHCIDS_CANONICALONLY))
     {
         hr = ShellFolderImpl_CompareItemColumn<LOGICALCMP>(psf, CANONICAL, pidl1, pidl2);
-        if (hr == 0 || !(lParam & SHCIDS_ALLFIELDS) || FAILED(hr))
+        if (hr == S_EQUAL || !(lParam & SHCIDS_ALLFIELDS) || FAILED(hr))
             return hr;
     }
     if (lParam & SHCIDS_ALLFIELDS)
@@ -44,7 +46,7 @@ static HRESULT ShellFolderImpl_CompareItemIDs(IShellFolder2 *psf, LPARAM lParam,
         for (UINT i = 0; i < COLCOUNT; ++i)
         {
             hr = ShellFolderImpl_CompareItemColumn<LOGICALCMP>(psf, i, pidl1, pidl2);
-            if (hr && SUCCEEDED(hr))
+            if (hr && SUCCEEDED(hr)) // Only stop if we successfully found a difference
                 break;
         }
         return hr;

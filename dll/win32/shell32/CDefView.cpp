@@ -1300,7 +1300,7 @@ int CDefView::LV_FindItemByPidl(PCUITEMID_CHILD pidl)
         HRESULT hr = m_pSFParent->CompareIDs(lParam, pidl, currentpidl);
         if (SUCCEEDED(hr))
         {
-            if (hr == 0)
+            if (hr == S_EQUAL)
                 return i;
         }
         else
