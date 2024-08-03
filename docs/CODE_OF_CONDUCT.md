@@ -4,4 +4,4 @@ Be respectful toward other members of the community. Don't initiate or engage in
 
 # See Also
 
-- [Rules for managing Pull Requests](PULL_REQUEST_MANAGEMENT.md)
+- [Rules for Managing Pull Requests](PULL_REQUEST_MANAGEMENT.md)

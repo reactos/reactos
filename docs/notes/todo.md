@@ -1,0 +1,33 @@
+
+## Critical Path Tasks
+- Test and debug Registry routines
+- Implement file cache
+- Implement paging
+
+## These Tasks Would Be Nice
+- Separate HAL into KM DLL
+
+## Function Groups Totally or Partially Unimplemented
+- Dma functions (see hal/x86/dma.c)
+- Shutdown support (see ex/power.c)
+- Zw(Set/Get)SystemInformation (see ex/sysinfo.c)
+- Io cancelation support (see io/cancel, et al)
+- Directory change notification (see io/dir.c)
+  - Error logging (see io/errlog.c)
+  - Io completion ports (see io/iocomp.c)
+  - File locking (see io/lock.c)
+  - Hardware resource management (see io/resource.c)
+  - Exception support (see ke/catch.c)
+  - Mutex support (see nt/mutex.c)
+
+## Verify Implementation
+### Major Areas
+- Security support (see se/*.c)
+- SCSI miniport driver
+
+### Drivers
+- NTFS, EXT2 filesystems
+- Many others (use oem's where possible)
+
+### For the Future
+- DOS, Win16, POSIX subsystems

@@ -114,4 +114,4 @@ Finding a good project to start with can be a challenge, because when starting o
 
 # See Also
 
-- [Rules for managing Pull Requests](PULL_REQUEST_MANAGEMENT.md)
+- [Rules for Managing Pull Requests](PULL_REQUEST_MANAGEMENT.md)
