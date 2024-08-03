@@ -1,5 +1,6 @@
 # Build Instructions
 
+
 ## 1. Build environment
 To build the system it is strongly advised to use the ReactOS Build Environment
 (RosBE). Up-to-date versions for Windows and for Unix/GNU-Linux are available
@@ -7,6 +8,7 @@ from our download page at: https://reactos.org/wiki/Build_Environment
 
 Alternatively one can use Microsoft Visual C++ (MSVC) version 2010+, together
 with separate installations of CMake and the Ninja build utility.
+
 
 ## 2. Building ReactOS
 A throughout guide for how to build ReactOS can be found at:
@@ -27,6 +29,7 @@ If you are using RosBE, follow on-screen instructions.
 To build a bootable CD image run 'ninja bootcd' (without the quotes) from the
 top directory. This will create a CD image with a filename, ReactOS.iso, in
 the top directory.
+
 
 ## 3. Installation
 By default, ReactOS can only be installed on a machine that has a FAT16 or FAT32
@@ -68,10 +71,10 @@ If you are on Linux this could be done by:
 
 Now run 'ninja install' to install the files to the new location.
 
-
 ### 3.2 Installation from bootable CD distribution
 To install ReactOS from the bootable CD distribution, extract the archive
 contents. Then burn the CD image, boot from it, and follow instructions.
+
 
 ## 4. Help
 If you run into problems or have suggestions for making ReactOS better, please

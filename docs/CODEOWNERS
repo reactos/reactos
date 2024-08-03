@@ -1,0 +1,351 @@
+# CODEOWNERS
+## Please see codeowners.md for more information.
+
+# 3rd Party File Format Libraries
+## Maintainer: @ThFabba
+## Reviewers: None
+## Status: Upstream
+## Comments: See media/doc/3rd Party Files.txt
+/dll/3rdparty/libjpeg/                  @ThFabba
+/dll/3rdparty/libpng/                   @ThFabba
+/dll/3rdparty/libtiff/                  @ThFabba
+/dll/3rdparty/libxslt/                  @ThFabba
+/sdk/include/reactos/libs/libjpeg/      @ThFabba
+/sdk/include/reactos/libs/libmpg123/    @ThFabba
+/sdk/include/reactos/libs/libpng/       @ThFabba
+/sdk/include/reactos/libs/libtiff/      @ThFabba
+/sdk/include/reactos/libs/libxml/       @ThFabba
+/sdk/include/reactos/libs/libxslt/      @ThFabba
+/sdk/lib/3rdparty/libmpg123/            @ThFabba
+/sdk/lib/3rdparty/libsamplerate/        @ThFabba
+/sdk/lib/3rdparty/libxml2/              @ThFabba
+
+# ACPI
+## Maintainer: None
+## Reviewers: @ThFabba
+## Status: Maintained
+## Comments: None
+/drivers/bus/acpi/  @ThFabba
+/hal/halx86/acpi/   @ThFabba
+
+# ACPICA Library
+## Maintainer: @ThFabba
+## Reviewers: None
+## Status: Upstream
+## Comments: None
+/drivers/bus/acpi/acpica/   @ThFabba
+
+# Apisets
+## Maintainer: @learn-more
+## Reviewers: None
+## Status: Maintained
+## Comments: None
+/sdk/lib/apisets/   @learn-more
+
+# Application Compatibility subystem
+## Maintainer: @learn-more
+## Reviewers: None
+## Status: Maintained
+## Comments: None
+/dll/appcompat/         @learn-more
+/dll/shellext/acppage/  @learn-more
+/ntoskrnl/ps/apphelp.c  @learn-more
+/sdk/tools/xml2sdb/     @learn-more
+
+# Cache Manager
+## Maintainer: @HeisSpiter
+## Reviewers: None
+## Status: Maintained
+## Comments: None
+/modules/rostests/kmtests/ntos_cc/  @HeisSpiter
+/ntoskrnl/cc/                       @HeisSpiter
+
+# Cache Manager Rewrite
+## Maintainer: None
+## Reviewers: None
+## Status: Abandoned
+## Comments: None
+/ntoskrnl/cache/
+
+# CMake Build Scripts
+## Maintainer: None
+## Reviewers: @learn-more
+## Status: Maintained
+## Comments: None
+/sdk/cmake/
+*.cmake
+
+# File Patch API
+## Maintainer: @learn-more
+## Reviewers: None
+## Status: Maintained
+## Comments: None
+/dll/win32/mspatcha/    @learn-more
+
+# File Systems
+## Maintainer: @HeisSpiter
+## Reviewers: None
+## Status: Maintained
+## Comments: Also see "Upstream File Systems"
+/drivers/filesystems/   @HeisSpiter
+/sdk/lib/fslib/         @HeisSpiter
+
+# Filesystem Filter Manager
+## Maintainer: @gedmurphy
+## Reviewers: None
+## Status: Maintained
+## Comments: None
+/drivers/filters/fltmgr/ @gedmurphy
+
+# File Systems Run Time Library
+## Maintainer: @HeisSpiter
+## Reviewers: None
+## Status: Maintained
+## Comments: None
+/modules/rostests/kmtests/ntos_fsrtl/       @HeisSpiter
+/modules/rostests/kmtests/novp_fsrtl/       @HeisSpiter
+/ntoskrnl/fsrtl/                            @HeisSpiter
+/sdk/lib/drivers/ntoskrnl_vista/fsrtl.c     @HeisSpiter
+
+# Freeloader
+## Maintainer: None
+## Reviewers: @tkreuzer
+## Status: Maintained
+## Comments: None
+/boot/freeldr/freeldr/  @tkreuzer @Extravert-ir
+
+# HAL / APIC
+## Maintainer: @tkreuzer
+## Reviewers: None
+## Status: Maintained
+## Comments: None
+/hal/halx86/apic/   @tkreuzer
+
+# HID Drivers
+## Maintainer: None
+## Reviewers: @ThFabba
+## Status: Maintained
+## Comments: None
+/drivers/hid/   @ThFabba
+
+# Kernel
+## Maintainer: None
+## Reviewers: @HeisSpiter, @ThFabba, @tkreuzer
+## Status: Maintained
+## Comments: None
+/ntoskrnl/  @HeisSpiter @ThFabba @tkreuzer
+
+# mbed TLS
+## Maintainer: @ThFabba
+## Reviewers: None
+## Status: Upstream
+## Comments: See media/doc/3rd Party Files.txt
+/dll/3rdparty/mbedtls/              @ThFabba
+/sdk/include/reactos/libs/mbedtls/  @ThFabba
+
+# Mount Point Manager
+## Maintainer: @HeisSpiter
+## Reviewers: None
+## Status: Maintained
+## Comments: None
+/drivers/storage/mountmgr/ @HeisSpiter
+
+# Network Drivers
+## Maintainer: None
+## Reviewers: @ThFabba
+## Status: Maintained
+## Comments: None
+/drivers/network/   @ThFabba
+
+# Intel PRO/1000 NIC family driver
+## Maintainer: None
+## Reviewers: @ThFabba, @Extravert-ir
+## Status: Maintained
+## Comments: None
+/drivers/network/dd/e1000/   @ThFabba @Extravert-ir
+
+# Network File Systems kernel libraries
+## Maintainer: @HeisSpiter
+## Reviewers: None
+## Status: Maintained
+## Comments: None
+/sdk/lib/drivers/rdbsslib/  @HeisSpiter
+/sdk/lib/drivers/rxce/      @HeisSpiter
+
+# NTDLL
+## Maintainer: @HeisSpiter
+## Reviewers: @HeisSpiter, @learn-more, @ThFabba, @tkreuzer
+## Status: Maintained
+## Comments: None
+/dll/ntdll/ @HeisSpiter @learn-more @ThFabba @tkreuzer
+
+# Printing
+## Maintainer: @ColinFinck
+## Reviewers: None
+## Status: Maintained
+## Comments: None
+/win32ss/printing/ @ColinFinck
+
+# ReactOS API Tests
+## Maintainer: None
+## Reviewers: @learn-more, @ThFabba
+## Status: Maintained
+## Comments: None
+/modules/rostests/apitests/
+
+# ReactOS Kernel-Mode Tests
+## Maintainer: @ThFabba
+## Reviewers: None
+## Status: Maintained
+## Comments: None
+/modules/rostests/kmtests/  @ThFabba
+
+# ROS internals tools
+## Maintainer: @HeisSpiter
+## Reviewers: None
+## Status: Maintained
+## Comments: None
+/modules/rosapps/applications/rosinternals/ @HeisSpiter
+
+# Run-Time Library (RTL)
+## Maintainer: None
+## Reviewers: @HeisSpiter, @learn-more, @ThFabba, @tkreuzer
+## Status: Maintained
+## Comments: None
+/sdk/lib/rtl/   @HeisSpiter @learn-more @ThFabba @tkreuzer
+
+# Security Manager
+## Maintainer: @GeoB99
+## Reviewers: None
+## Status: Maintained
+## Comments: None
+/modules/rostests/kmtests/ntos_se/   @GeoB99
+/ntoskrnl/se/                        @GeoB99
+
+# Shell
+## Maintainer: None
+## Reviewers: @learn-more, @yagoulas
+## Status: Maintained
+## Comments: None
+/base/shell/explorer/   @learn-more @yagoulas
+/base/shell/rshell/     @learn-more @yagoulas
+/dll/win32/browseui/    @learn-more @yagoulas
+/dll/win32/shell32/     @learn-more @yagoulas
+
+# Shell Extensions
+## Maintainer: None
+## Reviewers: @learn-more
+## Status: Maintained
+## Comments: None
+/dll/shellext/  @learn-more
+
+# UniATA
+## Maintainer: @ThFabba
+## Reviewers: None
+## Status: Upstream
+## Comments: None
+/drivers/storage/ide/uniata/   @ThFabba
+
+# Upstream File Systems
+## Maintainer: @HeisSpiter
+## Reviewers: None
+## Status: Upstream
+## Comments: None
+/base/services/nfsd/                @HeisSpiter
+/dll/np/nfs/                        @HeisSpiter
+/dll/shellext/shellbtrfs/           @HeisSpiter
+/drivers/filesystems/btrfs/         @HeisSpiter
+/drivers/filesystems/cdfs/          @HeisSpiter
+/drivers/filesystems/ext2/          @HeisSpiter
+/drivers/filesystems/fastfat/       @HeisSpiter
+/drivers/filesystems/nfs/           @HeisSpiter
+/media/doc/README.FSD               @HeisSpiter
+/sdk/lib/fslib/btrfslib/            @HeisSpiter
+/sdk/lib/fslib/ext2lib/             @HeisSpiter
+/sdk/lib/fslib/vfatlib/check/       @HeisSpiter
+
+# USB Drivers
+## Maintainer: @ThFabba
+## Reviewers: @Extravert-ir
+## Status: Maintained
+## Comments: None
+/drivers/usb/                           @ThFabba @Extravert-ir
+/sdk/include/reactos/drivers/usbport/   @ThFabba @Extravert-ir
+
+# Virtual CD-ROM
+## Maintainer: @HeisSpiter
+## Reviewers: None
+## Status: Maintained
+## Comments: None
+/modules/rosapps/applications/cmdutils/vcdcli/  @HeisSpiter
+/modules/rosapps/applications/vcdcontroltool/   @HeisSpiter
+/modules/rosapps/drivers/vcdrom/                @HeisSpiter
+
+# Virtual Floppy Disk
+## Maintainer: @HeisSpiter
+## Reviewers: None
+## Status: Upstream
+## Comments: None
+/modules/rosapps/applications/cmdutils/vfdcmd/  @HeisSpiter
+/modules/rosapps/drivers/vfd/                   @HeisSpiter
+
+# Win32 file functions
+## Maintainer: @HeisSpiter
+## Reviewers: None
+## Status: Maintained
+## Comments: None
+/dll/win32/kernel32/client/file/    @HeisSpiter
+
+# Windows Network File Systems functions
+## Maintainer: @HeisSpiter
+## Reviewers: None
+## Status: Upstream
+## Comments: None
+/dll/win32/mpr/wnet.c   @HeisSpiter
+
+# Wine Tests
+## Maintainer: None
+## Reviewers: @ThFabba
+## Status: Upstream
+## Comments: None
+/modules/rostests/winetests/    @ThFabba
+
+# zlib
+## Maintainer: @ThFabba
+## Reviewers: None
+## Status: Upstream
+## Comments: See media/doc/3rd Party Files.txt
+/sdk/include/reactos/libs/zlib/ @ThFabba
+/sdk/lib/3rdparty/zlib/         @ThFabba
+
+# x64 related code (keep this at the bottom)
+## Maintainer: @tkreuzer
+## Reviewers: None
+## Status: Maintained
+## Comments: None
+amd64/                                      @tkreuzer
+/boot/freeldr/freeldr/arch/realmode/amd64.S @tkreuzer
+
+# Translations
+## This is the list of translation teams in ReactOS GitHub organization.
+## If you want to be part of one - hit us at https://chat.reactos.org/
+de-DE.*    @reactos/lang-german
+es-ES.*    @reactos/lang-spanish
+et-EE.*    @reactos/lang-estonian
+fr-FR.*    @reactos/lang-french
+he-IL.*    @reactos/lang-hebrew
+hi-IN.*    @reactos/lang-hindi
+hu-HU.*    @reactos/lang-hungarian
+id-ID.*    @reactos/lang-indonesian
+it-IT.*    @reactos/lang-italian
+nl-NL.*    @reactos/lang-dutch
+pl-PL.*    @reactos/lang-polish
+pt-BR.*    @reactos/lang-portuguese
+pt-PT.*    @reactos/lang-portuguese
+ro-RO.*    @reactos/lang-romanian
+ru-RU.*    @reactos/lang-russian
+tr-TR.*    @reactos/lang-turkish
+uk-UA.*    @reactos/lang-ukrainian
+zh-CN.*    @reactos/lang-chinese
+zh-HK.*    @reactos/lang-chinese
+zh-TW.*    @reactos/lang-chinese
