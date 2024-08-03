@@ -46,6 +46,7 @@ typedef struct PART_TEST
     E_MODULE eModule;
     UINT id;
     SIZE_T nParts;
+    SIZE_T gotParts;
 } PART_TEST;
 
 typedef struct PART
@@ -59,6 +60,7 @@ typedef struct PART_MATCH
     PART p1, p2;
 } PART_MATCH;
 
+BOOL XPorlower;
 LCID curLcid = 0;
 std::set<LANGID> langs;
 std::map<E_MODULE, HMODULE> mod;
@@ -120,6 +122,40 @@ static PART_MATCH PartMatches[] =
     { { SH32_PROGRAM_FILES_COMMON, 1 }, { SYSS_COMMONFILES, 0 } },
 };
 
+static int GetLocalisedText(_In_opt_ HINSTANCE hInstance, _In_ UINT uID, _Out_ LPWSTR lpBuffer, _In_ int cchBufferMax)
+{
+    HRSRC hRes = FindResourceExW(hInstance, (LPWSTR)RT_STRING,
+                                 MAKEINTRESOURCEW((uID >> 4) + 1), curLcid);
+
+    if (!hRes)
+        hRes = FindResourceExW(hInstance, (LPWSTR)RT_STRING,
+                               MAKEINTRESOURCEW((uID >> 4) + 1),
+                               MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), SORT_DEFAULT));
+
+    if (!hRes)
+        return 0;
+
+    HGLOBAL hMem = LoadResource(hInstance, hRes);
+    if (!hMem)
+        return 0;
+
+    PWCHAR p = (PWCHAR)LockResource(hMem);
+    for (UINT i = 0; i < (uID & 0x0F); i++) p += *p + 1;
+
+    int len = (*p > cchBufferMax ? cchBufferMax : *p);
+    memcpy(lpBuffer, p + 1, len * sizeof(WCHAR));
+    lpBuffer[len] = UNICODE_NULL;
+    return len;
+}
+
+static int LoadStringWrapW(_In_opt_ HINSTANCE hInstance, _In_ UINT uID, _Out_ LPWSTR lpBuffer, _In_ int cchBufferMax)
+{
+    if (XPorlower)
+        return GetLocalisedText(hInstance, uID, lpBuffer, cchBufferMax);
+    else
+        return LoadStringW(hInstance, uID, lpBuffer, cchBufferMax);
+}
+
 static DWORD CountParts(_In_ LPWSTR str)
 {
     DWORD count = 0;
@@ -147,6 +183,9 @@ static LPWSTR GetPart(_In_ LPWSTR str, _In_ SIZE_T num, _Out_ SIZE_T* len)
         count++;
         ptr++;
     }
+
+    if (!ptr)
+        ptr = str;
 
     next = wcschr(ptr, L'\\');
     *len = next ? next - ptr : wcslen(ptr);
@@ -181,9 +220,11 @@ static void TEST_NumParts(void)
 
         WCHAR szBuffer[MAX_PATH];
 
-        LoadStringW(mod[m], p.second.id, szBuffer, _countof(szBuffer));
-        ok(p.second.nParts == CountParts(szBuffer), "Locale 0x%lX: Num parts mismatch %d - expected %lu, got %lu\n",
-           curLcid, p.first, p.second.nParts, CountParts(szBuffer));
+        LoadStringWrapW(mod[m], p.second.id, szBuffer, _countof(szBuffer));
+        p.second.gotParts = CountParts(szBuffer);
+
+        ok(p.second.nParts == p.second.gotParts, "Locale 0x%lX: Num parts mismatch %d - expected %lu, got %lu\n",
+           curLcid, p.first, p.second.nParts, p.second.gotParts);
     }
 }
 
@@ -193,13 +234,22 @@ static BOOL LoadPart(_In_ PART* p, _Out_ LPWSTR str, _In_ SIZE_T size)
     E_MODULE m = s.eModule;
 
     if (!mod[m])
+    {
+        SetLastError(ERROR_FILE_NOT_FOUND);
         return FALSE;
+    }
+
+    if (s.nParts != s.gotParts)
+    {
+        SetLastError(ERROR_INVALID_DATA);
+        return FALSE;
+    }
 
     WCHAR szBuffer[MAX_PATH];
     LPWSTR szPart;
     SIZE_T len;
 
-    LoadStringW(mod[m], s.id, szBuffer, _countof(szBuffer));
+    LoadStringWrapW(mod[m], s.id, szBuffer, _countof(szBuffer));
     szPart = GetPart(szBuffer, p->Idx, &len);
     StringCchCopyNW(str, size, szPart, len);
 
@@ -214,13 +264,15 @@ static void TEST_PartMatches(void)
 
         if (!LoadPart(&match.p1, szP1, _countof(szP1)))
         {
-            skip("No module for match test %d (pair 1)\n", match.p1.Num);
+            skip("%s for match test %d (pair 1)\n", GetLastError() == ERROR_FILE_NOT_FOUND
+                ? "No module" : "Invalid data", match.p1.Num);
             continue;
         }
 
         if (!LoadPart(&match.p2, szP2, _countof(szP2)))
         {
-            skip("No module for match test %d (pair 2)\n", match.p2.Num);
+            skip("%s for match test %d (pair 2)\n", GetLastError() == ERROR_FILE_NOT_FOUND
+                ? "No module" : "Invalid data", match.p2.Num);
             continue;
         }
 
@@ -233,6 +285,14 @@ static void TEST_LocaleTests(void)
 {
     // Initialization
     InitParts();
+
+    OSVERSIONINFOEXW osvi;
+    memset(&osvi, 0, sizeof(osvi));
+    osvi.dwOSVersionInfoSize = sizeof(osvi);
+
+    GetVersionExW((LPOSVERSIONINFOW)&osvi);
+    DWORD version = (osvi.dwMajorVersion << 8) | osvi.dwMinorVersion;
+    XPorlower = (version < 0x502);
 
     WCHAR szOldDir[MAX_PATH], szBuffer[MAX_PATH];
     GetCurrentDirectoryW(_countof(szOldDir), szOldDir);
