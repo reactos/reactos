@@ -27,3 +27,8 @@ If you want to get listed in `CODEOWNERS`, open a pull request.
 This file uses GitHub's format for specifying code owners.
 - Lines starting with `#` are comment lines.
 - All other lines specify a path / file (wildcards allowed) followed by the GitHub user name(s) of the code owners. See https://help.github.com/en/articles/about-code-owners for more information.
+
+
+## See Also
+
+- [CODEOWNERS](CODEOWNERS)

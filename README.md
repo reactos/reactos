@@ -13,7 +13,7 @@
     <img alt="Download ReactOS" src="https://img.shields.io/badge/download-latest-0688CB.svg"></a>
   <a href="https://sourceforge.net/projects/reactos/">
     <img alt="SourceForge Download" src="https://img.shields.io/sourceforge/dm/reactos.svg?colorB=0688CB"></a>
-  <a href="https://github.com/reactos/reactos/blob/master/COPYING">
+  <a href="https://github.com/reactos/reactos/blob/master/docs/licenses/COPYING">
     <img alt="License" src="https://img.shields.io/badge/license-GNU_GPL_2.0-0688CB.svg"></a>
   <a href="https://reactos.org/donate/">
     <img alt="Donate" src="https://img.shields.io/badge/%24-donate-E44E4A.svg"></a>
@@ -37,7 +37,7 @@ ReactOS™ is an Open Source effort to develop a quality operating system that i
 
 The ReactOS project, although currently focused on Windows Server 2003 compatibility, is always keeping an eye toward compatibility with Windows Vista and future Windows NT releases.
 
-The code of ReactOS is licensed under [GNU GPL 2.0](https://github.com/reactos/reactos/blob/master/COPYING).
+The code of ReactOS is licensed under [GNU GPL 2.0](https://github.com/reactos/reactos/blob/master/docs/licenses/COPYING).
 
 ### Product quality warning
 
@@ -107,12 +107,12 @@ ReactOS is also not "yet another OS". It does not attempt to be a third player l
 
 More information is available at: [reactos.org](https://reactos.org/).
 
-Also see the [media/doc](/media/doc/) subdirectory for some sparse notes.
+Also see the [docs/notes](/docs/notes/) subdirectory for some sparse notes.
 
 ## Who is responsible
 
 Active devs are listed as members of [GitHub organization](https://github.com/orgs/reactos/people).
-See also the [CREDITS](CREDITS) file for others.
+See also the [CREDITS](docs/CREDITS.md) file for others.
 
 ## Code mirrors
 
