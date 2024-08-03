@@ -1,0 +1,172 @@
+/*
+ * Top level resource file for Common Controls
+ *
+ * Copyright 1999 Bertho Stultiens
+ * Copyright 1999 Eric Kohl
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "comctl32.h"
+
+#pragma makedep po
+
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    IDS_CLOSE    "Close"
+}
+
+STRINGTABLE
+{
+    IDM_TODAY    "Today:"
+    IDM_GOTODAY  "Go to today"
+}
+
+STRINGTABLE
+{
+    IDS_SEPARATOR "Separator"
+}
+
+STRINGTABLE
+{
+    HKY_NONE "#msgctxt#hotkey#None"
+}
+
+STRINGTABLE
+{
+    IDS_BUTTON_YES    "&Yes"
+    IDS_BUTTON_NO     "&No"
+    IDS_BUTTON_RETRY  "&Retry"
+    IDS_BUTTON_OK     "OK"
+    IDS_BUTTON_CANCEL "Cancel"
+    IDS_BUTTON_CLOSE  "&Close"
+}
+
+STRINGTABLE
+{
+    IDS_TD_EXPANDED   "Hide details"
+    IDS_TD_COLLAPSED  "See details"
+}
+
+IDD_PROPSHEET DIALOG 0, 0, 220, 140
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
+CAPTION "Properties for %s"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  DEFPUSHBUTTON "OK",     IDOK,4,122,50,14, WS_TABSTOP | WS_GROUP
+  PUSHBUTTON    "Cancel", IDCANCEL,58,122,50,14
+  PUSHBUTTON    "&Apply", IDC_APPLY_BUTTON,112,122,50,14,WS_DISABLED
+  PUSHBUTTON    "Help",   IDHELP,166,122,50,14,WS_TABSTOP|WS_GROUP
+  CONTROL       "",       IDC_TABCONTROL,"SysTabControl32",WS_CLIPSIBLINGS|WS_GROUP|WS_TABSTOP|TCS_MULTILINE,4,4,212,114
+END
+
+
+IDD_WIZARD DIALOG 0, 0, 290, 159
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
+CAPTION "Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  PUSHBUTTON    "< &Back", IDC_BACK_BUTTON,56,138,55,14
+  DEFPUSHBUTTON "&Next >", IDC_NEXT_BUTTON,111,138,55,14
+  DEFPUSHBUTTON "Finish",  IDC_FINISH_BUTTON,111,138,55,14
+  PUSHBUTTON    "Cancel",  IDCANCEL,173,138,55,14
+  PUSHBUTTON    "Help",    IDHELP,235,138,55,14,WS_GROUP
+  LTEXT         "",        IDC_SUNKEN_LINE,7,129,278,1,SS_SUNKEN
+  CONTROL       "",        IDC_TABCONTROL,"SysTabControl32",WS_CLIPSIBLINGS | WS_DISABLED,7,7,258,5
+  LTEXT	        "",        IDC_SUNKEN_LINEHEADER,0,35,290,1,SS_LEFT | SS_SUNKEN | WS_CHILD | WS_VISIBLE
+END
+
+
+IDD_TBCUSTOMIZE DIALOG 10, 20, 395, 125
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Customize Toolbar"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  DEFPUSHBUTTON "&Close",     IDCANCEL,320,6,70,14
+  PUSHBUTTON    "R&eset",     IDC_RESET_BTN,320,23,70,14
+  PUSHBUTTON    "&Help",      IDC_HELP_BTN,320,40,70,14
+  PUSHBUTTON    "Move &Up",   IDC_MOVEUP_BTN,320,74,70,14
+  PUSHBUTTON    "Move &Down", IDC_MOVEDN_BTN,320,91,70,14
+  LTEXT         "A&vailable buttons:", -1,4,5,120,10
+  LISTBOX       IDC_AVAILBTN_LBOX,5,17,120,100, LBS_NOTIFY | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
+  PUSHBUTTON    "&Add ->",    IDOK, 132, 42, 55, 14
+  PUSHBUTTON    "<- &Remove", IDC_REMOVE_BTN,132,62,55,14
+  LTEXT         "&Toolbar buttons:", -1,194,5,120,10
+  LISTBOX       IDC_TOOLBARBTN_LBOX, 194,17,120,100,LBS_NOTIFY | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
+END
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+#define WINE_FILEDESCRIPTION_STR "Wine Common Controls"
+#define WINE_FILENAME_STR "comctl32.dll"
+#define WINE_FILEVERSION COMCTL32_VERSION, COMCTL32_VERSION_MINOR, 4704, 1100
+#define WINE_FILEVERSION_STR "5.81"
+#define WINE_PRODUCTVERSION WINE_FILEVERSION
+#define WINE_PRODUCTVERSION_STR WINE_FILEVERSION_STR
+
+#include "wine/wine_common_ver.rc"
+
+/* @makedep: comctl32.manifest */
+WINE_MANIFEST RT_MANIFEST comctl32.manifest
+
+/* @makedep: idt_check.bmp */
+IDT_CHECK BITMAP idt_check.bmp
+
+/* @makedep: idb_std_small.bmp */
+IDB_STD_SMALL BITMAP idb_std_small.bmp
+
+/* @makedep: idb_std_large.bmp */
+IDB_STD_LARGE BITMAP idb_std_large.bmp
+
+/* @makedep: idb_view_small.bmp */
+IDB_VIEW_SMALL BITMAP idb_view_small.bmp
+
+/* @makedep: idb_view_large.bmp */
+IDB_VIEW_LARGE BITMAP idb_view_large.bmp
+
+/* @makedep: idb_hist_small.bmp */
+IDB_HIST_SMALL BITMAP idb_hist_small.bmp
+
+/* @makedep: idb_hist_large.bmp */
+IDB_HIST_LARGE BITMAP idb_hist_large.bmp
+
+/* @makedep: idb_cmdlink.bmp */
+IDB_CMDLINK BITMAP idb_cmdlink.bmp
+
+/* @makedep: idc_copy.cur */
+IDC_COPY CURSOR idc_copy.cur
+
+/* @makedep: idc_divider.cur */
+IDC_DIVIDER CURSOR idc_divider.cur
+
+/* @makedep: idc_divideropen.cur */
+IDC_DIVIDEROPEN CURSOR idc_divideropen.cur
+
+/* @makedep: idc_movebutton.cur */
+IDC_MOVEBUTTON CURSOR idc_movebutton.cur
+
+/* @makedep: idi_dragarrow.ico */
+IDI_DRAGARROW ICON idi_dragarrow.ico
+
+/* @makedep: idi_tt_info_sm.ico */
+IDI_TT_INFO_SM ICON idi_tt_info_sm.ico
+
+/* @makedep: idi_tt_warn_sm.ico */
+IDI_TT_WARN_SM ICON idi_tt_warn_sm.ico
+
+/* @makedep: idi_tt_error_sm.ico */
+IDI_TT_ERROR_SM ICON idi_tt_error_sm.ico

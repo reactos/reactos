@@ -23,9 +23,7 @@
  *
  * TODO:
  *   - EDITBALLOONTIP structure
- *   - EM_GETCUEBANNER/Edit_GetCueBannerText
  *   - EM_HIDEBALLOONTIP/Edit_HideBalloonTip
- *   - EM_SETCUEBANNER/Edit_SetCueBannerText
  *   - EM_SHOWBALLOONTIP/Edit_ShowBalloonTip
  *   - EM_GETIMESTATUS, EM_SETIMESTATUS
  *   - EN_ALIGN_LTR_EC
@@ -33,8 +31,6 @@
  *   - ES_OEMCONVERT
  *
  */
-
-#include "config.h"
 
 #include <stdarg.h>
 #include <string.h>
@@ -53,7 +49,6 @@
 #include "commctrl.h"
 #include "uxtheme.h"
 #include "vsstyle.h"
-#include "wine/unicode.h"
 #include "wine/debug.h"
 #include "wine/heap.h"
 
@@ -139,6 +134,9 @@ typedef struct
 					   should be sent to the first parent. */
 	HWND hwndListBox;		/* handle of ComboBox's listbox or NULL */
 	INT wheelDeltaRemainder;        /* scroll wheel delta left over after scrolling whole lines */
+	WCHAR *cue_banner_text;
+	BOOL cue_banner_draw_focused;
+
 	/*
 	 *	only for multi line controls
 	 */
@@ -183,7 +181,7 @@ static LRESULT EDIT_EM_PosFromChar(EDITSTATE *es, INT index, BOOL after_wrap);
  */
 static inline BOOL EDIT_EM_CanUndo(const EDITSTATE *es)
 {
-	return (es->undo_insert_count || strlenW(es->undo_text));
+	return (es->undo_insert_count || lstrlenW(es->undo_text));
 }
 
 
@@ -219,7 +217,7 @@ static HBRUSH EDIT_NotifyCtlColor(EDITSTATE *es, HDC hdc)
 static inline UINT get_text_length(EDITSTATE *es)
 {
     if(es->text_length == (UINT)-1)
-        es->text_length = strlenW(es->text);
+        es->text_length = lstrlenW(es->text);
     return es->text_length;
 }
 
@@ -527,7 +525,7 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 		/* Mark type of line termination */
 		if (!(*cp)) {
 			current_line->ending = END_0;
-			current_line->net_length = strlenW(current_position);
+			current_line->net_length = lstrlenW(current_position);
 		} else if ((cp > current_position) && (*(cp - 1) == '\r')) {
 			current_line->ending = END_SOFT;
 			current_line->net_length = cp - current_position - 1;
@@ -1052,15 +1050,11 @@ static LRESULT EDIT_EM_PosFromChar(EDITSTATE *es, INT index, BOOL after_wrap)
 		lw = line_def->width;
 		w = es->format_rect.right - es->format_rect.left;
 		if (line_def->ssa)
-		{
 			ScriptStringCPtoX(line_def->ssa, (index - 1) - li, TRUE, &x);
-			x -= es->x_offset;
-		}
-		else
 #ifdef __REACTOS__ /* CORE-15780 */
-			x = (lw > 0 ? es->x_offset : x - es->x_offset);
+		x = (lw > 0 ? es->x_offset : x - es->x_offset);
 #else
-			x = es->x_offset;
+		x = es->x_offset;
 #endif
 
 		if (es->style & ES_RIGHT)
@@ -1836,7 +1830,6 @@ static void EDIT_EM_ScrollCaret(EDITSTATE *es)
 		}
 	}
 
-    if(es->flags & EF_FOCUSED)
 	EDIT_SetCaretPos(es, es->selection_end, es->flags & EF_AFTER_WRAP);
 }
 
@@ -2248,6 +2241,12 @@ static void EDIT_PaintLine(EDITSTATE *es, HDC dc, INT line, BOOL rev)
 		x += EDIT_PaintText(es, dc, x, y, line, e - li, li + ll - e, FALSE);
 	} else
 		x += EDIT_PaintText(es, dc, x, y, line, 0, ll, FALSE);
+
+       if (es->cue_banner_text && es->text_length == 0 && (!(es->flags & EF_FOCUSED) || es->cue_banner_draw_focused))
+       {
+	       SetTextColor(dc, GetSysColor(COLOR_GRAYTEXT));
+	       TextOutW(dc, x, y, es->cue_banner_text, lstrlenW(es->cue_banner_text));
+       }
 }
 
 
@@ -2537,7 +2536,7 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, const WCHAR *lpsz_r
 		memcpy(buf, es->text + s, bufl * sizeof(WCHAR));
 		buf[bufl] = 0; /* ensure 0 termination */
 		/* now delete */
-		strcpyW(es->text + s, es->text + e);
+		lstrcpyW(es->text + s, es->text + e);
                 text_buffer_changed(es);
 	}
 	if (strl) {
@@ -2565,7 +2564,7 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, const WCHAR *lpsz_r
 		/* if text is too long undo all changes */
 		if (honor_limit && !(es->style & ES_AUTOVSCROLL) && (es->line_count > vlc)) {
 			if (strl)
-				strcpyW(es->text + e, es->text + e + strl);
+				lstrcpyW(es->text + e, es->text + e + strl);
 			if (e != s)
 				for (i = 0 , p = es->text ; i < e - s ; i++)
 					p[i + s] = buf[i];
@@ -2585,7 +2584,7 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, const WCHAR *lpsz_r
 		/* remove chars that don't fit */
 		if (honor_limit && !(es->style & ES_AUTOHSCROLL) && (es->text_width > fw)) {
 			while ((es->text_width > fw) && s + strl >= s) {
-				strcpyW(es->text + s + strl - 1, es->text + s + strl);
+				lstrcpyW(es->text + s + strl - 1, es->text + s + strl);
 				strl--;
 				es->text_length = -1;
 				EDIT_InvalidateUniscribeData(es);
@@ -2598,7 +2597,7 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, const WCHAR *lpsz_r
 
 	if (e != s) {
 		if (can_undo) {
-			utl = strlenW(es->undo_text);
+			utl = lstrlenW(es->undo_text);
 			if (!es->undo_insert_count && (*es->undo_text && (s == es->undo_position))) {
 				/* undo-buffer is extended to the right */
 				EDIT_MakeUndoFit(es, utl + e - s);
@@ -2742,6 +2741,36 @@ static void EDIT_EM_SetLimitText(EDITSTATE *es, UINT limit)
     es->buffer_limit = limit;
 }
 
+static BOOL is_cjk(HDC dc)
+{
+    const DWORD FS_DBCS_MASK = FS_JISJAPAN|FS_CHINESESIMP|FS_WANSUNG|FS_CHINESETRAD|FS_JOHAB;
+    FONTSIGNATURE fs;
+
+    switch (GdiGetCodePage(dc)) {
+    case 932: case 936: case 949: case 950: case 1361:
+        return TRUE;
+    default:
+        return (GetTextCharsetInfo(dc, &fs, 0) != DEFAULT_CHARSET &&
+                (fs.fsCsb[0] & FS_DBCS_MASK));
+    }
+}
+
+static int get_cjk_fontinfo_margin(int width, int side_bearing)
+{
+    int margin;
+    if (side_bearing < 0)
+        margin = min(-side_bearing, width/2);
+    else
+        margin = 0;
+    return margin;
+}
+
+struct char_width_info {
+    INT min_lsb, min_rsb, unknown;
+};
+
+/* Undocumented gdi32 export */
+extern BOOL WINAPI GetCharWidthInfo(HDC, struct char_width_info *);
 
 /*********************************************************************
  *
@@ -2751,26 +2780,10 @@ static void EDIT_EM_SetLimitText(EDITSTATE *es, UINT limit)
  * action wParam despite what the docs say. EC_USEFONTINFO calculates the
  * margin according to the textmetrics of the current font.
  *
- * When EC_USEFONTINFO is used in the non_cjk case the margins only
- * change if the edit control is equal to or larger than a certain
- * size.  Though there is an exception for the empty client rect case
- * with small font sizes.
+ * When EC_USEFONTINFO is used, the margins only change if the edit control is
+ * equal to or larger than a certain size. The empty client rect is treated as
+ * 80 pixels width.
  */
-static BOOL is_cjk(UINT charset)
-{
-    switch(charset)
-    {
-    case SHIFTJIS_CHARSET:
-    case HANGUL_CHARSET:
-    case GB2312_CHARSET:
-    case CHINESEBIG5_CHARSET:
-        return TRUE;
-    }
-    /* HANGUL_CHARSET is strange, though treated as CJK by Win 8, it is
-     * not by other versions including Win 10. */
-    return FALSE;
-}
-
 static void EDIT_EM_SetMargins(EDITSTATE *es, INT action,
 			       WORD left, WORD right, BOOL repaint)
 {
@@ -2782,25 +2795,29 @@ static void EDIT_EM_SetMargins(EDITSTATE *es, INT action,
         if (es->font && (left == EC_USEFONTINFO || right == EC_USEFONTINFO)) {
             HDC dc = GetDC(es->hwndSelf);
             HFONT old_font = SelectObject(dc, es->font);
-            LONG width = GdiGetCharDimensions(dc, &tm, NULL);
+            LONG width = GdiGetCharDimensions(dc, &tm, NULL), rc_width;
             RECT rc;
 
             /* The default margins are only non zero for TrueType or Vector fonts */
             if (tm.tmPitchAndFamily & ( TMPF_VECTOR | TMPF_TRUETYPE )) {
-                if (!is_cjk(tm.tmCharSet)) {
-                    default_left_margin = width / 2;
-                    default_right_margin = width / 2;
+                struct char_width_info width_info;
 
-                    GetClientRect(es->hwndSelf, &rc);
-                    if (rc.right - rc.left < (width / 2 + width) * 2 &&
-                        (width >= 28 || !IsRectEmpty(&rc)) ) {
-                        default_left_margin = es->left_margin;
-                        default_right_margin = es->right_margin;
-                    }
-                } else {
-                    /* FIXME: figure out the CJK values. They are not affected by the client rect. */
+                if (is_cjk(dc) && GetCharWidthInfo(dc, &width_info))
+                {
+                    default_left_margin = get_cjk_fontinfo_margin(width, width_info.min_lsb);
+                    default_right_margin = get_cjk_fontinfo_margin(width, width_info.min_rsb);
+                }
+                else
+                {
                     default_left_margin = width / 2;
                     default_right_margin = width / 2;
+                }
+
+                GetClientRect(es->hwndSelf, &rc);
+                rc_width = !IsRectEmpty(&rc) ? rc.right - rc.left : 80;
+                if (rc_width < default_left_margin + default_right_margin + width * 2) {
+                    default_left_margin = es->left_margin;
+                    default_right_margin = es->right_margin;
                 }
             }
             SelectObject(dc, old_font);
@@ -2919,11 +2936,11 @@ static BOOL EDIT_EM_Undo(EDITSTATE *es)
 	if( es->style & ES_READONLY )
             return !(es->style & ES_MULTILINE);
 
-	ulength = strlenW(es->undo_text);
+	ulength = lstrlenW(es->undo_text);
 
 	utext = heap_alloc((ulength + 1) * sizeof(WCHAR));
 
-	strcpyW(utext, es->undo_text);
+	lstrcpyW(utext, es->undo_text);
 
 	TRACE("before UNDO:insertion length = %d, deletion buffer = %s\n",
 		     es->undo_insert_count, debugstr_w(utext));
@@ -2974,9 +2991,9 @@ static void EDIT_WM_Paste(EDITSTATE *es)
 	OpenClipboard(es->hwndSelf);
 	if ((hsrc = GetClipboardData(CF_UNICODETEXT))) {
 		src = GlobalLock(hsrc);
-                len = strlenW(src);
+                len = lstrlenW(src);
 		/* Protect single-line edit against pasting new line character */
-		if (!(es->style & ES_MULTILINE) && ((ptr = strchrW(src, '\n')))) {
+		if (!(es->style & ES_MULTILINE) && ((ptr = wcschr(src, '\n')))) {
 			len = ptr - src;
 			if (len && src[len - 1] == '\r')
 				--len;
@@ -3246,7 +3263,7 @@ static INT EDIT_WM_GetText(const EDITSTATE *es, INT count, LPWSTR dst)
         return 0;
 
     lstrcpynW(dst, es->text, count);
-    return strlenW(dst);
+    return lstrlenW(dst);
 }
 
 /*********************************************************************
@@ -3381,22 +3398,17 @@ static LRESULT EDIT_WM_KeyDown(EDITSTATE *es, INT key)
 				else
 					EDIT_WM_Clear(es);
 			} else {
-				if (shift) {
+				EDIT_EM_SetSel(es, ~0u, 0, FALSE);
+				if (shift)
 					/* delete character left of caret */
-					EDIT_EM_SetSel(es, (UINT)-1, 0, FALSE);
 					EDIT_MoveBackward(es, TRUE);
-					EDIT_WM_Clear(es);
-				} else if (control) {
+				else if (control)
 					/* delete to end of line */
-					EDIT_EM_SetSel(es, (UINT)-1, 0, FALSE);
 					EDIT_MoveEnd(es, TRUE, FALSE);
-					EDIT_WM_Clear(es);
-				} else {
+				else
 					/* delete character right of caret */
-					EDIT_EM_SetSel(es, (UINT)-1, 0, FALSE);
 					EDIT_MoveForward(es, TRUE);
-					EDIT_WM_Clear(es);
-				}
+				EDIT_WM_Clear(es);
 			}
 		}
 		break;
@@ -3775,6 +3787,29 @@ static void EDIT_WM_SetFocus(HTHEME theme, EDITSTATE *es)
 }
 
 
+static DWORD get_font_margins(HDC hdc, const TEXTMETRICW *tm)
+{
+	ABC abc[256];
+	SHORT left, right;
+	UINT i;
+
+	if (!(tm->tmPitchAndFamily & (TMPF_VECTOR | TMPF_TRUETYPE)))
+		return MAKELONG(EC_USEFONTINFO, EC_USEFONTINFO);
+
+	if (!is_cjk(hdc))
+		return MAKELONG(EC_USEFONTINFO, EC_USEFONTINFO);
+
+	if (!GetCharABCWidthsW(hdc, 0, 255, abc))
+		return 0;
+
+	left = right = 0;
+	for (i = 0; i < ARRAY_SIZE(abc); i++) {
+		if (-abc[i].abcA > right) right = -abc[i].abcA;
+		if (-abc[i].abcC > left ) left  = -abc[i].abcC;
+	}
+	return MAKELONG(left, right);
+}
+
 /*********************************************************************
  *
  *	WM_SETFONT
@@ -3790,6 +3825,7 @@ static void EDIT_WM_SetFont(EDITSTATE *es, HFONT font, BOOL redraw)
 	HDC dc;
 	HFONT old_font = 0;
 	RECT clientRect;
+	DWORD margins;
 
 	es->font = font;
 	EDIT_InvalidateUniscribeData(es);
@@ -3799,6 +3835,7 @@ static void EDIT_WM_SetFont(EDITSTATE *es, HFONT font, BOOL redraw)
 	GetTextMetricsW(dc, &tm);
 	es->line_height = tm.tmHeight;
 	es->char_width = tm.tmAveCharWidth;
+	margins = get_font_margins(dc, &tm);
 	if (font)
 		SelectObject(dc, old_font);
 	ReleaseDC(es->hwndSelf, dc);
@@ -3806,8 +3843,9 @@ static void EDIT_WM_SetFont(EDITSTATE *es, HFONT font, BOOL redraw)
 	/* Reset the format rect and the margins */
 	GetClientRect(es->hwndSelf, &clientRect);
 	EDIT_SetRectNP(es, &clientRect);
-	EDIT_EM_SetMargins(es, EC_LEFTMARGIN | EC_RIGHTMARGIN,
-			   EC_USEFONTINFO, EC_USEFONTINFO, FALSE);
+	if (margins)
+		EDIT_EM_SetMargins(es, EC_LEFTMARGIN | EC_RIGHTMARGIN,
+				   LOWORD(margins), HIWORD(margins), FALSE);
 
 	if (es->style & ES_MULTILINE)
 		EDIT_BuildLineDefs_ML(es, 0, get_text_length(es), 0, NULL);
@@ -3865,7 +3903,7 @@ static void EDIT_WM_SetText(EDITSTATE *es, LPCWSTR text)
     if (text)
     {
 	TRACE("%s\n", debugstr_w(text));
-	EDIT_EM_ReplaceSel(es, FALSE, text, strlenW(text), FALSE, FALSE);
+	EDIT_EM_ReplaceSel(es, FALSE, text, lstrlenW(text), FALSE, FALSE);
     }
     else
     {
@@ -4264,6 +4302,55 @@ static LRESULT EDIT_EM_GetThumb(EDITSTATE *es)
                         EDIT_WM_HScroll(es, EM_GETTHUMB, 0));
 }
 
+static inline WCHAR *heap_strdupW(const WCHAR *str)
+{
+    int len = lstrlenW(str) + 1;
+    WCHAR *ret = heap_alloc(len * sizeof(WCHAR));
+    lstrcpyW(ret, str);
+    return ret;
+}
+
+/*********************************************************************
+ *
+ *	EM_SETCUEBANNER
+ *
+ */
+static BOOL EDIT_EM_SetCueBanner(EDITSTATE *es, BOOL draw_focused, const WCHAR *cue_text)
+{
+    if (es->style & ES_MULTILINE || !cue_text)
+        return FALSE;
+
+    heap_free(es->cue_banner_text);
+    es->cue_banner_text = heap_strdupW(cue_text);
+    es->cue_banner_draw_focused = draw_focused;
+
+    return TRUE;
+}
+
+/*********************************************************************
+ *
+ *	EM_GETCUEBANNER
+ *
+ */
+static BOOL EDIT_EM_GetCueBanner(EDITSTATE *es, WCHAR *buf, DWORD size)
+{
+    if (es->style & ES_MULTILINE)
+        return FALSE;
+
+    if (!es->cue_banner_text)
+    {
+        if (buf && size)
+            *buf = 0;
+        return FALSE;
+    }
+    else
+    {
+        if (buf)
+            lstrcpynW(buf, es->cue_banner_text, size);
+        return TRUE;
+    }
+}
+
 
 /********************************************************************
  *
@@ -4557,7 +4644,7 @@ static LRESULT EDIT_WM_Create(EDITSTATE *es, const WCHAR *name)
 
     if (name && *name)
     {
-        EDIT_EM_ReplaceSel(es, FALSE, name, strlenW(name), FALSE, FALSE);
+        EDIT_EM_ReplaceSel(es, FALSE, name, lstrlenW(name), FALSE, FALSE);
         /* if we insert text to the editline, the text scrolls out
          * of the window, as the caret is placed after the insert
          * pos normally; thus we reset es->selection... to 0 and
@@ -4614,6 +4701,7 @@ static LRESULT EDIT_WM_NCDestroy(EDITSTATE *es)
 
     SetWindowLongPtrW( es->hwndSelf, 0, 0 );
     heap_free(es->undo_text);
+    heap_free(es->cue_banner_text);
     heap_free(es);
 
     return 0;
@@ -4726,7 +4814,7 @@ static LRESULT CALLBACK EDIT_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
     {
         const WCHAR *textW = (const WCHAR *)lParam;
 
-        EDIT_EM_ReplaceSel(es, (BOOL)wParam, textW, strlenW(textW), TRUE, TRUE);
+        EDIT_EM_ReplaceSel(es, (BOOL)wParam, textW, lstrlenW(textW), TRUE, TRUE);
         result = 1;
         break;
     }
@@ -4826,6 +4914,14 @@ static LRESULT CALLBACK EDIT_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
 
     case EM_CHARFROMPOS:
         result = EDIT_EM_CharFromPos(es, (short)LOWORD(lParam), (short)HIWORD(lParam));
+        break;
+
+    case EM_SETCUEBANNER:
+        result = EDIT_EM_SetCueBanner(es, (BOOL)wParam, (const WCHAR *)lParam);
+        break;
+
+    case EM_GETCUEBANNER:
+        result = EDIT_EM_GetCueBanner(es, (WCHAR *)wParam, (DWORD)lParam);
         break;
 
     /* End of the EM_ messages which were in numerical order; what order
@@ -5036,7 +5132,7 @@ static LRESULT CALLBACK EDIT_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
     case WM_MOUSEWHEEL:
     {
         int wheelDelta;
-        UINT pulScrollLines = 3;
+        INT pulScrollLines = 3;
         SystemParametersInfoW(SPI_GETWHEELSCROLLLINES,0, &pulScrollLines, 0);
 
         if (wParam & (MK_SHIFT | MK_CONTROL))
@@ -5056,9 +5152,9 @@ static LRESULT CALLBACK EDIT_WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
         if (es->wheelDeltaRemainder && pulScrollLines)
         {
             int cLineScroll;
-            pulScrollLines = (int) min((UINT) es->line_count, pulScrollLines);
-            cLineScroll = pulScrollLines * (float)es->wheelDeltaRemainder / WHEEL_DELTA;
-            es->wheelDeltaRemainder -= WHEEL_DELTA * cLineScroll / (int)pulScrollLines;
+            pulScrollLines = min(es->line_count, pulScrollLines);
+            cLineScroll = pulScrollLines * es->wheelDeltaRemainder / WHEEL_DELTA;
+            es->wheelDeltaRemainder -= WHEEL_DELTA * cLineScroll / pulScrollLines;
             result = EDIT_EM_LineScroll(es, 0, -cLineScroll);
         }
         break;

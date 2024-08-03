@@ -1189,6 +1189,8 @@ static void test_char_from_pos(void)
 {
     int lo, hi, mid, ret, i;
     HWND hwEdit;
+    HDC dc;
+    SIZE size;
 
     hwEdit = create_editcontrol(ES_AUTOHSCROLL | ES_AUTOVSCROLL, 0);
     SendMessageA(hwEdit, WM_SETTEXT, 0, (LPARAM)"aa");
@@ -1320,6 +1322,24 @@ static void test_char_from_pos(void)
 
     ret = SendMessageA(hwEdit, EM_POSFROMCHAR, 2, 0);
     ok(-1 == ret, "expected -1 got %d\n", ret);
+    DestroyWindow(hwEdit);
+
+    /* Scrolled to the right with partially visible line, position on next line. */
+    hwEdit = create_editcontrol(ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL, 0);
+
+    dc = GetDC(hwEdit);
+    GetTextExtentPoint32A(dc, "w", 1, &size);
+    ReleaseDC(hwEdit, dc);
+
+    SetWindowPos(hwEdit, NULL, 0, 0, size.cx * 15, size.cy * 5, SWP_NOMOVE | SWP_NOZORDER);
+    SendMessageA(hwEdit, WM_SETTEXT, 0, (LPARAM)"wwwwwwwwwwwwwwwwwwww\r\n\r\n");
+    SendMessageA(hwEdit, EM_SETSEL, 40, 40);
+
+    lo = (short)SendMessageA(hwEdit, EM_POSFROMCHAR, 22, 0);
+    ret = (short)SendMessageA(hwEdit, EM_POSFROMCHAR, 20, 0);
+    ret -= 20 * size.cx; /* Calculate expected position, 20 characters back. */
+    ok(ret == lo, "Unexpected position %d vs %d.\n", lo, ret);
+
     DestroyWindow(hwEdit);
 }
 
@@ -3240,18 +3260,17 @@ static void test_cue_banner(void)
     static WCHAR getcuetestW[5] = {'T',0};
     static const WCHAR testcmp1W[] = {'T','e','s','t',0};
     static const WCHAR testcmp2W[] = {'T','e','s',0};
-    static const WCHAR emptyW[] = {0};
 
     hwnd_edit = create_editcontrolW(ES_AUTOHSCROLL | ES_AUTOVSCROLL, 0);
 
     ret = SendMessageW(hwnd_edit, EM_GETCUEBANNER, (WPARAM)getcuetestW, 5);
-    if (lstrcmpW(getcuetestW, emptyW) != 0)
+    if (getcuetestW[0])
     {
         win_skip("skipping for Win XP and 2003 Server.\n");
         DestroyWindow(hwnd_edit);
         return;
     }
-    ok(lstrcmpW(getcuetestW, emptyW) == 0, "First char is %c\n", getcuetestW[0]);
+    ok(!getcuetestW[0], "First char is %c\n", getcuetestW[0]);
     ok(ret == FALSE, "EM_GETCUEBANNER should have returned FALSE.\n");
 
     lstrcpyW(getcuetestW, testcmp1W);
@@ -3279,12 +3298,12 @@ static void test_cue_banner(void)
     ok(ret == TRUE, "EM_GETCUEBANNER should have returned TRUE.\n");
     ok(lstrcmpW(getcuetestW, testcmp1W) == 0, "EM_GETCUEBANNER returned string %s.\n", wine_dbgstr_w(getcuetestW));
 
-    ret = SendMessageW(hwnd_edit, EM_SETCUEBANNER, 0, (LPARAM)emptyW);
+    ret = SendMessageW(hwnd_edit, EM_SETCUEBANNER, 0, (LPARAM)L"");
     ok(ret == TRUE, "EM_SETCUEBANNER should have returned TRUE.\n");
 
     ret = SendMessageW(hwnd_edit, EM_GETCUEBANNER, (WPARAM)getcuetestW, 5);
     ok(ret == TRUE, "EM_GETCUEBANNER should have returned TRUE.\n");
-    ok(lstrcmpW(getcuetestW, emptyW) == 0, "EM_GETCUEBANNER returned string %s.\n", wine_dbgstr_w(getcuetestW));
+    ok(!getcuetestW[0], "EM_GETCUEBANNER returned string %s.\n", wine_dbgstr_w(getcuetestW));
 
     /* EM_GETCUEBANNER's buffer size includes null char */
     ret = SendMessageW(hwnd_edit, EM_SETCUEBANNER, 0, (LPARAM)testcmp1W);

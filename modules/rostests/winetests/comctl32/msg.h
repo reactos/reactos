@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#pragma once
-
 #include <assert.h>
 #include <windows.h>
 #include "wine/heap.h"
@@ -164,7 +162,7 @@ static void dump_sequence( struct msg_sequence **seq, int sequence_index,
     }
 }
 
-static inline void ok_sequence_(struct msg_sequence **seq, int sequence_index,
+static void ok_sequence_(struct msg_sequence **seq, int sequence_index,
     const struct message *expected_list, const char *context, BOOL todo,
     const char *file, int line)
 {
@@ -388,7 +386,7 @@ done:
         ok_sequence_(seq, index, (exp), (contx), (todo), __FILE__, __LINE__)
 
 
-static inline void init_msg_sequences(struct msg_sequence **seq, int n)
+static void init_msg_sequences(struct msg_sequence **seq, int n)
 {
     int i;
 

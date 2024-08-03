@@ -33,7 +33,6 @@
 
 #include "windef.h"
 #include "winbase.h"
-#include "wine/unicode.h"
 #include "wingdi.h"
 #include "winuser.h"
 #include "winnls.h"
@@ -389,7 +388,7 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
         state = (phdi->bDown) ? HIS_PRESSED : (bHotTrack ? HIS_HOT : HIS_NORMAL);
 
     /* Set the colors before sending NM_CUSTOMDRAW so that it can change them */
-    SetTextColor(hdc, (bHotTrack && !theme) ? COLOR_HIGHLIGHT : COLOR_BTNTEXT);
+    SetTextColor(hdc, (bHotTrack && !theme) ? comctl32_color.clrHighlight : comctl32_color.clrBtnText);
     SetBkColor(hdc, comctl32_color.clr3dFace);
 
     if (lCDFlags & CDRF_NOTIFYITEMDRAW && !(phdi->fmt & HDF_OWNERDRAW))

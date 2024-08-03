@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
@@ -33,7 +34,6 @@
 #include "uxtheme.h"
 #include "vssym32.h"
 #include "wine/heap.h"
-#include "wine/unicode.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(updown);
@@ -170,13 +170,16 @@ static BOOL UPDOWN_HasBuddyBorder(const UPDOWN_INFO *infoPtr)
  * rect     - will hold the rectangle
  * arrow    - FLAG_INCR to get the "increment" rect (up or right)
  *            FLAG_DECR to get the "decrement" rect (down or left)
- *            If both flags are present, the envelope is returned.
  */
-static void UPDOWN_GetArrowRect (const UPDOWN_INFO* infoPtr, RECT *rect, int arrow)
+static void UPDOWN_GetArrowRect (const UPDOWN_INFO* infoPtr, RECT *rect, unsigned int arrow)
 {
     HTHEME theme = GetWindowTheme (infoPtr->Self);
     const int border = theme ? DEFAULT_BUDDYBORDER_THEMED : DEFAULT_BUDDYBORDER;
     const int spacer = theme ? DEFAULT_BUDDYSPACER_THEMED : DEFAULT_BUDDYSPACER;
+    int size;
+
+    assert(arrow && (arrow & (FLAG_INCR | FLAG_DECR)) != (FLAG_INCR | FLAG_DECR));
+
     GetClientRect (infoPtr->Self, rect);
 
     /*
@@ -200,21 +203,20 @@ static void UPDOWN_GetArrowRect (const UPDOWN_INFO* infoPtr, RECT *rect, int arr
 
     /*
      * We're calculating the midpoint to figure-out where the
-     * separation between the buttons will lay. We make sure that we
-     * round the uneven numbers by adding 1.
+     * separation between the buttons will lay.
      */
     if (infoPtr->dwStyle & UDS_HORZ) {
-        int len = rect->right - rect->left + 1; /* compute the width */
+        size = (rect->right - rect->left) / 2;
         if (arrow & FLAG_INCR)
-            rect->left = rect->left + len/2;
-        if (arrow & FLAG_DECR)
-            rect->right =  rect->left + len/2 - (theme ? 0 : 1);
+            rect->left = rect->right - size;
+        else if (arrow & FLAG_DECR)
+            rect->right = rect->left + size;
     } else {
-        int len = rect->bottom - rect->top + 1; /* compute the height */
+        size = (rect->bottom - rect->top) / 2;
         if (arrow & FLAG_INCR)
-            rect->bottom =  rect->top + len/2 - (theme ? 0 : 1);
-        if (arrow & FLAG_DECR)
-            rect->top =  rect->top + len/2;
+            rect->bottom = rect->top + size;
+        else if (arrow & FLAG_DECR)
+            rect->top = rect->bottom - size;
     }
 }
 
@@ -285,7 +287,7 @@ static BOOL UPDOWN_GetBuddyInt (UPDOWN_INFO *infoPtr)
         *dst = 0;
 
         /* try to convert the number and validate it */
-        newVal = strtolW(txt, &src, infoPtr->Base);
+        newVal = wcstol(txt, &src, infoPtr->Base);
         if(*src || !UPDOWN_InBounds (infoPtr, newVal)) return FALSE;
     }
 

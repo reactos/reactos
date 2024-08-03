@@ -159,6 +159,7 @@ static LRESULT parent_wnd_notify(LPARAM lParam)
             break;
 
         case TBN_GETINFOTIPA:
+        case TBN_GETINFOTIPW:
         {
             NMTBGETINFOTIPA *tbgit = (NMTBGETINFOTIPA*)lParam;
 
@@ -2028,6 +2029,9 @@ static void test_tooltip(void)
                 "dispinfo from tooltip", FALSE);
 
     g_ResetDispTextPtr = TRUE;
+    SendMessageA(hToolbar, WM_NOTIFY, 0, (LPARAM)&nmtti);
+    /* Same for TBN_GETINFOTIPW */
+    SendMessageA(hToolbar, TB_SETUNICODEFORMAT, TRUE, 0);
     SendMessageA(hToolbar, WM_NOTIFY, 0, (LPARAM)&nmtti);
     g_ResetDispTextPtr = FALSE;
 

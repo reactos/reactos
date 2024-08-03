@@ -41,10 +41,6 @@
 #include "v6util.h"
 #include "resources.h"
 
-#ifdef __REACTOS__
-#include <ole2.h>
-#endif
-
 #define IMAGELIST_MAGIC (('L' << 8) | 'I')
 
 #include "pshpack2.h"
@@ -2027,11 +2023,7 @@ static void check_color_table(const char *name, HDC hdc, HIMAGELIST himl, UINT i
 {
     IMAGEINFO info;
     INT ret;
-#ifdef __REACTOS__
-    char bmi_buffer[FIELD_OFFSET(BITMAPINFO, bmiColors) + 256 * sizeof(RGBQUAD)];
-#else
     char bmi_buffer[FIELD_OFFSET( BITMAPINFO, bmiColors[256] )];
-#endif
     BITMAPINFO *bmi = (BITMAPINFO *)bmi_buffer;
     int i, depth = ilc & 0xfe;
 
@@ -2063,11 +2055,7 @@ static void check_color_table(const char *name, HDC hdc, HIMAGELIST himl, UINT i
 
 static void get_default_color_table(HDC hdc, int bpp, RGBQUAD *table)
 {
-#ifdef __REACTOS__
-    char bmi_buffer[FIELD_OFFSET(BITMAPINFO, bmiColors) + 256 * sizeof(RGBQUAD)];
-#else
     char bmi_buffer[FIELD_OFFSET( BITMAPINFO, bmiColors[256] )];
-#endif
     BITMAPINFO *bmi = (BITMAPINFO *)bmi_buffer;
     HBITMAP tmp;
     int i;
@@ -2115,11 +2103,7 @@ static void test_color_table(UINT ilc)
 {
     HIMAGELIST himl;
     INT ret;
-#ifdef __REACTOS__
-    char bmi_buffer[FIELD_OFFSET(BITMAPINFO, bmiColors) + 256 * sizeof(RGBQUAD)];
-#else
     char bmi_buffer[FIELD_OFFSET( BITMAPINFO, bmiColors[256] )];
-#endif
     BITMAPINFO *bmi = (BITMAPINFO *)bmi_buffer;
     HDC hdc = CreateCompatibleDC(0);
     HBITMAP dib4, dib8, dib32;
