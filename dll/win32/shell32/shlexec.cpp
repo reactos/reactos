@@ -2153,39 +2153,26 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
     TRACE("execute: %s,%s,%s\n", debugstr_w(wszApplicationName), debugstr_w(wszParameters), debugstr_w(wszDir));
 
     /* separate out command line arguments from executable file name */
-    LPCWSTR lpFile;
-    WCHAR wfileName[MAX_PATH];
+    LPCWSTR lpFile = sei_tmp.lpFile;
     if (!*sei_tmp.lpParameters && !appKnownSingular)
     {
         /* If the executable path is quoted, handle the rest of the command line as parameters. */
         if (sei_tmp.lpFile[0] == L'"')
         {
-            LPWSTR src = wszApplicationName/*sei_tmp.lpFile*/ + 1;
-            LPWSTR dst = wfileName;
-            LPWSTR end;
-
-            /* copy the unquoted executable path to 'wfileName' */
-            while(*src && *src != L'"')
-                *dst++ = *src++;
-
-            *dst = L'\0';
-
-            if (*src == L'"')
+            LPWSTR pszArgs = PathGetArgsW(wszApplicationName);
+            PathRemoveArgsW(wszApplicationName);
+            PathUnquoteSpacesW(wszApplicationName);
+            parametersLen = lstrlenW(pszArgs);
+            if (parametersLen < _countof(parametersBuffer))
             {
-                end = ++src;
-
-                while(isspaceW(*src))
-                    ++src;
+                StringCchCopyW(parametersBuffer, _countof(parametersBuffer), pszArgs);
+                wszParameters = parametersBuffer;
             }
             else
-                end = src;
-
-            /* copy the parameter string to 'wszParameters' */
-            strcpyW(wszParameters, src);
-
-            /* terminate previous command string after the quote character */
-            *end = L'\0';
-            lpFile = wfileName;
+            {
+                wszParamAlloc.Attach(StrDupW(pszArgs));
+                wszParameters = wszParamAlloc;
+            }
         }
         /* We have to test sei instead of sei_tmp because sei_tmp had its
          * input fMask modified above in SHELL_translate_idlist.
@@ -2218,15 +2205,8 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
                     break;
                 }
             }
-            lpFile = sei_tmp.lpFile;
-        }
-        else
-        {
-            lpFile = sei_tmp.lpFile;
         }
     }
-    else
-        lpFile = sei_tmp.lpFile;
 
     WCHAR wcmdBuffer[1024];
     LPWSTR wcmd = wcmdBuffer;
