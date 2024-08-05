@@ -4,7 +4,7 @@
  * FILE:            ntoskrnl/po/power.c
  * PURPOSE:         Power Manager
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
- *                  Herv� Poussineau (hpoussin@reactos.com)
+ *                  Hervé Poussineau (hpoussin@reactos.com)
  */
 
 /* INCLUDES ******************************************************************/
@@ -833,8 +833,8 @@ NtPowerInformation(IN POWER_INFORMATION_LEVEL PowerInformationLevel,
 
             _SEH2_TRY
             {
-                /* Just zero the struct (and thus set BatteryState->BatteryPresent = FALSE) */
-                RtlZeroMemory(BatteryState, sizeof(SYSTEM_BATTERY_STATE));
+                /* Just zero the struct */
+                RtlZeroMemory(BatteryState, sizeof(*BatteryState));
                 BatteryState->EstimatedTime = MAXULONG;
                 BatteryState->BatteryPresent = PopCapabilities.SystemBatteriesPresent;
 //                BatteryState->AcOnLine = TRUE;
