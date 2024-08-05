@@ -366,14 +366,17 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
             if (hWindow)
             {
                 /* Activate the window in the other instance */
+                ShowWindow(hWindow, SW_SHOW);
                 SwitchToThisWindow(hWindow, TRUE);
                 if (bAppwizMode)
                     PostMessage(hWindow, WM_COMMAND, ID_ACTIVATE_APPWIZ, 0);
 
-                if (hMutex)
-                    CloseHandle(hMutex);
-
-                return FALSE;
+                if (IsWindowVisible(hWindow))
+                {
+                    if (hMutex)
+                        CloseHandle(hMutex);
+                    return FALSE;
+                }
             }
         }
 

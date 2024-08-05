@@ -29,6 +29,8 @@ ErrorFromHResult(HRESULT hr)
 VOID
 CopyTextToClipboard(LPCWSTR lpszText);
 VOID
+EmulateDialogReposition(HWND hwnd);
+VOID
 ShowPopupMenuEx(HWND hwnd, HWND hwndOwner, UINT MenuID, UINT DefaultItem);
 BOOL
 StartProcess(const CStringW &Path, BOOL Wait);
