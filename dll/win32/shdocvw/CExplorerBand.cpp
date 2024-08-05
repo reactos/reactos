@@ -20,51 +20,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
  *  - TESTING
  */
 
-typedef struct _PIDLDATA
-{
-    BYTE type;
-    BYTE data[1];
-} PIDLDATA, *LPPIDLDATA;
-
-#define PT_GUID 0x1F
-#define PT_SHELLEXT 0x2E
-#define PT_YAGUID 0x70
-
-static BOOL _ILIsSpecialFolder (LPCITEMIDLIST pidl)
-{
-    LPPIDLDATA lpPData = (LPPIDLDATA)&pidl->mkid.abID;
-
-    return (pidl &&
-        ((lpPData && (PT_GUID == lpPData->type || PT_SHELLEXT== lpPData->type ||
-        PT_YAGUID == lpPData->type)) || (pidl && pidl->mkid.cb == 0x00)));
-}
-
-HRESULT GetDisplayName(LPCITEMIDLIST pidlDirectory,TCHAR *szDisplayName,UINT cchMax,DWORD uFlags)
-{
-    IShellFolder *pShellFolder = NULL;
-    LPCITEMIDLIST pidlRelative = NULL;
-    STRRET str;
-    HRESULT hr;
-
-    if (pidlDirectory == NULL || szDisplayName == NULL)
-    {
-        return E_FAIL;
-    }
-
-    hr = SHBindToParent(pidlDirectory, IID_PPV_ARG(IShellFolder, &pShellFolder), &pidlRelative);
-
-    if (SUCCEEDED(hr))
-    {
-        hr = pShellFolder->GetDisplayNameOf(pidlRelative,uFlags,&str);
-        if (SUCCEEDED(hr))
-        {
-            hr = StrRetToBuf(&str,pidlDirectory,szDisplayName,cchMax);
-        }
-        pShellFolder->Release();
-    }
-    return hr;
-}
-
 CExplorerBand::CExplorerBand()
     : m_pSite(NULL)
     , m_fVisible(FALSE)
@@ -788,7 +743,7 @@ CExplorerBand::InsertItem(
         TVSORTCB sortCallback;
         sortCallback.hParent = hParent;
         sortCallback.lpfnCompare = CompareTreeItems;
-        sortCallback.lParam = (LPARAM)this;
+        sortCallback.lParam = (LPARAM)(PVOID)m_pDesktop;
         SendMessage(TVM_SORTCHILDRENCB, 0, (LPARAM)&sortCallback);
     }
 
@@ -882,7 +837,7 @@ BOOL CExplorerBand::InsertSubitems(HTREEITEM hItem, NodeInfo *pNodeInfo)
     /* Let's do sorting */
     sortCallback.hParent = hItem;
     sortCallback.lpfnCompare = CompareTreeItems;
-    sortCallback.lParam = (LPARAM)this;
+    sortCallback.lParam = (LPARAM)(PVOID)m_pDesktop;
     SendMessage(TVM_SORTCHILDRENCB, 0, (LPARAM)&sortCallback);
 
     /* Now we can redraw */
@@ -1014,55 +969,15 @@ BOOL CExplorerBand::NavigateToCurrentFolder()
 // *** Tree item sorting callback ***
 int CALLBACK CExplorerBand::CompareTreeItems(LPARAM p1, LPARAM p2, LPARAM p3)
 {
-    /*
-     * We first sort drive letters (Path root), then PIDLs and then regular folder
-     * display name.
-     * This is not how Windows sorts item, but it gives decent results.
-     */
-    NodeInfo                            *info1;
-    NodeInfo                            *info2;
-    CExplorerBand                       *pThis;
-    WCHAR                               wszFolder1[MAX_PATH];
-    WCHAR                               wszFolder2[MAX_PATH];
+    NodeInfo *info1 = (NodeInfo*)p1;
+    NodeInfo *info2 = (NodeInfo*)p2;
+    IShellFolder *pDesktop = (IShellFolder *)p3;
 
-    info1 = (NodeInfo*)p1;
-    info2 = (NodeInfo*)p2;
-    pThis = (CExplorerBand*)p3;
+    HRESULT hr = pDesktop->CompareIDs(0, info1->absolutePidl, info2->absolutePidl);
+    if (FAILED(hr))
+        return 0;
 
-    GetDisplayName(info1->absolutePidl, wszFolder1, MAX_PATH, SHGDN_FORPARSING);
-    GetDisplayName(info2->absolutePidl, wszFolder2, MAX_PATH, SHGDN_FORPARSING);
-    if (PathIsRoot(wszFolder1) && PathIsRoot(wszFolder2))
-    {
-        return lstrcmpiW(wszFolder1,wszFolder2);
-    }
-    if (PathIsRoot(wszFolder1) && !PathIsRoot(wszFolder2))
-    {
-        return -1;
-    }
-    if (!PathIsRoot(wszFolder1) && PathIsRoot(wszFolder2))
-    {
-        return 1;
-    }
-    // Now, we compare non-root folders, grab display name
-    GetDisplayName(info1->absolutePidl, wszFolder1, MAX_PATH, SHGDN_INFOLDER);
-    GetDisplayName(info2->absolutePidl, wszFolder2, MAX_PATH, SHGDN_INFOLDER);
-
-    if (_ILIsSpecialFolder(info1->relativePidl) && !_ILIsSpecialFolder(info2->relativePidl))
-    {
-        return -1;
-    }
-    if (!_ILIsSpecialFolder(info1->relativePidl) && _ILIsSpecialFolder(info2->relativePidl))
-    {
-        return 1;
-    }
-    if (_ILIsSpecialFolder(info1->relativePidl) && !_ILIsSpecialFolder(info2->relativePidl))
-    {
-        HRESULT hr;
-        hr = pThis->m_pDesktop->CompareIDs(0, info1->absolutePidl, info2->absolutePidl);
-        if (!hr) return 0;
-        return (hr > 0) ? -1 : 1;
-    }
-    return StrCmpLogicalW(wszFolder1, wszFolder2);
+    return (SHORT)HRESULT_CODE(hr);
 }
 
 // *** IOleWindow methods ***
