@@ -1,0 +1,8 @@
+
+Helper files to run lwIP unit tests on unix-like systems.
+
+1. Install the check library, through a package manager or from https://libcheck.github.io/check/
+2. Put the lwip code in a directory called 'lwip'
+3. Run `make check`
+4. Make sure all tests pass
+

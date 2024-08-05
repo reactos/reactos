@@ -1,0 +1,593 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug unittests|Win32">
+      <Configuration>Debug unittests</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release unittests|Win32">
+      <Configuration>Release unittests</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{2CC276FA-B226-49C9-8F82-7FCD5A228E28}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release unittests|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug unittests|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release unittests|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug unittests|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\$(ProjectName)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug unittests|Win32'">$(Configuration)\$(ProjectName)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug unittests|Win32'">$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release unittests|Win32'">$(Configuration)\$(ProjectName)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release unittests|Win32'">$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Configuration)\$(ProjectName)\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>..\..\..\..\src\include;..\..\..\..\src\include\ipv4;..\..\..\..\src\include\ipv6;..\include;..\..\..\examples\example_app;..\..\..\apps\snmp_private_mib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <ProgramDataBaseFileName>$(IntDir)$(ProjectName).pdb</ProgramDataBaseFileName>
+      <WarningLevel>Level4</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+      <TreatWarningAsError>true</TreatWarningAsError>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0407</Culture>
+    </ResourceCompile>
+    <Lib>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\..\..\src\include;..\..\..\..\src\include\ipv4;..\..\..\..\src\include\ipv6;..\include;..\..\..\examples\example_app;..\..\..\apps\snmp_private_mib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_LIB;WIN32;_DEBUG;LWIP_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <ProgramDataBaseFileName>$(IntDir)$(ProjectName).pdb</ProgramDataBaseFileName>
+      <WarningLevel>Level4</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+      <TreatWarningAsError>true</TreatWarningAsError>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0407</Culture>
+    </ResourceCompile>
+    <Lib>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug unittests|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\..\..\test\unit;..\..\..\..\src\include;..\..\..\..\src\include\ipv4;..\..\..\..\src\include\ipv6;..\include;..\..\..\examples\example_app;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_LIB;WIN32;_DEBUG;LWIP_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <ProgramDataBaseFileName>$(IntDir)$(ProjectName).pdb</ProgramDataBaseFileName>
+      <WarningLevel>Level4</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+      <TreatWarningAsError>true</TreatWarningAsError>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0407</Culture>
+    </ResourceCompile>
+    <Lib>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release unittests|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>..\..\..\..\test\unit;..\..\..\..\src\include;..\..\..\..\src\include\ipv4;..\..\..\..\src\include\ipv6;..\include;..\..\..\examples\example_app;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <ProgramDataBaseFileName>$(IntDir)$(ProjectName).pdb</ProgramDataBaseFileName>
+      <WarningLevel>Level4</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+      <TreatWarningAsError>true</TreatWarningAsError>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0407</Culture>
+    </ResourceCompile>
+    <Lib>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuildStep Include="..\..\..\..\doc\contrib.txt">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug unittests|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release unittests|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </CustomBuildStep>
+    <CustomBuildStep Include="..\..\..\..\doc\FILES">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug unittests|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release unittests|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </CustomBuildStep>
+    <CustomBuildStep Include="..\..\..\..\doc\rawapi.txt">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug unittests|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release unittests|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </CustomBuildStep>
+    <CustomBuildStep Include="..\..\..\..\doc\savannah.txt">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug unittests|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release unittests|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </CustomBuildStep>
+    <CustomBuildStep Include="..\..\..\..\doc\snmp_agent.txt">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug unittests|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release unittests|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </CustomBuildStep>
+    <CustomBuildStep Include="..\..\..\..\doc\sys_arch.txt">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug unittests|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release unittests|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </CustomBuildStep>
+    <CustomBuildStep Include="..\..\..\..\src\core\ipv6\README">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug unittests|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release unittests|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </CustomBuildStep>
+    <CustomBuildStep Include="..\..\..\..\src\netif\FILES">
+      <FileType>Document</FileType>
+    </CustomBuildStep>
+    <CustomBuildStep Include="..\lwipcfg_msvc.h.example">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug unittests|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release unittests|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </CustomBuildStep>
+    <None Include="..\..\..\..\CHANGELOG" />
+    <None Include="..\..\..\..\COPYING" />
+    <None Include="..\..\..\..\doc\contrib.txt" />
+    <None Include="..\..\..\..\doc\doxygen\generate.bat" />
+    <None Include="..\..\..\..\doc\doxygen\generate.sh" />
+    <None Include="..\..\..\..\doc\doxygen\lwip.Doxyfile" />
+    <None Include="..\..\..\..\doc\FILES" />
+    <None Include="..\..\..\..\doc\mdns.txt" />
+    <None Include="..\..\..\..\doc\ppp.txt" />
+    <None Include="..\..\..\..\doc\savannah.txt" />
+    <None Include="..\..\..\..\FILES" />
+    <None Include="..\..\..\..\README" />
+    <None Include="..\..\..\..\UPGRADING" />
+    <None Include="..\..\..\examples\example_app\lwipcfg.h.example">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug unittests|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release unittests|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\doc\NO_SYS_SampleCode.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug unittests|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release unittests|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\api\api_lib.c" />
+    <ClCompile Include="..\..\..\..\src\api\api_msg.c" />
+    <ClCompile Include="..\..\..\..\src\api\err.c" />
+    <ClCompile Include="..\..\..\..\src\api\if_api.c" />
+    <ClCompile Include="..\..\..\..\src\api\netbuf.c" />
+    <ClCompile Include="..\..\..\..\src\api\netdb.c" />
+    <ClCompile Include="..\..\..\..\src\api\netifapi.c" />
+    <ClCompile Include="..\..\..\..\src\api\sockets.c" />
+    <ClCompile Include="..\..\..\..\src\api\tcpip.c" />
+    <ClCompile Include="..\..\..\..\src\apps\altcp_tls\altcp_tls_mbedtls.c">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\..\..\..\mbedtls\include;..\..\..\..\src\include;..\..\..\..\src\include\ipv4;..\..\..\..\src\include\ipv6;..\include;..;..\..\..\apps\snmp_private_mib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\..\..\..\mbedtls\include;..\..\..\..\src\include;..\..\..\..\src\include\ipv4;..\..\..\..\src\include\ipv6;..\include;..;..\..\..\apps\snmp_private_mib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug unittests|Win32'">..\..\..\..\..\mbedtls\include;..\..\..\..\test\unit;..\..\..\..\src\include;..\..\..\..\src\include\ipv4;..\..\..\..\src\include\ipv6;..\include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release unittests|Win32'">..\..\..\..\..\mbedtls\include;..\..\..\..\test\unit;..\..\..\..\src\include;..\..\..\..\src\include\ipv4;..\..\..\..\src\include\ipv6;..\include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\apps\altcp_tls\altcp_tls_mbedtls_mem.c">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\..\..\..\mbedtls\include;..\..\..\..\src\include;..\..\..\..\src\include\ipv4;..\..\..\..\src\include\ipv6;..\include;..;..\..\..\apps\snmp_private_mib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\..\..\..\mbedtls\include;..\..\..\..\src\include;..\..\..\..\src\include\ipv4;..\..\..\..\src\include\ipv6;..\include;..;..\..\..\apps\snmp_private_mib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug unittests|Win32'">..\..\..\..\..\mbedtls\include;..\..\..\..\test\unit;..\..\..\..\src\include;..\..\..\..\src\include\ipv4;..\..\..\..\src\include\ipv6;..\include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release unittests|Win32'">..\..\..\..\..\mbedtls\include;..\..\..\..\test\unit;..\..\..\..\src\include;..\..\..\..\src\include\ipv4;..\..\..\..\src\include\ipv6;..\include;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\apps\http\altcp_proxyconnect.c" />
+    <ClCompile Include="..\..\..\..\src\apps\http\http_client.c" />
+    <ClCompile Include="..\..\..\..\src\apps\lwiperf\lwiperf.c" />
+    <ClCompile Include="..\..\..\..\src\apps\mdns\mdns_domain.c" />
+    <ClCompile Include="..\..\..\..\src\apps\mdns\mdns_out.c" />
+    <ClCompile Include="..\..\..\..\src\apps\mqtt\mqtt.c" />
+    <ClCompile Include="..\..\..\..\src\apps\netbiosns\netbiosns.c" />
+    <ClCompile Include="..\..\..\..\src\apps\smtp\smtp.c" />
+    <ClCompile Include="..\..\..\..\src\apps\snmp\snmp_snmpv2_framework.c" />
+    <ClCompile Include="..\..\..\..\src\apps\snmp\snmp_snmpv2_usm.c" />
+    <ClCompile Include="..\..\..\..\src\apps\sntp\sntp.c" />
+    <ClCompile Include="..\..\..\..\src\apps\tftp\tftp.c" />
+    <ClCompile Include="..\..\..\..\src\core\altcp.c" />
+    <ClCompile Include="..\..\..\..\src\core\altcp_alloc.c" />
+    <ClCompile Include="..\..\..\..\src\core\altcp_tcp.c" />
+    <ClCompile Include="..\..\..\..\src\core\def.c" />
+    <ClCompile Include="..\..\..\..\src\core\dns.c" />
+    <ClCompile Include="..\..\..\..\src\core\inet_chksum.c" />
+    <ClCompile Include="..\..\..\..\src\core\init.c" />
+    <ClCompile Include="..\..\..\..\src\core\mem.c" />
+    <ClCompile Include="..\..\..\..\src\core\memp.c" />
+    <ClCompile Include="..\..\..\..\src\core\netif.c" />
+    <ClCompile Include="..\..\..\..\src\core\pbuf.c" />
+    <ClCompile Include="..\..\..\..\src\core\raw.c" />
+    <ClCompile Include="..\..\..\..\src\core\stats.c" />
+    <ClCompile Include="..\..\..\..\src\core\sys.c" />
+    <ClCompile Include="..\..\..\..\src\core\tcp.c" />
+    <ClCompile Include="..\..\..\..\src\core\tcp_in.c" />
+    <ClCompile Include="..\..\..\..\src\core\tcp_out.c" />
+    <ClCompile Include="..\..\..\..\src\core\udp.c" />
+    <ClCompile Include="..\..\..\..\src\core\ipv4\acd.c" />
+    <ClCompile Include="..\..\..\..\src\core\ipv4\autoip.c" />
+    <ClCompile Include="..\..\..\..\src\core\ipv4\dhcp.c" />
+    <ClCompile Include="..\..\..\..\src\core\ipv4\etharp.c" />
+    <ClCompile Include="..\..\..\..\src\core\ipv4\icmp.c" />
+    <ClCompile Include="..\..\..\..\src\core\ipv4\igmp.c" />
+    <ClCompile Include="..\..\..\..\src\core\ipv4\ip4.c" />
+    <ClCompile Include="..\..\..\..\src\core\ipv4\ip4_addr.c" />
+    <ClCompile Include="..\..\..\..\src\core\ipv6\dhcp6.c" />
+    <ClCompile Include="..\..\..\..\src\core\ipv6\ethip6.c" />
+    <ClCompile Include="..\..\..\..\src\core\ipv6\icmp6.c" />
+    <ClCompile Include="..\..\..\..\src\core\ipv6\inet6.c" />
+    <ClCompile Include="..\..\..\..\src\core\ipv6\ip6.c" />
+    <ClCompile Include="..\..\..\..\src\core\ipv6\ip6_addr.c" />
+    <ClCompile Include="..\..\..\..\src\core\ipv6\ip6_frag.c" />
+    <ClCompile Include="..\..\..\..\src\core\ipv6\mld6.c" />
+    <ClCompile Include="..\..\..\..\src\core\ipv6\nd6.c" />
+    <ClCompile Include="..\..\..\..\src\netif\bridgeif.c" />
+    <ClCompile Include="..\..\..\..\src\netif\bridgeif_fdb.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ethernet.c" />
+    <ClCompile Include="..\..\..\..\src\netif\lowpan6.c" />
+    <ClCompile Include="..\..\..\..\src\netif\lowpan6_ble.c" />
+    <ClCompile Include="..\..\..\..\src\netif\lowpan6_common.c" />
+    <ClCompile Include="..\..\..\..\src\netif\slipif.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\auth.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\ccp.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\chap-md5.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\chap-new.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\chap_ms.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\demand.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\eap.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\ecp.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\eui64.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\fsm.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\ipcp.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\ipv6cp.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\lcp.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\magic.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\mppe.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\multilink.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\ppp.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\pppcrypt.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\pppoe.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\pppol2tp.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\pppos.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\upap.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\utils.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\vj.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\polarssl\arc4.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\polarssl\des.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\polarssl\md4.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\polarssl\md5.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\polarssl\sha1.c" />
+    <ClCompile Include="..\..\..\..\src\apps\http\fs.c" />
+    <ClCompile Include="..\..\..\..\src\apps\http\fsdata.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug unittests|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release unittests|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\apps\http\httpd.c" />
+    <ClCompile Include="..\..\..\..\src\apps\snmp\snmp_asn1.c" />
+    <ClCompile Include="..\..\..\..\src\apps\snmp\snmp_core.c" />
+    <ClCompile Include="..\..\..\..\src\apps\snmp\snmp_mib2.c" />
+    <ClCompile Include="..\..\..\..\src\apps\snmp\snmp_msg.c" />
+    <ClCompile Include="..\..\..\..\src\apps\snmp\snmp_netconn.c" />
+    <ClCompile Include="..\..\..\..\src\apps\snmp\snmp_pbuf_stream.c" />
+    <ClCompile Include="..\..\..\..\src\apps\snmp\snmp_raw.c" />
+    <ClCompile Include="..\..\..\..\src\apps\snmp\snmp_scalar.c" />
+    <ClCompile Include="..\..\..\..\src\apps\snmp\snmp_table.c" />
+    <ClCompile Include="..\..\..\..\src\apps\snmp\snmp_threadsync.c" />
+    <ClCompile Include="..\..\..\..\src\apps\snmp\snmp_traps.c" />
+    <ClCompile Include="..\..\..\..\src\core\ip.c" />
+    <ClCompile Include="..\..\..\..\src\apps\snmp\snmpv3.c" />
+    <ClCompile Include="..\..\..\..\src\apps\snmp\snmp_mib2_icmp.c" />
+    <ClCompile Include="..\..\..\..\src\apps\snmp\snmp_mib2_interfaces.c" />
+    <ClCompile Include="..\..\..\..\src\apps\snmp\snmp_mib2_ip.c" />
+    <ClCompile Include="..\..\..\..\src\apps\snmp\snmp_mib2_snmp.c" />
+    <ClCompile Include="..\..\..\..\src\apps\snmp\snmp_mib2_system.c" />
+    <ClCompile Include="..\..\..\..\src\apps\snmp\snmp_mib2_tcp.c" />
+    <ClCompile Include="..\..\..\..\src\apps\snmp\snmp_mib2_udp.c" />
+    <ClCompile Include="..\..\..\..\src\netif\ppp\pppapi.c" />
+    <ClCompile Include="..\..\..\..\src\core\ipv4\ip4_frag.c" />
+    <ClCompile Include="..\..\..\..\src\core\timeouts.c" />
+    <ClCompile Include="..\..\..\..\src\apps\mdns\mdns.c" />
+    <ClCompile Include="..\..\..\..\src\apps\snmp\snmpv3_mbedtls.c">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug unittests|Win32'">..\..\..\..\..\mbedtls\include;..\..\..\..\src\include;..\..\..\..\src\include\ipv4;..\..\..\..\src\include\ipv6;..\include;..;..\..\..\apps\snmp_private_mib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\..\..\..\mbedtls\include;..\..\..\..\src\include;..\..\..\..\src\include\ipv4;..\..\..\..\src\include\ipv6;..\include;..;..\..\..\apps\snmp_private_mib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release unittests|Win32'">..\..\..\..\..\mbedtls\include;..\..\..\..\src\include;..\..\..\..\src\include\ipv4;..\..\..\..\src\include\ipv6;..\include;..;..\..\..\apps\snmp_private_mib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\..\..\..\mbedtls\include;..\..\..\..\src\include;..\..\..\..\src\include\ipv4;..\..\..\..\src\include\ipv6;..\include;..;..\..\..\apps\snmp_private_mib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\netif\zepif.c" />
+    <ClCompile Include="..\sio.c" />
+    <ClCompile Include="..\sys_arch.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug unittests|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release unittests|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\doc\doxygen\main_page.h" />
+    <ClInclude Include="..\..\..\..\src\apps\altcp_tls\altcp_tls_mbedtls_mem.h" />
+    <ClInclude Include="..\..\..\..\src\apps\altcp_tls\altcp_tls_mbedtls_structs.h" />
+    <ClInclude Include="..\..\..\..\src\apps\snmp\snmp_msg.h" />
+    <ClInclude Include="..\..\..\..\src\include\compat\stdc\errno.h" />
+    <ClInclude Include="..\..\..\..\src\include\compat\posix\arpa\inet.h" />
+    <ClInclude Include="..\..\..\..\src\include\compat\posix\netdb.h" />
+    <ClInclude Include="..\..\..\..\src\include\compat\posix\net\if.h" />
+    <ClInclude Include="..\..\..\..\src\include\compat\posix\sys\socket.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\altcp.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\altcp_tcp.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\altcp_tls.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\altcp_proxyconnect.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\altcp_tls_mbedtls_opts.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\http_client.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\lwiperf.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\mdns_domain.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\mdns_out.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\mdns_priv.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\mqtt.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\mqtt_opts.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\mqtt_priv.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\netbiosns.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\netbiosns_opts.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\smtp.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\smtp_opts.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\snmp.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\snmp_opts.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\snmp_snmpv2_framework.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\snmp_snmpv2_usm.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\sntp.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\sntp_opts.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\tftp_client.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\tftp_common.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\tftp_opts.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\tftp_server.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\errno.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\if_api.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\ip6_zone.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\priv\altcp_priv.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\priv\api_msg.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\priv\memp_priv.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\priv\memp_std.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\priv\mem_priv.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\priv\nd6_priv.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\priv\raw_priv.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\priv\sockets_priv.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\priv\tcpip_priv.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\priv\tcp_priv.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\acd.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\api.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\arch.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\autoip.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\debug.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\def.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\dhcp.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\dhcp6.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\dns.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\err.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\ethip6.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\icmp.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\icmp6.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\igmp.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\inet.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\inet_chksum.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\init.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\ip.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\ip4.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\ip4_addr.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\ip6.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\ip6_addr.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\ip6_frag.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\ip_addr.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\mem.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\memp.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\mld6.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\nd6.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\netbuf.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\netdb.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\netif.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\netifapi.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\opt.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\pbuf.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\prot\dhcp6.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\prot\etharp.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\prot\iana.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\prot\ieee.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\prot\igmp.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\raw.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\sio.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\snmp.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\sockets.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\stats.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\sys.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\tcp.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\tcpip.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\udp.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\bridgeif.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\bridgeif_opts.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\etharp.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ethernet.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ieee802154.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\lowpan6.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\lowpan6_ble.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\lowpan6_common.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\lowpan6_opts.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\slipif.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\ccp.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\chap-md5.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\chap-new.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\chap_ms.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\eap.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\ecp.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\eui64.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\fsm.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\ipcp.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\ipv6cp.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\lcp.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\magic.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\mppe.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\ppp.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\ppp_impl.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\ppp_opts.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\pppcrypt.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\pppdebug.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\pppoe.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\pppol2tp.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\pppos.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\upap.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\vj.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\polarssl\arc4.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\polarssl\des.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\polarssl\md4.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\polarssl\md5.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\polarssl\sha1.h" />
+    <ClInclude Include="..\..\..\..\src\apps\http\fsdata.h" />
+    <ClInclude Include="..\..\..\..\src\apps\http\httpd_structs.h" />
+    <ClInclude Include="..\..\..\..\src\apps\snmp\snmp_asn1.h" />
+    <ClInclude Include="..\..\..\..\src\apps\snmp\snmp_core_priv.h" />
+    <ClInclude Include="..\..\..\..\src\apps\snmp\snmp_pbuf_stream.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\snmp_core.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\snmp_mib2.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\snmp_scalar.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\snmp_table.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\snmp_threadsync.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\ppp\pppapi.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\fs.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\httpd.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\httpd_opts.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\snmpv3.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\etharp.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\ip4_frag.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\timeouts.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\mdns.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\apps\mdns_opts.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\prot\acd.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\prot\autoip.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\prot\dhcp.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\prot\dns.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\prot\ip.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\prot\ip4.h" />
+    <ClInclude Include="..\..\..\..\src\apps\snmp\snmpv3_priv.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\prot\ethernet.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\prot\icmp.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\prot\icmp6.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\prot\ip6.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\prot\mld6.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\prot\nd6.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\prot\tcp.h" />
+    <ClInclude Include="..\..\..\..\src\include\lwip\prot\udp.h" />
+    <ClInclude Include="..\..\..\..\src\include\netif\zepif.h" />
+    <ClInclude Include="..\..\..\examples\example_app\default_netif.h" />
+    <ClInclude Include="..\..\..\examples\example_app\lwipcfg.h" />
+    <ClInclude Include="..\..\..\examples\example_app\lwipopts.h" />
+    <ClInclude Include="..\..\..\examples\example_app\lwippools.h" />
+    <ClInclude Include="..\..\..\examples\example_app\ppp_settings.h" />
+    <ClInclude Include="..\include\arch\bpstruct.h" />
+    <ClInclude Include="..\include\arch\cc.h" />
+    <ClInclude Include="..\include\arch\epstruct.h" />
+    <ClInclude Include="..\include\arch\perf.h" />
+    <ClInclude Include="..\include\arch\sys_arch.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

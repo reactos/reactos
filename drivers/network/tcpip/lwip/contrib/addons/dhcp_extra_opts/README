@@ -1,0 +1,5 @@
+A simple example of using LWIP_HOOK_DHCP_PARSE/APPEND_OPTION hooks to implement:
+* DHCP_OPTION_MTU (option 26) to update the netif's MTU
+* DHCP_OPTION_CLIENT_ID (option 61) to advertize client's HW id of LWIP_IANA_HWTYPE_ETHERNET type
+
+Please follow the instructions in dhcp_extra_opts.h to add the hooks, definitions in lwipopts.h and enabling the extra options.

@@ -1,0 +1,209 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{8CC0CE51-32CF-4585-BFAF-A9343BC5A96D}</ProjectGuid>
+    <RootNamespace>lwIP_test</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\$(Configuration)\$(ProjectName)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Midl>
+      <TypeLibraryName>.\Release/test.tlb</TypeLibraryName>
+      <HeaderFileName>
+      </HeaderFileName>
+    </Midl>
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>..\..\..\..\src\include;..\..\..\..\src\include\ipv4;..\..\..\..\src\include\ipv6;..\include;..\..\..\examples\example_app;..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
+      <ProgramDataBaseFileName>$(IntDir)$(ProjectName).pdb</ProgramDataBaseFileName>
+      <WarningLevel>Level4</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <CompileAs>Default</CompileAs>
+      <TreatWarningAsError>true</TreatWarningAsError>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0407</Culture>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>Packet.lib;wpcap.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <AdditionalLibraryDirectories>$(PCAP_DIR)\Lib;..\..\..\..\..\winpcap\WpdPack\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ProgramDatabaseFile>.\Release/test.pdb</ProgramDatabaseFile>
+      <SubSystem>Console</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+      <GenerateMapFile>true</GenerateMapFile>
+      <MapFileName>$(TargetDir)$(TargetName).map</MapFileName>
+      <DelayLoadDLLs>Packet.dll;wpcap.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Midl>
+      <TypeLibraryName>.\Debug/test.tlb</TypeLibraryName>
+      <HeaderFileName>
+      </HeaderFileName>
+    </Midl>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\..\..\src\include;..\..\..\..\src\include\ipv4;..\..\..\..\src\include\ipv6;..\include;..\..\..\examples\example_app;..\..\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CONSOLE;WIN32;_DEBUG;LWIP_DEBUG;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
+      <ProgramDataBaseFileName>$(IntDir)$(ProjectName).pdb</ProgramDataBaseFileName>
+      <WarningLevel>Level4</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+      <TreatWarningAsError>true</TreatWarningAsError>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0407</Culture>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>Packet.lib;wpcap.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <AdditionalLibraryDirectories>$(PCAP_DIR)\Lib;..\..\..\..\..\winpcap\WpdPack\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+      <GenerateMapFile>false</GenerateMapFile>
+      <MapFileName>$(TargetDir)$(TargetName).map</MapFileName>
+      <DelayLoadDLLs>Packet.dll;wpcap.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\addons\ipv6_static_routing\ip6_route_table.c" />
+    <ClCompile Include="..\..\..\addons\tcp_isn\tcp_isn.c" />
+    <ClCompile Include="..\..\..\apps\tcpecho_raw\tcpecho_raw.c" />
+    <ClCompile Include="..\..\..\apps\udpecho_raw\udpecho_raw.c" />
+    <ClCompile Include="..\..\..\examples\example_app\test.c" />
+    <ClCompile Include="..\..\..\examples\httpd\cgi_example\cgi_example.c" />
+    <ClCompile Include="..\..\..\examples\httpd\fs_example\fs_example.c" />
+    <ClCompile Include="..\..\..\examples\httpd\genfiles_example\genfiles_example.c" />
+    <ClCompile Include="..\..\..\examples\httpd\https_example\https_example.c" />
+    <ClCompile Include="..\..\..\examples\httpd\post_example\post_example.c" />
+    <ClCompile Include="..\..\..\examples\httpd\ssi_example\ssi_example.c" />
+    <ClCompile Include="..\..\..\examples\lwiperf\lwiperf_example.c" />
+    <ClCompile Include="..\..\..\examples\mdns\mdns_example.c" />
+    <ClCompile Include="..\..\..\examples\mqtt\mqtt_example.c" />
+    <ClCompile Include="..\..\..\examples\ppp\pppos_example.c" />
+    <ClCompile Include="..\..\..\examples\snmp\snmp_example.c" />
+    <ClCompile Include="..\..\..\examples\snmp\snmp_private_mib\lwip_prvmib.c" />
+    <ClCompile Include="..\..\..\examples\snmp\snmp_v3\snmpv3_dummy.c" />
+    <ClCompile Include="..\..\..\examples\sntp\sntp_example.c" />
+    <ClCompile Include="..\..\..\examples\tftp\tftp_example.c" />
+    <ClCompile Include="..\..\..\apps\chargen\chargen.c" />
+    <ClCompile Include="..\..\..\apps\httpserver\httpserver-netconn.c" />
+    <ClCompile Include="..\..\..\apps\netio\netio.c" />
+    <ClCompile Include="..\..\..\apps\ping\ping.c" />
+    <ClCompile Include="..\..\..\apps\rtp\rtp.c" />
+    <ClCompile Include="..\..\..\apps\shell\shell.c" />
+    <ClCompile Include="..\..\..\apps\socket_examples\socket_examples.c" />
+    <ClCompile Include="..\..\..\apps\tcpecho\tcpecho.c" />
+    <ClCompile Include="..\..\..\apps\udpecho\udpecho.c" />
+    <ClCompile Include="..\example_app\default_netif.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\addons\ipv6_static_routing\ip6_route_table.h" />
+    <ClInclude Include="..\..\..\addons\tcp_isn\tcp_isn.h" />
+    <ClInclude Include="..\..\..\apps\chargen\chargen.h" />
+    <ClInclude Include="..\..\..\apps\httpserver\httpserver-netconn.h" />
+    <ClInclude Include="..\..\..\apps\netio\netio.h" />
+    <ClInclude Include="..\..\..\apps\ping\ping.h" />
+    <ClInclude Include="..\..\..\apps\rtp\rtp.h" />
+    <ClInclude Include="..\..\..\apps\shell\shell.h" />
+    <ClInclude Include="..\..\..\apps\socket_examples\socket_examples.h" />
+    <ClInclude Include="..\..\..\apps\tcpecho\tcpecho.h" />
+    <ClInclude Include="..\..\..\apps\tcpecho_raw\tcpecho_raw.h" />
+    <ClInclude Include="..\..\..\apps\udpecho\udpecho.h" />
+    <ClInclude Include="..\..\..\apps\udpecho_raw\udpecho_raw.h" />
+    <ClInclude Include="..\..\..\examples\httpd\cgi_example\cgi_example.h" />
+    <ClInclude Include="..\..\..\examples\httpd\fs_example\fs_example.h" />
+    <ClInclude Include="..\..\..\examples\httpd\genfiles_example\genfiles_example.h" />
+    <ClInclude Include="..\..\..\examples\httpd\https_example\https_example.h" />
+    <ClInclude Include="..\..\..\examples\httpd\ssi_example\ssi_example.h" />
+    <ClInclude Include="..\..\..\examples\lwiperf\lwiperf_example.h" />
+    <ClInclude Include="..\..\..\examples\mdns\mdns_example.h" />
+    <ClInclude Include="..\..\..\examples\mqtt\mqtt_example.h" />
+    <ClInclude Include="..\..\..\examples\ppp\pppos_example.h" />
+    <ClInclude Include="..\..\..\examples\snmp\snmp_example.h" />
+    <ClInclude Include="..\..\..\examples\snmp\snmp_private_mib\private_mib.h" />
+    <ClInclude Include="..\..\..\examples\snmp\snmp_v3\snmpv3_dummy.h" />
+    <ClInclude Include="..\..\..\examples\sntp\sntp_example.h" />
+    <ClInclude Include="..\..\..\examples\tftp\tftp_example.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\addons\ipv6_static_routing\README" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="lwIP.vcxproj">
+      <Project>{2cc276fa-b226-49c9-8f82-7fcd5a228e28}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="lwIP_pcapif.vcxproj">
+      <Project>{6f44e49e-9f21-4144-91ec-53b92aef62ce}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

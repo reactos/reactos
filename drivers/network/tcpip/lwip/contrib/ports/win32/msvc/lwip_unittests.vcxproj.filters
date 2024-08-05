@@ -1,0 +1,168 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="core">
+      <UniqueIdentifier>{e351c538-9f2b-4a01-bf46-3ee8873cbc0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tcp">
+      <UniqueIdentifier>{5805c4bc-32c1-49cf-a35e-af58757e2d7a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="udp">
+      <UniqueIdentifier>{173ba4ab-b194-4933-8e02-319044c2a8fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="etharp">
+      <UniqueIdentifier>{70c655a7-f40f-4728-b586-33fd9598b355}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dhcp">
+      <UniqueIdentifier>{a6b60d4e-4b81-44f2-9408-2e45cc769391}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mdns">
+      <UniqueIdentifier>{d454902e-ce5b-48ae-a690-e6490bdbbf17}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api">
+      <UniqueIdentifier>{d9501476-6102-4f14-90bd-35322fbd2fb2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="arch">
+      <UniqueIdentifier>{b04f182c-1910-456d-9388-397dfe82dbc9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mqtt">
+      <UniqueIdentifier>{fd48ae04-ec85-478f-a97c-a7c8384a2d94}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ip4">
+      <UniqueIdentifier>{fe93fc95-f1af-4a1f-a086-c1771dbf4d79}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ipv6">
+      <UniqueIdentifier>{924d29be-e5e4-4b25-8bc4-92db91ce4c49}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ppp">
+      <UniqueIdentifier>{4d24c808-c024-4aba-a214-e5bc276e124d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\test\unit\core\test_mem.c">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\unit\core\test_pbuf.c">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\unit\tcp\tcp_helper.c">
+      <Filter>tcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\unit\tcp\test_tcp.c">
+      <Filter>tcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\unit\tcp\test_tcp_oos.c">
+      <Filter>tcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\unit\udp\test_udp.c">
+      <Filter>udp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\unit\etharp\test_etharp.c">
+      <Filter>etharp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\unit\dhcp\test_dhcp.c">
+      <Filter>dhcp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\unit\lwip_unittests.c" />
+    <ClCompile Include="..\..\..\..\test\unit\mdns\test_mdns.c">
+      <Filter>mdns</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\unit\api\test_sockets.c">
+      <Filter>api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\unit\arch\sys_arch.c">
+      <Filter>arch</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\unit\mqtt\test_mqtt.c">
+      <Filter>mqtt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\unit\ip4\test_ip4.c">
+      <Filter>ip4</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\unit\core\test_def.c">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\unit\core\test_timers.c">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\unit\core\test_netif.c">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\unit\ip6\test_ip6.c">
+      <Filter>ipv6</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\unit\core\test_dns.c">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\unit\ppp\test_pppos.c">
+      <Filter>ppp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\unit\tcp\test_tcp_state.c">
+      <Filter>tcp</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\test\unit\core\test_mem.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\unit\core\test_pbuf.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\unit\tcp\tcp_helper.h">
+      <Filter>tcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\unit\tcp\test_tcp.h">
+      <Filter>tcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\unit\tcp\test_tcp_oos.h">
+      <Filter>tcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\unit\udp\test_udp.h">
+      <Filter>udp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\unit\etharp\test_etharp.h">
+      <Filter>etharp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\unit\dhcp\test_dhcp.h">
+      <Filter>dhcp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\unit\lwip_check.h" />
+    <ClInclude Include="..\..\..\..\test\unit\lwipopts.h" />
+    <ClInclude Include="..\..\..\..\test\unit\mdns\test_mdns.h">
+      <Filter>mdns</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\unit\api\test_sockets.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\unit\arch\sys_arch.h">
+      <Filter>arch</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\unit\mqtt\test_mqtt.h">
+      <Filter>mqtt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\unit\ip4\test_ip4.h">
+      <Filter>ip4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\unit\core\test_def.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\unit\core\test_timers.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\unit\core\test_netif.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\unit\ip6\test_ip6.h">
+      <Filter>ipv6</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\unit\core\test_dns.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\unit\ppp\test_pppos.h">
+      <Filter>ppp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\unit\tcp\test_tcp_state.h">
+      <Filter>tcp</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

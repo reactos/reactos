@@ -1,0 +1,27 @@
+This folder provides an example implementation of how to add custom tcp header
+options and custom socket options.
+
+It does this by implementing the (seldom used) tcp md5 signature.
+
+To enable it, add an LWIP_HOOK_FILENAME hook file, include tcp_md5.h in it and
+define these hooks:
+
+  #define LWIP_HOOK_TCP_INPACKET_PCB(pcb, hdr, optlen, opt1len, opt2, p) tcp_md5_check_inpacket(pcb, hdr, optlen, opt1len, opt2, p)
+  #define LWIP_HOOK_TCP_OPT_LENGTH_SEGMENT(pcb, internal_len)            tcp_md5_get_additional_option_length(pcb, internal_len)
+  #define LWIP_HOOK_TCP_ADD_TX_OPTIONS(p, hdr, pcb, opts)                tcp_md5_add_tx_options(p, hdr, pcb,  opts)
+  #define LWIP_HOOK_SOCKETS_SETSOCKOPT(s, sock, level, optname, optval, optlen, err) tcp_md5_setsockopt_hook(sock, level, optname, optval, optlen, err)
+
+Then, in your sockets application, enable md5 signature on a socket like this:
+
+  struct tcp_md5sig md5;
+  struct sockaddr_storage addr_remote; /* Initialize this to remote address and port */
+  memcpy(&md5.tcpm_addr, &addr_remote, sizeof(addr_remote));
+  strcpy(md5.tcpm_key, key); /* this is the md5 key per connection */
+  md5.tcpm_keylen = strlen(key);
+  if ((ret = setsockopt(sockfd, IPPROTO_TCP, TCP_MD5SIG, &md5, sizeof(md5))) < 0) {
+    perror("setsockopt TCP_MD5SIG");
+    return;
+  }
+
+After that, your connection (client) or all incoming connections (server) require
+tcp md5 signatures.

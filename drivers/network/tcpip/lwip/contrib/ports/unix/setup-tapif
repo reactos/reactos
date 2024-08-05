@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# This script needs bridge-util debian package or similar
+# for other distros.
+
+# Run using "source setup-tapif" to get exported PRECONFIGURED_TAPIF variable
+# Alternatively, add "export PRECONFIGURED_TAPIF=tap0" to ~/.bashrc
+
+# http://backreference.org/2010/03/26/tuntap-interface-tutorial/
+
+# After executing this script, start example_app.
+# Enter 192.168.1.200 or "http://lwip.local/" (Zeroconf)
+# in your webbrowser to see example_app webpage.
+
+export PRECONFIGURED_TAPIF=tap0
+
+sudo ip tuntap add dev $PRECONFIGURED_TAPIF mode tap user `whoami`
+sudo ip link set $PRECONFIGURED_TAPIF up
+sudo brctl addbr lwipbridge
+sudo brctl addif lwipbridge $PRECONFIGURED_TAPIF
+sudo ip addr add 192.168.1.1/24 dev lwipbridge
+sudo ip link set dev lwipbridge up
