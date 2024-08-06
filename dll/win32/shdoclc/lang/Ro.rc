@@ -39,45 +39,45 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Înap&oi",                            IDM_GOBACKWARD
         MENUITEM "În&ainte",                           IDM_GOFORWARD
         MENUITEM SEPARATOR
-        MENUITEM "Salvează imagi&nea de fundal ca…",   IDM_SAVEBACKGROUND
-        MENUITEM "Stabilește ca f&undal",              IDM_SETWALLPAPER
-        MENUITEM "&Copiază fundalul",                  IDM_COPYBACKGROUND
-        MENUITEM "Definire ca element pe des&ktop…",   IDM_SETDESKTOPITEM
+        MENUITEM "&Salvare imagine de fundal ca…",     IDM_SAVEBACKGROUND
+        MENUITEM "Stabilire ca f&undal",               IDM_SETWALLPAPER
+        MENUITEM "&Copiere fundal",                    IDM_COPYBACKGROUND
+        MENUITEM "Stabilire ca element pe des&ktop…",  IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
-        MENUITEM "S&electează tot",                    IDM_SELECTALL
-        MENUITEM "&Lipește",                           IDM_PASTE
+        MENUITEM "S&electare tot",                     IDM_SELECTALL
+        MENUITEM "&Lipire",                            IDM_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "Crea&ză scurtătură",                 IDM_CREATESHORTCUT
+        MENUITEM "Creare co&mandă rapidă",             IDM_CREATESHORTCUT
         MENUITEM "Adăugare la fa&vorite…",             IDM_ADDFAVORITES
-        MENUITEM "A&fișează sursa",                    IDM_VIEWSOURCE
+        MENUITEM "A&fișare sursă",                     IDM_VIEWSOURCE
         MENUITEM SEPARATOR
         MENUITEM "Co&dificare",                        IDM_LANGUAGE
         MENUITEM SEPARATOR
-        MENUITEM "I&mprimă",                           IDM_PRINT
-        MENUITEM "Împ&rospătează",                     _IDM_REFRESH
+        MENUITEM "&Imprimare",                         IDM_PRINT
+        MENUITEM "Împ&rospătare",                      IDM_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "&Proprietăți",                       IDM_PROPERTIES
     }
 
     POPUP "" /* Image */
     {
-        MENUITEM "Deschide &adresa",                   IDM_FOLLOWLINKC
-        MENUITEM "Deschide în fereastră &nouă",        IDM_FOLLOWLINKN
-        MENUITEM "Salvează destinația ca…",            IDM_SAVETARGET
-        MENUITEM "I&mprimă destinația",                IDM_PRINTTARGET
+        MENUITEM "Deschidere &adresă",                 IDM_FOLLOWLINKC
+        MENUITEM "Deschidere în fereastră &nouă",      IDM_FOLLOWLINKN
+        MENUITEM "Salvare destinație ca…",             IDM_SAVETARGET
+        MENUITEM "&Imprimare destinație",              IDM_PRINTTARGET
         MENUITEM SEPARATOR
-        MENUITEM "Afișea&ză imaginea",                 IDM_SHOWPICTURE
-        MENUITEM "Salvează imaginea ca…",              IDM_SAVEPICTURE
+        MENUITEM "Afișa&re imagine",                   IDM_SHOWPICTURE
+        MENUITEM "&Salvare imagine ca…",               IDM_SAVEPICTURE
         MENUITEM "Transmitere imagine prin &email…",   IDM_MP_EMAILPICTURE
-        MENUITEM "Imp&rimă imaginea…",                 IDM_MP_PRINTPICTURE
-        MENUITEM "&Mergi la Imaginile mele",           IDM_MP_MYPICS
-        MENUITEM "Stabilește ca &fundal",              IDM_SETWALLPAPER
-        MENUITEM "Definire ca element pe des&ktop…",   IDM_SETDESKTOPITEM
+        MENUITEM "&Imprimare imagine…",                IDM_MP_PRINTPICTURE
+        MENUITEM "&Salt la Imaginile mele",            IDM_MP_MYPICS
+        MENUITEM "Stabilire ca &fundal",               IDM_SETWALLPAPER
+        MENUITEM "Stabilire ca element pe des&ktop…",  IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
-        MENUITEM "&Decupează",                         IDM_CUT
-        MENUITEM "&Copiază",                           IDM_COPY
-        MENUITEM "Copiază sc&urtătura",                IDM_COPYSHORTCUT
-        MENUITEM "&Lipește",                           IDM_PASTE
+        MENUITEM "&Decupare",                          IDM_CUT
+        MENUITEM "C&opiere",                           IDM_COPY
+        MENUITEM "Copiere co&mandă rapidă",            IDM_COPYSHORTCUT
+        MENUITEM "&Lipire",                            IDM_PASTE
         MENUITEM SEPARATOR
         MENUITEM "Adăugare la fa&vorite…",             IDM_ADDFAVORITES
         MENUITEM SEPARATOR
@@ -86,14 +86,14 @@ IDR_BROWSE_CONTEXT_MENU MENU
 
     POPUP "" /* Control */
     {
-        MENUITEM "Des&fă",           IDM_UNDO
+        MENUITEM "&Anulare",           IDM_UNDO
         MENUITEM SEPARATOR
-        MENUITEM "&Decupează",       IDM_CUT
-        MENUITEM "&Copiază",         IDM_COPY
-        MENUITEM "&Lipește",         IDM_PASTE
-        MENUITEM "Șt&erge",          IDM_DELETE
+        MENUITEM "&Decupare",          IDM_CUT
+        MENUITEM "&Copiere",           IDM_COPY
+        MENUITEM "&Lipire",            IDM_PASTE
+        MENUITEM "Șt&erge",            IDM_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "Selectează t&ot",  IDM_SELECTALL
+        MENUITEM "Selectați &tot",     IDM_SELECTALL
     }
 
     POPUP "" /* Table */
@@ -103,34 +103,34 @@ IDR_BROWSE_CONTEXT_MENU MENU
             MENUITEM "C&elulă",         IDM_CELLSELECT
             MENUITEM "&Rând",           IDM_ROWSELECT
             MENUITEM "&Coloană",        IDM_COLUMNSELECT
-            MENUITEM "T&abel",          IDM_TABLESELECT
+            MENUITEM "&Tabel",          IDM_TABLESELECT
         }
         MENUITEM SEPARATOR
         MENUITEM "Proprietăți &celulă", IDM_CELLPROPERTIES
-        MENUITEM "Proprietăți t&abel",  IDM_TABLEPROPERTIES
+        MENUITEM "Proprietăți &tabel",  IDM_TABLEPROPERTIES
     }
 
     POPUP "" /* 1DSite Select */
     {
-        MENUITEM "&Decupează",          IDM_CUT
-        MENUITEM "&Copiază",            IDM_COPY
-        MENUITEM "&Lipește",            IDM_PASTE
-        MENUITEM "Selectează t&ot",     IDM_SELECTALL
-        MENUITEM "I&mprimă",            IDM_PRINT
+        MENUITEM "&Decupare",          IDM_CUT
+        MENUITEM "C&opiere",           IDM_COPY
+        MENUITEM "&Lipire",            IDM_PASTE
+        MENUITEM "Selectați &tot",     IDM_SELECTALL
+        MENUITEM "&Imprimare",         IDM_PRINT
         MENUITEM SEPARATOR
     }
 
     POPUP "" /* Anchor */
     {
-        MENUITEM "Deschide &adresa",             IDM_FOLLOWLINKC
+        MENUITEM "Deschidere &adresă",           IDM_FOLLOWLINKC
         MENUITEM "Deschide în fereastră &nouă",  IDM_FOLLOWLINKN
-        MENUITEM "Sal&vează destinația ca…",     IDM_SAVETARGET
-        MENUITEM "I&mprimă destinația",          IDM_PRINTTARGET
+        MENUITEM "&Salvare destinație ca…",      IDM_SAVETARGET
+        MENUITEM "&Imprimare destinație",        IDM_PRINTTARGET
         MENUITEM SEPARATOR
-        MENUITEM "&Decupează",                   IDM_CUT
-        MENUITEM "&Copiază",                     IDM_COPY
-        MENUITEM "Copiază sc&urtătura",          IDM_COPYSHORTCUT
-        MENUITEM "&Lipește",                     IDM_PASTE
+        MENUITEM "&Decupare",                    IDM_CUT
+        MENUITEM "C&opiere",                     IDM_COPY
+        MENUITEM "Copiere co&mandă rapidă",      IDM_COPYSHORTCUT
+        MENUITEM "&Lipire",                      IDM_PASTE
         MENUITEM SEPARATOR
         MENUITEM "Adăugare la fa&vorite…",       IDM_ADDFAVORITES
         MENUITEM SEPARATOR
@@ -144,50 +144,50 @@ IDR_BROWSE_CONTEXT_MENU MENU
 
     POPUP "" /* DYNSRC Image */
     {
-        MENUITEM "Deschide &adresa",                 IDM_FOLLOWLINKC
+        MENUITEM "Deschide &adresă",                 IDM_FOLLOWLINKC
         MENUITEM "Deschide în fereastră &nouă",      IDM_FOLLOWLINKN
-        MENUITEM "Salvează destinația ca…",          IDM_SAVETARGET
-        MENUITEM "I&mprimă destinația",              IDM_PRINTTARGET
+        MENUITEM "Salvare destinație ca…",           IDM_SAVETARGET
+        MENUITEM "&Imprimare destinația",            IDM_PRINTTARGET
         MENUITEM SEPARATOR
-        MENUITEM "Afișea&ză imaginea",               IDM_SHOWPICTURE
-        MENUITEM "Salvează imaginea ca…",            IDM_SAVEPICTURE
-        MENUITEM "Stabilește ca &fundal",            IDM_SETWALLPAPER
-        MENUITEM "Definire ca element pe des&ktop…", IDM_SETDESKTOPITEM
+        MENUITEM "&Afișare imagine",                 IDM_SHOWPICTURE
+        MENUITEM "Salvare imagine ca…",              IDM_SAVEPICTURE
+        MENUITEM "Stabilire ca &fundal",             IDM_SETWALLPAPER
+        MENUITEM "Stabilire ca element pe des&ktop…",IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
-        MENUITEM "&Decupează",                       IDM_CUT
-        MENUITEM "&Copiază",                         IDM_COPY
-        MENUITEM "Copiază sc&urtătura",              IDM_COPYSHORTCUT
-        MENUITEM "&Lipește",                         IDM_PASTE
+        MENUITEM "&Decupare",                        IDM_CUT
+        MENUITEM "C&opiere",                         IDM_COPY
+        MENUITEM "Copiere sc&urtătura",              IDM_COPYSHORTCUT
+        MENUITEM "&Lipire",                          IDM_PASTE
         MENUITEM SEPARATOR
         MENUITEM "Adăugare la fa&vorite…",           IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM "P&ornește",                        IDM_DYNSRCPLAY
-        MENUITEM "&Oprește",                         IDM_DYNSRCSTOP
-        MENUITEM "&Proprietăți",                     IDM_PROPERTIES
+        MENUITEM "&Pornire",                         IDM_DYNSRCPLAY
+        MENUITEM "&Oprire",                          IDM_DYNSRCSTOP
+        MENUITEM "P&roprietăți",                     IDM_PROPERTIES
     }
 
     POPUP "" /* ART Image */
     {
-        MENUITEM "Deschide &adresa",                 IDM_FOLLOWLINKC
-        MENUITEM "Deschide în fereastră &nouă",      IDM_FOLLOWLINKN
-        MENUITEM "Salvează destinația ca…",          IDM_SAVETARGET
-        MENUITEM "I&mprimă destinația",              IDM_PRINTTARGET
+        MENUITEM "Deschidere &adresă",               IDM_FOLLOWLINKC
+        MENUITEM "Deschidere în fereastră &nouă",    IDM_FOLLOWLINKN
+        MENUITEM "&Salvare destinație ca…",          IDM_SAVETARGET
+        MENUITEM "&Imprimare destinație",            IDM_PRINTTARGET
         MENUITEM SEPARATOR
-        MENUITEM "Afișea&ză imaginea",               IDM_SHOWPICTURE
-        MENUITEM "Salvează imaginea ca…",            IDM_SAVEPICTURE
-        MENUITEM "Definește ca &fundal",             IDM_SETWALLPAPER
-        MENUITEM "Definire ca element pe des&ktop…", IDM_SETDESKTOPITEM
+        MENUITEM "&Afișare imagine",               IDM_SHOWPICTURE
+        MENUITEM "Salvare imagine ca…",              IDM_SAVEPICTURE
+        MENUITEM "Stabilire ca &fundal",             IDM_SETWALLPAPER
+        MENUITEM "Stabilire ca element pe des&ktop…",IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
-        MENUITEM "&Decupează",                       IDM_CUT
-        MENUITEM "&Copiază",                         IDM_COPY
-        MENUITEM "Copiază sc&urtătura",              IDM_COPYSHORTCUT
-        MENUITEM "&Lipește",                         IDM_PASTE
+        MENUITEM "&Decupare",                        IDM_CUT
+        MENUITEM "C&opiere",                         IDM_COPY
+        MENUITEM "Copiere co&mandă rapidă",          IDM_COPYSHORTCUT
+        MENUITEM "&Lipire",                          IDM_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "Adaugă la fa&vorite…",             IDM_ADDFAVORITES
+        MENUITEM "Adăugare la fa&vorite…",           IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM "P&ornește",                        IDM_IMGARTPLAY
-        MENUITEM "&Oprește",                         IDM_IMGARTSTOP
-        MENUITEM "De&rulează înapoi",                IDM_IMGARTREWIND
+        MENUITEM "&Pornire",                         IDM_IMGARTPLAY
+        MENUITEM "&Oprire",                          IDM_IMGARTSTOP
+        MENUITEM "De&rulare înapoi",                 IDM_IMGARTREWIND
         MENUITEM SEPARATOR
         MENUITEM "&Proprietăți",                     IDM_PROPERTIES
     }
@@ -195,48 +195,48 @@ IDR_BROWSE_CONTEXT_MENU MENU
     POPUP "" /* Debug */
     {
         MENUITEM "Urmărire etichete",                 IDM_TRACETAGS
-        MENUITEM "Erori în resursă",                  IDM_RESOURCEFAILURES
-        MENUITEM "Elimină informația de urmărire",    IDM_DUMPTRACKINGINFO
+        MENUITEM "Erori în resurse",                  IDM_RESOURCEFAILURES
+        MENUITEM "Eliminare informații de urmărire",  IDM_DUMPTRACKINGINFO
         MENUITEM "Întrerupere depanare",              IDM_DEBUGBREAK
         MENUITEM "Vizualizare depanare",              IDM_DEBUGVIEW
-        MENUITEM "Elimină arborele",                  IDM_DUMPTREE
-        MENUITEM "Elimină liniile",                   IDM_DUMPLINES
-        MENUITEM "Elimină arborele de afișare",       IDM_DUMPDISPLAYTREE
-        MENUITEM "Elimină cache-ul de format",        IDM_DUMPFORMATCACHES
-        MENUITEM "Elimină dreptunghiurile de format", IDM_DUMPLAYOUTRECTS
+        MENUITEM "Eliminare arbore",                  IDM_DUMPTREE
+        MENUITEM "Eliminare linii",                   IDM_DUMPLINES
+        MENUITEM "Eliminare arbore de afișare",       IDM_DUMPDISPLAYTREE
+        MENUITEM "Eliminare cache de formatare",      IDM_DUMPFORMATCACHES
+        MENUITEM "Eliminare dreptunghiuri formatare", IDM_DUMPLAYOUTRECTS
         MENUITEM "Monitor de memorie",                IDM_MEMORYMONITOR
         MENUITEM "Măsurători de performanță",         IDM_PERFORMANCEMETERS
-        MENUITEM "Salvează fișierul HTML",            IDM_SAVEHTML
+        MENUITEM "Salvare fișier HTML",               IDM_SAVEHTML
         MENUITEM SEPARATOR
-        MENUITEM "Răsfoiește vizualizarea",           IDM_BROWSEMODE
-        MENUITEM "Editează vizualizarea",             IDM_EDITMODE
+        MENUITEM "Răsfoire vizualizare",              IDM_BROWSEMODE
+        MENUITEM "Editare vizualizare",               IDM_EDITMODE
     }
 
     POPUP "" /* Vertical Scrollbar */
     {
-        MENUITEM "Derulează aici",  IDM_SCROLL_HERE
+        MENUITEM "Derulare aici",  IDM_SCROLL_HERE
         MENUITEM SEPARATOR
         MENUITEM "Sus",             IDM_SCROLL_TOP
         MENUITEM "Jos",             IDM_SCROLL_BOTTOM
         MENUITEM SEPARATOR
-        MENUITEM "Pagină mai sus",  IDM_SCROLL_PAGEUP
-        MENUITEM "Pagină mai jos",  IDM_SCROLL_PAGEDOWN
+        MENUITEM "Pagină în sus",   IDM_SCROLL_PAGEUP
+        MENUITEM "Pagină în jos",   IDM_SCROLL_PAGEDOWN
         MENUITEM SEPARATOR
-        MENUITEM "Defilare în sus", IDM_SCROLL_UP
-        MENUITEM "Defilare în jos", IDM_SCROLL_DOWN
+        MENUITEM "Derulare în sus", IDM_SCROLL_UP
+        MENUITEM "Derulare în jos", IDM_SCROLL_DOWN
     }
 
     POPUP "" /* Horizontal Scrollbar */
     {
-        MENUITEM "Derulează aici",        IDM_SCROLL_HERE
+        MENUITEM "Derulare aici",        IDM_SCROLL_HERE
         MENUITEM SEPARATOR
-        MENUITEM "Marginea stîngă",       IDM_SCROLL_LEFTEDGE
-        MENUITEM "Marginea dreaptă",      IDM_SCROLL_RIGHTEDGE
+        MENUITEM "Margine la stânga",    IDM_SCROLL_LEFTEDGE
+        MENUITEM "Margine la dreapta",   IDM_SCROLL_RIGHTEDGE
         MENUITEM SEPARATOR
-        MENUITEM "Pagină mai la stânga",  IDM_SCROLL_PAGELEFT
-        MENUITEM "Pagină mai la dreapta", IDM_SCROLL_PAGERIGHT
+        MENUITEM "Pagină la stânga",     IDM_SCROLL_PAGELEFT
+        MENUITEM "Pagină la dreapta",    IDM_SCROLL_PAGERIGHT
         MENUITEM SEPARATOR
-        MENUITEM "Defilează la stînga",   IDM_SCROLL_LEFT
-        MENUITEM "Defilează la dreapta",  IDM_SCROLL_RIGHT
+        MENUITEM "Derulare la stânga",   IDM_SCROLL_LEFT
+        MENUITEM "Derulare la dreapta",  IDM_SCROLL_RIGHT
     }
 }
