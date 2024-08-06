@@ -60,7 +60,7 @@ typedef struct PART_MATCH
     PART p1, p2;
 } PART_MATCH;
 
-BOOL XPorlower;
+DWORD dwVersion;
 LCID curLcid = 0;
 std::set<LANGID> langs;
 std::map<E_MODULE, HMODULE> mod;
@@ -150,7 +150,8 @@ static int GetLocalisedText(_In_opt_ HINSTANCE hInstance, _In_ UINT uID, _Out_ L
 
 static int LoadStringWrapW(_In_opt_ HINSTANCE hInstance, _In_ UINT uID, _Out_ LPWSTR lpBuffer, _In_ int cchBufferMax)
 {
-    if (XPorlower)
+    if (dwVersion < 0x502)
+        // Windows XP or lower: SetThreadLocale doesn't select user interface language
         return GetLocalisedText(hInstance, uID, lpBuffer, cchBufferMax);
     else
         return LoadStringW(hInstance, uID, lpBuffer, cchBufferMax);
@@ -291,14 +292,13 @@ static void TEST_LocaleTests(void)
     osvi.dwOSVersionInfoSize = sizeof(osvi);
 
     GetVersionExW((LPOSVERSIONINFOW)&osvi);
-    DWORD version = (osvi.dwMajorVersion << 8) | osvi.dwMinorVersion;
-    XPorlower = (version < 0x502);
+    dwVersion = (osvi.dwMajorVersion << 8) | osvi.dwMinorVersion;
 
     WCHAR szOldDir[MAX_PATH], szBuffer[MAX_PATH];
     GetCurrentDirectoryW(_countof(szOldDir), szOldDir);
 
     std::map<E_MODULE, LPCWSTR> lib;
-#define ADD_LIB(eModule, pszPath) lib.insert(std::make_pair(eModule, pszPath));
+#define ADD_LIB(eModule, pszPath) lib.insert(std::make_pair(eModule, pszPath))
 
     GetModuleFileNameW(NULL, szBuffer, _countof(szBuffer));
     LPCWSTR pszFind = StrStrW(szBuffer, L"modules\\rostests\\unittests");
@@ -310,19 +310,19 @@ static void TEST_LocaleTests(void)
         StringCchCopyNW(szNewDir, _countof(szNewDir), szBuffer, pszFind - szBuffer);
         SetCurrentDirectoryW(szNewDir);
 
-        ADD_LIB(shell32, L"dll\\win32\\shell32\\shell32.dll")
-        ADD_LIB(userenv, L"dll\\win32\\userenv\\userenv.dll")
-        ADD_LIB(syssetup, L"dll\\win32\\syssetup\\syssetup.dll")
-        ADD_LIB(mmsys, L"dll\\cpl\\mmsys\\mmsys.cpl")
-        ADD_LIB(explorer_old, L"modules\\rosapps\\applications\\explorer-old\\explorer_old.exe")
+        ADD_LIB(shell32, L"dll\\win32\\shell32\\shell32.dll");
+        ADD_LIB(userenv, L"dll\\win32\\userenv\\userenv.dll");
+        ADD_LIB(syssetup, L"dll\\win32\\syssetup\\syssetup.dll");
+        ADD_LIB(mmsys, L"dll\\cpl\\mmsys\\mmsys.cpl");
+        ADD_LIB(explorer_old, L"modules\\rosapps\\applications\\explorer-old\\explorer_old.exe");
     }
     else
     {
-        ADD_LIB(shell32, L"shell32.dll")
-        ADD_LIB(userenv, L"userenv.dll")
-        ADD_LIB(syssetup, L"syssetup.dll")
-        ADD_LIB(mmsys, L"mmsys.cpl")
-        ADD_LIB(explorer_old, L"explorer_old.exe")
+        ADD_LIB(shell32, L"shell32.dll");
+        ADD_LIB(userenv, L"userenv.dll");
+        ADD_LIB(syssetup, L"syssetup.dll");
+        ADD_LIB(mmsys, L"mmsys.cpl");
+        ADD_LIB(explorer_old, L"explorer_old.exe");
     }
 #undef ADD_LIB
 
