@@ -314,8 +314,8 @@ FONT 8, "MS Shell Dlg"
  CHECKBOX "&Koko sana", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "Kirjaink&oko", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
  GROUPBOX "Suunta", grp1, 147, 21, 58, 38
- CONTROL "&Ylös", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 151, 30, 48, 12
- CONTROL "&Alas", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 151, 44, 48, 12 //FIXME: accelerator collision &A
+ AUTORADIOBUTTON "&Ylös", rad1, 151, 30, 48, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
+ AUTORADIOBUTTON "&Alas", rad2, 151, 44, 48, 12, WS_CHILD | WS_VISIBLE | WS_TABSTOP//FIXME: accelerator collision &A
 
  DEFPUSHBUTTON "Etsi &seuraava", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "Peruuta", IDCANCEL	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
@@ -353,34 +353,34 @@ FONT 8, "MS Shell Dlg"
     PUSHBUTTON      "Peruuta", IDCANCEL, 230,164, 50,14, WS_GROUP
     PUSHBUTTON      "&Apua",  pshHelp,  50, 161, 50,14, WS_GROUP
 
-    GROUPBOX        "Kirjoitin",        grp4,   8,  4, 272,84, WS_GROUP
+    GROUPBOX        "Kirjoitin",      grp4,   8,  4, 272,84, WS_GROUP
     CONTROL         "&Tulosta tiedostoon", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,185,36,90,16
-    PUSHBUTTON      "&Ominaisuudet",    psh2, 212, 17,  60,14, WS_GROUP
+    PUSHBUTTON      "&Ominaisuudet",  psh2, 212, 17,  60,14, WS_GROUP
     LTEXT           "&Nimi:",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Tila:",        stc8,  16, 36,  47,10, SS_NOPREFIX
     LTEXT           "",               stc12, 65, 36, 120,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Tyyppi:",          stc7,  16, 48,  47,10, SS_NOPREFIX
+    LTEXT           "Tyyppi:",        stc7,  16, 48,  47,10, SS_NOPREFIX
     LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Sijainti:",         stc10, 16, 60,  47,10, SS_NOPREFIX
+    LTEXT           "Sijainti:",      stc10, 16, 60,  47,10, SS_NOPREFIX
     LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Kommentti:",       stc9,  16, 72,  47,10, SS_NOPREFIX
+    LTEXT           "Kommentti:",     stc9,  16, 72,  47,10, SS_NOPREFIX
     LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
-    GROUPBOX        "Kopioita",         grp2, 160, 92, 120,64, WS_GROUP
+    GROUPBOX        "Kopioita",       grp2, 160, 92, 120,64, WS_GROUP
     LTEXT           "Kopioiden &määrä:",stc5,168,105,68,8
     ICON            "",               ico3, 210,131,  76,24, WS_GROUP
     CONTROL         "&Kokoa",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
     EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
 
-    GROUPBOX        "Tulosta alueelta",    grp1,   8,92,  144,64, WS_GROUP
-    CONTROL         "&Kaikki",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
-    CONTROL         "&Sivut",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
-    CONTROL         "&Valinta",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
+    GROUPBOX        "Tulosta alueelta", grp1,   8,92,  144,64, WS_GROUP
+    AUTORADIOBUTTON "&Kaikki",        rad1,16,106,64,12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Sivut",         rad3,16,122,36,12
+    AUTORADIOBUTTON "&Valinta",       rad2,16,138,64,12
     EDITTEXT                          edt1,  73,122,  26,12, WS_GROUP | ES_NUMBER
     EDITTEXT                          edt2, 120,122,  26,12, WS_GROUP | ES_NUMBER
-    RTEXT           "M&istä:",         stc2,  52,124,  20,8
-    RTEXT           "Mi&hin:",           stc3,  99,124,  20,8
+    RTEXT           "M&istä:",        stc2,  52,124,  20,8
+    RTEXT           "Mi&hin:",        stc3,  99,124,  20,8
 }
 
 PRINT32_SETUP DIALOG  32, 32, 288, 178
@@ -392,20 +392,20 @@ BEGIN
     PUSHBUTTON      "Peruuta",IDCANCEL,230,156,50,14
 /*    PUSHBUTTON      "Network...", psh5, 284,156,48,14 */
 
-    GROUPBOX        "Kirjoitin",        grp4,   8,  4, 272,84, WS_GROUP
-    PUSHBUTTON      "&Ominaisuudet",    psh2, 212, 17,  60,14, WS_GROUP
+    GROUPBOX        "Kirjoitin",      grp4,   8,  4, 272,84, WS_GROUP
+    PUSHBUTTON      "&Ominaisuudet",  psh2, 212, 17,  60,14, WS_GROUP
     LTEXT           "&Nimi:",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Tila:",        stc8,  16, 36,  47,10, SS_NOPREFIX
     LTEXT           "",               stc12, 65, 36, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Tyyppi:",          stc7,  16, 48,  47,10, SS_NOPREFIX
+    LTEXT           "Tyyppi:",        stc7,  16, 48,  47,10, SS_NOPREFIX
     LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Sijainti:",         stc10, 16, 60,  47,10, SS_NOPREFIX
+    LTEXT           "Sijainti:",      stc10, 16, 60,  47,10, SS_NOPREFIX
     LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Kommentti:",       stc9,  16, 72,  47,10, SS_NOPREFIX
+    LTEXT           "Kommentti:",     stc9,  16, 72,  47,10, SS_NOPREFIX
     LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
-    GROUPBOX        "Paperi",          grp2,   8, 92, 164,56, WS_GROUP
+    GROUPBOX        "Paperi",         grp2,   8, 92, 164,56, WS_GROUP
     LTEXT           "Size:",         stc2,  16,108,  36, 8
     COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "&Lähde:",       stc3,  16,128,  36, 8
@@ -413,8 +413,8 @@ BEGIN
 
     GROUPBOX        "Suunta",    grp1, 180, 92, 100,56, WS_GROUP
     ICON            "",               ico1, 195,112,  18,20, WS_GROUP
-    CONTROL         "&Pysty",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
-    CONTROL         "V&aaka",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+    AUTORADIOBUTTON "&Pysty",         rad1, 224,106,52,12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "V&aaka",         rad2, 224,126,52,12
 END
 
 PAGESETUPDLGORD DIALOG 32, 32, 240, 240
@@ -431,8 +431,8 @@ BEGIN
   LTEXT "&Syöttö:", stc3, 16, 132, 36, 8
   COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
   GROUPBOX "Suunta", grp1, 8, 156, 64, 56, BS_GROUPBOX
-  AUTORADIOBUTTON "P&ysty", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "&Vaaka", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "P&ysty", rad1, 16, 170, 52, 12
+  AUTORADIOBUTTON "&Vaaka", rad2, 16, 190, 52, 12
   GROUPBOX "", grp4, 80, 156, 152, 56, BS_GROUPBOX
   LTEXT "&Vasen:", stc15, 88, 172, 30, 8
   EDITTEXT edt4, 119, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER

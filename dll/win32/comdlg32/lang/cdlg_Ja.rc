@@ -314,8 +314,8 @@ FONT 9, "MS UI Gothic"
  CHECKBOX "単語単位で検索(&W)", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "大文字と小文字を区別する(&C)", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
  GROUPBOX "検索する方向", grp1, 147, 21, 58, 38
- CONTROL "上(&U)", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 151, 30, 48, 12
- CONTROL "下(&D)", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 151, 44, 48, 12
+ AUTORADIOBUTTON "上(&U)", rad1, 151, 30, 48, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
+ AUTORADIOBUTTON "下(&D)", rad2, 151, 44, 48, 12, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 
  DEFPUSHBUTTON "次を検索(&F)", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "キャンセル", IDCANCEL	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
@@ -356,7 +356,7 @@ FONT 9, "MS UI Gothic"
     GROUPBOX        "プリンタの選択",        grp4,   8,  4, 272,84, WS_GROUP
     CONTROL         "ファイルへ出力(&L)", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,185,36,90,16
     PUSHBUTTON      "プロパティ(&P)",    psh2, 212, 17,  60,14, WS_GROUP
-    LTEXT           "名前(&N):",         stc6,  16, 20,  36,8
+    LTEXT           "名前(&N):",        stc6,  16, 20,  36,8
     COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "状態:",        stc8,  16, 36,  47,10, SS_NOPREFIX
     LTEXT           "",               stc12, 65, 36, 120,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
@@ -370,17 +370,17 @@ FONT 9, "MS UI Gothic"
     GROUPBOX        "印刷部数",         grp2, 160, 92, 120,64, WS_GROUP
     LTEXT           "部数(&C):",stc5,168,105,68,8
     ICON            "",               ico3, 210,131,  76,24, WS_GROUP
-    CONTROL         "部単位で印刷(&O)",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
+    CONTROL         "部単位で印刷(&O)",     chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
     EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
 
     GROUPBOX        "印刷範囲",    grp1,   8,92,  144,64, WS_GROUP
-    CONTROL         "すべて(&A)",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
-    CONTROL         "ページ指定(&G)",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
-    CONTROL         "選択した部分(&S)",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
+    AUTORADIOBUTTON "すべて(&A)",        rad1,16,106,64,12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "ページ指定(&G)",      rad3,16,122,36,12
+    AUTORADIOBUTTON "選択した部分(&S)",     rad2,16,138,64,12
     EDITTEXT                          edt1,  73,122,  26,12, WS_GROUP | ES_NUMBER
     EDITTEXT                          edt2, 120,122,  26,12, WS_GROUP | ES_NUMBER
-    RTEXT           "ページから(&F):",         stc2,  52,124,  20,8
-    RTEXT           "ページまで(&T):",           stc3,  99,124,  20,8
+    RTEXT           "ページから(&F):",     stc2,  52,124,  20,8
+    RTEXT           "ページまで(&T):",     stc3,  99,124,  20,8
 }
 
 PRINT32_SETUP DIALOG  32, 32, 288, 178
@@ -394,7 +394,7 @@ BEGIN
 
     GROUPBOX        "プリンタの選択",        grp4,   8,  4, 272,84, WS_GROUP
     PUSHBUTTON      "プロパティ(&P)",    psh2, 212, 17,  60,14, WS_GROUP
-    LTEXT           "名前(&N):",         stc6,  16, 20,  36,8
+    LTEXT           "名前(&N):",        stc6,  16, 20,  36,8
     COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "状態:",        stc8,  16, 36,  47,10, SS_NOPREFIX
     LTEXT           "",               stc12, 65, 36, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
@@ -406,15 +406,15 @@ BEGIN
     LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
     GROUPBOX        "用紙",          grp2,   8, 92, 164,56, WS_GROUP
-    LTEXT           "サイズ(&Z):",         stc2,  16,108,  36, 8
+    LTEXT           "サイズ(&Z):",       stc2,  16,108,  36, 8
     COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "ソース(&S):",    stc3,  16,128,  36, 8
     COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
 
     GROUPBOX        "方向",    grp1, 180, 92, 100,56, WS_GROUP
     ICON            "",               ico1, 195,112,  18,20, WS_GROUP
-    CONTROL         "縦(&O)",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
-    CONTROL         "横(&A)",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+    AUTORADIOBUTTON "縦(&O)",          rad1, 224,106,52,12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "横(&A)",          rad2, 224,126,52,12
 END
 
 PAGESETUPDLGORD DIALOG 32, 32, 240, 240
@@ -431,8 +431,8 @@ BEGIN
   LTEXT "給紙方法(&T):", stc3, 16, 132, 36, 8
   COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
   GROUPBOX "方向", grp1, 8, 156, 64, 56, BS_GROUPBOX
-  AUTORADIOBUTTON "縦(&P)", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "横(&L)", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "縦(&P)", rad1, 16, 170, 52, 12
+  AUTORADIOBUTTON "横(&L)", rad2, 16, 190, 52, 12
   GROUPBOX "", grp4, 80, 156, 152, 56, BS_GROUPBOX
   LTEXT "左(&E):", stc15, 88, 172, 30, 8
   EDITTEXT edt4, 119, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER

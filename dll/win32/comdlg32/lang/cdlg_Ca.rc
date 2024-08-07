@@ -314,8 +314,8 @@ FONT 8, "MS Shell Dlg"
  CHECKBOX "Troba només paraules &completes", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "&Distingir majúscules de minúscules", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
  GROUPBOX "Direcció", grp1, 147, 21, 58, 38
- CONTROL "A&munt", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 151, 30, 48, 12
- CONTROL "A &Baix", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 151, 44, 48, 12
+ AUTORADIOBUTTON "A&munt", rad1, 151, 30, 48, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
+ AUTORADIOBUTTON "A &Baix", rad2, 151, 44, 48, 12, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 
  DEFPUSHBUTTON "&Continuació", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "Cancel·la", IDCANCEL	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
@@ -353,30 +353,30 @@ FONT 8, "MS Shell Dlg"
     PUSHBUTTON      "Cancel·la", IDCANCEL, 230,164, 50,14, WS_GROUP
     PUSHBUTTON      "A&juda",  pshHelp,  50, 161, 50,14, WS_GROUP
 
-    GROUPBOX        "Impressora:",        grp4,   8,  4, 272,84, WS_GROUP
+    GROUPBOX        "Impressora:",    grp4,   8,  4, 272,84, WS_GROUP
     CONTROL         "Imprimeix a &fitxer", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,185,36,90,16
     PUSHBUTTON      "&Propietats",    psh2, 212, 17,  60,14, WS_GROUP
     LTEXT           "&Nom:",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Estat:",        stc8,  16, 36,  47,10, SS_NOPREFIX
     LTEXT           "",               stc12, 65, 36, 120,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Tipus:",          stc7,  16, 48,  47,10, SS_NOPREFIX
+    LTEXT           "Tipus:",         stc7,  16, 48,  47,10, SS_NOPREFIX
     LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "On:",         stc10, 16, 60,  47,10, SS_NOPREFIX
     LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Comentari:",       stc9,  16, 72,  47,10, SS_NOPREFIX
+    LTEXT           "Comentari:",     stc9,  16, 72,  47,10, SS_NOPREFIX
     LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
     GROUPBOX        "Copies",         grp2, 160, 92, 120,64, WS_GROUP
     LTEXT           "Nombre de &copies:",stc5,168,105,68,8
     ICON            "",               ico3, 210,131,  76,24, WS_GROUP
-    CONTROL         "C&ompagina",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
+    CONTROL         "C&ompagina",     chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
     EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
 
     GROUPBOX        "Interval d'impressi",    grp1,   8,92,  144,64, WS_GROUP
-    CONTROL         "&Tot",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
-    CONTROL         "Pa&ges",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
-    CONTROL         "&Selecci",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
+    AUTORADIOBUTTON "&Tot",           rad1,16,106,64,12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Pa&ges",         rad3,16,122,36,12
+    AUTORADIOBUTTON "&Selecci",       rad2,16,138,64,12
     EDITTEXT                          edt1,  73,122,  26,12, WS_GROUP | ES_NUMBER
     EDITTEXT                          edt2, 120,122,  26,12, WS_GROUP | ES_NUMBER
     RTEXT           "&de:",         stc2,  52,124,  20,8
@@ -413,8 +413,8 @@ BEGIN
 
     GROUPBOX        "Orientació",    grp1, 180, 92, 100,56, WS_GROUP
     ICON            "",               ico1, 195,112,  18,20, WS_GROUP
-    CONTROL         "&Vertical",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
-    CONTROL         "&Horizontal",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+    AUTORADIOBUTTON "&Vertical",      rad1, 224,106,52,12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Horizontal",    rad2, 224,126,52,12
 END
 
 PAGESETUPDLGORD DIALOG 32, 32, 240, 240
@@ -431,8 +431,8 @@ BEGIN
   LTEXT "&Safata:", stc3, 16, 132, 36, 8
   COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
   GROUPBOX "Orientació", grp1, 8, 156, 64, 56, BS_GROUPBOX
-  AUTORADIOBUTTON "&Vertical", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "&Horizontal", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "&Vertical", rad1, 16, 170, 52, 12
+  AUTORADIOBUTTON "&Horizontal", rad2, 16, 190, 52, 12
   GROUPBOX "Vores", grp4, 80, 156, 152, 56, BS_GROUPBOX
   LTEXT "&Esquerra:", stc15, 88, 172, 30, 8
   EDITTEXT edt4, 119, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
