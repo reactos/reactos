@@ -76,7 +76,6 @@
 #define ID_TREE_COLLAPSEBRANCH        32817
 #define ID_REGISTRY_LOADHIVE          32827
 #define ID_REGISTRY_UNLOADHIVE        32828
-#define ID_REGISTRY_SELECTCOMPUTER    32831
 #define ID_HEXEDIT_CUT                32835
 #define ID_HEXEDIT_COPY               32836
 #define ID_HEXEDIT_PASTE              32837
