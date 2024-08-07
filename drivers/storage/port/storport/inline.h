@@ -19,8 +19,8 @@
  * @param Irp 
  * @return PQUEUED_REQUEST_REFERENCE RequestReference structure allocated, or NULL on failure. 
  */
-PQUEUED_REQUEST_REFERENCE
 FORCEINLINE
+PQUEUED_REQUEST_REFERENCE
 StorpSrbAllocateRequestReference(
     _In_ PSCSI_REQUEST_BLOCK Srb,
     _In_ PIRP Irp,
@@ -57,11 +57,33 @@ StorpSrbAllocateRequestReference(
 }
 
 /**
+ * @brief Frees an SRB's Request Reference and restore Srb->OriginalRequest field to IRP.
+ * This function does not check if Srb->OriginalRequest is actually an request reference, and you
+ * must determine it by other means.
+ * 
+ * @param Srb 
+ * @return FORCEINLINE 
+ */
+FORCEINLINE
+VOID
+StorpSrbFreeRequestReference(
+    _In_ PSCSI_REQUEST_BLOCK Srb)
+{
+    PQUEUED_REQUEST_REFERENCE RequestReference;
+
+    RequestReference = (PQUEUED_REQUEST_REFERENCE)Srb->OriginalRequest;
+    Srb->OriginalRequest = RequestReference->Irp;
+
+    ExFreePoolWithTag(RequestReference, TAG_QUEUED_REQUEST);
+}
+
+
+/**
  * @brief Completes a request with specified SRB status and IRP status.
  * 
  */
-VOID
 FORCEINLINE
+VOID
 StorpCompleteRequest(
     _In_ PIRP Irp,
     _In_ UCHAR SrbStatus,
@@ -80,8 +102,8 @@ StorpCompleteRequest(
  * @param HwDeviceExtension HwDeviceExtension parameter of Storport API.
  * @return PFDO_DEVICE_EXTENSION FDO Device extension.
  */
-PFDO_DEVICE_EXTENSION
 FORCEINLINE
+PFDO_DEVICE_EXTENSION
 StorpGetMiniportFdo(
     _In_ PVOID HwDeviceExtension
 )
@@ -95,42 +117,6 @@ StorpGetMiniportFdo(
                                           HwDeviceExtension);
 
     return MiniportExtension->Miniport->DeviceExtension;
-}
-
-/**
- * @brief Assigns a queue tag to a request if it stated it supports one.
- * 
- * @param PdoExtension PDO Device extension
- * @param Srb SRB that represents this request
- * @return BOOLEAN Whether the request was assigned a tag at last.
- */
-BOOLEAN
-FORCEINLINE
-StorpAssignTagToSrb(
-    _In_ PPDO_DEVICE_EXTENSION PdoExtension,
-    _In_ PSCSI_REQUEST_BLOCK Srb
-)
-{
-    ULONG NewTag;
-    
-    /* Bail out if the request is untagged */
-    if (!TEST_FLAG(Srb->SrbFlags, SRB_FLAGS_QUEUE_ACTION_ENABLE))
-    {
-        return FALSE;
-    }
-
-    /* FIXME: What if the counter overflows? */
-    NewTag = InterlockedIncrement(&PdoExtension->TagCounter);
-
-    /*
-     * We use ULONG for tag counter, and here seems to do a stupid truncation by casting to UCHAR;
-     * But since Storport has a default maximum 254 requests/LUN limitation, this is actually OK for
-     * our use case. If a miniport needs to support more than 254 tags it must use
-     * STORAGE_REQUEST_BLOCK which we don't support yet :D
-     */
-    Srb->QueueTag = (UCHAR)(NewTag % PdoExtension->OutstandingRequestMax);
-
-    return TRUE;
 }
 
 /*
@@ -148,8 +134,8 @@ StorpAssignTagToSrb(
  * @param Counter Pointer to the list element counter ULONG value.
  * @return ULONG Number of items in the list after insertion.
  */
-ULONG
 FORCEINLINE
+ULONG
 StorpInterlockedInsertHeadListCounted(
     _In_ PKSPIN_LOCK SpinLock,
     _In_ PLIST_ENTRY ListHead,
@@ -176,8 +162,8 @@ StorpInterlockedInsertHeadListCounted(
  * @param Counter Pointer to the list element counter ULONG value.
  * @return ULONG Number of items in the list after insertion.
  */
-ULONG
 FORCEINLINE
+ULONG
 StorpInterlockedInsertTailListCounted(
     _In_ PKSPIN_LOCK SpinLock,
     _In_ PLIST_ENTRY ListHead,
@@ -203,8 +189,8 @@ StorpInterlockedInsertTailListCounted(
  * @param Counter Pointer to the list element counter ULONG value.
  * @return BOOLEAN Whether the list is empty after the removal.
  */
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 StorpInterlockedRemoveEntryListCounted(
     _In_ PKSPIN_LOCK SpinLock,
     _In_ PLIST_ENTRY Entry,
@@ -232,8 +218,8 @@ StorpInterlockedRemoveEntryListCounted(
  * @param Counter Pointer to the list element counter ULONG value.
  * @return PLIST_ENTRY The element taken from the list.
  */
-PLIST_ENTRY
 FORCEINLINE
+PLIST_ENTRY
 StorpInterlockedRemoveHeadListCounted(
     _In_ PKSPIN_LOCK SpinLock,
     _In_ PLIST_ENTRY ListHead,
@@ -261,8 +247,8 @@ StorpInterlockedRemoveHeadListCounted(
  * @param Counter Pointer to the list element counter ULONG value.
  * @return PLIST_ENTRY The element taken from the list.
  */
-PLIST_ENTRY
 FORCEINLINE
+PLIST_ENTRY
 StorpInterlockedRemoveTailListCounted(
     _In_ PKSPIN_LOCK SpinLock,
     _In_ PLIST_ENTRY ListHead,
@@ -367,3 +353,129 @@ GetGenericType(
             return "ScsiOther";
     }
 }
+
+#ifdef DBG
+/**
+ * @brief Check data consistency in flow control data structures.
+ * Will acquire PDO list lock. Must be executed with FDO flow control lock held.
+ * 
+ * @param FdoExtension FDO device extension.
+ */
+FORCEINLINE
+VOID
+StorpCheckFlowControl(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension)
+{
+    KLOCK_QUEUE_HANDLE LockHandle;
+    PPDO_DEVICE_EXTENSION PdoExtension;
+    PFDO_IO_FLOW_CONTROL FdoFlowControl;
+    PPDO_IO_FLOW_CONTROL PdoFlowControl;
+    PLIST_ENTRY PdoEntry;
+    ULONG PdoOutstandingSum = 0;
+    ULONG PdoStrongOrderedSum = 0;
+
+    FdoFlowControl = &FdoExtension->FlowControl;
+
+    KeAcquireInStackQueuedSpinLock(&FdoExtension->PdoListLock, &LockHandle);
+    PdoEntry = FdoExtension->PdoListHead.Flink;
+
+    while (PdoEntry != &FdoExtension->PdoListHead)
+    {
+        /* Obtain PDO extension and flow control */
+        PdoExtension = CONTAINING_RECORD(PdoEntry, PDO_DEVICE_EXTENSION, PdoListEntry);
+        PdoFlowControl = &PdoExtension->FlowControl;
+
+        /* Accumulate important values and compare to FDO record */
+        PdoOutstandingSum += PdoFlowControl->OutstandingRequestCount;
+        PdoStrongOrderedSum += PdoFlowControl->StrongOrderedCount;
+
+        /* Next element */
+        PdoEntry = PdoEntry->Flink;
+    }
+
+    UNREFERENCED_PARAMETER(PdoStrongOrderedSum); /* Don't know what to do with it */
+
+    /* Compare */
+    NT_ASSERT(PdoOutstandingSum == FdoFlowControl->OutstandingRequestCount);
+
+    KeReleaseInStackQueuedSpinLock(&LockHandle);
+}
+#else
+#define StorpCheckFlowControl(...)
+#endif
+
+
+// FORCEINLINE
+// VOID
+// StorpDumpRequest(
+//     _In_ PQUEUED_REQUEST_REFERENCE RequestReference)
+// {
+//     PPDO_DEVICE_EXTENSION PdoExtension = RequestReference->PdoExtension;
+//     CHAR HexBuf[50] = {0};
+
+//     RequestReference->SpecialRequestId = InterlockedIncrement(&PdoExtension->SpecialRequestCounter);
+
+//     DPRINT1("\n\n");
+//     DPRINT1("Storport SPECIAL REQUEST %d Before Issued\n", RequestReference->SpecialRequestId);
+//     DPRINT1("Bus:Target:Lun (%d:%d:%d) CDB %d\n",
+//             PdoExtension->Bus,
+//             PdoExtension->Target,
+//             PdoExtension->Lun,
+//             RequestReference->Srb->CdbLength);
+//     for (int i = 0; i < RequestReference->Srb->CdbLength; i++)
+//     {
+//         CHAR Tmp[3];
+//         sprintf(Tmp, "%02X", RequestReference->Srb->Cdb[i]);
+//         strcat(HexBuf, Tmp);
+//         if (i == 7 && RequestReference->Srb->CdbLength != 7)
+//             strcat(HexBuf, "-");
+//         else
+//             strcat(HexBuf, " ");
+//     }
+//     DPRINT1("CDB: %s\n\n", HexBuf);
+// }
+
+
+// FORCEINLINE
+// VOID
+// StorpDumpRequestResponse(
+//     _In_ PQUEUED_REQUEST_REFERENCE RequestReference)
+// {
+//     PPDO_DEVICE_EXTENSION PdoExtension = RequestReference->PdoExtension;
+//     CHAR HexBuf[50] = {0};
+//     ULONG BytesLeft = RequestReference->Srb->DataTransferLength;
+//     ULONG Offset = 0;
+    
+//     DPRINT1("\n\n");
+//     DPRINT1("Storport SPECIAL REQUEST %d Completion\n\n", RequestReference->SpecialRequestId);
+//     DPRINT1("Bus:Target:Lun (%d:%d:%d) CDB %d (%02X) ReturnLength %d\n",
+//             PdoExtension->Bus,
+//             PdoExtension->Target,
+//             PdoExtension->Lun,
+//             RequestReference->Srb->CdbLength,
+//             RequestReference->Srb->Cdb[0],
+//             BytesLeft);
+
+//     DPRINT1("Returned Data:\n");
+//     while (BytesLeft)
+//     {
+//         /* Print in 16 byte groups */
+//         ULONG BytesToPrint = (BytesLeft > 16) ? 16 : BytesLeft;
+//         HexBuf[0] = '\0';
+//         for (int i = 0; i < BytesToPrint; i++)
+//         {
+//             CHAR Tmp[3];
+//             sprintf(Tmp, "%02X", ((PUCHAR)RequestReference->Srb->DataBuffer)[Offset + i]);
+//             strcat(HexBuf, Tmp);
+//             if (i == 7 && RequestReference->Srb->CdbLength != 7)
+//                 strcat(HexBuf, "-");
+//             else
+//                 strcat(HexBuf, " ");
+//         }
+//         DPRINT1("%s\n", HexBuf);
+//         BytesLeft -= BytesToPrint;
+//         Offset += BytesToPrint;
+//     }
+//     DPRINT1("\n\n");
+// }
+

@@ -10,12 +10,50 @@
 #include "precomp.h"
 #include "inline.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug/driverdbg.h>
 #include <debug.h>
 
 
 /* FUNCTIONS ******************************************************************/
+
+/**
+ * @brief Assigns a queue tag to a request if it stated it supports one.
+ * 
+ * @param PdoExtension PDO Device extension
+ * @param Srb SRB that represents this request
+ * @return BOOLEAN Whether the request was assigned a tag at last.
+ */
+FORCEINLINE
+BOOLEAN
+StorpAssignTagToSrb(
+    _In_ PPDO_DEVICE_EXTENSION PdoExtension,
+    _In_ PSCSI_REQUEST_BLOCK Srb
+)
+{
+    ULONG NewTag;
+    
+    /* Bail out if the request is untagged */
+    if (!TEST_FLAG(Srb->SrbFlags, SRB_FLAGS_QUEUE_ACTION_ENABLE))
+    {
+        return FALSE;
+    }
+
+    /* FIXME: What if the counter overflows? */
+    NewTag = InterlockedIncrement(&PdoExtension->TagCounter);
+
+    /*
+     * We use ULONG for tag counter, and here seems to do a stupid truncation by casting to UCHAR;
+     * But since Storport has a default maximum 254 requests/LUN limitation, this is actually OK for
+     * our use case. If a miniport needs to support more than 254 tags it must use
+     * STORAGE_REQUEST_BLOCK which we don't support yet :D
+     */
+    Srb->QueueTag = (UCHAR)(NewTag % PdoExtension->OutstandingRequestMax);
+
+    DPRINT1(__FUNCTION__ "Assigned Tag %x, TagCounter was %x\n", Srb->QueueTag, NewTag);
+
+    return TRUE;
+}
 
 NTSTATUS
 PortCreatePdo(
@@ -92,6 +130,8 @@ PortCreatePdo(
     DeviceExtension->IsClaimed = 0;
 
     // FIXME: More initialization
+
+    DeviceExtension->SpecialRequestCounter = 0; /* FIXME: DELETE AFTER DEBUG */
 
     /* The device has been initialized */
     Pdo->Flags &= ~DO_DEVICE_INITIALIZING;
@@ -183,35 +223,47 @@ PortPdoIssueRequest(
     _In_ PPDO_DEVICE_EXTENSION PdoExtension,
     _In_ PQUEUED_REQUEST_REFERENCE RequestReference)
 {
+    PIRP Irp;
     NTSTATUS Status;
     PFDO_DEVICE_EXTENSION FdoExtension;
     PHW_INITIALIZATION_DATA HwInitData;
     KIRQL OldIrql;
 
+    Irp = RequestReference->Irp;
     FdoExtension = PdoExtension->FdoExtension;
     HwInitData = FdoExtension->Miniport.InitData;
 
     NT_ASSERT(HwInitData);
 
+    /* Fill in SCSI address data */
+    /* FIXME: Not sure if this is the best place for it. */
+    RequestReference->Srb->PathId = PdoExtension->Bus;
+    RequestReference->Srb->TargetId = PdoExtension->Target;
+    RequestReference->Srb->Lun = PdoExtension->Lun;
+
+    /* FIXME: Delete after debug */
+    // PSCSI_REQUEST_BLOCK Srb = RequestReference->Srb;
+    // if (Srb->Function == SRB_FUNCTION_EXECUTE_SCSI &&
+    //     (Srb->Cdb[0] == SCSIOP_GET_EVENT_STATUS || Srb->Cdb[0] == SCSIOP_TEST_UNIT_READY))
+    // {
+    //     RequestReference->DumpSpecialRequest = TRUE;
+    //     StorpDumpRequest(RequestReference);
+    // }
+
     /* Start an DMA if IO subsystem allocated an MDL for us */
     /* FIXME: Does this strategy work? */
     if (RequestReference->Irp->MdlAddress)
     {
-        /* Only lock the buffer if it's not from NonPagedPool, otherwise MM will be really upset */
-        if (!TEST_FLAG(RequestReference->Irp->MdlAddress->MdlFlags, MDL_SOURCE_IS_NONPAGED_POOL))
+        /*
+         * Lock the buffer so that it stays in physical memory.
+         * In the two cases avoided here the memory has already been locked
+         */
+        if (!TEST_FLAG(Irp->MdlAddress->MdlFlags, MDL_SOURCE_IS_NONPAGED_POOL) &&
+            !TEST_FLAG(Irp->MdlAddress->MdlFlags, MDL_MAPPED_TO_SYSTEM_VA) &&
+            !TEST_FLAG(Irp->MdlAddress->MdlFlags, MDL_PAGES_LOCKED))
         {
-            /* Lock the buffer so that it stays in physical memory */
-            RequestReference->MappedSystemVa = 
-                MmMapLockedPagesSpecifyCache(RequestReference->Irp->MdlAddress,
-                                             KernelMode,
-                                             MmCached,
-                                             NULL,
-                                             FALSE,
-                                             NormalPagePriority);
-        }
-        else
-        {
-            RequestReference->MappedSystemVa = NULL;
+            RequestReference->MappedSystemVa = (PVOID)1; /* FIXME: CHANGE ITS NAME */
+            MmProbeAndLockPages(Irp->MdlAddress, KernelMode, IoModifyAccess);
         }
 
         /* Following call requires DISPATCH_LEVEL. */
@@ -224,7 +276,7 @@ PortPdoIssueRequest(
         RequestReference->WriteToDevice =
             TEST_FLAG(RequestReference->Srb->SrbFlags, SRB_FLAGS_DATA_OUT);
 
-        Status = FdoExtension->DmaAdapter->DmaOperations->
+        FdoExtension->DmaAdapter->DmaOperations->
             GetScatterGatherList(FdoExtension->DmaAdapter,
                                  FdoExtension->Device,
                                  RequestReference->Irp->MdlAddress,
@@ -238,13 +290,14 @@ PortPdoIssueRequest(
         KfLowerIrql(OldIrql);
     } else {
         /* Otherwise just start the IO with a NULL scatter gather list */
-        Status = STATUS_SUCCESS;
-
         PortPdoAfterBuildingScatterGatherList(FdoExtension->Device,
                                               RequestReference->Irp,
                                               NULL,
                                               RequestReference);
     }
+
+    /* FIXME: Is this correct? */
+    Status = STATUS_PENDING;
 
     return Status;
 }
@@ -265,6 +318,7 @@ PortPdoScheduleRequestFlowControlled(
     /* Check if we can issue this request. */
     /* Acquire the HBA global flow control lock first */
     KeAcquireInStackQueuedSpinLock(&FdoExtension->FlowControl.Lock, &LockHandle);
+    StorpCheckFlowControl(FdoExtension);
 
     do
     {
@@ -357,9 +411,63 @@ PortPdoScheduleRequestFlowControlled(
     // https://learn.microsoft.com/en-us/windows-hardware/drivers/storage/storage-class-driver-s-releasequeue-routine
 
     /* We've determined where the request goes. Release the flow control lock */
+    StorpCheckFlowControl(FdoExtension);
     KeReleaseInStackQueuedSpinLock(&LockHandle);
 
     return IssueRequest;
+}
+
+
+/**
+ * @brief Allocate Request Reference, SRB extension, etc for a new request.
+ * An SRB must have been called with this before issuing a request with PortPdoIssueRequest.
+ * Because SRB is allocated here, one can determine if this call is needed by checking whether
+ * SRB extension is NULL.
+ * 
+ * @param Srb SRB pointer.
+ */
+NTSTATUS
+NTAPI
+PortAllocateResourceForNewRequest(
+    _In_ PPDO_DEVICE_EXTENSION PdoExtension,
+    _In_ PIRP Irp,
+    _In_ PSCSI_REQUEST_BLOCK Srb,
+    _In_ ULONG SrbExtensionSize)
+{
+    NTSTATUS Status;
+
+    /* Mark IRP as pending */
+    IoMarkIrpPending(Irp);
+
+    /* Allocate our private data area */
+    if (StorpSrbAllocateRequestReference(Srb, Irp, PdoExtension) == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        return Status;
+    }
+
+    /* Allocate SRB extension */
+    if (SrbExtensionSize != 0)
+    {
+        Srb->SrbExtension = ExAllocatePoolWithTag(NonPagedPool,
+                                                  SrbExtensionSize,
+                                                  TAG_SRB_EXTENSION);
+
+        if (Srb->SrbExtension == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            StorpSrbFreeRequestReference(Srb);
+            return Status;
+        }
+    } else {
+        Srb->SrbExtension = NULL;
+    }
+
+    /* Assign a tag to the SRB if it supports tagging */
+    StorpAssignTagToSrb(PdoExtension, Srb);
+
+    Status = STATUS_SUCCESS;
+    return Status;
 }
 
 
@@ -830,207 +938,7 @@ PdoHandleDeviceRelations(
 
 NTSTATUS
 NTAPI
-PortPdoScsi(
-    _In_ PDEVICE_OBJECT DeviceObject,
-    _In_ PIRP Irp)
-{
-    NTSTATUS Status;
-    PIO_STACK_LOCATION Stack;
-    PSCSI_REQUEST_BLOCK Srb;
-    PPDO_DEVICE_EXTENSION PdoExtension;
-    PFDO_DEVICE_EXTENSION FdoExtension;
-    PMINIPORT Miniport;
-    PHW_INITIALIZATION_DATA HwInitData;
-
-    DPRINT1("PortPdoScsi(%p %p)\n", DeviceObject, Irp);
-
-    Stack = IoGetCurrentIrpStackLocation(Irp);
-    Srb = Stack->Parameters.Scsi.Srb;
-
-    if (Srb == NULL) {
-        DPRINT1("Srb is NULL!");
-        DbgBreakPoint();
-        Status = STATUS_UNSUCCESSFUL;
-
-        Irp->IoStatus.Information = 0;
-        Irp->IoStatus.Status = Status;
-
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return Status;
-    }
-
-    PdoExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    NT_ASSERT(PdoExtension);
-    FdoExtension = PdoExtension->FdoExtension;
-    NT_ASSERT(FdoExtension);
-    Miniport = &FdoExtension->Miniport;
-    HwInitData = Miniport->InitData;
-
-    switch (Srb->Function) {
-        case SRB_FUNCTION_EXECUTE_SCSI:
-        {
-            PQUEUED_REQUEST_REFERENCE RequestReference;
-            BOOLEAN IssueRequest;
-
-            /* Mark IRP as pending */
-            IoMarkIrpPending(Irp);
-
-            /* Allocate our private data area */
-            RequestReference = StorpSrbAllocateRequestReference(Srb, Irp, PdoExtension);
-            if (RequestReference == NULL)
-            {
-                Status = STATUS_INSUFFICIENT_RESOURCES;
-                break;
-            }
-
-            /* Allocate SRB extension */
-            if (HwInitData->SrbExtensionSize != 0)
-            {
-                Srb->SrbExtension = ExAllocatePoolWithTag(NonPagedPool,
-                                                          HwInitData->SrbExtensionSize,
-                                                          TAG_SRB_EXTENSION);
-            } else {
-                Srb->SrbExtension = NULL;
-            }
-
-            /* Assign a tag to the SRB if it supports tagging */
-            StorpAssignTagToSrb(PdoExtension, Srb);
-
-            /*
-             * Do the scheduling. If returns TRUE, we should issue this request to the hardware.
-             * Otherwise it will keep waiting until next completion schedules it, or be cancelled on
-             * an error, etc.
-             */
-            IssueRequest = PortPdoScheduleRequestFlowControlled(PdoExtension,
-                                                                FdoExtension,
-                                                                RequestReference);
-
-            /* This request is viable to be issued. */
-            if (IssueRequest)
-            {
-                Status = PortPdoIssueRequest(PdoExtension, RequestReference);
-            } else {
-                Status = STATUS_SUCCESS;
-            }
-            
-            break;
-        }
-
-        case SRB_FUNCTION_CLAIM_DEVICE:
-        {
-            if (InterlockedCompareExchange(&PdoExtension->IsClaimed, 1, 0))
-            {
-                Status = STATUS_DEVICE_BUSY;
-                StorpCompleteRequest(Irp, SRB_STATUS_BUSY, Status);
-                break;
-            }
-
-            Srb->DataBuffer = PdoExtension->Device; // FIXME: What does this do?
-            Status = STATUS_SUCCESS;
-            StorpCompleteRequest(Irp, SRB_STATUS_SUCCESS, Status);
-            break;
-        }
-
-        default:
-            DPRINT1("Unsupported Srb Function %02X!", Srb->Function);
-            DbgBreakPoint();
-            Status = STATUS_NOT_IMPLEMENTED;
-            StorpCompleteRequest(Irp, SRB_STATUS_INVALID_REQUEST, Status);
-            break;
-    }
-
-    return Status;
-}
-
-
-NTSTATUS
-NTAPI
-PortPdoPnp(
-    _In_ PDEVICE_OBJECT DeviceObject,
-    _In_ PIRP Irp)
-{
-    NTSTATUS Status;
-    PIO_STACK_LOCATION Stack;
-
-    DPRINT1("PortPdoPnp(%p %p)\n", DeviceObject, Irp);
-
-    Stack = IoGetCurrentIrpStackLocation(Irp);
-
-    switch (Stack->MinorFunction)
-    {
-        case IRP_MN_START_DEVICE:
-        {
-            // RegistryInitLunKey(lunExt);
-            Status = STATUS_SUCCESS;
-            break;
-        }
-        case IRP_MN_REMOVE_DEVICE:
-        case IRP_MN_QUERY_CAPABILITIES:
-        case IRP_MN_QUERY_REMOVE_DEVICE:
-        case IRP_MN_QUERY_STOP_DEVICE:
-        case IRP_MN_SURPRISE_REMOVAL:
-        {
-            Status = STATUS_SUCCESS;
-            break;
-        }
-        case IRP_MN_QUERY_DEVICE_RELATIONS:
-        {
-            Status = PdoHandleDeviceRelations(DeviceObject, Irp);
-            break;
-        }
-        case IRP_MN_QUERY_DEVICE_TEXT:
-        {
-            Status = PdoHandleQueryDeviceText(DeviceObject, Irp);
-            break;
-        }
-        case IRP_MN_QUERY_ID:
-        {
-            DPRINT("IRP_MN_QUERY_ID IdType %s\n",
-                DbgGetDeviceIDString(Stack->Parameters.QueryId.IdType));
-
-           if (Stack->Parameters.QueryId.IdType == BusQueryDeviceID)
-           {
-               Status = PdoHandleQueryDeviceId(DeviceObject, Irp);
-               break;
-           }
-           else if (Stack->Parameters.QueryId.IdType == BusQueryHardwareIDs)
-           {
-               Status = PdoHandleQueryHardwareId(DeviceObject, Irp);
-               break;
-           }
-           else if (Stack->Parameters.QueryId.IdType == BusQueryInstanceID)
-           {
-               Status = PdoHandleQueryInstanceId(DeviceObject, Irp);
-               break;
-           }
-           else if (Stack->Parameters.QueryId.IdType == BusQueryCompatibleIDs)
-           {
-               Status = PdoHandleQueryCompatibleId(DeviceObject, Irp);
-               break;
-           }
-
-           // fallthrough
-        }
-        default:
-        {
-            // do nothing
-            Status = Irp->IoStatus.Status;
-        }
-    }
-
-    if (Status != STATUS_PENDING)
-    {
-        Irp->IoStatus.Status = Status;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    }
-
-    return Status;
-}
-
-
-NTSTATUS
-NTAPI
-PortPdoDeviceControl(
+PdoDeviceControlQueryProperty(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp)
 {
@@ -1165,6 +1073,7 @@ PortPdoDeviceControl(
                 IoSkipCurrentIrpStackLocation(Irp);
                 return IoCallDriver(PdoExtension->FdoExtension->Device, Irp);
             }
+            case StorageDevicePowerProperty:
             default:
             {
                 Status = STATUS_NOT_IMPLEMENTED;
@@ -1175,6 +1084,298 @@ PortPdoDeviceControl(
     while (0);
 
     Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+PdoDeviceControlScsiGetAddress(
+    _In_ PDEVICE_OBJECT DeviceObejct,
+    _In_ PIRP Irp)
+{
+    NTSTATUS Status;
+    PSCSI_ADDRESS ScsiAddress;
+    PIO_STACK_LOCATION IoStack;
+    PPDO_DEVICE_EXTENSION DeviceExtension;
+    PFDO_DEVICE_EXTENSION FdoDeviceExtension;
+
+    DPRINT("PdoDeviceControlScsiGetAddress(%p %p)\n", DeviceObejct, Irp);
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObejct->DeviceExtension;
+
+    NT_ASSERT(DeviceExtension->ExtensionType == PdoExtension);
+    FdoDeviceExtension = DeviceExtension->FdoExtension;
+    
+    do
+    {
+        /* Check buffer length */
+        if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(SCSI_ADDRESS))
+        {
+            Status = STATUS_BUFFER_TOO_SMALL;
+            Irp->IoStatus.Information = 0;
+            break;
+        }
+
+        ScsiAddress = (PSCSI_ADDRESS)Irp->AssociatedIrp.SystemBuffer;
+        ScsiAddress->Length = sizeof(SCSI_ADDRESS);
+        ScsiAddress->PortNumber = FdoDeviceExtension->ScsiPortNumber;
+        ScsiAddress->PathId = DeviceExtension->Bus;
+        ScsiAddress->TargetId = DeviceExtension->Target;
+        ScsiAddress->Lun = DeviceExtension->Lun;
+
+        Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = sizeof(SCSI_ADDRESS);
+
+        DPRINT("SCSI Address for PDO %p : (Path Target Lun)(%d %d %d)\n",
+               DeviceObejct, ScsiAddress->PathId, ScsiAddress->TargetId, ScsiAddress->Lun);
+    }
+    while (0);
+
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+PortPdoScsi(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp)
+{
+    NTSTATUS Status;
+    PIO_STACK_LOCATION Stack;
+    PSCSI_REQUEST_BLOCK Srb;
+    PPDO_DEVICE_EXTENSION PdoExtension;
+    PFDO_DEVICE_EXTENSION FdoExtension;
+    PMINIPORT Miniport;
+    PHW_INITIALIZATION_DATA HwInitData;
+
+    DPRINT("PortPdoScsi(%p %p)\n", DeviceObject, Irp);
+
+    Stack = IoGetCurrentIrpStackLocation(Irp);
+    Srb = Stack->Parameters.Scsi.Srb;
+
+    if (Srb == NULL) {
+        DPRINT1("Srb is NULL!");
+        DbgBreakPoint();
+        Status = STATUS_UNSUCCESSFUL;
+
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = Status;
+
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+
+    PdoExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    NT_ASSERT(PdoExtension);
+    FdoExtension = PdoExtension->FdoExtension;
+    NT_ASSERT(FdoExtension);
+    Miniport = &FdoExtension->Miniport;
+    HwInitData = Miniport->InitData;
+
+    switch (Srb->Function) {
+        /* Both of these should be sent to device and let themselves process this */
+        case SRB_FUNCTION_IO_CONTROL:
+        case SRB_FUNCTION_EXECUTE_SCSI:
+        {
+            PQUEUED_REQUEST_REFERENCE RequestReference;
+            BOOLEAN IssueRequest;
+
+            /* Mark IRP as pending */
+            IoMarkIrpPending(Irp);
+
+            /* Allocate our private data area */
+            RequestReference = StorpSrbAllocateRequestReference(Srb, Irp, PdoExtension);
+            if (RequestReference == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                break;
+            }
+
+            /* Allocate SRB extension */
+            if (HwInitData->SrbExtensionSize != 0)
+            {
+                Srb->SrbExtension = ExAllocatePoolWithTag(NonPagedPool,
+                                                          HwInitData->SrbExtensionSize,
+                                                          TAG_SRB_EXTENSION);
+            } else {
+                Srb->SrbExtension = NULL;
+            }
+
+            /* Assign a tag to the SRB if it supports tagging */
+            StorpAssignTagToSrb(PdoExtension, Srb);
+            
+            DPRINT1("New request (%d:%d:%d) ReqRef %p Srb %p Irp %p Tag %x SrbExt %p(%d)\n",
+                    Srb->PathId, Srb->TargetId, Srb->Lun,
+                    RequestReference, Srb, Irp, Srb->QueueTag,
+                    Srb->SrbExtension, HwInitData->SrbExtensionSize);
+
+            /*
+             * Do the scheduling. If returns TRUE, we should issue this request to the hardware.
+             * Otherwise it will keep waiting until next completion schedules it, or be cancelled on
+             * an error, etc.
+             */
+            IssueRequest = PortPdoScheduleRequestFlowControlled(PdoExtension,
+                                                                FdoExtension,
+                                                                RequestReference);
+
+            /* This request is viable to be issued. */
+            if (IssueRequest)
+            {
+                Status = PortPdoIssueRequest(PdoExtension, RequestReference);
+            } else {
+                Status = STATUS_PENDING;
+            }
+            
+            break;
+        }
+
+        case SRB_FUNCTION_CLAIM_DEVICE:
+        {
+            if (InterlockedCompareExchange(&PdoExtension->IsClaimed, 1, 0))
+            {
+                Status = STATUS_DEVICE_BUSY;
+                StorpCompleteRequest(Irp, SRB_STATUS_BUSY, Status);
+                break;
+            }
+
+            Srb->DataBuffer = PdoExtension->Device; // FIXME: What does this do?
+            Status = STATUS_SUCCESS;
+            StorpCompleteRequest(Irp, SRB_STATUS_SUCCESS, Status);
+            break;
+        }
+
+        default:
+            DPRINT1("Unsupported Srb Function %02X!", Srb->Function);
+            // DbgBreakPoint();
+            Status = STATUS_NOT_IMPLEMENTED;
+            StorpCompleteRequest(Irp, SRB_STATUS_INVALID_REQUEST, Status);
+            break;
+    }
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+PortPdoPnp(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp)
+{
+    NTSTATUS Status;
+    PIO_STACK_LOCATION Stack;
+
+    DPRINT1("PortPdoPnp(%p %p)\n", DeviceObject, Irp);
+
+    Stack = IoGetCurrentIrpStackLocation(Irp);
+
+    switch (Stack->MinorFunction)
+    {
+        case IRP_MN_START_DEVICE:
+        {
+            // RegistryInitLunKey(lunExt);
+            Status = STATUS_SUCCESS;
+            break;
+        }
+        case IRP_MN_REMOVE_DEVICE:
+        case IRP_MN_QUERY_CAPABILITIES:
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+        case IRP_MN_QUERY_STOP_DEVICE:
+        case IRP_MN_SURPRISE_REMOVAL:
+        {
+            Status = STATUS_SUCCESS;
+            break;
+        }
+        case IRP_MN_QUERY_DEVICE_RELATIONS:
+        {
+            Status = PdoHandleDeviceRelations(DeviceObject, Irp);
+            break;
+        }
+        case IRP_MN_QUERY_DEVICE_TEXT:
+        {
+            Status = PdoHandleQueryDeviceText(DeviceObject, Irp);
+            break;
+        }
+        case IRP_MN_QUERY_ID:
+        {
+            DPRINT("IRP_MN_QUERY_ID IdType %s\n",
+                DbgGetDeviceIDString(Stack->Parameters.QueryId.IdType));
+
+           if (Stack->Parameters.QueryId.IdType == BusQueryDeviceID)
+           {
+               Status = PdoHandleQueryDeviceId(DeviceObject, Irp);
+               break;
+           }
+           else if (Stack->Parameters.QueryId.IdType == BusQueryHardwareIDs)
+           {
+               Status = PdoHandleQueryHardwareId(DeviceObject, Irp);
+               break;
+           }
+           else if (Stack->Parameters.QueryId.IdType == BusQueryInstanceID)
+           {
+               Status = PdoHandleQueryInstanceId(DeviceObject, Irp);
+               break;
+           }
+           else if (Stack->Parameters.QueryId.IdType == BusQueryCompatibleIDs)
+           {
+               Status = PdoHandleQueryCompatibleId(DeviceObject, Irp);
+               break;
+           }
+
+           // fallthrough
+        }
+        default:
+        {
+            // do nothing
+            Status = Irp->IoStatus.Status;
+        }
+    }
+
+    if (Status != STATUS_PENDING)
+    {
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+PortPdoDeviceControl(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp)
+{
+    NTSTATUS Status;
+    PIO_STACK_LOCATION IoStack;
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    switch (IoStack->Parameters.DeviceIoControl.IoControlCode)
+    {
+        case IOCTL_STORAGE_QUERY_PROPERTY:
+            return PdoDeviceControlQueryProperty(DeviceObject, Irp);
+        
+        case IOCTL_SCSI_GET_ADDRESS:
+            return PdoDeviceControlScsiGetAddress(DeviceObject, Irp);
+
+        default:
+            // DbgBreakPoint();
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+    }
+
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     return Status;
