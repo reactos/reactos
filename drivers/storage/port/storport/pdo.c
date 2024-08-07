@@ -50,7 +50,7 @@ StorpAssignTagToSrb(
      */
     Srb->QueueTag = (UCHAR)(NewTag % PdoExtension->OutstandingRequestMax);
 
-    DPRINT1(__FUNCTION__ "Assigned Tag %x, TagCounter was %x\n", Srb->QueueTag, NewTag);
+    DPRINT(__FUNCTION__ "Assigned Tag %x, TagCounter was %x\n", Srb->QueueTag, NewTag);
 
     return TRUE;
 }
@@ -260,7 +260,8 @@ PortPdoIssueRequest(
          */
         if (!TEST_FLAG(Irp->MdlAddress->MdlFlags, MDL_SOURCE_IS_NONPAGED_POOL) &&
             !TEST_FLAG(Irp->MdlAddress->MdlFlags, MDL_MAPPED_TO_SYSTEM_VA) &&
-            !TEST_FLAG(Irp->MdlAddress->MdlFlags, MDL_PAGES_LOCKED))
+            !TEST_FLAG(Irp->MdlAddress->MdlFlags, MDL_PAGES_LOCKED) &&
+            !TEST_FLAG(Irp->MdlAddress->MdlFlags, MDL_PARTIAL))
         {
             RequestReference->MappedSystemVa = (PVOID)1; /* FIXME: CHANGE ITS NAME */
             MmProbeAndLockPages(Irp->MdlAddress, KernelMode, IoModifyAccess);
@@ -1212,7 +1213,7 @@ PortPdoScsi(
             /* Assign a tag to the SRB if it supports tagging */
             StorpAssignTagToSrb(PdoExtension, Srb);
             
-            DPRINT1("New request (%d:%d:%d) ReqRef %p Srb %p Irp %p Tag %x SrbExt %p(%d)\n",
+            DPRINT("New request (%d:%d:%d) ReqRef %p Srb %p Irp %p Tag %x SrbExt %p(%d)\n",
                     Srb->PathId, Srb->TargetId, Srb->Lun,
                     RequestReference, Srb, Irp, Srb->QueueTag,
                     Srb->SrbExtension, HwInitData->SrbExtensionSize);
