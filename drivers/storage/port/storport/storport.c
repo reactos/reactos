@@ -261,7 +261,7 @@ PortCompleteRequest(
     //     StorpDumpRequestResponse(RequestReference);
     // }
 
-    DPRINT1("Completing request: (%d:%d:%d) ReqRef %p Srb %p Irp %p Tag %x\n",
+    DPRINT("Completing request: (%d:%d:%d) ReqRef %p Srb %p Irp %p Tag %x\n",
             Srb->PathId, Srb->TargetId, Srb->Lun, RequestReference, Srb, RequestReference->Irp, Srb->QueueTag);
 
     /* Return SG list resources back to system */
@@ -361,7 +361,7 @@ PortCompleteRequest(
     Irp->IoStatus.Status = IoStatus;
     Irp->IoStatus.Information = Srb->DataTransferLength; /* FIXME: hopefully this is correct */
 
-    DPRINT1("Calling IoCompleteRequest\n");
+    DPRINT("Calling IoCompleteRequest\n");
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 }
 
@@ -404,7 +404,7 @@ PortCompletionDpc(
         ++Count;
     }
 
-    DPRINT1("Completed %d requests\n", Count);
+    DPRINT("Completed %d requests\n", Count);
 }
 
 
@@ -1638,7 +1638,7 @@ StorPortNotification(
         case RequestComplete:
             DPRINT("RequestComplete\n");
             Srb = (PSCSI_REQUEST_BLOCK)va_arg(ap, PSCSI_REQUEST_BLOCK);
-            DPRINT1("Complete Notify - (%d:%d:%d) ReqRef %p Srb %p Irp %p Tag %x\n",
+            DPRINT("Complete Notify - (%d:%d:%d) ReqRef %p Srb %p Irp %p Tag %x\n",
                     Srb->PathId, Srb->TargetId, Srb->Lun,
                     Srb->OriginalRequest, Srb,
                     ((PQUEUED_REQUEST_REFERENCE)Srb->OriginalRequest)->Irp,
