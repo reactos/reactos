@@ -10,7 +10,7 @@
 
 NTSTATUS
 SetupCreateDirectory(
-    IN PCWSTR DirectoryName);
+    _In_ PCWSTR PathName);
 
 NTSTATUS
 SetupDeleteFile(
@@ -66,10 +66,16 @@ CombinePaths(
     IN /* PCWSTR */ ...);
 
 BOOLEAN
+DoesPathExist_UStr(
+    _In_opt_ HANDLE RootDirectory,
+    _In_ PCUNICODE_STRING PathName,
+    _In_ BOOLEAN IsDirectory);
+
+BOOLEAN
 DoesPathExist(
-    IN HANDLE RootDirectory OPTIONAL,
-    IN PCWSTR PathName,
-    IN BOOLEAN IsDirectory);
+    _In_opt_ HANDLE RootDirectory,
+    _In_ PCWSTR PathName,
+    _In_ BOOLEAN IsDirectory);
 
 #define DoesDirExist(RootDirectory, DirName)    \
     DoesPathExist((RootDirectory), (DirName), TRUE)

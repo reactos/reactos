@@ -27,27 +27,24 @@
 static
 NTSTATUS
 SetupCreateSingleDirectory(
-    IN PCWSTR DirectoryName)
+    _In_ PCUNICODE_STRING DirectoryName)
 {
+    NTSTATUS Status;
+    UNICODE_STRING PathName = *DirectoryName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
-    UNICODE_STRING PathName;
     HANDLE DirectoryHandle;
-    NTSTATUS Status;
 
-    if (!RtlCreateUnicodeString(&PathName, DirectoryName))
-        return STATUS_NO_MEMORY;
-
-    if (PathName.Length > sizeof(WCHAR) &&
-        PathName.Buffer[PathName.Length / sizeof(WCHAR) - 1] == L'\\')
+    /* Remove the trailing separator if needed */
+    if (PathName.Length >= 2 * sizeof(WCHAR) &&
+        PathName.Buffer[PathName.Length / sizeof(WCHAR) - 1] == OBJ_NAME_PATH_SEPARATOR)
     {
         PathName.Length -= sizeof(WCHAR);
-        PathName.Buffer[PathName.Length / sizeof(WCHAR)] = UNICODE_NULL;
     }
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &PathName,
-                               OBJ_CASE_INSENSITIVE | OBJ_INHERIT,
+                               OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
 
@@ -63,79 +60,80 @@ SetupCreateSingleDirectory(
                           NULL,
                           0);
     if (NT_SUCCESS(Status))
-    {
         NtClose(DirectoryHandle);
-    }
-
-    RtlFreeUnicodeString(&PathName);
 
     return Status;
 }
 
+/**
+ * @brief
+ * Create a new directory, specified by the given path.
+ * Any intermediate non-existing directory is created as well.
+ *
+ * @param[in]   PathName
+ * The path of the directory to be created.
+ *
+ * @return  An NTSTATUS code indicating success or failure.
+ **/
 NTSTATUS
 SetupCreateDirectory(
-    IN PCWSTR PathName)
+    _In_ PCWSTR PathName)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    PWCHAR PathBuffer = NULL;
-    PWCHAR Ptr, EndPtr;
-    ULONG BackslashCount;
-    ULONG Size;
+    UNICODE_STRING PathNameU;
+    PCWSTR Buffer;
+    PCWCH Ptr, End;
 
-    Size = (wcslen(PathName) + 1) * sizeof(WCHAR);
-    PathBuffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Size);
-    if (PathBuffer == NULL)
-        return STATUS_INSUFFICIENT_RESOURCES;
+    RtlInitUnicodeString(&PathNameU, PathName);
+    Buffer = PathNameU.Buffer;
+    End = Buffer + (PathNameU.Length / sizeof(WCHAR));
 
-    wcscpy(PathBuffer, PathName);
-    EndPtr = PathBuffer + wcslen(PathName);
-
-    Ptr = PathBuffer;
-
-    /* Skip the '\Device\HarddiskX\PartitionY\ part */
-    BackslashCount = 0;
-    while (Ptr < EndPtr && BackslashCount < 4)
+    /* Find the deepest existing sub-directory: start from the
+     * end and go back, verifying each sub-directory in turn */
+    for (Ptr = End; Ptr > Buffer;)
     {
-        if (*Ptr == L'\\')
-            BackslashCount++;
+        BOOLEAN bExists;
 
-        Ptr++;
+        /* If we are on a separator, truncate at the next character.
+         * The trailing separator is kept for the existence check. */
+        if ((Ptr < End) && (*Ptr == OBJ_NAME_PATH_SEPARATOR))
+            PathNameU.Length = (ULONG_PTR)(Ptr+1) - (ULONG_PTR)Buffer;
+
+        /* Check if the sub-directory exists and stop
+         * if so: this is the deepest existing one */
+        DPRINT("PathName: %wZ\n", &PathNameU);
+        bExists = DoesPathExist_UStr(NULL, &PathNameU, TRUE);
+        if (bExists)
+            break;
+
+        /* Skip back any consecutive path separators */
+        while ((Ptr > Buffer) && (*Ptr == OBJ_NAME_PATH_SEPARATOR))
+            --Ptr;
+        /* Go to the beginning of the path component, stop at the separator */
+        while ((Ptr > Buffer) && (*Ptr != OBJ_NAME_PATH_SEPARATOR))
+            --Ptr;
     }
 
-    while (Ptr < EndPtr)
+    /* Skip any consecutive path separators */
+    while ((Ptr < End) && (*Ptr == OBJ_NAME_PATH_SEPARATOR))
+        ++Ptr;
+
+    /* Create all the remaining sub-directories */
+    for (; Ptr < End; ++Ptr)
     {
-        if (*Ptr == L'\\')
-        {
-            *Ptr = 0;
+        /* Go to the end of the current path component, stop at
+         * the separator or terminating NUL and truncate it */
+        while ((Ptr < End) && (*Ptr != OBJ_NAME_PATH_SEPARATOR))
+            ++Ptr;
+        PathNameU.Length = (ULONG_PTR)Ptr - (ULONG_PTR)Buffer;
 
-            DPRINT("PathBuffer: %S\n", PathBuffer);
-            if (!DoesDirExist(NULL, PathBuffer))
-            {
-                DPRINT("Create: %S\n", PathBuffer);
-                Status = SetupCreateSingleDirectory(PathBuffer);
-                if (!NT_SUCCESS(Status))
-                    goto done;
-            }
-
-            *Ptr = L'\\';
-        }
-
-        Ptr++;
-    }
-
-    if (!DoesDirExist(NULL, PathBuffer))
-    {
-        DPRINT("Create: %S\n", PathBuffer);
-        Status = SetupCreateSingleDirectory(PathBuffer);
+        DPRINT("Create: %wZ\n", &PathNameU);
+        Status = SetupCreateSingleDirectory(&PathNameU);
         if (!NT_SUCCESS(Status))
-            goto done;
+            break;
     }
 
-done:
     DPRINT("Done.\n");
-    if (PathBuffer != NULL)
-        RtlFreeHeap(RtlGetProcessHeap(), 0, PathBuffer);
-
     return Status;
 }
 
@@ -694,20 +692,18 @@ CombinePaths(
 }
 
 BOOLEAN
-DoesPathExist(
-    IN HANDLE RootDirectory OPTIONAL,
-    IN PCWSTR PathName,
-    IN BOOLEAN IsDirectory)
+DoesPathExist_UStr(
+    _In_opt_ HANDLE RootDirectory,
+    _In_ PCUNICODE_STRING PathName,
+    _In_ BOOLEAN IsDirectory)
 {
     NTSTATUS Status;
-    UNICODE_STRING Name;
     HANDLE FileHandle;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
 
-    RtlInitUnicodeString(&Name, PathName);
     InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
+                               (PUNICODE_STRING)PathName,
                                OBJ_CASE_INSENSITIVE,
                                RootDirectory,
                                NULL);
@@ -729,10 +725,21 @@ DoesPathExist(
     {
         DPRINT("Failed to open %s '%wZ', Status 0x%08lx\n",
                IsDirectory ? "directory" : "file",
-               &Name, Status);
+               PathName, Status);
     }
 
     return NT_SUCCESS(Status);
+}
+
+BOOLEAN
+DoesPathExist(
+    _In_opt_ HANDLE RootDirectory,
+    _In_ PCWSTR PathName,
+    _In_ BOOLEAN IsDirectory)
+{
+    UNICODE_STRING PathNameU;
+    RtlInitUnicodeString(&PathNameU, PathName);
+    return DoesPathExist_UStr(RootDirectory, &PathNameU, IsDirectory);
 }
 
 // FIXME: DEPRECATED! HACKish function that needs to be deprecated!
