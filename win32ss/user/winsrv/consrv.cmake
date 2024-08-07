@@ -46,10 +46,10 @@ list(APPEND CONSRV_SOURCE
 if(MSVC)
     ## NOTE: No need to specify it as we use MSVC :)
     ##target_compile_options(consrv PRIVATE "/Ze")
-    #set_source_files_properties(${CONSRV_SOURCE} PROPERTIES COMPILE_FLAGS "/Ze")
+    #set_source_files_properties(${CONSRV_SOURCE} PROPERTIES COMPILE_OPTIONS "/Ze")
 else()
     #target_compile_options(consrv PRIVATE "-fms-extensions")
-    set_source_files_properties(${CONSRV_SOURCE} PROPERTIES COMPILE_FLAGS "-fms-extensions")
+    set_source_files_properties(${CONSRV_SOURCE} PROPERTIES COMPILE_OPTIONS "-fms-extensions")
 endif()
 
 add_library(consrv ${CONSRV_SOURCE})

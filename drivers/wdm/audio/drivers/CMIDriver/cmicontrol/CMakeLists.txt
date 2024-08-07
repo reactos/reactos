@@ -4,7 +4,7 @@ include_directories(..)
 add_executable(cmicontrol main.cpp window.rc)
 
 if(NOT MSVC)
-    set_source_files_properties(main.cpp PROPERTIES COMPILE_FLAGS "-Wno-write-strings")
+    set_source_files_properties(main.cpp PROPERTIES COMPILE_OPTIONS "-Wno-write-strings")
 endif()
 
 add_dependencies(cmicontrol psdk)
