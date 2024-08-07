@@ -338,6 +338,7 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
     BOOL bAppwizMode = (argc > 1 && MatchCmdOption(argv[1], CMD_KEY_APPWIZ));
     if (!bAppwizMode)
     {
+        CUpdateDatabaseMutex lock;
         if (SettingsInfo.bUpdateAtStart || bIsFirstLaunch)
             db.RemoveCached();
 
@@ -351,7 +352,7 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
         // Check whether the RAPPS MainWindow is already launched in another process
         HANDLE hMutex;
 
-        hMutex = CreateMutexW(NULL, FALSE, szWindowClass);
+        hMutex = CreateMutexW(NULL, FALSE, MAINWINDOWMUTEX);
         if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
         {
             /* If already started, find its window */

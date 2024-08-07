@@ -13,7 +13,7 @@
 #include <gdiplus.h>
 #include <conutils.h>
 
-LPCWSTR szWindowClass = L"ROSAPPMGR2";
+LPCWSTR szWindowClass = MAINWINDOWCLASSNAME;
 
 HWND hMainWnd;
 HINSTANCE hInst;
