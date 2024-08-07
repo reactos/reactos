@@ -305,8 +305,8 @@ IDR_MENU_SCIENTIFIC_1 MENU
 BEGIN
     POPUP "Bewerken"
     BEGIN
-        MENUITEM "Kopiëren\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Plakken\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Kopiëren\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Plakken\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "Beeld"
     BEGIN
@@ -337,8 +337,8 @@ IDR_MENU_SCIENTIFIC_2 MENU
 BEGIN
     POPUP "Edit"
     BEGIN
-        MENUITEM "Kopiëren\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Plakken\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Kopiëren\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Plakken\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "Beeld"
     BEGIN
@@ -370,8 +370,8 @@ IDR_MENU_STANDARD MENU
 BEGIN
     POPUP "Edit"
     BEGIN
-        MENUITEM "Kopiëren\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Plakken\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Kopiëren\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Plakken\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "View"
     BEGIN

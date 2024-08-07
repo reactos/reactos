@@ -305,8 +305,8 @@ IDR_MENU_SCIENTIFIC_1 MENU
 BEGIN
     POPUP "แ&ก้ไข"
     BEGIN
-        MENUITEM "คัดลอก\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "วาง\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "คัดลอก\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "วาง\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "&มุมมอง"
     BEGIN
@@ -337,8 +337,8 @@ IDR_MENU_SCIENTIFIC_2 MENU
 BEGIN
     POPUP "แ&ก้ไข"
     BEGIN
-        MENUITEM "คัดลอก\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "วาง\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "คัดลอก\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "วาง\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "&มุมมอง"
     BEGIN
@@ -370,8 +370,8 @@ IDR_MENU_STANDARD MENU
 BEGIN
     POPUP "แ&ก้ไข"
     BEGIN
-        MENUITEM "คัดลอก\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "วาง\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "คัดลอก\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "วาง\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "&มุมมอง"
     BEGIN
@@ -500,7 +500,7 @@ BEGIN
     IDS_CURRENCY_LITHUANIAN_LITAS "Lithuanian litas"
     IDS_CURRENCY_LUXEMBOURG_FRANC "Luxembourg franc"
     IDS_CURRENCY_MALTESE_LIRA "Maltese lira"
-    IDS_CURRENCY_PORTOGUESE_ESCUDO "Portoguese escudo"
+    IDS_CURRENCY_PORTOGUESE_ESCUDO "Portuguese escudo"
     IDS_CURRENCY_SLOVAK_KORUNA "Slovak koruna"
     IDS_CURRENCY_SLOVENIAN_TOLAR "Slovenian tolar"
     IDS_CURRENCY_SPANISH_PESETA "Spanish peseta"

@@ -305,8 +305,8 @@ IDR_MENU_SCIENTIFIC_1 MENU
 BEGIN
     POPUP "Rediger"
     BEGIN
-        MENUITEM "Kopier\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Lim inn\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Kopier\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Lim inn\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "Vis"
     BEGIN
@@ -337,8 +337,8 @@ IDR_MENU_SCIENTIFIC_2 MENU
 BEGIN
     POPUP "Rediger"
     BEGIN
-        MENUITEM "Kopier\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Lim inn\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Kopier\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Lim inn\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "Vis"
     BEGIN
@@ -370,8 +370,8 @@ IDR_MENU_STANDARD MENU
 BEGIN
     POPUP "Rediger"
     BEGIN
-        MENUITEM "Kopier\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Lim inn\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Kopier\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Lim inn\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "Vis"
     BEGIN

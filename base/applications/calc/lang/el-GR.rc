@@ -305,8 +305,8 @@ IDR_MENU_SCIENTIFIC_1 MENU
 BEGIN
     POPUP "Επεξεργασία"
     BEGIN
-        MENUITEM "Αντιγραφή\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Επικόλληση\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Αντιγραφή\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Επικόλληση\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "View"
     BEGIN
@@ -337,8 +337,8 @@ IDR_MENU_SCIENTIFIC_2 MENU
 BEGIN
     POPUP "Επεξεργασία"
     BEGIN
-        MENUITEM "Αντιγραφή\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Επικόλληση\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Αντιγραφή\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Επικόλληση\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "View"
     BEGIN
@@ -370,8 +370,8 @@ IDR_MENU_STANDARD MENU
 BEGIN
     POPUP "Επεξεργασία"
     BEGIN
-        MENUITEM "Αντιγραφή\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Επικόλληση\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Αντιγραφή\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Επικόλληση\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "View"
     BEGIN

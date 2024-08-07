@@ -305,8 +305,8 @@ IDR_MENU_SCIENTIFIC_1 MENU
 BEGIN
     POPUP "Édition"
     BEGIN
-        MENUITEM "Copier\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Coller\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Copier\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Coller\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "Affichage"
     BEGIN
@@ -337,8 +337,8 @@ IDR_MENU_SCIENTIFIC_2 MENU
 BEGIN
     POPUP "Édition"
     BEGIN
-        MENUITEM "Copier\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Coller\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Copier\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Coller\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "Affichage"
     BEGIN
@@ -370,8 +370,8 @@ IDR_MENU_STANDARD MENU
 BEGIN
     POPUP "Édition"
     BEGIN
-        MENUITEM "Copier\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Coller\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "Copier\tCtrl-C", IDM_EDIT_COPY
+        MENUITEM "Coller\tCtrl-V", IDM_EDIT_PASTE
     END
     POPUP "Affichage"
     BEGIN
