@@ -342,11 +342,11 @@ MiniportHwInitialize(
 {
     BOOLEAN Result;
 
-    DPRINT1("MiniportHwInitialize(%p)\n", Miniport);
+    DPRINT("MiniportHwInitialize(%p)\n", Miniport);
 
     /* Call the miniport HwInitialize routine */
     Result = Miniport->InitData->HwInitialize(&Miniport->MiniportExtension->HwDeviceExtension);
-    DPRINT1("HwInitialize() returned %u\n", Result);
+    DPRINT("HwInitialize() returned %u\n", Result);
 
     return Result ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
@@ -358,11 +358,11 @@ MiniportHwInterrupt(
 {
     BOOLEAN Result;
 
-    DPRINT1("MiniportHwInterrupt(%p)\n",
+    DPRINT("MiniportHwInterrupt(%p)\n",
             Miniport);
 
     Result = Miniport->InitData->HwInterrupt(&Miniport->MiniportExtension->HwDeviceExtension);
-    DPRINT1("HwInterrupt() returned %u\n", Result);
+    DPRINT("HwInterrupt() returned %u\n", Result);
 
     return Result;
 }
@@ -375,11 +375,11 @@ MiniportStartIo(
 {
     BOOLEAN Result;
 
-    DPRINT1("MiniportHwStartIo(%p %p)\n",
+    DPRINT("MiniportHwStartIo(%p %p)\n",
             Miniport, Srb);
 
     Result = Miniport->InitData->HwStartIo(&Miniport->MiniportExtension->HwDeviceExtension, Srb);
-    DPRINT1("HwStartIo() returned %u\n", Result);
+    DPRINT("HwStartIo() returned %u\n", Result);
 
     return Result;
 }

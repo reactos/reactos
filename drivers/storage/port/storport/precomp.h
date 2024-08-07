@@ -228,6 +228,7 @@ typedef struct _FDO_DEVICE_EXTENSION
     MINIPORT Miniport;
     ULONG BusNumber;
     ULONG SlotNumber;
+    LONG ScsiPortNumber;
     PCM_RESOURCE_LIST AllocatedResources;
     PCM_RESOURCE_LIST TranslatedResources;
     BUS_INTERFACE_STANDARD BusInterface;
@@ -254,6 +255,9 @@ typedef struct _FDO_DEVICE_EXTENSION
 
     /* This maximum number is set in port configuration */
     ULONG OutstandingRequestMax;
+
+    /* The requests awaiting completion DPC processing */
+    SLIST_HEADER CompletionList;
 
     /*
      * FIXME: It REALLY should be cached here. The function pointers inside are extremely frequently
@@ -285,6 +289,8 @@ typedef struct _PDO_DEVICE_EXTENSION
     ULONG OutstandingRequestMax;
     LONG TagCounter;
 
+    LONG SpecialRequestCounter; /* FIXME: DELETE AFTER DEBUG */
+
 } PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
 /* 
@@ -303,6 +309,7 @@ typedef struct _PDO_DEVICE_EXTENSION
  */
 typedef struct _QUEUED_REQUEST_REFERENCE
 {
+    SLIST_ENTRY CompletionEntry;
     LIST_ENTRY FdoEntry;
     LIST_ENTRY PdoEntry;
     PPDO_DEVICE_EXTENSION PdoExtension;
@@ -310,9 +317,13 @@ typedef struct _QUEUED_REQUEST_REFERENCE
     PIRP Irp;
     PSTOR_SCATTER_GATHER_LIST ScatterGatherList;
     PVOID MappedSystemVa;
-    ULONG TimeoutCounter; // FIXME:
+    ULONG TimeoutCounter; // FIXME: Implement timeout with a heap
     BOOLEAN StrongOrdered;
     BOOLEAN WriteToDevice;
+
+    /* FIXME: This is solely for debugging and should be removed */
+    BOOLEAN DumpSpecialRequest;
+    LONG SpecialRequestId;
 } QUEUED_REQUEST_REFERENCE, *PQUEUED_REQUEST_REFERENCE;
 
 /* This and next one are for REPORT_LUNS command return structure, seems to be found nowhere else */
@@ -491,6 +502,14 @@ PortPdoScheduleRequestFlowControlled(
     _In_ PPDO_DEVICE_EXTENSION PdoExtension,
     _In_ PFDO_DEVICE_EXTENSION FdoExtension,
     _In_ PQUEUED_REQUEST_REFERENCE RequestReference);
+
+NTSTATUS
+NTAPI
+PortAllocateResourceForNewRequest(
+    _In_ PPDO_DEVICE_EXTENSION PdoExtension,
+    _In_ PIRP Irp,
+    _In_ PSCSI_REQUEST_BLOCK Srb,
+    _In_ ULONG SrbExtensionSize);
 
 NTSTATUS
 NTAPI
