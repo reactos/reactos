@@ -2,7 +2,8 @@
  * PROJECT:     ReactOS Explorer
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Czech resource file
- * TRANSLATOR:  Copyright 2008-2015 Radek Liška aka Black_Fox <radekliska@gmail.com>
+ * TRANSLATORS: Copyright 2008-2015 Radek Liška (Black_Fox) <radekliska@gmail.com>
+ *              Copyright 2024 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -78,7 +79,7 @@ BEGIN
     AUTOCHECKBOX "&Zobrazit hlavní panel nad ostatními okny", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
     AUTOCHECKBOX "&Seskupovat podobná tlačítka hlavního panelu", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
     AUTOCHECKBOX "Zobrazit &panel Snadné spuštění", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
-    AUTOCHECKBOX "U&se small icons", IDC_TASKBARPROP_SMALLICONS, 13, 110, 200, 10
+    AUTOCHECKBOX "Použít &malé ikony", IDC_TASKBARPROP_SMALLICONS, 13, 110, 200, 10
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
@@ -101,15 +102,15 @@ CAPTION "Oznamovací oblast"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 6, 229, 24
-    GROUPBOX "Icons", IDC_STATIC, 6, 36, 240, 56
+    GROUPBOX "Ikony", IDC_STATIC, 6, 36, 240, 56
     LTEXT "Přehlednost oznamovací oblasti lze zachovat pomocí skrytí nepoužívaných ikon.", IDC_STATIC, 13, 48, 223, 16
     AUTOCHECKBOX "Sk&rýt neaktivní ikony", IDC_TASKBARPROP_HIDEICONS, 13, 70, 125, 10
     PUSHBUTTON "&Upravit...", IDC_TASKBARPROP_ICONCUST, 188, 70, 50, 14
-    GROUPBOX "System icons", IDC_STATIC, 6, 99, 240, 56
-    LTEXT "Select which system icons to always show.", IDC_STATIC, 13, 113, 223, 8
+    GROUPBOX "Systémové ikony", IDC_STATIC, 6, 99, 240, 56
+    LTEXT "Vyberte, které systémové ikony se mají zobrazovat vždy.", IDC_STATIC, 13, 113, 223, 8
     AUTOCHECKBOX "&Zobrazit hodiny", IDC_TASKBARPROP_CLOCK, 13, 127, 80, 10
     AUTOCHECKBOX "Zobrazit sekundy", IDC_TASKBARPROP_SECONDS, 120, 127, 80, 10, WS_DISABLED
-    AUTOCHECKBOX "&Desktop", IDC_TASKBARPROP_DESKTOP, 13, 140, 80, 10
+    AUTOCHECKBOX "&Plocha", IDC_TASKBARPROP_DESKTOP, 13, 140, 80, 10
 END
 
 IDD_NOTIFICATIONS_CUSTOMIZE DIALOGEX 0, 0, 232, 240
@@ -211,7 +212,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Vlastnosti hlavního panelu a Start menu"
+    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Hlavního panelu a nabídky Start"
     IDS_RESTORE_ALL "&Show Open Windows"
     IDS_TRAYWND_UNDO_CASCADE "&Undo Cascade"
     IDS_TRAYWND_UNDO_TILE "&Undo Tile"
