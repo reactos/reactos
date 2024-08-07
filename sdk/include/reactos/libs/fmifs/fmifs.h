@@ -33,6 +33,20 @@ typedef struct
     PCHAR Output;
 } TEXTOUTPUT, *PTEXTOUTPUT;
 
+/* Device information */
+typedef struct _DEVICE_INFORMATION
+{
+    ULONG DeviceFlags;
+    ULONG SectorSize;
+    LARGE_INTEGER SectorCount;
+} DEVICE_INFORMATION, *PDEVICE_INFORMATION;
+
+/* Device information flags */
+#define MEMORYSTICK_FORMAT_CAPABLE 0x10
+#define MEMORYSTICK_SUPPORTS_PROGRESS_BAR 0x20
+#define DEVICE_HOTPLUG 0x40
+#define DEVICE_MEMORYSTICK 0x41
+
 /* media flags */
 typedef enum
 {
@@ -163,11 +177,12 @@ QueryAvailableFileSystemFormat(
     OUT UCHAR* Minor,
     OUT BOOLEAN* LatestVersion);
 
-BOOL NTAPI
+BOOL
+NTAPI
 QueryDeviceInformation(
-    IN PWCHAR DriveRoot,
-    OUT ULONG* Buffer, /* That is probably some 4-bytes structure */
-    IN ULONG BufferSize); /* 4 */
+    _In_ PWCHAR DriveRoot,
+    _Out_ PVOID DeviceInformation,
+    _In_ ULONG BufferSize);
 
 BOOL NTAPI
 QueryFileSystemName(

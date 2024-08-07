@@ -315,7 +315,8 @@ PiNotifyTargetDeviceChange(
     }
 
     KeReleaseGuardedMutex(&PiNotifyTargetDeviceLock);
-    ExFreePoolWithTag(notificationStruct, TAG_PNP_NOTIFY);
+    if (notificationStruct != CustomNotification)
+        ExFreePoolWithTag(notificationStruct, TAG_PNP_NOTIFY);
     ObDereferenceObject(DeviceObject);
 }
 
