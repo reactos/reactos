@@ -1,7 +1,12 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_definitions(-D__WINESRC__ -D__ROS_LONG64__)
-spec2def(uxtheme.dll uxtheme.spec ADD_IMPORTLIB)
+
+if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
+    spec2def(uxtheme.dll uxtheme_nt6plus.spec ADD_IMPORTLIB)
+else()
+    spec2def(uxtheme.dll uxtheme.spec ADD_IMPORTLIB)
+endif()
 
 list(APPEND SOURCE
     buffer.c
