@@ -112,8 +112,9 @@ static inline BOOL strftime_int(char *str, size_t *pos, size_t max,
  *		_Strftime (MSVCRT.@)
  */
 size_t CDECL _Strftime(char *str, size_t max, const char *format,
-        const struct tm *mstm, MSVCRT___lc_time_data *time_data)
+        const struct tm *mstm, void *_Lc_time_arg)
 {
+    MSVCRT___lc_time_data *time_data = (MSVCRT___lc_time_data*)_Lc_time_arg;
     size_t ret, tmp;
     BOOL alternate;
 
