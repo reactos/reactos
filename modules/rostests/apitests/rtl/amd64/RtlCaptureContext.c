@@ -132,20 +132,6 @@ START_TEST(RtlCaptureContext)
     ok_eq_hex(CapturedContext.FltSave.DataOffset, 0x00890088);
     ok_eq_hex(CapturedContext.FltSave.DataSelector, 0x008a);
     ok_eq_hex(CapturedContext.FltSave.Reserved3, 0x0000);
-#else
-    ok_eq_hex(CapturedContext.FltSave.ControlWord, 0xcccc);
-    ok_eq_hex(CapturedContext.FltSave.StatusWord, 0xcccc);
-    ok_eq_hex(CapturedContext.FltSave.TagWord, 0xcc);
-    ok_eq_hex(CapturedContext.FltSave.Reserved1, 0xcc);
-    ok_eq_hex(CapturedContext.FltSave.MxCsr_Mask, 0xcccccccc);
-    ok_eq_hex(CapturedContext.FltSave.ErrorOpcode, 0xcccc);
-    ok_eq_hex(CapturedContext.FltSave.ErrorOffset, 0xcccccccc);
-    ok_eq_hex(CapturedContext.FltSave.ErrorSelector, 0xcccc);
-    ok_eq_hex(CapturedContext.FltSave.Reserved2, 0xcccc);
-    ok_eq_hex(CapturedContext.FltSave.DataOffset, 0xcccccccc);
-    ok_eq_hex(CapturedContext.FltSave.DataSelector, 0xcccc);
-    ok_eq_hex(CapturedContext.FltSave.Reserved3, 0xcccc);
-#endif
 
     /* We get the value from OriginalContext.MxCsr, since we set that later in the wrapper */
     ok_eq_hex(CapturedContext.FltSave.MxCsr, OriginalContext.MxCsr);
@@ -167,14 +153,54 @@ START_TEST(RtlCaptureContext)
     ok_eq_hex64(CapturedContext.Legacy[6].High, OriginalContext.Legacy[6].High & 0xFF);
     ok_eq_hex64(CapturedContext.Legacy[7].Low, OriginalContext.Legacy[7].Low);
     ok_eq_hex64(CapturedContext.Legacy[7].High, OriginalContext.Legacy[7].High & 0xFF);
+#else
+    ok_eq_hex(CapturedContext.FltSave.ControlWord, 0xcccc);
+    ok_eq_hex(CapturedContext.FltSave.StatusWord, 0xcccc);
+    ok_eq_hex(CapturedContext.FltSave.TagWord, 0xcc);
+    ok_eq_hex(CapturedContext.FltSave.Reserved1, 0xcc);
+    ok_eq_hex(CapturedContext.FltSave.MxCsr_Mask, 0xcccccccc);
+    ok_eq_hex(CapturedContext.FltSave.ErrorOpcode, 0xcccc);
+    ok_eq_hex(CapturedContext.FltSave.ErrorOffset, 0xcccccccc);
+    ok_eq_hex(CapturedContext.FltSave.ErrorSelector, 0xcccc);
+    ok_eq_hex(CapturedContext.FltSave.Reserved2, 0xcccc);
+    ok_eq_hex(CapturedContext.FltSave.DataOffset, 0xcccccccc);
+    ok_eq_hex(CapturedContext.FltSave.DataSelector, 0xcccc);
+    ok_eq_hex(CapturedContext.FltSave.Reserved3, 0xcccc);
+
+    /* We get the value from OriginalContext.MxCsr, since we set that later in the wrapper */
+    ok_eq_hex(CapturedContext.FltSave.MxCsr, 0xcccccccc);
+
+    /* Legacy floating point registers are truncated to 10 bytes */
+    ok_eq_hex64(CapturedContext.Legacy[0].Low, 0xcccccccccccccccc);
+    ok_eq_hex64(CapturedContext.Legacy[0].High, 0xcccccccccccccccc);
+    ok_eq_hex64(CapturedContext.Legacy[1].Low, 0xcccccccccccccccc);
+    ok_eq_hex64(CapturedContext.Legacy[1].High, 0xcccccccccccccccc);
+    ok_eq_hex64(CapturedContext.Legacy[2].Low, 0xcccccccccccccccc);
+    ok_eq_hex64(CapturedContext.Legacy[2].High, 0xcccccccccccccccc);
+    ok_eq_hex64(CapturedContext.Legacy[3].Low, 0xcccccccccccccccc);
+    ok_eq_hex64(CapturedContext.Legacy[3].High, 0xcccccccccccccccc);
+    ok_eq_hex64(CapturedContext.Legacy[4].Low, 0xcccccccccccccccc);
+    ok_eq_hex64(CapturedContext.Legacy[4].High, 0xcccccccccccccccc);
+    ok_eq_hex64(CapturedContext.Legacy[5].Low, 0xcccccccccccccccc);
+    ok_eq_hex64(CapturedContext.Legacy[5].High, 0xcccccccccccccccc);
+    ok_eq_hex64(CapturedContext.Legacy[6].Low, 0xcccccccccccccccc);
+    ok_eq_hex64(CapturedContext.Legacy[6].High, 0xcccccccccccccccc);
+    ok_eq_hex64(CapturedContext.Legacy[7].Low, 0xcccccccccccccccc);
+    ok_eq_hex64(CapturedContext.Legacy[7].High, 0xcccccccccccccccc);
+#endif
 
     /* We don't pass in segments, but expect the default values */
-    ok_eq_hex(CapturedContext.SegCs, 0x33);
     ok_eq_hex(CapturedContext.SegDs, 0x2b);
     ok_eq_hex(CapturedContext.SegEs, 0x2b);
     ok_eq_hex(CapturedContext.SegFs, 0x53);
     ok_eq_hex(CapturedContext.SegGs, 0x2b);
+#ifndef KMT_KERNEL_MODE // User mode
+    ok_eq_hex(CapturedContext.SegCs, 0x33);
     ok_eq_hex(CapturedContext.SegSs, 0x2b);
+#else
+    ok_eq_hex(CapturedContext.SegCs, 0x10);
+    ok_eq_hex(CapturedContext.SegSs, 0x18);
+#endif
 
     /* For Rsp and Rip we get the expected value back from the asm wrapper */
     ok_eq_hex64(CapturedContext.Rsp, InOutContext.Rsp);
@@ -212,7 +238,9 @@ START_TEST(RtlCaptureContext)
     ok_eq_hex64(InOutContext.R15, OriginalContext.R15);
 
     /* Eflags is changed (parity is flaky) */
+#ifndef KMT_KERNEL_MODE // User mode
     ok_eq_hex64(InOutContext.EFlags & ~0x04, OriginalContext.EFlags & 0x782);
+#endif
 
     /* MxCsr is the one we passed in in OriginalContext.MxCsr */
     ok_eq_hex(InOutContext.MxCsr, OriginalContext.MxCsr);
@@ -235,7 +263,9 @@ START_TEST(RtlCaptureContext)
     ok_eq_hex64(CapturedContext.EFlags, OriginalContext.EFlags | 2);
 
     /* Parity flag is flaky */
+#ifndef KMT_KERNEL_MODE // User mode
     ok_eq_hex64(InOutContext.EFlags & ~4, CapturedContext.EFlags);
+#endif
 
     /* MxCsr is captured/returned as passed in */
     ok_eq_hex64(InOutContext.MxCsr, CapturedContext.MxCsr);

@@ -54,10 +54,17 @@ void Test_NtGdiCreateBitmap_Params(void)
     ok_ptr(NtGdiCreateBitmap(1, -2, 1, 1, (BYTE*)(LONG_PTR)0x80001234), NULL);
     ok_long(GetLastError(), ERROR_SUCCESS);
 
+#ifndef _WIN64 // Win64 doesn't fail here
     /* Test huge size */
     SetLastError(ERROR_SUCCESS);
     ok_ptr(NtGdiCreateBitmap(100000, 100000, 1, 1, NULL), NULL);
     ok_long(GetLastError(), ERROR_NOT_ENOUGH_MEMORY);
+#endif
+
+    /* Test too huge size */
+    SetLastError(ERROR_SUCCESS);
+    ok_ptr(NtGdiCreateBitmap(100000, 100000, 1, 32, NULL), NULL);
+    ok_long(GetLastError(), ERROR_INVALID_PARAMETER);
 
     /* Test huge size and valid bits */
     SetLastError(ERROR_SUCCESS);
