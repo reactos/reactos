@@ -826,7 +826,6 @@ BOOL WINAPI CryptProtectData(DATA_BLOB* pDataIn,
                              DWORD dwFlags,
                              DATA_BLOB* pDataOut)
 {
-    static const WCHAR empty_str[1];
     BOOL rc = FALSE;
     HCRYPTPROV hProv;
     struct protect_data_t protect_data;
@@ -852,7 +851,7 @@ BOOL WINAPI CryptProtectData(DATA_BLOB* pDataIn,
     /* Windows appears to create an empty szDataDescr instead of maintaining
      * a NULL */
     if (!szDataDescr)
-        szDataDescr = empty_str;
+        szDataDescr = L"";
 
     /* get crypt context */
     if (!CryptAcquireContextW(&hProv,NULL,MS_ENHANCED_PROV_W,CRYPT32_PROTECTDATA_PROV,CRYPT_VERIFYCONTEXT))
