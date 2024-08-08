@@ -193,6 +193,7 @@ typedef struct _ROS_SHARED_CACHE_MAP
     LIST_ENTRY CacheMapVacbListHead;
     BOOLEAN PinAccess;
     KSPIN_LOCK CacheMapLock;
+    KEVENT FlushEvent;
 #if DBG
     BOOLEAN Trace; /* enable extra trace output for this cache map and it's VACBs */
 #endif
@@ -201,7 +202,6 @@ typedef struct _ROS_SHARED_CACHE_MAP
 #define READAHEAD_DISABLED 0x1
 #define WRITEBEHIND_DISABLED 0x2
 #define SHARED_CACHE_MAP_IN_CREATION 0x4
-#define SHARED_CACHE_MAP_IN_LAZYWRITE 0x8
 
 typedef struct _ROS_VACB
 {

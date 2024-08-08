@@ -304,6 +304,98 @@ CcRosDeleteFileCache (
     return STATUS_SUCCESS;
 }
 
+static
+BOOLEAN
+CcpAcquireFileCacheForFlush2(
+    _In_ PROS_SHARED_CACHE_MAP SharedCacheMap,
+    _In_ BOOLEAN Wait,
+    _Inout_ PKIRQL OldIrql)
+{
+    LARGE_INTEGER Timeout;
+    NTSTATUS Status;
+
+    /* Keep a reference on the shared cache map */
+    ASSERT(SharedCacheMap->OpenCount > 0);
+    SharedCacheMap->OpenCount++;
+
+    KeReleaseQueuedSpinLock(LockQueueMasterLock, *OldIrql);
+
+    Timeout.QuadPart = 0;
+    Status = KeWaitForSingleObject(&SharedCacheMap->FlushEvent,
+                                   Executive,
+                                   KernelMode,
+                                   FALSE,
+                                   Wait ? NULL : &Timeout);
+
+    *OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+
+    if (Status == STATUS_TIMEOUT)
+    {
+        ASSERT(!Wait);
+
+        /* Release the shared cache map */
+        ASSERT(SharedCacheMap->OpenCount > 1);
+        SharedCacheMap->OpenCount--;
+
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static
+BOOLEAN
+CcpAcquireFileCacheForFlush(
+    _In_ PROS_SHARED_CACHE_MAP SharedCacheMap,
+    _In_ BOOLEAN Wait)
+{
+    KIRQL OldIrql;
+    BOOLEAN Ret;
+
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+
+    Ret = CcpAcquireFileCacheForFlush2(SharedCacheMap, Wait, &OldIrql);
+
+    KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+
+    return Ret;
+}
+
+static
+VOID
+CcpReleaseFileCacheFromFlush2(
+    _In_ PROS_SHARED_CACHE_MAP SharedCacheMap,
+    _Inout_ PKIRQL OldIrql)
+{
+    BOOLEAN Deleted = FALSE;
+
+    /* Release the shared cache map */
+    ASSERT(SharedCacheMap->OpenCount > 0);
+    if (--SharedCacheMap->OpenCount == 0)
+    {
+        /* Do cleanup */
+        CcRosDeleteFileCache(SharedCacheMap->FileObject, SharedCacheMap, OldIrql);
+        Deleted = TRUE;
+    }
+
+    if (!Deleted)
+        KeSetEvent(&SharedCacheMap->FlushEvent, IO_NO_INCREMENT, FALSE);
+}
+
+static
+VOID
+CcpReleaseFileCacheFromFlush(
+    _In_ PROS_SHARED_CACHE_MAP SharedCacheMap)
+{
+    KIRQL OldIrql;
+
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+
+    CcpReleaseFileCacheFromFlush2(SharedCacheMap, &OldIrql);
+
+    KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+}
+
 NTSTATUS
 CcRosFlushDirtyPages (
     ULONG Target,
@@ -334,6 +426,7 @@ CcRosFlushDirtyPages (
         PROS_SHARED_CACHE_MAP SharedCacheMap;
         PROS_VACB current;
         BOOLEAN Locked;
+        ULONG Refs;
 
         if (current_entry == &DirtyVacbListHead)
         {
@@ -348,37 +441,34 @@ CcRosFlushDirtyPages (
                                     DirtyVacbListEntry);
         current_entry = current_entry->Flink;
 
-        CcRosVacbIncRefCount(current);
-
         SharedCacheMap = current->SharedCacheMap;
 
         /* When performing lazy write, don't handle temporary files */
         if (CalledFromLazy && BooleanFlagOn(SharedCacheMap->FileObject->Flags, FO_TEMPORARY_FILE))
-        {
-            CcRosVacbDecRefCount(current);
             continue;
-        }
 
         /* Don't attempt to lazy write the files that asked not to */
         if (CalledFromLazy && BooleanFlagOn(SharedCacheMap->Flags, WRITEBEHIND_DISABLED))
+            continue;
+
+        /* Keep a reference on the VACB */
+        CcRosVacbIncRefCount(current);
+
+        /* Don't flush the same file concurrently.
+         * NOTE: We have to keep a reference on the VACB before calling CcpAcquireFileCacheForFlush2
+         *       because the function temporarily releases the master lock internally.
+         */
+        if (!CcpAcquireFileCacheForFlush2(SharedCacheMap, Wait, &OldIrql))
         {
-            CcRosVacbDecRefCount(current);
+            /* We failed. Release the VACB */
+            Refs = CcRosVacbDecRefCount(current);
+            ASSERT(Refs > 0);
+
+            /* Go to the next VACB */
             continue;
         }
 
         ASSERT(current->Dirty);
-
-        /* Do not lazy-write the same file concurrently. Fastfat ASSERTS on that */
-        if (SharedCacheMap->Flags & SHARED_CACHE_MAP_IN_LAZYWRITE)
-        {
-            CcRosVacbDecRefCount(current);
-            continue;
-        }
-
-        SharedCacheMap->Flags |= SHARED_CACHE_MAP_IN_LAZYWRITE;
-
-        /* Keep a ref on the shared cache map */
-        SharedCacheMap->OpenCount++;
 
         KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
 
@@ -387,13 +477,15 @@ CcRosFlushDirtyPages (
         {
             DPRINT("Not locked!");
             ASSERT(!Wait);
-            CcRosVacbDecRefCount(current);
+
             OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
-            SharedCacheMap->Flags &= ~SHARED_CACHE_MAP_IN_LAZYWRITE;
 
-            if (--SharedCacheMap->OpenCount == 0)
-                CcRosDeleteFileCache(SharedCacheMap->FileObject, SharedCacheMap, &OldIrql);
+            /* We failed to start lazy write. Release the VACB and the shared cache map */
+            Refs = CcRosVacbDecRefCount(current);
+            ASSERT(Refs > 0);
+            CcpReleaseFileCacheFromFlush2(SharedCacheMap, &OldIrql);
 
+            /* Go to the next VACB */
             continue;
         }
 
@@ -402,17 +494,12 @@ CcRosFlushDirtyPages (
 
         SharedCacheMap->Callbacks->ReleaseFromLazyWrite(SharedCacheMap->LazyWriteContext);
 
-        /* We release the VACB before acquiring the lock again, because
-         * CcRosVacbDecRefCount might free the VACB, as CcRosFlushVacb dropped a
-         * Refcount. Freeing must be done outside of the lock.
-         * The refcount is decremented atomically. So this is OK. */
-        CcRosVacbDecRefCount(current);
         OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
 
-        SharedCacheMap->Flags &= ~SHARED_CACHE_MAP_IN_LAZYWRITE;
-
-        if (--SharedCacheMap->OpenCount == 0)
-            CcRosDeleteFileCache(SharedCacheMap->FileObject, SharedCacheMap, &OldIrql);
+        /* We finished lazy write. Release the VACB and the shared cache map */
+        Refs = CcRosVacbDecRefCount(current);
+        ASSERT(Refs > 0);
+        CcpReleaseFileCacheFromFlush2(SharedCacheMap, &OldIrql);
 
         if (!NT_SUCCESS(Status) && (Status != STATUS_END_OF_FILE) &&
             (Status != STATUS_MEDIA_WRITE_PROTECTED))
@@ -442,6 +529,7 @@ CcRosFlushDirtyPages (
             }
         }
 
+        /* Go to the first VACB */
         current_entry = DirtyVacbListHead.Flink;
     }
 
@@ -1142,6 +1230,12 @@ CcFlushCache (
         IoStatus->Information = 0;
     }
 
+    /* Don't flush the same file concurrently.
+     * NOTE: MS Docs stated that the caller must be able to enter a wait state until all the data has been flushed
+     *       so waiting for the shared cache map here is OK.
+     */
+    CcpAcquireFileCacheForFlush(SharedCacheMap, TRUE);
+
     /*
      * We flush the VACBs that we find here.
      * If there is no (dirty) VACB, it doesn't mean that there is no data to flush, so we call Mm to be sure.
@@ -1161,7 +1255,7 @@ CcFlushCache (
                 if (!NT_SUCCESS(Status))
                 {
                     CcRosReleaseVacb(SharedCacheMap, vacb, FALSE, FALSE);
-                    goto quit;
+                    break;
                 }
                 DirtyVacb = TRUE;
 
@@ -1191,7 +1285,7 @@ CcFlushCache (
             }
 
             if (!NT_SUCCESS(Status))
-                goto quit;
+                break;
 
             if (IoStatus)
                 IoStatus->Information += MmIosb.Information;
@@ -1210,6 +1304,8 @@ CcFlushCache (
         /* Round down to next VACB start now */
         FlushStart -= FlushStart % VACB_MAPPING_GRANULARITY;
     }
+
+    CcpReleaseFileCacheFromFlush(SharedCacheMap);
 
 quit:
     if (IoStatus)
@@ -1319,6 +1415,7 @@ CcRosInitializeFileCache (
         KeInitializeSpinLock(&SharedCacheMap->CacheMapLock);
         InitializeListHead(&SharedCacheMap->CacheMapVacbListHead);
         InitializeListHead(&SharedCacheMap->BcbList);
+        KeInitializeEvent(&SharedCacheMap->FlushEvent, SynchronizationEvent, TRUE);
 
         SharedCacheMap->Flags = SHARED_CACHE_MAP_IN_CREATION;
 
