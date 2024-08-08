@@ -386,7 +386,6 @@ FORCEINLINE
 VOID
 KiRundownThread(IN PKTHREAD Thread)
 {
-#ifndef CONFIG_SMP
     /* Check if this is the NPX Thread */
     if (KeGetCurrentPrcb()->NpxThread == Thread)
     {
@@ -394,9 +393,6 @@ KiRundownThread(IN PKTHREAD Thread)
         KeGetCurrentPrcb()->NpxThread = NULL;
         Ke386FnInit();
     }
-#else
-    /* Nothing to do */
-#endif
 }
 
 CODE_SEG("INIT")
