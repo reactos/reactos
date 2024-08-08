@@ -2592,8 +2592,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 
 HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
 {
-    BOOL unicode = lpici->cbSize >= FIELD_OFFSET(CMINVOKECOMMANDINFOEX, ptInvoke) &&
-                   (lpici->fMask & CMIC_MASK_UNICODE);
+    const BOOL unicode = IsUnicode(*lpici);
 
     CStringW args;
     if (m_sArgs)

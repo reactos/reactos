@@ -155,6 +155,15 @@ UINT
 GetDfmCmd(_In_ IContextMenu *pCM, _In_ LPCSTR verba);
 #define SHELL_ExecuteControlPanelCPL(hwnd, cpl) SHRunControlPanel((cpl), (hwnd))
 
+#define CmicFlagsToSeeFlags(flags)  ((flags) & SEE_CMIC_COMMON_FLAGS)
+static inline UINT SeeFlagsToCmicFlags(UINT flags)
+{
+    if (flags & SEE_MASK_CLASSNAME)
+        flags &= ~(SEE_MASK_HASLINKNAME | SEE_MASK_HASTITLE);
+    return flags & SEE_CMIC_COMMON_FLAGS;
+}
+
+
 // CStubWindow32 --- The owner window of file property sheets.
 // This window hides taskbar button of property sheet.
 class CStubWindow32 : public CWindowImpl<CStubWindow32>

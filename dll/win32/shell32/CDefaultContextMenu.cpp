@@ -1302,8 +1302,7 @@ CDefaultContextMenu::TryToBrowse(
 HRESULT
 CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFOEX lpcmi, LPCITEMIDLIST pidl, PStaticShellEntry pEntry)
 {
-    BOOL unicode = lpcmi->cbSize >= FIELD_OFFSET(CMINVOKECOMMANDINFOEX, ptInvoke) &&
-                   (lpcmi->fMask & CMIC_MASK_UNICODE);
+    const BOOL unicode = IsUnicode(*lpcmi);
 
     LPITEMIDLIST pidlFull = ILCombine(m_pidlFolder, pidl);
     if (pidlFull == NULL)
@@ -1315,7 +1314,23 @@ CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFOEX lpcmi, LPCITEMIDLIST pid
     BOOL bHasPath = SHGetPathFromIDListW(pidlFull, wszPath);
 
     WCHAR wszDir[MAX_PATH];
-    if (bHasPath)
+
+    SHELLEXECUTEINFOW sei = { sizeof(sei) };
+    sei.fMask = SEE_MASK_CLASSKEY | SEE_MASK_IDLIST | (CmicFlagsToSeeFlags(lpcmi->fMask) & ~SEE_MASK_INVOKEIDLIST);
+    sei.hwnd = lpcmi->hwnd;
+    sei.nShow = lpcmi->nShow;
+    sei.lpVerb = pEntry->Verb;
+    sei.lpIDList = pidlFull;
+    sei.hkeyClass = pEntry->hkClass;
+    sei.dwHotKey = lpcmi->dwHotKey;
+    sei.hIcon = lpcmi->hIcon;
+    sei.lpDirectory = wszDir;
+
+    if (unicode && !StrIsNullOrEmpty(lpcmi->lpDirectoryW))
+    {
+        sei.lpDirectory = lpcmi->lpDirectoryW;
+    }
+    else if (bHasPath)
     {
         wcscpy(wszDir, wszPath);
         PathRemoveFileSpec(wszDir);
@@ -1326,25 +1341,16 @@ CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFOEX lpcmi, LPCITEMIDLIST pid
             *wszDir = UNICODE_NULL;
     }
 
-    CComHeapPtr<WCHAR> pszParamsW;
-    SHELLEXECUTEINFOW sei = { sizeof(sei) };
-    sei.hwnd = lpcmi->hwnd;
-    sei.nShow = SW_SHOWNORMAL;
-    sei.lpVerb = pEntry->Verb;
-    sei.lpDirectory = wszDir;
-    sei.lpIDList = pidlFull;
-    sei.hkeyClass = pEntry->hkClass;
-    sei.fMask = SEE_MASK_CLASSKEY | SEE_MASK_IDLIST;
     if (bHasPath)
         sei.lpFile = wszPath;
 
+    CComHeapPtr<WCHAR> pszParamsW;
     if (unicode && !StrIsNullOrEmpty(lpcmi->lpParametersW))
         sei.lpParameters = lpcmi->lpParametersW;
     else if (!StrIsNullOrEmpty(lpcmi->lpParameters) && __SHCloneStrAtoW(&pszParamsW, lpcmi->lpParameters))
         sei.lpParameters = pszParamsW;
 
     ShellExecuteExW(&sei);
-
     ILFree(pidlFull);
 
     return S_OK;
