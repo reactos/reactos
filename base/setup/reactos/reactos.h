@@ -255,6 +255,27 @@ DisplayError(
     _In_ UINT uIDMessage,
     ...);
 
+VOID
+SetWindowResTextW(
+    _In_ HWND hWnd,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ UINT uID);
+
+VOID
+SetWindowResPrintfVW(
+    _In_ HWND hWnd,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ UINT uID,
+    _In_ va_list args);
+
+VOID
+__cdecl
+SetWindowResPrintfW(
+    _In_ HWND hWnd,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ UINT uID,
+    ...);
+
 #endif /* _REACTOS_PCH_ */
 
 /* EOF */

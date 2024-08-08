@@ -246,6 +246,47 @@ DisplayError(
     return iRes;
 }
 
+VOID
+SetWindowResTextW(
+    _In_ HWND hWnd,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ UINT uID)
+{
+    WCHAR szText[256];
+    LoadStringW(hInstance, uID, szText, _countof(szText));
+    SetWindowTextW(hWnd, szText);
+}
+
+VOID
+SetWindowResPrintfVW(
+    _In_ HWND hWnd,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ UINT uID,
+    _In_ va_list args)
+{
+    WCHAR ResBuffer[256];
+    WCHAR szText[256];
+
+    LoadStringW(hInstance, uID, ResBuffer, _countof(ResBuffer));
+    StringCchVPrintfW(szText, _countof(szText), ResBuffer, args);
+    SetWindowTextW(hWnd, szText);
+}
+
+VOID
+__cdecl
+SetWindowResPrintfW(
+    _In_ HWND hWnd,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ UINT uID,
+    ...)
+{
+    va_list args;
+
+    va_start(args, uID);
+    SetWindowResPrintfVW(hWnd, hInstance, uID, args);
+    va_end(args);
+}
+
 static INT_PTR CALLBACK
 StartDlgProc(
     IN HWND hwndDlg,
