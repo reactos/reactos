@@ -74,16 +74,17 @@
 
 /* fastcall support */
 
-#if defined(__i386__) && !defined(_WIN32)
+#if defined(__i386__) && !defined(__WINE_PE_BUILD)
 
+# define __ASM_USE_FASTCALL_WRAPPER
 # define DEFINE_FASTCALL1_WRAPPER(func) \
-    __ASM_STDCALL_FUNC( __fastcall_ ## func, 4, \
+    __ASM_FASTCALL_FUNC( func, 4, \
                         "popl %eax\n\t"  \
                         "pushl %ecx\n\t" \
                         "pushl %eax\n\t" \
                         "jmp " __ASM_STDCALL(#func,4) )
 # define DEFINE_FASTCALL_WRAPPER(func,args) \
-    __ASM_STDCALL_FUNC( __fastcall_ ## func, args, \
+    __ASM_FASTCALL_FUNC( func, args, \
                         "popl %eax\n\t"  \
                         "pushl %edx\n\t" \
                         "pushl %ecx\n\t" \
@@ -103,8 +104,9 @@
 #define __thiscall __stdcall
 #endif
 
-#if defined(__i386__) && !defined(__MINGW32__)
+#if defined(__i386__) && !defined(__MINGW32__) && (!defined(_MSC_VER) || !defined(__clang__))
 
+# define __ASM_USE_THISCALL_WRAPPER
 # ifdef _MSC_VER
 
 #ifdef __REACTOS__
