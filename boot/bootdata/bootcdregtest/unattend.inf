@@ -11,10 +11,11 @@ DestinationDiskNumber = 0
 DestinationPartitionNumber = 1
 InstallationDirectory=ReactOS
 
-; MBRInstallType=0  skips MBR installation
-; MBRInstallType=1  install MBR on floppy 
-; MBRInstallType=2  install MBR on hdd
-MBRInstallType=2
+; BootLoaderLocation=0  Skip installation
+; BootLoaderLocation=1  Install on removable media (floppy)
+; BootLoaderLocation=2  Install on system partition (MBR and VBR for MBR disks)
+; BootLoaderLocation=3  Install on VBR only (for MBR disks)
+BootLoaderLocation=2
 
 FullName="MyName"
 ;OrgName="MyOrg"

@@ -3472,15 +3472,15 @@ BootLoaderSelectPage(PINPUT_RECORD Ir)
      */
     if (RepairUpdateFlag)
     {
-        USetupData.MBRInstallType = 0;
+        USetupData.BootLoaderLocation = 0;
         goto Quit;
     }
 
     /* For unattended setup, skip MBR installation or install on removable disk if needed */
     if (IsUnattendedSetup)
     {
-        if ((USetupData.MBRInstallType == 0) ||
-            (USetupData.MBRInstallType == 1))
+        if ((USetupData.BootLoaderLocation == 0) ||
+            (USetupData.BootLoaderLocation == 1))
         {
             goto Quit;
         }
@@ -3495,7 +3495,7 @@ BootLoaderSelectPage(PINPUT_RECORD Ir)
     if ((SystemPartition->DiskEntry->DiskStyle != PARTITION_STYLE_MBR) ||
         !IsRecognizedPartition(SystemPartition->PartitionType))
     {
-        USetupData.MBRInstallType = 1;
+        USetupData.BootLoaderLocation = 1;
         goto Quit;
     }
 #endif
@@ -3503,8 +3503,8 @@ BootLoaderSelectPage(PINPUT_RECORD Ir)
     /* Is it an unattended install on hdd? */
     if (IsUnattendedSetup)
     {
-        if ((USetupData.MBRInstallType == 2) ||
-            (USetupData.MBRInstallType == 3))
+        if ((USetupData.BootLoaderLocation == 2) ||
+            (USetupData.BootLoaderLocation == 3))
         {
             goto Quit;
         }
@@ -3576,25 +3576,25 @@ BootLoaderSelectPage(PINPUT_RECORD Ir)
             if (Line == 12)
             {
                 /* Install on both MBR and VBR */
-                USetupData.MBRInstallType = 2;
+                USetupData.BootLoaderLocation = 2;
                 break;
             }
             else if (Line == 13)
             {
                 /* Install on VBR only */
-                USetupData.MBRInstallType = 3;
+                USetupData.BootLoaderLocation = 3;
                 break;
             }
             else if (Line == 14)
             {
                 /* Install on removable disk */
-                USetupData.MBRInstallType = 1;
+                USetupData.BootLoaderLocation = 1;
                 break;
             }
             else if (Line == 15)
             {
                 /* Skip installation */
-                USetupData.MBRInstallType = 0;
+                USetupData.BootLoaderLocation = 0;
                 break;
             }
 
@@ -3663,7 +3663,7 @@ BootLoaderHardDiskPage(PINPUT_RECORD Ir)
     NTSTATUS Status;
     WCHAR DestinationDevicePathBuffer[MAX_PATH];
 
-    if (USetupData.MBRInstallType == 2)
+    if (USetupData.BootLoaderLocation == 2)
     {
         /* Step 1: Write the VBR */
         Status = InstallVBRToPartition(&USetupData.SystemRootPath,
@@ -3739,10 +3739,10 @@ BootLoaderInstallPage(PINPUT_RECORD Ir)
     RtlCreateUnicodeString(&USetupData.SystemRootPath, PathBuffer);
     DPRINT1("SystemRootPath: %wZ\n", &USetupData.SystemRootPath);
 
-    if (USetupData.MBRInstallType != 0)
+    if (USetupData.BootLoaderLocation != 0)
         MUIDisplayPage(BOOTLOADER_INSTALL_PAGE);
 
-    switch (USetupData.MBRInstallType)
+    switch (USetupData.BootLoaderLocation)
     {
         /* Skip installation */
         case 0:

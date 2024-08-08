@@ -92,17 +92,150 @@ CreateTitleFont(VOID)
     return hFont;
 }
 
-INT DisplayError(
-    IN HWND hParentWnd OPTIONAL,
-    IN UINT uIDTitle,
-    IN UINT uIDMessage)
+INT
+DisplayMessageV(
+    _In_opt_ HWND hWnd,
+    _In_ UINT uType,
+    _In_opt_ PCWSTR pszTitle,
+    _In_opt_ PCWSTR pszFormatMessage,
+    _In_ va_list args)
 {
-    WCHAR message[512], caption[64];
+    INT iRes;
+    HINSTANCE hInstance = NULL;
+    LPWSTR Format;
+    size_t MsgLen;
+    WCHAR  StaticBuffer[256];
+    LPWSTR Buffer = StaticBuffer; // Use the static buffer by default.
 
-    LoadStringW(SetupData.hInstance, uIDMessage, message, ARRAYSIZE(message));
-    LoadStringW(SetupData.hInstance, uIDTitle, caption, ARRAYSIZE(caption));
+    /* We need to retrieve the current module's instance handle if either
+     * the title or the format message is specified by a resource ID */
+    if ((pszTitle && IS_INTRESOURCE(pszTitle)) || IS_INTRESOURCE(pszFormatMessage))
+        hInstance = GetModuleHandleW(NULL); // SetupData.hInstance;
 
-    return MessageBoxW(hParentWnd, message, caption, MB_OK | MB_ICONERROR);
+    /* Retrieve the format message string if this is a resource */
+    if (pszFormatMessage && IS_INTRESOURCE(pszFormatMessage)) do
+    {
+        // LoadAllocStringW()
+        PCWSTR pStr;
+
+        /* Try to load the string from the resource */
+        MsgLen = LoadStringW(hInstance, PtrToUlong(pszFormatMessage), (LPWSTR)&pStr, 0);
+        if (MsgLen == 0)
+        {
+            /* No resource string was found, return NULL */
+            Format = NULL;
+            break;
+        }
+
+        /* Allocate a new buffer, adding a NULL-terminator */
+        Format = HeapAlloc(GetProcessHeap(), 0, (MsgLen + 1) * sizeof(WCHAR));
+        if (!Format)
+        {
+            MsgLen = 0;
+            break;
+        }
+
+        /* Copy the string, NULL-terminated */
+        StringCchCopyNW(Format, MsgLen + 1, pStr, MsgLen);
+    } while (0);
+    else
+    {
+        Format = (LPWSTR)pszFormatMessage;
+    }
+
+    if (Format)
+    {
+        /*
+         * Retrieve the message length. If it is too long, allocate
+         * an auxiliary buffer; otherwise use the static buffer.
+         * The string is built to be NULL-terminated.
+         */
+        MsgLen = _vscwprintf(Format, args);
+        if (MsgLen >= _countof(StaticBuffer))
+        {
+            Buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (MsgLen + 1) * sizeof(WCHAR));
+            if (!Buffer)
+            {
+                /* Allocation failed, use the original format string verbatim */
+                // MsgLen = wcslen(Format);
+                Buffer = Format;
+            }
+        }
+        if (Buffer != Format)
+        {
+            /* Do the printf as we use the caller's format string */
+            // _vsnwprintf(Buffer, MsgLen, Format, args);
+            StringCchVPrintfW(Buffer, MsgLen + 1, Format, args);
+        }
+    }
+    else
+    {
+        Format = (LPWSTR)pszFormatMessage;
+        Buffer = Format;
+    }
+
+    /* Display the message */
+    {
+    MSGBOXPARAMSW mb = {0};
+    mb.cbSize = sizeof(mb);
+    mb.hwndOwner = hWnd;
+    mb.hInstance = hInstance;
+    mb.lpszText = Buffer;
+    mb.lpszCaption = pszTitle;
+    mb.dwStyle = uType;
+    mb.dwLanguageId = MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT);
+
+    iRes = MessageBoxIndirectW(&mb);
+    }
+
+    /* Free the buffers if needed */
+    if ((Buffer != StaticBuffer) && (Buffer != Format))
+        HeapFree(GetProcessHeap(), 0, Buffer);
+
+    if (Format && (Format != pszFormatMessage))
+        HeapFree(GetProcessHeap(), 0, Format);
+
+    return iRes;
+}
+
+INT
+__cdecl
+DisplayMessage(
+    _In_opt_ HWND hWnd,
+    _In_ UINT uType,
+    _In_opt_ PCWSTR pszTitle,
+    _In_opt_ PCWSTR pszFormatMessage,
+    ...)
+{
+    INT iRes;
+    va_list args;
+
+    va_start(args, pszFormatMessage);
+    iRes = DisplayMessageV(hWnd, uType, pszTitle, pszFormatMessage, args);
+    va_end(args);
+
+    return iRes;
+}
+
+INT
+__cdecl
+DisplayError(
+    _In_opt_ HWND hWnd,
+    _In_ UINT uIDTitle,
+    _In_ UINT uIDMessage,
+    ...)
+{
+    INT iRes;
+    va_list args;
+
+    va_start(args, uIDMessage);
+    iRes = DisplayMessageV(hWnd, MB_OK | MB_ICONERROR,
+                           MAKEINTRESOURCEW(uIDTitle),
+                           MAKEINTRESOURCEW(uIDMessage),
+                           args);
+    va_end(args);
+
+    return iRes;
 }
 
 static INT_PTR CALLBACK
