@@ -19,6 +19,7 @@
 #include "vbscript.h"
 #include "regexp.h"
 #include "vbsregexp55.h"
+#include "wchar.h"
 
 #include "wine/debug.h"
 
@@ -1432,13 +1433,179 @@ static HRESULT WINAPI RegExp2_Test(IRegExp2 *iface, BSTR sourceString, VARIANT_B
     return hres;
 }
 
-static HRESULT WINAPI RegExp2_Replace(IRegExp2 *iface, BSTR sourceString,
-        VARIANT replaceVar, BSTR *pDestString)
+typedef struct {
+    WCHAR *buf;
+    DWORD size;
+    DWORD len;
+} strbuf_t;
+
+static BOOL strbuf_ensure_size(strbuf_t *buf, unsigned len)
+{
+    WCHAR *new_buf;
+    DWORD new_size;
+
+    if(len <= buf->size)
+        return TRUE;
+
+    new_size = buf->size ? buf->size<<1 : 16;
+    if(new_size < len)
+        new_size = len;
+    if(buf->buf)
+        new_buf = heap_realloc(buf->buf, new_size*sizeof(WCHAR));
+    else
+        new_buf = heap_alloc(new_size*sizeof(WCHAR));
+    if(!new_buf)
+        return FALSE;
+
+    buf->buf = new_buf;
+    buf->size = new_size;
+    return TRUE;
+}
+
+static HRESULT strbuf_append(strbuf_t *buf, const WCHAR *str, DWORD len)
+{
+    if(!len)
+        return S_OK;
+
+    if(!strbuf_ensure_size(buf, buf->len+len))
+        return E_OUTOFMEMORY;
+
+    memcpy(buf->buf+buf->len, str, len*sizeof(WCHAR));
+    buf->len += len;
+    return S_OK;
+}
+
+static HRESULT WINAPI RegExp2_Replace(IRegExp2 *iface, BSTR source, VARIANT replaceVar, BSTR *ret)
 {
     RegExp2 *This = impl_from_IRegExp2(iface);
-    FIXME("(%p)->(%s %s %p)\n", This, debugstr_w(sourceString),
-            debugstr_variant(&replaceVar), pDestString);
-    return E_NOTIMPL;
+    const WCHAR *cp, *prev_cp = NULL, *ptr, *prev_ptr;
+    size_t match_len = 0, source_len, replace_len;
+    strbuf_t buf = { NULL, 0, 0 };
+    match_state_t *state = NULL;
+    heap_pool_t *mark;
+    VARIANT strv;
+    BSTR replace;
+    HRESULT hres;
+
+    TRACE("(%p)->(%s %s %p)\n", This, debugstr_w(source), debugstr_variant(&replaceVar), ret);
+
+    if(This->pattern) {
+        if(!This->regexp) {
+            This->regexp = regexp_new(NULL, &This->pool, This->pattern,
+                                      lstrlenW(This->pattern), This->flags, FALSE);
+            if(!This->regexp)
+                return E_OUTOFMEMORY;
+        }else {
+            hres = regexp_set_flags(&This->regexp, NULL, &This->pool, This->flags);
+            if(FAILED(hres))
+                return hres;
+        }
+    }
+
+    V_VT(&strv) = VT_EMPTY;
+    hres = VariantChangeType(&strv, &replaceVar, 0, VT_BSTR);
+    if(FAILED(hres))
+        return hres;
+    replace = V_BSTR(&strv);
+    replace_len = SysStringLen(replace);
+    source_len = SysStringLen(source);
+
+    mark = heap_pool_mark(&This->pool);
+    cp = source;
+    if(This->regexp && !(state = alloc_match_state(This->regexp, &This->pool, cp)))
+        hres = E_OUTOFMEMORY;
+
+    while(SUCCEEDED(hres)) {
+        if(This->regexp) {
+            prev_cp = cp;
+            hres = regexp_execute(This->regexp, NULL, &This->pool, source, source_len, state);
+            if(hres != S_OK) break;
+            cp = state->cp;
+            match_len = state->match_len;
+        }else if(prev_cp) {
+            if(cp == source + source_len)
+                break;
+            prev_cp = cp++;
+        }else {
+            prev_cp = cp;
+        }
+
+        hres = strbuf_append(&buf, prev_cp, cp - prev_cp - match_len);
+        if(FAILED(hres))
+            break;
+
+        prev_ptr = replace;
+        while((ptr = wmemchr(prev_ptr, '$', replace + replace_len - prev_ptr))) {
+            hres = strbuf_append(&buf, prev_ptr, ptr - prev_ptr);
+            if(FAILED(hres))
+                break;
+
+            switch(ptr[1]) {
+            case '$':
+                hres = strbuf_append(&buf, ptr, 1);
+                prev_ptr = ptr + 2;
+                break;
+            case '&':
+                hres = strbuf_append(&buf, cp - match_len, match_len);
+                prev_ptr = ptr + 2;
+                break;
+            case '`':
+                hres = strbuf_append(&buf, source, cp - source - match_len);
+                prev_ptr = ptr + 2;
+                break;
+            case '\'':
+                hres = strbuf_append(&buf, cp, source + source_len - cp);
+                prev_ptr = ptr + 2;
+                break;
+            default: {
+                DWORD idx;
+
+                if(!is_digit(ptr[1])) {
+                    hres = strbuf_append(&buf, ptr, 1);
+                    prev_ptr = ptr + 1;
+                    break;
+                }
+
+                idx = ptr[1] - '0';
+                if(is_digit(ptr[2]) && idx * 10 + (ptr[2] - '0') <= state->paren_count) {
+                    idx = idx * 10 + (ptr[2] - '0');
+                    prev_ptr = ptr + 3;
+                }else if(idx && idx <= state->paren_count) {
+                    prev_ptr = ptr + 2;
+                }else {
+                    hres = strbuf_append(&buf, ptr, 1);
+                    prev_ptr = ptr + 1;
+                    break;
+                }
+
+                if(state->parens[idx - 1].index != -1)
+                    hres = strbuf_append(&buf, source + state->parens[idx - 1].index,
+                                         state->parens[idx - 1].length);
+                break;
+            }
+            }
+            if(FAILED(hres))
+                break;
+        }
+        if(SUCCEEDED(hres))
+            hres = strbuf_append(&buf, prev_ptr, replace + replace_len - prev_ptr);
+        if(FAILED(hres))
+            break;
+
+        if(!(This->flags & REG_GLOB))
+            break;
+    }
+
+    if(SUCCEEDED(hres)) {
+        hres = strbuf_append(&buf, cp, source + source_len - cp);
+        if(SUCCEEDED(hres) && !(*ret = SysAllocStringLen(buf.buf, buf.len)))
+            hres = E_OUTOFMEMORY;
+    }
+
+    heap_pool_clear(mark);
+    heap_free(buf.buf);
+    SysFreeString(replace);
+    return hres;
 }
 
 static const IRegExp2Vtbl RegExp2Vtbl = {
@@ -1461,6 +1628,48 @@ static const IRegExp2Vtbl RegExp2Vtbl = {
     RegExp2_Test,
     RegExp2_Replace
 };
+
+BSTR string_replace(BSTR string, BSTR find, BSTR replace, int from, int cnt)
+{
+    const WCHAR *ptr, *string_end;
+    strbuf_t buf = { NULL, 0, 0 };
+    size_t replace_len, find_len;
+    BSTR ret = NULL;
+    HRESULT hres = S_OK;
+
+    string_end = string + SysStringLen(string);
+    ptr = from > SysStringLen(string) ? string_end : string + from;
+
+    find_len = SysStringLen(find);
+    replace_len = SysStringLen(replace);
+    if(!replace_len)
+        cnt = 0;
+
+    while(string_end - ptr >= find_len && cnt && find_len) {
+        if(memcmp(ptr, find, find_len * sizeof(WCHAR))) {
+            hres = strbuf_append(&buf, ptr, 1);
+            if(FAILED(hres))
+                break;
+            ptr++;
+        }else {
+            hres = strbuf_append(&buf, replace, replace_len);
+            if(FAILED(hres))
+                break;
+            ptr += find_len;
+            if(cnt != -1)
+                cnt--;
+        }
+    }
+
+    if(SUCCEEDED(hres)) {
+        hres = strbuf_append(&buf, ptr, string_end - ptr);
+        if(SUCCEEDED(hres))
+            ret = SysAllocStringLen(buf.buf, buf.len);
+    }
+
+    heap_free(buf.buf);
+    return ret;
+}
 
 static inline RegExp2 *impl_from_IRegExp(IRegExp *iface)
 {

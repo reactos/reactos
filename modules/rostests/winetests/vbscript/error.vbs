@@ -77,6 +77,13 @@ const CO_E_SERVER_EXEC_FAILURE = &h80080005&
 call ok(Err.Number = 0, "Err.Number = " & Err.Number)
 call ok(getVT(Err.Number) = "VT_I4", "getVT(Err.Number) = " & getVT(Err.Number))
 
+class emptyclass
+end class
+
+class propclass
+    public prop
+end class
+
 dim calledFunc
 
 sub returnTrue
@@ -313,6 +320,70 @@ end sub
 
 call testForEachError()
 
+sub testWithError()
+    on error resume next
+    dim x
+
+    err.clear
+    x = false
+    with throwInt(E_TESTERROR)
+        ok Err.Number = E_TESTERROR, "Err.Number = " & Err.Number
+        x = true
+    end with
+    ok x, "with statement body not executed"
+
+    err.clear
+    x = false
+    with throwInt(E_TESTERROR)
+        x = true
+        .prop = 1
+        todo_wine_ok Err.Number = 424, "Err.Number = " & Err.Number
+    end with
+    ok x, "with statement body not executed"
+
+    err.clear
+    x = false
+    with empty
+        .prop = 1
+        todo_wine_ok Err.Number = 424, "Err.Number = " & Err.Number
+        x = true
+    end with
+    ok x, "with statement body not executed"
+end sub
+
+sub testWithError2()
+    on error resume next
+    dim x
+
+    err.clear
+    x = false
+    with new emptyclass
+        .prop = 1
+        ok Err.Number = 438, "Err.Number = " & Err.Number
+        x = true
+    end with
+    ok x, "with statement body not executed"
+
+    'dot expression can reference only inner-most with statement
+    err.clear
+    x = false
+    with new propclass
+        with new emptyclass
+            .prop = 1
+            ok Err.Number = 438, "Err.Number = " & Err.Number
+            x = true
+        end with
+    end with
+    ok x, "with statement body not executed"
+
+    err.clear
+    .prop
+    ok Err.Number = 505, "Err.Number = " & Err.Number & " description """ & err.description & """"
+end sub
+
+call testWithError()
+call testWithError2()
+
 sub testHresMap(hres, code)
     on error resume next
 
@@ -385,5 +456,21 @@ sub testVBErrorCodes()
 end sub
 
 call testVBErrorCodes
+
+on error resume next
+
+throwWithDesc
+ok err.number = &hdeadbeef&, "err.number = " & hex(err.number)
+ok err.description = "test", "err.description = " & err.description
+ok err.helpcontext = 10, "err.helpcontext = " & err.helpcontext
+ok err.helpfile = "test.chm", "err.helpfile = " & err.helpfile
+
+throwWithDesc = 1
+ok err.number = &hdeadbeef&, "err.number = " & hex(err.number)
+ok err.description = "test", "err.description = " & err.description
+ok err.helpcontext = 10, "err.helpcontext = " & err.helpcontext
+ok err.helpfile = "test.chm", "err.helpfile = " & err.helpfile
+
+on error goto 0
 
 call reportSuccess()
