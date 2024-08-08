@@ -18,6 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#if 0
+#pragma makedep testdll
+#endif
+
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -32,9 +36,15 @@
 #include <msiquery.h>
 #include <msidefs.h>
 
+#ifdef __MINGW32__
+#define __WINE_PRINTF_ATTR(fmt,args) __attribute__((format (printf,fmt,args)))
+#else
+#define __WINE_PRINTF_ATTR(fmt,args)
+#endif
+
 static int todo_level, todo_do_loop;
 
-static void WINAPIV ok_(MSIHANDLE hinst, int todo, const char *file, int line, int condition, const char *msg, ...)
+static void WINAPIV  __WINE_PRINTF_ATTR(6,7) ok_(MSIHANDLE hinst, int todo, const char *file, int line, int condition, const char *msg, ...)
 {
     static char buffer[2000];
     MSIHANDLE record;
@@ -100,7 +110,7 @@ static void check_prop(MSIHANDLE hinst, const char *prop, const char *expect)
     DWORD sz = sizeof(buffer);
     UINT r = MsiGetPropertyA(hinst, prop, buffer, &sz);
     ok(hinst, !r, "'%s': got %u\n", prop, r);
-    ok(hinst, sz == strlen(buffer), "'%s': expected %u, got %u\n", prop, strlen(buffer), sz);
+    ok(hinst, sz == strlen(buffer), "'%s': expected %Iu, got %lu\n", prop, strlen(buffer), sz);
     ok(hinst, !strcmp(buffer, expect), "expected '%s', got '%s'\n", expect, buffer);
 }
 
@@ -124,21 +134,21 @@ static void test_props(MSIHANDLE hinst)
     sz = 0;
     r = MsiGetPropertyA(hinst, "boo", NULL, &sz);
     ok(hinst, !r, "got %u\n", r);
-    ok(hinst, sz == 0, "got size %u\n", sz);
+    ok(hinst, sz == 0, "got size %lu\n", sz);
 
     sz = 0;
     strcpy(buffer,"x");
     r = MsiGetPropertyA(hinst, "boo", buffer, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !strcmp(buffer, "x"), "got \"%s\"\n", buffer);
-    ok(hinst, sz == 0, "got size %u\n", sz);
+    ok(hinst, sz == 0, "got size %lu\n", sz);
 
     sz = 1;
     strcpy(buffer,"x");
     r = MsiGetPropertyA(hinst, "boo", buffer, &sz);
     ok(hinst, !r, "got %u\n", r);
     ok(hinst, !buffer[0], "got \"%s\"\n", buffer);
-    ok(hinst, sz == 0, "got size %u\n", sz);
+    ok(hinst, sz == 0, "got size %lu\n", sz);
 
     /* set the property to something */
     r = MsiSetPropertyA(hinst, NULL, NULL);
@@ -186,35 +196,35 @@ static void test_props(MSIHANDLE hinst)
     sz = 0;
     r = MsiGetPropertyA(hinst, "boo", NULL, &sz);
     ok(hinst, !r, "got %u\n", r);
-    ok(hinst, sz == 6, "got size %u\n", sz);
+    ok(hinst, sz == 6, "got size %lu\n", sz);
 
     sz = 0;
     strcpy(buffer,"q");
     r = MsiGetPropertyA(hinst, "boo", buffer, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !strcmp(buffer, "q"), "got \"%s\"\n", buffer);
-    ok(hinst, sz == 6, "got size %u\n", sz);
+    ok(hinst, sz == 6, "got size %lu\n", sz);
 
     sz = 1;
     strcpy(buffer,"x");
     r = MsiGetPropertyA(hinst, "boo", buffer, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !buffer[0], "got \"%s\"\n", buffer);
-    ok(hinst, sz == 6, "got size %u\n", sz);
+    ok(hinst, sz == 6, "got size %lu\n", sz);
 
     sz = 3;
     strcpy(buffer,"x");
     r = MsiGetPropertyA(hinst, "boo", buffer, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !strcmp(buffer, "xy"), "got \"%s\"\n", buffer);
-    ok(hinst, sz == 6, "got size %u\n", sz);
+    ok(hinst, sz == 6, "got size %lu\n", sz);
 
     sz = 4;
     strcpy(buffer,"x");
     r = MsiGetPropertyA(hinst, "boo", buffer, &sz);
     ok(hinst, !r, "got %u\n", r);
     ok(hinst, !strcmp(buffer, "xyz"), "got \"%s\"\n", buffer);
-    ok(hinst, sz == 3, "got size %u\n", sz);
+    ok(hinst, sz == 3, "got size %lu\n", sz);
 
     r = MsiGetPropertyW(hinst, L"boo", NULL, NULL);
     ok(hinst, !r, "got %u\n", r);
@@ -225,35 +235,35 @@ static void test_props(MSIHANDLE hinst)
     sz = 0;
     r = MsiGetPropertyW(hinst, L"boo", NULL, &sz);
     ok(hinst, !r, "got %u\n", r);
-    ok(hinst, sz == 3, "got size %u\n", sz);
+    ok(hinst, sz == 3, "got size %lu\n", sz);
 
     sz = 0;
     lstrcpyW(bufferW, L"boo");
     r = MsiGetPropertyW(hinst, L"boo", bufferW, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !lstrcmpW(bufferW, L"boo"), "got %s\n", dbgstr_w(bufferW));
-    ok(hinst, sz == 3, "got size %u\n", sz);
+    ok(hinst, sz == 3, "got size %lu\n", sz);
 
     sz = 1;
     lstrcpyW(bufferW, L"boo");
     r = MsiGetPropertyW(hinst, L"boo", bufferW, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !bufferW[0], "got %s\n", dbgstr_w(bufferW));
-    ok(hinst, sz == 3, "got size %u\n", sz);
+    ok(hinst, sz == 3, "got size %lu\n", sz);
 
     sz = 3;
     lstrcpyW(bufferW, L"boo");
     r = MsiGetPropertyW(hinst, L"boo", bufferW, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !lstrcmpW(bufferW, L"xy"), "got %s\n", dbgstr_w(bufferW));
-    ok(hinst, sz == 3, "got size %u\n", sz);
+    ok(hinst, sz == 3, "got size %lu\n", sz);
 
     sz = 4;
     lstrcpyW(bufferW, L"boo");
     r = MsiGetPropertyW(hinst, L"boo", bufferW, &sz);
     ok(hinst, !r, "got %u\n", r);
     ok(hinst, !lstrcmpW(bufferW, L"xyz"), "got %s\n", dbgstr_w(bufferW));
-    ok(hinst, sz == 3, "got size %u\n", sz);
+    ok(hinst, sz == 3, "got size %lu\n", sz);
 
     r = MsiSetPropertyA(hinst, "boo", NULL);
     ok(hinst, !r, "got %u\n", r);
@@ -262,13 +272,13 @@ static void test_props(MSIHANDLE hinst)
     sz = 0;
     r = MsiGetPropertyA(hinst, "embednullprop", NULL, &sz);
     ok(hinst, !r, "got %u\n", r);
-    ok(hinst, sz == 6, "got size %u\n", sz);
+    ok(hinst, sz == 6, "got size %lu\n", sz);
 
     sz = 4;
     memset(buffer, 0xcc, sizeof(buffer));
     r = MsiGetPropertyA(hinst, "embednullprop", buffer, &sz);
     ok(hinst, !r, "got %u\n", r);
-    ok(hinst, sz == 3, "got size %u\n", sz);
+    ok(hinst, sz == 3, "got size %lu\n", sz);
     ok(hinst, !memcmp(buffer, "a\0\0\0\xcc", 5), "wrong data\n");
 }
 
@@ -306,7 +316,7 @@ static void test_db(MSIHANDLE hinst)
     sz = sizeof(buffer);
     r = MsiRecordGetStringA(rec2, 1, buffer, &sz);
     ok(hinst, !r, "got %u\n", r);
-    ok(hinst, sz == strlen(buffer), "got size %u\n", sz);
+    ok(hinst, sz == strlen(buffer), "got size %lu\n", sz);
     ok(hinst, !strcmp(buffer, "Name"), "got '%s'\n", buffer);
 
     /* Test MsiGetActiveDatabase + MsiDatabaseIsTablePersistent once again */
@@ -335,11 +345,11 @@ static void test_db(MSIHANDLE hinst)
     sz = sizeof(buffer);
     r = MsiRecordGetStringA(rec2, 1, buffer, &sz);
     ok(hinst, !r, "got %u\n", r);
-    ok(hinst, sz == strlen(buffer), "got size %u\n", sz);
+    ok(hinst, sz == strlen(buffer), "got size %lu\n", sz);
     ok(hinst, !strcmp(buffer, "one"), "got '%s'\n", buffer);
 
     r = MsiRecordGetInteger(rec2, 2);
-    ok(hinst, r == 1, "got %d\n", r);
+    ok(hinst, r == 1, "got %u\n", r);
 
     sz = sizeof(buffer);
     r = MsiRecordReadStream(rec2, 3, buffer, &sz);
@@ -358,11 +368,11 @@ static void test_db(MSIHANDLE hinst)
     sz = sizeof(buffer);
     r = MsiRecordGetStringA(rec2, 1, buffer, &sz);
     ok(hinst, !r, "got %u\n", r);
-    ok(hinst, sz == strlen(buffer), "got size %u\n", sz);
+    ok(hinst, sz == strlen(buffer), "got size %lu\n", sz);
     ok(hinst, !strcmp(buffer, "two"), "got '%s'\n", buffer);
 
     r = MsiRecordGetInteger(rec2, 2);
-    ok(hinst, r == 2, "got %d\n", r);
+    ok(hinst, r == 2, "got %u\n", r);
 
     sz = sizeof(buffer);
     r = MsiRecordReadStream(rec2, 3, buffer, &sz);
@@ -382,16 +392,16 @@ static void test_db(MSIHANDLE hinst)
     ok(hinst, !r, "got %u\n", r);
 
     r = MsiViewModify(view, MSIMODIFY_REFRESH, rec2);
-    ok(hinst, !r, "got %d\n", r);
+    ok(hinst, !r, "got %u\n", r);
 
     sz = sizeof(buffer);
     r = MsiRecordGetStringA(rec2, 1, buffer, &sz);
     ok(hinst, !r, "got %u\n", r);
-    ok(hinst, sz == strlen(buffer), "got size %u\n", sz);
+    ok(hinst, sz == strlen(buffer), "got size %lu\n", sz);
     ok(hinst, !strcmp(buffer, "two"), "got '%s'\n", buffer);
 
     r = MsiRecordGetInteger(rec2, 2);
-    ok(hinst, r == 2, "got %d\n", r);
+    ok(hinst, r == 2, "got %u\n", r);
 
     sz = sizeof(buffer);
     r = MsiRecordReadStream(rec2, 3, buffer, &sz);
@@ -403,7 +413,7 @@ static void test_db(MSIHANDLE hinst)
 
     r = MsiViewFetch(view, &rec2);
     ok(hinst, r == ERROR_NO_MORE_ITEMS, "got %u\n", r);
-    ok(hinst, !rec2, "got %u\n", rec2);
+    ok(hinst, !rec2, "got %lu\n", rec2);
 
     r = MsiViewClose(view);
     ok(hinst, !r, "got %u\n", r);
@@ -424,14 +434,14 @@ static void test_db(MSIHANDLE hinst)
     ok(hinst, !r, "got %u\n", r);
 
     r = MsiRecordGetInteger(rec2, 2);
-    ok(hinst, r == 1, "got %d\n", r);
+    ok(hinst, r == 1, "got %u\n", r);
 
     r = MsiCloseHandle(rec2);
     ok(hinst, !r, "got %u\n", r);
 
     r = MsiViewFetch(view, &rec2);
     ok(hinst, r == ERROR_NO_MORE_ITEMS, "got %u\n", r);
-    ok(hinst, !rec2, "got %u\n", rec2);
+    ok(hinst, !rec2, "got %lu\n", rec2);
 
     r = MsiCloseHandle(rec);
     ok(hinst, !r, "got %u\n", r);
@@ -444,18 +454,18 @@ static void test_db(MSIHANDLE hinst)
     ok(hinst, !r, "got %u\n", r);
 
     r = MsiRecordGetFieldCount(rec);
-    ok(hinst, r == 1, "got %d\n", r);
+    ok(hinst, r == 1, "got %u\n", r);
 
     sz = sizeof(buffer);
     r = MsiRecordGetStringA(rec, 0, buffer, &sz);
     ok(hinst, !r, "got %u\n", r);
-    ok(hinst, sz == strlen(buffer), "got size %u\n", sz);
+    ok(hinst, sz == strlen(buffer), "got size %lu\n", sz);
     ok(hinst, !strcmp(buffer, "Test"), "got '%s'\n", buffer);
 
     sz = sizeof(buffer);
     r = MsiRecordGetStringA(rec, 1, buffer, &sz);
     ok(hinst, !r, "got %u\n", r);
-    ok(hinst, sz == strlen(buffer), "got size %u\n", sz);
+    ok(hinst, sz == strlen(buffer), "got size %lu\n", sz);
     ok(hinst, !strcmp(buffer, "Name"), "got '%s'\n", buffer);
 
     r = MsiCloseHandle(rec);
@@ -499,17 +509,17 @@ static void test_db(MSIHANDLE hinst)
             ok(hinst, int_value == 0, "%u: got %u\n", i, int_value);
         if (i == PID_TEMPLATE)
         {
-            ok(hinst, sz == 5, "%u: got %u\n", i, sz);
+            ok(hinst, sz == 5, "%u: got %lu\n", i, sz);
             ok(hinst, !lstrcmpA(buffer, ";1033"), "%u: got %s\n", i, buffer);
         }
         else if (i == PID_REVNUMBER)
         {
-            ok(hinst, sz == 76, "%u: got %u\n", i, sz);
+            ok(hinst, sz == 76, "%u: got %lu\n", i, sz);
             ok(hinst, !lstrcmpA(buffer, "{004757CA"), "%u: got %s\n", i, buffer);
         }
         else
         {
-            ok(hinst, sz == sizeof(buffer), "%u: got %u\n", i, sz);
+            ok(hinst, sz == sizeof(buffer), "%u: got %lu\n", i, sz);
             ok(hinst, !*buffer, "%u: got %s\n", i, buffer);
         }
     }
@@ -582,68 +592,68 @@ static void test_targetpath(MSIHANDLE hinst)
     sz = 0;
     r = MsiGetTargetPathA(hinst, "TARGETDIR", NULL, &sz);
     ok(hinst, !r, "got %u\n", r);
-    ok(hinst, sz == 6, "got size %u\n", sz);
+    ok(hinst, sz == 6, "got size %lu\n", sz);
 
     sz = 0;
     strcpy(buffer,"q");
     r = MsiGetTargetPathA(hinst, "TARGETDIR", buffer, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !strcmp(buffer, "q"), "got \"%s\"\n", buffer);
-    ok(hinst, sz == 6, "got size %u\n", sz);
+    ok(hinst, sz == 6, "got size %lu\n", sz);
 
     sz = 1;
     strcpy(buffer,"x");
     r = MsiGetTargetPathA(hinst, "TARGETDIR", buffer, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !buffer[0], "got \"%s\"\n", buffer);
-    ok(hinst, sz == 6, "got size %u\n", sz);
+    ok(hinst, sz == 6, "got size %lu\n", sz);
 
     sz = 3;
     strcpy(buffer,"x");
     r = MsiGetTargetPathA(hinst, "TARGETDIR", buffer, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !strcmp(buffer, "C:"), "got \"%s\"\n", buffer);
-    ok(hinst, sz == 6, "got size %u\n", sz);
+    ok(hinst, sz == 6, "got size %lu\n", sz);
 
     sz = 4;
     strcpy(buffer,"x");
     r = MsiGetTargetPathA(hinst, "TARGETDIR", buffer, &sz);
     ok(hinst, !r, "got %u\n", r);
     ok(hinst, !strcmp(buffer, "C:\\"), "got \"%s\"\n", buffer);
-    ok(hinst, sz == 3, "got size %u\n", sz);
+    ok(hinst, sz == 3, "got size %lu\n", sz);
 
     sz = 0;
     r = MsiGetTargetPathW(hinst, L"TARGETDIR", NULL, &sz);
     ok(hinst, !r, "got %u\n", r);
-    ok(hinst, sz == 3, "got size %u\n", sz);
+    ok(hinst, sz == 3, "got size %lu\n", sz);
 
     sz = 0;
     bufferW[0] = 'q';
     r = MsiGetTargetPathW(hinst, L"TARGETDIR", bufferW, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, bufferW[0] == 'q', "got %s\n", dbgstr_w(bufferW));
-    ok(hinst, sz == 3, "got size %u\n", sz);
+    ok(hinst, sz == 3, "got size %lu\n", sz);
 
     sz = 1;
     bufferW[0] = 'q';
     r = MsiGetTargetPathW(hinst, L"TARGETDIR", bufferW, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !bufferW[0], "got %s\n", dbgstr_w(bufferW));
-    ok(hinst, sz == 3, "got size %u\n", sz);
+    ok(hinst, sz == 3, "got size %lu\n", sz);
 
     sz = 3;
     bufferW[0] = 'q';
     r = MsiGetTargetPathW(hinst, L"TARGETDIR", bufferW, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !lstrcmpW(bufferW, L"C:"), "got %s\n", dbgstr_w(bufferW));
-    ok(hinst, sz == 3, "got size %u\n", sz);
+    ok(hinst, sz == 3, "got size %lu\n", sz);
 
     sz = 4;
     bufferW[0] = 'q';
     r = MsiGetTargetPathW(hinst, L"TARGETDIR", bufferW, &sz);
     ok(hinst, !r, "got %u\n", r);
     ok(hinst, !lstrcmpW(bufferW, L"C:\\"), "got %s\n", dbgstr_w(bufferW));
-    ok(hinst, sz == 3, "got size %u\n", sz);
+    ok(hinst, sz == 3, "got size %lu\n", sz);
 
     r = MsiSetTargetPathA(hinst, NULL, "C:\\subdir");
     ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
@@ -681,68 +691,68 @@ static void test_targetpath(MSIHANDLE hinst)
     sz = 0;
     r = MsiGetSourcePathA(hinst, "TARGETDIR", NULL, &sz);
     ok(hinst, !r, "got %u\n", r);
-    ok(hinst, sz == srcsz * 2, "got size %u\n", sz);
+    ok(hinst, sz == srcsz * 2, "got size %lu\n", sz);
 
     sz = 0;
     strcpy(buffer,"q");
     r = MsiGetSourcePathA(hinst, "TARGETDIR", buffer, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !strcmp(buffer, "q"), "got \"%s\"\n", buffer);
-    ok(hinst, sz == srcsz * 2, "got size %u\n", sz);
+    ok(hinst, sz == srcsz * 2, "got size %lu\n", sz);
 
     sz = 1;
     strcpy(buffer,"x");
     r = MsiGetSourcePathA(hinst, "TARGETDIR", buffer, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !buffer[0], "got \"%s\"\n", buffer);
-    ok(hinst, sz == srcsz * 2, "got size %u\n", sz);
+    ok(hinst, sz == srcsz * 2, "got size %lu\n", sz);
 
     sz = srcsz;
     strcpy(buffer,"x");
     r = MsiGetSourcePathA(hinst, "TARGETDIR", buffer, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
-    ok(hinst, strlen(buffer) == srcsz - 1, "wrong buffer length %d\n", strlen(buffer));
-    ok(hinst, sz == srcsz * 2, "got size %u\n", sz);
+    ok(hinst, strlen(buffer) == srcsz - 1, "wrong buffer length %Iu\n", strlen(buffer));
+    ok(hinst, sz == srcsz * 2, "got size %lu\n", sz);
 
     sz = srcsz + 1;
     strcpy(buffer,"x");
     r = MsiGetSourcePathA(hinst, "TARGETDIR", buffer, &sz);
     ok(hinst, !r, "got %u\n", r);
-    ok(hinst, strlen(buffer) == srcsz, "wrong buffer length %d\n", strlen(buffer));
-    ok(hinst, sz == srcsz, "got size %u\n", sz);
+    ok(hinst, strlen(buffer) == srcsz, "wrong buffer length %Iu\n", strlen(buffer));
+    ok(hinst, sz == srcsz, "got size %lu\n", sz);
 
     sz = 0;
     r = MsiGetSourcePathW(hinst, L"TARGETDIR", NULL, &sz);
     ok(hinst, !r, "got %u\n", r);
-    ok(hinst, sz == srcsz, "got size %u\n", sz);
+    ok(hinst, sz == srcsz, "got size %lu\n", sz);
 
     sz = 0;
     bufferW[0] = 'q';
     r = MsiGetSourcePathW(hinst, L"TARGETDIR", bufferW, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, bufferW[0] == 'q', "got %s\n", dbgstr_w(bufferW));
-    ok(hinst, sz == srcsz, "got size %u\n", sz);
+    ok(hinst, sz == srcsz, "got size %lu\n", sz);
 
     sz = 1;
     bufferW[0] = 'q';
     r = MsiGetSourcePathW(hinst, L"TARGETDIR", bufferW, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !bufferW[0], "got %s\n", dbgstr_w(bufferW));
-    ok(hinst, sz == srcsz, "got size %u\n", sz);
+    ok(hinst, sz == srcsz, "got size %lu\n", sz);
 
     sz = srcsz;
     bufferW[0] = 'q';
     r = MsiGetSourcePathW(hinst, L"TARGETDIR", bufferW, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, lstrlenW(bufferW) == srcsz - 1, "wrong buffer length %d\n", lstrlenW(bufferW));
-    ok(hinst, sz == srcsz, "got size %u\n", sz);
+    ok(hinst, sz == srcsz, "got size %lu\n", sz);
 
     sz = srcsz + 1;
     bufferW[0] = 'q';
     r = MsiGetSourcePathW(hinst, L"TARGETDIR", bufferW, &sz);
     ok(hinst, !r, "got %u\n", r);
     ok(hinst, lstrlenW(bufferW) == srcsz, "wrong buffer length %d\n", lstrlenW(bufferW));
-    ok(hinst, sz == srcsz, "got size %u\n", sz);
+    ok(hinst, sz == srcsz, "got size %lu\n", sz);
 }
 
 static void test_misc(MSIHANDLE hinst)
@@ -886,35 +896,35 @@ static void test_format_record(MSIHANDLE hinst)
     sz = 0;
     r = MsiFormatRecordA(hinst, rec, NULL, &sz);
     ok(hinst, !r, "got %u\n", r);
-    ok(hinst, sz == 14, "got size %u\n", sz);
+    ok(hinst, sz == 14, "got size %lu\n", sz);
 
     sz = 0;
     strcpy(buffer,"q");
     r = MsiFormatRecordA(hinst, rec, buffer, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !strcmp(buffer, "q"), "got \"%s\"\n", buffer);
-    ok(hinst, sz == 14, "got size %u\n", sz);
+    ok(hinst, sz == 14, "got size %lu\n", sz);
 
     sz = 1;
     strcpy(buffer,"x");
     r = MsiFormatRecordA(hinst, rec, buffer, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !buffer[0], "got \"%s\"\n", buffer);
-    ok(hinst, sz == 14, "got size %u\n", sz);
+    ok(hinst, sz == 14, "got size %lu\n", sz);
 
     sz = 7;
     strcpy(buffer,"x");
     r = MsiFormatRecordA(hinst, rec, buffer, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !strcmp(buffer, "foo 12"), "got \"%s\"\n", buffer);
-    ok(hinst, sz == 14, "got size %u\n", sz);
+    ok(hinst, sz == 14, "got size %lu\n", sz);
 
     sz = 8;
     strcpy(buffer,"x");
     r = MsiFormatRecordA(hinst, rec, buffer, &sz);
     ok(hinst, !r, "got %u\n", r);
     ok(hinst, !strcmp(buffer, "foo 123"), "got \"%s\"\n", buffer);
-    ok(hinst, sz == 7, "got size %u\n", sz);
+    ok(hinst, sz == 7, "got size %lu\n", sz);
 
     r = MsiFormatRecordW(hinst, rec, NULL, NULL);
     ok(hinst, !r, "got %u\n", r);
@@ -925,35 +935,35 @@ static void test_format_record(MSIHANDLE hinst)
     sz = 0;
     r = MsiFormatRecordW(hinst, rec, NULL, &sz);
     ok(hinst, !r, "got %u\n", r);
-    ok(hinst, sz == 7, "got size %u\n", sz);
+    ok(hinst, sz == 7, "got size %lu\n", sz);
 
     sz = 0;
     bufferW[0] = 'q';
     r = MsiFormatRecordW(hinst, rec, bufferW, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, bufferW[0] == 'q', "got %s\n", dbgstr_w(bufferW));
-    ok(hinst, sz == 7, "got size %u\n", sz);
+    ok(hinst, sz == 7, "got size %lu\n", sz);
 
     sz = 1;
     bufferW[0] = 'q';
     r = MsiFormatRecordW(hinst, rec, bufferW, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !bufferW[0], "got %s\n", dbgstr_w(bufferW));
-    ok(hinst, sz == 7, "got size %u\n", sz);
+    ok(hinst, sz == 7, "got size %lu\n", sz);
 
     sz = 7;
     bufferW[0] = 'q';
     r = MsiFormatRecordW(hinst, rec, bufferW, &sz);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !lstrcmpW(bufferW, L"foo 12"), "got %s\n", dbgstr_w(bufferW));
-    ok(hinst, sz == 7, "got size %u\n", sz);
+    ok(hinst, sz == 7, "got size %lu\n", sz);
 
     sz = 8;
     bufferW[0] = 'q';
     r = MsiFormatRecordW(hinst, rec, bufferW, &sz);
     ok(hinst, !r, "got %u\n", r);
     ok(hinst, !lstrcmpW(bufferW, L"foo 123"), "got %s\n", dbgstr_w(bufferW));
-    ok(hinst, sz == 7, "got size %u\n", sz);
+    ok(hinst, sz == 7, "got size %lu\n", sz);
 
     /* check that properties work */
     MsiSetPropertyA(hinst, "fmtprop", "foobar");
@@ -962,7 +972,7 @@ static void test_format_record(MSIHANDLE hinst)
     r = MsiFormatRecordA(hinst, rec, buffer, &sz);
     ok(hinst, !r, "got %u\n", r);
     ok(hinst, !strcmp(buffer, "foobar"), "got \"%s\"\n", buffer);
-    ok(hinst, sz == 6, "got size %u\n", sz);
+    ok(hinst, sz == 6, "got size %lu\n", sz);
 
     MsiCloseHandle(rec);
 }
@@ -993,7 +1003,7 @@ static void test_costs(MSIHANDLE hinst)
     sz = cost = temp = 0xdead;
     r = MsiEnumComponentCostsA(hinst, "One", 0, INSTALLSTATE_LOCAL, NULL, &sz, &cost, &temp);
     ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
-    ok(hinst, sz == 0xdead, "got size %d\n", sz);
+    ok(hinst, sz == 0xdead, "got size %lu\n", sz);
     ok(hinst, cost == 0xdead, "got cost %d\n", cost);
     ok(hinst, temp == 0xdead, "got temp %d\n", temp);
 
@@ -1006,20 +1016,20 @@ static void test_costs(MSIHANDLE hinst)
     sz = temp = 0xdead;
     r = MsiEnumComponentCostsA(hinst, "One", 0, INSTALLSTATE_LOCAL, buffer, &sz, NULL, &temp);
     ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
-    ok(hinst, sz == 0xdead, "got size %d\n", sz);
+    ok(hinst, sz == 0xdead, "got size %lu\n", sz);
     ok(hinst, temp == 0xdead, "got temp %d\n", temp);
 
     sz = cost = 0xdead;
     r = MsiEnumComponentCostsA(hinst, "One", 0, INSTALLSTATE_LOCAL, buffer, &sz, &cost, NULL);
     ok(hinst, r == ERROR_INVALID_PARAMETER, "got %u\n", r);
-    ok(hinst, sz == 0xdead, "got size %d\n", sz);
+    ok(hinst, sz == 0xdead, "got size %lu\n", sz);
     ok(hinst, cost == 0xdead, "got cost %d\n", cost);
 
     cost = temp = 0xdead;
     sz = sizeof(buffer);
     r = MsiEnumComponentCostsA(hinst, NULL, 0, INSTALLSTATE_LOCAL, buffer, &sz, &cost, &temp);
     ok(hinst, !r, "got %u\n", r);
-    ok(hinst, sz == 2, "got size %u\n", sz);
+    ok(hinst, sz == 2, "got size %lu\n", sz);
     ok(hinst, !strcmp(buffer, "C:"), "got '%s'\n", buffer);
     ok(hinst, !cost, "got cost %d\n", cost);
     ok(hinst, temp && temp != 0xdead, "got temp %d\n", temp);
@@ -1028,7 +1038,7 @@ static void test_costs(MSIHANDLE hinst)
     sz = sizeof(buffer);
     r = MsiEnumComponentCostsA(hinst, "One", 0, INSTALLSTATE_LOCAL, buffer, &sz, &cost, &temp);
     ok(hinst, !r, "got %u\n", r);
-    ok(hinst, sz == 2, "got size %u\n", sz);
+    ok(hinst, sz == 2, "got size %lu\n", sz);
     ok(hinst, !strcmp(buffer, "C:"), "got '%s'\n", buffer);
     ok(hinst, cost == 8, "got cost %d\n", cost);
     ok(hinst, !temp, "got temp %d\n", temp);
@@ -1041,7 +1051,7 @@ static void test_costs(MSIHANDLE hinst)
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !strcmp(buffer, "q"), "got \"%s\"\n", buffer);
     todo_wine
-    ok(hinst, sz == 4, "got size %u\n", sz);
+    ok(hinst, sz == 4, "got size %lu\n", sz);
     ok(hinst, cost == 8, "got cost %d\n", cost);
     ok(hinst, !temp, "got temp %d\n", temp);
 
@@ -1051,7 +1061,7 @@ static void test_costs(MSIHANDLE hinst)
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     todo_wine {
     ok(hinst, !buffer[0], "got \"%s\"\n", buffer);
-    ok(hinst, sz == 4, "got size %u\n", sz);
+    ok(hinst, sz == 4, "got size %lu\n", sz);
     }
 
     sz = 2;
@@ -1060,7 +1070,7 @@ static void test_costs(MSIHANDLE hinst)
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     todo_wine {
     ok(hinst, !strcmp(buffer, "C"), "got \"%s\"\n", buffer);
-    ok(hinst, sz == 4, "got size %u\n", sz);
+    ok(hinst, sz == 4, "got size %lu\n", sz);
     }
 
     sz = 3;
@@ -1068,35 +1078,35 @@ static void test_costs(MSIHANDLE hinst)
     r = MsiEnumComponentCostsA(hinst, "One", 0, INSTALLSTATE_LOCAL, buffer, &sz, &cost, &temp);
     ok(hinst, !r, "got %u\n", r);
     ok(hinst, !strcmp(buffer, "C:"), "got \"%s\"\n", buffer);
-    ok(hinst, sz == 2, "got size %u\n", sz);
+    ok(hinst, sz == 2, "got size %lu\n", sz);
 
     sz = 0;
     bufferW[0] = 'q';
     r = MsiEnumComponentCostsW(hinst, L"One", 0, INSTALLSTATE_LOCAL, bufferW, &sz, &cost, &temp);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, bufferW[0] == 'q', "got %s\n", dbgstr_w(bufferW));
-    ok(hinst, sz == 2, "got size %u\n", sz);
+    ok(hinst, sz == 2, "got size %lu\n", sz);
 
     sz = 1;
     bufferW[0] = 'q';
     r = MsiEnumComponentCostsW(hinst, L"One", 0, INSTALLSTATE_LOCAL, bufferW, &sz, &cost, &temp);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !bufferW[0], "got %s\n", dbgstr_w(bufferW));
-    ok(hinst, sz == 2, "got size %u\n", sz);
+    ok(hinst, sz == 2, "got size %lu\n", sz);
 
     sz = 2;
     bufferW[0] = 'q';
     r = MsiEnumComponentCostsW(hinst, L"One", 0, INSTALLSTATE_LOCAL, bufferW, &sz, &cost, &temp);
     ok(hinst, r == ERROR_MORE_DATA, "got %u\n", r);
     ok(hinst, !lstrcmpW(bufferW, L"C"), "got %s\n", dbgstr_w(bufferW));
-    ok(hinst, sz == 2, "got size %u\n", sz);
+    ok(hinst, sz == 2, "got size %lu\n", sz);
 
     sz = 3;
     bufferW[0] = 'q';
     r = MsiEnumComponentCostsW(hinst, L"One", 0, INSTALLSTATE_LOCAL, bufferW, &sz, &cost, &temp);
     ok(hinst, !r, "got %u\n", r);
     ok(hinst, !lstrcmpW(bufferW, L"C:"), "got %s\n", dbgstr_w(bufferW));
-    ok(hinst, sz == 2, "got size %u\n", sz);
+    ok(hinst, sz == 2, "got size %lu\n", sz);
 }
 
 static void test_invalid_functions(MSIHANDLE hinst)
@@ -1118,9 +1128,7 @@ static void test_invalid_functions(MSIHANDLE hinst)
     ok(hinst, r == ERROR_INVALID_HANDLE, "got %u\n", r);
 
     r = MsiCreateTransformSummaryInfoA(db, db, "bogus.mst", 0, 0);
-    todo_wine ok(hinst, r == ERROR_INSTALL_PACKAGE_OPEN_FAILED ||
-                        r == ERROR_INSTALL_PACKAGE_INVALID /* winxp */,
-                 "got %u\n", r);
+    todo_wine ok(hinst, r == ERROR_INSTALL_PACKAGE_OPEN_FAILED, "got %u\n", r);
 
     GetCurrentDirectoryA(sizeof(path), path);
     r = MsiDatabaseExportA(db, "Test", path, "bogus.idt");
@@ -1168,7 +1176,7 @@ static void test_view_get_error(MSIHANDLE hinst)
     sz = 0;
     err = MsiViewGetErrorA(0, NULL, &sz);
     todo_wine ok(hinst, err == MSIDBERROR_FUNCTIONERROR, "got %d\n", err);
-    ok(hinst, sz == 0, "got size %u\n", sz);
+    ok(hinst, sz == 0, "got size %lu\n", sz);
 
     err = MsiViewGetErrorA(view, NULL, NULL);
     ok(hinst, err == MSIDBERROR_INVALIDARG, "got %d\n", err);
@@ -1176,21 +1184,21 @@ static void test_view_get_error(MSIHANDLE hinst)
     sz = 0;
     err = MsiViewGetErrorA(view, NULL, &sz);
     ok(hinst, err == MSIDBERROR_FUNCTIONERROR, "got %d\n", err);
-    ok(hinst, sz == 0, "got size %u\n", sz);
+    ok(hinst, sz == 0, "got size %lu\n", sz);
 
     sz = 0;
     strcpy(buffer, "x");
     err = MsiViewGetErrorA(view, buffer, &sz);
     ok(hinst, err == MSIDBERROR_FUNCTIONERROR, "got %d\n", err);
     ok(hinst, !strcmp(buffer, "x"), "got \"%s\"\n", buffer);
-    ok(hinst, sz == 0, "got size %u\n", sz);
+    ok(hinst, sz == 0, "got size %lu\n", sz);
 
     sz = 1;
     strcpy(buffer, "x");
     err = MsiViewGetErrorA(view, buffer, &sz);
     ok(hinst, err == MSIDBERROR_NOERROR, "got %d\n", err);
     ok(hinst, !buffer[0], "got \"%s\"\n", buffer);
-    ok(hinst, sz == 0, "got size %u\n", sz);
+    ok(hinst, sz == 0, "got size %lu\n", sz);
 
     rec = MsiCreateRecord(2);
     MsiRecordSetInteger(rec, 1, 1);
@@ -1203,14 +1211,14 @@ static void test_view_get_error(MSIHANDLE hinst)
     err = MsiViewGetErrorA(view, buffer, &sz);
     ok(hinst, err == MSIDBERROR_DUPLICATEKEY, "got %d\n", err);
     ok(hinst, !strcmp(buffer, "A"), "got \"%s\"\n", buffer);
-    ok(hinst, sz == 1, "got size %u\n", sz);
+    ok(hinst, sz == 1, "got size %lu\n", sz);
 
     sz = 2;
     strcpy(buffer, "x");
     err = MsiViewGetErrorA(view, buffer, &sz);
     todo_wine ok(hinst, err == MSIDBERROR_NOERROR, "got %d\n", err);
     todo_wine ok(hinst, !buffer[0], "got \"%s\"\n", buffer);
-    todo_wine ok(hinst, sz == 0, "got size %u\n", sz);
+    todo_wine ok(hinst, sz == 0, "got size %lu\n", sz);
 
     r = MsiViewModify(view, MSIMODIFY_VALIDATE_NEW, rec);
     ok(hinst, r == ERROR_INVALID_DATA, "got %u\n", r);
@@ -1220,14 +1228,14 @@ static void test_view_get_error(MSIHANDLE hinst)
     err = MsiViewGetErrorA(view, buffer, &sz);
     ok(hinst, err == MSIDBERROR_MOREDATA, "got %d\n", err);
     ok(hinst, !buffer[0], "got \"%s\"\n", buffer);
-    ok(hinst, sz == 1, "got size %u\n", sz);
+    ok(hinst, sz == 1, "got size %lu\n", sz);
 
     sz = 1;
     strcpy(buffer, "x");
     err = MsiViewGetErrorA(view, buffer, &sz);
     todo_wine ok(hinst, err == MSIDBERROR_NOERROR, "got %d\n", err);
     ok(hinst, !buffer[0], "got \"%s\"\n", buffer);
-    todo_wine ok(hinst, sz == 0, "got size %u\n", sz);
+    todo_wine ok(hinst, sz == 0, "got size %lu\n", sz);
 
     r = MsiViewModify(view, MSIMODIFY_VALIDATE_NEW, rec);
     ok(hinst, r == ERROR_INVALID_DATA, "got %u\n", r);
@@ -1237,14 +1245,14 @@ static void test_view_get_error(MSIHANDLE hinst)
     err = MsiViewGetErrorA(view, buffer, &sz);
     ok(hinst, err == MSIDBERROR_FUNCTIONERROR, "got %d\n", err);
     ok(hinst, !strcmp(buffer, "x"), "got \"%s\"\n", buffer);
-    ok(hinst, sz == 0, "got size %u\n", sz);
+    ok(hinst, sz == 0, "got size %lu\n", sz);
 
     sz = 0;
     strcpy(buffer, "x");
     err = MsiViewGetErrorA(view, buffer, &sz);
     ok(hinst, err == MSIDBERROR_FUNCTIONERROR, "got %d\n", err);
     ok(hinst, !strcmp(buffer, "x"), "got \"%s\"\n", buffer);
-    ok(hinst, sz == 0, "got size %u\n", sz);
+    ok(hinst, sz == 0, "got size %lu\n", sz);
 
     MsiCloseHandle(rec);
     MsiCloseHandle(view);
@@ -1260,13 +1268,13 @@ UINT WINAPI main_test(MSIHANDLE hinst)
 
     /* Test for an MTA apartment */
     hr = CoCreateInstance(&CLSID_XMLDocument, NULL, CLSCTX_INPROC_SERVER, &IID_IUnknown, (void **)&unk);
-    ok(hinst, hr == S_OK, "CoCreateInstance failed with %08x\n", hr);
+    ok(hinst, hr == S_OK, "CoCreateInstance failed with %08lx\n", hr);
 
     if (unk) IUnknown_Release(unk);
 
     /* but ours is uninitialized */
     hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
-    ok(hinst, hr == S_OK, "got %#x\n", hr);
+    ok(hinst, hr == S_OK, "got %#lx\n", hr);
     CoUninitialize();
 
     test_props(hinst);
@@ -1298,7 +1306,7 @@ static void append_file(MSIHANDLE hinst, const char *filename, const char *text)
 {
     DWORD size;
     HANDLE file = CreateFileA(filename, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-    ok(hinst, file != INVALID_HANDLE_VALUE, "CreateFile failed, error %u\n", GetLastError());
+    ok(hinst, file != INVALID_HANDLE_VALUE, "CreateFile failed, error %lu\n", GetLastError());
 
     SetFilePointer(file, 0, NULL, FILE_END);
     WriteFile(file, text, strlen(text), &size, NULL);
@@ -1376,7 +1384,7 @@ UINT WINAPI process2(MSIHANDLE hinst)
 {
     char env[2] = {0};
     DWORD r = GetEnvironmentVariableA("MSI_PROCESS_TEST", env, sizeof(env));
-    ok(hinst, r == 1, "got %d, error %u\n", r, GetLastError());
+    ok(hinst, r == 1, "got %lu, error %lu\n", r, GetLastError());
     ok(hinst, !strcmp(env, "1"), "got %s\n", env);
     ok(hinst, !global_state, "got global_state %d\n", global_state);
     return ERROR_SUCCESS;
@@ -1461,7 +1469,7 @@ UINT WINAPI sds_present(MSIHANDLE hinst)
     SC_HANDLE manager, service;
     manager = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
     service = OpenServiceA(manager, "TestService3", GENERIC_ALL);
-    ok(hinst, !!service, "service absent: %u\n", GetLastError());
+    ok(hinst, !!service, "service absent: %lu\n", GetLastError());
     CloseServiceHandle(service);
     CloseServiceHandle(manager);
     return ERROR_SUCCESS;
@@ -1483,7 +1491,7 @@ UINT WINAPI sis_present(MSIHANDLE hinst)
     SC_HANDLE manager, service;
     manager = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
     service = OpenServiceA(manager, "TestService", GENERIC_ALL);
-    ok(hinst, !!service, "service absent: %u\n", GetLastError());
+    ok(hinst, !!service, "service absent: %lu\n", GetLastError());
     CloseServiceHandle(service);
     CloseServiceHandle(manager);
     return ERROR_SUCCESS;
@@ -1509,8 +1517,8 @@ UINT WINAPI sss_started(MSIHANDLE hinst)
     manager = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
     service = OpenServiceA(manager, "Spooler", SC_MANAGER_ALL_ACCESS);
     ret = QueryServiceStatus(service, &status);
-    ok(hinst, ret, "QueryServiceStatus failed: %u\n", GetLastError());
-    ok(hinst, status.dwCurrentState == SERVICE_RUNNING, "got %u\n", status.dwCurrentState);
+    ok(hinst, ret, "QueryServiceStatus failed: %lu\n", GetLastError());
+    ok(hinst, status.dwCurrentState == SERVICE_RUNNING, "got %lu\n", status.dwCurrentState);
 
     CloseServiceHandle(service);
     CloseServiceHandle(manager);
@@ -1526,8 +1534,8 @@ UINT WINAPI sss_stopped(MSIHANDLE hinst)
     manager = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
     service = OpenServiceA(manager, "Spooler", SC_MANAGER_ALL_ACCESS);
     ret = QueryServiceStatus(service, &status);
-    ok(hinst, ret, "QueryServiceStatus failed: %u\n", GetLastError());
-    ok(hinst, status.dwCurrentState == SERVICE_STOPPED, "got %u\n", status.dwCurrentState);
+    ok(hinst, ret, "QueryServiceStatus failed: %lu\n", GetLastError());
+    ok(hinst, status.dwCurrentState == SERVICE_STOPPED, "got %lu\n", status.dwCurrentState);
 
     CloseServiceHandle(service);
     CloseServiceHandle(manager);
@@ -1622,12 +1630,12 @@ static void check_reg_str(MSIHANDLE hinst, HKEY key, const char *name, const cha
     res = RegQueryValueExA(key, name, NULL, NULL, (BYTE *)value, &sz);
     if (expect)
     {
-        ok(hinst, !res, "failed to get value \"%s\": %d\n", name, res);
+        ok(hinst, !res, "failed to get value \"%s\": %ld\n", name, res);
         ok(hinst, !strcmp(value, expect), "\"%s\": expected \"%s\", got \"%s\"\n",
             name, expect, value);
     }
     else
-        ok(hinst, res == ERROR_FILE_NOT_FOUND, "\"%s\": expected missing, got %u\n",
+        ok(hinst, res == ERROR_FILE_NOT_FOUND, "\"%s\": expected missing, got %ld\n",
             name, res);
 }
 
@@ -1641,7 +1649,7 @@ UINT WINAPI pa_present(MSIHANDLE hinst)
     LONG res;
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, path_dotnet, &key);
-    ok(hinst, !res, "got %d\n", res);
+    ok(hinst, !res, "got %ld\n", res);
     check_reg_str(hinst, key, name_dotnet, "rcHQPHq?CA@Uv-XqMI1e>Z'q,T*76M@=YEg6My?~]");
     RegCloseKey(key);
 
@@ -1654,7 +1662,7 @@ UINT WINAPI pa_absent(MSIHANDLE hinst)
     LONG res;
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, path_dotnet, &key);
-    ok(hinst, !res || res == ERROR_FILE_NOT_FOUND, "got %d\n", res);
+    ok(hinst, !res || res == ERROR_FILE_NOT_FOUND, "got %ld\n", res);
     if (!res)
     {
         check_reg_str(hinst, key, name_dotnet, NULL);
@@ -1702,9 +1710,9 @@ UINT WINAPI pub_present(MSIHANDLE hinst)
     LONG res;
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, pub_key, &key);
-    ok(hinst, !res, "got %u\n", res);
+    ok(hinst, !res, "got %ld\n", res);
     res = RegQueryValueExA(key, "english.txt", NULL, NULL, NULL, NULL);
-    ok(hinst, !res, "got %u\n", res);
+    ok(hinst, !res, "got %ld\n", res);
     RegCloseKey(key);
     return ERROR_SUCCESS;
 }
@@ -1715,7 +1723,7 @@ UINT WINAPI pub_absent(MSIHANDLE hinst)
     LONG res;
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, pub_key, &key);
-    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %ld\n", res);
     return ERROR_SUCCESS;
 }
 
@@ -1729,13 +1737,13 @@ UINT WINAPI pf_present(MSIHANDLE hinst)
     LONG res;
 
     res = RegOpenKeyExA(HKEY_CLASSES_ROOT, pf_classkey, 0, KEY_READ | KEY_WOW64_64KEY, &key);
-    ok(hinst, !res, "got %u\n", res);
+    ok(hinst, !res, "got %ld\n", res);
     check_reg_str(hinst, key, "feature", "");
     check_reg_str(hinst, key, "montecristo", "");
     RegCloseKey(key);
 
     res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, pf_userkey, 0, KEY_READ | KEY_WOW64_64KEY, &key);
-    ok(hinst, !res, "got %u\n", res);
+    ok(hinst, !res, "got %ld\n", res);
     check_reg_str(hinst, key, "feature", "VGtfp^p+,?82@JU1j_KE");
     check_reg_str(hinst, key, "montecristo", "VGtfp^p+,?82@JU1j_KE");
     RegCloseKey(key);
@@ -1749,10 +1757,10 @@ UINT WINAPI pf_absent(MSIHANDLE hinst)
     LONG res;
 
     res = RegOpenKeyExA(HKEY_CLASSES_ROOT, pf_classkey, 0, KEY_READ | KEY_WOW64_64KEY, &key);
-    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %ld\n", res);
 
     res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, pf_userkey, 0, KEY_READ | KEY_WOW64_64KEY, &key);
-    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %ld\n", res);
 
     return ERROR_SUCCESS;
 }
@@ -1765,7 +1773,7 @@ UINT WINAPI pp_present(MSIHANDLE hinst)
     LONG res;
 
     res = RegOpenKeyExA(HKEY_CLASSES_ROOT, pp_prodkey, 0, KEY_READ | KEY_WOW64_64KEY, &key);
-    ok(hinst, !res, "got %u\n", res);
+    ok(hinst, !res, "got %ld\n", res);
     check_reg_str(hinst, key, "ProductName", "MSITEST");
     check_reg_str(hinst, key, "PackageCode", "AC75740029052C94DA02821EECD05F2F");
     check_reg_str(hinst, key, "Clients", ":");
@@ -1780,7 +1788,7 @@ UINT WINAPI pp_absent(MSIHANDLE hinst)
     LONG res;
 
     res = RegOpenKeyExA(HKEY_CLASSES_ROOT, pp_prodkey, 0, KEY_READ | KEY_WOW64_64KEY, &key);
-    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %ld\n", res);
 
     return ERROR_SUCCESS;
 }
@@ -1792,15 +1800,15 @@ UINT WINAPI rci_present(MSIHANDLE hinst)
 
     res = RegOpenKeyExA(HKEY_CLASSES_ROOT, "CLSID\\{110913E7-86D1-4BF3-9922-BA103FCDDDFA}",
         0, KEY_READ | KEY_WOW64_32KEY, &key);
-    ok(hinst, !res, "got %u\n", res);
+    ok(hinst, !res, "got %ld\n", res);
     RegCloseKey(key);
 
     res = RegOpenKeyA(HKEY_CLASSES_ROOT, "FileType\\{110913E7-86D1-4BF3-9922-BA103FCDDDFA}", &key);
-    ok(hinst, !res, "got %u\n", res);
+    ok(hinst, !res, "got %ld\n", res);
     RegCloseKey(key);
 
     res = RegOpenKeyA(HKEY_CLASSES_ROOT, "AppID\\{CFCC3B38-E683-497D-9AB4-CB40AAFE307F}", &key);
-    ok(hinst, !res, "got %u\n", res);
+    ok(hinst, !res, "got %ld\n", res);
     RegCloseKey(key);
 
     return ERROR_SUCCESS;
@@ -1813,13 +1821,13 @@ UINT WINAPI rci_absent(MSIHANDLE hinst)
 
     res = RegOpenKeyExA(HKEY_CLASSES_ROOT, "CLSID\\{110913E7-86D1-4BF3-9922-BA103FCDDDFA}",
         0, KEY_READ | KEY_WOW64_32KEY, &key);
-    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %ld\n", res);
 
     res = RegOpenKeyA(HKEY_CLASSES_ROOT, "FileType\\{110913E7-86D1-4BF3-9922-BA103FCDDDFA}", &key);
-    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %ld\n", res);
 
     res = RegOpenKeyA(HKEY_CLASSES_ROOT, "AppID\\{CFCC3B38-E683-497D-9AB4-CB40AAFE307F}", &key);
-    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %ld\n", res);
 
     return ERROR_SUCCESS;
 }
@@ -1830,11 +1838,11 @@ UINT WINAPI rei_present(MSIHANDLE hinst)
     LONG res;
 
     res = RegOpenKeyA(HKEY_CLASSES_ROOT, ".extension", &key);
-    ok(hinst, !res, "got %u\n", res);
+    ok(hinst, !res, "got %ld\n", res);
     RegCloseKey(key);
 
     res = RegOpenKeyA(HKEY_CLASSES_ROOT, "Prog.Id.1\\shell\\Open\\command", &key);
-    ok(hinst, !res, "got %u\n", res);
+    ok(hinst, !res, "got %ld\n", res);
     RegCloseKey(key);
 
     return ERROR_SUCCESS;
@@ -1846,10 +1854,10 @@ UINT WINAPI rei_absent(MSIHANDLE hinst)
     LONG res;
 
     res = RegOpenKeyA(HKEY_CLASSES_ROOT, ".extension", &key);
-    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %ld\n", res);
 
     res = RegOpenKeyA(HKEY_CLASSES_ROOT, "Prog.Id.1\\shell\\Open\\command", &key);
-    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %ld\n", res);
 
     return ERROR_SUCCESS;
 }
@@ -1862,9 +1870,9 @@ UINT WINAPI font_present(MSIHANDLE hinst)
     LONG res;
 
     res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, font_key, 0, KEY_QUERY_VALUE | KEY_WOW64_64KEY, &key);
-    ok(hinst, !res, "got %u\n", res);
+    ok(hinst, !res, "got %ld\n", res);
     res = RegQueryValueExA(key, "msi test font", NULL, NULL, NULL, NULL);
-    ok(hinst, !res, "got %u\n", res);
+    ok(hinst, !res, "got %ld\n", res);
     RegCloseKey(key);
 
     return ERROR_SUCCESS;
@@ -1876,7 +1884,7 @@ UINT WINAPI font_absent(MSIHANDLE hinst)
     LONG res;
 
     res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, font_key, 0, KEY_QUERY_VALUE | KEY_WOW64_64KEY, &key);
-    ok(hinst, !res, "got %u\n", res);
+    ok(hinst, !res, "got %ld\n", res);
     check_reg_str(hinst, key, "msi test font", NULL);
     RegCloseKey(key);
 
@@ -1889,7 +1897,7 @@ UINT WINAPI rmi_present(MSIHANDLE hinst)
     LONG res;
 
     res = RegOpenKeyA(HKEY_CLASSES_ROOT, "MIME\\Database\\Content Type\\mime/type", &key);
-    ok(hinst, !res, "got %u\n", res);
+    ok(hinst, !res, "got %ld\n", res);
 
     return ERROR_SUCCESS;
 }
@@ -1900,7 +1908,7 @@ UINT WINAPI rmi_absent(MSIHANDLE hinst)
     LONG res;
 
     res = RegOpenKeyA(HKEY_CLASSES_ROOT, "MIME\\Database\\Content Type\\mime/type", &key);
-    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %ld\n", res);
 
     return ERROR_SUCCESS;
 }
@@ -1914,7 +1922,7 @@ UINT WINAPI rp_present(MSIHANDLE hinst)
     LONG res;
 
     res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, rp_key, 0, KEY_READ | KEY_WOW64_32KEY, &key);
-    ok(hinst, !res, "got %u\n", res);
+    ok(hinst, !res, "got %ld\n", res);
     check_reg_str(hinst, key, "DisplayName", "MSITEST");
     RegCloseKey(key);
 
@@ -1927,7 +1935,7 @@ UINT WINAPI rp_absent(MSIHANDLE hinst)
     LONG res;
 
     res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, rp_key, 0, KEY_READ | KEY_WOW64_32KEY, &key);
-    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %ld\n", res);
 
     return ERROR_SUCCESS;
 }
@@ -1939,19 +1947,19 @@ UINT WINAPI rpi_present(MSIHANDLE hinst)
 
     res = RegOpenKeyExA(HKEY_CLASSES_ROOT, "CLSID\\{110913E7-86D1-4BF3-9922-BA103FCDDDFA}",
         0, KEY_READ | KEY_WOW64_32KEY, &key);
-    ok(hinst, !res, "got %u\n", res);
+    ok(hinst, !res, "got %ld\n", res);
     RegCloseKey(key);
 
     res = RegOpenKeyA(HKEY_CLASSES_ROOT, "Winetest.Class.1", &key);
-    ok(hinst, !res, "got %u\n", res);
+    ok(hinst, !res, "got %ld\n", res);
     RegCloseKey(key);
 
     res = RegOpenKeyA(HKEY_CLASSES_ROOT, "Winetest.Class", &key);
-    ok(hinst, !res, "got %u\n", res);
+    ok(hinst, !res, "got %ld\n", res);
     RegCloseKey(key);
 
     res = RegOpenKeyA(HKEY_CLASSES_ROOT, "Winetest.Class.2", &key);
-    ok(hinst, !res, "got %u\n", res);
+    ok(hinst, !res, "got %ld\n", res);
     RegCloseKey(key);
 
     return ERROR_SUCCESS;
@@ -1964,16 +1972,16 @@ UINT WINAPI rpi_absent(MSIHANDLE hinst)
 
     res = RegOpenKeyExA(HKEY_CLASSES_ROOT, "CLSID\\{110913E7-86D1-4BF3-9922-BA103FCDDDFA}",
         0, KEY_READ | KEY_WOW64_32KEY, &key);
-    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %ld\n", res);
 
     res = RegOpenKeyA(HKEY_CLASSES_ROOT, "Winetest.Class.1", &key);
-    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %ld\n", res);
 
     res = RegOpenKeyA(HKEY_CLASSES_ROOT, "Winetest.Class", &key);
-    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %ld\n", res);
 
     res = RegOpenKeyA(HKEY_CLASSES_ROOT, "Winetest.Class.2", &key);
-    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %ld\n", res);
 
     return ERROR_SUCCESS;
 }
@@ -1987,7 +1995,7 @@ UINT WINAPI ru_present(MSIHANDLE hinst)
     LONG res;
 
     res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, ru_key, 0, KEY_READ | KEY_WOW64_64KEY, &key);
-    ok(hinst, !res, "got %u\n", res);
+    ok(hinst, !res, "got %ld\n", res);
     check_reg_str(hinst, key, "ProductID", "none");
     RegCloseKey(key);
 
@@ -2000,7 +2008,7 @@ UINT WINAPI ru_absent(MSIHANDLE hinst)
     LONG res;
 
     res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, ru_key, 0, KEY_READ | KEY_WOW64_64KEY, &key);
-    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %ld\n", res);
 
     return ERROR_SUCCESS;
 }
@@ -2014,7 +2022,7 @@ UINT WINAPI tl_present(MSIHANDLE hinst)
     HRESULT hr;
 
     hr = LoadRegTypeLib(&LIBID_register_test, 7, 1, 0, &tlb);
-    ok(hinst, hr == S_OK, "got %#x\n", hr);
+    ok(hinst, hr == S_OK, "got %#lx\n", hr);
     ITypeLib_Release(tlb);
 
     return ERROR_SUCCESS;
@@ -2026,7 +2034,7 @@ UINT WINAPI tl_absent(MSIHANDLE hinst)
     HRESULT hr;
 
     hr = LoadRegTypeLib(&LIBID_register_test, 7, 1, 0, &tlb);
-    ok(hinst, hr == TYPE_E_LIBNOTREGISTERED, "got %#x\n", hr);
+    ok(hinst, hr == TYPE_E_LIBNOTREGISTERED, "got %#lx\n", hr);
 
     return ERROR_SUCCESS;
 }
@@ -2037,7 +2045,7 @@ UINT WINAPI sr_present(MSIHANDLE hinst)
     LONG res;
 
     res = RegOpenKeyA(HKEY_CLASSES_ROOT, "selfreg_test", &key);
-    ok(hinst, !res, "got %u\n", res);
+    ok(hinst, !res, "got %ld\n", res);
     RegCloseKey(key);
 
     return ERROR_SUCCESS;
@@ -2049,7 +2057,7 @@ UINT WINAPI sr_absent(MSIHANDLE hinst)
     LONG res;
 
     res = RegOpenKeyA(HKEY_CLASSES_ROOT, "selfreg_test", &key);
-    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %u\n", res);
+    ok(hinst, res == ERROR_FILE_NOT_FOUND, "got %ld\n", res);
 
     return ERROR_SUCCESS;
 }
@@ -2060,7 +2068,7 @@ UINT WINAPI env_present(MSIHANDLE hinst)
     LONG res;
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, "Environment", &key);
-    ok(hinst, !res, "got %u\n", res);
+    ok(hinst, !res, "got %ld\n", res);
     check_reg_str(hinst, key, "MSITESTVAR3", "1");
     check_reg_str(hinst, key, "MSITESTVAR4", "1");
     RegCloseKey(key);
@@ -2074,7 +2082,7 @@ UINT WINAPI env_absent(MSIHANDLE hinst)
     LONG res;
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, "Environment", &key);
-    ok(hinst, !res, "got %u\n", res);
+    ok(hinst, !res, "got %ld\n", res);
     check_reg_str(hinst, key, "MSITESTVAR3", NULL);
     check_reg_str(hinst, key, "MSITESTVAR4", NULL);
     RegCloseKey(key);
@@ -2092,7 +2100,7 @@ UINT WINAPI ini_present(MSIHANDLE hinst)
     strcat(path, "\\msitest\\test.ini");
 
     len = GetPrivateProfileStringA("section1", "key1", NULL, buf, sizeof(buf), path);
-    ok(hinst, len == 6, "got %u\n", len);
+    ok(hinst, len == 6, "got %lu\n", len);
 
     return ERROR_SUCCESS;
 }
@@ -2107,7 +2115,7 @@ UINT WINAPI ini_absent(MSIHANDLE hinst)
     strcat(path, "\\msitest\\test.ini");
 
     len = GetPrivateProfileStringA("section1", "key1", NULL, buf, sizeof(buf), path);
-    ok(hinst, !len, "got %u\n", len);
+    ok(hinst, !len, "got %lu\n", len);
 
     return ERROR_SUCCESS;
 }
@@ -2118,7 +2126,7 @@ UINT WINAPI wrv_present(MSIHANDLE hinst)
     LONG res;
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, "msitest", &key);
-    ok(hinst, !res, "got %u\n", res);
+    ok(hinst, !res, "got %ld\n", res);
     check_reg_str(hinst, key, "sz", "string");
     RegCloseKey(key);
 
@@ -2131,7 +2139,7 @@ UINT WINAPI wrv_absent(MSIHANDLE hinst)
     LONG res;
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, "msitest", &key);
-    ok(hinst, !res, "got %u\n", res);
+    ok(hinst, !res, "got %ld\n", res);
     check_reg_str(hinst, key, "sz", NULL);
     RegCloseKey(key);
 

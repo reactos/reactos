@@ -49,7 +49,7 @@ static MSIAPPID *load_appid( MSIPACKAGE* package, MSIRECORD *row )
 
     /* fill in the data */
 
-    appid = msi_alloc_zero( sizeof(MSIAPPID) );
+    appid = calloc( 1, sizeof(MSIAPPID) );
     if (!appid)
         return NULL;
 
@@ -108,7 +108,7 @@ static MSIPROGID *load_progid( MSIPACKAGE* package, MSIRECORD *row )
 
     /* fill in the data */
 
-    progid = msi_alloc_zero( sizeof(MSIPROGID) );
+    progid = calloc( 1, sizeof(MSIPROGID) );
     if (!progid)
         return NULL;
 
@@ -137,9 +137,9 @@ static MSIPROGID *load_progid( MSIPACKAGE* package, MSIRECORD *row )
 
         FilePath = msi_build_icon_path(package, FileName);
 
-        progid->IconPath = msi_alloc( (lstrlenW(FilePath) + 10) * sizeof(WCHAR) );
+        progid->IconPath = malloc( (wcslen(FilePath) + 10) * sizeof(WCHAR) );
         swprintf( progid->IconPath, lstrlenW(FilePath) + 10, L"%s,%d", FilePath, icon_index );
-        msi_free(FilePath);
+        free(FilePath);
     }
     else
     {
@@ -203,7 +203,7 @@ static MSICLASS *load_class( MSIPACKAGE* package, MSIRECORD *row )
 
     /* fill in the data */
 
-    cls = msi_alloc_zero( sizeof(MSICLASS) );
+    cls = calloc( 1, sizeof(MSICLASS) );
     if (!cls)
         return NULL;
 
@@ -235,9 +235,9 @@ static MSICLASS *load_class( MSIPACKAGE* package, MSIRECORD *row )
 
         FilePath = msi_build_icon_path(package, FileName);
 
-        cls->IconPath = msi_alloc( (lstrlenW(FilePath) + 5) * sizeof(WCHAR) );
+        cls->IconPath = malloc( (wcslen(FilePath) + 5) * sizeof(WCHAR) );
         swprintf( cls->IconPath, lstrlenW(FilePath) + 5, L"%s,%d", FilePath, icon_index );
-        msi_free(FilePath);
+        free(FilePath);
     }
     else
     {
@@ -254,14 +254,14 @@ static MSICLASS *load_class( MSIPACKAGE* package, MSIRECORD *row )
             switch(i)
             {
                 case 1:
-                    cls->DefInprocHandler = strdupW(L"ole2.dll");
+                    cls->DefInprocHandler = wcsdup(L"ole2.dll");
                     break;
                 case 2:
-                    cls->DefInprocHandler32 = strdupW(L"ole32.dll");
+                    cls->DefInprocHandler32 = wcsdup(L"ole32.dll");
                     break;
                 case 3:
-                    cls->DefInprocHandler = strdupW(L"ole2.dll");
-                    cls->DefInprocHandler32 = strdupW(L"ole32.dll");
+                    cls->DefInprocHandler = wcsdup(L"ole2.dll");
+                    cls->DefInprocHandler32 = wcsdup(L"ole32.dll");
                     break;
             }
         }
@@ -324,7 +324,7 @@ static MSIMIME *load_mime( MSIPACKAGE* package, MSIRECORD *row )
 
     /* fill in the data */
 
-    mt = msi_alloc_zero( sizeof(MSIMIME) );
+    mt = calloc( 1, sizeof(MSIMIME) );
     if (!mt)
         return mt;
 
@@ -333,7 +333,7 @@ static MSIMIME *load_mime( MSIPACKAGE* package, MSIRECORD *row )
 
     extension = MSI_RecordGetString( row, 2 );
     mt->Extension = load_given_extension( package, extension );
-    mt->suffix = strdupW( extension );
+    mt->suffix = wcsdup( extension );
 
     mt->clsid = msi_dup_record_field( row, 3 );
     mt->Class = load_given_class( package, mt->clsid );
@@ -377,7 +377,7 @@ static MSIEXTENSION *load_extension( MSIPACKAGE* package, MSIRECORD *row )
 
     /* fill in the data */
 
-    ext = msi_alloc_zero( sizeof(MSIEXTENSION) );
+    ext = calloc( 1, sizeof(MSIEXTENSION) );
     if (!ext)
         return NULL;
 
@@ -454,7 +454,7 @@ static UINT iterate_load_verb(MSIRECORD *row, LPVOID param)
 
     /* fill in the data */
 
-    verb = msi_alloc_zero( sizeof(MSIVERB) );
+    verb = calloc( 1, sizeof(MSIVERB) );
     if (!verb)
         return ERROR_OUTOFMEMORY;
 
@@ -768,7 +768,7 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
         if (cls->Argument)
             size += lstrlenW(cls->Argument)+1;
 
-        argument = msi_alloc( size * sizeof(WCHAR) );
+        argument = malloc( size * sizeof(WCHAR) );
         lstrcpyW( argument, file->TargetPath );
 
         if (cls->Argument)
@@ -778,7 +778,7 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
         }
 
         msi_reg_set_val_str( hkey3, NULL, argument );
-        msi_free(argument);
+        free(argument);
 
         RegCloseKey(hkey3);
 
@@ -829,12 +829,12 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
                 ptr2 = wcschr(ptr,';');
                 if (ptr2)
                     *ptr2 = 0;
-                keyname = msi_alloc( (lstrlenW(L"FileType\\%s\\%d") + lstrlenW(cls->clsid) + 4) * sizeof(WCHAR));
+                keyname = malloc( sizeof(L"FileType\\%s\\%d") + (wcslen(cls->clsid) + 3) * sizeof(WCHAR) );
                 swprintf( keyname, lstrlenW(L"FileType\\%s\\%d") + lstrlenW(cls->clsid) + 4,
                           L"FileType\\%s\\%d", cls->clsid, index );
 
                 msi_reg_set_subkey_val( HKEY_CLASSES_ROOT, keyname, NULL, ptr );
-                msi_free(keyname);
+                free( keyname );
 
                 if (ptr2)
                     ptr = ptr2+1;
@@ -926,13 +926,13 @@ UINT ACTION_UnregisterClassInfo( MSIPACKAGE *package )
         }
         if (cls->FileTypeMask)
         {
-            filetype = msi_alloc( (lstrlenW( L"FileType\\" ) + lstrlenW( cls->clsid ) + 1) * sizeof(WCHAR) );
+            filetype = malloc( sizeof( L"FileType\\" ) + wcslen( cls->clsid ) * sizeof(WCHAR) );
             if (filetype)
             {
                 lstrcpyW( filetype, L"FileType\\" );
                 lstrcatW( filetype, cls->clsid );
                 res = RegDeleteTreeW( HKEY_CLASSES_ROOT, filetype );
-                msi_free( filetype );
+                free( filetype );
 
                 if (res != ERROR_SUCCESS)
                     WARN("failed to delete file type %ld\n", res);
@@ -1140,14 +1140,14 @@ static UINT register_verb(MSIPACKAGE *package, LPCWSTR progid,
         size += lstrlenW(verb->Argument);
      size += 4;
 
-     command = msi_alloc(size * sizeof (WCHAR));
+     command = malloc(size * sizeof(WCHAR));
      if (verb->Argument)
          swprintf(command, size, L"\"%s\" %s", component->FullKeypath, verb->Argument);
      else
          swprintf(command, size, L"\"%s\"", component->FullKeypath);
 
      msi_reg_set_val_str( key, NULL, command );
-     msi_free(command);
+     free(command);
 
      advertise = msi_create_component_advertise_string(package, component,
                                                        extension->Feature->Feature);
@@ -1157,7 +1157,7 @@ static UINT register_verb(MSIPACKAGE *package, LPCWSTR progid,
          size += lstrlenW(verb->Argument);
      size += 4;
 
-     command = msi_alloc_zero(size * sizeof (WCHAR));
+     command = calloc(size, sizeof(WCHAR));
 
      lstrcpyW(command,advertise);
      if (verb->Argument)
@@ -1169,15 +1169,15 @@ static UINT register_verb(MSIPACKAGE *package, LPCWSTR progid,
      msi_reg_set_val_multi_str( key, L"command", command );
 
      RegCloseKey(key);
-     msi_free(keyname);
-     msi_free(advertise);
-     msi_free(command);
+     free(keyname);
+     free(advertise);
+     free(command);
 
      if (verb->Command)
      {
         keyname = msi_build_directory_name( 3, progid, L"shell", verb->Verb );
         msi_reg_set_subkey_val( HKEY_CLASSES_ROOT, keyname, NULL, verb->Command );
-        msi_free(keyname);
+        free(keyname);
      }
 
      if (verb->Sequence != MSI_NULL_INTEGER)
@@ -1187,7 +1187,7 @@ static UINT register_verb(MSIPACKAGE *package, LPCWSTR progid,
             *Sequence = verb->Sequence;
             keyname = msi_build_directory_name( 2, progid, L"shell" );
             msi_reg_set_subkey_val( HKEY_CLASSES_ROOT, keyname, NULL, verb->Verb );
-            msi_free(keyname);
+            free(keyname);
         }
     }
     return ERROR_SUCCESS;
@@ -1248,13 +1248,13 @@ UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package)
 
         ext->action = INSTALLSTATE_LOCAL;
 
-        extension = msi_alloc( (lstrlenW( ext->Extension ) + 2) * sizeof(WCHAR) );
+        extension = malloc( (wcslen( ext->Extension ) + 2) * sizeof(WCHAR) );
         if (extension)
         {
             extension[0] = '.';
             lstrcpyW( extension + 1, ext->Extension );
             res = RegCreateKeyW( HKEY_CLASSES_ROOT, extension, &hkey );
-            msi_free( extension );
+            free( extension );
             if (res != ERROR_SUCCESS)
                 WARN("failed to create extension key %ld\n", res);
         }
@@ -1277,14 +1277,14 @@ UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package)
 
             msi_reg_set_val_str( hkey, NULL, progid );
 
-            newkey = msi_alloc( (lstrlenW(progid) + lstrlenW(L"\\ShellNew") + 1) * sizeof(WCHAR));
+            newkey = malloc( wcslen(progid) * sizeof(WCHAR) + sizeof(L"\\ShellNew") );
 
             lstrcpyW(newkey, progid);
             lstrcatW(newkey, L"\\ShellNew");
             RegCreateKeyW(hkey, newkey, &hkey2);
             RegCloseKey(hkey2);
 
-            msi_free(newkey);
+            free(newkey);
 
             /* do all the verbs */
             LIST_FOR_EACH_ENTRY( verb, &ext->verbs, MSIVERB, entry )
@@ -1347,13 +1347,13 @@ UINT ACTION_UnregisterExtensionInfo( MSIPACKAGE *package )
 
         ext->action = INSTALLSTATE_ABSENT;
 
-        extension = msi_alloc( (lstrlenW( ext->Extension ) + 2) * sizeof(WCHAR) );
+        extension = malloc( (wcslen( ext->Extension ) + 2) * sizeof(WCHAR) );
         if (extension)
         {
             extension[0] = '.';
             lstrcpyW( extension + 1, ext->Extension );
             res = RegDeleteTreeW( HKEY_CLASSES_ROOT, extension );
-            msi_free( extension );
+            free( extension );
             if (res != ERROR_SUCCESS)
                 WARN("failed to delete extension key %ld\n", res);
         }
@@ -1368,13 +1368,13 @@ UINT ACTION_UnregisterExtensionInfo( MSIPACKAGE *package )
             else
                 progid = ext->ProgIDText;
 
-            progid_shell = msi_alloc( (lstrlenW( progid ) + lstrlenW( L"\\shell" ) + 1) * sizeof(WCHAR) );
+            progid_shell = malloc( wcslen( progid ) * sizeof(WCHAR) + sizeof( L"\\shell" ) );
             if (progid_shell)
             {
                 lstrcpyW( progid_shell, progid );
                 lstrcatW( progid_shell, L"\\shell" );
                 res = RegDeleteTreeW( HKEY_CLASSES_ROOT, progid_shell );
-                msi_free( progid_shell );
+                free( progid_shell );
                 if (res != ERROR_SUCCESS)
                     WARN("failed to delete shell key %ld\n", res);
                 RegDeleteKeyW( HKEY_CLASSES_ROOT, progid );
@@ -1419,9 +1419,9 @@ UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package)
 
         TRACE("Registering MIME type %s\n", debugstr_w(mt->ContentType));
 
-        if (mt->Extension) extension = msi_alloc( (lstrlenW( mt->Extension->Extension ) + 2) * sizeof(WCHAR) );
-        key = msi_alloc( (lstrlenW( mt->ContentType ) +
-                          lstrlenW( L"MIME\\Database\\Content Type\\" ) + 1) * sizeof(WCHAR) );
+        if (mt->Extension) extension = malloc( (wcslen( mt->Extension->Extension ) + 2) * sizeof(WCHAR) );
+        key = malloc( sizeof( L"MIME\\Database\\Content Type\\" ) +
+                      wcslen( mt->ContentType ) * sizeof(WCHAR) );
 
         if (extension && key)
         {
@@ -1435,8 +1435,8 @@ UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package)
             if (mt->clsid)
                 msi_reg_set_subkey_val( HKEY_CLASSES_ROOT, key, L"CLSID", mt->clsid );
         }
-        msi_free( extension );
-        msi_free( key );
+        free( extension );
+        free( key );
 
         uirow = MSI_CreateRecord( 2 );
         MSI_RecordSetStringW( uirow, 1, mt->ContentType );
@@ -1474,8 +1474,8 @@ UINT ACTION_UnregisterMIMEInfo( MSIPACKAGE *package )
 
         TRACE("Unregistering MIME type %s\n", debugstr_w(mime->ContentType));
 
-        mime_key = msi_alloc( (lstrlenW( L"MIME\\Database\\Content Type\\" ) +
-                               lstrlenW( mime->ContentType ) + 1) * sizeof(WCHAR) );
+        mime_key = malloc( sizeof( L"MIME\\Database\\Content Type\\" ) +
+                           wcslen( mime->ContentType ) * sizeof(WCHAR) );
         if (mime_key)
         {
             lstrcpyW( mime_key, L"MIME\\Database\\Content Type\\" );
@@ -1483,7 +1483,7 @@ UINT ACTION_UnregisterMIMEInfo( MSIPACKAGE *package )
             res = RegDeleteKeyW( HKEY_CLASSES_ROOT, mime_key );
             if (res != ERROR_SUCCESS)
                 WARN("failed to delete MIME key %ld\n", res);
-            msi_free( mime_key );
+            free( mime_key );
         }
 
         uirow = MSI_CreateRecord( 2 );

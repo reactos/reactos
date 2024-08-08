@@ -50,18 +50,19 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 #endif
 
 /*
- * MsiActiveScriptSite - Our IActiveScriptSite implementation.
+ * struct script_site - Our IActiveScriptSite implementation.
  */
-typedef struct {
+struct script_site
+{
     IActiveScriptSite IActiveScriptSite_iface;
     IDispatch *installer;
     IDispatch *session;
     LONG ref;
-} MsiActiveScriptSite;
+};
 
-static inline MsiActiveScriptSite *impl_from_IActiveScriptSite( IActiveScriptSite *iface )
+static inline struct script_site *impl_from_IActiveScriptSite( IActiveScriptSite *iface )
 {
-    return CONTAINING_RECORD(iface, MsiActiveScriptSite, IActiveScriptSite_iface);
+    return CONTAINING_RECORD(iface, struct script_site, IActiveScriptSite_iface);
 }
 
 /*
@@ -69,7 +70,7 @@ static inline MsiActiveScriptSite *impl_from_IActiveScriptSite( IActiveScriptSit
  */
 static HRESULT WINAPI MsiActiveScriptSite_QueryInterface(IActiveScriptSite* iface, REFIID riid, void** obj)
 {
-    MsiActiveScriptSite *This = impl_from_IActiveScriptSite(iface);
+    struct script_site *This = impl_from_IActiveScriptSite(iface);
 
     TRACE("(%p)->(%s, %p)\n", This, debugstr_guid(riid), obj);
 
@@ -88,7 +89,7 @@ static HRESULT WINAPI MsiActiveScriptSite_QueryInterface(IActiveScriptSite* ifac
 
 static ULONG WINAPI MsiActiveScriptSite_AddRef(IActiveScriptSite* iface)
 {
-    MsiActiveScriptSite *This = impl_from_IActiveScriptSite(iface);
+    struct script_site *This = impl_from_IActiveScriptSite(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
     TRACE( "(%p)->(%lu)\n", This, ref );
     return ref;
@@ -96,27 +97,27 @@ static ULONG WINAPI MsiActiveScriptSite_AddRef(IActiveScriptSite* iface)
 
 static ULONG WINAPI MsiActiveScriptSite_Release(IActiveScriptSite* iface)
 {
-    MsiActiveScriptSite *This = impl_from_IActiveScriptSite(iface);
+    struct script_site *This = impl_from_IActiveScriptSite(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
     TRACE( "(%p)->(%lu)\n", This, ref );
 
     if (!ref)
-        msi_free(This);
+        free(This);
 
     return ref;
 }
 
 static HRESULT WINAPI MsiActiveScriptSite_GetLCID(IActiveScriptSite* iface, LCID* plcid)
 {
-    MsiActiveScriptSite *This = impl_from_IActiveScriptSite(iface);
+    struct script_site *This = impl_from_IActiveScriptSite(iface);
     TRACE("(%p)->(%p)\n", This, plcid);
     return E_NOTIMPL;  /* Script will use system-defined locale */
 }
 
 static HRESULT WINAPI MsiActiveScriptSite_GetItemInfo(IActiveScriptSite* iface, LPCOLESTR pstrName, DWORD dwReturnMask, IUnknown** ppiunkItem, ITypeInfo** ppti)
 {
-    MsiActiveScriptSite *This = impl_from_IActiveScriptSite(iface);
+    struct script_site *This = impl_from_IActiveScriptSite(iface);
 
     TRACE( "(%p)->(%p, %lu, %p, %p)\n", This, pstrName, dwReturnMask, ppiunkItem, ppti );
 
@@ -149,14 +150,14 @@ static HRESULT WINAPI MsiActiveScriptSite_GetItemInfo(IActiveScriptSite* iface, 
 
 static HRESULT WINAPI MsiActiveScriptSite_GetDocVersionString(IActiveScriptSite* iface, BSTR* pbstrVersion)
 {
-    MsiActiveScriptSite *This = impl_from_IActiveScriptSite(iface);
+    struct script_site *This = impl_from_IActiveScriptSite(iface);
     TRACE("(%p)->(%p)\n", This, pbstrVersion);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI MsiActiveScriptSite_OnScriptTerminate(IActiveScriptSite* iface, const VARIANT* pvarResult, const EXCEPINFO* pexcepinfo)
 {
-    MsiActiveScriptSite *This = impl_from_IActiveScriptSite(iface);
+    struct script_site *This = impl_from_IActiveScriptSite(iface);
     TRACE("(%p)->(%p, %p)\n", This, pvarResult, pexcepinfo);
     return S_OK;
 }
@@ -198,7 +199,7 @@ static HRESULT WINAPI MsiActiveScriptSite_OnStateChange(IActiveScriptSite* iface
 
 static HRESULT WINAPI MsiActiveScriptSite_OnScriptError(IActiveScriptSite* iface, IActiveScriptError* pscripterror)
 {
-    MsiActiveScriptSite *This = impl_from_IActiveScriptSite(iface);
+    struct script_site *This = impl_from_IActiveScriptSite(iface);
     EXCEPINFO exception;
     HRESULT hr;
 
@@ -219,14 +220,14 @@ static HRESULT WINAPI MsiActiveScriptSite_OnScriptError(IActiveScriptSite* iface
 
 static HRESULT WINAPI MsiActiveScriptSite_OnEnterScript(IActiveScriptSite* iface)
 {
-    MsiActiveScriptSite *This = impl_from_IActiveScriptSite(iface);
+    struct script_site *This = impl_from_IActiveScriptSite(iface);
     TRACE("(%p)\n", This);
     return S_OK;
 }
 
 static HRESULT WINAPI MsiActiveScriptSite_OnLeaveScript(IActiveScriptSite* iface)
 {
-    MsiActiveScriptSite *This = impl_from_IActiveScriptSite(iface);
+    struct script_site *This = impl_from_IActiveScriptSite(iface);
     TRACE("(%p)\n", This);
     return S_OK;
 }
@@ -246,15 +247,15 @@ static const struct IActiveScriptSiteVtbl activescriptsitevtbl =
     MsiActiveScriptSite_OnLeaveScript
 };
 
-static HRESULT create_activescriptsite(MsiActiveScriptSite **obj)
+static HRESULT create_activescriptsite(struct script_site **obj)
 {
-    MsiActiveScriptSite* object;
+    struct script_site *object;
 
     TRACE("(%p)\n", obj);
 
     *obj = NULL;
 
-    object = msi_alloc( sizeof(MsiActiveScriptSite) );
+    object = malloc(sizeof(*object));
     if (!object)
         return E_OUTOFMEMORY;
 
@@ -290,7 +291,7 @@ DWORD call_script(MSIHANDLE hPackage, INT type, LPCWSTR script, LPCWSTR function
     HRESULT hr;
     IActiveScript *pActiveScript = NULL;
     IActiveScriptParse *pActiveScriptParse = NULL;
-    MsiActiveScriptSite *scriptsite;
+    struct script_site *scriptsite;
     IDispatch *pDispatch = NULL;
     DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
     DISPID dispid;

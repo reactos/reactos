@@ -40,28 +40,28 @@ WINE_DEFAULT_DEBUG_CHANNEL(msidb);
 #define NUM_STORAGES_COLS    2
 #define MAX_STORAGES_NAME_LEN 62
 
-typedef struct tabSTORAGE
+struct storage
 {
     UINT str_index;
     IStorage *storage;
 } STORAGE;
 
-typedef struct tagMSISTORAGESVIEW
+struct storages_view
 {
     MSIVIEW view;
     MSIDATABASE *db;
-    STORAGE *storages;
+    struct storage *storages;
     UINT max_storages;
     UINT num_rows;
     UINT row_size;
-} MSISTORAGESVIEW;
+};
 
-static BOOL storages_set_table_size(MSISTORAGESVIEW *sv, UINT size)
+static BOOL storages_set_table_size(struct storages_view *sv, UINT size)
 {
     if (size >= sv->max_storages)
     {
         sv->max_storages *= 2;
-        sv->storages = msi_realloc(sv->storages, sv->max_storages * sizeof(*sv->storages));
+        sv->storages = realloc(sv->storages, sv->max_storages * sizeof(*sv->storages));
         if (!sv->storages)
             return FALSE;
     }
@@ -71,7 +71,7 @@ static BOOL storages_set_table_size(MSISTORAGESVIEW *sv, UINT size)
 
 static UINT STORAGES_fetch_int(struct tagMSIVIEW *view, UINT row, UINT col, UINT *val)
 {
-    MSISTORAGESVIEW *sv = (MSISTORAGESVIEW *)view;
+    struct storages_view *sv = (struct storages_view *)view;
 
     TRACE("(%p, %d, %d, %p)\n", view, row, col, val);
 
@@ -88,7 +88,7 @@ static UINT STORAGES_fetch_int(struct tagMSIVIEW *view, UINT row, UINT col, UINT
 
 static UINT STORAGES_fetch_stream(struct tagMSIVIEW *view, UINT row, UINT col, IStream **stm)
 {
-    MSISTORAGESVIEW *sv = (MSISTORAGESVIEW *)view;
+    struct storages_view *sv = (struct storages_view *)view;
 
     TRACE("(%p, %d, %d, %p)\n", view, row, col, stm);
 
@@ -124,7 +124,7 @@ static HRESULT stream_to_storage(IStream *stm, IStorage **stg)
     }
 
     size = stat.cbSize.QuadPart;
-    data = msi_alloc(size);
+    data = malloc(size);
     if (!data)
         return E_OUTOFMEMORY;
 
@@ -148,14 +148,14 @@ static HRESULT stream_to_storage(IStream *stm, IStorage **stg)
         goto done;
 
 done:
-    msi_free(data);
+    free(data);
     if (lockbytes) ILockBytes_Release(lockbytes);
     return hr;
 }
 
 static UINT STORAGES_set_stream( MSIVIEW *view, UINT row, UINT col, IStream *stream )
 {
-    MSISTORAGESVIEW *sv = (MSISTORAGESVIEW *)view;
+    struct storages_view *sv = (struct storages_view *)view;
     IStorage *stg, *substg, *prev;
     const WCHAR *name;
     HRESULT hr;
@@ -195,7 +195,7 @@ static UINT STORAGES_set_stream( MSIVIEW *view, UINT row, UINT col, IStream *str
 
 static UINT STORAGES_set_row(struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, UINT mask)
 {
-    MSISTORAGESVIEW *sv = (MSISTORAGESVIEW *)view;
+    struct storages_view *sv = (struct storages_view *)view;
     IStorage *stg, *substg = NULL, *prev;
     IStream *stm;
     LPWSTR name = NULL;
@@ -218,7 +218,7 @@ static UINT STORAGES_set_row(struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, 
         return r;
     }
 
-    name = strdupW(MSI_RecordGetString(rec, 1));
+    name = wcsdup(MSI_RecordGetString(rec, 1));
     if (!name)
     {
         r = ERROR_OUTOFMEMORY;
@@ -248,7 +248,7 @@ static UINT STORAGES_set_row(struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, 
     if (prev) IStorage_Release(prev);
 
 done:
-    msi_free(name);
+    free(name);
 
     if (substg) IStorage_Release(substg);
     IStorage_Release(stg);
@@ -259,7 +259,7 @@ done:
 
 static UINT STORAGES_insert_row(struct tagMSIVIEW *view, MSIRECORD *rec, UINT row, BOOL temporary)
 {
-    MSISTORAGESVIEW *sv = (MSISTORAGESVIEW *)view;
+    struct storages_view *sv = (struct storages_view *)view;
 
     if (!storages_set_table_size(sv, ++sv->num_rows))
         return ERROR_FUNCTION_FAILED;
@@ -294,7 +294,7 @@ static UINT STORAGES_close(struct tagMSIVIEW *view)
 
 static UINT STORAGES_get_dimensions(struct tagMSIVIEW *view, UINT *rows, UINT *cols)
 {
-    MSISTORAGESVIEW *sv = (MSISTORAGESVIEW *)view;
+    struct storages_view *sv = (struct storages_view *)view;
 
     TRACE("(%p, %p, %p)\n", view, rows, cols);
 
@@ -330,7 +330,7 @@ static UINT STORAGES_get_column_info( struct tagMSIVIEW *view, UINT n, LPCWSTR *
     return ERROR_SUCCESS;
 }
 
-static UINT storages_find_row(MSISTORAGESVIEW *sv, MSIRECORD *rec, UINT *row)
+static UINT storages_find_row(struct storages_view *sv, MSIRECORD *rec, UINT *row)
 {
     LPCWSTR str;
     UINT r, i, id, data;
@@ -356,7 +356,7 @@ static UINT storages_find_row(MSISTORAGESVIEW *sv, MSIRECORD *rec, UINT *row)
 
 static UINT storages_modify_update(struct tagMSIVIEW *view, MSIRECORD *rec)
 {
-    MSISTORAGESVIEW *sv = (MSISTORAGESVIEW *)view;
+    struct storages_view *sv = (struct storages_view *)view;
     UINT r, row;
 
     r = storages_find_row(sv, rec, &row);
@@ -368,7 +368,7 @@ static UINT storages_modify_update(struct tagMSIVIEW *view, MSIRECORD *rec)
 
 static UINT storages_modify_assign(struct tagMSIVIEW *view, MSIRECORD *rec)
 {
-    MSISTORAGESVIEW *sv = (MSISTORAGESVIEW *)view;
+    struct storages_view *sv = (struct storages_view *)view;
     UINT r, row;
 
     r = storages_find_row(sv, rec, &row);
@@ -420,7 +420,7 @@ static UINT STORAGES_modify(struct tagMSIVIEW *view, MSIMODIFY eModifyMode, MSIR
 
 static UINT STORAGES_delete(struct tagMSIVIEW *view)
 {
-    MSISTORAGESVIEW *sv = (MSISTORAGESVIEW *)view;
+    struct storages_view *sv = (struct storages_view *)view;
     UINT i;
 
     TRACE("(%p)\n", view);
@@ -431,9 +431,9 @@ static UINT STORAGES_delete(struct tagMSIVIEW *view)
             IStorage_Release(sv->storages[i].storage);
     }
 
-    msi_free(sv->storages);
+    free(sv->storages);
     sv->storages = NULL;
-    msi_free(sv);
+    free(sv);
 
     return ERROR_SUCCESS;
 }
@@ -461,7 +461,7 @@ static const MSIVIEWOPS storages_ops =
     NULL,
 };
 
-static INT add_storages_to_table(MSISTORAGESVIEW *sv)
+static INT add_storages_to_table(struct storages_view *sv)
 {
     IEnumSTATSTG *stgenum = NULL;
     STATSTG stat;
@@ -474,7 +474,7 @@ static INT add_storages_to_table(MSISTORAGESVIEW *sv)
         return -1;
 
     sv->max_storages = 1;
-    sv->storages = msi_alloc(sizeof(*sv->storages));
+    sv->storages = malloc(sizeof(*sv->storages));
     if (!sv->storages)
         return -1;
 
@@ -514,12 +514,12 @@ static INT add_storages_to_table(MSISTORAGESVIEW *sv)
 
 UINT STORAGES_CreateView(MSIDATABASE *db, MSIVIEW **view)
 {
-    MSISTORAGESVIEW *sv;
+    struct storages_view *sv;
     INT rows;
 
     TRACE("(%p, %p)\n", db, view);
 
-    sv = msi_alloc_zero( sizeof(MSISTORAGESVIEW) );
+    sv = calloc(1, sizeof(*sv));
     if (!sv)
         return ERROR_FUNCTION_FAILED;
 
@@ -529,7 +529,7 @@ UINT STORAGES_CreateView(MSIDATABASE *db, MSIVIEW **view)
     rows = add_storages_to_table(sv);
     if (rows < 0)
     {
-        msi_free( sv );
+        free(sv);
         return ERROR_FUNCTION_FAILED;
     }
     sv->num_rows = rows;

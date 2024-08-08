@@ -29,8 +29,8 @@
 ** All the keywords of the SQL language are stored as in a hash
 ** table composed of instances of the following structure.
 */
-typedef struct Keyword Keyword;
-struct Keyword {
+struct keyword
+{
   const WCHAR *name;             /* The keyword name */
   unsigned int len;
   int tokenType;           /* The token value for this keyword */
@@ -43,7 +43,7 @@ struct Keyword {
 ** They MUST be in alphabetical order
 */
 #define X(str)  str, ARRAY_SIZE(str) - 1
-static const Keyword aKeywordTable[] = {
+static const struct keyword aKeywordTable[] = {
   { X(L"ADD"),         TK_ADD },
   { X(L"ALTER"),       TK_ALTER },
   { X(L"AND"),         TK_AND },
@@ -88,7 +88,7 @@ static const Keyword aKeywordTable[] = {
 ** Comparison function for binary search.
 */
 static int __cdecl compKeyword(const void *m1, const void *m2){
-  const Keyword *k1 = m1, *k2 = m2;
+  const struct keyword *k1 = m1, *k2 = m2;
   int ret, len = min( k1->len, k2->len );
 
   if ((ret = wcsnicmp( k1->name, k2->name, len ))) return ret;
@@ -103,7 +103,7 @@ static int __cdecl compKeyword(const void *m1, const void *m2){
 ** returned.  If the input is not a keyword, TK_ID is returned.
 */
 static int sqliteKeywordCode(const WCHAR *z, int n){
-  Keyword key, *r;
+  struct keyword key, *r;
 
   if( n>MAX_TOKEN_LEN )
     return TK_ID;
@@ -111,7 +111,7 @@ static int sqliteKeywordCode(const WCHAR *z, int n){
   key.tokenType = 0;
   key.name = z;
   key.len = n;
-  r = bsearch( &key, aKeywordTable, ARRAY_SIZE(aKeywordTable), sizeof(Keyword), compKeyword );
+  r = bsearch( &key, aKeywordTable, ARRAY_SIZE(aKeywordTable), sizeof(struct keyword), compKeyword );
   if( r )
     return r->tokenType;
   return TK_ID;
