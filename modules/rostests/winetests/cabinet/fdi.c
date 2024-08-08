@@ -190,7 +190,7 @@ static INT_PTR CDECL fdi_open_static(char *pszFile, int oflag, int pmode)
 
 static UINT CDECL fdi_read_static(INT_PTR hf, void *pv, UINT cb)
 {
-    ok(hf == 0, "unexpected hf %lx\n", hf);
+    ok(hf == 0, "unexpected hf %Ix\n", hf);
     return fdi_read(static_fdi_handle, pv, cb);
 }
 
@@ -208,7 +208,7 @@ static int CDECL fdi_close_static(INT_PTR hf)
 
 static LONG CDECL fdi_seek_static(INT_PTR hf, LONG dist, int seektype)
 {
-    ok(hf == 0, "unexpected hf %lx\n", hf);
+    ok(hf == 0, "unexpected hf %Ix\n", hf);
     return fdi_seek(static_fdi_handle, dist, seektype);
 }
 
@@ -233,7 +233,7 @@ static void test_FDICreate(void)
                          cpuUNKNOWN, &erf);
         ok(hfdi != NULL, "Expected non-NULL context\n");
         ok(GetLastError() == 0xdeadbeef,
-           "Expected 0xdeadbeef, got %d\n", GetLastError());
+           "Expected 0xdeadbeef, got %ld\n", GetLastError());
         ok(erf.erfOper == 0x1abe11ed, "Expected 0x1abe11ed, got %d\n", erf.erfOper);
         ok(erf.erfType == 0x5eed1e55, "Expected 0x5eed1e55, got %d\n", erf.erfType);
         ok(erf.fError == 0x1ead1e55, "Expected 0x1ead1e55, got %d\n", erf.fError);
@@ -250,7 +250,7 @@ static void test_FDICreate(void)
                      cpuUNKNOWN, &erf);
     ok(hfdi != NULL, "Expected non-NULL context\n");
     ok(GetLastError() == 0xdeadbeef,
-       "Expected 0xdeadbeef, got %d\n", GetLastError());
+       "Expected 0xdeadbeef, got %ld\n", GetLastError());
     ok((erf.erfOper == 0x1abe11ed || erf.erfOper == 0 /* Vista */), "Expected 0x1abe11ed or 0, got %d\n", erf.erfOper);
     ok((erf.erfType == 0x5eed1e55 || erf.erfType == 0 /* Vista */), "Expected 0x5eed1e55 or 0, got %d\n", erf.erfType);
     ok((erf.fError == 0x1ead1e55 || erf.fError == 0 /* Vista */), "Expected 0x1ead1e55 or 0, got %d\n", erf.fError);
@@ -266,7 +266,7 @@ static void test_FDICreate(void)
                      cpuUNKNOWN, &erf);
     ok(hfdi != NULL, "Expected non-NULL context\n");
     ok(GetLastError() == 0xdeadbeef,
-       "Expected 0xdeadbeef, got %d\n", GetLastError());
+       "Expected 0xdeadbeef, got %ld\n", GetLastError());
     ok((erf.erfOper == 0x1abe11ed || erf.erfOper == 0 /* Vista */), "Expected 0x1abe11ed or 0, got %d\n", erf.erfOper);
     ok((erf.erfType == 0x5eed1e55 || erf.erfType == 0 /* Vista */), "Expected 0x5eed1e55 or 0, got %d\n", erf.erfType);
     ok((erf.fError == 0x1ead1e55 || erf.fError == 0 /* Vista */), "Expected 0x1ead1e55 or 0, got %d\n", erf.fError);
@@ -282,7 +282,7 @@ static void test_FDICreate(void)
                      cpuUNKNOWN, &erf);
     ok(hfdi != NULL, "Expected non-NULL context\n");
     ok(GetLastError() == 0xdeadbeef,
-       "Expected 0xdeadbeef, got %d\n", GetLastError());
+       "Expected 0xdeadbeef, got %ld\n", GetLastError());
     ok((erf.erfOper == 0x1abe11ed || erf.erfOper == 0 /* Vista */), "Expected 0x1abe11ed or 0, got %d\n", erf.erfOper);
     ok((erf.erfType == 0x5eed1e55 || erf.erfType == 0 /* Vista */), "Expected 0x5eed1e55 or 0, got %d\n", erf.erfType);
     ok((erf.fError == 0x1ead1e55 || erf.fError == 0 /* Vista */), "Expected 0x1ead1e55 or 0, got %d\n", erf.fError);
@@ -298,7 +298,7 @@ static void test_FDICreate(void)
                      cpuUNKNOWN, &erf);
     ok(hfdi != NULL, "Expected non-NULL context\n");
     ok(GetLastError() == 0xdeadbeef,
-       "Expected 0xdeadbeef, got %d\n", GetLastError());
+       "Expected 0xdeadbeef, got %ld\n", GetLastError());
     ok((erf.erfOper == 0x1abe11ed || erf.erfOper == 0 /* Vista */), "Expected 0x1abe11ed or 0, got %d\n", erf.erfOper);
     ok((erf.erfType == 0x5eed1e55 || erf.erfType == 0 /* Vista */), "Expected 0x5eed1e55 or 0, got %d\n", erf.erfType);
     ok((erf.fError == 0x1ead1e55 || erf.fError == 0 /* Vista */), "Expected 0x1ead1e55 or 0, got %d\n", erf.fError);
@@ -314,7 +314,7 @@ static void test_FDICreate(void)
                      cpuUNKNOWN, &erf);
     ok(hfdi != NULL, "Expected non-NULL context\n");
     ok(GetLastError() == 0xdeadbeef,
-       "Expected 0xdeadbeef, got %d\n", GetLastError());
+       "Expected 0xdeadbeef, got %ld\n", GetLastError());
     ok((erf.erfOper == 0x1abe11ed || erf.erfOper == 0 /* Vista */), "Expected 0x1abe11ed or 0, got %d\n", erf.erfOper);
     ok((erf.erfType == 0x5eed1e55 || erf.erfType == 0 /* Vista */), "Expected 0x5eed1e55 or 0, got %d\n", erf.erfType);
     ok((erf.fError == 0x1ead1e55 || erf.fError == 0 /* Vista */), "Expected 0x1ead1e55 or 0, got %d\n", erf.fError);
@@ -330,7 +330,7 @@ static void test_FDICreate(void)
                      cpuUNKNOWN, NULL);
     /* XP sets hfdi to a non-NULL value, but Vista sets it to NULL! */
     ok(GetLastError() == 0xdeadbeef,
-       "Expected 0xdeadbeef, got %d\n", GetLastError());
+       "Expected 0xdeadbeef, got %ld\n", GetLastError());
     /* NULL is passed to FDICreate instead of &erf, so don't retest the erf member values. */
 
     FDIDestroy(hfdi);
@@ -345,7 +345,7 @@ static void test_FDICreate(void)
                      0xcafebabe, &erf);
     ok(hfdi != NULL, "Expected non-NULL context\n");
     ok(GetLastError() == 0xdeadbeef,
-       "Expected 0xdeadbeef, got %d\n", GetLastError());
+       "Expected 0xdeadbeef, got %ld\n", GetLastError());
     ok((erf.erfOper == 0x1abe11ed || erf.erfOper == 0 /* Vista */), "Expected 0x1abe11ed or 0, got %d\n", erf.erfOper);
     ok((erf.erfType == 0x5eed1e55 || erf.erfType == 0 /* Vista */), "Expected 0x5eed1e55 or 0, got %d\n", erf.erfType);
     ok((erf.fError == 0x1ead1e55 || erf.fError == 0 /* Vista */), "Expected 0x1ead1e55 or 0, got %d\n", erf.fError);
@@ -365,7 +365,7 @@ static void test_FDICreate(void)
        "Expected FDIERROR_ALLOC_FAIL, got %d\n", erf.erfOper);
     ok(erf.fError == TRUE, "Expected TRUE, got %d\n", erf.fError);
     ok(GetLastError() == 0xdeadbeef,
-       "Expected 0xdeadbeef, got %d\n", GetLastError());
+       "Expected 0xdeadbeef, got %ld\n", GetLastError());
     ok(erf.erfType == 0, "Expected 0, got %d\n", erf.erfType);
 }
 
@@ -409,13 +409,6 @@ static void createTestFile(const CHAR *name)
 
 static void create_test_files(void)
 {
-    DWORD len;
-
-    len = GetCurrentDirectoryA(MAX_PATH, CURR_DIR);
-
-    if(len && (CURR_DIR[len-1] == '\\'))
-        CURR_DIR[len-1] = 0;
-
     createTestFile("a.txt");
     createTestFile("b.txt");
     CreateDirectoryA("testdir", NULL);
@@ -668,8 +661,8 @@ static void test_FDIIsCabinet(void)
     ret = FDIIsCabinet(hfdi, -1, &cabinfo);
     ok(ret == FALSE, "Expected FALSE, got %d\n", ret);
     ok(GetLastError() == ERROR_INVALID_HANDLE,
-       "Expected ERROR_INVALID_HANDLE, got %d\n", GetLastError());
-    ok(cabinfo.cbCabinet == 0, "Expected 0, got %d\n", cabinfo.cbCabinet);
+       "Expected ERROR_INVALID_HANDLE, got %ld\n", GetLastError());
+    ok(cabinfo.cbCabinet == 0, "Expected 0, got %ld\n", cabinfo.cbCabinet);
     ok(cabinfo.cFiles == 0, "Expected 0, got %d\n", cabinfo.cFiles);
     ok(cabinfo.cFolders == 0, "Expected 0, got %d\n", cabinfo.cFolders);
     ok(cabinfo.iCabinet == 0, "Expected 0, got %d\n", cabinfo.iCabinet);
@@ -683,8 +676,8 @@ static void test_FDIIsCabinet(void)
     SetLastError(0xdeadbeef);
     ret = FDIIsCabinet(hfdi, fd, &cabinfo);
     ok(ret == FALSE, "Expected FALSE, got %d\n", ret);
-    ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
-    ok(cabinfo.cbCabinet == 0, "Expected 0, got %d\n", cabinfo.cbCabinet);
+    ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %ld\n", GetLastError());
+    ok(cabinfo.cbCabinet == 0, "Expected 0, got %ld\n", cabinfo.cbCabinet);
     ok(cabinfo.cFiles == 0, "Expected 0, got %d\n", cabinfo.cFiles);
     ok(cabinfo.cFolders == 0, "Expected 0, got %d\n", cabinfo.cFolders);
     ok(cabinfo.iCabinet == 0, "Expected 0, got %d\n", cabinfo.iCabinet);
@@ -699,11 +692,11 @@ static void test_FDIIsCabinet(void)
     SetLastError(0xdeadbeef);
     ret = FDIIsCabinet(hfdi, fd, &cabinfo);
     ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
-    ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
+    ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %ld\n", GetLastError());
     ok(cabinfo.cFiles == 4, "Expected 4, got %d\n", cabinfo.cFiles);
     ok(cabinfo.cFolders == 1, "Expected 1, got %d\n", cabinfo.cFolders);
     ok(cabinfo.setID == 0xbeef, "Expected 0xbeef, got %d\n", cabinfo.setID);
-    ok(cabinfo.cbCabinet == 182, "Expected 182, got %d\n", cabinfo.cbCabinet);
+    ok(cabinfo.cbCabinet == 182, "Expected 182, got %ld\n", cabinfo.cbCabinet);
     ok(cabinfo.iCabinet == 0, "Expected 0, got %d\n", cabinfo.iCabinet);
 
     fdi_close(fd);
@@ -720,11 +713,11 @@ static void test_FDIIsCabinet(void)
     SetLastError(0xdeadbeef);
     ret = FDIIsCabinet(hfdi, 0, &cabinfo);
     ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
-    ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
+    ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %ld\n", GetLastError());
     ok(cabinfo.cFiles == 4, "Expected 4, got %d\n", cabinfo.cFiles);
     ok(cabinfo.cFolders == 1, "Expected 1, got %d\n", cabinfo.cFolders);
     ok(cabinfo.setID == 0xbeef, "Expected 0xbeef, got %d\n", cabinfo.setID);
-    ok(cabinfo.cbCabinet == 182, "Expected 182, got %d\n", cabinfo.cbCabinet);
+    ok(cabinfo.cbCabinet == 182, "Expected 182, got %ld\n", cabinfo.cbCabinet);
     ok(cabinfo.iCabinet == 0, "Expected 0, got %d\n", cabinfo.iCabinet);
 
     fdi_close(static_fdi_handle);
@@ -778,9 +771,9 @@ static UINT CDECL fdi_mem_write(INT_PTR hf, void *pv, UINT cb)
 {
     static const char expected[] = "Hello World!";
 
-    trace("mem_write(%#lx,%p,%u)\n", hf, pv, cb);
+    trace("mem_write(%#Ix,%p,%u)\n", hf, pv, cb);
 
-    ok(hf == 0x12345678, "expected 0x12345678, got %#lx\n", hf);
+    ok(hf == 0x12345678, "expected 0x12345678, got %#Ix\n", hf);
     ok(cb == 12, "expected 12, got %u\n", cb);
     ok(!memcmp(pv, expected, 12), "expected %s, got %s\n", expected, (const char *)pv);
 
@@ -827,7 +820,7 @@ static INT_PTR CDECL fdi_mem_notify(FDINOTIFICATIONTYPE fdint, FDINOTIFICATION *
     switch (fdint)
     {
     case fdintCLOSE_FILE_INFO:
-        trace("mem_notify: CLOSE_FILE_INFO %s, handle %#lx\n", info->psz1, info->hf);
+        trace("mem_notify: CLOSE_FILE_INFO %s, handle %#Ix\n", info->psz1, info->hf);
 
         ok(!strcmp(info->psz1, expected), "expected %s, got %s\n", expected, info->psz1);
         ok(info->date == 0x1225, "expected 0x1225, got %#x\n", info->date);
@@ -838,9 +831,9 @@ static INT_PTR CDECL fdi_mem_notify(FDINOTIFICATIONTYPE fdint, FDINOTIFICATION *
 
     case fdintCOPY_FILE:
     {
-        trace("mem_notify: COPY_FILE %s, %d bytes\n", info->psz1, info->cb);
+        trace("mem_notify: COPY_FILE %s, %ld bytes\n", info->psz1, info->cb);
 
-        ok(info->cb == 12, "expected 12, got %u\n", info->cb);
+        ok(info->cb == 12, "expected 12, got %lu\n", info->cb);
         ok(!strcmp(info->psz1, expected), "expected %s, got %s\n", expected, info->psz1);
         ok(info->iFolder == 0x1234, "expected 0x1234, got %#x\n", info->iFolder);
         return 0x12345678; /* call write() callback */
@@ -893,7 +886,7 @@ static void test_FDICopy(void)
         ret = FDICopy(hfdi, name, path, 0, CopyProgress, NULL, 0);
         ok(ret == FALSE, "Expected FALSE, got %d\n", ret);
         ok(GetLastError() == ERROR_INVALID_HANDLE,
-           "Expected ERROR_INVALID_HANDLE, got %d\n", GetLastError());
+           "Expected ERROR_INVALID_HANDLE, got %ld\n", GetLastError());
 
         FDIDestroy(hfdi);
     }
@@ -910,7 +903,7 @@ static void test_FDICopy(void)
     SetLastError(0xdeadbeef);
     ret = FDICopy(hfdi, name, path, 0, CopyProgress, NULL, 0);
     ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
-    ok(GetLastError() == 0, "Expected 0f, got %d\n", GetLastError());
+    ok(GetLastError() == 0, "Expected 0f, got %ld\n", GetLastError());
 
     FDIDestroy(hfdi);
 
@@ -927,7 +920,7 @@ static void test_FDICopy(void)
     memset(&info, 0, sizeof(info));
     ret = FDIIsCabinet(hfdi, fd, &info);
     ok(ret, "FDIIsCabinet error %d\n",  erf.erfOper);
-    ok(info.cbCabinet == 0x59, "expected 0x59, got %#x\n", info.cbCabinet);
+    ok(info.cbCabinet == 0x59, "expected 0x59, got %#lx\n", info.cbCabinet);
     ok(info.cFiles == 1, "expected 1, got %d\n", info.cFiles);
     ok(info.cFolders == 1, "expected 1, got %d\n", info.cFolders);
     ok(info.setID == 0x1225, "expected 0x1225, got %#x\n", info.setID);
@@ -944,6 +937,12 @@ static void test_FDICopy(void)
 
 START_TEST(fdi)
 {
+    int len;
+
+    len = GetCurrentDirectoryA(MAX_PATH, CURR_DIR);
+    if (len && (CURR_DIR[len - 1] == '\\'))
+        CURR_DIR[len - 1] = 0;
+
     test_FDICreate();
     test_FDIDestroy();
     test_FDIIsCabinet();
