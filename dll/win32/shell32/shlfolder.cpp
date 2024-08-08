@@ -26,6 +26,34 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+SHCONTF SHELL_GetDefaultFolderEnumSHCONTF()
+{
+    SHCONTF Flags = SHCONTF_FOLDERS | SHCONTF_NONFOLDERS;
+    SHELLSTATE ss;
+    SHGetSetSettings(&ss, SSF_SHOWALLOBJECTS | SSF_SHOWSUPERHIDDEN, FALSE);
+    if (ss.fShowAllObjects)
+        Flags |= SHCONTF_INCLUDEHIDDEN;
+    if (ss.fShowSuperHidden)
+        Flags |= SHCONTF_INCLUDESUPERHIDDEN;
+     return Flags;
+}
+
+BOOL SHELL_IncludeItemInFolderEnum(IShellFolder *pSF, PCUITEMID_CHILD pidl, SFGAOF Query, SHCONTF Flags)
+{
+    if (SUCCEEDED(pSF->GetAttributesOf(1, &pidl, &Query)))
+    {
+        if (Query & SFGAO_NONENUMERATED)
+            return FALSE;
+        if ((Query & SFGAO_HIDDEN) && !(Flags & SHCONTF_INCLUDEHIDDEN))
+            return FALSE;
+        if ((Query & (SFGAO_HIDDEN | SFGAO_SYSTEM)) == (SFGAO_HIDDEN | SFGAO_SYSTEM) && !(Flags & SHCONTF_INCLUDESUPERHIDDEN))
+            return FALSE;
+        if ((Flags & (SHCONTF_FOLDERS | SHCONTF_NONFOLDERS)) != (SHCONTF_FOLDERS | SHCONTF_NONFOLDERS))
+            return (Flags & SHCONTF_FOLDERS) ? (Query & SFGAO_FOLDER) : !(Query & SFGAO_FOLDER);
+    }
+    return TRUE;
+}
+
 HRESULT
 Shell_NextElement(
     _Inout_ LPWSTR *ppch,

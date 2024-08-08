@@ -23,6 +23,15 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+static const REGFOLDERINFO g_RegFolderInfo =
+{
+    PT_CONTROLS_NEWREGITEM,
+    0, NULL,
+    CLSID_ControlPanel,
+    L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}",
+    L"ControlPanel",
+};
+
 /***********************************************************************
 *   control panel implementation in shell namespace
 */
@@ -627,11 +636,10 @@ HRESULT WINAPI CControlPanelFolder::Initialize(PCIDLIST_ABSOLUTE pidl)
     pidlRoot = ILClone(pidl);
 
     /* Create the inner reg folder */
+    REGFOLDERINITDATA RegInit = { static_cast<IShellFolder*>(this), &g_RegFolderInfo };
     HRESULT hr;
-    hr = CRegFolder_CreateInstance(&CLSID_ControlPanel,
+    hr = CRegFolder_CreateInstance(&RegInit,
                                    pidlRoot,
-                                   L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}",
-                                   L"ControlPanel",
                                    IID_PPV_ARG(IShellFolder2, &m_regFolder));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
