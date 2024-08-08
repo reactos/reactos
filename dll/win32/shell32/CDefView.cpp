@@ -1290,15 +1290,29 @@ PCUITEMID_CHILD CDefView::_PidlByItem(LVITEM& lvItem)
 
 int CDefView::LV_FindItemByPidl(PCUITEMID_CHILD pidl)
 {
-    ASSERT(m_ListView);
+    ASSERT(m_ListView && m_pSFParent);
 
     int cItems = m_ListView.GetItemCount();
-
-    for (int i = 0; i<cItems; i++)
+    LPARAM lParam = m_pSF2Parent ? SHCIDS_CANONICALONLY : 0;
+    for (int i = 0; i < cItems; i++)
     {
         PCUITEMID_CHILD currentpidl = _PidlByItem(i);
-        if (ILIsEqual(pidl, currentpidl))
-            return i;
+        HRESULT hr = m_pSFParent->CompareIDs(lParam, pidl, currentpidl);
+        if (SUCCEEDED(hr))
+        {
+            if (hr == S_EQUAL)
+                return i;
+        }
+        else
+        {
+            for (i = 0; i < cItems; i++)
+            {
+                currentpidl = _PidlByItem(i);
+                if (ILIsEqual(pidl, currentpidl))
+                    return i;
+            }
+            break;
+        }
     }
     return -1;
 }
