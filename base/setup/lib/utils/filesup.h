@@ -10,7 +10,7 @@
 
 NTSTATUS
 SetupCreateDirectory(
-    IN PCWSTR DirectoryName);
+    _In_ PCWSTR DirectoryName);
 
 NTSTATUS
 SetupDeleteFile(

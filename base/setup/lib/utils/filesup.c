@@ -27,35 +27,32 @@
 static
 NTSTATUS
 SetupCreateSingleDirectory(
-    IN PCWSTR DirectoryName)
+    _In_ PCWSTR DirectoryName)
 {
+    NTSTATUS Status;
+    UNICODE_STRING PathName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
-    UNICODE_STRING PathName;
     HANDLE DirectoryHandle;
-    NTSTATUS Status;
 
-    if (!RtlCreateUnicodeString(&PathName, DirectoryName))
-        return STATUS_NO_MEMORY;
+    RtlInitUnicodeString(&PathName, DirectoryName);
 
     if (PathName.Length > sizeof(WCHAR) &&
         PathName.Buffer[PathName.Length / sizeof(WCHAR) - 2] == L'\\' &&
         PathName.Buffer[PathName.Length / sizeof(WCHAR) - 1] == L'.')
     {
-        PathName.Length -= sizeof(WCHAR);
-        PathName.Buffer[PathName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+        PathName.Length -= sizeof(WCHAR); // Erase trailing '.'
     }
 
     if (PathName.Length > sizeof(WCHAR) &&
         PathName.Buffer[PathName.Length / sizeof(WCHAR) - 1] == L'\\')
     {
-        PathName.Length -= sizeof(WCHAR);
-        PathName.Buffer[PathName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+        PathName.Length -= sizeof(WCHAR); // Erase trailing '\\'
     }
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &PathName,
-                               OBJ_CASE_INSENSITIVE | OBJ_INHERIT,
+                               OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
 
@@ -71,78 +68,84 @@ SetupCreateSingleDirectory(
                           NULL,
                           0);
     if (NT_SUCCESS(Status))
-    {
         NtClose(DirectoryHandle);
-    }
-
-    RtlFreeUnicodeString(&PathName);
 
     return Status;
 }
 
 NTSTATUS
 SetupCreateDirectory(
-    IN PCWSTR PathName)
+    _In_ PCWSTR DirectoryName)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    PWCHAR PathBuffer = NULL;
+    UNICODE_STRING PathNameU;
+    PWCHAR PathBuffer;
     PWCHAR Ptr, EndPtr;
-    ULONG BackslashCount;
-    ULONG Size;
 
-    Size = (wcslen(PathName) + 1) * sizeof(WCHAR);
-    PathBuffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Size);
-    if (PathBuffer == NULL)
-        return STATUS_INSUFFICIENT_RESOURCES;
+    if (!RtlCreateUnicodeString(&PathNameU, DirectoryName))
+        return STATUS_NO_MEMORY; // STATUS_INSUFFICIENT_RESOURCES;
+    PathBuffer = PathNameU.Buffer;
+    EndPtr = PathBuffer + (PathNameU.Length / sizeof(WCHAR));
 
-    wcscpy(PathBuffer, PathName);
-    EndPtr = PathBuffer + wcslen(PathName);
-
-    Ptr = PathBuffer;
-
-    /* Skip the '\Device\HarddiskX\PartitionY\ part */
-    BackslashCount = 0;
-    while (Ptr < EndPtr && BackslashCount < 4)
+    /* Find the deepest existing sub-directory: start from the
+     * end and go back verifying each sub-directory in turn */
+    for (Ptr = EndPtr; PathBuffer < Ptr;)
     {
-        if (*Ptr == L'\\')
-            BackslashCount++;
+        WCHAR wch = UNICODE_NULL;
+        BOOLEAN bExists;
 
-        Ptr++;
-    }
-
-    while (Ptr < EndPtr)
-    {
-        if (*Ptr == L'\\')
+        /* If we are on a separator, save and erase the next character */
+        if ((Ptr < EndPtr) && (*Ptr == OBJ_NAME_PATH_SEPARATOR))
         {
-            *Ptr = 0;
-
-            DPRINT("PathBuffer: %S\n", PathBuffer);
-            if (!DoesDirExist(NULL, PathBuffer))
-            {
-                DPRINT("Create: %S\n", PathBuffer);
-                Status = SetupCreateSingleDirectory(PathBuffer);
-                if (!NT_SUCCESS(Status))
-                    goto done;
-            }
-
-            *Ptr = L'\\';
+            wch = *(Ptr+1);
+            *(Ptr+1) = UNICODE_NULL;
         }
 
-        Ptr++;
+        DPRINT("PathBuffer: %S\n", PathBuffer);
+        bExists = DoesDirExist(NULL, PathBuffer);
+
+        if (wch) /* Restore the erased character */
+            *(Ptr+1) = wch;
+
+        /* Stop if we've found the deepest existing sub-directory */
+        if (bExists)
+            break;
+
+        /* Skip back path separators if any */
+        while ((PathBuffer < Ptr) && (*Ptr == OBJ_NAME_PATH_SEPARATOR))
+            --Ptr;
+        /* Go to the beginning of the path component, stop at the separator */
+        while ((PathBuffer < Ptr) && (*Ptr != OBJ_NAME_PATH_SEPARATOR))
+            --Ptr;
     }
 
-    if (!DoesDirExist(NULL, PathBuffer))
+    /* Skip path separators if any */
+    while ((Ptr < EndPtr) && (*Ptr == OBJ_NAME_PATH_SEPARATOR))
+        ++Ptr;
+
+    /* Create all the remaining sub-directories */
+    for (; Ptr < EndPtr; ++Ptr)
     {
+        WCHAR wch;
+
+        /* Go to the end of the current path component, stop at
+         * the separator or terminating NUL, and save and erase it */
+        while ((Ptr < EndPtr) && (*Ptr != OBJ_NAME_PATH_SEPARATOR))
+            ++Ptr;
+        wch = *Ptr;
+        *Ptr = UNICODE_NULL;
+
         DPRINT("Create: %S\n", PathBuffer);
         Status = SetupCreateSingleDirectory(PathBuffer);
+
+        *Ptr = wch; /* Restore the erased separator */
+
         if (!NT_SUCCESS(Status))
-            goto done;
+            break;
     }
 
-done:
     DPRINT("Done.\n");
-    if (PathBuffer != NULL)
-        RtlFreeHeap(RtlGetProcessHeap(), 0, PathBuffer);
+    RtlFreeUnicodeString(&PathNameU);
 
     return Status;
 }
@@ -719,6 +722,9 @@ DoesPathExist(
                                OBJ_CASE_INSENSITIVE,
                                RootDirectory,
                                NULL);
+
+    // Investigate: check for presence of FILE_ATTRIBUTE_DIRECTORY
+    // or FILE_ATTRIBUTE_REPARSE_POINT for directories?
 
     Status = NtOpenFile(&FileHandle,
                         IsDirectory ? (FILE_LIST_DIRECTORY | SYNCHRONIZE)

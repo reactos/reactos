@@ -407,7 +407,7 @@ GetSourcePaths(
     PWCHAR Ptr;
 
     // FIXME: commented out to allow installation from USB
-#if 0
+#if 1
     /* Determine the installation source path via the full path of the installer */
     RtlInitEmptyUnicodeString(InstallSourcePath,
                               (PWSTR)((ULONG_PTR)ImageFileBuffer + sizeof(UNICODE_STRING)),
@@ -477,7 +477,7 @@ GetSourcePaths(
 
     /* Check whether the resolved \SystemRoot is a prefix of the image file path */
     // FIXME: commented out to allow installation from USB
-    // if (RtlPrefixUnicodeString(&SystemRootPath, InstallSourcePath, TRUE))
+    /**/if (RtlPrefixUnicodeString(&SystemRootPath, InstallSourcePath, TRUE))/**/
     {
         /* Yes it is, so we use instead SystemRoot as the installation source path */
         InstallSourcePath = &SystemRootPath;
@@ -707,7 +707,8 @@ InitSystemPartition(
      * In all cases, whether or not we are going to perform a formatting,
      * we must perform a filesystem check of the system partition.
      */
-    SystemPartition->NeedsCheck = TRUE;
+    if (SystemPartition->Volume)
+        SystemPartition->Volume->NeedsCheck = TRUE;
 
     return TRUE;
 }
@@ -807,23 +808,21 @@ IsValidInstallDirectory(
 
 NTSTATUS
 InitDestinationPaths(
-    IN OUT PUSETUP_DATA pSetupData,
-    IN PCWSTR InstallationDir,
-    IN PPARTENTRY PartEntry)    // FIXME: HACK!
+    _Inout_ PUSETUP_DATA pSetupData,
+    _In_ PCWSTR InstallationDir,
+    _In_ PVOLENTRY Volume)  // FIXME: HACK!
 {
     NTSTATUS Status;
+    PPARTENTRY PartEntry = Volume->PartEntry;
     PDISKENTRY DiskEntry = PartEntry->DiskEntry;
-    WCHAR PathBuffer[MAX_PATH];
+    WCHAR PathBuffer[RTL_NUMBER_OF_FIELD(VOLINFO, DeviceName) + 1];
 
     ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
 
     /* Create 'pSetupData->DestinationRootPath' string */
     RtlFreeUnicodeString(&pSetupData->DestinationRootPath);
-    Status = RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
-                     L"\\Device\\Harddisk%lu\\Partition%lu\\",
-                     DiskEntry->DiskNumber,
-                     PartEntry->PartitionNumber);
-
+    Status = RtlStringCchPrintfW(PathBuffer, _countof(PathBuffer),
+                                 L"%s\\", Volume->Info.DeviceName);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("RtlStringCchPrintfW() failed with status 0x%08lx\n", Status);

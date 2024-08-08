@@ -22,7 +22,7 @@ typedef struct _NTOS_INSTALLATION
     PCWSTR PathComponent;           // Pointer inside SystemNtPath.Buffer
     ULONG DiskNumber;
     ULONG PartitionNumber;
-    PPARTENTRY PartEntry;
+    PVOLENTRY Volume; // PVOLINFO
     WCHAR InstallationName[MAX_PATH];
     WCHAR VendorName[MAX_PATH];
     // CHAR Data[ANYSIZE_ARRAY];
@@ -31,7 +31,7 @@ typedef struct _NTOS_INSTALLATION
 // EnumerateNTOSInstallations
 PGENERIC_LIST
 CreateNTOSInstallationsList(
-    IN PPARTLIST List);
+    _In_ PPARTLIST PartList);
 
 /*
  * FindSubStrI(PCWSTR str, PCWSTR strSearch) :

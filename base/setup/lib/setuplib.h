@@ -186,9 +186,9 @@ IsValidInstallDirectory(
 
 NTSTATUS
 InitDestinationPaths(
-    IN OUT PUSETUP_DATA pSetupData,
-    IN PCWSTR InstallationDir,
-    IN PPARTENTRY PartEntry);   // FIXME: HACK!
+    _Inout_ PUSETUP_DATA pSetupData,
+    _In_ PCWSTR InstallationDir,
+    _In_ PVOLENTRY Volume); // FIXME: HACK!
 
 // NTSTATUS
 ERROR_NUMBER

@@ -163,7 +163,7 @@ typedef enum _FSVOL_OP
 
 typedef struct _FORMAT_VOLUME_INFO
 {
-    PPARTENTRY PartEntry;
+    PVOLENTRY Volume;
     // PCWSTR NtPathPartition;
     NTSTATUS ErrorStatus;
 
@@ -179,7 +179,7 @@ typedef struct _FORMAT_VOLUME_INFO
 
 typedef struct _CHECK_VOLUME_INFO
 {
-    PPARTENTRY PartEntry;
+    PVOLENTRY Volume;
     // PCWSTR NtPathPartition;
     NTSTATUS ErrorStatus;
 
@@ -202,8 +202,8 @@ typedef FSVOL_OP
 BOOLEAN
 FsVolCommitOpsQueue(
     _In_ PPARTLIST PartitionList,
-    _In_ PPARTENTRY SystemPartition,
-    _In_ PPARTENTRY InstallPartition,
+    _In_ PVOLENTRY SystemVolume,
+    _In_ PVOLENTRY InstallVolume,
     _In_opt_ PFSVOL_CALLBACK FsVolCallback,
     _In_opt_ PVOID Context);
 
