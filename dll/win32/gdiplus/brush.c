@@ -96,7 +96,7 @@ GpStatus WINGDIPAPI GdipCloneBrush(GpBrush *brush, GpBrush **clone)
             *clone = heap_alloc_zero(sizeof(GpPathGradient));
             if (!*clone) return OutOfMemory;
 
-            src = (GpPathGradient*) brush,
+            src = (GpPathGradient*) brush;
             dest = (GpPathGradient*) *clone;
 
             memcpy(dest, src, sizeof(GpPathGradient));
@@ -226,40 +226,65 @@ GpStatus WINGDIPAPI GdipCloneBrush(GpBrush *brush, GpBrush **clone)
     return Ok;
 }
 
-static const char HatchBrushes[][8] = {
-    { 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00 }, /* HatchStyleHorizontal */
-    { 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08 }, /* HatchStyleVertical */
-    { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 }, /* HatchStyleForwardDiagonal */
-    { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 }, /* HatchStyleBackwardDiagonal */
-    { 0x08, 0x08, 0x08, 0xff, 0x08, 0x08, 0x08, 0x08 }, /* HatchStyleCross */
-    { 0x81, 0x42, 0x24, 0x18, 0x18, 0x24, 0x42, 0x81 }, /* HatchStyleDiagonalCross */
+/* The first 8 items per entry are bitmaps for each row of the hatch style.
+ * The 9th item of the entry is a flag indicating anti-aliasing. */
+static const unsigned char HatchBrushes[][9] = {
+    { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff }, /* HatchStyleHorizontal */
+    { 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80 }, /* HatchStyleVertical */
+    { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, TRUE }, /* HatchStyleForwardDiagonal */
+    { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, TRUE }, /* HatchStyleBackwardDiagonal */
+    { 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0xff }, /* HatchStyleCross */
+    { 0x81, 0x42, 0x24, 0x18, 0x18, 0x24, 0x42, 0x81, TRUE }, /* HatchStyleDiagonalCross */
     { 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x80 }, /* HatchStyle05Percent */
-    { 0x00, 0x02, 0x00, 0x88, 0x00, 0x20, 0x00, 0x88 }, /* HatchStyle10Percent */
-    { 0x00, 0x22, 0x00, 0xcc, 0x00, 0x22, 0x00, 0xcc }, /* HatchStyle20Percent */
-    { 0x00, 0xcc, 0x00, 0xcc, 0x00, 0xcc, 0x00, 0xcc }, /* HatchStyle25Percent */
-    { 0x00, 0xcc, 0x04, 0xcc, 0x00, 0xcc, 0x40, 0xcc }, /* HatchStyle30Percent */
-    { 0x44, 0xcc, 0x22, 0xcc, 0x44, 0xcc, 0x22, 0xcc }, /* HatchStyle40Percent */
-    { 0x55, 0xcc, 0x55, 0xcc, 0x55, 0xcc, 0x55, 0xcc }, /* HatchStyle50Percent */
-    { 0x55, 0xcd, 0x55, 0xee, 0x55, 0xdc, 0x55, 0xee }, /* HatchStyle60Percent */
-    { 0x55, 0xdd, 0x55, 0xff, 0x55, 0xdd, 0x55, 0xff }, /* HatchStyle70Percent */
-    { 0x55, 0xff, 0x55, 0xff, 0x55, 0xff, 0x55, 0xff }, /* HatchStyle75Percent */
-    { 0x55, 0xff, 0x59, 0xff, 0x55, 0xff, 0x99, 0xff }, /* HatchStyle80Percent */
-    { 0x77, 0xff, 0xdd, 0xff, 0x77, 0xff, 0xfd, 0xff }, /* HatchStyle90Percent */
+    { 0x00, 0x08, 0x00, 0x80, 0x00, 0x08, 0x00, 0x80 }, /* HatchStyle10Percent */
+    { 0x00, 0x22, 0x00, 0x88, 0x00, 0x22, 0x00, 0x88 }, /* HatchStyle20Percent */
+    { 0x22, 0x88, 0x22, 0x88, 0x22, 0x88, 0x22, 0x88 }, /* HatchStyle25Percent */
+    { 0x11, 0xaa, 0x44, 0xaa, 0x11, 0xaa, 0x44, 0xaa }, /* HatchStyle30Percent */
+    { 0x15, 0xaa, 0x55, 0xaa, 0x51, 0xaa, 0x55, 0xaa }, /* HatchStyle40Percent */
+    { 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa }, /* HatchStyle50Percent */
+    { 0x55, 0xbb, 0x55, 0xee, 0x55, 0xbb, 0x55, 0xee }, /* HatchStyle60Percent */
+    { 0xdd, 0x77, 0xdd, 0x77, 0xdd, 0x77, 0xdd, 0x77 }, /* HatchStyle70Percent */
+    { 0xff, 0xdd, 0xff, 0x77, 0xff, 0xdd, 0xff, 0x77 }, /* HatchStyle75Percent */
+    { 0xff, 0xfe, 0xff, 0xef, 0xff, 0xfe, 0xff, 0xef }, /* HatchStyle80Percent */
+    { 0x7f, 0xff, 0xff, 0xff, 0xf7, 0xff, 0xff, 0xff }, /* HatchStyle90Percent */
     { 0x11, 0x22, 0x44, 0x88, 0x11, 0x22, 0x44, 0x88 }, /* HatchStyleLightDownwardDiagonal */
     { 0x88, 0x44, 0x22, 0x11, 0x88, 0x44, 0x22, 0x11 }, /* HatchStyleLightUpwardDiagonal */
     { 0x99, 0x33, 0x66, 0xcc, 0x99, 0x33, 0x66, 0xcc }, /* HatchStyleDarkDownwardDiagonal */
-    { 0xcc, 0x66, 0x33, 0x99, 0xcc, 0x66, 0x33, 0x99 }, /* HatchStyleDarkUpwardDiagonal */
-    { 0xc1, 0x83, 0x07, 0x0e, 0x1c, 0x38, 0x70, 0xe0 }, /* HatchStyleWideDownwardDiagonal */
-    { 0xe0, 0x70, 0x38, 0x1c, 0x0e, 0x07, 0x83, 0xc1 }, /* HatchStyleWideUpwardDiagonal */
+    { 0x99, 0xcc, 0x66, 0x33, 0x99, 0xcc, 0x66, 0x33 }, /* HatchStyleDarkUpwardDiagonal */
+    { 0x83, 0x07, 0x0e, 0x1c, 0x38, 0x70, 0xe0, 0xc1 }, /* HatchStyleWideDownwardDiagonal */
+    { 0xc1, 0xe0, 0x70, 0x38, 0x1c, 0x0e, 0x07, 0x83 }, /* HatchStyleWideUpwardDiagonal */
     { 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88 }, /* HatchStyleLightVertical */
     { 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0xff }, /* HatchStyleLightHorizontal */
-    { 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa }, /* HatchStyleNarrowVertical */
+    { 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55 }, /* HatchStyleNarrowVertical */
     { 0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff }, /* HatchStyleNarrowHorizontal */
     { 0xcc, 0xcc, 0xcc, 0xcc, 0xcc, 0xcc, 0xcc, 0xcc }, /* HatchStyleDarkVertical */
     { 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0xff, 0xff }, /* HatchStyleDarkHorizontal */
+    { 0x00, 0x00, 0x11, 0x22, 0x44, 0x88, 0x00, 0x00 }, /* HatchStyleDashedDownwardDiagonal */
+    { 0x00, 0x00, 0x88, 0x44, 0x22, 0x11, 0x00, 0x00 }, /* HatchStyleDashedUpwardDiagonal */
+    { 0x00, 0x00, 0x00, 0x0f, 0x00, 0x00, 0x00, 0xf0 }, /* HatchStyleDashedHorizontal */
+    { 0x08, 0x08, 0x08, 0x08, 0x80, 0x80, 0x80, 0x80 }, /* HatchStyleDashedVertical */
+    { 0x04, 0x20, 0x01, 0x10, 0x02, 0x40, 0x08, 0x80 }, /* HatchStyleSmallConfetti */
+    { 0x8d, 0x0c, 0xc0, 0xd8, 0x1b, 0x03, 0x30, 0xb1 }, /* HatchStyleLargeConfetti */
+    { 0x18, 0x24, 0x42, 0x81, 0x18, 0x24, 0x42, 0x81 }, /* HatchStyleZigZag */
+    { 0xc0, 0x25, 0x18, 0x00, 0xc0, 0x25, 0x18, 0x00 }, /* HatchStyleWave */
+    { 0x81, 0x42, 0x24, 0x18, 0x08, 0x04, 0x02, 0x01 }, /* HatchStyleDiagonalBrick */
+    { 0x08, 0x08, 0x08, 0xff, 0x80, 0x80, 0x80, 0xff }, /* HatchStyleHorizontalBrick */
+    { 0x51, 0x22, 0x14, 0x88, 0x45, 0x22, 0x54, 0x88 }, /* HatchStyleWeave */
+    { 0xf0, 0xf0, 0xf0, 0xf0, 0x55, 0xaa, 0x55, 0xaa }, /* HatchStylePlaid */
+    { 0x80, 0x01, 0x80, 0x00, 0x10, 0x08, 0x10, 0x00 }, /* HatchStyleDivot */
+    { 0x00, 0x80, 0x00, 0x80, 0x00, 0x80, 0x00, 0xaa }, /* HatchStyleDottedGrid */
+    { 0x00, 0x22, 0x00, 0x08, 0x00, 0x22, 0x00, 0x80 }, /* HatchStyleDottedDiamond */
+    { 0x01, 0x01, 0x02, 0x0c, 0x30, 0x48, 0x84, 0x03 }, /* HatchStyleShingle */
+    { 0x99, 0xff, 0x66, 0xff, 0x99, 0xff, 0x66, 0xff }, /* HatchStyleTrellis */
+    { 0xf8, 0xf8, 0x98, 0x77, 0x8f, 0x8f, 0x89, 0x77 }, /* HatchStyleSphere */
+    { 0x88, 0x88, 0x88, 0xff, 0x88, 0x88, 0x88, 0xff }, /* HatchStyleSmallGrid */
+    { 0x99, 0x66, 0x66, 0x99, 0x99, 0x66, 0x66, 0x99 }, /* HatchStyleSmallCheckerBoard */
+    { 0x0f, 0x0f, 0x0f, 0x0f, 0xf0, 0xf0, 0xf0, 0xf0 }, /* HatchStyleLargeCheckerBoard */
+    { 0x01, 0x82, 0x44, 0x28, 0x10, 0x28, 0x44, 0x82 }, /* HatchStyleOutlinedDiamond */
+    { 0x00, 0x10, 0x38, 0x7c, 0xfe, 0x7c, 0x38, 0x10 }, /* HatchStyleSolidDiamond */
 };
 
-GpStatus get_hatch_data(GpHatchStyle hatchstyle, const char **result)
+GpStatus get_hatch_data(GpHatchStyle hatchstyle, const unsigned char **result)
 {
     if (hatchstyle < ARRAY_SIZE(HatchBrushes))
     {
@@ -275,7 +300,7 @@ GpStatus get_hatch_data(GpHatchStyle hatchstyle, const char **result)
  */
 GpStatus WINGDIPAPI GdipCreateHatchBrush(GpHatchStyle hatchstyle, ARGB forecol, ARGB backcol, GpHatch **brush)
 {
-    TRACE("(%d, %d, %d, %p)\n", hatchstyle, forecol, backcol, brush);
+    TRACE("(%d, %ld, %ld, %p)\n", hatchstyle, forecol, backcol, brush);
 
     if(!brush)  return InvalidParameter;
 
@@ -376,7 +401,7 @@ GpStatus WINGDIPAPI GdipCreateLineBrush(GDIPCONST GpPointF* startpoint,
     GpStatus stat;
     GpRectF rect;
 
-    TRACE("(%s, %s, %x, %x, %d, %p)\n", debugstr_pointf(startpoint),
+    TRACE("(%s, %s, %lx, %lx, %d, %p)\n", debugstr_pointf(startpoint),
           debugstr_pointf(endpoint), startcolor, endcolor, wrap, line);
 
     if(!line || !startpoint || !endpoint || wrap == WrapModeClamp)
@@ -419,7 +444,7 @@ GpStatus WINGDIPAPI GdipCreateLineBrushI(GDIPCONST GpPoint* startpoint,
     GpPointF stF;
     GpPointF endF;
 
-    TRACE("(%p, %p, %x, %x, %d, %p)\n", startpoint, endpoint,
+    TRACE("(%p, %p, %lx, %lx, %d, %p)\n", startpoint, endpoint,
           startcolor, endcolor, wrap, line);
 
     if(!startpoint || !endpoint)
@@ -439,7 +464,7 @@ GpStatus WINGDIPAPI GdipCreateLineBrushFromRect(GDIPCONST GpRectF* rect,
 {
     float angle;
 
-    TRACE("(%p, %x, %x, %d, %d, %p)\n", rect, startcolor, endcolor, mode,
+    TRACE("(%s, %lx, %lx, %d, %d, %p)\n", debugstr_rectf(rect), startcolor, endcolor, mode,
           wrap, line);
 
     if(!line || !rect)
@@ -472,14 +497,10 @@ GpStatus WINGDIPAPI GdipCreateLineBrushFromRectI(GDIPCONST GpRect* rect,
 {
     GpRectF rectF;
 
-    TRACE("(%p, %x, %x, %d, %d, %p)\n", rect, startcolor, endcolor, mode,
+    TRACE("(%p, %lx, %lx, %d, %d, %p)\n", rect, startcolor, endcolor, mode,
           wrap, line);
 
-    rectF.X      = (REAL) rect->X;
-    rectF.Y      = (REAL) rect->Y;
-    rectF.Width  = (REAL) rect->Width;
-    rectF.Height = (REAL) rect->Height;
-
+    set_rect(&rectF, rect->X, rect->Y, rect->Width, rect->Height);
     return GdipCreateLineBrushFromRect(&rectF, startcolor, endcolor, mode, wrap, line);
 }
 
@@ -495,7 +516,7 @@ GpStatus WINGDIPAPI GdipCreateLineBrushFromRectWithAngle(GDIPCONST GpRectF* rect
     REAL sin_angle, cos_angle, sin_cos_angle;
     GpPointF start, end;
 
-    TRACE("(%p, %x, %x, %.2f, %d, %d, %p)\n", rect, startcolor, endcolor, angle, isAngleScalable,
+    TRACE("(%s, %lx, %lx, %.2f, %d, %d, %p)\n", debugstr_rectf(rect), startcolor, endcolor, angle, isAngleScalable,
           wrap, line);
 
     if (!rect || !line || wrap == WrapModeClamp)
@@ -594,7 +615,7 @@ GpStatus WINGDIPAPI GdipCreateLineBrushFromRectWithAngleI(GDIPCONST GpRect* rect
     ARGB startcolor, ARGB endcolor, REAL angle, BOOL isAngleScalable, GpWrapMode wrap,
     GpLineGradient **line)
 {
-    TRACE("(%p, %x, %x, %.2f, %d, %d, %p)\n", rect, startcolor, endcolor, angle, isAngleScalable,
+    TRACE("(%p, %lx, %lx, %.2f, %d, %d, %p)\n", rect, startcolor, endcolor, angle, isAngleScalable,
           wrap, line);
 
     return GdipCreateLineBrushFromRectI(rect, startcolor, endcolor, LinearGradientModeForwardDiagonal,
@@ -603,15 +624,14 @@ GpStatus WINGDIPAPI GdipCreateLineBrushFromRectWithAngleI(GDIPCONST GpRect* rect
 
 static GpStatus create_path_gradient(GpPath *path, ARGB centercolor, GpPathGradient **grad)
 {
-    GpRectF bounds;
+    INT i;
+    REAL sum_x = 0, sum_y = 0;
 
     if(!path || !grad)
         return InvalidParameter;
 
     if (path->pathdata.Count < 2)
         return OutOfMemory;
-
-    GdipGetPathWorldBounds(path, &bounds, NULL, NULL);
 
     *grad = heap_alloc_zero(sizeof(GpPathGradient));
     if (!*grad)
@@ -642,9 +662,14 @@ static GpStatus create_path_gradient(GpPath *path, ARGB centercolor, GpPathGradi
     (*grad)->centercolor = centercolor;
     (*grad)->wrap = WrapModeClamp;
     (*grad)->gamma = FALSE;
-    /* FIXME: this should be set to the "centroid" of the path by default */
-    (*grad)->center.X = bounds.X + bounds.Width / 2;
-    (*grad)->center.Y = bounds.Y + bounds.Height / 2;
+    for (i=0; i<path->pathdata.Count; i++)
+    {
+        sum_x += path->pathdata.Points[i].X;
+        sum_y += path->pathdata.Points[i].Y;
+    }
+    (*grad)->center.X = sum_x / path->pathdata.Count;
+    (*grad)->center.Y = sum_y / path->pathdata.Count;
+
     (*grad)->focus.X = 0.0;
     (*grad)->focus.Y = 0.0;
     (*grad)->surroundcolors[0] = 0xffffffff;
@@ -756,7 +781,7 @@ GpStatus WINGDIPAPI GdipCreatePathGradientFromPath(GDIPCONST GpPath* path,
  */
 GpStatus WINGDIPAPI GdipCreateSolidFill(ARGB color, GpSolidFill **sf)
 {
-    TRACE("(%x, %p)\n", color, sf);
+    TRACE("(%lx, %p)\n", color, sf);
 
     if(!sf)  return InvalidParameter;
 
@@ -1656,7 +1681,7 @@ GpStatus WINGDIPAPI GdipGetPathGradientPresetBlendCount(GpPathGradient *brush,
 GpStatus WINGDIPAPI GdipSetPathGradientCenterColor(GpPathGradient *grad,
     ARGB argb)
 {
-    TRACE("(%p, %x)\n", grad, argb);
+    TRACE("(%p, %lx)\n", grad, argb);
 
     if(!grad || grad->brush.bt != BrushTypePathGradient)
         return InvalidParameter;
@@ -1924,7 +1949,7 @@ GpStatus WINGDIPAPI GdipTranslatePathGradientTransform(GpPathGradient *grad,
 
 GpStatus WINGDIPAPI GdipSetSolidFillColor(GpSolidFill *sf, ARGB argb)
 {
-    TRACE("(%p, %x)\n", sf, argb);
+    TRACE("(%p, %lx)\n", sf, argb);
 
     if(!sf)
         return InvalidParameter;
@@ -1969,7 +1994,7 @@ GpStatus WINGDIPAPI GdipSetTextureWrapMode(GpTexture *brush, GpWrapMode wrapmode
 GpStatus WINGDIPAPI GdipSetLineColors(GpLineGradient *brush, ARGB color1,
     ARGB color2)
 {
-    TRACE("(%p, %x, %x)\n", brush, color1, color2);
+    TRACE("(%p, %lx, %lx)\n", brush, color1, color2);
 
     if(!brush || brush->brush.bt != BrushTypeLinearGradient)
         return InvalidParameter;

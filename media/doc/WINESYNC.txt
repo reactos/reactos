@@ -73,7 +73,7 @@ dll/win32/dwmapi              # Synced to Wine-8.14
 dll/win32/faultrep            # Synced to WineStaging-4.18
 dll/win32/fontsub             # Synced to WineStaging-2.9
 dll/win32/fusion              # Synced to WineStaging-4.18
-dll/win32/gdiplus             # Synced to WineStaging-4.0
+dll/win32/gdiplus             # Synced to Wine 7abca9742a9410447636e0222e36d214449c90dd
 dll/win32/hhctrl.ocx          # Synced to WineStaging-4.18
 dll/win32/hlink               # Synced to WineStaging-4.18
 dll/win32/hnetcfg             # Synced to WineStaging-4.18
