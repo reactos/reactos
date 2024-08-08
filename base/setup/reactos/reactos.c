@@ -41,6 +41,9 @@ HANDLE ProcessHeap;
 BOOLEAN IsUnattendedSetup = FALSE;
 SETUPDATA SetupData;
 
+/* UI elements */
+UI_CONTEXT UiContext;
+
 
 /* FUNCTIONS ****************************************************************/
 
@@ -92,17 +95,191 @@ CreateTitleFont(VOID)
     return hFont;
 }
 
-INT DisplayError(
-    IN HWND hParentWnd OPTIONAL,
-    IN UINT uIDTitle,
-    IN UINT uIDMessage)
+INT
+DisplayMessageV(
+    _In_opt_ HWND hWnd,
+    _In_ UINT uType,
+    _In_opt_ PCWSTR pszTitle,
+    _In_opt_ PCWSTR pszFormatMessage,
+    _In_ va_list args)
 {
-    WCHAR message[512], caption[64];
+    INT iRes;
+    HINSTANCE hInstance = NULL;
+    LPWSTR Format;
+    size_t MsgLen;
+    WCHAR  StaticBuffer[256];
+    LPWSTR Buffer = StaticBuffer; // Use the static buffer by default.
 
-    LoadStringW(SetupData.hInstance, uIDMessage, message, ARRAYSIZE(message));
-    LoadStringW(SetupData.hInstance, uIDTitle, caption, ARRAYSIZE(caption));
+    /* We need to retrieve the current module's instance handle if either
+     * the title or the format message is specified by a resource ID */
+    if ((pszTitle && IS_INTRESOURCE(pszTitle)) || IS_INTRESOURCE(pszFormatMessage))
+        hInstance = GetModuleHandleW(NULL); // SetupData.hInstance;
 
-    return MessageBoxW(hParentWnd, message, caption, MB_OK | MB_ICONERROR);
+    /* Retrieve the format message string if this is a resource */
+    if (pszFormatMessage && IS_INTRESOURCE(pszFormatMessage)) do
+    {
+        // LoadAllocStringW()
+        PCWSTR pStr;
+
+        /* Try to load the string from the resource */
+        MsgLen = LoadStringW(hInstance, PtrToUlong(pszFormatMessage), (LPWSTR)&pStr, 0);
+        if (MsgLen == 0)
+        {
+            /* No resource string was found, return NULL */
+            Format = NULL;
+            break;
+        }
+
+        /* Allocate a new buffer, adding a NULL-terminator */
+        Format = HeapAlloc(GetProcessHeap(), 0, (MsgLen + 1) * sizeof(WCHAR));
+        if (!Format)
+        {
+            MsgLen = 0;
+            break;
+        }
+
+        /* Copy the string, NULL-terminated */
+        StringCchCopyNW(Format, MsgLen + 1, pStr, MsgLen);
+    } while (0);
+    else
+    {
+        Format = (LPWSTR)pszFormatMessage;
+    }
+
+    if (Format)
+    {
+        /*
+         * Retrieve the message length. If it is too long, allocate
+         * an auxiliary buffer; otherwise use the static buffer.
+         * The string is built to be NULL-terminated.
+         */
+        MsgLen = _vscwprintf(Format, args);
+        if (MsgLen >= _countof(StaticBuffer))
+        {
+            Buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (MsgLen + 1) * sizeof(WCHAR));
+            if (!Buffer)
+            {
+                /* Allocation failed, use the original format string verbatim */
+                // MsgLen = wcslen(Format);
+                Buffer = Format;
+            }
+        }
+        if (Buffer != Format)
+        {
+            /* Do the printf as we use the caller's format string */
+            // _vsnwprintf(Buffer, MsgLen, Format, args);
+            StringCchVPrintfW(Buffer, MsgLen + 1, Format, args);
+        }
+    }
+    else
+    {
+        Format = (LPWSTR)pszFormatMessage;
+        Buffer = Format;
+    }
+
+    /* Display the message */
+    {
+    MSGBOXPARAMSW mb = {0};
+    mb.cbSize = sizeof(mb);
+    mb.hwndOwner = hWnd;
+    mb.hInstance = hInstance;
+    mb.lpszText = Buffer;
+    mb.lpszCaption = pszTitle;
+    mb.dwStyle = uType;
+    mb.dwLanguageId = MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT);
+
+    iRes = MessageBoxIndirectW(&mb);
+    }
+
+    /* Free the buffers if needed */
+    if ((Buffer != StaticBuffer) && (Buffer != Format))
+        HeapFree(GetProcessHeap(), 0, Buffer);
+
+    if (Format && (Format != pszFormatMessage))
+        HeapFree(GetProcessHeap(), 0, Format);
+
+    return iRes;
+}
+
+INT
+__cdecl
+DisplayMessage(
+    _In_opt_ HWND hWnd,
+    _In_ UINT uType,
+    _In_opt_ PCWSTR pszTitle,
+    _In_opt_ PCWSTR pszFormatMessage,
+    ...)
+{
+    INT iRes;
+    va_list args;
+
+    va_start(args, pszFormatMessage);
+    iRes = DisplayMessageV(hWnd, uType, pszTitle, pszFormatMessage, args);
+    va_end(args);
+
+    return iRes;
+}
+
+INT
+__cdecl
+DisplayError(
+    _In_opt_ HWND hWnd,
+    _In_ UINT uIDTitle,
+    _In_ UINT uIDMessage,
+    ...)
+{
+    INT iRes;
+    va_list args;
+
+    va_start(args, uIDMessage);
+    iRes = DisplayMessageV(hWnd, MB_OK | MB_ICONERROR,
+                           MAKEINTRESOURCEW(uIDTitle),
+                           MAKEINTRESOURCEW(uIDMessage),
+                           args);
+    va_end(args);
+
+    return iRes;
+}
+
+VOID
+SetWindowResTextW(
+    _In_ HWND hWnd,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ UINT uID)
+{
+    WCHAR szText[256];
+    LoadStringW(hInstance, uID, szText, _countof(szText));
+    SetWindowTextW(hWnd, szText);
+}
+
+VOID
+SetWindowResPrintfVW(
+    _In_ HWND hWnd,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ UINT uID,
+    _In_ va_list args)
+{
+    WCHAR ResBuffer[256];
+    WCHAR szText[256];
+
+    LoadStringW(hInstance, uID, ResBuffer, _countof(ResBuffer));
+    StringCchVPrintfW(szText, _countof(szText), ResBuffer, args);
+    SetWindowTextW(hWnd, szText);
+}
+
+VOID
+__cdecl
+SetWindowResPrintfW(
+    _In_ HWND hWnd,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ UINT uID,
+    ...)
+{
+    va_list args;
+
+    va_start(args, uID);
+    SetWindowResPrintfVW(hWnd, hInstance, uID, args);
+    va_end(args);
 }
 
 static INT_PTR CALLBACK
@@ -976,8 +1153,6 @@ SummaryDlgProc(
 typedef struct _COPYCONTEXT
 {
     PSETUPDATA pSetupData;
-    HWND hWndItem;
-    HWND hWndProgress;
     ULONG TotalOperations;
     ULONG CompletedOperations;
 } COPYCONTEXT, *PCOPYCONTEXT;
@@ -1005,10 +1180,10 @@ FileCopyCallback(PVOID Context,
             CopyContext->TotalOperations = (ULONG)Param2;
             CopyContext->CompletedOperations = 0;
 
-            SendMessageW(CopyContext->hWndProgress,
+            SendMessageW(UiContext.hWndProgress,
                          PBM_SETRANGE, 0,
                          MAKELPARAM(0, CopyContext->TotalOperations));
-            SendMessageW(CopyContext->hWndProgress,
+            SendMessageW(UiContext.hWndProgress,
                          PBM_SETSTEP, 1, 0);
             break;
         }
@@ -1030,7 +1205,7 @@ FileCopyCallback(PVOID Context,
 
                 // STRING_DELETING
                 StringCchPrintfW(Status, ARRAYSIZE(Status), L"Deleting %s", DstFileName);
-                SetWindowTextW(CopyContext->hWndItem, Status);
+                SetWindowTextW(UiContext.hWndItem, Status);
             }
             else if (Notification == SPFILENOTIFY_STARTRENAME)
             {
@@ -1051,7 +1226,7 @@ FileCopyCallback(PVOID Context,
                 else
                     StringCchPrintfW(Status, ARRAYSIZE(Status), L"Renaming %s to %s", SrcFileName, DstFileName);
 
-                SetWindowTextW(CopyContext->hWndItem, Status);
+                SetWindowTextW(UiContext.hWndItem, Status);
             }
             else if (Notification == SPFILENOTIFY_STARTCOPY)
             {
@@ -1064,7 +1239,7 @@ FileCopyCallback(PVOID Context,
 
                 // STRING_COPYING
                 StringCchPrintfW(Status, ARRAYSIZE(Status), L"Copying %s", DstFileName);
-                SetWindowTextW(CopyContext->hWndItem, Status);
+                SetWindowTextW(UiContext.hWndItem, Status);
             }
             break;
         }
@@ -1079,12 +1254,46 @@ FileCopyCallback(PVOID Context,
             if (CopyContext->TotalOperations >> 1 == CopyContext->CompletedOperations)
                 DPRINT1("CHECKPOINT:HALF_COPIED\n");
 
-            SendMessageW(CopyContext->hWndProgress, PBM_STEPIT, 0, 0);
+            SendMessageW(UiContext.hWndProgress, PBM_STEPIT, 0, 0);
             break;
         }
     }
 
     return FILEOP_DOIT;
+}
+
+static VOID
+__cdecl
+RegistryStatus(IN REGISTRY_STATUS RegStatus, ...)
+{
+    /* WARNING: Please keep this lookup table in sync with the resources! */
+    static const UINT StringIDs[] =
+    {
+        IDS_REG_DONE,                   /* Success */
+        IDS_REG_REGHIVEUPDATE,          /* RegHiveUpdate */
+        IDS_REG_IMPORTFILE,             /* ImportRegHive */
+        IDS_REG_DISPLAYSETTINGSUPDATE,  /* DisplaySettingsUpdate */
+        IDS_REG_LOCALESETTINGSUPDATE,   /* LocaleSettingsUpdate */
+        IDS_REG_ADDKBLAYOUTS,           /* KeybLayouts */
+        IDS_REG_KEYBOARDSETTINGSUPDATE, /* KeybSettingsUpdate */
+        IDS_REG_CODEPAGEINFOUPDATE,     /* CodePageInfoUpdate */
+    };
+
+    if (RegStatus < _countof(StringIDs))
+    {
+        va_list args;
+        va_start(args, RegStatus);
+        // GetDlgItem(UiContext.hwndDlg, IDC_ITEM)
+        SetWindowResPrintfVW(UiContext.hWndItem, SetupData.hInstance, StringIDs[RegStatus], args);
+        va_end(args);
+    }
+    else
+    {
+        // GetDlgItem(UiContext.hwndDlg, IDC_ITEM)
+        SetWindowResPrintfW(UiContext.hWndItem, SetupData.hInstance, IDS_REG_UNKNOWN, RegStatus);
+    }
+
+    SendMessageW(UiContext.hWndProgress, PBM_STEPIT, 0, 0);
 }
 
 static DWORD
@@ -1096,7 +1305,7 @@ PrepareAndDoCopyThread(
     HWND hwndDlg = (HWND)Param;
     HWND hWndProgress;
     LONG_PTR dwStyle;
-    // ERROR_NUMBER ErrorNumber;
+    ERROR_NUMBER ErrorNumber;
     BOOLEAN Success;
     COPYCONTEXT CopyContext;
 
@@ -1105,6 +1314,12 @@ PrepareAndDoCopyThread(
 
     /* Get the progress handle */
     hWndProgress = GetDlgItem(hwndDlg, IDC_PROCESSPROGRESS);
+
+    /* Setup global UI context */
+    UiContext.hwndDlg = hwndDlg;
+    UiContext.hWndItem = GetDlgItem(hwndDlg, IDC_ITEM);
+    UiContext.hWndProgress = hWndProgress;
+    UiContext.dwPbStyle = 0;
 
 
     /*
@@ -1115,26 +1330,23 @@ PrepareAndDoCopyThread(
     SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"Preparing the list of files to be copied, please wait...");
     SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
 
-    /* Set progress marquee style */
+    /* Set progress marquee style and start it up */
     dwStyle = GetWindowLongPtrW(hWndProgress, GWL_STYLE);
     SetWindowLongPtrW(hWndProgress, GWL_STYLE, dwStyle | PBS_MARQUEE);
-
-    /* Start it up */
     SendMessageW(hWndProgress, PBM_SETMARQUEE, TRUE, 0);
 
     /* Prepare the list of files */
     /* ErrorNumber = */ Success = PrepareFileCopy(&pSetupData->USetupData, NULL);
+
+    /* Stop progress and restore its style */
+    SendMessageW(hWndProgress, PBM_SETMARQUEE, FALSE, 0);
+    SetWindowLongPtrW(hWndProgress, GWL_STYLE, dwStyle);
+
     if (/*ErrorNumber != ERROR_SUCCESS*/ !Success)
     {
         /* Display an error only if an unexpected failure happened, and not because the user cancelled the installation */
         if (!pSetupData->bStopInstall)
             MessageBoxW(GetParent(hwndDlg), L"Failed to prepare the list of files!", L"Error", MB_ICONERROR);
-
-        /* Stop it */
-        SendMessageW(hWndProgress, PBM_SETMARQUEE, FALSE, 0);
-
-        /* Restore progress style */
-        SetWindowLongPtrW(hWndProgress, GWL_STYLE, dwStyle);
 
         /*
          * If we failed due to an unexpected error, keep on the copy page to view the current state,
@@ -1145,12 +1357,6 @@ PrepareAndDoCopyThread(
             PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
         return 1;
     }
-
-    /* Stop it */
-    SendMessageW(hWndProgress, PBM_SETMARQUEE, FALSE, 0);
-
-    /* Restore progress style */
-    SetWindowLongPtrW(hWndProgress, GWL_STYLE, dwStyle);
 
 
     /*
@@ -1163,8 +1369,6 @@ PrepareAndDoCopyThread(
 
     /* Create context for the copy process */
     CopyContext.pSetupData = pSetupData;
-    CopyContext.hWndItem = GetDlgItem(hwndDlg, IDC_ITEM);
-    CopyContext.hWndProgress = hWndProgress;
     CopyContext.TotalOperations = 0;
     CopyContext.CompletedOperations = 0;
 
@@ -1191,6 +1395,38 @@ PrepareAndDoCopyThread(
 
     /* Create the $winnt$.inf file */
     InstallSetupInfFile(&pSetupData->USetupData);
+
+
+    /*
+     * Create or update the registry hives
+     */
+
+    /* Set status text */
+    SetWindowResTextW(GetDlgItem(hwndDlg, IDC_ACTIVITY),
+                      pSetupData->hInstance,
+                      pSetupData->RepairUpdateFlag ? IDS_UPDATE_REGISTRY
+                                                   : IDS_CREATE_REGISTRY);
+    SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
+
+    /* Set up the progress bar */
+    SendMessageW(hWndProgress,
+                 PBM_SETRANGE, 0,
+                 MAKELPARAM(0, 8)); // FIXME: hardcoded number of steps, see StringIDs[] array in RegistryStatus()
+    SendMessageW(hWndProgress,
+                 PBM_SETSTEP, 1, 0);
+    SendMessageW(hWndProgress,
+                 PBM_SETPOS, 0, 0);
+
+    ErrorNumber = UpdateRegistry(&pSetupData->USetupData,
+                                 pSetupData->RepairUpdateFlag,
+                                 pSetupData->PartitionList,
+                                 L'D', //InstallPartition->Volume.DriveLetter, // FIXME!
+                                 pSetupData->SelectedLanguageId,
+                                 RegistryStatus,
+                                 NULL /* SubstSettings */);
+    UNREFERENCED_PARAMETER(ErrorNumber);
+    SendMessageW(UiContext.hWndProgress, PBM_SETPOS, 100, 0);
+
 
     /* We are done! Switch to the Terminate page */
     PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_RESTARTPAGE);

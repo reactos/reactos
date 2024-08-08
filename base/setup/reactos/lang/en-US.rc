@@ -173,3 +173,30 @@ BEGIN
     IDS_PARTITION_SIZE "Size"
     IDS_PARTITION_STATUS "Status"
 END
+
+/* Progress Strings */
+
+STRINGTABLE
+BEGIN
+    ///// IDS_PREPARE_PARTITIONS "Preparing partitions..."
+    ///// IDS_PREPARE_FILES "Preparing the list of files to be copied, please wait..."
+    ///// IDS_COPYING_FILES "Copying the files..."
+
+    IDS_CREATE_REGISTRY "Creating the registry..."
+    IDS_UPDATE_REGISTRY "Updating the registry..."
+END
+
+
+
+STRINGTABLE
+BEGIN
+    IDS_REG_DONE "Done"
+    IDS_REG_REGHIVEUPDATE "Updating registry hives"
+    IDS_REG_IMPORTFILE "Importing %s"
+    IDS_REG_DISPLAYSETTINGSUPDATE "Updating display registry settings"
+    IDS_REG_LOCALESETTINGSUPDATE "Updating locale settings"
+    IDS_REG_ADDKBLAYOUTS "Adding keyboard layouts"
+    IDS_REG_KEYBOARDSETTINGSUPDATE "Updating keyboard layout settings"
+    IDS_REG_CODEPAGEINFOUPDATE "Adding codepage information to registry"
+    IDS_REG_UNKNOWN "Unknown status %d"
+END

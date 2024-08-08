@@ -69,14 +69,17 @@
 // #include <reactos/rosioctl.h>
 #include <../lib/setuplib.h>
 
-#if 0
-typedef struct _KBLAYOUT
+
+/* UI elements */
+typedef struct _UI_CONTEXT
 {
-    TCHAR LayoutId[9];
-    TCHAR LayoutName[128];
-    TCHAR DllName[128];
-} KBLAYOUT, *PKBLAYOUT;
-#endif
+    HWND hwndDlg;   // Install progress page
+    HWND hWndItem;  // Progress action
+    HWND hWndProgress;  // Progress gauge
+    LONG_PTR dwPbStyle; // Progress gauge style
+} UI_CONTEXT, *PUI_CONTEXT;
+
+extern UI_CONTEXT UiContext;
 
 
 /*
@@ -107,6 +110,15 @@ typedef struct _NT_WIN32_PATH_MAPPING_LIST
     ULONG MappingsCount;
 } NT_WIN32_PATH_MAPPING_LIST, *PNT_WIN32_PATH_MAPPING_LIST;
 
+
+#if 0
+typedef struct _KBLAYOUT
+{
+    TCHAR LayoutId[9];
+    TCHAR LayoutName[128];
+    TCHAR DllName[128];
+} KBLAYOUT, *PKBLAYOUT;
+#endif
 
 typedef struct _SETUPDATA
 {
@@ -166,6 +178,17 @@ ConvertNtPathToWin32Path(
 
 /* drivepage.c */
 
+INT_PTR
+CALLBACK
+DriveDlgProc(
+    HWND hwndDlg,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam);
+
+
+/* reactos.c */
+
 BOOL
 CreateListViewColumns(
     IN HINSTANCE hInstance,
@@ -175,14 +198,52 @@ CreateListViewColumns(
     IN const INT* pColsAlign,
     IN UINT nNumOfColumns);
 
-INT_PTR
-CALLBACK
-DriveDlgProc(
-    HWND hwndDlg,
-    UINT uMsg,
-    WPARAM wParam,
-    LPARAM lParam);
+INT
+DisplayMessageV(
+    _In_opt_ HWND hWnd,
+    _In_ UINT uType,
+    _In_opt_ PCWSTR pszTitle,
+    _In_opt_ PCWSTR pszFormatMessage,
+    _In_ va_list args);
+
+INT
+__cdecl
+DisplayMessage(
+    _In_opt_ HWND hWnd,
+    _In_ UINT uType,
+    _In_opt_ PCWSTR pszTitle,
+    _In_opt_ PCWSTR pszFormatMessage,
+    ...);
+
+INT
+__cdecl
+DisplayError(
+    _In_opt_ HWND hWnd,
+    _In_ UINT uIDTitle,
+    _In_ UINT uIDMessage,
+    ...);
+
+VOID
+SetWindowResTextW(
+    _In_ HWND hWnd,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ UINT uID);
+
+VOID
+SetWindowResPrintfVW(
+    _In_ HWND hWnd,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ UINT uID,
+    _In_ va_list args);
+
+VOID
+__cdecl
+SetWindowResPrintfW(
+    _In_ HWND hWnd,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ UINT uID,
+    ...);
 
 #endif /* _REACTOS_PCH_ */
 
-/* EOP */
+/* EOF */
