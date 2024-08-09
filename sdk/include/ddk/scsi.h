@@ -1239,11 +1239,11 @@ typedef union _CDB {
     UCHAR ExpectedSectorType:3;
     UCHAR Lun:3;
     _ANONYMOUS_UNION union {
-      struct _LBA {
+      struct {
         UCHAR StartingBlockAddress[4];
         UCHAR PlayLength[4];
       } LBA;
-      struct _MSF {
+      struct {
         UCHAR Reserved1;
         UCHAR StartingM;
         UCHAR StartingS;
@@ -3291,21 +3291,21 @@ typedef struct _LOG_PARAMETER {
 #if !defined(__midl)
     UCHAR AsByte[0];
 #endif
-    struct _THRESHOLD_RESOURCE_COUNT {
+    struct {
       UCHAR ResourceCount[4];
       UCHAR Scope : 2;
       UCHAR Reserved1 : 6;
       UCHAR Reserved2[3];
     } THRESHOLD_RESOURCE_COUNT;
-    struct _TEMPERATURE {
+    struct {
       UCHAR Reserved;
       UCHAR Temperature;
     } TEMPERATURE;
-    struct _DATE_OF_MANUFACTURE {
+    struct {
       UCHAR Year[4];
       UCHAR Week[2];
     } DATE_OF_MANUFACTURE;
-    struct _SELF_TEST_RESULTS {
+    struct {
       UCHAR SelfTestResults : 4;
       UCHAR Reserved1 : 1;
       UCHAR SelfTestCode : 3;
@@ -3319,12 +3319,12 @@ typedef struct _LOG_PARAMETER {
       UCHAR VendorSpecific;
     } SELF_TEST_RESULTS;
 
-    struct _SOLID_STATE_MEDIA {
+    struct {
       UCHAR Reserved[3];
       UCHAR PercentageUsed;
     } SOLID_STATE_MEDIA;
 
-    struct _BACKGROUND_SCAN_STATUS {
+    struct {
       UCHAR PowerOnMinutes[4];
       UCHAR Reserved;
       UCHAR ScanStatus;
@@ -3333,7 +3333,7 @@ typedef struct _LOG_PARAMETER {
       UCHAR MediumScansPerformed[2];
     } BACKGROUND_SCAN_STATUS;
 
-    struct _INFORMATIONAL_EXCEPTIONS {
+    struct {
       UCHAR ASC;
       UCHAR ASCQ;
       UCHAR MostRecentTemperature;
