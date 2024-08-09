@@ -291,11 +291,6 @@ HRESULT CNSCBand::_CreateTreeView()
     return S_OK;
 }
 
-DWORD CNSCBand::_GetEnumFlags()
-{
-    return SHCONTF_FOLDERS | SHCONTF_NONFOLDERS;
-}
-
 BOOL
 CNSCBand::IsTreeItemInEnum(
     _In_ HTREEITEM hItem,
