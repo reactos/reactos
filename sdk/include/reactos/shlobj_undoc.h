@@ -506,7 +506,7 @@ DECLARE_INTERFACE_(IBandNavigate, IUnknown)
 	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
 	 /*** IBandNavigate ***/
-	STDMETHOD(Select)(THIS_ long paramC) PURE;
+	STDMETHOD(Select)(THIS_ LPCITEMIDLIST pidl) PURE;
 };
 #undef INTERFACE
 
@@ -528,7 +528,7 @@ DECLARE_INTERFACE_(INamespaceProxy, IUnknown)
 	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
 	 /*** INamespaceProxy ***/
-	STDMETHOD(GetNavigateTarget)(THIS_ _In_ PCIDLIST_ABSOLUTE pidl, _Out_ PIDLIST_ABSOLUTE ppidlTarget, _Out_ ULONG *pulAttrib) PURE;
+	STDMETHOD(GetNavigateTarget)(THIS_ _In_ PCIDLIST_ABSOLUTE pidl, _Out_ PIDLIST_ABSOLUTE *ppidlTarget, _Out_ ULONG *pulAttrib) PURE;
 	STDMETHOD(Invoke)(THIS_ _In_ PCIDLIST_ABSOLUTE pidl) PURE;
 	STDMETHOD(OnSelectionChanged)(THIS_ _In_ PCIDLIST_ABSOLUTE pidl) PURE;
 	STDMETHOD(RefreshFlags)(THIS_ _Out_ DWORD *pdwStyle, _Out_ DWORD *pdwExStyle, _Out_ DWORD *dwEnum) PURE;
