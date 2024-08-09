@@ -36,7 +36,7 @@ int OSK_SetImage(int IdDlgItem, int IdResource)
     HWND hWndItem;
 
     hIcon = (HICON)LoadImageW(Globals.hInstance, MAKEINTRESOURCEW(IdResource),
-                              IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+                              IMAGE_ICON, ICON_WIDTH, ICON_HEIGHT, LR_DEFAULTCOLOR);
     if (hIcon == NULL)
         return FALSE;
 
@@ -174,6 +174,17 @@ VOID OSK_DestroyKeys(VOID)
     Globals.Keyboard = NULL;
 }
 
+static int OSK_GetKeyText(INT_PTR scancode, PBYTE bKeyStates, LPWSTR lpKeyText, UINT cchCount)
+{
+    UINT uVirtKey;
+    INT iResult;
+
+    uVirtKey = MapVirtualKeyW(scancode, MAPVK_VSC_TO_VK);
+    iResult = ToUnicode(uVirtKey, scancode, bKeyStates, lpKeyText, cchCount, 0);
+    lpKeyText[cchCount - 1] = UNICODE_NULL;
+    
+    return iResult;
+}
 /***********************************************************************
  *
  *           OSK_SetKeys
@@ -186,7 +197,6 @@ LRESULT OSK_SetKeys(int reason)
     BYTE bKeyStates[256];
     LPCWSTR szKey;
     PKEY Keys;
-    UINT uVirtKey;
     POINT LedPos;
     SIZE LedSize;
     int i, yPad;
@@ -209,15 +219,13 @@ LRESULT OSK_SetKeys(int reason)
                 if (!Keys[i].translate)
                     continue;
 
-                uVirtKey = MapVirtualKeyW(Keys[i].scancode & SCANCODE_MASK, MAPVK_VSC_TO_VK);
-
-                if (ToUnicode(uVirtKey, Keys[i].scancode & SCANCODE_MASK, bKeyStates, wKey, _countof(wKey), 0) >= 1)
+                if (OSK_GetKeyText(Keys[i].scancode & SCANCODE_MASK, bKeyStates, wKey, _countof(wKey)) >= 1)
                 {
                     szKey = wKey;
                 }
                 else
                 {
-                    szKey = Keys[i].name;
+                    szKey = L"";
                 }
 
                 /* Only one & the button will try to underline the next character... */
@@ -258,15 +266,17 @@ LRESULT OSK_SetKeys(int reason)
             /* Create key buttons */
             for (i = 0; i < Globals.Keyboard->KeyCount; i++)
             {
-                uVirtKey = MapVirtualKeyW(Keys[i].scancode & SCANCODE_MASK, MAPVK_VSC_TO_VK);
-
-                if (Keys[i].translate && ToUnicode(uVirtKey, Keys[i].scancode & SCANCODE_MASK, bKeyStates, wKey, _countof(wKey), 0) >= 1)
+                if (!Keys[i].translate)
+                {
+                    szKey = Keys[i].name;
+                }
+                else if (OSK_GetKeyText(Keys[i].scancode & SCANCODE_MASK, bKeyStates, wKey, _countof(wKey)) >= 1)
                 {
                     szKey = wKey;
                 }
                 else
                 {
-                    szKey = Keys[i].name;
+                    szKey = L"";
                 }
                 
                 Globals.hKeys[i] = CreateWindowW(WC_BUTTONW,
@@ -493,6 +503,8 @@ int OSK_Close(void)
     OSK_ReleaseKey(SCAN_CODE_60); // Left alt
     OSK_ReleaseKey(SCAN_CODE_62); // Right alt
     OSK_ReleaseKey(SCAN_CODE_64); // Right ctrl
+    OSK_ReleaseKey(SCAN_CODE_127); // Left Super/Win key
+    OSK_ReleaseKey(SCAN_CODE_128); // Right Super/Win key
 
     /* Destroy child controls */
     OSK_DestroyKeys();
@@ -785,6 +797,82 @@ LRESULT OSK_Paint(HWND hwnd)
 
     return 0;
 }
+
+/***********************************************************************
+ *
+ *           OSK_ThemeHandler
+ *
+ *  Function helper which handles theme drawing of buttons with icons.
+ */
+LRESULT APIENTRY OSK_ThemeHandler(LPNMCUSTOMDRAW pNmDraw)
+{
+    HTHEME hTheme;
+    HWND hButton;
+    INT iState = PBS_NORMAL;
+    HICON hIcon;
+    int x, y;
+
+    hButton = pNmDraw->hdr.hwndFrom;
+
+    /* If the button doesn't have an icon there is no need for custom handling */
+    if (!(GetWindowLongW(hButton, GWL_STYLE) & BS_ICON))
+        return CDRF_DODEFAULT;
+
+    /* Retrieve the theme handle for the button controls */
+    hTheme = GetWindowTheme(hButton);
+
+    if (!hTheme)
+        return CDRF_DODEFAULT;
+
+    /* Obtain CDDS drawing stages */
+    switch (pNmDraw->dwDrawStage)
+    {
+        case CDDS_PREPAINT:
+        {
+            /*
+                The button could be either in normal state or pushed.
+                Retrieve its state and save to a variable.
+            */
+            if (pNmDraw->uItemState & CDIS_DEFAULT)
+            {
+                iState = PBS_DEFAULTED;
+            }
+            else if (pNmDraw->uItemState & CDIS_SELECTED)
+            {
+                iState = PBS_PRESSED;
+            }
+            else if (pNmDraw->uItemState & CDIS_HOT)
+            {
+                iState = PBS_HOT;
+            }
+
+            if (IsThemeBackgroundPartiallyTransparent(hTheme, BP_PUSHBUTTON, iState))
+            {
+                /* Draw the application if the theme is transparent */
+                DrawThemeParentBackground(hButton, pNmDraw->hdc, &pNmDraw->rc);
+            }
+
+            hIcon = (HICON)SendMessageW(hButton, BM_GETIMAGE, IMAGE_ICON, 0);
+
+            /* Calculate icon coordinates */
+            x = (pNmDraw->rc.right - pNmDraw->rc.left) / 2 - ICON_WIDTH / 2;
+            y = (pNmDraw->rc.bottom - pNmDraw->rc.top) / 2 - ICON_HEIGHT / 2;
+
+            /* Draw it */
+            DrawThemeBackground(hTheme, pNmDraw->hdc, BP_PUSHBUTTON, iState, &pNmDraw->rc, NULL);
+            DrawIconEx(pNmDraw->hdc, x, y, hIcon, ICON_WIDTH, ICON_HEIGHT, 0, NULL, DI_NORMAL);
+
+            return CDRF_SKIPDEFAULT;
+        }
+
+        case CDDS_PREERASE:
+            return CDRF_DODEFAULT;
+
+        default:
+            return CDRF_SKIPDEFAULT;
+    }
+}
+
 /***********************************************************************
  *
  *       OSK_WndProc
@@ -825,6 +913,9 @@ LRESULT APIENTRY OSK_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     return (LRESULT)GetStockObject(BLACK_BRUSH);
             }
             break;
+
+        case WM_NOTIFY:
+            return OSK_ThemeHandler((LPNMCUSTOMDRAW)lParam);
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
