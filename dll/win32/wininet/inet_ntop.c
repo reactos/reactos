@@ -53,7 +53,7 @@ PCSTR
 WSAAPI
 inet_ntop(
   _In_ INT af,
-  _In_ PVOID src,
+  _In_ const VOID *src,
   _Out_writes_(StringBufSize) PSTR dst,
   _In_ size_t size)
 {
