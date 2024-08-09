@@ -55,7 +55,7 @@
 //	Used for IOCTL_VFD_OPEN_IMAGE and IOCTL_VFD_QUERY_IMAGE
 //
 #pragma pack	(push,2)
-#ifdef _MSC_VER
+#if !defined(__REACTOS__) || defined(_MSC_VER)
 #pragma warning (push)
 #pragma warning (disable: 4200)		//	Zero sized struct member warning
 #endif
@@ -70,7 +70,7 @@ typedef struct _VFD_IMAGE_INFO {
 	CHAR			FileName[0];	//	variable length file name string
 } VFD_IMAGE_INFO, *PVFD_IMAGE_INFO;
 
-#ifdef _MSC_VER
+#if !defined(__REACTOS__) || defined(_MSC_VER)
 #pragma warning (pop)
 #endif
 #pragma pack	(pop)

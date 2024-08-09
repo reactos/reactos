@@ -270,7 +270,7 @@ STDMETHODIMP CVfdShExt::GetCommandString(
 #ifndef __REACTOS__
 	UINT			idCmd,
 #else
-    UINT_PTR		idCmd,
+	UINT_PTR		idCmd,
 #endif
 	UINT			uFlags,
 	UINT			*reserved,
@@ -349,6 +349,7 @@ STDMETHODIMP CVfdShExt::InvokeCommand(
 		unicode = TRUE;
 	}
 #endif
+
 
 	if (!unicode && HIWORD(lpcmi->lpVerb)) {
 

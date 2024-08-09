@@ -13,8 +13,8 @@
 	so DO NOT define VFD_PNP macro
 	unless you know exactly what you are doing...
 */
+#if !defined(__REACTOS__) || defined(_MSC_VER)
 //	suppress empty compile unit warning
-#ifdef _MSC_VER
 #pragma warning (disable: 4206)
 #pragma message ("Plug and play support feature is disabled.")
 #endif

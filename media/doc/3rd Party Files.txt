@@ -287,3 +287,11 @@ Path: sdk/lib/crt/math/libm_sse2
 Used Version: git commit 6121d02
 License: MIT (https://spdx.org/licenses/MIT.html)
 URL: https://github.com/amd/win-libm
+
+Title: Virtual Floppy Drive
+Path: modules/rosapps/applications/cmdutils/vfdcmd
+Path: modules/rosapps/drivers/vfd
+Path: modules/rosapps/lib/vfdlib
+Used Version: 2.1.2008.206
+License: GPL-2.0 (https://spdx.org/licenses/GPL-2.0.html)
+URL: https://vfd.sourceforge.net/

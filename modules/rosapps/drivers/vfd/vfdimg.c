@@ -284,7 +284,7 @@ VfdOpenImage (
 #ifndef __REACTOS__
 			&file_object,
 #else
-            (PVOID *)&file_object,
+			(PVOID *)&file_object,
 #endif
 			NULL);
 
