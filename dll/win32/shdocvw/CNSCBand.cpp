@@ -67,7 +67,7 @@ SHDOCVW_CreateShortcut(
 
     CComPtr<IPersistFile> ppf;
     hr = psl->QueryInterface(IID_PPV_ARG(IPersistFile, &ppf));
-    if(FAILED_UNEXPECTEDLY(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     return ppf->Save(pszLnkFileName, TRUE);
@@ -254,7 +254,7 @@ void CNSCBand::_Init()
 void CNSCBand::_UnInit()
 {
     HRESULT hr;
-    CComPtr <IWebBrowser2> browserService;
+    CComPtr<IWebBrowser2> browserService;
 
     TRACE("Cleaning up explorer band ...\n");
 
@@ -262,9 +262,9 @@ void CNSCBand::_UnInit()
     if (FAILED_UNEXPECTEDLY(hr))
         return;
 
-    hr = AtlUnadvise(browserService, DIID_DWebBrowserEvents, m_adviseCookie);
+    AtlUnadvise(browserService, DIID_DWebBrowserEvents, m_adviseCookie);
     /* Remove all items of the treeview */
-    RevokeDragDrop(m_hwndTreeView);
+    ::RevokeDragDrop(m_hwndTreeView);
     TreeView_DeleteAllItems(m_hwndTreeView);
     m_pDesktop = NULL;
     m_hRoot = NULL;
@@ -1106,7 +1106,7 @@ LRESULT CNSCBand::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         case NM_DBLCLK:
             if (pnmhdr->hwndFrom == m_hwndTreeView)
             {
-                TV_HITTESTINFO HitTest;
+                TVHITTESTINFO HitTest;
                 ::GetCursorPos(&HitTest.pt);
                 TreeView_HitTest(m_hwndTreeView, &HitTest);
                 if (HitTest.flags & (TVHT_ABOVE | TVHT_BELOW | TVHT_NOWHERE))
@@ -1516,12 +1516,8 @@ STDMETHODIMP CNSCBand::TranslateAcceleratorIO(LPMSG lpMsg)
 
 STDMETHODIMP CNSCBand::GetClassID(CLSID *pClassID)
 {
-    if (!pClassID)
-        return E_POINTER;
-    *pClassID = CLSID_SH_FavBand;
-    return S_OK;
+    return E_NOTIMPL;
 }
-
 
 // *** IPersistStream ***
 

@@ -37,7 +37,6 @@ public:
     DECLARE_PROTECT_FINAL_CONSTRUCT()
 
     BEGIN_COM_MAP(CFavBand)
-        COM_INTERFACE_ENTRY_IID(IID_IDispatch, IDispatch)
         COM_INTERFACE_ENTRY_IID(IID_IDeskBand, IDeskBand)
         COM_INTERFACE_ENTRY2_IID(IID_IDockingWindow, IDockingWindow, IDeskBand)
         COM_INTERFACE_ENTRY2_IID(IID_IOleWindow, IOleWindow, IDeskBand)
