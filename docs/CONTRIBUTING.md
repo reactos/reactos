@@ -11,6 +11,7 @@ There are several ways to contribute to the development of ReactOS. The most oft
 >nor any Microsoft product that may be related to the proposed project that is under a license incompatible
 >with contribution to ReactOS, including but not limited to the leaked Windows 2000 source code and the Windows Research Kernel.
 
+
 ## What To Do?
 
 ### Fix bugs
@@ -42,6 +43,7 @@ There are some important points if you would like to help document ReactOS:
 1. Make sure the documentation does not exist yet (if it does, help improve it).
 2. Respect [clean room reverse engineering] practices.
 3. Add your knowledge to a place where the other developers can find it.
+
 
 ## How To Contribute?
 
@@ -79,6 +81,7 @@ Our commit style is defined in a __[commit template]__. Use it as a reference or
 
 To amend your commit with your name and e-mail (in any case you've forgot to set your name/e-mail) please take a look at this [guide](https://reactos.org/wiki/ReactOS_Git_For_Dummies#Amending_your_commit_with_name.2FE-mail). To set your name/e-mail globally for future commits that you push, [read this](https://reactos.org/wiki/ReactOS_Git_For_Dummies#Assign_commits_with_your_name_.26_E-mail_automatically).
 
+
 ## Where To Start?
 
 Finding a good project to start with can be a challenge, because when starting out you are (usually) not aware of all the possibilities. To help you find a project, here are some ideas to try:
@@ -112,6 +115,7 @@ Finding a good project to start with can be a challenge, because when starting o
   [request-coverity]:                                            https://scan.coverity.com/memberships/new?project_id=reactos
   [commit template]:                                             .gitmessage
 
-# See Also
 
-- [Rules for managing Pull Requests](PULL_REQUEST_MANAGEMENT.md)
+## See Also
+
+- [Rules for Managing Pull Requests](PULL_REQUEST_MANAGEMENT.md)

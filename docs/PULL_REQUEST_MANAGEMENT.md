@@ -1,4 +1,4 @@
-# Rules for managing Pull Requests
+# Rules for Managing Pull Requests
 
 For the sake of trying to maintain an acceptable number of open but idle PRs, the following rules should be considered:
 - If a PR has at least one approval, it can be merged after 1 week of waiting for additional comments.
