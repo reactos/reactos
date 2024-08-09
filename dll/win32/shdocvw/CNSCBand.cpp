@@ -1112,7 +1112,7 @@ LRESULT CNSCBand::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                 TV_HITTESTINFO HitTest;
                 ::GetCursorPos(&HitTest.pt);
                 TreeView_HitTest(m_hwndTreeView, &HitTest);
-                if (HitTest.flags & (VHT_ABOVE | TVHT_BELOW | TVHT_NOWHERE))
+                if (HitTest.flags & (TVHT_ABOVE | TVHT_BELOW | TVHT_NOWHERE))
                     break;
                 KillTimer(TIMER_ID_SELECT_ITEM);
                 SetTimer(TIMER_ID_SELECT_ITEM, ::GetDoubleClickTime(), NULL);
