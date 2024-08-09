@@ -936,7 +936,7 @@ void CNSCBand::_OnSelectItem()
     }
 }
 
-void CNSCBand::OnSelectionChanged(_In_ LPNMTREEVIEW pnmtv)
+void CNSCBand::_OnSelectionChanged(_In_ LPNMTREEVIEW pnmtv)
 {
     HTREEITEM hItem = pnmtv->itemNew.hItem;
     CItemData* pItemData = GetItemData(hItem);
@@ -1096,7 +1096,7 @@ LRESULT CNSCBand::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             if (pnmhdr->hwndFrom == m_hwndTreeView)
             {
                 KillTimer(TIMER_ID_SELECT_ITEM);
-                OnSelectionChanged((LPNMTREEVIEW)lParam);
+                _OnSelectionChanged((LPNMTREEVIEW)lParam);
             }
             break;
         case TVN_DELETEITEM:

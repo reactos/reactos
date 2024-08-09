@@ -218,7 +218,7 @@ protected:
     virtual BOOL _WantsRootItem() = 0;
     BOOL OnTreeItemExpanding(_In_ LPNMTREEVIEW pnmtv);
     BOOL OnTreeItemDeleted(_In_ LPNMTREEVIEW pnmtv);
-    void OnSelectionChanged(_In_ LPNMTREEVIEW pnmtv);
+    void _OnSelectionChanged(_In_ LPNMTREEVIEW pnmtv);
     void OnTreeItemDragging(_In_ LPNMTREEVIEW pnmtv, _In_ BOOL isRightClick);
     LRESULT OnBeginLabelEdit(_In_ LPNMTVDISPINFO dispInfo);
     LRESULT OnEndLabelEdit(_In_ LPNMTVDISPINFO dispInfo);
