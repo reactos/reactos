@@ -746,6 +746,22 @@ HRESULT STDMETHODCALLTYPE CShellLink::Load(IStream *stm)
     if (FAILED(hr)) // FIXME: Should we fail?
         return hr;
 
+    LPEXP_SPECIAL_FOLDER pSpecial = (LPEXP_SPECIAL_FOLDER)SHFindDataBlock(m_pDBList, EXP_SPECIAL_FOLDER_SIG);
+    if (pSpecial && pSpecial->cbSize == sizeof(*pSpecial) && ILGetSize(m_pPidl) > pSpecial->cbOffset)
+    {
+        if (LPITEMIDLIST folder = SHCloneSpecialIDList(NULL, pSpecial->idSpecialFolder, FALSE))
+        {
+            LPITEMIDLIST pidl = ILCombine(folder, (LPITEMIDLIST)((char*)m_pPidl + pSpecial->cbOffset));
+            if (pidl)
+            {
+                ILFree(m_pPidl);
+                m_pPidl = pidl;
+                TRACE("Replaced pidl base with CSIDL %u up to %ub.\n", pSpecial->idSpecialFolder, pSpecial->cbOffset);
+            }
+            ILFree(folder);
+        }
+    }
+
     if (TRACE_ON(shell))
     {
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
