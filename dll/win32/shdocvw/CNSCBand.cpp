@@ -219,6 +219,7 @@ void CNSCBand::_Init()
     }
     else
     {
+        TreeView_SetItemHeight(m_hwndTreeView, 24);
         InsertSubitems(TVI_ROOT, m_pidlRoot);
     }
 
@@ -612,7 +613,7 @@ BOOL CNSCBand::InsertSubitems(HTREEITEM hItem, LPCITEMIDLIST entry)
     /* Now we can redraw */
     m_hwndTreeView.SendMessage(WM_SETREDRAW, TRUE, 0);
 
-    return (uItemCount > 0) ? TRUE : FALSE;
+    return (uItemCount > 0);
 }
 
 /**
