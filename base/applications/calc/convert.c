@@ -75,6 +75,7 @@ static const conv_t conv_ANGLE[] = {
     DECLARE_CONV_UNIT(ANGLE, DEGREES,    "$",       "$")
     DECLARE_CONV_UNIT(ANGLE, GRADIANS,   "$*0.9",   "$/0.9")
     DECLARE_CONV_UNIT(ANGLE, RADIANS,    "$/P*180", "$*P/180")
+    DECLARE_CONV_UNIT(ANGLE, KONA,    "$/P*180", "$*P/180")
     DECLARE_CONV_END
 };
 
@@ -148,6 +149,7 @@ static const conv_t conv_AREA[] = {
     DECLARE_CONV_UNIT(AREA, SQUARE_YARD,            "$*0,83612736",      "$/0,83612736")
     DECLARE_CONV_UNIT(AREA, TAN,                    "$*1080000/1089",    "$*1089/1080000")
     DECLARE_CONV_UNIT(AREA, TSUBO,                  "$*1188/1089",       "$*1089/1188")
+    DECLARE_CONV_UNIT(AREA, AANA,                  "$*1188/1089",       "$*1089/1188")
     DECLARE_CONV_END
 };
 
