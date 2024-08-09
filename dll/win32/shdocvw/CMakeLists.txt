@@ -34,6 +34,7 @@ add_cd_file(TARGET shdocvw DESTINATION reactos/system32 FOR all)
 add_library(shdocvw_sublib OBJECT
     CExplorerBand.cpp
     CFavBand.cpp
+    CNSCBand.cpp
     mrulist.cpp
     objects.cpp
     utility.cpp)
