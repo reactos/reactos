@@ -1338,14 +1338,6 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_EDIT_PERMISSIONS:
         RegKeyEditPermissions(hWnd, hKeyRoot, NULL, keyPath);
         break;
-    case ID_REGISTRY_PRINTERSETUP:
-        //PRINTDLG pd;
-        //PrintDlg(&pd);
-        //PAGESETUPDLG psd;
-        //PageSetupDlg(&psd);
-        break;
-    case ID_REGISTRY_OPENLOCAL:
-        break;
     case ID_VIEW_REFRESH:
         RefreshTreeView(g_pChildWnd->hTreeWnd);
         keyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
