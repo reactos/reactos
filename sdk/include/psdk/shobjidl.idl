@@ -1442,6 +1442,11 @@ cpp_quote("#define CDBOSC_STATECHANGE  0x00000004")
 ]
 interface ICommDlgBrowser2 : ICommDlgBrowser
 {
+cpp_quote("#define CDB2N_CONTEXTMENU_DONE  1")
+cpp_quote("#define CDB2N_CONTEXTMENU_START 2")
+cpp_quote("#define CDB2GVF_SHOWALLFILES  0x00000001")
+cpp_quote("#define CDB2GVF_NOSELECTVERB  0x00000008")
+cpp_quote("#define CDB2GVF_NOINCLUDEITEM 0x00000010 /* IncludeObject should not be called */")
 
     HRESULT Notify(
         [in] IShellView *ppshv,

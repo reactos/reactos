@@ -1260,6 +1260,13 @@ CDefaultContextMenu::BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFOEX lpcmi, PStatic
     else
         FlagsName = L"BrowserFlags";
 
+    CComPtr<ICommDlgBrowser> pcdb;
+    if (SUCCEEDED(psb->QueryInterface(IID_PPV_ARG(ICommDlgBrowser, &pcdb))))
+    {
+        if (LOBYTE(GetVersion()) < 6 || FlagsName[0] == 'E')
+            return 0; // Don't browse in-place
+    }
+
     /* Try to get the flag from the verb */
     hr = StringCbPrintfW(wszKey, sizeof(wszKey), L"shell\\%s", pEntry->Verb.GetString());
     if (FAILED_UNEXPECTEDLY(hr))
