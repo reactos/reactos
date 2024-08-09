@@ -427,45 +427,45 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_MENU "Contém comandos para trabalhar com o Registo inteiro."
-    ID_EDIT_MENU "Contém comandos para edição de valores ou chaves."
-    ID_VIEW_MENU "Contém comandos para personalização da janela do Registo."
-    ID_FAVOURITES_MENU "Contém comandos para acessar chaves frequentemente usadas."
-    ID_HELP_MENU "Contém comandos para exibição da ajuda e informações sobre o Editor do Registo."
+    ID_REGISTRY_MENU "Contém comandos para trabalhar com o Registo inteiro"
+    ID_EDIT_MENU "Contém comandos para edição de valores ou chaves"
+    ID_VIEW_MENU "Contém comandos para personalização da janela do Registo"
+    ID_FAVOURITES_MENU "Contém comandos para acessar chaves frequentemente usadas"
+    ID_HELP_MENU "Contém comandos para exibição da ajuda e informações sobre o Editor do Registo"
     ID_EDIT_NEW_MENU "Contém comandos para criação de novas chaves ou valores"
 END
 
 STRINGTABLE
 BEGIN
-    ID_EDIT_MODIFY "Modifica os dados do valor."
+    ID_EDIT_MODIFY "Modifica os dados do valor"
     ID_EDIT_NEW_KEY "Adiciona uma nova chave"
-    ID_EDIT_NEW_STRINGVALUE "Adiciona um novo valor texto."
-    ID_EDIT_NEW_BINARYVALUE "Adiciona um novo valor binário."
-    ID_EDIT_NEW_DWORDVALUE "Adiciona um novo valor DWORD."
-    ID_REGISTRY_IMPORTREGISTRYFILE "Importa um ficheiro de texto para o registo."
-    ID_REGISTRY_EXPORTREGISTRYFILE "Exporta todo ou parte do registo para um ficheiro de texto."
+    ID_EDIT_NEW_STRINGVALUE "Adiciona um novo valor texto"
+    ID_EDIT_NEW_BINARYVALUE "Adiciona um novo valor binário"
+    ID_EDIT_NEW_DWORDVALUE "Adiciona um novo valor DWORD"
+    ID_REGISTRY_IMPORTREGISTRYFILE "Importa um ficheiro de texto para o registo"
+    ID_REGISTRY_EXPORTREGISTRYFILE "Exporta todo ou parte do registo para um ficheiro de texto"
     ID_REGISTRY_LOADHIVE "Carrega um ficheiro de secção no registo"
     ID_REGISTRY_UNLOADHIVE "Descarrega um ficheiro de secção no registo"
-    ID_REGISTRY_CONNECTNETWORKREGISTRY "Liga a um registo num computador remoto."
-    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Desliga um registo de um computador remoto."
-    ID_REGISTRY_PRINT "Imprime todo ou parte do registo."
-/*    ID_HELP_HELPTOPICS "Abre a ajuda do Editor do Registo." */
-    ID_HELP_ABOUT "Mostra informações do programa, número da versão e copyright."
+    ID_REGISTRY_CONNECTNETWORKREGISTRY "Liga a um registo num computador remoto"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Desliga um registo de um computador remoto"
+    ID_REGISTRY_PRINT "Imprime todo ou parte do registo"
+//    ID_HELP_HELPTOPICS "Abre a ajuda do Editor do Registo"
+    ID_HELP_ABOUT "Mostra informações do programa, número da versão e copyright"
 END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_EXIT "Encerra o Editor do Registo."
-    ID_FAVOURITES_ADDTOFAVOURITES "Adiciona chaves na lista de favoritos."
-    ID_FAVOURITES_REMOVEFAVOURITE "Remove chaves da lista de favoritos."
-    ID_VIEW_STATUSBAR "Mostra ou oculta a barra de estado."
-    ID_VIEW_SPLIT "Altera a posição da divisão entre os painéis."
-    ID_VIEW_REFRESH "Actualiza a janela."
-    ID_EDIT_DELETE "Exclui a seleccão."
-    ID_EDIT_RENAME "Renomeia a seleccão."
-    ID_EDIT_COPYKEYNAME "Copia o nome da chave seleccionada para a área de transferência."
-    ID_EDIT_FIND "Localiza um texto numa chave, valor ou dado."
-    ID_EDIT_FINDNEXT "Localiza a próxima ocorrência do texto especificado na pesquisa anterior."
+    ID_REGISTRY_EXIT "Encerra o Editor do Registo"
+    ID_FAVOURITES_ADDTOFAVOURITES "Adiciona chaves na lista de favoritos"
+    ID_FAVOURITES_REMOVEFAVOURITE "Remove chaves da lista de favoritos"
+    ID_VIEW_STATUSBAR "Mostra ou oculta a barra de estado"
+    ID_VIEW_SPLIT "Altera a posição da divisão entre os painéis"
+    ID_VIEW_REFRESH "Actualiza a janela"
+    ID_EDIT_DELETE "Exclui a seleccão"
+    ID_EDIT_RENAME "Renomeia a seleccão"
+    ID_EDIT_COPYKEYNAME "Copia o nome da chave seleccionada para a área de transferência"
+    ID_EDIT_FIND "Localiza um texto numa chave, valor ou dado"
+    ID_EDIT_FINDNEXT "Localiza a próxima ocorrência do texto especificado na pesquisa anterior"
 END
 
 STRINGTABLE
@@ -724,12 +724,3 @@ BEGIN
     DEFPUSHBUTTON "Cancelar", IDCANCEL, 93, 29, 45, 14
     LTEXT "Procurar no registo...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Opens Registry Editor Help."
- *    ID_HELP_ABOUT "Displays program information, version number, and copyright."
- *END
- */

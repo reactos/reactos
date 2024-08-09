@@ -439,7 +439,7 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Connects to a remote computer's registry"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Disconnects from a remote computer's registry"
     ID_REGISTRY_PRINT "Prints all or part of the registry"
-/*    ID_HELP_HELPTOPICS "Opens registry editor help" */
+//    ID_HELP_HELPTOPICS "Opens registry editor help"
     ID_HELP_ABOUT "Displays program information, version number and copyright"
 END
 
@@ -714,12 +714,3 @@ BEGIN
     DEFPUSHBUTTON "ביטול", IDCANCEL, 93, 29, 45, 14
     LTEXT "מחפש ברשום...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Opens Registry Editor Help."
- *    ID_HELP_ABOUT "Displays program information, version number, and copyright."
- *END
- */

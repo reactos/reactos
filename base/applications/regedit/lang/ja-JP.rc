@@ -417,45 +417,45 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_MENU "レジストリ全体で使用するコマンドです。"
-    ID_EDIT_MENU "値やキーを編集するコマンドです。"
-    ID_VIEW_MENU "レジストリ ウィンドウをカスタマイズするコマンドです。"
-    ID_FAVOURITES_MENU "頻繁に使用されるキーにアクセスするコマンドです。"
-    ID_HELP_MENU "ヘルプとレジストリ エディタのバージョン情報を表示するコマンドです。"
-    ID_EDIT_NEW_MENU "新しいキーや値を作成するコマンドです。"
+    ID_REGISTRY_MENU "レジストリ全体で使用するコマンドです"
+    ID_EDIT_MENU "値やキーを編集するコマンドです"
+    ID_VIEW_MENU "レジストリ ウィンドウをカスタマイズするコマンドです"
+    ID_FAVOURITES_MENU "頻繁に使用されるキーにアクセスするコマンドです"
+    ID_HELP_MENU "ヘルプとレジストリ エディタのバージョン情報を表示するコマンドです"
+    ID_EDIT_NEW_MENU "新しいキーや値を作成するコマンドです"
 END
 
 STRINGTABLE
 BEGIN
-    ID_EDIT_MODIFY "値のデータを変更します。"
-    ID_EDIT_NEW_KEY "新しいキーを追加します。"
-    ID_EDIT_NEW_STRINGVALUE "新しい文字列値を追加します。"
-    ID_EDIT_NEW_BINARYVALUE "新しいバイナリ値を追加します。"
-    ID_EDIT_NEW_DWORDVALUE "新しい DWORD 値を追加します。"
-    ID_REGISTRY_IMPORTREGISTRYFILE "テキスト ファイルをレジストリにインポートします。"
-    ID_REGISTRY_EXPORTREGISTRYFILE "レジストリの一部または全体をテキスト ファイルにエクスポートします。"
-    ID_REGISTRY_LOADHIVE "ハイブ ファイルをレジストリに読み込みます。"
-    ID_REGISTRY_UNLOADHIVE "レジストリからハイブをアンロードします。"
-    ID_REGISTRY_CONNECTNETWORKREGISTRY "リモート コンピュータのレジストリに接続します。"
-    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "リモート コンピュータのレジストリを切断します。"
-    ID_REGISTRY_PRINT "レジストリの一部または全体を印刷します。"
-/*    ID_HELP_HELPTOPICS "レジストリ エディタのヘルプを開きます。" */
-    ID_HELP_ABOUT "プログラムの情報、バージョン番号および著作権を表示します。"
+    ID_EDIT_MODIFY "値のデータを変更します"
+    ID_EDIT_NEW_KEY "新しいキーを追加します"
+    ID_EDIT_NEW_STRINGVALUE "新しい文字列値を追加します"
+    ID_EDIT_NEW_BINARYVALUE "新しいバイナリ値を追加します"
+    ID_EDIT_NEW_DWORDVALUE "新しい DWORD 値を追加します"
+    ID_REGISTRY_IMPORTREGISTRYFILE "テキスト ファイルをレジストリにインポートします"
+    ID_REGISTRY_EXPORTREGISTRYFILE "レジストリの一部または全体をテキスト ファイルにエクスポートします"
+    ID_REGISTRY_LOADHIVE "ハイブ ファイルをレジストリに読み込みます"
+    ID_REGISTRY_UNLOADHIVE "レジストリからハイブをアンロードします"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY "リモート コンピュータのレジストリに接続します"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "リモート コンピュータのレジストリを切断します"
+    ID_REGISTRY_PRINT "レジストリの一部または全体を印刷します"
+//    ID_HELP_HELPTOPICS "レジストリ エディタのヘルプを開きます"
+    ID_HELP_ABOUT "プログラムの情報、バージョン番号および著作権を表示します"
 END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_EXIT "レジストリ エディタを終了します。"
-    ID_FAVOURITES_ADDTOFAVOURITES "お気に入りの一覧にキーを追加します。"
-    ID_FAVOURITES_REMOVEFAVOURITE "お気に入りの一覧からキーを削除します。"
-    ID_VIEW_STATUSBAR "ステータス バーの表示/非表示を切り替えます。"
-    ID_VIEW_SPLIT "2つのパネルの境界の位置を変更します。"
-    ID_VIEW_REFRESH "ウィンドウの内容を最新の情報に更新します。"
-    ID_EDIT_DELETE "選択範囲を削除します。"
-    ID_EDIT_RENAME "名前を変更します。"
-    ID_EDIT_COPYKEYNAME "選択されたキー名をクリップボードにコピーします。"
-    ID_EDIT_FIND "キー、値、データの中のテキストを検索します。"
-    ID_EDIT_FINDNEXT "前回と同じ条件で次の項目を検索します。"
+    ID_REGISTRY_EXIT "レジストリ エディタを終了します"
+    ID_FAVOURITES_ADDTOFAVOURITES "お気に入りの一覧にキーを追加します"
+    ID_FAVOURITES_REMOVEFAVOURITE "お気に入りの一覧からキーを削除します"
+    ID_VIEW_STATUSBAR "ステータス バーの表示/非表示を切り替えます"
+    ID_VIEW_SPLIT "2つのパネルの境界の位置を変更します"
+    ID_VIEW_REFRESH "ウィンドウの内容を最新の情報に更新します"
+    ID_EDIT_DELETE "選択範囲を削除します"
+    ID_EDIT_RENAME "名前を変更します"
+    ID_EDIT_COPYKEYNAME "選択されたキー名をクリップボードにコピーします"
+    ID_EDIT_FIND "キー、値、データの中のテキストを検索します"
+    ID_EDIT_FINDNEXT "前回と同じ条件で次の項目を検索します"
 END
 
 STRINGTABLE
@@ -714,12 +714,3 @@ BEGIN
     DEFPUSHBUTTON "キャンセル", IDCANCEL, 93, 29, 45, 14
     LTEXT "レジストリの検索中...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "レジストリ エディタのヘルプを開きます。"
- *    ID_HELP_ABOUT "プログラムの情報、バージョン番号および著作権を表示します。"
- *END
- */

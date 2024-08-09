@@ -442,7 +442,7 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Свързва се с регистъра на далечен компютър"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Разкача се от регистъра на отдалечен компютър"
     ID_REGISTRY_PRINT "Разпечатва регистъра или част от него"
-/*    ID_HELP_HELPTOPICS "Отваря помощта за регистърен обработчик" */
+//    ID_HELP_HELPTOPICS "Отваря помощта за регистърен обработчик"
     ID_HELP_ABOUT "Показва сведения за приложението, версия и възпроизводствени права"
 END
 
@@ -717,12 +717,3 @@ BEGIN
     DEFPUSHBUTTON "Отказ", IDCANCEL, 93, 29, 45, 14
     LTEXT "Претърсване на регистъра...", IDC_STATIC, 33, 12, 105, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Отваря помощта за Регистърния обработчик."
- *    ID_HELP_ABOUT "Показва сведения за приложението, версията и възпроизводственото право."
- *END
- */

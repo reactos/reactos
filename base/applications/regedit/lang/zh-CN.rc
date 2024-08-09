@@ -427,45 +427,45 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_MENU "包含操作整个注册表的命令。"
-    ID_EDIT_MENU "包含编辑值或键的命令。"
-    ID_VIEW_MENU "包含定制注册表窗口的命令。"
-    ID_FAVOURITES_MENU "包含访问常用键时所用的命令。"
-    ID_HELP_MENU "包含显示帮助以及注册表编辑器有关信息的命令。"
-    ID_EDIT_NEW_MENU "包含创建新键或值的命令。"
+    ID_REGISTRY_MENU "包含操作整个注册表的命令"
+    ID_EDIT_MENU "包含编辑值或键的命令"
+    ID_VIEW_MENU "包含定制注册表窗口的命令"
+    ID_FAVOURITES_MENU "包含访问常用键时所用的命令"
+    ID_HELP_MENU "包含显示帮助以及注册表编辑器有关信息的命令"
+    ID_EDIT_NEW_MENU "包含创建新键或值的命令"
 END
 
 STRINGTABLE
 BEGIN
-    ID_EDIT_MODIFY "修改该值的数据。"
-    ID_EDIT_NEW_KEY "添加新键。"
-    ID_EDIT_NEW_STRINGVALUE "添加新字符串值。"
-    ID_EDIT_NEW_BINARYVALUE "添加新二进制值。"
-    ID_EDIT_NEW_DWORDVALUE "添加新 DWORD 值。"
-    ID_REGISTRY_IMPORTREGISTRYFILE "将文本文件导入到注册表中。"
-    ID_REGISTRY_EXPORTREGISTRYFILE "将注册表全部或部分导出到文件中。"
-    ID_REGISTRY_LOADHIVE "加載配置单元到注册表中。"
-    ID_REGISTRY_UNLOADHIVE "从注册表中卸載配置单元。"
-    ID_REGISTRY_CONNECTNETWORKREGISTRY "连接到远程计算机的注册表。"
-    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "与远程计算机注册表断开连接。"
-    ID_REGISTRY_PRINT "打印所有或部分注册表。"
-/*    ID_HELP_HELPTOPICS "打开注册表编辑器帮助。" */
-    ID_HELP_ABOUT "显示程序信息、版本和版权。"
+    ID_EDIT_MODIFY "修改该值的数据"
+    ID_EDIT_NEW_KEY "添加新键"
+    ID_EDIT_NEW_STRINGVALUE "添加新字符串值"
+    ID_EDIT_NEW_BINARYVALUE "添加新二进制值"
+    ID_EDIT_NEW_DWORDVALUE "添加新 DWORD 值"
+    ID_REGISTRY_IMPORTREGISTRYFILE "将文本文件导入到注册表中"
+    ID_REGISTRY_EXPORTREGISTRYFILE "将注册表全部或部分导出到文件中"
+    ID_REGISTRY_LOADHIVE "加載配置单元到注册表中"
+    ID_REGISTRY_UNLOADHIVE "从注册表中卸載配置单元"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY "连接到远程计算机的注册表"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "与远程计算机注册表断开连接"
+    ID_REGISTRY_PRINT "打印所有或部分注册表"
+//    ID_HELP_HELPTOPICS "打开注册表编辑器帮助"
+    ID_HELP_ABOUT "显示程序信息、版本和版权"
 END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_EXIT "退出注册表编辑器。"
-    ID_FAVOURITES_ADDTOFAVOURITES "将键添加到收藏夹列表中。"
-    ID_FAVOURITES_REMOVEFAVOURITE "将键从收藏夹列表中删除。"
-    ID_VIEW_STATUSBAR "显示或隐藏状态栏。"
-    ID_VIEW_SPLIT "改变两个面板的拆分位置。"
-    ID_VIEW_REFRESH "刷新窗口。"
-    ID_EDIT_DELETE "删除所选内容。"
-    ID_EDIT_RENAME "重命名选定内容。"
-    ID_EDIT_COPYKEYNAME "将选定键的名称复制到剪贴板上。"
-    ID_EDIT_FIND "在键、值或数据里找到文本字符串。"
-    ID_EDIT_FINDNEXT "继续查找上次搜索的文本。"
+    ID_REGISTRY_EXIT "退出注册表编辑器"
+    ID_FAVOURITES_ADDTOFAVOURITES "将键添加到收藏夹列表中"
+    ID_FAVOURITES_REMOVEFAVOURITE "将键从收藏夹列表中删除"
+    ID_VIEW_STATUSBAR "显示或隐藏状态栏"
+    ID_VIEW_SPLIT "改变两个面板的拆分位置"
+    ID_VIEW_REFRESH "刷新窗口"
+    ID_EDIT_DELETE "删除所选内容"
+    ID_EDIT_RENAME "重命名选定内容"
+    ID_EDIT_COPYKEYNAME "将选定键的名称复制到剪贴板上"
+    ID_EDIT_FIND "在键、值或数据里找到文本字符串"
+    ID_EDIT_FINDNEXT "继续查找上次搜索的文本"
 END
 
 STRINGTABLE
@@ -724,12 +724,3 @@ BEGIN
     DEFPUSHBUTTON "取消", IDCANCEL, 93, 29, 45, 14
     LTEXT "正在搜索注册表...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Opens Registry Editor Help."
- *    ID_HELP_ABOUT "Displays program information, version number, and copyright."
- *END
- */

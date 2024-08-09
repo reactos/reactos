@@ -439,7 +439,7 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Menyambungkan ke registri komputer lain"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Memutuskan dari registri komputer lain"
     ID_REGISTRY_PRINT "Mecetak semua atau sebagian registri"
-/*    ID_HELP_HELPTOPICS "Opens registry editor help" */
+//    ID_HELP_HELPTOPICS "Opens registry editor help"
     ID_HELP_ABOUT "Menampilkan informasi program, nomor versi, dan hak cipta"
 END
 
@@ -714,12 +714,3 @@ BEGIN
     DEFPUSHBUTTON "Batal", IDCANCEL, 93, 29, 45, 14
     LTEXT "Mencari registri...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Opens Registry Editor Help."
- *    ID_HELP_ABOUT "Displays program information, version number, and copyright."
- *END
- */

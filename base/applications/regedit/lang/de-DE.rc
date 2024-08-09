@@ -439,8 +439,8 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Verbindet zu einer Registry eines Fremdcomputers"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Trennt die Verbindung zu der Registry eines Fremdcomputers"
     ID_REGISTRY_PRINT "Druckt die gesamte Registry oder Teile davon aus"
-/*    ID_HELP_HELPTOPICS "Öffnet die Hilfe" */
-    ID_HELP_ABOUT "Zeigt Versions- und Copyright-Informationen an"
+//    ID_HELP_HELPTOPICS "Öffnet die Hilfe"
+    ID_HELP_ABOUT "Zeigt Programmname, Version und Copyright an"
 END
 
 STRINGTABLE
@@ -714,12 +714,3 @@ BEGIN
     DEFPUSHBUTTON "Abbrechen", IDCANCEL, 93, 29, 45, 14
     LTEXT "Durchsuche die Registry...", IDC_STATIC, 33, 12, 85, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Öffnet die Hilfe."
- *    ID_HELP_ABOUT "Zeigt Programmname, Version und Copyright an"
- *END
- */

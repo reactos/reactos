@@ -439,7 +439,7 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Připojí se ke vzdálenému registru jiného počítače"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Odpojí se od vzdálenému registru jiného počítače"
     ID_REGISTRY_PRINT "Vytiskne všechny části registru"
-/*    ID_HELP_HELPTOPICS "Otevře témata nápovědy pro editor registru" */
+//    ID_HELP_HELPTOPICS "Otevře nápovědu pro editor registru"
     ID_HELP_ABOUT "Zobrazí informace o aplikaci, verzi a copyright"
 END
 
@@ -714,12 +714,3 @@ BEGIN
     DEFPUSHBUTTON "Storno", IDCANCEL, 93, 29, 45, 14
     LTEXT "Probíhá prohledávání registru...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Otevře nápovědu pro editor registru."
- *    ID_HELP_ABOUT "Zobrazí informace o aplikaci, verzi a copyright."
- *END
- */

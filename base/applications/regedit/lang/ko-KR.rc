@@ -441,7 +441,7 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "원격 컴퓨터의 레지스트리로 접속합니다"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "원격 컴퓨터의 레지스트리로의 접속을 끊습니다"
     ID_REGISTRY_PRINT "레지스트리의 전체나 일부를 인쇄합니다"
-/*    ID_HELP_HELPTOPICS "레지스트리 편집기의 도움말을 표시합니다" */
+//    ID_HELP_HELPTOPICS "레지스트리 편집기의 도움말을 표시합니다"
     ID_HELP_ABOUT "프로그램 정보, 벼젼과 라이센스를 표시합니다"
 END
 
@@ -716,12 +716,3 @@ BEGIN
     DEFPUSHBUTTON "취소", IDCANCEL, 93, 29, 45, 14
     LTEXT "레지스트리를 검색중...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Opens Registry Editor Help."
- *    ID_HELP_ABOUT "Displays program information, version number, and copyright."
- *END
- */

@@ -437,45 +437,45 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_MENU "包含與整個登錄工作相關的命令。"
-    ID_EDIT_MENU "包含編輯值或機碼的命令。"
-    ID_VIEW_MENU "包含自訂登錄視窗的命令。"
-    ID_FAVOURITES_MENU "包含訪問常用機碼時所用的命令。"
-    ID_HELP_MENU "包含顯示説明以及登錄編輯程式有關資訊的命令。"
-    ID_EDIT_NEW_MENU "包含新增機碼或值的命令。"
+    ID_REGISTRY_MENU "包含與整個登錄工作相關的命令"
+    ID_EDIT_MENU "包含編輯值或機碼的命令"
+    ID_VIEW_MENU "包含自訂登錄視窗的命令"
+    ID_FAVOURITES_MENU "包含訪問常用機碼時所用的命令"
+    ID_HELP_MENU "包含顯示説明以及登錄編輯程式有關資訊的命令"
+    ID_EDIT_NEW_MENU "包含新增機碼或值的命令"
 END
 
 STRINGTABLE
 BEGIN
-    ID_EDIT_MODIFY "修改該值的資料。"
-    ID_EDIT_NEW_KEY "新增新機碼。"
-    ID_EDIT_NEW_STRINGVALUE "新增新的字串值。"
-    ID_EDIT_NEW_BINARYVALUE "新增新二進制值。"
-    ID_EDIT_NEW_DWORDVALUE "新增新 DWORD 值。"
-    ID_REGISTRY_IMPORTREGISTRYFILE "將檔案匯入到登錄中。"
-    ID_REGISTRY_EXPORTREGISTRYFILE "將登錄全部或部分匯出到檔案中。"
-    ID_REGISTRY_LOADHIVE "載入 Hive 控制檔到登錄中。"
-    ID_REGISTRY_UNLOADHIVE "從登錄中解除載入 Hive 控制檔。"
-    ID_REGISTRY_CONNECTNETWORKREGISTRY "連線到遠端電腦的登錄。"
-    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "斷開與遠端電腦登錄的連線。"
-    ID_REGISTRY_PRINT "列印所有或部分登錄。"
-/*    ID_HELP_HELPTOPICS "開啟登錄編輯程式説明。" */
-    ID_HELP_ABOUT "顯示程式資訊、版本號和版權。"
+    ID_EDIT_MODIFY "修改該值的資料"
+    ID_EDIT_NEW_KEY "新增新機碼"
+    ID_EDIT_NEW_STRINGVALUE "新增新的字串值"
+    ID_EDIT_NEW_BINARYVALUE "新增新二進制值"
+    ID_EDIT_NEW_DWORDVALUE "新增新 DWORD 值"
+    ID_REGISTRY_IMPORTREGISTRYFILE "將檔案匯入到登錄中"
+    ID_REGISTRY_EXPORTREGISTRYFILE "將登錄全部或部分匯出到檔案中"
+    ID_REGISTRY_LOADHIVE "載入 Hive 控制檔到登錄中"
+    ID_REGISTRY_UNLOADHIVE "從登錄中解除載入 Hive 控制檔"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY "連線到遠端電腦的登錄"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "斷開與遠端電腦登錄的連線"
+    ID_REGISTRY_PRINT "列印所有或部分登錄"
+//    ID_HELP_HELPTOPICS "開啟登錄編輯程式説明"
+    ID_HELP_ABOUT "顯示程式資訊、版本號和版權"
 END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_EXIT "結束登錄編輯程式。"
-    ID_FAVOURITES_ADDTOFAVOURITES "將機碼新增到我的最愛列表中。"
-    ID_FAVOURITES_REMOVEFAVOURITE "將機碼從我的最愛列表中刪除。"
-    ID_VIEW_STATUSBAR "顯示或隱藏狀態列。"
-    ID_VIEW_SPLIT "變更兩個窗格之間的分隔線位置。"
-    ID_VIEW_REFRESH "重新整理視窗。"
-    ID_EDIT_DELETE "刪除已選取內容。"
-    ID_EDIT_RENAME "重新命名已選取內容。"
-    ID_EDIT_COPYKEYNAME "將已選取機碼的名稱複製到剪貼簿。"
-    ID_EDIT_FIND "在機碼、值或資料裡找到文字字串。"
-    ID_EDIT_FINDNEXT "繼續搜尋上次搜尋的文字。"
+    ID_REGISTRY_EXIT "結束登錄編輯程式"
+    ID_FAVOURITES_ADDTOFAVOURITES "將機碼新增到我的最愛列表中"
+    ID_FAVOURITES_REMOVEFAVOURITE "將機碼從我的最愛列表中刪除"
+    ID_VIEW_STATUSBAR "顯示或隱藏狀態列"
+    ID_VIEW_SPLIT "變更兩個窗格之間的分隔線位置"
+    ID_VIEW_REFRESH "重新整理視窗"
+    ID_EDIT_DELETE "刪除已選取內容"
+    ID_EDIT_RENAME "重新命名已選取內容"
+    ID_EDIT_COPYKEYNAME "將已選取機碼的名稱複製到剪貼簿"
+    ID_EDIT_FIND "在機碼、值或資料裡找到文字字串"
+    ID_EDIT_FINDNEXT "繼續搜尋上次搜尋的文字"
 END
 
 STRINGTABLE
@@ -734,12 +734,3 @@ BEGIN
     DEFPUSHBUTTON "取消", IDCANCEL, 93, 29, 45, 14
     LTEXT "正在搜尋登錄...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "開啟登錄編輯程式説明。"
- *    ID_HELP_ABOUT "顯示程式資訊、版本號碼和版權。"
- *END
- */

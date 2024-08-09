@@ -442,7 +442,7 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Lidhet me regjistrin e një kompjuteri largët"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Shkëputet nga regjistri një kompjuter në distancë të"
     ID_REGISTRY_PRINT "Shtyp tërë ose pjesë të regjistrit"
-/*    ID_HELP_HELPTOPICS "Hap editor regjistrit ndihmë" */
+//    ID_HELP_HELPTOPICS "Hap editor regjistrit ndihmë"
     ID_HELP_ABOUT "Displays informacion rreth programit, versionin dhe të drejtat e autorit"
 END
 
@@ -717,12 +717,3 @@ BEGIN
     DEFPUSHBUTTON "Anulo", IDCANCEL, 93, 29, 45, 14
     LTEXT "Kerko ne regjister...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Opens Registry Editor Help."
- *    ID_HELP_ABOUT "Displays program information, version number, and copyright."
- *END
- */
