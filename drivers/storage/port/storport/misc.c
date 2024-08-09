@@ -336,6 +336,12 @@ TimerCallbackDpcRoutine(
 
     PTIMER_ENTRY TimerEntry = (PTIMER_ENTRY)DeferredContext;
 
+    /*
+     * Miniport can schedule a new timer event inside of callback, we should clear timer activated
+     * status here to ensure timer can be correctly scheduled
+     */
+    TimerEntry->TimerAlreadySet = 0;
+
     TimerEntry->TimerCallback(TimerEntry->HwDeviceExtension,
                               TimerEntry->Context);
 }
