@@ -224,7 +224,7 @@ DriverProc(
 
         case DRV_QUERYCONFIGURE :
         {
-            SND_TRACE(L"DRV_QUERYCONFIGURE");
+            SND_TRACE(L"DRV_QUERYCONFIGURE\n");
             return 0L;
         }
         case DRV_CONFIGURE :
