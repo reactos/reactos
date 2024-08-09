@@ -155,14 +155,14 @@ public:
     STDMETHODIMP Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr) override;
 
     // *** IDropTarget methods ***
-    STDMETHOD(DragEnter)(IDataObject *pObj, DWORD glfKeyState, POINTL pt, DWORD *pdwEffect) override;
-    STDMETHOD(DragOver)(DWORD glfKeyState, POINTL pt, DWORD *pdwEffect) override;
-    STDMETHOD(DragLeave)() override;
-    STDMETHOD(Drop)(IDataObject *pObj, DWORD glfKeyState, POINTL pt, DWORD *pdwEffect) override;
+    STDMETHODIMP DragEnter(IDataObject *pObj, DWORD glfKeyState, POINTL pt, DWORD *pdwEffect) override;
+    STDMETHODIMP DragOver(DWORD glfKeyState, POINTL pt, DWORD *pdwEffect) override;
+    STDMETHODIMP DragLeave() override;
+    STDMETHODIMP Drop(IDataObject *pObj, DWORD glfKeyState, POINTL pt, DWORD *pdwEffect) override;
 
     // *** IDropSource methods ***
-    STDMETHOD(QueryContinueDrag)(BOOL fEscapePressed, DWORD grfKeyState) override;
-    STDMETHOD(GiveFeedback)(DWORD dwEffect) override;
+    STDMETHODIMP QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyState) override;
+    STDMETHODIMP GiveFeedback(DWORD dwEffect) override;
 
     BEGIN_MSG_MAP(CNSCBand)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
