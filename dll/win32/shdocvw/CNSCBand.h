@@ -35,16 +35,16 @@ public:
     CNSCBand();
     virtual ~CNSCBand();
 
-    class NodeInfo
+    // The node of TreeView
+    struct CItemData
     {
-    public:
-        LPITEMIDLIST absolutePidl;
-        LPITEMIDLIST relativePidl;
-        BOOL expanded;
+        CComHeapPtr<ITEMIDLIST> absolutePidl;
+        CComHeapPtr<ITEMIDLIST> relativePidl;
+        BOOL expanded = FALSE;
     };
-    NodeInfo* GetNodeInfo(HTREEITEM hItem);
+    CItemData* GetItemData(_In_ HTREEITEM hItem);
 
-    HRESULT ExecuteCommand(CComPtr<IContextMenu>& menu, UINT nCmd);
+    HRESULT ExecuteCommand(_In_ CComPtr<IContextMenu>& menu, _In_ UINT nCmd);
     HTREEITEM InsertItem(
         _In_opt_ HTREEITEM hParent,
         _Inout_ IShellFolder *psfParent,
@@ -60,8 +60,8 @@ public:
     BOOL NavigateToPIDL(LPCITEMIDLIST dest, HTREEITEM *item, BOOL bExpand, BOOL bInsert, BOOL bSelect);
     BOOL NavigateToCurrentFolder();
     HRESULT UpdateBrowser(LPCITEMIDLIST pidlGoto);
-    HRESULT GetCurrentLocation(PIDLIST_ABSOLUTE *ppidl);
-    HRESULT IsCurrentLocation(PCIDLIST_ABSOLUTE pidl);
+    HRESULT GetCurrentLocation(_Out_ PIDLIST_ABSOLUTE *ppidl);
+    HRESULT IsCurrentLocation(_In_ PCIDLIST_ABSOLUTE pidl);
     void OnChangeNotify(
         _In_opt_ LPCITEMIDLIST pidl0,
         _In_opt_ LPCITEMIDLIST pidl1,
@@ -216,12 +216,12 @@ protected:
     virtual DWORD _GetEnumFlags() = 0;
     virtual BOOL _GetTitle(LPWSTR pszTitle, INT cchTitle) = 0;
     virtual BOOL _WantsRootItem() = 0;
-    BOOL OnTreeItemExpanding(LPNMTREEVIEW pnmtv);
-    BOOL OnTreeItemDeleted(LPNMTREEVIEW pnmtv);
-    void OnSelectionChanged(LPNMTREEVIEW pnmtv);
-    void OnTreeItemDragging(LPNMTREEVIEW pnmtv, BOOL isRightClick);
-    LRESULT OnBeginLabelEdit(LPNMTVDISPINFO dispInfo);
-    LRESULT OnEndLabelEdit(LPNMTVDISPINFO dispInfo);
+    BOOL OnTreeItemExpanding(_In_ LPNMTREEVIEW pnmtv);
+    BOOL OnTreeItemDeleted(_In_ LPNMTREEVIEW pnmtv);
+    void OnSelectionChanged(_In_ LPNMTREEVIEW pnmtv);
+    void OnTreeItemDragging(_In_ LPNMTREEVIEW pnmtv, _In_ BOOL isRightClick);
+    LRESULT OnBeginLabelEdit(_In_ LPNMTVDISPINFO dispInfo);
+    LRESULT OnEndLabelEdit(_In_ LPNMTVDISPINFO dispInfo);
     HRESULT _AddFavorite();
     void _OnSelectItem();
 
