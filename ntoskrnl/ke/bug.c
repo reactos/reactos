@@ -1134,6 +1134,8 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
         /* FIXME: Support Triage Dump */
 
         /* FIXME: Write the crash dump */
+        // TODO: The crash-dump helper must set the Reboot variable.
+        Reboot = !!IopAutoReboot;
     }
     else
     {

@@ -624,8 +624,6 @@ DATA_SEG("INITDATA") CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         NULL,
         NULL
     },
-
-
     {
         L"ProductOptions",
         L"ProductSuite",
@@ -923,6 +921,13 @@ DATA_SEG("INITDATA") CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         L"WMI\\Trace",
         L"TraceAlignment",
         &DummyData,
+        NULL,
+        NULL
+    },
+    {
+        L"CrashControl",
+        L"AutoReboot",
+        &IopAutoReboot,
         NULL,
         NULL
     },
