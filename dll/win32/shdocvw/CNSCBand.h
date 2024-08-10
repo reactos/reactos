@@ -228,6 +228,7 @@ protected:
     LRESULT OnBeginLabelEdit(_In_ LPNMTVDISPINFO dispInfo);
     LRESULT OnEndLabelEdit(_In_ LPNMTVDISPINFO dispInfo);
     HRESULT _AddFavorite();
+    void _Sort(HTREEITEM hParent);
 
     // *** message handlers ***
     LRESULT OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
@@ -242,6 +243,7 @@ protected:
     LRESULT OnShellEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT ContextMenuHack(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
+    // *** Tree item sorting callback ***
     static INT CALLBACK CompareTreeItems(LPARAM p1, LPARAM p2, LPARAM p3);
 };
 #endif // def __cplusplus
