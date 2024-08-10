@@ -1092,9 +1092,11 @@ LRESULT CNSCBand::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                 if (HitTest.flags & (TVHT_ABOVE | TVHT_BELOW | TVHT_NOWHERE))
                     break;
 
+                m_hwndTreeView.SendMessage(WM_SETREDRAW, FALSE, 0);
                 TreeView_SelectItem(m_hwndTreeView, NULL);
                 TreeView_SelectItem(m_hwndTreeView, HitTest.hItem);
-                return TRUE;
+                m_hwndTreeView.SendMessage(WM_SETREDRAW, TRUE, 0);
+                return TRUE; // Prevents processing click
             }
             break;
         case NM_RCLICK:
