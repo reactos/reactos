@@ -103,7 +103,7 @@ typedef struct _TIMER_ENTRY
     KTIMER Timer;
     KDPC TimerCallbackDpc;
     LONG TimerAlreadySet;
-    PVOID HwDeviceExtension; // FIXME: This is passed to callback but I don't know if this is best place for it
+    PVOID HwDeviceExtension;
     PHW_TIMER_EX TimerCallback;
     PVOID Context;
 } TIMER_ENTRY, *PTIMER_ENTRY;
@@ -246,6 +246,14 @@ typedef struct _FDO_DEVICE_EXTENSION
     LIST_ENTRY PdoListHead;
     ULONG PdoCount;
 
+    /*
+     * HBA timers. The first timer, DPC & callback are for StorPortNotification's RequestTimerCall,
+     * and the timer list is for StorPortInitializeTimer (implemented in ExtendedFunction), list
+     * entry type is TIMER_ENTRY.
+     */
+    KTIMER Timer;
+    KDPC TimerDpc;
+    PHW_TIMER TimerCallback;
     KSPIN_LOCK TimerListLock;
     LIST_ENTRY TimerListHead;
     ULONG TimerCount;
@@ -475,6 +483,14 @@ AllocateAddressMapping(
     PVOID MappedAddress,
     ULONG NumberOfBytes,
     ULONG BusNumber);
+
+VOID
+NTAPI
+SimpleTimerCallbackDpcRoutine(
+    PKDPC Dpc,
+    PVOID DeferredContext,
+    PVOID SystemArgument1,
+    PVOID SystemArgument2);
 
 VOID
 NTAPI

@@ -480,6 +480,10 @@ PortAddDevice(
     KeInitializeSpinLock(&DeviceExtension->TimerListLock);
     InitializeListHead(&DeviceExtension->TimerListHead);
 
+    /* Initialize simple timer for StorPortNotification */
+    KeInitializeTimer(&DeviceExtension->Timer);
+    KeInitializeDpc(&DeviceExtension->TimerDpc, SimpleTimerCallbackDpcRoutine, DeviceExtension);
+
     /* Initialize FDO Device DPC for delayed completion */
     KeInitializeDpc(&Fdo->Dpc, PortCompletionDpc, DeviceExtension);
 
@@ -1005,6 +1009,7 @@ StorPortExtendedFunction(
             }
 
             /* Initialize internal timer object; Win8.1+ EX_TIMER may be used too if we had it */
+            /* FIXME: IRQL > DISPATCH_LEVEL will bugcheck; queue a DPC to do this */
             KeInitializeTimer(&TimerEntry->Timer);
 
             MiniportExtension = CONTAINING_RECORD(HwDeviceExtension,
@@ -1673,7 +1678,7 @@ StorPortNotification(
             DPRINT1("GetExtendedFunctionTable\n");
             ppExtendedFunctions = (PSTORPORT_EXTENDED_FUNCTIONS*)va_arg(ap, PSTORPORT_EXTENDED_FUNCTIONS*);
             if (ppExtendedFunctions != NULL)
-                *ppExtendedFunctions = NULL; /* FIXME */
+                *ppExtendedFunctions = NULL; /* FIXME: */
             break;
 
         case EnablePassiveInitialization:
@@ -1740,6 +1745,36 @@ StorPortNotification(
             PortReleaseSpinLock(FdoExtension,
                                 LockHandle);
             break;
+
+        case RequestTimerCall:
+        {
+            PHW_TIMER TimerRoutine;
+            ULONG TimerValue;
+            LARGE_INTEGER TimerDueTime;
+            BOOLEAN MultiplyResult;
+
+            TimerRoutine = (PHW_TIMER)va_arg(ap, PHW_TIMER);
+            TimerValue = (ULONG)va_arg(ap, ULONG);
+            NT_ASSERT(TimerRoutine != NULL);
+
+            /* Set timer if timer value != 0. Logic is exactly same as StorPortRequestTimer */
+            if (TimerValue != 0)
+            {
+                MultiplyResult = ULongLongMult(TimerValue, 10ull, (PULONGLONG)&TimerDueTime.QuadPart);
+                if (MultiplyResult != INTSAFE_SUCCESS) {
+                    break;
+                }
+
+                FdoExtension->TimerCallback = TimerRoutine;
+                KeSetTimer(&FdoExtension->Timer, TimerDueTime, &FdoExtension->TimerDpc);
+            }
+            else
+            {
+                /* Otherwise cancel the timer. */
+                KeCancelTimer(&FdoExtension->Timer);
+            }
+            break;
+        }
 
         default:
             DPRINT1("Unsupported Notification %lx\n", NotificationType);
