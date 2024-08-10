@@ -2992,16 +2992,14 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
     /* We are off the right side of the screen */
     if (x + width > monitor->rcMonitor.right)
     {
-        if ((x - width) < monitor->rcMonitor.left || x >= monitor->rcMonitor.right)
-            x = monitor->rcMonitor.right - width;
-        else
-            x -= width;
+        /* Position menu at right edge of the screen */
+        x = monitor->rcMonitor.right - width;
     }
 
     /* We are off the left side of the screen */
     if (x < monitor->rcMonitor.left)
     {
-        /* Position menu at left edge of screen */
+        /* Position menu at left edge of the screen */
         x = 0;
 
         if (x < monitor->rcMonitor.left || x >= monitor->rcMonitor.right || bIsPopup)
