@@ -60,7 +60,7 @@ BOOLEAN CmpShareSystemHives;
 BOOLEAN CmpMiniNTBoot;
 
 ULONG CmpBootType;
-BOOLEAN CmSelfHeal = TRUE;
+ULONG CmSelfHeal = TRUE;
 BOOLEAN CmpSelfHeal = TRUE;
 
 USHORT CmpUnknownBusCount;
@@ -665,6 +665,13 @@ DATA_SEG("INITDATA") CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         &DummyData,
         &DummyData,
         &DummyData
+    },
+    {
+        L"Session Manager\\Configuration Manager",
+        L"SelfHealingEnabled",
+        &CmSelfHeal,
+        NULL,
+        NULL
     },
     {
         L"Session Manager",
