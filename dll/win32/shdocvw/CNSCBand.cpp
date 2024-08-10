@@ -338,7 +338,7 @@ CNSCBand::GetItemEnum(
 {
     CComPtr<IShellFolder> psfDesktop;
     HRESULT hr = SHGetDesktopFolder(&psfDesktop);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     CComPtr<IShellFolder> pFolder;
@@ -758,7 +758,7 @@ LRESULT CNSCBand::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
     INITCOMMONCONTROLSEX iccx = { sizeof(iccx), ICC_TREEVIEW_CLASSES | ICC_BAR_CLASSES };
     if (!::InitCommonControlsEx(&iccx))
         return -1;
-    if (FAILED(_CreateToolbar()) || FAILED(_CreateTreeView()))
+    if (FAILED_UNEXPECTEDLY(_CreateToolbar()) || FAILED_UNEXPECTEDLY(_CreateTreeView()))
         return -1;
     return 0;
 }
