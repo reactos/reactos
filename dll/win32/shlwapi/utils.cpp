@@ -43,9 +43,15 @@ GetVersionMajorMinor()
 }
 
 static HRESULT
-SHInvokeCommandOnContextMenuInternal(_In_opt_ HWND hWnd, _In_opt_ IUnknown* pUnk, _In_ IContextMenu* pCM,
-                                     _In_ UINT fCMIC, _In_ UINT fCMF, _In_opt_ LPCSTR pszVerb,
-                                     _In_opt_ LPCWSTR pwszDir, _In_ bool ForceQCM)
+SHInvokeCommandOnContextMenuInternal(
+    _In_opt_ HWND hWnd,
+    _In_opt_ IUnknown* pUnk,
+    _In_ IContextMenu* pCM,
+    _In_ UINT fCMIC,
+    _In_ UINT fCMF,
+    _In_opt_ LPCSTR pszVerb,
+    _In_opt_ LPCWSTR pwszDir,
+    _In_ bool ForceQCM)
 {
     CMINVOKECOMMANDINFOEX info = { sizeof(info), fCMIC, hWnd, pszVerb };
     INT iDefItem = 0;
@@ -76,7 +82,7 @@ SHInvokeCommandOnContextMenuInternal(_In_opt_ HWND hWnd, _In_opt_ IUnknown* pUnk
     }
     else
     {
-        if (GetVersionMajorMinor() >= 0x0601)
+        if (GetVersionMajorMinor() >= _WIN32_WINNT_WIN7)
         {
             info.fMask |= CMF_OPTIMIZEFORINVOKE;
         }
@@ -122,9 +128,16 @@ SHInvokeCommandOnContextMenuInternal(_In_opt_ HWND hWnd, _In_opt_ IUnknown* pUnk
 /*************************************************************************
  * SHInvokeCommandOnContextMenuEx [SHLWAPI.639]
  */
-EXTERN_C HRESULT WINAPI
-SHInvokeCommandOnContextMenuEx(_In_opt_ HWND hWnd, _In_opt_ IUnknown* pUnk, _In_ IContextMenu* pCM,
-                               _In_ UINT fCMIC, _In_ UINT fCMF, _In_opt_ LPCSTR pszVerb, _In_opt_ LPCWSTR pwszDir)
+EXTERN_C
+HRESULT WINAPI
+SHInvokeCommandOnContextMenuEx(
+    _In_opt_ HWND hWnd,
+    _In_opt_ IUnknown* pUnk,
+    _In_ IContextMenu* pCM,
+    _In_ UINT fCMIC,
+    _In_ UINT fCMF,
+    _In_opt_ LPCSTR pszVerb,
+    _In_opt_ LPCWSTR pwszDir)
 {
     return SHInvokeCommandOnContextMenuInternal(hWnd, pUnk, pCM, fCMIC, fCMF, pszVerb, pwszDir, true);
 }
@@ -132,10 +145,14 @@ SHInvokeCommandOnContextMenuEx(_In_opt_ HWND hWnd, _In_opt_ IUnknown* pUnk, _In_
 /*************************************************************************
  * SHInvokeCommandOnContextMenu [SHLWAPI.540]
  */
-EXTERN_C HRESULT WINAPI
-SHInvokeCommandOnContextMenu(_In_opt_ HWND hWnd, _In_opt_ IUnknown* pUnk,
-                             _In_ IContextMenu* pCM, _In_ UINT fCMIC,
-                             _In_opt_ LPCSTR pszVerb)
+EXTERN_C
+HRESULT WINAPI
+SHInvokeCommandOnContextMenu(
+    _In_opt_ HWND hWnd,
+    _In_opt_ IUnknown* pUnk,
+    _In_ IContextMenu* pCM,
+    _In_ UINT fCMIC,
+    _In_opt_ LPCSTR pszVerb)
 {
     return SHInvokeCommandOnContextMenuEx(hWnd, pUnk, pCM, fCMIC, CMF_EXTENDEDVERBS, pszVerb, NULL);
 }
@@ -143,10 +160,15 @@ SHInvokeCommandOnContextMenu(_In_opt_ HWND hWnd, _In_opt_ IUnknown* pUnk,
 /*************************************************************************
  * SHInvokeCommandWithFlagsAndSite [SHLWAPI.571]
  */
-EXTERN_C HRESULT WINAPI
-SHInvokeCommandWithFlagsAndSite(_In_opt_ HWND hWnd, _In_opt_ IUnknown* pUnk,
-                                _In_ IShellFolder* pShellFolder, _In_ LPCITEMIDLIST pidl,
-                                _In_ UINT fCMIC, _In_opt_ LPCSTR pszVerb)
+EXTERN_C
+HRESULT WINAPI
+SHInvokeCommandWithFlagsAndSite(
+    _In_opt_ HWND hWnd,
+    _In_opt_ IUnknown* pUnk,
+    _In_ IShellFolder* pShellFolder,
+    _In_ LPCITEMIDLIST pidl,
+    _In_ UINT fCMIC,
+    _In_opt_ LPCSTR pszVerb)
 {
     HRESULT hr = E_INVALIDARG;
     if (pShellFolder)
