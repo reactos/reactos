@@ -2988,10 +2988,6 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
     DebugPoint(x, y, RGB(0, 0, 255));
 #endif
     monitor = UserMonitorFromPoint( ptx, MONITOR_DEFAULTTONEAREST );
-    TRACE("RECT is (%d,%d)-(%d,%d)\n", monitor->rcMonitor.left,
-          monitor->rcMonitor.top, monitor->rcMonitor.right, monitor->rcMonitor.bottom);
-    /* The above shows 'RECT is (0,0)-(800,600)' for an 800x600 pixel screen.
-     * So the x and y values in this case start at 0 and end at 799 and 599. */
 
     /* We are off the right side of the screen */
     if (x + width > monitor->rcMonitor.right)
