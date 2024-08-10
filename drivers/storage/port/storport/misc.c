@@ -321,14 +321,35 @@ AllocateAddressMapping(
     return STATUS_SUCCESS;
 }
 
+
+VOID
+NTAPI
+SimpleTimerCallbackDpcRoutine(
+    PKDPC Dpc,
+    PVOID DeferredContext,
+    PVOID SystemArgument1,
+    PVOID SystemArgument2)
+{
+    UNREFERENCED_PARAMETER(Dpc);
+    UNREFERENCED_PARAMETER(SystemArgument1);
+    UNREFERENCED_PARAMETER(SystemArgument2);
+
+    PFDO_DEVICE_EXTENSION FdoExtension = (PFDO_DEVICE_EXTENSION)DeferredContext;
+
+    NT_ASSERT(FdoExtension);
+    NT_ASSERT(FdoExtension->Miniport.MiniportExtension);
+
+    FdoExtension->TimerCallback(&FdoExtension->Miniport.MiniportExtension->HwDeviceExtension);
+}
+
+
 VOID
 NTAPI
 TimerCallbackDpcRoutine(
     PKDPC Dpc,
     PVOID DeferredContext,
     PVOID SystemArgument1,
-    PVOID SystemArgument2
-)
+    PVOID SystemArgument2)
 {
     UNREFERENCED_PARAMETER(Dpc);
     UNREFERENCED_PARAMETER(SystemArgument1);
