@@ -506,7 +506,7 @@ BEGIN
     IDS_CURRENCY_LITHUANIAN_LITAS "Lithuanian litas"
     IDS_CURRENCY_LUXEMBOURG_FRANC "Franco luxemburgués"
     IDS_CURRENCY_MALTESE_LIRA "Lira maltesa"
-    IDS_CURRENCY_PORTOGUESE_ESCUDO "Escudo portugués"
+    IDS_CURRENCY_PORTUGUESE_ESCUDO "Escudo portugués"
     IDS_CURRENCY_SLOVAK_KORUNA "Corona eslovaca"
     IDS_CURRENCY_SLOVENIAN_TOLAR "Tolar esloveno"
     IDS_CURRENCY_SPANISH_PESETA "Peseta española"
