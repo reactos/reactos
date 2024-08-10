@@ -1823,6 +1823,19 @@ void CShellBrowser::UpdateViewMenu(HMENU theMenu)
         SetMenuItemInfo(theMenu, IDM_VIEW_TOOLBARS, FALSE, &menuItemInfo);
     }
     SHCheckMenuItem(theMenu, IDM_VIEW_STATUSBAR, m_settings.fStatusBarVisible ? TRUE : FALSE);
+
+    // Check the menu items for Explorer bar
+    BOOL bSearchBand = (IsEqualCLSID(CLSID_SH_SearchBand, fCurrentVertBar) ||
+                        IsEqualCLSID(CLSID_SearchBand, fCurrentVertBar) ||
+                        IsEqualCLSID(CLSID_IE_SearchBand, fCurrentVertBar) ||
+                        IsEqualCLSID(CLSID_FileSearchBand, fCurrentVertBar));
+    BOOL bHistory = IsEqualCLSID(CLSID_SH_HistBand, fCurrentVertBar);
+    BOOL bFavorites = IsEqualCLSID(CLSID_SH_FavBand, fCurrentVertBar);
+    BOOL bFolders = IsEqualCLSID(CLSID_ExplorerBand, fCurrentVertBar);
+    SHCheckMenuItem(theMenu, IDM_EXPLORERBAR_SEARCH, bSearchBand);
+    SHCheckMenuItem(theMenu, IDM_EXPLORERBAR_HISTORY, bHistory);
+    SHCheckMenuItem(theMenu, IDM_EXPLORERBAR_FAVORITES, bFavorites);
+    SHCheckMenuItem(theMenu, IDM_EXPLORERBAR_FOLDERS, bFolders);
 }
 
 HRESULT CShellBrowser::BuildExplorerBandMenu()
