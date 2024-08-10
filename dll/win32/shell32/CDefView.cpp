@@ -337,10 +337,10 @@ public:
     HRESULT SaveViewState(IStream *pStream);
     void UpdateFolderViewFlags();
 
-    DWORD GetCommDlgViewFlags() const
+    DWORD GetCommDlgViewFlags()
     {
         CComPtr<ICommDlgBrowser2> pcdb2;
-        if (m_pCommDlgBrowser.p && SUCCEEDED(m_pCommDlgBrowser->QueryInterface(IID_PPV_ARG(ICommDlgBrowser2, &pcdb2))))
+        if (m_pCommDlgBrowser && SUCCEEDED(m_pCommDlgBrowser->QueryInterface(IID_PPV_ARG(ICommDlgBrowser2, &pcdb2))))
         {
             DWORD flags;
             if (SUCCEEDED(pcdb2->GetViewFlags(&flags)))
@@ -637,7 +637,7 @@ HRESULT CDefView::IncludeObject(PCUITEMID_CHILD pidl)
 {
     HRESULT ret = S_OK;
 
-    if (m_pCommDlgBrowser.p != NULL && !(GetCommDlgViewFlags() & CDB2GVF_NOINCLUDEITEM))
+    if (m_pCommDlgBrowser && !(GetCommDlgViewFlags() & CDB2GVF_NOINCLUDEITEM))
     {
         TRACE("ICommDlgBrowser::IncludeObject pidl=%p\n", pidl);
         ret = m_pCommDlgBrowser->IncludeObject(this, pidl);
@@ -2200,7 +2200,7 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 
     if (m_pCommDlgBrowser && !(GetCommDlgViewFlags() & CDB2GVF_NOSELECTVERB))
     {
-        HMENU hMenuSource = LoadMenu(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCEW(IDM_DVSELECT));
+        HMENU hMenuSource = LoadMenuW(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCEW(IDM_DVSELECT));
         Shell_MergeMenus(m_hContextMenu, GetSubMenu(hMenuSource, 0), 0, DVIDM_COMMDLG_SELECT, 0xffff, MM_ADDSEPARATOR | MM_DONTREMOVESEPS);
         DestroyMenu(hMenuSource);
         SetMenuDefaultItem(m_hContextMenu, DVIDM_COMMDLG_SELECT, MF_BYCOMMAND);
