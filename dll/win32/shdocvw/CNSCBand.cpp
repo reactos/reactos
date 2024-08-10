@@ -11,7 +11,6 @@
 #include <undocshell.h>
 
 #define TIMER_ID_REFRESH 9999
-#define TIMER_ID_SELECT_ITEM 888
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
@@ -106,7 +105,7 @@ CNSCBand::CItemData* CNSCBand::GetItemData(_In_ HTREEITEM hItem)
     if (hItem == TVI_ROOT)
         return NULL;
 
-    TVITEM tvItem = { TVIF_PARAM, hItem };
+    TVITEMW tvItem = { TVIF_PARAM, hItem };
     if (!TreeView_GetItem(m_hwndTreeView, &tvItem))
         return NULL;
 
@@ -452,9 +451,6 @@ LRESULT CNSCBand::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle
         case TIMER_ID_REFRESH:
             Refresh();
             break;
-        case TIMER_ID_SELECT_ITEM:
-            _OnSelectItem();
-            break;
     }
 
     return 0;
@@ -624,42 +620,42 @@ BOOL CNSCBand::InsertSubitems(HTREEITEM hItem, LPCITEMIDLIST entry)
  *  - bInsert: insert the element at the right place if we don't find it
  *  - bSelect: select the item after we found it
  */
-BOOL CNSCBand::NavigateToPIDL(LPCITEMIDLIST dest, HTREEITEM *item, BOOL bExpand, BOOL bInsert,
-        BOOL bSelect)
+BOOL
+CNSCBand::NavigateToPIDL(
+    _In_ LPCITEMIDLIST dest,
+    _Out_ HTREEITEM *phItem,
+    _In_ BOOL bExpand,
+    _In_ BOOL bInsert,
+    _In_ BOOL bSelect)
 {
-    HTREEITEM                           current;
-    HTREEITEM                           tmp;
-    HTREEITEM                           parent;
-    CItemData                            *pItemData;
-    LPITEMIDLIST                        relativeChild;
-    TVITEM                              tvItem;
-
-    if (!item)
+    if (!phItem)
         return FALSE;
 
-    current = TreeView_GetFirstVisible(m_hwndTreeView);
-    parent = NULL;
+    HTREEITEM current = TreeView_GetFirstVisible(m_hwndTreeView);
+    HTREEITEM parent = NULL, tmp;
     while (TRUE)
     {
-        pItemData = GetItemData(current);
+        CItemData *pItemData = GetItemData(current);
         if (!pItemData)
         {
             ERR("Something has gone wrong, no data associated to node !\n");
-            *item = NULL;
+            *phItem = NULL;
             return FALSE;
         }
+
         // If we found our node, give it back
         if (!m_pDesktop->CompareIDs(0, pItemData->absolutePidl, dest))
         {
             if (bSelect)
                 TreeView_SelectItem(m_hwndTreeView, current);
-            *item = current;
+            *phItem = current;
             return TRUE;
         }
 
         // Check if we are a parent of the requested item
-        relativeChild = ILFindChild(pItemData->absolutePidl, dest);
-        if (relativeChild != 0)
+        TVITEMW tvItem;
+        LPITEMIDLIST relativeChild = ILFindChild(pItemData->absolutePidl, dest);
+        if (relativeChild)
         {
             // Notify treeview we have children
             tvItem.mask = TVIF_CHILDREN;
@@ -696,7 +692,7 @@ BOOL CNSCBand::NavigateToPIDL(LPCITEMIDLIST dest, HTREEITEM *item, BOOL bExpand,
             // We end up here, without any children, so we found nothing
             // Tell the parent node it has children
             ZeroMemory(&tvItem, sizeof(tvItem));
-            *item = NULL;
+            *phItem = NULL;
             return FALSE;
         }
 
@@ -707,13 +703,15 @@ BOOL CNSCBand::NavigateToPIDL(LPCITEMIDLIST dest, HTREEITEM *item, BOOL bExpand,
             current = tmp;
             continue;
         }
+
         if (bInsert)
         {
             current = InsertItem(parent, dest, ILFindLastID(dest), TRUE);
-            *item = current;
+            *phItem = current;
             return TRUE;
         }
-        *item = NULL;
+
+        *phItem = NULL;
         return FALSE;
     }
     UNREACHABLE;
@@ -924,33 +922,18 @@ BOOL CNSCBand::OnTreeItemDeleted(_In_ LPNMTREEVIEW pnmtv)
     return TRUE;
 }
 
-void CNSCBand::_OnSelectItem()
-{
-    KillTimer(TIMER_ID_SELECT_ITEM);
-    HTREEITEM hItem = TreeView_GetSelection(m_hwndTreeView);
-    CItemData* pItemData = GetItemData(hItem);
-    if (pItemData)
-    {
-        KillTimer(TIMER_ID_SELECT_ITEM);
-        OnSelectionChanged(pItemData->absolutePidl);
-    }
-}
-
 void CNSCBand::_OnSelectionChanged(_In_ LPNMTREEVIEW pnmtv)
 {
     HTREEITEM hItem = pnmtv->itemNew.hItem;
+    if (!hItem)
+        return;
     CItemData* pItemData = GetItemData(hItem);
     if (pItemData)
-    {
-        KillTimer(TIMER_ID_SELECT_ITEM);
         OnSelectionChanged(pItemData->absolutePidl);
-    }
 }
 
 void CNSCBand::OnTreeItemDragging(_In_ LPNMTREEVIEW pnmtv, _In_ BOOL isRightClick)
 {
-    KillTimer(TIMER_ID_SELECT_ITEM);
-
     if (!pnmtv->itemNew.lParam)
         return;
 
@@ -1094,25 +1077,24 @@ LRESULT CNSCBand::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         //case TVN_SINGLEEXPAND:
         case TVN_SELCHANGED:
             if (pnmhdr->hwndFrom == m_hwndTreeView)
-            {
-                KillTimer(TIMER_ID_SELECT_ITEM);
                 _OnSelectionChanged((LPNMTREEVIEW)lParam);
-            }
             break;
         case TVN_DELETEITEM:
             OnTreeItemDeleted((LPNMTREEVIEW)lParam);
             break;
         case NM_CLICK:
-        case NM_DBLCLK:
             if (pnmhdr->hwndFrom == m_hwndTreeView)
             {
                 TVHITTESTINFO HitTest;
                 ::GetCursorPos(&HitTest.pt);
+                ::ScreenToClient(m_hwndTreeView, &HitTest.pt);
                 TreeView_HitTest(m_hwndTreeView, &HitTest);
                 if (HitTest.flags & (TVHT_ABOVE | TVHT_BELOW | TVHT_NOWHERE))
                     break;
-                KillTimer(TIMER_ID_SELECT_ITEM);
-                SetTimer(TIMER_ID_SELECT_ITEM, ::GetDoubleClickTime(), NULL);
+
+                TreeView_SelectItem(m_hwndTreeView, NULL);
+                TreeView_SelectItem(m_hwndTreeView, HitTest.hItem);
+                return TRUE;
             }
             break;
         case NM_RCLICK:

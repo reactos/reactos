@@ -144,7 +144,17 @@ STDMETHODIMP CFavBand::OnSelectionChanged(_In_ PCIDLIST_ABSOLUTE pidl)
         return UpdateBrowser(pidlTarget);
 
     if (attrs & SFGAO_FOLDER)
+    {
+        HTREEITEM hItem = TreeView_GetSelection(m_hwndTreeView);
+        CItemData *pItemData = GetItemData(hItem);
+        if (pItemData && !pItemData->expanded)
+        {
+            InsertSubitems(hItem, pItemData->absolutePidl);
+            pItemData->expanded = TRUE;
+        }
+        TreeView_Expand(m_hwndTreeView, hItem, TVE_EXPAND);
         return S_OK;
+    }
 
     SHELLEXECUTEINFOW info = { sizeof(info) };
     info.fMask = SEE_MASK_FLAG_NO_UI | SEE_MASK_IDLIST;

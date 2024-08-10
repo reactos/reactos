@@ -57,7 +57,12 @@ public:
         _In_ LPCITEMIDLIST pEltRelative,
         _In_ BOOL bSort);
     BOOL InsertSubitems(HTREEITEM hItem, LPCITEMIDLIST entry);
-    BOOL NavigateToPIDL(LPCITEMIDLIST dest, HTREEITEM *item, BOOL bExpand, BOOL bInsert, BOOL bSelect);
+    BOOL NavigateToPIDL(
+        _In_ LPCITEMIDLIST dest,
+        _Out_ HTREEITEM *phItem,
+        _In_ BOOL bExpand,
+        _In_ BOOL bInsert,
+        _In_ BOOL bSelect);
     BOOL NavigateToCurrentFolder();
     HRESULT UpdateBrowser(LPCITEMIDLIST pidlGoto);
     HRESULT GetCurrentLocation(_Out_ PIDLIST_ABSOLUTE *ppidl);
@@ -223,7 +228,6 @@ protected:
     LRESULT OnBeginLabelEdit(_In_ LPNMTVDISPINFO dispInfo);
     LRESULT OnEndLabelEdit(_In_ LPNMTVDISPINFO dispInfo);
     HRESULT _AddFavorite();
-    void _OnSelectItem();
 
     // *** message handlers ***
     LRESULT OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
