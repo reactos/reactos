@@ -439,7 +439,6 @@ void CNSCBand::Refresh()
     m_hwndTreeView.SendMessage(WM_SETREDRAW, FALSE, 0);
     RefreshRecurse(_WantsRootItem() ? m_hRoot : TVI_ROOT);
     m_hwndTreeView.SendMessage(WM_SETREDRAW, TRUE, 0);
-    m_hwndTreeView.InvalidateRect(NULL, TRUE);
 }
 
 LRESULT CNSCBand::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
