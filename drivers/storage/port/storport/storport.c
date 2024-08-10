@@ -285,53 +285,58 @@ PortCompleteRequest(
         }
     }
 
-    /* Take the request out of FDO and PDO structures, and update flow control data */
-    KeAcquireInStackQueuedSpinLock(&FdoExtension->FlowControl.Lock, &LockHandle);
-    StorpCheckFlowControl(FdoExtension);
-
-    FdoExtension->FlowControl.OutstandingRequestCount--;
-    if (FdoExtension->FlowControl.RemainingBusyRequests)
+    /* Check if we need to interact with flow control. */
+    if (RequestReference->IsOutstanding)
     {
-        --FdoExtension->FlowControl.RemainingBusyRequests;
+        /* Take the request out of FDO and PDO structures, and update flow control data */
+        KeAcquireInStackQueuedSpinLock(&FdoExtension->FlowControl.Lock, &LockHandle);
+        StorpCheckFlowControl(FdoExtension);
 
-        /* Clear busy state as needed */
-        if (FdoExtension->FlowControl.OutstandingRequestCount == 0 ||
-            FdoExtension->FlowControl.RemainingBusyRequests == 0)
+        FdoExtension->FlowControl.OutstandingRequestCount--;
+        if (FdoExtension->FlowControl.RemainingBusyRequests)
         {
-            FdoExtension->FlowControl.IsBusy = FALSE;
+            --FdoExtension->FlowControl.RemainingBusyRequests;
+
+            /* Clear busy state as needed */
+            if (FdoExtension->FlowControl.OutstandingRequestCount == 0 ||
+                FdoExtension->FlowControl.RemainingBusyRequests == 0)
+            {
+                FdoExtension->FlowControl.IsBusy = FALSE;
+            }
         }
-    }
 
-    RemoveEntryList(&RequestReference->PdoEntry);
-    --PdoExtension->FlowControl.OutstandingRequestCount;
-    if (PdoExtension->FlowControl.RemainingBusyRequests)
-    {
-        --PdoExtension->FlowControl.RemainingBusyRequests;
-
-        /* Clear busy state as needed */
-        if (PdoExtension->FlowControl.OutstandingRequestCount == 0 ||
-            PdoExtension->FlowControl.RemainingBusyRequests == 0)
+        RemoveEntryList(&RequestReference->PdoEntry);
+        --PdoExtension->FlowControl.OutstandingRequestCount;
+        if (PdoExtension->FlowControl.RemainingBusyRequests)
         {
-            PdoExtension->FlowControl.IsBusy = FALSE;
+            --PdoExtension->FlowControl.RemainingBusyRequests;
+
+            /* Clear busy state as needed */
+            if (PdoExtension->FlowControl.OutstandingRequestCount == 0 ||
+                PdoExtension->FlowControl.RemainingBusyRequests == 0)
+            {
+                PdoExtension->FlowControl.IsBusy = FALSE;
+            }
         }
+
+        /* Decrement strong ordered request count if needed */
+        if (RequestReference->StrongOrdered)
+        {
+            --PdoExtension->FlowControl.StrongOrderedCount;
+        }
+
+        /* Free the private data structure. No one should use it anymore */
+        StorpSrbFreeRequestReference(Srb);
+        RequestReference = NULL;
+
+        /* Schedule next IO before we release flow control lock */
+        PortScheduleComingRequestsOnCompletion(PdoExtension, FdoExtension);
+
+        /* We're done, release flow control lock */
+        StorpCheckFlowControl(FdoExtension);
+        KeReleaseInStackQueuedSpinLock(&LockHandle);
+
     }
-
-    /* Decrement strong ordered request count if needed */
-    if (RequestReference->StrongOrdered)
-    {
-        --PdoExtension->FlowControl.StrongOrderedCount;
-    }
-
-    /* Free the private data structure. No one should use it anymore */
-    StorpSrbFreeRequestReference(Srb);
-    RequestReference = NULL;
-
-    /* Schedule next IO before we release flow control lock */
-    PortScheduleComingRequestsOnCompletion(PdoExtension, FdoExtension);
-
-    /* We're done, release flow control lock */
-    StorpCheckFlowControl(FdoExtension);
-    KeReleaseInStackQueuedSpinLock(&LockHandle);
 
     /*
      * Free SRB extension as this request will never go back to miniport again. Must free it before

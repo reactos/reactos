@@ -318,6 +318,13 @@ typedef struct _QUEUED_REQUEST_REFERENCE
     PSTOR_SCATTER_GATHER_LIST ScatterGatherList;
     PVOID MappedSystemVa;
     ULONG TimeoutCounter; // FIXME: Implement timeout with a heap
+    /*
+     * Indicates if the current request is outstanding. Some requests are for HBA, and shouldn't be
+     * affected by outstanding requests flow controlling.
+     * If this field is set to FALSE, this request will not trigger flow control code, flow control
+     * lock will not be acquired, and no new request will be scheduled upon its completion.
+     */
+    BOOLEAN IsOutstanding;
     BOOLEAN StrongOrdered;
     BOOLEAN WriteToDevice;
 

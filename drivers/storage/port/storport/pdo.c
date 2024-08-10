@@ -218,6 +218,50 @@ PortPdoAfterBuildingScatterGatherList(
 }
 
 
+/**
+ * @brief Allocates SRB extension, Request reference. If it fails, the IO will be failed and return.
+ * 
+ */
+NTSTATUS
+PortPdoSrbAllocatePrivateContexts(
+    _In_ PSCSI_REQUEST_BLOCK Srb,
+    _In_ PPDO_DEVICE_EXTENSION PdoExtension,
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension)
+{
+    PQUEUED_REQUEST_REFERENCE RequestReference;
+    NTSTATUS Status;
+    PIRP Irp;
+
+    Irp = (PIRP)Srb->OriginalRequest;
+
+    /* Allocate our private data area */
+    RequestReference = StorpSrbAllocateRequestReference(Srb, Irp, PdoExtension);
+    if (RequestReference == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        StorpCompleteRequest(Irp, SRB_STATUS_ERROR, Status); /* FIXME: SRB error code? */
+        return Status;
+    }
+
+    /* Allocate SRB extension */
+    if (FdoExtension->HwInitData->SrbExtensionSize != 0)
+    {
+        Srb->SrbExtension = ExAllocatePoolWithTag(NonPagedPool,
+                                                  FdoExtension->HwInitData->SrbExtensionSize,
+                                                  TAG_SRB_EXTENSION);
+    } else {
+        Srb->SrbExtension = NULL;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        StorpSrbFreeRequestReference(Srb);
+        StorpCompleteRequest(Irp, SRB_STATUS_ERROR, Status); /* FIXME: SRB error code? */
+        return Status;
+    }
+
+    Status = STATUS_SUCCESS;
+    return Status;
+}
+
+
 NTSTATUS
 PortPdoIssueRequest(
     _In_ PPDO_DEVICE_EXTENSION PdoExtension,
@@ -304,6 +348,27 @@ PortPdoIssueRequest(
 }
 
 
+VOID
+PortPdoScheduleRequestNoFlowControl(
+    _In_ PFDO_DEVICE_EXTENSION FdoExtension,
+    _In_ PQUEUED_REQUEST_REFERENCE RequestReference)
+{
+    /* Ensure outstanding flag is unset */
+    RequestReference->IsOutstanding = FALSE;
+}
+
+
+/**
+ * @brief Schedules an outstanding request and return a boolean value to indicate if the request can
+ * be immediately issued.
+ * 
+ * @param PdoExtension PDO device extension.
+ * @param FdoExtension FDO device extension.
+ * @param RequestReference RequestReference must be allocated beforehand.
+ * @return BOOLEAN When TRUE, you can call PortPdoIssueRequest to issue request right away;
+ *                 When FALSE, the request is already queued in flow control structures and you can
+ *                   safely go on without further processing, it will be issued upon completions.
+ */
 BOOLEAN
 PortPdoScheduleRequestFlowControlled(
     _In_ PPDO_DEVICE_EXTENSION PdoExtension,
@@ -315,6 +380,9 @@ PortPdoScheduleRequestFlowControlled(
     PSCSI_REQUEST_BLOCK Srb = RequestReference->Srb;
     BOOLEAN StrongOrderedRequest = FALSE;
     BOOLEAN IssueRequest = TRUE;
+
+    /* Set outstanding flag */
+    RequestReference->IsOutstanding = TRUE;
 
     /* Check if we can issue this request. */
     /* Acquire the HBA global flow control lock first */
@@ -1192,23 +1260,13 @@ PortPdoScsi(
             /* Mark IRP as pending */
             IoMarkIrpPending(Irp);
 
-            /* Allocate our private data area */
-            RequestReference = StorpSrbAllocateRequestReference(Srb, Irp, PdoExtension);
-            if (RequestReference == NULL)
+            /* Allocate private contexts */
+            Status = PortPdoSrbAllocatePrivateContexts(Srb, PdoExtension, FdoExtension);
+            if (!NT_SUCCESS(Status))
             {
-                Status = STATUS_INSUFFICIENT_RESOURCES;
                 break;
             }
-
-            /* Allocate SRB extension */
-            if (HwInitData->SrbExtensionSize != 0)
-            {
-                Srb->SrbExtension = ExAllocatePoolWithTag(NonPagedPool,
-                                                          HwInitData->SrbExtensionSize,
-                                                          TAG_SRB_EXTENSION);
-            } else {
-                Srb->SrbExtension = NULL;
-            }
+            RequestReference = (PQUEUED_REQUEST_REFERENCE)Srb->OriginalRequest;
 
             /* Assign a tag to the SRB if it supports tagging */
             StorpAssignTagToSrb(PdoExtension, Srb);
@@ -1235,6 +1293,38 @@ PortPdoScsi(
                 Status = STATUS_PENDING;
             }
             
+            break;
+        }
+
+        /*
+         * These requests are actually sent to adapters and are not outstanding requests for devices
+         * so we simply pass them down to miniport
+         */
+        case SRB_FUNCTION_FLUSH:
+        case SRB_FUNCTION_SHUTDOWN:
+        {
+            PQUEUED_REQUEST_REFERENCE RequestReference;
+
+            /* Mark IRP as pending */
+            IoMarkIrpPending(Irp);
+
+            /* Allocate private contexts */
+            Status = PortPdoSrbAllocatePrivateContexts(Srb, PdoExtension, FdoExtension);
+            if (!NT_SUCCESS(Status))
+            {
+                break;
+            }
+            RequestReference = (PQUEUED_REQUEST_REFERENCE)Srb->OriginalRequest;
+
+            /*
+             * Call the non-flow-controlled scheduling function (it does nothing but the model is
+             * preserved for consistency)
+             */
+            PortPdoScheduleRequestNoFlowControl(FdoExtension, RequestReference);
+
+            /* Fire up the request immediately */
+            PortPdoIssueRequest(PdoExtension, RequestReference);
+
             break;
         }
 
