@@ -54,6 +54,8 @@ UNICODE_STRING CmSymbolicLinkValueName =
 
 UNICODE_STRING CmpLoadOptions;
 
+/* TRUE if all hives must be loaded in shared mode */
+ULONG CmpVolatileBoot;
 /* TRUE if the system hives must be loaded in shared mode */
 BOOLEAN CmpShareSystemHives;
 /* TRUE when the registry is in PE mode */
@@ -670,6 +672,13 @@ DATA_SEG("INITDATA") CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
         L"Session Manager\\Configuration Manager",
         L"SelfHealingEnabled",
         &CmSelfHeal,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Configuration Manager",
+        L"VolatileBoot",
+        &CmpVolatileBoot,
         NULL,
         NULL
     },

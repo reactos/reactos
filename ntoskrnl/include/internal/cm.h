@@ -1420,6 +1420,7 @@ CmGetSystemDriverList(
 extern ULONG CmpTraceLevel;
 extern BOOLEAN CmpSpecialBootCondition;
 extern BOOLEAN CmpFlushOnLockRelease;
+extern ULONG CmpVolatileBoot;
 extern BOOLEAN CmpShareSystemHives;
 extern BOOLEAN CmpMiniNTBoot;
 extern BOOLEAN CmpNoVolatileCreates;
