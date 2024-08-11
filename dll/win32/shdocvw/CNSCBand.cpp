@@ -1389,7 +1389,7 @@ STDMETHODIMP CNSCBand::QueryService(REFGUID guidService, REFIID riid, void **ppv
     return IUnknown_QueryService(m_pSite, guidService, riid, ppvObject);
 }
 
-// *** IServiceProvider ***
+// *** IContextMenu ***
 
 STDMETHODIMP CNSCBand::QueryContextMenu(
     HMENU hmenu,
