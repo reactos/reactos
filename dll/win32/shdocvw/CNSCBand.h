@@ -132,19 +132,6 @@ public:
     STDMETHODIMP QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyState) override;
     STDMETHODIMP GiveFeedback(DWORD dwEffect) override;
 
-    BEGIN_MSG_MAP(CNSCBand)
-        MESSAGE_HANDLER(WM_CREATE, OnCreate)
-        MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
-        MESSAGE_HANDLER(WM_SIZE, OnSize)
-        MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
-        MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
-        MESSAGE_HANDLER(WM_COMMAND, OnCommand)
-        MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
-        MESSAGE_HANDLER(WM_TIMER, OnTimer)
-        MESSAGE_HANDLER(WM_RBUTTONDOWN, ContextMenuHack)
-        MESSAGE_HANDLER(WM_USER_SHELLEVENT, OnShellEvent)
-    END_MSG_MAP()
-
 protected:
     DWORD m_dwTVStyle = 0;
     DWORD m_dwTVExStyle = 0;
@@ -195,7 +182,6 @@ protected:
         _In_opt_ LPCITEMIDLIST pidl0,
         _In_opt_ LPCITEMIDLIST pidl1,
         _In_ LONG lEvent);
-
     HRESULT _ExecuteCommand(_In_ CComPtr<IContextMenu>& menu, _In_ UINT nCmd);
     HTREEITEM _InsertItem(
         _In_opt_ HTREEITEM hParent,
@@ -230,7 +216,7 @@ protected:
     BOOL _ItemHasAnyChild(_In_ HTREEITEM hItem);
     HRESULT _AddFavorite();
 
-    // *** message handlers ***
+    // *** ATL message handlers ***
     LRESULT OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -242,5 +228,18 @@ protected:
     LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnShellEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT ContextMenuHack(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+
+    BEGIN_MSG_MAP(CNSCBand)
+        MESSAGE_HANDLER(WM_CREATE, OnCreate)
+        MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
+        MESSAGE_HANDLER(WM_SIZE, OnSize)
+        MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
+        MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
+        MESSAGE_HANDLER(WM_COMMAND, OnCommand)
+        MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
+        MESSAGE_HANDLER(WM_TIMER, OnTimer)
+        MESSAGE_HANDLER(WM_RBUTTONDOWN, ContextMenuHack)
+        MESSAGE_HANDLER(WM_USER_SHELLEVENT, OnShellEvent)
+    END_MSG_MAP()
 };
 #endif // def __cplusplus
