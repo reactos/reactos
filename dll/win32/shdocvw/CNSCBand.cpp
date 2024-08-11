@@ -1510,7 +1510,7 @@ STDMETHODIMP CNSCBand::OnSelectionChanged(_In_ PCIDLIST_ABSOLUTE pidl)
     return S_OK;
 }
 
-/// Returns flags used to update the tree control.
+// Returns flags used to update the tree control.
 STDMETHODIMP CNSCBand::RefreshFlags(
     _Out_ DWORD *pdwStyle,
     _Out_ DWORD *pdwExStyle,
