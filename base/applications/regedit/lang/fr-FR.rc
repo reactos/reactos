@@ -12,18 +12,6 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&Fichier"
-    BEGIN
-        MENUITEM "&Quitter", ID_REGISTRY_EXIT
-    END
-    POPUP "&Aide"
-    BEGIN
-        MENUITEM "&À propos", ID_HELP_ABOUT
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Fichier"
@@ -36,8 +24,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Connecter à des registres via le réseau...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Déconnecter de registres réseau...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
-        MENUITEM SEPARATOR
-        MENUITEM "Im&primer...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Quitter", ID_REGISTRY_EXIT
     END
@@ -73,10 +59,6 @@ BEGIN
         MENUITEM "&Séparateur", ID_VIEW_SPLIT
         MENUITEM SEPARATOR
         MENUITEM "&Rafraîchir\tF5", ID_VIEW_REFRESH
-    END
-    POPUP "&Aide"
-    BEGIN
-        MENUITEM "&À propos de l'éditeur de registres", ID_HELP_ABOUT
     END
 END
 
@@ -140,7 +122,7 @@ END
 /* Dialogs */
 
 IDD_EDIT_STRING DIALOGEX 32, 24, 252, 84
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Éditer la chaîne"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -153,7 +135,7 @@ BEGIN
 END
 
 IDD_EDIT_MULTI_STRING DIALOGEX 32, 24, 252, 174
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Éditer la chaîne multiple"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -167,7 +149,7 @@ BEGIN
 END
 
 IDD_EDIT_BIN_DATA DIALOGEX 32, 24, 252, 174
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Éditer la valeur binaire"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -180,7 +162,7 @@ BEGIN
 END
 
 IDD_EDIT_DWORD DIALOGEX 32, 24, 252, 104
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Éditer le mot double"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -196,7 +178,7 @@ BEGIN
 END
 
 IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Liste des ressources"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -207,7 +189,7 @@ BEGIN
 END
 
 IDD_EDIT_RESOURCE DIALOGEX 6, 18, 281, 283
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Ressources"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -264,7 +246,6 @@ BEGIN
     ID_REGISTRY_MENU "Contient des commandes pour travailler sur les registres de manière globale"
     ID_EDIT_MENU "Contient des commandes pour éditer des valeurs ou des clés"
     ID_VIEW_MENU "Contient des commandes pour personnaliser la fenêtre des registres"
-    ID_HELP_MENU "Contient des commandes pour afficher de l'aide et de l'information à propos de l'éditeur de registres"
     ID_EDIT_NEW_MENU "Contient des commandes pour créer de nouvelles clés ou valeurs"
 END
 
@@ -281,8 +262,6 @@ BEGIN
     ID_REGISTRY_UNLOADHIVE "Décharge une ruche à partir du Registre"
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Connecte aux registres d'un ordinateur distant"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Déconnecte des registres d'un ordinateur distant"
-    ID_REGISTRY_PRINT "Imprime tout ou une partie des registres"
-    ID_HELP_ABOUT "Affiche de l'information sur le programme, le numéro de version et le copyright"
 END
 
 STRINGTABLE
@@ -451,8 +430,8 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_B
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Étendue de l'exportation", IDC_STATIC, 2, 0, 366, 48
-    CONTROL "T&out", IDC_EXPORT_ALL, "Button", BS_AUTORADIOBUTTON, 10, 10, 29, 11
-    CONTROL "&Branche sélectionnée", IDC_EXPORT_BRANCH, "Button", BS_AUTORADIOBUTTON, 10, 22, 100, 11
+    AUTORADIOBUTTON "T&out", IDC_EXPORT_ALL, 10, 10, 99, 11, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Branche sélectionnée", IDC_EXPORT_BRANCH, 10, 22, 99, 11
     EDITTEXT IDC_EXPORT_BRANCH_TEXT, 30, 34, 335, 12
 END
 
