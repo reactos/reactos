@@ -54,7 +54,5 @@ protected:
     BOOL _WantsRootItem() override;
     BOOL _GetTitle(LPWSTR pszTitle, INT cchTitle) override;
     void _SortItems(HTREEITEM hParent) override;
-
-    // *** Tree item sorting callback ***
-    static INT CALLBACK CompareTreeItems(LPARAM p1, LPARAM p2, LPARAM p3);
+    static INT CALLBACK _CompareTreeItems(LPARAM p1, LPARAM p2, LPARAM p3); // Used by _SortItems
 };

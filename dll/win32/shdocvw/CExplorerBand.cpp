@@ -88,12 +88,12 @@ void CExplorerBand::_SortItems(HTREEITEM hParent)
 {
     TVSORTCB sortCallback;
     sortCallback.hParent = hParent;
-    sortCallback.lpfnCompare = CompareTreeItems;
+    sortCallback.lpfnCompare = _CompareTreeItems;
     sortCallback.lParam = (LPARAM)(PVOID)m_pDesktop; // m_pDesktop is not a pointer
     TreeView_SortChildrenCB(m_hwndTreeView, &sortCallback, 0);
 }
 
-INT CALLBACK CExplorerBand::CompareTreeItems(LPARAM p1, LPARAM p2, LPARAM p3)
+INT CALLBACK CExplorerBand::_CompareTreeItems(LPARAM p1, LPARAM p2, LPARAM p3)
 {
     CItemData *info1 = (CItemData*)p1;
     CItemData *info2 = (CItemData*)p2;
