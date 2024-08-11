@@ -1043,6 +1043,7 @@ LRESULT CNSCBand::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             OnTreeItemDeleted((LPNMTREEVIEW)lParam);
             break;
         case NM_CLICK:
+        case NM_RCLICK:
             if (pnmhdr->hwndFrom == m_hwndTreeView)
             {
                 TVHITTESTINFO HitTest;
@@ -1051,17 +1052,18 @@ LRESULT CNSCBand::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                 TreeView_HitTest(m_hwndTreeView, &HitTest);
                 if (HitTest.flags & (TVHT_ABOVE | TVHT_BELOW | TVHT_NOWHERE))
                     break;
+                if (HitTest.flags & TVHT_ONITEMBUTTON)
+                    break;
 
                 m_hwndTreeView.SendMessage(WM_SETREDRAW, FALSE, 0);
                 TreeView_SelectItem(m_hwndTreeView, NULL);
                 TreeView_SelectItem(m_hwndTreeView, HitTest.hItem);
                 m_hwndTreeView.SendMessage(WM_SETREDRAW, TRUE, 0);
-                return TRUE; // Prevents processing click
+
+                if (pnmhdr->code == NM_CLICK)
+                    return TRUE; // Prevents processing click
             }
             break;
-        case NM_RCLICK:
-            OnContextMenu(WM_CONTEXTMENU, (WPARAM)m_hWnd, GetMessagePos(), bHandled);
-            return 1;
         case TVN_BEGINDRAG:
         case TVN_BEGINRDRAG:
             OnTreeItemDragging((LPNMTREEVIEW)lParam, pnmhdr->code == TVN_BEGINRDRAG);
@@ -1187,29 +1189,6 @@ Cleanup:
         --m_mtxBlockNavigate;
     }
     return TRUE;
-}
-
-LRESULT CNSCBand::ContextMenuHack(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
-{
-    bHandled = FALSE;
-    if (uMsg == WM_RBUTTONDOWN)
-    {
-        TVHITTESTINFO info;
-        info.pt.x = LOWORD(lParam);
-        info.pt.y = HIWORD(lParam);
-        info.flags = TVHT_ONITEM;
-        info.hItem = NULL;
-
-        // Save the current location
-        m_oldSelected = TreeView_GetSelection(m_hwndTreeView);
-
-        // Move to the item selected by the treeview (don't change right pane)
-        TreeView_HitTest(m_hwndTreeView, &info);
-        ++m_mtxBlockNavigate;
-        TreeView_SelectItem(m_hwndTreeView, info.hItem);
-        --m_mtxBlockNavigate;
-    }
-    return FALSE; /* let the wndproc process the message */
 }
 
 // WM_USER_SHELLEVENT
