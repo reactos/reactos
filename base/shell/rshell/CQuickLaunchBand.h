@@ -24,7 +24,6 @@ class CQuickLaunchBand :
     public IOleCommandTarget,
     public IContextMenu
 {
-protected:
     HWND m_hWndBro;
     CComPtr<IUnknown> m_punkISFB;
 

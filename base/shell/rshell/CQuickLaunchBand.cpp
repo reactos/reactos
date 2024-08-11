@@ -159,7 +159,6 @@ STDMETHODIMP CQuickLaunchBand::GetSite(IN REFIID riid, OUT VOID **ppvSite)
 
 /*****************************************************************************/
 // IDeskBand
-
 STDMETHODIMP CQuickLaunchBand::GetWindow(OUT HWND *phwnd)
 {
     // Internal CISFBand Calls
@@ -228,7 +227,6 @@ STDMETHODIMP CQuickLaunchBand::GetBandInfo(IN DWORD dwBandID, IN DWORD dwViewMod
 
 /*****************************************************************************/
 // IPersistStream
-
 STDMETHODIMP CQuickLaunchBand::GetClassID(OUT CLSID *pClassID)
 {
     // Internal CISFBand Calls
@@ -284,7 +282,6 @@ STDMETHODIMP CQuickLaunchBand::GetSizeMax(OUT ULARGE_INTEGER *pcbSize)
 
 /*****************************************************************************/
 // IWinEventHandler
-
 STDMETHODIMP CQuickLaunchBand::ContainsWindow(IN HWND hWnd)
 {
     return E_NOTIMPL;
@@ -314,7 +311,6 @@ STDMETHODIMP CQuickLaunchBand::IsWindowOwner(HWND hWnd)
 
 /*****************************************************************************/
 // *** IOleCommandTarget methods ***
-
 STDMETHODIMP CQuickLaunchBand::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds [], OLECMDTEXT *pCmdText)
 {
     // Internal CISFBand Calls
@@ -339,7 +335,6 @@ STDMETHODIMP CQuickLaunchBand::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWO
 
 /*****************************************************************************/
 // *** IContextMenu ***
-
 STDMETHODIMP CQuickLaunchBand::GetCommandString(UINT_PTR idCmd, UINT uFlags, UINT *pwReserved, LPSTR pszName, UINT cchMax)
 {
     // Internal CISFBand Calls
