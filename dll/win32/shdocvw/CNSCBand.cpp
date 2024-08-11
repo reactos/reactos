@@ -123,7 +123,7 @@ SHDOCVW_GetCurrentLocationFromView(_In_ IShellView& View, _In_ PIDLIST_ABSOLUTE 
     return hr;
 }
 
-HRESULT CNSCBand::GetCurrentLocation(_Out_ PIDLIST_ABSOLUTE *ppidl)
+HRESULT CNSCBand::_GetCurrentLocation(_Out_ PIDLIST_ABSOLUTE *ppidl)
 {
     *ppidl = NULL;
     CComPtr<IShellBrowser> psb;
@@ -143,20 +143,20 @@ HRESULT CNSCBand::GetCurrentLocation(_Out_ PIDLIST_ABSOLUTE *ppidl)
     return hr;
 }
 
-HRESULT CNSCBand::IsCurrentLocation(_In_ PCIDLIST_ABSOLUTE pidl)
+HRESULT CNSCBand::_IsCurrentLocation(_In_ PCIDLIST_ABSOLUTE pidl)
 {
     if (!pidl)
         return E_INVALIDARG;
     HRESULT hr = E_FAIL;
     PIDLIST_ABSOLUTE location = NULL;
-    hr = GetCurrentLocation(&location);
+    hr = _GetCurrentLocation(&location);
     if (SUCCEEDED(hr))
         hr = SHELL_IsEqualAbsoluteID(location, pidl) ? S_OK : S_FALSE;
     ILFree(location);
     return hr;
 }
 
-HRESULT CNSCBand::ExecuteCommand(_In_ CComPtr<IContextMenu>& menu, _In_ UINT nCmd)
+HRESULT CNSCBand::_ExecuteCommand(_In_ CComPtr<IContextMenu>& menu, _In_ UINT nCmd)
 {
     CComPtr<IOleWindow>                 pBrowserOleWnd;
     CMINVOKECOMMANDINFO                 cmi;
@@ -175,9 +175,9 @@ HRESULT CNSCBand::ExecuteCommand(_In_ CComPtr<IContextMenu>& menu, _In_ UINT nCm
     cmi.cbSize = sizeof(cmi);
     cmi.lpVerb = MAKEINTRESOURCEA(nCmd);
     cmi.hwnd = browserWnd;
-    if (GetKeyState(VK_SHIFT) < 0)
+    if (::GetKeyState(VK_SHIFT) < 0)
         cmi.fMask |= CMIC_MASK_SHIFT_DOWN;
-    if (GetKeyState(VK_CONTROL) < 0)
+    if (::GetKeyState(VK_CONTROL) < 0)
         cmi.fMask |= CMIC_MASK_CONTROL_DOWN;
 
     return menu->InvokeCommand(&cmi);
@@ -205,7 +205,7 @@ void CNSCBand::_Init()
     if (_WantsRootItem())
     {
         // Insert the root node
-        m_hRoot = InsertItem(NULL, m_pDesktop, m_pidlRoot, m_pidlRoot, FALSE);
+        m_hRoot = _InsertItem(NULL, m_pDesktop, m_pidlRoot, m_pidlRoot, FALSE);
         if (!m_hRoot)
         {
             ERR("Failed to create root item\n");
@@ -214,12 +214,12 @@ void CNSCBand::_Init()
         TreeView_Expand(m_hwndTreeView, m_hRoot, TVE_EXPAND);
 
         // Navigate to current folder position
-        NavigateToCurrentFolder();
+        _NavigateToCurrentFolder();
     }
     else
     {
         TreeView_SetItemHeight(m_hwndTreeView, 24);
-        InsertSubitems(TVI_ROOT, m_pidlRoot);
+        _InsertSubitems(TVI_ROOT, m_pidlRoot);
     }
 
 #define TARGET_EVENTS ( \
@@ -292,7 +292,7 @@ HRESULT CNSCBand::_CreateTreeView()
 }
 
 BOOL
-CNSCBand::IsTreeItemInEnum(
+CNSCBand::_IsTreeItemInEnum(
     _In_ HTREEITEM hItem,
     _In_ IEnumIDList *pEnum)
 {
@@ -315,7 +315,7 @@ CNSCBand::IsTreeItemInEnum(
 }
 
 BOOL
-CNSCBand::TreeItemHasThisChild(
+CNSCBand::_TreeItemHasThisChild(
     _In_ HTREEITEM hItem,
     _In_ PCITEMID_CHILD pidlChild)
 {
@@ -331,7 +331,7 @@ CNSCBand::TreeItemHasThisChild(
 }
 
 HRESULT
-CNSCBand::GetItemEnum(
+CNSCBand::_GetItemEnum(
     _Out_ CComPtr<IEnumIDList>& pEnum,
     _In_ HTREEITEM hItem,
     _Out_opt_ IShellFolder **ppFolder)
@@ -364,10 +364,10 @@ CNSCBand::GetItemEnum(
     return (*ppFolder)->EnumObjects(NULL, _GetEnumFlags(), &pEnum);
 }
 
-BOOL CNSCBand::ItemHasAnyChild(_In_ HTREEITEM hItem)
+BOOL CNSCBand::_ItemHasAnyChild(_In_ HTREEITEM hItem)
 {
     CComPtr<IEnumIDList> pEnum;
-    HRESULT hr = GetItemEnum(pEnum, hItem);
+    HRESULT hr = _GetItemEnum(pEnum, hItem);
     if (FAILED(hr))
         return FALSE;
 
@@ -376,10 +376,10 @@ BOOL CNSCBand::ItemHasAnyChild(_In_ HTREEITEM hItem)
     return SUCCEEDED(hr);
 }
 
-void CNSCBand::RefreshRecurse(_In_ HTREEITEM hTarget)
+void CNSCBand::_RefreshRecurse(_In_ HTREEITEM hTarget)
 {
     CComPtr<IEnumIDList> pEnum;
-    HRESULT hrEnum = GetItemEnum(pEnum, hTarget);
+    HRESULT hrEnum = _GetItemEnum(pEnum, hTarget);
 
     // Delete zombie items
     HTREEITEM hItem, hNextItem;
@@ -387,12 +387,12 @@ void CNSCBand::RefreshRecurse(_In_ HTREEITEM hTarget)
     {
         hNextItem = TreeView_GetNextSibling(m_hwndTreeView, hItem);
 
-        if (SUCCEEDED(hrEnum) && !IsTreeItemInEnum(hItem, pEnum))
+        if (SUCCEEDED(hrEnum) && !_IsTreeItemInEnum(hItem, pEnum))
             TreeView_DeleteItem(m_hwndTreeView, hItem);
     }
 
     pEnum = NULL;
-    hrEnum = GetItemEnum(pEnum, hTarget);
+    hrEnum = _GetItemEnum(pEnum, hTarget);
 
     CItemData* pItemData = ((hTarget == TVI_ROOT) ? NULL : GetItemData(hTarget));
 
@@ -402,17 +402,17 @@ void CNSCBand::RefreshRecurse(_In_ HTREEITEM hTarget)
         CComHeapPtr<ITEMIDLIST_RELATIVE> pidlTemp;
         while (pEnum->Next(1, &pidlTemp, NULL) == S_OK)
         {
-            if (!TreeItemHasThisChild(hTarget, pidlTemp))
+            if (!_TreeItemHasThisChild(hTarget, pidlTemp))
             {
                 if (pItemData)
                 {
                     CComHeapPtr<ITEMIDLIST> pidlAbsolute(ILCombine(pItemData->absolutePidl, pidlTemp));
-                    InsertItem(hTarget, pidlAbsolute, pidlTemp, TRUE);
+                    _InsertItem(hTarget, pidlAbsolute, pidlTemp, TRUE);
                 }
                 else
                 {
                     CComHeapPtr<ITEMIDLIST> pidlAbsolute(ILCombine(m_pidlRoot, pidlTemp));
-                    InsertItem(hTarget, pidlAbsolute, pidlTemp, TRUE);
+                    _InsertItem(hTarget, pidlAbsolute, pidlTemp, TRUE);
                 }
             }
             pidlTemp.Free();
@@ -426,18 +426,18 @@ void CNSCBand::RefreshRecurse(_In_ HTREEITEM hTarget)
 
         TV_ITEMW item = { TVIF_HANDLE | TVIF_CHILDREN };
         item.hItem = hItem;
-        item.cChildren = ItemHasAnyChild(hItem);
+        item.cChildren = _ItemHasAnyChild(hItem);
         TreeView_SetItem(m_hwndTreeView, &item);
 
         if (TreeView_GetItemState(m_hwndTreeView, hItem, TVIS_EXPANDEDONCE) & TVIS_EXPANDEDONCE)
-            RefreshRecurse(hItem);
+            _RefreshRecurse(hItem);
     }
 }
 
-void CNSCBand::Refresh()
+void CNSCBand::_Refresh()
 {
     m_hwndTreeView.SendMessage(WM_SETREDRAW, FALSE, 0);
-    RefreshRecurse(_WantsRootItem() ? m_hRoot : TVI_ROOT);
+    _RefreshRecurse(_WantsRootItem() ? m_hRoot : TVI_ROOT);
     m_hwndTreeView.SendMessage(WM_SETREDRAW, TRUE, 0);
 }
 
@@ -448,7 +448,7 @@ LRESULT CNSCBand::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle
     switch (wParam)
     {
         case TIMER_ID_REFRESH:
-            Refresh();
+            _Refresh();
             break;
     }
 
@@ -488,7 +488,7 @@ CNSCBand::OnChangeNotify(
 }
 
 HTREEITEM
-CNSCBand::InsertItem(
+CNSCBand::_InsertItem(
     _In_opt_ HTREEITEM hParent,
     _Inout_ IShellFolder *psfParent,
     _In_ LPCITEMIDLIST pElt,
@@ -545,7 +545,7 @@ CNSCBand::InsertItem(
 
 /* This is the slow version of the above method */
 HTREEITEM
-CNSCBand::InsertItem(
+CNSCBand::_InsertItem(
     _In_opt_ HTREEITEM hParent,
     _In_ LPCITEMIDLIST pElt,
     _In_ LPCITEMIDLIST pEltRelative,
@@ -556,16 +556,16 @@ CNSCBand::InsertItem(
     if (FAILED_UNEXPECTEDLY(hr))
         return NULL;
 
-    return InsertItem(hParent, psfFolder, pElt, pEltRelative, bSort);
+    return _InsertItem(hParent, psfFolder, pElt, pEltRelative, bSort);
 }
 
-BOOL CNSCBand::InsertSubitems(HTREEITEM hItem, LPCITEMIDLIST entry)
+BOOL CNSCBand::_InsertSubitems(HTREEITEM hItem, LPCITEMIDLIST entry)
 {
     ULONG fetched = 1, uItemCount = 0;
 
     CComPtr<IEnumIDList> pEnum;
     CComPtr<IShellFolder> pFolder;
-    HRESULT hr = GetItemEnum(pEnum, hItem, &pFolder);
+    HRESULT hr = _GetItemEnum(pEnum, hItem, &pFolder);
 
     // avoid broken IShellFolder implementations that return null pointer with success
     if (!SUCCEEDED(hr) || !pEnum)
@@ -583,7 +583,7 @@ BOOL CNSCBand::InsertSubitems(HTREEITEM hItem, LPCITEMIDLIST entry)
         LPITEMIDLIST pidlSubComplete;
         pidlSubComplete = ILCombine(entry, pidlSub);
 
-        if (InsertItem(hItem, pFolder, pidlSubComplete, pidlSub, FALSE))
+        if (_InsertItem(hItem, pFolder, pidlSubComplete, pidlSub, FALSE))
         {
             uItemCount++;
         }
@@ -610,7 +610,7 @@ BOOL CNSCBand::InsertSubitems(HTREEITEM hItem, LPCITEMIDLIST entry)
  *  - bSelect: select the item after we found it
  */
 BOOL
-CNSCBand::NavigateToPIDL(
+CNSCBand::_NavigateToPIDL(
     _In_ LPCITEMIDLIST dest,
     _Out_ HTREEITEM *phItem,
     _In_ BOOL bExpand,
@@ -657,7 +657,7 @@ CNSCBand::NavigateToPIDL(
             {
                 if (!pItemData->expanded)
                 {
-                    InsertSubitems(current, pItemData->absolutePidl);
+                    _InsertSubitems(current, pItemData->absolutePidl);
                     pItemData->expanded = TRUE;
                 }
                 TreeView_Expand(m_hwndTreeView, current, TVE_EXPAND);
@@ -676,7 +676,7 @@ CNSCBand::NavigateToPIDL(
             if (bInsert && pItemData->expanded)
             {
                 // Happens when we have to create a subchild inside a child
-                current = InsertItem(current, dest, relativeChild, TRUE);
+                current = _InsertItem(current, dest, relativeChild, TRUE);
             }
             // We end up here, without any children, so we found nothing
             // Tell the parent node it has children
@@ -695,7 +695,7 @@ CNSCBand::NavigateToPIDL(
 
         if (bInsert)
         {
-            current = InsertItem(parent, dest, ILFindLastID(dest), TRUE);
+            current = _InsertItem(parent, dest, ILFindLastID(dest), TRUE);
             *phItem = current;
             return TRUE;
         }
@@ -706,10 +706,10 @@ CNSCBand::NavigateToPIDL(
     UNREACHABLE;
 }
 
-BOOL CNSCBand::NavigateToCurrentFolder()
+BOOL CNSCBand::_NavigateToCurrentFolder()
 {
     CComHeapPtr<ITEMIDLIST> explorerPidl;
-    HRESULT hr = GetCurrentLocation(&explorerPidl);
+    HRESULT hr = _GetCurrentLocation(&explorerPidl);
     if (FAILED_UNEXPECTEDLY(hr))
     {
         ERR("Unable to get browser PIDL !\n");
@@ -719,7 +719,7 @@ BOOL CNSCBand::NavigateToCurrentFolder()
     ++m_mtxBlockNavigate;
     /* find PIDL into our explorer */
     HTREEITEM hItem;
-    BOOL result = NavigateToPIDL(explorerPidl, &hItem, TRUE, FALSE, TRUE);
+    BOOL result = _NavigateToPIDL(explorerPidl, &hItem, TRUE, FALSE, TRUE);
     --m_mtxBlockNavigate;
 
     return result;
@@ -784,7 +784,7 @@ LRESULT CNSCBand::OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
 HRESULT CNSCBand::_AddFavorite()
 {
     CComHeapPtr<ITEMIDLIST> pidlCurrent;
-    GetCurrentLocation(&pidlCurrent);
+    _GetCurrentLocation(&pidlCurrent);
 
     WCHAR szCurDir[MAX_PATH];
     if (!ILGetDisplayName(pidlCurrent, szCurDir))
@@ -859,19 +859,15 @@ BOOL CNSCBand::OnTreeItemExpanding(_In_ LPNMTREEVIEW pnmtv)
         // We have it, let's try
         if (pItemData && !pItemData->expanded)
         {
-            if (InsertSubitems(pnmtv->itemNew.hItem, pItemData->absolutePidl))
+            if (_InsertSubitems(pnmtv->itemNew.hItem, pItemData->absolutePidl))
             {
                 pItemData->expanded = TRUE;
             }
             else
             {
                 // remove subitem "+" since we failed to add subitems
-                TV_ITEM tvItem;
-
-                tvItem.mask = TVIF_CHILDREN;
-                tvItem.hItem = pnmtv->itemNew.hItem;
+                TVITEMW tvItem = { TVIF_CHILDREN, pnmtv->itemNew.hItem };
                 tvItem.cChildren = 0;
-
                 TreeView_SetItem(m_hwndTreeView, &tvItem);
             }
         }
@@ -967,7 +963,7 @@ LRESULT CNSCBand::OnBeginLabelEdit(_In_ LPNMTVDISPINFO dispInfo)
     return TRUE;
 }
 
-HRESULT CNSCBand::UpdateBrowser(LPCITEMIDLIST pidlGoto)
+HRESULT CNSCBand::_UpdateBrowser(LPCITEMIDLIST pidlGoto)
 {
     CComPtr<IShellBrowser> pBrowserService;
     HRESULT hr = IUnknown_QueryService(m_pSite, SID_STopLevelBrowser,
@@ -998,34 +994,32 @@ LRESULT CNSCBand::OnEndLabelEdit(_In_ LPNMTVDISPINFO dispInfo)
     if (!dispInfo->item.pszText)
         return FALSE;
 
-    LPITEMIDLIST pidlNew;
     CComPtr<IShellFolder> pParent;
     LPCITEMIDLIST pidlChild;
-    BOOL RenamedCurrent = IsCurrentLocation(info->absolutePidl) == S_OK;
+    BOOL RenamedCurrent = _IsCurrentLocation(info->absolutePidl) == S_OK;
 
     hr = SHBindToParent(info->absolutePidl, IID_PPV_ARG(IShellFolder, &pParent), &pidlChild);
     if (!SUCCEEDED(hr) || !pParent.p)
         return FALSE;
 
+    CComHeapPtr<ITEMIDLIST> pidlNew;
     hr = pParent->SetNameOf(m_hWnd, pidlChild, dispInfo->item.pszText, SHGDN_INFOLDER, &pidlNew);
     if (SUCCEEDED(hr) && pidlNew)
     {
         CComPtr<IPersistFolder2> pPersist;
-        LPITEMIDLIST pidlParent, pidlNewAbs;
-
         hr = pParent->QueryInterface(IID_PPV_ARG(IPersistFolder2, &pPersist));
-        if (!SUCCEEDED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return FALSE;
 
+        CComHeapPtr<ITEMIDLIST> pidlParent;
         hr = pPersist->GetCurFolder(&pidlParent);
-        if (!SUCCEEDED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return FALSE;
 
-        pidlNewAbs = ILCombine(pidlParent, pidlNew);
-
+        CComHeapPtr<ITEMIDLIST> pidlNewAbs(ILCombine(pidlParent, pidlNew));
         if (RenamedCurrent)
         {
-            UpdateBrowser(pidlNewAbs);
+            _UpdateBrowser(pidlNewAbs);
         }
         else
         {
@@ -1033,9 +1027,6 @@ LRESULT CNSCBand::OnEndLabelEdit(_In_ LPNMTVDISPINFO dispInfo)
             SHChangeNotify(SHCNE_RENAMEFOLDER, SHCNF_IDLIST, info->absolutePidl, pidlNewAbs);
         }
 
-        ILFree(pidlParent);
-        ILFree(pidlNewAbs);
-        ILFree(pidlNew);
         return TRUE;
     }
 
@@ -1181,7 +1172,7 @@ LRESULT CNSCBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
             goto Cleanup;
         }
 
-        hr = ExecuteCommand(contextMenu, uCommand);
+        hr = _ExecuteCommand(contextMenu, uCommand);
     }
 
 Cleanup:
@@ -1616,7 +1607,7 @@ STDMETHODIMP CNSCBand::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD 
         {
             TRACE("dispId %d received\n", dispIdMember);
             if (_WantsRootItem())
-                NavigateToCurrentFolder();
+                _NavigateToCurrentFolder();
             return S_OK;
         }
     }

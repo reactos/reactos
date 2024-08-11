@@ -141,7 +141,7 @@ STDMETHODIMP CFavBand::OnSelectionChanged(_In_ PCIDLIST_ABSOLUTE pidl)
         return hr;
 
     if ((attrs & (SFGAO_FOLDER | SFGAO_LINK)) == (SFGAO_FOLDER | SFGAO_LINK))
-        return UpdateBrowser(pidlTarget);
+        return _UpdateBrowser(pidlTarget);
 
     if (attrs & SFGAO_FOLDER)
     {
@@ -149,7 +149,7 @@ STDMETHODIMP CFavBand::OnSelectionChanged(_In_ PCIDLIST_ABSOLUTE pidl)
         CItemData *pItemData = GetItemData(hItem);
         if (pItemData && !pItemData->expanded)
         {
-            InsertSubitems(hItem, pItemData->absolutePidl);
+            _InsertSubitems(hItem, pItemData->absolutePidl);
             pItemData->expanded = TRUE;
         }
         TreeView_Expand(m_hwndTreeView, hItem, TVE_EXPAND);

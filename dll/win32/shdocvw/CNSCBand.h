@@ -44,43 +44,6 @@ public:
     };
     CItemData* GetItemData(_In_ HTREEITEM hItem);
 
-    HRESULT ExecuteCommand(_In_ CComPtr<IContextMenu>& menu, _In_ UINT nCmd);
-    HTREEITEM InsertItem(
-        _In_opt_ HTREEITEM hParent,
-        _Inout_ IShellFolder *psfParent,
-        _In_ LPCITEMIDLIST pElt,
-        _In_ LPCITEMIDLIST pEltRelative,
-        _In_ BOOL bSort);
-    HTREEITEM InsertItem(
-        _In_opt_ HTREEITEM hParent,
-        _In_ LPCITEMIDLIST pElt,
-        _In_ LPCITEMIDLIST pEltRelative,
-        _In_ BOOL bSort);
-    BOOL InsertSubitems(HTREEITEM hItem, LPCITEMIDLIST entry);
-    BOOL NavigateToPIDL(
-        _In_ LPCITEMIDLIST dest,
-        _Out_ HTREEITEM *phItem,
-        _In_ BOOL bExpand,
-        _In_ BOOL bInsert,
-        _In_ BOOL bSelect);
-    BOOL NavigateToCurrentFolder();
-    HRESULT UpdateBrowser(LPCITEMIDLIST pidlGoto);
-    HRESULT GetCurrentLocation(_Out_ PIDLIST_ABSOLUTE *ppidl);
-    HRESULT IsCurrentLocation(_In_ PCIDLIST_ABSOLUTE pidl);
-    void OnChangeNotify(
-        _In_opt_ LPCITEMIDLIST pidl0,
-        _In_opt_ LPCITEMIDLIST pidl1,
-        _In_ LONG lEvent);
-    void Refresh();
-    void RefreshRecurse(_In_ HTREEITEM hItem);
-    BOOL IsTreeItemInEnum(_In_ HTREEITEM hItem, _In_ IEnumIDList *pEnum);
-    BOOL TreeItemHasThisChild(_In_ HTREEITEM hItem, _In_ PCITEMID_CHILD pidlChild);
-    HRESULT GetItemEnum(
-        _Out_ CComPtr<IEnumIDList>& pEnum,
-        _In_ HTREEITEM hItem,
-        _Out_opt_ IShellFolder **ppFolder = NULL);
-    BOOL ItemHasAnyChild(_In_ HTREEITEM hItem);
-
     // *** IOleWindow methods ***
     STDMETHODIMP GetWindow(HWND *lphwnd) override;
     STDMETHODIMP ContextSensitiveHelp(BOOL fEnterMode) override;
@@ -228,6 +191,43 @@ protected:
     void OnTreeItemDragging(_In_ LPNMTREEVIEW pnmtv, _In_ BOOL isRightClick);
     LRESULT OnBeginLabelEdit(_In_ LPNMTVDISPINFO dispInfo);
     LRESULT OnEndLabelEdit(_In_ LPNMTVDISPINFO dispInfo);
+    void OnChangeNotify(
+        _In_opt_ LPCITEMIDLIST pidl0,
+        _In_opt_ LPCITEMIDLIST pidl1,
+        _In_ LONG lEvent);
+
+    HRESULT _ExecuteCommand(_In_ CComPtr<IContextMenu>& menu, _In_ UINT nCmd);
+    HTREEITEM _InsertItem(
+        _In_opt_ HTREEITEM hParent,
+        _Inout_ IShellFolder *psfParent,
+        _In_ LPCITEMIDLIST pElt,
+        _In_ LPCITEMIDLIST pEltRelative,
+        _In_ BOOL bSort);
+    HTREEITEM _InsertItem(
+        _In_opt_ HTREEITEM hParent,
+        _In_ LPCITEMIDLIST pElt,
+        _In_ LPCITEMIDLIST pEltRelative,
+        _In_ BOOL bSort);
+    BOOL _InsertSubitems(HTREEITEM hItem, LPCITEMIDLIST entry);
+    BOOL _NavigateToPIDL(
+        _In_ LPCITEMIDLIST dest,
+        _Out_ HTREEITEM *phItem,
+        _In_ BOOL bExpand,
+        _In_ BOOL bInsert,
+        _In_ BOOL bSelect);
+    BOOL _NavigateToCurrentFolder();
+    HRESULT _UpdateBrowser(LPCITEMIDLIST pidlGoto);
+    HRESULT _GetCurrentLocation(_Out_ PIDLIST_ABSOLUTE *ppidl);
+    HRESULT _IsCurrentLocation(_In_ PCIDLIST_ABSOLUTE pidl);
+    void _Refresh();
+    void _RefreshRecurse(_In_ HTREEITEM hItem);
+    BOOL _IsTreeItemInEnum(_In_ HTREEITEM hItem, _In_ IEnumIDList *pEnum);
+    BOOL _TreeItemHasThisChild(_In_ HTREEITEM hItem, _In_ PCITEMID_CHILD pidlChild);
+    HRESULT _GetItemEnum(
+        _Out_ CComPtr<IEnumIDList>& pEnum,
+        _In_ HTREEITEM hItem,
+        _Out_opt_ IShellFolder **ppFolder = NULL);
+    BOOL _ItemHasAnyChild(_In_ HTREEITEM hItem);
     HRESULT _AddFavorite();
 
     // *** message handlers ***

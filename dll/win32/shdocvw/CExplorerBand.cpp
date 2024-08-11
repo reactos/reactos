@@ -79,7 +79,7 @@ STDMETHODIMP CExplorerBand::Invoke(_In_ PCIDLIST_ABSOLUTE pidl)
     if (m_mtxBlockNavigate)
         return S_OK;
 
-    UpdateBrowser(pidl);
+    _UpdateBrowser(pidl);
     m_hwndTreeView.SetFocus();
     return S_OK;
 }
