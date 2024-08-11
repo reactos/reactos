@@ -148,8 +148,8 @@ protected:
     CTreeView m_hwndTreeView;
     LONG m_mtxBlockNavigate = 0; // A "lock" that prevents internal selection changes to initiate a navigation to the newly selected item.
     BOOL m_isEditing = FALSE;
-    HTREEITEM  m_hRoot = NULL;
-    HTREEITEM  m_oldSelected = NULL;
+    HTREEITEM m_hRoot = NULL;
+    HTREEITEM m_oldSelected = NULL;
     DWORD m_adviseCookie = 0;
     ULONG m_shellRegID = 0;
 

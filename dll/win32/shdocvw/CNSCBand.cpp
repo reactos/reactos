@@ -1050,18 +1050,21 @@ LRESULT CNSCBand::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                 ::GetCursorPos(&HitTest.pt);
                 ::ScreenToClient(m_hwndTreeView, &HitTest.pt);
                 TreeView_HitTest(m_hwndTreeView, &HitTest);
-                if (HitTest.flags & (TVHT_ABOVE | TVHT_BELOW | TVHT_NOWHERE))
-                    break;
-                if (HitTest.flags & TVHT_ONITEMBUTTON)
-                    break;
 
+                if (HitTest.flags & (TVHT_ABOVE | TVHT_BELOW | TVHT_NOWHERE))
+                    return TRUE; // Prevents click processing
+
+                if (HitTest.flags & TVHT_ONITEMBUTTON) // [+] / [-]
+                    break; // Do default processing
+
+                // Generate selection notification even if same item
                 m_hwndTreeView.SendMessage(WM_SETREDRAW, FALSE, 0);
                 TreeView_SelectItem(m_hwndTreeView, NULL);
                 TreeView_SelectItem(m_hwndTreeView, HitTest.hItem);
                 m_hwndTreeView.SendMessage(WM_SETREDRAW, TRUE, 0);
 
                 if (pnmhdr->code == NM_CLICK)
-                    return TRUE; // Prevents processing click
+                    return TRUE; // Prevents click processing
             }
             break;
         case TVN_BEGINDRAG:
@@ -1079,115 +1082,101 @@ LRESULT CNSCBand::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
     return 0;
 }
 
+// Temporary menu
+struct CMenuTemp
+{
+    HMENU m_hMenu = NULL;
+    CMenuTemp(HMENU hMenu) : m_hMenu(hMenu)
+    {
+    }
+    ~CMenuTemp()
+    {
+        if (m_hMenu)
+            ::DestroyMenu(m_hMenu);
+    }
+    operator HMENU() const
+    {
+        return m_hMenu;
+    }
+};
+
 // *** ATL event handlers ***
 LRESULT CNSCBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    HTREEITEM                           item;
-    CItemData                            *info;
-    HMENU                               treeMenu;
-    POINT                               pt;
-    CComPtr<IShellFolder>               pFolder;
-    CComPtr<IContextMenu>               contextMenu;
-    HRESULT                             hr;
-    UINT                                uCommand;
-    LPITEMIDLIST                        pidlChild;
-    UINT                                cmdBase = max(FCIDM_SHVIEWFIRST, 1);
-    UINT                                cmf = CMF_EXPLORE;
-    SFGAOF                              attr = SFGAO_CANRENAME;
-    BOOL                                startedRename = FALSE;
-
-    treeMenu = NULL;
-    item = TreeView_GetSelection(m_hwndTreeView);
-    bHandled = TRUE;
-    if (!item)
+    HWND hwndTarget = reinterpret_cast<HWND>(wParam);
+    if (hwndTarget && (hwndTarget == m_hwndToolbar || hwndTarget == m_hWnd))
     {
-        goto Cleanup;
+        FIXME("Show 'Close Toolbar' menu\n");
+        return 0;
     }
 
-    pt.x = LOWORD(lParam);
-    pt.y = HIWORD(lParam);
+    HTREEITEM hItem = TreeView_GetSelection(m_hwndTreeView);
+    if (!hItem)
+        return 0;
+
+    POINT pt = { (SHORT)LOWORD(lParam), (SHORT)HIWORD(lParam) };
     if ((UINT)lParam == (UINT)-1)
     {
-        RECT r;
-        if (TreeView_GetItemRect(m_hwndTreeView, item, &r, TRUE))
+        RECT rc;
+        if (TreeView_GetItemRect(m_hwndTreeView, hItem, &rc, TRUE))
         {
-            pt.x = (r.left + r.right) / 2; // Center of
-            pt.y = (r.top + r.bottom) / 2; // item rectangle
+            // Center of item rectangle
+            pt.x = (rc.left + rc.right) / 2;
+            pt.y = (rc.top + rc.bottom) / 2;
         }
         ClientToScreen(&pt);
     }
 
-    info = GetItemData(item);
+    CItemData *info = GetItemData(hItem);
     if (!info)
     {
         ERR("No node data, something has gone wrong !\n");
-        goto Cleanup;
+        return 0;
     }
-    hr = SHBindToParent(info->absolutePidl, IID_PPV_ARG(IShellFolder, &pFolder),
-        (LPCITEMIDLIST*)&pidlChild);
-    if (!SUCCEEDED(hr))
-    {
-        ERR("Can't bind to folder!\n");
-        goto Cleanup;
-    }
-    hr = pFolder->GetUIObjectOf(m_hWnd, 1, (LPCITEMIDLIST*)&pidlChild, IID_IContextMenu,
-        NULL, reinterpret_cast<void**>(&contextMenu));
-    if (!SUCCEEDED(hr))
-    {
-        ERR("Can't get IContextMenu interface\n");
-        goto Cleanup;
-    }
+
+    CComPtr<IShellFolder> pFolder;
+    LPCITEMIDLIST pidlChild;
+    HRESULT hr = SHBindToParent(info->absolutePidl, IID_PPV_ARG(IShellFolder, &pFolder), &pidlChild);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return 0;
+
+    CComPtr<IContextMenu> contextMenu;
+    hr = pFolder->GetUIObjectOf(m_hWnd, 1, &pidlChild, IID_NULL_PPV_ARG(IContextMenu, &contextMenu));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return 0;
 
     IUnknown_SetSite(contextMenu, (IDeskBand *)this);
 
-    if (SUCCEEDED(pFolder->GetAttributesOf(1, (LPCITEMIDLIST*)&pidlChild, &attr)) && (attr & SFGAO_CANRENAME))
+    UINT cmf = CMF_EXPLORE;
+    SFGAOF attr = SFGAO_CANRENAME;
+    hr = pFolder->GetAttributesOf(1, &pidlChild, &attr);
+    if (SUCCEEDED(hr) && (attr & SFGAO_CANRENAME))
         cmf |= CMF_CANRENAME;
 
-    treeMenu = CreatePopupMenu();
-    hr = contextMenu->QueryContextMenu(treeMenu, 0, cmdBase, FCIDM_SHVIEWLAST, cmf);
-    if (!SUCCEEDED(hr))
-    {
-        WARN("Can't get context menu for item\n");
-        DestroyMenu(treeMenu);
-        goto Cleanup;
-    }
+    CMenuTemp menuTemp(::CreatePopupMenu());
+    UINT idCmdFirst = max(FCIDM_SHVIEWFIRST, 1);
+    hr = contextMenu->QueryContextMenu(menuTemp, 0, idCmdFirst, FCIDM_SHVIEWLAST, cmf);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return 0;
 
-    uCommand = TrackPopupMenu(treeMenu, TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
-        pt.x, pt.y, 0, m_hWnd, NULL);
+    enum { flags = TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON };
+    UINT uCommand = ::TrackPopupMenu(menuTemp, flags, pt.x, pt.y, 0, m_hWnd, NULL);
     if (uCommand)
     {
-        uCommand -= cmdBase;
+        uCommand -= idCmdFirst;
 
         // Do DFM_CMD_RENAME in the treeview
         if ((cmf & CMF_CANRENAME) && SHELL_IsVerb(contextMenu, uCommand, L"rename"))
         {
-            HTREEITEM oldSelected = m_oldSelected;
-            SetFocus();
-            startedRename = TreeView_EditLabel(m_hwndTreeView, item) != NULL;
-            m_oldSelected = oldSelected; // Restore after TVN_BEGINLABELEDIT
-            goto Cleanup;
+            m_hwndTreeView.SetFocus();
+            if (TreeView_EditLabel(m_hwndTreeView, hItem))
+                m_oldSelected = hMenu;
+            return 0;
         }
 
         hr = _ExecuteCommand(contextMenu, uCommand);
     }
 
-Cleanup:
-    if (contextMenu)
-        IUnknown_SetSite(contextMenu, NULL);
-    if (treeMenu)
-        DestroyMenu(treeMenu);
-    if (startedRename)
-    {
-        // The treeview disables drawing of the edited item so we must make sure
-        // the correct item is selected (on right-click -> rename on not-current folder).
-        // TVN_ENDLABELEDIT becomes responsible for restoring the selection.
-    }
-    else
-    {
-        ++m_mtxBlockNavigate;
-        TreeView_SelectItem(m_hwndTreeView, m_oldSelected);
-        --m_mtxBlockNavigate;
-    }
     return TRUE;
 }
 
