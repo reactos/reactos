@@ -12,18 +12,6 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&Arquivo"
-    BEGIN
-        MENUITEM "Sai&r", ID_REGISTRY_EXIT
-    END
-    POPUP "Aj&uda"
-    BEGIN
-        MENUITEM "&Sobre", ID_HELP_ABOUT
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Arquivo"
@@ -36,8 +24,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Li&gar Registo da rede...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Desligar Registo da rede...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
-        MENUITEM SEPARATOR
-        MENUITEM "Im&primir...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Sai&r", ID_REGISTRY_EXIT
     END
@@ -72,11 +58,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Dividir", ID_VIEW_SPLIT
         MENUITEM SEPARATOR
-        MENUITEM "&Actualizar\tF5", ID_VIEW_REFRESH
-    END
-    POPUP "Aj&uda"
-    BEGIN
-        MENUITEM "&Sobre o Editor do Registo", ID_HELP_ABOUT
+        MENUITEM "&Atualizar\tF5", ID_VIEW_REFRESH
     END
 END
 
@@ -136,32 +118,32 @@ BEGIN
     END
     POPUP ""
     BEGIN
-        MENUITEM "C&ortar", ID_HEXEDIT_CUT
+        MENUITEM "Cor&tar", ID_HEXEDIT_CUT
         MENUITEM "&Copiar", ID_HEXEDIT_COPY
-        MENUITEM "Colar", ID_HEXEDIT_PASTE
+        MENUITEM "C&olar", ID_HEXEDIT_PASTE
         MENUITEM "&Apagar", ID_HEXEDIT_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "Seleccionar &Tudo", ID_HEXEDIT_SELECT_ALL
+        MENUITEM "&Seleccionar tudo", ID_HEXEDIT_SELECT_ALL
     END
 END
 
 /* Dialogs */
 
 IDD_EDIT_STRING DIALOGEX 32, 24, 252, 84
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Editar texto"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Nome do valor:", IDC_STATIC, 5, 5, 119, 8
+    LTEXT "Valor &nome:", IDC_STATIC, 5, 5, 119, 8
     EDITTEXT IDC_VALUE_NAME, 5, 15, 200, 12, ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Dados do valor:", IDC_STATIC, 5, 30, 119, 8
+    LTEXT "&Valor dados:", IDC_STATIC, 5, 30, 119, 8
     EDITTEXT IDC_VALUE_DATA, 5, 40, 200, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 140, 60, 30, 11
     PUSHBUTTON "Cancelar", IDCANCEL, 175, 60, 30, 11
 END
 
 IDD_EDIT_MULTI_STRING DIALOGEX 32, 24, 252, 174
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Edit Multi-String"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -175,7 +157,7 @@ BEGIN
 END
 
 IDD_EDIT_BIN_DATA DIALOGEX 32, 24, 252, 174
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Edit Binary Value"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -188,7 +170,7 @@ BEGIN
 END
 
 IDD_EDIT_DWORD DIALOGEX 32, 24, 252, 104
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Edit DWORD"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -204,7 +186,7 @@ BEGIN
 END
 
 IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Resource List"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -215,7 +197,7 @@ BEGIN
 END
 
 IDD_EDIT_RESOURCE DIALOGEX 6, 18, 281, 283
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Recursos"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -241,7 +223,7 @@ BEGIN
     LTEXT "Driver exclusive", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
     RTEXT "Interface Type:", IDC_STATIC, 144, 220, 58, 8
     LTEXT "", IDC_INTERFACETYPE, 205, 220, 66, 8
-    RTEXT "Bus Nummer:", IDC_STATIC, 151, 230, 51, 8
+    RTEXT "Bus Number:", IDC_STATIC, 151, 230, 51, 8
     LTEXT "", IDC_BUSNUMBER, 205, 230, 66, 8
     RTEXT "Versão:", IDC_STATIC, 151, 240, 51, 8
     LTEXT "", IDC_VERSION, 205, 240, 66, 8
@@ -272,7 +254,6 @@ BEGIN
     ID_REGISTRY_MENU "Contém comandos para trabalhar com o Registo inteiro."
     ID_EDIT_MENU "Contém comandos para edição de valores ou chaves."
     ID_VIEW_MENU "Contém comandos para personalização da janela do Registo."
-    ID_HELP_MENU "Contém comandos para exibição da ajuda e informações sobre o Editor do Registo."
     ID_EDIT_NEW_MENU "Contém comandos para criação de novas chaves ou valores"
 END
 
@@ -289,19 +270,17 @@ BEGIN
     ID_REGISTRY_UNLOADHIVE "Descarrega um arquivo de seção no registo"
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Liga a um registo num computador remoto."
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Desliga um registo de um computador remoto."
-    ID_REGISTRY_PRINT "Imprime todo ou parte do registo."
-    ID_HELP_ABOUT "Exibe informações do programa, número da versão e copyright."
 END
 
 STRINGTABLE
 BEGIN
     ID_REGISTRY_EXIT "Encerra o Editor do Registo."
-    ID_VIEW_STATUSBAR "Mostra ou oculta a barra de status."
+    ID_VIEW_STATUSBAR "Mostra ou oculta a barra de estado."
     ID_VIEW_SPLIT "Altera a posição da divisão entre os painéis."
-    ID_VIEW_REFRESH "Actualiza a janela."
+    ID_VIEW_REFRESH "Atualiza a janela."
     ID_EDIT_DELETE "Exclui a seleccão."
     ID_EDIT_RENAME "Renomeia a seleccão."
-    ID_EDIT_COPYKEYNAME "Copia o nome da chave seleccionada para a Área de transferência."
+    ID_EDIT_COPYKEYNAME "Copia o nome da chave seleccionada para a área de transferência."
     ID_EDIT_FIND "Localiza um texto numa chave, valor ou dado."
     ID_EDIT_FINDNEXT "Localiza a próxima ocorrência do texto especificado na pesquisa anterior."
 END
@@ -401,16 +380,16 @@ STRINGTABLE
 BEGIN
     IDS_BUSNUMBER "Bus Number"
     IDS_INTERFACE "Interface"
-    IDS_DMA_CHANNEL "Channel"
+    IDS_DMA_CHANNEL "Canal"
     IDS_DMA_PORT "Port"
     IDS_INTERRUPT_VECTOR "Vector"
     IDS_INTERRUPT_LEVEL "Level"
     IDS_INTERRUPT_AFFINITY "Affinity"
     IDS_INTERRUPT_TYPE "Type"
-    IDS_MEMORY_ADDRESS "Physical Address"
+    IDS_MEMORY_ADDRESS "Endereço físico"
     IDS_MEMORY_LENGTH "Length"
     IDS_MEMORY_ACCESS "Access"
-    IDS_PORT_ADDRESS "Physical Address"
+    IDS_PORT_ADDRESS "Endereço físico"
     IDS_PORT_LENGTH "Length"
     IDS_PORT_ACCESS "Access"
     IDS_SPECIFIC_RESERVED1 "Reserved 1"
@@ -432,7 +411,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_BUS_UNDEFINED "Undefined"
-    IDS_BUS_INTERNAL "Internal"
+    IDS_BUS_INTERNAL "Interno"
     IDS_BUS_ISA "ISA"
     IDS_BUS_EISA "EISA"
     IDS_BUS_MICROCHANNEL "MicroChannel"
@@ -460,8 +439,8 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_B
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Faixa de Exportação", IDC_STATIC, 2, 0, 366, 48
-    CONTROL "&Todos", IDC_EXPORT_ALL, "Button", BS_AUTORADIOBUTTON, 10, 10, 29, 11
-    CONTROL "&Ramo Seleccionado", IDC_EXPORT_BRANCH, "Button", BS_AUTORADIOBUTTON, 10, 22, 100, 11
+    AUTORADIOBUTTON "&Todos", IDC_EXPORT_ALL, 10, 10, 99, 11, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Ramo Seleccionado", IDC_EXPORT_BRANCH, 10, 22, 99, 11
     EDITTEXT IDC_EXPORT_BRANCH_TEXT, 30, 34, 335, 12
 END
 
@@ -494,7 +473,7 @@ BEGIN
             WS_TABSTOP, 14, 60, 42, 8
     CONTROL "Corresponder apenas &string inteira", IDC_MATCHSTRING, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 83, 32, 94, 13
-    CONTROL "Cor&respondencia", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |
+    CONTROL "Co&rrespondencia", IDC_MATCHCASE, "Button", BS_AUTOCHECKBOX |
             WS_TABSTOP, 83, 48, 90, 12
 END
 
