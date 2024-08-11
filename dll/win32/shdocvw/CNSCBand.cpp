@@ -264,7 +264,7 @@ void CNSCBand::_UnInit()
     TreeView_DeleteAllItems(m_hwndTreeView);
     m_pDesktop = NULL;
     m_hRoot = NULL;
-    TRACE("Cleanup done !\n");
+    TRACE("Cleanup ok\n");
 }
 
 HRESULT CNSCBand::_CreateTreeView()
