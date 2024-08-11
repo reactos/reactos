@@ -819,7 +819,7 @@ LRESULT CNSCBand::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
         }
         case ID_ORGANIZE:
         {
-            SHELLEXECUTEINFOW sei = { sizeof(sei), SEE_MASK_IDLIST };
+            SHELLEXECUTEINFOW sei = { sizeof(sei), SEE_MASK_INVOKEIDLIST };
             sei.hwnd = m_hWnd;
             sei.nShow = SW_SHOWNORMAL;
             sei.lpIDList = m_pidlRoot;
