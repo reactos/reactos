@@ -1277,7 +1277,6 @@ STDMETHODIMP CNSCBand::Save(IStream *pStm, BOOL fClearDirty)
 
 STDMETHODIMP CNSCBand::GetSizeMax(ULARGE_INTEGER *pcbSize)
 {
-    // TODO: calculate max size
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
@@ -1291,13 +1290,14 @@ STDMETHODIMP CNSCBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 STDMETHODIMP CNSCBand::IsWindowOwner(HWND hWnd)
 {
-    return (hWnd == m_hWnd) ? S_OK : S_FALSE;
+    return SHIsChildOrSelf(m_hWnd, hWnd);
 }
 
 // *** IBandNavigate ***
 
 STDMETHODIMP CNSCBand::Select(LPCITEMIDLIST pidl)
 {
+    UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
