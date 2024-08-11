@@ -1497,7 +1497,7 @@ STDMETHODIMP CNSCBand::GetNavigateTarget(
     return S_OK;
 }
 
-/// Handles a user action on an item.
+// Handles a user action on an item.
 STDMETHODIMP CNSCBand::Invoke(_In_ PCIDLIST_ABSOLUTE pidl)
 {
     UNIMPLEMENTED;
