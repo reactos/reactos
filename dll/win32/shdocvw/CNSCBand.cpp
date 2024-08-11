@@ -1504,7 +1504,7 @@ STDMETHODIMP CNSCBand::Invoke(_In_ PCIDLIST_ABSOLUTE pidl)
     return E_NOTIMPL;
 }
 
-/// Called when the user has selected an item.
+// Called when the user has selected an item.
 STDMETHODIMP CNSCBand::OnSelectionChanged(_In_ PCIDLIST_ABSOLUTE pidl)
 {
     return S_OK;
