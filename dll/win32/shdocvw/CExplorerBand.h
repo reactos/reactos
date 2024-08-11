@@ -19,13 +19,6 @@ public:
     CExplorerBand();
     virtual ~CExplorerBand();
 
-    INT _GetRootCsidl() override;
-    DWORD _GetTVStyle() override;
-    DWORD _GetTVExStyle() override;
-    DWORD _GetEnumFlags() override;
-    BOOL _WantsRootItem() override;
-    BOOL _GetTitle(LPWSTR pszTitle, INT cchTitle) override;
-
     STDMETHODIMP GetClassID(CLSID *pClassID) override;
     STDMETHODIMP OnSelectionChanged(_In_ PCIDLIST_ABSOLUTE pidl) override;
     STDMETHODIMP Invoke(_In_ PCIDLIST_ABSOLUTE pidl) override;
@@ -52,4 +45,16 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IDispatch, IDispatch)
         COM_INTERFACE_ENTRY2_IID(IID_IUnknown, IUnknown, IDispatch)
     END_COM_MAP()
+
+protected:
+    INT _GetRootCsidl() override;
+    DWORD _GetTVStyle() override;
+    DWORD _GetTVExStyle() override;
+    DWORD _GetEnumFlags() override;
+    BOOL _WantsRootItem() override;
+    BOOL _GetTitle(LPWSTR pszTitle, INT cchTitle) override;
+    void _SortItems(HTREEITEM hParent) override;
+
+    // *** Tree item sorting callback ***
+    static INT CALLBACK CompareTreeItems(LPARAM p1, LPARAM p2, LPARAM p3);
 };

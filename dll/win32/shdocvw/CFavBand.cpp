@@ -164,3 +164,8 @@ STDMETHODIMP CFavBand::OnSelectionChanged(_In_ PCIDLIST_ABSOLUTE pidl)
     ShellExecuteExW(&info);
     return hr;
 }
+
+void CFavBand::_SortItems(HTREEITEM hParent)
+{
+    TreeView_SortChildren(m_hwndTreeView, hParent, 0); // Sort by name
+}

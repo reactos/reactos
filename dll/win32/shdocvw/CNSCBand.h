@@ -221,6 +221,7 @@ protected:
     virtual DWORD _GetEnumFlags() = 0;
     virtual BOOL _GetTitle(LPWSTR pszTitle, INT cchTitle) = 0;
     virtual BOOL _WantsRootItem() = 0;
+    virtual void _SortItems(HTREEITEM hParent) = 0;
     BOOL OnTreeItemExpanding(_In_ LPNMTREEVIEW pnmtv);
     BOOL OnTreeItemDeleted(_In_ LPNMTREEVIEW pnmtv);
     void _OnSelectionChanged(_In_ LPNMTREEVIEW pnmtv);
@@ -228,7 +229,6 @@ protected:
     LRESULT OnBeginLabelEdit(_In_ LPNMTVDISPINFO dispInfo);
     LRESULT OnEndLabelEdit(_In_ LPNMTVDISPINFO dispInfo);
     HRESULT _AddFavorite();
-    void _Sort(HTREEITEM hParent);
 
     // *** message handlers ***
     LRESULT OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
@@ -242,8 +242,5 @@ protected:
     LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnShellEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT ContextMenuHack(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-
-    // *** Tree item sorting callback ***
-    static INT CALLBACK CompareTreeItems(LPARAM p1, LPARAM p2, LPARAM p3);
 };
 #endif // def __cplusplus

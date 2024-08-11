@@ -538,7 +538,7 @@ CNSCBand::InsertItem(
     HTREEITEM htiCreated = TreeView_InsertItem(m_hwndTreeView, &tvInsert);
 
     if (bSort)
-        _Sort(hParent);
+        _SortItems(hParent);
 
     return htiCreated;
 }
@@ -593,7 +593,7 @@ BOOL CNSCBand::InsertSubitems(HTREEITEM hItem, LPCITEMIDLIST entry)
     }
 
     /* Let's do sorting */
-    _Sort(hItem);
+    _SortItems(hItem);
 
     /* Now we can redraw */
     m_hwndTreeView.SendMessage(WM_SETREDRAW, TRUE, 0);
@@ -723,31 +723,6 @@ BOOL CNSCBand::NavigateToCurrentFolder()
     --m_mtxBlockNavigate;
 
     return result;
-}
-
-INT CALLBACK CNSCBand::CompareTreeItems(LPARAM p1, LPARAM p2, LPARAM p3)
-{
-    CItemData *info1 = (CItemData*)p1;
-    CItemData *info2 = (CItemData*)p2;
-    IShellFolder *pDesktop = (IShellFolder *)p3;
-    HRESULT hr = pDesktop->CompareIDs(0, info1->absolutePidl, info2->absolutePidl);
-    if (FAILED(hr))
-        return 0;
-    return (SHORT)HRESULT_CODE(hr);
-}
-
-void CNSCBand::_Sort(HTREEITEM hParent)
-{
-    if (!_WantsRootItem())
-    {
-        TreeView_SortChildren(m_hwndTreeView, hParent, 0); // Sort by name
-        return;
-    }
-    TVSORTCB sortCallback;
-    sortCallback.hParent = hParent;
-    sortCallback.lpfnCompare = CompareTreeItems;
-    sortCallback.lParam = (LPARAM)(PVOID)m_pDesktop; // m_pDesktop is not a pointer
-    TreeView_SortChildrenCB(m_hwndTreeView, &sortCallback, 0);
 }
 
 // *** message handlers ***
