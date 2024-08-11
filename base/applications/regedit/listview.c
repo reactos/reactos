@@ -2,20 +2,7 @@
  * Regedit listviews
  *
  * Copyright (C) 2002 Robert Dickenson <robd@reactos.org>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * LICENSE: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  */
 
 #include "regedit.h"
@@ -24,8 +11,8 @@
 #define CY_ICON            16
 #define LISTVIEW_NUM_ICONS 2
 
-int Image_String = 0;
-int Image_Bin = 0;
+int Image_String;
+int Image_Bin;
 INT iListViewSelect = -1;
 
 typedef struct tagLINE_INFO
@@ -42,11 +29,7 @@ typedef struct tagSORT_INFO
     BOOL bSortAscending;
 } SORT_INFO, *PSORT_INFO;
 
-/*******************************************************************************
- * Global and Local Variables:
- */
-
-static INT g_iSortedColumn = 0;
+static INT g_iSortedColumn;
 
 #define MAX_LIST_COLUMNS (IDS_LIST_COLUMN_LAST - IDS_LIST_COLUMN_FIRST + 1)
 static const int default_column_widths[MAX_LIST_COLUMNS] = { 35, 25, 40 };  /* in percents */
@@ -120,9 +103,6 @@ BOOL IsDefaultValue(HWND hwndLV, int i)
     return FALSE;
 }
 
-/*******************************************************************************
- * Local module support methods
- */
 static void AddEntryToList(HWND hwndLV, LPWSTR Name, DWORD dwValType, void* ValBuf, DWORD dwCount, int Position, BOOL ValExists)
 {
     PLINE_INFO linfo;
@@ -162,7 +142,6 @@ static void AddEntryToList(HWND hwndLV, LPWSTR Name, DWORD dwValType, void* ValB
             break;
     }
 
-    /*    item.lParam = (LPARAM)ValBuf; */
 #if (_WIN32_IE >= 0x0300)
     item.iIndent = 0;
 #endif
@@ -432,10 +411,8 @@ static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSor
                 dw1 = *(DWORD*)l->val;
                 dw2 = *(DWORD*)r->val;
                 if (pSortInfo->bSortAscending)
-                    // return (dw1 > dw2 ? 1 : -1);
                     return ((int)dw1 - (int)dw2);
                 else
-                    // return (dw1 > dw2 ? -1 : 1);
                     return ((int)dw2 - (int)dw1);
             }
 
@@ -444,10 +421,8 @@ static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSor
                 qw1 = *(DWORDLONG*)l->val;
                 qw2 = *(DWORDLONG*)r->val;
                 if (pSortInfo->bSortAscending)
-                    // return (qw1 > qw2 ? 1 : -1);
                     return ((int)qw1 - (int)qw2);
                 else
-                    // return (qw1 > qw2 ? -1 : 1);
                     return ((int)qw2 - (int)qw1);
             }
 
@@ -665,7 +640,6 @@ void DestroyListView(HWND hwndLV)
         free(((LINE_INFO*)item.lParam)->name);
         HeapFree(GetProcessHeap(), 0, (void*)item.lParam);
     }
-
 }
 
 BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCWSTR keyPath, BOOL bSelectNone)
@@ -705,10 +679,6 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCWSTR keyPath, BOOL bSelectNone)
         DWORD dwValSize = max_val_size;
         DWORD dwIndex = 0L;
         DWORD dwValType;
-        /*                if (RegQueryValueExW(hNewKey, NULL, NULL, &dwValType, ValBuf, &dwValSize) == ERROR_SUCCESS) { */
-        /*                    AddEntryToList(hwndLV, L"(Default)", dwValType, ValBuf, dwValSize); */
-        /*                } */
-        /*                dwValSize = max_val_size; */
         while (RegEnumValueW(hNewKey, dwIndex, ValName, &dwValNameLen, NULL, &dwValType, ValBuf, &dwValSize) == ERROR_SUCCESS)
         {
             /* Add a terminating 0 character. Usually this is only necessary for strings. */

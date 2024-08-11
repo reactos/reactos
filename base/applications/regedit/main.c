@@ -2,35 +2,18 @@
  * Regedit main function
  *
  * Copyright (C) 2002 Robert Dickenson <robd@reactos.org>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * LICENSE: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  */
 
 #include "regedit.h"
 
 BOOL ProcessCmdLine(LPWSTR lpCmdLine);
 
-/*******************************************************************************
- * Global Variables:
- */
-
 HINSTANCE hInst;
 HWND hFrameWnd;
 HWND hStatusBar;
 HMENU hMenuFrame;
-HMENU hPopupMenus = 0;
+HMENU hPopupMenus;
 UINT nClipboardFormat;
 LPCWSTR strClipboardFormat = L"TODO: SET CORRECT FORMAT";
 
@@ -40,24 +23,17 @@ WCHAR szFrameClass[MAX_LOADSTRING];
 WCHAR szChildClass[MAX_LOADSTRING];
 
 
-/*******************************************************************************
+/**
+ * PURPOSE: Saves instance handle and creates main window
  *
- *
- *   FUNCTION: InitInstance(HANDLE, int)
- *
- *   PURPOSE: Saves instance handle and creates main window
- *
- *   COMMENTS:
- *
- *        In this function, we save the instance handle in a global variable and
- *        create and display the main program window.
+ * COMMENTS:
+ *   In this function, we save the instance handle in a global variable and
+ *   create and display the main program window.
  */
-
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     BOOL AclUiAvailable;
     HMENU hEditMenu;
-
     WNDCLASSEXW wcFrame;
     WNDCLASSEXW wcChild;
     ATOM hFrameWndClass;
@@ -118,19 +94,13 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
         SetMenuDefaultItem(hEditMenu, ID_EDIT_MODIFY, MF_BYCOMMAND);
 
     nClipboardFormat = RegisterClipboardFormatW(strClipboardFormat);
-    /* if (nClipboardFormat == 0) {
-        DWORD dwError = GetLastError();
-    } */
 
     hFrameWnd = CreateWindowExW(WS_EX_WINDOWEDGE, (LPCWSTR)(UlongToPtr(hFrameWndClass)), szTitle,
                                 WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
                                 CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                                 NULL, hMenuFrame, hInstance, NULL/*lpParam*/);
-
     if (!hFrameWnd)
-    {
         return FALSE;
-    }
 
     /* Create the status bar */
     hStatusBar = CreateStatusWindowW(WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | SBT_NOBORDERS,
@@ -147,19 +117,14 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     return TRUE;
 }
 
-/******************************************************************************/
-
 /*
  * We need to destroy the main menu before destroying the main window
  * to avoid a memory leak.
  */
-
 void DestroyMainMenu()
 {
     DestroyMenu(hMenuFrame);
 }
-
-/******************************************************************************/
 
 void ExitInstance(HINSTANCE hInstance)
 {
@@ -169,11 +134,17 @@ void ExitInstance(HINSTANCE hInstance)
     UnloadAclUiDll();
 }
 
-BOOL TranslateChildTabMessage(PMSG msg)
+static BOOL InLabelEdit(HWND hWnd, UINT Msg)
+{
+    HWND hEdit = (HWND)SendMessageW(hWnd, Msg, 0, 0);
+    return hEdit && IsWindowVisible(hEdit);
+}
+
+static BOOL TranslateChildTabMessage(PMSG msg)
 {
     if (msg->message != WM_KEYDOWN) return FALSE;
 
-    /* Allow Ctrl+A on address bar */
+    // Allow Ctrl+A on address bar
     if ((msg->hwnd == g_pChildWnd->hAddressBarWnd) &&
         (msg->message == WM_KEYDOWN) &&
         (msg->wParam == L'A') && (GetKeyState(VK_CONTROL) < 0))
@@ -188,10 +159,25 @@ BOOL TranslateChildTabMessage(PMSG msg)
     return TRUE;
 }
 
-int APIENTRY wWinMain(HINSTANCE hInstance,
-                      HINSTANCE hPrevInstance,
-                      LPWSTR    lpCmdLine,
-                      int       nCmdShow)
+static BOOL TranslateRegeditAccelerator(HWND hWnd, HACCEL hAccTable, PMSG msg)
+{
+    if (msg->message == WM_KEYDOWN)
+    {
+        if (msg->wParam == VK_DELETE)
+        {
+            if (g_pChildWnd->hAddressBarWnd == msg->hwnd)
+                return FALSE;
+            if (InLabelEdit(g_pChildWnd->hTreeWnd, TVM_GETEDITCONTROL) || InLabelEdit(g_pChildWnd->hListWnd, LVM_GETEDITCONTROL))
+                return FALSE;
+        }
+    }
+    return TranslateAcceleratorW(hWnd, hAccTable, msg);
+}
+
+int WINAPI wWinMain(HINSTANCE hInstance,
+    HINSTANCE hPrevInstance,
+    LPWSTR lpCmdLine,
+    int nCmdShow)
 {
     MSG msg;
     HACCEL hAccel;
@@ -204,16 +190,13 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     LoadStringW(hInstance, IDC_REGEDIT, szChildClass, COUNT_OF(szChildClass));
 
     if (ProcessCmdLine(lpCmdLine))
-    {
         return 0;
-    }
 
     switch (GetUserDefaultUILanguage())
     {
         case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
             SetProcessDefaultLayout(LAYOUT_RTL);
             break;
-
         default:
             break;
     }
@@ -222,15 +205,14 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
     /* Perform application initialization */
     if (!InitInstance(hInstance, nCmdShow))
-    {
         return 0;
-    }
+
     hAccel = LoadAcceleratorsW(hInstance, MAKEINTRESOURCEW(ID_ACCEL));
 
     /* Main message loop */
     while (GetMessageW(&msg, NULL, 0, 0))
     {
-        if (!TranslateAcceleratorW(hFrameWnd, hAccel, &msg) &&
+        if (!TranslateRegeditAccelerator(hFrameWnd, hAccel, &msg) &&
             !TranslateChildTabMessage(&msg))
         {
             TranslateMessage(&msg);
@@ -241,5 +223,3 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     ExitInstance(hInstance);
     return (int)msg.wParam;
 }
-
-/* EOF */

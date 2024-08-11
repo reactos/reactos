@@ -2,20 +2,7 @@
  * Regedit frame window
  *
  * Copyright (C) 2002 Robert Dickenson <robd@reactos.org>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * LICENSE: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  */
 
 #include "regedit.h"
@@ -23,10 +10,6 @@
 #include <commdlg.h>
 #include <cderr.h>
 #include <objsel.h>
-
-/*******************************************************************************
- * Local module support methods
- */
 
 static void resize_frame_rect(HWND hWnd, PRECT prect)
 {
@@ -48,8 +31,6 @@ static void resize_frame_client(HWND hWnd)
     GetClientRect(hWnd, &rect);
     resize_frame_rect(hWnd, &rect);
 }
-
-/********************************************************************************/
 
 static void OnEnterMenuLoop(HWND hWnd)
 {
@@ -73,7 +54,7 @@ static void OnMenuSelect(HWND hWnd, UINT nItemID, UINT nFlags, HMENU hSysMenu)
 {
     WCHAR str[100];
 
-    wcscpy(str, L"");
+    str[0] = UNICODE_NULL;
     if (nFlags & MF_POPUP)
     {
         if (hSysMenu != GetMenu(hWnd))
@@ -299,7 +280,7 @@ static BOOL LoadHive(HWND hWnd)
     LoadStringW(hInst, IDS_LOAD_HIVE, Caption, COUNT_OF(Caption));
     ofn.lpstrTitle = Caption;
     ofn.Flags |= OFN_ENABLESIZING;
-    /*    ofn.lCustData = ;*/
+
     /* now load the hive */
     if (GetOpenFileName(&ofn))
     {
@@ -381,7 +362,7 @@ static BOOL ImportRegistryFile(HWND hWnd)
     LoadStringW(hInst, IDS_IMPORT_REG_FILE, Caption, COUNT_OF(Caption));
     ofn.lpstrTitle = Caption;
     ofn.Flags |= OFN_ENABLESIZING;
-    /*    ofn.lCustData = ;*/
+
     if (GetOpenFileName(&ofn))
     {
         /* Look at the extension of the file to determine its type */
@@ -622,78 +603,6 @@ BOOL ExportRegistryFile(HWND hWnd)
     return bRet;
 }
 
-BOOL PrintRegistryHive(HWND hWnd, LPWSTR path)
-{
-#if 1
-    PRINTDLG pd;
-    UNREFERENCED_PARAMETER(path);
-
-    ZeroMemory(&pd, sizeof(PRINTDLG));
-    pd.lStructSize = sizeof(PRINTDLG);
-    pd.hwndOwner   = hWnd;
-    pd.hDevMode    = NULL;     /* Don't forget to free or store hDevMode*/
-    pd.hDevNames   = NULL;     /* Don't forget to free or store hDevNames*/
-    pd.Flags       = PD_USEDEVMODECOPIESANDCOLLATE | PD_RETURNDC;
-    pd.nCopies     = 1;
-    pd.nFromPage   = 0xFFFF;
-    pd.nToPage     = 0xFFFF;
-    pd.nMinPage    = 1;
-    pd.nMaxPage    = 0xFFFF;
-    if (PrintDlg(&pd))
-    {
-        /* GDI calls to render output. */
-        DeleteDC(pd.hDC); /* Delete DC when done.*/
-    }
-#else
-    HRESULT hResult;
-    PRINTDLGEX pd;
-
-    hResult = PrintDlgEx(&pd);
-    if (hResult == S_OK)
-    {
-        switch (pd.dwResultAction)
-        {
-        case PD_RESULT_APPLY:
-            /*The user clicked the Apply button and later clicked the Cancel button. This indicates that the user wants to apply the changes made in the property sheet, but does not yet want to print. The PRINTDLGEX structure contains the information specified by the user at the time the Apply button was clicked. */
-            break;
-        case PD_RESULT_CANCEL:
-            /*The user clicked the Cancel button. The information in the PRINTDLGEX structure is unchanged. */
-            break;
-        case PD_RESULT_PRINT:
-            /*The user clicked the Print button. The PRINTDLGEX structure contains the information specified by the user. */
-            break;
-        default:
-            break;
-        }
-    }
-    else
-    {
-        switch (hResult)
-        {
-        case E_OUTOFMEMORY:
-            /*Insufficient memory. */
-            break;
-        case E_INVALIDARG:
-            /* One or more arguments are invalid. */
-            break;
-        case E_POINTER:
-            /*Invalid pointer. */
-            break;
-        case E_HANDLE:
-            /*Invalid handle. */
-            break;
-        case E_FAIL:
-            /*Unspecified error. */
-            break;
-        default:
-            break;
-        }
-        return FALSE;
-    }
-#endif
-    return TRUE;
-}
-
 BOOL CopyKeyName(HWND hWnd, HKEY hRootKey, LPCWSTR keyName)
 {
     BOOL bClipboardOpened = FALSE;
@@ -931,12 +840,8 @@ FreeObjectPicker(IN IDsObjectPicker *pDsObjectPicker)
     pDsObjectPicker->lpVtbl->Release(pDsObjectPicker);
 }
 
-/*******************************************************************************
- *
- *  FUNCTION: _CmdWndProc(HWND, unsigned, WORD, LONG)
- *
- *  PURPOSE:  Processes WM_COMMAND messages for the main frame window.
- *
+/**
+ * PURPOSE: Processes WM_COMMAND messages for the main frame window.
  */
 static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -982,7 +887,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                                                         COUNT_OF(szComputerName));
                 if (hRet == S_OK)
                 {
-                    /* FIXME - connect to the registry */
+                    // FIXME - connect to the registry
                 }
 
                 FreeObjectPicker(ObjectPicker);
@@ -995,17 +900,11 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
     case ID_REGISTRY_DISCONNECTNETWORKREGISTRY:
         return TRUE;
-    case ID_REGISTRY_PRINT:
-        PrintRegistryHive(hWnd, L"");
-        return TRUE;
     case ID_REGISTRY_EXIT:
         DestroyWindow(hWnd);
         return TRUE;
     case ID_VIEW_STATUSBAR:
         toggle_child(hWnd, LOWORD(wParam), hStatusBar);
-        return TRUE;
-    case ID_HELP_ABOUT:
-        ShowAboutBox(hWnd);
         return TRUE;
     case ID_VIEW_SPLIT:
     {
@@ -1146,23 +1045,11 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_EDIT_PERMISSIONS:
         RegKeyEditPermissions(hWnd, hKeyRoot, NULL, keyPath);
         break;
-    case ID_REGISTRY_PRINTERSETUP:
-        /*PRINTDLG pd;*/
-        /*PrintDlg(&pd);*/
-        /*PAGESETUPDLG psd;*/
-        /*PageSetupDlg(&psd);*/
-        break;
-    case ID_REGISTRY_OPENLOCAL:
-        break;
-
     case ID_VIEW_REFRESH:
         RefreshTreeView(g_pChildWnd->hTreeWnd);
         keyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
         RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath, TRUE);
         break;
-        /*case ID_OPTIONS_TOOLBAR:*/
-        /*	toggle_child(hWnd, LOWORD(wParam), hToolBar);*/
-        /*    break;*/
     case ID_EDIT_NEW_KEY:
         CreateNewKey(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd));
         break;
@@ -1213,17 +1100,12 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return result;
 }
 
-/********************************************************************************
+/**
+ * PURPOSE: Processes messages for the main frame window
  *
- *  FUNCTION: FrameWndProc(HWND, unsigned, WORD, LONG)
- *
- *  PURPOSE:  Processes messages for the main frame window.
- *
- *  WM_COMMAND  - process the application menu
- *  WM_DESTROY  - post a quit message and return
- *
+ * WM_COMMAND - process the application menu
+ * WM_DESTROY - post a quit message and return
  */
-
 LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     RECT rc;
@@ -1240,13 +1122,11 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             return DefWindowProcW(hWnd, message, wParam, lParam);
         break;
     case WM_ACTIVATE:
-        if (LOWORD(hWnd) && g_pChildWnd)
+        if (LOWORD(wParam) != WA_INACTIVE && g_pChildWnd)
             SetFocus(g_pChildWnd->hWnd);
         break;
     case WM_SIZE:
         resize_frame_client(hWnd);
-        break;
-    case WM_TIMER:
         break;
     case WM_INITMENU:
         break;
