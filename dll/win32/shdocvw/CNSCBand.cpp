@@ -1170,7 +1170,7 @@ LRESULT CNSCBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
         {
             m_hwndTreeView.SetFocus();
             if (TreeView_EditLabel(m_hwndTreeView, hItem))
-                m_oldSelected = hMenu;
+                m_oldSelected = hItem;
             return 0;
         }
 
