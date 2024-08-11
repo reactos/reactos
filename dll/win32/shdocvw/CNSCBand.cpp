@@ -1009,7 +1009,7 @@ LRESULT CNSCBand::OnEndLabelEdit(_In_ LPNMTVDISPINFO dispInfo)
         }
         else
         {
-            // Tell everyone in case SetNameOf forgot, this causes IShellView to update itself when we renamed a child
+            // Tell everyone if SetNameOf forgot, this causes IShellView to update itself when we rename a child
             SHChangeNotify(SHCNE_RENAMEFOLDER, SHCNF_IDLIST, info->absolutePidl, pidlNewAbs);
         }
 
