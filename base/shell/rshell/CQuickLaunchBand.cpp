@@ -95,6 +95,7 @@ CQuickLaunchBand::~CQuickLaunchBand()
 {
 }
 
+/*****************************************************************************/
 // ATL Construct
 /// Creates an instance of CISFBand, and initializes its Shell Folder Band for enumeration.
 /// @return The error code.
@@ -122,6 +123,7 @@ HRESULT CQuickLaunchBand::FinalConstruct()
     return hr;
 }
 
+/*****************************************************************************/
 // IObjectWithSite
 
 STDMETHODIMP CQuickLaunchBand::SetSite(IUnknown *pUnkSite)
@@ -145,6 +147,7 @@ STDMETHODIMP CQuickLaunchBand::GetSite(_In_ REFIID riid, _Out_ VOID **ppvSite)
     return pIOWS->GetSite(riid, ppvSite);
 }
 
+/*****************************************************************************/
 // IDeskBand
 
 STDMETHODIMP CQuickLaunchBand::GetWindow(_Out_ HWND *phwnd)
@@ -221,6 +224,7 @@ CQuickLaunchBand::GetBandInfo(
     return pIDB->GetBandInfo(dwBandID, dwViewMode, pdbi);
 }
 
+/*****************************************************************************/
 // IPersistStream
 
 STDMETHODIMP CQuickLaunchBand::GetClassID(_Out_ CLSID *pClassID)
@@ -276,6 +280,7 @@ STDMETHODIMP CQuickLaunchBand::GetSizeMax(_Out_ ULARGE_INTEGER *pcbSize)
     return pIPS->GetSizeMax(pcbSize);
 }
 
+/*****************************************************************************/
 // IWinEventHandler
 
 STDMETHODIMP CQuickLaunchBand::ContainsWindow(_In_ HWND hWnd)
