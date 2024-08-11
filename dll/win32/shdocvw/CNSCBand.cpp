@@ -252,7 +252,7 @@ void CNSCBand::_UnInit()
     HRESULT hr;
     CComPtr<IWebBrowser2> browserService;
 
-    TRACE("Cleaning up explorer band ...\n");
+    TRACE("Cleaning up explorer band...\n");
 
     hr = IUnknown_QueryService(m_pSite, SID_SWebBrowserApp, IID_PPV_ARG(IWebBrowser2, &browserService));
     if (FAILED_UNEXPECTEDLY(hr))
