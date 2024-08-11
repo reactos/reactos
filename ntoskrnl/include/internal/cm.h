@@ -1460,7 +1460,7 @@ extern HANDLE CmpRegistryRootHandle;
 extern BOOLEAN ExpInTextModeSetup;
 extern BOOLEAN InitIsWinPEMode;
 extern ULONG CmpHashTableSize;
-extern ULONG CmpDelayedCloseSize, CmpDelayedCloseIndex;
+extern ULONG CmpDelayedCloseSize;
 extern BOOLEAN CmpNoWrite;
 extern BOOLEAN CmpForceForceFlush;
 extern BOOLEAN CmpWasSetupBoot;
@@ -1468,6 +1468,8 @@ extern BOOLEAN CmpProfileLoaded;
 extern PCMHIVE CmiVolatileHive;
 extern LIST_ENTRY CmiKeyObjectListHead;
 extern BOOLEAN CmpHoldLazyFlush;
+extern ULONG CmpLazyFlushIntervalInSeconds;
+extern ULONG CmpLazyFlushHiveCount;
 extern BOOLEAN HvShutdownComplete;
 
 //

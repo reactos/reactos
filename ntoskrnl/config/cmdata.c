@@ -677,6 +677,27 @@ DATA_SEG("INITDATA") CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     },
     {
         L"Session Manager\\Configuration Manager",
+        L"RegistryLazyFlushInterval",
+        &CmpLazyFlushIntervalInSeconds,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Configuration Manager",
+        L"RegistryLazyFlushHiveCount",
+        &CmpLazyFlushHiveCount,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Configuration Manager",
+        L"DelayCloseSize",
+        &CmpDelayedCloseSize,
+        NULL,
+        NULL
+    },
+    {
+        L"Session Manager\\Configuration Manager",
         L"VolatileBoot",
         &CmpVolatileBoot,
         NULL,
