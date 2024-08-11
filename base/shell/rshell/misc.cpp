@@ -56,13 +56,13 @@
 
 extern "C"
 {
-extern HINSTANCE shell32_hInstance;
+    extern HINSTANCE shell32_hInstance;
 
-HRESULT WINAPI RSHELL_CStartMenu_CreateInstance(REFIID riid, void **ppv);
-HRESULT WINAPI RSHELL_CMenuDeskBar_CreateInstance(REFIID riid, LPVOID *ppv);
-HRESULT WINAPI RSHELL_CMenuSite_CreateInstance(REFIID riid, LPVOID *ppv);
-HRESULT WINAPI RSHELL_CMenuBand_CreateInstance(REFIID riid, LPVOID *ppv);
-HRESULT WINAPI RSHELL_CMergedFolder_CreateInstance(REFIID riid, LPVOID *ppv);
+    HRESULT WINAPI RSHELL_CStartMenu_CreateInstance(REFIID riid, void **ppv);
+    HRESULT WINAPI RSHELL_CMenuDeskBar_CreateInstance(REFIID riid, LPVOID *ppv);
+    HRESULT WINAPI RSHELL_CMenuSite_CreateInstance(REFIID riid, LPVOID *ppv);
+    HRESULT WINAPI RSHELL_CMenuBand_CreateInstance(REFIID riid, LPVOID *ppv);
+    HRESULT WINAPI RSHELL_CMergedFolder_CreateInstance(REFIID riid, LPVOID *ppv);
 }
 
 DWORD WINAPI WinList_Init(void)
@@ -263,9 +263,9 @@ public:
 
 STDAPI
 DllGetClassObject(
-REFCLSID rclsid,
-REFIID riid,
-LPVOID *ppv)
+    REFCLSID rclsid,
+    REFIID riid,
+    LPVOID *ppv)
 {
     if (!ppv)
         return E_INVALIDARG;
@@ -281,4 +281,3 @@ VOID WINAPI ShowFolderOptionsDialog(UINT Page, BOOL Async)
     wsprintfA(buf, "rundll32.exe shell32.dll,Options_RunDLL %u", Page);
     WinExec(buf, SW_SHOW);
 }
-
