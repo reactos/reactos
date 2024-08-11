@@ -72,7 +72,7 @@ STDMETHODIMP CExplorerBand::OnSelectionChanged(_In_ PCIDLIST_ABSOLUTE pidl)
     return Invoke(pidl);
 }
 
-/// Handles a user action on an item.
+// Handles a user action on an item.
 STDMETHODIMP CExplorerBand::Invoke(_In_ PCIDLIST_ABSOLUTE pidl)
 {
     /* Prevents navigation if selection is initiated inside the band */
