@@ -2,20 +2,7 @@
  * Regedit listviews
  *
  * Copyright (C) 2002 Robert Dickenson <robd@reactos.org>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * LICENSE: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  */
 
 #include "regedit.h"
@@ -24,8 +11,8 @@
 #define CY_ICON    16
 #define NUM_ICONS   2
 
-int Image_String = 0;
-int Image_Bin = 0;
+int Image_String;
+int Image_Bin;
 INT iListViewSelect = -1;
 
 typedef struct tagLINE_INFO
@@ -42,11 +29,7 @@ typedef struct tagSORT_INFO
     BOOL bSortAscending;
 } SORT_INFO, *PSORT_INFO;
 
-/*******************************************************************************
- * Global and Local Variables:
- */
-
-static INT g_iSortedColumn = 0;
+static INT g_iSortedColumn;
 
 #define MAX_LIST_COLUMNS (IDS_LIST_COLUMN_LAST - IDS_LIST_COLUMN_FIRST + 1)
 static const int default_column_widths[MAX_LIST_COLUMNS] = { 35, 25, 40 };
@@ -58,16 +41,11 @@ LPCWSTR GetValueName(HWND hwndLV, int iStartAt)
     LVITEMW LVItem;
     PLINE_INFO lineinfo;
 
-    /*
-       if a new item is inserted, then no allocation,
-       otherwise the heap block will be lost!
-    */
+    // if a new item is inserted, then no allocation, otherwise the heap block will be lost
     item = ListView_GetNextItem(hwndLV, iStartAt, LVNI_SELECTED);
     if (item == -1) return NULL;
 
-    /*
-        Should be always TRUE anyways
-    */
+    //  Should be always TRUE anyways
     LVItem.iItem = item;
     LVItem.iSubItem = 0;
     LVItem.mask = LVIF_PARAM;
@@ -120,9 +98,6 @@ BOOL IsDefaultValue(HWND hwndLV, int i)
     return FALSE;
 }
 
-/*******************************************************************************
- * Local module support methods
- */
 static void AddEntryToList(HWND hwndLV, LPWSTR Name, DWORD dwValType, void* ValBuf, DWORD dwCount, int Position, BOOL ValExists)
 {
     PLINE_INFO linfo;
@@ -162,7 +137,6 @@ static void AddEntryToList(HWND hwndLV, LPWSTR Name, DWORD dwValType, void* ValB
             break;
     }
 
-    /*    item.lParam = (LPARAM)ValBuf; */
 #if (_WIN32_IE >= 0x0300)
     item.iIndent = 0;
 #endif
@@ -217,16 +191,11 @@ static void AddEntryToList(HWND hwndLV, LPWSTR Name, DWORD dwValType, void* ValB
         {
             WCHAR buf[200];
             if(dwCount == sizeof(DWORD))
-            {
                 wsprintf(buf, L"0x%08x (%u)", *(DWORD*)ValBuf, *(DWORD*)ValBuf);
-            }
             else
-            {
                 LoadStringW(hInst, IDS_INVALID_DWORD, buf, COUNT_OF(buf));
-            }
             ListView_SetItemText(hwndLV, index, 2, buf);
         }
-        /*            lpsRes = convertHexToDWORDStr(lpbData, dwLen); */
         break;
         default:
         {
@@ -298,17 +267,13 @@ static BOOL InitListViewImageLists(HWND hwndLV)
 
     /* Fail if not all of the images were added.  */
     if (ImageList_GetImageCount(himl) < NUM_ICONS)
-    {
         return FALSE;
-    }
 
     /* Associate the image list with the tree view control.  */
     (void)ListView_SetImageList(hwndLV, himl, LVSIL_SMALL);
 
     return TRUE;
 }
-
-/* OnGetDispInfo - processes the LVN_GETDISPINFO notification message.  */
 
 static void OnGetDispInfo(NMLVDISPINFO* plvdi)
 {
@@ -432,10 +397,8 @@ static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSor
                 dw1 = *(DWORD*)l->val;
                 dw2 = *(DWORD*)r->val;
                 if (pSortInfo->bSortAscending)
-                    // return (dw1 > dw2 ? 1 : -1);
                     return ((int)dw1 - (int)dw2);
                 else
-                    // return (dw1 > dw2 ? -1 : 1);
                     return ((int)dw2 - (int)dw1);
             }
 
@@ -444,10 +407,8 @@ static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSor
                 qw1 = *(DWORDLONG*)l->val;
                 qw2 = *(DWORDLONG*)r->val;
                 if (pSortInfo->bSortAscending)
-                    // return (qw1 > qw2 ? 1 : -1);
                     return ((int)qw1 - (int)qw2);
                 else
-                    // return (qw1 > qw2 ? -1 : 1);
                     return ((int)qw2 - (int)qw1);
             }
 
@@ -572,13 +533,9 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
         {
             PLINE_INFO lineinfo = (PLINE_INFO)Info->item.lParam;
             if(!lineinfo->name || !wcscmp(lineinfo->name, L""))
-            {
                 *Result = TRUE;
-            }
             else
-            {
                 *Result = FALSE;
-            }
         }
         else
             *Result = TRUE;
@@ -665,7 +622,6 @@ void DestroyListView(HWND hwndLV)
         free(((LINE_INFO*)item.lParam)->name);
         HeapFree(GetProcessHeap(), 0, (void*)item.lParam);
     }
-
 }
 
 BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCWSTR keyPath, BOOL bSelectNone)
@@ -705,10 +661,6 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCWSTR keyPath, BOOL bSelectNone)
         DWORD dwValSize = max_val_size;
         DWORD dwIndex = 0L;
         DWORD dwValType;
-        /*                if (RegQueryValueExW(hNewKey, NULL, NULL, &dwValType, ValBuf, &dwValSize) == ERROR_SUCCESS) { */
-        /*                    AddEntryToList(hwndLV, L"(Default)", dwValType, ValBuf, dwValSize); */
-        /*                } */
-        /*                dwValSize = max_val_size; */
         while (RegEnumValueW(hNewKey, dwIndex, ValName, &dwValNameLen, NULL, &dwValType, ValBuf, &dwValSize) == ERROR_SUCCESS)
         {
             /* Add a terminating 0 character. Usually this is only necessary for strings. */
@@ -720,9 +672,7 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCWSTR keyPath, BOOL bSelectNone)
             dwValType = 0L;
             ++dwIndex;
             if(!wcscmp(ValName, L""))
-            {
                 AddedDefault = TRUE;
-            }
         }
         HeapFree(GetProcessHeap(), 0, ValBuf);
         HeapFree(GetProcessHeap(), 0, ValName);
@@ -730,14 +680,10 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCWSTR keyPath, BOOL bSelectNone)
     RegCloseKey(hNewKey);
 
     if(!AddedDefault)
-    {
         AddEntryToList(hwndLV, L"", REG_SZ, NULL, 0, 0, FALSE);
-    }
     c = ListView_GetItemCount(hwndLV);
     for(i = 0; i < c; i++)
-    {
         ListView_SetItemState(hwndLV, i, 0, LVIS_FOCUSED | LVIS_SELECTED);
-    }
 
     if (bSelectNone)
         iListViewSelect = -1;

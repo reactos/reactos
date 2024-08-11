@@ -1,21 +1,8 @@
 /*
  * Windows regedit.exe registry editor implementation.
  *
- * Copyright (C) 2002 Andriy Palamarchuk
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * Copyright 2002 Andriy Palamarchuk
+ * LICENSE: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  */
 
 #include "regedit.h"
@@ -63,7 +50,7 @@ LPCWSTR getAppName(void)
     return L"regedit";
 }
 
-/******************************************************************************
+/**
  * Copies file name from command line string to the buffer.
  * Rewinds the command line string pointer to the next non-space character
  * after the file name.
@@ -134,124 +121,118 @@ void get_file_name(LPWSTR *command_line, LPWSTR file_name)
 
 BOOL PerformRegAction(REGEDIT_ACTION action, LPWSTR s, BOOL silent)
 {
-    switch (action)
+    switch (action) {
+    case ACTION_ADD:
     {
-        case ACTION_ADD:
-        {
-            WCHAR szText[512];
-            WCHAR filename[MAX_PATH];
-            FILE *fp;
+        WCHAR szText[512];
+        WCHAR filename[MAX_PATH];
+        FILE *fp;
 
-            get_file_name(&s, filename);
-            if (!filename[0])
+        get_file_name(&s, filename);
+        if (!filename[0])
+        {
+            InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, NULL, L"No file name is specified.");
+            InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, szTitle, usage);
+            exit(4);
+        }
+
+        while (filename[0])
+        {
+            /* Request import confirmation */
+            if (!silent)
             {
-                InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, NULL, L"No file name is specified.");
-                InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, szTitle, usage);
-                exit(4);
+                int choice;
+
+                LoadStringW(hInst, IDS_IMPORT_PROMPT, szText, COUNT_OF(szText));
+
+                choice = InfoMessageBox(NULL, MB_YESNOCANCEL | MB_ICONWARNING, szTitle, szText, filename);
+
+                switch (choice)
+                {
+                    case IDNO:
+                        goto cont;
+                    case IDCANCEL:
+                        /* The cancel case is useful if the user is importing more than one registry file
+                        at a time, and wants to back out anytime during the import process. This way, the
+                        user doesn't have to resort to ending the regedit process abruptly just to cancel
+                        the operation. */
+                        return TRUE;
+                    default:
+                        break;
+                }
             }
 
-            while (filename[0])
+            /* Open the file */
+            fp = _wfopen(filename, L"r");
+
+            /* Import it */
+            if (fp == NULL || !import_registry_file(fp))
             {
-                /* Request import confirmation */
+                /* Error opening the file */
                 if (!silent)
                 {
-                    int choice;
-
-                    LoadStringW(hInst, IDS_IMPORT_PROMPT, szText, COUNT_OF(szText));
-
-                    choice = InfoMessageBox(NULL, MB_YESNOCANCEL | MB_ICONWARNING, szTitle, szText, filename);
-
-                    switch (choice)
-                    {
-                        case IDNO:
-                            goto cont;
-                        case IDCANCEL:
-                            /* The cancel case is useful if the user is importing more than one registry file
-                            at a time, and wants to back out anytime during the import process. This way, the
-                            user doesn't have to resort to ending the regedit process abruptly just to cancel
-                            the operation. */
-                            return TRUE;
-                        default:
-                            break;
-                    }
+                    LoadStringW(hInst, IDS_IMPORT_ERROR, szText, COUNT_OF(szText));
+                    InfoMessageBox(NULL, MB_OK | MB_ICONERROR, szTitle, szText, filename);
                 }
-
-                /* Open the file */
-                fp = _wfopen(filename, L"r");
-
-                /* Import it */
-                if (fp == NULL || !import_registry_file(fp))
-                {
-                    /* Error opening the file */
-                    if (!silent)
-                    {
-                        LoadStringW(hInst, IDS_IMPORT_ERROR, szText, COUNT_OF(szText));
-                        InfoMessageBox(NULL, MB_OK | MB_ICONERROR, szTitle, szText, filename);
-                    }
-                }
-                else
-                {
-                    /* Show successful import */
-                    if (!silent)
-                    {
-                        LoadStringW(hInst, IDS_IMPORT_OK, szText, COUNT_OF(szText));
-                        InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, szTitle, szText, filename);
-                    }
-                }
-
-                /* Close the file */
-                if (fp) fclose(fp);
-
-cont:
-                get_file_name(&s, filename);
-            }
-            break;
-        }
-
-        case ACTION_DELETE:
-        {
-            WCHAR reg_key_name[KEY_MAX_LEN];
-            get_file_name(&s, reg_key_name);
-            if (!reg_key_name[0])
-            {
-                InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, NULL, L"No registry key is specified for removal.");
-                InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, szTitle, usage);
-                exit(6);
-            }
-            delete_registry_key(reg_key_name);
-            break;
-        }
-
-        case ACTION_EXPORT:
-        {
-            WCHAR filename[MAX_PATH];
-
-            filename[0] = L'\0';
-            get_file_name(&s, filename);
-            if (!filename[0])
-            {
-                InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, NULL, L"No file name is specified.");
-                InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, szTitle, usage);
-                exit(7);
-            }
-
-            if (s[0])
-            {
-                WCHAR reg_key_name[KEY_MAX_LEN];
-                get_file_name(&s, reg_key_name);
-                export_registry_key(filename, reg_key_name, REG_FORMAT_4);
             }
             else
             {
-                export_registry_key(filename, NULL, REG_FORMAT_4);
+                /* Show successful import */
+                if (!silent)
+                {
+                    LoadStringW(hInst, IDS_IMPORT_OK, szText, COUNT_OF(szText));
+                    InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, szTitle, szText, filename);
+                }
             }
-            break;
+
+            /* Close the file */
+            if (fp) fclose(fp);
+
+cont:
+            get_file_name(&s, filename);
+        }
+        break;
+    }
+    case ACTION_DELETE:
+    {
+        WCHAR reg_key_name[KEY_MAX_LEN];
+        get_file_name(&s, reg_key_name);
+        if (!reg_key_name[0])
+        {
+            InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, NULL, L"No registry key is specified for removal.");
+            InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, szTitle, usage);
+            exit(6);
+        }
+        delete_registry_key(reg_key_name);
+        break;
+    }
+    case ACTION_EXPORT:
+    {
+        WCHAR filename[MAX_PATH];
+
+        filename[0] = L'\0';
+        get_file_name(&s, filename);
+        if (!filename[0])
+        {
+            InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, NULL, L"No file name is specified.");
+            InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, szTitle, usage);
+            exit(7);
         }
 
-        default:
-            fwprintf(stderr, L"%s: Unhandled action!\n", getAppName());
-            exit(8);
-            break;
+        if (s[0])
+        {
+            WCHAR reg_key_name[KEY_MAX_LEN];
+            get_file_name(&s, reg_key_name);
+            export_registry_key(filename, reg_key_name, REG_FORMAT_4);
+        }
+        else
+            export_registry_key(filename, NULL, REG_FORMAT_4);
+        break;
+    }
+    default:
+        fwprintf(stderr, L"%s: Unhandled action!\n", getAppName());
+        exit(8);
+        break;
     }
 
     return TRUE;
@@ -309,19 +290,19 @@ BOOL ProcessCmdLine(LPWSTR lpCmdLine)
             {
                 switch (chu)
                 {
-                    case L'D':
-                        action = ACTION_DELETE;
-                        break;
-                    case L'E':
-                        action = ACTION_EXPORT;
-                        break;
-                    case L'?':
-                        InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, szTitle, usage);
-                        exit(3);
-                        break;
-                    default:
-                        error_unknown_switch(chu, s);
-                        break;
+                case L'D':
+                    action = ACTION_DELETE;
+                    break;
+                case L'E':
+                    action = ACTION_EXPORT;
+                    break;
+                case L'?':
+                    InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, szTitle, usage);
+                    exit(3);
+                    break;
+                default:
+                    error_unknown_switch(chu, s);
+                    break;
                 }
             }
             s++;
@@ -332,18 +313,18 @@ BOOL ProcessCmdLine(LPWSTR lpCmdLine)
             {
                 switch (chu)
                 {
-                    case L'L':
-                        /* fall through */
-                    case L'R':
-                        s += 2;
-                        while (*s && !iswspace(*s))
-                        {
-                            s++;
-                        }
-                        break;
-                    default:
-                        error_unknown_switch(chu, s);
-                        break;
+                case L'L':
+                    /* fall through */
+                case L'R':
+                    s += 2;
+                    while (*s && !iswspace(*s))
+                    {
+                        s++;
+                    }
+                    break;
+                default:
+                    error_unknown_switch(chu, s);
+                    break;
                 }
             }
             else

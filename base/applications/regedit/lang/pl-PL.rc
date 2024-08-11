@@ -1,12 +1,6 @@
-/*
- *    Update by Caemyr - Olaf Siejka (Jan, 2007; May, 2011)
- *    Use ReactOS forum PM or IRC to contact me
- *    https://reactos.org
- *    IRC: irc.freenode.net #reactos-pl;
- *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2011)
- *    UTF-8 conversion by Caemyr (May, 2011)
- *    Update by wojo664 (04.08.2011)
- */
+// COPYRIGHT: 2007-2011 Caemyr - Olaf Siejka
+//            2011 Adam Stachowicz (Saibamen) <saibamenppl@gmail.com>
+//            2011 wojo664
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
@@ -22,18 +16,6 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&Plik"
-    BEGIN
-        MENUITEM "Za&kończ", ID_REGISTRY_EXIT
-    END
-    POPUP "Pomo&c"
-    BEGIN
-        MENUITEM "&Informacje", ID_HELP_ABOUT
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Plik"
@@ -46,8 +28,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Podłącz rejestr sieciowy...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Odłącz rejestr sieciowy...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
-        MENUITEM SEPARATOR
-        MENUITEM "&Drukuj...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Za&kończ", ID_REGISTRY_EXIT
     END
@@ -83,10 +63,6 @@ BEGIN
         MENUITEM "Po&dziel", ID_VIEW_SPLIT
         MENUITEM SEPARATOR
         MENUITEM "&Odśwież\tF5", ID_VIEW_REFRESH
-    END
-    POPUP "Pomo&c"
-    BEGIN
-        MENUITEM "Edytor rejestru - i&nformacje", ID_HELP_ABOUT
     END
 END
 
@@ -150,7 +126,7 @@ END
 /* Dialogs */
 
 IDD_EDIT_STRING DIALOGEX 32, 24, 252, 84
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Edytowanie ciągu"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -163,7 +139,7 @@ BEGIN
 END
 
 IDD_EDIT_MULTI_STRING DIALOGEX 32, 24, 252, 174
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Edytowanie wielociągu"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -177,7 +153,7 @@ BEGIN
 END
 
 IDD_EDIT_BIN_DATA DIALOGEX 32, 24, 252, 174
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Edytowanie wartości binarnej"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -190,7 +166,7 @@ BEGIN
 END
 
 IDD_EDIT_DWORD DIALOGEX 32, 24, 252, 104
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Edytowanie wartości DWORD"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -206,7 +182,7 @@ BEGIN
 END
 
 IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Lista zasobów"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -217,7 +193,7 @@ BEGIN
 END
 
 IDD_EDIT_RESOURCE DIALOGEX 6, 18, 281, 283
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Zasoby"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -274,7 +250,6 @@ BEGIN
     ID_REGISTRY_MENU "Zawiera polecenia do pracy z całym rejestrem"
     ID_EDIT_MENU "Zawiera polecenia do edycji wartości lub kluczy"
     ID_VIEW_MENU "Zawiera polecenia do dostosowywania okien rejestru"
-    ID_HELP_MENU "Zawiera polecenia do wyświetlania Pomocy oraz informacji o Edytorze rejestru"
     ID_EDIT_NEW_MENU "Zawiera polecenia do tworzenia nowych kluczy lub wartości"
 END
 
@@ -291,8 +266,6 @@ BEGIN
     ID_REGISTRY_UNLOADHIVE "Wyładowuje Drzewo z rejestru"
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Połączenie z rejestrem zdalnego komputera"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Odłącza od rejestru zdalnego komputera"
-    ID_REGISTRY_PRINT "Drukuje całość lub część rejestru"
-    ID_HELP_ABOUT "Wyświetla informacje o programie, numerze wersji i prawach autorskich"
 END
 
 STRINGTABLE
@@ -461,8 +434,8 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_B
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Zakres eksportu", IDC_STATIC, 2, 0, 366, 48
-    CONTROL "&Wszystko", IDC_EXPORT_ALL, "Button", BS_AUTORADIOBUTTON, 10, 10, 47, 11
-    CONTROL "Wy&brana gałąź", IDC_EXPORT_BRANCH, "Button", BS_AUTORADIOBUTTON, 10, 22, 100, 11
+    AUTORADIOBUTTON "&Wszystko", IDC_EXPORT_ALL, 10, 10, 99, 11, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Wy&brana gałąź", IDC_EXPORT_BRANCH, 10, 22, 99, 11
     EDITTEXT IDC_EXPORT_BRANCH_TEXT, 30, 34, 335, 12
 END
 
