@@ -1468,7 +1468,7 @@ STDMETHODIMP CNSCBand::Select(LPCITEMIDLIST pidl)
 
 // *** INamespaceProxy ***
 
-/// Returns the ITEMIDLIST that should be navigated when an item is invoked.
+// Returns the ITEMIDLIST that should be navigated when an item is invoked.
 STDMETHODIMP CNSCBand::GetNavigateTarget(
     _In_ PCIDLIST_ABSOLUTE pidl,
     _Out_ PIDLIST_ABSOLUTE *ppidlTarget,
