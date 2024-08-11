@@ -3060,9 +3060,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
         {
             if (Length < 50)
             {
-                /* Only accept valid characters for installation path
-                 * (alpha-numeric, '.', '\', '-' and '_'). Note that
-                 * spaces are not accepted. */
+                /* Only accept valid characters for the installation path */
                 c = (WCHAR)Ir->Event.KeyEvent.uChar.AsciiChar;
                 if (IS_VALID_INSTALL_PATH_CHAR(c))
                 {

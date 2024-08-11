@@ -177,8 +177,15 @@ InitSystemPartition(
     _In_opt_ PFSVOL_CALLBACK FsVolCallback,
     _In_opt_ PVOID Context);
 
+/**
+ * @brief
+ * Defines the class of characters valid for the installation directory.
+ *
+ * The valid characters are: ASCII alphanumericals (a-z, A-Z, 0-9),
+ * and: '.', '\\', '-', '_' . Spaces are not allowed.
+ **/
 #define IS_VALID_INSTALL_PATH_CHAR(c) \
-    (iswalnum(c) || (c) == L'.' || (c) == L'\\' || (c) == L'-' || (c) == L'_')
+    (isalnum(c) || (c) == L'.' || (c) == L'\\' || (c) == L'-' || (c) == L'_')
 
 BOOLEAN
 IsValidInstallDirectory(

@@ -731,8 +731,7 @@ IsValidInstallDirectory(
     if (!*p || (IS_PATH_SEPARATOR(*p) && !*(p + 1)))
         return FALSE;
 
-    /* The path must contain only valid characters (alpha-numeric,
-     * '.', '\\', '-' and '_'). Spaces are not accepted. */
+    /* The path must contain only valid characters */
     for (p = InstallDir; *p; ++p)
     {
         if (!IS_VALID_INSTALL_PATH_CHAR(*p))
