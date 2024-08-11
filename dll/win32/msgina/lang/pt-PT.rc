@@ -100,7 +100,7 @@ BEGIN
     EDITTEXT IDC_CHANGEPWD_OLDPWD, 90, 92, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
     LTEXT "Nova palavra-passe:", IDC_STATIC, 7, 111, 78, 8
     EDITTEXT IDC_CHANGEPWD_NEWPWD1, 90, 109, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "Confirme a nova palavra-passe:", IDC_STATIC, 7, 127, 78, 8
+    LTEXT "Confirmar palavra-passe:", IDC_STATIC, 7, 127, 83, 8
     EDITTEXT IDC_CHANGEPWD_NEWPWD2, 90, 125, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
     PUSHBUTTON "OK", IDOK, 164, 145, 50, 14, BS_DEFPUSHBUTTON
     PUSHBUTTON "Cancelar", IDCANCEL, 218, 145, 50, 14
@@ -238,7 +238,7 @@ BEGIN
     IDS_EMERGENCYLOGOFFTITLE "Encerrar sessão no ReactOS"
     IDS_EMERGENCYLOGOFF "Clique em OK para encerrar a sessão imediatamente. Quaisquer dados não guardados serão perdidos. Utilize isto apenas como último recurso."
     IDS_EMERGENCYRESTARTTITLE "Reinício de emergência"
-    IDS_EMERGENCYRESTART "Clique em OK para reiniciar imediatamente. Quaisquer dados não guardados serão perdidos. Utilize isto apenas como último recurso.."
+    IDS_EMERGENCYRESTART "Clique em OK para reiniciar imediatamente. Quaisquer dados não guardados serão perdidos. Utilize isto apenas como último recurso."
 END
 
 /* Shutdown Dialog Strings */
