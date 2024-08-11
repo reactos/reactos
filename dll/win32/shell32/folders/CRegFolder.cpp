@@ -58,6 +58,39 @@ static bool HasCLSIDShellFolderValue(REFCLSID clsid, LPCWSTR Value)
     return SHELL_QueryCLSIDValue(clsid, L"ShellFolder", Value, NULL, NULL) == ERROR_SUCCESS;
 }
 
+struct CRegFolderInfo {
+    const REGFOLDERINFO *m_pInfo;
+
+    void Initialize(const REGFOLDERINFO *pInfo)
+    {
+        m_pInfo = pInfo;
+    }
+
+    const CLSID* IsRegItem(LPCITEMIDLIST pidl) const
+    {
+        if (pidl && pidl->mkid.cb >= sizeof(WORD) + 1 + 1 + sizeof(GUID))
+        {
+            if (pidl->mkid.abID[0] == m_pInfo->PidlType)
+                return (CLSID*)(SIZE_T(pidl) + GetCLSIDOffset());
+            if (pidl->mkid.abID[0] == PT_CONTROLS_OLDREGITEM)
+                return (CLSID*)(SIZE_T(pidl) + GetRegItemCLSIDOffset(PT_CONTROLS_OLDREGITEM));
+        }
+        if (const IID* pIID = _ILGetGUIDPointer(pidl))
+        {
+            FIXME("Unexpected GUID PIDL type %#x\n", pidl->mkid.abID[0]);
+            return pIID; // FIXME: Remove this when all folders have been fixed
+        }
+        return NULL;
+    }
+
+    LPCWSTR GetParsingPath() const { return m_pInfo->pszParsingPath; }
+    UINT GetCLSIDOffset() const { return GetRegItemCLSIDOffset(m_pInfo->PidlType); }
+    PIDLTYPE GetPidlType() const { return m_pInfo->PidlType; }
+    UINT GetRequiredItemsCount() const { return m_pInfo->Count; }
+    const REQUIREDREGITEM& GetAt(size_t i) const { return m_pInfo->Items[i]; }
+    LPITEMIDLIST CreateItem(size_t i) const { return _ILCreateGuid(GetPidlType(), GetAt(i).clsid); }
+};
+
 HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVOID * ppvOut)
 {
     CComPtr<IDefaultExtractIconInit>    initIcon;
@@ -144,15 +177,19 @@ HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVO
 }
 
 class CRegFolderEnum :
-    public CEnumIDListBase
+    public CEnumIDListBase,
+    public CRegFolderInfo
 {
     IShellFolder *m_SF;
     SHCONTF m_SHCTF;
     public:
         CRegFolderEnum();
         ~CRegFolderEnum();
-        HRESULT Initialize(IShellFolder *pSF, LPCWSTR lpszEnumKeyName, DWORD dwFlags);
+        HRESULT Initialize(const REGFOLDERINFO *pInfo, IShellFolder *pSF, DWORD dwFlags);
         HRESULT AddItemsFromKey(HKEY hkey_root, LPCWSTR szRepPath);
+
+        const CLSID* GetPidlClsid(PCUITEMID_CHILD pidl) { return IsRegItem(pidl); }
+        BOOL HasItemWithCLSID(LPCITEMIDLIST pidl) { return HasItemWithCLSIDImpl<CRegFolderEnum>(pidl); }
 
         BEGIN_COM_MAP(CRegFolderEnum)
         COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
@@ -170,25 +207,35 @@ CRegFolderEnum::~CRegFolderEnum()
         m_SF->Release();
 }
 
-HRESULT CRegFolderEnum::Initialize(IShellFolder *pSF, LPCWSTR lpszEnumKeyName, DWORD dwFlags)
+HRESULT CRegFolderEnum::Initialize(const REGFOLDERINFO *pInfo, IShellFolder *pSF, DWORD dwFlags)
 {
-    WCHAR KeyName[MAX_PATH];
-
+    static_cast<CRegFolderInfo*>(this)->Initialize(pInfo);
     m_SHCTF = (SHCONTF)dwFlags;
     if (!(dwFlags & SHCONTF_FOLDERS))
         return S_OK;
 
+    WCHAR KeyName[MAX_PATH];
     HRESULT hr = StringCchPrintfW(KeyName, MAX_PATH,
                                   L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\%s\\Namespace",
-                                  lpszEnumKeyName);
+                                  pInfo->pszEnumKeyName);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     pSF->AddRef();
     m_SF = pSF;
+
+    // First add the required items and then the items from the registry
+    SFGAOF query = SHELL_CreateFolderEnumItemAttributeQuery(m_SHCTF, TRUE);
+    for (size_t i = 0; i < GetRequiredItemsCount(); ++i)
+    {
+        LPITEMIDLIST pidl = CreateItem(i);
+        if (pidl && SHELL_IncludeItemInFolderEnum(m_SF, pidl, query, m_SHCTF))
+            AddToEnumList(pidl);
+        else
+            ILFree(pidl);
+    }
     AddItemsFromKey(HKEY_LOCAL_MACHINE, KeyName);
     AddItemsFromKey(HKEY_CURRENT_USER, KeyName);
-
     return S_OK;
 }
 
@@ -219,7 +266,7 @@ HRESULT CRegFolderEnum::AddItemsFromKey(HKEY hkey_root, LPCWSTR szRepPath)
             if (pidl)
             {
                 SFGAOF query = SHELL_CreateFolderEnumItemAttributeQuery(m_SHCTF, TRUE);
-                if (SHELL_IncludeItemInFolderEnum(m_SF, pidl, query, m_SHCTF))
+                if (SHELL_IncludeItemInFolderEnum(m_SF, pidl, query, m_SHCTF) && !HasItemWithCLSID(pidl))
                     AddToEnumList(pidl);
                 else
                     ILFree(pidl);
@@ -246,10 +293,10 @@ enum REGFOLDERCOLUMNINDEX
 
 class CRegFolder :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IShellFolder2
+    public IShellFolder2,
+    public CRegFolderInfo
 {
     private:
-        const REGFOLDERINFO *m_pInfo;
         IShellFolder *m_pOuterFolder; // Not ref-counted
         CComHeapPtr<ITEMIDLIST> m_pidlRoot;
 
@@ -261,31 +308,14 @@ class CRegFolder :
         ~CRegFolder();
         HRESULT WINAPI Initialize(PREGFOLDERINITDATA pInit, LPCITEMIDLIST pidlRoot);
 
-        inline LPCWSTR GetParsingPath() const { return m_pInfo->pszParsingPath; }
-        inline UINT GetCLSIDOffset() const { return GetRegItemCLSIDOffset(m_pInfo->PidlType); }
-        const CLSID* IsRegItem(LPCITEMIDLIST pidl) const
-        {
-            if (pidl && pidl->mkid.cb >= sizeof(WORD) + 1 + 1 + sizeof(GUID))
-            {
-                if (pidl->mkid.abID[0] == m_pInfo->PidlType)
-                    return (CLSID*)(SIZE_T(pidl) + GetCLSIDOffset());
-                if (pidl->mkid.abID[0] == PT_CONTROLS_OLDREGITEM)
-                    return (CLSID*)(SIZE_T(pidl) + GetRegItemCLSIDOffset(PT_CONTROLS_OLDREGITEM));
-            }
-            if (const IID* pIID = _ILGetGUIDPointer(pidl))
-            {
-                FIXME("Unexpected GUID PIDL type %#x\n", pidl->mkid.abID[0]);
-                return pIID; // FIXME: Remove this when all folders have been fixed
-            }
-            return NULL;
-        }
         const REQUIREDREGITEM* IsRequiredItem(LPCITEMIDLIST pidl) const
         {
             const CLSID* const pCLSID = IsRegItem(pidl);
-            for (UINT i = 0; pCLSID && i < m_pInfo->Count; ++i)
+            for (size_t i = 0; pCLSID && i < GetRequiredItemsCount(); ++i)
             {
-                if (m_pInfo->Items[i].clsid == *pCLSID)
-                    return &m_pInfo->Items[i];
+                const REQUIREDREGITEM &item = GetAt(i);
+                if (item.clsid == *pCLSID)
+                    return &item;
             }
             return NULL;
         }
@@ -331,8 +361,8 @@ CRegFolder::~CRegFolder()
 
 HRESULT WINAPI CRegFolder::Initialize(PREGFOLDERINITDATA pInit, LPCITEMIDLIST pidlRoot)
 {
+    static_cast<CRegFolderInfo*>(this)->Initialize(pInit->pInfo);
     m_pOuterFolder = pInit->psfOuter;
-    m_pInfo = pInit->pInfo;
 
     m_pidlRoot.Attach(ILClone(pidlRoot));
     if (!m_pidlRoot)
@@ -437,8 +467,8 @@ HRESULT WINAPI CRegFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR l
 
 HRESULT WINAPI CRegFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
-    return ShellObjectCreatorInit<CRegFolderEnum>(m_pOuterFolder, m_pInfo->pszEnumKeyName,
-                                                  dwFlags, IID_PPV_ARG(IEnumIDList, ppEnumIDList));
+    return ShellObjectCreatorInit<CRegFolderEnum>(m_pInfo, m_pOuterFolder, dwFlags,
+                                                  IID_PPV_ARG(IEnumIDList, ppEnumIDList));
 }
 
 HRESULT WINAPI CRegFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)

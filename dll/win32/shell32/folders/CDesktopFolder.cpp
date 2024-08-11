@@ -177,40 +177,6 @@ always shows My Computer.
 /* Undocumented functions from shdocvw */
 extern "C" HRESULT WINAPI IEParseDisplayNameWithBCW(DWORD codepage, LPCWSTR lpszDisplayName, LPBC pbc, LPITEMIDLIST *ppidl);
 
-static const WCHAR ClassicStartMenuW[] = L"SOFTWARE\\Microsoft\\Windows\\"
-    L"CurrentVersion\\Explorer\\HideDesktopIcons\\ClassicStartMenu";
-
-static INT
-IsNamespaceExtensionHidden(const WCHAR *iid)
-{
-    DWORD Result, dwResult;
-    dwResult = sizeof(DWORD);
-
-    if (RegGetValueW(HKEY_CURRENT_USER, /* FIXME use NewStartPanel when activated */
-                     ClassicStartMenuW,
-                     iid,
-                     RRF_RT_DWORD,
-                     NULL,
-                     &Result,
-                     &dwResult) != ERROR_SUCCESS)
-    {
-        return -1;
-    }
-
-    return Result;
-}
-
-static INT IsNamespaceExtensionHidden(LPCITEMIDLIST pidl)
-{
-    GUID const *clsid = _ILGetGUIDPointer (pidl);
-    if (!clsid)
-        return -1;
-
-    WCHAR pwszGuid[CHARS_IN_GUID];
-    SHELL32_GUIDToStringW(*clsid, pwszGuid);
-    return IsNamespaceExtensionHidden(pwszGuid);
-}
-
 class CDesktopFolderEnum :
     public CEnumIDListBase
 {
@@ -219,94 +185,19 @@ class CDesktopFolderEnum :
 //    CComPtr                                fCommonDesktopEnumerator;
     public:
 
-        void AddItemsFromClassicStartMenuKey(HKEY hKeyRoot)
-        {
-            DWORD dwResult;
-            HKEY hkey;
-            DWORD j = 0, dwVal, Val, dwType, dwIID;
-            LONG r;
-            WCHAR iid[50];
-            LPITEMIDLIST pidl;
-
-            dwResult = RegOpenKeyExW(hKeyRoot, ClassicStartMenuW, 0, KEY_READ, &hkey);
-            if (dwResult != ERROR_SUCCESS)
-                return;
-
-            while(1)
-            {
-                dwVal = sizeof(Val);
-                dwIID = sizeof(iid) / sizeof(WCHAR);
-
-                r = RegEnumValueW(hkey, j++, iid, &dwIID, NULL, &dwType, (LPBYTE)&Val, &dwVal);
-                if (r != ERROR_SUCCESS)
-                    break;
-
-                if (Val == 0 && dwType == REG_DWORD)
-                {
-                    pidl = _ILCreateGuidFromStrW(iid);
-                    if (pidl != NULL)
-                    {
-                        if (!HasItemWithCLSID(pidl))
-                            AddToEnumList(pidl);
-                        else
-                            SHFree(pidl);
-                    }
-                }
-            }
-            RegCloseKey(hkey);
-        }
-
-        void TryAddRegItemToEnumList(IShellFolder *pSF, LPITEMIDLIST pidl, SHCONTF Flags)
-        {
-            SFGAOF query = SHELL_CreateFolderEnumItemAttributeQuery(Flags, TRUE);
-            if (SHELL_IncludeItemInFolderEnum(pSF, (PCUITEMID_CHILD)pidl, query, Flags))
-                AddToEnumList(pidl);
-            else
-                ILFree(pidl);
-        }
-
         HRESULT WINAPI Initialize(IShellFolder *pRegFolder, SHCONTF dwFlags, IEnumIDList *pRegEnumerator,
                                   IEnumIDList *pDesktopEnumerator, IEnumIDList *pCommonDesktopEnumerator)
         {
-            BOOL ret = TRUE;
-            LPITEMIDLIST pidl;
-
-            static const WCHAR MyDocumentsClassString[] = L"{450D8FBA-AD25-11D0-98A8-0800361B1103}";
-            static const WCHAR InternetClassString[] = L"{871C5380-42A0-1069-A2EA-08002B30309D}";
-
             TRACE("(%p)->(flags=0x%08x)\n", this, dwFlags);
 
-            /* enumerate the root folders */
-            if (dwFlags & SHCONTF_FOLDERS)
-            {
-                AddToEnumList(_ILCreateMyComputer());
-                if (IsNamespaceExtensionHidden(MyDocumentsClassString) < 1)
-                    AddToEnumList(_ILCreateMyDocuments());
-                if (IsNamespaceExtensionHidden(InternetClassString) < 1)
-                    TryAddRegItemToEnumList(pRegFolder, _ILCreateIExplore(), dwFlags);
-
-                DWORD dwFetched;
-                while((S_OK == pRegEnumerator->Next(1, &pidl, &dwFetched)) && dwFetched)
-                {
-                    if (IsNamespaceExtensionHidden(pidl) < 1)
-                    {
-                        if (!HasItemWithCLSID(pidl))
-                            AddToEnumList(pidl);
-                        else
-                            SHFree(pidl);
-                    }
-                }
-                AddItemsFromClassicStartMenuKey(HKEY_LOCAL_MACHINE);
-                AddItemsFromClassicStartMenuKey(HKEY_CURRENT_USER);
-            }
+            AppendItemsFromEnumerator(pRegEnumerator);
 
             /* Enumerate the items in the two fs folders */
             AppendItemsFromEnumerator(pDesktopEnumerator);
             AppendItemsFromEnumerator(pCommonDesktopEnumerator);
 
-            return ret ? S_OK : E_FAIL;
+            return S_OK;
         }
-
 
         BEGIN_COM_MAP(CDesktopFolderEnum)
         COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
