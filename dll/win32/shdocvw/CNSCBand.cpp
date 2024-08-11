@@ -84,11 +84,6 @@ CNSCBand::~CNSCBand()
         ImageList_Destroy(m_hToolbarImageList);
         m_hToolbarImageList = NULL;
     }
-    if (m_hTreeViewImageList)
-    {
-        ImageList_Destroy(m_hTreeViewImageList);
-        m_hTreeViewImageList = NULL;
-    }
     SHDOCVW_UnlockModule();
 }
 
@@ -180,45 +175,8 @@ HRESULT CNSCBand::_ExecuteCommand(_In_ CComPtr<IContextMenu>& menu, _In_ UINT nC
     return menu->InvokeCommand(&cmi);
 }
 
-void CNSCBand::_Init()
+void CNSCBand::_RegisterChangeNotify()
 {
-    // Init the treeview here
-    HRESULT hr = SHGetDesktopFolder(&m_pDesktop);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return;
-
-    m_pidlRoot.Free();
-    hr = SHGetFolderLocation(m_hWnd, _GetRootCsidl(), NULL, 0, &m_pidlRoot);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return;
-
-    IImageList *piml;
-    hr = SHGetImageList(SHIL_SMALL, IID_PPV_ARG(IImageList, &piml));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return;
-
-    TreeView_SetImageList(m_hwndTreeView, (HIMAGELIST)piml, TVSIL_NORMAL);
-
-    if (_WantsRootItem())
-    {
-        // Insert the root node
-        m_hRoot = _InsertItem(NULL, m_pDesktop, m_pidlRoot, m_pidlRoot, FALSE);
-        if (!m_hRoot)
-        {
-            ERR("Failed to create root item\n");
-            return;
-        }
-        TreeView_Expand(m_hwndTreeView, m_hRoot, TVE_EXPAND);
-
-        // Navigate to current folder position
-        _NavigateToCurrentFolder();
-    }
-    else
-    {
-        TreeView_SetItemHeight(m_hwndTreeView, 24);
-        _InsertSubitems(TVI_ROOT, m_pidlRoot);
-    }
-
 #define TARGET_EVENTS ( \
     SHCNE_DRIVEADD | SHCNE_MKDIR | SHCNE_CREATE | SHCNE_DRIVEREMOVED | SHCNE_RMDIR | \
     SHCNE_DELETE | SHCNE_RENAMEFOLDER | SHCNE_RENAMEITEM | SHCNE_UPDATEDIR | \
@@ -235,45 +193,33 @@ void CNSCBand::_Init()
     {
         ERR("Something went wrong, error %08x\n", GetLastError());
     }
-
-    // Register browser connection endpoint
-    CComPtr<IWebBrowser2> browserService;
-    hr = IUnknown_QueryService(m_pSite, SID_SWebBrowserApp, IID_PPV_ARG(IWebBrowser2, &browserService));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return;
-
-    hr = AtlAdvise(browserService, dynamic_cast<IDispatch*>(this), DIID_DWebBrowserEvents, &m_adviseCookie);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return;
 }
 
-void CNSCBand::_UnInit()
+void CNSCBand::_UnregisterChangeNotify()
 {
-    HRESULT hr;
-    CComPtr<IWebBrowser2> browserService;
+    SHChangeNotifyDeregister(m_shellRegID);
+    m_shellRegID = 0;
+}
 
-    TRACE("Cleaning up explorer band...\n");
-
-    hr = IUnknown_QueryService(m_pSite, SID_SWebBrowserApp, IID_PPV_ARG(IWebBrowser2, &browserService));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return;
-
-    AtlUnadvise(browserService, DIID_DWebBrowserEvents, m_adviseCookie);
+void CNSCBand::_DestroyTreeView()
+{
+    TRACE("Cleaning up treeview...\n");
     /* Remove all items of the treeview */
     ::RevokeDragDrop(m_hwndTreeView);
     TreeView_DeleteAllItems(m_hwndTreeView);
+    m_hwndTreeView.DestroyWindow();
     m_pDesktop = NULL;
     m_hRoot = NULL;
     TRACE("Cleanup ok\n");
 }
 
+void CNSCBand::_DestroyToolbar()
+{
+    m_hwndToolbar.DestroyWindow();
+}
+
 HRESULT CNSCBand::_CreateTreeView()
 {
-    m_hTreeViewImageList = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 64, 0);
-    ATLASSERT(m_hTreeViewImageList);
-    if (!m_hTreeViewImageList)
-        return E_FAIL;
-
     RefreshFlags(&m_dwTVStyle, &m_dwTVExStyle, &m_dwEnumFlags);
     HWND hwndTV = ::CreateWindowExW(m_dwTVExStyle, WC_TREEVIEWW, NULL, m_dwTVStyle, 0, 0, 0, 0,
                                     m_hWnd, (HMENU)UlongToHandle(IDW_TREEVIEW), instance, NULL);
@@ -282,8 +228,25 @@ HRESULT CNSCBand::_CreateTreeView()
         return E_FAIL;
 
     m_hwndTreeView.Attach(hwndTV);
-    TreeView_SetImageList(m_hwndTreeView, m_hTreeViewImageList, TVSIL_NORMAL);
     ::RegisterDragDrop(m_hwndTreeView, dynamic_cast<IDropTarget*>(this));
+
+    // Init the treeview here
+    HRESULT hr = SHGetDesktopFolder(&m_pDesktop);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    m_pidlRoot.Free();
+    hr = SHGetFolderLocation(m_hWnd, _GetRootCsidl(), NULL, 0, &m_pidlRoot);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    // Create image list and set
+    IImageList *piml;
+    hr = SHGetImageList(SHIL_SMALL, IID_PPV_ARG(IImageList, &piml));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    TreeView_SetImageList(m_hwndTreeView, (HIMAGELIST)piml, TVSIL_NORMAL);
 
     return S_OK;
 }
@@ -442,12 +405,8 @@ LRESULT CNSCBand::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandle
 {
     KillTimer(wParam);
 
-    switch (wParam)
-    {
-        case TIMER_ID_REFRESH:
-            _Refresh();
-            break;
-    }
+    if (wParam == TIMER_ID_REFRESH)
+        _Refresh();
 
     return 0;
 }
@@ -1304,15 +1263,11 @@ STDMETHODIMP CNSCBand::SetSite(IUnknown *pUnkSite)
     m_pSite = pUnkSite;
 
     if (m_hWnd)
-    {
         SetParent(hwndParent); // Change its parent
-    }
     else
-    {
         this->Create(hwndParent, NULL, NULL, WS_CHILD | WS_VISIBLE, 0, (UINT)0, NULL);
-    }
 
-    _Init();
+    _RegisterChangeNotify();
 
     return S_OK;
 }

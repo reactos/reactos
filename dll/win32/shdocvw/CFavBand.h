@@ -52,6 +52,7 @@ protected:
     BOOL _GetTitle(LPWSTR pszTitle, INT cchTitle) override;
     BOOL _WantsRootItem() override;
     void _SortItems(HTREEITEM hParent) override;
+    HRESULT _CreateTreeView() override;
     HRESULT _CreateToolbar() override;
 };
 

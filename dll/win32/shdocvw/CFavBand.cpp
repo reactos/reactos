@@ -169,3 +169,14 @@ void CFavBand::_SortItems(HTREEITEM hParent)
 {
     TreeView_SortChildren(m_hwndTreeView, hParent, 0); // Sort by name
 }
+
+HRESULT CFavBand::_CreateTreeView()
+{
+    HRESULT hr = CNSCBand::_CreateTreeView();
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    TreeView_SetItemHeight(m_hwndTreeView, 24);
+    _InsertSubitems(TVI_ROOT, m_pidlRoot);
+    return hr;
+}

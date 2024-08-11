@@ -103,3 +103,47 @@ INT CALLBACK CExplorerBand::_CompareTreeItems(LPARAM p1, LPARAM p2, LPARAM p3)
         return 0;
     return (SHORT)HRESULT_CODE(hr);
 }
+
+HRESULT CExplorerBand::_CreateTreeView()
+{
+    HRESULT hr = CNSCBand::_CreateTreeView();
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    // Insert the root node
+    m_hRoot = _InsertItem(NULL, m_pDesktop, m_pidlRoot, m_pidlRoot, FALSE);
+    if (!m_hRoot)
+    {
+        ERR("Failed to create root item\n");
+        return E_FAIL;
+    }
+    TreeView_Expand(m_hwndTreeView, m_hRoot, TVE_EXPAND);
+
+    // Navigate to current folder position
+    _NavigateToCurrentFolder();
+
+    // Register browser connection endpoint
+    CComPtr<IWebBrowser2> browserService;
+    hr = IUnknown_QueryService(m_pSite, SID_SWebBrowserApp, IID_PPV_ARG(IWebBrowser2, &browserService));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = AtlAdvise(browserService, dynamic_cast<IDispatch*>(this), DIID_DWebBrowserEvents, &m_adviseCookie);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return hr;
+}
+
+void CExplorerBand::_DestroyTreeView()
+{
+    CComPtr<IWebBrowser2> browserService;
+    HRESULT hr = IUnknown_QueryService(m_pSite, SID_SWebBrowserApp,
+                                       IID_PPV_ARG(IWebBrowser2, &browserService));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return;
+
+    AtlUnadvise(browserService, DIID_DWebBrowserEvents, m_adviseCookie);
+
+    CNSCBand::_DestroyTreeView();
+}

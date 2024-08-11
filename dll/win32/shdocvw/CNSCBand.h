@@ -143,7 +143,6 @@ protected:
     CComPtr<IShellFolder> m_pDesktop;
     CComHeapPtr<ITEMIDLIST> m_pidlRoot;
     HIMAGELIST m_hToolbarImageList = NULL;
-    HIMAGELIST m_hTreeViewImageList = NULL;
     CToolbar<> m_hwndToolbar;
     CTreeView m_hwndTreeView;
     LONG m_mtxBlockNavigate = 0; // A "lock" that prevents internal selection changes to initiate a navigation to the newly selected item.
@@ -161,17 +160,19 @@ protected:
     VOID OnFinalMessage(HWND) override;
 
     // *** helper methods ***
-    void _Init();
-    void _UnInit();
     virtual INT _GetRootCsidl() = 0;
-    virtual HRESULT _CreateToolbar() { return S_OK; }
     virtual HRESULT _CreateTreeView();
+    virtual HRESULT _CreateToolbar() { return S_OK; }
+    virtual void _DestroyTreeView();
+    virtual void _DestroyToolbar();
     virtual DWORD _GetTVStyle() = 0;
     virtual DWORD _GetTVExStyle() = 0;
     virtual DWORD _GetEnumFlags() = 0;
     virtual BOOL _GetTitle(LPWSTR pszTitle, INT cchTitle) = 0;
     virtual BOOL _WantsRootItem() = 0;
     virtual void _SortItems(HTREEITEM hParent) = 0;
+    void _RegisterChangeNotify();
+    void _UnregisterChangeNotify();
     BOOL OnTreeItemExpanding(_In_ LPNMTREEVIEW pnmtv);
     BOOL OnTreeItemDeleted(_In_ LPNMTREEVIEW pnmtv);
     void _OnSelectionChanged(_In_ LPNMTREEVIEW pnmtv);
