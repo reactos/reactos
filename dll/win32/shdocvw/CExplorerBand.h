@@ -58,7 +58,7 @@ protected:
     DWORD _GetTVStyle() override;
     DWORD _GetTVExStyle() override;
     DWORD _GetEnumFlags() override;
-    HRESULT _CreateTreeView() override;
+    HRESULT _CreateTreeView(HWND hwndParent) override;
     void _DestroyTreeView() override;
     BOOL _WantsRootItem() override;
     BOOL _GetTitle(LPWSTR pszTitle, INT cchTitle) override;

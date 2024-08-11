@@ -75,6 +75,9 @@ SHDOCVW_CreateShortcut(
 CNSCBand::CNSCBand()
 {
     SHDOCVW_LockModule();
+
+    INITCOMMONCONTROLSEX iccx = { sizeof(iccx), ICC_TREEVIEW_CLASSES | ICC_BAR_CLASSES };
+    ::InitCommonControlsEx(&iccx);
 }
 
 CNSCBand::~CNSCBand()
@@ -218,11 +221,11 @@ void CNSCBand::_DestroyToolbar()
     m_hwndToolbar.DestroyWindow();
 }
 
-HRESULT CNSCBand::_CreateTreeView()
+HRESULT CNSCBand::_CreateTreeView(HWND hwndParent)
 {
     RefreshFlags(&m_dwTVStyle, &m_dwTVExStyle, &m_dwEnumFlags);
     HWND hwndTV = ::CreateWindowExW(m_dwTVExStyle, WC_TREEVIEWW, NULL, m_dwTVStyle, 0, 0, 0, 0,
-                                    m_hWnd, (HMENU)UlongToHandle(IDW_TREEVIEW), instance, NULL);
+                                    hwndParent, (HMENU)UlongToHandle(IDW_TREEVIEW), instance, NULL);
     ATLASSERT(hwndTV);
     if (!hwndTV)
         return E_FAIL;
@@ -247,7 +250,6 @@ HRESULT CNSCBand::_CreateTreeView()
         return hr;
 
     TreeView_SetImageList(m_hwndTreeView, (HIMAGELIST)piml, TVSIL_NORMAL);
-
     return S_OK;
 }
 
@@ -554,10 +556,9 @@ BOOL CNSCBand::_InsertSubitems(HTREEITEM hItem, LPCITEMIDLIST entry)
 
 LRESULT CNSCBand::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    INITCOMMONCONTROLSEX iccx = { sizeof(iccx), ICC_TREEVIEW_CLASSES | ICC_BAR_CLASSES };
-    if (!::InitCommonControlsEx(&iccx))
+    if (FAILED_UNEXPECTEDLY(_CreateToolbar(m_hWnd)))
         return -1;
-    if (FAILED_UNEXPECTEDLY(_CreateToolbar()) || FAILED_UNEXPECTEDLY(_CreateTreeView()))
+    if (FAILED_UNEXPECTEDLY(_CreateTreeView(m_hWnd)))
         return -1;
     return 0;
 }

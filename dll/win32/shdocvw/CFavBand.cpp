@@ -68,7 +68,7 @@ BOOL CFavBand::_WantsRootItem()
     return FALSE;
 }
 
-HRESULT CFavBand::_CreateToolbar()
+HRESULT CFavBand::_CreateToolbar(HWND hwndParent)
 {
 #define IDB_SHELL_EXPLORER_SM 216 // Borrowed from browseui.dll
     HINSTANCE hinstBrowseUI = LoadLibraryExW(L"browseui.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
@@ -94,7 +94,7 @@ HRESULT CFavBand::_CreateToolbar()
 
     DWORD style = WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_LIST | CCS_NODIVIDER |
                   TBSTYLE_WRAPABLE;
-    HWND hwndTB = ::CreateWindowExW(0, TOOLBARCLASSNAMEW, NULL, style, 0, 0, 0, 0, m_hWnd,
+    HWND hwndTB = ::CreateWindowExW(0, TOOLBARCLASSNAMEW, NULL, style, 0, 0, 0, 0, hwndParent,
                                     (HMENU)(LONG_PTR)IDW_TOOLBAR, instance, NULL);
     ATLASSERT(hwndTB);
     if (!hwndTB)
@@ -170,9 +170,9 @@ void CFavBand::_SortItems(HTREEITEM hParent)
     TreeView_SortChildren(m_hwndTreeView, hParent, 0); // Sort by name
 }
 
-HRESULT CFavBand::_CreateTreeView()
+HRESULT CFavBand::_CreateTreeView(HWND hwndParent)
 {
-    HRESULT hr = CNSCBand::_CreateTreeView();
+    HRESULT hr = CNSCBand::_CreateTreeView(hwndParent);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 

@@ -154,8 +154,8 @@ protected:
 
     // *** helper methods ***
     virtual INT _GetRootCsidl() = 0;
-    virtual HRESULT _CreateTreeView();
-    virtual HRESULT _CreateToolbar() { return S_OK; }
+    virtual HRESULT _CreateTreeView(HWND hwndParent);
+    virtual HRESULT _CreateToolbar(HWND hwndParent) { return S_OK; }
     virtual void _DestroyTreeView();
     virtual void _DestroyToolbar();
     virtual DWORD _GetTVStyle() = 0;

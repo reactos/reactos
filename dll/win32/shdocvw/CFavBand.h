@@ -50,10 +50,10 @@ protected:
     DWORD _GetTVExStyle() override;
     DWORD _GetEnumFlags() override;
     BOOL _GetTitle(LPWSTR pszTitle, INT cchTitle) override;
+    HRESULT _CreateTreeView(HWND hwndParent) override;
+    HRESULT _CreateToolbar(HWND hwndParent) override;
     BOOL _WantsRootItem() override;
     void _SortItems(HTREEITEM hParent) override;
-    HRESULT _CreateTreeView() override;
-    HRESULT _CreateToolbar() override;
 };
 
 #endif // def __cplusplus

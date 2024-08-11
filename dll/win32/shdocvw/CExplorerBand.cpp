@@ -104,9 +104,9 @@ INT CALLBACK CExplorerBand::_CompareTreeItems(LPARAM p1, LPARAM p2, LPARAM p3)
     return (SHORT)HRESULT_CODE(hr);
 }
 
-HRESULT CExplorerBand::_CreateTreeView()
+HRESULT CExplorerBand::_CreateTreeView(HWND hwndParent)
 {
-    HRESULT hr = CNSCBand::_CreateTreeView();
+    HRESULT hr = CNSCBand::_CreateTreeView(hwndParent);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -128,6 +128,7 @@ HRESULT CExplorerBand::_CreateTreeView()
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
+    // Communicate via IDispatch
     hr = AtlAdvise(browserService, dynamic_cast<IDispatch*>(this), DIID_DWebBrowserEvents, &m_adviseCookie);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
