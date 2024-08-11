@@ -66,7 +66,7 @@ BOOL CExplorerBand::_WantsRootItem()
     return TRUE;
 }
 
-/// Called when the user has selected an item.
+// Called when the user has selected an item.
 STDMETHODIMP CExplorerBand::OnSelectionChanged(_In_ PCIDLIST_ABSOLUTE pidl)
 {
     return Invoke(pidl);
