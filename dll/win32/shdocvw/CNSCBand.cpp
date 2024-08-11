@@ -550,127 +550,6 @@ BOOL CNSCBand::_InsertSubitems(HTREEITEM hItem, LPCITEMIDLIST entry)
     return (uItemCount > 0);
 }
 
-/**
- * Navigate to a given PIDL in the treeview, and return matching tree item handle
- *  - dest: The absolute PIDL we should navigate in the treeview
- *  - item: Handle of the tree item matching the PIDL
- *  - bExpand: expand collapsed nodes in order to find the right element
- *  - bInsert: insert the element at the right place if we don't find it
- *  - bSelect: select the item after we found it
- */
-BOOL
-CNSCBand::_NavigateToPIDL(
-    _In_ LPCITEMIDLIST dest,
-    _Out_ HTREEITEM *phItem,
-    _In_ BOOL bExpand,
-    _In_ BOOL bInsert,
-    _In_ BOOL bSelect)
-{
-    if (!phItem)
-        return FALSE;
-
-    *phItem = NULL;
-
-    HTREEITEM hItem = TreeView_GetFirstVisible(m_hwndTreeView);
-    HTREEITEM hParent = NULL, tmp;
-    while (TRUE)
-    {
-        CItemData *pItemData = GetItemData(hItem);
-        if (!pItemData)
-        {
-            ERR("Something has gone wrong, no data associated to node\n");
-            return FALSE;
-        }
-
-        // If we found our node, give it back
-        if (!m_pDesktop->CompareIDs(0, pItemData->absolutePidl, dest))
-        {
-            if (bSelect)
-                TreeView_SelectItem(m_hwndTreeView, hItem);
-            *phItem = hItem;
-            return TRUE;
-        }
-
-        // Check if we are a parent of the requested item
-        TVITEMW tvItem;
-        LPITEMIDLIST relativeChild = ILFindChild(pItemData->absolutePidl, dest);
-        if (relativeChild)
-        {
-            // Notify treeview we have children
-            tvItem.mask = TVIF_CHILDREN;
-            tvItem.hItem = hItem;
-            tvItem.cChildren = 1;
-            TreeView_SetItem(m_hwndTreeView, &tvItem);
-
-            // If we can expand and the node isn't expanded yet, do it
-            if (bExpand)
-            {
-                if (!pItemData->expanded)
-                {
-                    _InsertSubitems(hItem, pItemData->absolutePidl);
-                    pItemData->expanded = TRUE;
-                }
-                TreeView_Expand(m_hwndTreeView, hItem, TVE_EXPAND);
-            }
-
-            // Try to get a child
-            tmp = TreeView_GetChild(m_hwndTreeView, hItem);
-            if (tmp)
-            {
-                // We have a child, let's continue with it
-                hParent = hItem;
-                hItem = tmp;
-                continue;
-            }
-
-            if (bInsert && pItemData->expanded)
-            {
-                // Happens when we have to create a subchild inside a child
-                hItem = _InsertItem(hItem, dest, relativeChild, TRUE);
-            }
-
-            // We end up here, without any children, so we found nothing
-            // Tell the parent node it has children
-            ZeroMemory(&tvItem, sizeof(tvItem));
-            return FALSE;
-        }
-
-        // Find sibling
-        tmp = TreeView_GetNextSibling(m_hwndTreeView, hItem);
-        if (tmp)
-        {
-            hItem = tmp;
-            continue;
-        }
-
-        if (bInsert)
-        {
-            *phItem = hItem = _InsertItem(hParent, dest, ILFindLastID(dest), TRUE);
-            return TRUE;
-        }
-
-        return FALSE;
-    }
-
-    UNREACHABLE;
-}
-
-BOOL CNSCBand::_NavigateToCurrentFolder()
-{
-    CComHeapPtr<ITEMIDLIST> pidl;
-    HRESULT hr = _GetCurrentLocation(&pidl);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return FALSE;
-
-    // Find PIDL into our explorer
-    ++m_mtxBlockNavigate;
-    HTREEITEM hItem;
-    BOOL result = _NavigateToPIDL(pidl, &hItem, TRUE, FALSE, TRUE);
-    --m_mtxBlockNavigate;
-
-    return result;
-}
-
 // *** message handlers ***
 
 LRESULT CNSCBand::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -685,8 +564,9 @@ LRESULT CNSCBand::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandl
 
 LRESULT CNSCBand::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-    m_hwndTreeView.DestroyWindow();
-    m_hwndToolbar.DestroyWindow();
+    _DestroyTreeView();
+    _DestroyToolbar();
+    _UnregisterChangeNotify();
     return 0;
 }
 

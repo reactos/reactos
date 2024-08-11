@@ -63,5 +63,12 @@ protected:
     BOOL _WantsRootItem() override;
     BOOL _GetTitle(LPWSTR pszTitle, INT cchTitle) override;
     void _SortItems(HTREEITEM hParent) override;
+    BOOL _NavigateToCurrentFolder();
+    BOOL _NavigateToPIDL(
+        _In_ LPCITEMIDLIST dest,
+        _Out_ HTREEITEM *phItem,
+        _In_ BOOL bExpand,
+        _In_ BOOL bInsert,
+        _In_ BOOL bSelect);
     static INT CALLBACK _CompareTreeItems(LPARAM p1, LPARAM p2, LPARAM p3); // Used by _SortItems
 };
