@@ -563,13 +563,8 @@ BOOL CNSCBand::_InsertSubitems(HTREEITEM hItem, LPCITEMIDLIST entry)
     CComPtr<IEnumIDList> pEnum;
     CComPtr<IShellFolder> pFolder;
     HRESULT hr = _GetItemEnum(pEnum, hItem, &pFolder);
-
-    // avoid broken IShellFolder implementations that return null pointer with success
-    if (!SUCCEEDED(hr) || !pEnum)
-    {
-        ERR("Can't enum the folder! %p\n", hItem);
+    if (FAILED_UNEXPECTEDLY(hr))
         return FALSE;
-    }
 
     /* Don't redraw while we add stuff into the tree */
     m_hwndTreeView.SendMessage(WM_SETREDRAW, FALSE, 0);
@@ -617,11 +612,11 @@ CNSCBand::_NavigateToPIDL(
 
     *phItem = NULL;
 
-    HTREEITEM current = TreeView_GetFirstVisible(m_hwndTreeView);
-    HTREEITEM parent = NULL, tmp;
+    HTREEITEM hItem = TreeView_GetFirstVisible(m_hwndTreeView);
+    HTREEITEM hParent = NULL, tmp;
     while (TRUE)
     {
-        CItemData *pItemData = GetItemData(current);
+        CItemData *pItemData = GetItemData(hItem);
         if (!pItemData)
         {
             ERR("Something has gone wrong, no data associated to node !\n");
@@ -632,8 +627,8 @@ CNSCBand::_NavigateToPIDL(
         if (!m_pDesktop->CompareIDs(0, pItemData->absolutePidl, dest))
         {
             if (bSelect)
-                TreeView_SelectItem(m_hwndTreeView, current);
-            *phItem = current;
+                TreeView_SelectItem(m_hwndTreeView, hItem);
+            *phItem = hItem;
             return TRUE;
         }
 
@@ -644,7 +639,7 @@ CNSCBand::_NavigateToPIDL(
         {
             // Notify treeview we have children
             tvItem.mask = TVIF_CHILDREN;
-            tvItem.hItem = current;
+            tvItem.hItem = hItem;
             tvItem.cChildren = 1;
             TreeView_SetItem(m_hwndTreeView, &tvItem);
 
@@ -653,26 +648,26 @@ CNSCBand::_NavigateToPIDL(
             {
                 if (!pItemData->expanded)
                 {
-                    _InsertSubitems(current, pItemData->absolutePidl);
+                    _InsertSubitems(hItem, pItemData->absolutePidl);
                     pItemData->expanded = TRUE;
                 }
-                TreeView_Expand(m_hwndTreeView, current, TVE_EXPAND);
+                TreeView_Expand(m_hwndTreeView, hItem, TVE_EXPAND);
             }
 
             // Try to get a child
-            tmp = TreeView_GetChild(m_hwndTreeView, current);
+            tmp = TreeView_GetChild(m_hwndTreeView, hItem);
             if (tmp)
             {
                 // We have a child, let's continue with it
-                parent = current;
-                current = tmp;
+                hParent = hItem;
+                hItem = tmp;
                 continue;
             }
 
             if (bInsert && pItemData->expanded)
             {
                 // Happens when we have to create a subchild inside a child
-                current = _InsertItem(current, dest, relativeChild, TRUE);
+                hItem = _InsertItem(hItem, dest, relativeChild, TRUE);
             }
 
             // We end up here, without any children, so we found nothing
@@ -682,39 +677,36 @@ CNSCBand::_NavigateToPIDL(
         }
 
         // Find sibling
-        tmp = TreeView_GetNextSibling(m_hwndTreeView, current);
+        tmp = TreeView_GetNextSibling(m_hwndTreeView, hItem);
         if (tmp)
         {
-            current = tmp;
+            hItem = tmp;
             continue;
         }
 
         if (bInsert)
         {
-            current = _InsertItem(parent, dest, ILFindLastID(dest), TRUE);
-            *phItem = current;
+            *phItem = hItem = _InsertItem(hParent, dest, ILFindLastID(dest), TRUE);
             return TRUE;
         }
 
         return FALSE;
     }
+
     UNREACHABLE;
 }
 
 BOOL CNSCBand::_NavigateToCurrentFolder()
 {
-    CComHeapPtr<ITEMIDLIST> explorerPidl;
-    HRESULT hr = _GetCurrentLocation(&explorerPidl);
+    CComHeapPtr<ITEMIDLIST> pidl;
+    HRESULT hr = _GetCurrentLocation(&pidl);
     if (FAILED_UNEXPECTEDLY(hr))
-    {
-        ERR("Unable to get browser PIDL !\n");
         return FALSE;
-    }
 
+    // Find PIDL into our explorer
     ++m_mtxBlockNavigate;
-    /* find PIDL into our explorer */
     HTREEITEM hItem;
-    BOOL result = _NavigateToPIDL(explorerPidl, &hItem, TRUE, FALSE, TRUE);
+    BOOL result = _NavigateToPIDL(pidl, &hItem, TRUE, FALSE, TRUE);
     --m_mtxBlockNavigate;
 
     return result;
@@ -908,7 +900,7 @@ void CNSCBand::OnTreeItemDragging(_In_ LPNMTREEVIEW pnmtv, _In_ BOOL isRightClic
     CComPtr<IShellFolder> pSrcFolder;
     LPCITEMIDLIST pLast;
     hr = SHBindToParent(pItemData->absolutePidl, IID_PPV_ARG(IShellFolder, &pSrcFolder), &pLast);
-    if (!SUCCEEDED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return;
 
     SFGAOF attrs = SFGAO_CANCOPY | SFGAO_CANMOVE | SFGAO_CANLINK;
@@ -924,7 +916,7 @@ void CNSCBand::OnTreeItemDragging(_In_ LPNMTREEVIEW pnmtv, _In_ BOOL isRightClic
 
     CComPtr<IDataObject> pObj;
     hr = pSrcFolder->GetUIObjectOf(m_hWnd, 1, &pLast, IID_IDataObject, 0, (LPVOID*)&pObj);
-    if (!SUCCEEDED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return;
 
     DoDragDrop(pObj, this, dwEffect, &dwEffect);
@@ -943,7 +935,7 @@ LRESULT CNSCBand::OnBeginLabelEdit(_In_ LPNMTVDISPINFO dispInfo)
         return FALSE;
 
     hr = SHBindToParent(info->absolutePidl, IID_PPV_ARG(IShellFolder, &pParent), &pChild);
-    if (!SUCCEEDED(hr) || !pParent.p)
+    if (FAILED_UNEXPECTEDLY(hr))
         return FALSE;
 
     hr = pParent->GetAttributesOf(1, &pChild, &dwAttr);
@@ -993,7 +985,7 @@ LRESULT CNSCBand::OnEndLabelEdit(_In_ LPNMTVDISPINFO dispInfo)
     BOOL RenamedCurrent = _IsCurrentLocation(info->absolutePidl) == S_OK;
 
     hr = SHBindToParent(info->absolutePidl, IID_PPV_ARG(IShellFolder, &pParent), &pidlChild);
-    if (!SUCCEEDED(hr) || !pParent.p)
+    if (FAILED_UNEXPECTEDLY(hr))
         return FALSE;
 
     CComHeapPtr<ITEMIDLIST> pidlNew;
@@ -1306,11 +1298,8 @@ STDMETHODIMP CNSCBand::SetSite(IUnknown *pUnkSite)
 
     HWND hwndParent;
     hr = IUnknown_GetWindow(pUnkSite, &hwndParent);
-    if (!SUCCEEDED(hr))
-    {
-        ERR("Could not get parent's window! 0x%08lX\n", hr);
+    if (FAILED_UNEXPECTEDLY(hr))
         return E_INVALIDARG;
-    }
 
     m_pSite = pUnkSite;
 
@@ -1598,60 +1587,61 @@ STDMETHODIMP CNSCBand::DragOver(DWORD glfKeyState, POINTL pt, DWORD *pdwEffect)
     TreeView_HitTest(m_hwndTreeView, &info);
 
     HRESULT hr;
-    if (info.hItem)
-    {
-        ++m_mtxBlockNavigate;
-        TreeView_SelectItem(m_hwndTreeView, info.hItem);
-        --m_mtxBlockNavigate;
-        // Delegate to shell folder
-        if (m_pDropTarget && info.hItem != m_childTargetNode)
-        {
-            m_pDropTarget = NULL;
-        }
-        if (info.hItem != m_childTargetNode)
-        {
-            CItemData *pItemData = GetItemData(info.hItem);
-            if (!pItemData)
-                return E_FAIL;
-
-            CComPtr<IShellFolder> pShellFldr;
-            if (_ILIsDesktop(pItemData->absolutePidl))
-            {
-                pShellFldr = m_pDesktop;
-            }
-            else
-            {
-                hr = m_pDesktop->BindToObject(pItemData->absolutePidl, 0, IID_PPV_ARG(IShellFolder, &pShellFldr));
-                if (!SUCCEEDED(hr))
-                {
-                    /* Don't allow dnd since we couldn't get our folder object */
-                    ERR("Can't bind to folder object\n");
-                    *pdwEffect = DROPEFFECT_NONE;
-                    return E_FAIL;
-                }
-            }
-            hr = pShellFldr->CreateViewObject(m_hWnd, IID_PPV_ARG(IDropTarget, &m_pDropTarget));
-            if (!SUCCEEDED(hr))
-            {
-                /* Don't allow dnd since we couldn't get our drop target */
-                ERR("Can't get drop target for folder object\n");
-                *pdwEffect = DROPEFFECT_NONE;
-                return E_FAIL;
-            }
-            hr = m_pDropTarget->DragEnter(m_pCurObject, glfKeyState, pt, pdwEffect);
-            m_childTargetNode = info.hItem;
-        }
-        if (m_pDropTarget)
-        {
-            hr = m_pDropTarget->DragOver(glfKeyState, pt, pdwEffect);
-        }
-    }
-    else
+    if (!info.hItem)
     {
         m_childTargetNode = NULL;
         m_pDropTarget = NULL;
         *pdwEffect = DROPEFFECT_NONE;
+        return S_OK;
     }
+
+    ++m_mtxBlockNavigate;
+    TreeView_SelectItem(m_hwndTreeView, info.hItem);
+    --m_mtxBlockNavigate;
+
+    // Delegate to shell folder
+    if (m_pDropTarget && info.hItem != m_childTargetNode)
+        m_pDropTarget = NULL;
+
+    if (info.hItem != m_childTargetNode)
+    {
+        CItemData *pItemData = GetItemData(info.hItem);
+        if (!pItemData)
+            return E_FAIL;
+
+        CComPtr<IShellFolder> pFolder;
+        if (_ILIsDesktop(pItemData->absolutePidl))
+        {
+            pFolder = m_pDesktop;
+        }
+        else
+        {
+            hr = m_pDesktop->BindToObject(pItemData->absolutePidl, 0, IID_PPV_ARG(IShellFolder, &pFolder));
+            if (!SUCCEEDED(hr))
+            {
+                /* Don't allow dnd since we couldn't get our folder object */
+                ERR("Can't bind to folder object\n");
+                *pdwEffect = DROPEFFECT_NONE;
+                return E_FAIL;
+            }
+        }
+
+        hr = pFolder->CreateViewObject(m_hWnd, IID_PPV_ARG(IDropTarget, &m_pDropTarget));
+        if (!SUCCEEDED(hr))
+        {
+            /* Don't allow dnd since we couldn't get our drop target */
+            ERR("Can't get drop target for folder object\n");
+            *pdwEffect = DROPEFFECT_NONE;
+            return E_FAIL;
+        }
+
+        hr = m_pDropTarget->DragEnter(m_pCurObject, glfKeyState, pt, pdwEffect);
+        m_childTargetNode = info.hItem;
+    }
+
+    if (m_pDropTarget)
+        hr = m_pDropTarget->DragOver(glfKeyState, pt, pdwEffect);
+
     return S_OK;
 }
 
