@@ -1,21 +1,8 @@
 /*
  * Regedit ACL Editor for Registry Keys
  *
- * Copyright (C) 2004 - 2006 Thomas Weidenmueller <w3seek@reactos.com>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * Copyright (C) 2004-2006 Thomas Weidenmueller <w3seek@reactos.com>
+ * LICENSE: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  */
 
 #include "regedit.h"
@@ -89,9 +76,7 @@ CRegKeySecurity_fnRelease(PCRegKeySecurity obj)
     Ret = (ULONG)InterlockedDecrement((LONG*)&obj->ref);
     if (Ret == 0)
     {
-        HeapFree(GetProcessHeap(),
-                 0,
-                 obj);
+        HeapFree(GetProcessHeap(), 0, obj);
     }
 
     return Ret;
@@ -104,31 +89,23 @@ CRegKeySecurity_fnQueryInterface(PCRegKeySecurity obj,
 {
     PVOID pvObj = NULL;
 
-    if (IsEqualGUID(iid,
-                    &IID_IRegKeySecurity))
+    if (IsEqualGUID(iid, &IID_IRegKeySecurity))
     {
-        pvObj = (PVOID)impl_to_interface(obj,
-                                         ISecurityInformation);
+        pvObj = (PVOID)impl_to_interface(obj, ISecurityInformation);
     }
 #if REGEDIT_IMPLEMENT_ISECURITYINFORMATION2
-    else if (IsEqualGUID(iid,
-                         &IID_IRegKeySecurity2))
+    else if (IsEqualGUID(iid, &IID_IRegKeySecurity2))
     {
-        pvObj = (PVOID)impl_to_interface(obj,
-                                         ISecurityInformation2);
+        pvObj = (PVOID)impl_to_interface(obj, ISecurityInformation2);
     }
 #endif
-    else if (IsEqualGUID(iid,
-                         &IID_IEffectivePermission))
+    else if (IsEqualGUID(iid, &IID_IEffectivePermission))
     {
-        pvObj = (PVOID)impl_to_interface(obj,
-                                         IEffectivePermission);
+        pvObj = (PVOID)impl_to_interface(obj, IEffectivePermission);
     }
-    else if (IsEqualGUID(iid,
-                         &IID_ISecurityObjectTypeInfo))
+    else if (IsEqualGUID(iid, &IID_ISecurityObjectTypeInfo))
     {
-        pvObj = (PVOID)impl_to_interface(obj,
-                                         ISecurityObjectTypeInfo);
+        pvObj = (PVOID)impl_to_interface(obj, ISecurityObjectTypeInfo);
     }
 
     if (pvObj == NULL)
@@ -370,8 +347,7 @@ ISecurityInformation_fnQueryInterface(struct ISecurityInformation *this,
                                       REFIID iid,
                                       PVOID *pvObject)
 {
-    if (IsEqualGUID(iid,
-                    &IID_IUnknown))
+    if (IsEqualGUID(iid, &IID_IUnknown))
     {
         *pvObject = (PVOID)this;
         ISecurityInformation_fnAddRef(this);
@@ -458,8 +434,7 @@ ISecurityInformation_fnMapGeneric(struct ISecurityInformation *this,
                                   UCHAR* pAceFlags,
                                   ACCESS_MASK* pMask)
 {
-    MapGenericMask(pMask,
-                   &RegAccessMasks);
+    MapGenericMask(pMask, &RegAccessMasks);
     *pMask &= ~SYNCHRONIZE;
     return S_OK;
 }
@@ -484,9 +459,9 @@ ISecurityInformation_fnGetInheritTypes(struct ISecurityInformation *this,
 
 static HRESULT STDMETHODCALLTYPE
 ISecurityInformation_fnPropertySheetPageCallback(struct ISecurityInformation *this,
-                                            HWND hwnd,
-                                            UINT uMsg,
-                                            SI_PAGE_TYPE uPage)
+    HWND hwnd,
+    UINT uMsg,
+    SI_PAGE_TYPE uPage)
 {
     return S_OK;
 }
@@ -501,8 +476,7 @@ ISecurityInformation2_fnQueryInterface(struct ISecurityInformation2 *this,
                                        REFIID iid,
                                        PVOID *pvObject)
 {
-    if (IsEqualGUID(iid,
-                    &IID_IUnknown))
+    if (IsEqualGUID(iid, &IID_IUnknown))
     {
         *pvObject = (PVOID)this;
         ISecurityInformation2_fnAddRef(this);
@@ -554,8 +528,7 @@ IEffectivePermission_fnQueryInterface(struct IEffectivePermission *this,
                                       REFIID iid,
                                       PVOID *pvObject)
 {
-    if (IsEqualGUID(iid,
-                    &IID_IUnknown))
+    if (IsEqualGUID(iid, &IID_IUnknown))
     {
         *pvObject = (PVOID)this;
         IEffectivePermission_fnAddRef(this);
@@ -600,8 +573,7 @@ IEffectivePermission_fnGetEffectivePermission(struct IEffectivePermission *this,
     *ppObjectTypeList = &DefObjTypeList;
     *pcObjectTypeListLength = 1;
 
-    BuildTrusteeWithSid(&Trustee,
-                        pUserSid);
+    BuildTrusteeWithSid(&Trustee, pUserSid);
 
     if (GetSecurityDescriptorDacl(pSD,
                                   &DaclPresent,
@@ -642,8 +614,7 @@ ISecurityObjectTypeInfo_fnQueryInterface(struct ISecurityObjectTypeInfo *this,
                                          REFIID iid,
                                          PVOID *pvObject)
 {
-    if (IsEqualGUID(iid,
-                    &IID_IUnknown))
+    if (IsEqualGUID(iid, &IID_IUnknown))
     {
         *pvObject = (PVOID)this;
         ISecurityObjectTypeInfo_fnAddRef(this);
@@ -680,13 +651,9 @@ ISecurityObjectTypeInfo_fnGetInheritSource(struct ISecurityObjectTypeInfo *this,
     LPWSTR lpBuf;
 
     pifSize = pACL->AceCount * sizeof(INHERITED_FROM);
-    pif = (PINHERITED_FROM)HeapAlloc(GetProcessHeap(),
-                                     0,
-                                     pifSize);
+    pif = (PINHERITED_FROM)HeapAlloc(GetProcessHeap(), 0, pifSize);
     if (pif == NULL)
-    {
         return E_OUTOFMEMORY;
-    }
 
     ErrorCode = GetInheritanceSourceW(obj->szRegKey,
                                       SE_REGISTRY_KEY,
@@ -698,23 +665,17 @@ ISecurityObjectTypeInfo_fnGetInheritSource(struct ISecurityObjectTypeInfo *this,
                                       NULL,
                                       &RegAccessMasks,
                                       pif);
-
     if (ErrorCode == ERROR_SUCCESS)
     {
         /* Calculate the size of the buffer to return */
-        for (i = 0;
-             i < pACL->AceCount;
-             i++)
+        for (i = 0; i < pACL->AceCount; i++)
         {
             if (pif[i].AncestorName != NULL)
-            {
                 pifSize += (wcslen(pif[i].AncestorName) + 1) * sizeof(WCHAR);
-            }
         }
 
         /* Allocate enough space for the array and the strings */
-        pif2 = (PINHERITED_FROM)LocalAlloc(LMEM_FIXED,
-                                           pifSize);
+        pif2 = (PINHERITED_FROM)LocalAlloc(LMEM_FIXED, pifSize);
         if (pif2 == NULL)
         {
             ErrorCode = GetLastError();
@@ -723,9 +684,7 @@ ISecurityObjectTypeInfo_fnGetInheritSource(struct ISecurityObjectTypeInfo *this,
 
         /* copy the array and strings to the buffer */
         lpBuf = (LPWSTR)((ULONG_PTR)pif2 + (pACL->AceCount * sizeof(INHERITED_FROM)));
-        for (i = 0;
-             i < pACL->AceCount;
-             i++)
+        for (i = 0; i < pACL->AceCount; i++)
         {
             pif2[i].GenerationGap = pif[i].GenerationGap;
             if (pif[i].AncestorName != NULL)
@@ -744,12 +703,8 @@ ISecurityObjectTypeInfo_fnGetInheritSource(struct ISecurityObjectTypeInfo *this,
     }
 
 Cleanup:
-    FreeInheritedFromArray(pif,
-                           pACL->AceCount,
-                           NULL);
-    HeapFree(GetProcessHeap(),
-             0,
-             pif);
+    FreeInheritedFromArray(pif, pACL->AceCount, NULL);
+    HeapFree(GetProcessHeap(), 0, pif);
 
     return HRESULT_FROM_WIN32(ErrorCode);
 }
@@ -890,26 +845,18 @@ RegKeyEditPermissions(HWND hWndOwner,
 
     if (lnMachine != 0)
     {
-        wcscat(lpKeyPath,
-               L"\\\\");
-        wcscat(lpKeyPath,
-               lpMachine);
-        wcscat(lpKeyPath,
-               L"\\");
+        wcscat(lpKeyPath, L"\\\\");
+        wcscat(lpKeyPath, lpMachine);
+        wcscat(lpKeyPath, L"\\");
     }
 
-    wcscat(lpKeyPath,
-           lphKey);
+    wcscat(lpKeyPath, lphKey);
     if (lpKeyName != NULL && lpKeyName[0] != L'\0')
     {
         if (lpKeyName[0] != L'\\')
-        {
-            wcscat(lpKeyPath,
-                    L"\\");
-        }
+            wcscat(lpKeyPath, L"\\");
 
-        wcscat(lpKeyPath,
-               lpKeyName);
+        wcscat(lpKeyPath, lpKeyName);
     }
 
     ObjectInfo.dwFlags = SI_EDIT_ALL  | SI_ADVANCED | SI_CONTAINER | SI_EDIT_EFFECTIVE | SI_EDIT_PERMS |
@@ -928,20 +875,14 @@ RegKeyEditPermissions(HWND hWndOwner,
     }
 
     /* display the security editor dialog */
-    pfnEditSecurity(hWndOwner,
-                    impl_to_interface(RegKeySecurity,
-                                      ISecurityInformation));
+    pfnEditSecurity(hWndOwner, impl_to_interface(RegKeySecurity, ISecurityInformation));
 
     /* dereference the interface, it should be destroyed here */
     CRegKeySecurity_fnRelease(RegKeySecurity);
 
 Cleanup:
     if (lpKeyPath != NULL)
-    {
-        HeapFree(GetProcessHeap(),
-                 0,
-                 lpKeyPath);
-    }
+        HeapFree(GetProcessHeap(), 0, lpKeyPath);
 
     return Result;
 }
