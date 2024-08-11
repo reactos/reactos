@@ -131,7 +131,7 @@ HRESULT CFavBand::_CreateToolbar()
     return S_OK;
 }
 
-/// Called when the user has selected an item.
+// Called when the user has selected an item.
 STDMETHODIMP CFavBand::OnSelectionChanged(_In_ PCIDLIST_ABSOLUTE pidl)
 {
     CComHeapPtr<ITEMIDLIST> pidlTarget;
