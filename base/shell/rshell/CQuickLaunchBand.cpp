@@ -64,6 +64,7 @@ HRESULT UnregisterComCat(VOID)
     return hr;
 }
 
+// Pidl Browser
 /// Opens a folder browser dialog, allowing the user to select a folder for enumeration.
 /// 
 /// @param hwnd
@@ -85,6 +86,7 @@ static LPITEMIDLIST PidlBrowse(HWND hwnd, INT nCSIDL)
     return pidlSelected;
 }
 
+// CQuickLaunchBand
 CQuickLaunchBand::CQuickLaunchBand()
 {
 }
@@ -93,7 +95,7 @@ CQuickLaunchBand::~CQuickLaunchBand()
 {
 }
 
-/*****************************************************************************/
+// ATL Construct
 /// Creates an instance of CISFBand, and initializes its Shell Folder Band for enumeration.
 /// @return The error code.
 HRESULT CQuickLaunchBand::FinalConstruct()
@@ -120,8 +122,7 @@ HRESULT CQuickLaunchBand::FinalConstruct()
     return hr;
 }
 
-/*****************************************************************************/
-// IObjectWithSite methods
+// IObjectWithSite
 
 STDMETHODIMP CQuickLaunchBand::SetSite(IUnknown *pUnkSite)
 {
@@ -144,8 +145,7 @@ STDMETHODIMP CQuickLaunchBand::GetSite(_In_ REFIID riid, _Out_ VOID **ppvSite)
     return pIOWS->GetSite(riid, ppvSite);
 }
 
-/*****************************************************************************/
-// IDeskBand methods
+// IDeskBand
 
 STDMETHODIMP CQuickLaunchBand::GetWindow(_Out_ HWND *phwnd)
 {
@@ -221,8 +221,7 @@ CQuickLaunchBand::GetBandInfo(
     return pIDB->GetBandInfo(dwBandID, dwViewMode, pdbi);
 }
 
-/*****************************************************************************/
-// IPersistStream methods
+// IPersistStream
 
 STDMETHODIMP CQuickLaunchBand::GetClassID(_Out_ CLSID *pClassID)
 {
@@ -277,8 +276,7 @@ STDMETHODIMP CQuickLaunchBand::GetSizeMax(_Out_ ULARGE_INTEGER *pcbSize)
     return pIPS->GetSizeMax(pcbSize);
 }
 
-/*****************************************************************************/
-// IWinEventHandler methods
+// IWinEventHandler
 
 STDMETHODIMP CQuickLaunchBand::ContainsWindow(_In_ HWND hWnd)
 {
@@ -344,8 +342,7 @@ CQuickLaunchBand::Exec(
     return pOCT->Exec(pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
 }
 
-/*****************************************************************************/
-// IContextMenu methods
+// IContextMenu
 
 STDMETHODIMP
 CQuickLaunchBand::GetCommandString(
