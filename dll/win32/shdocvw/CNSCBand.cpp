@@ -158,21 +158,18 @@ HRESULT CNSCBand::_IsCurrentLocation(_In_ PCIDLIST_ABSOLUTE pidl)
 
 HRESULT CNSCBand::_ExecuteCommand(_In_ CComPtr<IContextMenu>& menu, _In_ UINT nCmd)
 {
-    CComPtr<IOleWindow>                 pBrowserOleWnd;
-    CMINVOKECOMMANDINFO                 cmi;
-    HWND                                browserWnd;
-    HRESULT                             hr;
-
-    hr = IUnknown_QueryService(m_pSite, SID_SShellBrowser, IID_PPV_ARG(IOleWindow, &pBrowserOleWnd));
+    CComPtr<IOleWindow> pBrowserOleWnd;
+    HRESULT hr = IUnknown_QueryService(m_pSite, SID_SShellBrowser,
+                                       IID_PPV_ARG(IOleWindow, &pBrowserOleWnd));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
+    HWND browserWnd;
     hr = pBrowserOleWnd->GetWindow(&browserWnd);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    ZeroMemory(&cmi, sizeof(cmi));
-    cmi.cbSize = sizeof(cmi);
+    CMINVOKECOMMANDINFO cmi = { sizeof(cmi) };
     cmi.lpVerb = MAKEINTRESOURCEA(nCmd);
     cmi.hwnd = browserWnd;
     if (::GetKeyState(VK_SHIFT) < 0)
@@ -279,7 +276,7 @@ HRESULT CNSCBand::_CreateTreeView()
 
     RefreshFlags(&m_dwTVStyle, &m_dwTVExStyle, &m_dwEnumFlags);
     HWND hwndTV = ::CreateWindowExW(m_dwTVExStyle, WC_TREEVIEWW, NULL, m_dwTVStyle, 0, 0, 0, 0,
-                                    m_hWnd, (HMENU)(ULONG_PTR)IDW_TREEVIEW, instance, NULL);
+                                    m_hWnd, (HMENU)UlongToHandle(IDW_TREEVIEW), instance, NULL);
     ATLASSERT(hwndTV);
     if (!hwndTV)
         return E_FAIL;
@@ -584,9 +581,7 @@ BOOL CNSCBand::_InsertSubitems(HTREEITEM hItem, LPCITEMIDLIST entry)
         pidlSubComplete = ILCombine(entry, pidlSub);
 
         if (_InsertItem(hItem, pFolder, pidlSubComplete, pidlSub, FALSE))
-        {
-            uItemCount++;
-        }
+            ++uItemCount;
 
         ILFree(pidlSubComplete);
         ILFree(pidlSub);
@@ -620,6 +615,8 @@ CNSCBand::_NavigateToPIDL(
     if (!phItem)
         return FALSE;
 
+    *phItem = NULL;
+
     HTREEITEM current = TreeView_GetFirstVisible(m_hwndTreeView);
     HTREEITEM parent = NULL, tmp;
     while (TRUE)
@@ -628,7 +625,6 @@ CNSCBand::_NavigateToPIDL(
         if (!pItemData)
         {
             ERR("Something has gone wrong, no data associated to node !\n");
-            *phItem = NULL;
             return FALSE;
         }
 
@@ -678,10 +674,10 @@ CNSCBand::_NavigateToPIDL(
                 // Happens when we have to create a subchild inside a child
                 current = _InsertItem(current, dest, relativeChild, TRUE);
             }
+
             // We end up here, without any children, so we found nothing
             // Tell the parent node it has children
             ZeroMemory(&tvItem, sizeof(tvItem));
-            *phItem = NULL;
             return FALSE;
         }
 
@@ -700,7 +696,6 @@ CNSCBand::_NavigateToPIDL(
             return TRUE;
         }
 
-        *phItem = NULL;
         return FALSE;
     }
     UNREACHABLE;
@@ -905,10 +900,9 @@ void CNSCBand::_OnSelectionChanged(_In_ LPNMTREEVIEW pnmtv)
 
 void CNSCBand::OnTreeItemDragging(_In_ LPNMTREEVIEW pnmtv, _In_ BOOL isRightClick)
 {
-    if (!pnmtv->itemNew.lParam)
-        return;
-
     CItemData* pItemData = GetItemData(pnmtv->itemNew.hItem);
+    if (!pItemData)
+        return;
 
     HRESULT hr;
     CComPtr<IShellFolder> pSrcFolder;
@@ -1228,9 +1222,9 @@ LRESULT CNSCBand::OnShellEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
     PIDLIST_ABSOLUTE *ppidl = NULL;
     LONG lEvent;
     HANDLE hLock = SHChangeNotification_Lock(hChange, dwProcID, &ppidl, &lEvent);
-    if (hLock == NULL)
+    if (!hLock)
     {
-        ERR("hLock == NULL\n");
+        ERR("!hLock\n");
         return 0;
     }
 
@@ -1525,26 +1519,25 @@ STDMETHODIMP CNSCBand::GetNavigateTarget(
 {
     *pulAttrib = 0;
     WCHAR szPath[MAX_PATH];
-    if (SHGetPathFromIDListW(pidl, szPath))
+    if (!SHGetPathFromIDListW(pidl, szPath))
+        return E_FAIL;
+
+    if (lstrcmpiW(PathFindExtensionW(szPath), L".lnk") == 0) // shortcut file?
     {
-        if (lstrcmpiW(PathFindExtensionW(szPath), L".lnk") == 0) // shortcut file?
+        WCHAR szTarget[MAX_PATH];
+        HRESULT hr = SHDOCVW_GetPathOfShortcut(m_hWnd, szPath, szTarget);
+        if (SUCCEEDED(hr))
         {
-            WCHAR szTarget[MAX_PATH];
-            HRESULT hr = SHDOCVW_GetPathOfShortcut(m_hWnd, szPath, szTarget);
-            if (SUCCEEDED(hr))
-            {
-                lstrcpynW(szPath, szTarget, _countof(szPath));
-            }
+            lstrcpynW(szPath, szTarget, _countof(szPath));
             *pulAttrib |= SFGAO_LINK;
         }
-        if (PathIsDirectoryW(szPath))
-        {
-            *pulAttrib |= SFGAO_FOLDER;
-        }
-        *ppidlTarget = ILCreateFromPathW(szPath);
-        return S_OK;
     }
-    return E_FAIL;
+
+    if (PathIsDirectoryW(szPath) || PathIsRootW(szPath))
+        *pulAttrib |= SFGAO_FOLDER;
+
+    *ppidlTarget = ILCreateFromPathW(szPath);
+    return S_OK;
 }
 
 /// Handles a user action on an item.
@@ -1626,12 +1619,7 @@ STDMETHODIMP CNSCBand::DragEnter(IDataObject *pObj, DWORD glfKeyState, POINTL pt
 
 STDMETHODIMP CNSCBand::DragOver(DWORD glfKeyState, POINTL pt, DWORD *pdwEffect)
 {
-    TVHITTESTINFO                           info;
-    CComPtr<IShellFolder>                   pShellFldr;
-    CItemData                              *pItemData;
-    //LPCITEMIDLIST                         pChild;
-    HRESULT                                 hr;
-
+    TVHITTESTINFO info;
     info.pt.x = pt.x;
     info.pt.y = pt.y;
     info.flags = TVHT_ONITEM;
@@ -1641,6 +1629,7 @@ STDMETHODIMP CNSCBand::DragOver(DWORD glfKeyState, POINTL pt, DWORD *pdwEffect)
     // Move to the item selected by the treeview (don't change right pane)
     TreeView_HitTest(m_hwndTreeView, &info);
 
+    HRESULT hr;
     if (info.hItem)
     {
         ++m_mtxBlockNavigate;
@@ -1653,19 +1642,15 @@ STDMETHODIMP CNSCBand::DragOver(DWORD glfKeyState, POINTL pt, DWORD *pdwEffect)
         }
         if (info.hItem != m_childTargetNode)
         {
-            pItemData = GetItemData(info.hItem);
+            CItemData *pItemData = GetItemData(info.hItem);
             if (!pItemData)
                 return E_FAIL;
-#if 0
-            hr = SHBindToParent(pItemData->absolutePidl, IID_PPV_ARG(IShellFolder, &pShellFldr), &pChild);
-            if (!SUCCEEDED(hr))
-                return E_FAIL;
-            hr = pShellFldr->GetUIObjectOf(m_hWnd, 1, &pChild, IID_IDropTarget, NULL, reinterpret_cast<void**>(&pDropTarget));
-            if (!SUCCEEDED(hr))
-                return E_FAIL;
-#endif
+
+            CComPtr<IShellFolder> pShellFldr;
             if (_ILIsDesktop(pItemData->absolutePidl))
+            {
                 pShellFldr = m_pDesktop;
+            }
             else
             {
                 hr = m_pDesktop->BindToObject(pItemData->absolutePidl, 0, IID_PPV_ARG(IShellFolder, &pShellFldr));
@@ -1723,6 +1708,7 @@ STDMETHODIMP CNSCBand::Drop(IDataObject *pObj, DWORD glfKeyState, POINTL pt, DWO
 }
 
 // *** IDropSource methods ***
+
 STDMETHODIMP CNSCBand::QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyState)
 {
     if (fEscapePressed)
