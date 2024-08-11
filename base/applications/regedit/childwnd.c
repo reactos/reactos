@@ -2,28 +2,15 @@
  * Regedit child window
  *
  * Copyright (C) 2002 Robert Dickenson <robd@reactos.org>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * LICENSE: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  */
 
 #include "regedit.h"
 
 ChildWnd* g_pChildWnd;
 static int last_split;
-HBITMAP SizingPattern = 0;
-HBRUSH  SizingBrush = 0;
+HBITMAP SizingPattern;
+HBRUSH  SizingBrush;
 
 extern LPCWSTR get_root_key_name(HKEY hRootKey)
 {
@@ -120,11 +107,8 @@ static void draw_splitbar(HWND hWnd, int x)
     ReleaseDC(hWnd, hdc);
 }
 
-/*******************************************************************************
- * finish_splitbar [internal]
- *
- * make the splitbar invisible and resize the windows
- * (helper for ChildWndProc)
+/**
+ * make the splitbar invisible and resize the windows (helper for ChildWndProc)
  */
 static void finish_splitbar(HWND hWnd, int x)
 {
@@ -135,6 +119,7 @@ static void finish_splitbar(HWND hWnd, int x)
     GetClientRect(hWnd, &rt);
     g_pChildWnd->nSplitPos = x;
     ResizeWnd(rt.right, rt.bottom);
+    InvalidateRect(hWnd, &rt, FALSE); // HACK: See CORE-19576
     ReleaseCapture();
 }
 
@@ -217,15 +202,11 @@ UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath, BOOL bSelectNone)
     }
 }
 
-/*******************************************************************************
+/**
+ * PURPOSE: Processes messages for the child windows.
  *
- *  FUNCTION: ChildWndProc(HWND, unsigned, WORD, LONG)
- *
- *  PURPOSE:  Processes messages for the child windows.
- *
- *  WM_COMMAND  - process the application menu
- *  WM_DESTROY  - post a quit message and return
- *
+ * WM_COMMAND - process the application menu
+ * WM_DESTROY - post a quit message and return
  */
 LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -318,7 +299,6 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         }
         break;
     }
-
     case WM_LBUTTONUP:
     case WM_RBUTTONDOWN:
         if (GetCapture() == hWnd)
@@ -328,12 +308,10 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             finish_splitbar(hWnd, x);
         }
         break;
-
     case WM_CAPTURECHANGED:
         if (GetCapture()==hWnd && last_split>=0)
             draw_splitbar(hWnd, last_split);
         break;
-
     case WM_KEYDOWN:
         if (wParam == VK_ESCAPE)
             if (GetCapture() == hWnd)
@@ -347,7 +325,6 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                 SetCursor(LoadCursorW(0, IDC_ARROW));
             }
         break;
-
     case WM_MOUSEMOVE:
         if (GetCapture() == hWnd)
         {
@@ -361,14 +338,12 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             }
         }
         break;
-
     case WM_SETFOCUS:
         if (g_pChildWnd != NULL)
         {
             SetFocus(g_pChildWnd->nFocusPanel? g_pChildWnd->hListWnd: g_pChildWnd->hTreeWnd);
         }
         break;
-
     case WM_NOTIFY:
         if (g_pChildWnd == NULL) break;
 
@@ -392,7 +367,6 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                 goto def;
         }
         break;
-
     case WM_CONTEXTMENU:
     {
         POINT pt;
@@ -503,7 +477,6 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         }
         break;
     }
-
     case WM_SIZE:
         if (wParam != SIZE_MINIMIZED && g_pChildWnd != NULL)
         {

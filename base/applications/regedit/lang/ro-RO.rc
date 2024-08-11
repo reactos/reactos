@@ -14,18 +14,6 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&Fișier"
-    BEGIN
-        MENUITEM "I&eșire", ID_REGISTRY_EXIT
-    END
-    POPUP "Aj&utor"
-    BEGIN
-        MENUITEM "&Despre…", ID_HELP_ABOUT
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Fișier"
@@ -38,8 +26,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Conectare la un registru din rețea…", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Deconectare de la registru din rețea…", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
-        MENUITEM SEPARATOR
-        MENUITEM "I&mprimare…\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", ID_REGISTRY_EXIT
     END
@@ -75,10 +61,6 @@ BEGIN
         MENUITEM "&Reglează separator", ID_VIEW_SPLIT
         MENUITEM SEPARATOR
         MENUITEM "Împ&rospătează\tF5", ID_VIEW_REFRESH
-    END
-    POPUP "Aj&utor"
-    BEGIN
-        MENUITEM "&Despre…", ID_HELP_ABOUT
     END
 END
 
@@ -142,7 +124,7 @@ END
 /* Dialogs */
 
 IDD_EDIT_STRING DIALOGEX 32, 24, 252, 84
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Editare șir"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -155,7 +137,7 @@ BEGIN
 END
 
 IDD_EDIT_MULTI_STRING DIALOGEX 32, 24, 252, 174
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Editare multi-șir"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -169,7 +151,7 @@ BEGIN
 END
 
 IDD_EDIT_BIN_DATA DIALOGEX 32, 24, 252, 174
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Editare binară"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -182,7 +164,7 @@ BEGIN
 END
 
 IDD_EDIT_DWORD DIALOGEX 32, 24, 252, 104
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Editare date 32 biți"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -198,7 +180,7 @@ BEGIN
 END
 
 IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Lista resurselor"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -209,7 +191,7 @@ BEGIN
 END
 
 IDD_EDIT_RESOURCE DIALOGEX 6, 18, 281, 283
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Resurse"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -266,7 +248,6 @@ BEGIN
     ID_REGISTRY_MENU "Conține comenzi de lucru cu întreg registrul"
     ID_EDIT_MENU "Conține comenzi pentru editarea valorilor și cheilor"
     ID_VIEW_MENU "Conține comenzi pentru particularizarea ferestrei editorului de registru"
-    ID_HELP_MENU "Conține comenzi pentru reprezentarea manualului și informațiilor despre editorul de registru"
     ID_EDIT_NEW_MENU "Conține comenzi pentru crearea noilor chei sau valori"
 END
 
@@ -283,8 +264,6 @@ BEGIN
     ID_REGISTRY_UNLOADHIVE "Eliberează conținutul unui fișier binar din registru"
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Conectare la registrul unui calculator din rețea"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Deconectare de la registrul calculatorului din rețea"
-    ID_REGISTRY_PRINT "Imprimă toate părțile unui registru"
-    ID_HELP_ABOUT "Prezintă informații despre program, numărul versiunii și drepturi de autor"
 END
 
 STRINGTABLE
@@ -384,10 +363,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_IMPORT_PROMPT              "Adăugarea de informații poate în mod neintenționat modifica sau șterge valori (de registru) și cauza funcționare incorectă. Dacă nu aveți încredere în sursa acestei informații din „%s”, nu o adăugați în registru.\n\nSigur doriți să continuați?"
-    IDS_IMPORT_OK                  "Cheile și valorile conținute în „%s” au fost adăugate cu succes în registru."
-    IDS_IMPORT_ERROR               "„%s” nu a putut fi importat: Eroare la deschiderea fișierului. Poate fi o problemă a mediului de stocare, a sistemului de fișiere sau fișierul în cauză să nu existe."
-    IDS_EXPORT_ERROR               "„%s” nu a putut fi exportat: Eroare la crearea sau scrierea în fișier. Poate fi o problemă a mediului de stocare sau a sistemului de fișiere."
+    IDS_IMPORT_PROMPT "Adăugarea de informații poate în mod neintenționat modifica sau șterge valori (de registru) și cauza funcționare incorectă. Dacă nu aveți încredere în sursa acestei informații din „%s”, nu o adăugați în registru.\n\nSigur doriți să continuați?"
+    IDS_IMPORT_OK "Cheile și valorile conținute în „%s” au fost adăugate cu succes în registru."
+    IDS_IMPORT_ERROR "„%s” nu a putut fi importat: Eroare la deschiderea fișierului. Poate fi o problemă a mediului de stocare, a sistemului de fișiere sau fișierul în cauză să nu existe."
+    IDS_EXPORT_ERROR "„%s” nu a putut fi exportat: Eroare la crearea sau scrierea în fișier. Poate fi o problemă a mediului de stocare sau a sistemului de fișiere."
 END
 
 STRINGTABLE
@@ -453,8 +432,8 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_B
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Domeniul de export", IDC_STATIC, 2, 0, 366, 48
-    CONTROL "T&ot registrul", IDC_EXPORT_ALL, "Button", BS_AUTORADIOBUTTON, 10, 10, 65, 11
-    CONTROL "&Doar ramura selectată", IDC_EXPORT_BRANCH, "Button", BS_AUTORADIOBUTTON, 10, 22, 100, 11
+    AUTORADIOBUTTON "T&ot registrul", IDC_EXPORT_ALL, 10, 10, 99, 11, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Doar ramura selectată", IDC_EXPORT_BRANCH, 10, 22, 99, 11
     EDITTEXT IDC_EXPORT_BRANCH_TEXT, 30, 34, 335, 12
 END
 
