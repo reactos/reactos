@@ -1122,7 +1122,7 @@ LRESULT CNSCBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     CItemData *info = GetItemData(hItem);
     if (!info)
     {
-        ERR("No node data, something has gone wrong !\n");
+        ERR("No node data, something has gone wrong\n");
         return 0;
     }
 
