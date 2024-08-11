@@ -619,7 +619,7 @@ CNSCBand::_NavigateToPIDL(
         CItemData *pItemData = GetItemData(hItem);
         if (!pItemData)
         {
-            ERR("Something has gone wrong, no data associated to node !\n");
+            ERR("Something has gone wrong, no data associated to node\n");
             return FALSE;
         }
 
