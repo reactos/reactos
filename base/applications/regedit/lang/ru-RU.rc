@@ -12,18 +12,6 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&Файл"
-    BEGIN
-        MENUITEM "В&ыход", ID_REGISTRY_EXIT
-    END
-    POPUP "&Справка"
-    BEGIN
-        MENUITEM "&О программе", ID_HELP_ABOUT
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Файл"
@@ -31,13 +19,11 @@ BEGIN
         MENUITEM "&Импортировать из файла...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Экспортировать в файл...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "З&агрузить куст...", ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "&Загрузить куст...", ID_REGISTRY_LOADHIVE, GRAYED
         MENUITEM "&Выгрузить куст...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Подключить сетевой реестр...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Отключить сетевой реестр...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
-        MENUITEM SEPARATOR
-        MENUITEM "&Печать...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "В&ыход", ID_REGISTRY_EXIT
     END
@@ -73,10 +59,6 @@ BEGIN
         MENUITEM "&Разделить", ID_VIEW_SPLIT
         MENUITEM SEPARATOR
         MENUITEM "&Обновить\tF5", ID_VIEW_REFRESH
-    END
-    POPUP "&Справка"
-    BEGIN
-        MENUITEM "&О редакторе реестра", ID_HELP_ABOUT
     END
 END
 
@@ -140,7 +122,7 @@ END
 /* Dialogs */
 
 IDD_EDIT_STRING DIALOGEX 32, 24, 252, 84
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Изменение строкового параметра"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -153,7 +135,7 @@ BEGIN
 END
 
 IDD_EDIT_MULTI_STRING DIALOGEX 32, 24, 252, 174
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Изменение мультистрочного параметра"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -167,7 +149,7 @@ BEGIN
 END
 
 IDD_EDIT_BIN_DATA DIALOGEX 32, 24, 252, 174
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Изменение двоичного параметра"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -180,7 +162,7 @@ BEGIN
 END
 
 IDD_EDIT_DWORD DIALOGEX 32, 24, 252, 104
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Изменение параметра DWORD"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -196,7 +178,7 @@ BEGIN
 END
 
 IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Списки ресурсов"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -207,7 +189,7 @@ BEGIN
 END
 
 IDD_EDIT_RESOURCE DIALOGEX 6, 18, 281, 283
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Ресурсы"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -264,7 +246,6 @@ BEGIN
     ID_REGISTRY_MENU "Содержит команды для работы с реестром в целом"
     ID_EDIT_MENU "Содержит команды для редактирования значений или ключей"
     ID_VIEW_MENU "Содержит команды для настройки окна реестра"
-    ID_HELP_MENU "Содержит команды для отображения справки и информации о редакторе реестра"
     ID_EDIT_NEW_MENU "Содержит команды для создания новых ключей или значений"
 END
 
@@ -281,8 +262,6 @@ BEGIN
     ID_REGISTRY_UNLOADHIVE "Выгрузить куст реестра"
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Подключается к реестру удалённого компьютера"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Отключается от реестра удалённого компьютера"
-    ID_REGISTRY_PRINT "Печатает весь реестр или его часть"
-    ID_HELP_ABOUT "Отображает информацию о программе, номер версии и авторские права"
 END
 
 STRINGTABLE
@@ -320,7 +299,7 @@ BEGIN
     IDS_QUERY_IMPORT_HIVE_CAPTION "Подтвердите восстановление раздела"
     IDS_QUERY_IMPORT_HIVE_MSG "Раздел будет восстановлен поверх текущего выбранного раздела.\nВсе параметры и подразделы будут удалены.\nПродолжить выполнение операции?"
     IDS_NEW_KEY "Новый ключ #%d"
-    IDS_NEW_VALUE "Новое значение #%d"
+    IDS_NEW_VALUE "Новый параметр #%d"
 END
 
 STRINGTABLE
@@ -446,13 +425,13 @@ END
 
 /* Dialogs */
 
-IDD_EXPORTRANGE DIALOGEX 50, 50, 268, 98
+IDD_EXPORTRANGE DIALOGEX 50, 50, 370, 50
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Диапазон экспорта", IDC_STATIC, 2, 0, 366, 48
-    CONTROL "&Весь реестр", IDC_EXPORT_ALL, "Button", BS_AUTORADIOBUTTON, 10, 10, 70, 11
-    CONTROL "В&ыбранная ветвь", IDC_EXPORT_BRANCH, "Button", BS_AUTORADIOBUTTON, 10, 22, 100, 11
+    AUTORADIOBUTTON "&Весь реестр", IDC_EXPORT_ALL, 10, 10, 99, 11, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "В&ыбранная ветвь", IDC_EXPORT_BRANCH, 10, 22, 99, 11
     EDITTEXT IDC_EXPORT_BRANCH_TEXT, 30, 34, 335, 12
 END
 

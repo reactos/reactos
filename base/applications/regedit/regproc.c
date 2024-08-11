@@ -5,25 +5,10 @@
  * Copyright 1999 Sylvain St-Germain
  * Copyright 2002 Andriy Palamarchuk
  * Copyright 2008 Alexander N. Sørnes <alex@thehandofagony.com>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * LICENSE: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  */
 
 #include "regedit.h"
-
-#include <assert.h>
 #include <fcntl.h>
 #include <io.h>
 #include <wine/unicode.h>
@@ -46,28 +31,14 @@ static HKEY reg_class_keys[] = {
             HKEY_CURRENT_CONFIG, HKEY_CURRENT_USER, HKEY_DYN_DATA
         };
 
-#define REG_CLASS_NUMBER (sizeof(reg_class_keys) / sizeof(reg_class_keys[0]))
-
 /* return values */
-#define NOT_ENOUGH_MEMORY     1
 #define IO_ERROR              2
-
-/* processing macros */
-
-/* common check of memory allocation results */
-#define CHECK_ENOUGH_MEMORY(p) \
-if (!(p)) \
-{ \
-    fprintf(stderr,"%S: file %s, line %d: Not enough memory\n", \
-            getAppName(), __FILE__, __LINE__); \
-    exit(NOT_ENOUGH_MEMORY); \
-}
 
 /******************************************************************************
  * Allocates memory and converts input from multibyte to wide chars
  * Returned string must be freed by the caller
  */
-WCHAR* GetWideString(const char* strA)
+static WCHAR* GetWideString(const char* strA)
 {
     if(strA)
     {
@@ -75,7 +46,6 @@ WCHAR* GetWideString(const char* strA)
         int len = MultiByteToWideChar(CP_ACP, 0, strA, -1, NULL, 0);
 
         strW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-        CHECK_ENOUGH_MEMORY(strW);
         MultiByteToWideChar(CP_ACP, 0, strA, -1, strW, len);
         return strW;
     }
@@ -94,7 +64,6 @@ static WCHAR* GetWideStringN(const char* strA, int chars, DWORD *len)
         *len = MultiByteToWideChar(CP_ACP, 0, strA, chars, NULL, 0);
 
         strW = HeapAlloc(GetProcessHeap(), 0, *len * sizeof(WCHAR));
-        CHECK_ENOUGH_MEMORY(strW);
         MultiByteToWideChar(CP_ACP, 0, strA, chars, strW, *len);
         return strW;
     }
@@ -114,7 +83,6 @@ char* GetMultiByteString(const WCHAR* strW)
         int len = WideCharToMultiByte(CP_ACP, 0, strW, -1, NULL, 0, NULL, NULL);
 
         strA = HeapAlloc(GetProcessHeap(), 0, len);
-        CHECK_ENOUGH_MEMORY(strA);
         WideCharToMultiByte(CP_ACP, 0, strW, -1, strA, len, NULL, NULL);
         return strA;
     }
@@ -133,7 +101,6 @@ static char* GetMultiByteStringN(const WCHAR* strW, int chars, DWORD* len)
         *len = WideCharToMultiByte(CP_ACP, 0, strW, chars, NULL, 0, NULL, NULL);
 
         strA = HeapAlloc(GetProcessHeap(), 0, *len);
-        CHECK_ENOUGH_MEMORY(strA);
         WideCharToMultiByte(CP_ACP, 0, strW, chars, strA, *len, NULL, NULL);
         return strA;
     }
@@ -168,7 +135,6 @@ static BYTE* convertHexCSVToHex(WCHAR *str, DWORD *size)
     /* The worst case is 1 digit + 1 comma per byte */
     *size=(lstrlenW(str)+1)/2;
     data=HeapAlloc(GetProcessHeap(), 0, *size);
-    CHECK_ENOUGH_MEMORY(data);
 
     s = str;
     d = data;
@@ -311,7 +277,7 @@ static BOOL parseKeyName(LPWSTR lpKeyName, HKEY *hKey, LPWSTR *lpKeyPath)
     }
     *hKey = NULL;
 
-    for (i = 0; i < REG_CLASS_NUMBER; i++) {
+    for (i = 0; i < COUNT_OF(reg_class_keys); i++) {
         if (CompareStringW(LOCALE_USER_DEFAULT, 0, lpKeyName, len, reg_class_namesW[i], len) == CSTR_EQUAL &&
             len == lstrlenW(reg_class_namesW[i])) {
             *hKey = reg_class_keys[i];
@@ -456,7 +422,6 @@ static LONG openKeyW(WCHAR* stdInput)
         currentKeyHandle = NULL;
 
     return res;
-
 }
 
 /******************************************************************************
@@ -621,7 +586,6 @@ static void processRegLinesA(FILE *in, char* first_chars)
     ULONG lineSize       = REG_VAL_BUF_SIZE;
 
     line = HeapAlloc(GetProcessHeap(), 0, lineSize);
-    CHECK_ENOUGH_MEMORY(line);
     memcpy(line, first_chars, 2);
 
     while (!feof(in)) {
@@ -641,7 +605,6 @@ static void processRegLinesA(FILE *in, char* first_chars)
             char *s_eol; /* various local uses */
 
             /* Do we need to expand the buffer ? */
-            assert (s >= line && s <= line + lineSize);
             size_remaining = lineSize - (s-line);
             if (size_remaining < 2) /* room for 1 character and the \0 */
             {
@@ -651,7 +614,6 @@ static void processRegLinesA(FILE *in, char* first_chars)
                     new_buffer = HeapReAlloc (GetProcessHeap(), 0, line, new_size);
                 else
                     new_buffer = NULL;
-                CHECK_ENOUGH_MEMORY(new_buffer);
                 line = new_buffer;
                 s = line + lineSize - size_remaining;
                 lineSize = new_size;
@@ -674,8 +636,7 @@ static void processRegLinesA(FILE *in, char* first_chars)
                     if(ferror(in)){
                         perror("While reading input");
                         exit(IO_ERROR);
-                    }else
-                        assert(feof(in));
+                    }
                     break;
                 }
                 if(s[i] == '\r'){
@@ -768,7 +729,6 @@ static void processRegLinesW(FILE *in)
     WCHAR* line; /* The start of the current line */
 
     buf = HeapAlloc(GetProcessHeap(), 0, lineSize * sizeof(WCHAR));
-    CHECK_ENOUGH_MEMORY(buf);
 
     s = buf;
     line = buf;
@@ -779,7 +739,6 @@ static void processRegLinesW(FILE *in)
         WCHAR *s_eol = NULL; /* various local uses */
 
         /* Do we need to expand the buffer ? */
-        assert (s >= buf && s <= buf + lineSize);
         size_remaining = lineSize - (s-buf);
         if (size_remaining < 2) /* room for 1 character and the \0 */
         {
@@ -789,7 +748,6 @@ static void processRegLinesW(FILE *in)
                 new_buffer = HeapReAlloc (GetProcessHeap(), 0, buf, new_size * sizeof(WCHAR));
             else
                 new_buffer = NULL;
-            CHECK_ENOUGH_MEMORY(new_buffer);
             buf = new_buffer;
             line = buf;
             s = buf + lineSize - size_remaining;
@@ -810,7 +768,6 @@ static void processRegLinesW(FILE *in)
                 perror ("While reading input");
                 exit (IO_ERROR);
             } else {
-                assert (feof(in));
                 *s = '\0';
                 /* It is not clear to me from the definition that the
                 * contents of the buffer are well defined on detecting
@@ -888,7 +845,6 @@ static void processRegLinesW(FILE *in)
  *
  * Print the message for GetLastError
  */
-
 static void REGPROC_print_error(void)
 {
     LPVOID lpMsgBuf;
@@ -927,7 +883,6 @@ static void REGPROC_resize_char_buffer(WCHAR **buffer, DWORD *len, DWORD require
             *buffer = HeapAlloc(GetProcessHeap(), 0, *len * sizeof(**buffer));
         else
             *buffer = HeapReAlloc(GetProcessHeap(), 0, *buffer, *len * sizeof(**buffer));
-        CHECK_ENOUGH_MEMORY(*buffer);
     }
 }
 
@@ -947,7 +902,6 @@ static void REGPROC_resize_binary_buffer(BYTE **buffer, DWORD *size, DWORD requi
             *buffer = HeapAlloc(GetProcessHeap(), 0, *size);
         else
             *buffer = HeapReAlloc(GetProcessHeap(), 0, *buffer, *size);
-        CHECK_ENOUGH_MEMORY(*buffer);
     }
 }
 
@@ -972,14 +926,12 @@ static void REGPROC_export_string(WCHAR **line_buf, DWORD *line_buf_size, DWORD 
             (*line_buf)[pos++] = '\\';
             (*line_buf)[pos++] = 'n';
             break;
-
         case '\\':
         case '"':
             extra++;
             REGPROC_resize_char_buffer(line_buf, line_buf_size, *line_len + str_len + extra);
             (*line_buf)[pos++] = '\\';
             /* Fall through */
-
         default:
             (*line_buf)[pos++] = c;
             break;
@@ -1326,7 +1278,6 @@ BOOL export_registry_key(WCHAR *file_name, WCHAR *reg_key_name, DWORD format)
                              val_name_size * sizeof(*val_name_buf));
     val_buf = HeapAlloc(GetProcessHeap(), 0, val_size);
     line_buf = HeapAlloc(GetProcessHeap(), 0, line_buf_size * sizeof(*line_buf));
-    CHECK_ENOUGH_MEMORY(reg_key_name_buf && val_name_buf && val_buf && line_buf);
 
     if (reg_key_name && reg_key_name[0]) {
         HKEY reg_key_class;
@@ -1373,7 +1324,7 @@ BOOL export_registry_key(WCHAR *file_name, WCHAR *reg_key_name, DWORD format)
 
         /* export all registry classes */
         file = REGPROC_open_export_file(file_name, unicode);
-        for (i = 0; i < REG_CLASS_NUMBER; i++) {
+        for (i = 0; i < COUNT_OF(reg_class_keys); i++) {
             /* do not export HKEY_CLASSES_ROOT */
             if (reg_class_keys[i] != HKEY_CLASSES_ROOT &&
                     reg_class_keys[i] != HKEY_CURRENT_USER &&

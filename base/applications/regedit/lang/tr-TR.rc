@@ -14,18 +14,6 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&Kütük"
-    BEGIN
-        MENUITEM "&Çıkış", ID_REGISTRY_EXIT
-    END
-    POPUP "&Yardım"
-    BEGIN
-        MENUITEM "&Üzerine", ID_HELP_ABOUT
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Kütük"
@@ -38,8 +26,6 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "A&ğdaki Değer Defteri'ne Bağlan...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "Ağ&daki Değer Defteri'ne Bağlantıyı Kes...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
-        MENUITEM SEPARATOR
-        MENUITEM "Ya&zdır...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", ID_REGISTRY_EXIT
     END
@@ -75,10 +61,6 @@ BEGIN
         MENUITEM "&Böl", ID_VIEW_SPLIT
         MENUITEM SEPARATOR
         MENUITEM "&Yenile\tF5", ID_VIEW_REFRESH
-    END
-    POPUP "&Yardım"
-    BEGIN
-        MENUITEM "&Üzerine", ID_HELP_ABOUT
     END
 END
 
@@ -142,7 +124,7 @@ END
 /* Dialogs */
 
 IDD_EDIT_STRING DIALOGEX 32, 24, 252, 84
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Dize Değerini Düzenle"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -155,7 +137,7 @@ BEGIN
 END
 
 IDD_EDIT_MULTI_STRING DIALOGEX 32, 24, 252, 174
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Çoklu Dize Değerini Düzenle"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -169,7 +151,7 @@ BEGIN
 END
 
 IDD_EDIT_BIN_DATA DIALOGEX 32, 24, 252, 174
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "İkili Değeri Düzenle"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -182,7 +164,7 @@ BEGIN
 END
 
 IDD_EDIT_DWORD DIALOGEX 32, 24, 252, 104
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "DWORD Değeri Düzenle"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -198,7 +180,7 @@ BEGIN
 END
 
 IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Kaynak Listesi"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -209,7 +191,7 @@ BEGIN
 END
 
 IDD_EDIT_RESOURCE DIALOGEX 6, 18, 281, 283
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Kaynaklar"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -266,7 +248,6 @@ BEGIN
     ID_REGISTRY_MENU "Bütün Değer Defteri ile çalışma komutlarını içerir."
     ID_EDIT_MENU "Anahtar veya değerleri düzenleme komutlarını içerir."
     ID_VIEW_MENU "Değer Defteri penceresinin özelleştirme komutlarını içerir."
-    ID_HELP_MENU "Değer Defteri Düzenleyicisi ile ilgili bilgiyi ya da yardımı görüntüleme komutlarını içerir."
     ID_EDIT_NEW_MENU "Yeni bir dizin ya da yeni bir değer oluşturma komutlarını içerir."
 END
 
@@ -283,8 +264,6 @@ BEGIN
     ID_REGISTRY_UNLOADHIVE "Değer Defteri'nden bir yığın kaldırır."
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Uzaktaki bir bilgisyarın Değer Defteri'ne bağlanır."
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Uzaktaki bir bilgisayarın Değer Defteri'ne olan bağlantıyı keser."
-    ID_REGISTRY_PRINT "Değer Defteri'nin tümünü ya da bir bölümünü yazdırır."
-    ID_HELP_ABOUT "Programla ilgili bilgi, sürüm numarası ve telif hakkı görüntüler."
 END
 
 STRINGTABLE
@@ -308,7 +287,7 @@ BEGIN
     IDS_BAD_VALUE "Değer sorgulanamıyor: %s"
     IDS_UNSUPPORTED_TYPE "Şu türdeki dizinler değiştirilemiyor: %ld"
     IDS_TOO_BIG_VALUE "Değer çok büyük: %ld"
-    IDS_MULTI_SZ_EMPTY_STRING "REG_MULTI_SZ veri türü boş dizgi içeremez.\nBoş dizgiler dizelgeden silinmiştir."
+    IDS_MULTI_SZ_EMPTY_STRING "REG_MULTI_SZ veri türü boş dize içeremez.\nBoş diziler listelerden silinmiştir."
     IDS_QUERY_DELETE_KEY_ONE "Bu dizini silmek istediğinizden emin misiniz?"
     IDS_QUERY_DELETE_KEY_MORE "Bu dizinleri silmek istediğinizden emin misiniz?"
     IDS_QUERY_DELETE_KEY_CONFIRM "Dizin Silme Doğrulaması"
@@ -320,7 +299,7 @@ BEGIN
     IDS_ERR_RENVAL_CAPTION "Değer Adı Değiştirilmesi Hatası"
     IDS_ERR_RENVAL_TOEMPTY "Adı değiştirilemiyor: %s. Belirtilen değer adı boş. Başka bir ad yazıp yeniden deneyiniz."
     IDS_QUERY_IMPORT_HIVE_CAPTION "Dizin Yenileme Doğrulaması"
-    IDS_QUERY_IMPORT_HIVE_MSG "Bir dizin seçili dizinle yenilenecektir.\nBu dizinin tüm alt dizinleri ve değerleri silinecektir.\nİşlemi sürdürmek istiyor musunuz?"
+    IDS_QUERY_IMPORT_HIVE_MSG "Bir dizin seçili dizinle yenilenecektir.\nBu dizinin tüm alt dizinleri ve değerleri silinecektir.\nDevam etmek istiyor musunuz?"
     IDS_NEW_KEY "%d. Yeni Dizin"
     IDS_NEW_VALUE "%d. Yeni Değer"
 END
@@ -415,7 +394,7 @@ STRINGTABLE
 BEGIN
     IDS_PORT_PORT_IO "Giriş"
     IDS_PORT_MEMORY_IO "Bellek"
-    IDS_INTERRUPT_EDGE_SENSITIVE "Kıyı Duyarlı"
+    IDS_INTERRUPT_EDGE_SENSITIVE "Köşe Duyarlı"
     IDS_INTERRUPT_LEVEL_SENSITIVE "Düzey Duyarlı"
     IDS_MEMORY_READ_ONLY "Yalnızca Okunur"
     IDS_MEMORY_WRITE_ONLY "Yalnızca Yazılır"
@@ -453,8 +432,8 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_B
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Verme Kapsamı", IDC_STATIC, 2, 0, 366, 48
-    CONTROL "&Tümü", IDC_EXPORT_ALL, "Button", BS_AUTORADIOBUTTON, 10, 10, 29, 11
-    CONTROL "&Seçili Dal", IDC_EXPORT_BRANCH, "Button", BS_AUTORADIOBUTTON, 10, 22, 100, 11
+    AUTORADIOBUTTON "&Tümü", IDC_EXPORT_ALL, 10, 10, 99, 11, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Seçili Dal", IDC_EXPORT_BRANCH, 10, 22, 99, 11
     EDITTEXT IDC_EXPORT_BRANCH_TEXT, 30, 34, 335, 12
 END
 

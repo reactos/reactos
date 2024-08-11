@@ -11,7 +11,6 @@
 #include <strsafe.h>
 
 #include "main.h"
-#include "regproc.h"
 #include "hexedit.h"
 #include "security.h"
 
