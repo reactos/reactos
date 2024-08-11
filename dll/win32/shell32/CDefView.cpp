@@ -3435,7 +3435,7 @@ HRESULT WINAPI CDefView::GetItemObject(UINT uItem, REFIID riid, LPVOID *ppvOut)
 FOLDERVIEWMODE CDefView::GetDefaultViewMode()
 {
     FOLDERVIEWMODE mode = ((m_FolderSettings.fFlags & FWF_DESKTOP) || !IsOS(OS_SERVERADMINUI)) ? FVM_ICON : FVM_DETAILS;
-    FOLDERVIEWMODE temp;
+    FOLDERVIEWMODE temp = mode;
     if (SUCCEEDED(_DoFolderViewCB(SFVM_DEFVIEWMODE, 0, (LPARAM)&temp)) && temp >= FVM_FIRST && temp <= FVM_LAST)
         mode = temp;
     return mode;
@@ -3724,6 +3724,7 @@ HRESULT STDMETHODCALLTYPE CDefView::CreateViewWindow3(IShellBrowser *psb, IShell
 
     /* Get our parent window */
     m_pShellBrowser->GetWindow(&m_hWndParent);
+    _DoFolderViewCB(SFVM_HWNDMAIN, 0, (LPARAM)m_hWndParent);
 
     /* Try to get the ICommDlgBrowserInterface, adds a reference !!! */
     m_pCommDlgBrowser = NULL;
@@ -4625,26 +4626,6 @@ HRESULT CDefView::_DoFolderViewCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
 HRESULT CDefView_CreateInstance(IShellFolder *pFolder, REFIID riid, LPVOID * ppvOut)
 {
     return ShellObjectCreatorInit<CDefView>(pFolder, riid, ppvOut);
-}
-
-HRESULT WINAPI SHCreateShellFolderViewEx(
-    LPCSFV psvcbi,     // [in] shelltemplate struct
-    IShellView **ppsv) // [out] IShellView pointer
-{
-    CComPtr<IShellView> psv;
-    HRESULT hRes;
-
-    TRACE("sf=%p pidl=%p cb=%p mode=0x%08x parm=%p\n",
-      psvcbi->pshf, psvcbi->pidl, psvcbi->pfnCallback,
-      psvcbi->fvm, psvcbi->psvOuter);
-
-    *ppsv = NULL;
-    hRes = CDefView_CreateInstance(psvcbi->pshf, IID_PPV_ARG(IShellView, &psv));
-    if (FAILED_UNEXPECTEDLY(hRes))
-        return hRes;
-
-    *ppsv = psv.Detach();
-    return hRes;
 }
 
 HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv,
