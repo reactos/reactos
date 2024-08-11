@@ -27,8 +27,7 @@ class CQuickLaunchBand :
     HWND m_hWndBro;
     CComPtr<IUnknown> m_punkISFB;
 
-    public:
-
+public:
     CQuickLaunchBand();
     virtual ~CQuickLaunchBand();
 
