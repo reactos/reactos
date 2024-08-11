@@ -22,6 +22,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
+#define DEFAULTSORTORDERINDEX 0x80 // The default for registry items according to Geoff Chappell
+
 static HRESULT CRegItemContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder, HWND hwnd, UINT cidl,
                                                   PCUITEMID_CHILD_ARRAY apidl, IShellFolder *psf, IContextMenu **ppcm);
 
@@ -30,13 +32,36 @@ static inline UINT GetRegItemCLSIDOffset(PIDLTYPE type)
     return type == PT_CONTROLS_NEWREGITEM ? 14 : 4;
 }
 
+static LPITEMIDLIST CreateRegItem(PIDLTYPE type, REFCLSID clsid, BYTE order = 0)
+{
+#if 1 // FIXME: CControlPanelFolder is not ready for this yet
+    if (type == PT_CONTROLS_NEWREGITEM)
+        type = PT_CONTROLS_OLDREGITEM;
+#endif
+    const UINT offset = GetRegItemCLSIDOffset(type);
+    const UINT cb = offset + sizeof(CLSID), cbTotal = cb + sizeof(WORD);
+    LPITEMIDLIST pidl = (LPITEMIDLIST)SHAlloc(cbTotal);
+    if (pidl)
+    {
+        ZeroMemory(pidl, cbTotal);
+        pidl->mkid.cb = cb;
+        pidl->mkid.abID[0] = type;
+        pidl->mkid.abID[1] = order;
+        *(CLSID*)(SIZE_T(pidl) + offset) = clsid;
+    }
+    return pidl;
+}
+
+static LPITEMIDLIST CreateRegItem(PIDLTYPE type, LPCWSTR clsidstr)
+{
+    CLSID clsid;
+    return SUCCEEDED(CLSIDFromString(clsidstr, &clsid)) ? CreateRegItem(type, clsid) : NULL;
+}
+
 HRESULT FormatGUIDKey(LPWSTR KeyName, SIZE_T KeySize, LPCWSTR RegPath, const GUID* riid)
 {
-    WCHAR xriid[40];
-
-    if (!StringFromGUID2(*riid, xriid, _countof(xriid) - 1))
-        return E_FAIL;
-
+    WCHAR xriid[CHARS_IN_GUID];
+    StringFromGUID2(*riid, xriid, _countof(xriid));
     return StringCchPrintfW(KeyName, KeySize, RegPath, xriid);
 }
 
@@ -83,12 +108,17 @@ struct CRegFolderInfo {
         return NULL;
     }
 
+    LPITEMIDLIST CreateItem(size_t i) const
+    {
+        const REQUIREDREGITEM &item = GetAt(i);
+        return CreateRegItem(GetPidlType(), item.clsid, item.Order);
+    }
+
     LPCWSTR GetParsingPath() const { return m_pInfo->pszParsingPath; }
     UINT GetCLSIDOffset() const { return GetRegItemCLSIDOffset(m_pInfo->PidlType); }
     PIDLTYPE GetPidlType() const { return m_pInfo->PidlType; }
     UINT GetRequiredItemsCount() const { return m_pInfo->Count; }
     const REQUIREDREGITEM& GetAt(size_t i) const { return m_pInfo->Items[i]; }
-    LPITEMIDLIST CreateItem(size_t i) const { return _ILCreateGuid(GetPidlType(), GetAt(i).clsid); }
 };
 
 HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVOID * ppvOut)
@@ -261,9 +291,7 @@ HRESULT CRegFolderEnum::AddItemsFromKey(HKEY hkey_root, LPCWSTR szRepPath)
 
         if (*name == '{')
         {
-            LPITEMIDLIST pidl = _ILCreateGuidFromStrW(name);
-
-            if (pidl)
+            if (LPITEMIDLIST pidl = CreateRegItem(GetPidlType(), name))
             {
                 SFGAOF query = SHELL_CreateFolderEnumItemAttributeQuery(m_SHCTF, TRUE);
                 if (SHELL_IncludeItemInFolderEnum(m_SF, pidl, query, m_SHCTF) && !HasItemWithCLSID(pidl))
@@ -273,7 +301,6 @@ HRESULT CRegFolderEnum::AddItemsFromKey(HKEY hkey_root, LPCWSTR szRepPath)
             }
         }
     }
-
     RegCloseKey(hkey);
 
     return S_OK;
@@ -438,7 +465,7 @@ HRESULT WINAPI CRegFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR l
         return E_FAIL;
     }
 
-    CComHeapPtr<ITEMIDLIST> pidlTemp(_ILCreateGuid(PT_GUID, clsid));
+    CComHeapPtr<ITEMIDLIST> pidlTemp(CreateRegItem(GetPidlType(), clsid));
     if (!pidlTemp)
         return E_OUTOFMEMORY;
 
@@ -526,14 +553,10 @@ HRESULT WINAPI CRegFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, P
 
     /* Guid folders come first compared to everything else */
     /* And Drives come before folders in My Computer */
-    if (_ILIsMyComputer(m_pidlRoot))
-    {
+    if (GetPidlType() == PT_COMPUTER_REGITEM)
         return MAKE_COMPARE_HRESULT(clsid1 ? 1 : -1);
-    }
     else
-    {
         return MAKE_COMPARE_HRESULT(clsid1 ? -1 : 1);
-    }
 }
 
 HRESULT WINAPI CRegFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut)

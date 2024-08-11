@@ -1767,7 +1767,6 @@ LPITEMIDLIST _ILCreateGuidFromStrA(LPCSTR szGUID)
     }
     return _ILCreateGuid(PT_GUID, &iid);
 }
-#endif
 
 LPITEMIDLIST _ILCreateGuidFromStrW(LPCWSTR szGUID)
 {
@@ -1784,6 +1783,7 @@ LPITEMIDLIST _ILCreateGuidFromStrW(LPCWSTR szGUID)
     }
     return _ILCreateGuid(PT_GUID, &iid);
 }
+#endif /* __REACTOS__ */
 
 LPITEMIDLIST _ILCreateFromFindDataW( const WIN32_FIND_DATAW *wfd )
 {

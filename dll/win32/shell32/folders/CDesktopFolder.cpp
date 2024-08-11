@@ -25,6 +25,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+extern BOOL SHELL32_IsShellFolderNamespaceItemHidden(LPCWSTR SubKey, REFCLSID Clsid);
+
 static const REQUIREDREGITEM g_RequiredItems[] =
 {
     { CLSID_MyComputer, "sysdm.cpl", 0x50 },
@@ -43,6 +45,13 @@ static const REGFOLDERINFO g_RegFolderInfo =
 static BOOL IsSelf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
 {
     return cidl == 0 || (cidl == 1 && apidl && _ILIsEmpty(apidl[0]));
+}
+
+static const CLSID* IsRegItem(PCUITEMID_CHILD pidl)
+{
+    if (pidl && pidl->mkid.cb == 2 + 2 + sizeof(CLSID) && pidl->mkid.abID[0] == PT_GUID)
+        return (const CLSID*)(&pidl->mkid.abID[2]);
+    return NULL;
 }
 
 STDMETHODIMP
@@ -168,10 +177,8 @@ The CDesktopFolderEnum class should create two enumerators, one for each of the 
 system folders, and enumerate the contents of each folder. Since the CRegFolder
 implementation of IShellFolder::EnumObjects enumerates the virtual items, the
 CDesktopFolderEnum is only responsible for returning the physical items.
-CDesktopFolderEnum is incorrect where it filters My Computer from the enumeration
-if the new start menu is used. The CDesktopViewCallback is responsible for filtering
-it from the view by handling the IncludeObject query to return S_FALSE. The enumerator
-always shows My Computer.
+CDesktopFolderViewCB is responsible for filtering hidden regitems.
+The enumerator always shows My Computer.
 */
 
 /* Undocumented functions from shdocvw */
@@ -642,8 +649,15 @@ HRESULT WINAPI CDesktopFolder::CreateViewObject(
     }
     else if (IsEqualIID (riid, IID_IShellView))
     {
-        SFV_CREATE sfvparams = {sizeof(SFV_CREATE), this};
-        hr = SHCreateShellFolderView(&sfvparams, (IShellView**)ppvOut);
+        CComPtr<IShellFolderViewCB> sfviewcb;
+        hr = ShellObjectCreator<CDesktopFolderViewCB>(IID_PPV_ARG(IShellFolderViewCB, &sfviewcb));
+        if (SUCCEEDED(hr))
+        {
+            SFV_CREATE sfvparams = { sizeof(SFV_CREATE), this, NULL, sfviewcb };
+            hr = SHCreateShellFolderView(&sfvparams, (IShellView**)ppvOut);
+            if (SUCCEEDED(hr))
+                static_cast<CDesktopFolderViewCB*>(sfviewcb.p)->Initialize((IShellView*)*ppvOut);
+        }
     }
     TRACE ("-- (%p)->(interface=%p)\n", this, ppvOut);
     return hr;
@@ -1016,6 +1030,46 @@ HRESULT WINAPI CDesktopFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IData
         return S_OK;
     }
     return SHELL32_DefaultContextMenuCallBack(psf, pdtobj, uMsg);
+}
+
+/*************************************************************************
+ * CDesktopFolderViewCB
+ */
+
+bool CDesktopFolderViewCB::IsProgmanHostedBrowser(IShellView *psv)
+{
+    FOLDERSETTINGS settings;
+    return SUCCEEDED(psv->GetCurrentInfo(&settings)) && (settings.fFlags & FWF_DESKTOP);
+}
+
+bool CDesktopFolderViewCB::IsProgmanHostedBrowser()
+{
+    if (!m_IsProgmanHosted)
+        m_IsProgmanHosted = 1 + (m_ShellView && IsProgmanHostedBrowser(m_ShellView));
+    return !!(m_IsProgmanHosted - 1);
+}
+
+HRESULT WINAPI CDesktopFolderViewCB::ShouldShow(IShellFolder *psf, PCIDLIST_ABSOLUTE pidlFolder, PCUITEMID_CHILD pidlItem)
+{
+    const CLSID* pClsid;
+    if (IsProgmanHostedBrowser() && (pClsid = IsRegItem(pidlItem)) != NULL)
+    {
+        const BOOL NewStart = SHELL_GetSetting(SSF_STARTPANELON, fStartPanelOn);
+        LPCWSTR SubKey = NewStart ? L"HideDesktopIcons\\NewStartPanel" : L"HideDesktopIcons\\ClassicStartMenu";
+        return SHELL32_IsShellFolderNamespaceItemHidden(SubKey, *pClsid) ? S_FALSE : S_OK;
+    }
+    return S_OK;
+}
+
+HRESULT WINAPI CDesktopFolderViewCB::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case SFVM_VIEWRELEASE:
+            m_ShellView = NULL;
+            return S_OK;
+    }
+    return E_NOTIMPL;
 }
 
 /*************************************************************************

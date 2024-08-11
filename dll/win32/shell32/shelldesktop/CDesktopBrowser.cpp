@@ -226,8 +226,7 @@ HRESULT CDesktopBrowser::Initialize(IShellDesktopTray *ShellDesk)
     if (!m_hWnd)
         return E_FAIL;
 
-    CSFV csfv = {sizeof(CSFV), psfDesktop};
-    hRet = SHCreateShellFolderViewEx(&csfv, &m_ShellView);
+    hRet = psfDesktop->CreateViewObject(m_hWnd, IID_PPV_ARG(IShellView, &m_ShellView));
     if (FAILED_UNEXPECTEDLY(hRet))
         return hRet;
 
