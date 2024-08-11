@@ -14,6 +14,7 @@ class CExplorerBand
     : public CNSCBand
     , public CComCoClass<CExplorerBand, &CLSID_ExplorerBand>
     , public CComObjectRootEx<CComMultiThreadModelNoCS>
+    , public IDispatch
 {
 public:
     CExplorerBand();
@@ -22,6 +23,12 @@ public:
     STDMETHODIMP GetClassID(CLSID *pClassID) override;
     STDMETHODIMP OnSelectionChanged(_In_ PCIDLIST_ABSOLUTE pidl) override;
     STDMETHODIMP Invoke(_In_ PCIDLIST_ABSOLUTE pidl) override;
+
+    // *** IDispatch methods ***
+    STDMETHODIMP GetTypeInfoCount(UINT *pctinfo) override;
+    STDMETHODIMP GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo) override;
+    STDMETHODIMP GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId) override;
+    STDMETHODIMP Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr) override;
 
     DECLARE_REGISTRY_RESOURCEID(IDR_EXPLORERBAND)
     DECLARE_NOT_AGGREGATABLE(CExplorerBand)

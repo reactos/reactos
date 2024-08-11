@@ -24,7 +24,6 @@ class CNSCBand
     , public IBandNavigate
     , public IWinEventHandler
     , public INamespaceProxy
-    , public IDispatch
     , public IDropTarget
     , public IDropSource
 {
@@ -115,12 +114,6 @@ public:
         _Out_ DWORD *pdwExStyle,
         _Out_ DWORD *dwEnum) override;
     STDMETHODIMP CacheItem(_In_ PCIDLIST_ABSOLUTE pidl) override;
-
-    // *** IDispatch methods ***
-    STDMETHODIMP GetTypeInfoCount(UINT *pctinfo) override;
-    STDMETHODIMP GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo) override;
-    STDMETHODIMP GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId) override;
-    STDMETHODIMP Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr) override;
 
     // *** IDropTarget methods ***
     STDMETHODIMP DragEnter(IDataObject *pObj, DWORD glfKeyState, POINTL pt, DWORD *pdwEffect) override;

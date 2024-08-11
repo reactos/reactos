@@ -147,3 +147,48 @@ void CExplorerBand::_DestroyTreeView()
 
     CNSCBand::_DestroyTreeView();
 }
+
+// *** IDispatch methods ***
+
+STDMETHODIMP CExplorerBand::GetTypeInfoCount(UINT *pctinfo)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CExplorerBand::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CExplorerBand::GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP
+CExplorerBand::Invoke(
+    DISPID dispIdMember,
+    REFIID riid,
+    LCID lcid,
+    WORD wFlags,
+    DISPPARAMS *pDispParams,
+    VARIANT *pVarResult,
+    EXCEPINFO *pExcepInfo,
+    UINT *puArgErr)
+{
+    switch (dispIdMember)
+    {
+        case DISPID_DOWNLOADCOMPLETE:
+        case DISPID_NAVIGATECOMPLETE2:
+        {
+            TRACE("dispId %d received\n", dispIdMember);
+            _NavigateToCurrentFolder();
+            return S_OK;
+        }
+    }
+    TRACE("Unknown dispid requested: %08x\n", dispIdMember);
+    return E_INVALIDARG;
+}

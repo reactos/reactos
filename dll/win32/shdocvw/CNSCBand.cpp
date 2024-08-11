@@ -1484,42 +1484,6 @@ STDMETHODIMP CNSCBand::CacheItem(
     return E_NOTIMPL;
 }
 
-// *** IDispatch methods ***
-STDMETHODIMP CNSCBand::GetTypeInfoCount(UINT *pctinfo)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP CNSCBand::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP CNSCBand::GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP CNSCBand::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
-{
-    switch (dispIdMember)
-    {
-        case DISPID_DOWNLOADCOMPLETE:
-        case DISPID_NAVIGATECOMPLETE2:
-        {
-            TRACE("dispId %d received\n", dispIdMember);
-            if (_WantsRootItem())
-                _NavigateToCurrentFolder();
-            return S_OK;
-        }
-    }
-    TRACE("Unknown dispid requested: %08x\n", dispIdMember);
-    return E_INVALIDARG;
-}
-
 // *** IDropTarget methods ***
 STDMETHODIMP CNSCBand::DragEnter(IDataObject *pObj, DWORD glfKeyState, POINTL pt, DWORD *pdwEffect)
 {
