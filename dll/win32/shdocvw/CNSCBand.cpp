@@ -1034,6 +1034,12 @@ LRESULT CNSCBand::OnShellEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
     return 0;
 }
 
+// WM_ERASEBKGND
+LRESULT CNSCBand::OnEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    return TRUE;
+}
+
 // *** IOleWindow ***
 
 STDMETHODIMP CNSCBand::GetWindow(HWND *lphwnd)
