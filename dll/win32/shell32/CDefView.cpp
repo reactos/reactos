@@ -1717,7 +1717,7 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
     LPITEMIDLIST pidlTarget = NULL;
     LONG fEvents = 0;
     HRESULT hr = _DoFolderViewCB(SFVM_GETNOTIFY, (WPARAM)&pidlTarget, (LPARAM)&fEvents);
-    if (FAILED(hr) || (!pidlTarget && !fEvents))
+    if (FAILED(hr) || (!pidlTarget && !fEvents)) // FIXME: MSDN says both zero means no notifications
     {
         pidlTarget = m_pidlParent;
         fEvents = SHCNE_ALLEVENTS;

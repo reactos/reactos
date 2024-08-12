@@ -12,23 +12,23 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 class CObjectWithSiteBase :
     public IObjectWithSite
 {
-    public:
-        IUnknown* m_pUnkSite;
+public:
+    IUnknown* m_pUnkSite;
 
-        CObjectWithSiteBase() : m_pUnkSite(NULL) {}
-        virtual ~CObjectWithSiteBase() { SetSite(NULL); }
+    CObjectWithSiteBase() : m_pUnkSite(NULL) {}
+    virtual ~CObjectWithSiteBase() { SetSite(NULL); }
 
-        // IObjectWithSite
-        STDMETHODIMP SetSite(IUnknown *pUnkSite) override
-        {
-            IUnknown_Set(&m_pUnkSite, pUnkSite);
-            return S_OK;
-        }
-        STDMETHODIMP GetSite(REFIID riid, void **ppvSite) override
-        {
-            *ppvSite = NULL;
-            return m_pUnkSite ? m_pUnkSite->QueryInterface(riid, ppvSite) : E_FAIL;
-        }
+    // IObjectWithSite
+    STDMETHODIMP SetSite(IUnknown *pUnkSite) override
+    {
+        IUnknown_Set(&m_pUnkSite, pUnkSite);
+        return S_OK;
+    }
+    STDMETHODIMP GetSite(REFIID riid, void **ppvSite) override
+    {
+        *ppvSite = NULL;
+        return m_pUnkSite ? m_pUnkSite->QueryInterface(riid, ppvSite) : E_FAIL;
+    }
 };
 
 // This class adapts the legacy function callback to work as an IShellFolderViewCB
@@ -37,70 +37,78 @@ class CShellFolderViewCBWrapper :
     public IShellFolderViewCB,
     public CObjectWithSiteBase
 {
-    protected:
-        HWND                    m_hWndMain;
-        CComPtr<IShellFolder>   m_psf;
-        CComPtr<IShellView>     m_psvOuter;
-        LPFNVIEWCALLBACK        m_Callback;
-        FOLDERVIEWMODE          m_FVM;
-        LONG                    m_Events;
-    public:
-        CShellFolderViewCBWrapper() : m_hWndMain(NULL) {}
+protected:
+    HWND                    m_hWndMain;
+    PIDLIST_ABSOLUTE        m_Pidl;
+    CComPtr<IShellFolder>   m_psf;
+    CComPtr<IShellView>     m_psvOuter;
+    LPFNVIEWCALLBACK        m_Callback;
+    FOLDERVIEWMODE          m_FVM;
+    LONG                    m_Events;
 
-        HRESULT WINAPI Initialize(LPCSFV psvcbi)
+public:
+    CShellFolderViewCBWrapper() : m_hWndMain(NULL), m_Pidl(NULL) {}
+
+    virtual ~CShellFolderViewCBWrapper()
+    {
+        ILFree(m_Pidl);
+    }
+
+    HRESULT WINAPI Initialize(LPCSFV psvcbi)
+    {
+        m_psf = psvcbi->pshf;
+        m_psvOuter = psvcbi->psvOuter;
+        m_Pidl = psvcbi->pidl ? ILClone(psvcbi->pidl) : NULL;
+        m_Callback = psvcbi->pfnCallback;
+        m_FVM = psvcbi->fvm;
+        m_Events = psvcbi->lEvents;
+        return S_OK;
+    }
+
+    // IShellFolderViewCB
+    STDMETHODIMP MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam) override
+    {
+        switch (uMsg)
         {
-            m_psf = psvcbi->pshf;
-            m_psvOuter = psvcbi->psvOuter;
-            m_Callback = psvcbi->pfnCallback;
-            m_FVM = psvcbi->fvm;
-            m_Events = psvcbi->lEvents;
-            return S_OK;
+            case SFVM_HWNDMAIN:
+                m_hWndMain = (HWND)lParam;
+                break;
+
+            case SFVM_DEFVIEWMODE:
+                if (m_FVM)
+                    *(FOLDERVIEWMODE*)lParam = m_FVM;
+                break;
         }
 
-        // IShellFolderViewCB
-        STDMETHODIMP MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam) override
-        {
-            switch (uMsg)
-            {
-                case SFVM_HWNDMAIN:
-                    m_hWndMain = (HWND)lParam;
-                    break;
-
-                case SFVM_DEFVIEWMODE:
-                    if (m_FVM)
-                        *(FOLDERVIEWMODE*)lParam = m_FVM;
-                    break;
-            }
-
-            HRESULT hr = m_Callback(m_psvOuter, m_psf, m_hWndMain, uMsg, wParam, lParam);
-            if (SUCCEEDED(hr))
-                return hr;
-
-            switch (uMsg)
-            {
-                case SFVM_GETNOTIFY:
-                    *(LPITEMIDLIST*)wParam = NULL; // TODO: Where is this pidl supposed to come from?
-                    *(LONG*)lParam = m_Events;
-                    return S_OK;
-            }
+        HRESULT hr = m_Callback(m_psvOuter, m_psf, m_hWndMain, uMsg, wParam, lParam);
+        if (SUCCEEDED(hr))
             return hr;
-        }
 
-        // IObjectWithSite
-        STDMETHODIMP SetSite(IUnknown *pUnkSite) override
+        switch (uMsg)
         {
-            //learn.microsoft.com/en-us/windows/win32/shell/sfvm-setisfv
-            HRESULT hr = CObjectWithSiteBase::SetSite(pUnkSite);
-            MessageSFVCB(SFVM_SETISFV, 0, (LPARAM)pUnkSite);
-            return hr;
+            case SFVM_GETNOTIFY:
+                *(LPITEMIDLIST*)wParam = m_Pidl;
+                *(LONG*)lParam = m_Events;
+                return S_OK;
         }
+        return hr;
+    }
 
-        DECLARE_NO_REGISTRY()
-        DECLARE_NOT_AGGREGATABLE(CShellFolderViewCBWrapper)
-        BEGIN_COM_MAP(CShellFolderViewCBWrapper)
-            COM_INTERFACE_ENTRY_IID(IID_IShellFolderViewCB, IShellFolderViewCB)
-            COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
-        END_COM_MAP()
+    // IObjectWithSite
+    STDMETHODIMP SetSite(IUnknown *pUnkSite) override
+    {
+        // learn.microsoft.com/en-us/windows/win32/shell/sfvm-setisfv
+        HRESULT hr = CObjectWithSiteBase::SetSite(pUnkSite);
+        MessageSFVCB(SFVM_SETISFV, 0, (LPARAM)pUnkSite);
+        return hr;
+    }
+
+    DECLARE_NO_REGISTRY()
+    DECLARE_NOT_AGGREGATABLE(CShellFolderViewCBWrapper)
+    BEGIN_COM_MAP(CShellFolderViewCBWrapper)
+        COM_INTERFACE_ENTRY_IID(IID_IShellFolderViewCB, IShellFolderViewCB)
+        COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
+    END_COM_MAP()
 };
 
 /*************************************************************************
