@@ -1034,12 +1034,6 @@ LRESULT CNSCBand::OnShellEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
     return 0;
 }
 
-// WM_ERASEBKGND
-LRESULT CNSCBand::OnEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
-{
-    return TRUE;
-}
-
 // *** IOleWindow ***
 
 STDMETHODIMP CNSCBand::GetWindow(HWND *lphwnd)
@@ -1150,9 +1144,14 @@ STDMETHODIMP CNSCBand::SetSite(IUnknown *pUnkSite)
     m_pSite = pUnkSite;
 
     if (m_hWnd)
+    {
         SetParent(hwndParent); // Change its parent
+    }
     else
-        this->Create(hwndParent, NULL, NULL, WS_CHILD | WS_VISIBLE, 0, (UINT)0, NULL);
+    {
+        enum { style = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN };
+        this->Create(hwndParent, NULL, NULL, style, 0, 0U, NULL);
+    }
 
     _RegisterChangeNotify();
 

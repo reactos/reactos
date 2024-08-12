@@ -95,7 +95,7 @@ HRESULT CFavBand::_CreateToolbar(HWND hwndParent)
     DWORD style = WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_LIST | CCS_NODIVIDER |
                   TBSTYLE_WRAPABLE;
     HWND hwndTB = ::CreateWindowExW(0, TOOLBARCLASSNAMEW, NULL, style, 0, 0, 0, 0, hwndParent,
-                                    (HMENU)(LONG_PTR)IDW_TOOLBAR, instance, NULL);
+                                    (HMENU)UlongToHandle(IDW_TOOLBAR), instance, NULL);
     ATLASSERT(hwndTB);
     if (!hwndTB)
         return E_FAIL;

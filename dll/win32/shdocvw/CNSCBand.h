@@ -214,7 +214,6 @@ protected:
     LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnShellEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnEraseBkgnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
     BEGIN_MSG_MAP(CNSCBand)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
@@ -223,7 +222,6 @@ protected:
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
         MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
         MESSAGE_HANDLER(WM_COMMAND, OnCommand)
-        MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
         MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
         MESSAGE_HANDLER(WM_TIMER, OnTimer)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
