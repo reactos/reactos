@@ -3937,7 +3937,7 @@ co_IntSnapWindow(PWND Wnd, UINT Edge)
         co_IntSendMessage(UserHMGetHandle(Wnd), WM_SYSCOMMAND, SC_MAXIMIZE, 0);
         return;
     }
-    else if (Edge)
+    else if (Edge != HTNOWHERE)
     {
         UserRefObjectCo(Wnd, &ref);
         hasRef = TRUE;
@@ -3951,7 +3951,7 @@ co_IntSnapWindow(PWND Wnd, UINT Edge)
             IntSetSnapEdge(Wnd, HTNOWHERE);
             return;
         }
-        newPos = Wnd->InternalPos.NormalRect;
+        newPos = Wnd->InternalPos.NormalRect; /* Copy RECT now before it is lost */
         IntSetSnapInfo(Wnd, HTNOWHERE, NULL);
     }
     else
@@ -4000,7 +4000,7 @@ IntSetSnapInfo(PWND Wnd, UINT Edge, IN const RECT *Pos OPTIONAL)
 {
     RECT r;
     IntSetSnapEdge(Wnd, Edge);
-    if (Edge != HTNOWHERE)
+    if (Edge == HTNOWHERE)
     {
         RECTL_vSetEmptyRect(&r);
         Pos = (Wnd->style & WS_MINIMIZE) ? NULL : &r;
