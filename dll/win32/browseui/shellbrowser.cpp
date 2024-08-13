@@ -1034,6 +1034,10 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
+    if (FAILED_UNEXPECTEDLY(hResult = SHILClone(absolutePIDL, &absolutePIDL)))
+        return hResult;
+    CComHeapPtr<ITEMIDLIST> pidlAbsoluteClone(const_cast<LPITEMIDLIST>(absolutePIDL));
+
     // update history
     if (flags & BTP_UPDATE_CUR_HISTORY)
     {
@@ -1078,7 +1082,14 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
 
     // update current pidl
     ILFree(fCurrentDirectoryPIDL);
-    fCurrentDirectoryPIDL = ILClone(absolutePIDL);
+    fCurrentDirectoryPIDL = pidlAbsoluteClone.Detach();
+    /* CORE-19697: CAddressEditBox::OnWinEvent(CBN_SELCHANGE) causes CAddressEditBox to
+     * call BrowseObject(pidlLastParsed). As part of our browsing we call FireNavigateComplete
+     * and this in turn causes CAddressEditBox::Invoke to ILFree(pidlLastParsed)!
+     * We then call SHBindToParent on absolutePIDL (which is really (the now invalid) pidlLastParsed) and we
+     * end up accessing invalid memory! We therefore set absolutePIDL to be our cloned PIDL here.
+     */
+    absolutePIDL = fCurrentDirectoryPIDL;
 
     // create view window
     hResult = newShellView->CreateViewWindow(saveCurrentShellView, folderSettings,
