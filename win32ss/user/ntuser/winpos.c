@@ -1938,10 +1938,7 @@ co_WinPosSetWindowPos(
 //      valid_rects[1].left,valid_rects[1].top,valid_rects[1].right,valid_rects[1].bottom);
 
    if (WvrFlags & (WVR_HREDRAW | WVR_VREDRAW))
-   {
        fullRedraw = TRUE;
-   }
-
    /* Validate link windows. (also take into account shell window in hwndShellWindow) */
    if (!(WinPos.flags & SWP_NOZORDER) && WinPos.hwnd != UserGetShellWindow())
    {
