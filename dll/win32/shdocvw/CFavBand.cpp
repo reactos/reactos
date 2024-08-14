@@ -11,40 +11,64 @@
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
 CFavBand::CFavBand()
-    : m_fVisible(FALSE)
-    , m_bFocused(FALSE)
-    , m_dwBandID(0)
-    , m_hToolbarImageList(NULL)
-    , m_hTreeViewImageList(NULL)
 {
-    SHDOCVW_LockModule();
-    SHGetSpecialFolderLocation(NULL, CSIDL_FAVORITES, &m_pidlFav);
 }
 
 CFavBand::~CFavBand()
 {
-    if (m_hToolbarImageList)
-    {
-        ImageList_Destroy(m_hToolbarImageList);
-        m_hToolbarImageList = NULL;
-    }
-    if (m_hTreeViewImageList)
-    {
-        ImageList_Destroy(m_hTreeViewImageList);
-        m_hTreeViewImageList = NULL;
-    }
-    SHDOCVW_UnlockModule();
 }
 
-VOID CFavBand::OnFinalMessage(HWND)
+STDMETHODIMP CFavBand::GetClassID(CLSID *pClassID)
 {
-    // The message loop is finished, now we can safely destruct!
-    Release();
+    if (!pClassID)
+        return E_POINTER;
+    *pClassID = CLSID_SH_FavBand;
+    return S_OK;
 }
 
-// *** helper methods ***
+INT CFavBand::_GetRootCsidl()
+{
+    return CSIDL_FAVORITES;
+}
 
-BOOL CFavBand::CreateToolbar()
+DWORD CFavBand::_GetTVStyle()
+{
+    // Remove TVS_SINGLEEXPAND for now since it has strange behaviour
+    return TVS_NOHSCROLL | TVS_NONEVENHEIGHT | TVS_FULLROWSELECT | TVS_INFOTIP |
+           /*TVS_SINGLEEXPAND | TVS_TRACKSELECT |*/ TVS_SHOWSELALWAYS | TVS_EDITLABELS |
+           WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP;
+}
+
+DWORD CFavBand::_GetTVExStyle()
+{
+    return WS_EX_CLIENTEDGE;
+}
+
+DWORD CFavBand::_GetEnumFlags()
+{
+    return SHCONTF_FOLDERS | SHCONTF_NONFOLDERS;
+}
+
+BOOL CFavBand::_GetTitle(LPWSTR pszTitle, INT cchTitle)
+{
+#define IDS_FAVORITES 47 // Borrowed from shell32.dll
+    HINSTANCE hShell32 = ::LoadLibraryExW(L"shell32.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
+    if (hShell32)
+    {
+        ::LoadStringW(hShell32, IDS_FAVORITES, pszTitle, cchTitle);
+        ::FreeLibrary(hShell32);
+        return TRUE;
+    }
+    return FALSE;
+#undef IDS_FAVORITES
+}
+
+BOOL CFavBand::_WantsRootItem()
+{
+    return FALSE;
+}
+
+HRESULT CFavBand::_CreateToolbar(HWND hwndParent)
 {
 #define IDB_SHELL_EXPLORER_SM 216 // Borrowed from browseui.dll
     HINSTANCE hinstBrowseUI = LoadLibraryExW(L"browseui.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
@@ -58,23 +82,23 @@ BOOL CFavBand::CreateToolbar()
 #undef IDB_SHELL_EXPLORER_SM
     ATLASSERT(hbmToolbar);
     if (!hbmToolbar)
-        return FALSE;
+        return E_FAIL;
 
     m_hToolbarImageList = ImageList_Create(16, 16, ILC_COLOR32, 0, 8);
     ATLASSERT(m_hToolbarImageList);
     if (!m_hToolbarImageList)
-        return FALSE;
+        return E_FAIL;
 
     ImageList_Add(m_hToolbarImageList, hbmToolbar, NULL);
     DeleteObject(hbmToolbar);
 
     DWORD style = WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_LIST | CCS_NODIVIDER |
                   TBSTYLE_WRAPABLE;
-    HWND hwndTB = ::CreateWindowExW(0, TOOLBARCLASSNAMEW, NULL, style, 0, 0, 0, 0, m_hWnd,
-                                    (HMENU)(LONG_PTR)IDW_TOOLBAR, instance, NULL);
+    HWND hwndTB = ::CreateWindowExW(0, TOOLBARCLASSNAMEW, NULL, style, 0, 0, 0, 0, hwndParent,
+                                    (HMENU)UlongToHandle(IDW_TOOLBAR), instance, NULL);
     ATLASSERT(hwndTB);
     if (!hwndTB)
-        return FALSE;
+        return E_FAIL;
 
     m_hwndToolbar.Attach(hwndTB);
     m_hwndToolbar.SendMessage(TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
@@ -102,480 +126,57 @@ BOOL CFavBand::CreateToolbar()
     tbb[iButton].iString = (INT)m_hwndToolbar.SendMessage(TB_ADDSTRING, 0, (LPARAM)szzOrganize);
     ++iButton;
     ATLASSERT(iButton == _countof(tbb));
-
-    LRESULT ret = m_hwndToolbar.SendMessage(TB_ADDBUTTONS, iButton, (LPARAM)&tbb);
-    ATLASSERT(ret);
-
-    return ret;
-}
-
-BOOL CFavBand::CreateTreeView()
-{
-    m_hTreeViewImageList = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 64, 0);
-    ATLASSERT(m_hTreeViewImageList);
-    if (!m_hTreeViewImageList)
-        return FALSE;
-
-    DWORD style = TVS_NOHSCROLL | TVS_NONEVENHEIGHT | TVS_FULLROWSELECT | TVS_INFOTIP |
-                  TVS_SINGLEEXPAND | TVS_TRACKSELECT | TVS_SHOWSELALWAYS | TVS_EDITLABELS |
-                  WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP;
-    HWND hwndTV = ::CreateWindowExW(WS_EX_CLIENTEDGE, WC_TREEVIEWW, NULL, style, 0, 0, 0, 0,
-                                    m_hWnd, (HMENU)(ULONG_PTR)IDW_TREEVIEW, instance, NULL);
-    ATLASSERT(hwndTV);
-    if (!hwndTV)
-        return FALSE;
-
-    m_hwndTreeView.Attach(hwndTV);
-    TreeView_SetImageList(m_hwndTreeView, m_hTreeViewImageList, TVSIL_NORMAL);
-
-    return TRUE;
-}
-
-// *** message handlers ***
-
-LRESULT CFavBand::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    INITCOMMONCONTROLSEX iccx = { sizeof(iccx), ICC_TREEVIEW_CLASSES | ICC_BAR_CLASSES };
-    if (!::InitCommonControlsEx(&iccx) || !CreateToolbar() || !CreateTreeView())
-        return -1;
-
-    return 0;
-}
-
-LRESULT CFavBand::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    m_hwndTreeView.DestroyWindow();
-    m_hwndToolbar.DestroyWindow();
-    return 0;
-}
-
-LRESULT CFavBand::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    if (!m_hwndTreeView)
-        return 0;
-
-    RECT rc;
-    GetClientRect(&rc);
-    LONG cx = rc.right, cy = rc.bottom;
-
-    RECT rcTB;
-    m_hwndToolbar.SendMessage(TB_AUTOSIZE, 0, 0);
-    m_hwndToolbar.GetWindowRect(&rcTB);
-
-    LONG cyTB = rcTB.bottom - rcTB.top;
-    m_hwndTreeView.MoveWindow(0, cyTB, cx, cy - cyTB);
-
-    return 0;
-}
-
-LRESULT CFavBand::OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
-{
-    m_bFocused = TRUE;
-    IUnknown_OnFocusChangeIS(m_pSite, reinterpret_cast<IUnknown*>(this), TRUE);
-    return 0;
-}
-
-LRESULT CFavBand::OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
-{
-    IUnknown_OnFocusChangeIS(m_pSite, reinterpret_cast<IUnknown*>(this), FALSE);
-    m_bFocused = FALSE;
-    return 0;
-}
-
-LRESULT CFavBand::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
-{
-    switch (LOWORD(wParam))
-    {
-        case ID_ADD:
-        {
-            UNIMPLEMENTED;
-            SHELL_ErrorBox(m_hWnd, ERROR_NOT_SUPPORTED);
-            break;
-        }
-        case ID_ORGANIZE:
-        {
-            SHELLEXECUTEINFOW sei = { sizeof(sei), SEE_MASK_IDLIST };
-            sei.hwnd = m_hWnd;
-            sei.nShow = SW_SHOWNORMAL;
-            sei.lpIDList = m_pidlFav;
-            ::ShellExecuteExW(&sei);
-            break;
-        }
-    }
-    return 0;
-}
-
-// *** IOleWindow ***
-
-STDMETHODIMP CFavBand::GetWindow(HWND *lphwnd)
-{
-    if (!lphwnd)
-        return E_INVALIDARG;
-    *lphwnd = m_hWnd;
-    return S_OK;
-}
-
-STDMETHODIMP CFavBand::ContextSensitiveHelp(BOOL fEnterMode)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-// *** IDockingWindow ***
-
-STDMETHODIMP CFavBand::CloseDW(DWORD dwReserved)
-{
-    // We do nothing, we don't have anything to save yet
-    TRACE("CloseDW called\n");
-    return S_OK;
-}
-
-STDMETHODIMP CFavBand::ResizeBorderDW(const RECT *prcBorder, IUnknown *punkToolbarSite, BOOL fReserved)
-{
-    /* Must return E_NOTIMPL according to MSDN */
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP CFavBand::ShowDW(BOOL fShow)
-{
-    m_fVisible = fShow;
-    ShowWindow(fShow ? SW_SHOW : SW_HIDE);
-    return S_OK;
-}
-
-// *** IDeskBand ***
-
-STDMETHODIMP CFavBand::GetBandInfo(DWORD dwBandID, DWORD dwViewMode, DESKBANDINFO *pdbi)
-{
-    if (!pdbi)
-        return E_INVALIDARG;
-
-    m_dwBandID = dwBandID;
-
-    if (pdbi->dwMask & DBIM_MINSIZE)
-    {
-        pdbi->ptMinSize.x = 200;
-        pdbi->ptMinSize.y = 30;
-    }
-
-    if (pdbi->dwMask & DBIM_MAXSIZE)
-        pdbi->ptMaxSize.y = -1;
-
-    if (pdbi->dwMask & DBIM_INTEGRAL)
-        pdbi->ptIntegral.y = 1;
-
-    if (pdbi->dwMask & DBIM_ACTUAL)
-    {
-        pdbi->ptActual.x = 200;
-        pdbi->ptActual.y = 30;
-    }
-
-    if (pdbi->dwMask & DBIM_TITLE)
-    {
-#define IDS_FAVORITES 47 // Borrowed from shell32.dll
-        HINSTANCE hShell32 = LoadLibraryExW(L"shell32.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
-        if (hShell32)
-        {
-            LoadStringW(hShell32, IDS_FAVORITES, pdbi->wszTitle, _countof(pdbi->wszTitle));
-            FreeLibrary(hShell32);
-        }
-#undef IDS_FAVORITES
-    }
-
-    if (pdbi->dwMask & DBIM_MODEFLAGS)
-        pdbi->dwModeFlags = DBIMF_NORMAL | DBIMF_VARIABLEHEIGHT;
-
-    if (pdbi->dwMask & DBIM_BKCOLOR)
-        pdbi->dwMask &= ~DBIM_BKCOLOR;
+    m_hwndToolbar.SendMessage(TB_ADDBUTTONS, iButton, (LPARAM)&tbb);
 
     return S_OK;
 }
 
-// *** IObjectWithSite ***
-
-STDMETHODIMP CFavBand::SetSite(IUnknown *pUnkSite)
-{
-    HRESULT hr;
-
-    if (pUnkSite == m_pSite)
-        return S_OK;
-
-    TRACE("SetSite called\n");
-
-    if (!pUnkSite)
-    {
-        DestroyWindow();
-        m_hWnd = NULL;
-    }
-
-    if (pUnkSite != m_pSite)
-        m_pSite = NULL;
-
-    if (!pUnkSite)
-        return S_OK;
-
-    HWND hwndParent;
-    hr = IUnknown_GetWindow(pUnkSite, &hwndParent);
-    if (!SUCCEEDED(hr))
-    {
-        ERR("Could not get parent's window! 0x%08lX\n", hr);
-        return E_INVALIDARG;
-    }
-
-    m_pSite = pUnkSite;
-
-    if (m_hWnd)
-    {
-        SetParent(hwndParent); // Change its parent
-    }
-    else
-    {
-        this->Create(hwndParent, NULL, NULL, WS_CHILD | WS_VISIBLE, 0, (UINT)0, NULL);
-    }
-
-    return S_OK;
-}
-
-STDMETHODIMP CFavBand::GetSite(REFIID riid, void **ppvSite)
-{
-    if (!ppvSite)
-        return E_POINTER;
-    *ppvSite = m_pSite;
-    return S_OK;
-}
-
-// *** IOleCommandTarget ***
-
-STDMETHODIMP CFavBand::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds [], OLECMDTEXT *pCmdText)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP CFavBand::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-// *** IServiceProvider ***
-
-STDMETHODIMP CFavBand::QueryService(REFGUID guidService, REFIID riid, void **ppvObject)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-// *** IServiceProvider ***
-
-STDMETHODIMP CFavBand::QueryContextMenu(
-    HMENU hmenu,
-    UINT indexMenu,
-    UINT idCmdFirst,
-    UINT idCmdLast,
-    UINT uFlags)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP CFavBand::InvokeCommand(
-    LPCMINVOKECOMMANDINFO lpici)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP CFavBand::GetCommandString(
-    UINT_PTR idCmd,
-    UINT uType,
-    UINT *pwReserved,
-    LPSTR pszName,
-    UINT cchMax)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-// *** IInputObject ***
-
-STDMETHODIMP CFavBand::UIActivateIO(BOOL fActivate, LPMSG lpMsg)
-{
-    if (fActivate)
-    {
-        //SetFocus();
-        SetActiveWindow();
-    }
-
-    if (lpMsg)
-    {
-        TranslateMessage(lpMsg);
-        DispatchMessage(lpMsg);
-    }
-
-    return S_OK;
-}
-
-STDMETHODIMP CFavBand::HasFocusIO()
-{
-    return m_bFocused ? S_OK : S_FALSE;
-}
-
-STDMETHODIMP CFavBand::TranslateAcceleratorIO(LPMSG lpMsg)
-{
-    if (lpMsg->hwnd == m_hWnd)
-    {
-        TranslateMessage(lpMsg);
-        DispatchMessage(lpMsg);
-        return S_OK;
-    }
-
-    return S_FALSE;
-}
-
-// *** IPersist ***
-
-STDMETHODIMP CFavBand::GetClassID(CLSID *pClassID)
-{
-    if (!pClassID)
-        return E_POINTER;
-    *pClassID = CLSID_SH_FavBand;
-    return S_OK;
-}
-
-
-// *** IPersistStream ***
-
-STDMETHODIMP CFavBand::IsDirty()
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP CFavBand::Load(IStream *pStm)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP CFavBand::Save(IStream *pStm, BOOL fClearDirty)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP CFavBand::GetSizeMax(ULARGE_INTEGER *pcbSize)
-{
-    // TODO: calculate max size
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-// *** IWinEventHandler ***
-
-STDMETHODIMP CFavBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP CFavBand::IsWindowOwner(HWND hWnd)
-{
-    return (hWnd == m_hWnd) ? S_OK : S_FALSE;
-}
-
-// *** IBandNavigate ***
-
-STDMETHODIMP CFavBand::Select(long paramC)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-// *** INamespaceProxy ***
-
-/// Returns the ITEMIDLIST that should be navigated when an item is invoked.
-STDMETHODIMP CFavBand::GetNavigateTarget(
-    _In_ PCIDLIST_ABSOLUTE pidl,
-    _Out_ PIDLIST_ABSOLUTE ppidlTarget,
-    _Out_ ULONG *pulAttrib)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-/// Handles a user action on an item.
-STDMETHODIMP CFavBand::Invoke(_In_ PCIDLIST_ABSOLUTE pidl)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-/// Called when the user has selected an item.
+// Called when the user has selected an item.
 STDMETHODIMP CFavBand::OnSelectionChanged(_In_ PCIDLIST_ABSOLUTE pidl)
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
+    CComHeapPtr<ITEMIDLIST> pidlTarget;
+    DWORD attrs = SFGAO_FOLDER | SFGAO_LINK;
+    HRESULT hr = GetNavigateTarget(pidl, &pidlTarget, &attrs);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-/// Returns flags used to update the tree control.
-STDMETHODIMP CFavBand::RefreshFlags(
-    _Out_ DWORD *pdwStyle,
-    _Out_ DWORD *pdwExStyle,
-    _Out_ DWORD *dwEnum)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
+    if ((attrs & (SFGAO_FOLDER | SFGAO_LINK)) == (SFGAO_FOLDER | SFGAO_LINK))
+        return _UpdateBrowser(pidlTarget);
 
-STDMETHODIMP CFavBand::CacheItem(
-    _In_ PCIDLIST_ABSOLUTE pidl)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-// *** IDispatch ***
-
-STDMETHODIMP CFavBand::GetTypeInfoCount(UINT *pctinfo)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP CFavBand::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP CFavBand::GetIDsOfNames(
-    REFIID riid,
-    LPOLESTR *rgszNames,
-    UINT cNames,
-    LCID lcid,
-    DISPID *rgDispId)
-{
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP CFavBand::Invoke(
-    DISPID dispIdMember,
-    REFIID riid,
-    LCID lcid,
-    WORD wFlags,
-    DISPPARAMS *pDispParams,
-    VARIANT *pVarResult,
-    EXCEPINFO *pExcepInfo,
-    UINT *puArgErr)
-{
-    switch (dispIdMember)
+    if (attrs & SFGAO_FOLDER)
     {
-        case DISPID_DOWNLOADCOMPLETE:
-        case DISPID_NAVIGATECOMPLETE2:
-            // FIXME: Update current location
-            return S_OK;
+        HTREEITEM hItem = TreeView_GetSelection(m_hwndTreeView);
+        CItemData *pItemData = GetItemData(hItem);
+        if (pItemData && !pItemData->expanded)
+        {
+            _InsertSubitems(hItem, pItemData->absolutePidl);
+            pItemData->expanded = TRUE;
+        }
+        TreeView_Expand(m_hwndTreeView, hItem, TVE_EXPAND);
+        return S_OK;
     }
-    return E_INVALIDARG;
+
+    SHELLEXECUTEINFOW info = { sizeof(info) };
+    info.fMask = SEE_MASK_FLAG_NO_UI | SEE_MASK_IDLIST;
+    info.hwnd = m_hWnd;
+    info.nShow = SW_SHOWNORMAL;
+    info.lpIDList = pidlTarget;
+    ShellExecuteExW(&info);
+    return hr;
+}
+
+void CFavBand::_SortItems(HTREEITEM hParent)
+{
+    TreeView_SortChildren(m_hwndTreeView, hParent, 0); // Sort by name
+}
+
+HRESULT CFavBand::_CreateTreeView(HWND hwndParent)
+{
+    HRESULT hr = CNSCBand::_CreateTreeView(hwndParent);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    TreeView_SetItemHeight(m_hwndTreeView, 24);
+    _InsertSubitems(TVI_ROOT, m_pidlRoot);
+    return hr;
 }
