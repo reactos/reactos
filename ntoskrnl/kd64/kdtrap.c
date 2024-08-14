@@ -147,7 +147,7 @@ KdpTrap(IN PKTRAP_FRAME TrapFrame,
 
     /*
      * Check if we got a STATUS_BREAKPOINT with a SubID for Print, Prompt or
-     * Load/Unload symbols. Make sure it isn't a software breakpoints as those
+     * Load/Unload symbols. Make sure it isn't a software breakpoint as those
      * are handled by KdpReport.
      */
     if ((ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) &&

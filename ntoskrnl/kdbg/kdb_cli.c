@@ -3287,6 +3287,12 @@ KdbpCliMainLoop(
         }
         KdbpPrint("\n");
     }
+    else
+    {
+        /* Preceding this message is one of the "Entered debugger..." banners */
+        // KdbpPrint("\nEntered kernel debugger\n");
+        KdbpPrint("Type \"help\" for a list of commands.\n");
+    }
 
     /* Main loop */
     do
@@ -3332,12 +3338,17 @@ KdbpCliMainLoop(
     while (Continue);
 }
 
-/*!\brief This function is called by KdbEnterDebuggerException...
+/**
+ * @brief
+ * Interprets the KDBinit file from the SystemRoot\System32\drivers\etc
+ * directory, that has been loaded by KdbpCliInit().
  *
- * Used to interpret the init file in a context with a trapframe setup
- * (KdbpCliInit call KdbEnter which will call KdbEnterDebuggerException which will
- * call this function if KdbInitFileBuffer is not NULL.
- */
+ * This function is used to interpret the init file in the debugger context
+ * with a trap frame set up. KdbpCliInit() enters the debugger by calling
+ * DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C). In turn, this will call
+ * KdbEnterDebuggerException() which will finally call this function if
+ * KdbInitFileBuffer is not NULL.
+ **/
 VOID
 KdbpCliInterpretInitFile(VOID)
 {
@@ -3345,8 +3356,11 @@ KdbpCliInterpretInitFile(VOID)
     INT_PTR i;
     CHAR c;
 
+    if (!KdbInitFileBuffer)
+        return;
+
     /* Execute the commands in the init file */
-    DPRINT("KDB: Executing KDBinit file...\n");
+    KdpDprintf("KDB: Executing KDBinit file...\n");
     p1 = KdbInitFileBuffer;
     while (p1[0] != '\0')
     {
@@ -3365,8 +3379,8 @@ KdbpCliInterpretInitFile(VOID)
             if (strncmp(p2, "break", sizeof("break")-1) == 0 &&
                 (p2[sizeof("break")-1] == '\0' || isspace(p2[sizeof("break")-1])))
             {
-                /* break into the debugger */
-                KdbpCliMainLoop(FALSE);
+                /* Break into the debugger */
+                KdbpCliMainLoop(FALSE); // KdbpInternalEnter();
             }
             else if (p2[0] != '#' && p2[0] != '\0') /* Ignore empty lines and comments */
             {
@@ -3380,14 +3394,15 @@ KdbpCliInterpretInitFile(VOID)
         while (p1[0] == '\r' || p1[0] == '\n')
             p1++;
     }
-    DPRINT("KDB: KDBinit executed\n");
+    KdpDprintf("KDB: KDBinit executed\n");
+    KdbInitFileBuffer = NULL;
 }
 
 /**
  * @brief   Called when KDB is initialized.
  *
  * Reads the KDBinit file from the SystemRoot\System32\drivers\etc directory
- * and executes it.
+ * and executes it, by calling back into the debugger.
  **/
 NTSTATUS
 KdbpCliInit(VOID)
@@ -3400,7 +3415,6 @@ KdbpCliInit(VOID)
     HANDLE hFile = NULL;
     INT FileSize;
     PCHAR FileBuffer;
-    ULONG OldEflags;
 
     /* Don't load the KDBinit file if its buffer is already lying around */
     if (KdbInitFileBuffer)
@@ -3460,17 +3474,10 @@ KdbpCliInit(VOID)
     FileSize = min(FileSize, (INT)Iosb.Information);
     FileBuffer[FileSize] = '\0';
 
-    /* Enter critical section */
-    OldEflags = __readeflags();
-    _disable();
-
-    /* Interpret the init file... */
+    /* Interpret the init file by calling back into the debugger */
     KdbInitFileBuffer = FileBuffer;
-    //KdbEnter(); // FIXME, see commit baa47fa5e
+    DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
     KdbInitFileBuffer = NULL;
-
-    /* Leave critical section */
-    __writeeflags(OldEflags);
 
     ExFreePool(FileBuffer);
 
