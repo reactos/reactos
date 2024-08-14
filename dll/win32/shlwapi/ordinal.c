@@ -62,7 +62,7 @@ extern DWORD SHLWAPI_ThreadRef_index;
 
 HRESULT WINAPI IUnknown_QueryService(IUnknown*,REFGUID,REFIID,LPVOID*);
 #ifdef __REACTOS__
-HRESULT WINAPI SHInvokeCommand(HWND, IShellFolder*, LPCITEMIDLIST, LPCSTR);
+HRESULT WINAPI SHInvokeCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST lpApidl, LPCSTR lpVerb);
 #else
 HRESULT WINAPI SHInvokeCommand(HWND,IShellFolder*,LPCITEMIDLIST,DWORD);
 #endif

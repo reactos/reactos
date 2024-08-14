@@ -33,6 +33,10 @@
 
 #include <strsafe.h>
 
+#ifndef FAILED_UNEXPECTEDLY
+#define FAILED_UNEXPECTEDLY FAILED /* FIXME: Make shellutils.h usable without ATL */
+#endif
+
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 static inline WORD 
@@ -100,7 +104,7 @@ SHInvokeCommandOnContextMenuInternal(
 
     SetCursor(hOldCursor);
 
-    if (SUCCEEDED(hr) && (iDefItem != -1 || info.lpVerb))
+    if (!FAILED_UNEXPECTEDLY(hr) && (iDefItem != -1 || info.lpVerb))
     {
         if (!hWnd)
             info.fMask |= CMIC_MASK_FLAG_NO_UI;
@@ -115,6 +119,7 @@ SHInvokeCommandOnContextMenuInternal(
         }
 
         hr = pCM->InvokeCommand((LPCMINVOKECOMMANDINFO)&info);
+        if (FAILED_UNEXPECTEDLY(hr)) { /* Diagnostic message */ }
     }
 
     if (pUnk)
@@ -202,7 +207,7 @@ IContextMenu_Invoke(
     TRACE("(%p, %p, %s, %u)\n", pContextMenu, hwnd, debugstr_a(lpVerb), uFlags);
     HRESULT hr = SHInvokeCommandOnContextMenuInternal(hwnd, NULL, pContextMenu, 0,
                                                       uFlags, lpVerb, NULL, false);
-    return SUCCEEDED(hr);
+    return !FAILED_UNEXPECTEDLY(hr);
 }
 
 /*************************************************************************
