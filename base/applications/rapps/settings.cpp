@@ -109,7 +109,7 @@ class SettingsFieldString : public SettingsField
     LPCWSTR m_RegName;     // key name in registery
 };
 
-void
+static void
 AddInfoFields(ATL::CAtlList<SettingsField *> &infoFields, SETTINGS_INFO &settings)
 {
     infoFields.AddTail(new SettingsFieldBool(&(settings.bSaveWndPos), L"bSaveWndPos"));
@@ -127,11 +127,9 @@ AddInfoFields(ATL::CAtlList<SettingsField *> &infoFields, SETTINGS_INFO &setting
     infoFields.AddTail(new SettingsFieldString((settings.szNoProxyFor), MAX_PATH, L"NoProxyFor"));
     infoFields.AddTail(new SettingsFieldBool(&(settings.bUseSource), L"bUseSource"));
     infoFields.AddTail(new SettingsFieldString((settings.szSourceURL), INTERNET_MAX_URL_LENGTH, L"SourceURL"));
-
-    return;
 }
 
-BOOL
+static BOOL
 SaveAllSettings(CRegKey &key, SETTINGS_INFO &settings)
 {
     BOOL bAllSuccess = TRUE;
@@ -153,10 +151,10 @@ SaveAllSettings(CRegKey &key, SETTINGS_INFO &settings)
     return bAllSuccess;
 }
 
-BOOL
+static BOOL
 LoadAllSettings(CRegKey &key, SETTINGS_INFO &settings)
 {
-    BOOL bAllSuccess = TRUE;
+    BOOL bLoadedAny = FALSE;
     ATL::CAtlList<SettingsField *> infoFields;
 
     AddInfoFields(infoFields, settings);
@@ -165,27 +163,18 @@ LoadAllSettings(CRegKey &key, SETTINGS_INFO &settings)
     while (InfoListPosition)
     {
         SettingsField *Info = infoFields.GetNext(InfoListPosition);
-        if (!Info->Load(key))
-        {
-            bAllSuccess = FALSE;
-            // TODO: error log
-        }
+        if (Info->Load(key))
+            bLoadedAny = TRUE;
+        //else
+        //  TODO: error log
         delete Info;
     }
-    return bAllSuccess;
+    return bLoadedAny;
 }
 
-VOID
-FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
+static void
+GetDefaultDownloadDirectory(CStringW &szDownloadDir)
 {
-    CStringW szDownloadDir;
-    ZeroMemory(pSettingsInfo, sizeof(SETTINGS_INFO));
-
-    pSettingsInfo->bSaveWndPos = TRUE;
-    pSettingsInfo->bUpdateAtStart = FALSE;
-    pSettingsInfo->bLogEnabled = TRUE;
-    pSettingsInfo->bUseSource = FALSE;
-
     if (FAILED(SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, szDownloadDir.GetBuffer(MAX_PATH))))
     {
         szDownloadDir.ReleaseBuffer();
@@ -201,29 +190,56 @@ FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
 
     PathAppendW(szDownloadDir.GetBuffer(MAX_PATH), L"\\RAPPS Downloads");
     szDownloadDir.ReleaseBuffer();
+}
 
-    CStringW::CopyChars(
-        pSettingsInfo->szDownloadDir, _countof(pSettingsInfo->szDownloadDir), szDownloadDir.GetString(),
-        szDownloadDir.GetLength() + 1);
+static VOID
+ValidateStringSettings(PSETTINGS_INFO pSettingsInfo)
+{
+    if (!pSettingsInfo->szDownloadDir[0])
+    {
+        CStringW szDownloadDir;
+        GetDefaultDownloadDirectory(szDownloadDir);
 
+        CStringW::CopyChars(pSettingsInfo->szDownloadDir, _countof(pSettingsInfo->szDownloadDir),
+                            szDownloadDir.GetString(), szDownloadDir.GetLength() + 1);
+
+    }
+}
+
+VOID
+FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
+{
+    ZeroMemory(pSettingsInfo, sizeof(SETTINGS_INFO));
+
+    pSettingsInfo->bSaveWndPos = TRUE;
+    pSettingsInfo->bUpdateAtStart = FALSE;
+    pSettingsInfo->bLogEnabled = TRUE;
+    pSettingsInfo->bUseSource = FALSE;
     pSettingsInfo->bDelInstaller = FALSE;
     pSettingsInfo->Maximized = FALSE;
     pSettingsInfo->Left = CW_USEDEFAULT;
     pSettingsInfo->Top = CW_USEDEFAULT;
     pSettingsInfo->Width = 680;
     pSettingsInfo->Height = 450;
+
+    ValidateStringSettings(pSettingsInfo);
 }
 
 BOOL
 LoadSettings(PSETTINGS_INFO pSettingsInfo)
 {
+    BOOL bResult = FALSE;
+
+    FillDefaultSettings(pSettingsInfo);
+
     ATL::CRegKey RegKey;
-    if (RegKey.Open(HKEY_CURRENT_USER, L"Software\\ReactOS\\" RAPPS_NAME, KEY_READ) != ERROR_SUCCESS)
+    if (RegKey.Open(HKEY_CURRENT_USER, L"Software\\ReactOS\\" RAPPS_NAME, KEY_READ) == ERROR_SUCCESS)
     {
-        return FALSE;
+        bResult = LoadAllSettings(RegKey, *pSettingsInfo);
     }
 
-    return LoadAllSettings(RegKey, *pSettingsInfo);
+    ValidateStringSettings(pSettingsInfo); // Handles the case where a REG_SZ is present but empty
+    return bResult;
 }
 
 BOOL
