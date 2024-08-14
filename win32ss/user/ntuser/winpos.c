@@ -1814,6 +1814,7 @@ co_WinPosSetWindowPos(
    RECTL CopyRect;
    PWND Ancestor;
    BOOL bPointerInWindow, PosChanged = FALSE;
+   BOOL fullRedraw = FALSE;
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
 
    ASSERT_REFS_CO(Window);
@@ -1936,6 +1937,11 @@ co_WinPosSetWindowPos(
 //      valid_rects[0].left,valid_rects[0].top,valid_rects[0].right,valid_rects[0].bottom,
 //      valid_rects[1].left,valid_rects[1].top,valid_rects[1].right,valid_rects[1].bottom);
 
+   if (WvrFlags & (WVR_HREDRAW | WVR_VREDRAW))
+   {
+       fullRedraw = TRUE;
+   }
+
    /* Validate link windows. (also take into account shell window in hwndShellWindow) */
    if (!(WinPos.flags & SWP_NOZORDER) && WinPos.hwnd != UserGetShellWindow())
    {
@@ -2048,7 +2054,7 @@ co_WinPosSetWindowPos(
        * change.
        */
       if ( ( VisBefore != NULL &&
-             VisAfter != NULL &&
+             VisAfter != NULL && !fullRedraw &&
             !(WinPos.flags & SWP_NOCOPYBITS) &&
             ((WinPos.flags & SWP_NOSIZE) || !(WvrFlags & WVR_REDRAW)) &&
             !(Window->ExStyle & WS_EX_TRANSPARENT) ) )
