@@ -168,6 +168,6 @@ BEGIN
     IDS_REMOVE_TITLE "Conferma la rimozione della combinazione dei cursori"
     IDS_REMOVE_TEXT "Confermate di voler rimuovere la combinazione dei cursori '%s'?"
     IDS_OVERWRITE_TITLE "Sovrascrivvere combinazione dei cursori"
-    IDS_OVERWRITE_TEXT "Il nome della combinazione dei cursori è già in uso. Volere sovrascrivere quello esistente?"
+    IDS_OVERWRITE_TEXT "Il nome della combinazione dei cursori è già in uso. Si vuole sovrascrivere quello esistente?"
     IDS_ANIMATE_CURSOR "Cursori animati"
 END
