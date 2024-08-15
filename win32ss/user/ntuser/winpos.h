@@ -81,7 +81,7 @@ VOID FASTCALL IntSetSnapInfo(PWND Wnd, UINT Edge, IN const RECT *Pos OPTIONAL);
 FORCEINLINE VOID
 co_IntUnsnapWindow(PWND Wnd)
 {
-    co_IntSnapWindow(Wnd, 0);
+    co_IntSnapWindow(Wnd, HTNOWHERE);
 }
 
 FORCEINLINE BOOLEAN
