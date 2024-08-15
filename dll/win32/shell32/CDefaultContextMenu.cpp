@@ -876,7 +876,7 @@ CDefaultContextMenu::QueryContextMenu(
             return MAKE_HRESULT(SEVERITY_SUCCESS, 0, cIds);
 
         /* Add the default part of the menu */
-        HMENU hmenuDefault = LoadMenu(_AtlBaseModule.GetResourceInstance(), L"MENU_SHV_FILE");
+        HMENU hmenuDefault = LoadMenuW(_AtlBaseModule.GetResourceInstance(), L"MENU_SHV_FILE");
 
         /* Remove uneeded entries */
         if (!(rfg & SFGAO_CANMOVE))
@@ -1259,6 +1259,13 @@ CDefaultContextMenu::BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFOEX lpcmi, PStatic
         FlagsName = L"ExplorerFlags";
     else
         FlagsName = L"BrowserFlags";
+
+    CComPtr<ICommDlgBrowser> pcdb;
+    if (SUCCEEDED(psb->QueryInterface(IID_PPV_ARG(ICommDlgBrowser, &pcdb))))
+    {
+        if (LOBYTE(GetVersion()) < 6 || FlagsName[0] == 'E')
+            return 0; // Don't browse in-place
+    }
 
     /* Try to get the flag from the verb */
     hr = StringCbPrintfW(wszKey, sizeof(wszKey), L"shell\\%s", pEntry->Verb.GetString());
