@@ -18,7 +18,7 @@ EDITMENU MENU
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Undo", EM_UNDO
+        MENUITEM "&Annulla", EM_UNDO
         MENUITEM SEPARATOR
         MENUITEM "&Taglia", WM_CUT
         MENUITEM "&Copia", WM_COPY
@@ -59,7 +59,7 @@ STRINGTABLE
 BEGIN
     IDS_ERROR "Errore"
     IDS_NOT_RESPONDING " (Not Responding)"
-    IDS_ASK_TERMINATE "This application is not responding. Do you want to terminate it?"
+    IDS_ASK_TERMINATE "Questa applicazione non risponde. Terminare il processo?"
     IDS_HUNG_UP_TITLE "Hung up!"
     IDS_OK "OK"
     IDS_CANCEL "Annulla"

@@ -39,14 +39,18 @@ void Test_MaskBlt_1bpp()
     pjBitsDst[0] = 0xAA;
     pjBitsSrc[0] = 0xCC;
     pjBitsMsk[0] = 0xF0;
+    SetLastError(0xDEADBEEF);
     ret = MaskBlt(hdcDst, 0, 0, 8, 1, hdcSrc, 0, 0, hbmMsk, 0, 0, MAKEROP4(SRCCOPY, 0xAA0000));
+    ok_err(0xDEADBEEF);
     ok(ret == 1, "MaskBlt failed (%d)\n", ret);
     ok(pjBitsDst[0] == 0xCA, "pjBitsDst[0] == 0x%x\n", pjBitsDst[0]);
 
     pjBitsDst[0] = 0x00;
     pjBitsSrc[0] = 0xFF;
     pjBitsMsk[0] = 0xF0;
+    SetLastError(0xDEADBEEF);
     ret = MaskBlt(hdcDst, 0, 0, 8, 1, hdcSrc, 0, 0, hbmMsk, 0, 0, MAKEROP4(SRCCOPY, 0xAA0000));
+    ok_err(0xDEADBEEF);
     ok(ret == 1, "MaskBlt failed (%d)\n", ret);
     ok(pjBitsDst[0] == 0xF0, "pjBitsDst[0] == 0x%x\n", pjBitsDst[0]);
 
@@ -55,7 +59,9 @@ void Test_MaskBlt_1bpp()
     pjBitsSrc[0] = 0xCC; // 11001100
     pjBitsMsk[0] = 0xAA; // 10101010
 
+    SetLastError(0xDEADBEEF);
     ret = MaskBlt(hdcDst, 0, 0, 8, 1, hdcSrc, 0, 0, hbmMsk, 0, 0, MAKEROP4(NOTSRCERASE, SRCINVERT)); // 22
+    ok_err(0xDEADBEEF);
     ok(ret == 1, "MaskBlt failed (%d)\n", ret);
     ok(pjBitsDst[0] == 0x16, "pjBitsDst[0] == 0x%x\n", pjBitsDst[0]);
 
@@ -63,32 +69,43 @@ void Test_MaskBlt_1bpp()
     pjBitsDst[0] = 0xF0;
     pjBitsSrc[0] = 0xCC;
     pjBitsMsk[0] = 0xAA;
+    SetLastError(0xDEADBEEF);
     ret = MaskBlt(hdcDst, 0, 0, 8, 1, hdcSrc, 0, 0, hbmMsk, 0, 0, MAKEROP4(MERGEPAINT, 0x990000));
+    ok_err(0xDEADBEEF);
     ok(ret == 1, "MaskBlt failed (%d)\n", ret);
     ok(pjBitsDst[0] == 0xE3, "pjBitsDst[0] == 0x%x\n", pjBitsDst[0]);
 
     /* Try a ROP that needs a mask with a NULL mask bitmap handle */
+    SetLastError(0xDEADBEEF);
     ret = MaskBlt(hdcDst, 0, 0, 8, 1, hdcSrc, 0, 0, NULL, 0, 0, MAKEROP4(SRCCOPY, 0xAA0000));
+    ok_err(0xDEADBEEF);
     ok(ret == 1, "MaskBlt failed (%d)\n", ret);
     ok(pjBitsDst[0] == 0xCC, "pjBitsDst[0] == 0x%x\n", pjBitsDst[0]);
 
     /* Try a ROP that needs a mask with an invalid mask bitmap handle */
+    SetLastError(0xDEADBEEF);
     ret = MaskBlt(hdcDst, 0, 0, 8, 1, hdcSrc, 0, 0, (HBITMAP)0x123456, 0, 0, MAKEROP4(SRCCOPY, 0xAA0000));
+    ok_err(ERROR_INVALID_HANDLE);
     ok(ret == 0, "MaskBlt should fail, but succeeded (%d)\n", ret);
 
     /* Try a ROP that needs a mask with an invalid mask bitmap */
     ok(ghbmp24 != NULL, "ghbmp24 is NULL!\n");
+    SetLastError(0xDEADBEEF);
     ret = MaskBlt(hdcDst, 0, 0, 8, 1, hdcSrc, 0, 0, ghbmp24, 0, 0, MAKEROP4(SRCCOPY, 0xAA0000));
+    ok_err(ERROR_INVALID_HANDLE);
     ok(ret == 0, "MaskBlt should fail, but succeeded (%d)\n", ret);
 
     /* Try a ROP that needs no mask with an invalid mask bitmap */
+    SetLastError(0xDEADBEEF);
     ret = MaskBlt(hdcDst, 0, 0, 8, 1, hdcSrc, 0, 0, (HBITMAP)0x123456, 0, 0, MAKEROP4(SRCCOPY, SRCCOPY));
+    ok_err(0xDEADBEEF);
     ok(ret == 1, "MaskBlt failed (%d)\n", ret);
 
     /* Try (PATCOPY / NOOP) with a NULL source mask and bitmap */
+    SetLastError(0xDEADBEEF);
     ret = MaskBlt(hdcDst, 0, 0, 8, 1, NULL, 0, 0, NULL, 0, 0, MAKEROP4(PATCOPY, 0xAA0000));
+    ok_err(0xDEADBEEF);
     ok(ret == 0, "MaskBlt should fail, but succeeded (%d)\n", ret);
-
 
     /* Try with a mask that is smaller than the rect */
     DeleteObject(hbmMsk);
@@ -99,16 +116,27 @@ void Test_MaskBlt_1bpp()
     pjBitsDst[0] = 0xAA; // 10101010
     pjBitsSrc[0] = 0xCC; // 11001100
     pjBitsMsk[0] = 0x33; // 00110011
+
+    SetLastError(0xDEADBEEF);
     ret = MaskBlt(hdcDst, 0, 0, 5, 1, hdcSrc, 0, 0, hbmMsk, 0, 0, MAKEROP4(SRCCOPY, 0xAA0000));
+    ok_err(ERROR_INVALID_PARAMETER);
     ok(ret == 0, "MaskBlt should fail, but succeeded (%d)\n", ret);
+
+    SetLastError(0xDEADBEEF);
     ret = MaskBlt(hdcDst, 0, 0, 4, 1, hdcSrc, 0, 0, hbmMsk, 1, 0, MAKEROP4(SRCCOPY, 0xAA0000));
+    ok_err(ERROR_INVALID_PARAMETER);
     ok(ret == 0, "MaskBlt should fail, but succeeded (%d)\n", ret);
+
+    SetLastError(0xDEADBEEF);
     ret = MaskBlt(hdcDst, 0, 0, 4, 1, hdcSrc, 0, 0, hbmMsk, 0, 1, MAKEROP4(SRCCOPY, 0xAA0000));
+    ok_err(ERROR_INVALID_PARAMETER);
     ok(ret == 0, "MaskBlt should fail, but succeeded (%d)\n", ret);
+
+    SetLastError(0xDEADBEEF);
     ret = MaskBlt(hdcDst, 0, 0, 4, 1, hdcSrc, 0, 0, hbmMsk, 0, 0, MAKEROP4(SRCCOPY, 0xAA0000));
+    ok_err(0xDEADBEEF);
     ok(ret == 1, "MaskBlt failed (%d)\n", ret);
     ok(pjBitsDst[0] == 0x8A, "pjBitsDst[0] == 0x%x\n", pjBitsDst[0]);
-
 }
 
 void Test_MaskBlt_16bpp()
@@ -142,14 +170,18 @@ void Test_MaskBlt_16bpp()
     pusBitsSrc[0] = 0x4321;
     pusBitsSrc[1] = 0x8765;
     pjBitsMsk[0] = 0x80;
+    SetLastError(0xDEADBEEF);
     ret = MaskBlt(hdcDst, 0, 0, 8, 1, hdcSrc, 0, 0, hbmMsk, 0, 0, MAKEROP4(SRCCOPY, 0xAA0000));
+    ok_err(0xDEADBEEF);
     ok(ret == 1, "MaskBlt failed (%d)\n", ret);
     ok (pusBitsDst[0] == 0x4321, "pusBitsDst[0] == 0x%x\n", pusBitsDst[0]);
     ok (pusBitsDst[1] == 0x5678, "pusBitsDst[0] == 0x%x\n", pusBitsDst[1]);
 
     pusBitsDst[0] = 0x1234;
     pusBitsDst[1] = 0x5678;
+    SetLastError(0xDEADBEEF);
     ret = MaskBlt(hdcDst, 0, 0, 8, 1, hdcSrc, 0, 0, hbmMsk, 0, 0, MAKEROP4(SRCPAINT, MERGEPAINT));
+    ok_err(0xDEADBEEF);
     ok(ret == 1, "MaskBlt failed (%d)\n", ret);
     ok (pusBitsDst[0] == 0x5335, "pusBitsDst[0] == 0x%x\n", pusBitsDst[0]);
     ok (pusBitsDst[1] == 0x7efa, "pusBitsDst[0] == 0x%x\n", pusBitsDst[1]);
@@ -186,14 +218,18 @@ void Test_MaskBlt_32bpp()
     pulBitsSrc[0] = 0x87684321;
     pulBitsSrc[1] = 0x0fedcba9;
     pjBitsMsk[0] = 0x80;
+    SetLastError(0xDEADBEEF);
     ret = MaskBlt(hdcDst, 0, 0, 8, 1, hdcSrc, 0, 0, hbmMsk, 0, 0, MAKEROP4(SRCCOPY, 0xAA0000));
+    ok_err(0xDEADBEEF);
     ok(ret == 1, "MaskBlt failed (%d)\n", ret);
     ok (pulBitsDst[0] == 0x87684321, "pulBitsDst[0] == 0x%lx\n", pulBitsDst[0]);
     ok (pulBitsDst[1] == 0x9abcdef0, "pulBitsDst[0] == 0x%lx\n", pulBitsDst[1]);
 
     pulBitsDst[0] = 0x12345678;
     pulBitsDst[1] = 0x9abcdef0;
+    SetLastError(0xDEADBEEF);
     ret = MaskBlt(hdcDst, 0, 0, 8, 1, hdcSrc, 0, 0, hbmMsk, 0, 0, MAKEROP4(SRCPAINT, MERGEPAINT));
+    ok_err(0xDEADBEEF);
     ok(ret == 1, "MaskBlt failed (%d)\n", ret);
     ok (pulBitsDst[0] == 0x977c5779, "pulBitsDst[0] == 0x%lx\n", pulBitsDst[0]);
     ok (pulBitsDst[1] == 0xfabefef6, "pulBitsDst[0] == 0x%lx\n", pulBitsDst[1]);
@@ -230,7 +266,9 @@ void Test_MaskBlt_Brush()
     /* Do the masking (SRCCOPY / NOOP) */
     pulBitsDst[0] = 0x00000000;
     pulBitsSrc[0] = 0xFFFFFFFF;
+    SetLastError(0xDEADBEEF);
     ret = MaskBlt(hdcDst, 0, 0, 8, 1, hdcSrc, 0, 0, NULL, 0, 0, MAKEROP4(SRCCOPY, 0xAA0000));
+    ok_err(0xDEADBEEF);
     ok(ret == 1, "MaskBlt failed (%d)\n", ret);
     ok(pulBitsDst[0] == 0, "pulBitsDst[0] == 0x%lx\n", pulBitsDst[0]);
 
@@ -246,10 +284,11 @@ void Test_MaskBlt_Brush()
     pulBitsDst[0] = 0x00000000;
     pulBitsSrc[0] = 0xFFFFFFFF;
     pulBitsMsk[0] = 0xCCAAFF00;
+    SetLastError(0xDEADBEEF);
     ret = MaskBlt(hdcDst, 0, 0, 16, 1, hdcSrc, 0, 0, NULL, 0, 0, MAKEROP4(SRCCOPY, 0xAA0000));
+    ok_err(0xDEADBEEF);
     ok(ret == 1, "MaskBlt failed (%d)\n", ret);
     ok(pulBitsDst[0] == 0, "pulBitsDst[0] == 0x%lx\n", pulBitsDst[0]);
-
 }
 
 START_TEST(MaskBlt)
@@ -259,6 +298,4 @@ START_TEST(MaskBlt)
     Test_MaskBlt_16bpp();
     Test_MaskBlt_32bpp();
     Test_MaskBlt_Brush();
-
 }
-

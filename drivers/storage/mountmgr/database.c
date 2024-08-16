@@ -1641,12 +1641,12 @@ ReconcileThisDatabaseWithMaster(IN PDEVICE_EXTENSION DeviceExtension,
     WorkItem->DeviceInformation = DeviceInformation;
     QueueWorkItem(DeviceExtension, WorkItem, &(WorkItem->DeviceExtension));
 
-    /* If there's no automount, and automatic letters
-     * all volumes to find those online and notify there presence
-     */
+    /* If the worker thread isn't started yet, automatic drive letter is
+     * enabled but automount disabled, manually set mounted volumes online.
+     * Otherwise, they will be set online during database reconciliation. */
     if (DeviceExtension->WorkerThreadStatus == 0 &&
-        DeviceExtension->AutomaticDriveLetter == 1 &&
-        DeviceExtension->NoAutoMount == FALSE)
+        DeviceExtension->AutomaticDriveLetter &&
+        DeviceExtension->NoAutoMount)
     {
         OnlineMountedVolumes(DeviceExtension, DeviceInformation);
     }

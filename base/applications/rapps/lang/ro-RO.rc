@@ -19,7 +19,7 @@ BEGIN
     END
     POPUP "&Programe"
     BEGIN
-        MENUITEM "Instalea&ză\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Instalează\tCtrl+Enter", ID_INSTALL
         MENUITEM "&Dezinstalează\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modifică", ID_MODIFY
         MENUITEM SEPARATOR
@@ -27,7 +27,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Împ&rospătează\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "&Actualizează baza de date\tCtrl+F5", ID_RESETDB
+        MENUITEM "Actualizează &baza de date\tCtrl+F5", ID_RESETDB
     END
     POPUP "Aj&utor"
     BEGIN
@@ -38,7 +38,7 @@ END
 
 IDR_LINKMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "&Deschide în navigator", ID_OPEN_LINK
         MENUITEM "&Copiază în memorie", ID_COPY_LINK
@@ -47,9 +47,9 @@ END
 
 IDR_APPLICATIONMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
-        MENUITEM "Instalea&ză\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Instalează\tCtrl+Enter", ID_INSTALL
         MENUITEM "&Dezinstalează\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modifică", ID_MODIFY
         MENUITEM SEPARATOR
@@ -57,7 +57,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Împ&rospătează\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "&Actualizează baza de date\tCtrl+F5", ID_RESETDB
+        MENUITEM "Actualizează &baza de date\tCtrl+F5", ID_RESETDB
     END
 END
 
@@ -76,19 +76,19 @@ BEGIN
     PUSHBUTTON "Spe&cificare…", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "Șt&erge aplicația de instalare după instalarea programului", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
     GROUPBOX "Sursa programului", -1, 4, 118, 240, 46
-    CONTROL "Folosește valorile implicite", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 121, 10
-    CONTROL "Sursa specificată", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
+    AUTORADIOBUTTON "Folosește valorile implicite", IDC_SOURCE_DEFAULT, 15, 132, 121, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Sursa specificată", IDC_USE_SOURCE, 15, 147, 74, 10
     EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
     GROUPBOX "Mandatar", -1, 4, 166, 240, 76
-    CONTROL "Configur&ația mandatar din sistem", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 180, 210, 10
-    CONTROL "Di&rect (fără mandatar)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 195, 210, 10
-    CONTROL "Man&datar", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 210, 74, 10
+    AUTORADIOBUTTON "Configur&ația mandatar din sistem", IDC_PROXY_DEFAULT, 15, 180, 210, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Di&rect (fără mandatar)", IDC_NO_PROXY, 15, 195, 210, 10
+    AUTORADIOBUTTON "Man&datar", IDC_USE_PROXY, 15, 210, 74, 10
     EDITTEXT IDC_PROXY_SERVER, 90, 210, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     LTEXT "excepție pentru", -1, 26, 226, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 225, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    PUSHBUTTON "I&mplicite", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14
-    DEFPUSHBUTTON "Con&firmă", IDOK, 116, 245, 60, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 181, 245, 60, 14
+    PUSHBUTTON "I&mplicite", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "Confirmă", IDOK, 116, 245, 60, 14
+    PUSHBUTTON "Anulează", IDCANCEL, 181, 245, 60, 14
 END
 
 IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
@@ -99,8 +99,8 @@ BEGIN
     LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
     AUTORADIOBUTTON "Instalea&ză de pe un disc (CD sau DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "&Descarcă și instalează", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
-    DEFPUSHBUTTON "Con&firmă", IDOK, 86, 78, 60, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 150, 78, 60, 14
+    DEFPUSHBUTTON "Confirmă", IDOK, 86, 78, 60, 14
+    PUSHBUTTON "Anulează", IDCANCEL, 150, 78, 60, 14
 END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
@@ -108,9 +108,9 @@ STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 CAPTION "În curs de descărcare %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
+    CONTROL "", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
     EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
-    PUSHBUTTON "A&nulează", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Anulează", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
 END
 
 STRINGTABLE

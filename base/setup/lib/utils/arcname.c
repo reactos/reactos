@@ -702,9 +702,6 @@ ResolveArcNameManually(
     BOOLEAN UseSignature;
     SIZE_T NameLength;
 
-    PDISKENTRY DiskEntry;
-    PPARTENTRY PartEntry = NULL;
-
     if (NtName->MaximumLength < sizeof(UNICODE_NULL))
         return STATUS_BUFFER_TOO_SMALL;
 
@@ -757,6 +754,9 @@ ResolveArcNameManually(
     else
     if (PeripheralType == RDiskPeripheral)
     {
+        PDISKENTRY DiskEntry;
+        PPARTENTRY PartEntry = NULL;
+
         if (UseSignature)
         {
             /* The disk signature is stored in AdapterKey */

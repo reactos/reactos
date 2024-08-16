@@ -1,3 +1,12 @@
+/*
+ * PROJECT:     ReactOS Power Configuration Applet
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Czech resource file
+ * TRANSLATORS: Copyright 2007 Kamil Horníček <kamil.hornicek@reactos.org>
+ *              Copyright 2009 Radek Liška (Black_Fox) <radekliska@gmail.com>
+ *              Copyright 2024 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
+ */
+
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 IDD_POWERSCHEMESPAGE_ACDC DIALOGEX 0, 0, 252, 220
@@ -121,13 +130,13 @@ END
 
 IDD_SAVEPOWERSCHEME DIALOGEX 0, 0, 190, 62
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Save Scheme"
+CAPTION "Uložit schéma"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Save this power scheme as:", -1, 7, 7, 180, 8
+    LTEXT "Uložit toto schéma napájení jako:", -1, 7, 7, 180, 8
     EDITTEXT IDC_SCHEMENAME, 7, 18, 176, 14, ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 79, 40, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 133, 40, 50, 14
+    PUSHBUTTON "Storno", IDCANCEL, 133, 40, 50, 14
 END
 
 STRINGTABLE
@@ -167,5 +176,5 @@ BEGIN
     IDS_TIMEOUT16 "Nikdy"
     IDS_DEL_SCHEME "Opravdu si přejete smazat toto schéma napájení: ""%s""?"
     IDS_DEL_SCHEME_TITLE "Smazat schéma"
-    IDS_DEL_SCHEME_ERROR "Unable to delete power scheme"
+    IDS_DEL_SCHEME_ERROR "Nepodařilo se smazat schéma napájení"
 END

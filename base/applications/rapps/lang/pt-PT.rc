@@ -13,17 +13,17 @@ BEGIN
     BEGIN
         MENUITEM "&Definições", ID_SETTINGS
         MENUITEM SEPARATOR
-        MENUITEM "Sa&ir", ID_EXIT
+        MENUITEM "&Sair", ID_EXIT
     END
     POPUP "&Programas"
     BEGIN
-        MENUITEM "I&nstalar\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Instalar\tCtrl+Enter", ID_INSTALL
         MENUITEM "&Desinstalar\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modificar", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Remover do Registo", ID_REGREMOVE
+        MENUITEM "R&emover do Registo", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Actualizar\tF5", ID_REFRESH
+        MENUITEM "Actualiza&r\tF5", ID_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "Actualizar &Base de dados\tCtrl+F5", ID_RESETDB
     END
@@ -36,24 +36,24 @@ END
 
 IDR_LINKMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
-        MENUITEM "A&brir endereço no navegador", ID_OPEN_LINK
+        MENUITEM "Abrir endereço n&o navegador", ID_OPEN_LINK
         MENUITEM "&Copiar endereço", ID_COPY_LINK
     END
 END
 
 IDR_APPLICATIONMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "&Instalar\tCtrl+Enter", ID_INSTALL
         MENUITEM "&Desinstalar\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modificar", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Remover do Registo", ID_REGREMOVE
+        MENUITEM "R&emover do Registo", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Actualizar\tF5", ID_REFRESH
+        MENUITEM "Actualiza&r\tF5", ID_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "Actualizar &Base de dados\tCtrl+F5", ID_RESETDB
     END
@@ -72,19 +72,19 @@ BEGIN
     LTEXT "Pasta de download:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "&Seleccionar", IDC_CHOOSE, 187, 85, 50, 14
-    AUTOCHECKBOX "&Apagar instalador após a instalação do programa", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+    AUTOCHECKBOX "Apagar instala&dor após a instalação do programa", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
     GROUPBOX "Origem do Software", -1, 4, 118, 240, 46
-    CONTROL "Utilizar predefinição", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
-    CONTROL "Origem especificada", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
+    AUTORADIOBUTTON "Utilizar predefinição", IDC_SOURCE_DEFAULT, 15, 132, 74, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Origem especificada", IDC_USE_SOURCE, 15, 147, 74, 10
     EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
     GROUPBOX "Proxy", -1, 4, 166, 240, 76
-    CONTROL "Configurações de proxy do sistema", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 180, 210, 10
-    CONTROL "Directo (Sem proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 195, 210, 10
-    CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 210, 74, 10
+    AUTORADIOBUTTON "Configurações de proxy do sistema", IDC_PROXY_DEFAULT, 15, 180, 210, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Directo (Sem proxy)", IDC_NO_PROXY, 15, 195, 210, 10
+    AUTORADIOBUTTON "Proxy", IDC_USE_PROXY, 15, 210, 74, 10
     EDITTEXT IDC_PROXY_SERVER, 90, 210, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     LTEXT "Sem proxy para", -1, 26, 226, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 225, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    PUSHBUTTON "Padrão", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14
+    PUSHBUTTON "Padrão", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 116, 245, 60, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 181, 245, 60, 14
 END
@@ -106,7 +106,7 @@ STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 CAPTION "A carregar %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
+    CONTROL "", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
     EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
     PUSHBUTTON "Cancelar", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
 END

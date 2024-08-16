@@ -27,51 +27,37 @@ typedef struct _DELETED_FILE_RECORD
 typedef interface IRecycleBin5 IRecycleBin5;
 EXTERN_C const IID IID_IRecycleBin5;
 
-typedef struct IRecycleBin5Vtbl
+#define INTERFACE IRecycleBin5
+DECLARE_INTERFACE_(IRecycleBin5, IUnknown)
 {
+    BEGIN_INTERFACE
+
+    /* IUnknown interface */
+    STDMETHOD(QueryInterface)(THIS_ IN REFIID riid, OUT void **ppvObject) PURE;
+    STDMETHOD_(ULONG, AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG, Release)(THIS) PURE;
+
     /* IRecycleBin interface */
-    HRESULT (STDMETHODCALLTYPE *QueryInterface)(
-        IN IRecycleBin5 *This,
-        IN REFIID riid,
-        OUT void **ppvObject);
-
-    ULONG (STDMETHODCALLTYPE *AddRef)(
-        IN IRecycleBin5 *This);
-
-    ULONG (STDMETHODCALLTYPE *Release)(
-        IN IRecycleBin5 *This);
-
-    HRESULT (STDMETHODCALLTYPE *DeleteFile)(
-        IN IRecycleBin5 *This,
-        IN LPCWSTR szFileName);
-
-    HRESULT (STDMETHODCALLTYPE *EmptyRecycleBin)(
-        IN IRecycleBin5 *This);
-
-    HRESULT (STDMETHODCALLTYPE *EnumObjects)(
-        IN IRecycleBin5 *This,
-        OUT IRecycleBinEnumList **ppEnumList);
+    STDMETHOD(DeleteFile)(THIS_ IN LPCWSTR szFileName) PURE;
+    STDMETHOD(EmptyRecycleBin)(THIS);
+    STDMETHOD(EnumObjects)(THIS_ OUT IRecycleBinEnumList **ppEnumList) PURE;
 
     /* IRecycleBin5 interface */
-    HRESULT (STDMETHODCALLTYPE *Delete)(
-        IN IRecycleBin5 *This,
+    STDMETHOD(Delete)(
+        THIS_
         IN LPCWSTR pDeletedFileName,
-        IN DELETED_FILE_RECORD *pDeletedFile);
-
-    HRESULT (STDMETHODCALLTYPE *Restore)(
-        IN IRecycleBin5 *This,
+        IN DELETED_FILE_RECORD *pDeletedFile) PURE;
+    STDMETHOD(Restore)(
+        THIS_
         IN LPCWSTR pDeletedFileName,
-        IN DELETED_FILE_RECORD *pDeletedFile);
+        IN DELETED_FILE_RECORD *pDeletedFile) PURE;
+    STDMETHOD(OnClosing)(
+        THIS_
+        IN IRecycleBinEnumList *prbel) PURE;
 
-    HRESULT (STDMETHODCALLTYPE *OnClosing)(
-        IN IRecycleBin5 *This,
-        IN IRecycleBinEnumList *prbel);
-} IRecycleBin5Vtbl;
-
-interface IRecycleBin5
-{
-    CONST_VTBL struct IRecycleBin5Vtbl *lpVtbl;
+    END_INTERFACE
 };
+#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IRecycleBin5_QueryInterface(This, riid, ppvObject) \
@@ -94,13 +80,14 @@ interface IRecycleBin5
     (This)->lpVtbl->OnClosing(This, prb5el)
 #endif
 
+EXTERN_C
 HRESULT
 RecycleBin5Enum_Constructor(
-    IN IRecycleBin5 *prb,
-    IN HANDLE hInfo,
-    IN HANDLE hInfoMapped,
-    IN LPCWSTR szPrefix,
-    OUT IUnknown **ppUnknown);
+    _In_ IRecycleBin5 *prb,
+    _In_ HANDLE hInfo,
+    _In_ HANDLE hInfoMapped,
+    _In_ LPCWSTR szPrefix,
+    _Out_ IUnknown **ppUnknown);
 
 #ifdef __cplusplus
 }

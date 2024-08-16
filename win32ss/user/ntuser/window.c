@@ -441,7 +441,7 @@ DWORD FASTCALL IntGetWindowContextHelpId( PWND pWnd )
 
    do
    {
-      HelpId = (DWORD)(DWORD_PTR)UserGetProp(pWnd, gpsi->atomContextHelpIdProp, TRUE);
+      HelpId = HandleToUlong(UserGetProp(pWnd, gpsi->atomContextHelpIdProp, TRUE));
       if (!HelpId) break;
       pWnd = IntGetParent(pWnd);
    }

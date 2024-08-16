@@ -910,7 +910,7 @@ co_MsqDispatchOneSentMessage(
    if (Message->HookMessage == MSQ_ISHOOK)
    {  // Direct Hook Call processor
       Result = co_CallHook( Message->Msg.message,           // HookId
-                           (INT)(INT_PTR)Message->Msg.hwnd, // Code
+                            HandleToLong(Message->Msg.hwnd), // Code
                             Message->Msg.wParam,
                             Message->Msg.lParam);
    }

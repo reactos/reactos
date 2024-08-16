@@ -807,7 +807,7 @@ IntGetNextKL(
     {
         pKL = (bNext ? pKL->pklNext : pKL->pklPrev);
 
-        if (!(pKL->dwKL_Flags & KLF_UNLOAD) && bSameLang == (LangID == LOWORD(pKL->hkl)))
+        if (!(pKL->dwKL_Flags & KL_UNLOAD) && bSameLang == (LangID == LOWORD(pKL->hkl)))
             return pKL;
     } while (pKL != pFirstKL);
 

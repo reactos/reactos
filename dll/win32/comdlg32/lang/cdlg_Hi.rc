@@ -300,8 +300,8 @@ FONT 8, "MS Shell Dlg"
  CHECKBOX "केवल &पूर्ण शब्द मिलाएं", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "&केस मिलाएँ", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
  GROUPBOX "दिशाओं", grp1, 147, 21, 58, 38
- CONTROL "&ऊपर", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 151, 30, 48, 12
- CONTROL "&नीचे", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 151, 44, 48, 12
+ AUTORADIOBUTTON "&ऊपर", rad1, 151, 30, 48, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
+ AUTORADIOBUTTON "&नीचे", rad2, 151, 44, 48, 12, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 
  DEFPUSHBUTTON "अगला &ढूंढो", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "रद्द करें", IDCANCEL	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
@@ -346,23 +346,23 @@ FONT 8, "MS Shell Dlg"
     COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "स्थिति:",        stc8,  16, 36,  47,10, SS_NOPREFIX
     LTEXT           "",               stc12, 65, 36, 120,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "प्रकार:",          stc7,  16, 48,  47,10, SS_NOPREFIX
+    LTEXT           "प्रकार:",        stc7,  16, 48,  47,10, SS_NOPREFIX
     LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "कहा:",         stc10, 16, 60,  47,10, SS_NOPREFIX
     LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "टिप्पणी:",       stc9,  16, 72,  47,10, SS_NOPREFIX
     LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
-    GROUPBOX        "प्रतियां",         grp2, 160, 92, 120,64, WS_GROUP
+    GROUPBOX        "प्रतियां",       grp2, 160, 92, 120,64, WS_GROUP
     LTEXT           "&प्रतियों की संख्या:",stc5,168,105,68,8
     ICON            "",               ico3, 210,131,  76,24, WS_GROUP
     CONTROL         "&कोलेट",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
     EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
 
     GROUPBOX        "प्रिंट रेंज",    grp1,   8,92,  144,64, WS_GROUP
-    CONTROL         "&सब",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
-    CONTROL         "&पृष्ठों",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
-    CONTROL         "&चयन",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
+    AUTORADIOBUTTON "&सब",            rad1,16,106,64,12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&पृष्ठों",       rad3,16,122,36,12
+    AUTORADIOBUTTON "&चयन",           rad2,16,138,64,12
     EDITTEXT                          edt1,  73,122,  26,12, WS_GROUP | ES_NUMBER
     EDITTEXT                          edt2, 120,122,  26,12, WS_GROUP | ES_NUMBER
     RTEXT           "&से:",         stc2,  52,124,  20,8
@@ -384,7 +384,7 @@ BEGIN
     COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "स्थिति:",        stc8,  16, 36,  47,10, SS_NOPREFIX
     LTEXT           "",               stc12, 65, 36, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "प्रकार:",          stc7,  16, 48,  47,10, SS_NOPREFIX
+    LTEXT           "प्रकार:",        stc7,  16, 48,  47,10, SS_NOPREFIX
     LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "कहा:",         stc10, 16, 60,  47,10, SS_NOPREFIX
     LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
@@ -392,15 +392,15 @@ BEGIN
     LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
     GROUPBOX        "कागज़",          grp2,   8, 92, 164,56, WS_GROUP
-    LTEXT           "&साइज़:",         stc2,  16,108,  36, 8
+    LTEXT           "&साइज़:",        stc2,  16,108,  36, 8
     COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "&सॉर्स:",       stc3,  16,128,  36, 8
     COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
 
     GROUPBOX        "उन्मुखीकरण",    grp1, 180, 92, 100,56, WS_GROUP
     ICON            "",               ico1, 195,112,  18,20, WS_GROUP
-    CONTROL         "&पोर्ट्रिट",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
-    CONTROL         "&लैंडस्केप",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+    AUTORADIOBUTTON "&पोर्ट्रिट",     rad1, 224,106,52,12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&लैंडस्केप",     rad2, 224,126,52,12
 END
 
 PAGESETUPDLGORD DIALOG 32, 32, 240, 240
@@ -417,8 +417,8 @@ BEGIN
   LTEXT "&ट्रे:", stc3, 16, 132, 36, 8
   COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
   GROUPBOX "उन्मुखीकरण", grp1, 8, 156, 64, 56, BS_GROUPBOX
-  AUTORADIOBUTTON "&पोर्ट्रिट", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "&लैंडस्केप", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "&पोर्ट्रिट", rad1, 16, 170, 52, 12
+  AUTORADIOBUTTON "&लैंडस्केप", rad2, 16, 190, 52, 12
   GROUPBOX "", grp4, 80, 156, 152, 56, BS_GROUPBOX
   LTEXT "&बाएं:", stc15, 88, 172, 30, 8
   EDITTEXT edt4, 119, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER

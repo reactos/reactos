@@ -5,7 +5,7 @@
  * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
  *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
  */
-
+//FIXME: Replace all the ț and ș and Ș. See romanian translation notes
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 ID_ACCEL ACCELERATORS
@@ -75,18 +75,6 @@ Exemple de utilizări:\n\
 END
 
 /* Menus */
-
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&Fișier"
-    BEGIN
-        MENUITEM "I&eșire", ID_REGISTRY_EXIT
-    END
-    POPUP "Aj&utor"
-    BEGIN
-        MENUITEM "&Despre…", ID_HELP_ABOUT
-    END
-END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
@@ -227,8 +215,8 @@ BEGIN
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
     LTEXT "&Date:", IDC_STATIC, 6, 35, 161, 8
     EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 12, ES_AUTOHSCROLL
-    DEFPUSHBUTTON "Con&firmă", IDOK, 142, 64, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 196, 64, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 142, 64, 50, 14
+    PUSHBUTTON "Anulare", IDCANCEL, 196, 64, 50, 14
 END
 
 IDD_EDIT_MULTI_STRING DIALOGEX 32, 24, 252, 174
@@ -241,8 +229,8 @@ BEGIN
     LTEXT "&Date:", IDC_STATIC, 6, 35, 161, 8
     EDITTEXT IDC_VALUE_DATA, 6, 46, 240, 102, ES_AUTOHSCROLL | ES_MULTILINE |
              ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
-    DEFPUSHBUTTON "Con&firmă", IDOK, 142, 154, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 196, 154, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 142, 154, 50, 14
+    PUSHBUTTON "Anulare", IDCANCEL, 196, 154, 50, 14
 END
 
 IDD_EDIT_BIN_DATA DIALOGEX 32, 24, 252, 174
@@ -254,8 +242,8 @@ BEGIN
     EDITTEXT IDC_VALUE_NAME, 6, 17, 240, 12, ES_AUTOHSCROLL | ES_READONLY
     LTEXT "&Date:", IDC_STATIC, 6, 35, 161, 8
     CONTROL "", IDC_VALUE_DATA, "HexEdit32", WS_VSCROLL | WS_BORDER | WS_TABSTOP, 6, 46, 240, 102
-    DEFPUSHBUTTON "Con&firmă", IDOK, 142, 154, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 196, 154, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 142, 154, 50, 14
+    PUSHBUTTON "Anulare", IDCANCEL, 196, 154, 50, 14
 END
 
 IDD_EDIT_DWORD DIALOGEX 32, 24, 252, 104
@@ -270,8 +258,8 @@ BEGIN
     GROUPBOX "Baza", IDC_STATIC, 130, 35, 116, 39
     AUTORADIOBUTTON "&Hexazecimală", IDC_FORMAT_HEX, 141, 46, 60, 10, WS_GROUP
     AUTORADIOBUTTON "&Zecimală", IDC_FORMAT_DEC, 141, 59, 60, 10
-    DEFPUSHBUTTON "Con&firmă", IDOK, 142, 82, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 196, 82, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 142, 82, 50, 14
+    PUSHBUTTON "Anulare", IDCANCEL, 196, 82, 50, 14
 END
 
 IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
@@ -461,7 +449,7 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Conectare la registrul unui calculator din rețea"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Deconectare de la registrul calculatorului din rețea"
     ID_REGISTRY_PRINT "Imprimă toate părțile unui registru"
-/*    ID_HELP_HELPTOPICS "Deschide manualul editorului de registru" */
+//    ID_HELP_HELPTOPICS "Deschide manualul editorului de registru"
     ID_HELP_ABOUT "Prezintă informații despre program, numărul versiunii și drepturi de autor"
 END
 
@@ -567,10 +555,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_IMPORT_PROMPT              "Adăugarea de informații poate în mod neintenționat modifica sau șterge valori (de registru) și cauza funcționare incorectă. Dacă nu aveți încredere în sursa acestei informații din „%s”, nu o adăugați în registru.\n\nSigur doriți să continuați?"
-    IDS_IMPORT_OK                  "Cheile și valorile conținute în „%s” au fost adăugate cu succes în registru."
-    IDS_IMPORT_ERROR               "„%s” nu a putut fi importat: Eroare la deschiderea fișierului. Poate fi o problemă a mediului de stocare, a sistemului de fișiere sau fișierul în cauză să nu existe."
-    IDS_EXPORT_ERROR               "„%s” nu a putut fi exportat: Eroare la crearea sau scrierea în fișier. Poate fi o problemă a mediului de stocare sau a sistemului de fișiere."
+    IDS_IMPORT_PROMPT "Adăugarea de informații poate în mod neintenționat modifica sau șterge valori (de registru) și cauza funcționare incorectă. Dacă nu aveți încredere în sursa acestei informații din „%s”, nu o adăugați în registru.\n\nSigur doriți să continuați?"
+    IDS_IMPORT_OK "Cheile și valorile conținute în „%s” au fost adăugate cu succes în registru."
+    IDS_IMPORT_ERROR "„%s” nu a putut fi importat: Eroare la deschiderea fișierului. Poate fi o problemă a mediului de stocare, a sistemului de fișiere sau fișierul în cauză să nu existe."
+    IDS_EXPORT_ERROR "„%s” nu a putut fi exportat: Eroare la crearea sau scrierea în fișier. Poate fi o problemă a mediului de stocare sau a sistemului de fișiere."
 END
 
 STRINGTABLE
@@ -666,20 +654,20 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_B
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Domeniul de export", IDC_STATIC, 2, 0, 366, 48
-    CONTROL "T&ot registrul", IDC_EXPORT_ALL, "Button", BS_AUTORADIOBUTTON, 10, 10, 65, 11
-    CONTROL "&Doar ramura selectată", IDC_EXPORT_BRANCH, "Button", BS_AUTORADIOBUTTON, 10, 22, 100, 11
+    AUTORADIOBUTTON "T&ot registrul", IDC_EXPORT_ALL, 10, 10, 99, 11, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Doar ramura selectată", IDC_EXPORT_BRANCH, 10, 22, 99, 11
     EDITTEXT IDC_EXPORT_BRANCH_TEXT, 30, 34, 335, 12
 END
 
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Încărcare registru"
-FONT 8, "Ms Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Cheie:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
-    DEFPUSHBUTTON "Con&firmă", IDOK, 140, 17, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 89, 17, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 140, 17, 50, 14
+    PUSHBUTTON "Anulare", IDCANCEL, 89, 17, 50, 14
 END
 
 IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
@@ -687,8 +675,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Adaugă la favorite"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "Con&firmă", IDOK, 129, 7, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 129, 24, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 129, 7, 50, 14
+    PUSHBUTTON "Anulare", IDCANCEL, 129, 24, 50, 14
     LTEXT "Nume &favorit:", IDC_STATIC, 7, 7, 70, 10
     EDITTEXT IDC_FAVORITENAME, 7, 26, 110, 13, ES_AUTOHSCROLL
 END
@@ -698,8 +686,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Eliminare favorite"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "Con&firmă", IDOK, 107, 114, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 7, 114, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 107, 114, 50, 14
+    PUSHBUTTON "Anulare", IDCANCEL, 7, 114, 50, 14
     CONTROL "", IDC_FAVORITESLIST, "SysListView32", LVS_LIST | WS_BORDER |
             WS_TABSTOP, 7, 20, 150, 90
     LTEXT "Alege favorit(e):", IDC_STATIC, 7, 7, 99, 12
@@ -711,7 +699,7 @@ CAPTION "Găsire"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "&Găsește", IDOK, 197, 7, 50, 14
-    PUSHBUTTON "Î&nchide", IDCANCEL, 197, 24, 50, 14
+    PUSHBUTTON "Anulare", IDCANCEL, 197, 24, 50, 14
     GROUPBOX "Caută în", IDC_STATIC, 7, 25, 42, 51
     LTEXT "&Caută conținutul:", IDC_STATIC, 7, 8, 57, 10
     EDITTEXT IDC_FINDWHAT, 67, 7, 120, 13, ES_AUTOHSCROLL
@@ -733,15 +721,6 @@ CAPTION "Găsire"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
-    DEFPUSHBUTTON "A&nulare", IDCANCEL, 93, 29, 45, 14
+    DEFPUSHBUTTON "Anulare", IDCANCEL, 93, 29, 45, 14
     LTEXT "Căutare în registru…", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Deschide Ajutor pentru Editorul de registru."
- *    ID_HELP_ABOUT "Afișează informații despre program, numărul versiunii și marca înregistrată."
- *END
- */

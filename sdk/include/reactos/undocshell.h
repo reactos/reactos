@@ -58,6 +58,7 @@ typedef struct _TRAYNOTIFYDATAW
  * ProgMan messages
  */
 #define WM_PROGMAN_OPENSHELLSETTINGS (WM_USER + 22) /* wParam specifies the dialog (and tab page) */
+#define WM_PROGMAN_SAVESTATE         (WM_USER + 77)
 
 /****************************************************************************
  *  IDList Functions
@@ -122,6 +123,7 @@ typedef struct _SHCNF_PRINTJOB_INFO
 #define SHCNF_PRINTJOBA 0x0004
 #define SHCNF_PRINTJOBW 0x0007
 
+HRESULT WINAPI SHUpdateRecycleBinIcon(void);
 
 /****************************************************************************
  * Shell Common Dialogs
@@ -533,6 +535,19 @@ BOOL WINAPI PathIsTemporaryW(_In_ LPCWSTR Str);
 #define DE_SRC_IS_CDRECORD  0x88
 // #define DE_ERROR_MAX
 #define ERRORONDEST         0x10000
+
+/****************************************************************************
+ * Shell settings
+ */
+
+typedef struct _REGSHELLSTATE
+{
+    DWORD dwSize;
+    SHELLSTATE ss;
+} REGSHELLSTATE, *PREGSHELLSTATE;
+#define REGSHELLSTATE_SIZE 0x24
+#define REGSHELLSTATE_VERSION 0xD
+C_ASSERT(sizeof(REGSHELLSTATE) == REGSHELLSTATE_SIZE);
 
 /****************************************************************************
  * Shell Namespace Routines

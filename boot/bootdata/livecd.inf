@@ -58,6 +58,49 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Segoe UI Sy
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Terminal",0x00000000,"Lucida Console"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Times",0x00000000,"Times New Roman"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Tms Rmn",0x00000000,"Times New Roman"
+; Font Substitution (East Asian, English names)
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Batang",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","BatangChe",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","DLCMingBold",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","DLCMingMedium",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Dotum",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","DotumChe",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Gulim",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","GulimChe",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Gungsuh",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","GungsuhChe",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","MS Gothic",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","MS Mincho",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","MS PGothic",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","MS PMincho",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","MS Song",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","MS UI Gothic",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","MS UI Gothic 2",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","Ming Light",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","MingLiU",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","NSimSun",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","PMingLiU",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","SimHei",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes","SimSun",0x00000000,"Droid Sans Fallback"
+
+; For "Internet Browser" icon.
+; CLSID_Internet == {871C5380-42A0-1069-A2EA-08002B30309D}
+; FIXME: Implement CLSID_Internet in ieframe.dll (see CORE-18625)
+; https://git.reactos.org/?p=reactos.git;a=blob;f=modules/rostests/apitests/com/ieframe.c;hb=bf2cec186cc7655e062ec0e53ccfac860bcae70d#l35
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}",,,"Internet Browser"
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}","InfoTip",0x00020000,"@%SystemRoot%\system32\ieframe.dll,-881"
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}","LocalizedString",0x00020000,"@%SystemRoot%\system32\ieframe.dll,-880"
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}\DefaultIcon",,0x00020000,"%SystemRoot%\system32\shell32.dll,-512"
+; FIXME: should be "OpenHomePage" action
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}\Shell",,,"open"
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}\Shell\open",,,""
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}\Shell\open\Command",,,"rundll32.exe url,OpenURL https://google.com"
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}\ShellFolder","",,"@%SystemRoot%\system32\shell32.dll,-512"
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}\ShellFolder","Attributes",0x10001,0x24
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}\ShellFolder","HideAsDeletePerUser",,""
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}\ShellFolder","HideFolderVerbs",,""
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}\ShellFolder","HideOnDesktopPerUser",,""
+HKCR,"CLSID\{871C5380-42A0-1069-A2EA-08002B30309D}\ShellFolder","WantsParseDisplayName",,""
 
 ; FIXME: Registration
 

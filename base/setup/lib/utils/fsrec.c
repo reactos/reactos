@@ -255,7 +255,7 @@ InferFileSystemWorker(
     }
 
 Quit:
-    if (*FileSystemName && wcsicmp(FileSystemName, L"NTFS") == 0)
+    if (*FileSystemName && _wcsicmp(FileSystemName, L"NTFS") == 0)
     {
         // WARNING: We cannot write on this FS yet!
         DPRINT1("Recognized file system '%S' that doesn't have write support yet!\n",
@@ -340,9 +340,9 @@ FileSystemToMBRPartitionType(
     if (SectorCount == 0)
         return PARTITION_ENTRY_UNUSED;
 
-    if (wcsicmp(FileSystem, L"FAT")   == 0 ||
-        wcsicmp(FileSystem, L"FAT32") == 0 ||
-        wcsicmp(FileSystem, L"RAW")   == 0)
+    if (_wcsicmp(FileSystem, L"FAT")   == 0 ||
+        _wcsicmp(FileSystem, L"FAT32") == 0 ||
+        _wcsicmp(FileSystem, L"RAW")   == 0)
     {
         if (SectorCount < 8192ULL)
         {
@@ -385,14 +385,14 @@ FileSystemToMBRPartitionType(
             }
         }
     }
-    else if (wcsicmp(FileSystem, L"NTFS") == 0)
+    else if (_wcsicmp(FileSystem, L"NTFS") == 0)
     {
         return PARTITION_IFS;
     }
-    else if (wcsicmp(FileSystem, L"BTRFS") == 0 ||
-             wcsicmp(FileSystem, L"EXT2")  == 0 ||
-             wcsicmp(FileSystem, L"EXT3")  == 0 ||
-             wcsicmp(FileSystem, L"EXT4")  == 0)
+    else if (_wcsicmp(FileSystem, L"BTRFS") == 0 ||
+             _wcsicmp(FileSystem, L"EXT2")  == 0 ||
+             _wcsicmp(FileSystem, L"EXT3")  == 0 ||
+             _wcsicmp(FileSystem, L"EXT4")  == 0)
     {
         return PARTITION_LINUX;
     }

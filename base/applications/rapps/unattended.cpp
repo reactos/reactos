@@ -355,14 +355,26 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
         if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
         {
             /* If already started, find its window */
-            HWND hWindow = FindWindowW(szWindowClass, NULL);
+            HWND hWindow;
+            for (int wait = 2500, inter = 250; wait > 0; wait -= inter)
+            {
+                if ((hWindow = FindWindowW(szWindowClass, NULL)) != NULL)
+                    break;
+                Sleep(inter);
+            }
 
-            /* Activate window */
-            ShowWindow(hWindow, SW_SHOWNORMAL);
-            SetForegroundWindow(hWindow);
-            if (bAppwizMode)
-                PostMessage(hWindow, WM_COMMAND, ID_ACTIVATE_APPWIZ, 0);
-            return FALSE;
+            if (hWindow)
+            {
+                /* Activate the window in the other instance */
+                SwitchToThisWindow(hWindow, TRUE);
+                if (bAppwizMode)
+                    PostMessage(hWindow, WM_COMMAND, ID_ACTIVATE_APPWIZ, 0);
+
+                if (hMutex)
+                    CloseHandle(hMutex);
+
+                return FALSE;
+            }
         }
 
         CMainWindow wnd(&db, bAppwizMode);

@@ -68,18 +68,6 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "แ&ฟ้ม"
-    BEGIN
-        MENUITEM "&ออกจากโปรแกรม", ID_REGISTRY_EXIT
-    END
-    POPUP "&ช่วยเหลือ"
-    BEGIN
-        MENUITEM "เ&กี่ยวกับ", ID_HELP_ABOUT
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "แ&ฟ้ม"
@@ -87,8 +75,8 @@ BEGIN
         MENUITEM "&นำเข้า...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&ส่งออก...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Load Hive...", ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "Unload Hive...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "&Load Hive...", ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "&Unload Hive...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Connect Network Registry...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Disconnect Network Registry...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
@@ -130,16 +118,16 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Refresh\tF5", ID_VIEW_REFRESH
     END
-    POPUP "&Favorites"
+    POPUP "F&avorites"
     BEGIN
         MENUITEM "&Add to Favorites", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
         MENUITEM "&Remove Favorite", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
-    POPUP "&Help"
+    POPUP "&ช่วยเหลือ"
     BEGIN
         MENUITEM "&Help Topics\tF1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&About Registry Editor", ID_HELP_ABOUT
+        MENUITEM "เ&กี่ยวกับ", ID_HELP_ABOUT
     END
 END
 
@@ -199,7 +187,7 @@ BEGIN
     END
     POPUP ""
     BEGIN
-        MENUITEM "C&ut", ID_HEXEDIT_CUT
+        MENUITEM "Cu&t", ID_HEXEDIT_CUT
         MENUITEM "&Copy", ID_HEXEDIT_COPY
         MENUITEM "&Paste", ID_HEXEDIT_PASTE
         MENUITEM "&Delete", ID_HEXEDIT_DELETE
@@ -304,7 +292,7 @@ BEGIN
     LTEXT "Driver exclusive", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
     RTEXT "Interface Type:", IDC_STATIC, 144, 220, 58, 8
     LTEXT "", IDC_INTERFACETYPE, 205, 220, 66, 8
-    RTEXT "Bus Nummer:", IDC_STATIC, 151, 230, 51, 8
+    RTEXT "Bus Number:", IDC_STATIC, 151, 230, 51, 8
     LTEXT "", IDC_BUSNUMBER, 205, 230, 66, 8
     RTEXT "Version:", IDC_STATIC, 151, 240, 51, 8
     LTEXT "", IDC_VERSION, 205, 240, 66, 8
@@ -453,7 +441,7 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Connects to a remote computer's registry"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Disconnects from a remote computer's registry"
     ID_REGISTRY_PRINT "Prints all or part of the registry"
-/*    ID_HELP_HELPTOPICS "Opens registry editor help" */
+//    ID_HELP_HELPTOPICS "Opens registry editor help"
     ID_HELP_ABOUT "Displays program information, version number and copyright"
 END
 
@@ -658,15 +646,15 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_B
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Export Range", IDC_STATIC, 2, 0, 366, 48
-    CONTROL "&All", IDC_EXPORT_ALL, "Button", BS_AUTORADIOBUTTON, 10, 10, 29, 11
-    CONTROL "S&elected Branch", IDC_EXPORT_BRANCH, "Button", BS_AUTORADIOBUTTON, 10, 22, 100, 11
+    AUTORADIOBUTTON "&All", IDC_EXPORT_ALL, 10, 10, 99, 11, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "S&elected Branch", IDC_EXPORT_BRANCH, 10, 22, 99, 11
     EDITTEXT IDC_EXPORT_BRANCH_TEXT, 30, 34, 335, 12
 END
 
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Load Hive"
-FONT 8, "Ms Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Key:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
@@ -725,15 +713,6 @@ CAPTION "Find"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
-    DEFPUSHBUTTON "&Cancel", IDCANCEL, 93, 29, 45, 14
+    DEFPUSHBUTTON "Cancel", IDCANCEL, 93, 29, 45, 14
     LTEXT "Searching the registry...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Opens Registry Editor Help."
- *    ID_HELP_ABOUT "Displays program information, version number, and copyright."
- *END
- */

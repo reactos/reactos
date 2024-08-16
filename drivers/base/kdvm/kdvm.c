@@ -121,7 +121,7 @@ KdVmSendReceive(
         return NULL;
     }
 
-    if (RtlEqualMemory(ReceiveHeader->Magic, KdVmReplyMagic, 9))
+    if (!RtlEqualMemory(ReceiveHeader->Magic, KdVmReplyMagic, 9))
     {
         KDDBGPRINT("KdVmSendReceive: got invalid Magic: '%*s'\n",
                    sizeof(KdVmReplyMagic), ReceiveHeader->Magic);

@@ -39,6 +39,90 @@ LONG Unloading;
 static const WCHAR Cunc[] = L"\\??\\C:";
 #define Cunc_LETTER_POSITION 4
 
+/**
+ * @brief
+ * Sends a synchronous IOCTL to the specified device object.
+ *
+ * @param[in]   IoControlCode
+ * The IOCTL to send to the device.
+ *
+ * @param[in]   DeviceObject
+ * Pointer to the device object that will handle the IOCTL.
+ *
+ * @param[in]   InputBuffer
+ * Optional pointer to a buffer containing input data for the IOCTL.
+ * When specified, the buffer should be at least of InputBufferLength size.
+ *
+ * @param[in]   InputBufferLength
+ * Size in bytes, of the buffer pointed by InputBuffer.
+ *
+ * @param[out]  OutputBuffer
+ * Optional pointer to a buffer that will receive output data from the IOCTL.
+ * When specified, the buffer should be at least of OutputBufferLength size.
+ *
+ * @param[in]   OutputBufferLength
+ * Size in bytes, of the buffer pointed by OutputBuffer.
+ *
+ * @param[in]   FileObject
+ * Optional pointer to a file object that may be necessary for the IOCTL.
+ *
+ * @return
+ * An NTSTATUS code indicating success or failure of this function.
+ *
+ * @note
+ * Must be called at PASSIVE_LEVEL with all APCs enabled.
+ **/
+_IRQL_requires_(PASSIVE_LEVEL)
+NTSTATUS
+MountMgrSendSyncDeviceIoCtl(
+    _In_ ULONG IoControlCode,
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,
+    _In_ ULONG InputBufferLength,
+    _Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,
+    _In_ ULONG OutputBufferLength,
+    _In_opt_ PFILE_OBJECT FileObject)
+{
+    NTSTATUS Status;
+    KEVENT Event;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PIRP Irp;
+
+    /* We must be at passive level as we are using an on-stack event, and
+     * APCs must be enabled for allowing the Special Kernel APC queued by
+     * the IO Manager to run for completing the IRP */
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
+    ASSERT(!KeAreAllApcsDisabled());
+
+    /* Initialize the on-stack notification event and build the threaded IRP */
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    Irp = IoBuildDeviceIoControlRequest(IoControlCode,
+                                        DeviceObject,
+                                        InputBuffer,
+                                        InputBufferLength,
+                                        OutputBuffer,
+                                        OutputBufferLength,
+                                        FALSE,
+                                        &Event,
+                                        &IoStatusBlock);
+    if (!Irp)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Set up the FileObject for the IOCTL if required */
+    if (FileObject)
+        IoGetNextIrpStackLocation(Irp)->FileObject = FileObject;
+
+    /* Finally, call the driver and wait for IRP completion if necessary */
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+        Status = IoStatusBlock.Status;
+    }
+
+    return Status;
+}
+
 /*
  * @implemented
  */
@@ -187,26 +271,23 @@ CreateNewDriveLetterName(OUT PUNICODE_STRING DriveLetter,
  * @implemented
  */
 NTSTATUS
-QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
-                       OUT PUNICODE_STRING DeviceName OPTIONAL,
-                       OUT PMOUNTDEV_UNIQUE_ID * UniqueId OPTIONAL,
-                       OUT PBOOLEAN Removable OPTIONAL,
-                       OUT PBOOLEAN GptDriveLetter OPTIONAL,
-                       OUT PBOOLEAN HasGuid OPTIONAL,
-                       IN OUT LPGUID StableGuid OPTIONAL,
-                       OUT PBOOLEAN Valid OPTIONAL)
+QueryDeviceInformation(
+    _In_ PUNICODE_STRING SymbolicName,
+    _Out_opt_ PUNICODE_STRING DeviceName,
+    _Out_opt_ PMOUNTDEV_UNIQUE_ID* UniqueId,
+    _Out_opt_ PBOOLEAN Removable,
+    _Out_opt_ PBOOLEAN GptDriveLetter,
+    _Out_opt_ PBOOLEAN HasGuid,
+    _Inout_opt_ LPGUID StableGuid,
+    _Out_opt_ PBOOLEAN IsFT)
 {
-    PIRP Irp;
+    NTSTATUS Status;
     USHORT Size;
-    KEVENT Event;
     BOOLEAN IsRemovable;
     PMOUNTDEV_NAME Name;
     PMOUNTDEV_UNIQUE_ID Id;
     PFILE_OBJECT FileObject;
-    PIO_STACK_LOCATION Stack;
-    NTSTATUS Status, IntStatus;
     PDEVICE_OBJECT DeviceObject;
-    IO_STATUS_BLOCK IoStatusBlock;
     PARTITION_INFORMATION_EX PartitionInfo;
     STORAGE_DEVICE_NUMBER StorageDeviceNumber;
     VOLUME_GET_GPT_ATTRIBUTES_INFORMATION GptAttributes;
@@ -247,31 +328,14 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
         if (!IsRemovable)
         {
             /* Query the GPT attributes */
-            KeInitializeEvent(&Event, NotificationEvent, FALSE);
-            Irp = IoBuildDeviceIoControlRequest(IOCTL_VOLUME_GET_GPT_ATTRIBUTES,
-                                                DeviceObject,
-                                                NULL,
-                                                0,
-                                                &GptAttributes,
-                                                sizeof(GptAttributes),
-                                                FALSE,
-                                                &Event,
-                                                &IoStatusBlock);
-            if (!Irp)
-            {
-                ObDereferenceObject(DeviceObject);
-                ObDereferenceObject(FileObject);
-                return STATUS_INSUFFICIENT_RESOURCES;
-            }
-
-            Status = IoCallDriver(DeviceObject, Irp);
-            if (Status == STATUS_PENDING)
-            {
-                KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-                Status = IoStatusBlock.Status;
-            }
-
-            /* In case of failure, don't fail, that's no vital */
+            Status = MountMgrSendSyncDeviceIoCtl(IOCTL_VOLUME_GET_GPT_ATTRIBUTES,
+                                                 DeviceObject,
+                                                 NULL,
+                                                 0,
+                                                 &GptAttributes,
+                                                 sizeof(GptAttributes),
+                                                 NULL);
+            /* Failure isn't major */
             if (!NT_SUCCESS(Status))
             {
                 Status = STATUS_SUCCESS;
@@ -284,86 +348,51 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
         }
     }
 
-    /* If caller wants to know if there's valid contents */
-    if (Valid)
+    /* If caller wants to know if this is a FT volume */
+    if (IsFT)
     {
-        /* Suppose it's not OK */
-        *Valid = FALSE;
+        /* Suppose it's not */
+        *IsFT = FALSE;
 
+        /* FT volume can't be removable */
         if (!IsRemovable)
         {
-            /* Query partitions information */
-            KeInitializeEvent(&Event, NotificationEvent, FALSE);
-            Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_PARTITION_INFO_EX,
-                                                DeviceObject,
-                                                NULL,
-                                                0,
-                                                &PartitionInfo,
-                                                sizeof(PartitionInfo),
-                                                FALSE,
-                                                &Event,
-                                                &IoStatusBlock);
-            if (!Irp)
-            {
-                ObDereferenceObject(DeviceObject);
-                ObDereferenceObject(FileObject);
-                return STATUS_INSUFFICIENT_RESOURCES;
-            }
-
-            Status = IoCallDriver(DeviceObject, Irp);
-            if (Status == STATUS_PENDING)
-            {
-                KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-                Status = IoStatusBlock.Status;
-            }
-
-            /* Once again here, failure isn't major */
+            /* Query partition information */
+            Status = MountMgrSendSyncDeviceIoCtl(IOCTL_DISK_GET_PARTITION_INFO_EX,
+                                                 DeviceObject,
+                                                 NULL,
+                                                 0,
+                                                 &PartitionInfo,
+                                                 sizeof(PartitionInfo),
+                                                 NULL);
+            /* Failure isn't major */
             if (!NT_SUCCESS(Status))
             {
                 Status = STATUS_SUCCESS;
             }
-            /* Verify we know something in */
-            else if (PartitionInfo.PartitionStyle == PARTITION_STYLE_MBR &&
-                     IsRecognizedPartition(PartitionInfo.Mbr.PartitionType))
+            /* Check if this is a FT volume */
+            else if ((PartitionInfo.PartitionStyle == PARTITION_STYLE_MBR) &&
+                     IsFTPartition(PartitionInfo.Mbr.PartitionType))
             {
-                *Valid = TRUE;
+                *IsFT = TRUE;
             }
 
-            /* It looks correct, ensure it is & query device number */
-            if (*Valid)
+            /* It looks like a FT volume. Verify it is really one by checking
+             * that it does NOT lie on a specific storage device (i.e. it is
+             * not a basic volume). */
+            if (*IsFT)
             {
-                KeInitializeEvent(&Event, NotificationEvent, FALSE);
-                Irp = IoBuildDeviceIoControlRequest(IOCTL_STORAGE_GET_DEVICE_NUMBER,
-                                                    DeviceObject,
-                                                    NULL,
-                                                    0,
-                                                    &StorageDeviceNumber,
-                                                    sizeof(StorageDeviceNumber),
-                                                    FALSE,
-                                                    &Event,
-                                                    &IoStatusBlock);
-                if (!Irp)
-                {
-                    ObDereferenceObject(DeviceObject);
-                    ObDereferenceObject(FileObject);
-                    return STATUS_INSUFFICIENT_RESOURCES;
-                }
-
-                Status = IoCallDriver(DeviceObject, Irp);
-                if (Status == STATUS_PENDING)
-                {
-                    KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-                    Status = IoStatusBlock.Status;
-                }
-
+                Status = MountMgrSendSyncDeviceIoCtl(IOCTL_STORAGE_GET_DEVICE_NUMBER,
+                                                     DeviceObject,
+                                                     NULL,
+                                                     0,
+                                                     &StorageDeviceNumber,
+                                                     sizeof(StorageDeviceNumber),
+                                                     NULL);
                 if (!NT_SUCCESS(Status))
-                {
                     Status = STATUS_SUCCESS;
-                }
                 else
-                {
-                    *Valid = FALSE;
-                }
+                    *IsFT = FALSE; // Succeeded, so this cannot be a FT volume.
             }
         }
     }
@@ -381,35 +410,14 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
         }
 
         /* Query device name */
-        KeInitializeEvent(&Event, NotificationEvent, FALSE);
-        Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTDEV_QUERY_DEVICE_NAME,
-                                            DeviceObject,
-                                            NULL,
-                                            0,
-                                            Name,
-                                            sizeof(MOUNTDEV_NAME),
-                                            FALSE,
-                                            &Event,
-                                            &IoStatusBlock);
-        if (!Irp)
-        {
-            FreePool(Name);
-            ObDereferenceObject(DeviceObject);
-            ObDereferenceObject(FileObject);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-        Stack = IoGetNextIrpStackLocation(Irp);
-        Stack->FileObject = FileObject;
-
-        Status = IoCallDriver(DeviceObject, Irp);
-        if (Status == STATUS_PENDING)
-        {
-            KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-            Status = IoStatusBlock.Status;
-        }
-
-        /* Now, we've got the correct length */
+        Status = MountMgrSendSyncDeviceIoCtl(IOCTL_MOUNTDEV_QUERY_DEVICE_NAME,
+                                             DeviceObject,
+                                             NULL,
+                                             0,
+                                             Name,
+                                             sizeof(MOUNTDEV_NAME),
+                                             FileObject);
+        /* Retry with appropriate length */
         if (Status == STATUS_BUFFER_OVERFLOW)
         {
             Size = Name->NameLength + sizeof(MOUNTDEV_NAME);
@@ -426,33 +434,13 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
             }
 
             /* And query name (for real that time) */
-            KeInitializeEvent(&Event, NotificationEvent, FALSE);
-            Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTDEV_QUERY_DEVICE_NAME,
-                                                DeviceObject,
-                                                NULL,
-                                                0,
-                                                Name,
-                                                Size,
-                                                FALSE,
-                                                &Event,
-                                                &IoStatusBlock);
-            if (!Irp)
-            {
-                FreePool(Name);
-                ObDereferenceObject(DeviceObject);
-                ObDereferenceObject(FileObject);
-                return STATUS_INSUFFICIENT_RESOURCES;
-            }
-
-            Stack = IoGetNextIrpStackLocation(Irp);
-            Stack->FileObject = FileObject;
-
-            Status = IoCallDriver(DeviceObject, Irp);
-            if (Status == STATUS_PENDING)
-            {
-                KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-                Status = IoStatusBlock.Status;
-            }
+            Status = MountMgrSendSyncDeviceIoCtl(IOCTL_MOUNTDEV_QUERY_DEVICE_NAME,
+                                                 DeviceObject,
+                                                 NULL,
+                                                 0,
+                                                 Name,
+                                                 Size,
+                                                 FileObject);
         }
 
         if (NT_SUCCESS(Status))
@@ -495,34 +483,13 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
         }
 
         /* Query unique ID length */
-        KeInitializeEvent(&Event, NotificationEvent, FALSE);
-        Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTDEV_QUERY_UNIQUE_ID,
-                                            DeviceObject,
-                                            NULL,
-                                            0,
-                                            Id,
-                                            sizeof(MOUNTDEV_UNIQUE_ID),
-                                            FALSE,
-                                            &Event,
-                                            &IoStatusBlock);
-        if (!Irp)
-        {
-            FreePool(Id);
-            ObDereferenceObject(DeviceObject);
-            ObDereferenceObject(FileObject);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-        Stack = IoGetNextIrpStackLocation(Irp);
-        Stack->FileObject = FileObject;
-
-        Status = IoCallDriver(DeviceObject, Irp);
-        if (Status == STATUS_PENDING)
-        {
-            KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-            Status = IoStatusBlock.Status;
-        }
-
+        Status = MountMgrSendSyncDeviceIoCtl(IOCTL_MOUNTDEV_QUERY_UNIQUE_ID,
+                                             DeviceObject,
+                                             NULL,
+                                             0,
+                                             Id,
+                                             sizeof(MOUNTDEV_UNIQUE_ID),
+                                             FileObject);
         /* Retry with appropriate length */
         if (Status == STATUS_BUFFER_OVERFLOW)
         {
@@ -540,33 +507,13 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
             }
 
             /* Query unique ID */
-            KeInitializeEvent(&Event, NotificationEvent, FALSE);
-            Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTDEV_QUERY_UNIQUE_ID,
-                                                DeviceObject,
-                                                NULL,
-                                                0,
-                                                Id,
-                                                Size,
-                                                FALSE,
-                                                &Event,
-                                                &IoStatusBlock);
-            if (!Irp)
-            {
-                FreePool(Id);
-                ObDereferenceObject(DeviceObject);
-                ObDereferenceObject(FileObject);
-                return STATUS_INSUFFICIENT_RESOURCES;
-            }
-
-            Stack = IoGetNextIrpStackLocation(Irp);
-            Stack->FileObject = FileObject;
-
-            Status = IoCallDriver(DeviceObject, Irp);
-            if (Status == STATUS_PENDING)
-            {
-                KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-                Status = IoStatusBlock.Status;
-            }
+            Status = MountMgrSendSyncDeviceIoCtl(IOCTL_MOUNTDEV_QUERY_UNIQUE_ID,
+                                                 DeviceObject,
+                                                 NULL,
+                                                 0,
+                                                 Id,
+                                                 Size,
+                                                 FileObject);
         }
 
         /* Hands back unique ID */
@@ -579,13 +526,10 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
             /* In case of failure, also free the rest */
             FreePool(Id);
             if (DeviceName->Length)
-            {
                 FreePool(DeviceName->Buffer);
-            }
 
             ObDereferenceObject(DeviceObject);
             ObDereferenceObject(FileObject);
-
             return Status;
         }
     }
@@ -594,33 +538,14 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
     if (HasGuid)
     {
         /* Query device stable GUID */
-        KeInitializeEvent(&Event, NotificationEvent, FALSE);
-        Irp = IoBuildDeviceIoControlRequest(IOCTL_MOUNTDEV_QUERY_STABLE_GUID,
-                                            DeviceObject,
-                                            NULL,
-                                            0,
-                                            StableGuid,
-                                            sizeof(GUID),
-                                            FALSE,
-                                            &Event,
-                                            &IoStatusBlock);
-        if (!Irp)
-        {
-            ObDereferenceObject(DeviceObject);
-            ObDereferenceObject(FileObject);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-        Stack = IoGetNextIrpStackLocation(Irp);
-        Stack->FileObject = FileObject;
-
-        IntStatus = IoCallDriver(DeviceObject, Irp);
-        if (IntStatus == STATUS_PENDING)
-        {
-            KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-            IntStatus = IoStatusBlock.Status;
-        }
-
+        NTSTATUS IntStatus;
+        IntStatus = MountMgrSendSyncDeviceIoCtl(IOCTL_MOUNTDEV_QUERY_STABLE_GUID,
+                                                DeviceObject,
+                                                NULL,
+                                                0,
+                                                StableGuid,
+                                                sizeof(GUID),
+                                                FileObject);
         *HasGuid = NT_SUCCESS(IntStatus);
     }
 
@@ -791,7 +716,7 @@ MountMgrFreeSavedLink(IN PSAVED_LINK_INFORMATION SavedLinkInformation)
  */
 VOID
 NTAPI
-MountMgrUnload(IN struct _DRIVER_OBJECT *DriverObject)
+MountMgrUnload(IN PDRIVER_OBJECT DriverObject)
 {
     PLIST_ENTRY NextEntry;
     PUNIQUE_ID_WORK_ITEM WorkItem;
@@ -890,26 +815,27 @@ MountMgrUnload(IN struct _DRIVER_OBJECT *DriverObject)
     IoDeleteDevice(gdeviceObject);
 }
 
-/*
- * @implemented
- */
+/**
+ * @brief   Retrieves the "NoAutoMount" setting.
+ * @return  TRUE if AutoMount is disabled; FALSE if AutoMount is enabled.
+ **/
 CODE_SEG("INIT")
 BOOLEAN
-MountmgrReadNoAutoMount(IN PUNICODE_STRING RegistryPath)
+MountmgrReadNoAutoMount(
+    _In_ PUNICODE_STRING RegistryPath)
 {
     NTSTATUS Status;
     ULONG Result, Default = 0;
     RTL_QUERY_REGISTRY_TABLE QueryTable[2];
 
+    /* Retrieve data from registry */
     RtlZeroMemory(QueryTable, sizeof(QueryTable));
-
-    /* Simply read data from register */
     QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
     QueryTable[0].Name = L"NoAutoMount";
     QueryTable[0].EntryContext = &Result;
-    QueryTable[0].DefaultType = REG_NONE;
+    QueryTable[0].DefaultType = REG_DWORD;
     QueryTable[0].DefaultData = &Default;
-    QueryTable[0].DefaultLength = sizeof(ULONG);
+    QueryTable[0].DefaultLength = sizeof(Default);
 
     Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
                                     RegistryPath->Buffer,
@@ -917,9 +843,7 @@ MountmgrReadNoAutoMount(IN PUNICODE_STRING RegistryPath)
                                     NULL,
                                     NULL);
     if (!NT_SUCCESS(Status))
-    {
-        return (Default != 0);
-    }
+        Result = Default;
 
     return (Result != 0);
 }
@@ -946,7 +870,8 @@ MountMgrMountedDeviceArrival(IN PDEVICE_EXTENSION DeviceExtension,
     PDEVICE_INFORMATION DeviceInformation, CurrentDevice;
     WCHAR CSymLinkBuffer[RTL_NUMBER_OF(Cunc)], LinkTargetBuffer[MAX_PATH];
     UNICODE_STRING TargetDeviceName, SuggestedLinkName, DeviceName, VolumeName, DriveLetter, LinkTarget, CSymLink;
-    BOOLEAN HasGuid, HasGptDriveLetter, Valid, UseOnlyIfThereAreNoOtherLinks, IsDrvLetter, IsOff, IsVolumeName, LinkError;
+    BOOLEAN HasGuid, HasGptDriveLetter, IsFT, UseOnlyIfThereAreNoOtherLinks;
+    BOOLEAN IsDrvLetter, IsOff, IsVolumeName, SetOnline;
 
     /* New device = new structure to represent it */
     DeviceInformation = AllocatePool(sizeof(DEVICE_INFORMATION));
@@ -983,7 +908,7 @@ MountMgrMountedDeviceArrival(IN PDEVICE_EXTENSION DeviceExtension,
                                     &HasGptDriveLetter,
                                     &HasGuid,
                                     &StableGuid,
-                                    &Valid);
+                                    &IsFT);
     if (!NT_SUCCESS(Status))
     {
         KeWaitForSingleObject(&(DeviceExtension->DeviceLock), Executive, KernelMode, FALSE, NULL);
@@ -1207,7 +1132,7 @@ MountMgrMountedDeviceArrival(IN PDEVICE_EXTENSION DeviceExtension,
         Status = GlobalCreateSymbolicLink(&(SymLinks[i]), &TargetDeviceName);
         if (!NT_SUCCESS(Status))
         {
-            LinkError = TRUE;
+            BOOLEAN LinkError = TRUE;
 
             if ((SavedLinkInformation && !RedirectSavedLink(SavedLinkInformation, &(SymLinks[i]), &TargetDeviceName)) ||
                 !SavedLinkInformation)
@@ -1313,7 +1238,7 @@ MountMgrMountedDeviceArrival(IN PDEVICE_EXTENSION DeviceExtension,
         DeviceInformation->SuggestedDriveLetter = 0;
     }
     /* Else, it's time to set up one */
-    else if ((DeviceExtension->NoAutoMount || DeviceInformation->Removable) &&
+    else if ((!DeviceExtension->NoAutoMount || DeviceInformation->Removable) &&
              DeviceExtension->AutomaticDriveLetter &&
              (HasGptDriveLetter || DeviceInformation->SuggestedDriveLetter) &&
              !HasNoDriveLetterEntry(UniqueId))
@@ -1371,32 +1296,23 @@ MountMgrMountedDeviceArrival(IN PDEVICE_EXTENSION DeviceExtension,
         RtlCopyMemory(NewUniqueId->UniqueId, UniqueId->UniqueId, UniqueId->UniqueIdLength);
     }
 
-    /* If device's offline or valid, skip its notifications */
-    if (IsOff || Valid)
-    {
+    /* Skip online notifications if the device is offline or a FT volume */
+    if (IsOff || IsFT)
         DeviceInformation->SkipNotifications = TRUE;
-    }
 
-    /* In case device is valid and is set to no automount,
-     * set it offline.
-     */
-    if (DeviceExtension->NoAutoMount || IsDrvLetter)
-    {
-        IsOff = !DeviceInformation->SkipNotifications;
-    }
+    /* If automount is enabled or the device was already mounted, send now
+     * the online notification if needed; otherwise, defer its posting */
+    if (!DeviceExtension->NoAutoMount || IsDrvLetter)
+        SetOnline = !DeviceInformation->SkipNotifications;
     else
-    {
-        IsOff = FALSE;
-    }
+        SetOnline = FALSE;
 
     /* Finally, release the exclusive lock */
     KeReleaseSemaphore(&(DeviceExtension->DeviceLock), IO_NO_INCREMENT, 1, FALSE);
 
-    /* If device is not offline, notify its arrival */
-    if (!IsOff)
-    {
+    /* Set the device online now if necessary */
+    if (SetOnline)
         SendOnlineNotification(SymbolicName);
-    }
 
     /* If we had symlinks (from storage), free them */
     if (SymLinks)

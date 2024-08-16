@@ -104,7 +104,7 @@ CheckUnattendedSetup(
 
     INF_FreeData(Value);
 
-    /* Search for 'DestinationDiskNumber' in the 'Unattend' section */
+    /* Search for 'DestinationDiskNumber' */
     if (!SpInfFindFirstLine(UnattendInf, L"Unattend", L"DestinationDiskNumber", &Context))
     {
         DPRINT("SpInfFindFirstLine() failed for key 'DestinationDiskNumber'\n");
@@ -119,7 +119,7 @@ CheckUnattendedSetup(
 
     pSetupData->DestinationDiskNumber = (LONG)IntValue;
 
-    /* Search for 'DestinationPartitionNumber' in the 'Unattend' section */
+    /* Search for 'DestinationPartitionNumber' */
     if (!SpInfFindFirstLine(UnattendInf, L"Unattend", L"DestinationPartitionNumber", &Context))
     {
         DPRINT("SpInfFindFirstLine() failed for key 'DestinationPartitionNumber'\n");
@@ -134,56 +134,47 @@ CheckUnattendedSetup(
 
     pSetupData->DestinationPartitionNumber = (LONG)IntValue;
 
-    /* Search for 'InstallationDirectory' in the 'Unattend' section (optional) */
+    /* Search for 'InstallationDirectory' (optional) */
     if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"InstallationDirectory", &Context))
     {
-        /* Get pointer 'InstallationDirectory' key */
-        if (!INF_GetData(&Context, NULL, &Value))
+        if (INF_GetData(&Context, NULL, &Value))
+        {
+            RtlStringCchCopyW(pSetupData->InstallationDirectory,
+                              ARRAYSIZE(pSetupData->InstallationDirectory),
+                              Value);
+            INF_FreeData(Value);
+        }
+        else
         {
             DPRINT("INF_GetData() failed for key 'InstallationDirectory'\n");
-            goto Quit;
         }
-
-        RtlStringCchCopyW(pSetupData->InstallationDirectory,
-                          ARRAYSIZE(pSetupData->InstallationDirectory),
-                          Value);
-
-        INF_FreeData(Value);
     }
 
     IsUnattendedSetup = TRUE;
     DPRINT("Running unattended setup\n");
 
-    /* Search for 'MBRInstallType' in the 'Unattend' section */
-    pSetupData->MBRInstallType = -1;
-    if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"MBRInstallType", &Context))
+    /* Search for 'BootLoaderLocation' (optional) */
+    if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"BootLoaderLocation", &Context))
     {
         if (SpInfGetIntField(&Context, 1, &IntValue))
-        {
-            pSetupData->MBRInstallType = IntValue;
-        }
+            pSetupData->BootLoaderLocation = IntValue;
     }
 
-    /* Search for 'FormatPartition' in the 'Unattend' section */
-    pSetupData->FormatPartition = 0;
+    /* Search for 'FormatPartition' (optional) */
     if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"FormatPartition", &Context))
     {
         if (SpInfGetIntField(&Context, 1, &IntValue))
-        {
             pSetupData->FormatPartition = IntValue;
-        }
     }
 
-    pSetupData->AutoPartition = 0;
+    /* Search for 'AutoPartition' (optional) */
     if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"AutoPartition", &Context))
     {
         if (SpInfGetIntField(&Context, 1, &IntValue))
-        {
             pSetupData->AutoPartition = IntValue;
-        }
     }
 
-    /* Search for LocaleID in the 'Unattend' section */
+    /* Search for 'LocaleID' (optional) */
     if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"LocaleID", &Context))
     {
         if (INF_GetData(&Context, NULL, &Value))
@@ -193,17 +184,14 @@ CheckUnattendedSetup(
                                 ARRAYSIZE(pSetupData->LocaleID),
                                 L"%08lx", Id);
             INF_FreeData(Value);
-       }
+        }
     }
 
-    /* Search for FsType in the 'Unattend' section */
-    pSetupData->FsType = 0;
+    /* Search for 'FsType' (optional) */
     if (SpInfFindFirstLine(UnattendInf, L"Unattend", L"FsType", &Context))
     {
         if (SpInfGetIntField(&Context, 1, &IntValue))
-        {
             pSetupData->FsType = IntValue;
-        }
     }
 
 Quit:
@@ -619,6 +607,191 @@ LoadSetupInf(
     return ERROR_SUCCESS;
 }
 
+/**
+ * @brief   Find or set the active system partition.
+ **/
+BOOLEAN
+InitSystemPartition(
+    /**/_In_ PPARTLIST PartitionList,       /* HACK HACK! */
+    /**/_In_ PPARTENTRY InstallPartition,   /* HACK HACK! */
+    /**/_Out_ PPARTENTRY* pSystemPartition, /* HACK HACK! */
+    _In_opt_ PFSVOL_CALLBACK FsVolCallback,
+    _In_opt_ PVOID Context)
+{
+    FSVOL_OP Result;
+    PPARTENTRY SystemPartition;
+    PPARTENTRY OldActivePart;
+
+    /*
+     * If we install on a fixed disk, try to find a supported system
+     * partition on the system. Otherwise if we install on a removable disk
+     * use the install partition as the system partition.
+     */
+    if (InstallPartition->DiskEntry->MediaType == FixedMedia)
+    {
+        SystemPartition = FindSupportedSystemPartition(PartitionList,
+                                                       FALSE,
+                                                       InstallPartition->DiskEntry,
+                                                       InstallPartition);
+        /* Use the original system partition as the old active partition hint */
+        OldActivePart = PartitionList->SystemPartition;
+
+        if ( SystemPartition && PartitionList->SystemPartition &&
+            (SystemPartition != PartitionList->SystemPartition) )
+        {
+            DPRINT1("We are using a different system partition!!\n");
+
+            Result = FsVolCallback(Context,
+                                   ChangeSystemPartition,
+                                   (ULONG_PTR)SystemPartition,
+                                   0);
+            if (Result != FSVOL_DOIT)
+                return FALSE;
+        }
+    }
+    else // if (InstallPartition->DiskEntry->MediaType == RemovableMedia)
+    {
+        SystemPartition = InstallPartition;
+        /* Don't specify any old active partition hint */
+        OldActivePart = NULL;
+    }
+
+    if (!SystemPartition)
+    {
+        FsVolCallback(Context,
+                      FSVOLNOTIFY_PARTITIONERROR,
+                      ERROR_SYSTEM_PARTITION_NOT_FOUND,
+                      0);
+        return FALSE;
+    }
+
+    *pSystemPartition = SystemPartition;
+
+    /*
+     * If the system partition can be created in some
+     * non-partitioned space, create it now.
+     */
+    if (!SystemPartition->IsPartitioned)
+    {
+        /* Automatically create the partition; it will be
+         * formatted later with default parameters */
+        // FIXME: Don't use the whole empty space, but a minimal size
+        // specified from the TXTSETUP.SIF or unattended setup.
+        CreatePartition(PartitionList,
+                        SystemPartition,
+                        0ULL,
+                        0);
+        ASSERT(SystemPartition->IsPartitioned);
+    }
+
+    /* Set it as such */
+    if (!SetActivePartition(PartitionList, SystemPartition, OldActivePart))
+    {
+        DPRINT1("SetActivePartition(0x%p) failed?!\n", SystemPartition);
+        ASSERT(FALSE);
+    }
+
+    /*
+     * In all cases, whether or not we are going to perform a formatting,
+     * we must perform a filesystem check of the system partition.
+     */
+    SystemPartition->NeedsCheck = TRUE;
+
+    return TRUE;
+}
+
+
+#define IS_PATH_SEPARATOR(c)    ((c) == L'\\' || (c) == L'/')
+
+/**
+ * @brief
+ * Verify whether the given directory is suitable for ReactOS installation.
+ * Each path component must be a valid 8.3 name.
+ **/
+BOOLEAN
+IsValidInstallDirectory(
+    _In_ PCWSTR InstallDir)
+{
+    PCWCH p;
+
+    /* As with the NT installer, fail if the path is empty or "\\" */
+    p = InstallDir;
+    if (!*p || (IS_PATH_SEPARATOR(*p) && !*(p + 1)))
+        return FALSE;
+
+    /* The path must contain only valid characters */
+    for (p = InstallDir; *p; ++p)
+    {
+        if (!IS_VALID_INSTALL_PATH_CHAR(*p))
+            return FALSE;
+    }
+
+    /*
+     * Loop over each path component and verify that each is a valid 8.3 name.
+     */
+    for (p = InstallDir; *p;)
+    {
+        PCWSTR Path;
+        SIZE_T Length;
+        UNICODE_STRING Name;
+        BOOLEAN IsNameLegal, SpacesInName;
+
+        /* Skip any first separator */
+        if (IS_PATH_SEPARATOR(*p))
+            ++p;
+
+        /* Now skip past the path component until we reach the next separator */
+        Path = p;
+        while (*p && !IS_PATH_SEPARATOR(*p))
+            ++p;
+        if (p == Path)
+        {
+            /* Succeed if nothing else follows this separator; otherwise
+             * it's a separator and consecutive ones are not supported */
+            return (!*p);
+        }
+
+        /* Calculate the path component length */
+        Length = p - Path;
+
+        /* As with the NT installer, fail for '.' and '..';
+         * RtlIsNameLegalDOS8Dot3() would succeed otherwise */
+        if ((Length == 1 && *Path == '.') || (Length == 2 && *Path == '.' && *(Path + 1) == '.'))
+            return FALSE;
+
+        /* As with the NT installer, allow _only ONE trailing_ dot in
+         * the path component (but not 2 or more), by reducing Length
+         * in that case; RtlIsNameLegalDOS8Dot3() would fail otherwise */
+        if (Length > 1 && *(p - 2) != L'.' && *(p - 1) == L'.')
+            --Length;
+
+        if (Length == 0)
+            return FALSE;
+
+        /* Verify that the path component is a valid 8.3 name */
+        // if (Length > 8+1+3)
+        //     return FALSE;
+        Name.Length = Name.MaximumLength = (USHORT)(Length * sizeof(WCHAR));
+        Name.Buffer = (PWCHAR)Path;
+        SpacesInName = FALSE;
+        IsNameLegal = RtlIsNameLegalDOS8Dot3(&Name, NULL, &SpacesInName);
+
+        /* If it isn't legal or contain spaces, fail */
+        if (!IsNameLegal || SpacesInName)
+        {
+            DPRINT("'%wZ' is %s 8.3 filename %s spaces\n",
+                   &Name,
+                   (IsNameLegal ? "a valid" : "an invalid"),
+                   (SpacesInName ? "with" : "without"));
+            return FALSE;
+        }
+        /* Go to the next path component */
+    }
+
+    return TRUE;
+}
+
+
 NTSTATUS
 InitDestinationPaths(
     IN OUT PUSETUP_DATA pSetupData,
@@ -836,6 +1009,14 @@ InitializeSetup(
         DPRINT1("SourceRootPath (1): '%wZ'\n", &pSetupData->SourceRootPath);
         DPRINT1("SourceRootDir (1): '%wZ'\n", &pSetupData->SourceRootDir);
 
+        /* Set up default values */
+        pSetupData->DestinationDiskNumber = 0;
+        pSetupData->DestinationPartitionNumber = 1;
+        pSetupData->BootLoaderLocation = 2; // Default to "System partition"
+        pSetupData->FormatPartition = 0;
+        pSetupData->AutoPartition = 0;
+        pSetupData->FsType = 0;
+
         /* Load 'txtsetup.sif' from the installation media */
         Error = LoadSetupInf(pSetupData);
         if (Error != ERROR_SUCCESS)
@@ -846,6 +1027,17 @@ InitializeSetup(
         DPRINT1("SourcePath (2): '%wZ'\n", &pSetupData->SourcePath);
         DPRINT1("SourceRootPath (2): '%wZ'\n", &pSetupData->SourceRootPath);
         DPRINT1("SourceRootDir (2): '%wZ'\n", &pSetupData->SourceRootDir);
+
+        /* Retrieve the target machine architecture type */
+        // FIXME: This should be determined at runtime!!
+        // FIXME: Allow for (pre-)installing on an architecture
+        //        different from the current one?
+#if defined(SARCH_XBOX)
+        pSetupData->ArchType = ARCH_Xbox;
+// #elif defined(SARCH_PC98)
+#else // TODO: Arc, UEFI
+        pSetupData->ArchType = (IsNEC_98 ? ARCH_NEC98x86 : ARCH_PcAT);
+#endif
 
         return ERROR_SUCCESS;
     }

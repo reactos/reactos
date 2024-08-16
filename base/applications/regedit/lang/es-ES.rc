@@ -1,5 +1,5 @@
 /* Spanish Language resource file.
- * Translated by: ?? and Ismael Ferreras Morezuelas <2014-11-07> */
+ * TRANSLATOR: 2014 Ismael Ferreras Morezuelas */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -69,18 +69,6 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&Archivo"
-    BEGIN
-        MENUITEM "&Salir", ID_REGISTRY_EXIT
-    END
-    POPUP "Ay&uda"
-    BEGIN
-        MENUITEM "&Acerca de", ID_HELP_ABOUT
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Archivo"
@@ -88,8 +76,8 @@ BEGIN
         MENUITEM "&Importar archivo...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Exportar archivo...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Cargar subárbol...", ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "Descargar subárbol...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "Cargar subárbol...", ID_REGISTRY_LOADHIVE, GRAYED //FIXME: add accel
+        MENUITEM "Descargar subárbol...", ID_REGISTRY_UNLOADHIVE, GRAYED //FIXME: add accel
         MENUITEM SEPARATOR
         MENUITEM "&Conectar al Registro de red...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Desconectar del Registro de red...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
@@ -182,10 +170,10 @@ BEGIN
         END
         MENUITEM "&Buscar...", ID_EDIT_FIND
         MENUITEM SEPARATOR
-        MENUITEM "&Eliminar", ID_TREE_DELETE
+        MENUITEM "&Eliminar", ID_TREE_DELETE //FIXME: accelerator collision &E
         MENUITEM "&Renombrar", ID_TREE_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Exportar", ID_TREE_EXPORT
+        MENUITEM "&Exportar", ID_TREE_EXPORT //FIXME: accelerator collision &E. Please notice that there is another MENUITEM "&Exportar", ID_TREE_EXPORT ~ 10 lines below and also another MENUITEM "&Eliminar", ID_HEXEDIT_DELETE ~ 20 lines below. If possible keep them harmonizd.
         MENUITEM "&Permisos...", ID_TREE_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Copiar nombre de clave", ID_EDIT_COPYKEYNAME
@@ -454,8 +442,8 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Se conecta al Registro de un ordenador remoto"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Se desconecta del Registro de un ordenador remoto"
     ID_REGISTRY_PRINT "Imprime todo o parte del Registro"
-/*    ID_HELP_HELPTOPICS "Opens registry editor help" */
-    ID_HELP_ABOUT "Muestra información del programa, número de versión y derechos de autor"
+//    ID_HELP_HELPTOPICS "Abre la ayuda del Editor de registro"
+    ID_HELP_ABOUT "Despliega información del programa, versión y licencia"
 END
 
 STRINGTABLE
@@ -659,15 +647,15 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_B
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Intervalo de exportación ", IDC_STATIC, 2, 0, 276, 48
-    CONTROL "&Todos", IDC_EXPORT_ALL, "Button", BS_AUTORADIOBUTTON, 10, 10, 35, 11
-    CONTROL "&Rama seleccionada", IDC_EXPORT_BRANCH, "Button", BS_AUTORADIOBUTTON, 10, 22, 100, 11
+    AUTORADIOBUTTON "&Todos", IDC_EXPORT_ALL, 10, 10, 99, 11, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Rama seleccionada", IDC_EXPORT_BRANCH, 10, 22, 99, 11
     EDITTEXT IDC_EXPORT_BRANCH_TEXT, 25, 34, 245, 12
 END
 
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Cargar subárbol"
-FONT 8, "Ms Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Clave:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
@@ -705,7 +693,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Buscar &siguiente", IDOK, 187, 7, 60, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 187, 24, 60, 14
-    GROUPBOX "Buscar en ", IDC_STATIC, 7, 25, 63, 51
+    GROUPBOX "Buscar en", IDC_STATIC, 7, 25, 63, 51
     LTEXT "&Buscar:", IDC_STATIC, 7, 8, 30, 10
     EDITTEXT IDC_FINDWHAT, 40, 7, 142, 13, ES_AUTOHSCROLL
     CONTROL "&Claves", IDC_LOOKAT_KEYS, "Button", BS_AUTOCHECKBOX |
@@ -726,15 +714,6 @@ CAPTION "Buscar"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
-    DEFPUSHBUTTON "&Cancelar", IDCANCEL, 93, 29, 45, 14
+    DEFPUSHBUTTON "Cancelar", IDCANCEL, 93, 29, 45, 14
     LTEXT "Buscando en el Registro...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Abre la ayuda del Editor de registro."
- *    ID_HELP_ABOUT "Despliega información del programa, versión y licencia."
- *END
- */

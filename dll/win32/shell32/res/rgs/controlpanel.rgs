@@ -32,10 +32,11 @@ HKLM
 				{
 					NoRemove Explorer
 					{
-						ControlPanel
+						NoRemove ControlPanel
 						{
-							NameSpace
+							NoRemove NameSpace
 							{
+								'{0DF44EAA-FF21-4412-828E-260A8728E7F1}' = s 'Taskbar and Start Menu'
 							}
 						}
 						NoRemove MyComputer
@@ -70,6 +71,31 @@ HKCR
 		ForceRemove {06622D85-6856-4460-8DE1-A81921B41C4B} = s 'COpenControlPanel'
 		{
 			val DllSurrogate = s ''
+		}
+	}
+}
+
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {0DF44EAA-FF21-4412-828E-260A8728E7F1} = s 'Taskbar and Start Menu'
+		{
+			val '{305CA226-D286-468e-B848-2B2E8E697B74} 2' = d '1'
+			val InfoTip = e '@%%SystemRoot%%\system32\SHELL32.dll,-30348'
+			val LocalizedString = e '@%%SystemRoot%%\system32\SHELL32.dll,-32517'
+			DefaultIcon = e '%%SystemRoot%%\system32\SHELL32.dll,-40'
+			Shell
+			{
+				Open
+				{
+					Command = s 'rundll32.exe shell32.dll,Options_RunDLL 1'
+				}
+			}
+			ShellFolder
+			{
+				val Attributes = d '0'
+			}
 		}
 	}
 }

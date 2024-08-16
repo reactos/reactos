@@ -370,15 +370,12 @@ InstallFiles(const CStringW &SourceDirBase, const CStringW &Spec,
                 {
                     success = !ErrorBox(Info.Error);
                 }
-                else
-                {
-                    success = AddEntry(UNOP_EMPTYDIR, uninstpath);
-                }
 
                 if (success)
                 {
                     success = InstallFiles(from, filespec, to);
                 }
+                AddEntry(UNOP_EMPTYDIR, uninstpath);
             }
         }
         else
@@ -752,7 +749,7 @@ UninstallThread(LPVOID Parameter)
                             if (op == UNOP_REGKEY)
                                 err = key.RecurseDeleteKey(tmp);
                             else if (RegKeyHasValues(hKey, str, wowsam) == S_FALSE)
-                                err = key.DeleteSubKey(tmp);
+                                key.DeleteSubKey(tmp); // DelRegEmpty ignores errors
                         }
                         switch(err)
                         {

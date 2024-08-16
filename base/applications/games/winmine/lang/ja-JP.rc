@@ -14,6 +14,7 @@ BEGIN
         MENUITEM "スタート(&N)\tF2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "?マークを使用(&M)", IDM_MARKQ
+        MENUITEM "Sound", IDM_SOUND
         MENUITEM SEPARATOR
         MENUITEM "初級(&B)", IDM_BEGINNER
         MENUITEM "中級(&A)", IDM_ADVANCED

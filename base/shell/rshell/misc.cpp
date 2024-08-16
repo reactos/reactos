@@ -1,21 +1,8 @@
 /*
- * ReactOS Explorer
- *
- * Copyright 2014 Giannis Adamopoulos
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * PROJECT:     ReactOS shell extensions
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Quick Launch Toolbar (Taskbar Shell Extension)
+ * COPYRIGHT:   Copyright 2014 Giannis Adamopoulos
  */
 
 
@@ -56,13 +43,13 @@
 
 extern "C"
 {
-extern HINSTANCE shell32_hInstance;
+    extern HINSTANCE shell32_hInstance;
 
-HRESULT WINAPI RSHELL_CStartMenu_CreateInstance(REFIID riid, void **ppv);
-HRESULT WINAPI RSHELL_CMenuDeskBar_CreateInstance(REFIID riid, LPVOID *ppv);
-HRESULT WINAPI RSHELL_CMenuSite_CreateInstance(REFIID riid, LPVOID *ppv);
-HRESULT WINAPI RSHELL_CMenuBand_CreateInstance(REFIID riid, LPVOID *ppv);
-HRESULT WINAPI RSHELL_CMergedFolder_CreateInstance(REFIID riid, LPVOID *ppv);
+    HRESULT WINAPI RSHELL_CStartMenu_CreateInstance(REFIID riid, void **ppv);
+    HRESULT WINAPI RSHELL_CMenuDeskBar_CreateInstance(REFIID riid, LPVOID *ppv);
+    HRESULT WINAPI RSHELL_CMenuSite_CreateInstance(REFIID riid, LPVOID *ppv);
+    HRESULT WINAPI RSHELL_CMenuBand_CreateInstance(REFIID riid, LPVOID *ppv);
+    HRESULT WINAPI RSHELL_CMergedFolder_CreateInstance(REFIID riid, LPVOID *ppv);
 }
 
 DWORD WINAPI WinList_Init(void)
@@ -263,9 +250,9 @@ public:
 
 STDAPI
 DllGetClassObject(
-REFCLSID rclsid,
-REFIID riid,
-LPVOID *ppv)
+    REFCLSID rclsid,
+    REFIID riid,
+    LPVOID *ppv)
 {
     if (!ppv)
         return E_INVALIDARG;
@@ -281,4 +268,3 @@ VOID WINAPI ShowFolderOptionsDialog(UINT Page, BOOL Async)
     wsprintfA(buf, "rundll32.exe shell32.dll,Options_RunDLL %u", Page);
     WinExec(buf, SW_SHOW);
 }
-

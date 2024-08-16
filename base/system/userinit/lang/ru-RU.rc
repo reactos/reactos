@@ -1,3 +1,13 @@
+/*
+ * PROJECT:     ReactOS Userinit Logon Application
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Russian resource file
+ * TRANSLATORS: Copyright 2006 Anton Belitsky (bmoof) <fidoworld@mail.ru>
+ *              Copyright 2016 Alexey Shaltsin (BinaryTree) <lexa2011_98@mail.ru>
+ *              Copyright 2016 Kudratov Olimjon <olim98@bk.ru>
+ *              Copyright 2017 Nikolay Burshtyn <amber8706@mail.ru>
+ */
+
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDD_LOCALEPAGE DIALOGEX 0, 0, 317, 193
@@ -42,5 +52,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SPAIN "Spanish (Spain)"
+    IDS_SPAIN "Испанский (Испания)"
 END

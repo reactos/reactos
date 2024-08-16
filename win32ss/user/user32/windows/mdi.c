@@ -2053,7 +2053,7 @@ QuerySizeFix(HWND hwnd, LPINT pcx, LPINT pcy)
     mmi.ptMinTrackSize.x = mmi.ptMinTrackSize.y = 0;
     mmi.ptMaxTrackSize.x = mmi.ptMaxTrackSize.y = MAXLONG;
     if (SendMessageTimeoutW(hwnd, WM_GETMINMAXINFO, 0, (LPARAM)&mmi,
-                            SMTO_ABORTIFHUNG | SMTO_NORMAL, 120, &dwResult))
+                            SMTO_ABORTIFHUNG | SMTO_NORMAL, 1000, &dwResult))
     {
         *pcx = min(max(*pcx, mmi.ptMinTrackSize.x), mmi.ptMaxTrackSize.x);
         *pcy = min(max(*pcy, mmi.ptMinTrackSize.y), mmi.ptMaxTrackSize.y);

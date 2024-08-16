@@ -153,6 +153,9 @@
 #define IDS_CANTDISCONNECT        160
 #define IDS_NONE                  161
 
+#define IDS_EXPAND                170
+#define IDS_COLLAPSE              171
+
 /* Friendly File Type Names */
 #define IDS_DIRECTORY             200
 #define IDS_BAT_FILE              201
@@ -270,9 +273,11 @@
 #define IDS_FONTS_DESCRIPTION      22920
 #define IDS_ADMINISTRATIVETOOLS_DESCRIPTION 22921
 #define IDS_FOLDER_OPTIONS_DESCRIPTION 22924
+#define IDS_TASKBAR_OPTIONS_INFOTIP 30348
 #define IDS_ADMINISTRATIVETOOLS    22982
 #define IDS_FOLDER_OPTIONS         22985
 #define IDS_FONTS                  22981
+#define IDS_TASKBAR_OPTIONS        32517
 #define IDS_PRINTERS               9319
 #define IDS_MYCOMPUTER             9216
 #define IDS_PERSONAL               9227
@@ -873,6 +878,7 @@
 #define IDM_COPYHERE 0x7
 #define IDM_MOVEHERE 0x8
 #define IDM_LINKHERE 0xB
+#define IDM_DVSELECT 0x104
 
 #define IDM_MYDOCUMENTS 516
 #define IDM_MYPICTURES 518

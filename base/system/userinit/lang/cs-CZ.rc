@@ -1,6 +1,9 @@
-/* FILE:       system/userinit/lang/cs-CZ.rc
- * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2008-04-21
+/*
+ * PROJECT:     ReactOS Userinit Logon Application
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Czech resource file
+ * TRANSLATORS: Copyright 2008 Radek Liška (Black_Fox) <radekliska@gmail.com>
+ *              Copyright 2024 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -15,7 +18,7 @@ BEGIN
     COMBOBOX IDC_LANGUAGELIST, 132, 107, 176, 142, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP
     RTEXT "Rozvržení &klávesnice:", IDC_STATIC, 20, 132, 106, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_LAYOUTLIST, 132, 130, 176, 81, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Vyberte si svůj jazyk a rozložení klávesnice a kliknětě na Další.", IDC_STATIC, 7, 152, 300, 8
+    LTEXT "Vyberte si svůj jazyk a rozložení klávesnice a klikněte na Další.", IDC_STATIC, 7, 152, 300, 8
 
     CONTROL "", IDC_STATIC, "STATIC", SS_ETCHEDHORZ, 0, 165, 317, 1
     DEFPUSHBUTTON "&Další", IDOK, 205, 172, 50, 14
@@ -42,10 +45,10 @@ STRINGTABLE
 BEGIN
     IDS_SHELL_FAIL "Aplikace Userinit selhala při spouštění uživatelského rozhraní!"
     IDS_INSTALLER_FAIL "Aplikaci Userinit se nepodařilo spustit instalátor!"
-    IDS_CANCEL_CONFIRM "Are you sure you want to quit the ReactOS LiveCD?\nIf you choose to do so, your computer might restart."
+    IDS_CANCEL_CONFIRM "Jste si jisti, že chcete opustit ReactOS LiveCD?\nPokud ano, Váš počítač se může restartovat."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SPAIN "Spanish (Spain)"
+    IDS_SPAIN "Španělština (Španělsko)"
 END

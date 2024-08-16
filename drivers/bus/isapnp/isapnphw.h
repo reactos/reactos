@@ -46,6 +46,7 @@ extern "C" {
 #define    IRQTYPE_LOW_LEVEL 0x01
 #define    IRQTYPE_HIGH_EDGE 0x02
 #define ISAPNP_DMACHANNEL(n) (0x74 + (n))
+#define    DMACHANNEL_NONE 4
 #define ISAPNP_MEMBASE32(n) ((n) == 0 ? 0x76 : (0x70 + (n) * 16))
 #define ISAPNP_MEMCONTROL32(n) ((n) == 0 ? 0x7A : (0x74 + (n) * 16))
 #define ISAPNP_MEMLIMIT32(n) ((n) == 0 ? 0x7B : (0x75 + (n) * 16))

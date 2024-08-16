@@ -40,10 +40,7 @@ function(add_message_headers _type)
         get_filename_component(_file_name ${_file} NAME_WE)
         set(_converted_file ${CMAKE_CURRENT_BINARY_DIR}/${_file}) ## ${_file_name}.mc
         set(_source_file ${CMAKE_CURRENT_SOURCE_DIR}/${_file})    ## ${_file_name}.mc
-        add_custom_command(
-            OUTPUT "${_converted_file}"
-            COMMAND native-utf16le "${_source_file}" "${_converted_file}" nobom
-            DEPENDS native-utf16le "${_source_file}")
+        utf16le_convert(${_source_file} ${_converted_file} nobom)
         macro_mc(${_flag} ${_converted_file})
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file_name}.h ${CMAKE_CURRENT_BINARY_DIR}/${_file_name}.rc
@@ -82,7 +79,8 @@ function(add_link)
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_LINK_NAME}.lnk
         COMMAND native-mkshelllink -o ${CMAKE_CURRENT_BINARY_DIR}/${_LINK_NAME}.lnk ${_LINK_CMD_LINE_ARGS} ${_LINK_ICON} ${_LINK_GUID} ${_LINK_MINIMIZE} ${_LINK_PATH}
         DEPENDS native-mkshelllink)
-    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_LINK_NAME}.lnk PROPERTIES GENERATED TRUE)
+    set_source_files_properties(
+        ${CMAKE_CURRENT_BINARY_DIR}/${_LINK_NAME}.lnk PROPERTIES GENERATED TRUE)
 endfunction()
 
 #
@@ -698,6 +696,13 @@ function(end_module_group)
     set(CURRENT_MODULE_GROUP PARENT_SCOPE)
 endfunction()
 
+function(utf16le_convert _in _out)
+    add_custom_command(OUTPUT "${_out}"
+                       COMMAND native-utf16le "${_in}" "${_out}" ${ARGN}
+                       DEPENDS native-utf16le "${_in}")
+    set_source_files_properties("${_out}" PROPERTIES GENERATED TRUE)
+endfunction()
+
 function(preprocess_file __in __out)
     set(__arg ${__in})
     foreach(__def ${ARGN})
@@ -755,9 +760,7 @@ function(create_registry_hives)
         file(RELATIVE_PATH _subdir ${CMAKE_SOURCE_DIR} ${_file})
         get_filename_component(_subdir ${_subdir}  DIRECTORY)
         set(_converted_file ${CMAKE_BINARY_DIR}/${_subdir}/${_file_name}_utf16.inf)
-        add_custom_command(OUTPUT ${_converted_file}
-                           COMMAND native-utf16le ${_file} ${_converted_file}
-                           DEPENDS native-utf16le ${_file})
+        utf16le_convert(${_file} ${_converted_file})
         list(APPEND _converted_files ${_converted_file})
     endforeach()
 
@@ -853,9 +856,7 @@ function(add_driver_inf _module)
     foreach(_file ${ARGN})
         set(_converted_item ${CMAKE_CURRENT_BINARY_DIR}/${_file})
         set(_source_item ${CMAKE_CURRENT_SOURCE_DIR}/${_file})
-        add_custom_command(OUTPUT "${_converted_item}"
-                           COMMAND native-utf16le "${_source_item}" "${_converted_item}"
-                           DEPENDS native-utf16le "${_source_item}")
+        utf16le_convert(${_source_item} ${_converted_item})
         list(APPEND _converted_inf_files ${_converted_item})
     endforeach()
 

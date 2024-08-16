@@ -541,7 +541,7 @@ OwnerDrawButtonSubclass(
                 {
                     pContext->bIsButtonHot[HIBERNATE_BUTTON_HOT] = TRUE;
                 }
-                SetCursor(LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_HAND)));
+                SetCursor(LoadCursorW(NULL, IDC_HAND));
             }
 
             ClientToScreen(hButton, &pt);

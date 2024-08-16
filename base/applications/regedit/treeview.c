@@ -2,35 +2,20 @@
  * Regedit treeview
  *
  * Copyright (C) 2002 Robert Dickenson <robd@reactos.org>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * LICENSE: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  */
 
 #include "regedit.h"
 
-/* Global variables and constants  */
-/* Image_Open, Image_Closed, and Image_Root - integer variables for indexes of the images.  */
-/* CX_ICON and CY_ICON - width and height of an icon.  */
-/* NUM_ICON - number of icons to add to the image list.  */
-static int Image_Open = 0;
-static int Image_Closed = 0;
-static int Image_Root = 0;
+/* Global variables and constants */
+/* Image_Open, Image_Closed, and Image_Root - integer variables for indexes of the images */
+static int Image_Open;
+static int Image_Closed;
+static int Image_Root;
 
 static LPWSTR pathBuffer;
 
-#define NUM_ICONS   3
+#define NUM_ICONS   3 /* number of icons to add to the image list */
 
 /* External resources in shell32.dll */
 #define IDI_SHELL_FOLDER             4
@@ -92,17 +77,13 @@ LPCWSTR GetItemPath(HWND hwndTV, HTREEITEM hItem, HKEY* phRootKey)
     *phRootKey = NULL;
 
     if (!pathBuffer)
-    {
         pathBuffer = HeapAlloc(GetProcessHeap(), 0, 1024);
-    }
     if (!pathBuffer)
-    {
         return NULL;
-    }
 
     *pathBuffer = UNICODE_NULL;
 
-    maxLen = (int) HeapSize(GetProcessHeap(), 0, pathBuffer);
+    maxLen = (int)HeapSize(GetProcessHeap(), 0, pathBuffer);
 
     if (!hItem)
     {
@@ -444,7 +425,6 @@ static BOOL InitTreeViewItems(HWND hwndTV, LPWSTR pHostName)
     return TRUE;
 }
 
-
 /*
  * InitTreeViewImageLists - creates an image list, adds three bitmaps
  * to it, and associates the image list with a tree view control.
@@ -579,7 +559,6 @@ done:
 
     return TRUE;
 }
-
 
 BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem)
 {

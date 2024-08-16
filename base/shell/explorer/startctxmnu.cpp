@@ -29,15 +29,21 @@ class CStartMenuBtnCtxMenu :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IContextMenu
 {
+    /* AddStartContextMenuItems uses ID_SHELL_CMD IDs directly and relies on idCmdFirst being 0.
+     * CTrayWindow::TrackCtxMenu must pass 0 because DeleteMenu ID_SHELL_CMD_UNDO_ACTION would
+     * delete the wrong item if it used 1. m_Inner->QueryContextMenu is not aware of this game
+     * so we have to reserve the entire ID_SHELL_CMD range for ourselves here. */
+    enum { INNERIDOFFSET = ID_SHELL_CMD_LAST + 1 };
+    static BOOL IsShellCmdId(UINT_PTR id) { return id < INNERIDOFFSET; }
+
     CComPtr<ITrayWindow>  m_TrayWnd;
     CComPtr<IContextMenu> m_Inner;
     CComPtr<IShellFolder> m_Folder;
-    UINT m_idCmdCmLast;
 
     HWND m_Owner;
     LPITEMIDLIST m_FolderPidl;
 
-    HRESULT CreateContextMenuFromShellFolderPidl(HMENU hPopup)
+    HRESULT CreateContextMenuFromShellFolderPidl(HMENU hPopup, UINT idCmdFirst, UINT idCmdLast)
     {
         HRESULT hRet;
 
@@ -49,19 +55,16 @@ class CStartMenuBtnCtxMenu :
                 hRet = m_Inner->QueryContextMenu(
                     hPopup,
                     0,
-                    ID_SHELL_CMD_FIRST,
-                    ID_SHELL_CMD_LAST,
+                    idCmdFirst,
+                    idCmdLast,
                     CMF_VERBSONLY);
 
                 if (SUCCEEDED(hRet))
                 {
                     return hRet;
                 }
-
-                DestroyMenu(hPopup);
             }
         }
-
         return E_FAIL;
     }
 
@@ -69,6 +72,9 @@ class CStartMenuBtnCtxMenu :
     {
         WCHAR szBuf[MAX_PATH];
         HRESULT hRet;
+        C_ASSERT(ID_SHELL_CMD_FIRST != 0);
+         /* If this ever asserts, let m_Inner use 1..ID_SHELL_CMD_FIRST-1 instead */
+        C_ASSERT(ID_SHELL_CMD_LAST < 0xffff / 2);
 
         /* Add the "Open All Users" menu item */
         if (LoadStringW(hExplorerInstance,
@@ -148,13 +154,13 @@ public:
     {
         LPITEMIDLIST pidlStart;
         CComPtr<IShellFolder> psfDesktop;
-        HRESULT hRet;
+        HRESULT hRet = S_OK;
+        UINT idInnerFirst = idCmdFirst + INNERIDOFFSET;
 
         psfDesktop = NULL;
         m_Inner = NULL;
 
         pidlStart = SHCloneSpecialIDList(m_Owner, CSIDL_STARTMENU, TRUE);
-
         if (pidlStart != NULL)
         {
             m_FolderPidl = ILClone(ILFindLastID(pidlStart));
@@ -168,49 +174,48 @@ public:
                     hRet = psfDesktop->BindToObject(pidlStart, NULL, IID_PPV_ARG(IShellFolder, &m_Folder));
                     if (SUCCEEDED(hRet))
                     {
-                        hRet = CreateContextMenuFromShellFolderPidl(hPopup);
-                        m_idCmdCmLast = (SUCCEEDED(hRet)) ? HRESULT_CODE(hRet) : ID_SHELL_CMD_LAST;
-                        AddStartContextMenuItems(hPopup);
+                        hRet = CreateContextMenuFromShellFolderPidl(hPopup, idInnerFirst, idCmdLast);
                     }
                 }
             }
 
             ILFree(pidlStart);
         }
-
-        return S_OK;
+        if (idCmdLast - idCmdFirst >= ID_SHELL_CMD_LAST - ID_SHELL_CMD_FIRST)
+        {
+            AddStartContextMenuItems(hPopup);
+            hRet = SUCCEEDED(hRet) ? hRet + idInnerFirst : idInnerFirst;
+        }
+        return hRet;
     }
 
     virtual HRESULT STDMETHODCALLTYPE
         InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     {
         UINT uiCmdId = PtrToUlong(lpici->lpVerb);
-        if (uiCmdId != 0)
+        if (!IsShellCmdId((UINT_PTR)lpici->lpVerb))
         {
-            if ((uiCmdId >= ID_SHELL_CMD_FIRST) && (uiCmdId < m_idCmdCmLast))
-            {
-                CMINVOKECOMMANDINFO cmici = { 0 };
-                CHAR szDir[MAX_PATH];
+            CMINVOKECOMMANDINFO cmici = { 0 };
+            CHAR szDir[MAX_PATH];
 
-                /* Setup and invoke the shell command */
-                cmici.cbSize = sizeof(cmici);
-                cmici.hwnd = m_Owner;
-                cmici.lpVerb = MAKEINTRESOURCEA(uiCmdId - ID_SHELL_CMD_FIRST);
-                cmici.nShow = SW_NORMAL;
-
-                /* FIXME: Support Unicode!!! */
-                if (SHGetPathFromIDListA(m_FolderPidl, szDir))
-                {
-                    cmici.lpDirectory = szDir;
-                }
-
-                m_Inner->InvokeCommand(&cmici);
-            }
+            /* Setup and invoke the shell command */
+            cmici.cbSize = sizeof(cmici);
+            cmici.hwnd = m_Owner;
+            if (IS_INTRESOURCE(lpici->lpVerb))
+                cmici.lpVerb = MAKEINTRESOURCEA(uiCmdId - INNERIDOFFSET);
             else
+                cmici.lpVerb = lpici->lpVerb;
+            cmici.nShow = SW_NORMAL;
+
+            /* FIXME: Support Unicode!!! */
+            if (SHGetPathFromIDListA(m_FolderPidl, szDir))
             {
-                m_TrayWnd->ExecContextMenuCmd(uiCmdId);
+                cmici.lpDirectory = szDir;
             }
+
+            return m_Inner->InvokeCommand(&cmici);
         }
+        m_TrayWnd->ExecContextMenuCmd(uiCmdId);
         return S_OK;
     }
 
@@ -221,12 +226,13 @@ public:
                          LPSTR pszName,
                          UINT cchMax)
     {
+        if (!IsShellCmdId(idCmd) && m_Inner)
+            return m_Inner->GetCommandString(idCmd, uType, pwReserved, pszName, cchMax);
         return E_NOTIMPL;
     }
 
     CStartMenuBtnCtxMenu()
     {
-        m_idCmdCmLast = ID_SHELL_CMD_LAST;
     }
 
     virtual ~CStartMenuBtnCtxMenu()

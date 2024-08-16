@@ -61,11 +61,9 @@
 #define IDC_RESTART_PROGRESS 2072
 #define IDC_PARTMOREOPTS     2073
 
-#define IDD_BOOTOPTIONS      2080
+#define IDD_ADVINSTOPTS      2080
 #define IDC_PATH             2081
 #define IDC_INSTFREELDR      2082
-#define IDC_INSTVBRONLY      2083
-#define IDC_NOINSTFREELDR    2084
 
 #define IDD_PARTITION        2090
 #define IDC_UPDOWN1          2091
@@ -100,3 +98,19 @@
 #define IDS_PARTITION_TYPE   5201
 #define IDS_PARTITION_SIZE   5202
 #define IDS_PARTITION_STATUS 5203
+
+// WARNING: These IDs *MUST* stay in increasing order!
+#define IDS_BOOTLOADER_NOINST       5300
+#define IDS_BOOTLOADER_REMOVABLE    5301
+#define IDS_BOOTLOADER_SYSTEM       5302    // For non-MBR disks
+#define IDS_BOOTLOADER_MBRVBR       5303    // For MBR disks only
+#define IDS_BOOTLOADER_VBRONLY      5304    // ""
+
+
+/* Error Strings */
+#define IDS_ERROR_INVALID_INSTALLDIR_CHAR_TITLE 5400
+#define IDS_ERROR_INVALID_INSTALLDIR_CHAR       5401
+
+// ERROR_DIRECTORY_NAME
+#define IDS_ERROR_DIRECTORY_NAME_TITLE          5402
+#define IDS_ERROR_DIRECTORY_NAME                5403

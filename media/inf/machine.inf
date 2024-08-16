@@ -864,6 +864,8 @@ PCI\VEN_8086&DEV_7190.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU į PCI
 PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU į PCI tiltas"
 
 [Strings.0804]
+SystemClassName = "系统设备"
+
 GenericMfg = "(通用系统设备)"
 *PNP0000.DeviceDesc = "可编程中断控制器"
 *PNP0001.DeviceDesc = "EISA 可编程中断控制器"

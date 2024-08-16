@@ -1,7 +1,5 @@
 /* Превод на Български/ Bulgarian translation */
 /* https://reactos.org/wiki/Bulgarian_translation */
-/* LOCATION: base/applications/regedit/lang */
-/* НЕДОВЪРШЕН/ INCOMPLETE */
 
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
@@ -71,18 +69,6 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&Файл"
-    BEGIN
-        MENUITEM "Из&ход", ID_REGISTRY_EXIT
-    END
-    POPUP "Помо&щ"
-    BEGIN
-        MENUITEM "&За", ID_HELP_ABOUT
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Файл"
@@ -90,8 +76,8 @@ BEGIN
         MENUITEM "&Внос...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Износ...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Зареждане на рой...", ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "Изоставяне на рой...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "Зареждане на рой...", ID_REGISTRY_LOADHIVE, GRAYED //FIXME: add accelerator. You can use the same for ID_REGISTRY_LOADHIVE and ID_REGISTRY_UNLOADHIVE
+        MENUITEM "Изоставяне на рой...", ID_REGISTRY_UNLOADHIVE, GRAYED //FIXME: add accelerator. You can use the same for ID_REGISTRY_LOADHIVE and ID_REGISTRY_UNLOADHIVE
         MENUITEM SEPARATOR
         MENUITEM "&Свързване с мрежов регистър...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Разделяне от мрежов регистър...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
@@ -456,7 +442,7 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Свързва се с регистъра на далечен компютър"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Разкача се от регистъра на отдалечен компютър"
     ID_REGISTRY_PRINT "Разпечатва регистъра или част от него"
-/*    ID_HELP_HELPTOPICS "Отваря помощта за регистърен обработчик" */
+//    ID_HELP_HELPTOPICS "Отваря помощта за регистърен обработчик"
     ID_HELP_ABOUT "Показва сведения за приложението, версия и възпроизводствени права"
 END
 
@@ -661,15 +647,15 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_B
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Област за износ", IDC_STATIC, 2, 0, 366, 48
-    CONTROL "Вси&чки", IDC_EXPORT_ALL, "Button", BS_AUTORADIOBUTTON, 10, 10, 50, 11
-    CONTROL "Из&брания клон", IDC_EXPORT_BRANCH, "Button", BS_AUTORADIOBUTTON, 10, 22, 100, 11
+    AUTORADIOBUTTON "Вси&чки", IDC_EXPORT_ALL, 10, 10, 99, 11, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Из&брания клон", IDC_EXPORT_BRANCH, 10, 22, 99, 11
     EDITTEXT IDC_EXPORT_BRANCH_TEXT, 30, 34, 335, 12
 END
 
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Зареждане на рой"
-FONT 8, "Ms Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Клавиш:", IDC_STATIC, 4, 4, 28, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 41, 2, 145, 13
@@ -728,15 +714,6 @@ CAPTION "Търсене"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
-    DEFPUSHBUTTON "&Отказ", IDCANCEL, 93, 29, 45, 14
+    DEFPUSHBUTTON "Отказ", IDCANCEL, 93, 29, 45, 14
     LTEXT "Претърсване на регистъра...", IDC_STATIC, 33, 12, 105, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Отваря помощта за Регистърния обработчик."
- *    ID_HELP_ABOUT "Показва сведения за приложението, версията и възпроизводственото право."
- *END
- */

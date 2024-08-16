@@ -31,7 +31,7 @@ static BOOLEAN HalpSetClockRate;
 static UCHAR HalpNextClockRate;
 
 /*!
-    \brief Converts the CMOS RTC rate into the time increment in 100ns intervals.
+    \brief Converts the CMOS RTC rate into the time increment in 0.1ns intervals.
 
     Rate Frequency Interval (ms) Precise increment (0.1ns)
     ------------------------------------------------------
@@ -222,14 +222,15 @@ NTAPI
 HalSetTimeIncrement(IN ULONG Increment)
 {
     UCHAR Rate;
-    ULONG CurrentIncrement;
+    ULONG NextIncrement;
 
     /* Lookup largest value below given Increment */
-    for (Rate = RtcMinimumClockRate; Rate <= RtcMaximumClockRate; Rate++)
+    for (Rate = RtcMinimumClockRate; Rate < RtcMaximumClockRate; Rate++)
     {
         /* Check if this is the largest rate possible */
-        CurrentIncrement = RtcClockRateToPreciseIncrement(Rate + 1) / 1000;
-        if (Increment > CurrentIncrement) break;
+        NextIncrement = RtcClockRateToPreciseIncrement(Rate + 1) / 1000;
+        if (NextIncrement > Increment)
+            break;
     }
 
     /* Set the rate and tell HAL we want to change it */

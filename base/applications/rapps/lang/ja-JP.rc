@@ -23,22 +23,22 @@ BEGIN
         MENUITEM "アンインストール(&U)\tCtrl+Del", ID_UNINSTALL
         MENUITEM "変更(&M)", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "レジストリから削除(&R)\tF5", ID_REGREMOVE
+        MENUITEM "レジストリから削除(&E)\tF5", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "更新(&R)", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "データベースの更新(&T)\tCtrl+F5", ID_RESETDB
+        MENUITEM "データベースの更新(&B)\tCtrl+F5", ID_RESETDB
     END
     POPUP "ヘルプ"
     BEGIN
         MENUITEM "ヘルプ\tF1", ID_HELP, GRAYED
-        MENUITEM "バージョン情報", ID_ABOUT
+        MENUITEM "バージョン情報(&A)", ID_ABOUT
     END
 END
 
 IDR_LINKMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "ブラウザでリンクを開く(&O)", ID_OPEN_LINK
         MENUITEM "クリップボードにコピーする(&C)", ID_COPY_LINK
@@ -47,17 +47,17 @@ END
 
 IDR_APPLICATIONMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "インストール(&I)\tCtrl+Enter", ID_INSTALL
         MENUITEM "アンインストール(&U)\tCtrl+Del", ID_UNINSTALL
         MENUITEM "変更(&M)", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "レジストリから削除(&R)\tF5", ID_REGREMOVE
+        MENUITEM "レジストリから削除(&E)\tF5", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "更新(&R)", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "データベースの更新(&T)\tCtrl+F5", ID_RESETDB
+        MENUITEM "データベースの更新(&B)\tCtrl+F5", ID_RESETDB
     END
 END
 
@@ -76,17 +76,17 @@ BEGIN
     PUSHBUTTON "選択(&C)", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "インストール後にプログラムのインストーラを削除する(&D)", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
     GROUPBOX "ソフトウェアのソース", -1, 4, 118, 240, 46
-    CONTROL "既定を使う", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
-    CONTROL "指定のソース", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
+    AUTORADIOBUTTON "既定を使う", IDC_SOURCE_DEFAULT, 15, 132, 74, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "指定のソース", IDC_USE_SOURCE, 15, 147, 74, 10
     EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
     GROUPBOX "プロキシ", -1, 4, 166, 240, 76
-    CONTROL "システム プロキシ設定", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 180, 210, 10
-    CONTROL "直接 (プロキシなし)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 195, 210, 10
-    CONTROL "プロキシ", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 210, 74, 10
+    AUTORADIOBUTTON "システム プロキシ設定", IDC_PROXY_DEFAULT, 15, 180, 210, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "直接 (プロキシなし)", IDC_NO_PROXY, 15, 195, 210, 10
+    AUTORADIOBUTTON "プロキシ", IDC_USE_PROXY, 15, 210, 74, 10
     EDITTEXT IDC_PROXY_SERVER, 90, 210, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     LTEXT "次のはプロキシなし", -1, 26, 226, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 225, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    PUSHBUTTON "デフォルト", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14
+    PUSHBUTTON "デフォルト", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 116, 245, 60, 14
     PUSHBUTTON "キャンセル", IDCANCEL, 181, 245, 60, 14
 END
@@ -108,98 +108,98 @@ STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 CAPTION "ダウンロード %ls..."
 FONT 9, "MS UI Gothic"
 BEGIN
-    CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
+    CONTROL "", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
     EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
     PUSHBUTTON "キャンセル", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
 END
 
 STRINGTABLE
 BEGIN
-    IDS_TOOLTIP_INSTALL     "インストール"
-    IDS_TOOLTIP_UNINSTALL   "アンインストール"
-    IDS_TOOLTIP_MODIFY      "変更"
-    IDS_TOOLTIP_SELECT_ALL  "すべて選択/非選択"
-    IDS_TOOLTIP_SETTINGS    "設定"
-    IDS_TOOLTIP_REFRESH     "更新"
-    IDS_TOOLTIP_UPDATE_DB   "データベースの更新"
-    IDS_TOOLTIP_EXIT        "終了"
+    IDS_TOOLTIP_INSTALL "インストール"
+    IDS_TOOLTIP_UNINSTALL "アンインストール"
+    IDS_TOOLTIP_MODIFY "変更"
+    IDS_TOOLTIP_SELECT_ALL "すべて選択/非選択"
+    IDS_TOOLTIP_SETTINGS "設定"
+    IDS_TOOLTIP_REFRESH "更新"
+    IDS_TOOLTIP_UPDATE_DB "データベースの更新"
+    IDS_TOOLTIP_EXIT "終了"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_NAME            "名前"
-    IDS_APP_INST_VERSION    "バージョン"
-    IDS_APP_DESCRIPTION     "概要"
+    IDS_APP_NAME "名前"
+    IDS_APP_INST_VERSION "バージョン"
+    IDS_APP_DESCRIPTION "概要"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_INFO_VERSION        "\nバージョン: "
-    IDS_INFO_DESCRIPTION    "\n概要: "
-    IDS_INFO_PUBLISHER      "\n発行元: "
-    IDS_INFO_HELPLINK       "\nヘルプへのリンク: "
-    IDS_INFO_HELPPHONE      "\nヘルプの電話番号: "
-    IDS_INFO_README         "\nReadmeの位置: "
-    IDS_INFO_REGOWNER       "\n登録された所有者: "
-    IDS_INFO_PRODUCTID      "\nプロダクトID: "
-    IDS_INFO_CONTACT        "\n連絡先: "
-    IDS_INFO_UPDATEINFO     "\n更新情報: "
-    IDS_INFO_INFOABOUT      "\nこれに関する情報: "
-    IDS_INFO_COMMENTS       "\nコメント: "
-    IDS_INFO_INSTLOCATION   "\nインストール場所: "
-    IDS_INFO_INSTALLSRC     "\nインストール元: "
-    IDS_INFO_UNINSTALLSTR   "\nアンインストールに使用する文字列: "
-    IDS_INFO_MODIFYPATH     "\n変更に使用するパス: "
-    IDS_INFO_INSTALLDATE    "\nインストールした日付: "
+    IDS_INFO_VERSION "\nバージョン: "
+    IDS_INFO_DESCRIPTION "\n概要: "
+    IDS_INFO_PUBLISHER "\n発行元: "
+    IDS_INFO_HELPLINK "\nヘルプへのリンク: "
+    IDS_INFO_HELPPHONE "\nヘルプの電話番号: "
+    IDS_INFO_README "\nReadmeの位置: "
+    IDS_INFO_REGOWNER "\n登録された所有者: "
+    IDS_INFO_PRODUCTID "\nプロダクトID: "
+    IDS_INFO_CONTACT "\n連絡先: "
+    IDS_INFO_UPDATEINFO "\n更新情報: "
+    IDS_INFO_INFOABOUT "\nこれに関する情報: "
+    IDS_INFO_COMMENTS "\nコメント: "
+    IDS_INFO_INSTLOCATION "\nインストール場所: "
+    IDS_INFO_INSTALLSRC "\nインストール元: "
+    IDS_INFO_UNINSTALLSTR "\nアンインストールに使用する文字列: "
+    IDS_INFO_MODIFYPATH "\n変更に使用するパス: "
+    IDS_INFO_INSTALLDATE "\nインストールした日付: "
     IDS_AINFO_PACKAGE_NAME "\nPackage Name: "
 END
 
 STRINGTABLE
 BEGIN
-    IDS_AINFO_VERSION       "\nバージョン: "
+    IDS_AINFO_VERSION "\nバージョン: "
     IDS_AINFO_AVAILABLEVERSION "\n利用可能なバージョン: "
-    IDS_AINFO_DESCRIPTION   "\n概要: "
-    IDS_AINFO_SIZE          "\nサイズ: "
-    IDS_AINFO_URLSITE       "\nホームページ: "
-    IDS_AINFO_LICENSE       "\nライセンス: "
-    IDS_AINFO_URLDOWNLOAD    "\nダウンロード: "
+    IDS_AINFO_DESCRIPTION "\n概要: "
+    IDS_AINFO_SIZE "\nサイズ: "
+    IDS_AINFO_URLSITE "\nホームページ: "
+    IDS_AINFO_LICENSE "\nライセンス: "
+    IDS_AINFO_URLDOWNLOAD "\nダウンロード: "
     IDS_AINFO_LANGUAGES "\nLanguages: "
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CAT_AUDIO           "オーディオ"
-    IDS_CAT_DEVEL           "開発"
-    IDS_CAT_DRIVERS         "ドライバ"
-    IDS_CAT_EDU             "教育"
-    IDS_CAT_ENGINEER        "工学"
-    IDS_CAT_FINANCE         "経営"
-    IDS_CAT_GAMES           "ゲームとお楽しみ"
-    IDS_CAT_GRAPHICS        "グラフィックス"
-    IDS_CAT_INTERNET        "インターネットとネットワーク"
-    IDS_CAT_LIBS            "ライブラリ"
-    IDS_CAT_OFFICE          "オフィス"
-    IDS_CAT_OTHER           "その他"
-    IDS_CAT_SCIENCE         "科学"
-    IDS_CAT_TOOLS           "ツール"
-    IDS_CAT_VIDEO           "ビデオ"
-    IDS_CAT_THEMES          "テーマ"
+    IDS_CAT_AUDIO "オーディオ"
+    IDS_CAT_DEVEL "開発"
+    IDS_CAT_DRIVERS "ドライバ"
+    IDS_CAT_EDU "教育"
+    IDS_CAT_ENGINEER "工学"
+    IDS_CAT_FINANCE "経営"
+    IDS_CAT_GAMES "ゲームとお楽しみ"
+    IDS_CAT_GRAPHICS "グラフィックス"
+    IDS_CAT_INTERNET "インターネットとネットワーク"
+    IDS_CAT_LIBS "ライブラリ"
+    IDS_CAT_OFFICE "オフィス"
+    IDS_CAT_OTHER "その他"
+    IDS_CAT_SCIENCE "科学"
+    IDS_CAT_TOOLS "ツール"
+    IDS_CAT_VIDEO "ビデオ"
+    IDS_CAT_THEMES "テーマ"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE            "ReactOS アプリ マネージャ"
+    IDS_APPTITLE "ReactOS アプリ マネージャ"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT         "検索..."
-    IDS_APPS_COUNT          "アプリ数: %d; Selected: %d"
-    IDS_WELCOME_TITLE       "ReactOS アプリ マネージャへようこそ!\n\n"
-    IDS_WELCOME_TEXT        "左側からカテゴリを選択し、インストールまたはアンインストールするアプリを選んでください。\nReactOS ウェブ サイト: "
+    IDS_SEARCH_TEXT "検索..."
+    IDS_APPS_COUNT "アプリ数: %d; Selected: %d"
+    IDS_WELCOME_TITLE "ReactOS アプリ マネージャへようこそ!\n\n"
+    IDS_WELCOME_TEXT "左側からカテゴリを選択し、インストールまたはアンインストールするアプリを選んでください。\nReactOS ウェブ サイト: "
     IDS_WELCOME_URL "https://reactos.org"
-    IDS_INSTALLED           "インストール済み"
-    IDS_AVAILABLEFORINST    "インストール可能"
-    IDS_UPDATES             "更新"
-    IDS_APPLICATIONS        "アプリ"
-    IDS_CHOOSE_FOLDER_TEXT  "プログラムのダウンロードに使用するフォルダを選択してください:"
+    IDS_INSTALLED "インストール済み"
+    IDS_AVAILABLEFORINST "インストール可能"
+    IDS_UPDATES "更新"
+    IDS_APPLICATIONS "アプリ"
+    IDS_CHOOSE_FOLDER_TEXT "プログラムのダウンロードに使用するフォルダを選択してください:"
     IDS_CHOOSE_FOLDER_ERROR "指定されたフォルダは存在しません。"
     IDS_URL_INVALID "指定されたURLは不正または未サポートです。修正して下さい。"
     IDS_APP_REG_REMOVE "レジストリからインストールされたプログラムに関するデータを削除してもよろしいですか?"

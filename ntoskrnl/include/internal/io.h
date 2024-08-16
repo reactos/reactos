@@ -799,12 +799,10 @@ IoInitSystem(
 );
 
 BOOLEAN
-NTAPI
 IopVerifyDiskSignature(
-    IN PDRIVE_LAYOUT_INFORMATION_EX DriveLayout,
-    IN PARC_DISK_SIGNATURE ArcDiskSignature,
-    OUT PULONG Signature
-);
+    _In_ PDRIVE_LAYOUT_INFORMATION_EX DriveLayout,
+    _In_ PARC_DISK_SIGNATURE ArcDiskSignature,
+    _Out_ PULONG Signature);
 
 BOOLEAN
 NTAPI

@@ -13,6 +13,9 @@
 
 using namespace Gdiplus;
 
+HICON g_hDefaultPackageIcon = NULL;
+static int g_DefaultPackageIconILIdx = I_IMAGENONE;
+
 // **** CMainToolbar ****
 
 VOID
@@ -970,16 +973,89 @@ CAppInfoDisplay::~CAppInfoDisplay()
 
 // **** CAppsListView ****
 
+struct CAsyncLoadIcon {
+    CAsyncLoadIcon *pNext;
+    HWND hAppsList;
+    CAppInfo *AppInfo; // Only used to find the item in the list, do not access on background thread
+    UINT TaskId;
+    bool Parse;
+    WCHAR Location[ANYSIZE_ARRAY];
+
+    void Free() { free(this); }
+    static CAsyncLoadIcon* Queue(HWND hAppsList, CAppInfo &AppInfo, bool Parse);
+    static void StartTasks();
+} *g_AsyncIconTasks = NULL;
+static UINT g_AsyncIconTaskId = 0;
+
+static DWORD CALLBACK
+AsyncLoadIconProc(LPVOID Param)
+{
+    for (CAsyncLoadIcon *task = (CAsyncLoadIcon*)Param, *old; task; old->Free())
+    {
+        if (task->TaskId == g_AsyncIconTaskId)
+        {
+            HICON hIcon;
+            if (!task->Parse)
+                hIcon = (HICON)LoadImageW(NULL, task->Location, IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
+            else if (!ExtractIconExW(task->Location, PathParseIconLocationW(task->Location), &hIcon, NULL, 1))
+                hIcon = NULL;
+
+            if (hIcon)
+            {
+                SendMessageW(task->hAppsList, WM_RAPPSLIST_ASYNCICON, (WPARAM)hIcon, (LPARAM)task);
+                DestroyIcon(hIcon);
+            }
+        }
+        old = task;
+        task = task->pNext;
+    }
+    return 0;
+}
+
+CAsyncLoadIcon*
+CAsyncLoadIcon::Queue(HWND hAppsList, CAppInfo &AppInfo, bool Parse)
+{
+    ATLASSERT(GetCurrentThreadId() == GetWindowThreadProcessId(hAppsList, NULL));
+    CStringW szIconPath;
+    if (!AppInfo.RetrieveIcon(szIconPath))
+        return NULL;
+    SIZE_T cbstr = (szIconPath.GetLength() + 1) * sizeof(WCHAR);
+    CAsyncLoadIcon *task = (CAsyncLoadIcon*)malloc(sizeof(CAsyncLoadIcon) + cbstr);
+    if (!task)
+        return NULL;
+    task->hAppsList = hAppsList;
+    task->AppInfo = &AppInfo;
+    task->TaskId = g_AsyncIconTaskId;
+    task->Parse = Parse;
+    CopyMemory(task->Location, szIconPath.GetBuffer(), cbstr);
+    szIconPath.ReleaseBuffer();
+    task->pNext = g_AsyncIconTasks;
+    g_AsyncIconTasks = task;
+    return task;
+}
+
+void
+CAsyncLoadIcon::StartTasks()
+{
+    CAsyncLoadIcon *tasks = g_AsyncIconTasks;
+    g_AsyncIconTasks = NULL;
+    if (HANDLE hThread = CreateThread(NULL, 0, AsyncLoadIconProc, tasks, 0, NULL))
+        CloseHandle(hThread);
+    else
+        AsyncLoadIconProc(tasks); // Insist so we at least free the tasks
+}
+
 CAppsListView::CAppsListView()
 {
+    m_hImageListView = 0;
 }
 
 CAppsListView::~CAppsListView()
 {
     if (m_hImageListView)
-    {
         ImageList_Destroy(m_hImageListView);
-    }
+    if (g_hDefaultPackageIcon)
+        DestroyIcon(g_hDefaultPackageIcon);
 }
 
 LRESULT
@@ -998,6 +1074,32 @@ CAppsListView::OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
         SelectFont(HDC(wParam), oldFont);
     }
     return lRes;
+}
+
+LRESULT
+CAppsListView::OnAsyncIcon(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    CAsyncLoadIcon *task = (CAsyncLoadIcon*)lParam;
+    bHandled = TRUE;
+    if (task->TaskId == g_AsyncIconTaskId)
+    {
+        LVITEM lvi;
+        LVFINDINFO lvfi;
+        lvfi.flags = LVFI_PARAM;
+        lvfi.lParam = (LPARAM)task->AppInfo;
+        lvi.iItem = ListView_FindItem(m_hWnd, -1, &lvfi);
+        if (lvi.iItem != -1)
+        {
+            lvi.iImage = ImageList_AddIcon(m_hImageListView, (HICON)wParam);
+            if (lvi.iImage != -1)
+            {
+                lvi.mask = LVIF_IMAGE;
+                lvi.iSubItem = 0;
+                ListView_SetItem(m_hWnd, &lvi);
+            }
+        }
+    }
+    return 0;
 }
 
 VOID
@@ -1154,11 +1256,6 @@ CAppsListView::Create(HWND hwndParent)
         SetCheckboxesVisible(FALSE);
     }
 
-    m_hImageListView = ImageList_Create(LISTVIEW_ICON_SIZE, LISTVIEW_ICON_SIZE, GetSystemColorDepth() | ILC_MASK, 0, 1);
-
-    SetImageList(m_hImageListView, LVSIL_SMALL);
-    SetImageList(m_hImageListView, LVSIL_NORMAL);
-
 #pragma push_macro("SubclassWindow")
 #undef SubclassWindow
     m_hWnd = NULL;
@@ -1215,14 +1312,16 @@ CAppsListView::GetFocusedItemData()
 BOOL
 CAppsListView::SetDisplayAppType(APPLICATION_VIEW_TYPE AppType)
 {
+    ++g_AsyncIconTaskId; // Stop loading icons that are now invalid
     if (!DeleteAllItems())
         return FALSE;
+
     ApplicationViewType = AppType;
-
     bIsAscending = TRUE;
-
     ItemCount = 0;
     CheckedItemCount = 0;
+
+    ListView_Scroll(m_hWnd, 0, 0x7fff * -1); // FIXME: a bug in Wine ComCtl32 where VScroll is not reset after deleting items
 
     // delete old columns
     while (ColumnCount)
@@ -1230,7 +1329,22 @@ CAppsListView::SetDisplayAppType(APPLICATION_VIEW_TYPE AppType)
         DeleteColumn(--ColumnCount);
     }
 
+    if (!g_hDefaultPackageIcon)
+    {
+        ImageList_Destroy(m_hImageListView);
+        UINT IconSize = GetSystemMetrics(SM_CXICON);
+        UINT ilc = GetSystemColorDepth() | ILC_MASK;
+        m_hImageListView = ImageList_Create(IconSize, IconSize, ilc, 0, 1);
+        SetImageList(m_hImageListView, LVSIL_SMALL);
+        SetImageList(m_hImageListView, LVSIL_NORMAL);
+        g_hDefaultPackageIcon = (HICON)LoadImageW(hInst, MAKEINTRESOURCEW(IDI_MAIN),
+                                                  IMAGE_ICON, IconSize, IconSize, LR_SHARED);
+    }
     ImageList_RemoveAll(m_hImageListView);
+
+    g_DefaultPackageIconILIdx = ImageList_AddIcon(m_hImageListView, g_hDefaultPackageIcon);
+    if (g_DefaultPackageIconILIdx == -1)
+        g_DefaultPackageIconILIdx = I_IMAGENONE;
 
     // add new columns
     CStringW szText;
@@ -1284,31 +1398,20 @@ CAppsListView::SetViewMode(DWORD ViewMode)
 BOOL
 CAppsListView::AddApplication(CAppInfo *AppInfo, BOOL InitialCheckState)
 {
+    if (!AppInfo)
+    {
+        CAsyncLoadIcon::StartTasks();
+        return TRUE;
+    }
+
+    int IconIndex = g_DefaultPackageIconILIdx;
     if (ApplicationViewType == AppViewTypeInstalledApps)
     {
-        /* Load icon from registry */
-        HICON hIcon = NULL;
-        CStringW szIconPath;
-        int IconIndex;
-        if (AppInfo->RetrieveIcon(szIconPath))
-        {
-            IconIndex = PathParseIconLocationW(szIconPath.GetBuffer());
-            szIconPath.ReleaseBuffer();
-
-            ExtractIconExW(szIconPath.GetString(), IconIndex, &hIcon, NULL, 1);
-        }
-
-        /* Use the default icon if none were found in the file, or if it is not supported (returned 1) */
-        if (!hIcon || (hIcon == (HICON)1))
-        {
-            /* Load default icon */
-            hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
-        }
-
-        IconIndex = ImageList_AddIcon(m_hImageListView, hIcon);
-        DestroyIcon(hIcon);
-
         int Index = AddItem(ItemCount, IconIndex, AppInfo->szDisplayName, (LPARAM)AppInfo);
+        if (Index == -1)
+            return FALSE;
+        CAsyncLoadIcon::Queue(m_hWnd, *AppInfo, true);
+
         SetItemText(Index, 1, AppInfo->szDisplayVersion.IsEmpty() ? L"---" : AppInfo->szDisplayVersion);
         SetItemText(Index, 2, AppInfo->szComments.IsEmpty() ? L"---" : AppInfo->szComments);
 
@@ -1317,25 +1420,10 @@ CAppsListView::AddApplication(CAppInfo *AppInfo, BOOL InitialCheckState)
     }
     else if (ApplicationViewType == AppViewTypeAvailableApps)
     {
-        /* Load icon from file */
-        HICON hIcon = NULL;
-        CStringW szIconPath;
-        if (AppInfo->RetrieveIcon(szIconPath))
-        {
-            hIcon = (HICON)LoadImageW(
-                NULL, szIconPath, IMAGE_ICON, LISTVIEW_ICON_SIZE, LISTVIEW_ICON_SIZE, LR_LOADFROMFILE);
-        }
-
-        if (!hIcon)
-        {
-            /* Load default icon */
-            hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
-        }
-
-        int IconIndex = ImageList_AddIcon(m_hImageListView, hIcon);
-        DestroyIcon(hIcon);
-
         int Index = AddItem(ItemCount, IconIndex, AppInfo->szDisplayName, (LPARAM)AppInfo);
+        if (Index == -1)
+            return FALSE;
+        CAsyncLoadIcon::Queue(m_hWnd, *AppInfo, false);
 
         if (InitialCheckState)
         {

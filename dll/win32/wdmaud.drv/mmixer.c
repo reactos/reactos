@@ -805,6 +805,121 @@ WdmAudGetWavePositionByMMixer(
     return MMSYSERR_NOTSUPPORTED;
 }
 
+MMRESULT
+WdmAudGetVolumeByMMixer(
+    _In_ PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    _In_ DWORD DeviceId,
+    _Out_ PDWORD pdwVolume)
+{
+    MMRESULT Result;
+    MIXERLINE MixLine;
+    MIXERCONTROL MixControl;
+    MIXERLINECONTROLS MixLineControls;
+    MIXERCONTROLDETAILS MixControlDetails;
+    MIXERCONTROLDETAILS_UNSIGNED MixControlDetailsU[2]; // For 2 (stereo) channels
+
+    MixLine.cbStruct = sizeof(MixLine);
+    MixLine.dwComponentType = MIXERLINE_COMPONENTTYPE_DST_SPEAKERS;
+
+    /* Get line info */
+    Result = WdmAudGetLineInfo(SoundDeviceInstance->Handle,
+                               DeviceId,
+                               &MixLine,
+                               MIXER_OBJECTF_MIXER | MIXER_GETLINEINFOF_COMPONENTTYPE);
+    if (!MMSUCCESS(Result))
+        return TranslateInternalMmResult(Result);
+
+    MixLineControls.cbStruct = sizeof(MixLineControls);
+    MixLineControls.dwLineID = MixLine.dwLineID;
+    MixLineControls.dwControlType = MIXERCONTROL_CONTROLTYPE_VOLUME;
+    MixLineControls.cControls = 1;
+    MixLineControls.cbmxctrl = sizeof(MixControl);
+    MixLineControls.pamxctrl = &MixControl;
+
+    /* Get line controls */
+    Result = WdmAudGetLineControls(SoundDeviceInstance->Handle,
+                                   DeviceId,
+                                   &MixLineControls,
+                                   MIXER_OBJECTF_MIXER | MIXER_GETLINECONTROLSF_ONEBYTYPE);
+    if (!MMSUCCESS(Result))
+        return TranslateInternalMmResult(Result);
+
+    MixControlDetails.cbStruct = sizeof(MixControlDetails);
+    MixControlDetails.dwControlID = MixControl.dwControlID;
+    MixControlDetails.cChannels = MixLine.cChannels;
+    MixControlDetails.cMultipleItems = 0;
+    MixControlDetails.cbDetails = sizeof(MIXERCONTROLDETAILS_UNSIGNED);
+    MixControlDetails.paDetails = MixControlDetailsU;
+
+    /* Get volume control details */
+    Result = WdmAudGetControlDetails(SoundDeviceInstance->Handle,
+                                     DeviceId,
+                                     &MixControlDetails,
+                                     MIXER_OBJECTF_MIXER);
+    if (MMSUCCESS(Result))
+        *pdwVolume = MAKELONG(LOWORD(MixControlDetailsU[0].dwValue), HIWORD(MixControlDetailsU[1].dwValue));
+
+    return Result;
+}
+
+MMRESULT
+WdmAudSetVolumeByMMixer(
+    _In_ PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    _In_ DWORD DeviceId,
+    _In_ DWORD dwVolume)
+{
+    MMRESULT Result;
+    MIXERLINE MixLine;
+    MIXERCONTROL MixControl;
+    MIXERLINECONTROLS MixLineControls;
+    MIXERCONTROLDETAILS MixControlDetails;
+    MIXERCONTROLDETAILS_UNSIGNED MixControlDetailsU[2]; // For 2 (stereo) channels
+
+    MixLine.cbStruct = sizeof(MixLine);
+    MixLine.dwComponentType = MIXERLINE_COMPONENTTYPE_DST_SPEAKERS;
+
+    /* Get line info */
+    Result = WdmAudGetLineInfo(SoundDeviceInstance->Handle,
+                               DeviceId,
+                               &MixLine,
+                               MIXER_OBJECTF_MIXER | MIXER_GETLINEINFOF_COMPONENTTYPE);
+    if (!MMSUCCESS(Result))
+        return TranslateInternalMmResult(Result);
+
+    MixLineControls.cbStruct = sizeof(MixLineControls);
+    MixLineControls.dwLineID = MixLine.dwLineID;
+    MixLineControls.dwControlType = MIXERCONTROL_CONTROLTYPE_VOLUME;
+    MixLineControls.cControls = 1;
+    MixLineControls.cbmxctrl = sizeof(MixControl);
+    MixLineControls.pamxctrl = &MixControl;
+
+    /* Get line controls */
+    Result = WdmAudGetLineControls(SoundDeviceInstance->Handle,
+                                   DeviceId,
+                                   &MixLineControls,
+                                   MIXER_OBJECTF_MIXER | MIXER_GETLINECONTROLSF_ONEBYTYPE);
+    if (!MMSUCCESS(Result))
+        return TranslateInternalMmResult(Result);
+
+    /* Convert volume level to be set */
+    MixControlDetailsU[0].dwValue = LOWORD(dwVolume); // Left channel
+    MixControlDetailsU[1].dwValue = HIWORD(dwVolume); // Right channel
+
+    MixControlDetails.cbStruct = sizeof(MixControlDetails);
+    MixControlDetails.dwControlID = MixControl.dwControlID;
+    MixControlDetails.cChannels = MixLine.cChannels;
+    MixControlDetails.cMultipleItems = 0;
+    MixControlDetails.cbDetails = sizeof(MIXERCONTROLDETAILS_UNSIGNED);
+    MixControlDetails.paDetails = MixControlDetailsU;
+
+    /* Set volume control details */
+    Result = WdmAudSetControlDetails(SoundDeviceInstance->Handle,
+                                     DeviceId,
+                                     &MixControlDetails,
+                                     MIXER_OBJECTF_MIXER);
+    return Result;
+}
+
 static
 VOID WINAPI
 CommitWaveBufferApc(PVOID ApcContext,

@@ -47,6 +47,9 @@ typedef struct _DELETED_FILE_DETAILS_W
 #define PDELETED_FILE_DETAILS PDELETED_FILE_DETAILS_A
 #endif
 
+/* Distinct handle type for deleted file/folder */
+DECLARE_HANDLE(HDELFILE);
+
 /* API Interface */
 
 /* Function called for each deleted file in the recycle bin
@@ -55,7 +58,7 @@ typedef struct _DELETED_FILE_DETAILS_W
  * Returning FALSE stops the enumeration.
  * Remarks: the handle must be closed with the CloseRecycleBinHandle function
  */
-typedef BOOL (WINAPI *PENUMERATE_RECYCLEBIN_CALLBACK)(IN PVOID Context, IN HANDLE hDeletedFile);
+typedef BOOL (WINAPI *PENUMERATE_RECYCLEBIN_CALLBACK)(IN PVOID Context, IN HDELFILE hDeletedFile);
 
 /* Closes a file deleted handle.
  * hDeletedFile: the handle to close
@@ -64,7 +67,7 @@ typedef BOOL (WINAPI *PENUMERATE_RECYCLEBIN_CALLBACK)(IN PVOID Context, IN HANDL
  */
 BOOL WINAPI
 CloseRecycleBinHandle(
-    IN HANDLE hDeletedFile);
+    IN HDELFILE hDeletedFile);
 
 /* Moves a file to the recycle bin.
  * FileName: the name of the file to move the recycle bin
@@ -89,7 +92,7 @@ DeleteFileToRecycleBinW(
  */
 BOOL WINAPI
 DeleteFileHandleToRecycleBin(
-    IN HANDLE hDeletedFile);
+    IN HDELFILE hDeletedFile);
 
 /* Removes all elements contained in a recycle bin
  * pszRoot: the name of the drive containing the recycle bin
@@ -133,7 +136,7 @@ EnumerateRecycleBinW(
 
 BOOL WINAPI
 GetDeletedFileTypeNameW(
-    IN HANDLE hDeletedFile,
+    IN HDELFILE hDeletedFile,
     OUT LPWSTR pTypeName,
     IN DWORD BufferSize,
     OUT LPDWORD RequiredSize OPTIONAL);
@@ -148,13 +151,13 @@ GetDeletedFileTypeNameW(
  */
 BOOL WINAPI
 GetDeletedFileDetailsA(
-    IN HANDLE hDeletedFile,
+    IN HDELFILE hDeletedFile,
     IN DWORD BufferSize,
     IN OUT PDELETED_FILE_DETAILS_A FileDetails OPTIONAL,
     OUT LPDWORD RequiredSize OPTIONAL);
 BOOL WINAPI
 GetDeletedFileDetailsW(
-    IN HANDLE hDeletedFile,
+    IN HDELFILE hDeletedFile,
     IN DWORD BufferSize,
     IN OUT PDELETED_FILE_DETAILS_W FileDetails OPTIONAL,
     OUT LPDWORD RequiredSize OPTIONAL);
@@ -171,7 +174,7 @@ GetDeletedFileDetailsW(
  */
 BOOL WINAPI
 RestoreFile(
-    IN HANDLE hDeletedFile);
+    IN HDELFILE hDeletedFile);
 
 /* COM interface */
 
@@ -211,7 +214,7 @@ DECLARE_INTERFACE_(IRecycleBinEnumList, IUnknown)
     STDMETHOD_(ULONG, Release)(THIS) PURE;
 
     /* IRecycleBinEnumList methods */
-    STDMETHOD(Next)(THIS_ DWORD celt, IRecycleBinFile **rgelt, DWORD *pceltFetched);
+    STDMETHOD(Next)(THIS_ DWORD celt, IRecycleBinFile **rgelt, DWORD *pceltFetched) PURE;
     STDMETHOD(Skip)(THIS_ DWORD celt) PURE;
     STDMETHOD(Reset)(THIS) PURE;
 
