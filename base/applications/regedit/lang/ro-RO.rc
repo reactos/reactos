@@ -444,12 +444,12 @@ BEGIN
     ID_EDIT_NEW_DWORDVALUE "Adaugă o nouă valoare de 32 de biți"
     ID_REGISTRY_IMPORTREGISTRYFILE "Importă regiștri dintr-un fișier"
     ID_REGISTRY_EXPORTREGISTRYFILE "Exportă registrul total sau parțial într-un fișier"
-    ID_REGISTRY_LOADHIVE "Încarcă un fișier binar în regiștri"
-    ID_REGISTRY_UNLOADHIVE "Eliberează conținutul unui fișier binar din regiștri"
-    ID_REGISTRY_CONNECTNETWORKREGISTRY "Conectare la regiștrii unui calculator din rețea"
-    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Deconectare de la regiștrii calculatorului din rețea"
-    ID_REGISTRY_PRINT "Imprimă tot sau o parte din regiștri"
-/*    ID_HELP_HELPTOPICS "Deschide termenii de ajutor a editorului de regiștri" */
+    ID_REGISTRY_LOADHIVE "Încarcă un fișier binar în registru"
+    ID_REGISTRY_UNLOADHIVE "Eliberează conținutul unui fișier binar din registru"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY "Conectare la registrul unui calculator din rețea"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Deconectare de la registrul calculatorului din rețea"
+    ID_REGISTRY_PRINT "Imprimă toate părțile unui registru"
+//    ID_HELP_HELPTOPICS "Deschide manualul editorului de registru"
     ID_HELP_ABOUT "Prezintă informații despre program, numărul versiunii și drepturi de autor"
 END
 
@@ -725,11 +725,3 @@ BEGIN
     LTEXT "Căutare în regiștri…", IDC_STATIC, 33, 12, 83, 8
 END
 
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Deschide Ajutor pentru Editorul de regiștri."
- *    ID_HELP_ABOUT "Afișează informații despre program, numărul versiunii și marca înregistrată."
- *END
- */

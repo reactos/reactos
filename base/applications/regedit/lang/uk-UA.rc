@@ -441,7 +441,7 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Підключається до реєстру віддаленого комп'ютера"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Відключається від реєстру віддаленого комп'ютера"
     ID_REGISTRY_PRINT "Друкує весь реєстр або його частину"
-/*    ID_HELP_HELPTOPICS "Відкриває довідку редактора реєстра" */
+//    ID_HELP_HELPTOPICS "Відкриває довідку редактора реєстра"
     ID_HELP_ABOUT "Відображає інформацію про програму, номер версії та авторство"
 END
 
@@ -716,12 +716,3 @@ BEGIN
     DEFPUSHBUTTON "Скасувати", IDCANCEL, 93, 29, 45, 14
     LTEXT "Пошук у реєстрі...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Відкриває довідку редактора реєстра."
- *    ID_HELP_ABOUT "Відображає інформацію про програму, номер версії, та авторські права."
- *END
- */

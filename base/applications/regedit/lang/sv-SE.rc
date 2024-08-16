@@ -439,7 +439,7 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Ansluter till en annan dators register"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Kopplar ifrån en annan dators register"
     ID_REGISTRY_PRINT "Skriver ut hela eller en del av registret"
-/*    ID_HELP_HELPTOPICS "Öppnar hjälpen för Registereditorn" */
+//    ID_HELP_HELPTOPICS "Öppnar hjälpen för Registereditorn"
     ID_HELP_ABOUT "Visar programinformation, versionsnummer, och upphovsrätt"
 END
 
@@ -714,12 +714,3 @@ BEGIN
     DEFPUSHBUTTON "Avbryt", IDCANCEL, 93, 29, 45, 14
     LTEXT "Sök i registret...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Öppnar hjälpen för Registereditorn."
- *    ID_HELP_ABOUT "Visar programinformation, versionsnummer, och upphovsrätt."
- *END
- */
