@@ -6,7 +6,7 @@ BEGIN
     BEGIN
         MENUITEM "&Nuova operazione (Esegui...)", ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "E&sci da Gestione attività", ID_FILE_EXIT
+        MENUITEM "E&sci da Task Manager", ID_FILE_EXIT
     END
     POPUP "&Opzioni"
     BEGIN
@@ -62,7 +62,7 @@ BEGIN
     BEGIN
         MENUITEM "Task Manager &Help Topics", ID_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Informazioni su Gestione attività", ID_HELP_ABOUT
+        MENUITEM "&Informazioni su Task Manager", ID_HELP_ABOUT
     END
 END
 
@@ -313,18 +313,18 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE "Task manager"
-    IDC_TASKMGR "Task manager"
+    IDS_APP_TITLE "Task Manager"
+    IDC_TASKMGR "Task Manager"
     IDS_IDLE_PROCESS "Processo Idle di sistema"
 END
 
 STRINGTABLE
 BEGIN
     ID_FILE_NEW "Esegue un nuovo programma"
-    ID_OPTIONS_ALWAYSONTOP "Gestione attività rimane di fronte a ogni altra finestra a meno che sia minimizzato"
-    ID_OPTIONS_MINIMIZEONUSE "Gestione attività è minimizzato quando viene eseguita una operazione PassaA"
-    ID_OPTIONS_HIDEWHENMINIMIZED "Nasconde Gestione attività Quando è minimizzato"
-    ID_VIEW_REFRESH "Costringe Gestione attività a effettuare un aggiornamento, indipendentemente dalla frequenza di aggiornamento impostata"
+    ID_OPTIONS_ALWAYSONTOP "Task Manager rimane di fronte a ogni altra finestra a meno che sia minimizzato"
+    ID_OPTIONS_MINIMIZEONUSE "Task Manager è minimizzato quando viene eseguita una operazione PassaA"
+    ID_OPTIONS_HIDEWHENMINIMIZED "Nasconde Task Manager Quando è minimizzato"
+    ID_VIEW_REFRESH "Costringe Task Manager a effettuare un aggiornamento, indipendentemente dalla frequenza di aggiornamento impostata"
     ID_VIEW_LARGE "Visualizza i processi usando icone grandi"
     ID_VIEW_SMALL "Visualizza i processi usando icone piccole"
     ID_VIEW_DETAILS "Visualizza le informazioni di ogni processo"
@@ -342,7 +342,7 @@ BEGIN
     ID_WINDOWS_MAXIMIZE "Massimizza le finestre"
     ID_WINDOWS_CASCADE "Sovrappone diagonalmente le finestre sul desktop"
     ID_WINDOWS_BRINGTOFRONT "Porta la finestra in vista ma senza attivarla"
-    ID_HELP_TOPICS "Visualizza gli aiuti di Gestione attività"
+    ID_HELP_TOPICS "Visualizza gli aiuti di Task Manager"
     ID_HELP_ABOUT "Visualizza le informazioni sul programma, versione e copyright"
     ID_FILE_EXIT "Esce da Gestione attività"
     ID_OPTIONS_SHOW16BITTASKS "Mostra i processi a 16-bit con ntvdm.exe associato"
