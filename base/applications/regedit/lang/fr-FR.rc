@@ -439,7 +439,7 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Connecte aux registres d'un ordinateur distant"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Déconnecte des registres d'un ordinateur distant"
     ID_REGISTRY_PRINT "Imprime tout ou une partie des registres"
-/*    ID_HELP_HELPTOPICS "Ouvre l'aide de l'éditeur de registres" */
+//    ID_HELP_HELPTOPICS "Ouvre l'aide de l'éditeur de registres"
     ID_HELP_ABOUT "Affiche de l'information sur le programme, le numéro de version et le copyright"
 END
 
@@ -714,12 +714,3 @@ BEGIN
     DEFPUSHBUTTON "Annuler", IDCANCEL, 93, 29, 45, 14
     LTEXT "Recherche dans le registre...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Ouvre l'aide de l'éditeur de registres."
- *    ID_HELP_ABOUT "Affiche de l'information sur le programme, le numéro de version et le copyright."
- *END
- */

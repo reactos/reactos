@@ -439,7 +439,7 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Vzpostavi povezavo z registrom oddaljenega raèunalnika"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Prekine povezavo z registrom oddaljenega raèunalnika"
     ID_REGISTRY_PRINT "Natisne registrsko datoteko ali njen del"
-/*    ID_HELP_HELPTOPICS "Odpre pomoC" */
+//    ID_HELP_HELPTOPICS "Odpre pomoC"
     ID_HELP_ABOUT "Informacije o programu, številki razlièice in avtorskih pravicah"
 END
 
@@ -714,12 +714,3 @@ BEGIN
     DEFPUSHBUTTON "Cancel", IDCANCEL, 93, 29, 45, 14
     LTEXT "Searching the registry...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Odpre pomoè."
- *    ID_HELP_ABOUT "Informacije o programu, številki razlièice in avtorskih pravicah."
- *END
- */
