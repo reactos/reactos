@@ -31,19 +31,19 @@ Opțiuni:\n\
                  Compatibil cu orice alt comutator. Ignorat.\n\
   /R:user.dat    Locația fișierului user.dat urmează să fie modificată.\n\
                  Compatibil cu orice alt comutator. Ignorat.\n\
-  /C             Importă conținutul unui fișier de regiștri.\n\
-  /D             Șterge o cheie de regiștri specificată.\n\
-  /E             Exportă conținutul unei chei de regiștri specificată într-un\n\
+  /C             Importă conținutul unui fișier de registru.\n\
+  /D             Șterge o cheie de registru specificată.\n\
+  /E             Exportă conținutul unei chei de registru specificată într-un\n\
                  fișier. Dacă nu este nicio cheie specificată, este exportat\n\
-                 întregul regiștri.\n\
+                 întregul registru.\n\
   /S             Modul silențios. Nu sunt afișate mesaje.\n\
   /V             Lansează interfața grafică (GUI) în modul avansat. Ignorat.\n\
   /?             Afișează informații și părăsește programul.\n\
   [filename]     Locația fișierului ce conține informații despre registrul ce\n\
                  urmează să fie importat. Când e folosit cu [/E], această\n\
                  opțiune specifică locația fișierului în care informațiile\n\
-                 despre regiștri vor fi exportate.\n\
-  [reg_key]      Cheie de regiștri ce urmează să fie modificată.\n\
+                 despre registru vor fi exportate.\n\
+  [reg_key]      Cheie de registru ce urmează să fie modificată.\n\
 \n\
 Exemple de utilizări:\n\
   regedit ""import.reg""\n\
@@ -52,7 +52,7 @@ Exemple de utilizări:\n\
     STRING_INVALID_SWITCH "regedit: Comutatorul este nevalid sau nerecunoscut [%1]\n"
     STRING_HELP "Scrieți ""regedit /?"" pentru ajutor.\n"
     STRING_NO_FILENAME "regedit: Niciun nume de fișier nu a fost specificat.\n"
-    STRING_NO_REG_KEY "regedit: Nicio cheie de regiștri nu a fost specificată pentru ștergere.\n"
+    STRING_NO_REG_KEY "regedit: Nicio cheie de registru nu a fost specificată pentru ștergere.\n"
     STRING_FILE_NOT_FOUND "regedit: Fișierul '%1' nu a fost găsit.\n"
     STRING_CANNOT_OPEN_FILE "regedit: Nu s-a putut deschide fișierul '%1'.\n"
     STRING_UNHANDLED_ACTION "regedit: Acțiune necontrolată.\n"
@@ -60,16 +60,16 @@ Exemple de utilizări:\n\
     STRING_INVALID_HEX "regedit: Valoare hexazecimală nevalidă.\n"
     STRING_CSV_HEX_ERROR "regedit: Datele hexazecimale nu au putut fi transformate. O valoare nevalidă a fost întâlnită la '%1'.\n"
     STRING_ESCAPE_SEQUENCE "regedit: Secvență de evadare nerecunoscută [\\%1!c!]\n"
-    STRING_UNKNOWN_DATA_FORMAT "regedit: Tipul de date de regiștri [0x%1!x!] e nesuportat\n"
+    STRING_UNKNOWN_DATA_FORMAT "regedit: Tipul de date de registru [0x%1!x!] e nesuportat\n"
     STRING_UNEXPECTED_EOL "regedit: Capăt de linie neașteptat în '%1'.\n"
     STRING_UNRECOGNIZED_LINE "regedit: Linia '%1' nu a fost recunoscută.\n"
-    STRING_SETVALUE_FAILED "regedit: Valoarea de regiștri '%1' nu a putut fi adăugată la '%2'.\n"
-    STRING_OPEN_KEY_FAILED "regedit: Nu s-a putut deschide cheia de regiștri '%1'.\n"
-    STRING_UNSUPPORTED_TYPE "regedit: Tipul de date de regiștri [0x%1!x!] nesuportat a apărut în '%2'.\n"
-    STRING_EXPORT_AS_BINARY "regedit: Valoarea de regiștri '%1' va fi exportată ca date binare.\n"
+    STRING_SETVALUE_FAILED "regedit: Valoarea de registru '%1' nu a putut fi adăugată la '%2'.\n"
+    STRING_OPEN_KEY_FAILED "regedit: Nu s-a putut deschide cheia de registru '%1'.\n"
+    STRING_UNSUPPORTED_TYPE "regedit: Tipul de date de registru [0x%1!x!] nesuportat a apărut în '%2'.\n"
+    STRING_EXPORT_AS_BINARY "regedit: Valoarea de registru '%1' va fi exportată ca date binare.\n"
     STRING_INVALID_SYSTEM_KEY "regedit: Cheia de sistem [%1] este nevalidă\n"
-    STRING_REG_KEY_NOT_FOUND "regedit: Nu s-a putut  exporta '%1'. Cheia de regiștri specificată nu a fost găsită.\n"
-    STRING_DELETE_FAILED "regedit: Cheia de regiștri nu a putut fi ștearsă '%1'.\n"
+    STRING_REG_KEY_NOT_FOUND "regedit: Nu s-a putut  exporta '%1'. Cheia de registru specificată nu a fost găsită.\n"
+    STRING_DELETE_FAILED "regedit: Cheia de registru nu a putut fi ștearsă '%1'.\n"
     STRING_UNKNOWN_TYPE "Tip necunoscut"
     STRING_INVALID_LINE_SYNTAX, "regedit: Linia conține sintaxă nevalidă.\n"
 END
@@ -83,11 +83,11 @@ BEGIN
         MENUITEM "Imp&ortare…", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "E&xportare…", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Î&ncărcare de regiștri…", ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "&Descărcare de regiștri…", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "Î&ncărcare a registrului…", ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Descărcare a &registrului …", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Conectare la un registru din rețea…", ID_REGISTRY_CONNECTNETWORKREGISTRY
-        MENUITEM "&Deconectare de la regiștrii din rețea…", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
+        MENUITEM "&Deconectare de la registrui din rețea…", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "I&mprimare…\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
@@ -126,7 +126,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Î&mprospătare\tF5", ID_VIEW_REFRESH
     END
-    POPUP "&Favorite"
+    POPUP "Fa&vorite"
     BEGIN
         MENUITEM "&Adăugare la favorite", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
         MENUITEM "&Eliminare favorite", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
@@ -191,7 +191,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "E&xportare", ID_TREE_EXPORT
         MENUITEM SEPARATOR
-        MENUITEM "&Descărcare regiștri…", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "&Descărcare a registrului…", ID_REGISTRY_UNLOADHIVE, GRAYED
     END
     POPUP ""
     BEGIN
@@ -420,7 +420,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE "Editor de regiștri"
+    IDS_APP_TITLE "Editor de registru"
     IDC_REGEDIT "REGEDIT"
     IDC_REGEDIT_FRAME "REGEDIT_FRAME"
 END
@@ -429,9 +429,9 @@ STRINGTABLE
 BEGIN
     ID_REGISTRY_MENU "Conține comenzi pentru lucrul cu întregul registru"
     ID_EDIT_MENU "Conține comenzi pentru editarea valorilor și cheilor"
-    ID_VIEW_MENU "Conține comenzi pentru particularizarea ferestrei editorului de regiștri"
+    ID_VIEW_MENU "Conține comenzi pentru particularizarea ferestrei editorului de registru"
     ID_FAVOURITES_MENU "Conține comenzi pentru accesarea cheilor frecvent utilizate"
-    ID_HELP_MENU "Conține comenzi pentru reprezentarea ajutorului și informațiilor despre editorul de regiștri"
+    ID_HELP_MENU "Conține comenzi pentru reprezentarea ajutorului și informațiilor despre editorul de registru"
     ID_EDIT_NEW_MENU "Conține comenzi pentru crearea noilor chei sau valori"
 END
 
@@ -442,7 +442,7 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "Adaugă o nouă valoare șir"
     ID_EDIT_NEW_BINARYVALUE "Adaugă o nouă valoare de 1 bit"
     ID_EDIT_NEW_DWORDVALUE "Adaugă o nouă valoare de 32 de biți"
-    ID_REGISTRY_IMPORTREGISTRYFILE "Importă regiștri dintr-un fișier"
+    ID_REGISTRY_IMPORTREGISTRYFILE "Importă registru dintr-un fișier"
     ID_REGISTRY_EXPORTREGISTRYFILE "Exportă registrul total sau parțial într-un fișier"
     ID_REGISTRY_LOADHIVE "Încarcă un fișier binar în registru"
     ID_REGISTRY_UNLOADHIVE "Eliberează conținutul unui fișier binar din registru"
@@ -455,7 +455,7 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_EXIT "Ieșire din editorul de regiștri"
+    ID_REGISTRY_EXIT "Ieșire din editorul de registru"
     ID_FAVOURITES_ADDTOFAVOURITES "Adaugă chei către lista de favorite"
     ID_FAVOURITES_REMOVEFAVOURITE "Elimină chei din lista de favorite"
     ID_VIEW_STATUSBAR "Afișează sau ascunde bara de stare"
@@ -500,21 +500,21 @@ BEGIN
     IDS_VALUE_NOT_SET "(valoare nestabilită)"
     IDS_UNKNOWN_TYPE "Tip necunoscut: (0x%lx)"
     IDS_MY_COMPUTER "Calculatorul meu"
-    IDS_IMPORT_REG_FILE "Importă regiștri din fișier"
-    IDS_EXPORT_REG_FILE "Exportă regiștri în fișier"
-    IDS_LOAD_HIVE "Încarcă regiștri (binar)"
-    IDS_UNLOAD_HIVE "Eliberează regiștri (binar)"
+    IDS_IMPORT_REG_FILE "Importă registru din fișier"
+    IDS_EXPORT_REG_FILE "Exportă registru în fișier"
+    IDS_LOAD_HIVE "Încarcă registru (binar)"
+    IDS_UNLOAD_HIVE "Eliberează registru (binar)"
     IDS_INVALID_DWORD "(valoare de 32 de biți nevalidă)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FLT_REGFILE "Fișier de regiștri"
-    IDS_FLT_REGFILES "Fișiere de regiștri (*.reg)"
+    IDS_FLT_REGFILE "Fișier de registru"
+    IDS_FLT_REGFILES "Fișiere de registru (*.reg)"
     IDS_FLT_REGFILES_FLT "*.reg"
-    IDS_FLT_HIVFILES "Fișiere de regiștri (*.*)"
+    IDS_FLT_HIVFILES "Fișiere de registru (*.*)"
     IDS_FLT_HIVFILES_FLT "*.*"
-    IDS_FLT_REGEDIT4 "Fișiere de regiștri Win9x/NT4 (REGEDIT4) (*.reg)"
+    IDS_FLT_REGEDIT4 "Fișiere de registru Win9x/NT4 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT "*.reg"
     IDS_FLT_ALLFILES "Orice fișier (*.*)"
     IDS_FLT_ALLFILES_FLT "*.*"
@@ -550,13 +550,13 @@ BEGIN
     IDS_EXPAND "&Extindere"
     IDS_COLLAPSE "&Restrângere"
     IDS_GOTO_SUGGESTED_KEY "S&alt la '%s'"
-    IDS_FINISHEDFIND "Căutarea în regiștri a fost finalizată."
+    IDS_FINISHEDFIND "Căutarea în registru a fost finalizată."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_IMPORT_PROMPT "Adăugarea de informații poate în mod neintenționat modifica sau șterge valori (de regiștri) și cauza funcționare incorectă. Dacă nu aveți încredere în sursa acestei informații din '%s', nu o adăugați în regiștri.\n\nSigur doriți să continuați?"
-    IDS_IMPORT_OK "Cheile și valorile conținute în '%s' au fost adăugate cu succes în regiștri."
+    IDS_IMPORT_PROMPT "Adăugarea de informații poate în mod neintenționat modifica sau șterge valori (de registru) și cauza funcționare incorectă. Dacă nu aveți încredere în sursa acestei informații din '%s', nu o adăugați în registru.\n\nSigur doriți să continuați?"
+    IDS_IMPORT_OK "Cheile și valorile conținute în '%s' au fost adăugate cu succes în registru."
     IDS_IMPORT_ERROR "Nu s-a putut importa '%s' : Eroare la deschiderea fișierului. Poate fi o problemă a discului, a sistemului de fișiere sau fișierul în cauză să nu existe."
     IDS_EXPORT_ERROR "Nu s-a putut exporta '%s': Eroare la crearea sau scrierea în fișier. Poate fi o problemă a discului sau a sistemului de fișiere."
 END
@@ -661,7 +661,7 @@ END
 
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Încărcare de regiștri"
+CAPTION "Încărcare de registru"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Cheie:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
@@ -722,6 +722,5 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
     DEFPUSHBUTTON "Revocare", IDCANCEL, 93, 29, 45, 14
-    LTEXT "Căutare în regiștri…", IDC_STATIC, 33, 12, 83, 8
+    LTEXT "Căutare în registru…", IDC_STATIC, 33, 12, 83, 8
 END
-
