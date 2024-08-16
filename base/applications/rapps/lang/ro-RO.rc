@@ -53,7 +53,7 @@ BEGIN
         MENUITEM "&Dezinstalare\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modificare", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Eliminare din regiștri", ID_REGREMOVE
+        MENUITEM "&Eliminare din registru", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "Împ&rospătare\tF5", ID_REFRESH
         MENUITEM SEPARATOR
