@@ -30,7 +30,7 @@ BEGIN
     EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 89, 131, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     GROUPBOX "Amplasare", -1, 5, 172, 234, 55
-    LTEXT "P&entru ca serviciile să vă ofere informaţii regionale, cum ar fi ştirile sau vremea, selectaţi locul unde vă aflaţi:", -1, 14, 184, 210, 24
+    LTEXT "P&entru ca serviciile să vă ofere informaţii regionale, cum ar fi ştirile sau vremea, selectaţi locul unde vă aflaţi.", -1, 14, 184, 210, 24
     COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
