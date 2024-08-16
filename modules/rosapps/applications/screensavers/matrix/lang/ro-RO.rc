@@ -18,20 +18,20 @@ CAPTION "Configurare a economizorului de ecran Matrix"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "&Viteza de decodificare",IDC_STATIC,7,7,128,36
-    LTEXT           "Mai lentă",IDC_STATIC,13,24,22,8
+    LTEXT           "Mai lent",IDC_STATIC,13,24,22,8
     CONTROL         "Slider1",IDC_SLIDER1,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,17,62,22
-    LTEXT           "Mai rapidă",IDC_STATIC,104,24,25,8
+    LTEXT           "Mai rapid",IDC_STATIC,104,24,25,8
     GROUPBOX        "Densitatea &cifrului",IDC_STATIC,7,50,128,36
     LTEXT           "Mică",IDC_STATIC,13,67,19,8
     CONTROL         "Slider1",IDC_SLIDER2,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,60,62,22
     LTEXT           "Mai mult",IDC_STATIC,104,67,23,8
     GROUPBOX        "Vite&za de afișare a mesajului",IDC_MSGSPEEDGRP,7,93,127,36
-    LTEXT           "Mai lentă",IDC_STATIC,13,110,22,8
+    LTEXT           "Mai lent",IDC_STATIC,13,110,22,8
     CONTROL         "Slider3",IDC_SLIDER3,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,103,62,22
-    LTEXT           "Mai rapidă",IDC_STATIC,104,110,22,8
+    LTEXT           "Mai rapid",IDC_STATIC,104,110,22,8
     GROUPBOX        "&Dimensiunea fontului",IDC_STATIC,7,137,127,36
     LTEXT           "Mai mică",IDC_STATIC,13,153,24,8
     CONTROL         "Slider3",IDC_SLIDER4,"msctls_trackbar32",TBS_AUTOTICKS |
