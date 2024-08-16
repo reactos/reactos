@@ -7,7 +7,7 @@ BEGIN
         MENUITEM "E&sci", IDM_EXIT
         MENUITEM "&Opzioni", IDM_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Informazioni su Magnifier", IDM_ABOUT
+        MENUITEM "&Informazioni su Lente d'ingrandimento", IDM_ABOUT
     END
 END
 
@@ -19,18 +19,18 @@ END
 
 IDD_ABOUTBOX DIALOGEX 22, 17, 220, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
-CAPTION "Informazioni Magnifier"
+CAPTION "Informazioni su Lente d'ingrandimento"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_ICON, IDC_MYICON, 14, 9, 20, 20
-    LTEXT "Magnifier Versione 1.0", IDC_STATIC, 49, 10, 119, 8, SS_NOPREFIX
+    LTEXT "Lente d'ingrandimento Versione 1.0", IDC_STATIC, 49, 10, 119, 8, SS_NOPREFIX
     LTEXT "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)", IDC_STATIC, 48, 24, 125, 22
     PUSHBUTTON "OK", IDOK, 162, 48, 50, 14
 END
 
 IDD_DIALOGOPTIONS DIALOGEX 0, 0, 153, 182
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Impostazioni di Magnifier"
+CAPTION "Impostazioni di Lente d'ingrandimento"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "Uscita", IDOK, 96, 161, 50, 14
@@ -55,12 +55,12 @@ END
 
 IDD_WARNINGDIALOG DIALOGEX 0, 0, 250, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
-CAPTION "ReactOS Magnifier"
+CAPTION "Lente d'ingrandimento ReactOS"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "OK", IDOK, 193, 76, 50, 14
     ICON IDI_ICON, IDC_STATIC, 7, 17, 20, 20
-    LTEXT "Magnifier é stato realizzato per fornire un livello minimo di funzionalità agli utenti affetti da problemi visivi. La maggior parte di questi utenti avrà bisogno di un programma di utilità dotato di maggiori funzioni per l'uso quotidiano.", IDC_STATIC, 36, 7, 207, 33
+    LTEXT "Lente d'ingrandimento é stato realizzato per fornire un livello minimo di funzionalità agli utenti affetti da problemi visivi. La maggior parte di questi utenti avrà bisogno di un programma di utilità dotato di maggiori funzioni per l'uso quotidiano.", IDC_STATIC, 36, 7, 207, 33
     CONTROL "Non mostrare più questo messaggio", IDC_SHOWWARNINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 43, 80, 137, 10
 END
