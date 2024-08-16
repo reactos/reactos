@@ -26,7 +26,7 @@ BEGIN
         MENUITEM "Page Setup...", IDM_FILEPAGESETUP
         MENUITEM "Stampa...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
-        MENUITEM "Send...", IDM_FILESEND
+        MENUITEM "Invia...", IDM_FILESEND
         MENUITEM SEPARATOR
         MENUITEM "Imposta come sfondo (normale)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Imposta come sfondo (centrato)", IDM_FILEASWALLPAPERCENTERED
@@ -81,7 +81,7 @@ BEGIN
     POPUP "&Immagine"
     BEGIN
         MENUITEM "Ca&povolgi/ruota...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Estendi/Allarga...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "&Ritaglia", IDM_IMAGECROP
         MENUITEM "&Inverti colori\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "&Attributi...\tCtrl+E", IDM_IMAGEATTRIBUTES
@@ -119,7 +119,7 @@ BEGIN
         MENUITEM "Incolla &da...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
         MENUITEM "Ca&povolgi/ruota...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "S&tretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "Estendi/Allarha...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "&Inverti colori\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
@@ -197,7 +197,7 @@ END
 IDD_STRETCHSKEW DIALOGEX 100, 100, 225, 150
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Stretch and skew image"
+CAPTION "Estendi e allarga l'immagine"
 BEGIN
     GROUPBOX "Stretch", IDD_STRETCHSKEWGROUPSTRETCH, 6, 6, 158, 66
     ICON IDI_HORZSTRETCH, IDD_STRETCHSKEWICONHSTRETCH, 12, 18, 32, 32
@@ -237,7 +237,7 @@ BEGIN
     IDS_PROGRAMNAME "Paint"
     IDS_WINDOWTITLE "%s - Paint"
     IDS_INFOTITLE "Paint per ReactOS"
-    IDS_INFOTEXT "Available under the GNU Lesser General Public License (LGPL, see www.gnu.org)"
+    IDS_INFOTEXT "Disponibile sotto licenza GNU Lesser General Public (LGPL, vedi www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Si vuole salvare le modifiche a %s?"
     IDS_DEFAULTFILENAME "SenzaNome"
     IDS_MINIATURETITLE "Miniature"
