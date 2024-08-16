@@ -202,7 +202,6 @@ ValidateStringSettings(PSETTINGS_INFO pSettingsInfo)
 
         CStringW::CopyChars(pSettingsInfo->szDownloadDir, _countof(pSettingsInfo->szDownloadDir),
                             szDownloadDir.GetString(), szDownloadDir.GetLength() + 1);
-
     }
 }
 
