@@ -14,7 +14,7 @@ BEGIN
         MENUITEM "&Nuovo\tF2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Contrassegna domanda", IDM_MARKQ
-        MENUITEM "Sound", IDM_SOUND
+        MENUITEM "Suono", IDM_SOUND
         MENUITEM SEPARATOR
         MENUITEM "&Principiante", IDM_BEGINNER
         MENUITEM "&Avanzato", IDM_ADVANCED
