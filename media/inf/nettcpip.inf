@@ -343,6 +343,14 @@ DHCPCLIENT_NAME = "DHCP İstemcisi"
 DHCPCLIENT_DESC = "Kullanılabilir bir DHCP sunucusundan otomatik olarak ağ ayarlarını almayı dener"
 TCPIP_DEF = "Aktarım Denetim Protokolü/Genel Ağ Protokolü"
 
+[Strings.0804]
+MS_TCPIP.DisplayName = "Internet 协议版本 4 (TCP/IPv4)"
+DNSCLIENT_NAME = "DNS Client"
+DNSCLIENT_DESC = "本地 DNS 查询缓存服务"
+DHCPCLIENT_NAME = "DHCP Client"
+DHCPCLIENT_DESC = "尝试从可用的 DHCP 服务器自动获取网络设置"
+TCPIP_DEF = "传输控制协议 / Internet 协议"
+
 [Strings.0816]
 MS_TCPIP.DisplayName = "Internet Protocol Version 4 (TCP/IPv4)"
 DNSCLIENT_NAME = "DNS Client"

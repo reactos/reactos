@@ -1,3 +1,16 @@
+/*
+ * PROJECT:     ReactOS Registry Editor
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Russian resource file
+ * TRANSLATORS: Copyright 2003 Igor Stepin <is@istudio.ru>
+ *              Copyright 2006 Anton Belitsky (bmoof) <fidoworld@mail.ru>
+ *              Copyright 2008 Dmitry Chapyshev <dmitry@reactos.org>
+ *              Copyright 2011 Igor Paliychuk <mansonigor@gmail.com>
+ *              Copyright 2014 Alexey Gorgurov <leha-bot@ya.ru>
+ *              Copyright 2014 Kudratov Olimjon <olim98@bk.ru>
+ *              Copyright 2020-2024 Stanislav Motylkov <binarymaster@mail.ru>
+ */
+
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 ID_ACCEL ACCELERATORS
@@ -65,18 +78,6 @@ Usage examples:\n\
 END
 
 /* Menus */
-
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&Файл"
-    BEGIN
-        MENUITEM "В&ыход", ID_REGISTRY_EXIT
-    END
-    POPUP "&Справка"
-    BEGIN
-        MENUITEM "&О программе", ID_HELP_ABOUT
-    END
-END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
@@ -451,7 +452,7 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Подключается к реестру удалённого компьютера"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Отключается от реестра удалённого компьютера"
     ID_REGISTRY_PRINT "Печатает весь реестр или его часть"
-/*    ID_HELP_HELPTOPICS "Открывает справку редактора реестра" */
+//    ID_HELP_HELPTOPICS "Открывает справку редактора реестра"
     ID_HELP_ABOUT "Отображает информацию о программе, номер версии и авторские права"
 END
 
@@ -656,15 +657,15 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_B
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Диапазон экспорта", IDC_STATIC, 2, 0, 366, 48
-    CONTROL "&Весь реестр", IDC_EXPORT_ALL, "Button", BS_AUTORADIOBUTTON, 10, 10, 70, 11
-    CONTROL "В&ыбранная ветвь", IDC_EXPORT_BRANCH, "Button", BS_AUTORADIOBUTTON, 10, 22, 100, 11
+    AUTORADIOBUTTON "&Весь реестр", IDC_EXPORT_ALL, 10, 10, 99, 11, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "В&ыбранная ветвь", IDC_EXPORT_BRANCH, 10, 22, 99, 11
     EDITTEXT IDC_EXPORT_BRANCH_TEXT, 30, 34, 335, 12
 END
 
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Загрузить куст"
-FONT 8, "Ms Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Значение:", IDC_STATIC, 4, 4, 33, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 42, 2, 148, 13
@@ -723,15 +724,6 @@ CAPTION "Поиск"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
-    DEFPUSHBUTTON "&Отмена", IDCANCEL, 93, 29, 45, 14
+    DEFPUSHBUTTON "Отмена", IDCANCEL, 93, 29, 45, 14
     LTEXT "Поиск в реестре...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Открывает справку редактора реестра."
- *    ID_HELP_ABOUT "Отображает информацию о программе, номер версии и авторские права."
- *END
- */

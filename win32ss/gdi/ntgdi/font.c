@@ -914,7 +914,7 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
   }
   TextIntUpdateSize(dc, TextObj, FontGDI, TRUE);
   TEXTOBJ_UnlockText(TextObj);
-  Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
+  Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL, FALSE);
   if (!otm) return Size;
   if (Size > Data)
   {
@@ -928,7 +928,7 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
       return 0;
   }
   RtlZeroMemory(potm, Size);
-  IntGetOutlineTextMetrics(FontGDI, Size, potm);
+  IntGetOutlineTextMetrics(FontGDI, Size, potm, FALSE);
 
   _SEH2_TRY
   {

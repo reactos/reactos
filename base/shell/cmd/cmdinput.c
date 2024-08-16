@@ -106,10 +106,10 @@
  * See https://technet.microsoft.com/en-us/library/cc978715.aspx
  * and https://technet.microsoft.com/en-us/library/cc940805.aspx
  * to know the differences between those two settings.
- * Values 0x00, 0x0D (carriage return) and 0x20 (space) disable completion.
+ * Values 0x00, 0x0D (carriage return) and >= 0x20 (space) disable completion.
  */
-TCHAR AutoCompletionChar = _T('\t'); // Default is 0x20
-TCHAR PathCompletionChar = _T('\t'); // Default is 0x20
+TCHAR AutoCompletionChar = 0x20; // Disabled by default
+TCHAR PathCompletionChar = 0x20; // Disabled by default
 
 
 SHORT maxx;

@@ -1,6 +1,9 @@
-/* FILE:       dll/shellext/acppage/lang/cs-CZ.rc
- * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2010-05-25
+/*
+ * PROJECT:     ReactOS Compatibility Layer Shell Extension
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Czech resource file
+ * TRANSLATORS: Copyright 2010 Radek Liška (Black_Fox) <radekliska@gmail.com>
+ *              Copyright 2024 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -10,7 +13,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Kompatibilita"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Pokud jsou problémy se spouštěním tohoto programu v systému ReactOS, zvolte operační systém, který ReactOS tomuto programu sdělí.\nPlease note that this is a work in progress.", IDC_EXPLANATION, 7, 7, 210, 31
+    LTEXT "Pokud jsou problémy se spouštěním tohoto programu v systému ReactOS, zvolte operační systém, který ReactOS tomuto programu sdělí.\nMějte prosím na paměti, že tato funkce je stále ve vývoji.", IDC_EXPLANATION, 7, 7, 210, 31
     GROUPBOX "Režim kompatibility", IDC_COMPATGROUP, 7, 41, 210, 49
     CHECKBOX "Spustit tento program v režimu kompatibility pro:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
@@ -35,13 +38,13 @@ BEGIN
     PUSHBUTTON      "<",IDC_REMOVE,144,60,18,14,WS_DISABLED
     PUSHBUTTON      "&OK",IDOK,174,114,60,14
     PUSHBUTTON      "&Storno",IDCANCEL,240,114,60,14
-    LTEXT           "Available modes",-1,6,6,52,8
-    LTEXT           "Selected modes",-1,168,6,51,8
+    LTEXT           "Dostupné režimy",-1,6,6,53,8
+    LTEXT           "Vybrané režimy",-1,168,6,51,8
 END
 
 STRINGTABLE
 BEGIN
     IDS_COMPAT_TITLE "Kompatibilita"
-    IDS_FAILED_NETWORK "Compatibility modes cannot be set on this program because it is on a network drive."
-    IDS_FAILED_PROTECTED "Compatibility modes cannot be set on this program because it is a part of ReactOS."
+    IDS_FAILED_NETWORK "Režim kompatibility nelze u tohoto programu nastavit, protože program se nachází na síťovém úložišti."
+    IDS_FAILED_PROTECTED "Režim kompatibility nelze u tohoto programu nastavit, protože program je součástí ReactOS."
 END

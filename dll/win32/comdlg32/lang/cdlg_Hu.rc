@@ -314,8 +314,8 @@ FONT 8, "MS Shell Dlg"
  CHECKBOX "Teljes &szavak keresése", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "Kis/&nagybetű különb.", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
  GROUPBOX "Irány", grp1, 147, 21, 58, 38
- CONTROL "&Vissza", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 151, 30, 48, 12
- CONTROL "&Előre", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 151, 44, 48, 12
+ AUTORADIOBUTTON "&Vissza", rad1, 151, 30, 48, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
+ AUTORADIOBUTTON "&Előre", rad2, 151, 44, 48, 12, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 
  DEFPUSHBUTTON "&Tovább", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "Mégse", IDCANCEL	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
@@ -353,34 +353,34 @@ FONT 8, "MS Shell Dlg"
     PUSHBUTTON      "Mégse", IDCANCEL, 230,164, 50,14, WS_GROUP
     PUSHBUTTON      "&Súgó",  pshHelp,  50, 161, 50,14, WS_GROUP
 
-    GROUPBOX        "Nyomtató",        grp4,   8,  4, 272,84, WS_GROUP
+    GROUPBOX        "Nyomtató",       grp4,   8,  4, 272,84, WS_GROUP
     CONTROL         "Nyomtatás fáj&lba", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,185,36,90,16
-    PUSHBUTTON      "&Tulajdonságok",    psh2, 212, 17,  60,14, WS_GROUP
+    PUSHBUTTON      "&Tulajdonságok", psh2, 212, 17,  60,14, WS_GROUP
     LTEXT           "&Név:",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "Állapot:",        stc8,  16, 36,  47,10, SS_NOPREFIX
+    LTEXT           "Állapot:",       stc8,  16, 36,  47,10, SS_NOPREFIX
     LTEXT           "",               stc12, 65, 36, 120,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Típus:",          stc7,  16, 48,  47,10, SS_NOPREFIX
+    LTEXT           "Típus:",         stc7,  16, 48,  47,10, SS_NOPREFIX
     LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Hely:",         stc10, 16, 60,  47,10, SS_NOPREFIX
     LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Megjegyzés:",       stc9,  16, 72,  47,10, SS_NOPREFIX
+    LTEXT           "Megjegyzés:",    stc9,  16, 72,  47,10, SS_NOPREFIX
     LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
-    GROUPBOX        "Másolatok",         grp2, 160, 92, 120,64, WS_GROUP
+    GROUPBOX        "Másolatok",      grp2, 160, 92, 120,64, WS_GROUP
     LTEXT           "Másola&tok száma:",stc5,168,105,68,8
     ICON            "",               ico3, 210,131,  76,24, WS_GROUP
-    CONTROL         "Le&válogatás",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
+    CONTROL         "Le&válogatás",   chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
     EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
 
-    GROUPBOX        "Nyomtatási terület",    grp1,   8,92,  144,64, WS_GROUP
-    CONTROL         "&Mind",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
-    CONTROL         "Oldala&k",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
-    CONTROL         "&Kijelölés",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
+    GROUPBOX        "Nyomtatási terület", grp1,   8,92,  144,64, WS_GROUP
+    AUTORADIOBUTTON "&Mind",          rad1,16,106,64,12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Oldala&k",       rad3,16,122,36,12
+    AUTORADIOBUTTON "&Kijelölés",     rad2,16,138,64,12
     EDITTEXT                          edt1,  73,122,  26,12, WS_GROUP | ES_NUMBER
     EDITTEXT                          edt2, 120,122,  26,12, WS_GROUP | ES_NUMBER
-    RTEXT           "Et&től:",         stc2,  52,124,  20,8
-    RTEXT           "Ed&dig:",           stc3,  99,124,  20,8
+    RTEXT           "Et&től:",        stc2,  52,124,  20,8
+    RTEXT           "Ed&dig:",        stc3,  99,124,  20,8
 }
 
 PRINT32_SETUP DIALOG  32, 32, 288, 178
@@ -392,17 +392,17 @@ BEGIN
     PUSHBUTTON      "Mégse",IDCANCEL,230,156,50,14
 /*    PUSHBUTTON      "Hálózat...", psh5, 284,156,48,14 */
 
-    GROUPBOX        "Nyomtató",        grp4,   8,  4, 272,84, WS_GROUP
-    PUSHBUTTON      "&Tulajdonságok",    psh2, 212, 17,  60,14, WS_GROUP
+    GROUPBOX        "Nyomtató",       grp4,   8,  4, 272,84, WS_GROUP
+    PUSHBUTTON      "&Tulajdonságok", psh2, 212, 17,  60,14, WS_GROUP
     LTEXT           "&Név:",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    LTEXT           "Állapot:",        stc8,  16, 36,  47,10, SS_NOPREFIX
+    LTEXT           "Állapot:",       stc8,  16, 36,  47,10, SS_NOPREFIX
     LTEXT           "",               stc12, 65, 36, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Típus:",          stc7,  16, 48,  47,10, SS_NOPREFIX
+    LTEXT           "Típus:",         stc7,  16, 48,  47,10, SS_NOPREFIX
     LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Hely:",         stc10, 16, 60,  47,10, SS_NOPREFIX
     LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Megjegyzés:",       stc9,  16, 72,  47,10, SS_NOPREFIX
+    LTEXT           "Megjegyzés:",    stc9,  16, 72,  47,10, SS_NOPREFIX
     LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
     GROUPBOX        "Papír",          grp2,   8, 92, 164,56, WS_GROUP
@@ -413,8 +413,8 @@ BEGIN
 
     GROUPBOX        "Írásirány",    grp1, 180, 92, 100,56, WS_GROUP
     ICON            "",               ico1, 195,112,  18,20, WS_GROUP
-    CONTROL         "&Álló",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
-    CONTROL         "Fe&kvő",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+    AUTORADIOBUTTON "&Álló",          rad1, 224,106,52,12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Fe&kvő",         rad2, 224,126,52,12
 END
 
 PAGESETUPDLGORD DIALOG 32, 32, 240, 240
@@ -431,8 +431,8 @@ BEGIN
   LTEXT "&Forrás:", stc3, 16, 132, 36, 8
   COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
   GROUPBOX "Írásirány", grp1, 8, 156, 64, 56, BS_GROUPBOX
-  AUTORADIOBUTTON "&Függőleges", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "&Vízszintes", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "&Függőleges", rad1, 16, 170, 52, 12
+  AUTORADIOBUTTON "&Vízszintes", rad2, 16, 190, 52, 12
   GROUPBOX "", grp4, 80, 156, 152, 56, BS_GROUPBOX
   LTEXT "&Bal:", stc15, 88, 172, 30, 8
   EDITTEXT edt4, 119, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER

@@ -1,10 +1,10 @@
-/* TRANSLATOR: 2013-2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATOR: 2013-2015 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net> */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 ID_ACCEL ACCELERATORS
 BEGIN
-    "D", ID_ADDRESS_FOCUS, VIRTKEY, ALT
+    "D", ID_ADDRESS_FOCUS, VIRTKEY, ALT //FIXME: accelerator collision &D
     VK_DELETE, ID_EDIT_DELETE, VIRTKEY, NOINVERT
     "^F", ID_EDIT_FIND
     VK_F1, ID_HELP_HELPTOPICS, VIRTKEY, NOINVERT
@@ -68,21 +68,9 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&Dosya"
-    BEGIN
-        MENUITEM "&Çıkış", ID_REGISTRY_EXIT
-    END
-    POPUP "&Yardım"
-    BEGIN
-        MENUITEM "&Hakkında", ID_HELP_ABOUT
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "&Dosya" //FIXME: accelerator collision &D. If you decide to change this then please keep it in sync with the "&Dosya" in IDC_REGEDIT MENU
+    POPUP "&Kütük"
     BEGIN
         MENUITEM "&Al...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Ver...", ID_REGISTRY_EXPORTREGISTRYFILE
@@ -97,7 +85,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", ID_REGISTRY_EXIT
     END
-    POPUP "&Düzen" //FIXME: accelerator collision &D
+    POPUP "&Düzen" //FIXME: 2x accelerator collision &D: with "D", ID_ADDRESS_FOCUS, VIRTKEY, ALT.
     BEGIN
         MENUITEM "&Değiştir...", ID_EDIT_MODIFY
         MENUITEM SEPARATOR
@@ -431,45 +419,45 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_MENU "Bütün Kayıt Defteri ile çalışma komutlarını içerir."
-    ID_EDIT_MENU "Anahtar veya değerleri düzenleme komutlarını içerir."
-    ID_VIEW_MENU "Kayıt Defteri penceresinin özelleştirme komutlarını içerir."
-    ID_FAVOURITES_MENU "Sık kullanılan anahtarları kullanma komutlarını içerir."
-    ID_HELP_MENU "Kayıt Defteri Düzenleyicisi ile ilgili bilgiyi ya da yardımı görüntüleme komutlarını içerir."
-    ID_EDIT_NEW_MENU "Yeni bir anahtar ya da yeni bir değer oluşturma komutlarını içerir."
+    ID_REGISTRY_MENU "Bütün Kayıt Defteri ile çalışma komutlarını içerir"
+    ID_EDIT_MENU "Anahtar veya değerleri düzenleme komutlarını içerir"
+    ID_VIEW_MENU "Kayıt Defteri penceresinin özelleştirme komutlarını içerir"
+    ID_FAVOURITES_MENU "Sık kullanılan anahtarları kullanma komutlarını içerir"
+    ID_HELP_MENU "Kayıt Defteri Düzenleyicisi ile ilgili bilgiyi ya da yardımı görüntüleme komutlarını içerir"
+    ID_EDIT_NEW_MENU "Yeni bir anahtar ya da yeni bir değer oluşturma komutlarını içerir"
 END
 
 STRINGTABLE
 BEGIN
-    ID_EDIT_MODIFY "Değerin verisini değiştirir."
-    ID_EDIT_NEW_KEY "Yeni bir anahtar ekler."
-    ID_EDIT_NEW_STRINGVALUE "Yeni bir dizi değeri ekler."
-    ID_EDIT_NEW_BINARYVALUE "Yeni bir ikili değer ekler."
-    ID_EDIT_NEW_DWORDVALUE "Yeni bir DWORD değeri ekler."
-    ID_REGISTRY_IMPORTREGISTRYFILE "Bir metin dosyasını Kayıt Defteri'ne alır."
-    ID_REGISTRY_EXPORTREGISTRYFILE "Kayıt Defteri'nin tümünü ya da bir bölümünü bir metin dosyasına verir."
-    ID_REGISTRY_LOADHIVE "Kayıt Defteri'ne bir yığın dosyasını yükler."
-    ID_REGISTRY_UNLOADHIVE "Kayıt Defteri'nden bir yığın kaldırır."
-    ID_REGISTRY_CONNECTNETWORKREGISTRY "Uzaktaki bir bilgisayarın Kayıt Defteri'ne bağlanır."
-    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Uzaktaki bir bilgisayarın Kayıt Defteri'ne olan bağlantıyı keser."
-    ID_REGISTRY_PRINT "Kayıt Defteri'nin tümünü ya da bir bölümünü yazdırır."
-/*  ID_HELP_HELPTOPICS "Kayıt Defteri Düzenleyicisi Yardımı'nı açar."  */
-    ID_HELP_ABOUT "Programla ilgili bilgi, sürüm numarası ve telif hakkı görüntüler."
+    ID_EDIT_MODIFY "Değerin verisini değiştirir"
+    ID_EDIT_NEW_KEY "Yeni bir anahtar ekler"
+    ID_EDIT_NEW_STRINGVALUE "Yeni bir dizi değeri ekler"
+    ID_EDIT_NEW_BINARYVALUE "Yeni bir ikili değer ekler"
+    ID_EDIT_NEW_DWORDVALUE "Yeni bir DWORD değeri ekler"
+    ID_REGISTRY_IMPORTREGISTRYFILE "Bir metin dosyasını Kayıt Defteri'ne alır"
+    ID_REGISTRY_EXPORTREGISTRYFILE "Kayıt Defteri'nin tümünü ya da bir bölümünü bir metin dosyasına verir"
+    ID_REGISTRY_LOADHIVE "Kayıt Defteri'ne bir yığın dosyasını yükler"
+    ID_REGISTRY_UNLOADHIVE "Kayıt Defteri'nden bir yığın kaldırır"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY "Uzaktaki bir bilgisayarın Kayıt Defteri'ne bağlanır"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Uzaktaki bir bilgisayarın Kayıt Defteri'ne olan bağlantıyı keser"
+    ID_REGISTRY_PRINT "Kayıt Defteri'nin tümünü ya da bir bölümünü yazdırır"
+//  ID_HELP_HELPTOPICS "Kayıt Defteri Düzenleyicisi Yardımı'nı açar"
+    ID_HELP_ABOUT "Programla ilgili bilgi, sürüm numarası ve telif hakkı görüntüler"
 END
 
 STRINGTABLE
 BEGIN
-    ID_REGISTRY_EXIT "Kayıt Defteri Düzenleyicisi'nden çıkar."
-    ID_FAVOURITES_ADDTOFAVOURITES "Anahtarları yer imleri listesine ekler."
-    ID_FAVOURITES_REMOVEFAVOURITE "Anahtarları yer imleri listesinden kaldırır."
-    ID_VIEW_STATUSBAR "Durum çubuğunu gösterir ya da gizler."
-    ID_VIEW_SPLIT "İki levha arasındaki ayırıcının konumunu değiştirir."
-    ID_VIEW_REFRESH "Pencereyi yeniler."
-    ID_EDIT_DELETE "Seçileni siler."
-    ID_EDIT_RENAME "Seçilenin adını değiştirir."
-    ID_EDIT_COPYKEYNAME "Seçilen anahtarın adını panoya çoğaltır."
-    ID_EDIT_FIND "Bir dizeyi anahtarların adlarında, değer adlarında veya değer verilerinde arar."
-    ID_EDIT_FINDNEXT "Önceki aramada belirtilmiş metni sonraki aramada arar."
+    ID_REGISTRY_EXIT "Kayıt Defteri Düzenleyicisi'nden çıkar"
+    ID_FAVOURITES_ADDTOFAVOURITES "Anahtarları yer imleri listesine ekler"
+    ID_FAVOURITES_REMOVEFAVOURITE "Anahtarları yer imleri listesinden kaldırır"
+    ID_VIEW_STATUSBAR "Durum çubuğunu gösterir ya da gizler"
+    ID_VIEW_SPLIT "İki levha arasındaki ayırıcının konumunu değiştirir"
+    ID_VIEW_REFRESH "Pencereyi yeniler"
+    ID_EDIT_DELETE "Seçileni siler"
+    ID_EDIT_RENAME "Seçilenin adını değiştirir"
+    ID_EDIT_COPYKEYNAME "Seçilen anahtarın adını panoya çoğaltır"
+    ID_EDIT_FIND "Bir dizeyi anahtarların adlarında, değer adlarında veya değer verilerinde arar"
+    ID_EDIT_FINDNEXT "Önceki aramada belirtilmiş metni sonraki aramada arar"
 END
 
 STRINGTABLE
@@ -658,15 +646,15 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_B
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Verme Kapsamı", IDC_STATIC, 2, 0, 366, 48
-    CONTROL "&Tümü", IDC_EXPORT_ALL, "Button", BS_AUTORADIOBUTTON, 10, 10, 29, 11
-    CONTROL "&Seçili Dal", IDC_EXPORT_BRANCH, "Button", BS_AUTORADIOBUTTON, 10, 22, 100, 11
+    AUTORADIOBUTTON "&Tümü", IDC_EXPORT_ALL, 10, 10, 99, 11, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Seçili Dal", IDC_EXPORT_BRANCH, 10, 22, 99, 11
     EDITTEXT IDC_EXPORT_BRANCH_TEXT, 30, 34, 335, 12
 END
 
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Yığın Yükleme"
-FONT 8, "Ms Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Anahtar:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
@@ -728,12 +716,3 @@ BEGIN
     DEFPUSHBUTTON "İptal", IDCANCEL, 93, 29, 45, 14
     LTEXT "Kayıt Defteri Aranıyor...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Kayıt Defteri Düzenleyicisi Yardımı'nı açar."
- *    ID_HELP_ABOUT "İzlenceyle ilgili bilgi, sürüm numarası ve telif hakkı görüntüler."
- *END
- */

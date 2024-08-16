@@ -1,5 +1,4 @@
-/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com)
- * DATE OF TR:  29-11-2013
+/* TRANSLATOR: 2013 Ardit Dani (Ard1t) <ardit.dani@gmail.com>
 */
 
 LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
@@ -70,18 +69,6 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&File"
-    BEGIN
-        MENUITEM "dIL", ID_REGISTRY_EXIT
-    END
-    POPUP "nDIHMë"
-    BEGIN
-        MENUITEM "rRETH", ID_HELP_ABOUT
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&File"
@@ -89,15 +76,15 @@ BEGIN
         MENUITEM "&Importo...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Eksporto...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Ngarko koshere...", ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "Shkarko koshere...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "Ngarko koshere...", ID_REGISTRY_LOADHIVE, GRAYED //FIXME: add accelerator. It is possible to use the same accel for ID_REGISTRY_LOADHIVE and ID_REGISTRY_UNLOADHIVE, because they are never shown both at the same time.
+        MENUITEM "Shkarko koshere...", ID_REGISTRY_UNLOADHIVE, GRAYED //FIXME: add accelerator. It is possible to use the same accel for ID_REGISTRY_LOADHIVE and ID_REGISTRY_UNLOADHIVE, because they are never shown both at the same time.
         MENUITEM SEPARATOR
-        MENUITEM "Lidh regjistrin e Networkut...", ID_REGISTRY_CONNECTNETWORKREGISTRY
-        MENUITEM "Shkeput regjistrin e Networkut...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
+        MENUITEM "Lidh regjistrin e Networkut...", ID_REGISTRY_CONNECTNETWORKREGISTRY //FIXME: acceleraotr is missing
+        MENUITEM "Shkeput regjistrin e Networkut...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED //FIXME: acceleraotr is missing
         MENUITEM SEPARATOR
         MENUITEM "&Printo...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Dil", ID_REGISTRY_EXIT
+        MENUITEM "Dil", ID_REGISTRY_EXIT//FIXME: missing accelerator
     END
     POPUP "Modifiko"
     BEGIN
@@ -132,16 +119,16 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Rifresko\tF5", ID_VIEW_REFRESH
     END
-    POPUP "&Favorite"
+    POPUP "F&avorite"
     BEGIN
         MENUITEM "Shto tek Favoritet", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
         MENUITEM "Hiq nga Favorite", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
-    POPUP "Ndihmë"
+    POPUP "Ndihmë"//FIXME: missing accelerator
     BEGIN
-        MENUITEM "Ndihmë temë\tF1", ID_HELP_HELPTOPICS
+        MENUITEM "Ndihmë temë\tF1", ID_HELP_HELPTOPICS//FIXME: missing accelerator
         MENUITEM SEPARATOR
-        MENUITEM "Rreth Registry Editor", ID_HELP_ABOUT
+        MENUITEM "Rreth Registry Editor", ID_HELP_ABOUT//FIXME: missing accelerator
     END
 END
 
@@ -455,7 +442,7 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Lidhet me regjistrin e një kompjuteri largët"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Shkëputet nga regjistri një kompjuter në distancë të"
     ID_REGISTRY_PRINT "Shtyp tërë ose pjesë të regjistrit"
-/*    ID_HELP_HELPTOPICS "Hap editor regjistrit ndihmë" */
+//    ID_HELP_HELPTOPICS "Hap editor regjistrit ndihmë"
     ID_HELP_ABOUT "Displays informacion rreth programit, versionin dhe të drejtat e autorit"
 END
 
@@ -660,15 +647,15 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_B
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Gama Exportit", IDC_STATIC, 2, 0, 366, 48
-    CONTROL "Te Gjith", IDC_EXPORT_ALL, "Button", BS_AUTORADIOBUTTON, 10, 10, 29, 11
-    CONTROL "Dega e perzgjedhur", IDC_EXPORT_BRANCH, "Button", BS_AUTORADIOBUTTON, 10, 22, 100, 11
+    AUTORADIOBUTTON "Te Gjith", IDC_EXPORT_ALL, 10, 10, 99, 11, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Dega e perzgjedhur", IDC_EXPORT_BRANCH, 10, 22, 99, 11
     EDITTEXT IDC_EXPORT_BRANCH_TEXT, 30, 34, 335, 12
 END
 
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Ngarko kosheren"
-FONT 8, "Ms Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Çeles:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
@@ -730,12 +717,3 @@ BEGIN
     DEFPUSHBUTTON "Anulo", IDCANCEL, 93, 29, 45, 14
     LTEXT "Kerko ne regjister...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Opens Registry Editor Help."
- *    ID_HELP_ABOUT "Displays program information, version number, and copyright."
- *END
- */

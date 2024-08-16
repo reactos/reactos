@@ -549,11 +549,16 @@ WinPosInitInternalPos(PWND Wnd, RECTL *RestoreRect)
    }
    else
    {
-      Wnd->InternalPos.NormalRect = Rect;
+      /* Lie about the snap; Windows does this so applications don't save their
+       * position as a snap but rather the unsnapped "real" position. */
+      if (!IntIsWindowSnapped(Wnd) ||
+          RECTL_bIsEmptyRect(&Wnd->InternalPos.NormalRect))
+      {
+         Wnd->InternalPos.NormalRect = Rect;
+      }
    }
 }
 
-// Win: _GetWindowPlacement
 BOOL
 FASTCALL
 IntGetWindowPlacement(PWND Wnd, WINDOWPLACEMENT *lpwndpl)
@@ -562,6 +567,7 @@ IntGetWindowPlacement(PWND Wnd, WINDOWPLACEMENT *lpwndpl)
 
    if(lpwndpl->length != sizeof(WINDOWPLACEMENT))
    {
+      ERR("length mismatch: %u\n", lpwndpl->length);
       return FALSE;
    }
 
@@ -2487,6 +2493,7 @@ co_WinPosMinMaximize(PWND Wnd, UINT ShowFlag, RECT* NewPos)
          case SW_MAXIMIZE:
             {
                //ERR("MinMaximize Maximize\n");
+               IntSetSnapEdge(Wnd, HTNOWHERE); /* Mark as not snapped (for Win+Left,Up,Down) */
                if ((Wnd->style & WS_MAXIMIZE) && (Wnd->style & WS_VISIBLE))
                {
                   SwpFlags = SWP_NOSIZE | SWP_NOMOVE;
@@ -2535,6 +2542,12 @@ co_WinPosMinMaximize(PWND Wnd, UINT ShowFlag, RECT* NewPos)
                   else
                   {
                      *NewPos = wpl.rcNormalPosition;
+                     if (ShowFlag != SW_SHOWNORMAL && ShowFlag != SW_SHOWDEFAULT)
+                     {
+                        UINT edge = IntGetWindowSnapEdge(Wnd);
+                        if (edge)
+                           co_IntCalculateSnapPosition(Wnd, edge, NewPos);
+                     }
                      NewPos->right -= NewPos->left;
                      NewPos->bottom -= NewPos->top;
                      break;
@@ -3398,9 +3411,7 @@ NtUserGetWindowPlacement(HWND hWnd,
    UserEnterShared();
 
    if (!(Wnd = UserGetWindowObject(hWnd)))
-   {
       goto Exit; // Return FALSE
-   }
 
    Status = MmCopyFromCaller(&Safepl, lpwndpl, sizeof(WINDOWPLACEMENT));
    if (!NT_SUCCESS(Status))
@@ -3409,6 +3420,7 @@ NtUserGetWindowPlacement(HWND hWnd,
       goto Exit; // Return FALSE
    }
 
+   // This function doesn't check the length. Just overwrite it
    Safepl.length = sizeof(WINDOWPLACEMENT);
 
    IntGetWindowPlacement(Wnd, &Safepl);
@@ -3709,35 +3721,40 @@ NtUserSetWindowPlacement(HWND hWnd,
    TRACE("Enter NtUserSetWindowPlacement\n");
    UserEnterExclusive();
 
-   if (!(Wnd = UserGetWindowObject(hWnd)) ||
-        UserIsDesktopWindow(Wnd) || UserIsMessageWindow(Wnd))
-   {
-      goto Exit; // Return FALSE
-   }
+    _SEH2_TRY
+    {
+        ProbeForRead(lpwndpl, sizeof(*lpwndpl), 1);
+        Safepl = *lpwndpl;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastNtError(_SEH2_GetExceptionCode());
+        _SEH2_YIELD(goto Exit); // Return FALSE
+    }
+    _SEH2_END
 
-   _SEH2_TRY
-   {
-      ProbeForRead(lpwndpl, sizeof(WINDOWPLACEMENT), 1);
-      RtlCopyMemory(&Safepl, lpwndpl, sizeof(WINDOWPLACEMENT));
-   }
-   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-   {
-      SetLastNtError(_SEH2_GetExceptionCode());
-      _SEH2_YIELD(goto Exit); // Return FALSE
-   }
-   _SEH2_END
+    /* Backwards-compatibility: Win 3.x doesn't check the length */
+    if (LOWORD(gptiCurrent->dwExpWinVer) < WINVER_WINNT4)
+        Safepl.length = sizeof(Safepl);
 
-   if(Safepl.length != sizeof(WINDOWPLACEMENT))
-   {
-      goto Exit; // Return FALSE
-   }
+    if (Safepl.length != sizeof(Safepl))
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        goto Exit;
+    }
 
-   Flags = PLACE_MAX | PLACE_RECT;
-   if (Safepl.flags & WPF_SETMINPOSITION) Flags |= PLACE_MIN;
-   UserRefObjectCo(Wnd, &Ref);
-   IntSetWindowPlacement(Wnd, &Safepl, Flags);
-   UserDerefObjectCo(Wnd);
-   Ret = TRUE;
+    Flags = PLACE_MAX | PLACE_RECT;
+    if (Safepl.flags & WPF_SETMINPOSITION)
+        Flags |= PLACE_MIN;
+
+    Wnd = UserGetWindowObject(hWnd);
+    if (!Wnd)
+        goto Exit; // Return FALSE
+
+    UserRefObjectCo(Wnd, &Ref);
+    if (!UserIsDesktopWindow(Wnd) && !UserIsMessageWindow(Wnd))
+        Ret = IntSetWindowPlacement(Wnd, &Safepl, Flags);
+    UserDerefObjectCo(Wnd);
 
 Exit:
    TRACE("Leave NtUserSetWindowPlacement, ret=%i\n", Ret);
@@ -3857,6 +3874,141 @@ NtUserWindowFromPoint(LONG X, LONG Y)
    TRACE("Leave NtUserWindowFromPoint, ret=%p\n", Ret);
    UserLeave();
    return Ret;
+}
+
+/* Windows 10 (1903?)
+BOOL APIENTRY
+NtUserIsWindowArranged(HWND hWnd)
+{
+    PWND pwnd = UserGetWindowObject(hWnd);
+    return pwnd && IntIsWindowSnapped(pwnd);
+}
+*/
+
+UINT FASTCALL
+IntGetWindowSnapEdge(PWND Wnd)
+{
+    if (Wnd->ExStyle2 & WS_EX2_VERTICALLYMAXIMIZEDLEFT) return HTLEFT;
+    if (Wnd->ExStyle2 & WS_EX2_VERTICALLYMAXIMIZEDRIGHT) return HTRIGHT;
+    return HTNOWHERE;
+}
+
+VOID FASTCALL
+co_IntCalculateSnapPosition(PWND Wnd, UINT Edge, OUT RECT *Pos)
+{
+    POINT maxs, mint, maxt;
+    UINT width, height;
+    UserSystemParametersInfo(SPI_GETWORKAREA, 0, Pos, 0); /* FIXME: MultiMon of PWND */
+
+    co_WinPosGetMinMaxInfo(Wnd, &maxs, NULL, &mint, &maxt);
+    width = Pos->right - Pos->left;
+    width = min(min(max(width / 2, mint.x), maxt.x), width);
+    height = Pos->bottom - Pos->top;
+    height = min(max(height, mint.y), maxt.y);
+
+    switch (Edge)
+    {
+    case HTTOP: /* Maximized (Calculate RECT snap preview for SC_MOVE) */
+        height = min(Pos->bottom - Pos->top, maxs.y);
+        break; 
+    case HTLEFT:
+        Pos->right = width;
+        break;
+    case HTRIGHT:
+        Pos->left = Pos->right - width;
+        break;
+    default:
+        ERR("Unexpected snap edge %#x\n", Edge);
+    }
+    Pos->bottom = Pos->top + height;
+}
+
+VOID FASTCALL
+co_IntSnapWindow(PWND Wnd, UINT Edge)
+{
+    RECT newPos;
+    BOOLEAN wasSnapped = IntIsWindowSnapped(Wnd);
+    UINT normal = !(Wnd->style & (WS_MAXIMIZE | WS_MINIMIZE));
+    USER_REFERENCE_ENTRY ref;
+    BOOLEAN hasRef = FALSE;
+
+    if (Edge == HTTOP)
+    {
+        co_IntSendMessage(UserHMGetHandle(Wnd), WM_SYSCOMMAND, SC_MAXIMIZE, 0);
+        return;
+    }
+    else if (Edge != HTNOWHERE)
+    {
+        UserRefObjectCo(Wnd, &ref);
+        hasRef = TRUE;
+        co_IntCalculateSnapPosition(Wnd, Edge, &newPos);
+        IntSetSnapInfo(Wnd, Edge, (wasSnapped || !normal) ? NULL : &Wnd->rcWindow);
+    }
+    else if (wasSnapped)
+    {
+        if (!normal)
+        {
+            IntSetSnapEdge(Wnd, HTNOWHERE);
+            return;
+        }
+        newPos = Wnd->InternalPos.NormalRect; /* Copy RECT now before it is lost */
+        IntSetSnapInfo(Wnd, HTNOWHERE, NULL);
+    }
+    else
+    {
+        return; /* Already unsnapped, do nothing */
+    }
+
+    TRACE("WindowSnap: %d->%d\n", IntGetWindowSnapEdge(Wnd), Edge);
+    co_WinPosSetWindowPos(Wnd, HWND_TOP,
+                          newPos.left,
+                          newPos.top,
+                          newPos.right - newPos.left,
+                          newPos.bottom - newPos.top,
+                          0);
+    if (hasRef)
+        UserDerefObjectCo(Wnd);
+}
+
+VOID FASTCALL
+IntSetSnapEdge(PWND Wnd, UINT Edge)
+{
+    UINT styleMask = WS_EX2_VERTICALLYMAXIMIZEDLEFT | WS_EX2_VERTICALLYMAXIMIZEDRIGHT;
+    UINT style = 0;
+    switch (Edge)
+    {
+    case HTNOWHERE:
+        style = 0;
+        break;
+    case HTTOP: /* Maximize throws away the snap */
+        style = 0;
+        break;
+    case HTLEFT:
+        style = WS_EX2_VERTICALLYMAXIMIZEDLEFT;
+        break;
+    case HTRIGHT:
+        style = WS_EX2_VERTICALLYMAXIMIZEDRIGHT;
+        break;
+    default:
+        ERR("Unexpected snap edge %#x\n", Edge);
+    }
+    Wnd->ExStyle2 = (Wnd->ExStyle2 & ~styleMask) | style;
+}
+
+VOID FASTCALL
+IntSetSnapInfo(PWND Wnd, UINT Edge, IN const RECT *Pos OPTIONAL)
+{
+    RECT r;
+    IntSetSnapEdge(Wnd, Edge);
+    if (Edge == HTNOWHERE)
+    {
+        RECTL_vSetEmptyRect(&r);
+        Pos = (Wnd->style & WS_MINIMIZE) ? NULL : &r;
+    }
+    if (Pos)
+    {
+        Wnd->InternalPos.NormalRect = *Pos;
+    }
 }
 
 /* EOF */

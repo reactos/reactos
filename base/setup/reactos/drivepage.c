@@ -48,28 +48,260 @@ static const INT  column_alignment[MAX_LIST_COLUMNS] = {LVCFMT_LEFT, LVCFMT_LEFT
 
 /* FUNCTIONS ****************************************************************/
 
-static INT_PTR CALLBACK
-MoreOptDlgProc(HWND hwndDlg,
-               UINT uMsg,
-               WPARAM wParam,
-               LPARAM lParam)
+/**
+ * @brief
+ * Sanitize a given string in-place, by
+ * removing any invalid character found in it.
+ **/
+static BOOL
+DoSanitizeText(
+    _Inout_ PWSTR pszSanitized)
+{
+    PWCHAR pch1, pch2;
+    BOOL bSanitized = FALSE;
+
+    for (pch1 = pch2 = pszSanitized; *pch1; ++pch1)
+    {
+        /* Skip any invalid character found */
+        if (!IS_VALID_INSTALL_PATH_CHAR(*pch1))
+        {
+            bSanitized = TRUE;
+            continue;
+        }
+
+        /* Copy over the valid ones */
+        *pch2 = *pch1;
+        ++pch2;
+    }
+    *pch2 = 0;
+
+    return bSanitized;
+}
+
+/**
+ * @brief
+ * Sanitize in-place any text found in the clipboard.
+ **/
+static BOOL
+DoSanitizeClipboard(
+    _In_ HWND hWnd)
+{
+    HGLOBAL hData;
+    LPWSTR pszText, pszSanitized;
+    BOOL bSanitized;
+
+    /* Protect read-only edit control from modification */
+    if (GetWindowLongPtrW(hWnd, GWL_STYLE) & ES_READONLY)
+        return FALSE;
+
+    if (!OpenClipboard(hWnd))
+        return FALSE;
+
+    hData = GetClipboardData(CF_UNICODETEXT);
+    pszText = GlobalLock(hData);
+    if (!pszText)
+    {
+        CloseClipboard();
+        return FALSE;
+    }
+
+    pszSanitized = _wcsdup(pszText);
+    GlobalUnlock(hData);
+    bSanitized = (pszSanitized && DoSanitizeText(pszSanitized));
+    if (bSanitized)
+    {
+        /* Update clipboard text */
+        SIZE_T cbData = (wcslen(pszSanitized) + 1) * sizeof(WCHAR);
+        hData = GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, cbData);
+        pszText = GlobalLock(hData);
+        if (pszText)
+        {
+            CopyMemory(pszText, pszSanitized, cbData);
+            GlobalUnlock(hData);
+            SetClipboardData(CF_UNICODETEXT, hData);
+        }
+    }
+    free(pszSanitized);
+
+    CloseClipboard();
+    return bSanitized;
+}
+
+static VOID
+ShowErrorTip(
+    _In_ HWND hEdit)
+{
+    EDITBALLOONTIP balloon;
+    WCHAR szTitle[512];
+    WCHAR szText[512];
+
+    /* Load the resources */
+    LoadStringW(SetupData.hInstance, IDS_ERROR_INVALID_INSTALLDIR_CHAR_TITLE, szTitle, _countof(szTitle));
+    LoadStringW(SetupData.hInstance, IDS_ERROR_INVALID_INSTALLDIR_CHAR, szText, _countof(szText));
+
+    /* Show a warning balloon */
+    balloon.cbStruct = sizeof(balloon);
+    balloon.pszTitle = szTitle;
+    balloon.pszText  = szText;
+#if (_WIN32_WINNT < _WIN32_WINNT_VISTA)
+    balloon.ttiIcon  = TTI_ERROR;
+#else
+    balloon.ttiIcon  = TTI_ERROR_LARGE;
+#endif
+
+    MessageBeep(MB_ICONERROR);
+    Edit_ShowBalloonTip(hEdit, &balloon);
+
+    // NOTE: There is no need to hide it when other keys are pressed;
+    // the EDIT control will deal with that itself.
+}
+
+/**
+ * @brief
+ * Subclass edit window procedure to filter allowed characters
+ * for the ReactOS installation directory.
+ **/
+static LRESULT
+CALLBACK
+InstallDirEditProc(
+    _In_ HWND hWnd,
+    _In_ UINT uMsg,
+    _In_ WPARAM wParam,
+    _In_ LPARAM lParam)
+{
+    WNDPROC orgEditProc = (WNDPROC)GetWindowLongPtrW(hWnd, GWLP_USERDATA);
+
+    switch (uMsg)
+    {
+    case WM_UNICHAR:
+        if (wParam == UNICODE_NOCHAR)
+            return TRUE;
+        __fallthrough;
+
+    case WM_IME_CHAR:
+    case WM_CHAR:
+    {
+        WCHAR wch = (WCHAR)wParam;
+
+        /* Let the EDIT control deal with Control characters.
+         * It won't emit them as raw data in the text. */
+        if (wParam < ' ')
+            break;
+
+        /* Ignore Ctrl-Backspace */
+        if (wParam == '\x7F')
+            return 0;
+
+        /* Protect read-only edit control from modification */
+        if (GetWindowLongPtrW(hWnd, GWL_STYLE) & ES_READONLY)
+            break;
+
+        if (uMsg == WM_IME_CHAR)
+        {
+            if (!IsWindowUnicode(hWnd) && HIBYTE(wch) != 0)
+            {
+                CHAR data[] = {HIBYTE(wch), LOBYTE(wch)};
+                MultiByteToWideChar(CP_ACP, 0, data, 2, &wch, 1);
+            }
+        }
+
+        /* Show an error and ignore input character if it's invalid */
+        if (!IS_VALID_INSTALL_PATH_CHAR(wch))
+        {
+            ShowErrorTip(hWnd);
+            return 0;
+        }
+        break;
+    }
+
+    case WM_PASTE:
+        /* Verify the text being pasted; if it was sanitized, show an error */
+        if (DoSanitizeClipboard(hWnd))
+            ShowErrorTip(hWnd);
+        break;
+    }
+
+    return CallWindowProcW(orgEditProc, hWnd, uMsg, wParam, lParam);
+}
+
+static INT_PTR
+CALLBACK
+MoreOptDlgProc(
+    _In_ HWND hDlg,
+    _In_ UINT uMsg,
+    _In_ WPARAM wParam,
+    _In_ LPARAM lParam)
 {
     PSETUPDATA pSetupData;
 
     /* Retrieve pointer to the global setup data */
-    pSetupData = (PSETUPDATA)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
+    pSetupData = (PSETUPDATA)GetWindowLongPtrW(hDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
         {
+            HWND hEdit;
+            WNDPROC orgEditProc;
+            BOOL bIsBIOS;
+            UINT uID;
+            INT iItem, iCurrent = CB_ERR, iDefault = 0;
+            WCHAR szText[50];
+
             /* Save pointer to the global setup data */
             pSetupData = (PSETUPDATA)lParam;
-            SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
+            SetWindowLongPtrW(hDlg, GWLP_USERDATA, (LONG_PTR)pSetupData);
 
-            CheckDlgButton(hwndDlg, IDC_INSTFREELDR, BST_CHECKED);
-            SetDlgItemTextW(hwndDlg, IDC_PATH,
-                            pSetupData->USetupData.InstallationDirectory);
+            /* Subclass the install-dir edit control */
+            hEdit = GetDlgItem(hDlg, IDC_PATH);
+            orgEditProc = (WNDPROC)GetWindowLongPtrW(hEdit, GWLP_WNDPROC);
+            SetWindowLongPtrW(hEdit, GWLP_USERDATA, (LONG_PTR)orgEditProc);
+            SetWindowLongPtrW(hEdit, GWLP_WNDPROC, (LONG_PTR)InstallDirEditProc);
+
+            /* Set the current installation directory */
+            SetWindowTextW(hEdit, pSetupData->USetupData.InstallationDirectory);
+
+
+            /* Initialize the list of available bootloader locations */
+            bIsBIOS = ((pSetupData->USetupData.ArchType == ARCH_PcAT) ||
+                       (pSetupData->USetupData.ArchType == ARCH_NEC98x86));
+            for (uID = IDS_BOOTLOADER_NOINST; uID <= IDS_BOOTLOADER_VBRONLY; ++uID)
+            {
+                if ( ( bIsBIOS && (uID == IDS_BOOTLOADER_SYSTEM)) ||
+                     (!bIsBIOS && (uID == IDS_BOOTLOADER_MBRVBR || uID == IDS_BOOTLOADER_VBRONLY)) )
+                {
+                    continue; // Skip this choice.
+                }
+
+                LoadStringW(pSetupData->hInstance, uID, szText, ARRAYSIZE(szText));
+                iItem = SendDlgItemMessageW(hDlg, IDC_INSTFREELDR, CB_ADDSTRING, 0, (LPARAM)szText);
+                if (iItem != CB_ERR && iItem != CB_ERRSPACE)
+                {
+                    UINT uBldrLoc = uID - IDS_BOOTLOADER_NOINST
+                                        - (bIsBIOS && (uID >= IDS_BOOTLOADER_SYSTEM) ? 1 : 0);
+                    SendDlgItemMessageW(hDlg, IDC_INSTFREELDR, CB_SETITEMDATA, iItem, uBldrLoc);
+
+                    /* Find the index of the current and default locations */
+                    if (uBldrLoc == pSetupData->USetupData.BootLoaderLocation)
+                        iCurrent = iItem;
+                    if (uBldrLoc == (IDS_BOOTLOADER_SYSTEM - IDS_BOOTLOADER_NOINST))
+                        iDefault = iItem;
+                }
+            }
+            /* Select the current location or fall back to the default one */
+            if (iCurrent == CB_ERR)
+                iCurrent = iDefault;
+            SendDlgItemMessageW(hDlg, IDC_INSTFREELDR, CB_SETCURSEL, iCurrent, 0);
+
+            break;
+        }
+
+        case WM_DESTROY:
+        {
+            /* Unsubclass the edit control */
+            HWND hEdit = GetDlgItem(hDlg, IDC_PATH);
+            WNDPROC orgEditProc = (WNDPROC)GetWindowLongPtrW(hEdit, GWLP_USERDATA);
+            if (orgEditProc) SetWindowLongPtrW(hEdit, GWLP_WNDPROC, (LONG_PTR)orgEditProc);
             break;
         }
 
@@ -78,15 +310,50 @@ MoreOptDlgProc(HWND hwndDlg,
             {
                 case IDOK:
                 {
-                    GetDlgItemTextW(hwndDlg, IDC_PATH,
-                                    pSetupData->USetupData.InstallationDirectory,
-                                    ARRAYSIZE(pSetupData->USetupData.InstallationDirectory));
-                    EndDialog(hwndDlg, IDOK);
+                    HWND hEdit;
+                    BOOL bIsValid;
+                    WCHAR InstallDir[MAX_PATH];
+                    INT iItem;
+                    UINT uBldrLoc = CB_ERR;
+
+                    /*
+                     * Retrieve the installation path and verify its validity.
+                     * Check for the validity of the installation directory and
+                     * pop up an error if this is not the case.
+                     */
+                    hEdit = GetDlgItem(hDlg, IDC_PATH);
+                    bIsValid = (GetWindowTextLengthW(hEdit) < _countof(InstallDir)); // && IsValidInstallDirectory(InstallDir);
+                    GetWindowTextW(hEdit, InstallDir, _countof(InstallDir));
+                    bIsValid = bIsValid && IsValidInstallDirectory(InstallDir);
+
+                    if (!bIsValid)
+                    {
+                        // ERROR_DIRECTORY_NAME
+                        DisplayError(hDlg,
+                                     IDS_ERROR_DIRECTORY_NAME_TITLE,
+                                     IDS_ERROR_DIRECTORY_NAME);
+                        break; // Go back to the dialog.
+                    }
+
+                    StringCchCopyW(pSetupData->USetupData.InstallationDirectory,
+                                   _countof(pSetupData->USetupData.InstallationDirectory),
+                                   InstallDir);
+
+                    /* Retrieve the bootloader location */
+                    iItem = SendDlgItemMessageW(hDlg, IDC_INSTFREELDR, CB_GETCURSEL, 0, 0);
+                    if (iItem != CB_ERR)
+                        uBldrLoc = SendDlgItemMessageW(hDlg, IDC_INSTFREELDR, CB_GETITEMDATA, iItem, 0);
+                    if (uBldrLoc == CB_ERR) // Default location: System partition / MBR & VBR
+                        uBldrLoc = (IDS_BOOTLOADER_SYSTEM - IDS_BOOTLOADER_NOINST);
+                    uBldrLoc = min(max(uBldrLoc, 0), 3);
+                    pSetupData->USetupData.BootLoaderLocation = uBldrLoc;
+
+                    EndDialog(hDlg, IDOK);
                     return TRUE;
                 }
 
                 case IDCANCEL:
-                    EndDialog(hwndDlg, IDCANCEL);
+                    EndDialog(hDlg, IDCANCEL);
                     return TRUE;
             }
             break;
@@ -682,7 +949,7 @@ DriveDlgProc(
             {
                 case IDC_PARTMOREOPTS:
                     DialogBoxParamW(pSetupData->hInstance,
-                                    MAKEINTRESOURCEW(IDD_BOOTOPTIONS),
+                                    MAKEINTRESOURCEW(IDD_ADVINSTOPTS),
                                     hwndDlg,
                                     MoreOptDlgProc,
                                     (LPARAM)pSetupData);

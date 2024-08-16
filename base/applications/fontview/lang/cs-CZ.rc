@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Font Viewer
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Czech resource file
- * TRANSLATOR:  Copyright 2014-2017 Kamil Hornicek <kamil.hornicek@reactos.org>
+ * TRANSLATOR:  Copyright 2014-2017 Kamil Horníček <kamil.hornicek@reactos.org>
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT

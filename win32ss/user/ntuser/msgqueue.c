@@ -910,7 +910,7 @@ co_MsqDispatchOneSentMessage(
    if (Message->HookMessage == MSQ_ISHOOK)
    {  // Direct Hook Call processor
       Result = co_CallHook( Message->Msg.message,           // HookId
-                           (INT)(INT_PTR)Message->Msg.hwnd, // Code
+                            HandleToLong(Message->Msg.hwnd), // Code
                             Message->Msg.wParam,
                             Message->Msg.lParam);
    }
@@ -1945,6 +1945,7 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
    ULONG_PTR idSave;
    DWORD QS_Flags;
    LONG_PTR ExtraInfo;
+   MSG clk_msg;
    BOOL Ret = FALSE;
    PUSER_MESSAGE_QUEUE MessageQueue = pti->MessageQueue;
 
@@ -1994,17 +1995,22 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
          msg = CurrentMessage->Msg;
          ExtraInfo = CurrentMessage->ExtraInfo;
          QS_Flags = CurrentMessage->QS_Flags;
+         clk_msg = MessageQueue->msgDblClk;
 
          NotForUs = FALSE;
 
          UpdateKeyStateFromMsg(MessageQueue, &msg);
          AcceptMessage = co_IntProcessHardwareMessage(&msg, &Remove, &NotForUs, ExtraInfo, MsgFilterLow, MsgFilterHigh);
          
-         if (MsgFilterLow != 0 || MsgFilterHigh != 0)
+         if (!NotForUs && (MsgFilterLow != 0 || MsgFilterHigh != 0))
          {
              /* Don't return message if not in range */
              if (msg.message < MsgFilterLow || msg.message > MsgFilterHigh)
-                 AcceptMessage = FALSE;
+             {
+                 MessageQueue->msgDblClk = clk_msg;
+                 MessageQueue->idSysPeek = idSave;
+                 continue;
+             }
          }
 
          if (Remove)

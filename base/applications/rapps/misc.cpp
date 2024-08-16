@@ -12,9 +12,6 @@
 
 static HANDLE hLog = NULL;
 
-static BOOL bIsSys64ResultCached = FALSE;
-static BOOL bIsSys64Result = FALSE;
-
 VOID
 CopyTextToClipboard(LPCWSTR lpszText)
 {
@@ -289,32 +286,14 @@ GetInstalledVersion(CStringW *pszVersion, const CStringW &szRegName)
 BOOL
 IsSystem64Bit()
 {
-    if (bIsSys64ResultCached)
-    {
-        // just return cached result
-        return bIsSys64Result;
-    }
-
-    SYSTEM_INFO si;
-    typedef void(WINAPI * LPFN_PGNSI)(LPSYSTEM_INFO);
-    LPFN_PGNSI pGetNativeSystemInfo =
-        (LPFN_PGNSI)GetProcAddress(GetModuleHandle(L"kernel32.dll"), "GetNativeSystemInfo");
-    if (pGetNativeSystemInfo)
-    {
-        pGetNativeSystemInfo(&si);
-        if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 ||
-            si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_IA64)
-        {
-            bIsSys64Result = TRUE;
-        }
-    }
-    else
-    {
-        bIsSys64Result = FALSE;
-    }
-
-    bIsSys64ResultCached = TRUE; // next time calling this function, it will directly return bIsSys64Result
-    return bIsSys64Result;
+#ifdef _WIN64
+    return TRUE;
+#else
+    static UINT cache = 0;
+    if (!cache)
+        cache = 1 + (IsOS(OS_WOW6432) != FALSE);
+    return cache - 1;
+#endif
 }
 
 INT
@@ -368,6 +347,64 @@ UnixTimeToFileTime(DWORD dwUnixTime, LPFILETIME pFileTime)
     pFileTime->dwHighDateTime = ll >> 32;
 }
 
+HRESULT
+RegKeyHasValues(HKEY hKey, LPCWSTR Path, REGSAM wowsam)
+{
+    CRegKey key;
+    LONG err = key.Open(hKey, Path, KEY_QUERY_VALUE | wowsam);
+    if (err == ERROR_SUCCESS)
+    {
+        WCHAR name[1];
+        DWORD cchname = _countof(name), cbsize = 0;
+        err = RegEnumValueW(key, 0, name, &cchname, NULL, NULL, NULL, &cbsize);
+        if (err == ERROR_NO_MORE_ITEMS)
+            return S_FALSE;
+        if (err == ERROR_MORE_DATA)
+            err = ERROR_SUCCESS;
+    }
+    return HRESULT_FROM_WIN32(err);
+}
+
+LPCWSTR
+GetRegString(CRegKey &Key, LPCWSTR Name, CStringW &Value)
+{
+    for (;;)
+    {
+        ULONG cb = 0, cch;
+        ULONG err = Key.QueryValue(Name, NULL, NULL, &cb);
+        if (err)
+            break;
+        cch = cb / sizeof(WCHAR);
+        LPWSTR p = Value.GetBuffer(cch + 1);
+        p[cch] = UNICODE_NULL;
+        err = Key.QueryValue(Name, NULL, (BYTE*)p, &cb);
+        if (err == ERROR_MORE_DATA)
+            continue;
+        if (err)
+            break;
+        Value.ReleaseBuffer();
+        return Value.GetString();
+    }
+    return NULL;
+}
+
+bool
+ExpandEnvStrings(CStringW &Str)
+{
+    CStringW buf;
+    DWORD cch = ExpandEnvironmentStringsW(Str, NULL, 0);
+    if (cch)
+    {
+        if (ExpandEnvironmentStringsW(Str, buf.GetBuffer(cch), cch) == cch)
+        {
+            buf.ReleaseBuffer(cch - 1);
+            Str = buf;
+            return true;
+        }
+    }
+    return false;
+}
+
 BOOL
 SearchPatternMatch(LPCWSTR szHaystack, LPCWSTR szNeedle)
 {
@@ -375,4 +412,79 @@ SearchPatternMatch(LPCWSTR szHaystack, LPCWSTR szNeedle)
         return TRUE;
     /* TODO: Improve pattern search beyond a simple case-insensitive substring search. */
     return StrStrIW(szHaystack, szNeedle) != NULL;
+}
+
+BOOL
+DeleteDirectoryTree(LPCWSTR Dir, HWND hwnd)
+{
+    CStringW from(Dir);
+    UINT cch = from.GetLength();
+    from.Append(L"00");
+    LPWSTR p = from.GetBuffer();
+    p[cch] = p[cch + 1] = L'\0'; // Double null-terminate
+    UINT fof = FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_SILENT;
+    SHFILEOPSTRUCT shfos = { hwnd, FO_DELETE, p, NULL, (FILEOP_FLAGS)fof };
+    return SHFileOperationW(&shfos);
+}
+
+UINT
+CreateDirectoryTree(LPCWSTR Dir)
+{
+    UINT err = SHCreateDirectory(NULL, Dir);
+    return err == ERROR_ALREADY_EXISTS ? 0 : err;
+}
+
+CStringW
+SplitFileAndDirectory(LPCWSTR FullPath, CStringW *pDir)
+{
+    CPathW dir = FullPath;
+    //int win = dir.ReverseFind(L'\\'), nix = dir.ReverseFind(L'/'), sep = max(win, nix);
+    int sep = dir.FindFileName();
+    CStringW file = dir.m_strPath.Mid(sep);
+    if (pDir)
+        *pDir = sep == -1 ? L"" : dir.m_strPath.Left(sep - 1);
+    return file;
+}
+
+HRESULT
+GetSpecialPath(UINT csidl, CStringW &Path, HWND hwnd)
+{
+    if (!SHGetSpecialFolderPathW(hwnd, Path.GetBuffer(MAX_PATH), csidl, TRUE))
+        return E_FAIL;
+    Path.ReleaseBuffer();
+    return S_OK;
+}
+
+HRESULT
+GetKnownPath(REFKNOWNFOLDERID kfid, CStringW &Path, DWORD Flags)
+{
+    PWSTR p;
+    FARPROC f = GetProcAddress(LoadLibraryW(L"SHELL32"), "SHGetKnownFolderPath");
+    if (!f)
+        return HRESULT_FROM_WIN32(ERROR_OLD_WIN_VERSION);
+    HRESULT hr = ((HRESULT(WINAPI*)(REFKNOWNFOLDERID,UINT,HANDLE,PWSTR*))f)(kfid, Flags, NULL, &p);
+    if (FAILED(hr))
+        return hr;
+    Path = p;
+    CoTaskMemFree(p);
+    return hr;
+}
+
+HRESULT
+GetProgramFilesPath(CStringW &Path, BOOL PerUser, HWND hwnd)
+{
+    if (!PerUser)
+        return GetSpecialPath(CSIDL_PROGRAM_FILES, Path, hwnd);
+
+    HRESULT hr = GetKnownPath(FOLDERID_UserProgramFiles, Path);
+    if (FAILED(hr))
+    {
+        hr = GetSpecialPath(CSIDL_LOCAL_APPDATA, Path, hwnd);
+        // Use the correct path on NT6 (on NT5 the path becomes a bit long)
+        if (SUCCEEDED(hr) && LOBYTE(GetVersion()) >= 6)
+        {
+            Path = BuildPath(Path, L"Programs"); // Should not be localized
+        }
+    }
+    return hr;
 }

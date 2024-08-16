@@ -18,7 +18,7 @@ if(ARCH STREQUAL "i386")
         #
         add_custom_command(
             TARGET welcome POST_BUILD
-            COMMAND editbin.exe /NOLOGO /SUBSYSTEM:WINDOWS,4.00 $<TARGET_FILE:welcome>
+            COMMAND editbin.exe /NOLOGO /SUBSYSTEM:WINDOWS,4.00 $<TARGET_FILE:welcome> > NUL
             VERBATIM)
     else()
         # The binutils linker does not set a lower limit on the subsystem.

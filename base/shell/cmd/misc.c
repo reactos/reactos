@@ -83,45 +83,59 @@ cgetchar (VOID)
 /*
  * Takes a path in and returns it with the correct case of the letters
  */
-VOID GetPathCase( TCHAR * Path, TCHAR * OutPath)
+VOID GetPathCase(IN LPCTSTR Path, OUT LPTSTR OutPath)
 {
-    UINT i = 0;
+    SIZE_T i;
+    SIZE_T cchPath = _tcslen(Path);
     TCHAR TempPath[MAX_PATH];
+    LPTSTR pchTemp = TempPath;
+    LPTSTR pchTempEnd = TempPath + _countof(TempPath);
     WIN32_FIND_DATA FindFileData;
     HANDLE hFind;
-    _tcscpy(TempPath, _T(""));
-    _tcscpy(OutPath, _T(""));
 
-    for(i = 0; i < _tcslen(Path); i++)
+    *pchTemp = OutPath[0] = 0;
+
+    for (i = 0; i < cchPath; ++i)
     {
-        if (Path[i] != _T('\\'))
+        if (pchTemp + 1 >= pchTempEnd)
         {
-            _tcsncat(TempPath, &Path[i], 1);
-            if (i != _tcslen(Path) - 1)
+            // On failure, copy the original path for an error message
+            StringCchCopy(OutPath, MAX_PATH, Path);
+            return;
+        }
+
+        if (Path[i] != _T('\\') && Path[i] != _T('/'))
+        {
+            *pchTemp++ = Path[i];
+            *pchTemp = 0;
+            if (i != cchPath - 1)
                 continue;
         }
+
         /* Handle the base part of the path different.
            Because if you put it into findfirstfile, it will
            return your current folder */
-        if (_tcslen(TempPath) == 2 && TempPath[1] == _T(':'))
+        if (TempPath[0] && TempPath[1] == _T(':') && !TempPath[2]) /* "C:", "D:" etc. */
         {
-            _tcscat(OutPath, TempPath);
-            _tcscat(OutPath, _T("\\"));
-            _tcscat(TempPath, _T("\\"));
+            StringCchCat(OutPath, MAX_PATH, TempPath);
+            StringCchCat(OutPath, MAX_PATH, _T("\\"));
+            StringCchCat(TempPath, _countof(TempPath), _T("\\"));
         }
         else
         {
-            hFind = FindFirstFile(TempPath,&FindFileData);
+            hFind = FindFirstFile(TempPath, &FindFileData);
             if (hFind == INVALID_HANDLE_VALUE)
             {
-                _tcscpy(OutPath, Path);
+                StringCchCopy(OutPath, MAX_PATH, Path);
                 return;
             }
-            _tcscat(TempPath, _T("\\"));
-            _tcscat(OutPath, FindFileData.cFileName);
-            _tcscat(OutPath, _T("\\"));
             FindClose(hFind);
+            StringCchCat(OutPath, MAX_PATH, _T("\\"));
+            StringCchCat(OutPath, MAX_PATH, FindFileData.cFileName);
+            StringCchCat(OutPath, MAX_PATH, _T("\\"));
+            StringCchCopy(TempPath, _countof(TempPath), OutPath);
         }
+        pchTemp = TempPath + _tcslen(TempPath);
     }
 }
 

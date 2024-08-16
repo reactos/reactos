@@ -29,5 +29,5 @@ BEGIN
     IDS_TEMP "Preferințe locale\\Temp" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
     IDS_CACHE "Preferințe locale\\Fișiere de Internet temporare"
     IDS_HISTORY "Preferințe locale\\Istoric"
-    IDS_COOKIES "Cookies"
+    IDS_COOKIES "Cookie-uri"
 END

@@ -75,7 +75,6 @@ CCopyAsPathMenu::DoCopyAsPath(IDataObject *pdto)
 {
     CStringW paths;
     DWORD i, count;
-#if 0
     CComPtr<IShellItemArray> array;
     HRESULT hr = SHCreateShellItemArrayFromDataObject(pdto, IID_PPV_ARG(IShellItemArray, &array));
     if (SUCCEEDED(hr))
@@ -95,60 +94,6 @@ CCopyAsPathMenu::DoCopyAsPath(IDataObject *pdto)
             }
         }
     }
-#else
-    FIXME("Implement and use SHCreateShellItemArrayFromDataObject\n");
-    CDataObjectHIDA pCIDA(pdto);
-    HRESULT hr = pCIDA.hr();
-    if (SUCCEEDED(hr))
-    {
-        for (i = 0, count = pCIDA->cidl; i < count && SUCCEEDED(hr); ++i)
-        {
-            PCUIDLIST_ABSOLUTE folder = HIDA_GetPIDLFolder(pCIDA);
-            PCUIDLIST_RELATIVE item = HIDA_GetPIDLItem(pCIDA, i);
-            CComHeapPtr<ITEMIDLIST> full;
-            hr = SHILCombine(folder, item, &full);
-            if (SUCCEEDED(hr))
-            {
-                PCUITEMID_CHILD child;
-                CComPtr<IShellFolder> sf;
-                hr = SHBindToParent(full, IID_PPV_ARG(IShellFolder, &sf), &child);
-                if (SUCCEEDED(hr))
-                {
-                    STRRET strret;
-                    hr = sf->GetDisplayNameOf(child, SHGDN_FORPARSING, &strret);
-                    if (SUCCEEDED(hr))
-                    {
-                        CComHeapPtr<WCHAR> path;
-                        hr = StrRetToStrW(&strret, child, &path);
-                        if (SUCCEEDED(hr))
-                        {
-                            AppendToPathList(paths, path, i);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    else
-    {
-        FORMATETC fmte = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
-        STGMEDIUM stgm;
-        hr = pdto->GetData(&fmte, &stgm);
-        if (SUCCEEDED(hr))
-        {
-            for (i = 0, count = DragQueryFileW((HDROP)stgm.hGlobal, -1, NULL, 0); i < count && SUCCEEDED(hr); ++i)
-            {
-                WCHAR path[MAX_PATH];
-                if (DragQueryFileW((HDROP)stgm.hGlobal, i, path, _countof(path)))
-                {
-                    AppendToPathList(paths, path, i);
-                }
-            }
-            ReleaseStgMedium(&stgm);
-        }
-    }
-#endif
-
     if (SUCCEEDED(hr))
     {
         DWORD err = SetClipboardFromString(paths);
@@ -167,7 +112,7 @@ CCopyAsPathMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, 
           hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
     if ((uFlags & CMF_NOVERBS) || !(uFlags & CMF_EXTENDEDVERBS))
-        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, idCmdFirst);
+        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 0);
 
     // Insert "Copy as path"
     CStringW strText(MAKEINTRESOURCEW(IDS_COPYASPATHMENU));
@@ -180,7 +125,7 @@ CCopyAsPathMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, 
     if (InsertMenuItemW(hMenu, indexMenu, TRUE, &mii))
         return MAKE_HRESULT(SEVERITY_SUCCESS, 0, mii.wID - idCmdFirst + 1);
 
-    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, idCmdFirst);
+    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 0);
 }
 
 STDMETHODIMP

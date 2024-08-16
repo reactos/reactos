@@ -62,14 +62,14 @@ static const columninfo RecycleBinColumns[] =
  * Recycle Bin folder
  */
 
-BOOL WINAPI CBSearchRecycleBin(IN PVOID Context, IN HANDLE hDeletedFile);
+BOOL WINAPI CBSearchRecycleBin(IN PVOID Context, IN HDELFILE hDeletedFile);
 
 static PIDLRecycleStruct * _ILGetRecycleStruct(LPCITEMIDLIST pidl);
 
 typedef struct _SEARCH_CONTEXT
 {
     PIDLRecycleStruct *pFileDetails;
-    HANDLE hDeletedFile;
+    HDELFILE hDeletedFile;
     BOOL bFound;
 } SEARCH_CONTEXT, *PSEARCH_CONTEXT;
 
@@ -122,8 +122,8 @@ class CRecycleBinEnum :
         CRecycleBinEnum();
         ~CRecycleBinEnum();
         HRESULT WINAPI Initialize(DWORD dwFlags);
-        static BOOL WINAPI CBEnumRecycleBin(IN PVOID Context, IN HANDLE hDeletedFile);
-        BOOL WINAPI CBEnumRecycleBin(IN HANDLE hDeletedFile);
+        static BOOL WINAPI CBEnumRecycleBin(IN PVOID Context, IN HDELFILE hDeletedFile);
+        BOOL WINAPI CBEnumRecycleBin(IN HDELFILE hDeletedFile);
 
         BEGIN_COM_MAP(CRecycleBinEnum)
         COM_INTERFACE_ENTRY_IID(IID_IEnumIDList, IEnumIDList)
@@ -155,7 +155,7 @@ class CRecycleBinItemContextMenu :
         END_COM_MAP()
 };
 
-BOOL WINAPI CBSearchRecycleBin(IN PVOID Context, IN HANDLE hDeletedFile)
+BOOL WINAPI CBSearchRecycleBin(IN PVOID Context, IN HDELFILE hDeletedFile)
 {
     PSEARCH_CONTEXT pContext = (PSEARCH_CONTEXT)Context;
 
@@ -273,12 +273,12 @@ static LPITEMIDLIST _ILCreateRecycleItem(PDELETED_FILE_DETAILS_W pFileDetails)
     return pidl;
 }
 
-BOOL WINAPI CRecycleBinEnum::CBEnumRecycleBin(IN PVOID Context, IN HANDLE hDeletedFile)
+BOOL WINAPI CRecycleBinEnum::CBEnumRecycleBin(IN PVOID Context, IN HDELFILE hDeletedFile)
 {
     return static_cast<CRecycleBinEnum *>(Context)->CBEnumRecycleBin(hDeletedFile);
 }
 
-BOOL WINAPI CRecycleBinEnum::CBEnumRecycleBin(IN HANDLE hDeletedFile)
+BOOL WINAPI CRecycleBinEnum::CBEnumRecycleBin(IN HDELFILE hDeletedFile)
 {
     PDELETED_FILE_DETAILS_W pFileDetails;
     DWORD dwSize;
@@ -768,7 +768,12 @@ HRESULT WINAPI CRecycleBin::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, LPS
             pszBackslash = wcsrchr(pFileDetails->szName, L'\\');
             Length = (pszBackslash - pFileDetails->szName);
             memcpy((LPVOID)buffer, pFileDetails->szName, Length * sizeof(WCHAR));
-            buffer[Length] = L'\0';
+            buffer[Length] = UNICODE_NULL;
+            if (buffer[0] && buffer[1] == L':' && !buffer[2])
+            {
+                buffer[2] = L'\\';
+                buffer[3] = UNICODE_NULL;
+            }
             break;
         case COLUMN_SIZE:
             StrFormatKBSizeW(pFileDetails->FileSize.QuadPart, buffer, MAX_PATH);
@@ -1078,6 +1083,11 @@ EXTERN_C HRESULT WINAPI SHUpdateRecycleBinIcon(void)
 {
     FIXME("stub\n");
 
+    // HACK! This dwItem2 should be the icon index in the system image list that has changed.
+    // FIXME: Call SHMapPIDLToSystemImageListIndex
+    DWORD dwItem2 = -1;
+
+    SHChangeNotify(SHCNE_UPDATEIMAGE, SHCNF_DWORD, NULL, &dwItem2);
     return S_OK;
 }
 

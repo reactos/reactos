@@ -140,6 +140,7 @@ private:
     CSimpleArray<STGMEDIUM> m_Storage;
     UINT m_cfShellIDList;
     BOOL m_doasync;
+    bool m_FailGetHDrop;
 public:
     CIDLDataObj();
     ~CIDLDataObj();
@@ -173,6 +174,7 @@ CIDLDataObj::CIDLDataObj()
 {
     m_cfShellIDList = 0;
     m_doasync = FALSE;
+    m_FailGetHDrop = false;
 }
 
 CIDLDataObj::~CIDLDataObj()
@@ -205,6 +207,15 @@ HRESULT WINAPI CIDLDataObj::Initialize(HWND hwndOwner, PCIDLIST_ABSOLUTE pMyPidl
     HRESULT hr = SetData(&Format, &medium, TRUE);
     if (!FAILED_UNEXPECTEDLY(hr) && bAddAdditionalFormats)
     {
+        /* The Windows default shell IDataObject::GetData fails with DV_E_CLIPFORMAT if the desktop is present.
+         * Windows does return HDROP in EnumFormatEtc and does not fail until GetData is called.
+         * Failing GetData causes 7-Zip 23.01 to not add its menu to the desktop folder. */
+        for (UINT i = 0; i < cidlx; ++i)
+        {
+            if (ILIsEmpty(apidlx[i]) && ILIsEmpty(pMyPidl))
+                m_FailGetHDrop = true;
+        }
+
         Format.cfFormat = CF_HDROP;
         medium.hGlobal = RenderHDROP((LPITEMIDLIST)pMyPidl, (LPITEMIDLIST*)apidlx, cidlx);
         hr = SetData(&Format, &medium, TRUE);
@@ -245,6 +256,9 @@ HRESULT WINAPI CIDLDataObj::GetData(LPFORMATETC pformatetcIn, STGMEDIUM *pmedium
             fmt.dwAspect == pformatetcIn->dwAspect &&
             fmt.tymed == pformatetcIn->tymed)
         {
+            if (m_FailGetHDrop && fmt.cfFormat == CF_HDROP)
+                return DV_E_CLIPFORMAT;
+
             if (pformatetcIn->tymed != TYMED_HGLOBAL)
             {
                 UNIMPLEMENTED;

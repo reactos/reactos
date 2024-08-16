@@ -25,6 +25,11 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+static BOOL IsSelf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
+{
+    return cidl == 0 || (cidl == 1 && apidl && _ILIsEmpty(apidl[0]));
+}
+
 STDMETHODIMP
 CDesktopFolder::ShellUrlParseDisplayName(
     HWND hwndOwner,
@@ -810,10 +815,10 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
 
     if (!ppvOut)
         return hr;
-
     *ppvOut = NULL;
 
-    if (cidl == 1 && !_ILIsSpecialFolder(apidl[0]))
+    BOOL self = IsSelf(cidl, apidl);
+    if (cidl == 1 && !_ILIsSpecialFolder(apidl[0]) && !self)
     {
         CComPtr<IShellFolder2> psf;
         HRESULT hr = _GetSFFromPidl(apidl[0], &psf);
@@ -825,7 +830,8 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
 
     if (IsEqualIID (riid, IID_IContextMenu))
     {
-        if (cidl > 0 && _ILIsSpecialFolder(apidl[0]))
+        // FIXME: m_regFolder vs AddFSClassKeysToArray is incorrect when the selection includes both regitems and FS items
+        if (!self && cidl > 0 && _ILIsSpecialFolder(apidl[0]))
         {
             hr = m_regFolder->GetUIObjectOf(hwndOwner, cidl, apidl, riid, prgfInOut, &pObj);
         }
@@ -836,7 +842,12 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
             /* Otherwise operations like that involve items from both user and shared desktop will not work */
             HKEY hKeys[16];
             UINT cKeys = 0;
-            if (cidl > 0)
+            if (self)
+            {
+                AddClsidKeyToArray(CLSID_ShellDesktop, hKeys, &cKeys);
+                AddClassKeyToArray(L"Folder", hKeys, &cKeys);
+            }
+            else if (cidl > 0)
             {
                 AddFSClassKeysToArray(cidl, apidl, hKeys, &cKeys);
             }
@@ -902,7 +913,7 @@ HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFl
     }
     else if (_ILIsDesktop(pidl))
     {
-        if ((GET_SHGDN_RELATION(dwFlags) == SHGDN_NORMAL) && (GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING))
+        if (IS_SHGDN_DESKTOPABSOLUTEPARSING(dwFlags))
             return SHSetStrRet(strRet, sPathTarget);
         else
             return m_regFolder->GetDisplayNameOf(pidl, dwFlags, strRet);
@@ -1074,37 +1085,21 @@ HRESULT WINAPI CDesktopFolder::GetCurFolder(PIDLIST_ABSOLUTE * pidl)
 
 HRESULT WINAPI CDesktopFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    if (uMsg != DFM_MERGECONTEXTMENU && uMsg != DFM_INVOKECOMMAND)
-        return S_OK;
-
-    /* no data object means no selection */
-    if (!pdtobj)
+    enum { IDC_PROPERTIES };
+    if (uMsg == DFM_INVOKECOMMAND && wParam == (pdtobj ? DFM_CMD_PROPERTIES : IDC_PROPERTIES))
     {
-        if (uMsg == DFM_INVOKECOMMAND && wParam == 0)
-        {
-            if (32 >= (UINT_PTR)ShellExecuteW(hwndOwner, L"open", L"rundll32.exe",
-                                              L"shell32.dll,Control_RunDLL desk.cpl", NULL, SW_SHOWNORMAL))
-            {
-                return E_FAIL;
-            }
-            return S_OK;
-        }
-        else if (uMsg == DFM_MERGECONTEXTMENU)
-        {
-            QCMINFO *pqcminfo = (QCMINFO *)lParam;
-            HMENU hpopup = CreatePopupMenu();
-            _InsertMenuItemW(hpopup, 0, TRUE, 0, MFT_STRING, MAKEINTRESOURCEW(IDS_PROPERTIES), MFS_ENABLED);
-            Shell_MergeMenus(pqcminfo->hmenu, hpopup, pqcminfo->indexMenu, pqcminfo->idCmdFirst++, pqcminfo->idCmdLast, MM_ADDSEPARATOR);
-            DestroyMenu(hpopup);
-        }
-
+        return SHELL_ExecuteControlPanelCPL(hwndOwner, L"desk.cpl") ? S_OK : E_FAIL;
+    }
+    else if (uMsg == DFM_MERGECONTEXTMENU && !pdtobj) // Add Properties item when called for directory background
+    {
+        QCMINFO *pqcminfo = (QCMINFO *)lParam;
+        HMENU hpopup = CreatePopupMenu();
+        _InsertMenuItemW(hpopup, 0, TRUE, IDC_PROPERTIES, MFT_STRING, MAKEINTRESOURCEW(IDS_PROPERTIES), MFS_ENABLED);
+        pqcminfo->idCmdFirst = Shell_MergeMenus(pqcminfo->hmenu, hpopup, pqcminfo->indexMenu, pqcminfo->idCmdFirst, pqcminfo->idCmdLast, MM_ADDSEPARATOR);
+        DestroyMenu(hpopup);
         return S_OK;
     }
-
-    if (uMsg != DFM_INVOKECOMMAND || wParam != DFM_CMD_PROPERTIES)
-        return S_OK;
-
-    return Shell_DefaultContextMenuCallBack(this, pdtobj);
+    return SHELL32_DefaultContextMenuCallBack(psf, pdtobj, uMsg);
 }
 
 /*************************************************************************

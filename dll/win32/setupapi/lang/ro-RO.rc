@@ -10,13 +10,13 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 COPYFILEDLGORD DIALOGEX 20, 20, 208, 105
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "Copiere fișiere..."
+CAPTION "Copiere fișiere…"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    PUSHBUTTON "A&nulează", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Sursa:", -1, 7, 7, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    PUSHBUTTON "Revocare", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    LTEXT "Sursă:", -1, 7, 7, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", SOURCESTRORD, 7, 18, 194, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "Destinația:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Destinație:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", DESTSTRORD, 7, 41, 194, 22, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", PROGRESSORD, "setupx_progress", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 63, 194, 13
 END
@@ -26,26 +26,26 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Fișiere necesare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Introduceți discul de instalare al producătorului apoi\nverificați că discul corect e selectat mai jos", IDC_FILENEEDED, 10, 10, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Introduceţi discul de instalare al producătorului, apoi\nasiguraţi-vă că s-a selectat mai jos unitatea corectă.", IDC_FILENEEDED, 10, 10, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", IDC_INFO, 10, 50, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "Copiază fișierele producătorului din:", IDC_COPYFROM, 10, 90, 175, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Copiere a fișierelor producătorului din:", IDC_COPYFROM, 10, 90, 175, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", IDC_PATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 10, 100, 175, 14
-    DEFPUSHBUTTON "Con&firmă", IDOK, 195, 10, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "A&nulează", IDCANCEL, 195, 30, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "Spe&cificare…", IDC_RUNDLG_BROWSE, 195, 100, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 195, 10, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "Revocare", IDCANCEL, 195, 30, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Răsfoire…", IDC_RUNDLG_BROWSE, 195, 100, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PROMPTDISK   "Este necesar fișierul «%1» pe %2"
+    IDS_PROMPTDISK   "Este necesar fişierul '%1' din %2."
     IDS_UNKNOWN      "Necunoscut"
-    IDS_COPYFROM     "Copiază fișiere din:"
-    IDS_INFO         "Tastați calea unde sunt situate fișierele, apoi dați clic pe Confirmă."
+    IDS_COPYFROM     "Copiere &fişiere din:"
+    IDS_INFO         "Tastaţi calea amplasării fişierului, apoi faceţi clic pe OK."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_QUERY_REBOOT_TEXT "Este necesară repornirea calculatorului dvs. pentru a finaliza instalarea. Continuați?"
+    IDS_QUERY_REBOOT_TEXT "Este necesară repornirea computerului pentru a finaliza instalarea. Continuați?"
     IDS_QUERY_REBOOT_CAPTION "Repornire"
-    IDS_INF_FILE "Informație de instalare"
+    IDS_INF_FILE "Informații de instalare"
 END

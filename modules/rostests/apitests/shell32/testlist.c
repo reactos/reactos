@@ -18,6 +18,7 @@ extern void func_ExtractIconEx(void);
 extern void func_FindExecutable(void);
 extern void func_GetDisplayNameOf(void);
 extern void func_GUIDFromString(void);
+extern void func_ILCreateFromPath(void);
 extern void func_Int64ToString(void);
 extern void func_IShellFolderViewCB(void);
 extern void func_menu(void);
@@ -25,6 +26,7 @@ extern void func_OpenAs_RunDLL(void);
 extern void func_PathIsEqualOrSubFolder(void);
 extern void func_PathIsTemporary(void);
 extern void func_PathResolve(void);
+extern void func_PIDL(void);
 extern void func_RealShellExecuteEx(void);
 extern void func_SHAppBarMessage(void);
 extern void func_SHChangeNotify(void);
@@ -40,6 +42,7 @@ extern void func_ShellState(void);
 extern void func_SHGetAttributesFromDataObject(void);
 extern void func_SHLimitInputEdit(void);
 extern void func_SHParseDisplayName(void);
+extern void func_SHSimpleIDListFromPath(void);
 extern void func_SHRestricted(void);
 
 const struct test winetest_testlist[] =
@@ -59,6 +62,7 @@ const struct test winetest_testlist[] =
     { "FindExecutable", func_FindExecutable },
     { "GetDisplayNameOf", func_GetDisplayNameOf },
     { "GUIDFromString", func_GUIDFromString },
+    { "ILCreateFromPath", func_ILCreateFromPath },
     { "Int64ToString", func_Int64ToString },
     { "IShellFolderViewCB", func_IShellFolderViewCB },
     { "menu", func_menu },
@@ -66,6 +70,7 @@ const struct test winetest_testlist[] =
     { "PathIsEqualOrSubFolder", func_PathIsEqualOrSubFolder },
     { "PathIsTemporary", func_PathIsTemporary },
     { "PathResolve", func_PathResolve },
+    { "PIDL", func_PIDL },
     { "RealShellExecuteEx", func_RealShellExecuteEx },
     { "SHAppBarMessage", func_SHAppBarMessage },
     { "SHChangeNotify", func_SHChangeNotify },
@@ -81,6 +86,7 @@ const struct test winetest_testlist[] =
     { "SHGetAttributesFromDataObject", func_SHGetAttributesFromDataObject },
     { "SHLimitInputEdit", func_SHLimitInputEdit },
     { "SHParseDisplayName", func_SHParseDisplayName },
+    { "SHSimpleIDListFromPath", func_SHSimpleIDListFromPath },
     { "SHRestricted", func_SHRestricted },
 
     { 0, 0 }

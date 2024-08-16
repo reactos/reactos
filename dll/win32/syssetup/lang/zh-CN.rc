@@ -120,7 +120,7 @@ CAPTION "ReactOS 安装程序"
 FONT 9, "宋体"
 BEGIN
     LTEXT "请稍候，安装程序正在注册组件。", IDC_TASKTEXT1, 65, 27, 232, 8
-    LTEXT "正在安装开始菜单项目", IDC_TASKTEXT2, 65, 39, 232, 8
+    LTEXT "正在安装“开始”菜单项目", IDC_TASKTEXT2, 65, 39, 232, 8
     LTEXT "正在保存配置", IDC_TASKTEXT3, 65, 51, 232, 8
     LTEXT "正在删除临时文件", IDC_TASKTEXT4, 65, 63, 232, 8
     LTEXT "", IDC_ITEM, 21, 85, 275, 8

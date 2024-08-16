@@ -222,7 +222,7 @@ VOID inline MyFreePool__(PVOID addr) {
 #endif //MY_MEM_BOUNDS_CHECK
 
 /* This function just scares the hell out of GCC */
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstringop-overflow"
 #endif
@@ -298,7 +298,7 @@ ULONG inline MyReallocPool__(PCHAR addr, ULONG len, PCHAR *pnewaddr, ULONG newle
 */
     return newlen;
 }
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic pop
 #endif
 

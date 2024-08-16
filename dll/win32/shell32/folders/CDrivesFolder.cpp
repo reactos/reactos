@@ -57,13 +57,13 @@ static int iDriveTypeIds[7] = { IDS_DRIVE_FIXED,       /* DRIVE_UNKNOWN */
 
 BOOL _ILGetDriveType(LPCITEMIDLIST pidl)
 {
-    char szDrive[8];
+    WCHAR szDrive[8];
     if (!_ILGetDrive(pidl, szDrive, _countof(szDrive)))
     {
         ERR("pidl %p is not a drive\n", pidl);
         return DRIVE_UNKNOWN;
     }
-    return ::GetDriveTypeA(szDrive);
+    return ::GetDriveTypeW(szDrive);
 }
 
 /***********************************************************************
@@ -274,7 +274,7 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
                                            LPARAM       lParam)
 {
     if (uMsg != DFM_MERGECONTEXTMENU && uMsg != DFM_INVOKECOMMAND)
-        return S_OK;
+        return SHELL32_DefaultContextMenuCallBack(psf, pdtobj, uMsg);
 
     PIDLIST_ABSOLUTE pidlFolder;
     PUITEMID_CHILD *apidl;
@@ -285,16 +285,16 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    char szDrive[8] = {0};
-    if (!_ILGetDrive(apidl[0], szDrive, sizeof(szDrive)))
+    WCHAR szDrive[8] = {0};
+    if (!_ILGetDrive(apidl[0], szDrive, _countof(szDrive)))
     {
         ERR("pidl is not a drive\n");
         SHFree(pidlFolder);
         _ILFreeaPidl(apidl, cidl);
         return E_FAIL;
     }
-    nDriveType = GetDriveTypeA(szDrive);
-    GetVolumeInformationA(szDrive, NULL, 0, NULL, NULL, &dwFlags, NULL, 0);
+    nDriveType = GetDriveTypeW(szDrive);
+    GetVolumeInformationW(szDrive, NULL, 0, NULL, NULL, &dwFlags, NULL, 0);
 
 // custom command IDs
 #if 0 // Disabled until our menu building system is fixed
@@ -343,6 +343,7 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
 #else
             pqcminfo->idCmdFirst = (idCmd + 2);
 #endif
+        hr = S_OK;
     }
     else if (uMsg == DFM_INVOKECOMMAND)
     {
@@ -1306,37 +1307,24 @@ HRESULT WINAPI CDrivesFolder::GetCurFolder(PIDLIST_ABSOLUTE *pidl)
 
 HRESULT WINAPI CDrivesFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    if (uMsg != DFM_MERGECONTEXTMENU && uMsg != DFM_INVOKECOMMAND)
-        return S_OK;
-
+    enum { IDC_PROPERTIES };
     /* no data object means no selection */
     if (!pdtobj)
     {
-        if (uMsg == DFM_INVOKECOMMAND && wParam == 1)   // #1
+        if (uMsg == DFM_INVOKECOMMAND && wParam == IDC_PROPERTIES)
         {
             // "System" properties
-            ShellExecuteW(hwndOwner,
-                          NULL,
-                          L"rundll32.exe",
-                          L"shell32.dll,Control_RunDLL sysdm.cpl",
-                          NULL,
-                          SW_SHOWNORMAL);
+            return SHELL_ExecuteControlPanelCPL(hwndOwner, L"sysdm.cpl") ? S_OK : E_FAIL;
         }
         else if (uMsg == DFM_MERGECONTEXTMENU)
         {
             QCMINFO *pqcminfo = (QCMINFO *)lParam;
             HMENU hpopup = CreatePopupMenu();
-            _InsertMenuItemW(hpopup, 0, TRUE, 0, MFT_SEPARATOR, NULL, MFS_ENABLED); // #0
-            _InsertMenuItemW(hpopup, 1, TRUE, 1, MFT_STRING, MAKEINTRESOURCEW(IDS_PROPERTIES), MFS_ENABLED); // #1
-            Shell_MergeMenus(pqcminfo->hmenu, hpopup, pqcminfo->indexMenu++, pqcminfo->idCmdFirst, pqcminfo->idCmdLast, MM_ADDSEPARATOR);
+            _InsertMenuItemW(hpopup, 0, TRUE, IDC_PROPERTIES, MFT_STRING, MAKEINTRESOURCEW(IDS_PROPERTIES), MFS_ENABLED);
+            pqcminfo->idCmdFirst = Shell_MergeMenus(pqcminfo->hmenu, hpopup, pqcminfo->indexMenu, pqcminfo->idCmdFirst, pqcminfo->idCmdLast, MM_ADDSEPARATOR);
             DestroyMenu(hpopup);
+            return S_OK;
         }
-
-        return S_OK;
     }
-
-    if (uMsg != DFM_INVOKECOMMAND || wParam != DFM_CMD_PROPERTIES)
-        return S_OK;
-
-    return Shell_DefaultContextMenuCallBack(this, pdtobj);
+    return SHELL32_DefaultContextMenuCallBack(psf, pdtobj, uMsg);
 }

@@ -67,7 +67,7 @@ CAPTION "删除浏览历史记录"
 BEGIN
 
     AUTOCHECKBOX   "Internet 临时文件\n缓存的网站页面、 图像和证书的副本。",
-                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
+                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE | WS_GROUP | WS_TABSTOP
     AUTOCHECKBOX   "Cookies\n通过网站在您的计算机上保存文件存储用户首选项和登录信息。",
                     IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "历史记录\n您进入的网站的列表。",
@@ -77,7 +77,7 @@ BEGIN
     AUTOCHECKBOX   "密码\n保存在窗口中输入的密码。",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON  "取消", IDCANCEL, 185, 230, 60, 15, WS_GROUP
-    PUSHBUTTON     "删除", IDOK, 120, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "删除", IDOK, 120, 230, 60, 15
 
 END
 

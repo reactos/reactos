@@ -1,15 +1,15 @@
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 IDD_THEMES DIALOGEX 0, 0, 246, 210
-CAPTION "Themes"
+CAPTION "Temi"
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "A theme is a background plus a set of sounds, icons, and other elements to help you personalize your computer with one click.", IDC_STATIC, 5, 5, 235, 30
-    LTEXT "Theme:", IDC_STATIC, 5, 42, 55, 10
+    LTEXT "Un tema è uno sfondo più un set di suoni, icone, e altri elementi per personalizzare il computer in un clic.", IDC_STATIC, 5, 5, 235, 30
+    LTEXT "Tema:", IDC_STATIC, 5, 42, 55, 10
     COMBOBOX IDC_THEMES_COMBOBOX, 5, 52, 160, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Save &As...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
-    PUSHBUTTON "&Delete", IDC_THEMES_DELETE, 170, 70, 70, 14
+    PUSHBUTTON "Salva &Come...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
+    PUSHBUTTON "&Elimina", IDC_THEMES_DELETE, 170, 70, 70, 14
     CONTROL "", IDC_THEMES_PREVIEW, "STATIC", SS_BITMAP, 5, 90, 235, 115, WS_EX_CLIENTEDGE
 END
 
@@ -26,7 +26,7 @@ BEGIN
     PUSHBUTTON "&Colore...", IDC_COLOR_BUTTON, 188, 167, 55, 15
     LTEXT "Posizione", IDC_STATIC, 188, 128, 55, 9
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Customize &Desktop...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
+    PUSHBUTTON "Personalizza &Desktop...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
 END
 
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 202
@@ -77,7 +77,7 @@ CAPTION "Avanzato"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "If you select a theme other than ReactOS classic, it will override the following settings, except in some older programs.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
+    LTEXT "Se selezioni un tema che non sia ReactOS classico, sovrascriverà le seguenti impostazioni, eccetto in alcuni vecchi programmi.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
     LTEXT "Elemento", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
@@ -194,7 +194,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Display Settings"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Do you want to keep these display settings?", IDC_STATIC, 7, 7, 219, 8
+    LTEXT "Mantenere queste opzioni di visualizzazione?", IDC_STATIC, 7, 7, 219, 8
     LTEXT "", IDC_TIMEOUTTEXT, 7, 20, 219, 8
     PUSHBUTTON "&Yes", IDYES, 121, 36, 50, 14
     DEFPUSHBUTTON "&No", IDNO, 175, 36, 50, 14
@@ -233,14 +233,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DESKTOP_ITEMS "Desktop Items"
+    IDS_DESKTOP_ITEMS "Oggetti Desktop"
 END
 
 STRINGTABLE
 BEGIN
     IDS_MULTIPLEMONITORS "(Monitor Multipli)"
     IDS_UNKNOWNMONITOR "(Monitor sconosciuto)"
-    IDS_ADVANCEDTITLEFMT "%s and %s"
+    IDS_ADVANCEDTITLEFMT "%s e %s"
 END
 
 STRINGTABLE
@@ -309,5 +309,5 @@ BEGIN
     IDS_DISPLAY_SETTINGS "Impostazioni del monitor"
     IDS_APPLY_FAILED "Impossibile applicare le nuove impostazioni..."
     IDS_APPLY_NEEDS_RESTART "E' necessario riavviare il computer per applicare le modifiche."
-    IDS_TIMEOUTTEXT "Revert to previous settings in %d seconds."
+    IDS_TIMEOUTTEXT "Ripristino vecchie opzioni in %d secondi."
 END

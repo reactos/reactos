@@ -83,7 +83,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "此设备的驱动程序未安装。"
     IDS_DEV_HARDWARE_DISABLED "此设备被禁用，因为该设备的 BIOS 没有给它任何资源。"
     IDS_DEV_CANT_SHARE_IRQ "此设备正在使用的另一个设备正在使用，无法共享中断请求（IRQ）资源。\n您必须更改冲突的设置，或删除造成冲突的实模式驱动程序。"
-    IDS_DEV_FAILED_ADD "This device is not working properly because ReactOS cannot load the drivers required for this device."
+    IDS_DEV_FAILED_ADD "此设备无法正常工作，因为 ReactOS 无法加载此设备所需驱动。"
     IDS_DEV_DISABLED_SERVICE "ReactOS 不能安装此设备的驱动程序，因为它不能访问已安装文件的驱动器或网络上的位置。"
     IDS_DEV_TRANSLATION_FAILED "此设备对驱动程序没有响应。"
     IDS_DEV_NO_SOFTCONFIG "ReactOS 不能确定此设备的设置。请参考此设备附带的文档，使用资源选项卡来设置配置。"

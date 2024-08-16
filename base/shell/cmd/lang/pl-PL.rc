@@ -251,6 +251,7 @@ komenda           Komenda do wykonania, gdy warunek będzie spełniony.\n\
 ciąg1==ciąg2      Zwraca PRAWDA, gdy oba ciągi znaków są identyczne\n\
 EXIST plik        Zwraca PRAWDA, jeśli podany plik istnieje.\n\
 DEFINED zmienna   Zwraca PRAWDA, jeśli podana zmienna została zdefiniowana\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "Czas bieżący: "
     STRING_MKDIR_HELP "Tworzy katalog.\n\n\
 MKDIR [napęd:]ścieżka\nMD [napęd:]ścieżka"
@@ -342,33 +343,6 @@ Uwaga: możesz również podać nową ścieżkę dostępu dla zmienionych plikó
 do tego komendy MOVE.\n"
     STRING_REN_HELP2 "   zmieniono nazwę %lu pliku\n"
     STRING_REN_HELP3 "   zmieniono nazwy %lu plików\n"
-    STRING_REPLACE_HELP1 "Zamienia pliki.\n\n\
-REPLACE [napęd1:][ścieżka1] pliki [napęd2:][ścieżka2] [/A] [/P] [/R] [/W]\n\
-REPLACE [napęd1:][ścieżka1] pliki [napęd2:][ścieżka2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [napęd1:][ścieżka1]nazwa_pliku Wyznacza źródło pliku bądź plików.\n\
-  [napęd2:][ścieżka2]         Wyznacza lokalizacje gdzie pliki mają być\n\
-                           zamienione.\n\
-  /A                       Dodaje nowe pliki do lokalizacji docelowej. Nie można\n\
-                           łączyć z opcjami /S lub /U.\n\
-  /P                       Żąda potwierdzenia przed zamianą istniejącego lub\n\
-                           dodaniem nowego pliku.\n\
-  /R                       Zamienia pliki tylko do odczytu na równi z niezabez-\n\
-                           pieczonymi.\n\
-  /S                       Zamienia pliki we wszystkich podkatalogach w lokazlizacji\n\
-                           docelowej. Nie można łączyć z opcją /A.\n\
-  /W                      Czeka na włożenie dyskietki przed rozpoczęciem zamiany.\n\
-  /U                       Zamienia (aktualizuje) wyłącznie pliki starsze od\n\
-                           źródłowych. Nie można łączyć z opcją /A.\n"
-    STRING_REPLACE_HELP2 "Brak ścieżki do źródła\n"
-    STRING_REPLACE_HELP3 "Nie zamieniono żadnego pliku\n"
-    STRING_REPLACE_HELP4 "Zamieniono %lu plik(i/ów)\n"
-    STRING_REPLACE_HELP5 "Zamiana %s\n"
-    STRING_REPLACE_HELP6 "Zamieniony %s\n"
-    STRING_REPLACE_HELP7 "Nie dodano nowych plików\n"
-    STRING_REPLACE_HELP8 "Dodano %lu plik(i/ów)\n"
-    STRING_REPLACE_HELP9 "Czy dodać %s (T/N)? "
-    STRING_REPLACE_HELP10 "Czy zamienić %s (T/N)? "
-    STRING_REPLACE_HELP11 "Dodawanie %s\n"
     STRING_SHIFT_HELP "Zmienia pozycję parametru w pliku wsadowym.\n\n\
 SHIFT [DOWN]"
     STRING_SCREEN_HELP "Przesuwa kursor i opcjonalnie wyświetla tekst\n\n\
@@ -523,15 +497,16 @@ title         nowy tytuł okna\n"
     STRING_ERROR_CANNOTPIPE "Błąd potoków! Nie można otworzyć pliku tymczasowego.\n"
     STRING_ERROR_D_PAUSEMSG "Naciśnij dowolny klawisz, aby kontynuować . . . "
     STRING_ERROR_DRIVER_NOT_READY "Napęd nie jest gotowy"
+    STRING_ERROR_INVALID_NUMBER1 "Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"
+    STRING_ERROR_INVALID_NUMBER2 "Invalid number. Numbers are limited to 32-bits of precision.\n"
+    STRING_ERROR_DIVISION_BY_ZERO "Division by zero error.\n"
+    STRING_ERROR_INVALID_DEVICE L"Invalid device '%s'\n"
+    STRING_ERROR_CALL_BAD_LABEL "Invalid attempt to call batch label outside of batch script.\n"
+    STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
+    STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "Zmienna środowiskowa '%s' nie jest zdefiniowana\n"
-    STRING_REPLACE_ERROR1 "Nieprawidłowy parametr - %s\n"
-    STRING_REPLACE_ERROR2 "Ścieżka nie została odnaleziona - %s\n"
-    STRING_REPLACE_ERROR3 "Nazwa pliku, katalogu lub napędu nie jest prawidłowa.\n"
-    STRING_REPLACE_ERROR4 "Nieprawidłowa kombinacja parametrów\n"
-    STRING_REPLACE_ERROR5 "Dostęp zabroniony - %s\n"
-    STRING_REPLACE_ERROR6 "Nie znaleziono plików - %s\n"
-    STRING_REPLACE_ERROR7 "Extended Error 32 -  Błąd współdzielenia\n"
     STRING_CMD_INFOLINE "  Wiersz polecenia ReactOS                                    Type HELP = Help  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
     STRING_REACTOS_VERSION "ReactOS [Wersja %s %s]\n"
     STRING_CMD_SHELLINFO "\nInterpreter linii poleceń ReactOS\nWersja %s %s"
     STRING_VERSION_RUNNING_ON "Działający na: "

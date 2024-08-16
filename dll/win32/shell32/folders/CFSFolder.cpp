@@ -528,11 +528,11 @@ CFSFolder::~CFSFolder()
 }
 
 static const shvheader GenericSFHeader[] = {
-    {IDS_SHV_COLUMN_NAME, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
+    {IDS_SHV_COLUMN_NAME, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 18},
     {IDS_SHV_COLUMN_SIZE, SHCOLSTATE_TYPE_INT | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
     {IDS_SHV_COLUMN_TYPE, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 10},
     {IDS_SHV_COLUMN_MODIFIED, SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
-    {IDS_SHV_COLUMN_ATTRIBUTES, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 10},
+    {IDS_SHV_COLUMN_ATTRIBUTES, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 8},
     {IDS_SHV_COLUMN_COMMENTS, SHCOLSTATE_TYPE_STR | SHCOLSTATE_SLOW, LVCFMT_LEFT, 10},  // We don't currently support comments but CRegFolder does
 };
 
@@ -657,9 +657,9 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
 
     if (SFGAO_LINK & *pdwAttributes)
     {
-        char ext[MAX_PATH];
+        WCHAR ext[MAX_PATH];
 
-        if (_ILGetExtension(pidl, ext, MAX_PATH) && !lstrcmpiA(ext, "lnk"))
+        if (_ILGetExtension(pidl, ext, _countof(ext)) && !lstrcmpiW(ext, L"lnk"))
             dwShellAttributes |= SFGAO_LINK;
     }
 
@@ -683,6 +683,7 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
     return S_OK;
 }
 
+// This method is typically invoked from SHSimpleIDListFromPathA/W.
 HRESULT CFSFolder::_ParseSimple(
     _In_ LPOLESTR lpszDisplayName,
     _Inout_ WIN32_FIND_DATAW *pFind,
@@ -1354,20 +1355,10 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
 BOOL SHELL_FS_HideExtension(LPCWSTR szPath)
 {
     HKEY hKey;
-    DWORD dwData, dwDataSize = sizeof(DWORD);
     BOOL doHide = FALSE; /* The default value is FALSE (win98 at least) */
     LONG lError;
 
-    lError = RegCreateKeyExW(HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
-                             0, NULL, 0, KEY_ALL_ACCESS, NULL,
-                             &hKey, NULL);
-    if (lError == ERROR_SUCCESS)
-    {
-        lError = RegQueryValueExW(hKey, L"HideFileExt", NULL, NULL, (LPBYTE)&dwData, &dwDataSize);
-        if (lError == ERROR_SUCCESS)
-            doHide = dwData;
-        RegCloseKey(hKey);
-    }
+    doHide = !SHELL_GetSetting(SSF_SHOWEXTENSIONS, fShowExtensions);
 
     if (!doHide)
     {
@@ -1498,7 +1489,7 @@ HRESULT WINAPI CFSFolder::SetNameOf(
     }
 
     /* build source path */
-    PathCombineW(szSrc, m_sPathTarget, pDataW->wszName);
+    PathCombineW(szSrc, m_sPathTarget, pDataW->wszName); // FIXME: PIDLs without wide string
 
     /* build destination path */
     if (dwFlags == SHGDN_NORMAL || dwFlags & SHGDN_INFOLDER)
@@ -1506,39 +1497,33 @@ HRESULT WINAPI CFSFolder::SetNameOf(
     else
         lstrcpynW(szDest, lpName, MAX_PATH);
 
-    if(!(dwFlags & SHGDN_FORPARSING) && SHELL_FS_HideExtension(szSrc)) {
-        WCHAR *ext = PathFindExtensionW(szSrc);
-        if(*ext != '\0') {
-            INT len = wcslen(szDest);
-            lstrcpynW(szDest + len, ext, MAX_PATH - len);
-        }
+    if (!(dwFlags & SHGDN_FORPARSING) && !bIsFolder && SHELL_FS_HideExtension(szSrc))
+    {
+        LPCWSTR ext = PathFindExtensionW(szSrc);
+        if (*ext)
+            PathAddExtensionW(szDest, ext);
     }
 
+    HRESULT hr = S_OK;
     TRACE ("src=%s dest=%s\n", debugstr_w(szSrc), debugstr_w(szDest));
     if (!wcscmp(szSrc, szDest))
     {
         /* src and destination is the same */
-        HRESULT hr = S_OK;
         if (pPidlOut)
-            hr = _ILCreateFromPathW(szDest, pPidlOut);
-
-        return hr;
+            hr = SHILClone(pidl, pPidlOut);
     }
-
-    if (MoveFileW (szSrc, szDest))
+    else if (MoveFileW(szSrc, szDest))
     {
-        HRESULT hr = S_OK;
-
         if (pPidlOut)
-            hr = _ILCreateFromPathW(szDest, pPidlOut);
+            hr = ParseDisplayName(hwndOwner, NULL, PathFindFileNameW(szDest), NULL, pPidlOut, NULL);
 
-        SHChangeNotify (bIsFolder ? SHCNE_RENAMEFOLDER : SHCNE_RENAMEITEM,
-                        SHCNF_PATHW, szSrc, szDest);
-
-        return hr;
+        SHChangeNotify(bIsFolder ? SHCNE_RENAMEFOLDER : SHCNE_RENAMEITEM, SHCNF_PATHW, szSrc, szDest);
     }
-
-    return E_FAIL;
+    else
+    {
+        hr = HResultFromWin32(GetLastError());
+    }
+    return hr;
 }
 
 HRESULT WINAPI CFSFolder::GetDefaultSearchGUID(GUID * pguid)
@@ -1603,7 +1588,8 @@ HRESULT WINAPI CFSFolder::GetDetailsOf(PCUITEMID_CHILD pidl,
     else
     {
         hr = S_OK;
-        psd->str.uType = STRRET_CSTR;
+        psd->str.uType = STRRET_WSTR;
+        psd->str.pOleStr = (LPWSTR)CoTaskMemAlloc(MAX_PATH * sizeof(WCHAR));
         /* the data from the pidl */
         switch (iColumn)
         {
@@ -1611,19 +1597,19 @@ HRESULT WINAPI CFSFolder::GetDetailsOf(PCUITEMID_CHILD pidl,
                 hr = GetDisplayNameOf (pidl, SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
                 break;
             case SHFSF_COL_SIZE:
-                _ILGetFileSize(pidl, psd->str.cStr, MAX_PATH);
+                _ILGetFileSize(pidl, psd->str.pOleStr, MAX_PATH);
                 break;
             case SHFSF_COL_TYPE:
-                _ILGetFileType(pidl, psd->str.cStr, MAX_PATH);
+                _ILGetFileType(pidl, psd->str.pOleStr, MAX_PATH);
                 break;
             case SHFSF_COL_MDATE:
-                _ILGetFileDate(pidl, psd->str.cStr, MAX_PATH);
+                _ILGetFileDate(pidl, psd->str.pOleStr, MAX_PATH);
                 break;
             case SHFSF_COL_FATTS:
-                _ILGetFileAttributes(pidl, psd->str.cStr, MAX_PATH);
+                _ILGetFileAttributes(pidl, psd->str.pOleStr, MAX_PATH);
                 break;
             case SHFSF_COL_COMMENT:
-                psd->str.cStr[0] = '\0'; // TODO: Extract comment from .lnk files? desktop.ini?
+                psd->str.pOleStr[0] = UNICODE_NULL; // TODO: Extract comment from .lnk files? desktop.ini?
                 break;
 #if DBG
             default:
@@ -1887,13 +1873,11 @@ HRESULT CFSFolder::_CreateShellExtInstance(const CLSID *pclsid, LPCITEMIDLIST pi
 
 HRESULT WINAPI CFSFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    if (uMsg != DFM_MERGECONTEXTMENU && uMsg != DFM_INVOKECOMMAND)
-        return S_OK;
-
+    enum { IDC_PROPERTIES };
     /* no data object means no selection */
     if (!pdtobj)
     {
-        if (uMsg == DFM_INVOKECOMMAND && wParam == 0)
+        if (uMsg == DFM_INVOKECOMMAND && wParam == IDC_PROPERTIES)
         {
             // Create an data object
             CComHeapPtr<ITEMID_CHILD> pidlChild(ILClone(ILFindLastID(m_pidlRoot)));
@@ -1901,7 +1885,7 @@ HRESULT WINAPI CFSFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObjec
             ILRemoveLastID(pidlParent);
 
             CComPtr<IDataObject> pDataObj;
-            HRESULT hr = SHCreateDataObject(pidlParent, 1, &pidlChild, NULL, IID_PPV_ARG(IDataObject, &pDataObj));
+            HRESULT hr = SHCreateDataObject(pidlParent, 1, &pidlChild.m_pData, NULL, IID_PPV_ARG(IDataObject, &pDataObj));
             if (!FAILED_UNEXPECTEDLY(hr))
             {
                 // Ask for a title to display
@@ -1913,23 +1897,19 @@ HRESULT WINAPI CFSFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObjec
                         ERR("SH_ShowPropertiesDialog failed\n");
                 }
             }
+            return hr;
         }
         else if (uMsg == DFM_MERGECONTEXTMENU)
         {
             QCMINFO *pqcminfo = (QCMINFO *)lParam;
             HMENU hpopup = CreatePopupMenu();
-            _InsertMenuItemW(hpopup, 0, TRUE, 0, MFT_STRING, MAKEINTRESOURCEW(IDS_PROPERTIES), MFS_ENABLED);
-            Shell_MergeMenus(pqcminfo->hmenu, hpopup, pqcminfo->indexMenu++, pqcminfo->idCmdFirst, pqcminfo->idCmdLast, MM_ADDSEPARATOR);
+            _InsertMenuItemW(hpopup, 0, TRUE, IDC_PROPERTIES, MFT_STRING, MAKEINTRESOURCEW(IDS_PROPERTIES), MFS_ENABLED);
+            pqcminfo->idCmdFirst = Shell_MergeMenus(pqcminfo->hmenu, hpopup, pqcminfo->indexMenu, pqcminfo->idCmdFirst, pqcminfo->idCmdLast, MM_ADDSEPARATOR);
             DestroyMenu(hpopup);
+            return S_OK;
         }
-
-        return S_OK;
     }
-
-    if (uMsg != DFM_INVOKECOMMAND || wParam != DFM_CMD_PROPERTIES)
-        return S_OK;
-
-    return Shell_DefaultContextMenuCallBack(this, pdtobj);
+    return SHELL32_DefaultContextMenuCallBack(psf, pdtobj, uMsg);
 }
 
 static HBITMAP DoLoadPicture(LPCWSTR pszFileName)

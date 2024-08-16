@@ -193,7 +193,7 @@ BatteryClassIoctl(PVOID ClassData,
     PIO_STACK_LOCATION IrpSp;
     NTSTATUS Status;
     ULONG WaitTime;
-    PBATTERY_WAIT_STATUS BattWait;
+    BATTERY_WAIT_STATUS BattWait;
     PBATTERY_QUERY_INFORMATION BattQueryInfo;
     PBATTERY_SET_INFORMATION BattSetInfo;
     LARGE_INTEGER Timeout;
@@ -263,39 +263,39 @@ BatteryClassIoctl(PVOID ClassData,
             break;
 
         case IOCTL_BATTERY_QUERY_STATUS:
-            if (IrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof(*BattWait) ||
+            if (IrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof(BattWait) ||
                 IrpSp->Parameters.DeviceIoControl.OutputBufferLength < sizeof(BATTERY_STATUS))
             {
                 Status = STATUS_BUFFER_TOO_SMALL;
                 break;
             }
 
-            BattWait = Irp->AssociatedIrp.SystemBuffer;
+            BattWait = *(PBATTERY_WAIT_STATUS)Irp->AssociatedIrp.SystemBuffer;
 
-            Timeout.QuadPart = Int32x32To64(BattWait->Timeout, -1000);
+            Timeout.QuadPart = Int32x32To64(BattWait.Timeout, -1000);
 
             Status = BattClass->MiniportInfo.QueryStatus(BattClass->MiniportInfo.Context,
-                                                         BattWait->BatteryTag,
+                                                         BattWait.BatteryTag,
                                                          (PBATTERY_STATUS)Irp->AssociatedIrp.SystemBuffer);
 
             BattStatus = Irp->AssociatedIrp.SystemBuffer;
 
             if (!NT_SUCCESS(Status) ||
-                ((BattWait->PowerState & BattStatus->PowerState) &&
-                 (BattWait->HighCapacity <= BattStatus->Capacity) &&
-                 (BattWait->LowCapacity >= BattStatus->Capacity)))
+                ((BattWait.PowerState & BattStatus->PowerState) &&
+                 (BattWait.HighCapacity <= BattStatus->Capacity) &&
+                 (BattWait.LowCapacity >= BattStatus->Capacity)))
             {
-                BattNotify.PowerState = BattWait->PowerState;
-                BattNotify.HighCapacity = BattWait->HighCapacity;
-                BattNotify.LowCapacity = BattWait->LowCapacity;
+                BattNotify.PowerState = BattWait.PowerState;
+                BattNotify.HighCapacity = BattWait.HighCapacity;
+                BattNotify.LowCapacity = BattWait.LowCapacity;
 
                 BattClass->MiniportInfo.SetStatusNotify(BattClass->MiniportInfo.Context,
-                                                        BattWait->BatteryTag,
+                                                        BattWait.BatteryTag,
                                                         &BattNotify);
 
                 ExAcquireFastMutex(&BattClass->Mutex);
                 BattClass->EventTrigger = EVENT_BATTERY_STATUS;
-                BattClass->EventTriggerContext = BattWait;
+                BattClass->EventTriggerContext = &BattWait;
                 BattClass->Waiting = TRUE;
                 ExReleaseFastMutex(&BattClass->Mutex);
 
@@ -303,7 +303,7 @@ BatteryClassIoctl(PVOID ClassData,
                                                Executive,
                                                KernelMode,
                                                FALSE,
-                                               BattWait->Timeout != -1 ? &Timeout : NULL);
+                                               BattWait.Timeout != -1 ? &Timeout : NULL);
 
                 ExAcquireFastMutex(&BattClass->Mutex);
                 BattClass->Waiting = FALSE;
@@ -314,7 +314,7 @@ BatteryClassIoctl(PVOID ClassData,
                 if (Status == STATUS_SUCCESS)
                 {
                     Status = BattClass->MiniportInfo.QueryStatus(BattClass->MiniportInfo.Context,
-                                                                 BattWait->BatteryTag,
+                                                                 BattWait.BatteryTag,
                                                                  (PBATTERY_STATUS)Irp->AssociatedIrp.SystemBuffer);
                     if (NT_SUCCESS(Status))
                         Irp->IoStatus.Information = sizeof(ULONG);

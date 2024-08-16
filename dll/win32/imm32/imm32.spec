@@ -38,7 +38,7 @@
 @ stdcall ImmEnumRegisterWordW(long ptr wstr long wstr ptr)
 @ stdcall ImmEscapeA(long ptr long ptr)
 @ stdcall ImmEscapeW(long ptr long ptr)
-@ stdcall ImmFreeLayout(long)
+@ stdcall ImmFreeLayout(ptr)
 @ stdcall ImmGenerateMessage(ptr)
 @ stdcall ImmGetAppCompatFlags(ptr)
 @ stdcall ImmGetCandidateListA(long long ptr long)

@@ -70,6 +70,17 @@ typedef struct _LOG_CONF_INFO
 
 #define LOG_CONF_MAGIC 0x464E434C  /* "LCNF" */
 
+typedef struct _RES_DES_INFO
+{
+    ULONG ulMagic;
+    DEVINST dnDevInst;
+    ULONG ulLogConfType;
+    ULONG ulLogConfTag;
+    ULONG ulResDesType;
+    ULONG ulResDesTag;
+} RES_DES_INFO, *PRES_DES_INFO;
+
+#define RES_DES_MAGIC 0x53445352  /* "RSDS" */
 
 typedef struct _NOTIFY_DATA
 {
@@ -422,6 +433,30 @@ IsValidLogConf(
     _SEH2_TRY
     {
         if (pLogConfInfo->ulMagic != LOG_CONF_MAGIC)
+            bValid = FALSE;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        bValid = FALSE;
+    }
+    _SEH2_END;
+
+    return bValid;
+}
+
+
+BOOL
+IsValidResDes(
+    _In_opt_ PRES_DES_INFO pResDesInfo)
+{
+    BOOL bValid = TRUE;
+
+    if (pResDesInfo == NULL)
+        return FALSE;
+
+    _SEH2_TRY
+    {
+        if (pResDesInfo->ulMagic != RES_DES_MAGIC)
             bValid = FALSE;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -1896,10 +1931,66 @@ CM_Dup_Range_List(
     _In_ RANGE_LIST rlhNew,
     _In_ ULONG ulFlags)
 {
+    PINTERNAL_RANGE_LIST pOldRangeList, pNewRangeList;
+    PINTERNAL_RANGE pOldRange, pNewRange;
+    PLIST_ENTRY ListEntry;
+    CONFIGRET ret = CR_SUCCESS;
+
     FIXME("CM_Dup_Range_List(%p %p %lx)\n",
           rlhOld, rlhNew, ulFlags);
 
-    return CR_CALL_NOT_IMPLEMENTED;
+    pOldRangeList = (PINTERNAL_RANGE_LIST)rlhOld;
+    pNewRangeList = (PINTERNAL_RANGE_LIST)rlhNew;
+
+    if (!IsValidRangeList(pOldRangeList))
+        return CR_INVALID_RANGE_LIST;
+
+    if (!IsValidRangeList(pNewRangeList))
+        return CR_INVALID_RANGE_LIST;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    /* Lock the range lists */
+    WaitForSingleObject(pOldRangeList->hMutex, INFINITE);
+    WaitForSingleObject(pNewRangeList->hMutex, INFINITE);
+
+    /* Delete the new range list, if ist is not empty */
+    while (!IsListEmpty(&pNewRangeList->ListHead))
+    {
+        ListEntry = RemoveHeadList(&pNewRangeList->ListHead);
+        pNewRange = CONTAINING_RECORD(ListEntry, INTERNAL_RANGE, ListEntry);
+        HeapFree(GetProcessHeap(), 0, pNewRange);
+    }
+
+    /* Copy the old range list into the new range list */
+    ListEntry = &pOldRangeList->ListHead;
+    while (ListEntry->Flink == &pOldRangeList->ListHead)
+    {
+        pOldRange = CONTAINING_RECORD(ListEntry, INTERNAL_RANGE, ListEntry);
+
+        pNewRange = HeapAlloc(GetProcessHeap(), 0, sizeof(INTERNAL_RANGE));
+        if (pNewRange == NULL)
+        {
+            ret = CR_OUT_OF_MEMORY;
+            goto done;
+        }
+
+        pNewRange->pRangeList = pNewRangeList;
+        pNewRange->ullStart = pOldRange->ullStart;
+        pNewRange->ullEnd = pOldRange->ullEnd;
+
+        InsertTailList(&pNewRangeList->ListHead, &pNewRange->ListEntry);
+
+        ListEntry = ListEntry->Flink;
+    }
+
+done:
+    /* Unlock the range lists */
+    ReleaseMutex(pNewRangeList->hMutex);
+    ReleaseMutex(pOldRangeList->hMutex);
+
+    return ret;
 }
 
 
@@ -2490,9 +2581,17 @@ WINAPI
 CM_Free_Res_Des_Handle(
     _In_ RES_DES rdResDes)
 {
+    PRES_DES_INFO pResDesInfo;
+
     FIXME("CM_Free_Res_Des_Handle(%p)\n", rdResDes);
 
-    return CR_CALL_NOT_IMPLEMENTED;
+    pResDesInfo = (PRES_DES_INFO)rdResDes;
+    if (!IsValidResDes(pResDesInfo))
+        return CR_INVALID_RES_DES;
+
+    HeapFree(GetProcessHeap(), 0, pResDesInfo);
+
+    return CR_SUCCESS;
 }
 
 
@@ -5175,7 +5274,7 @@ CM_Get_Next_Log_Conf_Ex(
 
 
 /***********************************************************************
- * CM_Get_Next_Re_Des [SETUPAPI.@]
+ * CM_Get_Next_Res_Des [SETUPAPI.@]
  */
 CONFIGRET
 WINAPI
@@ -5209,8 +5308,9 @@ CM_Get_Next_Res_Des_Ex(
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     HSTRING_TABLE StringTable = NULL;
-    ULONG ulInTag, ulOutTag = 0;
-    ULONG ulInType, ulOutType = 0;
+    PRES_DES_INFO pNewResDesInfo = NULL;
+    ULONG ulLogConfTag, ulLogConfType, ulResDesTag;
+    ULONG ulNextResDesType = 0, ulNextResDesTag = 0;
     LPWSTR lpDevInst;
     DEVINST dnDevInst;
     CONFIGRET ret;
@@ -5225,22 +5325,28 @@ CM_Get_Next_Res_Des_Ex(
     {
         FIXME("LogConf found!\n");
         dnDevInst = ((PLOG_CONF_INFO)rdResDes)->dnDevInst;
-        ulInTag = ((PLOG_CONF_INFO)rdResDes)->ulTag;
-        ulInType = ((PLOG_CONF_INFO)rdResDes)->ulType;
+        ulLogConfTag = ((PLOG_CONF_INFO)rdResDes)->ulTag;
+        ulLogConfType = ((PLOG_CONF_INFO)rdResDes)->ulType;
+        ulResDesTag = (ULONG)-1;
     }
-#if 0
     else if (IsValidResDes((PRES_DES_INFO)rdResDes))
     {
         FIXME("ResDes found!\n");
         dnDevInst = ((PRES_DES_INFO)rdResDes)->dnDevInst;
-        ulInTag = ((PRES_DES_INFO)rdResDes)->ulTag;
-        ulInType = ((PRES_DES_INFO)rdResDes)->ulType;
+        ulLogConfTag = ((PRES_DES_INFO)rdResDes)->ulLogConfTag;
+        ulLogConfType = ((PRES_DES_INFO)rdResDes)->ulLogConfType;
+        ulResDesTag = ((PRES_DES_INFO)rdResDes)->ulResDesTag;
     }
-#endif
     else
     {
         return CR_INVALID_RES_DES;
     }
+
+    if ((ForResource == ResType_All) && (pResourceID == NULL))
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
 
     if (hMachine != NULL)
     {
@@ -5266,12 +5372,12 @@ CM_Get_Next_Res_Des_Ex(
     {
         ret = PNP_GetNextResDes(BindingHandle,
                                 lpDevInst,
-                                ulInTag,
-                                ulInType,
+                                ulLogConfTag,
+                                ulLogConfType,
                                 ForResource,
-                                0, /* unsigned long ulResourceTag, */
-                                &ulOutTag,
-                                &ulOutType,
+                                ulResDesTag,
+                                &ulNextResDesTag,
+                                &ulNextResDesType,
                                 0);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -5283,7 +5389,24 @@ CM_Get_Next_Res_Des_Ex(
     if (ret != CR_SUCCESS)
         return ret;
 
-    /* FIXME: Create the ResDes handle */
+    if (ForResource == ResType_All)
+        *pResourceID = ulNextResDesType;
+
+    if (prdResDes)
+    {
+        pNewResDesInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(RES_DES_INFO));
+        if (pNewResDesInfo == NULL)
+            return CR_OUT_OF_MEMORY;
+
+        pNewResDesInfo->ulMagic = LOG_CONF_MAGIC;
+        pNewResDesInfo->dnDevInst = dnDevInst;
+        pNewResDesInfo->ulLogConfType = ulLogConfType;
+        pNewResDesInfo->ulLogConfTag = ulLogConfTag;
+        pNewResDesInfo->ulResDesType = ulNextResDesType;
+        pNewResDesInfo->ulResDesTag = ulNextResDesTag;
+
+        *prdResDes = (RES_DES)pNewResDesInfo;
+    }
 
     return CR_SUCCESS;
 }
@@ -8312,9 +8435,62 @@ CM_Test_Range_Available(
     _In_ RANGE_LIST rlh,
     _In_ ULONG ulFlags)
 {
+    PINTERNAL_RANGE_LIST pRangeList;
+    PINTERNAL_RANGE pRange;
+    PLIST_ENTRY ListEntry;
+    CONFIGRET ret = CR_SUCCESS;
+
     FIXME("CM_Test_Range_Available(%I64u %I64u %p %lx)\n",
           ullStartValue, ullEndValue, rlh, ulFlags);
-    return CR_CALL_NOT_IMPLEMENTED;
+
+    pRangeList = (PINTERNAL_RANGE_LIST)rlh;
+
+    if (!IsValidRangeList(pRangeList))
+        return CR_INVALID_RANGE_LIST;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (ullStartValue > ullEndValue)
+        return CR_INVALID_RANGE;
+
+    /* Lock the range list */
+    WaitForSingleObject(pRangeList->hMutex, INFINITE);
+
+    /* Check the ranges */
+    ListEntry = &pRangeList->ListHead;
+    while (ListEntry->Flink == &pRangeList->ListHead)
+    {
+        pRange = CONTAINING_RECORD(ListEntry, INTERNAL_RANGE, ListEntry);
+
+        /* Check if the start value is within the current range */
+        if ((ullStartValue >= pRange->ullStart) && (ullStartValue <= pRange->ullEnd))
+        {
+            ret = CR_FAILURE;
+            break;
+        }
+
+        /* Check if the end value is within the current range */
+        if ((ullEndValue >= pRange->ullStart) && (ullEndValue <= pRange->ullEnd))
+        {
+            ret = CR_FAILURE;
+            break;
+        }
+
+        /* Check if the current range lies inside of the start-end interval */
+        if ((ullStartValue <= pRange->ullStart) && (ullEndValue >= pRange->ullEnd))
+        {
+            ret = CR_FAILURE;
+            break;
+        }
+
+        ListEntry = ListEntry->Flink;
+    }
+
+    /* Unlock the range list */
+    ReleaseMutex(pRangeList->hMutex);
+
+    return ret;
 }
 
 

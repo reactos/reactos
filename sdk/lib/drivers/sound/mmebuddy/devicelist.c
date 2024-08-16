@@ -51,7 +51,7 @@ FreeSoundDevice(
 {
     SND_ASSERT( SoundDevice );
 
-    SND_TRACE(L"Freeing a SOUND_DEVICE structure");
+    SND_TRACE(L"Freeing a SOUND_DEVICE structure\n");
 
     /* For safety the whole struct gets zeroed */
     ZeroMemory(SoundDevice, sizeof(SOUND_DEVICE));
