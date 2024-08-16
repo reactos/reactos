@@ -166,6 +166,17 @@ ConvertNtPathToWin32Path(
 
 /* drivepage.c */
 
+INT_PTR
+CALLBACK
+DriveDlgProc(
+    HWND hwndDlg,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam);
+
+
+/* reactos.c */
+
 BOOL
 CreateListViewColumns(
     IN HINSTANCE hInstance,
@@ -175,14 +186,31 @@ CreateListViewColumns(
     IN const INT* pColsAlign,
     IN UINT nNumOfColumns);
 
-INT_PTR
-CALLBACK
-DriveDlgProc(
-    HWND hwndDlg,
-    UINT uMsg,
-    WPARAM wParam,
-    LPARAM lParam);
+INT
+DisplayMessageV(
+    _In_opt_ HWND hWnd,
+    _In_ UINT uType,
+    _In_opt_ PCWSTR pszTitle,
+    _In_opt_ PCWSTR pszFormatMessage,
+    _In_ va_list args);
+
+INT
+__cdecl
+DisplayMessage(
+    _In_opt_ HWND hWnd,
+    _In_ UINT uType,
+    _In_opt_ PCWSTR pszTitle,
+    _In_opt_ PCWSTR pszFormatMessage,
+    ...);
+
+INT
+__cdecl
+DisplayError(
+    _In_opt_ HWND hWnd,
+    _In_ UINT uIDTitle,
+    _In_ UINT uIDMessage,
+    ...);
 
 #endif /* _REACTOS_PCH_ */
 
-/* EOP */
+/* EOF */

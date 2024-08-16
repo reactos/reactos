@@ -18,15 +18,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_CPL_NAME        "Preferințe Internet"
-    IDS_CPL_INFO        "Configurarea Navigatorului de Internet Wine și preferințele aferente"
+    IDS_CPL_NAME        "Opţiuni Internet"
+    IDS_CPL_INFO        "Configurarea WINE Internet Explorer și a setărilor aferente."
     IDS_SEC_SETTINGS    "Preferințe de securitate pentru zona: "
     IDS_SEC_LEVEL0      "Particularizată"
     IDS_SEC_LEVEL1      "Joasă"
@@ -77,9 +77,8 @@ BEGIN
                     IDC_DELETE_FORM_DATA, 10, 128, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "&Parolele\nParolele salvate pe care le-ați introdus prin formulare.",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
-    DEFPUSHBUTTON  "A&nulează", IDCANCEL, 185, 230, 60, 15, WS_GROUP
-    PUSHBUTTON     "&Elimină", IDOK, 120, 230, 60, 15
-
+    DEFPUSHBUTTON  "Revocare", IDCANCEL, 185, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "&Elimină", IDOK, 120, 230, 60, 15, WS_GROUP
 END
 
 /* "Security" propsheet */

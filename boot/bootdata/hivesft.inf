@@ -457,9 +457,7 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellServiceObjectDelayLoad",,0x00000012
 
 ; FIXME - Setup doesn't handle extra paths
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce","",0x00000000,"cmd /c md ""%programfiles%\Internet Explorer\"" && move %windir%\iexplore.exe ""%programfiles%\Internet Explorer\"" && ""%programfiles%\Internet Explorer\iexplore.exe"" /RegServer"
-; Create .NET Framework InstallRoot key, reg_sz & full path
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce","InstallRoot.NET",0x00000000,"cmd /c reg add HKLM\SOFTWARE\Microsoft\.NETFramework /v InstallRoot /t REG_SZ /d %SystemRoot%\Microsoft.NET\Framework\"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnceEx\Finalize","1",,"||rundll32.exe setupapi.dll,InstallHinfSection Finalize 128 %systemroot%\inf\syssetup.inf"
 
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu",,0x00000012
@@ -469,6 +467,10 @@ HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\BitBucket\Volume",,0x00
 
 ; CMD Settings
 HKLM,"SOFTWARE\Microsoft\Command Processor","AutoRun",0x00020000,""
+HKLM,"SOFTWARE\Microsoft\Command Processor","CompletionChar",0x00010001,0x40
+HKLM,"SOFTWARE\Microsoft\Command Processor","DefaultColor",0x00010001,0
+HKLM,"SOFTWARE\Microsoft\Command Processor","EnableExtensions",0x00010001,1
+HKLM,"SOFTWARE\Microsoft\Command Processor","PathCompletionChar",0x00010001,0x40
 
 ; Uninstall Application list
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",,0x00000012
@@ -513,7 +515,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\HotFix",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IME Compatibility",,0x00000012
 
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IMM","IME File",2,"msctfime.ime"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IMM","LoadIMM",0x00010003,1
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IMM","LoadIMM",0x00010003,0 ; "LoadIMM" means Cicero despite its name
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\IMM","LoadCTFIME",0x00010003,0
 
 ; DOS Device ports
@@ -610,6 +612,105 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList","ProfilesDirecto
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontDPI","LogPixels",0x00010003,96
+
+; FontLink
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink","FontLinkControl",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink","FontLinkDefaultChar",0x00010001,0x000030FB
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink",,0x00000012
+
+; FontLink (Latin to others)
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","Tahoma",0x00010000,\
+	"msgothic.ttc,MS UI Gothic",\
+	"simsun.ttc,SimSun",\
+	"gulim.ttc,Gulim",\
+	"mingliu.ttc,PMingLiU"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","Microsoft Sans Serif",0x00010000,\
+	"msgothic.ttc,MS UI Gothic",\
+	"mingliu.ttc,PMingLiU",\
+	"simsun.ttc,SimSun",\
+	"gulim.ttc,Gulim",\
+	"tahoma.ttf,Tahoma"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","Lucida Sans Unicode",0x00010000,\
+	"msgothic.ttc,MS UI Gothic",\
+	"mingliu.ttc,PMingLiU",\
+	"simsun.ttc,SimSun",\
+	"gulim.ttc,Gulim",\
+	"tahoma.ttf,Tahoma"
+
+; FontLink (Chinese to others)
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","MingLiU",0x00010000,\
+	"micross.ttf,Microsoft Sans Serif",\
+	"simsun.ttc,SimSun",\
+	"msmincho.ttc,MS Mincho",\
+	"batang.ttc,BatangChe",\
+	"tahoma.ttf,Tahoma"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","SimSun",0x00010000,\
+	"micross.ttf,Microsoft Sans Serif",\
+	"mingliu.ttc,PMingLiU",\
+	"msmincho.ttc,MS PMincho",\
+	"batang.ttc,Batang",\
+	"tahoma.ttf,Tahoma"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","PMingLiU",0x00010000,\
+	"micross.ttf,Microsoft Sans Serif",\
+	"simsun.ttc,SimSun",\
+	"msmincho.ttc,MS PMincho",\
+	"BATANG.TTC,Batang",\
+	"tahoma.ttf,Tahoma"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","NSimSun",0x00010000,\
+	"mingliu.ttc,PMingLiU",\
+	"msmincho.ttc,MS Mincho",\
+	"batang.ttc,BatangChe",\
+	"tahoma.ttf,Tahoma"
+
+; FontLink (Japanese to others)
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","MS Gothic",0x00010000,\
+	"mingliu.ttc,MingLiU",\
+	"simsun.ttc,SimSun",\
+	"gulim.ttc,GulimChe",\
+	"tahoma.ttf,Tahoma"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","MS Mincho",0x00010000,\
+	"mingliu.ttc,MingLiU",\
+	"simsun.ttc,SimSun",\
+	"batang.ttc,Batang",\
+	"tahoma.ttf,Tahoma"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","MS PGothic",0x00010000,\
+	"mingliu.ttc,PMingLiU",\
+	"simsun.ttc,SimSun",\
+	"gulim.ttc,Gulim",\
+	"tahoma.ttf,Tahoma"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","MS PMincho",0x00010000,\
+	"mingliu.ttc,PMingLiU",\
+	"simsun.ttc,SimSun",\
+	"batang.ttc,Batang",\
+	"tahoma.ttf,Tahoma"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","MS UI Gothic",0x00010000,\
+	"simsun.ttc,SimSun",\
+	"gulim.ttc,Gulim",\
+	"mingliu.ttc,PMingLiU",\
+	"tahoma.ttf,Tahoma"
+
+; FontLink (Korean to others)
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","Batang",0x00010000,\
+	"msmincho.ttc,MS PMincho",\
+	"mingliu.ttc,PMingLiU",\
+	"simsun.ttc,SimSun",\
+	"tahoma.ttf,Tahoma"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","BatangChe",0x00010000,\
+	"msmincho.ttc,MS Mincho",\
+	"mingliu.ttc,MingLiU",\
+	"simsun.ttc,SimSun",\
+	"tahoma.ttf,Tahoma"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","Gulim",0x00010000,\
+	"micross.ttf,Microsoft Sans Serif",\
+	"msgothic.ttc,MS UI Gothic",\
+	"mingliu.ttc,PMingLiU",\
+	"tahoma.ttf,Tahoma"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontLink\SystemLink","GulimChe",0x00010000,\
+	"msgothic.ttc,MS Gothic",\
+	"mingliu.ttc,MingLiU",\
+	"simsun.ttc,SimSun",\
+	"tahoma.ttf,Tahoma"
 
 ; Win32k GRE initialization
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\GRE_Initialize",,0x00000012
@@ -5431,6 +5532,593 @@ GMT_PLUS_12_C_STANDARD="ニュージーランド標準時"
 GMT_PLUS_13_A_DESC    ="(GMT+13:00) ヌクアロファ"
 GMT_PLUS_13_A_DAYLIGHT="トンガ夏時間"
 GMT_PLUS_13_A_STANDARD="トンガ標準時"
+
+; LANG_CHINESE SUBLANG_CHINESE_SIMPLIFIED
+[Strings.0804]
+COUNTRY_AD="安道尔"
+COUNTRY_AE="阿拉伯联合酋长国"
+COUNTRY_AF="阿富汗"
+COUNTRY_AG="安提瓜和巴布达"
+COUNTRY_AI="安圭拉"
+COUNTRY_AL="阿尔巴尼亚"
+COUNTRY_AM="亚美尼亚"
+COUNTRY_AO="安哥拉"
+COUNTRY_AQ="南极洲"
+COUNTRY_AR="阿根廷"
+COUNTRY_AS="美属萨摩亚"
+COUNTRY_AT="奥地利"
+COUNTRY_AU="澳洲"
+COUNTRY_AW="阿鲁巴"
+COUNTRY_AX="奥兰群岛"
+COUNTRY_AZ="阿塞拜疆"
+COUNTRY_BA="波斯尼亚和黑塞哥维那"
+COUNTRY_BB="巴巴多斯"
+COUNTRY_BD="孟加拉"
+COUNTRY_BE="比利时"
+COUNTRY_BF="布基纳法索"
+COUNTRY_BG="保加利亚"
+COUNTRY_BH="巴林"
+COUNTRY_BI="布隆迪"
+COUNTRY_BJ="贝宁"
+COUNTRY_BL="圣巴泰勒米岛"
+COUNTRY_BM="百慕大"
+COUNTRY_BN="文莱"
+COUNTRY_BO="玻利维亚"
+COUNTRY_BQ="荷兰加勒比区"
+COUNTRY_BR="巴西"
+COUNTRY_BS="巴哈马"
+COUNTRY_BT="不丹"
+COUNTRY_BV="布韦岛"
+COUNTRY_BW="博茨瓦纳"
+COUNTRY_BY="白俄罗斯"
+COUNTRY_BZ="伯利兹"
+COUNTRY_CA="加拿大"
+COUNTRY_CC="科科斯(基林)群岛"
+COUNTRY_CD="刚果(金)"
+COUNTRY_CF="中非共和国"
+COUNTRY_CG="刚果(布)"
+COUNTRY_CH="瑞士"
+COUNTRY_CI="科特迪瓦"
+COUNTRY_CK="库克群岛"
+COUNTRY_CL="智利"
+COUNTRY_CM="喀麦隆"
+COUNTRY_CN="中国"
+COUNTRY_CO="哥伦比亚"
+COUNTRY_CR="哥斯达黎加"
+COUNTRY_CU="古巴"
+COUNTRY_CV="佛得角"
+COUNTRY_CW="库拉索"
+COUNTRY_CX="圣诞岛"
+COUNTRY_CY="塞浦路斯"
+COUNTRY_CZ="捷克共和国"
+COUNTRY_DE="德国"
+COUNTRY_DJ="吉布提"
+COUNTRY_DK="丹麦"
+COUNTRY_DM="多米尼克"
+COUNTRY_DO="多米尼加共和国"
+COUNTRY_DZ="阿尔及利亚"
+COUNTRY_EC="厄瓜多尔"
+COUNTRY_EE="爱沙尼亚"
+COUNTRY_EG="埃及"
+COUNTRY_EH="西撒哈拉"
+COUNTRY_ER="厄立特里亚"
+COUNTRY_ES="西班牙"
+COUNTRY_ET="埃塞俄比亚"
+COUNTRY_FI="芬兰"
+COUNTRY_FJ="斐济"
+COUNTRY_FK="福克兰群岛"
+COUNTRY_FM="密克罗尼西亚"
+COUNTRY_FO="法罗群岛"
+COUNTRY_FR="法国"
+COUNTRY_GA="加蓬"
+COUNTRY_GD="格林纳达"
+COUNTRY_GE="格鲁吉亚"
+COUNTRY_GF="法属圭亚那"
+COUNTRY_GG="根西岛"
+COUNTRY_GH="加纳"
+COUNTRY_GI="直布罗陀"
+COUNTRY_GL="格陵兰"
+COUNTRY_GM="冈比亚"
+COUNTRY_GN="几内亚"
+COUNTRY_GP="瓜德罗普"
+COUNTRY_GQ="赤道几内亚"
+COUNTRY_GR="希腊"
+COUNTRY_GS="南乔治亚和南德桑威奇群岛"
+COUNTRY_GT="危地马拉"
+COUNTRY_GU="关岛"
+COUNTRY_GW="几内亚比绍"
+COUNTRY_GY="圭亚那"
+COUNTRY_HK="香港特别行政区"
+COUNTRY_HM="赫德岛和麦克唐纳群岛"
+COUNTRY_HN="洪都拉斯"
+COUNTRY_HR="克罗地亚"
+COUNTRY_HT="海地"
+COUNTRY_HU="匈牙利"
+COUNTRY_ID="印度尼西亚"
+COUNTRY_IE="爱尔兰"
+COUNTRY_IL="以色列"
+COUNTRY_IM="曼岛"
+COUNTRY_IN="印度"
+COUNTRY_IO="英属印度洋领地"
+COUNTRY_IQ="伊拉克"
+COUNTRY_IR="伊朗"
+COUNTRY_IS="冰岛"
+COUNTRY_IT="意大利"
+COUNTRY_JE="泽西"
+COUNTRY_JM="牙买加"
+COUNTRY_JO="约旦"
+COUNTRY_JP="日本"
+COUNTRY_KE="肯尼亚"
+COUNTRY_KG="吉尔吉斯斯坦"
+COUNTRY_KH="柬埔寨"
+COUNTRY_KI="基里巴斯"
+COUNTRY_KM="科摩罗联盟"
+COUNTRY_KN="圣基茨和尼维斯"
+COUNTRY_KP="朝鲜民主主义人民共和国"
+COUNTRY_KR="韩国"
+COUNTRY_KW="科威特"
+COUNTRY_KY="开曼群岛"
+COUNTRY_KZ="哈萨克斯坦"
+COUNTRY_LA="老挝"
+COUNTRY_LB="黎巴嫩"
+COUNTRY_LC="圣卢西亚"
+COUNTRY_LI="列支敦士登"
+COUNTRY_LK="斯里兰卡"
+COUNTRY_LR="利比里亚"
+COUNTRY_LS="莱索托"
+COUNTRY_LT="立陶宛"
+COUNTRY_LU="卢森堡"
+COUNTRY_LV="拉脱维亚"
+COUNTRY_LY="利比亚"
+COUNTRY_MA="摩洛哥"
+COUNTRY_MC="摩纳哥"
+COUNTRY_MD="摩尔多瓦"
+COUNTRY_ME="黑山"
+COUNTRY_MF="法属圣马丁"
+COUNTRY_MG="马达加斯加"
+COUNTRY_MH="马绍尔群岛"
+COUNTRY_MK="北马其顿"
+COUNTRY_ML="马里"
+COUNTRY_MM="缅甸"
+COUNTRY_MN="蒙古"
+COUNTRY_MO="澳门特别行政区"
+COUNTRY_MP="北马里亚纳群岛"
+COUNTRY_MQ="马提尼克"
+COUNTRY_MR="毛里塔尼亚"
+COUNTRY_MS="蒙特塞拉特"
+COUNTRY_MT="马耳他"
+COUNTRY_MU="毛里求斯"
+COUNTRY_MV="马尔代夫"
+COUNTRY_MW="马拉维"
+COUNTRY_MX="墨西哥"
+COUNTRY_MY="马来西亚"
+COUNTRY_MZ="莫桑比克"
+COUNTRY_NA="纳米比亚"
+COUNTRY_NC="新喀里多尼亚"
+COUNTRY_NE="尼日尔"
+COUNTRY_NF="诺福克岛"
+COUNTRY_NG="尼日利亚"
+COUNTRY_NI="尼加拉瓜"
+COUNTRY_NL="荷兰"
+COUNTRY_NO="挪威"
+COUNTRY_NP="尼泊尔"
+COUNTRY_NR="瑙鲁"
+COUNTRY_NU="纽埃"
+COUNTRY_NZ="新西兰"
+COUNTRY_OM="阿曼"
+COUNTRY_PA="巴拿马"
+COUNTRY_PE="秘鲁"
+COUNTRY_PF="法属波利尼西亚"
+COUNTRY_PG="巴布亚新几内亚"
+COUNTRY_PH="菲律宾"
+COUNTRY_PK="巴基斯坦"
+COUNTRY_PL="波兰"
+COUNTRY_PM="圣皮埃尔和密克隆群岛"
+COUNTRY_PN="皮特凯恩群岛"
+COUNTRY_PR="波多黎各"
+COUNTRY_PS="巴勒斯坦"
+COUNTRY_PT="葡萄牙"
+COUNTRY_PW="帕劳"
+COUNTRY_PY="巴拉圭"
+COUNTRY_QA="卡塔尔"
+COUNTRY_RE="留尼汪"
+COUNTRY_RO="罗马尼亚"
+COUNTRY_RS="塞尔维亚共和国"
+COUNTRY_RU="俄罗斯"
+COUNTRY_RW="卢旺达"
+COUNTRY_SA="沙特阿拉伯"
+COUNTRY_SB="所罗门群岛"
+COUNTRY_SC="塞舌尔"
+COUNTRY_SD="苏丹"
+COUNTRY_SE="瑞典"
+COUNTRY_SG="新加坡"
+COUNTRY_SH="圣赫勒拿、阿森松与特里斯坦达库尼亚"
+COUNTRY_SI="斯洛文尼亚"
+COUNTRY_SJ="斯瓦尔巴和扬马延"
+COUNTRY_SK="斯洛伐克"
+COUNTRY_SL="塞拉利昂"
+COUNTRY_SM="圣马力诺"
+COUNTRY_SN="塞内加尔"
+COUNTRY_SO="索马里"
+COUNTRY_SR="苏里南"
+COUNTRY_ST="圣多美和普林西比"
+COUNTRY_SV="萨尔瓦多"
+COUNTRY_SX="荷属圣马丁"
+COUNTRY_SY="叙利亚"
+COUNTRY_SZ="斯威士兰"
+COUNTRY_TC="特克斯和凯科斯群岛"
+COUNTRY_TD="乍得"
+COUNTRY_TF="法属南部地区"
+COUNTRY_TG="多哥"
+COUNTRY_TH="泰国"
+COUNTRY_TJ="塔吉克斯坦"
+COUNTRY_TK="托克劳"
+COUNTRY_TL="东帝汶"
+COUNTRY_TM="土库曼斯坦"
+COUNTRY_TN="突尼斯"
+COUNTRY_TO="汤加"
+COUNTRY_TR="土耳其"
+COUNTRY_TT="特立尼达和多巴哥"
+COUNTRY_TV="图瓦卢"
+COUNTRY_TW="台湾"
+COUNTRY_TZ="坦桑尼亚"
+COUNTRY_UA="乌克兰"
+COUNTRY_UG="乌干达"
+COUNTRY_UK="英国"
+COUNTRY_UM="美国本土外小岛屿"
+COUNTRY_US="美国"
+COUNTRY_UY="乌拉圭"
+COUNTRY_UZ="乌兹别克斯坦"
+COUNTRY_VA="梵蒂冈"
+COUNTRY_VC="圣文森特和格林纳丁斯"
+COUNTRY_VE="委内瑞拉"
+COUNTRY_VG="英属维尔京群岛"
+COUNTRY_VI="美属维尔京群岛"
+COUNTRY_VN="越南"
+COUNTRY_VU="瓦努阿图"
+COUNTRY_WF="瓦利斯和富图纳"
+COUNTRY_WS="萨摩亚"
+COUNTRY_YE="也门"
+COUNTRY_YT="马约特"
+COUNTRY_ZA="南非"
+COUNTRY_ZM="赞比亚"
+COUNTRY_ZW="津巴布韦"
+
+GMT_MINUS_12_A_DESC    ="(GMT-12:00) 国际日期变更线西"
+GMT_MINUS_12_A_DAYLIGHT="国际日期变更线夏令时"
+GMT_MINUS_12_A_STANDARD="国际日期变更线标准时间"
+
+GMT_MINUS_11_A_DESC    ="(GMT-11:00) 中途岛，萨摩亚群岛"
+GMT_MINUS_11_A_DAYLIGHT="萨摩亚群岛夏令时"
+GMT_MINUS_11_A_STANDARD="萨摩亚群岛标准时间"
+
+GMT_MINUS_10_A_DESC    ="(GMT-10:00) 夏威夷"
+GMT_MINUS_10_A_DAYLIGHT="夏威夷夏令时"
+GMT_MINUS_10_A_STANDARD="夏威夷标准时间"
+
+GMT_MINUS_09_A_DESC    ="(GMT-09:00) 阿拉斯加"
+GMT_MINUS_09_A_DAYLIGHT="阿拉斯加夏令时"
+GMT_MINUS_09_A_STANDARD="阿拉斯加标准时间"
+
+GMT_MINUS_08_A_DESC    ="(GMT-08:00) 太平洋时间（美国和加拿大）"
+GMT_MINUS_08_A_DAYLIGHT="太平洋夏令时"
+GMT_MINUS_08_A_STANDARD="太平洋标准时间"
+
+GMT_MINUS_07_A_DESC    ="(GMT-07:00) 山地时间（美国和加拿大）"
+GMT_MINUS_07_A_DAYLIGHT="山地夏令时"
+GMT_MINUS_07_A_STANDARD="山地标准时间"
+
+GMT_MINUS_07_B_DESC    ="(GMT-07:00) 奇瓦瓦，拉巴斯，马萨特兰"
+GMT_MINUS_07_B_DAYLIGHT="山地夏令时（墨西哥）"
+GMT_MINUS_07_B_STANDARD="山地标准时间（墨西哥）"
+
+GMT_MINUS_07_C_DESC    ="(GMT-07:00) 亚利桑那"
+GMT_MINUS_07_C_DAYLIGHT="美国山地夏令时"
+GMT_MINUS_07_C_STANDARD="美国山地标准时间"
+
+GMT_MINUS_06_A_DESC    ="(GMT-06:00) 中部时间（美国和加拿大）"
+GMT_MINUS_06_A_DAYLIGHT="中部夏令时"
+GMT_MINUS_06_A_STANDARD="中部标准时间"
+
+GMT_MINUS_06_B_DESC    ="(GMT-06:00) 萨斯喀彻温"
+GMT_MINUS_06_B_DAYLIGHT="加拿大中部夏令时"
+GMT_MINUS_06_B_STANDARD="加拿大中部标准时间"
+
+GMT_MINUS_06_C_DESC    ="(GMT-06:00) 瓜达拉哈拉，墨西哥城，蒙特雷"
+GMT_MINUS_06_C_DAYLIGHT="中部夏令时（墨西哥）"
+GMT_MINUS_06_C_STANDARD="中部标准时间（墨西哥）"
+
+GMT_MINUS_06_D_DESC    ="(GMT-06:00) 中美洲"
+GMT_MINUS_06_D_DAYLIGHT="中美洲夏令时"
+GMT_MINUS_06_D_STANDARD="中美洲标准时间"
+
+GMT_MINUS_05_A_DESC    ="(GMT-05:00) 东部时间（美国和加拿大）"
+GMT_MINUS_05_A_DAYLIGHT="东部夏令时"
+GMT_MINUS_05_A_STANDARD="东部标准时间"
+
+GMT_MINUS_05_B_DESC    ="(GMT-05:00) 印第安纳州（东部）"
+GMT_MINUS_05_B_DAYLIGHT="美国东部夏令时"
+GMT_MINUS_05_B_STANDARD="美国东部标准时间"
+
+GMT_MINUS_05_C_DESC    ="(GMT-05:00) 波哥大，利马，基多，里奥布朗库"
+GMT_MINUS_05_C_DAYLIGHT="南美洲太平洋夏令时"
+GMT_MINUS_05_C_STANDARD="南美洲太平洋标准时间"
+
+GMT_MINUS_04_A_DESC    ="(GMT-04:00) 大西洋时间（加拿大）"
+GMT_MINUS_04_A_DAYLIGHT="大西洋夏令时"
+GMT_MINUS_04_A_STANDARD="大西洋标准时间"
+
+GMT_MINUS_04_B_DESC    ="(GMT-04:00) 加拉加斯，拉巴斯"
+GMT_MINUS_04_B_DAYLIGHT="南美洲西部夏令时"
+GMT_MINUS_04_B_STANDARD="南美洲西部标准时间"
+
+GMT_MINUS_0330_A_DESC    ="(GMT-03:30) 纽芬兰"
+GMT_MINUS_0330_A_DAYLIGHT="纽芬兰夏令时"
+GMT_MINUS_0330_A_STANDARD="纽芬兰标准时间"
+
+GMT_MINUS_03_A_DESC    ="(GMT-03:00) 圣地亚哥"
+GMT_MINUS_03_A_DAYLIGHT="太平洋南美洲夏令时"
+GMT_MINUS_03_A_STANDARD="太平洋南美洲标准时间"
+
+GMT_MINUS_03_B_DESC    ="(GMT-03:00) 巴西利亚"
+GMT_MINUS_03_B_DAYLIGHT="东部南美洲夏令时"
+GMT_MINUS_03_B_STANDARD="东部南美洲标准时间"
+
+GMT_MINUS_03_C_DESC    ="(GMT-03:00) 布宜诺斯艾利斯，乔治敦"
+GMT_MINUS_03_C_DAYLIGHT="南美洲东部夏令时"
+GMT_MINUS_03_C_STANDARD="南美洲东部标准时间"
+
+GMT_MINUS_03_D_DESC    ="(GMT-03:00) 格陵兰"
+GMT_MINUS_03_D_DAYLIGHT="格陵兰夏令时"
+GMT_MINUS_03_D_STANDARD="格陵兰标准时间"
+
+GMT_MINUS_02_A_DESC    ="(GMT-02:00) 中大西洋"
+GMT_MINUS_02_A_DAYLIGHT="中大西洋夏令时"
+GMT_MINUS_02_A_STANDARD="中大西洋标准时间"
+
+GMT_MINUS_01_A_DESC    ="(GMT-01:00) 亚速尔群岛"
+GMT_MINUS_01_A_DAYLIGHT="亚速尔群岛夏令时"
+GMT_MINUS_01_A_STANDARD="亚速尔群岛标准时间"
+
+GMT_MINUS_01_B_DESC    ="(GMT-01:00) 佛得角群岛"
+GMT_MINUS_01_B_DAYLIGHT="佛得角群岛夏令时"
+GMT_MINUS_01_B_STANDARD="佛得角群岛标准时间"
+
+GMT_PLUS_00_A_DESC    ="(GMT+00:00) 格林威治标准时间：都柏林，爱丁堡，里斯本，伦敦"
+GMT_PLUS_00_A_DAYLIGHT="GMT 夏令时"
+GMT_PLUS_00_A_STANDARD="GMT 标准时间"
+
+GMT_PLUS_00_B_DESC    ="(GMT+00:00) 卡萨布兰卡，蒙多维亚，雷克雅未克"
+GMT_PLUS_00_B_DAYLIGHT="格林威治夏令时"
+GMT_PLUS_00_B_STANDARD="格林威治标准时间"
+
+GMT_PLUS_01_A_DESC    ="(GMT+01:00) 贝尔格莱德，布拉迪斯拉发，布达佩斯，卢布尔雅那，布拉格"
+GMT_PLUS_01_A_DAYLIGHT="中欧夏令时"
+GMT_PLUS_01_A_STANDARD="中欧标准时间"
+
+GMT_PLUS_01_B_DESC    ="(GMT+01:00) 萨拉热窝，斯科普里，华沙，萨格勒布"
+GMT_PLUS_01_B_DAYLIGHT="中欧的夏令时"
+GMT_PLUS_01_B_STANDARD="中欧的标准时间"
+
+GMT_PLUS_01_C_DESC    ="(GMT+01:00) 布鲁塞尔，哥本哈根，马德里，巴黎"
+GMT_PLUS_01_C_DAYLIGHT="罗马夏令时"
+GMT_PLUS_01_C_STANDARD="罗马标准时间"
+
+GMT_PLUS_01_D_DESC    ="(GMT+01:00) 阿姆斯特丹，柏林，伯尔尼，罗马，斯德哥尔摩，维也纳"
+GMT_PLUS_01_D_DAYLIGHT="西欧夏令时"
+GMT_PLUS_01_D_STANDARD="西欧标准时间"
+
+GMT_PLUS_02_A_DESC    ="(GMT+02:00) 基希讷乌"
+GMT_PLUS_02_A_DAYLIGHT="东欧夏令时"
+GMT_PLUS_02_A_STANDARD="东欧标准时间"
+
+GMT_PLUS_02_B_DESC    ="(GMT+02:00) 开罗"
+GMT_PLUS_02_B_DAYLIGHT="埃及夏令时"
+GMT_PLUS_02_B_STANDARD="埃及标准时间"
+
+GMT_PLUS_02_C_DESC    ="(GMT+02:00) 赫尔辛基，基辅，里加，索菲亚，塔林，维尔纽斯"
+GMT_PLUS_02_C_DAYLIGHT="FLE 夏令时"
+GMT_PLUS_02_C_STANDARD="FLE 标准时间"
+
+GMT_PLUS_02_D_DESC    ="(GMT+02:00) 雅典，布加勒斯特"
+GMT_PLUS_02_D_DAYLIGHT="GTB 夏令时"
+GMT_PLUS_02_D_STANDARD="GTB 标准时间"
+
+GMT_PLUS_02_E_DESC    ="(GMT+02:00) 耶路撒冷"
+GMT_PLUS_02_E_DAYLIGHT="耶路撒冷夏令时"
+GMT_PLUS_02_E_STANDARD="耶路撒冷标准时间"
+
+GMT_PLUS_02_F_DESC    ="(GMT+02:00) 哈拉雷，比勒陀利亚"
+GMT_PLUS_02_F_DAYLIGHT="南非夏令时"
+GMT_PLUS_02_F_STANDARD="南非标准时间"
+
+GMT_PLUS_02_G_DESC    ="(GMT+02:00) 加里宁格勒"
+GMT_PLUS_02_G_DAYLIGHT="RTZ 1 夏令时"
+GMT_PLUS_02_G_STANDARD="RTZ 1 标准时间"
+
+GMT_PLUS_03_A_DESC    ="(GMT+03:00) 明斯克"
+GMT_PLUS_03_A_DAYLIGHT="白俄罗斯夏令时"
+GMT_PLUS_03_A_STANDARD="白俄罗斯标准时间"
+
+GMT_PLUS_03_B_DESC    ="(GMT+03:00) 莫斯科，圣彼得堡"
+GMT_PLUS_03_B_DAYLIGHT="RTZ 2 夏令时"
+GMT_PLUS_03_B_STANDARD="RTZ 2 标准时间"
+
+GMT_PLUS_03_C_DESC    ="(GMT+03:00) 科威特，利雅得"
+GMT_PLUS_03_C_DAYLIGHT="阿拉伯（Arab）夏令时"
+GMT_PLUS_03_C_STANDARD="阿拉伯（Arab）标准时间"
+
+GMT_PLUS_03_D_DESC    ="(GMT+03:00) 内罗毕"
+GMT_PLUS_03_D_DAYLIGHT="东非夏令时"
+GMT_PLUS_03_D_STANDARD="东非标准时间"
+
+GMT_PLUS_03_E_DESC    ="(GMT+03:00) 巴格达"
+GMT_PLUS_03_E_DAYLIGHT="阿拉伯（Arabic）夏令时"
+GMT_PLUS_03_E_STANDARD="阿拉伯（Arabic）标准时间"
+
+GMT_PLUS_03_F_DESC    ="(GMT+03:00) 伊斯坦布尔"
+GMT_PLUS_03_F_DAYLIGHT="土耳其夏令时"
+GMT_PLUS_03_F_STANDARD="土耳其标准时间"
+
+GMT_PLUS_0330_A_DESC    ="(GMT+03:30) 德黑兰"
+GMT_PLUS_0330_A_DAYLIGHT="伊朗夏令时"
+GMT_PLUS_0330_A_STANDARD="伊朗标准时间"
+
+GMT_PLUS_04_A_DESC    ="(GMT+04:00) 阿布扎比，马斯喀特"
+GMT_PLUS_04_A_DAYLIGHT="阿拉伯半岛夏令时"
+GMT_PLUS_04_A_STANDARD="阿拉伯半岛标准时间"
+
+GMT_PLUS_04_B_DESC    ="(GMT+04:00) 埃里温"
+GMT_PLUS_04_B_DAYLIGHT="高加索夏令时"
+GMT_PLUS_04_B_STANDARD="高加索标准时间"
+
+GMT_PLUS_04_C_DESC    ="(GMT+04:00) 伊热夫斯克，萨马拉，伏尔加格勒"
+GMT_PLUS_04_C_DAYLIGHT="RTZ 3 夏令时"
+GMT_PLUS_04_C_STANDARD="RTZ 3 标准时间"
+
+GMT_PLUS_0430_A_DESC    ="(GMT+04:30) 喀布尔"
+GMT_PLUS_0430_A_DAYLIGHT="阿富汗夏令时"
+GMT_PLUS_0430_A_STANDARD="阿富汗标准时间"
+
+GMT_PLUS_05_A_DESC    ="(GMT+05:00) 叶卡捷琳堡"
+GMT_PLUS_05_A_DAYLIGHT="RTZ 4 夏令时"
+GMT_PLUS_05_A_STANDARD="RTZ 4 标准时间"
+
+GMT_PLUS_05_B_DESC    ="(GMT+05:00) 伊斯兰堡，卡拉奇，塔什干"
+GMT_PLUS_05_B_DAYLIGHT="西亚夏令时"
+GMT_PLUS_05_B_STANDARD="西亚标准时间"
+
+GMT_PLUS_0530_A_DESC    ="(GMT+05:30) 钦奈，加尔各答，孟买，新德里"
+GMT_PLUS_0530_A_DAYLIGHT="印度夏令时"
+GMT_PLUS_0530_A_STANDARD="印度标准时间"
+
+GMT_PLUS_0530_B_DESC    ="(GMT+05:30) 斯里贾亚瓦德纳普拉"
+GMT_PLUS_0530_B_DAYLIGHT="斯里兰卡夏令时"
+GMT_PLUS_0530_B_STANDARD="斯里兰卡标准时间"
+
+GMT_PLUS_0545_A_DESC    ="(GMT+05:45) 加德满都"
+GMT_PLUS_0545_A_DAYLIGHT="尼泊尔夏令时"
+GMT_PLUS_0545_A_STANDARD="尼泊尔标准时间"
+
+GMT_PLUS_06_A_DESC    ="(GMT+06:00) 阿斯塔纳，达卡"
+GMT_PLUS_06_A_DAYLIGHT="中亚夏令时"
+GMT_PLUS_06_A_STANDARD="中亚标准时间"
+
+GMT_PLUS_06_B_DESC    ="(GMT+06:00) 鄂木斯克"
+GMT_PLUS_06_B_DAYLIGHT="鄂木斯克夏令时"
+GMT_PLUS_06_B_STANDARD="鄂木斯克标准时间"
+
+GMT_PLUS_0630_A_DESC    ="(GMT+06:30) 仰光"
+GMT_PLUS_0630_A_DAYLIGHT="缅甸夏令时"
+GMT_PLUS_0630_A_STANDARD="缅甸标准时间"
+
+GMT_PLUS_07_A_DESC    ="(GMT+07:00) 新西伯利亚"
+GMT_PLUS_07_A_DAYLIGHT="新西伯利亚夏令时"
+GMT_PLUS_07_A_STANDARD="新西伯利亚标准时间"
+
+GMT_PLUS_07_B_DESC    ="(GMT+07:00) 曼谷，河内，雅加达"
+GMT_PLUS_07_B_DAYLIGHT="东南亚夏令时"
+GMT_PLUS_07_B_STANDARD="东南亚标准时间"
+
+GMT_PLUS_07_C_DESC    ="(GMT+07:00) 克拉斯诺亚尔斯克"
+GMT_PLUS_07_C_DAYLIGHT="RTZ 6 夏令时"
+GMT_PLUS_07_C_STANDARD="RTZ 6 标准时间"
+
+GMT_PLUS_07_D_DESC    ="(GMT+07:00) 托木斯克"
+GMT_PLUS_07_D_DAYLIGHT="托木斯克夏令时"
+GMT_PLUS_07_D_STANDARD="托木斯克标准时间"
+
+GMT_PLUS_08_A_DESC    ="(GMT+08:00) 北京，重庆，香港特别行政区，乌鲁木齐"
+GMT_PLUS_08_A_DAYLIGHT="中国夏令时"
+GMT_PLUS_08_A_STANDARD="中国标准时间"
+
+GMT_PLUS_08_B_DESC    ="(GMT+08:00) 吉隆坡，新加坡"
+GMT_PLUS_08_B_DAYLIGHT="新加坡夏令时"
+GMT_PLUS_08_B_STANDARD="新加坡标准时间"
+
+GMT_PLUS_08_C_DESC    ="(GMT+08:00) 台北"
+GMT_PLUS_08_C_DAYLIGHT="台北夏令时"
+GMT_PLUS_08_C_STANDARD="台北标准时间"
+
+GMT_PLUS_08_D_DESC    ="(GMT+08:00) 珀斯"
+GMT_PLUS_08_D_DAYLIGHT="澳大利亚西部夏令时"
+GMT_PLUS_08_D_STANDARD="澳大利亚西部标准时间"
+
+GMT_PLUS_08_E_DESC    ="(GMT+08:00) 乌兰巴托"
+GMT_PLUS_08_E_DAYLIGHT="乌兰巴托夏令时"
+GMT_PLUS_08_E_STANDARD="乌兰巴托标准时间"
+
+GMT_PLUS_08_F_DESC    ="(GMT+08:00) 伊尔库茨克"
+GMT_PLUS_08_F_DAYLIGHT="RTZ 7 夏令时"
+GMT_PLUS_08_F_STANDARD="RTZ 7 标准时间"
+
+GMT_PLUS_09_A_DESC    ="(GMT+09:00) 首尔"
+GMT_PLUS_09_A_DAYLIGHT="韩国夏令时"
+GMT_PLUS_09_A_STANDARD="韩国标准时间"
+
+GMT_PLUS_09_B_DESC    ="(GMT+09:00) 大阪，札幌，东京"
+GMT_PLUS_09_B_DAYLIGHT="东京夏令时"
+GMT_PLUS_09_B_STANDARD="东京标准时间"
+
+GMT_PLUS_09_C_DESC    ="(GMT+09:00) 雅库茨克"
+GMT_PLUS_09_C_DAYLIGHT="RTZ 8 夏令时"
+GMT_PLUS_09_C_STANDARD="RTZ 8 标准时间"
+
+GMT_PLUS_0930_A_DESC    ="(GMT+09:30) 达尔文"
+GMT_PLUS_0903_A_DAYLIGHT="澳大利亚中部夏令时"
+GMT_PLUS_0930_A_STANDARD="澳大利亚中部标准时间"
+
+GMT_PLUS_0930_B_DESC    ="(GMT+09:30) 阿德莱德"
+GMT_PLUS_0930_B_DAYLIGHT="中部澳大利亚夏令时"
+GMT_PLUS_0930_B_STANDARD="中部澳大利亚标准时间"
+
+GMT_PLUS_10_A_DESC    ="(GMT+10:00) 堪培拉，墨尔本，悉尼"
+GMT_PLUS_10_A_DAYLIGHT="澳大利亚东部夏令时"
+GMT_PLUS_10_A_STANDARD="澳大利亚东部标准时间"
+
+GMT_PLUS_10_B_DESC    ="(GMT+10:00) 布里斯班"
+GMT_PLUS_10_B_DAYLIGHT="东部澳大利亚夏令时"
+GMT_PLUS_10_B_STANDARD="东部澳大利亚标准时间"
+
+GMT_PLUS_10_C_DESC    ="(GMT+10:00) 霍巴特"
+GMT_PLUS_10_C_DAYLIGHT="塔斯马尼亚岛夏令时"
+GMT_PLUS_10_C_STANDARD="塔斯马尼亚岛标准时间"
+
+GMT_PLUS_10_D_DESC    ="(GMT+10:00) 符拉迪沃斯托克（海参崴）"
+GMT_PLUS_10_D_DAYLIGHT="RTZ 9 夏令时"
+GMT_PLUS_10_D_STANDARD="RTZ 9 标准时间"
+
+GMT_PLUS_10_E_DESC    ="(GMT+10:00) 关岛，莫尔兹比港"
+GMT_PLUS_10_E_DAYLIGHT="太平洋西部夏令时"
+GMT_PLUS_10_E_STANDARD="太平洋西部标准时间"
+
+GMT_PLUS_11_A_DESC    ="(GMT+11:00) 所罗门群岛，新喀里多尼亚"
+GMT_PLUS_11_A_DAYLIGHT="太平洋中部夏令时"
+GMT_PLUS_11_A_STANDARD="太平洋中部标准时间"
+
+GMT_PLUS_11_B_DESC    ="(GMT+11:00) 乔库尔达赫"
+GMT_PLUS_11_B_DAYLIGHT="RTZ 10 夏令时"
+GMT_PLUS_11_B_STANDARD="RTZ 10 标准时间"
+
+GMT_PLUS_11_C_DESC    ="(GMT+11:00) 马加丹"
+GMT_PLUS_11_C_DAYLIGHT="马加丹夏令时"
+GMT_PLUS_11_C_STANDARD="马加丹标准时间"
+
+GMT_PLUS_12_A_DESC    ="(GMT+12:00) 斐济，勘察加半岛，马绍尔群岛"
+GMT_PLUS_12_A_DAYLIGHT="斐济夏令时"
+GMT_PLUS_12_A_STANDARD="斐济标准时间"
+
+GMT_PLUS_12_B_DESC    ="(GMT+12:00) 阿纳德尔，堪察加彼得罗巴甫洛夫斯克"
+GMT_PLUS_12_B_DAYLIGHT="RTZ 11 夏令时"
+GMT_PLUS_12_B_STANDARD="RTZ 11 标准时间"
+
+GMT_PLUS_12_C_DESC    ="(GMT+12:00) 奥克兰，惠灵顿"
+GMT_PLUS_12_C_DAYLIGHT="新西兰夏令时"
+GMT_PLUS_12_C_STANDARD="新西兰标准时间"
+
+GMT_PLUS_13_A_DESC    ="(GMT+13:00) 努库阿洛法"
+GMT_PLUS_13_A_DAYLIGHT="汤加夏令时"
+GMT_PLUS_13_A_STANDARD="汤加标准时间"
 
 ; LANG_PORTUGUESE SUBLANG_NEUTRAL
 [Strings.0816]

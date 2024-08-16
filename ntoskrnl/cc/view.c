@@ -1142,6 +1142,8 @@ CcFlushCache (
         IoStatus->Information = 0;
     }
 
+    KeAcquireGuardedMutex(&SharedCacheMap->FlushCacheLock);
+
     /*
      * We flush the VACBs that we find here.
      * If there is no (dirty) VACB, it doesn't mean that there is no data to flush, so we call Mm to be sure.
@@ -1160,7 +1162,8 @@ CcFlushCache (
                 Status = CcRosFlushVacb(vacb, &VacbIosb);
                 if (!NT_SUCCESS(Status))
                 {
-                    goto quit;
+                    CcRosReleaseVacb(SharedCacheMap, vacb, FALSE, FALSE);
+                    break;
                 }
                 DirtyVacb = TRUE;
 
@@ -1190,7 +1193,7 @@ CcFlushCache (
             }
 
             if (!NT_SUCCESS(Status))
-                goto quit;
+                break;
 
             if (IoStatus)
                 IoStatus->Information += MmIosb.Information;
@@ -1209,6 +1212,8 @@ CcFlushCache (
         /* Round down to next VACB start now */
         FlushStart -= FlushStart % VACB_MAPPING_GRANULARITY;
     }
+
+    KeReleaseGuardedMutex(&SharedCacheMap->FlushCacheLock);
 
 quit:
     if (IoStatus)
@@ -1318,6 +1323,7 @@ CcRosInitializeFileCache (
         KeInitializeSpinLock(&SharedCacheMap->CacheMapLock);
         InitializeListHead(&SharedCacheMap->CacheMapVacbListHead);
         InitializeListHead(&SharedCacheMap->BcbList);
+        KeInitializeGuardedMutex(&SharedCacheMap->FlushCacheLock);
 
         SharedCacheMap->Flags = SHARED_CACHE_MAP_IN_CREATION;
 

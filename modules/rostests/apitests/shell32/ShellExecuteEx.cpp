@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <strsafe.h>
 #include <versionhelpers.h>
+#include "shell32_apitest_sub.h"
 
 static WCHAR s_win_dir[MAX_PATH];
 static WCHAR s_sys_dir[MAX_PATH];
@@ -440,6 +441,31 @@ static void TEST_AppPath(void)
     }
 }
 
+static void test_DoInvalidDir(void)
+{
+    WCHAR szSubProgram[MAX_PATH];
+    if (!FindSubProgram(szSubProgram, _countof(szSubProgram)))
+    {
+        skip("shell32_apitest_sub.exe not found\n");
+        return;
+    }
+
+    DWORD dwExitCode;
+    SHELLEXECUTEINFOW sei = { sizeof(sei), SEE_MASK_FLAG_NO_UI | SEE_MASK_NOCLOSEPROCESS };
+    sei.lpFile = szSubProgram;
+    sei.lpParameters = L"TEST";
+    sei.nShow = SW_SHOWNORMAL;
+
+    // Test invalid path on sei.lpDirectory
+    WCHAR szInvalidPath[MAX_PATH] = L"M:\\This is an invalid path\n";
+    sei.lpDirectory = szInvalidPath;
+    ok_int(ShellExecuteExW(&sei), TRUE);
+    WaitForSingleObject(sei.hProcess, 20 * 1000);
+    GetExitCodeProcess(sei.hProcess, &dwExitCode);
+    ok_long(dwExitCode, 0);
+    CloseHandle(sei.hProcess);
+}
+
 START_TEST(ShellExecuteEx)
 {
 #ifdef _WIN64
@@ -454,6 +480,7 @@ START_TEST(ShellExecuteEx)
     TEST_DoTestEntries();
     test_properties();
     test_sei_lpIDList();
+    test_DoInvalidDir();
 
     TEST_End();
 }

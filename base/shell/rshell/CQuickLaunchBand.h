@@ -1,9 +1,8 @@
 /*
  * PROJECT:     ReactOS shell extensions
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/shellext/qcklnch/CQuickLaunchBand.h
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Quick Launch Toolbar (Taskbar Shell Extension)
- * PROGRAMMERS: Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
+ * COPYRIGHT:   Copyright Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
  */
 #pragma once
 
@@ -27,8 +26,7 @@ class CQuickLaunchBand :
     HWND m_hWndBro;
     CComPtr<IUnknown> m_punkISFB;
 
-    public:
-
+public:
     CQuickLaunchBand();
     virtual ~CQuickLaunchBand();
 

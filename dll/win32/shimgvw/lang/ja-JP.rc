@@ -2,7 +2,7 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS画像とFAXビュアー"
+    IDS_APPTITLE "ReactOS 画像とFAXビュアー"
     IDS_SETASDESKBG "デスクトップの背景に設定する"
     IDS_NOPREVIEW "プレビューは利用できません。"
     IDS_PREVIEW "プレビュー"
@@ -16,8 +16,8 @@ BEGIN
     IDS_TOOLTIP_ZOOM_OUT "ズームアウト (-)"
     IDS_TOOLTIP_ROT_CLOCKW "時計回りに回転 (Ctrl+K)"
     IDS_TOOLTIP_ROT_COUNCW "反時計回りに回転 (Ctrl+L)"
-    IDS_TOOLTIP_ROT_CWSAVE "Rotate Clockwise and Save (Lossy)"
-    IDS_TOOLTIP_ROT_CCWSAVE "Rotate Counterclockwise and Save (Lossy)"
+    IDS_TOOLTIP_ROT_CWSAVE "時計回りに回転して保存 (劣化あり)"
+    IDS_TOOLTIP_ROT_CCWSAVE "反時計回りに回転して保存 (劣化あり)"
     IDS_TOOLTIP_DELETE "Delete (DEL)"
     IDS_TOOLTIP_PRINT "印刷 (Ctrl+P)"
     IDS_TOOLTIP_SAVEAS "名前を付けて保存... (Ctrl+S)"

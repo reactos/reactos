@@ -278,8 +278,38 @@ NTAPI
 CmBattVerifyStaticInfo(PCMBATT_DEVICE_EXTENSION DeviceExtension,
                        ULONG BatteryTag)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    ACPI_BIF_DATA BifData;
+    PBATTERY_INFORMATION Info = &DeviceExtension->BatteryInformation;
+    NTSTATUS Status;
+
+    Status = CmBattGetBifData(DeviceExtension, &BifData);
+    if (NT_SUCCESS(Status))
+    {
+        RtlZeroMemory(Info, sizeof(*Info));
+        Info->Capabilities = BATTERY_SYSTEM_BATTERY;
+        Info->Technology = BifData.BatteryTechnology;
+        RtlCopyMemory(Info->Chemistry, BifData.BatteryType, 4);
+        // FIXME: take from _BIX method: Info->CycleCount
+        DeviceExtension->BifData = BifData;
+
+        if (BifData.PowerUnit == 1)
+        {
+            DPRINT1("FIXME: need to convert mAh into mWh\n");
+            Info->DesignedCapacity = BATTERY_UNKNOWN_CAPACITY;
+            Info->FullChargedCapacity = BATTERY_UNKNOWN_CAPACITY;
+            Info->DefaultAlert1 = BATTERY_UNKNOWN_CAPACITY;
+            Info->DefaultAlert2 = BATTERY_UNKNOWN_CAPACITY;
+        }
+        else
+        {
+            Info->DesignedCapacity = BifData.DesignCapacity;
+            Info->FullChargedCapacity = BifData.LastFullCapacity;
+            Info->DefaultAlert1 = BifData.DesignCapacityLow;
+            Info->DefaultAlert2 = BifData.DesignCapacityWarning;
+        }
+    }
+
+    return Status;
 }
 
 NTSTATUS
@@ -1120,7 +1150,7 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
         case BatteryDeviceName:
 
             /* Build the model number string */
-            RtlInitAnsiString(&TempString, FdoExtension->ModelNumber);
+            RtlInitAnsiString(&TempString, FdoExtension->BifData.ModelNumber);
 
             /* Convert it to Unicode */
             InfoString.Buffer = InfoBuffer;
@@ -1142,7 +1172,7 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
         case BatteryManufactureName:
 
             /* Build the OEM info string */
-            RtlInitAnsiString(&TempString, FdoExtension->OemInfo);
+            RtlInitAnsiString(&TempString, FdoExtension->BifData.OemInfo);
 
             /* Convert it to Unicode */
             InfoString.Buffer = InfoBuffer;
@@ -1157,7 +1187,7 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
         case BatteryUniqueID:
 
             /* Build the serial number string */
-            RtlInitAnsiString(&TempString, FdoExtension->SerialNumber);
+            RtlInitAnsiString(&TempString, FdoExtension->BifData.SerialNumber);
 
             /* Convert it to Unicode */
             InfoString.Buffer = InfoBuffer;
@@ -1169,10 +1199,10 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
             TempString2.MaximumLength = sizeof(TempBuffer);
 
             /* Check if there's an OEM string */
-            if (FdoExtension->OemInfo[0])
+            if (FdoExtension->BifData.OemInfo[0])
             {
                 /* Build the OEM info string */
-                RtlInitAnsiString(&TempString, FdoExtension->OemInfo);
+                RtlInitAnsiString(&TempString, FdoExtension->BifData.OemInfo);
 
                 /* Convert it to Unicode and append it */
                 RtlAnsiStringToUnicodeString(&TempString2, &TempString, 0);
@@ -1180,7 +1210,7 @@ CmBattQueryInformation(IN PCMBATT_DEVICE_EXTENSION FdoExtension,
             }
 
             /* Build the model number string */
-            RtlInitAnsiString(&TempString, FdoExtension->ModelNumber);
+            RtlInitAnsiString(&TempString, FdoExtension->BifData.ModelNumber);
 
             /* Convert it to Unicode and append it */
             RtlAnsiStringToUnicodeString(&TempString2, &TempString, 0);

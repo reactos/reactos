@@ -34,10 +34,10 @@ BEGIN
             MENUITEM "&Ordna automatiskt", FCIDM_SHVIEW_AUTOARRANGE
             MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "Uppdatera", FCIDM_SHVIEW_REFRESH
+        MENUITEM "&Uppdatera", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Klistra in", FCIDM_SHVIEW_INSERT
-        MENUITEM "Klistra in som genväg", FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "K&listra in", FCIDM_SHVIEW_INSERT
+        MENUITEM "Klistra in &genväg", FCIDM_SHVIEW_INSERTLINK
     END
 END
 
@@ -46,9 +46,9 @@ MENU_003 MENU
 BEGIN
     MENUITEM "&Ångra\tCtrl+Z", FCIDM_SHVIEW_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "Kl&ipp ut\tCtrl+X", FCIDM_SHVIEW_CUT
+    MENUITEM "Kl&ipp ut\tCtrl+X", FCIDM_SHVIEW_CUT //FIXME: double-check this accelerator on Windows! Should it be &t maybe?
     MENUITEM "&Kopiera\tCtrl+C", FCIDM_SHVIEW_COPY
-    MENUITEM "&Klistra in\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "K&listra in\tCtrl+V", FCIDM_SHVIEW_INSERT
     MENUITEM "Klistra in &genväg", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
     MENUITEM "Kopiera till &mapp...", FCIDM_SHVIEW_COPYTO
@@ -64,15 +64,15 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "K&lipp ut", IDM_CUT
+        MENUITEM "K&lipp ut", IDM_CUT //FIXME: double-check this accelerator on Windows! Should it be &t maybe? (which is currently used by IDM_DELETE). Don't forget to keep in sync with IDS_CUT!
         MENUITEM "&Kopiera", IDM_COPY
         MENUITEM "Paste", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "Skapa &genväg", IDM_CREATELINK
-        MENUITEM "&Ta bort", IDM_DELETE
-        MENUITEM "&Byt namn", IDM_RENAME
+        MENUITEM "&Ta bort", IDM_DELETE //FIXME: double-check this accelerator on Windows! Don't forget to keep in sync with IDS_DELETE
+        MENUITEM "&Byt namn", IDM_RENAME //FIXME: sync that with IDS_RENAME "Byt namn". Either both should have an accelerator or both not. It's up to you.
         MENUITEM SEPARATOR
-        MENUITEM "&Egenskaper", IDM_PROPERTIES
+        MENUITEM "&Egenskaper", IDM_PROPERTIES //FIXME: sync that with IDS_PROPERTIES regarding the accelerator. Either &E or none, it's your choice!
     END
 END
 
@@ -88,16 +88,24 @@ BEGIN
     END
 END
 
+IDM_DVSELECT MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Se&lect", 0
+    END
+END
+
 IDD_BROWSE_FOR_FOLDER DIALOGEX 15, 40, 188, 192
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Bläddra efter mapp"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "OK", 1, 60, 175, 60, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Avbryt", 2, 125, 175, 60, 15, WS_GROUP | WS_TABSTOP
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 4, 4, 180, 24
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 4, 25, 180, 12
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
+    DEFPUSHBUTTON "OK", IDOK, 60, 175, 60, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Avbryt", IDCANCEL, 125, 175, 60, 15
 END
 
 IDD_BROWSE_FOR_FOLDER_NEW DIALOGEX 15, 40, 218, 196
@@ -110,8 +118,8 @@ BEGIN
     EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 12, 38, 194, 14, ES_AUTOHSCROLL | WS_GROUP
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_EDITLABELS | TVS_LINESATROOT | TVS_HASLINES | TVS_HASBUTTONS | WS_BORDER | WS_TABSTOP, 12, 58, 194, 105
     PUSHBUTTON "&Skapa ny mapp", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
-    DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Avbryt", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14
+    PUSHBUTTON "Avbryt", IDCANCEL, 156, 174, 50, 14
 END
 
 IDD_YESTOALL_MSGBOX DIALOGEX 200, 100, 280, 90
@@ -120,14 +128,14 @@ CAPTION "Meddelande"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "&Ja", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Ja till &alla", IDC_YESTOALL, 92, 69, 65, 14, WS_TABSTOP
-    PUSHBUTTON "&Nej", IDNO, 162, 69, 53, 14, WS_TABSTOP
-    PUSHBUTTON "&Avbryt", IDCANCEL, 220, 69, 53, 14, WS_TABSTOP
+    PUSHBUTTON "Ja till &alla", IDC_YESTOALL, 92, 69, 65, 14
+    PUSHBUTTON "&Nej", IDNO, 162, 69, 53, 14
+    PUSHBUTTON "Avbryt", IDCANCEL, 220, 69, 53, 14
     ICON "", IDC_YESTOALL_ICON, 10, 10, 16, 16
     LTEXT "", IDC_YESTOALL_MESSAGE, 40, 10, 238, 52, 0
 END
 
-IDD_ABOUT DIALOGEX 0, 0, 275, 198
+IDD_ABOUT DIALOGEX 20, 20, 275, 198
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Om %s"
 FONT 8, "MS Shell Dlg"
@@ -166,9 +174,9 @@ BEGIN
     LTEXT "Skriv namnet på ett program, en mapp, ett dokument eller en internetresurs som du vill öppna.", 12289, 36, 11, 185, 18
     LTEXT "&Öppna:", 12305, 7, 39, 24, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 184, 100
-    DEFPUSHBUTTON "OK", IDOK, 62, 70, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Avbryt", IDCANCEL, 116, 70, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Bläddra...", 12288, 170, 70, 50, 14, WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 62, 70, 50, 14
+    PUSHBUTTON "Avbryt", IDCANCEL, 116, 70, 50, 14
+    PUSHBUTTON "&Bläddra...", 12288, 170, 70, 50, 14
 END
 
 IDD_SHORTCUT_PROPERTIES DIALOGEX 0, 0, 235, 215
@@ -275,7 +283,7 @@ BEGIN
     AUTOCHECKBOX "&Skrivskyddad", 14021, 58, 188, 67, 10
     AUTOCHECKBOX "&Dold", 14022, 126, 188, 50, 10
     AUTOCHECKBOX "&Arkiv", 14023, 181, 188, 49, 10
-    PUSHBUTTON "A&vancerat...", 14028, 180, 185, 50, 15, WS_TABSTOP
+    PUSHBUTTON "A&vancerat...", 14028, 180, 185, 50, 15
 END
 
 IDD_FILE_VERSION DIALOGEX 0, 0, 235, 215
@@ -323,7 +331,7 @@ BEGIN
     EDITTEXT 14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 40
     CTEXT "Enhet %c", 14009, 95, 162, 50, 10
-    PUSHBUTTON "&Diskrensning", 14010, 160, 159, 70, 15, WS_TABSTOP
+    PUSHBUTTON "&Diskrensning", 14010, 160, 159, 70, 15
     LTEXT "", -1, 8, 176, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     CHECKBOX "Komprimera enhet för att spara diskutrymme", 14011, 8, 190, 222, 10, WS_DISABLED
     CHECKBOX "Tillåt indexeringstjänsten att indexera den här disken för snabb filsökning", 14012, 8, 204, 222, 10, WS_DISABLED
@@ -337,15 +345,15 @@ BEGIN
     GROUPBOX "Felkontroll", -1, 5, 5, 230, 60
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "Det här valet kontrollerar enheten efter fel.", -1, 40, 25, 160, 20
-    PUSHBUTTON "Kontrollera nu...", 14000, 130, 45, 90, 15, WS_TABSTOP
+    PUSHBUTTON "Kontrollera nu...", 14000, 130, 45, 90, 15
     GROUPBOX "Defragmentering", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "Det här valet defragmenterar filer på enheten.", -1, 40, 85, 160, 20
-    PUSHBUTTON "Defragmentera nu...", 14001, 130, 105, 90, 15, WS_TABSTOP
+    PUSHBUTTON "Defragmentera nu...", 14001, 130, 105, 90, 15
     GROUPBOX "Säkerhetskopiering", -1, 5, 130, 230, 60
     ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "Det här valet säkerhetskopierar filer på den här enheten.", -1, 40, 150, 160, 20
-    PUSHBUTTON "Säkerhetskopiera nu...", 14002, 130, 170, 90, 15, WS_TABSTOP
+    PUSHBUTTON "Säkerhetskopiera nu...", 14002, 130, 170, 90, 15
 END
 
 IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 220
@@ -367,12 +375,12 @@ BEGIN
     CHECKBOX "Följande användare:", 14002, 10, 100, 90, 10
     LTEXT "Användarnamn:", -1, 20, 118, 54, 10
     COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "...", 14004, 180, 115, 30, 14, WS_TABSTOP
+    PUSHBUTTON "...", 14004, 180, 115, 30, 14
     LTEXT "Lösenord:", -1, 20, 143, 53, 10
     EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
-    PUSHBUTTON "...", 14006, 180, 140, 30, 14, WS_TABSTOP
-    PUSHBUTTON "OK", 14007, 57, 170, 60, 14, WS_TABSTOP
-    PUSHBUTTON "Avbryt", 14008, 122, 170, 60, 14, WS_TABSTOP
+    PUSHBUTTON "...", 14006, 180, 140, 30, 14
+    PUSHBUTTON "OK", 14007, 57, 170, 60, 14
+    PUSHBUTTON "Avbryt", 14008, 122, 170, 60, 14
 END
 
 IDD_RECYCLE_BIN_PROPERTIES DIALOGEX 0, 0, 240, 190
@@ -382,11 +390,11 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Inställningar för vald plats", -1, 10, 72, 220, 70
-    RADIOBUTTON "&Användardefinierad storlek:", 14001, 20, 90, 100, 10, WS_TABSTOP
+    RADIOBUTTON "&Användardefinierad storlek:", 14001, 20, 90, 100, 10
     EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "M&aximal storlek(MB):", -1, 20, 105, 70, 10
     RADIOBUTTON "Flytta inte filer till &Papperskorgen. Radera filer direkt när de tas bort.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
-    AUTOCHECKBOX "&Visa dialog för bekräftelse av borttagning", 14004, 20, 155, 150, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Visa dialog för bekräftelse av borttagning", 14004, 20, 155, 150, 10
 END
 
 IDD_OPEN_WITH DIALOGEX 0, 0, 264, 256
@@ -396,7 +404,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
     LTEXT "Välj ett program att öppna den här filen med:", -1, 44, 12, 211, 10
-    LTEXT "Fil:     ", 14001, 44, 25, 188, 20
+    LTEXT "Fil:    ", 14001, 44, 25, 188, 20
     GROUPBOX "&Program", -1, 7, 42, 249, 187
     CONTROL "Program", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "&Använd alltid the valda programmet för att öppna den här filtypen", 14003, 16, 193, 232, 10
@@ -424,7 +432,7 @@ BEGIN
     AUTORADIOBUTTON "&Dubbelklicka för att öppna (markera genom att enkelklicka)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
     AUTORADIOBUTTON "Stryk under ikontitlar som min &webbläsare", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 200, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Stryk under ikontitlar endast när jag &pekar på dem", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
-    PUSHBUTTON "&Återställ standardvärde", IDC_FOLDER_OPTIONS_RESTORE, 167, 178, 90, 14, WS_TABSTOP
+    PUSHBUTTON "&Återställ standardvärde", IDC_FOLDER_OPTIONS_RESTORE, 167, 178, 90, 14
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 220
@@ -435,11 +443,11 @@ BEGIN
     GROUPBOX "Mappvyer", -1, 7, 10, 249, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 14, 20, 21, 20
     LTEXT "Du kan använda den nuvarande vyn (t.ex. detaljer) som används i den här mappen för alla mappar.", -1, 40, 20, 213, 20
-    PUSHBUTTON "Använd för a&lla mappar", IDC_VIEW_APPLY_TO_ALL, 15, 50, 115, 14, WS_TABSTOP
-    PUSHBUTTON "&Återställ alla mappar", IDC_VIEW_RESET_ALL, 135, 50, 115, 14, WS_TABSTOP
+    PUSHBUTTON "Använd för a&lla mappar", IDC_VIEW_APPLY_TO_ALL, 15, 50, 115, 14
+    PUSHBUTTON "&Återställ alla mappar", IDC_VIEW_RESET_ALL, 135, 50, 115, 14
     LTEXT "Avancerade inställningar:", -1, 7, 80, 100, 10
     CONTROL "", IDC_VIEW_TREEVIEW, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 111
-    PUSHBUTTON "Återställ &standardvärde", IDC_VIEW_RESTORE_DEFAULTS, 167, 204, 90, 14, WS_TABSTOP
+    PUSHBUTTON "Återställ &standardvärde", IDC_VIEW_RESTORE_DEFAULTS, 167, 204, 90, 14
 END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 220
@@ -449,15 +457,15 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Registrerade fil&typer:", -1, 7, 10, 180, 10 //FIXME: accelerator collision &T
     CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 99
-    PUSHBUTTON "&Ny", IDC_FILETYPES_NEW, 140, 123, 55, 14, WS_TABSTOP
-    PUSHBUTTON "&Ta bort", IDC_FILETYPES_DELETE, 200, 123, 55, 14, WS_TABSTOP //FIXME: accelerator collision &T
+    PUSHBUTTON "&Ny", IDC_FILETYPES_NEW, 140, 123, 55, 14
+    PUSHBUTTON "&Ta bort", IDC_FILETYPES_DELETE, 200, 123, 55, 14 //FIXME: accelerator collision &T
     GROUPBOX "Detaljer för filändelsen '%s'", IDC_FILETYPES_DETAILS_GROUPBOX, 7, 143, 249, 70
     LTEXT "Öppnas med:", -1, 12, 153, 48, 10
     CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 153, 10, 10
     LTEXT "", IDC_FILETYPES_APPNAME, 100, 153, 80, 10
-    PUSHBUTTON "&Ändra...", IDC_FILETYPES_CHANGE, 200, 153, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Ändra...", IDC_FILETYPES_CHANGE, 200, 153, 50, 14
     LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 168, 160, 40
-    PUSHBUTTON "A&vancerat", IDC_FILETYPES_ADVANCED, 200, 188, 50, 14, WS_TABSTOP
+    PUSHBUTTON "A&vancerat", IDC_FILETYPES_ADVANCED, 200, 188, 50, 14
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
@@ -786,9 +794,9 @@ BEGIN
     IDS_OPEN "Öppna"
     IDS_CREATELINK "Skapa &genväg"
     IDS_COPY "&Kopiera"
-    IDS_DELETE "Ta bort"
+    IDS_DELETE "Ta bort" //FIXME: double-check this accelerator on Windows! Don't forget to keep in sync with IDM_DELETE
     IDS_PROPERTIES "Egenskaper"
-    IDS_CUT "K&lipp ut"
+    IDS_CUT "K&lipp ut" //FIXME: double-check this accelerator on Windows! Should it be &t maybe? (which is currently used by IDM_DELETE). Don't forget to keep in sync with IDS_CUT!
     IDS_RESTORE "Återställ"
     IDS_FORMATDRIVE "Formatera..."
     IDS_RENAME "Byt namn"
@@ -911,6 +919,8 @@ BEGIN
     FCIDM_SHVIEW_NEWFOLDER "Ny &mapp"
     FCIDM_SHVIEW_NEWLINK "Ny &genväg"
     IDS_FOLDER_OPTIONS "Mappalternativ"
+    IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
+    IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
     IDS_RECYCLEBIN_LOCATION "Papperskorgens plats"
     IDS_RECYCLEBIN_DISKSPACE "Tillgängligt utrymme"
     IDS_EMPTY_BITBUCKET "Töm Papperskorgen"
@@ -924,6 +934,9 @@ BEGIN
     IDS_CANTSHOWPROPERTIES "Unable to show properties (Error Code: %lu)."
     IDS_CANTDISCONNECT "Unable to disconnect (Error Code: %lu)."
     IDS_NONE "(None)"
+
+    IDS_EXPAND "Exp&and"
+    IDS_COLLAPSE "Coll&apse"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Mapp"

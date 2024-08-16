@@ -155,7 +155,11 @@ DragList_SubclassWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, 
                     SetCursor(data->cursor);
                     break;
                 case DL_COPYCURSOR:
+#ifndef __REACTOS__
                     data->cursor = LoadCursorW(COMCTL32_hModule, (LPCWSTR)IDC_COPY);
+#else
+                    data->cursor = LoadCursorW(COMCTL32_hModule, MAKEINTRESOURCEW(IDC_COPY));
+#endif
                     SetCursor(data->cursor);
                     break;
                 case DL_MOVECURSOR:

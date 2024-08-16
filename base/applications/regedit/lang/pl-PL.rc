@@ -1,11 +1,9 @@
 /*
- *    Update by Caemyr - Olaf Siejka (Jan, 2007; May, 2011)
- *    Use ReactOS forum PM or IRC to contact me
- *    https://reactos.org
- *    IRC: irc.freenode.net #reactos-pl;
- *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (August, 2011)
- *    UTF-8 conversion by Caemyr (May, 2011)
- *    Update by wojo664 (04.08.2011)
+ * 2007-2011 Caemyr - Olaf Siejka
+ * Use ReactOS forum PM or IRC to contact me
+ * IRC: irc.freenode.net #reactos-pl;
+ * 2011 Adam Stachowicz (Saibamen) <saibamenppl@gmail.com>
+ * 2011 wojo664
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -76,27 +74,15 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&Plik"
-    BEGIN
-        MENUITEM "Za&kończ", ID_REGISTRY_EXIT
-    END
-    POPUP "Pomo&c"
-    BEGIN
-        MENUITEM "&Informacje", ID_HELP_ABOUT
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "&Rejestr"
+    POPUP "&Plik"
     BEGIN
         MENUITEM "&Importuj plik rejestru...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Eksportuj plik rejestru...", ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "Ładuj Drzewo....", ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "Wyładuj Drzewo..", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "Ładuj Drzewo...", ID_REGISTRY_LOADHIVE, GRAYED //FIXME: add accelerator. It is possible to use the same for ID_REGISTRY_LOADHIVE and ID_REGISTRY_UNLOADHIVE because both are never shown at the same time.
+        MENUITEM "Wyładuj Drzewo...", ID_REGISTRY_UNLOADHIVE, GRAYED //FIXME: add accelerator. It is possible to use the same for ID_REGISTRY_LOADHIVE and ID_REGISTRY_UNLOADHIVE because both are never shown at the same time.
         MENUITEM SEPARATOR
         MENUITEM "&Podłącz rejestr sieciowy...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Odłącz rejestr sieciowy...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
@@ -461,8 +447,8 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Połączenie z rejestrem zdalnego komputera"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Odłącza od rejestru zdalnego komputera"
     ID_REGISTRY_PRINT "Drukuje całość lub część rejestru"
-/*    ID_HELP_HELPTOPICS "Otwiera Pomoc Edytora rejestru" */
-    ID_HELP_ABOUT "Wyświetla informacje o programie, numerze wersji i prawach autorskich"
+//    ID_HELP_HELPTOPICS "Otwiera Pomoc Edytora rejestru"
+    ID_HELP_ABOUT "Wyświetla informacje o programie, numerze wersji, licencji"
 END
 
 STRINGTABLE
@@ -666,15 +652,15 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_B
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Zakres eksportu", IDC_STATIC, 2, 0, 366, 48
-    CONTROL "&Wszystko", IDC_EXPORT_ALL, "Button", BS_AUTORADIOBUTTON, 10, 10, 47, 11
-    CONTROL "Wy&brana gałąź", IDC_EXPORT_BRANCH, "Button", BS_AUTORADIOBUTTON, 10, 22, 100, 11
+    AUTORADIOBUTTON "&Wszystko", IDC_EXPORT_ALL, 10, 10, 99, 11, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Wy&brana gałąź", IDC_EXPORT_BRANCH, 10, 22, 99, 11
     EDITTEXT IDC_EXPORT_BRANCH_TEXT, 30, 34, 335, 12
 END
 
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Ładuj drzewo"
-FONT 8, "Ms Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Klucz:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
@@ -733,15 +719,6 @@ CAPTION "Znajdź"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON IDI_REGEDIT, IDC_STATIC, 7, 7, 20, 20
-    DEFPUSHBUTTON "&Anuluj", IDCANCEL, 93, 29, 45, 14
+    DEFPUSHBUTTON "Anuluj", IDCANCEL, 93, 29, 45, 14
     LTEXT "Przeszukiwanie rejestru...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Otwiera pomoc Edytora Rejestru."
- *    ID_HELP_ABOUT "Wyświetla informacje o programie, numerze wersji, licencji."
- *END
- */

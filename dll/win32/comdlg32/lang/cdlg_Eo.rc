@@ -314,8 +314,8 @@ FONT 8, "MS Shell Dlg"
  CHECKBOX "Nur tutan &vorton", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "Atentu &Usklecon", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
  GROUPBOX "Direkto", grp1, 147, 21, 58, 38
- CONTROL "&Supre", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 151, 30, 48, 12
- CONTROL "&Sube", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 151, 44, 48, 12
+ AUTORADIOBUTTON "&Supre", rad1, 151, 30, 48, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
+ AUTORADIOBUTTON "&Sube", rad2, 151, 44, 48, 12, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 
  DEFPUSHBUTTON "&Pluserĉu", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "Rezigni", IDCANCEL	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
@@ -349,34 +349,34 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Presu"
 FONT 8, "MS Shell Dlg"
 {
-    DEFPUSHBUTTON   "Bone",     IDOK,     176,164, 50,14, WS_GROUP | BS_DEFPUSHBUTTON
+    DEFPUSHBUTTON   "Bone",     IDOK,    176,164, 50,14, WS_GROUP | BS_DEFPUSHBUTTON
     PUSHBUTTON      "Rezigni", IDCANCEL, 230,164, 50,14, WS_GROUP
     PUSHBUTTON      "&Helpo",  pshHelp,  50, 161, 50,14, WS_GROUP
 
-    GROUPBOX        "Printilo",        grp4,   8,  4, 272,84, WS_GROUP
+    GROUPBOX        "Printilo",       grp4,   8,  4, 272,84, WS_GROUP
     CONTROL         "Prezu kiel &dosiero", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,185,36,90,16
     PUSHBUTTON      "&Ecoj",    psh2, 212, 17,  60,14, WS_GROUP
     LTEXT           "&Nomo:",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Stato:",        stc8,  16, 36,  47,10, SS_NOPREFIX
     LTEXT           "",               stc12, 65, 36, 120,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Speco:",          stc7,  16, 48,  47,10, SS_NOPREFIX
+    LTEXT           "Speco:",         stc7,  16, 48,  47,10, SS_NOPREFIX
     LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Kie:",         stc10, 16, 60,  47,10, SS_NOPREFIX
     LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Komento:",       stc9,  16, 72,  47,10, SS_NOPREFIX
     LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
-    GROUPBOX        "Ekzempleroj",         grp2, 160, 92, 120,64, WS_GROUP
+    GROUPBOX        "Ekzempleroj",    grp2, 160, 92, 120,64, WS_GROUP
     LTEXT           "Nombro da &ekzempleroj:",stc5,168,105,68,8
     ICON            "",               ico3, 210,131,  76,24, WS_GROUP
-    CONTROL         "Laŭ&kajere",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
+    CONTROL         "Laŭ&kajere",     chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
     EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
 
     GROUPBOX        "Etendiĝon",    grp1,   8,92,  144,64, WS_GROUP
-    CONTROL         "ĉ&iujn",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
-    CONTROL         "&paĝojn",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
-    CONTROL         "&elekton",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
+    AUTORADIOBUTTON "ĉ&iujn",         rad1,16,106,64,12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&paĝojn",        rad3,16,122,36,12
+    AUTORADIOBUTTON "&elekton",       rad2,16,138,64,12
     EDITTEXT                          edt1,  73,122,  26,12, WS_GROUP | ES_NUMBER
     EDITTEXT                          edt2, 120,122,  26,12, WS_GROUP | ES_NUMBER
     RTEXT           "de:",         stc2,  52,124,  20,8
@@ -392,29 +392,29 @@ BEGIN
     PUSHBUTTON      "Rezigni",IDCANCEL,230,156,50,14
 /*    PUSHBUTTON      "Network...", psh5, 284,156,48,14 */
 
-    GROUPBOX        "Printilo",        grp4,   8,  4, 272,84, WS_GROUP
+    GROUPBOX        "Printilo",       grp4,   8,  4, 272,84, WS_GROUP
     PUSHBUTTON      "&Ecoj",    psh2, 212, 17,  60,14, WS_GROUP
     LTEXT           "&Nomo:",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Stato:",        stc8,  16, 36,  47,10, SS_NOPREFIX
     LTEXT           "",               stc12, 65, 36, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Speco:",          stc7,  16, 48,  47,10, SS_NOPREFIX
+    LTEXT           "Speco:",         stc7,  16, 48,  47,10, SS_NOPREFIX
     LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Kie:",         stc10, 16, 60,  47,10, SS_NOPREFIX
     LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Komento:",       stc9,  16, 72,  47,10, SS_NOPREFIX
     LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
-    GROUPBOX        "Papero",          grp2,   8, 92, 164,56, WS_GROUP
-    LTEXT           "&Dimensio:",         stc2,  16,108,  36, 8
+    GROUPBOX        "Papero",         grp2,   8, 92, 164,56, WS_GROUP
+    LTEXT           "&Dimensio:",     stc2,  16,108,  36, 8
     COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "&Fonto:",       stc3,  16,128,  36, 8
     COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
 
     GROUPBOX        "Formato",    grp1, 180, 92, 100,56, WS_GROUP
     ICON            "",               ico1, 195,112,  18,20, WS_GROUP
-    CONTROL         "&Vertikala",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
-    CONTROL         "&Horizontala",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+    AUTORADIOBUTTON "&Vertikala",     rad1, 224,106,52,12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Horizontala",   rad2, 224,126,52,12
 END
 
 PAGESETUPDLGORD DIALOG 32, 32, 240, 240
@@ -431,8 +431,8 @@ BEGIN
   LTEXT "P&leto:", stc3, 16, 132, 36, 8
   COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
   GROUPBOX "Formato", grp1, 8, 156, 64, 56, BS_GROUPBOX
-  AUTORADIOBUTTON "&Vertikala", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "&Horizontala", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "&Vertikala", rad1, 16, 170, 52, 12
+  AUTORADIOBUTTON "&Horizontala", rad2, 16, 190, 52, 12
   GROUPBOX "", grp4, 80, 156, 152, 56, BS_GROUPBOX
   LTEXT "&Dekstra:", stc15, 88, 172, 30, 8
   EDITTEXT edt4, 119, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER

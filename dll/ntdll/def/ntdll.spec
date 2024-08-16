@@ -1066,7 +1066,7 @@
 @ stub -version=0x600+ RtlProcessFlsData
 @ stdcall RtlProtectHeap(ptr long)
 @ stdcall RtlPushFrame(ptr)
-@ stub -version=0x600+ RtlQueryActivationContextApplicationSettings
+@ stdcall -version=0x600+ RtlQueryActivationContextApplicationSettings(long ptr wstr wstr ptr ptr ptr)
 @ stdcall RtlQueryAtomInAtomTable(ptr long ptr ptr ptr ptr)
 @ stub -version=0x600+ RtlQueryCriticalSectionOwner
 @ stdcall RtlQueryDepthSList(ptr)
@@ -1801,6 +1801,7 @@
 @ cdecl _strlwr(str)
 @ cdecl _strnicmp(str str long)
 @ cdecl _strupr(str)
+@ cdecl -version=0x400-0x502 -impsym _swprintf() swprintf # Compatibility for pre NT6
 @ cdecl -version=0x600+ _swprintf(ptr str)
 @ cdecl -version=0x502 _tolower(long)
 @ cdecl -version=0x502 _toupper(long)

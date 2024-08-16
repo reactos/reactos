@@ -49,6 +49,8 @@ https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_co
 
 #define GET_SHGDN_FOR(dwFlags)         ((DWORD)dwFlags & (DWORD)0x0000FF00)
 #define GET_SHGDN_RELATION(dwFlags)    ((DWORD)dwFlags & (DWORD)0x000000FF)
+#define IS_SHGDN_FOR_PARSING(flags) ( ((flags) & (SHGDN_FORADDRESSBAR | SHGDN_FORPARSING)) == SHGDN_FORPARSING)
+#define IS_SHGDN_DESKTOPABSOLUTEPARSING(flags) ( ((flags) & (SHGDN_FORADDRESSBAR | SHGDN_FORPARSING | 0xFF)) == SHGDN_FORPARSING)
 
 HRESULT
 Shell_NextElement(
@@ -113,6 +115,7 @@ void SHELL_FS_ProcessDisplayFilename(LPWSTR szPath, DWORD dwFlags);
 BOOL SHELL_FS_HideExtension(LPCWSTR pwszPath);
 
 LSTATUS AddClassKeyToArray(const WCHAR* szClass, HKEY* array, UINT* cKeys);
+LSTATUS AddClsidKeyToArray(REFCLSID clsid, HKEY* array, UINT* cKeys);
 
 #ifdef __cplusplus
 

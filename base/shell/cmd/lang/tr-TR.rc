@@ -244,6 +244,7 @@ command           Koşul karşılanırsa yürütülecek komutu belirtir.\n\
 dizi1==dizi2      Belirtilen metin dizeleri eşleşirse doğru bir koşul belirtir\n\
 EXIST dosya_adi   Belirtilen dosya adı mevcutsa doğru bir koşul belirtir.\n\
 DEFINED variable  Belirtilen değişken tanımlanmışsa doğru bir koşul belirtir\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "Şimdiki zaman: "
     STRING_MKDIR_HELP "Bir dizin oluşturur.\n\n\
 MKDIR [sürücü:]yol\nMD [sürücü:]yol"
@@ -335,31 +336,6 @@ Hedefiniz için yeni bir sürücü veya yol belirtemeyeceğinizi unutmayın.\n\
 Bu amaç için MOVE komutunu kullanın.\n"
     STRING_REN_HELP2 "    %lu dosya yeniden adlandırıldı\n"
     STRING_REN_HELP3 "    %lu dosya yeniden adlandırıldı\n"
-    STRING_REPLACE_HELP1 "Replaces files.\n\n\
-REPLACE [sürücü1:][yol1]filename [sürücü2:][yol2] [/A] [/P] [/R] [/W]\n\
-REPLACE [sürücü1:][yol1]filename [sürücü2:][yol2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [drive1:][yol1]dosya adı  Kaynak dosyayı veya dosyaları belirtir.\n\
-  [drive2:][yol2]           Dosyaların aktarılacağı dizini belirtir.\n\
-  /A                        Hedef dizine yeni dosyalar ekler. /S veya /U\n\
-                            anahtarlarıyla kullanılamaz.\n\
-  /P                        Bir dosyayı değiştirmeden veya bir kaynak dosya eklemeden\n\
-                            önce onay ister.\n\
-  /R                        Salt okunur dosyaları da normal dosyalar gibi değiştirir\n\
-  /S                        Hedef dizinin tüm alt dizinlerindeki dosyaları değiştirir.\n\
-                            /A anahtarıyla kullanılamaz.\n\
-  /W                        Başlamadan önce bir disk yerleştirmenizi bekler.\n\
-  /U                        Yalnızca kaynak dosyalardan daha eski dosyaları\n\
-                            değiştirir (günceller). /A anahtarıyla kullanılamaz.\n"
-    STRING_REPLACE_HELP2 "Kaynak konum gerekli\n"
-    STRING_REPLACE_HELP3 "Herhangi bir dosya değiştirilmedi\n"
-    STRING_REPLACE_HELP4 "%lu dosya değiştirildi\n"
-    STRING_REPLACE_HELP5 "Değiştiriliyor: %s\n"
-    STRING_REPLACE_HELP6 "Değiştir: %s\n"
-    STRING_REPLACE_HELP7 "Herhangi bir dosya eklenemedi\n"
-    STRING_REPLACE_HELP8 "%lu dosya(lar) eklendi\n"
-    STRING_REPLACE_HELP9 "Şunu ekle %s (E/H)? "
-    STRING_REPLACE_HELP10 "Şunu değiştir %s (E/H)? "
-    STRING_REPLACE_HELP11 "Ekleniyor: %s\n"
     STRING_SHIFT_HELP "Bir toplu iş dosyasında değiştirilebilir parametrelerin konumunu değiştirir.\n\n\
 SHIFT [DOWN]"
     STRING_SCREEN_HELP "İmleci hareket ettirin ve isteğe bağlı olarak parametre olarak verilen metni yazdırın.\n\n\
@@ -511,15 +487,16 @@ başlık        pencere için yeni başlık\n"
     STRING_ERROR_CANNOTPIPE "Hata! Borulanamadı! Geçici dosya açılamıyor!\n"
     STRING_ERROR_D_PAUSEMSG "Devam etmek için herhangi bir tuşa basın . . . "
     STRING_ERROR_DRIVER_NOT_READY "Sürücü hazır değil"
+    STRING_ERROR_INVALID_NUMBER1 "Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"
+    STRING_ERROR_INVALID_NUMBER2 "Invalid number. Numbers are limited to 32-bits of precision.\n"
+    STRING_ERROR_DIVISION_BY_ZERO "Division by zero error.\n"
+    STRING_ERROR_INVALID_DEVICE L"Invalid device '%s'\n"
+    STRING_ERROR_CALL_BAD_LABEL "Invalid attempt to call batch label outside of batch script.\n"
+    STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
+    STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "'%s' çevresel değişkeni tanımlanmadı.\n"
-    STRING_REPLACE_ERROR1 "Geçersiz anahtar - %s\n"
-    STRING_REPLACE_ERROR2 "Yol bulunamadı - %s\n"
-    STRING_REPLACE_ERROR3 "Dosya adı, dizin adı veya birim etiketi sözdizimi yanlış.\n"
-    STRING_REPLACE_ERROR4 "Hatalı parametre kombinasyonu\n"
-    STRING_REPLACE_ERROR5 "Erişim reddedildi - %s\n"
-    STRING_REPLACE_ERROR6 "Hiçbir dosya bulunamadı - %s\n"
-    STRING_REPLACE_ERROR7 "Genişletilmiş Hata 32\n"
     STRING_CMD_INFOLINE "  ReactOS Komut Satırı                                 Yardım için, HELP yazın"
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
     STRING_REACTOS_VERSION "ReactOS [Sürüm %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Komut Satırı Yorumlayıcısı\nSürüm %s %s"
     STRING_VERSION_RUNNING_ON "Üzerinde Çalışıyor: "

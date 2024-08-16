@@ -4,7 +4,7 @@
  * PURPOSE:     German resource file
  * TRANSLATORS: Copyright 2009-2010 Matthias Kupfer <mkupfer@reactos.org>
  *              Copyright 2010 Sven Knurr (tux.) <forenkrams@tuxproject.de>
- *              Copyright 2017 Joachim Henze <joachim.henze@reactos.org>
+ *              Copyright 2017-2024 Joachim Henze <joachim.henze@reactos.org>
  *              Copyright 2021 Robert Naumann <gonzomdx@gmail.com>
  */
 
@@ -22,43 +22,43 @@ BEGIN
     BEGIN
         MENUITEM "&Installieren\tCtrl+Enter", ID_INSTALL
         MENUITEM "&Deinstallieren\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "&Ändern", ID_MODIFY
+        MENUITEM "Ä&ndern", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "Aus &Registry entfernen", ID_REGREMOVE
+        MENUITEM "Aus R&egistry entfernen", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Aktualisieren\tF5", ID_REFRESH
+        MENUITEM "Aktualisie&ren\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Da&tenbank aktualisieren\tCtrl+F5", ID_RESETDB
+        MENUITEM "Daten&bank aktualisieren\tCtrl+F5", ID_RESETDB
     END
     POPUP "Hilfe"
     BEGIN
         MENUITEM "Hilfe\tF1", ID_HELP, GRAYED
-        MENUITEM "Über", ID_ABOUT
+        MENUITEM "Ü&ber", ID_ABOUT
     END
 END
 
 IDR_LINKMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
-        MENUITEM "&Öffne den Link in einem Browser", ID_OPEN_LINK
+        MENUITEM "Öffne den Link in einem &Browser", ID_OPEN_LINK
         MENUITEM "&Kopiere den Link in die Zwischenablage", ID_COPY_LINK
     END
 END
 
 IDR_APPLICATIONMENU MENU
 BEGIN
-    POPUP "popup"
+    POPUP ""
     BEGIN
         MENUITEM "&Installieren\tCtrl+Enter", ID_INSTALL
         MENUITEM "&Deinstallieren\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "&Ändern", ID_MODIFY
+        MENUITEM "Ä&ndern", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "Aus &Registry entfernen", ID_REGREMOVE
+        MENUITEM "Aus R&egistry entfernen", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Aktualisieren\tF5", ID_REFRESH
+        MENUITEM "Aktualisie&ren\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Da&tenbank aktualisieren\tCtrl+F5", ID_RESETDB
+        MENUITEM "Daten&bank aktualisieren\tCtrl+F5", ID_RESETDB
     END
 END
 
@@ -77,17 +77,17 @@ BEGIN
     PUSHBUTTON "&Wählen", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "&Installer nach Programminstallation löschen", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
     GROUPBOX "Softwarequelle", -1, 4, 118, 240, 46
-    CONTROL "Vorgabe benutzen", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
-    CONTROL "Spezifische Quelle", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
+    AUTORADIOBUTTON "Vorgabe benutzen", IDC_SOURCE_DEFAULT, 15, 132, 74, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Spezifische Quelle", IDC_USE_SOURCE, 15, 147, 74, 10
     EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
     GROUPBOX "Proxy", -1, 4, 166, 240, 76
-    CONTROL "Proxy Einstellungen des Systems verwenden", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 180, 210, 10
-    CONTROL "Direkt (Kein Proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 195, 210, 10
-    CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 210, 74, 10
+    AUTORADIOBUTTON "Proxy Einstellungen des Systems verwenden", IDC_PROXY_DEFAULT, 15, 180, 210, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Direkt (Kein Proxy)", IDC_NO_PROXY, 15, 195, 210, 10
+    AUTORADIOBUTTON "Proxy", IDC_USE_PROXY, 15, 210, 74, 10
     EDITTEXT IDC_PROXY_SERVER, 90, 210, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     LTEXT "Kein Proxy", -1, 26, 226, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 225, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    PUSHBUTTON "Vorgabe", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14
+    PUSHBUTTON "Vorgabe", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 116, 245, 60, 14
     PUSHBUTTON "Abbrechen", IDCANCEL, 181, 245, 60, 14
 END
@@ -109,7 +109,7 @@ STYLE DS_SHELLFONT | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 CAPTION "Download von %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
+    CONTROL "", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
     EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
     PUSHBUTTON "Abbrechen", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
 END

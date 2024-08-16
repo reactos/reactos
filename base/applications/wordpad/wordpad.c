@@ -843,8 +843,15 @@ static BOOL DoSaveFile(LPCWSTR wszSaveFileName, WPARAM format)
     EDITSTREAM stream;
     LRESULT ret;
 
+#ifdef __REACTOS__
+    /* Use OPEN_ALWAYS instead of CREATE_ALWAYS in order to succeed
+     * even if the file has HIDDEN or SYSTEM attributes */
+    hFile = CreateFileW(wszSaveFileName, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS,
+        FILE_ATTRIBUTE_NORMAL, NULL);
+#else
     hFile = CreateFileW(wszSaveFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
         FILE_ATTRIBUTE_NORMAL, NULL);
+#endif
 
     if(hFile == INVALID_HANDLE_VALUE)
     {
@@ -870,6 +877,10 @@ static BOOL DoSaveFile(LPCWSTR wszSaveFileName, WPARAM format)
 
     ret = SendMessageW(hEditorWnd, EM_STREAMOUT, format, (LPARAM)&stream);
 
+#ifdef __REACTOS__
+    /* Truncate the file and close it */
+    SetEndOfFile(hFile);
+#endif
     CloseHandle(hFile);
 
     SetFocus(hEditorWnd);

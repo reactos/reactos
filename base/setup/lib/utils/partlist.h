@@ -251,45 +251,36 @@ DestroyPartitionList(
 
 PDISKENTRY
 GetDiskByBiosNumber(
-    IN PPARTLIST List,
-    IN ULONG HwDiskNumber);
+    _In_ PPARTLIST List,
+    _In_ ULONG HwDiskNumber);
 
 PDISKENTRY
 GetDiskByNumber(
-    IN PPARTLIST List,
-    IN ULONG DiskNumber);
+    _In_ PPARTLIST List,
+    _In_ ULONG DiskNumber);
 
 PDISKENTRY
 GetDiskBySCSI(
-    IN PPARTLIST List,
-    IN USHORT Port,
-    IN USHORT Bus,
-    IN USHORT Id);
+    _In_ PPARTLIST List,
+    _In_ USHORT Port,
+    _In_ USHORT Bus,
+    _In_ USHORT Id);
 
 PDISKENTRY
 GetDiskBySignature(
-    IN PPARTLIST List,
-    IN ULONG Signature);
+    _In_ PPARTLIST List,
+    _In_ ULONG Signature);
 
 PPARTENTRY
 GetPartition(
-    // IN PPARTLIST List,
-    IN PDISKENTRY DiskEntry,
-    IN ULONG PartitionNumber);
-
-BOOLEAN
-GetDiskOrPartition(
-    IN PPARTLIST List,
-    IN ULONG DiskNumber,
-    IN ULONG PartitionNumber OPTIONAL,
-    OUT PDISKENTRY* pDiskEntry,
-    OUT PPARTENTRY* pPartEntry OPTIONAL);
+    _In_ PDISKENTRY DiskEntry,
+    _In_ ULONG PartitionNumber);
 
 PPARTENTRY
 SelectPartition(
-    IN PPARTLIST List,
-    IN ULONG DiskNumber,
-    IN ULONG PartitionNumber);
+    _In_ PPARTLIST List,
+    _In_ ULONG DiskNumber,
+    _In_ ULONG PartitionNumber);
 
 PPARTENTRY
 GetNextPartition(
@@ -313,13 +304,8 @@ BOOLEAN
 CreatePartition(
     _In_ PPARTLIST List,
     _Inout_ PPARTENTRY PartEntry,
-    _In_opt_ ULONGLONG SizeBytes);
-
-BOOLEAN
-CreateExtendedPartition(
-    _In_ PPARTLIST List,
-    _Inout_ PPARTENTRY PartEntry,
-    _In_opt_ ULONGLONG SizeBytes);
+    _In_opt_ ULONGLONG SizeBytes,
+    _In_opt_ ULONG_PTR PartitionInfo);
 
 NTSTATUS
 DismountVolume(
@@ -327,9 +313,9 @@ DismountVolume(
 
 BOOLEAN
 DeletePartition(
-    IN PPARTLIST List,
-    IN PPARTENTRY PartEntry,
-    OUT PPARTENTRY* FreeRegion OPTIONAL);
+    _In_ PPARTLIST List,
+    _In_ PPARTENTRY PartEntry,
+    _Out_opt_ PPARTENTRY* FreeRegion);
 
 PPARTENTRY
 FindSupportedSystemPartition(
@@ -366,17 +352,5 @@ VOID
 SetMBRPartitionType(
     IN PPARTENTRY PartEntry,
     IN UCHAR PartitionType);
-
-BOOLEAN
-GetNextUnformattedPartition(
-    IN PPARTLIST List,
-    OUT PDISKENTRY *pDiskEntry OPTIONAL,
-    OUT PPARTENTRY *pPartEntry);
-
-BOOLEAN
-GetNextUncheckedPartition(
-    IN PPARTLIST List,
-    OUT PDISKENTRY *pDiskEntry OPTIONAL,
-    OUT PPARTENTRY *pPartEntry);
 
 /* EOF */

@@ -2992,17 +2992,15 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
     /* We are off the right side of the screen */
     if (x + width > monitor->rcMonitor.right)
     {
-        if ((x - width) < monitor->rcMonitor.left || x >= monitor->rcMonitor.right)
-            x = monitor->rcMonitor.right - width;
-        else
-            x -= width;
+        /* Position menu at right edge of the screen */
+        x = monitor->rcMonitor.right - width;
     }
 
     /* We are off the left side of the screen */
     if (x < monitor->rcMonitor.left)
     {
-        /* Re-orient the menu around the x-axis */
-        x += width;
+        /* Position menu at left edge of the screen */
+        x = 0;
 
         if (x < monitor->rcMonitor.left || x >= monitor->rcMonitor.right || bIsPopup)
             x = monitor->rcMonitor.left;
@@ -3023,7 +3021,14 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
         if ((y - height) < monitor->rcMonitor.top || y >= monitor->rcMonitor.bottom)
             y = monitor->rcMonitor.bottom - height;
         else
-            y -= height;
+        {
+            INT adjHgt = y + UserGetSystemMetrics(SM_CYMENUSIZE) +
+                         2 * UserGetSystemMetrics(SM_CYDLGFRAME);
+            if (adjHgt >= monitor->rcMonitor.bottom)
+                y -= height;
+            else
+                y = adjHgt - height;
+        }
     }
 
     if (pExclude)
@@ -3394,7 +3399,7 @@ static PMENU FASTCALL MENU_ShowSubPopup(PWND WndOwner, PMENU Menu, BOOL SelectFi
   }
   Item->fState |= MF_MOUSESELECT;
 
-  if (IS_SYSTEM_MENU(Menu))
+  if (IS_SYSTEM_MENU(Menu) && !(Menu->fFlags & MNF_POPUP))
   {
       MENU_InitSysMenuPopup(Item->spSubMenu, pWnd->style, pWnd->pcls->style, HTSYSMENU);
 

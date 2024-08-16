@@ -31,6 +31,8 @@
 
 #define ADVANCED_BUTTON_HEIGHT 16
 
+#define HOTKEY_CTRL_S 1
+
 typedef enum _WINDOW_MODE
 {
     NORMAL_MODE,

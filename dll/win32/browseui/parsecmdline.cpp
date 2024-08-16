@@ -259,7 +259,7 @@ SHExplorerParseCmdLine(_Out_ PEXPLORER_CMDLINE_PARSE_RESULTS pInfo)
         // Basic flags-only params first
         if (!StrCmpIW(strField, L"/N"))
         {
-            pInfo->dwFlags |= SH_EXPLORER_CMDLINE_FLAG_N | SH_EXPLORER_CMDLINE_FLAG_ONE;
+            pInfo->dwFlags |= SH_EXPLORER_CMDLINE_FLAG_NEWWND | SH_EXPLORER_CMDLINE_FLAG_NOREUSE;
             TRACE("CmdLine Parser: Parsed %S flag. dwFlags=%08lx\n", strField, pInfo->dwFlags);
         }
         else if (!StrCmpIW(strField, L"/S"))
@@ -402,7 +402,8 @@ SHExplorerParseCmdLine(_Out_ PEXPLORER_CMDLINE_PARSE_RESULTS pInfo)
                     // The path could not be parsed into an ID List,
                     // so pass it on as a plain string.
 
-                    PWSTR field = StrDupW(strField);
+                    PWSTR field;
+                    SHStrDupW(strField, &field);
                     pInfo->strPath = field;
                     if (field)
                     {

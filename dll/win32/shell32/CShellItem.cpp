@@ -335,3 +335,98 @@ HRESULT WINAPI SHCreateShellItem(PCIDLIST_ABSOLUTE pidlParent,
 
     return hr;
 }
+
+class CShellItemArray :
+    public CComCoClass<CShellItemArray, &CLSID_NULL>,
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IShellItemArray
+{
+    CIDA *m_pCIDA;
+    STGMEDIUM m_Medium;
+
+public:
+    CShellItemArray() : m_pCIDA(NULL)
+    {
+        m_Medium.tymed = TYMED_NULL;
+    }
+
+    virtual ~CShellItemArray()
+    {
+        CDataObjectHIDA::DestroyCIDA(m_pCIDA, m_Medium);
+    }
+
+    HRESULT Initialize(IDataObject *pdo)
+    {
+        return CDataObjectHIDA::CreateCIDA(pdo, &m_pCIDA, m_Medium);
+    }
+
+    inline UINT GetCount() const { return m_pCIDA->cidl; }
+
+    // IShellItemArray
+    STDMETHODIMP BindToHandler(IBindCtx *pbc, REFGUID rbhid, REFIID riid, void **ppv) override
+    {
+        UNIMPLEMENTED;
+        *ppv = NULL;
+        return E_NOTIMPL;
+    }
+
+    STDMETHODIMP GetPropertyStore(GETPROPERTYSTOREFLAGS flags, REFIID riid, void **ppv) override
+    {
+        UNIMPLEMENTED;
+        *ppv = NULL;
+        return E_NOTIMPL;
+    }
+
+    STDMETHODIMP GetPropertyDescriptionList(REFPROPERTYKEY keyType, REFIID riid, void **ppv) override
+    {
+        UNIMPLEMENTED;
+        *ppv = NULL;
+        return E_NOTIMPL;
+    }
+
+    STDMETHODIMP GetAttributes(SIATTRIBFLAGS dwAttribFlags, SFGAOF sfgaoMask, SFGAOF *psfgaoAttribs) override
+    {
+        UNIMPLEMENTED;
+        *psfgaoAttribs = 0;
+        return E_NOTIMPL;
+    }
+
+    STDMETHODIMP GetCount(DWORD*pCount) override
+    {
+        *pCount = m_pCIDA ? GetCount() : 0;
+        return S_OK;
+    }
+
+    STDMETHODIMP GetItemAt(DWORD nIndex, IShellItem **ppItem) override
+    {
+        if (!ppItem)
+            return E_INVALIDARG;
+        *ppItem = NULL;
+        if (!m_pCIDA)
+            return E_UNEXPECTED;
+        if (nIndex >= GetCount())
+            return E_FAIL;
+        return SHCreateShellItem(HIDA_GetPIDLFolder(m_pCIDA), NULL,
+                                 HIDA_GetPIDLItem(m_pCIDA, nIndex), ppItem);
+    }
+
+    STDMETHODIMP EnumItems(IEnumShellItems **ppESI) override
+    {
+        UNIMPLEMENTED;
+        *ppESI = NULL;
+        return E_NOTIMPL;
+    }
+
+DECLARE_NO_REGISTRY()
+DECLARE_NOT_AGGREGATABLE(CShellItemArray)
+
+BEGIN_COM_MAP(CShellItemArray)
+    COM_INTERFACE_ENTRY_IID(IID_IShellItemArray, IShellItemArray)
+END_COM_MAP()
+};
+
+EXTERN_C HRESULT WINAPI
+SHCreateShellItemArrayFromDataObject(_In_ IDataObject *pdo, _In_ REFIID riid, _Out_ void **ppv)
+{
+    return ShellObjectCreatorInit<CShellItemArray>(pdo, riid, ppv);
+}

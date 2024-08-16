@@ -3,7 +3,7 @@
  *
  * Copyright 1999 Bertho Stultiens
  * Copyright 1999 Klaas van Gend
- * Translated 2018 Joann Mõndresku (joannmondresku at gmail dot com)
+ * Translated 2018 Joann Mõndresku <joannmondresku@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -315,8 +315,8 @@ FONT 8, "MS Shell Dlg"
  CHECKBOX "Sobita &terve sõna ainult", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "Sobita &juhus", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
  GROUPBOX "Suund", grp1, 147, 21, 58, 38
- CONTROL "&Üles", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 151, 30, 48, 12
- CONTROL "&Alla", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 151, 44, 48, 12
+ AUTORADIOBUTTON "&Üles", rad1, 151, 30, 48, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
+ AUTORADIOBUTTON "&Alla", rad2, 151, 44, 48, 12, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 
  DEFPUSHBUTTON "&Leia järgmine", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "Loobu", IDCANCEL	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
@@ -368,20 +368,20 @@ FONT 8, "MS Shell Dlg"
     LTEXT           "Kommentaar:",    stc9,  16, 72,  47,10, SS_NOPREFIX
     LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
-    GROUPBOX        "Koopiad",         grp2, 160, 92, 120,64, WS_GROUP
-    LTEXT           "&Koopiate arv:",  stc5,168,105,68,8
-    ICON            "",                ico3, 210,131,  76,24, WS_GROUP
-    CONTROL         "V&õrdle",         chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
-    EDITTEXT                           edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
+    GROUPBOX        "Koopiad",        grp2, 160, 92, 120,64, WS_GROUP
+    LTEXT           "&Koopiate arv:", stc5,168,105,68,8
+    ICON            "",               ico3, 210,131,  76,24, WS_GROUP
+    CONTROL         "V&õrdle",        chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
+    EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
 
     GROUPBOX        "Printimise vahemik", grp1,   8,92,  144,64, WS_GROUP
-    CONTROL         "&Kõik",              rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
-    CONTROL         "&Lehed",             rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
-    CONTROL         "&Valik",             rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
-    EDITTEXT                              edt1,  73,122,  26,12, WS_GROUP | ES_NUMBER
-    EDITTEXT                              edt2, 120,122,  26,12, WS_GROUP | ES_NUMBER
-    RTEXT           "&alates:",           stc2,  52,124,  20,8
-    RTEXT           "&kuni:",             stc3,  99,124,  20,8
+    AUTORADIOBUTTON "&Kõik",          rad1,16,106,64,12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Lehed",         rad3,16,122,36,12
+    AUTORADIOBUTTON "&Valik",         rad2,16,138,64,12
+    EDITTEXT                          edt1,  73,122,  26,12, WS_GROUP | ES_NUMBER
+    EDITTEXT                          edt2, 120,122,  26,12, WS_GROUP | ES_NUMBER
+    RTEXT           "&alates:",       stc2,  52,124,  20,8
+    RTEXT           "&kuni:",         stc3,  99,124,  20,8
 }
 
 PRINT32_SETUP DIALOG  32, 32, 288, 178
@@ -414,8 +414,8 @@ BEGIN
 
     GROUPBOX        "Orientatsioon",  grp1, 180, 92, 100,56, WS_GROUP
     ICON            "",               ico1, 195,112,  18,20, WS_GROUP
-    CONTROL         "&Portree",       rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
-    CONTROL         "&Maastik",       rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+    AUTORADIOBUTTON "&Portree",       rad1, 224,106,52,12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Maastik",       rad2, 224,126,52,12
 END
 
 PAGESETUPDLGORD DIALOG 32, 32, 240, 240
@@ -432,8 +432,8 @@ BEGIN
   LTEXT "S&alv:", stc3, 16, 132, 36, 8
   COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
   GROUPBOX "Orientatsioon", grp1, 8, 156, 64, 56, BS_GROUPBOX
-  AUTORADIOBUTTON "&Portree", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "&Maastik", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "&Portree", rad1, 16, 170, 52, 12
+  AUTORADIOBUTTON "&Maastik", rad2, 16, 190, 52, 12
   GROUPBOX "", grp4, 80, 156, 152, 56, BS_GROUPBOX
   LTEXT "&Vasakult:", stc15, 88, 172, 30, 8
   EDITTEXT edt4, 119, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER

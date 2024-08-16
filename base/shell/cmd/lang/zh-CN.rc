@@ -237,6 +237,7 @@ ERRORLEVEL 数字    当上一个程序返回一个大于或等于指定数字�
 字符串1==字符串2   当所指定的字符串相匹配时为真。\n\
 EXIST 文件名       当指定的文件名存在时为真。\n\
 DEFINED 变量       当指定的变量已被定义时为真。\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "当前时间是： "
     STRING_MKDIR_HELP "创建一个目录。\n\n\
 MKDIR [驱动器:]路径\nMD [驱动器:]路径"
@@ -325,27 +326,6 @@ REN [/E /N /P /Q /S /T] 旧名称 ... 新名称\n\n\
 注意，您不能在新名称里指定新的驱动器或路径。请使用 MOVE 命令来达成这个目的。\n"
     STRING_REN_HELP2 "    %lu 文件已重命名\n"
     STRING_REN_HELP3 "    %lu 个文件已重命名\n"
-    STRING_REPLACE_HELP1 "替换文件。\n\n\
-REPLACE [驱动器1:][路径1]文件名 [驱动器2:][路径2] [/A] [/P] [/R] [/W]\n\
-REPLACE [驱动器1:][路径1]文件名 [驱动器2:][路径2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [驱动器1:][路径1]文件名   指定一个或多个源文件。\n\
-  [驱动器2:][路径2]         指定要被替换文件所在的目录。\n\
-  /A                        将新文件添加到目标目录。不能和 /S 或 /U 同时使用。\n\
-  /P                        在替换一个文件或添加一个源文件之前请求确认。\n\
-  /R                        将只读文件视为未保护文件并替换。\n\
-  /S                        替换目标目录中所有子目录中的文件。不能与 /A 同时使用。\n\
-  /W                        在开始前等待您插入一张磁盘。\n\
-  /U                        仅替换（更新）比原文件老的文件。不能和 /A 同时使用。\n"
-    STRING_REPLACE_HELP2 "需要源路径\n"
-    STRING_REPLACE_HELP3 "没有文件被替换\n"
-    STRING_REPLACE_HELP4 "%lu 个文件已被替换\n"
-    STRING_REPLACE_HELP5 "正在替换 %s\n"
-    STRING_REPLACE_HELP6 "替换 %s\n"
-    STRING_REPLACE_HELP7 "没有文件被添加\n"
-    STRING_REPLACE_HELP8 "%lu 个文件已被添加\n"
-    STRING_REPLACE_HELP9 "添加 %s 吗 (Y/N)？ "
-    STRING_REPLACE_HELP10 "替换 %s 吗 (Y/N)？ "
-    STRING_REPLACE_HELP11 "正在添加 %s\n"
     STRING_SHIFT_HELP "在批处理文件中改变可替换参数的位置。\n\n\
 SHIFT [DOWN]"
     STRING_SCREEN_HELP "移动光标并可选地输出文本\n\n\
@@ -491,15 +471,16 @@ RESTORE       恢复窗口\n\
     STRING_ERROR_CANNOTPIPE "错误！无法创建管道！不能打开临时文件！\n"
     STRING_ERROR_D_PAUSEMSG "按任意键继续... "
     STRING_ERROR_DRIVER_NOT_READY "驱动器未就绪"
+    STRING_ERROR_INVALID_NUMBER1 "Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"
+    STRING_ERROR_INVALID_NUMBER2 "Invalid number. Numbers are limited to 32-bits of precision.\n"
+    STRING_ERROR_DIVISION_BY_ZERO "Division by zero error.\n"
+    STRING_ERROR_INVALID_DEVICE L"Invalid device '%s'\n"
+    STRING_ERROR_CALL_BAD_LABEL "Invalid attempt to call batch label outside of batch script.\n"
+    STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
+    STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "环境变量“%s”未定义\n"
-    STRING_REPLACE_ERROR1 "无效开关 - %s\n"
-    STRING_REPLACE_ERROR2 "路径未找到 - %s\n"
-    STRING_REPLACE_ERROR3 "文件名、目录名或卷标语法不正确。\n"
-    STRING_REPLACE_ERROR4 "无效的参数组合\n"
-    STRING_REPLACE_ERROR5 "禁止访问 - %s\n"
-    STRING_REPLACE_ERROR6 "没有文件被发现 - %s\n"
-    STRING_REPLACE_ERROR7 "扩展错误 32\n"
     STRING_CMD_INFOLINE "  ReactOS 命令行解释器                                       输入 HELP = 帮助  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
     STRING_REACTOS_VERSION "ReactOS [版本 %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS 命令行解释器\n版本 %s %s"
     STRING_VERSION_RUNNING_ON "在 上运行"

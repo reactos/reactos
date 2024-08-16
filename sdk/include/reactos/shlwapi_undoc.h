@@ -39,6 +39,29 @@ PVOID WINAPI SHInterlockedCompareExchange(PVOID *dest, PVOID xchg, PVOID compare
 LONG WINAPI SHGlobalCounterGetValue(HANDLE hGlobalCounter);
 LONG WINAPI SHGlobalCounterIncrement(HANDLE hGlobalCounter);
 
+#if FALSE && ((DLL_EXPORT_VERSION) >= _WIN32_WINNT_VISTA)
+#define SHELL_GCOUNTER_DEFINE_GUID(name, a, b, c, d, e, f, g, h, i, j, k) enum { SHELLUNUSEDCOUNTERGUID_##name }
+#define SHELL_GCOUNTER_DEFINE_HANDLE(name) enum { SHELLUNUSEDCOUNTERHANDLE_##name }
+#define SHELL_GCOUNTER_PARAMETERS(handle, id) id
+#define SHELL_GlobalCounterCreate(refguid, handle) ( (refguid), (handle), (void)0 )
+#define SHELL_GlobalCounterIsInitialized(handle) ( (handle), TRUE )
+#define SHELL_GlobalCounterGet(id) SHGlobalCounterGetValue_Vista(id)
+#define SHELL_GlobalCounterIncrement(id) SHGlobalCounterIncrement_Vista(id)
+#else
+#define SHELL_GCOUNTER_DEFINE_GUID(name, a, b, c, d, e, f, g, h, i, j, k) const GUID name = { a, b, c, { d, e, f, g, h, i, j, k } }
+#define SHELL_GCOUNTER_DEFINE_HANDLE(name) HANDLE name = NULL
+#define SHELL_GCOUNTER_PARAMETERS(handle, id) handle
+#define SHELL_GlobalCounterCreate(refguid, handle) \
+  do { \
+    EXTERN_C HANDLE SHELL_GetCachedGlobalCounter(HANDLE *phGlobalCounter, REFGUID rguid); \
+    SHELL_GetCachedGlobalCounter(&(handle), (refguid)); \
+  } while (0)
+#define SHELL_GlobalCounterIsInitialized(handle) ( (handle) != NULL )
+#define SHELL_GlobalCounterGet(handle) SHGlobalCounterGetValue(handle)
+#define SHELL_GlobalCounterIncrement(handle) SHGlobalCounterIncrement(handle)
+#endif
+#define SHELL_GCOUNTER_DECLAREPARAMETERS(handle, id) SHELL_GCOUNTER_PARAMETERS(HANDLE handle, SHGLOBALCOUNTER id)
+
 DWORD WINAPI
 SHRestrictionLookup(
     _In_ DWORD policy,
@@ -71,6 +94,7 @@ BOOL WINAPI SHSimulateDrop(IDropTarget *pDrop, IDataObject *pDataObj, DWORD grfK
 HMENU WINAPI SHGetMenuFromID(HMENU hMenu, UINT uID);
 DWORD WINAPI SHGetCurColorRes(void);
 DWORD WINAPI SHWaitForSendMessageThread(HANDLE hand, DWORD dwTimeout);
+DWORD WINAPI SHSendMessageBroadcastW(UINT uMsg, WPARAM wParam, LPARAM lParam);
 HRESULT WINAPI SHIsExpandableFolder(LPSHELLFOLDER lpFolder, LPCITEMIDLIST pidl);
 DWORD WINAPI SHFillRectClr(HDC hDC, LPCRECT pRect, COLORREF cRef);
 int WINAPI SHSearchMapInt(const int *lpKeys, const int *lpValues, int iLen, int iKey);
@@ -180,6 +204,13 @@ SHCreatePropertyBagOnProfileSection(
     _In_ REFIID riid,
     _Out_ void **ppvObj);
 
+EXTERN_C HRESULT WINAPI
+IUnknown_QueryServicePropertyBag(
+    _In_ IUnknown *punk,
+    _In_ long flags,
+    _In_ REFIID riid,
+    _Outptr_ void **ppvObj);
+
 HWND WINAPI SHCreateWorkerWindowA(WNDPROC wndProc, HWND hWndParent, DWORD dwExStyle,
                                   DWORD dwStyle, HMENU hMenu, LONG_PTR wnd_extra);
 
@@ -283,7 +314,8 @@ ShellMessageBoxWrapW(
   _In_ UINT fuStyle,
   ...);
 
-/* dwWhich flags for PathFileExistsDefExtW and PathFindOnPathExW */
+/* dwWhich flags for PathFileExistsDefExtW, PathFindOnPathExW,
+ * and PathFileExistsDefExtAndAttributesW */
 #define WHICH_PIF       (1 << 0)
 #define WHICH_COM       (1 << 1)
 #define WHICH_EXE       (1 << 2)
@@ -309,6 +341,13 @@ ShellMessageBoxWrapW(
 #define PATH_CHAR_CLASS_ANY         0xffffffff
 
 BOOL WINAPI PathFileExistsDefExtW(LPWSTR lpszPath, DWORD dwWhich);
+
+BOOL WINAPI
+PathFileExistsDefExtAndAttributesW(
+    _Inout_ LPWSTR pszPath,
+    _In_ DWORD dwWhich,
+    _Out_opt_ LPDWORD pdwFileAttributes);
+
 BOOL WINAPI PathFindOnPathExW(LPWSTR lpszFile, LPCWSTR *lppszOtherDirs, DWORD dwWhich);
 VOID WINAPI FixSlashesAndColonW(LPWSTR);
 BOOL WINAPI PathIsValidCharA(char c, DWORD dwClass);
@@ -323,6 +362,41 @@ IContextMenu_Invoke(
     _In_ UINT uFlags);
 
 DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid);
+
+/*
+ * HACK! These functions are conflicting with <shobjidl.h> inline functions...
+ * We provide a macro option SHLWAPI_ISHELLFOLDER_HELPERS for using these functions.
+ */
+#ifdef SHLWAPI_ISHELLFOLDER_HELPERS
+HRESULT WINAPI
+IShellFolder_GetDisplayNameOf(
+    _In_ IShellFolder *psf,
+    _In_ LPCITEMIDLIST pidl,
+    _In_ SHGDNF uFlags,
+    _Out_ LPSTRRET lpName,
+    _In_ DWORD dwRetryFlags);
+
+/* Flags for IShellFolder_GetDisplayNameOf */
+#define SFGDNO_RETRYWITHFORPARSING  0x00000001
+#define SFGDNO_RETRYALWAYS          0x80000000
+
+HRESULT WINAPI
+IShellFolder_ParseDisplayName(
+    _In_ IShellFolder *psf,
+    _In_ HWND hwndOwner,
+    _In_ LPBC pbcReserved,
+    _In_ LPOLESTR lpszDisplayName,
+    _Out_ ULONG *pchEaten,
+    _Out_ PIDLIST_RELATIVE *ppidl,
+    _Out_ ULONG *pdwAttributes);
+
+EXTERN_C HRESULT WINAPI
+IShellFolder_CompareIDs(
+    _In_ IShellFolder *psf,
+    _In_ LPARAM lParam,
+    _In_ PCUIDLIST_RELATIVE pidl1,
+    _In_ PCUIDLIST_RELATIVE pidl2);
+#endif /* SHLWAPI_ISHELLFOLDER_HELPERS */
 
 #ifdef __cplusplus
 } /* extern "C" */

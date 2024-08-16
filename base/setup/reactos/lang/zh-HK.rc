@@ -8,6 +8,8 @@
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_HONGKONG
 
+/* Dialogs */
+
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS 安裝程式"
@@ -84,19 +86,18 @@ BEGIN
     PUSHBUTTON "取消(&C)", IDCANCEL, 87, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
 END
 
-IDD_BOOTOPTIONS DIALOGEX 0, 0, 305, 116
-STYLE DS_SHELLFONT | WS_VISIBLE | WS_CAPTION
-CAPTION "進階磁碟區設定"
+IDD_ADVINSTOPTS DIALOGEX 0, 0, 305, 135
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Advanced Installation Options"
 FONT 9, "新細明體"
 BEGIN
-    CONTROL "安裝資料夾", IDC_STATIC, "Button", BS_GROUPBOX, 4, 1, 298, 30
-    EDITTEXT IDC_PATH, 10, 11, 278, 13, WS_VISIBLE
-    CONTROL "安裝啟動程式", IDC_STATIC, "Button", BS_GROUPBOX, 4, 36, 298, 52
-    CONTROL "安裝啟動程式到硬碟（MBR 和 VBR）", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 46, 278, 11
-    CONTROL "安裝啟動程式到硬碟（僅 VBR）", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 57, 278, 11
-    CONTROL "不安裝啟動程式", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED, 10, 68, 278, 11
-    PUSHBUTTON "確定(&O)", IDOK, 180, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
-    PUSHBUTTON "取消(&C)", IDCANCEL, 240, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
+    LTEXT "Choose the &directory where you want to install ReactOS:", IDC_STATIC, 7, 9, 291, 10
+    EDITTEXT IDC_PATH, 7, 23, 291, 13, WS_VISIBLE
+    GROUPBOX "Bootloader", IDC_STATIC, 7, 45, 291, 60
+    LTEXT "Select the location where the FreeLoader\nbootloader should be installed.\n\nBy default, it is installed on the system partition of the boot disk (and either in the Master or the Volume Boot Record for BIOS-based computers).", IDC_STATIC, 13, 57, 279, 44
+    COMBOBOX IDC_INSTFREELDR, 150, 58, 142, 45, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
+    PUSHBUTTON "確定", IDOK, 193, 113, 50, 14, WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "取消", IDCANCEL, 248, 113, 50, 14, WS_TABSTOP | WS_VISIBLE
 END
 
 IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 143
@@ -147,6 +148,8 @@ BEGIN
     LTEXT "如果光碟機內仍然有光碟，請將其取出。然後按［完成］，重新啟動您的電腦。", IDC_STATIC, 115, 169, 195, 17
 END
 
+/* Strings */
+
 STRINGTABLE
 BEGIN
     IDS_TYPETITLE "ReactOS 安裝程式"
@@ -180,4 +183,28 @@ BEGIN
     IDS_PARTITION_TYPE "類型"
     IDS_PARTITION_SIZE "大小"
     IDS_PARTITION_STATUS "狀態"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BOOTLOADER_NOINST "No installation"
+    IDS_BOOTLOADER_REMOVABLE "Removable media"
+    IDS_BOOTLOADER_SYSTEM "System partition (Default)"
+    IDS_BOOTLOADER_MBRVBR "MBR 和 VBR (Default)"
+    IDS_BOOTLOADER_VBRONLY "僅 VBR"
+END
+
+/* Error Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR_TITLE "Invalid character"
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR "The only valid characters are:\n\
+alphanumericals (a-z, A-Z, 0-9), and\n . \\ - _\n\
+Spaces are not allowed."
+
+// ERROR_DIRECTORY_NAME
+    IDS_ERROR_DIRECTORY_NAME_TITLE "Invalid installation path"
+    IDS_ERROR_DIRECTORY_NAME "The ReactOS installation path must follow the DOS 8.3 naming scheme, \
+and only contain letters, digits, dashes and periods. Spaces are not allowed."
 END

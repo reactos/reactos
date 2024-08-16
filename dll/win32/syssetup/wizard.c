@@ -1971,7 +1971,7 @@ ThemePageDlgProc(HWND hwndDlg,
                         {
                             WCHAR wszParams[1024];
                             WCHAR wszTheme[MAX_PATH];
-                            WCHAR* format = L"desk.cpl desk,@Appearance /Action:ActivateMSTheme /file:\"%s\"";
+                            WCHAR* format = L"desk.cpl,,2 /Action:ActivateMSTheme /file:\"%s\"";
 
                             SHGetFolderPathAndSubDirW(0, CSIDL_RESOURCES, NULL, SHGFP_TYPE_DEFAULT, Themes[iTheme].ThemeFile, wszTheme);
                             swprintf(wszParams, format, wszTheme);
@@ -1979,7 +1979,7 @@ ThemePageDlgProc(HWND hwndDlg,
                         }
                         else
                         {
-                            RunControlPanelApplet(hwndDlg, L"desk.cpl desk,@Appearance /Action:ActivateMSTheme");
+                            RunControlPanelApplet(hwndDlg, L"desk.cpl,,2 /Action:ActivateMSTheme");
                         }
                     }
                     break;

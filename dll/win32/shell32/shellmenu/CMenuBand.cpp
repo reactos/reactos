@@ -832,8 +832,12 @@ HRESULT CMenuBand::_TrackContextMenu(IContextMenu * contextMenu, INT x, INT y)
         return E_FAIL;
 
     TRACE("Before Query\n");
-    const INT idCmdFirst = 100;
-    hr = contextMenu->QueryContextMenu(popup, 0, idCmdFirst, UINT_MAX, CMF_NORMAL);
+    UINT cmf = CMF_NORMAL;
+    if (GetKeyState(VK_SHIFT) < 0)
+        cmf |= CMF_EXTENDEDVERBS;
+
+    const UINT idCmdFirst = 100, idCmdLast = 0xffff;
+    hr = contextMenu->QueryContextMenu(popup, 0, idCmdFirst, idCmdLast, cmf);
     if (FAILED_UNEXPECTEDLY(hr))
     {
         TRACE("Query failed\n");
@@ -857,6 +861,10 @@ HRESULT CMenuBand::_TrackContextMenu(IContextMenu * contextMenu, INT x, INT y)
         TRACE("Before InvokeCommand\n");
         CMINVOKECOMMANDINFO cmi = { sizeof(cmi), 0, hwnd };
         cmi.lpVerb = MAKEINTRESOURCEA(uCommand - idCmdFirst);
+        if (GetKeyState(VK_SHIFT) < 0)
+            cmi.fMask |= CMIC_MASK_SHIFT_DOWN;
+        if (GetKeyState(VK_CONTROL) < 0)
+            cmi.fMask |= CMIC_MASK_CONTROL_DOWN;
         hr = contextMenu->InvokeCommand(&cmi);
         TRACE("InvokeCommand returned hr=%08x\n", hr);
     }

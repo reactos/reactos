@@ -118,6 +118,24 @@ wodMessage(
             break;
         }
 
+        case WODM_GETVOLUME:
+        {
+            Result = MmeGetVolume(WAVE_OUT_DEVICE_TYPE,
+                                  DeviceId,
+                                  PrivateHandle,
+                                  Parameter1);
+            break;
+        }
+
+        case WODM_SETVOLUME:
+        {
+            Result = MmeSetVolume(WAVE_OUT_DEVICE_TYPE,
+                                  DeviceId,
+                                  PrivateHandle,
+                                  Parameter1);
+            break;
+        }
+
         case DRV_QUERYDEVICEINTERFACESIZE :
         {
             Result = MmeGetDeviceInterfaceString(WAVE_OUT_DEVICE_TYPE, DeviceId, NULL, 0, (DWORD*)Parameter1); //FIXME DWORD_PTR

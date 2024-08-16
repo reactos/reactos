@@ -1035,6 +1035,7 @@
 @ cdecl -version=0x600+ _strupr_s_l(str long ptr)
 @ cdecl -version=0x600+ _strxfrm_l(ptr str long ptr)
 @ cdecl _swab(str str long)
+@ cdecl -version=0x400-0x502 -impsym _swprintf(ptr str) swprintf # Compatibility for pre NT6
 @ cdecl -version=0x600+ _swprintf(ptr str)
 @ stub -version=0x600+ _swprintf_c
 @ stub -version=0x600+ _swprintf_c_l
@@ -1122,6 +1123,7 @@
 @ stub -version=0x600+ _vsprintf_p
 @ stub -version=0x600+ _vsprintf_p_l
 @ stub -version=0x600+ _vsprintf_s_l
+@ cdecl -version=0x400-0x502 -impsym _vswprintf() vswprintf # Compatibility for pre NT6
 @ stub -version=0x600+ _vswprintf
 @ stub -version=0x600+ _vswprintf_c
 @ stub -version=0x600+ _vswprintf_c_l

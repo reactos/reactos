@@ -20,6 +20,7 @@ list(APPEND SOURCE
     GUIDFromString.cpp
     Int64ToString.cpp
     IShellFolderViewCB.cpp
+    ItemIDList.cpp
     OpenAs_RunDLL.cpp
     PathIsEqualOrSubFolder.cpp
     PathIsTemporary.cpp

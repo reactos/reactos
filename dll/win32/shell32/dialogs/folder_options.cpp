@@ -238,7 +238,6 @@ ShowFolderOptionsDialogThreadProc(LPVOID param)
     HPROPSHEETPAGE hppages[3];
     HPROPSHEETPAGE hpage;
     UINT num_pages = 0;
-    WCHAR szOptions[100];
 
     hpage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_GENERAL, FolderOptionsGeneralDlg, 0, NULL);
     if (hpage)
@@ -251,10 +250,6 @@ ShowFolderOptionsDialogThreadProc(LPVOID param)
     hpage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_FILETYPES, FolderOptionsFileTypesDlg, 0, NULL);
     if (hpage)
         hppages[num_pages++] = hpage;
-
-    szOptions[0] = 0;
-    LoadStringW(shell32_hInstance, IDS_FOLDER_OPTIONS, szOptions, _countof(szOptions));
-    szOptions[_countof(szOptions) - 1] = 0;
 
     // the stub window to hide taskbar button
     DWORD style = WS_DISABLED | WS_CLIPSIBLINGS | WS_CAPTION;
@@ -272,8 +267,9 @@ ShowFolderOptionsDialogThreadProc(LPVOID param)
     pinfo.hwndParent = stub;
     pinfo.nPages = num_pages;
     pinfo.phpage = hppages;
+    pinfo.hInstance = shell32_hInstance;
     pinfo.pszIcon = MAKEINTRESOURCEW(IDI_SHELL_FOLDER_OPTIONS);
-    pinfo.pszCaption = szOptions;
+    pinfo.pszCaption = MAKEINTRESOURCEW(IDS_FOLDER_OPTIONS);
     pinfo.pfnCallback = PropSheetProc;
     pinfo.nStartPage = PtrToUlong(param);
 

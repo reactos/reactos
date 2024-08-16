@@ -1,0 +1,15 @@
+/*
+ * PROJECT:     ReactOS shdocvw
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Polish resource file
+ * TRANSLATOR:  Copyright 2015 Adam Stachowicz <saibamenppl@gmail.com>
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_ADD "Add..."
+    IDS_ORGANIZE "Organize..."
+    IDS_FOLDERSLABEL "Foldery"
+END

@@ -1,5 +1,7 @@
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
+/* Dialogs */
+
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Installation de ReactOS"
@@ -76,19 +78,18 @@ BEGIN
     PUSHBUTTON "&Annuler", IDCANCEL, 87, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
 END
 
-IDD_BOOTOPTIONS DIALOGEX 0, 0, 305, 116
-STYLE DS_SHELLFONT | WS_VISIBLE | WS_CAPTION
-CAPTION "Paramètres de partition avancés"
+IDD_ADVINSTOPTS DIALOGEX 0, 0, 305, 135
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Paramètres d'installation avancés"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Dossier d'installation", IDC_STATIC, "Button", BS_GROUPBOX, 4, 1, 298, 30
-    EDITTEXT IDC_PATH, 10, 11, 278, 13, WS_VISIBLE
-    CONTROL "Installation du chargeur de démarrage", IDC_STATIC, "Button", BS_GROUPBOX, 4, 36, 298, 52
-    CONTROL "Installer le chargeur de démarrage sur le disque dur (MBR et VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 46, 278, 11
-    CONTROL "Installer le chargeur de démarrage sur le disque dur (VBR uniquement)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 57, 278, 11
-    CONTROL "Ne pas installer le chargeur de démarrage", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED, 10, 68, 278, 11
-    PUSHBUTTON "&OK", IDOK, 180, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
-    PUSHBUTTON "&Annuler", IDCANCEL, 240, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
+    LTEXT "Choisissez un &répertoire où vous voulez installer ReactOS :", IDC_STATIC, 7, 9, 291, 10
+    EDITTEXT IDC_PATH, 7, 23, 291, 13, WS_VISIBLE
+    GROUPBOX "Chargeur de démarrage", IDC_STATIC, 7, 45, 291, 60
+    LTEXT "Sélectionnez l'endroit où le chargeur de\ndémarrage FreeLoader doit être installé.\n\nPar défaut, il est installé sur la partition système du disque de démarrage (et sur le Master ou le Volume Boot Record pour les ordinateurs basés sur le BIOS).", IDC_STATIC, 13, 57, 279, 44
+    COMBOBOX IDC_INSTFREELDR, 150, 58, 142, 45, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
+    PUSHBUTTON "OK", IDOK, 193, 113, 50, 14, WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "Annuler", IDCANCEL, 248, 113, 50, 14, WS_TABSTOP | WS_VISIBLE
 END
 
 IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 143
@@ -139,6 +140,8 @@ BEGIN
     LTEXT "S'il y a un CD dans le lecteur, retirez le. Appuyez ensuite sur Terminer pour redémarrer votre ordinateur.", IDC_STATIC, 115, 169, 195, 17
 END
 
+/* Strings */
+
 STRINGTABLE
 BEGIN
     IDS_TYPETITLE "Bienvenue dans l'installation de ReactOS"
@@ -172,4 +175,28 @@ BEGIN
     IDS_PARTITION_TYPE "Type"
     IDS_PARTITION_SIZE "Taille"
     IDS_PARTITION_STATUS "Statut"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BOOTLOADER_NOINST "Ne pas installer"
+    IDS_BOOTLOADER_REMOVABLE "Média amovible"
+    IDS_BOOTLOADER_SYSTEM "Partition système (par défaut)"
+    IDS_BOOTLOADER_MBRVBR "MBR et VBR (par défaut)"
+    IDS_BOOTLOADER_VBRONLY "VBR seulement"
+END
+
+/* Error Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR_TITLE "Caractère invalide"
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR "Les seuls caractères valides sont :\n\
+alphanumériques (a-z, A-Z, 0-9), et\n . \\ - _\n\
+Les caractères d'espacement ne sont pas autorisés."
+
+// ERROR_DIRECTORY_NAME
+    IDS_ERROR_DIRECTORY_NAME_TITLE "Chemin d'installation invalide"
+    IDS_ERROR_DIRECTORY_NAME "Le chemin d'installation de ReactOS doit être au format DOS de noms 8.3, \
+et contenir seulement des lettres, chiffres, tirets et points. Les caractères d'espacement ne sont pas autorisés."
 END

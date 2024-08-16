@@ -12,7 +12,9 @@
 #include <ntddk.h>
 #include <ntstrsafe.h>
 #include <section_attribs.h>
+
 #include "isapnphw.h"
+#include "isapnpres.h"
 
 #include <initguid.h>
 #include <wdmguid.h>
@@ -23,120 +25,11 @@ extern "C" {
 
 #define TAG_ISAPNP 'pasI'
 
-/** @brief Maximum size of resource data structure supported by the driver. */
-#define ISAPNP_MAX_RESOURCEDATA 0x1000
-
-/** @brief Maximum number of Start DF tags supported by the driver. */
-#define ISAPNP_MAX_ALTERNATIVES 8
-
 typedef enum
 {
     dsStopped,
     dsStarted
 } ISAPNP_DEVICE_STATE;
-
-typedef struct _ISAPNP_IO
-{
-    USHORT CurrentBase;
-    ISAPNP_IO_DESCRIPTION Description;
-    UCHAR Index;
-} ISAPNP_IO, *PISAPNP_IO;
-
-typedef struct _ISAPNP_IRQ
-{
-    UCHAR CurrentNo;
-    UCHAR CurrentType;
-    ISAPNP_IRQ_DESCRIPTION Description;
-    UCHAR Index;
-} ISAPNP_IRQ, *PISAPNP_IRQ;
-
-typedef struct _ISAPNP_DMA
-{
-    UCHAR CurrentChannel;
-    ISAPNP_DMA_DESCRIPTION Description;
-    UCHAR Index;
-} ISAPNP_DMA, *PISAPNP_DMA;
-
-typedef struct _ISAPNP_MEMRANGE
-{
-    ULONG CurrentBase;
-    ULONG CurrentLength;
-    ISAPNP_MEMRANGE_DESCRIPTION Description;
-    UCHAR Index;
-} ISAPNP_MEMRANGE, *PISAPNP_MEMRANGE;
-
-typedef struct _ISAPNP_MEMRANGE32
-{
-    ULONG CurrentBase;
-    ULONG CurrentLength;
-    ISAPNP_MEMRANGE32_DESCRIPTION Description;
-    UCHAR Index;
-} ISAPNP_MEMRANGE32, *PISAPNP_MEMRANGE32;
-
-typedef struct _ISAPNP_COMPATIBLE_ID_ENTRY
-{
-    UCHAR VendorId[3];
-    USHORT ProdId;
-    LIST_ENTRY IdLink;
-} ISAPNP_COMPATIBLE_ID_ENTRY, *PISAPNP_COMPATIBLE_ID_ENTRY;
-
-typedef struct _ISAPNP_ALTERNATIVES
-{
-    ISAPNP_IO_DESCRIPTION Io[ISAPNP_MAX_ALTERNATIVES];
-    ISAPNP_IRQ_DESCRIPTION Irq[ISAPNP_MAX_ALTERNATIVES];
-    ISAPNP_DMA_DESCRIPTION Dma[ISAPNP_MAX_ALTERNATIVES];
-    ISAPNP_MEMRANGE_DESCRIPTION MemRange[ISAPNP_MAX_ALTERNATIVES];
-    ISAPNP_MEMRANGE32_DESCRIPTION MemRange32[ISAPNP_MAX_ALTERNATIVES];
-    UCHAR Priority[ISAPNP_MAX_ALTERNATIVES];
-    UCHAR IoIndex;
-    UCHAR IrqIndex;
-    UCHAR DmaIndex;
-    UCHAR MemRangeIndex;
-    UCHAR MemRange32Index;
-
-    _Field_range_(0, ISAPNP_MAX_ALTERNATIVES)
-    UCHAR Count;
-} ISAPNP_ALTERNATIVES, *PISAPNP_ALTERNATIVES;
-
-typedef struct _ISAPNP_LOGICAL_DEVICE
-{
-    PDEVICE_OBJECT Pdo;
-
-    /**
-     * @name The card data.
-     * @{
-     */
-    UCHAR CSN;
-    UCHAR VendorId[3];
-    USHORT ProdId;
-    ULONG SerialNumber;
-    /**@}*/
-
-    /**
-     * @name The logical device data.
-     * @{
-     */
-    UCHAR LDN;
-    UCHAR LogVendorId[3];
-    USHORT LogProdId;
-    LIST_ENTRY CompatibleIdList;
-    PSTR FriendlyName;
-    PISAPNP_ALTERNATIVES Alternatives;
-
-    ISAPNP_IO Io[8];
-    ISAPNP_IRQ Irq[2];
-    ISAPNP_DMA Dma[2];
-    ISAPNP_MEMRANGE MemRange[4];
-    ISAPNP_MEMRANGE32 MemRange32[4];
-    /**@}*/
-
-    ULONG Flags;
-#define ISAPNP_PRESENT              0x00000001 /**< @brief Cleared when the device is physically removed. */
-#define ISAPNP_HAS_MULTIPLE_LOGDEVS 0x00000002 /**< @brief Indicates if the parent card has multiple logical devices. */
-#define ISAPNP_HAS_RESOURCES        0x00000004 /**< @brief Cleared when the device has no boot resources. */
-
-    LIST_ENTRY DeviceLink;
-} ISAPNP_LOGICAL_DEVICE, *PISAPNP_LOGICAL_DEVICE;
 
 typedef enum _ISAPNP_SIGNATURE
 {
@@ -176,18 +69,29 @@ typedef struct _ISAPNP_FDO_EXTENSION
 typedef struct _ISAPNP_PDO_EXTENSION
 {
     ISAPNP_COMMON_EXTENSION Common;
-    PISAPNP_LOGICAL_DEVICE IsaPnpDevice;
     PISAPNP_FDO_EXTENSION FdoExt;
-    PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
-
-    PCM_RESOURCE_LIST ResourceList;
-    ULONG ResourceListSize;
 
     ULONG Flags;
 #define ISAPNP_ENUMERATED               0x00000001 /**< @brief Whether the device has been reported to the PnP manager. */
 #define ISAPNP_SCANNED_BY_READ_PORT     0x00000002 /**< @brief The bus has been scanned by Read Port PDO. */
 #define ISAPNP_READ_PORT_ALLOW_FDO_SCAN 0x00000004 /**< @brief Allows the active FDO to scan the bus. */
 #define ISAPNP_READ_PORT_NEED_REBALANCE 0x00000008 /**< @brief The I/O resource requirements have changed. */
+
+    union
+    {
+        /* Data belonging to logical devices */
+        struct
+        {
+            PISAPNP_LOGICAL_DEVICE IsaPnpDevice;
+
+            PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
+
+            PCM_RESOURCE_LIST ResourceList;
+            ULONG ResourceListSize;
+        };
+
+        ULONG SelectedPort;
+    };
 
     _Write_guarded_by_(_Global_interlock_)
     volatile LONG SpecialFiles;
@@ -207,6 +111,8 @@ FORCEINLINE
 VOID
 IsaPnpAcquireBusDataLock(VOID)
 {
+    ASSERT(PsGetCurrentProcess() == PsInitialSystemProcess);
+
     KeWaitForSingleObject(&BusSyncEvent, Executive, KernelMode, FALSE, NULL);
 }
 
@@ -225,6 +131,8 @@ VOID
 IsaPnpAcquireDeviceDataLock(
     _In_ PISAPNP_FDO_EXTENSION FdoExt)
 {
+    ASSERT(PsGetCurrentProcess() == PsInitialSystemProcess);
+
     KeWaitForSingleObject(&FdoExt->DeviceSyncEvent, Executive, KernelMode, FALSE, NULL);
 }
 
@@ -237,46 +145,6 @@ IsaPnpReleaseDeviceDataLock(
     KeSetEvent(&FdoExt->DeviceSyncEvent, IO_NO_INCREMENT, FALSE);
 }
 
-FORCEINLINE
-BOOLEAN
-HasIoAlternatives(
-    _In_ PISAPNP_ALTERNATIVES Alternatives)
-{
-    return (Alternatives->Io[0].Length != 0);
-}
-
-FORCEINLINE
-BOOLEAN
-HasIrqAlternatives(
-    _In_ PISAPNP_ALTERNATIVES Alternatives)
-{
-    return (Alternatives->Irq[0].Mask != 0);
-}
-
-FORCEINLINE
-BOOLEAN
-HasDmaAlternatives(
-    _In_ PISAPNP_ALTERNATIVES Alternatives)
-{
-    return (Alternatives->Dma[0].Mask != 0);
-}
-
-FORCEINLINE
-BOOLEAN
-HasMemoryAlternatives(
-    _In_ PISAPNP_ALTERNATIVES Alternatives)
-{
-    return (Alternatives->MemRange[0].Length != 0);
-}
-
-FORCEINLINE
-BOOLEAN
-HasMemory32Alternatives(
-    _In_ PISAPNP_ALTERNATIVES Alternatives)
-{
-    return (Alternatives->MemRange32[0].Length != 0);
-}
-
 /* isapnp.c */
 
 CODE_SEG("PAGE")
@@ -287,22 +155,19 @@ FindIoDescriptor(
     _In_ ULONG RangeStart,
     _In_ ULONG RangeEnd,
     _Out_opt_ PUCHAR Information,
-    _Out_opt_ PULONG Length,
-    _Out_opt_ PUCHAR WriteOrder);
+    _Out_opt_ PULONG Length);
 
 CODE_SEG("PAGE")
 BOOLEAN
 FindIrqDescriptor(
     _In_ PISAPNP_LOGICAL_DEVICE LogDevice,
-    _In_ ULONG Vector,
-    _Out_opt_ PUCHAR WriteOrder);
+    _In_ ULONG Vector);
 
 CODE_SEG("PAGE")
 BOOLEAN
 FindDmaDescriptor(
     _In_ PISAPNP_LOGICAL_DEVICE LogDevice,
-    _In_ ULONG Channel,
-    _Out_opt_ PUCHAR WriteOrder);
+    _In_ ULONG Channel);
 
 CODE_SEG("PAGE")
 BOOLEAN
@@ -310,15 +175,16 @@ FindMemoryDescriptor(
     _In_ PISAPNP_LOGICAL_DEVICE LogDevice,
     _In_ ULONG RangeStart,
     _In_ ULONG RangeEnd,
-    _Out_opt_ PBOOLEAN Memory32,
-    _Out_opt_ PUCHAR Information,
-    _Out_opt_ PUCHAR WriteOrder);
+    _Out_opt_ PUCHAR Information);
 
 CODE_SEG("PAGE")
-NTSTATUS
+PIO_RESOURCE_REQUIREMENTS_LIST
 IsaPnpCreateReadPortDORequirements(
-    _In_ PISAPNP_PDO_EXTENSION PdoExt,
     _In_opt_ ULONG SelectedReadPort);
+
+CODE_SEG("PAGE")
+PCM_RESOURCE_LIST
+IsaPnpCreateReadPortDOResources(VOID);
 
 CODE_SEG("PAGE")
 VOID
@@ -382,23 +248,23 @@ IsaHwConfigureDevice(
     _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice,
     _In_ PCM_RESOURCE_LIST Resources);
 
-_IRQL_requires_max_(DISPATCH_LEVEL)
+CODE_SEG("PAGE")
 VOID
 IsaHwWakeDevice(
     _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice);
 
-_IRQL_requires_max_(DISPATCH_LEVEL)
+CODE_SEG("PAGE")
 VOID
 IsaHwDeactivateDevice(
     _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice);
 
-_IRQL_requires_max_(DISPATCH_LEVEL)
+CODE_SEG("PAGE")
 VOID
 IsaHwActivateDevice(
     _In_ PISAPNP_FDO_EXTENSION FdoExt,
     _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice);
 
-_IRQL_requires_max_(DISPATCH_LEVEL)
+CODE_SEG("PAGE")
 VOID
 IsaHwWaitForKey(VOID);
 

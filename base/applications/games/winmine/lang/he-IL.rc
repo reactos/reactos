@@ -14,6 +14,7 @@ BEGIN
         MENUITEM "&חדש\tF2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "סימון בשאלה", IDM_MARKQ // to be invented
+        MENUITEM "Sound", IDM_SOUND
         MENUITEM SEPARATOR
         MENUITEM "&מתחיל", IDM_BEGINNER
         MENUITEM "מ&תקדם", IDM_ADVANCED

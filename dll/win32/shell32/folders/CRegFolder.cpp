@@ -30,7 +30,7 @@ HRESULT CALLBACK RegFolderContextMenuCallback(IShellFolder *psf,
                                               LPARAM       lParam)
 {
     if (uMsg != DFM_INVOKECOMMAND || wParam != DFM_CMD_PROPERTIES)
-        return S_OK;
+        return SHELL32_DefaultContextMenuCallBack(psf, pdtobj, uMsg);
 
     PIDLIST_ABSOLUTE pidlFolder;
     PUITEMID_CHILD *apidl;
@@ -41,24 +41,14 @@ HRESULT CALLBACK RegFolderContextMenuCallback(IShellFolder *psf,
 
     if (_ILIsMyComputer(apidl[0]))
     {
-        if (32 >= (UINT_PTR)ShellExecuteW(hwnd,
-                                          L"open",
-                                          L"rundll32.exe",
-                                          L"shell32.dll,Control_RunDLL sysdm.cpl",
-                                          NULL,
-                                          SW_SHOWNORMAL))
+        if (!SHELL_ExecuteControlPanelCPL(hwnd, L"sysdm.cpl"))
         {
             hr = E_FAIL;
         }
     }
     else if (_ILIsDesktop(apidl[0]))
     {
-        if (32 >= (UINT_PTR)ShellExecuteW(hwnd,
-                                          L"open",
-                                          L"rundll32.exe",
-                                          L"shell32.dll,Control_RunDLL desk.cpl",
-                                          NULL,
-                                          SW_SHOWNORMAL))
+        if (!SHELL_ExecuteControlPanelCPL(hwnd, L"desk.cpl"))
         {
             hr = E_FAIL;
         }
@@ -107,19 +97,22 @@ HRESULT CGuidItemContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder,
     GUID *pGuid = _ILGetGUIDPointer(apidl[0]);
     if (pGuid)
     {
-        LPOLESTR pwszCLSID;
         WCHAR key[60];
-
         wcscpy(key, L"CLSID\\");
-        HRESULT hr = StringFromCLSID(*pGuid, &pwszCLSID);
-        if (hr == S_OK)
-        {
-            wcscpy(&key[6], pwszCLSID);
-            AddClassKeyToArray(key, hKeys, &cKeys);
-            CoTaskMemFree(pwszCLSID);
-        }
+        StringFromGUID2(*pGuid, &key[6], 39);
+        AddClassKeyToArray(key, hKeys, &cKeys);
     }
-    AddClassKeyToArray(L"Folder", hKeys, &cKeys);
+
+    // FIXME: CRegFolder should be aggregated by its outer folder and should
+    // provide the attributes for all required non-registry folders.
+    // It currently does not so we have to ask the outer folder ourself so
+    // that we get the correct attributes for My Computer etc.
+    CComPtr<IShellFolder> pOuterSF;
+    SHBindToObject(NULL, pidlFolder, IID_PPV_ARG(IShellFolder, &pOuterSF));
+
+    SFGAOF att = (psf && cidl) ? SHGetAttributes(pOuterSF ? pOuterSF.p : psf, apidl[0], SFGAO_FOLDER) : 0;
+    if (att & SFGAO_FOLDER)
+        AddClassKeyToArray(L"Folder", hKeys, &cKeys);
 
     return CDefFolderMenu_Create2(pidlFolder, hwnd, cidl, apidl, psf, RegFolderContextMenuCallback, cKeys, hKeys, ppcm);
 }
@@ -400,10 +393,7 @@ HRESULT CRegFolder::GetGuidItemAttributes (LPCITEMIDLIST pidl, LPDWORD pdwAttrib
     }
 
     /* In any case, links can be created */
-    if (*pdwAttributes == NULL)
-    {
-        *pdwAttributes |= (dwAttributes & SFGAO_CANLINK);
-    }
+    *pdwAttributes |= (dwAttributes & SFGAO_CANLINK);
     return S_OK;
 }
 
@@ -624,20 +614,21 @@ HRESULT WINAPI CRegFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags,
 
     if (!pidl || !pidl->mkid.cb)
     {
-        if ((GET_SHGDN_RELATION(dwFlags) == SHGDN_NORMAL) && (GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING))
+        if (IS_SHGDN_FOR_PARSING(dwFlags))
         {
-            LPWSTR pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH + 1) * sizeof(WCHAR));
+            if (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER)
+            {
+                TRACE("GDNO returning INFOLDER instead of %#x\n", GET_SHGDN_RELATION(dwFlags));
+            }
+            LPWSTR pszPath = (LPWSTR)CoTaskMemAlloc((2 + 38 + 1) * sizeof(WCHAR));
             if (!pszPath)
                 return E_OUTOFMEMORY;
-
             /* parsing name like ::{...} */
             pszPath[0] = ':';
             pszPath[1] = ':';
             SHELL32_GUIDToStringW(m_guid, &pszPath[2]);
-
             strRet->uType = STRRET_WSTR;
             strRet->pOleStr = pszPath;
-
             return S_OK;
         }
         else
@@ -649,7 +640,6 @@ HRESULT WINAPI CRegFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags,
                 return E_FAIL;
 
             return SHSetStrRet(strRet, wstrName);
-
         }
     }
 
@@ -782,8 +772,7 @@ HRESULT WINAPI CRegFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl,    /*
 
     if (res == ERROR_SUCCESS)
     {
-        *pPidlOut = ILClone(pidl);
-        return S_OK;
+        return pPidlOut ? SHILClone(pidl, pPidlOut) : S_OK;
     }
 
     return E_FAIL;

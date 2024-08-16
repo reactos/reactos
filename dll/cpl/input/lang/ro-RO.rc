@@ -10,115 +10,115 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_PROPPAGESETTINGS DIALOGEX 0, 0, 254, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Configurare"
+CAPTION "Setări"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Li&mba de intrare implicită", -1, 5, 5, 246, 55
-    LTEXT "Selectați una din limbile de intrare pentru a o folosi atunci când vă pornește calculatorul.", -1, 15, 15, 230, 23
+    GROUPBOX "&Limba implicită a tastaturii", -1, 5, 5, 246, 55
+    LTEXT "Selectaţi una dintre limbile instalate pentru tastatură pentru a se utiliza la pornirea computerului.", -1, 15, 15, 230, 23
     COMBOBOX IDC_DEFAULT_LANGUAGE, 15, 40, 230, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX "&Servicii instalate", -1, 5, 65, 246, 125
-    LTEXT "Gestionați serviciile aferente limbilor de intrare utilizate în sistem. Utilizați butoanele pentru a aduce modificări listei.", -1, 15, 78, 230, 25
+    GROUPBOX "Ser&vicii instalate", -1, 5, 65, 246, 125
+    LTEXT "Selectaţi serviciile pe care le doriţi pentru fiecare dintre limbile pentru tastatură afişate în listă. Utilizaţi butoanele Adăugare şi Eliminare pentru a modifica această listă.", -1, 15, 78, 230, 25
     CONTROL "", IDC_KEYLAYOUT_LIST, "SysTreeView32", TVS_SHOWSELALWAYS | TVS_DISABLEDRAGDROP | WS_BORDER | WS_VSCROLL | WS_TABSTOP, 15, 105, 155, 80
     PUSHBUTTON "A&dăugare…", IDC_ADD_BUTTON, 175, 105, 70, 14
-    PUSHBUTTON "&Elimină", IDC_REMOVE_BUTTON, 175, 125, 70, 14
-    PUSHBUTTON "&Proprietăți…", IDC_PROP_BUTTON, 175, 145, 70, 14
-    GROUPBOX "Preferințe", -1, 5, 195, 245, 30
-    PUSHBUTTON "&Bara de limbă...", IDC_LANGUAGE_BAR, 15, 205, 110, 14
-    PUSHBUTTON "&Combinații de taste…", IDC_KEY_SET_BTN, 133, 205, 110, 14
+    PUSHBUTTON "&Eliminare", IDC_REMOVE_BUTTON, 175, 125, 70, 14
+    PUSHBUTTON "Propr&ietăţi…", IDC_PROP_BUTTON, 175, 145, 70, 14
+    GROUPBOX "Preferinţe", -1, 5, 195, 245, 30
+    PUSHBUTTON "&Bara lingvistică…", IDC_LANGUAGE_BAR, 15, 205, 110, 14
+    PUSHBUTTON "Setări pentru &taste…", IDC_KEY_SET_BTN, 133, 205, 110, 14
 END
 
 IDD_PROPPAGEADVANCEDSETTINGS DIALOGEX 0, 0, 254, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Configurație avansată"
+CAPTION "Setări Complexe"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Configurație de sistem", -1, 7, 7, 240, 70
-    AUTOCHECKBOX "&Dezactivează serviciile avansate de text", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
-    LTEXT "Selectați această bifă pentru a dezactiva serviciile avansate de text în toate programele.\nAceasta nu este recomandată pentru utilizatorii de limbi est-asiatice, deoarece va duce la închiderea barei de limbi.", -1, 14, 40, 230, 35
+    GROUPBOX "Setări de sistem", -1, 7, 7, 240, 70
+    AUTOCHECKBOX "De&zactivare servicii de text complexe", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
+    LTEXT "Selectați această bifă pentru a dezactiva serviciile complexe de text în toate programele.\nAceasta nu este recomandată pentru utilizatorii de limbi est-asiatice, deoarece va duce la închiderea barei lingvistice.", -1, 14, 40, 230, 35
 END
 
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Preferințe pentru combinații de taste"
+CAPTION "Setări Complexe pentru taste"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Pentru a anula Caps Lock", -1, 7, 7, 258, 26
-    AUTORADIOBUTTON "Voi apăsa din nou CAPS &LOCK", IDC_PRESS_CL_KEY_RB, 14, 17, 125, 11, WS_GROUP
-    AUTORADIOBUTTON "Voi apăsa tasta S&HIFT", IDC_PRESS_SHIFT_KEY_RB, 144, 17, 120, 11, NOT WS_TABSTOP
-    GROUPBOX "Combinații de taste", -1, 7, 37, 258, 95
+    GROUPBOX "Pentru a dezactiva Caps Lock", -1, 7, 7, 258, 26
+    AUTORADIOBUTTON "Se apasă tasta CAPS &LOCK", IDC_PRESS_CL_KEY_RB, 14, 17, 125, 11, WS_GROUP
+    AUTORADIOBUTTON "Se apasă tasta SHI&FT", IDC_PRESS_SHIFT_KEY_RB, 144, 17, 120, 11, NOT WS_TABSTOP
+    GROUPBOX "Taste de acces pentru limbile tastaturii", -1, 7, 37, 258, 95
     LTEXT "Acțiune", -1, 14, 47, 60, 9
-    RTEXT "Combinație de taste", -1, 177, 47, 79, 9
+    RTEXT "&Secvenţă de taste", -1, 177, 47, 79, 9
     CONTROL "", IDC_KEY_LISTVIEW, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_AUTOARRANGE | LVS_SINGLESEL, 14, 57, 244, 52, WS_EX_CLIENTEDGE
-    PUSHBUTTON "&Modificare combinație…", IDC_CHANGE_KEY_SEQ_BTN, 152, 113, 106, 14, WS_GROUP
-    DEFPUSHBUTTON "Con&firmă", IDOK, 66, 140, 70, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 146, 140, 70, 14
+    PUSHBUTTON "&Modificare secvenţă de taste…", IDC_CHANGE_KEY_SEQ_BTN, 152, 113, 106, 14, WS_GROUP
+    DEFPUSHBUTTON "OK", IDOK, 66, 140, 70, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 146, 140, 70, 14
 END
 
 IDD_ADD DIALOGEX 20, 20, 227, 90
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Adăguare limbă de intrare"
+CAPTION "Adăugare limbă tastatură"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Limbă:", -1, 7, 7, 61, 10
+    LTEXT "&Limbă tastatură:", -1, 7, 7, 61, 10
     COMBOBOX IDC_INPUT_LANG_COMBO, 7, 17, 212, 150, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&Aranjament de tastatură/IME:", -1, 7, 36, 110, 10
+    LTEXT "&Aspect tastatură/IME:", -1, 7, 36, 110, 10
     COMBOBOX IDC_KEYBOARD_LO_COMBO, 7, 47, 212, 150, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON "Con&firmă", IDOK, 116, 68, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 169, 68, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 116, 68, 50, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 169, 68, 50, 14
 END
 
 IDD_CHANGE_KEY_SEQ DIALOGEX 5, 100, 240, 125
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Modificare combinație de taste"
+CAPTION "Modificare secvenţă de taste"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "", -1, 9, 5, 165, 110
-    AUTOCHECKBOX "Permite combinație de co&mutare limbă", IDC_SWITCH_INPUT_LANG_CB, 16, 15, 155, 12
-    LTEXT "«Shift»", -1, 93, 37, 27, 12
+    AUTOCHECKBOX "Co&mutare limbă tastatură", IDC_SWITCH_INPUT_LANG_CB, 16, 15, 155, 12
+    LTEXT "SHIFT", -1, 93, 37, 27, 12
     CTEXT "+", -1, 82, 37, 8, 9
-    AUTORADIOBUTTON "«&Ctrl»", IDC_CTRL_LANG, 29, 31, 35, 11
-    AUTORADIOBUTTON "«&Alt» (stâng)", IDC_LEFT_ALT_LANG, 29, 45, 66, 12
-    AUTOCHECKBOX "Permite combinație de c&omutare șabloane", IDC_SWITCH_KBLAYOUTS_CB, 16, 65, 155, 12
-    LTEXT "«Shift»", -1, 94, 87, 27, 12
+    AUTORADIOBUTTON "&CTRL", IDC_CTRL_LANG, 29, 31, 35, 11
+    AUTORADIOBUTTON "&ALT stânga", IDC_LEFT_ALT_LANG, 29, 45, 66, 12
+    AUTOCHECKBOX "C&omutare aspecte tastatură", IDC_SWITCH_KBLAYOUTS_CB, 16, 65, 155, 12
+    LTEXT "SHIFT", -1, 94, 87, 27, 12
     CTEXT "+", -1, 83, 87, 8, 9
-    AUTORADIOBUTTON "«Ct&rl»", IDC_CTRL_LAYOUT, 30, 81, 35, 11
-    AUTORADIOBUTTON "«A&lt» (stâng)", IDC_LEFT_ALT_LAYOUT, 30, 95, 66, 12
-    DEFPUSHBUTTON "Con&firmă", IDOK, 182, 9, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 182, 27, 50, 14
+    AUTORADIOBUTTON "C&TRL", IDC_CTRL_LAYOUT, 30, 81, 35, 11
+    AUTORADIOBUTTON "A&LT stânga", IDC_LEFT_ALT_LAYOUT, 30, 95, 66, 12
+    DEFPUSHBUTTON "OK", IDOK, 182, 9, 50, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 182, 27, 50, 14
 END
 
 IDD_INPUT_LANG_PROP DIALOGEX 20, 20, 227, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Proprietăți limbă de introducere"
+CAPTION "Proprietăţi limbă tastatură"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Limbă:", -1, 7, 7, 37, 8
+    LTEXT "Limbă tastatură:", -1, 7, 7, 37, 8
     LTEXT "", IDC_INPUT_LANG_STR, 30, 7, 129, 8
-    LTEXT "&Aranjament de tastatură/IME:", -1, 7, 21, 110, 10
+    LTEXT "&Aspect tastatură/IME:", -1, 7, 21, 110, 10
     COMBOBOX IDC_KB_LAYOUT_IME_COMBO, 7, 32, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON "Con&firmă", IDOK, 116, 53, 52, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 169, 53, 52, 14
+    DEFPUSHBUTTON "OK", IDOK, 116, 53, 52, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 169, 53, 52, 14
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLSYSTEMNAME "Limbi de introducere și servicii de text"
-    IDS_CPLSYSTEMDESCRIPTION "Particularizarea configurației limbilor de introducere a textului."
+    IDS_CPLSYSTEMNAME "Servicii de text şi limbi pentru tastatură"
+    IDS_CPLSYSTEMDESCRIPTION "Particularizare setări pentru intrări de text şi limbi de tastatură"
     IDS_KEYBOARD "Tastatură"
-    IDS_NONE "(nespecificat)"
+    IDS_NONE "(fără)"
     IDS_UNKNOWN "(necunoscut)"
-    IDS_RESTART "Doriți să reporniți calculatorul acum?"
+    IDS_RESTART "Reporniţi acum computerul?"
     IDS_WHATS_THIS "Aceasta ce este?"
     IDS_LANGUAGE "Limbă"
-    IDS_LAYOUT "Aranjament de tastatură"
-    IDS_REM_QUESTION "Doriți eliminarea aranjamentului de tastatură selectat?"
+    IDS_LAYOUT "Aspect tastatură"
+    IDS_REM_QUESTION "Doriți eliminarea aspectului tastaturii selectate?"
     IDS_CONFIRMATION "Confirmare"
-    IDS_LAYOUT_EXISTS "Aranjamentul de tastatură există deja."
-    IDS_LAYOUT_EXISTS2 "Un asemenea aranjament de tastatură deja există și nu poate fi readăugat."
-    IDS_CTRL_SHIFT "«Ctrl» + «Shift»"
-    IDS_LEFT_ALT_SHIFT "«Alt» (stâng) + «Shift»"
-    IDS_SWITCH_BET_INLANG "Comutarea între limbile de intrare"
-    IDS_REBOOT_NOW "You have to restart the system for the settings to take effect. Reboot now?"
+    IDS_LAYOUT_EXISTS "Aspectului tastaturii există deja."
+    IDS_LAYOUT_EXISTS2 "Un asemenea aspect al tastaturii deja există și nu poate fi readăugat."
+    IDS_CTRL_SHIFT "Ctrl+Shift"
+    IDS_LEFT_ALT_SHIFT "Alt stânga+Shift"
+    IDS_SWITCH_BET_INLANG "Comutare între limbile de tastatură"
+    IDS_REBOOT_NOW "Trebuie să reporniţi computerul înainte ca noile setări să devină efective. Reporniţi acum computerul?"
 END
 
 STRINGTABLE
@@ -134,7 +134,7 @@ BEGIN
     IDS_AZERI_LATIN_LAYOUT "Azeră (grafie latină)"
     IDS_BELARUSIAN_LAYOUT "Belarusă"
     IDS_BELGIAN_COMMA_LAYOUT "Belgiană (virgulă)"
-    IDS_BELGIAN_FRENCH_LAYOUT "Belgiană Franceză"
+    IDS_BELGIAN_FRENCH_LAYOUT "Belgiană franceză"
     IDS_BELGIAN_LAYOUT "Belgiană (punct)"
     IDS_BENGALI_LAYOUT "Bengali"
     IDS_BULGARIAN_LAYOUT "Bulgară"
@@ -257,7 +257,7 @@ BEGIN
     IDS_UNITED_STATES_DVORAK_LAYOUT "Statele Unite-Dvorak"
     IDS_UNITED_STATES_DVORAK_FOR_LEFT_HAND_LAYOUT "Statele Unite-Dvorak pentru mâna stângă"
     IDS_UNITED_STATES_DVORAK_FOR_RIGHT_HAND_LAYOUT "Statele Unite-Dvorak pentru mâna dreaptă"
-    IDS_UNITED_STATES_INTERNATIONAL_LAYOUT "Statele Unite-Internațională"
+    IDS_UNITED_STATES_INTERNATIONAL_LAYOUT "Statele Unite-Internațional"
     IDS_URDU_LAYOUT "Urdu"
     IDS_US_LAYOUT "SUA"
     IDS_USENG_TABLE_IBM_ARABIC238L_LAYOUT "Tabelă Engleză SUA pentru IBM Arabă 238_L"

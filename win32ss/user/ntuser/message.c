@@ -13,7 +13,29 @@ DBG_DEFAULT_CHANNEL(UserMsg);
 
 #define PM_BADMSGFLAGS ~((QS_RAWINPUT << 16)|PM_QS_SENDMESSAGE|PM_QS_PAINT|PM_QS_POSTMESSAGE|PM_QS_INPUT|PM_NOYIELD|PM_REMOVE)
 
+/* Strings that are OK to pass between user and kernel mode.
+ * There may be other strings needed that can easily be added here. */
+WCHAR StrUserKernel[3][20] = {{L"intl"}, {L"Environment"}, {L"Policy"}};
+
 /* FUNCTIONS *****************************************************************/
+
+/* PosInArray checks for strings that can pass between user and kernel mode.
+ * See: https://learn.microsoft.com/en-us/windows/win32/winmsg/wm-settingchange
+ * It mentions 'Environment', 'intl', and 'Policy'.
+ * These strings are enumerated in the StrUserKernel definition.
+ * Returns: A positive integer indicating its position in the array if the
+ * string is found, or returns a minus one (-1) if the string is not found. */
+static INT PosInArray(_In_ PCWSTR String)
+{
+    INT i;
+
+    for (i = 0; i < ARRAYSIZE(StrUserKernel); ++i)
+    {
+        if (wcsncmp(String, StrUserKernel[i], _countof(StrUserKernel[0])) == 0)
+            return i;
+    }
+    return -1;
+}
 
 NTSTATUS FASTCALL
 IntInitMessageImpl(VOID)
@@ -431,7 +453,7 @@ CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEnt
     NTSTATUS Status;
 
     PVOID KernelMem;
-    UINT Size;
+    UINT Size, i;
 
     *KernelModeMsg = *UserModeMsg;
 
@@ -460,8 +482,42 @@ CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEnt
         if (0 != (MsgMemoryEntry->Flags & MMS_FLAG_READ))
         {
             TRACE("Copy Message %u from usermode buffer\n", KernelModeMsg->message);
-            Status = MmCopyFromCaller(KernelMem, (PVOID) UserModeMsg->lParam, Size);
-            if (! NT_SUCCESS(Status))
+            /* Don't do extra testing for 1 word messages. For examples see
+             * https://wiki.winehq.org/List_Of_Windows_Messages. */
+            if (Size > 1)
+            {
+                WCHAR lParamMsg[_countof(StrUserKernel[0]) + 1] = { 0 };
+                _SEH2_TRY
+                {
+                    if (UserModeMsg->lParam)
+                        RtlCopyMemory(lParamMsg, (WCHAR*)UserModeMsg->lParam, sizeof(lParamMsg));
+                        /* Make sure that the last WCHAR is a UNICODE_NULL */
+                        for (i = 0; i < ARRAYSIZE(lParamMsg); ++i)
+                        {
+                            if (lParamMsg[i] == 0)
+                                break;
+                        }
+                        /* If we did not find a UNICODE_NULL, then set last WCHAR to one */
+                        if (i == ARRAYSIZE(lParamMsg))
+                            lParamMsg[_countof(StrUserKernel[0])] = UNICODE_NULL;
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    _SEH2_YIELD(return STATUS_ACCESS_VIOLATION);
+                }
+                _SEH2_END;
+
+                if (UserModeMsg->lParam && !UserModeMsg->wParam &&
+                    PosInArray(lParamMsg) >= 0)
+                {
+                    TRACE("Copy String '%S' from usermode buffer\n", lParamMsg);
+                    wcscpy(KernelMem, lParamMsg);
+                    return STATUS_SUCCESS;
+                }
+            }
+
+            Status = MmCopyFromCaller(KernelMem, (PVOID)UserModeMsg->lParam, Size);
+            if (!NT_SUCCESS(Status))
             {
                 ERR("Failed to copy message to kernel: invalid usermode lParam buffer\n");
                 ExFreePoolWithTag(KernelMem, TAG_MSG);
@@ -2720,6 +2776,12 @@ NtUserMessageCall( HWND hWnd,
                            UserSendNotifyMessage(List[i], Msg, wParam, lParam);
                         }
                         ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
+                     }
+                     if (lParam && !wParam && wcsicmp((WCHAR*)lParam, L"Environment") == 0)
+                     {
+                         /* Handle Broadcast of WM_SETTINGCHAGE for Environment */
+                         co_IntDoSendMessage(HWND_BROADCAST, WM_SETTINGCHANGE,
+                                             0, (LPARAM)L"Environment", 0);
                      }
                      Ret = TRUE;
                   }

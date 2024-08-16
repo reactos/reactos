@@ -66,18 +66,6 @@ END
 
 /* Menus */
 
-IDC_REGEDIT MENU
-BEGIN
-    POPUP "&Soubor"
-    BEGIN
-        MENUITEM "U&končit", ID_REGISTRY_EXIT
-    END
-    POPUP "&Nápověda"
-    BEGIN
-        MENUITEM "&O editoru registru", ID_HELP_ABOUT
-    END
-END
-
 IDR_REGEDIT_MENU MENU
 BEGIN
     POPUP "&Registry"
@@ -451,7 +439,7 @@ BEGIN
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Připojí se ke vzdálenému registru jiného počítače"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Odpojí se od vzdálenému registru jiného počítače"
     ID_REGISTRY_PRINT "Vytiskne všechny části registru"
-/*    ID_HELP_HELPTOPICS "Otevře témata nápovědy pro editor registru" */
+//    ID_HELP_HELPTOPICS "Otevře nápovědu pro editor registru"
     ID_HELP_ABOUT "Zobrazí informace o aplikaci, verzi a copyright"
 END
 
@@ -656,20 +644,20 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_B
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Rozsah exportu", IDC_STATIC, 2, 0, 366, 48
-    CONTROL "&Vše", IDC_EXPORT_ALL, "Button", BS_AUTORADIOBUTTON, 10, 10, 29, 11
-    CONTROL "V&ybraná větev", IDC_EXPORT_BRANCH, "Button", BS_AUTORADIOBUTTON, 10, 22, 100, 11
+    AUTORADIOBUTTON "&Vše", IDC_EXPORT_ALL, 10, 10, 99, 11, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "V&ybraná větev", IDC_EXPORT_BRANCH, 10, 22, 99, 11
     EDITTEXT IDC_EXPORT_BRANCH_TEXT, 30, 34, 335, 12
 END
 
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Načíst registr"
-FONT 8, "Ms Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Klíč:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
     DEFPUSHBUTTON "OK", IDOK, 140, 17, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 89, 17, 50, 14
+    PUSHBUTTON "Storno", IDCANCEL, 89, 17, 50, 14
 END
 
 IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46
@@ -726,12 +714,3 @@ BEGIN
     DEFPUSHBUTTON "Storno", IDCANCEL, 93, 29, 45, 14
     LTEXT "Probíhá prohledávání registru...", IDC_STATIC, 33, 12, 83, 8
 END
-
-/* String Table */
-/*
- *STRINGTABLE
- *BEGIN
- *    ID_HELP_HELPTOPICS "Otevře nápovědu pro editor registru."
- *    ID_HELP_ABOUT "Zobrazí informace o aplikaci, verzi a copyright."
- *END
- */

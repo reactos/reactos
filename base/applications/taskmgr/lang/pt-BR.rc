@@ -433,5 +433,5 @@ BEGIN
     IDS_STATUS_CPUUSAGE "CPU: %3d%%"
     IDS_STATUS_PROCESSES "Processo: %d"
     IDS_NOT_RESPONDING "Não respondendo"
-    IDS_RUNNING "Execuando"
+    IDS_RUNNING "Executando"
 END
