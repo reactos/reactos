@@ -122,7 +122,7 @@ colors_init(void)
 static void
 run_test_window(const char *class_name, const char *window_title, UINT class_style)
 {
-    WNDCLASS class;
+    WNDCLASS class = { 0 };
     HWND window;
     MSG  msg;
     ATOM class_atom;
