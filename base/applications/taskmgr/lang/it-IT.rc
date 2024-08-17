@@ -344,7 +344,7 @@ BEGIN
     ID_WINDOWS_BRINGTOFRONT "Porta la finestra in vista ma senza attivarla"
     ID_HELP_TOPICS "Visualizza gli aiuti di Task Manager"
     ID_HELP_ABOUT "Visualizza le informazioni sul programma, versione e copyright"
-    ID_FILE_EXIT "Esce da Gestione attività"
+    ID_FILE_EXIT "Esce da Task Manager"
     ID_OPTIONS_SHOW16BITTASKS "Mostra i processi a 16-bit con ntvdm.exe associato"
     ID_VIEW_SELECTCOLUMNS "Seleziona quali colonne saranno visibili nella pagina dei processi"
     ID_VIEW_SHOWKERNELTIMES "Mostra il tempo di kernel nel grafico delle prestazioni"
