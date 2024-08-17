@@ -48,19 +48,19 @@ BEGIN
     END
     POPUP "Sh&ut Down"
     BEGIN
-        MENUITEM "Stand &By", ID_SHUTDOWN_STANDBY
+        MENUITEM "&Sospendi", ID_SHUTDOWN_STANDBY
         MENUITEM "&Iberna", ID_SHUTDOWN_HIBERNATE
-        MENUITEM "T&urn Off", ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Arresta", ID_SHUTDOWN_POWEROFF
         MENUITEM "&Riavvia", ID_SHUTDOWN_REBOOT
-        MENUITEM "&Log Off %s", ID_SHUTDOWN_LOGOFF
-        MENUITEM "Cambia utente\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "&Disconetti %s", ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Cambia utente\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
         MENUITEM "Loc&k Computer\tWinKey+L", ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Disconnetti", ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "Chi&udi sessione", ID_SHUTDOWN_DISCONNECT, GRAYED
         MENUITEM "&Eject Computer", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "&Aiuto"
     BEGIN
-        MENUITEM "Task Manager &Help Topics", ID_HELP_TOPICS
+        MENUITEM "G&uida in linea di Task Manager", ID_HELP_TOPICS
         MENUITEM SEPARATOR
         MENUITEM "&Informazioni su Task Manager", ID_HELP_ABOUT
     END
