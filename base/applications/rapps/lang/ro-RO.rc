@@ -69,7 +69,7 @@ BEGIN
     GROUPBOX "General", -1, 4, 2, 240, 61
     AUTOCHECKBOX "&Salvare a poziției ferestrei", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
     AUTOCHECKBOX "&Actualizare la pornire a listei programelor disponibile", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "Menținere j&urnal de instalare/dezinstalare a programelor", IDC_LOG_ENABLED, 15, 46, 219, 12
+    AUTOCHECKBOX "Menținere a j&urnalului de instalare/dezinstalare a programelor", IDC_LOG_ENABLED, 15, 46, 219, 12
     GROUPBOX "Descărcări", -1, 4, 65, 240, 51
     LTEXT "Folderul pentru descărcări:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
