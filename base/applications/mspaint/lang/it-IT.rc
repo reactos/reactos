@@ -115,7 +115,7 @@ BEGIN
         MENUITEM "Cance&lla area selezionata\tCanc", IDM_EDITDELETESELECTION
         MENUITEM "Sele&ziona tutto\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Copia &su...", IDM_EDITCOPYTO
+        MENUITEM "C&opia in...", IDM_EDITCOPYTO
         MENUITEM "Incolla &da...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
         MENUITEM "Ca&povolgi/ruota...\tCtrl+R", IDM_IMAGEROTATEMIRROR
