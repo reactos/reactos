@@ -73,7 +73,7 @@ BEGIN
     GROUPBOX "Descărcări", -1, 4, 65, 240, 51
     LTEXT "Folderul pentru descărcări:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
-    PUSHBUTTON "&Răsfoire…", IDC_CHOOSE, 187, 85, 50, 14
+    PUSHBUTTON "&Selectare", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "Se șterge de instalare &după instalarea programului", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
     GROUPBOX "Sursa programului", -1, 4, 118, 240, 46
     CONTROL "Se folosesc valorile implicite", IDC_SOURCE_DEFAULT, 15, 132, 121, 10, WS_GROUP | WS_TABSTOP
