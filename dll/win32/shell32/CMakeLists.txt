@@ -65,6 +65,7 @@ list(APPEND SOURCE
     shlfolder.cpp
     CFileSysBindData.cpp
     CDefView.cpp
+    CDefViewUtil.cpp
     CDefViewDual.cpp
     CDefViewBckgrndMenu.cpp
     stubs.cpp
