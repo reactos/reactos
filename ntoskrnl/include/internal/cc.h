@@ -41,6 +41,7 @@
 //
 extern ULONG CcRosTraceLevel;
 extern LIST_ENTRY DirtyVacbListHead;
+extern LIST_ENTRY CcDirtySharedCacheMapList;
 extern ULONG CcDirtyPageThreshold;
 extern ULONG CcTotalDirtyPages;
 extern LIST_ENTRY CcDeferredWrites;
