@@ -377,9 +377,9 @@ FONT 8, "MS Shell Dlg"
     EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
 
     GROUPBOX        "Interval de imprimare", grp1,   8,92,  144,64, WS_GROUP
-    AUTORADIOBUTTON         "T&ot",           rad1,16,106,64,12, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON         "&Pagini",      rad3,16,122,36,12
-    AUTORADIOBUTTON         "S&elecţia",      rad2,16,138,64,12
+    AUTORADIOBUTTON "T&ot",           rad1,16,106,64,12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Pagini",        rad3,16,122,36,12
+    AUTORADIOBUTTON "S&elecţia",      rad2,16,138,64,12
     EDITTEXT                          edt1,  73,122,  26,12, WS_GROUP | ES_NUMBER
     EDITTEXT                          edt2, 120,122,  26,12, WS_GROUP | ES_NUMBER
     RTEXT           "&de la:",        stc2,  52,124,  20,8
@@ -416,8 +416,8 @@ BEGIN
 
     GROUPBOX        "Orientare",    grp1, 180, 92, 100,56, WS_GROUP
     ICON            "",               ico1, 195,112,  18,20, WS_GROUP
-    AUTORADIOBUTTON         "Tip p&ortret",       rad1, 224,106,52,12, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON         "Tip &vedere",        rad2, 224,126,52,12
+    AUTORADIOBUTTON "Tip p&ortret",   rad1, 224,106,52,12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Tip &vedere",    rad2, 224,126,52,12
 END
 
 PAGESETUPDLGORD DIALOG 32, 32, 240, 240
