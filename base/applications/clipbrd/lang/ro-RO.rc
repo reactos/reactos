@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Clipboard
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Romanian resource file
- * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
  *              Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
@@ -18,23 +18,23 @@ BEGIN
     POPUP "&Fișier"
     BEGIN
         MENUITEM "&Deschidere…", CMD_OPEN
-        MENUITEM "S&alvare ca…", CMD_SAVE_AS
+        MENUITEM "&Salvare ca…", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", CMD_EXIT
     END
     POPUP "&Editare"
     BEGIN
-        MENUITEM "Șt&ergere\tDel", CMD_DELETE
+        MENUITEM "Ș&tergere\tDel", CMD_DELETE
     END
     POPUP "&Afișare"
     BEGIN
-        MENUITEM "&Automată", CMD_AUTOMATIC
+        MENUITEM "A&utomată", CMD_AUTOMATIC
     END
-    POPUP "Aj&utor"
+    POPUP "A&jutor"
     BEGIN
-        MENUITEM "&Manual…", CMD_HELP
+        MENUITEM "Aj&utor", CMD_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Despre…", CMD_ABOUT
+        MENUITEM "&Despre", CMD_ABOUT
     END
 END
 
@@ -60,10 +60,10 @@ BEGIN
     STRING_CF_ENHMETAFILE "Metafișier îmbunătățit"
     STRING_CF_METAFILEPICT "Metafișier"
     STRING_CF_PALETTE "Paletă de culori"
-    STRING_CF_DIBV5 "Bitmap DIB (versiune 5)"
+    STRING_CF_DIBV5 "Bitmap DIB (versiunea 5)"
     STRING_CF_SYLK "Format de legătură simbolică"
-    STRING_CF_DIF "Format de transfer al datelor"
-    STRING_CF_HDROP "Abandon date"
+    STRING_CF_DIF "Format de schimb de date"
+    STRING_CF_HDROP "Ștergere a datelor"
 END
 
 STRINGTABLE
