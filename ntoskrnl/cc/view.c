@@ -51,12 +51,14 @@ static NPAGED_LOOKASIDE_LIST VacbLookasideList;
  * - List for deferred writes
  * - Spinlock when dealing with the deferred list
  * - List for "clean" shared cache maps
+ * - List for "dirty" shared cache maps
  */
 ULONG CcDirtyPageThreshold = 0;
 ULONG CcTotalDirtyPages = 0;
 LIST_ENTRY CcDeferredWrites;
 KSPIN_LOCK CcDeferredWriteSpinLock;
 LIST_ENTRY CcCleanSharedCacheMapList;
+LIST_ENTRY CcDirtySharedCacheMapList;
 
 #if DBG
 ULONG CcRosVacbIncRefCount_(PROS_VACB vacb, PCSTR file, INT line)
@@ -1482,6 +1484,7 @@ CcInitView (
     InitializeListHead(&VacbLruListHead);
     InitializeListHead(&CcDeferredWrites);
     InitializeListHead(&CcCleanSharedCacheMapList);
+    InitializeListHead(&CcDirtySharedCacheMapList);
     KeInitializeSpinLock(&CcDeferredWriteSpinLock);
     ExInitializeNPagedLookasideList(&iBcbLookasideList,
                                     NULL,
