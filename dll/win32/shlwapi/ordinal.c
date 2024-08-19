@@ -6404,7 +6404,7 @@ EXTERN_C BOOL WINAPI SHBoolSystemParametersInfo(UINT uiAction, PVOID pvParam)
             if (uiAction < 0x1000)
                 return FALSE;
             else if (uiAction & 1) /* SPI_SET */
-                pvParam = (PVOID)(*(BOOL*)pvParam);
+                pvParam = (PVOID)(SIZE_T)(*(BOOL*)pvParam);
             break;
     }
 
