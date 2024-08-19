@@ -331,6 +331,7 @@ TOOLTIPS_Refresh (const TOOLTIPS_INFO *infoPtr, HDC hdc)
     }
 
     /* draw text */
+    uFlags |= DT_EXPANDTABS;
     DrawTextW (hdc, infoPtr->szTipText, -1, &rc, uFlags);
 
     /* Custom draw - Call PostPaint after drawing */
@@ -395,21 +396,6 @@ static void TOOLTIPS_GetDispInfoA(const TOOLTIPS_INFO *infoPtr, TTTOOL_INFO *too
         ERR("recursive text callback\n");
         buffer[0] = '\0';
     }
-
-    /* no text available - try calling parent instead as per native */
-    /* FIXME: Unsure if SETITEM should save the value or not        */
-    if (buffer[0] == 0x00) {
-
-        SendMessageW(GetParent(toolPtr->hwnd), WM_NOTIFY, toolPtr->uId, (LPARAM)&ttnmdi);
-
-        if (IS_INTRESOURCE(ttnmdi.lpszText)) {
-            LoadStringW(ttnmdi.hinst, LOWORD(ttnmdi.lpszText),
-                   buffer, INFOTIPSIZE);
-        } else if (ttnmdi.lpszText &&
-                   ttnmdi.lpszText != LPSTR_TEXTCALLBACKA) {
-            Str_GetPtrAtoW(ttnmdi.lpszText, buffer, INFOTIPSIZE);
-        }
-    }
 }
 
 static void TOOLTIPS_GetDispInfoW(const TOOLTIPS_INFO *infoPtr, TTTOOL_INFO *toolPtr, WCHAR *buffer)
@@ -451,22 +437,6 @@ static void TOOLTIPS_GetDispInfoW(const TOOLTIPS_INFO *infoPtr, TTTOOL_INFO *too
         ERR("recursive text callback\n");
         buffer[0] = '\0';
     }
-
-    /* no text available - try calling parent instead as per native */
-    /* FIXME: Unsure if SETITEM should save the value or not        */
-    if (buffer[0] == 0x00) {
-
-        SendMessageW(GetParent(toolPtr->hwnd), WM_NOTIFY, toolPtr->uId, (LPARAM)&ttnmdi);
-
-        if (IS_INTRESOURCE(ttnmdi.lpszText)) {
-            LoadStringW(ttnmdi.hinst, LOWORD(ttnmdi.lpszText),
-                   buffer, INFOTIPSIZE);
-        } else if (ttnmdi.lpszText &&
-                   ttnmdi.lpszText != LPSTR_TEXTCALLBACKW) {
-            Str_GetPtrW(ttnmdi.lpszText, buffer, INFOTIPSIZE);
-        }
-    }
-
 }
 
 static void
@@ -541,6 +511,7 @@ TOOLTIPS_CalcTipSize (const TOOLTIPS_INFO *infoPtr, LPSIZE lpSize)
         title.cx += (rcTitle.right - rcTitle.left);
     }
     hOldFont = SelectObject (hdc, infoPtr->hFont);
+    uFlags |= DT_EXPANDTABS;
     DrawTextW (hdc, infoPtr->szTipText, -1, &rc, uFlags);
     SelectObject (hdc, hOldFont);
     ReleaseDC (infoPtr->hwndSelf, hdc);
@@ -602,12 +573,9 @@ TOOLTIPS_Show (TOOLTIPS_INFO *infoPtr, BOOL track_activate)
     hdr.hwndFrom = infoPtr->hwndSelf;
     hdr.idFrom = toolPtr->uId;
     hdr.code = TTN_SHOW;
-    SendMessageW (toolPtr->hwnd, WM_NOTIFY, toolPtr->uId, (LPARAM)&hdr);
-
-    TRACE("%s\n", debugstr_w(infoPtr->szTipText));
+    SendMessageW(toolPtr->hwnd, WM_NOTIFY, toolPtr->uId, (LPARAM)&hdr);
 
     TOOLTIPS_CalcTipSize (infoPtr, &size);
-    TRACE("size %d x %d\n", size.cx, size.cy);
 
     if (track_activate && (toolPtr->uFlags & TTF_TRACK))
     {
@@ -780,7 +748,7 @@ TOOLTIPS_Show (TOOLTIPS_INFO *infoPtr, BOOL track_activate)
           }
         }
 
-        hrStem = CreatePolygonRgn(pts, sizeof(pts) / sizeof(pts[0]), ALTERNATE);
+        hrStem = CreatePolygonRgn(pts, ARRAY_SIZE(pts), ALTERNATE);
         
         hRgn = CreateRoundRectRgn(0,
                                   (infoPtr->bToolBelow ? BALLOON_STEMHEIGHT : 0),
@@ -796,9 +764,8 @@ TOOLTIPS_Show (TOOLTIPS_INFO *infoPtr, BOOL track_activate)
          * it is no longer needed */
     }
 
-    SetWindowPos (infoPtr->hwndSelf, HWND_TOPMOST, rect.left, rect.top,
-		    rect.right - rect.left, rect.bottom - rect.top,
-		    SWP_SHOWWINDOW | SWP_NOACTIVATE);
+    SetWindowPos(infoPtr->hwndSelf, HWND_TOPMOST, rect.left, rect.top,
+        rect.right - rect.left, rect.bottom - rect.top, SWP_SHOWWINDOW | SWP_NOACTIVATE);
 
     /* repaint the tooltip */
     InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
@@ -1093,7 +1060,6 @@ TOOLTIPS_AddToolT (TOOLTIPS_INFO *infoPtr, const TTTOOLINFOW *ti, BOOL isW)
 
     return TRUE;
 }
-
 
 static LRESULT
 TOOLTIPS_DelToolT (TOOLTIPS_INFO *infoPtr, const TTTOOLINFOW *ti, BOOL isW)
