@@ -2047,11 +2047,11 @@ co_WinPosSetWindowPos(
        * class need to be completely repainted on (horizontal/vertical) size
        * change.
        */
-      if ( ( VisBefore != NULL &&
-             VisAfter != NULL && !(WvrFlags & WVR_REDRAW) &&
-            !(WinPos.flags & SWP_NOCOPYBITS) &&
-            ((WinPos.flags & SWP_NOSIZE) || !(WvrFlags & WVR_REDRAW)) &&
-            !(Window->ExStyle & WS_EX_TRANSPARENT) ) )
+      if (VisBefore != NULL &&
+          VisAfter != NULL &&
+          !(WvrFlags & WVR_REDRAW) &&
+          !(WinPos.flags & SWP_NOCOPYBITS) &&
+          !(Window->ExStyle & WS_EX_TRANSPARENT))
       {
 
          /*
