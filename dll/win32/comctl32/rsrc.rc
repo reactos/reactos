@@ -108,9 +108,6 @@ IDI_TT_ERROR_SM ICON idi_tt_error_sm.ico
 #ifdef LANGUAGE_EN_US
     #include "lang/comctl_En.rc"
 #endif
-#ifdef LANGUAGE_EO_AA
-    #include "lang/comctl_Eo.rc"
-#endif
 #ifdef LANGUAGE_ES_ES
     #include "lang/comctl_Es.rc"
 #endif
@@ -119,9 +116,6 @@ IDI_TT_ERROR_SM ICON idi_tt_error_sm.ico
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "lang/comctl_Fr.rc"
-#endif
-#ifdef LANGUAGE_HE_IL
-    #include "lang/comctl_He.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
     #include "lang/comctl_Hu.rc"

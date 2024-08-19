@@ -1,24 +1,3 @@
-/*
- * Top level resource file for Common Controls
- *
- * Copyright 1999 Bertho Stultiens
- * Copyright 1999 Eric Kohl
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
-
 LANGUAGE LANG_SERBIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
@@ -71,7 +50,7 @@ CAPTION "Vodič"
 FONT 8, "MS Shell Dlg"
 BEGIN
   PUSHBUTTON    "< &Nazad", IDC_BACK_BUTTON,56,138,55,14
-  DEFPUSHBUTTON "&Napred >", IDC_NEXT_BUTTON,111,138,55,14
+  DEFPUSHBUTTON "N&apred >", IDC_NEXT_BUTTON,111,138,55,14
   DEFPUSHBUTTON "Kraj",  IDC_FINISH_BUTTON,111,138,55,14
   PUSHBUTTON    "Otkaži",  IDCANCEL,173,138,55,14
   PUSHBUTTON    "Pomoć",    IDHELP,235,138,55,14,WS_GROUP
@@ -88,13 +67,13 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   DEFPUSHBUTTON "&Zatvori",     IDCANCEL,320,6,70,14
   PUSHBUTTON    "&Poništi",     IDC_RESET_BTN,320,23,70,14
-  PUSHBUTTON    "&Pomoć",      IDC_HELP_BTN,320,40,70,14
+  PUSHBUTTON    "Pomoć",      IDC_HELP_BTN,320,40,70,14
   PUSHBUTTON    "Pomeri na&gore",   IDC_MOVEUP_BTN,320,74,70,14
-  PUSHBUTTON    "Pomeri na&dole", IDC_MOVEDN_BTN,320,91,70,14
-  LTEXT         "&Dostupni dugmići:", -1,4,5,120,10
+  PUSHBUTTON    "Pomeri &nadole", IDC_MOVEDN_BTN,320,91,70,14
+  LTEXT         "Do&stupni dugmići:", -1,4,5,120,10
   LISTBOX       IDC_AVAILBTN_LBOX,5,17,120,100, LBS_NOTIFY | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
   PUSHBUTTON    "&Dodaj ->",    IDOK, 132, 42, 55, 14
   PUSHBUTTON    "<- &Ukloni", IDC_REMOVE_BTN,132,62,55,14
-  LTEXT         "&Dugmići na alatnici:", -1,194,5,120,10
+  LTEXT         "D&ugmići na alatnici:", -1,194,5,120,10
   LISTBOX       IDC_TOOLBARBTN_LBOX, 194,17,120,100,LBS_NOTIFY | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
 END
