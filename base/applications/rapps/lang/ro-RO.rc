@@ -19,20 +19,20 @@ BEGIN
     END
     POPUP "&Programe"
     BEGIN
-        MENUITEM "&Instalează\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Dezinstalează\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "&Modifică", ID_MODIFY
+        MENUITEM "&Instalare\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Dezinstalare\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Modificare", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Elimină din registru", ID_REGREMOVE
+        MENUITEM "&Eliminare din registru", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "Împ&rospătează\tF5", ID_REFRESH
+        MENUITEM "Împ&rospătare\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Actualizează &baza de date\tCtrl+F5", ID_RESETDB
+        MENUITEM "&Actualizare baza de date\tCtrl+F5", ID_RESETDB
     END
     POPUP "Aj&utor"
     BEGIN
-        MENUITEM "&Manual…\tF1", ID_HELP, GRAYED
-        MENUITEM "&Despre…", ID_ABOUT
+        MENUITEM "&Ajutor\tF1", ID_HELP, GRAYED
+        MENUITEM "&Despre", ID_ABOUT
     END
 END
 
@@ -40,8 +40,8 @@ IDR_LINKMENU MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Deschide în navigator", ID_OPEN_LINK
-        MENUITEM "&Copiază în memorie", ID_COPY_LINK
+        MENUITEM "&Deschidere a legăturii în navigator", ID_OPEN_LINK
+        MENUITEM "&Copiere a legăturii în clipboard", ID_COPY_LINK
     END
 END
 
@@ -49,58 +49,58 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Instalează\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Dezinstalează\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "&Modifică", ID_MODIFY
+        MENUITEM "&Instalare\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Dezinstalare\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Modificare", ID_MODIFY
         MENUITEM SEPARATOR
-        MENUITEM "&Elimină din registru", ID_REGREMOVE
+        MENUITEM "&Eliminare din registru", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "Împ&rospătează\tF5", ID_REFRESH
+        MENUITEM "Împ&rospătare\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Actualizează &baza de date\tCtrl+F5", ID_RESETDB
+        MENUITEM "&Actualizare a bazei de date\tCtrl+F5", ID_RESETDB
     END
 END
 
 IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 265
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Preferințe"
+CAPTION "Setări"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Generale", -1, 4, 2, 240, 61
-    AUTOCHECKBOX "&Păstrează poziția ferestrei", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-    AUTOCHECKBOX "Actualizea&ză la pornire lista programelor disponibile", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "Menține j&urnal de instalare/dezinstalare a programelor", IDC_LOG_ENABLED, 15, 46, 219, 12
+    GROUPBOX "General", -1, 4, 2, 240, 61
+    AUTOCHECKBOX "&Salvare a poziției ferestrei", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+    AUTOCHECKBOX "&Actualizare la pornire a listei programelor disponibile", IDC_UPDATE_AVLIST, 15, 29, 222, 12
+    AUTOCHECKBOX "Menținere a j&urnalului de instalare/dezinstalare a programelor", IDC_LOG_ENABLED, 15, 46, 219, 12
     GROUPBOX "Descărcări", -1, 4, 65, 240, 51
     LTEXT "Folderul pentru descărcări:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
-    PUSHBUTTON "Spe&cificare…", IDC_CHOOSE, 187, 85, 50, 14
-    AUTOCHECKBOX "Șt&erge aplicația de instalare după instalarea programului", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+    PUSHBUTTON "&Răsfoire", IDC_CHOOSE, 187, 85, 50, 14
+    AUTOCHECKBOX "Se șterge de instalare &după instalarea programului", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
     GROUPBOX "Sursa programului", -1, 4, 118, 240, 46
-    AUTORADIOBUTTON "Folosește valorile implicite", IDC_SOURCE_DEFAULT, 15, 132, 121, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Se folosesc valorile implicite", IDC_SOURCE_DEFAULT, 15, 132, 121, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "Sursa specificată", IDC_USE_SOURCE, 15, 147, 74, 10
     EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
-    GROUPBOX "Mandatar", -1, 4, 166, 240, 76
-    AUTORADIOBUTTON "Configur&ația mandatar din sistem", IDC_PROXY_DEFAULT, 15, 180, 210, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Di&rect (fără mandatar)", IDC_NO_PROXY, 15, 195, 210, 10
-    AUTORADIOBUTTON "Man&datar", IDC_USE_PROXY, 15, 210, 74, 10
+    GROUPBOX "Proxy", -1, 4, 166, 240, 76
+    AUTORADIOBUTTON "Setări proxy de sistem", IDC_PROXY_DEFAULT, 15, 180, 210, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Direct (fără proxy)", IDC_NO_PROXY, 15, 195, 210, 10
+    AUTORADIOBUTTON "Proxy", IDC_USE_PROXY, 15, 210, 74, 10
     EDITTEXT IDC_PROXY_SERVER, 90, 210, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     LTEXT "excepție pentru", -1, 26, 226, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 225, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    PUSHBUTTON "I&mplicite", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14, WS_GROUP | WS_TABSTOP
-    DEFPUSHBUTTON "Confirmă", IDOK, 116, 245, 60, 14
-    PUSHBUTTON "Anulează", IDCANCEL, 181, 245, 60, 14
+    PUSHBUTTON "Implicit", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 116, 245, 60, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 181, 245, 60, 14
 END
 
 IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalare aplicație"
+CAPTION "Instalare a aplicației"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
-    AUTORADIOBUTTON "Instalea&ză de pe un disc (CD sau DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
-    AUTORADIOBUTTON "&Descarcă și instalează", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
-    DEFPUSHBUTTON "Confirmă", IDOK, 86, 78, 60, 14
-    PUSHBUTTON "Anulează", IDCANCEL, 150, 78, 60, 14
+    AUTORADIOBUTTON "&Instalare de pe un disc (CD sau DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+    AUTORADIOBUTTON "&Descărcare și instalare", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 86, 78, 60, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 150, 78, 60, 14
 END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
@@ -110,18 +110,18 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
     EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
-    PUSHBUTTON "Anulează", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Revocare", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
 END
 
 STRINGTABLE
 BEGIN
-    IDS_TOOLTIP_INSTALL "Instalează"
-    IDS_TOOLTIP_UNINSTALL "Dezinstalează"
-    IDS_TOOLTIP_MODIFY "Modifică"
-    IDS_TOOLTIP_SELECT_ALL "Selectează/Deselectează Toate"
+    IDS_TOOLTIP_INSTALL "Instalare"
+    IDS_TOOLTIP_UNINSTALL "Dezinstalare"
+    IDS_TOOLTIP_MODIFY "Modificare"
+    IDS_TOOLTIP_SELECT_ALL "Selectare/Deselectare Toate"
     IDS_TOOLTIP_SETTINGS "Preferințe"
-    IDS_TOOLTIP_REFRESH "Împrospătează"
-    IDS_TOOLTIP_UPDATE_DB "Actualizează baza de date"
+    IDS_TOOLTIP_REFRESH "Împrospătare"
+    IDS_TOOLTIP_UPDATE_DB "Actualizare baza de date"
     IDS_TOOLTIP_EXIT "Ieșire"
 END
 
@@ -188,11 +188,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "Gestionar de programe"
+    IDS_APPTITLE "Managerul de aplicații ReactOS"
     IDS_APP_AUTHORS "Marcă înregistrată 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "Căutare…"
     IDS_APPS_COUNT "Numărul de programe: %d; Selectate: %d"
-    IDS_WELCOME_TITLE "Bun venit la gestionarul de programe ReactOS!\n\n"
+    IDS_WELCOME_TITLE "Bun venit la Managerul de aplicații ReactOS!\n\n"
     IDS_WELCOME_TEXT "Alegeți o categorie din stânga, apoi alegeți o aplicație pentru a o instala sau dezinstala.\nArdesa web ReactOS: "
     IDS_WELCOME_URL "https://reactos.org"
     IDS_INSTALLED "Instalate"
@@ -208,12 +208,12 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD2 "Pachetul nu se poate descărca! Verificați conexiunea de Internet!"
     IDS_UNABLE_TO_REMOVE "Datele de registru pentru acest program nu s-au putut elimina!"
     IDS_UNABLE_TO_INSTALL "Programul de instalare nu se poate executa!"
-    IDS_UNABLE_TO_QUERY_CERT "Regăsirea informații despre certificat a eșuat.\n\nVreți să continuați oricum?"
+    IDS_UNABLE_TO_QUERY_CERT "Imposibil de obținut informații despre certificat.\n\nContinuați oricum?"
     IDS_INTEG_CHECK_TITLE "Integritatea pachetului în verificare…"
-    IDS_INTEG_CHECK_FAIL "Pachetul nu a trecut de verificarea de integritate. Utilizarea programului nu este recomandată."
+    IDS_INTEG_CHECK_FAIL "Pachetul nu a trecut de verificarea de integritate. Nu se recomandă utilizarea programului."
     IDS_INTERRUPTED_DOWNLOAD "Descărcarea a fost întreruptă. Verificați conexiunea la Internet."
     IDS_UNABLE_TO_WRITE "Nu se poate scrie pe disc. Discul poate fi la capacitate maximă."
-    IDS_INSTALL_SELECTED "Instalează selecționate"
+    IDS_INSTALL_SELECTED "Instalare aplicații selectate"
     IDS_SELECTEDFORINST "Selectate pentru instalare"
     IDS_MISMATCH_CERT_INFO "Certificatul în uz este necunoscut:\nSubiect: %s\nEmitent: %s\nVreți să continuați oricum?"
     IDS_UNABLE_PATH "Formatul căii specificate nu este corect."
@@ -273,5 +273,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
+    IDS_INSTGEN_CONFIRMUNINST "Sigur doriți să dezinstalați %s?"
 END
