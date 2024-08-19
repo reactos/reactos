@@ -70,8 +70,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VIS
 CAPTION "Vodič"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  PUSHBUTTON    "< &Nazad", IDC_BACK_BUTTON,56,138,55,14
-  DEFPUSHBUTTON "&Napred >", IDC_NEXT_BUTTON,111,138,55,14
+  PUSHBUTTON    "< &Nazad", IDC_BACK_BUTTON,56,138,55,14//FIXME: accelerator collision &N
+  DEFPUSHBUTTON "&Napred >", IDC_NEXT_BUTTON,111,138,55,14//FIXME: accelerator collision &N
   DEFPUSHBUTTON "Kraj",  IDC_FINISH_BUTTON,111,138,55,14
   PUSHBUTTON    "Otkaži",  IDCANCEL,173,138,55,14
   PUSHBUTTON    "Pomoć",    IDHELP,235,138,55,14,WS_GROUP
@@ -87,14 +87,14 @@ CAPTION "Prilagodi alatnicu"
 FONT 8, "MS Shell Dlg"
 BEGIN
   DEFPUSHBUTTON "&Zatvori",     IDCANCEL,320,6,70,14
-  PUSHBUTTON    "&Poništi",     IDC_RESET_BTN,320,23,70,14
-  PUSHBUTTON    "&Pomoć",      IDC_HELP_BTN,320,40,70,14
+  PUSHBUTTON    "&Poništi",     IDC_RESET_BTN,320,23,70,14//FIXME: accelerator collision &P
+  PUSHBUTTON    "&Pomoć",      IDC_HELP_BTN,320,40,70,14//FIXME: accelerator collision &P
   PUSHBUTTON    "Pomeri na&gore",   IDC_MOVEUP_BTN,320,74,70,14
-  PUSHBUTTON    "Pomeri na&dole", IDC_MOVEDN_BTN,320,91,70,14
-  LTEXT         "&Dostupni dugmići:", -1,4,5,120,10
+  PUSHBUTTON    "Pomeri na&dole", IDC_MOVEDN_BTN,320,91,70,14//FIXME: accelerator collision &D 1 of 4
+  LTEXT         "&Dostupni dugmići:", -1,4,5,120,10//FIXME: accelerator collision &D 2 of 4
   LISTBOX       IDC_AVAILBTN_LBOX,5,17,120,100, LBS_NOTIFY | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
-  PUSHBUTTON    "&Dodaj ->",    IDOK, 132, 42, 55, 14
+  PUSHBUTTON    "&Dodaj ->",    IDOK, 132, 42, 55, 14//FIXME: accelerator collision &D 3 of 4
   PUSHBUTTON    "<- &Ukloni", IDC_REMOVE_BTN,132,62,55,14
-  LTEXT         "&Dugmići na alatnici:", -1,194,5,120,10
+  LTEXT         "&Dugmići na alatnici:", -1,194,5,120,10//FIXME: accelerator collision &D 4 of 4
   LISTBOX       IDC_TOOLBARBTN_LBOX, 194,17,120,100,LBS_NOTIFY | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
 END

@@ -90,8 +90,8 @@ BEGIN
   PUSHBUTTON    "&Réinitialiser",     IDC_RESET_BTN,320,23,70,14
   PUSHBUTTON    "Aid&e",      IDC_HELP_BTN,320,40,70,14
   PUSHBUTTON    "&Monter",   IDC_MOVEUP_BTN,320,74,70,14
-  PUSHBUTTON    "&Descendre", IDC_MOVEDN_BTN,320,91,70,14
-  LTEXT         "Boutons &disponibles :", -1,4,5,120,10
+  PUSHBUTTON    "&Descendre", IDC_MOVEDN_BTN,320,91,70,14//FIXME: accelerator collision &D
+  LTEXT         "Boutons &disponibles :", -1,4,5,120,10//FIXME: accelerator collision &D
   LISTBOX       IDC_AVAILBTN_LBOX,5,17,120,100, LBS_NOTIFY | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
   PUSHBUTTON    "A&jouter ->",    IDOK, 132, 42, 55, 14
   PUSHBUTTON    "<- E&nlever", IDC_REMOVE_BTN,132,62,55,14

@@ -360,7 +360,7 @@
 360 stdcall -noname RemoveDirectoryWrapW(wstr) kernel32.RemoveDirectoryW
 361 stdcall -noname GetShortPathNameWrapW(wstr ptr long) kernel32.GetShortPathNameW
 362 stdcall -noname GetUserNameWrapW(ptr ptr) advapi32.GetUserNameW
-363 stdcall -noname SHInvokeCommand(ptr ptr ptr long)
+363 stdcall -noname SHInvokeCommand(ptr ptr ptr str)
 364 stdcall -noname DoesStringRoundTripA(str ptr long)
 365 stdcall -noname DoesStringRoundTripW(wstr ptr long)
 366 stdcall -noname RegEnumValueWrapW(long long ptr ptr ptr ptr ptr ptr) advapi32.RegEnumValueW
@@ -537,8 +537,8 @@
 537 stub -noname SHBoolSystemParametersInfo
 538 stdcall -noname IUnknown_QueryServiceForWebBrowserApp(ptr ptr ptr)
 539 stub -noname IUnknown_ShowBrowserBar
-540 stub -noname SHInvokeCommandOnContextMenu
-541 stub -noname SHInvokeCommandsOnContextMen
+540 stdcall -noname SHInvokeCommandOnContextMenu(ptr ptr ptr long str)
+541 stub -noname SHInvokeCommandsOnContextMenu
 542 stdcall -noname GetUIVersion()
 543 stdcall -noname CreateColorSpaceWrapW(ptr) gdi32.CreateColorSpaceW
 544 stub -noname QuerySourceCreateFromKey
@@ -568,7 +568,8 @@
 568 stdcall AssocQueryStringW(long long wstr wstr ptr ptr)
 569 stdcall ChrCmpIA(long long)
 570 stdcall ChrCmpIW(long long)
-571 stdcall ColorAdjustLuma(long long long)
+571 stdcall -noname -version=0x600+ SHInvokeCommandWithFlagsAndSite(ptr ptr ptr ptr long str)
+@ stdcall ColorAdjustLuma(long long long)
 572 stdcall ColorHLSToRGB(long long long)
 573 stdcall ColorRGBToHLS(long ptr ptr ptr)
 @ stdcall -private DllGetVersion(ptr)
@@ -636,7 +637,8 @@
 636 stdcall PathIsSameRootA(str str)
 637 stdcall PathIsSameRootW(wstr wstr)
 638 stdcall PathIsSystemFolderA(str long)
-639 stdcall PathIsSystemFolderW(wstr long)
+639 stdcall -noname -version=0x600+ SHInvokeCommandOnContextMenuEx(ptr ptr ptr long long str wstr)
+@ stdcall PathIsSystemFolderW(wstr long)
 640 stdcall PathIsUNCA(str)
 641 stdcall PathIsUNCServerA(str)
 642 stdcall PathIsUNCServerShareA(str)
