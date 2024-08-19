@@ -652,14 +652,24 @@ static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPA
             HideHorzScrollBar(Window);
 
             FsmState = FSM_STATE_START;
-            FsmTimer = SetTimer(Window, 1, FSM_STEP_PERIOD_MS, NULL);
-            ok(FsmTimer != 0, "Failed to initialize FSM timer, code: %ld\n", GetLastError());
+            FsmTimer = 0;
+
+            return 0;
+
+        case WM_PAINT:
 
             if (FsmTimer == 0)
             {
-                return -1;
+                FsmTimer = SetTimer(Window, 1, FSM_STEP_PERIOD_MS, NULL);
+                ok(FsmTimer != 0, "Failed to initialize FSM timer, code: %ld\n", GetLastError());
+
+                if (FsmTimer == 0)
+                {
+                    DestroyWindow(Window);
+                    return 0;
+                }
             }
-            return 0;
+            break;
 
         case WM_SIZE:
 
