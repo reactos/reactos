@@ -589,10 +589,9 @@ static int FsmStep(HWND Window)
 static int OnResize(HWND Window, int NewWidth, int NewHeight)
 {
     CurrentColor = (CurrentColor + 1) % TEST_COLOR_COUNT;
-    SetClassLongPtr(
-            Window,
-            GCLP_HBRBACKGROUND,
-            (LONG_PTR)ColorBrushes[CurrentColor]);
+    SetClassLongPtr(Window,
+                    GCLP_HBRBACKGROUND,
+                    (LONG_PTR)ColorBrushes[CurrentColor]);
 
     trace("New window size: %d x %d, new color: 0x%.8lX\n",
           NewWidth, NewHeight, Colors[CurrentColor]);
