@@ -45,7 +45,7 @@ BEGIN
         MENUITEM "&Copia\tCtrl+C", IDM_EDITCOPY
         MENUITEM "I&ncolla\tCtrl+V", IDM_EDITPASTE
         MENUITEM SEPARATOR
-        MENUITEM "Crop &selection", IDM_CROPSELECTION
+        MENUITEM "Ritaglia s&elezione", IDM_CROPSELECTION
         MENUITEM "Cancella area sele&zionata\tCanc", IDM_EDITDELETESELECTION
         MENUITEM "&Inverte selezione", IDM_EDITINVERTSELECTION
         MENUITEM "&Seleziona tutto\tCtrl+A", IDM_EDITSELECTALL
@@ -111,7 +111,7 @@ BEGIN
         MENUITEM "&Copia\tCtrl+C", IDM_EDITCOPY
         MENUITEM "&Incolla\tCtrl+V", IDM_EDITPASTE
         MENUITEM SEPARATOR
-        MENUITEM "Ritaglia &selezione", IDM_CROPSELECTION
+        MENUITEM "Ritaglia s&elezione", IDM_CROPSELECTION
         MENUITEM "Cancella area sele&zionata\tCanc", IDM_EDITDELETESELECTION
         MENUITEM "&Seleziona tutto\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
