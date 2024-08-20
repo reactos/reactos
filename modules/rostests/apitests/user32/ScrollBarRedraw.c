@@ -282,11 +282,13 @@ static int FsmStep(HWND Window)
         }
         Color = GetPixel(hdc, ClientWidth / 4, ClientHeight / 4);
 
+        ReleaseDC(Window, hdc);
+        hdc = NULL;
+
         if (Color == CLR_INVALID)
         {
             skip("Failed to get window color\n");
 
-            ReleaseDC(Window, hdc);
             DestroyWindow(Window);
             FsmState = FSM_STATE_END;
 
@@ -574,11 +576,7 @@ static int FsmStep(HWND Window)
             break;
     }
 
-    if (hdc != NULL)
-    {
-        PrevColor = Color;
-        ReleaseDC(Window, hdc);
-    }
+    PrevColor = Color;
 
     return 0;
 }
