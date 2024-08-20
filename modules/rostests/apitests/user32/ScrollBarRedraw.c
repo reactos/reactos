@@ -694,7 +694,8 @@ static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPA
         }
 
         case WM_ERASEBKGND:
-            return 1; /* We use WM_PAINT instead. */
+            /* We use WM_PAINT instead, since WM_ERASEBKGND is issued before WM_SIZE. */
+            return 1;
 
         case WM_TIMER:
             if (wParam != 0 && wParam == FsmTimer)
