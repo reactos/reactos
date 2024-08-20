@@ -567,15 +567,41 @@ static int FsmStep(HWND Window)
     return 0;
 }
 
-static int OnResize(HWND Window, int NewWidth, int NewHeight)
+static int OnPaint(HWND Window)
 {
-    CurrentColor = (CurrentColor + 1) % TEST_COLOR_COUNT;
-    SetClassLongPtr(Window,
-                    GCLP_HBRBACKGROUND,
-                    (LONG_PTR)ColorBrushes[CurrentColor]);
+    HRGN Region;
+    HDC hdc;
+    PAINTSTRUCT ps;
 
-    trace("New window size: %d x %d, new color: 0x%.8lX\n",
-          NewWidth, NewHeight, Colors[CurrentColor]);
+    hdc = BeginPaint(Window, &ps);
+    if (hdc == NULL)
+    {
+        skip("Failed to get device context\n");
+        DestroyWindow(Window);
+        return 0;
+    }
+
+    Region = CreateRectRgn(ps.rcPaint.left,
+                           ps.rcPaint.top,
+                           ps.rcPaint.right,
+                           ps.rcPaint.bottom);
+
+    if (Region == NULL)
+    {
+        skip("Failed to create drawing region\n");
+        EndPaint(Window, &ps);
+        DestroyWindow(Window);
+        return 0;
+    }
+
+    if(!FillRgn(hdc, Region, ColorBrushes[CurrentColor]))
+    {
+        skip("Failed to paint the window\n");
+        DestroyWindow(Window);
+    }
+
+    DeleteObject(Region);
+    EndPaint(Window, &ps);
 
     return 0;
 }
@@ -583,8 +609,8 @@ static int OnResize(HWND Window, int NewWidth, int NewHeight)
 static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPARAM lParam)
 {
     RECT Rect;
-    int Width;
-    int Height;
+    int NewWidth;
+    int NewHeight;
 
     switch (Message)
     {
@@ -640,21 +666,31 @@ static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPA
                     return 0;
                 }
             }
+            OnPaint(Window);
             break;
 
         case WM_SIZE:
-            Width = LOWORD(lParam);
-            Height = HIWORD(lParam);
+            NewWidth = LOWORD(lParam);
+            NewHeight = HIWORD(lParam);
 
-            if (Width != 0 && Height != 0 &&
-                (Width != ClientWidth || Height != ClientHeight))
+            if (NewWidth != 0 && NewHeight != 0 &&
+                (NewWidth != ClientWidth || NewHeight != ClientHeight))
             {
-                return OnResize(Window, Width, Height);
+                CurrentColor = (CurrentColor + 1) % TEST_COLOR_COUNT;
+                SetClassLongPtr(Window,
+                                GCLP_HBRBACKGROUND,
+                                (LONG_PTR)ColorBrushes[CurrentColor]);
 
-                ClientWidth = Width;
-                ClientHeight = Height;
+                trace("New window size: %d x %d, new color: 0x%.8lX\n",
+                      NewWidth, NewHeight, Colors[CurrentColor]);
+
+                ClientWidth = NewWidth;
+                ClientHeight = NewHeight;
             }
             return 0;
+
+        case WM_ERASEBKGND:
+            return 1; /* We use WM_PAINT instead. */
 
         case WM_TIMER:
             if (wParam != 0 && wParam == FsmTimer)
