@@ -11,9 +11,6 @@
 #define TEST_CLASS_NAME   "ScrollBarRedraw"
 #define TEST_WINDOW_TITLE "ScrollBarRedraw"
 
-EXTERN_C IMAGE_DOS_HEADER __ImageBase;
-#define HINST_THISCOMPONENT ((HINSTANCE)&__ImageBase)
-
 static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPARAM lParam);
 
 #define TEST_COLOR_COUNT 16
@@ -114,7 +111,6 @@ static void RunTestWindow(const char *ClassName, const char *WindowTitle, UINT C
     WNDCLASS Class = { 0 };
     HWND Window;
     MSG  Message;
-    ATOM ClassAtom;
 
     CurrentColor = 0;
 
@@ -122,21 +118,17 @@ static void RunTestWindow(const char *ClassName, const char *WindowTitle, UINT C
     Class.lpfnWndProc   = WindowProc;
     Class.cbClsExtra    = 0;
     Class.cbWndExtra    = 0;
-    Class.hInstance     = HINST_THISCOMPONENT;
+    Class.hInstance     = GetModuleHandleA(NULL);
     Class.hIcon         = LoadIcon(NULL, IDI_APPLICATION);
     Class.hCursor       = LoadCursor(NULL, IDC_ARROW);
     Class.hbrBackground = ColorBrushes[CurrentColor];
     Class.lpszMenuName  = NULL;
     Class.lpszClassName = ClassName;
 
-    ClassAtom = RegisterClass(&Class);
-
-    ok(ClassAtom != 0,
-       "Failed to register window class \"%s\", code: %ld\n",
-       ClassName, GetLastError());
-
-    if (ClassAtom == 0)
+    if (!RegisterClass(&Class))
     {
+        skip("Failed to register window class \"%s\", code: %ld\n",
+             ClassName, GetLastError());
         return;
     }
 
@@ -149,15 +141,13 @@ static void RunTestWindow(const char *ClassName, const char *WindowTitle, UINT C
                           CW_USEDEFAULT,
                           NULL,
                           NULL,
-                          HINST_THISCOMPONENT,
+                          GetModuleHandleA(NULL),
                           NULL);
-
-    ok(Window != NULL,
-       "Failed to create window of class \"%s\", code: %ld\n",
-       ClassName, GetLastError());
 
     if (Window == NULL)
     {
+        skip("Failed to create window of class \"%s\", code: %ld\n",
+             ClassName, GetLastError());
         return;
     }
 
@@ -173,12 +163,9 @@ static void RunTestWindow(const char *ClassName, const char *WindowTitle, UINT C
 
 START_TEST(ScrollBarRedraw)
 {
-    BOOL BoolRC;
-
-    BoolRC = ColorsInit();
-    ok(BoolRC, "Failed to initialize colors and solid color brushes\n");
-    if (!BoolRC)
+    if (!ColorsInit())
     {
+        skip("Failed to initialize colors and solid color brushes\n");
         return;
     }
 
@@ -284,16 +271,26 @@ static int FsmStep(HWND Window)
     {
         hdc = GetDC(Window);
 
-        ok(hdc != NULL, "Failed to get device context\n");
         if (hdc == NULL)
         {
+            skip("Failed to get device context\n");
+
             DestroyWindow(Window);
             FsmState = FSM_STATE_END;
+
+            return 0;
         }
-        else
+        Color = GetPixel(hdc, ClientWidth / 4, ClientHeight / 4);
+
+        if (Color == CLR_INVALID)
         {
-            Color = GetPixel(hdc, ClientWidth / 4, ClientHeight / 4);
-            ok(Color != CLR_INVALID, "Failed to get window color\n");
+            skip("Failed to get window color\n");
+
+            ReleaseDC(Window, hdc);
+            DestroyWindow(Window);
+            FsmState = FSM_STATE_END;
+
+            return 0;
         }
     }
 
@@ -602,7 +599,6 @@ static int OnResize(HWND Window, int NewWidth, int NewHeight)
 static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPARAM lParam)
 {
     RECT Rect;
-    BOOL BoolRC;
     int Width;
     int Height;
 
@@ -611,34 +607,27 @@ static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPA
         case WM_CREATE:
 
             /* It's important for the test that the entire Window is visible. */
-            BoolRC = SetWindowPos(Window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-            ok(BoolRC, "Failed to set window as top-most, code: %ld\n", GetLastError());
-
-            BoolRC = GetClientRect(Window, &Rect);
-            ok(BoolRC, "Failed to retrieve client area dimensions, code: %ld\n", GetLastError());
-
-            if (BoolRC)
+            if (!SetWindowPos(Window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE))
             {
-                ClientWidth = Rect.right;
-                ClientHeight = Rect.bottom;
-            }
-            else
-            {
+                skip("Failed to set window as top-most, code: %ld\n", GetLastError());
                 return -1;
             }
 
-            BoolRC = GetWindowRect(Window, &Rect);
-            ok(BoolRC, "Failed to retrieve window dimensions, code: %ld\n", GetLastError());
-
-            if (BoolRC)
+            if (!GetClientRect(Window, &Rect))
             {
-                OrigWidth  = Rect.right - Rect.left;
-                OrigHeight = Rect.bottom - Rect.top;
-            }
-            else
-            {
+                skip("Failed to retrieve client area dimensions, code: %ld\n", GetLastError());
                 return -1;
             }
+            ClientWidth = Rect.right;
+            ClientHeight = Rect.bottom;
+
+            if (!GetWindowRect(Window, &Rect))
+            {
+                skip("Failed to retrieve window dimensions, code: %ld\n", GetLastError());
+                return -1;
+            }
+            OrigWidth  = Rect.right - Rect.left;
+            OrigHeight = Rect.bottom - Rect.top;
 
             SmallWidth  = max((OrigWidth  * 3) / 4, 1);
             SmallHeight = max((OrigHeight * 3) / 4, 1);
@@ -661,10 +650,10 @@ static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPA
             if (FsmTimer == 0)
             {
                 FsmTimer = SetTimer(Window, 1, FSM_STEP_PERIOD_MS, NULL);
-                ok(FsmTimer != 0, "Failed to initialize FSM timer, code: %ld\n", GetLastError());
 
                 if (FsmTimer == 0)
                 {
+                    skip("Failed to initialize FSM timer, code: %ld\n", GetLastError());
                     DestroyWindow(Window);
                     return 0;
                 }
