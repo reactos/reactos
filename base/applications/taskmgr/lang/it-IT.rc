@@ -48,19 +48,19 @@ BEGIN
     END
     POPUP "Sh&ut Down"
     BEGIN
-        MENUITEM "Stand &By", ID_SHUTDOWN_STANDBY
-        MENUITEM "&Hibernate", ID_SHUTDOWN_HIBERNATE
-        MENUITEM "T&urn Off", ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Restart", ID_SHUTDOWN_REBOOT
-        MENUITEM "&Log Off %s", ID_SHUTDOWN_LOGOFF
-        MENUITEM "&Switch User\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "&Sospendi", ID_SHUTDOWN_STANDBY
+        MENUITEM "&Iberna", ID_SHUTDOWN_HIBERNATE
+        MENUITEM "&Arresta", ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Riavvia", ID_SHUTDOWN_REBOOT
+        MENUITEM "&Disconetti %s", ID_SHUTDOWN_LOGOFF
+        MENUITEM "&Cambia utente\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
         MENUITEM "Loc&k Computer\tWinKey+L", ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Disconnect", ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "Chi&udi sessione", ID_SHUTDOWN_DISCONNECT, GRAYED
         MENUITEM "&Eject Computer", ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "&Aiuto"
     BEGIN
-        MENUITEM "Task Manager &Help Topics", ID_HELP_TOPICS
+        MENUITEM "G&uida in linea di Task Manager", ID_HELP_TOPICS
         MENUITEM SEPARATOR
         MENUITEM "&Informazioni su Task Manager", ID_HELP_ABOUT
     END
@@ -324,10 +324,10 @@ BEGIN
     ID_OPTIONS_ALWAYSONTOP "Task Manager rimane di fronte a ogni altra finestra a meno che sia minimizzato"
     ID_OPTIONS_MINIMIZEONUSE "Task Manager è minimizzato quando viene eseguita una operazione PassaA"
     ID_OPTIONS_HIDEWHENMINIMIZED "Nasconde Task Manager Quando è minimizzato"
-    ID_VIEW_REFRESH "Costringe Task Manager a effettuare un aggiornamneto, indipendentemente dalla frequenza di aggiornamento impostata"
-    ID_VIEW_LARGE "Visualizza i task usando icone grandi"
-    ID_VIEW_SMALL "Visualizza i task usando icone piccole"
-    ID_VIEW_DETAILS "Visualizza le informazioni di ogni task"
+    ID_VIEW_REFRESH "Costringe Task Manager a effettuare un aggiornamento, indipendentemente dalla frequenza di aggiornamento impostata"
+    ID_VIEW_LARGE "Visualizza i processi usando icone grandi"
+    ID_VIEW_SMALL "Visualizza i processi usando icone piccole"
+    ID_VIEW_DETAILS "Visualizza le informazioni di ogni processo"
     ID_VIEW_UPDATESPEED_HIGH "Aggiorna lo schermo due volte al secondo"
     ID_VIEW_UPDATESPEED_NORMAL "Aggiorna lo schermo ogni due secondi"
     ID_VIEW_UPDATESPEED_LOW "Aggiorna lo schermo ogni quattro secondi"
@@ -343,20 +343,20 @@ BEGIN
     ID_WINDOWS_CASCADE "Sovrappone diagonalmente le finestre sul desktop"
     ID_WINDOWS_BRINGTOFRONT "Porta la finestra in vista ma senza attivarla"
     ID_HELP_TOPICS "Visualizza gli aiuti di Task Manager"
-    ID_HELP_ABOUT "Visualizza le informazioni sul program, version e copyright"
+    ID_HELP_ABOUT "Visualizza le informazioni sul programma, versione e copyright"
     ID_FILE_EXIT "Esce da Task Manager"
-    ID_OPTIONS_SHOW16BITTASKS "Mostra i task a 16-bit con ntvdm.exe associato"
+    ID_OPTIONS_SHOW16BITTASKS "Mostra i processi a 16-bit con ntvdm.exe associato"
     ID_VIEW_SELECTCOLUMNS "Seleziona quali colonne saranno visibili nella pagina dei processi"
     ID_VIEW_SHOWKERNELTIMES "Mostra il tempo di kernel nel grafico delle prestazioni"
     ID_VIEW_CPUHISTORY_ONEGRAPHALL "Un singolo grafico mostra l'uso di cpu totale"
     ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Ogni CPU ha il suo grafico"
-    ID_APPLICATION_PAGE_SWITCHTO "Porta un task in vista e gli dà il focus"
+    ID_APPLICATION_PAGE_SWITCHTO "Porta un processo in vista e gli dà il focus"
 END
 
 STRINGTABLE
 BEGIN
-    ID_ENDTASK "Richiede la chiusura del task selezionato"
-    ID_GOTOPROCESS "Porta il focus al task selezionato"
+    ID_ENDTASK "Richiede la chiusura del processo selezionato"
+    ID_GOTOPROCESS "Porta il focus al processo selezionato"
     ID_RESTORE "Ripristina Task Manager dallo stato nascosto"
     ID_PROCESS_PAGE_ENDPROCESS "Rimuove il processo dal sistema"
     ID_PROCESS_PAGE_ENDPROCESSTREE "Rimuove il processo e i suoi discendenti dal sistema"
@@ -368,8 +368,8 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Assegna al processo la classe di priorità NORMAL"
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Assegna al processo la classe di priorità BELOW NORMAL"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Assegna al processo la classe di priorità LOW"
-    ID_PROCESS_PAGE_PROPERTIES "Shows process file properties"
-    ID_PROCESS_PAGE_OPENFILELOCATION "Opens process file location"
+    ID_PROCESS_PAGE_PROPERTIES "Mostra proprietà file del processo"
+    ID_PROCESS_PAGE_OPENFILELOCATION "Apri posizione processo"
 END
 
 STRINGTABLE
@@ -377,7 +377,7 @@ BEGIN
     IDS_TAB_APPS "Applicazioni"
     IDS_TAB_PROCESSES "Processi"
     IDS_TAB_PERFORMANCE "Prestazioni"
-    IDS_TAB_TASK "Task"
+    IDS_TAB_TASK "Processo"
     IDS_TAB_STATUS "Stato"
     IDS_TAB_IMAGENAME "Nome immagine"
     IDS_TAB_PID "PID"
@@ -398,12 +398,12 @@ BEGIN
     IDS_TAB_THREADS "Threads"
     IDS_TAB_USERPBJECTS "Oggetti USER"
     IDS_TAB_GDIOBJECTS "Oggetti GDI"
-    IDS_TAB_IOREADS "I/O Letture"
-    IDS_TAB_IOWRITES "I/O Scritture"
-    IDS_TAB_IOOTHER "I/O Altro"
-    IDS_TAB_IOREADBYTES "I/O Letture Bytes"
-    IDS_TAB_IOWRITESBYTES "I/O Scritture Bytes"
-    IDS_TAB_IOOTHERBYTES "I/O Altro Bytes"
+    IDS_TAB_IOREADS "Letture I/O"
+    IDS_TAB_IOWRITES "Scritture I/O"
+    IDS_TAB_IOOTHER "Altro I/O"
+    IDS_TAB_IOREADBYTES "Letture Bytes I/O"
+    IDS_TAB_IOWRITESBYTES "Scritture Bytes I/O "
+    IDS_TAB_IOOTHERBYTES "Altro Bytes I/O "
     IDS_TAB_COMMANDLINE "Linea di comando"
     IDS_MENU_SELECTCOLUMNS "&Selezione Colonne..."
     IDS_MENU_16BITTASK "&Mostra task 16-bit"
@@ -413,9 +413,9 @@ BEGIN
     IDS_MENU_DETAILS "&Dettagli"
     IDS_MENU_ONEGRAPHALLCPUS "&Un grafico, tutte le CPU"
     IDS_MENU_ONEGRAPHPERCPU "Un grafico &Per CPU"
-    IDS_MENU_CPUHISTORY "&CPU History"
+    IDS_MENU_CPUHISTORY "Storia &CPU"
     IDS_MENU_SHOWKERNELTIMES "&Mostra tempo di Kernel"
-    IDS_CREATENEWTASK "Create Nuovo Task"
+    IDS_CREATENEWTASK "Crea nuovo processo"
     IDS_CREATENEWTASK_DESC "Scrivi il nome di un programma, Cartella, documento o risorsa internet e Task Manager lo aprirà."
     IDS_MSG_ACCESSPROCESSAFF "Impossibile accedere o impostare la 'Process Affinity'"
     IDS_MSG_PROCESSONEPRO "Il processo deve avere affinity con almeno un processore."
@@ -425,7 +425,7 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "Segnalazione di Task Manager"
     IDS_MSG_WARNINGTERMINATING "ATTENZIONE: Arrestare un processo può provocare\n effetti indesiderati compresa la perdita di dati o l'instabilità del sistema.\nIl processo non potrà salvare il prorio stato o i dati\nprima del suo arresto.\nSei sicuro di voler procedere?"
     IDS_MSG_UNABLETERMINATEPRO "Impossibile arrestare il Processo"
-    IDS_MSG_CLOSESYSTEMPROCESS "This is a critical system process. Task Manager will not end this process."
+    IDS_MSG_CLOSESYSTEMPROCESS "Questo è un processo di sistema critico. Task Manager non terminerà questo processo."
     IDS_MSG_UNABLECHANGEPRIORITY "Impossibile cambiare la Priorità"
     IDS_MSG_WARNINGCHANGEPRIORITY "ATTENZIONE: La modifica della classe di priorità può provocare\n effetti indesiderati compresa la perdita di dati o l'instabilità del sistema.\nSei sicuro di voler procedere?"
     IDS_MSG_TRAYICONCPUUSAGE "Uso CPU: %d%%"

@@ -25,7 +25,7 @@ BEGIN
     POPUP "&File"
     BEGIN
         MENUITEM "&Nuovo\tCtrl+N", CMD_NEW
-        MENUITEM "New &Window\tCtrl+Shift+N", CMD_NEW_WINDOW
+        MENUITEM "Nuova &finestra\tCtrl+Shift+N", CMD_NEW_WINDOW
         MENUITEM "&Apri...\tCtrl+O", CMD_OPEN
         MENUITEM "&Salva\tCtrl+S", CMD_SAVE
         MENUITEM "Sal&va con nome...", CMD_SAVE_AS
@@ -65,7 +65,7 @@ BEGIN
     BEGIN
         MENUITEM "&Guida in linea", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
-        MENUITEM "&About Notepad", CMD_HELP_ABOUT_NOTEPAD
+        MENUITEM "Informazioni &su Blocco note", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 
@@ -135,7 +135,7 @@ CAPTION "Now printing"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CTEXT "Print job is starting...", IDC_PRINTING_STATUS, 5, 10, 150, 15
+    CTEXT "Inizio stampa...", IDC_PRINTING_STATUS, 5, 10, 150, 15
     CTEXT "(Filename)", IDC_PRINTING_FILENAME, 5, 35, 150, 15
     CTEXT "Pagina %u", IDC_PRINTING_PAGE, 5, 55, 150, 15
     PUSHBUTTON "Annulla", IDCANCEL, 50, 75, 60, 20
@@ -169,19 +169,19 @@ di memoria libera."
     STRING_UNICODE "Unicode"
     STRING_UNICODE_BE "Unicode (big endian)"
     STRING_UTF8 "UTF-8"
-    STRING_UTF8_BOM "UTF-8 with BOM"
+    STRING_UTF8_BOM "UTF-8 con BOM"
     STRING_CRLF "Windows (CR + LF)"
     STRING_LF "Unix (LF)"
     STRING_CR "Mac (CR)"
     STRING_LINE_COLUMN "Linea %d, colonna %d"
     STRING_PRINTERROR "Impossibile stampare il file '%s'.\n\nControllare che la stampante sia accesa e impostata correttamente."
     STRING_DEFAULTFONT "Lucida Console"
-    STRING_LINE_NUMBER_OUT_OF_RANGE "The specified line number is out of range."
-    STRING_NOWPRINTING "Now printing page..."
+    STRING_LINE_NUMBER_OUT_OF_RANGE "Numero di riga maggiore del numero totale di righe."
+    STRING_NOWPRINTING "Stampa in corso della pagina..."
     STRING_PRINTCANCELING "The print job is being canceled..."
     STRING_PRINTCOMPLETE "Printing is successfully done."
-    STRING_PRINTCANCELED "Printing has been canceled."
-    STRING_PRINTFAILED "Printing failed."
+    STRING_PRINTCANCELED "La stampa è stata annullata."
+    STRING_PRINTFAILED "Stampa fallita."
 
     STRING_TEXT_DOCUMENT "Documento di testo"
     STRING_NOTEPAD_AUTHORS "Copyright 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"
