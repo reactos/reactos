@@ -5,6 +5,7 @@
  * COPYRIGHT:   Copyright 2024 Marek Benc <benc.marek.elektro98@proton.me>
  */
 
+#include <assert.h>
 #include <windows.h>
 #include "wine/test.h"
 
@@ -14,13 +15,33 @@
 static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPARAM lParam);
 
 #define TEST_COLOR_COUNT 16
-static COLORREF Colors[TEST_COLOR_COUNT] = { 0 };
-static HBRUSH   ColorBrushes[TEST_COLOR_COUNT] = { 0 };
+
+/* Standard Windows 16-Color VGA Color palette. */
+static COLORREF Colors[] =
+{
+    RGB(0x00, 0x00, 0x00),  /* Black */
+    RGB(0x00, 0x00, 0x80),  /* Dark Blue */
+    RGB(0x00, 0x80, 0x00),  /* Dark Green */
+    RGB(0x00, 0x80, 0x80),  /* Dark Cyan */
+    RGB(0x80, 0x00, 0x00),  /* Dark Red */
+    RGB(0x80, 0x00, 0x80),  /* Dark Magenta */
+    RGB(0x80, 0x80, 0x00),  /* Dark Yellow */
+    RGB(0xC0, 0xC0, 0xC0),  /* Light Gray */
+    RGB(0x80, 0x80, 0x80),  /* Dark Gray */
+    RGB(0x00, 0x00, 0xFF),  /* Blue */
+    RGB(0x00, 0xFF, 0x00),  /* Green */
+    RGB(0x00, 0xFF, 0xFF),  /* Cyan */
+    RGB(0xFF, 0x00, 0x00),  /* Red */
+    RGB(0xFF, 0x00, 0xFF),  /* Magenta */
+    RGB(0xFF, 0xFF, 0x00),  /* Yellow */
+    RGB(0xFF, 0xFF, 0xFF)   /* White */
+};
+static HBRUSH ColorBrushes[TEST_COLOR_COUNT] = { 0 };
 
 static BOOL HaveHRedraw = FALSE;
 static BOOL HaveVRedraw = FALSE;
 
-typedef enum
+typedef enum _FSM_STATE
 {
     FSM_STATE_START,
     FSM_STATE_VSCR_SHOWN,
@@ -52,11 +73,11 @@ static int OrigHeight = 0;
 static int SmallWidth = 0;
 static int SmallHeight = 0;
 
-static void ColorsCleanup()
+static void ColorsCleanup(void)
 {
     UINT Iter;
 
-    for (Iter = 0; Iter < TEST_COLOR_COUNT; Iter++)
+    for (Iter = 0; Iter < _countof(ColorBrushes); Iter++)
     {
         if (ColorBrushes[Iter] != NULL)
         {
@@ -70,30 +91,9 @@ static BOOL ColorsInit(void)
 {
     UINT Iter;
 
-    if (TEST_COLOR_COUNT != 16)
-    {
-        return FALSE;
-    }
+    assert(_countof(Colors) == _countof(ColorBrushes));
 
-    /* Standard Windows 16-Color VGA Color palette. */
-    Colors[0]  = RGB(0x00, 0x00, 0x00);  /* Black */
-    Colors[1]  = RGB(0x00, 0x00, 0x80);  /* Dark Blue */
-    Colors[2]  = RGB(0x00, 0x80, 0x00);  /* Dark Green */
-    Colors[3]  = RGB(0x00, 0x80, 0x80);  /* Dark Cyan */
-    Colors[4]  = RGB(0x80, 0x00, 0x00);  /* Dark Red */
-    Colors[5]  = RGB(0x80, 0x00, 0x80);  /* Dark Magenta */
-    Colors[6]  = RGB(0x80, 0x80, 0x00);  /* Dark Yellow */
-    Colors[7]  = RGB(0xC0, 0xC0, 0xC0);  /* Light Gray */
-    Colors[8]  = RGB(0x80, 0x80, 0x80);  /* Dark Gray */
-    Colors[9]  = RGB(0x00, 0x00, 0xFF);  /* Blue */
-    Colors[10] = RGB(0x00, 0xFF, 0x00);  /* Green */
-    Colors[11] = RGB(0x00, 0xFF, 0xFF);  /* Cyan */
-    Colors[12] = RGB(0xFF, 0x00, 0x00);  /* Red */
-    Colors[13] = RGB(0xFF, 0x00, 0xFF);  /* Magenta */
-    Colors[14] = RGB(0xFF, 0xFF, 0x00);  /* Yellow */
-    Colors[15] = RGB(0xFF, 0xFF, 0xFF);  /* White */
-
-    for (Iter = 0; Iter < TEST_COLOR_COUNT; Iter++)
+    for (Iter = 0; Iter < _countof(ColorBrushes); Iter++)
     {
         ColorBrushes[Iter] = CreateSolidBrush(Colors[Iter]);
         if (ColorBrushes[Iter] == NULL)
@@ -106,9 +106,9 @@ static BOOL ColorsInit(void)
     return TRUE;
 }
 
-static void RunTestWindow(const char *ClassName, const char *WindowTitle, UINT ClassStyle)
+static void RunTestWindow(PCSTR ClassName, PCSTR WindowTitle, UINT ClassStyle)
 {
-    WNDCLASS Class = { 0 };
+    WNDCLASSA Class = { 0 };
     HWND Window;
     MSG  Message;
 
@@ -119,30 +119,30 @@ static void RunTestWindow(const char *ClassName, const char *WindowTitle, UINT C
     Class.cbClsExtra    = 0;
     Class.cbWndExtra    = 0;
     Class.hInstance     = GetModuleHandleA(NULL);
-    Class.hIcon         = LoadIcon(NULL, IDI_APPLICATION);
-    Class.hCursor       = LoadCursor(NULL, IDC_ARROW);
+    Class.hIcon         = LoadIconA(NULL, IDI_APPLICATION);
+    Class.hCursor       = LoadCursorA(NULL, IDC_ARROW);
     Class.hbrBackground = ColorBrushes[CurrentColor];
     Class.lpszMenuName  = NULL;
     Class.lpszClassName = ClassName;
 
-    if (!RegisterClass(&Class))
+    if (!RegisterClassA(&Class))
     {
         skip("Failed to register window class \"%s\", code: %ld\n",
              ClassName, GetLastError());
         return;
     }
 
-    Window = CreateWindow(ClassName,
-                          WindowTitle,
-                          WS_OVERLAPPEDWINDOW | WS_VSCROLL | WS_HSCROLL,
-                          CW_USEDEFAULT,
-                          CW_USEDEFAULT,
-                          CW_USEDEFAULT,
-                          CW_USEDEFAULT,
-                          NULL,
-                          NULL,
-                          GetModuleHandleA(NULL),
-                          NULL);
+    Window = CreateWindowA(ClassName,
+                           WindowTitle,
+                           WS_OVERLAPPEDWINDOW | WS_VSCROLL | WS_HSCROLL,
+                           CW_USEDEFAULT,
+                           CW_USEDEFAULT,
+                           CW_USEDEFAULT,
+                           CW_USEDEFAULT,
+                           NULL,
+                           NULL,
+                           GetModuleHandleA(NULL),
+                           NULL);
 
     if (Window == NULL)
     {
@@ -608,13 +608,12 @@ static int OnPaint(HWND Window)
 
 static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-    RECT Rect;
-    int NewWidth;
-    int NewHeight;
-
     switch (Message)
     {
         case WM_CREATE:
+        {
+            RECT Rect;
+
             /* It's important for the test that the entire Window is visible. */
             if (!SetWindowPos(Window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE))
             {
@@ -653,6 +652,7 @@ static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPA
             FsmTimer = 0;
 
             return 0;
+        }
 
         case WM_PAINT:
             if (FsmTimer == 0)
@@ -670,8 +670,9 @@ static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPA
             break;
 
         case WM_SIZE:
-            NewWidth = LOWORD(lParam);
-            NewHeight = HIWORD(lParam);
+        {
+            int NewWidth = LOWORD(lParam);
+            int NewHeight = HIWORD(lParam);
 
             if (NewWidth != 0 && NewHeight != 0 &&
                 (NewWidth != ClientWidth || NewHeight != ClientHeight))
@@ -688,6 +689,7 @@ static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPA
                 ClientHeight = NewHeight;
             }
             return 0;
+        }
 
         case WM_ERASEBKGND:
             return 1; /* We use WM_PAINT instead. */
