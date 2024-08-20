@@ -301,13 +301,11 @@ static int FsmStep(HWND Window)
     switch (FsmState)
     {
         case FSM_STATE_START:
-
             ShowVertScrollBar(Window);
             FsmState = FSM_STATE_VSCR_SHOWN;
             break;
 
         case FSM_STATE_VSCR_SHOWN:
-
             if (HaveHRedraw)
             {
                 ok(Color != PrevColor,
@@ -329,7 +327,6 @@ static int FsmStep(HWND Window)
             break;
 
         case FSM_STATE_VSCR_HIDDEN:
-
             if (HaveHRedraw)
             {
                 ok(Color != PrevColor,
@@ -350,7 +347,6 @@ static int FsmStep(HWND Window)
             break;
 
         case FSM_STATE_HSCR_SHOWN:
-
             if (HaveVRedraw)
             {
                 ok(Color != PrevColor,
@@ -371,7 +367,6 @@ static int FsmStep(HWND Window)
             break;
 
         case FSM_STATE_HSCR_HIDDEN:
-
             if (HaveVRedraw)
             {
                 ok(Color != PrevColor,
@@ -394,7 +389,6 @@ static int FsmStep(HWND Window)
             break;
 
         case FSM_STATE_BSCR_SHOWN:
-
             if (HaveHRedraw || HaveVRedraw)
             {
                 ok(Color != PrevColor,
@@ -418,7 +412,6 @@ static int FsmStep(HWND Window)
             break;
 
         case FSM_STATE_BSCR_HIDDEN:
-
             if (HaveHRedraw || HaveVRedraw)
             {
                 ok(Color != PrevColor,
@@ -440,7 +433,6 @@ static int FsmStep(HWND Window)
             break;
 
         case FSM_STATE_WIDTH_SHRUNK:
-
             if (HaveHRedraw)
             {
                 ok(Color != PrevColor,
@@ -461,7 +453,6 @@ static int FsmStep(HWND Window)
             break;
 
         case FSM_STATE_WIDTH_EXPANDED:
-
             if (HaveHRedraw)
             {
                 ok(Color != PrevColor,
@@ -482,7 +473,6 @@ static int FsmStep(HWND Window)
             break;
 
         case FSM_STATE_HEIGHT_SHRUNK:
-
             if (HaveVRedraw)
             {
                 ok(Color != PrevColor,
@@ -503,7 +493,6 @@ static int FsmStep(HWND Window)
             break;
 
         case FSM_STATE_HEIGHT_EXPANDED:
-
             if (HaveVRedraw)
             {
                 ok(Color != PrevColor,
@@ -525,7 +514,6 @@ static int FsmStep(HWND Window)
             break;
 
         case FSM_STATE_BOTH_SHRUNK:
-
             if (HaveHRedraw || HaveVRedraw)
             {
                 ok(Color != PrevColor,
@@ -549,7 +537,6 @@ static int FsmStep(HWND Window)
             break;
 
         case FSM_STATE_BOTH_EXPANDED:
-
             if (HaveHRedraw || HaveVRedraw)
             {
                 ok(Color != PrevColor,
@@ -577,7 +564,6 @@ static int FsmStep(HWND Window)
     }
 
     PrevColor = Color;
-
     return 0;
 }
 
@@ -603,7 +589,6 @@ static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPA
     switch (Message)
     {
         case WM_CREATE:
-
             /* It's important for the test that the entire Window is visible. */
             if (!SetWindowPos(Window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE))
             {
@@ -629,8 +614,8 @@ static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPA
 
             SmallWidth  = max((OrigWidth  * 3) / 4, 1);
             SmallHeight = max((OrigHeight * 3) / 4, 1);
-            OrigWidth   = max(OrigWidth,  SmallWidth+1);
-            OrigHeight  = max(OrigHeight, SmallHeight+1);
+            OrigWidth   = max(OrigWidth,  SmallWidth  + 1);
+            OrigHeight  = max(OrigHeight, SmallHeight + 1);
 
             trace("OrigWidth: %d, OrigHeight: %d, SmallWidth: %d, SmallHeight: %d\n",
                   OrigWidth, OrigHeight, SmallWidth, SmallHeight);
@@ -644,7 +629,6 @@ static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPA
             return 0;
 
         case WM_PAINT:
-
             if (FsmTimer == 0)
             {
                 FsmTimer = SetTimer(Window, 1, FSM_STEP_PERIOD_MS, NULL);
@@ -659,7 +643,6 @@ static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPA
             break;
 
         case WM_SIZE:
-
             Width = LOWORD(lParam);
             Height = HIWORD(lParam);
 
@@ -674,7 +657,6 @@ static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPA
             return 0;
 
         case WM_TIMER:
-
             if (wParam != 0 && wParam == FsmTimer)
             {
                 return FsmStep(Window);
@@ -682,7 +664,6 @@ static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPA
             break;
 
         case WM_NCDESTROY:
-
             if (FsmTimer != 0)
             {
                 KillTimer(Window, FsmTimer);
@@ -691,7 +672,6 @@ static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPA
             return 0;
 
         case WM_DESTROY:
-
             PostQuitMessage(0);
             return 0;
     }
