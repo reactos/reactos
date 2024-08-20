@@ -597,7 +597,10 @@ static int OnPaint(HWND Window)
     if(!FillRgn(hdc, Region, ColorBrushes[CurrentColor]))
     {
         skip("Failed to paint the window\n");
+        DeleteObject(Region);
+        EndPaint(Window, &ps);
         DestroyWindow(Window);
+        return 0;
     }
 
     DeleteObject(Region);
@@ -666,8 +669,7 @@ static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPA
                     return 0;
                 }
             }
-            OnPaint(Window);
-            break;
+            return OnPaint(Window);
 
         case WM_SIZE:
         {
