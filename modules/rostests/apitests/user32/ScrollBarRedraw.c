@@ -323,7 +323,6 @@ static int FsmStep(HWND Window)
 
             HideVertScrollBar(Window);
             FsmState = FSM_STATE_VSCR_HIDDEN;
-
             break;
 
         case FSM_STATE_VSCR_HIDDEN:
@@ -585,7 +584,6 @@ static int OnPaint(HWND Window)
                            ps.rcPaint.top,
                            ps.rcPaint.right,
                            ps.rcPaint.bottom);
-
     if (Region == NULL)
     {
         skip("Failed to create drawing region\n");
