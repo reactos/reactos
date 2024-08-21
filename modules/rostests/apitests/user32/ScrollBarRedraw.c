@@ -109,14 +109,16 @@ static void RunTestWindow(PCWSTR ClassName, PCWSTR WindowTitle, UINT ClassStyle)
     WNDCLASSW Class = { 0 };
     HWND Window;
     MSG  Message;
+    HINSTANCE hInst;
 
     CurrentColor = 0;
+    hInst = GetModuleHandleW(NULL);
 
     Class.style         = ClassStyle;
     Class.lpfnWndProc   = WindowProc;
     Class.cbClsExtra    = 0;
     Class.cbWndExtra    = 0;
-    Class.hInstance     = GetModuleHandleW(NULL);
+    Class.hInstance     = hInst;
     Class.hIcon         = LoadIcon(NULL, IDI_APPLICATION);
     Class.hCursor       = LoadCursor(NULL, IDC_ARROW);
     Class.hbrBackground = ColorBrushes[CurrentColor];
@@ -139,7 +141,7 @@ static void RunTestWindow(PCWSTR ClassName, PCWSTR WindowTitle, UINT ClassStyle)
                            CW_USEDEFAULT,
                            NULL,
                            NULL,
-                           GetModuleHandleW(NULL),
+                           hInst,
                            NULL);
 
     if (Window == NULL)
