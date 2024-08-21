@@ -453,7 +453,7 @@ CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEnt
     NTSTATUS Status;
 
     PVOID KernelMem;
-    UINT Size, i;
+    UINT Size;
 
     *KernelModeMsg = *UserModeMsg;
 
@@ -497,15 +497,8 @@ CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEnt
                 }
                 _SEH2_END;
 
-                /* Make sure that the last WCHAR is a UNICODE_NULL */
-                for (i = 0; i < ARRAYSIZE(lParamMsg); ++i)
-                {
-                    if (lParamMsg[i] == 0)
-                        break;
-                }
-                /* If we did not find a UNICODE_NULL, then set last WCHAR to one */
-                if (i == ARRAYSIZE(lParamMsg))
-                    lParamMsg[_countof(StrUserKernel[0])] = UNICODE_NULL;
+                /* Make sure that we have a UNICODE_NULL within lParamMsg */
+                lParamMsg[_countof(StrUserKernel[0])] = UNICODE_NULL;
 
                 if (!UserModeMsg->wParam && PosInArray(lParamMsg) >= 0)
                 {
