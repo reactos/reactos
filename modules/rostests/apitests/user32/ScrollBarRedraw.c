@@ -5,9 +5,7 @@
  * COPYRIGHT:   Copyright 2024 Marek Benc <benc.marek.elektro98@proton.me>
  */
 
-#include <assert.h>
-#include <windows.h>
-#include "wine/test.h"
+#include "precomp.h"
 
 #define TEST_CLASS_NAME   L"ScrollBarRedraw"
 #define TEST_WINDOW_TITLE L"ScrollBarRedraw"
