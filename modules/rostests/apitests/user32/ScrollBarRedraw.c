@@ -275,8 +275,8 @@ static int FsmStep(HWND Window)
         {
             skip("Failed to get device context\n");
 
-            DestroyWindow(Window);
             FsmState = FSM_STATE_END;
+            DestroyWindow(Window);
 
             return 0;
         }
@@ -289,8 +289,8 @@ static int FsmStep(HWND Window)
         {
             skip("Failed to get window color\n");
 
-            DestroyWindow(Window);
             FsmState = FSM_STATE_END;
+            DestroyWindow(Window);
 
             return 0;
         }
@@ -553,9 +553,8 @@ static int FsmStep(HWND Window)
                    PrevColor, Color);
             }
 
-            DestroyWindow(Window);
-
             FsmState = FSM_STATE_END;
+            DestroyWindow(Window);
             break;
 
         case FSM_STATE_END:
@@ -707,6 +706,11 @@ static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPA
             {
                 KillTimer(Window, FsmTimer);
                 FsmTimer = 0;
+
+                if (FsmState != FSM_STATE_END)
+                {
+                    skip("Window was closed before test concluded, FsmState: %d, FSM_STATE_END: %d.\n", FsmState, FSM_STATE_END);
+                }
             }
             return 0;
 
