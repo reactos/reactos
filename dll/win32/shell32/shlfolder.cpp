@@ -274,6 +274,41 @@ HRESULT SHELL32_CompareDetails(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST 
     return MAKE_COMPARE_HRESULT(ret);
 }
 
+HRESULT SHELL_CompareAllFields(IShellFolder* psf,
+                                 LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2,
+                                 UINT Count, int Skip)
+{
+    for (UINT i = 0; i < Count; ++i)
+    {
+        if (Skip == (int)i)
+            continue;
+        HRESULT hr = psf->CompareIDs(i, pidl1, pidl2);
+        if (hr && SUCCEEDED(hr))
+            return hr;
+    }
+    return MAKE_COMPARE_HRESULT(0);
+}
+
+HRESULT SHELL_FolderImplCompareIDsTiebreaker(IShellFolder2* psf, LPARAM lParam,
+                                             LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2,
+                                             UINT Count, int Canonical)
+{
+    if ((lParam & SHCIDS_COLUMNMASK) != Canonical && Canonical >= 0)
+    {
+        LPARAM flags = (lParam & SHCIDS_BITMASK) & ~SHCIDS_ALLFIELDS;
+        HRESULT hr = psf->CompareIDs(Canonical | flags, pidl1, pidl2);
+        if (hr && SUCCEEDED(hr))
+            return hr;
+    }
+    if (lParam & SHCIDS_ALLFIELDS)
+    {
+        HRESULT hr = SHELL_CompareAllFields(psf, pidl1, pidl2, Count, Canonical);
+        if (hr && SUCCEEDED(hr))
+            return hr;
+    }
+    return SHELL32_CompareChildren(psf, lParam, pidl1, pidl2);
+}
+
 LSTATUS AddClassKeyToArray(const WCHAR* szClass, HKEY* array, UINT* cKeys)
 {
     if (*cKeys >= 16)
