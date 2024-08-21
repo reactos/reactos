@@ -306,7 +306,8 @@ HRESULT SHELL_FolderImplCompareIDsTiebreaker(IShellFolder2* psf, LPARAM lParam,
         if (hr && SUCCEEDED(hr))
             return hr;
     }
-    return SHELL32_CompareChildren(psf, lParam, pidl1, pidl2);
+    // We are not passing the column index because the columns in a child folder might not have the same meaning
+    return SHELL32_CompareChildren(psf, lParam & SHCIDS_BITMASK, pidl1, pidl2);
 }
 
 LSTATUS AddClassKeyToArray(const WCHAR* szClass, HKEY* array, UINT* cKeys)
