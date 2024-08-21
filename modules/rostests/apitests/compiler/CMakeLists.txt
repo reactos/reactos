@@ -6,6 +6,7 @@ if (MSVC OR ARCH STREQUAL "i386")
 endif()
 
 list(APPEND SOURCE
+    floatconv.c
     pseh.c
     pseh_cpp.cpp
     psehtest2.c
