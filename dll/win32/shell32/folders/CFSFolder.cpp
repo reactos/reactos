@@ -1139,7 +1139,7 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
     if (SUCCEEDED(hr))
         return hr;
     int result = 0;
-    switch (LOWORD(lParam))
+    switch (lParam & SHCIDS_COLUMNMASK)
     {
         case SHFSF_COL_NAME:
             result = CompareUiStrings(pszName1, pszName2, lParam);
@@ -1164,9 +1164,12 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
                 result = pData1->u.file.uFileTime - pData2->u.file.uFileTime;
             break;
         case SHFSF_COL_FATTS:
-            return SHELL32_CompareDetails(this, lParam, pidl1, pidl2);
+            result = SHELL32_CompareDetails(this, lParam, pidl1, pidl2);
+            if (result == 0)
+                result = pData1->u.file.uFileAttribs - pData1->u.file.uFileAttribs; // Attributes without a "UI letter"
+            break;
         case SHFSF_COL_COMMENT:
-            result = 0;
+            result = SHELL32_CompareDetails(this, lParam, pidl1, pidl2);
             break;
         default:
             if (_ILIsPidlSimple(pidl1) || _ILIsPidlSimple(pidl2))
@@ -1176,8 +1179,8 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
     }
 
     if (result == 0)
-        return SHELL32_CompareChildren(this, lParam, pidl1, pidl2);
-
+        return SHELL_FolderImplCompareIDsTiebreaker(this, lParam, pidl1, pidl2,
+                                                    GENERICSHELLVIEWCOLUMNS, SHFSF_COL_NAME);
     return MAKE_COMPARE_HRESULT(result);
 }
 
