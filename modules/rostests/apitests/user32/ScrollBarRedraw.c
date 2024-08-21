@@ -9,8 +9,8 @@
 #include <windows.h>
 #include "wine/test.h"
 
-#define TEST_CLASS_NAME   "ScrollBarRedraw"
-#define TEST_WINDOW_TITLE "ScrollBarRedraw"
+#define TEST_CLASS_NAME   L"ScrollBarRedraw"
+#define TEST_WINDOW_TITLE L"ScrollBarRedraw"
 
 static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPARAM lParam);
 
@@ -106,9 +106,9 @@ static BOOL ColorsInit(void)
     return TRUE;
 }
 
-static void RunTestWindow(PCSTR ClassName, PCSTR WindowTitle, UINT ClassStyle)
+static void RunTestWindow(PCWSTR ClassName, PCWSTR WindowTitle, UINT ClassStyle)
 {
-    WNDCLASSA Class = { 0 };
+    WNDCLASSW Class = { 0 };
     HWND Window;
     MSG  Message;
 
@@ -118,21 +118,21 @@ static void RunTestWindow(PCSTR ClassName, PCSTR WindowTitle, UINT ClassStyle)
     Class.lpfnWndProc   = WindowProc;
     Class.cbClsExtra    = 0;
     Class.cbWndExtra    = 0;
-    Class.hInstance     = GetModuleHandleA(NULL);
-    Class.hIcon         = LoadIconA(NULL, IDI_APPLICATION);
-    Class.hCursor       = LoadCursorA(NULL, IDC_ARROW);
+    Class.hInstance     = GetModuleHandleW(NULL);
+    Class.hIcon         = LoadIcon(NULL, IDI_APPLICATION);
+    Class.hCursor       = LoadCursor(NULL, IDC_ARROW);
     Class.hbrBackground = ColorBrushes[CurrentColor];
     Class.lpszMenuName  = NULL;
     Class.lpszClassName = ClassName;
 
-    if (!RegisterClassA(&Class))
+    if (!RegisterClassW(&Class))
     {
-        skip("Failed to register window class \"%s\", code: %ld\n",
+        skip("Failed to register window class \"%ls\", code: %ld\n",
              ClassName, GetLastError());
         return;
     }
 
-    Window = CreateWindowA(ClassName,
+    Window = CreateWindowW(ClassName,
                            WindowTitle,
                            WS_OVERLAPPEDWINDOW | WS_VSCROLL | WS_HSCROLL,
                            CW_USEDEFAULT,
@@ -141,12 +141,12 @@ static void RunTestWindow(PCSTR ClassName, PCSTR WindowTitle, UINT ClassStyle)
                            CW_USEDEFAULT,
                            NULL,
                            NULL,
-                           GetModuleHandleA(NULL),
+                           GetModuleHandleW(NULL),
                            NULL);
 
     if (Window == NULL)
     {
-        skip("Failed to create window of class \"%s\", code: %ld\n",
+        skip("Failed to create window of class \"%ls\", code: %ld\n",
              ClassName, GetLastError());
         return;
     }
@@ -154,10 +154,10 @@ static void RunTestWindow(PCSTR ClassName, PCSTR WindowTitle, UINT ClassStyle)
     ShowWindow(Window, SW_SHOWNORMAL);
     UpdateWindow(Window);
 
-    while (GetMessage(&Message, NULL, 0, 0))
+    while (GetMessageW(&Message, NULL, 0, 0))
     {
         TranslateMessage(&Message);
-        DispatchMessage(&Message);
+        DispatchMessageW(&Message);
     }
 }
 
@@ -172,29 +172,29 @@ START_TEST(ScrollBarRedraw)
     trace("Running test without specifying either CS_HREDRAW or CS_HREDRAW\n");
     HaveHRedraw = FALSE;
     HaveVRedraw = FALSE;
-    RunTestWindow(TEST_CLASS_NAME   "NoRedraw",
-                  TEST_WINDOW_TITLE " (No Redraw Flags)",
+    RunTestWindow(TEST_CLASS_NAME   L"NoRedraw",
+                  TEST_WINDOW_TITLE L" (No Redraw Flags)",
                   0);
 
     trace("Running test with CS_HREDRAW\n");
     HaveHRedraw = TRUE;
     HaveVRedraw = FALSE;
-    RunTestWindow(TEST_CLASS_NAME   "HRedraw",
-                  TEST_WINDOW_TITLE " (CS_HREDRAW)",
+    RunTestWindow(TEST_CLASS_NAME   L"HRedraw",
+                  TEST_WINDOW_TITLE L" (CS_HREDRAW)",
                   CS_HREDRAW);
 
     trace("Running test with CS_VREDRAW\n");
     HaveHRedraw = FALSE;
     HaveVRedraw = TRUE;
-    RunTestWindow(TEST_CLASS_NAME   "VRedraw",
-                  TEST_WINDOW_TITLE " (CS_VREDRAW)",
+    RunTestWindow(TEST_CLASS_NAME   L"VRedraw",
+                  TEST_WINDOW_TITLE L" (CS_VREDRAW)",
                   CS_VREDRAW);
 
     trace("Running test with both CS_HREDRAW and CS_VREDRAW\n");
     HaveHRedraw = TRUE;
     HaveVRedraw = TRUE;
-    RunTestWindow(TEST_CLASS_NAME   "HRedrawVRedraw",
-                  TEST_WINDOW_TITLE " (CS_HREDRAW | CS_VREDRAW)",
+    RunTestWindow(TEST_CLASS_NAME   L"HRedrawVRedraw",
+                  TEST_WINDOW_TITLE L" (CS_HREDRAW | CS_VREDRAW)",
                   CS_HREDRAW | CS_VREDRAW);
 
     trace("Test complete\n");
@@ -678,9 +678,9 @@ static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPA
                 (NewWidth != ClientWidth || NewHeight != ClientHeight))
             {
                 CurrentColor = (CurrentColor + 1) % TEST_COLOR_COUNT;
-                SetClassLongPtr(Window,
-                                GCLP_HBRBACKGROUND,
-                                (LONG_PTR)ColorBrushes[CurrentColor]);
+                SetClassLongPtrW(Window,
+                                 GCLP_HBRBACKGROUND,
+                                 (LONG_PTR)ColorBrushes[CurrentColor]);
 
                 trace("New window size: %d x %d, new color: 0x%.8lX\n",
                       NewWidth, NewHeight, Colors[CurrentColor]);
@@ -714,5 +714,5 @@ static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPA
             PostQuitMessage(0);
             return 0;
     }
-    return DefWindowProc(Window, Message, wParam, lParam);
+    return DefWindowProcW(Window, Message, wParam, lParam);
 }
