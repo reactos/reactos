@@ -483,8 +483,10 @@ CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEnt
         {
             TRACE("Copy Message %u from usermode buffer\n", KernelModeMsg->message);
             /* Don't do extra testing for 1 word messages. For examples see
-             * https://wiki.winehq.org/List_Of_Windows_Messages. */
-            if ((Size > 1) && UserModeMsg->lParam)
+             * https://wiki.winehq.org/List_Of_Windows_Messages and
+             * we are just handling WM_WININICHANGE here. */
+            if (Size > 1 && UserModeMsg->lParam &&
+                KernelModeMsg->message == WM_WININICHANGE)
             {
                 WCHAR lParamMsg[_countof(StrUserKernel[0]) + 1] = { 0 };
                 _SEH2_TRY
@@ -498,7 +500,7 @@ CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEnt
                 _SEH2_END;
 
                 /* Make sure that we have a UNICODE_NULL within lParamMsg */
-                lParamMsg[_countof(StrUserKernel[0])] = UNICODE_NULL;
+                lParamMsg[ARRAYSIZE(lParamMsg) - 1] = UNICODE_NULL;
 
                 if (!UserModeMsg->wParam && PosInArray(lParamMsg) >= 0)
                 {
