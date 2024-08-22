@@ -127,7 +127,7 @@ static void RunTestWindow(PCWSTR ClassName, PCWSTR WindowTitle, UINT ClassStyle)
 
     if (!RegisterClassW(&Class))
     {
-        skip("Failed to register window class \"%ls\", code: %ld\n",
+        skip("Failed to register window class '%ls', code: %ld\n",
              ClassName, GetLastError());
         return;
     }
@@ -143,10 +143,9 @@ static void RunTestWindow(PCWSTR ClassName, PCWSTR WindowTitle, UINT ClassStyle)
                            NULL,
                            hInst,
                            NULL);
-
     if (Window == NULL)
     {
-        skip("Failed to create window of class \"%ls\", code: %ld\n",
+        skip("Failed to create window of class '%ls', code: %ld\n",
              ClassName, GetLastError());
         return;
     }
@@ -270,7 +269,6 @@ static int FsmStep(HWND Window)
     if (FsmState != FSM_STATE_END)
     {
         hdc = GetDC(Window);
-
         if (hdc == NULL)
         {
             skip("Failed to get device context\n");
@@ -658,7 +656,6 @@ static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPA
             if (FsmTimer == 0)
             {
                 FsmTimer = SetTimer(Window, 1, FSM_STEP_PERIOD_MS, NULL);
-
                 if (FsmTimer == 0)
                 {
                     skip("Failed to initialize FSM timer, code: %ld\n", GetLastError());
@@ -709,7 +706,8 @@ static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPA
 
                 if (FsmState != FSM_STATE_END)
                 {
-                    skip("Window was closed before test concluded, FsmState: %d, FSM_STATE_END: %d.\n", FsmState, FSM_STATE_END);
+                    skip("Window closed before test concluded, FsmState: %d, FSM_STATE_END: %d.\n",
+                         FsmState, FSM_STATE_END);
                 }
             }
             return 0;
