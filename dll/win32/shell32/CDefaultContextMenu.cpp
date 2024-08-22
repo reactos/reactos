@@ -157,6 +157,7 @@ class CDefaultContextMenu :
         WCHAR m_DefVerbs[MAX_PATH];
 
         HRESULT _DoCallback(UINT uMsg, WPARAM wParam, LPVOID lParam);
+        HRESULT _DoInvokeCommandCallback(LPCMINVOKECOMMANDINFOEX lpcmi, WPARAM CmdId);
         void AddStaticEntry(const HKEY hkeyClass, const WCHAR *szVerb, UINT uFlags);
         void AddStaticEntriesForKey(HKEY hKey, UINT uFlags);
         void TryPickDefault(HMENU hMenu, UINT idCmdFirst, UINT DfltOffset, UINT uFlags);
@@ -1053,7 +1054,7 @@ HRESULT
 CDefaultContextMenu::DoProperties(
     LPCMINVOKECOMMANDINFOEX lpcmi)
 {
-    HRESULT hr = _DoCallback(DFM_INVOKECOMMAND, DFM_CMD_PROPERTIES, NULL);
+    HRESULT hr = _DoInvokeCommandCallback(lpcmi, DFM_CMD_PROPERTIES);
 
     // We are asked to run the default property sheet
     if (hr == S_FALSE)
@@ -1459,6 +1460,29 @@ CDefaultContextMenu::InvokeRegVerb(
 }
 
 HRESULT
+CDefaultContextMenu::_DoInvokeCommandCallback(
+    LPCMINVOKECOMMANDINFOEX lpcmi, WPARAM CmdId)
+{
+    BOOL Unicode = IsUnicode(*lpcmi);
+    WCHAR lParamBuf[MAX_PATH];
+    LPARAM lParam = 0;
+
+    if (Unicode && lpcmi->lpParametersW)
+        lParam = (LPARAM)lpcmi->lpParametersW;
+    else if (lpcmi->lpParameters)
+        lParam = SHAnsiToUnicode(lpcmi->lpParameters, lParamBuf, _countof(lParamBuf)) ? (LPARAM)lParamBuf : 0;
+
+    HRESULT hr;
+#if 0 // TODO: Try DFM_INVOKECOMMANDEX first.
+    DFMICS dfmics = { sizeof(DFMICS), lpcmi->fMask, lParam, m_iIdSCMFirst?, m_iIdDfltLast?, (LPCMINVOKECOMMANDINFO)lpcmi, m_site };
+    hr = _DoCallback(DFM_INVOKECOMMANDEX, CmdId, &dfmics);
+    if (hr == E_NOTIMPL)
+#endif
+        hr = _DoCallback(DFM_INVOKECOMMAND, CmdId, (void*)lParam);
+    return hr;
+}
+
+HRESULT
 WINAPI
 CDefaultContextMenu::InvokeCommand(
     LPCMINVOKECOMMANDINFO lpcmi)
@@ -1498,7 +1522,7 @@ CDefaultContextMenu::InvokeCommand(
 
     if (m_iIdCBFirst != m_iIdCBLast && CmdId >= m_iIdCBFirst && CmdId < m_iIdCBLast)
     {
-        Result = _DoCallback(DFM_INVOKECOMMAND, CmdId - m_iIdCBFirst, NULL);
+        Result = _DoInvokeCommandCallback(&LocalInvokeInfo, CmdId - m_iIdCBFirst);
         return Result;
     }
 
