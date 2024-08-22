@@ -39,14 +39,6 @@ SetupCreateSingleDirectory(
         return STATUS_NO_MEMORY;
 
     if (PathName.Length > sizeof(WCHAR) &&
-        PathName.Buffer[PathName.Length / sizeof(WCHAR) - 2] == L'\\' &&
-        PathName.Buffer[PathName.Length / sizeof(WCHAR) - 1] == L'.')
-    {
-        PathName.Length -= sizeof(WCHAR);
-        PathName.Buffer[PathName.Length / sizeof(WCHAR)] = UNICODE_NULL;
-    }
-
-    if (PathName.Length > sizeof(WCHAR) &&
         PathName.Buffer[PathName.Length / sizeof(WCHAR) - 1] == L'\\')
     {
         PathName.Length -= sizeof(WCHAR);
