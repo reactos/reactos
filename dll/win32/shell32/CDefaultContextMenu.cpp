@@ -1463,7 +1463,7 @@ HRESULT
 CDefaultContextMenu::_DoInvokeCommandCallback(
     LPCMINVOKECOMMANDINFOEX lpcmi, WPARAM CmdId)
 {
-    BOOL Unicode = (lpcmi->fMask & CMIC_MASK_UNICODE) && lpcmi->cbSize >= FIELD_OFFSET(CMINVOKECOMMANDINFOEX, ptInvoke);
+    BOOL Unicode = IsUnicode(*lpcmi);
     WCHAR lParamBuf[MAX_PATH];
     LPARAM lParam = 0;
 
@@ -1474,7 +1474,7 @@ CDefaultContextMenu::_DoInvokeCommandCallback(
 
     HRESULT hr;
 #if 0 // TODO: Try DFM_INVOKECOMMANDEX first.
-    DFMICS dfmics = { sizeof(DFMICS), lpcmi->fMask, lParam, ?, ?, (LPCMINVOKECOMMANDINFO)lpcmi, m_site };
+    DFMICS dfmics = { sizeof(DFMICS), lpcmi->fMask, lParam, m_iIdSCMFirst?, m_iIdDfltLast?, (LPCMINVOKECOMMANDINFO)lpcmi, m_site };
     hr = _DoCallback(DFM_INVOKECOMMANDEX, CmdId, &dfmics);
     if (hr == E_NOTIMPL)
 #endif
