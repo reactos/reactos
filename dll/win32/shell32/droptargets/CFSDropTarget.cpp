@@ -595,10 +595,11 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                 WCHAR targetName[MAX_PATH];
                 if (SUCCEEDED(hr))
                 {
-                    // If the target is a FS item, we use SHGDN_FORPARSING because "NeverShowExt" will hide the ".lnk" extension.
+                    // If the target is a file, we use SHGDN_FORPARSING because "NeverShowExt" will hide the ".lnk" extension.
                     // If the target is a virtual item, we ask for the friendly name because SHGDN_FORPARSING will return a GUID.
-                    DWORD shgdnfor = (att & SFGAO_FILESYSTEM) ? SHGDN_FORPARSING : SHGDN_FOREDITING;
-                    hr = Shell_DisplayNameOf(psfFrom, apidl[i], shgdnfor | SHGDN_INFOLDER, targetName, _countof(targetName));
+                    BOOL UseParsing = (att & (SFGAO_FILESYSTEM | SFGAO_FOLDER)) == SFGAO_FILESYSTEM;
+                    DWORD ShgdnFor = UseParsing ? SHGDN_FORPARSING : SHGDN_FOREDITING;
+                    hr = Shell_DisplayNameOf(psfFrom, apidl[i], ShgdnFor | SHGDN_INFOLDER, targetName, _countof(targetName));
                 }
                 if (FAILED_UNEXPECTEDLY(hr))
                 {
