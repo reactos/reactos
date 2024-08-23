@@ -38,6 +38,7 @@ static HBRUSH ColorBrushes[TEST_COLOR_COUNT] = { 0 };
 
 static BOOL HaveHRedraw = FALSE;
 static BOOL HaveVRedraw = FALSE;
+static BOOL WindowCreatedOk = FALSE;
 
 typedef enum _FSM_STATE
 {
@@ -611,6 +612,7 @@ static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPA
         case WM_CREATE:
         {
             RECT Rect;
+            WindowCreatedOk = FALSE;
 
             /* It's important for the test that the entire Window is visible. */
             if (!SetWindowPos(Window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE))
@@ -648,17 +650,18 @@ static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPA
 
             FsmState = FSM_STATE_START;
             FsmTimer = 0;
-
+            WindowCreatedOk = TRUE;
             return 0;
         }
 
         case WM_PAINT:
-            if (FsmTimer == 0)
+            if (FsmTimer == 0 && WindowCreatedOk)
             {
                 FsmTimer = SetTimer(Window, 1, FSM_STEP_PERIOD_MS, NULL);
                 if (FsmTimer == 0)
                 {
                     skip("Failed to initialize FSM timer, code: %ld\n", GetLastError());
+                    WindowCreatedOk = FALSE;
                     DestroyWindow(Window);
                     return 0;
                 }
@@ -709,6 +712,10 @@ static LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM wParam, LPA
                     skip("Window closed before test concluded, FsmState: %d, FSM_STATE_END: %d.\n",
                          FsmState, FSM_STATE_END);
                 }
+            }
+            else if (WindowCreatedOk)
+            {
+                skip("Window closed before test began.\n");
             }
             return 0;
 
