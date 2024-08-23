@@ -541,12 +541,6 @@ HRESULT WINAPI CRegFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, P
 
 HRESULT WINAPI CRegFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut)
 {
-
-    CComPtr<IShellFolder> pOuterSF;
-    SHBindToObject(NULL, m_pidlRoot, IID_PPV_ARG(IShellFolder, &pOuterSF));
-    if (pOuterSF.p)
-        return pOuterSF->CreateViewObject(hwndOwner, riid, ppvOut);
-
     return E_NOTIMPL;
 }
 
