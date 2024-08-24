@@ -264,7 +264,7 @@ BEGIN
     IDS_PERCENTAGE "La percentuale deve essere compresa tra 1 e 500."
     IDS_ANGLE "L'angolo deve essere compreso tra -89 e 89."
     IDS_LOADERRORTEXT "l file %s non può essere caricato."
-    IDS_ENLARGEPROMPTTEXT "L'immagine negli appunti è più grande della tela.\La si vuole allargare?"
+    IDS_ENLARGEPROMPTTEXT "L'immagine negli appunti è più grande della tela.\nLa si vuole allargare?"
     IDS_BOLD "Grossivo"
     IDS_ITALIC "Italico"
     IDS_UNDERLINE "Sottolineato"
