@@ -73,3 +73,8 @@ endif()
 add_pch(ntdll include/ntdll.h "${PCH_SKIP_SOURCE}")
 add_dependencies(ntdll ntstatus asm)
 add_cd_file(TARGET ntdll DESTINATION reactos/system32 NO_CAB FOR all)
+
+# Newer VS versions link to _ftol2 / _ftoul2_legacy
+if(MSVC AND ARCH STREQUAL "i386")
+    target_link_libraries(libntdll ftol2)
+endif()
