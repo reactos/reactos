@@ -588,12 +588,19 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
             /* We need to create a link for each pidl in the copied items, so step through the pidls from the clipboard */
             for (UINT i = 0; i < lpcida->cidl; i++)
             {
+                SFGAOF att = SHGetAttributes(psfFrom, apidl[i], SFGAO_FOLDER | SFGAO_STREAM | SFGAO_FILESYSTEM);
                 CComHeapPtr<ITEMIDLIST_ABSOLUTE> pidlFull;
                 hr = SHILCombine(pidl, apidl[i], &pidlFull);
 
                 WCHAR targetName[MAX_PATH];
                 if (SUCCEEDED(hr))
-                    hr = Shell_DisplayNameOf(psfFrom, apidl[i], SHGDN_FOREDITING | SHGDN_INFOLDER, targetName, _countof(targetName));
+                {
+                    // If the target is a file, we use SHGDN_FORPARSING because "NeverShowExt" will hide the ".lnk" extension.
+                    // If the target is a virtual item, we ask for the friendly name because SHGDN_FORPARSING will return a GUID.
+                    BOOL UseParsing = (att & (SFGAO_FILESYSTEM | SFGAO_FOLDER)) == SFGAO_FILESYSTEM;
+                    DWORD ShgdnFor = UseParsing ? SHGDN_FORPARSING : SHGDN_FOREDITING;
+                    hr = Shell_DisplayNameOf(psfFrom, apidl[i], ShgdnFor | SHGDN_INFOLDER, targetName, _countof(targetName));
+                }
                 if (FAILED_UNEXPECTEDLY(hr))
                 {
                     SHELL_ErrorBox(m_hwndSite, hr);
@@ -605,7 +612,6 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                 PathCombineW(wszCombined, m_sPathTarget, targetName);
 
                 // Check to see if the source is a link
-                SFGAOF att = SHGetAttributes(psfFrom, apidl[i], SFGAO_FOLDER | SFGAO_STREAM | SFGAO_FILESYSTEM);
                 BOOL fSourceIsLink = FALSE;
                 if (!wcsicmp(PathFindExtensionW(targetName), L".lnk") && (att & (SFGAO_FOLDER | SFGAO_STREAM)) != SFGAO_FOLDER)
                 {
