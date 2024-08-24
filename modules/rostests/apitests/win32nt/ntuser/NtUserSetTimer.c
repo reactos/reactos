@@ -68,6 +68,8 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static BOOL test1(void)
 {
     UINT i, countErrors = 0;
+    ULONGLONG startTime;
+    MSG msg = { NULL };
 
     int minMessages = ((float)SLEEP_TIME / (float)TEST1_INTERVAL) * (1 - TIME_TOLERANCE);
     int maxMessages = ((float)SLEEP_TIME / (float)TEST1_INTERVAL) * (1 + TIME_TOLERANCE);
@@ -81,9 +83,8 @@ static BOOL test1(void)
             countErrors++;
     }
 
-    ULONGLONG startTime = GetTickCount();
+    startTime = GetTickCount();
 
-    MSG msg = { NULL };
     while (GetMessage(&msg, NULL, 0, 0))
     {
         TranslateMessage(&msg);
@@ -112,10 +113,11 @@ static BOOL test1(void)
 static BOOL test2(void)
 {
     UINT i, countErrors = 0;
+    UINT_PTR locIndex;
 
     for (i = 0; i < TEST2_COUNT; i++)
     {
-        UINT_PTR locIndex = SetTimer(NULL, 0, TEST2_INTERVAL, TimerProc);
+        locIndex = SetTimer(NULL, 0, TEST2_INTERVAL, TimerProc);
 
         if (locIndex == 0)
             countErrors++;
@@ -130,13 +132,15 @@ static BOOL test2(void)
 static BOOL test3(void)
 {
     UINT countErrors = 0;
+    UINT_PTR locIndex1;
+    UINT_PTR locIndex2;
 
-    UINT_PTR locIndex1 = SetTimer(NULL, 0, TEST1_INTERVAL, TimerProc);
+    locIndex1 = SetTimer(NULL, 0, TEST1_INTERVAL, TimerProc);
     if (locIndex1 == 0)
         countErrors++;
     if (KillTimer(NULL, locIndex1) == 0)
         countErrors++;
-    UINT_PTR locIndex2 = SetTimer(NULL, 0, TEST1_INTERVAL, TimerProc);
+    locIndex2 = SetTimer(NULL, 0, TEST1_INTERVAL, TimerProc);
     if (locIndex2 == 0)
         countErrors++;
     if (KillTimer(NULL, locIndex2) == 0)
@@ -151,6 +155,9 @@ static BOOL test3(void)
 static BOOL testW1(HWND hwnd)
 {
     UINT i, countErrors = 0;
+    UINT_PTR locIndex;
+    ULONGLONG startTime;
+    MSG msg = { NULL };
 
     if (hwnd == NULL)
         return FALSE;
@@ -162,14 +169,13 @@ static BOOL testW1(HWND hwnd)
 
     for (i = 0; i < TESTW1_COUNT; i++)
     {
-        UINT_PTR locIndex = SetTimer(hwnd, i, TESTW1_INTERVAL, NULL);
+        locIndex = SetTimer(hwnd, i, TESTW1_INTERVAL, NULL);
         if (locIndex == 0)
             countErrors++;
     }
 
-    ULONGLONG startTime = GetTickCount();
+    startTime = GetTickCount();
 
-    MSG msg = { NULL };
     while (GetMessage(&msg, NULL, 0, 0))
     {
         TranslateMessage(&msg);
@@ -198,13 +204,14 @@ static BOOL testW1(HWND hwnd)
 static BOOL testW2(HWND hwnd)
 {
     UINT i, countErrors = 0;
+    UINT_PTR result;
 
     if (hwnd == NULL)
         return FALSE;
 
     for (i = 0; i < TESTW2_COUNT; i++)
     {
-        UINT_PTR result = SetTimer(hwnd, 1, TESTW2_INTERVAL, NULL);
+        result = SetTimer(hwnd, 1, TESTW2_INTERVAL, NULL);
         if (result == 0)
             countErrors++;
         if (KillTimer(hwnd, 1) == 0)
@@ -216,6 +223,9 @@ static BOOL testW2(HWND hwnd)
 
 START_TEST(NtUserSetTimer)
 {
+    WNDCLASSW wc = { 0 };
+    HWND hwnd;
+
     // TEST WITH MESSAGES WITHOUT WINDOW - test count of sent messages
     TEST(test1());
 
@@ -225,13 +235,12 @@ START_TEST(NtUserSetTimer)
     // TEST WITH MESSAGES WITHOUT WINDOW - test different ids
     TEST(test3());
 
-    WNDCLASSW wc = { 0 };
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = GetModuleHandle(NULL);
     wc.lpszClassName = L"TimerWindowClass";
     RegisterClassW(&wc);
 
-    HWND hwnd = CreateWindowExW(0, L"TimerWindowClass", L"Timer Window", 0,
+    hwnd = CreateWindowExW(0, L"TimerWindowClass", L"Timer Window", 0,
         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
         HWND_MESSAGE, NULL, GetModuleHandle(NULL), NULL);
 
