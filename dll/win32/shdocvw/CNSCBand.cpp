@@ -170,6 +170,7 @@ HRESULT CNSCBand::_ExecuteCommand(_In_ CComPtr<IContextMenu>& menu, _In_ UINT nC
     CMINVOKECOMMANDINFO cmi = { sizeof(cmi) };
     cmi.lpVerb = MAKEINTRESOURCEA(nCmd);
     cmi.hwnd = browserWnd;
+    cmi.nShow = SW_SHOW;
     if (::GetKeyState(VK_SHIFT) < 0)
         cmi.fMask |= CMIC_MASK_SHIFT_DOWN;
     if (::GetKeyState(VK_CONTROL) < 0)
