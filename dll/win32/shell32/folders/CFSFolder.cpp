@@ -1179,8 +1179,8 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
     }
 
     if (result == 0)
-        return SHELL_FolderImplCompareIDsTiebreaker(this, lParam, pidl1, pidl2,
-                                                    GENERICSHELLVIEWCOLUMNS, SHFSF_COL_NAME);
+        return SHELL32_FolderImplCompareIDsTiebreaker(this, lParam, pidl1, pidl2,
+                                                      GENERICSHELLVIEWCOLUMNS, SHFSF_COL_NAME);
     return MAKE_COMPARE_HRESULT(result);
 }
 

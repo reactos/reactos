@@ -65,12 +65,14 @@ struct LISTVIEW_SORT_INFO
     bool    bColumnIsFolderColumn;
     UINT8   Reserved; // Unused
     INT     ListColumn;
+    INT     DefaultFolderColumn;
 
     enum { UNSPECIFIEDCOLUMN = -1 };
     void Reset()
     {
         *(UINT*)this = 0;
         ListColumn = UNSPECIFIEDCOLUMN;
+        DefaultFolderColumn = 0;
     }
 };
 
@@ -315,6 +317,8 @@ public:
     void UpdateListColors();
     BOOL InitList();
     static INT CALLBACK ListViewCompareItems(LPARAM lParam1, LPARAM lParam2, LPARAM lpData);
+    HRESULT CompareIDsWithFallback(LPARAM Rules, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2);
+    HRESULT GetDefaultFolderSortColumn();
 
     HRESULT MapFolderColumnToListColumn(UINT FoldCol);
     HRESULT MapListColumnToFolderColumn(UINT ListCol);
@@ -1239,6 +1243,30 @@ void CDefView::ColumnListChanged()
     m_ListView.InvalidateRect(NULL, TRUE);
 }
 
+HRESULT CDefView::CompareIDsWithFallback(LPARAM Rule, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
+{
+    UINT Flags = m_pSF2Parent ? (Rule & SHCIDS_BITMASK) : 0;
+    HRESULT hr = m_pSFParent->CompareIDs(Rule, pidl1, pidl2);
+    if (hr != 0)
+        return hr;
+    if (hr == 0 && m_sortInfo.DefaultFolderColumn > 0)
+        hr = m_pSFParent->CompareIDs(m_sortInfo.DefaultFolderColumn | Flags, pidl1, pidl2);
+    if (hr == 0 && (Rule & SHCIDS_COLUMNMASK) != 0)
+        hr = m_pSFParent->CompareIDs(0 | Flags, pidl1, pidl2);
+    if (hr == 0 && !(Rule & SHCIDS_ALLFIELDS) && m_pSF2Parent)
+        hr = m_pSFParent->CompareIDs(0 | SHCIDS_ALLFIELDS, pidl1, pidl2);
+    return hr;
+}
+
+HRESULT CDefView::GetDefaultFolderSortColumn()
+{
+    if (!m_pSF2Parent)
+        return E_NOTIMPL;
+    ULONG folderSortCol = ~ULONG(0), dummy;
+    HRESULT hr = m_pSF2Parent->GetDefaultColumn(0, &folderSortCol, &dummy);
+    return (folderSortCol == ~ULONG(0) && SUCCEEDED(hr)) ? E_FAIL : hr;
+}
+
 /*************************************************************************
  * ShellView_ListViewCompareItems
  *
@@ -1259,11 +1287,9 @@ INT CALLBACK CDefView::ListViewCompareItems(LPARAM lParam1, LPARAM lParam2, LPAR
     PCUIDLIST_RELATIVE pidl1 = reinterpret_cast<PCUIDLIST_RELATIVE>(lParam1);
     PCUIDLIST_RELATIVE pidl2 = reinterpret_cast<PCUIDLIST_RELATIVE>(lParam2);
     CDefView *pThis = reinterpret_cast<CDefView*>(lpData);
-
-    HRESULT hres = pThis->m_pSFParent->CompareIDs(pThis->m_sortInfo.ListColumn, pidl1, pidl2);
+    HRESULT hres = pThis->CompareIDsWithFallback(pThis->m_sortInfo.ListColumn, pidl1, pidl2);
     if (FAILED_UNEXPECTEDLY(hres))
         return 0;
-
     SHORT nDiff = HRESULT_CODE(hres);
     return nDiff * pThis->m_sortInfo.Direction;
 }
@@ -1317,6 +1343,7 @@ BOOL CDefView::_Sort(int Col)
 
     /* Sort the list, using the current values of ListColumn and bIsAscending */
     ASSERT(m_sortInfo.Direction == 1 || m_sortInfo.Direction == -1);
+    m_sortInfo.DefaultFolderColumn = GetDefaultFolderSortColumn();
     return m_ListView.SortItems(ListViewCompareItems, this);
 }
 
@@ -1593,15 +1620,11 @@ HRESULT CDefView::FillList(BOOL IsRefreshCommand)
     {
         m_sortInfo.Direction = 0;
         sortCol = 0; // In case the folder does not know/care
-        if (m_pSF2Parent)
-        {
-            ULONG folderSortCol = sortCol, dummy;
-            HRESULT hr = m_pSF2Parent->GetDefaultColumn(NULL, &folderSortCol, &dummy);
-            if (SUCCEEDED(hr))
-                hr = MapFolderColumnToListColumn(folderSortCol);
-            if (SUCCEEDED(hr))
-                sortCol = (int) hr;
-        }
+        HRESULT hr = GetDefaultFolderSortColumn();
+        if (SUCCEEDED(hr))
+            hr = MapFolderColumnToListColumn(hr);
+        if (SUCCEEDED(hr))
+            sortCol = (int) hr;
     }
     _Sort(sortCol);
 
