@@ -17,17 +17,17 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", ID_EXIT
     END
-    POPUP "Y&azılım"
+    POPUP "&Yazılım"
     BEGIN
         MENUITEM "&Kur\tCtrl+Enter", ID_INSTALL
-        MENUITEM "K&aldır\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Kaldır\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Değiştir", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "&Girdiyi Kayıt Defteri'nden Kaldır", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "&Yenile\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Uygulama Veri Ta&banını Yenile\tCtrl+F5", ID_RESETDB
+        MENUITEM "&Uygulama Veri Tabanını Yenile\tCtrl+F5", ID_RESETDB
     END
     POPUP "&Yardım"
     BEGIN
@@ -41,7 +41,7 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM "&Bağlantıyı Tarayıcıda Aç", ID_OPEN_LINK
-        MENUITEM "Bağlantıyı Panoya &Kopyala", ID_COPY_LINK
+        MENUITEM "&Bağlantıyı Panoya Kopyala", ID_COPY_LINK
     END
 END
 
@@ -50,14 +50,14 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM "&Kur\tCtrl+Enter", ID_INSTALL
-        MENUITEM "K&aldır\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Kaldır\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Değiştir", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "&Girdiyi Kayıt Defteri'nden Kaldır", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "&Yenile\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Uygulama Veri Ta&banını Yenile\tCtrl+F5", ID_RESETDB
+        MENUITEM "&Uygulama Veri Tabanını Yenile\tCtrl+F5", ID_RESETDB
     END
 END
 
@@ -69,7 +69,7 @@ BEGIN
     GROUPBOX "Genel", -1, 4, 2, 240, 61
     AUTOCHECKBOX "&Pencere Konumunu Kaydet", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
     AUTOCHECKBOX "&Başlangıçta Erişilebilir Programların Listesini Yenile", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "P&rogramların Kurulma ve Kaldırma Günlüğünü Sakla", IDC_LOG_ENABLED, 15, 46, 219, 12
+    AUTOCHECKBOX "&Programların Kurulma ve Kaldırma Günlüğünü Sakla", IDC_LOG_ENABLED, 15, 46, 219, 12
     GROUPBOX "İndirme", -1, 4, 65, 240, 51
     LTEXT "İndirme Dizini:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
@@ -193,7 +193,7 @@ BEGIN
     IDS_SEARCH_TEXT "Ara"
     IDS_APPS_COUNT "Uygulama Sayısı: %d; Seçili: %d"
     IDS_WELCOME_TITLE "ReactOS Uygulama Yöneticisi'ne hoş geldiniz.\n\n"
-    IDS_WELCOME_TEXT "Solda bir kategori seçiniz, ardından kurmak ya da kaldırmak için bir uygulama seçiniz.\nReactOS'un İnternet sitesi: "
+    IDS_WELCOME_TEXT "Soldan bir kategori seçiniz, ardından kurmak ya da kaldırmak için bir uygulama seçiniz.\nReactOS'un İnternet sitesi: "
     IDS_WELCOME_URL "https://reactos.org"
     IDS_INSTALLED "Kurulanlar"
     IDS_AVAILABLEFORINST "Kurulabilir Uygulamalar"
@@ -205,13 +205,13 @@ BEGIN
     IDS_APP_REG_REMOVE "Kurulan programın girdiyi kayıt defterinden silmek istediğinizden emin misiniz?"
     IDS_INFORMATION "Bilgi"
     IDS_UNABLE_TO_DOWNLOAD "Paket indirilemiyor! Adres bulunamadı!"
-    IDS_UNABLE_TO_DOWNLOAD2 "Paket indirilemiyor! İnternet bağlantınızı denetleyiniz!"
+    IDS_UNABLE_TO_DOWNLOAD2 "Paket indirilemiyor! İnternet bağlantınızı kontrol ediniz!"
     IDS_UNABLE_TO_REMOVE "Programın girdisi kayıt defterinden silinemiyor."
     IDS_UNABLE_TO_INSTALL "Yükleyici açılamıyor!"
     IDS_UNABLE_TO_QUERY_CERT "Sertifika bilgisi alınamıyor.\n\nYine de devam edilsin mi?"
     IDS_INTEG_CHECK_TITLE "Paket bütünlüğü doğrulanıyor…"
-    IDS_INTEG_CHECK_FAIL "Paket bütünlük denetimini geçmedi, bozulmuş veya indirme esnasında oynanmış olabilir. Yazılımı çalıştırmanız önerilmez."
-    IDS_INTERRUPTED_DOWNLOAD "İndirme kesildi. İnternet bağlantınızı denetleyiniz."
+    IDS_INTEG_CHECK_FAIL "Paket bütünlük denetimini geçmedi, bozulmuş veya indirme esnasında oynanmış olabilir. Programı çalıştırmanız önerilmez."
+    IDS_INTERRUPTED_DOWNLOAD "İndirme tamamlanamadı. İnternet bağlantınızı kontrol ediniz."
     IDS_UNABLE_TO_WRITE "Diske yazılamıyor. Disk dolu olabilir."
     IDS_INSTALL_SELECTED "Seçileni Kur"
     IDS_SELECTEDFORINST "Kurulum için seçildi"
@@ -220,7 +220,7 @@ BEGIN
     IDS_APP_DISPLAY_DETAILS "Detaylar"
     IDS_APP_DISPLAY_LIST "Liste"
     IDS_APP_DISPLAY_TILE "Karo"
-    IDS_NO_SEARCH_RESULTS "No search results"
+    IDS_NO_SEARCH_RESULTS "Arama sonucu bulunamadı"
 END
 
 STRINGTABLE
@@ -273,5 +273,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
+    IDS_INSTGEN_CONFIRMUNINST "Kaldırmak istediğinize emin misiniz %s?"
 END
