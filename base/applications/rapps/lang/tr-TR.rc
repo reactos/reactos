@@ -193,7 +193,7 @@ BEGIN
     IDS_SEARCH_TEXT "Ara"
     IDS_APPS_COUNT "Uygulama Sayısı: %d; Seçili: %d"
     IDS_WELCOME_TITLE "ReactOS Uygulama Yöneticisi'ne hoş geldiniz.\n\n"
-    IDS_WELCOME_TEXT "Soldan bir kategori seçiniz, ardından kurmak ya da kaldırmak için bir uygulama seçiniz.\nReactOS'un İnternet sitesi: "
+    IDS_WELCOME_TEXT "Soldaki Menüden bir kategori seçiniz, ardından kurmak ya da kaldırmak için bir uygulama seçiniz.\nReactOS'un İnternet sitesi: "
     IDS_WELCOME_URL "https://reactos.org"
     IDS_INSTALLED "Kurulanlar"
     IDS_AVAILABLEFORINST "Kurulabilir Uygulamalar"
@@ -239,7 +239,7 @@ STRINGTABLE
 BEGIN
     IDS_LICENSE_OPENSOURCE "Açık Kaynak"
     IDS_LICENSE_FREEWARE "Ücretsiz"
-    IDS_LICENSE_TRIAL "Deneme/Tanıtım"
+    IDS_LICENSE_TRIAL "Deneme Sürümü"
 END
 
 STRINGTABLE
@@ -273,5 +273,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTGEN_CONFIRMUNINST "Kaldırmak istediğinize emin misiniz %s?"
+    IDS_INSTGEN_CONFIRMUNINST "Uygulamayı kaldırmak istediğinize emin misiniz: \"%s\"?"
 END
