@@ -13,6 +13,8 @@ DBG_DEFAULT_CHANNEL(UserObj);
 PUSER_HANDLE_TABLE gHandleTable = NULL;
 PUSER_HANDLE_ENTRY gHandleEntries = NULL;
 
+ULONG gUserHandleQuota = 10000; // This is the default on Win 10 (see HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows\USERProcessHandleQuota)
+
 /* Forward declarations */
 _Success_(return!=NULL)
 static PVOID AllocThreadObject(
@@ -27,6 +29,12 @@ static PVOID AllocThreadObject(
 
     ASSERT(Size > sizeof(*ObjHead));
     ASSERT(pti != NULL);
+
+    if (pti->ppi->UserHandleCount >= gUserHandleQuota)
+    {
+        ERR("UserHandleQuota exceeded for process %p\n", pti->ppi);
+        return NULL;
+    }
 
     ObjHead = UserHeapAlloc(Size);
     if (!ObjHead)
@@ -66,6 +74,12 @@ static PVOID AllocDeskThreadObject(
 
     ASSERT(Size > sizeof(*ObjHead));
     ASSERT(pti != NULL);
+
+    if (pti->ppi->UserHandleCount >= gUserHandleQuota)
+    {
+        ERR("UserHandleQuota exceeded for process %p\n", pti->ppi);
+        return NULL;
+    }
 
     if (!pDesk)
         pDesk = pti->rpdesk;
@@ -114,6 +128,12 @@ static PVOID AllocDeskProcObject(
     ASSERT(pDesk != NULL);
     ASSERT(pti != NULL);
 
+    if (pti->ppi->UserHandleCount >= gUserHandleQuota)
+    {
+        ERR("UserHandleQuota exceeded for process %p\n", pti->ppi);
+        return NULL;
+    }
+
     ObjHead = DesktopHeapAlloc(pDesk, Size);
     if (!ObjHead)
         return NULL;
@@ -158,6 +178,12 @@ static PVOID AllocProcMarkObject(
     UNREFERENCED_PARAMETER(pDesk);
 
     ASSERT(Size > sizeof(*ObjHead));
+
+    if (ppi->UserHandleCount >= gUserHandleQuota)
+    {
+        ERR("UserHandleQuota exceeded for process %p\n", pti->ppi);
+        return NULL;
+    }
 
     ObjHead = UserHeapAlloc(Size);
     if (!ObjHead)
