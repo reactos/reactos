@@ -317,11 +317,11 @@ HRESULT SHELL_CompareAllFields(IShellFolder* psf,
     return MAKE_COMPARE_HRESULT(0);
 }
 
-HRESULT SHELL_FolderImplCompareIDsTiebreaker(IShellFolder2* psf, LPARAM lParam,
+HRESULT SHELL32_FolderImplCompareIDsTiebreaker(IShellFolder2* psf, LPARAM lParam,
                                              LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2,
                                              UINT Count, int Canonical)
 {
-    if ((lParam & SHCIDS_COLUMNMASK) != Canonical && Canonical >= 0)
+    if ((lParam & SHCIDS_COLUMNMASK) != Canonical && Canonical >= 0 && LOBYTE(GetVersion()) < 6)
     {
         LPARAM flags = (lParam & SHCIDS_BITMASK) & ~SHCIDS_ALLFIELDS;
         HRESULT hr = psf->CompareIDs(Canonical | flags, pidl1, pidl2);
@@ -330,7 +330,7 @@ HRESULT SHELL_FolderImplCompareIDsTiebreaker(IShellFolder2* psf, LPARAM lParam,
     }
     if (lParam & SHCIDS_ALLFIELDS)
     {
-        HRESULT hr = SHELL_CompareAllFields(psf, pidl1, pidl2, Count, Canonical);
+        HRESULT hr = SHELL_CompareAllFields(psf, pidl1, pidl2, Count, lParam & SHCIDS_COLUMNMASK);
         if (hr && SUCCEEDED(hr))
             return hr;
     }

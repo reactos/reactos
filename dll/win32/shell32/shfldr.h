@@ -112,7 +112,7 @@ HRESULT SHELL32_CompareDetails(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST 
 
 HRESULT SHELL32_CompareChildren(IShellFolder2* psf, LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
 
-HRESULT SHELL_FolderImplCompareIDsTiebreaker(IShellFolder2* psf, LPARAM lParam,
+HRESULT SHELL32_FolderImplCompareIDsTiebreaker(IShellFolder2* psf, LPARAM lParam,
                                              LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2,
                                              UINT Count, int Canonical);
 
