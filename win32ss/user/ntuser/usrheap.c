@@ -81,7 +81,7 @@ IntUserHeapCommitRoutine(
                                     &ViewSize,
                                     ViewUnmap,
                                     SEC_NO_CHANGE,
-                                    PAGE_EXECUTE_READ); /* Would prefer PAGE_READONLY, but thanks to RTL heaps... */
+                                    PAGE_READONLY);
 
         if (!NT_SUCCESS(Status))
             return Status;
@@ -97,7 +97,7 @@ IntUserHeapCommitRoutine(
                                      0,
                                      CommitSize,
                                      MEM_COMMIT,
-                                     PAGE_EXECUTE_READ);
+                                     PAGE_READONLY);
 
     if (NT_SUCCESS(Status))
     {
@@ -139,7 +139,7 @@ IntUserHeapCreate(IN PVOID SectionObject,
                                 &ViewSize,
                                 ViewUnmap,
                                 SEC_NO_CHANGE,
-                                PAGE_EXECUTE_READ); /* Would prefer PAGE_READONLY, but thanks to RTL heaps... */
+                                PAGE_READONLY);
     if (!NT_SUCCESS(Status))
         return NULL;
 
@@ -148,7 +148,7 @@ IntUserHeapCreate(IN PVOID SectionObject,
                                      0,
                                      &ViewSize,
                                      MEM_COMMIT,
-                                     PAGE_EXECUTE_READ); /* Would prefer PAGE_READONLY, but thanks to RTL heaps... */
+                                     PAGE_READONLY);
 
     MmUnmapViewOfSection(PsGetCurrentProcess(),
                          MappedView);
@@ -193,7 +193,7 @@ UserCreateHeap(OUT PVOID *SectionObject,
                              SECTION_ALL_ACCESS,
                              NULL,
                              &SizeHeap,
-                             PAGE_EXECUTE_READWRITE, /* Would prefer PAGE_READWRITE, but thanks to RTL heaps... */
+                             PAGE_READWRITE,
                              SEC_RESERVE | 1,
                              NULL,
                              NULL);
@@ -315,7 +315,7 @@ MapGlobalUserHeap(IN  PEPROCESS Process,
                                 &ViewSize,
                                 ViewUnmap,
                                 SEC_NO_CHANGE,
-                                PAGE_EXECUTE_READ); /* Would prefer PAGE_READONLY, but thanks to RTL heaps... */
+                                PAGE_READONLY);
     if (!NT_SUCCESS(Status))
     {
         ERR_CH(UserProcess, "MapGlobalUserHeap - Failed to map the global heap! 0x%x\n", Status);
