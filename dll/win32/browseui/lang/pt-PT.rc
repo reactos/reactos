@@ -1,8 +1,9 @@
 /*
- * PROJECT:     ReactOS BrowseUI
+ * PROJECT:     ReactOS Win32 BrowseUI
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Portuguese (Portugal) resource file
- * TRANSLATOR:  Copyright 2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ * TRANSLATORS: Copyright 2019-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ *              Copyright 2021 Gabriel Aguiar <fgsoftwarestudio@gmail.com>
  */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
