@@ -242,7 +242,7 @@ START_TEST(NtUserSetTimer)
 
     hwnd = CreateWindowExW(0, L"TimerWindowClass", L"Timer Window", 0,
         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-        HWND_MESSAGE, NULL, GetModuleHandle(NULL), NULL);
+        HWND_MESSAGE, NULL, GetModuleHandleW(NULL), NULL);
 
     // TEST WITH MESSAGES WITH WINDOW - test count of sent messages
     TEST(testW1(hwnd));
