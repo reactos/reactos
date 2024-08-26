@@ -1,6 +1,6 @@
 /*
- * PROJECT:     ReactOS api tests
- * LICENSE:     ISC (https://spdx.org/licenses/ISC)
+ * PROJECT:     ReactOS API tests
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
  * PURPOSE:     Tests window redrawing when scrollbars appear or disappear
  * COPYRIGHT:   Copyright 2024 Marek Benc <benc.marek.elektro98@proton.me>
  */
