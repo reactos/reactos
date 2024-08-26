@@ -88,7 +88,7 @@ static BOOL test1(void)
     while (GetMessageW(&msg, NULL, 0, 0))
     {
         TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        DispatchMessageW(&msg);
 
         if (GetTickCount() - startTime >= SLEEP_TIME)
             PostQuitMessage(0);
