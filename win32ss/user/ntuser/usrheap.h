@@ -18,9 +18,11 @@ extern HANDLE GlobalUserHeap;
 extern PVOID GlobalUserHeapSection;
 
 PWIN32HEAP
-UserCreateHeap(OUT PVOID *SectionObject,
-               IN OUT PVOID *SystemBase,
-               IN SIZE_T HeapSize);
+UserCreateHeap(
+    _Out_ PVOID *SectionObject,
+    _Out_ PVOID *SystemBase,
+    _In_ SIZE_T HeapSize,
+    _In_ SIZE_T SectionSize);
 
 NTSTATUS
 UnmapGlobalUserHeap(IN PEPROCESS Process);

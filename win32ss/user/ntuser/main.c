@@ -1008,10 +1008,13 @@ DriverEntry(
     KdSystemDebugControl('CsoR', DbgPostServiceHook, ID_Win32PostServiceHook, 0, 0, 0, 0);
 #endif
 
+    SIZE_T HeapSize = 1 * 1024 * 1024; /* FIXME: 1 MB for now... */
+
     /* Create the global USER heap */
     GlobalUserHeap = UserCreateHeap(&GlobalUserHeapSection,
                                     &GlobalUserHeapBase,
-                                    1 * 1024 * 1024); /* FIXME: 1 MB for now... */
+                                    HeapSize,
+                                    HeapSize);
     if (GlobalUserHeap == NULL)
     {
         DPRINT1("Failed to initialize the global heap!\n");

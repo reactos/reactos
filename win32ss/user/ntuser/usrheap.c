@@ -178,21 +178,23 @@ IntUserHeapCreate(IN PVOID SectionObject,
 }
 
 PWIN32HEAP
-UserCreateHeap(OUT PVOID *SectionObject,
-               IN OUT PVOID *SystemBase,
-               IN SIZE_T HeapSize)
+UserCreateHeap(
+    _Out_ PVOID *SectionObject,
+    _Out_ PVOID *SystemBase,
+    _In_ SIZE_T HeapSize,
+    _In_ SIZE_T SectionSize)
 {
-    LARGE_INTEGER SizeHeap;
+    LARGE_INTEGER Size;
     PWIN32HEAP pHeap = NULL;
     NTSTATUS Status;
 
-    SizeHeap.QuadPart = HeapSize;
+    Size.QuadPart = SectionSize;
 
     /* Create the section and map it into session space */
     Status = MmCreateSection((PVOID*)SectionObject,
                              SECTION_ALL_ACCESS,
                              NULL,
-                             &SizeHeap,
+                             &Size,
                              PAGE_READWRITE,
                              SEC_RESERVE | 1,
                              NULL,
@@ -206,7 +208,7 @@ UserCreateHeap(OUT PVOID *SectionObject,
 
     Status = MmMapViewInSessionSpace(*SectionObject,
                                      SystemBase,
-                                     &HeapSize);
+                                     &SectionSize);
     if (!NT_SUCCESS(Status))
     {
         ObDereferenceObject(*SectionObject);
