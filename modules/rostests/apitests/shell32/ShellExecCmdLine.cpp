@@ -27,7 +27,6 @@
 #define shell32_hInstance   GetModuleHandle(NULL)
 #define IDS_FILE_NOT_FOUND  (-1)
 
-static const WCHAR wszOpen[] = L"open";
 static const WCHAR wszExe[] = L".exe";
 static const WCHAR wszCom[] = L".com";
 
