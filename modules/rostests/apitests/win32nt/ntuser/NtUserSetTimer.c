@@ -236,7 +236,7 @@ START_TEST(NtUserSetTimer)
     TEST(test3());
 
     wc.lpfnWndProc = WindowProc;
-    wc.hInstance = GetModuleHandle(NULL);
+    wc.hInstance = GetModuleHandleW(NULL);
     wc.lpszClassName = L"TimerWindowClass";
     RegisterClassW(&wc);
 
