@@ -176,7 +176,7 @@ static BOOL testW1(HWND hwnd)
 
     startTime = GetTickCount();
 
-    while (GetMessage(&msg, NULL, 0, 0))
+    while (GetMessageW(&msg, NULL, 0, 0))
     {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
