@@ -32,6 +32,15 @@ MapGlobalUserHeap(IN  PEPROCESS Process,
                   OUT PVOID* KernelMapping,
                   OUT PVOID* UserMapping);
 
+_Function_class_(RTL_HEAP_COMMIT_ROUTINE)
+_IRQL_requires_same_
+NTSTATUS
+NTAPI
+IntUserHeapCommitRoutine(
+    _In_ PVOID Base,
+    _Inout_ PVOID *CommitAddress,
+    _Inout_ PSIZE_T CommitSize);
+
 static __inline PVOID
 UserHeapAlloc(SIZE_T Bytes)
 {

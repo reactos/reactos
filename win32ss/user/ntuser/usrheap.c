@@ -28,7 +28,6 @@ PVOID GlobalUserHeapSection = NULL;
 
 _Function_class_(RTL_HEAP_COMMIT_ROUTINE)
 _IRQL_requires_same_
-static
 NTSTATUS
 NTAPI
 IntUserHeapCommitRoutine(

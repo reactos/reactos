@@ -7,6 +7,7 @@ typedef struct _USER_REFERENCE_ENTRY
 } USER_REFERENCE_ENTRY, *PUSER_REFERENCE_ENTRY;
 
 extern PUSER_HANDLE_TABLE gHandleTable;
+extern PUSER_HANDLE_ENTRY gHandleEntries;
 VOID FASTCALL UserReferenceObject(PVOID obj);
 PVOID FASTCALL UserReferenceObjectByHandle(HANDLE handle, HANDLE_TYPE type);
 BOOL FASTCALL UserDereferenceObject(PVOID obj);
