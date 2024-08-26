@@ -101,6 +101,7 @@ HKLM,"SOFTWARE\Classes\Applications\mplay32.exe\SupportedTypes",".midi",0x000000
 HKLM,"SOFTWARE\Classes\Applications\mplay32.exe\SupportedTypes",".cda",0x00000000,""
 HKLM,"SOFTWARE\Classes\Applications\mplay32.exe\SupportedTypes",".avi",0x00000000,""
 
+; Protocols
 HKLM,"SOFTWARE\Classes\ftp","",0x00000000,"URL:File Transfer Protocol"
 HKLM,"SOFTWARE\Classes\ftp\Source Filter","",0x00000000,"{E436EBB6-524F-11CE-9F53-0020AF0BA770}"
 HKLM,"SOFTWARE\Classes\ftp","URL Protocol",0x00000000,""
@@ -131,6 +132,11 @@ HKLM,"SOFTWARE\Classes\https","URL Protocol",0x00000000,""
 ;see http
 ;HKLM,"SOFTWARE\Classes\https\shell\open\command","",0x00000000,"""%programfiles%\Internet Explorer\iexplore.exe"" -nohome"
 HKLM,"SOFTWARE\Classes\https\shell\open\command","",0x00000000,"""%programfiles%\Internet Explorer\iexplore.exe"" ""%1"""
+
+HKLM,"SOFTWARE\Classes\rapps","",,"URL:RApps Protocol"
+HKLM,"SOFTWARE\Classes\rapps\DefaultIcon","",0x00020000,"%SystemRoot%\system32\rapps.exe"
+HKLM,"SOFTWARE\Classes\rapps","URL Protocol",,""
+HKLM,"SOFTWARE\Classes\rapps\shell\open\command","",0x00020000,"""%SystemRoot%\system32\rapps.exe"" %1"
 
 ; Register system default web browser
 HKLM,"SOFTWARE\Clients\StartMenuInternet","",0x00000000,"IEXPLORE.EXE"

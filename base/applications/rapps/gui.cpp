@@ -28,6 +28,8 @@
 #define SEARCH_TIMER_ID 'SR'
 #define TREEVIEW_ICON_SIZE 24
 
+static bool g_IgnoreSearchTimer = false;
+
 // **** CSideTreeView ****
 
 CSideTreeView::CSideTreeView()
@@ -471,10 +473,21 @@ CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lPa
             if (wParam == SEARCH_TIMER_ID)
             {
                 ::KillTimer(hwnd, SEARCH_TIMER_ID);
-
-                UpdateApplicationsList(SelectedEnumType);
+                if (!g_IgnoreSearchTimer)
+                    UpdateApplicationsList(SelectedEnumType);
             }
             break;
+
+        case WM_COPYDATA:
+        {
+            PCOPYDATASTRUCT pCDS = (PCOPYDATASTRUCT)lParam;
+            if (pCDS && pCDS->dwData == COPYDATA_PROTOCOLHANDLER)
+            {
+                theResult = HandleProtocolMessage((LPCWSTR)pCDS->lpData);
+                return TRUE;
+            }
+            break;
+        }
     }
 
     return FALSE;
@@ -709,6 +722,8 @@ CMainWindow::GetWndClassInfo()
 HWND
 CMainWindow::Create()
 {
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL); // Give UI higher priority than background threads
+
     CStringW szWindowName;
     szWindowName.LoadStringW(IDS_APPTITLE);
 
@@ -768,8 +783,27 @@ CMainWindow::InstallApplication(CAppInfo *Info)
     return FALSE;
 }
 
+static BOOL CALLBACK
+SwitchToCategoryWalker(HWND hTree, HTREEITEM hItem, PVOID Context)
+{
+    CSideTreeView *m_TreeView = (CSideTreeView*)((SIZE_T*)Context)[0];
+    if (m_TreeView->GetItemData(hItem) == ((SIZE_T*)Context)[1])
+    {
+        m_TreeView->SelectItem(hItem);
+        return FALSE;
+    }
+    return TRUE;
+}
+
+void
+CMainWindow::SwitchToCategoryByStringId(WORD ResId)
+{
+    SIZE_T data[] = { (SIZE_T)const_cast<CSideTreeView*>(m_TreeView), ResId };
+    TreeView_Walk(m_TreeView->GetWindow(), SwitchToCategoryWalker, (PVOID)data);
+}
+
 BOOL
-CMainWindow::SearchTextChanged(CStringW &SearchText)
+CMainWindow::SearchTextChanged(const CStringW &SearchText)
 {
     if (szSearchPattern == SearchText)
     {
@@ -777,6 +811,7 @@ CMainWindow::SearchTextChanged(CStringW &SearchText)
     }
 
     szSearchPattern = SearchText;
+    g_IgnoreSearchTimer = false;
 
     DWORD dwDelay = 0;
     SystemParametersInfoW(SPI_GETMENUSHOWDELAY, 0, &dwDelay, 0);
@@ -816,6 +851,56 @@ CMainWindow::HandleTabOrder(int direction)
     ::SetFocus(TabOrderHwndList[FocusIndex]);
     return;
 }
+
+LRESULT
+CMainWindow::HandleProtocolMessage(LPCWSTR Url)
+{
+    CStringW urlbuf(Url);
+    Url = urlbuf.GetBuffer();
+    UrlUnescapeInPlace(const_cast<LPWSTR>(Url), 0);
+
+    LPCWSTR p;
+    if ((p = IsStrPrefixI(Url, L"view/")) != NULL && m_Db)
+    {
+        CAppInfo *pApp = m_Db->FindAvailableByPackageName(p);
+        if (pApp)
+        {
+            HandleProtocolMessage(L"search/"); // Switch to the correct view and reset search
+            m_ApplicationView->SelectItem(pApp);
+        }
+    }
+    if ((p = IsStrPrefixI(Url, L"search/")) != NULL)
+    {
+        m_ApplicationView->SetSearchText(p);
+        g_IgnoreSearchTimer = true; // Prevent the timer from erasing our list selection
+        m_ApplicationView->SetFocusOnSearchBar(CApplicationView::FocusSelectNoneCaretEnd);
+        SwitchToCategoryByStringId(IDS_AVAILABLEFORINST); // Update the tree selection
+        UpdateApplicationsList(ENUM_ALL_AVAILABLE); // Filter by search term
+        m_ApplicationView->SelectItem(NULL); // Select the first list item found
+    }
+    if ((p = IsStrPrefixI(Url, L"category/")) != NULL)
+    {
+        for (int i = CATSTRINGID_FIRST; i <= CATSTRINGID_LAST; ++i)
+        {
+            WCHAR buf[100];
+            // Match the canonical English name or the id from the manifests
+            if ((LoadString(hInst, i, MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), buf, _countof(buf)) && !_wcsicmp(buf, p)) ||
+                (wcstol(p, NULL, 10) == i - CATSTRINGID_FIRST + 1))
+            {
+                SwitchToCategoryByStringId(i);
+                m_ApplicationView->SetSearchText(L"");
+            }
+        }
+    }
+    if ((p = IsStrPrefixI(Url, L"arp")) != NULL && (!*p || *p == '/'))
+    {
+        SwitchToCategoryByStringId(IDS_INSTALLED);
+        m_ApplicationView->SetSearchText(p + (*p == '/'));
+        m_ApplicationView->SetFocusOnSearchBar(CApplicationView::FocusSelectNoneCaretEnd);
+    }
+    return 0;
+}
+
 // **** CMainWindow ****
 
 VOID
