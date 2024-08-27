@@ -1609,7 +1609,9 @@ FsRtlAcquireFileExclusiveCommon(IN PFILE_OBJECT FileObject,
         if (Status == STATUS_FILE_LOCKED_WITH_ONLY_READERS ||
             Status == STATUS_FSFILTER_OP_COMPLETED_SUCCESSFULLY ||
             Status == STATUS_FILE_LOCKED_WITH_WRITERS)
+        {
             return Status;
+        }
     }
 
     FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
