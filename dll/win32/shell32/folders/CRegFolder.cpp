@@ -16,6 +16,9 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ * The required-regitem design is based on the research by Geoff Chappell
+ * https://www.geoffchappell.com/studies/windows/shell/shell32/classes/regfolder.htm
  */
 
 #include <precomp.h>
@@ -43,7 +46,7 @@ static LPITEMIDLIST CreateRegItem(PIDLTYPE type, REFCLSID clsid, BYTE order = 0)
     LPITEMIDLIST pidl = (LPITEMIDLIST)SHAlloc(cbTotal);
     if (pidl)
     {
-        ZeroMemory(pidl, cbTotal);
+        ZeroMemory(pidl, cbTotal); // Note: This also initializes the terminator WORD
         pidl->mkid.cb = cb;
         pidl->mkid.abID[0] = type;
         pidl->mkid.abID[1] = order;
@@ -86,7 +89,7 @@ static bool HasCLSIDShellFolderValue(REFCLSID clsid, LPCWSTR Value)
 struct CRegFolderInfo {
     const REGFOLDERINFO *m_pInfo;
 
-    void Initialize(const REGFOLDERINFO *pInfo)
+    void InitializeFolderInfo(const REGFOLDERINFO *pInfo)
     {
         m_pInfo = pInfo;
     }
@@ -210,13 +213,10 @@ class CRegFolderEnum :
     public CEnumIDListBase,
     public CRegFolderInfo
 {
-    IShellFolder *m_SF;
     SHCONTF m_SHCTF;
     public:
-        CRegFolderEnum();
-        ~CRegFolderEnum();
         HRESULT Initialize(const REGFOLDERINFO *pInfo, IShellFolder *pSF, DWORD dwFlags);
-        HRESULT AddItemsFromKey(HKEY hkey_root, LPCWSTR szRepPath);
+        HRESULT AddItemsFromKey(IShellFolder *pSF, HKEY hkey_root, LPCWSTR szRepPath);
 
         const CLSID* GetPidlClsid(PCUITEMID_CHILD pidl) { return IsRegItem(pidl); }
         BOOL HasItemWithCLSID(LPCITEMIDLIST pidl) { return HasItemWithCLSIDImpl<CRegFolderEnum>(pidl); }
@@ -226,20 +226,9 @@ class CRegFolderEnum :
         END_COM_MAP()
 };
 
-CRegFolderEnum::CRegFolderEnum()
-{
-    m_SF = NULL;
-}
-
-CRegFolderEnum::~CRegFolderEnum()
-{
-    if (m_SF)
-        m_SF->Release();
-}
-
 HRESULT CRegFolderEnum::Initialize(const REGFOLDERINFO *pInfo, IShellFolder *pSF, DWORD dwFlags)
 {
-    static_cast<CRegFolderInfo*>(this)->Initialize(pInfo);
+    InitializeFolderInfo(pInfo);
     m_SHCTF = (SHCONTF)dwFlags;
     if (!(dwFlags & SHCONTF_FOLDERS))
         return S_OK;
@@ -251,25 +240,22 @@ HRESULT CRegFolderEnum::Initialize(const REGFOLDERINFO *pInfo, IShellFolder *pSF
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    pSF->AddRef();
-    m_SF = pSF;
-
     // First add the required items and then the items from the registry
     SFGAOF query = SHELL_CreateFolderEnumItemAttributeQuery(m_SHCTF, TRUE);
     for (size_t i = 0; i < GetRequiredItemsCount(); ++i)
     {
         LPITEMIDLIST pidl = CreateItem(i);
-        if (pidl && SHELL_IncludeItemInFolderEnum(m_SF, pidl, query, m_SHCTF))
+        if (pidl && SHELL_IncludeItemInFolderEnum(pSF, pidl, query, m_SHCTF))
             AddToEnumList(pidl);
         else
             ILFree(pidl);
     }
-    AddItemsFromKey(HKEY_LOCAL_MACHINE, KeyName);
-    AddItemsFromKey(HKEY_CURRENT_USER, KeyName);
+    AddItemsFromKey(pSF, HKEY_LOCAL_MACHINE, KeyName);
+    AddItemsFromKey(pSF, HKEY_CURRENT_USER, KeyName);
     return S_OK;
 }
 
-HRESULT CRegFolderEnum::AddItemsFromKey(HKEY hkey_root, LPCWSTR szRepPath)
+HRESULT CRegFolderEnum::AddItemsFromKey(IShellFolder *pSF, HKEY hkey_root, LPCWSTR szRepPath)
 {
     WCHAR name[MAX_PATH];
     HKEY hkey;
@@ -294,7 +280,7 @@ HRESULT CRegFolderEnum::AddItemsFromKey(HKEY hkey_root, LPCWSTR szRepPath)
             if (LPITEMIDLIST pidl = CreateRegItem(GetPidlType(), name))
             {
                 SFGAOF query = SHELL_CreateFolderEnumItemAttributeQuery(m_SHCTF, TRUE);
-                if (SHELL_IncludeItemInFolderEnum(m_SF, pidl, query, m_SHCTF) && !HasItemWithCLSID(pidl))
+                if (SHELL_IncludeItemInFolderEnum(pSF, pidl, query, m_SHCTF) && !HasItemWithCLSID(pidl))
                     AddToEnumList(pidl);
                 else
                     ILFree(pidl);
@@ -388,7 +374,7 @@ CRegFolder::~CRegFolder()
 
 HRESULT WINAPI CRegFolder::Initialize(PREGFOLDERINITDATA pInit, LPCITEMIDLIST pidlRoot)
 {
-    static_cast<CRegFolderInfo*>(this)->Initialize(pInit->pInfo);
+    InitializeFolderInfo(pInit->pInfo);
     m_pOuterFolder = pInit->psfOuter;
 
     m_pidlRoot.Attach(ILClone(pidlRoot));
@@ -910,7 +896,7 @@ static HRESULT CALLBACK RegFolderContextMenuCallback(IShellFolder *psf, HWND hwn
 #endif
     else if (_ILIsDesktop(pidlFolder) && _ILIsBitBucket(apidl[0]))
     {
-        // FIXME: Use SHOpenPropSheet on its PropertySheetHandlers from the registry
+        FIXME("Use SHOpenPropSheet on Recyclers PropertySheetHandlers from the registry\n");
         hr = SH_ShowRecycleBinProperties(L'C') ? S_OK : E_FAIL;
     }
     else

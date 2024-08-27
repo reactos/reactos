@@ -1044,9 +1044,11 @@ bool CDesktopFolderViewCB::IsProgmanHostedBrowser(IShellView *psv)
 
 bool CDesktopFolderViewCB::IsProgmanHostedBrowser()
 {
-    if (!m_IsProgmanHosted)
-        m_IsProgmanHosted = 1 + (m_ShellView && IsProgmanHostedBrowser(m_ShellView));
-    return !!(m_IsProgmanHosted - 1);
+    enum { Uninitialized = 0, NotHosted, IsHosted };
+    C_ASSERT(Uninitialized == 0);
+    if (m_IsProgmanHosted == Uninitialized)
+        m_IsProgmanHosted = m_ShellView && IsProgmanHostedBrowser(m_ShellView) ? IsHosted : NotHosted;
+    return m_IsProgmanHosted == IsHosted;
 }
 
 HRESULT WINAPI CDesktopFolderViewCB::ShouldShow(IShellFolder *psf, PCIDLIST_ABSOLUTE pidlFolder, PCUITEMID_CHILD pidlItem)
