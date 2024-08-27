@@ -274,5 +274,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTGEN_CONFIRMUNINST "Uygulamayı kaldırmak istediğinize emin misiniz: \"%s\"?"
+    IDS_INSTGEN_CONFIRMUNINST "Uygulamayı kaldırmak istediğinize emin misiniz: ""%s""?"
 END
