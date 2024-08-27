@@ -590,7 +590,7 @@ static int OnPaint(HWND Window)
         return 0;
     }
 
-    if(!FillRgn(hdc, Region, ColorBrushes[CurrentColor]))
+    if (!FillRgn(hdc, Region, ColorBrushes[CurrentColor]))
     {
         skip("Failed to paint the window\n");
         DeleteObject(Region);
