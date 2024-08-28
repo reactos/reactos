@@ -2269,7 +2269,7 @@ MUI_STRING idIDStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   Memperbarui pengaturan tata letak papan ketik..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Menambahkan informasi halaman kode pada registri..."},
+    "   Menambahkan informasi halaman kode..."},
     {STRING_DONE,
     "   Selesai..."},
     {STRING_REBOOTCOMPUTER2,

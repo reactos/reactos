@@ -2283,7 +2283,7 @@ MUI_STRING esESStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   Actualizando configuraci\242n de distribuci\242n de teclado..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   A\244adiendo informaci\242n al registro..."},
+    "   A\244adiendo informaci\242n..."},
     {STRING_DONE,
     "   Terminado..."},
     {STRING_REBOOTCOMPUTER2,

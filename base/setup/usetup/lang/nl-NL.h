@@ -2296,7 +2296,7 @@ MUI_STRING nlNLStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   Bijwerken toetsenbordindeling..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Toevoegen informatie codepagina aan register..."},
+    "   Toevoegen informatie codepagina..."},
     {STRING_DONE,
     "   Voltooid..."},
     {STRING_REBOOTCOMPUTER2,

@@ -2276,7 +2276,7 @@ MUI_STRING itITStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   Aggiornamento delle impostazioni della tastiera..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Aggiunta delle informazioni di codepage al registry..."},
+    "   Aggiunta delle informazioni di codepage..."},
     {STRING_DONE,
     "   Fatto..."},
     {STRING_REBOOTCOMPUTER2,

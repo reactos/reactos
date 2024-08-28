@@ -2047,7 +2047,7 @@ MUI_ERROR elGRErrorEntries[] =
     },
     {
         // ERROR_ADDING_CODEPAGE,
-        "Setup failed to add codepage to registry.\n"
+        "Setup failed to add codepage to the registry.\n"
         "ENTER = \204\247\230\244\234\241\241\345\244\236\251\236 \254\247\246\242\246\232\240\251\253\343"
     },
     {
@@ -2285,7 +2285,7 @@ MUI_STRING elGRStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   \202\345\244\234\253\230\240 \230\244\230\244\342\340\251\236 \253\340\244 \250\254\237\243\345\251\234\340\244 \233\240\341\253\230\245\236\252 \247\242\236\241\253\250\246\242\246\232\345\246\254..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Adding codepage information to registry..."},
+    "   Adding codepage information..."},
     {STRING_DONE,
     "   \216\242\246\241\242\236\250\351\237\236\241\234..."},
     {STRING_REBOOTCOMPUTER2,

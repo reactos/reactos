@@ -2246,7 +2246,7 @@ MUI_STRING trTRStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   Klavye d\201zeni ayarlar\215 g\201ncelle\237tiriliyor..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Kay\215t defterine kod sayfas\215 bilgisi ekleniyor..."},
+    "   Kod sayfas\215 bilgisi ekleniyor..."},
     {STRING_DONE,
     "   Bitti..."},
     {STRING_REBOOTCOMPUTER2,

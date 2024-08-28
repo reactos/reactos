@@ -2307,7 +2307,7 @@ MUI_STRING ptPTStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   A actualizar as configura\207\344es do teclado..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   A adicionar as informa\207\344es de localiza\207\306o no registo..."},
+    "   A adicionar as informa\207\344es de localiza\207\306o..."},
     {STRING_DONE,
     "   Pronto..."},
     {STRING_REBOOTCOMPUTER2,
