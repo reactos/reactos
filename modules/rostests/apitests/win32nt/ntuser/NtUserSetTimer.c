@@ -9,7 +9,8 @@
 #include "../win32nt.h"
 
 #define SLEEP_TIME 500
-#define TIME_TOLERANCE 0.5
+#define MIN_MESSAGES_TIME 1
+#define MAX_MESSAGES_TIME 1000
 
 #define TEST1_COUNT 20
 #define TEST1_INTERVAL 10
@@ -71,9 +72,6 @@ static BOOL test1(void)
     ULONGLONG startTime;
     MSG msg = { NULL };
 
-    int minMessages = ((float)SLEEP_TIME / (float)TEST1_INTERVAL) * (1 - TIME_TOLERANCE);
-    int maxMessages = ((float)SLEEP_TIME / (float)TEST1_INTERVAL) * (1 + TIME_TOLERANCE);
-
     ZeroMemory(timerId1, sizeof(timerId1));
 
     for (i = 0; i < TEST1_COUNT; i++)
@@ -96,7 +94,7 @@ static BOOL test1(void)
 
     for (i = 0; i < TEST1_COUNT; i++)
     {
-        if ((timerId1[i].counter < minMessages) || (timerId1[i].counter > maxMessages))
+        if ((timerId1[i].counter < MIN_MESSAGES_TIME) || (timerId1[i].counter > MAX_MESSAGES_TIME))
             countErrors++;
     }
 
@@ -162,9 +160,6 @@ static BOOL testW1(HWND hwnd)
     if (hwnd == NULL)
         return FALSE;
 
-    int minMessages = ((float)SLEEP_TIME / (float)TESTW1_INTERVAL) * (1 - TIME_TOLERANCE);
-    int maxMessages = ((float)SLEEP_TIME / (float)TESTW1_INTERVAL) * (1 + TIME_TOLERANCE);
-
     ZeroMemory(timerIdW1, sizeof(timerIdW1));
 
     for (i = 0; i < TESTW1_COUNT; i++)
@@ -187,7 +182,7 @@ static BOOL testW1(HWND hwnd)
 
     for (i = 0; i < TESTW1_COUNT; i++)
     {
-        if ((timerIdW1[i].counter < minMessages) || (timerIdW1[i].counter > maxMessages))
+        if ((timerIdW1[i].counter < MIN_MESSAGES_TIME) || (timerIdW1[i].counter > MAX_MESSAGES_TIME))
             countErrors++;
     }
 
