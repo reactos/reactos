@@ -649,14 +649,13 @@ HRESULT WINAPI CDesktopFolder::CreateViewObject(
     }
     else if (IsEqualIID (riid, IID_IShellView))
     {
-        CComPtr<IShellFolderViewCB> sfviewcb;
-        hr = ShellObjectCreator<CDesktopFolderViewCB>(IID_PPV_ARG(IShellFolderViewCB, &sfviewcb));
-        if (SUCCEEDED(hr))
+        CComPtr<CDesktopFolderViewCB> sfviewcb;
+        if (SUCCEEDED(hr = ShellObjectCreator(sfviewcb)))
         {
-            SFV_CREATE sfvparams = { sizeof(SFV_CREATE), this, NULL, sfviewcb };
-            hr = SHCreateShellFolderView(&sfvparams, (IShellView**)ppvOut);
+            SFV_CREATE create = { sizeof(SFV_CREATE), this, NULL, sfviewcb };
+            hr = SHCreateShellFolderView(&create, (IShellView**)ppvOut);
             if (SUCCEEDED(hr))
-                static_cast<CDesktopFolderViewCB*>(sfviewcb.p)->Initialize((IShellView*)*ppvOut);
+                sfviewcb->Initialize((IShellView*)*ppvOut);
         }
     }
     TRACE ("-- (%p)->(interface=%p)\n", this, ppvOut);
