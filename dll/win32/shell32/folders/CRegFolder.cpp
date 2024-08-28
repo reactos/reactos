@@ -86,7 +86,8 @@ static bool HasCLSIDShellFolderValue(REFCLSID clsid, LPCWSTR Value)
     return SHELL_QueryCLSIDValue(clsid, L"ShellFolder", Value, NULL, NULL) == ERROR_SUCCESS;
 }
 
-struct CRegFolderInfo {
+struct CRegFolderInfo
+{
     const REGFOLDERINFO *m_pInfo;
 
     void InitializeFolderInfo(const REGFOLDERINFO *pInfo)
@@ -234,7 +235,7 @@ HRESULT CRegFolderEnum::Initialize(const REGFOLDERINFO *pInfo, IShellFolder *pSF
         return S_OK;
 
     WCHAR KeyName[MAX_PATH];
-    HRESULT hr = StringCchPrintfW(KeyName, MAX_PATH,
+    HRESULT hr = StringCchPrintfW(KeyName, _countof(KeyName),
                                   L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\%s\\Namespace",
                                   pInfo->pszEnumKeyName);
     if (FAILED_UNEXPECTEDLY(hr))

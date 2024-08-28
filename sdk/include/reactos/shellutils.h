@@ -298,7 +298,7 @@ HRESULT inline ShellObjectCreator(CComPtr<T> &objref)
 {
     _CComObject<T> *pobj;
     HRESULT hResult = _CComObject<T>::CreateInstance(&pobj);
-    objref = pobj; // AddRef()
+    objref = pobj; // AddRef() gets called here
     if (FAILED(hResult))
         return hResult;
     return S_OK;

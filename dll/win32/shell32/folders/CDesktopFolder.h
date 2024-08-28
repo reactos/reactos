@@ -150,11 +150,12 @@ class CDesktopFolderViewCB :
     public IShellFolderViewCB,
     public IFolderFilter
 {
-        CComPtr<IShellView> m_ShellView;
+        IShellView *m_pShellView; // Not ref-counted!
         UINT8 m_IsProgmanHosted;
+
     public:
         CDesktopFolderViewCB() : m_IsProgmanHosted(0) {}
-        void Initialize(IShellView *psv) { m_ShellView = psv; }
+        void Initialize(IShellView *psv) { m_pShellView = psv; }
         static bool IsProgmanHostedBrowser(IShellView *psv);
         bool IsProgmanHostedBrowser();
 

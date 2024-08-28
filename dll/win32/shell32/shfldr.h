@@ -47,7 +47,6 @@ https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_co
 #define SHFSF_COL_FATTS         4 // File attributes
 #define SHFSF_COL_COMMENT       5
 
-#define MAXREQUIREDREGITEMS 3
 typedef struct _REQUIREDREGITEM
 {
     REFCLSID clsid;

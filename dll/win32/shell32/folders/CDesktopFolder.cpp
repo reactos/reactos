@@ -652,7 +652,7 @@ HRESULT WINAPI CDesktopFolder::CreateViewObject(
         CComPtr<CDesktopFolderViewCB> sfviewcb;
         if (SUCCEEDED(hr = ShellObjectCreator(sfviewcb)))
         {
-            SFV_CREATE create = { sizeof(SFV_CREATE), this, NULL, sfviewcb };
+            SFV_CREATE create = { sizeof(create), this, NULL, sfviewcb };
             hr = SHCreateShellFolderView(&create, (IShellView**)ppvOut);
             if (SUCCEEDED(hr))
                 sfviewcb->Initialize((IShellView*)*ppvOut);
@@ -1046,7 +1046,7 @@ bool CDesktopFolderViewCB::IsProgmanHostedBrowser()
     enum { Uninitialized = 0, NotHosted, IsHosted };
     C_ASSERT(Uninitialized == 0);
     if (m_IsProgmanHosted == Uninitialized)
-        m_IsProgmanHosted = m_ShellView && IsProgmanHostedBrowser(m_ShellView) ? IsHosted : NotHosted;
+        m_IsProgmanHosted = m_pShellView && IsProgmanHostedBrowser(m_pShellView) ? IsHosted : NotHosted;
     return m_IsProgmanHosted == IsHosted;
 }
 
@@ -1067,7 +1067,7 @@ HRESULT WINAPI CDesktopFolderViewCB::MessageSFVCB(UINT uMsg, WPARAM wParam, LPAR
     switch (uMsg)
     {
         case SFVM_VIEWRELEASE:
-            m_ShellView = NULL;
+            m_pShellView = NULL;
             return S_OK;
     }
     return E_NOTIMPL;
