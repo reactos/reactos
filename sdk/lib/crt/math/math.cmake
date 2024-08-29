@@ -40,6 +40,7 @@ if(ARCH STREQUAL "i386")
         math/i386/floor_asm.s
         math/i386/ftol_asm.s
         math/i386/ftol2_asm.s
+        math/i386/ftoul2_legacy_asm.s
         math/i386/log_asm.s
         math/i386/log10_asm.s
         math/i386/pow_asm.s
