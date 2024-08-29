@@ -341,7 +341,7 @@ void DbgUserDumpHandleTable(VOID)
 PUSER_HANDLE_ENTRY handle_to_entry(PUSER_HANDLE_TABLE ht, HANDLE handle )
 {
    unsigned short generation;
-   int index = (LOWORD(handle) - FIRST_USER_HANDLE) >> 1;
+   int index = LOWORD(handle);
    if (index < 0 || index >= ht->nb_handles)
       return NULL;
    if (!ht->handles[index].type)
@@ -355,7 +355,7 @@ PUSER_HANDLE_ENTRY handle_to_entry(PUSER_HANDLE_TABLE ht, HANDLE handle )
 __inline static HANDLE entry_to_handle(PUSER_HANDLE_TABLE ht, PUSER_HANDLE_ENTRY ptr )
 {
    int index = ptr - ht->handles;
-   return (HANDLE)((((INT_PTR)index << 1) + FIRST_USER_HANDLE) + (ptr->generation << 16));
+   return (HANDLE)(((INT_PTR)index) | ((ULONG)ptr->generation << 16));
 }
 
 __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)

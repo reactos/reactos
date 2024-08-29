@@ -180,8 +180,8 @@ TestState(PWND pWnd, UINT Flag)
     bit = 1 << LOWORD(Flag);
     switch(HIWORD(Flag))
     {
-       case 0: 
-          return (pWnd->state & bit); 
+       case 0:
+          return (pWnd->state & bit);
        case 1:
           return (pWnd->state2 & bit);
        case 2:
@@ -199,7 +199,7 @@ GetUser32Handle(HANDLE handle)
 
     if (!handle) return NULL;
 
-    Index = (((UINT_PTR)handle & 0xffff) - FIRST_USER_HANDLE) >> 1;
+    Index = ((UINT_PTR)handle & 0xffff);
 
     if (Index < 0 || Index >= gHandleTable->nb_handles)
         return NULL;
