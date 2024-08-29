@@ -104,6 +104,18 @@ extern "C" {
 #define PT_IESPECIAL2	0xb1
 #define PT_SHARE	0xc3
 
+#ifdef __REACTOS__
+#define PT_DESKTOP_REGITEM      0x1F // => SHDID_ROOT_REGITEM
+#define PT_COMPUTER_REGITEM     0x2E // => SHDID_COMPUTER_OTHER
+#define PT_FS                   0x30 // Win95 SHSimpleIDListFromPath
+#define PT_FS_FOLDER_FLAG       0x01
+#define PT_FS_FILE_FLAG         0x02
+#define PT_FS_UNICODE_FLAG      0x04
+//      PT_NET_REGITEM          0x4? // => SHDID_NET_OTHER
+#define PT_CONTROLS_OLDREGITEM  0x70
+#define PT_CONTROLS_NEWREGITEM  0x71
+#endif
+
 #include "pshpack1.h"
 typedef BYTE PIDLTYPE;
 
@@ -263,9 +275,11 @@ BOOL    _ILIsEmpty              (LPCITEMIDLIST pidl) { return _ILIsDesktop(pidl)
  */
 LPITEMIDLIST	_ILCreateGuid(PIDLTYPE type, REFIID guid) DECLSPEC_HIDDEN;
 
+#ifndef __REACTOS__
 /* Like _ILCreateGuid, but using the string szGUID. */
 LPITEMIDLIST	_ILCreateGuidFromStrA(LPCSTR szGUID) DECLSPEC_HIDDEN;
 LPITEMIDLIST	_ILCreateGuidFromStrW(LPCWSTR szGUID) DECLSPEC_HIDDEN;
+#endif
 
 /* Commonly used PIDLs representing file system objects. */
 LPITEMIDLIST	_ILCreateDesktop	(void) DECLSPEC_HIDDEN;

@@ -195,6 +195,7 @@ interface IShellFolder : IUnknown
     cpp_quote("#define SFGAO_HASPROPSHEET      0x00000040L")
     cpp_quote("#define SFGAO_DROPTARGET        0x00000100L")
     cpp_quote("#define SFGAO_CAPABILITYMASK    0x00000177L")
+    cpp_quote("#define SFGAO_SYSTEM            0x00001000L")
     cpp_quote("#define SFGAO_ENCRYPTED         0x00002000L")
     cpp_quote("#define SFGAO_ISSLOW            0x00004000L")
     cpp_quote("#define SFGAO_GHOSTED           0x00008000L")
@@ -1483,6 +1484,38 @@ interface ICommDlgBrowser3 : ICommDlgBrowser2
 
     HRESULT OnPreviewCreated(
         [in] IShellView *ppshv);
+}
+
+/*****************************************************************************
+ * IFolderFilterSite & IFolderFilter interfaces
+ */
+[
+    object,
+    uuid(C0A651F5-B48B-11d2-B5ED-006097C686F6),
+    pointer_default(unique)
+]
+interface IFolderFilterSite : IUnknown
+{
+    HRESULT SetFilter([in] IUnknown* punk);
+}
+
+[
+    object,
+    uuid(9CC22886-DC8E-11d2-B1D0-00C04F8EEB3E),
+    pointer_default(unique)
+]
+interface IFolderFilter : IUnknown
+{
+    HRESULT ShouldShow(
+        [in] IShellFolder* psf,
+        [in, unique] PCIDLIST_ABSOLUTE pidlFolder,
+        [in] PCUITEMID_CHILD pidlItem);
+
+    HRESULT GetEnumFlags(
+        [in] IShellFolder* psf,
+        [in] PCIDLIST_ABSOLUTE pidlFolder,
+        [out] HWND *phwnd,
+        [in, out] DWORD *pgrfFlags);
 }
 
 /*****************************************************************************

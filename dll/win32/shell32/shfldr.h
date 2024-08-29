@@ -47,10 +47,52 @@ https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_co
 #define SHFSF_COL_FATTS         4 // File attributes
 #define SHFSF_COL_COMMENT       5
 
+typedef struct _REQUIREDREGITEM
+{
+    REFCLSID clsid;
+    LPCSTR pszCpl;
+    BYTE Order; // According to Geoff Chappell, required items have a fixed sort order
+} REQUIREDREGITEM;
+
+typedef struct _REGFOLDERINFO
+{
+    PIDLTYPE PidlType;
+    BYTE Count; // Count of required items
+    const REQUIREDREGITEM *Items;
+    REFCLSID clsid;
+    LPCWSTR pszParsingPath;
+    LPCWSTR pszEnumKeyName;
+} REGFOLDERINFO;
+
+typedef struct _REGFOLDERINITDATA
+{
+    IShellFolder *psfOuter;
+    const REGFOLDERINFO *pInfo;
+} REGFOLDERINITDATA, *PREGFOLDERINITDATA;
+
+HRESULT CRegFolder_CreateInstance(PREGFOLDERINITDATA pInit, LPCITEMIDLIST pidlRoot, REFIID riid, void **ppv);
+
 #define GET_SHGDN_FOR(dwFlags)         ((DWORD)dwFlags & (DWORD)0x0000FF00)
 #define GET_SHGDN_RELATION(dwFlags)    ((DWORD)dwFlags & (DWORD)0x000000FF)
 #define IS_SHGDN_FOR_PARSING(flags) ( ((flags) & (SHGDN_FORADDRESSBAR | SHGDN_FORPARSING)) == SHGDN_FORPARSING)
 #define IS_SHGDN_DESKTOPABSOLUTEPARSING(flags) ( ((flags) & (SHGDN_FORADDRESSBAR | SHGDN_FORPARSING | 0xFF)) == SHGDN_FORPARSING)
+
+static inline SFGAOF 
+SHELL_CreateFolderEnumItemAttributeQuery(SHCONTF Flags, BOOL ForRegItem)
+{
+    SFGAOF query = SFGAO_FOLDER | (ForRegItem ? SFGAO_NONENUMERATED : 0);
+    if (!(Flags & SHCONTF_INCLUDEHIDDEN))
+        query |= SFGAO_HIDDEN;
+    if (!(Flags & SHCONTF_INCLUDESUPERHIDDEN))
+        query |= SFGAO_HIDDEN | SFGAO_SYSTEM;
+    return query;
+}
+
+SHCONTF
+SHELL_GetDefaultFolderEnumSHCONTF();
+
+BOOL
+SHELL_IncludeItemInFolderEnum(IShellFolder *pSF, PCUITEMID_CHILD pidl, SFGAOF Query, SHCONTF Flags);
 
 HRESULT
 Shell_NextElement(

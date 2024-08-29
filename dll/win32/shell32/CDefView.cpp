@@ -231,6 +231,7 @@ private:
     CComPtr<IShellFolderViewCB> m_pShellFolderViewCB;
     CComPtr<IShellBrowser>    m_pShellBrowser;
     CComPtr<ICommDlgBrowser>  m_pCommDlgBrowser;
+    CComPtr<IFolderFilter>    m_pFolderFilter;
     CComPtr<IShellFolderViewDual> m_pShellFolderViewDual;
     CListView                 m_ListView;
     HWND                      m_hWndParent;
@@ -636,14 +637,16 @@ HRESULT WINAPI CDefView::Initialize(IShellFolder *shellFolder)
 HRESULT CDefView::IncludeObject(PCUITEMID_CHILD pidl)
 {
     HRESULT ret = S_OK;
-
     if (m_pCommDlgBrowser && !(GetCommDlgViewFlags() & CDB2GVF_NOINCLUDEITEM))
     {
         TRACE("ICommDlgBrowser::IncludeObject pidl=%p\n", pidl);
         ret = m_pCommDlgBrowser->IncludeObject(this, pidl);
         TRACE("-- returns 0x%08x\n", ret);
     }
-
+    else if (m_pFolderFilter)
+    {
+        ret = m_pFolderFilter->ShouldShow(m_pSFParent, m_pidlParent, pidl);
+    }
     return ret;
 }
 
@@ -1484,7 +1487,7 @@ HRESULT CDefView::FillList(BOOL IsRefreshCommand)
     DWORD         dwFetched;
     HRESULT       hRes;
     HDPA          hdpa;
-    DWORD         dFlags = SHCONTF_NONFOLDERS | SHCONTF_FOLDERS;
+    DWORD         dFlags = SHCONTF_NONFOLDERS | ((m_FolderSettings.fFlags & FWF_NOSUBFOLDERS) ? 0 : SHCONTF_FOLDERS);
 
     TRACE("%p\n", this);
 
@@ -4006,6 +4009,9 @@ HRESULT STDMETHODCALLTYPE CDefView::SetCallback(IShellFolderViewCB  *new_cb, ISh
         *old_cb = m_pShellFolderViewCB.Detach();
 
     m_pShellFolderViewCB = new_cb;
+    m_pFolderFilter = NULL;
+    if (new_cb)
+        new_cb->QueryInterface(IID_PPV_ARG(IFolderFilter, &m_pFolderFilter));
     return S_OK;
 }
 

@@ -55,6 +55,29 @@ static int iDriveTypeIds[7] = { IDS_DRIVE_FIXED,       /* DRIVE_UNKNOWN */
                                 IDS_DRIVE_FIXED        /* DRIVE_RAMDISK*/
                                 };
 
+static const REQUIREDREGITEM g_RequiredItems[] =
+{
+    { CLSID_ControlPanel, 0, 0x50 },
+};
+static const REGFOLDERINFO g_RegFolderInfo =
+{
+    PT_COMPUTER_REGITEM,
+    _countof(g_RequiredItems), g_RequiredItems,
+    CLSID_MyComputer,
+    L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}",
+    L"MyComputer",
+};
+
+static const CLSID* IsRegItem(PCUITEMID_CHILD pidl)
+{
+    if (pidl && pidl->mkid.cb == 2 + 2 + sizeof(CLSID))
+    {
+        if (pidl->mkid.abID[0] == PT_SHELLEXT || pidl->mkid.abID[0] == PT_GUID) // FIXME: Remove PT_GUID when CRegFolder is fixed
+            return (const CLSID*)(&pidl->mkid.abID[2]);
+    }
+    return NULL;
+}
+
 BOOL _ILGetDriveType(LPCITEMIDLIST pidl)
 {
     WCHAR szDrive[8];
@@ -64,6 +87,16 @@ BOOL _ILGetDriveType(LPCITEMIDLIST pidl)
         return DRIVE_UNKNOWN;
     }
     return ::GetDriveTypeW(szDrive);
+}
+
+BOOL SHELL32_IsShellFolderNamespaceItemHidden(LPCWSTR SubKey, REFCLSID Clsid)
+{
+    // If this function returns true, the item should be hidden in DefView but not in the Explorer folder tree.
+    WCHAR path[MAX_PATH], name[CHARS_IN_GUID];
+    wsprintfW(path, L"%s\\%s", REGSTR_PATH_EXPLORER, SubKey);
+    SHELL32_GUIDToStringW(Clsid, name);
+    DWORD data = 0, size = sizeof(data);
+    return !RegGetValueW(HKEY_CURRENT_USER, path, name, RRF_RT_DWORD, NULL, &data, &size) && data;
 }
 
 /***********************************************************************
@@ -643,10 +676,9 @@ HRESULT WINAPI CDrivesFolder::FinalConstruct()
     if (pidlRoot == NULL)
         return E_OUTOFMEMORY;
 
-    HRESULT hr = CRegFolder_CreateInstance(&CLSID_MyComputer,
+    REGFOLDERINITDATA RegInit = { static_cast<IShellFolder*>(this), &g_RegFolderInfo };
+    HRESULT hr = CRegFolder_CreateInstance(&RegInit,
                                            pidlRoot,
-                                           L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}",
-                                           L"MyComputer",
                                            IID_PPV_ARG(IShellFolder2, &m_regFolder));
 
     return hr;
@@ -901,7 +933,7 @@ HRESULT WINAPI CDrivesFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVO
     }
     else if (IsEqualIID(riid, IID_IShellView))
     {
-            SFV_CREATE sfvparams = {sizeof(SFV_CREATE), this};
+            SFV_CREATE sfvparams = { sizeof(SFV_CREATE), this, NULL, static_cast<IShellFolderViewCB*>(this) };
             hr = SHCreateShellFolderView(&sfvparams, (IShellView**)ppvOut);
     }
     TRACE("-- (%p)->(interface=%p)\n", this, ppvOut);
@@ -937,11 +969,17 @@ HRESULT WINAPI CDrivesFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY a
                     *rgfInOut &= ~SFGAO_CANRENAME; // CD-ROM drive cannot rename
             }
             else if (_ILIsControlPanel(apidl[i]))
+            {
                 *rgfInOut &= dwControlPanelAttributes;
+            }
             else if (_ILIsSpecialFolder(*apidl))
+            {
                 m_regFolder->GetAttributesOf(1, &apidl[i], rgfInOut);
+            }
             else
+            {
                 ERR("Got unknown pidl type!\n");
+            }
         }
     }
 
@@ -1299,6 +1337,16 @@ HRESULT WINAPI CDrivesFolder::GetCurFolder(PIDLIST_ABSOLUTE *pidl)
         return E_INVALIDARG; /* xp doesn't have this check and crashes on NULL */
 
     *pidl = ILClone(pidlRoot);
+    return S_OK;
+}
+
+/**************************************************************************
+ *    CDrivesFolder::ShouldShow
+ */
+HRESULT WINAPI CDrivesFolder::ShouldShow(IShellFolder *psf, PCIDLIST_ABSOLUTE pidlFolder, PCUITEMID_CHILD pidlItem)
+{
+    if (const CLSID* pClsid = IsRegItem(pidlItem))
+        return SHELL32_IsShellFolderNamespaceItemHidden(L"HideMyComputerIcons", *pClsid) ? S_FALSE : S_OK;
     return S_OK;
 }
 

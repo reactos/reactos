@@ -294,6 +294,17 @@ HRESULT inline ShellDebugObjectCreator(REFIID riid, R ** ppv)
 }
 
 template<class T>
+HRESULT inline ShellObjectCreator(CComPtr<T> &objref)
+{
+    _CComObject<T> *pobj;
+    HRESULT hResult = _CComObject<T>::CreateInstance(&pobj);
+    objref = pobj; // AddRef() gets called here
+    if (FAILED(hResult))
+        return hResult;
+    return S_OK;
+}
+
+template<class T>
 HRESULT inline ShellObjectCreator(REFIID riid, void ** ppv)
 {
     _CComObject<T> *pobj;
