@@ -2071,11 +2071,6 @@ co_WinPosSetWindowPos(
             RgnType = IntGdiCombineRgn(CopyRgn, VisAfter, VisBeforeJustClient, RGN_AND);
          }
 
-         if (VisBeforeJustClient != NULL)
-         {
-             REGION_Delete(VisBeforeJustClient);
-         }
-
          /* Now use in copying bits which are in the update region. */
          if (Window->hrgnUpdate != NULL)
          {
@@ -2223,11 +2218,6 @@ co_WinPosSetWindowPos(
          }
       }
 
-      if (CopyRgn != NULL)
-      {
-         REGION_Delete(CopyRgn);
-      }
-
       /* Expose what was covered before but not covered anymore */
       if (VisBefore != NULL)
       {
@@ -2248,12 +2238,6 @@ co_WinPosSetWindowPos(
              }
              REGION_Delete(ExposedRgn);
          }
-         REGION_Delete(VisBefore);
-      }
-
-      if (VisAfter != NULL)
-      {
-         REGION_Delete(VisAfter);
       }
    }
 
@@ -2299,6 +2283,27 @@ co_WinPosSetWindowPos(
    {
       TRACE("No drawing, set no Z order and no redraw!\n");
       WinPos.flags |= SWP_NOZORDER|SWP_NOREDRAW;
+   }
+
+   if (VisBefore != NULL)
+   {
+      REGION_Delete(VisBefore);
+      VisBefore = NULL;
+   }
+   if (VisBeforeJustClient != NULL)
+   {
+      REGION_Delete(VisBeforeJustClient);
+      VisBeforeJustClient = NULL;
+   }
+   if (VisAfter != NULL)
+   {
+      REGION_Delete(VisAfter);
+      VisAfter = NULL;
+   }
+   if (CopyRgn != NULL)
+   {
+      REGION_Delete(CopyRgn);
+      CopyRgn = NULL;
    }
 
    if(!(flags & SWP_DEFERERASE))
