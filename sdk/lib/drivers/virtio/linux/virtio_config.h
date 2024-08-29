@@ -62,7 +62,7 @@
 /* v1.0 compliant. */
 #define VIRTIO_F_VERSION_1              32
 
-#define VIRTIO_F_IOMMU_PLATFORM         33
+#define VIRTIO_F_ACCESS_PLATFORM          33
 
 /* This feature indicates support for the packed virtqueue layout. */
 #define VIRTIO_F_RING_PACKED            34
