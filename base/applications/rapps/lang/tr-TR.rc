@@ -18,17 +18,17 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", ID_EXIT
     END
-    POPUP "&Yazılım"
+    POPUP "Y&azılım"
     BEGIN
         MENUITEM "&Kur\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Kaldır\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "K&aldır\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Değiştir", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "&Girdiyi Kayıt Defteri'nden Kaldır", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "&Yenile\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "&Uygulama Veri Tabanını Yenile\tCtrl+F5", ID_RESETDB
+        MENUITEM "Uygulama Veri Tabanını Yenile\tCtrl+F5", ID_RESETDB
     END
     POPUP "&Yardım"
     BEGIN
@@ -42,7 +42,7 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM "&Bağlantıyı Tarayıcıda Aç", ID_OPEN_LINK
-        MENUITEM "&Bağlantıyı Panoya Kopyala", ID_COPY_LINK
+        MENUITEM "Bağlantıyı Panoya &Kopyala", ID_COPY_LINK
     END
 END
 
@@ -51,14 +51,14 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM "&Kur\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Kaldır\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "K&aldır\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Değiştir", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "&Girdiyi Kayıt Defteri'nden Kaldır", ID_REGREMOVE
         MENUITEM SEPARATOR
         MENUITEM "&Yenile\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "&Uygulama Veri Tabanını Yenile\tCtrl+F5", ID_RESETDB
+        MENUITEM "Uygulama Veri Ta&banını Yenile\tCtrl+F5", ID_RESETDB
     END
 END
 
@@ -70,7 +70,7 @@ BEGIN
     GROUPBOX "Genel", -1, 4, 2, 240, 61
     AUTOCHECKBOX "&Pencere Konumunu Kaydet", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
     AUTOCHECKBOX "&Başlangıçta Erişilebilir Programların Listesini Yenile", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-    AUTOCHECKBOX "&Programların Kurulma ve Kaldırma Günlüğünü Sakla", IDC_LOG_ENABLED, 15, 46, 219, 12
+    AUTOCHECKBOX "P&rogramların Kurulma ve Kaldırma Günlüğünü Sakla", IDC_LOG_ENABLED, 15, 46, 219, 12
     GROUPBOX "İndirme", -1, 4, 65, 240, 51
     LTEXT "İndirme Dizini:", -1, 16, 75, 100, 9
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
