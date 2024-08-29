@@ -47,7 +47,8 @@ if(ARCH STREQUAL "i386")
     endif()
     if(MSVC AND DLL_EXPORT_VERSION LESS 0x600)
         list(APPEND MSVCRTEX_ASM_SOURCE
-            except/i386/__CxxFrameHandler3.s)
+            except/i386/__CxxFrameHandler3.s
+            math/i386/ftoul2_legacy_asm.s)
         list(APPEND MSVCRTEX_SOURCE
             except/i386/CxxHandleV8Frame.c)
     endif()
