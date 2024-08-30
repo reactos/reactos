@@ -3214,11 +3214,8 @@ HRESULT WINAPI SHGetFolderLocation(
 
 #ifdef __REACTOS__
         case CSIDL_CONNECTIONS:
-        {
-            EXTERN_C const CLSID CLSID_ConnectionFolder;
-            hr = SHGetFolderLocationHelper(hwndOwner, CSIDL_CONTROLS, &CLSID_ConnectionFolder, ppidl);
+            hr = SHGetFolderLocationHelper(hwndOwner, CSIDL_CONTROLS, &CLSID_NetworkConnections, ppidl);
             break;
-        }
 #endif
 
         default:
