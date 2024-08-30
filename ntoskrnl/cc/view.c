@@ -812,6 +812,10 @@ CcRosCreateVacb (
     DPRINT("CcRosCreateVacb()\n");
 
     current = ExAllocateFromNPagedLookasideList(&VacbLookasideList);
+    if (!current)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
     current->BaseAddress = NULL;
     current->Dirty = FALSE;
     current->PageOut = FALSE;
