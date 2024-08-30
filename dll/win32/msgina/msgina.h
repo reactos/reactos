@@ -18,6 +18,7 @@ extern "C" {
 #include <winreg.h>
 #include <winuser.h>
 #include <winwlx.h>
+#define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>
 #include <ntsecapi.h>
 
