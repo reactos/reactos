@@ -3618,30 +3618,45 @@ Retry:
         CONSOLE_ConInKey(Ir);
 
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
+            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))   /* F3 */
         {
             if (ConfirmQuit(Ir))
                 return FALSE;
-
             break;
         }
-        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)    /* ENTER */
+        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
         {
-            Status = InstallFatBootcodeToFloppy(&USetupData.SourceRootPath,
+            // FIXME: So far USETUP only supports the 1st floppy.
+            static const UNICODE_STRING FloppyDrive = RTL_CONSTANT_STRING(L"\\Device\\Floppy0\\");
+            Status = InstallBootcodeToRemovable(USetupData.ArchType,
+                                                &FloppyDrive,
+                                                &USetupData.SourceRootPath,
                                                 &USetupData.DestinationArcPath);
-            if (!NT_SUCCESS(Status))
+            if (Status == STATUS_SUCCESS)
+                return TRUE; /* Successful installation */
+
+            if (Status == STATUS_DEVICE_NOT_READY)
             {
-                if (Status == STATUS_DEVICE_NOT_READY)
-                    MUIDisplayError(ERROR_NO_FLOPPY, Ir, POPUP_WAIT_ENTER);
-
-                /* TODO: Print error message */
-                goto Retry;
+                MUIDisplayError(ERROR_NO_FLOPPY, Ir, POPUP_WAIT_ENTER);
             }
+            else if (!NT_SUCCESS(Status))
+            {
+                /* Any other NTSTATUS failure code */
+                CHAR Buffer[MAX_PATH];
 
-            return TRUE;
+                DPRINT1("InstallBootcodeToRemovable() failed: Status 0x%lx\n", Status);
+                RtlStringCbPrintfA(Buffer, sizeof(Buffer),
+                                   "Setup could not install the bootloader.\n"
+                                   "(Status 0x%08lx).\n"
+                                   "Press ENTER to continue anyway.",
+                                   Status);
+                PopupError(Buffer,
+                           MUIGetString(STRING_CONTINUE),
+                           Ir, POPUP_WAIT_ENTER);
+            }
+            goto Retry;
         }
     }
-
     goto Retry;
 }
 
@@ -3652,54 +3667,54 @@ static BOOLEAN
 BootLoaderHardDiskPage(PINPUT_RECORD Ir)
 {
     NTSTATUS Status;
-    WCHAR DestinationDevicePathBuffer[MAX_PATH];
 
-    if (USetupData.BootLoaderLocation == 2)
+    /* Copy FreeLoader to the disk and save the boot entries */
+    Status = InstallBootManagerAndBootEntries(
+                USetupData.ArchType,
+                &USetupData.SystemRootPath,
+                &USetupData.SourceRootPath,
+                &USetupData.DestinationArcPath,
+                (USetupData.BootLoaderLocation == 2)
+                   ? 1 /* Install MBR and VBR */
+                   : 0 /* Install VBR only */);
+    if (Status == STATUS_SUCCESS)
+        return TRUE; /* Successful installation */
+
+    if (Status == ERROR_WRITE_BOOT)
     {
-        /* Step 1: Write the VBR */
-        Status = InstallVBRToPartition(&USetupData.SystemRootPath,
-                                       &USetupData.SourceRootPath,
-                                       &USetupData.DestinationArcPath,
-                                       SystemVolume->Info.FileSystem);
-        if (!NT_SUCCESS(Status))
-        {
-            MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER,
-                            SystemVolume->Info.FileSystem);
-            return FALSE;
-        }
-
-        /* Step 2: Write the MBR if the disk containing the system partition is not a super-floppy */
-        if (!IsSuperFloppy(SystemPartition->DiskEntry))
-        {
-            RtlStringCchPrintfW(DestinationDevicePathBuffer, ARRAYSIZE(DestinationDevicePathBuffer),
-                                L"\\Device\\Harddisk%d\\Partition0",
-                                SystemPartition->DiskEntry->DiskNumber);
-            Status = InstallMbrBootCodeToDisk(&USetupData.SystemRootPath,
-                                              &USetupData.SourceRootPath,
-                                              DestinationDevicePathBuffer);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("InstallMbrBootCodeToDisk() failed: Status 0x%lx\n", Status);
-                MUIDisplayError(ERROR_INSTALL_BOOTCODE, Ir, POPUP_WAIT_ENTER, L"MBR");
-                return FALSE;
-            }
-        }
+        /* Error when writing the VBR */
+        MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER,
+                        SystemVolume->Info.FileSystem);
     }
-    else
+    else if (Status == ERROR_INSTALL_BOOTCODE)
     {
-        Status = InstallVBRToPartition(&USetupData.SystemRootPath,
-                                       &USetupData.SourceRootPath,
-                                       &USetupData.DestinationArcPath,
-                                       SystemVolume->Info.FileSystem);
-        if (!NT_SUCCESS(Status))
-        {
-            MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER,
-                            SystemVolume->Info.FileSystem);
-            return FALSE;
-        }
+        /* Error when writing the MBR */
+        MUIDisplayError(ERROR_INSTALL_BOOTCODE, Ir, POPUP_WAIT_ENTER, L"MBR");
     }
+    else if (Status == STATUS_NOT_SUPPORTED)
+    {
+        PopupError("Setup does not currently support installing\n"
+                   "the bootloader on the computer you are using.\n"
+                   "Press ENTER to continue anyway.",
+                   MUIGetString(STRING_CONTINUE),
+                   Ir, POPUP_WAIT_ENTER);
+    }
+    else if (!NT_SUCCESS(Status))
+    {
+        /* Any other NTSTATUS failure code */
+        CHAR Buffer[MAX_PATH];
 
-    return TRUE;
+        DPRINT1("InstallBootManagerAndBootEntries() failed: Status 0x%lx\n", Status);
+        RtlStringCbPrintfA(Buffer, sizeof(Buffer),
+                           "Setup could not install the bootloader.\n"
+                           "(Status 0x%08lx).\n"
+                           "Press ENTER to continue anyway.",
+                           Status);
+        PopupError(Buffer,
+                   MUIGetString(STRING_CONTINUE),
+                   Ir, POPUP_WAIT_ENTER);
+    }
+    return FALSE;
 }
 
 /*
@@ -3717,16 +3732,11 @@ BootLoaderHardDiskPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 BootLoaderInstallPage(PINPUT_RECORD Ir)
 {
-    WCHAR PathBuffer[MAX_PATH];
-
-    // /* We must have a supported system partition by now */
-    // ASSERT(SystemPartition && SystemPartition->IsPartitioned && SystemPartition->PartitionNumber != 0);
+    WCHAR PathBuffer[RTL_NUMBER_OF_FIELD(PARTENTRY, DeviceName) + 1];
 
     RtlFreeUnicodeString(&USetupData.SystemRootPath);
-    RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
-            L"\\Device\\Harddisk%lu\\Partition%lu\\",
-            SystemPartition->DiskEntry->DiskNumber,
-            SystemPartition->PartitionNumber);
+    RtlStringCchPrintfW(PathBuffer, _countof(PathBuffer),
+                        L"%s\\", SystemPartition->DeviceName);
     RtlCreateUnicodeString(&USetupData.SystemRootPath, PathBuffer);
     DPRINT1("SystemRootPath: %wZ\n", &USetupData.SystemRootPath);
 
@@ -3735,19 +3745,17 @@ BootLoaderInstallPage(PINPUT_RECORD Ir)
 
     switch (USetupData.BootLoaderLocation)
     {
-        /* Skip installation */
-        case 0:
-            return SUCCESS_PAGE;
-
         /* Install on removable disk */
         case 1:
             return BootLoaderRemovableDiskPage(Ir) ? SUCCESS_PAGE : QUIT_PAGE;
 
-        /* Install on hard-disk (both MBR and VBR, or VBR only) */
-        case 2:
-        case 3:
+        /* Install on hard-disk */
+        case 2: // System partition / MBR and VBR (on BIOS-based PC)
+        case 3: // VBR only (on BIOS-based PC)
             return BootLoaderHardDiskPage(Ir) ? SUCCESS_PAGE : QUIT_PAGE;
 
+        /* Skip installation */
+        case 0:
         default:
             return SUCCESS_PAGE;
     }
