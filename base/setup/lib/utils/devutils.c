@@ -31,21 +31,21 @@
  * Specifies the type of share access for the device.
  *
  * @return  An NTSTATUS code indicating success or failure.
+ *
+ * @see pOpenDeviceEx()
  **/
 NTSTATUS
-pOpenDeviceEx(
-    _In_ PCWSTR DevicePath,
+pOpenDeviceEx_UStr(
+    _In_ PCUNICODE_STRING DevicePath,
     _Out_ PHANDLE DeviceHandle,
     _In_ ACCESS_MASK DesiredAccess,
     _In_ ULONG ShareAccess)
 {
-    UNICODE_STRING Name;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
 
-    RtlInitUnicodeString(&Name, DevicePath);
     InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
+                               (PUNICODE_STRING)DevicePath,
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
@@ -66,22 +66,72 @@ pOpenDeviceEx(
  *
  * @param[in]   DevicePath
  * @param[out]  DeviceHandle
- * See the DevicePath and DeviceHandle parameters of pOpenDeviceEx().
+ * See the DevicePath and DeviceHandle parameters of pOpenDeviceEx_UStr().
  *
  * @return  An NTSTATUS code indicating success or failure.
  *
- * @see pOpenDeviceEx()
+ * @see pOpenDevice(), pOpenDeviceEx(), pOpenDeviceEx_UStr()
+ **/
+NTSTATUS
+pOpenDevice_UStr(
+    _In_ PCUNICODE_STRING DevicePath,
+    _Out_ PHANDLE DeviceHandle)
+{
+    return pOpenDeviceEx_UStr(DevicePath,
+                              DeviceHandle,
+                              FILE_READ_DATA | FILE_READ_ATTRIBUTES,
+                              FILE_SHARE_ALL);
+}
+
+/**
+ * @brief
+ * Open an existing device given by its NT-style path, which is assumed to be
+ * for a disk device or a partition. The open is for synchronous I/O access.
+ *
+ * @param[in]   DevicePath
+ * @param[out]  DeviceHandle
+ * @param[in]   DesiredAccess
+ * @param[in]   ShareAccess
+ * See pOpenDeviceEx_UStr() parameters.
+ *
+ * @return  An NTSTATUS code indicating success or failure.
+ *
+ * @see pOpenDeviceEx_UStr()
+ **/
+NTSTATUS
+pOpenDeviceEx(
+    _In_ PCWSTR DevicePath,
+    _Out_ PHANDLE DeviceHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ ULONG ShareAccess)
+{
+    UNICODE_STRING Name;
+    RtlInitUnicodeString(&Name, DevicePath);
+    return pOpenDeviceEx_UStr(&Name, DeviceHandle, DesiredAccess, ShareAccess);
+}
+
+/**
+ * @brief
+ * Open an existing device given by its NT-style path, which is assumed to be
+ * for a disk device or a partition. The open is share read/write/delete, for
+ * synchronous I/O and read access.
+ *
+ * @param[in]   DevicePath
+ * @param[out]  DeviceHandle
+ * See the DevicePath and DeviceHandle parameters of pOpenDeviceEx_UStr().
+ *
+ * @return  An NTSTATUS code indicating success or failure.
+ *
+ * @see pOpenDeviceEx(), pOpenDevice_UStr(), pOpenDeviceEx_UStr()
  **/
 NTSTATUS
 pOpenDevice(
     _In_ PCWSTR DevicePath,
     _Out_ PHANDLE DeviceHandle)
 {
-    return pOpenDeviceEx(DevicePath,
-                         DeviceHandle,
-                         FILE_READ_DATA | FILE_READ_ATTRIBUTES,
-                         FILE_SHARE_VALID_FLAGS // FILE_SHARE_READ,WRITE,DELETE
-                         );
+    UNICODE_STRING Name;
+    RtlInitUnicodeString(&Name, DevicePath);
+    return pOpenDevice_UStr(&Name, DeviceHandle);
 }
 
 /* EOF */
