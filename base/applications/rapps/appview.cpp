@@ -792,6 +792,11 @@ CAppInfoDisplay::ProcessWindowMessage(
             }
             break;
         }
+        case WM_SYSCOLORCHANGE:
+        {
+            RichEdit->SendMessageW(EM_SETBKGNDCOLOR, 0, GetSysColor(COLOR_BTNFACE));
+            break;
+        }
     }
 
     return FALSE;
@@ -1587,7 +1592,7 @@ CApplicationView::ProcessWindowMessage(
         {
             /* Forward WM_SYSCOLORCHANGE to common controls */
             m_ListView->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
-            m_ListView->SendMessageW(EM_SETBKGNDCOLOR, 0, GetSysColor(COLOR_BTNFACE));
+            m_AppsInfo->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
             m_Toolbar->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
             m_ComboBox->SendMessageW(WM_SYSCOLORCHANGE, wParam, lParam);
         }
