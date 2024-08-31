@@ -1,4 +1,10 @@
-/* Brazilian Portuguese translation by Edison Henrique Andreassy (ehasis@hotmail.com) */
+/*
+ * PROJECT:     ReactOS Win32 BrowseUI
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATORS: Copyright 2019-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ *              Copyright 2021 Gabriel Aguiar <fgsoftwarestudio@gmail.com>
+ */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
@@ -10,7 +16,7 @@ BEGIN
     BEGIN
         MENUITEM "&Botões padrão", IDM_TOOLBARS_STANDARDBUTTONS, MFT_STRING, MFS_ENABLED
         MENUITEM "Barra de &endereços", IDM_TOOLBARS_ADDRESSBAR, MFT_STRING, MFS_ENABLED
-        MENUITEM "&Links", IDM_TOOLBARS_LINKSBAR, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Hiperligações", IDM_TOOLBARS_LINKSBAR, MFT_STRING, MFS_ENABLED
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Bloquear barra de &ferramentas", IDM_TOOLBARS_LOCKTOOLBARS, MFT_STRING, MFS_ENABLED
         MENUITEM "Per&sonalizar...", IDM_TOOLBARS_CUSTOMIZE, MFT_STRING, MFS_ENABLED
@@ -68,7 +74,7 @@ BEGIN
     BEGIN
         MENUITEM "&Mapear unidades de rede...", IDM_TOOLS_MAPNETWORKDRIVE
         MENUITEM "&Desligar unidade de rede...", IDM_TOOLS_DISCONNECTNETWORKDRIVE
-        MENUITEM "&Sincrinizar...", IDM_TOOLS_SYNCHRONIZE
+        MENUITEM "&Sincronizar...", IDM_TOOLS_SYNCHRONIZE
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Opções de pasta...", IDM_TOOLS_FOLDEROPTIONS
     END
@@ -101,8 +107,8 @@ BEGIN
     BEGIN
         POPUP "&Vista", IDM_VIEW_MENU
         BEGIN
-            MENUITEM "Icones &grandes", IDM_LARGE_ICONS
-            MENUITEM "Icones &pequenos", IDM_SMALL_ICONS
+            MENUITEM "Ícones &grandes", IDM_LARGE_ICONS
+            MENUITEM "Ícones &pequenos", IDM_SMALL_ICONS
         END
         MENUITEM "&Abrir pasta", IDM_OPEN_FOLDER
         MENUITEM "&Mostrar texto", IDM_SHOW_TEXT
@@ -140,7 +146,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Procurar por um dos seguintes critérios.", IDC_SEARCH_LABEL, 4, 2, 120, 20
 
-    LTEXT "A totalidade &ou parte do nome de ficheiro:", -1, 10, 25, 500, 10
+    LTEXT "A totalidade &ou parte do nome do ficheiro:", -1, 10, 25, 500, 10
     EDITTEXT IDC_SEARCH_FILENAME, 10, 35, 100, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
 
     LTEXT "&Uma palavra ou frase no ficheiro:", -1, 10, 50, 500, 10
@@ -226,7 +232,7 @@ END
 STRINGTABLE
 BEGIN
     9250 "Mostra informações sobre o programa, o número da versão e os direitos autorais."
-    9252 "Mostra infomrações para depuração."
+    9252 "Mostra informações para depuração."
 END
 
 STRINGTABLE
@@ -245,12 +251,12 @@ END
 
 STRINGTABLE
 BEGIN
-    9505 "Mostra ou oculta barras de ferramentas."
-    9506 "Mostra ou oculta barra de status."
+    9505 "Mostra ou oculta as barras de ferramentas."
+    9506 "Mostra ou oculta a barra de estado."
     9508 "Mostra os botões padrão da barra de ferramentas."
     9509 "Mostra a barra de endereços."
-    9510 "Mostra a barra de ferramentas 'Links rápidos'."
-    9516 "Bloqueia tamanhos e posições de barras das ferramentas."
+    9510 "Mostra a barra de ferramentas 'Hiperligações'."
+    9516 "Bloqueia tamanhos e posições das barras de ferramentas."
 END
 
 STRINGTABLE
@@ -260,12 +266,12 @@ END
 
 STRINGTABLE
 BEGIN
-    9552 "Mostra ou oculta uma barra do Explorer."
+    9552 "Mostra ou oculta uma barra do Explorador."
     9553 "Mostra a barra de pesquisa."
     9554 "Mostra a barra 'Favoritos'."
     9555 "Mostra a barra do histórico."
     9557 "Mostra a barra de pastas."
-    9559 "Mostra a barra de media."
+    9559 "Mostra a barra de média."
 END
 
 STRINGTABLE
@@ -295,7 +301,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ADDRESSMENUTEXT "&Address"
+    IDS_ADDRESSMENUTEXT "E&ndereço"
     IDS_HISTORYTEXT "&Histórico\tCtrl+H"
 END
 
@@ -313,7 +319,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|Voltar|Avançar|Acima|Pesquisar|Pastas|Mover para|Copiar para|Excluir|Desfazer|Modos de exibição|Parar|Actualizar|Página inicial|Mapear unidade|Desconectar|Favoritos|Histórico|Ecrã inteiro|Propriedades|Recortar|Copiar|Colar|Opções de pasta||"
+    IDS_STANDARD_TOOLBAR, "|Voltar|Avançar|Acima|Pesquisar|Pastas|Mover para|Copiar para|Excluir|Retroceder|Modos de exibição|Parar|Actualizar|Página inicial|Mapear unidade|Desconectar|Favoritos|Histórico|Ecrã inteiro|Propriedades|Recortar|Copiar|Colar|Opções de pasta||"
 END
 
 STRINGTABLE
