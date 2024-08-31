@@ -24,34 +24,34 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Sayfa Görünümü", IDM_FILEPAGEVIEW
         MENUITEM "Sayfa Ayarla...", IDM_FILEPAGESETUP
-        MENUITEM "&Yazdır...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM "Ya&zdır...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
         MENUITEM "Gönder...", IDM_FILESEND
         MENUITEM SEPARATOR
-        MENUITEM "&Duvar Kağıdı Yap (Döşeli)", IDM_FILEASWALLPAPERPLANE
-        MENUITEM "&Duvar Kağıdı Yap (Ortalanmış)", IDM_FILEASWALLPAPERCENTERED
-        MENUITEM "&Duvar Kağıdı Yap (Uzatılmış)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM "Du&var Kağıdı Yap (Döşeli)", IDM_FILEASWALLPAPERPLANE
+        MENUITEM "Du&var Kağıdı Yap (Ortalanmış)", IDM_FILEASWALLPAPERCENTERED
+        MENUITEM "Du&var Kağıdı Yap (Uzatılmış)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
         MENUITEM "En Son Kullanılan Dosya", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Çıkış\tAlt+F4", IDM_FILEEXIT
+        MENUITEM "Ç&ıkış\tAlt+F4", IDM_FILEEXIT
     END
-    POPUP "&Düzen"
+    POPUP "D&üzen"
     BEGIN
         MENUITEM "&Geri Al\tCtrl+Z", IDM_EDITUNDO
         MENUITEM "&Yeniden Yap\tCtrl+Y", IDM_EDITREDO
         MENUITEM SEPARATOR
         MENUITEM "&Kes\tCtrl+X", IDM_EDITCUT
-        MENUITEM "&Kopyala\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "&Yapıştır\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "K&opyala\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "Y&apıştır\tCtrl+V", IDM_EDITPASTE
         MENUITEM SEPARATOR
-        MENUITEM "&Seçimi kırp", IDM_CROPSELECTION
+        MENUITEM "Seçimi &kırp", IDM_CROPSELECTION
         MENUITEM "&Seçimi Sil\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "&Seçimi Evir", IDM_EDITINVERTSELECTION
+        MENUITEM "S&eçimi Evir", IDM_EDITINVERTSELECTION
         MENUITEM "&Tümünü Seç\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&Şuraya Kopyala...", IDM_EDITCOPYTO
-        MENUITEM "&Şuradan Yapıştır...", IDM_EDITPASTEFROM
+        MENUITEM "Ş&uraya Kopyala...", IDM_EDITCOPYTO
+        MENUITEM "Şu&radan Yapıştır...", IDM_EDITPASTEFROM
     END
     POPUP "&Görünüm"
     BEGIN
@@ -73,8 +73,8 @@ BEGIN
                 MENUITEM "%800", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "&Kılavuzu Göster\tCtrl+G", IDM_VIEWSHOWGRID
-            MENUITEM "&Küçük Resim Göster", IDM_VIEWSHOWMINIATURE
+            MENUITEM "K&ılavuzu Göster\tCtrl+G", IDM_VIEWSHOWGRID
+            MENUITEM "K%üçük Resim Göster", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "&Tam Ekran\tCtrl+F", IDM_VIEWFULLSCREEN
     END
@@ -85,10 +85,10 @@ BEGIN
         MENUITEM "&Kırp", IDM_IMAGECROP
         MENUITEM "&Renkleri Tersine Çevir\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "&Öznitelikler...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "&Resmi Sil\tCtrl+Shift+N", IDM_IMAGEDELETEIMAGE
-        MENUITEM "&Donuk Çiz", IDM_IMAGEDRAWOPAQUE
+        MENUITEM "R&esmi Sil\tCtrl+Shift+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "D&onuk Çiz", IDM_IMAGEDRAWOPAQUE
     END
-    POPUP "&Renkler"
+    POPUP "R&enkler"
     BEGIN
         MENUITEM "&Renk Paletini Düzenle...", IDM_COLORSEDITPALETTE
         MENUITEM SEPARATOR
@@ -108,19 +108,19 @@ BEGIN
     POPUP "Popup #0"
     BEGIN
         MENUITEM "&Kes\tCtrl+X", IDM_EDITCUT
-        MENUITEM "&Kopyala\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "&Yapıştır\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "K&opyala\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "Y&apıştır\tCtrl+V", IDM_EDITPASTE
         MENUITEM SEPARATOR
-        MENUITEM "&Seçimi kırp", IDM_CROPSELECTION
+        MENUITEM "Seçimi &kırp", IDM_CROPSELECTION
         MENUITEM "&Seçimi Sil\tDel", IDM_EDITDELETESELECTION
         MENUITEM "&Tümünü Seç\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&Şuraya Kopyala...", IDM_EDITCOPYTO
-        MENUITEM "&Şuradan Yapıştır...", IDM_EDITPASTEFROM
+        MENUITEM "Ş&uraya Kopyala...", IDM_EDITCOPYTO
+        MENUITEM "Şu&radan Yapıştır...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
         MENUITEM "&Döndür ya da Yansıt...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "&Yeniden Boyutlandır veya Eğ...\tCtrl+W", IDM_IMAGESTRETCHSKEW
-        MENUITEM "&Renkleri Tersine Çevir\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "Re&nkleri Tersine Çevir\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
 
