@@ -302,6 +302,12 @@ HRESULT SHELL32_CompareDetails(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST 
     return MAKE_COMPARE_HRESULT(ret);
 }
 
+void CloseRegKeyArray(HKEY* array, UINT cKeys)
+{
+    for (UINT i = 0; i < cKeys; ++i)
+        RegCloseKey(array[i]);
+}
+
 LSTATUS AddClassKeyToArray(const WCHAR* szClass, HKEY* array, UINT* cKeys)
 {
     if (*cKeys >= 16)
@@ -495,36 +501,6 @@ SHOpenFolderAndSelectItems(PCIDLIST_ABSOLUTE pidlFolder,
         return E_FAIL;
 }
 
-static
-DWORD WINAPI
-_ShowPropertiesDialogThread(LPVOID lpParameter)
-{
-    CComPtr<IDataObject> pDataObject;
-    pDataObject.Attach((IDataObject*)lpParameter);
-
-    CDataObjectHIDA cida(pDataObject);
-
-    if (FAILED_UNEXPECTEDLY(cida.hr()))
-        return cida.hr();
-
-    if (cida->cidl > 1)
-    {
-        ERR("SHMultiFileProperties is not yet implemented\n");
-        return E_FAIL;
-    }
-
-    CComHeapPtr<ITEMIDLIST> completePidl(ILCombine(HIDA_GetPIDLFolder(cida), HIDA_GetPIDLItem(cida, 0)));
-    CComHeapPtr<WCHAR> wszName;
-    if (FAILED_UNEXPECTEDLY(SHGetNameFromIDList(completePidl, SIGDN_PARENTRELATIVEPARSING, &wszName)))
-        return 0;
-
-    BOOL bSuccess = SH_ShowPropertiesDialog(wszName, pDataObject);
-    if (!bSuccess)
-        ERR("SH_ShowPropertiesDialog failed\n");
-
-    return 0;
-}
-
 /*
  * for internal use
  */
@@ -534,16 +510,15 @@ SHELL32_ShowPropertiesDialog(IDataObject *pdtobj)
     if (!pdtobj)
         return E_INVALIDARG;
 
-    pdtobj->AddRef();
-    if (!SHCreateThread(_ShowPropertiesDialogThread, pdtobj, CTF_INSIST | CTF_COINIT | CTF_PROCESS_REF, NULL))
+    CDataObjectHIDA cida(pdtobj);
+    if (FAILED_UNEXPECTEDLY(cida.hr()))
+        return cida.hr();
+    if (cida->cidl > 1)
     {
-        pdtobj->Release();
-        return HResultFromWin32(GetLastError());
+        ERR("SHMultiFileProperties is not yet implemented\n");
+        return E_FAIL;
     }
-    else
-    {
-        return S_OK;
-    }
+    return SHELL32_ShowFilesystemItemPropertiesDialogAsync(pdtobj);
 }
 
 HRESULT

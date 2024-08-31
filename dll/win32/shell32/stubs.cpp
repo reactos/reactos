@@ -215,6 +215,9 @@ SHGetSetFolderCustomSettingsA(LPSHFOLDERCUSTOMSETTINGSA pfcs,
  *
  * @see https://learn.microsoft.com/en-us/windows/win32/api/shlobj/nf-shlobj-shopenpropsheetw
  */
+EXTERN_C BOOL
+SHELL32_OpenPropSheet(LPCWSTR pszCaption, HKEY *ahKeys, UINT cKeys, const CLSID *pclsidDefault,
+                      IDataObject *pdtobj, LPCWSTR pStartPage);
 BOOL WINAPI
 SHOpenPropSheetW(
     _In_opt_ LPCWSTR pszCaption,
@@ -225,8 +228,8 @@ SHOpenPropSheetW(
     _In_opt_ IShellBrowser *pShellBrowser,
     _In_opt_ LPCWSTR pszStartPage)
 {
-    FIXME("SHOpenPropSheetW() stub\n");
-    return FALSE;
+    UNREFERENCED_PARAMETER(pShellBrowser); /* MSDN says "Not used". */
+    return SHELL32_OpenPropSheet(pszCaption, ahKeys, cKeys, pclsidDefault, pDataObject, pszStartPage);
 }
 
 /*

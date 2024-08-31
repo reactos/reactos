@@ -1923,23 +1923,16 @@ HRESULT WINAPI CFSFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObjec
     {
         if (uMsg == DFM_INVOKECOMMAND && wParam == IDC_PROPERTIES)
         {
-            // Create an data object
-            CComHeapPtr<ITEMID_CHILD> pidlChild(ILClone(ILFindLastID(m_pidlRoot)));
+            PUITEMID_CHILD pidlChild = ILFindLastID(m_pidlRoot);
             CComHeapPtr<ITEMIDLIST> pidlParent(ILClone(m_pidlRoot));
             ILRemoveLastID(pidlParent);
 
             CComPtr<IDataObject> pDataObj;
-            HRESULT hr = SHCreateDataObject(pidlParent, 1, &pidlChild.m_pData, NULL, IID_PPV_ARG(IDataObject, &pDataObj));
+            HRESULT hr = SHCreateDataObject(pidlParent, 1, &pidlChild, NULL, IID_PPV_ARG(IDataObject, &pDataObj));
             if (!FAILED_UNEXPECTEDLY(hr))
             {
-                // Ask for a title to display
-                CComHeapPtr<WCHAR> wszName;
-                if (!FAILED_UNEXPECTEDLY(SHGetNameFromIDList(m_pidlRoot, SIGDN_PARENTRELATIVEPARSING, &wszName)))
-                {
-                    BOOL bSuccess = SH_ShowPropertiesDialog(wszName, pDataObj);
-                    if (!bSuccess)
-                        ERR("SH_ShowPropertiesDialog failed\n");
-                }
+                SHELL32_ShowPropertiesDialog(pDataObj);
+                hr = S_OK;
             }
             return hr;
         }

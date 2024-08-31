@@ -299,23 +299,29 @@ SH_FormatFileSizeWithBytes(const PULARGE_INTEGER lpQwSize, LPWSTR pwszResult, UI
  */
 
 HPROPSHEETPAGE
-SH_CreatePropertySheetPage(WORD wDialogId, DLGPROC pfnDlgProc, LPARAM lParam, LPCWSTR pwszTitle)
+SH_CreatePropertySheetPageEx(WORD wDialogId, DLGPROC pfnDlgProc, LPARAM lParam,
+                             LPCWSTR pwszTitle, LPFNPSPCALLBACK Callback)
 {
-    PROPSHEETPAGEW Page;
-
-    memset(&Page, 0x0, sizeof(PROPSHEETPAGEW));
-    Page.dwSize = sizeof(PROPSHEETPAGEW);
-    Page.dwFlags = PSP_DEFAULT;
-    Page.hInstance = shell32_hInstance;
+    PROPSHEETPAGEW Page = { sizeof(Page), PSP_DEFAULT, shell32_hInstance };
     Page.pszTemplate = MAKEINTRESOURCE(wDialogId);
     Page.pfnDlgProc = pfnDlgProc;
     Page.lParam = lParam;
     Page.pszTitle = pwszTitle;
+    Page.pfnCallback = Callback;
 
     if (pwszTitle)
         Page.dwFlags |= PSP_USETITLE;
 
+    if (Callback)
+        Page.dwFlags |= PSP_USECALLBACK;
+
     return CreatePropertySheetPageW(&Page);
+}
+
+HPROPSHEETPAGE
+SH_CreatePropertySheetPage(WORD wDialogId, DLGPROC pfnDlgProc, LPARAM lParam, LPCWSTR pwszTitle)
+{
+    return SH_CreatePropertySheetPageEx(wDialogId, pfnDlgProc, lParam, pwszTitle, NULL);
 }
 
 VOID
@@ -1321,12 +1327,16 @@ CFileDefExt::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
     HPROPSHEETPAGE hPage;
     WORD wResId = m_bDir ? IDD_FOLDER_PROPERTIES : IDD_FILE_PROPERTIES;
 
-    hPage = SH_CreatePropertySheetPage(wResId,
+    hPage = SH_CreatePropertySheetPageEx(wResId,
                                        GeneralPageProc,
                                        (LPARAM)this,
-                                       NULL);
-    if (hPage)
-        pfnAddPage(hPage, lParam);
+                                       NULL,
+                                       &PropSheetPageLifetimeCallback<CFileDefExt>);
+    HRESULT hr = AddPropSheetPage(hPage, pfnAddPage, lParam);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+    else
+        AddRef(); // For PropSheetPageLifetimeCallback
 
     if (!m_bDir && GetFileVersionInfoSizeW(m_wszPath, NULL))
     {
@@ -1334,8 +1344,7 @@ CFileDefExt::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
                                             VersionPageProc,
                                             (LPARAM)this,
                                             NULL);
-        if (hPage)
-            pfnAddPage(hPage, lParam);
+        AddPropSheetPage(hPage, pfnAddPage, lParam);
     }
 
     if (m_bDir)
@@ -1344,8 +1353,7 @@ CFileDefExt::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
                                            FolderCustomizePageProc,
                                            (LPARAM)this,
                                            NULL);
-        if (hPage)
-            pfnAddPage(hPage, lParam);
+        AddPropSheetPage(hPage, pfnAddPage, lParam);
     }
 
     return S_OK;
