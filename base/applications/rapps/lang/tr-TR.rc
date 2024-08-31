@@ -28,7 +28,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Yenile\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Uygulama Veri Tabanını Yenile\tCtrl+F5", ID_RESETDB
+        MENUITEM "Uygulama Veri Ta&banını Yenile\tCtrl+F5", ID_RESETDB
     END
     POPUP "&Yardım"
     BEGIN
@@ -240,7 +240,7 @@ STRINGTABLE
 BEGIN
     IDS_LICENSE_OPENSOURCE "Açık Kaynak"
     IDS_LICENSE_FREEWARE "Ücretsiz"
-    IDS_LICENSE_TRIAL "Deneme Sürümü"
+    IDS_LICENSE_TRIAL "Deneme/Tanıtım Sürümü"
 END
 
 STRINGTABLE
