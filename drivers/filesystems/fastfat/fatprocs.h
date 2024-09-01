@@ -36,6 +36,7 @@ Abstract:
 #include <ntintsafe.h>
 #ifdef __REACTOS__
 #include <pseh/pseh2.h>
+#include <dbgbitmap.h>
 #endif
 
 
