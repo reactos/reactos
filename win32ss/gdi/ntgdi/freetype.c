@@ -6795,8 +6795,9 @@ IntExtTextOutW(
     FONT_CACHE_ENTRY Cache;
     FT_Matrix mat;
     BOOL bNoTransform;
-    DWORD ch0, ch1;
+    DWORD ch0, ch1, etx = 3; // etx is ASCII End of Text
     FONTLINK_CHAIN Chain;
+    SIZE spaceWidth;
 
     /* Check if String is valid */
     if (Count > 0xFFFF || (Count > 0 && String == NULL))
@@ -7062,6 +7063,22 @@ IntExtTextOutW(
         bitSize.cx = realglyph->bitmap.width;
         bitSize.cy = realglyph->bitmap.rows;
 
+        /* Do chars other than space and etx have a bitSize.cx of zero? */
+        if (ch0 != L' ' && ch0 != etx && bitSize.cx == 0)
+            DPRINT1("WARNING: WChar 0x%04x has a bitSize.cx of zero\n", ch0);
+
+        /* Don't ignore spaces when computing offset.
+         * This completes the fix of CORE-11787. */
+        if ((pdcattr->flTextAlign & TA_UPDATECP) && ch0 == L' ' && bitSize.cx == 0)
+        { 
+            IntUnLockFreeType();
+            /* Get the width of the space character */
+            TextIntGetTextExtentPoint(dc, TextObj, L" ", 1, 0, NULL, 0, &spaceWidth, 0);
+            IntLockFreeType();
+            bitSize.cx = spaceWidth.cx;
+            realglyph->left = 0;
+        }
+
         MaskRect.right = realglyph->bitmap.width;
         MaskRect.bottom = realglyph->bitmap.rows;
 
@@ -7166,8 +7183,8 @@ IntExtTextOutW(
 
         previous = glyph_index;
     }
-
-    if (pdcattr->flTextAlign & TA_UPDATECP)
+    /* Don't update position if String == NULL. Fixes CORE-19721. */
+    if ((pdcattr->flTextAlign & TA_UPDATECP) && String)
         pdcattr->ptlCurrent.x = DestRect.right - dc->ptlDCOrig.x;
 
     if (plf->lfUnderline || plf->lfStrikeOut) /* Underline or strike-out? */
