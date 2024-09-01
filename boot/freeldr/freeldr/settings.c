@@ -15,7 +15,7 @@
 
 static CCHAR DebugString[256];
 static CCHAR DefaultOs[256];
-BOOTMGRINFO BootMgrInfo = {0};
+BOOTMGRINFO BootMgrInfo = {NULL, NULL, -1, 0};
 
 /* FUNCTIONS ******************************************************************/
 
@@ -25,12 +25,6 @@ CmdLineParse(
 {
     PCHAR End, Setting;
     ULONG_PTR Length, Offset = 0;
-
-    /* Set defaults */
-    BootMgrInfo.DebugString = NULL;
-    BootMgrInfo.DefaultOs = NULL;
-    BootMgrInfo.TimeOut = -1;
-    // BootMgrInfo.FrLdrSection = 0;
 
     /*
      * Get the debug string, in the following format:
