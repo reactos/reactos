@@ -6795,7 +6795,7 @@ IntExtTextOutW(
     FONT_CACHE_ENTRY Cache;
     FT_Matrix mat;
     BOOL bNoTransform;
-    DWORD ch0, ch1, etx = 3; // etx is End of Text
+    DWORD ch0, ch1, etx = 3; // etx is ASCII End of Text
     FONTLINK_CHAIN Chain;
     SIZE spaceWidth;
 
