@@ -28,8 +28,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Gönder...", IDM_FILESEND
         MENUITEM SEPARATOR
-        MENUITEM "Du&var Kağıdı Yap (Döşeli)", IDM_FILEASWALLPAPERPLANE
-        MENUITEM "Du&var Kağıdı Yap (Ortalanmış)", IDM_FILEASWALLPAPERCENTERED
+        MENUITEM "&Duvar Kağıdı Yap (Döşeli)", IDM_FILEASWALLPAPERPLANE
+        MENUITEM "D&uvar Kağıdı Yap (Ortalanmış)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Du&var Kağıdı Yap (Uzatılmış)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
         MENUITEM "En Son Kullanılan Dosya", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
@@ -74,7 +74,7 @@ BEGIN
             END
             MENUITEM SEPARATOR
             MENUITEM "K&ılavuzu Göster\tCtrl+G", IDM_VIEWSHOWGRID
-            MENUITEM "K%üçük Resim Göster", IDM_VIEWSHOWMINIATURE
+            MENUITEM "Kü&çük Resim Göster", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "&Tam Ekran\tCtrl+F", IDM_VIEWFULLSCREEN
     END
