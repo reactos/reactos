@@ -150,7 +150,7 @@ static int GetLocalisedText(_In_opt_ HINSTANCE hInstance, _In_ UINT uID, _Out_ L
 
 static int LoadStringWrapW(_In_opt_ HINSTANCE hInstance, _In_ UINT uID, _Out_ LPWSTR lpBuffer, _In_ int cchBufferMax)
 {
-    if (dwVersion < 0x502)
+    if (dwVersion < _WIN32_WINNT_WS03)
         // Windows XP or lower: SetThreadLocale doesn't select user interface language
         return GetLocalisedText(hInstance, uID, lpBuffer, cchBufferMax);
     else
