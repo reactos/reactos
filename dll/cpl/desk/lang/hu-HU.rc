@@ -48,7 +48,7 @@ BEGIN
     LTEXT "percet", IDC_MINTEXT, 70, 125, 26, 9
     CONTROL "&Jelszóvédelem a visszatéréshez", IDC_SCREENS_USEPASSCHK, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
-    GROUPBOX "A monitor &energiatakarékossági tulajdonságai", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
+    GROUPBOX "A monitor energiatakarékossági tulajdonságai", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
     LTEXT "A monitor energiaellátási tulajdonságainak megváltoztatásához kattintson az energiaellátás gombra.", IDC_STATIC, 16, 161, 146, 27
     PUSHBUTTON "Ener&giaellátás...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
 END
@@ -186,9 +186,9 @@ BEGIN
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Kompatibilitás", -1, 7, 67, 237, 97
     LTEXT "Néhány program nem működik megfelelően ha nem indítja újra a számítógépet miután megváltoztatta a színbeállításokat.\n\nA színbeállítások megváltoztatása után", -1, 12, 78, 228, 34
-    AUTORADIOBUTTON "&Indítsa újra a számítógépet az alkalmazás előtt.", IDC_RESTART_RB, 14, 116, 228, 10
-    AUTORADIOBUTTON "Alkalmazza az új színbeállításokat újraindítás nélkül.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
-    AUTORADIOBUTTON "Kérdezzen rá mielőtt alkalmazná az új színbeállításokat.", IDC_ASKME_RB, 14, 146, 228, 10
+    AUTORADIOBUTTON "&Indítsa újra a számítógépet az alkalmazás előtt", IDC_RESTART_RB, 14, 116, 228, 10
+    AUTORADIOBUTTON "Alkalmazza az új színbeállításokat újraindítás nélkül", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10//FIXME: add accel
+    AUTORADIOBUTTON "Kérdezzen rá mielőtt alkalmazná az új színbeállításokat", IDC_ASKME_RB, 14, 146, 228, 10//FIXME: add accel
 END
 
 IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57

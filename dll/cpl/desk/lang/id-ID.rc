@@ -46,7 +46,7 @@ BEGIN
     LTEXT "menit", IDC_MINTEXT, 74, 125, 26, 9
     CONTROL "Pintai &kata sandi saat melanjutkan", IDC_SCREENS_USEPASSCHK, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 106, 120, 119, 19
-    GROUPBOX "Fitur pen&yimpan Daya monitor", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
+    GROUPBOX "Fitur penyimpan Daya monitor", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
     LTEXT "Untuk mengatur setelan daya monitor, klik Daya.", IDC_STATIC, 16, 161, 146, 27
     PUSHBUTTON "&Daya...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
 END
@@ -184,9 +184,9 @@ BEGIN
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Kompatibilitas", -1, 7, 67, 237, 97
     LTEXT "Berapa program berjalan tidak semestimnya jika anda tidak memulai ulang komputer setelah mengubah pengaturan warna.\n\nSetelah saya mengubah pengaturan warna", -1, 12, 78, 228, 34
-    AUTORADIOBUTTON "&Mulai ulang komputer sebelum menerapkan pengaturan warna baru.", IDC_RESTART_RB, 14, 116, 228, 10
-    AUTORADIOBUTTON "Me&nerapkan pengaturan warna baru tanpa memulai ulang.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
-    AUTORADIOBUTTON "&Tanya saya sebelum menerapkan pengaturan warna baru.", IDC_ASKME_RB, 14, 146, 228, 10
+    AUTORADIOBUTTON "&Mulai ulang komputer sebelum menerapkan pengaturan warna baru", IDC_RESTART_RB, 14, 116, 228, 10
+    AUTORADIOBUTTON "Me&nerapkan pengaturan warna baru tanpa memulai ulang", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
+    AUTORADIOBUTTON "&Tanya saya sebelum menerapkan pengaturan warna baru", IDC_ASKME_RB, 14, 146, 228, 10
 END
 
 IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57

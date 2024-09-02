@@ -186,7 +186,7 @@ BEGIN
     LTEXT "Alguns programas podem não funcionar corretamente se você não reiniciar o computador após alterar as configurações de vídeo.\n\nApós alterar as configurações de vídeo:", -1, 12, 78, 228, 34
     AUTORADIOBUTTON "&Reiniciar computador antes de aplicar novas configurações de vídeo", IDC_RESTART_RB, 14, 116, 228, 10
     AUTORADIOBUTTON "&Aplicar as novas configurações de vídeo sem reiniciar o computador", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
-    AUTORADIOBUTTON "Perg&untar antes de aplicar novas configurações de vídeo", IDC_ASKME_RB, 14, 146, 228, 10
+    AUTORADIOBUTTON "Perg&untar antes de aplicar novas configurações de vídeo", IDC_ASKME_RB, 14, 146, 228, 10//FIXME: add accel
 END
 
 IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57

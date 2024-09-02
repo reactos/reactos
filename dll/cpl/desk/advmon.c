@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
- * FILE:            dll/cpl/desk/advmon.c
  * PURPOSE:         Advanced monitor/display settings
  */
 
@@ -55,7 +54,7 @@ BuildAdvPropTitle(IDataObject *pdo, LPTSTR lpBuffer, DWORD dwBufferLen)
     LPTSTR lpMonitorName, lpDisplayName;
     TCHAR szFormatBuff[32];
 
-    if (!LoadString(hApplet, IDS_ADVANCEDTITLEFMT, szFormatBuff, sizeof(szFormatBuff) / sizeof(szFormatBuff[0])))
+    if (!LoadString(hApplet, IDS_ADVANCEDTITLEFMT, szFormatBuff, _countof(szFormatBuff)))
     {
         szFormatBuff[0] = _T('\0');
     }
@@ -89,7 +88,7 @@ DisplayAdvancedSettings(HWND hWndParent, PDISPLAY_DEVICE_ENTRY DisplayDevice)
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags =  PSH_PROPTITLE;
+    psh.dwFlags = PSH_PROPTITLE;
     psh.hwndParent = hWndParent;
     psh.hInstance = hApplet;
     psh.pszCaption = szCaption;
@@ -100,7 +99,7 @@ DisplayAdvancedSettings(HWND hWndParent, PDISPLAY_DEVICE_ENTRY DisplayDevice)
     pdo = CreateDevSettings(DisplayDevice);
 
     if (pdo != NULL)
-        BuildAdvPropTitle(pdo, szCaption, sizeof(szCaption) / sizeof(szCaption[0]));
+        BuildAdvPropTitle(pdo, szCaption, _countof(szCaption));
 
     hpsxaDev = SHCreatePropSheetExtArrayEx(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\Device"), MAX_ADVANCED_PAGES - psh.nPages, pdo);
     if (hpsxaDev != NULL)

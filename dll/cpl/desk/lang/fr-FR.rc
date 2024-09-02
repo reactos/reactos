@@ -1,4 +1,4 @@
-/* French translation by Benoit Plante (cmoibenlepro AT hotmail DOT com) & Pierre Schweitzer (pierre AT reactos DOT org) */
+/* French translation by Benoit Plante <cmoibenlepro@hotmail.com> & Pierre Schweitzer <pierre@reactos.org> */
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
@@ -10,7 +10,7 @@ BEGIN
     LTEXT "Un thème est un fond d'écran et un ensemble de sons, icones et autres éléments vous permettant de personnaliser votre ordinateur en un clic.", IDC_STATIC, 5, 5, 235, 30
     LTEXT "Thème :", IDC_STATIC, 5, 42, 55, 10
     COMBOBOX IDC_THEMES_COMBOBOX, 5, 52, 160, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Enregistrer sous...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
+    PUSHBUTTON "Enregistrer sous...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14//FIXME: add back accelerator which has been destroyed during 0.4.15-dev'ing
     PUSHBUTTON "&Supprimer", IDC_THEMES_DELETE, 170, 70, 70, 14
     CONTROL "", IDC_THEMES_PREVIEW, "STATIC", SS_BITMAP, 5, 90, 235, 115, WS_EX_CLIENTEDGE
 END
@@ -48,7 +48,7 @@ BEGIN
     LTEXT "minutes", IDC_MINTEXT, 65, 125, 26, 9
     CONTROL "À la reprise, demander un mot de &passe", IDC_SCREENS_USEPASSCHK, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 93, 120, 140, 19
-    GROUPBOX "G&estion de l'alimentation du moniteur", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
+    GROUPBOX "Gestion de l'alimentation du moniteur", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
     LTEXT "Pour modifier les paramètres de l'alimentation du moniteur, cliquez sur Gestion de l'alimentation.", IDC_STATIC, 16, 161, 146, 27
     PUSHBUTTON "&Gestion de l'alimentation...", IDC_SCREENS_POWER_BUTTON, 133, 172, 100, 15
 END
@@ -87,9 +87,9 @@ BEGIN
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP |
             UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT | WS_CHILD | WS_VISIBLE, 172, 170, 10, 13
-    LTEXT "Couleur 1 :", IDC_ADVAPPEARANCE_COLOR1_T, 180, 160, 34, 9
+    LTEXT "Couleur 1 :", IDC_ADVAPPEARANCE_COLOR1_T, 180, 160, 34, 9//FIXME: add back accelerator which was destroyed during 0.4.15-dev'ing. I used &1 for the backport
     CHECKBOX "-", IDC_ADVAPPEARANCE_COLOR1_B, 184, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
-    LTEXT "Couleur 2 :", IDC_ADVAPPEARANCE_COLOR2_T, 215, 160, 34, 9
+    LTEXT "Couleur 2 :", IDC_ADVAPPEARANCE_COLOR2_T, 215, 160, 34, 9//FIXME: add back accelerator which was destroyed during 0.4.15-dev'ing. I used &2 for the backport
     CHECKBOX "-", IDC_ADVAPPEARANCE_COLOR2_B, 218, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
     LTEXT "Police :", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN |
@@ -122,11 +122,11 @@ BEGIN
             BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
     CONTROL "&Afficher une ombre sous les menus", IDC_EFFAPPEARANCE_SETDROPSHADOW,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
-    CONTROL "Afficher le contenu des fenêtres pendant leur déplacement", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
+    CONTROL "Afficher le contenu des fenêtres pendant leur déplacement", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,//FIXME: add accel
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "Masquer les lettres soulignées pour la navigation au clavier jusqu'à ce que j'appuie sur la touche Alt",
+    CONTROL "Masquer les lettres soulignées pour la navigation au clavier jusqu'à ce que j'appuie sur la touche Alt",//FIXME: add back accelerator which has been destroyed during 0.4.15-dev'ing
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 360, 19
-    CONTROL "Utiliser les menus plats", IDC_EFFAPPEARANCE_FLATMENUS,
+    CONTROL "Utiliser les menus plats", IDC_EFFAPPEARANCE_FLATMENUS,//FIXME: add back accelerator which has been destroyed during 0.4.15-dev'ing
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
     PUSHBUTTON "Annuler", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "Accepter", IDOK, 172, 165, 50, 14
@@ -186,9 +186,9 @@ BEGIN
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Compatibilité", -1, 7, 67, 285, 97
     LTEXT "Quelques programmes peuvent mal fonctionner si vous ne redémarrez pas votre ordinateur après que vous ayiez changé les paramètres des couleurs.\n\nAprès que j'ai changé les paramètres des couleurs", -1, 12, 78, 270, 40
-    AUTORADIOBUTTON "&Redémarrer l'ordinateur avant d'appliquer les nouveaux paramètres des couleurs.", IDC_RESTART_RB, 14, 116, 273, 10
-    AUTORADIOBUTTON "Appliquer les nouveaux paramètres des couleurs sans redémarrer.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
-    AUTORADIOBUTTON "Me demander avant d'appliquer les nouveaux paramètres des couleurs.", IDC_ASKME_RB, 14, 146, 243, 10
+    AUTORADIOBUTTON "&Redémarrer l'ordinateur avant d'appliquer les nouveaux paramètres des couleurs", IDC_RESTART_RB, 14, 116, 273, 10
+    AUTORADIOBUTTON "Appliquer les nouveaux paramètres des couleurs sans redémarrer", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10//FIXME: add accel
+    AUTORADIOBUTTON "Me demander avant d'appliquer les nouveaux paramètres des couleurs", IDC_ASKME_RB, 14, 146, 243, 10//FIXME: add accel
 END
 
 IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57

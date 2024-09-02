@@ -46,7 +46,7 @@ BEGIN
     LTEXT "мин.", IDC_MINTEXT, 84, 125, 18, 9
     CONTROL "На&чинать с экрана приветствия", IDC_SCREENS_USEPASSCHK, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 106, 120, 121, 19
-    GROUPBOX "&Энергосбережение", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
+    GROUPBOX "Энергосбережение", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
     LTEXT "Для изменения параметров питания монитора нажмите кнопку ""Питание"".", IDC_STATIC, 16, 161, 146, 27
     PUSHBUTTON "П&итание...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
 END
