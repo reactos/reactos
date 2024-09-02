@@ -69,7 +69,7 @@ CreateWindowHelper(
 
 static
 void
-Test_GetDCEx_Cached()
+Test_GetDCEx_Cached(void)
 {
     static const PSTR pszClassName = "TestClass_Cached";
     ATOM atomClass;
@@ -139,7 +139,7 @@ Test_GetDCEx_Cached()
 
 static
 void
-Test_GetDCEx_CS_OWNDC()
+Test_GetDCEx_CS_OWNDC(void)
 {
     static const PSTR pszClassName = "TestClass_CS_OWNDC";
     ATOM atomClass;
@@ -199,7 +199,7 @@ Test_GetDCEx_CS_OWNDC()
 
 static
 void
-Test_GetDCEx_CS_CLASSDC()
+Test_GetDCEx_CS_CLASSDC(void)
 {
     static const PSTR pszClassName = "TestClass_CS_CLASSDC";
     ATOM atomClass;
@@ -250,7 +250,7 @@ Test_GetDCEx_CS_CLASSDC()
 
 static
 void
-Test_GetDCEx_CS_CLASSDC_NEXT()
+Test_GetDCEx_CS_CLASSDC_NEXT(void)
 {
     static const PSTR pszClassName = "TestClass_CS_SwitchedStyle";
     HWND hwnd1, hwnd2;
@@ -354,7 +354,7 @@ Test_GetDCEx_CS_CLASSDC_NEXT()
 
 static
 void
-Test_GetDCEx_CS_Mixed()
+Test_GetDCEx_CS_Mixed(void)
 {
     static const PSTR pszClassName = "TestClass_CS_Mixed";
     ATOM atomClass;
@@ -512,7 +512,7 @@ Test_GetDCEx_CS_Mixed()
 
 static
 void
-Test_GetDCEx_CS_SwitchedStyle()
+Test_GetDCEx_CS_SwitchedStyle(void)
 {
     static const PSTR pszClassName = "TestClass_CS_SwitchedStyle";
     ATOM atomClass;
@@ -1249,7 +1249,7 @@ static void test_destroyed_window(void)
     DestroyWindow( hwnd_parent );
 }
 
-void Test_from_wine()
+void Test_from_wine(void)
 {
     WNDCLASSA cls;
 
