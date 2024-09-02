@@ -1071,7 +1071,7 @@ static void test_invisible_create(void)
 {
     HDC dc1, dc2;
     HWND hwnd_owndc;
-    
+
     hwnd_owndc = CreateWindowA("owndc_class", NULL, WS_OVERLAPPED,
                                     0, 200, 100, 100,
                                     0, 0, GetModuleHandleA(0), NULL );
