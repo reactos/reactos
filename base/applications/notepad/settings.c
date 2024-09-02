@@ -102,11 +102,12 @@ static BOOL QueryString(HKEY hKey, LPCTSTR pszValueName, LPTSTR pszResult, DWORD
  *
  *  Load settings from registry HKCU\Software\Microsoft\Notepad.
  */
-void NOTEPAD_LoadSettingsFromRegistry(WINDOWPLACEMENT*pWP)
+void NOTEPAD_LoadSettingsFromRegistry(PWINDOWPLACEMENT pWP)
 {
     HKEY hKey;
     HFONT hFont;
-    DWORD dwPointSize, x = CW_USEDEFAULT, y = CW_USEDEFAULT, cx = 0, cy = 0;
+    DWORD dwPointSize;
+    DWORD x = CW_USEDEFAULT, y = CW_USEDEFAULT, cx = 0, cy = 0;
 
     /* Set the default values */
     Globals.bShowStatusBar = TRUE;
