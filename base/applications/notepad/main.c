@@ -557,10 +557,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     MSG msg;
     HACCEL hAccel;
     WNDCLASSEX wndclass;
-    HMONITOR monitor;
-    MONITORINFO info;
-    INT x, y;
-    RECT rcIntersect;
+    WINDOWPLACEMENT wp;
     static const TCHAR className[] = _T("Notepad");
     static const TCHAR winName[] = _T("Notepad");
 
@@ -579,7 +576,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
     aFINDMSGSTRING = (ATOM)RegisterWindowMessage(FINDMSGSTRING);
 
     NOTEPAD_InitData(hInstance);
-    NOTEPAD_LoadSettingsFromRegistry();
+    NOTEPAD_LoadSettingsFromRegistry(&wp);
 
     ZeroMemory(&wndclass, sizeof(wndclass));
     wndclass.cbSize = sizeof(wndclass);
@@ -602,25 +599,14 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
         return 1;
     }
 
-    /* Setup windows */
-
-    monitor = MonitorFromRect(&Globals.main_rect, MONITOR_DEFAULTTOPRIMARY);
-    info.cbSize = sizeof(info);
-    GetMonitorInfoW(monitor, &info);
-
-    x = Globals.main_rect.left;
-    y = Globals.main_rect.top;
-    if (!IntersectRect(&rcIntersect, &Globals.main_rect, &info.rcWork))
-        x = y = CW_USEDEFAULT;
-
     /* Globals.hMainWnd will be set in WM_CREATE handling */
     CreateWindow(className,
                  winName,
                  WS_OVERLAPPEDWINDOW,
-                 x,
-                 y,
-                 Globals.main_rect.right - Globals.main_rect.left,
-                 Globals.main_rect.bottom - Globals.main_rect.top,
+                 CW_USEDEFAULT,
+                 CW_USEDEFAULT,
+                 CW_USEDEFAULT,
+                 CW_USEDEFAULT,
                  NULL,
                  NULL,
                  Globals.hInstance,
@@ -631,7 +617,17 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
         return 1;
     }
 
-    ShowWindow(Globals.hMainWnd, show);
+    /* Use the result of CW_USEDEFAULT if the data in the registry is not valid */
+    if (wp.rcNormalPosition.right == wp.rcNormalPosition.left)
+    {
+        GetWindowPlacement(Globals.hMainWnd, &wp);
+    }
+    /* Does the parent process want to force a show action? */
+    if (show != SW_SHOWDEFAULT)
+    {
+        wp.showCmd = show;
+    }
+    SetWindowPlacement(Globals.hMainWnd, &wp);
     UpdateWindow(Globals.hMainWnd);
 
     if (!HandleCommandLine(cmdline))
