@@ -34,7 +34,7 @@ WndProc(
     return DefWindowProcW(hWnd, message, wParam, lParam);
 }
 
-void GetMessageRedrawWindowTest()
+void GetMessageRedrawWindowTest(void)
 {
     HWND hWnd;
     MSG msg;
@@ -52,9 +52,9 @@ void GetMessageRedrawWindowTest()
 
     ShowWindow(hWnd, SW_SHOW);
 
-    while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE ))
+    while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE ))
     {
-        DispatchMessageA( &msg );
+        DispatchMessageW( &msg );
     }
 
     ok(got_paint == TRUE, "Did not process WM_PAINT message\n");
@@ -66,7 +66,7 @@ void GetMessageRedrawWindowTest()
     ok(ret == TRUE, "RedrawWindow failed\n");
 
     i = 0;
-    while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE ))
+    while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE ))
     {
         RECORD_MESSAGE(1, msg.message, POST, 0, 0);
         if (msg.message == WM_PAINT)
@@ -79,7 +79,7 @@ void GetMessageRedrawWindowTest()
         }
         if (msg.message != WM_PAINT || i >= 10)
         {
-            DispatchMessageA( &msg );
+            DispatchMessageW( &msg );
         }
     }
 
@@ -136,12 +136,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return 0;
         }
     }
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    return DefWindowProcW(hwnd, uMsg, wParam, lParam);
 }
 
 LRESULT CALLBACK ChildWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    switch (uMsg) {
+    switch (uMsg)
+    {
         case WM_SYNCPAINT:
         {
             PAINTSTRUCT ps;
@@ -168,7 +169,7 @@ LRESULT CALLBACK ChildWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
             return 0;
         }
     }
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    return DefWindowProcW(hwnd, uMsg, wParam, lParam);
 }
 
 typedef struct STRUCT_TestRedrawWindow
@@ -223,10 +224,10 @@ void ServeSomeMessages(int messageTime, int messageCount)
     startTime = GetTickCount();
     while (GetTickCount() - startTime < messageTime * messageCount)
     {
-        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
         {
             TranslateMessage(&msg);
-            DispatchMessage(&msg);
+            DispatchMessageW(&msg);
         }
         else
         {
@@ -235,7 +236,8 @@ void ServeSomeMessages(int messageTime, int messageCount)
     }
 }
 
-void TestRedrawWindow(STRUCT_TestRedrawWindow* ptestRW) {
+void TestRedrawWindow(STRUCT_TestRedrawWindow* ptestRW)
+{
     DWORD style;
     int width;
     int height;
@@ -285,6 +287,8 @@ void TestRedrawWindow(STRUCT_TestRedrawWindow* ptestRW) {
             GetModuleHandle(NULL),
             NULL
         );
+        if (hChildWnd == NULL)
+            return;
     }
 
     HDC hdc = GetDC(hwnd);
@@ -298,7 +302,7 @@ void TestRedrawWindow(STRUCT_TestRedrawWindow* ptestRW) {
         RgnUpdate = CreateRectRgn(ptestRW->regRect.left, ptestRW->regRect.top, ptestRW->regRect.right, ptestRW->regRect.bottom);
     }
 
-    prect=NULL;
+    prect = NULL;
     if (ptestRW->useRect)
     {
         prect = &ptestRW->rectRect;
@@ -337,7 +341,8 @@ void TestRedrawWindow(STRUCT_TestRedrawWindow* ptestRW) {
     ptestRW->resultWmNcPaint = resultWmNcPaint;
     ptestRW->resultPaintIndex = paintIndex;
 
-    if (RgnUpdate) DeleteObject(RgnUpdate);
+    if (RgnUpdate)
+        DeleteObject(RgnUpdate);
 
     if (hChildWnd != NULL)
         DestroyWindow(hChildWnd);
@@ -425,14 +430,15 @@ UINT TestRedrawWindow2(STRUCT_TestRedrawWindow* ptestRW, STRUCT_TestRedrawWindow
     return countErrors;
 }
 
-void InitRect(RECT *rect, int left, int top, int right, int bottom) {
+void InitRect(RECT *rect, int left, int top, int right, int bottom)
+{
     rect->left = left;
     rect->top = top;
     rect->right = right;
     rect->bottom = bottom;
 }
 
-void FlagsRedrawWindowTest()
+void FlagsRedrawWindowTest(void)
 {
     STRUCT_TestRedrawWindow testRW;
     STRUCT_TestRedrawWindowCompare testRWcompare;
