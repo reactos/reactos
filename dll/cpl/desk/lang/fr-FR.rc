@@ -126,7 +126,7 @@ BEGIN
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
     CONTROL "Masquer les lettres soulignées pour la navigation au clavier jusqu'à ce que j'appuie sur la touche Alt",//FIXME: add back accelerator which has been destroyed during 0.4.15-dev'ing
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 360, 19
-    CONTROL "Utiliser les menus plats", IDC_EFFAPPEARANCE_FLATMENUS,//FIXME: add back accelerator which has been destroyed during 0.4.15-dev'ing
+    CONTROL "Utiliser les menus &plats", IDC_EFFAPPEARANCE_FLATMENUS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
     PUSHBUTTON "Annuler", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "Accepter", IDOK, 172, 165, 50, 14
@@ -187,8 +187,8 @@ BEGIN
     GROUPBOX "Compatibilité", -1, 7, 67, 285, 97
     LTEXT "Quelques programmes peuvent mal fonctionner si vous ne redémarrez pas votre ordinateur après que vous ayiez changé les paramètres des couleurs.\n\nAprès que j'ai changé les paramètres des couleurs", -1, 12, 78, 270, 40
     AUTORADIOBUTTON "&Redémarrer l'ordinateur avant d'appliquer les nouveaux paramètres des couleurs", IDC_RESTART_RB, 14, 116, 273, 10
-    AUTORADIOBUTTON "Appliquer les nouveaux paramètres des couleurs sans redémarrer", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10//FIXME: add accel
-    AUTORADIOBUTTON "Me demander avant d'appliquer les nouveaux paramètres des couleurs", IDC_ASKME_RB, 14, 146, 243, 10//FIXME: add accel
+    AUTORADIOBUTTON "A&ppliquer les nouveaux paramètres des couleurs sans redémarrer", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
+    AUTORADIOBUTTON "Me demander avant d'appliquer les nouveaux paramètres des &couleurs", IDC_ASKME_RB, 14, 146, 243, 10
 END
 
 IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57
