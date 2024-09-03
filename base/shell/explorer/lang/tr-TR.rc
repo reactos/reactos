@@ -4,6 +4,7 @@
  * PURPOSE:     Turkish resource file
  * TRANSLATORS: Copyright 2013-2015 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
  *              Copyright 2021 Süleyman Poyraz <zaryob.dev@gmail.com>
+ *              Copyright 2024 Ethem De Santa (scropool) <oyunyumru4@gmail.com>
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
@@ -13,18 +14,18 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "&Zamanı Ayarla", ID_SHELL_CMD_ADJUST_DAT
-        MENUITEM "&Bildirimleri Özelleştir...", ID_SHELL_CMD_CUST_NOTIF
+        MENUITEM "&Zamanı ayarla", ID_SHELL_CMD_ADJUST_DAT
+        MENUITEM "&Bildirimleri özelleştir...", ID_SHELL_CMD_CUST_NOTIF
         MENUITEM SEPARATOR
-        MENUITEM "&Pencereleri Basamakla", ID_SHELL_CMD_CASCADE_WND
-        MENUITEM "P&encereleri Yatay Olarak Döşe", ID_SHELL_CMD_TILE_WND_H
-        MENUITEM "Pe&ncereleri Dikey Olarak Döşe", ID_SHELL_CMD_TILE_WND_V
-        MENUITEM "&Masaüstünü Göster", ID_SHELL_CMD_SHOW_DESKTOP
+        MENUITEM "&Pencereleri basamakla", ID_SHELL_CMD_CASCADE_WND
+        MENUITEM "P&encereleri yan yana göster", ID_SHELL_CMD_TILE_WND_H
+        MENUITEM "Pe&ncereleri üst üste göster", ID_SHELL_CMD_TILE_WND_V
+        MENUITEM "&Masaüstünü göster", ID_SHELL_CMD_SHOW_DESKTOP
         MENUITEM "&Geri Al", ID_SHELL_CMD_UNDO_ACTION
         MENUITEM SEPARATOR
-        MENUITEM "&Görev Yöneticisi", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM "&Görev Yöneticisi'ni başlat", ID_SHELL_CMD_OPEN_TASKMGR
         MENUITEM SEPARATOR
-        MENUITEM "G&örev Çubuğunu Kilitle", ID_LOCKTASKBAR
+        MENUITEM "G&örev çubuğunu kilitle", ID_LOCKTASKBAR
         MENUITEM "&Özellikler", ID_SHELL_CMD_PROPERTIES
     END
 END
@@ -72,14 +73,14 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Görev Çubuğu"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX "Görev Çubuğu Görünümü", IDC_STATIC, 6, 6, 240, 120
+    GROUPBOX "Görev çubuğu görünümü", IDC_STATIC, 6, 6, 240, 120
     CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 18, 229, 24
-    AUTOCHECKBOX "&Görev Çubuğunu Kilitle", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
-    AUTOCHECKBOX "G&örev Çubuğunu Kendiliğinden Gizle", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
-    AUTOCHECKBOX "Gö&rev Çubuğunu Pencerelerin Üstünde Tut", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
-    AUTOCHECKBOX "&Benzer Görev Çubuğu Düğmelerini Gruplandır", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
-    AUTOCHECKBOX "&Hızlı Başlat'ı Göster", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
-    AUTOCHECKBOX "U&se small icons", IDC_TASKBARPROP_SMALLICONS, 13, 110, 200, 10
+    AUTOCHECKBOX "&Görev çubuğunu kilitle", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
+    AUTOCHECKBOX "G&örev çubuğunu otomatik olarak gizle", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
+    AUTOCHECKBOX "Gö&rev çubuğunu pencerelerin üstünde tut", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
+    AUTOCHECKBOX "&Benzer görev çubuğu düğmelerini gruplandır", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
+    AUTOCHECKBOX "&Hızlı Başlat'ı göster", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
+    AUTOCHECKBOX "K&üçük simgeler kullan", IDC_TASKBARPROP_SMALLICONS, 13, 110, 200, 10
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
@@ -102,15 +103,15 @@ CAPTION "Simgeler"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 6, 229, 24
-    GROUPBOX "Icons", IDC_STATIC, 6, 36, 240, 56
+    GROUPBOX "Simgeler", IDC_STATIC, 6, 36, 240, 56
     LTEXT "Son zamanlarda tıklamadığınız simgeleri gizleyerek bildirim alanını düzenli tutabilirsiniz.", IDC_STATIC, 13, 48, 223, 16
-    AUTOCHECKBOX "&Devre Dışı Simgeleri Gizle", IDC_TASKBARPROP_HIDEICONS, 13, 70, 125, 10
+    AUTOCHECKBOX "&Devre dışı simgeleri gizle", IDC_TASKBARPROP_HIDEICONS, 13, 70, 125, 10
     PUSHBUTTON "Ö&zelleştir...", IDC_TASKBARPROP_ICONCUST, 188, 70, 50, 14
-    GROUPBOX "System icons", IDC_STATIC, 6, 99, 240, 56
-    LTEXT "Select which system icons to always show.", IDC_STATIC, 13, 113, 223, 8
+    GROUPBOX "Sistem simgeleri", IDC_STATIC, 6, 99, 240, 56
+    LTEXT "Görev çubuğuna hangi araç çubuklarının ekleneceğini seçin.", IDC_STATIC, 13, 113, 223, 8
     AUTOCHECKBOX "&Saat", IDC_TASKBARPROP_CLOCK, 13, 127, 80, 10
-    AUTOCHECKBOX "S&aniyeleri Göster", IDC_TASKBARPROP_SECONDS, 120, 127, 80, 10, WS_DISABLED
-    AUTOCHECKBOX "&Desktop", IDC_TASKBARPROP_DESKTOP, 13, 140, 80, 10
+    AUTOCHECKBOX "S&aniyeleri göster", IDC_TASKBARPROP_SECONDS, 120, 127, 80, 10, WS_DISABLED
+    AUTOCHECKBOX "&Masaüstü", IDC_TASKBARPROP_DESKTOP, 13, 140, 80, 10
 END
 
 IDD_NOTIFICATIONS_CUSTOMIZE DIALOGEX 0, 0, 232, 240
@@ -139,7 +140,7 @@ BEGIN
     PUSHBUTTON       "&Ekle...", IDC_CLASSICSTART_ADD, 162, 18, 53, 14
     PUSHBUTTON       "&Sil...", IDC_CLASSICSTART_REMOVE, 162, 33, 53, 14
     PUSHBUTTON       "&Gelişmiş", IDC_CLASSICSTART_ADVANCED, 162, 49, 53, 14
-    PUSHBUTTON       "&Diz", IDC_CLASSICSTART_SORT, 162, 65, 53, 14
+    PUSHBUTTON       "S&ırala", IDC_CLASSICSTART_SORT, 162, 65, 53, 14
     ICON             IDI_RECYCLEBIN, IDC_STATIC, 20, 85, 20, 20
     LTEXT            "Son erişilen belgelerin, programların ve Genel Ağ sitelerinin kayıtlarını silmek için Sil'e tıklayınız.", IDC_STATIC, 49, 85, 108, 33
     PUSHBUTTON       "S&il", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
