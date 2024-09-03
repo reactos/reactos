@@ -256,10 +256,10 @@ Test_GetDCEx_CS_CLASSDC_NEXT(void)
     HWND hwnd1, hwnd2;
     HDC hdc1, hdc2 , hdcClass;
 
-    //1/
+    //1
     RegisterClassHelper(pszClassName, CS_CLASSDC, WndProc);
     hwnd1 = CreateWindowHelper(pszClassName, L"Test Window1");
-    hwnd2 = CreateWindowHelper(pszClassName, L"Test Window2");    
+    hwnd2 = CreateWindowHelper(pszClassName, L"Test Window2");
     ShowWindow(hwnd1, SW_SHOW);
     UpdateWindow(hwnd1);
     ShowWindow(hwnd2, SW_SHOW);
@@ -295,7 +295,7 @@ Test_GetDCEx_CS_CLASSDC_NEXT(void)
     DestroyWindow(hwnd2);
     UnregisterClassW(pszClassName, GetModuleHandleA(0));
 
-    //2/
+    //2
     RegisterClassHelper(pszClassName, CS_CLASSDC, WndProc);
     hwnd2 = CreateWindowHelper(pszClassName, L"Test Window2");
     hwnd1 = CreateWindowHelper(pszClassName, L"Test Window1");
@@ -314,7 +314,7 @@ Test_GetDCEx_CS_CLASSDC_NEXT(void)
     DestroyWindow(hwnd2);
     UnregisterClassW(pszClassName, GetModuleHandleA(0));
 
-    //3/
+    //3
     RegisterClassHelper(pszClassName, CS_CLASSDC, WndProc);
     hwnd1 = CreateWindowHelper(pszClassName, L"Test Window1");
     hwnd2 = CreateWindowHelper(pszClassName, L"Test Window2");
@@ -324,16 +324,16 @@ Test_GetDCEx_CS_CLASSDC_NEXT(void)
     ok(WindowFromDC(hdc1) == hwnd1,"DC1-hwnd not hwnd1\n");
     hdc1=GetDCEx(hwnd1, NULL, DCX_USESTYLE);    
     ok(hdc1 != NULL, "GetDCEx must be not NULL\n");
-    ok(WindowFromDC(hdc1) == hwnd1,"DC1-hwnd not hwnd1\n");    
+    ok(WindowFromDC(hdc1) == hwnd1,"DC1-hwnd not hwnd1\n");
     DestroyWindow(hwnd1);
     ok(WindowFromDC(hdc1) == NULL,"DC1-hwnd not NULL\n");
     DestroyWindow(hwnd2);
-    UnregisterClassW(pszClassName, GetModuleHandleA(0));    
+    UnregisterClassW(pszClassName, GetModuleHandleA(0));
 
-    //4/
+    //4
     RegisterClassHelper(pszClassName, CS_CLASSDC, WndProc);
     hwnd1 = CreateWindowHelper(pszClassName, L"Test Window1");
-    hwnd2 = CreateWindowHelper(pszClassName, L"Test Window2");    
+    hwnd2 = CreateWindowHelper(pszClassName, L"Test Window2");
     hdc1 = GetDCEx(hwnd1, NULL, DCX_USESTYLE);//1
     hdc2 = GetDCEx(hwnd2, NULL, DCX_USESTYLE);//2
     ok(WindowFromDC(hdc1) == hwnd2,"DC1-hwnd not hwnd2\n");
@@ -1075,7 +1075,6 @@ static void test_invisible_create(void)
     hwnd_owndc = CreateWindowA("owndc_class", NULL, WS_OVERLAPPED,
                                     0, 200, 100, 100,
                                     0, 0, GetModuleHandleA(0), NULL );
-    
 
     dc1 = GetDC(hwnd_owndc);
     dc2 = GetDC(hwnd_owndc);
