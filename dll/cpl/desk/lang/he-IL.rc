@@ -6,7 +6,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "A theme is a background plus a set of sounds, icons, and other elements to help you personalize your computer with one click.", IDC_STATIC, 5, 5, 235, 30
-    LTEXT "Theme:", IDC_STATIC, 5, 42, 55, 10
+    LTEXT "&Theme:", IDC_STATIC, 5, 42, 55, 10
     COMBOBOX IDC_THEMES_COMBOBOX, 5, 52, 160, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Save &As...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
     PUSHBUTTON "&Delete", IDC_THEMES_DELETE, 170, 70, 70, 14
@@ -24,7 +24,7 @@ BEGIN
     LTEXT "בחר תמונה שתשמש כרקע שולחן העבודה שלך:", IDC_STATIC, 8, 93, 230, 9
     PUSHBUTTON "סייר...", IDC_BROWSE_BUTTON, 188, 104, 55, 15
     PUSHBUTTON "צבע...", IDC_COLOR_BUTTON, 188, 167, 55, 15
-    LTEXT "מיקום", IDC_STATIC, 188, 128, 55, 9
+    LTEXT "מיקום:", IDC_STATIC, 188, 128, 55, 9
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Customize &Desktop...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
 END
@@ -57,13 +57,13 @@ CAPTION "מראה"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "סגנון חזותי", IDC_STATIC, 7, 130, 104, 9
+    LTEXT "סגנון חזותי:", IDC_STATIC, 7, 130, 104, 9
     COMBOBOX IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "ערכת צבעים", IDC_STATIC, 7, 157, 104, 9
+    LTEXT "ערכת צבעים:", IDC_STATIC, 7, 157, 104, 9
     COMBOBOX IDC_APPEARANCE_COLORSCHEME, 7, 167, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Size", IDC_STATIC, 7, 184, 104, 9
+    LTEXT "Size:", IDC_STATIC, 7, 184, 104, 9
     COMBOBOX IDC_APPEARANCE_SIZE, 7, 194, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "אפקטים...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
@@ -179,7 +179,7 @@ CAPTION "כללי"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "תצוגה", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "גודל גופן:", -1, 14, 20, 222, 9
+    LTEXT "גודל גופן:", -1, 14, 20, 222, 9//FIXME: 2k3sp2 does now call this "&DPI setting:" . Feel free to translate that.
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "תאימות", -1, 7, 67, 237, 97
