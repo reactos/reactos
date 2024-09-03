@@ -1173,11 +1173,46 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
 void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdShow)
 {
     CPanel	panel;
+#ifdef __REACTOS__
+    WCHAR *ptr1 = NULL;
+    WCHAR *ptr2 = NULL;
+    WCHAR comma = ',';
+    WCHAR dot = '.';
+    LPWSTR buffer;
+    WCHAR ext[4] = L"   ";
+    SIZE_T nLen = lstrlenW(cmd);
+    BOOL GoodExt;
+
+    TRACE("(%p, %p, %s, 0x%08x)\n",
+          hWnd, hInst, debugstr_w(cmd), nCmdShow);
+
+/* Search 'cmd' for first comma. If the remaining length is 1 or 2,
+ * then replace dot before extention with UNICODE_NULL. */
+
+    buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*buffer) * (nLen + 1));
+    if (!buffer) return;
+
+    lstrcpyW(buffer, cmd);
+
+    ptr1 = wcschr(cmd, comma);
+    if (ptr1)
+        nLen = lstrlenW(ptr1+1);
+    else
+        nLen = 0;
+
+    ptr2 = wcschr(cmd, dot);
+    if (ptr2)
+    {
+        wcsncpy(ext, ptr2 + 1, 3);
+    }
+
+    GoodExt = wcsicmp(ext, L"DLL") == 0 || wcscmp(ext, L"CPL") == 0;
+
+#else
 
     TRACE("(%p, %p, %s, 0x%08x)\n",
 	  hWnd, hInst, debugstr_w(cmd), nCmdShow);
 
-#ifndef __REACTOS__
     memset(&panel, 0, sizeof(panel));
     list_init( &panel.applets );
 #endif
@@ -1185,8 +1220,23 @@ void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdS
     if (!cmd || !*cmd) {
         Control_DoWindow(&panel, hWnd, hInst);
     } else {
-        Control_DoLaunch(&panel, hWnd, cmd);
+#ifdef __REACTOS__
+    if ((nLen == 1 || nLen ==2) && GoodExt)
+    {
+        buffer[ptr2-cmd] = UNICODE_NULL;
+        TRACE("\ncmd '%S'\nbuffer '%S'\n", cmd, buffer);
     }
+
+    Control_DoLaunch(&panel, hWnd, buffer);
+#else
+        Control_DoLaunch(&panel, hWnd, cmd);
+#endif
+    }
+
+#ifdef __REACTOS__
+    HeapFree(GetProcessHeap(), 0, buffer);
+#endif
+
 }
 
 /*************************************************************************
