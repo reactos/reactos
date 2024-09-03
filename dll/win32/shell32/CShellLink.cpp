@@ -2707,39 +2707,33 @@ INT_PTR CALLBACK ExtendedShortcutProc(HWND hwndDlg, UINT uMsg,
 *
 * Function to get target type by passing full path to it
 */
-LPWSTR SH_GetTargetTypeByPath(LPCWSTR lpcwFullPath)
+void SH_GetTargetTypeByPath(LPCWSTR lpcwFullPath, LPWSTR szBuf, UINT cchBuf)
 {
     LPCWSTR pwszExt;
-    static WCHAR wszBuf[MAX_PATH];
+    BOOL fFolderTarget = PathIsDirectoryW(lpcwFullPath);
+    DWORD fAttribs = fFolderTarget ? FILE_ATTRIBUTE_DIRECTORY : 0;
 
     /* Get file information */
     SHFILEINFOW fi;
-    if (!SHGetFileInfoW(lpcwFullPath, 0, &fi, sizeof(fi), SHGFI_TYPENAME | SHGFI_USEFILEATTRIBUTES))
+    if (!SHGetFileInfoW(lpcwFullPath, fAttribs, &fi, sizeof(fi), SHGFI_TYPENAME | SHGFI_USEFILEATTRIBUTES))
     {
         ERR("SHGetFileInfoW failed for %ls (%lu)\n", lpcwFullPath, GetLastError());
         fi.szTypeName[0] = L'\0';
         fi.hIcon = NULL;
     }
 
-    pwszExt = PathFindExtensionW(lpcwFullPath);
+    pwszExt = fFolderTarget ? L"" : PathFindExtensionW(lpcwFullPath);
     if (pwszExt[0])
     {
         if (!fi.szTypeName[0])
-        {
-            /* The file type is unknown, so default to string "FileExtension File" */
-            size_t cchRemaining = 0;
-            LPWSTR pwszEnd = NULL;
-
-            StringCchPrintfExW(wszBuf, _countof(wszBuf), &pwszEnd, &cchRemaining, 0, L"%s ", pwszExt + 1);
-        }
+            StringCchPrintfW(szBuf, cchBuf,L"%s ", pwszExt + 1);
         else
-        {
-            /* Update file type */
-            StringCbPrintfW(wszBuf, sizeof(wszBuf), L"%s (%s)", fi.szTypeName, pwszExt);
-        }
+            StringCchPrintfW(szBuf, cchBuf, L"%s (%s)", fi.szTypeName, pwszExt);
     }
-
-    return wszBuf;
+    else
+    {
+        StringCchPrintfW(szBuf, cchBuf, L"%s", fi.szTypeName);
+    }
 }
 
 BOOL CShellLink::OnInitDialog(HWND hwndDlg, HWND hwndFocus, LPARAM lParam)
@@ -2780,7 +2774,11 @@ BOOL CShellLink::OnInitDialog(HWND hwndDlg, HWND hwndFocus, LPARAM lParam)
 
     /* Target type */
     if (m_sPath)
-        SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_TYPE_EDIT, SH_GetTargetTypeByPath(m_sPath));
+    {
+        WCHAR buf[MAX_PATH];
+        SH_GetTargetTypeByPath(m_sPath, buf, _countof(buf));
+        SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_TYPE_EDIT, buf);
+    }
 
     /* Target location */
     if (m_sPath)
@@ -2853,8 +2851,11 @@ BOOL CShellLink::OnInitDialog(HWND hwndDlg, HWND hwndFocus, LPARAM lParam)
         if (FAILED(hr))
             hr = GetPath(path, _countof(path), NULL, 0);
 #if DBG
-        if (GetKeyState(VK_CONTROL) < 0)
-            hr = path[0] = S_OK; // Allow inspection of PIDL parsing path
+        if (GetKeyState(VK_CONTROL) < 0) // Allow inspection of PIDL parsing path
+        {
+            hr = S_OK;
+            path[0] = UNICODE_NULL;
+        }
 #endif
         if (hr != S_OK)
         {
