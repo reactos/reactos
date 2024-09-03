@@ -129,7 +129,7 @@ BEGIN
     CONTROL "Utiliser les menus &plats", IDC_EFFAPPEARANCE_FLATMENUS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
     PUSHBUTTON "Annuler", IDCANCEL, 226, 165, 50, 14//FIXME: someone resized the dialog from width 285 to 370 during 0.4.15-dev'ing, that is why those buttons are misplaced now. It would be better to shrink the dlg again, and shorten some texts instead.
-    DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14//FIXME: someone resized the dialog from width 285 to 370 during 0.4.15-dev'ing, that is why those buttons are misplaced now. It would be better to shrink the dlg again, and shorten some texts instead.
+    DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14//FIXME: someone resized the dialog from width 285 to 370 during 0.4.15-dev'ing, that is why those buttons are misplaced now. It would be better to shrink the dlg again, and shorten some texts instead. The string that didn't fit the screen was "Mas&quer les lettres soulignées pour la navigation au clavier jusqu'à ce que j'appuie sur la touche Alt" and so I used the shortened "&Cacher les lettres soulignées jusqu'à ce que j'appuie sur la touche Alt" for the backport to allow keeping the dialogs en-US original size
 END
 
 IDD_SETTINGS DIALOGEX 0, 0, 246, 202
