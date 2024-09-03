@@ -94,7 +94,7 @@ BEGIN
     LTEXT "&Yazı Tipi", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Y&azı Tipi Boyutu", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9
+    LTEXT "Y&azı Tipi Boyutu", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9//FIXME: In 100 years this will not fit here in this controls width. Shorten the string! I used "B&oyut" for the backport, because the context to "&Yazı Tipi" (the LTEXT above) is absolutely clear from the dialogs layout. Keep in mind that "&Boyut" is not possible here, because that is used already.
     COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
     LTEXT "&Renk", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 28, 9
     CHECKBOX "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
@@ -181,7 +181,7 @@ CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Görüntü", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Yazı Tipi Boyutu:", -1, 14, 20, 222, 9//FIXME: add accel
+    LTEXT "Yazı Tipi Boyutu:", -1, 14, 20, 222, 9//FIXME: add accel. I used "&Yazı Tipi Boyutu:" for the backport
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Uyumluluk", -1, 7, 67, 237, 97
