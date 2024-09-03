@@ -179,7 +179,7 @@ CAPTION "Общи"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Екран", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Размер на шрифта:", -1, 14, 20, 222, 9//FIXME: add accel. I used "&Размер на шрифта:" for the backport. 2k3sp2 calls this "&DPI setting" now. Feel free to translate that.
+    LTEXT "Размер на шрифта:", -1, 14, 20, 222, 9//FIXME: add accel. I used "&Размер на шрифта:" for the backport. 2k3sp2 calls this "&DPI setting:" now. Feel free to translate that.
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Съвместимост", -1, 7, 67, 237, 97
