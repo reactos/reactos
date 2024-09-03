@@ -26,7 +26,7 @@ BEGIN
     LTEXT "Välj en bild du vill ha som skrivbordsunderlägg", IDC_STATIC, 8, 93, 230, 9
     PUSHBUTTON "&Bläddra...", IDC_BROWSE_BUTTON, 188, 104, 55, 15
     PUSHBUTTON "&Färg...", IDC_COLOR_BUTTON, 188, 167, 55, 15
-    LTEXT "Placering", IDC_STATIC, 188, 128, 55, 9//FIXME: add accel
+    LTEXT "Placering", IDC_STATIC, 188, 128, 55, 9//FIXME: add accel. I used "&Placering" for the backport
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Customize &Desktop...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
 END
@@ -143,7 +143,7 @@ BEGIN
             WS_TABSTOP, 3, 23, 240, 82, WS_EX_CLIENTEDGE
     LTEXT "&Bild:", 1820, 3, 107, 70, 9//FIXME: accelerator collision &B
     LTEXT "<ingen>", IDC_SETTINGS_DEVICE, 3, 116, 224, 9
-    GROUPBOX "&Bildyta", 1818, 3, 127, 115, 43//FIXME: accelerator collision &B
+    GROUPBOX "&Bildyta", 1818, 3, 127, 115, 43//FIXME: accelerator collision &B. I used "Bil&dyta" for the backport to fix that
     CONTROL "", IDC_SETTINGS_RESOLUTION, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 58, 17
     LTEXT "Lägre", 1815, 9, 137, 25, 9, NOT WS_GROUP
     LTEXT "Högre", 1816, 93, 137, 20, 9, NOT WS_GROUP
@@ -181,7 +181,7 @@ CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Display", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Font Size:", -1, 14, 20, 222, 9//FIXME: add accel
+    LTEXT "Font Size:", -1, 14, 20, 222, 9//FIXME: add accel. I used "&Font Size:" for the backport
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Compatibility", -1, 7, 67, 237, 97
