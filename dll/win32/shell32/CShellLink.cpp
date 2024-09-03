@@ -882,6 +882,19 @@ HRESULT STDMETHODCALLTYPE CShellLink::Save(IStream *stm, BOOL fClearDirty)
     m_Header.dwSize = sizeof(m_Header);
     m_Header.clsid = CLSID_ShellLink;
 
+    /* Store target attributes */
+    WIN32_FIND_DATAW wfd = {};
+    WCHAR FsTarget[MAX_PATH];
+    if (GetPath(FsTarget, _countof(FsTarget), NULL, 0) == S_OK && PathFileExistsW(FsTarget))
+    {
+        HANDLE hFind = FindFirstFileW(FsTarget, &wfd);
+        if (hFind != INVALID_HANDLE_VALUE)
+            FindClose(hFind);
+    }
+    C_ASSERT(FIELD_OFFSET(SHELL_LINK_HEADER, ftCreationTime) - 4 == FIELD_OFFSET(SHELL_LINK_HEADER, dwFileAttributes));
+    CopyMemory(&m_Header.dwFileAttributes, &wfd.dwFileAttributes, sizeof(UINT) + (sizeof(FILETIME) * 3));
+    m_Header.nFileSizeLow = wfd.nFileSizeLow;
+
     /*
      * Reset the flags: keep only the flags related to data blocks as they were
      * already set in accordance by the different mutator member functions.
@@ -1077,7 +1090,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::GetPath(LPSTR pszFile, INT cchMaxPath, WIN
           this, pszFile, cchMaxPath, pfd, fFlags, debugstr_w(m_sPath));
 
     /* Allocate a temporary UNICODE buffer */
-    pszFileW = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, cchMaxPath * sizeof(WCHAR));
+    pszFileW = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, max(cchMaxPath, MAX_PATH) * sizeof(WCHAR));
     if (!pszFileW)
         return E_OUTOFMEMORY;
 
@@ -2683,31 +2696,24 @@ INT_PTR CALLBACK ExtendedShortcutProc(HWND hwndDlg, UINT uMsg,
     return FALSE;
 }
 
-/**************************************************************************
-* SH_GetTargetTypeByPath
-*
-* Function to get target type by passing full path to it
-*/
-void SH_GetTargetTypeByPath(LPCWSTR lpcwFullPath, LPWSTR szBuf, UINT cchBuf)
+static void GetTypeDescriptionByPath(PCWSTR pszFullPath, DWORD fAttributes, PWSTR szBuf, UINT cchBuf)
 {
-    LPCWSTR pwszExt;
-    BOOL fFolderTarget = PathIsDirectoryW(lpcwFullPath);
-    DWORD fAttribs = fFolderTarget ? FILE_ATTRIBUTE_DIRECTORY : 0;
+    if (fAttributes == INVALID_FILE_ATTRIBUTES && !PathFileExistsAndAttributesW(pszFullPath, &fAttributes))
+        fAttributes = 0;
 
-    /* Get file information */
     SHFILEINFOW fi;
-    if (!SHGetFileInfoW(lpcwFullPath, fAttribs, &fi, sizeof(fi), SHGFI_TYPENAME | SHGFI_USEFILEATTRIBUTES))
+    if (!SHGetFileInfoW(pszFullPath, fAttributes, &fi, sizeof(fi), SHGFI_TYPENAME | SHGFI_USEFILEATTRIBUTES))
     {
-        ERR("SHGetFileInfoW failed for %ls (%lu)\n", lpcwFullPath, GetLastError());
-        fi.szTypeName[0] = L'\0';
-        fi.hIcon = NULL;
+        ERR("SHGetFileInfoW failed for %ls (%lu)\n", pszFullPath, GetLastError());
+        fi.szTypeName[0] = UNICODE_NULL;
     }
 
-    pwszExt = fFolderTarget ? L"" : PathFindExtensionW(lpcwFullPath);
+    BOOL fFolder = (fAttributes & FILE_ATTRIBUTE_DIRECTORY);
+    LPCWSTR pwszExt = fFolder ? L"" : PathFindExtensionW(pszFullPath);
     if (pwszExt[0])
     {
         if (!fi.szTypeName[0])
-            StringCchPrintfW(szBuf, cchBuf,L"%s ", pwszExt + 1);
+            StringCchPrintfW(szBuf, cchBuf,L"%s", pwszExt + 1);
         else
             StringCchPrintfW(szBuf, cchBuf, L"%s (%s)", fi.szTypeName, pwszExt);
     }
@@ -2757,7 +2763,7 @@ BOOL CShellLink::OnInitDialog(HWND hwndDlg, HWND hwndFocus, LPARAM lParam)
     if (m_sPath)
     {
         WCHAR buf[MAX_PATH];
-        SH_GetTargetTypeByPath(m_sPath, buf, _countof(buf));
+        GetTypeDescriptionByPath(m_sPath, m_Header.dwFileAttributes, buf, _countof(buf));
         SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_TYPE_EDIT, buf);
     }
 
