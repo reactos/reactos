@@ -66,13 +66,13 @@ CAPTION "Aspect"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "Stil vizual", IDC_STATIC, 7, 130, 104, 9//FIXME: add accel
+    LTEXT "Stil vizual", IDC_STATIC, 7, 130, 104, 9//FIXME: add accel. I used "&Stil vizual" for the backport
     COMBOBOX IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Colorit", IDC_STATIC, 7, 157, 104, 9//FIXME: add accel
+    LTEXT "Colorit", IDC_STATIC, 7, 157, 104, 9//FIXME: add accel. I used "&Colorit" for the backport
     COMBOBOX IDC_APPEARANCE_COLORSCHEME, 7, 167, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Dimensiune", IDC_STATIC, 7, 184, 104, 9//FIXME: add accel
+    LTEXT "Dimensiune", IDC_STATIC, 7, 184, 104, 9//FIXME: add accel. I used "&Dimensiune" for the backport
     COMBOBOX IDC_APPEARANCE_SIZE, 7, 194, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Efecte…", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
@@ -169,7 +169,7 @@ BEGIN
     GROUPBOX "Pictograme de desktop", IDC_STATIC, 6, 4, 212, 40
     CONTROL "&Documente", IDC_ICONS_MYDOCS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 14, 14, 100, 12
-    CONTROL "Locurile din &reţeaua mea", IDC_ICONS_MYNET, "button",
+    CONTROL "Locurile din &reţeaua mea", IDC_ICONS_MYNET, "button",//FIXME: accelerator collision &R
             BS_AUTOCHECKBOX | WS_TABSTOP, 116, 14, 100, 12
     CONTROL "&Computerul meu", IDC_ICONS_MYCOMP, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 14, 28, 100, 12
@@ -179,7 +179,7 @@ BEGIN
             LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP | WS_HSCROLL,
             6, 60, 251, 54
     PUSHBUTTON "&Schimbă pictograma...", IDC_ICONS_CHANGEICON, 70, 120, 80, 15
-    PUSHBUTTON "&Restabileşte valorile implicite", IDC_ICONS_SETDEFAULT, 154, 120, 103, 15
+    PUSHBUTTON "&Restabileşte valorile implicite", IDC_ICONS_SETDEFAULT, 154, 120, 103, 15//FIXME: accelerator collision &R
 END
 
 IDD_ADVANCED_GENERAL DIALOGEX 0, 0, 253, 204
@@ -188,14 +188,14 @@ CAPTION "Generale"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Afişare", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Mărime font:", -1, 14, 20, 222, 9//FIXME: add accel
+    LTEXT "Mărime font:", -1, 14, 20, 222, 9//FIXME: add accel. I used "&Mărime font:" for the backport
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Compatibilitate", -1, 7, 67, 237, 97
     LTEXT "Unele programe funcţionează necorespunzător dacă nu reporniţi computerul după ce modificaţi setările de culoare.\n\nDupă ce schimb setările de culoare", -1, 12, 78, 228, 34
     AUTORADIOBUTTON "&Reporneşte computerul înainte de a aplica noile setări de culoare", IDC_RESTART_RB, 14, 116, 228, 10
-    AUTORADIOBUTTON "Aplică noua &setări de culoare fără a repornire", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10//FIXME: add accel
-    AUTORADIOBUTTON "Întreabă-mă înainte de a aplica noile setări de culoare", IDC_ASKME_RB, 14, 146, 228, 10//FIXME: add accel
+    AUTORADIOBUTTON "Aplică noua &setări de culoare fără a repornire", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
+    AUTORADIOBUTTON "Întreabă-mă înainte de a aplica noile setări de culoare", IDC_ASKME_RB, 14, 146, 228, 10//FIXME: add accel. I used "Î&ntreabă-mă înainte de a aplica noile setări de culoare" for the backport
 END
 
 IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57
