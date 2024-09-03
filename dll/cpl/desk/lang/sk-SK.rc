@@ -65,7 +65,7 @@ BEGIN
     LTEXT "&Farebná schéma", IDC_STATIC, 7, 157, 104, 9
     COMBOBOX IDC_APPEARANCE_COLORSCHEME, 7, 167, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Size", IDC_STATIC, 7, 184, 104, 9//FIXME: add accel
+    LTEXT "Size", IDC_STATIC, 7, 184, 104, 9//FIXME: add accel (and translate?). I used "Si&ze" for the backport, because &S is in use
     COMBOBOX IDC_APPEARANCE_SIZE, 7, 194, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Efekty...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
@@ -181,7 +181,7 @@ CAPTION "Všeobecné"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Display", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Veľkosť písma:", -1, 14, 20, 222, 9//FIXME: add accel
+    LTEXT "Veľkosť písma:", -1, 14, 20, 222, 9//FIXME: add accel. I used "&Veľkosť písma:" for the backport
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Kompatibilita", -1, 7, 67, 237, 97
@@ -308,7 +308,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DISPLAY_SETTINGS "Nastavenia zobrazenia" // obrazovky ?
+    IDS_DISPLAY_SETTINGS "Nastavenia zobrazenia"//I used "Nastavenia obrazovky" for the backports. It is one letter shorter and some native speaker suggested to consider that translation beforehand
     IDS_APPLY_FAILED "Nepodarilo sa aplikovať nové nastavenia..."
     IDS_APPLY_NEEDS_RESTART "Je potrebné reštartovať počítač, aby sa prejavili zmeny."
     IDS_TIMEOUTTEXT "Revert to previous settings in %d seconds."
