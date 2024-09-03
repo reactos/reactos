@@ -6,7 +6,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Tema adalah latar belakang plus serangkaian suara, ikon, dan elemen lainnya untuk membantu anda mempersonalisasikan komputer anda dengan satu klik.", IDC_STATIC, 5, 5, 235, 30
-    LTEXT "Tema:", IDC_STATIC, 5, 42, 55, 10
+    LTEXT "Tema:", IDC_STATIC, 5, 42, 55, 10//FIXME: add accel
     COMBOBOX IDC_THEMES_COMBOBOX, 5, 52, 160, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Simpan Sebagai...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
     PUSHBUTTON "&Hapus", IDC_THEMES_DELETE, 170, 70, 70, 14
