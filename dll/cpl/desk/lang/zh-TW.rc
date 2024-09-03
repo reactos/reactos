@@ -201,7 +201,7 @@ END
 IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "顯示設定"
-FONT 8, "新細明體"
+FONT 8, "新細明體"//FIXME: Double-check please whether this should be a 9. If yes, fix it and remove the comment. If no and the 8 is correct, then just remove the comment.
 BEGIN
     LTEXT "您是否想要保留顯示設定？", IDC_STATIC, 7, 7, 219, 8
     LTEXT "", IDC_TIMEOUTTEXT, 7, 20, 219, 8
