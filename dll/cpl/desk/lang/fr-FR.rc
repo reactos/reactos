@@ -87,16 +87,16 @@ BEGIN
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP |
             UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT | WS_CHILD | WS_VISIBLE, 172, 170, 10, 13
-    LTEXT "Coule&ur 1 :", IDC_ADVAPPEARANCE_COLOR1_T, 180, 160, 34, 9//FIXME: control is too small to hold all the text
+    LTEXT "Coule&ur 1 :", IDC_ADVAPPEARANCE_COLOR1_T, 180, 160, 34, 9//FIXME: control is too small to hold all the text. For the backport I simply stripped all " :" in this dlg. Imho that would be a good solution also for master. Some other translations do that as well.
     CHECKBOX "-", IDC_ADVAPPEARANCE_COLOR1_B, 184, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
-    LTEXT "C&ouleur 2 :", IDC_ADVAPPEARANCE_COLOR2_T, 215, 160, 34, 9//FIXME: control is too small to hold all the text
+    LTEXT "C&ouleur 2 :", IDC_ADVAPPEARANCE_COLOR2_T, 215, 160, 34, 9//FIXME: control is too small to hold all the text. For the backport I simply stripped all " :" in this dlg. Imho that would be a good solution also for master. Some other translations do that as well.
     CHECKBOX "-", IDC_ADVAPPEARANCE_COLOR2_B, 218, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
     LTEXT "&Police :", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "T&aille :", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
-    LTEXT "&Couleur :", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 28, 9//FIXME: control is too small to hold all the text
+    LTEXT "&Couleur :", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 28, 9//FIXME: control is too small to hold all the text. For the backport I simply stripped all " :" in this dlg. Imho that would be a good solution also for master. Some other translations do that as well.
     CHECKBOX "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
     AUTOCHECKBOX "G", IDC_ADVAPPEARANCE_FONTBOLD, 218, 200, 14, 13, BS_PUSHLIKE
     AUTOCHECKBOX "I ", IDC_ADVAPPEARANCE_FONTITALIC, 232, 200, 14, 13, BS_PUSHLIKE
