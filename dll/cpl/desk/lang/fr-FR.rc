@@ -1,4 +1,4 @@
-/* French translation by Benoit Plante <cmoibenlepro@hotmail.com> & Pierre Schweitzer <pierre@reactos.org> */
+/* French translation by Benoit Plante <cmoibenlepro@hotmail.com>, Pierre Schweitzer <pierre@reactos.org> */
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
@@ -23,10 +23,10 @@ BEGIN
     CONTROL "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74
     CONTROL "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 8, 104, 174, 86
-    LTEXT "Arrière-plan :", IDC_STATIC, 8, 93, 230, 9
+    LTEXT "A&rrière-plan :", IDC_STATIC, 8, 93, 230, 9
     PUSHBUTTON "&Parcourir...", IDC_BROWSE_BUTTON, 188, 104, 55, 15
     PUSHBUTTON "&Couleur...", IDC_COLOR_BUTTON, 188, 167, 55, 15
-    LTEXT "Position :", IDC_STATIC, 188, 128, 55, 9//FIXME: add accel
+    LTEXT "P&osition :", IDC_STATIC, 188, 128, 55, 9
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "P&ersonnalisation du Bureau...", IDC_DESKTOP_CUSTOM, 8, 194, 100, 15
 END
