@@ -185,10 +185,10 @@ BEGIN
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Compatibilité", -1, 7, 67, 285, 97
-    LTEXT "Quelques programmes peuvent mal fonctionner si vous ne redémarrez pas votre ordinateur après que vous ayiez changé les paramètres des couleurs.\n\nAprès que j'ai changé les paramètres des couleurs", -1, 12, 78, 270, 40
-    AUTORADIOBUTTON "&Redémarrer l'ordinateur avant d'appliquer les nouveaux paramètres des couleurs", IDC_RESTART_RB, 14, 116, 273, 10
-    AUTORADIOBUTTON "A&ppliquer les nouveaux paramètres des couleurs sans redémarrer", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
-    AUTORADIOBUTTON "Me demander avant d'appliquer les nouveaux paramètres des &couleurs", IDC_ASKME_RB, 14, 146, 243, 10
+    LTEXT "Quelques programmes peuvent mal fonctionner si vous ne redémarrez pas votre ordinateur après que vous ayiez changé les paramètres.\n\nAprès que j'ai changé les paramètres", -1, 12, 78, 270, 40
+    AUTORADIOBUTTON "&Redémarrer l'ordinateur avant d'appliquer les nouveaux paramètres", IDC_RESTART_RB, 14, 116, 273, 10
+    AUTORADIOBUTTON "A&ppliquer les nouveaux paramètres sans redémarrer", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
+    AUTORADIOBUTTON "Demander &confirmation avant d'appliquer les nouveaux paramètres", IDC_ASKME_RB, 14, 146, 243, 10
 END
 
 IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57
