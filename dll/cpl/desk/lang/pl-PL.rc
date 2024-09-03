@@ -17,7 +17,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Kompozycja to tapeta, zestaw dźwięków, ikon i innych elementów, które pomagają spersonalizować komputer za pomocą jednego kliknięcia.", IDC_STATIC, 5, 5, 235, 30
-    LTEXT "Kompozycja:", IDC_STATIC, 5, 42, 55, 10
+    LTEXT "Kompozycja:", IDC_STATIC, 5, 42, 55, 10//FIXME: add accel
     COMBOBOX IDC_THEMES_COMBOBOX, 5, 52, 160, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Z&apisz jako...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
     PUSHBUTTON "&Usuń", IDC_THEMES_DELETE, 170, 70, 70, 14
@@ -35,7 +35,7 @@ BEGIN
     LTEXT "Wybierz obraz do użycia jako tapeta pulpitu", IDC_STATIC, 8, 93, 230, 9
     PUSHBUTTON "&Przeglądaj...", IDC_BROWSE_BUTTON, 188, 104, 55, 15
     PUSHBUTTON "&Kolor...", IDC_COLOR_BUTTON, 188, 167, 55, 15
-    LTEXT "Położenie", IDC_STATIC, 188, 128, 55, 9
+    LTEXT "Położenie", IDC_STATIC, 188, 128, 55, 9//FIXME: add accel
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Dostosuj pulpit...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
 END
@@ -68,13 +68,13 @@ CAPTION "Wygląd"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "Motyw graficzny", IDC_STATIC, 7, 130, 104, 9
+    LTEXT "Motyw graficzny", IDC_STATIC, 7, 130, 104, 9//FIXME: add accel
     COMBOBOX IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Schemat kolorów", IDC_STATIC, 7, 157, 104, 9
+    LTEXT "Schemat kolorów", IDC_STATIC, 7, 157, 104, 9//FIXME: add accel
     COMBOBOX IDC_APPEARANCE_COLORSCHEME, 7, 167, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Rozmiar czcionki", IDC_STATIC, 7, 184, 104, 9
+    LTEXT "Rozmiar czcionki", IDC_STATIC, 7, 184, 104, 9//FIXME: add accel
     COMBOBOX IDC_APPEARANCE_SIZE, 7, 194, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Efekty...", IDC_APPEARANCE_EFFECTS, 178, 150, 63, 15
