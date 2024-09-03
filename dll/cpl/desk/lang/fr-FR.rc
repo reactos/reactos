@@ -110,21 +110,21 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Effets"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "&Utilisez l'effet de transition suivant pour les menus et les info-bulles :",
+    CONTROL "Utilisez l'effet de &transition suivant pour les menus et les info-bulles :",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL "U&tilisez la méthode suivante pour lisser les bords des polices d'écran :", IDC_EFFAPPEARANCE_SMOOTHING,
+    CONTROL "Utili&sez la méthode suivante pour lisser les bords des polices d'écran :", IDC_EFFAPPEARANCE_SMOOTHING,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    CONTROL "Uti&liser de grandes icones", IDC_EFFAPPEARANCE_LARGEICONS, "button",
+    CONTROL "&Utiliser de grandes icones", IDC_EFFAPPEARANCE_LARGEICONS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
     CONTROL "&Afficher une ombre sous les menus", IDC_EFFAPPEARANCE_SETDROPSHADOW,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
-    CONTROL "Afficher le contenu des fenêtres pendant leur déplacement", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,//FIXME: add accel
+    CONTROL "A&fficher le contenu des fenêtres pendant leur déplacement", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "Masquer les lettres soulignées pour la navigation au clavier jusqu'à ce que j'appuie sur la touche Alt",//FIXME: add back accelerator which has been destroyed during 0.4.15-dev'ing
+    CONTROL "Mas&quer les lettres soulignées pour la navigation au clavier jusqu'à ce que j'appuie sur la touche Alt",
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 360, 19
     CONTROL "Utiliser les menus &plats", IDC_EFFAPPEARANCE_FLATMENUS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
