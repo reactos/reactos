@@ -1276,20 +1276,20 @@ void Test_from_wine(void)
 
     hwnd_cache = CreateWindowW(L"cache_class", NULL, WS_OVERLAPPED | WS_VISIBLE,
                                0, 0, 100, 100,
-                               0, 0, GetModuleHandleA(0), NULL );
+                               0, 0, GetModuleHandleA(0), NULL);
     hwnd_owndc = CreateWindowW(L"owndc_class", NULL, WS_OVERLAPPED | WS_VISIBLE,
                                0, 200, 100, 100,
-                               0, 0, GetModuleHandleA(0), NULL );
+                               0, 0, GetModuleHandleA(0), NULL);
     hwnd_classdc = CreateWindowW(L"classdc_class", NULL, WS_OVERLAPPED | WS_VISIBLE,
                                  200, 0, 100, 100,
-                                 0, 0, GetModuleHandleA(0), NULL );
+                                 0, 0, GetModuleHandleA(0), NULL);
     hwnd_classdc2 = CreateWindowW(L"classdc_class", NULL, WS_OVERLAPPED | WS_VISIBLE,
                                   200, 200, 100, 100,
-                                  0, 0, GetModuleHandleA(0), NULL );
+                                  0, 0, GetModuleHandleA(0), NULL);
     hwnd_parent = CreateWindowW(L"static", NULL, WS_OVERLAPPED | WS_VISIBLE,
-                                400, 0, 100, 100, 0, 0, 0, NULL );
+                                400, 0, 100, 100, 0, 0, 0, NULL);
     hwnd_parentdc = CreateWindowW(L"parentdc_class", NULL, WS_CHILD | WS_VISIBLE,
-                                  0, 0, 1, 1, hwnd_parent, 0, 0, NULL );
+                                  0, 0, 1, 1, hwnd_parent, 0, 0, NULL);
 
     test_dc_attributes();
     test_parameters();
