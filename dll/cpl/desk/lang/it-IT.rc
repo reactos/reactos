@@ -24,7 +24,7 @@ BEGIN
     LTEXT "Selezionare un'immagine da usare come sfondo per il desktop", IDC_STATIC, 8, 93, 230, 9
     PUSHBUTTON "&Esplora...", IDC_BROWSE_BUTTON, 188, 104, 55, 15
     PUSHBUTTON "&Colore...", IDC_COLOR_BUTTON, 188, 167, 55, 15
-    LTEXT "Posizione", IDC_STATIC, 188, 128, 55, 9//FIXME: add accel
+    LTEXT "Posizione", IDC_STATIC, 188, 128, 55, 9//FIXME: add accel. I used "&Posizione" for the backport
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Personalizza &Desktop...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
 END
@@ -38,7 +38,7 @@ BEGIN
     GROUPBOX "&Salva schermo", IDC_SCREENS_DUMMY, 8, 92, 230, 52
     COMBOBOX IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Impostazioni", IDC_SCREENS_SETTINGS, 120, 102, 50, 15, WS_GROUP
-    PUSHBUTTON "&Anteprima", IDC_SCREENS_TESTSC, 175, 102, 50, 15//FIXME: accelerator collision &A
+    PUSHBUTTON "&Anteprima", IDC_SCREENS_TESTSC, 175, 102, 50, 15//FIXME: accelerator collision &A. I used "A&nteprima" for the backport
     LTEXT "&Attesa", IDC_WAITTEXT, 14, 125, 22, 9//FIXME: accelerator collision &A
     EDITTEXT IDC_SCREENS_TIMEDELAY, 38, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
@@ -57,13 +57,13 @@ CAPTION "Aspetto"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "Visual Style", IDC_STATIC, 7, 130, 104, 9//FIXME: add accel. You cannot use &V because that is consumed already
+    LTEXT "Visual Style", IDC_STATIC, 7, 130, 104, 9//FIXME: add accel. You cannot use &V because that is consumed already. I used Vis&ual for the backport
     COMBOBOX IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Schema dei colori", IDC_STATIC, 7, 157, 104, 9//FIXME: add accel
+    LTEXT "Schema dei colori", IDC_STATIC, 7, 157, 104, 9//FIXME: add accel. I used &Schema for the backport
     COMBOBOX IDC_APPEARANCE_COLORSCHEME, 7, 167, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Dimensione", IDC_STATIC, 7, 184, 104, 9//FIXME: add accel
+    LTEXT "Dimensione", IDC_STATIC, 7, 184, 104, 9//FIXME: add accel. I used &Dimensione for the backport
     COMBOBOX IDC_APPEARANCE_SIZE, 7, 194, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Effetti...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
@@ -78,23 +78,23 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
     LTEXT "Se selezioni un tema che non sia ReactOS classico, le seguenti impostazioni verranno sovrascritte, eccetto in alcuni vecchi programmi.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
-    LTEXT "Elemento", 8, 5, 160, 50, 9//FIXME: add accel
+    LTEXT "Elemento", 8, 5, 160, 50, 9//FIXME: add accel. I uzed &E for the backport.
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
     LTEXT "&Dimensione", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP |
             UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT | WS_CHILD | WS_VISIBLE, 172, 170, 10, 13
-    LTEXT "&Primo colore", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
+    LTEXT "Colore &1", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
     CHECKBOX "-", IDC_ADVAPPEARANCE_COLOR1_B, 184, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
-    LTEXT "&Secondo colore", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
+    LTEXT "Colore &2", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
     CHECKBOX "-", IDC_ADVAPPEARANCE_COLOR2_B, 216, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
-    LTEXT "Carattere", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9//FIXME: add accel
+    LTEXT "Carattere", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9//FIXME: add accel. I used C&arattere for the backport
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Dimensione del carattere", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9//FIXME: add accel
+    LTEXT "Di&mensione", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
-    LTEXT "Colore", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 28, 9//FIXME: add accel
+    LTEXT "Colore", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 28, 9//FIXME: add accel. I used &Colore for the backport
     CHECKBOX "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
     AUTOCHECKBOX "G", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
     AUTOCHECKBOX "I ", IDC_ADVAPPEARANCE_FONTITALIC, 230, 200, 14, 13, BS_PUSHLIKE
@@ -116,11 +116,11 @@ BEGIN
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    CONTROL "Usare le icone grandi", IDC_EFFAPPEARANCE_LARGEICONS, "button",//FIXME: add accel
+    CONTROL "Usare le icone grandi", IDC_EFFAPPEARANCE_LARGEICONS, "button",//FIXME: add accel. I used Us&are for the backport
             BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
     CONTROL "&Ombreggiatura sotto i menu", IDC_EFFAPPEARANCE_SETDROPSHADOW,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
-    CONTROL "Mostrare il contenuto delle finestr mentre le si trascina", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,//FIXME: add accel
+    CONTROL "Mostrare il contenuto delle finestr mentre le si trascina", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,//FIXME: add accel. I used &Mostrare for the backport
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
     CONTROL "&Nascondere la sottolineatura delle lettere di navigazione finche non è premuto il tasto Alt",
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
@@ -185,8 +185,8 @@ BEGIN
     GROUPBOX "Compatibilità", -1, 7, 67, 237, 97
     LTEXT "Alcuni programmi potrebbero funzionare in modo irregolare se non riavviate il computer dopo una modifica delle impostazioni dei colori.\n\nDopo la modifica delle impostazioni dei colori", -1, 12, 78, 228, 34
     AUTORADIOBUTTON "&Riavviare il computer prima di applicare le nuove impostazioni", IDC_RESTART_RB, 14, 116, 228, 10
-    AUTORADIOBUTTON "Applicare le nuove impostazioni dei colori senza riavviare", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10//FIXME: add accel
-    AUTORADIOBUTTON "Chiedere prima di applicare le nuove impostazioni dei colori", IDC_ASKME_RB, 14, 146, 228, 10//FIXME: add accel
+    AUTORADIOBUTTON "Applicare le nuove impostazioni dei colori senza riavviare", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10//FIXME: add accel. I used "&Applicare" for the backport
+    AUTORADIOBUTTON "Chiedere prima di applicare le nuove impostazioni dei colori", IDC_ASKME_RB, 14, 146, 228, 10//FIXME: add accel. I used "&Chiedere" for the backport
 END
 
 IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57
