@@ -13,7 +13,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "A theme is a background plus a set of sounds, icons, and other elements to help you personalize your computer with one click.", IDC_STATIC, 5, 5, 235, 30
-    LTEXT "Theme:", IDC_STATIC, 5, 42, 55, 10//FIXME: add accel
+    LTEXT "&Theme:", IDC_STATIC, 5, 42, 55, 10
     COMBOBOX IDC_THEMES_COMBOBOX, 5, 52, 160, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Save &As...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
     PUSHBUTTON "&Delete", IDC_THEMES_DELETE, 170, 70, 70, 14
@@ -28,10 +28,10 @@ BEGIN
     CONTROL "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74
     CONTROL "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 8, 104, 174, 86
-    LTEXT "Taust:", IDC_STATIC, 8, 93, 230, 9
+    LTEXT "Taust:", IDC_STATIC, 8, 93, 230, 9//FIXME: add accel. I used "&Taust:" for the backport
     PUSHBUTTON "&Sirvi...", IDC_BROWSE_BUTTON, 188, 104, 55, 15
     PUSHBUTTON "&Värv...", IDC_COLOR_BUTTON, 188, 167, 55, 15
-    LTEXT "&Paigutus", IDC_STATIC, 188, 128, 55, 9
+    LTEXT "&Paigutus:", IDC_STATIC, 188, 128, 55, 9
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Customize &Desktop...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
 END
@@ -51,7 +51,7 @@ BEGIN
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 56, 123, 12, 13
     LTEXT "minutit", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL "Ärkamisel küsi parooli", IDC_SCREENS_USEPASSCHK, "button",
+    CONTROL "Ärkamisel küsi parooli", IDC_SCREENS_USEPASSCHK, "button",//FIXME: add accel, I used "Ä&rkamisel küsi parooli" for the backport
             BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
     GROUPBOX "Kuvari toide", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
     LTEXT "Kuvari toitesätete reguleerimiseks ja energia säästmiseks klõpsake nuppu Toide.", IDC_STATIC, 16, 161, 146, 27
@@ -64,13 +64,13 @@ CAPTION "Ilme"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "&Aknad ja nupud", IDC_STATIC, 7, 130, 104, 9
+    LTEXT "&Aknad ja nupud:", IDC_STATIC, 7, 130, 104, 9
     COMBOBOX IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&Värviskeem", IDC_STATIC, 7, 157, 104, 9
+    LTEXT "&Värviskeem:", IDC_STATIC, 7, 157, 104, 9
     COMBOBOX IDC_APPEARANCE_COLORSCHEME, 7, 167, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&Fondi suurus", IDC_STATIC, 7, 184, 104, 9
+    LTEXT "&Fondi suurus:", IDC_STATIC, 7, 184, 104, 9
     COMBOBOX IDC_APPEARANCE_SIZE, 7, 194, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Efektid...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
@@ -186,14 +186,14 @@ CAPTION "Üldist"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Kuva", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Fondi suurus:", -1, 14, 20, 222, 9//FIXME: add accel
+    LTEXT "Fondi suurus:", -1, 14, 20, 222, 9//FIXME: add accel. I used "&Fondi suurus:" for the backport. 2k3sp2 does now call this "&DPI setting:". Feel free to translate that.
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Ühilduvus", -1, 7, 67, 237, 97
     LTEXT "Võimalik, et mõni programm ei tööta õigesti, kui te ei taaskäivita arvutit pärast kuvasätete muutmist.\n\nPärast kuvasätete muutmist:", -1, 12, 78, 228, 34
     AUTORADIOBUTTON "&Taaskäivita arvuti enne uute kuvasätete rakendamist", IDC_RESTART_RB, 14, 116, 228, 10
-    AUTORADIOBUTTON "Rakenda uued kuvasätted arvutit taaskäivitamata", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10//FIXME: add accel
-    AUTORADIOBUTTON "Küsi enne uute kuvasätete rakendamist", IDC_ASKME_RB, 14, 146, 228, 10//FIXME: add accel
+    AUTORADIOBUTTON "Rakenda uued kuvasätted arvutit taaskäivitamata", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10//FIXME: add accel. I used "&Rakenda uued kuvasätted arvutit taaskäivitamata" for the backport
+    AUTORADIOBUTTON "Küsi enne uute kuvasätete rakendamist", IDC_ASKME_RB, 14, 146, 228, 10//FIXME: add accel. I used "&Küsi enne uute kuvasätete rakendamist" for the backport
 END
 
 IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57
