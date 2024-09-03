@@ -181,7 +181,7 @@ CAPTION "Général"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Affichage", -1, 7, 6, 285, 56, WS_GROUP
-    LTEXT "Taille de la police :", -1, 14, 20, 222, 9
+    LTEXT "&Paramètre PPP :", -1, 14, 20, 222, 9
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Compatibilité", -1, 7, 67, 285, 97
