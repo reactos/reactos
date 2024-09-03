@@ -16,7 +16,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Un tema es todo un entorno lleno de sonidos, iconos y otros elementos que te ayudarán a personalizar tu ordenador con un solo clic.", IDC_STATIC, 5, 5, 235, 30
-    LTEXT "Tema:", IDC_STATIC, 5, 42, 55, 10
+    LTEXT "Tema:", IDC_STATIC, 5, 42, 55, 10//FIXME: add accel
     COMBOBOX IDC_THEMES_COMBOBOX, 5, 52, 160, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Guardar &como...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
     PUSHBUTTON "&Eliminar", IDC_THEMES_DELETE, 170, 70, 70, 14
@@ -189,10 +189,10 @@ CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Pantalla ", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Tamaño de la fuente:", -1, 14, 20, 222, 9
+    LTEXT "Tamaño de la fuente:", -1, 14, 20, 222, 9//FIXME: add accel
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
-    GROUPBOX "Compatibilidad ", -1, 7, 67, 237, 97
+    GROUPBOX "Compatibilidad", -1, 7, 67, 237, 97
     LTEXT "Es posible que algunos programas no funcionen correctamente si no reinicia el equipo después de cambiar la configuración de pantalla", -1, 12, 78, 228, 34
     AUTORADIOBUTTON "&Reiniciar el equipo antes de aplicar la nueva configuración", IDC_RESTART_RB, 14, 116, 228, 10
     AUTORADIOBUTTON "&Aplicar la nueva configuración de pantalla sin reiniciar", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
