@@ -27,7 +27,7 @@ BEGIN
     LTEXT "Zgjidhni një imazh për t'u përdorur si sfond tuaj desktop", IDC_STATIC, 8, 93, 230, 9
     PUSHBUTTON "&Shfleto...", IDC_BROWSE_BUTTON, 188, 104, 55, 15
     PUSHBUTTON "&Ngjyra...", IDC_COLOR_BUTTON, 188, 167, 55, 15
-    LTEXT "Vendosje", IDC_STATIC, 188, 128, 55, 9//FIXME: add accel
+    LTEXT "Vendosje", IDC_STATIC, 188, 128, 55, 9//FIXME: add accel. I used "&Vendosje" for the backport
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Customize &Desktop...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
 END
@@ -42,7 +42,7 @@ BEGIN
     COMBOBOX IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Cilësime&t", IDC_SCREENS_SETTINGS, 120, 102, 50, 15, WS_GROUP
     PUSHBUTTON "Pre&view", IDC_SCREENS_TESTSC, 175, 102, 50, 15
-    LTEXT "Prit", IDC_WAITTEXT, 14, 125, 20, 9//FIXME: add accel
+    LTEXT "Prit", IDC_WAITTEXT, 14, 125, 20, 9//FIXME: add accel. I used "&Prit" for the backport
     EDITTEXT IDC_SCREENS_TIMEDELAY, 36, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 56, 123, 12, 13
@@ -60,17 +60,17 @@ CAPTION "Dukje"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "Stili Vizual", IDC_STATIC, 7, 130, 104, 9//FIXME: add accel
+    LTEXT "Stili Vizual", IDC_STATIC, 7, 130, 104, 9//FIXME: add accel. I used "Stili &Vizual" for the backport
     COMBOBOX IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Skema Ngjyrave", IDC_STATIC, 7, 157, 104, 9//FIXME: add accel
+    LTEXT "Skema Ngjyrave", IDC_STATIC, 7, 157, 104, 9//FIXME: add accel. I used "&Skema Ngjyrave" for the backport
     COMBOBOX IDC_APPEARANCE_COLORSCHEME, 7, 167, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Masa", IDC_STATIC, 7, 184, 104, 9//FIXME: add accel
+    LTEXT "Masa", IDC_STATIC, 7, 184, 104, 9//FIXME: add accel. I used "&Masa" for the backport
     COMBOBOX IDC_APPEARANCE_SIZE, 7, 194, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Efekte...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
-    PUSHBUTTON "Përparuar...", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15//FIXME: add accel
+    PUSHBUTTON "Përparuar...", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15//FIXME: add accel. I used "&Përparuar..." for the backport
 END
 
 IDD_ADVAPPEARANCE DIALOGEX 0, 0, 250, 239
@@ -81,7 +81,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
     LTEXT "If you select a theme other than ReactOS classic, it will override the following settings, except in some older programs.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
-    LTEXT "Elemente", 8, 5, 160, 50, 9//FIXME: add accel
+    LTEXT "Elemente", 8, 5, 160, 50, 9//FIXME: add accel. I used "&Elemente" for the backport
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
     LTEXT "&Masa", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
@@ -95,9 +95,9 @@ BEGIN
     LTEXT "&Font", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Masa Font", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9//FIXME: add accel
+    LTEXT "Masa Font", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9//FIXME: add accel. I used just "M&asa" for the backport, because the dialogs layout makes it totally clear that this is about the *fonts* size. And the space is limited here.
     COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
-    LTEXT "Ngjyra", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 28, 9//FIXME: add accel
+    LTEXT "Ngjyra", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 28, 9//FIXME: add accel. I used "&Ngjyra" for the backport. We do have another "&Ngjyra" in this rc-file, so this might help future string-pooling.
     CHECKBOX "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
     AUTOCHECKBOX "B", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
     AUTOCHECKBOX "I ", IDC_ADVAPPEARANCE_FONTITALIC, 230, 200, 14, 13, BS_PUSHLIKE
@@ -111,21 +111,21 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Efekte"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "&Përdorni efektin e mëposhtme tranzicionit për menutë dhe ndihmesa",
+    CONTROL "&Përdorni efektin e mëposhtme tranzicionit për menutë dhe ndihmesa",//FIXME: accelerator collision &P
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL "Përdor metodën e mëposhtme për të zbutë skajet e fonts ekran", IDC_EFFAPPEARANCE_SMOOTHING,//FIXME: add accel
+    CONTROL "Përdor metodën e mëposhtme për të zbutë skajet e fonts ekran", IDC_EFFAPPEARANCE_SMOOTHING,//FIXME: add accel. I used "Pë&rdor metodën e mëposhtme për të zbutë skajet e fonts ekran" for the backport. Remember: &P is in use already.
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    CONTROL "Përdor ikona të mëdha", IDC_EFFAPPEARANCE_LARGEICONS, "button",//FIXME: add accel
+    CONTROL "Përdor ikona të mëdha", IDC_EFFAPPEARANCE_LARGEICONS, "button",//FIXME: add accel. I used "Për&dor ikona të mëdha" for the backport. Keep in mind that &P is in use
             BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
-    CONTROL "Shfaq hije poshte menus", IDC_EFFAPPEARANCE_SETDROPSHADOW,//FIXME: add accel
+    CONTROL "Shfaq hije poshte menus", IDC_EFFAPPEARANCE_SETDROPSHADOW,//FIXME: add accel. I used "&Shfaq hije poshte menus" for the backport
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
-    CONTROL "Shfaq &përmbajtjen dritare ndërsa zvarritet", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
+    CONTROL "Shfaq &përmbajtjen dritare ndërsa zvarritet", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,//FIXME: accelerator collision &P. I used "S&hfaq përmbajtjen dritare ndërsa zvarritet" for the backport
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "Fsheh gërma të nënvizuara për kërkimin e tastierës deri sa të shtypni butonin Alt",//FIXME: add accel
+    CONTROL "Fsheh gërma të nënvizuara për kërkimin e tastierës deri sa të shtypni butonin Alt",//FIXME: add accel. I used "Fsh&eh gërma të nënvizuara për kërkimin e tastierës deri sa të shtypni butonin Alt" for the backport. Keep in mind that &f is currently used by the &flat menus
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
     CONTROL "Use &flat menus", IDC_EFFAPPEARANCE_FLATMENUS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
@@ -152,7 +152,7 @@ BEGIN
     GROUPBOX "&Ngjyra", 1817, 125, 127, 115, 43
     COMBOBOX IDC_SETTINGS_BPP, 131, 137, 103, 80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     CONTROL "", IDC_SETTINGS_SPECTRUM, "Static", SS_OWNERDRAW | SS_SUNKEN, 131, 155, 103, 9
-    PUSHBUTTON "Përparuar...", IDC_SETTINGS_ADVANCED, 170, 174, 70, 15//FIXME: add accel
+    PUSHBUTTON "Përparuar...", IDC_SETTINGS_ADVANCED, 170, 174, 70, 15//FIXME: add accel. I used "&Përparuar..." for the backport. Like in the other dialog where such a button exists
 END
 
 IDD_DESKTOP_GENERAL DIALOGEX 0, 0, 224, 202
@@ -182,14 +182,14 @@ CAPTION "Përgjithshëm"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Ekran", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Font Masa:", -1, 14, 20, 222, 9//FIXME: add accel
+    LTEXT "Font Masa:", -1, 14, 20, 222, 9//FIXME: add accel. I used "&Font Masa:" for the backport
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Pajtueshmëri", -1, 7, 67, 237, 97
     LTEXT "Disa programe veprojë në mënyrë të paligjshme në qoftë se ju nuk e rinisni kompjuterin tuaj, pasi ju të ndryshoni parametrat e ngjyrave.\n\nPasi keni ndryshuar parametrat e ngjyrave", -1, 12, 78, 228, 34
     AUTORADIOBUTTON "&Rifillo kompjuterin para se të aplikoni vetit e reja ngjyra", IDC_RESTART_RB, 14, 116, 228, 10
-    AUTORADIOBUTTON "Apliko parametrat e ngjyrave te reja par rifilluar sistemit", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10//FIXME: add accel
-    AUTORADIOBUTTON "Pyet para se te aplikosh parametrat e ngjyrave te reja", IDC_ASKME_RB, 14, 146, 228, 10//FIXME: add accel
+    AUTORADIOBUTTON "Apliko parametrat e ngjyrave te reja par rifilluar sistemit", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10//FIXME: add accel. I used "&Apliko..." for the backport
+    AUTORADIOBUTTON "Pyet para se te aplikosh parametrat e ngjyrave te reja", IDC_ASKME_RB, 14, 146, 228, 10//FIXME: add accel. I used "&Pyet..." for the backport
 END
 
 IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57
