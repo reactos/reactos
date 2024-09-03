@@ -1202,11 +1202,9 @@ void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdS
 
     ptr2 = wcschr(cmd, dot);
     if (ptr2)
-    {
         wcsncpy(ext, ptr2 + 1, 3);
-    }
 
-    GoodExt = wcsicmp(ext, L"DLL") == 0 || wcscmp(ext, L"CPL") == 0;
+    GoodExt = wcsicmp(ext, L"DLL") == 0 || wcsicmp(ext, L"CPL") == 0;
 
 #else
 
