@@ -73,8 +73,13 @@ Varray::~Varray( void )
 inline void
 Varray::update( Arc_ptr arc, long dir[2], REAL val )
 {
+#ifdef __REACTOS__
+    long ds = sgn(arc->tail()[0] - arc->prev->tail()[0]);
+    long dt = sgn(arc->tail()[1] - arc->prev->tail()[1]);
+#else
     register long ds = sgn(arc->tail()[0] - arc->prev->tail()[0]);
     register long dt = sgn(arc->tail()[1] - arc->prev->tail()[1]);
+#endif
 
     if( dir[0] != ds || dir[1] != dt ) {
 	dir[0] = ds;
