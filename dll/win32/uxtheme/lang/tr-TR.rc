@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS uxtheme.dll
  * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  * PURPOSE:     Turkish resource file
- * TRANSLATORS: Copyright 2024 Ethem De Santa (scropool) <oyunyumru4@gmail.com>
+ * TRANSLATOR:  Copyright 2024 Ethem De Santa (scropool) <oyunyumru4@gmail.com>
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
