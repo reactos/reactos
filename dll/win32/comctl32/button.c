@@ -93,8 +93,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(button);
 typedef struct _BUTTON_INFO
 {
     HWND        hwnd;
+    HWND        parent;
     LONG        state;
     HFONT       font;
+    WCHAR      *note;
+    INT         note_length;
     union
     {
         HICON   icon;
@@ -254,6 +257,14 @@ HRGN set_control_clipping( HDC hdc, const RECT *rect )
     }
     IntersectClipRect( hdc, rc.left, rc.top, rc.right, rc.bottom );
     return hrgn;
+}
+
+static WCHAR *heap_strndupW(const WCHAR *src, size_t length)
+{
+    size_t size = (length + 1) * sizeof(WCHAR);
+    WCHAR *dst = heap_alloc(size);
+    if (dst) memcpy(dst, src, size);
+    return dst;
 }
 
 /**********************************************************************
@@ -642,6 +653,7 @@ static LRESULT CALLBACK BUTTON_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
 
     case WM_NCDESTROY:
         SetWindowLongPtrW( hWnd, 0, 0 );
+        heap_free(infoPtr->note);
         heap_free(infoPtr);
         break;
 
@@ -1022,6 +1034,81 @@ static LRESULT CALLBACK BUTTON_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, L
         else
             paint_button( infoPtr, btn_type, ODA_DRAWENTIRE );
         return 1; /* success. FIXME: check text length */
+    }
+
+    case BCM_SETNOTE:
+    {
+        WCHAR *note = (WCHAR *)lParam;
+        if (btn_type != BS_COMMANDLINK && btn_type != BS_DEFCOMMANDLINK)
+        {
+            SetLastError(ERROR_NOT_SUPPORTED);
+            return FALSE;
+        }
+
+        heap_free(infoPtr->note);
+        if (note)
+        {
+            infoPtr->note_length = lstrlenW(note);
+            infoPtr->note = heap_strndupW(note, infoPtr->note_length);
+        }
+
+        if (!note || !infoPtr->note)
+        {
+            infoPtr->note_length = 0;
+            infoPtr->note = heap_alloc_zero(sizeof(WCHAR));
+        }
+
+        SetLastError(NO_ERROR);
+        return TRUE;
+    }
+
+    case BCM_GETNOTE:
+    {
+        DWORD *size = (DWORD *)wParam;
+        WCHAR *buffer = (WCHAR *)lParam;
+        INT length = 0;
+
+        if (btn_type != BS_COMMANDLINK && btn_type != BS_DEFCOMMANDLINK)
+        {
+            SetLastError(ERROR_NOT_SUPPORTED);
+            return FALSE;
+        }
+
+        if (!buffer || !size || !infoPtr->note)
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+        }
+
+        if (*size > 0)
+        {
+            length = min(*size - 1, infoPtr->note_length);
+            memcpy(buffer, infoPtr->note, length * sizeof(WCHAR));
+            buffer[length] = '\0';
+        }
+
+        if (*size < infoPtr->note_length + 1)
+        {
+            *size = infoPtr->note_length + 1;
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            return FALSE;
+        }
+        else
+        {
+            SetLastError(NO_ERROR);
+            return TRUE;
+        }
+    }
+
+    case BCM_GETNOTELENGTH:
+    {
+        if (btn_type != BS_COMMANDLINK && btn_type != BS_DEFCOMMANDLINK)
+        {
+            SetLastError(ERROR_NOT_SUPPORTED);
+            return 0;
+        }
+
+        return infoPtr->note_length;
     }
 
     case WM_SETFONT:

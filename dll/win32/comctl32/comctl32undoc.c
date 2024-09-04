@@ -26,8 +26,6 @@
  *     COMCTL32.DLL (internally).
  *
  */
-#include "config.h"
-#include "wine/port.h"
 
 #include <stdarg.h>
 #include <string.h>
@@ -47,7 +45,6 @@
 #include "objbase.h"
 #include "winerror.h"
 
-#include "wine/unicode.h"
 #include "comctl32.h"
 
 #include "wine/debug.h"
@@ -311,7 +308,7 @@ static void MRU_SaveChanged ( LPWINEMRULIST mp )
     if (mp->wineFlags & WMRUF_CHANGED) {
 	mp->wineFlags &= ~WMRUF_CHANGED;
 	err = RegSetValueExW(newkey, strMRUList, 0, REG_SZ, (LPBYTE)mp->realMRU,
-			     (strlenW(mp->realMRU) + 1)*sizeof(WCHAR));
+			     (lstrlenW(mp->realMRU) + 1)*sizeof(WCHAR));
 	if (err) {
 	    ERR("error saving MRUList, err=%d\n", err);
 	}
@@ -470,7 +467,7 @@ INT WINAPI AddMRUData (HANDLE hList, LPCVOID lpData, DWORD cbData)
 
     if ((replace = FindMRUData (hList, lpData, cbData, NULL)) >= 0) {
         /* Item exists, just move it to the front */
-        LPWSTR pos = strchrW(mp->realMRU, replace + 'a');
+        LPWSTR pos = wcschr(mp->realMRU, replace + 'a');
         while (pos > mp->realMRU)
         {
             pos[0] = pos[-1];
@@ -555,7 +552,7 @@ INT WINAPI AddMRUStringW(HANDLE hList, LPCWSTR lpszString)
     }
 
     return AddMRUData(hList, lpszString,
-                      (strlenW(lpszString) + 1) * sizeof(WCHAR));
+                      (lstrlenW(lpszString) + 1) * sizeof(WCHAR));
 }
 
 /**************************************************************************
@@ -747,8 +744,8 @@ HANDLE WINAPI CreateMRUListLazyW (const MRUINFOW *infoW, DWORD dwParam2,
 
     mp = Alloc(sizeof(WINEMRULIST));
     memcpy(&mp->extview, infoW, sizeof(MRUINFOW));
-    mp->extview.lpszSubKey = Alloc((strlenW(infoW->lpszSubKey) + 1) * sizeof(WCHAR));
-    strcpyW(mp->extview.lpszSubKey, infoW->lpszSubKey);
+    mp->extview.lpszSubKey = Alloc((lstrlenW(infoW->lpszSubKey) + 1) * sizeof(WCHAR));
+    lstrcpyW(mp->extview.lpszSubKey, infoW->lpszSubKey);
     mp->isUnicode = TRUE;
 
     return create_mru_list(mp);
