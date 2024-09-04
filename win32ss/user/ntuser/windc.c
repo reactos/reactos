@@ -677,7 +677,6 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
          Dce = DceAllocDCE(NULL, DCE_CACHE_DC);
       }
       if (Dce == NULL) return NULL;
-      
       StructDceInit(Dce);
       StructDceAddPwnd(Dce, Wnd);
    }
