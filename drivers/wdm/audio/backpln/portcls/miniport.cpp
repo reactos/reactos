@@ -42,9 +42,9 @@ operator delete(
 
 void
 __cdecl
-operator delete(PVOID ptr,
-                UINT64 ,
-                enum std::align_val_t)
+operator delete(
+    PVOID ptr, UINT_PTR,
+    enum std::align_val_t)
 {
     ExFreePool(ptr);
 }
