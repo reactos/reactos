@@ -25,7 +25,7 @@ typedef struct tagDCE
 {
     LIST_ENTRY   List;
     HDC          hDC;
-    LIST_ENTRY listPwndCurrent;
+    LIST_ENTRY   listPwndCurrent;
     HRGN         hrgnClip;
     DWORD        DCXFlags;
     PTHREADINFO  ptiOwner;
