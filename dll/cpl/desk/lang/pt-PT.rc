@@ -186,7 +186,7 @@ CAPTION "Geral"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Visualização", -1, 7, 6, 237, 56, WS_GROUP
-    //LTEXT "Se a resolução do ecrã tornar os items demasiado pequenos para ver confortavelmente, pode aumentar o valor ppp para compensar. Para alterar apenas o tamanho do tipo de letra, clique em ""Cancelar"" e vá até ao separador ""Aspecto"".", -1, 14, 20, 220, 45
+    //LTEXT "Se a resolução do ecrã tornar os items demasiado pequenos para ver confortavelmente, pode aumentar o valor ppp para compensar. Para alterar apenas o tamanho do tipo de letra, clique em ""Cancelar"" e vá até ao separador ""Aspecto"".", -1, 14, 20, 220, 45//FIXME: The whole dialog was relayouted by the pt-PT translator, and still this text doesn't fit. At least the current workaround is visually appealing. Nevertheless: Shrink the texts length! When done, try to live with the en-US dimensions and layout.
     LTEXT "&Definição do valor ppp:", -1, 14, 20, 222, 9
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
