@@ -6,7 +6,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "A theme is a background plus a set of sounds, icons, and other elements to help you personalize your computer with one click.", IDC_STATIC, 5, 5, 235, 30
-    LTEXT "Theme:", IDC_STATIC, 5, 42, 55, 10//FIXME: add accel
+    LTEXT "&Theme:", IDC_STATIC, 5, 42, 55, 10
     COMBOBOX IDC_THEMES_COMBOBOX, 5, 52, 160, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Save &As...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
     PUSHBUTTON "&Delete", IDC_THEMES_DELETE, 170, 70, 70, 14
@@ -21,10 +21,10 @@ BEGIN
     CONTROL "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74
     CONTROL "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 8, 104, 174, 86
-    LTEXT "Velg et bilde som du vil bruke som skrivebordbakgrunn", IDC_STATIC, 8, 93, 230, 9
+    LTEXT "Velg et bilde som du vil bruke som skrivebordbakgrunn:", IDC_STATIC, 8, 93, 230, 9//FIXME: add accel. I used "&Velg et bilde som du vil bruke som skrivebordbakgrunn:" for the backport
     PUSHBUTTON "&Bla gjennom...", IDC_BROWSE_BUTTON, 188, 104, 55, 15
     PUSHBUTTON "&Farger...", IDC_COLOR_BUTTON, 188, 167, 55, 15
-    LTEXT "Plassering", IDC_STATIC, 188, 128, 55, 9//FIXME: add accel. I used &P for the backport
+    LTEXT "Plassering:", IDC_STATIC, 188, 128, 55, 9//FIXME: add accel. I used "&Plassering:" for the backport
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Customize &Desktop...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
 END
@@ -57,13 +57,13 @@ CAPTION "Utseende"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "&Visual Style", IDC_STATIC, 7, 130, 104, 9//FIXME: translate me to free the &V for a different button
+    LTEXT "&Visual Style:", IDC_STATIC, 7, 130, 104, 9//FIXME: we may want to use the &V for a different button. I used "Vis&ual Style:" for backport
     COMBOBOX IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Fargevalg", IDC_STATIC, 7, 157, 104, 9//FIXME: add accel. I used &F for the backport
+    LTEXT "Fargevalg:", IDC_STATIC, 7, 157, 104, 9//FIXME: add accel. I used "&Fargevalg:" for the backport
     COMBOBOX IDC_APPEARANCE_COLORSCHEME, 7, 167, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Size", IDC_STATIC, 7, 184, 104, 9//FIXME: add accel. I used &S for the backport
+    LTEXT "Size:", IDC_STATIC, 7, 184, 104, 9//FIXME: add accel. I used "&Size:" for the backport
     COMBOBOX IDC_APPEARANCE_SIZE, 7, 194, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Effekter...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
@@ -94,7 +94,7 @@ BEGIN
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "Størrelse", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9//FIXME: add accel. I used "Stø&rrelse" for the backport
     COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
-    LTEXT "Farger", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 28, 9//FIXME: add accel. I used "&Farge" WITHOUT 'r' in the end for the backport
+    LTEXT "Farger", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 28, 9//FIXME: add accel. I used "&Farge" WITHOUT 'r' at the end of the string for the backport
     CHECKBOX "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
     AUTOCHECKBOX "B", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
     AUTOCHECKBOX "I ", IDC_ADVAPPEARANCE_FONTITALIC, 230, 200, 14, 13, BS_PUSHLIKE
@@ -179,14 +179,14 @@ CAPTION "Generielt"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Vis", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Skriftstørrelse:", -1, 14, 20, 222, 9//FIXME: add accel. Attention: &S is used already. I used "S&kriftstørrelse:" for the backport
+    LTEXT "Skriftstørrelse:", -1, 14, 20, 222, 9//FIXME: add accel. Attention: &S is used already. I used "S&kriftstørrelse:" for the backport. 2k3sp2 does now call this "&DPI setting:". So feel free to translate that.
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Kompatibilitet", -1, 7, 67, 237, 97
     LTEXT "Noen programmer fungerer kanskje ikke skikkelig hvis du ikke starter datamaskinen på nytt etter å ha endret skjerminnstillingene.\n\nGjør følgende etter at skjerminnstillingene er endret", -1, 12, 78, 228, 34
     AUTORADIOBUTTON "&Start maskinen på nytt før de nye skjerminnstillingene tas i bruk", IDC_RESTART_RB, 14, 116, 228, 10
-    AUTORADIOBUTTON "Bruk de nye skjerminnstillingene uten å starte på nytt", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10//FIXME: add accel. I used "&Bruk de..." for the backport
-    AUTORADIOBUTTON "Spør før de nye skjerminnstillingene tas i bruk", IDC_ASKME_RB, 14, 146, 228, 10//FIXME: add accel. I used "Spø&r før" for the backport. &S is consumed already.
+    AUTORADIOBUTTON "Bruk de nye skjerminnstillingene uten å starte på nytt", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10//FIXME: add accel. I used "&Bruk de nye skjerminnstillingene uten å starte på nytt" for the backport
+    AUTORADIOBUTTON "Spør før de nye skjerminnstillingene tas i bruk", IDC_ASKME_RB, 14, 146, 228, 10//FIXME: add accel. I used "Spø&r før de nye skjerminnstillingene tas i bruk" for the backport. &S is consumed already.
 END
 
 IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57
