@@ -14,21 +14,22 @@ typedef enum
     DCE_WINDOW_DC   /* This is a window DC (style CS_OWNDC) */
 } DCE_TYPE, *PDCE_TYPE;
 
+typedef struct _DCEPWND_TYPE
+{
+    LIST_ENTRY Entry;
+    HWND hwnd;
+    PWND pwnd;
+} DCEPWND_TYPE, *PDCEPWND_TYPE;
+
 typedef struct tagDCE
 {
     LIST_ENTRY   List;
     HDC          hDC;
-    HWND         hwndCurrent;
-    PWND         pwndOrg;
-    PWND         pwndClip;
-    PWND         pwndRedirect;
+    LIST_ENTRY listPwndCurrent;
     HRGN         hrgnClip;
-    HRGN         hrgnClipPublic;
-    HRGN         hrgnSavedVis;
     DWORD        DCXFlags;
     PTHREADINFO  ptiOwner;
     PPROCESSINFO ppiOwner;
-    struct _MONITOR* pMonitor;
 } DCE, *PDCE;
 
 /* internal DCX flags, see psdk/winuser.h for the rest */
