@@ -6,6 +6,9 @@ include_directories(${REACTOS_SOURCE_DIR}/drivers/filesystems/btrfs)
 
 spec2def(shellbtrfs.dll shellbtrfs.spec)
 
+# Don't use C++17 on the ONLY module in the OS that uses namepsace std
+set(CMAKE_CXX_STANDARD 14)
+
 list(APPEND SOURCE
     balance.cpp
     contextmenu.cpp
