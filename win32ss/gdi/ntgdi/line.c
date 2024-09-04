@@ -11,6 +11,8 @@
 #define NDEBUG
 #include <debug.h>
 
+DBG_DEFAULT_CHANNEL(GdiLine);
+
 // Some code from the WINE project source (www.winehq.com)
 
 VOID FASTCALL
@@ -531,9 +533,9 @@ NtGdiLineTo(HDC  hDC,
 }
 
 // FIXME: This function is completely broken
+static
 BOOL
-APIENTRY
-NtGdiPolyDraw(
+GdiPolyDraw(
     IN HDC hdc,
     IN LPPOINT lppt,
     IN LPBYTE lpbTypes,
@@ -567,15 +569,11 @@ NtGdiPolyDraw(
     line_pts_old = NULL;
     bzr_pts = NULL;
 
-    _SEH2_TRY
     {
-        ProbeArrayForRead(lppt, sizeof(POINT), cCount, sizeof(LONG));
-        ProbeArrayForRead(lpbTypes, sizeof(BYTE), cCount, sizeof(BYTE));
-
         if (PATH_IsPathOpen(dc->dclevel))
         {
            result = PATH_PolyDraw(dc, (const POINT *)lppt, (const BYTE *)lpbTypes, cCount);
-           _SEH2_LEAVE;
+           goto Cleanup;
         }
 
         /* Check for valid point types */
@@ -595,7 +593,7 @@ NtGdiPolyDraw(
                    break;
                }
            default:
-               _SEH2_LEAVE;
+               goto Cleanup;
            }
         }
 
@@ -604,7 +602,7 @@ NtGdiPolyDraw(
         if (line_pts == NULL)
         {
             result = FALSE;
-            _SEH2_LEAVE;
+            goto Cleanup;
         }
 
         num_pts = 1;
@@ -639,7 +637,7 @@ NtGdiPolyDraw(
                       space = size * 2;
                       line_pts_old = line_pts;
                       line_pts = ExAllocatePoolWithTag(PagedPool, space * sizeof(POINT), TAG_SHAPE);
-                      if (!line_pts) _SEH2_LEAVE;
+                      if (!line_pts) goto Cleanup;
                       RtlCopyMemory(line_pts, line_pts_old, space_old * sizeof(POINT));
                       ExFreePoolWithTag(line_pts_old, TAG_SHAPE);
                       line_pts_old = NULL;
@@ -659,11 +657,8 @@ NtGdiPolyDraw(
         IntGdiMoveToEx( dc, line_pts[num_pts - 1].x, line_pts[num_pts - 1].y, NULL );
         result = TRUE;
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        SetLastNtError(_SEH2_GetExceptionCode());
-    }
-    _SEH2_END;
+
+Cleanup:
 
     if (line_pts != NULL)
     {
@@ -683,6 +678,78 @@ NtGdiPolyDraw(
     DC_UnlockDc(dc);
 
     return result;
+}
+
+__kernel_entry
+W32KAPI
+BOOL
+APIENTRY
+NtGdiPolyDraw(
+    _In_ HDC hdc,
+    _In_reads_(cpt) LPPOINT ppt,
+    _In_reads_(cpt) LPBYTE pjAttr,
+    _In_ ULONG cpt)
+{
+    PBYTE pjBuffer;
+    PPOINT pptSafe;
+    PBYTE pjSafe;
+    SIZE_T cjSizePt;
+    BOOL bResult;
+
+    if (cpt == 0)
+    {
+        ERR("cpt is 0\n");
+        return FALSE;
+    }
+
+    /* Validate that cpt isn't too large */
+    if (cpt > ((MAXULONG - cpt) / sizeof(*ppt)))
+    {
+        ERR("cpt is too large\n", cpt);
+        return FALSE;
+    }
+
+    /* Calculate size for a buffer */
+    cjSizePt = cpt * sizeof(*ppt);
+    ASSERT(cjSizePt + cpt > cjSizePt);
+
+    /* Allocate a buffer for all data */
+    pjBuffer = ExAllocatePoolWithTag(PagedPool, cjSizePt + cpt, TAG_SHAPE);
+    if (pjBuffer == NULL)
+    {
+        ERR("Failed to allocate buffer\n");
+        return FALSE;
+    }
+
+    pptSafe = (PPOINT)pjBuffer;
+    pjSafe = pjBuffer + cjSizePt;
+
+    _SEH2_TRY
+    {
+        ProbeArrayForRead(ppt, sizeof(*ppt), cpt, sizeof(ULONG));
+        ProbeArrayForRead(pjAttr, sizeof(*pjAttr), cpt, sizeof(BYTE));
+
+        /* Copy the arrays */
+        RtlCopyMemory(pptSafe, ppt, cjSizePt);
+        RtlCopyMemory(pjSafe, pjAttr, cpt);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastNtError(_SEH2_GetExceptionCode());
+        bResult = FALSE;
+        goto Cleanup;
+    }
+    _SEH2_END;
+
+    /* Call the internal function */
+    bResult = GdiPolyDraw(hdc, pptSafe, pjSafe, cpt);
+
+Cleanup:
+
+    /* Free the buffer */
+    ExFreePoolWithTag(pjBuffer, TAG_SHAPE);
+
+    return bResult;
 }
 
 /*
