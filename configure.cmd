@@ -51,13 +51,12 @@ if defined ROS_ARCH (
     cl 2>&1 | find "x64" > NUL && set ARCH=amd64
     cl 2>&1 | find "ARM" > NUL && set ARCH=arm
     cl 2>&1 | find "ARM64" > NUL && set ARCH=arm64
-    cl 2>&1 | find "19.00." > NUL && set VS_VERSION=14
     cl 2>&1 | findstr /R /c:"19\.1.\." > NUL && set VS_VERSION=15
     cl 2>&1 | findstr /R /c:"19\.2.\." > NUL && set VS_VERSION=16
     cl 2>&1 | findstr /R /c:"19\.3.\." > NUL && set VS_VERSION=17
     cl 2>&1 | findstr /R /c:"19\.4.\." > NUL && set VS_VERSION=17
     if not defined VS_VERSION (
-        echo Error: Visual Studio version too old ^(before 14 ^(2015^)^) or version detection failed.
+        echo Error: Visual Studio version too old ^(before 15 ^(2017^)^) or version detection failed.
         goto quit
     )
     set BUILD_ENVIRONMENT=VS
