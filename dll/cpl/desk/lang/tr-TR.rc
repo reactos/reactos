@@ -1,4 +1,6 @@
-/* TRANSLATOR: 2013, 2014, 2016, 2020 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATORS: 2013, 2014, 2016, 2020 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
+ *              Copyright 2024 Ethem De Santa (scropool) <oyunyumru4@gmail.com>
+ */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -277,7 +279,7 @@ BEGIN
     IDS_INACTWIN "Pasif Pencere"
     IDS_ACTWIN "Etkin Pencere"
     IDS_WINTEXT "Pencere Metni"
-    IDS_MESSBOX "İleti Penceresi"
+    IDS_MESSBOX "İleti Kutusu"
     IDS_MESSTEXT "İleti Metni"
     IDS_BUTTEXT "Tamam"
     IDS_CLASSIC_THEME "Klasik Tema"
