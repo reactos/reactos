@@ -9,7 +9,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "A theme is a background plus a set of sounds, icons, and other elements to help you personalize your computer with one click.", IDC_STATIC, 5, 5, 235, 30
-    LTEXT "Theme:", IDC_STATIC, 5, 42, 55, 10//FIXME: add accel
+    LTEXT "&Theme:", IDC_STATIC, 5, 42, 55, 10
     COMBOBOX IDC_THEMES_COMBOBOX, 5, 52, 160, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Save &As...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
     PUSHBUTTON "&Delete", IDC_THEMES_DELETE, 170, 70, 70, 14
@@ -24,10 +24,10 @@ BEGIN
     CONTROL "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74
     CONTROL "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 8, 104, 174, 86
-    LTEXT "Zgjidhni një imazh për t'u përdorur si sfond tuaj desktop", IDC_STATIC, 8, 93, 230, 9
+    LTEXT "Zgjidhni një imazh për t'u përdorur si sfond tuaj desktop:", IDC_STATIC, 8, 93, 230, 9//FIXME: add accel. I used "&Zgjidhni një imazh për t'u përdorur si sfond tuaj desktop:" for the backport
     PUSHBUTTON "&Shfleto...", IDC_BROWSE_BUTTON, 188, 104, 55, 15
     PUSHBUTTON "&Ngjyra...", IDC_COLOR_BUTTON, 188, 167, 55, 15
-    LTEXT "Vendosje", IDC_STATIC, 188, 128, 55, 9//FIXME: add accel. I used "&Vendosje" for the backport
+    LTEXT "Vendosje:", IDC_STATIC, 188, 128, 55, 9//FIXME: add accel. I used "&Vendosje:" for the backport
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Customize &Desktop...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
 END
@@ -47,7 +47,7 @@ BEGIN
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 56, 123, 12, 13
     LTEXT "minuta", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL "Pyet për fjalëkalim kur të rinisë", IDC_SCREENS_USEPASSCHK, "button",
+    CONTROL "Pyet për fjalëkalim kur të rinisë", IDC_SCREENS_USEPASSCHK, "button",//FIXME: add accel. I used "Pyet pë&r fjalëkalim kur të rinisë" for the backport
             BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
     GROUPBOX "Karakteristika Ruajtja e Energjisë të monitoruar", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
     LTEXT "Për të rregulluar parametrat Energjise të monitoruar tuaj, klikoni mbi cilësime energjisë.", IDC_STATIC, 16, 161, 146, 27
@@ -60,13 +60,13 @@ CAPTION "Dukje"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "Stili Vizual", IDC_STATIC, 7, 130, 104, 9//FIXME: add accel. I used "Stili &Vizual" for the backport
+    LTEXT "Stili Vizual:", IDC_STATIC, 7, 130, 104, 9//FIXME: add accel. I used "Stili &Vizual:" for the backport
     COMBOBOX IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Skema Ngjyrave", IDC_STATIC, 7, 157, 104, 9//FIXME: add accel. I used "&Skema Ngjyrave" for the backport
+    LTEXT "Skema Ngjyrave:", IDC_STATIC, 7, 157, 104, 9//FIXME: add accel. I used "&Skema Ngjyrave:" for the backport
     COMBOBOX IDC_APPEARANCE_COLORSCHEME, 7, 167, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Masa", IDC_STATIC, 7, 184, 104, 9//FIXME: add accel. I used "&Masa" for the backport
+    LTEXT "Masa:", IDC_STATIC, 7, 184, 104, 9//FIXME: add accel. I used "&Masa:" for the backport
     COMBOBOX IDC_APPEARANCE_SIZE, 7, 194, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Efekte...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
@@ -182,7 +182,7 @@ CAPTION "Përgjithshëm"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Ekran", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Font Masa:", -1, 14, 20, 222, 9//FIXME: add accel. I used "&Font Masa:" for the backport
+    LTEXT "Font Masa:", -1, 14, 20, 222, 9//FIXME: add accel. I used "&Font Masa:" for the backport. 2k3sp2 does now use "&DPI setting". So feel free to translate that.
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Pajtueshmëri", -1, 7, 67, 237, 97
