@@ -483,10 +483,7 @@ DceReleaseDCHwnd(DCE *dce, HWND hwnd, BOOL EndPaint)
       if (!(dce->DCXFlags & DCX_NORESETATTRS))
       {
           // Clean the DC
-          if (!IntGdiCleanDC(dce->hDC))
-          {
-              return 0;
-          }
+         if (!IntGdiCleanDC(dce->hDC)) return 0;
 
          if (dce->DCXFlags & DCX_DCEDIRTY)
          {
