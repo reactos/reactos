@@ -891,8 +891,10 @@ HRESULT STDMETHODCALLTYPE CShellLink::Save(IStream *stm, BOOL fClearDirty)
         if (hFind != INVALID_HANDLE_VALUE)
             FindClose(hFind);
     }
-    C_ASSERT(FIELD_OFFSET(SHELL_LINK_HEADER, ftCreationTime) - 4 == FIELD_OFFSET(SHELL_LINK_HEADER, dwFileAttributes));
-    CopyMemory(&m_Header.dwFileAttributes, &wfd.dwFileAttributes, sizeof(UINT) + (sizeof(FILETIME) * 3));
+    m_Header.dwFileAttributes = wfd.dwFileAttributes;
+    m_Header.ftCreationTime = wfd.ftCreationTime;
+    m_Header.ftLastAccessTime = wfd.ftLastAccessTime;
+    m_Header.ftLastWriteTime = wfd.ftLastWriteTime;
     m_Header.nFileSizeLow = wfd.nFileSizeLow;
 
     /*
@@ -2713,7 +2715,7 @@ static void GetTypeDescriptionByPath(PCWSTR pszFullPath, DWORD fAttributes, PWST
     if (pwszExt[0])
     {
         if (!fi.szTypeName[0])
-            StringCchPrintfW(szBuf, cchBuf,L"%s", pwszExt + 1);
+            StringCchPrintfW(szBuf, cchBuf, L"%s", pwszExt + 1);
         else
             StringCchPrintfW(szBuf, cchBuf, L"%s (%s)", fi.szTypeName, pwszExt);
     }
