@@ -182,7 +182,7 @@ CAPTION "Përgjithshëm"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Ekran", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Font Masa:", -1, 14, 20, 222, 9//FIXME: add accel. I used "&Font Masa:" for the backport. 2k3sp2 does now use "&DPI setting". So feel free to translate that.
+    LTEXT "Font Masa:", -1, 14, 20, 222, 9//FIXME: add accel. I used "&Font Masa:" for the backport. 2k3sp2 does now use "&DPI setting". Feel free to translate that.
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Pajtueshmëri", -1, 7, 67, 237, 97
