@@ -13,7 +13,7 @@ STRINGTABLE
 BEGIN
     IDS_MESSAGEBOX "İleti Kutusu"
     IDS_ACTIVEWIN "Etkin Pencere"
-    IDS_INACTIVEWIN "Etkin Olmayan Pencere"
+    IDS_INACTIVEWIN "Pasif Pencere"
     IDS_OK "Tamam"
     IDS_WINTEXT "Pencere Metni"
 END
