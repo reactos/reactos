@@ -2617,9 +2617,11 @@ HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
         }
     }
 
+    WCHAR dir[MAX_PATH];
     SHELLEXECUTEINFOW sei = { sizeof(sei) };
-    sei.fMask = SEE_MASK_HASLINKNAME | SEE_MASK_UNICODE |
+    sei.fMask = SEE_MASK_HASLINKNAME | SEE_MASK_UNICODE | SEE_MASK_DOENVSUBST |
                (lpici->fMask & (SEE_MASK_NOASYNC | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI));
+    sei.lpDirectory = m_sWorkDir;
     if (m_pPidl)
     {
         sei.lpIDList = m_pPidl;
@@ -2628,13 +2630,18 @@ HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
     else
     {
         sei.lpFile = m_sPath;
+        if (!(m_Header.dwFlags & SLDF_HAS_EXP_SZ))
+        {
+            sei.fMask &= ~SEE_MASK_DOENVSUBST; // The link does not want to expand lpFile
+            if (m_sWorkDir && ExpandEnvironmentStringsW(m_sWorkDir, dir, _countof(dir)) <= _countof(dir))
+                sei.lpDirectory = dir;
+        }
     }
     sei.lpParameters = args;
     sei.lpClass = m_sLinkPath;
     sei.nShow = m_Header.nShowCommand;
     if (lpici->nShow != SW_SHOWNORMAL && lpici->nShow != SW_SHOW)
         sei.nShow = lpici->nShow; // Allow invoker to override .lnk show mode
-    sei.lpDirectory = m_sWorkDir;
 
     return (ShellExecuteExW(&sei) ? S_OK : E_FAIL);
 }
