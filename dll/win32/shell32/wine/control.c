@@ -1174,37 +1174,34 @@ void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdS
 {
     CPanel	panel;
 #ifdef __REACTOS__
-    WCHAR *ptr1 = NULL;
-    WCHAR *ptr2 = NULL;
-    WCHAR comma = ',';
-    WCHAR dot = '.';
+    PWCHAR ptr1, ptr2;
     LPWSTR buffer;
     WCHAR ext[4] = L"   ";
     SIZE_T nLen = lstrlenW(cmd);
-    BOOL GoodExt;
+    BOOL bDLLExt;
 
     TRACE("(%p, %p, %s, 0x%08x)\n",
           hWnd, hInst, debugstr_w(cmd), nCmdShow);
 
-/* Search 'cmd' for first comma. If the remaining length is 1 or 2,
- * then replace dot before extention with UNICODE_NULL. */
+/* If DLL search 'cmd' for first comma. If the remaining length is 2(@1 or ,1) or 3(,@1)
+ * then replace char after the extention with UNICODE_NULL. */
 
     buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*buffer) * (nLen + 1));
     if (!buffer) return;
 
     lstrcpyW(buffer, cmd);
 
-    ptr1 = wcschr(cmd, comma);
+    ptr1 = wcschr(cmd, L',');
     if (ptr1)
         nLen = lstrlenW(ptr1+1);
     else
         nLen = 0;
 
-    ptr2 = wcschr(cmd, dot);
+    ptr2 = PathFindExtensionW(cmd);
     if (ptr2)
         wcsncpy(ext, ptr2 + 1, 3);
 
-    GoodExt = wcsicmp(ext, L"DLL") == 0 || wcsicmp(ext, L"CPL") == 0;
+    bDLLExt = wcsicmp(ext, L"DLL") == 0;
 
 #else
 
@@ -1219,9 +1216,10 @@ void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdS
         Control_DoWindow(&panel, hWnd, hInst);
     } else {
 #ifdef __REACTOS__
-    if ((nLen == 1 || nLen ==2) && GoodExt)
+    if ((nLen == 2 || nLen == 3) && bDLLExt)
     {
-        buffer[ptr2-cmd] = UNICODE_NULL;
+        /* buffer char at size of cmd + .ext */
+        buffer[ptr2 - cmd + (UINT_PTR)lstrlenW(L".ext")] = UNICODE_NULL;
         TRACE("\ncmd '%S'\nbuffer '%S'\n", cmd, buffer);
     }
 
