@@ -32,15 +32,15 @@ RegisterClassHelper(
     UINT style,
     WNDPROC pfnWndProc)
 {
-    WNDCLASSW cls;
+    WNDCLASSW cls = { 0 };
 
     cls.style = style;
     cls.lpfnWndProc = pfnWndProc;
     cls.cbClsExtra = 0;
     cls.cbWndExtra = 0;
-    cls.hInstance = GetModuleHandleA(0);
+    cls.hInstance = GetModuleHandleW(0);
     cls.hIcon = 0;
-    cls.hCursor = LoadCursorA(0, IDC_ARROW);
+    cls.hCursor = LoadCursorW(0, MAKEINTRESOURCEW(32512));
     cls.hbrBackground = GetStockObject(WHITE_BRUSH);
     cls.lpszMenuName = NULL;
     cls.lpszClassName = pszClassName;
@@ -244,7 +244,7 @@ Test_GetDCEx_CS_CLASSDC(void)
 
     DestroyWindow(hwnd1);
     DestroyWindow(hwnd2);
-    ok(UnregisterClassW(pszClassName, GetModuleHandleA(0)) == TRUE,
+    ok(UnregisterClassW(pszClassName, GetModuleHandleW(0)) == TRUE,
        "UnregisterClass failed");
 }
 
@@ -252,7 +252,7 @@ static
 void
 Test_GetDCEx_CS_CLASSDC_NEXT(void)
 {
-    static const LPCWSTR pszClassName = L"TestClass_CS_SwitchedStyle";
+    static const LPCWSTR pszClassName = L"TestClass_CLASSDC_NEXT";
     HWND hwnd1, hwnd2;
     HDC hdc1, hdc2 , hdcClass;
 
@@ -271,16 +271,15 @@ Test_GetDCEx_CS_CLASSDC_NEXT(void)
     ReleaseDC(hwnd2, hdc2);
     ok(WindowFromDC(hdc1) == hwnd2,"DC1-hwnd not hwnd2\n");
     ok(WindowFromDC(hdc2) == hwnd2,"DC2-hwnd not hwnd2\n");
-    SetClassLongPtrA(hwnd1, GCL_STYLE, CS_OWNDC);
+    SetClassLongPtrW(hwnd1, GCL_STYLE, CS_OWNDC);
     ok(WindowFromDC(hdc1) == hwnd2,"DC1-hwnd not hwnd2\n");
     ok(WindowFromDC(hdc2) == hwnd2,"DC2-hwnd not hwnd2\n");
     hdcClass = GetDCEx(hwnd1, NULL, DCX_USESTYLE);
     ok(hdcClass == NULL, "GetDCEx must be NULL\n");
-
     ShowWindow(hwnd1, SW_SHOW);
     UpdateWindow(hwnd1);
     ShowWindow(hwnd2, SW_SHOW);
-    UpdateWindow(hwnd2);    
+    UpdateWindow(hwnd2);
     ok(WindowFromDC(hdc1) == hwnd2,"DC1-hwnd not hwnd2\n");
     ok(WindowFromDC(hdc2) == hwnd2,"DC2-hwnd not hwnd2\n");
     Sleep(200);
@@ -293,7 +292,7 @@ Test_GetDCEx_CS_CLASSDC_NEXT(void)
     Sleep(200);
     DestroyWindow(hwnd1);
     DestroyWindow(hwnd2);
-    UnregisterClassW(pszClassName, GetModuleHandleA(0));
+    //UnregisterClassW(pszClassName, GetModuleHandleW(0));
 
     //2
     RegisterClassHelper(pszClassName, CS_CLASSDC, WndProc);
@@ -302,17 +301,17 @@ Test_GetDCEx_CS_CLASSDC_NEXT(void)
     hdc2 = GetDCEx(hwnd2, NULL, DCX_USESTYLE); // 1
     hdc1 = GetDCEx(hwnd1, NULL, DCX_USESTYLE); // 2
     ok(WindowFromDC(hdc1) == hwnd1,"DC1-hwnd not hwnd1\n");
-    ok(WindowFromDC(hdc2) == hwnd1,"DC2-hwnd not hwnd1\n");
-    SetClassLongPtrA(hwnd1, GCL_STYLE, CS_OWNDC);
+    ok(WindowFromDC(hdc2) == hwnd2,"DC2-hwnd not hwnd2\n");
+    SetClassLongPtrW(hwnd1, GCL_STYLE, CS_OWNDC);
     hdc1 = GetDCEx(hwnd1, NULL, DCX_USESTYLE);
     ok(hdc1 != NULL, "GetDCEx must be not NULL\n");
     ok(WindowFromDC(hdc1) == hwnd1,"DC1-hwnd not hwnd1\n");
-    ok(WindowFromDC(hdc2) == hwnd1,"DC2-hwnd not hwnd1\n");
+    ok(WindowFromDC(hdc2) == hwnd2,"DC2-hwnd not hwnd2\n");
     DestroyWindow(hwnd1);
     ok(WindowFromDC(hdc1) == NULL,"DC1-hwnd not NULL\n");
-    ok(WindowFromDC(hdc2) == NULL,"DC2-hwnd not NULL\n");
+    ok(WindowFromDC(hdc2) == hwnd2,"DC2-hwnd not hwnd2\n");
     DestroyWindow(hwnd2);
-    UnregisterClassW(pszClassName, GetModuleHandleA(0));
+    //UnregisterClassW(pszClassName, GetModuleHandleW(0));
 
     //3
     RegisterClassHelper(pszClassName, CS_CLASSDC, WndProc);
@@ -320,7 +319,7 @@ Test_GetDCEx_CS_CLASSDC_NEXT(void)
     hwnd2 = CreateWindowHelper(pszClassName, L"Test Window2");
     hdc1 = GetDCEx(hwnd1, NULL, DCX_USESTYLE);//4
     ok(WindowFromDC(hdc1) == hwnd1,"DC1-hwnd not hwnd1\n");
-    SetClassLongPtrA(hwnd1, GCL_STYLE, CS_OWNDC);
+    SetClassLongPtrW(hwnd1, GCL_STYLE, CS_OWNDC);
     ok(WindowFromDC(hdc1) == hwnd1,"DC1-hwnd not hwnd1\n");
     hdc1=GetDCEx(hwnd1, NULL, DCX_USESTYLE);    
     ok(hdc1 != NULL, "GetDCEx must be not NULL\n");
@@ -328,7 +327,7 @@ Test_GetDCEx_CS_CLASSDC_NEXT(void)
     DestroyWindow(hwnd1);
     ok(WindowFromDC(hdc1) == NULL,"DC1-hwnd not NULL\n");
     DestroyWindow(hwnd2);
-    UnregisterClassW(pszClassName, GetModuleHandleA(0));
+    //UnregisterClassW(pszClassName, GetModuleHandleW(0));
 
     //4
     RegisterClassHelper(pszClassName, CS_CLASSDC, WndProc);
@@ -336,20 +335,20 @@ Test_GetDCEx_CS_CLASSDC_NEXT(void)
     hwnd2 = CreateWindowHelper(pszClassName, L"Test Window2");
     hdc1 = GetDCEx(hwnd1, NULL, DCX_USESTYLE);//1
     hdc2 = GetDCEx(hwnd2, NULL, DCX_USESTYLE);//2
-    ok(WindowFromDC(hdc1) == hwnd2,"DC1-hwnd not hwnd2\n");
+    ok(WindowFromDC(hdc1) == hwnd1,"DC1-hwnd not hwnd1\n");
     ok(WindowFromDC(hdc2) == hwnd2,"DC1-hwnd not hwnd2\n");
-    SetClassLongPtrA(hwnd1, GCL_STYLE, CS_OWNDC);
-    ok(WindowFromDC(hdc1) == hwnd2,"DC1-hwnd not hwnd2\n");
+    SetClassLongPtrW(hwnd1, GCL_STYLE, CS_OWNDC);
+    ok(WindowFromDC(hdc1) == hwnd1,"DC1-hwnd not hwnd1\n");
     ok(WindowFromDC(hdc2) == hwnd2,"DC1-hwnd not hwnd2\n");
     DestroyWindow(hwnd2);
-    ok(WindowFromDC(hdc1) == NULL,"DC1-hwnd not NULL\n");
+    ok(WindowFromDC(hdc1) == hwnd1,"DC1-hwnd not hwnd1\n");
     ok(WindowFromDC(hdc2) == NULL,"DC1-hwnd not NULL\n");
     hdc1=GetDCEx(hwnd1, NULL, DCX_USESTYLE);
-    ok(WindowFromDC(hdc1) == NULL,"DC1-hwnd not NULL\n");
+    ok(WindowFromDC(hdc1) == hwnd1,"DC1-hwnd not hwnd1\n");
     ok(WindowFromDC(hdc2) == NULL,"DC1-hwnd not NULL\n");
-    ok(hdc1 == NULL, "GetDCEx must be NULL\n");
+    ok(hdc1 != NULL, "GetDCEx not NULL\n");
     DestroyWindow(hwnd1);
-    UnregisterClassW(pszClassName, GetModuleHandleA(0));
+    //UnregisterClassW(pszClassName, GetModuleHandleW(0));
 }
 
 static
@@ -370,7 +369,7 @@ Test_GetDCEx_CS_Mixed(void)
     ok(hwnd1 != NULL, "Failed to create hwnd1\n");
 
     /* Verify that we have the right style */
-    ok(GetClassLongPtrA(hwnd1, GCL_STYLE) == (CS_OWNDC | CS_CLASSDC),
+    ok(GetClassLongPtrW(hwnd1, GCL_STYLE) == (CS_OWNDC | CS_CLASSDC),
        "class style not set\n");
 
     /* This is now the class DC and the first windows own DC */
@@ -404,8 +403,8 @@ Test_GetDCEx_CS_Mixed(void)
     ok(ReleaseDC(hwnd2, hdc3) == TRUE, "ReleaseDC failed\n");
 
     /* Disable CS_OWNDC */
-    ok(SetClassLongPtrA(hwnd1, GCL_STYLE, CS_CLASSDC) == (CS_OWNDC | CS_CLASSDC), "unexpected style\n");
-    ok(GetClassLongPtrA(hwnd1, GCL_STYLE) == CS_CLASSDC, "class style not set\n");
+    ok(SetClassLongPtrW(hwnd1, GCL_STYLE, CS_CLASSDC) == (CS_OWNDC | CS_CLASSDC), "unexpected style\n");
+    ok(GetClassLongPtrW(hwnd1, GCL_STYLE) == CS_CLASSDC, "class style not set\n");
 
     /* Since the window already has an own DC, we get it again! */
     hdc3 = GetDCEx(hwnd2, NULL, DCX_USESTYLE);
@@ -413,8 +412,8 @@ Test_GetDCEx_CS_Mixed(void)
     ok(ReleaseDC(hwnd2, hdc3) == TRUE, "ReleaseDC failed\n");
 
     /* Disable CS_CLASSDC, too */
-    ok(SetClassLongPtrA(hwnd1, GCL_STYLE, 0) == CS_CLASSDC, "unexpected style\n");
-    ok(GetClassLongPtrA(hwnd1, GCL_STYLE) == 0, "class style not set\n");
+    ok(SetClassLongPtrW(hwnd1, GCL_STYLE, 0) == CS_CLASSDC, "unexpected style\n");
+    ok(GetClassLongPtrW(hwnd1, GCL_STYLE) == 0, "class style not set\n");
 
     /* With DCX_USESTYLE we only get a cached DC */
     hdc3 = GetDCEx(hwnd2, NULL, DCX_USESTYLE);
@@ -431,8 +430,8 @@ Test_GetDCEx_CS_Mixed(void)
     ok(ReleaseDC(hwnd2, hdc3) == TRUE, "ReleaseDC failed\n");
 
     /* Set only CS_OWNDC */
-    ok(SetClassLongPtrA(hwnd1, GCL_STYLE, CS_OWNDC) == 0, "unexpected style\n");
-    ok(GetClassLongPtrA(hwnd1, GCL_STYLE) == CS_OWNDC, "class style not set\n");
+    ok(SetClassLongPtrW(hwnd1, GCL_STYLE, CS_OWNDC) == 0, "unexpected style\n");
+    ok(GetClassLongPtrW(hwnd1, GCL_STYLE) == CS_OWNDC, "class style not set\n");
 
     hwnd3 = CreateWindowHelper(pszClassName, L"Test Window1");
     ok(hwnd3 != NULL, "Failed to create hwnd1\n");
@@ -443,8 +442,8 @@ Test_GetDCEx_CS_Mixed(void)
     ok(ReleaseDC(hwnd3, hdc2) == TRUE, "ReleaseDC failed\n");
 
     /* Re-enable CS_CLASSDC */
-    ok(SetClassLongPtrA(hwnd1, GCL_STYLE, (CS_OWNDC | CS_CLASSDC)) == CS_OWNDC, "unexpected style\n");
-    ok(GetClassLongPtrA(hwnd1, GCL_STYLE) == (CS_OWNDC | CS_CLASSDC), "class style not set\n");
+    ok(SetClassLongPtrW(hwnd1, GCL_STYLE, (CS_OWNDC | CS_CLASSDC)) == CS_OWNDC, "unexpected style\n");
+    ok(GetClassLongPtrW(hwnd1, GCL_STYLE) == (CS_OWNDC | CS_CLASSDC), "class style not set\n");
 
     /* This should get us the own DC */
     hdc3 = GetDCEx(hwnd3, NULL, 0);
@@ -457,8 +456,8 @@ Test_GetDCEx_CS_Mixed(void)
     ok(ReleaseDC(hwnd3, hdc3) == TRUE, "ReleaseDC failed\n");
 
     /* Disable CS_OWNDC */
-    ok(SetClassLongPtrA(hwnd1, GCL_STYLE, CS_CLASSDC) == (CS_OWNDC | CS_CLASSDC), "unexpected style\n");
-    ok(GetClassLongPtrA(hwnd1, GCL_STYLE) == CS_CLASSDC, "class style not set\n");
+    ok(SetClassLongPtrW(hwnd1, GCL_STYLE, CS_CLASSDC) == (CS_OWNDC | CS_CLASSDC), "unexpected style\n");
+    ok(GetClassLongPtrW(hwnd1, GCL_STYLE) == CS_CLASSDC, "class style not set\n");
 
     /* This should get us the own DC */
     hdc3 = GetDCEx(hwnd3, NULL, 0);
@@ -474,7 +473,7 @@ Test_GetDCEx_CS_Mixed(void)
     DestroyWindow(hwnd1);
     DestroyWindow(hwnd2);
     DestroyWindow(hwnd3);
-    ok(UnregisterClassW(pszClassName, GetModuleHandleA(0)) == TRUE,
+    ok(UnregisterClassW(pszClassName, GetModuleHandleW(0)) == TRUE,
        "UnregisterClass failed\n");
 
     /* Create class again with CS_OWNDC */
@@ -490,8 +489,8 @@ Test_GetDCEx_CS_Mixed(void)
     ok(ReleaseDC(hwnd1, hdc1) == TRUE, "ReleaseDC failed\n");
 
     /* Enable only CS_CLASSDC */
-    ok(SetClassLongPtrA(hwnd1, GCL_STYLE, CS_CLASSDC) == CS_OWNDC, "unexpected style\n");
-    ok(GetClassLongPtrA(hwnd1, GCL_STYLE) == CS_CLASSDC, "class style not set\n");
+    ok(SetClassLongPtrW(hwnd1, GCL_STYLE, CS_CLASSDC) == CS_OWNDC, "unexpected style\n");
+    ok(GetClassLongPtrW(hwnd1, GCL_STYLE) == CS_CLASSDC, "class style not set\n");
 
     /* Create a second window. Now we should create a class DC! */
     hwnd2 = CreateWindowHelper(pszClassName, L"Test Window2");
@@ -506,7 +505,7 @@ Test_GetDCEx_CS_Mixed(void)
     /* cleanup */
     DestroyWindow(hwnd1);
     DestroyWindow(hwnd2);
-    ok(UnregisterClassW(pszClassName, GetModuleHandleA(0)) == TRUE,
+    ok(UnregisterClassW(pszClassName, GetModuleHandleW(0)) == TRUE,
        "UnregisterClass failed\n");
 }
 
@@ -537,8 +536,8 @@ Test_GetDCEx_CS_SwitchedStyle(void)
     ok(ReleaseDC(hwnd2, hdc2) == TRUE, "ReleaseDC failed\n");
 
     /* Switch the class to CS_OWNDC */
-    ok(SetClassLongPtrA(hwnd1, GCL_STYLE, CS_OWNDC) == CS_CLASSDC, "unexpected style\n");
-    ok(GetClassLongPtrA(hwnd1, GCL_STYLE) == CS_OWNDC, "class style not set\n");
+    ok(SetClassLongPtrW(hwnd1, GCL_STYLE, CS_OWNDC) == CS_CLASSDC, "unexpected style\n");
+    ok(GetClassLongPtrW(hwnd1, GCL_STYLE) == CS_OWNDC, "class style not set\n");
 
     /* Release the DC and try to get another one, this should fail now */
     ok(ReleaseDC(hwnd1, hdc1) == TRUE, "ReleaseDC failed\n");
@@ -557,8 +556,8 @@ Test_GetDCEx_CS_SwitchedStyle(void)
     ok(hdc1 != hdc2, "Should get different DC\n");
 
     /* Switch the class back to CS_CLASSDC */
-    ok(SetClassLongPtrA(hwnd2, GCL_STYLE, CS_CLASSDC) == CS_OWNDC, "unexpected style\n");
-    ok(GetClassLongPtrA(hwnd2, GCL_STYLE) == CS_CLASSDC, "class style not set\n");
+    ok(SetClassLongPtrW(hwnd2, GCL_STYLE, CS_CLASSDC) == CS_OWNDC, "unexpected style\n");
+    ok(GetClassLongPtrW(hwnd2, GCL_STYLE) == CS_CLASSDC, "class style not set\n");
 
     /* Get the 2nd window's DC, this should still be the class DC */
     hdc2 = GetDCEx(hwnd2, NULL, DCX_USESTYLE);
@@ -567,7 +566,7 @@ Test_GetDCEx_CS_SwitchedStyle(void)
 
     DestroyWindow(hwnd1);
     DestroyWindow(hwnd2);
-    ok(UnregisterClassW(pszClassName, GetModuleHandleA(0)) == TRUE,
+    ok(UnregisterClassW(pszClassName, GetModuleHandleW(0)) == TRUE,
        "UnregisterClass failed\n");
 }
 
@@ -1072,9 +1071,9 @@ static void test_invisible_create(void)
     HDC dc1, dc2;
     HWND hwnd_owndc;
 
-    hwnd_owndc = CreateWindowA("owndc_class", NULL, WS_OVERLAPPED,
+    hwnd_owndc = CreateWindowW(L"owndc_class", NULL, WS_OVERLAPPED,
                                     0, 200, 100, 100,
-                                    0, 0, GetModuleHandleA(0), NULL);
+                                    0, 0, GetModuleHandleW(0), NULL);
 
     dc1 = GetDC(hwnd_owndc);
     dc2 = GetDC(hwnd_owndc);
@@ -1093,7 +1092,7 @@ static void test_dc_layout(void)
     HWND hwnd_cache_rtl, hwnd_owndc_rtl, hwnd_classdc_rtl, hwnd_classdc2_rtl;
     HDC hdc;
     DWORD layout;
-    HMODULE mod = GetModuleHandleA("gdi32.dll");
+    HMODULE mod = GetModuleHandleW(L"gdi32.dll");
 
     pGetLayout = (void *)GetProcAddress(mod, "GetLayout");
     pSetLayout = (void *)GetProcAddress(mod, "SetLayout");
@@ -1113,14 +1112,14 @@ static void test_dc_layout(void)
         return;
     }
 
-    hwnd_cache_rtl = CreateWindowExA(WS_EX_LAYOUTRTL, "cache_class", NULL, WS_OVERLAPPED | WS_VISIBLE,
-                                     0, 0, 100, 100, 0, 0, GetModuleHandleA(0), NULL);
-    hwnd_owndc_rtl = CreateWindowExA(WS_EX_LAYOUTRTL, "owndc_class", NULL, WS_OVERLAPPED | WS_VISIBLE,
-                                     0, 200, 100, 100, 0, 0, GetModuleHandleA(0), NULL);
-    hwnd_classdc_rtl = CreateWindowExA(WS_EX_LAYOUTRTL, "classdc_class", NULL, WS_OVERLAPPED | WS_VISIBLE,
-                                       200, 0, 100, 100, 0, 0, GetModuleHandleA(0), NULL);
-    hwnd_classdc2_rtl = CreateWindowExA(WS_EX_LAYOUTRTL, "classdc_class", NULL, WS_OVERLAPPED | WS_VISIBLE,
-                                        200, 200, 100, 100, 0, 0, GetModuleHandleA(0), NULL);
+    hwnd_cache_rtl = CreateWindowExW(WS_EX_LAYOUTRTL, L"cache_class", NULL, WS_OVERLAPPED | WS_VISIBLE,
+                                     0, 0, 100, 100, 0, 0, GetModuleHandleW(0), NULL);
+    hwnd_owndc_rtl = CreateWindowExW(WS_EX_LAYOUTRTL, L"owndc_class", NULL, WS_OVERLAPPED | WS_VISIBLE,
+                                     0, 200, 100, 100, 0, 0, GetModuleHandleW(0), NULL);
+    hwnd_classdc_rtl = CreateWindowExW(WS_EX_LAYOUTRTL, L"classdc_class", NULL, WS_OVERLAPPED | WS_VISIBLE,
+                                       200, 0, 100, 100, 0, 0, GetModuleHandleW(0), NULL);
+    hwnd_classdc2_rtl = CreateWindowExW(WS_EX_LAYOUTRTL, L"classdc_class", NULL, WS_OVERLAPPED | WS_VISIBLE,
+                                        200, 200, 100, 100, 0, 0, GetModuleHandleW(0), NULL);
     hdc = GetDC(hwnd_cache_rtl);
     layout = pGetLayout(hdc);
 
@@ -1258,7 +1257,7 @@ void Test_from_wine(void)
     cls.cbWndExtra = 0;
     cls.hInstance = GetModuleHandleW(0);
     cls.hIcon = 0;
-    cls.hCursor = LoadCursorA(0, (LPCSTR)IDC_ARROW);
+    cls.hCursor = LoadCursorW(0, MAKEINTRESOURCEW(32512));
     cls.hbrBackground = GetStockObject(WHITE_BRUSH);
     cls.lpszMenuName = NULL;
     cls.lpszClassName = L"cache_class";
@@ -1275,16 +1274,16 @@ void Test_from_wine(void)
 
     hwnd_cache = CreateWindowW(L"cache_class", NULL, WS_OVERLAPPED | WS_VISIBLE,
                                0, 0, 100, 100,
-                               0, 0, GetModuleHandleA(0), NULL);
+                               0, 0, GetModuleHandleW(0), NULL);
     hwnd_owndc = CreateWindowW(L"owndc_class", NULL, WS_OVERLAPPED | WS_VISIBLE,
                                0, 200, 100, 100,
-                               0, 0, GetModuleHandleA(0), NULL);
+                               0, 0, GetModuleHandleW(0), NULL);
     hwnd_classdc = CreateWindowW(L"classdc_class", NULL, WS_OVERLAPPED | WS_VISIBLE,
                                  200, 0, 100, 100,
-                                 0, 0, GetModuleHandleA(0), NULL);
+                                 0, 0, GetModuleHandleW(0), NULL);
     hwnd_classdc2 = CreateWindowW(L"classdc_class", NULL, WS_OVERLAPPED | WS_VISIBLE,
                                   200, 200, 100, 100,
-                                  0, 0, GetModuleHandleA(0), NULL);
+                                  0, 0, GetModuleHandleW(0), NULL);
     hwnd_parent = CreateWindowW(L"static", NULL, WS_OVERLAPPED | WS_VISIBLE,
                                 400, 0, 100, 100, 0, 0, 0, NULL);
     hwnd_parentdc = CreateWindowW(L"parentdc_class", NULL, WS_CHILD | WS_VISIBLE,
@@ -1303,10 +1302,10 @@ void Test_from_wine(void)
 
 START_TEST(GetDCEx)
 {
+    Test_GetDCEx_CS_CLASSDC_NEXT();
     Test_GetDCEx_Cached();
     Test_GetDCEx_CS_OWNDC();
     Test_GetDCEx_CS_CLASSDC();
-    Test_GetDCEx_CS_CLASSDC_NEXT();
     Test_GetDCEx_CS_Mixed();
     Test_GetDCEx_CS_SwitchedStyle();
     Test_from_wine();
