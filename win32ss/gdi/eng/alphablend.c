@@ -131,6 +131,7 @@ EngAlphaBlend(
             break;
 
         case DC_RECT:
+            Ret = TRUE;
             ClipRect.left = ClipRegion->rclBounds.left + Translate.x;
             ClipRect.right = ClipRegion->rclBounds.right + Translate.x;
             ClipRect.top = ClipRegion->rclBounds.top + Translate.y;
