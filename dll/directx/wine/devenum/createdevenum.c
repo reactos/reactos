@@ -23,9 +23,6 @@
  * - Also creates the special registry keys created at run-time
  */
 
-#define NONAMELESSSTRUCT
-#define NONAMELESSUNION
-
 #include "devenum_private.h"
 #include "vfw.h"
 #include "aviriff.h"
