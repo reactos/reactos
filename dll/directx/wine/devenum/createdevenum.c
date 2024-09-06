@@ -237,8 +237,8 @@ static void DEVENUM_ReadPins(HKEY hkeyFilterClass, REGFILTER2 *rgf2)
     REGFILTERPINS2 *rgPins = NULL;
 
     rgf2->dwVersion = 2;
-    rgf2->u.s2.cPins2 = 0;
-    rgf2->u.s2.rgPins2 = NULL;
+    rgf2->cPins2 = 0;
+    rgf2->rgPins2 = NULL;
 
     if (RegOpenKeyExW(hkeyFilterClass, L"Pins", 0, KEY_READ, &hkeyPins) != ERROR_SUCCESS)
         return ;
@@ -265,7 +265,7 @@ static void DEVENUM_ReadPins(HKEY hkeyFilterClass, REGFILTER2 *rgf2)
         HKEY hkeyPinKey = NULL;
         WCHAR wszPinName[MAX_PATH];
         DWORD cName = ARRAY_SIZE(wszPinName);
-        REGFILTERPINS2 *rgPin = &rgPins[rgf2->u.s2.cPins2];
+        REGFILTERPINS2 *rgPin = &rgPins[rgf2->cPins2];
         DWORD value, size, Type;
         LONG lRet;
 
@@ -306,7 +306,7 @@ static void DEVENUM_ReadPins(HKEY hkeyFilterClass, REGFILTER2 *rgf2)
 
         DEVENUM_ReadPinTypes(hkeyPinKey, rgPin);
 
-        ++rgf2->u.s2.cPins2;
+        ++rgf2->cPins2;
         continue;
 
         error_cleanup:
@@ -316,38 +316,38 @@ static void DEVENUM_ReadPins(HKEY hkeyFilterClass, REGFILTER2 *rgf2)
 
     RegCloseKey(hkeyPins);
 
-    if (rgPins && !rgf2->u.s2.cPins2)
+    if (rgPins && !rgf2->cPins2)
     {
         CoTaskMemFree(rgPins);
         rgPins = NULL;
     }
 
-    rgf2->u.s2.rgPins2 = rgPins;
+    rgf2->rgPins2 = rgPins;
 }
 
 static void free_regfilter2(REGFILTER2 *rgf)
 {
-    if (rgf->u.s2.rgPins2)
+    if (rgf->rgPins2)
     {
         UINT iPin;
 
-        for (iPin = 0; iPin < rgf->u.s2.cPins2; iPin++)
+        for (iPin = 0; iPin < rgf->cPins2; iPin++)
         {
-            if (rgf->u.s2.rgPins2[iPin].lpMediaType)
+            if (rgf->rgPins2[iPin].lpMediaType)
             {
                 UINT iType;
 
-                for (iType = 0; iType < rgf->u.s2.rgPins2[iPin].nMediaTypes; iType++)
+                for (iType = 0; iType < rgf->rgPins2[iPin].nMediaTypes; iType++)
                 {
-                    CoTaskMemFree((void *)rgf->u.s2.rgPins2[iPin].lpMediaType[iType].clsMajorType);
-                    CoTaskMemFree((void *)rgf->u.s2.rgPins2[iPin].lpMediaType[iType].clsMinorType);
+                    CoTaskMemFree((void *)rgf->rgPins2[iPin].lpMediaType[iType].clsMajorType);
+                    CoTaskMemFree((void *)rgf->rgPins2[iPin].lpMediaType[iType].clsMinorType);
                 }
 
-                CoTaskMemFree((void *)rgf->u.s2.rgPins2[iPin].lpMediaType);
+                CoTaskMemFree((void *)rgf->rgPins2[iPin].lpMediaType);
             }
         }
 
-        CoTaskMemFree((void *)rgf->u.s2.rgPins2);
+        CoTaskMemFree((void *)rgf->rgPins2);
     }
 }
 
@@ -508,8 +508,8 @@ static BOOL CALLBACK register_dsound_devices(GUID *guid, const WCHAR *desc, cons
     /* write filter data */
     rgf.dwVersion = 2;
     rgf.dwMerit = guid ? MERIT_DO_NOT_USE : MERIT_PREFERRED;
-    rgf.u.s2.cPins2 = 1;
-    rgf.u.s2.rgPins2 = &rgpins;
+    rgf.cPins2 = 1;
+    rgf.rgPins2 = &rgpins;
     rgpins.dwFlags = REG_PINFLAG_B_RENDERER;
     /* FIXME: native registers many more formats */
     rgpins.nMediaTypes = 1;
@@ -558,8 +558,8 @@ static void register_waveout_devices(void)
         /* write filter data */
         rgf.dwVersion = 2;
         rgf.dwMerit = MERIT_DO_NOT_USE;
-        rgf.u.s2.cPins2 = 1;
-        rgf.u.s2.rgPins2 = &rgpins;
+        rgf.cPins2 = 1;
+        rgf.rgPins2 = &rgpins;
         rgpins.dwFlags = REG_PINFLAG_B_RENDERER;
         rgpins.nMediaTypes = 1;
         rgpins.lpMediaType = &rgtypes;
@@ -642,8 +642,8 @@ static void register_midiout_devices(void)
         /* write filter data */
         rgf.dwVersion = 2;
         rgf.dwMerit = (i == -1) ? MERIT_PREFERRED : MERIT_DO_NOT_USE;
-        rgf.u.s2.cPins2 = 1;
-        rgf.u.s2.rgPins2 = &rgpins;
+        rgf.cPins2 = 1;
+        rgf.rgPins2 = &rgpins;
         rgpins.dwFlags = REG_PINFLAG_B_RENDERER;
         rgpins.nMediaTypes = 1;
         rgpins.lpMediaType = &rgtypes;
@@ -692,8 +692,8 @@ static void register_vfw_codecs(void)
         /* write filter data */
         rgf.dwVersion = 2;
         rgf.dwMerit = MERIT_DO_NOT_USE;
-        rgf.u.s2.cPins2 = 2;
-        rgf.u.s2.rgPins2 = rgpins;
+        rgf.cPins2 = 2;
+        rgf.rgPins2 = rgpins;
         rgpins[0].dwFlags = 0;
         rgpins[0].nMediaTypes = 1;
         rgpins[0].lpMediaType = &rgtypes[0];
@@ -746,8 +746,8 @@ static void register_avicap_devices(void)
 
         rgf.dwVersion = 2;
         rgf.dwMerit = MERIT_DO_NOT_USE;
-        rgf.u.s2.cPins2 = 1;
-        rgf.u.s2.rgPins2 = &rgpins;
+        rgf.cPins2 = 1;
+        rgf.rgPins2 = &rgpins;
         rgpins.dwFlags = 0;
         rgpins.nMediaTypes = 1;
         rgpins.lpMediaType = &rgtypes;
