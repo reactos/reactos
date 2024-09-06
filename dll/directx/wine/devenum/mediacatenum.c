@@ -170,11 +170,6 @@ static HRESULT WINAPI property_bag_Read(IPropertyBag *iface,
         case REG_SZ:
             switch (V_VT(pVar))
             {
-            case VT_LPWSTR:
-                V_BSTR(pVar) = CoTaskMemAlloc(received);
-                memcpy(V_BSTR(pVar), pData, received);
-                res = S_OK;
-                break;
             case VT_EMPTY:
                 V_VT(pVar) = VT_BSTR;
             /* fall through */
@@ -261,7 +256,6 @@ static HRESULT WINAPI property_bag_Write(IPropertyBag *iface,
     switch (V_VT(pVar))
     {
     case VT_BSTR:
-    case VT_LPWSTR:
         TRACE("writing %s\n", debugstr_w(V_BSTR(pVar)));
         lpData = V_BSTR(pVar);
         dwType = REG_SZ;
@@ -481,13 +475,13 @@ static HRESULT WINAPI moniker_BindToObject(IMoniker *iface, IBindCtx *pbc,
             pProp = pvptr;
             if (SUCCEEDED(res))
             {
-                V_VT(&var) = VT_LPWSTR;
+                V_VT(&var) = VT_BSTR;
                 res = IPropertyBag_Read(pProp, clsidW, &var, NULL);
             }
             if (SUCCEEDED(res))
             {
                 res = CLSIDFromString(V_BSTR(&var), &clsID);
-                CoTaskMemFree(V_BSTR(&var));
+                VariantClear(&var);
             }
             if (SUCCEEDED(res))
             {

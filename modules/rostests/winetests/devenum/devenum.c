@@ -359,7 +359,7 @@ static void test_directshow_filter(void)
         VariantClear(&var);
         V_VT(&var) = VT_LPWSTR;
         hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
-        todo_wine ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
+        ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
 
         V_VT(&var) = VT_BSTR;
         hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
@@ -517,7 +517,7 @@ static void test_codec(void)
     VariantClear(&var);
     V_VT(&var) = VT_LPWSTR;
     hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
-    todo_wine ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
+    ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
 
     V_VT(&var) = VT_BSTR;
     hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
