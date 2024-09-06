@@ -147,28 +147,27 @@ static HRESULT WINAPI property_bag_Read(IPropertyBag *iface,
             };
 
             unsigned int count = 1, input_count, output_count, i;
-            DMO_PARTIAL_MEDIATYPE *types = NULL;
+            DMO_PARTIAL_MEDIATYPE *types = NULL, *new_array;
             REGPINTYPES *reg_types;
             HRESULT hr;
 
-            if (!(types = malloc(2 * count * sizeof(*types))))
-                return E_OUTOFMEMORY;
-
-            while ((hr = DMOGetTypes(&moniker->clsid, count, &input_count, types,
-                    count, &output_count, types + count)) == S_FALSE)
+            do
             {
                 count *= 2;
-                if (!(types = realloc(types, count * sizeof(*types))))
+                if (!(new_array = realloc(types, 2 * count * sizeof(*types))))
                 {
                     free(types);
                     return E_OUTOFMEMORY;
                 }
-            }
-            if (hr != S_OK)
-            {
-                free(types);
-                return hr;
-            }
+                types = new_array;
+
+                if (FAILED(hr = DMOGetTypes(&moniker->clsid, count, &input_count, types,
+                        count, &output_count, types + count)))
+                {
+                    free(types);
+                    return hr;
+                }
+            } while (input_count == count || output_count == count);
 
             if (!(reg_types = malloc(2 * count * sizeof(*reg_types))))
             {
