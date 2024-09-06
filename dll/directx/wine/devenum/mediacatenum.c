@@ -265,7 +265,7 @@ static HRESULT WINAPI property_bag_Write(IPropertyBag *iface, const WCHAR *name,
     }
     default:
         WARN("Unhandled type %s.\n", debugstr_vt(V_VT(var)));
-        return E_FAIL;
+        return E_INVALIDARG;
     }
 
     RegCloseKey(key);

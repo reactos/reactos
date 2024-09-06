@@ -377,7 +377,7 @@ static void test_directshow_filter(void)
 
         V_VT(&var) = VT_LPWSTR;
         hr = IPropertyBag_Write(prop_bag, L"FriendlyName", &var);
-        todo_wine ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
+        ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
         VariantClear(&var);
 
         V_VT(&var) = VT_I4;
@@ -406,7 +406,7 @@ static void test_directshow_filter(void)
 
         V_VT(&var) = VT_UI4;
         hr = IPropertyBag_Write(prop_bag, L"foobar", &var);
-        todo_wine ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
+        ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
 
         V_VT(&var) = VT_ARRAY | VT_UI1;
         V_ARRAY(&var) = SafeArrayCreate(VT_UI1, 1, &bound);
@@ -513,7 +513,7 @@ static void test_codec(void)
 
     V_VT(&var) = VT_LPWSTR;
     hr = IPropertyBag_Write(prop_bag, L"FriendlyName", &var);
-    todo_wine ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
+    ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
 
     VariantClear(&var);
     V_VT(&var) = VT_EMPTY;
@@ -559,7 +559,7 @@ static void test_codec(void)
 
     V_VT(&var) = VT_UI4;
     hr = IPropertyBag_Write(prop_bag, L"foobar", &var);
-    todo_wine ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
+    ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
 
     V_VT(&var) = VT_ARRAY | VT_UI1;
     V_ARRAY(&var) = SafeArrayCreate(VT_UI1, 1, &bound);
