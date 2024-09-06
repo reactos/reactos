@@ -769,7 +769,7 @@ static HRESULT WINAPI devenum_factory_CreateClassEnumerator(ICreateDevEnum *ifac
     HRESULT hr;
     HKEY key;
 
-    TRACE("iface %p, class %s, out %p, flags %#x.\n", iface, debugstr_guid(class), out, flags);
+    TRACE("iface %p, class %s, out %p, flags %#lx.\n", iface, debugstr_guid(class), out, flags);
 
     if (!out)
         return E_POINTER;
