@@ -50,11 +50,11 @@ struct moniker
     IPropertyBag IPropertyBag_iface;
 };
 
-HRESULT create_filter_data(VARIANT *var, REGFILTER2 *rgf) DECLSPEC_HIDDEN;
-struct moniker *dmo_moniker_create(const GUID class, const GUID clsid) DECLSPEC_HIDDEN;
-struct moniker *codec_moniker_create(const GUID *class, const WCHAR *name) DECLSPEC_HIDDEN;
-struct moniker *filter_moniker_create(const GUID *class, const WCHAR *name) DECLSPEC_HIDDEN;
-HRESULT enum_moniker_create(REFCLSID class, IEnumMoniker **enum_mon) DECLSPEC_HIDDEN;
+HRESULT create_filter_data(VARIANT *var, REGFILTER2 *rgf);
+struct moniker *dmo_moniker_create(const GUID class, const GUID clsid);
+struct moniker *codec_moniker_create(const GUID *class, const WCHAR *name);
+struct moniker *filter_moniker_create(const GUID *class, const WCHAR *name);
+HRESULT enum_moniker_create(REFCLSID class, IEnumMoniker **enum_mon);
 
-extern ICreateDevEnum devenum_factory DECLSPEC_HIDDEN;
-extern IParseDisplayName devenum_parser DECLSPEC_HIDDEN;
+extern ICreateDevEnum devenum_factory;
+extern IParseDisplayName devenum_parser;
