@@ -419,8 +419,11 @@ static void register_legacy_filters(void)
             hr = CLSIDFromString(wszFilterSubkeyName, &clsid);
             if (FAILED(hr))
                 continue;
-
+#ifdef __REACTOS__
+            swprintf(wszRegKey, L"CLSID\\%s", wszFilterSubkeyName);
+#else
             swprintf(wszRegKey, ARRAY_SIZE(wszRegKey), L"CLSID\\%s", wszFilterSubkeyName);
+#endif
             if (RegOpenKeyExW(HKEY_CLASSES_ROOT, wszRegKey, 0, KEY_READ, &classkey) != ERROR_SUCCESS)
                 continue;
 
@@ -728,9 +731,11 @@ static void register_avicap_devices(void)
         if (!capGetDriverDescriptionW(i, friendlyname, ARRAY_SIZE(friendlyname),
                 version, ARRAY_SIZE(version)))
             continue;
-
+#ifdef __REACTOS__
+        swprintf(name, L"video%d", i);
+#else
         swprintf(name, ARRAY_SIZE(name), L"video%d", i);
-
+#endif
         hr = register_codec(&CLSID_VideoInputDeviceCategory, name,
                 &CLSID_VfwCapture, friendlyname, &prop_bag);
         if (FAILED(hr))

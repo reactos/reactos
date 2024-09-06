@@ -127,8 +127,11 @@ HRESULT WINAPI DllRegisterServer(void)
     LPVOID mapvptr;
 
     TRACE("\n");
-
+#ifdef __REACTOS__
+    res = __wine_register_resources(devenum_instance);
+#else
     res = __wine_register_resources();
+#endif
     if (FAILED(res))
         return res;
 
@@ -165,7 +168,11 @@ HRESULT WINAPI DllRegisterServer(void)
 HRESULT WINAPI DllUnregisterServer(void)
 {
     FIXME("stub!\n");
+#ifdef __REACTOS__
+    return __wine_unregister_resources(devenum_instance);
+#else
     return __wine_unregister_resources();
+#endif
 }
 
 #ifdef __REACTOS__
@@ -187,4 +194,12 @@ static void DEVENUM_RegisterQuartz(void)
     }
 }
 
+//TODO: This gets removed in wine due to it being handled in a generic way.
+/***********************************************************************
+ *		DllCanUnloadNow (DEVENUM.@)
+ */
+HRESULT WINAPI DllCanUnloadNow(void)
+{
+    return S_OK;
+}
 #endif
