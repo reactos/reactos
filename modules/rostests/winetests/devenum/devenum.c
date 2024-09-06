@@ -310,8 +310,10 @@ static IMoniker *check_display_name_(int line, IParseDisplayName *parser, WCHAR 
 
 static void test_directshow_filter(void)
 {
+    SAFEARRAYBOUND bound = {.cElements = 10};
     IParseDisplayName *parser;
     IPropertyBag *prop_bag;
+    void *array_data;
     IMoniker *mon;
     WCHAR buffer[200];
     LRESULT res;
@@ -348,13 +350,76 @@ static void test_directshow_filter(void)
         ok(find_moniker(&CLSID_AudioRendererCategory, mon), "filter should be registered\n");
 
         VariantClear(&var);
-        hr = IPropertyBag_Read(prop_bag, friendly_name, &var, NULL);
-        ok(hr == S_OK, "Read failed: %#x\n", hr);
-        ok(!lstrcmpW(V_BSTR(&var), testW), "got %s\n", wine_dbgstr_w(V_BSTR(&var)));
+        V_VT(&var) = VT_EMPTY;
+        hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
+        ok(hr == S_OK, "Got hr %#x.\n", hr);
+        ok(V_VT(&var) == VT_BSTR, "Got type %#x.\n", V_VT(&var));
+        ok(!wcscmp(V_BSTR(&var), L"test"), "Got name %s.\n", wine_dbgstr_w(V_BSTR(&var)));
+
+        VariantClear(&var);
+        V_VT(&var) = VT_LPWSTR;
+        hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
+        todo_wine ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
+
+        V_VT(&var) = VT_BSTR;
+        hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
+        ok(hr == S_OK, "Got hr %#x.\n", hr);
+        ok(V_VT(&var) == VT_BSTR, "Got type %#x.\n", V_VT(&var));
+        ok(!wcscmp(V_BSTR(&var), L"test"), "Got name %s.\n", wine_dbgstr_w(V_BSTR(&var)));
+
+        V_VT(&var) = VT_LPWSTR;
+        hr = IPropertyBag_Write(prop_bag, L"FriendlyName", &var);
+        todo_wine ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
+        VariantClear(&var);
+
+        V_VT(&var) = VT_I4;
+        V_I4(&var) = 0xdeadbeef;
+        hr = IPropertyBag_Write(prop_bag, L"foobar", &var);
+        ok(hr == S_OK, "Got hr %#x.\n", hr);
+
+        V_VT(&var) = VT_EMPTY;
+        hr = IPropertyBag_Read(prop_bag, L"foobar", &var, NULL);
+        ok(hr == S_OK, "Got hr %#x.\n", hr);
+        ok(V_VT(&var) == VT_I4, "Got type %#x.\n", V_VT(&var));
+        ok(V_I4(&var) == 0xdeadbeef, "Got value %#x.\n", V_I4(&var));
+
+        V_VT(&var) = VT_UI4;
+        hr = IPropertyBag_Read(prop_bag, L"foobar", &var, NULL);
+        todo_wine ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
+        V_VT(&var) = VT_BSTR;
+        hr = IPropertyBag_Read(prop_bag, L"foobar", &var, NULL);
+        ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
+
+        V_VT(&var) = VT_I4;
+        hr = IPropertyBag_Read(prop_bag, L"foobar", &var, NULL);
+        ok(hr == S_OK, "Got hr %#x.\n", hr);
+        ok(V_VT(&var) == VT_I4, "Got type %#x.\n", V_VT(&var));
+        ok(V_I4(&var) == 0xdeadbeef, "Got value %#x.\n", V_I4(&var));
+
+        V_VT(&var) = VT_UI4;
+        hr = IPropertyBag_Write(prop_bag, L"foobar", &var);
+        todo_wine ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
+
+        V_VT(&var) = VT_ARRAY | VT_UI1;
+        V_ARRAY(&var) = SafeArrayCreate(VT_UI1, 1, &bound);
+        SafeArrayAccessData(V_ARRAY(&var), &array_data);
+        memcpy(array_data, "test data", 10);
+        SafeArrayUnaccessData(V_ARRAY(&var));
+        hr = IPropertyBag_Write(prop_bag, L"foobar", &var);
+        ok(hr == S_OK, "Got hr %#x.\n", hr);
+
+        VariantClear(&var);
+        V_VT(&var) = VT_EMPTY;
+        hr = IPropertyBag_Read(prop_bag, L"foobar", &var, NULL);
+        ok(hr == S_OK, "Got hr %#x.\n", hr);
+        ok(V_VT(&var) == (VT_ARRAY | VT_UI1), "Got type %#x.\n", V_VT(&var));
+        SafeArrayAccessData(V_ARRAY(&var), &array_data);
+        ok(!memcmp(array_data, "test data", 10), "Got wrong data.\n");
+        SafeArrayUnaccessData(V_ARRAY(&var));
 
         IMoniker_Release(mon);
 
-        /* devenum doesn't give us a way to unregister�we have to do that manually */
+        /* devenum doesn't give us a way to unregister—we have to do that manually */
         wcscpy(buffer, L"CLSID\\");
         StringFromGUID2(&CLSID_AudioRendererCategory, buffer + wcslen(buffer), CHARS_IN_GUID);
         wcscat(buffer, L"\\Instance\\test");
@@ -405,8 +470,10 @@ static void test_directshow_filter(void)
 
 static void test_codec(void)
 {
+    SAFEARRAYBOUND bound = {.cElements = 10};
     IParseDisplayName *parser;
     IPropertyBag *prop_bag;
+    void *array_data;
     IMoniker *mon;
     WCHAR buffer[200];
     VARIANT var;
@@ -436,10 +503,63 @@ static void test_codec(void)
     hr = IPropertyBag_Write(prop_bag, L"FriendlyName", &var);
     ok(hr == S_OK, "Write failed: %#x\n", hr);
 
+    V_VT(&var) = VT_LPWSTR;
+    hr = IPropertyBag_Write(prop_bag, L"FriendlyName", &var);
+    todo_wine ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
+
     VariantClear(&var);
+    V_VT(&var) = VT_EMPTY;
     hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
-    ok(hr == S_OK, "Read failed: %#x\n", hr);
-    ok(!wcscmp(V_BSTR(&var), L"test"), "got %s\n", wine_dbgstr_w(V_BSTR(&var)));
+    ok(hr == S_OK, "Got hr %#x.\n", hr);
+    ok(V_VT(&var) == VT_BSTR, "Got type %#x.\n", V_VT(&var));
+    ok(!wcscmp(V_BSTR(&var), L"test"), "Got name %s.\n", wine_dbgstr_w(V_BSTR(&var)));
+
+    VariantClear(&var);
+    V_VT(&var) = VT_LPWSTR;
+    hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
+    todo_wine ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
+
+    V_VT(&var) = VT_BSTR;
+    hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
+    ok(hr == S_OK, "Got hr %#x.\n", hr);
+    ok(V_VT(&var) == VT_BSTR, "Got type %#x.\n", V_VT(&var));
+    ok(!wcscmp(V_BSTR(&var), L"test"), "Got name %s.\n", wine_dbgstr_w(V_BSTR(&var)));
+
+    V_VT(&var) = VT_I4;
+    V_I4(&var) = 0xdeadbeef;
+    hr = IPropertyBag_Write(prop_bag, L"foobar", &var);
+    ok(hr == S_OK, "Got hr %#x.\n", hr);
+
+    V_VT(&var) = VT_EMPTY;
+    hr = IPropertyBag_Read(prop_bag, L"foobar", &var, NULL);
+    ok(hr == S_OK, "Got hr %#x.\n", hr);
+    ok(V_VT(&var) == VT_I4, "Got type %#x.\n", V_VT(&var));
+    ok(V_I4(&var) == 0xdeadbeef, "Got value %#x.\n", V_I4(&var));
+
+    V_VT(&var) = VT_UI4;
+    hr = IPropertyBag_Read(prop_bag, L"foobar", &var, NULL);
+    todo_wine ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
+    V_VT(&var) = VT_BSTR;
+    hr = IPropertyBag_Read(prop_bag, L"foobar", &var, NULL);
+    ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
+
+    V_VT(&var) = VT_I4;
+    hr = IPropertyBag_Read(prop_bag, L"foobar", &var, NULL);
+    ok(hr == S_OK, "Got hr %#x.\n", hr);
+    ok(V_VT(&var) == VT_I4, "Got type %#x.\n", V_VT(&var));
+    ok(V_I4(&var) == 0xdeadbeef, "Got value %#x.\n", V_I4(&var));
+
+    V_VT(&var) = VT_UI4;
+    hr = IPropertyBag_Write(prop_bag, L"foobar", &var);
+    todo_wine ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
+
+    V_VT(&var) = VT_ARRAY | VT_UI1;
+    V_ARRAY(&var) = SafeArrayCreate(VT_UI1, 1, &bound);
+    SafeArrayAccessData(V_ARRAY(&var), &array_data);
+    memcpy(array_data, "test data", 10);
+    SafeArrayUnaccessData(V_ARRAY(&var));
+    hr = IPropertyBag_Write(prop_bag, L"foobar", &var);
+    ok(hr == S_OK, "Got hr %#x.\n", hr);
 
     /* unlike DirectShow filters, these are automatically generated, so
      * enumerating them will destroy the key */
