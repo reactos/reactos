@@ -323,7 +323,7 @@ static ULONG WINAPI moniker_Release(IMoniker *iface)
     TRACE("(%p) ref=%d\n", This, ref);
 
     if (ref == 0) {
-        CoTaskMemFree(This->name);
+        free(This->name);
         free(This);
         DEVENUM_UnlockModule();
     }
