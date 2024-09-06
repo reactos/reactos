@@ -46,19 +46,6 @@ static const WCHAR swW[] = {'s','w',':',0};
 static const WCHAR cmW[] = {'c','m',':',0};
 static const WCHAR backslashW[] = {'\\',0};
 
-static inline WCHAR *strchrW( const WCHAR *str, WCHAR ch )
-{
-    do { if (*str == ch) return (WCHAR *)str; } while (*str++);
-    return NULL;
-}
-
-static inline int strncmpW( const WCHAR *str1, const WCHAR *str2, int n )
-{
-    if (n <= 0) return 0;
-    while ((--n > 0) && *str1 && (*str1 == *str2)) { str1++; str2++; }
-    return *str1 - *str2;
-}
-
 static void test_devenum(IBindCtx *bind_ctx)
 {
     IEnumMoniker *enum_cat, *enum_moniker;
@@ -762,7 +749,7 @@ static void test_waveout(void)
             StringFromGUID2(&CLSID_AudioRendererCategory, buffer + lstrlenW(buffer), CHARS_IN_GUID);
             lstrcatW(buffer, backslashW);
             lstrcatW(buffer, waveW);
-            lstrcatW(buffer, strchrW(endpoint, '}') + 2);
+            lstrcatW(buffer, wcschr(endpoint, '}') + 2);
 
             mon = check_display_name(parser, buffer);
 
@@ -773,7 +760,7 @@ static void test_waveout(void)
         }
         ok(hr == S_OK, "Read failed: %#x\n", hr);
 
-        ok(!strncmpW(name, V_BSTR(&var), lstrlenW(name)), "expected %s, got %s\n",
+        ok(!wcsncmp(name, V_BSTR(&var), lstrlenW(name)), "expected %s, got %s\n",
             wine_dbgstr_w(name), wine_dbgstr_w(V_BSTR(&var)));
 
         VariantClear(&var);
@@ -848,7 +835,7 @@ static void test_wavein(void)
             StringFromGUID2(&CLSID_AudioInputDeviceCategory, buffer + lstrlenW(buffer), CHARS_IN_GUID);
             lstrcatW(buffer, backslashW);
             lstrcatW(buffer, waveW);
-            lstrcatW(buffer, strchrW(endpoint, '}') + 2);
+            lstrcatW(buffer, wcschr(endpoint, '}') + 2);
 
             mon = check_display_name(parser, buffer);
 
@@ -859,7 +846,7 @@ static void test_wavein(void)
         }
         ok(hr == S_OK, "Read failed: %#x\n", hr);
 
-        ok(!strncmpW(caps.szPname, V_BSTR(&var), lstrlenW(caps.szPname)), "expected %s, got %s\n",
+        ok(!wcsncmp(caps.szPname, V_BSTR(&var), lstrlenW(caps.szPname)), "expected %s, got %s\n",
             wine_dbgstr_w(caps.szPname), wine_dbgstr_w(V_BSTR(&var)));
 
         VariantClear(&var);
