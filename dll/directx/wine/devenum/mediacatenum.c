@@ -382,7 +382,6 @@ static HRESULT WINAPI moniker_BindToObject(IMoniker *iface, IBindCtx *bind_ctx,
 {
     struct moniker *moniker = impl_from_IMoniker(iface);
     IPersistPropertyBag *persist_bag;
-    IPropertyBag *prop_bag;
     IUnknown *unk;
     CLSID clsid;
     VARIANT var;
@@ -397,33 +396,21 @@ static HRESULT WINAPI moniker_BindToObject(IMoniker *iface, IBindCtx *bind_ctx,
     VariantInit(&var);
     *out = NULL;
 
-    if (FAILED(hr = IMoniker_BindToStorage(iface, NULL, NULL, &IID_IPropertyBag, (void **)&prop_bag)))
-        return hr;
-
     V_VT(&var) = VT_BSTR;
-    if (FAILED(hr = IPropertyBag_Read(prop_bag, L"CLSID", &var, NULL)))
-    {
-        IPropertyBag_Release(prop_bag);
+    if (FAILED(hr = IPropertyBag_Read(&moniker->IPropertyBag_iface, L"CLSID", &var, NULL)))
         return hr;
-    }
 
     hr = CLSIDFromString(V_BSTR(&var), &clsid);
     VariantClear(&var);
     if (FAILED(hr))
-    {
-        IPropertyBag_Release(prop_bag);
         return hr;
-    }
 
     if (FAILED(hr = CoCreateInstance(&clsid, NULL, CLSCTX_ALL, &IID_IUnknown, (void **)&unk)))
-    {
-        IPropertyBag_Release(prop_bag);
         return hr;
-    }
 
     if (SUCCEEDED(IUnknown_QueryInterface(unk, &IID_IPersistPropertyBag, (void **)&persist_bag)))
     {
-        hr = IPersistPropertyBag_Load(persist_bag, prop_bag, NULL);
+        hr = IPersistPropertyBag_Load(persist_bag, &moniker->IPropertyBag_iface, NULL);
         IPersistPropertyBag_Release(persist_bag);
     }
 
@@ -431,7 +418,6 @@ static HRESULT WINAPI moniker_BindToObject(IMoniker *iface, IBindCtx *bind_ctx,
         hr = IUnknown_QueryInterface(unk, iid, out);
 
     IUnknown_Release(unk);
-    IPropertyBag_Release(prop_bag);
 
     return hr;
 }
