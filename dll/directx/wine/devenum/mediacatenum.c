@@ -789,7 +789,7 @@ static ULONG WINAPI enum_moniker_Release(IEnumMoniker *iface)
         IEnumDMO_Release(This->dmo_enum);
         RegCloseKey(This->sw_key);
         RegCloseKey(This->cm_key);
-        CoTaskMemFree(This);
+        free(This);
         DEVENUM_UnlockModule();
         return 0;
     }
@@ -922,41 +922,43 @@ static const IEnumMonikerVtbl IEnumMoniker_Vtbl =
     enum_moniker_Clone,
 };
 
-HRESULT enum_moniker_create(REFCLSID class, IEnumMoniker **ppEnumMoniker)
+HRESULT enum_moniker_create(REFCLSID class, IEnumMoniker **out)
 {
-    EnumMonikerImpl * pEnumMoniker = CoTaskMemAlloc(sizeof(EnumMonikerImpl));
+    EnumMonikerImpl *object;
     WCHAR buffer[78];
     HRESULT hr;
 
-    if (!pEnumMoniker)
+    if (!(object = calloc(1, sizeof(*object))))
         return E_OUTOFMEMORY;
 
-    pEnumMoniker->IEnumMoniker_iface.lpVtbl = &IEnumMoniker_Vtbl;
-    pEnumMoniker->ref = 1;
-    pEnumMoniker->sw_index = 0;
-    pEnumMoniker->cm_index = 0;
-    pEnumMoniker->class = *class;
+    object->IEnumMoniker_iface.lpVtbl = &IEnumMoniker_Vtbl;
+    object->ref = 1;
+    object->class = *class;
 
     lstrcpyW(buffer, clsidW);
     lstrcatW(buffer, backslashW);
     StringFromGUID2(class, buffer + lstrlenW(buffer), CHARS_IN_GUID);
     lstrcatW(buffer, instanceW);
-    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, buffer, 0, KEY_ENUMERATE_SUB_KEYS, &pEnumMoniker->sw_key))
-        pEnumMoniker->sw_key = NULL;
+    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, buffer, 0, KEY_ENUMERATE_SUB_KEYS, &object->sw_key))
+        object->sw_key = NULL;
 
     lstrcpyW(buffer, wszActiveMovieKey);
     StringFromGUID2(class, buffer + lstrlenW(buffer), CHARS_IN_GUID);
-    if (RegOpenKeyExW(HKEY_CURRENT_USER, buffer, 0, KEY_ENUMERATE_SUB_KEYS, &pEnumMoniker->cm_key))
-        pEnumMoniker->cm_key = NULL;
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, buffer, 0, KEY_ENUMERATE_SUB_KEYS, &object->cm_key))
+        object->cm_key = NULL;
 
-    hr = DMOEnum(class, 0, 0, NULL, 0, NULL, &pEnumMoniker->dmo_enum);
+    hr = DMOEnum(class, 0, 0, NULL, 0, NULL, &object->dmo_enum);
     if (FAILED(hr))
     {
-        IEnumMoniker_Release(&pEnumMoniker->IEnumMoniker_iface);
+        if (object->cm_key)
+            RegCloseKey(object->cm_key);
+        if (object->sw_key)
+            RegCloseKey(object->sw_key);
+        free(object);
         return hr;
     }
 
-    *ppEnumMoniker = &pEnumMoniker->IEnumMoniker_iface;
+    *out = &object->IEnumMoniker_iface;
 
     DEVENUM_LockModule();
 
