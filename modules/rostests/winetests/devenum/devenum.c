@@ -269,7 +269,7 @@ static void test_register_filter(void)
 
     rgf2.dwVersion = 2;
     rgf2.dwMerit = MERIT_UNLIKELY;
-    S2(U(rgf2)).cPins2 = 0;
+    rgf2.cPins2 = 0;
 
 
     hr = IFilterMapper2_RegisterFilter(mapper2, &CLSID_TestFilter, L"devenum test", &mon, NULL, NULL, &rgf2);
