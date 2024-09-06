@@ -37,7 +37,7 @@
 
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
-static void test_devenum(IBindCtx *bind_ctx)
+static void test_devenum(void)
 {
     IEnumMoniker *enum_cat, *enum_moniker;
     ICreateDevEnum* create_devenum;
@@ -45,6 +45,7 @@ static void test_devenum(IBindCtx *bind_ctx)
     IMoniker *moniker;
     GUID cat_guid, clsid;
     WCHAR *displayname;
+    IBindCtx *bindctx;
     VARIANT var;
     HRESULT hr;
     int count;
@@ -58,7 +59,7 @@ static void test_devenum(IBindCtx *bind_ctx)
 
     while (IEnumMoniker_Next(enum_cat, 1, &moniker, NULL) == S_OK)
     {
-        hr = IMoniker_BindToStorage(moniker, bind_ctx, NULL, &IID_IPropertyBag, (void **)&prop_bag);
+        hr = IMoniker_BindToStorage(moniker, NULL, NULL, &IID_IPropertyBag, (void **)&prop_bag);
         ok(hr == S_OK, "IMoniker_BindToStorage failed: %#x\n", hr);
 
         VariantInit(&var);
@@ -100,7 +101,7 @@ static void test_devenum(IBindCtx *bind_ctx)
                    "Expected CLSID_CDeviceMoniker got %s\n", wine_dbgstr_guid(&clsid));
 
                 VariantInit(&var);
-                hr = IMoniker_BindToStorage(moniker, bind_ctx, NULL, &IID_IPropertyBag, (LPVOID*)&prop_bag);
+                hr = IMoniker_BindToStorage(moniker, NULL, NULL, &IID_IPropertyBag, (LPVOID*)&prop_bag);
                 ok(hr == S_OK, "IMoniker_BindToStorage failed with error %x\n", hr);
 
                 hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
@@ -110,8 +111,15 @@ static void test_devenum(IBindCtx *bind_ctx)
                 if (winetest_debug > 1)
                     trace("  %s %s\n", wine_dbgstr_w(displayname), wine_dbgstr_w(V_BSTR(&var)));
 
-                hr = IMoniker_BindToObject(moniker, bind_ctx, NULL, &IID_IUnknown, NULL);
+                hr = IMoniker_BindToObject(moniker, NULL, NULL, &IID_IUnknown, NULL);
                 ok(hr == E_POINTER, "got %#x\n", hr);
+
+                hr = CreateBindCtx(0, &bindctx);
+                ok(hr == S_OK, "Got hr %#x.\n", hr);
+                hr = IMoniker_BindToStorage(moniker, bindctx, NULL, &IID_IPropertyBag, (LPVOID*)&prop_bag);
+                ok(hr == S_OK, "IMoniker_BindToStorage failed with error %x\n", hr);
+                IPropertyBag_Release(prop_bag);
+                IBindCtx_Release(bindctx);
 
                 VariantClear(&var);
                 CoTaskMemFree(displayname);
@@ -1087,21 +1095,11 @@ static void test_vfw(void)
 
 START_TEST(devenum)
 {
-    IBindCtx *bind_ctx = NULL;
     HRESULT hr;
 
     CoInitialize(NULL);
 
-    test_devenum(NULL);
-
-    /* IBindCtx is allowed in IMoniker_BindToStorage (IMediaCatMoniker_BindToStorage) */
-    hr = CreateBindCtx(0, &bind_ctx);
-    ok(hr == S_OK, "Cannot create BindCtx: (res = 0x%x)\n", hr);
-    if (bind_ctx) {
-        test_devenum(bind_ctx);
-        IBindCtx_Release(bind_ctx);
-    }
-
+    test_devenum();
     test_moniker_isequal();
     test_register_filter();
     test_directshow_filter();
