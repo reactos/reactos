@@ -23,9 +23,6 @@
  */
 
 #include "devenum_private.h"
-#include "oleauto.h"
-#include "ocidl.h"
-#include "dmoreg.h"
 
 #include "wine/debug.h"
 
@@ -393,9 +390,25 @@ static HRESULT WINAPI moniker_BindToObject(IMoniker *iface, IBindCtx *bind_ctx,
     if (!out)
         return E_POINTER;
 
-    VariantInit(&var);
     *out = NULL;
 
+    if (moniker->type == DEVICE_DMO)
+    {
+        IDMOWrapperFilter *wrapper;
+
+        if (FAILED(hr = CoCreateInstance(&CLSID_DMOWrapperFilter, NULL,
+                CLSCTX_INPROC_SERVER, &IID_IDMOWrapperFilter, (void **)&wrapper)))
+            return hr;
+
+        if (SUCCEEDED(hr = IDMOWrapperFilter_Init(wrapper, &moniker->clsid, &moniker->class)))
+        {
+            hr = IDMOWrapperFilter_QueryInterface(wrapper, iid, out);
+        }
+        IDMOWrapperFilter_Release(wrapper);
+        return hr;
+    }
+
+    VariantInit(&var);
     V_VT(&var) = VT_BSTR;
     if (FAILED(hr = IPropertyBag_Read(&moniker->IPropertyBag_iface, L"CLSID", &var, NULL)))
         return hr;

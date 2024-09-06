@@ -20,20 +20,15 @@
 
 #define COBJMACROS
 
-#include <stdio.h>
-
-#include "wine/test.h"
 #include "initguid.h"
-#include "ole2.h"
-#include "strmif.h"
-#include "uuids.h"
-#include "vfwmsgs.h"
-#include "mmsystem.h"
+#include "dshow.h"
+#include "dmo.h"
+#include "dmodshow.h"
 #include "dsound.h"
 #include "mmddk.h"
 #include "vfw.h"
-#include "dmoreg.h"
 #include "setupapi.h"
+#include "wine/test.h"
 
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
@@ -603,10 +598,15 @@ static void test_dmo(void)
 {
     IParseDisplayName *parser;
     IPropertyBag *prop_bag;
+    IBaseFilter *filter;
+    IMediaObject *dmo;
+    IEnumDMO *enumdmo;
     WCHAR buffer[200];
     IMoniker *mon;
     VARIANT var;
+    WCHAR *name;
     HRESULT hr;
+    GUID clsid;
 
     hr = CoCreateInstance(&CLSID_CDeviceMoniker, NULL, CLSCTX_INPROC, &IID_IParseDisplayName, (void **)&parser);
     ok(hr == S_OK, "Failed to create ParseDisplayName: %#x\n", hr);
@@ -657,6 +657,54 @@ static void test_dmo(void)
     }
     IPropertyBag_Release(prop_bag);
     IMoniker_Release(mon);
+
+    hr = DMOEnum(&DMOCATEGORY_AUDIO_DECODER, 0, 0, NULL, 0, NULL, &enumdmo);
+    ok(hr == S_OK, "Got hr %#x.\n", hr);
+
+    while (IEnumDMO_Next(enumdmo, 1, &clsid, &name, NULL) == S_OK)
+    {
+        wcscpy(buffer, L"@device:dmo:");
+        StringFromGUID2(&clsid, buffer + wcslen(buffer), CHARS_IN_GUID);
+        StringFromGUID2(&DMOCATEGORY_AUDIO_DECODER, buffer + wcslen(buffer), CHARS_IN_GUID);
+        mon = check_display_name(parser, buffer);
+        ok(find_moniker(&DMOCATEGORY_AUDIO_DECODER, mon), "DMO was not found.\n");
+
+        hr = IMoniker_BindToStorage(mon, NULL, NULL, &IID_IPropertyBag, (void **)&prop_bag);
+        ok(hr == S_OK, "Got hr %#x.\n", hr);
+
+        VariantClear(&var);
+        hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
+        ok(hr == S_OK, "got %#x\n", hr);
+        ok(!wcscmp(V_BSTR(&var), name), "got %s\n", wine_dbgstr_w(V_BSTR(&var)));
+
+        VariantClear(&var);
+        V_VT(&var) = VT_BSTR;
+        V_BSTR(&var) = SysAllocString(L"devenum test");
+        hr = IPropertyBag_Write(prop_bag, L"FriendlyName", &var);
+        ok(hr == E_ACCESSDENIED, "Write failed: %#x\n", hr);
+
+        VariantClear(&var);
+        hr = IPropertyBag_Read(prop_bag, L"CLSID", &var, NULL);
+        ok(hr == HRESULT_FROM_WIN32(ERROR_NOT_FOUND), "got %#x\n", hr);
+
+        IPropertyBag_Release(prop_bag);
+        CoTaskMemFree(name);
+
+        hr = IMoniker_BindToObject(mon, NULL, NULL, &IID_IBaseFilter, (void **)&filter);
+        ok(hr == S_OK, "got %#x\n", hr);
+
+        hr = IBaseFilter_GetClassID(filter, &clsid);
+        ok(hr == S_OK, "got %#x\n", hr);
+        ok(IsEqualGUID(&clsid, &CLSID_DMOWrapperFilter), "Got CLSID %s.\n", debugstr_guid(&clsid));
+
+        hr = IBaseFilter_QueryInterface(filter, &IID_IMediaObject, (void **)&dmo);
+        ok(hr == S_OK, "got %#x\n", hr);
+        IMediaObject_Release(dmo);
+
+        IBaseFilter_Release(filter);
+    }
+    IEnumDMO_Release(enumdmo);
+
     IParseDisplayName_Release(parser);
 }
 
