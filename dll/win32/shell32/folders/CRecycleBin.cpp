@@ -750,15 +750,20 @@ HRESULT WINAPI CRecycleBin::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, LPS
     TRACE("(%p, %p, %d, %p)\n", this, pidl, iColumn, pDetails);
     if (iColumn >= COLUMNS_COUNT)
         return E_FAIL;
-    pDetails->fmt = RecycleBinColumns[iColumn].fmt;
-    pDetails->cxChar = RecycleBinColumns[iColumn].cxChars;
+
     if (pidl == NULL)
+    {
+        pDetails->fmt = RecycleBinColumns[iColumn].fmt;
+        pDetails->cxChar = RecycleBinColumns[iColumn].cxChars;
         return SHSetStrRet(&pDetails->str, RecycleBinColumns[iColumn].column_name_id);
+    }
 
     if (iColumn == COLUMN_NAME)
         return GetDisplayNameOf(pidl, SHGDN_NORMAL, &pDetails->str);
 
     pFileDetails = _ILGetRecycleStruct(pidl);
+    if (!pFileDetails && FAILED_UNEXPECTEDLY(E_INVALIDARG))
+        return E_INVALIDARG;
     switch (iColumn)
     {
         case COLUMN_DATEDEL:
@@ -766,10 +771,18 @@ HRESULT WINAPI CRecycleBin::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, LPS
             break;
         case COLUMN_DELFROM:
             pszBackslash = wcsrchr(pFileDetails->szName, L'\\');
-            Length = (pszBackslash - pFileDetails->szName);
-            memcpy((LPVOID)buffer, pFileDetails->szName, Length * sizeof(WCHAR));
+            if (!pszBackslash)
+            {
+                ERR("Filename '%ls' not a valid path?\n", pFileDetails->szName);
+                Length = 0;
+            }
+            else
+            {
+                Length = (pszBackslash - pFileDetails->szName);
+                memcpy((LPVOID)buffer, pFileDetails->szName, Length * sizeof(WCHAR));
+            }
             buffer[Length] = UNICODE_NULL;
-            if (buffer[0] && buffer[1] == L':' && !buffer[2])
+            if (!buffer[2] && buffer[0] && buffer[1] == L':')
             {
                 buffer[2] = L'\\';
                 buffer[3] = UNICODE_NULL;
