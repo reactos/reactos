@@ -245,16 +245,18 @@ static BOOL find_moniker(const GUID *class, IMoniker *needle)
     BOOL found = FALSE;
 
     CoCreateInstance(&CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC, &IID_ICreateDevEnum, (void **)&devenum);
-    ICreateDevEnum_CreateClassEnumerator(devenum, class, &enum_mon, 0);
-    while (!found && IEnumMoniker_Next(enum_mon, 1, &mon, NULL) == S_OK)
+    if (ICreateDevEnum_CreateClassEnumerator(devenum, class, &enum_mon, 0) == S_OK)
     {
-        if (IMoniker_IsEqual(mon, needle) == S_OK)
-            found = TRUE;
+        while (!found && IEnumMoniker_Next(enum_mon, 1, &mon, NULL) == S_OK)
+        {
+            if (IMoniker_IsEqual(mon, needle) == S_OK)
+                found = TRUE;
 
-        IMoniker_Release(mon);
+            IMoniker_Release(mon);
+        }
+
+        IEnumMoniker_Release(enum_mon);
     }
-
-    IEnumMoniker_Release(enum_mon);
     ICreateDevEnum_Release(devenum);
     return found;
 }
@@ -594,7 +596,7 @@ static void test_codec(void)
     IParseDisplayName_Release(parser);
 }
 
-static void test_dmo(void)
+static void test_dmo(const GUID *dmo_category, const GUID *enum_category)
 {
     IParseDisplayName *parser;
     IPropertyBag *prop_bag;
@@ -613,10 +615,10 @@ static void test_dmo(void)
 
     wcscpy(buffer, L"@device:dmo:");
     StringFromGUID2(&CLSID_TestFilter, buffer + wcslen(buffer), CHARS_IN_GUID);
-    StringFromGUID2(&CLSID_AudioRendererCategory, buffer + wcslen(buffer), CHARS_IN_GUID);
+    StringFromGUID2(dmo_category, buffer + wcslen(buffer), CHARS_IN_GUID);
     mon = check_display_name(parser, buffer);
 
-    ok(!find_moniker(&CLSID_AudioRendererCategory, mon), "DMO should not be registered\n");
+    ok(!find_moniker(enum_category, mon), "DMO should not be registered\n");
 
     hr = IMoniker_BindToStorage(mon, NULL, NULL, &IID_IPropertyBag, (void **)&prop_bag);
     ok(hr == S_OK, "got %#x\n", hr);
@@ -630,12 +632,12 @@ static void test_dmo(void)
     hr = IPropertyBag_Write(prop_bag, L"FriendlyName", &var);
     ok(hr == E_ACCESSDENIED, "Write failed: %#x\n", hr);
 
-    hr = DMORegister(L"devenum test", &CLSID_TestFilter, &CLSID_AudioRendererCategory, 0, 0, NULL, 0, NULL);
+    hr = DMORegister(L"devenum test", &CLSID_TestFilter, dmo_category, 0, 0, NULL, 0, NULL);
     if (hr != E_FAIL)
     {
         ok(hr == S_OK, "got %#x\n", hr);
 
-        ok(find_moniker(&CLSID_AudioRendererCategory, mon), "DMO should be registered\n");
+        ok(find_moniker(enum_category, mon), "DMO should be registered\n");
 
         VariantClear(&var);
         hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
@@ -652,7 +654,7 @@ static void test_dmo(void)
         hr = IPropertyBag_Read(prop_bag, L"CLSID", &var, NULL);
         ok(hr == HRESULT_FROM_WIN32(ERROR_NOT_FOUND), "got %#x\n", hr);
 
-        hr = DMOUnregister(&CLSID_TestFilter, &CLSID_AudioRendererCategory);
+        hr = DMOUnregister(&CLSID_TestFilter, dmo_category);
         ok(hr == S_OK, "got %#x\n", hr);
     }
     IPropertyBag_Release(prop_bag);
@@ -1168,7 +1170,9 @@ START_TEST(devenum)
     test_register_filter();
     test_directshow_filter();
     test_codec();
-    test_dmo();
+    test_dmo(&DMOCATEGORY_AUDIO_DECODER, &CLSID_LegacyAmFilterCategory);
+    test_dmo(&DMOCATEGORY_VIDEO_DECODER, &CLSID_LegacyAmFilterCategory);
+    test_dmo(&DMOCATEGORY_VIDEO_DECODER, &DMOCATEGORY_VIDEO_DECODER);
 
     test_legacy_filter();
     hr = DirectSoundEnumerateW(test_dsound, NULL);

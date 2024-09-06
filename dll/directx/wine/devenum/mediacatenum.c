@@ -33,7 +33,7 @@ typedef struct
     IEnumMoniker IEnumMoniker_iface;
     CLSID class;
     LONG ref;
-    IEnumDMO *dmo_enum;
+    IEnumDMO *dmo_enum, *dmo_enum2;
     HKEY sw_key;
     DWORD sw_index;
     HKEY cm_key;
@@ -786,7 +786,10 @@ static ULONG WINAPI enum_moniker_Release(IEnumMoniker *iface)
 
     if (!ref)
     {
-        IEnumDMO_Release(This->dmo_enum);
+        if (This->dmo_enum)
+            IEnumDMO_Release(This->dmo_enum);
+        if (This->dmo_enum2)
+            IEnumDMO_Release(This->dmo_enum2);
         RegCloseKey(This->sw_key);
         RegCloseKey(This->cm_key);
         free(This);
@@ -794,6 +797,26 @@ static ULONG WINAPI enum_moniker_Release(IEnumMoniker *iface)
         return 0;
     }
     return ref;
+}
+
+static struct moniker *get_dmo_moniker(EnumMonikerImpl *enum_moniker)
+{
+    GUID clsid;
+
+    if (IsEqualGUID(&enum_moniker->class, &CLSID_LegacyAmFilterCategory))
+    {
+        if (enum_moniker->dmo_enum && IEnumDMO_Next(enum_moniker->dmo_enum, 1, &clsid, NULL, NULL) == S_OK)
+            return dmo_moniker_create(DMOCATEGORY_AUDIO_DECODER, clsid);
+        if (enum_moniker->dmo_enum2 && IEnumDMO_Next(enum_moniker->dmo_enum2, 1, &clsid, NULL, NULL) == S_OK)
+            return dmo_moniker_create(DMOCATEGORY_VIDEO_DECODER, clsid);
+    }
+    else
+    {
+        if (enum_moniker->dmo_enum && IEnumDMO_Next(enum_moniker->dmo_enum, 1, &clsid, NULL, NULL) == S_OK)
+            return dmo_moniker_create(enum_moniker->class, clsid);
+    }
+
+    return NULL;
 }
 
 static HRESULT WINAPI enum_moniker_Next(IEnumMoniker *iface, ULONG celt, IMoniker **rgelt,
@@ -804,8 +827,6 @@ static HRESULT WINAPI enum_moniker_Next(IEnumMoniker *iface, ULONG celt, IMonike
     struct moniker *moniker;
     LONG res;
     ULONG fetched = 0;
-    HRESULT hr;
-    GUID clsid;
     HKEY hkey;
 
     TRACE("(%p)->(%d, %p, %p)\n", iface, celt, rgelt, pceltFetched);
@@ -815,10 +836,8 @@ static HRESULT WINAPI enum_moniker_Next(IEnumMoniker *iface, ULONG celt, IMonike
         /* FIXME: try PNP devices first */
 
         /* try DMOs */
-        if ((hr = IEnumDMO_Next(This->dmo_enum, 1, &clsid, NULL, NULL)) == S_OK)
-        {
-            moniker = dmo_moniker_create(This->class, clsid);
-        }
+        if ((moniker = get_dmo_moniker(This)))
+            ;
         /* try DirectShow filters */
         else if (!(res = RegEnumKeyW(This->sw_key, This->sw_index, buffer, ARRAY_SIZE(buffer))))
         {
@@ -869,7 +888,9 @@ static HRESULT WINAPI enum_moniker_Skip(IEnumMoniker *iface, ULONG celt)
         /* FIXME: try PNP devices first */
 
         /* try DMOs */
-        if (IEnumDMO_Skip(This->dmo_enum, 1) == S_OK)
+        if (This->dmo_enum && IEnumDMO_Skip(This->dmo_enum, 1) == S_OK)
+            ;
+        else if (This->dmo_enum2 && IEnumDMO_Skip(This->dmo_enum2, 1) == S_OK)
             ;
         /* try DirectShow filters */
         else if (RegEnumKeyW(This->sw_key, This->sw_index, NULL, 0) != ERROR_NO_MORE_ITEMS)
@@ -894,7 +915,10 @@ static HRESULT WINAPI enum_moniker_Reset(IEnumMoniker *iface)
 
     TRACE("(%p)->()\n", iface);
 
-    IEnumDMO_Reset(This->dmo_enum);
+    if (This->dmo_enum)
+        IEnumDMO_Reset(This->dmo_enum);
+    if (This->dmo_enum2)
+        IEnumDMO_Reset(This->dmo_enum2);
     This->sw_index = 0;
     This->cm_index = 0;
 
@@ -926,7 +950,6 @@ HRESULT enum_moniker_create(REFCLSID class, IEnumMoniker **out)
 {
     EnumMonikerImpl *object;
     WCHAR buffer[78];
-    HRESULT hr;
 
     if (!(object = calloc(1, sizeof(*object))))
         return E_OUTOFMEMORY;
@@ -947,15 +970,17 @@ HRESULT enum_moniker_create(REFCLSID class, IEnumMoniker **out)
     if (RegOpenKeyExW(HKEY_CURRENT_USER, buffer, 0, KEY_ENUMERATE_SUB_KEYS, &object->cm_key))
         object->cm_key = NULL;
 
-    hr = DMOEnum(class, 0, 0, NULL, 0, NULL, &object->dmo_enum);
-    if (FAILED(hr))
+    if (IsEqualGUID(class, &CLSID_LegacyAmFilterCategory))
     {
-        if (object->cm_key)
-            RegCloseKey(object->cm_key);
-        if (object->sw_key)
-            RegCloseKey(object->sw_key);
-        free(object);
-        return hr;
+        if (FAILED(DMOEnum(&DMOCATEGORY_AUDIO_DECODER, 0, 0, NULL, 0, NULL, &object->dmo_enum)))
+            object->dmo_enum = NULL;
+        if (FAILED(DMOEnum(&DMOCATEGORY_VIDEO_DECODER, 0, 0, NULL, 0, NULL, &object->dmo_enum2)))
+            object->dmo_enum2 = NULL;
+    }
+    else
+    {
+        if (FAILED(DMOEnum(class, 0, 0, NULL, 0, NULL, &object->dmo_enum)))
+            object->dmo_enum = NULL;
     }
 
     *out = &object->IEnumMoniker_iface;
