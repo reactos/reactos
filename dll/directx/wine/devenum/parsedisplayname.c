@@ -68,10 +68,10 @@ static ULONG WINAPI devenum_parser_Release(IParseDisplayName *iface)
 static HRESULT WINAPI devenum_parser_ParseDisplayName(IParseDisplayName *iface,
         IBindCtx *pbc, LPOLESTR name, ULONG *eaten, IMoniker **ret)
 {
+    struct moniker *moniker;
     WCHAR buffer[MAX_PATH];
     enum device_type type;
-    struct moniker *mon;
-    CLSID class;
+    GUID class, clsid;
 
     TRACE("(%p, %s, %p, %p)\n", pbc, debugstr_w(name), eaten, ret);
 
@@ -102,47 +102,42 @@ static HRESULT WINAPI devenum_parser_ParseDisplayName(IParseDisplayName *iface,
         return MK_E_SYNTAX;
     }
 
-    if (!(mon = moniker_create()))
-        return E_OUTOFMEMORY;
-
     if (type == DEVICE_DMO)
     {
         lstrcpynW(buffer, name, CHARS_IN_GUID);
-        if (FAILED(CLSIDFromString(buffer, &mon->clsid)))
-        {
-            IMoniker_Release(&mon->IMoniker_iface);
+        if (FAILED(CLSIDFromString(buffer, &clsid)))
             return MK_E_SYNTAX;
-        }
 
         lstrcpynW(buffer, name + CHARS_IN_GUID - 1, CHARS_IN_GUID);
-        if (FAILED(CLSIDFromString(buffer, &mon->class)))
-        {
-            IMoniker_Release(&mon->IMoniker_iface);
+        if (FAILED(CLSIDFromString(buffer, &class)))
             return MK_E_SYNTAX;
-        }
+
+        moniker = dmo_moniker_create(class, clsid);
     }
     else
     {
         lstrcpynW(buffer, name, CHARS_IN_GUID);
         if (CLSIDFromString(buffer, &class) == S_OK)
         {
-            mon->has_class = TRUE;
-            mon->class = class;
             name += CHARS_IN_GUID;
+            if (type == DEVICE_FILTER)
+                moniker = filter_moniker_create(&class, name);
+            else
+                moniker = codec_moniker_create(&class, name);
         }
-
-        if (!(mon->name = CoTaskMemAlloc((lstrlenW(name) + 1) * sizeof(WCHAR))))
+        else
         {
-            IMoniker_Release(&mon->IMoniker_iface);
-            return E_OUTOFMEMORY;
+            if (type == DEVICE_FILTER)
+                moniker = filter_moniker_create(NULL, name);
+            else
+                moniker = codec_moniker_create(NULL, name);
         }
-        lstrcpyW(mon->name, name);
     }
 
-    mon->type = type;
+    if (!moniker)
+        return E_OUTOFMEMORY;
 
-    *ret = &mon->IMoniker_iface;
-
+    *ret = &moniker->IMoniker_iface;
     return S_OK;
 }
 

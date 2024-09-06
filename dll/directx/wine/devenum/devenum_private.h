@@ -70,7 +70,9 @@ struct moniker
     };
 };
 
-struct moniker *moniker_create(void) DECLSPEC_HIDDEN;
+struct moniker *dmo_moniker_create(const GUID class, const GUID clsid) DECLSPEC_HIDDEN;
+struct moniker *codec_moniker_create(const GUID *class, const WCHAR *name) DECLSPEC_HIDDEN;
+struct moniker *filter_moniker_create(const GUID *class, const WCHAR *name) DECLSPEC_HIDDEN;
 HRESULT enum_moniker_create(REFCLSID class, IEnumMoniker **enum_mon) DECLSPEC_HIDDEN;
 
 extern ICreateDevEnum devenum_factory DECLSPEC_HIDDEN;

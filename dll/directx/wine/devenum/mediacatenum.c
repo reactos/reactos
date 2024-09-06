@@ -768,7 +768,7 @@ static const IMonikerVtbl IMoniker_Vtbl =
     moniker_IsSystemMoniker,
 };
 
-struct moniker *moniker_create(void)
+struct moniker *filter_moniker_create(const GUID *class, const WCHAR *name)
 {
     struct moniker *object;
 
@@ -777,6 +777,49 @@ struct moniker *moniker_create(void)
 
     object->IMoniker_iface.lpVtbl = &IMoniker_Vtbl;
     object->ref = 1;
+    object->type = DEVICE_FILTER;
+    if (class)
+        object->class = *class;
+    object->has_class = !!class;
+    object->name = wcsdup(name);
+
+    DEVENUM_LockModule();
+
+    return object;
+}
+
+struct moniker *codec_moniker_create(const GUID *class, const WCHAR *name)
+{
+    struct moniker *object;
+
+    if (!(object = calloc(1, sizeof(*object))))
+        return NULL;
+
+    object->IMoniker_iface.lpVtbl = &IMoniker_Vtbl;
+    object->ref = 1;
+    object->type = DEVICE_CODEC;
+    if (class)
+        object->class = *class;
+    object->has_class = !!class;
+    object->name = wcsdup(name);
+
+    DEVENUM_LockModule();
+
+    return object;
+}
+
+struct moniker *dmo_moniker_create(const GUID class, const GUID clsid)
+{
+    struct moniker *object;
+
+    if (!(object = calloc(1, sizeof(*object))))
+        return NULL;
+
+    object->IMoniker_iface.lpVtbl = &IMoniker_Vtbl;
+    object->ref = 1;
+    object->type = DEVICE_DMO;
+    object->class = class;
+    object->clsid = clsid;
 
     DEVENUM_LockModule();
 
@@ -842,11 +885,11 @@ static HRESULT WINAPI enum_moniker_Next(IEnumMoniker *iface, ULONG celt, IMonike
 {
     EnumMonikerImpl *This = impl_from_IEnumMoniker(iface);
     WCHAR buffer[MAX_PATH + 1];
-    struct moniker *pMoniker;
+    struct moniker *moniker;
     LONG res;
     ULONG fetched = 0;
-    CLSID clsid;
     HRESULT hr;
+    GUID clsid;
     HKEY hkey;
 
     TRACE("(%p)->(%d, %p, %p)\n", iface, celt, rgelt, pceltFetched);
@@ -858,14 +901,7 @@ static HRESULT WINAPI enum_moniker_Next(IEnumMoniker *iface, ULONG celt, IMonike
         /* try DMOs */
         if ((hr = IEnumDMO_Next(This->dmo_enum, 1, &clsid, NULL, NULL)) == S_OK)
         {
-            if (!(pMoniker = moniker_create()))
-                return E_OUTOFMEMORY;
-
-            pMoniker->type = DEVICE_DMO;
-            pMoniker->clsid = clsid;
-
-            StringFromGUID2(&clsid, buffer, CHARS_IN_GUID);
-            StringFromGUID2(&This->class, buffer + CHARS_IN_GUID - 1, CHARS_IN_GUID);
+            moniker = dmo_moniker_create(This->class, clsid);
         }
         /* try DirectShow filters */
         else if (!(res = RegEnumKeyW(This->sw_key, This->sw_index, buffer, ARRAY_SIZE(buffer))))
@@ -874,17 +910,7 @@ static HRESULT WINAPI enum_moniker_Next(IEnumMoniker *iface, ULONG celt, IMonike
             if ((res = RegOpenKeyExW(This->sw_key, buffer, 0, KEY_QUERY_VALUE, &hkey)))
                 break;
 
-            if (!(pMoniker = moniker_create()))
-                return E_OUTOFMEMORY;
-
-            pMoniker->type = DEVICE_FILTER;
-
-            if (!(pMoniker->name = CoTaskMemAlloc((lstrlenW(buffer) + 1) * sizeof(WCHAR))))
-            {
-                IMoniker_Release(&pMoniker->IMoniker_iface);
-                return E_OUTOFMEMORY;
-            }
-            lstrcpyW(pMoniker->name, buffer);
+            moniker = filter_moniker_create(&This->class, buffer);
         }
         /* then try codecs */
         else if (!(res = RegEnumKeyW(This->cm_key, This->cm_index, buffer, ARRAY_SIZE(buffer))))
@@ -894,26 +920,15 @@ static HRESULT WINAPI enum_moniker_Next(IEnumMoniker *iface, ULONG celt, IMonike
             if ((res = RegOpenKeyExW(This->cm_key, buffer, 0, KEY_QUERY_VALUE, &hkey)))
                 break;
 
-            if (!(pMoniker = moniker_create()))
-                return E_OUTOFMEMORY;
-
-            pMoniker->type = DEVICE_CODEC;
-
-            if (!(pMoniker->name = CoTaskMemAlloc((lstrlenW(buffer) + 1) * sizeof(WCHAR))))
-            {
-                IMoniker_Release(&pMoniker->IMoniker_iface);
-                return E_OUTOFMEMORY;
-            }
-            lstrcpyW(pMoniker->name, buffer);
+            moniker = codec_moniker_create(&This->class, buffer);
         }
         else
             break;
 
-        pMoniker->has_class = TRUE;
-        pMoniker->class = This->class;
+        if (!moniker)
+            return E_OUTOFMEMORY;
 
-        rgelt[fetched] = &pMoniker->IMoniker_iface;
-        fetched++;
+        rgelt[fetched++] = &moniker->IMoniker_iface;
     }
 
     TRACE("-- fetched %d\n", fetched);
