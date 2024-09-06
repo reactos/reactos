@@ -637,8 +637,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
 
     while (GetMessage(&msg, NULL, 0, 0))
     {
-        if (!TranslateAccelerator(Globals.hMainWnd, hAccel, &msg) &&
-            !IsDialogMessage(Globals.hFindReplaceDlg, &msg))
+        if ((!Globals.hFindReplaceDlg || !IsDialogMessage(Globals.hFindReplaceDlg, &msg)) &&
+            !TranslateAccelerator(Globals.hMainWnd, hAccel, &msg))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
