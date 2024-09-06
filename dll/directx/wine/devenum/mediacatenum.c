@@ -137,17 +137,10 @@ static HRESULT WINAPI property_bag_Read(IPropertyBag *iface,
         }
         else if (!wcscmp(name, L"FilterData"))
         {
-            REGFILTERPINS2 reg_pins[2] = {{0}};
-            REGFILTER2 reg_filter =
-            {
-                .dwVersion = 2,
-                .dwMerit = MERIT_NORMAL + 0x800,
-                .cPins2 = 2,
-                .rgPins2 = reg_pins,
-            };
-
             unsigned int count = 1, input_count, output_count, i;
             DMO_PARTIAL_MEDIATYPE *types = NULL, *new_array;
+            REGFILTERPINS2 reg_pins[2] = {{0}};
+            REGFILTER2 reg_filter = {0};
             REGPINTYPES *reg_types;
             HRESULT hr;
 
@@ -192,6 +185,10 @@ static HRESULT WINAPI property_bag_Read(IPropertyBag *iface,
             reg_pins[1].cInstances = 1;
             reg_pins[1].nMediaTypes = output_count;
             reg_pins[1].lpMediaType = reg_types + count;
+            reg_filter.dwVersion = 2;
+            reg_filter.dwMerit = MERIT_NORMAL + 0x800,
+            reg_filter.cPins2 = 2;
+            reg_filter.rgPins2 = reg_pins;
 
             hr = create_filter_data(var, &reg_filter);
             free(reg_types);
