@@ -57,6 +57,7 @@ struct moniker
     IPropertyBag IPropertyBag_iface;
 };
 
+HRESULT create_filter_data(VARIANT *var, REGFILTER2 *rgf) DECLSPEC_HIDDEN;
 struct moniker *dmo_moniker_create(const GUID class, const GUID clsid) DECLSPEC_HIDDEN;
 struct moniker *codec_moniker_create(const GUID *class, const WCHAR *name) DECLSPEC_HIDDEN;
 struct moniker *filter_moniker_create(const GUID *class, const WCHAR *name) DECLSPEC_HIDDEN;

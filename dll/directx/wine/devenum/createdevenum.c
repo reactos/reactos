@@ -351,40 +351,44 @@ static void free_regfilter2(REGFILTER2 *rgf)
     }
 }
 
-static void write_filter_data(IPropertyBag *prop_bag, REGFILTER2 *rgf)
+HRESULT create_filter_data(VARIANT *var, REGFILTER2 *rgf)
 {
-    BYTE *data = NULL, *array;
     IAMFilterData *fildata;
-    SAFEARRAYBOUND sabound;
-    VARIANT var;
+    BYTE *data = NULL;
     ULONG size;
     HRESULT hr;
 
     hr = CoCreateInstance(&CLSID_FilterMapper2, NULL, CLSCTX_INPROC, &IID_IAMFilterData, (void **)&fildata);
-    if (FAILED(hr)) goto cleanup;
+    if (FAILED(hr))
+        return hr;
 
     hr = IAMFilterData_CreateFilterData(fildata, rgf, &data, &size);
-    if (FAILED(hr)) goto cleanup;
-
-    V_VT(&var) = VT_ARRAY | VT_UI1;
-    sabound.lLbound = 0;
-    sabound.cElements = size;
-    if (!(V_ARRAY(&var) = SafeArrayCreate(VT_UI1, 1, &sabound)))
-        goto cleanup;
-    hr = SafeArrayAccessData(V_ARRAY(&var), (void *)&array);
-    if (FAILED(hr)) goto cleanup;
-
-    memcpy(array, data, size);
-    hr = SafeArrayUnaccessData(V_ARRAY(&var));
-    if (FAILED(hr)) goto cleanup;
-
-    hr = IPropertyBag_Write(prop_bag, L"FilterData", &var);
-    if (FAILED(hr)) goto cleanup;
-
-cleanup:
-    VariantClear(&var);
-    CoTaskMemFree(data);
     IAMFilterData_Release(fildata);
+    if (FAILED(hr))
+        return hr;
+
+    V_VT(var) = VT_ARRAY | VT_UI1;
+    if (!(V_ARRAY(var) = SafeArrayCreateVector(VT_UI1, 1, size)))
+    {
+        VariantClear(var);
+        CoTaskMemFree(data);
+        return E_OUTOFMEMORY;
+    }
+
+    memcpy(V_ARRAY(var)->pvData, data, size);
+    CoTaskMemFree(data);
+    return S_OK;
+}
+
+static void write_filter_data(IPropertyBag *prop_bag, REGFILTER2 *rgf)
+{
+    VARIANT var;
+
+    if (SUCCEEDED(create_filter_data(&var, rgf)))
+    {
+        IPropertyBag_Write(prop_bag, L"FilterData", &var);
+        VariantClear(&var);
+    }
 }
 
 static void register_legacy_filters(void)

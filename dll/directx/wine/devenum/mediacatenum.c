@@ -28,6 +28,35 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(devenum);
 
+BOOL array_reserve(void **elements, unsigned int *capacity, unsigned int count, unsigned int size)
+{
+    unsigned int max_capacity, new_capacity;
+    void *new_elements;
+
+    if (count <= *capacity)
+        return TRUE;
+
+    max_capacity = ~0u / size;
+    if (count > max_capacity)
+        return FALSE;
+
+    new_capacity = max(8, *capacity);
+    while (new_capacity < count && new_capacity <= max_capacity / 2)
+        new_capacity *= 2;
+    if (new_capacity < count)
+        new_capacity = count;
+
+    if (!(new_elements = realloc(*elements, new_capacity * size)))
+    {
+        ERR("Failed to allocate memory.\n");
+        return FALSE;
+    }
+
+    *elements = new_elements;
+    *capacity = new_capacity;
+    return TRUE;
+}
+
 typedef struct
 {
     IEnumMoniker IEnumMoniker_iface;
@@ -104,6 +133,70 @@ static HRESULT WINAPI property_bag_Read(IPropertyBag *iface,
                 V_VT(var) = VT_BSTR;
                 V_BSTR(var) = SysAllocString(dmo_name);
             }
+            return hr;
+        }
+        else if (!wcscmp(name, L"FilterData"))
+        {
+            REGFILTERPINS2 reg_pins[2] = {{0}};
+            REGFILTER2 reg_filter =
+            {
+                .dwVersion = 2,
+                .dwMerit = MERIT_NORMAL + 0x800,
+                .cPins2 = 2,
+                .rgPins2 = reg_pins,
+            };
+
+            unsigned int count = 1, input_count, output_count, i;
+            DMO_PARTIAL_MEDIATYPE *types = NULL;
+            REGPINTYPES *reg_types;
+            HRESULT hr;
+
+            if (!(types = malloc(2 * count * sizeof(*types))))
+                return E_OUTOFMEMORY;
+
+            while ((hr = DMOGetTypes(&moniker->clsid, count, &input_count, types,
+                    count, &output_count, types + count)) == S_FALSE)
+            {
+                count *= 2;
+                if (!(types = realloc(types, count * sizeof(*types))))
+                {
+                    free(types);
+                    return E_OUTOFMEMORY;
+                }
+            }
+            if (hr != S_OK)
+            {
+                free(types);
+                return hr;
+            }
+
+            if (!(reg_types = malloc(2 * count * sizeof(*reg_types))))
+            {
+                free(types);
+                return hr;
+            }
+
+            for (i = 0; i < input_count; ++i)
+            {
+                reg_types[i].clsMajorType = &types[i].type;
+                reg_types[i].clsMinorType = &types[i].subtype;
+            }
+            for (i = 0; i < output_count; ++i)
+            {
+                reg_types[count + i].clsMajorType = &types[count + i].type;
+                reg_types[count + i].clsMinorType = &types[count + i].subtype;
+            }
+            reg_pins[0].cInstances = 1;
+            reg_pins[0].nMediaTypes = input_count;
+            reg_pins[0].lpMediaType = reg_types;
+            reg_pins[1].dwFlags = REG_PINFLAG_B_OUTPUT;
+            reg_pins[1].cInstances = 1;
+            reg_pins[1].nMediaTypes = output_count;
+            reg_pins[1].lpMediaType = reg_types + count;
+
+            hr = create_filter_data(var, &reg_filter);
+            free(reg_types);
+            free(types);
             return hr;
         }
         return HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
