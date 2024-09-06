@@ -32,22 +32,6 @@ static HINSTANCE devenum_instance;
 static void DEVENUM_RegisterQuartz(void);
 #endif
 
-/***********************************************************************
- *		DllEntryPoint
- */
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
-{
-    TRACE("%p 0x%x %p\n", hinstDLL, fdwReason, fImpLoad);
-
-    switch(fdwReason) {
-    case DLL_PROCESS_ATTACH:
-        devenum_instance = hinstDLL;
-        DisableThreadLibraryCalls(hinstDLL);
-	break;
-    }
-    return TRUE;
-}
-
 struct class_factory
 {
     IClassFactory IClassFactory_iface;
@@ -158,7 +142,7 @@ HRESULT WINAPI DllRegisterServer(void)
 
     TRACE("\n");
 
-    res = __wine_register_resources( devenum_instance );
+    res = __wine_register_resources();
     if (FAILED(res))
         return res;
 
@@ -195,7 +179,7 @@ HRESULT WINAPI DllRegisterServer(void)
 HRESULT WINAPI DllUnregisterServer(void)
 {
     FIXME("stub!\n");
-    return __wine_unregister_resources( devenum_instance );
+    return __wine_unregister_resources();
 }
 
 #ifdef __REACTOS__
