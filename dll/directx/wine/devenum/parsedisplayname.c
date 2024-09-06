@@ -70,7 +70,7 @@ static HRESULT WINAPI devenum_parser_ParseDisplayName(IParseDisplayName *iface,
 {
     WCHAR buffer[MAX_PATH];
     enum device_type type;
-    MediaCatMoniker *mon;
+    struct moniker *mon;
     CLSID class;
 
     TRACE("(%p, %s, %p, %p)\n", pbc, debugstr_w(name), eaten, ret);

@@ -319,7 +319,7 @@ static const IPropertyBagVtbl IPropertyBag_Vtbl =
     property_bag_Write,
 };
 
-static HRESULT property_bag_create(MediaCatMoniker *mon, IPropertyBag **ppBag)
+static HRESULT property_bag_create(struct moniker *mon, IPropertyBag **ppBag)
 {
     RegPropBagImpl * rpb = CoTaskMemAlloc(sizeof(RegPropBagImpl));
     if (!rpb)
@@ -359,9 +359,9 @@ static HRESULT property_bag_create(MediaCatMoniker *mon, IPropertyBag **ppBag)
 }
 
 
-static inline MediaCatMoniker *impl_from_IMoniker(IMoniker *iface)
+static inline struct moniker *impl_from_IMoniker(IMoniker *iface)
 {
-    return CONTAINING_RECORD(iface, MediaCatMoniker, IMoniker_iface);
+    return CONTAINING_RECORD(iface, struct moniker, IMoniker_iface);
 }
 
 static HRESULT WINAPI moniker_QueryInterface(IMoniker *iface, REFIID riid, void **ppv)
@@ -388,7 +388,7 @@ static HRESULT WINAPI moniker_QueryInterface(IMoniker *iface, REFIID riid, void 
 
 static ULONG WINAPI moniker_AddRef(IMoniker *iface)
 {
-    MediaCatMoniker *This = impl_from_IMoniker(iface);
+    struct moniker *This = impl_from_IMoniker(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
     TRACE("(%p) ref=%d\n", This, ref);
@@ -398,7 +398,7 @@ static ULONG WINAPI moniker_AddRef(IMoniker *iface)
 
 static ULONG WINAPI moniker_Release(IMoniker *iface)
 {
-    MediaCatMoniker *This = impl_from_IMoniker(iface);
+    struct moniker *This = impl_from_IMoniker(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p) ref=%d\n", This, ref);
@@ -413,7 +413,7 @@ static ULONG WINAPI moniker_Release(IMoniker *iface)
 
 static HRESULT WINAPI moniker_GetClassID(IMoniker *iface, CLSID *pClassID)
 {
-    MediaCatMoniker *This = impl_from_IMoniker(iface);
+    struct moniker *This = impl_from_IMoniker(iface);
 
     TRACE("(%p)->(%p)\n", This, pClassID);
 
@@ -458,7 +458,7 @@ static HRESULT WINAPI moniker_GetSizeMax(IMoniker *iface, ULARGE_INTEGER *pcbSiz
 static HRESULT WINAPI moniker_BindToObject(IMoniker *iface, IBindCtx *pbc,
         IMoniker *pmkToLeft, REFIID riidResult, void **ppvResult)
 {
-    MediaCatMoniker *This = impl_from_IMoniker(iface);
+    struct moniker *This = impl_from_IMoniker(iface);
     IUnknown * pObj = NULL;
     IPropertyBag * pProp = NULL;
     CLSID clsID;
@@ -527,7 +527,7 @@ static HRESULT WINAPI moniker_BindToObject(IMoniker *iface, IBindCtx *pbc,
 static HRESULT WINAPI moniker_BindToStorage(IMoniker *iface, IBindCtx *pbc,
         IMoniker *pmkToLeft, REFIID riid, void **ppvObj)
 {
-    MediaCatMoniker *This = impl_from_IMoniker(iface);
+    struct moniker *This = impl_from_IMoniker(iface);
 
     TRACE("(%p)->(%p, %p, %s, %p)\n", This, pbc, pmkToLeft, debugstr_guid(riid), ppvObj);
 
@@ -681,7 +681,7 @@ static HRESULT WINAPI moniker_RelativePathTo(IMoniker *iface, IMoniker *pmkOther
 static HRESULT WINAPI moniker_GetDisplayName(IMoniker *iface, IBindCtx *pbc,
         IMoniker *pmkToLeft, LPOLESTR *ppszDisplayName)
 {
-    MediaCatMoniker *This = impl_from_IMoniker(iface);
+    struct moniker *This = impl_from_IMoniker(iface);
     WCHAR *buffer;
 
     TRACE("(%p)->(%p, %p, %p)\n", iface, pbc, pmkToLeft, ppszDisplayName);
@@ -768,10 +768,11 @@ static const IMonikerVtbl IMoniker_Vtbl =
     moniker_IsSystemMoniker,
 };
 
-MediaCatMoniker *moniker_create(void)
+struct moniker *moniker_create(void)
 {
-    MediaCatMoniker * pMoniker = NULL;
-    pMoniker = CoTaskMemAlloc(sizeof(MediaCatMoniker));
+    struct moniker *pMoniker;
+
+    pMoniker = CoTaskMemAlloc(sizeof(*pMoniker));
     if (!pMoniker)
         return NULL;
 
@@ -844,9 +845,9 @@ static HRESULT WINAPI enum_moniker_Next(IEnumMoniker *iface, ULONG celt, IMonike
 {
     EnumMonikerImpl *This = impl_from_IEnumMoniker(iface);
     WCHAR buffer[MAX_PATH + 1];
+    struct moniker *pMoniker;
     LONG res;
     ULONG fetched = 0;
-    MediaCatMoniker * pMoniker;
     CLSID clsid;
     HRESULT hr;
     HKEY hkey;

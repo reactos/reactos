@@ -56,7 +56,7 @@ enum device_type
     DEVICE_DMO,
 };
 
-typedef struct
+struct moniker
 {
     IMoniker IMoniker_iface;
     LONG ref;
@@ -68,9 +68,9 @@ typedef struct
         WCHAR *name;    /* for filters and codecs */
         CLSID clsid;    /* for DMOs */
     };
-} MediaCatMoniker;
+};
 
-MediaCatMoniker *moniker_create(void) DECLSPEC_HIDDEN;
+struct moniker *moniker_create(void) DECLSPEC_HIDDEN;
 HRESULT enum_moniker_create(REFCLSID class, IEnumMoniker **enum_mon) DECLSPEC_HIDDEN;
 
 extern ICreateDevEnum devenum_factory DECLSPEC_HIDDEN;
