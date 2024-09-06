@@ -1555,9 +1555,10 @@ static HRESULT ShellExecute_ContextMenuVerb(LPSHELLEXECUTEINFOW sei)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    CComHeapPtr<char> verb, parameters;
+    CComHeapPtr<char> verb, parameters, dir;
     __SHCloneStrWtoA(&verb, sei->lpVerb);
     __SHCloneStrWtoA(&parameters, sei->lpParameters);
+    __SHCloneStrWtoA(&dir, sei->lpDirectory);
 
     BOOL fDefault = StrIsNullOrEmpty(sei->lpVerb);
     CMINVOKECOMMANDINFOEX ici = { sizeof(ici) };
@@ -1571,6 +1572,8 @@ static HRESULT ShellExecute_ContextMenuVerb(LPSHELLEXECUTEINFOW sei)
     ici.hwnd = sei->hwnd;
     ici.lpParameters = parameters;
     ici.lpParametersW = sei->lpParameters;
+    ici.lpDirectory = dir;
+    ici.lpDirectoryW = sei->lpDirectory;
     ici.dwHotKey = sei->dwHotKey;
     ici.hIcon = sei->hIcon;
     if (ici.fMask & (CMIC_MASK_HASLINKNAME | CMIC_MASK_HASTITLE))
