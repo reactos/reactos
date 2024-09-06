@@ -43,263 +43,233 @@ typedef struct
     DWORD cm_index;
 } EnumMonikerImpl;
 
-typedef struct
+static inline struct moniker *impl_from_IPropertyBag(IPropertyBag *iface)
 {
-    IPropertyBag IPropertyBag_iface;
-    LONG ref;
-    enum device_type type;
-    union
-    {
-        WCHAR path[MAX_PATH];   /* for filters and codecs */
-        CLSID clsid;            /* for DMOs */
-    };
-} RegPropBagImpl;
-
-
-static inline RegPropBagImpl *impl_from_IPropertyBag(IPropertyBag *iface)
-{
-    return CONTAINING_RECORD(iface, RegPropBagImpl, IPropertyBag_iface);
+    return CONTAINING_RECORD(iface, struct moniker, IPropertyBag_iface);
 }
 
-static HRESULT WINAPI property_bag_QueryInterface(IPropertyBag *iface, REFIID riid, void **ppvObj)
+static HRESULT WINAPI property_bag_QueryInterface(IPropertyBag *iface, REFIID iid, void **out)
 {
-    RegPropBagImpl *This = impl_from_IPropertyBag(iface);
+    struct moniker *moniker = impl_from_IPropertyBag(iface);
 
-    TRACE("(%p)->(%s, %p)\n", iface, debugstr_guid(riid), ppvObj);
+    TRACE("moniker %p, iid %s, out %p.\n", moniker, debugstr_guid(iid), out);
 
-    if (This == NULL || ppvObj == NULL) return E_POINTER;
+    if (!out)
+        return E_POINTER;
 
-    if (IsEqualGUID(riid, &IID_IUnknown) ||
-        IsEqualGUID(riid, &IID_IPropertyBag))
+    if (IsEqualGUID(iid, &IID_IUnknown) || IsEqualGUID(iid, &IID_IPropertyBag))
     {
-        *ppvObj = iface;
+        *out = iface;
         IPropertyBag_AddRef(iface);
         return S_OK;
     }
 
-    FIXME("- no interface IID: %s\n", debugstr_guid(riid));
+    WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(iid));
+    *out = NULL;
     return E_NOINTERFACE;
 }
 
 static ULONG WINAPI property_bag_AddRef(IPropertyBag *iface)
 {
-    RegPropBagImpl *This = impl_from_IPropertyBag(iface);
-
-    TRACE("(%p)->() AddRef from %d\n", iface, This->ref);
-
-    return InterlockedIncrement(&This->ref);
+    struct moniker *moniker = impl_from_IPropertyBag(iface);
+    return IMoniker_AddRef(&moniker->IMoniker_iface);
 }
 
 static ULONG WINAPI property_bag_Release(IPropertyBag *iface)
 {
-    RegPropBagImpl *This = impl_from_IPropertyBag(iface);
-    ULONG ref;
-
-    TRACE("(%p)->() ReleaseThis->ref from %d\n", iface, This->ref);
-
-    ref = InterlockedDecrement(&This->ref);
-    if (ref == 0) {
-        CoTaskMemFree(This);
-        DEVENUM_UnlockModule();
-    }
-    return ref;
+    struct moniker *moniker = impl_from_IPropertyBag(iface);
+    return IMoniker_Release(&moniker->IMoniker_iface);
 }
 
 static HRESULT WINAPI property_bag_Read(IPropertyBag *iface,
-        const WCHAR *pszPropName, VARIANT *pVar, IErrorLog *pErrorLog)
+        const WCHAR *name, VARIANT *var, IErrorLog *errorlog)
 {
-    static const WCHAR FriendlyNameW[] = {'F','r','i','e','n','d','l','y','N','a','m','e',0};
-    LPVOID pData = NULL;
-    DWORD received;
-    DWORD type = 0;
-    RegPropBagImpl *This = impl_from_IPropertyBag(iface);
-    HRESULT res = S_OK;
-    LONG reswin32 = ERROR_SUCCESS;
-    WCHAR name[80];
-    HKEY hkey;
+    struct moniker *moniker = impl_from_IPropertyBag(iface);
+    WCHAR dmo_name[80];
+    DWORD size, type;
+    HKEY parent, key;
+    WCHAR path[78];
+    void *data;
+    HRESULT hr;
+    LONG ret;
 
-    TRACE("(%p)->(%s, %p, %p)\n", This, debugstr_w(pszPropName), pVar, pErrorLog);
+    TRACE("moniker %p, name %s, var %p, errorlog %p.\n", moniker, debugstr_w(name), var, errorlog);
 
-    if (!pszPropName || !pVar)
+    if (!name || !var)
         return E_POINTER;
 
-    if (This->type == DEVICE_DMO)
+    if (moniker->type == DEVICE_DMO)
     {
-        if (!lstrcmpW(pszPropName, FriendlyNameW))
+        if (!wcscmp(name, L"FriendlyName"))
         {
-            res = DMOGetName(&This->clsid, name);
-            if (SUCCEEDED(res))
+            if (SUCCEEDED(hr = DMOGetName(&moniker->clsid, dmo_name)))
             {
-                V_VT(pVar) = VT_BSTR;
-                V_BSTR(pVar) = SysAllocString(name);
+                V_VT(var) = VT_BSTR;
+                V_BSTR(var) = SysAllocString(dmo_name);
             }
-            return res;
+            return hr;
         }
         return HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
     }
 
-    if (This->type == DEVICE_FILTER)
-        reswin32 = RegOpenKeyW(HKEY_CLASSES_ROOT, This->path, &hkey);
-    else if (This->type == DEVICE_CODEC)
-        reswin32 = RegOpenKeyW(HKEY_CURRENT_USER, This->path, &hkey);
-    res = HRESULT_FROM_WIN32(reswin32);
-
-    if (SUCCEEDED(res))
+    if (moniker->type == DEVICE_FILTER)
     {
-        reswin32 = RegQueryValueExW(hkey, pszPropName, NULL, NULL, NULL, &received);
-        res = HRESULT_FROM_WIN32(reswin32);
-    }
-
-    if (SUCCEEDED(res))
-    {
-        pData = HeapAlloc(GetProcessHeap(), 0, received);
-
-        /* work around a GCC bug that occurs here unless we use the reswin32 variable as well */
-        reswin32 = RegQueryValueExW(hkey, pszPropName, NULL, &type, pData, &received);
-        res = HRESULT_FROM_WIN32(reswin32);
-    }
-
-    if (SUCCEEDED(res))
-    {
-        res = E_INVALIDARG; /* assume we cannot coerce into right type */
-
-        TRACE("Read %d bytes (%s)\n", received, type == REG_SZ ? debugstr_w(pData) : "binary data");
-
-        switch (type)
+        wcscpy(path, L"CLSID\\");
+        if (moniker->has_class)
         {
-        case REG_SZ:
-            switch (V_VT(pVar))
-            {
-            case VT_EMPTY:
-                V_VT(pVar) = VT_BSTR;
-            /* fall through */
-            case VT_BSTR:
-                V_BSTR(pVar) = SysAllocStringLen(pData, received/sizeof(WCHAR) - 1);
-                res = S_OK;
-                break;
-            }
-            break;
-        case REG_DWORD:
-            TRACE("REG_DWORD: %x\n", *(DWORD *)pData);
-            switch (V_VT(pVar))
-            {
-            case VT_EMPTY:
-                V_VT(pVar) = VT_I4;
-                /* fall through */
-            case VT_I4:
-                V_I4(pVar) = *(DWORD *)pData;
-                res = S_OK;
-                break;
-            }
-            break;
-        case REG_BINARY:
-            {
-                SAFEARRAYBOUND bound;
-                void * pArrayElements;
-                bound.lLbound = 0;
-                bound.cElements = received;
-                TRACE("REG_BINARY: len = %d\n", received);
-                switch (V_VT(pVar))
-                {
-                case VT_EMPTY:
-                    V_VT(pVar) = VT_ARRAY | VT_UI1;
-                    /* fall through */
-                case VT_ARRAY | VT_UI1:
-                    if (!(V_ARRAY(pVar) = SafeArrayCreate(VT_UI1, 1, &bound)))
-                        res = E_OUTOFMEMORY;
-                    else
-                        res = S_OK;
-                    break;
-                }
-
-                if (res == E_INVALIDARG)
-                    break;
-
-                res = SafeArrayAccessData(V_ARRAY(pVar), &pArrayElements);
-                if (FAILED(res))
-                    break;
-
-                CopyMemory(pArrayElements, pData, received);
-                res = SafeArrayUnaccessData(V_ARRAY(pVar));
-                break;
-            }
+            StringFromGUID2(&moniker->class, path + wcslen(path), CHARS_IN_GUID);
+            wcscat(path, L"\\Instance");
         }
-        if (res == E_INVALIDARG)
-            FIXME("Variant type %x not supported for regtype %x\n", V_VT(pVar), type);
+        if ((ret = RegOpenKeyExW(HKEY_CLASSES_ROOT, path, 0, 0, &parent)))
+            return HRESULT_FROM_WIN32(ret);
+    }
+    else if (moniker->type == DEVICE_CODEC)
+    {
+        wcscpy(path, L"Software\\Microsoft\\ActiveMovie\\devenum\\");
+        if (moniker->has_class)
+            StringFromGUID2(&moniker->class, path + wcslen(path), CHARS_IN_GUID);
+        if ((ret = RegOpenKeyExW(HKEY_CURRENT_USER, path, 0, 0, &parent)))
+            return HRESULT_FROM_WIN32(ret);
+    }
+    ret = RegOpenKeyExW(parent, moniker->name, 0, KEY_READ, &key);
+    RegCloseKey(parent);
+    if (ret)
+        return HRESULT_FROM_WIN32(ret);
+
+    if ((ret = RegQueryValueExW(key, name, NULL, NULL, NULL, &size)))
+    {
+        RegCloseKey(key);
+        return HRESULT_FROM_WIN32(ret);
     }
 
-    HeapFree(GetProcessHeap(), 0, pData);
+    data = malloc(size);
+    if ((ret = RegQueryValueExW(key, name, NULL, &type, data, &size)))
+    {
+        RegCloseKey(key);
+        free(data);
+        return HRESULT_FROM_WIN32(ret);
+    }
+    RegCloseKey(key);
 
-    RegCloseKey(hkey);
+    switch (type)
+    {
+    case REG_SZ:
+        if (V_VT(var) == VT_EMPTY)
+            V_VT(var) = VT_BSTR;
+        if (V_VT(var) != VT_BSTR)
+        {
+            WARN("Invalid type %s.\n", debugstr_vt(V_VT(var)));
+            return E_INVALIDARG;
+        }
+        V_BSTR(var) = SysAllocStringLen(data, size / sizeof(WCHAR) - 1);
+        free(data);
+        return S_OK;
+    case REG_DWORD:
+        if (V_VT(var) == VT_EMPTY)
+            V_VT(var) = VT_I4;
+        if (V_VT(var) != VT_I4)
+        {
+            WARN("Invalid type %s.\n", debugstr_vt(V_VT(var)));
+            return E_INVALIDARG;
+        }
+        V_I4(var) = *(DWORD *)data;
+        free(data);
+        return S_OK;
+    case REG_BINARY:
+    {
+        SAFEARRAYBOUND bound = {.cElements = size};
+        void *array_data;
 
-    TRACE("<- %x\n", res);
-    return res;
+        if (V_VT(var) == VT_EMPTY)
+            V_VT(var) = VT_ARRAY | VT_UI1;
+        if (V_VT(var) != (VT_ARRAY | VT_UI1))
+        {
+            WARN("Invalid type %s.\n", debugstr_vt(V_VT(var)));
+            return E_INVALIDARG;
+        }
+
+        if (!(V_ARRAY(var) = SafeArrayCreate(VT_UI1, 1, &bound)))
+        {
+            free(data);
+            return E_OUTOFMEMORY;
+        }
+
+        SafeArrayAccessData(V_ARRAY(var), &array_data);
+        memcpy(array_data, data, size);
+        SafeArrayUnaccessData(V_ARRAY(var));
+        free(data);
+        return S_OK;
+    }
+    default:
+        FIXME("Unhandled type %#x.\n", type);
+        free(data);
+        return E_NOTIMPL;
+    }
 }
 
-static HRESULT WINAPI property_bag_Write(IPropertyBag *iface,
-        const WCHAR *pszPropName, VARIANT *pVar)
+static HRESULT WINAPI property_bag_Write(IPropertyBag *iface, const WCHAR *name, VARIANT *var)
 {
-    RegPropBagImpl *This = impl_from_IPropertyBag(iface);
-    LPVOID lpData = NULL;
-    DWORD cbData = 0;
-    DWORD dwType = 0;
-    HRESULT res = S_OK;
-    LONG lres = ERROR_SUCCESS;
-    HKEY hkey;
+    struct moniker *moniker = impl_from_IPropertyBag(iface);
+    HKEY parent, key;
+    WCHAR path[78];
+    LONG ret;
 
-    TRACE("(%p)->(%s, %p)\n", This, debugstr_w(pszPropName), pVar);
+    TRACE("moniker %p, name %s, var %s.\n", moniker, debugstr_w(name), debugstr_variant(var));
 
-    if (This->type == DEVICE_DMO)
+    if (moniker->type == DEVICE_DMO)
         return E_ACCESSDENIED;
 
-    switch (V_VT(pVar))
+    if (moniker->type == DEVICE_FILTER)
+    {
+        wcscpy(path, L"CLSID\\");
+        if (moniker->has_class)
+        {
+            StringFromGUID2(&moniker->class, path + wcslen(path), CHARS_IN_GUID);
+            wcscat(path, L"\\Instance");
+        }
+        if ((ret = RegCreateKeyExW(HKEY_CLASSES_ROOT, path, 0, NULL, 0, 0, NULL, &parent, NULL)))
+            return HRESULT_FROM_WIN32(ret);
+    }
+    else if (moniker->type == DEVICE_CODEC)
+    {
+        wcscpy(path, L"Software\\Microsoft\\ActiveMovie\\devenum\\");
+        if (moniker->has_class)
+            StringFromGUID2(&moniker->class, path + wcslen(path), CHARS_IN_GUID);
+        if ((ret = RegCreateKeyExW(HKEY_CURRENT_USER, path, 0, NULL, 0, 0, NULL, &parent, NULL)))
+            return HRESULT_FROM_WIN32(ret);
+    }
+    ret = RegCreateKeyExW(parent, moniker->name, 0, NULL, 0, KEY_WRITE, NULL, &key, NULL);
+    RegCloseKey(parent);
+    if (ret)
+        return HRESULT_FROM_WIN32(ret);
+
+    switch (V_VT(var))
     {
     case VT_BSTR:
-        TRACE("writing %s\n", debugstr_w(V_BSTR(pVar)));
-        lpData = V_BSTR(pVar);
-        dwType = REG_SZ;
-        cbData = (lstrlenW(V_BSTR(pVar)) + 1) * sizeof(WCHAR);
+        ret = RegSetValueExW(key, name, 0, REG_SZ, (BYTE *)V_BSTR(var),
+                (wcslen(V_BSTR(var)) + 1) * sizeof(WCHAR));
         break;
     case VT_I4:
-        TRACE("writing %d\n", V_I4(pVar));
-        lpData = &V_I4(pVar);
-        dwType = REG_DWORD;
-        cbData = sizeof(DWORD);
+        ret = RegSetValueExW(key, name, 0, REG_DWORD, (BYTE *)&V_I4(var), sizeof(DWORD));
         break;
     case VT_ARRAY | VT_UI1:
     {
-        LONG lUbound = 0;
-        LONG lLbound = 0;
-        dwType = REG_BINARY;
-        res = SafeArrayGetLBound(V_ARRAY(pVar), 1, &lLbound);
-        res = SafeArrayGetUBound(V_ARRAY(pVar), 1, &lUbound);
-        cbData = (lUbound - lLbound + 1) /* * sizeof(BYTE)*/;
-        TRACE("cbData: %d\n", cbData);
-        res = SafeArrayAccessData(V_ARRAY(pVar), &lpData);
+        LONG lbound, ubound;
+        void *array_data;
+        SafeArrayGetLBound(V_ARRAY(var), 1, &lbound);
+        SafeArrayGetUBound(V_ARRAY(var), 1, &ubound);
+        SafeArrayAccessData(V_ARRAY(var), &array_data);
+        ret = RegSetValueExW(key, name, 0, REG_BINARY, array_data, ubound - lbound + 1);
+        SafeArrayUnaccessData(V_ARRAY(var));
         break;
     }
     default:
-        FIXME("Variant type %d not handled\n", V_VT(pVar));
+        WARN("Unhandled type %s.\n", debugstr_vt(V_VT(var)));
         return E_FAIL;
     }
 
-    if (This->type == DEVICE_FILTER)
-        lres = RegCreateKeyW(HKEY_CLASSES_ROOT, This->path, &hkey);
-    else if (This->type == DEVICE_CODEC)
-        lres = RegCreateKeyW(HKEY_CURRENT_USER, This->path, &hkey);
-    res = HRESULT_FROM_WIN32(lres);
-
-    if (SUCCEEDED(res))
-    {
-        lres = RegSetValueExW(hkey, pszPropName, 0, dwType, lpData, cbData);
-        res = HRESULT_FROM_WIN32(lres);
-        RegCloseKey(hkey);
-    }
-
-    if (V_VT(pVar) & VT_ARRAY)
-        res = SafeArrayUnaccessData(V_ARRAY(pVar));
-
-    return res;
+    RegCloseKey(key);
+    return S_OK;
 }
 
 static const IPropertyBagVtbl IPropertyBag_Vtbl =
@@ -310,46 +280,6 @@ static const IPropertyBagVtbl IPropertyBag_Vtbl =
     property_bag_Read,
     property_bag_Write,
 };
-
-static HRESULT property_bag_create(struct moniker *mon, IPropertyBag **ppBag)
-{
-    RegPropBagImpl * rpb = CoTaskMemAlloc(sizeof(RegPropBagImpl));
-    if (!rpb)
-        return E_OUTOFMEMORY;
-    rpb->IPropertyBag_iface.lpVtbl = &IPropertyBag_Vtbl;
-    rpb->ref = 1;
-    rpb->type = mon->type;
-
-    if (rpb->type == DEVICE_DMO)
-        rpb->clsid = mon->clsid;
-    else if (rpb->type == DEVICE_FILTER)
-    {
-        lstrcpyW(rpb->path, clsidW);
-        lstrcatW(rpb->path, backslashW);
-        if (mon->has_class)
-        {
-            StringFromGUID2(&mon->class, rpb->path + lstrlenW(rpb->path), CHARS_IN_GUID);
-            lstrcatW(rpb->path, instanceW);
-            lstrcatW(rpb->path, backslashW);
-        }
-        lstrcatW(rpb->path, mon->name);
-    }
-    else if (rpb->type == DEVICE_CODEC)
-    {
-        lstrcpyW(rpb->path, wszActiveMovieKey);
-        if (mon->has_class)
-        {
-            StringFromGUID2(&mon->class, rpb->path + lstrlenW(rpb->path), CHARS_IN_GUID);
-            lstrcatW(rpb->path, backslashW);
-        }
-        lstrcatW(rpb->path, mon->name);
-    }
-
-    *ppBag = &rpb->IPropertyBag_iface;
-    DEVENUM_LockModule();
-    return S_OK;
-}
-
 
 static inline struct moniker *impl_from_IMoniker(IMoniker *iface)
 {
@@ -517,13 +447,13 @@ static HRESULT WINAPI moniker_BindToObject(IMoniker *iface, IBindCtx *pbc,
 }
 
 static HRESULT WINAPI moniker_BindToStorage(IMoniker *iface, IBindCtx *pbc,
-        IMoniker *pmkToLeft, REFIID riid, void **ppvObj)
+        IMoniker *pmkToLeft, REFIID riid, void **out)
 {
-    struct moniker *This = impl_from_IMoniker(iface);
+    struct moniker *moniker = impl_from_IMoniker(iface);
 
-    TRACE("(%p)->(%p, %p, %s, %p)\n", This, pbc, pmkToLeft, debugstr_guid(riid), ppvObj);
+    TRACE("moniker %p, left %p, iid %s, out %p.\n", moniker, pmkToLeft, debugstr_guid(riid), out);
 
-    *ppvObj = NULL;
+    *out = NULL;
 
     if (pmkToLeft)
         return MK_E_NOSTORAGE;
@@ -540,7 +470,9 @@ static HRESULT WINAPI moniker_BindToStorage(IMoniker *iface, IBindCtx *pbc,
 
     if (IsEqualGUID(riid, &IID_IPropertyBag))
     {
-        return property_bag_create(This, (IPropertyBag **)ppvObj);
+        *out = &moniker->IPropertyBag_iface;
+        IPropertyBag_AddRef(&moniker->IPropertyBag_iface);
+        return S_OK;
     }
 
     return MK_E_NOSTORAGE;
@@ -768,6 +700,7 @@ struct moniker *filter_moniker_create(const GUID *class, const WCHAR *name)
         return NULL;
 
     object->IMoniker_iface.lpVtbl = &IMoniker_Vtbl;
+    object->IPropertyBag_iface.lpVtbl = &IPropertyBag_Vtbl;
     object->ref = 1;
     object->type = DEVICE_FILTER;
     if (class)
@@ -788,6 +721,7 @@ struct moniker *codec_moniker_create(const GUID *class, const WCHAR *name)
         return NULL;
 
     object->IMoniker_iface.lpVtbl = &IMoniker_Vtbl;
+    object->IPropertyBag_iface.lpVtbl = &IPropertyBag_Vtbl;
     object->ref = 1;
     object->type = DEVICE_CODEC;
     if (class)
@@ -808,6 +742,7 @@ struct moniker *dmo_moniker_create(const GUID class, const GUID clsid)
         return NULL;
 
     object->IMoniker_iface.lpVtbl = &IMoniker_Vtbl;
+    object->IPropertyBag_iface.lpVtbl = &IPropertyBag_Vtbl;
     object->ref = 1;
     object->type = DEVICE_DMO;
     object->class = class;

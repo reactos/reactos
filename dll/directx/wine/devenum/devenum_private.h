@@ -68,6 +68,8 @@ struct moniker
         WCHAR *name;    /* for filters and codecs */
         CLSID clsid;    /* for DMOs */
     };
+
+    IPropertyBag IPropertyBag_iface;
 };
 
 struct moniker *dmo_moniker_create(const GUID class, const GUID clsid) DECLSPEC_HIDDEN;
