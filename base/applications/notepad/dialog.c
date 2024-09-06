@@ -48,7 +48,7 @@ VOID ShowLastError(VOID)
     if (error != NO_ERROR)
     {
         LPTSTR lpMsgBuf = NULL;
-        TCHAR szTitle[MAX_STRING_LEN];
+        TCHAR szTitle[MAX_STRING_LEN], szFallback[42], *pszMessage = szFallback;
 
         LoadString(Globals.hInstance, STRING_ERROR, szTitle, _countof(szTitle));
 
@@ -60,7 +60,12 @@ VOID ShowLastError(VOID)
                       0,
                       NULL);
 
-        MessageBox(Globals.hMainWnd, lpMsgBuf, szTitle, MB_OK | MB_ICONERROR);
+        if (lpMsgBuf)
+            pszMessage = lpMsgBuf;
+        else
+            wsprintfW(szFallback, L"%d\n", error);
+
+        MessageBox(Globals.hMainWnd, pszMessage, szTitle, MB_OK | MB_ICONERROR);
         LocalFree(lpMsgBuf);
     }
 }
