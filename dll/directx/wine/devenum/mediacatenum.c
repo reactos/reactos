@@ -187,7 +187,6 @@ static HRESULT WINAPI property_bag_Read(IPropertyBag *iface,
                 V_VT(pVar) = VT_I4;
                 /* fall through */
             case VT_I4:
-            case VT_UI4:
                 V_I4(pVar) = *(DWORD *)pData;
                 res = S_OK;
                 break;
@@ -262,9 +261,8 @@ static HRESULT WINAPI property_bag_Write(IPropertyBag *iface,
         cbData = (lstrlenW(V_BSTR(pVar)) + 1) * sizeof(WCHAR);
         break;
     case VT_I4:
-    case VT_UI4:
-        TRACE("writing %u\n", V_UI4(pVar));
-        lpData = &V_UI4(pVar);
+        TRACE("writing %d\n", V_I4(pVar));
+        lpData = &V_I4(pVar);
         dwType = REG_DWORD;
         cbData = sizeof(DWORD);
         break;

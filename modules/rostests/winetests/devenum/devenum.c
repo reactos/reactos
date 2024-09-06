@@ -385,7 +385,7 @@ static void test_directshow_filter(void)
 
         V_VT(&var) = VT_UI4;
         hr = IPropertyBag_Read(prop_bag, L"foobar", &var, NULL);
-        todo_wine ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
+        ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
         V_VT(&var) = VT_BSTR;
         hr = IPropertyBag_Read(prop_bag, L"foobar", &var, NULL);
         ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
@@ -538,7 +538,7 @@ static void test_codec(void)
 
     V_VT(&var) = VT_UI4;
     hr = IPropertyBag_Read(prop_bag, L"foobar", &var, NULL);
-    todo_wine ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
+    ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
     V_VT(&var) = VT_BSTR;
     hr = IPropertyBag_Read(prop_bag, L"foobar", &var, NULL);
     ok(hr == E_INVALIDARG, "Got hr %#x.\n", hr);
