@@ -186,7 +186,7 @@ static HRESULT WINAPI property_bag_Read(IPropertyBag *iface,
             reg_pins[1].nMediaTypes = output_count;
             reg_pins[1].lpMediaType = reg_types + count;
             reg_filter.dwVersion = 2;
-            reg_filter.dwMerit = MERIT_NORMAL + 0x800,
+            reg_filter.dwMerit = MERIT_NORMAL + 0x800;
             reg_filter.cPins2 = 2;
             reg_filter.rgPins2 = reg_pins;
 
