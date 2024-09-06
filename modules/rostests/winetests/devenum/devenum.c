@@ -150,91 +150,85 @@ static void test_devenum(void)
 
 static void test_moniker_isequal(void)
 {
-    HRESULT res;
     ICreateDevEnum *create_devenum = NULL;
     IEnumMoniker *enum_moniker0 = NULL, *enum_moniker1 = NULL;
     IMoniker *moniker0 = NULL, *moniker1 = NULL;
+    HRESULT hr;
 
-    res = CoCreateInstance(&CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC,
+    hr = CoCreateInstance(&CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC,
                            &IID_ICreateDevEnum, (LPVOID*)&create_devenum);
-    if (FAILED(res))
+    ok(hr == S_OK, "Got hr %#x.\n", hr);
+
+    hr = ICreateDevEnum_CreateClassEnumerator(create_devenum, &CLSID_LegacyAmFilterCategory, &enum_moniker0, 0);
+    ok(hr == S_OK, "Got hr %#x.\n", hr);
+
+    if (IEnumMoniker_Next(enum_moniker0, 1, &moniker0, NULL) == S_OK
+            && IEnumMoniker_Next(enum_moniker0, 1, &moniker1, NULL) == S_OK)
     {
-         skip("Cannot create SystemDeviceEnum object (%x)\n", res);
-         return;
+        hr = IMoniker_IsEqual(moniker0, moniker1);
+        ok(hr == S_FALSE, "Got hr %#x.\n", hr);
+
+        hr = IMoniker_IsEqual(moniker1, moniker0);
+        ok(hr == S_FALSE, "Got hr %#x.\n", hr);
+
+        IMoniker_Release(moniker0);
+        IMoniker_Release(moniker1);
     }
-
-    res = ICreateDevEnum_CreateClassEnumerator(create_devenum, &CLSID_LegacyAmFilterCategory, &enum_moniker0, 0);
-    ok(SUCCEEDED(res), "Cannot create enum moniker (res = %x)\n", res);
-    if (SUCCEEDED(res))
+    else
     {
-        if (IEnumMoniker_Next(enum_moniker0, 1, &moniker0, NULL) == S_OK &&
-            IEnumMoniker_Next(enum_moniker0, 1, &moniker1, NULL) == S_OK)
-        {
-            res = IMoniker_IsEqual(moniker0, moniker1);
-            ok(res == S_FALSE, "IMoniker_IsEqual should fail (res = %x)\n", res);
-
-            res = IMoniker_IsEqual(moniker1, moniker0);
-            ok(res == S_FALSE, "IMoniker_IsEqual should fail (res = %x)\n", res);
-
-            IMoniker_Release(moniker0);
-            IMoniker_Release(moniker1);
-        }
-        else
-            skip("Cannot get moniker for testing.\n");
+        skip("Cannot get moniker for testing.\n");
     }
     IEnumMoniker_Release(enum_moniker0);
 
-    res = ICreateDevEnum_CreateClassEnumerator(create_devenum, &CLSID_LegacyAmFilterCategory, &enum_moniker0, 0);
-    ok(SUCCEEDED(res), "Cannot create enum moniker (res = %x)\n", res);
-    res = ICreateDevEnum_CreateClassEnumerator(create_devenum, &CLSID_AudioRendererCategory, &enum_moniker1, 0);
-    ok(SUCCEEDED(res), "Cannot create enum moniker (res = %x)\n", res);
-    if (SUCCEEDED(res))
+    hr = ICreateDevEnum_CreateClassEnumerator(create_devenum, &CLSID_LegacyAmFilterCategory, &enum_moniker0, 0);
+    ok(hr == S_OK, "Got hr %#x.\n", hr);
+    hr = ICreateDevEnum_CreateClassEnumerator(create_devenum, &CLSID_AudioRendererCategory, &enum_moniker1, 0);
+    ok(hr == S_OK, "Got hr %#x.\n", hr);
+
+    if (IEnumMoniker_Next(enum_moniker0, 1, &moniker0, NULL) == S_OK
+            && IEnumMoniker_Next(enum_moniker1, 1, &moniker1, NULL) == S_OK)
     {
-        if (IEnumMoniker_Next(enum_moniker0, 1, &moniker0, NULL) == S_OK &&
-            IEnumMoniker_Next(enum_moniker1, 1, &moniker1, NULL) == S_OK)
-        {
-            res = IMoniker_IsEqual(moniker0, moniker1);
-            ok(res == S_FALSE, "IMoniker_IsEqual should failed (res = %x)\n", res);
+        hr = IMoniker_IsEqual(moniker0, moniker1);
+        ok(hr == S_FALSE, "Got hr %#x.\n", hr);
 
-            res = IMoniker_IsEqual(moniker1, moniker0);
-            ok(res == S_FALSE, "IMoniker_IsEqual should failed (res = %x)\n", res);
+        hr = IMoniker_IsEqual(moniker1, moniker0);
+        ok(hr == S_FALSE, "Got hr %#x.\n", hr);
 
-            IMoniker_Release(moniker0);
-            IMoniker_Release(moniker1);
-        }
-        else
-            skip("Cannot get moniker for testing.\n");
+        IMoniker_Release(moniker0);
+        IMoniker_Release(moniker1);
+    }
+    else
+    {
+        skip("Cannot get moniker for testing.\n");
     }
     IEnumMoniker_Release(enum_moniker0);
     IEnumMoniker_Release(enum_moniker1);
 
-    res = ICreateDevEnum_CreateClassEnumerator(create_devenum, &CLSID_LegacyAmFilterCategory, &enum_moniker0, 0);
-    ok(SUCCEEDED(res), "Cannot create enum moniker (res = %x)\n", res);
-    res = ICreateDevEnum_CreateClassEnumerator(create_devenum, &CLSID_LegacyAmFilterCategory, &enum_moniker1, 0);
-    ok(SUCCEEDED(res), "Cannot create enum moniker (res = %x)\n", res);
-    if (SUCCEEDED(res))
+    hr = ICreateDevEnum_CreateClassEnumerator(create_devenum, &CLSID_LegacyAmFilterCategory, &enum_moniker0, 0);
+    ok(hr == S_OK, "Got hr %#x.\n", hr);
+    hr = ICreateDevEnum_CreateClassEnumerator(create_devenum, &CLSID_LegacyAmFilterCategory, &enum_moniker1, 0);
+    ok(hr == S_OK, "Got hr %#x.\n", hr);
+
+    if (IEnumMoniker_Next(enum_moniker0, 1, &moniker0, NULL) == S_OK
+            && IEnumMoniker_Next(enum_moniker1, 1, &moniker1, NULL) == S_OK)
     {
-        if (IEnumMoniker_Next(enum_moniker0, 1, &moniker0, NULL) == S_OK &&
-            IEnumMoniker_Next(enum_moniker1, 1, &moniker1, NULL) == S_OK)
-        {
-            res = IMoniker_IsEqual(moniker0, moniker1);
-            ok(res == S_OK, "IMoniker_IsEqual failed (res = %x)\n", res);
+        hr = IMoniker_IsEqual(moniker0, moniker1);
+        ok(hr == S_OK, "Got hr %#x.\n", hr);
 
-            res = IMoniker_IsEqual(moniker1, moniker0);
-            ok(res == S_OK, "IMoniker_IsEqual failed (res = %x)\n", res);
+        hr = IMoniker_IsEqual(moniker1, moniker0);
+        ok(hr == S_OK, "Got hr %#x.\n", hr);
 
-            IMoniker_Release(moniker0);
-            IMoniker_Release(moniker1);
-        }
-        else
-            skip("Cannot get moniker for testing.\n");
+        IMoniker_Release(moniker0);
+        IMoniker_Release(moniker1);
+    }
+    else
+    {
+        skip("Cannot get moniker for testing.\n");
     }
     IEnumMoniker_Release(enum_moniker0);
     IEnumMoniker_Release(enum_moniker1);
 
     ICreateDevEnum_Release(create_devenum);
-
-    return;
 }
 
 static BOOL find_moniker(const GUID *class, IMoniker *needle)
@@ -276,6 +270,7 @@ static void test_register_filter(void)
     rgf2.dwVersion = 2;
     rgf2.dwMerit = MERIT_UNLIKELY;
     S2(U(rgf2)).cPins2 = 0;
+
 
     hr = IFilterMapper2_RegisterFilter(mapper2, &CLSID_TestFilter, L"devenum test", &mon, NULL, NULL, &rgf2);
     if (hr == E_ACCESSDENIED)
