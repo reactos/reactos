@@ -405,7 +405,7 @@ static ULONG WINAPI moniker_Release(IMoniker *iface)
 
     if (ref == 0) {
         CoTaskMemFree(This->name);
-        CoTaskMemFree(This);
+        free(This);
         DEVENUM_UnlockModule();
     }
     return ref;
@@ -770,20 +770,17 @@ static const IMonikerVtbl IMoniker_Vtbl =
 
 struct moniker *moniker_create(void)
 {
-    struct moniker *pMoniker;
+    struct moniker *object;
 
-    pMoniker = CoTaskMemAlloc(sizeof(*pMoniker));
-    if (!pMoniker)
+    if (!(object = calloc(1, sizeof(*object))))
         return NULL;
 
-    pMoniker->IMoniker_iface.lpVtbl = &IMoniker_Vtbl;
-    pMoniker->ref = 1;
-    pMoniker->has_class = FALSE;
-    pMoniker->name = NULL;
+    object->IMoniker_iface.lpVtbl = &IMoniker_Vtbl;
+    object->ref = 1;
 
     DEVENUM_LockModule();
 
-    return pMoniker;
+    return object;
 }
 
 static inline EnumMonikerImpl *impl_from_IEnumMoniker(IEnumMoniker *iface)
