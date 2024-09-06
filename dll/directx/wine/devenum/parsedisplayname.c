@@ -77,21 +77,21 @@ static HRESULT WINAPI devenum_parser_ParseDisplayName(IParseDisplayName *iface,
 
     *ret = NULL;
     if (eaten)
-        *eaten = lstrlenW(name);
+        *eaten = wcslen(name);
 
     name = wcschr(name, ':') + 1;
 
-    if (!wcsncmp(name, swW, 3))
+    if (!wcsncmp(name, L"sw:", 3))
     {
         type = DEVICE_FILTER;
         name += 3;
     }
-    else if (!wcsncmp(name, cmW, 3))
+    else if (!wcsncmp(name, L"cm:", 3))
     {
         type = DEVICE_CODEC;
         name += 3;
     }
-    else if (!wcsncmp(name, dmoW, 4))
+    else if (!wcsncmp(name, L"dmo:", 4))
     {
         type = DEVICE_DMO;
         name += 4;

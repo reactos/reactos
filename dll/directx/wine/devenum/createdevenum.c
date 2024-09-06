@@ -40,17 +40,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(devenum);
 
-static const WCHAR wszFilterKeyName[] = {'F','i','l','t','e','r',0};
-static const WCHAR wszMeritName[] = {'M','e','r','i','t',0};
-static const WCHAR wszPins[] = {'P','i','n','s',0};
-static const WCHAR wszAllowedMany[] = {'A','l','l','o','w','e','d','M','a','n','y',0};
-static const WCHAR wszAllowedZero[] = {'A','l','l','o','w','e','d','Z','e','r','o',0};
-static const WCHAR wszDirection[] = {'D','i','r','e','c','t','i','o','n',0};
-static const WCHAR wszIsRendered[] = {'I','s','R','e','n','d','e','r','e','d',0};
-static const WCHAR wszTypes[] = {'T','y','p','e','s',0};
-static const WCHAR wszFriendlyName[] = {'F','r','i','e','n','d','l','y','N','a','m','e',0};
-static const WCHAR wszFilterData[] = {'F','i','l','t','e','r','D','a','t','a',0};
-
 static HRESULT WINAPI devenum_factory_QueryInterface(ICreateDevEnum *iface, REFIID riid, void **ppv)
 {
     TRACE("(%p)->(%s, %p)\n", iface, debugstr_guid(riid), ppv);
@@ -92,7 +81,6 @@ static ULONG WINAPI devenum_factory_Release(ICreateDevEnum *iface)
 static HRESULT register_codec(const GUID *class, const WCHAR *name,
         const GUID *clsid, const WCHAR *friendly_name, IPropertyBag **ret)
 {
-    static const WCHAR deviceW[] = {'@','d','e','v','i','c','e',':','c','m',':',0};
     WCHAR guidstr[CHARS_IN_GUID];
     IParseDisplayName *parser;
     IPropertyBag *propbag;
@@ -106,17 +94,16 @@ static HRESULT register_codec(const GUID *class, const WCHAR *name,
     if (FAILED(hr))
         return hr;
 
-    buffer = heap_alloc((lstrlenW(deviceW) + CHARS_IN_GUID + lstrlenW(name) + 1) * sizeof(WCHAR));
-    if (!buffer)
+    if (!(buffer = heap_alloc((wcslen(L"@device:cm:") + CHARS_IN_GUID + wcslen(name) + 1) * sizeof(WCHAR))))
     {
         IParseDisplayName_Release(parser);
         return E_OUTOFMEMORY;
     }
 
-    lstrcpyW(buffer, deviceW);
-    StringFromGUID2(class, buffer + lstrlenW(buffer), CHARS_IN_GUID);
-    lstrcatW(buffer, backslashW);
-    lstrcatW(buffer, name);
+    wcscpy(buffer, L"@device:cm:");
+    StringFromGUID2(class, buffer + wcslen(buffer), CHARS_IN_GUID);
+    wcscat(buffer, L"\\");
+    wcscat(buffer, name);
 
     IParseDisplayName_ParseDisplayName(parser, NULL, buffer, &eaten, &mon);
     IParseDisplayName_Release(parser);
@@ -127,7 +114,7 @@ static HRESULT register_codec(const GUID *class, const WCHAR *name,
 
     V_VT(&var) = VT_BSTR;
     V_BSTR(&var) = SysAllocString(friendly_name);
-    hr = IPropertyBag_Write(propbag, wszFriendlyName, &var);
+    hr = IPropertyBag_Write(propbag, L"FriendlyName", &var);
     VariantClear(&var);
     if (FAILED(hr))
     {
@@ -138,7 +125,7 @@ static HRESULT register_codec(const GUID *class, const WCHAR *name,
     V_VT(&var) = VT_BSTR;
     StringFromGUID2(clsid, guidstr, ARRAY_SIZE(guidstr));
     V_BSTR(&var) = SysAllocString(guidstr);
-    hr = IPropertyBag_Write(propbag, clsidW, &var);
+    hr = IPropertyBag_Write(propbag, L"CLSID", &var);
     VariantClear(&var);
     if (FAILED(hr))
     {
@@ -157,7 +144,7 @@ static void DEVENUM_ReadPinTypes(HKEY hkeyPinKey, REGFILTERPINS2 *rgPin)
     REGPINTYPES *lpMediaType = NULL;
     DWORD dwMediaTypeSize = 0;
 
-    if (RegOpenKeyExW(hkeyPinKey, wszTypes, 0, KEY_READ, &hkeyTypes) != ERROR_SUCCESS)
+    if (RegOpenKeyExW(hkeyPinKey, L"Types", 0, KEY_READ, &hkeyTypes) != ERROR_SUCCESS)
         return ;
 
     if (RegQueryInfoKeyW(hkeyTypes, NULL, NULL, NULL, &dwMajorTypes, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
@@ -253,7 +240,7 @@ static void DEVENUM_ReadPins(HKEY hkeyFilterClass, REGFILTER2 *rgf2)
     rgf2->u.s2.cPins2 = 0;
     rgf2->u.s2.rgPins2 = NULL;
 
-    if (RegOpenKeyExW(hkeyFilterClass, wszPins, 0, KEY_READ, &hkeyPins) != ERROR_SUCCESS)
+    if (RegOpenKeyExW(hkeyFilterClass, L"Pins", 0, KEY_READ, &hkeyPins) != ERROR_SUCCESS)
         return ;
 
     if (RegQueryInfoKeyW(hkeyPins, NULL, NULL, NULL, &dwPinsSubkeys, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
@@ -289,21 +276,21 @@ static void DEVENUM_ReadPins(HKEY hkeyFilterClass, REGFILTER2 *rgf2)
         if (RegOpenKeyExW(hkeyPins, wszPinName, 0, KEY_READ, &hkeyPinKey) != ERROR_SUCCESS) continue;
 
         size = sizeof(DWORD);
-        lRet = RegQueryValueExW(hkeyPinKey, wszAllowedMany, NULL, &Type, (BYTE *)&value, &size);
+        lRet = RegQueryValueExW(hkeyPinKey, L"AllowedMany", NULL, &Type, (BYTE *)&value, &size);
         if (lRet != ERROR_SUCCESS || Type != REG_DWORD)
             goto error_cleanup;
         if (value)
             rgPin->dwFlags |= REG_PINFLAG_B_MANY;
 
         size = sizeof(DWORD);
-        lRet = RegQueryValueExW(hkeyPinKey, wszAllowedZero, NULL, &Type, (BYTE *)&value, &size);
+        lRet = RegQueryValueExW(hkeyPinKey, L"AllowedZero", NULL, &Type, (BYTE *)&value, &size);
         if (lRet != ERROR_SUCCESS || Type != REG_DWORD)
             goto error_cleanup;
         if (value)
             rgPin->dwFlags |= REG_PINFLAG_B_ZERO;
 
         size = sizeof(DWORD);
-        lRet = RegQueryValueExW(hkeyPinKey, wszDirection, NULL, &Type, (BYTE *)&value, &size);
+        lRet = RegQueryValueExW(hkeyPinKey, L"Direction", NULL, &Type, (BYTE *)&value, &size);
         if (lRet != ERROR_SUCCESS || Type != REG_DWORD)
             goto error_cleanup;
         if (value)
@@ -311,7 +298,7 @@ static void DEVENUM_ReadPins(HKEY hkeyFilterClass, REGFILTER2 *rgf2)
 
 
         size = sizeof(DWORD);
-        lRet = RegQueryValueExW(hkeyPinKey, wszIsRendered, NULL, &Type, (BYTE *)&value, &size);
+        lRet = RegQueryValueExW(hkeyPinKey, L"IsRendered", NULL, &Type, (BYTE *)&value, &size);
         if (lRet != ERROR_SUCCESS || Type != REG_DWORD)
             goto error_cleanup;
         if (value)
@@ -391,7 +378,7 @@ static void write_filter_data(IPropertyBag *prop_bag, REGFILTER2 *rgf)
     hr = SafeArrayUnaccessData(V_ARRAY(&var));
     if (FAILED(hr)) goto cleanup;
 
-    hr = IPropertyBag_Write(prop_bag, wszFilterData, &var);
+    hr = IPropertyBag_Write(prop_bag, L"FilterData", &var);
     if (FAILED(hr)) goto cleanup;
 
 cleanup:
@@ -407,7 +394,7 @@ static void register_legacy_filters(void)
     LONG lRet;
     HRESULT hr;
 
-    lRet = RegOpenKeyExW(HKEY_CLASSES_ROOT, wszFilterKeyName, 0, KEY_READ, &hkeyFilter);
+    lRet = RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Filter", 0, KEY_READ, &hkeyFilter);
     hr = HRESULT_FROM_WIN32(lRet);
 
     if (SUCCEEDED(hr))
@@ -437,10 +424,7 @@ static void register_legacy_filters(void)
             if (FAILED(hr))
                 continue;
 
-            lstrcpyW(wszRegKey, clsidW);
-            lstrcatW(wszRegKey, backslashW);
-            lstrcatW(wszRegKey, wszFilterSubkeyName);
-
+            swprintf(wszRegKey, ARRAY_SIZE(wszRegKey), L"CLSID\\%s", wszFilterSubkeyName);
             if (RegOpenKeyExW(HKEY_CLASSES_ROOT, wszRegKey, 0, KEY_READ, &classkey) != ERROR_SUCCESS)
                 continue;
 
@@ -473,7 +457,7 @@ static void register_legacy_filters(void)
             rgf2.dwMerit = MERIT_NORMAL;
 
             len = sizeof(rgf2.dwMerit);
-            RegQueryValueExW(classkey, wszMeritName, NULL, &Type, (BYTE *)&rgf2.dwMerit, &len);
+            RegQueryValueExW(classkey, L"Merit", NULL, &Type, (BYTE *)&rgf2.dwMerit, &len);
 
             DEVENUM_ReadPins(classkey, &rgf2);
 
@@ -490,9 +474,7 @@ static void register_legacy_filters(void)
 
 static BOOL CALLBACK register_dsound_devices(GUID *guid, const WCHAR *desc, const WCHAR *module, void *context)
 {
-    static const WCHAR defaultW[] = {'D','e','f','a','u','l','t',' ','D','i','r','e','c','t','S','o','u','n','d',' ','D','e','v','i','c','e',0};
-    static const WCHAR directsoundW[] = {'D','i','r','e','c','t','S','o','u','n','d',':',' ',0};
-    static const WCHAR dsguidW[] = {'D','S','G','u','i','d',0};
+    static const WCHAR defaultW[] = L"Default DirectSound Device";
     IPropertyBag *prop_bag = NULL;
     REGFILTERPINS2 rgpins = {0};
     REGPINTYPES rgtypes = {0};
@@ -503,11 +485,11 @@ static BOOL CALLBACK register_dsound_devices(GUID *guid, const WCHAR *desc, cons
 
     if (guid)
     {
-        WCHAR *name = heap_alloc(sizeof(defaultW) + lstrlenW(desc) * sizeof(WCHAR));
+        WCHAR *name = heap_alloc(sizeof(defaultW) + wcslen(desc) * sizeof(WCHAR));
         if (!name)
             return FALSE;
-        lstrcpyW(name, directsoundW);
-        lstrcatW(name, desc);
+        wcscpy(name, L"DirectSound: ");
+        wcscat(name, desc);
 
         hr = register_codec(&CLSID_AudioRendererCategory, name,
                 &CLSID_DSoundRender, name, &prop_bag);
@@ -537,7 +519,7 @@ static BOOL CALLBACK register_dsound_devices(GUID *guid, const WCHAR *desc, cons
     V_VT(&var) = VT_BSTR;
     StringFromGUID2(guid ? guid : &GUID_NULL, clsid, CHARS_IN_GUID);
     if ((V_BSTR(&var) = SysAllocString(clsid)))
-        hr = IPropertyBag_Write(prop_bag, dsguidW, &var);
+        hr = IPropertyBag_Write(prop_bag, L"DSGuid", &var);
 
     VariantClear(&var);
     IPropertyBag_Release(prop_bag);
@@ -546,8 +528,6 @@ static BOOL CALLBACK register_dsound_devices(GUID *guid, const WCHAR *desc, cons
 
 static void register_waveout_devices(void)
 {
-    static const WCHAR defaultW[] = {'D','e','f','a','u','l','t',' ','W','a','v','e','O','u','t',' ','D','e','v','i','c','e',0};
-    static const WCHAR waveoutidW[] = {'W','a','v','e','O','u','t','I','d',0};
     IPropertyBag *prop_bag = NULL;
     REGFILTERPINS2 rgpins = {0};
     REGPINTYPES rgtypes = {0};
@@ -564,7 +544,7 @@ static void register_waveout_devices(void)
     {
         waveOutGetDevCapsW(i, &caps, sizeof(caps));
 
-        name = (i == -1) ? defaultW : caps.szPname;
+        name = (i == -1) ? L"Default WaveOut Device" : caps.szPname;
 
         hr = register_codec(&CLSID_AudioRendererCategory, name,
                 &CLSID_AudioRender, name, &prop_bag);
@@ -587,7 +567,7 @@ static void register_waveout_devices(void)
         /* write WaveOutId */
         V_VT(&var) = VT_I4;
         V_I4(&var) = i;
-        IPropertyBag_Write(prop_bag, waveoutidW, &var);
+        IPropertyBag_Write(prop_bag, L"WaveOutId", &var);
 
         VariantClear(&var);
         if (prop_bag) IPropertyBag_Release(prop_bag);
@@ -596,7 +576,6 @@ static void register_waveout_devices(void)
 
 static void register_wavein_devices(void)
 {
-    static const WCHAR waveinidW[] = {'W','a','v','e','I','n','I','d',0};
     IPropertyBag *prop_bag = NULL;
     REGFILTER2 rgf = {0};
     WAVEINCAPSW caps;
@@ -624,7 +603,7 @@ static void register_wavein_devices(void)
         /* write WaveInId */
         V_VT(&var) = VT_I4;
         V_I4(&var) = i;
-        IPropertyBag_Write(prop_bag, waveinidW, &var);
+        IPropertyBag_Write(prop_bag, L"WaveInId", &var);
 
         VariantClear(&var);
         IPropertyBag_Release(prop_bag);
@@ -633,8 +612,6 @@ static void register_wavein_devices(void)
 
 static void register_midiout_devices(void)
 {
-    static const WCHAR defaultW[] = {'D','e','f','a','u','l','t',' ','M','i','d','i','O','u','t',' ','D','e','v','i','c','e',0};
-    static const WCHAR midioutidW[] = {'M','i','d','i','O','u','t','I','d',0};
     IPropertyBag *prop_bag = NULL;
     REGFILTERPINS2 rgpins = {0};
     REGPINTYPES rgtypes = {0};
@@ -651,7 +628,7 @@ static void register_midiout_devices(void)
     {
         midiOutGetDevCapsW(i, &caps, sizeof(caps));
 
-        name = (i == -1) ? defaultW : caps.szPname;
+        name = (i == -1) ? L"Default MidiOut Device" : caps.szPname;
 
         hr = register_codec(&CLSID_MidiRendererCategory, name,
                 &CLSID_AVIMIDIRender, name, &prop_bag);
@@ -674,7 +651,7 @@ static void register_midiout_devices(void)
         /* write MidiOutId */
         V_VT(&var) = VT_I4;
         V_I4(&var) = i;
-        IPropertyBag_Write(prop_bag, midioutidW, &var);
+        IPropertyBag_Write(prop_bag, L"MidiOutId", &var);
 
         VariantClear(&var);
         IPropertyBag_Release(prop_bag);
@@ -683,7 +660,6 @@ static void register_midiout_devices(void)
 
 static void register_vfw_codecs(void)
 {
-    static const WCHAR fcchandlerW[] = {'F','c','c','H','a','n','d','l','e','r',0};
     REGFILTERPINS2 rgpins[2] = {{0}};
     IPropertyBag *prop_bag = NULL;
     REGPINTYPES rgtypes[2];
@@ -732,7 +708,7 @@ static void register_vfw_codecs(void)
         /* write WaveInId */
         V_VT(&var) = VT_BSTR;
         V_BSTR(&var) = SysAllocString(name);
-        IPropertyBag_Write(prop_bag, fcchandlerW, &var);
+        IPropertyBag_Write(prop_bag, L"FccHandler", &var);
 
         VariantClear(&var);
         IPropertyBag_Release(prop_bag);
@@ -741,13 +717,12 @@ static void register_vfw_codecs(void)
 
 static void register_avicap_devices(void)
 {
-    static const WCHAR vfwindexW[] = {'V','F','W','I','n','d','e','x',0};
-    WCHAR name[] = {'v','i','d','e','o','0',0};
     WCHAR friendlyname[32], version[32];
     IPropertyBag *prop_bag = NULL;
     REGFILTERPINS2 rgpins = {0};
     REGPINTYPES rgtypes;
     REGFILTER2 rgf;
+    WCHAR name[6];
     VARIANT var;
     HRESULT hr;
     int i = 0;
@@ -758,7 +733,7 @@ static void register_avicap_devices(void)
                 version, ARRAY_SIZE(version)))
             continue;
 
-        name[5] = '0' + i;
+        swprintf(name, ARRAY_SIZE(name), L"video%d", i);
 
         hr = register_codec(&CLSID_VideoInputDeviceCategory, name,
                 &CLSID_VfwCapture, friendlyname, &prop_bag);
@@ -780,7 +755,7 @@ static void register_avicap_devices(void)
         /* write VFWIndex */
         V_VT(&var) = VT_I4;
         V_I4(&var) = i;
-        IPropertyBag_Write(prop_bag, vfwindexW, &var);
+        IPropertyBag_Write(prop_bag, L"VFWIndex", &var);
 
         VariantClear(&var);
         IPropertyBag_Release(prop_bag);
@@ -801,7 +776,7 @@ static HRESULT WINAPI devenum_factory_CreateClassEnumerator(ICreateDevEnum *ifac
 
     *out = NULL;
 
-    if (!RegOpenKeyW(HKEY_CURRENT_USER, wszActiveMovieKey, &key))
+    if (!RegOpenKeyW(HKEY_CURRENT_USER, L"Software\\Microsoft\\ActiveMovie\\devenum", &key))
     {
         StringFromGUID2(class, guidstr, ARRAY_SIZE(guidstr));
         RegDeleteTreeW(key, guidstr);

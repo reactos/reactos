@@ -171,27 +171,17 @@ HRESULT WINAPI DllRegisterServer(void)
                            &IID_IFilterMapper2,  &mapvptr);
     if (SUCCEEDED(res))
     {
-        static const WCHAR friendlyvidcap[] = {'V','i','d','e','o',' ','C','a','p','t','u','r','e',' ','S','o','u','r','c','e','s',0};
-        static const WCHAR friendlydshow[] = {'D','i','r','e','c','t','S','h','o','w',' ','F','i','l','t','e','r','s',0};
-        static const WCHAR friendlyvidcomp[] = {'V','i','d','e','o',' ','C','o','m','p','r','e','s','s','o','r','s',0};
-        static const WCHAR friendlyaudcap[] = {'A','u','d','i','o',' ','C','a','p','t','u','r','e',' ','S','o','u','r','c','e','s',0};
-        static const WCHAR friendlyaudcomp[] = {'A','u','d','i','o',' ','C','o','m','p','r','e','s','s','o','r','s',0};
-        static const WCHAR friendlyaudrend[] = {'A','u','d','i','o',' ','R','e','n','d','e','r','e','r','s',0};
-        static const WCHAR friendlymidirend[] = {'M','i','d','i',' ','R','e','n','d','e','r','e','r','s',0};
-        static const WCHAR friendlyextrend[] = {'E','x','t','e','r','n','a','l',' ','R','e','n','d','e','r','e','r','s',0};
-        static const WCHAR friendlydevctrl[] = {'D','e','v','i','c','e',' ','C','o','n','t','r','o','l',' ','F','i','l','t','e','r','s',0};
-
         pMapper = mapvptr;
 
-        IFilterMapper2_CreateCategory(pMapper, &CLSID_VideoInputDeviceCategory, MERIT_DO_NOT_USE, friendlyvidcap);
-        IFilterMapper2_CreateCategory(pMapper, &CLSID_LegacyAmFilterCategory, MERIT_NORMAL, friendlydshow);
-        IFilterMapper2_CreateCategory(pMapper, &CLSID_VideoCompressorCategory, MERIT_DO_NOT_USE, friendlyvidcomp);
-        IFilterMapper2_CreateCategory(pMapper, &CLSID_AudioInputDeviceCategory, MERIT_DO_NOT_USE, friendlyaudcap);
-        IFilterMapper2_CreateCategory(pMapper, &CLSID_AudioCompressorCategory, MERIT_DO_NOT_USE, friendlyaudcomp);
-        IFilterMapper2_CreateCategory(pMapper, &CLSID_AudioRendererCategory, MERIT_NORMAL, friendlyaudrend);
-        IFilterMapper2_CreateCategory(pMapper, &CLSID_MidiRendererCategory, MERIT_NORMAL, friendlymidirend);
-        IFilterMapper2_CreateCategory(pMapper, &CLSID_TransmitCategory, MERIT_DO_NOT_USE, friendlyextrend);
-        IFilterMapper2_CreateCategory(pMapper, &CLSID_DeviceControlCategory, MERIT_DO_NOT_USE, friendlydevctrl);
+        IFilterMapper2_CreateCategory(pMapper, &CLSID_AudioCompressorCategory, MERIT_DO_NOT_USE, L"Audio Compressors");
+        IFilterMapper2_CreateCategory(pMapper, &CLSID_AudioInputDeviceCategory, MERIT_DO_NOT_USE, L"Audio Capture Sources");
+        IFilterMapper2_CreateCategory(pMapper, &CLSID_AudioRendererCategory, MERIT_NORMAL, L"Audio Renderers");
+        IFilterMapper2_CreateCategory(pMapper, &CLSID_DeviceControlCategory, MERIT_DO_NOT_USE, L"Device Control Filters");
+        IFilterMapper2_CreateCategory(pMapper, &CLSID_LegacyAmFilterCategory, MERIT_NORMAL, L"DirectShow Filters");
+        IFilterMapper2_CreateCategory(pMapper, &CLSID_MidiRendererCategory, MERIT_NORMAL, L"Midi Renderers");
+        IFilterMapper2_CreateCategory(pMapper, &CLSID_TransmitCategory, MERIT_DO_NOT_USE, L"External Renderers");
+        IFilterMapper2_CreateCategory(pMapper, &CLSID_VideoInputDeviceCategory, MERIT_DO_NOT_USE, L"Video Capture Sources");
+        IFilterMapper2_CreateCategory(pMapper, &CLSID_VideoCompressorCategory, MERIT_DO_NOT_USE, L"Video Compressors");
 
         IFilterMapper2_Release(pMapper);
     }
