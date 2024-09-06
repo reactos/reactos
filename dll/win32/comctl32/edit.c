@@ -1050,7 +1050,15 @@ static LRESULT EDIT_EM_PosFromChar(EDITSTATE *es, INT index, BOOL after_wrap)
 		lw = line_def->width;
 		w = es->format_rect.right - es->format_rect.left;
 		if (line_def->ssa)
+#ifdef __REACTOS__ /* CORE-19731 & match win32ss/user/user32/controls/edit.c */
+		{
 			ScriptStringCPtoX(line_def->ssa, (index - 1) - li, TRUE, &x);
+			x -= es->x_offset;
+		}
+		else
+#else
+			ScriptStringCPtoX(line_def->ssa, (index - 1) - li, TRUE, &x);
+#endif
 #ifdef __REACTOS__ /* CORE-15780 */
 		x = (lw > 0 ? es->x_offset : x - es->x_offset);
 #else
