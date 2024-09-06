@@ -52,7 +52,6 @@ static const WCHAR wszFriendlyName[] = {'F','r','i','e','n','d','l','y','N','a',
 static const WCHAR wszFilterData[] = {'F','i','l','t','e','r','D','a','t','a',0};
 
 static ULONG WINAPI DEVENUM_ICreateDevEnum_AddRef(ICreateDevEnum * iface);
-static HRESULT DEVENUM_CreateAMCategoryKey(const CLSID * clsidCategory);
 
 /**********************************************************************
  * DEVENUM_ICreateDevEnum_QueryInterface (also IUnknown)
@@ -430,9 +429,6 @@ static void register_legacy_filters(void)
     }
 
     if (SUCCEEDED(hr))
-        hr = DEVENUM_CreateAMCategoryKey(&CLSID_LegacyAmFilterCategory);
-
-    if (SUCCEEDED(hr))
     {
         for (i = 0; i < dwFilterSubkeys; i++)
         {
@@ -517,10 +513,6 @@ static BOOL CALLBACK register_dsound_devices(GUID *guid, const WCHAR *desc, cons
     VARIANT var;
     HRESULT hr;
 
-    hr = DEVENUM_CreateAMCategoryKey(&CLSID_AudioRendererCategory);
-    if (FAILED(hr))
-        return FALSE;
-
     if (guid)
     {
         WCHAR *name = heap_alloc(sizeof(defaultW) + lstrlenW(desc) * sizeof(WCHAR));
@@ -578,9 +570,6 @@ static void register_waveout_devices(void)
     VARIANT var;
     HRESULT hr;
 
-    hr = DEVENUM_CreateAMCategoryKey(&CLSID_AudioRendererCategory);
-    if (FAILED(hr)) return;
-
     count = waveOutGetNumDevs();
 
     for (i = -1; i < count; i++)
@@ -627,9 +616,6 @@ static void register_wavein_devices(void)
     VARIANT var;
     HRESULT hr;
 
-    hr = DEVENUM_CreateAMCategoryKey(&CLSID_AudioRendererCategory);
-    if (FAILED(hr)) return;
-
     count = waveInGetNumDevs();
 
     for (i = 0; i < count; i++)
@@ -670,9 +656,6 @@ static void register_midiout_devices(void)
     int i, count;
     VARIANT var;
     HRESULT hr;
-
-    hr = DEVENUM_CreateAMCategoryKey(&CLSID_AudioRendererCategory);
-    if (FAILED(hr)) return;
 
     count = midiOutGetNumDevs();
 
@@ -723,9 +706,6 @@ static void register_vfw_codecs(void)
     HRESULT hr;
     int i = 0;
     HIC hic;
-
-    hr = DEVENUM_CreateAMCategoryKey(&CLSID_AudioRendererCategory);
-    if (FAILED(hr)) return;
 
     while (ICInfo(ICTYPE_VIDEO, i++, &info))
     {
@@ -783,10 +763,6 @@ static void register_avicap_devices(void)
     VARIANT var;
     HRESULT hr;
     int i = 0;
-
-    hr = DEVENUM_CreateAMCategoryKey(&CLSID_VideoInputDeviceCategory);
-    if (FAILED(hr))
-        return;
 
     for (i = 0; i < 10; ++i)
     {
@@ -896,35 +872,3 @@ static const ICreateDevEnumVtbl ICreateDevEnum_Vtbl =
  * static CreateDevEnum instance
  */
 ICreateDevEnum DEVENUM_CreateDevEnum = { &ICreateDevEnum_Vtbl };
-
-/**********************************************************************
- * DEVENUM_CreateAMCategoryKey (INTERNAL)
- *
- * Creates a registry key for a category at HKEY_CURRENT_USER\Software\
- * Microsoft\ActiveMovie\devenum\{clsid}
- */
-static HRESULT DEVENUM_CreateAMCategoryKey(const CLSID * clsidCategory)
-{
-    WCHAR wszRegKey[MAX_PATH];
-    HRESULT res = S_OK;
-    HKEY hkeyDummy = NULL;
-
-    lstrcpyW(wszRegKey, wszActiveMovieKey);
-
-    if (!StringFromGUID2(clsidCategory, wszRegKey + lstrlenW(wszRegKey), ARRAY_SIZE(wszRegKey) - lstrlenW(wszRegKey)))
-        res = E_INVALIDARG;
-
-    if (SUCCEEDED(res))
-    {
-        LONG lRes = RegCreateKeyW(HKEY_CURRENT_USER, wszRegKey, &hkeyDummy);
-        res = HRESULT_FROM_WIN32(lRes);
-    }
-
-    if (hkeyDummy)
-        RegCloseKey(hkeyDummy);
-
-    if (FAILED(res))
-        ERR("Failed to create key HKEY_CURRENT_USER\\%s\n", debugstr_w(wszRegKey));
-
-    return res;
-}
