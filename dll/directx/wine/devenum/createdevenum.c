@@ -64,16 +64,12 @@ static ULONG WINAPI devenum_factory_AddRef(ICreateDevEnum *iface)
 {
     TRACE("\n");
 
-    DEVENUM_LockModule();
-
     return 2; /* non-heap based object */
 }
 
 static ULONG WINAPI devenum_factory_Release(ICreateDevEnum *iface)
 {
     TRACE("\n");
-
-    DEVENUM_UnlockModule();
 
     return 1; /* non-heap based object */
 }

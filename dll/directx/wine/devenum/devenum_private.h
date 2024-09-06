@@ -30,13 +30,6 @@
 #include "dmo.h"
 #include "dmodshow.h"
 
-/**********************************************************************
- * Dll lifetime tracking declaration for devenum.dll
- */
-extern LONG dll_refs DECLSPEC_HIDDEN;
-static inline void DEVENUM_LockModule(void) { InterlockedIncrement(&dll_refs); }
-static inline void DEVENUM_UnlockModule(void) { InterlockedDecrement(&dll_refs); }
-
 enum device_type
 {
     DEVICE_FILTER,

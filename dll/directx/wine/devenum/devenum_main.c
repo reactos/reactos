@@ -25,7 +25,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(devenum);
 
-DECLSPEC_HIDDEN LONG dll_refs;
 static HINSTANCE devenum_instance;
 
 #ifdef __REACTOS__
@@ -61,13 +60,11 @@ static HRESULT WINAPI ClassFactory_QueryInterface(IClassFactory *iface, REFIID i
 
 static ULONG WINAPI ClassFactory_AddRef(IClassFactory *iface)
 {
-    DEVENUM_LockModule();
     return 2;
 }
 
 static ULONG WINAPI ClassFactory_Release(IClassFactory *iface)
 {
-    DEVENUM_UnlockModule();
     return 1;
 }
 
@@ -87,10 +84,7 @@ static HRESULT WINAPI ClassFactory_CreateInstance(IClassFactory *iface,
 
 static HRESULT WINAPI ClassFactory_LockServer(IClassFactory *iface, BOOL lock)
 {
-    if (lock)
-        DEVENUM_LockModule();
-    else
-        DEVENUM_UnlockModule();
+    TRACE("iface %p, lock %d.\n", iface, lock);
     return S_OK;
 }
 
@@ -121,14 +115,6 @@ HRESULT WINAPI DllGetClassObject(REFCLSID clsid, REFIID iid, void **obj)
 
     FIXME("class %s not available\n", debugstr_guid(clsid));
     return CLASS_E_CLASSNOTAVAILABLE;
-}
-
-/***********************************************************************
- *		DllCanUnloadNow (DEVENUM.@)
- */
-HRESULT WINAPI DllCanUnloadNow(void)
-{
-    return dll_refs != 0 ? S_FALSE : S_OK;
 }
 
 /***********************************************************************

@@ -51,16 +51,12 @@ static ULONG WINAPI devenum_parser_AddRef(IParseDisplayName *iface)
 {
     TRACE("\n");
 
-    DEVENUM_LockModule();
-
     return 2; /* non-heap based object */
 }
 
 static ULONG WINAPI devenum_parser_Release(IParseDisplayName *iface)
 {
     TRACE("\n");
-
-    DEVENUM_UnlockModule();
 
     return 1; /* non-heap based object */
 }
