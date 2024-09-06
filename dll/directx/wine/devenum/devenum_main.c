@@ -118,8 +118,8 @@ static const IClassFactoryVtbl ClassFactory_vtbl = {
     ClassFactory_LockServer
 };
 
-static struct class_factory create_devenum_cf = { { &ClassFactory_vtbl }, (IUnknown *)&DEVENUM_CreateDevEnum };
-static struct class_factory device_moniker_cf = { { &ClassFactory_vtbl }, (IUnknown *)&DEVENUM_ParseDisplayName };
+static struct class_factory create_devenum_cf = { { &ClassFactory_vtbl }, (IUnknown *)&devenum_factory };
+static struct class_factory device_moniker_cf = { { &ClassFactory_vtbl }, (IUnknown *)&devenum_parser };
 
 /***********************************************************************
  *		DllGetClassObject (DEVENUM.@)

@@ -70,11 +70,11 @@ typedef struct
     };
 } MediaCatMoniker;
 
-MediaCatMoniker * DEVENUM_IMediaCatMoniker_Construct(void) DECLSPEC_HIDDEN;
-HRESULT create_EnumMoniker(REFCLSID class, IEnumMoniker **enum_mon) DECLSPEC_HIDDEN;
+MediaCatMoniker *moniker_create(void) DECLSPEC_HIDDEN;
+HRESULT enum_moniker_create(REFCLSID class, IEnumMoniker **enum_mon) DECLSPEC_HIDDEN;
 
-extern ICreateDevEnum DEVENUM_CreateDevEnum DECLSPEC_HIDDEN;
-extern IParseDisplayName DEVENUM_ParseDisplayName DECLSPEC_HIDDEN;
+extern ICreateDevEnum devenum_factory DECLSPEC_HIDDEN;
+extern IParseDisplayName devenum_parser DECLSPEC_HIDDEN;
 
 /**********************************************************************
  * Global string constant declarations

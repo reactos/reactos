@@ -51,13 +51,7 @@ static const WCHAR wszTypes[] = {'T','y','p','e','s',0};
 static const WCHAR wszFriendlyName[] = {'F','r','i','e','n','d','l','y','N','a','m','e',0};
 static const WCHAR wszFilterData[] = {'F','i','l','t','e','r','D','a','t','a',0};
 
-static ULONG WINAPI DEVENUM_ICreateDevEnum_AddRef(ICreateDevEnum * iface);
-
-/**********************************************************************
- * DEVENUM_ICreateDevEnum_QueryInterface (also IUnknown)
- */
-static HRESULT WINAPI DEVENUM_ICreateDevEnum_QueryInterface(ICreateDevEnum *iface, REFIID riid,
-        void **ppv)
+static HRESULT WINAPI devenum_factory_QueryInterface(ICreateDevEnum *iface, REFIID riid, void **ppv)
 {
     TRACE("(%p)->(%s, %p)\n", iface, debugstr_guid(riid), ppv);
 
@@ -68,7 +62,7 @@ static HRESULT WINAPI DEVENUM_ICreateDevEnum_QueryInterface(ICreateDevEnum *ifac
 	IsEqualGUID(riid, &IID_ICreateDevEnum))
     {
         *ppv = iface;
-	DEVENUM_ICreateDevEnum_AddRef(iface);
+        ICreateDevEnum_AddRef(iface);
 	return S_OK;
     }
 
@@ -77,10 +71,7 @@ static HRESULT WINAPI DEVENUM_ICreateDevEnum_QueryInterface(ICreateDevEnum *ifac
     return E_NOINTERFACE;
 }
 
-/**********************************************************************
- * DEVENUM_ICreateDevEnum_AddRef (also IUnknown)
- */
-static ULONG WINAPI DEVENUM_ICreateDevEnum_AddRef(ICreateDevEnum * iface)
+static ULONG WINAPI devenum_factory_AddRef(ICreateDevEnum *iface)
 {
     TRACE("\n");
 
@@ -89,10 +80,7 @@ static ULONG WINAPI DEVENUM_ICreateDevEnum_AddRef(ICreateDevEnum * iface)
     return 2; /* non-heap based object */
 }
 
-/**********************************************************************
- * DEVENUM_ICreateDevEnum_Release (also IUnknown)
- */
-static ULONG WINAPI DEVENUM_ICreateDevEnum_Release(ICreateDevEnum * iface)
+static ULONG WINAPI devenum_factory_Release(ICreateDevEnum *iface)
 {
     TRACE("\n");
 
@@ -799,11 +787,8 @@ static void register_avicap_devices(void)
     }
 }
 
-/**********************************************************************
- * DEVENUM_ICreateDevEnum_CreateClassEnumerator
- */
-static HRESULT WINAPI DEVENUM_ICreateDevEnum_CreateClassEnumerator(
-    ICreateDevEnum *iface, REFCLSID class, IEnumMoniker **out, DWORD flags)
+static HRESULT WINAPI devenum_factory_CreateClassEnumerator(ICreateDevEnum *iface,
+        REFCLSID class, IEnumMoniker **out, DWORD flags)
 {
     WCHAR guidstr[CHARS_IN_GUID];
     HRESULT hr;
@@ -838,7 +823,7 @@ static HRESULT WINAPI DEVENUM_ICreateDevEnum_CreateClassEnumerator(
     else if (IsEqualGUID(class, &CLSID_VideoInputDeviceCategory))
         register_avicap_devices();
 
-    if (SUCCEEDED(hr = create_EnumMoniker(class, out)))
+    if (SUCCEEDED(hr = enum_moniker_create(class, out)))
     {
         IMoniker *mon;
         hr = IEnumMoniker_Next(*out, 1, &mon, NULL);
@@ -862,13 +847,13 @@ static HRESULT WINAPI DEVENUM_ICreateDevEnum_CreateClassEnumerator(
  */
 static const ICreateDevEnumVtbl ICreateDevEnum_Vtbl =
 {
-    DEVENUM_ICreateDevEnum_QueryInterface,
-    DEVENUM_ICreateDevEnum_AddRef,
-    DEVENUM_ICreateDevEnum_Release,
-    DEVENUM_ICreateDevEnum_CreateClassEnumerator,
+    devenum_factory_QueryInterface,
+    devenum_factory_AddRef,
+    devenum_factory_Release,
+    devenum_factory_CreateClassEnumerator,
 };
 
 /**********************************************************************
  * static CreateDevEnum instance
  */
-ICreateDevEnum DEVENUM_CreateDevEnum = { &ICreateDevEnum_Vtbl };
+ICreateDevEnum devenum_factory = { &ICreateDevEnum_Vtbl };

@@ -27,8 +27,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(devenum);
 
-static HRESULT WINAPI DEVENUM_IParseDisplayName_QueryInterface(IParseDisplayName *iface,
-        REFIID riid, void **ppv)
+static HRESULT WINAPI devenum_parser_QueryInterface(IParseDisplayName *iface, REFIID riid, void **ppv)
 {
     TRACE("\n\tIID:\t%s\n",debugstr_guid(riid));
 
@@ -48,7 +47,7 @@ static HRESULT WINAPI DEVENUM_IParseDisplayName_QueryInterface(IParseDisplayName
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI DEVENUM_IParseDisplayName_AddRef(IParseDisplayName *iface)
+static ULONG WINAPI devenum_parser_AddRef(IParseDisplayName *iface)
 {
     TRACE("\n");
 
@@ -57,7 +56,7 @@ static ULONG WINAPI DEVENUM_IParseDisplayName_AddRef(IParseDisplayName *iface)
     return 2; /* non-heap based object */
 }
 
-static ULONG WINAPI DEVENUM_IParseDisplayName_Release(IParseDisplayName *iface)
+static ULONG WINAPI devenum_parser_Release(IParseDisplayName *iface)
 {
     TRACE("\n");
 
@@ -66,16 +65,7 @@ static ULONG WINAPI DEVENUM_IParseDisplayName_Release(IParseDisplayName *iface)
     return 1; /* non-heap based object */
 }
 
-/**********************************************************************
- * DEVENUM_IParseDisplayName_ParseDisplayName
- *
- *  Creates a moniker referenced to by the display string argument
- *
- * POSSIBLE BUGS:
- *  Might not handle more complicated strings properly (ie anything
- *  not in "@device:sw:{CLSID1}\<filter name or CLSID>" format
- */
-static HRESULT WINAPI DEVENUM_IParseDisplayName_ParseDisplayName(IParseDisplayName *iface,
+static HRESULT WINAPI devenum_parser_ParseDisplayName(IParseDisplayName *iface,
         IBindCtx *pbc, LPOLESTR name, ULONG *eaten, IMoniker **ret)
 {
     WCHAR buffer[MAX_PATH];
@@ -112,7 +102,7 @@ static HRESULT WINAPI DEVENUM_IParseDisplayName_ParseDisplayName(IParseDisplayNa
         return MK_E_SYNTAX;
     }
 
-    if (!(mon = DEVENUM_IMediaCatMoniker_Construct()))
+    if (!(mon = moniker_create()))
         return E_OUTOFMEMORY;
 
     if (type == DEVICE_DMO)
@@ -161,11 +151,11 @@ static HRESULT WINAPI DEVENUM_IParseDisplayName_ParseDisplayName(IParseDisplayNa
  */
 static const IParseDisplayNameVtbl IParseDisplayName_Vtbl =
 {
-    DEVENUM_IParseDisplayName_QueryInterface,
-    DEVENUM_IParseDisplayName_AddRef,
-    DEVENUM_IParseDisplayName_Release,
-    DEVENUM_IParseDisplayName_ParseDisplayName
+    devenum_parser_QueryInterface,
+    devenum_parser_AddRef,
+    devenum_parser_Release,
+    devenum_parser_ParseDisplayName,
 };
 
 /* The one instance of this class */
-IParseDisplayName DEVENUM_ParseDisplayName = { &IParseDisplayName_Vtbl };
+IParseDisplayName devenum_parser = { &IParseDisplayName_Vtbl };
