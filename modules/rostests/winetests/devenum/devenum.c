@@ -46,8 +46,9 @@ static void test_devenum(void)
     GUID cat_guid, clsid;
     WCHAR *displayname;
     IBindCtx *bindctx;
+    HRESULT hr, hr2;
+    IUnknown *unk;
     VARIANT var;
-    HRESULT hr;
     int count;
 
     hr = CoCreateInstance(&CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC,
@@ -113,6 +114,21 @@ static void test_devenum(void)
 
                 hr = IMoniker_BindToObject(moniker, NULL, NULL, &IID_IUnknown, NULL);
                 ok(hr == E_POINTER, "got %#x\n", hr);
+
+                VariantClear(&var);
+                hr = IPropertyBag_Read(prop_bag, L"CLSID", &var, NULL);
+                /* Instantiating the WMT Screen Capture Filter crashes on Windows XP. */
+                if (hr != S_OK || wcscmp(V_BSTR(&var), L"{31087270-D348-432C-899E-2D2F38FF29A0}"))
+                {
+                    hr = IMoniker_BindToObject(moniker, NULL, NULL, &IID_IUnknown, (void **)&unk);
+                    if (hr == S_OK)
+                        IUnknown_Release(unk);
+                    hr2 = IMoniker_BindToObject(moniker, NULL, (IMoniker *)0xdeadbeef,
+                            &IID_IUnknown, (void **)&unk);
+                    if (hr2 == S_OK)
+                        IUnknown_Release(unk);
+                    ok(hr2 == hr, "Expected hr %#x, got %#x.\n", hr, hr2);
+                }
 
                 hr = CreateBindCtx(0, &bindctx);
                 ok(hr == S_OK, "Got hr %#x.\n", hr);

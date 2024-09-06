@@ -377,73 +377,63 @@ static HRESULT WINAPI moniker_GetSizeMax(IMoniker *iface, ULARGE_INTEGER *pcbSiz
     return S_OK;
 }
 
-static HRESULT WINAPI moniker_BindToObject(IMoniker *iface, IBindCtx *pbc,
-        IMoniker *pmkToLeft, REFIID riidResult, void **ppvResult)
+static HRESULT WINAPI moniker_BindToObject(IMoniker *iface, IBindCtx *bind_ctx,
+        IMoniker *left, REFIID iid, void **out)
 {
-    struct moniker *This = impl_from_IMoniker(iface);
-    IUnknown * pObj = NULL;
-    IPropertyBag * pProp = NULL;
-    CLSID clsID;
+    struct moniker *moniker = impl_from_IMoniker(iface);
+    IPersistPropertyBag *persist_bag;
+    IPropertyBag *prop_bag;
+    IUnknown *unk;
+    CLSID clsid;
     VARIANT var;
-    HRESULT res = E_FAIL;
+    HRESULT hr;
 
-    TRACE("(%p)->(%p, %p, %s, %p)\n", This, pbc, pmkToLeft, debugstr_guid(riidResult), ppvResult);
+    TRACE("moniker %p, bind_ctx %p, left %p, iid %s, out %p.\n",
+            moniker, bind_ctx, left, debugstr_guid(iid), out);
 
-    if (!ppvResult)
+    if (!out)
         return E_POINTER;
 
     VariantInit(&var);
-    *ppvResult = NULL;
+    *out = NULL;
 
-    if(pmkToLeft==NULL)
+    if (FAILED(hr = IMoniker_BindToStorage(iface, NULL, NULL, &IID_IPropertyBag, (void **)&prop_bag)))
+        return hr;
+
+    V_VT(&var) = VT_BSTR;
+    if (FAILED(hr = IPropertyBag_Read(prop_bag, L"CLSID", &var, NULL)))
     {
-            /* first activation of this class */
-	    LPVOID pvptr;
-            res=IMoniker_BindToStorage(iface, NULL, NULL, &IID_IPropertyBag, &pvptr);
-            pProp = pvptr;
-            if (SUCCEEDED(res))
-            {
-                V_VT(&var) = VT_BSTR;
-                res = IPropertyBag_Read(pProp, clsidW, &var, NULL);
-            }
-            if (SUCCEEDED(res))
-            {
-                res = CLSIDFromString(V_BSTR(&var), &clsID);
-                VariantClear(&var);
-            }
-            if (SUCCEEDED(res))
-            {
-                res=CoCreateInstance(&clsID,NULL,CLSCTX_ALL,&IID_IUnknown,&pvptr);
-                pObj = pvptr;
-            }
+        IPropertyBag_Release(prop_bag);
+        return hr;
     }
 
-    if (pObj!=NULL)
+    hr = CLSIDFromString(V_BSTR(&var), &clsid);
+    VariantClear(&var);
+    if (FAILED(hr))
     {
-        /* get the requested interface from the loaded class */
-        res = S_OK;
-        if (pProp) {
-           HRESULT res2;
-           LPVOID ppv = NULL;
-           res2 = IUnknown_QueryInterface(pObj, &IID_IPersistPropertyBag, &ppv);
-           if (SUCCEEDED(res2)) {
-              res = IPersistPropertyBag_Load((IPersistPropertyBag *) ppv, pProp, NULL);
-              IPersistPropertyBag_Release((IPersistPropertyBag *) ppv);
-           }
-        }
-        if (SUCCEEDED(res))
-           res= IUnknown_QueryInterface(pObj,riidResult,ppvResult);
-        IUnknown_Release(pObj);
+        IPropertyBag_Release(prop_bag);
+        return hr;
     }
 
-    if (pProp)
+    if (FAILED(hr = CoCreateInstance(&clsid, NULL, CLSCTX_ALL, &IID_IUnknown, (void **)&unk)))
     {
-        IPropertyBag_Release(pProp);
+        IPropertyBag_Release(prop_bag);
+        return hr;
     }
 
-    TRACE("<- 0x%x\n", res);
+    if (SUCCEEDED(IUnknown_QueryInterface(unk, &IID_IPersistPropertyBag, (void **)&persist_bag)))
+    {
+        hr = IPersistPropertyBag_Load(persist_bag, prop_bag, NULL);
+        IPersistPropertyBag_Release(persist_bag);
+    }
 
-    return res;
+    if (SUCCEEDED(hr))
+        hr = IUnknown_QueryInterface(unk, iid, out);
+
+    IUnknown_Release(unk);
+    IPropertyBag_Release(prop_bag);
+
+    return hr;
 }
 
 static HRESULT WINAPI moniker_BindToStorage(IMoniker *iface, IBindCtx *pbc,
