@@ -212,6 +212,11 @@ static UINT CalculateCharWidth(HWND hwnd)
     return ret;
 }
 
+static inline COLORREF GetViewColor(COLORREF Clr, UINT SysFallback)
+{
+    return Clr != CLR_INVALID ? Clr : GetSysColor(SysFallback);
+}
+
 class CDefView :
     public CWindowImpl<CDefView, CWindow, CControlWinTraits>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -592,8 +597,8 @@ CDefView::CDefView() :
     ZeroMemory(&m_FolderSettings, sizeof(m_FolderSettings));
     ZeroMemory(&m_ptLastMousePos, sizeof(m_ptLastMousePos));
     ZeroMemory(&m_Category, sizeof(m_Category));
-    m_viewinfo_data.clrText = GetSysColor(COLOR_WINDOWTEXT);
-    m_viewinfo_data.clrTextBack = GetSysColor(COLOR_WINDOW);
+    m_viewinfo_data.clrText = CLR_INVALID;
+    m_viewinfo_data.clrTextBack = CLR_INVALID;
     m_viewinfo_data.hbmBack = NULL;
 
     m_sortInfo.Reset();
@@ -934,18 +939,8 @@ void CDefView::UpdateListColors()
     }
     else
     {
-        // text background color
-        COLORREF clrTextBack = m_viewinfo_data.clrTextBack;
-        m_ListView.SetTextBkColor(clrTextBack);
-
-        // text color
-        COLORREF clrText;
-        if (m_viewinfo_data.clrText != CLR_INVALID)
-            clrText = m_viewinfo_data.clrText;
-        else
-            clrText = GetSysColor(COLOR_WINDOWTEXT);
-
-        m_ListView.SetTextColor(clrText);
+        m_ListView.SetTextBkColor(GetViewColor(m_viewinfo_data.clrTextBack, COLOR_WINDOW));
+        m_ListView.SetTextColor(GetViewColor(m_viewinfo_data.clrText, COLOR_WINDOWTEXT));
 
         // Background is painted by the parent via WM_PRINTCLIENT
         m_ListView.SetExtendedListViewStyle(LVS_EX_TRANSPARENTBKGND, LVS_EX_TRANSPARENTBKGND);
@@ -1663,7 +1658,7 @@ LRESULT CDefView::OnPrintClient(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     }
     else
     {
-        FillRect(hDC, &rc, GetSysColorBrush(COLOR_WINDOW));
+        SHFillRectClr(hDC, &rc, GetViewColor(m_viewinfo_data.clrTextBack, COLOR_WINDOW));
     }
 
     bHandled = TRUE;
