@@ -1183,7 +1183,8 @@ void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdS
     TRACE("(%p, %p, %s, 0x%08x)\n",
           hWnd, hInst, debugstr_w(cmd), nCmdShow);
 
-/* If DLL search 'cmd' for first comma. If the remaining length is 2(@1 or ,1) or 3(,@1)
+/* Search 'cmd' for first comma. If the remaining length is either
+ * 0(only ext or , only), 1(,, or ,1), 2(,,1 or ,@1) or 3(,,@1),
  * then replace char after the extention with UNICODE_NULL. */
 
     buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*buffer) * (nLen + 1));
@@ -1216,7 +1217,7 @@ void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdS
         Control_DoWindow(&panel, hWnd, hInst);
     } else {
 #ifdef __REACTOS__
-    if ((nLen == 2 || nLen == 3) && bDLLExt)
+    if ((nLen >= 0 && nLen < 4) && bDLLExt)
     {
         /* buffer char at size of cmd + .ext */
         buffer[ptr2 - cmd + (UINT_PTR)lstrlenW(L".ext")] = UNICODE_NULL;
