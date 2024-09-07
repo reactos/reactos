@@ -4,7 +4,7 @@
 <svg
    inkscape:export-ydpi="96"
    inkscape:export-xdpi="96"
-   inkscape:export-filename="35-16x.png"
+   inkscape:export-filename="35-desktop-16x.png"
    width="16"
    height="16"
    id="svg11300"
@@ -25,7 +25,12 @@
      id="defs3">
     <linearGradient
        inkscape:collect="always"
-       id="linearGradient5500">
+       id="linearGradient5500"
+       x1="2"
+       y1="38"
+       x2="2"
+       y2="41"
+       gradientUnits="userSpaceOnUse">
       <stop
          style="stop-color:#5a5a5a;stop-opacity:1;"
          offset="0"
@@ -146,15 +151,6 @@
        y1="3.1310341"
        x2="11.210244"
        y2="15.11003" />
-    <linearGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient5500"
-       id="linearGradient5502"
-       x1="2"
-       y1="38"
-       x2="2"
-       y2="41"
-       gradientUnits="userSpaceOnUse" />
   </defs>
   <sodipodi:namedview
      stroke="#204a87"
@@ -168,7 +164,7 @@
      inkscape:zoom="1"
      inkscape:cx="7.5"
      inkscape:cy="7.5"
-     inkscape:current-layer="layer3"
+     inkscape:current-layer="taskbar-layer"
      showgrid="false"
      inkscape:grid-bbox="true"
      inkscape:document-units="px"
@@ -217,8 +213,8 @@
     </rdf:RDF>
   </metadata>
   <g
-     id="layer1"
-     inkscape:label="Layer 1"
+     id="bg-layer"
+     inkscape:label="Background"
      inkscape:groupmode="layer"
      sodipodi:insensitive="true">
     <rect
@@ -239,8 +235,8 @@
   </g>
   <g
      inkscape:groupmode="layer"
-     id="layer3"
-     inkscape:label="Layer 2"
+     id="taskbar-layer"
+     inkscape:label="Taskbar"
      style="display:inline">
     <g
        id="g968">
@@ -255,7 +251,7 @@
            id="rect5054"
            style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#0e0e0f;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;marker-start:none;marker-mid:none;marker-end:none" />
         <rect
-           style="fill:url(#linearGradient5502);fill-opacity:1;stroke:none;stroke-width:2;stroke-opacity:1"
+           style="fill:url(#linearGradient5500);fill-opacity:1;stroke:none;stroke-width:2;stroke-opacity:1"
            id="rect5360"
            width="14"
            height="2"

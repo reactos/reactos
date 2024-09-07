@@ -4,12 +4,12 @@
 <svg
    inkscape:export-ydpi="96"
    inkscape:export-xdpi="96"
-   inkscape:export-filename="35-48x.png"
+   inkscape:export-filename="35-desktop-48x.png"
    width="48px"
    height="48px"
    id="svg11300"
    sodipodi:version="0.32"
-   inkscape:version="1.1 (1:1.1+202105261517+ce6663b3b7)"
+   inkscape:version="1.1.2 (0a00cf5, 2022-02-04)"
    sodipodi:docname="35-desktop-48x.svg"
    inkscape:output_extension="org.inkscape.output.svg.inkscape"
    version="1.1"
@@ -25,7 +25,12 @@
      id="defs3">
     <linearGradient
        inkscape:collect="always"
-       id="linearGradient5500">
+       id="linearGradient5500"
+       x1="2"
+       y1="38"
+       x2="2"
+       y2="41"
+       gradientUnits="userSpaceOnUse">
       <stop
          style="stop-color:#5a5a5a;stop-opacity:1;"
          offset="0"
@@ -146,36 +151,17 @@
        y1="6.3776422"
        x2="30.802307"
        y2="42.314632" />
-    <linearGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient5500"
-       id="linearGradient5502"
-       x1="2"
-       y1="38"
-       x2="2"
-       y2="41"
-       gradientUnits="userSpaceOnUse" />
     <clipPath
        clipPathUnits="userSpaceOnUse"
-       id="clipPath5603">
-      <g
-         id="g5609">
-        <rect
-           rx="1.36"
-           y="38"
-           x="2"
-           height="3"
-           width="44"
-           id="rect5605"
-           style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;marker-start:none;marker-mid:none;marker-end:none" />
-        <rect
-           y="38"
-           x="2"
-           height="1.5"
-           width="44"
-           id="rect5607"
-           style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;marker-start:none;marker-mid:none;marker-end:none" />
-      </g>
+       id="clipPath1228">
+      <rect
+         rx="1.36"
+         y="6"
+         x="2"
+         height="35"
+         width="44"
+         id="rect1230"
+         style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#ff00ff;fill-opacity:0.501961;fill-rule:evenodd;stroke:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;marker-start:none;marker-mid:none;marker-end:none" />
     </clipPath>
   </defs>
   <sodipodi:namedview
@@ -187,10 +173,10 @@
      borderopacity="0.25490196"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1"
-     inkscape:cx="25.5"
-     inkscape:cy="23.5"
-     inkscape:current-layer="layer1"
+     inkscape:zoom="13.958333"
+     inkscape:cx="24"
+     inkscape:cy="24"
+     inkscape:current-layer="taskbar-layer"
      showgrid="false"
      inkscape:grid-bbox="true"
      inkscape:document-units="px"
@@ -239,8 +225,8 @@
     </rdf:RDF>
   </metadata>
   <g
-     id="layer1"
-     inkscape:label="Layer 1"
+     id="bg-layer"
+     inkscape:label="Background"
      inkscape:groupmode="layer">
     <rect
        style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:url(#linearGradient1812);fill-opacity:1;fill-rule:evenodd;stroke:#173764;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;marker-start:none;marker-mid:none;marker-end:none"
@@ -262,11 +248,12 @@
   </g>
   <g
      inkscape:groupmode="layer"
-     id="layer3"
-     inkscape:label="Layer 2"
+     id="taskbar-layer"
+     inkscape:label="Taskbar"
      style="display:inline">
     <g
-       id="g968">
+       id="g968"
+       clip-path="url(#clipPath1228)">
       <g
          id="g6249">
         <rect
@@ -277,13 +264,13 @@
            id="rect5054"
            style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#0e0e0f;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;marker-start:none;marker-mid:none;marker-end:none" />
         <rect
-           style="fill:url(#linearGradient5502);fill-opacity:1;stroke:none;stroke-width:2;stroke-opacity:1"
+           style="fill:url(#linearGradient5500);fill-opacity:1;stroke:none;stroke-width:2;stroke-opacity:1"
            id="rect5360"
            width="44"
            height="3"
            x="2"
            y="38"
-           clip-path="url(#clipPath5603)" />
+           clip-path="none" />
       </g>
       <rect
          style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:2;stroke-opacity:1"
