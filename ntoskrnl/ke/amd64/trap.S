@@ -461,8 +461,11 @@ IntsDisabled:
 
 PageFaultError:
 
-    /* Set parameter 1 to error code */
+    /* Set parameter 1 to write/execute flag.
+       See https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-exception_record */
     mov r9d, [rbp + KTRAP_FRAME_ErrorCode]
+    shr r9d, 1
+    and r9d, 9
 
     /* Set parameter 2 to faulting address */
     mov r10, cr2  // Param2 = faulting address
