@@ -391,7 +391,7 @@ static HWND COMDLG32_FR_DoFindReplace(
         DWORD error;
         LPDLGTEMPLATEW rcs;
 
-	TRACE("hInst=%p, Flags=%08x\n", pdata->fr.hInstance, pdata->fr.Flags);
+	TRACE("hInst=%p, Flags=%08lx\n", pdata->fr.hInstance, pdata->fr.Flags);
 
         if(!(pdata->fr.Flags & FR_ENABLETEMPLATEHANDLE))
         {

@@ -47,11 +47,8 @@ typedef struct
 } CFn_ENUMSTRUCT, *LPCFn_ENUMSTRUCT;
 
 
-static const WCHAR strWineFontData[] = {'_','_','W','I','N','E','_','F','O','N','T','D','L','G','D','A','T','A',0};
-static const WCHAR strWineFontData_a[] =
-                               {'_','_','W','I','N','E','_','F','O','N','T','D','L','G','D','A','T','A','_','A',0};
-static const WCHAR chooseFontW[] = {'C','H','O','O','S','E','_','F','O','N','T',0};
-static const WCHAR fontsizefmtW[] = {'%','d',0};
+static const WCHAR strWineFontData[] = L"__WINE_FONTDLGDATA";
+static const WCHAR strWineFontData_a[] = L"__WINE_FONTDLGDATA_A";
 
 /* image list with TrueType bitmaps and more */
 static HIMAGELIST himlTT = 0;
@@ -67,43 +64,37 @@ static INT_PTR CALLBACK FormatCharDlgProcW(HWND hDlg, UINT uMsg, WPARAM wParam, 
 
 #define CI(cs) ((IDS_CHARSET_##cs)-IDS_CHARSET_ANSI)
 
-
-static const WCHAR stWestern[]={'A','a','B','b','Y','y','Z','z',0}; /* Western and default */
-static const WCHAR stSymbol[]={'S','y','m','b','o','l',0}; /* Symbol */
-static const WCHAR stShiftJis[]={'A','a',0x3042,0x3041,0x30a2,0x30a1,0x4e9c,0x5b87,0}; /* Shift JIS */
-static const WCHAR stHangul[]={0xac00,0xb098,0xb2e4,'A','a','B','Y','y','Z','z',0}; /* Hangul */
-static const WCHAR stGB2312[]={0x5fae,0x8f6f,0x4e2d,0x6587,0x8f6f,0x4ef6,0}; /* GB2312 */
-static const WCHAR stBIG5[]={0x4e2d,0x6587,0x5b57,0x578b,0x7bc4,0x4f8b,0}; /* BIG5 */
-static const WCHAR stGreek[]={'A','a','B','b',0x0391,0x03b1,0x0392,0x03b2,0}; /* Greek */
-static const WCHAR stTurkish[]={'A','a','B','b',0x011e,0x011f,0x015e,0x015f,0}; /* Turkish */
-static const WCHAR stHebrew[]={'A','a','B','b',0x05e0,0x05e1,0x05e9,0x05ea,0}; /* Hebrew */
-static const WCHAR stArabic[]={'A','a','B','b',0x0627,0x0628,0x062c,0x062f,0x0647,0x0648,0x0632,0};/* Arabic */
-static const WCHAR stBaltic[]={'A','a','B','b','Y','y','Z','z',0}; /* Baltic */
-static const WCHAR stVietname[]={'A','a','B','b',0x01a0,0x01a1,0x01af,0x01b0,0}; /* Vietnamese */
-static const WCHAR stCyrillic[]={'A','a','B','b',0x0411,0x0431,0x0424,0x0444,0}; /* Cyrillic */
-static const WCHAR stEastEur[]={'A','a','B','b',0xc1,0xe1,0xd4,0xf4,0}; /* East European */
-static const WCHAR stThai[]={'A','a','B','b',0x0e2d,0x0e31,0x0e01,0x0e29,0x0e23,0x0e44,0x0e17,0x0e22,0}; /* Thai */
-static const WCHAR stJohab[]={0xac00,0xb098,0xb2e4,'A','a','B','Y','y','Z','z',0}; /* Johab */
-static const WCHAR stMac[]={'A','a','B','b','Y','y','Z','z',0}; /* Mac */
-static const WCHAR stOEM[]={'A','a','B','b',0xf8,0xf1,0xfd,0}; /* OEM */
-/* the following character sets actually behave different (Win2K observation):
- * the sample string is 'sticky': it uses the sample string of the previous
- * selected character set. That behaviour looks like some default, which is
- * not (yet) implemented. */
-static const WCHAR stVISCII[]={'A','a','B','b',0}; /* VISCII */
-static const WCHAR stTCVN[]={'A','a','B','b',0}; /* TCVN */
-static const WCHAR stKOI8[]={'A','a','B','b',0}; /* KOI-8 */
-static const WCHAR stIso88593[]={'A','a','B','b',0}; /* ISO-8859-3 */
-static const WCHAR stIso88594[]={'A','a','B','b',0}; /* ISO-8859-4 */
-static const WCHAR stIso885910[]={'A','a','B','b',0}; /* ISO-8859-10 */
-static const WCHAR stCeltic[]={'A','a','B','b',0};/* Celtic */
-
 static const WCHAR * const sample_lang_text[]={
-    stWestern,stSymbol,stShiftJis,stHangul,stGB2312,
-    stBIG5,stGreek,stTurkish,stHebrew,stArabic,
-    stBaltic,stVietname,stCyrillic,stEastEur,stThai,
-    stJohab,stMac,stOEM,stVISCII,stTCVN,
-    stKOI8,stIso88593,stIso88594,stIso885910,stCeltic};
+    L"AaBbYyZz",                                /* Western and default */
+    L"Symbol",                                  /* Symbol */
+    L"Aa\x3042\x3041\x30a2\x30a1\x4e9c\x5b87",  /* Shift JIS */
+    L"\xac00\xb098\xb2e4" "AaBYyZz",            /* Hangul */
+    L"\x5fae\x8f6f\x4e2d\x6587\x8f6f\x4ef6",    /* GB2312 */
+    L"\x4e2d\x6587\x5b57\x578b\x7bc4\x4f8b",    /* BIG5 */
+    L"AaBb\x0391\x03b1\x0392\x03b2",            /* Greek */
+    L"AaBb\x011e\x011f\x015e\x015f",            /* Turkish */
+    L"AaBb\x05e0\x05e1\x05e9\x05ea",            /* Hebrew */
+    L"AaBb\x0627\x0628\x062c\x062f\x0647\x0648\x0632", /* Arabic */
+    L"AaBbYyZz",                                /* Baltic */
+    L"AaBb\x01a0\x01a1\x01af\x01b0",            /* Vietnamese */
+    L"AaBb\x0411\x0431\x0424\x0444",            /* Cyrillic */
+    L"AaBb\x00c1\x00e1\x00d4\x00f4",            /* East European */
+    L"AaBb\x0e2d\x0e31\x0e01\x0e29\x0e23\x0e44\x0e17\x0e22", /* Thai */
+    L"\xac00\xb098\xb2e4" "AaBYyZz",            /* Johab */
+    L"AaBbYyZz",                                /* Mac */
+    L"AaBb\x00f8\x00f1\x00fd",                  /* OEM */
+    /* the following character sets actually behave different (Win2K observation):
+     * the sample string is 'sticky': it uses the sample string of the previous
+     * selected character set. That behaviour looks like some default, which is
+     * not (yet) implemented. */
+    L"AaBb",                                    /* VISCII */
+    L"AaBb",                                    /* TCVN */
+    L"AaBb",                                    /* KOI-8 */
+    L"AaBb",                                    /* ISO-8859-3 */
+    L"AaBb",                                    /* ISO-8859-4 */
+    L"AaBb",                                    /* ISO-8859-10 */
+    L"AaBb"                                     /* Celtic */
+};
 
 
 static const BYTE CHARSET_ORDER[256]={
@@ -207,7 +198,7 @@ BOOL WINAPI ChooseFontW(LPCHOOSEFONTW lpChFont)
         } else
         {
             hDlginst=COMDLG32_hInstance;
-            if (!(hResInfo = FindResourceW(hDlginst, chooseFontW, (LPWSTR)RT_DIALOG)))
+            if (!(hResInfo = FindResourceW(hDlginst, L"CHOOSE_FONT", (LPWSTR)RT_DIALOG)))
             {
                 COMDLG32_SetCommDlgExtendedError(CDERR_FINDRESFAILURE);
                 return FALSE;
@@ -261,7 +252,7 @@ BOOL WINAPI ChooseFontA(LPCHOOSEFONTA lpChFont)
         } else
         {
             hDlginst=COMDLG32_hInstance;
-            if (!(hResInfo = FindResourceW(hDlginst, chooseFontW, (LPWSTR)RT_DIALOG)))
+            if (!(hResInfo = FindResourceW(hDlginst, L"CHOOSE_FONT", (LPWSTR)RT_DIALOG)))
             {
                 COMDLG32_SetCommDlgExtendedError(CDERR_FINDRESFAILURE);
                 return FALSE;
@@ -422,7 +413,11 @@ static BOOL AddFontSizeToCombo3(HWND hwnd, UINT h, const CHOOSEFONTW *lpcf)
     if (  (!(lpcf->Flags & CF_LIMITSIZE))  ||
             ((lpcf->Flags & CF_LIMITSIZE) && (h >= lpcf->nSizeMin) && (h <= lpcf->nSizeMax)))
     {
-        swprintf(buffer, fontsizefmtW, h);
+#ifndef __REACTOS__
+        swprintf(buffer, ARRAY_SIZE(buffer), L"%d", h);
+#else
+        swprintf(buffer, L"%d", h);
+#endif
         j=SendMessageW(hwnd, CB_FINDSTRINGEXACT, -1, (LPARAM)buffer);
         if (j==CB_ERR)
         {
@@ -505,7 +500,7 @@ static INT AddFontStyle( const ENUMLOGFONTEXW *lpElfex, const NEWTEXTMETRICEXW *
     HDC hdc;
 
     TRACE("(nFontType=%d)\n",nFontType);
-    TRACE("  %s h=%d w=%d e=%d o=%d wg=%d i=%d u=%d s=%d"
+    TRACE("  %s h=%ld w=%ld e=%ld o=%ld wg=%ld i=%d u=%d s=%d"
             " ch=%d op=%d cp=%d q=%d pf=%xh\n",
             debugstr_w(lplf->lfFaceName),lplf->lfHeight,lplf->lfWidth,
             lplf->lfEscapement,lplf->lfOrientation,
@@ -625,11 +620,10 @@ static LRESULT CFn_WMInitDialog(HWND hDlg, LPARAM lParam, LPCHOOSEFONTW lpcf)
     CFn_ENUMSTRUCT s;
     LPLOGFONTW lpxx;
     HCURSOR hcursor=SetCursor(LoadCursorW(0,(LPWSTR)IDC_WAIT));
-    static const WCHAR strColorName[] = {'[','c','o','l','o','r',' ','n','a','m','e',']',0};
 
     SetPropW(hDlg, strWineFontData, lpcf);
     lpxx=lpcf->lpLogFont;
-    TRACE("WM_INITDIALOG lParam=%08lX\n", lParam);
+    TRACE("WM_INITDIALOG lParam=%08IX\n", lParam);
 
     if (lpcf->lStructSize != sizeof(CHOOSEFONTW))
     {
@@ -662,11 +656,8 @@ static LRESULT CFn_WMInitDialog(HWND hDlg, LPARAM lParam, LPCHOOSEFONTW lpcf)
         {
             WCHAR name[30];
 
-            if( LoadStringW(COMDLG32_hInstance, IDS_COLOR_BLACK+i, name,
-                        ARRAY_SIZE(name)) == 0 )
-            {
-                memcpy(name, strColorName, sizeof(strColorName));
-            }
+            if (LoadStringW(COMDLG32_hInstance, IDS_COLOR_BLACK+i, name, ARRAY_SIZE(name)) == 0)
+                lstrcpyW(name, L"[color name]");
             j=SendDlgItemMessageW(hDlg, cmb4, CB_ADDSTRING, 0, (LPARAM)name);
             SendDlgItemMessageW(hDlg, cmb4, CB_SETITEMDATA, j, textcolors[i]);
             /* look for a fitting value in color combobox */
@@ -950,7 +941,7 @@ static LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam, LPCHOOSEFO
         }
     }
 
-    TRACE("WM_COMMAND wParam=%08X lParam=%08lX\n", (LONG)wParam, lParam);
+    TRACE("WM_COMMAND wParam=%08IX lParam=%08IX\n", wParam, lParam);
     switch (LOWORD(wParam))
     {
     case cmb1:
@@ -1011,7 +1002,7 @@ static LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam, LPCHOOSEFO
             WINDOWINFO wininfo;
             LPLOGFONTW lpxx=lpcf->lpLogFont;
 
-            TRACE("WM_COMMAND/cmb2,3 =%08lX\n", lParam);
+            TRACE("WM_COMMAND/cmb2,3 =%08IX\n", lParam);
 
             /* face name */
             i=SendDlgItemMessageW(hDlg,cmb1,CB_GETCURSEL,0,0);
@@ -1045,11 +1036,16 @@ static LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam, LPCHOOSEFO
             get_dialog_font_point_size(hDlg, lpcf);
 
             /* charset */
-            i=SendDlgItemMessageW(hDlg, cmb5, CB_GETCURSEL, 0, 0);
-            if (i!=CB_ERR)
-                lpxx->lfCharSet=SendDlgItemMessageW(hDlg, cmb5, CB_GETITEMDATA, i, 0);
-            else
+            if (lpcf->Flags & CF_NOSCRIPTSEL)
                 lpxx->lfCharSet = DEFAULT_CHARSET;
+            else
+            {
+                i=SendDlgItemMessageW(hDlg, cmb5, CB_GETCURSEL, 0, 0);
+                if (i!=CB_ERR)
+                    lpxx->lfCharSet=SendDlgItemMessageW(hDlg, cmb5, CB_GETITEMDATA, i, 0);
+                else
+                    lpxx->lfCharSet = DEFAULT_CHARSET;
+            }
             lpxx->lfStrikeOut=IsDlgButtonChecked(hDlg,chx1);
             lpxx->lfUnderline=IsDlgButtonChecked(hDlg,chx2);
             lpxx->lfWidth=lpxx->lfOrientation=lpxx->lfEscapement=0;
@@ -1116,8 +1112,7 @@ static LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam, LPCHOOSEFO
             args[0] = lpcf->nSizeMin;
             args[1] = lpcf->nSizeMax;
             FormatMessageW(FORMAT_MESSAGE_FROM_STRING|FORMAT_MESSAGE_ARGUMENT_ARRAY,
-                           format, 0, 0, msgW, ARRAY_SIZE(msgW),
-                           (__ms_va_list*)args);
+                           format, 0, 0, msgW, ARRAY_SIZE(msgW), (va_list *)args);
             MessageBoxW(hDlg, msgW, NULL, MB_OK);
         }
         return(TRUE);
@@ -1252,7 +1247,7 @@ static INT_PTR CALLBACK FormatCharDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam, 
     case WM_CHOOSEFONT_GETLOGFONT:
     {
         LOGFONTA *logfont = (LOGFONTA *)lParam;
-        TRACE("WM_CHOOSEFONT_GETLOGFONT lParam=%08lX\n", lParam);
+        TRACE("WM_CHOOSEFONT_GETLOGFONT lParam=%08IX\n", lParam);
         memcpy( logfont, lpcfw->lpLogFont, FIELD_OFFSET( LOGFONTA, lfFaceName ));
         WideCharToMultiByte( CP_ACP, 0, lpcfw->lpLogFont->lfFaceName, LF_FACESIZE,
                              logfont->lfFaceName, LF_FACESIZE, NULL, NULL );
@@ -1302,7 +1297,7 @@ static INT_PTR CALLBACK FormatCharDlgProcW(HWND hDlg, UINT uMsg, WPARAM wParam, 
     case WM_DESTROY:
         return TRUE;
     case WM_CHOOSEFONT_GETLOGFONT:
-        TRACE("WM_CHOOSEFONT_GETLOGFONT lParam=%08lX\n", lParam);
+        TRACE("WM_CHOOSEFONT_GETLOGFONT lParam=%08IX\n", lParam);
         memcpy( (LOGFONTW *)lParam, lpcf->lpLogFont, sizeof(LOGFONTW) );
         break;
     case WM_PAINT:
