@@ -277,7 +277,7 @@ BEGIN
     IDS_INACTWIN "Pasif Pencere"
     IDS_ACTWIN "Etkin Pencere"
     IDS_WINTEXT "Pencere Metni"
-    IDS_MESSBOX "İleti Penceresi"
+    IDS_MESSBOX "İleti Kutusu"
     IDS_MESSTEXT "İleti Metni"
     IDS_BUTTEXT "Tamam"
     IDS_CLASSIC_THEME "Klasik Tema"
