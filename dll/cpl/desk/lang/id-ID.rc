@@ -44,7 +44,7 @@ BEGIN
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 60, 123, 12, 13
     LTEXT "menit", IDC_MINTEXT, 74, 125, 26, 9
-    CONTROL "Pintai &kata sandi saat melanjutkan", IDC_SCREENS_USEPASSCHK, "button",
+    CONTROL "Pintai &kata sandi saat melanjutkan", IDC_SCREENS_USEPASSCHK, "button",//FIXME: text truncation. I used "Minta &kata sandi saat melanjutkan" with width 124 to fix that.
             BS_AUTOCHECKBOX | WS_TABSTOP, 106, 120, 119, 19
     GROUPBOX "Fitur penyimpan Daya monitor", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
     LTEXT "Untuk mengatur setelan daya monitor, klik Daya.", IDC_STATIC, 16, 161, 146, 27
