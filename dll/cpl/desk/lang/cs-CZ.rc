@@ -127,7 +127,7 @@ BEGIN
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
     CONTROL "Zobrazovat &obsah okna během přesouvání", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "&Nezobrazovat podtržení písmen u klávesových zkratek, dokud nestisknu klávesu Alt",
+    CONTROL "&Nezobrazovat podtržení písmen u klávesových zkratek, dokud nestisknu klávesu Alt",//FIXME: text truncation. I used "S&kryl podtržená písmena pro klávesnici, dokud nestisknu Alt" for the backport
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
     CONTROL "Use &flat menus", IDC_EFFAPPEARANCE_FLATMENUS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19

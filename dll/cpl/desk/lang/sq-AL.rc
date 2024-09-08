@@ -125,7 +125,7 @@ BEGIN
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
     CONTROL "Shfaq &përmbajtjen dritare ndërsa zvarritet", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,//FIXME: accelerator collision &P. I used "S&hfaq përmbajtjen dritare ndërsa zvarritet" for the backport
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "Fsheh gërma të nënvizuara për kërkimin e tastierës deri sa të shtypni butonin Alt",//FIXME: add accel. I used "Fsh&eh gërma të nënvizuara për kërkimin e tastierës deri sa të shtypni butonin Alt" for the backport. Keep in mind that &f is currently used by the &flat menus
+    CONTROL "Fsheh gërma të nënvizuara për kërkimin e tastierës deri sa të shtypni butonin Alt",//FIXME: add accel. I used "Fsh&eh gërma të nënvizuara për kërkimin e tastierës deri sa të shtypni Alt" as shortener for the backport. Keep in mind that &f is currently used by the &flat menus. And keep in mind that the text is currently too long and therefore cut off.
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
     CONTROL "Use &flat menus", IDC_EFFAPPEARANCE_FLATMENUS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
