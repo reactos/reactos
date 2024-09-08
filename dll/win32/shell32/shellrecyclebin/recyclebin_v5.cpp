@@ -36,7 +36,7 @@ public:
     inline LPWSTR c_str() { return m_sz; }
 };
 
-static int SHELL_SingleFileOperation(HWND hWnd, UINT Op, LPCWSTR pszFrom, LPCWSTR pszTo, WORD Flags)
+static int SHELL_SingleFileOperation(HWND hWnd, UINT Op, LPCWSTR pszFrom, LPCWSTR pszTo, FILEOP_FLAGS Flags)
 {
     CZZWStr szzFrom, szzTo;
     if (!szzFrom.Initialize(pszFrom) || !szzTo.Initialize(pszTo))
