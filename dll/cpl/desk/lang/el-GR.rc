@@ -44,7 +44,7 @@ BEGIN
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 56, 123, 12, 13
     LTEXT "λεπτά", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL "Κατά τη συνέχιση, προστασία με κωδικό πρόσβασης.", IDC_SCREENS_USEPASSCHK, "button",//FIXME: add accel. I used "&Κατά τη συνέχιση, προστασία με κωδικό πρόσβασης." for the backport
+    CONTROL "Κατά τη συνέχιση, προστασία με κωδικό πρόσβασης", IDC_SCREENS_USEPASSCHK, "button",//FIXME: add accel. I used "&Κατά τη συνέχιση, προστασία με κωδικό πρόσβασης" for the backport
             BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
     GROUPBOX "Ενέργεια οθόνης", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
     LTEXT "Για ρύθμιση των χαρακτηριστικών εξοικονόμησης ενέργειας, κάντε κλικ στο κουμπί 'Ενέργεια'.", IDC_STATIC, 16, 161, 146, 27
