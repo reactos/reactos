@@ -4175,6 +4175,50 @@ INT WINAPI CompareStringOrdinal(const WCHAR *str1, INT len1, const WCHAR *str2, 
 }
 #endif // (WINVER >= 0x0600)
 
+#if (WINVER >= 0x0601)
+/******************************************************************************
+ *	FindStringOrdinal   (KERNEL32.@)
+ */
+INT WINAPI DECLSPEC_HOTPATCH FindStringOrdinal( DWORD flag, const WCHAR *src, INT src_size,
+                                                const WCHAR *val, INT val_size, BOOL ignore_case )
+{
+    INT offset, inc, count;
+
+    TRACE( "%#lx %s %d %s %d %d\n", flag, wine_dbgstr_w(src), src_size,
+           wine_dbgstr_w(val), val_size, ignore_case );
+
+    if (!src || !val)
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return -1;
+    }
+
+    if (flag != FIND_FROMSTART && flag != FIND_FROMEND && flag != FIND_STARTSWITH && flag != FIND_ENDSWITH)
+    {
+        SetLastError( ERROR_INVALID_FLAGS );
+        return -1;
+    }
+
+    if (src_size == -1) src_size = lstrlenW( src );
+    if (val_size == -1) val_size = lstrlenW( val );
+
+    SetLastError( ERROR_SUCCESS );
+    src_size -= val_size;
+    if (src_size < 0) return -1;
+
+    count = flag & (FIND_FROMSTART | FIND_FROMEND) ? src_size + 1 : 1;
+    offset = flag & (FIND_FROMSTART | FIND_STARTSWITH) ? 0 : src_size;
+    inc = flag & (FIND_FROMSTART | FIND_STARTSWITH) ? 1 : -1;
+    while (count--)
+    {
+        if (CompareStringOrdinal( src + offset, val_size, val, val_size, ignore_case ) == CSTR_EQUAL)
+            return offset;
+        offset += inc;
+    }
+    return -1;
+}
+#endif // (WINVER >= 0x0601)
+
 #ifndef __REACTOS__
 /*************************************************************************
  *           lstrcmp     (KERNEL32.@)
