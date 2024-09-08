@@ -38,7 +38,7 @@ BEGIN
     GROUPBOX "&Skjermsparer", IDC_SCREENS_DUMMY, 8, 92, 230, 52
     COMBOBOX IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Inn&stillinger", IDC_SCREENS_SETTINGS, 120, 102, 50, 15, WS_GROUP
-    PUSHBUTTON "Forhånds&visning ", IDC_SCREENS_TESTSC, 175, 102, 50, 15//FIXME: accelerator collision &V. I used &F here for the backport to fix that.
+    PUSHBUTTON "Forhånds&visning", IDC_SCREENS_TESTSC, 175, 102, 50, 15//FIXME: accelerator collision &V. I used &F here for the backport to fix that.
     LTEXT "&Vent", IDC_WAITTEXT, 14, 125, 20, 9//FIXME: accelerator collision &V
     EDITTEXT IDC_SCREENS_TIMEDELAY, 36, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
