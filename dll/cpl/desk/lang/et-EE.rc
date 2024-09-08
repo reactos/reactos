@@ -131,7 +131,7 @@ BEGIN
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
     CONTROL "&Peida kiirkla&hvide jaoks allakriipsutatud tähed muuteklahvi (Alt) vajutamiseni",
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
-    CONTROL "Kasuta k&itsaid aknaid", IDC_EFFAPPEARANCE_FLATMENUS,
+    CONTROL "Kasuta k&itsaid aknaid", IDC_EFFAPPEARANCE_FLATMENUS,//FIXME: double-check that translation. The current translation means "Use small windows" while it should be "Use flat menus". I used "&Lamedad menüüd" for the backport
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
     PUSHBUTTON "Loobu", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
