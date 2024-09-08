@@ -18,8 +18,11 @@ class CZZWStr
     LPWSTR m_sz;
 
 public:
-    CZZWStr() : m_sz(NULL) {}
     ~CZZWStr() { SHFree(m_sz); }
+    CZZWStr() : m_sz(NULL) {}
+    CZZWStr(const CZZWStr&) = delete;
+    CZZWStr& operator=(const CZZWStr&) = delete;
+
     bool Initialize(LPCWSTR Str)
     {
         SIZE_T cch = wcslen(Str) + 1;
