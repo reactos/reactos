@@ -6,7 +6,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\vga","ImagePath",0x00020000,"system32\dr
 HKLM,"SYSTEM\CurrentControlSet\Services\vga","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\vga","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\vga","Tag",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\vga\Video","Service",0x00000000,"vga"
 
 HKLM,"SYSTEM\CurrentControlSet\Services\vga\Device0","InstalledDisplayDrivers",0x00010000,"framebuf"
 HKLM,"SYSTEM\CurrentControlSet\Services\vga\Device0","DefaultSettings.VRefresh",0x00010001,1

@@ -6,7 +6,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\VgaSave","ImagePath",0x00020000,"system3
 HKLM,"SYSTEM\CurrentControlSet\Services\VgaSave","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\VgaSave","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\VgaSave","Tag",0x00010001,0x00000002
-HKLM,"SYSTEM\CurrentControlSet\Services\VgaSave\Video","Service",0x00000000,"VgaSave"
 HKLM,"SYSTEM\CurrentControlSet\Services\VgaSave\Device0","VgaCompatible",0x00010001,1
 
 HKLM,"SYSTEM\CurrentControlSet\Services\VgaSave\Device0","InstalledDisplayDrivers",0x00010000,"vgaddi"
