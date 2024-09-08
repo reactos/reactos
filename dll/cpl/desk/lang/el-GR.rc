@@ -35,16 +35,16 @@ CAPTION "Προφύλαξη οθόνης"
 FONT 8, "MS Shell Dlg", 0, 0
 BEGIN
     CONTROL "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74
-    GROUPBOX "Προφύλαξη οθόνης", IDC_SCREENS_DUMMY, 8, 92, 230, 52//FIXME: add accel. I used "&Προφύλαξη οθόνης" for the backport
+    GROUPBOX "Προφύλαξη οθόνης", IDC_SCREENS_DUMMY, 8, 92, 230, 52//FIXME: add accel. I used "Πρ&οφύλαξη οθόνης" for the backport
     COMBOBOX IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Ρυθμίσεις", IDC_SCREENS_SETTINGS, 120, 102, 50, 15, WS_GROUP//FIXME: add accel. I used "&Ρυθμίσεις" for the backport
-    PUSHBUTTON "Προεπισκόπηση", IDC_SCREENS_TESTSC, 175, 102, 50, 15//FIXME: add accel. I used "Πρ&οεπισκόπηση" for the backport
+    PUSHBUTTON "Προεπισκόπηση", IDC_SCREENS_TESTSC, 175, 102, 50, 15//FIXME: add accel and shorten the text. It is too long to fit the control. I used "&Πρεμιέρα" for the backport to fix both.
     LTEXT "Αναμονή", IDC_WAITTEXT, 14, 125, 20, 9//FIXME: add accel. I used "&Αναμονή" for the backport
     EDITTEXT IDC_SCREENS_TIMEDELAY, 36, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 56, 123, 12, 13
     LTEXT "λεπτά", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL "Κατά τη συνέχιση, προστασία με κωδικό πρόσβασης", IDC_SCREENS_USEPASSCHK, "button",//FIXME: add accel. I used "&Κατά τη συνέχιση, προστασία με κωδικό πρόσβασης" for the backport
+    CONTROL "Κατά τη συνέχιση, προστασία με κωδικό πρόσβασης", IDC_SCREENS_USEPASSCHK, "button",//FIXME: add accel and shrink the text. It is too long to fit the control. I used "&Κωδικός πρόσβασης όταν συνεχίζετε" for the backport with the position and width 98, 120, 127, 19
             BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
     GROUPBOX "Ενέργεια οθόνης", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
     LTEXT "Για ρύθμιση των χαρακτηριστικών εξοικονόμησης ενέργειας, κάντε κλικ στο κουμπί 'Ενέργεια'.", IDC_STATIC, 16, 161, 146, 27
