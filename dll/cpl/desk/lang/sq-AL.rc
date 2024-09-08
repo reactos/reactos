@@ -24,7 +24,7 @@ BEGIN
     CONTROL "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74
     CONTROL "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 8, 104, 174, 86
-    LTEXT "Zgjidhni një imazh për t'u përdorur si sfond tuaj desktop:", IDC_STATIC, 8, 93, 230, 9//FIXME: add accel. I used "&Zgjidhni një imazh për t'u përdorur si sfond tuaj desktop:" for the backport
+    LTEXT "Zgjidhni një imazh për t'u përdorur si sfond tuaj desktop:", IDC_STATIC, 8, 93, 230, 9//FIXME: add accel. I used "Sfond i des&ktopit:" for the backport, because that doesn't overflow the length of the IDC_BACKGROUND_LIST below and therefore looks better
     PUSHBUTTON "&Shfleto...", IDC_BROWSE_BUTTON, 188, 104, 55, 15
     PUSHBUTTON "&Ngjyra...", IDC_COLOR_BUTTON, 188, 167, 55, 15
     LTEXT "Vendosje:", IDC_STATIC, 188, 128, 55, 9//FIXME: add accel. I used "&Vendosje:" for the backport
