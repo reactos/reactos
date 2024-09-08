@@ -131,7 +131,7 @@ BEGIN
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
     CONTROL "拖動時顯示視窗內容(&W)", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "直到我按 ALT 鍵之前，請隱藏有下劃線的字母供鍵盤使用",
+    CONTROL "直到我按 ALT 鍵之前，請隱藏有下劃線的字母供鍵盤使用(&H)",
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
     CONTROL "使用扁平化選單(&F)", IDC_EFFAPPEARANCE_FLATMENUS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
