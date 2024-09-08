@@ -1239,7 +1239,7 @@ HRESULT WINAPI DrawNCPreview(HDC hDC,
     if (!RegisterClassExW(&DummyPreviewWindowClass))
         return E_FAIL;
 
-    hwndDummy = CreateWindowExW(0, L"DummyPreviewWindowClass", NULL, WS_OVERLAPPEDWINDOW | WS_VSCROLL, 30, 30, 300, 150, 0, 0, hDllInst, NULL);
+    hwndDummy = CreateWindowExW(WS_EX_DLGMODALFRAME, L"DummyPreviewWindowClass", NULL, WS_OVERLAPPEDWINDOW | WS_VSCROLL, 30, 30, 300, 150, 0, 0, hDllInst, NULL);
     if (!hwndDummy)
         return E_FAIL;
 
@@ -1295,14 +1295,11 @@ HRESULT WINAPI DrawNCPreview(HDC hDC,
     SetWindowResourceText(hwndDummy, IDS_MESSAGEBOX);
     DWORD dwStyleNew = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_DLGFRAME;
     SetWindowLongPtr(hwndDummy, GWL_STYLE, dwStyleNew);
-    DWORD dwExStyleNew = WS_EX_DLGMODALFRAME;
-    SetWindowLongPtr(hwndDummy, GWL_EXSTYLE, dwExStyleNew);
 
     if (!GetWindowInfo(hwndDummy, &context.wi))
         return E_FAIL;
 
     context.wi.dwStyle = WS_VISIBLE | dwStyleNew;
-    context.wi.dwExStyle = dwExStyleNew;
 
     INT msgBoxHCenter = rcAdjPreview.left + (previewWidth / 2);
     INT msgBoxVCenter = rcAdjPreview.top + (previewHeight / 2);
