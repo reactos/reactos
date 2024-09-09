@@ -27,9 +27,26 @@ IntFreeDesktopHeap(IN PDESKTOP pdesk);
 
 /* GLOBALS *******************************************************************/
 
-/* These can be changed via CSRSS startup, these are defaults */
-DWORD gdwDesktopSectionSize = 512;
-DWORD gdwNOIOSectionSize    = 128; // A guess, for one or more of the first three system desktops.
+/* These can be changed via registry settings.
+ * Default values (interactive desktop / non-interactive desktop):
+ * Windows 2003 x86: 3 MB / 512 KB (Disconnect: 64 KB, Winlogon: 128 KB)
+ * Windows 7 x86: 12 MB / 512 KB
+ * Windows 7 x64: 20 MB / 768 KB
+ * Windows 10 x64: 20 MB / 4 MB
+ * See:
+ * - https://dbmentors.blogspot.com/2011/09/desktop-heap-overview.html
+ * - https://www.ibm.com/support/pages/using-microsoft-desktop-heap-monitor-dheapmon-determine-desktop-heap-space-and-troubleshoot-filenet-p8-and-image-services-issues
+ * - https://www.betaarchive.com/wiki/index.php?title=Microsoft_KB_Archive/184802
+ * - https://kb.firedaemon.com/support/solutions/articles/4000086192-windows-service-quota-limits-and-desktop-heap-exhaustion
+ * - https://learn.microsoft.com/en-us/troubleshoot/windows-server/performance/desktop-heap-limitation-out-of-memory
+ */
+#ifdef _WIN64
+DWORD gdwDesktopSectionSize = 20 * 1024; // 20 MB (Windows 7 style)
+#else
+DWORD gdwDesktopSectionSize = 3 * 1024; // 3 MB (Windows 2003 style)
+#endif
+DWORD gdwNOIOSectionSize    = 128;
+DWORD gdwWinlogonSectionSize = 128;
 
 /* Currently active desktop */
 PDESKTOP gpdeskInputDesktop = NULL;
@@ -2259,14 +2276,33 @@ IntPaintDesktop(HDC hDC)
 static NTSTATUS
 UserInitializeDesktop(PDESKTOP pdesk, PUNICODE_STRING DesktopName, PWINSTATION_OBJECT pwinsta)
 {
+    static const UNICODE_STRING WinlogonDesktop = RTL_CONSTANT_STRING(L"Winlogon");
     PVOID DesktopHeapSystemBase = NULL;
-    ULONG_PTR HeapSize = gdwDesktopSectionSize * 1024;
+    ULONG_PTR HeapSize;
     SIZE_T DesktopInfoSize;
     ULONG i;
 
     TRACE("UserInitializeDesktop desktop 0x%p with name %wZ\n", pdesk, DesktopName);
 
     RtlZeroMemory(pdesk, sizeof(DESKTOP));
+
+    /* Set desktop size, based on whether the WinSta is interactive or not */
+    if (pwinsta == InputWindowStation)
+    {
+        /* Check if the Desktop is named "Winlogon" */
+        if (RtlEqualUnicodeString(DesktopName, &WinlogonDesktop, TRUE))
+        {
+            HeapSize = gdwWinlogonSectionSize * 1024;
+        }
+        else
+        {
+            HeapSize = gdwDesktopSectionSize * 1024;
+        }
+    }
+    else
+    {
+        HeapSize = gdwNOIOSectionSize * 1024;
+    }
 
     /* Link the desktop with the parent window station */
     ObReferenceObject(pwinsta);

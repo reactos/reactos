@@ -11,6 +11,40 @@
 #include <shlwapi.h>
 #include "sddl.h"
 
+EXTERN_C HRESULT WINAPI SHUpdateRecycleBinIcon(void);
+
+class CZZWStr
+{
+    LPWSTR m_sz;
+
+public:
+    ~CZZWStr() { SHFree(m_sz); }
+    CZZWStr() : m_sz(NULL) {}
+    CZZWStr(const CZZWStr&) = delete;
+    CZZWStr& operator=(const CZZWStr&) = delete;
+
+    bool Initialize(LPCWSTR Str)
+    {
+        SIZE_T cch = wcslen(Str) + 1;
+        m_sz = (LPWSTR)SHAlloc((cch + 1) * sizeof(*Str));
+        if (!m_sz)
+            return false;
+        CopyMemory(m_sz, Str, cch * sizeof(*Str));
+        m_sz[cch] = UNICODE_NULL; // Double-null terminate
+        return true;
+    }
+    inline LPWSTR c_str() { return m_sz; }
+};
+
+static int SHELL_SingleFileOperation(HWND hWnd, UINT Op, LPCWSTR pszFrom, LPCWSTR pszTo, FILEOP_FLAGS Flags)
+{
+    CZZWStr szzFrom, szzTo;
+    if (!szzFrom.Initialize(pszFrom) || !szzTo.Initialize(pszTo))
+        return ERROR_OUTOFMEMORY; // Note: Not one of the DE errors but also not in the DE range
+    SHFILEOPSTRUCTW fos = { hWnd, Op, szzFrom.c_str(), szzTo.c_str(), Flags };
+    return SHFileOperationW(&fos);
+}
+
 static BOOL
 IntDeleteRecursive(
     IN LPCWSTR FullName)
@@ -465,7 +499,6 @@ STDMETHODIMP RecycleBin5::Restore(
     PINFO2_HEADER pHeader;
     DELETED_FILE_RECORD *pRecord, *pLast;
     DWORD dwEntries, i;
-    SHFILEOPSTRUCTW op;
     int res;
 
     TRACE("(%p, %s, %p)\n", this, debugstr_w(pDeletedFileName), pDeletedFile);
@@ -490,13 +523,7 @@ STDMETHODIMP RecycleBin5::Restore(
     {
         if (pRecord->dwRecordUniqueId == pDeletedFile->dwRecordUniqueId)
         {
-            /* Restore file */
-            ZeroMemory(&op, sizeof(op));
-            op.wFunc = FO_MOVE;
-            op.pFrom = pDeletedFileName;
-            op.pTo = pDeletedFile->FileNameW;
-
-            res = SHFileOperationW(&op);
+            res = SHELL_SingleFileOperation(NULL, FO_MOVE, pDeletedFileName, pDeletedFile->FileNameW, 0);
             if (res)
             {
                 ERR("SHFileOperationW failed with 0x%x\n", res);
@@ -517,6 +544,8 @@ STDMETHODIMP RecycleBin5::Restore(
             m_hInfoMapped = CreateFileMappingW(m_hInfo, NULL, PAGE_READWRITE | SEC_COMMIT, 0, 0, NULL);
             if (!m_hInfoMapped)
                 return HRESULT_FROM_WIN32(GetLastError());
+            if (dwEntries == 1)
+                SHUpdateRecycleBinIcon(); // Full --> Empty
             return S_OK;
         }
         pRecord++;

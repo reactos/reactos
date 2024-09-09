@@ -1372,11 +1372,21 @@ typedef int (WINAPI * DRAWSHADOWTEXT)(HDC hdc, LPCWSTR pszText, UINT cch, RECT *
                           COLORREF crText, COLORREF crShadow, int ixOffset, int iyOffset);
 
 /***********************************************************************
- *      DrawThemeText                                       (UXTHEME.@)
+ *      DrawThemeTextEx                                     (UXTHEME.@)
  */
-HRESULT WINAPI DrawThemeText(HTHEME hTheme, HDC hdc, int iPartId, int iStateId,
-                             LPCWSTR pszText, int iCharCount, DWORD dwTextFlags,
-                             DWORD dwTextFlags2, const RECT *pRect)
+HRESULT
+WINAPI
+DrawThemeTextEx(
+    _In_ HTHEME hTheme,
+    _In_ HDC hdc,
+    _In_ int iPartId,
+    _In_ int iStateId,
+    _In_ LPCWSTR pszText,
+    _In_ int iCharCount,
+    _In_ DWORD dwTextFlags,
+    _Inout_ LPRECT pRect,
+    _In_ const DTTOPTS *options
+)
 {
     HRESULT hr;
     HFONT hFont = NULL;
@@ -1389,10 +1399,14 @@ HRESULT WINAPI DrawThemeText(HTHEME hTheme, HDC hdc, int iPartId, int iStateId,
     int oldBkMode;
     RECT rt;
     int iShadowType;
+    DWORD optFlags;
 
-    TRACE("%d %d: stub\n", iPartId, iStateId);
     if(!hTheme)
         return E_HANDLE;
+    if (!options)
+        return E_NOTIMPL;
+
+    optFlags = options->dwFlags;
 
     hr = GetThemeFont(hTheme, hdc, iPartId, iStateId, TMT_FONT, &logfont);
     if(SUCCEEDED(hr)) 
@@ -1410,10 +1424,17 @@ HRESULT WINAPI DrawThemeText(HTHEME hTheme, HDC hdc, int iPartId, int iStateId,
 
     oldBkMode = SetBkMode(hdc, TRANSPARENT);
 
-    if(dwTextFlags2 & DTT_GRAYED)
-        textColor = GetSysColor(COLOR_GRAYTEXT);
-    else {
-        if(FAILED(GetThemeColor(hTheme, iPartId, iStateId, TMT_TEXTCOLOR, &textColor)))
+    if (optFlags & DTT_TEXTCOLOR)
+    {
+        textColor = options->crText;
+    }
+    else
+    {
+        int textColorProp = TMT_TEXTCOLOR;
+        if (optFlags & DTT_COLORPROP)
+            textColorProp = options->iColorPropId;
+
+        if (FAILED(GetThemeColor(hTheme, iPartId, iStateId, textColorProp, &textColor)))
             textColor = GetTextColor(hdc);
     }
 
@@ -1471,6 +1492,29 @@ cleanup:
         DeleteObject(hFont);
     }
     return S_OK;
+}
+
+/***********************************************************************
+ *      DrawThemeText                                       (UXTHEME.@)
+ */
+HRESULT WINAPI DrawThemeText(HTHEME hTheme, HDC hdc, int iPartId, int iStateId,
+                             LPCWSTR pszText, int iCharCount, DWORD dwTextFlags,
+                             DWORD dwTextFlags2, const RECT *pRect)
+{
+    DTTOPTS opts = { 0 };
+    RECT rt = *pRect;
+
+    TRACE("(%p %p %d %d %s:%d 0x%08lx 0x%08lx %p)\n", hTheme, hdc, iPartId, iStateId,
+        debugstr_wn(pszText, iCharCount), iCharCount, dwTextFlags, dwTextFlags2, pRect);
+
+    if (dwTextFlags2 & DTT_GRAYED)
+    {
+        opts.dwFlags = DTT_TEXTCOLOR;
+        opts.crText = GetSysColor(COLOR_GRAYTEXT);
+    }
+    opts.dwSize = sizeof(opts);
+
+    return DrawThemeTextEx(hTheme, hdc, iPartId, iStateId, pszText, iCharCount, dwTextFlags, &rt, &opts);
 }
 
 /***********************************************************************

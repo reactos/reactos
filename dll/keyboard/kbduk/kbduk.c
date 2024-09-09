@@ -346,7 +346,7 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
   { 0x47, L"Home" },
   { 0x48, L"Up" },
   { 0x49, L"Page Up" },
-  { 0x4a, L"Left" },
+  { 0x4b, L"Left" },
   { 0x4c, L"Center" },
   { 0x4d, L"Right" },
   { 0x4f, L"End" },

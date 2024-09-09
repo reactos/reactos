@@ -257,6 +257,7 @@ RecycleBin5File::Init(
 {
     m_recycleBin = prb;
     m_recycleBin->AddRef();
+    m_deletedFile = *pDeletedFile;
 
     WCHAR szUniqueId[32];
     StringCchPrintfW(szUniqueId, _countof(szUniqueId), L"%lu", pDeletedFile->dwRecordUniqueId);

@@ -1,7 +1,5 @@
-IDB_REACTOS             BITMAP "res/bitmaps/reactos.bmp"
-IDB_REACTOS_WORKSTATION BITMAP "res/bitmaps/reactosworkstation.bmp"
-IDB_REACTOS_SERVER      BITMAP "res/bitmaps/reactosserver.bmp"
-IDB_LINEBAR             BITMAP "res/bitmaps/line.bmp"
+IDB_REACTOS BITMAP "res/bitmaps/reactos.bmp"
+IDB_LINEBAR BITMAP "res/bitmaps/line.bmp"
 
 IDB_DLG_BG BITMAP "res/bitmaps/dlg_bg.bmp"
 IDB_REACTOS_FLAG BITMAP "res/bitmaps/reactos_flag.bmp"

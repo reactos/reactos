@@ -11,6 +11,8 @@
 #define NDEBUG
 #include <debug.h>
 
+DBG_DEFAULT_CHANNEL(GdiClipRgn);
+
 VOID
 FASTCALL
 IntGdiReleaseRaoRgn(PDC pDC)
@@ -776,16 +778,16 @@ CLIPPING_UpdateGCRegion(PDC pDC)
         pDC->prgnAPI = NULL;
     }
 
-    if (pDC->prgnRao)
-        REGION_Delete(pDC->prgnRao);
-
-    pDC->prgnRao = IntSysCreateRectpRgn(0,0,0,0);
-
-    ASSERT(pDC->prgnRao);
-
     if (pDC->dclevel.prgnMeta || pDC->dclevel.prgnClip)
     {
         pDC->prgnAPI = IntSysCreateRectpRgn(0,0,0,0);
+        if (!pDC->prgnAPI)
+        {
+            /* Best we can do here. Better than crashing. */
+            ERR("Failed to allocate prgnAPI! Expect drawing issues!\n");
+            return;
+        }
+
         if (!pDC->dclevel.prgnMeta)
         {
             REGION_bCopy(pDC->prgnAPI,
@@ -802,6 +804,17 @@ CLIPPING_UpdateGCRegion(PDC pDC)
                                     pDC->dclevel.prgnClip,
                                     pDC->dclevel.prgnMeta);
         }
+    }
+
+    if (pDC->prgnRao)
+        REGION_Delete(pDC->prgnRao);
+
+    pDC->prgnRao = IntSysCreateRectpRgn(0,0,0,0);
+    if (!pDC->prgnRao)
+    {
+        /* Best we can do here. Better than crashing. */
+        ERR("Failed to allocate prgnRao! Expect drawing issues!\n");
+        return;
     }
 
     if (pDC->prgnAPI)

@@ -1,0 +1,19 @@
+/*
+ * PROJECT:     ReactOS uxtheme.dll
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATOR:  Copyright 2024 Ethem De Santa (scropool) <oyunyumru4@gmail.com>
+ */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+/* Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_MESSAGEBOX "İleti Kutusu"
+    IDS_ACTIVEWIN "Etkin Pencere"
+    IDS_INACTIVEWIN "Pasif Pencere"
+    IDS_OK "Tamam"
+    IDS_WINTEXT "Pencere Metni"
+END

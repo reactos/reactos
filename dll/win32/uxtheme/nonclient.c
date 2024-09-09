@@ -1092,7 +1092,7 @@ DrawWindowForNCPreview(
     _In_ INT top,
     _In_ INT right,
     _In_ INT bottom,
-    _In_ BOOL drawClientAreaColor,
+    _In_ INT clientAreaColor,
     _Out_opt_ LPRECT prcClient)
 {
     if (!hDC)
@@ -1172,12 +1172,9 @@ DrawWindowForNCPreview(
 
     OffsetRect(&rcClientNew, -pcontext->wi.rcWindow.left, -pcontext->wi.rcWindow.top);
 
-    if (drawClientAreaColor)
-    {
-        HBRUSH hbrWindow = GetThemeSysColorBrush(pcontext->theme, COLOR_WINDOW);
-        FillRect(hDC, &rcClientNew, hbrWindow);
-        DeleteObject(hbrWindow);
-    }
+    HBRUSH hbrWindow = GetThemeSysColorBrush(pcontext->theme, clientAreaColor);
+    FillRect(hDC, &rcClientNew, hbrWindow);
+    DeleteObject(hbrWindow);
 
     pcontext->wi.rcWindow = rcWindowPrev;
     pcontext->wi.rcClient = rcClientPrev;
@@ -1242,7 +1239,7 @@ HRESULT WINAPI DrawNCPreview(HDC hDC,
     if (!RegisterClassExW(&DummyPreviewWindowClass))
         return E_FAIL;
 
-    hwndDummy = CreateWindowExW(0, L"DummyPreviewWindowClass", NULL, WS_OVERLAPPEDWINDOW | WS_VSCROLL, 30, 30, 300, 150, 0, 0, hDllInst, NULL);
+    hwndDummy = CreateWindowExW(WS_EX_DLGMODALFRAME, L"DummyPreviewWindowClass", NULL, WS_OVERLAPPEDWINDOW | WS_VSCROLL, 30, 30, 300, 150, 0, 0, hDllInst, NULL);
     if (!hwndDummy)
         return E_FAIL;
 
@@ -1272,7 +1269,7 @@ HRESULT WINAPI DrawNCPreview(HDC hDC,
     /* Draw inactive preview window */
     context.Active = FALSE;
     SetWindowResourceText(hwndDummy, IDS_INACTIVEWIN);
-    DrawWindowForNCPreview(hDC, &context, rcAdjPreview.left, rcAdjPreview.top, rcAdjPreview.right - 17, rcAdjPreview.bottom - 20, TRUE, NULL);
+    DrawWindowForNCPreview(hDC, &context, rcAdjPreview.left, rcAdjPreview.top, rcAdjPreview.right - 17, rcAdjPreview.bottom - 20, COLOR_WINDOW, NULL);
 
     /* Draw active preview window */
     context.Active = TRUE;
@@ -1280,7 +1277,7 @@ HRESULT WINAPI DrawNCPreview(HDC hDC,
 
     DWORD textDrawFlags = DT_NOPREFIX | DT_SINGLELINE | DT_WORDBREAK;
     RECT rcWindowClient;
-    DrawWindowForNCPreview(hDC, &context, rcAdjPreview.left + 10, rcAdjPreview.top + 22, rcAdjPreview.right, rcAdjPreview.bottom, TRUE, &rcWindowClient);
+    DrawWindowForNCPreview(hDC, &context, rcAdjPreview.left + 10, rcAdjPreview.top + 22, rcAdjPreview.right, rcAdjPreview.bottom, COLOR_WINDOW, &rcWindowClient);
     LOGFONTW lfText;
     HFONT textFont = NULL;
     if (SUCCEEDED(GetThemeSysFont(context.theme, TMT_MSGBOXFONT, &lfText)))
@@ -1289,32 +1286,33 @@ HRESULT WINAPI DrawNCPreview(HDC hDC,
     if (textFont)
         SelectFont(hDC, textFont);
 
-    SetTextColor(hDC, GetThemeSysColor(context.theme, TMT_WINDOWTEXT));
+    HTHEME hBtnTheme = OpenThemeDataFromFile(hThemeFile, hwndDummy, L"BUTTON", OTD_NONCLIENT);
     len = LoadStringW(hDllInst, IDS_WINTEXT, (LPWSTR)&szText, 0);
     if (len > 0)
-        DrawThemeText(context.theme, hDC, WP_DIALOG, 0, szText, len, DT_LEFT | DT_TOP | textDrawFlags, 0, &rcWindowClient);
+    {
+        DTTOPTS dttOpts = { sizeof(dttOpts) };
+        dttOpts.dwFlags = DTT_TEXTCOLOR;
+        dttOpts.crText = GetThemeSysColor(context.theme, COLOR_WINDOWTEXT);
+
+        DrawThemeTextEx(hBtnTheme, hDC, BP_PUSHBUTTON, PBS_DEFAULTED, szText, len, DT_LEFT | DT_TOP | textDrawFlags, &rcWindowClient, &dttOpts);
+    }
 
     /* Draw preview dialog window */
     SetWindowResourceText(hwndDummy, IDS_MESSAGEBOX);
     DWORD dwStyleNew = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_DLGFRAME;
     SetWindowLongPtr(hwndDummy, GWL_STYLE, dwStyleNew);
-    DWORD dwExStyleNew = WS_EX_DLGMODALFRAME;
-    SetWindowLongPtr(hwndDummy, GWL_EXSTYLE, dwExStyleNew);
 
     if (!GetWindowInfo(hwndDummy, &context.wi))
         return E_FAIL;
 
     context.wi.dwStyle = WS_VISIBLE | dwStyleNew;
-    context.wi.dwExStyle = dwExStyleNew;
 
     INT msgBoxHCenter = rcAdjPreview.left + (previewWidth / 2);
     INT msgBoxVCenter = rcAdjPreview.top + (previewHeight / 2);
 
-    DrawWindowForNCPreview(hDC, &context, msgBoxHCenter - NC_PREVIEW_MSGBOX_HALF_WIDTH, msgBoxVCenter + NC_PREVIEW_MSGBOX_OFFSET_X, msgBoxHCenter + NC_PREVIEW_MSGBOX_HALF_WIDTH, msgBoxVCenter + NC_PREVIEW_MSGBOX_OFFSET_Y, FALSE, &rcWindowClient);
-    DrawThemeBackground(context.theme, hDC, WP_DIALOG, 0, &rcWindowClient, NULL);
+    DrawWindowForNCPreview(hDC, &context, msgBoxHCenter - NC_PREVIEW_MSGBOX_HALF_WIDTH, msgBoxVCenter + NC_PREVIEW_MSGBOX_OFFSET_X, msgBoxHCenter + NC_PREVIEW_MSGBOX_HALF_WIDTH, msgBoxVCenter + NC_PREVIEW_MSGBOX_OFFSET_Y, COLOR_BTNFACE, &rcWindowClient);
 
     /* Draw preview dialog button */
-    HTHEME hBtnTheme = OpenThemeDataFromFile(hThemeFile, hwndDummy, L"BUTTON", OTD_NONCLIENT);
     if (hBtnTheme)
     {
         INT btnCenterH = rcWindowClient.left + ((rcWindowClient.right - rcWindowClient.left) / 2);
