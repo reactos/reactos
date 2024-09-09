@@ -1607,8 +1607,10 @@ SetClassLongPtrA(HWND hWnd,
                  INT nIndex,
                  LONG_PTR dwNewLong)
 {
-    UNIMPLEMENTED;
-    return 0;
+    return NtUserSetClassLongPtr(hWnd,
+                                 nIndex,
+                                 dwNewLong,
+                                 TRUE);
 }
 
 /*
@@ -1620,8 +1622,10 @@ SetClassLongPtrW(HWND hWnd,
                  INT nIndex,
                  LONG_PTR dwNewLong)
 {
-    UNIMPLEMENTED;
-    return 0;
+    return NtUserSetClassLongPtr(hWnd,
+                                 nIndex,
+                                 dwNewLong,
+                                 FALSE);
 }
 #endif // _WIN64
 
