@@ -298,7 +298,7 @@ BEGIN
     IDS_ELEMENT_12 "Dialogo"
     IDS_ELEMENT_13 "Sfondo della applicazione"
     IDS_ELEMENT_14 "Distanza tra i simboli (orizzontale)"
-    IDS_ELEMENT_15 "Distanza tra i simboli  (verticale)"
+    IDS_ELEMENT_15 "Distanza tra i simboli (verticale)"
     IDS_ELEMENT_16 "Informazioni rapide"
     IDS_ELEMENT_17 "Simbolo"
 //  IDS_ELEMENT_18 "Elementi dei menu disattivati"
