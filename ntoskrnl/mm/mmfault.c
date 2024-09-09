@@ -22,7 +22,8 @@ NTSTATUS
 NTAPI
 MmpAccessFault(KPROCESSOR_MODE Mode,
                ULONG_PTR Address,
-               BOOLEAN FromMdl)
+               BOOLEAN FromMdl,
+               ULONG FaultCode)
 {
     PMMSUPPORT AddressSpace;
     MEMORY_AREA* MemoryArea;
@@ -34,6 +35,14 @@ MmpAccessFault(KPROCESSOR_MODE Mode,
     {
         DPRINT1("Page fault at high IRQL was %u\n", KeGetCurrentIrql());
         return(STATUS_UNSUCCESSFUL);
+    }
+
+    /* Instruction fetch and the page is present.
+       This means the page is NX and we cannot do anything to "fix" it. */
+    if (MI_IS_INSTRUCTION_FETCH(FaultCode))
+    {
+        DPRINT1("Page fault instruction fetch at %p\n", Address);
+        return STATUS_ACCESS_VIOLATION;
     }
 
     /*
@@ -285,7 +294,7 @@ Retry:
     if (!MI_IS_NOT_PRESENT_FAULT(FaultCode))
     {
         /* Call access fault */
-        Status = MmpAccessFault(Mode, (ULONG_PTR)Address, TrapInformation ? FALSE : TRUE);
+        Status = MmpAccessFault(Mode, (ULONG_PTR)Address, TrapInformation ? FALSE : TRUE, FaultCode);
     }
     else
     {
