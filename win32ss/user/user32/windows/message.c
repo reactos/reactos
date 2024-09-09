@@ -1432,7 +1432,7 @@ IntCallWindowProcW(BOOL IsAnsiProc,
 {
   MSG AnsiMsg;
   MSG UnicodeMsg;
-  BOOL Hook = FALSE, MsgOverride = FALSE, Dialog, DlgOverride = FALSE;
+  BOOL Hook = FALSE, MsgOverride = FALSE, Dialog, Visible, DlgOverride = FALSE;
   LRESULT Result = 0, PreResult = 0;
   DWORD Data = 0;
 
@@ -1543,6 +1543,12 @@ IntCallWindowProcW(BOOL IsAnsiProc,
 
       if (PreResult) goto Exit;
 
+      /* Testing for visibility for CORE-12033 */
+      Visible = GetWindowLong(hWnd, GWL_STYLE) & WS_VISIBLE;
+      if (!Dialog && !Visible)
+      Result = CALL_EXTERN_WNDPROC(WndProc, hWnd, Msg, wParam, lParam);
+      else
+      {
       _SEH2_TRY
       {
          Result = CALL_EXTERN_WNDPROC(WndProc, hWnd, Msg, wParam, lParam);
@@ -1552,6 +1558,7 @@ IntCallWindowProcW(BOOL IsAnsiProc,
          ERR("Exception Dialog unicode %p Msg %d pti %p Wndpti %p\n",WndProc, Msg,GetW32ThreadInfo(),pWnd->head.pti);
       }
       _SEH2_END;
+      }
 
       if (Hook && (MsgOverride || DlgOverride))
       {
