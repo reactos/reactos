@@ -1543,10 +1543,6 @@ IntCallWindowProcW(BOOL IsAnsiProc,
 
       if (PreResult) goto Exit;
 
-      if (!Dialog)
-      Result = CALL_EXTERN_WNDPROC(WndProc, hWnd, Msg, wParam, lParam);
-      else
-      {
       _SEH2_TRY
       {
          Result = CALL_EXTERN_WNDPROC(WndProc, hWnd, Msg, wParam, lParam);
@@ -1556,7 +1552,6 @@ IntCallWindowProcW(BOOL IsAnsiProc,
          ERR("Exception Dialog unicode %p Msg %d pti %p Wndpti %p\n",WndProc, Msg,GetW32ThreadInfo(),pWnd->head.pti);
       }
       _SEH2_END;
-      }
 
       if (Hook && (MsgOverride || DlgOverride))
       {
