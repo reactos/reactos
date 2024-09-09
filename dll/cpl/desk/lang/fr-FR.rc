@@ -294,7 +294,7 @@ BEGIN
     IDS_ELEMENT_6 "Éléments sélectionnés"
     IDS_ELEMENT_7 "Fenêtres"
     IDS_ELEMENT_8 "Barres de défilement"
-    IDS_ELEMENT_9 "Objets 3D "
+    IDS_ELEMENT_9 "Objets 3D"
     IDS_ELEMENT_10 "Titre de palette"
     IDS_ELEMENT_11 "Boutons de barre de titre"
     IDS_ELEMENT_12 "Fenêtre de dialogue"
