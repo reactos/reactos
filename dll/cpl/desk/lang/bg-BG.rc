@@ -48,7 +48,7 @@ BEGIN
             BS_AUTOCHECKBOX | WS_TABSTOP, 116, 120, 109, 19
     GROUPBOX "Енергоспестяващи възможности на монитора", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
     LTEXT "За настройка захранването на монитора, натиснете „Захранване...“.", IDC_STATIC, 16, 161, 146, 27
-    PUSHBUTTON "Захранване...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15//FIXME: add accel
+    PUSHBUTTON "Захранване...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15//FIXME: add accel. I used "&Захранване..." for the backport
 END
 
 IDD_APPEARANCE DIALOGEX 0, 0, 246, 212
