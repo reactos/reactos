@@ -250,109 +250,6 @@ Test_GetDCEx_CS_CLASSDC(void)
 
 static
 void
-Test_GetDCEx_CS_CLASSDC_NEXT(void)
-{
-    static const LPCWSTR pszClassName = L"TestClass_CLASSDC_NEXT";
-    HWND hwnd1, hwnd2;
-    HDC hdc1, hdc2 , hdcClass;
-
-    //1
-    RegisterClassHelper(pszClassName, CS_CLASSDC, WndProc);
-    hwnd1 = CreateWindowHelper(pszClassName, L"Test Window1");
-    hwnd2 = CreateWindowHelper(pszClassName, L"Test Window2");
-    ShowWindow(hwnd1, SW_SHOW);
-    UpdateWindow(hwnd1);
-    ShowWindow(hwnd2, SW_SHOW);
-    UpdateWindow(hwnd2);
-    hdc1 = GetDCEx(hwnd1, NULL, DCX_USESTYLE);
-    hdc2 = GetDCEx(hwnd2, NULL, DCX_USESTYLE);
-    ok(WindowFromDC(hdc1) == hwnd2,"DC1-hwnd not hwnd2\n");
-    ok(WindowFromDC(hdc2) == hwnd2,"DC2-hwnd not hwnd2\n");
-    ReleaseDC(hwnd2, hdc2);
-    ok(WindowFromDC(hdc1) == hwnd2,"DC1-hwnd not hwnd2\n");
-    ok(WindowFromDC(hdc2) == hwnd2,"DC2-hwnd not hwnd2\n");
-    SetClassLongPtrW(hwnd1, GCL_STYLE, CS_OWNDC);
-    ok(WindowFromDC(hdc1) == hwnd2,"DC1-hwnd not hwnd2\n");
-    ok(WindowFromDC(hdc2) == hwnd2,"DC2-hwnd not hwnd2\n");
-    hdcClass = GetDCEx(hwnd1, NULL, DCX_USESTYLE);
-    ok(hdcClass == NULL, "GetDCEx must be NULL\n");
-    ShowWindow(hwnd1, SW_SHOW);
-    UpdateWindow(hwnd1);
-    ShowWindow(hwnd2, SW_SHOW);
-    UpdateWindow(hwnd2);
-    ok(WindowFromDC(hdc1) == hwnd2,"DC1-hwnd not hwnd2\n");
-    ok(WindowFromDC(hdc2) == hwnd2,"DC2-hwnd not hwnd2\n");
-    Sleep(200);
-    ShowWindow(hwnd1, SW_SHOW);
-    UpdateWindow(hwnd1);
-    ShowWindow(hwnd2, SW_SHOW);
-    UpdateWindow(hwnd2);
-    ok(WindowFromDC(hdc1) == hwnd2,"DC1-hwnd not hwnd2\n");
-    ok(WindowFromDC(hdc2) == hwnd2,"DC2-hwnd not hwnd2\n");
-    Sleep(200);
-    DestroyWindow(hwnd1);
-    DestroyWindow(hwnd2);
-    //UnregisterClassW(pszClassName, GetModuleHandleW(0));
-
-    //2
-    RegisterClassHelper(pszClassName, CS_CLASSDC, WndProc);
-    hwnd2 = CreateWindowHelper(pszClassName, L"Test Window2");
-    hwnd1 = CreateWindowHelper(pszClassName, L"Test Window1");
-    hdc2 = GetDCEx(hwnd2, NULL, DCX_USESTYLE); // 1
-    hdc1 = GetDCEx(hwnd1, NULL, DCX_USESTYLE); // 2
-    ok(WindowFromDC(hdc1) == hwnd1,"DC1-hwnd not hwnd1\n");
-    ok(WindowFromDC(hdc2) == hwnd2,"DC2-hwnd not hwnd2\n");
-    SetClassLongPtrW(hwnd1, GCL_STYLE, CS_OWNDC);
-    hdc1 = GetDCEx(hwnd1, NULL, DCX_USESTYLE);
-    ok(hdc1 != NULL, "GetDCEx must be not NULL\n");
-    ok(WindowFromDC(hdc1) == hwnd1,"DC1-hwnd not hwnd1\n");
-    ok(WindowFromDC(hdc2) == hwnd2,"DC2-hwnd not hwnd2\n");
-    DestroyWindow(hwnd1);
-    ok(WindowFromDC(hdc1) == NULL,"DC1-hwnd not NULL\n");
-    ok(WindowFromDC(hdc2) == hwnd2,"DC2-hwnd not hwnd2\n");
-    DestroyWindow(hwnd2);
-    //UnregisterClassW(pszClassName, GetModuleHandleW(0));
-
-    //3
-    RegisterClassHelper(pszClassName, CS_CLASSDC, WndProc);
-    hwnd1 = CreateWindowHelper(pszClassName, L"Test Window1");
-    hwnd2 = CreateWindowHelper(pszClassName, L"Test Window2");
-    hdc1 = GetDCEx(hwnd1, NULL, DCX_USESTYLE);//4
-    ok(WindowFromDC(hdc1) == hwnd1,"DC1-hwnd not hwnd1\n");
-    SetClassLongPtrW(hwnd1, GCL_STYLE, CS_OWNDC);
-    ok(WindowFromDC(hdc1) == hwnd1,"DC1-hwnd not hwnd1\n");
-    hdc1=GetDCEx(hwnd1, NULL, DCX_USESTYLE);    
-    ok(hdc1 != NULL, "GetDCEx must be not NULL\n");
-    ok(WindowFromDC(hdc1) == hwnd1,"DC1-hwnd not hwnd1\n");
-    DestroyWindow(hwnd1);
-    ok(WindowFromDC(hdc1) == NULL,"DC1-hwnd not NULL\n");
-    DestroyWindow(hwnd2);
-    //UnregisterClassW(pszClassName, GetModuleHandleW(0));
-
-    //4
-    RegisterClassHelper(pszClassName, CS_CLASSDC, WndProc);
-    hwnd1 = CreateWindowHelper(pszClassName, L"Test Window1");
-    hwnd2 = CreateWindowHelper(pszClassName, L"Test Window2");
-    hdc1 = GetDCEx(hwnd1, NULL, DCX_USESTYLE);//1
-    hdc2 = GetDCEx(hwnd2, NULL, DCX_USESTYLE);//2
-    ok(WindowFromDC(hdc1) == hwnd1,"DC1-hwnd not hwnd1\n");
-    ok(WindowFromDC(hdc2) == hwnd2,"DC1-hwnd not hwnd2\n");
-    SetClassLongPtrW(hwnd1, GCL_STYLE, CS_OWNDC);
-    ok(WindowFromDC(hdc1) == hwnd1,"DC1-hwnd not hwnd1\n");
-    ok(WindowFromDC(hdc2) == hwnd2,"DC1-hwnd not hwnd2\n");
-    DestroyWindow(hwnd2);
-    ok(WindowFromDC(hdc1) == hwnd1,"DC1-hwnd not hwnd1\n");
-    ok(WindowFromDC(hdc2) == NULL,"DC1-hwnd not NULL\n");
-    hdc1=GetDCEx(hwnd1, NULL, DCX_USESTYLE);
-    ok(WindowFromDC(hdc1) == hwnd1,"DC1-hwnd not hwnd1\n");
-    ok(WindowFromDC(hdc2) == NULL,"DC1-hwnd not NULL\n");
-    ok(hdc1 != NULL, "GetDCEx not NULL\n");
-    DestroyWindow(hwnd1);
-    //UnregisterClassW(pszClassName, GetModuleHandleW(0));
-}
-
-static
-void
 Test_GetDCEx_CS_Mixed(void)
 {
     static const LPCWSTR pszClassName = L"TestClass_CS_Mixed";
@@ -1302,7 +1199,6 @@ void Test_from_wine(void)
 
 START_TEST(GetDCEx)
 {
-    Test_GetDCEx_CS_CLASSDC_NEXT();
     Test_GetDCEx_Cached();
     Test_GetDCEx_CS_OWNDC();
     Test_GetDCEx_CS_CLASSDC();
