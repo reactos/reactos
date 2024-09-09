@@ -278,7 +278,7 @@ BEGIN
     IDS_MESSBOX "Dialogfeld"
     IDS_MESSTEXT "Dialogfeldtext"
     IDS_BUTTEXT "OK"
-    IDS_CLASSIC_THEME   "Klassischer Stil"
+    IDS_CLASSIC_THEME "Klassischer Stil"
 END
 
 STRINGTABLE
