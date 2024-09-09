@@ -1286,10 +1286,16 @@ HRESULT WINAPI DrawNCPreview(HDC hDC,
     if (textFont)
         SelectFont(hDC, textFont);
 
-    SetTextColor(hDC, GetThemeSysColor(context.theme, TMT_WINDOWTEXT));
+    HTHEME hBtnTheme = OpenThemeDataFromFile(hThemeFile, hwndDummy, L"BUTTON", OTD_NONCLIENT);
     len = LoadStringW(hDllInst, IDS_WINTEXT, (LPWSTR)&szText, 0);
     if (len > 0)
-        DrawThemeText(context.theme, hDC, WP_DIALOG, 0, szText, len, DT_LEFT | DT_TOP | textDrawFlags, 0, &rcWindowClient);
+    {
+        DTTOPTS dttOpts = { sizeof(dttOpts) };
+        dttOpts.dwFlags = DTT_TEXTCOLOR;
+        dttOpts.crText = GetThemeSysColor(context.theme, COLOR_WINDOWTEXT);
+
+        DrawThemeTextEx(hBtnTheme, hDC, BP_PUSHBUTTON, PBS_DEFAULTED, szText, len, DT_LEFT | DT_TOP | textDrawFlags, &rcWindowClient, &dttOpts);
+    }
 
     /* Draw preview dialog window */
     SetWindowResourceText(hwndDummy, IDS_MESSAGEBOX);
@@ -1307,7 +1313,6 @@ HRESULT WINAPI DrawNCPreview(HDC hDC,
     DrawWindowForNCPreview(hDC, &context, msgBoxHCenter - NC_PREVIEW_MSGBOX_HALF_WIDTH, msgBoxVCenter + NC_PREVIEW_MSGBOX_OFFSET_X, msgBoxHCenter + NC_PREVIEW_MSGBOX_HALF_WIDTH, msgBoxVCenter + NC_PREVIEW_MSGBOX_OFFSET_Y, COLOR_BTNFACE, &rcWindowClient);
 
     /* Draw preview dialog button */
-    HTHEME hBtnTheme = OpenThemeDataFromFile(hThemeFile, hwndDummy, L"BUTTON", OTD_NONCLIENT);
     if (hBtnTheme)
     {
         INT btnCenterH = rcWindowClient.left + ((rcWindowClient.right - rcWindowClient.left) / 2);
