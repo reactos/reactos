@@ -151,12 +151,12 @@ BEGIN
             WS_TABSTOP, 3, 23, 240, 82, WS_EX_CLIENTEDGE
     LTEXT "Mostrar:", 1820, 3, 107, 70, 9//FIXME: add accel. I used "&Mostrar:" for the backport
     LTEXT "<ninguno>", IDC_SETTINGS_DEVICE, 3, 116, 224, 9
-    GROUPBOX "&Resolución de pantalla ", 1818, 3, 127, 115, 43
+    GROUPBOX "&Resolución de pantalla", 1818, 3, 127, 115, 43
     CONTROL "", IDC_SETTINGS_RESOLUTION, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 58, 17
     LTEXT "Menor", 1815, 9, 137, 25, 9, NOT WS_GROUP
     LTEXT "Mayor", 1816, 93, 137, 20, 9, NOT WS_GROUP
     LTEXT "", IDC_SETTINGS_RESOLUTION_TEXT, 10, 157, 100, 10, NOT WS_GROUP | SS_CENTER
-    GROUPBOX "&Profundidad de color ", 1817, 125, 127, 115, 43
+    GROUPBOX "&Profundidad de color", 1817, 125, 127, 115, 43
     COMBOBOX IDC_SETTINGS_BPP, 131, 137, 103, 80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     CONTROL "", IDC_SETTINGS_SPECTRUM, "Static", SS_OWNERDRAW | SS_SUNKEN, 131, 155, 103, 9
     PUSHBUTTON "Opciones &avanzadas", IDC_SETTINGS_ADVANCED, 170, 174, 70, 15
@@ -188,7 +188,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Pantalla ", -1, 7, 6, 237, 56, WS_GROUP
+    GROUPBOX "Pantalla", -1, 7, 6, 237, 56, WS_GROUP
     LTEXT "Tamaño de la fuente:", -1, 14, 20, 222, 9//FIXME: add accel. I used "&Tamaño de la fuente:" for the backport. 2k3p2 does call this "&DPI setting:" now. Feel free to translate that.
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
