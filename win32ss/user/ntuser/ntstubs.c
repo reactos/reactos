@@ -949,15 +949,6 @@ BOOL APIENTRY NtUserGetUpdatedClipboardFormats(
     return FALSE;
 }
 
-LONG_PTR
-APIENTRY
-NtUserSetClassLongPtr(
-    VOID)
-{
-    STUB;
-    return 0;
-}
-
 // Yes, I know, these do not belong here, just tell me where to put them
 BOOL
 APIENTRY

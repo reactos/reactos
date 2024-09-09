@@ -7,6 +7,8 @@
  */
 
 #include <win32k.h>
+#include <unaligned.h>
+
 DBG_DEFAULT_CHANNEL(UserClass);
 
 static PWSTR ControlsList[] =
@@ -1865,11 +1867,37 @@ IntSetClassMenuName(IN PCLS Class,
     return Ret;
 }
 
+static inline
+ULONG_PTR
+IntGetSetClassLongPtr(PCLS Class, ULONG Index, ULONG_PTR NewValue, ULONG Size)
+{
+    PVOID Address = (PUCHAR)(&Class[1]) + Index;
+    ULONG_PTR OldValue;
+
+#ifdef _WIN64
+    if (Size == sizeof(LONG))
+    {
+        /* Values might be unaligned */
+        OldValue = ReadUnalignedU32(Address);
+        WriteUnalignedU32(Address, NewValue);
+    }
+    else
+#endif
+    {
+        /* Values might be unaligned */
+        OldValue = ReadUnalignedUlongPtr(Address);
+        WriteUnalignedUlongPtr(Address, NewValue);
+    }
+
+    return OldValue;
+}
+
 ULONG_PTR
 UserSetClassLongPtr(IN PCLS Class,
                     IN INT Index,
                     IN ULONG_PTR NewLong,
-                    IN BOOL Ansi)
+                    IN BOOL Ansi,
+                    IN ULONG Size)
 {
     ULONG_PTR Ret = 0;
 
@@ -1880,30 +1908,22 @@ UserSetClassLongPtr(IN PCLS Class,
 
     if (Index >= 0)
     {
-        PULONG_PTR Data;
-
         TRACE("SetClassLong(%d, %x)\n", Index, NewLong);
 
-        if (((ULONG)Index + sizeof(ULONG_PTR)) < (ULONG)Index ||
-            ((ULONG)Index + sizeof(ULONG_PTR)) > (ULONG)Class->cbclsExtra)
+        if (((ULONG)Index + Size) < (ULONG)Index ||
+            ((ULONG)Index + Size) > (ULONG)Class->cbclsExtra)
         {
             EngSetLastError(ERROR_INVALID_PARAMETER);
             return 0;
         }
 
-        Data = (PULONG_PTR)((ULONG_PTR)(Class + 1) + Index);
-
-        /* FIXME: Data might be a unaligned pointer! Might be a problem on
-                  certain architectures, maybe using RtlCopyMemory is a
-                  better choice for those architectures! */
-        Ret = *Data;
-        *Data = NewLong;
+        Ret = IntGetSetClassLongPtr(Class, Index, NewLong, Size);
 
         /* Update the clones */
         Class = Class->pclsClone;
         while (Class != NULL)
         {
-            *(PULONG_PTR)((ULONG_PTR)(Class + 1) + Index) = NewLong;
+            IntGetSetClassLongPtr(Class, Index, NewLong, Size);
             Class = Class->pclsNext;
         }
 
@@ -2583,10 +2603,11 @@ InvalidParameter:
 }
 
 ULONG_PTR APIENTRY
-NtUserSetClassLong(HWND hWnd,
+IntNtUserSetClassLongPtr(HWND hWnd,
                    INT Offset,
                    ULONG_PTR dwNewLong,
-                   BOOL Ansi)
+                   BOOL Ansi,
+                   ULONG Size)
 {
     PPROCESSINFO pi;
     PWND Window;
@@ -2655,7 +2676,8 @@ InvalidParameter:
             Ret = UserSetClassLongPtr(Window->pcls,
                                       Offset,
                                       dwNewLong,
-                                      Ansi);
+                                      Ansi,
+                                      Size);
             switch(Offset)
             {
                case GCLP_HICONSM:
@@ -2678,6 +2700,32 @@ Cleanup:
 
     return Ret;
 }
+
+ULONG_PTR
+APIENTRY
+NtUserSetClassLong(
+    _In_ HWND hWnd,
+    _In_ INT Offset,
+    _In_ ULONG dwNewLong,
+    _In_ BOOL Ansi)
+{
+    return IntNtUserSetClassLongPtr(hWnd, Offset, dwNewLong, Ansi, sizeof(LONG));
+}
+
+#ifdef _WIN64
+
+ULONG_PTR
+APIENTRY
+NtUserSetClassLongPtr(
+    _In_ HWND hWnd,
+    _In_ INT Offset,
+    _In_ ULONG_PTR dwNewLong,
+    _In_ BOOL Ansi)
+{
+    return IntNtUserSetClassLongPtr(hWnd, Offset, dwNewLong, Ansi, sizeof(LONG_PTR));
+}
+
+#endif // _WIN64
 
 WORD
 APIENTRY
