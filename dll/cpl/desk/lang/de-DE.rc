@@ -291,7 +291,7 @@ BEGIN
     IDS_ELEMENT_5 "Menü"
     IDS_ELEMENT_6 "Markierte Elemente"
     IDS_ELEMENT_7 "Fenster"
-    IDS_ELEMENT_8 "Bildlaufleiste"
+    IDS_ELEMENT_8 "Scrollbars"
     IDS_ELEMENT_9 "3D-Objekte"
     IDS_ELEMENT_10 "Palettentitel"
     IDS_ELEMENT_11 "Titelleistenschaltfläche"
