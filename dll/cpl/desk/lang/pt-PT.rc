@@ -36,26 +36,26 @@ BEGIN
     PUSHBUTTON "&Personalizar...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
 END
 
-IDD_SCREENSAVER DIALOGEX 0, 0, 246, 216
+IDD_SCREENSAVER DIALOGEX 0, 0, 246, 202
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Protecção de ecrã"
 FONT 8, "MS Shell Dlg", 0, 0
 BEGIN
     CONTROL "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74
-    GROUPBOX "Pro&tecção de ecrã", IDC_SCREENS_DUMMY, 8, 92, 230, 64
+    GROUPBOX "Pro&tecção de ecrã", IDC_SCREENS_DUMMY, 8, 92, 230, 52
     COMBOBOX IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Definições", IDC_SCREENS_SETTINGS, 120, 102, 50, 15, WS_GROUP
     PUSHBUTTON "&Pré-visualizar", IDC_SCREENS_TESTSC, 175, 102, 50, 15
-    LTEXT "Ag&uardar:", IDC_WAITTEXT, 14, 125, 30, 9
-    EDITTEXT IDC_SCREENS_TIMEDELAY, 46, 123, 32, 13, ES_RIGHT | WS_GROUP
+    LTEXT "Ag&uardar:", IDC_WAITTEXT, 14, 125, 32, 9
+    EDITTEXT IDC_SCREENS_TIMEDELAY, 48, 123, 29, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 56, 123, 12, 13
-    LTEXT "minutos", IDC_MINTEXT, 80, 125, 26, 9
+    LTEXT "min", IDC_MINTEXT, 79, 125, 13, 9
     CONTROL "Ao &reiniciar, proteger por palavra-passe", IDC_SCREENS_USEPASSCHK, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 30, 140, 200, 11
-    GROUPBOX "Energia do monitor", IDC_SCREENS_DUMMY2, 8, 164, 230, 41
-    LTEXT "Para ajustar as definições de energia do monitor e poupar energia, clique em 'Energia'.", IDC_STATIC, 16, 174, 146, 27
-    PUSHBUTTON "&Energia...", IDC_SCREENS_POWER_BUTTON, 167, 179, 61, 15
+            BS_AUTOCHECKBOX | WS_TABSTOP, 93, 120, 139, 19
+    GROUPBOX "Energia do monitor", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
+    LTEXT "Para ajustar as definições de energia do monitor e poupar energia, clique em 'Energia'.", IDC_STATIC, 16, 161, 146, 27
+    PUSHBUTTON "&Energia...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
 END
 
 IDD_APPEARANCE DIALOGEX 0, 0, 246, 212
@@ -129,7 +129,7 @@ BEGIN
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
     CONTROL "&Mostrar o conteúdo das janelas ao arrastar", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "&Ocultar letras sublinhadas para navegação por teclado até que a tecla Alt seja premida",
+    CONTROL "&Ocultar letras sublinhadas para navegação por teclado até que a tecla Alt seja premida",//FIXME: text cutoff. I used "&Ocultar letras sublinhadas para navegação pelo teclado até que Alt seja premida" AND A WIDTH OF 270 for the backport
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
     CONTROL "Utilizar menus &planos", IDC_EFFAPPEARANCE_FLATMENUS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
@@ -146,7 +146,7 @@ BEGIN
     LTEXT "Arraste os ícones dos monitores, para que correspondam à disposição física dos seus monitores.", IDC_SETTINGS_MONTEXT, 3, 3, 240, 20
     CONTROL "", IDC_SETTINGS_MONSEL, "MONITORSELWNDCLASS", WS_CHILD | WS_VISIBLE |
             WS_TABSTOP, 3, 23, 250, 82, WS_EX_CLIENTEDGE
-    LTEXT "Monitor:", 1820, 3, 107, 70, 9
+    LTEXT "Monitor:", 1820, 3, 107, 70, 9//FIXME: add accel. I used "&Monitor:" for the backport
     LTEXT "<Desconhecido>", IDC_SETTINGS_DEVICE, 3, 116, 224, 9
     GROUPBOX "&Resolução do ecrã", 1818, 3, 142, 115, 43
     CONTROL "", IDC_SETTINGS_RESOLUTION, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 30, 152, 58, 17
@@ -186,7 +186,7 @@ CAPTION "Geral"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Visualização", -1, 7, 6, 237, 56, WS_GROUP
-    //LTEXT "Se a resolução do ecrã tornar os items demasiado pequenos para ver confortavelmente, pode aumentar o valor ppp para compensar. Para alterar apenas o tamanho do tipo de letra, clique em ""Cancelar"" e vá até ao separador ""Aspecto"".", -1, 14, 20, 220, 45
+    //LTEXT "Se a resolução do ecrã tornar os items demasiado pequenos para ver confortavelmente, pode aumentar o valor ppp para compensar. Para alterar apenas o tamanho do tipo de letra, clique em ""Cancelar"" e vá até ao separador ""Aspecto"".", -1, 14, 20, 220, 45//FIXME: The whole dialog was relayouted by the pt-PT translator, and still this text doesn't fit. At least the current workaround is visually appealing. Nevertheless: Shrink the texts length! When done, try to live with the en-US dimensions and layout.
     LTEXT "&Definição do valor ppp:", -1, 14, 20, 222, 9
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
