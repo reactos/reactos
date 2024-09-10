@@ -108,11 +108,11 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Efek"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "G&unakan efek transisi berikut untuk menu dan alat bantuan",
+    CONTROL "G&unakan efek transisi berikut untuk menu dan alat bantuan:",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL "Gu&nakan cara berikut untuk menghaluskan tepi fon pada layar", IDC_EFFAPPEARANCE_SMOOTHING,
+    CONTROL "Gu&nakan cara berikut untuk menghaluskan tepi fon pada layar:", IDC_EFFAPPEARANCE_SMOOTHING,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
@@ -122,7 +122,7 @@ BEGIN
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
     CONTROL "&Tampilkan konten jendela ketika digeser", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "&Sembunyikan huruf yang digarisbawahi untuk navigasi papan ketik sampai\ntombol Alt tertekan",
+    CONTROL "&Sembunyikan huruf yang digarisbawahi untuk navigasi papan ketik sampai tombol Alt tertekan",
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 23
     CONTROL "Gunakan menu &datar", IDC_EFFAPPEARANCE_FLATMENUS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 144, 267, 19

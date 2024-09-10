@@ -110,11 +110,11 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Efekty"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "&Používať nasledovný efekt prechodu pre ponuky a názvy tlačidiel",
+    CONTROL "&Používať nasledovný efekt prechodu pre ponuky a názvy tlačidiel:",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL "Po&užívať nasledovnú metódu vyhladenia okrajov zobrazeného písma", IDC_EFFAPPEARANCE_SMOOTHING,
+    CONTROL "Po&užívať nasledovnú metódu vyhladenia okrajov zobrazeného písma:", IDC_EFFAPPEARANCE_SMOOTHING,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP

@@ -108,11 +108,11 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Effetti"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "&Usare il seguente effetto per le transizioni in menu e tooltip",
+    CONTROL "&Usare il seguente effetto per le transizioni in menu e tooltip:",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL "U&sare il seguente metodo per arrotondare i bordi dei font per lo schermo", IDC_EFFAPPEARANCE_SMOOTHING,
+    CONTROL "U&sare il seguente metodo per arrotondare i bordi dei font per lo schermo:", IDC_EFFAPPEARANCE_SMOOTHING,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
