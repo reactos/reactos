@@ -1,9 +1,5 @@
-/*
- * PROJECT:     ReactOS Display Control Panel
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Estonian Language resource file
- * TRANSLATOR:  Joann Mõndresku (joannmondresku at gmail dot com)
- */
+// LICENSE:   GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+// COPYRIGHT: Joann Mõndresku <joannmondresku@gmail.com>
 
 LANGUAGE LANG_ESTONIAN, SUBLANG_DEFAULT
 
@@ -12,13 +8,13 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Taust"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74, 0
+    CONTROL "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74
     CONTROL "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 8, 104, 174, 86
-    LTEXT "Taust:", IDC_STATIC, 8, 93, 230, 9
+    LTEXT "&Taust:", IDC_STATIC, 8, 93, 230, 9
     PUSHBUTTON "&Sirvi...", IDC_BROWSE_BUTTON, 188, 104, 55, 15
     PUSHBUTTON "&Värv...", IDC_COLOR_BUTTON, 188, 167, 55, 15
-    LTEXT "&Paigutus", IDC_STATIC, 188, 128, 55, 9
+    LTEXT "&Paigutus:", IDC_STATIC, 188, 128, 55, 9
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
@@ -27,7 +23,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ekraanisäästja"
 FONT 8, "MS Shell Dlg", 0, 0
 BEGIN
-    CONTROL "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 70, WS_EX_STATICEDGE
+    CONTROL "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74, WS_EX_STATICEDGE
     GROUPBOX "&Erkaanisäästja", IDC_SCREENS_DUMMY, 8, 92, 230, 52
     COMBOBOX IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "S&ätted", IDC_SCREENS_SETTINGS, 120, 102, 50, 15, WS_GROUP
@@ -37,10 +33,9 @@ BEGIN
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 56, 123, 12, 13
     LTEXT "minutit", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL "Ärkamisel küsi parooli", IDC_SCREENS_USEPASSCHK, "button",
+    CONTROL "Ä&rkamisel küsi parooli", IDC_SCREENS_USEPASSCHK, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
-    GROUPBOX "&Kuvari toide", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
-    LTEXT "Kuvari toitesätete reguleerimiseks ja energia säästmiseks klõpsake nuppu Toide.", IDC_STATIC, 16, 161, 146, 27
+    GROUPBOX "Kuvari toide", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
     PUSHBUTTON "&Toide...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
 END
 
@@ -50,13 +45,13 @@ CAPTION "Ilme"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "&Aknad ja nupud", IDC_STATIC, 7, 130, 104, 9
+    LTEXT "&Aknad ja nupud:", IDC_STATIC, 7, 130, 104, 9
     COMBOBOX IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&Värviskeem", IDC_STATIC, 7, 157, 104, 9
+    LTEXT "&Värviskeem:", IDC_STATIC, 7, 157, 104, 9
     COMBOBOX IDC_APPEARANCE_COLORSCHEME, 7, 167, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&Fondi suurus", IDC_STATIC, 7, 184, 104, 9
+    LTEXT "&Fondi suurus:", IDC_STATIC, 7, 184, 104, 9
     COMBOBOX IDC_APPEARANCE_SIZE, 7, 194, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Efektid...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
@@ -116,7 +111,7 @@ BEGIN
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
     CONTROL "&Peida kiirkla&hvide jaoks allakriipsutatud tähed muuteklahvi (Alt) vajutamiseni",
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
-    CONTROL "Kasuta k&itsaid aknaid", IDC_EFFAPPEARANCE_FLATMENUS,
+    CONTROL "&Lamedad menüüd", IDC_EFFAPPEARANCE_FLATMENUS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
     PUSHBUTTON "Loobu", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
@@ -149,14 +144,14 @@ CAPTION "Üldist"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Kuva", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Fondi suurus", -1, 14, 20, 222, 9
+    LTEXT "&Fondi suurus:", -1, 14, 20, 222, 9
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_CUSTOM, 14, 46, 223, 12
     GROUPBOX "Ühilduvus", -1, 7, 67, 237, 97
     LTEXT "Võimalik, et mõni programm ei tööta õigesti, kui te ei taaskäivita arvutit pärast kuvasätete muutmist.\n\nPärast kuvasätete muutmist:", -1, 12, 78, 228, 34
-    AUTORADIOBUTTON "&Taaskäivita arvuti enne uute kuvasätete rakendamist.", IDC_RESTART_RB, 14, 116, 228, 10
-    AUTORADIOBUTTON "Rakenda uued kuvasätted arvutit taaskäivitamata.", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
-    AUTORADIOBUTTON "Küsi enne uute kuvasätete rakendamist.", IDC_ASKME_RB, 14, 146, 228, 10
+    AUTORADIOBUTTON "&Taaskäivita arvuti enne uute kuvasätete rakendamist", IDC_RESTART_RB, 14, 116, 228, 10
+    AUTORADIOBUTTON "&Rakenda uued kuvasätted arvutit taaskäivitamata", IDC_WITHOUTREBOOT_RB, 14, 131, 228, 10
+    AUTORADIOBUTTON "&Küsi enne uute kuvasätete rakendamist", IDC_ASKME_RB, 14, 146, 228, 10
 END
 
 IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57
@@ -243,7 +238,7 @@ BEGIN
     IDS_MESSBOX "Teateboks"
     IDS_MESSTEXT "Teate tekst"
     IDS_BUTTEXT "OK"
-    IDS_CLASSIC_THEME "Klassikaline laad"
+    IDS_CLASSIC_THEME "Klassik laad"
 END
 
 STRINGTABLE
@@ -266,7 +261,6 @@ BEGIN
     IDS_ELEMENT_15 "Ikoonisamm (vertikaalne)"
     IDS_ELEMENT_16 "Kohtspikker"
     IDS_ELEMENT_17 "Ikoon"
-//  IDS_ELEMENT_18 "Deactivated menu elements"
 END
 
 STRINGTABLE

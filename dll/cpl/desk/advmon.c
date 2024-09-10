@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
- * FILE:            dll/cpl/desk/advmon.c
  * PURPOSE:         Advanced monitor/display settings
  */
 
@@ -55,7 +54,7 @@ BuildAdvPropTitle(IDataObject *pdo, LPTSTR lpBuffer, DWORD dwBufferLen)
     LPTSTR lpMonitorName, lpDisplayName;
     TCHAR szFormatBuff[32];
 
-    if (!LoadString(hApplet, IDS_ADVANCEDTITLEFMT, szFormatBuff, sizeof(szFormatBuff) / sizeof(szFormatBuff[0])))
+    if (!LoadString(hApplet, IDS_ADVANCEDTITLEFMT, szFormatBuff, _countof(szFormatBuff)))
     {
         szFormatBuff[0] = _T('\0');
     }
@@ -74,9 +73,6 @@ BuildAdvPropTitle(IDataObject *pdo, LPTSTR lpBuffer, DWORD dwBufferLen)
         LocalFree((HLOCAL)lpDisplayName);
 }
 
-
-typedef HPSXA (WINAPI * CPSEAE)(HKEY,LPCWSTR,UINT,IDataObject*);
-
 BOOL
 DisplayAdvancedSettings(HWND hWndParent, PDISPLAY_DEVICE_ENTRY DisplayDevice)
 {
@@ -86,17 +82,13 @@ DisplayAdvancedSettings(HWND hWndParent, PDISPLAY_DEVICE_ENTRY DisplayDevice)
     HPSXA hpsxaDev, hpsxaDisp;
     BOOL Ret;
     IDataObject *pdo;
-#ifdef _MSC_VER
-    HMODULE hShell32 = NULL;
-    CPSEAE msvc_SHCreatePropSheetExtArrayEx;
-#endif
 
     /* FIXME: Build the "%s and %s" caption string for the monitor and adapter name */
     szCaption[0] = _T('\0');
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags =  PSH_PROPTITLE;
+    psh.dwFlags = PSH_PROPTITLE;
     psh.hwndParent = hWndParent;
     psh.hInstance = hApplet;
     psh.pszCaption = szCaption;
@@ -107,27 +99,15 @@ DisplayAdvancedSettings(HWND hWndParent, PDISPLAY_DEVICE_ENTRY DisplayDevice)
     pdo = CreateDevSettings(DisplayDevice);
 
     if (pdo != NULL)
-        BuildAdvPropTitle(pdo, szCaption, sizeof(szCaption) / sizeof(szCaption[0]));
+        BuildAdvPropTitle(pdo, szCaption, _countof(szCaption));
 
-#ifdef _MSC_VER
-    hShell32 = LoadLibrary(_T("shell32.dll"));
-    if (hShell32 == NULL)
-        return FALSE;
-    msvc_SHCreatePropSheetExtArrayEx = (CPSEAE)GetProcAddress(hShell32, (LPCSTR)194);
-    hpsxaDev = msvc_SHCreatePropSheetExtArrayEx(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\Device"), MAX_ADVANCED_PAGES - psh.nPages, pdo);
-#else
     hpsxaDev = SHCreatePropSheetExtArrayEx(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\Device"), MAX_ADVANCED_PAGES - psh.nPages, pdo);
-#endif
     if (hpsxaDev != NULL)
-      SHAddFromPropSheetExtArray(hpsxaDev, PropSheetAddPage, (LPARAM)&psh);
+        SHAddFromPropSheetExtArray(hpsxaDev, PropSheetAddPage, (LPARAM)&psh);
 
-#ifdef _MSC_VER
-    hpsxaDisp = msvc_SHCreatePropSheetExtArrayEx(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\Device"), MAX_ADVANCED_PAGES - psh.nPages, pdo);
-#else
     hpsxaDisp = SHCreatePropSheetExtArrayEx(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\Display"), MAX_ADVANCED_PAGES - psh.nPages, pdo);
-#endif
     if (hpsxaDisp != NULL)
-      SHAddFromPropSheetExtArray(hpsxaDisp, PropSheetAddPage, (LPARAM)&psh);
+        SHAddFromPropSheetExtArray(hpsxaDisp, PropSheetAddPage, (LPARAM)&psh);
 
     Ret = (LONG)(PropertySheet(&psh) != -1);
 
@@ -138,10 +118,6 @@ DisplayAdvancedSettings(HWND hWndParent, PDISPLAY_DEVICE_ENTRY DisplayDevice)
         SHDestroyPropSheetExtArray(hpsxaDev);
 
     IDataObject_Release(pdo);
-
-#ifdef _MSC_VER
-    FreeLibrary(hShell32);
-#endif
 
     return Ret;
 }
