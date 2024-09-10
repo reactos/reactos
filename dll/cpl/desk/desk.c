@@ -1,9 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
- * FILE:            dll/cpl/desk/desk.c
- * PURPOSE:         ReactOS Display Control Panel
- *
  * PROGRAMMERS:     Trevor McCort (lycan359@gmail.com)
  */
 
@@ -22,7 +19,7 @@ INT_PTR CALLBACK AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 INT_PTR CALLBACK SettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 UINT CALLBACK SettingsPageCallbackProc(HWND hwnd, UINT uMsg, LPPROPSHEETPAGE ppsp);
 
-HINSTANCE hApplet = 0;
+HINSTANCE hApplet;
 HWND hCPLWindow;
 
 /* Applets */
@@ -125,7 +122,6 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     HPROPSHEETPAGE hpsp[MAX_DESK_PAGES];
     PROPSHEETHEADER psh;
     HPSXA hpsxa = NULL;
-    TCHAR Caption[1024];
     UINT i;
     LPWSTR *argv = NULL;
     LPCWSTR pwszSelectedTab = NULL;
@@ -176,15 +172,13 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     g_GlobalData.pwszAction = pwszAction;
     g_GlobalData.desktop_color = GetSysColor(COLOR_DESKTOP);
 
-    LoadString(hApplet, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
-
-    ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
-    psh.dwSize = sizeof(PROPSHEETHEADER);
+    ZeroMemory(&psh, sizeof(psh));
+    psh.dwSize = sizeof(psh);
     psh.dwFlags = PSH_USECALLBACK | PSH_PROPTITLE;
     psh.hwndParent = hCPLWindow;
     psh.hInstance = hApplet;
-    psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_DESK_ICON));
-    psh.pszCaption = Caption;
+    psh.pszIcon = MAKEINTRESOURCEW(IDC_DESK_ICON);
+    psh.pszCaption = MAKEINTRESOURCEW(IDS_CPLNAME);
     psh.nPages = 0;
     psh.nStartPage = 0;
     psh.phpage = hpsp;
@@ -192,7 +186,7 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     /* Allow shell extensions to replace the background page */
     hpsxa = SHCreatePropSheetExtArray(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\Desk"), MAX_DESK_PAGES - psh.nPages);
 
-    for (i = 0; i != sizeof(PropPages) / sizeof(PropPages[0]); i++)
+    for (i = 0; i < _countof(PropPages); i++)
     {
         if (pwszSelectedTab && wcsicmp(pwszSelectedTab, PropPages[i].Name) == 0)
             psh.nStartPage = i;
