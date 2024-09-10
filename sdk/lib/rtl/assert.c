@@ -42,6 +42,12 @@ RtlAssert(IN PVOID FailedAssertion,
                  (PSTR)FileName,
                  LineNumber);
 
+        /* Check for reactos specific flag (set by rosautotest) */
+        if (RtlGetNtGlobalFlags() & FLG_DISABLE_DEBUG_PROMPTS)
+        {
+            RtlRaiseStatus(STATUS_ASSERTION_FAILURE);
+        }
+
         /* Prompt for action */
         DbgPrompt("Break repeatedly, break Once, Ignore, "
                   "terminate Process or terminate Thread (boipt)? ",
