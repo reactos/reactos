@@ -1,11 +1,9 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
- * FILE:            dll/cpl/desk/effappdlg.c
  * PURPOSE:         Effects appearance dialog
- *
- * PROGRAMMERS:     Jan Roeloffzen (jroeloffzen[at]hotmail[dot]com)
- *                  Ismael Ferreras Morezuelas (swyterzone+reactos@gmail.com)
+ * PROGRAMMERS:     Jan Roeloffzen <jroeloffzen@hotmail.com>
+ *                  Ismael Ferreras Morezuelas <swyterzone+reactos@gmail.com>
  */
 
 #include "desk.h"
@@ -70,7 +68,7 @@ AddToCombobox(INT Combo, HWND hwndDlg, INT From, INT To)
 
     for (iElement = From; iElement <= To; iElement++)
     {
-        LoadString(hApplet, iElement, (LPTSTR)tstrText, ARRAYSIZE(tstrText));
+        LoadString(hApplet, iElement, (LPTSTR)tstrText, _countof(tstrText));
         SendDlgItemMessage(hwndDlg, Combo, CB_ADDSTRING, 0, (LPARAM)tstrText);
     }
 }
@@ -164,9 +162,7 @@ EffAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 case IDC_EFFAPPEARANCE_KEYBOARDCUES:
                 case IDC_EFFAPPEARANCE_FLATMENUS:
                     if (HIWORD(wParam) == BN_CLICKED)
-                    {
                         EffAppearanceDlgUpdateControls(hwndDlg, g);
-                    }
                     break;
 
                 case IDC_EFFAPPEARANCE_ANIMATIONTYPE:
