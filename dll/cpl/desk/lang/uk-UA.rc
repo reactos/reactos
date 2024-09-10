@@ -122,7 +122,7 @@ BEGIN
     CONTROL "З&астосовувати наступний метод згладжування для екранних шрифтів", IDC_EFFAPPEARANCE_SMOOTHING,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+             CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
     CONTROL "Застосовувати &великі значки", IDC_EFFAPPEARANCE_LARGEICONS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
     CONTROL "Відображати тіні від меню", IDC_EFFAPPEARANCE_SETDROPSHADOW,//FIXME: add accel. I used "Ві&дображати тіні від меню" for the backport
