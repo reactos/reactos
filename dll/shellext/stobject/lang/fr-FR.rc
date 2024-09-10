@@ -7,7 +7,7 @@ CAPTION "Gestionnaire d'énergie"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Etat de l'alimentation", 1001, "Button", BS_GROUPBOX | WS_CHILD | WS_VISIBLE, 9, 20, 234, 189
-    CONTROL "&Toujours afficher l'icone.", 1002, "Button", BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 6, 6, 120, 10
+    CONTROL "&Toujours afficher l'icône.", 1002, "Button", BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 6, 6, 120, 10
     CONTROL "Afficher les détails pour chaque &batterie.", 1003, "Button", BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 135, 6, 120, 8
     CONTROL "", 1000, "Static", SS_LEFT | WS_CHILD | WS_GROUP, 11, 29, 229, 178
 END
