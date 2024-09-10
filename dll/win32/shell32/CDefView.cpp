@@ -58,7 +58,7 @@ enum  {
 };
 #undef FCIDM_SHVIEWLAST // Don't use this constant, change DVIDM_CONTEXTMENU_LAST if you need a new id.
 
-typedef struct
+struct LISTVIEW_SORT_INFO
 {
     INT8    Direction;
     bool    bLoadedFromViewState;
@@ -72,7 +72,7 @@ typedef struct
         *(UINT*)this = 0;
         ListColumn = UNSPECIFIEDCOLUMN;
     }
-} LISTVIEW_SORT_INFO, *LPLISTVIEW_SORT_INFO;
+};
 
 #define SHV_CHANGE_NOTIFY   (WM_USER + 0x1111)
 #define SHV_UPDATESTATUSBAR (WM_USER + 0x1112)
