@@ -32,8 +32,8 @@ InitFontSizeList(HWND hWnd)
                 dwSize = MAX_PATH;
                 dwType = REG_DWORD;
 
-                if (!RegQueryValueEx(hKey, _T("LogPixels"), NULL,
-                                    &dwType, (LPBYTE)&dwValue, &dwSize) == ERROR_SUCCESS)
+                if (RegQueryValueEx(hKey, _T("LogPixels"), NULL, &dwType,
+                                    (LPBYTE)&dwValue, &dwSize) != ERROR_SUCCESS)
                 {
                     dwValue = 0;
                 }
