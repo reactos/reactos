@@ -392,6 +392,10 @@ elseif(ARCH STREQUAL "arm")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/ARM3/arm/init.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/arm/psctx.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/rtl/arm/rtlexcpt.c)
+    if(BUILD_MP)
+        list(APPEND SOURCE
+            ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm/mproc.c)
+    endif()
 endif()
 
 if(NOT _WINKD_)
