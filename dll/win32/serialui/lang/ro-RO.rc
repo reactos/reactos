@@ -1,8 +1,9 @@
 /*
- * FILE:       dll/win32/serialui/lang/ro-RO.rc
- *             ReactOS Project (https://reactos.org)
- * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
- * CHANGE LOG: 2011-10-10  initial translation
+ * PROJECT:     ReactOS Serial UI
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -10,7 +11,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_EVENPARITY "Par"
-    IDS_MARKPARITY "Reper"
+    IDS_MARKPARITY "Marcare"
     IDS_NOPARITY "Fără paritate"
     IDS_ODDPARITY "Impar"
     IDS_SPACEPARITY "Spațiu"
@@ -29,8 +30,8 @@ STYLE 0x10C80080
 EXSTYLE 0x00000001
 BEGIN
     CONTROL "", IDC_GRP1, "Button", 0x50000007, 6, 5, 210, 146, 0x00000000
-    CONTROL "Con&firmă", IDC_OKBTN, "Button", 0x50010000, 98, 156, 56, 13, 0x00000000
-    CONTROL "A&nulează", IDC_CANCELBTN, "Button", 0x50010000, 158, 156, 56, 13, 0x00000000
+    CONTROL "OK", IDC_OKBTN, "Button", 0x50010000, 98, 156, 56, 13, 0x00000000
+    CONTROL "Revocare", IDC_CANCELBTN, "Button", 0x50010000, 158, 156, 56, 13, 0x00000000
     CONTROL "Rata baud:", IDC_STC1, "Static", 0x50000000, 24, 31, 42, 9, 0x00000000
     CONTROL "Mărime octet:", IDC_STC2, "Static", 0x50000000, 24, 53, 42, 9, 0x00000000
     CONTROL "Paritate:", IDC_STC3, "Static", 0x50000000, 24, 73, 42, 9, 0x00000000
