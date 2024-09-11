@@ -32,7 +32,7 @@ END
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 202
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Bildschirmschoner"
-FONT 8, "MS Shell Dlg", 0, 0
+FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 74
     GROUPBOX "Bild&schirmschoner", IDC_SCREENS_DUMMY, 8, 92, 230, 52
@@ -108,11 +108,11 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Effekte"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "&Verwende folgenden Übergangseffekt für Menüs und Tooltips",
+    CONTROL "&Verwende folgenden Übergangseffekt für Menüs und Tooltips:",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL "V&erwende folgende Kantenglättungsmethode für Bildschirmschriften", IDC_EFFAPPEARANCE_SMOOTHING,
+    CONTROL "V&erwende folgende Kantenglättungsmethode für Bildschirmschriften:", IDC_EFFAPPEARANCE_SMOOTHING,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
