@@ -17,7 +17,9 @@ static LIST_ENTRY TimersListHead;
 static LONG TimeLast = 0;
 
 /* Windows 2000 has room for 32768 window-less timers */
-#define NUM_WINDOW_LESS_TIMERS   32768
+/* These values give timer IDs [256,32767], same as on Windows */
+#define NUM_WINDOW_MAX_TIMERS   (32768 - 1)
+#define NUM_WINDOW_LESS_TIMERS  (32768 - 256)
 
 #define HINTINDEX_BEGIN_VALUE   0
 
@@ -80,7 +82,7 @@ RemoveTimer(PTIMER pTmr)
      {
         UINT_PTR IDEvent;
 
-        IDEvent = NUM_WINDOW_LESS_TIMERS - pTmr->nID;
+        IDEvent = NUM_WINDOW_MAX_TIMERS - pTmr->nID;
         IntLockWindowlessTimerBitmap();
         RtlClearBit(&WindowLessTimersBitMap, IDEvent);
         IntUnlockWindowlessTimerBitmap();
@@ -222,12 +224,8 @@ IntSetTimer( PWND Window,
   {
       IntLockWindowlessTimerBitmap();
 
-      ulBitmapIndex = RtlFindClearBitsAndSet(&WindowLessTimersBitMap, 1, HintIndex++);
-      if (ulBitmapIndex == ULONG_MAX)
-      {
-         HintIndex = HINTINDEX_BEGIN_VALUE;
-         ulBitmapIndex = RtlFindClearBitsAndSet(&WindowLessTimersBitMap, 1, HintIndex++);
-      }
+      ulBitmapIndex = RtlFindClearBitsAndSet(&WindowLessTimersBitMap, 1, HintIndex);
+      HintIndex = (ulBitmapIndex + 1) % NUM_WINDOW_LESS_TIMERS;
       if (ulBitmapIndex == ULONG_MAX)
       {
          IntUnlockWindowlessTimerBitmap();
