@@ -887,7 +887,8 @@ HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1
     }
 
     if (HRESULT_CODE(hres) == 0)
-        return SHELL32_CompareChildren(this, lParam, pidl1, pidl2);
+        return SHELL32_FolderImplCompareIDsTiebreaker(this, lParam, pidl1, pidl2,
+                                                      _countof(MyComputerSFHeader), IDS_SHV_COLUMN_NAME);
 
     return hres;
 }
