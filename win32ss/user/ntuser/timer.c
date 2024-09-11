@@ -80,11 +80,11 @@ RemoveTimer(PTIMER pTmr)
      RemoveEntryList(&pTmr->ptmrList);
      if ((pTmr->pWnd == NULL) && (!(pTmr->flags & TMRF_SYSTEM))) // System timers are reusable.
      {
-        UINT_PTR IDEvent;
+        ULONG ulBitmapIndex;
 
-        IDEvent = NUM_WINDOW_MAX_TIMERS - pTmr->nID;
+        ulBitmapIndex = NUM_WINDOW_MAX_TIMERS - pTmr->nID;
         IntLockWindowlessTimerBitmap();
-        RtlClearBit(&WindowLessTimersBitMap, IDEvent);
+        RtlClearBit(&WindowLessTimersBitMap, ulBitmapIndex);
         IntUnlockWindowlessTimerBitmap();
      }
      UserDereferenceObject(pTmr);
