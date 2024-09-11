@@ -23,7 +23,7 @@ extern UINT32 FreeldrDescCount;
 BOOLEAN AcpiPresent = FALSE;
 
 /* FUNCTIONS *****************************************************************/
-
+#ifndef _M_ARM //TODO: Not worth fixing on arm for now.
 static
 PRSDP_DESCRIPTOR
 FindAcpiBios(VOID)
@@ -122,12 +122,16 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     }
 }
 
+#endif
+
 PCONFIGURATION_COMPONENT_DATA
 UefiHwDetect(
     _In_opt_ PCSTR Options)
 {
     PCONFIGURATION_COMPONENT_DATA SystemKey;
+#ifndef _M_ARM
     ULONG BusNumber = 0;
+#endif
 
     TRACE("DetectHardware()\n");
 
@@ -142,8 +146,10 @@ UefiHwDetect(
     #error Please define a system key for your architecture
 #endif
 
+#ifndef _M_ARM
     /* Detect ACPI */
     DetectAcpiBios(SystemKey, &BusNumber);
+#endif
 
     TRACE("DetectHardware() Done\n");
     return SystemKey;

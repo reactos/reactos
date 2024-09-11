@@ -36,6 +36,8 @@ elseif(ARCH STREQUAL "arm")
     list(APPEND UEFILDR_ARC_SOURCE
         arch/arm/macharm.c
         arch/arm/debug.c)
+    list(APPEND UEFILDR_COMMON_ASM_SOURCE
+        arch/uefi/arm/uefiasm.S)
     #TBD
 elseif(ARCH STREQUAL "arm64")
     #TBD
