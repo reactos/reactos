@@ -145,10 +145,8 @@ PspEnumerateProcessesInJob(
     PEPROCESS Process;
     PLIST_ENTRY Entry;
 
-    /* Enter critical region and acquire exclusive lock on the job object */
     ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
 
-    /* Initialize entry to the first process in the job's process list */
     Entry = Job->ProcessListHead.Flink;
 
     /* For each process in job process list */
@@ -160,8 +158,8 @@ PspEnumerateProcessesInJob(
         /* Move to the next process in the list */
         Entry = Entry->Flink;
 
-        /* Increase the reference count of the process object.
-           We use the safe variant here because it returns FALSE if the object
+        /* Increase the reference count of the process object. We use
+           the safe variant here because it returns FALSE if the object
            is being deleted */
         if (!ObReferenceObjectSafe(Process))
         {
@@ -183,7 +181,6 @@ PspEnumerateProcessesInJob(
         }
     }
 
-    /* Resume APCs and release lock */
     ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
 
     return Status;
@@ -211,10 +208,7 @@ PspAssignProcessToJob(
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
-    DPRINT("PspAssignProcessToJob(Process: %p, Job: %p)\n", Process, Job);
-
-    /* Ensure the process is not already assigned to a job */
-    ASSERT(Process->Job == NULL);
+    DPRINT1("PspAssignProcessToJob(Process: %p, Job: %p)\n", Process, Job);
 
     /* Check if the job has a limit on the number of active processes */
     if (Job->LimitFlags & JOB_OBJECT_LIMIT_ACTIVE_PROCESS)
@@ -224,8 +218,8 @@ PspAssignProcessToJob(
         {
             if (Job->CompletionPort)
             {
-                /* If the job has a completion port, notify the job that the limit
-                   on the number of active processes has been exceeded */
+                /* If the job has a completion port, notify the job that the
+                   limit on the number of active processes has been exceeded */
                 Status = IoSetIoCompletion(Job->CompletionPort,
                                            Job->CompletionKey,
                                            NULL,
@@ -242,7 +236,6 @@ PspAssignProcessToJob(
         }
     }
 
-    /* Ensure we are not interrupted by acquiring the job lock */
     ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
 
     /* Assign process to job object by inserting into the job's process list */
@@ -264,7 +257,6 @@ PspAssignProcessToJob(
                                    FALSE);
     }
 
-    /* Resume APCs and release the job lock */
     ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
 
     /* TODO: Ensure that job limits are respected */
@@ -281,7 +273,8 @@ PspAssignProcessToJob(
  * @param[in] Job
  *     A pointer to the job object from which the process is to be removed.
  *
- * @remark This function is called from PspDeleteProcess() as the process is destroyed.
+ * @remark This function is called from PspDeleteProcess() as the process
+ *         is destroyed.
  */
 VOID
 NTAPI
@@ -290,13 +283,15 @@ PspRemoveProcessFromJob(
     _In_ PEJOB Job
 )
 {
-    DPRINT("PspRemoveProcessFromJob(Process: %p, Job: %p)\n", Process, Job);
+    DPRINT1("PspRemoveProcessFromJob(Process: %p, Job: %p)\n", Process, Job);
 
     ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
 
-    /* Attempt to atomically set the process's job pointer to NULL if it is currently
-       set to the specified job */
-    if (InterlockedCompareExchangePointer((PVOID)&Process->Job, NULL, Job) == Job)
+    /* Attempt to atomically set the process's job pointer to NULL if it is
+       currently set to the specified job */
+    if (InterlockedCompareExchangePointer((PVOID)&Process->Job,
+                                          NULL,
+                                          Job) == Job)
     {
         /* Remove the process from the job's process list */
         RemoveEntryList(&Process->JobLinks);
@@ -312,7 +307,9 @@ PspRemoveProcessFromJob(
     else
     {
         /* The process is not in the specified job */
-        DPRINT1("PspRemoveProcessFromJob(%p,%p) Process not in job\n", Process, Job);
+        DPRINT1("PspRemoveProcessFromJob(%p,%p) Process not in job\n",
+                Process,
+                Job);
     }
 
     ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
@@ -336,7 +333,7 @@ PspExitProcessFromJob(
     _In_ PEPROCESS Process
 )
 {
-    DPRINT("PspExitProcessFromJob(Job: %p, Process: %p)\n", Job, Process);
+    DPRINT1("PspExitProcessFromJob(Job: %p, Process: %p)\n", Job, Process);
 
     /* Make sure we are not interrupted */
     ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
@@ -396,7 +393,8 @@ PspExitProcessFromJob(
  *
  * @remark
  *     When this callback function is executed, the job lock is held by
- *     PspEnumerateProcessesInJob(). It releases the lock after the callback returns.
+ *     PspEnumerateProcessesInJob(). It releases the lock after the callback
+ *     returns.
  */
 NTSTATUS
 NTAPI
@@ -451,7 +449,9 @@ PspTerminateJobObject(
     Context.Job = Job;
     Context.ExitStatus = ExitStatus;
 
-    DPRINT("PspTerminateJobObject(Job: %p, ExitStatus: %x)\n", Job, ExitStatus);
+    DPRINT1("PspTerminateJobObject(Job: %p, ExitStatus: %x)\n",
+            Job,
+            ExitStatus);
 
     return PspEnumerateProcessesInJob(Job,
                                       PspTerminateProcessCallback,
@@ -477,7 +477,8 @@ PspTerminateJobObject(
  *     The number of system handles currently open for the job object.
  *
  * @remark
- *     This function terminates the job if the JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE flag is set.
+ *     This function terminates the job if the JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+ *     flag is set.
  */
 VOID
 NTAPI
@@ -497,12 +498,13 @@ PspCloseJob(
     UNREFERENCED_PARAMETER(GrantedAccess);
     UNREFERENCED_PARAMETER(HandleCount);
 
-    DPRINT("PspCloseJob(Process: %p, ObjectBody: %p, GrantedAccess: %x, HandleCount: %u, SystemHandleCount: %u)\n",
-           Process,
-           ObjectBody,
-           GrantedAccess,
-           HandleCount,
-           SystemHandleCount);
+    DPRINT1("PspCloseJob(Process: %p, ObjectBody: %p, GrantedAccess: %x, "
+            "HandleCount: %u, SystemHandleCount: %u)\n",
+            Process,
+            ObjectBody,
+            GrantedAccess,
+            HandleCount,
+            SystemHandleCount);
 
     /* Proceed only when the last handle is left */
     if (SystemHandleCount != 1)
@@ -532,7 +534,7 @@ PspDeleteJob(_In_ PVOID ObjectBody)
 {
     PEJOB Job = (PEJOB)ObjectBody;
 
-    DPRINT("PspDeleteJob(ObjectBody: %p)\n", ObjectBody);
+    DPRINT1("PspDeleteJob(ObjectBody: %p)\n", ObjectBody);
 
     PAGED_CODE();
 
@@ -637,7 +639,7 @@ NtCreateJobObject(
     PEPROCESS CurrentProcess;
     NTSTATUS Status;
 
-    DPRINT("NtCreateJobObject(JobHandle: %p)\n", JobHandle);
+    DPRINT1("NtCreateJobObject(JobHandle: %p)\n", JobHandle);
 
     PAGED_CODE();
 
@@ -700,8 +702,8 @@ NtCreateJobObject(
         /* Initialize the event object within the job */
         KeInitializeEvent(&Job->Event, NotificationEvent, FALSE);
 
-        /* Set the scheduling class. The default is '5'
-           per Windows 10 System Programming (Yosifovich, P.), p.264 */
+        /* Set the scheduling class. The default is '5' per Yosifovich, P.,
+           "Windows 10 System Programming, Part 1", p.264, (2020) */
         Job->SchedulingClass = 5;
 
         /* Link the object into the global job list */
@@ -722,9 +724,6 @@ NtCreateJobObject(
             /* Pass the handle back to the caller */
             _SEH2_TRY
             {
-                /* NOTE: if the caller passed invalid buffers to receive the handle it's his
-                   own fault! the object will still be created and live... It's possible
-                   to find the handle using ObFindHandleForObject()! */
                 *JobHandle = Handle;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -847,7 +846,8 @@ NtAssignProcessToJobObject(
 
     PreviousMode = ExGetPreviousMode();
 
-    /* Reference the job. JOB_OBJECT_ASSIGN_PROCESS rights are required for assignment */
+    /* Reference the job. JOB_OBJECT_ASSIGN_PROCESS rights are required
+       for assignment */
     Status = ObReferenceObjectByHandle(JobHandle,
                                        JOB_OBJECT_ASSIGN_PROCESS,
                                        PsJobType,
@@ -860,8 +860,8 @@ NtAssignProcessToJobObject(
     }
 
     /* Reference the process. Make sure we have enough rights, especially to
-       terminate the process. Otherwise, one could abuse job objects to terminate
-       processes without having the rights to do so */
+       terminate the process. Otherwise, one could abuse job objects to
+       terminate processes without having the rights to do so */
     Status = ObReferenceObjectByHandle(ProcessHandle,
                                        PROCESS_TERMINATE,
                                        PsProcessType,
@@ -879,19 +879,20 @@ NtAssignProcessToJobObject(
 
     if (Process->Job != NULL || SessionId != Job->SessionId)
     {
-        /* Return STATUS_ACCESS_DENIED if the process is already assigned to a job or
-           the session ID is different */
+        /* Return STATUS_ACCESS_DENIED if the process is already assigned
+           to a job or the session ID is different */
         ObDereferenceObject(Job);
         ObDereferenceObject(Process);
         return STATUS_ACCESS_DENIED;
     }
 
-    /* TODO: Security checks */
-
     if (ExAcquireRundownProtection(&Process->RundownProtect))
     {
         /* Capture a reference for the process lifetime */
         ObReferenceObject(Job);
+
+        /* Ensure the process is not already assigned to a job */
+        ASSERT(Process->Job == NULL);
 
         /* Try to atomically compare-and-exchange the job pointer */
         if (InterlockedCompareExchangePointer((PVOID)&Process->Job, Job, NULL))
@@ -921,7 +922,7 @@ NtAssignProcessToJobObject(
 }
 
 /*!
- * Determines if a specified process is associated with a specified job or any job.
+ * Determines if a specified process is associated with a specified or any job.
  *
  * @param[in] ProcessHandle
  *     A handle to the process being queried.
@@ -948,7 +949,9 @@ NtIsProcessInJob(
     PEJOB JobObjectFromHandle;
     NTSTATUS Status;
 
-    DPRINT("NtIsProcessInJob(ProcessHandle: %p, JobHandle: %p)\n", ProcessHandle, JobHandle);
+    DPRINT1("NtIsProcessInJob(ProcessHandle: %p, JobHandle: %p)\n",
+            ProcessHandle,
+            JobHandle);
 
     PreviousMode = ExGetPreviousMode();
 
@@ -980,14 +983,16 @@ NtIsProcessInJob(
 
     if (ProcessJob != NULL)
     {
-        /* If no specific job handle is provided, the process is assigned to a job */
+        /* If no specific job handle is provided,
+           the process is assigned to a job */
         if (JobHandle == NULL)
         {
             Status = STATUS_PROCESS_IN_JOB;
         }
         else
         {
-            /* Get the job object from the provided job handle and compare it with the process job */
+            /* Get the job object from the provided job handle and compare it
+               with the process job */
             Status = ObReferenceObjectByHandle(JobHandle,
                                                JOB_OBJECT_QUERY,
                                                PsJobType,
