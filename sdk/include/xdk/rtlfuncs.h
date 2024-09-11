@@ -821,7 +821,13 @@ RtlSetDaclSecurityDescriptor(
   _In_opt_ PACL Dacl,
   _In_opt_ BOOLEAN DaclDefaulted);
 
-#if defined(_AMD64_)
+//
+// These functions are really bad and shouldn't be used.
+// They have no type checking and can easily overwrite the target
+// variable or only set half of it.
+// Use Read/WriteUnalignedU16/U32/U64 from reactos/unaligned.h instead.
+//
+#if defined(_AMD64_) || defined(_M_AMD64) || defined(_X86) || defined(_M_IX86)
 
 /* VOID
  * RtlStoreUlong(
@@ -853,7 +859,7 @@ RtlSetDaclSecurityDescriptor(
  *    PUSHORT SourceAddress);
  */
 #define RtlRetrieveUshort(DestAddress,SrcAddress) \
-    *(USHORT UNALIGNED *)(DestAddress) = *(USHORT)(SrcAddress)
+    *(USHORT*)(DestAddress) = *(USHORT UNALIGNED *)(SrcAddress)
 
 /* VOID
  * RtlRetrieveUlong(
@@ -861,7 +867,7 @@ RtlSetDaclSecurityDescriptor(
  *    PULONG SourceAddress);
  */
 #define RtlRetrieveUlong(DestAddress,SrcAddress) \
-    *(ULONG UNALIGNED *)(DestAddress) = *(PULONG)(SrcAddress)
+    *(ULONG*)(DestAddress) = *(ULONG UNALIGNED *)(SrcAddress)
 
 #else
 
@@ -919,7 +925,7 @@ RtlSetDaclSecurityDescriptor(
         *((PULONG)(DestAddress))=*((PULONG)(SrcAddress)); \
     }
 
-#endif /* defined(_AMD64_) */
+#endif /* defined(_AMD64_) || defined(_M_AMD64) || defined(_X86) || defined(_M_IX86) */
 
 #ifdef _WIN64
 /* VOID
