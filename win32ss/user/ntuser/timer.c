@@ -236,7 +236,7 @@ IntSetTimer( PWND Window,
       }
 
       ASSERT(ulBitmapIndex < NUM_WINDOW_LESS_TIMERS);
-      IDEvent = NUM_WINDOW_LESS_TIMERS - ulBitmapIndex;
+      IDEvent = NUM_WINDOW_MAX_TIMERS - ulBitmapIndex;
       Ret = IDEvent;
 
       IntUnlockWindowlessTimerBitmap();
