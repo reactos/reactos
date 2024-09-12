@@ -66,7 +66,7 @@ void GetMessageRedrawWindowTest(void)
     ok(ret == TRUE, "RedrawWindow failed\n");
 
     i = 0;
-    while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE ))
+    while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
     {
         RECORD_MESSAGE(1, msg.message, POST, 0, 0);
         if (msg.message == WM_PAINT)
