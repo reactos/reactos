@@ -52,7 +52,7 @@ static
 HWND
 CreateWindowHelper(
     PCWSTR pszClassName,
-    LPCWSTR pszTitle)
+    PCWSTR pszTitle)
 {
     return CreateWindowW(pszClassName,
                          pszTitle,
