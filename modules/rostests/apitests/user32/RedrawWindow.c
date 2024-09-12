@@ -79,7 +79,7 @@ void GetMessageRedrawWindowTest(void)
         }
         if (msg.message != WM_PAINT || i >= 10)
         {
-            DispatchMessageW( &msg );
+            DispatchMessageW(&msg);
         }
     }
 
