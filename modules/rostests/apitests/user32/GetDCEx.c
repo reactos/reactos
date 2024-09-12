@@ -252,7 +252,7 @@ static
 void
 Test_GetDCEx_CS_Mixed(void)
 {
-    static const LPCWSTR pszClassName = L"TestClass_CS_Mixed";
+    static const PCWSTR pszClassName = L"TestClass_CS_Mixed";
     ATOM atomClass;
     HWND hwnd1,hwnd2, hwnd3;
     HDC hdc1, hdc2, hdc3;
