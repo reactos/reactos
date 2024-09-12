@@ -91,14 +91,22 @@ void test_fpclass(void)
      * on w2k3, it's Quiet NAN
      * ok(class == _FPCLASS_SNAN, "class = %d\n", class);
      */
+#ifdef _M_AMD64
+    ok(class == _FPCLASS_SNAN, "class = %d\n", class);
+#else
     ok(class == _FPCLASS_QNAN, "class = %d\n", class);
+#endif
     tested.l = 0xFFF0000000000001LL;
     class = _fpclass(tested.d);
     /* According to IEEE, it should be Signaling NaN, but
      * on w2k3, it's Quiet NAN
      * ok(class == _FPCLASS_SNAN, "class = %d\n", class);
      */
+#ifdef _M_AMD64
+    ok(class == _FPCLASS_SNAN, "class = %d\n", class);
+#else
     ok(class == _FPCLASS_QNAN, "class = %d\n", class);
+#endif
     tested.l = 0xFFF0000000000000LL;
     class = _fpclass(tested.d);
     ok(class == _FPCLASS_NINF, "class = %d\n", class);
@@ -141,14 +149,22 @@ void test_fpclass(void)
      * on w2k3, it's Quiet NAN
      * ok(class == _FPCLASS_SNAN, "class = %d\n", class);
      */
+#ifdef _M_AMD64
+    ok(class == _FPCLASS_SNAN, "class = %d\n", class);
+#else
     ok(class == _FPCLASS_QNAN, "class = %d\n", class);
+#endif
     tested.l = 0x7FF7FFFFFFFFFFFFLL;
     class = _fpclass(tested.d);
     /* According to IEEE, it should be Signaling NaN, but
      * on w2k3, it's Quiet NAN
      * ok(class == _FPCLASS_SNAN, "class = %d\n", class);
      */
+#ifdef _M_AMD64
+    ok(class == _FPCLASS_SNAN, "class = %d\n", class);
+#else
     ok(class == _FPCLASS_QNAN, "class = %d\n", class);
+#endif
     tested.l = 0x7FF8000000000000LL;
     class = _fpclass(tested.d);
     ok(class == _FPCLASS_QNAN, "class = %d\n", class);
@@ -258,7 +274,11 @@ void test_j0(void)
     ok(errno == EDOM, "errno: %d\n", errno);
     errno = 0xDEADBEEF;
     tested.l = 0xFFEFFFFFFFFFFFFFLL;
+#ifdef _M_AMD64
+    expected.l = 0x8000000000000000LL;
+#else
     expected.l = 0x1FE7206E1D6FDCFALL;
+#endif
     result.d =  _j0(tested.d);
     ok(result.l == expected.l, "_j0 returned: %I64x\n", result.l);
     ok(errno == 0xDEADBEEF, "errno: %d\n", errno);
@@ -312,7 +332,11 @@ void test_j0(void)
     ok(errno == 0xDEADBEEF, "errno: %d\n", errno);
     errno = 0xDEADBEEF;
     tested.l = 0x7FEFFFFFFFFFFFFFLL;
+#ifdef _M_AMD64
+    expected.l = 0x8000000000000000LL;
+#else
     expected.l = 0x1FE7206E1D6FDCFALL;
+#endif
     result.d =  _j0(tested.d);
     ok(result.l == expected.l, "_j0 returned: %I64x\n", result.l);
     ok(errno == 0xDEADBEEF, "errno: %d\n", errno);
@@ -402,7 +426,11 @@ void test_j1(void)
     ok(errno == EDOM, "errno: %d\n", errno);
     errno = 0xDEADBEEF;
     tested.l = 0xFFEFFFFFFFFFFFFFLL;
+#ifdef _M_AMD64
+    expected.l = 0;
+#else
     expected.l = 0x9FE7206E1D6FDCFALL;
+#endif
     result.d =  _j1(tested.d);
     ok(result.l == expected.l, "_j1 returned: %I64x\n", result.l);
     ok(errno == 0xDEADBEEF, "errno: %d\n", errno);
@@ -456,9 +484,13 @@ void test_j1(void)
     ok(errno == 0xDEADBEEF, "errno: %d\n", errno);
     errno = 0xDEADBEEF;
     tested.l = 0x7FEFFFFFFFFFFFFFLL;
+#ifdef _M_AMD64
+    expected.l = 0x8000000000000000LL;
+#else
     expected.l = 0x1FE7206E1D6FDCFALL;
+#endif
     result.d =  _j1(tested.d);
-    ok(result.l == expected.l, "_j1 returned: %I64x\n", result.l);
+    ok(result.l == expected.l, "_j1 returned: %I64x, expected %I64x\n", result.l, expected.l);
     ok(errno == 0xDEADBEEF, "errno: %d\n", errno);
     errno = 0xDEADBEEF;
     tested.l = 0x7FF0000000000000LL;
@@ -744,7 +776,11 @@ void test_y0(void)
     ok(errno == 0xDEADBEEF, "errno: %d\n", errno);
     errno = 0xDEADBEEF;
     tested.l = 0x7FEFFFFFFFFFFFFFLL;
+#ifdef _M_AMD64
+    expected.l = 0;
+#else
     expected.l = 0x9FD5A36F8428F58BLL;
+#endif
     result.d =  _y0(tested.d);
     ok(result.l == expected.l, "_y0 returned: %I64x\n", result.l);
     ok(errno == 0xDEADBEEF, "errno: %d\n", errno);
@@ -888,7 +924,11 @@ void test_y1(void)
     ok(errno == 0xDEADBEEF, "errno: %d\n", errno);
     errno = 0xDEADBEEF;
     tested.l = 0x7FEFFFFFFFFFFFFFLL;
+#ifdef _M_AMD64
+    expected.l = 0;
+#else
     expected.l = 0x9FD5A36F8428F58BLL;
+#endif
     result.d =  _y1(tested.d);
     ok(result.l == expected.l, "_y1 returned: %I64x\n", result.l);
     ok(errno == 0xDEADBEEF, "errno: %d\n", errno);
