@@ -141,7 +141,7 @@ static
 void
 Test_GetDCEx_CS_OWNDC(void)
 {
-    static const LPCWSTR pszClassName = L"TestClass_CS_OWNDC";
+    static const PCWSTR pszClassName = L"TestClass_CS_OWNDC";
     ATOM atomClass;
     HWND hwnd;
     HDC hdc1, hdc2;
