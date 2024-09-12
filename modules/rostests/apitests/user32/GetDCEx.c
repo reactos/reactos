@@ -40,7 +40,7 @@ RegisterClassHelper(
     cls.cbWndExtra = 0;
     cls.hInstance = GetModuleHandleW(0);
     cls.hIcon = 0;
-    cls.hCursor = LoadCursorW(0, MAKEINTRESOURCEW(32512));
+    cls.hCursor = LoadCursorA(0, IDC_ARROW);
     cls.hbrBackground = GetStockObject(WHITE_BRUSH);
     cls.lpszMenuName = NULL;
     cls.lpszClassName = pszClassName;
@@ -1154,7 +1154,7 @@ void Test_from_wine(void)
     cls.cbWndExtra = 0;
     cls.hInstance = GetModuleHandleW(0);
     cls.hIcon = 0;
-    cls.hCursor = LoadCursorW(0, MAKEINTRESOURCEW(32512));
+    cls.hCursor = LoadCursorA(0, IDC_ARROW);
     cls.hbrBackground = GetStockObject(WHITE_BRUSH);
     cls.lpszMenuName = NULL;
     cls.lpszClassName = L"cache_class";
