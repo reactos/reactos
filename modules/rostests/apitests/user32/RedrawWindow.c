@@ -54,7 +54,7 @@ void GetMessageRedrawWindowTest(void)
 
     while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
     {
-        DispatchMessageW( &msg );
+        DispatchMessageW(&msg);
     }
 
     ok(got_paint == TRUE, "Did not process WM_PAINT message\n");
