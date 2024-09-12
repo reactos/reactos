@@ -51,7 +51,7 @@ RegisterClassHelper(
 static
 HWND
 CreateWindowHelper(
-    LPCWSTR pszClassName,
+    PCWSTR pszClassName,
     LPCWSTR pszTitle)
 {
     return CreateWindowW(pszClassName,
