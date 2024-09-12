@@ -71,7 +71,7 @@ static
 void
 Test_GetDCEx_Cached(void)
 {
-    static const LPCWSTR pszClassName = L"TestClass_Cached";
+    static const PCWSTR pszClassName = L"TestClass_Cached";
     ATOM atomClass;
     HWND hwnd;
     HDC hdc1, hdc2;
