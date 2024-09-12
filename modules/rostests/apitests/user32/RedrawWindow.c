@@ -52,7 +52,7 @@ void GetMessageRedrawWindowTest(void)
 
     ShowWindow(hWnd, SW_SHOW);
 
-    while (PeekMessageW( &msg, 0, 0, 0, PM_REMOVE ))
+    while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
     {
         DispatchMessageW( &msg );
     }
