@@ -201,7 +201,7 @@ static
 void
 Test_GetDCEx_CS_CLASSDC(void)
 {
-    static const LPCWSTR pszClassName = L"TestClass_CS_CLASSDC";
+    static const PCWSTR pszClassName = L"TestClass_CS_CLASSDC";
     ATOM atomClass;
     HWND hwnd1, hwnd2;
     HDC hdc1, hdc2;
