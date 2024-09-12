@@ -7,8 +7,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Asennus"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Welcome to the ReactOS Setup Wizard", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "Et voi asentaa ReactOS:ä suoraan tältä CDlevyltä! Käynnistä tietokoneesi tältä CD levyltä asentaaksesi ReactOS:ä.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Tervetuloa ReactOS-asentimeen", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "Et voi asentaa ReactOS:ä suoraan tältä CD-levyltä! Käynnistä tietokoneesi tältä CD levyltä asentaaksesi ReactOS:ä.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Click Finish to exit the Setup.", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -17,11 +17,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "Install ReactOS", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "Install a new copy of ReactOS. This option does not keep your files, settings and programs. You can make changes to disks and partitions.", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
-    AUTORADIOBUTTON "Update or repair an installed ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "Update or repair an installed copy of ReactOS. This option keeps your files, settings and programs. This option is only available if ReactOS is already installed on this computer.", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
-    LTEXT "Click Next to setup the devices.", IDC_STATIC, 7, 128, 297, 8
+    AUTORADIOBUTTON "Asenna ReactOS", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
+    LTEXT "Asenna uusi ReactOS kopio. Tämä vaihtoehto ei säilytä tiedostojasi, asetuksiasi ja sovelluksia. Voit tehdä muutoksia levyihin ja osiohin.", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
+    AUTORADIOBUTTON "Päivitä tai korjaa ReactOS-asennus", IDC_UPDATE, 7, 50, 277, 10
+    LTEXT "Päivitä tai korjaa ReactOS-asennus. Tämä vaihtoehto säilyttää tiedostot, asetukset ja sovellukset. Tämä vaihtoehto on vain 
+käytettävissä, jos ReactOS on asennettu tietokoneelle.", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
+    LTEXT "Paina Seuraava jatkaaksesi.", IDC_STATIC, 7, 128, 297, 8
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
@@ -29,198 +30,198 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT       "The ReactOS Setup can upgrade one of the available ReactOS installations listed below, or, if a ReactOS installation is damaged, the Setup program can attempt to repair it.", IDC_STATIC, 6, 6, 300, 18
+    LTEXT       "ReactOS-asennin voi päivittää alhaalla olevia asennuksia, tai jos asennus on vahingoittunut, niin asennin voi yrittää korjata sen.", IDC_STATIC, 6, 6, 300, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
-    PUSHBUTTON  "&Do not upgrade", IDC_SKIPUPGRADE, 230, 128, 80, 14
-    LTEXT       "Click Next to upgrade the selected OS installation, or on 'Do not upgrade' to continue a new installation without upgrading.", IDC_STATIC, 7, 124, 222, 16
+    PUSHBUTTON  "&Älä päivitä", IDC_SKIPUPGRADE, 230, 128, 80, 14
+    LTEXT       "Paina Seuraava päivittääksesi OS-asennuksen tai "Älä päivitä" jatkaaksesi ilman päivitystä.", IDC_STATIC, 7, 124, 222, 16
 END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "ReactOS Asennin"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Computer:", IDC_STATIC, 20, 15, 80, 10
+    LTEXT "Tietokone:", IDC_STATIC, 20, 15, 80, 10
     COMBOBOX IDC_COMPUTER, 100, 15, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
-    LTEXT "Display:", IDC_STATIC, 20, 35, 80, 10
+    LTEXT "Näyttö:", IDC_STATIC, 20, 35, 80, 10
     COMBOBOX IDC_DISPLAY, 100, 35, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
-    LTEXT "Keyboard:", IDC_STATIC, 20, 55, 80, 10
+    LTEXT "Näppäimistö:", IDC_STATIC, 20, 55, 80, 10
     COMBOBOX IDC_KEYBOARD, 100, 55, 180, 80, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
-    LTEXT "Click Next to continue setup on the installation device.", IDC_STATIC, 7, 128, 297, 8
+    LTEXT "Paina Seuraava jatkaaksesi asennusta.", IDC_STATIC, 7, 128, 297, 8
 END
 
 IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "ReactOS Asennin"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
     PUSHBUTTON "&Initialize", IDC_INITDISK, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
-    PUSHBUTTON "&Create", IDC_PARTCREATE, 7, 122, 50, 14
-    PUSHBUTTON "&Format", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
-    PUSHBUTTON "&Delete", IDC_PARTDELETE, 63, 122, 50, 14
-    PUSHBUTTON "D&river", IDC_DEVICEDRIVER, 174, 122, 50, 14, WS_DISABLED
-    PUSHBUTTON "&Advanced Options...", IDC_PARTMOREOPTS, 230, 122, 80, 14
+    PUSHBUTTON "&Luo", IDC_PARTCREATE, 7, 122, 50, 14
+    PUSHBUTTON "&Formatti", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "&Poista", IDC_PARTDELETE, 63, 122, 50, 14
+    PUSHBUTTON "A&juri", IDC_DEVICEDRIVER, 174, 122, 50, 14, WS_DISABLED
+    PUSHBUTTON "&Kehittyneet valinnat...", IDC_PARTMOREOPTS, 230, 122, 80, 14
     // LTEXT "Click Next to check the summary.", IDC_STATIC, 7, 128, 277, 8
 END
 
 IDD_PARTITION DIALOGEX 0, 0, 200, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Create and Format Partition"
+CAPTION "Tee ja formatoi osio"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Size:", IDC_STATIC, 7, 9, 70, 9
+    LTEXT "&Koko:", IDC_STATIC, 7, 9, 70, 9
     EDITTEXT IDC_EDIT_PARTSIZE, 82, 7, 47, 13, ES_RIGHT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_PARTSIZE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 22, 9, 13
     LTEXT "MB", IDC_UNIT, 134, 9, 14, 9
-    AUTOCHECKBOX "&Extended partition", IDC_CHECK_MBREXTPART, 7, 22, 180, 14
-    LTEXT "&File System:", IDC_FS_STATIC, 7, 46, 70, 9
+    AUTOCHECKBOX "&Laajennettu osio", IDC_CHECK_MBREXTPART, 7, 22, 180, 14
+    LTEXT "&Tiedostojärjestelmä:", IDC_FS_STATIC, 7, 46, 70, 9
     COMBOBOX IDC_FSTYPE, 82, 44, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX "&Quick format", IDC_CHECK_QUICKFMT, 7, 59, 180, 14
+    AUTOCHECKBOX "&Nopea formatointi", IDC_CHECK_QUICKFMT, 7, 59, 180, 14
     PUSHBUTTON "OK", IDOK, 88, 98, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 143, 98, 50, 14
+    PUSHBUTTON "Peruuta", IDCANCEL, 143, 98, 50, 14
 END
 
 IDD_FORMAT DIALOGEX 0, 0, 200, 83
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Format Partition"
+CAPTION "Formatoi osio"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&File System:", IDC_FS_STATIC, 7, 9, 70, 9
+    LTEXT "&Tiedostojärjestelmä:", IDC_FS_STATIC, 7, 9, 70, 9
     COMBOBOX IDC_FSTYPE, 82, 7, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX "&Quick format", IDC_CHECK_QUICKFMT, 7, 22, 180, 14
+    AUTOCHECKBOX "&Nopea formatointi", IDC_CHECK_QUICKFMT, 7, 22, 180, 14
     PUSHBUTTON "OK", IDOK, 88, 61, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 143, 61, 50, 14
+    PUSHBUTTON "Peruuta", IDCANCEL, 143, 61, 50, 14
 END
 
 IDD_ADVINSTOPTS DIALOGEX 0, 0, 305, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Advanced Installation Options"
+CAPTION "Edistynyt asennus valikko"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Choose the &directory where you want to install ReactOS:", IDC_STATIC, 7, 9, 291, 10
+    LTEXT "Valitse &hakemisto, minne haluat asentaa käyttöjärjestelmän:", IDC_STATIC, 7, 9, 291, 10
     EDITTEXT IDC_PATH, 7, 23, 291, 13
     GROUPBOX "Bootloader", IDC_STATIC, 7, 45, 291, 60
     LTEXT "Select the location where the FreeLoader\nbootloader should be installed.\n\nBy default, it is installed on the system partition of the boot disk (and either in the Master or the Volume Boot Record for BIOS-based computers).", IDC_STATIC, 13, 57, 279, 44
     COMBOBOX IDC_INSTFREELDR, 150, 58, 142, 45, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     DEFPUSHBUTTON "OK", IDOK, 193, 113, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 248, 113, 50, 14
+    PUSHBUTTON "Peruuta", IDCANCEL, 248, 113, 50, 14
 END
 
 IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "ReactOS Asennin"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Installation type:", IDC_STATIC, 18, 5, 74, 11
+    LTEXT "Asennuksen tyyppi:", IDC_STATIC, 18, 5, 74, 11
     EDITTEXT IDC_INSTALLTYPE, 95, 4, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Installation source:", IDC_STATIC, 18, 17, 74, 11
+    LTEXT "Asennuksen lähde:", IDC_STATIC, 18, 17, 74, 11
     EDITTEXT IDC_INSTALLSOURCE, 95, 16, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Architecture:", IDC_STATIC, 18, 29, 74, 11
+    LTEXT "Arkkitehtuuri:", IDC_STATIC, 18, 29, 74, 11
     EDITTEXT IDC_ARCHITECTURE, 95, 28, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Computer:", IDC_STATIC, 18, 41, 74, 11
+    LTEXT "Tietokone:", IDC_STATIC, 18, 41, 74, 11
     EDITTEXT IDC_COMPUTER, 95, 40, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Display:", IDC_STATIC, 18, 53, 74, 11
+    LTEXT "Näyttö:", IDC_STATIC, 18, 53, 74, 11
     EDITTEXT IDC_DISPLAY, 95, 52, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Keyboard:", IDC_STATIC, 18, 65, 74, 11
+    LTEXT "Näppäimistö:", IDC_STATIC, 18, 65, 74, 11
     EDITTEXT IDC_KEYBOARD, 95, 64, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Destination volume:", IDC_STATIC, 18, 77, 74, 11
+    LTEXT "Kohde osio:", IDC_STATIC, 18, 77, 74, 11
     EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Destination directory:", IDC_STATIC, 18, 89, 74, 11
+    LTEXT "Kohde hakemisto:", IDC_STATIC, 18, 89, 74, 11
     EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    AUTOCHECKBOX "I confirm that all the installation settings are correct. I also acknowledge that\nReactOS is alpha-quality software and may break on my computer or corrupt my data.",
+    AUTOCHECKBOX "Ymmärrän, että kaikki asennus asetukset ovat oikein. Tiedän myös, että\nReactOS on alpha-tasoinen ohjelmisto ja voi rikkoa tietokoneeni tai korruptoida dataa.",
         IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE
-    LTEXT "Please confirm that all the installation settings are correct,\nthen click on Install to start the installation process.", IDC_STATIC, 7, 124, 303, 18
+    LTEXT "Varmista, että kaikki asennus asetukset ovat oikein,\nsitten paina Asenna aloittaaksesi asennuksen.", IDC_STATIC, 7, 124, 303, 18
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "ReactOS Asennin"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Install files...", IDC_ACTIVITY, 20, 50, 277, 10
+    LTEXT "Asennetaan tiedostoja...", IDC_ACTIVITY, 20, 50, 277, 10
     LTEXT "test.txt", IDC_ITEM, 30, 80, 257, 10
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
 END
 
 IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "ReactOS Asennin"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Completing the ReactOS Setup Wizard", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "You have successfully completed the first stage of ReactOS Setup.", IDC_STATIC, 115, 50, 195, 17
-    LTEXT "When you click Finish, your computer will restart.", IDC_STATIC, 115, 80, 195, 17
+    LTEXT "Viimeistellään asennusta", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "Olet suorittanut ensimmäisen vaiheen ReactOS-asennuksesta.", IDC_STATIC, 115, 50, 195, 17
+    LTEXT "Kun painat Valmis, tietokoneesi käynnistyy uudelleen.", IDC_STATIC, 115, 80, 195, 17
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
-    LTEXT "If there is a CD in a drive, remove it. Then, to restart your computer, click Finish.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Jos tietokoneessa on CD-levy, ota se pois ja sen jälkeen paina Valmis.", IDC_STATIC, 115, 169, 195, 17
 END
 
 /* Strings */
 
 STRINGTABLE
 BEGIN
-    IDS_TYPETITLE "Welcome to ReactOS Setup"
-    IDS_TYPESUBTITLE "Choose setup type."
-    IDS_DEVICETITLE "Setup the basic devices"
-    IDS_DEVICESUBTITLE "Set the settings of display and keyboard."
-    IDS_DRIVETITLE "Setup the installation partition and system folder"
-    IDS_DRIVESUBTITLE "Prepare installation partition, system folder and bootloader."
-    IDS_PROCESSTITLE "Setup partition, copy files and setup system"
-    IDS_PROCESSSUBTITLE "Create and format partition, copy files, install and setup bootloader"
-    IDS_RESTARTTITLE "First stage of setup finished"
-    IDS_RESTARTSUBTITLE "The first stage of setup has been completed, restart to continue with second stage"
-    IDS_SUMMARYTITLE "Installation Summary"
+    IDS_TYPETITLE "Tervetuloa ReactOS-asenukseen"
+    IDS_TYPESUBTITLE "Valitse asennustyyppi"
+    IDS_DEVICETITLE "Aseta perus laitteet"
+    IDS_DEVICESUBTITLE "Aseta näytön ja näppäimistön asetukset."
+    IDS_DRIVETITLE "Aseta osio-asennus ja järjestelmäkansio"
+    IDS_DRIVESUBTITLE "Valmistele osio-asennus, järjestelmäkansio ja bootloaderi."
+    IDS_PROCESSTITLE "Aseta osio, kopio tiedostoja ja järjestelmän muokkaus"
+    IDS_PROCESSSUBTITLE "Tee ja formatoi osio, kopio tiedostoja, asenna ja setuppaa bootloaderi"
+    IDS_RESTARTTITLE "Asennuksen ensimmäinen vaihe valmis"
+    IDS_RESTARTSUBTITLE "Asennuksen ensimmäinen vaihe valmis, käynnistä kone uudelleen jatkaaksesi asennuksen toiseen vaiheeseen"
+    IDS_SUMMARYTITLE "Asennuksen yhteenveto"
     IDS_SUMMARYSUBTITLE "List installation properties to check before apply to the installation device"
-    IDS_ABORTSETUP "ReactOS is not completely installed on your computer. If you quit Setup now, you will need to run Setup again to install ReactOS. Really quit?"
-    IDS_ABORTSETUP2 "Abort installation?"
-    IDS_NO_TXTSETUP_SIF "Unable to find 'txtsetup.sif'.\nSetup is unable to continue."
-    IDS_CAPTION "ReactOS Setup"
-    IDS_VOLUME_NOFORMAT "Not formatted"
+    IDS_ABORTSETUP "ReactOS ei ole kokonaan asennettu koneellesi. Jos poistut asentemisesta nyt, joudut tekemään kaikki uudestaan. Poistutaanko?"
+    IDS_ABORTSETUP2 "Keskeytä asennus?"
+    IDS_NO_TXTSETUP_SIF "Unable to find 'txtsetup.sif'.\nAsennus ei voi jatkua virheen takia."
+    IDS_CAPTION "ReactOS Asennus"
+    IDS_VOLUME_NOFORMAT "Ei formatoitu"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALLATION_NAME "Name"
-    IDS_INSTALLATION_PATH "Installation Path"
-    IDS_INSTALLATION_VENDOR "Vendor Name"
+    IDS_INSTALLATION_NAME "Nimi"
+    IDS_INSTALLATION_PATH "Asennnuspolku"
+    IDS_INSTALLATION_VENDOR "Myyjän Nimi"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PARTITION_NAME "Name"
-    IDS_PARTITION_TYPE "Type"
-    IDS_PARTITION_SIZE "Size"
-    IDS_PARTITION_STATUS "Status"
+    IDS_PARTITION_NAME "Nimi"
+    IDS_PARTITION_TYPE "Tyyppi"
+    IDS_PARTITION_SIZE "Koko"
+    IDS_PARTITION_STATUS "Tila"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BOOTLOADER_NOINST "No installation"
+    IDS_BOOTLOADER_NOINST "Ei asennusta"
     IDS_BOOTLOADER_REMOVABLE "Removable media"
-    IDS_BOOTLOADER_SYSTEM "System partition (Default)"
-    IDS_BOOTLOADER_MBRVBR "MBR and VBR (Default)"
-    IDS_BOOTLOADER_VBRONLY "VBR only"
+    IDS_BOOTLOADER_SYSTEM "Järjestelmäosio (Oletus)"
+    IDS_BOOTLOADER_MBRVBR "MBR and VBR (Oletus)"
+    IDS_BOOTLOADER_VBRONLY "vain VBR"
 END
 
 /* Progress Strings */
 
 STRINGTABLE
 BEGIN
-    IDS_FORMATTING_PROGRESS1 "Formatting volume %c: (%s) in %s..."
-    IDS_FORMATTING_PROGRESS2 "Formatting volume %s in %s..."
+    IDS_FORMATTING_PROGRESS1 "Formatoidaan osio %c: (%s) in %s..."
+    IDS_FORMATTING_PROGRESS2 "Formatoidaan osio %s in %s..."
 
-    IDS_CHECKING_PROGRESS1 "Checking volume %c: (%s)..."
-    IDS_CHECKING_PROGRESS2 "Checking volume %s..."
+    IDS_CHECKING_PROGRESS1 "Chekataan osio %c: (%s)..."
+    IDS_CHECKING_PROGRESS2 "Chekataan osio %s..."
 
-    IDS_COPYING  "Copying %s"
-    IDS_MOVING   "Moving %s to %s"
-    IDS_RENAMING "Renaming %s to %s"
-    IDS_DELETING "Deleting %s"
+    IDS_COPYING  "Kopioidaan %s"
+    IDS_MOVING   "Liikutetaan %s to %s"
+    IDS_RENAMING "Uudelleennimetään %s to %s"
+    IDS_DELETING "Poistetaan %s"
 
-    IDS_PREPARE_PARTITIONS "Preparing partitions..."
+    IDS_PREPARE_PARTITIONS "Valmistellaan osioita..."
     IDS_PREPARE_FILES "Preparing the list of files to be copied, please wait..."
-    IDS_COPYING_FILES "Copying the files..."
+    IDS_COPYING_FILES "Kopioidaan tiedostot..."
 
     IDS_CREATE_REGISTRY "Creating the registry..."
     IDS_UPDATE_REGISTRY "Updating the registry..."
