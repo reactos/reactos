@@ -82,7 +82,8 @@ RemoveTimer(PTIMER pTmr)
      {
         ULONG ulBitmapIndex;
 
-        ulBitmapIndex = NUM_WINDOW_MAX_TIMERS - pTmr->nID;
+        ASSERT(pTmr->nID <= NUM_WINDOW_MAX_TIMERS);
+        ulBitmapIndex = (ULONG)(NUM_WINDOW_MAX_TIMERS - pTmr->nID);
         IntLockWindowlessTimerBitmap();
         RtlClearBit(&WindowLessTimersBitMap, ulBitmapIndex);
         IntUnlockWindowlessTimerBitmap();
