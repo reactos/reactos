@@ -14,6 +14,13 @@ START_TEST(NtGdiEnumFontOpen)
     ULONG ulCount;
     PENTRY pEntry;
 
+    DWORD dwOsVer = NtCurrentPeb()->OSMajorVersion << 8 | NtCurrentPeb()->OSMinorVersion;
+    if (dwOsVer >= _WIN32_WINNT_WIN7)
+    {
+        skip("NtGdiEnumFontOpen is not supported on Windows 7 or later\n");
+        return;
+    }
+
     hDC = CreateDCW(L"DISPLAY",NULL,NULL,NULL);
 
     // FIXME: We should load the font first
@@ -32,7 +39,7 @@ START_TEST(NtGdiEnumFontOpen)
     ok(pEntry->einfo.pobj != NULL, "pEntry->einfo.pobj was NULL.\n");
     ok_long(pEntry->ObjectOwner.ulObj, GetCurrentProcessId());
     ok_ptr(pEntry->pUser, NULL);
-    ok_int(pEntry->FullUnique, (idEnum >> 16));
+    ok_int(pEntry->FullUnique, (idEnum >> 16) & 0xFFFF);
     ok_int(pEntry->Objt, GDI_OBJECT_TYPE_ENUMFONT >> 16);
     ok_int(pEntry->Flags, 0);
 
