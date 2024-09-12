@@ -6,8 +6,13 @@
  *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
-#include <apitest.h>
 #include <atlbase.h>
+
+#ifdef HAVE_APITEST
+    #include <apitest.h>
+#else
+    #include "atltest.h"
+#endif
 
 START_TEST(CRegKey)
 {
