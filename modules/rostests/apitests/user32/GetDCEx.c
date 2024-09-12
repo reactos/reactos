@@ -28,7 +28,7 @@ WndProc(
 static
 ATOM
 RegisterClassHelper(
-    LPCWSTR pszClassName,
+    PCWSTR pszClassName,
     UINT style,
     WNDPROC pfnWndProc)
 {
