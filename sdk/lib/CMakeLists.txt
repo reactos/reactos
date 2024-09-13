@@ -40,6 +40,7 @@ add_subdirectory(lsalib)
 add_subdirectory(nt)
 add_subdirectory(pathcch)
 add_subdirectory(pseh)
+add_subdirectory(roscompat)
 
 if(KDBG)
     add_subdirectory(rossym)

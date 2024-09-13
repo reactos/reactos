@@ -32,7 +32,7 @@
  *   Otherwise they are kept separated, unless an explicit /MERGE is used.
  */
 
-#pragma comment(linker, "/SECTION:.text,ERW /SECTION:.data,RW /MERGE:.MBDATA=.text /MERGE:INIT=.text /MERGE:.edata=.rdata")
+#pragma comment(linker, "/SECTION:.text,ERW /SECTION:.data,RW /MERGE:.MBDATA=.text /MERGE:INIT=.text /MERGE:.edata=.rdata /MERGE:.expvers=.rdata")
 
 #endif
 

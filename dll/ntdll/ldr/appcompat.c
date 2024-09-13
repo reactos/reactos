@@ -138,6 +138,16 @@ LdrpApplyDllExportVersioning(
         return;
     }
 
+    /* Save the descriptor */
+    LdrEntry->PatchInformation = RosCompatDescriptor;
+
+    /* Check for dummy descriptor */
+    if (RosCompatDescriptor->ExportMasks == NULL)
+    {
+        *RosCompatDescriptor->NumberOfValidExports = MAXULONG;
+        return;
+    }
+
     /* Count the number of valid (public) exports */
     ULONG NumberOfValidExports = 0;
     for (ULONG i = 0; i < RosCompatDescriptor->NumberOfOrdinals; i++)
@@ -149,9 +159,6 @@ LdrpApplyDllExportVersioning(
     }
 
     *RosCompatDescriptor->NumberOfValidExports = NumberOfValidExports;
-
-    /* Save the descriptor */
-    LdrEntry->PatchInformation = RosCompatDescriptor;
 
     DPRINT1("roscompat: Applied export version info for '%wZ'\n",
            &LdrEntry->BaseDllName);
@@ -198,6 +205,12 @@ LdrpValidateVersionedExport(
     _In_ ULONG OrdinalIndex)
 {
     PROSCOMPAT_DESCRIPTOR RosCompatDescriptor = LdrEntry->PatchInformation;
+
+    /* Check for dummy descriptor */
+    if (RosCompatDescriptor->ExportMasks == NULL)
+    {
+        return TRUE;
+    }
 
     if (OrdinalIndex >= RosCompatDescriptor->NumberOfOrdinals)
     {
