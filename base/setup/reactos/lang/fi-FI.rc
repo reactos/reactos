@@ -20,8 +20,7 @@ BEGIN
     AUTORADIOBUTTON "Asenna ReactOS", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
     LTEXT "Asenna uusi ReactOS kopio. Tämä vaihtoehto ei säilytä tiedostojasi, asetuksiasi ja sovelluksia. Voit tehdä muutoksia levyihin ja osiohin.", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
     AUTORADIOBUTTON "Päivitä tai korjaa ReactOS-asennus", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "Päivitä tai korjaa ReactOS-asennus. Tämä vaihtoehto säilyttää tiedostot, asetukset ja sovellukset. Tämä vaihtoehto on vain 
-käytettävissä, jos ReactOS on asennettu tietokoneelle.", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
+    LTEXT "Päivitä tai korjaa ReactOS-asennus. Tämä vaihtoehto säilyttää tiedostot, asetukset ja sovellukset. Tämä vaihtoehto on vain käytettävissä, jos ReactOS on asennettu tietokoneelle.", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
     LTEXT "Paina Seuraava jatkaaksesi.", IDC_STATIC, 7, 128, 297, 8
 END
 
