@@ -62,6 +62,7 @@ add_library(comctl32 MODULE
     ${SOURCE}
     ${PCH_SKIP_SOURCE}
     rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/comctl32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/comctl32.def)
 
 if(MSVC)

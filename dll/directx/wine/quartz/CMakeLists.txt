@@ -43,6 +43,7 @@ list(APPEND PCH_SKIP_SOURCE
 add_library(quartz MODULE
     ${SOURCE}
     ${PCH_SKIP_SOURCE}
+    ${CMAKE_CURRENT_BINARY_DIR}/quartz_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/quartz.def
     version.rc)
 

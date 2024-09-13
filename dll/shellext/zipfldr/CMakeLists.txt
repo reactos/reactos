@@ -32,6 +32,7 @@ add_library(zipfldr MODULE
     ${SOURCE}
     ${ZLIB_SOURCE}
     zipfldr.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/zipfldr_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/zipfldr.def)
 
 set_module_type(zipfldr win32dll UNICODE)

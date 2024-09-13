@@ -35,6 +35,7 @@ add_library(shellbtrfs MODULE
     ${btrfs_asm}
     ${PCH_SKIP_SOURCE}
     shellbtrfs.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/shellbtrfs_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/shellbtrfs.def)
 
 file(GLOB shellbtrfs_rc_deps *.ico)

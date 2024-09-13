@@ -20,6 +20,7 @@ list(APPEND SOURCE
 add_library(rsaenh MODULE
     ${SOURCE}
     rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/rsaenh_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/rsaenh.def)
 
 set_module_type(rsaenh win32dll)

@@ -19,6 +19,7 @@ add_rc_deps(appwiz.rc ${appwiz_rc_deps})
 add_library(appwiz MODULE
     ${SOURCE}
     appwiz.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/appwiz_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/appwiz.def)
 
 set_module_type(appwiz cpl UNICODE)
