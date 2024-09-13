@@ -781,8 +781,8 @@ OutputLine_def(FILE *fileDest, EXPORT *pexp)
     else
         OutputLine_def_GCC(fileDest, pexp);
 
-    /* On GCC builds we force ordinals */
-    if ((pexp->uFlags & FL_ORDINAL) || (!gbMSComp && !gbImportLib))
+    /* If it is not an import lib, we force ordinals */
+    if ((pexp->uFlags & FL_ORDINAL) || !gbImportLib)
     {
         fprintf(fileDest, " @%d", pexp->nOrdinal);
     }
@@ -1421,6 +1421,7 @@ ApplyOrdinals(EXPORT* pexports, unsigned cExports)
 {
     unsigned short i, j;
     char* used;
+    unsigned short firstOrdinal = 0xFFFF, firstIndex = 0;
 
     /* Allocate a table to mark used ordinals */
     used = malloc(65536);
@@ -1442,11 +1443,31 @@ ApplyOrdinals(EXPORT* pexports, unsigned cExports)
                 return -1;
             }
             used[pexports[i].nOrdinal] = 1;
+            if (pexports[i].nOrdinal < firstOrdinal)
+            {
+                firstOrdinal = pexports[i].nOrdinal;
+                firstIndex = i;
+            }
         }
     }
 
+    /* Check if we found an ordinal */
+    if (firstOrdinal != 0xFFFF)
+    {
+        /* We did. Reserve ordinals for entries before that one. */
+        if (firstOrdinal > firstIndex)
+            firstOrdinal -= firstIndex;
+        else
+            firstOrdinal = 1;
+    }
+    else
+    {
+        /* We didn't, so start with 1 */
+        firstOrdinal = 1;
+    }
+
     /* Pass 2: apply available ordinals */
-    for (i = 0, j = 1; i < cExports; i++)
+    for (i = 0, j = firstOrdinal; i < cExports; i++)
     {
         if ((pexports[i].uFlags & FL_ORDINAL) == 0 && pexports[i].bVersionIncluded)
         {
@@ -1640,13 +1661,10 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    if (!gbMSComp)
+    if (ApplyOrdinals(pexports, cExports) < 0)
     {
-        if (ApplyOrdinals(pexports, cExports) < 0)
-        {
-            fprintf(stderr, "error: could not apply ordinals!\n");
-            return -1;
-        }
+        fprintf(stderr, "error: could not apply ordinals!\n");
+        return -1;
     }
 
     if (pszDefFileName)
