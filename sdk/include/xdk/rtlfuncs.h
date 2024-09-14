@@ -673,6 +673,14 @@ RtlFindNextForwardRunClear(
   _In_ ULONG FromIndex,
   _Out_ PULONG StartingRunIndex);
 
+NTSYSAPI
+ULONG
+NTAPI
+RtlFindNextForwardRunSet(
+  _In_ PRTL_BITMAP BitMapHeader,
+  _In_ ULONG FromIndex,
+  _Out_ PULONG StartingRunIndex);
+
 _Success_(return != -1)
 _Must_inspect_result_
 NTSYSAPI
