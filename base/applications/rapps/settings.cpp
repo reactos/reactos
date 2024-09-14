@@ -208,7 +208,7 @@ ValidateStringSettings(PSETTINGS_INFO pSettingsInfo)
 VOID
 FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
 {
-    ZeroMemory(pSettingsInfo, sizeof(SETTINGS_INFO));
+    ZeroMemory(pSettingsInfo, sizeof(*pSettingsInfo));
 
     pSettingsInfo->bSaveWndPos = TRUE;
     pSettingsInfo->bUpdateAtStart = FALSE;
