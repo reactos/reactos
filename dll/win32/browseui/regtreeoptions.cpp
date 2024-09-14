@@ -167,7 +167,6 @@ static HRESULT GetSetState(HKEY hKey, DWORD &Type, LPBYTE Data, DWORD &Size, BOO
     {
         Size = sizeof(BOOL);
         Type = REG_DWORD;
-        *(BOOL*)Data = FALSE;
         SHBoolSystemParametersInfo(SysParam, Data);
         return S_OK;
     }
@@ -181,6 +180,8 @@ static HRESULT GetSetState(HKEY hKey, DWORD &Type, LPBYTE Data, DWORD &Size, BOO
         if (SUCCEEDED(hr = IUnknown_QueryService(m_pUnkSite, clsid, ..)))
         {
             BOOL *boolptr = (BOOL*)Data;
+            Size = sizeof(BOOL);
+            Type = REG_DWORD;
             hr = Set ? pRTI->SetCheckState(*boolptr) : pRTI->GetCheckState(boolptr);
             pRTI->Release();
         }
