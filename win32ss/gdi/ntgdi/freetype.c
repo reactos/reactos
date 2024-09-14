@@ -34,7 +34,7 @@
 
 #define NDEBUG
 #include <debug.h>
-// DBG_DEFAULT_CHANNEL(GdiFont); // TODO: Re-enable when using TRACE/ERR...
+DBG_DEFAULT_CHANNEL(GdiFont);
 
 typedef struct _FONTLINK
 {
@@ -1713,8 +1713,194 @@ UINT FASTCALL IntGetCharSet(INT nIndex, FT_ULong CodePageRange1)
     return (nIndex < 0) ? nCount : ANSI_CHARSET;
 }
 
-/* pixels to points */
-#define PX2PT(pixels) FT_MulDiv((pixels), 72, 96)
+/* Borrowed and adapted from Wine */
+static BOOL select_charmap(FT_Face ft_face, FT_Encoding encoding)
+{
+    FT_Error ft_err = FT_Err_Invalid_CharMap_Handle;
+    FT_CharMap cmap0, cmap1, cmap2, cmap3, cmap_def;
+    FT_Int i;
+
+    cmap0 = cmap1 = cmap2 = cmap3 = cmap_def = NULL;
+
+    for (i = 0; i < ft_face->num_charmaps; i++)
+    {
+        if (ft_face->charmaps[i]->encoding == encoding)
+        {
+            TRACE("found cmap with platform_id %u, encoding_id %u\n",
+                   ft_face->charmaps[i]->platform_id, ft_face->charmaps[i]->encoding_id);
+
+            switch (ft_face->charmaps[i]->platform_id)
+            {
+                default:
+                    cmap_def = ft_face->charmaps[i];
+                    break;
+                case 0: /* Apple Unicode */
+                    cmap0 = ft_face->charmaps[i];
+                    break;
+                case 1: /* Macintosh */
+                    cmap1 = ft_face->charmaps[i];
+                    break;
+                case 2: /* ISO */
+                    cmap2 = ft_face->charmaps[i];
+                    break;
+                case 3: /* Microsoft */
+                    cmap3 = ft_face->charmaps[i];
+                    break;
+            }
+        }
+#ifdef __REACTOS__
+// Wine bug: for each loop iteration, a FT_Set_Charmap() call is made.
+// ReactOS fix: Instead, loop until we retrieve all the cmap pointers
+// of interest, then do one single FT_Set_Charmap() call using the
+// preferred cmap.
+    }{
+#endif
+
+        if (cmap3) /* prefer Microsoft cmap table */
+            ft_err = FT_Set_Charmap(ft_face, cmap3);
+        else if (cmap1)
+            ft_err = FT_Set_Charmap(ft_face, cmap1);
+        else if (cmap2)
+            ft_err = FT_Set_Charmap(ft_face, cmap2);
+        else if (cmap0)
+            ft_err = FT_Set_Charmap(ft_face, cmap0);
+        else if (cmap_def)
+            ft_err = FT_Set_Charmap(ft_face, cmap_def);
+    }
+
+    return ft_err == FT_Err_Ok;
+}
+
+/* Borrowed from Wine */
+static FT_Encoding pick_charmap( FT_Face face, int charset )
+{
+    static const FT_Encoding regular_order[] = { FT_ENCODING_UNICODE, FT_ENCODING_APPLE_ROMAN, FT_ENCODING_MS_SYMBOL, 0 };
+    static const FT_Encoding symbol_order[]  = { FT_ENCODING_MS_SYMBOL, FT_ENCODING_UNICODE, FT_ENCODING_APPLE_ROMAN, 0 };
+    const FT_Encoding *encs = regular_order;
+
+    if (charset == SYMBOL_CHARSET) encs = symbol_order;
+
+    while (*encs != 0)
+    {
+        if (select_charmap( face, *encs )) break;
+        encs++;
+    }
+
+    if (!face->charmap && face->num_charmaps)
+    {
+        if (!FT_Set_Charmap(face, face->charmaps[0]))
+            return face->charmap->encoding;
+    }
+
+    return *encs;
+}
+
+#if 0
+//
+// NOTE: This was the old charmap selection code in TextIntUpdateSize().
+//
+static
+void
+FindFallbackCharmap(
+    _In_ FT_Face face)
+{
+    FT_CharMap charmap, found = NULL;
+    INT error, n;
+
+    if (face->charmap)
+        return;
+
+    DPRINT1("WARNING: No charmap selected!\n");
+    DPRINT1("This font face has %d charmaps\n", face->num_charmaps);
+__debugbreak();
+
+    /*
+     * Selects a unicode charmap, if any.
+     * Prefers one that supports UCS-4, otherwise use UCS-2.
+     * See also FreeType's src/base/ftobjs.c!find_unicode_charmap().
+     */
+    // error = FT_Select_Charmap(face, FT_ENCODING_UNICODE);
+    for (n = 0; n < face->num_charmaps; n++)
+    {
+        //
+        // Specific 
+        //
+        charmap = face->charmaps[n];
+        if (charmap->encoding == FT_ENCODING_UNICODE)
+        {
+            found = charmap;
+            break;
+        }
+    }
+    if (!found)
+    {
+        for (n = 0; n < face->num_charmaps; n++)
+        {
+            charmap = face->charmaps[n];
+
+            /* Windows Unicode? */
+            if (charmap->platform_id == TT_PLATFORM_MICROSOFT &&
+                charmap->encoding_id == TT_MS_ID_UNICODE_CS)
+            {
+                found = charmap;
+                break;
+            }
+
+            /* Apple Unicode platform id? */
+            if (charmap->platform_id == TT_PLATFORM_APPLE_UNICODE)
+            {
+                found = charmap;
+                break;
+            }
+        }
+    }
+    if (!found)
+    {
+        // error = FT_Select_Charmap(face, FT_ENCODING_MS_SYMBOL);
+        for (n = 0; n < face->num_charmaps; n++)
+        {
+            charmap = face->charmaps[n];
+            if (charmap->encoding == FT_ENCODING_MS_SYMBOL)
+            {
+                found = charmap;
+                break;
+            }
+        }
+    }
+    if (!found)
+    {
+        for (n = 0; n < face->num_charmaps; n++)
+        {
+            charmap = face->charmaps[n];
+            if (charmap->encoding != FT_ENCODING_NONE)
+            {
+                found = charmap;
+                break;
+            }
+        }
+    }
+#if 0
+    if (!found && face->num_charmaps > 0)
+    {
+        found = face->charmaps[0];
+    }
+#endif
+    if (!found)
+    {
+        DPRINT1("WARNING: Could not find desired charmap!\n");
+    }
+    else
+    {
+        DPRINT1("Found charmap encoding: 0x%x\n", found->encoding);
+        error = FT_Set_Charmap(face, found);
+        if (error)
+        {
+            DPRINT1("WARNING: Could not set the charmap!\n");
+        }
+    }
+}
+
+#endif
 
 static INT FASTCALL
 IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
@@ -1819,6 +2005,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     FontGDI->OriginalWeight = FALSE;
     FontGDI->RequestWeight = FW_NORMAL;
 
+    os2_version = 0;
     IntLockFreeType();
     pOS2 = (TT_OS2 *)FT_Get_Sfnt_Table(Face, FT_SFNT_OS2);
     if (pOS2)
@@ -1835,52 +2022,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
             FontGDI->OriginalWeight = WinFNT.weight;
         }
     }
-    IntUnLockFreeType();
 
-    RtlInitAnsiString(&AnsiString, Face->family_name);
-    Status = RtlAnsiStringToUnicodeString(&Entry->FaceName, &AnsiString, TRUE);
-    if (NT_SUCCESS(Status))
-    {
-        if (Face->style_name && Face->style_name[0] &&
-            strcmp(Face->style_name, "Regular") != 0)
-        {
-            RtlInitAnsiString(&AnsiString, Face->style_name);
-            Status = RtlAnsiStringToUnicodeString(&Entry->StyleName, &AnsiString, TRUE);
-            if (!NT_SUCCESS(Status))
-            {
-                RtlFreeUnicodeString(&Entry->FaceName);
-            }
-        }
-        else
-        {
-            RtlInitUnicodeString(&Entry->StyleName, NULL);
-        }
-    }
-    if (!NT_SUCCESS(Status))
-    {
-        if (PrivateEntry)
-        {
-            if (pLoadFont->PrivateEntry == PrivateEntry)
-            {
-                pLoadFont->PrivateEntry = NULL;
-            }
-            else
-            {
-                RemoveEntryList(&PrivateEntry->ListEntry);
-            }
-            ExFreePoolWithTag(PrivateEntry, TAG_FONT);
-        }
-        if (FontGDI->Filename)
-            ExFreePoolWithTag(FontGDI->Filename, GDITAG_PFF);
-        EngFreeMem(FontGDI);
-        SharedFace_Release(SharedFace);
-        ExFreePoolWithTag(Entry, TAG_FONT);
-        return 0;
-    }
-
-    os2_version = 0;
-    IntLockFreeType();
-    pOS2 = (TT_OS2 *)FT_Get_Sfnt_Table(Face, FT_SFNT_OS2);
     if (pOS2)
     {
         os2_version = pOS2->version;
@@ -1926,6 +2068,73 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
             FontGDI->CharSet = WinFNT.charset;
         }
         IntUnLockFreeType();
+    }
+
+    /*
+     * If this is the first time the font face is loaded,
+     * activate a charmap in the font face.
+     *
+     * Note from FreeType documentation:
+     * https://freetype.org/freetype2/docs/reference/ft2-character_mapping.html#ft_charmap
+     *
+     * When a new face is created (either through FT_New_Face or
+     * FT_Open_Face), the library looks for a Unicode charmap within
+     * the list and automatically activates it. If there is no
+     * Unicode charmap, FreeType doesn't set an 'active' charmap.
+     */
+    if (CharSetIndex == -1)
+    {
+        IntLockFreeType();
+        pick_charmap(Face, FontGDI->CharSet);
+        if (!Face->charmap)
+        {
+            DPRINT1("ERROR: Could not find desired charmap!\n");
+__debugbreak();
+            // TODO: Actually fail font creation!
+            // Error = FT_Err_Invalid_CharMap_Handle;
+        }
+        IntUnLockFreeType();
+    }
+
+    RtlInitAnsiString(&AnsiString, Face->family_name);
+    Status = RtlAnsiStringToUnicodeString(&Entry->FaceName, &AnsiString, TRUE);
+    if (NT_SUCCESS(Status))
+    {
+        if (Face->style_name && Face->style_name[0] &&
+            strcmp(Face->style_name, "Regular") != 0)
+        {
+            RtlInitAnsiString(&AnsiString, Face->style_name);
+            Status = RtlAnsiStringToUnicodeString(&Entry->StyleName, &AnsiString, TRUE);
+            if (!NT_SUCCESS(Status))
+            {
+                RtlFreeUnicodeString(&Entry->FaceName);
+            }
+        }
+        else
+        {
+            RtlInitUnicodeString(&Entry->StyleName, NULL);
+        }
+    }
+    if (!NT_SUCCESS(Status))
+    {
+        if (PrivateEntry)
+        {
+            if (pLoadFont->PrivateEntry == PrivateEntry)
+            {
+                pLoadFont->PrivateEntry = NULL;
+            }
+            else
+            {
+                RemoveEntryList(&PrivateEntry->ListEntry);
+            }
+            ExFreePoolWithTag(PrivateEntry, TAG_FONT);
+        }
+        if (FontGDI->Filename)
+            ExFreePoolWithTag(FontGDI->Filename, GDITAG_PFF);
+        EngFreeMem(FontGDI);
+        SharedFace_Release(SharedFace);
+        ExFreePoolWithTag(Entry, TAG_FONT);
+        return 0;
     }
 
     ++FaceCount;
@@ -2031,6 +2240,28 @@ IntGdiLoadFontByIndexFromMemory(PGDI_LOAD_FONT pLoadFont, FT_Long FontIndex)
         IntUnLockFreeType();
         return 0; /* Failure */
     }
+
+
+    /*
+     * In IntGdiLoadFontsFromMemory, when CharSetIndex == -1,
+     * we will always activate a charmap in the font face.
+     *
+     * Note from FreeType documentation:
+     * https://freetype.org/freetype2/docs/reference/ft2-character_mapping.html#ft_charmap
+     *
+     * When a new face is created (either through FT_New_Face or
+     * FT_Open_Face), the library looks for a Unicode charmap within
+     * the list and automatically activates it. If there is no
+     * Unicode charmap, FreeType doesn't set an 'active' charmap.
+     */
+    pick_charmap(Face, DEFAULT_CHARSET);
+    if (!Face->charmap)
+    {
+        DPRINT1("WARNING: Could not find default charmap!\n");
+__debugbreak();
+        // Error = FT_Err_Invalid_CharMap_Handle;
+    }
+
 
     pLoadFont->IsTrueType = FT_IS_SFNT(Face);
     num_faces = Face->num_faces;
@@ -4227,91 +4458,29 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
 
 BOOL
 FASTCALL
-TextIntUpdateSize(PDC dc,
-                  PTEXTOBJ TextObj,
-                  PFONTGDI FontGDI,
-                  BOOL bDoLock)
+TextIntUpdateSize(
+    _In_ PDC dc,
+    _In_ PTEXTOBJ TextObj,
+    _In_ PFONTGDI FontGDI,
+    _In_ BOOL bDoLock)
 {
-    FT_Face face;
-    INT error, n;
-    FT_CharMap charmap, found;
-    LOGFONTW *plf;
+    FT_Face face = FontGDI->SharedFace->Face;
+    PLOGFONTW plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
+    FT_Error error;
+
+    ASSERT(face->charmap);
 
     if (bDoLock)
         IntLockFreeType();
-
-    face = FontGDI->SharedFace->Face;
-    if (face->charmap == NULL)
-    {
-        DPRINT("WARNING: No charmap selected!\n");
-        DPRINT("This font face has %d charmaps\n", face->num_charmaps);
-
-        found = NULL;
-        for (n = 0; n < face->num_charmaps; n++)
-        {
-            charmap = face->charmaps[n];
-            if (charmap->encoding == FT_ENCODING_UNICODE)
-            {
-                found = charmap;
-                break;
-            }
-        }
-        if (!found)
-        {
-            for (n = 0; n < face->num_charmaps; n++)
-            {
-                charmap = face->charmaps[n];
-                if (charmap->platform_id == TT_PLATFORM_APPLE_UNICODE)
-                {
-                    found = charmap;
-                    break;
-                }
-            }
-        }
-        if (!found)
-        {
-            for (n = 0; n < face->num_charmaps; n++)
-            {
-                charmap = face->charmaps[n];
-                if (charmap->encoding == FT_ENCODING_MS_SYMBOL)
-                {
-                    found = charmap;
-                    break;
-                }
-            }
-        }
-        if (!found && face->num_charmaps > 0)
-        {
-            found = face->charmaps[0];
-        }
-        if (!found)
-        {
-            DPRINT1("WARNING: Could not find desired charmap!\n");
-        }
-        else
-        {
-            DPRINT("Found charmap encoding: %i\n", found->encoding);
-            error = FT_Set_Charmap(face, found);
-            if (error)
-            {
-                DPRINT1("WARNING: Could not set the charmap!\n");
-            }
-        }
-    }
-
-    plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
-
     error = IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
-
     if (bDoLock)
         IntUnLockFreeType();
 
-    if (error)
+    if (error != FT_Err_Ok)
     {
         DPRINT1("Error in setting pixel sizes: %d\n", error);
         return FALSE;
     }
-
     return TRUE;
 }
 
