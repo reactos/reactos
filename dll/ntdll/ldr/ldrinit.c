@@ -1263,7 +1263,7 @@ LdrShutdownThread(VOID)
 
 NTSTATUS
 NTAPI
-LdrpInitializeTls(VOID)
+LdrpInitializeTls()
 {
     PLIST_ENTRY NextEntry, ListHead;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
@@ -1272,7 +1272,8 @@ LdrpInitializeTls(VOID)
     ULONG Size;
 
     /* Initialize the TLS List */
-    InitializeListHead(&LdrpTlsList);
+    if (!LdrpImageHasTls)
+      InitializeListHead(&LdrpTlsList);
 
     /* Loop all the modules */
     ListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
@@ -1291,6 +1292,8 @@ LdrpInitializeTls(VOID)
 
         /* Check if we have a directory */
         if (!TlsDirectory) continue;
+        /* Todo: change usage of TLS directory characteristics so it is not treated as an index anymore */
+        if (TlsDirectory->SizeOfZeroFill & 0x2) continue;
 
         /* Check if the image has TLS */
         if (!LdrpImageHasTls) LdrpImageHasTls = TRUE;
@@ -1318,6 +1321,7 @@ LdrpInitializeTls(VOID)
         /* Update the index */
         *(PLONG)TlsData->TlsDirectory.AddressOfIndex = LdrpNumberOfTlsEntries;
         TlsData->TlsDirectory.Characteristics = LdrpNumberOfTlsEntries++;
+        TlsData->TlsDirectory.SizeOfZeroFill |= 0x2;
     }
 
     /* Done setting up TLS, allocate entries */
@@ -1333,9 +1337,13 @@ LdrpAllocateTls(VOID)
     PLDRP_TLS_DATA TlsData;
     SIZE_T TlsDataSize;
     PVOID *TlsVector;
+    PVOID *OldTlsVector;
 
     /* Check if we have any entries */
     if (!LdrpNumberOfTlsEntries)
+        return STATUS_SUCCESS;
+
+    if (LdrpNumberOfTlsEntries == (ULONG)Teb->UserReserved[0])
         return STATUS_SUCCESS;
 
     /* Allocate the vector array */
@@ -1343,6 +1351,9 @@ LdrpAllocateTls(VOID)
                                     0,
                                     LdrpNumberOfTlsEntries * sizeof(PVOID));
     if (!TlsVector) return STATUS_NO_MEMORY;
+    /* Grab old TLS vector to retrieve existing values */
+    /* Todo: create TLS vector list to deallocate when thread exits */
+    OldTlsVector = Teb->ThreadLocalStoragePointer;
     Teb->ThreadLocalStoragePointer = TlsVector;
 
     /* Loop the TLS Array */
@@ -1357,32 +1368,49 @@ LdrpAllocateTls(VOID)
         /* Allocate this vector */
         TlsDataSize = TlsData->TlsDirectory.EndAddressOfRawData -
                       TlsData->TlsDirectory.StartAddressOfRawData;
-        TlsVector[TlsData->TlsDirectory.Characteristics] = RtlAllocateHeap(RtlGetProcessHeap(),
-                                                                           0,
-                                                                           TlsDataSize);
-        if (!TlsVector[TlsData->TlsDirectory.Characteristics])
+        if (!OldTlsVector || ((TlsData->TlsDirectory.Characteristics + 1) > (ULONG)Teb->UserReserved[0]))
         {
-            /* Out of memory */
-            return STATUS_NO_MEMORY;
-        }
+            TlsVector[TlsData->TlsDirectory.Characteristics] = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                                               0,
+                                                                               TlsDataSize);
+            if (!TlsVector[TlsData->TlsDirectory.Characteristics])
+            {
+                /* Out of memory */
+                return STATUS_NO_MEMORY;
+            }
 
-        /* Show debug message */
-        if (ShowSnaps)
+            /* Show debug message */
+            if (ShowSnaps)
+            {
+                DPRINT1("LDR: TlsVector %p Index %lu = %p copied from %x to %p\n",
+                        TlsVector,
+                        TlsData->TlsDirectory.Characteristics,
+                        &TlsVector[TlsData->TlsDirectory.Characteristics],
+                        TlsData->TlsDirectory.StartAddressOfRawData,
+                        TlsVector[TlsData->TlsDirectory.Characteristics]);
+            }
+
+            /* Copy the data */
+            RtlCopyMemory(TlsVector[TlsData->TlsDirectory.Characteristics],
+                          (PVOID)TlsData->TlsDirectory.StartAddressOfRawData,
+                          TlsDataSize);
+        }
+        else
         {
-            DPRINT1("LDR: TlsVector %p Index %lu = %p copied from %x to %p\n",
-                    TlsVector,
-                    TlsData->TlsDirectory.Characteristics,
-                    &TlsVector[TlsData->TlsDirectory.Characteristics],
-                    TlsData->TlsDirectory.StartAddressOfRawData,
-                    TlsVector[TlsData->TlsDirectory.Characteristics]);
+            TlsVector[TlsData->TlsDirectory.Characteristics] = OldTlsVector[TlsData->TlsDirectory.Characteristics];
+            /* Show debug message */
+            if (ShowSnaps)
+            {
+                DPRINT1("LDR: TlsVector %p Index %lu = %p recycled from %x to %p\n",
+                        TlsVector,
+                        TlsData->TlsDirectory.Characteristics,
+                        &OldTlsVector[TlsData->TlsDirectory.Characteristics],
+                        OldTlsVector[TlsData->TlsDirectory.Characteristics],
+                        TlsVector[TlsData->TlsDirectory.Characteristics]);
+            }
         }
-
-        /* Copy the data */
-        RtlCopyMemory(TlsVector[TlsData->TlsDirectory.Characteristics],
-                      (PVOID)TlsData->TlsDirectory.StartAddressOfRawData,
-                      TlsDataSize);
     }
-
+    Teb->UserReserved[0] = LdrpNumberOfTlsEntries;
     /* Done */
     return STATUS_SUCCESS;
 }
