@@ -584,7 +584,7 @@ SharedFace_Create(FT_Face Face, PSHARED_MEM Memory)
         SharedFaceCache_Init(&Ptr->UserLanguage);
 
         SharedMem_AddRef(Memory);
-        DPRINT("Creating SharedFace for %s\n", Face->family_name ? Face->family_name : "<NULL>");
+        DPRINT1("Creating SharedFace for %s\n", Face->family_name ? Face->family_name : "<NULL>");
     }
     return Ptr;
 }
@@ -600,7 +600,7 @@ SharedMem_Create(PBYTE Buffer, ULONG BufferSize, BOOL IsMapping)
         Ptr->BufferSize = BufferSize;
         Ptr->RefCount = 1;
         Ptr->IsMapping = IsMapping;
-        DPRINT("Creating SharedMem for %p (%i, %p)\n", Buffer, IsMapping, Ptr);
+        DPRINT1("Creating SharedMem for %p (%i, %p)\n", Buffer, IsMapping, Ptr);
     }
     return Ptr;
 }
@@ -1457,7 +1457,7 @@ FontLink_Create(
         RtlStringCchCopyW(lf.lfFaceName, _countof(lf.lfFaceName), pch0);
 
     SubstituteFontRecurse(&lf);
-    DPRINT("lfFaceName: %S\n", lf.lfFaceName);
+    DPRINT1("lfFaceName: %S\n", lf.lfFaceName);
 
     if (RtlEqualMemory(plfBase, &lf, sizeof(lf)) || FontLink_Chain_FindLink(pChain, &lf))
         return NULL; // Already exists
@@ -1530,7 +1530,7 @@ FontLink_Chain_Populate(
     pszLink = pChain->pszzFontLink;
     while (*pszLink)
     {
-        DPRINT("pszLink: '%S'\n", pszLink);
+        DPRINT1("pszLink: '%S'\n", pszLink);
         pLink = FontLink_Create(pChain, &lfBase, pszLink);
         if (pLink)
             InsertTailList(&pChain->FontLinkList, &pLink->ListEntry);
@@ -1543,7 +1543,7 @@ FontLink_Chain_Populate(
         RtlStringCchCopyW(szEntry, _countof(szEntry), s_szDefFontLinkFileName);
         RtlStringCchCatW(szEntry, _countof(szEntry), L",");
         RtlStringCchCatW(szEntry, _countof(szEntry), s_szDefFontLinkFontName);
-        DPRINT("szEntry: '%S'\n", szEntry);
+        DPRINT1("szEntry: '%S'\n", szEntry);
         pLink = FontLink_Create(pChain, &lfBase, szEntry);
         if (pLink)
             InsertTailList(&pChain->FontLinkList, &pLink->ListEntry);
@@ -2138,11 +2138,11 @@ __debugbreak();
     }
 
     ++FaceCount;
-    DPRINT("Font loaded: %s (%s)\n",
+    DPRINT1("Font loaded: %s (%s)\n",
            Face->family_name ? Face->family_name : "<NULL>",
            Face->style_name ? Face->style_name : "<NULL>");
-    DPRINT("Num glyphs: %d\n", Face->num_glyphs);
-    DPRINT("CharSet: %d\n", FontGDI->CharSet);
+    DPRINT1("Num glyphs: %d\n", Face->num_glyphs);
+    DPRINT1("CharSet: %d\n", FontGDI->CharSet);
 
     /* Add this font resource to the font table */
     Entry->Font = FontGDI;
