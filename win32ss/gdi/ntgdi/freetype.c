@@ -3472,11 +3472,11 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
     RtlZeroMemory(Info, sizeof(FONTFAMILYINFO));
     ASSERT_FREETYPE_LOCK_HELD();
     Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL, TRUE);
+    if (!Size)
+        return;
     Otm = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
     if (!Otm)
-    {
         return;
-    }
     ASSERT_FREETYPE_LOCK_HELD();
     Size = IntGetOutlineTextMetrics(FontGDI, Size, Otm, TRUE);
     if (!Size)
