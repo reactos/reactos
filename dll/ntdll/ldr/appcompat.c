@@ -138,6 +138,18 @@ LdrpApplyDllExportVersioning(
         return;
     }
 
+    /* Count the number of valid (public) exports */
+    ULONG NumberOfValidExports = 0;
+    for (ULONG i = 0; i < RosCompatDescriptor->NumberOfOrdinals; i++)
+    {
+        if (RosCompatDescriptor->ExportMasks[i] & ExportVersionMask)
+        {
+            NumberOfValidExports++;
+        }
+    }
+
+    *RosCompatDescriptor->NumberOfValidExports = NumberOfValidExports;
+
     /* Save the descriptor */
     LdrEntry->PatchInformation = RosCompatDescriptor;
 

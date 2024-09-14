@@ -45,4 +45,5 @@ typedef struct _ROSCOMPAT_DESCRIPTOR
     ROSCOMPAT_VERMASK* ExportMasks; // Array with size NumberOfExportNames
     unsigned long NumberOfOrdinals;
     unsigned long BaseOrdinal;
+    unsigned long *NumberOfValidExports;
 } ROSCOMPAT_DESCRIPTOR, * PROSCOMPAT_DESCRIPTOR;

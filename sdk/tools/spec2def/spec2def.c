@@ -1634,6 +1634,8 @@ Output_RosCompatDescriptor(FILE *file, EXPORT *pexports, unsigned int cExports)
             "    0x0 // dummy \n"
             "};\n"
             "\n"
+            "static unsigned long NumberOfValidExports = 0;\n"
+            "\n"
             "#if defined(_MSC_VER)\n"
             "#pragma section(\".expvers\")\n"
             "__declspec(allocate(\".expvers\"))\n"
@@ -1646,7 +1648,8 @@ Output_RosCompatDescriptor(FILE *file, EXPORT *pexports, unsigned int cExports)
             "{\n"
             "    __roscompat_export_masks__,\n"
             "    (sizeof(__roscompat_export_masks__) / sizeof(__roscompat_export_masks__[0])) - 1,\n"
-            "    %u\n"
+            "    %u,\n"
+            "    &NumberOfValidExports\n"
             "};\n",
             baseOrdinal);
 }

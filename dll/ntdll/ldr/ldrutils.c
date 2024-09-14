@@ -2535,6 +2535,17 @@ LdrpLoadDll(IN BOOLEAN Redirected,
                 if (LdrEntry->LoadCount != 0xFFFF) LdrEntry->LoadCount++;
                 LdrpUpdateLoadCount2(LdrEntry, LDRP_UPDATE_REFCOUNT);
 
+                /* Check for DLL with 0 valid exports */
+                if (NT_SUCCESS(Status) && LdrEntry->PatchInformation != NULL)
+                {
+                    PROSCOMPAT_DESCRIPTOR RosCompatDescriptor = LdrEntry->PatchInformation;
+                    if (*RosCompatDescriptor->NumberOfValidExports == 0)
+                    {
+                        DPRINT1("appcompat: %wZ has 0 valid exports\n", &RawDllName);
+                        Status = STATUS_DLL_NOT_FOUND;
+                    }
+                }
+
                 /* Check if we failed */
                 if (!NT_SUCCESS(Status))
                 {
@@ -2604,6 +2615,17 @@ LdrpLoadDll(IN BOOLEAN Redirected,
         }
         else
         {
+            /* Check for DLL with 0 valid exports */
+            if (LdrEntry->PatchInformation != NULL)
+            {
+                PROSCOMPAT_DESCRIPTOR RosCompatDescriptor = LdrEntry->PatchInformation;
+                if (*RosCompatDescriptor->NumberOfValidExports == 0)
+                {
+                    Status = STATUS_DLL_NOT_FOUND;
+                    _SEH2_LEAVE;
+                }
+            }
+
             /* We were already loaded. Are we a DLL? */
             if ((LdrEntry->Flags & LDRP_IMAGE_DLL) && (LdrEntry->LoadCount != 0xFFFF))
             {
