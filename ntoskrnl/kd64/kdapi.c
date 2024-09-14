@@ -2222,6 +2222,9 @@ KdSystemDebugControl(
     _Out_opt_ PULONG ReturnLength,
     _In_ KPROCESSOR_MODE PreviousMode)
 {
+    NTSTATUS Status;
+    ULONG Length = 0;
+
     /* Handle some internal commands */
     switch ((ULONG)Command)
     {
@@ -2285,9 +2288,35 @@ KdSystemDebugControl(
             break;
     }
 
-    /* Local kernel debugging is not yet supported */
-    DbgPrint("KdSystemDebugControl is unimplemented!\n");
-    return STATUS_NOT_IMPLEMENTED;
+    switch (Command)
+    {
+        case SysDbgQueryVersion:
+        case SysDbgReadVirtual:
+        case SysDbgWriteVirtual:
+        case SysDbgReadPhysical:
+        case SysDbgWritePhysical:
+        case SysDbgReadControlSpace:
+        case SysDbgWriteControlSpace:
+        case SysDbgReadIoSpace:
+        case SysDbgWriteIoSpace:
+        case SysDbgReadMsr:
+        case SysDbgWriteMsr:
+        case SysDbgReadBusData:
+        case SysDbgWriteBusData:
+        case SysDbgCheckLowMemory:
+            UNIMPLEMENTED;
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        default:
+            Status = STATUS_INVALID_INFO_CLASS;
+            break;
+    }
+
+    if (ReturnLength)
+        *ReturnLength = Length;
+
+    return Status;
 }
 
 /*
