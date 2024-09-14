@@ -218,6 +218,10 @@ NtSystemDebugControl(
     ULONG Length = 0;
     NTSTATUS Status;
 
+    /* Debugger controlling requires the debug privilege */
+    if (!SeSinglePrivilegeCheck(SeDebugPrivilege, PreviousMode))
+        return STATUS_ACCESS_DENIED;
+
     _SEH2_TRY
     {
         if (PreviousMode != KernelMode)
