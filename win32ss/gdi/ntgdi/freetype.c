@@ -4510,6 +4510,7 @@ ftGdiGetGlyphOutline(
 
     IntLockFreeType();
     TextIntUpdateSize(dc, TextObj, FontGDI, FALSE);
+    // TODO: Check returned success
     IntMatrixFromMx(&mat, DC_pmxWorldToDevice(dc));
     FT_Set_Transform(ft_face, &mat, NULL);
 
@@ -5001,6 +5002,7 @@ TextIntGetTextExtentPoint(
     // NOTE: GetTextExtentPoint32 simply ignores lfEscapement and XFORM.
     IntLockFreeType();
     TextIntUpdateSize(dc, TextObj, FontGDI, FALSE);
+    // TODO: Check returned success
     Cache.Hashed.matTransform = identityMat;
     FT_Set_Transform(Cache.Hashed.Face, NULL, NULL);
 
@@ -5278,14 +5280,10 @@ ftGdiGetTextMetricsW(
     PDC dc;
     PDC_ATTR pdcattr;
     PTEXTOBJ TextObj;
-    PFONTGDI FontGDI;
-    FT_Face Face;
     TT_OS2 *pOS2;
     TT_HoriHeader *pHori;
     FT_WinFNT_HeaderRec Win;
-    ULONG Error;
     NTSTATUS Status = STATUS_SUCCESS;
-    LOGFONTW *plf;
 
     if (!ptmwi)
     {
@@ -5303,28 +5301,22 @@ ftGdiGetTextMetricsW(
     TextObj = RealizeFontInit(pdcattr->hlfntNew);
     if (NULL != TextObj)
     {
-        plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
-        FontGDI = ObjToGDI(TextObj->Font, FONT);
-
-        Face = FontGDI->SharedFace->Face;
+        PFONTGDI FontGDI = ObjToGDI(TextObj->Font, FONT);
+        FT_Face Face = FontGDI->SharedFace->Face;
 
         // NOTE: GetTextMetrics simply ignores lfEscapement and XFORM.
         IntLockFreeType();
-        Error = IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
-        FT_Set_Transform(Face, NULL, NULL);
-
-        IntUnLockFreeType();
-
-        if (0 != Error)
+        if (!TextIntUpdateSize(dc, TextObj, FontGDI, FALSE))
         {
-            DPRINT1("Error in setting pixel sizes: %u\n", Error);
             Status = STATUS_UNSUCCESSFUL;
         }
         else
         {
+            FT_Error Error;
+
             Status = STATUS_SUCCESS;
 
-            IntLockFreeType();
+            FT_Set_Transform(Face, NULL, NULL);
 
             Error = FT_Get_WinFNT_Header(Face, &Win);
             pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
@@ -5335,22 +5327,18 @@ ftGdiGetTextMetricsW(
                 DPRINT1("Can't find OS/2 table - not TT font?\n");
                 Status = STATUS_INTERNAL_ERROR;
             }
-
             if (!pHori && Error)
             {
                 DPRINT1("Can't find HHEA table - not TT font?\n");
                 Status = STATUS_INTERNAL_ERROR;
             }
-
             if (NT_SUCCESS(Status))
             {
                 FillTM(&ptmwi->TextMetric, FontGDI, pOS2, pHori, (Error ? NULL : &Win));
-
                 /* FIXME: Fill Diff member */
             }
-
-            IntUnLockFreeType();
         }
+        IntUnLockFreeType();
         TEXTOBJ_UnlockText(TextObj);
     }
     else
@@ -7511,7 +7499,6 @@ GreGetCharABCWidthsW(
     FT_Face face;
     UINT i, glyph_index;
     HFONT hFont = NULL;
-    PLOGFONTW plf;
 
     dc = DC_LockDc(hDC);
     if (dc == NULL)
@@ -7533,20 +7520,17 @@ GreGetCharABCWidthsW(
     }
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
-
     face = FontGDI->SharedFace->Face;
-    if (!IntSelectFaceCharmap(face))
-    {
-        TEXTOBJ_UnlockText(TextObj);
-        EngSetLastError(ERROR_INVALID_HANDLE);
-        return FALSE;
-    }
-
-    plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
 
     // NOTE: GetCharABCWidths simply ignores lfEscapement and XFORM.
     IntLockFreeType();
-    IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
+    if (!TextIntUpdateSize(dc, TextObj, FontGDI, FALSE))
+    {
+        IntUnLockFreeType();
+        TEXTOBJ_UnlockText(TextObj);
+        EngSetLastError(ERROR_GEN_FAILURE);
+        return FALSE;
+    }
     FT_Set_Transform(face, NULL, NULL);
 
     if (!fl)
@@ -7615,8 +7599,7 @@ GreGetCharWidthW(
     PFONTGDI FontGDI;
     FT_Face face;
     UINT i, glyph_index;
-    HFONT hFont = 0;
-    LOGFONTW *plf;
+    HFONT hFont = NULL;
     PINT SafeBuffI;
     PFLOAT SafeBuffF;
 
@@ -7639,20 +7622,17 @@ GreGetCharWidthW(
     }
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
-
     face = FontGDI->SharedFace->Face;
-    if (!IntSelectFaceCharmap(face))
-    {
-        TEXTOBJ_UnlockText(TextObj);
-        EngSetLastError(ERROR_INVALID_HANDLE);
-        return FALSE;
-    }
-
-    plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
 
     // NOTE: GetCharWidth simply ignores lfEscapement and XFORM.
     IntLockFreeType();
-    IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
+    if (!TextIntUpdateSize(dc, TextObj, FontGDI, FALSE))
+    {
+        IntUnLockFreeType();
+        TEXTOBJ_UnlockText(TextObj);
+        EngSetLastError(ERROR_GEN_FAILURE);
+        return FALSE;
+    }
     FT_Set_Transform(face, NULL, NULL);
 
     if (!fl)
