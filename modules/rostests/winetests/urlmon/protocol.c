@@ -4255,6 +4255,12 @@ START_TEST(protocol)
 {
     HMODULE hurlmon;
 
+    if (!winetest_interactive)
+    {
+        win_skip("Skipping urlmon:protocol due to hang ROSTESTS-358\n"); // FIXME: It crashes even on WHS testbot https://reactos.org/testman/compare.php?ids=97640
+        return;
+    }
+
     hurlmon = GetModuleHandleA("urlmon.dll");
     pCoInternetGetSession = (void*) GetProcAddress(hurlmon, "CoInternetGetSession");
     pReleaseBindInfo = (void*) GetProcAddress(hurlmon, "ReleaseBindInfo");

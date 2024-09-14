@@ -8556,6 +8556,12 @@ static void test_ServiceProvider(void)
 
 START_TEST(htmldoc)
 {
+    if (!winetest_interactive)
+    {
+        win_skip("Skipping mshtml:htmldoc due to hang ROSTESTS-358\n");
+        return;
+    }
+
     CoInitialize(NULL);
 
     if(!check_ie()) {

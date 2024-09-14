@@ -3924,6 +3924,12 @@ START_TEST(url)
 {
     HMODULE hurlmon;
 
+    if (!winetest_interactive)
+    {
+        win_skip("Skipping urlmon:url due to hang ROSTESTS-358\n");
+        return;
+    }
+
     hurlmon = GetModuleHandleA("urlmon.dll");
     pCreateAsyncBindCtxEx = (void*) GetProcAddress(hurlmon, "CreateAsyncBindCtxEx");
 
