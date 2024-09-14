@@ -1773,8 +1773,6 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
 // #### Handling of the menus ####
 
-extern "C" DWORD WINAPI SHMenuIndexFromID(HMENU hMenu, UINT uID);
-
 HRESULT CDefView::FillFileMenu()
 {
     HMENU hFileMenu = GetSubmenuByID(m_hMenu, FCIDM_MENU_FILE);
