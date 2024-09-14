@@ -2580,6 +2580,20 @@ LdrpLoadDll(IN BOOLEAN Redirected,
                 }
 
                 /* Run the init routine */
+                Status = LdrpInitializeTls();
+                if (!NT_SUCCESS(Status))
+                {
+                    /* Failed, unload the DLL */
+                    if (ShowSnaps)
+                    {
+                        DbgPrint("LDR: Unloading %wZ because dynamic TLS allocation "
+                                 "failed; "
+                                 "status = 0x%08lx\n",
+                                 DllName,
+                                 Status);
+                    }
+                    LdrUnloadDll(LdrEntry->DllBase);
+                }
                 Status = LdrpRunInitializeRoutines(NULL);
                 if (!NT_SUCCESS(Status))
                 {
