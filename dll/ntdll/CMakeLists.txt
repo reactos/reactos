@@ -24,14 +24,18 @@ add_library(rtl_um OBJECT
 target_link_libraries(rtl_um apisets ${PSEH_LIB})
 add_dependencies(rtl_um psdk)
 
+# On NT6+ this is used by advapi32
+add_library(etwtrace etw/trace.c)
+target_link_libraries(etwtrace ${PSEH_LIB})
+add_dependencies(etwtrace psdk)
+
 list(APPEND SOURCE
     dbg/dbgui.c
     ldr/ldrapi.c
     ldr/ldrinit.c
     ldr/ldrpe.c
     ldr/ldrutils.c
-    ldr/verifier.c
-    etw/trace.c)
+    ldr/verifier.c)
 
 if(ARCH STREQUAL "i386")
     list(APPEND ASM_SOURCE dispatch/i386/dispatch.S)
@@ -61,7 +65,7 @@ set_module_type(ntdll win32dll ENTRYPOINT 0)
 set_subsystem(ntdll console)
 ################# END  HACK #################
 
-target_link_libraries(ntdll csrlib rtl rtl_um rtl_vista ntdllsys libcntpr uuid ${PSEH_LIB})
+target_link_libraries(ntdll etwtrace csrlib rtl rtl_um rtl_vista ntdllsys libcntpr uuid ${PSEH_LIB})
 if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
     target_link_libraries(ntdll cryptlib)
 endif()
