@@ -14,8 +14,20 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
 static HRESULT SHELL32_GetCLSIDForDirectory(LPCWSTR pwszDir, LPCWSTR KeyName, CLSID* pclsidFolder);
 
+static LPCWSTR GetItemFileName(PCUITEMID_CHILD pidl, LPWSTR Buf, UINT cchMax)
+{
+    FileStructW* pDataW = _ILGetFileStructW(pidl);
+    if (pDataW)
+        return pDataW->wszName;
+    LPPIDLDATA pdata = _ILGetDataPointer(pidl);
+    if ((pdata->type & PT_VALUEW) == PT_VALUEW)
+        return (LPWSTR)pdata->u.file.szNames;
+    if (_ILSimpleGetTextW(pidl, Buf, cchMax))
+        return Buf;
+    return NULL;
+}
 
-HKEY OpenKeyFromFileType(LPWSTR pExtension, LPCWSTR KeyName)
+static HKEY OpenKeyFromFileType(LPCWSTR pExtension, LPCWSTR KeyName)
 {
     HKEY hkey;
 
@@ -45,7 +57,7 @@ HKEY OpenKeyFromFileType(LPWSTR pExtension, LPCWSTR KeyName)
     return hkey;
 }
 
-LPWSTR ExtensionFromPidl(PCUIDLIST_RELATIVE pidl)
+static LPCWSTR ExtensionFromPidl(PCUIDLIST_RELATIVE pidl, LPWSTR Buf, UINT cchMax)
 {
     if (!_ILIsValue(pidl))
     {
@@ -53,23 +65,17 @@ LPWSTR ExtensionFromPidl(PCUIDLIST_RELATIVE pidl)
         return NULL;
     }
 
-    FileStructW* pDataW = _ILGetFileStructW(pidl);
-    if (!pDataW)
-    {
-        ERR("Invalid pidl!\n");
-        return NULL;
-    }
-
-    LPWSTR pExtension = PathFindExtensionW(pDataW->wszName);
+    LPCWSTR name = GetItemFileName(pidl, Buf, cchMax);
+    LPCWSTR pExtension = name ? PathFindExtensionW(name) : NULL;
     if (!pExtension || *pExtension == UNICODE_NULL)
     {
-        WARN("No extension for %S!\n", pDataW->wszName);
+        WARN("No extension for %S!\n", name);
         return NULL;
     }
     return pExtension;
 }
 
-HRESULT GetCLSIDForFileTypeFromExtension(LPWSTR pExtension, LPCWSTR KeyName, CLSID* pclsid)
+static HRESULT GetCLSIDForFileTypeFromExtension(LPCWSTR pExtension, LPCWSTR KeyName, CLSID* pclsid)
 {
     HKEY hkeyProgId = OpenKeyFromFileType(pExtension, KeyName);
     if (!hkeyProgId)
@@ -126,7 +132,8 @@ HRESULT GetCLSIDForFileTypeFromExtension(LPWSTR pExtension, LPCWSTR KeyName, CLS
 
 HRESULT GetCLSIDForFileType(PCUIDLIST_RELATIVE pidl, LPCWSTR KeyName, CLSID* pclsid)
 {
-    LPWSTR pExtension = ExtensionFromPidl(pidl);
+    WCHAR buf[256];
+    LPCWSTR pExtension = ExtensionFromPidl(pidl, buf, _countof(buf));
     if (!pExtension)
         return S_FALSE;
 
@@ -289,7 +296,8 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
     }
     else
     {
-        LPWSTR pExtension = ExtensionFromPidl(pidl);
+        WCHAR extbuf[256];
+        LPCWSTR pExtension = ExtensionFromPidl(pidl, extbuf, _countof(extbuf));
         HKEY hkey = pExtension ? OpenKeyFromFileType(pExtension, L"DefaultIcon") : NULL;
         if (!hkey)
             WARN("Could not open DefaultIcon key!\n");
