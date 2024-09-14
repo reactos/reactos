@@ -4521,6 +4521,7 @@ ftGdiGetGlyphOutline(
 
     IntLockFreeType();
     TextIntUpdateSize(dc, TextObj, FontGDI, FALSE);
+    // TODO: Check returned success
     IntMatrixFromMx(&mat, DC_pmxWorldToDevice(dc));
     FT_Set_Transform(ft_face, &mat, NULL);
 
@@ -5011,6 +5012,7 @@ TextIntGetTextExtentPoint(PDC dc,
     // NOTE: GetTextExtentPoint32 simply ignores lfEscapement and XFORM.
     IntLockFreeType();
     TextIntUpdateSize(dc, TextObj, FontGDI, FALSE);
+    // TODO: Check returned success
     Cache.Hashed.matTransform = identityMat;
     FT_Set_Transform(Cache.Hashed.Face, NULL, NULL);
 
@@ -5289,14 +5291,10 @@ ftGdiGetTextMetricsW(
     PDC dc;
     PDC_ATTR pdcattr;
     PTEXTOBJ TextObj;
-    PFONTGDI FontGDI;
-    FT_Face Face;
     TT_OS2 *pOS2;
     TT_HoriHeader *pHori;
     FT_WinFNT_HeaderRec Win;
-    ULONG Error;
     NTSTATUS Status = STATUS_SUCCESS;
-    LOGFONTW *plf;
 
     if (!ptmwi)
     {
@@ -5314,28 +5312,22 @@ ftGdiGetTextMetricsW(
     TextObj = RealizeFontInit(pdcattr->hlfntNew);
     if (NULL != TextObj)
     {
-        plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
-        FontGDI = ObjToGDI(TextObj->Font, FONT);
-
-        Face = FontGDI->SharedFace->Face;
+        PFONTGDI FontGDI = ObjToGDI(TextObj->Font, FONT);
+        FT_Face Face = FontGDI->SharedFace->Face;
 
         // NOTE: GetTextMetrics simply ignores lfEscapement and XFORM.
         IntLockFreeType();
-        Error = IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
-        FT_Set_Transform(Face, NULL, NULL);
-
-        IntUnLockFreeType();
-
-        if (0 != Error)
+        if (!TextIntUpdateSize(dc, TextObj, FontGDI, FALSE))
         {
-            DPRINT1("Error in setting pixel sizes: %u\n", Error);
             Status = STATUS_UNSUCCESSFUL;
         }
         else
         {
+            FT_Error Error;
+
             Status = STATUS_SUCCESS;
 
-            IntLockFreeType();
+            FT_Set_Transform(Face, NULL, NULL);
 
             Error = FT_Get_WinFNT_Header(Face, &Win);
             pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
@@ -5346,22 +5338,18 @@ ftGdiGetTextMetricsW(
                 DPRINT1("Can't find OS/2 table - not TT font?\n");
                 Status = STATUS_INTERNAL_ERROR;
             }
-
             if (!pHori && Error)
             {
                 DPRINT1("Can't find HHEA table - not TT font?\n");
                 Status = STATUS_INTERNAL_ERROR;
             }
-
             if (NT_SUCCESS(Status))
             {
                 FillTM(&ptmwi->TextMetric, FontGDI, pOS2, pHori, (Error ? NULL : &Win));
-
                 /* FIXME: Fill Diff member */
             }
-
-            IntUnLockFreeType();
         }
+        IntUnLockFreeType();
         TEXTOBJ_UnlockText(TextObj);
     }
     else
@@ -7503,12 +7491,10 @@ NtGdiGetCharABCWidthsW(
     PTEXTOBJ TextObj;
     PFONTGDI FontGDI;
     FT_Face face;
-    FT_CharMap charmap, found = NULL;
     UINT i, glyph_index, BufferSize;
-    HFONT hFont = 0;
+    HFONT hFont = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
     PWCHAR Safepwch = NULL;
-    LOGFONTW *plf;
 
     if (!Buffer)
     {
@@ -7520,8 +7506,7 @@ NtGdiGetCharABCWidthsW(
     {
         UINT pwchSize = Count * sizeof(WCHAR);
         Safepwch = ExAllocatePoolWithTag(PagedPool, pwchSize, GDITAG_TEXT);
-
-        if(!Safepwch)
+        if (!Safepwch)
         {
             EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return FALSE;
@@ -7541,8 +7526,8 @@ NtGdiGetCharABCWidthsW(
 
     if (!NT_SUCCESS(Status))
     {
-        if(Safepwch)
-            ExFreePoolWithTag(Safepwch , GDITAG_TEXT);
+        if (Safepwch)
+            ExFreePoolWithTag(Safepwch, GDITAG_TEXT);
 
         SetLastNtError(Status);
         return FALSE;
@@ -7553,9 +7538,8 @@ NtGdiGetCharABCWidthsW(
     if (!fl) SafeBuffF = (LPABCFLOAT) SafeBuff;
     if (SafeBuff == NULL)
     {
-
-        if(Safepwch)
-            ExFreePoolWithTag(Safepwch , GDITAG_TEXT);
+        if (Safepwch)
+            ExFreePoolWithTag(Safepwch, GDITAG_TEXT);
 
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
@@ -7566,8 +7550,8 @@ NtGdiGetCharABCWidthsW(
     {
         ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
 
-        if(Safepwch)
-            ExFreePoolWithTag(Safepwch , GDITAG_TEXT);
+        if (Safepwch)
+            ExFreePoolWithTag(Safepwch, GDITAG_TEXT);
 
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
@@ -7582,50 +7566,31 @@ NtGdiGetCharABCWidthsW(
     {
         ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
 
-        if(Safepwch)
-            ExFreePoolWithTag(Safepwch , GDITAG_TEXT);
+        if (Safepwch)
+            ExFreePoolWithTag(Safepwch, GDITAG_TEXT);
 
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
-
     face = FontGDI->SharedFace->Face;
-    if (face->charmap == NULL)
-    {
-        for (i = 0; i < (UINT)face->num_charmaps; i++)
-        {
-            charmap = face->charmaps[i];
-            if (charmap->encoding != 0)
-            {
-                found = charmap;
-                break;
-            }
-        }
-
-        if (!found)
-        {
-            DPRINT1("WARNING: Could not find desired charmap!\n");
-            ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
-
-            if(Safepwch)
-                ExFreePoolWithTag(Safepwch , GDITAG_TEXT);
-
-            EngSetLastError(ERROR_INVALID_HANDLE);
-            return FALSE;
-        }
-
-        IntLockFreeType();
-        FT_Set_Charmap(face, found);
-        IntUnLockFreeType();
-    }
-
-    plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
 
     // NOTE: GetCharABCWidths simply ignores lfEscapement and XFORM.
     IntLockFreeType();
-    IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
+    if (!TextIntUpdateSize(dc, TextObj, FontGDI, FALSE))
+    {
+        IntUnLockFreeType();
+        TEXTOBJ_UnlockText(TextObj);
+
+        ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
+
+        if (Safepwch)
+            ExFreePoolWithTag(Safepwch, GDITAG_TEXT);
+
+        EngSetLastError(ERROR_GEN_FAILURE);
+        return FALSE;
+    }
     FT_Set_Transform(face, NULL, NULL);
 
     for (i = FirstChar; i < FirstChar+Count; i++)
@@ -7673,8 +7638,8 @@ NtGdiGetCharABCWidthsW(
 
     ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
 
-    if(Safepwch)
-        ExFreePoolWithTag(Safepwch , GDITAG_TEXT);
+    if (Safepwch)
+        ExFreePoolWithTag(Safepwch, GDITAG_TEXT);
 
     if (!NT_SUCCESS(Status))
     {
@@ -7707,18 +7672,16 @@ NtGdiGetCharWidthW(
     PTEXTOBJ TextObj;
     PFONTGDI FontGDI;
     FT_Face face;
-    FT_CharMap charmap, found = NULL;
     UINT i, glyph_index, BufferSize;
-    HFONT hFont = 0;
+    HFONT hFont = NULL;
     PWCHAR Safepwc = NULL;
-    LOGFONTW *plf;
 
     if (UnSafepwc)
     {
         UINT pwcSize = Count * sizeof(WCHAR);
         Safepwc = ExAllocatePoolWithTag(PagedPool, pwcSize, GDITAG_TEXT);
 
-        if(!Safepwc)
+        if (!Safepwc)
         {
             EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return FALSE;
@@ -7746,7 +7709,7 @@ NtGdiGetCharWidthW(
     if (!fl) SafeBuffF = (PFLOAT) SafeBuff;
     if (SafeBuff == NULL)
     {
-        if(Safepwc)
+        if (Safepwc)
             ExFreePoolWithTag(Safepwc, GDITAG_TEXT);
 
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -7756,7 +7719,7 @@ NtGdiGetCharWidthW(
     dc = DC_LockDc(hDC);
     if (dc == NULL)
     {
-        if(Safepwc)
+        if (Safepwc)
             ExFreePoolWithTag(Safepwc, GDITAG_TEXT);
 
         ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
@@ -7770,7 +7733,7 @@ NtGdiGetCharWidthW(
 
     if (TextObj == NULL)
     {
-        if(Safepwc)
+        if (Safepwc)
             ExFreePoolWithTag(Safepwc, GDITAG_TEXT);
 
         ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
@@ -7779,42 +7742,23 @@ NtGdiGetCharWidthW(
     }
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
-
     face = FontGDI->SharedFace->Face;
-    if (face->charmap == NULL)
-    {
-        for (i = 0; i < (UINT)face->num_charmaps; i++)
-        {
-            charmap = face->charmaps[i];
-            if (charmap->encoding != 0)
-            {
-                found = charmap;
-                break;
-            }
-        }
-
-        if (!found)
-        {
-            DPRINT1("WARNING: Could not find desired charmap!\n");
-
-            if(Safepwc)
-                ExFreePoolWithTag(Safepwc, GDITAG_TEXT);
-
-            ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
-            EngSetLastError(ERROR_INVALID_HANDLE);
-            return FALSE;
-        }
-
-        IntLockFreeType();
-        FT_Set_Charmap(face, found);
-        IntUnLockFreeType();
-    }
-
-    plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
 
     // NOTE: GetCharWidth simply ignores lfEscapement and XFORM.
     IntLockFreeType();
-    IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
+    if (!TextIntUpdateSize(dc, TextObj, FontGDI, FALSE))
+    {
+        IntUnLockFreeType();
+        TEXTOBJ_UnlockText(TextObj);
+
+        ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
+
+        if (Safepwc)
+            ExFreePoolWithTag(Safepwc, GDITAG_TEXT);
+
+        EngSetLastError(ERROR_GEN_FAILURE);
+        return FALSE;
+    }
     FT_Set_Transform(face, NULL, NULL);
 
     for (i = FirstChar; i < FirstChar+Count; i++)
@@ -7837,10 +7781,11 @@ NtGdiGetCharWidthW(
     TEXTOBJ_UnlockText(TextObj);
     MmCopyToCaller(Buffer, SafeBuff, BufferSize);
 
-    if(Safepwc)
+    ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
+
+    if (Safepwc)
         ExFreePoolWithTag(Safepwc, GDITAG_TEXT);
 
-    ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
     return TRUE;
 }
 
