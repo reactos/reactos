@@ -4,17 +4,17 @@ LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Asennus"
+CAPTION "ReactOS-asennin"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Tervetuloa ReactOS-asentimeen", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "Et voi asentaa ReactOS:ä suoraan tältä CD-levyltä! Käynnistä tietokoneesi tältä CD levyltä asentaaksesi ReactOS:ä.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Click Finish to exit the Setup.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Et voi asentaa ReactOS:ä suoraan tältä CD-levyltä! Käynnistä tietokoneesi tältä CD-levyltä asentaaksesi ReactOS:ä.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Klikkaa Valmis poistuaksesi asentimesta.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "ReactOS-asennin"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "Asenna ReactOS", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
@@ -26,18 +26,18 @@ END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "ReactOS-asennin"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT       "ReactOS-asennin voi päivittää alhaalla olevia asennuksia, tai jos asennus on vahingoittunut, niin asennin voi yrittää korjata sen.", IDC_STATIC, 6, 6, 300, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
     PUSHBUTTON  "&Älä päivitä", IDC_SKIPUPGRADE, 230, 128, 80, 14
-    LTEXT       "Paina Seuraava päivittääksesi OS-asennuksen tai "Älä päivitä" jatkaaksesi ilman päivitystä.", IDC_STATIC, 7, 124, 222, 16
+    LTEXT       "Paina Seuraava päivittääksesi OS-asennuksen tai ""Älä päivitä"" jatkaaksesi ilman päivitystä.", IDC_STATIC, 7, 124, 222, 16
 END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Asennin"
+CAPTION "ReactOS-asennin"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Tietokone:", IDC_STATIC, 20, 15, 80, 10
@@ -51,13 +51,13 @@ END
 
 IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Asennin"
+CAPTION "ReactOS-asennin"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
     PUSHBUTTON "&Initialize", IDC_INITDISK, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
     PUSHBUTTON "&Luo", IDC_PARTCREATE, 7, 122, 50, 14
-    PUSHBUTTON "&Formatti", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "&Alusta", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
     PUSHBUTTON "&Poista", IDC_PARTDELETE, 63, 122, 50, 14
     PUSHBUTTON "A&juri", IDC_DEVICEDRIVER, 174, 122, 50, 14, WS_DISABLED
     PUSHBUTTON "&Kehittyneet valinnat...", IDC_PARTMOREOPTS, 230, 122, 80, 14
@@ -146,7 +146,7 @@ END
 
 IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Asennin"
+CAPTION "ReactOS-asennin"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Viimeistellään asennusta", IDC_FINISHTITLE, 115, 8, 195, 24
@@ -160,7 +160,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TYPETITLE "Tervetuloa ReactOS-asenukseen"
+    IDS_TYPETITLE "Tervetuloa ReactOS-asentimeen"
     IDS_TYPESUBTITLE "Valitse asennustyyppi"
     IDS_DEVICETITLE "Aseta perus laitteet"
     IDS_DEVICESUBTITLE "Aseta näytön ja näppäimistön asetukset."
