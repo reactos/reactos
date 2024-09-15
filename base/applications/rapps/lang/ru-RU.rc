@@ -185,7 +185,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_SEARCH_TEXT "Поиск…"
-    IDS_APPS_COUNT "Количество приложений: %d; Выбрано: %d"
+    IDS_APPS_COUNT "Количество приложений: %d"
+    IDS_APPS_SELECT_COUNT "; Выбрано: %d"
     IDS_INSTALLED "Установленные"
     IDS_AVAILABLEFORINST "Доступно для установки"
     IDS_UPDATES "Обновления"

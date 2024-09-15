@@ -185,7 +185,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_SEARCH_TEXT "חיפוש…"
-    IDS_APPS_COUNT "ספירת יישומים: %d; Selected: %d"
+    IDS_APPS_COUNT "ספירת יישומים: %d"
+    IDS_APPS_SELECT_COUNT "; Selected: %d"
     IDS_INSTALLED "מותקן"
     IDS_AVAILABLEFORINST "זמין להתקנה"
     IDS_UPDATES "עדכונים"

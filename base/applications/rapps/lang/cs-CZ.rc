@@ -181,7 +181,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_SEARCH_TEXT "Hledat…"
-    IDS_APPS_COUNT "Počet aplikací: %d; Vybráno: %d"
+    IDS_APPS_COUNT "Počet aplikací: %d"
+    IDS_APPS_SELECT_COUNT "; Vybráno: %d"
     IDS_INSTALLED "Nainstalováno"
     IDS_AVAILABLEFORINST "Lze instalovat"
     IDS_UPDATES "Aktualizace"

@@ -97,7 +97,7 @@
 /* Strings */
 #define IDS_SEARCH_TEXT          110
 #define IDS_APPS_COUNT           111
-// 112 - Reserved
+#define IDS_APPS_SELECT_COUNT    112
 #define IDS_INSTALLED            113
 #define IDS_AVAILABLEFORINST     114
 #define IDS_UPDATES              115

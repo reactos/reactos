@@ -608,8 +608,16 @@ CMainWindow::UpdateStatusBarText()
     if (m_StatusBar)
     {
         CStringW szBuffer;
+        szBuffer.Format(IDS_APPS_COUNT, m_ApplicationView->GetItemCount());
 
-        szBuffer.Format(IDS_APPS_COUNT, m_ApplicationView->GetItemCount(), m_Selected.GetCount());
+        // Append the number of selected apps if not in APPWIZ-mode.
+        if (!m_bAppwizMode)
+        {
+            CStringW szBuffer2;
+            szBuffer2.Format(IDS_APPS_SELECT_COUNT, m_Selected.GetCount());
+            szBuffer += szBuffer2;
+        }
+
         m_StatusBar->SetText(szBuffer);
     }
 }

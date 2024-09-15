@@ -180,7 +180,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_SEARCH_TEXT "Otsi…"
-    IDS_APPS_COUNT "Rakenduste arv: %d; Valitud: %d"
+    IDS_APPS_COUNT "Rakenduste arv: %d"
+    IDS_APPS_SELECT_COUNT "; Valitud: %d"
     IDS_INSTALLED "Installitud"
     IDS_AVAILABLEFORINST "Installimiseks saadaval"
     IDS_UPDATES "Uuendused"

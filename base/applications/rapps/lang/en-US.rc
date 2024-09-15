@@ -183,7 +183,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_SEARCH_TEXT "Search…"
-    IDS_APPS_COUNT "Applications count: %d; Selected: %d"
+    IDS_APPS_COUNT "Applications count: %d"
+    IDS_APPS_SELECT_COUNT "; Selected: %d"
     IDS_INSTALLED "Installed"
     IDS_AVAILABLEFORINST "Available for installation"
     IDS_UPDATES "Updates"

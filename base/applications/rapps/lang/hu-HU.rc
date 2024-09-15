@@ -180,7 +180,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_SEARCH_TEXT "Keresés…"
-    IDS_APPS_COUNT "Alkalmazások száma: %d; Kijelölve: %d"
+    IDS_APPS_COUNT "Alkalmazások száma: %d"
+    IDS_APPS_SELECT_COUNT "; Kijelölve: %d"
     IDS_INSTALLED "Telepített"
     IDS_AVAILABLEFORINST "Telepíthető alkalmazások"
     IDS_UPDATES "Frissítések"

@@ -184,7 +184,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_SEARCH_TEXT "搜索…"
-    IDS_APPS_COUNT "程序数量：%d；已选：%d"
+    IDS_APPS_COUNT "程序数量：%d"
+    IDS_APPS_SELECT_COUNT "；已选：%d"
     IDS_INSTALLED "已安装"
     IDS_AVAILABLEFORINST "可安装"
     IDS_UPDATES "更新"

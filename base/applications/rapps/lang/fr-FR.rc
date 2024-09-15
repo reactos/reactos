@@ -183,7 +183,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_SEARCH_TEXT "Chercher…"
-    IDS_APPS_COUNT "Nombre d'applications : %d ; Sélectionnées : %d"
+    IDS_APPS_COUNT "Nombre d'applications : %d"
+    IDS_APPS_SELECT_COUNT " ; Sélectionnées : %d"
     IDS_INSTALLED "Installé"
     IDS_AVAILABLEFORINST "Disponible pour installation"
     IDS_UPDATES "Mises à jour"
@@ -262,5 +263,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
+    IDS_INSTGEN_CONFIRMUNINST "Êtes-vous sûr de vouloir désinstaller %s ?"
 END

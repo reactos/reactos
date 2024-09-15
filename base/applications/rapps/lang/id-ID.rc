@@ -180,7 +180,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_SEARCH_TEXT "Cari…"
-    IDS_APPS_COUNT "Jumlah aplikasi: %d; Terpilih: %d"
+    IDS_APPS_COUNT "Jumlah aplikasi: %d"
+    IDS_APPS_SELECT_COUNT "; Terpilih: %d"
     IDS_INSTALLED "Terpasang"
     IDS_AVAILABLEFORINST "Tersedia untuk pemasangan"
     IDS_UPDATES "Pembaruan"

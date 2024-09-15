@@ -182,7 +182,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_SEARCH_TEXT "Căutare…"
-    IDS_APPS_COUNT "Numărul de programe: %d; Selectate: %d"
+    IDS_APPS_COUNT "Numărul de programe: %d"
+    IDS_APPS_SELECT_COUNT "; Selectate: %d"
     IDS_INSTALLED "Instalate"
     IDS_AVAILABLEFORINST "Disponibile pentru instalare"
     IDS_UPDATES "Actualizări"

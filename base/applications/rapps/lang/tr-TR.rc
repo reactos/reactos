@@ -182,7 +182,8 @@ END
 STRINGTABLE
 BEGIN
     IDS_SEARCH_TEXT "Ara…"
-    IDS_APPS_COUNT "Uygulama Sayısı: %d; Seçili: %d"
+    IDS_APPS_COUNT "Uygulama Sayısı: %d"
+    IDS_APPS_SELECT_COUNT "; Seçili: %d"
     IDS_INSTALLED "Kurulanlar"
     IDS_AVAILABLEFORINST "Kurulabilir Uygulamalar"
     IDS_UPDATES "Güncelleştirmeler"
