@@ -8,6 +8,7 @@
 #include "rapps.h"
 #include "settings.h"
 
+#define SETTINGSSUBKEY L"Software\\ReactOS\\" RAPPS_NAME
 
 class SettingsField
 {
@@ -227,18 +228,31 @@ FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
 BOOL
 LoadSettings(PSETTINGS_INFO pSettingsInfo)
 {
-    BOOL bResult = FALSE;
+    BOOL bLoadedAny = FALSE;
 
     FillDefaultSettings(pSettingsInfo);
 
     ATL::CRegKey RegKey;
-    if (RegKey.Open(HKEY_CURRENT_USER, L"Software\\ReactOS\\" RAPPS_NAME, KEY_READ) == ERROR_SUCCESS)
+    if (RegKey.Open(HKEY_CURRENT_USER, SETTINGSSUBKEY, KEY_READ) == ERROR_SUCCESS)
     {
-        bResult = LoadAllSettings(RegKey, *pSettingsInfo);
+        bLoadedAny = LoadAllSettings(RegKey, *pSettingsInfo);
     }
 
     ValidateStringSettings(pSettingsInfo); // Handles the case where a REG_SZ is present but empty
-    return bResult;
+
+    if (!bLoadedAny)
+    {
+        // This the first launch, write at least one item so ParseCmdAndExecute() does not
+        // trigger another DB update in another process instance between now and SaveSettings().
+        ATL::CRegKey RegKey;
+        if (RegKey.Create(HKEY_CURRENT_USER, SETTINGSSUBKEY, NULL, REG_OPTION_NON_VOLATILE,
+                          KEY_WRITE, NULL, NULL) == ERROR_SUCCESS)
+        {
+            SettingsFieldBool field(&(pSettingsInfo->bUpdateAtStart), L"bUpdateAtStart");
+            field.Save(RegKey);
+        }
+    }
+    return bLoadedAny;
 }
 
 BOOL
@@ -260,8 +274,8 @@ SaveSettings(HWND hwnd, PSETTINGS_INFO pSettingsInfo)
             (wp.showCmd == SW_MAXIMIZE || (wp.showCmd == SW_SHOWMINIMIZED && (wp.flags & WPF_RESTORETOMAXIMIZED)));
     }
 
-    if (RegKey.Create(HKEY_CURRENT_USER, L"Software\\ReactOS\\" RAPPS_NAME, NULL,
-                      REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, NULL) != ERROR_SUCCESS)
+    if (RegKey.Create(HKEY_CURRENT_USER, SETTINGSSUBKEY, NULL, REG_OPTION_NON_VOLATILE,
+                      KEY_WRITE, NULL, NULL) != ERROR_SUCCESS)
     {
         return FALSE;
     }
