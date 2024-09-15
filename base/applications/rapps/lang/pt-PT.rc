@@ -188,11 +188,15 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "Central de aplicações ReactOS"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT "Procurar…"
-    IDS_APPS_COUNT "Número de aplicações: %d; Seleccionadas: %d"
     IDS_WELCOME_TITLE "Bem-vindo(a) à Central de aplicações ReactOS!\n\n"
     IDS_WELCOME_TEXT "Escolha uma categoria à esquerda, de seguida escolha uma aplicação para instalar ou desinstalar.\nWeb Site ReactOS: "
     IDS_WELCOME_URL "https://reactos.org"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCH_TEXT "Procurar…"
+    IDS_APPS_COUNT "Número de aplicações: %d; Seleccionadas: %d"
     IDS_INSTALLED "Instalado"
     IDS_AVAILABLEFORINST "Disponível para instalação"
     IDS_UPDATES "Actualizações"

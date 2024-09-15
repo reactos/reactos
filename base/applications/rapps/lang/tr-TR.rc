@@ -190,11 +190,15 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS Uygulama Yöneticisi"
     IDS_APP_AUTHORS "Telif Hakkı: 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT "Ara"
-    IDS_APPS_COUNT "Uygulama Sayısı: %d; Seçili: %d"
     IDS_WELCOME_TITLE "ReactOS Uygulama Yöneticisi'ne hoş geldiniz.\n\n"
     IDS_WELCOME_TEXT "Solda bir kategori seçiniz, ardından kurmak ya da kaldırmak için bir uygulama seçiniz.\nReactOS'un İnternet sitesi: "
     IDS_WELCOME_URL "https://reactos.org"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCH_TEXT "Ara…"
+    IDS_APPS_COUNT "Uygulama Sayısı: %d; Seçili: %d"
     IDS_INSTALLED "Kurulanlar"
     IDS_AVAILABLEFORINST "Kurulabilir Uygulamalar"
     IDS_UPDATES "Güncelleştirmeler"

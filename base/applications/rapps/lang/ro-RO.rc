@@ -190,11 +190,15 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "Managerul de aplicații ReactOS"
     IDS_APP_AUTHORS "Marcă înregistrată 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT "Căutare…"
-    IDS_APPS_COUNT "Numărul de programe: %d; Selectate: %d"
     IDS_WELCOME_TITLE "Bun venit la Managerul de aplicații ReactOS!\n\n"
     IDS_WELCOME_TEXT "Alegeți o categorie din stânga, apoi alegeți o aplicație pentru a o instala sau dezinstala.\nArdesa web ReactOS: "
     IDS_WELCOME_URL "https://reactos.org"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCH_TEXT "Căutare…"
+    IDS_APPS_COUNT "Numărul de programe: %d; Selectate: %d"
     IDS_INSTALLED "Instalate"
     IDS_AVAILABLEFORINST "Disponibile pentru instalare"
     IDS_UPDATES "Actualizări"

@@ -193,11 +193,15 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "מנהל היישומים של ReactOS"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT "חיפוש…"
-    IDS_APPS_COUNT "ספירת יישומים: %d; Selected: %d"
     IDS_WELCOME_TITLE "ברוכים הבאים למנהל היישומים של ReactOS!\n\n"
     IDS_WELCOME_TEXT "בחר קטגוריה בצד שמאל, לאחר מכן בחר יישום להתקנה או להסרה.\nהאתר של ReactOS: "
     IDS_WELCOME_URL "https://reactos.org"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCH_TEXT "חיפוש…"
+    IDS_APPS_COUNT "ספירת יישומים: %d; Selected: %d"
     IDS_INSTALLED "מותקן"
     IDS_AVAILABLEFORINST "זמין להתקנה"
     IDS_UPDATES "עדכונים"

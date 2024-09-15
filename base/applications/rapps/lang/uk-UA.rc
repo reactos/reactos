@@ -191,11 +191,15 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "Менеджер додатків ReactOS"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT "Пошук…"
-    IDS_APPS_COUNT "Kількість додатків: %d; Обрано: %d"
     IDS_WELCOME_TITLE "Ласкаво просимо в Менеджер додатків ReactOS!\n\n"
     IDS_WELCOME_TEXT "Виберіть категорію зліва, а потім виберіть програми для встановлення чи видалення.\nСторінка ReactOS: "
     IDS_WELCOME_URL "https://reactos.org"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCH_TEXT "Пошук…"
+    IDS_APPS_COUNT "Kількість додатків: %d; Обрано: %d"
     IDS_INSTALLED "Встановлені"
     IDS_AVAILABLEFORINST "Доступні для встановлення"
     IDS_UPDATES "Оновлення"

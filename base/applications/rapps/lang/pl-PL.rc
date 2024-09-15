@@ -190,11 +190,15 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "Menedżer aplikacji ReactOS"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT "Szukaj…"
-    IDS_APPS_COUNT "Liczba aplikacji: %d; Wybranych: %d"
     IDS_WELCOME_TITLE "Witamy w Menedżerze aplikacji ReactOS!\n\n"
     IDS_WELCOME_TEXT "Z listy po lewej wybierz kategorię, a następnie aplikację, by ją zainstalować lub odinstalować.\nStrona projektu ReactOS: "
     IDS_WELCOME_URL "https://reactos.org"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCH_TEXT "Szukaj…"
+    IDS_APPS_COUNT "Liczba aplikacji: %d; Wybranych: %d"
     IDS_INSTALLED "Zainstalowane"
     IDS_AVAILABLEFORINST "Dostępne"
     IDS_UPDATES "Uaktualnienia"

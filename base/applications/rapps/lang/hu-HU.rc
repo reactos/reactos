@@ -188,11 +188,15 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS Alkalmazáskezelő"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT "Keresés…"
-    IDS_APPS_COUNT "Alkalmazások száma: %d; Kijelölve: %d"
     IDS_WELCOME_TITLE "Üdvözöljük a ReactOS Alkalmazáskezelőben!\n\n"
     IDS_WELCOME_TEXT "Bal oldalon válasszon kategóriát, majd válasszon egy telepíteni vagy eltávolítani kívánt alkalmazást.\nReactOS weboldal: "
     IDS_WELCOME_URL "https://reactos.org"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCH_TEXT "Keresés…"
+    IDS_APPS_COUNT "Alkalmazások száma: %d; Kijelölve: %d"
     IDS_INSTALLED "Telepített"
     IDS_AVAILABLEFORINST "Telepíthető alkalmazások"
     IDS_UPDATES "Frissítések"

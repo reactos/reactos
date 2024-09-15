@@ -189,11 +189,15 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS Správce aplikací"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT "Hledat…"
-    IDS_APPS_COUNT "Počet aplikací: %d; Vybráno: %d"
     IDS_WELCOME_TITLE "Vítejte v ReactOS Správci aplikací!\n\n"
     IDS_WELCOME_TEXT "Na levé straně zvolte kategorii, pak vpravo zvolte aplikaci, která bude nainstalována nebo odinstalována.\nWebová stránka ReactOS: "
     IDS_WELCOME_URL "https://reactos.org"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCH_TEXT "Hledat…"
+    IDS_APPS_COUNT "Počet aplikací: %d; Vybráno: %d"
     IDS_INSTALLED "Nainstalováno"
     IDS_AVAILABLEFORINST "Lze instalovat"
     IDS_UPDATES "Aktualizace"

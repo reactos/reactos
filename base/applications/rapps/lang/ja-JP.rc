@@ -190,11 +190,15 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS アプリ マネージャ"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT "検索..."
-    IDS_APPS_COUNT "アプリ数: %d; Selected: %d"
     IDS_WELCOME_TITLE "ReactOS アプリ マネージャへようこそ!\n\n"
     IDS_WELCOME_TEXT "左側からカテゴリを選択し、インストールまたはアンインストールするアプリを選んでください。\nReactOS ウェブ サイト: "
     IDS_WELCOME_URL "https://reactos.org"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCH_TEXT "検索..."
+    IDS_APPS_COUNT "アプリ数: %d; Selected: %d"
     IDS_INSTALLED "インストール済み"
     IDS_AVAILABLEFORINST "インストール可能"
     IDS_UPDATES "更新"
