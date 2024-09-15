@@ -40,12 +40,7 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nSh
     }
 
     hInst = hInstance;
-
     BOOL bIsFirstLaunch = !LoadSettings(&SettingsInfo);
-    if (bIsFirstLaunch)
-    {
-        FillDefaultSettings(&SettingsInfo);
-    }
 
     InitLogs();
     InitCommonControls();
