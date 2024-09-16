@@ -3264,7 +3264,11 @@ GpStatus WINGDIPAPI GdipDrawImagePointsRect(GpGraphics *graphics, GpImage *image
 
             if (do_resampling)
             {
+#ifdef __REACTOS__  // CORE-19456
+                DOUBLE delta_xx, delta_xy, delta_yx, delta_yy;
+#else
                 REAL delta_xx, delta_xy, delta_yx, delta_yy;
+#endif
 
                 /* Transform the bits as needed to the destination. */
                 dst_data = dst_dyn_data = heap_alloc_zero(sizeof(ARGB) * (dst_area.right - dst_area.left) * (dst_area.bottom - dst_area.top));
