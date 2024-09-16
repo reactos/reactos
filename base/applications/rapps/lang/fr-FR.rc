@@ -175,9 +175,13 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "Gestionnaire d'applications ReactOS"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_WELCOME_TITLE "Bienvenue dans ReactOS Applications Manager !\n\n"
+    IDS_WELCOME_TITLE "Bienvenue dans ReactOS Applications Manager !"
     IDS_WELCOME_TEXT "Choisissez une catégorie à gauche, ensuite choisissez une application à installer ou désinstaller.\nSite internet de ReactOS : "
     IDS_WELCOME_URL "https://reactos.org"
+
+    IDS_APPWIZ_TITLE "Ajout/Suppression de programmes" // "Ajouter/Supprimer des Programmes"
+    IDS_APPWIZ_TEXT1 "Choisissez ""Applications"" ou ""Mises à jour"" pour voir la liste des programmes ou des mises à jour installés sur votre système."
+    IDS_APPWIZ_TEXT2 "Pour supprimer un programme, ou modifier ses composants installés, sélectionnez-le dans la liste et cliquez sur ""Désinstaller"" ou ""Modifier""."
 END
 
 STRINGTABLE

@@ -89,8 +89,6 @@ class CAppRichEdit : public CUiWindow<CRichEdit>
     LoadAndInsertText(UINT uStringID, DWORD StringFlags);
     VOID
     InsertTextWithString(UINT StringID, const CStringW &Text, DWORD TextFlags);
-    VOID
-    SetWelcomeText();
 };
 
 int
@@ -178,8 +176,8 @@ class CAppInfoDisplay : public CUiWindow<CWindowImpl<CAppInfoDisplay>>
 
     VOID
     ShowAppInfo(CAppInfo *Info);
-    VOID
-    SetWelcomeText();
+    void
+    SetWelcomeText(bool bAppwiz);
     VOID
     OnCommand(WPARAM wParam, LPARAM lParam);
 

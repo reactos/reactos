@@ -313,21 +313,6 @@ CAppRichEdit::InsertTextWithString(UINT StringID, const CStringW &Text, DWORD Te
         LoadAndInsertText(StringID, Text, TextFlags);
     }
 }
-
-VOID
-CAppRichEdit::SetWelcomeText()
-{
-    CStringW szText;
-
-    szText.LoadStringW(IDS_WELCOME_TITLE);
-    SetText(szText, CFE_BOLD);
-
-    szText.LoadStringW(IDS_WELCOME_TEXT);
-    InsertText(szText, 0);
-
-    szText.LoadStringW(IDS_WELCOME_URL);
-    InsertText(szText, CFM_LINK);
-}
 // **** CAppRichEdit ****
 
 int
@@ -985,12 +970,41 @@ CAppInfoDisplay::ShowAppInfo(CAppInfo *Info)
     Info->ShowAppInfo(RichEdit);
 }
 
-VOID
-CAppInfoDisplay::SetWelcomeText()
+void
+CAppInfoDisplay::SetWelcomeText(bool bAppwiz)
 {
+    CStringW szText;
+
     ScrnshotPrev->DisplayEmpty();
     ResizeChildren();
-    RichEdit->SetWelcomeText();
+
+    // Display the standard banner in normal mode, or
+    // the specific "Add/Remove Programs" in APPWIZ-mode.
+    if (!bAppwiz)
+    {
+        szText.LoadStringW(IDS_WELCOME_TITLE);
+        RichEdit->SetText(szText, CFE_BOLD);
+        RichEdit->InsertText(L"\n\n", 0);
+
+        szText.LoadStringW(IDS_WELCOME_TEXT);
+        RichEdit->InsertText(szText, 0);
+
+        szText.LoadStringW(IDS_WELCOME_URL);
+        RichEdit->InsertText(szText, CFM_LINK);
+    }
+    else
+    {
+        szText.LoadStringW(IDS_APPWIZ_TITLE);
+        RichEdit->SetText(szText, CFE_BOLD);
+        RichEdit->InsertText(L"\n\n", 0);
+
+        szText.LoadStringW(IDS_APPWIZ_TEXT1);
+        RichEdit->InsertText(szText, 0);
+        RichEdit->InsertText(L"\n", 0);
+
+        szText.LoadStringW(IDS_APPWIZ_TEXT2);
+        RichEdit->InsertText(szText, 0);
+    }
 }
 
 VOID
@@ -2006,7 +2020,7 @@ CApplicationView::SetDisplayAppType(APPLICATION_VIEW_TYPE AppType)
         return FALSE;
     }
     ApplicationViewType = AppType;
-    m_AppsInfo->SetWelcomeText();
+    m_AppsInfo->SetWelcomeText(m_MainWindow->m_bAppwizMode);
 
     HMENU hMenu = ::GetMenu(m_hWnd);
     switch (AppType)
