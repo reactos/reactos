@@ -195,7 +195,7 @@ class CAppsListView : public CUiWindow<CWindowImpl<CAppsListView, CListView>>
     };
 
     BOOL bIsAscending = TRUE;
-    BOOL bHasCheckboxes = FALSE;
+    bool bHasCheckboxes = false;
 
     INT ItemCount = 0;
     INT CheckedItemCount = 0;
@@ -224,8 +224,9 @@ class CAppsListView : public CUiWindow<CWindowImpl<CAppsListView, CListView>>
 
     VOID
     SetWatermark(const CStringW &Text);
-    VOID
-    SetCheckboxesVisible(BOOL bIsVisible);
+
+    void
+    ShowCheckboxes(bool bShow);
 
     VOID
     ColumnClick(LPNMLISTVIEW pnmv);

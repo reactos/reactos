@@ -1109,19 +1109,11 @@ CAppsListView::SetWatermark(const CStringW &Text)
     m_Watermark = Text;
 }
 
-VOID
-CAppsListView::SetCheckboxesVisible(BOOL bIsVisible)
+void
+CAppsListView::ShowCheckboxes(bool bShow)
 {
-    if (bIsVisible)
-    {
-        SetExtendedListViewStyle(LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT);
-    }
-    else
-    {
-        SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
-    }
-
-    bHasCheckboxes = bIsVisible;
+    SetExtendedListViewStyle((bShow ? LVS_EX_CHECKBOXES : 0) | LVS_EX_FULLROWSELECT);
+    bHasCheckboxes = bShow;
 }
 
 VOID
@@ -1254,7 +1246,7 @@ CAppsListView::Create(HWND hwndParent)
 
     if (hwnd)
     {
-        SetCheckboxesVisible(FALSE);
+        ShowCheckboxes(false);
     }
 
 #pragma push_macro("SubclassWindow")
@@ -1363,8 +1355,8 @@ CAppsListView::SetDisplayAppType(APPLICATION_VIEW_TYPE AppType)
             szText.LoadStringW(IDS_APP_DESCRIPTION);
             AddColumn(ColumnCount++, szText, 300, LVCFMT_LEFT);
 
-            // disable checkboxes
-            SetCheckboxesVisible(FALSE);
+            // Disable checkboxes
+            ShowCheckboxes(false);
             break;
 
         case AppViewTypeAvailableApps:
@@ -1379,8 +1371,8 @@ CAppsListView::SetDisplayAppType(APPLICATION_VIEW_TYPE AppType)
             szText.LoadStringW(IDS_APP_DESCRIPTION);
             AddColumn(ColumnCount++, szText, 300, LVCFMT_LEFT);
 
-            // enable checkboxes
-            SetCheckboxesVisible(TRUE);
+            // Enable checkboxes
+            ShowCheckboxes(true);
             break;
 
         default:
