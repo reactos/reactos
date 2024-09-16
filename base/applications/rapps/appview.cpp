@@ -1347,13 +1347,15 @@ CAppsListView::SetDisplayAppType(APPLICATION_VIEW_TYPE AppType)
 
             /* Add columns to ListView */
             szText.LoadStringW(IDS_APP_NAME);
-            AddColumn(ColumnCount++, szText, 250, LVCFMT_LEFT);
+            AddColumn(ColumnCount++, szText, 368, LVCFMT_LEFT);
 
             szText.LoadStringW(IDS_APP_INST_VERSION);
             AddColumn(ColumnCount++, szText, 90, LVCFMT_RIGHT);
 
+#if 0 // This column is not currently useful for installed apps.
             szText.LoadStringW(IDS_APP_DESCRIPTION);
             AddColumn(ColumnCount++, szText, 300, LVCFMT_LEFT);
+#endif
 
             // Disable checkboxes
             ShowCheckboxes(false);
