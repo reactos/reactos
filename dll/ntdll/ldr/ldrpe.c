@@ -1038,7 +1038,7 @@ FailurePath:
                 DPRINT1("Failed to snap ordinal %wZ!0x%x for %wZ\n", &ExportLdrEntry->BaseDllName, OriginalOrdinal, &SnapTarget);
             else
                 DPRINT1("Failed to snap %wZ!%s for %wZ\n", &ExportLdrEntry->BaseDllName, ImportName, &SnapTarget);
-            __debugbreak();
+
             /* These are critical errors. Setup a string for the DLL name */
             RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
                                       &ExportLdrEntry->BaseDllName,
