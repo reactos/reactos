@@ -134,7 +134,7 @@ LdrpApplyDllExportVersioning(
     RosCompatDescriptor = FindRosCompatDescriptor(LdrEntry->DllBase);
     if (RosCompatDescriptor == NULL)
     {
-        DPRINT1("roscompat: No descriptor in %wZ\n", &LdrEntry->BaseDllName);
+        DPRINT("roscompat: No descriptor in %wZ\n", &LdrEntry->BaseDllName);
         return;
     }
 
@@ -144,6 +144,7 @@ LdrpApplyDllExportVersioning(
     /* Check for dummy descriptor */
     if (RosCompatDescriptor->ExportMasks == NULL)
     {
+        DPRINT("roscompat: Dummy descriptor in %wZ\n", &LdrEntry->BaseDllName);
         *RosCompatDescriptor->NumberOfValidExports = MAXULONG;
         return;
     }
@@ -160,7 +161,7 @@ LdrpApplyDllExportVersioning(
 
     *RosCompatDescriptor->NumberOfValidExports = NumberOfValidExports;
 
-    DPRINT1("roscompat: Applied export version info for '%wZ'\n",
+    DPRINT("roscompat: Applied export version info for '%wZ'\n",
            &LdrEntry->BaseDllName);
 }
 
@@ -186,9 +187,9 @@ LdrpInitializeExportVersioning(
         Peb->OSMajorVersion = AppCompatVersion >> 8;
         Peb->OSMinorVersion = AppCompatVersion & 0xFF;
 
-        DPRINT1("roscompat: Using AppCompat version %lu for image %wZ\n",
-                AppCompatVersion,
-                &ImageLdrEntry->BaseDllName);
+        DPRINT("roscompat: Using AppCompat version %lu for image %wZ\n",
+               AppCompatVersion,
+               &ImageLdrEntry->BaseDllName);
     }
 
     /* Set the global export version mask */
