@@ -31,7 +31,7 @@ add_library(kernel32_vista MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/kernel32_vista.def)
 set_module_type(kernel32_vista win32dll ENTRYPOINT DllMain 12)
 target_link_libraries(kernel32_vista kernel32_vista_static kernel32_shared)
-add_importlibs(kernel32_vista kernel32 ntdll_vista ntdll)
+add_importlibs(kernel32_vista kernel32 ntdll_vista)
 add_delay_importlibs(kernel32_vista ntdll_vista)
 add_dependencies(kernel32_vista psdk)
 add_cd_file(TARGET kernel32_vista DESTINATION reactos/system32 FOR all)
