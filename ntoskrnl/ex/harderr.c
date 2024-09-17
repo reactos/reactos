@@ -395,7 +395,7 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
     PVOID UserData = NULL;
     PHARDERROR_USER_PARAMETERS UserParams;
     PWSTR BufferBase;
-    ULONG SafeResponse = ResponseNotHandled;
+    ULONG SafeResponse = ResponseReturnToCaller;
 
     PAGED_CODE();
 
@@ -557,7 +557,7 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PULONG_PTR SafeParams = NULL;
-    ULONG SafeResponse = ResponseNotHandled;
+    ULONG SafeResponse = ResponseReturnToCaller;
     UNICODE_STRING SafeString;
     ULONG i;
     ULONG ParamSize = 0;
