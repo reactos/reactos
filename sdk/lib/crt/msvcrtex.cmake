@@ -55,11 +55,11 @@ if(ARCH STREQUAL "i386")
 elseif(ARCH STREQUAL "amd64")
     list(APPEND MSVCRTEX_ASM_SOURCE
         except/amd64/chkstk_ms.s)
-    if(MSVC AND DLL_EXPORT_VERSION LESS 0x600)
+    #if(MSVC AND DLL_EXPORT_VERSION LESS 0x600)
         list(APPEND MSVCRTEX_ASM_SOURCE
             except/amd64/__CxxFrameHandler3.s
         )
-    endif()
+    #endif()
 elseif(ARCH STREQUAL "arm")
     list(APPEND MSVCRTEX_SOURCE
         math/arm/__rt_sdiv.c
