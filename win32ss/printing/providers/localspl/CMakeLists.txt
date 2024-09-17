@@ -29,6 +29,6 @@ add_library(localspl MODULE
 
 set_module_type(localspl win32dll UNICODE)
 target_link_libraries(localspl skiplist16 wine)
-add_importlibs(localspl user32 advapi32 advapi32_vista netapi32 rpcrt4 secur32 spoolss msvcrt kernel32 ntdll)
+add_importlibs(localspl user32 advapi32_vista netapi32 rpcrt4 secur32 spoolss msvcrt kernel32 ntdll)
 add_pch(localspl precomp.h SOURCE)
 add_cd_file(TARGET localspl DESTINATION reactos/system32 FOR all)

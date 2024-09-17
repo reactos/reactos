@@ -3,7 +3,6 @@ remove_definitions(-D_WIN32_WINNT=0x502 -DWINVER=0x502)
 add_definitions(-D_WIN32_WINNT=0x600 -DWINVER=0x600)
 
 add_definitions(-D_ADVAPI32_ -D_ADVAPI32_VISTA_)
-spec2def(advapi32_vista.dll advapi32_vista.spec ADD_IMPORTLIB)
 
 include_directories(
     ../advapi32
@@ -15,9 +14,19 @@ list(APPEND SOURCE
     ../advapi32/reg/reg.c
     ${CMAKE_CURRENT_BINARY_DIR}/advapi32_vista.def)
 
-add_library(advapi32_vista MODULE ${SOURCE} advapi32_vista.rc)
-set_module_type(advapi32_vista win32dll ENTRYPOINT DllMain 12)
-target_link_libraries(advapi32_vista wine ${PSEH_LIB})
-add_importlibs(advapi32_vista advapi32 kernel32 ntdll)
-add_dependencies(advapi32_vista psdk advapi32)
-add_cd_file(TARGET advapi32_vista DESTINATION reactos/system32 FOR all)
+if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
+    # On NT6+ builds this is an empty interface library
+    add_library(libadvapi32_vista INTERFACE)
+else()
+    # On pre-NT6 builds we create an additional DLL
+    spec2def(advapi32_vista.dll advapi32_vista.spec ADD_IMPORTLIB)
+    add_library(advapi32_vista MODULE ${SOURCE} advapi32_vista.rc)
+    set_module_type(advapi32_vista win32dll ENTRYPOINT DllMain 12)
+    target_link_libraries(advapi32_vista wine ${PSEH_LIB})
+    add_importlibs(advapi32_vista advapi32 kernel32 ntdll)
+    add_dependencies(advapi32_vista psdk advapi32)
+    add_cd_file(TARGET advapi32_vista DESTINATION reactos/system32 FOR all)
+endif()
+
+# Implicitly link against advapi32
+target_link_libraries(libadvapi32_vista INTERFACE libadvapi32)
