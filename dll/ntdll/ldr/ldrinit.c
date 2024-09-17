@@ -1341,6 +1341,7 @@ LdrpAllocateTls(VOID)
     SIZE_T TlsDataSize;
     PVOID *TlsVector;
     PVOID *OldTlsVector;
+    PLDRP_OLD_TLS_VECTOR_ENTRY OldTlsVectorEntry;
 
     /* Check if we have any entries */
     if (!LdrpNumberOfTlsEntries)
@@ -1357,7 +1358,6 @@ LdrpAllocateTls(VOID)
     /* Grab old TLS vector to retrieve existing values */
     /* Todo: create TLS vector list to deallocate when thread exits */
     OldTlsVector = Teb->ThreadLocalStoragePointer;
-    Teb->ThreadLocalStoragePointer = TlsVector;
 
     /* Loop the TLS Array */
     ListHead = &LdrpTlsList;
@@ -1400,6 +1400,7 @@ LdrpAllocateTls(VOID)
         }
         else
         {
+            /* Reuse the previous thread-local copy of the TLS data in the new vector. */
             TlsVector[TlsData->TlsDirectory.Characteristics] = OldTlsVector[TlsData->TlsDirectory.Characteristics];
             /* Show debug message */
             if (ShowSnaps)
@@ -1413,6 +1414,30 @@ LdrpAllocateTls(VOID)
             }
         }
     }
+
+    if (OldTlsVector)
+    {
+        OldTlsVectorEntry = RtlAllocateHeap(RtlGetProcessHeap(), 0,
+                                            sizeof(LDRP_OLD_TLS_VECTOR_ENTRY));
+        if (!OldTlsVectorEntry)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, TlsVector);
+            return STATUS_NO_MEMORY;
+        }
+        OldTlsVectorEntry->OldTlsVector = OldTlsVector;
+        if (Teb->SystemReserved1[0])
+        {
+            InsertTailList(Teb->SystemReserved1[0], &OldTlsVectorEntry->TlsVectorLinks);
+        }
+        else
+        {
+            InitializeListHead(&OldTlsVectorEntry->TlsVectorLinks);
+            Teb->SystemReserved1[0] = OldTlsVectorEntry;
+        }
+    }
+    /* Teb->UserReserved[0] -> rename to ThreadNumberOfTlsEntries?
+       SystemReserved1[0] -> rename to OldTlsVectorList?          */
+    Teb->ThreadLocalStoragePointer = TlsVector;
     Teb->UserReserved[0] = LdrpNumberOfTlsEntries;
     /* Done */
     return STATUS_SUCCESS;
@@ -1424,6 +1449,7 @@ LdrpFreeTls(VOID)
 {
     PLIST_ENTRY ListHead, NextEntry;
     PLDRP_TLS_DATA TlsData;
+    PLDRP_OLD_TLS_VECTOR_ENTRY OldTlsVectorDataEntry;
     PVOID *TlsVector;
     PTEB Teb = NtCurrentTeb();
 
@@ -1452,6 +1478,28 @@ LdrpFreeTls(VOID)
     RtlFreeHeap(RtlGetProcessHeap(),
                 0,
                 TlsVector);
+
+    if(Teb->SystemReserved1[0])
+    {
+		/* Loop through it */
+		ListHead = Teb->SystemReserved1[0];
+		NextEntry = ListHead->Flink;
+        while (NextEntry != ListHead)
+        {
+            OldTlsVectorDataEntry = CONTAINING_RECORD(NextEntry, LDRP_OLD_TLS_VECTOR_ENTRY, TlsVectorLinks);
+            NextEntry = NextEntry->Flink;
+
+            /* Free each old TLS vector. */
+            RtlFreeHeap(RtlGetProcessHeap(),
+                        0,
+                        OldTlsVectorDataEntry->OldTlsVector);
+            /* And the entry itself. */
+            RtlFreeHeap(RtlGetProcessHeap(),
+                        0,
+                        OldTlsVectorDataEntry);
+        }
+    }
+    Teb->SystemReserved[0] = NULL;
 }
 
 NTSTATUS
