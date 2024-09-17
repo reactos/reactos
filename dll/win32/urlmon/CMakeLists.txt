@@ -52,6 +52,6 @@ add_library(urlmon MODULE
 set_module_type(urlmon win32dll)
 target_link_libraries(urlmon uuid wine ${PSEH_LIB})
 add_delay_importlibs(urlmon advpack)
-add_importlibs(urlmon rpcrt4 propsys ole32 oleaut32 shlwapi shell32 wininet user32 advapi32 kernel32_vista msvcrt kernel32 ntdll)
+add_importlibs(urlmon rpcrt4 propsys ole32 oleaut32 shlwapi shell32 wininet user32 advapi32 msvcrt kernel32_vista ntdll)
 add_pch(urlmon precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET urlmon DESTINATION reactos/system32 FOR all)

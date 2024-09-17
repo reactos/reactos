@@ -48,6 +48,6 @@ set_module_type(wininet win32dll)
 target_link_libraries(wininet wine ${PSEH_LIB} oldnames)
 
 add_delay_importlibs(wininet secur32 crypt32 cryptui iphlpapi dhcpcsvc)
-add_importlibs(wininet mpr shlwapi shell32 user32 advapi32 ws2_32 normaliz kernel32_vista msvcrt kernel32 ntdll)
+add_importlibs(wininet mpr shlwapi shell32 user32 advapi32 ws2_32 normaliz msvcrt kernel32_vista ntdll)
 add_pch(wininet precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET wininet DESTINATION reactos/system32 FOR all)
