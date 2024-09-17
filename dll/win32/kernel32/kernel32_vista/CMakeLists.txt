@@ -27,6 +27,7 @@ add_dependencies(kernel32_vista_static psdk)
 if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
     # On NT6+ builds this is an empty interface library
     add_library(libkernel32_vista INTERFACE)
+    target_link_libraries(libkernel32_vista INTERFACE roscompat_desc)
 else()
     # On pre-NT6 builds we create an additional DLL
     spec2def(kernel32_vista.dll kernel32_vista.spec ADD_IMPORTLIB)

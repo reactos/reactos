@@ -17,6 +17,7 @@ list(APPEND SOURCE
 if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
     # On NT6+ builds this is an empty interface library
     add_library(libadvapi32_vista INTERFACE)
+    target_link_libraries(libadvapi32_vista INTERFACE roscompat_desc)
 else()
     # On pre-NT6 builds we create an additional DLL
     spec2def(advapi32_vista.dll advapi32_vista.spec ADD_IMPORTLIB)

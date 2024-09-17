@@ -15,6 +15,7 @@ list(APPEND SOURCE
 if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
     # On NT6+ builds this is an empty interface library
     add_library(libntdll_vista INTERFACE)
+    target_link_libraries(libntdll_vista INTERFACE roscompat_desc)
 else()
     # On pre-NT6 builds we create an additional DLL
     spec2def(ntdll_vista.dll ntdll_vista.spec ADD_IMPORTLIB)
