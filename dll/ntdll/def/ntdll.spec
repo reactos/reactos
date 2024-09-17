@@ -262,6 +262,7 @@
 @ stdcall NtCompressKey(ptr)
 @ stdcall NtConnectPort(ptr ptr ptr ptr ptr ptr ptr ptr)
 @ stdcall NtContinue(ptr long)
+@ stub -version=0x500 NtCreateChannel() # For testing only
 @ stdcall NtCreateDebugObject(ptr long ptr long)
 @ stdcall NtCreateDirectoryObject(long long long)
 @ stub -version=0x600+ NtCreateEnlistment
