@@ -10,7 +10,7 @@ list(APPEND COMMON_SOURCE
     assembly.c
     fusion.c
     precomp.h
-    ${CMAKE_CURRENT_BINARY_DIR}/fusion_stubs.c)
+)
 
 add_library(fusion_common STATIC ${COMMON_SOURCE})
 add_dependencies(fusion_common psdk)
@@ -18,6 +18,7 @@ add_pch(fusion_common precomp.h COMMON_SOURCE)
 
 add_library(fusion MODULE
     version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/fusion_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/fusion.def)
 
 set_module_type(fusion win32dll)

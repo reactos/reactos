@@ -6,6 +6,7 @@ spec2def(fusion.dll fusion.spec)
 
 add_library(fusion_2_0 MODULE
     ${fusion_folder}/version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/fusion_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/fusion.def)
 
 set_module_type(fusion_2_0 win32dll)
