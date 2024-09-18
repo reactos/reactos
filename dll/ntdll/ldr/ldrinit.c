@@ -1284,8 +1284,8 @@ LdrpInitializeTls()
 
         /* Check if we have a directory */
         if (!TlsDirectory) continue;
-        /* Todo: change usage of TLS directory characteristics so it is not treated as an index anymore */
-        if (TlsDirectory->SizeOfZeroFill & 0x2) continue;
+        /* Tentatively this flag should be named LDRP_TLS_LOADED  */
+        if (LdrEntry->Flags & 0x10) continue;
 
         /* Check if the image has TLS */
         if (!LdrpImageHasTls) LdrpImageHasTls = TRUE;
@@ -1305,6 +1305,7 @@ LdrpInitializeTls()
         /* Lock the DLL and mark it for TLS Usage */
         LdrEntry->LoadCount = -1;
         LdrEntry->TlsIndex = -1;
+        LdrEntry->Flags |= 0x10;
 
         /* Save the cached TLS data */
         TlsData->TlsDirectory = *TlsDirectory;
@@ -1313,7 +1314,6 @@ LdrpInitializeTls()
         /* Update the index */
         *(PLONG)TlsData->TlsDirectory.AddressOfIndex = LdrpNumberOfTlsEntries;
         TlsData->TlsDirectory.Characteristics = LdrpNumberOfTlsEntries++;
-        TlsData->TlsDirectory.SizeOfZeroFill |= 0x2;
     }
 
     /* Done setting up TLS, allocate entries */
@@ -1488,7 +1488,6 @@ LdrpFreeTls(VOID)
                         OldTlsVectorDataEntry);
         }
     }
-    Teb->SystemReserved[0] = NULL;
 }
 
 NTSTATUS
