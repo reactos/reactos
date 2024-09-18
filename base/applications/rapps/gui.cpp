@@ -749,8 +749,7 @@ CMainWindow::GetWndClassInfo()
 HWND
 CMainWindow::Create()
 {
-    CStringW szWindowName;
-    szWindowName.LoadStringW(m_bAppwizMode ? IDS_APPWIZ_TITLE : IDS_APPTITLE);
+    const CStringW szWindowName(MAKEINTRESOURCEW(m_bAppwizMode ? IDS_APPWIZ_TITLE : IDS_APPTITLE));
 
     RECT r = {
         (SettingsInfo.bSaveWndPos ? SettingsInfo.Left : CW_USEDEFAULT),
