@@ -750,7 +750,7 @@ HWND
 CMainWindow::Create()
 {
     CStringW szWindowName;
-    szWindowName.LoadStringW(IDS_APPTITLE);
+    szWindowName.LoadStringW(m_bAppwizMode ? IDS_APPWIZ_TITLE : IDS_APPTITLE);
 
     RECT r = {
         (SettingsInfo.bSaveWndPos ? SettingsInfo.Left : CW_USEDEFAULT),

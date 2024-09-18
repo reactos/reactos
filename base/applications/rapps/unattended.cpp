@@ -350,15 +350,18 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
     {
         // Check whether the RAPPS MainWindow is already launched in another process
         HANDLE hMutex;
+        WCHAR szWindowText[200];
+        LPCWSTR pszMutex = bAppwizMode ? L"RAPPSAPPWIZ" : szWindowClass;
+        LoadStringW(hInst, bAppwizMode ? IDS_APPWIZ_TITLE : IDS_APPTITLE, szWindowText, _countof(szWindowText));
 
-        hMutex = CreateMutexW(NULL, FALSE, szWindowClass);
+        hMutex = CreateMutexW(NULL, FALSE, pszMutex);
         if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
         {
             /* If already started, find its window */
             HWND hWindow;
             for (int wait = 2500, inter = 250; wait > 0; wait -= inter)
             {
-                if ((hWindow = FindWindowW(szWindowClass, NULL)) != NULL)
+                if ((hWindow = FindWindowW(szWindowClass, szWindowText)) != NULL)
                     break;
                 Sleep(inter);
             }
