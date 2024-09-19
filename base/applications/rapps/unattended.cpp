@@ -371,12 +371,9 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
                 if (bAppwizMode)
                     PostMessage(hWindow, WM_COMMAND, ID_ACTIVATE_APPWIZ, 0);
 
-                if (IsWindowVisible(hWindow))
-                {
-                    if (hMutex)
-                        CloseHandle(hMutex);
-                    return FALSE;
-                }
+                if (hMutex)
+                    CloseHandle(hMutex);
+                return FALSE;
             }
         }
 
