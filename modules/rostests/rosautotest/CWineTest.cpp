@@ -11,7 +11,7 @@ static const DWORD ListTimeout = 10000;
 
 // This value needs to be lower than the <timeout> configured in sysreg.xml! (usually 180000)
 // Otherwise, sysreg2 kills the VM before we can kill the process.
-static const DWORD ProcessActivityTimeout = 170000;
+static const DWORD ProcessActivityTimeout = 60000;
 
 
 /**
@@ -288,12 +288,13 @@ void
 CWineTest::RunTest(CTestInfo* TestInfo)
 {
     DWORD BytesAvailable;
-    stringstream ss, ssFinish;
+    stringstream ss, ssFinish, ssTimeout;
     DWORD StartTime;
     float TotalTime;
     string tailString;
     CPipe Pipe;
     char Buffer[1024];
+    DWORD TimeutRepeats = 0;
 
     ss << "Running Wine Test, Module: " << TestInfo->Module << ", Test: " << TestInfo->Test << endl;
     StringOut(ss.str());
@@ -327,6 +328,17 @@ CWineTest::RunTest(CTestInfo* TestInfo)
             }
             else if (dwReadResult == WAIT_TIMEOUT)
             {
+                if (++TimeutRepeats < 3)
+                {
+                    // The process activity timeout above has elapsed without any new data.
+                    // We'll try to read again, but only a few times.
+                    float elapsed = ((float)GetTickCount() - StartTime)/1000;
+                    ssTimeout << "[ROSAUTOTEST] Test timeout #" << TimeutRepeats;
+                    ssTimeout << " @ " << elapsed << "s of test time. Retrying..." << endl;
+
+                    StringOut(ssTimeout.str());
+                    continue;
+                }
                 // The process activity timeout above has elapsed without any new data.
                 TESTEXCEPTION("Timeout while waiting for the test process\n");
             }
