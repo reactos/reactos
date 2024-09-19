@@ -1438,6 +1438,13 @@ static void test_FakeDLL(void)
             continue;
 
         dll_func = (BYTE *)GetProcAddress(module, func_name);
+#ifdef __REACTOS__
+        if (!dll_func)
+        {
+            /* Not a bug, but a feature (versioned exports) */
+            continue;
+        }
+#endif /* __REACTOS__ */
         ok(dll_func != NULL, "%s: GetProcAddress returned NULL\n", func_name);
 #if defined(__i386__)
         if (dll_func[0] == 0x90 && dll_func[1] == 0x90 &&
