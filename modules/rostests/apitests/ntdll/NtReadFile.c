@@ -55,6 +55,7 @@ START_TEST(NtReadFile)
     trace("System is %d bits, Size of MDL: %lu\n", Is64BitSystem() ? 64 : 32, SizeOfMdl());
     trace("Max MDL data size: 0x%lx bytes\n", LargeMdlMaxDataSize);
 
+    fprintf(stderr, "NtReadFile Line %u\n", __LINE__);
     ByteOffset.QuadPart = 0;
 
     Buffer = NULL;
@@ -71,6 +72,7 @@ START_TEST(NtReadFile)
         return;
     }
 
+    fprintf(stderr, "NtReadFile Line %u\n", __LINE__);
     InitializeObjectAttributes(&ObjectAttributes,
                                &FileName,
                                OBJ_CASE_INSENSITIVE,
@@ -88,6 +90,7 @@ START_TEST(NtReadFile)
                                                     FILE_NO_INTERMEDIATE_BUFFERING,
                           NULL,
                           0);
+    fprintf(stderr, "NtReadFile Line %u\n", __LINE__);
     ok_hex(Status, STATUS_SUCCESS);
 
     ByteOffset.QuadPart = 0x10000;
