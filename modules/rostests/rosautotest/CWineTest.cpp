@@ -288,7 +288,7 @@ void
 CWineTest::RunTest(CTestInfo* TestInfo)
 {
     DWORD BytesAvailable;
-    stringstream ss, ssFinish, ssTimeout;
+    stringstream ss, ssFinish;
     DWORD StartTime;
     float TotalTime;
     string tailString;
@@ -333,6 +333,7 @@ CWineTest::RunTest(CTestInfo* TestInfo)
                     // The process activity timeout above has elapsed without any new data.
                     // We'll try to read again, but only a few times.
                     float elapsed = ((float)GetTickCount() - StartTime)/1000;
+                    stringstream ssTimeout;
                     ssTimeout << "[ROSAUTOTEST] Test timeout #" << TimeutRepeats;
                     ssTimeout << " @ " << elapsed << "s of test time. Retrying..." << endl;
 
