@@ -95,7 +95,7 @@ ULONG PspJobInfoAlign[] =
  * @param[in] ExitStatus
  *     The exit status to be used for all terminated processes.
  */
-typedef struct _TERMINATE_PROCESS_CONTEXT
+typedef struct TERMINATE_PROCESS_CONTEXT
 {
     PEJOB Job;
     NTSTATUS ExitStatus;
@@ -324,7 +324,8 @@ PspRemoveProcessFromJob(
  * @param[in] Process
  *     A pointer to the process that is exiting the job.
  *
- * @remark This function is called from PspExitThread() as the last thread exits.
+ * @remark This function is called from PspExitThread() as the last thread
+ *         exits.
  */
 VOID
 NTAPI
@@ -897,7 +898,8 @@ NtAssignProcessToJobObject(
         /* Try to atomically compare-and-exchange the job pointer */
         if (InterlockedCompareExchangePointer((PVOID)&Process->Job, Job, NULL))
         {
-            ObDereferenceObject(Job);
+            /* At this point, the job was referenced twice */
+            ObDereferenceObjectEx(Job, 2);
             Status = STATUS_ACCESS_DENIED;
         }
         else
@@ -928,11 +930,12 @@ NtAssignProcessToJobObject(
  *     A handle to the process being queried.
  *
  * @param[in, optional] JobHandle
- *     An optional handle to the job object being compared. If NULL, the function
- *     checks if the process is associated with any job.
+ *     An optional handle to the job object being compared. If NULL,
+ *     the function checks if the process is associated with any job.
  *
  * @returns
- *     STATUS_PROCESS_IN_JOB if the process is in the job or any job (when JobHandle is NULL).
+ *     STATUS_PROCESS_IN_JOB if the process is in the job or any job (when
+ *     JobHandle is NULL).
  *     STATUS_PROCESS_NOT_IN_JOB if the process is not in the job or any job.
  *     Otherwise, an appropriate NTSTATUS error code.
  */
