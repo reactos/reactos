@@ -1262,6 +1262,7 @@ LdrpInitializeTls()
     PIMAGE_TLS_DIRECTORY TlsDirectory;
     PLDRP_TLS_DATA TlsData;
     ULONG Size;
+    BOOL AllocateTls = FALSE;
 
     /* Initialize the TLS List */
     if (!LdrpImageHasTls)
@@ -1289,6 +1290,7 @@ LdrpInitializeTls()
 
         /* Check if the image has TLS */
         if (!LdrpImageHasTls) LdrpImageHasTls = TRUE;
+        AllocateTls = TRUE;
 
         /* Show debug message */
         if (ShowSnaps)
@@ -1317,7 +1319,10 @@ LdrpInitializeTls()
     }
 
     /* Done setting up TLS, allocate entries */
-    return LdrpAllocateTls();
+    if (AllocateTls)
+        return LdrpAllocateTls();
+    else
+        return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -1335,7 +1340,7 @@ LdrpAllocateTls(VOID)
     /* Check if we have any entries */
     if (!LdrpNumberOfTlsEntries)
         return STATUS_SUCCESS;
-
+    /* Check if there are new entries to add to the vector */
     if (LdrpNumberOfTlsEntries == (ULONG)Teb->UserReserved[0])
         return STATUS_SUCCESS;
 
