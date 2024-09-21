@@ -14,7 +14,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_CONFIG DIALOGEX DISCARDABLE  0, 0, 340, 183
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Configurare a economizorului de ecran Matrix"
+CAPTION "Setări pentru economizorul de ecran Matrix"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "&Viteza de decodificare",IDC_STATIC,7,7,128,36
