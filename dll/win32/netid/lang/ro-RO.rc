@@ -1,8 +1,9 @@
 /*
- * FILE:          dll/win32/netid/lang/ro-RO.rc
- *                ReactOS Project (https://reactos.org)
- * TRANSLATORS:   Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *                Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
+ * PROJECT:     ReactOS Network ID Page
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
