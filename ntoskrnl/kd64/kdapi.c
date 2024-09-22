@@ -2359,7 +2359,59 @@ KdSystemDebugControl(
             break;
 
         case SysDbgReadControlSpace:
+            if (InputBufferLength != sizeof(SYSDBG_CONTROL_SPACE))
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+            else
+            {
+                SYSDBG_CONTROL_SPACE Request = *(PSYSDBG_CONTROL_SPACE)InputBuffer;
+                PVOID LockedBuffer;
+                PMDL LockVariable;
+
+                Status = ExLockUserBuffer(Request.Buffer,
+                                          Request.Request,
+                                          PreviousMode,
+                                          IoWriteAccess,
+                                          &LockedBuffer,
+                                          &LockVariable);
+                if (NT_SUCCESS(Status))
+                {
+                    Status = KdpSysReadControlSpace(Request.Processor,
+                                                    Request.Address,
+                                                    LockedBuffer,
+                                                    Request.Request,
+                                                    &Length);
+                    ExUnlockUserBuffer(LockVariable);
+                }
+            }
+            break;
+
         case SysDbgWriteControlSpace:
+            if (InputBufferLength != sizeof(SYSDBG_CONTROL_SPACE))
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+            else
+            {
+                SYSDBG_CONTROL_SPACE Request = *(PSYSDBG_CONTROL_SPACE)InputBuffer;
+                PVOID LockedBuffer;
+                PMDL LockVariable;
+
+                Status = ExLockUserBuffer(Request.Buffer,
+                                          Request.Request,
+                                          PreviousMode,
+                                          IoReadAccess,
+                                          &LockedBuffer,
+                                          &LockVariable);
+                if (NT_SUCCESS(Status))
+                {
+                    Status = KdpSysWriteControlSpace(Request.Processor,
+                                                     Request.Address,
+                                                     LockedBuffer,
+                                                     Request.Request,
+                                                     &Length);
+                    ExUnlockUserBuffer(LockVariable);
+                }
+            }
+            break;
+
         case SysDbgReadIoSpace:
         case SysDbgWriteIoSpace:
         case SysDbgReadMsr:
