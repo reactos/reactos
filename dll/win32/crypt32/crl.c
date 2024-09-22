@@ -24,7 +24,6 @@
 #include "winbase.h"
 #include "wincrypt.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "crypt32_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
@@ -614,7 +613,7 @@ static BOOL compare_dist_point_name(const CRL_DIST_POINT_NAME *name1,
                         switch (entry1->dwAltNameChoice)
                         {
                         case CERT_ALT_NAME_URL:
-                            match = !strcmpiW(entry1->u.pwszURL,
+                            match = !wcsicmp(entry1->u.pwszURL,
                              entry2->u.pwszURL);
                             break;
                         case CERT_ALT_NAME_DIRECTORY_NAME:
