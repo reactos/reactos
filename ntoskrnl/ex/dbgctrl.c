@@ -351,10 +351,27 @@ NtSystemDebugControl(
                 break;
 
             case SysDbgGetTriageDump:
-            case SysDbgGetKdBlockEnable:
-            case SysDbgSetKdBlockEnable:
                 UNIMPLEMENTED;
                 Status = STATUS_NOT_IMPLEMENTED;
+                break;
+
+            case SysDbgGetKdBlockEnable:
+                if (OutputBufferLength != sizeof(BOOLEAN))
+                    Status = STATUS_INFO_LENGTH_MISMATCH;
+                else
+                {
+                    *(PBOOLEAN)OutputBuffer = KdBlockEnable;
+                    Status = STATUS_SUCCESS;
+                }
+                break;
+
+            case SysDbgSetKdBlockEnable:
+                Status = KdChangeOption(KD_OPTION_SET_BLOCK_ENABLE,
+                                        InputBufferLength,
+                                        InputBuffer,
+                                        OutputBufferLength,
+                                        OutputBuffer,
+                                        &Length);
                 break;
 
             default:
