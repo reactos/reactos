@@ -60,18 +60,21 @@ typedef struct _VD_HEADER
 typedef struct _PVD
 {
     UCHAR  VdType;                      // 1
-    CHAR   StandardId[5];               // 2-6
+    UCHAR  StandardId[5];               // 2-6
     UCHAR  VdVersion;                   // 7
     UCHAR  unused0;                     // 8
-    CHAR   SystemId[32];                // 9-40
-    CHAR   VolumeId[32];                // 41-72
+    UCHAR  SystemId[32];                // 9-40
+    UCHAR  VolumeId[32];                // 41-72
     UCHAR  unused1[8];                  // 73-80
     ULONG  VolumeSpaceSizeL;            // 81-84
     ULONG  VolumeSpaceSizeM;            // 85-88
     UCHAR  unused2[32];                 // 89-120
-    ULONG  VolumeSetSize;               // 121-124
-    ULONG  VolumeSequenceNumber;        // 125-128
-    ULONG  LogicalBlockSize;            // 129-132
+    USHORT VolumeSetSizeL;              // 121-122
+    USHORT VolumeSetSizeM;              // 123-124
+    USHORT VolumeSeqNumberL;            // 125-126
+    USHORT VolumeSeqNumberM;            // 127-128
+    USHORT LogicalBlockSizeL;           // 129-130
+    USHORT LogicalBlockSizeM;           // 131-132
     ULONG  PathTableSizeL;              // 133-136
     ULONG  PathTableSizeM;              // 137-140
     ULONG  LPathTablePos;               // 141-144
@@ -79,8 +82,8 @@ typedef struct _PVD
     ULONG  MPathTablePos;               // 149-152
     ULONG  MOptPathTablePos;            // 153-156
     DIR_RECORD RootDirRecord;           // 157-190
-    CHAR   VolumeSetIdentifier[128];    // 191-318
-    CHAR   PublisherIdentifier[128];    // 319-446
+    UCHAR  VolumeSetIdentifier[128];    // 191-318
+    UCHAR  PublisherIdentifier[128];    // 319-446
 
     /* more data ... */
 } PVD, *PPVD;
