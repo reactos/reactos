@@ -1079,6 +1079,14 @@ KeBugCheckUnicodeToAnsi(
     IN ULONG Length
 );
 
+#ifdef CONFIG_SMP
+ULONG
+NTAPI
+KiFindIdealProcessor(
+    _In_ KAFFINITY ProcessorSet,
+    _In_ UCHAR OriginalIdealProcessor);
+#endif // CONFIG_SMP
+
 #ifdef __cplusplus
 } // extern "C"
 
