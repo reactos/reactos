@@ -1008,15 +1008,22 @@ DriverEntry(
     KdSystemDebugControl('CsoR', DbgPostServiceHook, ID_Win32PostServiceHook, 0, 0, 0, 0);
 #endif
 
+    SIZE_T HeapSize = 1 * 1024 * 1024; /* FIXME: 1 MB for now... */
+    SIZE_T SectionSize = HeapSize + MAX_USER_HANDLES * sizeof(USER_HANDLE_ENTRY);
+
     /* Create the global USER heap */
     GlobalUserHeap = UserCreateHeap(&GlobalUserHeapSection,
                                     &GlobalUserHeapBase,
-                                    1 * 1024 * 1024); /* FIXME: 1 MB for now... */
+                                    HeapSize,
+                                    SectionSize);
     if (GlobalUserHeap == NULL)
     {
         DPRINT1("Failed to initialize the global heap!\n");
         return STATUS_UNSUCCESSFUL;
     }
+
+    /* Calculate the base address for the handle table */
+    gHandleEntries = (PUSER_HANDLE_ENTRY)((ULONG_PTR)GlobalUserHeapBase + HeapSize);
 
     /* Init the global user lock */
     ExInitializeResourceLite(&UserLock);

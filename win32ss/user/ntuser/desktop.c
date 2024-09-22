@@ -2313,6 +2313,7 @@ UserInitializeDesktop(PDESKTOP pdesk, PUNICODE_STRING DesktopName, PWINSTATION_O
     pdesk->hsectionDesktop = NULL;
     pdesk->pheapDesktop = UserCreateHeap(&pdesk->hsectionDesktop,
                                          &DesktopHeapSystemBase,
+                                         HeapSize,
                                          HeapSize);
     if (pdesk->pheapDesktop == NULL)
     {
@@ -3262,7 +3263,7 @@ IntMapDesktopView(IN PDESKTOP pdesk)
                                 &ViewSize,
                                 ViewUnmap,
                                 SEC_NO_CHANGE,
-                                PAGE_EXECUTE_READ); /* Would prefer PAGE_READONLY, but thanks to RTL heaps... */
+                                PAGE_READONLY);
     if (!NT_SUCCESS(Status))
     {
         ERR("Failed to map desktop\n");

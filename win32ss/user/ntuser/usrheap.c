@@ -28,7 +28,6 @@ PVOID GlobalUserHeapSection = NULL;
 
 _Function_class_(RTL_HEAP_COMMIT_ROUTINE)
 _IRQL_requires_same_
-static
 NTSTATUS
 NTAPI
 IntUserHeapCommitRoutine(
@@ -81,7 +80,7 @@ IntUserHeapCommitRoutine(
                                     &ViewSize,
                                     ViewUnmap,
                                     SEC_NO_CHANGE,
-                                    PAGE_EXECUTE_READ); /* Would prefer PAGE_READONLY, but thanks to RTL heaps... */
+                                    PAGE_READONLY);
 
         if (!NT_SUCCESS(Status))
             return Status;
@@ -97,7 +96,7 @@ IntUserHeapCommitRoutine(
                                      0,
                                      CommitSize,
                                      MEM_COMMIT,
-                                     PAGE_EXECUTE_READ);
+                                     PAGE_READONLY);
 
     if (NT_SUCCESS(Status))
     {
@@ -139,7 +138,7 @@ IntUserHeapCreate(IN PVOID SectionObject,
                                 &ViewSize,
                                 ViewUnmap,
                                 SEC_NO_CHANGE,
-                                PAGE_EXECUTE_READ); /* Would prefer PAGE_READONLY, but thanks to RTL heaps... */
+                                PAGE_READONLY);
     if (!NT_SUCCESS(Status))
         return NULL;
 
@@ -148,7 +147,7 @@ IntUserHeapCreate(IN PVOID SectionObject,
                                      0,
                                      &ViewSize,
                                      MEM_COMMIT,
-                                     PAGE_EXECUTE_READ); /* Would prefer PAGE_READONLY, but thanks to RTL heaps... */
+                                     PAGE_READONLY);
 
     MmUnmapViewOfSection(PsGetCurrentProcess(),
                          MappedView);
@@ -178,22 +177,24 @@ IntUserHeapCreate(IN PVOID SectionObject,
 }
 
 PWIN32HEAP
-UserCreateHeap(OUT PVOID *SectionObject,
-               IN OUT PVOID *SystemBase,
-               IN SIZE_T HeapSize)
+UserCreateHeap(
+    _Out_ PVOID *SectionObject,
+    _Out_ PVOID *SystemBase,
+    _In_ SIZE_T HeapSize,
+    _In_ SIZE_T SectionSize)
 {
-    LARGE_INTEGER SizeHeap;
+    LARGE_INTEGER Size;
     PWIN32HEAP pHeap = NULL;
     NTSTATUS Status;
 
-    SizeHeap.QuadPart = HeapSize;
+    Size.QuadPart = SectionSize;
 
     /* Create the section and map it into session space */
     Status = MmCreateSection((PVOID*)SectionObject,
                              SECTION_ALL_ACCESS,
                              NULL,
-                             &SizeHeap,
-                             PAGE_EXECUTE_READWRITE, /* Would prefer PAGE_READWRITE, but thanks to RTL heaps... */
+                             &Size,
+                             PAGE_READWRITE,
                              SEC_RESERVE | 1,
                              NULL,
                              NULL);
@@ -206,7 +207,7 @@ UserCreateHeap(OUT PVOID *SectionObject,
 
     Status = MmMapViewInSessionSpace(*SectionObject,
                                      SystemBase,
-                                     &HeapSize);
+                                     &SectionSize);
     if (!NT_SUCCESS(Status))
     {
         ObDereferenceObject(*SectionObject);
@@ -315,7 +316,7 @@ MapGlobalUserHeap(IN  PEPROCESS Process,
                                 &ViewSize,
                                 ViewUnmap,
                                 SEC_NO_CHANGE,
-                                PAGE_EXECUTE_READ); /* Would prefer PAGE_READONLY, but thanks to RTL heaps... */
+                                PAGE_READONLY);
     if (!NT_SUCCESS(Status))
     {
         ERR_CH(UserProcess, "MapGlobalUserHeap - Failed to map the global heap! 0x%x\n", Status);
