@@ -2491,7 +2491,63 @@ KdSystemDebugControl(
             break;
 
         case SysDbgReadBusData:
+            if (InputBufferLength != sizeof(SYSDBG_BUS_DATA))
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+            else
+            {
+                SYSDBG_BUS_DATA Request = *(PSYSDBG_BUS_DATA)InputBuffer;
+                PVOID LockedBuffer;
+                PMDL LockVariable;
+
+                Status = ExLockUserBuffer(Request.Buffer,
+                                          Request.Request,
+                                          PreviousMode,
+                                          IoWriteAccess,
+                                          &LockedBuffer,
+                                          &LockVariable);
+                if (NT_SUCCESS(Status))
+                {
+                    Status = KdpSysReadBusData(Request.BusDataType,
+                                               Request.BusNumber,
+                                               Request.SlotNumber,
+                                               Request.Address,
+                                               LockedBuffer,
+                                               Request.Request,
+                                               &Length);
+                    ExUnlockUserBuffer(LockVariable);
+                }
+            }
+            break;
+
         case SysDbgWriteBusData:
+            if (InputBufferLength != sizeof(SYSDBG_BUS_DATA))
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+            else
+            {
+                SYSDBG_BUS_DATA Request = *(PSYSDBG_BUS_DATA)InputBuffer;
+                PVOID LockedBuffer;
+                PMDL LockVariable;
+
+                Status = ExLockUserBuffer(Request.Buffer,
+                                          Request.Request,
+                                          PreviousMode,
+                                          IoReadAccess,
+                                          &LockedBuffer,
+                                          &LockVariable);
+                if (NT_SUCCESS(Status))
+                {
+                    Status = KdpSysWriteBusData(Request.BusDataType,
+                                                Request.BusNumber,
+                                                Request.SlotNumber,
+                                                Request.Address,
+                                                LockedBuffer,
+                                                Request.Request,
+                                                &Length);
+                    ExUnlockUserBuffer(LockVariable);
+                }
+            }
+            break;
+
         case SysDbgCheckLowMemory:
             UNIMPLEMENTED;
             Status = STATUS_NOT_IMPLEMENTED;
