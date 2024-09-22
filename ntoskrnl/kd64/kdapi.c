@@ -2291,6 +2291,15 @@ KdSystemDebugControl(
     switch (Command)
     {
         case SysDbgQueryVersion:
+            if (OutputBufferLength != sizeof(DBGKD_GET_VERSION64))
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+            else
+            {
+                KdpSysGetVersion((PDBGKD_GET_VERSION64)OutputBuffer);
+                Status = STATUS_SUCCESS;
+            }
+            break;
+
         case SysDbgReadVirtual:
         case SysDbgWriteVirtual:
         case SysDbgReadPhysical:
