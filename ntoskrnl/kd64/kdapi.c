@@ -2471,7 +2471,25 @@ KdSystemDebugControl(
             break;
 
         case SysDbgReadMsr:
+            if (InputBufferLength != sizeof(SYSDBG_MSR))
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+            else
+            {
+                PSYSDBG_MSR Request = (PSYSDBG_MSR)InputBuffer;
+                Status = KdpSysReadMsr(Request->Address, &Request->Data);
+            }
+            break;
+
         case SysDbgWriteMsr:
+            if (InputBufferLength != sizeof(SYSDBG_MSR))
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+            else
+            {
+                PSYSDBG_MSR Request = (PSYSDBG_MSR)InputBuffer;
+                Status = KdpSysWriteMsr(Request->Address, &Request->Data);
+            }
+            break;
+
         case SysDbgReadBusData:
         case SysDbgWriteBusData:
         case SysDbgCheckLowMemory:
