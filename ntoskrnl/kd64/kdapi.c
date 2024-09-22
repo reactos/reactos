@@ -2549,8 +2549,7 @@ KdSystemDebugControl(
             break;
 
         case SysDbgCheckLowMemory:
-            UNIMPLEMENTED;
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = KdpSysCheckLowMemory(0);
             break;
 
         default:
