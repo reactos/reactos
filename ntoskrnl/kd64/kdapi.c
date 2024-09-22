@@ -2331,6 +2331,33 @@ KdSystemDebugControl(
 
         case SysDbgReadPhysical:
         case SysDbgWritePhysical:
+            if (InputBufferLength != sizeof(SYSDBG_PHYSICAL))
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+            else
+            {
+                SYSDBG_PHYSICAL Request = *(PSYSDBG_PHYSICAL)InputBuffer;
+                PVOID LockedBuffer;
+                PMDL LockVariable;
+
+                Status = ExLockUserBuffer(Request.Buffer,
+                                          Request.Request,
+                                          PreviousMode,
+                                          Command == SysDbgReadVirtual ? IoWriteAccess : IoReadAccess,
+                                          &LockedBuffer,
+                                          &LockVariable);
+                if (NT_SUCCESS(Status))
+                {
+                    Status = KdpCopyMemoryChunks(Request.Address.QuadPart,
+                                                 Request.Buffer,
+                                                 Request.Request,
+                                                 0,
+                                                 MMDBG_COPY_PHYSICAL | (Command == SysDbgReadVirtual ? 0 : MMDBG_COPY_WRITE),
+                                                 &Length);
+                    ExUnlockUserBuffer(LockVariable);
+                }
+            }
+            break;
+
         case SysDbgReadControlSpace:
         case SysDbgWriteControlSpace:
         case SysDbgReadIoSpace:
