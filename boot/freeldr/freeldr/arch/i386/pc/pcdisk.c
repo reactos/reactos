@@ -338,14 +338,15 @@ DiskGetExtendedDriveParameters(
     TRACE("number of physical cylinders on drive:   %u\n", *(PULONG)&Ptr[2]);
     TRACE("number of physical heads on drive:       %u\n", *(PULONG)&Ptr[4]);
     TRACE("number of physical sectors per track:    %u\n", *(PULONG)&Ptr[6]);
-    TRACE("total number of sectors on drive:        %I64u\n", *(unsigned long long*)&Ptr[8]);
+    TRACE("total number of sectors on drive:        %I64u\n", *(PULONGLONG)&Ptr[8]);
     TRACE("bytes per sector:                        %u\n", Ptr[12]);
     if (Ptr[0] >= 0x1e)
     {
-        TRACE("EED configuration parameters:            %x:%x\n", Ptr[13], Ptr[14]);
+        // Ptr[13]: offset, Ptr[14]: segment
+        TRACE("EDD configuration parameters:            %x:%x\n", Ptr[14], Ptr[13]);
         if (Ptr[13] != 0xffff && Ptr[14] != 0xffff)
         {
-            PUCHAR SpecPtr = (PUCHAR)(ULONG_PTR)((Ptr[13] << 4) + Ptr[14]);
+            PUCHAR SpecPtr = (PUCHAR)(ULONG_PTR)((Ptr[14] << 4) + Ptr[13]);
             TRACE("SpecPtr:                                 %x\n", SpecPtr);
             TRACE("physical I/O port base address:          %x\n", *(PUSHORT)&SpecPtr[0]);
             TRACE("disk-drive control port address:         %x\n", *(PUSHORT)&SpecPtr[2]);
