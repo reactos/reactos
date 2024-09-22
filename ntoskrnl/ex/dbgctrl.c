@@ -322,8 +322,34 @@ NtSystemDebugControl(
                 break;
 
             case SysDbgSetPrintBufferSize:
+                UNIMPLEMENTED;
+                Status = STATUS_NOT_IMPLEMENTED;
+                break;
+
             case SysDbgGetKdUmExceptionEnable:
+                if (OutputBufferLength != sizeof(BOOLEAN))
+                    Status = STATUS_INFO_LENGTH_MISMATCH;
+                else
+                {
+                    /* Unfortunately, the internal flag says if UM exceptions are disabled */
+                    *(PBOOLEAN)OutputBuffer = !KdIgnoreUmExceptions;
+                    Status = STATUS_SUCCESS;
+                }
+                break;
+
             case SysDbgSetKdUmExceptionEnable:
+                if (InputBufferLength != sizeof(BOOLEAN))
+                    Status = STATUS_INFO_LENGTH_MISMATCH;
+                else if (KdPitchDebugger)
+                    Status = STATUS_ACCESS_DENIED;
+                else
+                {
+                    /* Unfortunately, the internal flag says if UM exceptions are disabled */
+                    KdIgnoreUmExceptions = !*(PBOOLEAN)InputBuffer;
+                    Status = STATUS_SUCCESS;
+                }
+                break;
+
             case SysDbgGetTriageDump:
             case SysDbgGetKdBlockEnable:
             case SysDbgSetKdBlockEnable:
