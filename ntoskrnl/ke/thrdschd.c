@@ -75,6 +75,42 @@ KiQueueReadyThread(IN PKTHREAD Thread,
 }
 
 #ifdef CONFIG_SMP
+ULONG
+NTAPI
+KiFindIdealProcessor(
+    _In_ KAFFINITY ProcessorSet,
+    _In_ UCHAR OriginalIdealProcessor)
+{
+    PKPRCB OriginalIdealPrcb;
+    KAFFINITY NodeMask;
+    ULONG Processor;
+
+    /* Check if we can use the original ideal processor */
+    if (ProcessorSet & AFFINITY_MASK(OriginalIdealProcessor))
+    {
+        /* We can, so use it */
+        return OriginalIdealProcessor;
+    }
+
+    /* Only use active processors */
+    ProcessorSet &= KeActiveProcessors;
+
+    /* Get the original ideal PRCB */
+    OriginalIdealPrcb = KiProcessorBlock[OriginalIdealProcessor];
+
+    /* Check if we can use the original node */
+    NodeMask = OriginalIdealPrcb->ParentNode->ProcessorMask & ProcessorSet;
+    if (NodeMask)
+    {
+        /* Use the node set instead */
+        ProcessorSet = NodeMask;
+    }
+
+    /* Calculate the ideal CPU from the affinity set */
+    BitScanReverseAffinity(&Processor, ProcessorSet);
+    return Processor;
+}
+
 static
 ULONG
 KiSelectNextProcessor(
@@ -740,6 +776,10 @@ KiSetAffinityThread(IN PKTHREAD Thread,
     if (!Thread->SystemAffinityActive)
     {
 #ifdef CONFIG_SMP
+        /* Calculate the new ideal processor from the affinity set */
+        Thread->UserIdealProcessor =
+            KiFindIdealProcessor(Affinity, Thread->UserIdealProcessor);
+
         /* FIXME: TODO */
         DPRINT1("Affinity support disabled!\n");
 #endif

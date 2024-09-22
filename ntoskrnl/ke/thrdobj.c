@@ -1119,29 +1119,10 @@ KeSetSystemAffinityThread(IN KAFFINITY Affinity)
     CurrentThread->Affinity = Affinity;
     CurrentThread->SystemAffinityActive = TRUE;
 
-    /* Check if the ideal processor is part of the affinity */
 #ifdef CONFIG_SMP
-    if (!(Affinity & AFFINITY_MASK(CurrentThread->IdealProcessor)))
-    {
-        KAFFINITY AffinitySet, NodeMask;
-        ULONG IdealProcessor;
-
-        /* It's not! Get the PRCB */
-        Prcb = KiProcessorBlock[CurrentThread->IdealProcessor];
-
-        /* Calculate the affinity set */
-        AffinitySet = KeActiveProcessors & Affinity;
-        NodeMask = Prcb->ParentNode->ProcessorMask & AffinitySet;
-        if (NodeMask)
-        {
-            /* Use the Node set instead */
-            AffinitySet = NodeMask;
-        }
-
-        /* Calculate the ideal CPU from the affinity set */
-        BitScanReverseAffinity(&IdealProcessor, AffinitySet);
-        CurrentThread->IdealProcessor = (UCHAR)IdealProcessor;
-    }
+    /* Calculate the ideal processor from the affinity set */
+    CurrentThread->IdealProcessor =
+        KiFindIdealProcessor(Affinity, CurrentThread->IdealProcessor);
 #endif
 
     /* Get the current PRCB and check if it doesn't match this affinity */
