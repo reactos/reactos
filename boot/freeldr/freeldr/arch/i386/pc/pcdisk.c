@@ -443,8 +443,12 @@ InitDriveGeometry(
     Cylinders++;
     DiskDrive->Geometry.Cylinders = Cylinders;
     DiskDrive->Geometry.Heads = RegsOut.b.dh + 1;
-    DiskDrive->Geometry.Sectors = RegsOut.b.cl & 0x3F;
-    DiskDrive->Geometry.BytesPerSector = 512;     /* Just assume 512 bytes per sector */
+    DiskDrive->Geometry.SectorsPerTrack = RegsOut.b.cl & 0x3F;
+    DiskDrive->Geometry.BytesPerSector = 512;   /* Just assume 512 bytes per sector */
+
+    DiskDrive->Geometry.Sectors = (ULONGLONG)DiskDrive->Geometry.Cylinders *
+                                             DiskDrive->Geometry.Heads *
+                                             DiskDrive->Geometry.SectorsPerTrack;
 
     TRACE("Regular Int13h(0x%x) returned:\n"
           "Cylinders  : 0x%x\n"
@@ -454,7 +458,7 @@ InitDriveGeometry(
           DriveNumber,
           DiskDrive->Geometry.Cylinders,
           DiskDrive->Geometry.Heads,
-          DiskDrive->Geometry.Sectors, RegsOut.b.cl,
+          DiskDrive->Geometry.SectorsPerTrack, RegsOut.b.cl,
           DiskDrive->Geometry.BytesPerSector);
 
     return Success;
@@ -645,40 +649,35 @@ PcDiskReadLogicalSectorsCHS(
     ULONG RetryCount;
 
     DriveGeometry = DiskDrive->Geometry;
-    if (DriveGeometry.Sectors == 0 || DriveGeometry.Heads == 0)
+    if (DriveGeometry.SectorsPerTrack == 0 || DriveGeometry.Heads == 0)
         return FALSE;
 
     while (SectorCount > 0)
     {
         /*
          * Calculate the physical disk offsets.
-         * Note: DriveGeometry.Sectors < 64
+         * Note: DriveGeometry.SectorsPerTrack < 64
          */
-        PhysicalSector = 1 + (UCHAR)(SectorNumber % DriveGeometry.Sectors);
-        PhysicalHead = (UCHAR)((SectorNumber / DriveGeometry.Sectors) % DriveGeometry.Heads);
-        PhysicalTrack = (ULONG)((SectorNumber / DriveGeometry.Sectors) / DriveGeometry.Heads);
+        PhysicalSector = 1 + (UCHAR)(SectorNumber % DriveGeometry.SectorsPerTrack);
+        PhysicalHead = (UCHAR)((SectorNumber / DriveGeometry.SectorsPerTrack) % DriveGeometry.Heads);
+        PhysicalTrack = (ULONG)((SectorNumber / DriveGeometry.SectorsPerTrack) / DriveGeometry.Heads);
 
         /* Calculate how many sectors we need to read this round */
         if (PhysicalSector > 1)
         {
-            if (SectorCount >= (DriveGeometry.Sectors - (PhysicalSector - 1)))
-                NumberOfSectorsToRead = (DriveGeometry.Sectors - (PhysicalSector - 1));
-            else
-                NumberOfSectorsToRead = SectorCount;
+            NumberOfSectorsToRead = min(SectorCount,
+                                        (DriveGeometry.SectorsPerTrack - (PhysicalSector - 1)));
         }
         else
         {
-            if (SectorCount >= DriveGeometry.Sectors)
-                NumberOfSectorsToRead = DriveGeometry.Sectors;
-            else
-                NumberOfSectorsToRead = SectorCount;
+            NumberOfSectorsToRead = min(SectorCount, DriveGeometry.SectorsPerTrack);
         }
 
         /* Make sure the read is within the geometry boundaries */
         if ((PhysicalHead >= DriveGeometry.Heads) ||
             (PhysicalTrack >= DriveGeometry.Cylinders) ||
-            ((NumberOfSectorsToRead + PhysicalSector) > (DriveGeometry.Sectors + 1)) ||
-            (PhysicalSector > DriveGeometry.Sectors))
+            ((NumberOfSectorsToRead + PhysicalSector) > (DriveGeometry.SectorsPerTrack + 1)) ||
+            (PhysicalSector > DriveGeometry.SectorsPerTrack))
         {
             DiskError("Disk read exceeds drive geometry limits.", 0);
             return FALSE;
@@ -817,8 +816,9 @@ PcDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY Geometry)
         /* Extended geometry has been initialized, return it */
         Geometry->Cylinders = DiskDrive->ExtGeometry.Cylinders;
         Geometry->Heads = DiskDrive->ExtGeometry.Heads;
-        Geometry->Sectors = DiskDrive->ExtGeometry.SectorsPerTrack;
+        Geometry->SectorsPerTrack = DiskDrive->ExtGeometry.SectorsPerTrack;
         Geometry->BytesPerSector = DiskDrive->ExtGeometry.BytesPerSector;
+        Geometry->Sectors = DiskDrive->ExtGeometry.Sectors;
     }
     else
     /* Fall back to legacy BIOS geometry */
@@ -845,7 +845,7 @@ PcDiskGetCacheableBlockCount(UCHAR DriveNumber)
     if (DiskDrive->Int13ExtensionsSupported)
         return 64;
     else
-        return DiskDrive->Geometry.Sectors;
+        return DiskDrive->Geometry.SectorsPerTrack;
 }
 
 /* EOF */

@@ -394,7 +394,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
         {
             Int13Drives[i].DriveSelect = DriveNumber;
             Int13Drives[i].MaxCylinders = Geometry.Cylinders - 1;
-            Int13Drives[i].SectorsPerTrack = (USHORT)Geometry.Sectors;
+            Int13Drives[i].SectorsPerTrack = (USHORT)Geometry.SectorsPerTrack;
             Int13Drives[i].MaxHeads = (USHORT)Geometry.Heads - 1;
             Int13Drives[i].NumberDrives = DiskCount;
 
@@ -402,7 +402,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
                   DriveNumber,
                   Geometry.Cylinders - 1,
                   Geometry.Heads - 1,
-                  Geometry.Sectors,
+                  Geometry.SectorsPerTrack,
                   Geometry.BytesPerSector);
         }
     }
