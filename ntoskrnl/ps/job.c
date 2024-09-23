@@ -113,6 +113,78 @@ PspInitializeJobStructures(VOID)
 }
 
 /*!
+ * Advances the job enumerator to the next process in the job's process list.
+ *
+ * @param Job
+ *     Pointer to the job object containing the process list.
+ *
+ * @param Process
+ *     Pointer to the current process obtained from a previous call to
+ *     PspAdvanceJobEnumerator.
+ *
+ * @return
+ *     Pointer to the next valid process, or NULL if no more processes are
+ *     available.
+ */
+PEPROCESS
+PspAdvanceJobEnumerator(
+    _In_ PEJOB Job,
+    _In_opt_ PEPROCESS Process
+)
+{
+    PLIST_ENTRY Entry;
+    PEPROCESS Next;
+
+    ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
+
+    /* If Process is NULL, the enumeration starts from the first process.
+       Otherwise, continue from the next process */
+    if (Process)
+    {
+        Entry = Process->JobLinks.Flink;
+    }
+    else
+    {
+        Entry = Job->ProcessListHead.Flink;
+    }
+
+    /* Iterate through the job's process list */
+    do
+    {
+        if (Entry != &Job->ProcessListHead)
+        {
+            Next = CONTAINING_RECORD(Entry, EPROCESS, JobLinks);
+
+            /* We use the safe variant because it returns FALSE if
+               the object is being deleted */
+            if (ObReferenceObjectSafe(Next))
+            {
+                /* Found a valid process */
+                break;
+            }
+        }
+        else
+        {
+            /* Reached the end */
+            Next = NULL;
+            break;
+        }
+
+        /* Move to the next process */
+        Entry = Entry->Flink;
+    } while (Entry != &Job->ProcessListHead);
+
+    ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
+
+    if (Process != NULL)
+    {
+        ObDereferenceObject(Process);
+    }
+
+    return Next;
+}
+
+/*!
  * Enumerates all processes currently associated with the specified job object
  * and calls the provided callback function for each process.
  *
@@ -143,45 +215,26 @@ PspEnumerateProcessesInJob(
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PEPROCESS Process;
-    PLIST_ENTRY Entry;
 
-    ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
+    /* Start enumerating processes with the first process */
+    Process = PspAdvanceJobEnumerator(Job, NULL);
 
-    Entry = Job->ProcessListHead.Flink;
-
-    /* For each process in job process list */
-    while (Entry != &Job->ProcessListHead)
+    /* Loop through each process in the job until no process remains */
+    while (Process)
     {
-        /* Get process object */
-        Process = CONTAINING_RECORD(Entry, EPROCESS, JobLinks);
-
-        /* Move to the next process in the list */
-        Entry = Entry->Flink;
-
-        /* Increase the reference count of the process object. We use
-           the safe variant here because it returns FALSE if the object
-           is being deleted */
-        if (!ObReferenceObjectSafe(Process))
-        {
-            /* The process is being deleted, continue on to the next one */
-            continue;
-        }
-
         /* Call the callback function */
         Status = Callback(Process, Context);
-
-        /* Decrease the reference count */
-        ObDereferenceObject(Process);
 
         /* Check if the callback returned an error */
         if (!NT_SUCCESS(Status))
         {
-            /* Exit the loop on error */
+            /* And exit the loop on error */
             break;
         }
-    }
 
-    ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
+        /* Advance to the next process */
+        Process = PspAdvanceJobEnumerator(Job, Process);
+    }
 
     return Status;
 }
@@ -287,14 +340,8 @@ PspRemoveProcessFromJob(
 
     ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
 
-    /* Attempt to atomically set the process's job pointer to NULL if it is
-       currently set to the specified job */
-    if (InterlockedCompareExchangePointer((PVOID)&Process->Job,
-                                          NULL,
-                                          Job) == Job)
-    {
-        /* Remove the process from the job's process list */
-        RemoveEntryList(&Process->JobLinks);
+    /* Remove the process from the job's process list */
+    RemoveEntryList(&Process->JobLinks);
 
     /* Decrement the job's active process count */
     if (!(Process->JobStatus & JOB_NOT_REALLY_ACTIVE))
@@ -302,7 +349,6 @@ PspRemoveProcessFromJob(
         /* Assert that the job's active process count does not underflow */
         ASSERT((Job->ActiveProcesses - 1) < Job->ActiveProcesses);
 
-        /* Decrement the job's active process count */
         Job->ActiveProcesses--;
 
         /* Flag the job as inactive to prevent the number of active processes
@@ -428,11 +474,6 @@ PspTerminateProcessCallback(
         {
             Job->ActiveProcesses--;
 
-    /* Check if there are no active processes left in the job */
-    if (Job->ActiveProcesses == 0)
-    {
-        /* If so, notify anyone waiting for the job object */
-        KeSetEvent(&Job->Event, IO_NO_INCREMENT, FALSE);
             /* Flag the job as inactive to prevent the number of active
                processes from repeatedly decrementing */
             InterlockedOr((PLONG)&Process->JobStatus,
