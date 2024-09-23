@@ -1509,7 +1509,12 @@ MmAlterViewAttributes(PMMSUPPORT AddressSpace,
                  */
                 Page = MmGetPfnForProcess(Process, Address);
 
-                Protect = PAGE_READONLY;
+                /* Choose protection based on what was requested */
+                if (NewProtect == PAGE_EXECUTE_READWRITE)
+                    Protect = PAGE_EXECUTE_READ;
+                else
+                    Protect = PAGE_READONLY;
+
                 if (IS_SWAP_FROM_SSE(Entry) || PFN_FROM_SSE(Entry) != Page)
                 {
                     Protect = NewProtect;
