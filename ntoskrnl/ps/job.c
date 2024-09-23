@@ -296,21 +296,21 @@ PspRemoveProcessFromJob(
         /* Remove the process from the job's process list */
         RemoveEntryList(&Process->JobLinks);
 
+    /* Decrement the job's active process count */
+    if (!(Process->JobStatus & JOB_NOT_REALLY_ACTIVE))
+    {
         /* Assert that the job's active process count does not underflow */
         ASSERT((Job->ActiveProcesses - 1) < Job->ActiveProcesses);
 
         /* Decrement the job's active process count */
         Job->ActiveProcesses--;
 
-        /* TODO: Ensure that job limits are respected */
+        /* Flag the job as inactive to prevent the number of active processes
+           from repeatedly decrementing */
+        InterlockedOr((PLONG)&Process->JobStatus, JOB_NOT_REALLY_ACTIVE);
     }
-    else
-    {
-        /* The process is not in the specified job */
-        DPRINT1("PspRemoveProcessFromJob(%p,%p) Process not in job\n",
-                Process,
-                Job);
-    }
+
+    /* TODO: Ensure that job limits are respected */
 
     ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
 }
@@ -342,11 +342,18 @@ PspExitProcessFromJob(
     /* Check if the process is part of the specified job */
     if (Process->Job == Job)
     {
-        /* Assert that the job's active process count does not underflow */
-        ASSERT((Job->ActiveProcesses - 1) < Job->ActiveProcesses);
-
         /* Decrement the job's active process count */
-        Job->ActiveProcesses--;
+        if (!(Process->JobStatus & JOB_NOT_REALLY_ACTIVE))
+        {
+            /* Assert that the job's active process count does not underflow */
+            ASSERT((Job->ActiveProcesses - 1) < Job->ActiveProcesses);
+
+            Job->ActiveProcesses--;
+
+            /* Flag the job as inactive to prevent the number of active
+               processes from repeatedly decrementing */
+            InterlockedOr((PLONG)&Process->JobStatus, JOB_NOT_REALLY_ACTIVE);
+        }
 
         /* If the job has a completion port, notify it of the process exit */
         if (Job->CompletionPort)
@@ -411,16 +418,35 @@ PspTerminateProcessCallback(
 
     /* Terminate the process */
     Status = PsTerminateProcess(Process, ExitStatus);
-    ASSERT(NT_SUCCESS(Status));
 
-    /* Decrement the job's active process counter */
-    Job->ActiveProcesses--;
+    if (NT_SUCCESS(Status))
+    {
+        ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
+
+        /* Decrement the job's active process count */
+        if (!(Process->JobStatus & JOB_NOT_REALLY_ACTIVE))
+        {
+            Job->ActiveProcesses--;
 
     /* Check if there are no active processes left in the job */
     if (Job->ActiveProcesses == 0)
     {
         /* If so, notify anyone waiting for the job object */
         KeSetEvent(&Job->Event, IO_NO_INCREMENT, FALSE);
+            /* Flag the job as inactive to prevent the number of active
+               processes from repeatedly decrementing */
+            InterlockedOr((PLONG)&Process->JobStatus,
+                          JOB_NOT_REALLY_ACTIVE);
+
+            /* Check if there are no active processes left in the job */
+            if (Job->ActiveProcesses == 0)
+            {
+                /* If so, notify anyone waiting for the job object */
+                KeSetEvent(&Job->Event, IO_NO_INCREMENT, FALSE);
+            }
+        }
+
+        ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
     }
 
     return Status;
@@ -1229,7 +1255,7 @@ NtQueryInformationJobObject (
                 PEPROCESS Process;
 
                 Process = CONTAINING_RECORD(NextEntry, EPROCESS, JobLinks);
-                if (!BooleanFlagOn(Process->JobStatus, 2))
+                if (!BooleanFlagOn(Process->JobStatus, ACCOUNTING_FOLDED))
                 {
                     PROCESS_VALUES Values;
 

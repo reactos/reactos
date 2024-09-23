@@ -77,6 +77,15 @@
 #define PSP_PAGED_POOL_QUOTA_THRESHOLD                  0x80000
 
 //
+// Flags for JobStatus in EPROCESS
+//
+// These are based on the layout of bit fields in the Flags2 set introduced in
+// version 6.0
+//
+#define JOB_NOT_REALLY_ACTIVE   0x00000001
+#define ACCOUNTING_FOLDED       0x00000002
+
+//
 // Thread "Set/Get Context" Context Structure
 //
 typedef struct _GET_SET_CTX_CONTEXT
