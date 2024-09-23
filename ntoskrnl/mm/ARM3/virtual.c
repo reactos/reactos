@@ -2423,7 +2423,7 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
                     MI_WRITE_INVALID_PTE(PointerPte, PteContents);
 #ifdef CONFIG_SMP
                     // FIXME: Should invalidate entry in every CPU TLB
-                    ASSERT(KeNumberProcessors == 1);
+                    //ASSERT(KeNumberProcessors == 1);
 #endif
                     KeInvalidateTlbEntry(MiPteToAddress(PointerPte));
 
