@@ -267,7 +267,7 @@ check Wine current sources first as it may already be fixed.
 
 sdk/lib/3rdparty/strmbase           # Synced to WineStaging-3.3
 
-sdk/lib/rtl/actctx.c                # Synced to wine-5.18
+sdk/lib/rtl/actctx.c                # Synced to wine-9.18
 sdk/lib/rtl/timerqueue.c            # Synced to wine-5.18
 sdk/lib/rtl/wait.c                  # Synced to wine-5.18
 
