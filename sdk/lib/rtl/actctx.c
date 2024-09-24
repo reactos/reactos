@@ -3022,8 +3022,6 @@ static NTSTATUS get_manifest_in_module( struct actctx_loader* acl, struct assemb
     }
 #endif
 
-    if (!resname) return STATUS_INVALID_PARAMETER;
-
     info.Type = RT_MANIFEST;
     info.Language = lang;
     if (!((ULONG_PTR)resname >> 16))
@@ -5474,6 +5472,8 @@ RtlCreateActivationContext(IN ULONG Flags,
         (pActCtx->dwFlags & ~ACTCTX_FLAGS_ALL))
         return STATUS_INVALID_PARAMETER;
 
+    if ((pActCtx->dwFlags & ACTCTX_FLAG_RESOURCE_NAME_VALID) && !pActCtx->lpResourceName)
+        return STATUS_INVALID_PARAMETER;
 
     if (!(actctx = RtlAllocateHeap( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*actctx) )))
         return STATUS_NO_MEMORY;
