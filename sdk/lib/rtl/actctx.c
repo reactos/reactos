@@ -2994,6 +2994,24 @@ static NTSTATUS open_nt_file( HANDLE *handle, UNICODE_STRING *name )
                        FILE_SHARE_READ | FILE_SHARE_DELETE, FILE_SYNCHRONOUS_IO_ALERT );
 }
 
+static NTSTATUS find_first_manifest_resource_in_module( HANDLE hModule, const WCHAR **resname )
+{
+    static LDR_RESOURCE_INFO manifest_res_info = { RT_MANIFEST };
+    const IMAGE_RESOURCE_DIRECTORY_ENTRY *entry_base, *entry;
+    IMAGE_RESOURCE_DIRECTORY *resdir;
+    NTSTATUS status;
+
+    status = LdrFindResourceDirectory_U( hModule, &manifest_res_info, 1, &resdir );
+    if (status != STATUS_SUCCESS) return status;
+
+    if (!resdir->NumberOfIdEntries) return STATUS_RESOURCE_NAME_NOT_FOUND;
+    entry_base = (const IMAGE_RESOURCE_DIRECTORY_ENTRY *)(resdir + 1);
+    entry = entry_base + resdir->NumberOfNamedEntries;
+    *resname = (const WCHAR *)(ULONG_PTR)entry->Id;
+
+    return STATUS_SUCCESS;
+}
+
 static NTSTATUS get_manifest_in_module( struct actctx_loader* acl, struct assembly_identity* ai,
                                         LPCWSTR filename, LPCWSTR directory, BOOL shared,
                                         HANDLE hModule, LPCWSTR resname, ULONG lang )
@@ -3021,6 +3039,12 @@ static NTSTATUS get_manifest_in_module( struct actctx_loader* acl, struct assemb
                     hModule, debugstr_w(filename) );
     }
 #endif
+
+    if (!resname)
+    {
+        status = find_first_manifest_resource_in_module( hModule, &resname );
+        if (status != STATUS_SUCCESS) return status;
+    }
 
     info.Type = RT_MANIFEST;
     info.Language = lang;
@@ -3472,8 +3496,7 @@ static NTSTATUS lookup_assembly(struct actctx_loader* acl,
             status = open_nt_file( &file, &nameW );
             if (!status)
             {
-                status = get_manifest_in_pe_file( acl, ai, nameW.Buffer, directory, FALSE, file,
-                                                  (LPCWSTR)CREATEPROCESS_MANIFEST_RESOURCE_ID, 0 );
+                status = get_manifest_in_pe_file( acl, ai, nameW.Buffer, directory, FALSE, file, NULL, 0 );
                 NtClose( file );
                 if (status == STATUS_SUCCESS)
                     break;
