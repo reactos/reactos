@@ -212,13 +212,6 @@ struct wndclass_redirect_data
     ULONG module_offset;/* container name offset */
 };
 
-struct dllredirect_data
-{
-    ULONG size;
-    ULONG unk;
-    DWORD res[3];
-};
-
 struct tlibredirect_data
 {
     ULONG  size;
@@ -510,6 +503,7 @@ struct entity_array
 struct dll_redirect
 {
     WCHAR                *name;
+    WCHAR                *load_from;
     WCHAR                *hash;
     struct entity_array   entities;
 };
@@ -1123,6 +1117,7 @@ static void actctx_release( ACTIVATION_CONTEXT *actctx )
                 struct dll_redirect *dll = &assembly->dlls[j];
                 free_entity_array( &dll->entities );
                 RtlFreeHeap( GetProcessHeap(), 0, dll->name );
+                RtlFreeHeap( GetProcessHeap(), 0, dll->load_from );
                 RtlFreeHeap( GetProcessHeap(), 0, dll->hash );
             }
             RtlFreeHeap( GetProcessHeap(), 0, assembly->dlls );
@@ -2283,6 +2278,10 @@ static void parse_file_elem( xmlbuf_t* xmlbuf, struct assembly* assembly,
         {
             if (!(dll->name = xmlstrdupW(&attr.value))) set_error( xmlbuf );
             TRACE("name=%s\n", debugstr_xmlstr(&attr.value));
+        }
+        else if (xml_attr_cmp(&attr, L"loadFrom"))
+        {
+            if (!(dll->load_from = xmlstrdupW(&attr.value))) set_error( xmlbuf );
         }
         else if (xml_attr_cmp(&attr, L"hash"))
         {
@@ -3486,8 +3485,13 @@ static NTSTATUS build_dllredirect_section(ACTIVATION_CONTEXT* actctx, struct str
 
             /* each entry needs index, data and string data */
             total_len += sizeof(*index);
-            total_len += sizeof(*data);
             total_len += aligned_string_len((wcslen(dll->name)+1)*sizeof(WCHAR));
+            if (dll->load_from)
+            {
+                total_len += offsetof( struct dllredirect_data, paths[1] );
+                total_len += aligned_string_len( wcslen(dll->load_from) * sizeof(WCHAR) );
+            }
+            else total_len += offsetof( struct dllredirect_data, paths[0] );
 
             DPRINT("assembly %d (%p), dll %d: dll name %S\n", i, assembly, j, dll->name);
         }
@@ -3531,21 +3535,40 @@ static NTSTATUS build_dllredirect_section(ACTIVATION_CONTEXT* actctx, struct str
             index->name_offset = name_offset;
             index->name_len = str.Length;
             index->data_offset = index->name_offset + aligned_string_len(str.MaximumLength);
-            index->data_len = sizeof(*data);
+            index->data_len = offsetof( struct dllredirect_data, paths[0] );
             index->rosterindex = i + 1;
-
-            /* setup data */
-            data = (struct dllredirect_data*)((BYTE*)header + index->data_offset);
-            data->size = sizeof(*data);
-            data->unk = 2; /* FIXME: seems to be constant */
-            memset(data->res, 0, sizeof(data->res));
 
             /* dll name */
             ptrW = (WCHAR*)((BYTE*)header + index->name_offset);
             memcpy(ptrW, dll->name, index->name_len);
             ptrW[index->name_len/sizeof(WCHAR)] = 0;
+            name_offset += aligned_string_len(str.MaximumLength);
 
-            name_offset += sizeof(*data) + aligned_string_len(str.MaximumLength);
+            /* setup data */
+            data = (struct dllredirect_data*)((BYTE*)header + index->data_offset);
+            if (dll->load_from)
+            {
+                ULONG len = wcslen(dll->load_from) * sizeof(WCHAR);
+                data->size = offsetof( struct dllredirect_data, paths[1] );
+                data->flags = 0;
+                data->total_len = aligned_string_len( len );
+                data->paths_count = 1;
+                data->paths_offset = index->data_offset + offsetof( struct dllredirect_data, paths[0] );
+                data->paths[0].offset = index->data_offset + data->size;
+                data->paths[0].len = len;
+                ptrW = (WCHAR *)((BYTE *)header + data->paths[0].offset);
+                memcpy( ptrW, dll->load_from, len );
+                if (wcschr( dll->load_from, '%' )) data->flags |= DLL_REDIRECT_PATH_EXPAND;
+            }
+            else
+            {
+                data->size = offsetof( struct dllredirect_data, paths[0] );
+                data->flags = DLL_REDIRECT_PATH_OMITS_ASSEMBLY_ROOT;
+                data->total_len = 0;
+                data->paths_count = 0;
+                data->paths_offset = 0;
+            }
+            name_offset += data->size + data->total_len;
 
             index++;
         }

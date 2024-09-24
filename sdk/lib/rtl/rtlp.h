@@ -273,6 +273,22 @@ NTAPI
 RtlpDebugBufferCommit(_Inout_ PRTL_DEBUG_INFORMATION Buffer,
                       _In_ SIZE_T Size);
 
+/* Wine stuff (dll/ntdll/ntdll_misc.h) */
+struct dllredirect_data
+{
+    ULONG size;
+    ULONG flags;
+    ULONG total_len;
+    ULONG paths_count;
+    ULONG paths_offset;
+    struct { ULONG len; ULONG offset; } paths[1];
+};
+
+#define DLL_REDIRECT_PATH_INCLUDES_BASE_NAME                      1
+#define DLL_REDIRECT_PATH_OMITS_ASSEMBLY_ROOT                     2
+#define DLL_REDIRECT_PATH_EXPAND                                  4
+#define DLL_REDIRECT_PATH_SYSTEM_DEFAULT_REDIRECTED_SYSTEM32_DLL  8
+
 #endif /* !_BLDR_ */
 
 /* EOF */
