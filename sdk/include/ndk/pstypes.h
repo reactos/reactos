@@ -207,14 +207,6 @@ extern POBJECT_TYPE NTSYSAPI PsJobType;
                                                  31)
 
 //
-// Job Flags
-//
-// More information:
-// https://www.geoffchappell.com/studies/windows/km/ntoskrnl/inc/ntos/ps/ejob/jobflags.htm
-//
-#define JOB_OBJECT_CLOSE_DONE                   0x1
-
-//
 // Job Limit Flags
 //
 #define JOB_OBJECT_LIMIT_WORKINGSET             0x1

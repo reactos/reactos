@@ -82,8 +82,19 @@
 // These are based on the layout of bit fields in the Flags2 set introduced in
 // version 6.0
 //
+// More information:
+// https://www.geoffchappell.com/studies/windows/km/ntoskrnl/inc/ntos/ps/eprocess/flags2.htm
+//
 #define JOB_NOT_REALLY_ACTIVE   0x00000001
 #define ACCOUNTING_FOLDED       0x00000002
+
+//
+// Job Flags
+//
+// More information:
+// https://www.geoffchappell.com/studies/windows/km/ntoskrnl/inc/ntos/ps/ejob/jobflags.htm
+//
+#define JOB_OBJECT_CLOSE_DONE                   0x1
 
 //
 // Thread "Set/Get Context" Context Structure
