@@ -3526,6 +3526,19 @@ static NTSTATUS parse_depend_manifests(struct actctx_loader* acl)
     return status;
 }
 
+static HANDLE get_current_actctx_no_addref(void)
+{
+#ifdef __REACTOS__
+    if (NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame)
+        return NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame->ActivationContext;
+#else
+    if (NtCurrentTeb()->ActivationContextStack.ActiveFrame)
+        return NtCurrentTeb()->ActivationContextStack.ActiveFrame->ActivationContext;
+#endif
+
+    return NULL;
+}
+
 /* find the appropriate activation context for RtlQueryInformationActivationContext */
 static NTSTATUS find_query_actctx( HANDLE *handle, DWORD flags, ULONG class )
 {
@@ -3535,8 +3548,7 @@ static NTSTATUS find_query_actctx( HANDLE *handle, DWORD flags, ULONG class )
     {
         if (*handle) return STATUS_INVALID_PARAMETER;
 
-        if (NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame)
-            *handle = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame->ActivationContext;
+        *handle = get_current_actctx_no_addref();
     }
     else if (flags & (RTL_QUERY_ACTIVATION_CONTEXT_FLAG_IS_ADDRESS | RTL_QUERY_ACTIVATION_CONTEXT_FLAG_IS_HMODULE))
     {
@@ -5759,14 +5771,7 @@ void WINAPI RtlFreeThreadActivationContextStack(void)
  */
 NTSTATUS WINAPI RtlGetActiveActivationContext( HANDLE *handle )
 {
-    if (NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame)
-    {
-        *handle = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame->ActivationContext;
-        RtlAddRefActivationContext( *handle );
-    }
-    else
-        *handle = 0;
-
+    RtlAddRefActivationContext( *handle = get_current_actctx_no_addref() );
     return STATUS_SUCCESS;
 }
 
@@ -6099,6 +6104,7 @@ NTSTATUS WINAPI RtlFindActivationContextSectionString( ULONG flags, const GUID *
 {
     PACTCTX_SECTION_KEYED_DATA data = ptr;
     NTSTATUS status = STATUS_SXS_KEY_NOT_FOUND;
+    ACTIVATION_CONTEXT *actctx;
 
     TRACE("%08lx %s %lu %s %p\n", flags, debugstr_guid(guid), section_kind,
           debugstr_us(section_name), data);
@@ -6139,15 +6145,8 @@ NTSTATUS WINAPI RtlFindActivationContextSectionString( ULONG flags, const GUID *
     }
 #endif // __REACTOS__
 
-    ASSERT(NtCurrentTeb());
-    ASSERT(NtCurrentTeb()->ActivationContextStackPointer);
-
-    DPRINT("ActiveFrame: %p\n",NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame);
-    if (NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame)
-    {
-        ACTIVATION_CONTEXT *actctx = check_actctx(NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame->ActivationContext);
-        if (actctx) status = find_string( actctx, section_kind, section_name, flags, data );
-    }
+    actctx = check_actctx( get_current_actctx_no_addref() );
+    if (actctx) status = find_string( actctx, section_kind, section_name, flags, data );
 
     DPRINT("status %x\n", status);
     if (status != STATUS_SUCCESS)
@@ -6171,6 +6170,7 @@ NTSTATUS WINAPI RtlFindActivationContextSectionGuid( ULONG flags, const GUID *ex
 {
     ACTCTX_SECTION_KEYED_DATA *data = ptr;
     NTSTATUS status = STATUS_SXS_KEY_NOT_FOUND;
+    ACTIVATION_CONTEXT *actctx;
 
     TRACE("%08lx %s %lu %s %p\n", flags, debugstr_guid(extguid), section_kind, debugstr_guid(guid), data);
 
@@ -6189,11 +6189,8 @@ NTSTATUS WINAPI RtlFindActivationContextSectionGuid( ULONG flags, const GUID *ex
     if (!data || data->cbSize < FIELD_OFFSET(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex) || !guid)
         return STATUS_INVALID_PARAMETER;
 
-    if (NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame)
-    {
-        ACTIVATION_CONTEXT *actctx = check_actctx(NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame->ActivationContext);
-        if (actctx) status = find_guid( actctx, section_kind, guid, flags, data );
-    }
+    actctx = check_actctx( get_current_actctx_no_addref() );
+    if (actctx) status = find_guid( actctx, section_kind, guid, flags, data );
 
     if (status != STATUS_SUCCESS)
         status = find_guid( process_actctx, section_kind, guid, flags, data );
