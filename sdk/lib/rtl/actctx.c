@@ -2762,11 +2762,14 @@ static void parse_assembly_elem( xmlbuf_t *xmlbuf, struct assembly* assembly,
         }
     }
 
-    if (end || !version)
+    if (!version)
     {
         set_error( xmlbuf );
         return;
     }
+
+    if (end)
+        return;
 
     while (next_xml_elem(xmlbuf, &elem, parent))
     {
