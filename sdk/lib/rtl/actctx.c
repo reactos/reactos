@@ -3162,7 +3162,7 @@ static NTSTATUS get_manifest_in_associated_manifest( struct actctx_loader* acl, 
         status = get_manifest_in_manifest_file( acl, ai, nameW.Buffer, directory, FALSE, file );
         NtClose( file );
     }
-    else status = STATUS_RESOURCE_TYPE_NOT_FOUND;
+    else status = STATUS_RESOURCE_NAME_NOT_FOUND;
     RtlFreeUnicodeString( &nameW );
     return status;
 }
