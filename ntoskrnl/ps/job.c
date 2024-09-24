@@ -289,6 +289,14 @@ PspAssignProcessToJob(
         }
     }
 
+    /* Prevent processes from being added to the job if it is flagged for
+       closing and has a limit on process termination on closing */
+    if (Job->LimitFlags & JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE &&
+        Job->JobFlags & JOB_OBJECT_CLOSE_DONE)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
     ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
 
     /* Assign process to job object by inserting into the job's process list */
@@ -545,8 +553,8 @@ PspTerminateJobObject(
  *     The number of system handles currently open for the job object.
  *
  * @remark
- *     This function terminates the job if the JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
- *     flag is set.
+ *     This function terminates the job if the
+ *     JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE flag is set.
  */
 VOID
 NTAPI
@@ -558,6 +566,7 @@ PspCloseJob(
     _In_ ULONG SystemHandleCount
 )
 {
+    NTSTATUS Status;
     PEJOB Job = (PEJOB)ObjectBody;
 
     PAGED_CODE();
@@ -580,10 +589,14 @@ PspCloseJob(
         return;
     }
 
+    /* Flag the job as closed */
+    InterlockedOr((PLONG)&Job->JobFlags, JOB_OBJECT_CLOSE_DONE);
+
     /* If the job is set to kill on close, terminate all associated processes */
     if (Job->LimitFlags & JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE)
     {
-        PspTerminateJobObject(Job, STATUS_SUCCESS);
+        Status = PspTerminateJobObject(Job, STATUS_SUCCESS);
+        ASSERT(NT_SUCCESS(Status));
     }
 
     /* Set the completion port to NULL to clean up */
@@ -819,13 +832,15 @@ NtCreateJobSet(IN ULONG NumJob,
  * Opens a handle to an existing job object.
  *
  * @param JobHandle
- *     A pointer to a handle that will receive the handle of the created job object.
+ *     A pointer to a handle that will receive the handle of the created job
+ *     object.
  *
  * @param DesiredAccess
  *     Specifies the desired access rights for the job object.
  *
  * @param ObjectAttributes
- *     Pointer to the OBJECT_ATTRIBUTES structure specifying the object name and attributes.
+ *     Pointer to the OBJECT_ATTRIBUTES structure specifying the object name and
+ *     attributes.
  *
  * @returns
  *     STATUS_SUCCESS if the job object is successfully created.
