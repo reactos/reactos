@@ -5708,50 +5708,29 @@ NTSTATUS WINAPI RtlDeactivateActivationContext( ULONG flags, ULONG_PTR cookie )
     return STATUS_SUCCESS;
 }
 
-#ifdef __REACTOS__
-VOID
-NTAPI
-RtlFreeActivationContextStack(IN PACTIVATION_CONTEXT_STACK Stack)
-{
-    PRTL_ACTIVATION_CONTEXT_STACK_FRAME ActiveFrame, PrevFrame;
-
-    /* Nothing to do if there is no stack */
-    if (!Stack) return;
-
-    /* Get the current active frame */
-    ActiveFrame = Stack->ActiveFrame;
-
-    /* Go through them in backwards order and release */
-    while (ActiveFrame)
-    {
-        PrevFrame = ActiveFrame->Previous;
-        RtlReleaseActivationContext(ActiveFrame->ActivationContext);
-        RtlFreeHeap(GetProcessHeap(), 0, ActiveFrame);
-        ActiveFrame = PrevFrame;
-    }
-
-    /* Zero out the active frame */
-    Stack->ActiveFrame = NULL;
-
-    /* TODO: Empty the Frame List Cache */
-    ASSERT(IsListEmpty(&Stack->FrameListCache));
-
-    /* Free activation stack memory */
-    RtlFreeHeap(GetProcessHeap(), 0, Stack);
-}
-#endif // __REACTOS__
-
 /******************************************************************
  *		RtlFreeThreadActivationContextStack (NTDLL.@)
  */
 void WINAPI RtlFreeThreadActivationContextStack(void)
 {
+    RtlFreeActivationContextStack( NtCurrentTeb()->ActivationContextStackPointer );
 #ifdef __REACTOS__
-    RtlFreeActivationContextStack(NtCurrentTeb()->ActivationContextStackPointer);
     NtCurrentTeb()->ActivationContextStackPointer = NULL;
-#else
-    ACTIVATION_CONTEXT_STACK *actctx_stack = NtCurrentTeb()->ActivationContextStackPointer;
+#endif
+}
+
+
+/******************************************************************
+ *		RtlFreeActivationContextStack (NTDLL.@)
+ */
+void WINAPI RtlFreeActivationContextStack( ACTIVATION_CONTEXT_STACK *actctx_stack )
+{
     RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame;
+
+#ifdef __REACTOS__
+    /* Nothing to do if there is no stack */
+    if (!actctx_stack) return;
+#endif // __REACTOS_
 
     frame = actctx_stack->ActiveFrame;
     while (frame)
@@ -5762,6 +5741,13 @@ void WINAPI RtlFreeThreadActivationContextStack(void)
         frame = prev;
     }
     actctx_stack->ActiveFrame = NULL;
+
+#ifdef __REACTOS__
+    /* TODO: Empty the Frame List Cache */
+    ASSERT(IsListEmpty(&actctx_stack->FrameListCache));
+
+    /* Free activation stack memory */
+    RtlFreeHeap(GetProcessHeap(), 0, actctx_stack);
 #endif // __REACTOS__
 }
 
