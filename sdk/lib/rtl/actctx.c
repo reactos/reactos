@@ -639,12 +639,12 @@ static const xmlstr_t empty_xmlstr;
 
 #ifdef __i386__
 static const WCHAR current_archW[] = L"x86";
+#elif defined __aarch64__ || defined __arm64ec__
+static const WCHAR current_archW[] = L"arm64";
 #elif defined __x86_64__
 static const WCHAR current_archW[] = L"amd64";
 #elif defined __arm__
 static const WCHAR current_archW[] = L"arm";
-#elif defined __aarch64__
-static const WCHAR current_archW[] = L"arm64";
 #else
 static const WCHAR current_archW[] = L"none";
 #endif
@@ -3317,6 +3317,10 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
     swprintf( lookup, len, lookup_fmtW, ai->arch, ai->name, ai->public_key,
               ai->version.major, ai->version.minor, lang );
     RtlInitUnicodeString( &lookup_us, lookup );
+
+#ifdef __arm64ec__
+    if (!wcsncmp( lookup, L"amd64_", 6 )) memcpy( lookup, L"a??", 3 * sizeof(WCHAR) );
+#endif
 
     if (!NtQueryDirectoryFile( dir, 0, NULL, NULL, &io, buffer, sizeof(buffer),
                                FileBothDirectoryInformation, FALSE, &lookup_us, TRUE ))
