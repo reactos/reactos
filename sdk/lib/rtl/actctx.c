@@ -2357,6 +2357,8 @@ static void parse_dependency_elem( xmlbuf_t *xmlbuf, struct actctx_loader *acl,
         }
     }
 
+    if (end) return;
+
     while (next_xml_elem(xmlbuf, &elem, parent))
     {
         if (xml_elem_cmp(&elem, dependentAssemblyW, asmv1W))
