@@ -5037,7 +5037,7 @@ static NTSTATUS build_clr_surrogate_section(ACTIVATION_CONTEXT* actctx, struct g
                     ptrW[data->version_len/sizeof(WCHAR)] = 0;
                 }
 
-                data_offset += index->data_offset;
+                data_offset += index->data_len;
                 index++;
             }
         }
