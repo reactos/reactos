@@ -966,7 +966,7 @@ static void free_entity_array(struct entity_array *array)
             RtlFreeHeap(GetProcessHeap(), 0, entity->u.activatable_class.name);
             break;
         default:
-            FIXME("Unknown entity kind %d\n", entity->kind);
+            FIXME("Unknown entity kind %ld\n", entity->kind);
         }
     }
     RtlFreeHeap( GetProcessHeap(), 0, array->base );
@@ -3222,11 +3222,11 @@ static NTSTATUS get_manifest_in_associated_manifest( struct actctx_loader* acl, 
     NTSTATUS status;
     UNICODE_STRING nameW;
     HANDLE file;
-    ULONG_PTR resid = CREATEPROCESS_MANIFEST_RESOURCE_ID;
+    UINT resid = CREATEPROCESS_MANIFEST_RESOURCE_ID;
 
-    if (!((ULONG_PTR)resname >> 16)) resid = (ULONG_PTR)resname & 0xffff;
+    if (!((ULONG_PTR)resname >> 16)) resid = LOWORD(resname);
 
-    TRACE( "looking for manifest associated with %s id %lu\n", debugstr_w(filename), resid );
+    TRACE( "looking for manifest associated with %s id %u\n", debugstr_w(filename), resid );
 
     if (module) /* use the module filename */
     {
@@ -3234,7 +3234,7 @@ static NTSTATUS get_manifest_in_associated_manifest( struct actctx_loader* acl, 
 
         if (!(status = get_module_filename( module, &name, sizeof(L".manifest") + 10*sizeof(WCHAR) )))
         {
-            if (resid != 1) swprintf( name.Buffer + wcslen(name.Buffer), 10, L".%Iu", resid );
+            if (resid != 1) swprintf( name.Buffer + wcslen(name.Buffer), 10, L".%u", resid );
             wcscat( name.Buffer, L".manifest" );
             if (!RtlDosPathNameToNtPathName_U( name.Buffer, &nameW, NULL, NULL ))
                 status = STATUS_RESOURCE_DATA_NOT_FOUND;
@@ -3248,7 +3248,7 @@ static NTSTATUS get_manifest_in_associated_manifest( struct actctx_loader* acl, 
                                         (wcslen(filename) + 10) * sizeof(WCHAR) + sizeof(L".manifest") )))
             return STATUS_NO_MEMORY;
         wcscpy( buffer, filename );
-        if (resid != 1) swprintf( buffer + wcslen(buffer), 10, L".%Iu", resid );
+        if (resid != 1) swprintf( buffer + wcslen(buffer), 10, L".%u", resid );
         wcscat( buffer, L".manifest" );
         RtlInitUnicodeString( &nameW, buffer );
     }
@@ -3699,7 +3699,7 @@ static struct string_index *find_string_index(const struct strsection_header *se
                 break;
             }
             else
-                WARN("hash collision 0x%08x, %s, %s\n", hash, debugstr_us(name), debugstr_us(&str));
+                WARN("hash collision 0x%08lx, %s, %s\n", hash, debugstr_us(name), debugstr_us(&str));
         }
         iter++;
     }
@@ -3962,7 +3962,7 @@ static NTSTATUS find_window_class(ACTIVATION_CONTEXT* actctx, const UNICODE_STRI
                 break;
             }
             else
-                WARN("hash collision 0x%08x, %s, %s\n", hash, debugstr_us(name), debugstr_us(&str));
+                WARN("hash collision 0x%08lx, %s, %s\n", hash, debugstr_us(name), debugstr_us(&str));
         }
         iter++;
     }
@@ -4162,7 +4162,7 @@ static NTSTATUS find_activatable_class(ACTIVATION_CONTEXT* actctx, const UNICODE
                 break;
             }
             else
-                WARN("hash collision 0x%08x, %s, %s\n", hash, debugstr_us(name), debugstr_us(&str));
+                WARN("hash collision 0x%08lx, %s, %s\n", hash, debugstr_us(name), debugstr_us(&str));
         }
         iter++;
     }
@@ -5337,13 +5337,13 @@ static NTSTATUS find_string(ACTIVATION_CONTEXT* actctx, ULONG section_kind,
         status = find_progid_redirection(actctx, section_name, data);
         break;
     case ACTIVATION_CONTEXT_SECTION_GLOBAL_OBJECT_RENAME_TABLE:
-        FIXME("Unsupported yet section_kind %x\n", section_kind);
+        FIXME("Unsupported yet section_kind %lx\n", section_kind);
         return STATUS_SXS_SECTION_NOT_FOUND;
     case ACTIVATION_CONTEXT_SECTION_WINRT_ACTIVATABLE_CLASSES:
         status = find_activatable_class(actctx, section_name, data);
         break;
     default:
-        WARN("Unknown section_kind %x\n", section_kind);
+        WARN("Unknown section_kind %lx\n", section_kind);
         return STATUS_SXS_SECTION_NOT_FOUND;
     }
 
@@ -5377,7 +5377,7 @@ static NTSTATUS find_guid(ACTIVATION_CONTEXT* actctx, ULONG section_kind,
         status = find_clr_surrogate(actctx, guid, data);
         break;
     default:
-        WARN("Unknown section_kind %x\n", section_kind);
+        WARN("Unknown section_kind %lx\n", section_kind);
         return STATUS_SXS_SECTION_NOT_FOUND;
     }
 
@@ -5458,7 +5458,7 @@ RtlCreateActivationContext(IN ULONG Flags,
     HANDLE file = 0;
     struct actctx_loader acl;
 
-    TRACE("%p %08x\n", pActCtx, pActCtx ? pActCtx->dwFlags : 0);
+    TRACE("%p %08lx\n", pActCtx, pActCtx ? pActCtx->dwFlags : 0);
 
     if (!pActCtx || pActCtx->cbSize < sizeof(*pActCtx) ||
         (pActCtx->dwFlags & ~ACTCTX_FLAGS_ALL))
@@ -5653,7 +5653,7 @@ NTSTATUS WINAPI RtlActivateActivationContextEx( ULONG flags, TEB *teb, HANDLE ha
     RtlAddRefActivationContext( handle );
 
     *cookie = (ULONG_PTR)frame;
-    TRACE( "%p cookie=%lx\n", handle, *cookie );
+    TRACE( "%p cookie=%Ix\n", handle, *cookie );
     return STATUS_SUCCESS;
 }
 
@@ -5664,7 +5664,7 @@ NTSTATUS WINAPI RtlDeactivateActivationContext( ULONG flags, ULONG_PTR cookie )
 {
     RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame, *top;
 
-    TRACE( "%x cookie=%lx\n", flags, cookie );
+    TRACE( "%lx cookie=%Ix\n", flags, cookie );
 
     /* find the right frame */
     top = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame;
@@ -5796,7 +5796,7 @@ NTSTATUS WINAPI RtlQueryInformationActivationContext( ULONG flags, HANDLE handle
     ACTIVATION_CONTEXT *actctx;
     NTSTATUS status;
 
-    TRACE("%08x %p %p %u %p %ld %p\n", flags, handle,
+    TRACE("%08lx %p %p %lu %p %Id %p\n", flags, handle,
           subinst, class, buffer, bufsize, retlen);
 
     if (retlen) *retlen = 0;
@@ -6033,7 +6033,7 @@ NTSTATUS WINAPI RtlQueryInformationActivationContext( ULONG flags, HANDLE handle
         break;
 
     default:
-        FIXME( "class %u not implemented\n", class );
+        FIXME( "class %lu not implemented\n", class );
         return STATUS_NOT_IMPLEMENTED;
     }
     return STATUS_SUCCESS;
@@ -6099,7 +6099,7 @@ NTSTATUS WINAPI RtlFindActivationContextSectionString( ULONG flags, const GUID *
     PACTCTX_SECTION_KEYED_DATA data = ptr;
     NTSTATUS status = STATUS_SXS_KEY_NOT_FOUND;
 
-    TRACE("%08x %s %u %s %p\n", flags, debugstr_guid(guid), section_kind,
+    TRACE("%08lx %s %lu %s %p\n", flags, debugstr_guid(guid), section_kind,
           debugstr_us(section_name), data);
 
 #ifdef __REACTOS__
@@ -6127,7 +6127,7 @@ NTSTATUS WINAPI RtlFindActivationContextSectionString( ULONG flags, const GUID *
     }
     if (flags & ~FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX)
     {
-        FIXME("unknown flags %08x\n", flags);
+        FIXME("unknown flags %08lx\n", flags);
         return STATUS_INVALID_PARAMETER;
     }
     if ((data && data->cbSize < offsetof(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex)) ||
@@ -6171,7 +6171,7 @@ NTSTATUS WINAPI RtlFindActivationContextSectionGuid( ULONG flags, const GUID *ex
     ACTCTX_SECTION_KEYED_DATA *data = ptr;
     NTSTATUS status = STATUS_SXS_KEY_NOT_FOUND;
 
-    TRACE("%08x %s %u %s %p\n", flags, debugstr_guid(extguid), section_kind, debugstr_guid(guid), data);
+    TRACE("%08lx %s %lu %s %p\n", flags, debugstr_guid(extguid), section_kind, debugstr_guid(guid), data);
 
     if (extguid)
     {
@@ -6181,7 +6181,7 @@ NTSTATUS WINAPI RtlFindActivationContextSectionGuid( ULONG flags, const GUID *ex
 
     if (flags & ~FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX)
     {
-        FIXME("unknown flags %08x\n", flags);
+        FIXME("unknown flags %08lx\n", flags);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -6216,7 +6216,7 @@ NTSTATUS WINAPI RtlQueryActivationContextApplicationSettings( DWORD flags, HANDL
 
     if (flags)
     {
-        WARN( "unknown flags %08x\n", flags );
+        WARN( "unknown flags %08lx\n", flags );
         return STATUS_INVALID_PARAMETER;
     }
 
