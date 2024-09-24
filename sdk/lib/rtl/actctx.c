@@ -14,6 +14,7 @@
 
 /* Based on Wine 3.2-37c98396 */
 #ifdef __REACTOS__
+#include <stdlib.h>
 
 #include <rtl.h>
 #include <ntstrsafe.h>
