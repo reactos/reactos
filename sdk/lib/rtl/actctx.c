@@ -5672,9 +5672,7 @@ NTSTATUS WINAPI RtlActivateActivationContextEx( ULONG flags, TEB *teb, HANDLE ha
     ACTIVATION_CONTEXT_STACK *actctx_stack = teb->ActivationContextStackPointer;
     RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame;
 
-    if (!(frame = RtlAllocateHeap( GetProcessHeap(), 0, sizeof(*frame) )))
-        return STATUS_NO_MEMORY;
-
+    frame = RtlAllocateHeap( GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, sizeof(*frame) );
     frame->Previous = actctx_stack->ActiveFrame;
     frame->ActivationContext = handle;
     frame->Flags = 0;
