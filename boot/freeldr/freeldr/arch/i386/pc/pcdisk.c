@@ -39,8 +39,8 @@ typedef struct
     ULONGLONG   LBAStartBlock;          // 08h - Starting absolute block number
 //  ULONGLONG   TransferBuffer64;       // 10h - (EDD-3.0, optional) 64-bit flat address of transfer buffer
                                         //       used if DWORD at 04h is FFFFh:FFFFh
-                                        //       Commented since some earlier BIOSes refuse to work with
-                                        //       such extended structure
+                                        //       Commented since some earlier BIOSes (e.g. Insyde BIOS)
+                                        //       refuse to work with such extended structure.
 } I386_DISK_ADDRESS_PACKET, *PI386_DISK_ADDRESS_PACKET;
 
 typedef struct
@@ -236,6 +236,7 @@ DiskInt13ExtensionsSupported(IN UCHAR DriveNumber)
 {
     REGS RegsIn, RegsOut;
 
+#if 0 // TEMP TESTS
     /*
      * Some BIOSes report that extended disk access functions are not supported
      * when booting from a CD (e.g. Phoenix BIOS v6.00PG and Insyde BIOS shipping
@@ -243,9 +244,14 @@ DiskInt13ExtensionsSupported(IN UCHAR DriveNumber)
      * - we can assume that all El Torito capable BIOSes support INT 13 extensions.
      * We simply detect whether we're booting from CD by checking whether the drive
      * number is >= 0x8A. It's 0x90 on the Insyde BIOS, and 0x9F on most other BIOSes.
+     *
+     * See commits ef4a67dd52 (r25063), 520f691995 (r47531) and fc022a8506 (r47576)
+     *
+     * (NOTE: Actually, on the Dell Latitude D531 the CD-ROM drive gets number 0x82.)
      */
     if (DriveNumber >= 0x8A)
         return TRUE;
+#endif
 
     /*
      * IBM/MS INT 13 Extensions - INSTALLATION CHECK
@@ -395,6 +401,55 @@ DiskGetExtendedDriveParameters(
     }
 #endif // DBG
 
+    /* Perform Removable & Geometry-max bits fixup for ATAPI drives i.e. CD-ROMs */
+    if (BufferSize >= sizeof(EXTENDED_GEOMETRY))
+    {
+        PEXTENDED_GEOMETRY ExtGeometry = Buffer;
+        USHORT DriveOptions = 0;
+
+        /*
+         * - According to the
+         *   "El Torito" Bootable CD-ROM Format Specification Version 1.0,
+         *   Section "4.2 INT 13 Function 48", this function (exposed by the
+         *   Phoenix Enhanced Disk Drive Specification Version 1.1+) returns
+         *   the extended drive parameters, that contains a pointer to the
+         *   Device Parameter Table Extension. Its byte 10, bit 6 ("ATAPI device")
+         *   is set to 1 if the attached device is a CD-ROM.
+         *
+         * - In addition, "The CD-ROM is a removable media type, [...]", per
+         *   Section "1.3 Introduction" of the "El Torito" specification.
+         *
+         * - However, some hardware, like the Dell Latitude D531, do *NOT* set
+         *   the Removable flag. Hence, perform a fixup by setting it accordingly.
+         */
+        if ((Ptr->Size >= 0x1E) && (Ptr->PDPTE != 0xFFFFFFFF && Ptr->PDPTE != 0))
+        {
+            // LOWORD(Ptr->PDPTE): offset, HIWORD(Ptr->PDPTE): segment
+            USHORT Off = (USHORT)(Ptr->PDPTE & 0xFFFF);         // ((PUSHORT)&Ptr->PDPTE)[0];
+            USHORT Seg = (USHORT)((Ptr->PDPTE >> 16) & 0xFFFF); // ((PUSHORT)&Ptr->PDPTE)[1];
+            PUCHAR SpecPtr = (PUCHAR)(ULONG_PTR)((Seg << 4) + Off);
+            DriveOptions = *(PUSHORT)&SpecPtr[10];
+        }
+
+        /* Check drive options bit 5 "Removable media" and bit 6 "ATAPI device"
+         * (set if CD-ROM). Any of these must be set if the drive is removable,
+         * and compare with bit 2 of ExInt13 flags. */
+        if ((DriveOptions & 0x60) && !(ExtGeometry->Flags & 0x04))
+        {
+            WARN("Drive 0x%x: DPTE drive options 0x%x, but ExInt13 flags 0x%x not reporting Removable: performing fixup\n",
+                 DriveNumber, DriveOptions, ExtGeometry->Flags);
+            ExtGeometry->Flags |= 0x04;
+        }
+        /* If the drive is removable, the geometry is probably out of date: invalidate the geometry bits */
+        if (ExtGeometry->Flags & 0x04)
+        {
+            ExtGeometry->Flags &= ~0x02;  // "CHS info NOT valid"
+            ExtGeometry->Flags |= 0x40;   // "Geometry set to max value"
+            ExtGeometry->Sectors = ~0ULL; // But don't touch the CHS info!
+            /* The BytesPerSector value is generally valid and doesn't require invalidation */
+        }
+    }
+
     return TRUE;
 }
 
@@ -409,6 +464,106 @@ DiskGetConfigType(
     else
         return DiskPeripheral;
 }
+
+
+static BOOLEAN
+PcDiskReadLogicalSectorsLBA(
+    IN UCHAR DriveNumber,
+    IN ULONGLONG SectorNumber,
+    IN ULONG SectorCount,
+    OUT PVOID Buffer);
+
+/**
+ * @brief
+ * Attempts to determine the size of interest of a removable media,
+ * by bisecting over valid and invalid sectors.
+ *
+ * This function expects, that for a valid drive, all consecutive sectors
+ * up to the top valid one are readable, thus valid, and all the following
+ * sectors are not.
+ **/
+static BOOLEAN
+GetDriveSizeViaBisection(
+    _In_ UCHAR BiosDrive,
+    _Out_ PULONGLONG Sectors,
+    _Inout_ PULONG BytesPerSector)
+{
+    BOOLEAN Success = FALSE;
+    ULONGLONG Start, Mid, End;
+
+    *Sectors = 0;
+
+    UNREFERENCED_PARAMETER(BytesPerSector);
+
+    DiskReportError(FALSE);
+
+    /*
+     * Do a binary search. We need Start to be in the valid range;
+     * Mid is the testing point, and End is outside the valid range.
+     *
+     * NOTES:
+     * - VBOX does not support 64-bit LBA, and would display:
+     *   "FATAL: int13_cdrom: function 42. Can't use 64bits lba"
+     *   and halt if so.
+     *
+     * - The Dell Latitude D531 BIOS appears to only support LBA28
+     *   for the CD-ROM, ignoring bits 28 to 31, and so values like
+     *   0x*FFFFFFF are treated like 0x0FFFFFFF.
+     *   This is probably related to bit 6 "ATAPI device" set in the DriveOptions.
+     */
+    Start = 0; Mid = 0;
+    End = (ULONGLONG)0x0FFFFFFFULL; // ATA_MAX_LBA_28 in drivers/hwidep.h
+ERR("S [%llu -- %llu -- %llu]\n", Start, Mid, End);
+    while (Start < End)
+    {
+        /* Get new middle value */
+        Mid = (Start + End) >> 1;
+        if ((0 < Start) && (Mid <= Start))
+        {
+            /* In this case, the calculated Mid value has already been
+             * tested by a previous bisection and saved into Start. So
+             * we don't need to retest, and the search is finished. */
+            Success = TRUE; // We know this Mid value was successful.
+            break;
+        }
+ERR("  [%llu -- %llu -- %llu]\n", Start, Mid, End);
+
+        /* Check whether this sector is readable */
+        Success = PcDiskReadLogicalSectorsLBA(BiosDrive, Mid, 1, DiskReadBuffer);
+        if (!Success)
+        {
+            /* Update End, stays outside the valid range */
+            End = Mid;
+        }
+        else if (Mid > Start)
+        {
+            /* Update Start, stays in the valid range */
+            Start = Mid;
+        }
+        else
+        {
+            /* Mid is == Start, meaning the search finished */
+            break;
+        }
+    }
+ERR("F [%llu -- %llu -- %llu]\n", Start, Mid, End);
+
+    DiskReportError(TRUE);
+
+    /* Check if we couldn't find it */
+    if (!Success)
+    {
+        *Sectors = 0; // No valid sectors.
+        return FALSE;
+    }
+
+    /* Otherwise, this is the number of sectors sought for.
+     * Mid is the (zero-based) sector number; convert to numbers of sectors. */
+    *Sectors = Mid + 1; // In LBN (Logical Block Numbers)
+    // *BytesPerSector = ...;
+    return TRUE;
+}
+
 
 static BOOLEAN
 InitDriveGeometry(
@@ -438,6 +593,108 @@ InitDriveGeometry(
               DiskDrive->ExtGeometry.SectorsPerTrack,
               DiskDrive->ExtGeometry.Sectors,
               DiskDrive->ExtGeometry.BytesPerSector);
+    }
+
+    if (Success && (DiskDrive->ExtGeometry.Size == sizeof(DiskDrive->ExtGeometry)))
+    {
+        USHORT Flags = DiskDrive->ExtGeometry.Flags;
+        BOOLEAN IsEnhRemovable;
+
+        /* Update the Removable flag by looking at bit 2 of ExInt13 flags */
+        DiskDrive->IsRemovable |= !!(Flags & 0x04);
+
+        /*
+         * Check whether this is an removable "enhanced" drive (e.g. CD-ROM).
+         *
+         * NOTE: On the Dell Latitude D531, the CD-ROM drive gets BIOS number
+         * 0x82, so the original ((DriveNumber & 0xF0) > 0x80) wouldn't work.
+         * Note that arch/i386/xbox/xboxdisk.c!XboxDiskDriveNumberToDeviceUnit()
+         * does a > 0x80 test as well...
+         *
+         * On the contrary, VBOX hardcodes the booted CD-ROM drive number to 0xE0:
+         * https://www.virtualbox.org/browser/vbox/trunk/src/VBox/Devices/PC/BIOS/eltorito.c#L459
+         */
+        IsEnhRemovable = ((DriveNumber & 0xF0) >= 0x80) && DiskDrive->IsRemovable;
+        TRACE("Drive 0x%x is a%s %s drive\n", DriveNumber, IsEnhRemovable ? "n" : "",
+              IsEnhRemovable ? "enhanced removable" : (DiskDrive->IsRemovable ? "removable" : "fixed"));
+
+        /*
+         * Perform geometry fixup ONLY for "enhanced" removable drives, check
+         * for "Geometry set to max value" (bit 6). Note that we don't check
+         * "CHS info NOT valid" (bit 1) because we don't really care about it
+         * when using extended INT 13h support. However, we will fake one if
+         * the bit 6 is set.
+         *
+         * NOTE: In most systems (but not the Dell Latitude D531), the BIOS
+         * reports an invalid geometry for booted El-Torito CD-ROMs, usually:
+         * Cyl/Heads/Sects == (-1)/(-1)/(-1) and Total Sectors = (-1).
+         *
+         * This is what VBOX does as well: The extended parameters return:
+         * flags == 0x74, and invalid geometry with Cyl/Heads/Sects == (-1)/(-1)/(-1).
+         * See https://www.virtualbox.org/browser/vbox/trunk/src/VBox/Devices/PC/BIOS/disk.c#L155
+         * In addition, directly reading disk size (INT 13h, AH=15h) will fail:
+         * https://www.virtualbox.org/browser/vbox/trunk/src/VBox/Devices/PC/BIOS/eltorito.c#L869
+         */
+        if (IsEnhRemovable && (Flags & 0x40))
+        {
+            ULONGLONG Sectors;
+            ULONG BytesPerSector = DiskDrive->ExtGeometry.BytesPerSector;
+            BOOLEAN SizeSuccess = FALSE;
+
+            WARN("~~~~ Drive 0x%x requires geometry fixups\n", DriveNumber);
+
+            SizeSuccess = GetDriveSizeViaBisection(DriveNumber, &Sectors, &BytesPerSector);
+            if (SizeSuccess)
+            {
+                TRACE("GetDriveSizeViaBisection(0x%x) returned:\n"
+                      "  Sectors: %llu\n"
+                      "  BytesPerSector: %lu\n",
+                      DriveNumber, Sectors, BytesPerSector);
+            }
+            else
+            {
+                ERR("GetDriveSizeViaBisection(0x%x) failed\n", DriveNumber);
+            }
+            if (SizeSuccess)
+            {
+                /* NOTE: CHS always assume 512 bytes per sector. Use LBA-assisted
+                 * to-CHS translation algorithm, 2nd table page 3 of the Phoenix
+                 * Enhanced Disk Drive Specification Version 1.1. */
+                ULONGLONG Size = Sectors * BytesPerSector;
+                ULONGLONG Temp = Size;
+                DiskDrive->ExtGeometry.SectorsPerTrack = 63;
+                DiskDrive->ExtGeometry.Heads = 16;
+                for (; Temp > (1024ULL * 16 * 63 * 512); Temp >>= 1)
+                {
+                    DiskDrive->ExtGeometry.Heads <<= 1;
+                    if (DiskDrive->ExtGeometry.Heads > 255)
+                    {
+                        DiskDrive->ExtGeometry.Heads = 255;
+                        break;
+                    }
+                }
+                DiskDrive->ExtGeometry.Cylinders = Size / (DiskDrive->ExtGeometry.Heads * 63 /*SectorsPerTrack*/ * 512);
+                // DiskDrive->ExtGeometry.Flags |= 0x02; // CHS is still "fake", so keep it as it was.
+
+                /* Fix the LBA geometry */
+                DiskDrive->ExtGeometry.Sectors = Sectors;
+                // DiskDrive->ExtGeometry.BytesPerSector = (USHORT)BytesPerSector;
+                DiskDrive->ExtGeometry.Flags &= ~0x40;
+
+                TRACE("Extended Geometry for drive 0x%x after fixup:\n"
+                      "Cylinders  : 0x%x\n"
+                      "Heads      : 0x%x\n"
+                      "Sects/Track: 0x%x\n"
+                      "Total Sects: 0x%llx\n"
+                      "Bytes/Sect : 0x%x\n",
+                      DriveNumber,
+                      DiskDrive->ExtGeometry.Cylinders,
+                      DiskDrive->ExtGeometry.Heads,
+                      DiskDrive->ExtGeometry.SectorsPerTrack,
+                      DiskDrive->ExtGeometry.Sectors,
+                      DiskDrive->ExtGeometry.BytesPerSector);
+            }
+        }
     }
 
     /* Now try the legacy geometry */
