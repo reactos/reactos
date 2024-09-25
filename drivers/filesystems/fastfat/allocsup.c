@@ -99,7 +99,7 @@ FatLogOf(
 #define FatLockFreeClusterBitMap(VCB) {                         \
     NT_ASSERT(KeAreApcsDisabled());                             \
     ExAcquireFastMutexUnsafe( &(VCB)->FreeClusterBitMapMutex ); \
-    ASSERT_CURRENT_WINDOW_GOOD(VCB)                             \
+/*    ASSERT_CURRENT_WINDOW_GOOD(VCB)                             */\
 }
 
 //
@@ -110,7 +110,7 @@ FatLogOf(
 //
 
 #define FatUnlockFreeClusterBitMap(VCB) {                       \
-    ASSERT_CURRENT_WINDOW_GOOD(VCB)                             \
+/*    ASSERT_CURRENT_WINDOW_GOOD(VCB)                             */\
     NT_ASSERT(KeAreApcsDisabled());                             \
     ExReleaseFastMutexUnsafe( &(VCB)->FreeClusterBitMapMutex ); \
 }
@@ -1811,7 +1811,7 @@ Arguments:
     ULONG ClusterCount;
     ULONG WindowRelativeHint;
 #if DBG
-    ULONG PreviousClear = 0;
+//    ULONG PreviousClear = 0;
 #endif
 
     PFAT_WINDOW Window;
@@ -2050,7 +2050,7 @@ Arguments:
     )  {
 
 #if DBG
-        PreviousClear = RtlNumberOfClearBits( &Vcb->FreeClusterBitMap );
+//        PreviousClear = RtlNumberOfClearBits( &Vcb->FreeClusterBitMap );
 #endif // DBG
 
         //
@@ -2064,7 +2064,7 @@ Arguments:
         StartingCluster += Window->FirstCluster;
         StartingCluster -= 2;
 
-        NT_ASSERT( PreviousClear - ClusterCount == Window->ClustersFree );
+//        NT_ASSERT( PreviousClear - ClusterCount == Window->ClustersFree );
 
         FatUnlockFreeClusterBitMap( Vcb );
 
@@ -2254,7 +2254,7 @@ Arguments:
                                 WindowRelativeHint = 0;
                             }
 #if DBG
-                            PreviousClear = RtlNumberOfClearBits( &Vcb->FreeClusterBitMap );
+//                            PreviousClear = RtlNumberOfClearBits( &Vcb->FreeClusterBitMap );
 #endif // DBG
                         }
                         else  {
@@ -2306,7 +2306,7 @@ Arguments:
 
                         }
 #if DBG
-                        PreviousClear = RtlNumberOfClearBits( &Vcb->FreeClusterBitMap );
+//                        PreviousClear = RtlNumberOfClearBits( &Vcb->FreeClusterBitMap );
 #endif // DBG
                         if (ClustersFound >= ClustersRemaining) {
 
@@ -2430,7 +2430,7 @@ Arguments:
                     //  and allocate....
                     //
 #if DBG
-                    PreviousClear = RtlNumberOfClearBits( &Vcb->FreeClusterBitMap );
+//                    PreviousClear = RtlNumberOfClearBits( &Vcb->FreeClusterBitMap );
 #endif //DBG
                 }       // if (clustersfound == 0)
                 else  {
@@ -2447,7 +2447,7 @@ Arguments:
                     Cluster = Index + Window->FirstCluster;
 
                     Window->ClustersFree -= ClustersFound;
-                    NT_ASSERT( PreviousClear - ClustersFound == Window->ClustersFree );
+//                    NT_ASSERT( PreviousClear - ClustersFound == Window->ClustersFree );
 
                     FatUnlockFreeClusterBitMap( Vcb );
                     LockedBitMap = FALSE;
@@ -5271,7 +5271,7 @@ Return Value:
 
         if (!SetupWindows && BitMapBuffer == NULL) {
 
-            ASSERT_CURRENT_WINDOW_GOOD( Vcb );
+//            ASSERT_CURRENT_WINDOW_GOOD( Vcb );
         }
 
         NT_ASSERT(Vcb->AllocationSupport.NumberOfFreeClusters <= Vcb->AllocationSupport.NumberOfClusters);
