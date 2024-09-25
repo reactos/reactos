@@ -19,7 +19,7 @@ BEGIN
     PUSHBUTTON      "Revocare",IDCANCEL,61,35,50,14
     CONTROL         "&Rotire a Fluturilor",ROTATE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,56,15,70,8
-    PUSHBUTTON      "Despre",IDABOUT,115,35,50,14
+    PUSHBUTTON      "&Despre",IDABOUT,115,35,50,14
 END
 
 IDD_DLG_ABOUT DIALOGEX DISCARDABLE  0, 0, 149, 79
