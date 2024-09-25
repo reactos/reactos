@@ -8,6 +8,7 @@
  *                  2015-2016 Samuel Serapión Vega (encoded@reactos.org)
  *                  2017 Mark Jansen (mark.jansen@reactos.org)
  *                  2018 Pierre Schweitzer (pierre@reactos.org)
+ *                  2022 Timo Kreuzer (timo.kreuzer@reactos.org)
  *                  2024 Gleb Surikov (glebs.surikovs@gmail.com)
  */
 
@@ -655,6 +656,131 @@ PspDeleteJob(_In_ PVOID ObjectBody)
 
     /* Delete the resource associated with the job object */
     ExDeleteResource(&Job->JobLock);
+}
+
+/*!
+ * Helper function to set limit information for a job object,
+ * either basic or extended limits.
+ *
+ * @param[in] Job
+ *     The job object being modified.
+ *
+ * @param[in] ExtendedLimit
+ *     A pointer to the structure containing the limit information to be set.
+ *
+ * @param[in] IsExtendedLimit
+ *     A boolean value indicating whether the limit information is extended.
+ *
+ * @returns
+ *     STATUS_SUCCESS if the job limits are successfully set.
+ *     Otherwise, an appropriate NTSTATUS error code.
+ *
+ */
+NTSTATUS
+PspSetJobLimitsBasicOrExtended(
+    _In_ PEJOB Job,
+    _In_ PJOBOBJECT_EXTENDED_LIMIT_INFORMATION ExtendedLimit,
+    _In_ BOOLEAN IsExtendedLimit
+)
+{
+    NTSTATUS Status;
+    ULONG AllowedFlags;
+
+    const ULONG AllowedBasicFlags = JOB_OBJECT_LIMIT_WORKINGSET |
+        JOB_OBJECT_LIMIT_PROCESS_TIME |
+        JOB_OBJECT_LIMIT_JOB_TIME |
+        JOB_OBJECT_LIMIT_ACTIVE_PROCESS |
+        JOB_OBJECT_LIMIT_AFFINITY |
+        JOB_OBJECT_LIMIT_PRIORITY_CLASS |
+        JOB_OBJECT_LIMIT_PRESERVE_JOB_TIME |
+        JOB_OBJECT_LIMIT_SCHEDULING_CLASS;
+
+    const ULONG AllowedExtendedFlags = AllowedBasicFlags |
+        JOB_OBJECT_LIMIT_BREAKAWAY_OK |
+        JOB_OBJECT_LIMIT_DIE_ON_UNHANDLED_EXCEPTION |
+        JOB_OBJECT_LIMIT_PROCESS_MEMORY |
+        JOB_OBJECT_LIMIT_JOB_MEMORY |
+        JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK |
+        JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+
+    AllowedFlags = IsExtendedLimit ? AllowedExtendedFlags : AllowedBasicFlags;
+
+    /* Validate flags */
+    if (ExtendedLimit->BasicLimitInformation.LimitFlags & ~AllowedFlags)
+    {
+        DPRINT1("Invalid LimitFlags specified\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if ((ExtendedLimit->BasicLimitInformation.LimitFlags & JOB_OBJECT_LIMIT_PRESERVE_JOB_TIME) &&
+        (ExtendedLimit->BasicLimitInformation.LimitFlags & JOB_OBJECT_LIMIT_JOB_TIME))
+    {
+        DPRINT1("Invalid LimitFlags combination specified\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Acquire the job lock */
+    ExAcquireResourceSharedLite(&Job->JobLock, TRUE);
+
+    /* Copy basic information */
+    if (ExtendedLimit->BasicLimitInformation.LimitFlags & JOB_OBJECT_LIMIT_WORKINGSET)
+    {
+        Job->MinimumWorkingSetSize = ExtendedLimit->BasicLimitInformation.MinimumWorkingSetSize;
+        Job->MaximumWorkingSetSize = ExtendedLimit->BasicLimitInformation.MaximumWorkingSetSize;
+    }
+
+    if (ExtendedLimit->BasicLimitInformation.LimitFlags & JOB_OBJECT_LIMIT_PROCESS_TIME)
+    {
+        Job->PerProcessUserTimeLimit.QuadPart =
+            ExtendedLimit->BasicLimitInformation.PerProcessUserTimeLimit.QuadPart;
+    }
+
+    if (ExtendedLimit->BasicLimitInformation.LimitFlags & JOB_OBJECT_LIMIT_JOB_TIME)
+    {
+        Job->PerJobUserTimeLimit.QuadPart =
+            ExtendedLimit->BasicLimitInformation.PerJobUserTimeLimit.QuadPart;
+    }
+
+    if (ExtendedLimit->BasicLimitInformation.LimitFlags & JOB_OBJECT_LIMIT_ACTIVE_PROCESS)
+    {
+        Job->ActiveProcessLimit = ExtendedLimit->BasicLimitInformation.ActiveProcessLimit;
+    }
+
+    if (ExtendedLimit->BasicLimitInformation.LimitFlags & JOB_OBJECT_LIMIT_AFFINITY)
+    {
+        Job->Affinity = ExtendedLimit->BasicLimitInformation.Affinity;
+    }
+
+    if (ExtendedLimit->BasicLimitInformation.LimitFlags & JOB_OBJECT_LIMIT_PRIORITY_CLASS)
+    {
+        Job->PriorityClass = ExtendedLimit->BasicLimitInformation.PriorityClass;
+    }
+
+    if (ExtendedLimit->BasicLimitInformation.LimitFlags & JOB_OBJECT_LIMIT_SCHEDULING_CLASS)
+    {
+        Job->SchedulingClass = ExtendedLimit->BasicLimitInformation.SchedulingClass;
+    }
+
+    /* Acquire the memory limits lock */
+    KeAcquireGuardedMutexUnsafe(&Job->MemoryLimitsLock);
+
+    if (ExtendedLimit->BasicLimitInformation.LimitFlags & JOB_OBJECT_LIMIT_PROCESS_MEMORY)
+    {
+        Job->ProcessMemoryLimit = ExtendedLimit->ProcessMemoryLimit >> PAGE_SHIFT;
+    }
+
+    if (ExtendedLimit->BasicLimitInformation.LimitFlags & JOB_OBJECT_LIMIT_JOB_MEMORY)
+    {
+        Job->JobMemoryLimit = ExtendedLimit->JobMemoryLimit >> PAGE_SHIFT;
+    }
+
+    Job->LimitFlags = ExtendedLimit->BasicLimitInformation.LimitFlags;
+
+    /* Release locks */
+    KeReleaseGuardedMutexUnsafe(&Job->MemoryLimitsLock);
+    ExReleaseResourceLite(&Job->JobLock);
+
+    return Status;
 }
 
 /*
@@ -1438,16 +1564,44 @@ NtQueryInformationJobObject (
     return Status;
 }
 
-/*
- * @unimplemented
+/*!
+ * Sets the information for a job object, updating the specified job object
+ * limits.
+ *
+ * This function is called to modify various job object limits, including basic
+ * limits, extended limits, security limits, and other job-specific settings.
+ *
+ * @param[in] JobHandle
+ *     A handle to the job object that is being modified. The handle must have
+ *     the JOB_OBJECT_SET_ATTRIBUTES access right.
+ *
+ * @param[in] JobInformationClass
+ *     The class of information to set. This determines the structure and
+ *     content of the JobInformation parameter.
+ *
+ * @param[in] JobInformation
+ *     A pointer to a buffer that contains the information to be set. The type
+ *     and content of the buffer depend on the value of JobInformationClass.
+ *
+ * @param[in] JobInformationLength
+ *     The size of the buffer pointed to by JobInformation, in bytes.
+ *
+ * @return
+ *     STATUS_SUCCESS on success.
+ *     Otherwise, an appropriate NTSTATUS error co
+ *
+ * @remarks
+ *     Not fully implemented. The function currently does not support some
+ *     information classes.
  */
 NTSTATUS
 NTAPI
-NtSetInformationJobObject (
-    HANDLE JobHandle,
-    JOBOBJECTINFOCLASS JobInformationClass,
-    PVOID JobInformation,
-    ULONG JobInformationLength)
+NtSetInformationJobObject(
+    _In_ HANDLE JobHandle,
+    _In_ JOBOBJECTINFOCLASS JobInformationClass,
+    _In_reads_bytes_(JobInformationLength) PVOID JobInformation,
+    _In_ ULONG JobInformationLength
+)
 {
     PEJOB Job;
     NTSTATUS Status;
@@ -1461,7 +1615,8 @@ NtSetInformationJobObject (
     CurrentThread  = KeGetCurrentThread();
 
     /* Validate class */
-    if (JobInformationClass > JobObjectJobSetInformation || JobInformationClass < JobObjectBasicAccountingInformation)
+    if (JobInformationClass > JobObjectJobSetInformation ||
+        JobInformationClass < JobObjectBasicAccountingInformation)
     {
         return STATUS_INVALID_INFO_CLASS;
     }
@@ -1474,7 +1629,11 @@ NtSetInformationJobObject (
     /* If not comming from umode, we need to probe buffers */
     if (PreviousMode != KernelMode)
     {
-        ASSERT(((RequiredAlign) == 1) || ((RequiredAlign) == 2) || ((RequiredAlign) == 4) || ((RequiredAlign) == 8) || ((RequiredAlign) == 16));
+        ASSERT(((RequiredAlign) == 1) ||
+               ((RequiredAlign) == 2) ||
+               ((RequiredAlign) == 4) ||
+               ((RequiredAlign) == 8) ||
+               ((RequiredAlign) == 16));
 
         _SEH2_TRY
         {
@@ -1516,18 +1675,60 @@ NtSetInformationJobObject (
 
     /* And set the information */
     KeEnterGuardedRegionThread(CurrentThread);
+
     switch (JobInformationClass)
     {
-        case JobObjectExtendedLimitInformation:
-            DPRINT1("Class JobObjectExtendedLimitInformation not implemented\n");
-            Status = STATUS_SUCCESS;
-            break;
+    case JobObjectBasicLimitInformation:
+    case JobObjectExtendedLimitInformation:
+    {
+        JOBOBJECT_EXTENDED_LIMIT_INFORMATION ExtendedLimit;
+        BOOLEAN IsExtendedLimit = JobInformationClass == JobObjectExtendedLimitInformation;
 
-        default:
-            DPRINT1("Class %d not implemented\n", JobInformationClass);
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
+        _SEH2_TRY
+        {
+            /* If asking for extending limits */
+            if (JobInformationClass == JobObjectExtendedLimitInformation)
+            {
+                ExtendedLimit = *(PJOBOBJECT_EXTENDED_LIMIT_INFORMATION)JobInformation;
+            }
+            else
+            {
+                RtlZeroMemory(&ExtendedLimit, sizeof(ExtendedLimit));
+                ExtendedLimit.BasicLimitInformation =
+                    *(PJOBOBJECT_BASIC_LIMIT_INFORMATION)JobInformation;
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+            goto Exit;
+        }
+        _SEH2_END;
+
+        Status = PspSetBasicOrExtendedJobLimits(Job,
+                                                &ExtendedLimit,
+                                                IsExtendedLimit);
+        goto Exit;
     }
+    case JobObjectAssociateCompletionPortInformation:
+    case JobObjectBasicAccountingInformation:
+    case JobObjectBasicAndIoAccountingInformation:
+    case JobObjectBasicProcessIdList:
+    case JobObjectBasicUIRestrictions:
+    case JobObjectEndOfJobTimeInformation:
+    case JobObjectJobSetInformation:
+    case JobObjectSecurityLimitInformation:
+        DPRINT1("Class %d not implemented\n", JobInformationClass);
+        Status = STATUS_NOT_IMPLEMENTED;
+        break;
+    case MaxJobObjectInfoClass:
+    default:
+        DPRINT1("Invalid class %d\n", JobInformationClass);
+        Status = STATUS_INVALID_PARAMETER;
+        break;
+    }
+
+Exit:
     KeLeaveGuardedRegionThread(CurrentThread);
 
     ObDereferenceObject(Job);

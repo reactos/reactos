@@ -209,10 +209,10 @@ QueryInformationJobObject(IN HANDLE hJob,
  */
 BOOL
 WINAPI
-SetInformationJobObject(IN HANDLE hJob,
-                        IN JOBOBJECTINFOCLASS JobObjectInformationClass,
-                        IN LPVOID lpJobObjectInformation,
-                        IN DWORD cbJobObjectInformationLength)
+SetInformationJobObject(_In_ HANDLE hJob,
+                        _In_ JOBOBJECTINFOCLASS JobObjectInformationClass,
+                        _In_reads_bytes_(cbJobObjectInformationLength) LPVOID lpJobObjectInformation,
+                        _In_ DWORD cbJobObjectInformationLength)
 {
     NTSTATUS Status;
     PVOID JobInfo;
