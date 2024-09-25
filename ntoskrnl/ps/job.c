@@ -289,6 +289,14 @@ PspAssignProcessToJob(
         }
     }
 
+    /* https://learn.microsoft.com/en-us/windows/win32/api/jobapi2/nf-jobapi2-assignprocesstojobobject:
+       "If the job or any of its parent jobs in the job chain is terminating
+       when AssignProcessToJob is called, the function fails" */
+    if (Job->JobFlags & JOB_OBJECT_TERMINATING)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
     /* Prevent processes from being added to the job if it is flagged for
        closing and has a limit on process termination on closing */
     if (Job->LimitFlags & JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE &&
@@ -470,6 +478,9 @@ PspTerminateProcessCallback(
     PEJOB Job = TerminateContext->Job;
     NTSTATUS ExitStatus = TerminateContext->ExitStatus;
 
+    /* Flag the job as terminating */
+    InterlockedOr((PLONG)&Job->JobFlags, JOB_OBJECT_TERMINATING);
+
     /* Terminate the process */
     Status = PsTerminateProcess(Process, ExitStatus);
 
@@ -497,6 +508,8 @@ PspTerminateProcessCallback(
 
         ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
     }
+
+    InterlockedOr((PLONG)&Job->JobFlags, ~JOB_OBJECT_TERMINATING);
 
     return Status;
 }

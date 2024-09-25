@@ -94,7 +94,8 @@
 // More information:
 // https://www.geoffchappell.com/studies/windows/km/ntoskrnl/inc/ntos/ps/ejob/jobflags.htm
 //
-#define JOB_OBJECT_CLOSE_DONE                   0x1
+#define JOB_OBJECT_CLOSE_DONE                   0x00000001
+#define JOB_OBJECT_TERMINATING                  0x00000080
 
 //
 // Thread "Set/Get Context" Context Structure
