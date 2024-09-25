@@ -17,7 +17,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,7,35,50,14
     PUSHBUTTON      "Revocare",IDCANCEL,61,35,50,14
-    CONTROL         "Rotire a Fluturilor",ROTATE,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&Rotire a Fluturilor",ROTATE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,56,15,70,8
     PUSHBUTTON      "Despre",IDABOUT,115,35,50,14
 END
