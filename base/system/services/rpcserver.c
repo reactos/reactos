@@ -116,7 +116,7 @@ ScmStartRpcServer(VOID)
                                     NULL);
     if (Status != RPC_S_OK)
     {
-        DPRINT1("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
+        DPRINT("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
         return;
     }
 
@@ -125,14 +125,14 @@ ScmStartRpcServer(VOID)
                                  NULL);
     if (Status != RPC_S_OK)
     {
-        DPRINT1("RpcServerRegisterIf() failed (Status %lx)\n", Status);
+        DPRINT("RpcServerRegisterIf() failed (Status %lx)\n", Status);
         return;
     }
 
     Status = RpcServerListen(1, 20, TRUE);
     if (Status != RPC_S_OK)
     {
-        DPRINT1("RpcServerListen() failed (Status %lx)\n", Status);
+        DPRINT("RpcServerListen() failed (Status %lx)\n", Status);
         return;
     }
 
@@ -210,7 +210,7 @@ ScmGetServiceManagerFromHandle(SC_RPC_HANDLE Handle)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        DPRINT1("Exception: Invalid Service Manager handle\n");
+        DPRINT("Exception: Invalid Service Manager handle\n");
     }
     _SEH2_END;
 
@@ -230,7 +230,7 @@ ScmGetServiceFromHandle(SC_RPC_HANDLE Handle)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        DPRINT1("Exception: Invalid Service handle\n");
+        DPRINT("Exception: Invalid Service handle\n");
     }
     _SEH2_END;
 
@@ -390,7 +390,7 @@ cleanup:
     }
     else
     {
-        DPRINT1("Failed to assign new tag to service %S, error=%lu\n",
+        DPRINT("Failed to assign new tag to service %S, error=%lu\n",
                 lpService->lpServiceName, dwError);
     }
 
@@ -777,9 +777,9 @@ ScmCanonDriverImagePath(DWORD dwStartType,
 }
 
 
-/* Internal recursive function */
+/* Recursive function */
 /* Need to search for every dependency on every service */
-static DWORD
+DWORD
 Int_EnumDependentServicesW(HKEY hServicesKey,
                            PSERVICE lpService,
                            DWORD dwServiceState,
@@ -939,10 +939,6 @@ RCloseServiceHandle(
     PMANAGER_HANDLE hManager;
     PSERVICE_HANDLE hService;
     PSERVICE lpService;
-    HKEY hServicesKey;
-    DWORD dwError;
-    DWORD pcbBytesNeeded = 0;
-    DWORD dwServicesReturned = 0;
 
     DPRINT("RCloseServiceHandle() called\n");
 
@@ -986,68 +982,9 @@ RCloseServiceHandle(
         HeapFree(GetProcessHeap(), 0, hService);
         hService = NULL;
 
-        ASSERT(lpService->dwRefCount > 0);
 
-        lpService->dwRefCount--;
-        DPRINT("CloseServiceHandle - lpService->dwRefCount %u\n",
-               lpService->dwRefCount);
-
-        if (lpService->dwRefCount == 0)
-        {
-            /* If this service has been marked for deletion */
-            if (lpService->bDeleted &&
-                lpService->Status.dwCurrentState == SERVICE_STOPPED)
-            {
-                /* Open the Services Reg key */
-                dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                                        L"System\\CurrentControlSet\\Services",
-                                        0,
-                                        KEY_SET_VALUE | KEY_READ,
-                                        &hServicesKey);
-                if (dwError != ERROR_SUCCESS)
-                {
-                    DPRINT("Failed to open services key\n");
-                    ScmUnlockDatabase();
-                    return dwError;
-                }
-
-                /* Call the internal function with NULL, just to get bytes we need */
-                Int_EnumDependentServicesW(hServicesKey,
-                                           lpService,
-                                           SERVICE_ACTIVE,
-                                           NULL,
-                                           &pcbBytesNeeded,
-                                           &dwServicesReturned);
-
-                /* If pcbBytesNeeded returned a value then there are services running that are dependent on this service */
-                if (pcbBytesNeeded)
-                {
-                    DPRINT("Deletion failed due to running dependencies\n");
-                    RegCloseKey(hServicesKey);
-                    ScmUnlockDatabase();
-                    return ERROR_SUCCESS;
-                }
-
-                /* There are no references and no running dependencies,
-                   it is now safe to delete the service */
-
-                /* Delete the Service Key */
-                dwError = ScmDeleteRegKey(hServicesKey,
-                                          lpService->lpServiceName);
-
-                RegCloseKey(hServicesKey);
-
-                if (dwError != ERROR_SUCCESS)
-                {
-                    DPRINT("Failed to Delete the Service Registry key\n");
-                    ScmUnlockDatabase();
-                    return dwError;
-                }
-
-                /* Delete the Service */
-                ScmDeleteServiceRecord(lpService);
-            }
-        }
+        DPRINT("Closing service %S with %d references\n", lpService->lpServiceName, lpService->RefCount);
+        ScmDereferenceService(lpService);
 
         ScmUnlockDatabase();
 
@@ -1093,7 +1030,7 @@ RControlService(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT1("Invalid service handle\n");
+        DPRINT("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -1101,7 +1038,7 @@ RControlService(
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
-        DPRINT1("lpService == NULL\n");
+        DPRINT("lpService == NULL\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -1249,7 +1186,7 @@ RControlService(
         }
 
         /* Send control code to the service */
-        dwError = ScmControlService(lpService->lpImage->hControlPipe,
+        dwError = ScmControlService(lpService,
                                     lpService->lpServiceName,
                                     (SERVICE_STATUS_HANDLE)lpService,
                                     dwControl);
@@ -1316,7 +1253,7 @@ RDeleteService(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT1("Invalid service handle\n");
+        DPRINT("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -1372,7 +1309,7 @@ RLockServiceDatabase(
     hMgr = ScmGetServiceManagerFromHandle(hSCManager);
     if (hMgr == NULL)
     {
-        DPRINT1("Invalid service manager handle\n");
+        DPRINT("Invalid service manager handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -1406,7 +1343,7 @@ RQueryServiceObjectSecurity(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT1("Invalid service handle\n");
+        DPRINT("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -1491,7 +1428,7 @@ RSetServiceObjectSecurity(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT1("Invalid service handle\n");
+        DPRINT("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -1529,14 +1466,14 @@ RSetServiceObjectSecurity(
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
                                   DesiredAccess))
     {
-        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+        DPRINT("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
         return ERROR_ACCESS_DENIED;
     }
 
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
-        DPRINT1("lpService == NULL\n");
+        DPRINT("lpService == NULL\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -1620,7 +1557,7 @@ RQueryServiceStatus(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT1("Invalid service handle\n");
+        DPRINT("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -1672,6 +1609,81 @@ ScmIsValidServiceState(DWORD dwCurrentState)
     }
 }
 
+static
+DWORD
+WINAPI
+ScmStopThread(PVOID pParam)
+{
+    PSERVICE lpService = (PSERVICE)pParam;
+    WCHAR szLogBuffer[80];
+    LPCWSTR lpLogStrings[2];
+
+    /* Check if we are about to stop this service */
+    if (lpService->lpImage->dwImageRunCount == 1)
+    {
+        /* Stop the dispatcher thread.
+         * We must not send a control message while holding the database lock, otherwise it can cause timeouts
+         * We are sure that the service won't be deleted in the meantime because we still have a reference to it. */
+        DPRINT("Stopping the dispatcher thread for service %S\n", lpService->lpServiceName);
+        ScmControlService(lpService,
+                          L"",
+                          (SERVICE_STATUS_HANDLE)lpService,
+                          SERVICE_CONTROL_STOP);
+    }
+
+    /* Lock the service database exclusively */
+    ScmLockDatabaseExclusive();
+
+    DPRINT("Service %S image count:%d\n", lpService->lpServiceName, lpService->lpImage->dwImageRunCount);
+
+    /* Decrement the image run counter */
+    lpService->lpImage->dwImageRunCount--;
+
+    /* If we just stopped the last running service... */
+    if (lpService->lpImage->dwImageRunCount == 0)
+    {
+        /* Remove the service image */
+        DPRINT("Removing service image for %S\n", lpService->lpServiceName);
+        ScmRemoveServiceImage(lpService->lpImage);
+        lpService->lpImage = NULL;
+    }
+
+    /* Report the results of the status change here */
+    if (lpService->Status.dwWin32ExitCode != ERROR_SUCCESS)
+    {
+        /* Log a failed service stop */
+        StringCchPrintfW(szLogBuffer, ARRAYSIZE(szLogBuffer),
+                         L"%lu", lpService->Status.dwWin32ExitCode);
+        lpLogStrings[0] = lpService->lpDisplayName;
+        lpLogStrings[1] = szLogBuffer;
+
+        ScmLogEvent(EVENT_SERVICE_EXIT_FAILED,
+                    EVENTLOG_ERROR_TYPE,
+                    ARRAYSIZE(lpLogStrings),
+                    lpLogStrings);
+    }
+    else 
+    {
+        /* Log a successful service status change */
+        LoadStringW(GetModuleHandle(NULL), IDS_SERVICE_STOPPED, szLogBuffer, ARRAYSIZE(szLogBuffer));
+        lpLogStrings[0] = lpService->lpDisplayName;
+        lpLogStrings[1] = szLogBuffer;
+
+        ScmLogEvent(EVENT_SERVICE_STATUS_SUCCESS,
+                    EVENTLOG_INFORMATION_TYPE,
+                    ARRAYSIZE(lpLogStrings),
+                    lpLogStrings);
+    }
+
+    /* Remove the reference that was added when the service started */
+    DPRINT("Service %S has %d references while stoping\n", lpService->lpServiceName, lpService->RefCount);
+    ScmDereferenceService(lpService);
+
+    /* Unlock the service database */
+    ScmUnlockDatabase();
+
+    return 0;
+}
 
 /* Function 7 */
 DWORD
@@ -1686,6 +1698,8 @@ RSetServiceStatus(
     LPCWSTR lpLogStrings[2];
     WCHAR szLogBuffer[80];
     UINT uID;
+    HANDLE hStopThread;
+    DWORD dwStopThreadId;
 
     DPRINT("RSetServiceStatus() called\n");
     DPRINT("hServiceStatus = %lu\n", hServiceStatus);
@@ -1754,58 +1768,60 @@ RSetServiceStatus(
     /* Restore the previous service type */
     lpService->Status.dwServiceType = dwPreviousType;
 
-    /* Dereference a stopped service */
-    if ((lpServiceStatus->dwServiceType & SERVICE_WIN32) &&
-        (lpServiceStatus->dwCurrentState == SERVICE_STOPPED))
+    DPRINT("Service %S changed state %d to %d\n", lpService->lpServiceName, dwPreviousState, lpServiceStatus->dwCurrentState);
+
+    if (lpServiceStatus->dwCurrentState != SERVICE_STOPPED &&
+        dwPreviousState == SERVICE_STOPPED)
     {
-        /* Decrement the image run counter */
-        lpService->lpImage->dwImageRunCount--;
+        /* Keep a reference on all non stopped services */
+        ScmReferenceService(lpService);
+        DPRINT("Service %S has %d references after starting\n", lpService->lpServiceName, lpService->RefCount);
+    }
 
-        /* If we just stopped the last running service... */
-        if (lpService->lpImage->dwImageRunCount == 0)
+    /* Check if the service just stopped */
+    if (lpServiceStatus->dwCurrentState == SERVICE_STOPPED &&
+        dwPreviousState != SERVICE_STOPPED)
+    {
+        DPRINT("Service %S, currentstate: %d, prev: %d\n", lpService->lpServiceName, lpServiceStatus->dwCurrentState, dwPreviousState);
+
+        /* 
+         * The service just changed its status to stopped.
+         * Create a thread that will complete the stop sequence.
+         * This thread will remove the reference that was added when the service started.
+         * This will ensure that the service will remain valid as long as this reference is still held.
+         */
+        hStopThread = CreateThread(NULL,
+                                   0,
+                                   ScmStopThread,
+                                   (LPVOID)lpService,
+                                   0,
+                                   &dwStopThreadId);
+        if (hStopThread == NULL)
         {
-            /* Stop the dispatcher thread */
-            ScmControlService(lpService->lpImage->hControlPipe,
-                              L"",
-                              (SERVICE_STATUS_HANDLE)lpService,
-                              SERVICE_CONTROL_STOP);
-
-            /* Remove the service image */
-            ScmRemoveServiceImage(lpService->lpImage);
-            lpService->lpImage = NULL;
+            DPRINT1("Failed to create thread to complete service stop\n");
+            /* We can't leave without releasing the reference.
+             * We also can't remove it without holding the lock. */
+            ScmDereferenceService(lpService);
+            DPRINT("Service %S has %d references after stoping\n", lpService->lpServiceName, lpService->RefCount);
+        }
+        else
+        {
+            CloseHandle(hStopThread);
         }
     }
 
     /* Unlock the service database */
     ScmUnlockDatabase();
 
-    if ((lpServiceStatus->dwCurrentState == SERVICE_STOPPED) &&
-        (dwPreviousState != SERVICE_STOPPED) &&
-        (lpServiceStatus->dwWin32ExitCode != ERROR_SUCCESS))
-    {
-        /* Log a failed service stop */
-        StringCchPrintfW(szLogBuffer, ARRAYSIZE(szLogBuffer),
-                         L"%lu", lpServiceStatus->dwWin32ExitCode);
-        lpLogStrings[0] = lpService->lpDisplayName;
-        lpLogStrings[1] = szLogBuffer;
+    /* Don't log any events here regarding a service stop as it can become invalid at any time */
 
-        ScmLogEvent(EVENT_SERVICE_EXIT_FAILED,
-                    EVENTLOG_ERROR_TYPE,
-                    2,
-                    lpLogStrings);
-    }
-    else if (lpServiceStatus->dwCurrentState != dwPreviousState &&
-             (lpServiceStatus->dwCurrentState == SERVICE_STOPPED ||
-              lpServiceStatus->dwCurrentState == SERVICE_RUNNING ||
-              lpServiceStatus->dwCurrentState == SERVICE_PAUSED))
+    if (lpServiceStatus->dwCurrentState != dwPreviousState &&
+        (lpServiceStatus->dwCurrentState == SERVICE_RUNNING ||
+         lpServiceStatus->dwCurrentState == SERVICE_PAUSED))
     {
         /* Log a successful service status change */
         switch(lpServiceStatus->dwCurrentState)
         {
-            case SERVICE_STOPPED:
-                uID = IDS_SERVICE_STOPPED;
-                break;
-
             case SERVICE_RUNNING:
                 uID = IDS_SERVICE_RUNNING;
                 break;
@@ -1825,7 +1841,6 @@ RSetServiceStatus(
                     lpLogStrings);
     }
 
-    DPRINT("Set %S to %lu\n", lpService->lpDisplayName, lpService->Status.dwCurrentState);
     DPRINT("RSetServiceStatus() done\n");
 
     return ERROR_SUCCESS;
@@ -1957,7 +1972,7 @@ RChangeServiceConfigW(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT1("Invalid service handle\n");
+        DPRINT("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -2214,17 +2229,17 @@ RChangeServiceConfigW(
                                              &lpClearTextPassword);
                 if (dwError != ERROR_SUCCESS)
                 {
-                    DPRINT1("ScmDecryptPassword failed (Error %lu)\n", dwError);
+                    DPRINT("ScmDecryptPassword failed (Error %lu)\n", dwError);
                     goto done;
                 }
-                DPRINT1("Clear text password: %S\n", lpClearTextPassword);
+                DPRINT("Clear text password: %S\n", lpClearTextPassword);
 
                 /* Write the password */
                 dwError = ScmSetServicePassword(lpService->szServiceName,
                                                 lpClearTextPassword);
                 if (dwError != ERROR_SUCCESS)
                 {
-                    DPRINT1("ScmSetServicePassword failed (Error %lu)\n", dwError);
+                    DPRINT("ScmSetServicePassword failed (Error %lu)\n", dwError);
                     goto done;
                 }
             }
@@ -2238,7 +2253,7 @@ RChangeServiceConfigW(
 
                 if (dwError != ERROR_SUCCESS)
                 {
-                    DPRINT1("ScmSetServicePassword failed (Error %lu)\n", dwError);
+                    DPRINT("ScmSetServicePassword failed (Error %lu)\n", dwError);
                     goto done;
                 }
             }
@@ -2313,7 +2328,7 @@ RCreateServiceW(
     hManager = ScmGetServiceManagerFromHandle(hSCManager);
     if (hManager == NULL)
     {
-        DPRINT1("Invalid service manager handle\n");
+        DPRINT("Invalid service manager handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -2641,12 +2656,12 @@ RCreateServiceW(
     if (dwError != ERROR_SUCCESS)
         goto done;
 
-    lpService->dwRefCount = 1;
+    ScmReferenceService(lpService);
 
     /* Get the service tag (if Win32) */
     ScmGenerateServiceTag(lpService);
 
-    DPRINT("CreateService - lpService->dwRefCount %u\n", lpService->dwRefCount);
+    DPRINT("CreateService - lpService->RefCount %u\n", lpService->RefCount);
 
 done:
     /* Unlock the service database */
@@ -2730,7 +2745,7 @@ REnumDependentServicesW(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT1("Invalid service handle\n");
+        DPRINT("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -2777,7 +2792,7 @@ REnumDependentServicesW(
                                 (dwServicesReturned + 1) * sizeof(PSERVICE));
     if (!lpServicesArray)
     {
-        DPRINT1("Could not allocate buffer\n");
+        DPRINT("Could not allocate buffer\n");
         dwError = ERROR_NOT_ENOUGH_MEMORY;
         goto Done;
     }
@@ -2940,7 +2955,7 @@ ROpenServiceW(
     hManager = ScmGetServiceManagerFromHandle(hSCManager);
     if (hManager == NULL)
     {
-        DPRINT1("Invalid service manager handle\n");
+        DPRINT("Invalid service manager handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -2981,8 +2996,8 @@ ROpenServiceW(
         goto Done;
     }
 
-    lpService->dwRefCount++;
-    DPRINT("OpenService - lpService->dwRefCount %u\n",lpService->dwRefCount);
+    ScmReferenceService(lpService);
+    DPRINT("OpenService %S - lpService->RefCount %u\n", lpService->lpServiceName, lpService->RefCount);
 
     *lpServiceHandle = (SC_RPC_HANDLE)hHandle;
     DPRINT("*hService = %p\n", *lpServiceHandle);
@@ -3026,7 +3041,7 @@ RQueryServiceConfigW(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT1("Invalid service handle\n");
+        DPRINT("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -3224,7 +3239,7 @@ RQueryServiceLockStatusW(
     hMgr = ScmGetServiceManagerFromHandle(hSCManager);
     if (hMgr == NULL)
     {
-        DPRINT1("Invalid service manager handle\n");
+        DPRINT("Invalid service manager handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -3280,7 +3295,7 @@ RStartServiceW(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT1("Invalid service handle\n");
+        DPRINT("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -3768,7 +3783,7 @@ REnumDependentServicesA(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT1("Invalid service handle\n");
+        DPRINT("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -4097,7 +4112,7 @@ RQueryServiceConfigA(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT1("Invalid service handle\n");
+        DPRINT("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -4328,7 +4343,7 @@ RQueryServiceLockStatusA(
     hMgr = ScmGetServiceManagerFromHandle(hSCManager);
     if (hMgr == NULL)
     {
-        DPRINT1("Invalid service manager handle\n");
+        DPRINT("Invalid service manager handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -4375,7 +4390,7 @@ RStartServiceA(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT1("Invalid service handle\n");
+        DPRINT("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -4710,7 +4725,7 @@ RI_ScGetCurrentGroupStateW(
     hManager = ScmGetServiceManagerFromHandle(hSCManager);
     if (hManager == NULL)
     {
-        DPRINT1("Invalid service manager handle\n");
+        DPRINT("Invalid service manager handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -4782,7 +4797,7 @@ REnumServiceGroupW(
     hManager = ScmGetServiceManagerFromHandle(hSCManager);
     if (hManager == NULL)
     {
-        DPRINT1("Invalid service manager handle\n");
+        DPRINT("Invalid service manager handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -5584,7 +5599,7 @@ RQueryServiceConfig2A(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT1("Invalid service handle\n");
+        DPRINT("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -5830,7 +5845,7 @@ RQueryServiceConfig2W(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT1("Invalid service handle\n");
+        DPRINT("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -6047,7 +6062,7 @@ RQueryServiceStatusEx(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT1("Invalid service handle\n");
+        DPRINT("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -6268,7 +6283,7 @@ REnumServicesStatusExW(
     hManager = ScmGetServiceManagerFromHandle(hSCManager);
     if (hManager == NULL)
     {
-        DPRINT1("Invalid service manager handle\n");
+        DPRINT("Invalid service manager handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -6725,7 +6740,7 @@ RI_ScValidatePnPService(
     hManager = ScmGetServiceManagerFromHandle(hSCManager);
     if (hManager == NULL)
     {
-        DPRINT1("Invalid handle!\n");
+        DPRINT("Invalid handle!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -6735,7 +6750,7 @@ RI_ScValidatePnPService(
     if (!RtlAreAllAccessesGranted(hManager->Handle.DesiredAccess,
                                   SC_MANAGER_CONNECT))
     {
-        DPRINT1("No SC_MANAGER_CONNECT access!\n");
+        DPRINT("No SC_MANAGER_CONNECT access!\n");
         return ERROR_ACCESS_DENIED;
     }
 
