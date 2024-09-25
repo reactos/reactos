@@ -685,6 +685,7 @@ PspSetJobLimitsBasicOrExtended(
 {
     NTSTATUS Status;
     ULONG AllowedFlags;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
 
     const ULONG AllowedBasicFlags = JOB_OBJECT_LIMIT_WORKINGSET |
         JOB_OBJECT_LIMIT_PROCESS_TIME |
@@ -753,12 +754,56 @@ PspSetJobLimitsBasicOrExtended(
 
     if (ExtendedLimit->BasicLimitInformation.LimitFlags & JOB_OBJECT_LIMIT_PRIORITY_CLASS)
     {
-        Job->PriorityClass = ExtendedLimit->BasicLimitInformation.PriorityClass;
+        if (ExtendedLimit->BasicLimitInformation.PriorityClass > PROCESS_PRIORITY_CLASS_ABOVE_NORMAL ||
+            ExtendedLimit->BasicLimitInformation.PriorityClass <= PROCESS_PRIORITY_CLASS_INVALID)
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        /* https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_basic_limit_information:
+           "The calling process must enable the SE_INC_BASE_PRIORITY_NAME
+           privilege" */
+        if (SeCheckPrivilegedObject(SeIncreaseBasePriorityPrivilege,
+                                    Job,
+                                    JOB_OBJECT_SET_ATTRIBUTES,
+                                    PreviousMode))
+        {
+            Job->PriorityClass = ExtendedLimit->BasicLimitInformation.PriorityClass;
+        }
+        else
+        {
+            return STATUS_PRIVILEGE_NOT_HELD;
+        }
     }
 
     if (ExtendedLimit->BasicLimitInformation.LimitFlags & JOB_OBJECT_LIMIT_SCHEDULING_CLASS)
     {
-        Job->SchedulingClass = ExtendedLimit->BasicLimitInformation.SchedulingClass;
+        if (ExtendedLimit->BasicLimitInformation.SchedulingClass >= PSP_JOB_SCHEDULING_CLASSES)
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        /* https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_basic_limit_information:
+           "To use a scheduling class greater than 5, the calling process must
+           enable the SE_INC_BASE_PRIORITY_NAME privilege" */
+        if (ExtendedLimit->BasicLimitInformation.SchedulingClass > 5)
+        {
+            if (SeCheckPrivilegedObject(SeIncreaseBasePriorityPrivilege,
+                                        Job,
+                                        JOB_OBJECT_SET_ATTRIBUTES,
+                                        PreviousMode))
+            {
+                Job->SchedulingClass = ExtendedLimit->BasicLimitInformation.SchedulingClass;
+            }
+            else
+            {
+                return STATUS_PRIVILEGE_NOT_HELD;
+            }
+        }
+        else
+        {
+            Job->SchedulingClass = ExtendedLimit->BasicLimitInformation.SchedulingClass;
+        }
     }
 
     /* Acquire the memory limits lock */
@@ -1612,21 +1657,22 @@ NtSetInformationJobObject(
 
     PAGED_CODE();
 
-    CurrentThread  = KeGetCurrentThread();
+    CurrentThread = KeGetCurrentThread();
 
-    /* Validate class */
+    /* Validate that JobInformationClass is in the expected range */
     if (JobInformationClass > JobObjectJobSetInformation ||
         JobInformationClass < JobObjectBasicAccountingInformation)
     {
         return STATUS_INVALID_INFO_CLASS;
     }
 
-    /* Get associated lengths & alignments */
+    /* Determine the required length and alignment for the class */
     RequiredLength = PspJobInfoLengths[JobInformationClass];
     RequiredAlign = PspJobInfoAlign[JobInformationClass];
 
     PreviousMode = ExGetPreviousMode();
-    /* If not comming from umode, we need to probe buffers */
+
+    /* If the request is coming from user mode, probe the user buffer */
     if (PreviousMode != KernelMode)
     {
         ASSERT(((RequiredAlign) == 1) ||
@@ -1640,7 +1686,9 @@ NtSetInformationJobObject(
             /* Probe out buffer for read */
             if (JobInformationLength != 0)
             {
-                ProbeForRead(JobInformation, JobInformationLength, RequiredAlign);
+                ProbeForRead(JobInformation,
+                             JobInformationLength,
+                             RequiredAlign);
             }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -1650,18 +1698,22 @@ NtSetInformationJobObject(
         _SEH2_END;
     }
 
-    /* Validate input size */
+    /* Validate that the provided buffer length matches the expected size
+       for the class */
     if (JobInformationLength != RequiredLength)
     {
         return STATUS_INFO_LENGTH_MISMATCH;
     }
 
-    /* Open the given job */
     DesiredAccess = JOB_OBJECT_SET_ATTRIBUTES;
+
+    /* If setting security limits, additional security access rights
+       are required */
     if (JobInformationClass == JobObjectSecurityLimitInformation)
     {
         DesiredAccess |= JOB_OBJECT_SET_SECURITY_ATTRIBUTES;
     }
+
     Status = ObReferenceObjectByHandle(JobHandle,
                                        DesiredAccess,
                                        PsJobType,
@@ -1705,7 +1757,7 @@ NtSetInformationJobObject(
         }
         _SEH2_END;
 
-        Status = PspSetBasicOrExtendedJobLimits(Job,
+        Status = PspSetJobLimitsBasicOrExtended(Job,
                                                 &ExtendedLimit,
                                                 IsExtendedLimit);
         goto Exit;
