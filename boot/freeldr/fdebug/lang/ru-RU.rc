@@ -39,7 +39,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "О программе Отладчик FreeLoader"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Отладчик FreeLoader v1.0\nАвторские права (C) 2003\nБраин Палмер (brianp@reactos.org)", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
+    CONTROL "Отладчик FreeLoader\nАвторские права (C) 2003\nБраин Палмер (brianp@reactos.org)", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
     DEFPUSHBUTTON "OK", IDOK, 183, 189, 44, 14, WS_GROUP
     ICON IDI_FDEBUG, IDC_STATIC, 19, 30, 20, 20
     EDITTEXT IDC_LICENSE_EDIT, 53, 63, 174, 107, ES_MULTILINE | ES_READONLY | WS_VSCROLL
