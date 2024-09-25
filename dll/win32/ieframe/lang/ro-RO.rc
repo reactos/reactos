@@ -79,7 +79,7 @@ CAPTION "Deschidere URL"
 FONT 8, "MS Shell Dlg"
 {
     LTEXT "Specificați adresa URL pe care doriți să o deschideți în Internet Explorer",-1, 35,5,160,25
-    LTEXT "Deschidere:", -1, 5, 32, 30, 15
+    LTEXT "Deschide:", -1, 5, 32, 30, 15
 #ifdef __REACTOS__
     ICON IDC_PAGEICO, IDC_PAGEICO, 2, 5, 21, 20, SS_ICON
 #endif
