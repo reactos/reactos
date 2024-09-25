@@ -116,9 +116,11 @@ i386PrintExceptionText(ULONG TrapIndex, PKTRAP_FRAME TrapFrame, PKSPECIAL_REGIST
     i386_ScreenPosX = 0;
     i386_ScreenPosY = 0;
 
-    PrintText("Freeldr " KERNEL_VERSION_STR " " KERNEL_VERSION_BUILD_STR "\n"
+    PrintText("FreeLdr %s %s\n"
               "Report this error on the ReactOS Bug Tracker: https://jira.reactos.org\n\n"
-              "0x%02lx: %s\n\n", TrapIndex, i386ExceptionDescriptionText[TrapIndex]);
+              "0x%02lx: %s\n\n",
+              KERNEL_VERSION_STR, KERNEL_VERSION_BUILD_STR,
+              TrapIndex, i386ExceptionDescriptionText[TrapIndex]);
 
 #ifdef _M_IX86
     PrintText("EAX: %.8lx        ESP: %.8lx        CR0: %.8lx        DR0: %.8lx\n",
