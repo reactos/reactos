@@ -168,7 +168,7 @@ BEGIN
     IDS_SAVE_FILTER "Jurnal de evenimente (*.evt)\0*.evt\0"
     IDS_CLEAREVENTS_MSG "Doriți să salvați acest jurnal de evenimente înainte de a-l închide?"
     IDS_RESTOREDEFAULTS "Doriți să restabiliți toate setările pentru acest jurnal la valorile lor implicite?"
-    IDS_EVENTSTRINGIDNOTFOUND "Imposibil de găsit descrierea evenimentului cu ID-ul ( %lu ) în sursa ( %s ). Este posibil ca computerul local să nu aibă informațiile de registru necesare sau fișierele DLL de mesaje pentru a afișa mesaje de la un calculator la distanță.\n\nUrmătoarele informații fac parte din eveniment:\n\n"
+    IDS_EVENTSTRINGIDNOTFOUND "Imposibil de găsit descrierea evenimentului cu ID-ul ( %lu ) în sursa ( %s ). Este posibil ca computerul local să nu aibă informațiile de registru necesare sau fișierele DLL de mesaje pentru a afișa mesaje de la un computer la distanță.\n\nUrmătoarele informații fac parte din eveniment:\n\n"
 END
 
 STRINGTABLE
@@ -176,11 +176,11 @@ BEGIN
 /* Please note that explicit TAB characters '\t' are used to fix the alignment of the message in the MessageBox */
     IDS_USAGE "Vizualizatorul de evenimente ReactOS\n\
 \n\
-EventVwr [numele calculatorului] [/L:<fișier de jurnal de evenimente>] [/?]\n\
+EventVwr [numele computerului] [/L:<fișier de jurnal de evenimente>] [/?]\n\
 \n\
-""numele calculatorului"" : Specifică calculatorul de la distanță unde să se conecteze\n\
+""numele computerului"" : Specifică computerul de la distanță unde să se conecteze\n\
 \pentru a prelua evenimentele de afișat. Dacă nu este specificat niciun nume,\n\
-\tcalculatorul local este folosit.\n\
+\tcomputerul local este folosit.\n\
 \n\
 /L:<fișier de jurnal de evenimente> : Specifică deschiderea unui fișier.\n\
 \tSunt acceptate doar fișierele în format .evt (NT ≤ 5.2)\n\
@@ -216,7 +216,7 @@ BEGIN
     IDS_COLUMNCATEGORY "Categorie"
     IDS_COLUMNEVENT "Eveniment"
     IDS_COLUMNUSER "Utilizator"
-    IDS_COLUMNCOMPUTER "Calculator"
+    IDS_COLUMNCOMPUTER "Computer"
 END
 
 STRINGTABLE
