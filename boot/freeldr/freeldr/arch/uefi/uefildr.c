@@ -80,6 +80,7 @@ ExecuteLoaderCleanly(PVOID PreviousStack)
 }
 
 #ifndef _M_ARM
+DECLSPEC_NORETURN
 VOID __cdecl Reboot(VOID)
 {
     //TODO: Replace with a true firmware reboot eventually

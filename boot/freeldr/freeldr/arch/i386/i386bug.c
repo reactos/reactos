@@ -194,6 +194,7 @@ i386PrintExceptionText(ULONG TrapIndex, PKTRAP_FRAME TrapFrame, PKSPECIAL_REGIST
               InstructionPointer[6], InstructionPointer[7]);
 }
 
+DECLSPEC_NORETURN
 VOID
 FrLdrBugCheckWithMessage(
     ULONG BugCode,
@@ -227,8 +228,9 @@ FrLdrBugCheckWithMessage(
     for (;;);
 }
 
+static
+DECLSPEC_NORETURN
 void
-NTAPI
 FrLdrBugCheckEx(
     ULONG BugCode,
     PCHAR File,
@@ -256,6 +258,7 @@ FrLdrBugCheckEx(
     for (;;);
 }
 
+DECLSPEC_NORETURN
 void
 NTAPI
 FrLdrBugCheck(ULONG BugCode)
