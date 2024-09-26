@@ -590,6 +590,25 @@ HalInitializeBios(
 #define HalBeginSystemInterrupt(Irql, Vector, OldIrql) ((*(OldIrql) = PASSIVE_LEVEL), TRUE)
 #endif // _M_AMD64
 
+#ifdef _MINIHAL_
+#if defined(_M_IX86) || defined(_M_AMD64)
+/* Use intrinsics for x86 and x64 */
+#define H2I(Port) PtrToUshort(Port)
+#define READ_PORT_UCHAR(port) __inbyte(H2I(port))
+#define READ_PORT_USHORT(port) __inword(H2I(port))
+#define READ_PORT_ULONG(port) __indword(H2I(port))
+#define READ_PORT_BUFFER_UCHAR(port, buffer, count) __inbytestring(H2I(port), buffer, count)
+#define READ_PORT_BUFFER_USHORT(port, buffer, count) __inwordstring(H2I(port), buffer, count)
+#define READ_PORT_BUFFER_ULONG(port, buffer, count) __indwordstring(H2I(port), buffer, count)
+#define WRITE_PORT_UCHAR(port, value) __outbyte(H2I(port), value)
+#define WRITE_PORT_USHORT(port, value) __outword(H2I(port), value)
+#define WRITE_PORT_ULONG(port, value) __outdword(H2I(port), value)
+#define WRITE_PORT_BUFFER_UCHAR(port, buffer, count) __outbytestring(H2I(port), buffer, count)
+#define WRITE_PORT_BUFFER_USHORT  (port, buffer, count) __outwordstring(H2I(port), buffer, count)
+#define WRITE_PORT_BUFFER_ULONG(port, buffer, count) __outdwordstring(H2I(port), buffer, count)
+#endif
+#endif
+
 extern BOOLEAN HalpNMIInProgress;
 
 extern ADDRESS_USAGE HalpDefaultIoSpace;
