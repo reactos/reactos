@@ -258,8 +258,8 @@ alfanümerik (a-z, A-Z, 0-9), ve\n . \\ - _\n\
 Boşluklara izin verilmez."
 
     IDS_ERROR_DIRECTORY_NAME_TITLE "Geçersiz kurulum yolu"
-    IDS_ERROR_DIRECTORY_NAME "ReactOS kurulum yolu DOS 8.3 adlandırma şemasını takip etmelidir, 
-\n ve yalnızca harf, rakam, tire ve nokta içerir. Boşluklara izin verilmez."
+    IDS_ERROR_DIRECTORY_NAME "ReactOS kurulum yolu DOS 8.3 adlandırma şemasını takip \
+etmelidir, ve yalnızca harf, rakam, tire ve nokta içerir. Boşluklara izin verilmez."
 
     IDS_ERROR_CREATE_PARTITION_TITLE "Bölüm oluştur"
     IDS_ERROR_CREATE_PARTITION "Yeni bir bölüm oluşturulamadı."
