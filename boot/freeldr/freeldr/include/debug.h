@@ -125,10 +125,12 @@ void    MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 
 #endif // DBG
 
+DECLSPEC_NORETURN
 void
 NTAPI
 FrLdrBugCheck(ULONG BugCode);
 
+DECLSPEC_NORETURN
 VOID
 FrLdrBugCheckWithMessage(
     ULONG BugCode,
