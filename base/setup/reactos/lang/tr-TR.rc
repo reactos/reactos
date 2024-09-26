@@ -270,10 +270,10 @@ etmelidir, ve yalnızca harf, rakam, tire ve nokta içerir. Boşluklara izin ver
 
     IDS_ERROR_WRITE_PTABLE "Kurulum bölüm tablolarını yazamadı."
 
-    IDS_ERROR_SYSTEM_PARTITION "ReactOS Kurulumu sisteminizde desteklenen bir sistem bölümü bulamadı
-\n veya yeni bir bölüm oluşturamadı. Böyle bir bölüm olmadan
-\n Kurulum programı ReactOS'u yükleyemez.
-\n Bölüm seçim listesine dönmek için Tamam'a tıklayın."
+    IDS_ERROR_SYSTEM_PARTITION "ReactOS Kurulumu sisteminizde desteklenen bir sistem bölümü bulamadı\n\
+veya yeni bir bölüm oluşturamadı. Böyle bir bölüm olmadan\n\
+Kurulum programı ReactOS'u yükleyemez.\n\
+Bölüm seçim listesine dönmek için Tamam'a tıklayın."
 
     IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "Bölüm biçimlendirilmeye çalışılırken tanınmayan birim."
 
