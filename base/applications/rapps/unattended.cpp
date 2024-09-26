@@ -373,6 +373,7 @@ ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
 
                 if (hMutex)
                     CloseHandle(hMutex);
+
                 return FALSE;
             }
         }
