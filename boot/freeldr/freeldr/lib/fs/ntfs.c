@@ -718,6 +718,11 @@ static BOOLEAN NtfsLookupFile(PNTFS_VOLUME_INFO Volume, PCSTR FileName, PNTFS_MF
     TRACE("NtfsLookupFile() FileName = %s\n", FileName);
 
     CurrentMFTIndex = NTFS_FILE_ROOT;
+
+    /* Skip leading path separator, if any */
+    if (*FileName == '\\' || *FileName == '/')
+        ++FileName;
+
     NumberOfPathParts = FsGetNumPathParts(FileName);
     for (i = 0; i < NumberOfPathParts; i++)
     {

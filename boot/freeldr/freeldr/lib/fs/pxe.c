@@ -155,6 +155,12 @@ static ARC_STATUS PxeOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     if (OpenMode != OpenReadOnly)
         return EACCES;
 
+#if 0
+    /* Skip leading path separator, if any */
+    if (*Path == '\\' || *Path == '/')
+        ++Path;
+#endif
+
     /* Retrieve the path length without NULL terminator */
     PathLen = (Path ? min(strlen(Path), sizeof(_OpenFileName) - 1) : 0);
 

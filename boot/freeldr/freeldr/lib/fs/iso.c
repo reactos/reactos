@@ -182,6 +182,9 @@ static ARC_STATUS IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO I
     DirectorySector = Pvd->RootDirRecord.ExtentLocationL;
     DirectoryLength = Pvd->RootDirRecord.DataLengthL;
 
+    /* Skip leading path separator, if any */
+    if (*FileName == '\\' || *FileName == '/')
+        ++FileName;
     //
     // Figure out how many sub-directories we are nested in
     //
