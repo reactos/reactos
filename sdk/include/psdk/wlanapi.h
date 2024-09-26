@@ -16,6 +16,9 @@ extern "C" {
 #define WLAN_MAX_PHY_INDEX 64
 #define WLAN_MAX_NAME_LENGTH 256
 
+#define WLAN_AVAILABLE_NETWORK_INCLUDE_ALL_ADHOC_PROFILES         0x00000001
+#define WLAN_AVAILABLE_NETWORK_INCLUDE_ALL_MANUAL_HIDDEN_PROFILES 0x00000002
+
 /* Enumerations */
 
 #if defined(__midl) || defined(__WIDL__)
