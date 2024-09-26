@@ -470,6 +470,7 @@ CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lPa
     {
         case WM_INITDIALOG:
         {
+            g_Busy++;
             HICON hIconSm, hIconBg;
             CStringW szTempCaption;
 
@@ -556,6 +557,12 @@ CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                 ::DestroyWindow(Dlg);
             }
             return TRUE;
+
+        case WM_DESTROY:
+            g_Busy--;
+            if (hMainWnd)
+                PostMessage(hMainWnd, WM_NOTIFY_OPERATIONCOMPLETED, 0, 0);
+            return FALSE;
 
         default:
             return FALSE;
