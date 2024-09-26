@@ -63,9 +63,9 @@ CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
-    PUSHBUTTON "&Initialize", IDC_INITDISK, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "B&aşlat", IDC_INITDISK, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
     PUSHBUTTON "&Oluştur...", IDC_PARTCREATE, 7, 122, 50, 14
-    PUSHBUTTON "&Format", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "&Biçimlendir", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
     PUSHBUTTON "&Sil", IDC_PARTDELETE, 63, 122, 50, 14
     PUSHBUTTON "S&ürücü", IDC_DEVICEDRIVER, 174, 122, 50, 14, WS_DISABLED
     PUSHBUTTON "G&elişmiş Seçenekler...", IDC_PARTMOREOPTS, 230, 122, 80, 14
@@ -85,7 +85,7 @@ BEGIN
     AUTOCHECKBOX "&Genişletilmiş bölüm", IDC_CHECK_MBREXTPART, 7, 22, 180, 14
     LTEXT "&Dosya sistemi:", IDC_FS_STATIC, 7, 46, 70, 9
     COMBOBOX IDC_FSTYPE, 82, 44, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX "&Hızlı format", IDC_CHECK_QUICKFMT, 7, 59, 180, 14
+    AUTOCHECKBOX "&Hızlı biçimlendir", IDC_CHECK_QUICKFMT, 7, 59, 180, 14
     PUSHBUTTON "Tamam", IDOK, 88, 98, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 143, 98, 50, 14
 END
@@ -97,7 +97,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Dosya sistemi:", IDC_FS_STATIC, 7, 9, 70, 9
     COMBOBOX IDC_FSTYPE, 82, 7, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX "&Hızlı format", IDC_CHECK_QUICKFMT, 7, 22, 180, 14
+    AUTOCHECKBOX "&Hızlı biçimlendir", IDC_CHECK_QUICKFMT, 7, 22, 180, 14
     PUSHBUTTON "Tamam", IDOK, 88, 61, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 143, 61, 50, 14
 END
@@ -110,7 +110,7 @@ BEGIN
     LTEXT "Yüklemek istediğiniz &dizinini seçin ReactOS:", IDC_STATIC, 7, 9, 291, 10
     EDITTEXT IDC_PATH, 7, 23, 291, 13
     GROUPBOX "Bootloader", IDC_STATIC, 7, 45, 291, 60
-    LTEXT "FreeLoader\nbootloader'ın kurulması gereken konumu seçin.\nVarsayılan olarak, önyükleme diskinin sistem bölümüne kurulur.\n(BIOS tabanlı bilgisayarlar için Ana veya Birim Önyükleme Kaydına)", IDC_STATIC, 13, 57, 279, 44
+    LTEXT "FreeLoader bootloader'ın kurulması gereken konumu seçin.\nVarsayılan olarak, önyükleme diskinin sistem bölümüne kurulur.\n(BIOS tabanlı bilgisayarlar için Ana veya Birim Önyükleme Kaydına)", IDC_STATIC, 13, 57, 279, 44
     COMBOBOX IDC_INSTFREELDR, 150, 58, 142, 45, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     DEFPUSHBUTTON "Tamam", IDOK, 193, 113, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 248, 113, 50, 14
