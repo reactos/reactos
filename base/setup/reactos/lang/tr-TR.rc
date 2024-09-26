@@ -278,8 +278,8 @@ etmelidir, ve yalnızca harf, rakam, tire ve nokta içerir. Boşluklara izin ver
     IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "Bölüm biçimlendirilmeye çalışılırken tanınmayan birim."
 
     IDS_ERROR_COULD_NOT_FORMAT "Kurulum şu anda bir bölümü şu şekilde biçimlendiremiyor: %s.\n\
-\n Kuruluma devam etmek için Tamam'a tıklayın.\
-\n Kurulumdan çıkmak için İPTAL üzerine tıklayın."
+\nKuruluma devam etmek için Tamam'a tıklayın.\
+\nKurulumdan çıkmak için İPTAL üzerine tıklayın."
 
     IDS_ERROR_FORMATTING_PARTITION "Kurulum bölümü biçimlendiremiyor:\n %s\n"
 
