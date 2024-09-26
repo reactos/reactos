@@ -77,16 +77,75 @@ PFS_MOUNT FileSystems[] =
 
 /* ARC FUNCTIONS **************************************************************/
 
+/**
+ * @brief
+ * Replace "()" by "(0)" in the given ARC device name, if necessary.
+ *
+ * @param[in]   DeviceName
+ * The original ARC device name string to normalize.
+ *
+ * @param[in,out]   Length
+ * Points to a SIZE_T variable that:
+ * - on input, specifies the length of the ARC device name string pointed
+ *   by DeviceName;
+ * - on output, receives the length of the normalized ARC device name,
+ *   returned by value by this function.
+ *
+ * @return
+ * - On success, returns a string pointer to the normalized ARC device name.
+ *   If the device name string had to be normalized, this returned string is
+ *   allocated from the temporary heap, with TAG_DEVICE_NAME tag.
+ *   Otherwise, the function returns the original device name string pointer.
+ * - On failure, the function returns NULL.
+ **/
+PCHAR
+NormalizeArcDeviceName(
+    _In_ PCCH DeviceName,
+    _Inout_ PSIZE_T Length)
+{
+    ULONG Count;
+    SIZE_T NameLength;
+    PCCH p, End;
+    PCHAR q, NormName;
+
+    NameLength = *Length;
+    End = DeviceName + NameLength;
+
+    /* Count the number of "()", which needs to be replaced by "(0)" */
+    Count = 0;
+    for (p = DeviceName; p < End; ++p)
+    {
+        if ((p + 1) < End && *p == '(' && *(p + 1) == ')')
+            ++Count; //, ++p;
+    }
+
+    if (Count == 0) /* No need to duplicate the device name */
+        return (PCHAR)DeviceName;
+
+    /* Return the updated length */
+    *Length = NameLength + Count;
+
+    /* Duplicate the device name and replace "()" by "(0)" */
+    NormName = FrLdrTempAlloc(*Length, TAG_DEVICE_NAME);
+    if (!NormName)
+        return NULL;
+    for (p = DeviceName, q = NormName; p < End; ++p)
+    {
+        *q++ = *p;
+        if ((p + 1) < End && *p == '(' && *(p + 1) == ')')
+            *q++ = '0'; //, *q++ = *++p;
+    }
+    return NormName;
+}
+
 ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
     ARC_STATUS Status;
-    ULONG Count, i;
+    ULONG i;
     PLIST_ENTRY pEntry;
     DEVICE* pDevice;
-    CHAR* DeviceName;
-    CHAR* FileName;
-    CHAR* p;
-    CHAR* q;
+    PCHAR DeviceName;
+    PSTR FileName;
     SIZE_T Length;
     OPENMODE DeviceOpenMode;
     ULONG DeviceId;
@@ -100,34 +159,13 @@ ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     FileName = strrchr(Path, ')');
     if (!FileName)
         return EINVAL;
-    FileName++;
+    ++FileName;
 
-    /* Count number of "()", which needs to be replaced by "(0)" */
-    Count = 0;
-    for (p = Path; p != FileName; p++)
-    {
-        if (*p == '(' && *(p + 1) == ')')
-            Count++;
-    }
-
-    /* Duplicate device name, and replace "()" by "(0)" (if required) */
-    Length = FileName - Path + Count;
-    if (Count != 0)
-    {
-        DeviceName = FrLdrTempAlloc(FileName - Path + Count, TAG_DEVICE_NAME);
-        if (!DeviceName)
-            return ENOMEM;
-        for (p = Path, q = DeviceName; p != FileName; p++)
-        {
-            *q++ = *p;
-            if (*p == '(' && *(p + 1) == ')')
-                *q++ = '0';
-        }
-    }
-    else
-    {
-        DeviceName = Path;
-    }
+    /* Normalize the device name, replacing "()" by "(0)" if necessary */
+    Length = FileName - Path;
+    DeviceName = NormalizeArcDeviceName(Path, &Length);
+    if (!DeviceName)
+        return ENOMEM;
 
     /* Search for the device */
     if (OpenMode == OpenReadOnly || OpenMode == OpenWriteOnly)
