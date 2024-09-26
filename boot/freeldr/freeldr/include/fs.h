@@ -52,7 +52,11 @@ FsOpenFile(
 ULONG FsGetNumPathParts(PCSTR Path);
 VOID  FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path);
 
-VOID FsRegisterDevice(CHAR* Prefix, const DEVVTBL* FuncTable);
+VOID
+FsRegisterDevice(
+    _In_ PCSTR DeviceName,
+    _In_ const DEVVTBL* FuncTable);
+
 PCWSTR FsGetServiceName(ULONG FileId);
 VOID  FsSetDeviceSpecific(ULONG FileId, VOID* Specific);
 VOID* FsGetDeviceSpecific(ULONG FileId);
