@@ -30,23 +30,23 @@ DBG_DEFAULT_CHANNEL(FILESYSTEM);
 #define TAG_DEVICE_NAME 'NDsF'
 #define TAG_DEVICE 'vDsF'
 
-typedef struct tagFILEDATA
-{
-    ULONG DeviceId;
-    ULONG ReferenceCount;
-    const DEVVTBL* FuncTable;
-    const DEVVTBL* FileFuncTable;
-    VOID* Specific;
-} FILEDATA;
-
 typedef struct tagDEVICE
 {
     LIST_ENTRY ListEntry;
-    const DEVVTBL* FuncTable;
+    const DEVVTBL* FuncTable;     ///< Driver function table.
+    const DEVVTBL* FileFuncTable; ///< Used only by mounted storage devices.
     PSTR DeviceName;
-    ULONG DeviceId;
+    ULONG DeviceId; ///< Entry ID in FileData when the device gets referenced.
     ULONG ReferenceCount;
 } DEVICE;
+
+typedef struct tagFILEDATA
+{
+    ULONG DeviceId; ///< Parent device's ID.
+    ULONG ReferenceCount;
+    const DEVVTBL* FuncTable;
+    PVOID Specific;
+} FILEDATA;
 
 static FILEDATA FileData[MAX_FDS];
 static LIST_ENTRY DeviceListHead;
@@ -73,6 +73,84 @@ PFS_MOUNT FileSystems[] =
 #endif
 #endif
 };
+
+
+/* DEBUGGING HELPERS **********************************************************/
+
+#if DBG && 0
+static VOID
+DumpDeviceList(VOID)
+{
+    PLIST_ENTRY pEntry;
+
+    DbgPrint("\n== Dumping ARC devices ==\n");
+
+    for (pEntry = DeviceListHead.Flink;
+         pEntry != &DeviceListHead;
+         pEntry = pEntry->Flink)
+    {
+        DEVICE* pDevice = CONTAINING_RECORD(pEntry, DEVICE, ListEntry);
+        ULONG DeviceId = pDevice->DeviceId;
+        const DEVVTBL* FuncTable;
+
+        DbgPrint("\n"
+                 "DeviceId %lu\n"
+                 "  RefCount: %lu\n"
+                 "  DeviceName  : '%s'\n",
+                 DeviceId, pDevice->ReferenceCount, pDevice->DeviceName);
+
+        FuncTable = pDevice->FuncTable;
+        DbgPrint("  DevFuncTable: 0x%p (In array: 0x%p) ; Name: '%S'\n",
+                 FuncTable,
+                 (DeviceId != INVALID_FILE_ID ? FileData[DeviceId].FuncTable : NULL),
+                 (FuncTable && FuncTable->ServiceName)
+                    ? FuncTable->ServiceName : L"n/a");
+
+        FuncTable = pDevice->FileFuncTable;
+        DbgPrint("  FileFuncTable: 0x%p ; Name: '%S'\n",
+                 FuncTable,
+                 (FuncTable && FuncTable->ServiceName)
+                    ? FuncTable->ServiceName : L"n/a");
+    }
+
+    DbgPrint("\n== END Dumping ARC devices ==\n\n");
+}
+
+static VOID
+DumpFileTable(VOID)
+{
+    ULONG i;
+
+    DbgPrint("\n== Dumping ARC files table ==\n");
+
+    for (i = 0; i < _countof(FileData); ++i)
+    {
+        FILEDATA* pFileData = &FileData[i];
+        const DEVVTBL* FuncTable;
+
+        /* Show only occupied slots */
+        if (!pFileData->FuncTable)
+            continue;
+
+        DbgPrint("\n"
+                 "FileId %lu\n"
+                 "  RefCount: %lu\n"
+                 "  ParentDeviceId: %lu\n"
+                 /*"  FileName  : '%s'\n"*/
+                 "  Specific: 0x%p\n",
+                 i, pFileData->ReferenceCount,
+                 pFileData->DeviceId, pFileData->Specific);
+
+        FuncTable = pFileData->FuncTable;
+        DbgPrint("  FuncTable: 0x%p ; Name: '%S'\n",
+                 FuncTable,
+                 (FuncTable && FuncTable->ServiceName)
+                    ? FuncTable->ServiceName : L"n/a");
+    }
+
+    DbgPrint("\n== END Dumping ARC files table ==\n\n");
+}
+#endif // DBG
 
 
 /* ARC FUNCTIONS **************************************************************/
@@ -204,6 +282,7 @@ ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
         }
 
         /* Try to open the device */
+        FileData[DeviceId].ReferenceCount = 0;
         FileData[DeviceId].FuncTable = pDevice->FuncTable;
         Status = pDevice->FuncTable->Open(pDevice->DeviceName, DeviceOpenMode, &DeviceId);
         if (Status != ESUCCESS)
@@ -211,57 +290,71 @@ ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
             FileData[DeviceId].FuncTable = NULL;
             return Status;
         }
-        else if (!*FileName)
-        {
-            /* Done, caller wanted to open the raw device */
-            *FileId = DeviceId;
-            pDevice->ReferenceCount++;
-            return ESUCCESS;
-        }
-
-        /* Try to detect the file system */
-        for (ULONG fs = 0; fs < _countof(FileSystems); ++fs)
-        {
-            FileData[DeviceId].FileFuncTable = FileSystems[fs](DeviceId);
-            if (FileData[DeviceId].FileFuncTable)
-                break;
-        }
-        if (!FileData[DeviceId].FileFuncTable)
-        {
-            /* Error, unable to detect the file system */
-            pDevice->FuncTable->Close(DeviceId);
-            FileData[DeviceId].FuncTable = NULL;
-            return ENODEV;
-        }
-
         pDevice->DeviceId = DeviceId;
     }
     else
     {
+        /* Reuse the existing entry */
         DeviceId = pDevice->DeviceId;
+        ASSERT(FileData[DeviceId].FuncTable == pDevice->FuncTable);
     }
-    pDevice->ReferenceCount++;
 
-    /* At this point, device is found and opened. Its file id is stored
-     * in DeviceId, and FileData[DeviceId].FileFuncTable contains what
-     * needs to be called to open the file */
+    /* Done, increase the device reference count */
+    pDevice->ReferenceCount++;
+    FileData[DeviceId].ReferenceCount++;
+
+    if (!*FileName)
+    {
+        /* The caller wanted to open the raw device: return its ID */
+        *FileId = DeviceId;
+        return ESUCCESS;
+    }
+
+
+    /*
+     * We are opening a file.
+     */
 
     /* Find some room for the file */
     for (i = 0; ; ++i)
     {
         if (i >= _countof(FileData))
-            return EMFILE;
+        {
+            Status = EMFILE;
+            goto Done;
+        }
         if (!FileData[i].FuncTable)
             break;
     }
 
-    /* Skip leading path separator, if any */
-    if (*FileName == '\\' || *FileName == '/')
-        FileName++;
+    /* The device is accessed using filesystem semantics.
+     * Try to detect the file system if not already done. */
+    if (!pDevice->FileFuncTable && (pDevice->ReferenceCount <= 1))
+    {
+        for (ULONG fs = 0; fs < _countof(FileSystems); ++fs)
+        {
+            pDevice->FileFuncTable = FileSystems[fs](DeviceId);
+            if (pDevice->FileFuncTable)
+                break;
+        }
+    }
+    if (!pDevice->FileFuncTable)
+    {
+        /* Error, unable to detect the file system */
+        Status = ENOENT; // ENXIO;
+        goto Done;
+    }
+
+    /*
+     * At this point, the device is found and opened. Its file ID is stored
+     * in DeviceId, and pDevice->FileFuncTable contains what needs to be
+     * called to manipulate the file.
+     */
 
     /* Open the file */
-    FileData[i].FuncTable = FileData[DeviceId].FileFuncTable;
     FileData[i].DeviceId = DeviceId;
+    FileData[i].ReferenceCount = 0;
+    FileData[i].FuncTable = pDevice->FileFuncTable;
     *FileId = i;
     Status = FileData[i].FuncTable->Open(FileName, OpenMode, FileId);
     if (Status != ESUCCESS)
@@ -271,24 +364,85 @@ ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
         FileData[i].Specific = NULL;
         *FileId = INVALID_FILE_ID;
     }
+    else
+    {
+        /* Reference the file */
+        FileData[i].ReferenceCount++;
+    }
+
+Done:
+    /* If we failed somewhere, dereference the device as well */
+    if (Status != ESUCCESS)
+    {
+        // ArcClose(DeviceId);
+        if (--FileData[DeviceId].ReferenceCount == 0)
+        {
+            (void)FileData[DeviceId].FuncTable->Close(DeviceId);
+            FileData[DeviceId].DeviceId = INVALID_FILE_ID;
+            FileData[DeviceId].FuncTable = NULL;
+            FileData[DeviceId].Specific = NULL;
+        }
+        if (--pDevice->ReferenceCount == 0)
+            pDevice->DeviceId = INVALID_FILE_ID;
+    }
+
     return Status;
 }
 
-ARC_STATUS ArcClose(ULONG FileId)
+static DEVICE*
+FsGetDeviceById(ULONG DeviceId)
 {
-    ARC_STATUS Status;
+    PLIST_ENTRY pEntry;
+
+    for (pEntry = DeviceListHead.Flink;
+         pEntry != &DeviceListHead;
+         pEntry = pEntry->Flink)
+    {
+        DEVICE* pDevice = CONTAINING_RECORD(pEntry, DEVICE, ListEntry);
+        if (pDevice->DeviceId == DeviceId)
+            return pDevice;
+    }
+    return NULL;
+}
+
+ARC_STATUS
+ArcClose(
+    _In_ ULONG FileId)
+{
+    ULONG DeviceId;
+    DEVICE* pDevice;
 
     if (!IS_VALID_FILEID(FileId))
         return EBADF;
 
-    Status = FileData[FileId].FuncTable->Close(FileId);
-    if (Status == ESUCCESS)
+    /* Retrieve the parent device's ID if any, for later */
+    DeviceId = FileData[FileId].DeviceId;
+
+    /* Dereference the file and close it if needed */
+    ASSERT(FileData[FileId].ReferenceCount > 0);
+    if (--FileData[FileId].ReferenceCount == 0)
     {
+        (void)FileData[FileId].FuncTable->Close(FileId);
         FileData[FileId].DeviceId = INVALID_FILE_ID;
         FileData[FileId].FuncTable = NULL;
         FileData[FileId].Specific = NULL;
     }
-    return Status;
+
+    /* Check whether this file actually references a device */
+    pDevice = FsGetDeviceById(FileId);
+    if (pDevice)
+    {
+        /* It does, dereference it */
+        ASSERT(pDevice->ReferenceCount > 0);
+        if (--pDevice->ReferenceCount == 0)
+            pDevice->DeviceId = INVALID_FILE_ID;
+    }
+
+    /* And dereference the parent device too, if there is one */
+    if (IS_VALID_FILEID(DeviceId))
+        ArcClose(DeviceId);
+
+    return ESUCCESS;
 }
 
 ARC_STATUS ArcRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
@@ -381,7 +535,7 @@ FsOpenFile(
 /*
  * FsGetNumPathParts()
  * This function parses a path in the form of dir1\dir2\file1.ext
- * and returns the number of parts it has (i.e. 3 - dir1,dir2,file1.ext)
+ * and returns the number of parts it has (i.e. 3 - dir1,dir2,file1.ext).
  */
 ULONG FsGetNumPathParts(PCSTR Path)
 {
@@ -409,7 +563,7 @@ ULONG FsGetNumPathParts(PCSTR Path)
  * FsGetFirstNameFromPath()
  * This function parses a path in the form of dir1\dir2\file1.ext
  * and puts the first name of the path (e.g. "dir1") in buffer
- * compatible with the MSDOS directory structure
+ * compatible with the MSDOS directory structure.
  */
 VOID FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path)
 {
@@ -468,14 +622,14 @@ PCWSTR FsGetServiceName(ULONG FileId)
     return FileData[FileId].FuncTable->ServiceName;
 }
 
-VOID FsSetDeviceSpecific(ULONG FileId, VOID* Specific)
+VOID FsSetDeviceSpecific(ULONG FileId, PVOID Specific)
 {
     if (!IS_VALID_FILEID(FileId))
         return;
     FileData[FileId].Specific = Specific;
 }
 
-VOID* FsGetDeviceSpecific(ULONG FileId)
+PVOID FsGetDeviceSpecific(ULONG FileId)
 {
     if (!IS_VALID_FILEID(FileId))
         return NULL;
