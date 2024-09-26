@@ -723,9 +723,32 @@ PspSetJobLimitsBasicOrExtended(
     /* Acquire the job lock */
     ExAcquireResourceSharedLite(&Job->JobLock, TRUE);
 
-    /* Copy basic information */
+    /*
+     * Basic Limits
+     */
+
     if (ExtendedLimit->BasicLimitInformation.LimitFlags & JOB_OBJECT_LIMIT_WORKINGSET)
     {
+        /* https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_basic_limit_information:
+           "If MaximumWorkingSetSize is nonzero, MinimumWorkingSetSize cannot be zero"
+           "If MinimumWorkingSetSize is nonzero, MaximumWorkingSetSize cannot be zero"
+           Also check that the minimum doesn't exceed the maximum or both aren't
+           equal to zero. */
+        if ((ExtendedLimit->BasicLimitInformation.MaximumWorkingSetSize > 0 &&
+                ExtendedLimit->BasicLimitInformation.MinimumWorkingSetSize <= 0)
+            ||
+            (ExtendedLimit->BasicLimitInformation.MinimumWorkingSetSize > 0 &&
+                ExtendedLimit->BasicLimitInformation.MaximumWorkingSetSize <= 0)
+            ||
+            (ExtendedLimit->BasicLimitInformation.MaximumWorkingSetSize <
+                ExtendedLimit->BasicLimitInformation.MinimumWorkingSetSize)
+            ||
+            (!ExtendedLimit->BasicLimitInformation.MaximumWorkingSetSize &&
+                ExtendedLimit->BasicLimitInformation.MaximumWorkingSetSize))
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+
         Job->MinimumWorkingSetSize = ExtendedLimit->BasicLimitInformation.MinimumWorkingSetSize;
         Job->MaximumWorkingSetSize = ExtendedLimit->BasicLimitInformation.MaximumWorkingSetSize;
     }
@@ -749,6 +772,16 @@ PspSetJobLimitsBasicOrExtended(
 
     if (ExtendedLimit->BasicLimitInformation.LimitFlags & JOB_OBJECT_LIMIT_AFFINITY)
     {
+        /* https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_basic_limit_information:
+           "The affinity must be a subset of the system affinity mask obtained
+           by calling the GetProcessAffinityMask function"
+           The lpSystemAffinityMask obtained with GetProcessAffinityMask() corresponds
+           to ActiveProcessorsAffinityMask, which in turn corresponds to KeActiveProcessors */
+        if (ExtendedLimit->BasicLimitInformation.Affinity != (ExtendedLimit->BasicLimitInformation.Affinity & KeActiveProcessors))
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+
         Job->Affinity = ExtendedLimit->BasicLimitInformation.Affinity;
     }
 
@@ -806,6 +839,10 @@ PspSetJobLimitsBasicOrExtended(
         }
     }
 
+    /*
+     * Extended Memory Limits
+     */
+
     /* Acquire the memory limits lock */
     KeAcquireGuardedMutexUnsafe(&Job->MemoryLimitsLock);
 
@@ -819,6 +856,8 @@ PspSetJobLimitsBasicOrExtended(
         Job->JobMemoryLimit = ExtendedLimit->JobMemoryLimit >> PAGE_SHIFT;
     }
 
+    /* Update the job's limit flags with the new ones. This includes dealing
+       with those extended limits that only set some flag */
     Job->LimitFlags = ExtendedLimit->BasicLimitInformation.LimitFlags;
 
     /* Release locks */
