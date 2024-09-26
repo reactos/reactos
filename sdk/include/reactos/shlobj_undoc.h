@@ -480,7 +480,7 @@ DECLARE_INTERFACE_(IRegTreeOptions, IUnknown)
 	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
 	 /*** IRegTreeOptions ***/
-	STDMETHOD(InitTree)(THIS_ HWND hTV, HKEY hKey, LPCSTR SubKey, char const *param18) PURE;
+	STDMETHOD(InitTree)(THIS_ HWND hTV, HKEY hKey, LPCSTR SubKey, char const *pUnknown) PURE;
 	STDMETHOD(WalkTree)(THIS_ WALK_TREE_CMD Command) PURE;
 	STDMETHOD(ToggleItem)(THIS_ HTREEITEM hTI) PURE;
 	STDMETHOD(ShowHelp)(THIS_ HTREEITEM hTI, unsigned long param10) PURE;
