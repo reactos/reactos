@@ -51,6 +51,9 @@ typedef struct tagDEVICE
 static FILEDATA FileData[MAX_FDS];
 static LIST_ENTRY DeviceListHead;
 
+#define IS_VALID_FILEID(FileId) \
+    ((ULONG)(FileId) < _countof(FileData) && FileData[(ULONG)(FileId)].FuncTable)
+
 typedef const DEVVTBL* (*PFS_MOUNT)(ULONG DeviceId);
 
 PFS_MOUNT FileSystems[] =
@@ -91,7 +94,7 @@ ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     /* Print status message */
     TRACE("Opening file '%s'...\n", Path);
 
-    *FileId = MAX_FDS;
+    *FileId = INVALID_FILE_ID;
 
     /* Search last ')', which delimits device and path */
     FileName = strrchr(Path, ')');
@@ -138,17 +141,17 @@ ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
         pDevice = CONTAINING_RECORD(pEntry, DEVICE, ListEntry);
         if (strncmp(pDevice->Prefix, DeviceName, Length) == 0)
         {
-            /* OK, device found. It is already opened? */
+            /* OK, device found. Is it already opened? */
             if (pDevice->ReferenceCount == 0)
             {
-                /* Search some room for the device */
-                for (DeviceId = 0; DeviceId < MAX_FDS; DeviceId++)
+                /* Find some room for the device */
+                for (DeviceId = 0; ; ++DeviceId)
                 {
+                    if (DeviceId >= _countof(FileData))
+                        return EMFILE;
                     if (!FileData[DeviceId].FuncTable)
                         break;
                 }
-                if (DeviceId == MAX_FDS)
-                    return EMFILE;
 
                 /* Try to open the device */
                 FileData[DeviceId].FuncTable = pDevice->FuncTable;
@@ -199,14 +202,14 @@ ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
      * in DeviceId, and FileData[DeviceId].FileFuncTable contains what
      * needs to be called to open the file */
 
-    /* Search some room for the device */
-    for (i = 0; i < MAX_FDS; i++)
+    /* Find some room for the file */
+    for (i = 0; ; ++i)
     {
+        if (i >= _countof(FileData))
+            return EMFILE;
         if (!FileData[i].FuncTable)
             break;
     }
-    if (i == MAX_FDS)
-        return EMFILE;
 
     /* Skip leading path separator, if any */
     if (*FileName == '\\' || *FileName == '/')
@@ -219,8 +222,10 @@ ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     Status = FileData[i].FuncTable->Open(FileName, OpenMode, FileId);
     if (Status != ESUCCESS)
     {
+        FileData[i].DeviceId = INVALID_FILE_ID;
         FileData[i].FuncTable = NULL;
-        *FileId = MAX_FDS;
+        FileData[i].Specific = NULL;
+        *FileId = INVALID_FILE_ID;
     }
     return Status;
 }
@@ -229,37 +234,36 @@ ARC_STATUS ArcClose(ULONG FileId)
 {
     ARC_STATUS Status;
 
-    if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)
+    if (!IS_VALID_FILEID(FileId))
         return EBADF;
 
     Status = FileData[FileId].FuncTable->Close(FileId);
-
     if (Status == ESUCCESS)
     {
+        FileData[FileId].DeviceId = INVALID_FILE_ID;
         FileData[FileId].FuncTable = NULL;
         FileData[FileId].Specific = NULL;
-        FileData[FileId].DeviceId = -1;
     }
     return Status;
 }
 
 ARC_STATUS ArcRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
-    if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)
+    if (!IS_VALID_FILEID(FileId))
         return EBADF;
     return FileData[FileId].FuncTable->Read(FileId, Buffer, N, Count);
 }
 
 ARC_STATUS ArcSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
-    if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)
+    if (!IS_VALID_FILEID(FileId))
         return EBADF;
     return FileData[FileId].FuncTable->Seek(FileId, Position, SeekMode);
 }
 
 ARC_STATUS ArcGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
-    if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)
+    if (!IS_VALID_FILEID(FileId))
         return EBADF;
     return FileData[FileId].FuncTable->GetFileInformation(FileId, Information);
 }
@@ -402,6 +406,7 @@ VOID FsRegisterDevice(CHAR* Prefix, const DEVVTBL* FuncTable)
     if (!pNewEntry)
         return;
     pNewEntry->FuncTable = FuncTable;
+    pNewEntry->DeviceId = INVALID_FILE_ID;
     pNewEntry->ReferenceCount = 0;
     pNewEntry->Prefix = (CHAR*)(pNewEntry + 1);
     RtlCopyMemory(pNewEntry->Prefix, Prefix, Length);
@@ -411,29 +416,29 @@ VOID FsRegisterDevice(CHAR* Prefix, const DEVVTBL* FuncTable)
 
 PCWSTR FsGetServiceName(ULONG FileId)
 {
-    if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)
+    if (!IS_VALID_FILEID(FileId))
         return NULL;
     return FileData[FileId].FuncTable->ServiceName;
 }
 
 VOID FsSetDeviceSpecific(ULONG FileId, VOID* Specific)
 {
-    if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)
+    if (!IS_VALID_FILEID(FileId))
         return;
     FileData[FileId].Specific = Specific;
 }
 
 VOID* FsGetDeviceSpecific(ULONG FileId)
 {
-    if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)
+    if (!IS_VALID_FILEID(FileId))
         return NULL;
     return FileData[FileId].Specific;
 }
 
 ULONG FsGetDeviceId(ULONG FileId)
 {
-    if (FileId >= MAX_FDS)
-        return (ULONG)-1;
+    if (FileId >= _countof(FileData)) // !IS_VALID_FILEID(FileId)
+        return INVALID_FILE_ID;
     return FileData[FileId].DeviceId;
 }
 
@@ -442,8 +447,8 @@ VOID FsInit(VOID)
     ULONG i;
 
     RtlZeroMemory(FileData, sizeof(FileData));
-    for (i = 0; i < MAX_FDS; i++)
-        FileData[i].DeviceId = (ULONG)-1;
+    for (i = 0; i < _countof(FileData); ++i)
+        FileData[i].DeviceId = INVALID_FILE_ID;
 
     InitializeListHead(&DeviceListHead);
 }

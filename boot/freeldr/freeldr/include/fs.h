@@ -32,6 +32,7 @@ typedef struct tagDEVVTBL
 } DEVVTBL;
 
 #define MAX_FDS 60
+#define INVALID_FILE_ID ((ULONG)-1)
 
 ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId);
 ARC_STATUS ArcClose(ULONG FileId);
