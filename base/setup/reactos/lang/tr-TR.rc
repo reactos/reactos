@@ -284,8 +284,8 @@ etmelidir, ve yalnızca harf, rakam, tire ve nokta içerir. Boşluklara izin ver
     IDS_ERROR_FORMATTING_PARTITION "Kurulum bölümü biçimlendiremiyor:\n %s\n"
 
     IDS_ERROR_COULD_NOT_CHECK "Kurulum şu anda şu şekilde biçimlendirilmiş bir bölümü kontrol edemiyor: %s.\n\
-\n Kuruluma devam etmek için Tamam'a tıklayın.\
-\n Kurulumdan çıkmak için İPTAL üzerine tıklayın."
+\nKuruluma devam etmek için Tamam'a tıklayın.\
+\nKurulumdan çıkmak için İPTAL üzerine tıklayın."
 
     IDS_ERROR_CHECKING_PARTITION "ChkDsk bazı disk hataları algıladı.\n(Status 0x%08lx)."
 END
