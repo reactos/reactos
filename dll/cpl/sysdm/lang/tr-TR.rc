@@ -371,5 +371,5 @@ BEGIN
     IDS_HWPROFILE_WARNING "Uyarı"
     IDS_ENVIRONMENT_WARNING "Yapılan tüm değişiklikler atılacak ve değişkenin değeri metin olarak düzenlenecektir."
     IDS_ENVIRONMENT_WARNING_TITLE "Sistem özellikleri"
-    IDS_FILE_BROWSE_FILTER "All Files (*.*)\0*.*\0"
+    IDS_FILE_BROWSE_FILTER "Tüm Dosyalar (*.*)\0*.*\0"
 END
