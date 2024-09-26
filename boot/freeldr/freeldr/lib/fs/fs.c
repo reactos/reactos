@@ -51,6 +51,27 @@ typedef struct tagDEVICE
 static FILEDATA FileData[MAX_FDS];
 static LIST_ENTRY DeviceListHead;
 
+typedef const DEVVTBL* (*PFS_MOUNT)(ULONG DeviceId);
+
+PFS_MOUNT FileSystems[] =
+{
+#ifndef _M_ARM
+    IsoMount,
+#endif
+    FatMount,
+    BtrFsMount,
+#ifndef _M_ARM
+    NtfsMount,
+    Ext2Mount,
+#endif
+#if defined(_M_IX86) || defined(_M_AMD64)
+#ifndef UEFIBOOT
+    PxeMount,
+#endif
+#endif
+};
+
+
 /* ARC FUNCTIONS **************************************************************/
 
 ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
@@ -146,28 +167,15 @@ ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
                 }
 
                 /* Try to detect the file system */
-#ifndef _M_ARM
-                FileData[DeviceId].FileFuncTable = IsoMount(DeviceId);
-                if (!FileData[DeviceId].FileFuncTable)
-#endif
-                    FileData[DeviceId].FileFuncTable = FatMount(DeviceId);
-                if (!FileData[DeviceId].FileFuncTable)
-                    FileData[DeviceId].FileFuncTable = BtrFsMount(DeviceId);
-#ifndef _M_ARM
-                if (!FileData[DeviceId].FileFuncTable)
-                    FileData[DeviceId].FileFuncTable = NtfsMount(DeviceId);
-                if (!FileData[DeviceId].FileFuncTable)
-                    FileData[DeviceId].FileFuncTable = Ext2Mount(DeviceId);
-#endif
-#if defined(_M_IX86) || defined(_M_AMD64)
-#ifndef UEFIBOOT
-                if (!FileData[DeviceId].FileFuncTable)
-                    FileData[DeviceId].FileFuncTable = PxeMount(DeviceId);
-#endif
-#endif
+                for (ULONG fs = 0; fs < _countof(FileSystems); ++fs)
+                {
+                    FileData[DeviceId].FileFuncTable = FileSystems[fs](DeviceId);
+                    if (FileData[DeviceId].FileFuncTable)
+                        break;
+                }
                 if (!FileData[DeviceId].FileFuncTable)
                 {
-                    /* Error, unable to detect file system */
+                    /* Error, unable to detect the file system */
                     pDevice->FuncTable->Close(DeviceId);
                     FileData[DeviceId].FuncTable = NULL;
                     return ENODEV;
