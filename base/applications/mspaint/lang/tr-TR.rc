@@ -4,6 +4,7 @@
  * PURPOSE:     Turkish resource file
  * TRANSLATORS: Copyright 2013-2016, 2019 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
  *              Copyright 2021-2022 Süleyman Poyraz <zaryob.dev@gmail.com>
+ *              Copyright 2024 Mahir Gül <mahirgul@gmail.com>
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
@@ -269,8 +270,8 @@ BEGIN
     IDS_UNDERLINE "Altı Çizgili"
     IDS_VERTICAL "Düşey"
     IDS_PRINTRES "%d x %d pixel/cm"
-    IDS_CANTPASTE "Failed to paste from the clipboard. The data format is either incorrect or not supported."
-    IDS_SAVEERROR "Failed to save the bitmap to file:\n\n%s"
-    IDS_CANTSENDMAIL "Failed to send a mail."
-    IDS_LOSECOLOR "The color information will be lost in this operation. Are you sure to proceed?"
+    IDS_CANTPASTE "Panodan yapıştırma işlemi başarısız oldu. Veri biçimi ya yanlış ya da desteklenmiyor."
+    IDS_SAVEERROR "Bit eşlemi dosyaya kaydedilemedi:\n\n%s"
+    IDS_CANTSENDMAIL "Posta gönderilemedi."
+    IDS_LOSECOLOR "Bu işlem sırasında renk bilgisi kaybolacaktır. Devam edeceğinizden emin misiniz?"
 END

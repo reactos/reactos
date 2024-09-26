@@ -13,4 +13,8 @@
 #include "misc.h"
 #include "configparser.h"
 
+extern LONG g_Busy;
+
+#define WM_NOTIFY_OPERATIONCOMPLETED (WM_APP + 0)
+
 #endif /* _RAPPS_H */

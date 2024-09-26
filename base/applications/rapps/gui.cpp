@@ -318,13 +318,13 @@ CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lPa
         case WM_CREATE:
             if (!InitControls())
                 ::PostMessageW(hwnd, WM_CLOSE, 0, 0);
+            ::PostMessageW(hwnd, DM_REPOSITION, 0, 0);
             break;
 
         case WM_DESTROY:
         {
-            ShowWindow(SW_HIDE);
+            hMainWnd = NULL;
             SaveSettings(hwnd, &SettingsInfo);
-
             FreeLogs();
 
             delete m_ClientPanel;
@@ -332,6 +332,19 @@ CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lPa
             PostQuitMessage(0);
             return 0;
         }
+
+        case WM_CLOSE:
+            ShowWindow(SW_HIDE);
+            return g_Busy;
+
+        case WM_NOTIFY_OPERATIONCOMPLETED:
+            if (!g_Busy && !IsWindowVisible())
+                SendMessage(WM_CLOSE, 0, 0);
+            break;
+
+        case DM_REPOSITION:
+            EmulateDialogReposition(hwnd); // We are not a real dialog, we need help from a real one
+            break;
 
         case WM_COMMAND:
             OnCommand(wParam, lParam);
@@ -749,8 +762,7 @@ CMainWindow::GetWndClassInfo()
 HWND
 CMainWindow::Create()
 {
-    CStringW szWindowName;
-    szWindowName.LoadStringW(IDS_APPTITLE);
+    const CStringW szWindowName(MAKEINTRESOURCEW(m_bAppwizMode ? IDS_APPWIZ_TITLE : IDS_APPTITLE));
 
     RECT r = {
         (SettingsInfo.bSaveWndPos ? SettingsInfo.Left : CW_USEDEFAULT),
