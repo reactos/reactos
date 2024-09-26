@@ -36,133 +36,133 @@
 #endif
 
 //Constants
-#define my_inet_addr 	inet_addr
+#define my_inet_addr     inet_addr
 #define MAX_SERVERS 8
 
 //Structs
 struct home
 {
-	char alias[64];
-	char target[256];
+    char alias[64];
+    char target[256];
 };
 
 struct tftpConnType
 {
-	SOCKET sock;
-	sockaddr_in addr;
-	MYDWORD server;
-	MYWORD port;
-	bool loaded;
-	bool ready;
+    SOCKET sock;
+    sockaddr_in addr;
+    MYDWORD server;
+    MYWORD port;
+    bool loaded;
+    bool ready;
 };
 
 struct acknowledgement
 {
-	MYWORD opcode;
-	MYWORD block;
+    MYWORD opcode;
+    MYWORD block;
 };
 
 struct message
 {
-	MYWORD opcode;
-	char buffer[514];
+    MYWORD opcode;
+    char buffer[514];
 };
 
 struct tftperror
 {
-	MYWORD opcode;
-	MYWORD errorcode;
-	char errormessage[512];
+    MYWORD opcode;
+    MYWORD errorcode;
+    char errormessage[512];
 };
 
 struct packet
 {
-	MYWORD opcode;
-	MYWORD block;
-	char buffer;
+    MYWORD opcode;
+    MYWORD block;
+    char buffer;
 };
 
 struct data12
 {
-	MYDWORD rangeStart;
-	MYDWORD rangeEnd;
+    MYDWORD rangeStart;
+    MYDWORD rangeEnd;
 };
 
 struct request
 {
-	timeval tv;
-	fd_set readfds;
-	time_t expiry;
-	SOCKET sock;
-	SOCKET knock;
-	MYBYTE sockInd;
-	MYBYTE attempt;
-	char path[256];
-	FILE *file;
-	char *filename;
-	char *mode;
-	char *alias;
-	MYDWORD tsize;
-	MYDWORD fblock;
-	int bytesReady;
-	int bytesRecd;
-	int bytesRead[2];
-	packet* pkt[2];
-	sockaddr_in client;
-	socklen_t clientsize;
-	union
-	{
-		tftperror serverError;
-		message mesout;
-		acknowledgement acout;
-	};
-	union
-	{
-		tftperror clientError;
-		message mesin;
-		acknowledgement acin;
-	};
-	MYWORD blksize;
-	MYWORD timeout;
-	MYWORD block;
-	MYWORD tblock;
+    timeval tv;
+    fd_set readfds;
+    time_t expiry;
+    SOCKET sock;
+    SOCKET knock;
+    MYBYTE sockInd;
+    MYBYTE attempt;
+    char path[256];
+    FILE *file;
+    char *filename;
+    char *mode;
+    char *alias;
+    MYDWORD tsize;
+    MYDWORD fblock;
+    int bytesReady;
+    int bytesRecd;
+    int bytesRead[2];
+    packet* pkt[2];
+    sockaddr_in client;
+    socklen_t clientsize;
+    union
+    {
+        tftperror serverError;
+        message mesout;
+        acknowledgement acout;
+    };
+    union
+    {
+        tftperror clientError;
+        message mesin;
+        acknowledgement acin;
+    };
+    MYWORD blksize;
+    MYWORD timeout;
+    MYWORD block;
+    MYWORD tblock;
 };
 
 struct data1
 {
-	tftpConnType tftpConn[MAX_SERVERS];
-	MYDWORD allServers[MAX_SERVERS];
-	MYDWORD staticServers[MAX_SERVERS];
-	MYDWORD listenServers[MAX_SERVERS];
-	MYWORD listenPorts[MAX_SERVERS];
-	SOCKET maxFD;
-	bool ready;
-	bool readyForChange;
+    tftpConnType tftpConn[MAX_SERVERS];
+    MYDWORD allServers[MAX_SERVERS];
+    MYDWORD staticServers[MAX_SERVERS];
+    MYDWORD listenServers[MAX_SERVERS];
+    MYWORD listenPorts[MAX_SERVERS];
+    SOCKET maxFD;
+    bool ready;
+    bool readyForChange;
 };
 
 struct data2
 {
-	WSADATA wsaData;
-	home homes[8];
-	FILE *logfile;
-	data12 hostRanges[32];
-	char fileRead;
-	char fileWrite;
-	char fileOverwrite;
-	int minport;
-	int maxport;
-	MYBYTE logLevel;
-	MYDWORD failureCount;
+    WSADATA wsaData;
+    home homes[8];
+    FILE *logfile;
+    data12 hostRanges[32];
+    char fileRead;
+    char fileWrite;
+    char fileOverwrite;
+    int minport;
+    int maxport;
+    MYBYTE logLevel;
+    MYDWORD failureCount;
 };
 
 struct data15
 {
-	union
-	{
-		//MYDWORD ip;
-		unsigned ip:32;
-		MYBYTE octate[4];
-	};
+    union
+    {
+        //MYDWORD ip;
+        unsigned ip:32;
+        MYBYTE octate[4];
+    };
 };
 
 //Functions
