@@ -42,6 +42,7 @@ ViewDlg_OnDestroy(HWND hwndDlg)
     {
         pRTO->WalkTree(WALK_TREE_DESTROY);
         pRTO->Release();
+        SetWindowLongPtr(hwndDlg, DWLP_USER, 0);
     }
 }
 
@@ -88,8 +89,8 @@ ViewDlg_OnTreeViewClick(HWND hwndDlg)
     TV_HITTESTINFO HitTest;
     ZeroMemory(&HitTest, sizeof(HitTest));
     DWORD dwPos = GetMessagePos();
-    HitTest.pt.x = (short)LOWORD(dwPos);
-    HitTest.pt.y = (short)HIWORD(dwPos);
+    HitTest.pt.x = GET_X_LPARAM(dwPos);
+    HitTest.pt.y = GET_Y_LPARAM(dwPos);
     ScreenToClient(hwndTreeView, &HitTest.pt);
     HTREEITEM hItem = TreeView_HitTest(hwndTreeView, &HitTest);
 
@@ -196,7 +197,7 @@ ViewDlg_Apply(HWND hwndDlg)
     CABINETSTATE cs;
     cs.cLength = sizeof(cs);
     if (ReadCabinetState(&cs, sizeof(cs)))
-        WriteCabinetState(&cs);
+        WriteCabinetState(&cs); // Write the settings and invalidate global counter
 
     SHSendMessageBroadcastW(WM_SETTINGCHANGE, 0, 0);
     PostCabinetMessage(WM_COMMAND, FCIDM_DESKBROWSER_REFRESH, 0);

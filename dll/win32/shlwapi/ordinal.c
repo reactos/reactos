@@ -6381,6 +6381,7 @@ DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid)
 EXTERN_C BOOL WINAPI SHBoolSystemParametersInfo(UINT uiAction, PVOID pvParam)
 {
     BOOL retval;
+    PVOID pvOrgParam = pvParam;
     UINT uiParam = 0;
     ANIMATIONINFO animinfo;
 
@@ -6410,7 +6411,7 @@ EXTERN_C BOOL WINAPI SHBoolSystemParametersInfo(UINT uiAction, PVOID pvParam)
 
     retval = SystemParametersInfoW(uiAction, uiParam, pvParam, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
     if (uiAction == SPI_GETANIMATION)
-        *(BOOL*)pvParam = animinfo.iMinAnimate;
+        *(BOOL*)pvOrgParam = animinfo.iMinAnimate;
     return retval;
 }
 #endif

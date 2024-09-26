@@ -487,9 +487,9 @@ void CRegTreeOptions::AddItemsFromRegistry(HKEY hKey, HTREEITEM hParent, HTREEIT
     SendMessage(m_hTree, TVM_SORTCHILDREN, 0, (LPARAM)hParent);
 }
 
-HRESULT STDMETHODCALLTYPE CRegTreeOptions::InitTree(HWND hTV, HKEY hKey, LPCSTR SubKey, char const *param18)
+HRESULT STDMETHODCALLTYPE CRegTreeOptions::InitTree(HWND hTV, HKEY hKey, LPCSTR SubKey, char const *pUnknown)
 {
-    UNREFERENCED_PARAMETER(param18);
+    UNREFERENCED_PARAMETER(pUnknown);
     m_hTree = hTV;
 
     m_hIL = CreateStateImages(GetSystemMetrics(SM_CXSMICON));
