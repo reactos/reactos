@@ -7,6 +7,6 @@ typedef enum _DOT11_BSS_TYPE {
     dot11_BSS_type_any
 } DOT11_BSS_TYPE;
 
-
+#define DOT11_SSID_MAX_LENGTH 32
 #endif
 
