@@ -1,4 +1,4 @@
-/*
+﻿/*
  * PROJECT:     ReactOS Service Control Manager
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/system/services/rpcserver.c
@@ -1186,7 +1186,7 @@ RControlService(
         }
 
         /* Send control code to the service */
-        dwError = ScmControlService(lpService,
+        dwError = ScmControlService(lpService->lpImage->hControlPipe,
                                     lpService->lpServiceName,
                                     (SERVICE_STATUS_HANDLE)lpService,
                                     dwControl);
@@ -1625,7 +1625,7 @@ ScmStopThread(PVOID pParam)
          * We must not send a control message while holding the database lock, otherwise it can cause timeouts
          * We are sure that the service won't be deleted in the meantime because we still have a reference to it. */
         DPRINT("Stopping the dispatcher thread for service %S\n", lpService->lpServiceName);
-        ScmControlService(lpService,
+        ScmControlService(lpService->lpImage->hControlPipe,
                           L"",
                           (SERVICE_STATUS_HANDLE)lpService,
                           SERVICE_CONTROL_STOP);

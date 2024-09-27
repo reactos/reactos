@@ -201,7 +201,7 @@ VOID ScmDeleteServiceRecord(PSERVICE lpService);
 DWORD ScmMarkServiceForDelete(PSERVICE pService);
 
 DWORD
-ScmControlService(PSERVICE lpService,
+ScmControlService(HANDLE hControlPipe,
     PWSTR pServiceName,
     SERVICE_STATUS_HANDLE hServiceStatus,
     DWORD dwControl);

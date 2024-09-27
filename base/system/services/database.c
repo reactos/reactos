@@ -1,4 +1,4 @@
-/*
+﻿/*
  * PROJECT:     ReactOS Service Control Manager
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/system/services/database.c
@@ -1414,7 +1414,7 @@ ScmGetBootAndSystemDriverState(VOID)
  * The service passed must always be referenced instead
  */
 DWORD
-ScmControlService(PSERVICE lpService,
+ScmControlService(HANDLE hControlPipe,
                   PWSTR pServiceName,
                   SERVICE_STATUS_HANDLE hServiceStatus,
                   DWORD dwControl)
@@ -1429,9 +1429,8 @@ ScmControlService(PSERVICE lpService,
     DWORD dwError = ERROR_SUCCESS;
     BOOL bResult;
     OVERLAPPED Overlapped = {0};
-    HANDLE hControlPipe = lpService->lpImage->hControlPipe;
 
-    DPRINT("ScmControlService(%S, %d) called\n", lpService->lpServiceName, dwControl);
+    DPRINT("ScmControlService(%S, %d) called\n", pServiceName, dwControl);
 
     /* Acquire the service control critical section, to synchronize requests */
     EnterCriticalSection(&ControlServiceCriticalSection);
@@ -1468,24 +1467,24 @@ ScmControlService(PSERVICE lpService,
                         &Overlapped);
     if (bResult == FALSE)
     {
-        DPRINT("WriteFile(%S, %d) returned FALSE\n", lpService->lpServiceName, dwControl);
+        DPRINT("WriteFile(%S, %d) returned FALSE\n", pServiceName, dwControl);
 
         dwError = GetLastError();
         if (dwError == ERROR_IO_PENDING)
         {
-            DPRINT("(%S, %d) dwError: ERROR_IO_PENDING\n", lpService->lpServiceName, dwControl);
+            DPRINT("(%S, %d) dwError: ERROR_IO_PENDING\n", pServiceName, dwControl);
 
             dwError = WaitForSingleObject(hControlPipe,
                                           PipeTimeout);
-            DPRINT("WaitForSingleObject(%S, %d) returned %lu\n", lpService->lpServiceName, dwControl, dwError);
+            DPRINT("WaitForSingleObject(%S, %d) returned %lu\n", pServiceName, dwControl, dwError);
 
             if (dwError == WAIT_TIMEOUT)
             {
-                DPRINT1("WaitForSingleObject(%S, %d) timed out\n", lpService->lpServiceName, dwControl, dwError);
+                DPRINT1("WaitForSingleObject(%S, %d) timed out\n", pServiceName, dwControl, dwError);
                 bResult = CancelIo(hControlPipe);
                 if (bResult == FALSE)
                 {
-                    DPRINT("CancelIo(%S, %d) failed (Error: %lu)\n", lpService->lpServiceName, dwControl, GetLastError());
+                    DPRINT("CancelIo(%S, %d) failed (Error: %lu)\n", pServiceName, dwControl, GetLastError());
                 }
 
                 dwError = ERROR_SERVICE_REQUEST_TIMEOUT;
@@ -1500,7 +1499,7 @@ ScmControlService(PSERVICE lpService,
                 if (bResult == FALSE)
                 {
                     dwError = GetLastError();
-                    DPRINT("GetOverlappedResult(%S, %d) failed (Error %lu)\n", lpService->lpServiceName, dwControl, dwError);
+                    DPRINT("GetOverlappedResult(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, dwError);
 
                     goto Done;
                 }
@@ -1508,7 +1507,7 @@ ScmControlService(PSERVICE lpService,
         }
         else
         {
-            DPRINT("WriteFile(%S, %d) failed (Error %lu)\n", lpService->lpServiceName, dwControl, dwError);
+            DPRINT("WriteFile(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, dwError);
             goto Done;
         }
     }
@@ -1523,24 +1522,24 @@ ScmControlService(PSERVICE lpService,
                        &Overlapped);
     if (bResult == FALSE)
     {
-        DPRINT("ReadFile(%S, %d) returned FALSE\n", lpService->lpServiceName, dwControl);
+        DPRINT("ReadFile(%S, %d) returned FALSE\n", pServiceName, dwControl);
 
         dwError = GetLastError();
         if (dwError == ERROR_IO_PENDING)
         {
-            DPRINT("(%S, %d) dwError: ERROR_IO_PENDING\n", lpService->lpServiceName, dwControl);
+            DPRINT("(%S, %d) dwError: ERROR_IO_PENDING\n", pServiceName, dwControl);
 
             dwError = WaitForSingleObject(hControlPipe,
                                           PipeTimeout);
-            DPRINT("WaitForSingleObject(%S, %d) returned %lu\n", lpService->lpServiceName, dwControl, dwError);
+            DPRINT("WaitForSingleObject(%S, %d) returned %lu\n", pServiceName, dwControl, dwError);
 
             if (dwError == WAIT_TIMEOUT)
             {
-                DPRINT1("WaitForSingleObject(%S, %d) timed out\n", lpService->lpServiceName, dwControl, dwError);
+                DPRINT1("WaitForSingleObject(%S, %d) timed out\n", pServiceName, dwControl, dwError);
                 bResult = CancelIo(hControlPipe);
                 if (bResult == FALSE)
                 {
-                    DPRINT("CancelIo(%S, %d) failed (Error: %lu)\n", lpService->lpServiceName, dwControl, GetLastError());
+                    DPRINT("CancelIo(%S, %d) failed (Error: %lu)\n", pServiceName, dwControl, GetLastError());
                 }
 
                 dwError = ERROR_SERVICE_REQUEST_TIMEOUT;
@@ -1555,7 +1554,7 @@ ScmControlService(PSERVICE lpService,
                 if (bResult == FALSE)
                 {
                     dwError = GetLastError();
-                    DPRINT("GetOverlappedResult(%S, %d) failed (Error %lu)\n", lpService->lpServiceName, dwControl, dwError);
+                    DPRINT("GetOverlappedResult(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, dwError);
 
                     goto Done;
                 }
@@ -1563,7 +1562,7 @@ ScmControlService(PSERVICE lpService,
         }
         else
         {
-            DPRINT("ReadFile(%S, %d) failed (Error %lu)\n", lpService->lpServiceName, dwControl, dwError);
+            DPRINT("ReadFile(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, dwError);
             goto Done;
         }
     }
@@ -1581,7 +1580,7 @@ Done:
 
     LeaveCriticalSection(&ControlServiceCriticalSection);
 
-    DPRINT("ScmControlService(%S, %d) done\n", lpService->lpServiceName, dwControl);
+    DPRINT("ScmControlService(%S, %d) done\n", pServiceName, dwControl);
 
     return dwError;
 }
