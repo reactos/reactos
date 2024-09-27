@@ -113,9 +113,54 @@ test_SwapElements()
     ok_list(list, "3,1,2,");
 }
 
+static void
+test_AppendListToTail()
+{
+    CAtlList<int> list;
+    list.AddTail(1);
+    list.AddTail(2);
+    list.AddTail(0);
+    ok_list(list, "1,2,0,");
+
+    CAtlList<int> list_tail;
+    list_tail.AddTail(8);
+    list_tail.AddTail(1);
+    list_tail.AddTail(0);
+    ok_list(list_tail, "8,1,0,");
+
+    list.AddTailList(&list_tail);
+    ok_list(list, "1,2,0,8,1,0,");
+
+    list_tail.AddTailList(&list);
+    ok_list(list_tail, "8,1,0,1,2,0,8,1,0,");
+}
+
+static void
+test_AppendListToHead()
+{
+    CAtlList<int> list_head;
+    list_head.AddHead(0);
+    list_head.AddHead(0);
+    list_head.AddHead(2);
+    ok_list(list_head, "2,0,0,");
+
+    CAtlList<int> list;
+    list.AddHead(8);
+    list.AddHead(9);
+    list.AddHead(7);
+    ok_list(list, "7,9,8,");
+
+    list.AddHeadList(&list_head);
+    ok_list(list, "2,0,0,7,9,8,");
+
+    list_head.AddHeadList(&list);
+    ok_list(list_head, "2,0,0,7,9,8,2,0,0,");
+}
 
 START_TEST(CAtlList)
 {
     test_BasicCases();
     test_SwapElements();
+    test_AppendListToTail();
+    test_AppendListToHead();
 }
