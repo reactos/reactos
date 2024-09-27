@@ -116,7 +116,7 @@ ScmStartRpcServer(VOID)
                                     NULL);
     if (Status != RPC_S_OK)
     {
-        DPRINT("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
+        DPRINT1("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
         return;
     }
 
@@ -125,14 +125,14 @@ ScmStartRpcServer(VOID)
                                  NULL);
     if (Status != RPC_S_OK)
     {
-        DPRINT("RpcServerRegisterIf() failed (Status %lx)\n", Status);
+        DPRINT1("RpcServerRegisterIf() failed (Status %lx)\n", Status);
         return;
     }
 
     Status = RpcServerListen(1, 20, TRUE);
     if (Status != RPC_S_OK)
     {
-        DPRINT("RpcServerListen() failed (Status %lx)\n", Status);
+        DPRINT1("RpcServerListen() failed (Status %lx)\n", Status);
         return;
     }
 
@@ -210,7 +210,7 @@ ScmGetServiceManagerFromHandle(SC_RPC_HANDLE Handle)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        DPRINT("Exception: Invalid Service Manager handle\n");
+        DPRINT1("Exception: Invalid Service Manager handle\n");
     }
     _SEH2_END;
 
@@ -230,7 +230,7 @@ ScmGetServiceFromHandle(SC_RPC_HANDLE Handle)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        DPRINT("Exception: Invalid Service handle\n");
+        DPRINT1("Exception: Invalid Service handle\n");
     }
     _SEH2_END;
 
@@ -390,7 +390,7 @@ cleanup:
     }
     else
     {
-        DPRINT("Failed to assign new tag to service %S, error=%lu\n",
+        DPRINT1("Failed to assign new tag to service %S, error=%lu\n",
                 lpService->lpServiceName, dwError);
     }
 
@@ -1030,7 +1030,7 @@ RControlService(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT("Invalid service handle\n");
+        DPRINT1("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -1038,7 +1038,7 @@ RControlService(
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
-        DPRINT("lpService == NULL\n");
+        DPRINT1("lpService == NULL\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -1253,7 +1253,7 @@ RDeleteService(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT("Invalid service handle\n");
+        DPRINT1("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -1309,7 +1309,7 @@ RLockServiceDatabase(
     hMgr = ScmGetServiceManagerFromHandle(hSCManager);
     if (hMgr == NULL)
     {
-        DPRINT("Invalid service manager handle\n");
+        DPRINT1("Invalid service manager handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -1343,7 +1343,7 @@ RQueryServiceObjectSecurity(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT("Invalid service handle\n");
+        DPRINT1("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -1428,7 +1428,7 @@ RSetServiceObjectSecurity(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT("Invalid service handle\n");
+        DPRINT1("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -1466,14 +1466,14 @@ RSetServiceObjectSecurity(
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
                                   DesiredAccess))
     {
-        DPRINT("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
         return ERROR_ACCESS_DENIED;
     }
 
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
-        DPRINT("lpService == NULL\n");
+        DPRINT1("lpService == NULL\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -1557,7 +1557,7 @@ RQueryServiceStatus(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT("Invalid service handle\n");
+        DPRINT1("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -1802,7 +1802,7 @@ RSetServiceStatus(
             /* We can't leave without releasing the reference.
              * We also can't remove it without holding the lock. */
             ScmDereferenceService(lpService);
-            DPRINT("Service %S has %d references after stoping\n", lpService->lpServiceName, lpService->RefCount);
+            DPRINT1("Service %S has %d references after stoping\n", lpService->lpServiceName, lpService->RefCount);
         }
         else
         {
@@ -1841,6 +1841,7 @@ RSetServiceStatus(
                     lpLogStrings);
     }
 
+    DPRINT("Set %S to %lu\n", lpService->lpDisplayName, lpService->Status.dwCurrentState);
     DPRINT("RSetServiceStatus() done\n");
 
     return ERROR_SUCCESS;
@@ -1972,7 +1973,7 @@ RChangeServiceConfigW(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT("Invalid service handle\n");
+        DPRINT1("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -2229,7 +2230,7 @@ RChangeServiceConfigW(
                                              &lpClearTextPassword);
                 if (dwError != ERROR_SUCCESS)
                 {
-                    DPRINT("ScmDecryptPassword failed (Error %lu)\n", dwError);
+                    DPRINT1("ScmDecryptPassword failed (Error %lu)\n", dwError);
                     goto done;
                 }
                 DPRINT("Clear text password: %S\n", lpClearTextPassword);
@@ -2239,7 +2240,7 @@ RChangeServiceConfigW(
                                                 lpClearTextPassword);
                 if (dwError != ERROR_SUCCESS)
                 {
-                    DPRINT("ScmSetServicePassword failed (Error %lu)\n", dwError);
+                    DPRINT1("ScmSetServicePassword failed (Error %lu)\n", dwError);
                     goto done;
                 }
             }
@@ -2253,7 +2254,7 @@ RChangeServiceConfigW(
 
                 if (dwError != ERROR_SUCCESS)
                 {
-                    DPRINT("ScmSetServicePassword failed (Error %lu)\n", dwError);
+                    DPRINT1("ScmSetServicePassword failed (Error %lu)\n", dwError);
                     goto done;
                 }
             }
@@ -2328,7 +2329,7 @@ RCreateServiceW(
     hManager = ScmGetServiceManagerFromHandle(hSCManager);
     if (hManager == NULL)
     {
-        DPRINT("Invalid service manager handle\n");
+        DPRINT1("Invalid service manager handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -2745,7 +2746,7 @@ REnumDependentServicesW(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT("Invalid service handle\n");
+        DPRINT1("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -2792,7 +2793,7 @@ REnumDependentServicesW(
                                 (dwServicesReturned + 1) * sizeof(PSERVICE));
     if (!lpServicesArray)
     {
-        DPRINT("Could not allocate buffer\n");
+        DPRINT1("Could not allocate buffer\n");
         dwError = ERROR_NOT_ENOUGH_MEMORY;
         goto Done;
     }
@@ -2955,7 +2956,7 @@ ROpenServiceW(
     hManager = ScmGetServiceManagerFromHandle(hSCManager);
     if (hManager == NULL)
     {
-        DPRINT("Invalid service manager handle\n");
+        DPRINT1("Invalid service manager handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -3041,7 +3042,7 @@ RQueryServiceConfigW(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT("Invalid service handle\n");
+        DPRINT1("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -3239,7 +3240,7 @@ RQueryServiceLockStatusW(
     hMgr = ScmGetServiceManagerFromHandle(hSCManager);
     if (hMgr == NULL)
     {
-        DPRINT("Invalid service manager handle\n");
+        DPRINT1("Invalid service manager handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -3295,7 +3296,7 @@ RStartServiceW(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT("Invalid service handle\n");
+        DPRINT1("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -3783,7 +3784,7 @@ REnumDependentServicesA(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT("Invalid service handle\n");
+        DPRINT1("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -4112,7 +4113,7 @@ RQueryServiceConfigA(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT("Invalid service handle\n");
+        DPRINT1("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -4343,7 +4344,7 @@ RQueryServiceLockStatusA(
     hMgr = ScmGetServiceManagerFromHandle(hSCManager);
     if (hMgr == NULL)
     {
-        DPRINT("Invalid service manager handle\n");
+        DPRINT1("Invalid service manager handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -4390,7 +4391,7 @@ RStartServiceA(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT("Invalid service handle\n");
+        DPRINT1("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -4725,7 +4726,7 @@ RI_ScGetCurrentGroupStateW(
     hManager = ScmGetServiceManagerFromHandle(hSCManager);
     if (hManager == NULL)
     {
-        DPRINT("Invalid service manager handle\n");
+        DPRINT1("Invalid service manager handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -4797,7 +4798,7 @@ REnumServiceGroupW(
     hManager = ScmGetServiceManagerFromHandle(hSCManager);
     if (hManager == NULL)
     {
-        DPRINT("Invalid service manager handle\n");
+        DPRINT1("Invalid service manager handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -5599,7 +5600,7 @@ RQueryServiceConfig2A(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT("Invalid service handle\n");
+        DPRINT1("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -5845,7 +5846,7 @@ RQueryServiceConfig2W(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT("Invalid service handle\n");
+        DPRINT1("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -6062,7 +6063,7 @@ RQueryServiceStatusEx(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT("Invalid service handle\n");
+        DPRINT1("Invalid service handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -6283,7 +6284,7 @@ REnumServicesStatusExW(
     hManager = ScmGetServiceManagerFromHandle(hSCManager);
     if (hManager == NULL)
     {
-        DPRINT("Invalid service manager handle\n");
+        DPRINT1("Invalid service manager handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -6740,7 +6741,7 @@ RI_ScValidatePnPService(
     hManager = ScmGetServiceManagerFromHandle(hSCManager);
     if (hManager == NULL)
     {
-        DPRINT("Invalid handle\n");
+        DPRINT1("Invalid handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -6750,7 +6751,7 @@ RI_ScValidatePnPService(
     if (!RtlAreAllAccessesGranted(hManager->Handle.DesiredAccess,
                                   SC_MANAGER_CONNECT))
     {
-        DPRINT("No SC_MANAGER_CONNECT access\n");
+        DPRINT1("No SC_MANAGER_CONNECT access\n");
         return ERROR_ACCESS_DENIED;
     }
 

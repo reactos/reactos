@@ -877,7 +877,7 @@ DWORD ScmDeleteService(PSERVICE lpService)
                             &hServicesKey);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT("Failed to open services key\n");
+        DPRINT1("Failed to open services key\n");
         return dwError;
     }
 
@@ -907,7 +907,7 @@ DWORD ScmDeleteService(PSERVICE lpService)
 
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT("Failed to Delete the Service Registry key\n");
+        DPRINT1("Failed to Delete the Service Registry key\n");
         return dwError;
     }
 
@@ -1467,7 +1467,7 @@ ScmControlService(HANDLE hControlPipe,
                         &Overlapped);
     if (bResult == FALSE)
     {
-        DPRINT("WriteFile(%S, %d) returned FALSE\n", pServiceName, dwControl);
+        DPRINT1("WriteFile(%S, %d) returned FALSE\n", pServiceName, dwControl);
 
         dwError = GetLastError();
         if (dwError == ERROR_IO_PENDING)
@@ -1484,7 +1484,7 @@ ScmControlService(HANDLE hControlPipe,
                 bResult = CancelIo(hControlPipe);
                 if (bResult == FALSE)
                 {
-                    DPRINT("CancelIo(%S, %d) failed (Error: %lu)\n", pServiceName, dwControl, GetLastError());
+                    DPRINT1("CancelIo(%S, %d) failed (Error: %lu)\n", pServiceName, dwControl, GetLastError());
                 }
 
                 dwError = ERROR_SERVICE_REQUEST_TIMEOUT;
@@ -1499,7 +1499,7 @@ ScmControlService(HANDLE hControlPipe,
                 if (bResult == FALSE)
                 {
                     dwError = GetLastError();
-                    DPRINT("GetOverlappedResult(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, dwError);
+                    DPRINT1("GetOverlappedResult(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, dwError);
 
                     goto Done;
                 }
@@ -1507,7 +1507,7 @@ ScmControlService(HANDLE hControlPipe,
         }
         else
         {
-            DPRINT("WriteFile(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, dwError);
+            DPRINT1("WriteFile(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, dwError);
             goto Done;
         }
     }
@@ -1522,7 +1522,7 @@ ScmControlService(HANDLE hControlPipe,
                        &Overlapped);
     if (bResult == FALSE)
     {
-        DPRINT("ReadFile(%S, %d) returned FALSE\n", pServiceName, dwControl);
+        DPRINT1("ReadFile(%S, %d) returned FALSE\n", pServiceName, dwControl);
 
         dwError = GetLastError();
         if (dwError == ERROR_IO_PENDING)
@@ -1535,11 +1535,11 @@ ScmControlService(HANDLE hControlPipe,
 
             if (dwError == WAIT_TIMEOUT)
             {
-                DPRINT1("WaitForSingleObject(%S, %d) timed out\n", pServiceName, dwControl, dwError);
+                DPRINT("WaitForSingleObject(%S, %d) timed out\n", pServiceName, dwControl, dwError);
                 bResult = CancelIo(hControlPipe);
                 if (bResult == FALSE)
                 {
-                    DPRINT("CancelIo(%S, %d) failed (Error: %lu)\n", pServiceName, dwControl, GetLastError());
+                    DPRINT1("CancelIo(%S, %d) failed (Error: %lu)\n", pServiceName, dwControl, GetLastError());
                 }
 
                 dwError = ERROR_SERVICE_REQUEST_TIMEOUT;
@@ -1554,7 +1554,7 @@ ScmControlService(HANDLE hControlPipe,
                 if (bResult == FALSE)
                 {
                     dwError = GetLastError();
-                    DPRINT("GetOverlappedResult(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, dwError);
+                    DPRINT1("GetOverlappedResult(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, dwError);
 
                     goto Done;
                 }
@@ -1562,7 +1562,7 @@ ScmControlService(HANDLE hControlPipe,
         }
         else
         {
-            DPRINT("ReadFile(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, dwError);
+            DPRINT1("ReadFile(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, dwError);
             goto Done;
         }
     }
