@@ -1698,8 +1698,6 @@ RSetServiceStatus(
     LPCWSTR lpLogStrings[2];
     WCHAR szLogBuffer[80];
     UINT uID;
-    HANDLE hStopThread;
-    DWORD dwStopThreadId;
 
     DPRINT("RSetServiceStatus() called\n");
     DPRINT("hServiceStatus = %lu\n", hServiceStatus);
@@ -1782,6 +1780,8 @@ RSetServiceStatus(
     if (lpServiceStatus->dwCurrentState == SERVICE_STOPPED &&
         dwPreviousState != SERVICE_STOPPED)
     {
+        HANDLE hStopThread;
+        DWORD dwStopThreadId;
         DPRINT("Service %S, currentstate: %d, prev: %d\n", lpService->lpServiceName, lpServiceStatus->dwCurrentState, dwPreviousState);
 
         /* 
