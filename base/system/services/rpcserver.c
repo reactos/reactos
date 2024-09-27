@@ -6740,7 +6740,7 @@ RI_ScValidatePnPService(
     hManager = ScmGetServiceManagerFromHandle(hSCManager);
     if (hManager == NULL)
     {
-        DPRINT("Invalid handle!\n");
+        DPRINT("Invalid handle\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -6750,7 +6750,7 @@ RI_ScValidatePnPService(
     if (!RtlAreAllAccessesGranted(hManager->Handle.DesiredAccess,
                                   SC_MANAGER_CONNECT))
     {
-        DPRINT("No SC_MANAGER_CONNECT access!\n");
+        DPRINT("No SC_MANAGER_CONNECT access\n");
         return ERROR_ACCESS_DENIED;
     }
 
