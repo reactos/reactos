@@ -894,7 +894,7 @@ DWORD ScmDeleteService(PSERVICE lpService)
     {
         DPRINT1("Deletion failed due to running dependencies\n");
         RegCloseKey(hServicesKey);
-        return ERROR_SUCCESS;
+        return ERROR_DEPENDENT_SERVICES_RUNNING;
     }
 
     /* There are no references and no running dependencies,
