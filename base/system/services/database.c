@@ -943,11 +943,11 @@ ScmDereferenceService(PSERVICE lpService)
     ASSERT(lpService->RefCount > 0);
 
     ref = InterlockedDecrement(&lpService->RefCount);
-#if 0
-    /* Service should not be automatically deleted here. */
-    if (ref == 0 && lpService->bDeleted)
+
+    if (ref == 0 && lpService->bDeleted &&
+        lpService->Status.dwCurrentState == SERVICE_STOPPED)
+
         ScmDeleteService(lpService);
-#endif
 
     return ref;
 }
