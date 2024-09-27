@@ -1,24 +1,25 @@
 /*
- * FILE:       base/applications/screensavers/3dtext/lang/ro-RO.rc
- *             ReactOS Project (https://reactos.org)
- * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
- * CHANGE LOG: 2011-08-24  initial translation
+ * PROJECT:     OpenGL 3DText ScreenSaver
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 DLG_SCRNSAVECONFIGURE DIALOGEX 0, 0, 245, 40
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Preferințe"
+CAPTION "Setări pentru economizorul de ecran Text 3D"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON "Con&firmă", IDOK, 175, 4, 65, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 175, 21, 65, 14
+    DEFPUSHBUTTON "OK", IDOK, 175, 4, 65, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 175, 21, 65, 14
     EDITTEXT IDC_MESSAGE_TEXT, 6, 21, 160, 14, ES_AUTOHSCROLL
-    LTEXT "Text afișat:", IDC_STATIC, 7, 7, 120, 8
+    LTEXT "Text personalizat", IDC_STATIC, 7, 7, 120, 8
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DESCRIPTION "Text 3D"
+    IDS_DESCRIPTION "Economizorul de ecran Text 3D"
 END
