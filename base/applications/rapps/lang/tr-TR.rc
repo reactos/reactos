@@ -180,7 +180,7 @@ BEGIN
 
     IDS_APPWIZ_TITLE "Program Ekle/Kaldır"
     IDS_APPWIZ_TEXT1 "Sisteminizde yüklü olan uygulamaların veya güncellemelerin listesini görüntülemek için ""Uygulamalar"" veya ""Güncellemeler"" öğesini seçin."
-    IDS_APPWIZ_TEXT2 "Bir programı kaldırmak veya yüklü bileşenlerini değiştirmek için listeden seçin ve ""Kaldır"" veya ""Değiştir"" üzerine tıklayın.."
+    IDS_APPWIZ_TEXT2 "Bir programı kaldırmak veya yüklü bileşenlerini değiştirmek için listeden seçin ve ""Kaldır"" veya ""Değiştir"" üzerine tıklayın."
 END
 
 STRINGTABLE
