@@ -54,8 +54,7 @@ BEGIN
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 58, 123, 12, 13
     LTEXT "minutos", IDC_MINTEXT, 74, 125, 26, 9
-    CONTROL "Pr&oteger sesión con contraseña", IDC_SCREENS_USEPASSCHK, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
+    AUTOCHECKBOX "Pr&oteger sesión con contraseña", IDC_SCREENS_USEPASSCHK, 108, 120, 117, 19
     GROUPBOX "Energía del monitor", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
     LTEXT "Para ajustar la configuración de energía del monitor y ahorrar energía, haga clic en Energía.", IDC_STATIC, 16, 161, 146, 27
     PUSHBUTTON "E&nergía...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
@@ -118,24 +117,17 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Efectos"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "&Animar transiciones de menús y sugerencias emergentes:",
-            IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
+    AUTOCHECKBOX "&Animar transiciones de menús y sugerencias emergentes:", IDC_EFFAPPEARANCE_ANIMATION, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    CONTROL "U&sar el siguiente método para suavizar los bordes de las fuentes de pantalla:", IDC_EFFAPPEARANCE_SMOOTHING,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
+    AUTOCHECKBOX "U&sar el siguiente método para suavizar los bordes de las fuentes de pantalla:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    CONTROL "Usar i&conos grandes", IDC_EFFAPPEARANCE_LARGEICONS, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
-    CONTROL "Mostrar som&bras bajo los menús", IDC_EFFAPPEARANCE_SETDROPSHADOW,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
-    CONTROL "&Mostrar el contenido de la ventana mientras se arrastra", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "&Ocultar el subrayado de acceso rápido hasta presionar la tecla Alt",
-            IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
-    CONTROL "Usar menús &planos", IDC_EFFAPPEARANCE_FLATMENUS,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
+    AUTOCHECKBOX "Usar i&conos grandes", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX "Mostrar som&bras bajo los menús", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19
+    AUTOCHECKBOX "&Mostrar el contenido de la ventana mientras se arrastra", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19
+    AUTOCHECKBOX "&Ocultar el subrayado de acceso rápido hasta presionar la tecla Alt", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19
+    AUTOCHECKBOX "Usar menús &planos", IDC_EFFAPPEARANCE_FLATMENUS, 10, 140, 267, 19
     PUSHBUTTON "Cancelar", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "Aceptar", IDOK, 172, 165, 50, 14
 END
@@ -168,14 +160,10 @@ CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Desktop icons", IDC_STATIC, 6, 4, 212, 40
-    CONTROL "My &Documents", IDC_ICONS_MYDOCS, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 14, 14, 100, 12
-    CONTROL "My &Network Places", IDC_ICONS_MYNET, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 116, 14, 100, 12
-    CONTROL "&My Computer", IDC_ICONS_MYCOMP, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 14, 28, 100, 12
-    CONTROL "&Internet Browser", IDC_ICONS_INTERNET, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 116, 28, 100, 12
+    AUTOCHECKBOX "My &Documents", IDC_ICONS_MYDOCS, 14, 14, 100, 12
+    AUTOCHECKBOX "My &Network Places", IDC_ICONS_MYNET, 116, 14, 100, 12
+    AUTOCHECKBOX "&My Computer", IDC_ICONS_MYCOMP, 14, 28, 100, 12
+    AUTOCHECKBOX "&Internet Browser", IDC_ICONS_INTERNET, 116, 28, 100, 12
     CONTROL "", IDC_ICONS_LISTVIEW, "SysListView32",
             LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP | WS_HSCROLL,
             6, 60, 212, 56
