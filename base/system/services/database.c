@@ -621,9 +621,50 @@ done:
 VOID
 ScmRemoveServiceImage(PSERVICE_IMAGE pServiceImage)
 {
+    DWORD dwError;
+
     DPRINT1("ScmRemoveServiceImage() called\n");
 
-    /* FIXME: Terminate the process */
+    /*
+     * No services are running in this image anymore.
+     * Tell the service dispatcher to exit now, and wait
+     * for the process to cleanly terminate.
+     */
+// FIXME: Re-enable here and remove the L"" SERVICE_CONTROL_STOP call in rpcserver.c
+#if 0
+    dwError = ScmControlService(pServiceImage->hControlPipe,
+                                L"",
+                                SERVICE_CONTROL_STOP, // Windows: use SERVICE_STOP
+                                NULL);
+    if (dwError == ERROR_SUCCESS)
+#endif
+    {
+        dwError = WaitForSingleObject(pServiceImage->hProcess, 20000);
+        if (dwError != WAIT_OBJECT_0)
+            DPRINT1("WaitForSingleObject failed, going to kill the process.\n");
+    }
+#if 0
+    else
+    {
+        DPRINT1("ScmControlService failed, going to kill the process.\n");
+    }
+#endif
+
+    if (dwError != ERROR_SUCCESS || dwError != WAIT_OBJECT_0)
+    {
+        /* If the control or the wait failed, kill the host process
+         * (asynchronously), unless it is ourselves (case of services.exe
+         * hosting services) */
+        if (pServiceImage->hProcess != GetCurrentProcess())
+        {
+            TerminateProcess(pServiceImage->hProcess, 0);
+
+            /* Be sure the process really terminates */
+            dwError = WaitForSingleObject(pServiceImage->hProcess, 20000);
+        }
+        if (dwError != WAIT_OBJECT_0)
+            DPRINT1("WaitForSingleObject failed, the process cannot be killed.\n");
+    }
 
     /* Remove the service image from the list */
     RemoveEntryList(&pServiceImage->ImageListEntry);
