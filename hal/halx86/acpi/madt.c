@@ -17,21 +17,6 @@
 #define NDEBUG
 #include <debug.h>
 
-// See HalpParseApicTables(). Only enable this to local-debug it.
-// That needs, for example, to test-call the function later or to use the "FrLdrDbgPrint" hack.
-#if DBG && 0
-    #define DPRINT01        DPRINT1
-    #define DPRINT00        DPRINT
-#else
-#if defined(_MSC_VER)
-    #define DPRINT01        __noop
-    #define DPRINT00        __noop
-#else
-    #define DPRINT01(...)   do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
-    #define DPRINT00(...)   do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
-#endif // _MSC_VER
-#endif // DBG && 0
-
 /* GLOBALS ********************************************************************/
 
 HALP_APIC_INFO_TABLE HalpApicInfoTable;
@@ -64,59 +49,35 @@ HalpParseApicTables(
     MadtTable = HalAcpiGetTable(LoaderBlock, APIC_SIGNATURE);
     if (!MadtTable)
     {
-        DPRINT01("MADT table not found\n");
+        DPRINT("MADT table not found\n");
         return;
     }
 
     if (MadtTable->Header.Length < sizeof(*MadtTable))
     {
-        DPRINT01("Length is too short: %p, %u\n", MadtTable, MadtTable->Header.Length);
+        DPRINT("Length is too short: %p, %u\n", MadtTable, MadtTable->Header.Length);
         return;
     }
 
-    DPRINT00("MADT table: Address %08X, Flags %08X\n", MadtTable->Address, MadtTable->Flags);
+    DPRINT("MADT table: Address %08X, Flags %08X\n", MadtTable->Address, MadtTable->Flags);
 
-#if 1
-
-    // TODO: We support only legacy APIC for now
-    HalpApicInfoTable.ApicMode = HALP_APIC_MODE_LEGACY;
-    // TODO: What about 'MadtTable->Flags & ACPI_MADT_PCAT_COMPAT'?
-
-#else // TODO: Is that correct?
-
-    if ((MadtTable->Flags & ACPI_MADT_PCAT_COMPAT) == ACPI_MADT_DUAL_PIC)
-    {
-        HalpApicInfoTable.ApicMode = HALP_APIC_MODE_LEGACY;
-    }
-    else // if ((MadtTable->Flags & ACPI_MADT_PCAT_COMPAT) == ACPI_MADT_MULTIPLE_APIC)
-    {
-#if 1
-        DPRINT01("ACPI_MADT_MULTIPLE_APIC support is UNIMPLEMENTED\n");
-        return;
-#else
-        HalpApicInfoTable.ApicMode = HALP_APIC_MODE_xyz;
-#endif
-    }
-
-#endif
 
     HalpApicInfoTable.LocalApicPA = MadtTable->Address;
-
     AcpiHeader = (ACPI_SUBTABLE_HEADER *)((ULONG_PTR)MadtTable + sizeof(*MadtTable));
     TableEnd = (ULONG_PTR)MadtTable + MadtTable->Header.Length;
-    DPRINT00(" MadtTable %p, subtables %p - %p\n", MadtTable, AcpiHeader, (PVOID)TableEnd);
+    DPRINT(" MadtTable %p, subtables %p - %p\n", MadtTable, AcpiHeader, (PVOID)TableEnd);
 
     while ((ULONG_PTR)(AcpiHeader + 1) <= TableEnd)
     {
         if (AcpiHeader->Length < sizeof(*AcpiHeader))
         {
-            DPRINT01("Length is too short: %p, %u\n", AcpiHeader, AcpiHeader->Length);
+            DPRINT("Length is too short: %p, %u\n", AcpiHeader, AcpiHeader->Length);
             return;
         }
 
         if ((ULONG_PTR)AcpiHeader + AcpiHeader->Length > TableEnd)
         {
-            DPRINT01("Length mismatch: %p, %u, %p\n",
+            DPRINT("Length mismatch: %p, %u, %p\n",
                      AcpiHeader, AcpiHeader->Length, (PVOID)TableEnd);
             return;
         }
@@ -129,23 +90,23 @@ HalpParseApicTables(
 
                 if (AcpiHeader->Length != sizeof(*LocalApic))
                 {
-                    DPRINT01("Type/Length mismatch: %p, %u\n", AcpiHeader, AcpiHeader->Length);
+                    DPRINT("Type/Length mismatch: %p, %u\n", AcpiHeader, AcpiHeader->Length);
                     return;
                 }
 
-                DPRINT00(" Local Apic, Processor %lu: ProcessorId %u, Id %u, LapicFlags %08X\n",
+                DPRINT(" Local Apic, Processor %lu: ProcessorId %u, Id %u, LapicFlags %08X\n",
                          HalpApicInfoTable.ProcessorCount,
                          LocalApic->ProcessorId, LocalApic->Id, LocalApic->LapicFlags);
 
                 if (!(LocalApic->LapicFlags & (LAPIC_FLAG_ONLINE_CAPABLE | LAPIC_FLAG_ENABLED)))
                 {
-                    DPRINT00("  Ignored: unusable\n");
+                    DPRINT("  Ignored: unusable\n");
                     break;
                 }
 
                 if (HalpApicInfoTable.ProcessorCount == _countof(HalpStaticProcessorIdentity))
                 {
-                    DPRINT00("  Skipped: array is full\n");
+                    DPRINT("  Skipped: array is full\n");
                     // We assume ignoring this processor is acceptable, until proven otherwise.
                     break;
                 }
@@ -172,17 +133,17 @@ HalpParseApicTables(
 
                 if (AcpiHeader->Length != sizeof(*IoApic))
                 {
-                    DPRINT01("Type/Length mismatch: %p, %u\n", AcpiHeader, AcpiHeader->Length);
+                    DPRINT("Type/Length mismatch: %p, %u\n", AcpiHeader, AcpiHeader->Length);
                     return;
                 }
 
-                DPRINT00(" Io Apic: Id %u, Address %08X, GlobalIrqBase %08X\n",
+                DPRINT(" IoApic: Id %u, Address %08X, GlobalIrqBase %08X\n",
                          IoApic->Id, IoApic->Address, IoApic->GlobalIrqBase);
 
                 // Ensure HalpApicInfoTable.IOAPICCount consistency.
                 if (HalpApicInfoTable.IoApicPA[IoApic->Id] != 0)
                 {
-                    DPRINT01("Id duplication: %p, %u\n", IoApic, IoApic->Id);
+                    DPRINT("Id duplication: %p, %u\n", IoApic, IoApic->Id);
                     return;
                 }
 
@@ -201,41 +162,30 @@ HalpParseApicTables(
 
                 if (AcpiHeader->Length != sizeof(*InterruptOverride))
                 {
-                    DPRINT01("Type/Length mismatch: %p, %u\n", AcpiHeader, AcpiHeader->Length);
+                    DPRINT("Type/Length mismatch: %p, %u\n", AcpiHeader, AcpiHeader->Length);
                     return;
                 }
 
-                DPRINT00(" Interrupt Override: Bus %u, SourceIrq %u, GlobalIrq %08X, IntiFlags %04X / UNIMPLEMENTED\n",
+                /*
+                 * We use this information to make sure IOAPIC knows the difference between the
+                 * legacy PIC IRQs and the associated GSI with them.
+                 */
+                DPRINT1(" Interrupt Override: Bus %u, SourceIrq %u, GlobalIrq %08X, IntiFlags %04X / UNIMPLEMENTED\n",
                          InterruptOverride->Bus, InterruptOverride->SourceIrq,
                          InterruptOverride->GlobalIrq, InterruptOverride->IntiFlags);
 
                 if (InterruptOverride->Bus != 0) // 0 = ISA
                 {
-                    DPRINT01("Invalid Bus: %p, %u\n", InterruptOverride, InterruptOverride->Bus);
+                    DPRINT("Invalid Bus: %p, %u\n", InterruptOverride, InterruptOverride->Bus);
                     return;
                 }
-
-#if 1
-                // TODO: Implement it.
-#else // TODO: Is that correct?
-                if (InterruptOverride->SourceIrq > _countof(HalpPicVectorRedirect))
-                {
-                    DPRINT01("Invalid SourceIrq: %p, %u\n",
-                             InterruptOverride, InterruptOverride->SourceIrq);
-                    return;
-                }
-
-                // Note: GlobalIrq is not validated in any way (yet).
-                HalpPicVectorRedirect[InterruptOverride->SourceIrq] = InterruptOverride->GlobalIrq;
-                // TODO: What about 'InterruptOverride->IntiFlags'?
-#endif
 
                 break;
             }
             default:
             {
-                DPRINT01(" UNIMPLEMENTED: Type %u, Length %u\n",
-                         AcpiHeader->Type, AcpiHeader->Length);
+                DPRINT(" UNIMPLEMENTED: Type %u, Length %u\n",
+                       AcpiHeader->Type, AcpiHeader->Length);
                 return;
             }
         }
@@ -245,7 +195,7 @@ HalpParseApicTables(
 
     if ((ULONG_PTR)AcpiHeader != TableEnd)
     {
-        DPRINT01("Length mismatch: %p, %p, %p\n", MadtTable, AcpiHeader, (PVOID)TableEnd);
+        DPRINT("Length mismatch: %p, %p, %p\n", MadtTable, AcpiHeader, (PVOID)TableEnd);
         return;
     }
 }
