@@ -1,0 +1,23 @@
+/*
+ * PROJECT:     ReactOS msctfime.ime
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATOR:  Copyright 2024 Ethem De Santa (scropool) <oyunyumru4@gmail.com>
+ */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_OK               "Tamam"
+    IDS_CANCEL           "İptal"
+    IDS_ABORT            "&Durdur"
+    IDS_RETRY            "&Yeniden Dene"
+    IDS_IGNORE           "Y&oksay"
+    IDS_YES              "&Evet"
+    IDS_NO               "&Hayır"
+
+    IDS_ENTER            "Gir"
+    IDS_FINALIZE_STRING  "Dizeyi Sonlandır"
+    IDS_CONVERSION       "Dönüştür"
+END
