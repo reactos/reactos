@@ -83,7 +83,7 @@ BEGIN
     LTEXT "If you select a theme other than ReactOS classic, it will override the following settings, except in some older programs.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
     LTEXT "Elemente", 8, 5, 160, 50, 9//FIXME: add accel. I used "&Elemente" for the backport
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
+             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "&Masa", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP |
@@ -114,11 +114,11 @@ BEGIN
     CONTROL "&Përdorni efektin e mëposhtme tranzicionit për menutë dhe ndihmesa:",//FIXME: accelerator collision &P
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
+             CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
     CONTROL "Përdor metodën e mëposhtme për të zbutë skajet e fonts ekran:", IDC_EFFAPPEARANCE_SMOOTHING,//FIXME: add accel. I used "Pë&rdor metodën e mëposhtme për të zbutë skajet e fonts ekran" for the backport. Remember: &P is in use already.
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+             CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
     CONTROL "Përdor ikona të mëdha", IDC_EFFAPPEARANCE_LARGEICONS, "button",//FIXME: add accel. I used "Për&dor ikona të mëdha" for the backport. Keep in mind that &P is in use
             BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
     CONTROL "Shfaq hije poshte menus", IDC_EFFAPPEARANCE_SETDROPSHADOW,//FIXME: add accel. I used "&Shfaq hije poshte menus" for the backport
