@@ -27,7 +27,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Împ&rospătare\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "&Actualizare baza de date\tCtrl+F5", ID_RESETDB
+        MENUITEM "&Actualizare a bazei de date\tCtrl+F5", ID_RESETDB
     END
     POPUP "Aj&utor"
     BEGIN
@@ -178,9 +178,9 @@ BEGIN
     IDS_WELCOME_TEXT "Alegeți o categorie din stânga, apoi alegeți o aplicație pentru a o instala sau dezinstala.\nArdesa web ReactOS: "
     IDS_WELCOME_URL "https://reactos.org"
 
-    IDS_APPWIZ_TITLE "Add/Remove Programs"
-    IDS_APPWIZ_TEXT1 "Choose ""Applications"" or ""Updates"" to view the list of applications or updates installed on your system."
-    IDS_APPWIZ_TEXT2 "To remove a program or to modify its installed components, select it from the list and click on ""Uninstall"" or ""Modify""."
+    IDS_APPWIZ_TITLE "Adăugare/Eliminare de programe"
+    IDS_APPWIZ_TEXT1 "Alegeți ""Aplicații"" sau ""Actualizări"" pentru a vedea lista aplicațiilor sau a actualizărilor instalate pe sistem."
+    IDS_APPWIZ_TEXT2 "Pentru a elimina un program sau pentru a-i modifica componentele instalate, selectați-l din listă și faceți clic pe ""Dezinstalare"" sau pe ""Modificare""."
 END
 
 STRINGTABLE
@@ -247,9 +247,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DL_DIALOG_DB_DISP "Aplicații baza de date"
-    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Actualizare bază de date…"
-    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Actualizare bază de date… (Sursă neoficială)"
+    IDS_DL_DIALOG_DB_DISP "Aplicații pentru baza de date"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Actualizare a bazei de date…"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Actualizare a bazei de date… (Sursă neoficială)"
 END
 
 STRINGTABLE
@@ -261,7 +261,7 @@ BEGIN
     IDS_CMD_INVALID_OPTION "Eroare: opțiunea de linie de comandă specificată este necunoscută sau nevalidă.\n"
     IDS_CMD_FIND_RESULT_FOR "Rezultatele căutării pentru %1:\n"
     IDS_CMD_PACKAGE_NOT_FOUND "Nu se poate găsi pachetul %1.\n"
-    IDS_CMD_PACKAGE_INFO "Informații despre pachet %1:\n"
+    IDS_CMD_PACKAGE_INFO "Informații despre pachetul %1:\n"
 END
 
 STRINGTABLE
