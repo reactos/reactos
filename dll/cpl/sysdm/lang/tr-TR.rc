@@ -116,7 +116,7 @@ BEGIN
     GROUPBOX "", IDC_STATIC, 10, 69, 192, 61
     AUTOCHECKBOX "&Bu bir taşınabilir bilgisayardır", IDC_HWPPROP_PORTABLE, 17, 68, 115, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "&Dock Durumu Bilinmiyor", IDC_HWPPROP_UNKNOWN, 22, 85, 160, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Bi&lgisayar Dock İstasyonuna Yerleştirilniş", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
+    AUTORADIOBUTTON "Bi&lgisayar Dock İstasyonuna Yerleştirilmiş", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
     AUTORADIOBUTTON "Bilgi&sayar Dock İstasyonuna Yerleştirilmemiş", IDC_HWPPROP_UNDOCKED, 22, 109, 160, 10
     GROUPBOX "Donanım Profilleri Seçimi", IDC_STATIC, 10, 138, 192, 42
     AUTOCHECKBOX "&ReactOS başladığında bu profili bir seçenek olarak her zaman dahil et", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
