@@ -28,12 +28,12 @@ BEGIN
         MENUITEM "B&ară de stare", ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "Împ&rospătare\tF5", ID_REFRESH
-        MENUITEM "Pe &tot ecranul\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+        MENUITEM "E&cran complet\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
         MENUITEM "&SDI", ID_VIEW_SDI
     END
     POPUP "F&ereastră"
     BEGIN
-        MENUITEM "Fereastră &Nouă", ID_WINDOW_NEW
+        MENUITEM "Fereastră &nouă", ID_WINDOW_NEW
         MENUITEM "Aranjare în &cascadă\tShift+F5", ID_WINDOW_CASCADE
         MENUITEM "Aranjări &orizontale", ID_WINDOW_TILE_HORZ
         MENUITEM "Aranjări &verticale\tShift+F4", ID_WINDOW_TILE_VERT
