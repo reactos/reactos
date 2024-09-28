@@ -241,7 +241,7 @@ BEGIN
     IDS_DDTEST_DESCRIPTION "Acesta va porni testarea interfeței DirectDraw. Doriți să continuați?"
     IDS_DDPRIMARY_DESCRIPTION "Acest test va folosi DirectDraw pentru a desena pe suprafața principală.\Ar trebui desenate dreptunghiuri alb-negru. Doriți să continuați?"
     IDS_DDPRIMARY_RESULT "Ați văzut dreptunghiuri alb-negru?"
-    IDS_DDOFFSCREEN_DESCRIPTION "Acest test va folosi DirectDraw pentru a desena un buffer în afara ecranului. Ar trebui desenat un dreptunghi alb în mișcare. Doriți să continuați?"
+    IDS_DDOFFSCREEN_DESCRIPTION "Acest test va folosi DirectDraw pentru a desena un tampon în afara ecranului. Ar trebui desenat un dreptunghi alb în mișcare. Doriți să continuați?"
     IDS_DDOFFSCREEN_RESULT "Ați văzut dreptunghi alb în mișcare?"
     IDS_DDFULLSCREEN_DESCRIPTION "Acest test va folosi DirectDraw pentru a desena în modul ecran complet. Ar trebui desenat un dreptunghi alb în mișcare. Doriți să continuați?"
     IDS_DDFULLSCREEN_RESULT "Ați văzut dreptunghi alb în mișcare în modul ecran complet?"
