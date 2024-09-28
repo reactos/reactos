@@ -27,6 +27,12 @@
 ULONG ApicVersion;
 UCHAR HalpVectorToIndex[256];
 
+ULONG
+HalpGetCurrentProcessorHwID()
+{
+    return ApicRead(APIC_ID);
+}
+
 #ifndef _M_AMD64
 const UCHAR
 HalpIRQLtoTPR[32] =

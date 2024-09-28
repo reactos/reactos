@@ -17,6 +17,12 @@ NTAPI
 HalpEndSoftwareInterrupt(IN KIRQL OldIrql,
                          IN PKTRAP_FRAME TrapFrame);
 
+ULONG
+HalpGetCurrentProcessorHwID()
+{
+    return 0;
+}
+
 /* GLOBALS ********************************************************************/
 
 #ifndef _MINIHAL_
