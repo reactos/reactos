@@ -82,7 +82,7 @@ BEGIN
     LTEXT "Si vous sélectionnez un paramètre de boutons et de fenêtres autre que ReactOS classique, celui-ci va remplacer les paramètres suivants exception faite de certains programmes plus anciens.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
     LTEXT "Élém&ent :", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
+             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "&Taille :", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP |
@@ -113,11 +113,11 @@ BEGIN
     CONTROL "Utiliser l'effet de &transition suivant pour les menus et les info-bulles :",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
+             CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
     CONTROL "Utili&ser la méthode suivante pour lisser les bords des polices d'écran :", IDC_EFFAPPEARANCE_SMOOTHING,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+             CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
     CONTROL "&Utiliser de grandes icônes", IDC_EFFAPPEARANCE_LARGEICONS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
     CONTROL "&Afficher une ombre sous les menus", IDC_EFFAPPEARANCE_SETDROPSHADOW,
