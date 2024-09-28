@@ -338,14 +338,15 @@ DiskGetExtendedDriveParameters(
     TRACE("number of physical cylinders on drive:   %u\n", *(PULONG)&Ptr[2]);
     TRACE("number of physical heads on drive:       %u\n", *(PULONG)&Ptr[4]);
     TRACE("number of physical sectors per track:    %u\n", *(PULONG)&Ptr[6]);
-    TRACE("total number of sectors on drive:        %I64u\n", *(unsigned long long*)&Ptr[8]);
+    TRACE("total number of sectors on drive:        %I64u\n", *(PULONGLONG)&Ptr[8]);
     TRACE("bytes per sector:                        %u\n", Ptr[12]);
     if (Ptr[0] >= 0x1e)
     {
-        TRACE("EED configuration parameters:            %x:%x\n", Ptr[13], Ptr[14]);
+        // Ptr[13]: offset, Ptr[14]: segment
+        TRACE("EDD configuration parameters:            %x:%x\n", Ptr[14], Ptr[13]);
         if (Ptr[13] != 0xffff && Ptr[14] != 0xffff)
         {
-            PUCHAR SpecPtr = (PUCHAR)(ULONG_PTR)((Ptr[13] << 4) + Ptr[14]);
+            PUCHAR SpecPtr = (PUCHAR)(ULONG_PTR)((Ptr[14] << 4) + Ptr[13]);
             TRACE("SpecPtr:                                 %x\n", SpecPtr);
             TRACE("physical I/O port base address:          %x\n", *(PUSHORT)&SpecPtr[0]);
             TRACE("disk-drive control port address:         %x\n", *(PUSHORT)&SpecPtr[2]);
@@ -569,14 +570,13 @@ PcDiskReadLogicalSectorsLBA(
     RtlZeroMemory(Packet, sizeof(*Packet));
     Packet->PacketSize = sizeof(*Packet);
     Packet->Reserved = 0;
-    Packet->LBABlockCount = (USHORT)SectorCount;
-    ASSERT(Packet->LBABlockCount == SectorCount);
+    // Packet->LBABlockCount set in the loop.
     Packet->TransferBufferOffset = ((ULONG_PTR)Buffer) & 0x0F;
     Packet->TransferBufferSegment = (USHORT)(((ULONG_PTR)Buffer) >> 4);
     Packet->LBAStartBlock = SectorNumber;
 
     /*
-     * BIOS int 0x13, function 42h - IBM/MS INT 13 Extensions - EXTENDED READ
+     * BIOS Int 13h, function 42h - IBM/MS INT 13 Extensions - EXTENDED READ
      * Return:
      * CF clear if successful
      * AH = 00h
@@ -585,7 +585,7 @@ PcDiskReadLogicalSectorsLBA(
      * Disk address packet's block count field set to the
      * number of blocks successfully transferred.
      */
-    RegsIn.b.ah = 0x42;                 // Subfunction 42h
+    RegsIn.b.ah = 0x42;
     RegsIn.b.dl = DriveNumber;          // Drive number in DL (0 - floppy, 0x80 - harddisk)
     RegsIn.x.ds = BIOSCALLBUFSEGMENT;   // DS:SI -> disk address packet
     RegsIn.w.si = BIOSCALLBUFOFFSET;
@@ -593,6 +593,12 @@ PcDiskReadLogicalSectorsLBA(
     /* Retry 3 times */
     for (RetryCount = 0; RetryCount < 3; ++RetryCount)
     {
+        /* Restore the number of blocks to transfer, since it gets reset
+         * on failure with the number of blocks that were successfully
+         * transferred (and which could be zero). */
+        Packet->LBABlockCount = (USHORT)SectorCount;
+        ASSERT(Packet->LBABlockCount == SectorCount);
+
         Int386(0x13, &RegsIn, &RegsOut);
 
         /* If it worked return TRUE */

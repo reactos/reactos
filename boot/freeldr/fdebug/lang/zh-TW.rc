@@ -45,7 +45,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "關於 FreeLoader 除錯程式"
 FONT 9, "新細明體"
 BEGIN
-    CONTROL "FreeLoader 除錯程式 v1.0\nCopyright (C) 2003\n由 Brian Palmer (brianp@reactos.org) 開發", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
+    CONTROL "FreeLoader 除錯程式\nCopyright (C) 2003\n由 Brian Palmer (brianp@reactos.org) 開發", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
     DEFPUSHBUTTON "確定", IDOK, 183, 189, 44, 14, WS_GROUP
     ICON IDI_FDEBUG, IDC_STATIC, 19, 30, 20, 20
     EDITTEXT IDC_LICENSE_EDIT, 53, 63, 174, 107, ES_MULTILINE | ES_READONLY | WS_VSCROLL
