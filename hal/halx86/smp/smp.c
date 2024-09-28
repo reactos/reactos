@@ -16,7 +16,7 @@
 
 /* GLOBALS *******************************************************************/
 
-extern PPROCESSOR_IDENTITY HalpProcessorIdentity;
+extern PROCESSOR_IDENTITY HalpProcessorIdentity[MAXIMUM_PROCESSORS];
 
 /* FUNCTIONS *****************************************************************/
 

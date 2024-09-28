@@ -44,9 +44,8 @@ HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             (HalpBuildType & PRCB_BUILD_UNIPROCESSOR) ? "UP" : "SMP",
             (HalpBuildType & PRCB_BUILD_DEBUG) ? "DBG" : "REL");
 
-    /* This works as InitPhase0 happens before secondary processors are spun-up.*/
+    /* This works because InitPhase0 happens before secondary processors are spun-up */
     HalpParseApicTables(LoaderBlock);
-    HalpPrintApicTables();
 
     /* Enable clock interrupt handler */
     HalpEnableInterruptHandler(IDT_INTERNAL,

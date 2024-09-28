@@ -16,7 +16,6 @@
 
 /* GLOBALS *******************************************************************/
 
-extern PPROCESSOR_IDENTITY HalpProcessorIdentity;
 extern PHYSICAL_ADDRESS HalpLowStubPhysicalAddress;
 extern PVOID HalpLowStub;
 
@@ -26,7 +25,7 @@ extern PVOID HalpAPEntryData;
 extern PVOID HalpAPEntry32;
 extern PVOID HalpAPEntry16End;
 extern HALP_APIC_INFO_TABLE HalpApicInfoTable;
-extern PPROCESSOR_IDENTITY HalpProcessorIdentity;
+extern PROCESSOR_IDENTITY HalpProcessorIdentity[MAXIMUM_PROCESSORS];
 
 ULONG HalpStartedProcessorCount = 0;
 

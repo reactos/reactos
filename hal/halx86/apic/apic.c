@@ -28,7 +28,7 @@ ULONG ApicVersion;
 UCHAR HalpVectorToIndex[256];
 
 ULONG
-HalpGetCurrentProcessorHwID()
+HalpGetCurrentProcessorHwID(VOID)
 {
     return ApicRead(APIC_ID);
 }

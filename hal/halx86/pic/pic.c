@@ -18,7 +18,7 @@ HalpEndSoftwareInterrupt(IN KIRQL OldIrql,
                          IN PKTRAP_FRAME TrapFrame);
 
 ULONG
-HalpGetCurrentProcessorHwID()
+HalpGetCurrentProcessorHwID(VOID)
 {
     return 0;
 }

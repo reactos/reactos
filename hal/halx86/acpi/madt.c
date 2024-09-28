@@ -26,13 +26,12 @@ HALP_APIC_INFO_TABLE HalpApicInfoTable;
 #define LAPIC_FLAG_ONLINE_CAPABLE   0x00000002
 // Bits 2-31 are reserved.
 
-static PROCESSOR_IDENTITY HalpStaticProcessorIdentity[MAXIMUM_PROCESSORS];
-PPROCESSOR_IDENTITY HalpProcessorIdentity;
+PROCESSOR_IDENTITY HalpProcessorIdentity[MAXIMUM_PROCESSORS];
 
 extern ULONG HalpPicVectorRedirect[16];
 
 ULONG
-HalpGetCurrentProcessorHwID();
+HalpGetCurrentProcessorHwID(VOID);
 
 /* FUNCTIONS ******************************************************************/
 
@@ -45,17 +44,16 @@ HalpParseApicTables(
     ACPI_SUBTABLE_HEADER *AcpiHeader;
     ULONG_PTR TableEnd;
 
-    HalpProcessorIdentity = HalpStaticProcessorIdentity;
     MadtTable = HalAcpiGetTable(LoaderBlock, APIC_SIGNATURE);
     if (!MadtTable)
     {
-        DPRINT("MADT table not found\n");
+        DPRINT1("MADT table not found\n");
         return;
     }
 
     if (MadtTable->Header.Length < sizeof(*MadtTable))
     {
-        DPRINT("Length is too short: %p, %u\n", MadtTable, MadtTable->Header.Length);
+        DPRINT1("Length is too short: %p, %u\n", MadtTable, MadtTable->Header.Length);
         return;
     }
 
@@ -71,13 +69,13 @@ HalpParseApicTables(
     {
         if (AcpiHeader->Length < sizeof(*AcpiHeader))
         {
-            DPRINT("Length is too short: %p, %u\n", AcpiHeader, AcpiHeader->Length);
+            DPRINT1("Length is too short: %p, %u\n", AcpiHeader, AcpiHeader->Length);
             return;
         }
 
         if ((ULONG_PTR)AcpiHeader + AcpiHeader->Length > TableEnd)
         {
-            DPRINT("Length mismatch: %p, %u, %p\n",
+            DPRINT1("Length mismatch: %p, %u, %p\n",
                      AcpiHeader, AcpiHeader->Length, (PVOID)TableEnd);
             return;
         }
@@ -90,7 +88,7 @@ HalpParseApicTables(
 
                 if (AcpiHeader->Length != sizeof(*LocalApic))
                 {
-                    DPRINT("Type/Length mismatch: %p, %u\n", AcpiHeader, AcpiHeader->Length);
+                    DPRINT1("Type/Length mismatch: %p, %u\n", AcpiHeader, AcpiHeader->Length);
                     return;
                 }
 
@@ -104,9 +102,9 @@ HalpParseApicTables(
                     break;
                 }
 
-                if (HalpApicInfoTable.ProcessorCount == _countof(HalpStaticProcessorIdentity))
+                if (HalpApicInfoTable.ProcessorCount == MAXIMUM_PROCESSORS)
                 {
-                    DPRINT("  Skipped: array is full\n");
+                    DPRINT1("  Skipped: array is full\n");
                     // We assume ignoring this processor is acceptable, until proven otherwise.
                     break;
                 }
@@ -133,7 +131,7 @@ HalpParseApicTables(
 
                 if (AcpiHeader->Length != sizeof(*IoApic))
                 {
-                    DPRINT("Type/Length mismatch: %p, %u\n", AcpiHeader, AcpiHeader->Length);
+                    DPRINT1("Type/Length mismatch: %p, %u\n", AcpiHeader, AcpiHeader->Length);
                     return;
                 }
 
@@ -143,7 +141,7 @@ HalpParseApicTables(
                 // Ensure HalpApicInfoTable.IOAPICCount consistency.
                 if (HalpApicInfoTable.IoApicPA[IoApic->Id] != 0)
                 {
-                    DPRINT("Id duplication: %p, %u\n", IoApic, IoApic->Id);
+                    DPRINT1("Id duplication: %p, %u\n", IoApic, IoApic->Id);
                     return;
                 }
 
@@ -162,7 +160,7 @@ HalpParseApicTables(
 
                 if (AcpiHeader->Length != sizeof(*InterruptOverride))
                 {
-                    DPRINT("Type/Length mismatch: %p, %u\n", AcpiHeader, AcpiHeader->Length);
+                    DPRINT1("Type/Length mismatch: %p, %u\n", AcpiHeader, AcpiHeader->Length);
                     return;
                 }
 
@@ -176,7 +174,7 @@ HalpParseApicTables(
 
                 if (InterruptOverride->Bus != 0) // 0 = ISA
                 {
-                    DPRINT("Invalid Bus: %p, %u\n", InterruptOverride, InterruptOverride->Bus);
+                    DPRINT1("Invalid Bus: %p, %u\n", InterruptOverride, InterruptOverride->Bus);
                     return;
                 }
 
@@ -184,7 +182,7 @@ HalpParseApicTables(
             }
             default:
             {
-                DPRINT(" UNIMPLEMENTED: Type %u, Length %u\n",
+                DPRINT1(" UNIMPLEMENTED: Type %u, Length %u\n",
                        AcpiHeader->Type, AcpiHeader->Length);
                 return;
             }
@@ -198,6 +196,8 @@ HalpParseApicTables(
         DPRINT("Length mismatch: %p, %p, %p\n", MadtTable, AcpiHeader, (PVOID)TableEnd);
         return;
     }
+
+    HalpPrintApicTables();
 }
 
 VOID
