@@ -1051,8 +1051,15 @@ StartServiceCtrlDispatcherA(const SERVICE_TABLE_ENTRYA *lpServiceStartTable)
     ULONG i;
     HANDLE hPipe;
 
-    TRACE("StartServiceCtrlDispatcherA(%p)\n",
-          lpServiceStartTable);
+    TRACE("StartServiceCtrlDispatcherA(%p)\n", lpServiceStartTable);
+
+    /* If this function was already called (and thus dwActiveServiceCount
+     * set to a non-zero number of active services), fail the call */
+    if (dwActiveServiceCount)
+    {
+        SetLastError(ERROR_SERVICE_ALREADY_RUNNING);
+        return FALSE;
+    }
 
     i = 0;
     while (lpServiceStartTable[i].lpServiceProc != NULL)
@@ -1134,8 +1141,15 @@ StartServiceCtrlDispatcherW(const SERVICE_TABLE_ENTRYW *lpServiceStartTable)
     ULONG i;
     HANDLE hPipe;
 
-    TRACE("StartServiceCtrlDispatcherW(%p)\n",
-          lpServiceStartTable);
+    TRACE("StartServiceCtrlDispatcherW(%p)\n", lpServiceStartTable);
+
+    /* If this function was already called (and thus dwActiveServiceCount
+     * set to a non-zero number of active services), fail the call */
+    if (dwActiveServiceCount)
+    {
+        SetLastError(ERROR_SERVICE_ALREADY_RUNNING);
+        return FALSE;
+    }
 
     i = 0;
     while (lpServiceStartTable[i].lpServiceProc != NULL)
