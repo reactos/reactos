@@ -1802,7 +1802,7 @@ RSetServiceStatus(
             /* We can't leave without releasing the reference.
              * We also can't remove it without holding the lock. */
             ScmDereferenceService(lpService);
-            DPRINT1("Service %S has %d references after stoping\n", lpService->lpServiceName, lpService->RefCount);
+            DPRINT1("Service %S has %d references after stop\n", lpService->lpServiceName, lpService->RefCount);
         }
         else
         {
