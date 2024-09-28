@@ -79,10 +79,10 @@ RPC_SERVICE_STATUS_HANDLE_unbind(RPC_SERVICE_STATUS_HANDLE hServiceStatus,
 }
 
 
-static RPC_STATUS
+static DWORD
 ScCreateStatusBinding(VOID)
 {
-    LPWSTR pszStringBinding;
+    RPC_WSTR pszStringBinding;
     RPC_STATUS status;
 
     TRACE("ScCreateStatusBinding()\n");
@@ -96,7 +96,7 @@ ScCreateStatusBinding(VOID)
     if (status != RPC_S_OK)
     {
         ERR("RpcStringBindingCompose returned 0x%x\n", status);
-        return status;
+        goto Quit;
     }
 
     /* Set the binding handle that will be used to bind to the server. */
@@ -113,7 +113,8 @@ ScCreateStatusBinding(VOID)
         ERR("RpcStringFree returned 0x%x\n", status);
     }
 
-    return status;
+Quit:
+    return ScmRpcStatusToWinError(status);
 }
 
 
@@ -1084,20 +1085,23 @@ StartServiceCtrlDispatcherA(const SERVICE_TABLE_ENTRYA *lpServiceStartTable)
 
     /* Connect to the SCM */
     dwError = ScConnectControlPipe(&hPipe);
+    if (dwError == ERROR_SUCCESS)
+    {
+        dwError = ScCreateStatusBinding();
+        if (dwError != ERROR_SUCCESS)
+            CloseHandle(hPipe);
+    }
     if (dwError != ERROR_SUCCESS)
     {
         bRet = FALSE;
         goto done;
     }
 
-    ScCreateStatusBinding();
-
     /* Start the dispatcher loop */
     ScServiceDispatcher(hPipe);
 
-    ScDestroyStatusBinding();
-
     /* Close the connection */
+    ScDestroyStatusBinding();
     CloseHandle(hPipe);
 
 done:
@@ -1164,20 +1168,23 @@ StartServiceCtrlDispatcherW(const SERVICE_TABLE_ENTRYW *lpServiceStartTable)
 
     /* Connect to the SCM */
     dwError = ScConnectControlPipe(&hPipe);
+    if (dwError == ERROR_SUCCESS)
+    {
+        dwError = ScCreateStatusBinding();
+        if (dwError != ERROR_SUCCESS)
+            CloseHandle(hPipe);
+    }
     if (dwError != ERROR_SUCCESS)
     {
         bRet = FALSE;
         goto done;
     }
 
-    ScCreateStatusBinding();
-
     /* Start the dispatcher loop */
     ScServiceDispatcher(hPipe);
 
-    ScDestroyStatusBinding();
-
     /* Close the connection */
+    ScDestroyStatusBinding();
     CloseHandle(hPipe);
 
 done:
