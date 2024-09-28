@@ -1061,13 +1061,22 @@ StartServiceCtrlDispatcherA(const SERVICE_TABLE_ENTRYA *lpServiceStartTable)
         return FALSE;
     }
 
+    /* Count the number of active services. They must
+     * have a "valid" name and service procedure. */
     i = 0;
-    while (lpServiceStartTable[i].lpServiceProc != NULL)
+    while (lpServiceStartTable[i].lpServiceName != NULL &&
+           lpServiceStartTable[i].lpServiceProc != NULL)
     {
-        i++;
+        ++i;
     }
-
     dwActiveServiceCount = i;
+
+    /* If no active services were found, fail the call */
+    if (!dwActiveServiceCount)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     /* Allocate the service table */
     lpActiveServices = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -1151,13 +1160,22 @@ StartServiceCtrlDispatcherW(const SERVICE_TABLE_ENTRYW *lpServiceStartTable)
         return FALSE;
     }
 
+    /* Count the number of active services. They must
+     * have a "valid" name and service procedure. */
     i = 0;
-    while (lpServiceStartTable[i].lpServiceProc != NULL)
+    while (lpServiceStartTable[i].lpServiceName != NULL &&
+           lpServiceStartTable[i].lpServiceProc != NULL)
     {
-        i++;
+        ++i;
     }
-
     dwActiveServiceCount = i;
+
+    /* If no active services were found, fail the call */
+    if (!dwActiveServiceCount)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     /* Allocate the service table */
     lpActiveServices = RtlAllocateHeap(RtlGetProcessHeap(),
