@@ -281,7 +281,7 @@ Bölüm seçim listesine dönmek için Tamam'a tıklayın."
 \nKuruluma devam etmek için Tamam'a tıklayın.\
 \nKurulumdan çıkmak için İPTAL üzerine tıklayın."
 
-    IDS_ERROR_FORMATTING_PARTITION "Kurulum bölümü biçimlendiremiyor:\n %s\n"
+    IDS_ERROR_FORMATTING_PARTITION "Kurulum bölümü biçimlendiremiyor: %s\n"
 
     IDS_ERROR_COULD_NOT_CHECK "Kurulum şu anda şu şekilde biçimlendirilmiş bir bölümü kontrol edemiyor: %s.\n\
 \nKuruluma devam etmek için Tamam'a tıklayın.\
