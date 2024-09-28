@@ -39,7 +39,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Despre depanatorul FreeLoader"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Depanatorul FreeLoader v1.0\nDrept de autor (C) 2003\nde Brian Palmer (brianp@reactos.org)", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
+    CONTROL "Depanatorul FreeLoader\nDrept de autor (C) 2003\nde Brian Palmer (brianp@reactos.org)", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
     DEFPUSHBUTTON "Î&nchide", IDOK, 189, 44, 50, 14, WS_GROUP
     ICON IDI_FDEBUG, IDC_STATIC, 19, 30, 20, 20
     EDITTEXT IDC_LICENSE_EDIT, 53, 63, 174, 107, ES_MULTILINE | ES_READONLY | WS_VSCROLL
