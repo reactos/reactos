@@ -924,7 +924,7 @@ DWORD ScmDeleteService(PSERVICE lpService)
  * A running service will keep a reference for the whole time it is not SERVICE_STOPPED.
  * A service handle will also keep a reference to a service. Keeping a reference is
  * really needed so that ScmControlService can be called without keeping the database locked.
- * This means that eventually the correct order of operations to send a control message to 
+ * This means that eventually the correct order of operations to send a control message to
  * a service looks like: lock, reference, unlock, send control, lock, dereference, unlock.
  */
 DWORD
@@ -1409,8 +1409,8 @@ ScmGetBootAndSystemDriverState(VOID)
 }
 
 
-/* 
- * ScmControlService must never be called with the database lock being held 
+/*
+ * ScmControlService must never be called with the database lock being held
  * The service passed must always be referenced instead
  */
 DWORD

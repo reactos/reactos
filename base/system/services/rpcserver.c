@@ -1662,7 +1662,7 @@ ScmStopThread(PVOID pParam)
                     ARRAYSIZE(lpLogStrings),
                     lpLogStrings);
     }
-    else 
+    else
     {
         /* Log a successful service status change */
         LoadStringW(GetModuleHandle(NULL), IDS_SERVICE_STOPPED, szLogBuffer, ARRAYSIZE(szLogBuffer));
@@ -1784,7 +1784,7 @@ RSetServiceStatus(
         DWORD dwStopThreadId;
         DPRINT("Service %S, currentstate: %d, prev: %d\n", lpService->lpServiceName, lpServiceStatus->dwCurrentState, dwPreviousState);
 
-        /* 
+        /*
          * The service just changed its status to stopped.
          * Create a thread that will complete the stop sequence.
          * This thread will remove the reference that was added when the service started.
