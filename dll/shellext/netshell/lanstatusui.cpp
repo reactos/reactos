@@ -819,7 +819,34 @@ ShowStatusPropertyDialog(
         else if (pProperties->Status == NCS_MEDIA_DISCONNECTED || pProperties->Status == NCS_DISCONNECTED ||
                  pProperties->Status == NCS_HARDWARE_DISABLED)
         {
-            ShowNetConnectionProperties(pContext->pNet, pContext->hwndDlg);
+            WCHAR buffer[100];
+            
+            /* If the window is already opened, prevent it from opening again */
+            LoadStringW(netshell_hInstance, IDS_NETWORKCONNECTION, buffer, _countof(buffer));
+            HWND hWndProp = FindWindow(NULL, buffer);
+            if (hWndProp != NULL)
+            {
+                ShowWindow(hWndProp, SW_SHOWNORMAL);
+                SetForegroundWindow(hWndProp);
+            }
+            else
+            {
+                LPITEMIDLIST pidl = NULL;
+                if (SUCCEEDED(SHGetSpecialFolderLocation(NULL, CSIDL_CONNECTIONS, &pidl)))
+                {
+                    SHELLEXECUTEINFOW shExInfo = { 0 };
+                    shExInfo.cbSize = sizeof(shExInfo);
+                    shExInfo.fMask = SEE_MASK_INVOKEIDLIST;
+                    shExInfo.hwnd = NULL;
+                    shExInfo.lpVerb = L"open";
+                    shExInfo.lpIDList = pidl;
+                    shExInfo.nShow = SW_SHOWNORMAL;
+
+                    ShellExecuteExW(&shExInfo);
+
+                    ILFree(pidl);
+                }
+            }
         }
 
         NcFreeNetconProperties(pProperties);
