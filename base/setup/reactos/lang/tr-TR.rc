@@ -3,6 +3,7 @@
 2013-2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net),
 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net),
 2021 Süleyman Poyraz (zaryob [dot] dev [at] gmail [dot] com)
+2024 Mahir Gül mahirgul@gmail.com
 */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
@@ -62,9 +63,9 @@ CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
-    PUSHBUTTON "&Initialize", IDC_INITDISK, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "B&aşlat", IDC_INITDISK, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
     PUSHBUTTON "&Oluştur...", IDC_PARTCREATE, 7, 122, 50, 14
-    PUSHBUTTON "&Format", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "&Biçimlendir", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
     PUSHBUTTON "&Sil", IDC_PARTDELETE, 63, 122, 50, 14
     PUSHBUTTON "S&ürücü", IDC_DEVICEDRIVER, 174, 122, 50, 14, WS_DISABLED
     PUSHBUTTON "G&elişmiş Seçenekler...", IDC_PARTMOREOPTS, 230, 122, 80, 14
@@ -81,10 +82,10 @@ BEGIN
     CONTROL "", IDC_UPDOWN_PARTSIZE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 22, 9, 13
     LTEXT "MB", IDC_UNIT, 134, 9, 14, 9
-    AUTOCHECKBOX "&Extended partition", IDC_CHECK_MBREXTPART, 7, 22, 180, 14
+    AUTOCHECKBOX "&Genişletilmiş bölüm", IDC_CHECK_MBREXTPART, 7, 22, 180, 14
     LTEXT "&Dosya sistemi:", IDC_FS_STATIC, 7, 46, 70, 9
     COMBOBOX IDC_FSTYPE, 82, 44, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX "&Quick format", IDC_CHECK_QUICKFMT, 7, 59, 180, 14
+    AUTOCHECKBOX "&Hızlı biçimlendir", IDC_CHECK_QUICKFMT, 7, 59, 180, 14
     PUSHBUTTON "Tamam", IDOK, 88, 98, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 143, 98, 50, 14
 END
@@ -96,20 +97,20 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Dosya sistemi:", IDC_FS_STATIC, 7, 9, 70, 9
     COMBOBOX IDC_FSTYPE, 82, 7, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
-    AUTOCHECKBOX "&Quick format", IDC_CHECK_QUICKFMT, 7, 22, 180, 14
+    AUTOCHECKBOX "&Hızlı biçimlendir", IDC_CHECK_QUICKFMT, 7, 22, 180, 14
     PUSHBUTTON "Tamam", IDOK, 88, 61, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 143, 61, 50, 14
 END
 
 IDD_ADVINSTOPTS DIALOGEX 0, 0, 305, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Advanced Installation Options"
+CAPTION "Gelişmiş Kurulum Seçenekleri"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Choose the &directory where you want to install ReactOS:", IDC_STATIC, 7, 9, 291, 10
+    LTEXT "Yüklemek istediğiniz &dizinini seçin ReactOS:", IDC_STATIC, 7, 9, 291, 10
     EDITTEXT IDC_PATH, 7, 23, 291, 13
     GROUPBOX "Bootloader", IDC_STATIC, 7, 45, 291, 60
-    LTEXT "Select the location where the FreeLoader\nbootloader should be installed.\n\nBy default, it is installed on the system partition of the boot disk (and either in the Master or the Volume Boot Record for BIOS-based computers).", IDC_STATIC, 13, 57, 279, 44
+    LTEXT "FreeLoader bootloader'ın kurulması gereken konumu seçin.\nVarsayılan olarak, önyükleme diskinin sistem bölümüne kurulur.\n(BIOS tabanlı bilgisayarlar için Ana veya Birim Önyükleme Kaydına)", IDC_STATIC, 13, 57, 279, 44
     COMBOBOX IDC_INSTFREELDR, 150, 58, 142, 45, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
     DEFPUSHBUTTON "Tamam", IDOK, 193, 113, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 248, 113, 50, 14
@@ -183,7 +184,7 @@ BEGIN
     IDS_ABORTSETUP2 "Kurulum iptal edilsin mi?"
     IDS_NO_TXTSETUP_SIF """txtsetup.sif"" bulunamıyor.\nKurulum Yöneticisi sürdüremiyor."
     IDS_CAPTION "ReactOS Kur"
-    IDS_VOLUME_NOFORMAT "Not formatted"
+    IDS_VOLUME_NOFORMAT "Biçimlendirilmemiş"
 END
 
 STRINGTABLE
@@ -203,10 +204,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BOOTLOADER_NOINST "No installation"
-    IDS_BOOTLOADER_REMOVABLE "Removable media"
-    IDS_BOOTLOADER_SYSTEM "System partition (Default)"
-    IDS_BOOTLOADER_MBRVBR "MBR ve VBR (Default)"
+    IDS_BOOTLOADER_NOINST "Kurulum yok"
+    IDS_BOOTLOADER_REMOVABLE "Çıkarılabilir medya"
+    IDS_BOOTLOADER_SYSTEM "Sistem bölümü (Varsayılan)"
+    IDS_BOOTLOADER_MBRVBR "MBR ve VBR (Varsayılan)"
     IDS_BOOTLOADER_VBRONLY "Yalnızca VBR"
 END
 
@@ -214,77 +215,77 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_FORMATTING_PROGRESS1 "Formatting volume %c: (%s) in %s..."
-    IDS_FORMATTING_PROGRESS2 "Formatting volume %s in %s..."
+    IDS_FORMATTING_PROGRESS1 "Birim biçimlendiriliyor %c: (%s) in %s..."
+    IDS_FORMATTING_PROGRESS2 "Birim biçimlendiriliyor %s in %s..."
 
-    IDS_CHECKING_PROGRESS1 "Checking volume %c: (%s)..."
-    IDS_CHECKING_PROGRESS2 "Checking volume %s..."
+    IDS_CHECKING_PROGRESS1 "Birim kontrol ediliyor %c: (%s)..."
+    IDS_CHECKING_PROGRESS2 "Birim kontrol ediliyor %s..."
 
-    IDS_COPYING  "Copying %s"
-    IDS_MOVING   "Moving %s to %s"
-    IDS_RENAMING "Renaming %s to %s"
-    IDS_DELETING "Deleting %s"
+    IDS_COPYING  "Kopyalanıyor %s"
+    IDS_MOVING   "Taşınıyor %s to %s"
+    IDS_RENAMING "Yeniden Adlandırılıyor %s to %s"
+    IDS_DELETING "Siliniyor %s"
 
-    IDS_PREPARE_PARTITIONS "Preparing partitions..."
-    IDS_PREPARE_FILES "Preparing the list of files to be copied, please wait..."
-    IDS_COPYING_FILES "Copying the files..."
+    IDS_PREPARE_PARTITIONS "Bölümler hazırlanıyor..."
+    IDS_PREPARE_FILES "Kopyalanacak dosyaların listesi hazırlanıyor, lütfen bekleyin..."
+    IDS_COPYING_FILES "Dosyalar kopyalanıyor..."
 
-    IDS_CREATE_REGISTRY "Creating the registry..."
-    IDS_UPDATE_REGISTRY "Updating the registry..."
+    IDS_CREATE_REGISTRY "Kayıt defteri oluşturuluyor..."
+    IDS_UPDATE_REGISTRY "Kayıt defteri güncelleniyor..."
 END
 
 // Note to translators: please refer to the corresponding usetup/lang/*.h translations.
 STRINGTABLE
 BEGIN
-    IDS_REG_DONE "Done"
-    IDS_REG_REGHIVEUPDATE "Updating registry hives"
-    IDS_REG_IMPORTFILE "Importing %s"
-    IDS_REG_DISPLAYSETTINGSUPDATE "Updating display registry settings"
-    IDS_REG_LOCALESETTINGSUPDATE "Updating locale settings"
-    IDS_REG_ADDKBLAYOUTS "Adding keyboard layouts"
-    IDS_REG_KEYBOARDSETTINGSUPDATE "Updating keyboard layout settings"
-    IDS_REG_CODEPAGEINFOUPDATE "Adding codepage information"
-    IDS_REG_UNKNOWN "Unknown status %d"
+    IDS_REG_DONE "Tamamlandı"
+    IDS_REG_REGHIVEUPDATE "Kayıt defteri güncelleniyor"
+    IDS_REG_IMPORTFILE "İçe Alınıyor %s"
+    IDS_REG_DISPLAYSETTINGSUPDATE "Ekran kayıt defteri ayarlarını güncelleme"
+    IDS_REG_LOCALESETTINGSUPDATE "Yerel ayarların güncellenmesi"
+    IDS_REG_ADDKBLAYOUTS "Klavye düzenleri ekleme"
+    IDS_REG_KEYBOARDSETTINGSUPDATE "Klavye düzeni ayarlarını güncelleme"
+    IDS_REG_CODEPAGEINFOUPDATE "Kod sayfası bilgisi ekleme"
+    IDS_REG_UNKNOWN "Bilinmeyen durum %d"
 END
 
 /* Error Strings */
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR_INVALID_INSTALLDIR_CHAR_TITLE "Invalid character"
-    IDS_ERROR_INVALID_INSTALLDIR_CHAR "The only valid characters are:\n\
-alphanumericals (a-z, A-Z, 0-9), and\n . \\ - _\n\
-Spaces are not allowed."
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR_TITLE "Geçersiz karakter"
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR "Geçerli karakterler şunlardır:\n\
+alfanümerik (a-z, A-Z, 0-9), ve\n . \\ - _\n\
+Boşluklara izin verilmez."
 
-    IDS_ERROR_DIRECTORY_NAME_TITLE "Invalid installation path"
-    IDS_ERROR_DIRECTORY_NAME "The ReactOS installation path must follow the DOS 8.3 naming scheme, \
-and only contain letters, digits, dashes and periods. Spaces are not allowed."
+    IDS_ERROR_DIRECTORY_NAME_TITLE "Geçersiz kurulum yolu"
+    IDS_ERROR_DIRECTORY_NAME "ReactOS kurulum yolu DOS 8.3 adlandırma şemasını takip \
+etmelidir, ve yalnızca harf, rakam, tire ve nokta içerir. Boşluklara izin verilmez."
 
-    IDS_ERROR_CREATE_PARTITION_TITLE "Create partition"
-    IDS_ERROR_CREATE_PARTITION "Failed to create a new partition."
+    IDS_ERROR_CREATE_PARTITION_TITLE "Bölüm oluştur"
+    IDS_ERROR_CREATE_PARTITION "Yeni bir bölüm oluşturulamadı."
 
-    IDS_WARN_DELETE_PARTITION_TITLE "Delete partition?"
-    IDS_WARN_DELETE_PARTITION "Are you sure you want to delete the selected partition?"
-    IDS_WARN_DELETE_MBR_EXTENDED_PARTITION "Are you sure you want to delete the selected extended partition and ALL the logical partitions it contains?"
+    IDS_WARN_DELETE_PARTITION_TITLE "Bölüm sil?"
+    IDS_WARN_DELETE_PARTITION "Seçili bölümü silmek istediğinizden emin misiniz?"
+    IDS_WARN_DELETE_MBR_EXTENDED_PARTITION "Seçili genişletilmiş bölümü ve içerdiği TÜM mantıksal bölümleri silmek istediğinizden emin misiniz?"
 
-    IDS_ERROR_WRITE_PTABLE "Setup failed to write partition tables."
+    IDS_ERROR_WRITE_PTABLE "Kurulum bölüm tablolarını yazamadı."
 
-    IDS_ERROR_SYSTEM_PARTITION "The ReactOS Setup could not find a supported system partition\n\
-on your system or could not create a new one. Without such a partition\n\
-the Setup program cannot install ReactOS.\
-\nClick on OK to return to the partition selection list."
+    IDS_ERROR_SYSTEM_PARTITION "ReactOS Kurulumu sisteminizde desteklenen bir sistem bölümü bulamadı\n\
+veya yeni bir bölüm oluşturamadı. Böyle bir bölüm olmadan\n\
+Kurulum programı ReactOS'u yükleyemez.\n\
+Bölüm seçim listesine dönmek için Tamam'a tıklayın."
 
-    IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "Unrecognized volume while attempting to format the partition."
+    IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "Bölüm biçimlendirilmeye çalışılırken tanınmayan birim."
 
-    IDS_ERROR_COULD_NOT_FORMAT "Setup is currently unable to format a partition in %s.\n\
-\nClick on OK to continue Setup.\
-\nClick on CANCEL to quit Setup."
+    IDS_ERROR_COULD_NOT_FORMAT "Kurulum şu anda bir bölümü şu şekilde biçimlendiremiyor: %s.\n\
+\nKuruluma devam etmek için Tamam'a tıklayın.\
+\nKurulumdan çıkmak için İPTAL üzerine tıklayın."
 
-    IDS_ERROR_FORMATTING_PARTITION "Setup is unable to format the partition:\n %s\n"
+    IDS_ERROR_FORMATTING_PARTITION "Kurulum bölümü biçimlendiremiyor: %s\n"
 
-    IDS_ERROR_COULD_NOT_CHECK "Setup is currently unable to check a partition formatted in %s.\n\
-\nClick on OK to continue Setup.\
-\nClick on CANCEL to quit Setup."
+    IDS_ERROR_COULD_NOT_CHECK "Kurulum şu anda şu şekilde biçimlendirilmiş bir bölümü kontrol edemiyor: %s.\n\
+\nKuruluma devam etmek için Tamam'a tıklayın.\
+\nKurulumdan çıkmak için İPTAL üzerine tıklayın."
 
-    IDS_ERROR_CHECKING_PARTITION "ChkDsk detected some disk errors.\n(Status 0x%08lx)."
+    IDS_ERROR_CHECKING_PARTITION "ChkDsk bazı disk hataları algıladı.\n(Status 0x%08lx)."
 END
