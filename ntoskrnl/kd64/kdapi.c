@@ -961,7 +961,7 @@ KdpReadMachineSpecificRegister(IN PDBGKD_MANIPULATE_STATE64 State,
 {
     STRING Header;
     PDBGKD_READ_WRITE_MSR ReadMsr = &State->u.ReadWriteMsr;
-    LARGE_INTEGER MsrValue;
+    ULARGE_INTEGER MsrValue;
 
     /* Setup the header */
     Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
@@ -969,8 +969,7 @@ KdpReadMachineSpecificRegister(IN PDBGKD_MANIPULATE_STATE64 State,
     ASSERT(Data->Length == 0);
 
     /* Call the internal routine */
-    State->ReturnStatus = KdpSysReadMsr(ReadMsr->Msr,
-                                        &MsrValue);
+    State->ReturnStatus = KdpSysReadMsr(ReadMsr->Msr, &MsrValue.QuadPart);
 
     /* Return the data */
     ReadMsr->DataValueLow = MsrValue.LowPart;
@@ -991,7 +990,7 @@ KdpWriteMachineSpecificRegister(IN PDBGKD_MANIPULATE_STATE64 State,
 {
     STRING Header;
     PDBGKD_READ_WRITE_MSR WriteMsr = &State->u.ReadWriteMsr;
-    LARGE_INTEGER MsrValue;
+    ULARGE_INTEGER MsrValue;
 
     /* Setup the header */
     Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
@@ -1001,8 +1000,7 @@ KdpWriteMachineSpecificRegister(IN PDBGKD_MANIPULATE_STATE64 State,
     /* Call the internal routine */
     MsrValue.LowPart = WriteMsr->DataValueLow;
     MsrValue.HighPart = WriteMsr->DataValueHigh;
-    State->ReturnStatus = KdpSysWriteMsr(WriteMsr->Msr,
-                                         &MsrValue);
+    State->ReturnStatus = KdpSysWriteMsr(WriteMsr->Msr, &MsrValue.QuadPart);
 
     /* Send the reply */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
@@ -1062,7 +1060,6 @@ KdpSetBusData(IN PDBGKD_MANIPULATE_STATE64 State,
 {
     STRING Header;
     PDBGKD_GET_SET_BUS_DATA SetBusData = &State->u.GetSetBusData;
-    ULONG Length;
 
     /* Setup the header */
     Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
@@ -1075,10 +1072,7 @@ KdpSetBusData(IN PDBGKD_MANIPULATE_STATE64 State,
                                              SetBusData->Offset,
                                              Data->Buffer,
                                              SetBusData->Length,
-                                             &Length);
-
-    /* Return the actual length written */
-    SetBusData->Length = Length;
+                                             &SetBusData->Length);
 
     /* Send the reply */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
@@ -1926,7 +1920,7 @@ KdEnterDebugger(IN PKTRAP_FRAME TrapFrame,
     /* Freeze all CPUs, raising also the IRQL to HIGH_LEVEL */
     Enable = KeFreezeExecution(TrapFrame, ExceptionFrame);
 
-    /* Lock the port, save the state and set debugger entered */
+    /* Lock the port, save its state and set the debugger entered flag */
     KdpPortLocked = KeTryToAcquireSpinLockAtDpcLevel(&KdpDebuggerLock);
     KdSave(FALSE);
     KdEnteredDebugger = TRUE;

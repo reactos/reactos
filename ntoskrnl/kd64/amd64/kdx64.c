@@ -95,12 +95,12 @@ NTSTATUS
 NTAPI
 KdpSysReadMsr(
     _In_ ULONG Msr,
-    _Out_ PLARGE_INTEGER MsrValue)
+    _Out_ PULONGLONG MsrValue)
 {
     /* Use SEH to protect from invalid MSRs */
     _SEH2_TRY
     {
-        MsrValue->QuadPart = __readmsr(Msr);
+        *MsrValue = __readmsr(Msr);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -115,12 +115,12 @@ NTSTATUS
 NTAPI
 KdpSysWriteMsr(
     _In_ ULONG Msr,
-    _In_ PLARGE_INTEGER MsrValue)
+    _In_ PULONGLONG MsrValue)
 {
     /* Use SEH to protect from invalid MSRs */
     _SEH2_TRY
     {
-        __writemsr(Msr, MsrValue->QuadPart);
+        __writemsr(Msr, *MsrValue);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {

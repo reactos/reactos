@@ -401,13 +401,13 @@ NTSTATUS
 NTAPI
 KdpSysReadMsr(
     _In_ ULONG Msr,
-    _Out_ PLARGE_INTEGER MsrValue);
+    _Out_ PULONGLONG MsrValue);
 
 NTSTATUS
 NTAPI
 KdpSysWriteMsr(
     _In_ ULONG Msr,
-    _In_ PLARGE_INTEGER MsrValue);
+    _In_ PULONGLONG MsrValue);
 
 //
 // Bus
