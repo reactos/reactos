@@ -47,6 +47,11 @@ if(MSVC AND ARCH STREQUAL "amd64")
     target_compile_options(comctl32_winetest PRIVATE /wd4334)
 endif()
 
+if(MSVC)
+    #  warning C4045: 'large_truncated_80_w': array bounds overflow
+    target_compile_options(comctl32_winetest PRIVATE /wd4045)
+endif()
+
 target_compile_options(comctl32_winetest PRIVATE $<$<NOT:$<C_COMPILER_ID:MSVC>>:-Wno-format>)
 
 set_module_type(comctl32_winetest win32cui)
