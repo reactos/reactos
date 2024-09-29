@@ -91,11 +91,13 @@ typedef enum _SYSDBG_COMMAND
     SysDbgGetTriageDump = 29,
     SysDbgGetKdBlockEnable = 30,
     SysDbgSetKdBlockEnable = 31,
+#if (NTDDI_VERSION >= NTDDI_VISTA)
     SysDbgRegisterForUmBreakInfo = 32,
     SysDbgGetUmBreakPid = 33,
     SysDbgClearUmBreakPid = 34,
     SysDbgGetUmAttachPid = 35,
     SysDbgClearUmAttachPid = 36,
+#endif
 } SYSDBG_COMMAND;
 
 //
