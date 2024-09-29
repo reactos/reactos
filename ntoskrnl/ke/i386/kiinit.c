@@ -384,7 +384,7 @@ KiVerifyCpuFeatures(PKPRCB Prcb)
         KeBugCheckEx(UNSUPPORTED_PROCESSOR, 0x386, 0, 0, 0);
 
     // 3. Finally, obtain CPU features.
-    ULONG FeatureBits = KiGetFeatureBits();
+    ULONG64 FeatureBits = KiGetFeatureBits();
 
     // 4. Verify it supports everything we need.
     if (!(FeatureBits & KF_RDTSC))
@@ -423,7 +423,8 @@ KiVerifyCpuFeatures(PKPRCB Prcb)
     }
 
     // 5. Save feature bits.
-    Prcb->FeatureBits = FeatureBits;
+    Prcb->FeatureBits = (ULONG)FeatureBits;
+    Prcb->FeatureBitsHigh = FeatureBits >> 32;
 }
 
 CODE_SEG("INIT")
@@ -445,7 +446,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 
     /* Set boot-level flags */
     if (Number == 0)
-        KeFeatureBits = Prcb->FeatureBits;
+        KeFeatureBits = Prcb->FeatureBits | (ULONG64)Prcb->FeatureBitsHigh << 32;
 
     /* Set the default NX policy (opt-in) */
     SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_OPTIN;
