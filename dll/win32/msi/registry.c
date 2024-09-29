@@ -251,7 +251,7 @@ LPWSTR msi_reg_get_val_str( HKEY hkey, LPCWSTR name )
         return NULL;
 
     len += sizeof (WCHAR);
-    val = msi_alloc( len );
+    val = malloc( len );
     if (!val)
         return NULL;
     val[0] = 0;
@@ -274,15 +274,15 @@ static WCHAR *get_user_sid(void)
     WCHAR *ret;
 
     if (!OpenProcessToken( GetCurrentProcess(), TOKEN_QUERY, &token )) return NULL;
-    if (!(user = msi_alloc( size )))
+    if (!(user = malloc( size )))
     {
         CloseHandle( token );
         return NULL;
     }
     if (!GetTokenInformation( token, TokenUser, user, size, &size ))
     {
-        msi_free( user );
-        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER || !(user = msi_alloc( size )))
+        free( user );
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER || !(user = malloc( size )))
         {
             CloseHandle( token );
             return NULL;
@@ -292,10 +292,10 @@ static WCHAR *get_user_sid(void)
     CloseHandle( token );
     if (!ConvertSidToStringSidW( user->User.Sid, &ret ))
     {
-        msi_free( user );
+        free( user );
         return NULL;
     }
-    msi_free( user );
+    free( user );
     return ret;
 }
 
@@ -1016,7 +1016,7 @@ UINT WINAPI MsiDecomposeDescriptorA( LPCSTR szDescriptor, LPSTR szProduct,
                              szComponent, MAX_FEATURE_CHARS+1, NULL, NULL );
     }
 
-    msi_free( str );
+    free( str );
 
     return r;
 }
@@ -1070,7 +1070,7 @@ UINT WINAPI MsiEnumFeaturesA( const char *szProduct, DWORD index, char *szFeatur
         WideCharToMultiByte(CP_ACP, 0, szwParent, -1, szParent, GUID_SIZE, NULL, NULL);
     }
 
-    msi_free( szwProduct);
+    free(szwProduct);
 
     return r;
 }
@@ -1132,9 +1132,9 @@ UINT WINAPI MsiEnumComponentsExA( const char *user_sid, DWORD ctx, DWORD index, 
 
     if (sid && !sid_len) return ERROR_INVALID_PARAMETER;
     if (user_sid && !(user_sidW = strdupAtoW( user_sid ))) return ERROR_OUTOFMEMORY;
-    if (sid && !(sidW = msi_alloc( *sid_len * sizeof(WCHAR) )))
+    if (sid && !(sidW = malloc( *sid_len * sizeof(WCHAR) )))
     {
-        msi_free( user_sidW );
+        free( user_sidW );
         return ERROR_OUTOFMEMORY;
     }
     r = MsiEnumComponentsExW( user_sidW, ctx, index, guidW, installed_ctx, sidW, sid_len );
@@ -1143,8 +1143,8 @@ UINT WINAPI MsiEnumComponentsExA( const char *user_sid, DWORD ctx, DWORD index, 
         if (guid) WideCharToMultiByte( CP_ACP, 0, guidW, GUID_SIZE, guid, GUID_SIZE, NULL, NULL );
         if (sid) WideCharToMultiByte( CP_ACP, 0, sidW, *sid_len + 1, sid, *sid_len + 1, NULL, NULL );
     }
-    msi_free( user_sidW );
-    msi_free( sidW );
+    free( user_sidW );
+    free( sidW );
     return r;
 }
 
@@ -1347,7 +1347,7 @@ UINT WINAPI MsiEnumClientsA( const char *szComponent, DWORD index, char *szProdu
     if( r == ERROR_SUCCESS )
         WideCharToMultiByte(CP_ACP, 0, szwProduct, -1, szProduct, GUID_SIZE, NULL, NULL);
 
-    msi_free( szwComponent);
+    free(szwComponent);
 
     return r;
 }
@@ -1429,13 +1429,13 @@ static UINT MSI_EnumComponentQualifiers( const WCHAR *szComponent, DWORD iIndex,
     /* figure out how big the name is we want to return */
     name_max = 0x10;
     r = ERROR_OUTOFMEMORY;
-    name = msi_alloc( name_max * sizeof(WCHAR) );
+    name = malloc( name_max * sizeof(WCHAR) );
     if (!name)
         goto end;
 
     val_max = 0x10;
     r = ERROR_OUTOFMEMORY;
-    val = msi_alloc( val_max );
+    val = malloc( val_max );
     if (!val)
         goto end;
 
@@ -1460,8 +1460,8 @@ static UINT MSI_EnumComponentQualifiers( const WCHAR *szComponent, DWORD iIndex,
         if (name_sz + 1 >= name_max)
         {
             name_max *= 2;
-            msi_free( name );
-            name = msi_alloc( name_max * sizeof (WCHAR) );
+            free( name );
+            name = malloc( name_max * sizeof (WCHAR) );
             if (!name)
                 goto end;
             continue;
@@ -1469,8 +1469,8 @@ static UINT MSI_EnumComponentQualifiers( const WCHAR *szComponent, DWORD iIndex,
         if (val_sz > val_max)
         {
             val_max = val_sz + sizeof (WCHAR);
-            msi_free( val );
-            val = msi_alloc( val_max * sizeof (WCHAR) );
+            free( val );
+            val = malloc( val_max * sizeof (WCHAR) );
             if (!val)
                 goto end;
             continue;
@@ -1493,8 +1493,8 @@ static UINT MSI_EnumComponentQualifiers( const WCHAR *szComponent, DWORD iIndex,
         r = r2;
 
 end:
-    msi_free(val);
-    msi_free(name);
+    free(val);
+    free(name);
     RegCloseKey(key);
     return r;
 }
@@ -1525,7 +1525,7 @@ UINT WINAPI MsiEnumComponentQualifiersA( const char *szComponent, DWORD iIndex, 
 
     r = MSI_EnumComponentQualifiers( comp, iIndex,
               &qual, pcchQualifierBuf, &appdata, pcchApplicationDataBuf );
-    msi_free( comp );
+    free( comp );
     return r;
 }
 
@@ -1608,7 +1608,7 @@ UINT WINAPI MsiEnumRelatedProductsA( const char *szUpgradeCode, DWORD dwReserved
         WideCharToMultiByte( CP_ACP, 0, productW, GUID_SIZE,
                              lpProductBuf, GUID_SIZE, NULL, NULL );
     }
-    msi_free( szwUpgradeCode);
+    free( szwUpgradeCode );
     return r;
 }
 
@@ -1654,7 +1654,7 @@ UINT WINAPI MsiEnumPatchesExA( const char *szProductCode, const char *szUserSid,
         goto done;
     }
 
-    targsid = msi_alloc(++len * sizeof(WCHAR));
+    targsid = malloc(++len * sizeof(WCHAR));
     if (!targsid)
     {
         r = ERROR_OUTOFMEMORY;
@@ -1680,16 +1680,15 @@ UINT WINAPI MsiEnumPatchesExA( const char *szProductCode, const char *szUserSid,
         *pcchTargetUserSid = len;
 
 done:
-    msi_free(prodcode);
-    msi_free(usersid);
-    msi_free(targsid);
+    free(prodcode);
+    free(usersid);
+    free(targsid);
 
     return r;
 }
 
-static UINT msi_get_patch_state(LPCWSTR prodcode, LPCWSTR usersid,
-                                MSIINSTALLCONTEXT context,
-                                LPWSTR patch, MSIPATCHSTATE *state)
+static UINT get_patch_state(const WCHAR *prodcode, const WCHAR *usersid, MSIINSTALLCONTEXT context,
+                            WCHAR *patch, MSIPATCHSTATE *state)
 {
     DWORD type, val, size;
     HKEY prod, hkey = 0;
@@ -1732,10 +1731,9 @@ done:
     return r;
 }
 
-static UINT msi_check_product_patches(LPCWSTR prodcode, LPCWSTR usersid,
-        MSIINSTALLCONTEXT context, DWORD filter, DWORD index, DWORD *idx,
-        LPWSTR patch, LPWSTR targetprod, MSIINSTALLCONTEXT *targetctx,
-        LPWSTR targetsid, DWORD *sidsize, LPWSTR *transforms)
+static UINT check_product_patches(const WCHAR *prodcode, const WCHAR *usersid, MSIINSTALLCONTEXT context,
+                                  DWORD filter, DWORD index, DWORD *idx, WCHAR *patch, WCHAR *targetprod,
+                                  MSIINSTALLCONTEXT *targetctx, WCHAR *targetsid, DWORD *sidsize, WCHAR **transforms)
 {
     MSIPATCHSTATE state = MSIPATCHSTATE_INVALID;
     LPWSTR ptr, patches = NULL;
@@ -1761,7 +1759,7 @@ static UINT msi_check_product_patches(LPCWSTR prodcode, LPCWSTR usersid,
         goto done;
     }
 
-    patches = msi_alloc(size);
+    patches = malloc(size);
     if (!patches)
     {
         r = ERROR_OUTOFMEMORY;
@@ -1789,7 +1787,7 @@ static UINT msi_check_product_patches(LPCWSTR prodcode, LPCWSTR usersid,
 
         if (transforms)
         {
-            *transforms = msi_alloc(size);
+            *transforms = malloc(size);
             if (!*transforms)
             {
                 r = ERROR_OUTOFMEMORY;
@@ -1806,8 +1804,7 @@ static UINT msi_check_product_patches(LPCWSTR prodcode, LPCWSTR usersid,
         {
             if (!(filter & MSIPATCHSTATE_APPLIED))
             {
-                temp = msi_get_patch_state(prodcode, usersid, context,
-                                           ptr, &state);
+                temp = get_patch_state(prodcode, usersid, context, ptr, &state);
                 if (temp == ERROR_BAD_CONFIGURATION)
                 {
                     r = ERROR_BAD_CONFIGURATION;
@@ -1822,8 +1819,7 @@ static UINT msi_check_product_patches(LPCWSTR prodcode, LPCWSTR usersid,
         {
             if (!(filter & MSIPATCHSTATE_APPLIED))
             {
-                temp = msi_get_patch_state(prodcode, usersid, context,
-                                           ptr, &state);
+                temp = get_patch_state(prodcode, usersid, context, ptr, &state);
                 if (temp == ERROR_BAD_CONFIGURATION)
                 {
                     r = ERROR_BAD_CONFIGURATION;
@@ -1896,16 +1892,15 @@ static UINT msi_check_product_patches(LPCWSTR prodcode, LPCWSTR usersid,
 
 done:
     RegCloseKey(prod);
-    msi_free(patches);
+    free(patches);
 
     return r;
 }
 
-static UINT msi_enum_patches(LPCWSTR szProductCode, LPCWSTR szUserSid,
-        DWORD dwContext, DWORD dwFilter, DWORD dwIndex, DWORD *idx,
-        LPWSTR szPatchCode, LPWSTR szTargetProductCode,
-        MSIINSTALLCONTEXT *pdwTargetProductContext, LPWSTR szTargetUserSid,
-        LPDWORD pcchTargetUserSid, LPWSTR *szTransforms)
+static UINT enum_patches(const WCHAR *szProductCode, const WCHAR *szUserSid, DWORD dwContext, DWORD dwFilter,
+                         DWORD dwIndex, DWORD *idx, WCHAR *szPatchCode, WCHAR *szTargetProductCode,
+                         MSIINSTALLCONTEXT *pdwTargetProductContext, WCHAR *szTargetUserSid, DWORD *pcchTargetUserSid,
+                         WCHAR **szTransforms)
 {
     LPWSTR usersid = NULL;
     UINT r = ERROR_INVALID_PARAMETER;
@@ -1918,36 +1913,27 @@ static UINT msi_enum_patches(LPCWSTR szProductCode, LPCWSTR szUserSid,
 
     if (dwContext & MSIINSTALLCONTEXT_USERMANAGED)
     {
-        r = msi_check_product_patches(szProductCode, szUserSid,
-                                      MSIINSTALLCONTEXT_USERMANAGED, dwFilter,
-                                      dwIndex, idx, szPatchCode,
-                                      szTargetProductCode,
-                                      pdwTargetProductContext, szTargetUserSid,
-                                      pcchTargetUserSid, szTransforms);
+        r = check_product_patches(szProductCode, szUserSid, MSIINSTALLCONTEXT_USERMANAGED, dwFilter, dwIndex, idx,
+                                  szPatchCode, szTargetProductCode, pdwTargetProductContext, szTargetUserSid,
+                                  pcchTargetUserSid, szTransforms);
         if (r != ERROR_NO_MORE_ITEMS)
             goto done;
     }
 
     if (dwContext & MSIINSTALLCONTEXT_USERUNMANAGED)
     {
-        r = msi_check_product_patches(szProductCode, szUserSid,
-                                      MSIINSTALLCONTEXT_USERUNMANAGED, dwFilter,
-                                      dwIndex, idx, szPatchCode,
-                                      szTargetProductCode,
-                                      pdwTargetProductContext, szTargetUserSid,
-                                      pcchTargetUserSid, szTransforms);
+        r = check_product_patches(szProductCode, szUserSid, MSIINSTALLCONTEXT_USERUNMANAGED, dwFilter, dwIndex, idx,
+                                  szPatchCode, szTargetProductCode, pdwTargetProductContext, szTargetUserSid,
+                                  pcchTargetUserSid, szTransforms);
         if (r != ERROR_NO_MORE_ITEMS)
             goto done;
     }
 
     if (dwContext & MSIINSTALLCONTEXT_MACHINE)
     {
-        r = msi_check_product_patches(szProductCode, szUserSid,
-                                      MSIINSTALLCONTEXT_MACHINE, dwFilter,
-                                      dwIndex, idx, szPatchCode,
-                                      szTargetProductCode,
-                                      pdwTargetProductContext, szTargetUserSid,
-                                      pcchTargetUserSid, szTransforms);
+        r = check_product_patches(szProductCode, szUserSid, MSIINSTALLCONTEXT_MACHINE, dwFilter, dwIndex, idx,
+                                  szPatchCode, szTargetProductCode, pdwTargetProductContext, szTargetUserSid,
+                                  pcchTargetUserSid, szTransforms);
         if (r != ERROR_NO_MORE_ITEMS)
             goto done;
     }
@@ -1997,10 +1983,8 @@ UINT WINAPI MsiEnumPatchesExW( const WCHAR *szProductCode, const WCHAR *szUserSi
     if (dwIndex == 0)
         last_index = 0;
 
-    r = msi_enum_patches(szProductCode, szUserSid, dwContext, dwFilter,
-                         dwIndex, &idx, szPatchCode, szTargetProductCode,
-                         pdwTargetProductContext, szTargetUserSid,
-                         pcchTargetUserSid, NULL);
+    r = enum_patches(szProductCode, szUserSid, dwContext, dwFilter, dwIndex, &idx, szPatchCode, szTargetProductCode,
+                     pdwTargetProductContext, szTargetUserSid, pcchTargetUserSid, NULL);
 
     if (r == ERROR_SUCCESS)
         last_index = dwIndex;
@@ -2031,7 +2015,7 @@ UINT WINAPI MsiEnumPatchesA( const char *szProduct, DWORD iPatchIndex, char *lpP
         return ERROR_OUTOFMEMORY;
 
     len = *pcchTransformsBuf;
-    transforms = msi_alloc( len * sizeof(WCHAR) );
+    transforms = malloc(len * sizeof(WCHAR));
     if (!transforms)
     {
         r = ERROR_OUTOFMEMORY;
@@ -2058,8 +2042,8 @@ UINT WINAPI MsiEnumPatchesA( const char *szProduct, DWORD iPatchIndex, char *lpP
         *pcchTransformsBuf = strlen( lpTransformsBuf );
 
 done:
-    msi_free(transforms);
-    msi_free(product);
+    free(transforms);
+    free(product);
 
     return r;
 }
@@ -2094,9 +2078,8 @@ UINT WINAPI MsiEnumPatchesW( const WCHAR *szProduct, DWORD iPatchIndex, WCHAR *l
 
     RegCloseKey(prod);
 
-    r = msi_enum_patches(szProduct, NULL, MSIINSTALLCONTEXT_ALL,
-                         MSIPATCHSTATE_ALL, iPatchIndex, &idx, lpPatchBuf,
-                         NULL, NULL, NULL, NULL, &transforms);
+    r = enum_patches(szProduct, NULL, MSIINSTALLCONTEXT_ALL, MSIPATCHSTATE_ALL, iPatchIndex, &idx, lpPatchBuf, NULL,
+                     NULL, NULL, NULL, &transforms);
     if (r != ERROR_SUCCESS)
         goto done;
 
@@ -2110,7 +2093,7 @@ UINT WINAPI MsiEnumPatchesW( const WCHAR *szProduct, DWORD iPatchIndex, WCHAR *l
         *pcchTransformsBuf = lstrlenW(transforms);
 
 done:
-    msi_free(transforms);
+    free(transforms);
     return r;
 }
 
@@ -2128,13 +2111,13 @@ UINT WINAPI MsiEnumProductsExA( const char *product, const char *usersid, DWORD 
     if (product && !(productW = strdupAtoW( product ))) return ERROR_OUTOFMEMORY;
     if (usersid && !(usersidW = strdupAtoW( usersid )))
     {
-        msi_free( productW );
+        free( productW );
         return ERROR_OUTOFMEMORY;
     }
-    if (sid && !(sidW = msi_alloc( *sid_len * sizeof(WCHAR) )))
+    if (sid && !(sidW = malloc( *sid_len * sizeof(WCHAR) )))
     {
-        msi_free( usersidW );
-        msi_free( productW );
+        free( usersidW );
+        free( productW );
         return ERROR_OUTOFMEMORY;
     }
     r = MsiEnumProductsExW( productW, usersidW, ctx, index, installed_productW,
@@ -2145,9 +2128,9 @@ UINT WINAPI MsiEnumProductsExA( const char *product, const char *usersid, DWORD 
                                                     installed_product, GUID_SIZE, NULL, NULL );
         if (sid) WideCharToMultiByte( CP_ACP, 0, sidW, *sid_len + 1, sid, *sid_len + 1, NULL, NULL );
     }
-    msi_free( productW );
-    msi_free( usersidW );
-    msi_free( sidW );
+    free( productW );
+    free( usersidW );
+    free( sidW );
     return r;
 }
 

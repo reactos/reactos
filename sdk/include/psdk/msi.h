@@ -838,6 +838,10 @@ MsiGetComponentPathW(
 
 #define MsiGetComponentPath WINELIB_NAME_AW(MsiGetComponentPath)
 
+INSTALLSTATE WINAPI MsiGetComponentPathExA(LPCSTR, LPCSTR, LPCSTR, MSIINSTALLCONTEXT, LPSTR, LPDWORD);
+INSTALLSTATE WINAPI MsiGetComponentPathExW(LPCWSTR, LPCWSTR, LPCWSTR, MSIINSTALLCONTEXT, LPWSTR, LPDWORD);
+#define MsiGetComponentPathEx WINELIB_NAME_AW(MsiGetComponentPathEx)
+
 INSTALLSTATE WINAPI MsiQueryFeatureStateA(_In_ LPCSTR, _In_ LPCSTR);
 INSTALLSTATE WINAPI MsiQueryFeatureStateW(_In_ LPCWSTR, _In_ LPCWSTR);
 #define MsiQueryFeatureState WINELIB_NAME_AW(MsiQueryFeatureState)
@@ -1060,7 +1064,7 @@ MsiGetUserInfoW(
 
 #define MsiGetUserInfo WINELIB_NAME_AW(MsiGetUserInfo)
 
-UINT WINAPI MsiProvidedComponentA(LPCSTR, LPCSTR, LPCSTR, DWORD, LPSTR, LPDWORD);
+UINT WINAPI MsiProvideComponentA(LPCSTR, LPCSTR, LPCSTR, DWORD, LPSTR, LPDWORD);
 UINT WINAPI MsiProvideComponentW(LPCWSTR, LPCWSTR, LPCWSTR, DWORD, LPWSTR, LPDWORD);
 #define MsiProvideComponent WINELIB_NAME_AW(MsiProvideComponent)
 

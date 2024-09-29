@@ -38,17 +38,17 @@ WINE_DEFAULT_DEBUG_CHANNEL(msidb);
 
 /* below is the query interface to a table */
 
-typedef struct tagMSIUPDATEVIEW
+struct update_view
 {
     MSIVIEW          view;
     MSIDATABASE     *db;
     MSIVIEW         *wv;
     column_info     *vals;
-} MSIUPDATEVIEW;
+};
 
 static UINT UPDATE_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT *val )
 {
-    MSIUPDATEVIEW *uv = (MSIUPDATEVIEW*)view;
+    struct update_view *uv = (struct update_view *)view;
 
     TRACE("%p %d %d %p\n", uv, row, col, val );
 
@@ -57,7 +57,7 @@ static UINT UPDATE_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT 
 
 static UINT UPDATE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
 {
-    MSIUPDATEVIEW *uv = (MSIUPDATEVIEW*)view;
+    struct update_view *uv = (struct update_view *)view;
     UINT i, r, col_count = 0, row_count = 0;
     MSIRECORD *values = NULL;
     MSIRECORD *where = NULL;
@@ -128,7 +128,7 @@ done:
 
 static UINT UPDATE_close( struct tagMSIVIEW *view )
 {
-    MSIUPDATEVIEW *uv = (MSIUPDATEVIEW*)view;
+    struct update_view *uv = (struct update_view *)view;
     MSIVIEW *wv;
 
     TRACE("%p\n", uv);
@@ -142,7 +142,7 @@ static UINT UPDATE_close( struct tagMSIVIEW *view )
 
 static UINT UPDATE_get_dimensions( struct tagMSIVIEW *view, UINT *rows, UINT *cols )
 {
-    MSIUPDATEVIEW *uv = (MSIUPDATEVIEW*)view;
+    struct update_view *uv = (struct update_view *)view;
     MSIVIEW *wv;
 
     TRACE("%p %p %p\n", uv, rows, cols );
@@ -157,7 +157,7 @@ static UINT UPDATE_get_dimensions( struct tagMSIVIEW *view, UINT *rows, UINT *co
 static UINT UPDATE_get_column_info( struct tagMSIVIEW *view, UINT n, LPCWSTR *name,
                                     UINT *type, BOOL *temporary, LPCWSTR *table_name )
 {
-    MSIUPDATEVIEW *uv = (MSIUPDATEVIEW*)view;
+    struct update_view *uv = (struct update_view *)view;
     MSIVIEW *wv;
 
     TRACE("%p %d %p %p %p %p\n", uv, n, name, type, temporary, table_name );
@@ -172,7 +172,7 @@ static UINT UPDATE_get_column_info( struct tagMSIVIEW *view, UINT n, LPCWSTR *na
 static UINT UPDATE_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,
                            MSIRECORD *rec, UINT row )
 {
-    MSIUPDATEVIEW *uv = (MSIUPDATEVIEW*)view;
+    struct update_view *uv = (struct update_view *)view;
 
     TRACE("%p %d %p\n", uv, eModifyMode, rec );
 
@@ -181,7 +181,7 @@ static UINT UPDATE_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,
 
 static UINT UPDATE_delete( struct tagMSIVIEW *view )
 {
-    MSIUPDATEVIEW *uv = (MSIUPDATEVIEW*)view;
+    struct update_view *uv = (struct update_view *)view;
     MSIVIEW *wv;
 
     TRACE("%p\n", uv );
@@ -190,7 +190,7 @@ static UINT UPDATE_delete( struct tagMSIVIEW *view )
     if( wv )
         wv->ops->delete( wv );
     msiobj_release( &uv->db->hdr );
-    msi_free( uv );
+    free( uv );
 
     return ERROR_SUCCESS;
 }
@@ -220,7 +220,7 @@ static const MSIVIEWOPS update_ops =
 UINT UPDATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
                         column_info *columns, struct expr *expr )
 {
-    MSIUPDATEVIEW *uv = NULL;
+    struct update_view *uv = NULL;
     UINT r;
     MSIVIEW *sv = NULL, *wv = NULL;
 
@@ -242,7 +242,7 @@ UINT UPDATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
         return r;
     }
 
-    uv = msi_alloc_zero( sizeof *uv );
+    uv = calloc( 1, sizeof *uv );
     if( !uv )
     {
         wv->ops->delete( wv );
