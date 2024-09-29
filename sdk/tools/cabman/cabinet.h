@@ -36,10 +36,15 @@
 #define C_ASSERT(expr) extern char (*c_assert(void)) [(expr) ? 1 : -1]
 #endif
 
+#ifndef _countof
+#define _countof(_Array) (sizeof(_Array) / sizeof(_Array[0]))
+#endif
+
 #if defined(_WIN32)
 #define DIR_SEPARATOR_CHAR '\\'
 #define DIR_SEPARATOR_STRING "\\"
 
+#define snprintf _snprintf
 #define strcasecmp _stricmp
 #define strdup _strdup
 #else
