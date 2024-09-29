@@ -462,7 +462,7 @@ NTAPI
 KiSetProcessorType(VOID);
 
 CODE_SEG("INIT")
-ULONG
+ULONG64
 NTAPI
 KiGetFeatureBits(VOID);
 

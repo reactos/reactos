@@ -19,7 +19,7 @@
 USHORT KeProcessorArchitecture;
 USHORT KeProcessorLevel;
 USHORT KeProcessorRevision;
-ULONG KeFeatureBits;
+ULONG64 KeFeatureBits;
 
 /* System call count */
 ULONG KiServiceLimit = NUMBER_OF_SYSCALLS;

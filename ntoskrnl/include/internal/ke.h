@@ -103,7 +103,7 @@ extern BOOLEAN ExCmosClockIsSane;
 extern USHORT KeProcessorArchitecture;
 extern USHORT KeProcessorLevel;
 extern USHORT KeProcessorRevision;
-extern ULONG KeFeatureBits;
+extern ULONG64 KeFeatureBits;
 extern KNODE KiNode0;
 extern PKNODE KeNodeBlock[1];
 extern UCHAR KeNumberNodes;
