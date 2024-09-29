@@ -220,7 +220,7 @@ CmpRemoveSubkeyInRoot(
                     HvReleaseCell(Hive, LeafCell);
                     HvMarkCellDirty(Hive, LeafCell, FALSE);
                     CmpRemoveFastIndexKeyCell(FastIndex, LeafCountIndex, TRUE);
-                    DPRINT1("The offending key cell has BEEN FOUND in fast index (fast index 0x%p, index %lu)\n",
+                    DPRINT1("The offending key cell has BEEN FOUND in fast index (fast index 0x%p, index %u)\n",
                             FastIndex, LeafCountIndex);
                     return TRUE;
                 }
@@ -237,7 +237,7 @@ CmpRemoveSubkeyInRoot(
                     HvReleaseCell(Hive, LeafCell);
                     HvMarkCellDirty(Hive, LeafCell, FALSE);
                     CmpRemoveIndexKeyCell(Leaf, LeafCountIndex);
-                    DPRINT1("The offending key cell has BEEN FOUND in leaf (leaf 0x%p, index %lu)\n",
+                    DPRINT1("The offending key cell has BEEN FOUND in leaf (leaf 0x%p, index %u)\n",
                             Leaf, LeafCountIndex);
                     return TRUE;
                 }
@@ -316,7 +316,7 @@ CmpRemoveSubKeyInLeaf(
                  * rather than that of the fast index.
                  */
                 Leaf->Count--;
-                DPRINT1("The offending key cell has BEEN FOUND in fast index (fast index 0x%p, leaf index %lu)\n",
+                DPRINT1("The offending key cell has BEEN FOUND in fast index (fast index 0x%p, leaf index %u)\n",
                         FastIndex, LeafIndex);
                 return TRUE;
             }
@@ -332,7 +332,7 @@ CmpRemoveSubKeyInLeaf(
             {
                 HvMarkCellDirty(Hive, KeyNode->SubKeyLists[Stable], FALSE);
                 CmpRemoveIndexKeyCell(Leaf, LeafIndex);
-                DPRINT1("The offending key cell has BEEN FOUND in leaf (leaf 0x%p, index %lu)\n",
+                DPRINT1("The offending key cell has BEEN FOUND in leaf (leaf 0x%p, index %u)\n",
                         Leaf, LeafIndex);
                 return TRUE;
             }
@@ -477,7 +477,8 @@ CmpRepairParentKey(
          * if for whatever reason we reach here then something
          * is seriously wrong.
          */
-        DPRINT1("The key index signature is invalid (KeyIndex->Signature == %lu)", KeyIndex->Signature);
+        DPRINT1("The key index signature is invalid (KeyIndex->Signature == %u)",
+                KeyIndex->Signature);
         ASSERT(FALSE);
     }
 
