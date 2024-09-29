@@ -93,22 +93,19 @@ NTSTATUS
 NTAPI
 KdpSysReadMsr(
     _In_ ULONG Msr,
-    _Out_ PLARGE_INTEGER MsrValue)
+    _Out_ PULONGLONG MsrValue)
 {
-    /* Wrap this in SEH in case the MSR doesn't exist */
+    /* Use SEH to protect from invalid MSRs */
     _SEH2_TRY
     {
-        /* Read from the MSR */
-        MsrValue->QuadPart = __readmsr(Msr);
+        *MsrValue = __readmsr(Msr);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Invalid MSR */
         _SEH2_YIELD(return STATUS_NO_SUCH_DEVICE);
     }
     _SEH2_END;
 
-    /* Success */
     return STATUS_SUCCESS;
 }
 
@@ -116,22 +113,19 @@ NTSTATUS
 NTAPI
 KdpSysWriteMsr(
     _In_ ULONG Msr,
-    _In_ PLARGE_INTEGER MsrValue)
+    _In_ PULONGLONG MsrValue)
 {
-    /* Wrap this in SEH in case the MSR doesn't exist */
+    /* Use SEH to protect from invalid MSRs */
     _SEH2_TRY
     {
-        /* Write to the MSR */
-        __writemsr(Msr, MsrValue->QuadPart);
+        __writemsr(Msr, *MsrValue);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Invalid MSR */
         _SEH2_YIELD(return STATUS_NO_SUCH_DEVICE);
     }
     _SEH2_END;
 
-    /* Success */
     return STATUS_SUCCESS;
 }
 
@@ -155,7 +149,7 @@ KdpSysReadBusData(
                                           Length);
 
     /* Return status */
-    return *ActualLength != 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+    return (*ActualLength != 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
 }
 
 NTSTATUS
@@ -178,7 +172,7 @@ KdpSysWriteBusData(
                                           Length);
 
     /* Return status */
-    return *ActualLength != 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+    return (*ActualLength != 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
 }
 
 NTSTATUS
@@ -272,9 +266,7 @@ KdpSysReadIoSpace(
     NTSTATUS Status;
 
     /* Verify parameters */
-    if ((InterfaceType != Isa) ||
-        (BusNumber != 0) ||
-        (AddressSpace != 1))
+    if ((InterfaceType != Isa) || (BusNumber != 0) || (AddressSpace != 1))
     {
         /* Fail, we don't support this */
         *ActualDataSize = 0;
@@ -285,16 +277,17 @@ KdpSysReadIoSpace(
     switch (DataSize)
     {
         case sizeof(UCHAR):
-
+        {
             /* Read 1 byte */
             *(PUCHAR)DataValue =
                 READ_PORT_UCHAR((PUCHAR)(ULONG_PTR)IoAddress);
             *ActualDataSize = sizeof(UCHAR);
             Status = STATUS_SUCCESS;
             break;
+        }
 
         case sizeof(USHORT):
-
+        {
             /* Make sure the address is aligned */
             if ((IoAddress & (sizeof(USHORT) - 1)) != 0)
             {
@@ -310,9 +303,10 @@ KdpSysReadIoSpace(
             *ActualDataSize = sizeof(USHORT);
             Status = STATUS_SUCCESS;
             break;
+        }
 
         case sizeof(ULONG):
-
+        {
             /* Make sure the address is aligned */
             if ((IoAddress & (sizeof(ULONG) - 1)) != 0)
             {
@@ -328,9 +322,9 @@ KdpSysReadIoSpace(
             *ActualDataSize = sizeof(ULONG);
             Status = STATUS_SUCCESS;
             break;
+        }
 
         default:
-
             /* Invalid size, fail */
             *ActualDataSize = 0;
             Status = STATUS_INVALID_PARAMETER;
@@ -354,9 +348,7 @@ KdpSysWriteIoSpace(
     NTSTATUS Status;
 
     /* Verify parameters */
-    if ((InterfaceType != Isa) ||
-        (BusNumber != 0) ||
-        (AddressSpace != 1))
+    if ((InterfaceType != Isa) || (BusNumber != 0) || (AddressSpace != 1))
     {
         /* Fail, we don't support this */
         *ActualDataSize = 0;
@@ -367,16 +359,17 @@ KdpSysWriteIoSpace(
     switch (DataSize)
     {
         case sizeof(UCHAR):
-
+        {
             /* Write 1 byte */
             WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)IoAddress,
                              *(PUCHAR)DataValue);
             *ActualDataSize = sizeof(UCHAR);
             Status = STATUS_SUCCESS;
             break;
+        }
 
         case sizeof(USHORT):
-
+        {
             /* Make sure the address is aligned */
             if ((IoAddress & (sizeof(USHORT) - 1)) != 0)
             {
@@ -392,9 +385,10 @@ KdpSysWriteIoSpace(
             *ActualDataSize = sizeof(USHORT);
             Status = STATUS_SUCCESS;
             break;
+        }
 
         case sizeof(ULONG):
-
+        {
             /* Make sure the address is aligned */
             if ((IoAddress & (sizeof(ULONG) - 1)) != 0)
             {
@@ -410,9 +404,9 @@ KdpSysWriteIoSpace(
             *ActualDataSize = sizeof(ULONG);
             Status = STATUS_SUCCESS;
             break;
+        }
 
         default:
-
             /* Invalid size, fail */
             *ActualDataSize = 0;
             Status = STATUS_INVALID_PARAMETER;
