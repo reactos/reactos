@@ -209,13 +209,13 @@ KiSetProcessorType(VOID)
 }
 
 CODE_SEG("INIT")
-ULONG
+ULONG64
 NTAPI
 KiGetFeatureBits(VOID)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
     ULONG Vendor;
-    ULONG FeatureBits = KF_WORKING_PTE;
+    ULONG64 FeatureBits = KF_WORKING_PTE;
     CPU_INFO CpuInfo, DummyCpuInfo;
     UCHAR Ccr1;
     BOOLEAN ExtendedCPUID = TRUE;
