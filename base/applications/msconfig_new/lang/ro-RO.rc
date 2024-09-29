@@ -162,7 +162,7 @@ BEGIN
     CONTROL         "&Jos", IDC_RB_FIND_DOWN, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 143, 38, 28, 12
     DEFPUSHBUTTON   "Găsire &următorul", IDOK, 182, 5, 50, 14, WS_GROUP
     PUSHBUTTON      "Revocare", IDCANCEL, 182, 23, 50, 14, WS_GROUP
-    CONTROL         "&Căutare de la început (Direcție: Jos) sau sfârșit (Direcție: Sus)", IDC_CBX_FIND_FROM_BEGINNING,
+    CONTROL         "&Căutare de la început (Direcție: Jos) sau de la sfârșit (Direcție: Sus)", IDC_CBX_FIND_FROM_BEGINNING,
                     "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 4, 58, 231, 12
 END
 
