@@ -1724,20 +1724,7 @@ FileTypesDlg_Refresh(HWND hwndDlg, HWND hListView, PFILE_TYPE_GLOBALS pG)
     RedrawWindow(hListView, NULL, NULL, RDW_ALLCHILDREN | RDW_ERASE | RDW_FRAME | RDW_INVALIDATE);
 
 #if DBG
-    WCHAR dbgbuf[200];
-    wsprintfW(dbgbuf, L"%u (%ums)", iItem, GetTickCount() - statTickStart);
-    RECT r;
-    GetWindowRect(hwndDlg, &r);
-    HWND hDbg = CreateWindowExW(WS_EX_TRANSPARENT, L"STATIC", dbgbuf, WS_CHILD | WS_DISABLED | SS_RIGHT |
-                                WS_VISIBLE, 0, 0, r.right - r.left, pG->IconSize, hwndDlg, 0, NULL, NULL);
-    struct Hide {
-        static void CALLBACK Callback(HWND hwnd, UINT, UINT_PTR id, DWORD)
-        {
-            KillTimer(hwnd, id);
-            PostMessage(hwnd, WM_CLOSE, 0, 0);
-        }
-    };
-    SetTimer(hDbg, 42, 1000 * 5, Hide::Callback);
+    DbgPrint("FT loaded %u (%ums)\n", iItem, GetTickCount() - statTickStart);
 #endif
     // select first item
     ListView_SetItemState(hListView, 0, -1, LVIS_FOCUSED | LVIS_SELECTED);
