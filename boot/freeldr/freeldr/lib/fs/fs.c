@@ -51,6 +51,8 @@ typedef struct tagDEVICE
 static FILEDATA FileData[MAX_FDS];
 static LIST_ENTRY DeviceListHead;
 
+BOOLEAN FSFileNameCaseSensitive = TRUE;
+
 #define IS_VALID_FILEID(FileId) \
     ((ULONG)(FileId) < _countof(FileData) && FileData[(ULONG)(FileId)].FuncTable)
 
