@@ -116,11 +116,13 @@ AssignProcessToJobObject(_In_ HANDLE hJob,
  */
 BOOL
 WINAPI
-QueryInformationJobObject(IN HANDLE hJob,
-                          IN JOBOBJECTINFOCLASS JobObjectInformationClass,
-                          IN LPVOID lpJobObjectInformation,
-                          IN DWORD cbJobObjectInformationLength,
-                          OUT LPDWORD lpReturnLength)
+QueryInformationJobObject(
+    _In_opt_ HANDLE hJob,
+    _In_ JOBOBJECTINFOCLASS JobObjectInformationClass,
+    _Out_writes_bytes_to_(cbJobObjectInformationLength, *lpReturnLength) LPVOID
+    lpJobObjectInformation,
+    _In_ DWORD cbJobObjectInformationLength,
+    _Out_opt_ LPDWORD lpReturnLength)
 {
     NTSTATUS Status;
     PVOID JobInfo;
@@ -209,10 +211,11 @@ QueryInformationJobObject(IN HANDLE hJob,
  */
 BOOL
 WINAPI
-SetInformationJobObject(_In_ HANDLE hJob,
-                        _In_ JOBOBJECTINFOCLASS JobObjectInformationClass,
-                        _In_reads_bytes_(cbJobObjectInformationLength) LPVOID lpJobObjectInformation,
-                        _In_ DWORD cbJobObjectInformationLength)
+SetInformationJobObject(
+    _In_ HANDLE hJob,
+    _In_ JOBOBJECTINFOCLASS JobObjectInformationClass,
+    _In_reads_bytes_(cbJobObjectInformationLength) LPVOID lpJobObjectInformation,
+    _In_ DWORD cbJobObjectInformationLength)
 {
     NTSTATUS Status;
     PVOID JobInfo;

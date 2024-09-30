@@ -479,6 +479,11 @@ PspTerminateProcessCallback(
     PEJOB Job = TerminateContext->Job;
     NTSTATUS ExitStatus = TerminateContext->ExitStatus;
 
+    if (Process->JobStatus & JOB_NOT_REALLY_ACTIVE)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
     /* Flag the job as terminating */
     InterlockedOr((PLONG)&Job->JobFlags, JOB_OBJECT_TERMINATING);
 
@@ -863,6 +868,262 @@ PspSetJobLimitsBasicOrExtended(
     /* Release locks */
     KeReleaseGuardedMutexUnsafe(&Job->MemoryLimitsLock);
     ExReleaseResourceLite(&Job->JobLock);
+
+    return Status;
+}
+
+/*!
+ * Collects accounting information, such as total user time, kernel time, page
+ * fault counts, and I/O operations, for the given job object.
+ *
+ * @param[in] Job
+ *     Pointer to the job object whose accounting information is being queried.
+ *
+ * @param[out] BasicAndIo
+ *     Pointer to a structure that will be filled with basic accounting and
+ *     I/O information about the job.
+ *
+ * @return
+ *     STATUS_SUCCESS on success.
+ *     Otherwise, an appropriate NTSTATUS error code.
+ */
+NTSTATUS
+PspQueryBasicAccountingInfo(
+    _In_ PEJOB Job,
+    _Out_ PJOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION BasicAndIo
+)
+{
+    PLIST_ENTRY NextEntry;
+    PROCESS_VALUES Values;
+
+    /* Zero the basic accounting information */
+    RtlZeroMemory(&BasicAndIo->BasicInfo,
+                  sizeof(JOBOBJECT_BASIC_ACCOUNTING_INFORMATION));
+
+    /* Lock the job object */
+    ExEnterCriticalRegionAndAcquireResourceShared(&Job->JobLock);
+
+    /* Initialize with job's accumulated accounting data */
+    BasicAndIo->BasicInfo.TotalUserTime.QuadPart = Job->TotalUserTime.QuadPart;
+    BasicAndIo->BasicInfo.TotalKernelTime.QuadPart = Job->TotalKernelTime.QuadPart;
+    BasicAndIo->BasicInfo.ThisPeriodTotalUserTime.QuadPart = Job->ThisPeriodTotalUserTime.QuadPart;
+    BasicAndIo->BasicInfo.ThisPeriodTotalKernelTime.QuadPart = Job->ThisPeriodTotalKernelTime.QuadPart;
+    BasicAndIo->BasicInfo.TotalPageFaultCount = Job->TotalPageFaultCount;
+    BasicAndIo->BasicInfo.TotalProcesses = Job->TotalProcesses;
+    BasicAndIo->BasicInfo.ActiveProcesses = Job->ActiveProcesses;
+    BasicAndIo->BasicInfo.TotalTerminatedProcesses = Job->TotalTerminatedProcesses;
+
+    /* Set I/O info (even though it may not be returned in some cases) */
+    BasicAndIo->IoInfo.ReadOperationCount = Job->ReadOperationCount;
+    BasicAndIo->IoInfo.WriteOperationCount = Job->WriteOperationCount;
+    BasicAndIo->IoInfo.OtherOperationCount = Job->OtherOperationCount;
+    BasicAndIo->IoInfo.ReadTransferCount = Job->ReadTransferCount;
+    BasicAndIo->IoInfo.WriteTransferCount = Job->WriteTransferCount;
+    BasicAndIo->IoInfo.OtherTransferCount = Job->OtherTransferCount;
+
+    /* Sum up accounting data for each active process in the job */
+    for (NextEntry = Job->ProcessListHead.Flink;
+         NextEntry != &Job->ProcessListHead;
+         NextEntry = NextEntry->Flink)
+    {
+        PEPROCESS Process = CONTAINING_RECORD(NextEntry, EPROCESS, JobLinks);
+
+        /* Skip folded accounting processes */
+        if (!BooleanFlagOn(Process->JobStatus, ACCOUNTING_FOLDED))
+        {
+            KeQueryValuesProcess(&Process->Pcb, &Values);
+
+            /* Accumulate user and kernel times, and I/O counts */
+            BasicAndIo->BasicInfo.TotalUserTime.QuadPart += Values.TotalUserTime.QuadPart;
+            BasicAndIo->BasicInfo.TotalKernelTime.QuadPart += Values.TotalKernelTime.QuadPart;
+            BasicAndIo->IoInfo.ReadOperationCount += Values.IoInfo.ReadOperationCount;
+            BasicAndIo->IoInfo.WriteOperationCount += Values.IoInfo.WriteOperationCount;
+            BasicAndIo->IoInfo.OtherOperationCount += Values.IoInfo.OtherOperationCount;
+            BasicAndIo->IoInfo.ReadTransferCount += Values.IoInfo.ReadTransferCount;
+            BasicAndIo->IoInfo.WriteTransferCount += Values.IoInfo.WriteTransferCount;
+            BasicAndIo->IoInfo.OtherTransferCount += Values.IoInfo.OtherTransferCount;
+        }
+    }
+
+    /* Release the job lock */
+    ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
+
+    return STATUS_SUCCESS;
+}
+
+/*!
+ * Retrieves basic or extended limit information for a job object.
+ *
+ * @param[in] Job
+ *     Pointer to the job object whose limit information is being queried.
+ *
+ * @param[in] Extended
+ *     A boolean value indicating whether extended limit information is being
+ *     requested or only basic limit information.
+ *
+ * @param[out] ExtendedLimit
+ *     Pointer to a structure that will be filled with basic or extended limit
+ *     information about the job.
+ *
+ * @return
+ *     STATUS_SUCCESS on success.
+ *     Otherwise, an appropriate NTSTATUS error code.
+ */
+NTSTATUS
+PspQueryLimitInformation(
+    _In_ PEJOB Job,
+    _In_ BOOLEAN Extended,
+    _Out_ PJOBOBJECT_EXTENDED_LIMIT_INFORMATION ExtendedLimit
+)
+{
+    PKTHREAD CurrentThread = KeGetCurrentThread();
+
+    /* Lock the job object */
+    KeEnterGuardedRegionThread(CurrentThread);
+    ExAcquireResourceSharedLite(&Job->JobLock, TRUE);
+
+    /* Copy basic limit information */
+    ExtendedLimit->BasicLimitInformation.LimitFlags = Job->LimitFlags;
+    ExtendedLimit->BasicLimitInformation.MinimumWorkingSetSize = Job->MinimumWorkingSetSize;
+    ExtendedLimit->BasicLimitInformation.MaximumWorkingSetSize = Job->MaximumWorkingSetSize;
+    ExtendedLimit->BasicLimitInformation.ActiveProcessLimit = Job->ActiveProcessLimit;
+    ExtendedLimit->BasicLimitInformation.PriorityClass = Job->PriorityClass;
+    ExtendedLimit->BasicLimitInformation.SchedulingClass = Job->SchedulingClass;
+    ExtendedLimit->BasicLimitInformation.Affinity = Job->Affinity;
+    ExtendedLimit->BasicLimitInformation.PerProcessUserTimeLimit.QuadPart = Job->PerProcessUserTimeLimit.QuadPart;
+    ExtendedLimit->BasicLimitInformation.PerJobUserTimeLimit.QuadPart = Job->PerJobUserTimeLimit.QuadPart;
+
+    /* If extended limits are requested, include memory limits */
+    if (Extended)
+    {
+        KeAcquireGuardedMutexUnsafe(&Job->MemoryLimitsLock);
+
+        ExtendedLimit->ProcessMemoryLimit = Job->ProcessMemoryLimit << PAGE_SHIFT;
+        ExtendedLimit->JobMemoryLimit = Job->JobMemoryLimit << PAGE_SHIFT;
+        ExtendedLimit->PeakProcessMemoryUsed = Job->PeakProcessMemoryUsed << PAGE_SHIFT;
+        ExtendedLimit->PeakJobMemoryUsed = Job->PeakJobMemoryUsed << PAGE_SHIFT;
+
+        KeReleaseGuardedMutexUnsafe(&Job->MemoryLimitsLock);
+
+        /* Zero out IoInfo to avoid kernel memory leaks */
+        RtlZeroMemory(&ExtendedLimit->IoInfo, sizeof(IO_COUNTERS));
+    }
+
+    /* Release the job lock */
+    ExReleaseResourceLite(&Job->JobLock);
+    KeLeaveGuardedRegionThread(CurrentThread);
+
+    return STATUS_SUCCESS;
+}
+
+/*!
+ * Collects a list of process IDs for all processes associated with a job.
+ *
+ * @param[in] Job
+ *     Pointer to the job object whose process IDs are being queried.
+ *
+ * @param[out] ProcIdList
+ *     Pointer to a structure that will be filled with the list of process IDs
+ *     and information about the number of assigned and returned process IDs.
+ *
+ * @param[in] JobInformationLength
+ *     Specifies the size, in bytes, of the buffer that will receive the process
+ *     ID list.
+ *
+ * @param[out] ReturnRequiredLength
+ *     Pointer to a variable that receives the size, in bytes, of the
+ *     information written to the buffer. If there is a buffer overflow, the
+ *     required size is returned.
+ *
+ * @return
+ *     STATUS_SUCCESS on success.
+ *     STATUS_BUFFER_OVERFLOW if the buffer is too small to hold all IDs.
+ *     Otherwise, an appropriate NTSTATUS error code.
+ */
+NTSTATUS
+PspQueryJobProcessIdList(
+    _In_ PEJOB Job,
+    _Out_writes_bytes_(JobInformationLength) PJOBOBJECT_BASIC_PROCESS_ID_LIST ProcIdList,
+    _In_ ULONG JobInformationLength,
+    _Out_ PULONG ReturnRequiredLength
+)
+{
+    PLIST_ENTRY Next;
+    PULONG_PTR IdListArray = &ProcIdList->ProcessIdList[0];
+    ULONG ListLength =
+        JobInformationLength - FIELD_OFFSET(JOBOBJECT_BASIC_PROCESS_ID_LIST,
+                                            ProcessIdList);
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Check if the buffer provided is large enough to hold at least the
+       fixed portion of JOBOBJECT_BASIC_PROCESS_ID_LIST */
+    if (JobInformationLength < sizeof(JOBOBJECT_BASIC_PROCESS_ID_LIST))
+    {
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    /* Acquire the job lock */
+    ExEnterCriticalRegionAndAcquireResourceShared(&Job->JobLock);
+
+    _SEH2_TRY
+    {
+        ProcIdList->NumberOfAssignedProcesses = Job->ActiveProcesses;
+        ProcIdList->NumberOfProcessIdsInList = 0;
+
+        /* Iterate over each process in the job's process list */
+        Next = Job->ProcessListHead.Flink;
+        while (Next != &Job->ProcessListHead)
+        {
+            PEPROCESS Process = (PEPROCESS)CONTAINING_RECORD(Next,
+                                                             EPROCESS,
+                                                             JobLinks);
+
+            /* Skip processes out of the job */
+            if (Process->JobStatus & JOB_NOT_REALLY_ACTIVE)
+            {
+                Next = Next->Flink;
+                continue;
+            }
+
+            /* Check if there is enough space left in the provided buffer */
+            if (ListLength >= sizeof(ULONG_PTR))
+            {
+                if (ExAcquireRundownProtection(&Process->RundownProtect))
+                {
+                    /* Add the process ID to the list */
+                    *IdListArray++ = (ULONG_PTR)Process->UniqueProcessId;
+
+                    /* Adjust remaining buffer space and increment the process
+                       count in the list */
+                    ListLength -= sizeof(ULONG_PTR);
+                    ProcIdList->NumberOfProcessIdsInList++;
+
+                    ExReleaseRundownProtection(&Process->RundownProtect);
+                }
+            }
+            else
+            {
+                Status = STATUS_BUFFER_OVERFLOW;
+                *ReturnRequiredLength = ListLength;
+                break;
+            }
+
+            /* Move to the next process  */
+            Next = Next->Flink;
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+        *ReturnRequiredLength = 0;
+    }
+    _SEH2_END;
+
+    /* Release the job lock */
+    ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
+
+    /* Calculate how much of the buffer was used */
+    *ReturnRequiredLength = JobInformationLength - ListLength;
 
     return Status;
 }
@@ -1382,76 +1643,113 @@ NtTerminateJobObject(
     return Status;
 }
 
-/*
- * @implemented
+/*!
+ * Retrieves information about a job object based on the requested information
+ * class.
+ *
+ * @param[in, optional] JobHandle
+ *     Handle to the job object for which information is being queried. The
+ *     handle must have the JOB_OBJECT_QUERY access right. If NULL, the current
+ *     process' job is used.
+ *
+ * @param[in] JobInformationClass
+ *     Specifies the type of information to query.
+ *
+ * @param[out] JobInformation
+ *     Pointer to a buffer that receives the requested job object information.
+ *
+ * @param[in] JobInformationLength
+ *     Specifies the size, in bytes, of the JobInformation buffer.
+ *
+ * @param[out, optional] ReturnLength
+ *     Pointer to a variable that receives the size, in bytes, of the
+ *     information written to the JobInformation buffer. Specify NULL to not
+ *     receive this information.
+ *
+ * @return
+ *     STATUS_SUCCESS on success.
+ *     Otherwise, an appropriate NTSTATUS error code.
+ *
+ * @remarks
+ *     Not fully implemented. The function currently does not support all
+ *     information classes.
  */
 NTSTATUS
 NTAPI
-NtQueryInformationJobObject (
-    HANDLE JobHandle,
-    JOBOBJECTINFOCLASS JobInformationClass,
-    PVOID JobInformation,
-    ULONG JobInformationLength,
-    PULONG ReturnLength )
+NtQueryInformationJobObject(
+    _In_opt_ HANDLE JobHandle,
+    _In_ JOBOBJECTINFOCLASS JobInformationClass,
+    _Out_writes_bytes_(JobInformationLength) PVOID JobInformation,
+    _In_ ULONG JobInformationLength,
+    _Out_opt_ PULONG ReturnLength
+)
 {
     PEJOB Job;
     NTSTATUS Status;
     BOOLEAN NoOutput;
-    PVOID GenericCopy;
+    PVOID JobInfoBuffer;
     PLIST_ENTRY NextEntry;
     PKTHREAD CurrentThread;
     KPROCESSOR_MODE PreviousMode;
     JOBOBJECT_EXTENDED_LIMIT_INFORMATION ExtendedLimit;
     JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION BasicAndIo;
-    ULONG RequiredLength, RequiredAlign, SizeToCopy, NeededSize;
+    ULONG RequiredLength, RequiredAlign, ReturnRequiredLength;
 
     PAGED_CODE();
 
     CurrentThread  = KeGetCurrentThread();
 
-    /* Validate class */
-    if (JobInformationClass > JobObjectJobSetInformation || JobInformationClass < JobObjectBasicAccountingInformation)
+    /* Validate that JobInformationClass is in the expected range */
+    if (JobInformationClass > JobObjectJobSetInformation ||
+        JobInformationClass < JobObjectBasicAccountingInformation)
     {
         return STATUS_INVALID_INFO_CLASS;
     }
 
-    /* Get associated lengths & alignments */
+    /* Determine the required length and alignment for the class */
     RequiredLength = PspJobInfoLengths[JobInformationClass];
     RequiredAlign = PspJobInfoAlign[JobInformationClass];
-    SizeToCopy = RequiredLength;
-    NeededSize = RequiredLength;
+    ReturnRequiredLength = RequiredLength;
 
     /* If length mismatch (needed versus provided) */
     if (JobInformationLength != RequiredLength)
     {
-        /* This can only be accepted if: JobObjectBasicProcessIdList or JobObjectSecurityLimitInformation
-         * Or if size is bigger than needed
-         */
-        if ((JobInformationClass != JobObjectBasicProcessIdList && JobInformationClass != JobObjectSecurityLimitInformation) ||
+        /* This can only be accepted if the class is variable length
+           (JobObjectBasicProcessIdList or JobObjectSecurityLimitInformation) or
+           if size is bigger than needed */
+        if ((JobInformationClass != JobObjectBasicProcessIdList &&
+                JobInformationClass != JobObjectSecurityLimitInformation) ||
             JobInformationLength < RequiredLength)
         {
             return STATUS_INFO_LENGTH_MISMATCH;
         }
 
         /* Set what we need to copy out */
-        SizeToCopy = JobInformationLength;
+        RequiredLength = JobInformationLength;
     }
 
     PreviousMode = ExGetPreviousMode();
-    /* If not comming from umode, we need to probe buffers */
+
+    /* If the request is coming from user mode, probe the user buffer */
     if (PreviousMode != KernelMode)
     {
-        ASSERT(((RequiredAlign) == 1) || ((RequiredAlign) == 2) || ((RequiredAlign) == 4) || ((RequiredAlign) == 8) || ((RequiredAlign) == 16));
+        ASSERT(((RequiredAlign) == 1) ||
+               ((RequiredAlign) == 2) ||
+               ((RequiredAlign) == 4) ||
+               ((RequiredAlign) == 8) ||
+               ((RequiredAlign) == 16));
 
         _SEH2_TRY
         {
-            /* Probe out buffer for write */
+            /* Probe the buffer */
             if (JobInformation != NULL)
             {
-                ProbeForWrite(JobInformation, JobInformationLength, RequiredAlign);
+                ProbeForWrite(JobInformation,
+                              JobInformationLength,
+                              RequiredAlign);
             }
 
-            /* But also return length if asked */
+            /* Probe the return length if required */
             if (ReturnLength != NULL)
             {
                 ProbeForWriteUlong(ReturnLength);
@@ -1495,133 +1793,55 @@ NtQueryInformationJobObject (
 
     /* By default, assume we'll have to copy data */
     NoOutput = FALSE;
-    /* Select class */
+
     switch (JobInformationClass)
     {
-        /* Basic counters */
-        case JobObjectBasicAccountingInformation:
-        case JobObjectBasicAndIoAccountingInformation:
-            /* Zero basics */
-            RtlZeroMemory(&BasicAndIo.BasicInfo, sizeof(JOBOBJECT_BASIC_ACCOUNTING_INFORMATION));
+    case JobObjectBasicAccountingInformation:
+    case JobObjectBasicAndIoAccountingInformation:
+    {
+        Status = PspQueryBasicAccountingInfo(Job, &BasicAndIo);
+        JobInfoBuffer = &BasicAndIo;
+        break;
+    }
+    case JobObjectBasicLimitInformation:
+    case JobObjectExtendedLimitInformation:
+    {
+        Status = PspQueryLimitInformation(Job,
+                                          (JobInformationClass == JobObjectExtendedLimitInformation),
+                                          &ExtendedLimit);
+        JobInfoBuffer = &ExtendedLimit;
+        break;
+    }
+    case JobObjectBasicProcessIdList:
+    {
+        Status = PspQueryJobProcessIdList(Job,
+                                          (PJOBOBJECT_BASIC_PROCESS_ID_LIST)JobInformation,
+                                          JobInformationLength,
+                                          &ReturnRequiredLength);
 
-            /* Lock */
-            KeEnterGuardedRegionThread(CurrentThread);
-            ExAcquireResourceSharedLite(&Job->JobLock, TRUE);
-
-            /* Initialize with job counters */
-            BasicAndIo.BasicInfo.TotalUserTime.QuadPart = Job->TotalUserTime.QuadPart;
-            BasicAndIo.BasicInfo.TotalKernelTime.QuadPart = Job->TotalKernelTime.QuadPart;
-            BasicAndIo.BasicInfo.ThisPeriodTotalUserTime.QuadPart = Job->ThisPeriodTotalUserTime.QuadPart;
-            BasicAndIo.BasicInfo.ThisPeriodTotalKernelTime.QuadPart = Job->ThisPeriodTotalKernelTime.QuadPart;
-            BasicAndIo.BasicInfo.TotalPageFaultCount = Job->TotalPageFaultCount;
-            BasicAndIo.BasicInfo.TotalProcesses = Job->TotalProcesses;
-            BasicAndIo.BasicInfo.ActiveProcesses = Job->ActiveProcesses;
-            BasicAndIo.BasicInfo.TotalTerminatedProcesses = Job->TotalTerminatedProcesses;
-
-            /* We also set IoInfo, even though we might not return it */
-            BasicAndIo.IoInfo.ReadOperationCount = Job->ReadOperationCount;
-            BasicAndIo.IoInfo.WriteOperationCount = Job->WriteOperationCount;
-            BasicAndIo.IoInfo.OtherOperationCount = Job->OtherOperationCount;
-            BasicAndIo.IoInfo.ReadTransferCount = Job->ReadTransferCount;
-            BasicAndIo.IoInfo.WriteTransferCount = Job->WriteTransferCount;
-            BasicAndIo.IoInfo.OtherTransferCount = Job->OtherTransferCount;
-
-            /* For every process, sum its counters */
-            for (NextEntry = Job->ProcessListHead.Flink;
-                 NextEntry != &Job->ProcessListHead;
-                 NextEntry = NextEntry->Flink)
-            {
-                PEPROCESS Process;
-
-                Process = CONTAINING_RECORD(NextEntry, EPROCESS, JobLinks);
-                if (!BooleanFlagOn(Process->JobStatus, ACCOUNTING_FOLDED))
-                {
-                    PROCESS_VALUES Values;
-
-                    KeQueryValuesProcess(&Process->Pcb, &Values);
-                    BasicAndIo.BasicInfo.TotalUserTime.QuadPart += Values.TotalUserTime.QuadPart;
-                    BasicAndIo.BasicInfo.TotalKernelTime.QuadPart += Values.TotalKernelTime.QuadPart;
-                    BasicAndIo.IoInfo.ReadOperationCount += Values.IoInfo.ReadOperationCount;
-                    BasicAndIo.IoInfo.WriteOperationCount += Values.IoInfo.WriteOperationCount;
-                    BasicAndIo.IoInfo.OtherOperationCount += Values.IoInfo.OtherOperationCount;
-                    BasicAndIo.IoInfo.ReadTransferCount += Values.IoInfo.ReadTransferCount;
-                    BasicAndIo.IoInfo.WriteTransferCount += Values.IoInfo.WriteTransferCount;
-                    BasicAndIo.IoInfo.OtherTransferCount += Values.IoInfo.OtherTransferCount;
-                }
-            }
-
-            /* And done */
-            ExReleaseResourceLite(&Job->JobLock);
-            KeLeaveGuardedRegionThread(CurrentThread);
-
-            /* We'll copy back the buffer */
-            GenericCopy = &BasicAndIo;
-            Status = STATUS_SUCCESS;
-
-            break;
-
-        /* Limits information */
-        case JobObjectBasicLimitInformation:
-        case JobObjectExtendedLimitInformation:
-            /* Lock */
-            KeEnterGuardedRegionThread(CurrentThread);
-            ExAcquireResourceSharedLite(&Job->JobLock, TRUE);
-
-            /* Copy basic information */
-            ExtendedLimit.BasicLimitInformation.LimitFlags = Job->LimitFlags;
-            ExtendedLimit.BasicLimitInformation.MinimumWorkingSetSize = Job->MinimumWorkingSetSize;
-            ExtendedLimit.BasicLimitInformation.MaximumWorkingSetSize = Job->MaximumWorkingSetSize;
-            ExtendedLimit.BasicLimitInformation.ActiveProcessLimit = Job->ActiveProcessLimit;
-            ExtendedLimit.BasicLimitInformation.PriorityClass = Job->PriorityClass;
-            ExtendedLimit.BasicLimitInformation.SchedulingClass = Job->SchedulingClass;
-            ExtendedLimit.BasicLimitInformation.Affinity = Job->Affinity;
-            ExtendedLimit.BasicLimitInformation.PerProcessUserTimeLimit.QuadPart = Job->PerProcessUserTimeLimit.QuadPart;
-            ExtendedLimit.BasicLimitInformation.PerJobUserTimeLimit.QuadPart = Job->PerJobUserTimeLimit.QuadPart;
-
-            /* If asking for extending limits */
-            if (JobInformationClass == JobObjectExtendedLimitInformation)
-            {
-                /* Lock our memory lock */
-                KeAcquireGuardedMutexUnsafe(&Job->MemoryLimitsLock);
-                /* Return limits */
-                ExtendedLimit.ProcessMemoryLimit = Job->ProcessMemoryLimit << PAGE_SHIFT;
-                ExtendedLimit.JobMemoryLimit = Job->JobMemoryLimit << PAGE_SHIFT;
-                ExtendedLimit.PeakProcessMemoryUsed = Job->PeakProcessMemoryUsed << PAGE_SHIFT;
-                ExtendedLimit.PeakJobMemoryUsed = Job->PeakJobMemoryUsed << PAGE_SHIFT;
-                KeReleaseGuardedMutexUnsafe(&Job->MemoryLimitsLock);
-
-                /* And done */
-                ExReleaseResourceLite(&Job->JobLock);
-                KeLeaveGuardedRegionThread(CurrentThread);
-
-                /* We'll never return IoInfo, so zero it out to avoid
-                 * kernel memory leak
-                 */
-                RtlZeroMemory(&ExtendedLimit.IoInfo, sizeof(IO_COUNTERS));
-            }
-            else
-            {
-                /* And done */
-                ExReleaseResourceLite(&Job->JobLock);
-                KeLeaveGuardedRegionThread(CurrentThread);
-            }
-
-            /* We'll copy back the buffer */
-            GenericCopy = &ExtendedLimit;
-            Status = STATUS_SUCCESS;
-
-            break;
-
-        default:
-            DPRINT1("Class %d not implemented\n", JobInformationClass);
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
+        /* No need to copy data as it's directly filled in the helper */
+        NoOutput = TRUE;
+        break;
+    }
+    case JobObjectBasicUIRestrictions:
+    case JobObjectSecurityLimitInformation:
+    case JobObjectEndOfJobTimeInformation:
+    case JobObjectAssociateCompletionPortInformation:
+    case JobObjectJobSetInformation:
+        DPRINT1("Class %d not implemented\n", JobInformationClass);
+        Status = STATUS_NOT_IMPLEMENTED;
+        break;
+    case MaxJobObjectInfoClass:
+    default:
+        DPRINT1("Invalid class %d\n", JobInformationClass);
+        Status = STATUS_NOT_IMPLEMENTED;
+        break;
     }
 
     /* Job is no longer required */
     ObDereferenceObject(Job);
 
-    /* If we succeeed, copy back data */
+    /* If we succeeded, copy back data */
     if (NT_SUCCESS(Status))
     {
         _SEH2_TRY
@@ -1629,13 +1849,13 @@ NtQueryInformationJobObject (
             /* If we have anything to copy, do it */
             if (!NoOutput)
             {
-                RtlCopyMemory(JobInformation, GenericCopy, SizeToCopy);
+                RtlCopyMemory(JobInformation, JobInfoBuffer, RequiredLength);
             }
 
             /* And return length if asked */
             if (ReturnLength != NULL)
             {
-                *ReturnLength = NeededSize;
+                *ReturnLength = ReturnRequiredLength;
             }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -1672,10 +1892,10 @@ NtQueryInformationJobObject (
  *
  * @return
  *     STATUS_SUCCESS on success.
- *     Otherwise, an appropriate NTSTATUS error co
+ *     Otherwise, an appropriate NTSTATUS error code.
  *
  * @remarks
- *     Not fully implemented. The function currently does not support some
+ *     Not fully implemented. The function currently does not support all
  *     information classes.
  */
 NTSTATUS
