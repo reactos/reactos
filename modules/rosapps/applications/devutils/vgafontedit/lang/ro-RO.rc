@@ -2,34 +2,34 @@
  * PROJECT:     ReactOS VGA Font Editor
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Romanian resource file
- * TRANSLATORS: Copyright 2008 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ * TRANSLATORS: Copyright 2014-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_ABOUT DIALOGEX 10, 10, 130, 62
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "About"
+CAPTION "Despre"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON           IDI_MAIN,                          IDC_STATIC, 10, 10, 20, 20
     LTEXT          "Editor de font VGA ReactOS",      IDC_STATIC, 37, 10, 93, 10
     LTEXT          "Drept de autor 2008 Colin Finck", IDC_STATIC, 37, 20, 93, 10
-    DEFPUSHBUTTON  "Î&nchide",                        IDCANCEL,   40, 44, 55, 15
+    DEFPUSHBUTTON  "Î&nchidere",                      IDCANCEL,   40, 44, 55, 15
 END
 
 IDD_EDITGLYPH DIALOGEX 32768, 32768, 246, 197
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Editare glifă"
+CAPTION "Editare a glifei"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_EDIT_GLYPH_TOOLBOX, TOOLBARCLASSNAMEA,          CCS_NODIVIDER | CCS_NORESIZE, 5, 5, 24, 82
     CONTROL "", IDC_EDIT_GLYPH_EDIT,    EDIT_GLYPH_EDIT_CLASSW,     0, 39, 5, 160, 160
     CONTROL "", IDC_EDIT_GLYPH_PREVIEW, EDIT_GLYPH_PREVIEW_CLASSW,  0, 209, 5, 32, 32
 
-    DEFPUSHBUTTON "Con&firmă", IDOK, 48, 177, 70, 14
-    PUSHBUTTON    "A&nulează", IDCANCEL, 125, 177, 70, 14
+    DEFPUSHBUTTON "OK", IDOK, 48, 177, 70, 14
+    PUSHBUTTON    "Revocare", IDCANCEL, 125, 177, 70, 14
 END
 
 IDM_MAINMENU MENU
@@ -40,31 +40,31 @@ BEGIN
         MENUITEM "&Deschidere…\tCtrl+O", ID_FILE_OPEN
         MENUITEM "În&chide", ID_FILE_CLOSE
         MENUITEM SEPARATOR
-        MENUITEM "Sal&vează\tCtrl+S", ID_FILE_SAVE
-        MENUITEM "Salvea&ză ca…", ID_FILE_SAVE_AS
+        MENUITEM "&Salvare\tCtrl+S", ID_FILE_SAVE
+        MENUITEM "S&alvare ca…", ID_FILE_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "I&eșire\tAlt+F4", ID_FILE_EXIT
     END
 
     POPUP "&Editare"
     BEGIN
-        MENUITEM "&Copiază\tCtrl+C", ID_EDIT_COPY
-        MENUITEM "&Lipește\tCtrl+V", ID_EDIT_PASTE
+        MENUITEM "&Copiere\tCtrl+C", ID_EDIT_COPY
+        MENUITEM "&Lipire\tCtrl+V", ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "&Editare glifă…", ID_EDIT_GLYPH
+        MENUITEM "&Editare a glifei…", ID_EDIT_GLYPH
     END
 
     POPUP "Fe&restre"
     BEGIN
-        MENUITEM "Aranjare în &cascadă", ID_WINDOW_CASCADE
-        MENUITEM "Aranjări &orizontale", ID_WINDOW_TILE_HORZ
-        MENUITEM "Aranjări &verticale", ID_WINDOW_TILE_VERT
-        MENUITEM "&Aranjează pictograme", ID_WINDOW_ARRANGE
+        MENUITEM "&Cascadă", ID_WINDOW_CASCADE
+        MENUITEM "Dale &orizontale", ID_WINDOW_TILE_HORZ
+        MENUITEM "Dale &verticale", ID_WINDOW_TILE_VERT
+        MENUITEM "&Aranjare a pictogramelor", ID_WINDOW_ARRANGE
         MENUITEM SEPARATOR
-        MENUITEM "&Următoarea\tCtrl+F6", ID_WINDOW_NEXT
+        MENUITEM "&Următorul\tCtrl+F6", ID_WINDOW_NEXT
     END
 
-    POPUP "&?"
+    POPUP "&Ajutor"
     BEGIN
         MENUITEM "&Despre…", ID_HELP_ABOUT
     END
@@ -72,22 +72,22 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_OPENFILTER, "Toate formatele compatibile (*.bin,*.psf)|*.bin;*.psf|Fișiere de font binar (*.bin)|*.bin|Fonturi (de versiune 1) PC Screen (*.psf)|*.psf|"
-    IDS_SAVEFILTER, "Fișiere de font binar (*.bin)|*.bin|"
+    IDS_OPENFILTER, "Toate formatele compatibile (*.bin,*.psf)|*.bin;*.psf|Fișiere de font binare (*.bin)|*.bin|Fonturi pentru ecranul PC Versiunea 1 (*.psf)|*.psf|"
+    IDS_SAVEFILTER, "Fișiere de font binare (*.bin)|*.bin|"
     IDS_OPENERROR, "Eroare la deschiderea fișierului! (Număr de eroare %1!u!)"
     IDS_READERROR, "Eroare la citirea fișierului! (Număr de eroare %1!u!)"
     IDS_WRITEERROR, "Eroare la scrierea fișierului! (Număr de eroare %1!u!)"
     IDS_UNSUPPORTEDFORMAT, "Format de fișier incompatibil!"
     IDS_UNSUPPORTEDPSF, "Format incompatibil de font PSF! Posibilitățile editorului se limitează la fonturile 8x8 fără moduri speciale."
     IDS_DOCNAME, "Font %1!u!"
-    IDS_SAVEPROMPT, "Modificările în fișierul „%1” încă nu au fost salvate.\n\nDoriți salvarea lor?"
-    IDS_APPTITLE, "Editor de font VGA ReactOS"
-    IDS_CLOSEEDIT, "Închideți mai întâi toate ferestrele de editare!"
+    IDS_SAVEPROMPT, "Fișierul ""%1"" a fost modificat, dar nu salvat.\n\nDoriți salvarea lor?"
+    IDS_APPTITLE, "Editorul de font VGA ReactOS"
+    IDS_CLOSEEDIT, "Închideți mai întâi toate ferestrele de Editare deschise!"
 
     IDS_TOOLTIP_NEW, "Nou"
-    IDS_TOOLTIP_OPEN, "Deschide"
-    IDS_TOOLTIP_SAVE, "Salvează"
-    IDS_TOOLTIP_EDIT_GLYPH, "Editează glifă"
-    IDS_TOOLTIP_COPY, "Copiază"
-    IDS_TOOLTIP_PASTE, "Lipește"
+    IDS_TOOLTIP_OPEN, "Deschidere"
+    IDS_TOOLTIP_SAVE, "Salvare"
+    IDS_TOOLTIP_EDIT_GLYPH, "Editare a glifei"
+    IDS_TOOLTIP_COPY, "Copiere"
+    IDS_TOOLTIP_PASTE, "Lipire"
 END
