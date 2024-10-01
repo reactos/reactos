@@ -1,39 +1,45 @@
-/* Translator: Ștefan Fulea (stefan dot fulea at mail dot com) */
+/*
+ * PROJECT:     ReactOS WineD3D Configuration Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Romanian resource file
+ * TRANSLATORS: Copyright 2011-2018 Ștefan Fulea <stefan.fulea@mail.com>
+ *              Copyright 2024 Andrei Miloiu <miloiuandrei@gmail.com>
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Generale"
+CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLICON, IDI_CPLICON, 8, 0, 21, 20
     GROUPBOX "Efecte de umbrire", -1, 5, 25, 230, 80
-    LTEXT "Activează GLSL:", -1, 15, 42, 120, 10
+    LTEXT "&Activare a GLSL:", -1, 15, 42, 120, 10
     COMBOBOX IDC_GLSL, 135, 40, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Nivelul GS maxim:", -1, 15, 57, 120, 10
+    LTEXT "Nivelul &GS maxim:", -1, 15, 57, 120, 10
     COMBOBOX IDC_GSLEVEL, 135, 55, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Nivelul PS maxim:", -1, 15, 72, 120, 10
+    LTEXT "Nivelul &PS maxim:", -1, 15, 72, 120, 10
     COMBOBOX IDC_PSLEVEL, 135, 70, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Nivelul VS maxim:", -1, 15, 87, 120, 10
+    LTEXT "Nivelul &VS maxim:", -1, 15, 87, 120, 10
     COMBOBOX IDC_VSLEVEL, 135, 85, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
     GROUPBOX "Randare", -1, 5, 110, 230, 110
-    LTEXT "Multieșantionare:", -1, 15, 127, 120, 10
+    LTEXT "&Multieșantionare:", -1, 15, 127, 120, 10
     COMBOBOX IDC_MULTISAMPLING, 135, 125, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Ordinea strictă de desenare:", -1, 15, 142, 120, 10
+    LTEXT "&Ordine strictă de desenare:", -1, 15, 142, 120, 10
     COMBOBOX IDC_STRICTDRAWORDERING, 135, 140, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Randarea extra-ecran:", -1, 15, 157, 120, 10
+    LTEXT "&Randare extra-ecran:", -1, 15, 157, 120, 10
     COMBOBOX IDC_OFFSCREEN, 135, 155, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Întotdeauna extra-ecran:", -1, 15, 172, 120, 10, SS_LEFT
+    LTEXT "Î&ntotdeauna extra-ecran:", -1, 15, 172, 120, 10, SS_LEFT
     COMBOBOX IDC_ALWAYSOFFSCREEN, 135, 170, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Dimensiunea memoriei video:", -1, 15, 187, 120, 10, SS_LEFT
+    LTEXT "Dim&ensiunea memoriei video:", -1, 15, 187, 120, 10, SS_LEFT
     COMBOBOX IDC_VIDMEMSIZE, 135, 185, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Randator DirectDraw:", -1, 15, 202, 120, 10, SS_LEFT
+    LTEXT "Randator &DirectDraw:", -1, 15, 202, 120, 10, SS_LEFT
     COMBOBOX IDC_DDRENDERER, 135, 200, 90, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
 END
 
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Opțiuni WineD3D"
-    IDS_CPLDESCRIPTION "Configurarea opțiunilor de execuție WineD3D."
+    IDS_CPLDESCRIPTION "Configurează setările de rulare WineD3D."
 END
