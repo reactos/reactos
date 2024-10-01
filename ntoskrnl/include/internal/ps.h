@@ -403,7 +403,8 @@ NTAPI
 PspEnumerateProcessesInJob(
     _In_ PEJOB Job,
     _In_ PJOB_ENUMERATOR_CALLBACK Callback,
-    _In_opt_ PVOID Context
+    _In_opt_ PVOID Context,
+    _In_ BOOLEAN BreakOnCallbackFailure
 );
 
 NTSTATUS

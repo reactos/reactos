@@ -2,7 +2,8 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ps/job.c
- * PURPOSE:         Job Native Functions
+ * PURPOSE:         Core functions for managing job objects, a kernel mechanism
+ *                  for managing multiple processes as a single unit
  * PROGRAMMERS:     2004-2012 Alex Ionescu (alex@relsoft.net) (stubs)
  *                  2004-2005 Thomas Weidenmueller <w3seek@reactos.com>
  *                  2015-2016 Samuel Serapión Vega (encoded@reactos.org)
@@ -17,7 +18,6 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
-
 
 /* GLOBALS *******************************************************************/
 
@@ -150,34 +150,29 @@ PspAdvanceJobEnumerator(
     }
 
     /* Iterate through the job's process list */
-    do
+    while (Entry != &Job->ProcessListHead)
     {
-        if (Entry != &Job->ProcessListHead)
-        {
-            Next = CONTAINING_RECORD(Entry, EPROCESS, JobLinks);
+        Next = CONTAINING_RECORD(Entry, EPROCESS, JobLinks);
 
-            /* We use the safe variant because it returns FALSE if
-               the object is being deleted */
-            if (ObReferenceObjectSafe(Next))
-            {
-                /* Found a valid process */
-                break;
-            }
-        }
-        else
+        /* We use the safe variant because it returns FALSE if
+           the object is being deleted */
+        if (ObReferenceObjectSafe(Next))
         {
-            /* Reached the end */
-            Next = NULL;
-            break;
+            goto Found;
         }
 
-        /* Move to the next process */
+        /* Move to the next entry in the lsit */
         Entry = Entry->Flink;
-    } while (Entry != &Job->ProcessListHead);
+    }
+
+    /* Reached the end */
+    Next = NULL;
+
+Found:
 
     ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
 
-    if (Process != NULL)
+    if (Process)
     {
         ObDereferenceObject(Process);
     }
@@ -199,42 +194,59 @@ PspAdvanceJobEnumerator(
  * @param[in, optional] Context
  *     An optional pointer to a context to be passed to the callback function.
  *
+ * @param[in] BreakOnCallbackFailure
+ *     A boolean that, if TRUE, indicates that enumeration should stop early if
+ *     the callback function returns an error. If FALSE, the enumeration
+ *     continues even if the callback function fails.
+ *
  * @returns
  *     STATUS_SUCCESS if the enumeration completed successfully.
  *     An appropriate NTSTATUS error code otherwise.
  *
- * @remark
- *     When the callback function is executed, the job lock is held.
+ * @remarks
+ *     If BreakOnCallbackFailure is TRUE and not all callbacks returned success,
+ *     the function may still return STATUS_SUCCESS.
  */
 NTSTATUS
 NTAPI
 PspEnumerateProcessesInJob(
     _In_ PEJOB Job,
     _In_ PJOB_ENUMERATOR_CALLBACK Callback,
-    _In_opt_ PVOID Context
+    _In_opt_ PVOID Context,
+    _In_ BOOLEAN BreakOnCallbackFailure
 )
 {
     NTSTATUS Status = STATUS_SUCCESS;
+    BOOLEAN AnyCallbackFailed = FALSE;
     PEPROCESS Process;
 
-    /* Start enumerating processes with the first process */
+    /* Get the first process from the job */
     Process = PspAdvanceJobEnumerator(Job, NULL);
 
-    /* Loop through each process in the job until no process remains */
+    /* Iterate through all processes in the job */
     while (Process)
     {
-        /* Call the callback function */
+        /* Call the provided callback */
         Status = Callback(Process, Context);
-
-        /* Check if the callback returned an error */
         if (!NT_SUCCESS(Status))
         {
-            /* And exit the loop on error */
-            break;
+            AnyCallbackFailed = TRUE;
+            if (BreakOnCallbackFailure)
+            {
+                break;
+            }
         }
 
-        /* Advance to the next process */
+        /* Move to the next process */
         Process = PspAdvanceJobEnumerator(Job, Process);
+    }
+
+    if (NT_SUCCESS(Status) && AnyCallbackFailed)
+    {
+        DPRINT1("PspEnumerateProcessesInJob(Job: %p, Callback: %p, Context: %p,"
+                " BreakOnCallbackFailure: %u) - Partial success report, not all"
+                " callbacks returned success\n",
+                Job, Callback, Context, BreakOnCallbackFailure);
     }
 
     return Status;
@@ -550,7 +562,8 @@ PspTerminateJobObject(
 
     return PspEnumerateProcessesInJob(Job,
                                       PspTerminateProcessCallback,
-                                      &Context);
+                                      &Context,
+                                      FALSE);
 }
 
 /*!
