@@ -14,8 +14,10 @@
 
 /* GLOBALS ********************************************************************/
 
+#ifndef _MINIHAL_
 extern KSPIN_LOCK HalpPCIConfigLock;
 ULONG HalpPciIrqMask;
+#endif
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -1017,11 +1019,11 @@ HalpInitializePciBus(VOID)
         BusHandler = HalHandlerForBus(PCIBus, i);
 
         /* Loop every device */
-        for (j = 0; j < 32; j++)
+        for (j = 0; j < PCI_MAX_DEVICES; j++)
         {
             /* Loop every function */
             PciSlot.u.bits.DeviceNumber = j;
-            for (k = 0; k < 8; k++)
+            for (k = 0; k < PCI_MAX_FUNCTION; k++)
             {
                 /* Build the final slot structure */
                 PciSlot.u.bits.FunctionNumber = k;
@@ -1211,14 +1213,18 @@ HalpAssignSlotResources(IN PUNICODE_STRING RegistryPath,
                         IN ULONG SlotNumber,
                         IN OUT PCM_RESOURCE_LIST *AllocatedResources)
 {
+#ifndef _MINIHAL_
     PBUS_HANDLER Handler;
     NTSTATUS Status;
+
     PAGED_CODE();
+
     DPRINT1("Slot assignment for %d on bus %u\n", BusType, BusNumber);
 
     /* Find the handler */
     Handler = HalReferenceHandlerForBus(BusType, BusNumber);
-    if (!Handler) return STATUS_NOT_FOUND;
+    if (!Handler)
+        return STATUS_NOT_FOUND;
 
     /* Do the assignment */
     Status = Handler->AssignSlotResources(Handler,
@@ -1233,6 +1239,31 @@ HalpAssignSlotResources(IN PUNICODE_STRING RegistryPath,
     /* Dereference the handler and return */
     HalDereferenceBusHandler(Handler);
     return Status;
+
+#else // _MINIHAL_
+// Code adapted from acpi/busemul.c
+
+    BUS_HANDLER BusHandler;
+    PAGED_CODE();
+
+    /* Only PCI is supported */
+    if (BusType != PCIBus)
+        return STATUS_NOT_IMPLEMENTED;
+
+    /* Setup fake PCI Bus handler */
+    RtlCopyMemory(&BusHandler, &HalpFakePciBusHandler, sizeof(BusHandler));
+    BusHandler.BusNumber = BusNumber;
+
+    /* Call the PCI function */
+    return HalpAssignPCISlotResources(&BusHandler,
+                                      &BusHandler,
+                                      RegistryPath,
+                                      DriverClassName,
+                                      DriverObject,
+                                      DeviceObject,
+                                      SlotNumber,
+                                      AllocatedResources);
+#endif // _MINIHAL_
 }
 
 BOOLEAN
@@ -1421,7 +1452,6 @@ HalAssignSlotResources(IN PUNICODE_STRING RegistryPath,
     }
 }
 
-#ifndef _MINIHAL_
 /*
  * @implemented
  */
@@ -1441,7 +1471,6 @@ HalGetBusData(IN BUS_DATA_TYPE BusDataType,
                                  0,
                                  Length);
 }
-#endif // _MINIHAL_
 
 /*
  * @implemented
@@ -1455,12 +1484,14 @@ HalGetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
                       IN ULONG Offset,
                       IN ULONG Length)
 {
+#ifndef _MINIHAL_
     PBUS_HANDLER Handler;
     ULONG Status;
 
     /* Find the handler */
     Handler = HaliReferenceHandlerForConfigSpace(BusDataType, BusNumber);
-    if (!Handler) return 0;
+    if (!Handler)
+        return 0;
 
     /* Do the assignment */
     Status = Handler->GetBusData(Handler,
@@ -1473,6 +1504,41 @@ HalGetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
     /* Dereference the handler and return */
     HalDereferenceBusHandler(Handler);
     return Status;
+
+#else // _MINIHAL_
+// Code adapted from acpi/busemul.c
+
+    /* Look at the bus type */
+    if (BusDataType == Cmos)
+    {
+        /* Call CMOS Function */
+        return HalpGetCmosData(0, SlotNumber, Buffer, Length);
+    }
+    else if (BusDataType == EisaConfiguration)
+    {
+        /* FIXME: TODO */
+        ASSERT(FALSE);
+    }
+    else if ((BusDataType == PCIConfiguration) && HalpPCIConfigInitialized &&
+             ((BusNumber >= HalpMinPciBus) && (BusNumber <= HalpMaxPciBus)))
+    {
+        /* Setup fake PCI Bus handler */
+        BUS_HANDLER BusHandler;
+        RtlCopyMemory(&BusHandler, &HalpFakePciBusHandler, sizeof(BusHandler));
+        BusHandler.BusNumber = BusNumber;
+
+        /* Call PCI function */
+        return HalpGetPCIData(&BusHandler,
+                              &BusHandler,
+                              SlotNumber,
+                              Buffer,
+                              Offset,
+                              Length);
+    }
+
+    /* Invalid bus */
+    return 0;
+#endif // _MINIHAL_
 }
 
 #ifndef _MINIHAL_
@@ -1521,6 +1587,7 @@ HalGetInterruptVector(IN INTERFACE_TYPE InterfaceType,
     HalDereferenceBusHandler(Handler);
     return Vector;
 }
+#endif // _MINIHAL_
 
 /*
  * @implemented
@@ -1554,12 +1621,14 @@ HalSetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
                       IN ULONG Offset,
                       IN ULONG Length)
 {
+#ifndef _MINIHAL_
     PBUS_HANDLER Handler;
     ULONG Status;
 
     /* Find the handler */
     Handler = HaliReferenceHandlerForConfigSpace(BusDataType, BusNumber);
-    if (!Handler) return 0;
+    if (!Handler)
+        return 0;
 
     /* Do the assignment */
     Status = Handler->SetBusData(Handler,
@@ -1572,8 +1641,36 @@ HalSetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
     /* Dereference the handler and return */
     HalDereferenceBusHandler(Handler);
     return Status;
-}
+
+#else // _MINIHAL_
+// Code adapted from acpi/busemul.c
+
+    /* Look at the bus type */
+    if (BusDataType == Cmos)
+    {
+        /* Call CMOS Function */
+        return HalpSetCmosData(0, SlotNumber, Buffer, Length);
+    }
+    else if ((BusDataType == PCIConfiguration) && HalpPCIConfigInitialized)
+    {
+        /* Setup fake PCI Bus handler */
+        BUS_HANDLER BusHandler;
+        RtlCopyMemory(&BusHandler, &HalpFakePciBusHandler, sizeof(BusHandler));
+        BusHandler.BusNumber = BusNumber;
+
+        /* Call PCI function */
+        return HalpSetPCIData(&BusHandler,
+                              &BusHandler,
+                              SlotNumber,
+                              Buffer,
+                              Offset,
+                              Length);
+    }
+
+    /* Invalid bus */
+    return 0;
 #endif // _MINIHAL_
+}
 
 /*
  * @implemented
@@ -1586,7 +1683,7 @@ HalTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
                        IN OUT PULONG AddressSpace,
                        OUT PPHYSICAL_ADDRESS TranslatedAddress)
 {
-    /* Look as the bus type */
+    /* Look at the bus type */
     if (InterfaceType == PCIBus)
     {
         /* Call the PCI registered function */

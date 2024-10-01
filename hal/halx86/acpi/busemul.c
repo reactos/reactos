@@ -55,10 +55,11 @@ HalpAssignSlotResources(IN PUNICODE_STRING RegistryPath,
     PAGED_CODE();
 
     /* Only PCI is supported */
-    if (BusType != PCIBus) return STATUS_NOT_IMPLEMENTED;
+    if (BusType != PCIBus)
+        return STATUS_NOT_IMPLEMENTED;
 
     /* Setup fake PCI Bus handler */
-    RtlCopyMemory(&BusHandler, &HalpFakePciBusHandler, sizeof(BUS_HANDLER));
+    RtlCopyMemory(&BusHandler, &HalpFakePciBusHandler, sizeof(BusHandler));
     BusHandler.BusNumber = BusNumber;
 
     /* Call the PCI function */
@@ -94,10 +95,12 @@ HalpFindBusAddressTranslation(IN PHYSICAL_ADDRESS BusAddress,
                               IN BOOLEAN NextBus)
 {
     /* Make sure we have a context */
-    if (!Context) return FALSE;
+    if (!Context)
+        return FALSE;
 
     /* If we have data in the context, then this shouldn't be a new lookup */
-    if ((*Context != 0) && (NextBus != FALSE)) return FALSE;
+    if ((*Context != 0) && (NextBus != FALSE))
+        return FALSE;
 
     /* Return bus data */
     TranslatedAddress->QuadPart = BusAddress.QuadPart;
@@ -136,6 +139,8 @@ HalAssignSlotResources(IN PUNICODE_STRING RegistryPath,
                        IN ULONG SlotNumber,
                        IN OUT PCM_RESOURCE_LIST *AllocatedResources)
 {
+    PAGED_CODE();
+
     /* Check the bus type */
     if (BusType != PCIBus)
     {
@@ -195,9 +200,7 @@ HalGetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
                       IN ULONG Offset,
                       IN ULONG Length)
 {
-    BUS_HANDLER BusHandler;
-
-    /* Look as the bus type */
+    /* Look at the bus type */
     if (BusDataType == Cmos)
     {
         /* Call CMOS Function */
@@ -208,12 +211,12 @@ HalGetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
         /* FIXME: TODO */
         ASSERT(FALSE);
     }
-    else if ((BusDataType == PCIConfiguration) &&
-             (HalpPCIConfigInitialized) &&
+    else if ((BusDataType == PCIConfiguration) && HalpPCIConfigInitialized &&
              ((BusNumber >= HalpMinPciBus) && (BusNumber <= HalpMaxPciBus)))
     {
         /* Setup fake PCI Bus handler */
-        RtlCopyMemory(&BusHandler, &HalpFakePciBusHandler, sizeof(BUS_HANDLER));
+        BUS_HANDLER BusHandler;
+        RtlCopyMemory(&BusHandler, &HalpFakePciBusHandler, sizeof(BusHandler));
         BusHandler.BusNumber = BusNumber;
 
         /* Call PCI function */
@@ -282,18 +285,17 @@ HalSetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
                       IN ULONG Offset,
                       IN ULONG Length)
 {
-    BUS_HANDLER BusHandler;
-
-    /* Look as the bus type */
+    /* Look at the bus type */
     if (BusDataType == Cmos)
     {
         /* Call CMOS Function */
         return HalpSetCmosData(0, SlotNumber, Buffer, Length);
     }
-    else if ((BusDataType == PCIConfiguration) && (HalpPCIConfigInitialized))
+    else if ((BusDataType == PCIConfiguration) && HalpPCIConfigInitialized)
     {
         /* Setup fake PCI Bus handler */
-        RtlCopyMemory(&BusHandler, &HalpFakePciBusHandler, sizeof(BUS_HANDLER));
+        BUS_HANDLER BusHandler;
+        RtlCopyMemory(&BusHandler, &HalpFakePciBusHandler, sizeof(BusHandler));
         BusHandler.BusNumber = BusNumber;
 
         /* Call PCI function */
@@ -320,7 +322,7 @@ HalTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
                        IN OUT PULONG AddressSpace,
                        OUT PPHYSICAL_ADDRESS TranslatedAddress)
 {
-    /* Look as the bus type */
+    /* Look at the bus type */
     if (InterfaceType == PCIBus)
     {
         /* Call the PCI registered function */
@@ -332,6 +334,13 @@ HalTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
     }
     else
     {
+#if 0
+        return HalpTranslateBusAddress(InterfaceType,
+                                       BusNumber,
+                                       BusAddress,
+                                       AddressSpace,
+                                       TranslatedAddress);
+#endif
         /* Translation is easy */
         TranslatedAddress->QuadPart = BusAddress.QuadPart;
         return TRUE;
