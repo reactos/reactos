@@ -178,9 +178,9 @@ BEGIN
     IDS_WELCOME_TEXT "Solda bir kategori seçiniz, ardından kurmak ya da kaldırmak için bir uygulama seçiniz.\nReactOS'un İnternet sitesi: "
     IDS_WELCOME_URL "https://reactos.org"
 
-    IDS_APPWIZ_TITLE "Add/Remove Programs"
-    IDS_APPWIZ_TEXT1 "Choose ""Applications"" or ""Updates"" to view the list of applications or updates installed on your system."
-    IDS_APPWIZ_TEXT2 "To remove a program or to modify its installed components, select it from the list and click on ""Uninstall"" or ""Modify""."
+    IDS_APPWIZ_TITLE "Program Ekle/Kaldır"
+    IDS_APPWIZ_TEXT1 "Sisteminizde yüklü olan uygulamaların veya güncellemelerin listesini görüntülemek için ""Uygulamalar"" veya ""Güncellemeler"" öğesini seçin."
+    IDS_APPWIZ_TEXT2 "Bir programı kaldırmak veya yüklü bileşenlerini değiştirmek için listeden seçin ve ""Kaldır"" veya ""Değiştir"" üzerine tıklayın."
 END
 
 STRINGTABLE
@@ -213,7 +213,7 @@ BEGIN
     IDS_APP_DISPLAY_DETAILS "Detaylar"
     IDS_APP_DISPLAY_LIST "Liste"
     IDS_APP_DISPLAY_TILE "Karo"
-    IDS_NO_SEARCH_RESULTS "No search results"
+    IDS_NO_SEARCH_RESULTS "Arama sonucu yok"
 END
 
 STRINGTABLE
@@ -266,5 +266,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
+    IDS_INSTGEN_CONFIRMUNINST "Kaldırmak istediğinizden emin misiniz %s?"
 END
