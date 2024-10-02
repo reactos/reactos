@@ -62,11 +62,6 @@ list(APPEND FREELDR_BOOTLIB_SOURCE
 
 list(APPEND FREELDR_BOOTMGR_SOURCE
     include/freeldr.h
-    custom.c
-    # linuxboot.c
-    miscboot.c
-    options.c
-    oslist.c
     settings.c
     ui/directui.c
     # ui/gui.c
@@ -122,14 +117,8 @@ else()
 endif()
 
 list(APPEND FREELDR_BASE_SOURCE
-    bootmgr.c # This file is compiled with custom definitions
     freeldr.c
-    ntldr/setupldr.c ## Strangely enough this file is needed in GCC builds
-                     ## even if ${FREELDR_NTLDR_SOURCE} is not added,
-                     ## otherwise we get linking errors with Rtl**Bitmap** APIs.
-                     ## Do not happen on MSVC builds however...
-    ntldr/inffile.c
-    ntldr/ntldropts.c
+    ntldr/ntldropts.c # Should be in rosload, but is currently needed by machpc.c, etc.
     lib/rtl/libsupp.c)
 
 if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")

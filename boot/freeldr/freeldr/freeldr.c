@@ -40,6 +40,107 @@ CCHAR FrLdrBootPath[MAX_PATH] = "";
 
 /* FUNCTIONS ******************************************************************/
 
+static
+BOOLEAN
+LoadRosload(
+    _In_ PCSTR RosloadPath,
+    _Out_ PCHAR FullPath,
+    _Out_ PVOID* ImageBase)
+{
+    BOOLEAN Success;
+
+    /* Create full rosload.exe path */
+    strcpy(FullPath, FrLdrBootPath);
+    strcat(FullPath, "\\");
+    strcat(FullPath, RosloadPath);
+
+    TRACE("Loading second stage loader '%s'\n", FullPath);
+
+    /* Load rosload.exe as a bootloader image */
+    Success = PeLdrLoadImageEx(FullPath,
+                               LoaderLoadedProgram,
+                               ImageBase,
+                               FALSE);
+    if (!Success)
+    {
+        ERR("Failed to load second stage loader '%s'\n", FullPath);
+    }
+
+    return Success;
+}
+
+static
+ULONG
+LaunchSecondStageLoader(VOID)
+{
+    CHAR SecondStageLdrPath[MAX_PATH];
+    PLDR_DATA_TABLE_ENTRY FreeldrDTE, RosloadDTE;
+    LIST_ENTRY ModuleListHead;
+    PVOID ImageBase;
+    LONG (*EntryPoint)(VOID);
+    BOOLEAN Success;
+
+    /* Initialize the loaded module list */
+    InitializeListHead(&ModuleListHead);
+
+    /* Load the second stage loader */
+    if (!LoadRosload("rosload.exe", SecondStageLdrPath, &ImageBase))
+    {
+        /* Try in loader directory */
+        if (!LoadRosload("loader\\rosload.exe", SecondStageLdrPath, &ImageBase))
+        {
+            return ENOENT;
+        }
+    }
+
+    /* Allocate a DTE for rosload.exe */
+    Success = PeLdrAllocateDataTableEntry(&ModuleListHead,
+                                          "rosload.exe",
+                                          SecondStageLdrPath,
+                                          ImageBase,
+                                          &RosloadDTE);
+    if (!Success)
+    {
+        /* Cleanup and bail out */
+        ERR("Failed to allocate DTE for rosload.exe\n");
+        MmFreeMemory(ImageBase);
+        return ENOMEM;
+    }
+
+    /* Add the PE part of freeldr.sys to the list of loaded executables, it
+       contains ScsiPort* exports, imported by ntbootdd.sys */
+    Success = PeLdrAllocateDataTableEntry(&ModuleListHead,
+                                          "freeldr_pe.exe",
+                                          "freeldr_pe.exe",
+                                          &__ImageBase,
+                                          &FreeldrDTE);
+    if (!Success)
+    {
+        /* Cleanup and bail out */
+        ERR("Failed to allocate DTE for freeldr\n");
+        PeLdrFreeDataTableEntry(RosloadDTE);
+        MmFreeMemory(ImageBase);
+        return ENOMEM;
+    }
+
+    /* Resolve imports */
+    Success = PeLdrScanImportDescriptorTable(&ModuleListHead, "", RosloadDTE);
+    if (!Success)
+    {
+        /* Cleanup and bail out */
+        ERR("Failed to resolve imports for rosload.exe\n");
+        PeLdrFreeDataTableEntry(FreeldrDTE);
+        PeLdrFreeDataTableEntry(RosloadDTE);
+        MmFreeMemory(ImageBase);
+        return EIO;
+    }
+
+    /* Call the entrypoint */
+    printf("Launching rosload.exe...\n");
+    EntryPoint = VaToPa(RosloadDTE->EntryPoint);
+    return (*EntryPoint)();
+}
+
 VOID __cdecl BootMain(IN PCCH CmdLine)
 {
     /* Load the default settings from the command-line */
@@ -74,7 +175,17 @@ VOID __cdecl BootMain(IN PCCH CmdLine)
     /* Initialize I/O subsystem */
     FsInit();
 
-    RunLoader();
+    if (!MachInitializeBootDevices())
+    {
+        UiMessageBoxCritical("Error when detecting hardware.");
+        goto Quit;
+    }
+
+    /* Launch second stage loader */
+    if (LaunchSecondStageLoader() != ESUCCESS)
+    {
+        UiMessageBoxCritical("Unable to load second stage loader.");
+    }
 
 Quit:
     /* If we reach this point, something went wrong before, therefore reboot */
