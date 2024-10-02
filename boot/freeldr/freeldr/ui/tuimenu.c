@@ -222,7 +222,7 @@ TuiDrawMenu(
     /* Display the boot options if needed */
     if (MenuInfo->ShowBootOptions)
     {
-        DisplayBootTimeOptions();
+        //DisplayBootTimeOptions(); // FIXME
     }
 
     VideoCopyOffScreenBufferToVRAM();
