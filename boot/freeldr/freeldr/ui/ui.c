@@ -605,7 +605,6 @@ BOOLEAN
 UiDisplayMenu(
     IN PCSTR MenuHeader,
     IN PCSTR MenuFooter OPTIONAL,
-    IN BOOLEAN ShowBootOptions,
     IN PCSTR MenuItemList[],
     IN ULONG MenuItemCount,
     IN ULONG DefaultMenuItem,
@@ -615,7 +614,7 @@ UiDisplayMenu(
     IN UiMenuKeyPressFilterCallback KeyPressFilter OPTIONAL,
     IN PVOID Context OPTIONAL)
 {
-    return UiVtbl.DisplayMenu(MenuHeader, MenuFooter, ShowBootOptions,
+    return UiVtbl.DisplayMenu(MenuHeader, MenuFooter,
                               MenuItemList, MenuItemCount, DefaultMenuItem,
                               MenuTimeOut, SelectedMenuItem, CanEscape,
                               KeyPressFilter, Context);

@@ -95,7 +95,6 @@ VOID DoOptionsMenu(IN OperatingSystemItem* OperatingSystem)
     CHAR  DebugChannelString[100];
 
     if (!UiDisplayMenu("Select an option:", NULL,
-                       TRUE,
                        OptionsMenuList,
                        sizeof(OptionsMenuList) / sizeof(OptionsMenuList[0]),
                        11, // Use "Start ReactOS normally" as default; see the switch below.
