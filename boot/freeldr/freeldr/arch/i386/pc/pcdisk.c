@@ -605,22 +605,13 @@ PcDiskReadLogicalSectorsLBA(
 
         Int386(0x13, &RegsIn, &RegsOut);
 
-        /* If it worked return TRUE */
-        if (INT386_SUCCESS(RegsOut))
-        {
+        /* If it worked, or if it was a corrected ECC error
+         * and the data is still good, return success */
+        if (INT386_SUCCESS(RegsOut) || (RegsOut.b.ah == 0x11))
             return TRUE;
-        }
-        /* If it was a corrected ECC error then the data is still good */
-        else if (RegsOut.b.ah == 0x11)
-        {
-            return TRUE;
-        }
-        /* If it failed then do the next retry */
-        else
-        {
-            DiskResetController(DriveNumber);
-            continue;
-        }
+
+        /* It failed, do the next retry */
+        DiskResetController(DriveNumber);
     }
 
     /* If we get here then the read failed */
@@ -715,22 +706,13 @@ PcDiskReadLogicalSectorsCHS(
         {
             Int386(0x13, &RegsIn, &RegsOut);
 
-            /* If it worked break out */
-            if (INT386_SUCCESS(RegsOut))
-            {
+            /* If it worked, or if it was a corrected ECC error
+             * and the data is still good, break out */
+            if (INT386_SUCCESS(RegsOut) || (RegsOut.b.ah == 0x11))
                 break;
-            }
-            /* If it was a corrected ECC error then the data is still good */
-            else if (RegsOut.b.ah == 0x11)
-            {
-                break;
-            }
-            /* If it failed then do the next retry */
-            else
-            {
-                DiskResetController(DriveNumber);
-                continue;
-            }
+
+            /* It failed, do the next retry */
+            DiskResetController(DriveNumber);
         }
 
         /* If we retried 3 times then fail */

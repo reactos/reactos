@@ -219,22 +219,13 @@ Pc98DiskReadLogicalSectorsLBA(
         {
             Int386(0x1B, &RegsIn, &RegsOut);
 
-            /* If it worked return TRUE */
-            if (INT386_SUCCESS(RegsOut))
-            {
+            /* If it worked, or if it was a corrected ECC error
+             * and the data is still good, return success */
+            if (INT386_SUCCESS(RegsOut) || (RegsOut.b.ah == 0x08))
                 return TRUE;
-            }
-            /* If it was a corrected ECC error then the data is still good */
-            else if (RegsOut.b.ah == 0x08)
-            {
-                return TRUE;
-            }
-            /* If it failed the do the next retry */
-            else
-            {
-                DiskResetController(DiskDrive);
-                continue;
-            }
+
+            /* It failed, do the next retry */
+            DiskResetController(DiskDrive);
         }
     }
 

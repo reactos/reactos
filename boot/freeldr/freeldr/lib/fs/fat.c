@@ -668,7 +668,8 @@ BOOLEAN FatSearchDirectoryBufferForFile(PFAT_VOLUME_INFO Volume, PVOID Directory
         // See if the file name matches either the short or long name
         //
         if (((strlen(FileName) == strlen(LfnNameBuffer)) && (_stricmp(FileName, LfnNameBuffer) == 0)) ||
-            ((strlen(FileName) == strlen(ShortNameBuffer)) && (_stricmp(FileName, ShortNameBuffer) == 0)))        {
+            ((strlen(FileName) == strlen(ShortNameBuffer)) && (_stricmp(FileName, ShortNameBuffer) == 0)))
+        {
             //
             // We found the entry, now fill in the FAT_FILE_INFO struct
             //
@@ -702,7 +703,6 @@ BOOLEAN FatSearchDirectoryBufferForFile(PFAT_VOLUME_INFO Volume, PVOID Directory
         //
         RtlZeroMemory(ShortNameBuffer, 13 * sizeof(UCHAR));
         RtlZeroMemory(LfnNameBuffer, 261 * sizeof(UCHAR));
-        continue;
     }
 
     return FALSE;
