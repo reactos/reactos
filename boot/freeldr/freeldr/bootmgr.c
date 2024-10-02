@@ -340,6 +340,7 @@ MainBootMenuKeyPressFilter(
     {
     case KEY_F8:
         DoOptionsMenu(&((OperatingSystemItem*)Context)[SelectedMenuItem]);
+        DisplayBootTimeOptions();
         return TRUE;
 
 #ifdef HAS_OPTION_MENU_EDIT_CMDLINE
@@ -433,7 +434,6 @@ VOID RunLoader(VOID)
         if (!UiDisplayMenu("Please select the operating system to start:",
                            "For troubleshooting and advanced startup options for "
                                "ReactOS, press F8.",
-                           TRUE,
                            OperatingSystemDisplayNames,
                            OperatingSystemCount,
                            DefaultOperatingSystem,
