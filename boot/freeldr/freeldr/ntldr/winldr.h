@@ -79,23 +79,6 @@ extern BOOLEAN SosEnabled;
 extern BOOLEAN PaeModeOn;
 #endif
 
-FORCEINLINE
-VOID
-UiResetForSOS(VOID)
-{
-#ifdef _M_ARM
-    /* Re-initialize the UI */
-    UiInitialize(TRUE);
-#else
-    /* Reset the UI and switch to MiniTui */
-    UiVtbl.UnInitialize();
-    UiVtbl = MiniTuiVtbl;
-    UiVtbl.Initialize();
-#endif
-    /* Disable the progress bar */
-    UiProgressBar.Show = FALSE;
-}
-
 VOID
 NtLdrOutputLoadMsg(
     _In_ PCSTR FileName,
