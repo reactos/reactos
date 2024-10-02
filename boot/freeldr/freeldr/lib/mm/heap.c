@@ -31,8 +31,8 @@ DBG_DEFAULT_CHANNEL(HEAP);
 #define REDZONE_LOW(Block) ((ULONG64*)Block->Data + 1)
 #define REDZONE_HI(Block) ((ULONG64*)((PUCHAR)Block->Data + 16 + *REDZONE_SIZE(Block)))
 
-PVOID FrLdrDefaultHeap;
-PVOID FrLdrTempHeap;
+static PVOID FrLdrDefaultHeap;
+static PVOID FrLdrTempHeap;
 
 typedef struct _BLOCK_DATA
 {
@@ -529,6 +529,32 @@ FrLdrHeapFreeEx(
 #endif
 }
 
+PVOID
+FrLdrHeapAlloc(SIZE_T MemorySize, ULONG Tag)
+{
+    return FrLdrHeapAllocateEx(FrLdrDefaultHeap, MemorySize, Tag);
+}
+
+VOID
+FrLdrHeapFree(PVOID MemoryPointer, ULONG Tag)
+{
+    FrLdrHeapFreeEx(FrLdrDefaultHeap, MemoryPointer, Tag);
+}
+
+PVOID
+FrLdrTempAlloc(
+    _In_ SIZE_T Size,
+    _In_ ULONG Tag)
+{
+    return FrLdrHeapAllocateEx(FrLdrTempHeap, Size, Tag);
+}
+
+VOID
+FrLdrTempFree(
+    PVOID Allocation, ULONG Tag)
+{
+    FrLdrHeapFreeEx(FrLdrTempHeap, Allocation, Tag);
+}
 
 /* Wrapper functions *********************************************************/
 
