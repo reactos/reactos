@@ -132,7 +132,7 @@ list(APPEND FREELDR_BASE_SOURCE
     ntldr/ntldropts.c
     lib/rtl/libsupp.c)
 
-if(ARCH STREQUAL "i386")
+if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
     # Must be included together with disk/scsiport.c
     list(APPEND FREELDR_BASE_SOURCE
         ${CMAKE_CURRENT_BINARY_DIR}/freeldr_pe.def)
