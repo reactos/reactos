@@ -85,7 +85,7 @@ WarnDeprecated(
     CHAR msgString[300];
 
     /* If the user didn't cancel the timeout, don't display the warning */
-    if (BootMgrInfo.TimeOut >= 0)
+    if (GetBootMgrInfo()->TimeOut >= 0)
         return;
 
     va_start(ap, MsgFmt);
@@ -183,6 +183,7 @@ BuildArgvForOsLoader(
     PCHAR* Argv;
     PCHAR* Args;
     PCHAR SettingName, SettingValue;
+    PCCHAR BootPath = FrLdrGetBootPath();
 
     *pArgc = 0;
 
@@ -208,7 +209,7 @@ BuildArgvForOsLoader(
     /* i == 0: Program name */
     // TODO: Provide one in the future...
     /* i == 1: SystemPartition : from where FreeLdr has been started */
-    Size += (strlen("SystemPartition=") + strlen(FrLdrBootPath) + 1) * sizeof(CHAR);
+    Size += (strlen("SystemPartition=") + strlen(BootPath) + 1) * sizeof(CHAR);
     /* i == 2: LoadIdentifier  : ASCII string that may be used
      * to associate an identifier with a set of load parameters */
     if (LoadIdentifier)
@@ -236,7 +237,7 @@ BuildArgvForOsLoader(
     /* i == 1: SystemPartition */
     {
         strcpy(SettingName, "SystemPartition=");
-        strcat(SettingName, FrLdrBootPath);
+        strcat(SettingName, BootPath);
 
         *Args++ = SettingName;
         SettingName += (strlen(SettingName) + 1);
@@ -333,7 +334,7 @@ MainBootMenuKeyPressFilter(
     IN PVOID Context OPTIONAL)
 {
     /* Any key-press cancels the global timeout */
-    BootMgrInfo.TimeOut = -1;
+    GetBootMgrInfo()->TimeOut = -1;
 
     switch (KeyPress)
     {
@@ -394,7 +395,7 @@ VOID RunLoader(VOID)
 #endif
 
     /* Debugger main initialization */
-    DebugInit(BootMgrInfo.DebugString);
+    DebugInit(GetBootMgrInfo()->DebugString);
 
     /* UI main initialization */
     if (!UiInitialize(TRUE))
@@ -427,7 +428,7 @@ VOID RunLoader(VOID)
     }
 
     /* Find all the message box settings and run them */
-    UiShowMessageBoxesInSection(BootMgrInfo.FrLdrSection);
+    UiShowMessageBoxesInSection(GetBootMgrInfo()->FrLdrSection);
 
     for (;;)
     {
@@ -442,7 +443,7 @@ VOID RunLoader(VOID)
                            OperatingSystemDisplayNames,
                            OperatingSystemCount,
                            DefaultOperatingSystem,
-                           BootMgrInfo.TimeOut,
+                           GetBootMgrInfo()->TimeOut,
                            &SelectedOperatingSystem,
                            FALSE,
                            MainBootMenuKeyPressFilter,
@@ -455,12 +456,12 @@ VOID RunLoader(VOID)
         /* Load the chosen operating system */
         LoadOperatingSystem(&OperatingSystemList[SelectedOperatingSystem]);
 
-        BootMgrInfo.TimeOut = -1;
+        GetBootMgrInfo()->TimeOut = -1;
 
         /* If we get there, the OS loader failed. As it may have
          * messed up the display, re-initialize the UI. */
 #ifndef _M_ARM
-        UiVtbl.UnInitialize();
+        UiUnInitialize("");
 #endif
         UiInitialize(TRUE);
     }

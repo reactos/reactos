@@ -118,7 +118,7 @@ BOOLEAN MmAreMemoryPagesAvailable(PVOID PageLookupTable, PFN_NUMBER TotalPageCou
 VOID MmSetMemoryType(PVOID MemoryAddress, SIZE_T MemorySize, TYPE_OF_MEMORY NewType); // Use with EXTREME caution!
 
 PPAGE_LOOKUP_TABLE_ITEM MmGetMemoryMap(PFN_NUMBER *NoEntries);            // Returns a pointer to the memory mapping table and a number of entries in it
-
+PFN_NUMBER MmGetTotalPagesInLookupTable(VOID);
 
 //BOOLEAN    MmInitializeMemoryManager(ULONG LowMemoryStart, ULONG LowMemoryLength);
 BOOLEAN    MmInitializeMemoryManager(VOID);
@@ -129,12 +129,14 @@ VOID    MmFreeMemory(PVOID MemoryPointer);
 PVOID    MmAllocateMemoryAtAddress(SIZE_T MemorySize, PVOID DesiredAddress, TYPE_OF_MEMORY MemoryType);
 PVOID    MmAllocateHighestMemoryBelowAddress(SIZE_T MemorySize, PVOID DesiredAddress, TYPE_OF_MEMORY MemoryType);
 
+PFN_NUMBER MmGetHighestPhysicalPage(VOID);
+PFN_NUMBER MmGetLoaderPagesSpanned(VOID);
+ULONG MmGetBiosMemoryMap(_Out_ PFREELDR_MEMORY_DESCRIPTOR *MemoryMap);
+
 /* Heap */
 #define DEFAULT_HEAP_SIZE (1024 * 1024)
 #define TEMP_HEAP_SIZE (32 * 1024 * 1024)
 
-extern PVOID FrLdrDefaultHeap;
-extern PVOID FrLdrTempHeap;
 extern SIZE_T FrLdrImageSize;
 
 PVOID
@@ -169,34 +171,17 @@ FrLdrHeapFreeEx(
     PVOID Pointer,
     ULONG Tag);
 
-FORCEINLINE
 PVOID
-FrLdrHeapAlloc(SIZE_T MemorySize, ULONG Tag)
-{
-    return FrLdrHeapAllocateEx(FrLdrDefaultHeap, MemorySize, Tag);
-}
+FrLdrHeapAlloc(SIZE_T MemorySize, ULONG Tag);
 
-FORCEINLINE
 VOID
-FrLdrHeapFree(PVOID MemoryPointer, ULONG Tag)
-{
-    FrLdrHeapFreeEx(FrLdrDefaultHeap, MemoryPointer, Tag);
-}
+FrLdrHeapFree(PVOID MemoryPointer, ULONG Tag);
 
-FORCEINLINE
 PVOID
 FrLdrTempAlloc(
     _In_ SIZE_T Size,
-    _In_ ULONG Tag)
-{
-    return FrLdrHeapAllocateEx(FrLdrTempHeap, Size, Tag);
-}
+    _In_ ULONG Tag);
 
-FORCEINLINE
 VOID
 FrLdrTempFree(
-    PVOID Allocation, ULONG Tag)
-{
-    FrLdrHeapFreeEx(FrLdrTempHeap, Allocation, Tag);
-}
-
+    PVOID Allocation, ULONG Tag);
