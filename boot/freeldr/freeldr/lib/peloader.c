@@ -194,7 +194,7 @@ PeLdrpBindImportName(
     PCHAR ExportName, ForwarderName;
     BOOLEAN Success;
 
-    //TRACE("PeLdrpBindImportName(): DllBase 0x%X, ImageBase 0x%X, ThunkData 0x%X, ExportDirectory 0x%X, ExportSize %d, ProcessForwards 0x%X\n",
+    //TRACE("PeLdrpBindImportName(): DllBase 0x%p, ImageBase 0x%p, ThunkData 0x%p, ExportDirectory 0x%p, ExportSize %d, ProcessForwards 0x%X\n",
     //      DllBase, ImageBase, ThunkData, ExportDirectory, ExportSize, ProcessForwards);
 
     /* Check passed DllBase param */
@@ -503,8 +503,8 @@ PeLdrpScanImportAddressTable(
     BOOLEAN Success;
     ULONG ExportSize;
 
-    TRACE("PeLdrpScanImportAddressTable(): DllBase 0x%X, "
-          "ImageBase 0x%X, ThunkData 0x%X\n", DllBase, ImageBase, ThunkData);
+    TRACE("PeLdrpScanImportAddressTable(): DllBase 0x%p, "
+          "ImageBase 0x%p, ThunkData 0x%p\n", DllBase, ImageBase, ThunkData);
 
     /* Obtain the export table from the DLL's base */
     if (DllBase == NULL)
@@ -521,7 +521,7 @@ PeLdrpScanImportAddressTable(
                 &ExportSize);
     }
 
-    TRACE("PeLdrpScanImportAddressTable(): ExportDirectory 0x%X\n", ExportDirectory);
+    TRACE("PeLdrpScanImportAddressTable(): ExportDirectory 0x%p\n", ExportDirectory);
 
     /* If pointer to Export Directory is */
     if (ExportDirectory == NULL)
@@ -630,7 +630,7 @@ PeLdrCheckForLoadedDll(
                to the caller and increase load count for it */
             *LoadedEntry = DataTableEntry;
             DataTableEntry->LoadCount++;
-            TRACE("PeLdrCheckForLoadedDll: LoadedEntry %X\n", DataTableEntry);
+            TRACE("PeLdrCheckForLoadedDll: LoadedEntry %p\n", DataTableEntry);
             return TRUE;
         }
 
@@ -664,7 +664,7 @@ PeLdrScanImportDescriptorTable(
         BaseName.Buffer = VaToPa(ScanDTE->BaseDllName.Buffer);
         BaseName.MaximumLength = ScanDTE->BaseDllName.MaximumLength;
         BaseName.Length = ScanDTE->BaseDllName.Length;
-        TRACE("PeLdrScanImportDescriptorTable(): %wZ ImportTable = 0x%X\n",
+        TRACE("PeLdrScanImportDescriptorTable(): %wZ ImportTable = 0x%p\n",
               &BaseName, ImportTable);
     }
 #endif
@@ -938,7 +938,7 @@ PeLdrLoadImage(
     /* This is the real image base, in form of a virtual address */
     VirtualBase = PaToVa(PhysicalBase);
 
-    TRACE("Base PA: 0x%X, VA: 0x%X\n", PhysicalBase, VirtualBase);
+    TRACE("Base PA: 0x%p, VA: 0x%p\n", PhysicalBase, VirtualBase);
 
     /* Copy headers from already read data */
     RtlCopyMemory(PhysicalBase, HeadersBuffer, min(NtHeaders->OptionalHeader.SizeOfHeaders, sizeof(HeadersBuffer)));
