@@ -418,7 +418,7 @@ PeLdrpLoadAndScanReferencedDll(
     Success = PeLdrAllocateDataTableEntry(Parent ? Parent->Blink : ModuleListHead,
                                           ImportName,
                                           FullDllName,
-                                          BasePA,
+                                          PaToVa(BasePA),
                                           DataTableEntry);
     if (!Success)
     {
@@ -682,10 +682,10 @@ PeLdrAllocateDataTableEntry(
     IN OUT PLIST_ENTRY ModuleListHead,
     IN PCCH BaseDllName,
     IN PCCH FullDllName,
-    IN PVOID BasePA,
+    IN PVOID BaseVA,
     OUT PLDR_DATA_TABLE_ENTRY *NewEntry)
 {
-    PVOID BaseVA = PaToVa(BasePA);
+    PVOID BasePA = VaToPa(BaseVA);
     PWSTR BaseDllNameBuffer, Buffer;
     PLDR_DATA_TABLE_ENTRY DataTableEntry;
     PIMAGE_NT_HEADERS NtHeaders;
