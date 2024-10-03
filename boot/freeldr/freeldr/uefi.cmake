@@ -49,8 +49,7 @@ add_library(uefifreeldr_common
     ${uefifreeldr_common_asm}
     ${UEFILDR_ARC_SOURCE}
     ${FREELDR_BOOTLIB_SOURCE}
-    ${FREELDR_BOOTMGR_SOURCE}
-    ${FREELDR_NTLDR_SOURCE})
+    ${FREELDR_BOOTMGR_SOURCE})
 
 target_compile_definitions(uefifreeldr_common PRIVATE UEFIBOOT)
 
@@ -62,8 +61,7 @@ endif()
 set(PCH_SOURCE
     ${UEFILDR_ARC_SOURCE}
     ${FREELDR_BOOTLIB_SOURCE}
-    ${FREELDR_BOOTMGR_SOURCE}
-    ${FREELDR_NTLDR_SOURCE})
+    ${FREELDR_BOOTMGR_SOURCE})
 
 add_pch(uefifreeldr_common include/arch/uefi/uefildr.h PCH_SOURCE)
 add_dependencies(uefifreeldr_common bugcodes asm xdk)
@@ -121,11 +119,10 @@ endif()
 
 set_entrypoint(uefildr EfiEntry)
 
+target_link_libraries(uefildr uefifreeldr_common cportlib libcntpr blrtl)
 if(ARCH STREQUAL "i386")
     target_link_libraries(uefildr mini_hal)
 endif()
-
-target_link_libraries(uefildr uefifreeldr_common cportlib blcmlib blrtl libcntpr)
 
 # dynamic analysis switches
 if(STACK_PROTECTOR)

@@ -8,17 +8,12 @@
 #spec2def(rosload.exe rosload.spec)
 
 list(APPEND ROSLOAD_SOURCE
-    include/freeldr.h
-    bootmgr.c
-    custom.c
-    linuxboot.c
-    miscboot.c
-    options.c
-    oslist.c
+###     options.c
     lib/rtl/libsupp.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmboot.c
     ntldr/conversion.c
     ntldr/inffile.c
+    ntldr/ntldropts.c
     ntldr/registry.c
     ntldr/setupldr.c
     ntldr/winldr.c
@@ -27,41 +22,20 @@ list(APPEND ROSLOAD_SOURCE
 )
 
 if(ARCH STREQUAL "i386")
-
     list(APPEND ROSLOAD_SOURCE
-        arch/i386/halstub.c
-        arch/i386/ntoskrnl.c
-        disk/scsiport.c
         ntldr/arch/i386/winldr.c
         ntldr/headless.c)
 
-    if(SARCH STREQUAL "pc98" OR SARCH STREQUAL "xbox")
-        # These machine types require built-in bitmap font
-        list(APPEND ROSLOAD_SOURCE
-            arch/vgafont.c)
-    endif()
-
-    list(APPEND ROSLOAD_ASM_SOURCE
-        arch/i386/drvmap.S
-        arch/i386/linux.S)
-
 elseif(ARCH STREQUAL "amd64")
-
     list(APPEND ROSLOAD_SOURCE
         ntldr/arch/amd64/winldr.c)
 
     list(APPEND ROSLOAD_ASM_SOURCE
-        arch/amd64/misc.S
-        arch/amd64/linux.S
-    )
+        arch/amd64/misc.S)
 
 elseif(ARCH STREQUAL "arm")
-
     list(APPEND ROSLOAD_SOURCE
         ntldr/arch/arm/winldr.c)
-
-    list(APPEND ROSLOAD_ASM_SOURCE
-        arch/arm/boot.S)
 
 else()
     #TBD
@@ -83,11 +57,11 @@ set_image_base(rosload 0x10000) # 0x200000
 set_subsystem(rosload native)
 set_entrypoint(rosload RunLoader)
 
+target_link_libraries(rosload blcmlib blrtl libcntpr)
 if(ARCH STREQUAL "i386")
     target_link_libraries(rosload mini_hal)
 endif()
 
-target_link_libraries(rosload blcmlib blrtl libcntpr)
 add_importlibs(rosload freeldr_pe)
 
 # dynamic analysis switches
