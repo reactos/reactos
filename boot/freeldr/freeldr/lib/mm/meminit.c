@@ -109,6 +109,14 @@ DbgDumpMemoryMap(
     }
     DbgPrint("\n");
 }
+#else
+/* Dummy, so we can export it */
+PCSTR
+MmGetSystemMemoryMapTypeString(
+    TYPE_OF_MEMORY Type)
+{
+    return "-";
+}
 #endif
 
 ULONG

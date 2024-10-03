@@ -22,7 +22,7 @@ elseif(ARCH STREQUAL "amd64")
 endif()
 
 
-spec2def(freeldr_pe.exe freeldr.spec)
+spec2def(freeldr_pe.exe freeldr.spec ADD_IMPORTLIB)
 
 list(APPEND PCATLDR_ARC_SOURCE
     ${FREELDR_ARC_SOURCE}
