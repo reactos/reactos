@@ -1074,8 +1074,9 @@ LoadAndBootWindows(
     if (ArgValue && *ArgValue)
         RtlStringCbCopyA(BootOptions, sizeof(BootOptions), ArgValue);
 
-    /* Append boot-time options */
-    AppendBootTimeOptions(BootOptions);
+    // FIXME!
+    // /* Append boot-time options */
+    // AppendBootTimeOptions(BootOptions);
 
     /*
      * Set the "/HAL=" and "/KERNEL=" options if needed.
