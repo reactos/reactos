@@ -5,8 +5,6 @@
 ## COPYRIGHT:   Copyright 2024 Timo Kreuzer <timo.kreuzer@reactos.org>
 ##
 
-#spec2def(rosload.exe rosload.spec)
-
 list(APPEND ROSLOAD_SOURCE
 ###     options.c
     lib/rtl/libsupp.c
@@ -47,11 +45,6 @@ add_executable(rosload
     ${ROSLOAD_SOURCE}
     ${rosload_asm}
 )
-
-set_target_properties(rosload
-    PROPERTIES
-    ENABLE_EXPORTS TRUE
-    DEFINE_SYMBOL "")
 
 set_image_base(rosload 0x10000) # 0x200000
 set_subsystem(rosload native)
