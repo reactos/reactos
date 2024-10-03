@@ -55,7 +55,7 @@ set_target_properties(rosload
 
 set_image_base(rosload 0x10000) # 0x200000
 set_subsystem(rosload native)
-set_entrypoint(rosload RunLoader)
+set_entrypoint(rosload RunNtLoader)
 
 target_link_libraries(rosload blcmlib blrtl libcntpr)
 if(ARCH STREQUAL "i386")

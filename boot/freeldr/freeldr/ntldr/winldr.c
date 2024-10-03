@@ -1170,6 +1170,24 @@ LoadAndBootWindows(
 }
 
 ARC_STATUS
+RunNtLoader(
+    IN ULONG Argc,
+    IN PCHAR Argv[],
+    IN PCHAR Envp[])
+{
+    /* Retrieve the (mandatory) boot type */
+    PCSTR ArgValue = GetArgumentValue(Argc, Argv, "BootType");
+    if (!ArgValue || !*ArgValue)
+    {
+        ERR("No 'BootType' value, aborting!\n");
+        return EINVAL;
+    }
+    if (_stricmp(ArgValue, "ReactOSSetup") == 0)
+        return LoadReactOSSetup(Argc, Argv, Envp);
+    return LoadAndBootWindows(Argc, Argv, Envp);
+}
+
+ARC_STATUS
 LoadAndBootWindowsCommon(
     IN USHORT OperatingSystemVersion,
     IN PLOADER_PARAMETER_BLOCK LoaderBlock,
