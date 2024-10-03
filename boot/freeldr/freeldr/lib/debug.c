@@ -30,7 +30,11 @@
 // #define DEBUG_CUSTOM
 #define DEBUG_NONE
 
+#ifdef _WINKD_
+#define DBG_DEFAULT_LEVELS 0
+#else
 #define DBG_DEFAULT_LEVELS (ERR_LEVEL|FIXME_LEVEL)
+#endif
 
 static UCHAR DbgChannels[DBG_CHANNELS_COUNT];
 

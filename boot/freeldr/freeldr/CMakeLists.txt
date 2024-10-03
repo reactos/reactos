@@ -14,6 +14,10 @@ if(MSVC)
     add_compile_options("/GF")
 endif()
 
+if(_WINKD_)
+    add_definitions(-D_WINKD_)
+endif()
+
 #spec2def(freeldr_pe.exe freeldr.spec)
 
 include_directories(BEFORE include)
