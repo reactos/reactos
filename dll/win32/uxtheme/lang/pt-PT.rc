@@ -1,0 +1,19 @@
+/*
+ * PROJECT:     ReactOS uxtheme.dll
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATOR:  Copyright 2024 Daniel Victor <ilauncherdeveloper@gmail.com>
+ */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
+/* Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_MESSAGEBOX "Caixa de mensagem"
+    IDS_ACTIVEWIN "Janela activa"
+    IDS_INACTIVEWIN "Janela inactiva"
+    IDS_OK "OK"
+    IDS_WINTEXT "Texto da janela"
+END
