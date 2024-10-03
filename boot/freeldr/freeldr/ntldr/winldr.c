@@ -342,7 +342,11 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
     }
 
     // Allocate a DTE for it
-    Success = PeLdrAllocateDataTableEntry(LoadOrderListHead, DllName, DllName, DriverBase, DriverDTE);
+    Success = PeLdrAllocateDataTableEntry(LoadOrderListHead,
+                                          DllName,
+                                          DllName,
+                                          PaToVa(DriverBase),
+                                          DriverDTE);
     if (!Success)
     {
         /* Cleanup and bail out */
@@ -542,7 +546,7 @@ LoadModule(
     Success = PeLdrAllocateDataTableEntry(&LoaderBlock->LoadOrderListHead,
                                           ImportName,
                                           FullFileName,
-                                          BaseAddress,
+                                          PaToVa(BaseAddress),
                                           Dte);
     if (!Success)
     {
