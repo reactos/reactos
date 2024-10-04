@@ -88,7 +88,7 @@ if(ARCH STREQUAL "i386")
 endif()
 
 target_link_libraries(rosload blcmlib blrtl libcntpr)
-add_importlibs(rosload freeldr_pe)
+add_importlibs(rosload freeldr)
 
 # dynamic analysis switches
 if(STACK_PROTECTOR)

@@ -110,8 +110,8 @@ LaunchSecondStageLoader(VOID)
     /* Add the PE part of freeldr.sys to the list of loaded executables, it
        contains ScsiPort* exports, imported by ntbootdd.sys */
     Success = PeLdrAllocateDataTableEntry(&ModuleListHead,
-                                          "freeldr_pe.exe",
-                                          "freeldr_pe.exe",
+                                          "freeldr.sys",
+                                          "freeldr.sys",
                                           &__ImageBase,
                                           &FreeldrDTE);
     if (!Success)
