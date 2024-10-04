@@ -101,4 +101,4 @@ endif()
 
 add_dependencies(rosload bugcodes asm xdk)
 
-add_cd_file(TARGET rosload FILE ${CMAKE_CURRENT_BINARY_DIR}/rosload.exe DESTINATION loader NO_CAB FOR bootcd regtest livecd hybridcd)
+add_cd_file(TARGET rosload DESTINATION loader NO_CAB FOR bootcd regtest livecd hybridcd)
