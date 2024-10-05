@@ -71,6 +71,12 @@ VOID __cdecl BootMain(IN PCCH CmdLine)
         goto Quit;
     }
 
+    if (!MachInitializeBootDevices())
+    {
+        UiMessageBoxCritical("Error when detecting hardware.");
+        goto Quit;
+    }
+
     RunLoader();
 
 Quit:
