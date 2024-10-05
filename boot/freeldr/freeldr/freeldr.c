@@ -74,6 +74,13 @@ VOID __cdecl BootMain(IN PCCH CmdLine)
     /* Initialize I/O subsystem */
     FsInit();
 
+    /* Initialize the module list */
+    if (!PeLdrInitializeModuleList())
+    {
+        UiMessageBoxCritical("Unable to initialize module list.");
+        goto Quit;
+    }
+
     RunLoader();
 
 Quit:
