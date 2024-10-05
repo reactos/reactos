@@ -1807,11 +1807,14 @@ HRESULT CDefView::FillFileMenu()
         return hr;
 
     // TODO: filter or something
+    static const WORD remove[] = { FCIDM_SHVIEW_VIEW, FCIDM_SHVIEW_ARRANGE, FCIDM_SHVIEW_REFRESH };
+    for (UINT j = 0; j < _countof(remove) && !selcount; ++j)
+    {
+        DeleteMenu(hmenu, remove[j], MF_BYCOMMAND);
+    }
 
     Shell_MergeMenus(hFileMenu, hmenu, 0, 0, 0xFFFF, MM_ADDSEPARATOR | MM_SUBMENUSHAVEIDS);
-
     ::DestroyMenu(hmenu);
-
     return S_OK;
 }
 
