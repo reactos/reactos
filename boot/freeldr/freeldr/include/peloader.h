@@ -27,6 +27,9 @@ typedef VOID
 extern PELDR_IMPORTDLL_LOAD_CALLBACK PeLdrImportDllLoadCallback;
 
 BOOLEAN
+PeLdrInitializeModuleList(VOID);
+
+BOOLEAN
 PeLdrLoadImage(
     _In_ PCSTR FilePath,
     _In_ TYPE_OF_MEMORY MemoryType,

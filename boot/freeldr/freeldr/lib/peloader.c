@@ -25,6 +25,8 @@ DBG_DEFAULT_CHANNEL(PELOADER);
 
 /* GLOBALS *******************************************************************/
 
+LIST_ENTRY FrLdrModuleList;
+
 PELDR_IMPORTDLL_LOAD_CALLBACK PeLdrImportDllLoadCallback = NULL;
 
 #ifdef _WIN64
@@ -517,6 +519,29 @@ PeLdrpScanImportAddressTable(
 
 
 /* FUNCTIONS *****************************************************************/
+
+BOOLEAN
+PeLdrInitializeModuleList(VOID)
+{
+    PLDR_DATA_TABLE_ENTRY FreeldrDTE;
+
+    InitializeListHead(&FrLdrModuleList);
+
+    /* Allocate a data table entry for freeldr.sys.
+       The base name is scsiport.sys for imports from ntbootdd.sys */
+    if (!PeLdrAllocateDataTableEntry(&FrLdrModuleList,
+                                     "scsiport.sys",
+                                     "freeldr.sys",
+                                     &__ImageBase,
+                                     &FreeldrDTE))
+    {
+        /* Cleanup and bail out */
+        ERR("Failed to allocate DTE for freeldr\n");
+        return FALSE;
+    }
+
+    return TRUE;
+}
 
 PVOID
 PeLdrInitSecurityCookie(PLDR_DATA_TABLE_ENTRY LdrEntry)
