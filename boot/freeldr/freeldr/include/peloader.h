@@ -70,3 +70,10 @@ PeLdrCheckForLoadedDll(
 PVOID
 PeLdrInitSecurityCookie(
     _In_ PLDR_DATA_TABLE_ENTRY LdrEntry);
+
+BOOLEAN
+PeLdrLoadBootImage(
+    _In_ PCSTR FilePath,
+    _In_ PCSTR BaseDllName,
+    _Out_ PVOID* ImageBase,
+    _Out_ PLDR_DATA_TABLE_ENTRY* DataTableEntry);

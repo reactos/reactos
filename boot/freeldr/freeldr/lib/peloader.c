@@ -1044,3 +1044,51 @@ PeLdrLoadImage(
 {
     return PeLdrLoadImageEx(FilePath, MemoryType, ImageBasePA, TRUE);
 }
+
+BOOLEAN
+PeLdrLoadBootImage(
+    _In_ PCSTR FilePath,
+    _In_ PCSTR BaseDllName,
+    _Out_ PVOID* ImageBase,
+    _Out_ PLDR_DATA_TABLE_ENTRY* DataTableEntry)
+{
+    BOOLEAN Success;
+
+    /* Load the image as a bootloader image */
+    Success = PeLdrLoadImageEx(FilePath,
+                               LoaderLoadedProgram,
+                               ImageBase,
+                               FALSE);
+    if (!Success)
+    {
+        WARN("Failed to load boot image '%s'\n", FilePath);
+        return FALSE;
+    }
+
+    /* Allocate a DTE */
+    Success = PeLdrAllocateDataTableEntry(&FrLdrModuleList,
+                                          BaseDllName,
+                                          FilePath,
+                                          *ImageBase,
+                                          DataTableEntry);
+    if (!Success)
+    {
+        /* Cleanup and bail out */
+        ERR("Failed to allocate DTE for '%s'\n", FilePath);
+        MmFreeMemory(*ImageBase);
+        return FALSE;
+    }
+
+    /* Resolve imports */
+    Success = PeLdrScanImportDescriptorTable(&FrLdrModuleList, "", *DataTableEntry);
+    if (!Success)
+    {
+        /* Cleanup and bail out */
+        ERR("Failed to resolve imports for '%s'\n", FilePath);
+        PeLdrFreeDataTableEntry(*DataTableEntry);
+        MmFreeMemory(*ImageBase);
+        return FALSE;
+    }
+
+    return TRUE;
+}
