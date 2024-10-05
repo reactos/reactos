@@ -15,23 +15,6 @@ free(void *mem);
 void *
 realloc(void *mem, size_t size);
 
-/* mem_trim() must trim the buffer without relocating it.
- * Since we can't do that, we just return the buffer passed in unchanged */
-#define mem_trim(_m_, _s_) (_m_)
-
-/* Unsigned int types */
-typedef unsigned char u8_t;
-typedef unsigned short u16_t;
-typedef unsigned long u32_t;
-
-/* Signed int types */
-typedef signed char s8_t;
-typedef signed short s16_t;
-typedef signed long s32_t;
-
-/* Memory pointer */
-typedef ULONG_PTR mem_ptr_t;
-
 /* Printf/DPRINT formatters */
 #define U16_F "hu"
 #define S16_F "hd"

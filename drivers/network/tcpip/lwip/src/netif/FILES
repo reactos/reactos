@@ -2,28 +2,22 @@ This directory contains generic network interface device drivers that
 do not contain any hardware or architecture specific code. The files
 are:
 
-etharp.c
-          Implements the ARP (Address Resolution Protocol) over
-          Ethernet. The code in this file should be used together with
-          Ethernet device drivers. Note that this module has been
-          largely made Ethernet independent so you should be able to
-          adapt this for other link layers (such as Firewire).
+ethernet.c
+          Shared code for Ethernet based interfaces.
 
-ethernetif.c
-          An example of how an Ethernet device driver could look. This
-          file can be used as a "skeleton" for developing new Ethernet
-          network device drivers. It uses the etharp.c ARP code.
+lowpan6.c
+          A 6LoWPAN implementation as a netif.
 
-loopif.c
-          A "loopback" network interface driver. It requires configuration
-          through the define LWIP_LOOPIF_MULTITHREADING (see opt.h).
+lowpan6_ble.c
+          A 6LoWPAN over Bluetooth Low Energy (BLE) implementation as netif,
+          according to RFC-7668.
 
 slipif.c
           A generic implementation of the SLIP (Serial Line IP)
           protocol. It requires a sio (serial I/O) module to work.
 
 ppp/      Point-to-Point Protocol stack
-          The PPP stack has been ported from ucip (http://ucip.sourceforge.net).
-          It matches quite well to pppd 2.3.1 (http://ppp.samba.org), although
-          compared to that, it has some modifications for embedded systems and
-          the source code has been reordered a bit.
+          The lwIP PPP support is based from pppd (http://ppp.samba.org) with
+          huge changes to match code size and memory requirements for embedded
+          devices. Please read /doc/ppp.txt and ppp/PPPD_FOLLOWUP for a detailed
+          explanation.

@@ -1,8 +1,11 @@
 #include "test_etharp.h"
 
 #include "lwip/udp.h"
-#include "netif/etharp.h"
+#include "lwip/etharp.h"
+#include "lwip/inet.h"
+#include "netif/ethernet.h"
 #include "lwip/stats.h"
+#include "lwip/prot/iana.h"
 
 #if !LWIP_STATS || !UDP_STATS || !MEMP_STATS || !ETHARP_STATS
 #error "This tests needs UDP-, MEMP- and ETHARP-statistics enabled"
@@ -12,11 +15,11 @@
 #endif
 
 static struct netif test_netif;
-static ip_addr_t test_ipaddr, test_netmask, test_gw;
-struct eth_addr test_ethaddr = {1,1,1,1,1,1};
-struct eth_addr test_ethaddr2 = {1,1,1,1,1,2};
-struct eth_addr test_ethaddr3 = {1,1,1,1,1,3};
-struct eth_addr test_ethaddr4 = {1,1,1,1,1,4};
+static ip4_addr_t test_ipaddr, test_netmask, test_gw;
+struct eth_addr test_ethaddr =  {{1,1,1,1,1,1}};
+struct eth_addr test_ethaddr2 = {{1,1,1,1,1,2}};
+struct eth_addr test_ethaddr3 = {{1,1,1,1,1,3}};
+struct eth_addr test_ethaddr4 = {{1,1,1,1,1,4}};
 static int linkoutput_ctr;
 
 /* Helper functions */
@@ -72,7 +75,7 @@ default_netif_remove(void)
 }
 
 static void
-create_arp_response(ip_addr_t *adr)
+create_arp_response(ip4_addr_t *adr)
 {
   int k;
   struct eth_hdr *ethhdr;
@@ -88,14 +91,14 @@ create_arp_response(ip_addr_t *adr)
   ethhdr->src = test_ethaddr2;
   ethhdr->type = htons(ETHTYPE_ARP);
 
-  etharphdr->hwtype = htons(/*HWTYPE_ETHERNET*/ 1);
+  etharphdr->hwtype = htons(LWIP_IANA_HWTYPE_ETHERNET);
   etharphdr->proto = htons(ETHTYPE_IP);
   etharphdr->hwlen = ETHARP_HWADDR_LEN;
-  etharphdr->protolen = sizeof(ip_addr_t);
+  etharphdr->protolen = sizeof(ip4_addr_t);
   etharphdr->opcode = htons(ARP_REPLY);
 
-  SMEMCPY(&etharphdr->sipaddr, adr, sizeof(ip_addr_t));
-  SMEMCPY(&etharphdr->dipaddr, &test_ipaddr, sizeof(ip_addr_t));
+  SMEMCPY(&etharphdr->sipaddr, adr, sizeof(ip4_addr_t));
+  SMEMCPY(&etharphdr->dipaddr, &test_ipaddr, sizeof(ip4_addr_t));
 
   k = 6;
   while(k > 0) {
@@ -118,6 +121,7 @@ etharp_setup(void)
 {
   etharp_remove_all();
   default_netif_add();
+  lwip_check_ensure_no_alloc(SKIP_POOL(MEMP_SYS_TIMEOUT));
 }
 
 static void
@@ -125,6 +129,7 @@ etharp_teardown(void)
 {
   etharp_remove_all();
   default_netif_remove();
+  lwip_check_ensure_no_alloc(SKIP_POOL(MEMP_SYS_TIMEOUT));
 }
 
 
@@ -135,8 +140,8 @@ START_TEST(test_etharp_table)
 #if ETHARP_SUPPORT_STATIC_ENTRIES
   err_t err;
 #endif /* ETHARP_SUPPORT_STATIC_ENTRIES */
-  s8_t idx;
-  ip_addr_t *unused_ipaddr;
+  ssize_t idx;
+  const ip4_addr_t *unused_ipaddr;
   struct eth_addr *unused_ethaddr;
   struct udp_pcb* pcb;
   LWIP_UNUSED_ARG(_i);
@@ -150,7 +155,7 @@ START_TEST(test_etharp_table)
   pcb = udp_new();
   fail_unless(pcb != NULL);
   if (pcb != NULL) {
-    ip_addr_t adrs[ARP_TABLE_SIZE + 2];
+    ip4_addr_t adrs[ARP_TABLE_SIZE + 2];
     int i;
     for(i = 0; i < ARP_TABLE_SIZE + 2; i++) {
       IP4_ADDR(&adrs[i], 192,168,0,i+2);
@@ -160,8 +165,11 @@ START_TEST(test_etharp_table)
       struct pbuf *p = pbuf_alloc(PBUF_TRANSPORT, 10, PBUF_RAM);
       fail_unless(p != NULL);
       if (p != NULL) {
-        err_t err = udp_sendto(pcb, p, &adrs[i], 123);
-        fail_unless(err == ERR_OK);
+        err_t err2;
+        ip_addr_t dst;
+        ip_addr_copy_from_ip4(dst, adrs[i]);
+        err2 = udp_sendto(pcb, p, &dst, 123);
+        fail_unless(err2 == ERR_OK);
         /* etharp request sent? */
         fail_unless(linkoutput_ctr == (2*i) + 1);
         pbuf_free(p);
@@ -192,8 +200,11 @@ START_TEST(test_etharp_table)
       struct pbuf *p = pbuf_alloc(PBUF_TRANSPORT, 10, PBUF_RAM);
       fail_unless(p != NULL);
       if (p != NULL) {
-        err_t err = udp_sendto(pcb, p, &adrs[i], 123);
-        fail_unless(err == ERR_OK);
+        err_t err2;
+        ip_addr_t dst;
+        ip_addr_copy_from_ip4(dst, adrs[i]);
+        err2 = udp_sendto(pcb, p, &dst, 123);
+        fail_unless(err2 == ERR_OK);
         /* etharp request sent? */
         fail_unless(linkoutput_ctr == (2*i) + 1);
         pbuf_free(p);
@@ -255,8 +266,8 @@ END_TEST
 Suite *
 etharp_suite(void)
 {
-  TFun tests[] = {
-    test_etharp_table
+  testfunc tests[] = {
+    TESTFUNC(test_etharp_table)
   };
-  return create_suite("ETHARP", tests, sizeof(tests)/sizeof(TFun), etharp_setup, etharp_teardown);
+  return create_suite("ETHARP", tests, sizeof(tests)/sizeof(testfunc), etharp_setup, etharp_teardown);
 }

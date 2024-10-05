@@ -1,5 +1,5 @@
-#ifndef __TEST_TCP_H__
-#define __TEST_TCP_H__
+#ifndef LWIP_HDR_TEST_TCP_H
+#define LWIP_HDR_TEST_TCP_H
 
 #include "../lwip_check.h"
 

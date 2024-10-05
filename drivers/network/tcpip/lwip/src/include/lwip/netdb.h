@@ -1,5 +1,10 @@
+/**
+ * @file
+ * NETDB API (sockets)
+ */
+
 /*
- * Redistribution and use in source and binary forms, with or without modification, 
+ * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice,
@@ -8,33 +13,32 @@
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
  * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission. 
+ *    derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED 
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT 
- * SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, 
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT 
- * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
- * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+ * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  *
  * This file is part of the lwIP TCP/IP stack.
- * 
+ *
  * Author: Simon Goldschmidt
  *
  */
-#ifndef __LWIP_NETDB_H__
-#define __LWIP_NETDB_H__
+#ifndef LWIP_HDR_NETDB_H
+#define LWIP_HDR_NETDB_H
 
 #include "lwip/opt.h"
 
 #if LWIP_DNS && LWIP_SOCKET
 
-#include <stddef.h> /* for size_t */
-
+#include "lwip/arch.h"
 #include "lwip/inet.h"
 #include "lwip/sockets.h"
 
@@ -44,15 +48,19 @@ extern "C" {
 
 /* some rarely used options */
 #ifndef LWIP_DNS_API_DECLARE_H_ERRNO
-#define LWIP_DNS_API_DECLARE_H_ERRNO 1
+#define LWIP_DNS_API_DECLARE_H_ERRNO  1
 #endif
 
 #ifndef LWIP_DNS_API_DEFINE_ERRORS
-#define LWIP_DNS_API_DEFINE_ERRORS 1
+#define LWIP_DNS_API_DEFINE_ERRORS    1
+#endif
+
+#ifndef LWIP_DNS_API_DEFINE_FLAGS
+#define LWIP_DNS_API_DEFINE_FLAGS     1
 #endif
 
 #ifndef LWIP_DNS_API_DECLARE_STRUCTS
-#define LWIP_DNS_API_DECLARE_STRUCTS 1
+#define LWIP_DNS_API_DECLARE_STRUCTS  1
 #endif
 
 #if LWIP_DNS_API_DEFINE_ERRORS
@@ -61,12 +69,24 @@ extern "C" {
 #define EAI_SERVICE     201
 #define EAI_FAIL        202
 #define EAI_MEMORY      203
+#define EAI_FAMILY      204
 
 #define HOST_NOT_FOUND  210
 #define NO_DATA         211
 #define NO_RECOVERY     212
 #define TRY_AGAIN       213
 #endif /* LWIP_DNS_API_DEFINE_ERRORS */
+
+#if LWIP_DNS_API_DEFINE_FLAGS
+/* input flags for struct addrinfo */
+#define AI_PASSIVE      0x01
+#define AI_CANONNAME    0x02
+#define AI_NUMERICHOST  0x04
+#define AI_NUMERICSERV  0x08
+#define AI_V4MAPPED     0x10
+#define AI_ALL          0x20
+#define AI_ADDRCONFIG   0x40
+#endif /* LWIP_DNS_API_DEFINE_FLAGS */
 
 #if LWIP_DNS_API_DECLARE_STRUCTS
 struct hostent {
@@ -92,8 +112,10 @@ struct addrinfo {
 };
 #endif /* LWIP_DNS_API_DECLARE_STRUCTS */
 
+#define NETDB_ELEM_SIZE           (sizeof(struct addrinfo) + sizeof(struct sockaddr_storage) + DNS_MAX_NAME_LENGTH + 1)
+
 #if LWIP_DNS_API_DECLARE_H_ERRNO
-/* application accessable error code set by the DNS API functions */
+/* application accessible error code set by the DNS API functions */
 extern int h_errno;
 #endif /* LWIP_DNS_API_DECLARE_H_ERRNO*/
 
@@ -107,10 +129,14 @@ int lwip_getaddrinfo(const char *nodename,
        struct addrinfo **res);
 
 #if LWIP_COMPAT_SOCKETS
+/** @ingroup netdbapi */
 #define gethostbyname(name) lwip_gethostbyname(name)
+/** @ingroup netdbapi */
 #define gethostbyname_r(name, ret, buf, buflen, result, h_errnop) \
        lwip_gethostbyname_r(name, ret, buf, buflen, result, h_errnop)
+/** @ingroup netdbapi */
 #define freeaddrinfo(addrinfo) lwip_freeaddrinfo(addrinfo)
+/** @ingroup netdbapi */
 #define getaddrinfo(nodname, servname, hints, res) \
        lwip_getaddrinfo(nodname, servname, hints, res)
 #endif /* LWIP_COMPAT_SOCKETS */
@@ -121,4 +147,4 @@ int lwip_getaddrinfo(const char *nodename,
 
 #endif /* LWIP_DNS && LWIP_SOCKET */
 
-#endif /* __LWIP_NETDB_H__ */
+#endif /* LWIP_HDR_NETDB_H */
