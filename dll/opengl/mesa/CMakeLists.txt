@@ -1,71 +1,36 @@
 
 include_directories(.)
 
-add_definitions(-DFAST_MATH -DTHREADS)
+# our DBG definitions conflict with mesa source code
+remove_definitions(-DDBG=1 -DDBG=0)
 
-if(ARCH STREQUAL "i386")
-    list(APPEND ASM_SOURCE asm-386.S)
-    add_definitions(-DUSE_ASM)
-endif()
-
-add_asm_files(mesa_asm ${ASM_SOURCE})
-
-list(APPEND SOURCE
-    accum.c
-    alpha.c
-    alphabuf.c
-    api.c
-    attrib.c
-    bitmap.c
-    blend.c
-    clip.c
-    colortab.c
-    context.c
-    copypix.c
-    depth.c
-    dlist.c
-    drawpix.c
-    enable.c
-    eval.c
-    feedback.c
-    fog.c
-    get.c
-    hash.c
-    image.c
-    light.c
-    lines.c
-    logic.c
-    masking.c
-    matrix.c
-    misc.c
-    mmath.c
-    pb.c
-    pixel.c
-    pointers.c
-    points.c
-    polygon.c
-    quads.c
-    rastpos.c
-    readpix.c
-    rect.c
-    scissor.c
-    shade.c
-    span.c
-    stencil.c
-    teximage.c
-    texobj.c
-    texstate.c
-    texture.c
-    triangle.c
-    varray.c
-    vb.c
-    vbfill.c
-    vbrender.c
-    vbxform.c
-    xform.c
+add_definitions(
+    -DWIN32
+    -D_WINDOWS
+    -D_DLL
+    -DFEATURE_GL=1
+    -D_GDI32_           # prevent gl* being declared __declspec(dllimport) in MS headers
+    -DBUILD_GL32        # declare gl* as __declspec(dllexport) in Mesa headers
+    -D_GLAPI_NO_EXPORTS # prevent _glapi_* from being declared __declspec(dllimport)
 )
 
-add_library(mesa STATIC ${SOURCE} ${mesa_asm})
-add_dependencies(mesa psdk)
+if(OPENGL32_USE_TLS)
+    add_definitions(-DOPENGL32_USE_TLS)
+endif()
 
+if((ARCH STREQUAL "i386") AND (NOT MSVC))
+    add_definitions(
+        -DUSE_X86_ASM
+        -DUSE_MMX_ASM
+        -DUSE_3DNOW_ASM
+        -DUSE_SSE_ASM)
+    add_subdirectory(x86)
+endif()
 
+add_subdirectory(drivers/common)
+add_subdirectory(main)
+add_subdirectory(math)
+add_subdirectory(swrast)
+add_subdirectory(swrast_setup)
+add_subdirectory(tnl)
+add_subdirectory(vbo)
