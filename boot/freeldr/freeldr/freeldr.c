@@ -30,6 +30,64 @@ CCHAR FrLdrBootPath[MAX_PATH] = "";
 
 /* FUNCTIONS ******************************************************************/
 
+static
+BOOLEAN
+LoadRosload(
+    _In_ PCSTR RosloadPath,
+    _Out_ PVOID* ImageBase,
+    _Out_ PLDR_DATA_TABLE_ENTRY* DataTableEntry)
+{
+    CHAR FullPath[MAX_PATH];
+    BOOLEAN Success;
+
+    /* Create full rosload.exe path */
+    RtlStringCbPrintfA(FullPath,
+                       sizeof(FullPath),
+                       "%s\\%s",
+                       FrLdrBootPath,
+                       RosloadPath);
+
+    TRACE("Loading second stage loader '%s'\n", FullPath);
+
+    /* Load rosload.exe as a bootloader image. The base name is "scsiport.sys",
+       because it exports ScsiPort* functions for ntbootdd.sys */
+    Success = PeLdrLoadBootImage(FullPath,
+                                 "scsiport.sys",
+                                 ImageBase,
+                                 DataTableEntry);
+    if (!Success)
+    {
+        WARN("Failed to load second stage loader '%s'\n", FullPath);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static
+ULONG
+LaunchSecondStageLoader(VOID)
+{
+    PLDR_DATA_TABLE_ENTRY RosloadDTE;
+    PVOID ImageBase;
+    LONG (*EntryPoint)(VOID);
+
+    /* Load the second stage loader */
+    if (!LoadRosload("rosload.exe", &ImageBase, &RosloadDTE))
+    {
+        /* Try in loader directory */
+        if (!LoadRosload("loader\\rosload.exe", &ImageBase, &RosloadDTE))
+        {
+            return ENOENT;
+        }
+    }
+
+    /* Call the entrypoint */
+    printf("Launching rosload.exe...\n");
+    EntryPoint = VaToPa(RosloadDTE->EntryPoint);
+    return (*EntryPoint)();
+}
+
 VOID __cdecl BootMain(IN PCCH CmdLine)
 {
     /* Load the default settings from the command-line */
@@ -77,7 +135,11 @@ VOID __cdecl BootMain(IN PCCH CmdLine)
         goto Quit;
     }
 
-    RunLoader();
+    /* Launch second stage loader */
+    if (LaunchSecondStageLoader() != ESUCCESS)
+    {
+        UiMessageBoxCritical("Unable to load second stage loader.");
+    }
 
 Quit:
     /* If we reach this point, something went wrong before, therefore reboot */
