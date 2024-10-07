@@ -484,6 +484,24 @@ IopLogWorker(IN PVOID Parameter)
     ExFreePoolWithTag(Message, TAG_IO);
 }
 
+/* See also ntoskrnl/io/iomgr/irp.c!IopCompleteRequest */
+static
+VOID
+NTAPI
+IopAbortApc(IN PKAPC Apc)
+{
+    PAGED_CODE();
+
+    /* Complete the associated request and free the APC */
+    IopCompleteRequest(Apc,
+                       &Apc->NormalRoutine,
+                       &Apc->NormalContext,
+                       &Apc->SystemArgument1,
+                       &Apc->SystemArgument2);
+
+    ExFreePoolWithTag(Apc, TAG_APC);
+}
+
 static
 VOID
 NTAPI
@@ -694,7 +712,7 @@ IoRaiseHardError(IN PIRP Irp,
                     &Thread->Tcb,
                     Irp->ApcEnvironment,
                     IopFreeApc,
-                    NULL,
+                    IopAbortApc,
                     IopRaiseHardError,
                     KernelMode,
                     Irp);
