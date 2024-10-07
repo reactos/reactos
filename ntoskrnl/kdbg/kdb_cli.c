@@ -29,6 +29,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+
 #include "kdb.h"
 #include "../kd/kdterminal.h"
 
@@ -619,7 +620,7 @@ KdbpCmdPrintStruct(
 {
     ULONG i;
     ULONGLONG Result = 0;
-    PVOID BaseAddress = 0;
+    PVOID BaseAddress = NULL;
     ROSSYM_AGGREGATE Aggregate = {0};
     UNICODE_STRING ModName = {0};
     ANSI_STRING AnsiName = {0};
@@ -641,7 +642,7 @@ KdbpCmdPrintStruct(
     if (Argc > 3) {
         ULONG len;
         PCHAR ArgStart = Argv[3];
-        DPRINT1("Trying to get expression\n");
+        DPRINT("Trying to get expression\n");
         for (i = 3; i < Argc - 1; i++)
         {
             len = strlen(Argv[i]);
@@ -649,20 +650,18 @@ KdbpCmdPrintStruct(
         }
 
         /* Evaluate the expression */
-        DPRINT1("Arg: %s\n", ArgStart);
-        if (KdbpEvaluateExpression(ArgStart, strlen(ArgStart), &Result)) {
+        DPRINT("Arg: %s\n", ArgStart);
+        if (KdbpEvaluateExpression(ArgStart, strlen(ArgStart), &Result))
             BaseAddress = (PVOID)(ULONG_PTR)Result;
-            DPRINT1("BaseAddress: %p\n", BaseAddress);
-        }
     }
-    DPRINT1("BaseAddress: %p\n", BaseAddress);
+    DPRINT("BaseAddress: %p\n", BaseAddress);
     KdbpPrintStructInternal(Info, Indent, !!BaseAddress, BaseAddress, &Aggregate);
 end:
     RosSymFreeAggregate(&Aggregate);
     RtlFreeUnicodeString(&ModName);
     return TRUE;
 }
-#endif
+#endif // __ROS_DWARF__
 
 /*!\brief Retrieves the component ID corresponding to a given component name.
  *
@@ -1140,7 +1139,7 @@ KdbpContextFromPrevTss(
 #endif
     return TRUE;
 }
-#endif
+#endif // _M_IX86
 
 #ifdef _M_AMD64
 
@@ -3421,7 +3420,7 @@ KdbpCliInit(VOID)
                         FILE_NO_INTERMEDIATE_BUFFERING);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Could not open \\SystemRoot\\System32\\drivers\\etc\\KDBinit (Status 0x%x)", Status);
+        DPRINT1("Could not open \\SystemRoot\\System32\\drivers\\etc\\KDBinit (Status 0x%lx)\n", Status);
         return Status;
     }
 
@@ -3432,7 +3431,7 @@ KdbpCliInit(VOID)
     if (!NT_SUCCESS(Status))
     {
         ZwClose(hFile);
-        DPRINT("Could not query size of \\SystemRoot\\System32\\drivers\\etc\\KDBinit (Status 0x%x)", Status);
+        DPRINT1("Could not query size of \\SystemRoot\\System32\\drivers\\etc\\KDBinit (Status 0x%lx)\n", Status);
         return Status;
     }
     FileSize = FileStdInfo.EndOfFile.u.LowPart;
@@ -3442,7 +3441,7 @@ KdbpCliInit(VOID)
     if (!FileBuffer)
     {
         ZwClose(hFile);
-        DPRINT("Could not allocate %d bytes for KDBinit file\n", FileSize);
+        DPRINT1("Could not allocate %d bytes for KDBinit file\n", FileSize);
         return Status;
     }
 
@@ -3453,7 +3452,7 @@ KdbpCliInit(VOID)
     if (!NT_SUCCESS(Status) && (Status != STATUS_END_OF_FILE))
     {
         ExFreePool(FileBuffer);
-        DPRINT("Could not read KDBinit file into memory (Status 0x%lx)\n", Status);
+        DPRINT1("Could not read KDBinit file into memory (Status 0x%lx)\n", Status);
         return Status;
     }
 
