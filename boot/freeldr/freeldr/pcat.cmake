@@ -110,6 +110,9 @@ if(ARCH STREQUAL "i386")
     endif()
 
 elseif(ARCH STREQUAL "amd64")
+    list(APPEND PCATLDR_BASE_ASM_SOURCE
+        arch/i386/multiboot.S)
+
     list(APPEND PCATLDR_COMMON_ASM_SOURCE
         arch/amd64/entry.S
         arch/amd64/int386.S
