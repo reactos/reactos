@@ -23,6 +23,7 @@ list(APPEND SOURCE
     rtlstr.c
     string.c
     testlist.c
+    threadpool.c
     time.c)
 
 if(ARCH STREQUAL "i386")
