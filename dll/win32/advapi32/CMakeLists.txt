@@ -66,3 +66,7 @@ add_delay_importlibs(advapi32 secur32)
 add_importlibs(advapi32 advapi32_vista rpcrt4 kernel32 ntdll)
 add_pch(advapi32 advapi32.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET advapi32 DESTINATION reactos/system32 FOR all)
+
+if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
+    target_link_libraries(advapi32 etwtrace)
+endif()

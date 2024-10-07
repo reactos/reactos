@@ -2,9 +2,9 @@
 2 stdcall GenericChainFinalProv(ptr) wintrust.GenericChainFinalProv
 3 stdcall HTTPSCertificateTrust(ptr) wintrust.HTTPSCertificateTrust
 4 stdcall SoftpubDefCertInit(ptr) wintrust.SoftpubDefCertInit
-5 stub SoftpubFreeDefUsageCallData
-6 stub SoftpubLoadDefUsageCallData
-7 stub AddPersonalTrustDBPages
+5 stdcall SoftpubFreeDefUsageCallData(long ptr) wintrust.SoftpubFreeDefUsageCallData
+6 stdcall SoftpubLoadDefUsageCallData(long ptr) wintrust.SoftpubLoadDefUsageCallData
+7 stdcall AddPersonalTrustDBPages() wintrust.AddPersonalTrustDBPages
 @ stdcall -private DllRegisterServer() wintrust.SoftpubDllRegisterServer
 @ stdcall -private DllUnregisterServer() wintrust.SoftpubDllUnregisterServer
 10 stdcall DriverCleanupPolicy(ptr) wintrust.DriverCleanupPolicy
