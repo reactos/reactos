@@ -3,6 +3,7 @@
 #include <ksamd64.inc>
 #include <arch/pc/x86common.h>
 #include <arch/pc/pcbios.h>
+#include "multiboot.S"
 
 EXTERN BootMain:PROC
 // EXTERN cmdline:DWORD
