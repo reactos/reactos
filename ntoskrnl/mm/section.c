@@ -4961,9 +4961,7 @@ MmFlushSegment(
     if (!Segment)
     {
         /* Nothing to flush */
-        if (Iosb)
-            Iosb->Status = STATUS_SUCCESS;
-        return STATUS_SUCCESS;
+        goto Quit;
     }
 
     ASSERT(*Segment->Flags & MM_DATAFILE_SEGMENT);
@@ -4976,17 +4974,12 @@ MmFlushSegment(
 
         /* FIXME: All of this is suboptimal */
         ULONG ElemCount = RtlNumberGenericTableElements(&Segment->PageTable);
-        /* No page. Nothing to flush */
         if (!ElemCount)
         {
+            /* No page. Nothing to flush */
             MmUnlockSectionSegment(Segment);
             MmDereferenceSegment(Segment);
-            if (Iosb)
-            {
-                Iosb->Status = STATUS_SUCCESS;
-                Iosb->Information = 0;
-            }
-            return STATUS_SUCCESS;
+            goto Quit;
         }
 
         PCACHE_SECTION_PAGE_TABLE PageTable = RtlGetElementGenericTable(&Segment->PageTable, ElemCount - 1);
@@ -5014,6 +5007,8 @@ MmFlushSegment(
     MmUnlockSectionSegment(Segment);
     MmDereferenceSegment(Segment);
 
+Quit:
+    /* FIXME: Handle failures */
     if (Iosb)
         Iosb->Status = STATUS_SUCCESS;
 
