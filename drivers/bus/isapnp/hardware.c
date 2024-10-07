@@ -20,10 +20,10 @@
 
 #endif /* UNIT_TEST */
 
-ULONG_PTR IsaConfigPorts[2] =
+ULONG IsaConfigPorts[2] =
 {
     ISAPNP_WRITE_DATA_PCAT,
-    ISAPNP_ADDRESS_PCAT,
+    ISAPNP_ADDRESS_PCAT
 };
 
 static
@@ -32,7 +32,7 @@ VOID
 WriteAddress(
     _In_ UCHAR Address)
 {
-    WRITE_PORT_UCHAR((PUCHAR)IsaConfigPorts[1], Address);
+    WRITE_PORT_UCHAR(UlongToPtr(IsaConfigPorts[1]), Address);
 }
 
 static
@@ -41,7 +41,7 @@ VOID
 WriteData(
     _In_ UCHAR Data)
 {
-    WRITE_PORT_UCHAR((PUCHAR)IsaConfigPorts[0], Data);
+    WRITE_PORT_UCHAR(UlongToPtr(IsaConfigPorts[0]), Data);
 }
 
 static

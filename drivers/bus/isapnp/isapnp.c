@@ -28,7 +28,7 @@ LIST_ENTRY BusListHead;
 
 #endif /* UNIT_TEST */
 
-extern ULONG_PTR IsaConfigPorts[2];
+extern ULONG IsaConfigPorts[2];
 
 /* FUNCTIONS ******************************************************************/
 
