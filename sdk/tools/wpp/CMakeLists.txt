@@ -1,4 +1,9 @@
 
+add_definitions(
+    -D_CRT_DECLARE_NONSTDC_NAMES=1
+    -D_CRT_NONSTDC_NO_DEPRECATE
+)
+
 if(MSVC)
     if(MSVC_VERSION LESS 1900)
         add_definitions(

@@ -688,7 +688,7 @@ TestModuleRegistry(
                 // TODO: Use SearchPath (or assume everything's in system32) and do a proper full path compare
                 PathStripPathW(data);
                 PathRemoveExtensionW(data);
-                ok(!wcsicmp(data, ModuleName), "Server is %ls, expected %ls for %s\n", data, ModuleName, class->name);
+                ok(!_wcsicmp(data, ModuleName), "Server is %ls, expected %ls for %s\n", data, ModuleName, class->name);
             }
 
             dataSize = sizeof(data);
@@ -703,7 +703,7 @@ TestModuleRegistry(
                 expectedThreadingModel = class->ThreadingModel;
                 if (!expectedThreadingModel)
                     expectedThreadingModel = L"Apartment";
-                ok(!wcsicmp(data, expectedThreadingModel), "Server is %ls, expected %ls for %s\n", data, expectedThreadingModel, class->name);
+                ok(!_wcsicmp(data, expectedThreadingModel), "Server is %ls, expected %ls for %s\n", data, expectedThreadingModel, class->name);
             }
 
             RegCloseKey(hKeyServer);
@@ -829,7 +829,7 @@ TestInterfaceRegistry(
                     expectedName++;
                 else
                     expectedName = iface->wname;
-                ok(!wcsicmp(data, expectedName), "Name is %ls, expected %ls\n", data, expectedName);
+                ok(!_wcsicmp(data, expectedName), "Name is %ls, expected %ls\n", data, expectedName);
             }
 
             RegCloseKey(hKey);

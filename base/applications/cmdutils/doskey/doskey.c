@@ -305,8 +305,8 @@ wmain(VOID)
         {
             pszExeName = RemoveQuotes(pArgStart + 9);
         }
-        else if (!wcsicmp(pArgStart, L"/H") ||
-                 !wcsicmp(pArgStart, L"/HISTORY"))
+        else if (!_wcsicmp(pArgStart, L"/H") ||
+                 !_wcsicmp(pArgStart, L"/HISTORY"))
         {
             PrintHistory();
         }
@@ -314,20 +314,20 @@ wmain(VOID)
         {
             SetConsoleNumberOfCommandsW(_wtoi(pArgStart + 10), pszExeName);
         }
-        else if (!wcsicmp(pArgStart, L"/REINSTALL"))
+        else if (!_wcsicmp(pArgStart, L"/REINSTALL"))
         {
             ExpungeConsoleCommandHistoryW(pszExeName);
         }
-        else if (!wcsicmp(pArgStart, L"/INSERT"))
+        else if (!_wcsicmp(pArgStart, L"/INSERT"))
         {
             SetInsert(ENABLE_INSERT_MODE);
         }
-        else if (!wcsicmp(pArgStart, L"/OVERSTRIKE"))
+        else if (!_wcsicmp(pArgStart, L"/OVERSTRIKE"))
         {
             SetInsert(0);
         }
-        else if (!wcsicmp(pArgStart, L"/M") ||
-                 !wcsicmp(pArgStart, L"/MACROS"))
+        else if (!_wcsicmp(pArgStart, L"/M") ||
+                 !_wcsicmp(pArgStart, L"/MACROS"))
         {
             PrintMacros(pszExeName, L"");
         }
@@ -335,7 +335,7 @@ wmain(VOID)
                  !_wcsnicmp(pArgStart, L"/MACROS:", 8))
         {
             LPWSTR exe = RemoveQuotes(wcschr(pArgStart, L':') + 1);
-            if (!wcsicmp(exe, L"ALL"))
+            if (!_wcsicmp(exe, L"ALL"))
                 PrintAllMacros();
             else
                 PrintMacros(exe, L"");

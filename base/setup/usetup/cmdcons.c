@@ -531,7 +531,7 @@ CommandHelp(
     {
         for (cmdptr = Commands; cmdptr->name != NULL; cmdptr++)
         {
-            if (!stricmp(param, cmdptr->name))
+            if (!_stricmp(param, cmdptr->name))
             {
                 if (cmdptr->help != NULL)
                 {
@@ -1122,7 +1122,7 @@ DoCommand(
                 break;
             }
 
-            if (stricmp(com, cmdptr->name) == 0)
+            if (_stricmp(com, cmdptr->name) == 0)
             {
                 cmdptr->func(State, rest);
                 break;

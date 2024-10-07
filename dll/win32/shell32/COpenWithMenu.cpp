@@ -204,7 +204,7 @@ BOOL COpenWithList::SaveApp(SApp *pApp)
 COpenWithList::SApp *COpenWithList::Find(LPCWSTR pwszFilename)
 {
     for (UINT i = 0; i < m_cApp; ++i)
-        if (wcsicmp(m_pApp[i].wszFilename, pwszFilename) == 0)
+        if (_wcsicmp(m_pApp[i].wszFilename, pwszFilename) == 0)
             return &m_pApp[i];
     return NULL;
 }

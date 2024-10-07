@@ -2,7 +2,7 @@ spec2def(libtirpc.dll libtirpc/libtirpc.spec ADD_IMPORTLIB)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
-add_definitions(-DUNICODE -D_WIN32 -DPORTMAP -Dstrdup=_strdup -D_CRT_NONSTDC_NO_DEPRECATE=1)
+add_definitions(-DUNICODE -D_WIN32 -DPORTMAP -D_CRT_NONSTDC_NO_DEPRECATE=1)
 
 include_directories(${REACTOS_SOURCE_DIR}/dll/3rdparty/libtirpc/tirpc)
 
@@ -106,6 +106,7 @@ else()
 endif()
 
 set_module_type(libtirpc win32dll)
+target_link_libraries(libtirpc oldnames)
 add_importlibs(libtirpc user32 advapi32 kernel32_vista ws2_32 msvcrt kernel32 ntdll)
 add_delay_importlibs(libtirpc secur32)
 add_pch(libtirpc precomp.h SOURCE)

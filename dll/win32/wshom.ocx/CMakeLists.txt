@@ -29,7 +29,7 @@ list(APPEND wshom_rc_deps
 
 set_source_files_properties(wshom.rc PROPERTIES OBJECT_DEPENDS "${wshom_rc_deps}")
 set_module_type(wshom win32ocx)
-target_link_libraries(wshom uuid wine)
+target_link_libraries(wshom uuid wine oldnames)
 add_importlibs(wshom oleaut32 ole32 shell32 advapi32 advapi32_vista user32 msvcrt kernel32 ntdll)
 add_dependencies(wshom stdole2 wshom_idlheader)
 add_pch(wshom precomp.h "${PCH_SKIP_SOURCE}")
