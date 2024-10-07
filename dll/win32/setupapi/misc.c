@@ -1230,7 +1230,7 @@ BOOL WINAPI SetupUninstallOEMInfW( PCWSTR inf_file, DWORD flags, PVOID reserved 
         return FALSE;
     }
 
-    if (!GetWindowsDirectoryW( target, sizeof(target)/sizeof(WCHAR) )) return FALSE;
+    if (!GetWindowsDirectoryW( target, ARRAY_SIZE( target ))) return FALSE;
 
     strcatW( target, infW );
     strcatW( target, inf_file );
