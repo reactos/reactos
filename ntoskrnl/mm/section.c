@@ -4954,8 +4954,6 @@ MmFlushSegment(
             return Status;
     }
 
-    /* Assume success, no bytes written */
-    Status = STATUS_SUCCESS;
     if (Iosb)
         Iosb->Information = 0;
 
@@ -5010,10 +5008,11 @@ MmFlushSegment(
     MmDereferenceSegment(Segment);
 
 Quit:
+    /* FIXME: Handle failures */
     if (Iosb)
-        Iosb->Status = Status;
+        Iosb->Status = STATUS_SUCCESS;
 
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 _Requires_exclusive_lock_held_(Segment->Lock)
