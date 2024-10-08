@@ -46,8 +46,7 @@ BEGIN
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 62, 123, 12, 13
     LTEXT "dakika", IDC_MINTEXT, 76, 125, 26, 9
-    CONTROL "&Çıkışta Parola Sor", IDC_SCREENS_USEPASSCHK, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
+    AUTOCHECKBOX "&Çıkışta Parola Sor", IDC_SCREENS_USEPASSCHK, 108, 120, 117, 19
     GROUPBOX "Monitörün Güç Tasarrufu Özellikleri", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
     LTEXT "Monitörünüzün güç ayarlarını düzenlemek için ""Güç Ayarları""na tıklayınız.", IDC_STATIC, 16, 161, 146, 27
     PUSHBUTTON "G&üç...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
@@ -110,24 +109,17 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Etkiler"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "&Araç ipuçları ve menüler için aşağıdaki geçiş etkisini kullan:",
-            IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
+    AUTOCHECKBOX "&Araç ipuçları ve menüler için aşağıdaki geçiş etkisini kullan:", IDC_EFFAPPEARANCE_ANIMATION, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    CONTROL "&Ekran yazı tiplerinin kenarlarını yumuşatmak için aşağıdaki yöntemi kullan:", IDC_EFFAPPEARANCE_SMOOTHING,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
+    AUTOCHECKBOX "&Ekran yazı tiplerinin kenarlarını yumuşatmak için aşağıdaki yöntemi kullan:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    CONTROL "&Büyük simgeler kullan", IDC_EFFAPPEARANCE_LARGEICONS, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
-    CONTROL "&Menüler altında gölge göster", IDC_EFFAPPEARANCE_SETDROPSHADOW,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
-    CONTROL "&Sürüklerken pencere içeriğini göster", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "A&lt düğmesine basana kadar klavyeyle gezinme için altı çizili harfleri gizle",
-            IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
-    CONTROL "&Düz menüler kullan", IDC_EFFAPPEARANCE_FLATMENUS,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
+    AUTOCHECKBOX "&Büyük simgeler kullan", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX "&Menüler altında gölge göster", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19
+    AUTOCHECKBOX "&Sürüklerken pencere içeriğini göster", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19
+    AUTOCHECKBOX "A&lt düğmesine basana kadar klavyeyle gezinme için altı çizili harfleri gizle", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19
+    AUTOCHECKBOX "&Düz menüler kullan", IDC_EFFAPPEARANCE_FLATMENUS, 10, 140, 267, 19
     PUSHBUTTON "İptal", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "Tamam", IDOK, 172, 165, 50, 14
 END
@@ -160,14 +152,10 @@ CAPTION "Genel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Masaüstü simgeleri", IDC_STATIC, 6, 4, 212, 40
-    CONTROL "&Belgelerim", IDC_ICONS_MYDOCS, "button",//FIXME: accelerator collision &B
-            BS_AUTOCHECKBOX | WS_TABSTOP, 14, 14, 100, 12
-    CONTROL "&Ağ Konumlarım", IDC_ICONS_MYNET, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 116, 14, 100, 12
-    CONTROL "&Bu bilgisayar", IDC_ICONS_MYCOMP, "button",//FIXME: accelerator collision &B
-            BS_AUTOCHECKBOX | WS_TABSTOP, 14, 28, 100, 12
-    CONTROL "&İnternet tarayıcısı", IDC_ICONS_INTERNET, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 116, 28, 100, 12
+    AUTOCHECKBOX "&Belgelerim", IDC_ICONS_MYDOCS, 14, 14, 100, 12//FIXME: accelerator collision &B
+    AUTOCHECKBOX "&Ağ Konumlarım", IDC_ICONS_MYNET, 116, 14, 100, 12
+    AUTOCHECKBOX "&Bu bilgisayar", IDC_ICONS_MYCOMP, 14, 28, 100, 12//FIXME: accelerator collision &B
+    AUTOCHECKBOX "&İnternet tarayıcısı", IDC_ICONS_INTERNET, 116, 28, 100, 12
     CONTROL "", IDC_ICONS_LISTVIEW, "SysListView32",
             LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP | WS_HSCROLL,
             6, 60, 212, 56

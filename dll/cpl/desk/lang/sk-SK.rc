@@ -46,8 +46,7 @@ BEGIN
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 58, 123, 12, 13
     LTEXT "minút", IDC_MINTEXT, 72, 125, 26, 9
-    CONTROL "Pri obnovení chrániť &heslom", IDC_SCREENS_USEPASSCHK, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
+    AUTOCHECKBOX "Pri obnovení chrániť &heslom", IDC_SCREENS_USEPASSCHK, 108, 120, 117, 19
     GROUPBOX "Napájanie monitora", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
     LTEXT "Ak chcete upraviť nastavenie napájania monitora a ušetriť energiu, kliknite na tlačidlo Napájanie.", IDC_STATIC, 16, 161, 146, 27
     PUSHBUTTON "N&apájanie...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
@@ -110,24 +109,17 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Efekty"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "&Používať nasledovný efekt prechodu pre ponuky a názvy tlačidiel:",
-            IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
+    AUTOCHECKBOX "&Používať nasledovný efekt prechodu pre ponuky a názvy tlačidiel:", IDC_EFFAPPEARANCE_ANIMATION, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    CONTROL "Po&užívať nasledovnú metódu vyhladenia okrajov zobrazeného písma:", IDC_EFFAPPEARANCE_SMOOTHING,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
+    AUTOCHECKBOX "Po&užívať nasledovnú metódu vyhladenia okrajov zobrazeného písma:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    CONTROL "Používať &veľké ikony", IDC_EFFAPPEARANCE_LARGEICONS, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
-    CONTROL "&Zobrazovať tiene pod ponukami", IDC_EFFAPPEARANCE_SETDROPSHADOW,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
-    CONTROL "Zobrazovať &obsah okna počas presúvania", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "&Skrývať podčiarknuté písmená (klávesové skratky) až do stlačenia klávesu Alt",
-            IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
-    CONTROL "Use &flat menus", IDC_EFFAPPEARANCE_FLATMENUS,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
+    AUTOCHECKBOX "Používať &veľké ikony", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX "&Zobrazovať tiene pod ponukami", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19
+    AUTOCHECKBOX "Zobrazovať &obsah okna počas presúvania", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19
+    AUTOCHECKBOX "&Skrývať podčiarknuté písmená (klávesové skratky) až do stlačenia klávesu Alt", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19
+    AUTOCHECKBOX "Use &flat menus", IDC_EFFAPPEARANCE_FLATMENUS, 10, 140, 267, 19
     PUSHBUTTON "Zrušiť", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
 END
@@ -160,14 +152,10 @@ CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Desktop icons", IDC_STATIC, 6, 4, 212, 40
-    CONTROL "My &Documents", IDC_ICONS_MYDOCS, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 14, 14, 100, 12
-    CONTROL "My &Network Places", IDC_ICONS_MYNET, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 116, 14, 100, 12
-    CONTROL "&My Computer", IDC_ICONS_MYCOMP, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 14, 28, 100, 12
-    CONTROL "&Internet Browser", IDC_ICONS_INTERNET, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 116, 28, 100, 12
+    AUTOCHECKBOX "My &Documents", IDC_ICONS_MYDOCS, 14, 14, 100, 12
+    AUTOCHECKBOX "My &Network Places", IDC_ICONS_MYNET, 116, 14, 100, 12
+    AUTOCHECKBOX "&My Computer", IDC_ICONS_MYCOMP, 14, 28, 100, 12
+    AUTOCHECKBOX "&Internet Browser", IDC_ICONS_INTERNET, 116, 28, 100, 12
     CONTROL "", IDC_ICONS_LISTVIEW, "SysListView32",
             LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP | WS_HSCROLL,
             6, 60, 212, 56
