@@ -20,6 +20,7 @@
  */
 
 #include "precomp.h"
+#include <atlpath.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL (fprop);
 
@@ -85,8 +86,9 @@ typedef struct _FILE_TYPE_GLOBALS
     UINT IconSize;
     HICON hDefExtIconSmall;
     HBITMAP hOpenWithImage;
+    HANDLE hHeap;
     WCHAR DefExtTypeNameFmt[TYPENAME_CCHMAX];
-    WCHAR NoneString[33];
+    WCHAR NoneString[42];
     INT8 SortCol, SortReverse;
     UINT Restricted;
 } FILE_TYPE_GLOBALS, *PFILE_TYPE_GLOBALS;
@@ -131,6 +133,13 @@ GetClassKey(const FILE_TYPE_ENTRY &FTE, LPCWSTR &SubKey)
     ASSERT(*path);
     SubKey = path;
     return hr;
+}
+
+static void
+QuoteAppPathForCommand(CStringW &path)
+{
+    if (path.Find(' ') >= 0 && path.Find('\"') < 0)
+        path = CStringW(L"\"") + path + L"\"";
 }
 
 static BOOL
@@ -378,11 +387,11 @@ EditTypeDlg_OnChangeIcon(HWND hwndDlg, PEDITTYPE_DIALOG pEditType)
         // replace Windows directory with "%SystemRoot%" (for portability)
         WCHAR szWinDir[MAX_PATH];
         UINT lenWinDir = GetWindowsDirectoryW(szWinDir, _countof(szWinDir));
-        if (wcsstr(szPath, szWinDir) == szPath)
+        if (StrStrIW(szPath, szWinDir) == szPath)
         {
-            CStringW str(L"%SystemRoot%");
+            CPathW str(L"%SystemRoot%");
             str.Append(&szPath[lenWinDir]);
-            StringCbCopyW(szPath, sizeof(szPath), str.GetString());
+            StringCbCopyW(szPath, sizeof(szPath), str);
         }
 
         // update EDITTYPE_DIALOG
@@ -722,7 +731,7 @@ FileTypesDlg_InsertToLV(HWND hListView, LPCWSTR Assoc, INT iItem, PFILE_TYPE_GLO
         return NULL;
     }
 
-    Entry = (PFILE_TYPE_ENTRY)HeapAlloc(GetProcessHeap(), 0, sizeof(FILE_TYPE_ENTRY));
+    Entry = (PFILE_TYPE_ENTRY)HeapAlloc(pG->hHeap, 0, sizeof(FILE_TYPE_ENTRY));
     if (!Entry)
     {
         RegCloseKey(hKey);
@@ -746,7 +755,7 @@ FileTypesDlg_InsertToLV(HWND hListView, LPCWSTR Assoc, INT iItem, PFILE_TYPE_GLO
 #else
         if (!Entry->ClassKey[0])
         {
-            HeapFree(GetProcessHeap(), 0, Entry);
+            HeapFree(pG->hHeap, 0, Entry);
             RegCloseKey(hKey);
             return NULL;
         }
@@ -756,7 +765,7 @@ FileTypesDlg_InsertToLV(HWND hListView, LPCWSTR Assoc, INT iItem, PFILE_TYPE_GLO
     Entry->EditFlags = GetRegDWORD(hKey, L"EditFlags", 0);
     if (Entry->EditFlags & FTA_Exclude)
     {
-        HeapFree(GetProcessHeap(), 0, Entry);
+        HeapFree(pG->hHeap, 0, Entry);
         RegCloseKey(hKey);
         return NULL;
     }
@@ -916,6 +925,7 @@ ActionDlg_OnBrowse(HWND hwndDlg, PACTION_DIALOG pNewAct, BOOL bEdit = FALSE)
         if (bEdit)
         {
             CStringW str = szFile;
+            QuoteAppPathForCommand(str);
             str += L" \"%1\"";
             SetDlgItemTextW(hwndDlg, IDC_ACTION_APP, str);
         }
@@ -1242,8 +1252,8 @@ EditTypeDlg_WriteClass(HWND hwndDlg, PEDITTYPE_DIALOG pEditType,
     const INT nCount = pEditType->CommandLineMap.GetSize();
     for (INT i = 0; i < nCount; ++i)
     {
-        CStringW& key = pEditType->CommandLineMap.GetKeyAt(i);
-        CStringW& cmd = pEditType->CommandLineMap.GetValueAt(i);
+        const CStringW& key = pEditType->CommandLineMap.GetKeyAt(i);
+        const CStringW& cmd = pEditType->CommandLineMap.GetValueAt(i);
         if (!pEditType->ModifiedVerbs.Find(key))
         {
             ASSERT(RegKeyExists(hShellKey, key));
@@ -1262,8 +1272,8 @@ EditTypeDlg_WriteClass(HWND hwndDlg, PEDITTYPE_DIALOG pEditType,
             {
                 DWORD dwSize = (cmd.GetLength() + 1) * sizeof(WCHAR);
                 DWORD dwType = REG_SZ;
-                LPCWSTR exp;
-                if ((exp = StrChrW(cmd, '%')) && StrChrW(exp + 1, '%'))
+                int exp;
+                if ((exp = cmd.Find('%', 0)) >= 0 && cmd.Find('%', exp + 1) >= 0)
                     dwType = REG_EXPAND_SZ;
                 RegSetValueExW(hCommandKey, NULL, 0, dwType, LPBYTE(LPCWSTR(cmd)), dwSize);
                 RegCloseKey(hCommandKey);
@@ -1354,7 +1364,7 @@ EditTypeDlg_ReadClass(HWND hwndDlg, PEDITTYPE_DIALOG pEditType, EDITTYPEFLAGS &E
     dwSize = sizeof(TypeName);
     if (!RegQueryValueExW(hClassKey, NULL, NULL, NULL, LPBYTE(TypeName), &dwSize))
     {
-        TypeName[_countof(TypeName) - 1] = UNICODE_NULL;
+        TypeName[_countof(TypeName) - 1] = UNICODE_NULL; // Terminate
         SetDlgItemTextW(hwndDlg, IDC_EDITTYPE_TEXT, TypeName);
     }
 
@@ -1463,6 +1473,7 @@ EditTypeDlg_OnCommand(HWND hwndDlg, UINT id, UINT code, PEDITTYPE_DIALOG pEditTy
                 {
                     // add it
                     CStringW strCommandLine = action.szApp;
+                    QuoteAppPathForCommand(strCommandLine);
                     strCommandLine += L" \"%1\"";
                     pEditType->CommandLineMap.SetAt(action.szAction, strCommandLine);
                     pEditType->ModifiedVerbs.AddHead(action.szAction);
@@ -1743,6 +1754,7 @@ FileTypesDlg_Initialize(HWND hwndDlg)
     pG->hOpenWithImage = NULL;
     pG->IconSize = GetSystemMetrics(SM_CXSMICON); // Shell icons are always square
     pG->himlSmall = ImageList_Create(pG->IconSize, pG->IconSize, ILC_COLOR32 | ILC_MASK, 256, 20);
+    pG->hHeap = GetProcessHeap();
 
     if (!LoadStringW(shell32_hInstance, IDS_ANY_FILE,
                      pG->DefExtTypeNameFmt, _countof(pG->DefExtTypeNameFmt)))
@@ -1972,7 +1984,7 @@ FolderOptionsFileTypesDlg(
                     if (pEntry)
                     {
                         pEntry->DestroyIcons();
-                        HeapFree(GetProcessHeap(), 0, pEntry);
+                        HeapFree(pGlobals->hHeap, 0, pEntry);
                     }
                     return FALSE;
 
