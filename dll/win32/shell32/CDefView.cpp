@@ -1807,11 +1807,15 @@ HRESULT CDefView::FillFileMenu()
         return hr;
 
     // TODO: filter or something
+    if (!selcount)
+    {
+        DeleteMenu(hmenu, FCIDM_SHVIEW_VIEW, MF_BYCOMMAND);
+        DeleteMenu(hmenu, FCIDM_SHVIEW_ARRANGE, MF_BYCOMMAND);
+        DeleteMenu(hmenu, FCIDM_SHVIEW_REFRESH, MF_BYCOMMAND);
+    }
 
     Shell_MergeMenus(hFileMenu, hmenu, 0, 0, 0xFFFF, MM_ADDSEPARATOR | MM_SUBMENUSHAVEIDS);
-
     ::DestroyMenu(hmenu);
-
     return S_OK;
 }
 
