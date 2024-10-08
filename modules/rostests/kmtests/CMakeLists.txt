@@ -80,6 +80,7 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_io/IoIrp.c
     ntos_io/IoMdl.c
     ntos_io/IoVolume.c
+    ntos_kd/KdSystemDebugControl.c
     ntos_ke/KeApc.c
     ntos_ke/KeDevQueue.c
     ntos_ke/KeDpc.c
@@ -164,6 +165,7 @@ list(APPEND KMTEST_SOURCE
     ntos_io/IoCreateFile_user.c
     ntos_io/IoDeviceObject_user.c
     ntos_io/IoReadWrite_user.c
+    ntos_kd/NtSystemDebugControl.c
     ntos_mm/MmMapLockedPagesSpecifyCache_user.c
     ntos_mm/NtCreateSection_user.c
     ntos_po/PoIrp_user.c
