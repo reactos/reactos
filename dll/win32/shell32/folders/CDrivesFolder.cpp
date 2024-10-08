@@ -188,7 +188,7 @@ static BOOL DoEjectDrive(const WCHAR *physical, UINT nDriveType, INT *pnStringID
 
 static DWORD CALLBACK DoFormatDriveThread(LPVOID args)
 {
-    UINT nDrive = (UINT)(SIZE_T)args, StubType = CStubWindow32::TYPE_FORMATDRIVE;
+    UINT nDrive = PtrToUlong(args), StubType = CStubWindow32::TYPE_FORMATDRIVE;
     WCHAR szPath[] = { LOWORD(L'A' + nDrive), L'\0' }; // Arbitrary, just needs to include nDrive
     CStubWindow32 stub;
     HRESULT hr = CStubWindow32::CreateStub(stub, StubType, szPath, NULL);
@@ -200,7 +200,7 @@ static DWORD CALLBACK DoFormatDriveThread(LPVOID args)
 
 static HRESULT DoFormatDriveAsync(HWND hwnd, UINT nDrive)
 {
-    BOOL succ = SHCreateThread(DoFormatDriveThread, (void*)nDrive, CTF_PROCESS_REF, NULL);
+    BOOL succ = SHCreateThread(DoFormatDriveThread, UlongToPtr(nDrive), CTF_PROCESS_REF, NULL);
     return succ ? S_OK : E_FAIL;
 }
 
