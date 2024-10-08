@@ -290,6 +290,7 @@ RecycleBinDlg(
         case WM_INITDIALOG:
             page = (PROPSHEETPAGE*)lParam;
             InitializeRecycleBinDlg(hwndDlg, (WCHAR)page->lParam);
+            SendDlgItemMessage(hwndDlg, 14004, BM_SETCHECK, !SHELL_GetSetting(SSF_NOCONFIRMRECYCLE, fNoConfirmRecycle), 0);
             dwStyle = (DWORD) SendDlgItemMessage(hwndDlg, 14000, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
             dwStyle = dwStyle | LVS_EX_FULLROWSELECT;
             SendDlgItemMessage(hwndDlg, 14000, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, dwStyle);
@@ -324,6 +325,10 @@ RecycleBinDlg(
             lppl = (LPNMLISTVIEW) lParam;
             if (lppsn->hdr.code == PSN_APPLY)
             {
+                SHELLSTATE ss;
+                ss.fNoConfirmRecycle = SendDlgItemMessage(hwndDlg, 14004, BM_GETCHECK, 0, 0) == BST_UNCHECKED;
+                SHGetSetSettings(&ss, SSF_NOCONFIRMRECYCLE, TRUE);
+
                 if (GetDefaultItem(hwndDlg, &li) > -1)
                 {
                     pItem = (PDRIVE_ITEM_CONTEXT)li.lParam;
