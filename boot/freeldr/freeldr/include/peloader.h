@@ -60,3 +60,24 @@ PeLdrCheckForLoadedDll(
 PVOID
 PeLdrInitSecurityCookie(
     _In_ PLDR_DATA_TABLE_ENTRY LdrEntry);
+
+
+
+extern LIST_ENTRY FrLdrModuleList;
+extern PLDR_DATA_TABLE_ENTRY FreeldrDTE;
+
+ARC_STATUS
+FldrpLoadImage(
+    _In_ PCSTR ImageFilePath,
+    _In_opt_ PCSTR ImportName,
+    _In_ TYPE_OF_MEMORY MemoryType,
+    _Out_ PLDR_DATA_TABLE_ENTRY* ImageEntry,
+    _Out_opt_ PVOID* ImageBasePA);
+
+BOOLEAN
+FldrpUnloadImage(
+    _Inout_ PLDR_DATA_TABLE_ENTRY ImageEntry);
+
+ARC_STATUS
+FldrpStartImage(
+    _In_ PLDR_DATA_TABLE_ENTRY ImageEntry);
