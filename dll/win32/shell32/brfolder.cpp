@@ -343,6 +343,13 @@ BrFolder_InsertItem(
     _In_ PCIDLIST_ABSOLUTE pidlParent,
     _In_ HTREEITEM hParent)
 {
+    if (!(BrowseFlagsToSHCONTF(info->lpBrowseInfo->ulFlags) & SHCONTF_NONFOLDERS))
+#ifdef BIF_BROWSEFILEJUNCTIONS
+        if (!(info->lpBrowseInfo->ulFlags & BIF_BROWSEFILEJUNCTIONS))
+#endif
+            if (SHGetAttributes(lpsf, pidlChild, SFGAO_STREAM) & SFGAO_STREAM)
+                return NULL; // .zip files have both FOLDER and STREAM attributes set
+
     WCHAR szName[MAX_PATH];
     if (!BrFolder_GetName(lpsf, pidlChild, SHGDN_NORMAL, szName))
         return NULL;
