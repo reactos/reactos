@@ -220,12 +220,12 @@ CcPerformReadAhead(
 
         if (!Success)
         {
-            CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE);
+            CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE);
             DPRINT1("Failed to read data: %lx!\n", Status);
             goto Clear;
         }
 
-        CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE);
+        CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE);
 
         Length -= PartialLength;
         CurrentOffset += PartialLength;
@@ -256,12 +256,12 @@ CcPerformReadAhead(
 
         if (!Success)
         {
-            CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE);
+            CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE);
             DPRINT1("Failed to read data: %lx!\n", Status);
             goto Clear;
         }
 
-        CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE);
+        CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE);
 
         Length -= PartialLength;
         CurrentOffset += PartialLength;
@@ -551,7 +551,7 @@ CcCopyRead (
         }
         _SEH2_FINALLY
         {
-            CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE);
+            CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE);
         }
         _SEH2_END;
     }
@@ -652,15 +652,13 @@ CcCopyWrite (
             Buffer = (PVOID)((ULONG_PTR)Buffer + VacbLength);
             CurrentOffset += VacbLength;
 
-            /* Tell Mm */
-            Status = MmMakePagesDirty(NULL, Add2Ptr(Vacb->BaseAddress, VacbOffset), VacbLength);
+            Status = CcpMarkCacheBlockDirty(Vacb, VacbOffset, VacbLength);
             if (!NT_SUCCESS(Status))
                 ExRaiseStatus(Status);
         }
         _SEH2_FINALLY
         {
-            /* Do not mark the VACB as dirty if an exception was raised */
-            CcRosReleaseVacb(SharedCacheMap, Vacb, !_SEH2_AbnormalTermination(), FALSE);
+            CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE);
         }
         _SEH2_END;
     }
@@ -912,15 +910,13 @@ CcZeroData (
             WriteOffset.QuadPart += VacbLength;
             Length -= VacbLength;
 
-            /* Tell Mm */
-            Status = MmMakePagesDirty(NULL, Add2Ptr(Vacb->BaseAddress, VacbOffset), VacbLength);
+            Status = CcpMarkCacheBlockDirty(Vacb, VacbOffset, VacbLength);
             if (!NT_SUCCESS(Status))
                 ExRaiseStatus(Status);
         }
         _SEH2_FINALLY
         {
-            /* Do not mark the VACB as dirty if an exception was raised */
-            CcRosReleaseVacb(SharedCacheMap, Vacb, !_SEH2_AbnormalTermination(), FALSE);
+            CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE);
         }
         _SEH2_END;
     }
