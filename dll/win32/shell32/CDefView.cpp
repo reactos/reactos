@@ -4604,7 +4604,7 @@ HRESULT WINAPI CDefView::GetAdvise(DWORD *pAspects, DWORD *pAdvf, IAdviseSink **
 
 HRESULT STDMETHODCALLTYPE CDefView::QueryService(REFGUID guidService, REFIID riid, void **ppvObject)
 {
-    if (IsEqualIID(guidService, SID_IShellBrowser))
+    if (IsEqualIID(guidService, SID_IShellBrowser) && m_pShellBrowser)
         return m_pShellBrowser->QueryInterface(riid, ppvObject);
     else if(IsEqualIID(guidService, SID_IFolderView))
         return QueryInterface(riid, ppvObject);

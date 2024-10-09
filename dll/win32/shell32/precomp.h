@@ -218,6 +218,7 @@ SHBindToObjectEx(
 
 DWORD
 SHGetAttributes(_In_ IShellFolder *psf, _In_ LPCITEMIDLIST pidl, _In_ DWORD dwAttributes);
+HRESULT SHELL_GetIDListTarget(_In_ LPCITEMIDLIST pidl, _Out_ PIDLIST_ABSOLUTE *ppidl);
 HRESULT SHCoInitializeAnyApartment(VOID);
 
 HRESULT

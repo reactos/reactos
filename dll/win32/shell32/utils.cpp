@@ -277,6 +277,18 @@ SHGetAttributes(_In_ IShellFolder *psf, _In_ LPCITEMIDLIST pidl, _In_ DWORD dwAt
     return dwAttributes;
 }
 
+HRESULT SHELL_GetIDListTarget(_In_ LPCITEMIDLIST pidl, _Out_ PIDLIST_ABSOLUTE *ppidl)
+{
+    IShellLink *pSL;
+    HRESULT hr = SHBindToObject(NULL, pidl, IID_PPV_ARG(IShellLink, &pSL));
+    if (SUCCEEDED(hr))
+    {
+        hr = pSL->GetIDList(ppidl); // Note: Returns S_FALSE if no target pidl
+        pSL->Release();
+    }
+    return hr;
+}
+
 HRESULT SHCoInitializeAnyApartment(VOID)
 {
     HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);

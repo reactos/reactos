@@ -1630,7 +1630,8 @@ static HRESULT delete_files(FILE_OPERATION *op, const FILE_LIST *flFrom)
             BOOL bDelete;
             if (TRASH_TrashFile(fileEntry->szFullPath))
             {
-                SHChangeNotify(SHCNE_DELETE, SHCNF_PATHW, fileEntry->szFullPath, NULL);
+                UINT event = IsAttribFile(fileEntry->attributes) ? SHCNE_DELETE : SHCNE_RMDIR;
+                SHChangeNotify(event, SHCNF_PATHW, fileEntry->szFullPath, NULL);
                 continue;
             }
 
@@ -1649,9 +1650,7 @@ static HRESULT delete_files(FILE_OPERATION *op, const FILE_LIST *flFrom)
 
         /* delete the file or directory */
         if (IsAttribFile(fileEntry->attributes))
-        {
             bPathExists = (ERROR_SUCCESS == SHNotifyDeleteFileW(op, fileEntry->szFullPath));
-        }
         else
             bPathExists = SHELL_DeleteDirectoryW(op, fileEntry->szFullPath, FALSE);
 
