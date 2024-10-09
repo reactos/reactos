@@ -23,6 +23,22 @@
 #define TAG_HW_RESOURCE_LIST    'lRwH'
 #define TAG_HW_DISK_CONTEXT     'cDwH'
 
+/*
+ * Unfortunately, the ioaccess.h header doesn't define the string I/O operations
+ */
+#define READ_PORT_BUFFER_UCHAR(port, buffer, count) \
+    __inbytestring(PtrToUshort(port), buffer, count)
+#define READ_PORT_BUFFER_USHORT(port, buffer, count) \
+    __inwordstring(PtrToUshort(port), buffer, count)
+#define READ_PORT_BUFFER_ULONG(port, buffer, count) \
+    __indwordstring(PtrToUshort(port), buffer, count)
+#define WRITE_PORT_BUFFER_UCHAR(port, buffer, count) \
+    __outbytestring(PtrToUshort(port), buffer, count)
+#define WRITE_PORT_BUFFER_USHORT(port, buffer, count) \
+    __outwordstring(PtrToUshort(port), buffer, count)
+#define WRITE_PORT_BUFFER_ULONG(port, buffer, count) \
+    __outdwordstring(PtrToUshort(port), buffer, count)
+
 /* PROTOTYPES ***************************************************************/
 
 /* hardware.c */

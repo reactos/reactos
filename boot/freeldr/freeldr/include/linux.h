@@ -129,6 +129,7 @@ typedef struct
 #include <poppack.h>
 
 // Implemented in linux.S
+DECLSPEC_NORETURN
 VOID __cdecl
 BootLinuxKernel(
     _In_ ULONG KernelSize,
