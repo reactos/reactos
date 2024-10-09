@@ -216,6 +216,9 @@ BOOLEAN Ext2LookupFile(PEXT2_VOLUME_INFO Volume, PCSTR FileName, PEXT2_FILE_INFO
 
     RtlZeroMemory(Ext2FileInfo, sizeof(EXT2_FILE_INFO));
 
+    /* Skip leading path separator, if any */
+    if (*FileName == '\\' || *FileName == '/')
+        ++FileName;
     //
     // Figure out how many sub-directories we are nested in
     //
