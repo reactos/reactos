@@ -9,6 +9,20 @@
 
 SETTINGS_INFO NewSettingsInfo;
 
+static int CALLBACK
+BrowseFolderCallback(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
+{
+    switch (uMsg)
+    {
+        case BFFM_INITIALIZED:
+            SendMessageW(hwnd, BFFM_SETSELECTIONW, TRUE, lpData);
+            break;
+        case BFFM_VALIDATEFAILED:
+            return TRUE;
+    }
+    return 0;
+}
+
 BOOL
 ChooseFolder(HWND hwnd)
 {
@@ -25,23 +39,23 @@ ChooseFolder(HWND hwnd)
     bi.ulFlags =
         BIF_USENEWUI | BIF_DONTGOBELOWDOMAIN | BIF_RETURNONLYFSDIRS | /* BIF_BROWSEFILEJUNCTIONS | */ BIF_VALIDATE;
 
-    if (SUCCEEDED(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED)))
+    if (SUCCEEDED(CoInitialize(NULL)))
     {
-        CStringW szBuf;
+        WCHAR szDir[MAX_PATH];
+        if (GetWindowTextW(GetDlgItem(hwnd, IDC_DOWNLOAD_DIR_EDIT), szDir, _countof(szDir)))
+        {
+            bi.lpfn = BrowseFolderCallback;
+            bi.lParam = (LPARAM)szDir;
+        }
 
         LPITEMIDLIST lpItemList = SHBrowseForFolderW(&bi);
-        if (lpItemList && SHGetPathFromIDListW(lpItemList, szBuf.GetBuffer(MAX_PATH)))
+        if (lpItemList && SHGetPathFromIDListW(lpItemList, szDir))
         {
-            szBuf.ReleaseBuffer();
-            if (!szBuf.IsEmpty())
+            if (*szDir)
             {
-                SetDlgItemTextW(hwnd, IDC_DOWNLOAD_DIR_EDIT, szBuf);
+                SetDlgItemTextW(hwnd, IDC_DOWNLOAD_DIR_EDIT, szDir);
                 bRet = TRUE;
             }
-        }
-        else
-        {
-            szBuf.ReleaseBuffer();
         }
 
         CoTaskMemFree(lpItemList);
@@ -94,7 +108,9 @@ InitSettingsControls(HWND hDlg, PSETTINGS_INFO Info)
     SendDlgItemMessageW(hDlg, IDC_LOG_ENABLED, BM_SETCHECK, Info->bLogEnabled, 0);
     SendDlgItemMessageW(hDlg, IDC_DEL_AFTER_INSTALL, BM_SETCHECK, Info->bDelInstaller, 0);
 
-    SetWindowTextW(GetDlgItem(hDlg, IDC_DOWNLOAD_DIR_EDIT), Info->szDownloadDir);
+    HWND hCtl = GetDlgItem(hDlg, IDC_DOWNLOAD_DIR_EDIT);
+    SetWindowTextW(hCtl, Info->szDownloadDir);
+    SendMessageW(hCtl, EM_LIMITTEXT, MAX_PATH - 1, 0);
 
     CheckRadioButton(hDlg, IDC_PROXY_DEFAULT, IDC_USE_PROXY, IDC_PROXY_DEFAULT + Info->Proxy);
 
