@@ -202,3 +202,30 @@ START_TEST(PIDL)
         skip("?\n");
     ILFree(pidl);
 }
+
+START_TEST(ILIsEqual)
+{
+    LPITEMIDLIST p1, p2;
+
+    p1 = p2 = NULL;
+    ok_int(ILIsEqual(p1, p2), TRUE);
+
+    ITEMIDLIST emptyitem = {};
+    p1 = p2 = &emptyitem;
+    ok_int(ILIsEqual(p1, p2), TRUE);
+
+    p1 = SHCloneSpecialIDList(NULL, CSIDL_DRIVES, FALSE);
+    p2 = SHCloneSpecialIDList(NULL, CSIDL_DRIVES, FALSE);
+    if (p1 && p2)
+    {
+        ok_int(ILIsEqual(p1, p2), TRUE);
+        p1->mkid.abID[0] = 0x2E; // Convert Desktop RegItem to Computer RegItem
+        ok_int(ILIsEqual(p1, p2), FALSE);
+    }
+    else
+    {
+        skip("?\n");
+    }
+    ILFree(p1);
+    ILFree(p2);
+}
