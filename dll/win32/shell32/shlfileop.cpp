@@ -1596,7 +1596,10 @@ static HRESULT delete_files(FILE_OPERATION *op, const FILE_LIST *flFrom)
     bTrash = (op->req->fFlags & FOF_ALLOWUNDO)
         && TRASH_CanTrashFile(flFrom->feFiles[0].szFullPath);
 
-    if (!(op->req->fFlags & FOF_NOCONFIRMATION) || (!bTrash && op->req->fFlags & FOF_WANTNUKEWARNING))
+    BOOL confirm = !(op->req->fFlags & FOF_NOCONFIRMATION);
+    if (bTrash && SHELL_GetSetting(SSF_NOCONFIRMRECYCLE, fNoConfirmRecycle))
+        confirm = FALSE;
+    if (confirm || (!bTrash && op->req->fFlags & FOF_WANTNUKEWARNING))
         if (!confirm_delete_list(op->req->hwnd, op->req->fFlags, bTrash, flFrom))
         {
             op->req->fAnyOperationsAborted = TRUE;
