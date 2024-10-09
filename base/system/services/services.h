@@ -200,11 +200,10 @@ DWORD ScmCreateNewServiceRecord(LPCWSTR lpServiceName,
 VOID ScmDeleteServiceRecord(PSERVICE lpService);
 DWORD ScmMarkServiceForDelete(PSERVICE pService);
 
-DWORD
-ScmControlService(HANDLE hControlPipe,
-    PWSTR pServiceName,
-    SERVICE_STATUS_HANDLE hServiceStatus,
-    DWORD dwControl);
+DWORD ScmControlService(HANDLE hControlPipe,
+                        PWSTR pServiceName,
+                        SERVICE_STATUS_HANDLE hServiceStatus,
+                        DWORD dwControl);
 
 BOOL ScmLockDatabaseExclusive(VOID);
 BOOL ScmLockDatabaseShared(VOID);

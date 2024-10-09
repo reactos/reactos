@@ -777,8 +777,7 @@ ScmCanonDriverImagePath(DWORD dwStartType,
 }
 
 
-/* Recursive function */
-/* Need to search for every dependency on every service */
+/* Recursively search for every dependency on every service */
 DWORD
 Int_EnumDependentServicesW(HKEY hServicesKey,
                            PSERVICE lpService,

@@ -907,7 +907,7 @@ DWORD ScmDeleteService(PSERVICE lpService)
 
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("Failed to Delete the Service Registry key\n");
+        DPRINT1("Failed to delete the Service Registry key\n");
         return dwError;
     }
 
@@ -938,7 +938,7 @@ ScmReferenceService(PSERVICE lpService)
 DWORD
 ScmDereferenceService(PSERVICE lpService)
 {
-    ULONG ref;
+    DWORD ref;
 
     ASSERT(lpService->RefCount > 0);
 
@@ -946,9 +946,9 @@ ScmDereferenceService(PSERVICE lpService)
 
     if (ref == 0 && lpService->bDeleted &&
         lpService->Status.dwCurrentState == SERVICE_STOPPED)
-
+    {
         ScmDeleteService(lpService);
-
+    }
     return ref;
 }
 
@@ -1410,8 +1410,8 @@ ScmGetBootAndSystemDriverState(VOID)
 
 
 /*
- * ScmControlService must never be called with the database lock being held
- * The service passed must always be referenced instead
+ * ScmControlService must never be called with the database lock being held.
+ * The service passed must always be referenced instead.
  */
 DWORD
 ScmControlService(HANDLE hControlPipe,
@@ -1535,7 +1535,7 @@ ScmControlService(HANDLE hControlPipe,
 
             if (dwError == WAIT_TIMEOUT)
             {
-                DPRINT("WaitForSingleObject(%S, %d) timed out\n", pServiceName, dwControl, dwError);
+                DPRINT1("WaitForSingleObject(%S, %d) timed out\n", pServiceName, dwControl, dwError);
                 bResult = CancelIo(hControlPipe);
                 if (bResult == FALSE)
                 {
