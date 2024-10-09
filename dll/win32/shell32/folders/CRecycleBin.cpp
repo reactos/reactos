@@ -782,7 +782,7 @@ HRESULT WINAPI CRecycleBin::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, LPS
                 memcpy((LPVOID)buffer, pFileDetails->szName, Length * sizeof(WCHAR));
             }
             buffer[Length] = UNICODE_NULL;
-            if (!buffer[2] && buffer[0] && buffer[1] == L':')
+            if (buffer[0] && buffer[1] == L':' && !buffer[2])
             {
                 buffer[2] = L'\\';
                 buffer[3] = UNICODE_NULL;
