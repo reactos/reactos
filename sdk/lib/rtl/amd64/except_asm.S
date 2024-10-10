@@ -94,12 +94,20 @@ PUBLIC RtlCaptureContext
     movaps [rcx + CxXmm14], xmm14
     movaps [rcx + CxXmm15], xmm15
 
-    /* Store legacy floating point registers */
-    fxsave [rcx + CxFltSave]
+    /* Store eflags */
+    mov [rcx + CxEFlags], eax
+
+    /* Store mxcsr */
     stmxcsr [rcx + CxMxCsr]
 
-    /* Store rflags */
-    mov [rcx + CxEFlags], eax
+    /* Check if we are in user mode */
+    test byte ptr [rcx + CxSegCs], 3
+    jz RtlCaptureContextExit
+
+    /* Store legacy floating point registers */
+    fxsave [rcx + CxFltSave]
+
+RtlCaptureContextExit:
 
     /* Cleanup stack and return */
     add rsp, 8
@@ -118,10 +126,6 @@ PUBLIC RtlpRestoreContextInternal
     sub rsp, HEX(8)
     .ALLOCSTACK 8
     .ENDPROLOG
-
-    /* Restore legacy floating point registers (It is slow, so do it first) */
-    ldmxcsr [rcx + CxMxCsr]
-    fxrstor [rcx + CxFltSave]
 
     /* Load the target stack pointer into rdx */
     mov rdx, [rcx + CxRsp]
@@ -185,6 +189,18 @@ PUBLIC RtlpRestoreContextInternal
     mov r8,  [rcx + CxR8]
     mov r9,  [rcx + CxR9]
 
+    /* Restore MXCSR */
+    ldmxcsr [rcx + CxMxCsr]
+
+    /* Check if we go to user mode */
+    test byte ptr [rcx + CxSegCs], 3
+    jz Exit
+
+    /* Restore legacy floating point registers */
+    fxrstor [rcx + CxFltSave]
+
+Exit:
+
     /* Check if we go to a different cs */
     mov ax, cs
     cmp [rcx + CxSegCs], ax
@@ -207,6 +223,9 @@ PUBLIC RtlpRestoreContextInternal
     ret 8
 
 ReturnFar:
+
+    // We should never need this path
+    int HEX(2c)
 
     /* Put cs on the stack for the far return */
     mov ax, [rcx + CxSegCs]
