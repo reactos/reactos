@@ -127,3 +127,18 @@ double log10(double x)
     __debugbreak();
     return 0.0;
 }
+
+PCCHAR FrLdrGetBootPath(VOID)
+{
+    return FrLdrBootPath;
+}
+
+UCHAR FrldrGetBootDrive(VOID)
+{
+    return FrldrBootDrive;
+}
+
+ULONG FrldrGetBootPartition(VOID)
+{
+    return FrldrBootPartition;
+}
