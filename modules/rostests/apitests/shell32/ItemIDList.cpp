@@ -231,15 +231,22 @@ START_TEST(ILIsEqual)
     ILFree(p1);
     ILFree(p2);
 
-
+    // ILIsParent must compare like ILIsEqual
     p1 = SHSimpleIDListFromPath(L"c:\\");
     p2 = SHSimpleIDListFromPath(L"c:\\dir\\file");
     if (p1 && p2)
     {
-        ok_int(ILIsParent(p1, p2, FALSE), TRUE);
-        ok_int(ILIsParent(p1, p2, TRUE), FALSE);
+        ok_int(ILIsParent(NULL, p1, FALSE), FALSE); // NULL is always false
+        ok_int(ILIsParent(p1, NULL, FALSE), FALSE); // NULL is always false
+        ok_int(ILIsParent(NULL, NULL, FALSE), FALSE); // NULL is always false
+        ok_int(ILIsParent(p1, p1, FALSE), TRUE); // I'm my own parent
+        ok_int(ILIsParent(p1, p1, TRUE), FALSE); // Self is not immediate
+        ok_int(ILIsParent(p1, p2, FALSE), TRUE); // Grandchild
+        ok_int(ILIsParent(p1, p2, TRUE), FALSE); // Grandchild is not immediate
         ok_ptr(ILFindChild(p1, p2), ILGetNext(ILGetNext(p2))); // Child is "dir\\file", skip MyComputer and C:
         ok_int(ILIsEmpty(pidl = ILFindChild(p1, p1)) && pidl, TRUE); // Self
+        ILRemoveLastID(p2);
+        ok_int(ILIsParent(p1, p2, TRUE), TRUE); // Immediate child
 
         p1->mkid.abID[0] = 0x2E; // Convert Desktop RegItem to Computer RegItem
         ok_int(ILIsParent(p1, p2, FALSE), FALSE);
