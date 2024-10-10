@@ -1239,6 +1239,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     DirectoryTableBase[0] = TableBaseIndex << PAGE_SHIFT;
     DirectoryTableBase[1] = HyperIndex << PAGE_SHIFT;
 
+#ifndef _M_ARM /* Not ready for ARM yet... */
     /* Perform the arch-specific parts */
     if (!MiArchCreateProcessAddressSpace(Process, DirectoryTableBase))
     {
@@ -1252,7 +1253,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
         DirectoryTableBase[1] = 0;
         return FALSE;
     }
-
+#endif
     /* Switch to phase 1 initialization */
     ASSERT(Process->AddressSpaceInitialized == 0);
     Process->AddressSpaceInitialized = 1;

@@ -61,12 +61,13 @@ KeGetCurrentIrql(
     VOID);
 
 _IRQL_requires_max_(HIGH_LEVEL)
-NTHALAPI
+FORCEINLINE
 VOID
-FASTCALL
-KfLowerIrql(
-    _In_ _IRQL_restores_ _Notliteral_ KIRQL NewIrql);
-#define KeLowerIrql(a) KfLowerIrql(a)
+KeLowerIrql(
+    _In_ _IRQL_restores_ _Notliteral_ KIRQL NewIrql)
+{
+    UNREFERENCED_PARAMETER(NewIrql); //TODO FIXME:
+}
 
 _IRQL_requires_max_(HIGH_LEVEL)
 _IRQL_raises_(NewIrql)
@@ -81,58 +82,20 @@ KfRaiseIrql(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 _IRQL_saves_
 _IRQL_raises_(DISPATCH_LEVEL)
-NTHALAPI
+FORCEINLINE
 KIRQL
-NTAPI
-KeRaiseIrqlToDpcLevel(VOID);
+KeRaiseIrqlToDpcLevel(
+    VOID)
+{
+    return KfRaiseIrql(DISPATCH_LEVEL);
+}
 
-NTHALAPI
+FORCEINLINE
 KIRQL
-NTAPI
-KeRaiseIrqlToSynchLevel(VOID);
-
-_Requires_lock_not_held_(*SpinLock)
-_Acquires_lock_(*SpinLock)
-_IRQL_requires_max_(DISPATCH_LEVEL)
-_IRQL_saves_
-_IRQL_raises_(DISPATCH_LEVEL)
-NTHALAPI
-KIRQL
-FASTCALL
-KfAcquireSpinLock(
-  _Inout_ PKSPIN_LOCK SpinLock);
-#define KeAcquireSpinLock(a,b) *(b) = KfAcquireSpinLock(a)
-
-_Requires_lock_held_(*SpinLock)
-_Releases_lock_(*SpinLock)
-_IRQL_requires_(DISPATCH_LEVEL)
-NTHALAPI
-VOID
-FASTCALL
-KfReleaseSpinLock(
-  _Inout_ PKSPIN_LOCK SpinLock,
-  _In_ _IRQL_restores_ KIRQL NewIrql);
-#define KeReleaseSpinLock(a,b) KfReleaseSpinLock(a,b)
-
-_Requires_lock_not_held_(*SpinLock)
-_Acquires_lock_(*SpinLock)
-_IRQL_requires_min_(DISPATCH_LEVEL)
-NTKERNELAPI
-VOID
-FASTCALL
-KefAcquireSpinLockAtDpcLevel(
-  _Inout_ PKSPIN_LOCK SpinLock);
-#define KeAcquireSpinLockAtDpcLevel(SpinLock) KefAcquireSpinLockAtDpcLevel(SpinLock)
-
-_Requires_lock_held_(*SpinLock)
-_Releases_lock_(*SpinLock)
-_IRQL_requires_min_(DISPATCH_LEVEL)
-NTKERNELAPI
-VOID
-FASTCALL
-KefReleaseSpinLockFromDpcLevel(
-  _Inout_ PKSPIN_LOCK SpinLock);
-#define KeReleaseSpinLockFromDpcLevel(SpinLock) KefReleaseSpinLockFromDpcLevel(SpinLock)
+KeRaiseIrqlToSynchLevel(VOID)
+{
+    return KfRaiseIrql(12); // SYNCH_LEVEL = IPI_LEVEL - 2
+}
 
 NTSYSAPI
 PKTHREAD
@@ -164,6 +127,16 @@ KeRestoreFloatingPointState(
     UNREFERENCED_PARAMETER(FloatSave);
     return STATUS_SUCCESS;
 }
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+FORCEINLINE
+ULONG
+NTAPI
+KeGetCurrentProcessorIndex(VOID)
+{
+    return 0; //TODO FIXME:
+}
+#endif
 
 VOID
 KeFlushIoBuffers(

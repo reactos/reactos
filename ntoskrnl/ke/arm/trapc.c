@@ -20,7 +20,7 @@ VOID
 KiIdleLoop(VOID)
 {
     PKPCR Pcr = (PKPCR)KeGetPcr();
-    PKPRCB Prcb = Pcr->Prcb;
+    PKPRCB Prcb = Pcr->PrcbData;
     PKTHREAD OldThread, NewThread;
 
     //
@@ -124,7 +124,7 @@ KiSwapContextInternal(IN PKTHREAD OldThread,
                       IN PKTHREAD NewThread)
 {
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
-    PKPRCB Prcb = Pcr->Prcb;
+    PKPRCB Prcb = Pcr->PrcbData;
     PKPROCESS OldProcess, NewProcess;
 
     DPRINT1("SWAP\n");
@@ -281,7 +281,7 @@ KiDispatchInterrupt(VOID)
     // Get the PCR and disable interrupts
     //
     Pcr = (PKIPCR)KeGetPcr();
-    Prcb = Pcr->Prcb;
+    Prcb = Pcr->PrcbData;
     _disable();
 
     //
@@ -364,7 +364,7 @@ KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
     // Increment interrupt count
     //
     Pcr = (PKIPCR)KeGetPcr();
-    Pcr->Prcb.InterruptCount++;
+    Pcr->PrcbData.InterruptCount++;
 
     //
     // Get the old IRQL

@@ -193,6 +193,16 @@ jobs:
     - name: Build some applications (arm64)
       if: ${{ matrix.arch == 'arm64' }}
       run: cmake --build build --target calc magnify mstsc notepad osk regedit taskmgr winmine wordpad base/applications/screensavers/all -- -k0
+    - name: Build arm CD
+      if: ${{ matrix.arch == 'arm' }}
+      run: cmake --build build --target livecd
+    - name: Upload arm livecd
+      if: ${{ matrix.arch == 'arm' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: reactos-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
+        path: |
+          build/livecd.iso
     - name: Upload compiled binaries
       uses: actions/upload-artifact@v4
       with:

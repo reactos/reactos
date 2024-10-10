@@ -73,6 +73,12 @@
 //
 #define KeGetTrapFrameInterruptState(TrapFrame) 0
 
+DECLSPEC_NORETURN
+VOID
+KiExceptionExit(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ PKEXCEPTION_FRAME ExceptionFrame);
+
 FORCEINLINE
 BOOLEAN
 KeDisableInterrupts(VOID)

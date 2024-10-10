@@ -173,6 +173,9 @@ typedef ULONG_PTR SWAPENTRY;
 #define MM_WAIT_ENTRY            0x7ffffc00
 #elif defined(_M_AMD64)
 #define MM_WAIT_ENTRY            0x7FFFFFFFFFFFFC00ULL
+#elif _M_ARM
+/* TODO: We gotta figure out what windows does here... */
+#define MM_WAIT_ENTRY            0x7ffffc00
 #else
 #error Unsupported architecture!
 #endif
@@ -1248,9 +1251,13 @@ MmSetCleanPage(
 VOID
 NTAPI
 MmSetDirtyBit(PEPROCESS Process, PVOID Address, BOOLEAN Bit);
+#ifndef _M_ARM
 #define MmSetCleanPage(__P, __A) MmSetDirtyBit(__P, __A, FALSE)
 #define MmSetDirtyPage(__P, __A) MmSetDirtyBit(__P, __A, TRUE)
-
+#else
+#define MmSetCleanPage(__P, __A)
+#define MmSetDirtyPage(__P, __A)
+#endif
 VOID
 NTAPI
 MmDeletePageTable(

@@ -17,26 +17,36 @@ else()
     message(FATAL_ERROR "Unknown ARCH '" ${ARCH} "', cannot generate a valid UEFI boot filename.")
 endif()
 
+# ISO image EFI boot parameters
+set(ISO_EFI_BOOT_PARAMS)
+
 if(DEFINED EFI_PLATFORM_ID)
+if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
     add_custom_target(efisys
         COMMAND native-fatten ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin -format 2880 EFIBOOT
             -boot ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/fat.bin
             -mkdir EFI -mkdir EFI/BOOT -add $<TARGET_FILE:uefildr> EFI/BOOT/boot${EFI_PLATFORM_ID}.efi
         DEPENDS native-fatten fat uefildr
         VERBATIM)
+else()
+add_custom_target(efisys
+    COMMAND native-fatten ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin -format 2880 EFIBOOT -mkdir EFI -mkdir EFI/BOOT -add $<TARGET_FILE:uefildr> EFI/BOOT/boot${EFI_PLATFORM_ID}.efi
+    DEPENDS uefildr
+    VERBATIM)
 endif()
-
-# ISO image EFI boot parameters
-set(ISO_EFI_BOOT_PARAMS)
+endif()
 
 # Create an 'empty' directory (guaranteed to be empty) to be able to add
 # arbitrary empty directories to the ISO image using mkisofs.
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/empty)
 
+if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
 # Retrieve the full paths to the generated files of the 'isombr', 'isoboot', 'isobtrt' and 'efisys' targets
 set(_isombr_file  ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isombr.bin)  # get_target_property(_isombr_file  isombr  LOCATION)
 set(_isoboot_file ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isoboot.bin) # get_target_property(_isoboot_file isoboot LOCATION)
 set(_isobtrt_file ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isobtrt.bin) # get_target_property(_isobtrt_file isobtrt LOCATION)
+endif()
+
 if(DEFINED EFI_PLATFORM_ID)
     set(_efisys_file  ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin) # get_target_property(_efisys_file  efisys  LOCATION)
     list(APPEND ISO_EFI_BOOT_PARAMS -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot)
@@ -148,6 +158,7 @@ file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.cmake.lst "reactos/TEMP=${CMAKE_C
 add_allusers_profile_dirs(${CMAKE_CURRENT_BINARY_DIR}/livecd.cmake.lst "Profiles")
 add_user_profile_dirs(${CMAKE_CURRENT_BINARY_DIR}/livecd.cmake.lst "Profiles" "Default User")
 
+if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
 add_custom_target(livecd
     COMMAND native-mkisofs -quiet -o ${REACTOS_BINARY_DIR}/livecd.iso -iso-level 4
         -publisher ${ISO_MANUFACTURER} -preparer ${ISO_MANUFACTURER} -volid ${ISO_VOLNAME} -volset ${ISO_VOLNAME}
@@ -157,6 +168,16 @@ add_custom_target(livecd
     COMMAND native-isohybrid -b ${_isombr_file} -t 0x96 ${REACTOS_BINARY_DIR}/livecd.iso
     DEPENDS isombr native-isohybrid native-mkisofs
     VERBATIM)
+else()
+#Build LiveCDs with only UEFI boot
+add_custom_target(livecd
+    COMMAND native-mkisofs -quiet -o ${REACTOS_BINARY_DIR}/livecd.iso -iso-level 4
+        -publisher ${ISO_MANUFACTURER} -preparer ${ISO_MANUFACTURER} -volid ${ISO_VOLNAME} -volset ${ISO_VOLNAME}
+        ${ISO_EFI_BOOT_PARAMS} -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
+        -no-cache-inodes -graft-points -path-list ${CMAKE_CURRENT_BINARY_DIR}/livecd.$<CONFIG>.lst
+    DEPENDS native-mkisofs
+    VERBATIM)
+endif()
 
 ## HybridCD
 # Create the file list

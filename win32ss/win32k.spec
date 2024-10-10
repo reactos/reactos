@@ -197,19 +197,19 @@
 @ stdcall -arch=x86_64,arm RtlCopyMemory(ptr ptr int64) NTOSKRNL.RtlCopyMemory
 @ stdcall -arch=x86_64,arm RtlCopyMemoryNonTemporal(ptr ptr int64) NTOSKRNL.RtlCopyMemoryNonTemporal
 @ stdcall -arch=x86_64,arm RtlFillMemory(ptr long long) NTOSKRNL.RtlFillMemory
-@ cdecl -arch=x86_64,arm RtlLookupFunctionEntry(double ptr ptr) NTOSKRNL.RtlLookupFunctionEntry
+@ cdecl -arch=x86_64 RtlLookupFunctionEntry(double ptr ptr) NTOSKRNL.RtlLookupFunctionEntry
 @ stdcall -arch=x86_64,arm RtlMoveMemory(ptr ptr long) NTOSKRNL.RtlMoveMemory
 @ stdcall RtlMultiByteToUnicodeN(ptr long ptr ptr long) NTOSKRNL.RtlMultiByteToUnicodeN
 @ cdecl -arch=x86_64,arm RtlPcToFileHeader(ptr ptr) NTOSKRNL.RtlPcToFileHeader
 @ stdcall RtlRaiseException(ptr) NTOSKRNL.RtlRaiseException
-@ cdecl -arch=x86_64,arm RtlRestoreContext(ptr ptr) NTOSKRNL.RtlRestoreContext
+@ cdecl -arch=x86_64 RtlRestoreContext(ptr ptr) NTOSKRNL.RtlRestoreContext
 @ stdcall RtlUnicodeToMultiByteN(ptr long ptr ptr long) NTOSKRNL.RtlUnicodeToMultiByteN
 @ stdcall RtlUnicodeToMultiByteSize(ptr ptr long) NTOSKRNL.RtlUnicodeToMultiByteSize
 @ stdcall RtlUnwind(ptr ptr ptr ptr) NTOSKRNL.RtlUnwind
-@ cdecl -arch=x86_64,arm RtlUnwindEx(double double ptr ptr ptr ptr) NTOSKRNL.RtlUnwindEx
+@ cdecl -arch=x86_64 RtlUnwindEx(double double ptr ptr ptr ptr) NTOSKRNL.RtlUnwindEx
 @ stdcall RtlUpcaseUnicodeChar(long) NTOSKRNL.RtlUpcaseUnicodeChar
 @ stdcall RtlUpcaseUnicodeToMultiByteN(ptr long ptr ptr long) NTOSKRNL.RtlUpcaseUnicodeToMultiByteN
-@ cdecl -arch=x86_64,arm RtlVirtualUnwind(long double double ptr ptr ptr ptr ptr) NTOSKRNL.RtlVirtualUnwind
+@ cdecl -arch=x86_64 RtlVirtualUnwind(long double double ptr ptr ptr ptr ptr) NTOSKRNL.RtlVirtualUnwind
 @ stdcall -arch=x86_64,arm RtlZeroMemory(ptr long) NTOSKRNL.RtlZeroMemory
 @ stdcall STROBJ_bEnum(ptr ptr ptr)
 @ stdcall STROBJ_bEnumPositionsOnly(ptr ptr ptr)

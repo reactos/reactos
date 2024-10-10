@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>
+#include "sp804.h"
 #define NDEBUG
 #include <debug.h>
 
@@ -53,12 +54,12 @@ HalpStallInterrupt(VOID)
 VOID
 HalpInitializeClock(VOID)
 {
-    PKPCR Pcr = KeGetPcr();
+    //PKPCR Pcr = KeGetPcr();
     ULONG ClockInterval;
     SP804_CONTROL_REGISTER ControlRegister;
 
     /* Setup the clock and profile interrupt */
-    Pcr->InterruptRoutine[CLOCK2_LEVEL] = HalpStallInterrupt;
+   // Pcr->InterruptRoutine[CLOCK2_LEVEL] = HalpStallInterrupt; //TODO:
 
     /*
      * Configure the interval to 10ms

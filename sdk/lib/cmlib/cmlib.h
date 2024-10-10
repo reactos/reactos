@@ -156,8 +156,6 @@
     } SECURITY_DESCRIPTOR_RELATIVE, *PISECURITY_DESCRIPTOR_RELATIVE;
 
     #define CMLTRACE(x, ...)
-    #undef PAGED_CODE
-    #define PAGED_CODE()
     #define REGISTRY_ERROR                   ((ULONG)0x00000051L)
 
 #else
@@ -186,6 +184,10 @@
     #define _WINNLS_
 #endif
 
+#if defined(CMLIB_HOST) || defined(_BLDR_)
+    #undef PAGED_CODE
+    #define PAGED_CODE()
+#endif
 
 //
 // These define the Debug Masks Supported

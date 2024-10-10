@@ -898,12 +898,22 @@ MI_MAKE_SUBSECTION_PTE(IN PMMPTE NewPte,
     if ((ULONG_PTR)Segment < ((ULONG_PTR)MmSubsectionBase + (128 * _1MB)))
     {
         Offset = (ULONG_PTR)Segment - (ULONG_PTR)MmSubsectionBase;
+        #ifndef _M_ARM
         NewPte->u.Subsect.WhichPool = PagedPool;
+        #else
+        //TODO ARM is broken
+        __debugbreak();
+        #endif
     }
     else
     {
         Offset = (ULONG_PTR)MmNonPagedPoolEnd - (ULONG_PTR)Segment;
+        #ifndef _M_ARM
         NewPte->u.Subsect.WhichPool = NonPagedPool;
+        #else
+        //TODO: ARM is broken
+        __debugbreak();
+        #endif
     }
 
     /*

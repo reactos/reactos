@@ -2325,12 +2325,13 @@ MmArmInitSystem(IN ULONG Phase,
             ASSERT(PointerPte == TestPte);
             PointerPte++;
         }
-
+#ifndef _M_ARM
         /* Subsection PTEs are always in nonpaged pool, pick a random address to try */
         PointerPte = (PMMPTE)((ULONG_PTR)MmNonPagedPoolStart + (MmSizeOfNonPagedPoolInBytes / 2));
         MI_MAKE_SUBSECTION_PTE(&TempPte, PointerPte);
         TestPte = MiSubsectionPteToSubsection(&TempPte);
         ASSERT(PointerPte == TestPte);
+#endif
 #endif
 
         //

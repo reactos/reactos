@@ -16,6 +16,7 @@
 #define MI_NONPAGED_POOL_END                    (PVOID)0xFFBE0000
 #define MI_DEBUG_MAPPING                        (PVOID)0xFFBFF000
 #define MI_HIGHEST_SYSTEM_ADDRESS               (PVOID)0xFFFFFFFF
+#define MI_SYSTEM_CACHE_START                   (PVOID)0xC1000000
 
 #define PTE_PER_PAGE 256
 #define PDE_PER_PAGE 4096
@@ -79,16 +80,16 @@
 #define MI_MAKE_DIRTY_PAGE(x)
 #define MI_MAKE_CLEAN_PAGE(x)
 #define MI_MAKE_ACCESSED_PAGE(x)
-#define MI_PAGE_DISABLE_CACHE(x)   ((x)->u.Hard.Cached = 0)
-#define MI_PAGE_WRITE_THROUGH(x)   ((x)->u.Hard.Buffered = 0)
-#define MI_PAGE_WRITE_COMBINED(x)  ((x)->u.Hard.Buffered = 1)
+#define MI_PAGE_DISABLE_CACHE(x)   ((x)->u.Hard.CacheType = 0) /* TEMP */
+#define MI_PAGE_WRITE_THROUGH(x)   ((x)->u.Hard.CacheType = 0) /* TEMP */
+#define MI_PAGE_WRITE_COMBINED(x)  ((x)->u.Hard.CacheType = 1) /* TEMP */
 #define MI_IS_PAGE_LARGE(x)        FALSE
-#define MI_IS_PAGE_WRITEABLE(x)    ((x)->u.Hard.ReadOnly == 0)
+#define MI_IS_PAGE_WRITEABLE(x)    ((x)->u.Hard.Writable == 0)
 #define MI_IS_PAGE_COPY_ON_WRITE(x)FALSE
 #define MI_IS_PAGE_EXECUTABLE(x)   TRUE
 #define MI_IS_PAGE_DIRTY(x)        TRUE
 #define MI_MAKE_OWNER_PAGE(x)      ((x)->u.Hard.Owner = 1)
-#define MI_MAKE_WRITE_PAGE(x)      ((x)->u.Hard.ReadOnly = 0)
+#define MI_MAKE_WRITE_PAGE(x)      ((x)->u.Hard.Writable = 0)
 
 /* Macros to identify the page fault reason from the error code */
 #define MI_IS_NOT_PRESENT_FAULT(FaultCode) TRUE
@@ -123,6 +124,9 @@
 /* Check P*E boundaries */
 #define MiIsPteOnPdeBoundary(PointerPte) \
     ((((ULONG_PTR)PointerPte) & (PAGE_SIZE - 1)) == 0)
+
+/* The size of the virtual memory area that is mapped using a single PDE */
+#define PDE_MAPPED_VA (PTE_PER_PAGE * PAGE_SIZE)
 
 //
 // Decodes a Prototype PTE into the underlying PTE

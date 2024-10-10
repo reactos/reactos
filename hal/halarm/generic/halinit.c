@@ -35,9 +35,20 @@ HalpGetParameters(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 /* FUNCTIONS ******************************************************************/
 
+VOID
+NTAPI
+HaliHaltSystem(VOID)
+{
+    for(;;)
+    {
+
+    }
+}
+
 /*
  * @implemented
  */
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 HalInitSystem(IN ULONG BootPhase,
@@ -96,7 +107,7 @@ HalInitSystem(IN ULONG BootPhase,
         //HalGetDmaAdapter = NULL; // FIXME: TODO;
         //HalGetInterruptTranslator = NULL;  // FIXME: TODO
         //HalResetDisplay = NULL; // FIXME: TODO;
-        //HalHaltSystem = NULL; // FIXME: TODO;
+        HalHaltSystem = HaliHaltSystem; // FIXME: TODO;
 
         /* Setup I/O space */
         //HalpDefaultIoSpace.Next = HalpAddressUsageList;
@@ -118,7 +129,7 @@ HalInitSystem(IN ULONG BootPhase,
          * We could be rebooting with a pending profile interrupt,
          * so clear it here before interrupts are enabled
          */
-        HalStopProfileInterrupt(ProfileTime);
+        //HalStopProfileInterrupt(ProfileTime);
 
         /* Do some HAL-specific initialization */
         HalpInitPhase0(LoaderBlock);
@@ -150,33 +161,6 @@ HalInitSystem(IN ULONG BootPhase,
 
     /* All done, return */
     return TRUE;
-}
-
-#include <internal/kd.h>
-ULONG
-DbgPrintEarly(const char *fmt, ...)
-{
-    va_list args;
-    unsigned int i;
-    char Buffer[1024];
-    PCHAR String = Buffer;
-
-    va_start(args, fmt);
-    i = vsprintf(Buffer, fmt, args);
-    va_end(args);
-
-    /* Output the message */
-    while (*String != 0)
-    {
-        if (*String == '\n')
-        {
-            KdPortPutByteEx(NULL, '\r');
-        }
-        KdPortPutByteEx(NULL, *String);
-        String++;
-    }
-
-    return STATUS_SUCCESS;
 }
 
 /* EOF */

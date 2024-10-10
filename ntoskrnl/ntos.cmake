@@ -377,10 +377,12 @@ elseif(ARCH STREQUAL "arm")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm/stubs_asm.s
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm/trap.s)
     list(APPEND SOURCE
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/spinlock.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/config/arm/cmhardwr.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/arm/kdarm.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm/cpu.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm/exp.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm/freeze.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm/interrupt.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm/kiinit.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm/thrdini.c
@@ -390,6 +392,10 @@ elseif(ARCH STREQUAL "arm")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/ARM3/arm/init.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/arm/psctx.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/rtl/arm/rtlexcpt.c)
+    if(BUILD_MP)
+        list(APPEND SOURCE
+            ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm/mproc.c)
+    endif()
 endif()
 
 if(NOT _WINKD_)

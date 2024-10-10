@@ -6,13 +6,6 @@
 #include <internal/arm/ke.h>
 #include <internal/arm/intrin_i.h>
 
-//
-// Versatile Peripherals
-//
-#include <peripherals/pl011.h>
-#include <peripherals/pl190.h>
-#include <peripherals/sp804.h>
-
 #define PRIMARY_VECTOR_BASE     0x00
 
 /* Usage flags */

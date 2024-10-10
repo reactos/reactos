@@ -767,8 +767,12 @@ int main(int argc,char *argv[])
       if (pointer_size == 4) target_cpu = CPU_x86;
       else pointer_size = 8;
       break;
+  case CPU_ARM:
+      if (pointer_size == 8) target_cpu = CPU_ARM64;
+      else pointer_size = 4;
+      break;
   case CPU_ARM64:
-      if (pointer_size == 4) error( "Cannot build 32-bit code for this CPU\n" );
+      if (pointer_size == 4) target_cpu = CPU_ARM;
       pointer_size = 8;
       break;
   default:

@@ -30,7 +30,6 @@ extern ULONG SecondLevelIcacheSize;
 extern ULONG SecondLevelIcacheFillSize;
 
 extern ULONG gDiskReadBuffer, gFileSysBuffer;
-#define DiskReadBuffer ((PVOID)gDiskReadBuffer)
 
 #define DriveMapGetBiosDriveNumber(DeviceName) 0
 
@@ -38,22 +37,6 @@ FORCEINLINE VOID Reboot(VOID)
 {
     DbgBreakPoint();
 }
-
-typedef struct _PAGE_TABLE_ARM
-{
-    HARDWARE_PTE_ARMV6 Pte[1024];
-} PAGE_TABLE_ARM, *PPAGE_TABLE_ARM;
-C_ASSERT(sizeof(PAGE_TABLE_ARM) == PAGE_SIZE);
-
-typedef struct _PAGE_DIRECTORY_ARM
-{
-    union
-    {
-        HARDWARE_PDE_ARMV6 Pde[4096];
-        HARDWARE_LARGE_PTE_ARMV6 Pte[4096];
-    };
-} PAGE_DIRECTORY_ARM, *PPAGE_DIRECTORY_ARM;
-C_ASSERT(sizeof(PAGE_DIRECTORY_ARM) == (4 * PAGE_SIZE));
 
 // FIXME: sync with NDK
 typedef enum _ARM_DOMAIN

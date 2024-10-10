@@ -108,7 +108,7 @@ ULONG MmGlobalKernelPageDirectory[4096];
 
 /* Template PTE and PDE for a kernel page */
 MMPDE ValidKernelPde = {.u.Hard.Valid = 1};
-MMPTE ValidKernelPte = {.u.Hard.Valid = 1, .u.Hard.Sbo = 1};
+MMPTE ValidKernelPte = {.u.Hard.Valid = 1};
 
 /* Template PDE for a demand-zero page */
 MMPDE DemandZeroPde  = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS)};
@@ -131,23 +131,12 @@ MiFlushTlb(IN PMMPTE PointerPte,
     UNIMPLEMENTED_DBGBREAK();
 }
 
-BOOLEAN
-NTAPI
-MmCreateProcessAddressSpace(IN ULONG MinWs,
-                            IN PEPROCESS Process,
-                            IN PULONG DirectoryTableBase)
-{
-    UNIMPLEMENTED_DBGBREAK();
-    return FALSE;
-}
-
 NTSTATUS
 NTAPI
-MmCreateVirtualMappingUnsafe(IN PEPROCESS Process,
-                             IN PVOID Address,
-                             IN ULONG Protection,
-                             IN PPFN_NUMBER Pages,
-                             IN ULONG PageCount)
+MmCreateVirtualMappingUnsafe(PEPROCESS Process,
+                             PVOID Address,
+                             ULONG flProtect,
+                             PFN_NUMBER Page)
 {
     UNIMPLEMENTED_DBGBREAK();
     return STATUS_SUCCESS;
@@ -155,11 +144,10 @@ MmCreateVirtualMappingUnsafe(IN PEPROCESS Process,
 
 NTSTATUS
 NTAPI
-MmCreateVirtualMapping(IN PEPROCESS Process,
-                       IN PVOID Address,
-                       IN ULONG Protection,
-                       IN PPFN_NUMBER Pages,
-                       IN ULONG PageCount)
+MmCreateVirtualMapping(PEPROCESS Process,
+                       PVOID Address,
+                       ULONG flProtect,
+                       PFN_NUMBER Page)
 {
     UNIMPLEMENTED_DBGBREAK();
     return STATUS_SUCCESS;
@@ -191,6 +179,30 @@ MmDeletePageFileMapping(IN PEPROCESS Process,
     UNIMPLEMENTED_DBGBREAK();
 }
 
+_Success_(return)
+BOOLEAN
+MmDeletePhysicalMapping(
+    _Inout_opt_ PEPROCESS Process,
+    _In_ PVOID Address,
+    _Out_opt_ BOOLEAN * WasDirty,
+    _Out_opt_ PPFN_NUMBER Page)
+{
+    UNIMPLEMENTED_DBGBREAK();
+    return FALSE;
+}
+
+NTSTATUS
+NTAPI
+MmCreatePhysicalMapping(
+    _Inout_opt_ PEPROCESS Process,
+    _In_ PVOID Address,
+    _In_ ULONG flProtect,
+    _In_ PFN_NUMBER Page)
+{
+    UNIMPLEMENTED_DBGBREAK();
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 NTSTATUS
 NTAPI
 MmCreatePageFileMapping(IN PEPROCESS Process,
@@ -217,22 +229,6 @@ MmIsDirtyPage(IN PEPROCESS Process,
 {
     UNIMPLEMENTED_DBGBREAK();
     return FALSE;
-}
-
-VOID
-NTAPI
-MmSetCleanPage(IN PEPROCESS Process,
-               IN PVOID Address)
-{
-    UNIMPLEMENTED_DBGBREAK();
-}
-
-VOID
-NTAPI
-MmSetDirtyPage(IN PEPROCESS Process,
-               IN PVOID Address)
-{
-    UNIMPLEMENTED_DBGBREAK();
 }
 
 BOOLEAN
@@ -272,6 +268,7 @@ MmSetPageProtect(IN PEPROCESS Process,
     return;
 }
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 MmInitGlobalKernelPageDirectory(VOID)

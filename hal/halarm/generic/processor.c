@@ -49,6 +49,10 @@ HalInitializeProcessor(IN ULONG ProcessorNumber,
                        IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     /* Do nothing */
+    for(;;)
+    {
+
+    }
     return;
 }
 
@@ -99,33 +103,60 @@ HalRequestIpi(KAFFINITY TargetProcessors)
     UNIMPLEMENTED;
     while (TRUE);
 }
+#define QEMUUART 0x09000000
+volatile unsigned int * UART0DR = (unsigned int *) QEMUUART;
 
+VOID
+ARMWriteToUART(UCHAR Data)
+{
+    *UART0DR = Data;
+}
+
+ULONG
+DbgPrintEarly(const char *fmt, ...)
+{
+    va_list args;
+    unsigned int i;
+    char Buffer[1024];
+    PCHAR String = Buffer;
+
+    va_start(args, fmt);
+    i = vsprintf(Buffer, fmt, args);
+    va_end(args);
+
+    /* Output the message */
+    while (*String != 0)
+    {
+        if (*String == '\n')
+        {
+
+            ARMWriteToUART('\r');
+        }
+        ARMWriteToUART(*String);
+        String++;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
+
+VOID v7_flush_dcache_all(VOID);
 /*
  * @implemented
  */
 VOID
 HalSweepDcache(VOID)
 {
+    DbgPrintEarly("HalSweepDcache: try dcache sweep");
     /*
      * We get called very early on, before HalInitSystem or any of the Hal*
      * processor routines, so we need to figure out what CPU we're on.
      */
     if (!HalpProcessorIdentified) HalpIdentifyProcessor();
 
-    /*
-     * Check if we can do it the ARMv5TE-J way
-     */
-    if (HalpTestCleanSupported)
-    {
-        /* Test, clean, flush D-Cache */
-        __asm__ __volatile__ ("1: mrc p15, 0, pc, c7, c14, 3; bne 1b");
-    }
-    else
-    {
-        /* We need to do it it by set/way. For now always call ARMv7 function */
-        //extern VOID v7_flush_dcache_all(VOID);
-        //v7_flush_dcache_all();
-    }
+    /* We need to do it it by set/way. For now always call ARMv7 function */
+    v7_flush_dcache_all();
 }
 
 /*
@@ -134,8 +165,10 @@ HalSweepDcache(VOID)
 VOID
 HalSweepIcache(VOID)
 {
+
+    DbgPrintEarly("HAL JUMP");
     /* All ARM cores support the same Icache flush command */
-    KeArmFlushIcache();
+   // KeArmFlushIcache();
 }
 
 /* EOF */
