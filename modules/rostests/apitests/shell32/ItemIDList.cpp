@@ -214,6 +214,8 @@ START_TEST(ILIsEqual)
     p1 = p2 = &emptyitem;
     ok_int(ILIsEqual(p1, p2), TRUE);
 
+    ok_int(ILIsEqual(NULL, &emptyitem), FALSE); // These two are not equal for some reason
+
     p1 = SHCloneSpecialIDList(NULL, CSIDL_DRIVES, FALSE);
     p2 = SHCloneSpecialIDList(NULL, CSIDL_DRIVES, FALSE);
     if (p1 && p2)
