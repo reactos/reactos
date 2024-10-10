@@ -102,7 +102,7 @@ IDM_DVSELECT MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Se&lect", 0
+        MENUITEM "Se&leccionar", 0
     END
 END
 
@@ -213,7 +213,7 @@ BEGIN
     LTEXT "C&omentário:", IDC_SHORTCUT_COMMENT, 8, 154, 68, 10
     EDITTEXT IDC_SHORTCUT_COMMENT_EDIT, 79, 152, 150, 14, ES_AUTOHSCROLL
     PUSHBUTTON "&Localizar destino...", IDC_SHORTCUT_FIND, 9, 172, 70, 14, ES_LEFT
-    PUSHBUTTON "Troc&ar ícone...", IDC_SHORTCUT_CHANGE_ICON, 84, 172, 70, 14, ES_LEFT
+    PUSHBUTTON "Alter&ar ícone...", IDC_SHORTCUT_CHANGE_ICON, 84, 172, 70, 14, ES_LEFT
     PUSHBUTTON "A&vançadas...", IDC_SHORTCUT_ADVANCED, 159, 172, 70, 14, ES_LEFT
 END
 
@@ -256,7 +256,7 @@ BEGIN
     LTEXT "Atributos:", 14020, 8, 152, 46, 10
     AUTOCHECKBOX "&Só de leitura", 14021, 58, 151, 68, 10
     AUTOCHECKBOX "&Oculto", 14022, 126, 151, 55, 10
-    AUTOCHECKBOX "&Arquivo", 14023, 181, 151, 59, 10
+    AUTOCHECKBOX "A&rquivar", 14023, 181, 151, 59, 10
     PUSHBUTTON "A&vançadas...", 14028, 158, 170, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
@@ -272,7 +272,7 @@ BEGIN
     CONTROL "Ficheiro", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 58, 35, 170, 10
     LTEXT "Abre com:", 14006, 8, 53, 50, 10
     ICON "", 14025, 58, 52, 11, 10, NOT WS_VISIBLE
-    PUSHBUTTON "&Alterar...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP //FIXME: accelerator collision &A. This one is most likely wrong.
+    PUSHBUTTON "&Alterar...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     EDITTEXT 14007, 58, 53, 100, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "", -1, 8, 68, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Localização:", 14008, 8, 75, 45, 10
@@ -292,7 +292,7 @@ BEGIN
     LTEXT "Atributos:", 14020, 8, 189, 45, 10
     AUTOCHECKBOX "&Só de leitura", 14021, 58, 188, 67, 10
     AUTOCHECKBOX "&Oculto", 14022, 126, 188, 50, 10
-    AUTOCHECKBOX "&Arquivo", 14023, 181, 188, 49, 10 //FIXME: accelerator collision &A. This one is most likely correct.
+    AUTOCHECKBOX "A&rquivar", 14023, 181, 188, 49, 10
     PUSHBUTTON "A&vançadas...", 14028, 180, 185, 50, 15
 END
 
@@ -301,7 +301,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Versão"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Versão do ficheiro:", 14000, 10, 10, 55, 10 //FIXME: text truncation, suggestion: using just "Versão:", maybe in companion with writing "Versão do ficheiro" into the caption, if you think it is not obvious enough already! (Take into consideration how the user reaches that dialog! it is obvious that this is about the files version!
+    LTEXT "Versão:", 14000, 10, 10, 55, 10
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
     LTEXT "Descrição:", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
@@ -354,16 +354,16 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Verificar por erros...", -1, 5, 5, 230, 60
     ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
-    LTEXT "Esta opção vai verificar o volume por erros.", -1, 40, 25, 160, 20
+    LTEXT "Esta opção irá verificar se existem erros no volume.", -1, 40, 25, 160, 20
     PUSHBUTTON "Verificar agora...", 14000, 130, 45, 90, 15
     GROUPBOX "Desfragmentação", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
-    LTEXT "Esta opção vai desfragmentar os ficheiros no volume.", -1, 40, 85, 160, 20
+    LTEXT "Esta opção irá desfragmentar os ficheiros contidos no volume.", -1, 40, 85, 160, 20
     PUSHBUTTON "Desfragmentar agora...", 14001, 130, 105, 90, 15
     GROUPBOX "Cópia de segurança", -1, 5, 130, 230, 60
     ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
-    LTEXT "Esta opção vai verificar os ficheiros do volume.", -1, 40, 150, 160, 20
-    PUSHBUTTON "Criar cópia de Segurança...", 14002, 130, 170, 90, 15
+    LTEXT "Esta opção irá fazer uma cópia de segurança dos ficheiros contidos no volume.", -1, 40, 150, 160, 20
+    PUSHBUTTON "Criar cópia de segurança...", 14002, 130, 170, 90, 15
 END
 
 IDD_DRIVE_HARDWARE DIALOGEX 0, 0, 240, 220
@@ -400,11 +400,11 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Propriedades para as localizações seleccionadas", -1, 10, 72, 220, 70
-    RADIOBUTTON "&Tamanho personalizado:", 14001, 20, 90, 92, 10
+    RADIOBUTTON "Tamanho &personalizado:", 14001, 20, 90, 92, 10
     EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
-    LTEXT "Tamanho M&áximo(MB):", -1, 20, 105, 75, 10
-    RADIOBUTTON "Não mover os ficheiros para a &reciclagem. Apagá-los definitivamente.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
-    AUTOCHECKBOX "&Mostrar ecrâ de confirmação de eliminação", 14004, 20, 155, 140, 10
+    LTEXT "&Tamanho máximo(MB):", -1, 20, 105, 75, 10
+    RADIOBUTTON "&Não mover os ficheiros para a reciclagem. Apagá-los definitivamente.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
+    AUTOCHECKBOX "&Mostrar caixa de dialogo de confirmação de eliminação", 14004, 20, 155, 188, 10
 END
 
 IDD_OPEN_WITH DIALOGEX 0, 0, 264, 256
@@ -438,8 +438,8 @@ BEGIN
     AUTORADIOBUTTON "Abrir cada pasta na sua &janela", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 210, 10
     GROUPBOX "Seleccione a seguinte opção", -1, 7, 110, 249, 64
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
-    AUTORADIOBUTTON "&Click simples para abrir um item", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "&Duplo-click para abrir um item (um click para seleccionar)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
+    AUTORADIOBUTTON "&Clique simples para abrir um item", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "&Duplo-clique para abrir um item (um clique para seleccionar)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
     AUTORADIOBUTTON "Sublinhar títulos de ícones consistentes com meu &navegador", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 205, 10, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Sublinhar títulos de ícones sómente quando &apontados", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
     PUSHBUTTON "&Restaurar predefinições", IDC_FOLDER_OPTIONS_RESTORE, 167, 178, 90, 14
@@ -613,7 +613,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "&Iniciar", IDOK, 53, 198, 60, 14
     PUSHBUTTON "&Fechar", IDCANCEL, 118, 198, 60, 14
-    LTEXT "Capacidade:", -1, 7, 6, 169, 9 //FIXME: needs an accelerator. In the past that was "Ca&pacidade:" and was most likely correct, but the &P is currently blocked by "&Permitir Compressão". Check Windows!
+    LTEXT "&Capacidade:", -1, 7, 6, 169, 9
     COMBOBOX 28673, 7, 17, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "&Sistema de ficheiros", -1, 7, 35, 170, 9
     COMBOBOX 28677, 7, 46, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
@@ -623,8 +623,8 @@ BEGIN
     LTEXT "&Nome do volume", -1, 7, 93, 170, 9
     EDITTEXT 28679, 7, 103, 170, 13, ES_AUTOHSCROLL
     GROUPBOX "&Opções", 4610, 7, 121, 170, 49
-    AUTOCHECKBOX "Formatação &Rápida", 28674, 16, 135, 155, 10
-    AUTOCHECKBOX "&Permitir Compressão", 28675, 16, 152, 155, 10
+    AUTOCHECKBOX "Formatação &rápida", 28674, 16, 135, 155, 10
+    AUTOCHECKBOX "&Permitir compressão", 28675, 16, 152, 155, 10
 END
 
 IDD_CHECK_DISK DIALOGEX 50, 50, 194, 115
@@ -635,8 +635,8 @@ BEGIN
     DEFPUSHBUTTON "Iniciar", IDOK, 63, 95, 60, 14
     GROUPBOX "Opções verificação do disco", -1, 7, 6, 179, 40
     PUSHBUTTON "Cancelar", IDCANCEL, 128, 95, 60, 14
-    AUTOCHECKBOX "Corrigir erros do sistema de ficheiros automaticamente", 14000, 12, 15, 155, 10 //FIXME: needs an accel
-    AUTOCHECKBOX "&Procurar e tentar recuperar sectores danificados", 14001, 12, 30, 165, 10
+    AUTOCHECKBOX "&Corrigir erros do sistema automaticamente", 14000, 12, 15, 155, 10
+    AUTOCHECKBOX "&Procurar e recuperar sectores danificados", 14001, 12, 30, 165, 10
     CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
@@ -665,8 +665,8 @@ BEGIN
 outra aplicação. Modificar este ficheiro pode danificar o seu\n\
 sistema ou torná-lo instável.\n\n\
 Tem a certeza que deseja abrir este ficheiro?", IDC_STATIC, 35, 5, 230, 60
-    DEFPUSHBUTTON "&Sim", IDYES, 125, 55, 50, 14
-    PUSHBUTTON "&Não", IDNO, 180, 55, 50, 14
+    DEFPUSHBUTTON "Sim", IDYES, 125, 55, 50, 14
+    PUSHBUTTON "Não", IDNO, 180, 55, 50, 14
 END
 
 IDD_NEWEXTENSION DIALOGEX 0, 0, 260, 75
@@ -873,8 +873,8 @@ BEGIN
 
     /* Shortcut property sheet */
     IDS_SHORTCUT_RUN_NORMAL "Normal window"
-    IDS_SHORTCUT_RUN_MIN "Minimized"
-    IDS_SHORTCUT_RUN_MAX "Maximized"
+    IDS_SHORTCUT_RUN_MIN "Minimizado"
+    IDS_SHORTCUT_RUN_MAX "Maximizado"
 
     /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Menu Iniciar\\Programas"
@@ -928,8 +928,8 @@ BEGIN
     FCIDM_SHVIEW_NEWFOLDER "&Pasta"
     FCIDM_SHVIEW_NEWLINK "&Atalho"
     IDS_FOLDER_OPTIONS "Opções das Pastas"
-    IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
-    IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
+    IDS_TASKBAR_OPTIONS "Barra de tarefas e menu iniciar"
+    IDS_TASKBAR_OPTIONS_INFOTIP "Personaliza o menu Iniciar e a barra de tarefas, como o tipo de itens a apresentar e o seu aspecto visual."
     IDS_RECYCLEBIN_LOCATION "Localização da reciclagem"
     IDS_RECYCLEBIN_DISKSPACE "Espaço disponível"
     IDS_EMPTY_BITBUCKET "Esvaziar reciclagem"
@@ -944,8 +944,8 @@ BEGIN
     IDS_CANTDISCONNECT "Não foi possível desconectar (Código de erro: %lu)."
     IDS_NONE "(Nenhum)"
 
-    IDS_EXPAND "Exp&and"
-    IDS_COLLAPSE "Coll&apse"
+    IDS_EXPAND "Exp&andir"
+    IDS_COLLAPSE "Col&apsar"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Pasta"
