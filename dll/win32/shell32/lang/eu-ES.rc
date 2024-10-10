@@ -995,10 +995,6 @@ BEGIN
     IDS_FILE_TYPES "Fitxategi-mota"
     IDS_COLUMN_EXTENSION "Luzapena"
 
-    /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
-       used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "%s fitxategi"
-
     IDS_BYTES_FORMAT "bytes"
     IDS_UNKNOWN_APP "Aplikazio ezezaguna"
     IDS_EXE_DESCRIPTION "Deskribapena:"

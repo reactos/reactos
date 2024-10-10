@@ -997,10 +997,6 @@ BEGIN
     IDS_FILE_TYPES "Failitüübid"
     IDS_COLUMN_EXTENSION "Laiendused"
 
-    /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
-       used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "%s Fail"
-
     IDS_BYTES_FORMAT "baiti"
     IDS_UNKNOWN_APP "Tundmatu rakendus"
     IDS_EXE_DESCRIPTION "Kirjeldus:"

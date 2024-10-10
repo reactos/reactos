@@ -1000,10 +1000,6 @@ BEGIN
     IDS_FILE_TYPES "文件类型"
     IDS_COLUMN_EXTENSION "扩展名"
 
-    /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
-       used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "%s 文件"
-
     IDS_BYTES_FORMAT "字节"
     IDS_UNKNOWN_APP "未知应用程序"
     IDS_EXE_DESCRIPTION "描述："
