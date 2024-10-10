@@ -1421,7 +1421,7 @@ ScmControlServiceEx(
     _In_ SERVICE_STATUS_HANDLE hServiceStatus,
     _In_opt_ DWORD dwServiceTag,
     _In_opt_ DWORD argc,
-    _In_reads_opt_(argc) PWSTR* argv)
+    _In_reads_opt_(argc) const PCWSTR* argv)
 {
     DWORD dwError = ERROR_SUCCESS;
     BOOL bResult;
@@ -1760,7 +1760,7 @@ ScmWaitForServiceConnect(PSERVICE Service)
 static DWORD
 ScmStartUserModeService(PSERVICE Service,
                         DWORD argc,
-                        LPWSTR* argv)
+                        const PCWSTR* argv)
 {
     PROCESS_INFORMATION ProcessInformation;
     STARTUPINFOW StartupInfo;
@@ -1910,7 +1910,7 @@ Quit:
 static DWORD
 ScmLoadService(PSERVICE Service,
                DWORD argc,
-               LPWSTR* argv)
+               const PCWSTR* argv)
 {
     PSERVICE_GROUP Group = Service->lpGroup;
     DWORD dwError = ERROR_SUCCESS;
@@ -2023,7 +2023,7 @@ ScmLoadService(PSERVICE Service,
 DWORD
 ScmStartService(PSERVICE Service,
                 DWORD argc,
-                LPWSTR* argv)
+                const PCWSTR* argv)
 {
     DWORD dwError = ERROR_SUCCESS;
     SC_RPC_LOCK Lock = NULL;
@@ -2042,7 +2042,8 @@ ScmStartService(PSERVICE Service,
     if (!ScmInitialize)
     {
         dwError = ScmAcquireServiceStartLock(TRUE, &Lock);
-        if (dwError != ERROR_SUCCESS) goto done;
+        if (dwError != ERROR_SUCCESS)
+            goto done;
     }
 
     /* Really start the service */
