@@ -1430,7 +1430,6 @@ ScmControlServiceEx(
     DWORD PacketSize;
     DWORD i;
     PWSTR Ptr;
-    DWORD dwWriteCount = 0;
     DWORD dwReadCount = 0;
     OVERLAPPED Overlapped = {0};
 
@@ -1507,100 +1506,48 @@ ScmControlServiceEx(
     /* Acquire the service control critical section, to synchronize requests */
     EnterCriticalSection(&ControlServiceCriticalSection);
 
-    bResult = WriteFile(hControlPipe,
-                        ControlPacket,
-                        PacketSize,
-                        &dwWriteCount,
-                        &Overlapped);
+    bResult = TransactNamedPipe(hControlPipe,
+                                ControlPacket,
+                                PacketSize,
+                                &ReplyPacket,
+                                sizeof(ReplyPacket),
+                                &dwReadCount,
+                                &Overlapped);
     if (!bResult)
     {
+        /* Fail for any error other than pending IO */
         dwError = GetLastError();
-        if (dwError == ERROR_IO_PENDING)
+        if (dwError != ERROR_IO_PENDING)
         {
-            DPRINT("WriteFile(%S, %d) returned ERROR_IO_PENDING\n", pServiceName, dwControl);
-
-            dwError = WaitForSingleObject(hControlPipe,
-                                          PipeTimeout);
-            DPRINT("WaitForSingleObject(%S, %d) returned %lu\n", pServiceName, dwControl, dwError);
-
-            if (dwError == WAIT_TIMEOUT)
-            {
-                DPRINT1("WaitForSingleObject(%S, %d) timed out\n", pServiceName, dwControl);
-                bResult = CancelIo(hControlPipe);
-                if (!bResult)
-                    DPRINT1("CancelIo(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, GetLastError());
-
-                dwError = ERROR_SERVICE_REQUEST_TIMEOUT;
-                goto Done;
-            }
-            else if (dwError == WAIT_OBJECT_0)
-            {
-                bResult = GetOverlappedResult(hControlPipe,
-                                              &Overlapped,
-                                              &dwWriteCount,
-                                              TRUE);
-                if (!bResult)
-                {
-                    dwError = GetLastError();
-                    DPRINT1("GetOverlappedResult(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, dwError);
-                    goto Done;
-                }
-            }
-        }
-        else
-        {
-            DPRINT1("WriteFile(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, dwError);
+            DPRINT1("TransactNamedPipe(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, dwError);
             goto Done;
         }
-    }
 
-    /* Read the reply */
-    Overlapped.hEvent = NULL;
+        DPRINT("TransactNamedPipe(%S, %d) returned ERROR_IO_PENDING\n", pServiceName, dwControl);
 
-    bResult = ReadFile(hControlPipe,
-                       &ReplyPacket,
-                       sizeof(ReplyPacket),
-                       &dwReadCount,
-                       &Overlapped);
-    if (!bResult)
-    {
-        dwError = GetLastError();
-        if (dwError == ERROR_IO_PENDING)
+        dwError = WaitForSingleObject(hControlPipe, PipeTimeout);
+        DPRINT("WaitForSingleObject(%S, %d) returned %lu\n", pServiceName, dwControl, dwError);
+
+        if (dwError == WAIT_TIMEOUT)
         {
-            DPRINT("ReadFile(%S, %d) returned ERROR_IO_PENDING\n", pServiceName, dwControl);
+            DPRINT1("WaitForSingleObject(%S, %d) timed out\n", pServiceName, dwControl);
+            bResult = CancelIo(hControlPipe);
+            if (!bResult)
+                DPRINT1("CancelIo(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, GetLastError());
 
-            dwError = WaitForSingleObject(hControlPipe,
-                                          PipeTimeout);
-            DPRINT("WaitForSingleObject(%S, %d) returned %lu\n", pServiceName, dwControl, dwError);
-
-            if (dwError == WAIT_TIMEOUT)
-            {
-                DPRINT1("WaitForSingleObject(%S, %d) timed out\n", pServiceName, dwControl);
-                bResult = CancelIo(hControlPipe);
-                if (!bResult)
-                    DPRINT1("CancelIo(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, GetLastError());
-
-                dwError = ERROR_SERVICE_REQUEST_TIMEOUT;
-                goto Done;
-            }
-            else if (dwError == WAIT_OBJECT_0)
-            {
-                bResult = GetOverlappedResult(hControlPipe,
-                                              &Overlapped,
-                                              &dwReadCount,
-                                              TRUE);
-                if (!bResult)
-                {
-                    dwError = GetLastError();
-                    DPRINT1("GetOverlappedResult(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, dwError);
-                    goto Done;
-                }
-            }
+            dwError = ERROR_SERVICE_REQUEST_TIMEOUT;
         }
-        else
+        else if (dwError == WAIT_OBJECT_0)
         {
-            DPRINT1("ReadFile(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, dwError);
-            goto Done;
+            bResult = GetOverlappedResult(hControlPipe,
+                                          &Overlapped,
+                                          &dwReadCount,
+                                          TRUE);
+            if (!bResult)
+            {
+                dwError = GetLastError();
+                DPRINT1("GetOverlappedResult(%S, %d) failed (Error %lu)\n", pServiceName, dwControl, dwError);
+            }
         }
     }
 
