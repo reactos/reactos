@@ -186,7 +186,7 @@ VOID ScmAutoStartServices(VOID);
 VOID ScmAutoShutdownServices(VOID);
 DWORD ScmStartService(PSERVICE Service,
                       DWORD argc,
-                      LPWSTR *argv);
+                      const PCWSTR* argv);
 
 DWORD ScmReferenceService(PSERVICE lpService);
 DWORD ScmDereferenceService(PSERVICE lpService);
