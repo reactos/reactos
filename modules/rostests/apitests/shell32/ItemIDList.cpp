@@ -205,7 +205,7 @@ START_TEST(PIDL)
 
 START_TEST(ILIsEqual)
 {
-    LPITEMIDLIST p1, p2;
+    LPITEMIDLIST p1, p2, pidl;
 
     p1 = p2 = NULL;
     ok_int(ILIsEqual(p1, p2), TRUE);
@@ -223,6 +223,26 @@ START_TEST(ILIsEqual)
         ok_int(ILIsEqual(p1, p2), TRUE);
         p1->mkid.abID[0] = 0x2E; // Convert Desktop RegItem to Computer RegItem
         ok_int(ILIsEqual(p1, p2), FALSE);
+    }
+    else
+    {
+        skip("?\n");
+    }
+    ILFree(p1);
+    ILFree(p2);
+
+
+    p1 = SHSimpleIDListFromPath(L"c:\\");
+    p2 = SHSimpleIDListFromPath(L"c:\\dir\\file");
+    if (p1 && p2)
+    {
+        ok_int(ILIsParent(p1, p2, FALSE), TRUE);
+        ok_int(ILIsParent(p1, p2, TRUE), FALSE);
+        ok_ptr(ILFindChild(p1, p2), ILGetNext(ILGetNext(p2))); // Child is "dir\\file", skip MyComputer and C:
+        ok_int(ILIsEmpty(pidl = ILFindChild(p1, p1)) && pidl, TRUE); // Self
+
+        p1->mkid.abID[0] = 0x2E; // Convert Desktop RegItem to Computer RegItem
+        ok_int(ILIsParent(p1, p2, FALSE), FALSE);
     }
     else
     {
