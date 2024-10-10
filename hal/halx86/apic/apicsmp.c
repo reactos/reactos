@@ -16,7 +16,7 @@
 #include <debug.h>
 
 
-extern PPROCESSOR_IDENTITY HalpProcessorIdentity;
+extern PROCESSOR_IDENTITY HalpProcessorIdentity[MAXIMUM_PROCESSORS];
 
 /* INTERNAL FUNCTIONS *********************************************************/
 

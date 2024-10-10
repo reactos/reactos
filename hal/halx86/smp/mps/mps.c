@@ -18,8 +18,7 @@
 static // TODO: While HalpParseApicTables() is UNIMPLEMENTED.
 ULONG PhysicalProcessorCount;
 
-static PROCESSOR_IDENTITY HalpStaticProcessorIdentity[MAXIMUM_PROCESSORS];
-const PPROCESSOR_IDENTITY HalpProcessorIdentity = HalpStaticProcessorIdentity;
+PROCESSOR_IDENTITY HalpProcessorIdentity[MAXIMUM_PROCESSORS];
 
 /* FUNCTIONS ******************************************************************/
 

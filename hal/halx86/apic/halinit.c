@@ -25,11 +25,6 @@ HalpInitProcessor(
     IN ULONG ProcessorNumber,
     IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    if (ProcessorNumber == 0)
-    {
-        HalpParseApicTables(LoaderBlock);
-    }
-
     HalpSetupProcessorsTable(ProcessorNumber);
 
     /* Initialize the local APIC for this cpu */
@@ -49,7 +44,8 @@ HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             (HalpBuildType & PRCB_BUILD_UNIPROCESSOR) ? "UP" : "SMP",
             (HalpBuildType & PRCB_BUILD_DEBUG) ? "DBG" : "REL");
 
-    HalpPrintApicTables();
+    /* This works because InitPhase0 happens before secondary processors are spun-up */
+    HalpParseApicTables(LoaderBlock);
 
     /* Enable clock interrupt handler */
     HalpEnableInterruptHandler(IDT_INTERNAL,

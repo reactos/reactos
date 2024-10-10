@@ -16,7 +16,6 @@
 
 /* GLOBALS *******************************************************************/
 
-extern PPROCESSOR_IDENTITY HalpProcessorIdentity;
 extern PHYSICAL_ADDRESS HalpLowStubPhysicalAddress;
 extern PVOID HalpLowStub;
 
@@ -26,8 +25,9 @@ extern PVOID HalpAPEntryData;
 extern PVOID HalpAPEntry32;
 extern PVOID HalpAPEntry16End;
 extern HALP_APIC_INFO_TABLE HalpApicInfoTable;
+extern PROCESSOR_IDENTITY HalpProcessorIdentity[MAXIMUM_PROCESSORS];
 
-ULONG HalpStartedProcessorCount = 1;
+ULONG HalpStartedProcessorCount = 0;
 
 #ifndef Add2Ptr
 #define Add2Ptr(P,I) ((PVOID)((PUCHAR)(P) + (I)))
@@ -90,6 +90,12 @@ HalStartNextProcessor(
 {
     if (HalpStartedProcessorCount == HalpApicInfoTable.ProcessorCount)
         return FALSE;
+
+    if (HalpProcessorIdentity[HalpStartedProcessorCount].BSPCheck == TRUE)
+    {
+        // SKIP the BSP
+        HalpStartedProcessorCount++;
+    }
 
     // Initalize the temporary page table
     // TODO: clean it up after an AP boots successfully
