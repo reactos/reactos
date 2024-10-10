@@ -153,3 +153,7 @@ DiskGetPartitionEntry(
  * SCSI support (disk/scsiport.c)
  */
 ULONG LoadBootDeviceDriver(VOID);
+
+PCCHAR FrLdrGetBootPath(VOID);
+UCHAR FrldrGetBootDrive(VOID);
+ULONG FrldrGetBootPartition(VOID);
