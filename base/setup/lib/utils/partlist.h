@@ -259,8 +259,24 @@ RoundingDivide(
 
 
 BOOLEAN
+IsDiskSuperFloppy2(
+    _In_ const DISK_PARTITION_INFO* DiskInfo,
+    _In_opt_ const ULONGLONG* DiskSize,
+    _In_ const PARTITION_INFORMATION* PartitionInfo);
+
+BOOLEAN
+IsDiskSuperFloppy(
+    _In_ const DRIVE_LAYOUT_INFORMATION* Layout,
+    _In_opt_ const ULONGLONG* DiskSize);
+
+BOOLEAN
+IsDiskSuperFloppyEx(
+    _In_ const DRIVE_LAYOUT_INFORMATION_EX* LayoutEx,
+    _In_opt_ const ULONGLONG* DiskSize);
+
+BOOLEAN
 IsSuperFloppy(
-    IN PDISKENTRY DiskEntry);
+    _In_ PDISKENTRY DiskEntry);
 
 BOOLEAN
 IsPartitionActive(
