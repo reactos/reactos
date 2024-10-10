@@ -5,6 +5,7 @@
  * TRANSLATORS: Copyright 2006 Fatih Aşıcı <fasici@linux-sevenler.org>
  *              Copyright 2012 Arda Tanrıkulu (ardatan) <ardatanrikulu@gmail.com>
  *              Copyright 2015-2020 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
+ *              Copyright 2024 Ethem De Santa (scropool) <oyunyumru4@gmail.com>
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
@@ -19,8 +20,8 @@ BEGIN
     POPUP "&Simgeleri Düzenle", FCIDM_SHVIEW_ARRANGE
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "&Otomatik Düzenle", FCIDM_SHVIEW_AUTOARRANGE
-        MENUITEM "I&zgaraya Uydur", FCIDM_SHVIEW_ALIGNTOGRID
+        MENUITEM "S&imgeleri otomatik düzenle", FCIDM_SHVIEW_AUTOARRANGE
+        MENUITEM "Simgeleri kılavuz çi&zgisine hizala", FCIDM_SHVIEW_ALIGNTOGRID
     END
 END
 
@@ -40,8 +41,8 @@ BEGIN
         POPUP "&Simgeleri Düzenle", FCIDM_SHVIEW_ARRANGE
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
-            MENUITEM "&Kendiliğinden Düzenle", FCIDM_SHVIEW_AUTOARRANGE
-            MENUITEM "I&zgaraya Uydur", FCIDM_SHVIEW_ALIGNTOGRID
+            MENUITEM "S&imgeleri otomatik düzenle", FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "Simgeleri kılavuz çi&zgisine hizala", FCIDM_SHVIEW_ALIGNTOGRID
         END
         MENUITEM "&Yenile", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
@@ -101,7 +102,7 @@ IDM_DVSELECT MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Se&lect", 0
+        MENUITEM "Se&ç", 0
     END
 END
 
@@ -302,7 +303,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Dosya sürümü:", 14000, 10, 10, 55, 10
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Tanım:", 14002, 10, 27, 45, 10
+    LTEXT "Açıklama:", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
     LTEXT "Telif Hakkı:", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
@@ -814,7 +815,7 @@ BEGIN
     IDS_DISCONNECT "Bağlantıyı kes"
     IDS_OPENFILELOCATION "&Dosya konumunu aç"
     IDS_SENDTO_MENU "&Gönder"
-    IDS_COPYASPATHMENU "Copy as path"
+    IDS_COPYASPATHMENU "Yol olarak kopyala"
 
     IDS_MOVEERRORTITLE "Dosya veya Dizin Taşıma Hatası"
     IDS_COPYERRORTITLE "Dosya veya Dizin Kopyalama Hatası"
@@ -823,11 +824,11 @@ BEGIN
     IDS_COPYERRORSAME "'%s' kopyalanamıyor: Kaynak ve hedef dosya adları aynı."
     IDS_MOVEERRORSUBFOLDER "'%s' taşınamıyor: Hedef dizin, kaynak dizinin bir alt dizinidir."
     IDS_COPYERRORSUBFOLDER "'%s' kopyalanamıyor: Hedef dizin, kaynak dizinin bir alt dizinidir."
-    IDS_MOVEERROR "Cannot move '%s': %s"
-    IDS_COPYERROR "Cannot copy '%s': %s"
+    IDS_MOVEERROR "'%s' taşınamadı: %s"
+    IDS_COPYERROR "'%s' kopyalanamadı: %s"
 
-    IDS_CREATEFILE_DENIED "Could not create file %1"
-    IDS_CREATEFILE_CAPTION "Error creating file"
+    IDS_CREATEFILE_DENIED "Dosya %1 oluşturulamadı"
+    IDS_CREATEFILE_CAPTION "Dosya oluşturma hatası"
     IDS_CREATEFOLDER_DENIED """%1"" dizini oluşturulamıyor."
     IDS_CREATEFOLDER_CAPTION "Dizin Oluşturulamıyor"
     IDS_DELETEITEM_CAPTION "Dosya Silmeyi Onayla"
@@ -872,9 +873,9 @@ BEGIN
     IDS_RUNDLG_BROWSE_FILTER "Çalıştırılabilir Dosyalar (*.exe)\0*.exe\0Tüm Dosyalar (*.*)\0*.*\0"
 
     /* Shortcut property sheet */
-    IDS_SHORTCUT_RUN_NORMAL "Normal window"
-    IDS_SHORTCUT_RUN_MIN "Minimized"
-    IDS_SHORTCUT_RUN_MAX "Maximized"
+    IDS_SHORTCUT_RUN_NORMAL "Normal Pencere"
+    IDS_SHORTCUT_RUN_MIN "Küçültülmüş"
+    IDS_SHORTCUT_RUN_MAX "Büyütülmüş"
 
     /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Başlat Menüsü\\Programlar"
@@ -893,7 +894,7 @@ BEGIN
     IDS_PRINTHOOD "Yazıcılar"
     IDS_LOCAL_APPDATA "Yerel Ayarlar\\Uygulama Verileri"
     IDS_INTERNET_CACHE "Yerel Ayarlar\\Geçici İnternet Dosyaları"
-    IDS_COOKIES "Tanımlama Bilgileri"
+    IDS_COOKIES "Çerezler"
     IDS_HISTORY "Yerel Ayarlar\\Geçmiş"
     IDS_PROGRAM_FILES "Program Dosyaları"
     IDS_MYPICTURES "Resimlerim"
@@ -907,7 +908,7 @@ BEGIN
     IDS_NETWORKPLACE "Ağ Bağlantılarım"
 
     IDS_NEWFOLDER "Yeni Dizin"
-    IDS_NEWITEMFORMAT "New %s"
+    IDS_NEWITEMFORMAT "Yeni %s"
 
     IDS_DRIVE_FIXED "Yerel Disk"
     IDS_DRIVE_CDROM "CD-ROM"
@@ -924,12 +925,12 @@ BEGIN
 
     IDS_SHELL_ABOUT_AUTHORS "&Yazarlar"
     IDS_SHELL_ABOUT_BACK "< &Geri"
-    FCIDM_SHVIEW_NEW "Ne&w" /* A menu item with an ampersand */
+    FCIDM_SHVIEW_NEW "Y&eni" /* A menu item with an ampersand */
     FCIDM_SHVIEW_NEWFOLDER "Yeni &Dizin"
     FCIDM_SHVIEW_NEWLINK "Yeni &Kısayol"
     IDS_FOLDER_OPTIONS "Dizin Seçenekleri"
-    IDS_TASKBAR_OPTIONS "Taskbar and Start Menu"
-    IDS_TASKBAR_OPTIONS_INFOTIP "Customize the Start Menu and the taskbar, such as the types of items to be displayed and how they should appear."
+    IDS_TASKBAR_OPTIONS "Görev Çubuğu ve Başlat Menüsü"
+    IDS_TASKBAR_OPTIONS_INFOTIP "Başlat Menüsü ve görev çubuğunu, görüntülenecek öğe türleri ve nasıl görünecekleri gibi seçeneklerle özelleştirin."
     IDS_RECYCLEBIN_LOCATION "Geri Dönüşüm Kutusu Konumu"
     IDS_RECYCLEBIN_DISKSPACE "Kullanılabilir Alan"
     IDS_EMPTY_BITBUCKET "&Geri Dönüşüm Kutusu'nu Boşalt"
@@ -944,8 +945,8 @@ BEGIN
     IDS_CANTDISCONNECT "Bağlanılamıyor (Hata Kodu: %lu)."
     IDS_NONE "(Hiçbir Şey)"
 
-    IDS_EXPAND "Exp&and"
-    IDS_COLLAPSE "Coll&apse"
+    IDS_EXPAND "Geniş&let"
+    IDS_COLLAPSE "Dar&alt"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Dizin"
@@ -962,7 +963,7 @@ BEGIN
     IDS_NLS_FILE "Yerel Dil Desteği Dosyası"
     IDS_OCX_FILE "ActiveX Denetimi"
     IDS_TLB_FILE "Tip Kitaplığı"
-    IDS_FON_FILE "YazıTipi"
+    IDS_FON_FILE "Yazı Tipi"
     IDS_TTF_FILE "TrueType Yazı Tipi Dosyası"
     IDS_OTF_FILE "OpenType Yazı Tipi Dosyası"
     IDS_HLP_FILE "Yardım Dosyası"
@@ -1003,9 +1004,9 @@ BEGIN
        used in the _File type_ tab of the _Folder Options_ dialog */
     IDS_FILE_EXT_TYPE "%s Dosyası"
 
-    IDS_BYTES_FORMAT "bit"
+    IDS_BYTES_FORMAT "bayt"
     IDS_UNKNOWN_APP "Bilinmeyen Uygulama"
-    IDS_EXE_DESCRIPTION "Tanım:"
+    IDS_EXE_DESCRIPTION "Açıklama:"
 
     IDS_MENU_EMPTY "(Boş)"
     IDS_OBJECTS "%d Nesne"
@@ -1013,8 +1014,8 @@ BEGIN
 
     IDS_TITLE_MYCOMP "Bilgisayarım"
     IDS_TITLE_MYNET "Ağ Bağlantılarım"
-    IDS_TITLE_BIN_1 "Recycle Bin (full)"
-    IDS_TITLE_BIN_0 "Recycle Bin (empty)"
+    IDS_TITLE_BIN_1 "Geri Dönüşüm Kutusu (dolu)"
+    IDS_TITLE_BIN_0 "Geri Dönüşüm Kutusu (boş)"
 
     IDS_ADVANCED_FOLDER "Dosyalar ve Dizinler"
     IDS_ADVANCED_NET_CRAWLER "Ağ dizinlerini ve yazıcıları otomatik ara"
@@ -1034,17 +1035,17 @@ BEGIN
     IDS_ADVANCED_PERSIST_BROWSERS "Oturum açarken önceki dizin pencerelerini geri getir"
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Bilgisayarım'da Denetim Masası'nı göster"
     IDS_ADVANCED_SHOW_COMP_COLOR "Şifrelenmiş veya sıkıştırılmış NTFS dosyalarını renkli göster"
-    IDS_ADVANCED_SHOW_INFO_TIP "Dizin ve masaüstü ögeleri için açılan tanım göster"
-    IDS_ADVANCED_DISPLAY_FAVORITES "Display Favorites"
-    IDS_ADVANCED_DISPLAY_LOG_OFF "Display Log Off"
-    IDS_ADVANCED_EXPAND_CONTROL_PANEL "Expand Control Panel"
-    IDS_ADVANCED_EXPAND_MY_DOCUMENTS "Expand My Documents"
-    IDS_ADVANCED_EXPAND_PRINTERS "Expand Printers"
-    IDS_ADVANCED_EXPAND_MY_PICTURES "Expand My Pictures"
-    IDS_ADVANCED_EXPAND_NET_CONNECTIONS "Expand Network Connections"
-    IDS_ADVANCED_DISPLAY_RUN "Display Run"
-    IDS_ADVANCED_DISPLAY_ADMINTOOLS "Display Administrative Tools"
-    IDS_ADVANCED_SMALL_START_MENU "Show Small Icons in Start menu"
+    IDS_ADVANCED_SHOW_INFO_TIP "Dizin ve masaüstü ögeleri için açıklama göster"
+    IDS_ADVANCED_DISPLAY_FAVORITES "Favorileri Göster"
+    IDS_ADVANCED_DISPLAY_LOG_OFF "Oturumu Kapatmayı Göster"
+    IDS_ADVANCED_EXPAND_CONTROL_PANEL "Denetim Masası'nı Genişlet"
+    IDS_ADVANCED_EXPAND_MY_DOCUMENTS "Belgelerim'i Genişlet"
+    IDS_ADVANCED_EXPAND_PRINTERS "Yazıcıları Genişlet"
+    IDS_ADVANCED_EXPAND_MY_PICTURES "Resimlerim'i Genişlet"
+    IDS_ADVANCED_EXPAND_NET_CONNECTIONS "Ağ Bağlantılarını Genişlet"
+    IDS_ADVANCED_DISPLAY_RUN "Çalıştır'ı Göster"
+    IDS_ADVANCED_DISPLAY_ADMINTOOLS "Yönetim Araçlarını Göster"
+    IDS_ADVANCED_SMALL_START_MENU "Başlat menüsünde Küçük Simge Göster"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< G&elişmiş"
     IDS_NEWEXT_ADVANCED_RIGHT "Ge&lişmiş >>"
