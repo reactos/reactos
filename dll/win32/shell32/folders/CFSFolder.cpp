@@ -624,6 +624,7 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
         WCHAR szFileName[MAX_PATH];
         LPWSTR pExtension;
         BOOL hasName = _ILSimpleGetTextW(pidl, szFileName, _countof(szFileName));
+        dwShellAttributes |= SFGAO_STREAM;
 
         // Vista+ feature: Hidden files with a leading tilde treated as super-hidden
         // See https://devblogs.microsoft.com/oldnewthing/20170526-00/?p=96235
@@ -671,10 +672,6 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
         {
             dwShellAttributes |= (SFGAO_FILESYSANCESTOR | SFGAO_STORAGEANCESTOR);
         }
-    }
-    else
-    {
-        dwShellAttributes |= SFGAO_STREAM;
     }
 
     if (dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
