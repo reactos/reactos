@@ -46,14 +46,18 @@ HRESULT STDMETHODCALLTYPE CFolderOptions::AddPages(LPFNSVADDPROPSHEETPAGE pfnAdd
     HPROPSHEETPAGE hPage;
     LPARAM sheetparam = (LPARAM)static_cast<CFolderOptions*>(this);
 
-    hPage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_GENERAL, FolderOptionsGeneralDlg, sheetparam, NULL);
-    if (hPage == NULL)
+    hPage = SH_CreatePropertySheetPageEx(IDD_FOLDER_OPTIONS_GENERAL, FolderOptionsGeneralDlg,
+                                         sheetparam, NULL, &PropSheetPageLifetimeCallback<CFolderOptions>);
+    HRESULT hr = AddPropSheetPage(hPage, pfnAddPage, lParam);
+    if (FAILED_UNEXPECTEDLY(hr))
     {
         ERR("Failed to create property sheet page FolderOptionsGeneral\n");
-        return E_FAIL;
+        return hr;
     }
-    if (!pfnAddPage(hPage, lParam))
-        return E_FAIL;
+    else
+    {
+        AddRef(); // For PropSheetPageLifetimeCallback
+    }
 
     hPage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_VIEW, FolderOptionsViewDlg, sheetparam, NULL);
     if (hPage == NULL)
