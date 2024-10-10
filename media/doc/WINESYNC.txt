@@ -180,6 +180,7 @@ dll/win32/secur32             # Forked
 dll/win32/security            # Forked (different .spec)
 dll/win32/sensapi             # Synced to WineStaging-4.18
 dll/win32/setupapi            # Forked at Wine-20050524
+dll/win32/shcore              # Synced to Wine-8.14
 dll/win32/shdoclc             # Synced to WineStaging-3.3
 dll/win32/shdocvw             # Synced to WineStaging-4.18
 dll/win32/shell32             # Forked at Wine-20071011
@@ -196,6 +197,7 @@ dll/win32/t2embed             # Synced to WineStaging-4.18
 dll/win32/tapi32              # Synced to WineStaging-4.18
 dll/win32/traffic             # Synced to WineStaging-3.3
 dll/win32/twain_32            # Synced to WineStaging-4.18
+dll/win32/uianimation         # Synced to Wine-8.14
 dll/win32/updspapi            # Synced to WineStaging-4.18
 dll/win32/url                 # Synced to WineStaging-3.3
 dll/win32/urlmon              # Synced to WineStaging-4.18

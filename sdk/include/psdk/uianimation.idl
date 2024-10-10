@@ -1,0 +1,622 @@
+/*
+ * Copyright 2017 Alistair Leslie-Hughes
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+import "wtypes.idl";
+import "unknwn.idl";
+
+interface IUIAnimationStoryboard;
+interface IUIAnimationVariable;
+interface IUIAnimationManager;
+interface IUIAnimationPriorityComparison;
+interface IUIAnimationTransitionFactory;
+interface IUIAnimationInterpolator;
+interface IUIAnimationManagerEventHandler;
+interface IUIAnimationTransition;
+interface IUIAnimationTransitionLibrary;
+
+typedef DOUBLE UI_ANIMATION_SECONDS;
+typedef struct { int _; } *UI_ANIMATION_KEYFRAME;
+const UI_ANIMATION_KEYFRAME UI_ANIMATION_KEYFRAME_STORYBOARD_START = (UI_ANIMATION_KEYFRAME)(-1);
+
+const UI_ANIMATION_SECONDS UI_ANIMATION_SECONDS_EVENTUALLY = -1.0;
+
+typedef enum
+{
+    UI_ANIMATION_MANAGER_IDLE,
+    UI_ANIMATION_MANAGER_BUSY
+} UI_ANIMATION_MANAGER_STATUS;
+
+typedef enum
+{
+    UI_ANIMATION_ROUNDING_NEAREST,
+    UI_ANIMATION_ROUNDING_FLOOR,
+    UI_ANIMATION_ROUNDING_CEILING
+} UI_ANIMATION_ROUNDING_MODE;
+
+typedef enum
+{
+    UI_ANIMATION_SCHEDULING_UNEXPECTED_FAILURE,
+    UI_ANIMATION_SCHEDULING_INSUFFICIENT_PRIORITY,
+    UI_ANIMATION_SCHEDULING_ALREADY_SCHEDULED,
+    UI_ANIMATION_SCHEDULING_SUCCEEDED,
+    UI_ANIMATION_SCHEDULING_DEFERRED
+} UI_ANIMATION_SCHEDULING_RESULT;
+
+typedef enum
+{
+    UI_ANIMATION_STORYBOARD_BUILDING,
+    UI_ANIMATION_STORYBOARD_SCHEDULED,
+    UI_ANIMATION_STORYBOARD_CANCELLED,
+    UI_ANIMATION_STORYBOARD_PLAYING,
+    UI_ANIMATION_STORYBOARD_TRUNCATED,
+    UI_ANIMATION_STORYBOARD_FINISHED,
+    UI_ANIMATION_STORYBOARD_READY,
+    UI_ANIMATION_STORYBOARD_INSUFFICIENT_PRIORITY
+} UI_ANIMATION_STORYBOARD_STATUS;
+
+typedef enum
+{
+    UI_ANIMATION_UPDATE_NO_CHANGE,
+    UI_ANIMATION_UPDATE_VARIABLES_CHANGED,
+} UI_ANIMATION_UPDATE_RESULT;
+
+typedef enum
+{
+    UI_ANIMATION_TIMER_CLIENT_IDLE,
+    UI_ANIMATION_TIMER_CLIENT_BUSY,
+} UI_ANIMATION_TIMER_CLIENT_STATUS;
+
+typedef enum
+{
+    UI_ANIMATION_IDLE_BEHAVIOR_CONTINUE,
+    UI_ANIMATION_IDLE_BEHAVIOR_DISABLE,
+} UI_ANIMATION_IDLE_BEHAVIOR;
+
+typedef [v1_enum] enum
+{
+    UI_ANIMATION_MODE_DISABLED,
+    UI_ANIMATION_MODE_SYSTEM_DEFAULT,
+    UI_ANIMATION_MODE_ENABLED
+} UI_ANIMATION_MODE;
+
+typedef [v1_enum] enum
+{
+    UI_ANIMATION_PRIORITY_EFFECT_FAILURE,
+    UI_ANIMATION_PRIORITY_EFFECT_DELAY
+} UI_ANIMATION_PRIORITY_EFFECT;
+
+typedef [v1_enum] enum
+{
+    UI_ANIMATION_DEPENDENCY_NONE = 0,
+    UI_ANIMATION_DEPENDENCY_INTERMEDIATE_VALUES = 0x1,
+    UI_ANIMATION_DEPENDENCY_FINAL_VALUE = 0x2,
+    UI_ANIMATION_DEPENDENCY_FINAL_VELOCITY = 0x4,
+    UI_ANIMATION_DEPENDENCY_DURATION = 0x8
+} UI_ANIMATION_DEPENDENCIES;
+
+typedef [v1_enum] enum
+{
+    UI_ANIMATION_SLOPE_INCREASING,
+    UI_ANIMATION_SLOPE_DECREASING
+} UI_ANIMATION_SLOPE;
+
+[
+    local,
+    object,
+    uuid(783321ed-78a3-4366-b574-6af607a64788),
+    pointer_default(unique)
+]
+interface IUIAnimationManagerEventHandler : IUnknown
+{
+    HRESULT OnManagerStatusChanged (
+        [in] UI_ANIMATION_MANAGER_STATUS status,
+        [in] UI_ANIMATION_MANAGER_STATUS prev_status);
+}
+
+[
+    local,
+    object,
+    uuid(6358b7ba-87d2-42d5-bf71-82e919dd5862),
+    pointer_default(unique)
+]
+interface IUIAnimationVariableChangeHandler : IUnknown
+{
+    HRESULT OnValueChanged (
+        [in] IUIAnimationStoryboard *storyboard,
+        [in] IUIAnimationVariable *variable,
+        [in] DOUBLE value,
+        [in] DOUBLE prev_value);
+}
+
+[
+    local,
+    object,
+    uuid(bb3e1550-356e-44b0-99da-85ac6017865e),
+    pointer_default(unique)
+]
+interface IUIAnimationVariableIntegerChangeHandler : IUnknown
+{
+    HRESULT OnIntegerValueChanged (
+        [in] IUIAnimationStoryboard *storyboard,
+        [in] IUIAnimationVariable *variable,
+        [in] INT32 value,
+        [in] INT32 prev_value);
+}
+
+[
+    local,
+    object,
+    uuid(3d5c9008-ec7c-4364-9f8a-9af3c58cbae6),
+    pointer_default(unique)
+]
+interface IUIAnimationStoryboardEventHandler : IUnknown
+{
+    HRESULT OnStoryboardStatusChanged (
+        [in] IUIAnimationStoryboard *storyboard,
+        [in] UI_ANIMATION_STORYBOARD_STATUS status,
+        [in] UI_ANIMATION_STORYBOARD_STATUS prev_status);
+
+    HRESULT OnStoryboardUpdated ([in] IUIAnimationStoryboard *storyboard);
+}
+
+[
+    local,
+    object,
+    uuid(dc6ce252-f731-41cf-b610-614b6ca049ad),
+    pointer_default(unique)
+]
+interface IUIAnimationTransition : IUnknown
+{
+    HRESULT SetInitialValue ([in] DOUBLE value);
+
+    HRESULT SetInitialVelocity ([in] DOUBLE velocity);
+
+    HRESULT IsDurationKnown ();
+
+    HRESULT GetDuration ([out, retval] UI_ANIMATION_SECONDS *duration);
+}
+
+[
+    local,
+    object,
+    uuid(8ceeb155-2849-4ce5-9448-91ff70e1e4d9),
+    pointer_default(unique)
+]
+interface IUIAnimationVariable : IUnknown
+{
+    HRESULT GetValue ([out, retval] DOUBLE *value);
+
+    HRESULT GetFinalValue ([out, retval] DOUBLE *value);
+
+    HRESULT GetPreviousValue ([out, retval] DOUBLE *value);
+
+    HRESULT GetIntegerValue ([out, retval] INT32 *value);
+
+    HRESULT GetFinalIntegerValue ([out, retval] INT32 *value);
+
+    HRESULT GetPreviousIntegerValue ([out, retval] INT32 *value);
+
+    HRESULT GetCurrentStoryboard ([out, retval] IUIAnimationStoryboard **storyboard);
+
+    HRESULT SetLowerBound ([in] DOUBLE bound);
+
+    HRESULT SetUpperBound ([in] DOUBLE bound);
+
+    HRESULT SetRoundingMode ([in] UI_ANIMATION_ROUNDING_MODE mode);
+
+    HRESULT SetTag (
+        [in] IUnknown *object,
+        [in] UINT32 id);
+
+    HRESULT GetTag (
+        [out] IUnknown **object,
+        [out] UINT32 *id);
+
+    HRESULT SetVariableChangeHandler ([in, unique] IUIAnimationVariableChangeHandler *handler);
+
+    HRESULT SetVariableIntegerChangeHandler ([in, unique] IUIAnimationVariableIntegerChangeHandler *handler);
+}
+
+[
+    local,
+    object,
+    uuid(a8ff128f-9bf9-4af1-9e67-e5e410defb84),
+    pointer_default(unique)
+]
+interface IUIAnimationStoryboard : IUnknown
+{
+    HRESULT AddTransition (
+        [in] IUIAnimationVariable *variable,
+        [in] IUIAnimationTransition *transition);
+
+    HRESULT AddKeyframeAtOffset (
+        [in] UI_ANIMATION_KEYFRAME existingframe,
+        [in] UI_ANIMATION_SECONDS offset,
+        [out, retval] UI_ANIMATION_KEYFRAME *keyframe);
+
+    HRESULT AddKeyframeAfterTransition (
+        [in] IUIAnimationTransition *transition,
+        [out, retval] UI_ANIMATION_KEYFRAME *keyframe);
+
+    HRESULT AddTransitionAtKeyframe (
+        [in] IUIAnimationVariable *variable,
+        [in] IUIAnimationTransition *transition,
+        [in] UI_ANIMATION_KEYFRAME start_key);
+
+    HRESULT AddTransitionBetweenKeyframes (
+        [in] IUIAnimationVariable *variable,
+        [in] IUIAnimationTransition *transition,
+        [in] UI_ANIMATION_KEYFRAME start_key,
+        [in] UI_ANIMATION_KEYFRAME end_key);
+
+    HRESULT RepeatBetweenKeyframes (
+        [in] UI_ANIMATION_KEYFRAME start_key,
+        [in] UI_ANIMATION_KEYFRAME end_key,
+        [in] INT32 count);
+
+    HRESULT HoldVariable ([in] IUIAnimationVariable *variable);
+
+    HRESULT SetLongestAcceptableDelay ([in] UI_ANIMATION_SECONDS delay);
+
+    HRESULT Schedule (
+        [in] UI_ANIMATION_SECONDS now,
+        [out, defaultvalue(0)] UI_ANIMATION_SCHEDULING_RESULT *result);
+
+    HRESULT Conclude ();
+
+    HRESULT Finish ([in] UI_ANIMATION_SECONDS deadline);
+
+    HRESULT Abandon ();
+
+    HRESULT SetTag(
+        [in, unique] IUnknown *object,
+        [in] UINT32 id);
+
+    HRESULT GetTag (
+        [out] IUnknown **object,
+        [out] UINT32 *id);
+
+    HRESULT GetStatus ([out, retval] UI_ANIMATION_STORYBOARD_STATUS *status);
+
+    HRESULT GetElapsedTime ([out] UI_ANIMATION_SECONDS *elapsed);
+
+    HRESULT SetStoryboardEventHandler ([in, unique] IUIAnimationStoryboardEventHandler *handler);
+}
+
+[
+    local,
+    object,
+    uuid(bedb4db6-94fa-4bfb-a47f-ef2d9e408c25),
+    pointer_default(unique)
+]
+interface IUIAnimationTimerClientEventHandler : IUnknown
+{
+    HRESULT OnTimerClientStatusChanged (
+        [in] UI_ANIMATION_TIMER_CLIENT_STATUS new_status,
+        [in] UI_ANIMATION_TIMER_CLIENT_STATUS previous_status);
+}
+
+[
+    local,
+    object,
+    uuid(195509b7-5d5e-4e3e-b278-ee3759b367ad),
+    pointer_default(unique)
+]
+interface IUIAnimationTimerUpdateHandler : IUnknown
+{
+    HRESULT OnUpdate (
+        [in] UI_ANIMATION_SECONDS now,
+        [out, retval] UI_ANIMATION_UPDATE_RESULT *result);
+
+    HRESULT SetTimerClientEventHandler (
+        [in] IUIAnimationTimerClientEventHandler *handler);
+
+    HRESULT ClearTimerClientEventHandler ();
+}
+
+[
+    local,
+    object,
+    uuid(274a7dea-d771-4095-abbd-8df7abd23ce3),
+    pointer_default(unique)
+]
+interface IUIAnimationTimerEventHandler : IUnknown
+{
+    HRESULT OnPreUpdate ();
+
+    HRESULT OnPostUpdate ();
+
+    HRESULT OnRenderingTooSlow (
+        [in] UINT32 fps);
+}
+
+[
+    local,
+    object,
+    uuid(6b0efad1-a053-41d6-9085-33a689144665),
+    pointer_default(unique)
+]
+interface IUIAnimationTimer : IUnknown
+{
+    HRESULT SetTimerUpdateHandler (
+        [in, unique] IUIAnimationTimerUpdateHandler *handler,
+        [in] UI_ANIMATION_IDLE_BEHAVIOR idlebehavior);
+
+    HRESULT SetTimerEventHandler (
+        [in, unique] IUIAnimationTimerEventHandler *handler);
+
+    HRESULT Enable ();
+
+    HRESULT Disable ();
+
+    HRESULT IsEnabled ();
+
+    HRESULT GetTime (
+        [out] UI_ANIMATION_SECONDS *time);
+
+    HRESULT SetFrameRateThreshold (
+        [in] UINT32 fps);
+}
+
+[
+    local,
+    object,
+    uuid(9169896c-ac8d-4e7d-94e5-67fa4dc2f2e8),
+    pointer_default(unique)
+]
+interface IUIAnimationManager : IUnknown
+{
+    HRESULT CreateAnimationVariable(
+        [in] UI_ANIMATION_SECONDS initialvalue,
+        [out, retval] IUIAnimationVariable **variable);
+
+    HRESULT ScheduleTransition(
+        [in] IUIAnimationVariable *variable,
+        [in] IUIAnimationTransition *transition,
+        [in] UI_ANIMATION_SECONDS timenow);
+
+    HRESULT CreateStoryboard(
+        [out, retval] IUIAnimationStoryboard **storyboard);
+
+    HRESULT FinishAllStoryboards(
+        [in] UI_ANIMATION_SECONDS deadline);
+
+    HRESULT AbandonAllStoryboards();
+
+    HRESULT Update(
+        [in] UI_ANIMATION_SECONDS timenow,
+        [out, defaultvalue(0)] UI_ANIMATION_UPDATE_RESULT *updateresult);
+
+    HRESULT GetVariableFromTag(
+        [in] IUnknown * object,
+        [in] UINT32 id,
+        [out, retval] IUIAnimationVariable **variable);
+
+    HRESULT GetStoryboardFromTag(
+        [in] IUnknown * object,
+        [in] UINT32 id,
+        [out, retval] IUIAnimationStoryboard **storyboard);
+
+    HRESULT GetStatus(
+        [out, retval] UI_ANIMATION_MANAGER_STATUS *status);
+
+    HRESULT SetAnimationMode(
+        [in] UI_ANIMATION_MODE mode);
+
+    HRESULT Pause();
+
+    HRESULT Resume();
+
+    HRESULT SetManagerEventHandler(
+        [in] IUIAnimationManagerEventHandler *handler);
+
+    HRESULT SetCancelPriorityComparison(
+        [in] IUIAnimationPriorityComparison *comparison);
+
+    HRESULT SetTrimPriorityComparison(
+        [in] IUIAnimationPriorityComparison *comparison);
+
+    HRESULT SetCompressPriorityComparison(
+        [in] IUIAnimationPriorityComparison *comparison);
+
+    HRESULT SetConcludePriorityComparison(
+        [in] IUIAnimationPriorityComparison *comparison);
+
+    HRESULT SetDefaultLongestAcceptableDelay(
+        [in] UI_ANIMATION_SECONDS delay);
+
+    HRESULT Shutdown();
+}
+
+[
+    local,
+    object,
+    uuid(83fa9b74-5f86-4618-bc6a-a2fac19b3f44),
+    pointer_default(unique)
+]
+interface IUIAnimationPriorityComparison : IUnknown
+{
+    HRESULT HasPriority(
+        [in] IUIAnimationStoryboard *scheduledboard,
+        [in] IUIAnimationStoryboard *newboard,
+        [in] UI_ANIMATION_PRIORITY_EFFECT effect);
+}
+
+[
+    local,
+    object,
+    uuid(fcd91e03-3e3b-45ad-bbb1-6dfc8153743d),
+    pointer_default(unique)
+]
+interface IUIAnimationTransitionFactory : IUnknown
+{
+    HRESULT CreateTransition(
+        [in] IUIAnimationInterpolator *interpolator,
+        [out, retval] IUIAnimationTransition **transition);
+}
+
+[
+    local,
+    object,
+    uuid(7815cbba-ddf7-478c-a46c-7b6c738b7978),
+    pointer_default(unique)
+]
+interface IUIAnimationInterpolator : IUnknown
+{
+    HRESULT SetInitialValueAndVelocity(
+        [in] double initialvalue,
+        [in] double initialvelocity);
+
+    HRESULT SetDuration(
+        [in] UI_ANIMATION_SECONDS duration);
+
+    HRESULT GetDuration(
+        [out, retval] UI_ANIMATION_SECONDS *duration);
+
+    HRESULT GetFinalValue(
+        [out, retval] double *value);
+
+    HRESULT InterpolateValue(
+        [in] UI_ANIMATION_SECONDS offset,
+        [out, retval] double *value);
+
+    HRESULT InterpolateVelocity(
+        [in] UI_ANIMATION_SECONDS offset,
+        [out, retval] double *velocity);
+
+    HRESULT GetDependencies(
+        [out] UI_ANIMATION_DEPENDENCIES *initialvaluedependencies,
+        [out] UI_ANIMATION_DEPENDENCIES *initialvelocitydependencies,
+        [out] UI_ANIMATION_DEPENDENCIES *durationdependencies);
+}
+
+[
+    local,
+    object,
+    uuid(ca5a14b1-d24f-48b8-8fe4-c78169ba954e),
+    pointer_default(unique)
+]
+interface IUIAnimationTransitionLibrary : IUnknown
+{
+    HRESULT CreateInstantaneousTransition(
+        [in] double finalvalue,
+        [out, retval] IUIAnimationTransition **transition);
+
+    HRESULT CreateConstantTransition(
+        [in] UI_ANIMATION_SECONDS duration,
+        [out, retval] IUIAnimationTransition **transition);
+
+    HRESULT CreateDiscreteTransition(
+        [in] UI_ANIMATION_SECONDS delay,
+        [in] double finalvalue,
+        [in] UI_ANIMATION_SECONDS hold,
+        [out, retval] IUIAnimationTransition **transition);
+
+    HRESULT CreateLinearTransition(
+        [in] UI_ANIMATION_SECONDS duration,
+        [in] double finalvalue,
+        [out, retval] IUIAnimationTransition **transition);
+
+    HRESULT CreateLinearTransitionFromSpeed(
+        [in] double speed,
+        [in] double finalvalue,
+        [out, retval] IUIAnimationTransition **transition);
+
+    HRESULT CreateSinusoidalTransitionFromVelocity(
+        [in] UI_ANIMATION_SECONDS duration,
+        [in] UI_ANIMATION_SECONDS period,
+        [out, retval] IUIAnimationTransition **transition);
+
+    HRESULT CreateSinusoidalTransitionFromRange(
+        [in] UI_ANIMATION_SECONDS duration,
+        [in] double minimumvalue,
+        [in] double maximumvalue,
+        [in] UI_ANIMATION_SECONDS period,
+        [in] UI_ANIMATION_SLOPE slope,
+        [out, retval] IUIAnimationTransition **transition);
+
+  HRESULT CreateAccelerateDecelerateTransition(
+        [in] UI_ANIMATION_SECONDS duration,
+        [in] double finalvalue,
+        [in] double accelerationratio,
+        [in] double decelerationratio,
+        [out, retval] IUIAnimationTransition **transition);
+
+    HRESULT CreateReversalTransition(
+        [in] UI_ANIMATION_SECONDS duration,
+        [out, retval] IUIAnimationTransition **transition);
+
+    HRESULT CreateCubicTransition(
+        [in] UI_ANIMATION_SECONDS duration,
+        [in] double finalvalue,
+        [in] double finalvelocity,
+        [out, retval] IUIAnimationTransition **transition);
+
+    HRESULT CreateSmoothStopTransition(
+        [in] UI_ANIMATION_SECONDS maximumduration,
+        [in] double finalvalue,
+        [out, retval] IUIAnimationTransition **transition);
+
+    HRESULT CreateParabolicTransitionFromAcceleration(
+        [in] UI_ANIMATION_SECONDS finalvalue,
+        [in] double finalvelocity,
+        [in] double acceleration,
+        [out, retval] IUIAnimationTransition **transition);
+}
+
+[
+    uuid(44ca24db-1a92-4149-bab5-fb14d64b401e),
+    version(1.0)
+]
+library UIAnimation
+{
+    [
+        uuid(bfcd4a0c-06b6-4384-b768-0daa792c380e),
+        threading(both)
+    ]
+    coclass UIAnimationTimer
+    {
+        [default] interface IUIAnimationTimer;
+    }
+
+    [
+        uuid(4c1fc63a-695c-47e8-a339-1a194be3d0b8),
+        threading(both)
+    ]
+    coclass UIAnimationManager
+    {
+        [default] interface IUIAnimationManager;
+    }
+
+    [
+        uuid(8a9b1cdd-fcd7-419c-8b44-42fd17db1887),
+        threading(both)
+    ]
+    coclass UIAnimationTransitionFactory
+    {
+        [default] interface IUIAnimationTransitionFactory;
+    }
+
+    [
+        uuid(1d6322ad-aa85-4ef5-a828-86d71067d145),
+        threading(both)
+    ]
+    coclass UIAnimationTransitionLibrary
+    {
+        [default] interface IUIAnimationTransitionLibrary;
+    }
+}
