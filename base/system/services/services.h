@@ -65,7 +65,7 @@ typedef struct _SERVICE
     PSERVICE_IMAGE lpImage;
     BOOL bDeleted;
     DWORD dwResumeCount;
-    LONG RefCount;
+    DWORD dwRefCount;
 
     SERVICE_STATUS Status;
     DWORD dwStartType;
@@ -185,9 +185,6 @@ VOID ScmAutoShutdownServices(VOID);
 DWORD ScmStartService(PSERVICE Service,
                       DWORD argc,
                       LPWSTR *argv);
-
-DWORD ScmReferenceService(PSERVICE lpService);
-DWORD ScmDereferenceService(PSERVICE lpService);
 
 VOID ScmRemoveServiceImage(PSERVICE_IMAGE pServiceImage);
 PSERVICE ScmGetServiceEntryByName(LPCWSTR lpServiceName);
