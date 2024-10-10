@@ -1,5 +1,5 @@
 #define __ROS_LONG64__
-
+#define wine_dbgstr_wn wine_dbgstr_wn_
 #define STANDALONE
 #include <apitest.h>
 
