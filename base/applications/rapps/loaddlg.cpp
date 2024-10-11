@@ -635,7 +635,7 @@ unsigned int WINAPI
 CDownloadManager::ThreadFunc(LPVOID param)
 {
     CPathW Path;
-    PWSTR p, q;
+    PCWSTR p, q;
 
     HWND hDlg = static_cast<DownloadParam *>(param)->Dialog;
     HWND Item;

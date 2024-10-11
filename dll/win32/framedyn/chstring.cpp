@@ -1001,10 +1001,10 @@ void CHString::ReleaseBuffer(int nNewLength)
  */
 int CHString::ReverseFind(CHSTRING_WCHAR ch) const
 {
-    CHSTRING_WCHAR *Last;
+    CHSTRING_LPCWSTR Last;
 
     // Let's use appropriate helper
-    Last = reinterpret_cast<CHSTRING_WCHAR*>(wcsrchr(reinterpret_cast<LPCWSTR>(m_pchData), ch));
+    Last = reinterpret_cast<CHSTRING_LPCWSTR>(wcsrchr(reinterpret_cast<LPCWSTR>(m_pchData), ch));
     // We have to return a position, so compute it
     if (Last)
     {
