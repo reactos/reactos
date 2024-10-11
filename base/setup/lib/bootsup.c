@@ -1275,7 +1275,6 @@ InstallBtrfsBootcodeToPartition(
     return STATUS_SUCCESS;
 }
 
-
 static
 NTSTATUS
 InstallExt2BootcodeToPartition(
@@ -1343,7 +1342,7 @@ InstallExt2BootcodeToPartition(
             }
 
             /* Save current bootsector */
-            CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, BootSector);
+            CombinePaths(DstPath, _countof(DstPath), 2, SystemRootPath->Buffer, BootSector);
 
             DPRINT1("Save bootsector: %S ==> %S\n", SystemRootPath->Buffer, DstPath);
             Status = SaveBootSector(SystemRootPath->Buffer, DstPath, BTRFS_BOOTSECTOR_SIZE);
@@ -1511,8 +1510,8 @@ InstallVBRToPartition(
     else if (wcsicmp(FileSystemName, L"EXT2")  == 0)
     {
         return InstallExt2BootcodeToPartition(SystemRootPath,
-                                               SourceRootPath,
-                                               DestinationArcPath);
+                                              SourceRootPath,
+                                              DestinationArcPath);
     }
     else if (wcsicmp(FileSystemName, L"EXT3")  == 0 ||
              wcsicmp(FileSystemName, L"EXT4")  == 0)

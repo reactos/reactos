@@ -130,7 +130,6 @@ C_ASSERT(sizeof(BTRFS_BOOTSECTOR) == BTRFS_BOOTSECTOR_SIZE);
  } EXT2_BOOTSECTOR, *PEXT2_BOOTSECTOR;
 C_ASSERT(sizeof(EXT2_BOOTSECTOR) == EXT2_BOOTSECTOR_SIZE);
 
-
 typedef struct _NTFS_BOOTSECTOR
 {
     UCHAR Jump[3];
@@ -783,9 +782,7 @@ InstallExt2BootCode(
                          NULL);
 
     if (!NT_SUCCESS(Status))
-    {
         DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
-    }
 
     /* Free the new bootsector */
     FreeBootCode(&NewBootSector);
