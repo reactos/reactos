@@ -2,7 +2,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ps/job.c
- * PURPOSE:         Core functions for managing job objects, a kernel mechanism
+ * PURPOSE:         Core functions for managing Job Objects, a kernel mechanism
  *                  for managing multiple processes as a single unit
  * PROGRAMMERS:     2004-2012 Alex Ionescu (alex@relsoft.net) (stubs)
  *                  2004-2005 Thomas Weidenmueller <w3seek@reactos.com>
@@ -101,6 +101,32 @@ typedef struct TERMINATE_PROCESS_CONTEXT
     PEJOB Job;
     NTSTATUS ExitStatus;
 } TERMINATE_PROCESS_CONTEXT, *PTERMINATE_PROCESS_CONTEXT;
+
+/*!
+ * Context structure used to collect process IDs for a job object.
+ *
+ * @param[in, out] ProcIdList
+ *     A pointer to the structure that holds the process IDs and the count of
+ *     assigned processes.
+ *
+ * @param[in, out] ListLength
+ *     The remaining length of the process ID list buffer, adjusted as process
+ *     IDs are added.
+ *
+ * @param[in, out] IdListArray
+ *     A pointer to the position in the process ID array where the next process
+ *     ID will be added.
+ *
+ * @param[in, out] Status
+ *     Holds the status of the process ID collection operation.
+ */
+typedef struct QUERY_JOB_PROCESS_ID_CONTEXT {
+    PJOBOBJECT_BASIC_PROCESS_ID_LIST ProcIdList;
+    ULONG ListLength;
+    ULONG_PTR *IdListArray;
+    NTSTATUS Status;
+} QUERY_JOB_PROCESS_ID_CONTEXT, *PQUERY_JOB_PROCESS_ID_CONTEXT;
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -1035,6 +1061,64 @@ PspQueryLimitInformation(
 }
 
 /*!
+ * Callback function used by to collect the process IDs for all active processes
+ * in a job object.
+ *
+ * @param[in] Process
+ *     A pointer to the process whose ID is being added to the process list.
+ *
+ * @param[in, out, optional] Context
+ *     A pointer to the context structure that tracks the process ID collection.
+ *     This context holds the list of process IDs, the length of the buffer,
+ *     and the status of the collection operation.
+ *
+ * @return
+ *     STATUS_SUCCESS on successful collection of the process ID.
+ *     Otherwise, an appropriate NTSTATUS error code if the buffer is
+ *     insufficient or another error occurs.
+ */
+NTSTATUS
+PspQueryJobProcessIdListCallback(
+    _In_ PEPROCESS Process,
+    _In_opt_ PVOID Context
+)
+{
+    PQUERY_JOB_PROCESS_ID_CONTEXT ProcContext = (PQUERY_JOB_PROCESS_ID_CONTEXT)Context;
+
+    /* Skip processes that are not really active */
+    if (Process->JobStatus & JOB_NOT_REALLY_ACTIVE)
+    {
+        /* Continue to the next process */
+        return STATUS_SUCCESS;
+    }
+
+    /* Check if there is enough space in the list to add another process ID */
+    if (ProcContext->ListLength >= sizeof(ULONG_PTR))
+    {
+        if (ExAcquireRundownProtection(&Process->RundownProtect))
+        {
+            /* Add the process ID to the list */
+            *ProcContext->IdListArray++ = (ULONG_PTR)Process->UniqueProcessId;
+
+            /* Adjust the remaining buffer space and increment the process
+               count */
+            ProcContext->ListLength -= sizeof(ULONG_PTR);
+            ProcContext->ProcIdList->NumberOfProcessIdsInList++;
+
+            ExReleaseRundownProtection(&Process->RundownProtect);
+        }
+    }
+    else
+    {
+        /* Break the enumeration on buffer overflow */
+        ProcContext->Status = STATUS_BUFFER_OVERFLOW;
+        return ProcContext->Status;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+/*!
  * Collects a list of process IDs for all processes associated with a job.
  *
  * @param[in] Job
@@ -1066,12 +1150,8 @@ PspQueryJobProcessIdList(
     _Out_ PULONG ReturnRequiredLength
 )
 {
-    PLIST_ENTRY Next;
-    PULONG_PTR IdListArray = &ProcIdList->ProcessIdList[0];
-    ULONG ListLength =
-        JobInformationLength - FIELD_OFFSET(JOBOBJECT_BASIC_PROCESS_ID_LIST,
-                                            ProcessIdList);
     NTSTATUS Status = STATUS_SUCCESS;
+    QUERY_JOB_PROCESS_ID_CONTEXT ProcContext;
 
     /* Check if the buffer provided is large enough to hold at least the
        fixed portion of JOBOBJECT_BASIC_PROCESS_ID_LIST */
@@ -1080,70 +1160,32 @@ PspQueryJobProcessIdList(
         return STATUS_INFO_LENGTH_MISMATCH;
     }
 
-    /* Acquire the job lock */
-    ExEnterCriticalRegionAndAcquireResourceShared(&Job->JobLock);
+    /* Initialize the process context */
+    ProcContext.ProcIdList = ProcIdList;
+    ProcContext.ListLength =
+        JobInformationLength - FIELD_OFFSET(JOBOBJECT_BASIC_PROCESS_ID_LIST,
+                                            ProcessIdList);
+    ProcContext.IdListArray = &ProcIdList->ProcessIdList[0];
+    ProcContext.Status = STATUS_SUCCESS;
 
-    _SEH2_TRY
-    {
-        ProcIdList->NumberOfAssignedProcesses = Job->ActiveProcesses;
-        ProcIdList->NumberOfProcessIdsInList = 0;
+    /* Fill in the number of assigned processes */
+    ProcIdList->NumberOfAssignedProcesses = Job->ActiveProcesses;
+    ProcIdList->NumberOfProcessIdsInList = 0;
 
-        /* Iterate over each process in the job's process list */
-        Next = Job->ProcessListHead.Flink;
-        while (Next != &Job->ProcessListHead)
-        {
-            PEPROCESS Process = (PEPROCESS)CONTAINING_RECORD(Next,
-                                                             EPROCESS,
-                                                             JobLinks);
-
-            /* Skip processes out of the job */
-            if (Process->JobStatus & JOB_NOT_REALLY_ACTIVE)
-            {
-                Next = Next->Flink;
-                continue;
-            }
-
-            /* Check if there is enough space left in the provided buffer */
-            if (ListLength >= sizeof(ULONG_PTR))
-            {
-                if (ExAcquireRundownProtection(&Process->RundownProtect))
-                {
-                    /* Add the process ID to the list */
-                    *IdListArray++ = (ULONG_PTR)Process->UniqueProcessId;
-
-                    /* Adjust remaining buffer space and increment the process
-                       count in the list */
-                    ListLength -= sizeof(ULONG_PTR);
-                    ProcIdList->NumberOfProcessIdsInList++;
-
-                    ExReleaseRundownProtection(&Process->RundownProtect);
-                }
-            }
-            else
-            {
-                Status = STATUS_BUFFER_OVERFLOW;
-                *ReturnRequiredLength = ListLength;
-                break;
-            }
-
-            /* Move to the next process  */
-            Next = Next->Flink;
-        }
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = _SEH2_GetExceptionCode();
-        *ReturnRequiredLength = 0;
-    }
-    _SEH2_END;
-
-    /* Release the job lock */
-    ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
+    /* Use the enumerator to collect the process IDs
+       N.B. The enumeration will stop if the callback fails */
+    Status = PspEnumerateProcessesInJob(Job,
+                                        PspQueryJobProcessIdListCallback,
+                                        &ProcContext,
+                                        TRUE);
 
     /* Calculate how much of the buffer was used */
-    *ReturnRequiredLength = JobInformationLength - ListLength;
+    *ReturnRequiredLength = JobInformationLength - ProcContext.ListLength;
 
-    return Status;
+    /* Ensure the right error is propagated if the buffer was too small */
+    return ProcContext.Status == STATUS_BUFFER_OVERFLOW
+               ? STATUS_BUFFER_OVERFLOW
+               : Status;
 }
 
 /*
