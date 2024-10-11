@@ -9,7 +9,10 @@
 #include "shelltest.h"
 #include <shellutils.h>
 
-enum { DIRBIT = 1, FILEBIT = 2 };
+enum { 
+    DIRBIT = 1, FILEBIT = 2,
+    PT_COMPUTER_REGITEM = 0x2E,
+};
 
 static BYTE GetPIDLType(LPCITEMIDLIST pidl)
 {
@@ -221,12 +224,12 @@ START_TEST(ILIsEqual)
     if (p1 && p2)
     {
         ok_int(ILIsEqual(p1, p2), TRUE);
-        p1->mkid.abID[0] = 0x2E; // Convert Desktop RegItem to Computer RegItem
+        p1->mkid.abID[0] = PT_COMPUTER_REGITEM; // RegItem in wrong parent
         ok_int(ILIsEqual(p1, p2), FALSE);
     }
     else
     {
-        skip("?\n");
+        skip("Unable to initialize test\n");
     }
     ILFree(p1);
     ILFree(p2);
@@ -248,12 +251,12 @@ START_TEST(ILIsEqual)
         ILRemoveLastID(p2);
         ok_int(ILIsParent(p1, p2, TRUE), TRUE); // Immediate child
 
-        p1->mkid.abID[0] = 0x2E; // Convert Desktop RegItem to Computer RegItem
+        p1->mkid.abID[0] = PT_COMPUTER_REGITEM; // RegItem in wrong parent
         ok_int(ILIsParent(p1, p2, FALSE), FALSE);
     }
     else
     {
-        skip("?\n");
+        skip("Unable to initialize test\n");
     }
     ILFree(p1);
     ILFree(p2);
