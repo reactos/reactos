@@ -276,6 +276,8 @@ PspAssignProcessToJob(
 
     DPRINT1("PspAssignProcessToJob(Process: %p, Job: %p)\n", Process, Job);
 
+    ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
+
     /* Check if the job has a limit on the number of active processes */
     if (Job->LimitFlags & JOB_OBJECT_LIMIT_ACTIVE_PROCESS)
     {
@@ -317,8 +319,6 @@ PspAssignProcessToJob(
     {
         return STATUS_INVALID_PARAMETER;
     }
-
-    ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
 
     /* Assign process to job object by inserting into the job's process list */
     InsertTailList(&Job->ProcessListHead, &Process->JobLinks);
@@ -372,7 +372,7 @@ PspRemoveProcessFromJob(
     /* Remove the process from the job's process list */
     RemoveEntryList(&Process->JobLinks);
 
-    /* Decrement the job's active process count */
+    /* Decrement the job's active process count if the process is still active*/
     if (!(Process->JobStatus & JOB_NOT_REALLY_ACTIVE))
     {
         /* Assert that the job's active process count does not underflow */
@@ -417,7 +417,8 @@ PspExitProcessFromJob(
     /* Check if the process is part of the specified job */
     if (Process->Job == Job)
     {
-        /* Decrement the job's active process count */
+        /* Decrement the job's active process count if the process is still
+           active */
         if (!(Process->JobStatus & JOB_NOT_REALLY_ACTIVE))
         {
             /* Assert that the job's active process count does not underflow */
@@ -491,10 +492,13 @@ PspTerminateProcessCallback(
     PEJOB Job = TerminateContext->Job;
     NTSTATUS ExitStatus = TerminateContext->ExitStatus;
 
+    /* If the process is already inactive, no need to terminate */
     if (Process->JobStatus & JOB_NOT_REALLY_ACTIVE)
     {
         return STATUS_INVALID_PARAMETER;
     }
+
+    ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
 
     /* Flag the job as terminating */
     InterlockedOr((PLONG)&Job->JobFlags, JOB_OBJECT_TERMINATING);
@@ -504,9 +508,8 @@ PspTerminateProcessCallback(
 
     if (NT_SUCCESS(Status))
     {
-        ExEnterCriticalRegionAndAcquireResourceExclusive(&Job->JobLock);
-
-        /* Decrement the job's active process count */
+        /* Decrement the job's active process count, but only if the process is
+           still active */
         if (!(Process->JobStatus & JOB_NOT_REALLY_ACTIVE))
         {
             Job->ActiveProcesses--;
@@ -519,15 +522,17 @@ PspTerminateProcessCallback(
             /* Check if there are no active processes left in the job */
             if (Job->ActiveProcesses == 0)
             {
-                /* If so, notify anyone waiting for the job object */
+                /* If so, notify anyone waiting for the job object by signaling
+                   completion */
                 KeSetEvent(&Job->Event, IO_NO_INCREMENT, FALSE);
             }
         }
-
-        ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
     }
 
-    InterlockedOr((PLONG)&Job->JobFlags, ~JOB_OBJECT_TERMINATING);
+    /* Clear the terminating flag */
+    InterlockedAnd((PLONG)&Job->JobFlags, ~JOB_OBJECT_TERMINATING);
+
+    ExReleaseResourceAndLeaveCriticalRegion(&Job->JobLock);
 
     return Status;
 }
