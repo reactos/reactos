@@ -69,7 +69,8 @@ __MINGW_EXTENSION typedef long long  intmax_t;
 __MINGW_EXTENSION typedef unsigned long long   uintmax_t;
 
 /* 7.18.2  Limits of specified-width integer types */
-#if !defined ( __cplusplus) || defined (__STDC_LIMIT_MACROS)
+#if !defined(__cplusplus) || defined(__STDC_LIMIT_MACROS) ||	\
+    defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
 
 /* 7.18.2.1  Limits of exact-width integer types */
 #define INT8_MIN (-128)
