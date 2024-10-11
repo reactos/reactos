@@ -35,6 +35,7 @@ _PNH __cdecl _set_new_handler(_PNH new_handler)
     {
         __acrt_unlock(__acrt_heap_lock);
     }
+    __endtry
 
     return result;
 }
@@ -65,6 +66,7 @@ _PNH __cdecl _query_new_handler()
     {
         __acrt_unlock(__acrt_heap_lock);
     }
+    __endtry
 
     return result;
 }

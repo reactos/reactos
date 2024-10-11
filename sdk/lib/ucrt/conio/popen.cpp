@@ -400,6 +400,7 @@ static FILE* __cdecl common_popen(
     {
         __acrt_unlock(__acrt_popen_lock);
     }
+    __endtry
 
     return return_value;
 }
@@ -483,6 +484,7 @@ extern "C" int __cdecl _pclose(FILE* const stream)
     {
         __acrt_unlock(__acrt_popen_lock);
     }
+    __endtry
 
     return return_value;
 }

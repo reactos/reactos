@@ -28,6 +28,7 @@ static int __cdecl try_walk(PROCESS_HEAP_ENTRY* const win32_entry) throw()
     {
         return _HEAPBADNODE;
     }
+    __endtry
 }
 
 // Walks the heap, returning information on one entry at a time.  If there are

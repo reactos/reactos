@@ -105,6 +105,7 @@ static int __cdecl _dup2_internal(int const source_fh, int const target_fh, __cr
         __acrt_lowio_unlock_fh(source_fh);
         __acrt_lowio_unlock_fh(target_fh);
     }
+    __endtry
     return result;
 }
 

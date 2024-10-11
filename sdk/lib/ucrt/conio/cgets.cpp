@@ -91,6 +91,7 @@ extern "C" errno_t __cdecl _cgets_s(char* const source_string, size_t const size
     {
         __acrt_unlock(__acrt_conio_lock);
     }
+    __endtry
 
     *string++ = '\0';
 

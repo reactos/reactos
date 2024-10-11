@@ -309,6 +309,7 @@ static errno_t common_tmpnam(
     {
         __acrt_unlock(__acrt_tempnam_lock);
     }
+    __endtry
 
     return return_value;
 }
@@ -408,6 +409,7 @@ static errno_t __cdecl common_tmpfile_nolock(_Out_ FILE** const stream, int cons
 
         local_stream.unlock();
     }
+    __endtry
 
     return result;
 }
@@ -435,6 +437,7 @@ static errno_t __cdecl common_tmpfile(_Out_ FILE** const stream, int const sh_fl
     {
         __acrt_unlock(__acrt_tempnam_lock);
     }
+    __endtry
 
     return return_value;
 }

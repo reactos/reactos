@@ -53,6 +53,7 @@ static FILE* __cdecl common_fdopen(
     {
         stream.unlock();
     }
+    __endtry
 
     return stream.public_stream();
 }

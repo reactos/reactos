@@ -25,6 +25,7 @@ extern "C" errno_t __cdecl clearerr_s(FILE* const public_stream)
     {
         _unlock_file(stream.public_stream());
     }
+    __endtry
 
     return 0;
 }

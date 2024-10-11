@@ -60,6 +60,7 @@ static int __cdecl _fputc_internal(int const c, FILE* const stream, __crt_cached
     {
         _unlock_file(stream);
     }
+    __endtry
 
     return return_value;
 }

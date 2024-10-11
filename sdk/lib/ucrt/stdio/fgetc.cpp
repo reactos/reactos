@@ -55,6 +55,7 @@ extern "C" int __cdecl fgetc(FILE* const public_stream)
     {
         _unlock_file(stream.public_stream());
     }
+    __endtry
 
     return return_value;
 }

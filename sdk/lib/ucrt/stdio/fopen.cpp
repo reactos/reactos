@@ -60,6 +60,7 @@ static FILE* __cdecl common_fsopen(
 
         stream.unlock();
     }
+    __endtry
 
     return return_value;
 }

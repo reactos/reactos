@@ -195,6 +195,7 @@ static BOOL WINAPI ctrlevent_capture(DWORD const ctrl_type) throw()
     {
         __acrt_unlock(__acrt_signal_lock);
     }
+    __endtry
 
     // The default signal action leaves the event unhandled, so return false to
     // indicate such:
@@ -333,6 +334,7 @@ extern "C" __crt_signal_handler_t __cdecl signal(int signum, __crt_signal_handle
         {
             __acrt_unlock(__acrt_signal_lock);
         }
+        __endtry
 
         if (set_console_ctrl_error)
             return signal_failed(signum);
@@ -525,6 +527,7 @@ extern "C" int __cdecl raise(int const signum)
         if (action_is_global)
             __acrt_unlock(__acrt_signal_lock);
     }
+    __endtry
 
     if (return0)
         return 0;

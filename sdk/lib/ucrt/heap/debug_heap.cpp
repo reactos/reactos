@@ -241,6 +241,7 @@ static bool __cdecl is_bad_read_pointer(void const* const p, size_t const size) 
     {
         return true;
     }
+    __endtry
 
     return false;
 }
@@ -285,6 +286,7 @@ static void __cdecl validate_heap_if_required_nolock() throw()
     {
         heap_validation_pending = false;
     }
+    __endtry
 
     __acrt_check_counter = 0;
 }
@@ -431,6 +433,7 @@ static void* __cdecl heap_alloc_dbg_internal(
     {
         __acrt_unlock(__acrt_heap_lock);
     }
+    __endtry
 
     return block;
 }
@@ -763,6 +766,7 @@ extern "C" __declspec(noinline) void* __cdecl _realloc_dbg(
     {
         __acrt_unlock(__acrt_heap_lock);
     }
+    __endtry
 
     return new_block;
 }
@@ -835,6 +839,7 @@ extern "C" __declspec(noinline) void* __cdecl _expand_dbg(
     {
         __acrt_unlock(__acrt_heap_lock);
     }
+    __endtry
 
     return new_block;
 }
@@ -1035,6 +1040,7 @@ extern "C" __declspec(noinline) void __cdecl _free_dbg(void* const block, int co
     {
         __acrt_unlock(__acrt_heap_lock);
     }
+    __endtry
 }
 
 
@@ -1070,6 +1076,7 @@ extern "C" __declspec(noinline) size_t __cdecl _msize_dbg(void* const block, int
     {
         __acrt_unlock(__acrt_heap_lock);
     }
+    __endtry
 
     return size;
 }
@@ -1115,6 +1122,7 @@ extern "C" void __cdecl _CrtSetDbgBlockType(
     {
         __acrt_unlock(__acrt_heap_lock);
     }
+    __endtry
 }
 
 
@@ -1301,6 +1309,7 @@ extern "C" int __cdecl _CrtCheckMemory()
     {
         __acrt_unlock(__acrt_heap_lock);
     }
+    __endtry
 
     return all_okay ? TRUE : FALSE;
 }
@@ -1344,6 +1353,7 @@ extern "C" int __cdecl _CrtSetDbgFlag(int const new_bits)
     {
         __acrt_unlock(__acrt_heap_lock);
     }
+    __endtry
 
     return old_bits;
 }
@@ -1374,6 +1384,7 @@ extern "C" void __cdecl _CrtDoForAllClientObjects(
     {
         __acrt_unlock(__acrt_heap_lock);
     }
+    __endtry
 }
 
 
@@ -1469,6 +1480,7 @@ extern "C" int __cdecl _CrtIsMemoryBlock(
     {
         __acrt_unlock(__acrt_heap_lock);
     }
+    __endtry
 
     return result;
 }
@@ -1547,6 +1559,7 @@ extern "C" void __cdecl _CrtMemCheckpoint(_CrtMemState* const state)
     {
         __acrt_unlock(__acrt_heap_lock);
     }
+    __endtry
 }
 
 
@@ -1701,6 +1714,7 @@ extern "C" void __cdecl _CrtMemDumpAllObjectsSince(_CrtMemState const* const sta
     {
         __acrt_unlock(__acrt_heap_lock);
     }
+    __endtry
 
     _RPT0(_CRT_WARN, "Object dump complete.\n");
 }

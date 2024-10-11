@@ -110,6 +110,7 @@ static wint_t __cdecl _fputwc_internal(wchar_t const c, FILE* const stream, __cr
     {
         _unlock_file(stream);
     }
+    __endtry
 
     return return_value;
 }

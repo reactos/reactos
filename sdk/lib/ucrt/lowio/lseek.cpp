@@ -123,6 +123,7 @@ static Integer __cdecl common_lseek(int const fh, Integer const offset, int cons
     {
         __acrt_lowio_unlock_fh(fh);
     }
+    __endtry
     return result;
 }
 

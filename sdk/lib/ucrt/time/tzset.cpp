@@ -381,6 +381,7 @@ extern "C" void __cdecl _tzset()
     {
         __acrt_unlock(__acrt_time_lock);
     }
+    __endtry
 }
 
 
@@ -413,6 +414,7 @@ extern "C" void __cdecl __tzset()
     {
         __acrt_unlock(__acrt_time_lock);
     }
+    __endtry
 }
 
 
@@ -707,6 +709,7 @@ extern "C" int __cdecl _isindst(tm* const tb)
     {
         __acrt_unlock(__acrt_time_lock);
     }
+    __endtry
 
     return retval;
 }

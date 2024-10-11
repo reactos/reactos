@@ -121,6 +121,7 @@ extern "C" errno_t __cdecl _cgetws_s(wchar_t* const string_buffer, size_t const 
     {
         __acrt_unlock(__acrt_conio_lock);
     }
+    __endtry
 
     return retval;
 }

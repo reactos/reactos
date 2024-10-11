@@ -68,6 +68,7 @@ extern "C" int __cdecl _write_internal(int const fh, void const* const buffer, u
     {
         __acrt_lowio_unlock_fh(fh);
     }
+    __endtry
     return result;
 }
 

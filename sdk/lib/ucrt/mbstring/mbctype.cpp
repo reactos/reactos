@@ -343,6 +343,7 @@ static __crt_multibyte_data* __cdecl update_thread_multibyte_data_internal(
             {
                 __acrt_unlock(__acrt_multibyte_cp_lock);
             }
+            __endtry
         }
         else
         {

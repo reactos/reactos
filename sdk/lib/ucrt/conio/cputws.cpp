@@ -58,6 +58,7 @@ extern "C" int __cdecl _cputws(wchar_t const* string)
     {
         __acrt_unlock(__acrt_conio_lock);
     }
+    __endtry
 
     return result;
 }

@@ -194,6 +194,7 @@ static int __cdecl common_fseek(
     {
         _unlock_file(stream.public_stream());
     }
+    __endtry
 
     return return_value;
 }

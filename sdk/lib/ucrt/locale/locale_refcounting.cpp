@@ -280,6 +280,7 @@ extern "C" __crt_locale_data* __cdecl __acrt_update_thread_locale_data()
         {
             __acrt_unlock(__acrt_locale_lock);
         }
+        __endtry
     }
     else
     {

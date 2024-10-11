@@ -254,6 +254,7 @@ extern "C" int __cdecl _getch()
     {
         __acrt_unlock(__acrt_conio_lock);
     }
+    __endtry
     return result;
 }
 
@@ -269,6 +270,7 @@ extern "C" int __cdecl _getche()
     {
         __acrt_unlock(__acrt_conio_lock);
     }
+    __endtry
     return result;
 }
 
@@ -353,6 +355,7 @@ extern "C" int __cdecl _getch_nolock()
         // Restore the previous console mode:
         __dcrt_set_input_console_mode(old_console_mode);
     }
+    __endtry
     return result;
 }
 
@@ -394,6 +397,7 @@ extern "C" int __cdecl _kbhit()
     {
         __acrt_unlock(__acrt_conio_lock);
     }
+    __endtry
     return result;
 }
 
@@ -472,6 +476,7 @@ extern "C" int __cdecl _ungetch(int const c)
     {
         __acrt_unlock(__acrt_conio_lock);
     }
+    __endtry
     return result;
 }
 

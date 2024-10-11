@@ -228,6 +228,7 @@ static void __cdecl common_exit(
         {
             terminate();
         }
+        __endtry
 
         #ifndef CRTDLL
         // When the CRT is statically linked, we are responsible for executing

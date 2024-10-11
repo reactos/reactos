@@ -75,6 +75,7 @@ static Character* __cdecl common_fgets(
     {
         _unlock_file(stream.public_stream());
     }
+    __endtry
 
     return return_value;
 }

@@ -158,6 +158,7 @@ struct __crt_seh_guarded_call
         {
             cleanup();
         }
+        __endtry
     }
 };
 

@@ -362,6 +362,7 @@ static Integer __cdecl common_ftell(__crt_stdio_stream const stream, __crt_cache
     {
         _unlock_file(stream.public_stream());
     }
+    __endtry
 
     return return_value;
 }

@@ -111,6 +111,7 @@ static Character* __cdecl common_gets(
     {
         _unlock_file(stdin);
     }
+    __endtry
 
     return return_value;
 }
