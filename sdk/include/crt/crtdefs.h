@@ -37,6 +37,16 @@
 #define NO_OLDNAMES
 #endif
 
+#if defined(__GNUC__) && !defined(__clang__)
+  #define _CRT_DISABLE_GCC_WARNINGS \
+            _Pragma("GCC diagnostic push") \
+            _Pragma("GCC diagnostic ignored \"-Wbuiltin-declaration-mismatch\"") \
+            _Pragma("GCC diagnostic ignored \"-Wunknown-pragmas\"")
+  #define _CRT_RESTORE_GCC_WARNINGS _Pragma("GCC diagnostic pop")
+#else // __GNUC__
+  #define _CRT_DISABLE_GCC_WARNINGS
+  #define _CRT_RESTORE_GCC_WARNINGS
+#endif // __GNUC__
 
 /** Properties ***************************************************************/
 
@@ -130,10 +140,6 @@
 
 #ifndef _AGLOBAL
  #define _AGLOBAL
-#endif
-
-#ifndef _CONST_RETURN
- #define _CONST_RETURN
 #endif
 
 #ifndef UNALIGNED
