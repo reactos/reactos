@@ -701,7 +701,7 @@ size_t __acrt_mbs_to_wcs_cp_array(
     )
 {
     __crt_no_alloc_win32_buffer<wchar_t> win32_buffer(buffer);
-    if (__acrt_wcs_to_mbs_cp(null_terminated_input_string, win32_buffer, code_page) != 0) {
+    if (__acrt_mbs_to_wcs_cp(null_terminated_input_string, win32_buffer, code_page) != 0) {
         return 0;
     }
 
