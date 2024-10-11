@@ -63,12 +63,19 @@ typedef signed char __v16qs __attribute__((__vector_size__(16)));
 
 #ifdef __clang__
 #define __ATTRIBUTE_SSE2__ __attribute__((__target__("sse2"),__min_vector_width__(128)))
+#define __ATTRIBUTE_MMXSSE2__ __attribute__((__target__("mmx,sse2"),__min_vector_width__(128)))
 #else
 #define __ATTRIBUTE_SSE2__ __attribute__((__target__("sse2")))
+#define __ATTRIBUTE_MMXSSE2__ __attribute__((__target__("mmx,sse2")))
 #endif
 #define __INTRIN_INLINE_SSE2 __INTRIN_INLINE __ATTRIBUTE_SSE2__
+#define __INTRIN_INLINE_MMXSSE2 __INTRIN_INLINE __ATTRIBUTE_MMXSSE2__
 
 #endif /* _MSC_VER */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern __m128d _mm_add_sd(__m128d a, __m128d b);
 extern __m128d _mm_add_pd(__m128d a, __m128d b);
@@ -495,12 +502,12 @@ void _mm_pause(void);
 #pragma intrinsic(_mm_loadu_si128)
 #pragma intrinsic(_mm_loadl_epi64)
 //#pragma intrinsic(_mm_undefined_si128)
-#pragma intrinsic(_mm_set_epi64x)
+//#pragma intrinsic(_mm_set_epi64x)
 //#pragma intrinsic(_mm_set_epi64)
 #pragma intrinsic(_mm_set_epi32)
 #pragma intrinsic(_mm_set_epi16)
 #pragma intrinsic(_mm_set_epi8)
-#pragma intrinsic(_mm_set1_epi64x)
+//#pragma intrinsic(_mm_set1_epi64x)
 //#pragma intrinsic(_mm_set1_epi64)
 #pragma intrinsic(_mm_set1_epi32)
 #pragma intrinsic(_mm_set1_epi16)
@@ -904,17 +911,17 @@ __INTRIN_INLINE_SSE2 int _mm_cvttsd_si32(__m128d a)
     return __builtin_ia32_cvttsd2si((__v2df)a);
 }
 
-__INTRIN_INLINE_MMX __m64 _mm_cvtpd_pi32(__m128d a)
+__INTRIN_INLINE_MMXSSE2 __m64 _mm_cvtpd_pi32(__m128d a)
 {
     return (__m64)__builtin_ia32_cvtpd2pi((__v2df)a);
 }
 
-__INTRIN_INLINE_MMX __m64 _mm_cvttpd_pi32(__m128d a)
+__INTRIN_INLINE_MMXSSE2 __m64 _mm_cvttpd_pi32(__m128d a)
 {
     return (__m64)__builtin_ia32_cvttpd2pi((__v2df)a);
 }
 
-__INTRIN_INLINE_SSE __m128d _mm_cvtpi32_pd(__m64 a)
+__INTRIN_INLINE_MMXSSE2 __m128d _mm_cvtpi32_pd(__m64 a)
 {
     return __builtin_ia32_cvtpi2pd((__v2si)a);
 }
@@ -1130,7 +1137,7 @@ __INTRIN_INLINE_SSE2 __m128i _mm_add_epi32(__m128i a, __m128i b)
     return (__m128i)((__v4su)a + (__v4su)b);
 }
 
-__INTRIN_INLINE_MMX __m64 _mm_add_si64(__m64 a, __m64 b)
+__INTRIN_INLINE_MMXSSE2 __m64 _mm_add_si64(__m64 a, __m64 b)
 {
     return (__m64)__builtin_ia32_paddq((__v1di)a, (__v1di)b);
 }
@@ -1242,7 +1249,7 @@ __INTRIN_INLINE_SSE2 __m128i _mm_mullo_epi16(__m128i a, __m128i b)
     return (__m128i)((__v8hu)a * (__v8hu)b);
 }
 
-__INTRIN_INLINE_MMX __m64 _mm_mul_su32(__m64 a, __m64 b)
+__INTRIN_INLINE_MMXSSE2 __m64 _mm_mul_su32(__m64 a, __m64 b)
 {
     return (__m64)__builtin_ia32_pmuludq((__v2si)a, (__v2si)b);
 }
@@ -1272,7 +1279,7 @@ __INTRIN_INLINE_SSE2 __m128i _mm_sub_epi32(__m128i a, __m128i b)
     return (__m128i)((__v4su)a - (__v4su)b);
 }
 
-__INTRIN_INLINE_MMX __m64 _mm_sub_si64(__m64 a, __m64 b)
+__INTRIN_INLINE_MMXSSE2 __m64 _mm_sub_si64(__m64 a, __m64 b)
 {
     return (__m64)__builtin_ia32_psubq((__v1di)a, (__v1di)b);
 }
@@ -1936,6 +1943,8 @@ void _mm_pause(void);
 
 #endif /* _MSC_VER */
 
-
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif /* _INCLUDED_EMM */
