@@ -47,8 +47,7 @@ BEGIN
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 56, 123, 12, 13
     LTEXT "minuta", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL "Pyet për fjalëkalim kur të rinisë", IDC_SCREENS_USEPASSCHK, "button",//FIXME: add accel. I used "Pyet pë&r fjalëkalim kur të rinisë" for the backport
-            BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
+    AUTOCHECKBOX "Pyet për fjalëkalim kur të rinisë", IDC_SCREENS_USEPASSCHK, 108, 120, 117, 19//FIXME: add accel. I used "Pyet pë&r fjalëkalim kur të rinisë" for the backport
     GROUPBOX "Karakteristika Ruajtja e Energjisë të monitoruar", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
     LTEXT "Për të rregulluar parametrat Energjise të monitoruar tuaj, klikoni mbi cilësime energjisë.", IDC_STATIC, 16, 161, 146, 27
     PUSHBUTTON "&Energji...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
@@ -111,24 +110,17 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Efekte"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "&Përdorni efektin e mëposhtme tranzicionit për menutë dhe ndihmesa:",//FIXME: accelerator collision &P
-            IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
+    AUTOCHECKBOX "&Përdorni efektin e mëposhtme tranzicionit për menutë dhe ndihmesa:", IDC_EFFAPPEARANCE_ANIMATION, 10, 5, 267, 19//FIXME: accelerator collision &P
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    CONTROL "Përdor metodën e mëposhtme për të zbutë skajet e fonts ekran:", IDC_EFFAPPEARANCE_SMOOTHING,//FIXME: add accel. I used "Pë&rdor metodën e mëposhtme për të zbutë skajet e fonts ekran" for the backport. Remember: &P is in use already.
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
+    AUTOCHECKBOX "Përdor metodën e mëposhtme për të zbutë skajet e fonts ekran:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19//FIXME: add accel. I used "Pë&rdor metodën e mëposhtme për të zbutë skajet e fonts ekran" for the backport. Remember: &P is in use already.
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    CONTROL "Përdor ikona të mëdha", IDC_EFFAPPEARANCE_LARGEICONS, "button",//FIXME: add accel. I used "Për&dor ikona të mëdha" for the backport. Keep in mind that &P is in use
-            BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
-    CONTROL "Shfaq hije poshte menus", IDC_EFFAPPEARANCE_SETDROPSHADOW,//FIXME: add accel. I used "&Shfaq hije poshte menus" for the backport
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
-    CONTROL "Shfaq &përmbajtjen dritare ndërsa zvarritet", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,//FIXME: accelerator collision &P. I used "S&hfaq përmbajtjen dritare ndërsa zvarritet" for the backport
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "Fsheh gërma të nënvizuara për kërkimin e tastierës deri sa të shtypni butonin Alt",//FIXME: add accel. I used "Fsh&eh gërma të nënvizuara për kërkimin e tastierës deri sa të shtypni Alt" as shortener for the backport. Keep in mind that &f is currently used by the &flat menus. And keep in mind that the text is currently too long and therefore cut off.
-            IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
-    CONTROL "Use &flat menus", IDC_EFFAPPEARANCE_FLATMENUS,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
+    AUTOCHECKBOX "Përdor ikona të mëdha", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED//FIXME: add accel. I used "Për&dor ikona të mëdha" for the backport. Keep in mind that &P is in use
+    AUTOCHECKBOX "Shfaq hije poshte menus", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19//FIXME: add accel. I used "&Shfaq hije poshte menus" for the backport
+    AUTOCHECKBOX "Shfaq &përmbajtjen dritare ndërsa zvarritet", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19//FIXME: accelerator collision &P. I used "S&hfaq përmbajtjen dritare ndërsa zvarritet" for the backport
+    AUTOCHECKBOX "Fsheh gërma të nënvizuara për kërkimin e tastierës deri sa të shtypni butonin Alt", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19//FIXME: add accel. I used "Fsh&eh gërma të nënvizuara për kërkimin e tastierës deri sa të shtypni Alt" as shortener for the backport. Keep in mind that &f is currently used by the &flat menus. And keep in mind that the text is currently too long and therefore cut off.
+    AUTOCHECKBOX "Use &flat menus", IDC_EFFAPPEARANCE_FLATMENUS, 10, 140, 267, 19
     PUSHBUTTON "Anulo", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
 END
@@ -161,14 +153,10 @@ CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Desktop icons", IDC_STATIC, 6, 4, 212, 40
-    CONTROL "My &Documents", IDC_ICONS_MYDOCS, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 14, 14, 100, 12
-    CONTROL "My &Network Places", IDC_ICONS_MYNET, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 116, 14, 100, 12
-    CONTROL "&My Computer", IDC_ICONS_MYCOMP, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 14, 28, 100, 12
-    CONTROL "&Internet Browser", IDC_ICONS_INTERNET, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 116, 28, 100, 12
+    AUTOCHECKBOX "My &Documents", IDC_ICONS_MYDOCS, 14, 14, 100, 12
+    AUTOCHECKBOX "My &Network Places", IDC_ICONS_MYNET, 116, 14, 100, 12
+    AUTOCHECKBOX "&My Computer", IDC_ICONS_MYCOMP, 14, 28, 100, 12
+    AUTOCHECKBOX "&Internet Browser", IDC_ICONS_INTERNET, 116, 28, 100, 12
     CONTROL "", IDC_ICONS_LISTVIEW, "SysListView32",
             LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP | WS_HSCROLL,
             6, 60, 212, 56

@@ -44,8 +44,7 @@ BEGIN
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 70, 123, 12, 13
     LTEXT "мин.", IDC_MINTEXT, 84, 125, 18, 9
-    CONTROL "На&чинать с экрана приветствия", IDC_SCREENS_USEPASSCHK, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 106, 120, 121, 19
+    AUTOCHECKBOX "На&чинать с экрана приветствия", IDC_SCREENS_USEPASSCHK, 106, 120, 121, 19
     GROUPBOX "Энергосбережение", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
     LTEXT "Для изменения параметров питания монитора нажмите кнопку ""Питание"".", IDC_STATIC, 16, 161, 146, 27
     PUSHBUTTON "П&итание...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
@@ -108,24 +107,17 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Эффекты"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "&Применять следующий переходный эффект для меню и подсказок:",
-            IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
+    AUTOCHECKBOX "&Применять следующий переходный эффект для меню и подсказок:", IDC_EFFAPPEARANCE_ANIMATION, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    CONTROL "Пр&именять следующий метод сглаживания для экранных шрифтов:", IDC_EFFAPPEARANCE_SMOOTHING,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
+    AUTOCHECKBOX "Пр&именять следующий метод сглаживания для экранных шрифтов:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    CONTROL "Применять &крупные значки", IDC_EFFAPPEARANCE_LARGEICONS, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
-    CONTROL "Отображать &тени, отбрасываемые меню", IDC_EFFAPPEARANCE_SETDROPSHADOW,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
-    CONTROL "&Отображать содержимое окна при перетаскивании", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "Скр&ывать указатели вызова с клавиатуры до нажатия <Alt>",
-            IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
-    CONTROL "Использовать п&лоские меню", IDC_EFFAPPEARANCE_FLATMENUS,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
+    AUTOCHECKBOX "Применять &крупные значки", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX "Отображать &тени, отбрасываемые меню", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19
+    AUTOCHECKBOX "&Отображать содержимое окна при перетаскивании", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19
+    AUTOCHECKBOX "Скр&ывать указатели вызова с клавиатуры до нажатия <Alt>", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19
+    AUTOCHECKBOX "Использовать п&лоские меню", IDC_EFFAPPEARANCE_FLATMENUS, 10, 140, 267, 19
     PUSHBUTTON "Отмена", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
 END
@@ -158,14 +150,10 @@ CAPTION "Общие"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Значки рабочего стола", IDC_STATIC, 6, 4, 212, 40
-    CONTROL "Мои &документы", IDC_ICONS_MYDOCS, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 14, 14, 100, 12
-    CONTROL "&Сетевое окружение", IDC_ICONS_MYNET, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 116, 14, 100, 12
-    CONTROL "Мой &компьютер", IDC_ICONS_MYCOMP, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 14, 28, 100, 12
-    CONTROL "&Интернет браузер", IDC_ICONS_INTERNET, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 116, 28, 100, 12
+    AUTOCHECKBOX "Мои &документы", IDC_ICONS_MYDOCS, 14, 14, 100, 12
+    AUTOCHECKBOX "&Сетевое окружение", IDC_ICONS_MYNET, 116, 14, 100, 12
+    AUTOCHECKBOX "Мой &компьютер", IDC_ICONS_MYCOMP, 14, 28, 100, 12
+    AUTOCHECKBOX "&Интернет браузер", IDC_ICONS_INTERNET, 116, 28, 100, 12
     CONTROL "", IDC_ICONS_LISTVIEW, "SysListView32",
             LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP | WS_HSCROLL,
             6, 60, 212, 56
