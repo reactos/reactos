@@ -25,10 +25,10 @@ extern "C" {
 #endif
 
 #ifndef WCHAR_MIN
-#define WCHAR_MIN 0
+#define WCHAR_MIN 0x0000
 #endif
 #ifndef WCHAR_MAX
-#define WCHAR_MAX ((wchar_t)-1) /* UINT16_MAX */
+#define WCHAR_MAX 0xffff /* UINT16_MAX */
 #endif
 
 #ifndef WEOF
