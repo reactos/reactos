@@ -399,6 +399,7 @@ extern "C" int __cdecl _read(int const fh, void* const buffer, unsigned const bu
     {
         __acrt_lowio_unlock_fh(fh);
     }
+    __endtry
     return result;
 }
 

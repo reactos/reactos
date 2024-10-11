@@ -28,6 +28,7 @@ extern "C" int __cdecl ungetc(int const c, FILE* const stream)
     {
         _unlock_file(stream);
     }
+    __endtry
 
     return return_value;
 }

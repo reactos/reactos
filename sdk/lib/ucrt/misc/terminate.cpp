@@ -51,6 +51,7 @@ extern "C" void __cdecl terminate() throw()
         {
             ; // Deliberately do nothing
         }
+        __endtry
     }
 
     // If the terminate handler returned, faulted, or otherwise failed to end

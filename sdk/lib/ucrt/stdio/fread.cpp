@@ -59,6 +59,7 @@ extern "C" size_t __cdecl fread_s(
     {
         _unlock_file(stream);
     }
+    __endtry
 
     return return_value;
 }

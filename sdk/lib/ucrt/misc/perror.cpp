@@ -62,6 +62,7 @@ static void __cdecl _perror_internal(char const* const user_prefix, __crt_cached
     {
         __acrt_lowio_unlock_fh( fh );
     }
+    __endtry
 }
 
 extern "C" void __cdecl perror(char const* const user_prefix)

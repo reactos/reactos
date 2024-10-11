@@ -242,6 +242,7 @@ extern "C" bool __cdecl __acrt_initialize_lowio()
     {
         __acrt_unlock(__acrt_lowio_index_lock);
     }
+    __endtry
 
     return result;
 }

@@ -48,6 +48,7 @@ static Integer __cdecl common_filelength(int const fh) throw()
     {
         __acrt_lowio_unlock_fh(fh);
     }
+    __endtry
     return end;
 }
 

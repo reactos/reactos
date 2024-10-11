@@ -34,5 +34,6 @@ extern "C" int __cdecl _cputs(char const* const string)
     {
         __acrt_unlock(__acrt_conio_lock);
     }
+    __endtry
     return result;
 }

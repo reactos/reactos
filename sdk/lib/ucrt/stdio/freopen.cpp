@@ -79,6 +79,7 @@ static errno_t __cdecl common_freopen(
     {
         _unlock_file(stream.public_stream());
     }
+    __endtry
 
     return return_value;
 }

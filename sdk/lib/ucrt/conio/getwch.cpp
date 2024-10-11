@@ -51,6 +51,7 @@ extern "C" wint_t __cdecl _getwch()
     {
         __acrt_unlock(__acrt_conio_lock);
     }
+    __endtry
     return result;
 }
 
@@ -67,6 +68,7 @@ extern "C" wint_t __cdecl _getwche()
     {
         __acrt_unlock(__acrt_conio_lock);
     }
+    __endtry
     return result;
 }
 
@@ -140,6 +142,7 @@ extern "C" wint_t __cdecl _getwch_nolock()
         // Restore the previous console mode:
         __dcrt_set_input_console_mode(old_console_mode);
     }
+    __endtry
     return result;
 }
 
@@ -185,6 +188,7 @@ extern "C" wint_t __cdecl _ungetwch(wint_t const c)
     {
         __acrt_unlock(__acrt_conio_lock);
     }
+    __endtry
     return result;
 }
 

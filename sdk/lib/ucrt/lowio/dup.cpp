@@ -72,6 +72,7 @@ static int __cdecl _dup_nolock_internal(int const fh, __crt_cached_ptd_host& ptd
 
         __acrt_lowio_unlock_fh(new_fh);
     }
+    __endtry
     return return_value;
 }
 

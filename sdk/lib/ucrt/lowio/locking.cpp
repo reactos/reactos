@@ -116,5 +116,6 @@ extern "C" int __cdecl _locking(int const fh, int const locking_mode, long const
     {
         __acrt_lowio_unlock_fh(fh);
     }
+    __endtry
     return result;
 }

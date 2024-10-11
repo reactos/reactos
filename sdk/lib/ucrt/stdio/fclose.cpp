@@ -75,6 +75,7 @@ static int __cdecl _fclose_internal(FILE* const public_stream, __crt_cached_ptd_
     {
         _unlock_file(stream.public_stream());
     }
+    __endtry
 
     return return_value;
 }

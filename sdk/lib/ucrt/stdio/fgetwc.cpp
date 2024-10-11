@@ -110,6 +110,7 @@ extern "C" wint_t __cdecl fgetwc(FILE* const stream)
     {
         _unlock_file(stream);
     }
+    __endtry
 
     return return_value;
 }

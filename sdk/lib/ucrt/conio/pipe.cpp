@@ -61,6 +61,7 @@ extern "C" int __cdecl _pipe(int* const phandles, unsigned const psize, int cons
     {
         __acrt_lowio_unlock_fh(crt_read_handle);
     }
+    __endtry
 
     // Create the CRT write handle for the pipe:
     int const crt_write_handle = _alloc_osfhnd();
@@ -84,6 +85,7 @@ extern "C" int __cdecl _pipe(int* const phandles, unsigned const psize, int cons
     {
         __acrt_lowio_unlock_fh(crt_write_handle);
     }
+    __endtry
 
     // Figure out which textmode the file gets:
     int fmode = 0;

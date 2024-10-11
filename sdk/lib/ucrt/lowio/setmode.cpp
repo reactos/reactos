@@ -46,6 +46,7 @@ extern "C" int __cdecl _setmode(int const fh, int const mode)
     {
         __acrt_lowio_unlock_fh(fh);
     }
+    __endtry
     return result;
 }
 

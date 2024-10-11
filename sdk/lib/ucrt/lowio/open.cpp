@@ -110,6 +110,7 @@ static int __cdecl common_open(
             __acrt_lowio_unlock_fh(fh);
         }
     }
+    __endtry
 
     if (error_code != 0)
     {
@@ -182,6 +183,7 @@ static errno_t __cdecl common_sopen_dispatch(
             __acrt_lowio_unlock_fh(*pfh);
         }
     }
+    __endtry
 
     if (error_code != 0)
     {

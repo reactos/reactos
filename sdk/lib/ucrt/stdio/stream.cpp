@@ -89,6 +89,7 @@ __crt_stdio_stream __cdecl __acrt_stdio_allocate_stream() throw()
     {
         __acrt_unlock(__acrt_stdio_index_lock);
     }
+    __endtry
 
     return stream;
 }

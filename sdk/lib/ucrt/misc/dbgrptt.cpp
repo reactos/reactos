@@ -380,6 +380,7 @@ int __cdecl _VCrtDbgReportA(
             {
                 __acrt_unlock(__acrt_debug_lock);
             }
+            __endtry
         }
 
         if (handled)
@@ -427,6 +428,7 @@ int __cdecl _VCrtDbgReportA(
             _InterlockedDecrement(&_crtAssertBusy);
         }
     }
+    __endtry
 
     return retval;
 }
@@ -602,6 +604,7 @@ int __cdecl _VCrtDbgReportW
             {
                 __acrt_unlock(__acrt_debug_lock);
             }
+            __endtry
         }
 
         if (handled)
@@ -680,6 +683,7 @@ int __cdecl _VCrtDbgReportW
             _InterlockedDecrement(&_crtAssertBusy);
         }
     }
+    __endtry
 
     return retval;
 }

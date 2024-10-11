@@ -76,6 +76,7 @@ static Character* __cdecl common_getenv(Character const* const name) throw()
     {
         __acrt_unlock(__acrt_environment_lock);
     }
+    __endtry
     
     return result;
 }
@@ -160,6 +161,7 @@ static errno_t __cdecl common_getenv_s(
     {
         __acrt_unlock(__acrt_environment_lock);
     }
+    __endtry
     
     return status;
 }
@@ -275,6 +277,7 @@ static errno_t __cdecl common_dupenv_s(
     {
         __acrt_unlock(__acrt_environment_lock);
     }
+    __endtry
     
     return status;
 }

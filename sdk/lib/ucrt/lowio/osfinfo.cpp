@@ -93,6 +93,7 @@ extern "C" errno_t __cdecl __acrt_lowio_ensure_fh_exists(int const fh)
     {
         __acrt_unlock(__acrt_lowio_index_lock);
     }
+    __endtry
 
     return status;
 }
@@ -183,6 +184,7 @@ extern "C" int __cdecl _alloc_osfhnd()
     {
         __acrt_unlock(__acrt_lowio_index_lock);
     }
+    __endtry
     return result;
 }
 
@@ -328,6 +330,7 @@ extern "C" int __cdecl _open_osfhandle(intptr_t const osfhandle, int const sourc
 
         __acrt_lowio_unlock_fh(fh);
     }
+    __endtry
     return fh;
 }
 

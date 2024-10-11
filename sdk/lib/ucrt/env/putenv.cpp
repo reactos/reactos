@@ -212,6 +212,7 @@ static int __cdecl common_putenv(
     {
         __acrt_unlock(__acrt_environment_lock);
     }
+    __endtry
 
     return status;
 }

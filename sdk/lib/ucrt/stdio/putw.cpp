@@ -38,6 +38,7 @@ extern "C" int __cdecl _putw(int const value, FILE* const stream)
     {
         _unlock_file(stream);
     }
+    __endtry
 
     return return_value;
 }

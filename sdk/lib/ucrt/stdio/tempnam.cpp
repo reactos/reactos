@@ -172,6 +172,7 @@ static bool __cdecl compute_name(
     {
         __acrt_unlock(__acrt_tempnam_lock);
     }
+    __endtry
 
     return return_value;
 }

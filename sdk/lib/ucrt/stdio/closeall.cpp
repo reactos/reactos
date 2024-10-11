@@ -39,6 +39,7 @@ extern "C" int __cdecl _fcloseall()
     {
         __acrt_unlock(__acrt_stdio_index_lock);
     }
+    __endtry
 
     return count;
 }

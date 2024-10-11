@@ -58,12 +58,14 @@ extern "C" int __cdecl _rmtmp()
             {
                 _unlock_file(stream.public_stream());
             }
+            __endtry
         }
     }
     __finally
     {
         __acrt_unlock(__acrt_stdio_index_lock);
     }
+    __endtry
 
     return count;
 }

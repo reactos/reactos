@@ -168,6 +168,7 @@ void __cdecl _free_locale(
         {
             __acrt_unlock(__acrt_multibyte_cp_lock);
         }
+        __endtry
 
         if (plocinfo->locinfo != nullptr)
         {
@@ -191,6 +192,7 @@ void __cdecl _free_locale(
             {
                 __acrt_unlock(__acrt_locale_lock);
             }
+            __endtry
         }
 
         _free_crt(plocinfo);

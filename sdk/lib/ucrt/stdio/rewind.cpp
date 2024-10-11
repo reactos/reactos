@@ -51,6 +51,7 @@ static void __cdecl _rewind_internal(FILE* const public_stream, __crt_cached_ptd
     {
         _unlock_file(stream.public_stream());
     }
+    __endtry
 }
 
 extern "C" void __cdecl rewind(FILE* const public_stream)

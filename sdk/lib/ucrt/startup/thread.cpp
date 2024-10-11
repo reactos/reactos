@@ -107,6 +107,7 @@ static unsigned long WINAPI thread_start(void* const parameter) throw()
         // Execution should never reach here:
         _exit(GetExceptionCode());
     }
+    __endtry
 
     // This return statement will never be reached.  All execution paths result
     // in the thread or process exiting.
