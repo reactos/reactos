@@ -33,7 +33,6 @@
 #include "comctl32.h"
 #include "uxtheme.h"
 #include "vssym32.h"
-#include "wine/heap.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(updown);
@@ -306,8 +305,6 @@ static BOOL UPDOWN_GetBuddyInt (UPDOWN_INFO *infoPtr)
  */
 static BOOL UPDOWN_SetBuddyInt (const UPDOWN_INFO *infoPtr)
 {
-    static const WCHAR fmt_hex[] = { '0', 'x', '%', '0', '4', 'X', 0 };
-    static const WCHAR fmt_dec_oct[] = { '%', 'd', '\0' };
     const WCHAR *fmt;
     WCHAR txt[20], txt_old[20] = { 0 };
     int len;
@@ -323,7 +320,7 @@ static BOOL UPDOWN_SetBuddyInt (const UPDOWN_INFO *infoPtr)
     }
 
     /* Regular window, so set caption to the number */
-    fmt = (infoPtr->Base == 16) ? fmt_hex : fmt_dec_oct;
+    fmt = (infoPtr->Base == 16) ? L"0x%04X" : L"%d";
     len = wsprintfW(txt, fmt, infoPtr->CurVal);
 
 
@@ -578,8 +575,7 @@ UPDOWN_Buddy_SubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 {
     UPDOWN_INFO *infoPtr = UPDOWN_GetInfoPtr((HWND)ref_data);
 
-    TRACE("hwnd=%p, uMsg=%04x, wParam=%08lx, lParam=%08lx\n",
-          hwnd, uMsg, wParam, lParam);
+    TRACE("hwnd %p, uMsg %04x, wParam %Ix, lParam %Ix\n", hwnd, uMsg, wParam, lParam);
 
     switch(uMsg)
     {
@@ -784,7 +780,7 @@ static BOOL UPDOWN_CancelMode (UPDOWN_INFO *infoPtr)
     KillTimer (infoPtr->Self, TIMER_AUTOPRESS);
 
     if (GetCapture() == infoPtr->Self)
-        ReleaseCapture();
+	ReleaseCapture();
 
     infoPtr->Flags &= ~FLAG_PRESSED;
     InvalidateRect (infoPtr->Self, NULL, FALSE);
@@ -892,10 +888,9 @@ static void UPDOWN_HandleMouseEvent (UPDOWN_INFO *infoPtr, UINT msg, INT x, INT 
 static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     UPDOWN_INFO *infoPtr = UPDOWN_GetInfoPtr (hwnd);
-    static const WCHAR themeClass[] = {'S','p','i','n',0};
     HTHEME theme;
 
-    TRACE("hwnd=%p msg=%04x wparam=%08lx lparam=%08lx\n", hwnd, message, wParam, lParam);
+    TRACE("hwnd %p, msg %04x, wparam %Id, lparam %Ix\n", hwnd, message, wParam, lParam);
 
     if (!infoPtr && (message != WM_CREATE))
         return DefWindowProcW (hwnd, message, wParam, lParam);
@@ -906,7 +901,7 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 	    {
 	    CREATESTRUCTW *pcs = (CREATESTRUCTW*)lParam;
 
-            infoPtr = heap_alloc_zero(sizeof(*infoPtr));
+            infoPtr = Alloc(sizeof(*infoPtr));
 	    SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
 	    /* initialize the info struct */
@@ -932,16 +927,16 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 	    if (infoPtr->dwStyle & UDS_AUTOBUDDY)
 		UPDOWN_SetBuddy (infoPtr, GetWindow (hwnd, GW_HWNDPREV));
 
-	    OpenThemeData (hwnd, themeClass);
+	    OpenThemeData (hwnd, L"Spin");
 
 	    TRACE("UpDown Ctrl creation, hwnd=%p\n", hwnd);
 	    }
 	    break;
 
 	case WM_DESTROY:
-	    heap_free (infoPtr->AccelVect);
+	    Free (infoPtr->AccelVect);
             UPDOWN_ResetSubclass (infoPtr);
-	    heap_free (infoPtr);
+	    Free (infoPtr);
 	    SetWindowLongPtrW (hwnd, 0, 0);
             theme = GetWindowTheme (hwnd);
             CloseThemeData (theme);
@@ -959,17 +954,15 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 	    break;
 
         case WM_STYLECHANGED:
-            if (wParam == GWL_STYLE) {
+            if (wParam == GWL_STYLE)
                 infoPtr->dwStyle = ((LPSTYLESTRUCT)lParam)->styleNew;
-	        InvalidateRect (infoPtr->Self, NULL, FALSE);
-            }
             break;
 
         case WM_THEMECHANGED:
             theme = GetWindowTheme (hwnd);
             CloseThemeData (theme);
-            OpenThemeData (hwnd, themeClass);
-            InvalidateRect (hwnd, NULL, FALSE);
+            OpenThemeData (hwnd, L"Spin");
+            InvalidateRect (hwnd, NULL, TRUE);
             break;
 
 	case WM_TIMER:
@@ -1066,12 +1059,12 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 	    TRACE("UDM_SETACCEL\n");
 
 	    if(infoPtr->AccelVect) {
-		heap_free (infoPtr->AccelVect);
+		Free (infoPtr->AccelVect);
 		infoPtr->AccelCount = 0;
 		infoPtr->AccelVect  = 0;
       	    }
 	    if(wParam==0) return TRUE;
-	    infoPtr->AccelVect = heap_alloc(wParam*sizeof(UDACCEL));
+	    infoPtr->AccelVect = Alloc(wParam*sizeof(UDACCEL));
 	    if(!infoPtr->AccelVect) return FALSE;
 	    memcpy(infoPtr->AccelVect, (void*)lParam, wParam*sizeof(UDACCEL));
             infoPtr->AccelCount = wParam;
@@ -1091,7 +1084,7 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 	    return infoPtr->Base;
 
 	case UDM_SETBASE:
-	    TRACE("UpDown Ctrl new base(%ld), hwnd=%p\n", wParam, hwnd);
+	    TRACE("UpDown Ctrl new base(%Id), hwnd=%p\n", wParam, hwnd);
 	    if (wParam==10 || wParam==16) {
 		WPARAM old_base = infoPtr->Base;
 		infoPtr->Base = wParam;
@@ -1162,7 +1155,7 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 	}
 	default:
 	    if ((message >= WM_USER) && (message < WM_APP) && !COMCTL32_IsReflectedMessage(message))
-		ERR("unknown msg %04x wp=%04lx lp=%08lx\n", message, wParam, lParam);
+		ERR("unknown msg %04x wp=%Ix lp=%Ix\n", message, wParam, lParam);
 	    return DefWindowProcW (hwnd, message, wParam, lParam);
     }
 

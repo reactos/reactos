@@ -93,7 +93,6 @@
 
 #include <stdarg.h>
 #include <string.h>
-#include <stdlib.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -162,17 +161,10 @@ typedef struct
 #define BALLOON_TEXT_MARGIN (NORMAL_TEXT_MARGIN+8)
 /* value used for CreateRoundRectRgn that specifies how much
  * each corner is curved */
-#ifdef __REACTOS__
-#define BALLOON_ROUNDEDNESS 16
-#define BALLOON_STEMHEIGHT 18
-#define BALLOON_STEMWIDTH 18
-#define BALLOON_STEMINDENT 16
-#else
 #define BALLOON_ROUNDEDNESS 20
 #define BALLOON_STEMHEIGHT 13
 #define BALLOON_STEMWIDTH 10
 #define BALLOON_STEMINDENT 20
-#endif // __REACTOS__
 
 #define BALLOON_ICON_TITLE_SPACING 8 /* horizontal spacing between icon and title */
 #define BALLOON_TITLE_TEXT_SPACING 8 /* vertical spacing between icon/title and main text */
@@ -236,7 +228,7 @@ TOOLTIPS_notify_customdraw (DWORD dwDrawStage, NMTTCUSTOMDRAW *lpnmttcd)
     LRESULT result;
     lpnmttcd->nmcd.dwDrawStage = dwDrawStage;
 
-    TRACE("Notifying stage %d, flags %x, id %x\n", lpnmttcd->nmcd.dwDrawStage,
+    TRACE("Notifying stage %ld, flags %x, id %x\n", lpnmttcd->nmcd.dwDrawStage,
           lpnmttcd->uDrawFlags, lpnmttcd->nmcd.hdr.code);
 
     result = SendMessageW(GetParent(lpnmttcd->nmcd.hdr.hwndFrom), WM_NOTIFY,
@@ -340,9 +332,6 @@ TOOLTIPS_Refresh (const TOOLTIPS_INFO *infoPtr, HDC hdc)
     }
 
     /* draw text */
-#ifdef __REACTOS__
-    uFlags |= DT_EXPANDTABS;
-#endif
     DrawTextW (hdc, infoPtr->szTipText, -1, &rc, uFlags);
 
     /* Custom draw - Call PostPaint after drawing */
@@ -381,7 +370,7 @@ static void TOOLTIPS_GetDispInfoA(const TOOLTIPS_INFO *infoPtr, TTTOOL_INFO *too
     ttnmdi.uFlags = toolPtr->uFlags;
     ttnmdi.lParam = toolPtr->lParam;
 
-    TRACE("hdr.idFrom = %lx\n", ttnmdi.hdr.idFrom);
+    TRACE("hdr.idFrom = %Ix\n", ttnmdi.hdr.idFrom);
     SendMessageW(toolPtr->hwnd, WM_NOTIFY, toolPtr->uId, (LPARAM)&ttnmdi);
 
     if (IS_INTRESOURCE(ttnmdi.lpszText)) {
@@ -408,7 +397,6 @@ static void TOOLTIPS_GetDispInfoA(const TOOLTIPS_INFO *infoPtr, TTTOOL_INFO *too
         buffer[0] = '\0';
     }
 
-#ifndef __REACTOS_
     /* no text available - try calling parent instead as per native */
     /* FIXME: Unsure if SETITEM should save the value or not        */
     if (buffer[0] == 0x00) {
@@ -423,7 +411,6 @@ static void TOOLTIPS_GetDispInfoA(const TOOLTIPS_INFO *infoPtr, TTTOOL_INFO *too
             Str_GetPtrAtoW(ttnmdi.lpszText, buffer, INFOTIPSIZE);
         }
     }
-#endif
 }
 
 static void TOOLTIPS_GetDispInfoW(const TOOLTIPS_INFO *infoPtr, TTTOOL_INFO *toolPtr, WCHAR *buffer)
@@ -439,7 +426,7 @@ static void TOOLTIPS_GetDispInfoW(const TOOLTIPS_INFO *infoPtr, TTTOOL_INFO *too
     ttnmdi.uFlags = toolPtr->uFlags;
     ttnmdi.lParam = toolPtr->lParam;
 
-    TRACE("hdr.idFrom = %lx\n", ttnmdi.hdr.idFrom);
+    TRACE("hdr.idFrom = %Ix\n", ttnmdi.hdr.idFrom);
     SendMessageW(toolPtr->hwnd, WM_NOTIFY, toolPtr->uId, (LPARAM)&ttnmdi);
 
     if (IS_INTRESOURCE(ttnmdi.lpszText)) {
@@ -466,7 +453,6 @@ static void TOOLTIPS_GetDispInfoW(const TOOLTIPS_INFO *infoPtr, TTTOOL_INFO *too
         buffer[0] = '\0';
     }
 
-#ifndef __REACTOS__
     /* no text available - try calling parent instead as per native */
     /* FIXME: Unsure if SETITEM should save the value or not        */
     if (buffer[0] == 0x00) {
@@ -481,7 +467,6 @@ static void TOOLTIPS_GetDispInfoW(const TOOLTIPS_INFO *infoPtr, TTTOOL_INFO *too
             Str_GetPtrW(ttnmdi.lpszText, buffer, INFOTIPSIZE);
         }
     }
-#endif
 
 }
 
@@ -560,9 +545,6 @@ TOOLTIPS_CalcTipSize (const TOOLTIPS_INFO *infoPtr, LPSIZE lpSize)
         title.cx += (rcTitle.right - rcTitle.left);
     }
     hOldFont = SelectObject (hdc, infoPtr->hFont);
-#ifdef __REACTOS__
-    uFlags |= DT_EXPANDTABS;
-#endif
     DrawTextW (hdc, infoPtr->szTipText, -1, &rc, uFlags);
     SelectObject (hdc, hOldFont);
     ReleaseDC (infoPtr->hwndSelf, hdc);
@@ -634,7 +616,7 @@ TOOLTIPS_Show (TOOLTIPS_INFO *infoPtr, BOOL track_activate)
     toolPtr = &infoPtr->tools[nTool];
     TOOLTIPS_CalcTipSize (infoPtr, &size);
 
-    TRACE("Show tooltip %d, %s, size %d x %d\n", nTool, debugstr_w(infoPtr->szTipText),
+    TRACE("Show tooltip %d, %s, size %ld x %ld\n", nTool, debugstr_w(infoPtr->szTipText),
         size.cx, size.cy);
 
     if (track_activate && (toolPtr->uFlags & TTF_TRACK))
@@ -738,7 +720,7 @@ TOOLTIPS_Show (TOOLTIPS_INFO *infoPtr, BOOL track_activate)
         }
     }
 
-    TRACE("pos %d - %d\n", rect.left, rect.top);
+    TRACE("pos %ld - %ld\n", rect.left, rect.top);
 
     rect.right = rect.left + size.cx;
     rect.bottom = rect.top + size.cy;
@@ -749,40 +731,6 @@ TOOLTIPS_Show (TOOLTIPS_INFO *infoPtr, BOOL track_activate)
     mon_info.cbSize = sizeof(mon_info);
     GetMonitorInfoW( monitor, &mon_info );
 
-#ifdef __REACTOS__
-    if (rect.right > mon_info.rcMonitor.right)
-    {
-        rect.left -= size.cx - (BALLOON_STEMINDENT + BALLOON_STEMWIDTH);
-        rect.right -= size.cx - (BALLOON_STEMINDENT + BALLOON_STEMWIDTH);
-        if (rect.right > mon_info.rcMonitor.right)
-        {
-            rect.left -= (rect.right - mon_info.rcMonitor.right);
-            rect.right = mon_info.rcMonitor.right;
-        }
-    }
-
-    if (rect.left < mon_info.rcMonitor.left)
-    {
-        rect.right += abs(rect.left);
-        rect.left = 0;
-    }
-
-    if (rect.bottom > mon_info.rcMonitor.bottom)
-    {
-        RECT rc;
-        if (toolPtr->uFlags & TTF_IDISHWND)
-        {
-            GetWindowRect((HWND)toolPtr->uId, &rc);
-        }
-        else
-        {
-            rc = toolPtr->rect;
-            MapWindowPoints(toolPtr->hwnd, NULL, (LPPOINT)&rc, 2);
-        }
-	    rect.bottom = rc.top - 2;
-    	rect.top = rect.bottom - size.cy;
-    }
-#else
     if( rect.right > mon_info.rcWork.right ) {
         rect.left -= rect.right - mon_info.rcWork.right + 2;
         rect.right = mon_info.rcWork.right - 2;
@@ -801,7 +749,6 @@ TOOLTIPS_Show (TOOLTIPS_INFO *infoPtr, BOOL track_activate)
 	rect.bottom = rc.top - 2;
     	rect.top = rect.bottom - size.cy;
     }
-#endif // __REACTOS__
 
     AdjustWindowRectEx (&rect, GetWindowLongW (infoPtr->hwndSelf, GWL_STYLE),
 			FALSE, GetWindowLongW (infoPtr->hwndSelf, GWL_EXSTYLE));
@@ -818,11 +765,7 @@ TOOLTIPS_Show (TOOLTIPS_INFO *infoPtr, BOOL track_activate)
         {
           pts[0].x = ptfx;
           pts[0].y = 0;
-#ifdef __REACTOS__
-          pts[1].x = max(BALLOON_STEMINDENT, ptfx - BALLOON_STEMWIDTH);
-#else
           pts[1].x = max(BALLOON_STEMINDENT, ptfx - (BALLOON_STEMWIDTH / 2));
-#endif
           pts[1].y = BALLOON_STEMHEIGHT;
           pts[2].x = pts[1].x + BALLOON_STEMWIDTH;
           pts[2].y = pts[1].y;
@@ -834,11 +777,7 @@ TOOLTIPS_Show (TOOLTIPS_INFO *infoPtr, BOOL track_activate)
         }
         else
         {
-#ifdef __REACTOS__
-          pts[0].x = max(BALLOON_STEMINDENT, ptfx - BALLOON_STEMWIDTH);
-#else
           pts[0].x = max(BALLOON_STEMINDENT, ptfx - (BALLOON_STEMWIDTH / 2));
-#endif
           pts[0].y = (rect.bottom - rect.top) - BALLOON_STEMHEIGHT;
           pts[1].x = pts[0].x + BALLOON_STEMWIDTH;
           pts[1].y = pts[0].y;
@@ -856,11 +795,7 @@ TOOLTIPS_Show (TOOLTIPS_INFO *infoPtr, BOOL track_activate)
         hRgn = CreateRoundRectRgn(0,
                                   (infoPtr->bToolBelow ? BALLOON_STEMHEIGHT : 0),
                                   rect.right - rect.left,
-#ifdef __REACTOS__
-                                  (infoPtr->bToolBelow ? rect.bottom - rect.top : rect.bottom - rect.top - BALLOON_STEMHEIGHT + 1),
-#else
                                   (infoPtr->bToolBelow ? rect.bottom - rect.top : rect.bottom - rect.top - BALLOON_STEMHEIGHT),
-#endif
                                   BALLOON_ROUNDEDNESS, BALLOON_ROUNDEDNESS);
 
         CombineRgn(hRgn, hRgn, hrStem, RGN_OR);
@@ -1110,7 +1045,7 @@ TOOLTIPS_AddToolT (TOOLTIPS_INFO *infoPtr, const TTTOOLINFOW *ti, BOOL isW)
 
     if (!ti) return FALSE;
 
-    TRACE("add tool (%p) %p %ld%s\n", infoPtr->hwndSelf, ti->hwnd, ti->uId,
+    TRACE("add tool (%p) %p %Id%s\n", infoPtr->hwndSelf, ti->hwnd, ti->uId,
         (ti->uFlags & TTF_IDISHWND) ? " TTF_IDISHWND" : "");
 
     if (ti->cbSize > TTTOOLINFOW_V3_SIZE && isW)
@@ -1350,7 +1285,7 @@ TOOLTIPS_GetBubbleSize (const TOOLTIPS_INFO *infoPtr, const TTTOOLINFOW *lpToolI
     TRACE("tool %d\n", nTool);
 
     TOOLTIPS_CalcTipSize (infoPtr, &size);
-    TRACE("size %d x %d\n", size.cx, size.cy);
+    TRACE("size %ld x %ld\n", size.cx, size.cy);
 
     return MAKELRESULT(size.cx, size.cy);
 }
@@ -1385,7 +1320,7 @@ TOOLTIPS_GetDelayTime (const TOOLTIPS_INFO *infoPtr, DWORD duration)
         return infoPtr->nInitialTime;
 
     default:
-        WARN("Invalid duration flag %x\n", duration);
+        WARN("Invalid duration flag %lx\n", duration);
 	break;
     }
 
@@ -1642,7 +1577,7 @@ TOOLTIPS_SetDelayTime (TOOLTIPS_INFO *infoPtr, DWORD duration, INT nTime)
 	    break;
 
     default:
-        WARN("Invalid duration flag %x\n", duration);
+        WARN("Invalid duration flag %lx\n", duration);
 	break;
     }
 
@@ -1989,36 +1924,7 @@ TOOLTIPS_NCHitTest (const TOOLTIPS_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 static LRESULT
 TOOLTIPS_NotifyFormat (TOOLTIPS_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
-#ifdef __REACTOS__
-    TTTOOL_INFO *toolPtr = infoPtr->tools;
-    LRESULT nResult;
-
-    TRACE("infoPtr=%p wParam=%lx lParam=%p\n", infoPtr, wParam, (PVOID)lParam);
-
-    if (lParam == NF_QUERY) {
-        if (toolPtr->bNotifyUnicode) {
-            return NFR_UNICODE;
-        } else {
-            return NFR_ANSI;
-        }
-    }
-    else if (lParam == NF_REQUERY) {
-        nResult = SendMessageW (toolPtr->hwnd, WM_NOTIFYFORMAT,
-                    (WPARAM)infoPtr->hwndSelf, (LPARAM)NF_QUERY);
-        if (nResult == NFR_ANSI) {
-            toolPtr->bNotifyUnicode = FALSE;
-            TRACE(" -- WM_NOTIFYFORMAT returns: NFR_ANSI\n");
-        } else if (nResult == NFR_UNICODE) {
-            toolPtr->bNotifyUnicode = TRUE;
-            TRACE(" -- WM_NOTIFYFORMAT returns: NFR_UNICODE\n");
-        } else {
-            TRACE (" -- WM_NOTIFYFORMAT returns: error!\n");
-        }
-        return nResult;
-    }
-#else
-    FIXME ("hwnd=%p wParam=%lx lParam=%lx\n", infoPtr->hwndSelf, wParam, lParam);
-#endif
+    FIXME("hwnd %p, wParam %Ix, lParam %Ix\n", infoPtr->hwndSelf, wParam, lParam);
 
     return 0;
 }
@@ -2196,7 +2102,8 @@ TOOLTIPS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
 
-    TRACE("hwnd=%p msg=%x wparam=%lx lParam=%lx\n", hwnd, uMsg, wParam, lParam);
+    TRACE("hwnd %p, msg %x, wparam %Ix, lParam %Ix\n", hwnd, uMsg, wParam, lParam);
+
     if (!infoPtr && (uMsg != WM_CREATE) && (uMsg != WM_NCCREATE))
         return DefWindowProcW (hwnd, uMsg, wParam, lParam);
     switch (uMsg)
@@ -2364,8 +2271,7 @@ TOOLTIPS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	default:
 	    if ((uMsg >= WM_USER) && (uMsg < WM_APP) && !COMCTL32_IsReflectedMessage(uMsg))
-		ERR("unknown msg %04x wp=%08lx lp=%08lx\n",
-		     uMsg, wParam, lParam);
+		ERR("unknown msg %04x, wp %Ix, lp %Ix\n", uMsg, wParam, lParam);
 	    return DefWindowProcW (hwnd, uMsg, wParam, lParam);
     }
 }

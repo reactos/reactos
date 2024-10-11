@@ -43,6 +43,8 @@
 #include "winnls.h"
 #include "commctrl.h"
 #include "comctl32.h"
+#include "uxtheme.h"
+#include "vsstyle.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(datetime);
@@ -62,6 +64,7 @@ typedef struct
     RECT checkbox;  /* checkbox allowing the control to be enabled/disabled */
     RECT calbutton; /* button that toggles the dropdown of the monthcal control */
     BOOL bCalDepressed; /* TRUE = cal button is depressed */
+    BOOL bCalHot; /* TRUE if calendar button is hovered */
     BOOL bDropdownEnabled;
     int  select;
     WCHAR charsEntered[4];
@@ -77,10 +80,6 @@ typedef struct
     POINT monthcal_pos;
     int pendingUpdown;
 } DATETIME_INFO, *LPDATETIME_INFO;
-
-/* in monthcal.c */
-extern int MONTHCAL_MonthLength(int month, int year);
-extern int MONTHCAL_CalculateDayOfWeek(SYSTEMTIME *date, BOOL inplace);
 
 /* this list of defines is closely related to `allowedformatchars' defined
  * in datetime.c; the high nibble indicates the `base type' of the format
@@ -128,15 +127,11 @@ static BOOL DATETIME_SendSimpleNotify (const DATETIME_INFO *infoPtr, UINT code);
 static BOOL DATETIME_SendDateTimeChangeNotify (const DATETIME_INFO *infoPtr);
 static const WCHAR allowedformatchars[] = L"dhHmMstyX";
 static const int maxrepetition [] = {4,2,2,2,4,2,2,4,-1};
+static const WCHAR *themeClass = WC_SCROLLBARW;
 
 /* valid date limits */
-#ifndef __REACTOS__
 static const SYSTEMTIME max_allowed_date = { .wYear = 9999, .wMonth = 12, .wDayOfWeek = 0, .wDay = 31 };
 static const SYSTEMTIME min_allowed_date = { .wYear = 1752, .wMonth = 9, .wDayOfWeek = 0, .wDay = 14 };
-#else
-static const SYSTEMTIME max_allowed_date = { /*.wYear =*/ 9999, /*.wMonth =*/ 12, /*.wDayOfWeek =*/ 0, /*.wDay =*/ 31 };
-static const SYSTEMTIME min_allowed_date = { /*.wYear =*/ 1752, /*.wMonth =*/ 9, /*.wDayOfWeek =*/ 0, /*.wDay =*/ 14 };
-#endif
 
 static DWORD
 DATETIME_GetSystemTime (const DATETIME_INFO *infoPtr, SYSTEMTIME *systime)
@@ -713,6 +708,9 @@ static int DATETIME_GetFieldWidth (const DATETIME_INFO *infoPtr, HDC hdc, int co
 static void 
 DATETIME_Refresh (DATETIME_INFO *infoPtr, HDC hdc)
 {
+    HTHEME theme;
+    int state;
+
     TRACE("\n");
 
     if (infoPtr->dateValid) {
@@ -776,7 +774,25 @@ DATETIME_Refresh (DATETIME_INFO *infoPtr, HDC hdc)
         SelectObject (hdc, oldFont);
     }
 
-    if (!(infoPtr->dwStyle & DTS_UPDOWN)) {
+    if (infoPtr->dwStyle & DTS_UPDOWN)
+        return;
+
+    theme = GetWindowTheme(infoPtr->hwndSelf);
+    if (theme)
+    {
+        if (infoPtr->dwStyle & WS_DISABLED)
+            state = ABS_DOWNDISABLED;
+        else if (infoPtr->bCalDepressed)
+            state = ABS_DOWNPRESSED;
+        else if (infoPtr->bCalHot)
+            state = ABS_DOWNHOT;
+        else
+            state = ABS_DOWNNORMAL;
+
+        DrawThemeBackground(theme, hdc, SBP_ARROWBTN, state, &infoPtr->calbutton, NULL);
+    }
+    else
+    {
         DrawFrameControl(hdc, &infoPtr->calbutton, DFC_SCROLL,
                          DFCS_SCROLLDOWN | (infoPtr->bCalDepressed ? DFCS_PUSHED : 0) |
                          (infoPtr->dwStyle & WS_DISABLED ? DFCS_INACTIVE : 0) );
@@ -1038,6 +1054,7 @@ DATETIME_Button_Command (DATETIME_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
         DWORD state = SendMessageW((HWND)lParam, BM_GETCHECK, 0, 0);
         infoPtr->dateValid = (state == BST_CHECKED);
         InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
+        DATETIME_SendDateTimeChangeNotify(infoPtr);
     }
     return 0;
 }
@@ -1285,6 +1302,85 @@ DATETIME_NCCreate (HWND hwnd, const CREATESTRUCTW *lpcs)
     return 1;
 }
 
+static LRESULT DATETIME_NCPaint (HWND hwnd, HRGN region)
+{
+    INT cxEdge, cyEdge;
+    HRGN clipRgn;
+    HTHEME theme;
+    LONG exStyle;
+    RECT r;
+    HDC dc;
+
+    theme = OpenThemeDataForDpi(NULL, WC_EDITW, GetDpiForWindow(hwnd));
+    if (!theme)
+        return DefWindowProcW(hwnd, WM_NCPAINT, (WPARAM)region, 0);
+
+    exStyle = GetWindowLongW(hwnd, GWL_EXSTYLE);
+    if (!(exStyle & WS_EX_CLIENTEDGE))
+    {
+        CloseThemeData(theme);
+        return DefWindowProcW(hwnd, WM_NCPAINT, (WPARAM)region, 0);
+    }
+
+    cxEdge = GetSystemMetrics(SM_CXEDGE);
+    cyEdge = GetSystemMetrics(SM_CYEDGE);
+    GetWindowRect(hwnd, &r);
+
+    /* New clipping region passed to default proc to exclude border */
+    clipRgn = CreateRectRgn(r.left + cxEdge, r.top + cyEdge, r.right - cxEdge, r.bottom - cyEdge);
+    if (region != (HRGN)1)
+        CombineRgn(clipRgn, clipRgn, region, RGN_AND);
+    OffsetRect(&r, -r.left, -r.top);
+
+    dc = GetDCEx(hwnd, region, DCX_WINDOW | DCX_INTERSECTRGN);
+    if (IsThemeBackgroundPartiallyTransparent(theme, 0, 0))
+        DrawThemeParentBackground(hwnd, dc, &r);
+    DrawThemeBackground(theme, dc, 0, 0, &r, 0);
+    ReleaseDC(hwnd, dc);
+    CloseThemeData(theme);
+
+    /* Call default proc to get the scrollbars etc. also painted */
+    DefWindowProcW(hwnd, WM_NCPAINT, (WPARAM)clipRgn, 0);
+    DeleteObject(clipRgn);
+    return 0;
+}
+
+static LRESULT DATETIME_MouseMove (DATETIME_INFO *infoPtr, LONG x, LONG y)
+{
+    TRACKMOUSEEVENT event;
+    POINT point;
+    BOOL hot;
+
+    point.x = x;
+    point.y = y;
+    hot = PtInRect(&infoPtr->calbutton, point);
+    if (hot != infoPtr->bCalHot)
+    {
+        infoPtr->bCalHot = hot;
+        RedrawWindow(infoPtr->hwndSelf, &infoPtr->calbutton, 0, RDW_INVALIDATE | RDW_UPDATENOW);
+    }
+
+    if (!hot)
+        return 0;
+
+    event.cbSize = sizeof(TRACKMOUSEEVENT);
+    event.dwFlags = TME_QUERY;
+    if (!TrackMouseEvent(&event) || event.hwndTrack != infoPtr->hwndSelf || !(event.dwFlags & TME_LEAVE))
+    {
+        event.hwndTrack = infoPtr->hwndSelf;
+        event.dwFlags = TME_LEAVE;
+        TrackMouseEvent(&event);
+    }
+
+    return 0;
+}
+
+static LRESULT DATETIME_MouseLeave (DATETIME_INFO *infoPtr)
+{
+    infoPtr->bCalHot = FALSE;
+    RedrawWindow(infoPtr->hwndSelf, &infoPtr->calbutton, 0, RDW_INVALIDATE | RDW_UPDATENOW);
+    return 0;
+}
 
 static LRESULT
 DATETIME_SetFocus (DATETIME_INFO *infoPtr, HWND lostFocus)
@@ -1353,7 +1449,7 @@ DATETIME_Size (DATETIME_INFO *infoPtr, INT width, INT height)
     infoPtr->rcClient.bottom = height;
     infoPtr->rcClient.right = width;
 
-    TRACE("Height=%d, Width=%d\n", infoPtr->rcClient.bottom, infoPtr->rcClient.right);
+    TRACE("Height %ld, Width %ld\n", infoPtr->rcClient.bottom, infoPtr->rcClient.right);
 
     infoPtr->rcDraw = infoPtr->rcClient;
     
@@ -1387,8 +1483,7 @@ DATETIME_Size (DATETIME_INFO *infoPtr, INT width, INT height)
 static LRESULT
 DATETIME_StyleChanging(DATETIME_INFO *infoPtr, WPARAM wStyleType, STYLESTRUCT *lpss)
 {
-    TRACE("(styletype=%lx, styleOld=0x%08x, styleNew=0x%08x)\n",
-          wStyleType, lpss->styleOld, lpss->styleNew);
+    TRACE("styletype %Ix, styleOld %#lx, styleNew %#lx\n", wStyleType, lpss->styleOld, lpss->styleNew);
 
     /* block DTS_SHOWNONE change */
     if ((lpss->styleNew ^ lpss->styleOld) & DTS_SHOWNONE)
@@ -1405,8 +1500,7 @@ DATETIME_StyleChanging(DATETIME_INFO *infoPtr, WPARAM wStyleType, STYLESTRUCT *l
 static LRESULT 
 DATETIME_StyleChanged(DATETIME_INFO *infoPtr, WPARAM wStyleType, const STYLESTRUCT *lpss)
 {
-    TRACE("(styletype=%lx, styleOld=0x%08x, styleNew=0x%08x)\n",
-          wStyleType, lpss->styleOld, lpss->styleNew);
+    TRACE("styletype %Ix, styleOld %#lx, styleNew %#lx\n", wStyleType, lpss->styleOld, lpss->styleNew);
 
     if (wStyleType != GWL_STYLE) return 0;
   
@@ -1430,7 +1524,16 @@ DATETIME_StyleChanged(DATETIME_INFO *infoPtr, WPARAM wStyleType, const STYLESTRU
 	DestroyWindow(infoPtr->hUpdown);
 	infoPtr->hUpdown = 0;
     }
+    return 0;
+}
 
+static LRESULT DATETIME_ThemeChanged (DATETIME_INFO *infoPtr)
+{
+    HTHEME theme;
+
+    theme = GetWindowTheme(infoPtr->hwndSelf);
+    CloseThemeData(theme);
+    OpenThemeData(infoPtr->hwndSelf, themeClass);
     InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
     return 0;
 }
@@ -1482,7 +1585,7 @@ static BOOL DATETIME_GetIdealSize(DATETIME_INFO *infoPtr, SIZE *size)
     size->cx += 12;
     size->cy += 4;
 
-    TRACE("cx=%d cy=%d\n", size->cx, size->cy);
+    TRACE("cx %ld, cy %ld\n", size->cx, size->cy);
     return TRUE;
 }
 
@@ -1513,6 +1616,7 @@ DATETIME_Create (HWND hwnd, const CREATESTRUCTW *lpcs)
     infoPtr->hwndNotify = lpcs->hwndParent;
     infoPtr->select = -1; /* initially, nothing is selected */
     infoPtr->bDropdownEnabled = TRUE;
+    infoPtr->bCalHot = FALSE;
 
     DATETIME_StyleChanged(infoPtr, GWL_STYLE, &ss);
     DATETIME_SetFormatW (infoPtr, 0);
@@ -1527,6 +1631,7 @@ DATETIME_Create (HWND hwnd, const CREATESTRUCTW *lpcs)
     infoPtr->hFont = GetStockObject(DEFAULT_GUI_FONT);
 
     SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
+    OpenThemeData(hwnd, themeClass);
 
     return 0;
 }
@@ -1536,6 +1641,11 @@ DATETIME_Create (HWND hwnd, const CREATESTRUCTW *lpcs)
 static LRESULT
 DATETIME_Destroy (DATETIME_INFO *infoPtr)
 {
+    HTHEME theme;
+
+    theme = GetWindowTheme(infoPtr->hwndSelf);
+    CloseThemeData(theme);
+
     if (infoPtr->hwndCheckbut)
 	DestroyWindow(infoPtr->hwndCheckbut);
     if (infoPtr->hUpdown)
@@ -1590,7 +1700,7 @@ DATETIME_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     DATETIME_INFO *infoPtr = ((DATETIME_INFO *)GetWindowLongPtrW (hwnd, 0));
 
-    TRACE ("%x, %lx, %lx\n", uMsg, wParam, lParam);
+    TRACE("%x, %Ix, %Ix\n", uMsg, wParam, lParam);
 
     if (!infoPtr && (uMsg != WM_CREATE) && (uMsg != WM_NCCREATE))
 	return DefWindowProcW( hwnd, uMsg, wParam, lParam );
@@ -1661,6 +1771,15 @@ DATETIME_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_NCCREATE:
         return DATETIME_NCCreate (hwnd, (LPCREATESTRUCTW)lParam);
 
+    case WM_NCPAINT:
+        return DATETIME_NCPaint(hwnd, (HRGN)wParam);
+
+    case WM_MOUSEMOVE:
+        return DATETIME_MouseMove(infoPtr, (SHORT)LOWORD(lParam), (SHORT)HIWORD(lParam));
+
+    case WM_MOUSELEAVE:
+        return DATETIME_MouseLeave(infoPtr);
+
     case WM_SETFOCUS:
         return DATETIME_SetFocus (infoPtr, (HWND)wParam);
 
@@ -1691,6 +1810,9 @@ DATETIME_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_STYLECHANGED:
         return DATETIME_StyleChanged(infoPtr, wParam, (LPSTYLESTRUCT)lParam);
 
+    case WM_THEMECHANGED:
+        return DATETIME_ThemeChanged(infoPtr);
+
     case WM_SETFONT:
         return DATETIME_SetFont(infoPtr, (HFONT)wParam, (BOOL)lParam);
 
@@ -1707,10 +1829,9 @@ DATETIME_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         return CB_ERR;
 
     default:
-	if ((uMsg >= WM_USER) && (uMsg < WM_APP) && !COMCTL32_IsReflectedMessage(uMsg))
-		ERR("unknown msg %04x wp=%08lx lp=%08lx\n",
-		     uMsg, wParam, lParam);
-	return DefWindowProcW (hwnd, uMsg, wParam, lParam);
+        if ((uMsg >= WM_USER) && (uMsg < WM_APP) && !COMCTL32_IsReflectedMessage(uMsg))
+            ERR("unknown msg %04x, wp %Ix, lp %Ix\n", uMsg, wParam, lParam);
+        return DefWindowProcW (hwnd, uMsg, wParam, lParam);
     }
 }
 

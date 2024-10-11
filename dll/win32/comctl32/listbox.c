@@ -33,7 +33,6 @@
 #include "vssym32.h"
 #include "wine/exception.h"
 #include "wine/debug.h"
-#include "wine/heap.h"
 
 #include "comctl32.h"
 
@@ -153,7 +152,7 @@ static BOOL resize_storage(LB_DESCR *descr, UINT items_size)
         items_size = (items_size + LB_ARRAY_GRANULARITY - 1) & ~(LB_ARRAY_GRANULARITY - 1);
         if ((descr->style & (LBS_NODATA | LBS_MULTIPLESEL | LBS_EXTENDEDSEL)) != LBS_NODATA)
         {
-            items = heap_realloc(descr->u.items, items_size * get_sizeof_item(descr));
+            items = ReAlloc(descr->u.items, items_size * get_sizeof_item(descr));
             if (!items)
             {
                 SEND_NOTIFICATION(descr, LBN_ERRSPACE);
@@ -881,9 +880,9 @@ static LRESULT LISTBOX_GetText( LB_DESCR *descr, INT index, LPWSTR buffer, BOOL 
     return len;
 }
 
-static inline INT LISTBOX_lstrcmpiW( LCID lcid, LPCWSTR str1, LPCWSTR str2 )
+static inline INT LISTBOX_lstrcmpiW( LCID lcid, LPCWSTR str1, LPCWSTR str2, int len )
 {
-    INT ret = CompareStringW( lcid, NORM_IGNORECASE, str1, -1, str2, -1 );
+    INT ret = CompareStringW( lcid, NORM_IGNORECASE, str1, len, str2, len );
     if (ret == CSTR_LESS_THAN)
         return -1;
     if (ret == CSTR_EQUAL)
@@ -911,7 +910,7 @@ static INT LISTBOX_FindStringPos( LB_DESCR *descr, LPCWSTR str, BOOL exact )
     {
         index = (min + max) / 2;
         if (HAS_STRINGS(descr))
-            res = LISTBOX_lstrcmpiW( descr->locale, get_item_string(descr, index), str );
+            res = LISTBOX_lstrcmpiW( descr->locale, get_item_string(descr, index), str, -1 );
         else
         {
             COMPAREITEMSTRUCT cis;
@@ -966,13 +965,13 @@ static INT LISTBOX_FindFileStrPos( LB_DESCR *descr, LPCWSTR str )
             else  /* directory */
             {
                 if (str[1] == '-') res = 1;
-                else res = LISTBOX_lstrcmpiW( descr->locale, str, p );
+                else res = LISTBOX_lstrcmpiW( descr->locale, str, p, -1 );
             }
         }
         else  /* filename */
         {
             if (*str == '[') res = 1;
-            else res = LISTBOX_lstrcmpiW( descr->locale, str, p );
+            else res = LISTBOX_lstrcmpiW( descr->locale, str, p, -1 );
         }
         if (!res) return index;
         if (res < 0) max = index;
@@ -1003,7 +1002,7 @@ static INT LISTBOX_FindString( LB_DESCR *descr, INT start, LPCWSTR str, BOOL exa
             for (i = 0, index = start; i < descr->nb_items; i++, index++)
             {
                 if (index == descr->nb_items) index = 0;
-                if (!LISTBOX_lstrcmpiW(descr->locale, str, get_item_string(descr, index)))
+                if (!LISTBOX_lstrcmpiW(descr->locale, str, get_item_string(descr, index), -1))
                     return index;
             }
         }
@@ -1018,11 +1017,11 @@ static INT LISTBOX_FindString( LB_DESCR *descr, INT start, LPCWSTR str, BOOL exa
                 if (index == descr->nb_items) index = 0;
                 item_str = get_item_string(descr, index);
 
-                if (!wcsnicmp(str, item_str, len)) return index;
+                if (!LISTBOX_lstrcmpiW(descr->locale, str, item_str, len)) return index;
                 if (item_str[0] == '[')
                 {
-                    if (!wcsnicmp(str, item_str + 1, len)) return index;
-                    if (item_str[1] == '-' && !wcsnicmp(str, item_str + 2, len)) return index;
+                    if (!LISTBOX_lstrcmpiW(descr->locale, str, item_str + 1, len)) return index;
+                    if (item_str[1] == '-' && !LISTBOX_lstrcmpiW(descr->locale, str, item_str + 2, len)) return index;
                 }
             }
         }
@@ -1186,7 +1185,7 @@ static LRESULT LISTBOX_Paint( LB_DESCR *descr, HDC hdc )
     return 0;
 }
 
-static void LISTBOX_NCPaint( LB_DESCR *descr, HRGN region )
+static LRESULT LISTBOX_NCPaint( LB_DESCR *descr, HRGN region )
 {
     DWORD exstyle = GetWindowLongW( descr->self, GWL_EXSTYLE);
     HTHEME theme = GetWindowTheme( descr->self );
@@ -1196,7 +1195,7 @@ static void LISTBOX_NCPaint( LB_DESCR *descr, HRGN region )
     RECT r;
 
     if (!theme || !(exstyle & WS_EX_CLIENTEDGE))
-        return;
+        return DefWindowProcW(descr->self, WM_NCPAINT, (WPARAM)region, 0);
 
     cxEdge = GetSystemMetrics(SM_CXEDGE);
     cyEdge = GetSystemMetrics(SM_CYEDGE);
@@ -1210,23 +1209,17 @@ static void LISTBOX_NCPaint( LB_DESCR *descr, HRGN region )
         CombineRgn(cliprgn, cliprgn, region, RGN_AND);
     OffsetRect(&r, -r.left, -r.top);
 
-#ifdef __REACTOS__ /* r73789 */
-    hdc = GetWindowDC(descr->self);
-    /* Exclude client part */
-    ExcludeClipRect(hdc,
-                    r.left + cxEdge,
-                    r.top + cyEdge,
-                    r.right - cxEdge,
-                    r.bottom -cyEdge);
-#else
     hdc = GetDCEx(descr->self, region, DCX_WINDOW|DCX_INTERSECTRGN);
-    OffsetRect(&r, -r.left, -r.top);
-#endif
 
     if (IsThemeBackgroundPartiallyTransparent (theme, 0, 0))
         DrawThemeParentBackground(descr->self, hdc, &r);
     DrawThemeBackground (theme, hdc, 0, 0, &r, 0);
     ReleaseDC(descr->self, hdc);
+
+    /* Call default proc to get the scrollbars etc. also painted */
+    DefWindowProcW(descr->self, WM_NCPAINT, (WPARAM)cliprgn, 0);
+    DeleteObject(cliprgn);
+    return 0;
 }
 
 /***********************************************************************
@@ -1700,8 +1693,7 @@ static LRESULT LISTBOX_InsertString( LB_DESCR *descr, INT index, LPCWSTR str )
 
     if (HAS_STRINGS(descr))
     {
-        static const WCHAR empty_stringW[] = { 0 };
-        if (!str) str = empty_stringW;
+        if (!str) str = L"";
         if (!(new_str = HeapAlloc( GetProcessHeap(), 0, (lstrlenW(str) + 1) * sizeof(WCHAR) )))
         {
             SEND_NOTIFICATION( descr, LBN_ERRSPACE );
@@ -1837,6 +1829,8 @@ static LRESULT LISTBOX_SetCount( LB_DESCR *descr, UINT count )
     if (!resize_storage(descr, count))
         return LB_ERRSPACE;
     descr->nb_items = count;
+    if (descr->style & LBS_NOREDRAW)
+        descr->style |= LBS_DISPLAYCHANGED;
 
     if (count)
     {
@@ -1891,16 +1885,14 @@ static LRESULT LISTBOX_Directory( LB_DESCR *descr, UINT attrib,
                 WCHAR buffer[270];
                 if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                 {
-                    static const WCHAR bracketW[]  = { ']',0 };
-                    static const WCHAR dotW[] = { '.',0 };
                     if (!(attrib & DDL_DIRECTORY) ||
-                        !lstrcmpW( entry.cFileName, dotW )) continue;
+                        !lstrcmpW( entry.cFileName, L"." )) continue;
                     buffer[0] = '[';
                     if (!long_names && entry.cAlternateFileName[0])
                         lstrcpyW( buffer + 1, entry.cAlternateFileName );
                     else
                         lstrcpyW( buffer + 1, entry.cFileName );
-                    lstrcatW(buffer, bracketW);
+                    lstrcatW(buffer, L"]");
                 }
                 else  /* not a directory */
                 {
@@ -1932,8 +1924,8 @@ static LRESULT LISTBOX_Directory( LB_DESCR *descr, UINT attrib,
         /* scan drives */
         if (attrib & DDL_DRIVES)
         {
-            WCHAR buffer[] = {'[','-','a','-',']',0};
-            WCHAR root[] = {'A',':','\\',0};
+            WCHAR buffer[] = L"[-a-]";
+            WCHAR root[] = L"A:\\";
             int drive;
             for (drive = 0; drive < 26; drive++, buffer[2]++, root[0]++)
             {
@@ -2411,7 +2403,7 @@ static void LISTBOX_HandleMouseMove( LB_DESCR *descr,
     /* Start/stop the system timer */
 
     if (dir != LB_TIMER_NONE)
-        SetSystemTimer( descr->self, LB_TIMER_ID, LB_SCROLL_TIMEOUT, NULL);
+        SetSystemTimer( descr->self, LB_TIMER_ID, LB_SCROLL_TIMEOUT, 0 );
     else if (LISTBOX_Timer != LB_TIMER_NONE)
         KillSystemTimer( descr->self, LB_TIMER_ID );
     LISTBOX_Timer = dir;
@@ -2690,7 +2682,7 @@ static LRESULT CALLBACK LISTBOX_WindowProc( HWND hwnd, UINT msg, WPARAM wParam, 
     }
     if (descr->style & LBS_COMBOBOX) lphc = descr->lphc;
 
-    TRACE("[%p]: msg %#x wp %08lx lp %08lx\n", descr->self, msg, wParam, lParam );
+    TRACE("[%p]: msg %#x, wp %Ix, lp %Ix\n", descr->self, msg, wParam, lParam );
 
     switch(msg)
     {
@@ -2989,8 +2981,7 @@ static LRESULT CALLBACK LISTBOX_WindowProc( HWND hwnd, UINT msg, WPARAM wParam, 
         return ret;
 
     case WM_NCPAINT:
-        LISTBOX_NCPaint( descr, (HRGN)wParam );
-        break;
+        return LISTBOX_NCPaint( descr, (HRGN)wParam );
 
     case WM_SIZE:
         LISTBOX_UpdateSize( descr );
@@ -3146,12 +3137,12 @@ static LRESULT CALLBACK LISTBOX_WindowProc( HWND hwnd, UINT msg, WPARAM wParam, 
         theme = GetWindowTheme( hwnd );
         CloseThemeData( theme );
         OpenThemeData( hwnd, WC_LISTBOXW );
+        InvalidateRect( hwnd, NULL, TRUE );
         break;
 
     default:
         if ((msg >= WM_USER) && (msg < 0xc000))
-            WARN("[%p]: unknown msg %04x wp %08lx lp %08lx\n",
-                 hwnd, msg, wParam, lParam );
+            WARN("[%p]: unknown msg %04x, wp %Ix, lp %Ix\n", hwnd, msg, wParam, lParam );
     }
 
     return DefWindowProcW( hwnd, msg, wParam, lParam );
@@ -3174,7 +3165,6 @@ void LISTBOX_Register(void)
 
 void COMBOLBOX_Register(void)
 {
-    static const WCHAR combolboxW[] = {'C','o','m','b','o','L','B','o','x',0};
     WNDCLASSW wndClass;
 
     memset(&wndClass, 0, sizeof(wndClass));
@@ -3184,19 +3174,6 @@ void COMBOLBOX_Register(void)
     wndClass.cbWndExtra = sizeof(LB_DESCR *);
     wndClass.hCursor = LoadCursorW(0, (LPWSTR)IDC_ARROW);
     wndClass.hbrBackground = NULL;
-    wndClass.lpszClassName = combolboxW;
+    wndClass.lpszClassName = L"ComboLBox";
     RegisterClassW(&wndClass);
 }
-
-#ifdef __REACTOS__
-void LISTBOX_Unregister(void)
-{
-    UnregisterClassW(WC_LISTBOXW, NULL);
-}
-
-void COMBOLBOX_Unregister(void)
-{
-    static const WCHAR combolboxW[] = {'C','o','m','b','o','L','B','o','x',0};
-    UnregisterClassW(combolboxW, NULL);
-}
-#endif

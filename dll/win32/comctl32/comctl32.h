@@ -34,17 +34,9 @@
 #include "winuser.h"
 #include "winnls.h"
 #include "commctrl.h"
-#include "windowsx.h"
 
-#ifdef __REACTOS__
-// This is really ComCtl32 v5.82, the last one not supporting SxS
-#undef  COMCTL32_VERSION // Undefines what the PSDK gave to us
-#define COMCTL32_VERSION        5
-#define COMCTL32_VERSION_MINOR 82
-#endif
-
-extern HMODULE COMCTL32_hModule DECLSPEC_HIDDEN;
-extern HBRUSH  COMCTL32_hPattern55AABrush DECLSPEC_HIDDEN;
+extern HMODULE COMCTL32_hModule;
+extern HBRUSH  COMCTL32_hPattern55AABrush;
 
 /* Property sheet / Wizard */
 #define IDD_PROPSHEET 1006
@@ -118,12 +110,11 @@ extern HBRUSH  COMCTL32_hPattern55AABrush DECLSPEC_HIDDEN;
 #define IDS_BUTTON_CANCEL 3004
 #define IDS_BUTTON_CLOSE  3005
 
+/* Task dialog expando control default text */
 #define IDS_TD_EXPANDED   3020
 #define IDS_TD_COLLAPSED  3021
 
-#ifndef __REACTOS__
 #define WM_SYSTIMER     0x0118
-#endif
 
 enum combobox_state_flags
 {
@@ -164,7 +155,7 @@ typedef struct
    INT            visibleItems;
 } HEADCOMBO, *LPHEADCOMBO;
 
-extern BOOL COMBO_FlipListbox(HEADCOMBO *lphc, BOOL ok, BOOL bRedrawButton) DECLSPEC_HIDDEN;
+extern BOOL COMBO_FlipListbox(HEADCOMBO *lphc, BOOL ok, BOOL bRedrawButton);
 
 typedef struct
 {
@@ -187,23 +178,23 @@ typedef struct
     COLORREF clrInfoText;           /* COLOR_INFOTEXT                      */
 } COMCTL32_SysColor;
 
-extern COMCTL32_SysColor  comctl32_color DECLSPEC_HIDDEN;
+extern COMCTL32_SysColor  comctl32_color;
 
 /* Internal function */
-HWND COMCTL32_CreateToolTip (HWND) DECLSPEC_HIDDEN;
-VOID COMCTL32_RefreshSysColors(void) DECLSPEC_HIDDEN;
-void COMCTL32_DrawInsertMark(HDC hDC, const RECT *lpRect, COLORREF clrInsertMark, BOOL bHorizontal) DECLSPEC_HIDDEN;
-void COMCTL32_EnsureBitmapSize(HBITMAP *pBitmap, int cxMinWidth, int cyMinHeight, COLORREF crBackground) DECLSPEC_HIDDEN;
-void COMCTL32_GetFontMetrics(HFONT hFont, TEXTMETRICW *ptm) DECLSPEC_HIDDEN;
-BOOL COMCTL32_IsReflectedMessage(UINT uMsg) DECLSPEC_HIDDEN;
-INT  Str_GetPtrWtoA (LPCWSTR lpSrc, LPSTR lpDest, INT nMaxLen) DECLSPEC_HIDDEN;
-INT  Str_GetPtrAtoW (LPCSTR lpSrc, LPWSTR lpDest, INT nMaxLen) DECLSPEC_HIDDEN;
-BOOL Str_SetPtrAtoW (LPWSTR *lppDest, LPCSTR lpSrc) DECLSPEC_HIDDEN;
-BOOL Str_SetPtrWtoA (LPSTR *lppDest, LPCWSTR lpSrc) DECLSPEC_HIDDEN;
+HWND COMCTL32_CreateToolTip(HWND);
+void COMCTL32_DrawStatusText(HDC hdc, LPCRECT lprc, LPCWSTR text, UINT style, BOOL draw_background);
+VOID COMCTL32_RefreshSysColors(void);
+void COMCTL32_DrawInsertMark(HDC hDC, const RECT *lpRect, COLORREF clrInsertMark, BOOL bHorizontal);
+void COMCTL32_EnsureBitmapSize(HBITMAP *pBitmap, int cxMinWidth, int cyMinHeight, COLORREF crBackground);
+void COMCTL32_GetFontMetrics(HFONT hFont, TEXTMETRICW *ptm);
+BOOL COMCTL32_IsReflectedMessage(UINT uMsg);
+INT  Str_GetPtrWtoA(LPCWSTR lpSrc, LPSTR lpDest, INT nMaxLen);
+INT  Str_GetPtrAtoW(LPCSTR lpSrc, LPWSTR lpDest, INT nMaxLen);
+BOOL Str_SetPtrAtoW(LPWSTR *lppDest, LPCSTR lpSrc);
+BOOL Str_SetPtrWtoA(LPSTR *lppDest, LPCWSTR lpSrc);
+BOOL imagelist_has_alpha(HIMAGELIST, UINT);
 
-#ifndef __REACTOS__
 #define COMCTL32_VERSION_MINOR 81
-#endif
 
 /* Our internal stack structure of the window procedures to subclass */
 typedef struct _SUBCLASSPROCS {
@@ -218,14 +209,15 @@ typedef struct
    SUBCLASSPROCS *SubclassProcs;
    SUBCLASSPROCS *stackpos;
    WNDPROC origproc;
+   int is_unicode;
    int running;
 } SUBCLASS_INFO, *LPSUBCLASS_INFO;
 
 /* undocumented functions */
 
-LPVOID WINAPI Alloc (DWORD) __WINE_ALLOC_SIZE(1);
-LPVOID WINAPI ReAlloc (LPVOID, DWORD) __WINE_ALLOC_SIZE(2);
 BOOL   WINAPI Free (LPVOID);
+void * WINAPI Alloc (DWORD) __WINE_ALLOC_SIZE(1) __WINE_DEALLOC(Free) __WINE_MALLOC;
+void * WINAPI ReAlloc (void *, DWORD) __WINE_ALLOC_SIZE(2) __WINE_DEALLOC(Free);
 DWORD  WINAPI GetSize (LPVOID);
 
 INT  WINAPI Str_GetPtrA (LPCSTR, LPSTR, INT);
@@ -234,82 +226,60 @@ INT  WINAPI Str_GetPtrW (LPCWSTR, LPWSTR, INT);
 LRESULT WINAPI SetPathWordBreakProc(HWND hwnd, BOOL bSet);
 BOOL WINAPI MirrorIcon(HICON *phicon1, HICON *phicon2);
 
-HRGN set_control_clipping(HDC hdc, const RECT *rect) DECLSPEC_HIDDEN;
+HRGN set_control_clipping(HDC hdc, const RECT *rect);
 
-extern void ANIMATE_Register(void) DECLSPEC_HIDDEN;
-extern void ANIMATE_Unregister(void) DECLSPEC_HIDDEN;
-extern void BUTTON_Register(void) DECLSPEC_HIDDEN;
-extern void COMBO_Register(void) DECLSPEC_HIDDEN;
-extern void COMBOEX_Register(void) DECLSPEC_HIDDEN;
-extern void COMBOEX_Unregister(void) DECLSPEC_HIDDEN;
-extern void COMBOLBOX_Register(void) DECLSPEC_HIDDEN;
-extern void DATETIME_Register(void) DECLSPEC_HIDDEN;
-extern void DATETIME_Unregister(void) DECLSPEC_HIDDEN;
-extern void EDIT_Register(void) DECLSPEC_HIDDEN;
-extern void FLATSB_Register(void) DECLSPEC_HIDDEN;
-extern void FLATSB_Unregister(void) DECLSPEC_HIDDEN;
-extern void HEADER_Register(void) DECLSPEC_HIDDEN;
-extern void HEADER_Unregister(void) DECLSPEC_HIDDEN;
-extern void HOTKEY_Register(void) DECLSPEC_HIDDEN;
-extern void HOTKEY_Unregister(void) DECLSPEC_HIDDEN;
-extern void IPADDRESS_Register(void) DECLSPEC_HIDDEN;
-extern void IPADDRESS_Unregister(void) DECLSPEC_HIDDEN;
-extern void LISTBOX_Register(void) DECLSPEC_HIDDEN;
-extern void LISTVIEW_Register(void) DECLSPEC_HIDDEN;
-extern void LISTVIEW_Unregister(void) DECLSPEC_HIDDEN;
-extern void MONTHCAL_Register(void) DECLSPEC_HIDDEN;
-extern void MONTHCAL_Unregister(void) DECLSPEC_HIDDEN;
-extern void NATIVEFONT_Register(void) DECLSPEC_HIDDEN;
-extern void NATIVEFONT_Unregister(void) DECLSPEC_HIDDEN;
-extern void PAGER_Register(void) DECLSPEC_HIDDEN;
-extern void PAGER_Unregister(void) DECLSPEC_HIDDEN;
-extern void PROGRESS_Register(void) DECLSPEC_HIDDEN;
-extern void PROGRESS_Unregister(void) DECLSPEC_HIDDEN;
-extern void REBAR_Register(void) DECLSPEC_HIDDEN;
-extern void REBAR_Unregister(void) DECLSPEC_HIDDEN;
-extern void STATIC_Register(void) DECLSPEC_HIDDEN;
-extern void STATUS_Register(void) DECLSPEC_HIDDEN;
-extern void STATUS_Unregister(void) DECLSPEC_HIDDEN;
-extern void SYSLINK_Register(void) DECLSPEC_HIDDEN;
-extern void SYSLINK_Unregister(void) DECLSPEC_HIDDEN;
-extern void TAB_Register(void) DECLSPEC_HIDDEN;
-extern void TAB_Unregister(void) DECLSPEC_HIDDEN;
-extern void TOOLBAR_Register(void) DECLSPEC_HIDDEN;
-extern void TOOLBAR_Unregister(void) DECLSPEC_HIDDEN;
-extern void TOOLTIPS_Register(void) DECLSPEC_HIDDEN;
-extern void TOOLTIPS_Unregister(void) DECLSPEC_HIDDEN;
-extern void TRACKBAR_Register(void) DECLSPEC_HIDDEN;
-extern void TRACKBAR_Unregister(void) DECLSPEC_HIDDEN;
-extern void TREEVIEW_Register(void) DECLSPEC_HIDDEN;
-extern void TREEVIEW_Unregister(void) DECLSPEC_HIDDEN;
-extern void UPDOWN_Register(void) DECLSPEC_HIDDEN;
-extern void UPDOWN_Unregister(void) DECLSPEC_HIDDEN;
-#ifdef __REACTOS__
-extern void BUTTON_Unregister(void) DECLSPEC_HIDDEN;
-extern void COMBO_Unregister(void) DECLSPEC_HIDDEN;
-extern void COMBOLBOX_Unregister(void) DECLSPEC_HIDDEN;
-extern void EDIT_Unregister(void) DECLSPEC_HIDDEN;
-extern void LISTBOX_Unregister(void) DECLSPEC_HIDDEN;
-extern void STATIC_Unregister(void) DECLSPEC_HIDDEN;
-extern void TOOLBARv6_Register(void) DECLSPEC_HIDDEN;
-extern void TOOLBARv6_Unregister(void) DECLSPEC_HIDDEN;
-#endif /* __REACTOS__ */
+extern void ANIMATE_Register(void);
+extern void ANIMATE_Unregister(void);
+extern void BUTTON_Register(void);
+extern void COMBO_Register(void);
+extern void COMBOEX_Register(void);
+extern void COMBOEX_Unregister(void);
+extern void COMBOLBOX_Register(void);
+extern void DATETIME_Register(void);
+extern void DATETIME_Unregister(void);
+extern void EDIT_Register(void);
+extern void FLATSB_Register(void);
+extern void FLATSB_Unregister(void);
+extern void HEADER_Register(void);
+extern void HEADER_Unregister(void);
+extern void HOTKEY_Register(void);
+extern void HOTKEY_Unregister(void);
+extern void IPADDRESS_Register(void);
+extern void IPADDRESS_Unregister(void);
+extern void LISTBOX_Register(void);
+extern void LISTVIEW_Register(void);
+extern void LISTVIEW_Unregister(void);
+extern void MONTHCAL_Register(void);
+extern void MONTHCAL_Unregister(void);
+extern void NATIVEFONT_Register(void);
+extern void NATIVEFONT_Unregister(void);
+extern void PAGER_Register(void);
+extern void PAGER_Unregister(void);
+extern void PROGRESS_Register(void);
+extern void PROGRESS_Unregister(void);
+extern void REBAR_Register(void);
+extern void REBAR_Unregister(void);
+extern void STATIC_Register(void);
+extern void STATUS_Register(void);
+extern void STATUS_Unregister(void);
+extern void SYSLINK_Register(void);
+extern void SYSLINK_Unregister(void);
+extern void TAB_Register(void);
+extern void TAB_Unregister(void);
+extern void TOOLBAR_Register(void);
+extern void TOOLBAR_Unregister(void);
+extern void TOOLTIPS_Register(void);
+extern void TOOLTIPS_Unregister(void);
+extern void TRACKBAR_Register(void);
+extern void TRACKBAR_Unregister(void);
+extern void TREEVIEW_Register(void);
+extern void TREEVIEW_Unregister(void);
+extern void UPDOWN_Register(void);
+extern void UPDOWN_Unregister(void);
 
-int MONTHCAL_MonthLength(int month, int year) DECLSPEC_HIDDEN;
-int MONTHCAL_CalculateDayOfWeek(SYSTEMTIME *date, BOOL inplace) DECLSPEC_HIDDEN;
-LONG MONTHCAL_CompareSystemTime(const SYSTEMTIME *first, const SYSTEMTIME *second) DECLSPEC_HIDDEN;
-#ifdef __REACTOS__
-extern void THEMING_Initialize(HANDLE hActCtx5, HANDLE hActCtx6) DECLSPEC_HIDDEN;
-#else
-extern void THEMING_Initialize(void) DECLSPEC_HIDDEN;
-#endif
-extern void THEMING_Uninitialize(void) DECLSPEC_HIDDEN;
-extern LRESULT THEMING_CallOriginalClass(HWND, UINT, WPARAM, LPARAM) DECLSPEC_HIDDEN;
 
-#ifdef __REACTOS__
-#define IDI_SHIELD  32518
-#define wcsnicmp _wcsnicmp
-#define GetDpiForWindow(PVOID) 96
-#endif
+int MONTHCAL_MonthLength(int month, int year);
+int MONTHCAL_CalculateDayOfWeek(SYSTEMTIME *date, BOOL inplace);
+LONG MONTHCAL_CompareSystemTime(const SYSTEMTIME *first, const SYSTEMTIME *second);
 
 #endif  /* __WINE_COMCTL32_H */

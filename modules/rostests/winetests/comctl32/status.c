@@ -25,7 +25,12 @@
 
 #define SUBCLASS_NAME "MyStatusBar"
 
-#define expect(expected,got) ok (expected == got,"Expected %d, got %d\n",expected,got)
+#define expect(expected,got) expect_(__LINE__, expected, got)
+static inline void expect_(unsigned line, DWORD expected, DWORD got)
+{
+    ok_(__FILE__, line)(expected == got, "Expected %ld, got %ld\n", expected, got);
+}
+
 #define expect_rect(_left,_top,_right,_bottom,got) do { \
         RECT exp = {abs(got.left - _left), abs(got.top - _top), \
                     abs(got.right - _right), abs(got.bottom - _bottom)}; \
@@ -145,7 +150,7 @@ static int CALLBACK check_height_font_enumproc(ENUMLOGFONTEXA *enumlf, NEWTEXTME
         y = tm.tmHeight + (tm.tmInternalLeading ? tm.tmInternalLeading : 2) + 4;
 
         ok( (rcCtrl.bottom == max(y, g_ysize)) || (rcCtrl.bottom == max(y, g_dpisize)),
-            "got %d (expected %d or %d) for %s #%d\n",
+            "got %ld (expected %d or %d) for %s #%d\n",
             rcCtrl.bottom, max(y, g_ysize), max(y, g_dpisize), facename, sizes[i]);
 
         SelectObject(hdc, hOldFont);
@@ -253,7 +258,7 @@ static void test_status_control(void)
     HWND hWndStatus;
     int r;
     int nParts[] = {50, 150, -1};
-    int checkParts[] = {0, 0, 0};
+    int checkParts[] = {0, 0, 0, 0, 0};
     int borders[] = {0, 0, 0};
     RECT rc;
     CHAR charArray[20];
@@ -261,6 +266,7 @@ static void test_status_control(void)
     char ch;
     char chstr[10] = "Inval id";
     COLORREF crColor = RGB(0,0,0);
+    WCHAR wbuf[20];
 
     hWndStatus = create_status_control(WS_VISIBLE | SBT_TOOLTIPS, 0);
 
@@ -303,12 +309,20 @@ static void test_status_control(void)
     expect(5,LOWORD(r));
     expect(SBT_NOBORDERS,HIWORD(r));
 
-    /* Get parts and borders */
+    /* Get parts */
     r = SendMessageA(hWndStatus, SB_GETPARTS, 3, (LPARAM)checkParts);
     ok(r == 3, "Expected 3, got %d\n", r);
     expect(50,checkParts[0]);
     expect(150,checkParts[1]);
     expect(-1,checkParts[2]);
+    r = SendMessageA(hWndStatus, SB_GETPARTS, 5, (LPARAM)checkParts);
+    ok(r == 3, "Expected 3, got %d\n", r);
+    expect(50,checkParts[0]);
+    expect(150,checkParts[1]);
+    expect(-1,checkParts[2]);
+    expect(0,checkParts[3]);
+    expect(0,checkParts[4]);
+    /* Get borders */
     r = SendMessageA(hWndStatus, SB_GETBORDERS, 0, (LPARAM)borders);
     ok(r == TRUE, "Expected TRUE, got %d\n", r);
     expect(0,borders[0]);
@@ -316,28 +330,33 @@ static void test_status_control(void)
     expect(2,borders[2]);
 
     /* Test resetting text with different characters */
+    r = SendMessageA(hWndStatus, SB_SETPARTS, 4, (LPARAM)nParts);
+    expect(TRUE,r);
     r = SendMessageA(hWndStatus, SB_SETTEXTA, 0, (LPARAM)"First@Again");
     expect(TRUE,r);
     r = SendMessageA(hWndStatus, SB_SETTEXTA, 1, (LPARAM)"Invalid\tChars\\7\7");
-        expect(TRUE,r);
+    expect(TRUE,r);
     r = SendMessageA(hWndStatus, SB_SETTEXTA, 2, (LPARAM)"InvalidChars\\n\n");
-        expect(TRUE,r);
+    expect(TRUE,r);
+    r = SendMessageW(hWndStatus, SB_SETTEXTW, 3, (LPARAM)L"Non printable\x80");
+    expect(TRUE,r);
 
     /* Get text again */
     r = SendMessageA(hWndStatus, SB_GETTEXTA, 0, (LPARAM) charArray);
     ok(strcmp(charArray,"First@Again") == 0, "Expected First@Again, got %s\n", charArray);
-    expect(11,LOWORD(r));
-    expect(0,HIWORD(r));
+    ok(r == 11, "r = %d\n", r);
+
     r = SendMessageA(hWndStatus, SB_GETTEXTA, 1, (LPARAM) charArray);
     ok(strcmp(charArray,"Invalid\tChars\\7 ") == 0, "Expected Invalid\tChars\\7 , got %s\n", charArray);
+    ok(r == 16, "r = %d\n", r);
 
-    expect(16,LOWORD(r));
-    expect(0,HIWORD(r));
     r = SendMessageA(hWndStatus, SB_GETTEXTA, 2, (LPARAM) charArray);
     ok(strcmp(charArray,"InvalidChars\\n ") == 0, "Expected InvalidChars\\n , got %s\n", charArray);
+    ok(r == 15, "r = %d\n", r);
 
-    expect(15,LOWORD(r));
-    expect(0,HIWORD(r));
+    r = SendMessageW(hWndStatus, SB_GETTEXTW, 3, (LPARAM) wbuf);
+    ok(wcscmp(wbuf, L"Non printable\x80") == 0, "got %s\n", wine_dbgstr_w(wbuf));
+    ok(r == 14, "r = %d\n", r);
 
     /* test more nonprintable chars */
     for(ch = 0x00; ch < 0x7F; ch++) {
@@ -356,11 +375,11 @@ static void test_status_control(void)
     crColor = SendMessageA(hWndStatus, SB_SETBKCOLOR , 0, RGB(255,0,0));
     ok(crColor == CLR_DEFAULT ||
        broken(crColor == RGB(0,0,0)), /* win95 */
-       "Expected 0x%.8x, got 0x%.8x\n", CLR_DEFAULT, crColor);
+       "Expected 0x%.8lx, got 0x%.8lx\n", CLR_DEFAULT, crColor);
     crColor = SendMessageA(hWndStatus, SB_SETBKCOLOR , 0, CLR_DEFAULT);
     ok(crColor == RGB(255,0,0) ||
        broken(crColor == RGB(0,0,0)), /* win95 */
-       "Expected 0x%.8x, got 0x%.8x\n", RGB(255,0,0), crColor);
+       "Expected 0x%.8lx, got 0x%.8lx\n", RGB(255,0,0), crColor);
 
     /* Add an icon to the status bar */
     hIcon = LoadIconA(NULL, (LPCSTR)IDI_QUESTION);

@@ -20,10 +20,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifdef __REACTOS__
-#pragma once
-#endif
-
 #ifdef __i386__
 #define ARCH "x86"
 #elif defined __x86_64__
@@ -111,7 +107,7 @@ static BOOL load_v6_module(ULONG_PTR *pcookie, HANDLE *hCtx)
     hmod = GetModuleHandleA("comctl32.dll");
 
     ret = ActivateActCtx(*hCtx, pcookie);
-    ok(ret, "Failed to activate context, error %d.\n", GetLastError());
+    ok(ret, "Failed to activate context, error %ld.\n", GetLastError());
 
     if (!ret)
     {
@@ -122,7 +118,7 @@ static BOOL load_v6_module(ULONG_PTR *pcookie, HANDLE *hCtx)
     data.cbSize = sizeof(data);
     ret = FindActCtxSectionStringA(0, NULL, ACTIVATION_CONTEXT_SECTION_DLL_REDIRECTION,
         "comctl32.dll", &data);
-    ok(ret, "failed to find comctl32.dll in active context, %u\n", GetLastError());
+    ok(ret, "failed to find comctl32.dll in active context, %lu\n", GetLastError());
     if (ret)
     {
         FreeLibrary(hmod);

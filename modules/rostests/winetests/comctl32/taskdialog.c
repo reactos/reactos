@@ -24,15 +24,9 @@
 #include "winuser.h"
 #include "commctrl.h"
 
-#include "wine/heap.h"
 #include "wine/test.h"
 #include "v6util.h"
 #include "msg.h"
-
-#ifdef __REACTOS__
-#undef WM_KEYF1
-#define WM_KEYF1 0x004d
-#endif
 
 #define WM_TD_CALLBACK (WM_APP) /* Custom dummy message to wrap callback notifications */
 
@@ -409,7 +403,7 @@ static void run_test_(TASKDIALOGCONFIG *info, int expect_button, int expect_radi
     int i;
 
     /* Allocate messages to test against, plus 2 implicit and 1 empty */
-    msg_start = msg = heap_alloc_zero(sizeof(*msg) * (test_messages_len + 3));
+    msg_start = msg = calloc(test_messages_len + 3, sizeof(*msg));
 
     /* Always needed, thus made implicit */
     init_test_message(TDN_DIALOG_CONSTRUCTED, 0, 0, msg++);
@@ -422,7 +416,7 @@ static void run_test_(TASKDIALOGCONFIG *info, int expect_button, int expect_radi
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
     hr = pTaskDialogIndirect(info, &ret_button, &ret_radio, &ret_verification);
-    ok_(file, line)(hr == S_OK, "TaskDialogIndirect() failed, got %#x.\n", hr);
+    ok_(file, line)(hr == S_OK, "TaskDialogIndirect() failed, got %#lx.\n", hr);
 
     ok_sequence_(sequences, TASKDIALOG_SEQ_INDEX, msg_start, context, FALSE, file, line);
     ok_(file, line)(ret_button == expect_button,
@@ -430,7 +424,7 @@ static void run_test_(TASKDIALOGCONFIG *info, int expect_button, int expect_radi
     ok_(file, line)(ret_radio == expect_radio_button,
                      "Wrong radio button. Expected %d, got %d\n", expect_radio_button, ret_radio);
 
-    heap_free(msg_start);
+    free(msg_start);
 }
 
 static const LONG_PTR test_ref_data = 123456;
@@ -442,7 +436,7 @@ static HRESULT CALLBACK taskdialog_callback_proc(HWND hwnd, UINT notification,
     const struct message_info *msg_send;
     struct message msg;
 
-    ok(test_ref_data == ref_data, "Unexpected ref data %lu.\n", ref_data);
+    ok(test_ref_data == ref_data, "Unexpected ref data %Iu.\n", ref_data);
 
     init_test_message(notification, (short)wParam, lParam, &msg);
     add_message(sequences, TASKDIALOG_SEQ_INDEX, &msg);
@@ -463,19 +457,19 @@ static void test_invalid_parameters(void)
     HRESULT hr;
 
     hr = pTaskDialogIndirect(NULL, NULL, NULL, NULL);
-    ok(hr == E_INVALIDARG, "Unexpected return value %#x.\n", hr);
+    ok(hr == E_INVALIDARG, "Unexpected return value %#lx.\n", hr);
 
     info.cbSize = 0;
     hr = pTaskDialogIndirect(&info, NULL, NULL, NULL);
-    ok(hr == E_INVALIDARG, "Unexpected return value %#x.\n", hr);
+    ok(hr == E_INVALIDARG, "Unexpected return value %#lx.\n", hr);
 
     info.cbSize = sizeof(TASKDIALOGCONFIG) - 1;
     hr = pTaskDialogIndirect(&info, NULL, NULL, NULL);
-    ok(hr == E_INVALIDARG, "Unexpected return value %#x.\n", hr);
+    ok(hr == E_INVALIDARG, "Unexpected return value %#lx.\n", hr);
 
     info.cbSize = sizeof(TASKDIALOGCONFIG) + 1;
     hr = pTaskDialogIndirect(&info, NULL, NULL, NULL);
-    ok(hr == E_INVALIDARG, "Unexpected return value %#x.\n", hr);
+    ok(hr == E_INVALIDARG, "Unexpected return value %#lx.\n", hr);
 }
 
 static void test_callback(void)
@@ -494,7 +488,6 @@ static void test_buttons(void)
     TASKDIALOGCONFIG info = {0};
     static const DWORD command_link_flags[] = {0, TDF_USE_COMMAND_LINKS, TDF_USE_COMMAND_LINKS_NO_ICON};
     TASKDIALOG_BUTTON custom_buttons[TEST_NUM_BUTTONS], radio_buttons[TEST_NUM_RADIO_BUTTONS];
-    const WCHAR button_format[] = {'%','0','2','d',0};
     /* Each button has two digits as title, plus null-terminator */
     WCHAR button_titles[TEST_NUM_BUTTONS * 3], radio_button_titles[TEST_NUM_BUTTONS * 3];
     int i;
@@ -507,7 +500,7 @@ static void test_buttons(void)
     for (i = 0; i < TEST_NUM_BUTTONS; i++)
     {
         WCHAR *text = &button_titles[i * 3];
-        wsprintfW(text, button_format, i);
+        wsprintfW(text, L"%02d", i);
 
         custom_buttons[i].pszButtonText = text;
         custom_buttons[i].nButtonID = ID_START_BUTTON + i;
@@ -518,7 +511,7 @@ static void test_buttons(void)
     for (i = 0; i < TEST_NUM_RADIO_BUTTONS; i++)
     {
         WCHAR *text = &radio_button_titles[i * 3];
-        wsprintfW(text, button_format, i);
+        wsprintfW(text, L"%02d", i);
 
         radio_buttons[i].pszButtonText = text;
         radio_buttons[i].nButtonID = ID_START_RADIO_BUTTON + i;
@@ -735,9 +728,9 @@ static HRESULT CALLBACK taskdialog_callback_proc_progress_bar(HWND hwnd, UINT no
 
         /* TDM_SET_PROGRESS_BAR_RANGE */
         ret = SendMessageW(hwnd, TDM_SET_PROGRESS_BAR_RANGE, 0, MAKELPARAM(0, 200));
-        ok(ret == MAKELONG(0, 100), "Expect range:%x got:%lx\n", MAKELONG(0, 100), ret);
+        ok(ret == MAKELONG(0, 100), "Expect range:%lx got:%lx\n", MAKELONG(0, 100), ret);
         ret = SendMessageW(hwnd, TDM_SET_PROGRESS_BAR_RANGE, 0, MAKELPARAM(0, 200));
-        ok(ret == MAKELONG(0, 200), "Expect range:%x got:%lx\n", MAKELONG(0, 200), ret);
+        ok(ret == MAKELONG(0, 200), "Expect range:%lx got:%lx\n", MAKELONG(0, 200), ret);
 
         /* TDM_SET_PROGRESS_BAR_POS */
         if (flags & TDF_SHOW_MARQUEE_PROGRESS_BAR)
@@ -784,7 +777,6 @@ static void test_progress_bar(void)
 static void test_verification_box(void)
 {
     TASKDIALOGCONFIG info = {0};
-    WCHAR textW[] = {'t', 'e', 'x', 't', 0};
 
     info.cbSize = sizeof(TASKDIALOGCONFIG);
     info.pfCallback = taskdialog_callback_proc;
@@ -797,7 +789,7 @@ static void test_verification_box(void)
     info.dwFlags = TDF_VERIFICATION_FLAG_CHECKED;
     run_test(&info, IDOK, 0, FALSE, msg_return_default_verification_checked, "default verification box: checked");
 
-    info.pszVerificationText = textW;
+    info.pszVerificationText = L"text";
     run_test(&info, IDOK, 0, FALSE, msg_return_default_verification_unchecked, "default verification box: unchecked");
 
     info.dwFlags = TDF_VERIFICATION_FLAG_CHECKED;
@@ -814,8 +806,6 @@ static void test_verification_box(void)
 static void test_navigate_page(void)
 {
     TASKDIALOGCONFIG info = {0};
-    static const WCHAR textW[] = {'t', 'e', 'x', 't', 0};
-    static const WCHAR button_format[] = {'%', '0', '2', 'd', 0};
     TASKDIALOG_BUTTON radio_buttons[TEST_NUM_RADIO_BUTTONS];
     WCHAR radio_button_titles[TEST_NUM_BUTTONS * 3];
     int i;
@@ -824,7 +814,7 @@ static void test_navigate_page(void)
     for (i = 0; i < TEST_NUM_RADIO_BUTTONS; i++)
     {
         WCHAR *text = &radio_button_titles[i * 3];
-        wsprintfW(text, button_format, i);
+        wsprintfW(text, L"%02d", i);
 
         radio_buttons[i].pszButtonText = text;
         radio_buttons[i].nButtonID = ID_START_RADIO_BUTTON + i;
@@ -838,7 +828,7 @@ static void test_navigate_page(void)
     info.pRadioButtons = radio_buttons;
 
     navigated_info = info;
-    navigated_info.pszVerificationText = textW;
+    navigated_info.pszVerificationText = L"text";
     navigated_info.dwFlags = TDF_VERIFICATION_FLAG_CHECKED;
 
     run_test(&info, IDOK, ID_START_RADIO_BUTTON, TRUE, msg_return_navigated_page, "navigate page: default");

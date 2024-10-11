@@ -222,22 +222,22 @@ static void test_setcolors(void)
     progress = create_progress(PBS_SMOOTH);
 
     clr = SendMessageA(progress, PBM_SETBARCOLOR, 0, 0);
-    ok(clr == CLR_DEFAULT, "got %x\n", clr);
+    ok(clr == CLR_DEFAULT, "got %lx\n", clr);
 
     clr = SendMessageA(progress, PBM_SETBARCOLOR, 0, RGB(0, 255, 0));
-    ok(clr == 0, "got %x\n", clr);
+    ok(clr == 0, "got %lx\n", clr);
 
     clr = SendMessageA(progress, PBM_SETBARCOLOR, 0, CLR_DEFAULT);
-    ok(clr == RGB(0, 255, 0), "got %x\n", clr);
+    ok(clr == RGB(0, 255, 0), "got %lx\n", clr);
 
     clr = SendMessageA(progress, PBM_SETBKCOLOR, 0, 0);
-    ok(clr == CLR_DEFAULT, "got %x\n", clr);
+    ok(clr == CLR_DEFAULT, "got %lx\n", clr);
 
     clr = SendMessageA(progress, PBM_SETBKCOLOR, 0, RGB(255, 0, 0));
-    ok(clr == 0, "got %x\n", clr);
+    ok(clr == 0, "got %lx\n", clr);
 
     clr = SendMessageA(progress, PBM_SETBKCOLOR, 0, CLR_DEFAULT);
-    ok(clr == RGB(255, 0, 0), "got %x\n", clr);
+    ok(clr == RGB(255, 0, 0), "got %lx\n", clr);
 
     DestroyWindow(progress);
 }

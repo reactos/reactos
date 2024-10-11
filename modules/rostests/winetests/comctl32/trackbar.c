@@ -25,7 +25,12 @@
 #include "msg.h"
 #include "v6util.h"
 
-#define expect(expected, got) ok(got == expected, "Expected %d, got %d\n", expected, got)
+#define expect(expected,got) expect_(__LINE__, expected, got)
+static inline void expect_(unsigned line, DWORD expected, DWORD got)
+{
+    ok_(__FILE__, line)(expected == got, "Expected %ld, got %ld\n", expected, got);
+}
+
 #define NUM_MSG_SEQUENCE 2
 #define PARENT_SEQ_INDEX 0
 #define TRACKBAR_SEQ_INDEX 1
@@ -717,21 +722,21 @@ static void test_position(void)
     r = SendMessageA(hWndTrackbar, TBM_GETPOS, 0, 0);
     ok(r == 25, "got %d\n", r);
     SendMessageA(hWndTrackbar, TBM_GETTHUMBRECT, 0, (LPARAM)&rect2);
-    ok(rect.left == rect2.left, "got %d\n", rect.left);
+    ok(rect.left == rect2.left, "got %ld\n", rect.left);
 
     /* with repaint */
     SendMessageA(hWndTrackbar, TBM_SETPOS, TRUE, 30);
     r = SendMessageA(hWndTrackbar, TBM_GETPOS, 0, 0);
     ok(r == 30, "got %d\n", r);
     SendMessageA(hWndTrackbar, TBM_GETTHUMBRECT, 0, (LPARAM)&rect2);
-    ok(rect.left != rect2.left, "got %d, expected %d\n", rect2.left, rect.left);
+    ok(rect.left != rect2.left, "got %ld, expected %ld\n", rect2.left, rect.left);
 
     /* now move it with keys */
     SendMessageA(hWndTrackbar, WM_KEYDOWN, VK_END, 0);
     r = SendMessageA(hWndTrackbar, TBM_GETPOS, 0, 0);
     ok(r == 100, "got %d\n", r);
     SendMessageA(hWndTrackbar, TBM_GETTHUMBRECT, 0, (LPARAM)&rect);
-    ok(rect.left != rect2.left, "got %d, expected %d\n", rect.left, rect2.left);
+    ok(rect.left != rect2.left, "got %ld, expected %ld\n", rect.left, rect2.left);
 
     DestroyWindow(hWndTrackbar);
 }
@@ -1109,7 +1114,7 @@ static void test_tic_placement(void)
     SendMessageA(hWndTrackbar, TBM_SETTICFREQ, 1, 0);
 
     numtics = SendMessageA(hWndTrackbar, TBM_GETNUMTICS, 0, 0);
-    ok(numtics == 6, "Expected 6, got %d\n", numtics);
+    ok(numtics == 6, "Expected 6, got %ld\n", numtics);
 
     flush_sequences(sequences, NUM_MSG_SEQUENCE);
     /* test TBM_GETPTICS */

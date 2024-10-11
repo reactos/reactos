@@ -133,20 +133,20 @@ static void test_play(void)
 
     create_animate(0, 0);
     SetLastError(0xdeadbeef);
-    res = SendMessageA(hAnimateWnd, ACM_OPENA,(WPARAM)shell32, (LPARAM)MAKEINTRESOURCE(INVALID_AVI_INDEX));
+    res = SendMessageA(hAnimateWnd, ACM_OPENA,(WPARAM)shell32, MAKEINTRESOURCE(INVALID_AVI_INDEX));
     err = GetLastError();
     ok(res == 0, "Invalid video should have failed\n");
-    ok(err == ERROR_RESOURCE_NAME_NOT_FOUND, "Expected 1814, got %u\n", err);
+    ok(err == ERROR_RESOURCE_NAME_NOT_FOUND, "Expected 1814, got %lu\n", err);
 
     SetLastError(0xdeadbeef);
     res = SendMessageA(hAnimateWnd, ACM_PLAY, (WPARAM) -1, MAKELONG(0, -1));
     err = GetLastError();
     ok(res == 0, "Play should have failed\n");
-    ok(err == 0xdeadbeef, "Expected 0xdeadbeef, got %u\n", err);
+    ok(err == 0xdeadbeef, "Expected 0xdeadbeef, got %lu\n", err);
     destroy_animate();
 
     create_animate(0, 0);
-    res = SendMessageA(hAnimateWnd, ACM_OPENA,(WPARAM)shell32, (LPARAM)MAKEINTRESOURCE(SEARCHING_AVI_INDEX));
+    res = SendMessageA(hAnimateWnd, ACM_OPENA,(WPARAM)shell32, MAKEINTRESOURCE(SEARCHING_AVI_INDEX));
     ok(res != 0, "Load AVI resource failed\n");
     res = SendMessageA(hAnimateWnd, ACM_PLAY, (WPARAM) -1, MAKELONG(0, -1));
     ok(res != 0, "Play should have worked\n");

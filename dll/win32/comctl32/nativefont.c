@@ -76,8 +76,7 @@ NATIVEFONT_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     NATIVEFONT_INFO *infoPtr = NATIVEFONT_GetInfoPtr(hwnd);
 
-    TRACE("hwnd=%p msg=%04x wparam=%08lx lparam=%08lx\n",
-	  hwnd, uMsg, wParam, lParam);
+    TRACE("hwnd %p, msg %04x, wparam %Ix, lparam %Ix\n", hwnd, uMsg, wParam, lParam);
 
     if (!infoPtr && (uMsg != WM_CREATE))
 	return DefWindowProcW( hwnd, uMsg, wParam, lParam );
@@ -102,8 +101,7 @@ NATIVEFONT_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	default:
 	    if ((uMsg >= WM_USER) && (uMsg < WM_APP) && !COMCTL32_IsReflectedMessage(uMsg))
-		ERR("unknown msg %04x wp=%08lx lp=%08lx\n",
-		     uMsg, wParam, lParam);
+		ERR("unknown msg %04x, wp %Ix, lp %Ix\n", uMsg, wParam, lParam);
 	    return DefWindowProcW (hwnd, uMsg, wParam, lParam);
     }
 }

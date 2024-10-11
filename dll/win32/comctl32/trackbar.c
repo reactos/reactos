@@ -97,7 +97,7 @@ typedef struct
 #define TIC_SELECTIONMARKMIN    0x100
 #define TIC_SELECTIONMARK       (TIC_SELECTIONMARKMAX | TIC_SELECTIONMARKMIN)
 
-static const WCHAR themeClass[] = { 'T','r','a','c','k','b','a','r',0 };
+static const WCHAR themeClass[] = L"Trackbar";
 
 static inline int 
 notify_customdraw (const TRACKBAR_INFO *infoPtr, NMCUSTOMDRAW *pnmcd, int stage)
@@ -118,7 +118,7 @@ static LRESULT notify_hdr (const TRACKBAR_INFO *infoPtr, INT code, LPNMHDR pnmh)
     pnmh->code = code;
     result = SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, pnmh->idFrom, (LPARAM)pnmh);
 
-    TRACE("  <= %ld\n", result);
+    TRACE("  <= %Id\n", result);
 
     return result;
 }
@@ -443,7 +443,7 @@ TRACKBAR_AutoPage (TRACKBAR_INFO *infoPtr, POINT clickPoint)
     LONG dir = TRACKBAR_GetAutoPageDirection(infoPtr, clickPoint);
     LONG prevPos = infoPtr->lPos;
 
-    TRACE("clickPoint=%s, dir=%d\n", wine_dbgstr_point(&clickPoint), dir);
+    TRACE("clickPoint=%s, dir=%ld\n", wine_dbgstr_point(&clickPoint), dir);
 
     if (dir > 0 && (infoPtr->flags & TB_AUTO_PAGE_RIGHT))
 	TRACKBAR_PageDown(infoPtr);
@@ -717,6 +717,8 @@ TRACKBAR_DrawThumb (TRACKBAR_INFO *infoPtr, HDC hdc)
             stateId = TUS_PRESSED;
         else if (infoPtr->flags & TB_THUMB_HOT)
             stateId = TUS_HOT;
+        else if (infoPtr->flags & TB_IS_FOCUSED)
+            stateId = TUS_FOCUSED;
         else
             stateId = TUS_NORMAL;
         
@@ -851,7 +853,6 @@ static void
 TRACKBAR_UpdateToolTip (const TRACKBAR_INFO *infoPtr)
 {
     WCHAR buf[80];
-    static const WCHAR fmt[] = { '%', 'l', 'd', 0 };
     TTTOOLINFOW ti;
     POINT pt;
     RECT rcClient;
@@ -864,7 +865,7 @@ TRACKBAR_UpdateToolTip (const TRACKBAR_INFO *infoPtr)
     ti.hwnd   = infoPtr->hwndSelf;
     ti.uFlags = TTF_IDISHWND | TTF_TRACK | TTF_ABSOLUTE;
 
-    wsprintfW (buf, fmt, infoPtr->lPos);
+    wsprintfW (buf, L"%ld", infoPtr->lPos);
     ti.lpszText = buf;
     SendMessageW (infoPtr->hwndToolTip, TTM_UPDATETIPTEXTW, 0, (LPARAM)&ti);
 
@@ -898,6 +899,7 @@ TRACKBAR_Refresh (TRACKBAR_INFO *infoPtr, HDC hdcDst)
     HBITMAP hOldBmp = 0, hOffScreenBmp = 0;
     NMCUSTOMDRAW nmcd;
     int gcdrf, icdrf;
+    HBRUSH brush;
 
     if (infoPtr->flags & TB_THUMBCHANGED) {
         TRACKBAR_UpdateThumb (infoPtr);
@@ -942,18 +944,9 @@ TRACKBAR_Refresh (TRACKBAR_INFO *infoPtr, HDC hdcDst)
     /* Erase background */
     if (gcdrf == CDRF_DODEFAULT ||
         notify_customdraw(infoPtr, &nmcd, CDDS_PREERASE) != CDRF_SKIPDEFAULT) {
-        if (GetWindowTheme (infoPtr->hwndSelf)) {
-            DrawThemeParentBackground (infoPtr->hwndSelf, hdc, 0);
-        }
-#ifndef __REACTOS__
-        else {
-#else
-        {
-#endif
-            HBRUSH brush = (HBRUSH)SendMessageW(infoPtr->hwndNotify, WM_CTLCOLORSTATIC,
-                    (WPARAM)hdc, (LPARAM)infoPtr->hwndSelf);
-            FillRect (hdc, &rcClient, brush ? brush : GetSysColorBrush(COLOR_BTNFACE));
-        }
+        brush = (HBRUSH)SendMessageW(infoPtr->hwndNotify, WM_CTLCOLORSTATIC, (WPARAM)hdc,
+                                     (LPARAM)infoPtr->hwndSelf);
+        FillRect(hdc, &rcClient, brush ? brush : GetSysColorBrush(COLOR_BTNFACE));
         if (gcdrf != CDRF_DODEFAULT)
 	    notify_customdraw(infoPtr, &nmcd, CDDS_POSTERASE);
     }
@@ -1130,7 +1123,6 @@ static int __cdecl comp_tics (const void *ap, const void *bp)
     const DWORD a = *(const DWORD *)ap;
     const DWORD b = *(const DWORD *)bp;
 
-    TRACE("(a=%d, b=%d)\n", a, b);
     if (a < b) return -1;
     if (a > b) return 1;
     return 0;
@@ -1410,7 +1402,7 @@ TRACKBAR_SetTic (TRACKBAR_INFO *infoPtr, LONG lPos)
     if ((lPos < infoPtr->lRangeMin) || (lPos> infoPtr->lRangeMax))
         return FALSE;
 
-    TRACE("lPos=%d\n", lPos);
+    TRACE("position %ld\n", lPos);
 
     infoPtr->uNumTics++;
     infoPtr->tics=ReAlloc( infoPtr->tics,
@@ -1505,6 +1497,19 @@ TRACKBAR_InitializeThumb (TRACKBAR_INFO *infoPtr)
     return 0;
 }
 
+static void TRACKBAR_RecalculateAll (TRACKBAR_INFO *infoPtr)
+{
+    if (infoPtr->dwStyle & TBS_FIXEDLENGTH)
+    {
+        TRACKBAR_CalcChannel(infoPtr);
+        TRACKBAR_UpdateThumb(infoPtr);
+    }
+    else
+    {
+        TRACKBAR_InitializeThumb(infoPtr);
+    }
+    TRACKBAR_AlignBuddies(infoPtr);
+}
 
 static LRESULT
 TRACKBAR_Create (HWND hwnd, const CREATESTRUCTW *lpcs)
@@ -1544,12 +1549,12 @@ TRACKBAR_Create (HWND hwnd, const CREATESTRUCTW *lpcs)
 
     	if (infoPtr->hwndToolTip) {
             TTTOOLINFOW ti;
-            WCHAR wEmpty = 0;
+            WCHAR wEmpty[] = L"";
             ZeroMemory (&ti, sizeof(ti));
             ti.cbSize   = sizeof(ti);
      	    ti.uFlags   = TTF_IDISHWND | TTF_TRACK | TTF_ABSOLUTE;
 	    ti.hwnd     = hwnd;
-            ti.lpszText = &wEmpty;
+            ti.lpszText = wEmpty;
 
             SendMessageW (infoPtr->hwndToolTip, TTM_ADDTOOLW, 0, (LPARAM)&ti);
 	 }
@@ -1680,14 +1685,7 @@ TRACKBAR_SetFocus (TRACKBAR_INFO *infoPtr)
 static LRESULT
 TRACKBAR_Size (TRACKBAR_INFO *infoPtr)
 {
-    if (infoPtr->dwStyle & TBS_FIXEDLENGTH)
-    {
-        TRACKBAR_CalcChannel(infoPtr);
-        TRACKBAR_UpdateThumb(infoPtr);
-    }
-    else
-        TRACKBAR_InitializeThumb(infoPtr);
-    TRACKBAR_AlignBuddies (infoPtr);
+    TRACKBAR_RecalculateAll(infoPtr);
     TRACKBAR_InvalidateAll(infoPtr);
 
     return 0;
@@ -1700,7 +1698,8 @@ TRACKBAR_StyleChanged (TRACKBAR_INFO *infoPtr, WPARAM wStyleType,
     if (wStyleType != GWL_STYLE) return 0;
 
     infoPtr->dwStyle = lpss->styleNew;
-
+    TRACKBAR_RecalculateAll(infoPtr);
+    TRACKBAR_InvalidateAll(infoPtr);
     return 0;
 }
 
@@ -1723,6 +1722,7 @@ static LRESULT theme_changed (const TRACKBAR_INFO* infoPtr)
     HTHEME theme = GetWindowTheme (infoPtr->hwndSelf);
     CloseThemeData (theme);
     OpenThemeData (infoPtr->hwndSelf, themeClass);
+    InvalidateRect (infoPtr->hwndSelf, NULL, FALSE);
     return 0;
 }
 
@@ -1880,7 +1880,7 @@ TRACKBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     TRACKBAR_INFO *infoPtr = (TRACKBAR_INFO *)GetWindowLongPtrW (hwnd, 0);
 
-    TRACE("hwnd=%p msg=%x wparam=%lx lparam=%lx\n", hwnd, uMsg, wParam, lParam);
+    TRACE("hwnd %p, msg %x, wparam %Ix, lparam %Ix\n", hwnd, uMsg, wParam, lParam);
 
     if (!infoPtr && (uMsg != WM_CREATE))
         return DefWindowProcW (hwnd, uMsg, wParam, lParam);
@@ -2059,7 +2059,7 @@ TRACKBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     default:
         if ((uMsg >= WM_USER) && (uMsg < WM_APP) && !COMCTL32_IsReflectedMessage(uMsg))
-            ERR("unknown msg %04x wp=%08lx lp=%08lx\n", uMsg, wParam, lParam);
+            ERR("unknown msg %04x, wp %Ix, lp %Ix\n", uMsg, wParam, lParam);
         return DefWindowProcW (hwnd, uMsg, wParam, lParam);
     }
 }

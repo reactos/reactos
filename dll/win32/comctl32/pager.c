@@ -53,6 +53,7 @@
  */
 
 #include <stdarg.h>
+#include <stdlib.h>
 #include <string.h>
 #include "windef.h"
 #include "winbase.h"
@@ -62,7 +63,6 @@
 #include "commctrl.h"
 #include "comctl32.h"
 #include "wine/debug.h"
-#include "wine/heap.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(pager);
 
@@ -219,7 +219,7 @@ PAGER_GetBorder(const PAGER_INFO *infoPtr)
 static inline COLORREF
 PAGER_GetBkColor(const PAGER_INFO *infoPtr)
 {
-    TRACE("[%p] returns %06x\n", infoPtr->hwndSelf, infoPtr->clrBk);
+    TRACE("[%p] returns %#lx\n", infoPtr->hwndSelf, infoPtr->clrBk);
     return infoPtr->clrBk;
 }
 
@@ -446,7 +446,7 @@ PAGER_SetBkColor (PAGER_INFO* infoPtr, COLORREF clrBk)
     COLORREF clrTemp = infoPtr->clrBk;
 
     infoPtr->clrBk = clrBk;
-    TRACE("[%p] %06x\n", infoPtr->hwndSelf, infoPtr->clrBk);
+    TRACE("[%p] %#lx\n", infoPtr->hwndSelf, infoPtr->clrBk);
 
     /* the native control seems to do things this way */
     SetWindowPos(infoPtr->hwndSelf, 0, 0, 0, 0, 0,
@@ -576,7 +576,7 @@ PAGER_Create (HWND hwnd, const CREATESTRUCTW *lpcs)
     INT ret;
 
     /* allocate memory for info structure */
-    infoPtr = heap_alloc_zero (sizeof(*infoPtr));
+    infoPtr = Alloc(sizeof(*infoPtr));
     if (!infoPtr) return -1;
     SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
@@ -611,8 +611,8 @@ static LRESULT
 PAGER_Destroy (PAGER_INFO *infoPtr)
 {
     SetWindowLongPtrW (infoPtr->hwndSelf, 0, 0);
-    heap_free (infoPtr->pwszBuffer);
-    heap_free (infoPtr);
+    Free (infoPtr->pwszBuffer);
+    Free (infoPtr);
     return 0;
 }
 
@@ -776,7 +776,7 @@ PAGER_MouseMove (PAGER_INFO* infoPtr, INT keys, INT x, INT y)
 	/* If in one of the buttons the capture and draw buttons */
 	if (rect)
 	{
-            TRACE("[%p] draw btn (%s), Capture %s, style %08x\n",
+            TRACE("[%p] draw btn (%s), Capture %s, style %#lx\n",
                   infoPtr->hwndSelf, wine_dbgstr_rect(rect),
 		  (infoPtr->bCapture) ? "TRUE" : "FALSE",
 		  infoPtr->dwStyle);
@@ -943,7 +943,7 @@ PAGER_Timer (PAGER_INFO* infoPtr, INT nTimerId)
 	else
 	    dir = (infoPtr->dwStyle & PGS_HORZ) ?
 		PGF_SCROLLRIGHT : PGF_SCROLLDOWN;
-	TRACE("[%p] TIMERID1: style=%08x, dir=%d\n",
+	TRACE("[%p] TIMERID1: style=%#lx, dir=%d\n",
               infoPtr->hwndSelf, infoPtr->dwStyle, dir);
 	KillTimer(infoPtr->hwndSelf, TIMERID1);
 	SetTimer(infoPtr->hwndSelf, TIMERID1, REPEAT_DELAY, 0);
@@ -963,6 +963,12 @@ PAGER_Timer (PAGER_INFO* infoPtr, INT nTimerId)
 	PAGER_Scroll(infoPtr, infoPtr->direction);
 	SetTimer(infoPtr->hwndSelf, TIMERID2, REPEAT_DELAY, 0);
     }
+    return 0;
+}
+
+static LRESULT PAGER_ThemeChanged (const PAGER_INFO* infoPtr)
+{
+    InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
     return 0;
 }
 
@@ -1006,8 +1012,7 @@ PAGER_StyleChanged(PAGER_INFO *infoPtr, WPARAM wStyleType, const STYLESTRUCT *lp
 {
     DWORD oldStyle = infoPtr->dwStyle;
 
-    TRACE("(styletype=%lx, styleOld=0x%08x, styleNew=0x%08x)\n",
-          wStyleType, lpss->styleOld, lpss->styleNew);
+    TRACE("styletype %Ix, styleOld %#lx, styleNew %#lx\n", wStyleType, lpss->styleOld, lpss->styleNew);
 
     if (wStyleType != GWL_STYLE) return 0;
   
@@ -1094,9 +1099,9 @@ static UINT PAGER_GetAnsiNtfCode(UINT code)
 static BOOL PAGER_AdjustBuffer(PAGER_INFO *infoPtr, INT size)
 {
     if (!infoPtr->pwszBuffer)
-        infoPtr->pwszBuffer = heap_alloc(size);
+        infoPtr->pwszBuffer = Alloc(size);
     else if (infoPtr->nBufferSize < size)
-        infoPtr->pwszBuffer = heap_realloc(infoPtr->pwszBuffer, size);
+        infoPtr->pwszBuffer = ReAlloc(infoPtr->pwszBuffer, size);
 
     if (!infoPtr->pwszBuffer) return FALSE;
     if (infoPtr->nBufferSize < size) infoPtr->nBufferSize = size;
@@ -1148,7 +1153,7 @@ static LRESULT PAGER_SendConvertedNotify(PAGER_INFO *infoPtr, NMHDR *hdr, UINT *
     if ((*text && flags & (CONVERT_SEND | ZERO_SEND)) || (!*text && flags & SEND_EMPTY_IF_NULL))
     {
         bufferSize = textMax ? *textMax : lstrlenW(*text) + 1;
-        sendBuffer = heap_alloc_zero(bufferSize);
+        sendBuffer = Alloc(bufferSize);
         if (!sendBuffer) goto done;
         if (!(flags & ZERO_SEND)) WideCharToMultiByte(CP_ACP, 0, *text, -1, sendBuffer, bufferSize, NULL, FALSE);
         *text = (WCHAR *)sendBuffer;
@@ -1162,18 +1167,18 @@ static LRESULT PAGER_SendConvertedNotify(PAGER_INFO *infoPtr, NMHDR *hdr, UINT *
         if (*text == oldText)
         {
             bufferSize = lstrlenA((CHAR *)*text)  + 1;
-            receiveBuffer = heap_alloc(bufferSize);
+            receiveBuffer = Alloc(bufferSize);
             if (!receiveBuffer) goto done;
             memcpy(receiveBuffer, *text, bufferSize);
             MultiByteToWideChar(CP_ACP, 0, receiveBuffer, bufferSize, oldText, oldTextMax);
-            heap_free(receiveBuffer);
+            Free(receiveBuffer);
         }
         else
             MultiByteToWideChar(CP_ACP, 0, (CHAR *)*text, -1, oldText, oldTextMax);
     }
 
 done:
-    heap_free(sendBuffer);
+    Free(sendBuffer);
     *text = oldText;
     return ret;
 }
@@ -1458,7 +1463,7 @@ PAGER_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     PAGER_INFO *infoPtr = (PAGER_INFO *)GetWindowLongPtrW(hwnd, 0);
 
-    TRACE("(%p, %#x, %#lx, %#lx)\n", hwnd, uMsg, wParam, lParam);
+    TRACE("%p, %#x, %#Ix, %#Ix\n", hwnd, uMsg, wParam, lParam);
 
     if (!infoPtr && (uMsg != WM_CREATE))
 	return DefWindowProcW (hwnd, uMsg, wParam, lParam);
@@ -1552,6 +1557,9 @@ PAGER_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_COMMAND:
             return SendMessageW (infoPtr->hwndNotify, uMsg, wParam, lParam);
+
+        case WM_THEMECHANGED:
+            return PAGER_ThemeChanged (infoPtr);
 
         default:
             return DefWindowProcW (hwnd, uMsg, wParam, lParam);

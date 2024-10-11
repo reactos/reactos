@@ -56,7 +56,11 @@ static HWND hWndHeader;
 
 #define compare(val, exp, fmt)  ok((val) == (exp), #val " value: " fmt ", expected: " fmt "\n", (val), (exp))
 
-#define expect(expected, got) ok(expected == got, "expected %d, got %d\n", expected,got)
+#define expect(expected,got) expect_(__LINE__, expected, got)
+static inline void expect_(unsigned line, DWORD expected, DWORD got)
+{
+    ok_(__FILE__, line)(expected == got, "Expected %ld, got %ld\n", expected, got);
+}
 
 #define NUM_MSG_SEQUENCES    2
 #define PARENT_SEQ_INDEX     0
@@ -393,13 +397,13 @@ static WCHAR pszUniTestW[] = {'T','S','T',0};
 
 #define TEST_GET_ITEM(i,c)\
 {   res = getItem(hWndHeader, i, buffer);\
-    ok(res != 0, "Getting item[%d] using valid index failed unexpectedly (%d)\n", i, res);\
+    ok(res != 0, "Getting item[%d] using valid index failed unexpectedly (%ld)\n", i, res);\
     ok(strcmp(str_items[c], buffer) == 0, "Getting item[%d] returned \"%s\" expecting \"%s\"\n", i, buffer, str_items[c]);\
 }
 
 #define TEST_GET_ITEMCOUNT(i)\
 {   res = getItemCount(hWndHeader);\
-    ok(res == i, "Got Item Count as %d\n", res);\
+    ok(res == i, "Got Item Count as %ld\n", res);\
 }
 
 static LRESULT WINAPI header_subclass_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -730,25 +734,25 @@ static void test_header_control (void)
     {
         TEST_GET_ITEMCOUNT(3-i);
         res = addItem(hWndHeader, 0, str_items[i]);
-        ok(res == 0, "Adding simple item failed (%d)\n", res);
+        ok(res == 0, "Adding simple item failed (%ld)\n", res);
     }
 
     TEST_GET_ITEMCOUNT(4);
     res = addItem(hWndHeader, 99, str_items[i+1]);
-    ok(res != -1, "Adding Out of Range item should fail with -1 got (%d)\n", res);
+    ok(res != -1, "Adding Out of Range item should fail with -1 got (%ld)\n", res);
     TEST_GET_ITEMCOUNT(5);
     res = addItem(hWndHeader, 5, str_items[i+1]);
-    ok(res != -1, "Adding Out of Range item should fail with -1 got (%d)\n", res);
+    ok(res != -1, "Adding Out of Range item should fail with -1 got (%ld)\n", res);
     TEST_GET_ITEMCOUNT(6);
 
     for (i = 0; i < 4; i++) { TEST_GET_ITEM(i,i); TEST_GET_ITEMCOUNT(6); }
 
     res=getItem(hWndHeader, 99, buffer);
-    ok(res == 0, "Getting Out of Range item should fail with 0 (%d), got %s\n", res,buffer);
+    ok(res == 0, "Getting Out of Range item should fail with 0 (%ld), got %s\n", res,buffer);
     res=getItem(hWndHeader, 5, buffer);
-    ok(res == 1, "Getting Out of Range item should fail with 1 (%d), got %s\n", res,buffer);
+    ok(res == 1, "Getting Out of Range item should fail with 1 (%ld), got %s\n", res,buffer);
     res=getItem(hWndHeader, -2, buffer);
-    ok(res == 0, "Getting Out of Range item should fail with 0 (%d), got %s\n", res,buffer);
+    ok(res == 0, "Getting Out of Range item should fail with 0 (%ld), got %s\n", res,buffer);
 
     if (winetest_interactive)
     {
@@ -758,17 +762,17 @@ static void test_header_control (void)
 
     TEST_GET_ITEMCOUNT(6);
     res=setItem(hWndHeader, 99, str_items[5], FALSE);
-    ok(res == 0, "Setting Out of Range item should fail with 0 (%d)\n", res);
+    ok(res == 0, "Setting Out of Range item should fail with 0 (%ld)\n", res);
     res=setItem(hWndHeader, 5, str_items[5], TRUE);
-    ok(res == 1, "Setting Out of Range item should fail with 1 (%d)\n", res);
+    ok(res == 1, "Setting Out of Range item should fail with 1 (%ld)\n", res);
     res=setItem(hWndHeader, -2, str_items[5], FALSE);
-    ok(res == 0, "Setting Out of Range item should fail with 0 (%d)\n", res);
+    ok(res == 0, "Setting Out of Range item should fail with 0 (%ld)\n", res);
     TEST_GET_ITEMCOUNT(6);
 
     for (i = 0; i < 4; i++)
     {
         res = setItem(hWndHeader, i, str_items[4], TRUE);
-        ok(res != 0, "Setting %d item failed (%d)\n", i+1, res);
+        ok(res != 0, "Setting %d item failed (%ld)\n", i+1, res);
         TEST_GET_ITEM(i, 4);
         TEST_GET_ITEMCOUNT(6);
     }
@@ -796,22 +800,22 @@ static void test_header_control (void)
     TEST_GET_ITEMCOUNT(6);
 
     res = delItem(hWndHeader, 5);
-    ok(res == 1, "Deleting Out of Range item should fail with 1 (%d)\n", res);
+    ok(res == 1, "Deleting Out of Range item should fail with 1 (%ld)\n", res);
     res = delItem(hWndHeader, -2);
-    ok(res == 0, "Deleting Out of Range item should fail with 0 (%d)\n", res);
+    ok(res == 0, "Deleting Out of Range item should fail with 0 (%ld)\n", res);
     TEST_GET_ITEMCOUNT(5);
 
     res = delItem(hWndHeader, 3);
-    ok(res != 0, "Deleting using out of range index failed (%d)\n", res);
+    ok(res != 0, "Deleting using out of range index failed (%ld)\n", res);
     TEST_GET_ITEMCOUNT(4);
     res = delItem(hWndHeader, 0);
-    ok(res != 0, "Deleting using out of range index failed (%d)\n", res);
+    ok(res != 0, "Deleting using out of range index failed (%ld)\n", res);
     TEST_GET_ITEMCOUNT(3);
     res = delItem(hWndHeader, 0);
-    ok(res != 0, "Deleting using out of range index failed (%d)\n", res);
+    ok(res != 0, "Deleting using out of range index failed (%ld)\n", res);
     TEST_GET_ITEMCOUNT(2);
     res = delItem(hWndHeader, 0);
-    ok(res != 0, "Deleting using out of range index failed (%d)\n", res);
+    ok(res != 0, "Deleting using out of range index failed (%ld)\n", res);
     TEST_GET_ITEMCOUNT(1);
 
     DestroyWindow(hWndHeader);
@@ -869,9 +873,12 @@ static void test_hdm_layout(HWND hParent)
     ok_sequence(sequences, PARENT_SEQ_INDEX, add_header_to_parent_seq,
                                     "adder header control to parent", FALSE);
 
+    windowPos.hwnd = (HWND)0xdeadbeef;
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     retVal = SendMessageA(hChild, HDM_LAYOUT, 0, (LPARAM) &hdLayout);
     expect(TRUE, retVal);
+    ok(windowPos.hwnd == (HWND)0xdeadbeef, "Unexpected value %p.\n", windowPos.hwnd);
+    ok(!windowPos.hwndInsertAfter, "Unexpected value %p.\n", windowPos.hwndInsertAfter);
 
     ok_sequence(sequences, HEADER_SEQ_INDEX, layout_seq, "layout sequence testing", FALSE);
 
@@ -1366,13 +1373,13 @@ static void test_hds_nosizing(HWND hParent)
 }
 
 #define TEST_NMCUSTOMDRAW(draw_stage, item_spec, lparam, _left, _top, _right, _bottom) \
-    ok(nm->dwDrawStage == draw_stage, "Invalid dwDrawStage %d vs %d\n", draw_stage, nm->dwDrawStage); \
+    ok(nm->dwDrawStage == draw_stage, "Invalid dwDrawStage %d vs %ld\n", draw_stage, nm->dwDrawStage); \
     if (item_spec != -1) \
-        ok(nm->dwItemSpec == item_spec, "Invalid dwItemSpec %d vs %ld\n", item_spec, nm->dwItemSpec); \
-    ok(nm->lItemlParam == lparam, "Invalid lItemlParam %d vs %ld\n", lparam, nm->lItemlParam); \
+        ok(nm->dwItemSpec == item_spec, "Invalid dwItemSpec %d vs %Id\n", item_spec, nm->dwItemSpec); \
+    ok(nm->lItemlParam == lparam, "Invalid lItemlParam %d vs %Id\n", lparam, nm->lItemlParam); \
     ok((nm->rc.top == _top && nm->rc.bottom == _bottom && nm->rc.left == _left && nm->rc.right == _right) || \
         broken(draw_stage != CDDS_ITEMPREPAINT), /* comctl32 < 5.80 */ \
-        "Invalid rect (%d,%d)-(%d,%d) vs %s\n", _left, _top, _right, _bottom, \
+        "Invalid rect (%d,%d)-(%d,%ld) vs %s\n", _left, _top, _right, _bottom, \
         wine_dbgstr_rect(&nm->rc));
 
 static LRESULT customdraw_1(int n, NMCUSTOMDRAW *nm)
@@ -1390,7 +1397,7 @@ static LRESULT customdraw_1(int n, NMCUSTOMDRAW *nm)
         return 0;
     }
 
-    ok(FALSE, "Too many custom draw messages (n=%d, nm->dwDrawStage=%d)\n", n, nm->dwDrawStage);
+    ok(FALSE, "Too many custom draw messages (n=%d, nm->dwDrawStage=%ld)\n", n, nm->dwDrawStage);
     return -1;
 }
 
@@ -1417,7 +1424,7 @@ static LRESULT customdraw_2(int n, NMCUSTOMDRAW *nm)
         return 0;
     }
 
-    ok(FALSE, "Too many custom draw messages (n=%d, nm->dwDrawStage=%d)\n", n, nm->dwDrawStage);
+    ok(FALSE, "Too many custom draw messages (n=%d, nm->dwDrawStage=%ld)\n", n, nm->dwDrawStage);
     return 0;
 }
 
@@ -1447,7 +1454,7 @@ static LRESULT customdraw_3(int n, NMCUSTOMDRAW *nm)
         return 0;
     }
 
-    ok(FALSE, "Too many custom draw messages (n=%d, nm->dwDrawStage=%d)\n", n, nm->dwDrawStage);
+    ok(FALSE, "Too many custom draw messages (n=%d, nm->dwDrawStage=%ld)\n", n, nm->dwDrawStage);
     return 0;
 }
 
@@ -1475,7 +1482,7 @@ static LRESULT customdraw_4(int n, NMCUSTOMDRAW *nm)
         return 0;
     }
 
-    ok(FALSE, "Too many custom draw messages (n=%d, nm->dwDrawStage=%d)\n", n, nm->dwDrawStage);
+    ok(FALSE, "Too many custom draw messages (n=%d, nm->dwDrawStage=%ld)\n", n, nm->dwDrawStage);
     return 0;
 }
 
@@ -1498,7 +1505,7 @@ static void test_customdraw(void)
     hWndHeader = create_header_control();
     GetClientRect(hWndHeader, &rect);
     ok(rect.right - rect.left == 670 && rect.bottom - rect.top == g_customheight,
-        "Tests will fail as header size is %dx%d instead of 670x%d\n",
+        "Tests will fail as header size is %ldx%ld instead of 670x%ld\n",
         rect.right - rect.left, rect.bottom - rect.top, g_customheight);
 
     for (i = 0; i < 3; i++)
@@ -1650,10 +1657,10 @@ static LRESULT CALLBACK HeaderTestWndProc(HWND hWnd, UINT msg, WPARAM wParam, LP
         compare(di->hwndItem,  g_DrawItem.hwndItem, "%p");
         compare(di->itemID,    g_DrawItem.itemID, "%d");
         compare(di->itemState, g_DrawItem.itemState, "%d");
-        compare(di->rcItem.left,   g_DrawItem.rcItem.left, "%d");
-        compare(di->rcItem.top,    g_DrawItem.rcItem.top, "%d");
-        compare(di->rcItem.right,  g_DrawItem.rcItem.right, "%d");
-        compare(di->rcItem.bottom, g_DrawItem.rcItem.bottom, "%d");
+        compare(di->rcItem.left,   g_DrawItem.rcItem.left, "%ld");
+        compare(di->rcItem.top,    g_DrawItem.rcItem.top, "%ld");
+        compare(di->rcItem.right,  g_DrawItem.rcItem.right, "%ld");
+        compare(di->rcItem.bottom, g_DrawItem.rcItem.bottom, "%ld");
         break;
 
     case WM_DESTROY:
@@ -1703,7 +1710,7 @@ static BOOL init(void)
     GetTextMetricsA(hdc, &tm);
     /* 2 dot extra space are needed for the border */
     g_customheight = tm.tmHeight + 2;
-    trace("customdraw height: %d (dpi: %d)\n", g_customheight, GetDeviceCaps(hdc, LOGPIXELSY));
+    trace("customdraw height: %ld (dpi: %d)\n", g_customheight, GetDeviceCaps(hdc, LOGPIXELSY));
     SelectObject(hdc, hOldFont);
     ReleaseDC(0, hdc);
 
@@ -1732,22 +1739,22 @@ static void check_orderarray(HWND hwnd, DWORD start, DWORD set, DWORD expected,
         order[i-1] = start>>(4*(count-i)) & 0xf;
 
     ret = SendMessageA(hwnd, HDM_SETORDERARRAY, count, (LPARAM)order);
-    ok_(__FILE__, line)(ret, "Expected HDM_SETORDERARRAY to succeed, got %d\n", ret);
+    ok_(__FILE__, line)(ret, "Expected HDM_SETORDERARRAY to succeed, got %ld\n", ret);
 
     /* new order */
     for(i = 1; i<=count; i++)
         order[i-1] = set>>(4*(count-i)) & 0xf;
     ret = SendMessageA(hwnd, HDM_SETORDERARRAY, count, (LPARAM)order);
-    ok_(__FILE__, line)(ret, "Expected HDM_SETORDERARRAY to succeed, got %d\n", ret);
+    ok_(__FILE__, line)(ret, "Expected HDM_SETORDERARRAY to succeed, got %ld\n", ret);
 
     /* check actual order */
     ret = SendMessageA(hwnd, HDM_GETORDERARRAY, count, (LPARAM)order);
-    ok_(__FILE__, line)(ret, "Expected HDM_GETORDERARRAY to succeed, got %d\n", ret);
+    ok_(__FILE__, line)(ret, "Expected HDM_GETORDERARRAY to succeed, got %ld\n", ret);
     for(i = 1; i<=count; i++)
         array |= order[i-1]<<(4*(count-i));
 
     todo_wine_if(todo)
-        ok_(__FILE__, line)(array == expected, "Expected %x, got %x\n", expected, array);
+        ok_(__FILE__, line)(array == expected, "Expected %lx, got %lx\n", expected, array);
 }
 
 static void test_hdm_orderarray(void)
@@ -1880,6 +1887,7 @@ START_TEST(header)
     test_hdf_fixedwidth(parent_hwnd);
     test_hds_nosizing(parent_hwnd);
     test_item_auto_format(parent_hwnd);
+    test_hdm_layout(parent_hwnd);
 
     unload_v6_module(ctx_cookie, hCtx);
 

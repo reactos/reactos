@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg id="bitmap:120-32" xmlns="http://www.w3.org/2000/svg" height="24" width="120" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <defs id="defs2916">
+  <radialGradient id="radialGradient1361" gradientUnits="userSpaceOnUse" cy="36.421" cx="24.837" gradientTransform="matrix(1,0,0,0.536723,0,16.87306)" r="15.645">
+   <stop id="stop8664" stop-color="#000" offset="0"/>
+   <stop id="stop8666" stop-color="#000" stop-opacity="0" offset="1"/>
+  </radialGradient>
+  <radialGradient id="radialGradient3241" gradientUnits="userSpaceOnUse" cx="15.987" cy="1.535" r="17.171" gradientTransform="matrix(-0.99935,0,0,0.783428,33.4962,1.6234577)">
+   <stop id="stop8652-1" stop-color="#FFF" offset="0"/>
+   <stop id="stop8654-1" stop-color="#FFF" stop-opacity="0" offset="1"/>
+  </radialGradient>
+  <radialGradient id="radialGradient3244" gradientUnits="userSpaceOnUse" cx="17.481" cy="16.118" r="16.956" gradientTransform="matrix(-0.411558,0.00716573,-0.00521275,-0.299389,21.69622,19.724318)">
+   <stop id="stop2593-6" stop-color="#73d216" offset="0"/>
+   <stop id="stop2595-2" stop-color="#4e9a06" offset="1"/>
+  </radialGradient>
+  <radialGradient id="radialGradient3263" gradientUnits="userSpaceOnUse" cx="15.987" cy="1.535" r="17.171" gradientTransform="matrix(0.99731932,0,0,0.783428,14.565151,1.62346)">
+   <stop id="stop8652" stop-color="#FFF" offset="0"/>
+   <stop id="stop8654" stop-color="#FFF" stop-opacity="0" offset="1"/>
+  </radialGradient>
+  <radialGradient id="radialGradient3266" gradientUnits="userSpaceOnUse" cx="27.547" cy="15.843" r="16.956" gradientTransform="matrix(0.41071672,0.0074091,0.00521275,-0.288964,26.347891,19.75179)">
+   <stop id="stop2593" stop-color="#73d216" offset="0"/>
+   <stop id="stop2595" stop-color="#4e9a06" offset="1"/>
+  </radialGradient>
+  <linearGradient id="linearGradient3278" y2="4" gradientUnits="userSpaceOnUse" y1="15" gradientTransform="translate(96,-1)" x2="4" x1="4">
+   <stop id="stop10718" stop-color="#d3d7cf" offset="0"/>
+   <stop id="stop10720" stop-color="#babdb6" offset="1"/>
+  </linearGradient>
+  <linearGradient id="linearGradient3281" y2="5" gradientUnits="userSpaceOnUse" y1="2" gradientTransform="translate(96,0)" x2="4" x1="4">
+   <stop id="stop10746" stop-color="#729fcf" offset="0"/>
+   <stop id="stop10748" stop-color="#3465a4" offset="1"/>
+  </linearGradient>
+ </defs>
+ <g id="g3268">
+  <path id="path8660" opacity="0.32156863" style="color:#000000;" d="m40.482,36.421a15.645,8.3969,0,1,1,-31.289,0,15.645,8.3969,0,1,1,31.289,0z" fill-rule="evenodd" transform="matrix(0.703097,0,0,0.655005,18.537026,-6.3560112)" fill="url(#radialGradient1361)"/>
+  <path id="path8643" stroke-linejoin="round" style="color:#000000;stroke-dasharray:none;" d="m28.501,16.5,0-9,5.9878,0,0-4,10.011,8.5554l-10.011,8.445v-4h-5.9878z" fill-rule="evenodd" stroke-dashoffset="0" stroke="#3a7304" stroke-linecap="round" stroke-miterlimit="10" stroke-width="0.99999964" fill="url(#radialGradient3266)"/>
+  <path id="path8645" opacity="0.5080214" style="color:#000000;" d="m34.988,4.5,0,3.5h-5.988l0.03167,4.5c5.9878-3,8.9817,2,14.471-0.5l-8.515-7.5z" fill-rule="evenodd" fill="url(#radialGradient3263)"/>
+  <path id="path8658" opacity="0.48128339" stroke-linejoin="miter" style="color:#000000;stroke-dasharray:none;" d="m29.499,15.5,0-7,5.9878,0,0-3,7.4848,6.5-7.4848,6.5,0-3-5.9878,0z" stroke-dashoffset="0" stroke="#FFF" stroke-linecap="butt" stroke-miterlimit="10" stroke-width="0.99999976" fill="none"/>
+ </g>
+ <g id="g3246">
+  <path id="path8660-4" opacity="0.32156863" style="color:#000000;" d="m40.482,36.421a15.645,8.3969,0,1,1,-31.289,0,15.645,8.3969,0,1,1,31.289,0z" fill-rule="evenodd" transform="matrix(0.703097,0,0,0.655005,-5.4629086,-6.3560133)" fill="url(#radialGradient1361)"/>
+  <path id="path8643-2" stroke-linejoin="round" style="color:#000000;stroke-dasharray:none;" d="m19.532,16.5,0-9-6,0,0-4-10.032,8.5554,10.032,8.4446,0-4,6,0z" fill-rule="evenodd" stroke-dashoffset="0" stroke="#3a7304" stroke-linecap="round" stroke-miterlimit="10" stroke-width="0.99999988" fill="url(#radialGradient3244)"/>
+  <path id="path8645-4" opacity="0.5080214" style="color:#000000;" d="m13.032,4.5,0,3.5,6,0-0.03173,4.5c-6-3-9,2-14.5-0.5l8.5317-7.5z" fill-rule="evenodd" fill="url(#radialGradient3241)"/>
+  <path id="path8658-0" opacity="0.48128339" stroke-linejoin="miter" style="color:#000000;stroke-dasharray:none;" d="m18.532,15.5,0-7-6,0,0-3-7.5,6.5,7.5,6.5,0-3,6,0z" stroke-dashoffset="0" stroke="#FFF" stroke-linecap="butt" stroke-miterlimit="10" stroke-width="1" fill="none"/>
+ </g>
+ <image id="image3101" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABYAAAAWCAYAAADEtGw7AAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A /wD/oL2nkwAAAAlwSFlzAAAN1wAADdcBQiibeAAAAAd0SU1FB9kHCwovJyZFtIYAAAKZSURBVDjL vZTLT1QxGMVPe3vbKXONgRASAwkwK5c+4k5NJHHQnUYTFq50JRGDEHVjTPARlsYQdDAYNxoT/wAB WfkfqFGDiuIjwMgwYww6L2amn4t7uc6VuTgstKu2aX89PedrgX/U2Fqnf6DvdDL5NUFEqNjtmE/L 0E22IOzs/LFuPhbr7B0cuDAGAGLtgOXldOLQ4W60tbVi9449eDwxjcSj17h08QSIvEWejKvD97Fv 7350dR2AZVkAAGMMhq4MJQAEwFQqlTA5MQXOOZ7teo6ZN7OolFvw4t0CFpZXfFWtLVsBAE+mJ/Hx 8wcAQEd7B+IHuwPqRfXAcRwoFcHZM/2YmprGy9tPkfn2HUtLGV9uRBiUV/M4euQY4vE4iAg3R26s syUAZowjk0mDyIAxoLSax2oxj2Ih6wdSKmiUSwVUKhWUyyUIYdfMQYSmygDOJWzbhi2V6xcBlrDB reptVA/49yLOOYTUECoKpYtegAQ7oiFs7QdGtbnhil24BcY5LGH7ACEkuCVAZDywqb03DKqUdPMK kSSl9OC0OcWRSATMq4QtDQpRrbDysxAAG2Pq9bhaccQLjLA49wWpZBot25rR3Ljdv5FrBdVhBVUr VuCc4e2r90gl07h1vQepZBqzM3Pus7YljKHQ8PhGVhhDSCXTGBvuQVOjg9FrxzH/aRGcM0hph9qw oRVSKjwYOQmtNbTWAAiO4+Dh6Cnkcvm//m4i6AT59RmNNniqWCB9x3GgtUahUKwf7B9ABkqpQK26 YBduWRai0YbNg40xXjBu6m5Zba6FgKlKLdUF+vPwoMeG0NTY5D0MDsviYIx5Pybz+szru3NrwLv3 xhGLdfbWAo9mc9m+bC6LO+Njm7q2lOry4Lnz1/E/2i8h2hqY4UCQ2AAAAABJRU5ErkJggg== " height="22" width="22" y="1" x="49"/>
+ <image id="image3115" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABYAAAAWCAYAAADEtGw7AAAABmJLR0QA/wD/AP+gvaeTAAAACXBI WXMAAA3XAAAN1wFCKJt4AAAAB3RJTUUH1QoRFQYvy1T0IwAAAzhJREFUOMutk91rW2Ucxz/Pc56T k7Osprqa6Iq9KLS1JqUJrXUT9LZeKYhziHjltZfiEMuk1KrzUiYI3vkXFBUvZJdSNzPQWhbm0rXd 8rK0aR1NmreTnMeLJIeQprOiXzg8nHOe5/N8f2+CHs29culj4DLHSAiRv/7jp08BNPKvmcBzoObA 3QV3FdhV4RVXdA58duWTRWAB4FYyxe18mIVL76B1B9haF5e/JTqcY3xinDPBCi/NPmT4mfNIa4S9 7LX1s0/88QY0UqrLzMIH738IwHff/8DyVz/z+58ZMrsH3obhUBCANy+8xfz8PLp2A12/gwi8CsLP 0FkjSvXW69D4WvWGurm5SaGwh1Mvs7f/kHx+z7PrVy6NeoVCoUA2m8UUFR6zHcxmGWFI6pU0PikO 0DRVnxxiSInjlKnXKtSqh63vgFO1aThVtra2WFtbQ4oGc/EnQV/DNG0y91eZGHFuAsW+YCkFUlqY ponpswDQGgxlIg3F6OgosVgMgKrbxKnlGTrVILFuMTHS/E2FV9z+jg2J8tkoK4Bl19oF1Jh+G2Xa bGxsMDg4CEA8HkfLYfCd4UHhJ1R4pQrQF9xybSCkxFCm1xlK+ZCGYmxsjNnZ2Z5zCq29JkP2gn+9 eQPLslr16hB7tL29TSKRIJFIYJomUh7BHHX8wvPnyGQyCFq3D5yyCNgWB6WqtycWizEzM4Nod0tn fSRYCEGpVAIBWmuyd++xkysQenqIocefBSCTyWDbNgBTU1N9Hct+YL/fjxSC2+spdnIFri5dZCdX 4E7yLgCRSIRoNMr09DRSyr6OZb8c+v1+XK3ZyRX4cvECg8EBri5dJL2VRUpBIBBAKdVV6BPk+Jfr q4yPTfDNlbdJp9OUD4tUyiVc1+Xyey9Tq9VIpVLs7+977dZPR8Dnz71IMBikWCwSCoVaYUnphdxs NnEch0AgAIBhGLiue/LiSSlJJpP8k+Lx+MlS0a3JyUlM0zxmgGR7Sk/ouLsvH+X4X/dxtyKRiOeu 47B31Vqj+0zoEXA4HOb/kAd2XXfp8y+WP/ovsPv30u966TzmstPAQPs5DQTaw2QAGnCACvAXcAAc tt+b7f/8DTlPJBp8S28uAAAAAElFTkSuQmCC " height="22" width="22" y="1" x="73"/>
+ <g id="g3306">
+  <path id="rect9935" stroke-linejoin="round" d="m98.5,1.5,19,0c0.554,0,1,0.446,1,1v20h-21v-20c0-0.554,0.446-1,1-1z" stroke="#204a87" stroke-linecap="round" stroke-miterlimit="4" stroke-width="1" fill="url(#linearGradient3281)"/>
+  <rect id="rect9941" stroke-linejoin="miter" style="stroke-dasharray:none;" height="15" width="5" stroke="#d3d7cf" stroke-linecap="round" stroke-miterlimit="4" y="5.5" x="99.5" stroke-width="1" fill="url(#linearGradient3278)"/>
+  <path id="path9939" stroke-linejoin="miter" d="M105.5,21" fill-rule="evenodd" stroke="#888a85" stroke-linecap="butt" stroke-width="1px" fill="#204a87"/>
+  <rect id="rect10713" stroke-linejoin="miter" style="stroke-dasharray:none;" height="15" width="10" stroke="#eeeeec" stroke-linecap="round" stroke-miterlimit="4" y="5.5" x="106.5" stroke-width="1" fill="#eeeeec"/>
+  <path id="path10754" stroke-linejoin="miter" d="m105.5,21,0-16" stroke="#888a85" stroke-linecap="butt" stroke-width="1px" fill="none"/>
+ </g>
+</svg>

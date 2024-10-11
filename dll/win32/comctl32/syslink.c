@@ -165,10 +165,6 @@ static VOID SYSLINK_ClearDoc (SYSLINK_INFO *infoPtr)
  */
 static UINT SYSLINK_ParseText (SYSLINK_INFO *infoPtr, LPCWSTR Text)
 {
-    static const WCHAR SL_LINKOPEN[] =  { '<','a' };
-    static const WCHAR SL_HREF[] =      { 'h','r','e','f','=','\"' };
-    static const WCHAR SL_ID[] =        { 'i','d','=','\"' };
-    static const WCHAR SL_LINKCLOSE[] = { '<','/','a','>' };
     LPCWSTR current, textstart = NULL, linktext = NULL, firsttag = NULL;
     int taglen = 0, textlen = 0, linklen = 0, docitems = 0;
     PDOC_ITEM Last = NULL;
@@ -182,7 +178,7 @@ static UINT SYSLINK_ParseText (SYSLINK_INFO *infoPtr, LPCWSTR Text)
     {
         if(*current == '<')
         {
-            if(!wcsnicmp(current, SL_LINKOPEN, ARRAY_SIZE(SL_LINKOPEN)) && (CurrentType == slText))
+            if(!wcsnicmp(current, L"<a", 2) && (CurrentType == slText))
             {
                 BOOL ValidParam = FALSE, ValidLink = FALSE;
 
@@ -210,14 +206,14 @@ static UINT SYSLINK_ParseText (SYSLINK_INFO *infoPtr, LPCWSTR Text)
                     
 CheckParameter:
                     /* compare the current position with all known parameters */
-                    if(!wcsnicmp(tmp, SL_HREF, ARRAY_SIZE(SL_HREF)))
+                    if(!wcsnicmp(tmp, L"href=\"", 6))
                     {
                         taglen += 6;
                         ValidParam = TRUE;
                         CurrentParameter = &lpUrl;
                         CurrentParameterLen = &lenUrl;
                     }
-                    else if(!wcsnicmp(tmp, SL_ID, ARRAY_SIZE(SL_ID)))
+                    else if(!wcsnicmp(tmp, L"id=\"", 4))
                     {
                         taglen += 4;
                         ValidParam = TRUE;
@@ -291,7 +287,7 @@ CheckParameter:
                     }
                 }
             }
-            else if(!wcsnicmp(current, SL_LINKCLOSE, ARRAY_SIZE(SL_LINKCLOSE)) && (CurrentType == slLink) && firsttag)
+            else if (!wcsnicmp(current, L"</a>", 4) && (CurrentType == slLink) && firsttag)
             {
                 /* there's a <a...> tag opened, first add the previous text, if present */
                 if(textstart != NULL && textlen > 0 && firsttag > textstart)
@@ -798,9 +794,7 @@ static LRESULT SYSLINK_Draw (const SYSLINK_INFO *infoPtr, HDC hdc)
     }
     else SetBkMode( hdc, TRANSPARENT );
 
-#ifndef __REACTOS__
     DeleteObject(hBrush);
-#endif
 
     LIST_FOR_EACH_ENTRY(Current, &infoPtr->Items, DOC_ITEM, entry)
     {
@@ -1326,16 +1320,18 @@ static PDOC_ITEM SYSLINK_LinkAtPt (const SYSLINK_INFO *infoPtr, const POINT *pt,
 
     LIST_FOR_EACH_ENTRY(Current, &infoPtr->Items, DOC_ITEM, entry)
     {
-        if((Current->Type == slLink) && SYSLINK_PtInDocItem(Current, *pt) &&
-           (!MustBeEnabled || (Current->u.Link.state & LIS_ENABLED)))
+        if(Current->Type == slLink)
         {
-            if(LinkId != NULL)
+            if(SYSLINK_PtInDocItem(Current, *pt) && (!MustBeEnabled || (Current->u.Link.state & LIS_ENABLED)))
             {
-                *LinkId = id;
+                if(LinkId != NULL)
+                {
+                    *LinkId = id;
+                }
+                return Current;
             }
-            return Current;
+            id++;
         }
-        id++;
     }
 
     return NULL;
@@ -1503,7 +1499,7 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
 {
     SYSLINK_INFO *infoPtr;
 
-    TRACE("hwnd=%p msg=%04x wparam=%lx lParam=%lx\n", hwnd, message, wParam, lParam);
+    TRACE("hwnd %p, msg %04x, wparam %Ix, lParam %Ix\n", hwnd, message, wParam, lParam);
 
     infoPtr = (SYSLINK_INFO *)GetWindowLongPtrW(hwnd, 0);
 
@@ -1682,11 +1678,7 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
 
     case WM_STYLECHANGED:
         if (wParam == GWL_STYLE)
-        {
             infoPtr->Style = ((LPSTYLESTRUCT)lParam)->styleNew;
-
-            InvalidateRect(infoPtr->Self, NULL, TRUE);
-        }
         return 0;
 
     case WM_CREATE:
@@ -1732,7 +1724,7 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
     default:
         if ((message >= WM_USER) && (message < WM_APP) && !COMCTL32_IsReflectedMessage(message))
         {
-            ERR("unknown msg %04x wp=%04lx lp=%08lx\n", message, wParam, lParam );
+            ERR("unknown msg %04x, wp %Ix, lp %Ix\n", message, wParam, lParam );
         }
         return DefWindowProcW(hwnd, message, wParam, lParam);
     }

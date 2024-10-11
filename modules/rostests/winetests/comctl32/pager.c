@@ -312,9 +312,9 @@ static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LP
                 DWORD style = GetWindowLongA(nmpgcs->hdr.hwndFrom, GWL_STYLE);
 
                 if (style & PGS_HORZ)
-                    ok(nmpgcs->dwFlag == PGF_CALCWIDTH, "Unexpected flags %#x.\n", nmpgcs->dwFlag);
+                    ok(nmpgcs->dwFlag == PGF_CALCWIDTH, "Unexpected flags %#lx.\n", nmpgcs->dwFlag);
                 else
-                    ok(nmpgcs->dwFlag == PGF_CALCHEIGHT, "Unexpected flags %#x.\n", nmpgcs->dwFlag);
+                    ok(nmpgcs->dwFlag == PGF_CALCHEIGHT, "Unexpected flags %#lx.\n", nmpgcs->dwFlag);
                 break;
             }
             default:
@@ -449,14 +449,14 @@ static void test_pager(void)
     ok_sequence(sequences, PAGER_SEQ_INDEX, set_child_seq, "set child", FALSE);
     GetWindowRect( pager, &rect );
     ok( rect.right - rect.left == 100 && rect.bottom - rect.top == 100,
-        "pager resized %dx%d\n", rect.right - rect.left, rect.bottom - rect.top );
+        "pager resized %ldx%ld\n", rect.right - rect.left, rect.bottom - rect.top );
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     SendMessageA(pager, PGM_SETCHILD, 0, (LPARAM)child2_wnd);
     ok_sequence(sequences, PAGER_SEQ_INDEX, switch_child_seq, "switch to invisible child", FALSE);
     GetWindowRect(pager, &rect);
     ok(rect.right - rect.left == 100 && rect.bottom - rect.top == 100,
-        "pager resized %dx%d\n", rect.right - rect.left, rect.bottom - rect.top);
+        "pager resized %ldx%ld\n", rect.right - rect.left, rect.bottom - rect.top);
     ok(!IsWindowVisible(child2_wnd), "Child window 2 is visible\n");
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
@@ -464,14 +464,14 @@ static void test_pager(void)
     ok_sequence(sequences, PAGER_SEQ_INDEX, set_child_seq, "switch to visible child", FALSE);
     GetWindowRect(pager, &rect);
     ok(rect.right - rect.left == 100 && rect.bottom - rect.top == 100,
-        "pager resized %dx%d\n", rect.right - rect.left, rect.bottom - rect.top);
+        "pager resized %ldx%ld\n", rect.right - rect.left, rect.bottom - rect.top);
 
     flush_sequences( sequences, NUM_MSG_SEQUENCES );
     SendMessageA( pager, PGM_SETPOS, 0, 10 );
     ok_sequence(sequences, PAGER_SEQ_INDEX, set_pos_seq, "set pos", TRUE);
     GetWindowRect( pager, &rect );
     ok( rect.right - rect.left == 100 && rect.bottom - rect.top == 100,
-        "pager resized %dx%d\n", rect.right - rect.left, rect.bottom - rect.top );
+        "pager resized %ldx%ld\n", rect.right - rect.left, rect.bottom - rect.top );
 
     flush_sequences( sequences, NUM_MSG_SEQUENCES );
     SendMessageA( pager, PGM_SETPOS, 0, 10 );
@@ -529,23 +529,16 @@ static LRESULT WINAPI test_notifyformat_proc(HWND hwnd, UINT message, WPARAM wPa
 
 static BOOL register_notifyformat_class(void)
 {
-    static const WCHAR class_w[] = {'P', 'a', 'g', 'e', 'r', ' ', 'n', 'o', 't', 'i', 'f', 'y', 'f',
-                                   'o', 'r', 'm', 'a', 't', ' ', 'c', 'l', 'a', 's', 's', 0};
     WNDCLASSW cls = {0};
 
     cls.lpfnWndProc = test_notifyformat_proc;
     cls.hInstance = GetModuleHandleW(NULL);
-    cls.lpszClassName = class_w;
+    cls.lpszClassName = L"Pager notifyformat class";
     return RegisterClassW(&cls);
 }
 
 static void test_wm_notifyformat(void)
 {
-    static const WCHAR class_w[] = {'P', 'a', 'g', 'e', 'r', ' ', 'n', 'o', 't', 'i', 'f', 'y', 'f',
-                                    'o', 'r', 'm', 'a', 't', ' ', 'c', 'l', 'a', 's', 's', 0};
-    static const WCHAR parent_w[] = {'p', 'a', 'r', 'e', 'n', 't', 0};
-    static const WCHAR pager_w[] = {'p', 'a', 'g', 'e', 'r', 0};
-    static const WCHAR child_w[] = {'c', 'h', 'i', 'l', 'd', 0};
     static const INT formats[] = {NFR_UNICODE, NFR_ANSI};
     HWND parent, pager, child;
     LRESULT ret;
@@ -553,47 +546,47 @@ static void test_wm_notifyformat(void)
     INT i;
 
     bret = register_notifyformat_class();
-    ok(bret, "Register test class failed, error 0x%08x\n", GetLastError());
+    ok(bret, "Register test class failed, error 0x%08lx\n", GetLastError());
 
     for (i = 0; i < ARRAY_SIZE(formats); i++)
     {
         notify_format = formats[i];
-        parent = CreateWindowW(class_w, parent_w, WS_OVERLAPPED, 0, 0, 100, 100, 0, 0, GetModuleHandleW(0), 0);
+        parent = CreateWindowW(L"Pager notifyformat class", L"parent", WS_OVERLAPPED, 0, 0, 100, 100, 0, 0, GetModuleHandleW(0), 0);
         ok(parent != NULL, "CreateWindow failed\n");
-        pager = CreateWindowW(WC_PAGESCROLLERW, pager_w, WS_CHILD, 0, 0, 100, 100, parent, 0, GetModuleHandleW(0), 0);
+        pager = CreateWindowW(WC_PAGESCROLLERW, L"pager", WS_CHILD, 0, 0, 100, 100, parent, 0, GetModuleHandleW(0), 0);
         ok(pager != NULL, "CreateWindow failed\n");
-        child = CreateWindowW(class_w, child_w, WS_CHILD, 0, 0, 100, 100, pager, 0, GetModuleHandleW(0), 0);
+        child = CreateWindowW(L"Pager notifyformat class", L"child", WS_CHILD, 0, 0, 100, 100, pager, 0, GetModuleHandleW(0), 0);
         ok(child != NULL, "CreateWindow failed\n");
         SendMessageW(pager, PGM_SETCHILD, 0, (LPARAM)child);
 
         /* Test parent */
         notify_query_received = FALSE;
         ret = SendMessageW(pager, WM_NOTIFYFORMAT, (WPARAM)parent, NF_REQUERY);
-        ok(ret == notify_format, "Expect %d, got %ld\n", notify_format, ret);
+        ok(ret == notify_format, "Expect %d, got %Id\n", notify_format, ret);
         ok(notify_query_received, "Didn't receive notify\n");
 
         /* Send NF_QUERY directly to parent */
         notify_query_received = FALSE;
         ret = SendMessageW(parent, WM_NOTIFYFORMAT, (WPARAM)pager, NF_QUERY);
-        ok(ret == notify_format, "Expect %d, got %ld\n", notify_format, ret);
+        ok(ret == notify_format, "Expect %d, got %Id\n", notify_format, ret);
         ok(notify_query_received, "Didn't receive notify\n");
 
         /* Pager send notifications to its parent regardless of wParam */
         notify_query_received = FALSE;
         ret = SendMessageW(pager, WM_NOTIFYFORMAT, (WPARAM)parent_wnd, NF_REQUERY);
-        ok(ret == notify_format, "Expect %d, got %ld\n", notify_format, ret);
+        ok(ret == notify_format, "Expect %d, got %Id\n", notify_format, ret);
         ok(notify_query_received, "Didn't receive notify\n");
 
         /* Pager always wants Unicode notifications from children */
         ret = SendMessageW(child, WM_NOTIFYFORMAT, (WPARAM)pager, NF_REQUERY);
-        ok(ret == NFR_UNICODE, "Expect %d, got %ld\n", NFR_UNICODE, ret);
+        ok(ret == NFR_UNICODE, "Expect %d, got %Id\n", NFR_UNICODE, ret);
         ret = SendMessageW(pager, WM_NOTIFYFORMAT, (WPARAM)child, NF_QUERY);
-        ok(ret == NFR_UNICODE, "Expect %d, got %ld\n", NFR_UNICODE, ret);
+        ok(ret == NFR_UNICODE, "Expect %d, got %Id\n", NFR_UNICODE, ret);
 
         DestroyWindow(parent);
     }
 
-    UnregisterClassW(class_w, GetModuleHandleW(NULL));
+    UnregisterClassW(L"Pager notifyformat class", GetModuleHandleW(NULL));
 }
 
 static void notify_generic_text_handler(CHAR **text, INT *text_max)
@@ -685,7 +678,6 @@ static void notify_datetime_handler(NMDATETIMEFORMATA *nm)
 
 static LRESULT WINAPI test_notify_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    static const WCHAR test[] = {'t', 'e', 's', 't', 0};
     switch (message)
     {
     case WM_NOTIFY:
@@ -696,9 +688,9 @@ static LRESULT WINAPI test_notify_proc(HWND hwnd, UINT message, WPARAM wParam, L
         if (!notify_test_info.unicode) break;
         ok(!notify_test_info.received, "Extra notification received\n");
 
-        ok(wParam == notify_test_info.id_from, "Expect %ld, got %ld\n", notify_test_info.id_from, wParam);
+        ok(wParam == notify_test_info.id_from, "Expect %Id, got %Id\n", notify_test_info.id_from, wParam);
         ok(hdr->code == notify_test_info.ansi, "Expect 0x%08x, got 0x%08x\n", notify_test_info.ansi, hdr->code);
-        ok(hdr->idFrom == notify_test_info.id_from, "Expect %ld, got %ld\n", notify_test_info.id_from, wParam);
+        ok(hdr->idFrom == notify_test_info.id_from, "Expect %Id, got %Id\n", notify_test_info.id_from, wParam);
         ok(hdr->hwndFrom == notify_test_info.hwnd_from, "Expect %p, got %p\n", notify_test_info.hwnd_from, hdr->hwndFrom);
 
         if (hdr->code != notify_test_info.ansi)
@@ -895,7 +887,7 @@ static LRESULT WINAPI test_notify_proc(HWND hwnd, UINT message, WPARAM wParam, L
         }
         notify_test_info.received = TRUE;
         ok(!lstrcmpA(test_a, "test"), "test_a got modified\n");
-        ok(!lstrcmpW(test_w, test), "test_w got modified\n");
+        ok(!lstrcmpW(test_w, L"test"), "test_w got modified\n");
         return 0;
     }
     case WM_NOTIFYFORMAT:
@@ -1218,7 +1210,7 @@ static void test_wm_notify(void)
          DONT_CONVERT_SEND | DONT_CONVERT_RECEIVE},
         {&nmtbr, sizeof(nmtbr), NULL, 0, (WCHAR **)&nmtbr.tbButton.iString, NULL, TBN_RESTORE, TBN_RESTORE,
          DONT_CONVERT_SEND | DONT_CONVERT_RECEIVE},
-        {&nmtbdi, sizeof(nmtbdi), &nmtbdi.dwMask, TBNF_TEXT, &nmtbdi.pszText, &nmtbdi.cchText, TBN_GETDISPINFOW,
+        {&nmtbdi, sizeof(nmtbdi), (UINT*)&nmtbdi.dwMask, TBNF_TEXT, &nmtbdi.pszText, &nmtbdi.cchText, TBN_GETDISPINFOW,
          TBN_GETDISPINFOW, DONT_CONVERT_SEND | DONT_CONVERT_RECEIVE},
         {&nmtb, sizeof(nmtb), NULL, 0, &nmtb.pszText, &nmtb.cchText, TBN_GETBUTTONINFOW, TBN_GETBUTTONINFOA,
          SEND_EMPTY_IF_NULL | CONVERT_SEND | CONVERT_RECEIVE},
@@ -1272,7 +1264,7 @@ static void test_wm_notify(void)
     INT i;
 
     bret = register_test_notify_class();
-    ok(bret, "Register test class failed, error 0x%08x\n", GetLastError());
+    ok(bret, "Register test class failed, error 0x%08lx\n", GetLastError());
 
     parent = CreateWindowA(class, "parent", WS_OVERLAPPED, 0, 0, 100, 100, 0, 0, GetModuleHandleA(0), 0);
     ok(parent != NULL, "CreateWindow failed\n");

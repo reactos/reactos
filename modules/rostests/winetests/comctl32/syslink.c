@@ -30,6 +30,7 @@
 #define SYSLINK_SEQ_INDEX 1
 
 static HWND hWndParent;
+static int g_link_id;
 
 static struct msg_sequence *sequences[NUM_MSG_SEQUENCE];
 
@@ -99,14 +100,26 @@ static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LP
         add_message(sequences, PARENT_SEQ_INDEX, &msg);
     }
 
+    switch(message)
+    {
+       case WM_NOTIFY:
+       {
+           NMLINK *nml = ((NMLINK *)lParam);
+           if (nml && NM_CLICK == nml->hdr.code)
+           {
+               g_link_id = nml->item.iLink;
+           }
+           break;
+       }
+       default:
+            break;
+    }
     defwndproc_counter++;
     ret = DefWindowProcW(hwnd, message, wParam, lParam);
     defwndproc_counter--;
 
     return ret;
 }
-
-static const WCHAR parentClassW[] = {'S','y','s','l','i','n','k',' ','t','e','s','t',' ','p','a','r','e','n','t',' ','c','l','a','s','s',0};
 
 static BOOL register_parent_wnd_class(void)
 {
@@ -121,17 +134,16 @@ static BOOL register_parent_wnd_class(void)
     cls.hCursor = LoadCursorW(0, (LPCWSTR)IDC_ARROW);
     cls.hbrBackground = GetStockObject(WHITE_BRUSH);
     cls.lpszMenuName = NULL;
-    cls.lpszClassName = parentClassW;
+    cls.lpszClassName = L"Syslink test parent class";
     return RegisterClassW(&cls);
 }
 
 static HWND create_parent_window(void)
 {
-    static const WCHAR titleW[] = {'S','y','s','l','i','n','k',' ','t','e','s','t',' ','p','a','r','e','n','t',' ','w','i','n','d','o','w',0};
     if (!register_parent_wnd_class())
         return NULL;
 
-    return CreateWindowExW(0, parentClassW, titleW,
+    return CreateWindowExW(0, L"Syslink test parent class", L"Syslink test parent window",
                            WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX |
                            WS_MAXIMIZEBOX | WS_VISIBLE,
                            0, 0, 200, 100, GetDesktopWindow(),
@@ -163,10 +175,9 @@ static LRESULT WINAPI syslink_subclass_proc(HWND hwnd, UINT message, WPARAM wPar
 static HWND create_syslink(DWORD style, HWND parent)
 {
     HWND hWndSysLink;
-    static const WCHAR linkW[] = {'H','e','a','d',' ','<','a',' ','h','r','e','f','=','"','l','i','n','k','1','"','>','N','a','m','e','1','<','/','a','>',' ','M','i','d','d','l','e',' ','<','a',' ','h','r','e','f','=','"','l','i','n','k','2','"','>','N','a','m','e','2','<','/','a','>',' ','T','a','i','l',0};
 
     /* Only Unicode will do here */
-    hWndSysLink = CreateWindowExW(0, WC_LINK, linkW,
+    hWndSysLink = CreateWindowExW(0, WC_LINK, L"Head <a href=\"link1\">Name1</a> Middle <a href=\"link2\">Name2</a> Tail",
                                 style, 0, 0, 150, 50,
                                 parent, NULL, GetModuleHandleW(NULL), NULL);
     if (!hWndSysLink) return NULL;
@@ -188,7 +199,7 @@ static void test_create_syslink(void)
     /* Create an invisible SysLink control */
     flush_sequences(sequences, NUM_MSG_SEQUENCE);
     hWndSysLink = create_syslink(WS_CHILD | WS_TABSTOP, hWndParent);
-    ok(hWndSysLink != NULL, "Expected non NULL value (le %u)\n", GetLastError());
+    ok(hWndSysLink != NULL, "Expected non NULL value (le %lu)\n", GetLastError());
     flush_events();
     ok_sequence(sequences, SYSLINK_SEQ_INDEX, empty_wnd_seq, "create SysLink", FALSE);
     ok_sequence(sequences, PARENT_SEQ_INDEX, parent_create_syslink_wnd_seq, "create SysLink (parent)", TRUE);
@@ -214,7 +225,7 @@ static void test_LM_GETIDEALHEIGHT(void)
     ok(hwnd != NULL, "Failed to create SysLink window.\n");
 
     ret = SendMessageA(hwnd, LM_GETIDEALHEIGHT, 0, 0);
-    ok(ret > 0, "Unexpected ideal height, %d.\n", ret);
+    ok(ret > 0, "Unexpected ideal height, %ld.\n", ret);
 
     DestroyWindow(hwnd);
 }
@@ -230,14 +241,36 @@ static void test_LM_GETIDEALSIZE(void)
 
     memset(&sz, 0, sizeof(sz));
     ret = SendMessageA(hwnd, LM_GETIDEALSIZE, 0, (LPARAM)&sz);
-    ok(ret > 0, "Unexpected return value, %d.\n", ret);
+    ok(ret > 0, "Unexpected return value, %ld.\n", ret);
     if (sz.cy == 0)
         win_skip("LM_GETIDEALSIZE is not supported.\n");
     else
     {
-        ok(sz.cx > 5, "Unexpected ideal width, %d.\n", sz.cx);
-        ok(sz.cy == ret, "Unexpected ideal height, %d.\n", sz.cy);
+        ok(sz.cx > 5, "Unexpected ideal width, %ld.\n", sz.cx);
+        ok(sz.cy == ret, "Unexpected ideal height, %ld.\n", sz.cy);
     }
+
+    DestroyWindow(hwnd);
+}
+
+static void test_link_id(void)
+{
+    HWND hwnd;
+
+    hwnd = create_syslink(WS_CHILD | WS_TABSTOP | WS_VISIBLE, hWndParent);
+    ok(hwnd != NULL, "Failed to create SysLink window.\n");
+
+    /* test link1 at (50, 10) */
+    g_link_id = 0;
+    SendMessageA(hwnd, WM_LBUTTONDOWN, 1, MAKELPARAM(50, 10));
+    SendMessageA(hwnd, WM_LBUTTONUP, 0, MAKELPARAM(50, 10));
+    ok(g_link_id == 0, "Got unexpected link id %d.\n", g_link_id);
+
+    /* test link2 at (25, 25) */
+    g_link_id = 0;
+    SendMessageA(hwnd, WM_LBUTTONDOWN, 1, MAKELPARAM(25, 25));
+    SendMessageA(hwnd, WM_LBUTTONUP, 0, MAKELPARAM(25, 25));
+    ok(g_link_id == 1, "Got unexpected link id %d.\n", g_link_id);
 
     DestroyWindow(hwnd);
 }
@@ -270,6 +303,7 @@ START_TEST(syslink)
     test_create_syslink();
     test_LM_GETIDEALHEIGHT();
     test_LM_GETIDEALSIZE();
+    test_link_id();
 
     DestroyWindow(hWndParent);
     unload_v6_module(ctx_cookie, hCtx);

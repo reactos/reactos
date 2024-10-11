@@ -26,6 +26,7 @@
  */
 
 #include <stdarg.h>
+#include <stdlib.h>
 #include <string.h>
 #include "windef.h"
 #include "winbase.h"
@@ -37,7 +38,6 @@
 #include "uxtheme.h"
 #include "vssym32.h"
 #include "wine/debug.h"
-#include "wine/heap.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(progress);
 
@@ -529,10 +529,10 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
                                          WPARAM wParam, LPARAM lParam)
 {
     PROGRESS_INFO *infoPtr;
-    static const WCHAR themeClass[] = {'P','r','o','g','r','e','s','s',0};
+    static const WCHAR themeClass[] = L"Progress";
     HTHEME theme;
 
-    TRACE("hwnd=%p msg=%04x wparam=%lx lParam=%lx\n", hwnd, message, wParam, lParam);
+    TRACE("hwnd %p, msg %04x, wparam %Ix, lParam %Ix\n", hwnd, message, wParam, lParam);
 
     infoPtr = (PROGRESS_INFO *)GetWindowLongPtrW(hwnd, 0);
 
@@ -554,7 +554,7 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
 	    SWP_FRAMECHANGED | SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 
         /* allocate memory for info struct */
-        infoPtr = heap_alloc_zero (sizeof(*infoPtr));
+        infoPtr = Alloc(sizeof(*infoPtr));
         if (!infoPtr) return -1;
         SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
@@ -576,7 +576,7 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
 
     case WM_DESTROY:
         TRACE("Progress Ctrl destruction, hwnd=%p\n", hwnd);
-        heap_free (infoPtr);
+        Free (infoPtr);
         SetWindowLongPtrW(hwnd, 0, 0);
         theme = GetWindowTheme (hwnd);
         CloseThemeData (theme);
@@ -615,7 +615,7 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
             dwExStyle |= WS_EX_STATICEDGE;
         SetWindowLongW (hwnd, GWL_EXSTYLE, dwExStyle);
         
-        InvalidateRect (hwnd, NULL, FALSE);
+        InvalidateRect (hwnd, NULL, TRUE);
         return 0;
     }
 
@@ -712,7 +712,7 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
 
     case PBM_SETSTATE:
         if(wParam != PBST_NORMAL)
-            FIXME("state %04lx not yet handled\n", wParam);
+            FIXME("state %Ix not yet handled\n", wParam);
         return PBST_NORMAL;
 
     case PBM_GETSTATE:
@@ -734,7 +734,7 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
 
     default:
         if ((message >= WM_USER) && (message < WM_APP) && !COMCTL32_IsReflectedMessage(message))
-	    ERR("unknown msg %04x wp=%04lx lp=%08lx\n", message, wParam, lParam );
+            ERR("unknown msg %04x, wp %Ix, lp %Ix\n", message, wParam, lParam );
         return DefWindowProcW( hwnd, message, wParam, lParam );
     }
 }
