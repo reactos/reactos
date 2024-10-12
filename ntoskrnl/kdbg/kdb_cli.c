@@ -353,6 +353,7 @@ static const struct
 #endif // _M_IX86
     { "x", "x [address] [L count]", "Display count dwords, starting at address.", KdbpCmdDisassembleX },
     { "regs", "regs", "Display general purpose registers.", KdbpCmdRegs },
+    { "cregs", "cregs", "Display control, descriptor table and task segment registers.", KdbpCmdRegs },
     { "sregs", "sregs", "Display status registers.", KdbpCmdRegs },
     { "dregs", "dregs", "Display debug registers.", KdbpCmdRegs },
     { "bt", "bt [*frameaddr|thread id]", "Prints current backtrace or from given frame address.", KdbpCmdBackTrace },
@@ -983,6 +984,84 @@ KdbpCmdRegs(
             }
         }
         KdbpPrint("\n");
+    }
+    else if (Argv[0][0] == 'c') /* cregs */
+    {
+        ULONG Cr0, Cr2, Cr3, Cr4;
+        KDESCRIPTOR Gdtr = {0, 0, 0}, Idtr = {0, 0, 0};
+        USHORT Ldtr, Tr;
+        static const PCHAR Cr0Bits[32] = { " PE", " MP", " EM", " TS", " ET", " NE", NULL, NULL,
+                                           NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                           " WP", NULL, " AM", NULL, NULL, NULL, NULL, NULL,
+                                           NULL, NULL, NULL, NULL, NULL, " NW", " CD", " PG" };
+        static const PCHAR Cr4Bits[32] = { " VME", " PVI", " TSD", " DE", " PSE", " PAE", " MCE", " PGE",
+                                           " PCE", " OSFXSR", " OSXMMEXCPT", NULL, NULL, NULL, NULL, NULL,
+                                           NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                                           NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+        SYSDBG_CONTROL_SPACE Input;
+        KSPECIAL_REGISTERS SpecialRegisters;
+        NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
+
+        /* Retrieve the control registers */
+        RtlZeroMemory(&Input, sizeof(Input));
+        Input.Buffer = &SpecialRegisters;
+        Input.Request = sizeof(SpecialRegisters);
+#ifdef _M_IX86
+        Input.Address = sizeof(CONTEXT);
+#else
+        Input.Address = AMD64_DEBUG_CONTROL_SPACE_KSPECIAL;
+#endif
+        Status = KdSystemDebugControl(SysDbgReadControlSpace,
+                                      &Input, sizeof(Input),
+                                      NULL, 0,
+                                      NULL, KernelMode);
+        if (!NT_SUCCESS(Status))
+        {
+            KdbpPrint("Failed to get registers: status 0x%08x\n", Status);
+            return TRUE;
+        }
+        Cr0 = SpecialRegisters.Cr0;
+        Cr2 = SpecialRegisters.Cr2;
+        Cr3 = SpecialRegisters.Cr3;
+        Cr4 = SpecialRegisters.Cr4;
+
+        /* Retrieve the descriptor table and task segment registers */
+        Gdtr = SpecialRegisters.Gdtr;
+        Ldtr = SpecialRegisters.Ldtr;
+        Idtr = SpecialRegisters.Idtr;
+        Tr = SpecialRegisters.Tr;
+
+        /* Display the control registers */
+        KdbpPrint("CR0  0x%08x ", Cr0);
+        for (i = 0; i < 32; i++)
+        {
+            if (!Cr0Bits[i])
+                continue;
+
+            if ((Cr0 & (1 << i)) != 0)
+                KdbpPrint(Cr0Bits[i]);
+        }
+        KdbpPrint("\n");
+
+        KdbpPrint("CR2  0x%08x\n", Cr2);
+        KdbpPrint("CR3  0x%08x  Pagedir-Base 0x%08x %s%s\n", Cr3, (Cr3 & 0xfffff000),
+                  (Cr3 & (1 << 3)) ? " PWT" : "", (Cr3 & (1 << 4)) ? " PCD" : "" );
+        KdbpPrint("CR4  0x%08x ", Cr4);
+        for (i = 0; i < 32; i++)
+        {
+            if (!Cr4Bits[i])
+                continue;
+
+            if ((Cr4 & (1 << i)) != 0)
+                KdbpPrint(Cr4Bits[i]);
+        }
+        KdbpPrint("\n");
+
+        /* Display the descriptor table and task segment registers */
+        KdbpPrint("GDTR Base 0x%08x  Size 0x%04x\n", Gdtr.Base, Gdtr.Limit);
+        KdbpPrint("LDTR 0x%04x\n", Ldtr);
+        KdbpPrint("IDTR Base 0x%08x  Size 0x%04x\n", Idtr.Base, Idtr.Limit);
+        KdbpPrint("TR   0x%04x\n", Tr);
     }
     else if (Argv[0][0] == 's') /* sregs */
     {
