@@ -40,7 +40,7 @@ void FindExpectedFile(FileInfo* Array, size_t len, IShellFolder* pFolder, PCUITE
 
     for (size_t n = 0; n < len; ++n)
     {
-        if (!wcsicmp(Array[n].Name, DisplayName) && !Array[n].Found)
+        if (!_wcsicmp(Array[n].Name, DisplayName) && !Array[n].Found)
         {
             Array[n].Found = true;
             ExpectedName = Array[n].Name;
@@ -98,7 +98,7 @@ test_EnumDirFiles(const WCHAR *TestFolder, BOOL EnumFolders)
         SFGAOF Attributes = SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER;
         hr = spFolder->GetAttributesOf(1, &child, &Attributes);
 
-        if (!wcsicmp(ExpectedName, L"TMP0.zip"))
+        if (!_wcsicmp(ExpectedName, L"TMP0.zip"))
         {
             // We allow both .zip files being a 'file' (2k3) or a 'folder' (win10)
             if (Attributes & SFGAO_FOLDER)

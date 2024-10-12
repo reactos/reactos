@@ -10,6 +10,6 @@ list(APPEND SOURCE
 
 add_library(credui MODULE ${SOURCE} credui.rc)
 set_module_type(credui win32dll)
-target_link_libraries(credui wine)
+target_link_libraries(credui wine oldnames)
 add_importlibs(credui advapi32 user32 comctl32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET credui DESTINATION reactos/system32 FOR all)

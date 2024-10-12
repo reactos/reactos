@@ -3121,10 +3121,10 @@ IsSupportedActivePartition(
         ASSERT(*Volume->Info.FileSystem);
 
         /* NOTE: Please keep in sync with the RegisteredFileSystems list! */
-        if (wcsicmp(Volume->Info.FileSystem, L"FAT")   == 0 ||
-            wcsicmp(Volume->Info.FileSystem, L"FAT32") == 0 ||
-         // wcsicmp(Volume->Info.FileSystem, L"NTFS")  == 0 ||
-            wcsicmp(Volume->Info.FileSystem, L"BTRFS") == 0)
+        if (_wcsicmp(Volume->Info.FileSystem, L"FAT")   == 0 ||
+            _wcsicmp(Volume->Info.FileSystem, L"FAT32") == 0 ||
+         // _wcsicmp(Volume->Info.FileSystem, L"NTFS")  == 0 ||
+            _wcsicmp(Volume->Info.FileSystem, L"BTRFS") == 0)
         {
             return TRUE;
         }

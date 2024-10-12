@@ -60,7 +60,7 @@ BOOL LoadRegistryMMEDrivers(char* key)
             /* We look for mappers first so they don't match
                something else later on! */
 
-            if ( ! stricmp("wavemapper", value_name) )
+            if ( ! _stricmp("wavemapper", value_name) )
             {
                 TRACE("Found a Wave-mapper: %s\n", value_data);
                 /* Delay loading Wave mapper driver */
@@ -68,7 +68,7 @@ BOOL LoadRegistryMMEDrivers(char* key)
                 is_mapper = TRUE;
                 driver_count ++;
             }
-            else if ( ! stricmp("midimapper", value_name) )
+            else if ( ! _stricmp("midimapper", value_name) )
             {
                 TRACE("Found a MIDI-mapper: %s\n", value_data);
                 /* Delay loading MIDI mapper driver */

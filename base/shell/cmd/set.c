@@ -278,7 +278,7 @@ ident_len(LPCTSTR p)
 #define PARSE_IDENT(ident, identlen, p) \
 do { \
     identlen = ident_len(p); \
-    ident = (LPTSTR)alloca((identlen + 1) * sizeof(TCHAR)); \
+    ident = (LPTSTR)_alloca((identlen + 1) * sizeof(TCHAR)); \
     memmove(ident, p, identlen * sizeof(TCHAR)); \
     ident[identlen] = 0; \
     p += identlen; \
@@ -681,7 +681,7 @@ evaluate:
                 return FALSE;
         }
 
-        buf = (LPTSTR)alloca(32 * sizeof(TCHAR));
+        buf = (LPTSTR)_alloca(32 * sizeof(TCHAR));
         _sntprintf(buf, 32, _T("%i"), identval);
         SetEnvironmentVariable(ident, buf); // TODO FIXME - check return value
         exprval = identval;

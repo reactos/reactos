@@ -6,7 +6,9 @@ add_definitions(
     -D__WINESRC__
     -D__ROS_LONG64__
     -D_WINE
-    -D_CRYPT32_)
+    -D_CRYPT32_
+    -Dstrncasecmp=_strnicmp
+)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(crypt32.dll crypt32.spec ADD_IMPORTLIB)

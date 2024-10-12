@@ -30,6 +30,7 @@ DEBUG_CHANNEL(nls);
 #include "lcformat_private.h"
 #ifdef __REACTOS__
     #include "japanese.h"
+    #define strcasecmp _stricmp
 #endif
 
 INT WINAPI CompareStringEx(LPCWSTR locale, DWORD flags, LPCWSTR str1, INT len1,

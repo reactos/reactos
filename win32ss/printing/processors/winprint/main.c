@@ -206,7 +206,7 @@ OpenPrintProcessor(PWSTR pPrinterName, PPRINTPROCESSOROPENDATA pPrintProcessorOp
     pHandle = DllAllocSplMem(sizeof(WINPRINT_HANDLE));
 
     // Check what datatype was given.
-    if (wcsicmp(pPrintProcessorOpenData->pDatatype, L"RAW") == 0)
+    if (_wcsicmp(pPrintProcessorOpenData->pDatatype, L"RAW") == 0)
     {
         pHandle->Datatype = RAW;
     }

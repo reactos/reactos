@@ -2390,7 +2390,7 @@ RCreateServiceW(
         (lpServiceStartName))
     {
         /* We allow LocalSystem to run interactive. */
-        if (wcsicmp(lpServiceStartName, L"LocalSystem"))
+        if (_wcsicmp(lpServiceStartName, L"LocalSystem"))
         {
             return ERROR_INVALID_PARAMETER;
         }

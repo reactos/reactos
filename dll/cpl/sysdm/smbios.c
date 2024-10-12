@@ -365,7 +365,7 @@ BOOL IsGenericSystemName(PCWSTR ven, PCWSTR dev, BOOL * bRemove)
         }
         else
         {
-            bMatch = !wcsicmp(ven, Vendors[i].pwName);
+            bMatch = !_wcsicmp(ven, Vendors[i].pwName);
         }
         if (bMatch)
         {
@@ -389,7 +389,7 @@ BOOL IsGenericSystemName(PCWSTR ven, PCWSTR dev, BOOL * bRemove)
         }
         else
         {
-            bMatch = !wcsicmp(dev, Devices[i].pwName);
+            bMatch = !_wcsicmp(dev, Devices[i].pwName);
         }
         if (bMatch)
         {
@@ -430,7 +430,7 @@ void AppendSystemFamily(PWSTR pBuf, SIZE_T cchBuf, PCHAR * DmiStrings, PWSTR dev
         if (wcsistr(dev, wideStr) == NULL &&
             (!Aliases[i] || wcsistr(dev, Aliases[i]) == NULL) &&
             DmiStrings[SYS_FAMILY] != NULL &&
-            !stricmp(DmiStrings[SYS_FAMILY], KnownFamilies[i]))
+            !_stricmp(DmiStrings[SYS_FAMILY], KnownFamilies[i]))
         {
             if (wcslen(pBuf) > 0 && wcslen(dev) > 0)
             {
@@ -746,7 +746,7 @@ BOOL GetSystemName(PWSTR pBuf, SIZE_T cchBuf)
     }
 
     // workaround for LENOVO notebooks
-    if (!wcsicmp(ven, L"LENOVO"))
+    if (!_wcsicmp(ven, L"LENOVO"))
     {
         StringCchCopyW(ven, _countof(ven), L"Lenovo");
 
@@ -812,9 +812,9 @@ BOOL GetSystemName(PWSTR pBuf, SIZE_T cchBuf)
     {
         if (DmiStrings[SYS_PRODUCT] != NULL &&
             DmiStrings[SYS_VERSION] != NULL &&
-            (!stricmp(DmiStrings[SYS_PRODUCT], "Tablet PC") ||
-             !stricmp(DmiStrings[SYS_PRODUCT], "Notebook") ||
-             !stricmp(DmiStrings[SYS_PRODUCT], "Decktop")))
+            (!_stricmp(DmiStrings[SYS_PRODUCT], "Tablet PC") ||
+             !_stricmp(DmiStrings[SYS_PRODUCT], "Notebook") ||
+             !_stricmp(DmiStrings[SYS_PRODUCT], "Decktop")))
         {
             GetSMBiosStringW(DmiStrings[SYS_VERSION], dev, _countof(dev), TRUE);
         }

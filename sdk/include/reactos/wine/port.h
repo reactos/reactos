@@ -91,6 +91,7 @@ struct statfs;
 # endif /* defined(__BEOS__) */
 #endif /* !defined(HAVE_STATFS) */
 
+struct stat;
 
 /****************************************************************
  * Macro definitions
