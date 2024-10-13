@@ -5,6 +5,7 @@ if(_WINKD_)
 endif()
 
 include_directories(spapisup utils)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/pseh/include)
 
 list(APPEND SOURCE
     spapisup/fileqsup.c
