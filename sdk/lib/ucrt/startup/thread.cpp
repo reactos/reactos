@@ -126,7 +126,7 @@ static __acrt_thread_parameter* __cdecl create_thread_parameter(
         return nullptr;
     }
 
-    parameter.get()->_procedure = procedure;
+    parameter.get()->_procedure = reinterpret_cast<void*>(procedure);
     parameter.get()->_context   = context;
 
     // Attempt to bump the reference count of the module in which the user's
@@ -149,7 +149,7 @@ extern "C" uintptr_t __cdecl _beginthread(
 {
     _VALIDATE_RETURN(procedure != nullptr, EINVAL, reinterpret_cast<uintptr_t>(INVALID_HANDLE_VALUE));
 
-    unique_thread_parameter parameter(create_thread_parameter(procedure, context));
+    unique_thread_parameter parameter(create_thread_parameter(reinterpret_cast<void*>(procedure), context));
     if (!parameter)
     {
         return reinterpret_cast<uintptr_t>(INVALID_HANDLE_VALUE);
@@ -199,7 +199,7 @@ extern "C" uintptr_t __cdecl _beginthreadex(
 {
     _VALIDATE_RETURN(procedure != nullptr, EINVAL, 0);
 
-    unique_thread_parameter parameter(create_thread_parameter(procedure, context));
+    unique_thread_parameter parameter(create_thread_parameter((void*)procedure, context));
     if (!parameter)
     {
         return 0;
