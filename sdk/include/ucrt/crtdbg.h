@@ -11,6 +11,7 @@
 
 #include <corecrt.h>
 #include <vcruntime_new_debug.h>
+#include <intrin.h> // for __debugbreak() on GCC
 
 #pragma warning(push)
 #pragma warning(disable: _UCRT_DISABLED_WARNINGS)
