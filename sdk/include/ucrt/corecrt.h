@@ -280,7 +280,18 @@ extern "C++"
 #define _CRT_SIZE_MAX ((size_t)-1)
 
 #define __FILEW__     _CRT_WIDE(__FILE__)
+
+#ifdef _MSC_VER
 #define __FUNCTIONW__ _CRT_WIDE(__FUNCTION__)
+#else // _MSC_VER
+#define __FUNCTIONW__ \
+({ \
+    static wchar_t __funcw__[sizeof(__func__)]; \
+    for (size_t i = 0; i < sizeof(__func__); i++) \
+        __funcw__[i] = __func__[i]; \
+    __funcw__; \
+})
+#endif // _MSC_VER
 
 #ifdef __cplusplus
     #ifndef _STATIC_ASSERT
