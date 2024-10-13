@@ -166,7 +166,38 @@ extern "C" __declspec(noreturn) void __cdecl _invalid_parameter_noinfo_noreturn(
         EXCEPTION_POINTERS ExceptionPointers = {&ExceptionRecord, &ContextRecord};
 
         #ifdef _M_IX86
-
+        #if defined(__GNUC__) || defined(__clang__)
+        __asm__ __volatile__(
+            "movl %%eax, %[CxEax]\n\t"
+            "movl %%ecx, %[CxEcx]\n\t"
+            "movl %%edx, %[CxEdx]\n\t"
+            "movl %%ebx, %[CxEbx]\n\t"
+            "movl %%esi, %[CxEsi]\n\t"
+            "movl %%edi, %[CxEdi]\n\t"
+            : [CxEax] "=m" (ContextRecord.Eax),
+              [CxEcx] "=m" (ContextRecord.Ecx),
+              [CxEdx] "=m" (ContextRecord.Edx),
+              [CxEbx] "=m" (ContextRecord.Ebx),
+              [CxEsi] "=m" (ContextRecord.Esi),
+              [CxEdi] "=m" (ContextRecord.Edi));
+        __asm__ __volatile__(
+            "movw %%ss, %[CxSegSs]\n\t"
+            "movw %%cs, %[CxSegCs]\n\t"
+            "movw %%ds, %[CxSegDs]\n\t"
+            "movw %%es, %[CxSegEs]\n\t"
+            "movw %%fs, %[CxSegFs]\n\t"
+            "movw %%gs, %[CxSegGs]\n\t"
+            : [CxSegSs] "=m" (ContextRecord.SegSs),
+              [CxSegCs] "=m" (ContextRecord.SegCs),
+              [CxSegDs] "=m" (ContextRecord.SegDs),
+              [CxSegEs] "=m" (ContextRecord.SegEs),
+              [CxSegFs] "=m" (ContextRecord.SegFs),
+              [CxSegGs] "=m" (ContextRecord.SegGs));
+        __asm__ __volatile__(
+            "pushfl\n\t"
+            "popl %[CxEFlags]\n\t"
+            : [CxEFlags] "=m" (ContextRecord.EFlags));
+        #else // ^^^ __GNUC__ ^^^ // vvv !__GNUC__ vvv //
         __asm
         {
             mov dword ptr [ContextRecord.Eax  ], eax
@@ -184,6 +215,7 @@ extern "C" __declspec(noreturn) void __cdecl _invalid_parameter_noinfo_noreturn(
             pushfd
             pop [ContextRecord.EFlags]
         }
+        #endif // !__GNUC__
 
         ContextRecord.ContextFlags = CONTEXT_CONTROL;
 
