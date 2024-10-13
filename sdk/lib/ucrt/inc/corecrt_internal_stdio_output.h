@@ -1580,26 +1580,26 @@ private:
         return true;
     }
 
-    template <typename Character>
-    static bool __cdecl is_pointer_specifier(Character const specifier) throw()
+    template <typename Character2>
+    static bool __cdecl is_pointer_specifier(Character2 const specifier) throw()
     {
         return specifier == 'p';
     }
 
-    template <typename Character>
-    static bool __cdecl is_string_specifier(Character const specifier) throw()
+    template <typename Character2>
+    static bool __cdecl is_string_specifier(Character2 const specifier) throw()
     {
         return specifier == 's' || specifier == 'S';
     }
 
-    template <typename Character>
-    static bool __cdecl is_character_specifier(Character const specifier) throw()
+    template <typename Character2>
+    static bool __cdecl is_character_specifier(Character2 const specifier) throw()
     {
         return specifier == 'c' || specifier == 'C';
     }
 
-    template <typename Character>
-    static bool __cdecl is_integral_specifier(Character const specifier) throw()
+    template <typename Character2>
+    static bool __cdecl is_integral_specifier(Character2 const specifier) throw()
     {
         return specifier == 'd' || specifier == 'i' || specifier == 'o'
             || specifier == 'u' || specifier == 'x' || specifier == 'X'
