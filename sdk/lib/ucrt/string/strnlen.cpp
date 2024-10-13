@@ -138,7 +138,7 @@ static __forceinline size_t __cdecl common_strnlen_c(
         // [2] Aligned Vector Loop (Middle)
         __crt_simd_cleanup_guard<Isa> const simd_cleanup;
 
-        traits::pack_type const zero = traits::get_zero_pack();
+        typename traits::pack_type const zero = traits::get_zero_pack();
 
         size_t const middle_and_suffix_count = maximum_count - prefix_count;
         size_t const suffix_count            = middle_and_suffix_count % traits::pack_size;
@@ -147,7 +147,7 @@ static __forceinline size_t __cdecl common_strnlen_c(
         Element const* const middle_last = it + middle_count;
         while (!last_reached<Mode>(it, middle_last))
         {
-            auto const element_it = reinterpret_cast<traits::pack_type const*>(it);
+            auto const element_it = reinterpret_cast<typename traits::pack_type const*>(it);
 
             bool const element_has_terminator = traits::compute_byte_mask(traits::compare_equals(*element_it, zero)) != 0;
             if (element_has_terminator)

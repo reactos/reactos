@@ -11,7 +11,7 @@
 template<typename TPolicy>
 static typename TPolicy::policy_type __cdecl get_win_policy(typename TPolicy::appmodel_policy_type defaultValue)
 {
-    TPolicy::appmodel_policy_type appmodelPolicy = defaultValue;
+    typename TPolicy::appmodel_policy_type appmodelPolicy = defaultValue;
 
     // Secure processes cannot load the appmodel DLL, so only attempt loading
     // policy information if this is not a secure process.
@@ -29,10 +29,10 @@ static typename TPolicy::policy_type __cdecl get_cached_win_policy(typename TPol
     static long state_cache = 0;
     if (long const cached_state = __crt_interlocked_read(&state_cache))
     {
-        return static_cast<TPolicy::policy_type>(cached_state);
+        return static_cast<typename TPolicy::policy_type>(cached_state);
     }
 
-    TPolicy::appmodel_policy_type appmodelPolicy = defaultValue;
+    typename TPolicy::appmodel_policy_type appmodelPolicy = defaultValue;
 
     // Secure processes cannot load the appmodel DLL, so only attempt loading
     // policy information if this is not a secure process.
@@ -41,7 +41,7 @@ static typename TPolicy::policy_type __cdecl get_cached_win_policy(typename TPol
         TPolicy::appmodel_get_policy(&appmodelPolicy);
     }
 
-    TPolicy::policy_type const policyValue = TPolicy::appmodel_policy_to_policy_type(appmodelPolicy);
+    typename TPolicy::policy_type const policyValue = TPolicy::appmodel_policy_to_policy_type(appmodelPolicy);
 
     long const cached_state = _InterlockedExchange(&state_cache, static_cast<long>(policyValue));
     if (cached_state)
