@@ -17,6 +17,41 @@
 
 #pragma pack(push, _CRT_PACKING)
 
+#if defined(__GNUC__) || defined(__clang__)
+// We have to declare them here, because GCC expects them to be declared,
+// when the template specializations below are instanciated!
+#include <corecrt_io.h>
+extern "C" {
+errno_t __cdecl _access_s(char const* const path, int const access_mode);
+errno_t __cdecl _waccess_s(wchar_t const* const path, int const access_mode);
+__time32_t __cdecl __loctotime32_t(int, int, int, int, int, int, int);
+__time64_t __cdecl __loctotime64_t(int, int, int, int, int, int, int);
+_Check_return_opt_ long __cdecl _lseek_nolock(_In_ int _FileHandle, _In_ long _Offset, _In_ int _Origin);
+_Check_return_opt_ __int64 __cdecl _lseeki64_nolock(_In_ int _FileHandle, _In_ __int64 _Offset, _In_ int _Origin);
+_ACRTIMP __time32_t __cdecl _time32(_Out_opt_ __time32_t* _Time);
+_ACRTIMP __time64_t __cdecl _time64(_Out_opt_ __time64_t* _Time);
+_Success_(return == 0)
+errno_t __cdecl _sopen_nolock(
+    _Out_  int*        _UnlockFlag,
+    _Out_  int*        _FileHandle,
+    _In_z_ char const* _FileName,
+    _In_   int         _OpenFlag,
+    _In_   int         _ShareFlag,
+    _In_   int         _PermissionFlag,
+    _In_   int         _SecureFlag
+    );
+_Success_(return == 0)
+errno_t __cdecl _wsopen_nolock(
+    _Out_  int*           _UnlockFlag,
+    _Out_  int*           _FileHandle,
+    _In_z_ wchar_t const* _FileName,
+    _In_   int            _OpenFlag,
+    _In_   int            _ShareFlag,
+    _In_   int            _PermissionFlag,
+    _In_   int            _SecureFlag
+    );
+} // extern "C"
+#endif // __GNUC__
 
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
