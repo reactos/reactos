@@ -1,5 +1,15 @@
+/*
+ * PROJECT:     ReactOS SDK
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Definitions for CRT startup functionality
+ * COPYRIGHT:   Copyright 2024 Timo Kreuzer (timo.kreuzer@reactos.org)
+ */
 
 #pragma once
+
+#include <vcruntime.h>
+
+_CRT_BEGIN_C_HEADER
 
 typedef enum _crt_argv_mode
 {
@@ -21,4 +31,9 @@ typedef enum _crt_exit_return_mode
     _crt_exit_return_to_caller
 } _crt_exit_return_mode;
 
+__vcrt_bool __cdecl __vcrt_initialize(void);
 __vcrt_bool __cdecl __vcrt_uninitialize(_In_ __vcrt_bool _Terminating);
+
+int __cdecl __isa_available_init(void);
+
+_CRT_END_C_HEADER

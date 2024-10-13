@@ -16,6 +16,10 @@
 #error eh.h is only for C++!
 #endif
 
+extern "C++" {
+    _VCRT_EXPORT_STD class type_info;
+}
+
 typedef void (__cdecl *terminate_function)(void);
 typedef void (__cdecl *terminate_handler)(void);
 typedef void (__cdecl *unexpected_function)(void);
