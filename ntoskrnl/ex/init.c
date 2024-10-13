@@ -1139,8 +1139,8 @@ ExpInitializeExecutive(IN ULONG Cpu,
     {
         /* Get the service pack string */
         Status = RtlFindMessage(NtosEntry->DllBase,
-                                11,
-                                0,
+                                RT_MESSAGETABLE,
+                                LANG_NEUTRAL,
                                 WINDOWS_NT_CSD_STRING,
                                 &MsgEntry);
         if (NT_SUCCESS(Status))
@@ -1425,8 +1425,8 @@ Phase1InitializationDiscard(IN PVOID Context)
 
     /* Find the banner message */
     MsgStatus = RtlFindMessage(NtosEntry->DllBase,
-                               11,
-                               0,
+                               RT_MESSAGETABLE,
+                               LANG_NEUTRAL,
                                WINDOWS_NT_BANNER,
                                &MsgEntry);
 
@@ -1586,8 +1586,8 @@ Phase1InitializationDiscard(IN PVOID Context)
 
     /* Get the information string from our resource file */
     MsgStatus = RtlFindMessage(NtosEntry->DllBase,
-                               11,
-                               0,
+                               RT_MESSAGETABLE,
+                               LANG_NEUTRAL,
                                KeNumberProcessors > 1 ?
                                WINDOWS_NT_INFO_STRING_PLURAL :
                                WINDOWS_NT_INFO_STRING,
@@ -1760,8 +1760,8 @@ Phase1InitializationDiscard(IN PVOID Context)
 
             /* Find the message to print out */
             Status = RtlFindMessage(NtosEntry->DllBase,
-                                    11,
-                                    0,
+                                    RT_MESSAGETABLE,
+                                    LANG_NEUTRAL,
                                     MessageCode,
                                     &MsgEntry);
             if (NT_SUCCESS(Status))
@@ -1780,8 +1780,8 @@ Phase1InitializationDiscard(IN PVOID Context)
         {
             /* Find the message to print out */
             Status = RtlFindMessage(NtosEntry->DllBase,
-                                    11,
-                                    0,
+                                    RT_MESSAGETABLE,
+                                    LANG_NEUTRAL,
                                     BOOTLOG_ENABLED,
                                     &MsgEntry);
             if (NT_SUCCESS(Status))
