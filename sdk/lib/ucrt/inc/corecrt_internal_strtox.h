@@ -1329,7 +1329,7 @@ floating_point_parse_result __cdecl parse_floating_point_possible_nan(
     StoredState      stored_state
     ) throw()
 {
-    using char_type = CharacterSource::char_type;
+    using char_type = typename CharacterSource::char_type;
 
     auto restore_state = [&]()
     {
