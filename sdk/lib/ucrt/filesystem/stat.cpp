@@ -83,7 +83,7 @@ static bool __cdecl compute_size(BY_HANDLE_FILE_INFORMATION const& file_info, __
     _VALIDATE_RETURN_NOEXC(file_info.nFileSizeHigh <= LONG_MAX, EOVERFLOW, false);
 
     size = static_cast<__int64>(
-        static_cast<unsigned __int64>(file_info.nFileSizeHigh) * 0x100000000i64 +
+        static_cast<unsigned __int64>(file_info.nFileSizeHigh) * 0x100000000ll +
         static_cast<unsigned __int64>(file_info.nFileSizeLow));
     return true;
 }
