@@ -1870,7 +1870,7 @@ c_string_character_source<Character> __cdecl make_c_string_character_source(
     EndPointer       const end
     ) throw()
 {
-    return c_string_character_source<Character>(string, const_cast<Character const**>(end));
+    return c_string_character_source<Character>(string, (Character const**)(end));
 }
 
 template <typename Integer, typename Character, typename EndPointer>
