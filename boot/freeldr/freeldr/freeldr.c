@@ -26,6 +26,12 @@ DBG_DEFAULT_CHANNEL(WARNING);
 
 /* GLOBALS ********************************************************************/
 
+#define TOSTRING_(X) #X
+#define TOSTRING(X) TOSTRING_(X)
+
+const PCSTR FrLdrVersionString =
+    "FreeLoader v" TOSTRING(FREELOADER_MAJOR_VERSION) "." TOSTRING(FREELOADER_MINOR_VERSION);
+
 CCHAR FrLdrBootPath[MAX_PATH] = "";
 
 /* FUNCTIONS ******************************************************************/
