@@ -213,9 +213,8 @@ START_TEST(ILIsEqual)
     p1 = p2 = NULL;
     ok_int(ILIsEqual(p1, p2), TRUE);
 
-    ITEMIDLIST emptyitem = {};
-    p1 = p2 = &emptyitem;
-    ok_int(ILIsEqual(p1, p2), TRUE);
+    ITEMIDLIST emptyitem = {}, emptyitem2 = {};
+    ok_int(ILIsEqual(&emptyitem, &emptyitem2), TRUE);
 
     ok_int(ILIsEqual(NULL, &emptyitem), FALSE); // These two are not equal for some reason
 
