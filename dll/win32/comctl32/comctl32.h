@@ -34,6 +34,7 @@
 #include "winuser.h"
 #include "winnls.h"
 #include "commctrl.h"
+#include "windowsx.h"
 
 #ifdef __REACTOS__
 // This is really ComCtl32 v5.82, the last one not supporting SxS
@@ -152,8 +153,8 @@ typedef struct
    RECT           droppedRect;
    INT            droppedIndex;
    INT            fixedOwnerDrawHeight;
-   INT            droppedWidth;   /* last two are not used unless set */
-   INT            editHeight;     /* explicitly */
+   INT            droppedWidth;   /* not used unless set explicitly */
+   INT            item_height;
    INT            visibleItems;
 } HEADCOMBO, *LPHEADCOMBO;
 
