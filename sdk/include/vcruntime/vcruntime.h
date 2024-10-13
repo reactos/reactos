@@ -1,5 +1,13 @@
+/*
+ * PROJECT:     ReactOS SDK
+ * LICENSE:     MIT (https://spdx.org/licenses/MIT)
+ * PURPOSE:     Common definitions
+ * COPYRIGHT:   Copyright 2024 Timo Kreuzer (timo.kreuzer@reactos.org)
+ */
 
 #pragma once
+
+#define _VCRUNTIME_H
 
 #include <_mingw.h>
 #include <sal.h>
@@ -68,6 +76,12 @@ _CRT_BEGIN_C_HEADER
 #else
 #define _CONST_RETURN
 #endif
+#endif
+
+#ifdef _BUILD_STD_MODULE
+ #define _VCRT_EXPORT_STD export
+#else
+ #define _VCRT_EXPORT_STD
 #endif
 
 #ifdef __GNUC__
