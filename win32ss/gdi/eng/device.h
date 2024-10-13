@@ -8,8 +8,6 @@ NTAPI
 PDEVOBJ_vRefreshModeList(
     PPDEVOBJ ppdev);
 
-extern PGRAPHICS_DEVICE gpPrimaryGraphicsDevice;
-
 VOID
 APIENTRY
 EngFileWrite(

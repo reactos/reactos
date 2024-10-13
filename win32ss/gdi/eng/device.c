@@ -12,7 +12,7 @@
 
 DBG_DEFAULT_CHANNEL(EngDev);
 
-PGRAPHICS_DEVICE gpPrimaryGraphicsDevice;
+static PGRAPHICS_DEVICE gpPrimaryGraphicsDevice;
 static PGRAPHICS_DEVICE gpVgaGraphicsDevice;
 
 static PGRAPHICS_DEVICE gpGraphicsDeviceFirst = NULL;
