@@ -187,7 +187,7 @@ int __cdecl __acrt_locale_initialize_numeric (
     if ( (ploci->lconv_num_refcount != nullptr) &&
          (InterlockedDecrement(ploci->lconv_num_refcount) == 0))
     {
-        _ASSERTE(ploci->lconv_num_refcount > 0);
+        _ASSERTE(*ploci->lconv_num_refcount > 0);
     }
     if ( (ploci->lconv_intl_refcount != nullptr) &&
          (InterlockedDecrement(ploci->lconv_intl_refcount) == 0))

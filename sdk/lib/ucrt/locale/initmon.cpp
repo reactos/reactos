@@ -205,7 +205,7 @@ int __cdecl __acrt_locale_initialize_monetary (
     if ( (ploci->lconv_mon_refcount != nullptr) &&
          (InterlockedDecrement(ploci->lconv_mon_refcount) == 0))
     {
-        _ASSERTE(ploci->lconv_mon_refcount > 0);
+        _ASSERTE(*ploci->lconv_mon_refcount > 0);
     }
     if ( (ploci->lconv_intl_refcount != nullptr) &&
          (InterlockedDecrement(ploci->lconv_intl_refcount) == 0))

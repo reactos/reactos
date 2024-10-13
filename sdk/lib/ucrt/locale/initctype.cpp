@@ -251,7 +251,7 @@ error_cleanup:
         if ( (ploci->ctype1_refcount != nullptr)&&
              (InterlockedDecrement(ploci->ctype1_refcount) == 0))
         {
-            _ASSERTE(ploci->ctype1_refcount > 0);
+            _ASSERTE(*ploci->ctype1_refcount > 0);
         }
         ploci->ctype1_refcount        = nullptr;
         ploci->ctype1                 = nullptr;
