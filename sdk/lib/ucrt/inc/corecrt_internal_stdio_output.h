@@ -30,16 +30,33 @@ namespace __crt_stdio_output {
 // reads the next argument of type T from the varargs list and updates the
 // va_list, just like va_arg does.  The 'peek' function returns the next argument
 // of type T, but does not modify the va_list.
+#if defined(__GNUC__) || defined(__clang__)
+template<typename T> struct _va_arg_promoted_tye { using type = T; };
+template<> struct _va_arg_promoted_tye<signed char> { using type = int; };
+template<> struct _va_arg_promoted_tye<unsigned char> { using type = int; };
+template<> struct _va_arg_promoted_tye<wchar_t> { using type = int; };
+template<> struct _va_arg_promoted_tye<short int> { using type = int; };
+template<> struct _va_arg_promoted_tye<short unsigned int> { using type = int; };
+#endif
+
 template <typename T>
 T read_va_arg(va_list& arglist) throw()
 {
+#if defined(__GNUC__) || defined(__clang__)
+    return (T)(va_arg(arglist, typename _va_arg_promoted_tye<T>::type));
+#else
     return va_arg(arglist, T);
+#endif
 }
 
 template <typename T>
 T peek_va_arg(va_list arglist) throw()
 {
+#if defined(__GNUC__) || defined(__clang__)
+    return (T)(va_arg(arglist, typename _va_arg_promoted_tye<T>::type));
+#else
     return va_arg(arglist, T);
+#endif
 }
 
 
