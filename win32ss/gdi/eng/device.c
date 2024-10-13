@@ -94,8 +94,8 @@ EngpHasVgaDriver(
         return FALSE;
     }
 
-    /* Device is using VGA driver if service name starts with 'VGA' (case insensitive) */
-    return (_wcsnicmp(awcServiceName, L"VGA", 3) == 0);
+    /* Device is using VGA driver if service name is 'VGASave' (case insensitive) */
+    return (_wcsicmp(awcServiceName, L"VGASave") == 0);
 }
 
 /*
@@ -242,7 +242,7 @@ EngpUpdateGraphicsDeviceList(VOID)
         if (pGraphicsDevice->StateFlags & DISPLAY_DEVICE_VGA_COMPATIBLE)
         {
             /* Save this as the VGA adapter */
-            if (!gpVgaGraphicsDevice)
+            if (!gpVgaGraphicsDevice || !EngpHasVgaDriver(gpVgaGraphicsDevice))
             {
                 gpVgaGraphicsDevice = pGraphicsDevice;
                 TRACE("gpVgaGraphicsDevice = %p\n", gpVgaGraphicsDevice);
