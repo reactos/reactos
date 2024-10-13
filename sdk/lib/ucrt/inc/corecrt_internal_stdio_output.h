@@ -111,6 +111,10 @@ template <typename Character>
 class console_output_adapter
     : public output_adapter_common<Character, console_output_adapter<Character>>
 {
+#ifndef _MSC_VER // For retarded compilers!
+    using oac_base = output_adapter_common<Character, console_output_adapter<Character>>;
+    using oac_base::write_string_impl;
+#endif
 public:
     typedef __acrt_stdio_char_traits<Character> char_traits;
 
@@ -141,6 +145,10 @@ template <typename Character>
 class stream_output_adapter
     : public output_adapter_common<Character, stream_output_adapter<Character>>
 {
+#ifndef _MSC_VER // For retarded compilers!
+    using oac_base = output_adapter_common<Character, stream_output_adapter<Character>>;
+    using oac_base::write_string_impl;
+#endif
 public:
     typedef __acrt_stdio_char_traits<Character> char_traits;
 
@@ -969,6 +977,11 @@ class output_adapter_data
     : protected common_data<Character>
 {
 protected:
+#ifndef _MSC_VER // For retarded compilers!
+    using common_data<Character>::_options;
+    using common_data<Character>::_format_it;
+    using common_data<Character>::_valist_it;
+#endif
     output_adapter_data(
         OutputAdapter      const& output_adapter,
         uint64_t           const  options,
@@ -1003,6 +1016,12 @@ class standard_base
     : protected output_adapter_data<Character, OutputAdapter>
 {
 protected:
+#ifndef _MSC_VER // For retarded compilers!
+    using common_data_base = typename output_adapter_data<Character, OutputAdapter>::template common_data<Character>;
+    using common_data_base::_valist_it;
+    using common_data_base::_field_width;
+    using common_data_base::_precision;
+#endif
     template <typename... Ts>
     standard_base(Ts&&... arguments) throw()
         : output_adapter_data<Character, OutputAdapter>{arguments...     },
@@ -1106,6 +1125,11 @@ class format_validation_base
     : protected standard_base<Character, OutputAdapter>
 {
 protected:
+#ifndef _MSC_VER // For retarded compilers!
+    using common_data_base = typename standard_base<Character, OutputAdapter>::template output_adapter_data<Character, OutputAdapter>::template common_data<Character>;
+    using common_data_base::_ptd;
+    using common_data_base::_state;
+#endif
     template <typename... Ts>
     format_validation_base(Ts&&... arguments) throw()
         : standard_base<Character, OutputAdapter>{arguments...}
@@ -1150,6 +1174,19 @@ class positional_parameter_base
     : protected format_validation_base<Character, OutputAdapter>
 {
 protected:
+#if defined(__GNUC__) || defined(__clang__) // For retarded compilers!
+    using common_data_base = typename format_validation_base<Character, OutputAdapter>::template standard_base<Character, OutputAdapter>::template output_adapter_data<Character, OutputAdapter>::template common_data<Character>;
+    using output_adapter_data = typename format_validation_base<Character, OutputAdapter>::template standard_base<Character, OutputAdapter>::template output_adapter_data<Character, OutputAdapter>;
+    using common_data_base::_format_it;
+    using common_data_base::_ptd;
+    using common_data_base::_field_width;
+    using common_data_base::_precision;
+    using common_data_base::_format_char;
+    using common_data_base::_valist_it;
+    using common_data_base::_length;
+    using common_data_base::_state;
+    using common_data_base::_options;
+#endif
 
     typedef positional_parameter_base    self_type;
     typedef format_validation_base       base_type;
@@ -1641,6 +1678,39 @@ class output_processor
     : private ProcessorBase
 {
 public:
+#ifndef _MSC_VER // For retarded compilers!
+    using ProcessorBase::advance_to_next_pass;
+    using ProcessorBase::validate_and_update_state_at_beginning_of_format_character;
+    using ProcessorBase::validate_and_update_state_at_end_of_format_string;
+    using ProcessorBase::should_skip_normal_state_processing;
+    using ProcessorBase::update_field_width;
+    using ProcessorBase::should_format;
+    using ProcessorBase::update_precision;
+    using ProcessorBase::should_skip_type_state_output;
+    using ProcessorBase::validate_state_for_type_case_a;
+    using ProcessorBase::tchar_string;
+    using ProcessorBase::state_transition_table;
+    using ProcessorBase::state_count;
+    using oad_base = typename ProcessorBase::output_adapter_data;
+    using oad_base::_output_adapter;
+    using common_data_base = typename ProcessorBase::common_data_base;
+    using common_data_base::_string_length;
+    using common_data_base::_ptd;
+    using common_data_base::_format_it;
+    using common_data_base::_state;
+    using common_data_base::_format_char;
+    using common_data_base::_characters_written;
+    using common_data_base::_string_is_wide;
+    using common_data_base::_field_width;
+    using common_data_base::_suppress_output;
+    using common_data_base::_flags;
+    using common_data_base::_precision;
+    using common_data_base::_length;
+    using common_data_base::_options;
+    using common_data_base::_buffer;
+    using common_data_base::_narrow_string;
+    using common_data_base::_wide_string;
+#endif
 
     typedef __acrt_stdio_char_traits<Character> char_traits;
 

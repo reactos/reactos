@@ -42,6 +42,7 @@
         : __crt_simd_pack_traits<Isa>
     {
         using element_type = Element;
+        using __crt_simd_pack_traits<Isa>::pack_size;
 
         enum : size_t
         {
