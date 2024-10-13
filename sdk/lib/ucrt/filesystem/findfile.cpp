@@ -27,13 +27,13 @@ template <typename CrtTime>
 static CrtTime __cdecl convert_system_time_to_time_t(SYSTEMTIME const& st) throw();
 
 template <>
-static __time32_t __cdecl convert_system_time_to_time_t(SYSTEMTIME const& st) throw()
+__time32_t __cdecl convert_system_time_to_time_t(SYSTEMTIME const& st) throw()
 {
     return __loctotime32_t(st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, -1);
 }
 
 template <>
-static __time64_t __cdecl convert_system_time_to_time_t(SYSTEMTIME const& st) throw()
+__time64_t __cdecl convert_system_time_to_time_t(SYSTEMTIME const& st) throw()
 {
     return __loctotime64_t(st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, -1);
 }
@@ -64,13 +64,13 @@ template <typename Integer>
 static Integer convert_file_size_to_integer(DWORD const high, DWORD const low) throw();
 
 template <>
-static __int64 convert_file_size_to_integer(DWORD const high, DWORD const low) throw()
+__int64 convert_file_size_to_integer(DWORD const high, DWORD const low) throw()
 {
     return static_cast<__int64>(high) * 0x100000000ll + static_cast<__int64>(low);
 }
 
 template <>
-static unsigned long convert_file_size_to_integer(DWORD const high, DWORD const low) throw()
+unsigned long convert_file_size_to_integer(DWORD const high, DWORD const low) throw()
 {
     UNREFERENCED_PARAMETER(high);
     return low;
