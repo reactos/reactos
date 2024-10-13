@@ -23,7 +23,7 @@ extern "C" int __cdecl _cputws(wchar_t const* string)
         return -1;
 
     // Write string to console file handle:
-    ptrdiff_t length = wcslen(string);
+    size_t length = wcslen(string);
 
     __acrt_lock(__acrt_conio_lock);
 
