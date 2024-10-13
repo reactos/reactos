@@ -10,7 +10,7 @@
 
 
 
-extern "C" int __mb_cur_max{1};
+extern "C" { int __mb_cur_max{1}; }
 
 
 
@@ -25,11 +25,11 @@ extern "C" int* __cdecl __p___mb_cur_max()
 
 
 
-extern "C" wchar_t __acrt_wide_c_locale_string[]{L"C"};
+extern "C" { wchar_t __acrt_wide_c_locale_string[]{L"C"}; }
 
 
 
-extern "C" __crt_lc_time_data const __lc_time_c
+extern "C" { __crt_lc_time_data const __lc_time_c
 {
     { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" },
 
@@ -82,13 +82,13 @@ extern "C" __crt_lc_time_data const __lc_time_c
     L"dddd, MMMM dd, yyyy",
     L"HH:mm:ss",
     L"en-US"
-};
+}; }
 
 
 
 // The initial locale information structure, containing the C locale data.  It
 // is used until the first call to setlocale().
-extern "C" __crt_locale_data __acrt_initial_locale_data
+extern "C" { __crt_locale_data __acrt_initial_locale_data
 {
     {
         __newctype + 128,    // _locale_pctype
@@ -124,7 +124,7 @@ extern "C" __crt_locale_data __acrt_initial_locale_data
         nullptr,             // locale_name[LC_NUMERIC]
         nullptr              // locale_name[LC_TIME]
     }
-};
+}; }
 
 
 
@@ -133,8 +133,8 @@ __crt_state_management::dual_state_global<__crt_locale_data*> __acrt_current_loc
 
 
 
-extern "C" __crt_locale_pointers __acrt_initial_locale_pointers
+extern "C" { __crt_locale_pointers __acrt_initial_locale_pointers
 {
     &__acrt_initial_locale_data,
     &__acrt_initial_multibyte_data
-};
+}; }

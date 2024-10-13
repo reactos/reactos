@@ -37,4 +37,4 @@ extern "C" int __cdecl _CrtDefaultAllocHook(
     return 1; // Allow all heap operations
 }
 
-extern "C" _CRT_ALLOC_HOOK _pfnAllocHook = _CrtDefaultAllocHook;
+extern "C" { _CRT_ALLOC_HOOK _pfnAllocHook = _CrtDefaultAllocHook; }

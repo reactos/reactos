@@ -10,4 +10,4 @@
 
 #include <corecrt_internal.h>
 
-extern "C" int __globallocalestatus = (~_GLOBAL_LOCALE_BIT);
+extern "C" { int __globallocalestatus = (~_GLOBAL_LOCALE_BIT); }

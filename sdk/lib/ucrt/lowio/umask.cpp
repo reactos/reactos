@@ -12,7 +12,7 @@
 #include <corecrt_internal_lowio.h>
 #include <sys\stat.h>
 
-extern "C" int _umaskval = 0;
+extern "C" { int _umaskval = 0; }
 
 /***
 *errno_t _umask(mode, poldmode) - set the file mode mask

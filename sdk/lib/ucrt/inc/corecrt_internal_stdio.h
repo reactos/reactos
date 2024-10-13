@@ -307,13 +307,13 @@ auto __acrt_lock_stream_and_call(FILE* const stream, Action&& action) throw()
  * the number of stdio-level files which may be open simultaneously. This
  * is normally set to _NSTREAM_ by the stdio initialization code.
  */
-extern "C" extern int _nstream;
+extern "C" int _nstream;
 
 /*
  * Pointer to the array of pointers to FILE structures that are used
  * to manage stdio-level files.
  */
-extern "C" extern __crt_stdio_stream_data** __piob;
+extern "C" __crt_stdio_stream_data** __piob;
 
 // __acrt_stdio_is_initialized cannot be with the rest of
 // stdio initialization logic since referencing those symbols

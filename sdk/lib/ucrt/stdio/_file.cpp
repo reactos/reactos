@@ -11,13 +11,13 @@
 
 
 // FILE descriptors for stdin, stdout, and stderr
-extern "C" __crt_stdio_stream_data _iob[_IOB_ENTRIES] =
+extern "C" { __crt_stdio_stream_data _iob[_IOB_ENTRIES] =
 {
     // ptr      _base,   _cnt, _flag,                   _file, _charbuf, _bufsiz
     {  nullptr, nullptr, 0,    _IOALLOCATED | _IOREAD,  0,     0,        0}, // stdin
     {  nullptr, nullptr, 0,    _IOALLOCATED | _IOWRITE, 1,     0,        0}, // stdout
     {  nullptr, nullptr, 0,    _IOALLOCATED | _IOWRITE, 2,     0,        0}, // stderr
-};
+}; }
 
 extern "C" FILE* __cdecl __acrt_iob_func(unsigned const id)
 {
@@ -50,7 +50,7 @@ _CRT_LINKER_FORCE_INCLUDE(__acrt_stdio_terminator);
     // This variable is used by the statically linked CRT to ensure that if any
     // stdio functionality is used, the terminate_stdio() function will be
     // registered for call during CRT termination.
-    extern "C" int _cflush = 0;
+    extern "C" { int _cflush = 0; }
 #endif
 
 

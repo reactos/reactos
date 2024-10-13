@@ -141,9 +141,11 @@ static long __acrt_current_request_number{1};
 #undef _crtDbgFlag
 #undef _crtBreakAlloc
 
-extern "C" int              _crtDbgFlag{_CRTDBG_ALLOC_MEM_DF | _CRTDBG_CHECK_DEFAULT_DF};
-extern "C" long             _crtBreakAlloc{-1};
-extern "C" _CRT_DUMP_CLIENT _pfnDumpClient{nullptr};
+extern "C" {
+    int              _crtDbgFlag{_CRTDBG_ALLOC_MEM_DF | _CRTDBG_CHECK_DEFAULT_DF};
+    long             _crtBreakAlloc{-1};
+    _CRT_DUMP_CLIENT _pfnDumpClient{nullptr};
+}
 
 extern "C" int* __p__crtDbgFlag()
 {

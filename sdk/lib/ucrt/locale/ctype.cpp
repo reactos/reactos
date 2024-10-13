@@ -35,7 +35,7 @@ extern "C" unsigned short const* __cdecl __pctype_func()
 // implement this lookup table for consistency with GetStringTypeW, rather than
 // try to implement something completely different.  We expect this is sufficient,
 // as C character classification does not map well to Unicode.
-extern "C" extern unsigned short const _wctype[]
+extern "C" unsigned short const _wctype[]
 {
     0,                              // -1 EOF
     _CONTROL ,                      // 00 (NUL)
@@ -133,7 +133,7 @@ extern "C" extern unsigned short const _wctype[]
     _UPPER | C1_ALPHA ,             // 59 Y
     _UPPER | C1_ALPHA ,             // 5A Z
     _PUNCT ,                        // 5B [
-    _PUNCT ,                        // 5C \ 
+    _PUNCT ,                        // 5C '\'
     _PUNCT ,                        // 5D ]
     _PUNCT ,                        // 5E ^
     _PUNCT ,                        // 5F _
@@ -300,7 +300,7 @@ extern "C" extern unsigned short const _wctype[]
     _UPPER | C1_ALPHA ,             //100 (LATIN CAPITAL LETTER A WITH MACRON)
 };
 
-extern "C" extern unsigned short const __newctype[384]
+extern "C" unsigned short const __newctype[384]
 {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -443,7 +443,7 @@ extern "C" extern unsigned short const __newctype[384]
     // and the rest are 0...
 };
 
-extern "C" extern unsigned char const __newclmap[384]
+extern "C" unsigned char const __newclmap[384]
 {
     0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d, 0x8e, 0x8f,
     0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9d, 0x9e, 0x9f,
@@ -545,7 +545,7 @@ extern "C" extern unsigned char const __newclmap[384]
     0x79,   // 59 Y
     0x7A,   // 5A Z
     0x5B,   // 5B [
-    0x5C,   // 5C \ 
+    0x5C,   // 5C '\'
     0x5D,   // 5D ]
     0x5E,   // 5E ^
     0x5F,   // 5F _
@@ -591,7 +591,7 @@ extern "C" extern unsigned char const __newclmap[384]
     0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff
 };
 
-extern "C" extern unsigned char const __newcumap[384]
+extern "C" unsigned char const __newcumap[384]
 {
     0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d, 0x8e, 0x8f,
     0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9d, 0x9e, 0x9f,
@@ -693,7 +693,7 @@ extern "C" extern unsigned char const __newcumap[384]
     0x59,   // 59 Y
     0x5A,   // 5A Z
     0x5B,   // 5B [
-    0x5C,   // 5C \ 
+    0x5C,   // 5C '\'
     0x5D,   // 5D ]
     0x5E,   // 5E ^
     0x5F,   // 5F _
@@ -741,5 +741,5 @@ extern "C" extern unsigned char const __newcumap[384]
 
 
 
-extern "C" unsigned short const* _pctype {__newctype + 128}; // Pointer to table for char's
-extern "C" unsigned short const* _pwctype{_wctype    + 1  }; // Pointer to table for wchar_t's
+extern "C" { unsigned short const* _pctype {__newctype + 128}; } // Pointer to table for char's
+extern "C" { unsigned short const* _pwctype{_wctype    + 1  }; } // Pointer to table for wchar_t's

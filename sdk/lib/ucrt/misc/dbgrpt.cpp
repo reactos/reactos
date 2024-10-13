@@ -27,9 +27,9 @@
  *
  --------------------------------------------------------------------------*/
 
-extern "C" extern _CRT_REPORT_HOOK _pfnReportHook;
-extern "C" extern __crt_report_hook_node<char>* _pReportHookList;
-extern "C" extern __crt_report_hook_node<wchar_t>* _pReportHookListW;
+extern "C" _CRT_REPORT_HOOK _pfnReportHook;
+extern "C" __crt_report_hook_node<char>* _pReportHookList;
+extern "C" __crt_report_hook_node<wchar_t>* _pReportHookListW;
 
 static __crt_report_hook_node<char>*&    __cdecl get_report_hook_list(char)    throw() { return _pReportHookList;  }
 static __crt_report_hook_node<wchar_t>*& __cdecl get_report_hook_list(wchar_t) throw() { return _pReportHookListW; }

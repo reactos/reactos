@@ -27,7 +27,7 @@ namespace
 
 static wint_t wchbuf = WEOF; // The push-back buffer
 
-extern "C" extern intptr_t __dcrt_lowio_console_input_handle;
+extern "C" intptr_t __dcrt_lowio_console_input_handle;
 
 extern "C" CharPair const* __cdecl _getextendedkeycode(KEY_EVENT_RECORD*);
 

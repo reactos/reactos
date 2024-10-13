@@ -17,7 +17,7 @@
 //    0 for everything else, including invalid patterns.
 // We return 0 for invalid patterns because we rely on MultiByteToWideChar to
 // do the validations.
-extern "C" char _lookuptrailbytes[256] =
+extern "C" { char _lookuptrailbytes[256] =
 {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -32,7 +32,7 @@ extern "C" char _lookuptrailbytes[256] =
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
     3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0
-};
+}; }
 
 
 static void store_lookahead(int const fh, char const c) throw()

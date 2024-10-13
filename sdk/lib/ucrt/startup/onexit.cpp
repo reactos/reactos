@@ -22,8 +22,8 @@
 
 
 // The global atexit and at_quick_exit registries
-extern "C" _onexit_table_t __acrt_atexit_table{};
-extern "C" _onexit_table_t __acrt_at_quick_exit_table{};
+extern "C" { _onexit_table_t __acrt_atexit_table{}; }
+extern "C" { _onexit_table_t __acrt_at_quick_exit_table{}; }
 
 
 

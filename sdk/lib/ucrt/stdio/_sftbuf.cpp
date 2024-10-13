@@ -23,8 +23,8 @@
 
 
 // Buffer pointers for stdout and stderr
-extern "C" void* __acrt_stdout_buffer = nullptr;
-extern "C" void* __acrt_stderr_buffer = nullptr;
+extern "C" { void* __acrt_stdout_buffer = nullptr; }
+extern "C" { void* __acrt_stderr_buffer = nullptr; }
 
 // The temporary buffer has the data of one stdio call. Stderr and Stdout use a
 // temporary buffer for the duration of stdio output calls instead of having a
