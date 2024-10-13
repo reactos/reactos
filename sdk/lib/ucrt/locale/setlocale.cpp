@@ -12,7 +12,7 @@
 #include <locale.h>
 #include <stdlib.h>
 
-extern "C" static wchar_t* __cdecl call_wsetlocale(int const category, char const* const narrow_locale)
+static wchar_t* __cdecl call_wsetlocale(int const category, char const* const narrow_locale)
 {
     if (narrow_locale == nullptr)
         return _wsetlocale(category, nullptr);
