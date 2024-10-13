@@ -576,7 +576,10 @@ public:
 
     // Instead of using an lfence mitigation, we can fill the table to a power of two,
     // then bitwise-and all values used to index into the array.
-    __declspec(spectre(nomitigation)) T const& operator[](size_t const index) const
+    #if defined(_MSC_VER) && !defined(__clang__)
+    __declspec(spectre(nomitigation))
+    #endif
+    T const& operator[](size_t const index) const
     {
         return m_array[index & mask];
     }
