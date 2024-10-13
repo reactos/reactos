@@ -1009,7 +1009,7 @@ protected:
         __crt_cached_ptd_host&    ptd,
         va_list            const  arglist
         ) throw()
-        : common_data{ptd},
+        : common_data<Character>{ptd},
           _output_adapter(output_adapter)
     {
         // We initialize several base class data members here, so that we can
@@ -1209,7 +1209,7 @@ protected:
 #endif
 
     typedef positional_parameter_base    self_type;
-    typedef format_validation_base       base_type;
+    typedef format_validation_base<Character, OutputAdapter>       base_type;
     typedef __crt_char_traits<Character> char_traits;
 
     template <typename... Ts>
@@ -1296,7 +1296,7 @@ protected:
     {
         if (_format_mode == mode::nonpositional)
         {
-            return base_type::extract_argument_from_va_list<RequestedParameterType>(result);
+            return base_type::template extract_argument_from_va_list<RequestedParameterType>(result);
         }
 
         _UCRT_VALIDATE_RETURN(_ptd, _type_index >= 0 && _type_index < _ARGMAX, EINVAL, false);
@@ -2274,7 +2274,7 @@ private:
         if (is_wide_character_specifier(_options, _format_char, _length))
         {
             wchar_t wide_character{};
-            if (!extract_argument_from_va_list<wchar_t>(wide_character))
+            if (!this->template extract_argument_from_va_list<wchar_t>(wide_character))
             {
                 return false;
             }
@@ -2286,7 +2286,7 @@ private:
 
             // Convert to multibyte.  If the conversion fails, we suppress the
             // output operation but we do not fail the entire operation:
-            errno_t const status{_wctomb_internal(&_string_length, _buffer.data<char>(), _buffer.count<char>(), wide_character, _ptd)};
+            errno_t const status{_wctomb_internal(&_string_length, _buffer.template data<char>(), _buffer.template count<char>(), wide_character, _ptd)};
             if (status != 0)
             {
                 _suppress_output = true;
@@ -2296,7 +2296,7 @@ private:
         // to the output, as-is.
         else
         {
-            if (!extract_argument_from_va_list<unsigned short>(_buffer.data<char>()[0]))
+            if (!this->template extract_argument_from_va_list<unsigned short>(_buffer.template data<char>()[0]))
             {
                 return false;
             }
@@ -2309,7 +2309,7 @@ private:
             _string_length = 1;
         }
 
-        _narrow_string = _buffer.data<char>();
+        _narrow_string = _buffer.template data<char>();
         return true;
     }
 
@@ -2320,7 +2320,7 @@ private:
         _string_is_wide = true;
 
         wchar_t wide_character{};
-        if (!extract_argument_from_va_list<wchar_t>(wide_character))
+        if (!this->template extract_argument_from_va_list<wchar_t>(wide_character))
             return false;
 
         if (!should_format())
@@ -2334,7 +2334,7 @@ private:
             // output operation.
             char const local_buffer[2]{ static_cast<char>(wide_character & 0x00ff), '\0' };
             int const mbc_length{_mbtowc_internal(
-                _buffer.data<wchar_t>(),
+                _buffer.template data<wchar_t>(),
                 local_buffer,
                 _ptd.get_locale()->locinfo->_public._locale_mb_cur_max,
                 _ptd
@@ -2346,10 +2346,10 @@ private:
         }
         else
         {
-            _buffer.data<wchar_t>()[0] = wide_character;
+            _buffer.template data<wchar_t>()[0] = wide_character;
         }
 
-        _wide_string   = _buffer.data<wchar_t>();
+        _wide_string   = _buffer.template data<wchar_t>();
         _string_length = 1;
         return true;
     }
@@ -2371,7 +2371,7 @@ private:
         };
 
         ansi_string* string{};
-        if (!extract_argument_from_va_list<ansi_string*>(string))
+        if (!this->template extract_argument_from_va_list<ansi_string*>(string))
             return false;
 
         if (!should_format())
@@ -2406,7 +2406,7 @@ private:
         // of the length of the C string and the given precision.  Note that the
         // string needs not be null-terminated if a precision is given, so we
         // cannot call strlen to compute the length of the string.
-        if (!extract_argument_from_va_list<char*>(_narrow_string))
+        if (!this->template extract_argument_from_va_list<char*>(_narrow_string))
             return false;
 
         if (!should_format())
@@ -2505,18 +2505,18 @@ private:
             _precision = 1; // Per C Standard Library specification.
         }
 
-        if (!_buffer.ensure_buffer_is_big_enough<char>(_CVTBUFSIZE + _precision, _ptd))
+        if (!_buffer.template ensure_buffer_is_big_enough<char>(_CVTBUFSIZE + _precision, _ptd))
         {
             // If we fail to enlarge the buffer, cap precision so that the
             // statically-sized buffer may be used for the formatting:
-            _precision = static_cast<int>(_buffer.count<char>() - _CVTBUFSIZE);
+            _precision = static_cast<int>(_buffer.template count<char>() - _CVTBUFSIZE);
         }
 
-        _narrow_string = _buffer.data<char>();
+        _narrow_string = _buffer.template data<char>();
 
         // Note that we separately handle the FORMAT_POSSCAN_PASS above.
         _CRT_DOUBLE tmp{};
-        if (!extract_argument_from_va_list<_CRT_DOUBLE>(tmp))
+        if (!this->template extract_argument_from_va_list<_CRT_DOUBLE>(tmp))
         {
             return false;
         }
@@ -2524,10 +2524,10 @@ private:
         // Format the number into the buffer:
         __acrt_fp_format(
             &tmp.x,
-            _buffer.data<char>(),
-            _buffer.count<char>(),
-            _buffer.scratch_data<char>(),
-            _buffer.scratch_count<char>(),
+            _buffer.template data<char>(),
+            _buffer.template count<char>(),
+            _buffer.template scratch_data<char>(),
+            _buffer.template scratch_count<char>(),
             static_cast<char>(_format_char),
             _precision,
             _options,
@@ -2639,23 +2639,23 @@ private:
         {
         case sizeof(int8_t):
             extraction_result = has_flag(FL_SIGNED)
-                ? extract_argument_from_va_list<int8_t >(original_number)
-                : extract_argument_from_va_list<uint8_t>(original_number);
+                ? this->template extract_argument_from_va_list<int8_t >(original_number)
+                : this->template extract_argument_from_va_list<uint8_t>(original_number);
             break;
         case sizeof(int16_t):
             extraction_result = has_flag(FL_SIGNED)
-                ? extract_argument_from_va_list<int16_t >(original_number)
-                : extract_argument_from_va_list<uint16_t>(original_number);
+                ? this->template extract_argument_from_va_list<int16_t >(original_number)
+                : this->template extract_argument_from_va_list<uint16_t>(original_number);
             break;
         case sizeof(int32_t):
             extraction_result = has_flag(FL_SIGNED)
-                ? extract_argument_from_va_list<int32_t >(original_number)
-                : extract_argument_from_va_list<uint32_t>(original_number);
+                ? this->template extract_argument_from_va_list<int32_t >(original_number)
+                : this->template extract_argument_from_va_list<uint32_t>(original_number);
             break;
         case sizeof(int64_t):
             extraction_result = has_flag(FL_SIGNED)
-                ? extract_argument_from_va_list<int64_t >(original_number)
-                : extract_argument_from_va_list<uint64_t>(original_number);
+                ? this->template extract_argument_from_va_list<int64_t >(original_number)
+                : this->template extract_argument_from_va_list<uint64_t>(original_number);
             break;
         default:
             _UCRT_VALIDATE_RETURN(_ptd, ("Invalid integer length modifier", 0), EINVAL, false);
@@ -2695,7 +2695,7 @@ private:
         else
         {
             unset_flag(FL_LEADZERO);
-            _buffer.ensure_buffer_is_big_enough<Character>(_precision, _ptd);
+            _buffer.template ensure_buffer_is_big_enough<Character>(_precision, _ptd);
         }
 
         // If the number is zero, we do not want to print the hex prefix ("0x"),
@@ -2741,7 +2741,7 @@ private:
         // buffer at the end of the formatting buffer, which allows us to perform
         // the formatting from least to greatest magnitude, which maps well to
         // the math.
-        Character* const last_digit{_buffer.data<Character>() + _buffer.count<Character>() - 1};
+        Character* const last_digit{_buffer.template data<Character>() + _buffer.template count<Character>() - 1};
 
         Character*& string_pointer = tchar_string();
 
@@ -2773,7 +2773,7 @@ private:
     bool type_case_n() throw()
     {
         void* p{nullptr};
-        if (!extract_argument_from_va_list<void*>(p))
+        if (!this->template extract_argument_from_va_list<void*>(p))
             return false;
 
         if (!should_format())
