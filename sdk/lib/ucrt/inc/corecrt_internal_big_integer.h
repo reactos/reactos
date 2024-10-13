@@ -686,6 +686,7 @@ __forceinline uint32_t __cdecl count_sequential_high_zeroes(uint32_t const u) th
         uint32_t const multiplier
         ) throw()
     {
+       #ifdef _MSC_VER
         __asm
         {
             mov eax, dword ptr [multiplicand + 4]
@@ -698,6 +699,21 @@ __forceinline uint32_t __cdecl count_sequential_high_zeroes(uint32_t const u) th
 
             add edx, ecx
         }
+        #else // ^^^ _MSC_VER ^^^ // vvv !_MSC_VER vvv //
+	    uint64_t retval;
+	    __asm__(
+            "mull %[multiplier]\n"
+            "movl %%eax, %%ecx\n"
+            "movl %[multiplicand_lo], %%eax\n"
+            "mull %[multiplier]\n"
+            "addl %%ecx, %%edx\n"
+            : "=A" (retval)
+            : [multiplicand_hi] "a" ((uint32_t)((multiplicand >> 32) & 0xFFFFFFFF)),
+              [multiplicand_lo] "rm" ((uint32_t)((multiplicand >>  0) & 0xFFFFFFFF)),
+              [multiplier] "rm" (multiplier)
+            : "ecx" );
+        return retval;
+        #endif // !_MSC_VER
     }
 #else
     __forceinline uint64_t __cdecl multiply_64_32(
@@ -869,7 +885,7 @@ inline uint64_t __cdecl divide(
         }
 
         // Multiply and subtract.  Note that uu_quo may be one too large.  If
-        // we have a borrow at the end, we'll add the denominator back on and 
+        // we have a borrow at the end, we'll add the denominator back on and
         // decrement uu_quo.
         if (uu_quo > 0)
         {
