@@ -25,7 +25,7 @@
 //
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 // Number of 100 nanosecond units from 1/1/1601 to 1/1/1970
-#define _EPOCH_BIAS 116444736000000000i64
+#define _EPOCH_BIAS 116444736000000000ll
 
 #define _DAY_SEC       (24 * 60 * 60)    // Seconds in a day
 #define _YEAR_SEC      (365 * _DAY_SEC)  // Seconds in a year

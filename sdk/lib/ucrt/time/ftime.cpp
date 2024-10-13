@@ -48,7 +48,7 @@ static errno_t __cdecl common_ftime_s(TimeBType* const tp) throw()
 
     // Obtain the current Daylight Savings Time status.  Note that the status is
     // cached and only updated once per minute, if necessary.
-    TimeType const current_minutes_value = static_cast<TimeType>(system_time._scalar / 600000000i64);
+    TimeType const current_minutes_value = static_cast<TimeType>(system_time._scalar / 600000000ll);
     if (static_cast<__time64_t>(current_minutes_value) != elapsed_minutes_cache)
     {
         TIME_ZONE_INFORMATION tz_info;
@@ -78,8 +78,8 @@ static errno_t __cdecl common_ftime_s(TimeBType* const tp) throw()
     }
 
     tp->dstflag = static_cast<short>(dstflag_cache);
-    tp->millitm = static_cast<unsigned short>((system_time._scalar / 10000i64) % 1000i64);
-    tp->time    = static_cast<TimeType>((system_time._scalar - _EPOCH_BIAS) / 10000000i64);
+    tp->millitm = static_cast<unsigned short>((system_time._scalar / 10000ll) % 1000ll);
+    tp->time    = static_cast<TimeType>((system_time._scalar - _EPOCH_BIAS) / 10000000ll);
 
     return 0;
 }

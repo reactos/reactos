@@ -687,9 +687,9 @@ __forceinline uint64_t __cdecl right_shift_with_rounding(
         return 0;
     }
 
-    uint64_t const extra_bits_mask = (1ui64 << (shift - 1)) - 1;
-    uint64_t const round_bit_mask  = (1ui64 << (shift - 1));
-    uint64_t const lsb_bit_mask    =  1ui64 <<  shift;
+    uint64_t const extra_bits_mask = (1ull << (shift - 1)) - 1;
+    uint64_t const round_bit_mask  = (1ull << (shift - 1));
+    uint64_t const lsb_bit_mask    =  1ull <<  shift;
 
     bool const lsb_bit   = (value & lsb_bit_mask)   != 0;
     bool const round_bit = (value & round_bit_mask) != 0;
@@ -1140,7 +1140,7 @@ inline SLD_STATUS __cdecl convert_decimal_string_to_floating_type_common(
     if (fractional_mantissa_bits > required_fractional_bits_of_precision)
     {
         uint32_t const shift = fractional_mantissa_bits - required_fractional_bits_of_precision;
-        has_zero_tail         = has_zero_tail && (fractional_mantissa & ((1ui64 << shift) - 1)) == 0;
+        has_zero_tail         = has_zero_tail && (fractional_mantissa & ((1ull << shift) - 1)) == 0;
         fractional_mantissa >>= shift;
     }
 

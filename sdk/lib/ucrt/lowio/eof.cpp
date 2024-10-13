@@ -29,13 +29,13 @@ extern "C" int __cdecl _eof(int const fh)
             return -1;
         }
 
-        __int64 const here = _lseeki64_nolock(fh, 0i64, SEEK_CUR);
-        if (here == -1i64)
+        __int64 const here = _lseeki64_nolock(fh, 0ll, SEEK_CUR);
+        if (here == -1ll)
             return -1;
 
 
-        __int64 const end = _lseeki64_nolock(fh, 0i64, SEEK_END);
-        if (end == -1i64)
+        __int64 const end = _lseeki64_nolock(fh, 0ll, SEEK_END);
+        if (end == -1ll)
             return -1;
 
         // Now we can test if we're at the end:

@@ -66,7 +66,7 @@ static Integer convert_file_size_to_integer(DWORD const high, DWORD const low) t
 template <>
 static __int64 convert_file_size_to_integer(DWORD const high, DWORD const low) throw()
 {
-    return static_cast<__int64>(high) * 0x100000000i64 + static_cast<__int64>(low);
+    return static_cast<__int64>(high) * 0x100000000ll + static_cast<__int64>(low);
 }
 
 template <>

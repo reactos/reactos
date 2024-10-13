@@ -71,11 +71,11 @@ struct __acrt_floating_type_traits<double>
 
     enum : uint64_t
     {
-        exponent_mask             = (1ui64 << (exponent_bits    )) - 1,
-        normal_mantissa_mask      = (1ui64 << (mantissa_bits    )) - 1,
-        denormal_mantissa_mask    = (1ui64 << (mantissa_bits - 1)) - 1,
+        exponent_mask             = (1ull << (exponent_bits    )) - 1,
+        normal_mantissa_mask      = (1ull << (mantissa_bits    )) - 1,
+        denormal_mantissa_mask    = (1ull << (mantissa_bits - 1)) - 1,
 
-        special_nan_mantissa_mask = (1ui64 << (mantissa_bits - 2))
+        special_nan_mantissa_mask = (1ull << (mantissa_bits - 2))
     };
 
     struct components_type
