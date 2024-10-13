@@ -229,7 +229,7 @@ static int get_next_getch_pushback_buffer()
     return ret_val;
 }
 
-extern "C" extern intptr_t __dcrt_lowio_console_input_handle;
+extern "C" intptr_t __dcrt_lowio_console_input_handle;
 
 extern "C" CharPair const* __cdecl _getextendedkeycode(KEY_EVENT_RECORD*);
 extern "C" int __cdecl _kbhit_nolock();

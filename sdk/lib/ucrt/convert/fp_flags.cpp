@@ -6,7 +6,7 @@
 // Public data used by the floating point library
 //
 
-extern "C" int __fastflag{0};
+extern "C" { int __fastflag{0}; }
 
 
 

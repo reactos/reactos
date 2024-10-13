@@ -12,7 +12,7 @@
 
 // The CRT heap handle.  This global variable is modified only during CRT
 // startup and CRT shutdown.
-extern "C" HANDLE __acrt_heap = nullptr;
+extern "C" { HANDLE __acrt_heap = nullptr; }
 
 
 

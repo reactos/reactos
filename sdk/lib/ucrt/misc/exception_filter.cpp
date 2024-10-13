@@ -17,7 +17,7 @@
 // signal (e.g. SIGFPE) must be grouped together.  If any _action field is
 // changed in this table, that field must be initialized with an encoded
 // function pointer during CRT startup.
-extern "C" extern struct __crt_signal_action_t const __acrt_exception_action_table[] =
+extern "C" struct __crt_signal_action_t const __acrt_exception_action_table[] =
 {
 //    _exception_number                          _signal_number   _action
 //  --------------------------------------------------------
@@ -38,16 +38,16 @@ extern "C" extern struct __crt_signal_action_t const __acrt_exception_action_tab
 // WARNING!!! This constant must be the integer value for which
 // __acrt_exception_action_table[__acrt_signal_action_first_fpe_index] is the very FIRST entry in the table
 // corresponding to a floating point exception.
-extern "C" extern size_t const __acrt_signal_action_first_fpe_index = 3;
+extern "C" { size_t const __acrt_signal_action_first_fpe_index = 3; }
 
 // There are __acrt_signal_action_fpe_count entries in XcptActTab for floating point exceptions:
-extern "C" extern size_t const __acrt_signal_action_fpe_count = 9;
+extern "C" { size_t const __acrt_signal_action_fpe_count = 9; }
 
 // Size of the exception-action table in bytes
-extern "C" extern size_t const __acrt_signal_action_table_size = sizeof(__acrt_exception_action_table);
+extern "C" { size_t const __acrt_signal_action_table_size = sizeof(__acrt_exception_action_table); }
 
 // Number of entries in the exception-action table
-extern "C" extern size_t const __acrt_signal_action_table_count = sizeof(__acrt_exception_action_table) / sizeof(__acrt_exception_action_table[0]);
+extern "C" { size_t const __acrt_signal_action_table_count = sizeof(__acrt_exception_action_table) / sizeof(__acrt_exception_action_table[0]); }
 
 
 
@@ -218,5 +218,5 @@ extern "C" int __cdecl _seh_filter_exe(
     // Restore the stored value of _pxcptinfoptrs:
     ptd->_tpxcptinfoptrs = old_pxcptinfoptrs;
 
-    return EXCEPTION_CONTINUE_EXECUTION; 
+    return EXCEPTION_CONTINUE_EXECUTION;
 }

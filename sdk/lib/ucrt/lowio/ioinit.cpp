@@ -14,7 +14,7 @@
 // This is a special static lowio file object referenced only by the safe access
 // functionality in the internal headers.  It is used in certain stdio-level
 // functions to more gracefully handle a FILE with -1 as its lowio file id.
-extern "C" __crt_lowio_handle_data __badioinfo =
+extern "C" { __crt_lowio_handle_data __badioinfo =
 {
     { },                         // lock
     static_cast<intptr_t>(-1),   // osfhnd
@@ -22,7 +22,7 @@ extern "C" __crt_lowio_handle_data __badioinfo =
     FTEXT,                       // osfile
     __crt_lowio_text_mode::ansi, // textmode
     { LF, LF, LF },              // _pipe_lookahead
-};
+}; }
 
 
 
@@ -31,12 +31,12 @@ extern "C" __crt_lowio_handle_data __badioinfo =
 // are necessarily in use at any given time.
 //
 // This number is in the range of [IOINFO_ARRAY_ELTS, _NHANDLE_]
-extern "C" int _nhandle = 0;
+extern "C" { int _nhandle = 0; }
 
 
 
 // This is the global array of file object arrays:
-extern "C" __crt_lowio_handle_data* __pioinfo[IOINFO_ARRAYS] = { 0 };
+extern "C" { __crt_lowio_handle_data* __pioinfo[IOINFO_ARRAYS] = { 0 }; }
 
 
 

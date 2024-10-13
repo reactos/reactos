@@ -14,13 +14,13 @@
 
 
 /* pointer to original static to avoid freeing */
-extern "C" char    __acrt_lconv_static_decimal  []{"."};
-extern "C" char    __acrt_lconv_static_null     []{""};
-extern "C" wchar_t __acrt_lconv_static_W_decimal[]{L"."};
-extern "C" wchar_t __acrt_lconv_static_W_null   []{L""};
+extern "C" { char    __acrt_lconv_static_decimal  []{"."}; }
+extern "C" { char    __acrt_lconv_static_null     []{""}; }
+extern "C" { wchar_t __acrt_lconv_static_W_decimal[]{L"."}; }
+extern "C" { wchar_t __acrt_lconv_static_W_null   []{L""}; }
 
 /* lconv settings for "C" locale */
-extern "C" struct lconv __acrt_lconv_c
+extern "C" { struct lconv __acrt_lconv_c
 {
     __acrt_lconv_static_decimal,   // decimal_point
     __acrt_lconv_static_null,      // thousands_sep
@@ -48,12 +48,12 @@ extern "C" struct lconv __acrt_lconv_c
     __acrt_lconv_static_W_null,    // _W_mon_thousands_sep
     __acrt_lconv_static_W_null,    // _W_positive_sign
     __acrt_lconv_static_W_null,    // _W_negative_sign
-};
+}; }
 
 
 /* pointer to current lconv structure */
 
-extern "C" struct lconv* __acrt_lconv{&__acrt_lconv_c};
+extern "C" { struct lconv* __acrt_lconv{&__acrt_lconv_c}; }
 
 /***
 *struct lconv *localeconv(void) - Return the numeric formatting convention

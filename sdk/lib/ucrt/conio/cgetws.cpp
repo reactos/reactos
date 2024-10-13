@@ -15,8 +15,8 @@
 // character buffer and the unicode character is not converted to single byte
 // MBC, then _cget_s should buffer that character so that next call to
 // _cgetws_s can return the same character.
-extern "C" wchar_t __console_wchar_buffer      = 0;
-extern "C" int     __console_wchar_buffer_used = 0;
+extern "C" { wchar_t __console_wchar_buffer      = 0; }
+extern "C" { int     __console_wchar_buffer_used = 0; }
 
 
 

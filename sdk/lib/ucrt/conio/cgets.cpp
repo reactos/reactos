@@ -11,7 +11,7 @@
 
 
 
-extern "C" extern intptr_t __dcrt_lowio_console_input_handle;
+extern "C" { extern intptr_t __dcrt_lowio_console_input_handle; }
 
 
 
@@ -20,8 +20,8 @@ extern "C" extern intptr_t __dcrt_lowio_console_input_handle;
 // character buffer and the unicode character is not converted to single byte
 // MBC, then _cget_s should buffer that character so that next call to
 // _cgetws_s can return the same character.
-extern "C" extern wchar_t __console_wchar_buffer;
-extern "C" extern int     __console_wchar_buffer_used;
+extern "C" { extern wchar_t __console_wchar_buffer; }
+extern "C" { extern int     __console_wchar_buffer_used; }
 
 
 

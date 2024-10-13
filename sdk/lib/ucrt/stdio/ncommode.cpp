@@ -10,7 +10,7 @@
 
 
 // Set default file commit mode to nocommit
-extern "C" int _commode = 0;
+extern "C" { int _commode = 0; }
 
 
 

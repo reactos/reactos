@@ -18,7 +18,7 @@
     #define _INIT_ABORT_BEHAVIOR _CALL_REPORTFAULT
 #endif
 
-extern "C" unsigned int __abort_behavior = _INIT_ABORT_BEHAVIOR;
+extern "C" { unsigned int __abort_behavior = _INIT_ABORT_BEHAVIOR; }
 
 /***
 *void abort() - abort the current program by raising SIGABRT

@@ -17,11 +17,11 @@ _CRT_LINKER_FORCE_INCLUDE(__acrt_tmpfile_terminator);
 // These definitions will cause this object to be linked in whenever the
 // termination code requires it.
 #ifndef CRTDLL
-    extern "C" unsigned __acrt_tmpfile_used = 1;
+    extern "C" { unsigned __acrt_tmpfile_used = 1; }
 #endif
 
-extern "C" unsigned _tempoff = 1;
-extern "C" unsigned _old_pfxlen = 0;
+extern "C" { unsigned _tempoff = 1; }
+extern "C" { unsigned _old_pfxlen = 0; }
 
 
 

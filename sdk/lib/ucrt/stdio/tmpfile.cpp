@@ -499,7 +499,7 @@ extern "C" errno_t __cdecl tmpfile_s(FILE** const stream)
 // Ensure that _rmtmp is called during static CRT termination:
 #ifndef CRTDLL
 
-    extern "C" extern unsigned __acrt_tmpfile_used;
+    extern "C" unsigned __acrt_tmpfile_used;
 
     extern "C" void __acrt_force_use_of_tmpfile()
     {

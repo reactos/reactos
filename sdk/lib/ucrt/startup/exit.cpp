@@ -11,8 +11,8 @@
 
 static long c_termination_complete = FALSE;
 
-extern "C" extern _onexit_table_t __acrt_atexit_table;
-extern "C" extern _onexit_table_t __acrt_at_quick_exit_table;
+extern "C" _onexit_table_t __acrt_atexit_table;
+extern "C" _onexit_table_t __acrt_at_quick_exit_table;
 
 // thread_local atexit dtor handling. The APPCRT exports a function to set the
 // callback function. The exe main function will call this to set the callback
