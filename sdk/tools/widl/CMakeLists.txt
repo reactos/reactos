@@ -1,15 +1,4 @@
 
-if(MSVC)
-    if(MSVC_VERSION LESS 1900)
-        add_definitions(-Dsnprintf=_snprintf)
-
-        # Add this definition for WDK only, VS 9 doesn't like that
-        if(DEFINED ENV{DDKBUILDENV})
-            add_definitions(-Dvsnprintf=_vsnprintf)
-        endif()
-    endif()
-endif()
-
 FLEX_TARGET(p_scanner parser.l ${CMAKE_CURRENT_BINARY_DIR}/parser.yy.c)
 BISON_TARGET(p_parser parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.tab.c COMPILE_FLAGS "-p parser_")
 ADD_FLEX_BISON_DEPENDENCY(p_scanner p_parser)
