@@ -53,14 +53,14 @@ static errno_t __cdecl construct_command_line(
     Character*              result_it = command_line.get();
 
     // If there are no arguments, just return the empty string:
-    if (*source_it == '\0')
+    if (*source_it == nullptr)
     {
         *command_line_result = command_line.detach();
         return 0;
     }
 
     // Copy the arguments, separated by spaces:
-    while (*source_it != '\0')
+    while (*source_it != nullptr)
     {
         _ERRCHECK(traits::tcscpy_s(result_it, command_line_count - (result_it - command_line.get()), *source_it));
         result_it += traits::tcslen(*source_it);
