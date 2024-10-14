@@ -53,7 +53,7 @@ CAPTION "Smazat historii prohlížení"
 BEGIN
 
     AUTOCHECKBOX   "Dočasné internetové soubory\nUložené kopie webových stránek, obrázků a certifikátů.",
-                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
+                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE | WS_GROUP | WS_TABSTOP
     AUTOCHECKBOX   "Cookies\nSoubory uložené na počítači webovými stránkami, ve kterých jsou uložené například uživatelské předvolby nebo přihlašovací údaje.",
                     IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "Historie\nSeznam navštívených webových stránek.",
@@ -63,7 +63,7 @@ BEGIN
     AUTOCHECKBOX   "Hesla\nUložená hesla, která byla zadána do formulářů.",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON  "Storno", IDCANCEL, 185, 230, 60, 15, WS_GROUP
-    PUSHBUTTON     "Smazat", IDOK, 120, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "Smazat", IDOK, 120, 230, 60, 15
 
 END
 

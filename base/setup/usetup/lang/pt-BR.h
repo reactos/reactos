@@ -2306,7 +2306,7 @@ MUI_STRING ptBRStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   Atualizando as configura\207\344es de leiaute do teclado..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Adicionando as informa\207\344es de localidade no registro..."},
+    "   Adicionando as informa\207\344es de localidade..."},
     {STRING_DONE,
     "   Pronto..."},
     {STRING_REBOOTCOMPUTER2,

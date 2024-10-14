@@ -21,7 +21,7 @@ add_library(rtl_um OBJECT
     rtl/libsupp.c
     rtl/uilist.c
     rtl/version.c)
-target_link_libraries(rtl_um ${PSEH_LIB})
+target_link_libraries(rtl_um apisets ${PSEH_LIB})
 add_dependencies(rtl_um psdk)
 
 list(APPEND SOURCE
@@ -62,6 +62,9 @@ set_subsystem(ntdll console)
 ################# END  HACK #################
 
 target_link_libraries(ntdll csrlib rtl rtl_um rtl_vista ntdllsys libcntpr uuid ${PSEH_LIB})
+if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
+    target_link_libraries(ntdll cryptlib)
+endif()
 
 if (STACK_PROTECTOR)
     target_sources(ntdll PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
@@ -70,3 +73,8 @@ endif()
 add_pch(ntdll include/ntdll.h "${PCH_SKIP_SOURCE}")
 add_dependencies(ntdll ntstatus asm)
 add_cd_file(TARGET ntdll DESTINATION reactos/system32 NO_CAB FOR all)
+
+# Newer VS versions link to _ftol2 / _ftoul2_legacy
+if(MSVC AND ARCH STREQUAL "i386")
+    target_link_libraries(libntdll ftol2)
+endif()

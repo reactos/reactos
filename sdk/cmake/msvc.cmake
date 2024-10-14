@@ -23,8 +23,7 @@ endif()
 add_compile_options(/GF)
 
 # Enable function level linking and comdat folding (only C/C++, not ASM!)
-add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/Gy>)
-add_compile_options($<$<COMPILE_LANGUAGE:C>:/Gy>)
+add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/Gy>)
 add_link_options(/OPT:REF /OPT:ICF)
 
 if(ARCH STREQUAL "i386")
@@ -145,6 +144,7 @@ endif()
 add_compile_options(/w14115)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-Werror=unknown-warning-option>)
     add_compile_options("$<$<COMPILE_LANGUAGE:C,CXX>:-nostdinc;-Wno-multichar;-Wno-char-subscripts;-Wno-microsoft-enum-forward-reference;-Wno-pragma-pack;-Wno-microsoft-anon-tag;-Wno-parentheses-equality;-Wno-unknown-pragmas>")
 endif()
 
@@ -317,11 +317,12 @@ function(generate_import_lib _libname _dllname _spec_file __version_arg)
 
     set(_def_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def)
     set(_asm_stubs_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_stubs.asm)
+    set(_asm_impalias_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_impalias.asm)
 
-    # Generate the def and asm stub files
+    # Generate the def, asm stub and alias files
     add_custom_command(
-        OUTPUT ${_asm_stubs_file} ${_def_file}
-        COMMAND native-spec2def --ms ${__version_arg} -a=${SPEC2DEF_ARCH} --implib -n=${_dllname} -d=${_def_file} -l=${_asm_stubs_file} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        OUTPUT ${_asm_stubs_file} ${_def_file} ${_asm_impalias_file}
+        COMMAND native-spec2def --ms ${__version_arg} -a=${SPEC2DEF_ARCH} --implib -n=${_dllname} -d=${_def_file} -l=${_asm_stubs_file} -i=${_asm_impalias_file} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
     # Compile the generated asm stub file
@@ -351,7 +352,7 @@ function(generate_import_lib _libname _dllname _spec_file __version_arg)
     # By giving the import lib as an object input, LIB extracts the relevant object files and make a new library.
     # This allows us to treat the implib as a regular static library
     set_source_files_properties(${_libfile_tmp} PROPERTIES EXTERNAL_OBJECT TRUE)
-    add_library(${_libname} STATIC ${_libfile_tmp})
+    add_library(${_libname} STATIC ${_libfile_tmp} ${_asm_impalias_file})
 
     set_target_properties(${_libname} PROPERTIES LINKER_LANGUAGE "C")
 endfunction()
@@ -364,7 +365,7 @@ if(ARCH STREQUAL "amd64")
 elseif(ARCH STREQUAL "arm")
     set(SPEC2DEF_ARCH arm)
 elseif(ARCH STREQUAL "arm64")
-    add_definitions(/D__arm64__) 
+    add_definitions(/D__arm64__)
     set(SPEC2DEF_ARCH arm64)
 else()
     set(SPEC2DEF_ARCH i386)

@@ -2329,7 +2329,7 @@ MUI_STRING roROStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   Configura\376ie de tastatur\343 \356n actualizare..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Date de paginare \356n curs de adaugare \356n registru..."},
+    "   Date de paginare \356n curs de adaugare..."},
     {STRING_DONE,
     "   Terminat!"},
     {STRING_REBOOTCOMPUTER2,

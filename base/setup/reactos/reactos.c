@@ -41,6 +41,19 @@ HANDLE ProcessHeap;
 BOOLEAN IsUnattendedSetup = FALSE;
 SETUPDATA SetupData;
 
+/* The partition where to perform the installation */
+PPARTENTRY InstallPartition = NULL;
+// static PVOLENTRY InstallVolume = NULL;
+#define InstallVolume (InstallPartition->Volume)
+
+/* The system partition we will actually use */
+PPARTENTRY SystemPartition = NULL;
+// static PVOLENTRY SystemVolume = NULL;
+#define SystemVolume (SystemPartition->Volume)
+
+/* UI elements */
+UI_CONTEXT UiContext;
+
 
 /* FUNCTIONS ****************************************************************/
 
@@ -92,17 +105,186 @@ CreateTitleFont(VOID)
     return hFont;
 }
 
-INT DisplayError(
-    IN HWND hParentWnd OPTIONAL,
-    IN UINT uIDTitle,
-    IN UINT uIDMessage)
+INT
+DisplayMessageV(
+    _In_opt_ HWND hWnd,
+    _In_ UINT uType,
+    _In_opt_ PCWSTR pszTitle,
+    _In_opt_ PCWSTR pszFormatMessage,
+    _In_ va_list args)
 {
-    WCHAR message[512], caption[64];
+    INT iRes;
+    HINSTANCE hInstance = NULL;
+    MSGBOXPARAMSW mb = {0};
+    LPWSTR Format;
+    size_t MsgLen;
+    WCHAR  StaticBuffer[256];
+    LPWSTR Buffer = StaticBuffer; // Use the static buffer by default.
 
-    LoadStringW(SetupData.hInstance, uIDMessage, message, ARRAYSIZE(message));
-    LoadStringW(SetupData.hInstance, uIDTitle, caption, ARRAYSIZE(caption));
+    /* We need to retrieve the current module's instance handle if either
+     * the title or the format message is specified by a resource ID */
+    if ((pszTitle && IS_INTRESOURCE(pszTitle)) || IS_INTRESOURCE(pszFormatMessage))
+        hInstance = GetModuleHandleW(NULL); // SetupData.hInstance;
 
-    return MessageBoxW(hParentWnd, message, caption, MB_OK | MB_ICONERROR);
+    /* Retrieve the format message string if this is a resource */
+    if (pszFormatMessage && IS_INTRESOURCE(pszFormatMessage)) do
+    {
+        // LoadAllocStringW()
+        PCWSTR pStr;
+
+        /* Try to load the string from the resource */
+        MsgLen = LoadStringW(hInstance, PtrToUlong(pszFormatMessage), (LPWSTR)&pStr, 0);
+        if (MsgLen == 0)
+        {
+            /* No resource string was found, return NULL */
+            Format = NULL;
+            break;
+        }
+
+        /* Allocate a new buffer, adding a NULL-terminator */
+        Format = HeapAlloc(GetProcessHeap(), 0, (MsgLen + 1) * sizeof(WCHAR));
+        if (!Format)
+        {
+            MsgLen = 0;
+            break;
+        }
+
+        /* Copy the string, NULL-terminated */
+        StringCchCopyNW(Format, MsgLen + 1, pStr, MsgLen);
+    } while (0);
+    else
+    {
+        Format = (LPWSTR)pszFormatMessage;
+    }
+
+    if (Format)
+    {
+        /*
+         * Retrieve the message length. If it is too long, allocate
+         * an auxiliary buffer; otherwise use the static buffer.
+         * The string is built to be NULL-terminated.
+         */
+        MsgLen = _vscwprintf(Format, args);
+        if (MsgLen >= _countof(StaticBuffer))
+        {
+            Buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (MsgLen + 1) * sizeof(WCHAR));
+            if (!Buffer)
+            {
+                /* Allocation failed, use the original format string verbatim */
+                Buffer = Format;
+            }
+        }
+        if (Buffer != Format)
+        {
+            /* Do the printf as we use the caller's format string */
+            StringCchVPrintfW(Buffer, MsgLen + 1, Format, args);
+        }
+    }
+    else
+    {
+        Format = (LPWSTR)pszFormatMessage;
+        Buffer = Format;
+    }
+
+    /* Display the message */
+    mb.cbSize = sizeof(mb);
+    mb.hwndOwner = hWnd;
+    mb.hInstance = hInstance;
+    mb.lpszText = Buffer;
+    mb.lpszCaption = pszTitle;
+    mb.dwStyle = uType;
+    mb.dwLanguageId = MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT);
+    iRes = MessageBoxIndirectW(&mb);
+
+    /* Free the buffers if needed */
+    if ((Buffer != StaticBuffer) && (Buffer != Format))
+        HeapFree(GetProcessHeap(), 0, Buffer);
+
+    if (Format && (Format != pszFormatMessage))
+        HeapFree(GetProcessHeap(), 0, Format);
+
+    return iRes;
+}
+
+INT
+__cdecl
+DisplayMessage(
+    _In_opt_ HWND hWnd,
+    _In_ UINT uType,
+    _In_opt_ PCWSTR pszTitle,
+    _In_opt_ PCWSTR pszFormatMessage,
+    ...)
+{
+    INT iRes;
+    va_list args;
+
+    va_start(args, pszFormatMessage);
+    iRes = DisplayMessageV(hWnd, uType, pszTitle, pszFormatMessage, args);
+    va_end(args);
+
+    return iRes;
+}
+
+INT
+__cdecl
+DisplayError(
+    _In_opt_ HWND hWnd,
+    _In_ UINT uIDTitle,
+    _In_ UINT uIDMessage,
+    ...)
+{
+    INT iRes;
+    va_list args;
+
+    va_start(args, uIDMessage);
+    iRes = DisplayMessageV(hWnd, MB_OK | MB_ICONERROR,
+                           MAKEINTRESOURCEW(uIDTitle),
+                           MAKEINTRESOURCEW(uIDMessage),
+                           args);
+    va_end(args);
+
+    return iRes;
+}
+
+VOID
+SetWindowResTextW(
+    _In_ HWND hWnd,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ UINT uID)
+{
+    WCHAR szText[256];
+    LoadStringW(hInstance, uID, szText, _countof(szText));
+    SetWindowTextW(hWnd, szText);
+}
+
+VOID
+SetWindowResPrintfVW(
+    _In_ HWND hWnd,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ UINT uID,
+    _In_ va_list args)
+{
+    WCHAR ResBuffer[256];
+    WCHAR szText[256];
+
+    LoadStringW(hInstance, uID, ResBuffer, _countof(ResBuffer));
+    StringCchVPrintfW(szText, _countof(szText), ResBuffer, args);
+    SetWindowTextW(hWnd, szText);
+}
+
+VOID
+__cdecl
+SetWindowResPrintfW(
+    _In_ HWND hWnd,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ UINT uID,
+    ...)
+{
+    va_list args;
+
+    va_start(args, uID);
+    SetWindowResPrintfVW(hWnd, hInstance, uID, args);
+    va_end(args);
 }
 
 static INT_PTR CALLBACK
@@ -222,10 +404,10 @@ TypeDlgProc(
 
                 case PSN_QUERYCANCEL:
                 {
-                    if (MessageBoxW(GetParent(hwndDlg),
-                                    pSetupData->szAbortMessage,
-                                    pSetupData->szAbortTitle,
-                                    MB_YESNO | MB_ICONQUESTION) == IDYES)
+                    if (DisplayMessage(GetParent(hwndDlg),
+                                       MB_YESNO | MB_ICONQUESTION,
+                                       MAKEINTRESOURCEW(IDS_ABORTSETUP2),
+                                       MAKEINTRESOURCEW(IDS_ABORTSETUP)) == IDYES)
                     {
                         /* Go to the Terminate page */
                         PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_RESTARTPAGE);
@@ -468,14 +650,14 @@ AddNTOSInstallationItem(
     IN SIZE_T cchBufferSize)
 {
     PNTOS_INSTALLATION NtOsInstall = (PNTOS_INSTALLATION)GetListEntryData(Entry);
-    PPARTENTRY PartEntry = NtOsInstall->PartEntry;
+    PVOLINFO VolInfo = (NtOsInstall->Volume ? &NtOsInstall->Volume->Info : NULL);
 
-    if (PartEntry && PartEntry->DriveLetter)
+    if (VolInfo && VolInfo->DriveLetter)
     {
         /* We have retrieved a partition that is mounted */
         StringCchPrintfW(Buffer, cchBufferSize,
                          L"%c:%s",
-                         PartEntry->DriveLetter,
+                         VolInfo->DriveLetter,
                          NtOsInstall->PathComponent);
     }
     else
@@ -656,10 +838,10 @@ UpgradeRepairDlgProc(
 
                 case PSN_QUERYCANCEL:
                 {
-                    if (MessageBoxW(GetParent(hwndDlg),
-                                    pSetupData->szAbortMessage,
-                                    pSetupData->szAbortTitle,
-                                    MB_YESNO | MB_ICONQUESTION) == IDYES)
+                    if (DisplayMessage(GetParent(hwndDlg),
+                                       MB_YESNO | MB_ICONQUESTION,
+                                       MAKEINTRESOURCEW(IDS_ABORTSETUP2),
+                                       MAKEINTRESOURCEW(IDS_ABORTSETUP)) == IDYES)
                     {
                         /* Go to the Terminate page */
                         PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_RESTARTPAGE);
@@ -765,10 +947,10 @@ DeviceDlgProc(
 
                 case PSN_QUERYCANCEL:
                 {
-                    if (MessageBoxW(GetParent(hwndDlg),
-                                    pSetupData->szAbortMessage,
-                                    pSetupData->szAbortTitle,
-                                    MB_YESNO | MB_ICONQUESTION) == IDYES)
+                    if (DisplayMessage(GetParent(hwndDlg),
+                                       MB_YESNO | MB_ICONQUESTION,
+                                       MAKEINTRESOURCEW(IDS_ABORTSETUP2),
+                                       MAKEINTRESOURCEW(IDS_ABORTSETUP)) == IDYES)
                     {
                         /* Go to the Terminate page */
                         PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_RESTARTPAGE);
@@ -859,6 +1041,8 @@ SummaryDlgProc(
                 {
                     WCHAR CurrentItemText[256];
 
+                    ASSERT(InstallPartition);
+
                     /* Show the current selected settings */
 
                     // FIXME! Localize
@@ -894,24 +1078,39 @@ SummaryDlgProc(
                                           ARRAYSIZE(CurrentItemText));
                     SetDlgItemTextW(hwndDlg, IDC_KEYBOARD, CurrentItemText);
 
-                    if (L'C') // FIXME!
+                    if (InstallVolume->Info.DriveLetter)
                     {
+#if 0
                         StringCchPrintfW(CurrentItemText, ARRAYSIZE(CurrentItemText),
                                          L"%c: \x2014 %wZ",
-                                         L'C', // FIXME!
+                                         InstallVolume->Info.DriveLetter,
                                          &pSetupData->USetupData.DestinationRootPath);
+#else
+                        StringCchPrintfW(CurrentItemText, ARRAYSIZE(CurrentItemText),
+                                         L"%c: \x2014 Harddisk %lu, Partition %lu",
+                                         InstallVolume->Info.DriveLetter,
+                                         InstallPartition->DiskEntry->DiskNumber,
+                                         InstallPartition->OnDiskPartitionNumber);
+#endif
                     }
                     else
                     {
+#if 0
                         StringCchPrintfW(CurrentItemText, ARRAYSIZE(CurrentItemText),
                                          L"%wZ",
                                          &pSetupData->USetupData.DestinationRootPath);
+#else
+                        StringCchPrintfW(CurrentItemText, ARRAYSIZE(CurrentItemText),
+                                         L"Harddisk %lu, Partition %lu",
+                                         InstallPartition->DiskEntry->DiskNumber,
+                                         InstallPartition->OnDiskPartitionNumber);
+#endif
                     }
                     SetDlgItemTextW(hwndDlg, IDC_DESTDRIVE, CurrentItemText);
 
                     SetDlgItemTextW(hwndDlg, IDC_PATH,
-                                    /*pSetupData->USetupData.InstallationDirectory*/
-                                    pSetupData->USetupData.InstallPath.Buffer);
+                                    pSetupData->USetupData.InstallationDirectory
+                                    /*pSetupData->USetupData.InstallPath.Buffer*/);
 
 
                     /* Change the "Next" button text to "Install" */
@@ -945,10 +1144,10 @@ SummaryDlgProc(
 
                 case PSN_QUERYCANCEL:
                 {
-                    if (MessageBoxW(GetParent(hwndDlg),
-                                    pSetupData->szAbortMessage,
-                                    pSetupData->szAbortTitle,
-                                    MB_YESNO | MB_ICONQUESTION) == IDYES)
+                    if (DisplayMessage(GetParent(hwndDlg),
+                                       MB_YESNO | MB_ICONQUESTION,
+                                       MAKEINTRESOURCEW(IDS_ABORTSETUP2),
+                                       MAKEINTRESOURCEW(IDS_ABORTSETUP)) == IDYES)
                     {
                         /* Go to the Terminate page */
                         PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_RESTARTPAGE);
@@ -973,11 +1172,419 @@ SummaryDlgProc(
 }
 
 
+typedef struct _FSVOL_CONTEXT
+{
+    PSETUPDATA pSetupData;
+    // PAGE_NUMBER NextPageOnAbort;
+} FSVOL_CONTEXT, *PFSVOL_CONTEXT;
+
+static
+BOOLEAN
+NTAPI
+FormatCallback(
+    _In_ CALLBACKCOMMAND Command,
+    _In_ ULONG Modifier,
+    _In_ PVOID Argument)
+{
+    switch (Command)
+    {
+        case PROGRESS:
+        {
+            PULONG Percent = (PULONG)Argument;
+            DPRINT("%lu percent completed\n", *Percent);
+            SendMessageW(UiContext.hWndProgress, PBM_SETPOS, *Percent, 0);
+            break;
+        }
+
+#if 0
+        case OUTPUT:
+        {
+            PTEXTOUTPUT output = (PTEXTOUTPUT)Argument;
+            DPRINT("%s\n", output->Output);
+            break;
+        }
+#endif
+
+        case DONE:
+        {
+#if 0
+            PBOOLEAN Success = (PBOOLEAN)Argument;
+            if (*Success == FALSE)
+            {
+                DPRINT("FormatEx was unable to complete successfully.\n\n");
+            }
+#endif
+            DPRINT("Done\n");
+            break;
+        }
+
+        default:
+            DPRINT("Unknown callback %lu\n", (ULONG)Command);
+            break;
+    }
+
+    return TRUE;
+}
+
+static
+BOOLEAN
+NTAPI
+ChkdskCallback(
+    _In_ CALLBACKCOMMAND Command,
+    _In_ ULONG Modifier,
+    _In_ PVOID Argument)
+{
+    switch (Command)
+    {
+        default:
+            DPRINT("Unknown callback %lu\n", (ULONG)Command);
+            break;
+    }
+
+    return TRUE;
+}
+
+// PFSVOL_CALLBACK
+static FSVOL_OP
+CALLBACK
+FsVolCallback(
+    _In_opt_ PVOID Context,
+    _In_ FSVOLNOTIFY FormatStatus,
+    _In_ ULONG_PTR Param1,
+    _In_ ULONG_PTR Param2)
+{
+    PFSVOL_CONTEXT FsVolContext = (PFSVOL_CONTEXT)Context;
+    WCHAR Buffer[MAX_PATH];
+
+    switch (FormatStatus)
+    {
+    // FIXME: Deprecate!
+    case ChangeSystemPartition:
+    {
+        // PPARTENTRY SystemPartition = (PPARTENTRY)Param1;
+
+        // FsVolContext->NextPageOnAbort = SELECT_PARTITION_PAGE;
+        // if (ChangeSystemPartitionPage(Ir, SystemPartition))
+        //     return FSVOL_DOIT;
+        return FSVOL_ABORT;
+    }
+
+    case FSVOLNOTIFY_PARTITIONERROR:
+    {
+        switch (Param1)
+        {
+        case STATUS_PARTITION_FAILURE:
+        {
+            // ERROR_WRITE_PTABLE
+            DisplayError(NULL,
+                         0, // Default to "Error"
+                         IDS_ERROR_WRITE_PTABLE);
+            // FsVolContext->NextPageOnAbort = QUIT_PAGE;
+            // TODO: Go back to the partitioning page?
+            break;
+        }
+
+        case ERROR_SYSTEM_PARTITION_NOT_FOUND:
+        {
+            /* FIXME: improve the error dialog */
+            //
+            // Error dialog should say that we cannot find a suitable
+            // system partition and create one on the system. At this point,
+            // it may be nice to ask the user whether he wants to continue,
+            // or use an external drive as the system drive/partition
+            // (e.g. floppy, USB drive, etc...)
+            //
+            DisplayError(NULL,
+                         0, // Default to "Error"
+                         IDS_ERROR_SYSTEM_PARTITION);
+            // FsVolContext->NextPageOnAbort = SELECT_PARTITION_PAGE;
+            // TODO: Go back to the partitioning page
+            break;
+        }
+
+        default:
+            break;
+        }
+        return FSVOL_ABORT;
+    }
+
+    case FSVOLNOTIFY_STARTQUEUE:
+    case FSVOLNOTIFY_ENDQUEUE:
+        // NOTE: If needed, clear progress gauges.
+        return FSVOL_DOIT;
+
+    case FSVOLNOTIFY_STARTSUBQUEUE:
+    {
+        if ((FSVOL_OP)Param1 == FSVOL_FORMAT)
+        {
+            /*
+             * In case we just repair an existing installation, or make
+             * an unattended setup without formatting, just go to the
+             * filesystem check step.
+             */
+            if (FsVolContext->pSetupData->RepairUpdateFlag)
+                return FSVOL_SKIP; /** HACK!! **/
+
+            if (IsUnattendedSetup && !FsVolContext->pSetupData->USetupData.FormatPartition)
+                return FSVOL_SKIP; /** HACK!! **/
+
+            /* Set status text */
+            SetDlgItemTextW(UiContext.hwndDlg, IDC_ITEM, L"");
+        }
+        else
+        if ((FSVOL_OP)Param1 == FSVOL_CHECK)
+        {
+            /* Set status text */
+            SetDlgItemTextW(UiContext.hwndDlg, IDC_ITEM, L"");
+
+            /* Filechecking step: set progress marquee style and start it up */
+            UiContext.dwPbStyle = GetWindowLongPtrW(UiContext.hWndProgress, GWL_STYLE);
+            SetWindowLongPtrW(UiContext.hWndProgress, GWL_STYLE, UiContext.dwPbStyle | PBS_MARQUEE);
+            SendMessageW(UiContext.hWndProgress, PBM_SETMARQUEE, TRUE, 0);
+        }
+
+        return FSVOL_DOIT;
+    }
+
+    case FSVOLNOTIFY_ENDSUBQUEUE:
+    {
+        if ((FSVOL_OP)Param1 == FSVOL_CHECK)
+        {
+            /* File-checking finished: stop the progress bar and restore its style */
+            SendMessageW(UiContext.hWndProgress, PBM_SETMARQUEE, FALSE, 0);
+            SetWindowLongPtrW(UiContext.hWndProgress, GWL_STYLE, UiContext.dwPbStyle);
+        }
+        return 0;
+    }
+
+    case FSVOLNOTIFY_FORMATERROR:
+    {
+        PFORMAT_VOLUME_INFO FmtInfo = (PFORMAT_VOLUME_INFO)Param1;
+
+        // FIXME: See also FSVOLNOTIFY_PARTITIONERROR
+        if (FmtInfo->ErrorStatus == STATUS_PARTITION_FAILURE)
+        {
+            // ERROR_WRITE_PTABLE
+            DisplayError(NULL,
+                         0, // Default to "Error"
+                         IDS_ERROR_WRITE_PTABLE);
+            // FsVolContext->NextPageOnAbort = QUIT_PAGE;
+            // TODO: Go back to the partitioning page?
+            return FSVOL_ABORT;
+        }
+        else
+        if (FmtInfo->ErrorStatus == STATUS_UNRECOGNIZED_VOLUME)
+        {
+            /* FIXME: show an error dialog */
+            // MUIDisplayError(ERROR_FORMATTING_PARTITION, Ir, POPUP_WAIT_ANY_KEY, PathBuffer);
+            DisplayError(NULL,
+                         0, // Default to "Error"
+                         IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME);
+            // FsVolContext->NextPageOnAbort = QUIT_PAGE;
+            return FSVOL_ABORT;
+        }
+        else
+        if (FmtInfo->ErrorStatus == STATUS_NOT_SUPPORTED)
+        {
+            INT nRet;
+
+            nRet = DisplayMessage(NULL, MB_ICONERROR | MB_OKCANCEL,
+                                  NULL, // Default to "Error"
+                                  MAKEINTRESOURCEW(IDS_ERROR_COULD_NOT_FORMAT),
+                                  FmtInfo->FileSystemName);
+            if (nRet == IDCANCEL)
+            {
+                // FsVolContext->NextPageOnAbort = QUIT_PAGE;
+                return FSVOL_ABORT;
+            }
+            else if (nRet == IDOK)
+            {
+                return FSVOL_RETRY;
+            }
+        }
+        else if (!NT_SUCCESS(FmtInfo->ErrorStatus))
+        {
+            ASSERT(*FmtInfo->Volume->Info.DeviceName);
+
+            DPRINT1("FormatPartition() failed with status 0x%08lx\n", FmtInfo->ErrorStatus);
+
+            // ERROR_FORMATTING_PARTITION
+            DisplayError(NULL,
+                         0, // Default to "Error"
+                         IDS_ERROR_FORMATTING_PARTITION,
+                         FmtInfo->Volume->Info.DeviceName);
+            // FsVolContext->NextPageOnAbort = QUIT_PAGE;
+            return FSVOL_ABORT;
+        }
+
+        return FSVOL_RETRY;
+    }
+
+    case FSVOLNOTIFY_CHECKERROR:
+    {
+        PCHECK_VOLUME_INFO ChkInfo = (PCHECK_VOLUME_INFO)Param1;
+
+        if (ChkInfo->ErrorStatus == STATUS_NOT_SUPPORTED)
+        {
+            INT nRet;
+
+            nRet = DisplayMessage(NULL, MB_ICONERROR | MB_OKCANCEL,
+                                  NULL, // Default to "Error"
+                                  MAKEINTRESOURCEW(IDS_ERROR_COULD_NOT_CHECK),
+                                  ChkInfo->Volume->Info.FileSystem);
+            if (nRet == IDCANCEL)
+            {
+                // FsVolContext->NextPageOnAbort = QUIT_PAGE;
+                return FSVOL_ABORT;
+            }
+            else if (nRet == IDOK)
+            {
+                return FSVOL_SKIP;
+            }
+        }
+        else if (!NT_SUCCESS(ChkInfo->ErrorStatus))
+        {
+            DPRINT1("ChkdskPartition() failed with status 0x%08lx\n", ChkInfo->ErrorStatus);
+
+            DisplayError(NULL,
+                         0, // Default to "Error"
+                         IDS_ERROR_CHECKING_PARTITION,
+                         ChkInfo->ErrorStatus);
+            return FSVOL_SKIP;
+        }
+
+        return FSVOL_SKIP;
+    }
+
+    case FSVOLNOTIFY_STARTFORMAT:
+    {
+        PFORMAT_VOLUME_INFO FmtInfo = (PFORMAT_VOLUME_INFO)Param1;
+        PVOL_CREATE_INFO VolCreate;
+
+        ASSERT((FSVOL_OP)Param2 == FSVOL_FORMAT);
+
+        /* Find the volume info in the partition TreeList UI.
+         * If none, don't format it. */
+        VolCreate = FindVolCreateInTreeByVolume(UiContext.hPartList,
+                                                FmtInfo->Volume);
+        if (!VolCreate)
+            return FSVOL_SKIP;
+        ASSERT(VolCreate->Volume == FmtInfo->Volume);
+
+        /* If there is no formatting information, skip it */
+        if (!*VolCreate->FileSystemName)
+            return FSVOL_SKIP;
+
+        ASSERT(*FmtInfo->Volume->Info.DeviceName);
+
+        /* Set status text */
+        if (FmtInfo->Volume->Info.DriveLetter)
+        {
+            StringCchPrintfW(Buffer, ARRAYSIZE(Buffer),
+                             L"Formatting volume %c: (%s) in %s...", // IDS_FORMATTING_PROGRESS1
+                             FmtInfo->Volume->Info.DriveLetter,
+                             FmtInfo->Volume->Info.DeviceName,
+                             VolCreate->FileSystemName);
+        }
+        else
+        {
+            StringCchPrintfW(Buffer, ARRAYSIZE(Buffer),
+                             L"Formatting volume %s in %s...", // IDS_FORMATTING_PROGRESS2
+                             FmtInfo->Volume->Info.DeviceName,
+                             VolCreate->FileSystemName);
+        }
+        SetDlgItemTextW(UiContext.hwndDlg, IDC_ITEM, Buffer);
+
+        // StartFormat(FmtInfo, FileSystemList->Selected);
+        FmtInfo->FileSystemName = VolCreate->FileSystemName;
+        FmtInfo->MediaFlag = VolCreate->MediaFlag;
+        FmtInfo->Label = VolCreate->Label;
+        FmtInfo->QuickFormat = VolCreate->QuickFormat;
+        FmtInfo->ClusterSize = VolCreate->ClusterSize;
+        FmtInfo->Callback = FormatCallback;
+
+        /* Set up the progress bar */
+        SendMessageW(UiContext.hWndProgress,
+                     PBM_SETRANGE, 0, MAKELPARAM(0, 100));
+        SendMessageW(UiContext.hWndProgress,
+                     PBM_SETPOS, 0, 0);
+
+        return FSVOL_DOIT;
+    }
+
+    case FSVOLNOTIFY_ENDFORMAT:
+    {
+        PFORMAT_VOLUME_INFO FmtInfo = (PFORMAT_VOLUME_INFO)Param1;
+
+        // EndFormat(FmtInfo->ErrorStatus);
+        if (FmtInfo->FileSystemName)
+            *(PWSTR)FmtInfo->FileSystemName = UNICODE_NULL; // FIXME: HACK!
+
+        // /* Reset the file system list */
+        // ResetFileSystemList();
+        return 0;
+    }
+
+    case FSVOLNOTIFY_STARTCHECK:
+    {
+        PCHECK_VOLUME_INFO ChkInfo = (PCHECK_VOLUME_INFO)Param1;
+        PVOL_CREATE_INFO VolCreate;
+
+        ASSERT((FSVOL_OP)Param2 == FSVOL_CHECK);
+
+        /* Find the volume info in the partition TreeList UI.
+         * If none, don't check it. */
+        VolCreate = FindVolCreateInTreeByVolume(UiContext.hPartList,
+                                                ChkInfo->Volume);
+        if (!VolCreate)
+            return FSVOL_SKIP;
+        ASSERT(VolCreate->Volume == ChkInfo->Volume);
+
+        ASSERT(*ChkInfo->Volume->Info.DeviceName);
+
+        /* Set status text */
+        if (ChkInfo->Volume->Info.DriveLetter)
+        {
+            StringCchPrintfW(Buffer, ARRAYSIZE(Buffer),
+                             L"Checking volume %c: (%s)...", // IDS_CHECKING_PROGRESS1
+                             ChkInfo->Volume->Info.DriveLetter,
+                             ChkInfo->Volume->Info.DeviceName);
+        }
+        else
+        {
+            StringCchPrintfW(Buffer, ARRAYSIZE(Buffer),
+                             L"Checking volume %s...", // IDS_CHECKING_PROGRESS2
+                             ChkInfo->Volume->Info.DeviceName);
+        }
+        SetDlgItemTextW(UiContext.hwndDlg, IDC_ITEM, Buffer);
+
+        // StartCheck(ChkInfo);
+        // TODO: Think about which values could be defaulted...
+        ChkInfo->FixErrors = TRUE;
+        ChkInfo->Verbose = FALSE;
+        ChkInfo->CheckOnlyIfDirty = TRUE;
+        ChkInfo->ScanDrive = FALSE;
+        ChkInfo->Callback = ChkdskCallback;
+
+        return FSVOL_DOIT;
+    }
+
+    case FSVOLNOTIFY_ENDCHECK:
+    {
+        // PCHECK_VOLUME_INFO ChkInfo = (PCHECK_VOLUME_INFO)Param1;
+        // EndCheck(ChkInfo->ErrorStatus);
+        return 0;
+    }
+    }
+
+    return 0;
+}
+
+
+
 typedef struct _COPYCONTEXT
 {
     PSETUPDATA pSetupData;
-    HWND hWndItem;
-    HWND hWndProgress;
     ULONG TotalOperations;
     ULONG CompletedOperations;
 } COPYCONTEXT, *PCOPYCONTEXT;
@@ -1005,11 +1612,14 @@ FileCopyCallback(PVOID Context,
             CopyContext->TotalOperations = (ULONG)Param2;
             CopyContext->CompletedOperations = 0;
 
-            SendMessageW(CopyContext->hWndProgress,
+            /* Set up the progress bar */
+            SendMessageW(UiContext.hWndProgress,
                          PBM_SETRANGE, 0,
                          MAKELPARAM(0, CopyContext->TotalOperations));
-            SendMessageW(CopyContext->hWndProgress,
+            SendMessageW(UiContext.hWndProgress,
                          PBM_SETSTEP, 1, 0);
+            SendMessageW(UiContext.hWndProgress,
+                         PBM_SETPOS, 0, 0);
             break;
         }
 
@@ -1030,7 +1640,7 @@ FileCopyCallback(PVOID Context,
 
                 // STRING_DELETING
                 StringCchPrintfW(Status, ARRAYSIZE(Status), L"Deleting %s", DstFileName);
-                SetWindowTextW(CopyContext->hWndItem, Status);
+                SetWindowTextW(UiContext.hWndItem, Status);
             }
             else if (Notification == SPFILENOTIFY_STARTRENAME)
             {
@@ -1051,7 +1661,7 @@ FileCopyCallback(PVOID Context,
                 else
                     StringCchPrintfW(Status, ARRAYSIZE(Status), L"Renaming %s to %s", SrcFileName, DstFileName);
 
-                SetWindowTextW(CopyContext->hWndItem, Status);
+                SetWindowTextW(UiContext.hWndItem, Status);
             }
             else if (Notification == SPFILENOTIFY_STARTCOPY)
             {
@@ -1064,9 +1674,18 @@ FileCopyCallback(PVOID Context,
 
                 // STRING_COPYING
                 StringCchPrintfW(Status, ARRAYSIZE(Status), L"Copying %s", DstFileName);
-                SetWindowTextW(CopyContext->hWndItem, Status);
+                SetWindowTextW(UiContext.hWndItem, Status);
             }
             break;
+        }
+
+        case SPFILENOTIFY_COPYERROR:
+        {
+            FilePathInfo = (PFILEPATHS_W)Param1;
+
+            DPRINT1("An error happened while trying to copy file '%S' (error 0x%08lx), skipping it...\n",
+                    FilePathInfo->Target, FilePathInfo->Win32Error);
+            return FILEOP_SKIP;
         }
 
         case SPFILENOTIFY_ENDDELETE:
@@ -1079,12 +1698,61 @@ FileCopyCallback(PVOID Context,
             if (CopyContext->TotalOperations >> 1 == CopyContext->CompletedOperations)
                 DPRINT1("CHECKPOINT:HALF_COPIED\n");
 
-            SendMessageW(CopyContext->hWndProgress, PBM_STEPIT, 0, 0);
+            SendMessageW(UiContext.hWndProgress, PBM_STEPIT, 0, 0);
             break;
         }
     }
 
     return FILEOP_DOIT;
+}
+
+static VOID
+__cdecl
+RegistryStatus(IN REGISTRY_STATUS RegStatus, ...)
+{
+    /* WARNING: Please keep this lookup table in sync with the resources! */
+    static const UINT StringIDs[] =
+    {
+        IDS_REG_DONE,                   /* Success */
+        IDS_REG_REGHIVEUPDATE,          /* RegHiveUpdate */
+        IDS_REG_IMPORTFILE,             /* ImportRegHive */
+        IDS_REG_DISPLAYSETTINGSUPDATE,  /* DisplaySettingsUpdate */
+        IDS_REG_LOCALESETTINGSUPDATE,   /* LocaleSettingsUpdate */
+        IDS_REG_ADDKBLAYOUTS,           /* KeybLayouts */
+        IDS_REG_KEYBOARDSETTINGSUPDATE, /* KeybSettingsUpdate */
+        IDS_REG_CODEPAGEINFOUPDATE,     /* CodePageInfoUpdate */
+    };
+
+    if (RegStatus < _countof(StringIDs))
+    {
+        va_list args;
+        va_start(args, RegStatus);
+        SetWindowResPrintfVW(UiContext.hWndItem, SetupData.hInstance, StringIDs[RegStatus], args);
+        va_end(args);
+    }
+    else
+    {
+        SetWindowResPrintfW(UiContext.hWndItem, SetupData.hInstance, IDS_REG_UNKNOWN, RegStatus);
+    }
+
+    SendMessageW(UiContext.hWndProgress, PBM_STEPIT, 0, 0);
+}
+
+/**
+ * @brief
+ * Enables or disables the Cancel and the Close title-bar
+ * property-sheet window buttons.
+ **/
+VOID
+PropSheet_SetCloseCancel(
+    _In_ HWND hWndWiz,
+    _In_ BOOL Enable)
+{
+    EnableDlgItem(hWndWiz, IDCANCEL, Enable);
+    // ShowDlgItem(hWndWiz, IDCANCEL, Enable ? SW_SHOW : SW_HIDE);
+    EnableMenuItem(GetSystemMenu(hWndWiz, FALSE),
+                   SC_CLOSE,
+                   MF_BYCOMMAND | (Enable ? MF_ENABLED : MF_GRAYED));
 }
 
 static DWORD
@@ -1096,15 +1764,121 @@ PrepareAndDoCopyThread(
     HWND hwndDlg = (HWND)Param;
     HWND hWndProgress;
     LONG_PTR dwStyle;
-    // ERROR_NUMBER ErrorNumber;
+    ERROR_NUMBER ErrorNumber;
     BOOLEAN Success;
+    NTSTATUS Status;
+    FSVOL_CONTEXT FsVolContext;
     COPYCONTEXT CopyContext;
+    // WCHAR PathBuffer[MAX_PATH];
 
     /* Retrieve pointer to the global setup data */
     pSetupData = (PSETUPDATA)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
 
     /* Get the progress handle */
     hWndProgress = GetDlgItem(hwndDlg, IDC_PROCESSPROGRESS);
+
+    /* Setup global UI context */
+    UiContext.hwndDlg = hwndDlg;
+    UiContext.hWndItem = GetDlgItem(hwndDlg, IDC_ITEM);
+    UiContext.hWndProgress = hWndProgress;
+    UiContext.dwPbStyle = 0;
+
+
+    /* Disable the Close/Cancel buttons during all partition operations */
+    // TODO: Consider, alternatively, to just show an info-box saying
+    // that the installation process cannot be canceled at this stage?
+    // PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
+    PropSheet_SetCloseCancel(GetParent(hwndDlg), FALSE);
+
+
+    /*
+     * Find/Set the system partition, and apply all pending partition operations.
+     */
+
+    /* Create context for the volume/partition operations */
+    FsVolContext.pSetupData = pSetupData;
+
+    /* Set status text */
+    SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"Setting the system partition...");
+    SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
+
+    /* Find or set the active system partition before starting formatting */
+    Success = InitSystemPartition(pSetupData->PartitionList,
+                                  InstallPartition,
+                                  &SystemPartition,
+                                  FsVolCallback,
+                                  &FsVolContext);
+    // if (!Success)
+    //     return FsVolContext.NextPageOnAbort;
+    //
+    // FIXME?? If cannot use any system partition, install FreeLdr on floppy / removable media??
+    //
+    if (!Success)
+    {
+        /* Display an error if an unexpected failure happened */
+        MessageBoxW(GetParent(hwndDlg), L"Failed to find or set the system partition!", L"Error", MB_ICONERROR);
+
+        /* Re-enable the Close/Cancel buttons */
+        PropSheet_SetCloseCancel(GetParent(hwndDlg), TRUE);
+
+        /*
+         * We failed due to an unexpected error, keep on the copy page to view the current state,
+         * but enable the "Next" button to allow the user to continue to the terminate page.
+         */
+        PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
+        return 1;
+    }
+
+
+    /* Set status text */
+    SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"Preparing partitions...");
+    SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
+
+    /* Apply all pending operations on partitions: formatting and checking */
+    Success = FsVolCommitOpsQueue(pSetupData->PartitionList,
+                                  SystemVolume,
+                                  InstallVolume,
+                                  FsVolCallback,
+                                  &FsVolContext);
+    if (!Success)
+    {
+        /* Display an error if an unexpected failure happened */
+        MessageBoxW(GetParent(hwndDlg), L"Failed to prepare the partitions!", L"Error", MB_ICONERROR);
+
+        /* Re-enable the Close/Cancel buttons */
+        PropSheet_SetCloseCancel(GetParent(hwndDlg), TRUE);
+
+        /*
+         * We failed due to an unexpected error, keep on the copy page to view the current state,
+         * but enable the "Next" button to allow the user to continue to the terminate page.
+         */
+        PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
+        return 1;
+    }
+
+
+    /* Re-enable the Close/Cancel buttons */
+    PropSheet_SetCloseCancel(GetParent(hwndDlg), TRUE);
+
+
+
+    /* Re-calculate the final destination paths */
+    ASSERT(InstallPartition);
+    Status = InitDestinationPaths(&pSetupData->USetupData,
+                                  NULL, // pSetupData->USetupData.InstallationDirectory,
+                                  InstallVolume);
+    if (!NT_SUCCESS(Status))
+    {
+        DisplayMessage(GetParent(hwndDlg), MB_ICONERROR, L"Error", L"InitDestinationPaths() failed with status 0x%08lx\n", Status);
+
+        /*
+         * We failed due to an unexpected error, keep on the copy page to view the current state,
+         * but enable the "Next" button to allow the user to continue to the terminate page.
+         */
+        PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
+        return 1;
+    }
+
 
 
     /*
@@ -1115,26 +1889,23 @@ PrepareAndDoCopyThread(
     SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"Preparing the list of files to be copied, please wait...");
     SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
 
-    /* Set progress marquee style */
+    /* Set progress marquee style and start it up */
     dwStyle = GetWindowLongPtrW(hWndProgress, GWL_STYLE);
     SetWindowLongPtrW(hWndProgress, GWL_STYLE, dwStyle | PBS_MARQUEE);
-
-    /* Start it up */
     SendMessageW(hWndProgress, PBM_SETMARQUEE, TRUE, 0);
 
     /* Prepare the list of files */
     /* ErrorNumber = */ Success = PrepareFileCopy(&pSetupData->USetupData, NULL);
+
+    /* Stop progress and restore its style */
+    SendMessageW(hWndProgress, PBM_SETMARQUEE, FALSE, 0);
+    SetWindowLongPtrW(hWndProgress, GWL_STYLE, dwStyle);
+
     if (/*ErrorNumber != ERROR_SUCCESS*/ !Success)
     {
         /* Display an error only if an unexpected failure happened, and not because the user cancelled the installation */
         if (!pSetupData->bStopInstall)
             MessageBoxW(GetParent(hwndDlg), L"Failed to prepare the list of files!", L"Error", MB_ICONERROR);
-
-        /* Stop it */
-        SendMessageW(hWndProgress, PBM_SETMARQUEE, FALSE, 0);
-
-        /* Restore progress style */
-        SetWindowLongPtrW(hWndProgress, GWL_STYLE, dwStyle);
 
         /*
          * If we failed due to an unexpected error, keep on the copy page to view the current state,
@@ -1145,12 +1916,6 @@ PrepareAndDoCopyThread(
             PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
         return 1;
     }
-
-    /* Stop it */
-    SendMessageW(hWndProgress, PBM_SETMARQUEE, FALSE, 0);
-
-    /* Restore progress style */
-    SetWindowLongPtrW(hWndProgress, GWL_STYLE, dwStyle);
 
 
     /*
@@ -1163,8 +1928,6 @@ PrepareAndDoCopyThread(
 
     /* Create context for the copy process */
     CopyContext.pSetupData = pSetupData;
-    CopyContext.hWndItem = GetDlgItem(hwndDlg, IDC_ITEM);
-    CopyContext.hWndProgress = hWndProgress;
     CopyContext.TotalOperations = 0;
     CopyContext.CompletedOperations = 0;
 
@@ -1185,12 +1948,44 @@ PrepareAndDoCopyThread(
         return 1;
     }
 
-    /* Set status text */
-    SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"Finalizing the installation...");
-    SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
+    // /* Set status text */
+    // SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"Finalizing the installation...");
+    // SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
 
     /* Create the $winnt$.inf file */
     InstallSetupInfFile(&pSetupData->USetupData);
+
+
+    /*
+     * Create or update the registry hives
+     */
+
+    /* Set status text */
+    SetWindowResTextW(GetDlgItem(hwndDlg, IDC_ACTIVITY),
+                      pSetupData->hInstance,
+                      pSetupData->RepairUpdateFlag ? IDS_UPDATE_REGISTRY
+                                                   : IDS_CREATE_REGISTRY);
+    SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
+
+    /* Set up the progress bar */
+    SendMessageW(hWndProgress,
+                 PBM_SETRANGE, 0,
+                 MAKELPARAM(0, 8)); // FIXME: hardcoded number of steps, see StringIDs[] array in RegistryStatus()
+    SendMessageW(hWndProgress,
+                 PBM_SETSTEP, 1, 0);
+    SendMessageW(hWndProgress,
+                 PBM_SETPOS, 0, 0);
+
+    ErrorNumber = UpdateRegistry(&pSetupData->USetupData,
+                                 pSetupData->RepairUpdateFlag,
+                                 pSetupData->PartitionList,
+                                 InstallVolume->Info.DriveLetter,
+                                 pSetupData->SelectedLanguageId,
+                                 RegistryStatus,
+                                 NULL /* SubstSettings */);
+    DBG_UNREFERENCED_PARAMETER(ErrorNumber);
+    SendMessageW(UiContext.hWndProgress, PBM_SETPOS, 100, 0);
+
 
     /* We are done! Switch to the Terminate page */
     PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_RESTARTPAGE);
@@ -1269,10 +2064,10 @@ ProcessDlgProc(
                     /* Halt the on-going file copy */
                     ResetEvent(pSetupData->hHaltInstallEvent);
 
-                    if (MessageBoxW(GetParent(hwndDlg),
-                                    pSetupData->szAbortMessage,
-                                    pSetupData->szAbortTitle,
-                                    MB_YESNO | MB_ICONQUESTION) == IDYES)
+                    if (DisplayMessage(GetParent(hwndDlg),
+                                       MB_YESNO | MB_ICONQUESTION,
+                                       MAKEINTRESOURCEW(IDS_ABORTSETUP2),
+                                       MAKEINTRESOURCEW(IDS_ABORTSETUP)) == IDYES)
                     {
                         /* Stop the file copy thread */
                         pSetupData->bStopInstall = TRUE;
@@ -1375,7 +2170,7 @@ RestartDlgProc(
                 case PSN_SETACTIVE:
                 {
                     /* Only "Finish" for closing the wizard */
-                    ShowWindow(GetDlgItem(GetParent(hwndDlg), IDCANCEL), SW_HIDE);
+                    ShowDlgItem(GetParent(hwndDlg), IDCANCEL, SW_HIDE);
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_FINISH);
 
                     /* Set up the reboot progress bar */
@@ -1909,10 +2704,6 @@ _tWinMain(HINSTANCE hInst,
         goto Quit;
 
     hHotkeyThread = CreateThread(NULL, 0, HotkeyThread, NULL, 0, NULL);
-
-    /* Cache commonly-used strings */
-    LoadStringW(hInst, IDS_ABORTSETUP, SetupData.szAbortMessage, ARRAYSIZE(SetupData.szAbortMessage));
-    LoadStringW(hInst, IDS_ABORTSETUP2, SetupData.szAbortTitle, ARRAYSIZE(SetupData.szAbortTitle));
 
     /* Whenever any of the common controls are used in your app,
      * you must call InitCommonControlsEx() to register the classes

@@ -10,7 +10,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Dată și oră"
+CAPTION "Data și ora"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "&Dată", -1, 4, 2, 122, 125
@@ -32,7 +32,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     CONTROL "", IDC_WORLD_BACKGROUND, "Static", SS_OWNERDRAW, 5, 20, 240, 110, WS_EX_STATICEDGE
-    AUTOCHECKBOX "Ajustează în mod automat ora de &vară/iarnă",
+    AUTOCHECKBOX "Reglare a&utomată a ceasului la modificarea orei de vară",
                  IDC_AUTODAYLIGHT, 6, 132, 242, 11, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 END
 
@@ -42,26 +42,26 @@ CAPTION "Timp Internet"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX IDC_SERVERLIST, 65, 22, 117, 136, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "&Permite sincronizarea automată cu un server de oră de pe internet:",
+    AUTOCHECKBOX "&Sincronizare automată cu un server de timp Internet",
                  IDC_AUTOSYNC, 11, 7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
     LTEXT "Server:", IDC_SERVERTEXT, 34, 22, 28, 13
-    PUSHBUTTON "A&ctualizează", IDC_UPDATEBUTTON, 187, 22, 49, 14
+    PUSHBUTTON "A&ctualizare acum", IDC_UPDATEBUTTON, 187, 22, 49, 14
     LTEXT "", IDC_SUCSYNC, 12, 54, 214, 23
     LTEXT "", IDC_NEXTSYNC, 12, 96, 137, 12
-    LTEXT "Sincronizarea poate fi făcută doar atunci când calculatorul este conectat la internet.", -1, 12, 114, 225, 25
+    LTEXT "Sincronizarea poate apărea numai când computerul este conectat la Internet.", -1, 12, 114, 225, 25
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Dată/oră"
-    IDS_CPLDESCRIPTION "Schimbarea datei, orei sau a fusului orar."
+    IDS_CPLNAME "Dată şi oră"
+    IDS_CPLDESCRIPTION "Se stabileşte data, ora şi fusul orar pentru computer."
     IDS_TIMEZONETEXT "Fusul orar curent: %s"
     IDS_TIMEZONEINVALID "Nevalid"
     IDS_TIMEZONEUNKNOWN "Necunoscut"
     IDS_INETTIMESUCSYNC "Ora a fost sincronizată cu succes %s pe %s la %s"
     IDS_INETTIMENEXTSYNC "Următoarea sincronizare: %s la %s"
-    IDS_INETTIMESYNCING "Așteptați sincronizarea cu %s"
+    IDS_INETTIMESYNCING "Aşteptaţi până când ReactOS se sincronizează cu %s"
     IDS_INETTIMEERROR "A apărut o eroare la sincronizarea cu %s"
     IDS_INETTIMESUCFILL "Scrie numele serverului NTP pentru a sincroniza timpul"
-    IDS_INETTIMEWELCOME "Selectați un server NTP din lista de sus sau scrie numele serverului NTP pentru a sincroniza timpul calculatorului"
+    IDS_INETTIMEWELCOME "Selectați un server NTP din listă sau scrieți numele serverului NTP pentru a sincroniza timpul calculatorului"
 END

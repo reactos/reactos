@@ -1030,8 +1030,8 @@ DeviceCreateHardwarePageEx(IN HWND hWndParent,
        failure cases! */
     hpd = (PHARDWARE_PAGE_DATA)HeapAlloc(GetProcessHeap(),
                                          HEAP_ZERO_MEMORY,
-                                         FIELD_OFFSET(HARDWARE_PAGE_DATA,
-                                                      ClassDevInfo[uNumberOfGuids]));
+                                         DYNAMIC_FIELD_OFFSET(HARDWARE_PAGE_DATA,
+                                                              ClassDevInfo[uNumberOfGuids]));
     if (hpd != NULL)
     {
         HWND hWnd;

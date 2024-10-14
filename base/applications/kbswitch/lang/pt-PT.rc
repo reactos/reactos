@@ -1,0 +1,18 @@
+/*
+ * PROJECT:     Keyboard Layout Switcher
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATOR:  Copyright 2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+IDR_POPUP MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&Preferências...", ID_PREFERENCES
+        MENUITEM SEPARATOR
+        MENUITEM "&Sair", ID_EXIT
+    END
+END

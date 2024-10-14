@@ -340,8 +340,10 @@ NtUserGetThreadState(
          ret = (ULONG_PTR)pti->hklPrev;
          break;
       case THREADSTATE_ISWINLOGON:
-      case THREADSTATE_ISWINLOGON2:
          ret = (gpidLogon == PsGetCurrentProcessId());
+         break;
+      case THREADSTATE_UNKNOWN_0x10:
+         FIXME("stub\n");
          break;
       case THREADSTATE_CHECKCONIME:
          ret = (IntTID2PTI(UlongToHandle(pti->rpdesk->dwConsoleThreadId)) == pti);
@@ -433,7 +435,7 @@ NtUserGetGUIThreadInfo(
       pti = PsGetCurrentThreadWin32Thread();
 
       // Validate Tread ID
-      W32Thread = IntTID2PTI((HANDLE)(DWORD_PTR)idThread);
+      W32Thread = IntTID2PTI(UlongToHandle(idThread));
 
       if ( !W32Thread )
       {

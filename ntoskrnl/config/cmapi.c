@@ -2206,14 +2206,18 @@ CmpUnlinkHiveFromMaster(IN PCMHIVE CmHive,
 
 NTSTATUS
 NTAPI
-CmUnloadKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
-            IN ULONG Flags)
+CmUnloadKey(
+    _In_ PCM_KEY_CONTROL_BLOCK Kcb,
+    _In_ ULONG Flags)
 {
     PHHIVE Hive;
     PCMHIVE CmHive;
     HCELL_INDEX Cell;
 
     DPRINT("CmUnloadKey(%p, %lx)\n", Kcb, Flags);
+
+    /* Ensure the registry is locked exclusively for the calling thread */
+    CMP_ASSERT_EXCLUSIVE_REGISTRY_LOCK();
 
     /* Get the hive */
     Hive = Kcb->KeyHive;
@@ -2242,7 +2246,7 @@ CmUnloadKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
     {
         if (Flags != REG_FORCE_UNLOAD)
         {
-            if (CmpEnumerateOpenSubKeys(Kcb, FALSE, FALSE) != 0)
+            if (CmpEnumerateOpenSubKeys(Kcb, TRUE, FALSE) != 0)
             {
                 /* There are open subkeys but we don't force hive unloading, fail */
                 Hive->HiveFlags &= ~HIVE_IS_UNLOADING;
@@ -2251,7 +2255,6 @@ CmUnloadKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
         }
         else
         {
-            DPRINT1("CmUnloadKey: Force unloading is HALF-IMPLEMENTED, expect dangling KCBs problems!\n");
             if (CmpEnumerateOpenSubKeys(Kcb, TRUE, TRUE) != 0)
             {
                 /* There are open subkeys that we cannot force to unload, fail */
@@ -2293,14 +2296,8 @@ CmUnloadKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
     Kcb->Delete = TRUE;
     CmpRemoveKeyControlBlock(Kcb);
 
-    if (Flags != REG_FORCE_UNLOAD)
-    {
-        /* Release the KCB locks */
-        CmpReleaseTwoKcbLockByKey(Kcb->ConvKey, Kcb->ParentKcb->ConvKey);
-
-        /* Release the hive loading lock */
-        ExReleasePushLockExclusive(&CmpLoadHiveLock);
-    }
+    /* Release the hive loading lock */
+    ExReleasePushLockExclusive(&CmpLoadHiveLock);
 
     /* Release hive lock */
     CmpUnlockRegistry();
@@ -2340,9 +2337,9 @@ CmUnloadKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
 ULONG
 NTAPI
 CmpEnumerateOpenSubKeys(
-    IN PCM_KEY_CONTROL_BLOCK RootKcb,
-    IN BOOLEAN RemoveEmptyCacheEntries,
-    IN BOOLEAN DereferenceOpenedEntries)
+    _In_ PCM_KEY_CONTROL_BLOCK RootKcb,
+    _In_ BOOLEAN RemoveEmptyCacheEntries,
+    _In_ BOOLEAN DereferenceOpenedEntries)
 {
     PCM_KEY_HASH Entry;
     PCM_KEY_CONTROL_BLOCK CachedKcb;
@@ -2352,6 +2349,9 @@ CmpEnumerateOpenSubKeys(
     ULONG SubKeys = 0;
 
     DPRINT("CmpEnumerateOpenSubKeys() called\n");
+
+    /* Ensure the registry is locked exclusively for the calling thread */
+    CMP_ASSERT_EXCLUSIVE_REGISTRY_LOCK();
 
     /* The root key is the only referenced key. There are no referenced sub keys. */
     if (RootKcb->RefCount == 1)
@@ -2400,9 +2400,6 @@ CmpEnumerateOpenSubKeys(
                         if (DereferenceOpenedEntries &&
                             !(CachedKcb->ExtFlags & CM_KCB_READ_ONLY_KEY))
                         {
-                            /* Registry needs to be locked down */
-                            CMP_ASSERT_EXCLUSIVE_REGISTRY_LOCK();
-
                             /* Flush any notifications */
                             CmpFlushNotifiesOnKeyBodyList(CachedKcb, TRUE); // Lock is already held
 

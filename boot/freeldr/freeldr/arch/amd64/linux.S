@@ -23,8 +23,6 @@
 
 EXTERN DiskStopFloppyMotor:PROC
 EXTERN Relocator16Boot:PROC
-EXTERN FrldrBootDrive:BYTE
-EXTERN FrldrBootPartition:DWORD
 
 .code64
 
@@ -32,12 +30,11 @@ Regs:
     .space REGS_SIZE
 
 /*
- * VOID __cdecl BootLinuxKernel(
- *     IN ULONG KernelSize<ecx>,
- *     IN PVOID KernelCurrentLoadAddress<rdx>,
- *     IN PVOID KernelTargetLoadAddress<r8>,
- *     IN UCHAR DriveNumber<r9b>,
- *     IN ULONG PartitionNumber<rsp+40>);
+ * VOID __cdecl
+ * BootLinuxKernel(
+ *     _In_ ULONG KernelSize<ecx>,
+ *     _In_ PVOID KernelCurrentLoadAddress<rdx>,
+ *     _In_ PVOID KernelTargetLoadAddress<r8>);
  */
 PUBLIC BootLinuxKernel
 BootLinuxKernel:
@@ -47,7 +44,6 @@ BootLinuxKernel:
     mov dword ptr [r11 +  8], ecx
     mov qword ptr [r11 + 16], rdx
     mov qword ptr [r11 + 24], r8
-    mov  byte ptr [r11 + 32], r9b
 
     /* Save non-volatile registers */
     push rsi
@@ -66,25 +62,6 @@ BootLinuxKernel:
     mov word ptr [Regs + REGS_ES], ax
     mov word ptr [Regs + REGS_FS], ax
     mov word ptr [Regs + REGS_GS], ax
-
-    /* Set the boot drive */
-    xor edx, edx
-    mov dl, byte ptr [r11 + 32]
-    test dl, dl
-    jnz set_part
-    mov dl, byte ptr /*ds:*/[FrldrBootDrive]
-
-    /* Set the boot partition */
-set_part:
-    mov eax, dword ptr [r11 + 40]
-    test eax, eax
-    jnz continue
-    mov eax, dword ptr /*ds:*/[FrldrBootPartition]
-continue:
-    /* Store the 1-byte truncated partition number in DH */
-    mov dh, al
-
-    mov dword ptr [Regs + REGS_EDX], edx
 
     /*
      * Relocate the kernel image to its final destination (can be as low as 0x10000).

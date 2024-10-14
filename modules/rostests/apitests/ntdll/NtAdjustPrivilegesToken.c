@@ -15,13 +15,10 @@ IsPrivilegeEnabled(
 {
     PRIVILEGE_SET PrivSet;
     BOOL Result, Success;
-    LUID Priv;
-
-    ConvertPrivLongToLuid(Privilege, &Priv);
 
     PrivSet.PrivilegeCount = 1;
     PrivSet.Control = PRIVILEGE_SET_ALL_NECESSARY;
-    PrivSet.Privilege[0].Luid = Priv;
+    PrivSet.Privilege[0].Luid = RtlConvertUlongToLuid(Privilege);
     PrivSet.Privilege[0].Attributes = 0;
 
     Success = PrivilegeCheck(TokenHandle, &PrivSet, &Result);

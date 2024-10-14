@@ -144,3 +144,19 @@ Control="System\CurrentControlSet\Control"
 
 [Classes]
 HKLM,%CurrentVersion%\Installer,"InstallerLocation",,"%11%"
+HKLM,Software\Microsoft\.NETFramework,InstallRoot,,"%10%\Microsoft.NET\Framework\"
+
+[DestinationDirs]
+IECopy=16422,Internet Explorer
+
+[Finalize] ; Executed by RunOnceEx on first normal boot
+; FIXME: This should be moved to ie.inf,DefaultInstall and executed by [Infs.Always]
+CopyFiles=IECopy
+RegisterDlls=IEReg
+
+[IECopy]
+iexplore.exe,..\iexplore.exe,,0x00002000
+
+[IEReg]
+16422,Internet Explorer,iexplore.exe
+11,,rundll32.exe,,,"advpack.dll,DelNodeRunDLL32 ""%10%\iexplore.exe"""

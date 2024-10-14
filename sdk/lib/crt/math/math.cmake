@@ -40,6 +40,7 @@ if(ARCH STREQUAL "i386")
         math/i386/floor_asm.s
         math/i386/ftol_asm.s
         math/i386/ftol2_asm.s
+        math/i386/ftoul2_legacy_asm.s
         math/i386/log_asm.s
         math/i386/log10_asm.s
         math/i386/pow_asm.s
@@ -240,15 +241,10 @@ list(APPEND CRT_MATH_SOURCE
     math/ldiv.c
     math/logf.c
     math/powf.c
-    math/rand.c
 )
 
 list(APPEND CRT_MATH_ASM_SOURCE
     ${LIBCNTPR_MATH_ASM_SOURCE}
-)
-
-list(APPEND LIBCNTPR_MATH_SOURCE
-    math/rand_nt.c
 )
 
 if(ARCH STREQUAL "i386")

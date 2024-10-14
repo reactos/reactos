@@ -2,13 +2,13 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    STRING_ASSOC_HELP "Modify file extension associations.\n\n\
-assoc [.ext[=[FileType]]]\n\
+    STRING_ASSOC_HELP "ファイル拡張子の関連付けを変更します。\n\n\
+assoc [.拡張子[=[ファイルの種類]]]\n\
 \n\
-assoc (print all associations)\n\
-assoc .ext (print specific association)\n\
-assoc .ext= (remove specific association)\n\
-assoc .ext=FileType (add new association)\n"
+assoc (すべての関連付けを出力します)\n\
+assoc .拡張子 (特定の関連付けを出力します)\n\
+assoc .拡張子= (特定の関連付けを削除します)\n\
+assoc .拡張子=ファイルの種類 (新しい関連付けを追加します)\n"
     STRING_ALIAS_HELP "エイリアスの設定や解除をしたり、エイリアスを表示したりします。\n\n\
 ALIAS [エイリアス=[コマンド]]\n\n\
   エイリアス   エイリアスとしてつける名前。\n\
@@ -92,14 +92,13 @@ COPY [/V][/Y|/-Y][/A|/B] コピー元 [/A|/B]\n\
                表示します。\n\n\
 環境変数 COPYCMD でスイッチ /Y が設定されている場合があります。\n\
 ...\n"
-    STRING_CTTY_HELP "Changes the standard I/O terminal device to an auxiliary device.\n\n\
-CTTY device\n\n\
-  device    The terminal device you want to use as the new standard I/O device.\n\
-            This name must refer to a valid character device:\n\
+    STRING_CTTY_HELP "標準のI/O端末装置を補助装置に変更します。\n\n\
+CTTY デバイス\n\n\
+  デバイス  新しい標準 I/O デバイスとして使用する端末デバイスを指定します。\n\
+            この名前は有効な文字デバイスを参照する必要があります:\n\
             AUX, COMx (x=1..N), CON, LPTx (x=1..N), PRN, NUL.\n\
-            CON is usually the default standard I/O device.\n\n\
-To return control to the standard console, type: CTTY CON on the auxiliary\n\
-device."
+            CON は通常、デフォルトの標準 I/O デバイスです。\n\n\
+制御を標準コンソールに戻すには、補助デバイスで「CTTY CON」と入力します。"
     STRING_DATE_HELP1 "新しい日付を入力してください (mm%cdd%cyyyy): "
     STRING_DATE_HELP2 "新しい日付を入力してください (dd%cmm%cyyyy): "
     STRING_DATE_HELP3 "新しい日付を入力してください (yyyy%cmm%cdd): "
@@ -114,12 +113,12 @@ DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]属性]] ファイル名 ...\n\
 ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]属性]] ファイル名 ...\n\n\
   ファイル名\n\
         削除するファイル (複数可) を指定します。\n\n\
-  /N    Nothing. 何もしません。\n\
-  /P    Prompt. 各ファイルを削除する前に確認のメッセージを表示します。\n\
-  /T    Total. 削除されたファイルの総数と解放されたディスク領域を表示します。\n\
-  /Q    Quiet.\n\
-  /W    Wipe. 削除する前に、ファイルを乱数で上書きします。\n\
-  /Y    Yes. ワイルドカードを使用して一括削除するときも、確認のメッセージを\n\
+  /N    何もしません。\n\
+  /P    各ファイルを削除する前に確認のメッセージを表示します。\n\
+  /T    削除されたファイルの総数と解放されたディスク領域を表示します。\n\
+  /Q    出力しません。\n\
+  /W    削除する前に、ファイルを乱数で上書きします。\n\
+  /Y    ワイルドカードを使用して一括削除するときも、確認のメッセージを\n\
         表示せずに削除します。\n\
   /F    読みとり専用ファイルやシステム ファイルを強制的に削除します。\n\
   /S    指定されたファイルをすべてのサブディレクトリから削除します。\n\
@@ -158,7 +157,7 @@ DIR [ドライブ:][パス][ファイル名] [/A[[:]属性]] [/B] [/C] [/D] [/L]
                G  グループ (ディレクトリから) -  降順\n\
   /P          1 画面ごとに停止して表示します。\n\
   /Q          ファイルの所有者を表示します。\n\
-  /R          Displays alternate data streams of the files.\n\
+  /R          ファイルの代替データ ストリームを表示します。\n\
   /S          指定されたディレクトリおよびそのサブディレクトリのすべての\n\
               ファイルを表示します。\n\
   /T          どのタイムフィールドを表示するか、または並べ替えに使用するかを\n\
@@ -205,23 +204,25 @@ PUSHD [パス | ..]\n\n\
     STRING_EXIT_HELP "コマンド インタープリタを終了します。\n\nEXIT\n"
     STRING_FOR_HELP1 "指定されたコマンドをファイル セットの各ファイルに対して実行します。\n\n\
 FOR %変数 IN (セット) DO コマンド [パラメータ]\n\
-FOR /L %変数 IN (start,step,end) DO コマンド [パラメータ]\n\
+FOR /L %変数 IN (開始,増分,終了) DO コマンド [パラメータ]\n\
 FOR /D %変数 IN (セット) DO コマンド [パラメータ]\n\
-FOR /R [[drive:]path] IN (セット) DO コマンド [パラメータ]\n\
-FOR /F [""options""] IN (セット) DO コマンド [パラメータ]\n\n\
-  /L    Generates a number sequence from start to end incrementing by step.\n\
-  /D    Modifies the set to refer to directories instead of files.\n\
-  /R    Executes command for files in the set in the specified path (or current\n\
-        working directory if not specified) and every directory below.\n\
-  /F    Modifies the set to refer to the contents of the files in the set.\n\n\
+FOR /R [[ドライブ:]パス] IN (セット) DO コマンド [パラメータ]\n\
+FOR /F [""オプション""] IN (セット) DO コマンド [パラメータ]\n\n\
+  /L    開始から終了までステップごとに増加する番号シーケンスを生成します。\n\
+  /D    ファイルではなくディレクトリを参照するようにセットを変更します。\n\
+  /R    指定されたパス (指定されていない場合は現在の作業ディレクトリ) 内の\n\
+        ファイル セットとその下のすべてのディレクトリに対してコマンドを\n\
+        実行します。\n\
+  /F    セット内のファイルの内容を参照するようにセットを変更します。\n\n\
   %変数      単一文字の置き換え可能なパラメータを指定します。\n\
   (セット)    ファイル セットを指定します。ワイルドカードを使用できます。\n\
   コマンド     各ファイルごとに実行するコマンドを指定します。\n\
   パラメータ    指定されたコマンドのパラメータまたはスイッチを指定します。\n\
-  options  Supported options are: eol, skip, delims, tokens, and usebackq.\n\n\
-Replacable parameters can be modified by adding a ~ and an optional qualifier\n\
-after the % and before the name (e.g. %~X). Supported qualifiers are:\n\
-f,d,p,n,x,s,a,t,z.\n\n\
+  オプション  サポートされるオプションは: eol, skip, delims, tokens,\n\
+              usebackq です。\n\n\
+置き換え可能なパラメータは、% の後、名前の前に ~ とオプションの修飾子を\n\
+追加することで変更できます (例: %~X)。サポートされる修飾子は:\n\
+f, d, p, n, x, s, a, t, z のいずれかです。\n\n\
 バッチ プログラムで FOR コマンドを使用するときは、%%変数の代わりに、\n\
 %%%%変数を使用してください。\n"
     STRING_FREE_HELP1 "\nドライブ %c のボリューム ラベルは %-11s です\n\
@@ -251,16 +252,17 @@ EXIST ファイル名  指定したファイル名が存在するときに条件
                   指定します。\n\
 DEFINED 変数      指定した変数が定義されているときに条件が真になるように\n\
                   指定します。\n"
+    STRING_DATE_NOW "現在の日付は: "
     STRING_TIME_NOW "現在時刻は: "
     STRING_MKDIR_HELP "ディレクトリを作成します。\n\n\
 MKDIR [ドライブ:]パス\n\
 MD [ドライブ:]パス"
-    STRING_MKLINK_HELP "Creates a filesystem link object.\n\n\
-MKLINK [/D | /H | /J] linkname target\n\n\
-  /D  Indicates that the symbolic link target is a directory.\n\
-  /H  Create a hard link.\n\
-  /J  Create a directory junction.\n\n\
-If neither /H or /J is specified, a symbolic link is created."
+    STRING_MKLINK_HELP "ファイルシステム リンク オブジェクトを作成します。\n\n\
+MKLINK [/D | /H | /J] リンク名 ターゲット\n\n\
+  /D  シンボリック リンクのターゲットがディレクトリであることを示します。\n\
+  /H  ハードリンクを作成します。\n\
+  /J  ディレクトリ ジャンクションを作成します。\n\n\
+もし、 /H も /J も未指定の場合は、シンボリック リンクが作成されます。"
     STRING_MEMORY_HELP1 "システム メモリの量を表示します。\n\nMEMORY"
     STRING_MEMORY_HELP2 "\n  %12s%% のメモリが使用されています。\n\n\
   %13s バイト: 全物理メモリ\n\
@@ -278,7 +280,7 @@ MOVE [/N][/Y|/-Y][ドライブ:][パス]ファイル名1[,...] 移動先\n\n\
 MOVE [/N][/Y|/-Y][ドライブ:][パス]変更前 変更後\n\n\
   [ドライブ:][パス]ファイル名1\n\
             移動するファイルの場所と名前を指定します。\n\
-  /N        Nothing. ファイルとディレクトリの移動以外のすべてを行います。\n\n\
+  /N        ファイルとディレクトリの移動以外のすべてを行います。\n\n\
 現段階での制限:\n\
   - ファイルやディレクトリを、異なるドライブをまたがって移動することは\n\
     できません。\n"
@@ -312,12 +314,12 @@ PROMPT には通常の文字と次に示す特殊コードを使用できます:
   $F   ) (右かっこ)\n\
   $G   > (不等号 (大なり))\n\
   $H   バックスペース (直前の文字を削除します)\n\
-  $I   Information line\n\
+  $I   情報の行\n\
   $L   < (不等号 (小なり))\n\
   $N   現在のドライブ\n\
   $P   現在のドライブとパス\n\
   $Q   = (等号)\n\
-  $S   (space)\n\
+  $S   (空白)\n\
   $T   現在の時刻\n\
   $V   OS のバージョン番号\n\
   $_   キャリッジ リターンとラインフィード\n\
@@ -337,41 +339,13 @@ REN [/E /N /P /Q /S /T] 元のファイル名 ... 新ファイル名\n\n\
   /N    何もしません。\n\
   /P    ファイルの名前を変更する前にそれぞれ確認を求めます。\n\
         (まだ実装されていません!)\n\
-  /Q    Quiet.\n\
+  /Q    静かにする。\n\
   /S    サブディレクトリの名前を変更する。\n\
   /T    名前を変更したファイルの総数を報告する。\n\n\
 新ファイル名 には新しいドライブもパスも指定できないので注意してください。\n\
 そういった目的には MOVE コマンドを用いてください。\n"
     STRING_REN_HELP2 "    %lu 個のファイルの名前が変更されました\n"
     STRING_REN_HELP3 "    %lu 個のファイルの名前が変更されました\n"
-    STRING_REPLACE_HELP1 "Replaces files.\n\n\
-REPLACE [drive1:][path1]filename [drive2:][path2] [/A] [/P] [/R] [/W]\n\
-REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [drive1:][path1]filename Specifies the source file or files.\n\
-  [drive2:][path2]         Specifies the directory where files are to be\n\
-                           replaced.\n\
-  /A                       Adds new files to destination directory. Cannot\n\
-                           use with /S or /U switches.\n\
-  /P                       Prompts for confirmation before replacing a file or\n\
-                           adding a source file.\n\
-  /R                       Replaces read-only files as well as unprotected\n\
-                           files.\n\
-  /S                       Replaces files in all subdirectories of the\n\
-                           destination directory. Cannot use with the /A\n\
-                           switch.\n\
-  /W                       Waits for you to insert a disk before beginning.\n\
-  /U                       Replaces (updates) only files that are older than\n\
-                           source files. Cannot use with the /A switch.\n"
-    STRING_REPLACE_HELP2 "Source path required\n"
-    STRING_REPLACE_HELP3 "No files replaced\n"
-    STRING_REPLACE_HELP4 "%lu file(s) replaced\n"
-    STRING_REPLACE_HELP5 "Replacing %s\n"
-    STRING_REPLACE_HELP6 "Replace %s\n"
-    STRING_REPLACE_HELP7 "No files added\n"
-    STRING_REPLACE_HELP8 "%lu file(s) added\n"
-    STRING_REPLACE_HELP9 "Add %s (Y/N)? "
-    STRING_REPLACE_HELP10 "Replace %s (Y/N)? "
-    STRING_REPLACE_HELP11 "Adding %s\n"
     STRING_SHIFT_HELP "バッチ ファイル中の置き換え可能なパラメータの位置を変更します。\n\n\
 SHIFT [DOWN]"
     STRING_SCREEN_HELP "カーソルを移動させます。移動後、文字列を入力することもできます。\n\n\
@@ -384,18 +358,17 @@ SET [変数名[=]文字列]]\n\n\
   文字列   変数に割り当てる文字列を指定します。\n\n\
 現在の環境変数を表示するには、パラメータを指定せずに SET と入力してください。\n"
     STRING_START_HELP1 "別のウィンドウを起動し、指定したプログラムまたはコマンドを実行します。\n\n\
-START [""title""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
-      [command/program] [parameters]\n\n\
-  ""title""     Title of the window.\n\
-  path        Specifies the startup directory.\n\
-  I           Uses the original environment given to cmd.exe,\n\
-              instead of the current environment.\n\
-  B           Starts the command or program without creating any window.\n\
-  MIN         Starts with a minimized window.\n\
-  MAX         Starts with a maximized window.\n\
-  WAIT        Starts the command or program and waits for its termination.\n\
-  コマンド       実行するコマンドを指定します。\n\
-  parameters  Specifies the parameters to be given to the command or program.\n"
+START [""タイトル""] [/D パス] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
+      [コマンド/プログラム] [パラメータ]\n\n\
+  ""タイトル""     ウィンドウのタイトルです。\n\
+  パス        開始時のディレクトリを指定します。\n\
+  I           現在の環境の代わりにcmd.exeに与えられた元の環境を使用します。\n\
+  B           ウィンドウを作成せずにコマンドまたはプログラムを起動します。\n\
+  MIN         最小化されたウィンドウで起動します。\n\
+  MAX         最大化されたウィンドウで起動します。\n\
+  WAIT        コマンドまたはプログラムを開始し、終了を待機します。\n\
+  コマンド    実行するコマンドを指定します。\n\
+  パラメータ  コマンドまたはプログラムに渡すパラメータを指定します。\n"
     STRING_TITLE_HELP "コマンド プロンプト ウィンドウのウィンドウ タイトルを設定します。\n\n\
 TITLE [文字列]\n\n\
 文字列       コマンド プロンプト ウィンドウのタイトルを指定します。\n"
@@ -411,7 +384,7 @@ TIME [/T][時刻]\n\n\
 TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
   ON          ストップウォッチを ON にします。\n\
   OFF         ストップウォッチを OFF にします。\n\
-  /S          Split time. ストップウォッチの値を変更することなく、\n\
+  /S          ストップウォッチの値を変更することなく、\n\
               現在刻んでいる時間を表示します。\n\
   /n          ストップウォッチ番号を指定します。\n\
               ストップウォッチは 0 から 9 までが利用できます。\n\
@@ -448,15 +421,15 @@ VER [/C][/R][/W]\n\n\
  布または改変することができます。\n"
     STRING_VERSION_HELP5 "\nバグ報告は <ros-dev@reactos.org> へ送ってください。\n\
 最新のバージョンは次のページから入手できます: https://reactos.org"
-    STRING_VERSION_HELP6 "\nFreeDOS version written by:\n"
-    STRING_VERSION_HELP7 "\nReactOS version written by:\n"
+    STRING_VERSION_HELP6 "\nFreeDOS バージョンの著者:\n"
+    STRING_VERSION_HELP7 "\nReactOS バージョンの著者:\n"
     STRING_VOL_HELP1 " ドライブ %c: のボリューム ラベルは %s です。\n"
     STRING_VOL_HELP2 " ドライブ %c: にはボリューム ラベルがありません。\n"
     STRING_VOL_HELP3 " ボリューム シリアル番号は %04X-%04X です。\n"
     STRING_VOL_HELP4 "存在するならば、ディスクのボリューム ラベルとシリアル番号を表示します。\n\nVOL [ドライブ:]"
     STRING_WINDOW_HELP1 "コンソール ウィンドウの外見を変更します。\n\n\
 WINDOW [/POS[=]左,上,幅,高さ]\n\
-              [MIN|MAX|RESTORE] ['title']\n\n\
+              [MIN|MAX|RESTORE] ['タイトル']\n\n\
 /POS          ウィンドウの位置と大きさを指定します。\n\
 MIN           ウィンドウを最小化します。\n\
 MAX           ウィンドウを最大化します。\n\
@@ -473,7 +446,7 @@ RESTORE       ウィンドウを元のサイズに戻します。\n\
     STRING_CHOICE_OPTION "YN"
     STRING_COPY_OPTION "YNA"
     STRING_ALIAS_ERROR "エイリアス展開後のコマンド ラインが長すぎます!\n"
-    STRING_ASSOC_ERROR "File association not found for extension %s\n"
+    STRING_ASSOC_ERROR "拡張子 %s に対するファイル関連付けが見つかりません。\n"
     STRING_BATCH_ERROR "バッチ ファイルを開くときにエラーが発生しました。\n"
     STRING_CHOICE_ERROR "無効なオプションです。期待される書式: /C[:]オプション\n"
     STRING_CHOICE_ERROR_TXT "無効なオプションです。期待される書式: /T[:]c,nn\n"
@@ -508,7 +481,7 @@ RESTORE       ウィンドウを元のサイズに戻します。\n\
     STRING_MD_ERROR2 "新しいフォルダへのパスが存在していません。\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[エラー]\n"
-    STRING_REN_ERROR "MoveFile() failed. エラー: %lu\n"
+    STRING_REN_ERROR "MoveFile() が失敗しました。エラー: %lu\n"
     STRING_TIME_ERROR "無効な時刻です。\n"
     STRING_TYPE_ERROR "'/%s' は無効なオプションです\n"
     STRING_WINDOW_ERROR "ウィンドウが見つかりません。\n"
@@ -525,18 +498,19 @@ RESTORE       ウィンドウを元のサイズに戻します。\n\
     STRING_ERROR_CANNOTPIPE "エラー!  パイプできません!  一時ファイルを開けません!\n"
     STRING_ERROR_D_PAUSEMSG "続行するには何かキーを押してください . . . "
     STRING_ERROR_DRIVER_NOT_READY "ドライブの準備ができていません。"
-    STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
-    STRING_REPLACE_ERROR1 "Invalid switch - %s\n"
-    STRING_REPLACE_ERROR2 "Path not found - %s\n"
-    STRING_REPLACE_ERROR3 "The filename, directory name, or volume label syntax is incorrect.\n"
-    STRING_REPLACE_ERROR4 "Invalid parameter combination\n"
-    STRING_REPLACE_ERROR5 "Access denied - %s\n"
-    STRING_REPLACE_ERROR6 "No files found - %s\n"
-    STRING_REPLACE_ERROR7 "Extended Error 32\n"
+    STRING_ERROR_INVALID_NUMBER1 "無効な数値です。数値定数は 10 進数 (42)、16 進数 (0x2A)、または 8 進数 (052) のいずれかです。\n"
+    STRING_ERROR_INVALID_NUMBER2 "無効な数値です。数値の精度は 32 ビットに制限されています。\n"
+    STRING_ERROR_DIVISION_BY_ZERO "ゼロ除算エラーです。\n"
+    STRING_ERROR_INVALID_DEVICE L"'%s' は無効なデバイスです。\n"
+    STRING_ERROR_CALL_BAD_LABEL "バッチ スクリプトの外部でバッチ ラベルを呼び出そうとする無効な試みです。\n"
+    STRING_ERROR_UNEXPECTED "%s は予期されていませんでした。\n"
+    STRING_ERROR_WHILE_PROCESSING "%s の処理中にエラーが発生しました\n"
+    STRING_SET_ENV_ERROR "環境変数 '%s' は未定義です。\n"
     STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
     STRING_REACTOS_VERSION "ReactOS [Version %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Command Line Interpreter\nVersion %s %s"
-    STRING_VERSION_RUNNING_ON "Running on: "
+    STRING_VERSION_RUNNING_ON "実行中: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
     STRING_COPY_FILE "        %d 個のファイルがコピーされました\n"
     STRING_DELETE_WIPE "完全に消去されました。"
@@ -544,13 +518,13 @@ RESTORE       ウィンドウを元のサイズに戻します。\n\
     STRING_SCREEN_COL "行の値が無効です。\n"
     STRING_SCREEN_ROW "列の値が無効です。\n"
     STRING_TIMER_TIME "タイマー %d は %s です。: "
-    STRING_MKLINK_CREATED_SYMBOLIC "Symbolic link created for %s <<===>> %s\n"
-    STRING_MKLINK_CREATED_HARD "Hard link created for %s <<===>> %s\n"
-    STRING_MKLINK_CREATED_JUNCTION "Junction created for %s <<===>> %s\n"
+    STRING_MKLINK_CREATED_SYMBOLIC "%s <<===>> %s に対するシンボリック リンクが作成されました。\n"
+    STRING_MKLINK_CREATED_HARD "%s <<===>> %s に対するハードリンクが作成されました。\n"
+    STRING_MKLINK_CREATED_JUNCTION "%s <<===>> %s に対するジャンクションが作成されました。\n"
     STRING_MORE "More? "
-    STRING_CANCEL_BATCH_FILE "\r\nCtrl-Break pressed.  Cancel batch file? (Yes/No/All) "
+    STRING_CANCEL_BATCH_FILE "\r\nCtrl-Break が押されました。バッチ ファイルをキャンセルしますか? (Yes/No/All) "
     STRING_INVALID_OPERAND "無効なオペランドです。\n"
-    STRING_EXPECTED_CLOSE_PAREN "Expected ')'\n"
-    STRING_EXPECTED_NUMBER_OR_VARIABLE "Expected number or variable name.\n"
+    STRING_EXPECTED_CLOSE_PAREN "')' が必要です。\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "数値または変数名が必要です。\n"
     STRING_SYNTAX_COMMAND_INCORRECT "コマンドの構文が間違っています。\n"
 END

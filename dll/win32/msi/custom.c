@@ -867,6 +867,17 @@ static UINT HANDLE_CustomType1( MSIPACKAGE *package, const WCHAR *source, const 
     if (!(binary = get_temp_binary(package, source)))
         return ERROR_FUNCTION_FAILED;
 
+#if defined(__REACTOS__) && defined(_M_AMD64)
+    {
+        DWORD arch;
+        get_binary_type(binary->tmpfile, &arch);
+        if (arch == SCS_32BIT_BINARY) {
+            ERR("%s is a 32 bit custom action. Returning as ERROR_SUCCESS\n", debugstr_w(source));
+            return ERROR_SUCCESS; // HACK: NO WOW64! return as executed though it's not true
+        }
+    }
+#endif
+
     TRACE("Calling function %s from %s\n", debugstr_w(target), debugstr_w(binary->tmpfile));
 
     if (!(info = do_msidbCustomActionTypeDll( package, type, binary->tmpfile, target, action )))
@@ -974,6 +985,17 @@ static UINT HANDLE_CustomType17( MSIPACKAGE *package, const WCHAR *source, const
         ERR("invalid file key %s\n", debugstr_w( source ));
         return ERROR_FUNCTION_FAILED;
     }
+
+#if defined(__REACTOS__) && defined(_M_AMD64)
+    {
+        DWORD arch;
+        get_binary_type(file->TargetPath, &arch);
+        if (arch == SCS_32BIT_BINARY) {
+            ERR("%s is a 32 bit custom action. Returning as ERROR_SUCCESS\n", debugstr_w(source));
+            return ERROR_SUCCESS; // HACK: NO WOW64! return as executed though it's not true
+        }
+    }
+#endif
 
     if (!(info = do_msidbCustomActionTypeDll( package, type, file->TargetPath, target, action )))
         return ERROR_FUNCTION_FAILED;

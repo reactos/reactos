@@ -6,6 +6,19 @@
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */
 
+#if DBG
+FORCEINLINE
+VOID
+CmpCaptureLockBackTraceByIndex(_In_ ULONG Index)
+{
+    /* Capture the backtrace */
+    RtlCaptureStackBackTrace(1,
+                             _countof(CmpCacheTable[Index].LockBackTrace),
+                             CmpCacheTable[Index].LockBackTrace,
+                             NULL);
+}
+#endif
+
 //
 // Returns the hashkey corresponding to a convkey
 //
@@ -104,8 +117,12 @@ FORCEINLINE
 VOID
 CmpAcquireKcbLockExclusiveByIndex(ULONG Index)
 {
+    ASSERT(CmpCacheTable[Index].Owner != KeGetCurrentThread());
     ExAcquirePushLockExclusive(&CmpCacheTable[Index].Lock);
     CmpCacheTable[Index].Owner = KeGetCurrentThread();
+#if DBG
+    CmpCaptureLockBackTraceByIndex(Index);
+#endif
 }
 
 //

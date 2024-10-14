@@ -483,7 +483,10 @@
 @ stdcall -version=0x600+ GetFinalPathNameByHandleA(ptr str long long)
 @ stdcall -version=0x600+ GetFinalPathNameByHandleW(ptr wstr long long)
 @ stdcall GetFirmwareEnvironmentVariableA(str str ptr long)
+@ stdcall -version=0x602+ GetFirmwareEnvironmentVariableExA(str str ptr long long)
+@ stdcall -version=0x602+ GetFirmwareEnvironmentVariableExW(wstr wstr ptr long long)
 @ stdcall GetFirmwareEnvironmentVariableW(wstr wstr ptr long)
+@ stdcall -version=0x602+ GetFirmwareType(ptr)
 @ stdcall GetFullPathNameA(str long ptr ptr)
 @ stub -version=0x600+ GetFullPathNameTransactedA
 @ stub -version=0x600+ GetFullPathNameTransactedW
@@ -1037,6 +1040,8 @@
 @ stdcall SetFileTime(long ptr ptr ptr)
 @ stdcall SetFileValidData(long double)
 @ stdcall SetFirmwareEnvironmentVariableA(str str ptr long)
+@ stdcall -version=0x602+ SetFirmwareEnvironmentVariableExA(str str ptr long long)
+@ stdcall -version=0x602+ SetFirmwareEnvironmentVariableExW(str str ptr long long)
 @ stdcall SetFirmwareEnvironmentVariableW(wstr wstr ptr long)
 @ stdcall -i386 SetHandleContext(long long)
 @ stdcall SetHandleCount(long)

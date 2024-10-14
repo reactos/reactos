@@ -22,9 +22,9 @@
 #if defined(_M_IX86) || defined(_M_AMD64)
 
 ARC_STATUS
-LoadAndBootDevice(
-    IN ULONG Argc,
-    IN PCHAR Argv[],
-    IN PCHAR Envp[]);
+LoadAndBootSector(
+    _In_ ULONG Argc,
+    _In_ PCHAR Argv[],
+    _In_ PCHAR Envp[]);
 
 #endif /* _M_IX86 || _M_AMD64 */

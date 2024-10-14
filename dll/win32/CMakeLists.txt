@@ -262,5 +262,6 @@ add_subdirectory(xmllite)
 add_subdirectory(xolehlp)
 
 if(DLL_EXPORT_VERSION GREATER_EQUAL 0x600)
+    add_subdirectory(avrt)
     add_subdirectory(dwmapi)
 endif()

@@ -102,12 +102,12 @@ static BOOL QueryString(HKEY hKey, LPCTSTR pszValueName, LPTSTR pszResult, DWORD
  *
  *  Load settings from registry HKCU\Software\Microsoft\Notepad.
  */
-void NOTEPAD_LoadSettingsFromRegistry(void)
+void NOTEPAD_LoadSettingsFromRegistry(PWINDOWPLACEMENT pWP)
 {
     HKEY hKey;
     HFONT hFont;
-    DWORD dwPointSize, cx, cy;
-    DWORD cxScreen = GetSystemMetrics(SM_CXSCREEN), cyScreen = GetSystemMetrics(SM_CYSCREEN);
+    DWORD dwPointSize;
+    DWORD x = CW_USEDEFAULT, y = CW_USEDEFAULT, cx = 0, cy = 0;
 
     /* Set the default values */
     Globals.bShowStatusBar = TRUE;
@@ -118,10 +118,6 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
     dwPointSize = 100;
     Globals.lfFont.lfWeight = FW_NORMAL;
     Globals.lfFont.lfPitchAndFamily = FIXED_PITCH | FF_MODERN;
-    Globals.main_rect.left = CW_USEDEFAULT;
-    Globals.main_rect.top = CW_USEDEFAULT;
-    cx = min((cxScreen * 3) / 4, 640);
-    cy = min((cyScreen * 3) / 4, 480);
 
     /* FIXME: Globals.fSaveWindowPositions = FALSE; */
     /* FIXME: Globals.fMLE_is_broken = FALSE; */
@@ -154,8 +150,8 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
         QueryDword(hKey, _T("iMarginRight"), (DWORD*)&Globals.lMargins.right);
         QueryDword(hKey, _T("iMarginBottom"), (DWORD*)&Globals.lMargins.bottom);
 
-        QueryDword(hKey, _T("iWindowPosX"), (DWORD*)&Globals.main_rect.left);
-        QueryDword(hKey, _T("iWindowPosY"), (DWORD*)&Globals.main_rect.top);
+        QueryDword(hKey, _T("iWindowPosX"), &x);
+        QueryDword(hKey, _T("iWindowPosY"), &y);
         QueryDword(hKey, _T("iWindowPosDX"), &cx);
         QueryDword(hKey, _T("iWindowPosDY"), &cy);
 
@@ -163,10 +159,23 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
         QueryString(hKey, _T("replaceString"), Globals.szReplaceText, _countof(Globals.szReplaceText));
     }
 
-    Globals.lfFont.lfHeight = HeightFromPointSize(dwPointSize);
-    Globals.main_rect.right = Globals.main_rect.left + cx;
-    Globals.main_rect.bottom = Globals.main_rect.top + cy;
+    pWP->length = sizeof(*pWP);
+    pWP->flags = 0;
+    pWP->showCmd = SW_SHOWDEFAULT;
+    if (cy & 0x80000000)
+    {
+        cy &= ~0x80000000;
+        pWP->flags |= WPF_RESTORETOMAXIMIZED;
+        pWP->showCmd = SW_SHOWMAXIMIZED;
+    }
+    pWP->rcNormalPosition.left = x;
+    pWP->rcNormalPosition.right = x + cx;
+    pWP->rcNormalPosition.top = y;
+    pWP->rcNormalPosition.bottom = y + cy;
+    pWP->ptMaxPosition.x = x;
+    pWP->ptMaxPosition.y = y;
 
+    Globals.lfFont.lfHeight = HeightFromPointSize(dwPointSize);
     if (!hKey || !QueryString(hKey, _T("lfFaceName"),
                               Globals.lfFont.lfFaceName, _countof(Globals.lfFont.lfFaceName)))
     {
@@ -228,8 +237,18 @@ void NOTEPAD_SaveSettingsToRegistry(void)
 {
     HKEY hKey;
     DWORD dwDisposition;
+    WINDOWPLACEMENT wp;
+    UINT x, y, cx, cy;
 
-    GetWindowRect(Globals.hMainWnd, &Globals.main_rect);
+    wp.length = sizeof(wp);
+    GetWindowPlacement(Globals.hMainWnd, &wp);
+    x = wp.rcNormalPosition.left;
+    y = wp.rcNormalPosition.top;
+    cx = wp.rcNormalPosition.right - x;
+    cy = wp.rcNormalPosition.bottom - y;
+    if (wp.flags & WPF_RESTORETOMAXIMIZED)
+        cy |= 0x80000000;
+
 
     if (RegCreateKeyEx(HKEY_CURRENT_USER, s_szRegistryKey,
                        0, NULL, 0, KEY_SET_VALUE, NULL,
@@ -256,10 +275,10 @@ void NOTEPAD_SaveSettingsToRegistry(void)
         SaveDword(hKey, _T("iMarginTop"), Globals.lMargins.top);
         SaveDword(hKey, _T("iMarginRight"), Globals.lMargins.right);
         SaveDword(hKey, _T("iMarginBottom"), Globals.lMargins.bottom);
-        SaveDword(hKey, _T("iWindowPosX"), Globals.main_rect.left);
-        SaveDword(hKey, _T("iWindowPosY"), Globals.main_rect.top);
-        SaveDword(hKey, _T("iWindowPosDX"), Globals.main_rect.right - Globals.main_rect.left);
-        SaveDword(hKey, _T("iWindowPosDY"), Globals.main_rect.bottom - Globals.main_rect.top);
+        SaveDword(hKey, _T("iWindowPosX"), x);
+        SaveDword(hKey, _T("iWindowPosY"), y);
+        SaveDword(hKey, _T("iWindowPosDX"), cx);
+        SaveDword(hKey, _T("iWindowPosDY"), cy);
         SaveString(hKey, _T("searchString"), Globals.szFindText);
         SaveString(hKey, _T("replaceString"), Globals.szReplaceText);
 

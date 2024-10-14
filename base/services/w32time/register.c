@@ -236,7 +236,7 @@ SetNtpClientValues(VOID)
         goto done;
     }
 
-    dwValue = 0x00093a80;
+    dwValue = W32TIME_POLL_INTERVAL;
     dwError = RegSetValueExW(hKey,
                              L"SpecialPollInterval",
                              0,

@@ -7,7 +7,7 @@ list(APPEND SOURCE
     VirtIORing-Packed.c)
 
 add_library(virtio ${SOURCE})
-add_dependencies(virtio xdk)
+add_dependencies(virtio bugcodes xdk)
 
 if(NOT MSVC)
     target_compile_options(virtio PRIVATE

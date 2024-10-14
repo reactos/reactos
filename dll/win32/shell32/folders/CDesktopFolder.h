@@ -42,6 +42,34 @@ class CDesktopFolder :
 
         HRESULT _GetSFFromPidl(LPCITEMIDLIST pidl, IShellFolder2** psf);
 
+        static HRESULT GetColumnDetails(UINT iColumn, SHELLDETAILS &sd);
+
+        HRESULT _ParseDisplayNameByParent(
+            HWND hwndOwner,
+            LPBC pbc,
+            LPOLESTR pszPath,
+            DWORD *pchEaten,
+            PIDLIST_RELATIVE *ppidl,
+            DWORD *pdwAttributes);
+
+        STDMETHODIMP
+        ShellUrlParseDisplayName(
+            HWND hwndOwner,
+            LPBC pbc,
+            LPOLESTR lpszDisplayName,
+            DWORD *pchEaten,
+            PIDLIST_RELATIVE *ppidl,
+            DWORD *pdwAttributes);
+
+        STDMETHODIMP
+        HttpUrlParseDisplayName(
+            HWND hwndOwner,
+            LPBC pbc,
+            LPOLESTR lpszDisplayName,
+            DWORD *pchEaten,
+            PIDLIST_RELATIVE *ppidl,
+            DWORD *pdwAttributes);
+
     public:
         CDesktopFolder();
         ~CDesktopFolder();
@@ -114,6 +142,35 @@ class CDesktopFolder :
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
         COM_INTERFACE_ENTRY_IID(IID_IItemNameLimits, IItemNameLimits)
+        END_COM_MAP()
+};
+
+class CDesktopFolderViewCB :
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IShellFolderViewCB,
+    public IFolderFilter
+{
+        IShellView *m_pShellView; // Not ref-counted!
+        UINT8 m_IsProgmanHosted;
+
+    public:
+        CDesktopFolderViewCB() : m_IsProgmanHosted(0) {}
+        void Initialize(IShellView *psv) { m_pShellView = psv; }
+        static bool IsProgmanHostedBrowser(IShellView *psv);
+        bool IsProgmanHostedBrowser();
+
+        // IShellFolderViewCB
+        STDMETHOD(MessageSFVCB)(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+
+        // IFolderFilter
+        STDMETHOD(ShouldShow)(IShellFolder *psf, PCIDLIST_ABSOLUTE pidlFolder, PCUITEMID_CHILD pidlItem) override;
+        STDMETHODIMP GetEnumFlags(IShellFolder*, PCIDLIST_ABSOLUTE, HWND*, DWORD*) override { return E_NOTIMPL; }
+
+        DECLARE_NO_REGISTRY()
+        DECLARE_NOT_AGGREGATABLE(CDesktopFolderViewCB)
+        BEGIN_COM_MAP(CDesktopFolderViewCB)
+        COM_INTERFACE_ENTRY_IID(IID_IShellFolderViewCB, IShellFolderViewCB)
+        COM_INTERFACE_ENTRY_IID(IID_IFolderFilter, IFolderFilter)
         END_COM_MAP()
 };
 

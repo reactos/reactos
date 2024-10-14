@@ -76,6 +76,12 @@ PopulateWdmDeviceList(
         FuncTable.Close = FUNC_NAME(WdmAudCloseSoundDevice);
         FuncTable.GetDeviceInterfaceString = FUNC_NAME(WdmAudGetDeviceInterfaceString);
 
+        if (DeviceType == AUX_DEVICE_TYPE || DeviceType == MIDI_OUT_DEVICE_TYPE || DeviceType == WAVE_OUT_DEVICE_TYPE)
+        {
+            FuncTable.GetVolume = FUNC_NAME(WdmAudGetVolume);
+            FuncTable.SetVolume = FUNC_NAME(WdmAudSetVolume);
+        }
+
         if (DeviceType == MIXER_DEVICE_TYPE)
         {
             FuncTable.SetWaveFormat = FUNC_NAME(WdmAudSetMixerDeviceFormat);

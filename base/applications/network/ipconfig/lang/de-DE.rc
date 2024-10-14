@@ -91,7 +91,7 @@ BEGIN
     IDS_DHCPNOTENABLED      "Der Adapter %ls ist nicht für DHCP aktiviert.\n"
     IDS_DHCPNOADAPTER       "Der Vorgang ist fehlgeschlagen, weil kein Adapter sich in einem für diesen\nVorgang zulässigen Zustand befindet.\n"
     IDS_DHCPRELEASED        "Die IP-Adresse für den Adapter %ls wurde bereits freigegeben.\n"
-    IDS_DHCPRELEASEERROR    "Beim Freigeben der Schnittstellen %ls ist folgender Fehler aufgetreten: "
+    IDS_DHCPRELEASEERROR    "Beim Freigeben der Schnittstelle %ls ist folgender Fehler aufgetreten: "
     IDS_DHCPRENEWERROR      "Beim Aktualisieren der Schnittstelle %ls ist folgender Fehler aufgetreten: "
 END
 

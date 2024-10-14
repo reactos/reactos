@@ -1137,7 +1137,7 @@ list(APPEND SOURCE_MSVCRT
 #    qsort_s
 #    raise.c
 #    rand.c
-#    rand_s.c
+    rand_s.c
 #    realloc.c
 #    remove.c
 #    rename.c

@@ -11,6 +11,7 @@ list(APPEND SOURCE
     spapisup/infsupp.c
     utils/arcname.c
     utils/bldrsup.c
+    utils/devutils.c
     utils/filesup.c
     utils/fsrec.c
     utils/genlist.c
@@ -20,6 +21,7 @@ list(APPEND SOURCE
     utils/partinfo.c
     utils/partlist.c
     utils/regutil.c
+    utils/volutil.c
     bootcode.c
     bootsup.c
     fsutil.c

@@ -2061,6 +2061,8 @@ cleanup:
 
     if (lpFileOp->wFunc != FO_DELETE)
         destroy_file_list(&flTo);
+    else if (lpFileOp->fFlags & FOF_ALLOWUNDO)
+        SHUpdateRecycleBinIcon();
 
     if (ret == ERROR_CANCELLED)
         lpFileOp->fAnyOperationsAborted = TRUE;

@@ -25,6 +25,20 @@ struct CSectionNames
 };
 static CSectionNames g_Names;
 
+HRESULT
+ReadIniValue(LPCWSTR File, LPCWSTR Section, LPCWSTR Name, CStringW &Output)
+{
+    for (DWORD len = 256, ret;; len *= 2)
+    {
+        ret = GetPrivateProfileString(Section, Name, L"\n", Output.GetBuffer(len), len, File);
+        if (ret + 1 != len)
+        {
+            Output.ReleaseBuffer(ret);
+            return ret && Output[0] != L'\n' ? ret : HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
+        }
+    }
+}
+
 CConfigParser::CConfigParser(const CStringW &FilePath) : szConfigPath(FilePath)
 {
     CacheINI();
@@ -165,4 +179,43 @@ CConfigParser::GetInt(const CStringW &KeyName, INT &iResult)
 
     // we only care about values > 0
     return (iResult > 0);
+}
+
+UINT
+CConfigParser::GetSectionString(LPCWSTR Section, LPCWSTR Name, CStringW &Result)
+{
+    HRESULT hr; // Return value; length of ini string or 0 on failure.
+    CStringW SecBuf;
+    WCHAR FullLoc[5], *NeutralLoc = FullLoc + 2;
+    GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_ILANGUAGE, FullLoc, _countof(FullLoc));
+
+    SecBuf.Format(L"%s.%s.%s", Section, FullLoc, CurrentArchitecture);
+    if ((hr = ReadIniValue(szConfigPath, SecBuf, Name, Result)) > 0)
+        return hr;
+
+    if (*NeutralLoc)
+    {
+        SecBuf.Format(L"%s.%s.%s", Section, NeutralLoc, CurrentArchitecture);
+        if ((hr = ReadIniValue(szConfigPath, SecBuf, Name, Result)) > 0)
+            return hr;
+    }
+
+    SecBuf.Format(L"%s.%s", Section, CurrentArchitecture);
+    if ((hr = ReadIniValue(szConfigPath, SecBuf, Name, Result)) > 0)
+        return hr;
+
+    SecBuf.Format(L"%s.%s", Section, FullLoc);
+    if ((hr = ReadIniValue(szConfigPath, SecBuf, Name, Result)) > 0)
+        return hr;
+
+    if (*NeutralLoc)
+    {
+        SecBuf.Format(L"%s.%s", Section, NeutralLoc);
+        if ((hr = ReadIniValue(szConfigPath, SecBuf, Name, Result)) > 0)
+            return hr;
+    }
+
+    if ((hr = ReadIniValue(szConfigPath, Section, Name, Result)) > 0)
+        return hr;
+    return 0;
 }

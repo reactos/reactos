@@ -14,22 +14,22 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Tastatură"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "TasteLipicioase", -1, 6, 11, 234, 57
-    LTEXT "TasteLipicioase e o cale de a utiliza tastele utilizate în combinații, precum «Shift», «Alt» sau «Ctrl», fără necesitatea acționării simultane.",
+    GROUPBOX "TasteAdezive", -1, 6, 11, 234, 57
+    LTEXT "Utilizaţi TasteAdezive dacă doriţi ca tastele SHIFT, CTRL, ALT sau tasta Windows să se utilizeze apăsând doar câte o tastă odată.",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "Doresc folosirea de Taste&Lipicioase", IDC_STICKY_BOX, 12, 49, 126, 14
-    PUSHBUTTON "&Opțiuni…", IDC_STICKY_BUTTON, 144, 49, 90, 14
-    GROUPBOX "FiltruTaste", -1, 6, 79, 234, 62
-    LTEXT "Utilizați FiltruTaste pentru a ignora apăsarea prea scurtă, prea îndelungată sau repetată a tastelor.",
+    AUTOCHECKBOX "Utilizare TasteAde&zive", IDC_STICKY_BOX, 12, 49, 126, 14
+    PUSHBUTTON "&Setări", IDC_STICKY_BUTTON, 144, 49, 90, 14
+    GROUPBOX "TasteFiltrare", -1, 6, 79, 234, 62
+    LTEXT "Utilizaţi TasteFiltrare dacă doriţi ca Windows să ignore apăsările scurte sau repetate de taste sau pentru a micşora frecvenţa de repetare.",
           -1, 12, 89, 222, 29
-    AUTOCHECKBOX "Doresc folosirea de Filt&ruTaste", IDC_FILTER_BOX, 12, 121, 126, 14
-    PUSHBUTTON "O&pțiuni…", IDC_FILTER_BUTTON, 154, 121, 80, 14
-    GROUPBOX "TasteDeComutare", -1, 6, 148, 234, 55
-    LTEXT "Utilizați TasteDeComutare pentru a semnala sonor apăsarea tastelor «Caps Lock», «Num Lock» sau «Scroll Lock».",
+    AUTOCHECKBOX "Utilizare Taste&Filtrare", IDC_FILTER_BOX, 12, 121, 126, 14
+    PUSHBUTTON "S&etări", IDC_FILTER_BUTTON, 154, 121, 80, 14
+    GROUPBOX "TasteComutare", -1, 6, 148, 234, 55
+    LTEXT "Utilizaţi TasteComutare dacă doriţi să se emită sunete la apăsarea tastelor CAPS LOCK, NUM LOCK sau SCROLL LOCK.",
           -1, 12, 161, 222, 20
-    AUTOCHECKBOX "Doresc folosirea de TasteDe&Comutare", IDC_TOGGLE_BOX, 12, 184, 136, 14
-    PUSHBUTTON "Opți&uni…", IDC_TOGGLE_BUTTON, 154, 184, 80, 14
-    AUTOCHECKBOX "Afișează în programe informații ale tastaturii e&xtinse", IDC_KEYBOARD_EXTRA,
+    AUTOCHECKBOX "Utilizare Taste&Comutare", IDC_TOGGLE_BOX, 12, 184, 136, 14
+    PUSHBUTTON "Se&tări", IDC_TOGGLE_BUTTON, 154, 184, 80, 14
+    AUTOCHECKBOX "Af&işare ajutor suplimentar privind tastatura în programe", IDC_KEYBOARD_EXTRA,
                  6, 207, 234, 14
 END
 
@@ -39,39 +39,39 @@ CAPTION "Sunet"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "SantinelăSunet", -1, 6, 11, 234, 98
-    LTEXT "Utilizați SantinelăSunet dacă doriți afișarea de avertismente vizuale atunci când sistemul redă un sunet.",
+    LTEXT "Utilizaţi SantinelăSunet dacă doriţi ca ReactOS să genereze avertismente vizuale atunci când sistemul emite un sunet.",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "Doresc folosirea de Santin&elăSunet", IDC_SENTRY_BOX, 12, 49, 140, 14
-    LTEXT "Modalitatea aleasă de avertizare:", IDC_SENTRY_TEXT, 12, 72, 222, 11
+    AUTOCHECKBOX "Utilizare &SantinelăSunet", IDC_SENTRY_BOX, 12, 49, 140, 14
+    LTEXT "Alegeţi metoda de avertizare vizuală:", IDC_SENTRY_TEXT, 12, 72, 222, 11
     COMBOBOX IDC_SENTRY_COMBO, 12, 83, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    GROUPBOX "AfișareSunete", -1, 6, 115, 234, 67
-    LTEXT "Folosiți AfișareSunete pentru a genera înștiințări grafice ce vor însoți vorbirea și sunetele produse de programe.",
+    GROUPBOX "AratăSunete", -1, 6, 115, 234, 67
+    LTEXT "Utilizaţi AratăSunete pentru a indica programelor să afişeze legende pentru textele vorbite şi pentru sunetele emise.",
           -1, 12, 125, 222, 29
-    AUTOCHECKBOX "Doresc folosirea de AfișareS&unete", IDC_SSHOW_BOX, 12, 148, 222, 14
+    AUTOCHECKBOX "Utilizare AratăS&unete", IDC_SSHOW_BOX, 12, 148, 222, 14
 END
 
 IDD_PROPPAGEDISPLAY DIALOGEX 0, 0, 246, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Afișaj"
+CAPTION "Afişare"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "ContrastSporit", -1, 6, 11, 234, 62
-    LTEXT "Utilizați această opțiune dacă întâmpinați dificultăți la utilizarea interfețelor cu fonturile și culorile implicite ale ReactOS.",
+    GROUPBOX "Contrast Înalt", -1, 6, 11, 234, 62
+    LTEXT "Utilizaţi această opţiune dacă doriţi ca ReactOS să utilizeze culori şi fonturi proiectate pentru o citire mai uşoară.",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "Doresc folosirea de &ContrastSporit", IDC_CONTRAST_BOX, 12, 49, 126, 14
-    PUSHBUTTON "&Opțiuni…", IDC_CONTRAST_BUTTON, 144, 49, 90, 14
-    GROUPBOX "Opțiuni ale cursorului", -1, 6, 79, 234, 115
-    LTEXT "Folosiți controalele glisoare pentru a ajusta lățimea și frecvența de clipire a cursorului de text.",
+    AUTOCHECKBOX "&Utilizare Contrast Înalt", IDC_CONTRAST_BOX, 12, 49, 126, 14
+    PUSHBUTTON "&Setări", IDC_CONTRAST_BUTTON, 144, 49, 90, 14
+    GROUPBOX "Opţiuni pentru cursor", -1, 6, 79, 234, 115
+    LTEXT "Se deplasează glisoarele pentru a schimba viteza cu care clipeşte cursorul (frecvenţa de clipire) şi lăţimea cursorului.",
           -1, 12, 88, 222, 20
-    CTEXT "Frecvența de clipire:", -1, 12, 115, 222, 11
-    LTEXT "Mică", -1, 18, 130, 36, 11
-    LTEXT "Mare", -1, 192, 130, 36, 11
+    CTEXT "F&recvenţă de clipire:", -1, 12, 115, 222, 11
+    LTEXT "Fără", -1, 18, 130, 36, 11
+    LTEXT "Rapid", -1, 192, 130, 36, 11
     CONTROL "", IDC_CURSOR_BLINK_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             60, 124, 126, 20
-    CTEXT "Lățimea cursorului:", -1, 12, 151, 222, 11
-    LTEXT "Mică", -1, 18, 171, 36, 11
-    LTEXT "Mare", -1, 192, 171, 36, 11
+    CTEXT "&Lăţime:", -1, 12, 151, 222, 11
+    LTEXT "Îngust", -1, 18, 171, 36, 11
+    LTEXT "Lat", -1, 192, 171, 36, 11
     CONTROL "", IDC_CURSOR_WIDTH_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             60, 169, 126, 20
     LTEXT "", IDC_CURSOR_WIDTH_TEXT, 18, 142, 24, 16
@@ -79,222 +79,222 @@ END
 
 IDD_PROPPAGEMOUSE DIALOGEX 0, 0, 246, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Mouse"
+CAPTION "Maus"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "TasteMouse", -1, 6, 11, 234, 62
-    LTEXT "Folosiți această opțiune dacă sunteți constrânși să controlați indicatorul mouse-ului folosind tastele numerice ale tastaturii.",
+    LTEXT "Utilizaţi TasteMaus dacă doriţi să controlaţi indicatorul mausului cu ajutorul minitastaturii numerice.",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "&Doresc folosirea de TasteMouse", IDC_MOUSE_BOX, 12, 49, 126, 14
-    PUSHBUTTON "&Opțiuni…", IDC_MOUSE_BUTTON, 144, 49, 90, 14
+    AUTOCHECKBOX "Utilizare &TasteMaus", IDC_MOUSE_BOX, 12, 49, 126, 14
+    PUSHBUTTON "&Setări", IDC_MOUSE_BUTTON, 144, 49, 90, 14
 END
 
 IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 246, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Generale"
+CAPTION "General"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Resetare automată", -1, 6, 11, 234, 47
-    AUTOCHECKBOX "Oprește facilitățile din Accesi&bilitate după o perioadă inactivă de:",
+    GROUPBOX "Revenire automată", -1, 6, 11, 234, 47
+    AUTOCHECKBOX "Se a&plică modificările doar pentru această sesiune ReactOS",
                  IDC_RESET_BOX, 12, 18, 222, 14
     COMBOBOX IDC_RESET_COMBO, 24, 38, 60, 47,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "Notificare", -1, 6, 63, 234, 47
-    AUTOCHECKBOX "Afișează &mesaj de înștiințare la pornirea unei facilități", IDC_NOTIFICATION_MESSAGE,
+    AUTOCHECKBOX "&Mesaj de avertizare la activarea unei caracteristici", IDC_NOTIFICATION_MESSAGE,
                  12, 72, 222, 14
-    AUTOCHECKBOX "S&emnalizează sonor activarea/dezactivarea funcționalităților", IDC_NOTIFICATION_SOUND,
+    AUTOCHECKBOX "Se &emite un sunet la activarea sau dezactivarea unei caracteristici", IDC_NOTIFICATION_SOUND,
                  12, 90, 222, 14
-    GROUPBOX "Dispozitive de intrare alternative", -1, 6, 115, 234, 47
-    LTEXT "Această opțiune vă permite conectarea dispozitivelor de intrare alternative tastaturii sau șoricelului.",
+    GROUPBOX "Dispozitive TasteSeriale", -1, 6, 115, 234, 47
+    LTEXT "Dispozitivele de tip TastăSerială oferă o alternativă pentru accesul la funcţiile mausului şi tastaturii.",
           -1, 12, 124, 222, 20
-    AUTOCHECKBOX "Permite &dispozitive alternative", IDC_SERIAL_BOX, 12, 142, 126, 14
-    PUSHBUTTON "&Setări…", IDC_SERIAL_BUTTON, 144, 142, 90, 14
-    GROUPBOX "Opțiuni administrative", -1, 6, 169, 234, 47
-    AUTOCHECKBOX "Aplică preferințele de accesibilitate la a&utentificare", IDC_ADMIN_LOGON_BOX,
+    AUTOCHECKBOX "Utilizare &taste seriale", IDC_SERIAL_BOX, 12, 142, 126, 14
+    PUSHBUTTON "&Setări", IDC_SERIAL_BUTTON, 144, 142, 90, 14
+    GROUPBOX "Opţiuni administrative", -1, 6, 169, 234, 47
+    AUTOCHECKBOX "Se ap&lică toate setările la spaţiul de lucru unde s-a făcut Log on", IDC_ADMIN_LOGON_BOX,
                  12, 178, 222, 14
-    AUTOCHECKBOX "Aplică &toate setările implicite pentru noii utilizatori", IDC_ADMIN_USERS_BOX,
+    AUTOCHECKBOX "Se aplică toate setările ca &implicite pentru noii utilizatori", IDC_ADMIN_USERS_BOX,
                  12, 196, 222, 14
 END
 
 IDD_STICKYKEYSOPTIONS DIALOGEX 0, 0, 246, 220
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Opțiuni pentru TasteLipicioase"
+CAPTION "Setări pentru TasteAdezive"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Activare din taste", -1, 6, 11, 234, 62
-    LTEXT "Apăsați tasta «Shift» de 5 ori pentru a activa TasteLipicioase.",
+    GROUPBOX "Comandă rapidă de la tastatură", -1, 6, 11, 234, 62
+    LTEXT "Comanda rapidă pentru TasteAdezive este:\nSe apasă de cinci ori tasta SHIFT.",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "&Permite activarea din taste", IDC_STICKY_ACTIVATE_CHECK, 12, 49, 222, 14
-    GROUPBOX "Preferințe", -1, 6, 83, 234, 44
-    AUTOCHECKBOX "&Blochează tasta specială prin dubla ei apăsare", IDC_STICKY_LOCK_CHECK,
+    AUTOCHECKBOX "&Utilizare comandă rapidă", IDC_STICKY_ACTIVATE_CHECK, 12, 49, 222, 14
+    GROUPBOX "Opţiuni", -1, 6, 83, 234, 44
+    AUTOCHECKBOX "Se a&pasă de două ori tasta modificatoare pentru pentru blocare", IDC_STICKY_LOCK_CHECK,
                  12, 94, 222, 14
-    AUTOCHECKBOX "&Dezactivează TasteLipicioase la apăsarea simultană a două taste", IDC_STICKY_UNLOCK_CHECK,
+    AUTOCHECKBOX "Se de&zactivează TasteAdezive dacă se apasă simultan două taste", IDC_STICKY_UNLOCK_CHECK,
                  12, 106, 222, 14
-    GROUPBOX "Notificări", -1, 6, 133, 234, 44
-    AUTOCHECKBOX "S&emnalizează sonor apăsarea tastelor speciale", IDC_STICKY_SOUND_CHECK,
+    GROUPBOX "Notificare", -1, 6, 133, 234, 44
+    AUTOCHECKBOX "Se &emit sunete la apăsarea tastei modificatoare", IDC_STICKY_SOUND_CHECK,
                  12, 148, 222, 14
-    AUTOCHECKBOX "&Afișează pe ecran starea accesibilității TasteLipicioase", IDC_STICKY_STATUS_CHECK,
+    AUTOCHECKBOX "Se &afişează pe ecran statutul pentru TasteAdezive", IDC_STICKY_STATUS_CHECK,
                  12, 160, 222, 14
-    DEFPUSHBUTTON "Con&firmă", IDOK, 135, 207, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 189, 207, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 189, 207, 50, 14
 END
 
 IDD_FILTERKEYSOPTIONS DIALOGEX 0, 0, 246, 220
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Opțiuni pentru FiltruTaste"
+CAPTION "Setări pentru TasteFiltrare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Activare din taste", -1, 6, 11, 234, 62
-    LTEXT "Combinația de activare a accesibilității FiltruTaste:\nApăsați «Shift» (dreapta) timp de 8 secunde.",
+    GROUPBOX "Comandă rapidă de la tastatură", -1, 6, 11, 234, 62
+    LTEXT "Comanda rapidă pentru TasteFiltrare este:\nSe menţine apăsată tasta SHIFT dreapta pentru opt secunde.",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "&Permite activarea din taste", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
-    GROUPBOX "Opțiuni de filtrare", -1, 6, 79, 234, 79
-    AUTORADIOBUTTON "Ign&oră apăsarea repetată", IDC_FILTER_BOUNCE_RADIO,
+    AUTOCHECKBOX "&Utilizare comandă rapidă", IDC_FILTER_ACTIVATE_CHECK, 12, 49, 126, 14
+    GROUPBOX "Opţiuni de filtrare", -1, 6, 79, 234, 79
+    AUTORADIOBUTTON "Se ign&oră apăsările repetate de taste", IDC_FILTER_BOUNCE_RADIO,
                     12, 91, 120, 11, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Igno&ră apăsarea scurtă și reduce rata de repetiție", IDC_FILTER_REPEAT_RADIO,
+    AUTORADIOBUTTON "Se ig&noră apăsările rapide de taste şi se micşorează frecvenţa de repetare", IDC_FILTER_REPEAT_RADIO,
                     12, 106, 120, 20, BS_TOP | BS_MULTILINE
-    PUSHBUTTON "&Opțiuni…", IDC_FILTER_BOUNCE_BUTTON, 144, 88, 90, 14, WS_GROUP
-    PUSHBUTTON "Opți&uni…", IDC_FILTER_REPEAT_BUTTON, 144, 106, 90, 14, WS_GROUP
-    LTEXT "&Câmp de text pentru testarea opțiunilor FiltruTaste:", -1, 12, 129, 222, 11
+    PUSHBUTTON "&Setări", IDC_FILTER_BOUNCE_BUTTON, 144, 88, 90, 14, WS_GROUP
+    PUSHBUTTON "S&etări", IDC_FILTER_REPEAT_BUTTON, 144, 106, 90, 14, WS_GROUP
+    LTEXT "Se face &clic în acest loc şi se tastează pentru a testa setările TasteFiltrare:", -1, 12, 129, 222, 11
     EDITTEXT IDC_FILTER_TEST_EDIT, 12, 138, 222, 14, WS_GROUP | ES_AUTOHSCROLL
-    GROUPBOX "Notificări", -1, 6, 161, 234, 41
-    AUTOCHECKBOX "S&emnalizează sonor apăsarea și acceptul unei taste", IDC_FILTER_SOUND_CHECK,
+    GROUPBOX "Notificare ", -1, 6, 161, 234, 41
+    AUTOCHECKBOX "Se e&mite un bip când tastele sunt apăsate sau acceptate", IDC_FILTER_SOUND_CHECK,
                  12, 169, 222, 10
-    AUTOCHECKBOX "&Afișează pe ecran starea pentru FiltruTaste", IDC_FILTER_STATUS_CHECK,
+    AUTOCHECKBOX "Se &afişează pe ecran informaţiile de stare pentru TasteFiltrare", IDC_FILTER_STATUS_CHECK,
                  12, 188, 222, 10
-    DEFPUSHBUTTON "Con&firmă", IDOK, 135, 207, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 189, 207, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 189, 207, 50, 14
 END
 
 IDD_TOGGLEKEYSOPTIONS DIALOGEX 0, 0, 246, 220
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Opțiuni pentru TasteDeComutare"
+CAPTION "Setări pentru TasteComutare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Activare din taste", -1, 6, 11, 234, 62
-    LTEXT "Combinația de activare a accesibilității TasteDeComutare:\nApăsați «Num Lock» timp de 5 secunde.",
+    GROUPBOX "Comandă rapidă de la tastatură", -1, 6, 11, 234, 62
+    LTEXT "Comanda rapidă pentru TasteComutare este:\nSe menţine apăsată tasta NUM LOCK pentru cinci secunde.",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "&Permite activarea din taste", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
-    DEFPUSHBUTTON "Con&firmă", IDOK, 135, 207, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 189, 207, 50, 14
+    AUTOCHECKBOX "&Utilizare comandă rapidă", IDC_TOGGLE_ACTIVATE_CHECK, 12, 49, 222, 14
+    DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 189, 207, 50, 14
 END
 
 IDD_CONTRASTOPTIONS DIALOGEX 0, 0, 246, 220
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Opțiuni pentru ContrastSporit"
+CAPTION "Setări pentru Contrast Înalt"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Activare din taste", -1, 6, 11, 234, 62
-    LTEXT "Combinația de activare a accesibilității ContrastSporit:\nApăsați «Alt» (stânga) + «Shift» (stânga) + «Print Screen».",
+    GROUPBOX "Comandă rapidă de la tastatură", -1, 6, 11, 234, 62
+    LTEXT "Comanda rapidă pentru Contrast Înalt este:  \nSe apasă tastele ALT stânga + SHIFT stânga + PRINT SCREEN.",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "&Permite activarea din taste", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
-    GROUPBOX "Schema de culori ContrastSporit:", -1, 6, 83, 234, 44
-    LTEXT "S&chema de culori curentă:", -1, 12, 94, 222, 11
+    AUTOCHECKBOX "&Utilizare comandă rapidă", IDC_CONTRAST_ACTIVATE_CHECK, 12, 49, 222, 14
+    GROUPBOX "Schema de aspect cu contrast înalt", -1, 6, 83, 234, 44
+    LTEXT "&Schema curentă cu contrast înalt este:", -1, 12, 94, 222, 11
     COMBOBOX IDC_CONTRAST_COMBO, 12, 103, 222, 56,
              CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    DEFPUSHBUTTON "Con&firmă", IDOK, 135, 207, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 189, 207, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 189, 207, 50, 14
 END
 
 IDD_MOUSEKEYSOPTIONS DIALOGEX 0, 0, 246, 220
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Opțiuni TasteȘoricel"
+CAPTION "Setări pentru TasteMaus"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Activare din taste", -1, 6, 11, 234, 62
-    LTEXT "Combinația de activare a accesibilității TasteȘoricel:\nApăsați «Alt» (stâng) + «Shift» (stâng) + «Num Lock».",
+    GROUPBOX "Comandă rapidă de la tastatură", -1, 6, 11, 234, 62
+    LTEXT "Comanda rapidă pentru TasteMaus este:\nSe apasă tastele ALT stânga + SHIFT stânga + NUM LOCK.",
           -1, 12, 20, 222, 29
-    AUTOCHECKBOX "P&ermite activarea din taste", IDC_MOUSEKEYS_ACTIVATE_CHECK,
+    AUTOCHECKBOX "&Utilizare comandă rapidă", IDC_MOUSEKEYS_ACTIVATE_CHECK,
                  12, 49, 222, 14
     GROUPBOX "Viteză indicator", -1, 6, 83, 234, 83
     LTEXT "Viteză &maximă:", -1, 12, 96, 48, 11
-    LTEXT "Mică", -1, 66, 96, 18, 11
+    LTEXT "Minimă", -1, 66, 96, 18, 11
     CONTROL "", IDC_MOUSEKEYS_SPEED_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             90, 94, 114, 20
-    LTEXT "Mare", -1, 204, 96, 18, 11
-    LTEXT "A&ccelerație:", -1, 12, 123, 48, 11
-    LTEXT "Mică", -1, 66, 123, 18, 11
+    LTEXT "Maximă", -1, 204, 96, 18, 11
+    LTEXT "&Acceleraţia:", -1, 12, 123, 48, 11
+    LTEXT "Lentă", -1, 66, 123, 18, 11
     CONTROL "", IDC_MOUSEKEYS_ACCEL_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             90, 121, 114, 20
-    LTEXT "Mare", -1, 204, 123, 18, 11
-    AUTOCHECKBOX "&Voi folosi «Ctrl» pentru a mări viteza, «Shift» pentru a o micșora", IDC_MOUSEKEYS_SPEED_CHECK,
+    LTEXT "Rapidă", -1, 204, 123, 18, 11
+    AUTOCHECKBOX "&Se menţine apăsată Ctrl pentru a mări viteza şi Shift pentru a o încetini", IDC_MOUSEKEYS_SPEED_CHECK,
                  12, 142, 222, 14
-    LTEXT "Pornire TasteȘoricel când «Num Lock» este:", -1, 6, 171, 150, 11
-    AUTORADIOBUTTON "&Pornit", IDC_MOUSEKEYS_ON_RADIO, 162, 171, 30, 11
-    AUTORADIOBUTTON "&Oprit", IDC_MOUSEKEYS_OFF_RADIO, 198, 171, 30, 11
-    AUTOCHECKBOX "&Afișează pe ecran starea pentru TasteȘoricel", IDC_MOUSEKEYS_STATUS_CHECK,
+    LTEXT "Se utilizează TasteMaus când NumLock este:", -1, 6, 171, 150, 11
+    AUTORADIOBUTTON "Acti&v", IDC_MOUSEKEYS_ON_RADIO, 162, 171, 30, 11
+    AUTORADIOBUTTON "&Inactiv", IDC_MOUSEKEYS_OFF_RADIO, 198, 171, 30, 11
+    AUTOCHECKBOX "Se a&fişează pe ecran informaţiile de stare pentru TasteMaus", IDC_MOUSEKEYS_STATUS_CHECK,
                  6, 184, 222, 14
-    DEFPUSHBUTTON "Con&firmă", IDOK, 135, 207, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 189, 207, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 189, 207, 50, 14
 END
 
 IDD_BOUNCEKEYSOPTIONS DIALOGEX 0, 0, 246, 220
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Opțiuni avansate pentru FiltruTaste"
+CAPTION "Setări complexe pentru TasteFiltrare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Taste bruște", -1, 6, 11, 234, 47
-    LTEXT "Ign&oră apăsările repetate de taste mai rapide de:", -1, 12, 21, 222, 20
+    GROUPBOX "RepetareTaste", -1, 6, 11, 234, 47
+    LTEXT "Se &ignoră apăsările de taste repetate la mai puţin de:", -1, 12, 21, 222, 20
     COMBOBOX IDC_BOUNCE_TIME_COMBO, 12, 34, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    LTEXT "&Zonă de test:", -1, 6, 68, 48, 11
+    LTEXT "&Zonă de testare:", -1, 6, 68, 48, 11
     EDITTEXT IDC_BOUNCE_TEST_EDIT, 60, 65, 180, 14, ES_AUTOHSCROLL
-    DEFPUSHBUTTON "Con&firmă", IDOK, 135, 207, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 189, 207, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 189, 207, 50, 14
 END
 
 IDD_REPEATKEYSOPTIONS DIALOGEX 0, 0, 246, 220
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Opțiuni avansate pentru FiltruTaste"
+CAPTION "Setări complexe pentru TasteFiltrare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Repetare tastă apăsată", -1, 6, 11, 234, 106
-    LTEXT "Înlocuiește opțiunile de Tastatură (din Panoul de control):",
+    GROUPBOX "RepetareTaste", -1, 6, 11, 234, 106
+    LTEXT "Înlocuieşte setările din panoul de control pentru tastatură:",
           -1, 12, 20, 222, 20
-    AUTORADIOBUTTON "N&u permite apăsarea continuă a tastelor", IDC_REPEAT_NOREPEAT_RADIO, 12, 32, 150, 11, WS_GROUP
-    AUTORADIOBUTTON "În&cetinește rata de repetiție a tastelor:", IDC_REPEAT_REPEAT_RADIO, 12, 45, 140, 11
-    LTEXT "Acti&vează modul de apăsare repetată (abia) după:", -1, 24, 60, 180, 11
+    AUTORADIOBUTTON "&Fără repetare de la tastatură", IDC_REPEAT_NOREPEAT_RADIO, 12, 32, 150, 11, WS_GROUP
+    AUTORADIOBUTTON "Î&ncetineşte frecvenţa de repetare a tastaturii", IDC_REPEAT_REPEAT_RADIO, 12, 45, 140, 11
+    LTEXT "&Interval de repetare:", -1, 24, 60, 180, 11
     COMBOBOX IDC_REPEAT_DELAY_COMBO, 24, 71, 210, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    LTEXT "&Rata de repetare a tastei (încontinuu) apăsate:", -1, 24, 89, 160, 11
+    LTEXT "Frecvenţă de &repetare:", -1, 24, 89, 160, 11
     COMBOBOX IDC_REPEAT_REPEAT_COMBO, 24, 100, 210, 65,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    GROUPBOX "Taste lente", -1, 6, 124, 234, 42
-    LTEXT "T&astele necesită o apăsare de minim:", -1, 12, 133, 222, 11
+    GROUPBOX "TasteLente", -1, 6, 124, 234, 42
+    LTEXT "&Tastele trebuie menţinute apăsate pentru:", -1, 12, 133, 222, 11
     COMBOBOX IDC_REPEAT_WAIT_COMBO, 12, 150, 222, 74,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    LTEXT "&Zonă de test:", -1, 6, 178, 48, 11
+    LTEXT "&Zonă de testare:", -1, 6, 178, 48, 11
     EDITTEXT IDC_REPEAT_TEST_EDIT, 60, 180, 180, 14, ES_AUTOHSCROLL
-    DEFPUSHBUTTON "Con&firmă", IDOK, 135, 207, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 189, 207, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 189, 207, 50, 14
 END
 
 IDD_SERIALKEYSOPTIONS DIALOGEX 0, 0, 246, 220
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Opțiuni pentru dispozitive de intrare alternative"
+CAPTION "Setări pentru TasteSeriale"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Dispozitive de intrare alternative", -1, 6, 11, 234, 92
-    LTEXT "Specificați portul de la care veți conecta dispozitivele alternative.",
+    GROUPBOX "Dispozitive de intrare seriale", -1, 6, 11, 234, 92
+    LTEXT "Se selectează portul unde se conectează un dispozitiv alternativ de intrare.",
           -1, 12, 20, 222, 20
-    LTEXT "&Portul serial:", -1, 12, 34, 222, 20
+    LTEXT "&Port serial:", -1, 12, 34, 222, 20
     COMBOBOX IDC_SERIAL_PORT_COMBO, 12, 45, 222, 56,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    LTEXT "&Rata baud:", -1, 12, 65, 222, 20
+    LTEXT "&Frecvenţă de baud:", -1, 12, 65, 222, 20
     COMBOBOX IDC_SERIAL_BAUD_COMBO, 12, 76, 222, 74,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    DEFPUSHBUTTON "Con&firmă", IDOK, 135, 207, 50, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 189, 207, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 135, 207, 50, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 189, 207, 50, 14
 END
 
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Accesibilitate"
-    IDS_CPLSYSTEMDESCRIPTION "Modificarea opțiunilor de accesibilitate pentru acest calculator."
-    IDS_SENTRY_NONE "[nespecificată]"
-    IDS_SENTRY_TITLE "Clipire bară de titlu"
+    IDS_CPLSYSTEMDESCRIPTION "Reglarea setărilor computerului pentru vizualizare, redare sunet şi mobilitate."
+    IDS_SENTRY_NONE "[Fără]"
+    IDS_SENTRY_TITLE "Clipire bară de legendă activă"
     IDS_SENTRY_WINDOW "Clipire fereastră activă"
-    IDS_SENTRY_DISPLAY "Clipire spațiu de lucru"
+    IDS_SENTRY_DISPLAY "Clipire spaţiu de lucru"
     IDS_SECONDS "secunde"
     IDS_MINUTES "minute"
 END

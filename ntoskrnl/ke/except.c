@@ -17,9 +17,10 @@
 
 VOID
 NTAPI
-KiContinuePreviousModeUser(IN PCONTEXT Context,
-                           IN PKEXCEPTION_FRAME ExceptionFrame,
-                           IN PKTRAP_FRAME TrapFrame)
+KiContinuePreviousModeUser(
+    _In_ PCONTEXT Context,
+    _Out_ PKEXCEPTION_FRAME ExceptionFrame,
+    _Out_ PKTRAP_FRAME TrapFrame)
 {
     CONTEXT LocalContext;
 
@@ -28,16 +29,12 @@ KiContinuePreviousModeUser(IN PCONTEXT Context,
     RtlCopyMemory(&LocalContext, Context, sizeof(CONTEXT));
     Context = &LocalContext;
 
-#ifdef _M_AMD64
-    KiSetTrapContext(TrapFrame, &LocalContext, UserMode);
-#else
     /* Convert the context into Exception/Trap Frames */
     KeContextToTrapFrame(&LocalContext,
                          ExceptionFrame,
                          TrapFrame,
                          LocalContext.ContextFlags,
                          UserMode);
-#endif
 }
 
 NTSTATUS
@@ -66,16 +63,12 @@ KiContinue(IN PCONTEXT Context,
         }
         else
         {
-#ifdef _M_AMD64
-            KiSetTrapContext(TrapFrame, Context, KernelMode);
-#else
             /* Convert the context into Exception/Trap Frames */
             KeContextToTrapFrame(Context,
                                  ExceptionFrame,
                                  TrapFrame,
                                  Context->ContextFlags,
                                  KernelMode);
-#endif
         }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -94,11 +87,12 @@ KiContinue(IN PCONTEXT Context,
 
 NTSTATUS
 NTAPI
-KiRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
-                 IN PCONTEXT Context,
-                 IN PKEXCEPTION_FRAME ExceptionFrame,
-                 IN PKTRAP_FRAME TrapFrame,
-                 IN BOOLEAN SearchFrames)
+KiRaiseException(
+    _In_ PEXCEPTION_RECORD ExceptionRecord,
+    _In_ PCONTEXT Context,
+    _Out_ PKEXCEPTION_FRAME ExceptionFrame,
+    _Out_ PKTRAP_FRAME TrapFrame,
+    _In_ BOOLEAN SearchFrames)
 {
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     CONTEXT LocalContext;
@@ -176,15 +170,22 @@ KiRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
 
 NTSTATUS
 NTAPI
-NtRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
-                 IN PCONTEXT Context,
-                 IN BOOLEAN FirstChance)
+NtRaiseException(
+    _In_ PEXCEPTION_RECORD ExceptionRecord,
+    _In_ PCONTEXT Context,
+    _In_ BOOLEAN FirstChance)
 {
     NTSTATUS Status;
     PKTHREAD Thread;
     PKTRAP_FRAME TrapFrame;
+#ifdef _M_IX86
+    PKEXCEPTION_FRAME ExceptionFrame = NULL;
+#else
+    KEXCEPTION_FRAME LocalExceptionFrame;
+    PKEXCEPTION_FRAME ExceptionFrame = &LocalExceptionFrame;
+#endif
 
-    /* Get trap frame and link previous one*/
+    /* Get trap frame and link previous one */
     Thread = KeGetCurrentThread();
     TrapFrame = Thread->TrapFrame;
     Thread->TrapFrame = KiGetLinkedTrapFrame(TrapFrame);
@@ -197,32 +198,34 @@ NtRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
     /* Raise the exception */
     Status = KiRaiseException(ExceptionRecord,
                               Context,
-                              NULL,
+                              ExceptionFrame,
                               TrapFrame,
                               FirstChance);
-    if (NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
-        /* It was handled, so exit restoring all state */
-        KiServiceExit2(TrapFrame);
-    }
-    else
-    {
-        /* Exit with error */
-        KiServiceExit(TrapFrame, Status);
+        DPRINT1("KiRaiseException failed. Status = 0x%lx\n", Status);
+        return Status;
     }
 
-    /* We don't actually make it here */
-    return Status;
+    /* It was handled, so exit restoring all state */
+    KiExceptionExit(TrapFrame, ExceptionFrame);
 }
 
 NTSTATUS
 NTAPI
-NtContinue(IN PCONTEXT Context,
-           IN BOOLEAN TestAlert)
+NtContinue(
+    _In_ PCONTEXT Context,
+    _In_ BOOLEAN TestAlert)
 {
     PKTHREAD Thread;
     NTSTATUS Status;
     PKTRAP_FRAME TrapFrame;
+#ifdef _M_IX86
+    PKEXCEPTION_FRAME ExceptionFrame = NULL;
+#else
+    KEXCEPTION_FRAME LocalExceptionFrame;
+    PKEXCEPTION_FRAME ExceptionFrame = &LocalExceptionFrame;
+#endif
 
     /* Get trap frame and link previous one*/
     Thread = KeGetCurrentThread();
@@ -230,23 +233,21 @@ NtContinue(IN PCONTEXT Context,
     Thread->TrapFrame = KiGetLinkedTrapFrame(TrapFrame);
 
     /* Continue from this point on */
-    Status = KiContinue(Context, NULL, TrapFrame);
-    if (NT_SUCCESS(Status))
+    Status = KiContinue(Context, ExceptionFrame, TrapFrame);
+    if (!NT_SUCCESS(Status))
     {
-        /* Check if alert was requested */
-        if (TestAlert) KeTestAlertThread(Thread->PreviousMode);
-
-        /* Exit to new trap frame */
-        KiServiceExit2(TrapFrame);
-    }
-    else
-    {
-        /* Exit with an error */
-        KiServiceExit(TrapFrame, Status);
+        DPRINT1("KiContinue failed. Status = 0x%lx\n", Status);
+        return Status;
     }
 
-    /* We don't actually make it here */
-    return Status;
+    /* Check if alert was requested */
+    if (TestAlert)
+    {
+        KeTestAlertThread(Thread->PreviousMode);
+    }
+
+    /* Exit to new context */
+    KiExceptionExit(TrapFrame, ExceptionFrame);
 }
 
 /* EOF */

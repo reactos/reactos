@@ -47,9 +47,6 @@ typedef struct _ATTACHINFO
 
 extern PATTACHINFO gpai;
 
-/* Keyboard layout undocumented flags */
-#define KLF_UNLOAD 0x20000000
-
 /* Key States */
 #define KS_DOWN_BIT      0x80
 #define KS_LOCK_BIT      0x01

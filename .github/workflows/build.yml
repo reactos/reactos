@@ -84,24 +84,14 @@ jobs:
   build-msvc:
     strategy:
       matrix:
-        os: [windows-latest, windows-2019]
-        toolset: ['14.2', '14.1', '14.0'] # VS 2019, 2017, and 2015 (see below)
+        os: [windows-latest]
+        toolset: ['14','14.2'] # VS 2022, and 2019 (see below)
         arch: [i386, amd64]
         config: [Debug, Release]
         dllver: ['0x502', '0x600']
-        exclude: # VS 2019, 2017 only with windows-latest; VS 2015 only with windows-2019
-          - os: windows-2019
-            toolset: '14.2'
-          - os: windows-2019
-            toolset: '14.1'
-          - os: windows-latest
-            toolset: '14.0'
+        exclude: # Build NT6 ISOs only with the latest toolset when compiled as a debug build
           - dllver: 0x600
-            os: windows-2019
-          - dllver: 0x600
-            toolset: '14.1'
-          - dllver: 0x600
-            toolset: '14.0'
+            toolset: 14.2
           - dllver: 0x600
             config: Release
       fail-fast: false
@@ -155,7 +145,7 @@ jobs:
   build-msvc-arm:
     strategy:
       matrix:
-        toolset: ['14.2', '14.1'] # VS 2019, 2017
+        toolset: ['14','14.2'] # VS 2022, 2019
         arch: [arm, arm64]
         config: [Debug, Release]
       fail-fast: false
@@ -232,6 +222,7 @@ jobs:
         name: reactos-syms-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: build/msvc_pdb
 
+  # FIXME: Does not boot on toolset 14.1, 14.3+ is untested
   build-clang-cl:
     strategy:
       matrix:
@@ -258,13 +249,13 @@ jobs:
       uses: ilammy/msvc-dev-cmd@v1
       with:
         arch: amd64_x86
-        toolset: '14.1' # latest masm build known to make bootable builds
+        toolset: '14'
     - name: Activate VS cmd (amd64)
       if: ${{ matrix.arch == 'amd64' }}
       uses: ilammy/msvc-dev-cmd@v1
       with:
         arch: amd64
-        toolset: '14.1' # latest masm build known to make bootable builds
+        toolset: '14'
     - name: Add LLVM to PATH
       run: echo "${env:LLVM_PATH}" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
     - name: Source checkout
@@ -293,7 +284,7 @@ jobs:
 
   build-msbuild-i386:
     name: MSBuild (i386)
-    runs-on: windows-2019
+    runs-on: windows-latest
     steps:
     - name: Install Flex and Bison
       run: |
@@ -313,6 +304,6 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake -G "Visual Studio 16 2019" -A Win32 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=i386 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{github.workspace}}\src
+        cmake -G "Visual Studio 17 2022" -A Win32 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=i386 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{github.workspace}}\src
     - name: Build
       run: cmake --build ${{github.workspace}}\build --target bootcd --target livecd

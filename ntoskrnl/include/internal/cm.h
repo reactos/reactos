@@ -160,6 +160,9 @@ typedef struct _CM_KEY_HASH_TABLE_ENTRY
     EX_PUSH_LOCK Lock;
     PKTHREAD Owner;
     PCM_KEY_HASH Entry;
+#if DBG
+    PVOID LockBackTrace[5];
+#endif
 } CM_KEY_HASH_TABLE_ENTRY, *PCM_KEY_HASH_TABLE_ENTRY;
 
 //
@@ -1326,16 +1329,16 @@ CmLoadKey(
 NTSTATUS
 NTAPI
 CmUnloadKey(
-    IN PCM_KEY_CONTROL_BLOCK Kcb,
-    IN ULONG Flags
+    _In_ PCM_KEY_CONTROL_BLOCK Kcb,
+    _In_ ULONG Flags
 );
 
 ULONG
 NTAPI
 CmpEnumerateOpenSubKeys(
-    IN PCM_KEY_CONTROL_BLOCK RootKcb,
-    IN BOOLEAN RemoveEmptyCacheEntries,
-    IN BOOLEAN DereferenceOpenedEntries
+    _In_ PCM_KEY_CONTROL_BLOCK RootKcb,
+    _In_ BOOLEAN RemoveEmptyCacheEntries,
+    _In_ BOOLEAN DereferenceOpenedEntries
 );
 
 HCELL_INDEX

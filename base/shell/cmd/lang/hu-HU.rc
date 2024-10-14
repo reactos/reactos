@@ -239,6 +239,7 @@ parancs           Ezt a parancsot hajtsa végre, ha igaz a feltétel.\n\
 string1==string2  Igaz a feltétel, ha a megadott sztringek egyenlőek.\n\
 EXIST fájlnév     Igaz a feltétel, ha a megadott fájl létezik.\n\
 DEFINED változó   Igaz a feltétel, ha a megadott változó definiálva van.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "Az aktuális idő: "
     STRING_MKDIR_HELP "Létrehoz egy új mappát.\n\n\
 MKDIR [meghajtó:]útvonal\nMD [meghajtó:]útvonal"
@@ -329,32 +330,6 @@ Célnak nem lehet megadni új meghajtót vagy mappát.\n\
 Ha mégis ezt szeretné, használja a MOVE parancsot."
     STRING_REN_HELP2 "    %lu állomány átnevezve\n"
     STRING_REN_HELP3 "    %lu állomány átnevezve\n"
-    STRING_REPLACE_HELP1 "Fájlok cseréje.\n\n\
-REPLACE [meghajt1:][útvonal1]fájl [meghajt2:][útvonal2] [/A] [/P] [/R] [/W]\n\
-REPLACE [meghajt1:][útvonal1]fájl [meghajt2:][útvonal2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [meghajt1:][útvonal1]fájl A forrás fájl vagy fájlok.\n\
-  [meghajt2:][útvonal2]     A cél mappa, ahol a fájlok lecserélődnek.\n\
-  /A                        Új fájlokat ad a cél mappába. Nem lehet\n\
-                            a /S vagy /U kapcsolókkal együtt használni.\n\
-  /P                        Rákérdez fájlcsere vagy fájl hozzáadása előtt.\n\
-  /R                        A csak olvasható fájlokat is ugyanúgy cseréli, mint\n\
-                            a védelem nélküli fájlokat.\n\
-  /S                        Az célmappa összes almappájában cseréli a fájlokat.\n\
-                            Nem lehet a /A kapcsolóval együtt használni.\n\
-  /W                        Lemez behelyezésére vár a kezdés előtt.\n\
-  /U                        Csak azokat a fájlokat cseréli (frissíti), amik\n\
-                            régebbiek mint a forrás fájl.\n\
-                            Nem lehet a /A kapcsolóval együtt használni.\n"
-    STRING_REPLACE_HELP2 "Meg kell adni a forrás útvonalat\n"
-    STRING_REPLACE_HELP3 "Egy fájl sem lett cserélve\n"
-    STRING_REPLACE_HELP4 "%lu fájl lett cserélve\n"
-    STRING_REPLACE_HELP5 "Csere: %s\n"
-    STRING_REPLACE_HELP6 "Csere: %s\n"
-    STRING_REPLACE_HELP7 "Egy fájl sem lett hozzáadva\n"
-    STRING_REPLACE_HELP8 "%lu fájl lett hozzáadva\n"
-    STRING_REPLACE_HELP9 "Hozzáadja %s (I/N)? "
-    STRING_REPLACE_HELP10 "Cseréli %s (I/N)? "
-    STRING_REPLACE_HELP11 "Hozzáadás: %s\n"
     STRING_SHIFT_HELP "Eltolja a helyettesíthető paraméterek pozícióját a batch állományban.\n\n\
 SHIFT [DOWN]"
     STRING_SCREEN_HELP "Mozgatja a kurzort és opcionálisan megjelenít egy szöveget.\n\n\
@@ -510,15 +485,16 @@ title         új cím\n"
     STRING_ERROR_CANNOTPIPE "Hiba! Nem sikerült csővezetéket létrehozni! Nem lehet megnyitni az átmeneti fájlt!\n"
     STRING_ERROR_D_PAUSEMSG "A folytatáshoz nyomjon meg egy billentyűt . . . "
     STRING_ERROR_DRIVER_NOT_READY "A meghajtó nem áll készen"
+    STRING_ERROR_INVALID_NUMBER1 "Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"
+    STRING_ERROR_INVALID_NUMBER2 "Invalid number. Numbers are limited to 32-bits of precision.\n"
+    STRING_ERROR_DIVISION_BY_ZERO "Division by zero error.\n"
+    STRING_ERROR_INVALID_DEVICE L"Invalid device '%s'\n"
+    STRING_ERROR_CALL_BAD_LABEL "Invalid attempt to call batch label outside of batch script.\n"
+    STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
+    STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "A(z) '%s' környezeti változó nincs definiálva\n"
-    STRING_REPLACE_ERROR1 "Érvénytelen kapcsoló - %s\n"
-    STRING_REPLACE_ERROR2 "Útvonal nem található - %s\n"
-    STRING_REPLACE_ERROR3 "A fájlnév, mappanév, vagy kötetcímke szintaxis hibás.\n"
-    STRING_REPLACE_ERROR4 "Érvénytelen paraméter kombináció\n"
-    STRING_REPLACE_ERROR5 "Hozzáférés megtagadva - %s\n"
-    STRING_REPLACE_ERROR6 "Nem találhatóak fájlok - %s\n"
-    STRING_REPLACE_ERROR7 "Kiterjesztett hiba 32\n"
     STRING_CMD_INFOLINE "  ReactOS Parancssor                                       HELP parancs = Súgó  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
     STRING_REACTOS_VERSION "ReactOS [Version %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Parancssor értelmező\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Ezen fut: "

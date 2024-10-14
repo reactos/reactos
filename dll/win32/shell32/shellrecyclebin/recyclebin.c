@@ -10,7 +10,7 @@
 
 BOOL WINAPI
 CloseRecycleBinHandle(
-    IN HANDLE hDeletedFile)
+    IN HDELFILE hDeletedFile)
 {
     IRecycleBinFile *rbf = (IRecycleBinFile *)hDeletedFile;
     HRESULT hr;
@@ -91,7 +91,7 @@ cleanup:
 
 BOOL WINAPI
 DeleteFileHandleToRecycleBin(
-    IN HANDLE hDeletedFile)
+    IN HDELFILE hDeletedFile)
 {
     IRecycleBinFile *rbf = (IRecycleBinFile *)hDeletedFile;
     HRESULT hr;
@@ -254,7 +254,7 @@ cleanup:
 
 BOOL WINAPI
 GetDeletedFileTypeNameW(
-    IN HANDLE hDeletedFile,
+    IN HDELFILE hDeletedFile,
     OUT LPWSTR pTypeName,
     IN DWORD BufferSize,
     OUT LPDWORD RequiredSize OPTIONAL)
@@ -280,7 +280,7 @@ GetDeletedFileTypeNameW(
 
 BOOL WINAPI
 GetDeletedFileDetailsA(
-    IN HANDLE hDeletedFile,
+    IN HDELFILE hDeletedFile,
     IN DWORD BufferSize,
     IN OUT PDELETED_FILE_DETAILS_A FileDetails OPTIONAL,
     OUT LPDWORD RequiredSize OPTIONAL)
@@ -325,7 +325,7 @@ cleanup:
 
 BOOL WINAPI
 GetDeletedFileDetailsW(
-    IN HANDLE hDeletedFile,
+    IN HDELFILE hDeletedFile,
     IN DWORD BufferSize,
     IN OUT PDELETED_FILE_DETAILS_W FileDetails OPTIONAL,
     OUT LPDWORD RequiredSize OPTIONAL)
@@ -378,7 +378,7 @@ cleanup:
 
 BOOL WINAPI
 RestoreFile(
-    IN HANDLE hDeletedFile)
+    IN HDELFILE hDeletedFile)
 {
     IRecycleBinFile *rbf = (IRecycleBinFile *)hDeletedFile;
     HRESULT hr;

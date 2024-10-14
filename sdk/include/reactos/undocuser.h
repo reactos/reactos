@@ -175,6 +175,12 @@ extern "C" {
 #define SBRG_PAGEDOWNLEFT  4 /* the page down or page left region */
 #define SBRG_BOTTOMLEFTBTN 5 /* the bottom or left button */
 
+// Keyboard Layout undocumented flags
+#define KL_UNLOAD 0x20000000
+
+// co_IntUnloadKeyboardLayoutEx undocumented flags
+#define UKL_NOACTIVATENEXT 0x80000000
+
 BOOL WINAPI UpdatePerUserSystemParameters(DWORD dwReserved, BOOL bEnable);
 BOOL WINAPI SetLogonNotifyWindow(HWND Wnd);
 BOOL WINAPI KillSystemTimer(HWND,UINT_PTR);

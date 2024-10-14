@@ -26,6 +26,11 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS WineMine Game"
+#define REACTOS_STR_INTERNAL_NAME     "winmine"
+#define REACTOS_STR_ORIGINAL_FILENAME "winmine.exe"
+#include <reactos/version.rc>
+
 IDA_WINEMINE ACCELERATORS
 BEGIN
     VK_F2, IDM_NEW, VIRTKEY, NOINVERT
@@ -43,6 +48,13 @@ IDI_LEDS BITMAP "rc/leds.bmp"
 
 /* @makedep: mines.bmp */
 IDI_MINES BITMAP "rc/mines.bmp"
+
+/* Sound effects */
+IDW_BOX WAVE "rc/box.wav"
+IDW_FLAG WAVE "rc/flag.wav"
+IDW_QUESTION WAVE "rc/question.wav"
+IDW_EXPLODE WAVE "rc/explode.wav"
+IDW_WIN WAVE "rc/win.wav"
 
 #include <reactos/manifest_exe.rc>
 

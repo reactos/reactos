@@ -812,6 +812,8 @@ BOOL WINAPI SetCommState( HANDLE handle, LPDCB lpdcb)
     SERIAL_CHARS               sc;
     DWORD dwBytesReturned;
 
+    TRACE("handle %p, ptr %p\n", handle, lpdcb);
+
     if (lpdcb == NULL)
     {
         SetLastError(ERROR_INVALID_PARAMETER);

@@ -189,6 +189,7 @@ DefWndHandleSysCommand(PWND pWnd, WPARAM wParam, LPARAM lParam)
            }
         }
         break;
+
 //      case SC_DEFAULT:
       case SC_MOUSEMENU:
         {
@@ -197,15 +198,14 @@ DefWndHandleSysCommand(PWND pWnd, WPARAM wParam, LPARAM lParam)
           Pt.y = (short)HIWORD(lParam);
           MENU_TrackMouseMenuBar(pWnd, wParam & 0x000f, Pt);
         }
-	break;
+        break;
 
       case SC_KEYMENU:
         MENU_TrackKbdMenuBar(pWnd, wParam, (WCHAR)lParam);
-	break;
-
+        break;
 
       default:
-   // We do not support anything else here so we should return normal even when sending a hook.
+        // We do not support anything else here so we should return normal even when sending a hook.
         return 0;
    }
 
@@ -284,9 +284,9 @@ DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
             }
          }
          ////
-	 if (Msg == WM_LBUTTONDOWN || Msg == WM_MBUTTONDOWN ||
-	     Msg == WM_RBUTTONDOWN || Msg == WM_XBUTTONDOWN)
-	 {
+         if (Msg == WM_LBUTTONDOWN || Msg == WM_MBUTTONDOWN ||
+             Msg == WM_RBUTTONDOWN || Msg == WM_XBUTTONDOWN)
+         {
              if (pwndPopUP)
              {
                  FLASHWINFO fwi =
@@ -299,9 +299,9 @@ DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
                  // Now shake that window!
                  IntFlashWindowEx(pwndPopUP, &fwi);
              }
-	     UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_MESSAGE_BEEP, 0);
-	 }
-	 break;
+             UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_MESSAGE_BEEP, 0);
+         }
+         break;
       }
 
       case HTCLIENT:
@@ -309,8 +309,8 @@ DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
          if (pWnd->pcls->spcur)
          {
             IntSystemSetCursor(pWnd->pcls->spcur);
-	 }
-	 return FALSE;
+         }
+         return FALSE;
       }
 
       case HTLEFT:
@@ -566,7 +566,6 @@ IntDefWindowProc(
                     lResult = (LRESULT) (Wnd->strName.Length / sizeof(WCHAR));
                 }
             }
-            else lResult = 0L;
 
             break;
       }
@@ -716,7 +715,7 @@ IntDefWindowProc(
            * "If it is appropriate to do so, the system sends the WM_SYSCOMMAND
            * message to the window". When is it appropriate?
            */
-           ERR("WM_NCRBUTTONUP\n");
+          ERR("WM_NCRBUTTONUP\n");
           break;
 
       case WM_XBUTTONUP:
@@ -773,7 +772,7 @@ IntDefWindowProc(
                 {
                    WARN("Scroll Menu Not Supported\n");
                 }
-	    }
+            }
             break;
       }
 
@@ -789,112 +788,66 @@ IntDefWindowProc(
          }
          if (g_bWindowSnapEnabled && (IS_KEY_DOWN(gafAsyncKeyState, VK_LWIN) || IS_KEY_DOWN(gafAsyncKeyState, VK_RWIN)))
          {
-            BOOL IsTaskBar;
-            DWORD StyleTB;
-            DWORD ExStyleTB;
             HWND hwndTop = UserGetForegroundWindow();
             PWND topWnd = UserGetWindowObject(hwndTop);
+            BOOL allowSnap;
 
             // MS Doc: foreground window can be NULL, e.g. when window is losing activation
             if (!topWnd)
                return 0;
 
-            // We want to forbid snapping operations on the TaskBar
-            // We use a heuristic for detecting the TaskBar Wnd by its typical Style & ExStyle Values
-            ExStyleTB = (topWnd->ExStyle & WS_EX_TOOLWINDOW);
-            StyleTB = (topWnd->style & (WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN));
-            IsTaskBar = (StyleTB == (WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN))
-                        && (ExStyleTB == WS_EX_TOOLWINDOW);
-            TRACE("ExStyle=%x Style=%x IsTaskBar=%d\n", ExStyleTB, StyleTB, IsTaskBar);
+            allowSnap = IntIsSnapAllowedForWindow(topWnd);
+            /* Allow the minimize action if it has a minimize button, even if the window cannot be snapped (e.g. Calc.exe) */
+            if (!allowSnap && (topWnd->style & (WS_MINIMIZEBOX|WS_THICKFRAME)) == WS_MINIMIZEBOX)
+                allowSnap = wParam == VK_DOWN;
 
-            if (!IsTaskBar)
+            if (allowSnap)
             {
-               if ((topWnd->style & WS_THICKFRAME) == 0)
-                  return 0;
+               UINT snapped = IntGetWindowSnapEdge(topWnd);
 
                if (wParam == VK_DOWN)
                {
                    if (topWnd->style & WS_MAXIMIZE)
-                   {
-                       co_IntSendMessage(hwndTop, WM_SYSCOMMAND, SC_RESTORE, lParam);
-
-                       /* "Normal size" must be erased after restoring, otherwise it will block next side snap actions */
-                       RECTL_vSetEmptyRect(&topWnd->InternalPos.NormalRect);
-                   }
+                       co_IntSendMessage(hwndTop, WM_SYSCOMMAND, SC_RESTORE, MAKELONG(0, 1));
+                   else if (snapped)
+                       co_IntUnsnapWindow(topWnd);
                    else
-                   {
-                       co_IntSendMessage(hwndTop, WM_SYSCOMMAND, SC_MINIMIZE, lParam);
-                   }
+                       co_IntSendMessage(hwndTop, WM_SYSCOMMAND, SC_MINIMIZE, MAKELONG(0, 1));
                }
                else if (wParam == VK_UP)
                {
-                  RECT currentRect;
-                  if ((topWnd->InternalPos.NormalRect.right == topWnd->InternalPos.NormalRect.left) ||
-                      (topWnd->InternalPos.NormalRect.top == topWnd->InternalPos.NormalRect.bottom))
-                  {
-                      currentRect = topWnd->rcWindow;
-                  }
-                  else
-                  {
-                      currentRect = topWnd->InternalPos.NormalRect;
-                  }
-                  co_IntSendMessage(hwndTop, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
-
-                  // save normal rect if maximazing snapped window
-                  topWnd->InternalPos.NormalRect = currentRect;
+                   if (topWnd->style & WS_MINIMIZE)
+                       co_IntSendMessage(hwndTop, WM_SYSCOMMAND, SC_RESTORE, MAKELONG(0, 1));
+                   else
+                       co_IntSendMessage(hwndTop, WM_SYSCOMMAND, SC_MAXIMIZE, MAKELONG(0, 1));
                }
                else if (wParam == VK_LEFT || wParam == VK_RIGHT)
                {
-                  RECT snapRect, normalRect, windowRect;
-                  BOOL snapped;
-                  normalRect = topWnd->InternalPos.NormalRect;
-                  snapped = (normalRect.left != 0 && normalRect.right != 0 &&
-                             normalRect.top != 0 && normalRect.bottom != 0);
+                  UINT edge = wParam == VK_LEFT ? HTLEFT : HTRIGHT;
+                  UINT otherEdge = edge == HTLEFT ? HTRIGHT : HTLEFT;
 
                   if (topWnd->style & WS_MAXIMIZE)
                   {
-                     co_IntSendMessage(hwndTop, WM_SYSCOMMAND, SC_RESTORE, lParam);
-                     snapped = FALSE;
+                     /* SC_RESTORE + Snap causes the window to visually move twice, place it manually in the snap position */
+                     RECT normalRect = topWnd->InternalPos.NormalRect;
+                     co_IntCalculateSnapPosition(topWnd, edge, &topWnd->InternalPos.NormalRect); /* Calculate edge position */
+                     IntSetSnapEdge(topWnd, edge); /* Tell everyone the edge we are snapped to */
+                     co_IntSendMessage(hwndTop, WM_SYSCOMMAND, SC_RESTORE, MAKELONG(0, 1));
+                     IntSetSnapInfo(topWnd, edge, &normalRect); /* Reset the real place to unsnap to */
+                     snapped = HTNOWHERE; /* Force snap */
                   }
-                  windowRect = topWnd->rcWindow;
+#if 0 /* Windows 8 does this but is it a good feature? */
+                  else if (snapped == edge)
+                  {
+                     /* Already snapped to this edge, snap to the opposite side */
+                     edge = otherEdge;
+                  }
+#endif
 
-                  UserSystemParametersInfo(SPI_GETWORKAREA, 0, &snapRect, 0);
-                  if (wParam == VK_LEFT)
-                  {
-                     snapRect.right = (snapRect.left + snapRect.right) / 2;
-                  }
-                  else // VK_RIGHT
-                  {
-                     snapRect.left = (snapRect.left + snapRect.right) / 2;
-                  }
-
-                  if (snapped)
-                  {
-                     // if window was snapped but moved to other location - restore normal size
-                     if (!IntEqualRect(&snapRect, &windowRect))
-                     {
-                        RECT empty = {0, 0, 0, 0};
-                        co_WinPosSetWindowPos(topWnd,
-                                              0,
-                                              normalRect.left,
-                                              normalRect.top,
-                                              normalRect.right - normalRect.left,
-                                              normalRect.bottom - normalRect.top,
-                                              0);
-                        topWnd->InternalPos.NormalRect = empty;
-                     }
-                  }
+                  if (snapped == otherEdge)
+                     co_IntUnsnapWindow(topWnd);
                   else
-                  {
-                     co_WinPosSetWindowPos(topWnd,
-                                           0,
-                                           snapRect.left,
-                                           snapRect.top,
-                                           snapRect.right - snapRect.left,
-                                           snapRect.bottom - snapRect.top,
-                                           0);
-                     topWnd->InternalPos.NormalRect = windowRect;
-                  }
+                     co_IntSnapWindow(topWnd, edge);
                }
             }
          }
@@ -920,7 +873,7 @@ IntDefWindowProc(
                 if (wParam == VK_F4) /* Try to close the window */
                 {
                    PWND top = UserGetAncestor(Wnd, GA_ROOT);
-                   if (!(top->style & CS_NOCLOSE))
+                   if (!(top->pcls->style & CS_NOCLOSE))
                       UserPostMessage(UserHMGetHandle(top), WM_SYSCOMMAND, SC_CLOSE, 0);
                 }
                 else if (wParam == VK_SNAPSHOT) // Alt-VK_SNAPSHOT?
@@ -1038,12 +991,15 @@ IntDefWindowProc(
       case WM_MOUSEACTIVATE:
          if (Wnd->style & WS_CHILD)
          {
-             LONG Ret;
              HWND hwndParent;
              PWND pwndParent = IntGetParent(Wnd);
              hwndParent = pwndParent ? UserHMGetHandle(pwndParent) : NULL;
-             if (hwndParent) Ret = co_IntSendMessage(hwndParent, WM_MOUSEACTIVATE, wParam, lParam);
-             if (Ret) return (Ret);
+             if (hwndParent)
+             {
+                 lResult = co_IntSendMessage(hwndParent, WM_MOUSEACTIVATE, wParam, lParam);
+                 if (lResult)
+                     break;
+             }
          }
          return ( (HIWORD(lParam) == WM_LBUTTONDOWN && LOWORD(lParam) == HTCAPTION) ? MA_NOACTIVATE : MA_ACTIVATE );
 
@@ -1286,12 +1242,12 @@ IntDefWindowProc(
                }
                if (!lResult)
                   lResult = co_HOOK_CallHooks(WH_CBT, HCBT_MOVESIZE, (WPARAM)UserHMGetHandle(Wnd), lParam ? (LPARAM)&rt : 0);
-           }
-            break;
+
+               break;
+            }
          }
          break;
       }
-      break;
    }
    return lResult;
 }

@@ -9,9 +9,13 @@
 
 PNETCONIDSTRUCT ILGetConnData(PCITEMID_CHILD pidl)
 {
-    if (!pidl || !pidl->mkid.cb || pidl->mkid.abID[0] != 0x99)
-        return NULL;
-    return (PNETCONIDSTRUCT)(&pidl->mkid.abID[0]);
+    if (pidl && pidl->mkid.cb >= 2 + sizeof(NETCONIDSTRUCT))
+    {
+        PNETCONIDSTRUCT pData = (PNETCONIDSTRUCT)pidl->mkid.abID;
+        if (pData->Signature == NETCONIDSTRUCT_SIG)
+            return pData;
+    }
+    return NULL;
 }
 
 PWCHAR ILGetConnName(PCITEMID_CHILD pidl)
@@ -48,17 +52,21 @@ PITEMID_CHILD ILCreateNetConnectItem(INetConnection * pItem)
 
     /* Allocate enough memory for the trailing id which will indicate that this is a simple id */
     pidl = static_cast<LPITEMIDLIST>(SHAlloc(size + sizeof(SHITEMID)));
+    if (!pidl)
+        goto end;
     pidl->mkid.cb = (WORD)size;
-    pidl->mkid.abID[0] = 0x99;
+    ((PNETCONIDSTRUCT)(pidl->mkid.abID))->Signature = NETCONIDSTRUCT_SIG;
 
     /* Copy the connection properties */
     pnetid = ILGetConnData(pidl);
+    memset(pnetid->Unknown, 0, sizeof(pnetid->Unknown));
+    pnetid->clsidThisObject = pProperties->clsidThisObject;
     pnetid->guidId = pProperties->guidId;
     pnetid->Status = pProperties->Status;
     pnetid->MediaType = pProperties->MediaType;
     pnetid->dwCharacter = pProperties->dwCharacter;
     pnetid->uNameOffset = sizeof(NETCONIDSTRUCT);
-    pnetid->uDeviceNameOffset = pnetid->uNameOffset + (wcslen(pProperties->pszwName) + 1) * sizeof(WCHAR);
+    pnetid->uDeviceNameOffset = ULONG(pnetid->uNameOffset + (wcslen(pProperties->pszwName) + 1) * sizeof(WCHAR));
 
     pwchName = ILGetConnName(pidl);
     wcscpy(pwchName, pProperties->pszwName);
@@ -68,7 +76,7 @@ PITEMID_CHILD ILCreateNetConnectItem(INetConnection * pItem)
 
     /* Set the trailing id to null */
     memset((void*)((ULONG_PTR)pidl + size), 0, sizeof(SHITEMID));
-
+end:
     NcFreeNetconProperties(pProperties);
 
     return pidl;

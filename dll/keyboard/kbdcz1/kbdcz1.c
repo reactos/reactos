@@ -4,7 +4,7 @@
  * License: LGPL, see: LGPL.txt
  *
  * Based on other kbd*.dlls
- * modified by Kamil Hornicek (tykef at atlas dot cz)
+ * modified by Kamil Horníček <tykef@atlas.cz>
  */
 
 #define WIN32_NO_STATUS

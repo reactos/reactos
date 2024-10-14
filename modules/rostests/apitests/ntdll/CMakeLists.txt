@@ -137,10 +137,7 @@ add_pch(ntdll_apitest precomp.h "${PCH_SKIP_SOURCE}")
 add_dependencies(ntdll_apitest load_notifications)
 
 if(NOT MSVC)
-    set_source_files_properties(RtlGetFullPathName_UstrEx.c PROPERTIES COMPILE_FLAGS "-Wno-format")
-
-    # Avoid "universal character names are only valid in C++ and C99" error.
-    set_property(TARGET ntdll_apitest PROPERTY C_STANDARD 99)
+    set_source_files_properties(RtlGetFullPathName_UstrEx.c PROPERTIES COMPILE_OPTIONS "-Wno-format")
 endif()
 
 add_rostests_file(TARGET ntdll_apitest)

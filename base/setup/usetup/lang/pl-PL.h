@@ -2281,7 +2281,7 @@ MUI_STRING plPLStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   Zmiana uk\210adu klawiatury..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Dodawanie informacji o stronie kodowej do rejestru..."},
+    "   Dodawanie informacji o stronie kodowej..."},
     {STRING_DONE,
     "   Uko\344czone..."},
     {STRING_REBOOTCOMPUTER2,

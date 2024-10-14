@@ -26,45 +26,82 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-/***************************************************************************
- *  GetNextElement (internal function)
- *
- * Gets a part of a string till the first backslash.
- *
- * PARAMETERS
- *  pszNext [IN] string to get the element from
- *  pszOut  [IN] pointer to buffer which receives string
- *  dwOut   [IN] length of pszOut
- *
- *  RETURNS
- *    LPSTR pointer to first, not yet parsed char
- */
-
-LPCWSTR GetNextElementW (LPCWSTR pszNext, LPWSTR pszOut, DWORD dwOut)
+SHCONTF SHELL_GetDefaultFolderEnumSHCONTF()
 {
-    LPCWSTR pszTail = pszNext;
-    DWORD dwCopy;
+    SHCONTF Flags = SHCONTF_FOLDERS | SHCONTF_NONFOLDERS;
+    SHELLSTATE ss;
+    SHGetSetSettings(&ss, SSF_SHOWALLOBJECTS | SSF_SHOWSUPERHIDDEN, FALSE);
+    if (ss.fShowAllObjects)
+        Flags |= SHCONTF_INCLUDEHIDDEN;
+    if (ss.fShowSuperHidden)
+        Flags |= SHCONTF_INCLUDESUPERHIDDEN;
+     return Flags;
+}
 
-    TRACE ("(%s %p 0x%08x)\n", debugstr_w (pszNext), pszOut, dwOut);
+BOOL SHELL_IncludeItemInFolderEnum(IShellFolder *pSF, PCUITEMID_CHILD pidl, SFGAOF Query, SHCONTF Flags)
+{
+    if (SUCCEEDED(pSF->GetAttributesOf(1, &pidl, &Query)))
+    {
+        if (Query & SFGAO_NONENUMERATED)
+            return FALSE;
+        if ((Query & SFGAO_HIDDEN) && !(Flags & SHCONTF_INCLUDEHIDDEN))
+            return FALSE;
+        if ((Query & (SFGAO_HIDDEN | SFGAO_SYSTEM)) == (SFGAO_HIDDEN | SFGAO_SYSTEM) && !(Flags & SHCONTF_INCLUDESUPERHIDDEN))
+            return FALSE;
+        if ((Flags & (SHCONTF_FOLDERS | SHCONTF_NONFOLDERS)) != (SHCONTF_FOLDERS | SHCONTF_NONFOLDERS))
+            return (Flags & SHCONTF_FOLDERS) ? (Query & SFGAO_FOLDER) : !(Query & SFGAO_FOLDER);
+    }
+    return TRUE;
+}
 
-    *pszOut = 0x0000;
+HRESULT
+Shell_NextElement(
+    _Inout_ LPWSTR *ppch,
+    _Out_ LPWSTR pszOut,
+    _In_ INT cchOut,
+    _In_ BOOL bValidate)
+{
+    *pszOut = UNICODE_NULL;
 
-    if (!pszNext || !*pszNext)
-        return NULL;
+    if (!*ppch)
+        return S_FALSE;
 
-    while (*pszTail && (*pszTail != (WCHAR) '\\'))
-        pszTail++;
+    HRESULT hr;
+    LPWSTR pchNext = wcschr(*ppch, L'\\');
+    if (pchNext)
+    {
+        if (*ppch < pchNext)
+        {
+            /* Get an element */
+            StringCchCopyNW(pszOut, cchOut, *ppch, pchNext - *ppch);
+            ++pchNext;
 
-    dwCopy = pszTail - pszNext + 1;
-    lstrcpynW (pszOut, pszNext, (dwOut < dwCopy) ? dwOut : dwCopy);
+            if (!*pchNext)
+                pchNext = NULL; /* No next */
 
-    if (*pszTail)
-        pszTail++;
-    else
-        pszTail = NULL;
+            hr = S_OK;
+        }
+        else /* Double backslashes found? */
+        {
+            pchNext = NULL;
+            hr = E_INVALIDARG;
+        }
+    }
+    else /* No more next */
+    {
+        StringCchCopyW(pszOut, cchOut, *ppch);
+        hr = S_OK;
+    }
 
-    TRACE ("--(%s %s 0x%08x %p)\n", debugstr_w (pszNext), debugstr_w (pszOut), dwOut, pszTail);
-    return pszTail;
+    *ppch = pchNext; /* Go next */
+
+    if (hr == S_OK && bValidate && !PathIsValidElement(pszOut))
+    {
+        *pszOut = UNICODE_NULL;
+        hr = E_INVALIDARG;
+    }
+
+    return hr;
 }
 
 HRESULT SHELL32_ParseNextElement (IShellFolder2 * psf, HWND hwndOwner, LPBC pbc,
@@ -265,59 +302,90 @@ HRESULT SHELL32_CompareDetails(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST 
     return MAKE_COMPARE_HRESULT(ret);
 }
 
-void AddClassKeyToArray(const WCHAR * szClass, HKEY* array, UINT* cKeys)
+LSTATUS AddClassKeyToArray(const WCHAR* szClass, HKEY* array, UINT* cKeys)
 {
     if (*cKeys >= 16)
-        return;
+        return ERROR_MORE_DATA;
 
     HKEY hkey;
     LSTATUS result = RegOpenKeyExW(HKEY_CLASSES_ROOT, szClass, 0, KEY_READ | KEY_QUERY_VALUE, &hkey);
-    if (result != ERROR_SUCCESS)
-        return;
-
-    array[*cKeys] = hkey;
-    *cKeys += 1;
+    if (result == ERROR_SUCCESS)
+    {
+        array[*cKeys] = hkey;
+        *cKeys += 1;
+    }
+    return result;
 }
 
-void AddFSClassKeysToArray(PCUITEMID_CHILD pidl, HKEY* array, UINT* cKeys)
+LSTATUS AddClsidKeyToArray(REFCLSID clsid, HKEY* array, UINT* cKeys)
 {
+    WCHAR path[6 + 38 + 1] = L"CLSID\\";
+    StringFromGUID2(clsid, path + 6, 38 + 1);
+    return AddClassKeyToArray(path, array, cKeys);
+}
+
+void AddFSClassKeysToArray(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, HKEY* array, UINT* cKeys)
+{
+    // This function opens the association array keys in canonical order for filesystem items.
+    // The order is documented: learn.microsoft.com/en-us/windows/win32/shell/fa-associationarray
+
+    ASSERT(cidl >= 1 && apidl);
+    PCUITEMID_CHILD pidl = apidl[0];
     if (_ILIsValue(pidl))
     {
+        WCHAR buf[MAX_PATH];
+        PWSTR name;
         FileStructW* pFileData = _ILGetFileStructW(pidl);
-        LPWSTR extension = PathFindExtension(pFileData->wszName);
+        if (pFileData)
+        {
+            name = pFileData->wszName;
+        }
+        else
+        {
+            _ILSimpleGetTextW(pidl, buf, _countof(buf));
+            name = buf;
+        }
+        LPCWSTR extension = PathFindExtension(name);
 
         if (extension)
         {
-            AddClassKeyToArray(extension, array, cKeys);
-
-            WCHAR wszClass[MAX_PATH], wszClass2[MAX_PATH];
+            WCHAR wszClass[MAX_PATH], wszSFA[23 + _countof(wszClass)];
             DWORD dwSize = sizeof(wszClass);
-            if (RegGetValueW(HKEY_CLASSES_ROOT, extension, NULL, RRF_RT_REG_SZ, NULL, wszClass, &dwSize) == ERROR_SUCCESS)
+            if (RegGetValueW(HKEY_CLASSES_ROOT, extension, NULL, RRF_RT_REG_SZ, NULL, wszClass, &dwSize) != ERROR_SUCCESS ||
+                !*wszClass || AddClassKeyToArray(wszClass, array, cKeys) != ERROR_SUCCESS)
             {
-                swprintf(wszClass2, L"%s//%s", extension, wszClass);
+                // Only add the extension key if the ProgId is not valid
+                AddClassKeyToArray(extension, array, cKeys);
 
-                AddClassKeyToArray(wszClass, array, cKeys);
-                AddClassKeyToArray(wszClass2, array, cKeys);
+                // "Open With" becomes the default when there are no verbs in the above keys
+                if (cidl == 1)
+                    AddClassKeyToArray(L"Unknown", array, cKeys);
             }
 
-            swprintf(wszClass2, L"SystemFileAssociations//%s", extension);
-            AddClassKeyToArray(wszClass2, array, cKeys);
+            swprintf(wszSFA, L"SystemFileAssociations\\%s", extension);
+            AddClassKeyToArray(wszSFA, array, cKeys);
 
+            dwSize = sizeof(wszClass);
             if (RegGetValueW(HKEY_CLASSES_ROOT, extension, L"PerceivedType ", RRF_RT_REG_SZ, NULL, wszClass, &dwSize) == ERROR_SUCCESS)
             {
-                swprintf(wszClass2, L"SystemFileAssociations//%s", wszClass);
-                AddClassKeyToArray(wszClass2, array, cKeys);
+                swprintf(wszSFA, L"SystemFileAssociations\\%s", wszClass);
+                AddClassKeyToArray(wszSFA, array, cKeys);
             }
         }
 
-        AddClassKeyToArray(L"AllFilesystemObjects", array, cKeys);
         AddClassKeyToArray(L"*", array, cKeys);
+        AddClassKeyToArray(L"AllFilesystemObjects", array, cKeys);
     }
     else if (_ILIsFolder(pidl))
     {
+        // FIXME: Directory > Folder > AFO is the correct order and it's
+        // the order Windows reports in its undocumented association array
+        // but it is somehow not the order Windows adds the items to its menu!
+        // Until the correct algorithm in CDefaultContextMenu can be determined,
+        // we add the folder keys in "menu order".
+        AddClassKeyToArray(L"Folder", array, cKeys);
         AddClassKeyToArray(L"AllFilesystemObjects", array, cKeys);
         AddClassKeyToArray(L"Directory", array, cKeys);
-        AddClassKeyToArray(L"Folder", array, cKeys);
     }
     else
     {
@@ -372,17 +440,21 @@ SHOpenFolderAndSelectItems(PCIDLIST_ABSOLUTE pidlFolder,
                            DWORD dwFlags)
 {
     ERR("SHOpenFolderAndSelectItems() is hackplemented\n");
+    CComHeapPtr<ITEMIDLIST> freeItem;
     PCIDLIST_ABSOLUTE pidlItem;
     if (cidl)
     {
         /* Firefox sends a full pidl here dispite the fact it is a PCUITEMID_CHILD_ARRAY -_- */
-        if (ILGetNext(apidl[0]) != NULL)
+        if (!ILIsSingle(apidl[0]))
         {
             pidlItem = apidl[0];
         }
         else
         {
-            pidlItem = ILCombine(pidlFolder, apidl[0]);
+            HRESULT hr = SHILCombine(pidlFolder, apidl[0], &pidlItem);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+            freeItem.Attach(const_cast<PIDLIST_ABSOLUTE>(pidlItem));
         }
     }
     else
@@ -456,17 +528,35 @@ _ShowPropertiesDialogThread(LPVOID lpParameter)
 /*
  * for internal use
  */
-HRESULT WINAPI
-Shell_DefaultContextMenuCallBack(IShellFolder *psf, IDataObject *pdtobj)
+HRESULT
+SHELL32_ShowPropertiesDialog(IDataObject *pdtobj)
 {
+    if (!pdtobj)
+        return E_INVALIDARG;
+
     pdtobj->AddRef();
-    if (!SHCreateThread(_ShowPropertiesDialogThread, pdtobj, CTF_INSIST | CTF_COINIT, NULL))
+    if (!SHCreateThread(_ShowPropertiesDialogThread, pdtobj, CTF_INSIST | CTF_COINIT | CTF_PROCESS_REF, NULL))
     {
         pdtobj->Release();
-        return HRESULT_FROM_WIN32(GetLastError());
+        return HResultFromWin32(GetLastError());
     }
     else
     {
         return S_OK;
     }
+}
+
+HRESULT
+SHELL32_DefaultContextMenuCallBack(IShellFolder *psf, IDataObject *pdo, UINT msg)
+{
+    switch (msg)
+    {
+        case DFM_MERGECONTEXTMENU:
+            return S_OK; // Yes, I want verbs
+        case DFM_INVOKECOMMAND:
+            return S_FALSE; // Do it for me please
+        case DFM_GETDEFSTATICID:
+            return S_FALSE; // Supposedly "required for Windows 7 to pick a default"
+    }
+    return E_NOTIMPL;
 }

@@ -1,7 +1,7 @@
 /* FILE:       base/applications/msconfig/lang/cs-CZ.rc
  * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
  * UPDATED:    2009-08-03
- * THANKS TO:  Kamil Hornicek, who translated major part of this file
+ * THANKS TO:  Kamil Horníček, who translated major part of this file
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT

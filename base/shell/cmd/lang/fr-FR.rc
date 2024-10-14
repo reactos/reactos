@@ -258,6 +258,7 @@ commande          Indique la commande à lancer si la condition est vérifiée.\
 chaine1==chaine2  La condition sera vraie si les deux chaines sont identiques.\n\
 EXIST nomfichier  La condition sera vraie si le fichier spécifié existe.\n\
 DEFINED variable  La condition sera vraie si la variable indiquée est définie."
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "L'heure actuelle est : "
     STRING_MKDIR_HELP "Crée un répertoire.\n\n\
 MKDIR [lecteur:]chemin\nMD [lecteur:]chemin"
@@ -352,33 +353,6 @@ Vous ne pouvez indiquez un autre lecteur/chemin pour la destination.\n\
 Utiliser la commande MOVE dans ce but."
     STRING_REN_HELP2 "    %lu fichier renommé\n"
     STRING_REN_HELP3 "    %lu fichiers renommés\n"
-    STRING_REPLACE_HELP1 "Remplace les fichiers.\n\n\
-REPLACE [lecteur1:][chemin1]nomdefichier [lecteur2:][chemin2] [/A] [/P] [/R] [/W]\n\
-REPLACE [lecteur1:][chemin1]nomdefichier [lecteur2:][chemin2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [lecteur1:][chemin1]nomdefichier Spécifie le ou les fichier(s) source.\n\
-  [lecteur2:][chemin2]             Spécifie le répertoire où les fichiers doivent être\n\
-                                   remplacés.\n\
-  /A                               Ajoute les nouveaux fichiers dans le répertoire de destination. Ne peut\n\
-                                   être utilisé avec /S ou /U.\n\
-  /P                               Demande une confirmation avant de remplacer un fichier ou\n\
-                                   d'ajouter un fichier source.\n\
-  /R                               Remplace les fichiers en lecture-seule aussi bien que les\n\
-                                   fichiers sans protection.\n\
-  /S                               Remplace les fichiers dans tous les sous-répertoires du\n\
-                                   répertoire de destination. Ne peut être utilisé avec /A\n\
-  /W                               Attend que vous insériez un disque avant de commencer.\n\
-  /U                               Remplace (met à jour) uniquement les fichiers qui sont plus anciens que\n\
-                                   les fichiers sources. Ne peut être utilisé avec /A.\n"
-    STRING_REPLACE_HELP2 "Chemin source requis\n"
-    STRING_REPLACE_HELP3 "Aucun fichier remplacé\n"
-    STRING_REPLACE_HELP4 "%lu fichier(s) remplacé(s)\n"
-    STRING_REPLACE_HELP5 "Remplace %s\n"
-    STRING_REPLACE_HELP6 "Remplace %s\n"
-    STRING_REPLACE_HELP7 "Aucun fichier ajouté\n"
-    STRING_REPLACE_HELP8 "%lu fichier(s) ajouté(s)\n"
-    STRING_REPLACE_HELP9 "Ajouter %s (O/N) ? "
-    STRING_REPLACE_HELP10 "Remplacer %s (O/N) ? "
-    STRING_REPLACE_HELP11 "Ajoute %s\n"
     STRING_SHIFT_HELP "Change la position de paramètres remplaçables dans un fichier batch.\n\n\
 SHIFT [DOWN]"
     STRING_SCREEN_HELP "Déplace le curseur, optionnellement affiche du texte\n\n\
@@ -534,15 +508,16 @@ titre         titre de la fenêtre"
     STRING_ERROR_CANNOTPIPE "Erreur ! Impossible de chaîner ! Échec à l'ouverture du fichier temporaire!\n"
     STRING_ERROR_D_PAUSEMSG "Appuyez sur une touche pour continuer . . . "
     STRING_ERROR_DRIVER_NOT_READY "Lecteur non prêt"
+    STRING_ERROR_INVALID_NUMBER1 "Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"
+    STRING_ERROR_INVALID_NUMBER2 "Invalid number. Numbers are limited to 32-bits of precision.\n"
+    STRING_ERROR_DIVISION_BY_ZERO "Division by zero error.\n"
+    STRING_ERROR_INVALID_DEVICE L"Invalid device '%s'\n"
+    STRING_ERROR_CALL_BAD_LABEL "Invalid attempt to call batch label outside of batch script.\n"
+    STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
+    STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "Variable d'environnement '%s' non définie\n"
-    STRING_REPLACE_ERROR1 "Commutateur invalide - %s\n"
-    STRING_REPLACE_ERROR2 "Chemin introuvable - %s\n"
-    STRING_REPLACE_ERROR3 "La syntaxe du nom de fichier, du répertoire, ou du nom de volume est incorrecte.\n"
-    STRING_REPLACE_ERROR4 "Combinaison de paramètres invalide\n"
-    STRING_REPLACE_ERROR5 "Accès refusé - %s\n"
-    STRING_REPLACE_ERROR6 "Aucun fichier trouvé - %s\n"
-    STRING_REPLACE_ERROR7 "Erreur étendue 32\n"
     STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
     STRING_REACTOS_VERSION "ReactOS [Version %s %s]\n"
     STRING_CMD_SHELLINFO "\nInterpréteur de ligne de commandes ReactOS\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Fonctionnant sous: "

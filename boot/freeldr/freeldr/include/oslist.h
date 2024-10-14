@@ -29,6 +29,5 @@ typedef struct tagOperatingSystemItem
 
 OperatingSystemItem*
 InitOperatingSystemList(
-    IN ULONG_PTR FrLdrSectionId,
-    OUT PULONG OperatingSystemCount,
-    OUT PULONG DefaultOperatingSystem);
+    _Out_ PULONG OperatingSystemCount,
+    _Out_ PULONG DefaultOperatingSystem);

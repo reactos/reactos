@@ -976,7 +976,7 @@ static MUI_ENTRY svSESelectPartitionEntries[] =
     {
         8,
         15,
-        "\x07  Tryck C f\224r att skapa en primär/logisk partition.",
+        "\x07  Tryck C f\224r att skapa en prim\344r/logisk partition.",
 //        "\x07  Tryck C f\224r att skapa en ny partition.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
@@ -2213,7 +2213,7 @@ MUI_STRING svSEStrings[] =
     {STRING_PLEASEWAIT,
      "   Var v\204nlig v\204nta..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Installera   C = Skapa Primär Partition   E = Skapa Ut\224kad Partition   F3 = Avsluta"},
+     "   ENTER = Installera   C = Skapa Prim\344r Partition   E = Skapa Ut\224kad Partition   F3 = Avsluta"},
     {STRING_INSTALLCREATELOGICAL,
      "   ENTER = Installera   C = Skapa Logisk Partition   F3 = Avsluta"},
     {STRING_INSTALLDELETEPARTITION,
@@ -2272,7 +2272,7 @@ MUI_STRING svSEStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   Uppdaterar tangentbordslayoutinst\204llningar..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   L\204gger till information om codepage till registret..."},
+    "   L\204gger till information om codepage..."},
     {STRING_DONE,
     "   F\204rdigt..."},
     {STRING_REBOOTCOMPUTER2,

@@ -2690,7 +2690,7 @@ MyRegisterClass(HINSTANCE hInstance)
     wcex.cbWndExtra = 0;
     wcex.hInstance = hInstance;
     wcex.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_EVENTVWR));
-    wcex.hCursor = LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_ARROW));
+    wcex.hCursor = LoadCursorW(NULL, IDC_ARROW);
     wcex.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1); // COLOR_WINDOW + 1
     wcex.lpszMenuName = MAKEINTRESOURCEW(IDM_EVENTVWR);
     wcex.lpszClassName = EVENTVWR_WNDCLASS;

@@ -286,6 +286,16 @@ static inline BOOL button_has_ddarrow(const TOOLBAR_INFO *infoPtr, const TBUTTON
         (btnPtr->fsStyle & BTNS_WHOLEDROPDOWN);
 }
 
+#ifdef __REACTOS__
+static inline DWORD TOOLBAR_GetButtonDTFlags(const TOOLBAR_INFO *infoPtr, const TBUTTON_INFO *btnPtr)
+{
+    DWORD dwDTFlags = infoPtr->dwDTFlags;
+    if (btnPtr->fsStyle & BTNS_NOPREFIX)
+        dwDTFlags |= DT_NOPREFIX;
+    return dwDTFlags;
+}
+#endif
+
 static LPWSTR
 TOOLBAR_GetText(const TOOLBAR_INFO *infoPtr, const TBUTTON_INFO *btnPtr)
 {
@@ -623,6 +633,9 @@ TOOLBAR_DrawArrow (HDC hdc, INT left, INT top, COLORREF clr)
  */
 static void
 TOOLBAR_DrawString (const TOOLBAR_INFO *infoPtr, RECT *rcText, LPCWSTR lpText,
+#ifdef __REACTOS__
+                    const TBUTTON_INFO *btnPtr,
+#endif
                     const NMTBCUSTOMDRAW *tbcd, DWORD dwItemCDFlag)
 {
     HDC hdc = tbcd->nmcd.hdc;
@@ -633,6 +646,7 @@ TOOLBAR_DrawString (const TOOLBAR_INFO *infoPtr, RECT *rcText, LPCWSTR lpText,
     UINT state = tbcd->nmcd.uItemState;
 #ifdef __REACTOS__
     HTHEME theme = GetWindowTheme (infoPtr->hwndSelf);
+    DWORD dwDTFlags = TOOLBAR_GetButtonDTFlags(infoPtr, btnPtr);
 #endif
 
     /* draw text */
@@ -660,7 +674,7 @@ TOOLBAR_DrawString (const TOOLBAR_INFO *infoPtr, RECT *rcText, LPCWSTR lpText,
         else if (state & CDIS_HOT)
             stateId = TS_HOT;
 
-        DrawThemeText(theme, hdc, partId, stateId, lpText, -1, infoPtr->dwDTFlags, dwDTFlags2, rcText);
+        DrawThemeText(theme, hdc, partId, stateId, lpText, -1, dwDTFlags, dwDTFlags2, rcText);
         SelectObject (hdc, hOldFont);
         return;
     }
@@ -672,7 +686,11 @@ TOOLBAR_DrawString (const TOOLBAR_INFO *infoPtr, RECT *rcText, LPCWSTR lpText,
 	else if (state & CDIS_DISABLED) {
 	    clrOld = SetTextColor (hdc, tbcd->clrBtnHighlight);
 	    OffsetRect (rcText, 1, 1);
+#ifdef __REACTOS__
+	    DrawTextW (hdc, lpText, -1, rcText, dwDTFlags);
+#else
 	    DrawTextW (hdc, lpText, -1, rcText, infoPtr->dwDTFlags);
+#endif
 	    SetTextColor (hdc, comctl32_color.clr3dShadow);
 	    OffsetRect (rcText, -1, -1);
 	}
@@ -688,7 +706,11 @@ TOOLBAR_DrawString (const TOOLBAR_INFO *infoPtr, RECT *rcText, LPCWSTR lpText,
 	    clrOld = SetTextColor (hdc, tbcd->clrText);
 	}
 
+#ifdef __REACTOS__
+	DrawTextW (hdc, lpText, -1, rcText, dwDTFlags);
+#else
 	DrawTextW (hdc, lpText, -1, rcText, infoPtr->dwDTFlags);
+#endif
 	SetTextColor (hdc, clrOld);
 	if ((state & CDIS_MARKED) && !(dwItemCDFlag & TBCDRF_NOMARK))
 	{
@@ -1197,7 +1219,11 @@ TOOLBAR_DrawButton (const TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, HDC hdc, 
 
     oldBkMode = SetBkMode (hdc, tbcd.nStringBkMode);
     if (!(infoPtr->dwExStyle & TBSTYLE_EX_MIXEDBUTTONS) || (btnPtr->fsStyle & BTNS_SHOWTEXT))
+#ifdef __REACTOS__
+        TOOLBAR_DrawString(infoPtr, &rcText, lpText, btnPtr, &tbcd, dwItemCDFlag);
+#else
         TOOLBAR_DrawString (infoPtr, &rcText, lpText, &tbcd, dwItemCDFlag);
+#endif
     SetBkMode (hdc, oldBkMode);
 
     TOOLBAR_DrawImage(infoPtr, btnPtr, rcBitmap.left, rcBitmap.top, &tbcd, dwItemCDFlag);
@@ -5812,7 +5838,11 @@ TOOLBAR_LButtonDown (TOOLBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
             /* If drag cursor has not been loaded, load it.
              * Note: it doesn't need to be freed */
             if (!hCursorDrag)
+#ifndef __REACTOS__
                 hCursorDrag = LoadCursorW(COMCTL32_hModule, (LPCWSTR)IDC_MOVEBUTTON);
+#else
+                hCursorDrag = LoadCursorW(COMCTL32_hModule, MAKEINTRESOURCEW(IDC_MOVEBUTTON));
+#endif
             SetCursor(hCursorDrag);
         }
         else

@@ -199,7 +199,8 @@ CreateDirectoryWatcherFromRegEntry(LPREGENTRY pRegEntry)
         return NULL;
 
     // create a CDirectoryWatcher
-    CDirectoryWatcher *pDirectoryWatcher = CDirectoryWatcher::Create(szPath, pRegEntry->fRecursive);
+    CDirectoryWatcher *pDirectoryWatcher =
+        CDirectoryWatcher::Create(pRegEntry->hwnd, szPath, pRegEntry->fRecursive);
     if (pDirectoryWatcher == NULL)
         return NULL;
 

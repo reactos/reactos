@@ -23,26 +23,44 @@
 
 #include <freeldr.h>
 
+#include <debug.h>
+DBG_DEFAULT_CHANNEL(DISK);
+
 /* FUNCTIONS ******************************************************************/
 
-static ARC_STATUS
-LoadBootSector(
-    IN ULONG Argc,
-    IN PCHAR Argv[],
-    OUT PUCHAR DriveNumber,
-    OUT PULONG PartitionNumber)
+/**
+ * @brief
+ * Loads and boots a disk MBR, a partition VBR or a file boot sector.
+ **/
+ARC_STATUS
+LoadAndBootSector(
+    _In_ ULONG Argc,
+    _In_ PCHAR Argv[],
+    _In_ PCHAR Envp[])
 {
     ARC_STATUS Status;
     PCSTR ArgValue;
     PCSTR BootPath;
     PCSTR FileName;
+    UCHAR BiosDriveNumber = 0;
+    ULONG PartitionNumber = 0;
+    ULONG LoadAddress;
     ULONG FileId;
     ULONG BytesRead;
     CHAR ArcPath[MAX_PATH];
-    ULONG LoadAddress;
 
-    *DriveNumber = 0;
-    *PartitionNumber = 0;
+#if DBG
+    /* Ensure the boot type is the one expected */
+    ArgValue = GetArgumentValue(Argc, Argv, "BootType");
+    if (!ArgValue || !*ArgValue || _stricmp(ArgValue, "BootSector") != 0)
+    {
+        ERR("Unexpected boot type '%s', aborting\n", ArgValue ? ArgValue : "n/a");
+        return EINVAL;
+    }
+#endif
+
+    /* Find all the message box settings and run them */
+    UiShowMessageBoxesInArgv(Argc, Argv);
 
     /*
      * Check whether we have a "BootPath" value (takes precedence
@@ -57,24 +75,13 @@ LoadBootSector(
         ArgValue = GetArgumentValue(Argc, Argv, "BootDrive");
         if (ArgValue && *ArgValue)
         {
-            *DriveNumber = DriveMapGetBiosDriveNumber(ArgValue);
+            BiosDriveNumber = DriveMapGetBiosDriveNumber(ArgValue);
 
-            /* Retrieve the boot partition (not optional and cannot be zero) */
-            *PartitionNumber = 0;
+            /* Retrieve the boot partition (optional, fall back to zero otherwise) */
+            PartitionNumber = 0;
             ArgValue = GetArgumentValue(Argc, Argv, "BootPartition");
             if (ArgValue && *ArgValue)
-                *PartitionNumber = atoi(ArgValue);
-            if (*PartitionNumber == 0)
-            {
-                UiMessageBox("Boot partition cannot be 0!");
-                return EINVAL;
-            }
-
-            /* Construct the corresponding ARC path */
-            ConstructArcPath(ArcPath, "", *DriveNumber, *PartitionNumber);
-            *strrchr(ArcPath, '\\') = ANSI_NULL; // Trim the trailing path separator.
-
-            BootPath = ArcPath;
+                PartitionNumber = atoi(ArgValue);
         }
         else
         {
@@ -83,268 +90,122 @@ LoadBootSector(
         }
     }
 
-    /* Retrieve the file name */
-    FileName = GetArgumentValue(Argc, Argv, "BootSectorFile");
-    if (!FileName || !*FileName)
-    {
-        UiMessageBox("Boot sector file not specified for selected OS!");
-        return EINVAL;
-    }
-
-    /* Open the boot sector file */
-    Status = FsOpenFile(FileName, BootPath, OpenReadOnly, &FileId);
-    if (Status != ESUCCESS)
-    {
-        UiMessageBox("Unable to open %s", FileName);
-        return Status;
-    }
-
-#if defined(SARCH_PC98)
-    LoadAddress = Pc98GetBootSectorLoadAddress(*DriveNumber);
-#else
-    LoadAddress = 0x7C00;
-#endif
-
-    /* Now try to load the boot sector. If this fails then abort. */
-    Status = ArcRead(FileId, UlongToPtr(LoadAddress), 512, &BytesRead);
-    ArcClose(FileId);
-    if ((Status != ESUCCESS) || (BytesRead != 512))
-    {
-        UiMessageBox("Unable to load boot sector.");
-        return EIO;
-    }
-
-    /* Check for validity */
-    if (*(USHORT*)UlongToPtr(LoadAddress + 0x1FE) != 0xAA55)
-    {
-        UiMessageBox("Invalid boot sector magic (0xaa55)");
-        return ENOEXEC;
-    }
-
-    /* Reset the drive and partition numbers so as to use their default values */
-    *DriveNumber = 0;
-    *PartitionNumber = 0;
-
-    return ESUCCESS;
-}
-
-static ARC_STATUS
-LoadPartitionOrDrive(
-    IN OUT PUCHAR DriveNumber,
-    IN OUT PULONG PartitionNumber,
-    IN PCSTR BootPath OPTIONAL)
-{
-    ARC_STATUS Status;
-    ULONG FileId;
-    ULONG BytesRead;
-    CHAR ArcPath[MAX_PATH];
-    ULONG LoadAddress;
-
     /*
      * The ARC "BootPath" value takes precedence over
-     * both the DriveNumber and PartitionNumber options.
+     * both the BiosDriveNumber and PartitionNumber options.
      */
     if (BootPath && *BootPath)
     {
-        PCSTR FileName = NULL;
-
         /*
          * Retrieve the BIOS drive and partition numbers; verify also that the
          * path is "valid" in the sense that it must not contain any file name.
          */
-        if (!DissectArcPath(BootPath, &FileName, DriveNumber, PartitionNumber) ||
+        FileName = NULL;
+        if (!DissectArcPath(BootPath, &FileName, &BiosDriveNumber, &PartitionNumber) ||
             (FileName && *FileName))
         {
+            UiMessageBox("Currently unsupported BootPath value:\n%s", BootPath);
             return EINVAL;
         }
     }
     else
     {
         /* We don't have one, so construct the corresponding ARC path */
-        ConstructArcPath(ArcPath, "", *DriveNumber, *PartitionNumber);
+        ConstructArcPath(ArcPath, "", BiosDriveNumber, PartitionNumber);
         *strrchr(ArcPath, '\\') = ANSI_NULL; // Trim the trailing path separator.
-
         BootPath = ArcPath;
     }
 
-    /* Open the volume */
-    Status = ArcOpen((PSTR)BootPath, OpenReadOnly, &FileId);
+    FileName = NULL;
+    if (strstr(BootPath, ")partition()") || strstr(BootPath, ")partition(0)"))
+    {
+        /*
+         * The partition specifier is zero i.e. the device is accessed
+         * in an unpartitioned fashion, do not retrieve a file name.
+         *
+         * NOTE: If we access a floppy drive, we would not have a
+         * partition specifier, and PartitionNumber would be == 0,
+         * so don't check explicitly for PartitionNumber because
+         * we want to retrieve a file name.
+         */
+    }
+    else
+    {
+        /* Retrieve the file name, if any, and normalize
+         * the pointer to make subsequent tests simpler */
+        FileName = GetArgumentValue(Argc, Argv, "BootSectorFile");
+        if (FileName && !*FileName)
+            FileName = NULL;
+    }
+
+
+    /* If we load a boot sector file, reset the drive number
+     * so as to use the original boot drive/partition */
+    if (FileName)
+        BiosDriveNumber = 0;
+    if (!BiosDriveNumber)
+    {
+        BiosDriveNumber = FrldrBootDrive;
+        PartitionNumber = FrldrBootPartition;
+    }
+
+
+    /* Open the boot sector file or the volume */
+    if (FileName)
+        Status = FsOpenFile(FileName, BootPath, OpenReadOnly, &FileId);
+    else
+        Status = ArcOpen((PSTR)BootPath, OpenReadOnly, &FileId);
     if (Status != ESUCCESS)
     {
-        UiMessageBox("Unable to open %s", BootPath);
+        UiMessageBox("Unable to open %s", FileName ? FileName : BootPath);
         return Status;
     }
 
 #if defined(SARCH_PC98)
-    LoadAddress = Pc98GetBootSectorLoadAddress(*DriveNumber);
+    LoadAddress = Pc98GetBootSectorLoadAddress(BiosDriveNumber);
 #else
     LoadAddress = 0x7C00;
 #endif
 
     /*
-     * Now try to load the partition boot sector or the MBR (when PartitionNumber == 0).
-     * If this fails then abort.
+     * Now try to load the boot sector: disk MBR (when PartitionNumber == 0),
+     * partition VBR or boot sector file. If this fails, abort.
      */
     Status = ArcRead(FileId, UlongToPtr(LoadAddress), 512, &BytesRead);
     ArcClose(FileId);
     if ((Status != ESUCCESS) || (BytesRead != 512))
     {
-        if (*PartitionNumber != 0)
-            UiMessageBox("Unable to load partition's boot sector.");
+        PCSTR WhatFailed;
+
+        if (FileName)
+            WhatFailed = "boot sector file";
+        else if (PartitionNumber != 0)
+            WhatFailed = "partition's boot sector";
         else
-            UiMessageBox("Unable to load MBR boot sector.");
+            WhatFailed = "MBR boot sector";
+
+        UiMessageBox("Unable to load %s.", WhatFailed);
         return EIO;
     }
 
     /* Check for validity */
     if (*(USHORT*)UlongToPtr(LoadAddress + 0x1FE) != 0xAA55)
     {
-        UiMessageBox("Invalid boot sector magic (0xaa55)");
+        UiMessageBox("Invalid boot sector magic (0xAA55)");
         return ENOEXEC;
     }
-
-    return ESUCCESS;
-}
-
-static ARC_STATUS
-LoadPartition(
-    IN ULONG Argc,
-    IN PCHAR Argv[],
-    OUT PUCHAR DriveNumber,
-    OUT PULONG PartitionNumber)
-{
-    PCSTR ArgValue;
-    PCSTR BootPath;
-
-    *DriveNumber = 0;
-    *PartitionNumber = 0;
-
-    /*
-     * Check whether we have a "BootPath" value (takes precedence
-     * over both "BootDrive" and "BootPartition").
-     */
-    BootPath = GetArgumentValue(Argc, Argv, "BootPath");
-    if (!BootPath || !*BootPath)
-    {
-        /* We don't have one */
-
-        /* Retrieve the boot drive */
-        ArgValue = GetArgumentValue(Argc, Argv, "BootDrive");
-        if (!ArgValue || !*ArgValue)
-        {
-            UiMessageBox("Boot drive not specified for selected OS!");
-            return EINVAL;
-        }
-        *DriveNumber = DriveMapGetBiosDriveNumber(ArgValue);
-
-        /* Retrieve the boot partition (optional, fall back to zero otherwise) */
-        *PartitionNumber = 0;
-        ArgValue = GetArgumentValue(Argc, Argv, "BootPartition");
-        if (ArgValue && *ArgValue)
-            *PartitionNumber = atoi(ArgValue);
-    }
-
-    return LoadPartitionOrDrive(DriveNumber, PartitionNumber, BootPath);
-}
-
-static ARC_STATUS
-LoadDrive(
-    IN ULONG Argc,
-    IN PCHAR Argv[],
-    OUT PUCHAR DriveNumber,
-    OUT PULONG PartitionNumber)
-{
-    PCSTR ArgValue;
-    PCSTR BootPath;
-
-    *DriveNumber = 0;
-    *PartitionNumber = 0;
-
-    /* Check whether we have a "BootPath" value (takes precedence over "BootDrive") */
-    BootPath = GetArgumentValue(Argc, Argv, "BootPath");
-    if (BootPath && *BootPath)
-    {
-        /*
-         * We have one, check that it does not contain any
-         * "partition()" specification, and fail if so.
-         */
-        if (strstr(BootPath, ")partition("))
-        {
-            UiMessageBox("Invalid 'BootPath' value!");
-            return EINVAL;
-        }
-    }
-    else
-    {
-        /* We don't, retrieve the boot drive value instead */
-        ArgValue = GetArgumentValue(Argc, Argv, "BootDrive");
-        if (!ArgValue || !*ArgValue)
-        {
-            UiMessageBox("Boot drive not specified for selected OS!");
-            return EINVAL;
-        }
-        *DriveNumber = DriveMapGetBiosDriveNumber(ArgValue);
-    }
-
-    return LoadPartitionOrDrive(DriveNumber, PartitionNumber, BootPath);
-}
-
-
-ARC_STATUS
-LoadAndBootDevice(
-    IN ULONG Argc,
-    IN PCHAR Argv[],
-    IN PCHAR Envp[])
-{
-    ARC_STATUS Status;
-    PCSTR ArgValue;
-    UCHAR Type;
-    UCHAR DriveNumber = 0;
-    ULONG PartitionNumber = 0;
-
-    /* Retrieve the (mandatory) boot type */
-    ArgValue = GetArgumentValue(Argc, Argv, "BootType");
-    if (!ArgValue || !*ArgValue)
-        return EINVAL;
-    if (_stricmp(ArgValue, "Drive") == 0)
-        Type = 1;
-    else if (_stricmp(ArgValue, "Partition") == 0)
-        Type = 2;
-    else if (_stricmp(ArgValue, "BootSector") == 0)
-        Type = 3;
-    else
-        return EINVAL;
-
-    /* Find all the message box settings and run them */
-    UiShowMessageBoxesInArgv(Argc, Argv);
-
-    /* Load the corresponding device */
-    switch (Type)
-    {
-        case 1:
-            Status = LoadDrive(Argc, Argv, &DriveNumber, &PartitionNumber);
-            break;
-        case 2:
-            Status = LoadPartition(Argc, Argv, &DriveNumber, &PartitionNumber);
-            break;
-        case 3:
-            Status = LoadBootSector(Argc, Argv, &DriveNumber, &PartitionNumber);
-            break;
-        default:
-            return EINVAL;
-    }
-    if (Status != ESUCCESS)
-        return Status;
 
     UiUnInitialize("Booting...");
     IniCleanup();
 
 #ifndef UEFIBOOT
     /* Boot the loaded sector code */
-    ChainLoadBiosBootSectorCode(DriveNumber, PartitionNumber);
+    ChainLoadBiosBootSectorCode(BiosDriveNumber, PartitionNumber);
 #endif
     /* Must not return! */
     return ESUCCESS;
 }
 
 #endif /* _M_IX86 || _M_AMD64 */
+
+/* EOF */

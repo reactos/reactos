@@ -68,7 +68,7 @@ CAPTION "Gespeicherte Browserdaten löschen"
 BEGIN
 
     AUTOCHECKBOX   "&Temporäre Internetdateien\nZwischengespeicherte Kopien von Webseiten, Bildern und Zertifikaten.",
-                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
+                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE | WS_GROUP | WS_TABSTOP
     AUTOCHECKBOX   "&Cookies\nVon Webseiten auf ihrem Computer gespeicherte Dateien, die Benutzereinstellungen oder Anmeldeinformationen enthalten.",
                     IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "&Verlauf\nListe von Webseiten, die Sie aufgerufen haben.",
@@ -78,7 +78,7 @@ BEGIN
     AUTOCHECKBOX   "&Kennwörter\nGespeicherte Kennwörter, die Sie in Formulare eingegeben haben.",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON  "&Abbrechen", IDCANCEL, 185, 230, 60, 15, WS_GROUP
-    PUSHBUTTON     "&Löschen", IDOK, 120, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "&Löschen", IDOK, 120, 230, 60, 15
 
 END
 

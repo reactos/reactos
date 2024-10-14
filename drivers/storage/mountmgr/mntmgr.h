@@ -12,105 +12,105 @@
 
 typedef struct _DEVICE_EXTENSION
 {
-    PDEVICE_OBJECT DeviceObject;           // 0x0
-    PDRIVER_OBJECT DriverObject;           // 0x4
-    LIST_ENTRY DeviceListHead;             // 0x8
-    LIST_ENTRY OfflineDeviceListHead;      // 0x10
-    PVOID NotificationEntry;               // 0x18
-    KSEMAPHORE DeviceLock;                 // 0x1C
-    KSEMAPHORE RemoteDatabaseLock;         // 0x30
-    ULONG AutomaticDriveLetter;            // 0x44
-    LIST_ENTRY IrpListHead;                // 0x48
-    ULONG EpicNumber;                      // 0x50
-    LIST_ENTRY SavedLinksListHead;         // 0x54
-    BOOLEAN ProcessedSuggestions;          // 0x5C
-    BOOLEAN NoAutoMount;                   // 0x5D
-    LIST_ENTRY WorkerQueueListHead;        // 0x60
-    KSEMAPHORE WorkerSemaphore;            // 0x68
-    LONG WorkerReferences;                 // 0x7C
-    KSPIN_LOCK WorkerLock;                 // 0x80
-    LIST_ENTRY UniqueIdWorkerItemListHead; // 0x84
-    PMOUNTDEV_UNIQUE_ID DriveLetterData;   // 0x8C
-    UNICODE_STRING RegistryPath;           // 0x90
-    LONG WorkerThreadStatus;               // 0x98
-    LIST_ENTRY OnlineNotificationListHead; // 0x9C
-    ULONG OnlineNotificationWorkerActive;  // 0xA4
-    ULONG OnlineNotificationCount;         // 0xA8
-    KEVENT OnlineNotificationEvent;        // 0xAC
-} DEVICE_EXTENSION, *PDEVICE_EXTENSION;    // 0xBC
+    PDEVICE_OBJECT DeviceObject;
+    PDRIVER_OBJECT DriverObject;
+    LIST_ENTRY DeviceListHead;
+    LIST_ENTRY OfflineDeviceListHead;
+    PVOID NotificationEntry;
+    KSEMAPHORE DeviceLock;
+    KSEMAPHORE RemoteDatabaseLock;
+    BOOLEAN AutomaticDriveLetter;
+    LIST_ENTRY IrpListHead;
+    ULONG EpicNumber;
+    LIST_ENTRY SavedLinksListHead;
+    BOOLEAN ProcessedSuggestions;
+    BOOLEAN NoAutoMount;
+    LIST_ENTRY WorkerQueueListHead;
+    KSEMAPHORE WorkerSemaphore;
+    LONG WorkerReferences;
+    KSPIN_LOCK WorkerLock;
+    LIST_ENTRY UniqueIdWorkerItemListHead;
+    PMOUNTDEV_UNIQUE_ID DriveLetterData;
+    UNICODE_STRING RegistryPath;
+    LONG WorkerThreadStatus;
+    LIST_ENTRY OnlineNotificationListHead;
+    ULONG OnlineNotificationWorkerActive;
+    ULONG OnlineNotificationCount;
+    KEVENT OnlineNotificationEvent;
+} DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 typedef struct _DEVICE_INFORMATION
 {
-    LIST_ENTRY DeviceListEntry;             // 0x00
-    LIST_ENTRY SymbolicLinksListHead;       // 0x08
-    LIST_ENTRY ReplicatedUniqueIdsListHead; // 0x10
-    LIST_ENTRY AssociatedDevicesHead;       // 0x18
-    UNICODE_STRING SymbolicName;            // 0x20
-    PMOUNTDEV_UNIQUE_ID UniqueId;           // 0x28
-    UNICODE_STRING DeviceName;              // 0x2C
-    BOOLEAN KeepLinks;                      // 0x34
-    UCHAR SuggestedDriveLetter;             // 0x35
-    BOOLEAN ManuallyRegistered;             // 0x36
-    BOOLEAN Removable;                      // 0x37
-    BOOLEAN LetterAssigned;                 // 0x38
-    BOOLEAN NeedsReconcile;                 // 0x39
-    BOOLEAN NoDatabase;                     // 0x3A
-    BOOLEAN SkipNotifications;              // 0x3B
-    ULONG Migrated;                         // 0x3C
-    LONG MountState;                        // 0x40
-    PVOID TargetDeviceNotificationEntry;    // 0x44
-    PDEVICE_EXTENSION DeviceExtension;      // 0x48
-} DEVICE_INFORMATION, *PDEVICE_INFORMATION; // 0x4C
+    LIST_ENTRY DeviceListEntry;
+    LIST_ENTRY SymbolicLinksListHead;
+    LIST_ENTRY ReplicatedUniqueIdsListHead;
+    LIST_ENTRY AssociatedDevicesHead;
+    UNICODE_STRING SymbolicName;
+    PMOUNTDEV_UNIQUE_ID UniqueId;
+    UNICODE_STRING DeviceName;
+    BOOLEAN KeepLinks;
+    UCHAR SuggestedDriveLetter;
+    BOOLEAN ManuallyRegistered;
+    BOOLEAN Removable;
+    BOOLEAN LetterAssigned;
+    BOOLEAN NeedsReconcile;
+    BOOLEAN NoDatabase;
+    BOOLEAN SkipNotifications;
+    ULONG Migrated;
+    LONG MountState;
+    PVOID TargetDeviceNotificationEntry;
+    PDEVICE_EXTENSION DeviceExtension;
+} DEVICE_INFORMATION, *PDEVICE_INFORMATION;
 
 typedef struct _SYMLINK_INFORMATION
 {
-    LIST_ENTRY SymbolicLinksListEntry;        // 0x00
-    UNICODE_STRING Name;                      // 0x08
-    BOOLEAN Online;                           // 0x10
-} SYMLINK_INFORMATION, *PSYMLINK_INFORMATION; // 0x14
+    LIST_ENTRY SymbolicLinksListEntry;
+    UNICODE_STRING Name;
+    BOOLEAN Online;
+} SYMLINK_INFORMATION, *PSYMLINK_INFORMATION;
 
 typedef struct _SAVED_LINK_INFORMATION
 {
-    LIST_ENTRY SavedLinksListEntry;                 // 0x0
-    LIST_ENTRY SymbolicLinksListHead;               // 0x8
-    PMOUNTDEV_UNIQUE_ID UniqueId;                   // 0x10
-} SAVED_LINK_INFORMATION, *PSAVED_LINK_INFORMATION; // 0x14
+    LIST_ENTRY SavedLinksListEntry;
+    LIST_ENTRY SymbolicLinksListHead;
+    PMOUNTDEV_UNIQUE_ID UniqueId;
+} SAVED_LINK_INFORMATION, *PSAVED_LINK_INFORMATION;
 
 typedef struct _UNIQUE_ID_REPLICATE
 {
-    LIST_ENTRY ReplicatedUniqueIdsListEntry;  // 0x0
-    PMOUNTDEV_UNIQUE_ID UniqueId;             // 0x8
-} UNIQUE_ID_REPLICATE, *PUNIQUE_ID_REPLICATE; // 0xC
+    LIST_ENTRY ReplicatedUniqueIdsListEntry;
+    PMOUNTDEV_UNIQUE_ID UniqueId;
+} UNIQUE_ID_REPLICATE, *PUNIQUE_ID_REPLICATE;
 
 typedef struct _DATABASE_ENTRY
 {
-    ULONG EntrySize;                // 0x00
-    ULONG EntryReferences;          // 0x04
-    USHORT SymbolicNameOffset;      // 0x08
-    USHORT SymbolicNameLength;      // 0x0A
-    USHORT UniqueIdOffset;          // 0x0C
-    USHORT UniqueIdLength;          // 0x0E
-} DATABASE_ENTRY, *PDATABASE_ENTRY; // 0x10
+    ULONG EntrySize;
+    ULONG EntryReferences;
+    USHORT SymbolicNameOffset;
+    USHORT SymbolicNameLength;
+    USHORT UniqueIdOffset;
+    USHORT UniqueIdLength;
+} DATABASE_ENTRY, *PDATABASE_ENTRY;
 
 typedef struct _ASSOCIATED_DEVICE_ENTRY
 {
-    LIST_ENTRY AssociatedDevicesEntry;                // 0x00
-    PDEVICE_INFORMATION DeviceInformation;            // 0x08
-    UNICODE_STRING String;                            // 0x0C
-} ASSOCIATED_DEVICE_ENTRY, *PASSOCIATED_DEVICE_ENTRY; // 0x14
+    LIST_ENTRY AssociatedDevicesEntry;
+    PDEVICE_INFORMATION DeviceInformation;
+    UNICODE_STRING String;
+} ASSOCIATED_DEVICE_ENTRY, *PASSOCIATED_DEVICE_ENTRY;
 
 typedef struct _DEVICE_INFORMATION_ENTRY
 {
-    LIST_ENTRY DeviceInformationEntry;                  // 0x00
-    PDEVICE_INFORMATION DeviceInformation;              // 0x08
-} DEVICE_INFORMATION_ENTRY, *PDEVICE_INFORMATION_ENTRY; // 0x0C
+    LIST_ENTRY DeviceInformationEntry;
+    PDEVICE_INFORMATION DeviceInformation;
+} DEVICE_INFORMATION_ENTRY, *PDEVICE_INFORMATION_ENTRY;
 
 typedef struct _ONLINE_NOTIFICATION_WORK_ITEM
 {
-    WORK_QUEUE_ITEM WorkItem;                                     // 0x00
-    PDEVICE_EXTENSION DeviceExtension;                            // 0x10
-    UNICODE_STRING SymbolicName;                                  // 0x14
-} ONLINE_NOTIFICATION_WORK_ITEM, *PONLINE_NOTIFICATION_WORK_ITEM; // 0x1C
+    WORK_QUEUE_ITEM WorkItem;
+    PDEVICE_EXTENSION DeviceExtension;
+    UNICODE_STRING SymbolicName;
+} ONLINE_NOTIFICATION_WORK_ITEM, *PONLINE_NOTIFICATION_WORK_ITEM;
 
 typedef struct _RECONCILE_WORK_ITEM_CONTEXT
 {
@@ -120,34 +120,34 @@ typedef struct _RECONCILE_WORK_ITEM_CONTEXT
 
 typedef struct _RECONCILE_WORK_ITEM
 {
-    LIST_ENTRY WorkerQueueListEntry;            // 0x00
-    PIO_WORKITEM WorkItem;                      // 0x08
-    PWORKER_THREAD_ROUTINE WorkerRoutine;       // 0x0C
-    PVOID Context;                              // 0x10
-    RECONCILE_WORK_ITEM_CONTEXT;                // 0x14
-} RECONCILE_WORK_ITEM, *PRECONCILE_WORK_ITEM;   // 0x1C
+    LIST_ENTRY WorkerQueueListEntry;
+    PIO_WORKITEM WorkItem;
+    PWORKER_THREAD_ROUTINE WorkerRoutine;
+    PVOID Context;
+    RECONCILE_WORK_ITEM_CONTEXT;
+} RECONCILE_WORK_ITEM, *PRECONCILE_WORK_ITEM;
 
 typedef struct _MIGRATE_WORK_ITEM
 {
-    PIO_WORKITEM WorkItem;                 // 0x0
-    PDEVICE_INFORMATION DeviceInformation; // 0x4
-    PKEVENT Event;                         // 0x8
-    NTSTATUS Status;                       // 0x0C
-    HANDLE Database;                       // 0x10
-} MIGRATE_WORK_ITEM, *PMIGRATE_WORK_ITEM;  // 0x14
+    PIO_WORKITEM WorkItem;
+    PDEVICE_INFORMATION DeviceInformation;
+    PKEVENT Event;
+    NTSTATUS Status;
+    HANDLE Database;
+} MIGRATE_WORK_ITEM, *PMIGRATE_WORK_ITEM;
 
 typedef struct _UNIQUE_ID_WORK_ITEM
 {
-    LIST_ENTRY UniqueIdWorkerItemListEntry;   // 0x0
-    PIO_WORKITEM WorkItem;                    // 0x8
-    PDEVICE_EXTENSION DeviceExtension;        // 0xC
-    PIRP Irp;                                 // 0x10
-    PVOID IrpBuffer;                          // 0x14
-    PKEVENT Event;                            // 0x1C
-    UNICODE_STRING DeviceName;                // 0x20
-    ULONG IrpBufferLength;                    // 0x28
-    ULONG StackSize;                          // 0x2C
-} UNIQUE_ID_WORK_ITEM, *PUNIQUE_ID_WORK_ITEM; // 0x30
+    LIST_ENTRY UniqueIdWorkerItemListEntry;
+    PIO_WORKITEM WorkItem;
+    PDEVICE_EXTENSION DeviceExtension;
+    PIRP Irp;
+    PVOID IrpBuffer;
+    PKEVENT Event;
+    UNICODE_STRING DeviceName;
+    ULONG IrpBufferLength;
+    ULONG StackSize;
+} UNIQUE_ID_WORK_ITEM, *PUNIQUE_ID_WORK_ITEM;
 
 /* Memory allocation helpers */
 #define AllocatePool(Size) ExAllocatePoolWithTag(PagedPool, Size, 'AtnM')
@@ -178,6 +178,17 @@ extern LONG Unloading;
 
 CODE_SEG("INIT")
 DRIVER_INITIALIZE DriverEntry;
+
+_IRQL_requires_(PASSIVE_LEVEL)
+NTSTATUS
+MountMgrSendSyncDeviceIoCtl(
+    _In_ ULONG IoControlCode,
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,
+    _In_ ULONG InputBufferLength,
+    _Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,
+    _In_ ULONG OutputBufferLength,
+    _In_opt_ PFILE_OBJECT FileObject);
 
 VOID
 NTAPI
@@ -214,25 +225,18 @@ MountMgrFreeDeadDeviceInfo(
 
 NTSTATUS
 QueryDeviceInformation(
-    IN PUNICODE_STRING SymbolicName,
-    OUT PUNICODE_STRING DeviceName OPTIONAL,
-    OUT PMOUNTDEV_UNIQUE_ID * UniqueId OPTIONAL,
-    OUT PBOOLEAN Removable OPTIONAL,
-    OUT PBOOLEAN GptDriveLetter OPTIONAL,
-    OUT PBOOLEAN HasGuid OPTIONAL,
-    IN OUT LPGUID StableGuid OPTIONAL,
-    OUT PBOOLEAN Valid OPTIONAL
-);
+    _In_ PUNICODE_STRING SymbolicName,
+    _Out_opt_ PUNICODE_STRING DeviceName,
+    _Out_opt_ PMOUNTDEV_UNIQUE_ID* UniqueId,
+    _Out_opt_ PBOOLEAN Removable,
+    _Out_opt_ PBOOLEAN GptDriveLetter,
+    _Out_opt_ PBOOLEAN HasGuid,
+    _Inout_opt_ LPGUID StableGuid,
+    _Out_opt_ PBOOLEAN IsFT);
 
 BOOLEAN
 HasDriveLetter(
     IN PDEVICE_INFORMATION DeviceInformation
-);
-
-CODE_SEG("INIT")
-BOOLEAN
-MountmgrReadNoAutoMount(
-    IN PUNICODE_STRING RegistryPath
 );
 
 /* database.c */

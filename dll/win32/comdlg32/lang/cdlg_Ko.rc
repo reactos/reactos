@@ -31,7 +31,7 @@ STRINGTABLE
 덮어쓰겠습니까?"
     IDS_INVALID_FILENAME_TITLE "경로에 올바르지 않은 문자가 있습니다h"
     IDS_INVALID_FILENAME    "파일이름에는 다음 문자만 포함될 수 있습니다:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "경로가 존재하지 않습니다."
     IDS_FILENOTEXISTING     "파일이 존재하지 않습니다"
     IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
@@ -247,7 +247,7 @@ FONT 9, "MS Shell Dlg"
     COMBOBOX        cmb1, 6,13,94,76,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
     LTEXT           "글꼴 스타일(&Y):",stc2 ,108,3,60,9
-    COMBOBOX        cmb2,108,13,64,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+    COMBOBOX        cmb2,108,13,64,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
     LTEXT           "크기(&S):",stc3,179,3,32,9
     COMBOBOX        cmb3,179,13,32,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
@@ -314,8 +314,8 @@ FONT 9, "MS Shell Dlg"
  CHECKBOX "단어 단위로(&W)", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "대/소문자 구분(&C)", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
  GROUPBOX "방향", grp1, 147, 21, 58, 38
- CONTROL "위(&U)", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 151, 30, 48, 12
- CONTROL "아래(&D)", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 151, 44, 48, 12
+ AUTORADIOBUTTON "위(&U)", rad1, 151, 30, 48, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
+ AUTORADIOBUTTON "아래(&D)", rad2, 151, 44, 48, 12, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 
  DEFPUSHBUTTON "다음 찾기(&F)", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "취소", IDCANCEL	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
@@ -374,13 +374,13 @@ FONT 9, "MS Shell Dlg"
     EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
 
     GROUPBOX        "인쇄 범위",    grp1,   8,92,  144,64, WS_GROUP
-    CONTROL         "모두(&A)",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
-    CONTROL         "페이지(&G)",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
-    CONTROL         "선택 영역(&S)",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
+    AUTORADIOBUTTON "모두(&A)",         rad1,16,106,64,12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "페이지(&G)",        rad3,16,122,36,12
+    AUTORADIOBUTTON "선택 영역(&S)",      rad2,16,138,64,12
     EDITTEXT                          edt1,  73,122,  26,12, WS_GROUP | ES_NUMBER
     EDITTEXT                          edt2, 120,122,  26,12, WS_GROUP | ES_NUMBER
-    RTEXT           "시작(&F):",         stc2,  52,124,  20,8
-    RTEXT           "끝(&T):",           stc3,  99,124,  20,8
+    RTEXT           "시작(&F):",        stc2,  52,124,  20,8
+    RTEXT           "끝(&T):",         stc3,  99,124,  20,8
 }
 
 PRINT32_SETUP DIALOG  32, 32, 288, 178
@@ -394,7 +394,7 @@ BEGIN
 
     GROUPBOX        "프린터",        grp4,   8,  4, 272,84, WS_GROUP
     PUSHBUTTON      "등록 정보(&P)",    psh2, 212, 17,  60,14, WS_GROUP
-    LTEXT           "이름(&N):",         stc6,  16, 20,  36,8
+    LTEXT           "이름(&N):",        stc6,  16, 20,  36,8
     COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "상태:",        stc8,  16, 36,  47,10, SS_NOPREFIX
     LTEXT           "",               stc12, 65, 36, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
@@ -406,15 +406,15 @@ BEGIN
     LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
     GROUPBOX        "종이",          grp2,   8, 92, 164,56, WS_GROUP
-    LTEXT           "크기(&Z):",         stc2,  16,108,  36, 8
+    LTEXT           "크기(&Z):",        stc2,  16,108,  36, 8
     COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "원본(&S):",       stc3,  16,128,  36, 8
     COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
 
     GROUPBOX        "방향",    grp1, 180, 92, 100,56, WS_GROUP
     ICON            "",               ico1, 195,112,  18,20, WS_GROUP
-    CONTROL         "세로(&O)",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
-    CONTROL         "가로(&A)",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+    AUTORADIOBUTTON "세로(&O)",         rad1, 224,106,52,12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "가로(&A)",         rad2, 224,126,52,12
 END
 
 PAGESETUPDLGORD DIALOG 32, 32, 240, 240
@@ -431,8 +431,8 @@ BEGIN
   LTEXT "트레이(&T):", stc3, 16, 132, 36, 8
   COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
   GROUPBOX "방향", grp1, 8, 156, 64, 56, BS_GROUPBOX
-  AUTORADIOBUTTON "세로(&P)", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "가로(&L)", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "세로(&P)", rad1, 16, 170, 52, 12
+  AUTORADIOBUTTON "가로(&L)", rad2, 16, 190, 52, 12
   GROUPBOX "", grp4, 80, 156, 152, 56, BS_GROUPBOX
   LTEXT "왼쪽(&E):", stc15, 88, 172, 30, 8
   EDITTEXT edt4, 119, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
@@ -474,28 +474,28 @@ FONT 9, "MS Shell Dlg"
 
 NEWFILEOPENV2ORD DIALOG 0, 0, 370, 237
 STYLE DS_MODALFRAME | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN
-CAPTION "Open"
-FONT 8, "MS Shell Dlg"
+CAPTION "열기"
+FONT 9, "MS Shell Dlg"
 {
-    LTEXT "Look &in:", IDC_LOOKINSTATIC, 28, 6, 43, 8, SS_NOTIFY
+    LTEXT "보기(&I):", IDC_LOOKINSTATIC, 28, 6, 43, 8, SS_NOTIFY
     COMBOBOX IDC_LOOKIN, 64, 3, 150, 100, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
 
     LTEXT "" , IDC_TOOLBARSTATIC, 209, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE
     CONTROL "", IDC_TOOLBARPLACES, "ToolbarWindow32", 0x800 | CCS_NORESIZE | CCS_TOP | CCS_NOPARENTALIGN | CCS_NODIVIDER, 4, 20, 56, 192
     LISTBOX IDC_SHELLSTATIC, 64, 20, 300, 155, LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_HSCROLL | NOT WS_VISIBLE
 
-    LTEXT "File &name:", IDC_FILENAMESTATIC, 65, 182, 56, 16, SS_NOTIFY
+    LTEXT "파일 이름(&N):", IDC_FILENAMESTATIC, 65, 182, 56, 16, SS_NOTIFY
     EDITTEXT IDC_FILENAME, 123, 180, 180, 12, ES_AUTOHSCROLL
     CONTROL "", cmb13, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP, 123, 180, 180, 150
 
-    LTEXT "Files of &type:", IDC_FILETYPESTATIC, 65, 200, 56, 16, SS_NOTIFY
+    LTEXT "파일 형식(&T):", IDC_FILETYPESTATIC, 65, 200, 56, 16, SS_NOTIFY
     COMBOBOX IDC_FILETYPE, 123, 198, 180, 53, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
-    CONTROL "Open as &read-only", IDC_OPENREADONLY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 218, 150, 10
+    CONTROL "읽기 전용으로 열기(&R)", IDC_OPENREADONLY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 218, 150, 10
 
-    DEFPUSHBUTTON "&Open", IDOK, 310, 180, 54, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 310, 198, 54, 14
-    PUSHBUTTON "&Help", pshHelp, 310, 215, 54, 14
+    DEFPUSHBUTTON "열기(&O)", IDOK, 310, 180, 54, 14
+    PUSHBUTTON "취소", IDCANCEL, 310, 198, 54, 14
+    PUSHBUTTON "도움말(&H)", pshHelp, 310, 215, 54, 14
 }
 
 NEWFILEOPENV3ORD DIALOG 0, 0, 440, 300

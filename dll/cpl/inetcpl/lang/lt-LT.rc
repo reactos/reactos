@@ -69,7 +69,7 @@ CAPTION "Šalinti naršymo istoriją"
 BEGIN
 
     AUTOCHECKBOX   "Laikini interneto failai\nTinklalapių kopijos podėlyje, paveikslai, liudijimai.",
-                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
+                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE | WS_GROUP | WS_TABSTOP
     AUTOCHECKBOX   "Slapukai\nTinklalapių kompiuteryje išsaugoti failai, kuriuose saugomi naudotojų nustatymai ir prisijungimo informacija.",
                     IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "Istorija\nTinklalapių, kuriuos naršėte, sąrašas.",
@@ -79,8 +79,7 @@ BEGIN
     AUTOCHECKBOX   "Slaptažodžiai\nIšsaugoti slaptažodžiai, kuriuos įvedėte į formas.",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON  "Atsisakyti", IDCANCEL, 185, 230, 60, 15, WS_GROUP
-    PUSHBUTTON     "Šalinti", IDOK, 120, 230, 60, 15, WS_GROUP
-
+    PUSHBUTTON     "Šalinti", IDOK, 120, 230, 60, 15
 END
 
 /* "Security" propsheet */

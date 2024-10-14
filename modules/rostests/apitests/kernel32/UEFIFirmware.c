@@ -21,18 +21,46 @@
 #define EFI_DUMMY_NAMESPACE_GUID_STRING "{00000000-0000-0000-0000-000000000000}"
 #define EFI_DUMMY_VARIABLE_NAME ""
 
+typedef enum _FIRMWARE_TYPE
+{
+    FirmwareTypeUnknown,
+    FirmwareTypeBios,
+    FirmwareTypeUefi,
+    FirmwareTypeMax
+} FIRMWARE_TYPE, *PFIRMWARE_TYPE;
+
+typedef
+_Success_(return)
+BOOL
+WINAPI
+FN_GetFirmwareType(_Out_ PFIRMWARE_TYPE FirmwareType);
+
 static ULONG RandomSeed;
 static DWORD EfiVariableValue;
 
 static VOID test_GetFirmwareType(BOOL bIsUEFI)
 {
-#if (_WIN32_WINNT >= 0x0602)
     BOOL bResult;
+    HMODULE hKernel32;
+    FN_GetFirmwareType* pfnGetFirmwareType;
     FIRMWARE_TYPE FirmwareType = FirmwareTypeUnknown, FirmwareExpect;
 
-    /* Test GetFirmwareType, should return FirmwareTypeBios or FirmwareTypeUefi */
-    bResult = GetFirmwareType(&FirmwareType);
+    /* Load functions */
+    hKernel32 = GetModuleHandleW(L"kernel32.dll");
+    if (hKernel32 == NULL)
+    {
+        skip("Module kernel32 not found\n");
+        return;
+    }
+    pfnGetFirmwareType = (FN_GetFirmwareType*)GetProcAddress(hKernel32, "GetFirmwareType");
+    if (pfnGetFirmwareType == NULL)
+    {
+        skip("GetFirmwareType (NT6.2+ API) not found\n");
+        return;
+    }
 
+    /* Test GetFirmwareType, should return FirmwareTypeBios or FirmwareTypeUefi */
+    bResult = pfnGetFirmwareType(&FirmwareType);
     ok(bResult,
        "GetFirmwareType failed with error: 0x%08lX\n",
        GetLastError());
@@ -44,9 +72,6 @@ static VOID test_GetFirmwareType(BOOL bIsUEFI)
     ok(FirmwareType == FirmwareExpect,
        "FirmwareType is %d, but %d is expected.\n",
        FirmwareType, FirmwareExpect);
-#else
-    skip("This test can be run only when compiled for NT >= 6.2.\n");
-#endif
 }
 
 START_TEST(UEFIFirmware)

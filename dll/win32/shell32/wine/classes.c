@@ -130,9 +130,11 @@ BOOL HCR_MapTypeToValueA(LPCSTR szExtension, LPSTR szFileType, LONG len, BOOL bP
 	return TRUE;
 }
 
+EXTERN_C HRESULT SHELL32_EnumDefaultVerbList(LPCWSTR List, UINT Index, LPWSTR Verb, SIZE_T cchMax);
+
 BOOL HCR_GetDefaultVerbW( HKEY hkeyClass, LPCWSTR szVerb, LPWSTR szDest, DWORD len )
 {
-        WCHAR sTemp[MAX_PATH];
+        WCHAR sTemp[MAX_PATH], verbs[MAX_PATH];
         LONG size;
         HKEY hkey;
 
@@ -144,21 +146,25 @@ BOOL HCR_GetDefaultVerbW( HKEY hkeyClass, LPCWSTR szVerb, LPWSTR szDest, DWORD l
             return TRUE;
         }
 
-        size=len;
-        *szDest='\0';
-        if (!RegQueryValueW(hkeyClass, L"shell\\", szDest, &size) && *szDest)
+        /* MSDN says to first try the default verb */
+        size = _countof(verbs);
+        if (!RegQueryValueW(hkeyClass, L"shell", verbs, &size) && *verbs)
         {
-            /* The MSDN says to first try the default verb */
-            lstrcpyW(sTemp, L"shell\\");
-            lstrcatW(sTemp, szDest);
-            lstrcatW(sTemp, L"\\command");
-            if (!RegOpenKeyExW(hkeyClass, sTemp, 0, KEY_READ, &hkey))
+            for (UINT i = 0;; ++i)
             {
-                RegCloseKey(hkey);
-                TRACE("default verb=%s\n", debugstr_w(szDest));
-                return TRUE;
+                if (FAILED(SHELL32_EnumDefaultVerbList(verbs, i, szDest, len)))
+                    break;
+                if (FAILED(StringCchPrintfW(sTemp, _countof(sTemp), L"shell\\%s\\command", szDest)))
+                    break;
+                if (!RegOpenKeyExW(hkeyClass, sTemp, 0, KEY_READ, &hkey))
+                {
+                    RegCloseKey(hkey);
+                    TRACE("default verb=%s\n", debugstr_w(szDest));
+                    return TRUE;
+                }
             }
         }
+        *szDest = UNICODE_NULL;
 
         /* then fallback to 'open' */
         lstrcpyW(sTemp, L"shell\\open\\command");

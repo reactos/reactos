@@ -152,6 +152,7 @@ VOID NTAPI MD4Final( MD4_CTX *ctx )
     MD4Transform( ctx->buf, (unsigned int *)ctx->in );
     byteReverse( (unsigned char *)ctx->buf, 4 );
     memcpy( ctx->digest, ctx->buf, 16 );
+    memset(ctx->in, 0, sizeof(ctx->in));
 }
 
 /* The three core functions */

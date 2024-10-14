@@ -4,7 +4,7 @@
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2009 Petru Dimitriu <petrimetri@gmail.com>
  *              Copyright 2011-2019 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -27,12 +27,12 @@ BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     CONTROL IDI_BAR, IDC_BAR, "Static", SS_BITMAP, 0, 44, 275, 4
     ICON IDI_KEYBOARD, IDC_STATIC, 7, 53, 32, 32
-    LTEXT "Apasați simultan «Ctrl»+«Alt»+«Del»", IDC_STATIC, 38, 59, 230, 14
+    LTEXT "Apăsaţi Ctrl-Alt-Del pentru a începe.", IDC_STATIC, 38, 59, 230, 14
 END
 
 IDD_LOGON DIALOGEX 0, 0, 275, 147
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Autentificare"
+CAPTION "Log on"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -41,11 +41,11 @@ BEGIN
     EDITTEXT IDC_LOGON_USERNAME, 60, 57, 155, 14, ES_AUTOHSCROLL
     LTEXT "Parola:", IDC_STATIC, 6, 78, 52, 8
     EDITTEXT IDC_LOGON_PASSWORD, 60, 76, 155, 14, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "Vă autentificați la:", IDC_STATIC, 6, 96, 52, 8
+    LTEXT "Log on la:", IDC_STATIC, 6, 96, 52, 8
     COMBOBOX IDC_LOGON_DOMAIN, 60, 95, 155, 14, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Con&firmă", IDOK, 106, 122, 50, 14, BS_DEFPUSHBUTTON
-    PUSHBUTTON "A&nulează", IDCANCEL, 160, 122, 50, 14
-    PUSHBUTTON "&Oprește", IDC_LOGON_SHUTDOWN, 214, 122, 50, 14
+    PUSHBUTTON "OK", IDOK, 106, 122, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "Revocare", IDCANCEL, 160, 122, 50, 14
+    PUSHBUTTON "Î&nchidere…", IDC_LOGON_SHUTDOWN, 214, 122, 50, 14
 END
 
 IDD_SECURITY DIALOGEX 0, 0, 275, 164
@@ -54,76 +54,76 @@ CAPTION "Securitate"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
-    GROUPBOX "Informații de autentificare", IDC_STATIC, 7, 50, 261, 52
-    LTEXT "<Message>", IDC_SECURITY_MESSAGE, 15, 62, 245, 18
-    LTEXT "<Logon date>", IDC_SECURITY_LOGONDATE, 15, 83, 245, 8
-    CTEXT "Ce acțiune preferați?", IDC_STATIC, 10, 108, 255, 8
-    PUSHBUTTON "&Blochează calculatorul", IDC_SECURITY_LOCK, 7, 124, 80, 14
-    PUSHBUTTON "&Deautentifică-mă…", IDC_SECURITY_LOGOFF, 98, 124, 80, 14
-    PUSHBUTTON "Închid&e calculatorul…", IDC_SECURITY_SHUTDOWN, 188, 124, 80, 14
-    PUSHBUTTON "Schim&bă parola…", IDC_SECURITY_CHANGEPWD, 7, 143, 80, 14
-    PUSHBUTTON "&Gestionar de activități", IDC_SECURITY_TASKMGR, 98, 143, 80, 14
-    PUSHBUTTON "A&nulează", IDCANCEL, 188, 143, 80, 14
+    GROUPBOX "Informaţii de Log on", IDC_STATIC, 7, 50, 261, 52
+    LTEXT "<Mesaj>", IDC_SECURITY_MESSAGE, 15, 62, 245, 18
+    LTEXT "<Dată Log on:>", IDC_SECURITY_LOGONDATE, 15, 83, 245, 8
+    CTEXT "Ce vreți să faceți?", IDC_STATIC, 10, 108, 255, 8
+    PUSHBUTTON "&Blocare computer", IDC_SECURITY_LOCK, 7, 124, 80, 14
+    PUSHBUTTON "&Log off…", IDC_SECURITY_LOGOFF, 98, 124, 80, 14
+    PUSHBUTTON "Închidere…", IDC_SECURITY_SHUTDOWN, 188, 124, 80, 14
+    PUSHBUTTON "M&odificare parolă…", IDC_SECURITY_CHANGEPWD, 7, 143, 80, 14
+    PUSHBUTTON "&Manager de activităţi", IDC_SECURITY_TASKMGR, 98, 143, 80, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 188, 143, 80, 14
 END
 
 IDD_LOCKED DIALOGEX 0, 0, 275, 121
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Calculator blocat"
+CAPTION "Computer blocat"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_LOCKICON, IDC_STATIC, 7, 59, 20, 20
-    LTEXT "Acest calculator este în uz și a fost blocat.", IDC_STATIC, 36, 61, 232, 8
-    LTEXT "<Message>", IDC_LOCKED_MESSAGE, 37, 75, 231, 26
-    LTEXT "Apăsați simultan «Ctrl»+«Alt»+«Del» pentru a debloca acest calculator.", IDC_STATIC, 36, 106, 232, 8
+    LTEXT "Acest computer este activ şi a fost blocat.", IDC_STATIC, 36, 61, 232, 8
+    LTEXT "<Mesaj>", IDC_LOCKED_MESSAGE, 37, 75, 231, 26
+    LTEXT "Apăsaţi Ctrl-Alt-Del pentru a debloca acest computer.", IDC_STATIC, 36, 106, 232, 8
 END
 
 IDD_UNLOCK DIALOGEX 0, 0, 275, 179
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Deblocare calculator"
+CAPTION "Deblocare computer"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_LOCKICON, IDC_STATIC, 7, 59, 20, 20
-    LTEXT "Acest calculator este în uz și a fost blocat.", IDC_STATIC, 36, 61, 232, 8
-    LTEXT "<Message>", IDC_UNLOCK_MESSAGE, 36, 75, 232, 26
+    LTEXT "Acest computer este activ şi a fost blocat.", IDC_STATIC, 36, 61, 232, 8
+    LTEXT "<Mesaj>", IDC_UNLOCK_MESSAGE, 36, 75, 232, 26
     LTEXT "Nume utilizator:", IDC_STATIC, 36, 107, 40, 8
     EDITTEXT IDC_UNLOCK_USERNAME, 84, 104, 119, 14, ES_AUTOHSCROLL
-    LTEXT "Parola:", IDC_STATIC, 36, 125, 42, 8
+    LTEXT "Parolă:", IDC_STATIC, 36, 125, 42, 8
     EDITTEXT IDC_UNLOCK_PASSWORD, 84, 123, 119, 14, ES_AUTOHSCROLL | ES_PASSWORD
-    PUSHBUTTON "Con&firmă", IDOK, 80, 154, 50, 14, BS_DEFPUSHBUTTON
-    PUSHBUTTON "A&nulează", IDCANCEL, 144, 154, 50, 14
+    PUSHBUTTON "OK", IDOK, 80, 154, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "Revocare", IDCANCEL, 144, 154, 50, 14
 END
 
 IDD_CHANGEPWD DIALOGEX 0, 0, 275, 166
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Schimbare parolă"
+CAPTION "Modificare parolă"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     LTEXT "Nume utilizator:", IDC_STATIC, 7, 61, 78, 8
     EDITTEXT IDC_CHANGEPWD_USERNAME, 90, 59, 127, 12, ES_AUTOHSCROLL
-    LTEXT "Autentificat pe:", IDC_STATIC, 7, 78, 78, 8
+    LTEXT "Log on la:", IDC_STATIC, 7, 78, 78, 8
     COMBOBOX IDC_CHANGEPWD_DOMAIN, 90, 75, 127, 144, CBS_DROPDOWNLIST | CBS_SORT | WS_TABSTOP
-    LTEXT "Parola veche:", IDC_STATIC, 7, 95, 78, 8
+    LTEXT "Parolă veche:", IDC_STATIC, 7, 95, 78, 8
     EDITTEXT IDC_CHANGEPWD_OLDPWD, 90, 92, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "Parola nouă:", IDC_STATIC, 7, 111, 78, 8
+    LTEXT "Parolă nouă:", IDC_STATIC, 7, 111, 78, 8
     EDITTEXT IDC_CHANGEPWD_NEWPWD1, 90, 109, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "Confirmați parola:", IDC_STATIC, 7, 127, 78, 8
+    LTEXT "Confirmare parolă nouă:", IDC_STATIC, 7, 127, 78, 8
     EDITTEXT IDC_CHANGEPWD_NEWPWD2, 90, 125, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
-    PUSHBUTTON "Con&firmă", IDOK, 164, 145, 50, 14, BS_DEFPUSHBUTTON
-    PUSHBUTTON "A&nulează", IDCANCEL, 218, 145, 50, 14
+    PUSHBUTTON "OK", IDOK, 164, 145, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "Revocare", IDCANCEL, 218, 145, 50, 14
 END
 
 IDD_LOGOFF DIALOGEX 0, 0, 188, 60
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_SYSMENU | WS_POPUP
-CAPTION "Deautentificare ReactOS"
+CAPTION "Log off din ReactOS"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     ICON IDI_LOGOFF, IDC_STATIC, 7, 7, 20, 20
-    LTEXT "Sigur doriți să vă deautentificați?", IDC_STATIC, 35, 16, 146, 8
-    PUSHBUTTON "D&a", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
-    PUSHBUTTON "N&u", IDNO, 95, 39, 50, 14
+    LTEXT "Sigur faceţi Log off?", IDC_STATIC, 35, 16, 146, 8
+    PUSHBUTTON "Da", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "Nu", IDNO, 95, 39, 50, 14
 END
 
 IDD_SHUTDOWN DIALOGEX 0, 0, 275, 146
@@ -134,15 +134,15 @@ BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     CONTROL IDI_BAR, IDC_BAR, "Static", SS_BITMAP, 0, 44, 275, 4
     ICON IDI_SHUTDOWN, IDC_STATIC, 9, 57, 21, 20, WS_GROUP
-    LTEXT "&Ce doriți să se întâmple?", IDC_STATIC, 39, 57, 167, 10
+    LTEXT "&Ce acţiune va face computerul?", IDC_STATIC, 39, 57, 167, 10
     COMBOBOX IDC_SHUTDOWN_ACTION, 39, 70, 165, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 187, 27
-    DEFPUSHBUTTON "Con&firmă", IDOK, 143, 122, 55, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", IDCANCEL, 204, 122, 55, 14
+    DEFPUSHBUTTON "OK", IDOK, 143, 122, 55, 14, WS_GROUP
+    PUSHBUTTON "Revocare", IDCANCEL, 204, 122, 55, 14
 
-    // DEFPUSHBUTTON "Con&firmă", IDOK, 80, 122, 55, 14, WS_GROUP
-    // PUSHBUTTON "A&nulează", IDCANCEL, 143, 122, 55, 14
-    // PUSHBUTTON "&Manual…", IDHELP, 204, 122, 55, 14
+    // DEFPUSHBUTTON "OK", IDOK, 80, 122, 55, 14, WS_GROUP
+    // PUSHBUTTON "Revocare", IDCANCEL, 143, 122, 55, 14
+    // PUSHBUTTON "Aj&utor", IDHELP, 204, 122, 55, 14
 END
 
 IDD_SHUTDOWN_REASON DIALOGEX 0, 0, 275, 297
@@ -153,23 +153,23 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_SHUTDOWN, IDC_STATIC, 9, 57, 21, 20, WS_GROUP
-    LTEXT "&Ce doriți să se întâmple?", IDC_STATIC, 39, 57, 167, 10
+    LTEXT "&Ce acţiune va face computerul?", IDC_STATIC, 39, 57, 167, 10
     COMBOBOX IDC_SHUTDOWN_ACTION, 39, 70, 190, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 190, 27
-    GROUPBOX "Închide urmăritorul de evenimente", IDC_STATIC, 9, 122, 257, 146
-    LTEXT "Selectați opțiunea care descrie cel mai bine motivul pentru care doriți să vă închideți calculatorul.", IDC_STATIC, 39, 134, 190, 17
-    LTEXT "&Opțiune:", IDC_STATIC, 39, 154, 80, 8
+    GROUPBOX "Monitorizare eveniment închidere", IDC_STATIC, 9, 122, 257, 146
+    LTEXT "Selectaţi opţiunea care descrie cel mai bine motivul pentru care închideţi computerul", IDC_STATIC, 39, 134, 190, 17
+    LTEXT "&Opţiune:", IDC_STATIC, 39, 154, 80, 8
     AUTOCHECKBOX "&Planificat", IDC_REASON_PLANNED, 182, 154, 47, 10
     COMBOBOX IDC_REASON_LIST, 39, 165, 190, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_REASON_DESCRIPTION, 39, 184, 190, 27
     LTEXT "Co&mentariu:", IDC_STATIC, 39, 214, 80, 8
     EDITTEXT IDC_REASON_COMMENT, 39, 224, 190, 35, ES_MULTILINE | WS_VISIBLE | WS_TABSTOP
-    DEFPUSHBUTTON "Con&firmă", IDOK, 150, 276, 55, 14, WS_GROUP
-    PUSHBUTTON "A&nulează", IDCANCEL, 211, 276, 55, 14
+    DEFPUSHBUTTON "OK", IDOK, 150, 276, 55, 14, WS_GROUP
+    PUSHBUTTON "Revocare", IDCANCEL, 211, 276, 55, 14
 
-    // DEFPUSHBUTTON "Con&firmă", IDOK, 87, 276, 55, 14, WS_GROUP
-    // PUSHBUTTON "A&nulează", IDCANCEL, 150, 276, 55, 14
-    // PUSHBUTTON "&Manual…", IDHELP, 211, 276, 55, 14
+    // DEFPUSHBUTTON "OK", IDOK, 87, 276, 55, 14, WS_GROUP
+    // PUSHBUTTON "Revocare", IDCANCEL, 150, 276, 55, 14
+    // PUSHBUTTON "Aj&utor", IDHELP, 211, 276, 55, 14
 END
 
 IDD_LEGALNOTICE DIALOGEX 0, 0, 280, 200
@@ -178,7 +178,7 @@ CAPTION ""
 FONT 8, "MS Shell Dlg"
 BEGIN
     EDITTEXT IDC_LEGALNOTICE_TEXT, 7, 7, 266, 165, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    DEFPUSHBUTTON "Î&nchide", IDOK, 115, 179, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 115, 179, 50, 14
 END
 
 IDD_SHUTDOWN_FANCY DIALOGEX 0, 0, 208, 122
@@ -189,9 +189,9 @@ BEGIN
     CONTROL IDI_ROSLOGO_FLAG, IDC_ROSLOGO_WHITE, "STATIC", SS_BITMAP, 176, 1, 32, 26
     PUSHBUTTON "&Hibernare", IDC_BUTTON_HIBERNATE, 30093, 30049, 22, 20, BS_OWNERDRAW | WS_DISABLED
     PUSHBUTTON "&Stare de veghe", IDC_BUTTON_SLEEP, 36, 46, 22, 20, BS_OWNERDRAW | WS_GROUP
-    PUSHBUTTON "Închi&dere", IDC_BUTTON_SHUTDOWN, 93, 46, 22, 20, BS_OWNERDRAW
+    PUSHBUTTON "Î&nchidere", IDC_BUTTON_SHUTDOWN, 93, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "&Repornire", IDC_BUTTON_REBOOT, 150, 46, 22, 20, BS_OWNERDRAW
-    PUSHBUTTON "A&nulează", IDCANCEL, 162, 103, 40, 12, BS_FLAT | WS_GROUP
+    PUSHBUTTON "Revocare", IDCANCEL, 162, 103, 40, 12, BS_FLAT | WS_GROUP
     LTEXT "Închidere ReactOS", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
     CTEXT "Stare de veghe", IDC_SLEEP_STATIC, 22, 70, 51, 11
     CTEXT "Închidere", IDC_SHUTDOWN_STATIC, 79, 70, 51, 11
@@ -204,11 +204,11 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_DLG_BG, IDC_DLG_BG, "STATIC", SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 264, 122
     CONTROL IDI_ROSLOGO_FLAG, IDC_ROSLOGO_WHITE, "STATIC", SS_BITMAP, 232, 1, 32, 26
-    PUSHBUTTON "&Hibernare", IDC_BUTTON_HIBERNATE, 36, 46, 22, 20, BS_OWNERDRAW | WS_GROUP
+    PUSHBUTTON "&Hibernate", IDC_BUTTON_HIBERNATE, 36, 46, 22, 20, BS_OWNERDRAW | WS_GROUP
     PUSHBUTTON "&Stare de veghe", IDC_BUTTON_SLEEP, 93, 46, 22, 20, BS_OWNERDRAW
-    PUSHBUTTON "Închi&dere", IDC_BUTTON_SHUTDOWN, 150, 46, 22, 20, BS_OWNERDRAW
+    PUSHBUTTON "Î&nchidere", IDC_BUTTON_SHUTDOWN, 150, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "&Repornire", IDC_BUTTON_REBOOT, 207, 46, 22, 20, BS_OWNERDRAW
-    PUSHBUTTON "A&nulează", IDCANCEL, 218, 103, 40, 12, BS_FLAT | WS_GROUP
+    PUSHBUTTON "Revocare", IDCANCEL, 218, 103, 40, 12, BS_FLAT | WS_GROUP
     LTEXT "Închidere ReactOS", IDC_TURN_OFF_STATIC, 4, 7, 130, 19
     CTEXT "Hibernare", IDC_HIBERNATE_STATIC, 22, 70, 51, 11
     CTEXT "Stare de veghe", IDC_SLEEP_STATIC, 79, 70, 51, 11
@@ -220,47 +220,47 @@ STRINGTABLE
 BEGIN
     IDS_LOGGEDOUTSAS "Bun venit!"
     IDS_LOCKEDSAS "Momentan calculatorul este blocat."
-    IDS_PRESSCTRLALTDELETE "Pentru autentificare, apăsați «Ctrl»+«Alt»+«Del»."
+    IDS_PRESSCTRLALTDELETE "Pentru Log on, apăsați Ctrl-Alt-Delete."
     IDS_ASKFORUSER "Nume utilizator: "
     IDS_ASKFORPASSWORD "Parola: "
     IDS_FORCELOGOFF "Această acțiune va deautentifica utilizatorului curent cu posibile pierderi ale datelor nesalvate. Continuați?"
-    IDS_LOCKMSG "Doar %s sau un Administrator poate debloca acest calculator."
+    IDS_LOCKMSG "Numai %s\\%s (%s) sau un administrator au posibilitatea să deblocheze acest computer."
     IDS_LOGONMSG "Sunteți autentificat ca %s."
     IDS_LOGONDATE "Data autentificării: %s %s"
     IDS_COMPUTERLOCKED "Calculator blocat"
-    IDS_LOCKEDWRONGPASSWORD "Parola este eronată. Încercați din nou. Literele din parola necesită atenție la capitalizare."
-    IDS_LOCKEDWRONGUSER "Acest calculator a fost blocat. Doar %s\\%s sau un Administrator pot debloca acest calculator."
-    IDS_CHANGEPWDTITLE "Modifică parola"
+    IDS_LOCKEDWRONGPASSWORD "Parola este incorectă. Retastaţi parola. Este necesar ca literele parolei să fie tastate cu literele mari şi mici corecte."
+    IDS_LOCKEDWRONGUSER "Acest computer este blocat. Numai %s\\%s sau un administrator au posibilitatea să deblocheze acest computer."
+    IDS_CHANGEPWDTITLE "Modificare parolă"
     IDS_NONMATCHINGPASSWORDS "Parolele tastate nu corespund. Tastați aceiași parolă în ambele câmpuri de intrpducere."
     IDS_PASSWORDCHANGED "Parola dumneavoastră a fost modificată."
-    IDS_LOGONTITLE "Mesaj de autentificare"
+    IDS_LOGONTITLE "Mesaj de Log on"
     IDS_LOGONWRONGUSERORPWD "Sistemul nu vă poate autentifica. Asigurați-vă că numele și domeniul sunt corecte apoi tastați din nou parola. În parolă este făcută distincție între majuscule și minuscule."
     IDS_LOGONUSERDISABLED "Contul dumneavoastră a fost dezactivat. Contactați administratorul de sistem."
-    IDS_PASSWORDMUSTCHANGE "Este imperativ să vă schimbați parola la prima autentificare."
+    IDS_PASSWORDMUSTCHANGE "Trebuie să vă schimbați parola la prima Log on."
     IDS_PASSWORDEXPIRED "Parola v-a expirat și trebuie schimbată."
     IDS_ACCOUNTEXPIRED "Contul v-a expirat, adresați-vă administratorului."
     IDS_ACCOUNTLOCKED "Nu vă pot conecta deoarece contul dumneavoastră. a fost blocat. Consultați administratorul de sistem."
-    IDS_INVALIDLOGONHOURS "Contul dumneavoastră are restricții de timp care vă împiedică să vă conectați în acest moment. Încercați mai târziu."
-    IDS_INVALIDWORKSTATION "Contul dumneavoastră este configurat pentru a vă preveni în a folosi acest calculator. Încercați la alt calculator."
-    IDS_ACCOUNTRESTRICTION "Eșec în conectarea dumneavoastră din cauza unei restricții a contului."
-    IDS_EMERGENCYLOGOFFTITLE "Deautentificare din ReactOS"
-    IDS_EMERGENCYLOGOFF "Apăsați Confirmă pentru a vă deautentifica imediat. Toate datele nesalvate vor fi pierdute. Folosiți acest lucru doar ca ultimă soluție."
+    IDS_INVALIDLOGONHOURS "Contul are restricţii de timp care vă împiedică să faceţi Log on acum. Încercaţi din nou mai târziu."
+    IDS_INVALIDWORKSTATION "Contul este configurat să vă împiedice să utilizaţi acest computer. Încercaţi un alt computer."
+    IDS_ACCOUNTRESTRICTION "Nu v-ați putut conecta din cauza unei restricții a contului."
+    IDS_EMERGENCYLOGOFFTITLE "Log off din ReactOS"
+    IDS_EMERGENCYLOGOFF "Apăsați OK pentru a vă deautentifica imediat. Toate datele nesalvate vor fi pierdute. Folosiți acest lucru doar ca ultimă soluție."
     IDS_EMERGENCYRESTARTTITLE "Repornire de urgență"
-    IDS_EMERGENCYRESTART "Apăsați Confirmă pentru a vă reporni calculatorul imediat. Toate datele nesalvate vor fi pierdute. Folosiți acest lucru doar ca ultimă soluție."
+    IDS_EMERGENCYRESTART "Apăsați OK pentru a vă reporni calculatorul imediat. Toate datele nesalvate vor fi pierdute. Folosiți acest lucru doar ca ultimă soluție."
 END
 
 /* Shutdown Dialog Strings */
 STRINGTABLE
 BEGIN
-    IDS_SHUTDOWN_LOGOFF "Deautentificare „%s”"
+    IDS_SHUTDOWN_LOGOFF "Log off din %s"
     IDS_SHUTDOWN_SHUTDOWN "Închidere"
     IDS_SHUTDOWN_RESTART "Repornire"
     IDS_SHUTDOWN_SLEEP "Stare de veghe"
     IDS_SHUTDOWN_HIBERNATE "Hibernare"
     /* Shut down descriptions */
-    IDS_SHUTDOWN_LOGOFF_DESC "Închide sesiunea curentă permițând altor utilizatori autentificarea în sistem."
-    IDS_SHUTDOWN_SHUTDOWN_DESC "Închide atât sesiunea curentă cât și sistemul de operare pentru a puta opri în siguranță alimentarea electrică."
-    IDS_SHUTDOWN_RESTART_DESC "Închide sesiunea curentă și repornește sistemul."
-    IDS_SHUTDOWN_SLEEP_DESC "Induce sistemul în starea de veghe."
-    IDS_SHUTDOWN_HIBERNATE_DESC "Salvează sesiunea curentă și oprește calculatorul."
+    IDS_SHUTDOWN_LOGOFF_DESC "Închide sesiunea curentă permițând altor utilizatori Log on în sistem."
+    IDS_SHUTDOWN_SHUTDOWN_DESC "Se încheie sesiunea şi se închide Windows astfel încât oprirea alimentării cu curent să se facă în siguranţă."
+    IDS_SHUTDOWN_RESTART_DESC "Se închide sesiunea, se închide Windows, apoi se porneşte din nou ReactOS."
+    IDS_SHUTDOWN_SLEEP_DESC "Se induce sistemul în starea de veghe."
+    IDS_SHUTDOWN_HIBERNATE_DESC "Se Salvează sesiunea curentă și se oprește calculatorul."
 END

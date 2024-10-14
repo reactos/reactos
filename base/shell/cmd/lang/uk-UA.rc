@@ -255,6 +255,7 @@ ERRORLEVEL число  Ця умова є iстинною, якщо код, що
 EXIST iм'я_файлу  Умова є iстинною, якщо файл з вказаним iменем iснує.\n\
 DEFINED змiнна    Ця умова є iстинною, якщо вказана змiнна\n\
                   задана.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "Поточний час: "
     STRING_MKDIR_HELP "Створення каталогу.\n\n\
 MKDIR [диск:]шлях\nMD [диск:]шлях"
@@ -346,33 +347,6 @@ REN [/E /N /P /Q /S /T] старе_iм'я ... нове_iм'я\n\n\
 Для цього використайте команду MOVE.\n"
     STRING_REN_HELP2 "    %lu файл переiменовано\n"
     STRING_REN_HELP3 "    %lu файлiв переiменовано\n"
-    STRING_REPLACE_HELP1 "Замiна файлiв.\n\n\
-REPLACE [диск1:][шлях1]iм'я_файлу [диск2:][шлях2] [/A] [/P] [/R] [/W]\n\
-REPLACE [диск1:][шлях1]iм'я_файлу [диск2:][шлях2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [диск1:][шлях1]iм'я_файлу Задає файл(и) для замiни.\n\
-  [диск2:][шлях2]           Задає каталог, в якому будуть замiненi файли\n\
-                            файли.\n\
-  /A                        Додати новi файли в кiнцеву теку. Неможливе\n\
-                            при використаннi ключiв /S чи /U.\n\
-  /P                        Запит на пiдтвердження замiни файлу чи\n\
-                            додавання початкового файлу.\n\
-  /R                        Замiнює також файли лише для читання.\n\
-  /S                        Замiнює файли у всiх пiдкаталогах каталогу\n\
-                            призначення. Неможливе при використаннi\n\
-                            ключа /A.\n\
-  /W                        Чекає поки ви вставите диск перед початком.\n\
-  /U                        Замiнює (оновлює) лише файли, що старiшi нiж\n\
-                            копiйованi. Неможливе при використаннi ключа /A.\n"
-    STRING_REPLACE_HELP2 "Необхiдний шлях джерела\n"
-    STRING_REPLACE_HELP3 "Не замiнено жодних файлiв\n"
-    STRING_REPLACE_HELP4 "%lu файл(iв) замiнено\n"
-    STRING_REPLACE_HELP5 "Замiна %s\n"
-    STRING_REPLACE_HELP6 "Замiнити %s\n"
-    STRING_REPLACE_HELP7 "Не додано жодних файлiв\n"
-    STRING_REPLACE_HELP8 "%lu файл(iв) додано\n"
-    STRING_REPLACE_HELP9 "Додати %s (Y/N)? "
-    STRING_REPLACE_HELP10 "Замiнити %s (Y/N)? "
-    STRING_REPLACE_HELP11 "Додавання %s\n"
     STRING_SHIFT_HELP "Змiна позицiї пiдставлюваних параметрiв для пакетного файлу.\n\n\
 SHIFT [DOWN]"
     STRING_SCREEN_HELP "перемiщення курсора та опцiонально показ тексту\n\n\
@@ -528,15 +502,16 @@ title         новий заголовок\n"
     STRING_ERROR_CANNOTPIPE "Помилка!  Неможливо використати pipe!  Неможливо вiдкрити тимчасовий файл!\n"
     STRING_ERROR_D_PAUSEMSG "Натиснiть будь-яку клавiшу для продовження . . . "
     STRING_ERROR_DRIVER_NOT_READY "Пристрій не готовий"
+    STRING_ERROR_INVALID_NUMBER1 "Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"
+    STRING_ERROR_INVALID_NUMBER2 "Invalid number. Numbers are limited to 32-bits of precision.\n"
+    STRING_ERROR_DIVISION_BY_ZERO "Division by zero error.\n"
+    STRING_ERROR_INVALID_DEVICE L"Invalid device '%s'\n"
+    STRING_ERROR_CALL_BAD_LABEL "Invalid attempt to call batch label outside of batch script.\n"
+    STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
+    STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
-    STRING_REPLACE_ERROR1 "Невiрний ключ - %s\n"
-    STRING_REPLACE_ERROR2 "Шлях не знайдено - %s\n"
-    STRING_REPLACE_ERROR3 "Синтаксис iменi файлу, теки чи мiтки диску некоректнi.\n"
-    STRING_REPLACE_ERROR4 "Невiрна комбiнацiя параметрiв\n"
-    STRING_REPLACE_ERROR5 "Немає доступу - %s\n"
-    STRING_REPLACE_ERROR6 "Файли не знайдено - %s\n"
-    STRING_REPLACE_ERROR7 "Розширена помилка 32\n"
     STRING_CMD_INFOLINE "  Командний рядок ReactOS                              Введіть HELP = Допомога  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
     STRING_REACTOS_VERSION "ReactOS [Версiя %s %s]\n"
     STRING_CMD_SHELLINFO "\nIнтерпретатор командного рядка ReactOS\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Запущений на: "

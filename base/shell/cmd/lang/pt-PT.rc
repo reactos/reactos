@@ -260,6 +260,7 @@ EXIST ficheiro     Especifica uma condição verdadeira se o nome do ficheiro\n\
                    especificado existir.\n\
 DEFINED variável   Especifica uma condição verdadeira se a variável especificada\n\
                    for definida.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "A hora actual é: "
     STRING_MKDIR_HELP "Cria um directório.\n\n\
 MKDIR [unidade:] caminho\nMD [unidade:] caminho"
@@ -355,34 +356,6 @@ Observe que não pode especificar uma nova unidade ou caminho para o seu destino
 o comando MOVE para esse propósito.\n"
     STRING_REN_HELP2 "%lu ficheiro renomeado\n"
     STRING_REN_HELP3 "%lu ficheiros renomeados\n"
-    STRING_REPLACE_HELP1 "Substitui ficheiros.\n\n\
-REPLACE [unidade1:][caminho1]ficheiro [unidade2:][caminho2][/A][/P][/R][/W]\n\
-REPLACE [unidade1:][caminho1]ficheiro [unidade2:][caminho2][/P][/R][/S][/W][/U]\n\n\
-  [unidade1:] [caminho1] ficheiro\n\
-                   Especifica o ficheiro ou ficheiros de origem.\n\
-  [unidade2:] [caminho2]\n\
-                   Especifica o directório onde os ficheiros devem ser\n\
-                   substituídos.\n\
-  /A               Adiciona novos ficheiros ao directório de destino.\n\
-                   Não pode usar com as opções /S ou /U.\n\
-  /P               Solicita confirmação antes de substituir ou adicionar\n\
-                   um ficheiro.\n\
-  /R               Substitui ficheiros só de leitura e ficheiros desprotegidos\n\
-  /S               Substitui os ficheiros em todos os subdiretórios do\n\
-                   directório de destino. Não é possível usar com a opção /A\n\
-  /W               Espera que insira um disco antes de começar.\n\
-  /U               Substitui (atualiza) apenas os ficheiros mais antigos que os\n\
-                   arquivos fonte. Não é possível usar com a opção /A.\n"
-    STRING_REPLACE_HELP2 "Caminho de origem obrigatório\n"
-    STRING_REPLACE_HELP3 "Nenhum ficheiro substituído\n"
-    STRING_REPLACE_HELP4 "%lu ficheiro(s) substituído(s)\n"
-    STRING_REPLACE_HELP5 "A substituir %s\n"
-    STRING_REPLACE_HELP6 "Substitua %s\n"
-    STRING_REPLACE_HELP7 "Nenhum ficheiro adicionado\n"
-    STRING_REPLACE_HELP8 "%lu ficheiro(s) adicionado(s)\n"
-    STRING_REPLACE_HELP9 "Adicionar %s (S/N)?"
-    STRING_REPLACE_HELP10 "Substituir %s (S/N)?"
-    STRING_REPLACE_HELP11 "A adicionar %s\n"
     STRING_SHIFT_HELP "Altera a posição dos parâmetros substituíveis num arquivo em batch.\n\n\
 SHIFT [DOWN] "
     STRING_SCREEN_HELP "move o cursor e opcionalmente imprime o texto\n\n\
@@ -539,15 +512,16 @@ título      Novo título\n"
     STRING_ERROR_CANNOTPIPE "Erro! Não é possível enviar! Não é possível abrir o ficheiro temporário!\n"
     STRING_ERROR_D_PAUSEMSG "Pressione qualquer tecla para continuar..."
     STRING_ERROR_DRIVER_NOT_READY "A unidade não está pronta"
+    STRING_ERROR_INVALID_NUMBER1 "Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"
+    STRING_ERROR_INVALID_NUMBER2 "Invalid number. Numbers are limited to 32-bits of precision.\n"
+    STRING_ERROR_DIVISION_BY_ZERO "Division by zero error.\n"
+    STRING_ERROR_INVALID_DEVICE L"Invalid device '%s'\n"
+    STRING_ERROR_CALL_BAD_LABEL "Invalid attempt to call batch label outside of batch script.\n"
+    STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
+    STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "Variável de ambiente '%s' não está definida\n"
-    STRING_REPLACE_ERROR1 "Opção inválida - %s\n"
-    STRING_REPLACE_ERROR2 "Caminho não encontrado - %s\n"
-    STRING_REPLACE_ERROR3 "O nome do ficheiro, nome do directório ou sintaxe do rótulo do volume está incorrecto.\n"
-    STRING_REPLACE_ERROR4 "Combinação de parâmetro inválida\n"
-    STRING_REPLACE_ERROR5 "Acesso negado - %s\n"
-    STRING_REPLACE_ERROR6 "Nenhum ficheiro encontrado - %s\n"
-    STRING_REPLACE_ERROR7 "Erro estendido 32\n"
     STRING_CMD_INFOLINE "Tipo de prompt de comando do ReactOS HELP = Ajuda"
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
     STRING_REACTOS_VERSION "ReactOS [Versão %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Intérprete de linha de comando\nVersão %s %s"
     STRING_VERSION_RUNNING_ON "Em execução em:"

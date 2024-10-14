@@ -450,7 +450,7 @@ AutoStartupApplications(INT nCSIDL_Folder)
     return TRUE;
 }
 
-INT ProcessStartupItems(VOID)
+INT ProcessStartupItems(BOOL bRunOnce)
 {
     /* TODO: ProcessRunKeys already checks SM_CLEANBOOT -- items prefixed with * should probably run even in safe mode */
     BOOL bNormalBoot = GetSystemMetrics(SM_CLEANBOOT) == 0; /* Perform the operations that are performed every boot */
@@ -478,11 +478,16 @@ INT ProcessStartupItems(VOID)
      */
     res = TRUE;
 
-    if (res && bNormalBoot)
-        ProcessRunOnceEx(HKEY_LOCAL_MACHINE);
+    if (bRunOnce)
+    {
+        if (res && bNormalBoot)
+            ProcessRunOnceEx(HKEY_LOCAL_MACHINE);
 
-    if (res && (SHRestricted(REST_NOLOCALMACHINERUNONCE) == 0))
-        res = ProcessRunKeys(HKEY_LOCAL_MACHINE, L"RunOnce", TRUE, TRUE);
+        if (res && (SHRestricted(REST_NOLOCALMACHINERUNONCE) == 0))
+            res = ProcessRunKeys(HKEY_LOCAL_MACHINE, L"RunOnce", TRUE, TRUE);
+
+        return !res;
+    }
 
     if (res && bNormalBoot && (SHRestricted(REST_NOLOCALMACHINERUN) == 0))
         res = ProcessRunKeys(HKEY_LOCAL_MACHINE, L"Run", FALSE, FALSE);
@@ -505,7 +510,7 @@ INT ProcessStartupItems(VOID)
     return res ? 0 : 101;
 }
 
-BOOL DoFinishStartupItems(VOID)
+VOID ReleaseStartupMutex()
 {
     if (s_hStartupMutex)
     {
@@ -513,13 +518,10 @@ BOOL DoFinishStartupItems(VOID)
         CloseHandle(s_hStartupMutex);
         s_hStartupMutex = NULL;
     }
-    return TRUE;
 }
 
-BOOL DoStartStartupItems(ITrayWindow *Tray)
+static BOOL InitializeStartupMutex()
 {
-    DWORD dwWait;
-
     if (!bExplorerIsShell)
         return FALSE;
 
@@ -532,15 +534,22 @@ BOOL DoStartStartupItems(ITrayWindow *Tray)
             return FALSE;
     }
 
-    dwWait = WaitForSingleObject(s_hStartupMutex, INFINITE);
+    DWORD dwWait = WaitForSingleObject(s_hStartupMutex, INFINITE);
     TRACE("dwWait: 0x%08lX\n", dwWait);
     if (dwWait != WAIT_OBJECT_0)
     {
         TRACE("LastError: %ld\n", GetLastError());
 
-        DoFinishStartupItems();
+        ReleaseStartupMutex();
         return FALSE;
     }
+    return TRUE;
+}
+
+BOOL DoStartStartupItems(ITrayWindow *Tray)
+{
+    if (!bExplorerIsShell || !InitializeStartupMutex())
+        return FALSE;
 
     const DWORD dwWaitTotal = 3000;     // in milliseconds
     DWORD dwTick = GetTickCount();
@@ -574,4 +583,10 @@ BOOL DoStartStartupItems(ITrayWindow *Tray)
     }
 
     return TRUE;
+}
+
+VOID ProcessRunOnceItems()
+{
+    if (bExplorerIsShell && IsUserAnAdmin() && InitializeStartupMutex())
+        ProcessStartupItems(TRUE);
 }

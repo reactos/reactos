@@ -78,6 +78,7 @@ END
 #include "rgs_res.rc"
 
 #include <reactos/manifest_dll.rc>
+#include <reactos/manifest_hosted.rc>
 
 1 TYPELIB "shell32_shldisp.tlb"
 

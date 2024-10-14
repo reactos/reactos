@@ -53,6 +53,8 @@ extern char** __initenv;     /* pointer to initial environment block */
 extern wchar_t** _wenviron;  /* pointer to environment block */
 extern wchar_t** __winitenv; /* pointer to initial environment block */
 
+
+extern BOOL msvcrt_init_heap(void);
 extern void CDECL __getmainargs(int *argc, char** *argv, char** *envp,
                                 int expand_wildcards, int *new_mode);
 extern void CDECL __wgetmainargs(int *argc, WCHAR** *wargv, WCHAR** *wenvp,
@@ -81,6 +83,9 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
         /* create tls stuff */
         if (!msvcrt_init_tls())
           return FALSE;
+
+        if (!msvcrt_init_heap())
+            return FALSE;
 
         if (BlockEnvToEnvironA() < 0)
             return FALSE;

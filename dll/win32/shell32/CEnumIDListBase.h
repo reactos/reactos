@@ -27,7 +27,7 @@ class CEnumIDListBase :
 	public CComObjectRootEx<CComMultiThreadModelNoCS>,
 	public IEnumIDList
 {
-private:
+protected:
 	ENUMLIST				*mpFirst;
 	ENUMLIST				*mpLast;
 	ENUMLIST				*mpCurrent;
@@ -37,7 +37,19 @@ public:
 	BOOL AddToEnumList(LPITEMIDLIST pidl);
 	BOOL DeleteList();
 	BOOL HasItemWithCLSID(LPITEMIDLIST pidl);
-    HRESULT AppendItemsFromEnumerator(IEnumIDList* pEnum);
+	HRESULT AppendItemsFromEnumerator(IEnumIDList* pEnum);
+
+	template <class T> BOOL HasItemWithCLSIDImpl(LPCITEMIDLIST pidl)
+	{
+		const CLSID * const pClsid = static_cast<T*>(this)->GetPidlClsid((PCUITEMID_CHILD)pidl);
+		for (ENUMLIST *pCur = mpFirst; pClsid && pCur; pCur = pCur->pNext)
+		{
+			const CLSID * const pEnumClsid = static_cast<T*>(this)->GetPidlClsid((PCUITEMID_CHILD)pCur->pidl);
+			if (pEnumClsid && IsEqualCLSID(*pClsid, *pEnumClsid))
+				return TRUE;
+		}
+		return FALSE;
+	}
 
 	// *** IEnumIDList methods ***
 	STDMETHOD(Next)(ULONG celt, LPITEMIDLIST *rgelt, ULONG *pceltFetched) override;

@@ -498,7 +498,7 @@ static const ULONG CrcTable[256] =
  * @implemented
  */
 ULONG
-__RtlComputeCrc32(ULONG Initial, PUCHAR Data, ULONG Length)
+__RtlComputeCrc32(ULONG Initial, const UCHAR *Data, ULONG Length)
 {
   ULONG CrcValue = ~Initial;
 

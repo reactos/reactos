@@ -665,7 +665,7 @@ Imm32LoadCtfIme(VOID)
          * NOTE: (HKL)0x04090409 is English US keyboard (default).
          * The Cicero keyboard logically uses English US keyboard.
          */
-        if (!ImmLoadLayout((HKL)ULongToHandle(0x04090409), &ImeInfoEx))
+        if (!ImmLoadLayout(ULongToHandle(0x04090409), &ImeInfoEx))
             break;
 
         /* Build a path string in system32. The installed IME file must be in system32. */
@@ -1179,7 +1179,7 @@ CtfImmTIMActivate(_In_ HKL hKL)
     }
 
     if (IS_IME_HKL(hKL))
-        hKL = (HKL)UlongToHandle(MAKELONG(LOWORD(hKL), LOWORD(hKL)));
+        hKL = UlongToHandle(MAKELONG(LOWORD(hKL), LOWORD(hKL)));
 
     if (!ImmLoadIME(hKL))
         Imm32TF_InvalidAssemblyListCacheIfExist();

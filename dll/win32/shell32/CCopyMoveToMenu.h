@@ -13,11 +13,10 @@ class CCopyMoveToMenu :
     public IShellExtInit
 {
 protected:
-    UINT m_idCmdFirst, m_idCmdLast, m_idCmdAction;
     CComPtr<IDataObject> m_pDataObject;
     CComPtr<IUnknown> m_pSite;
 
-    HRESULT DoRealFileOp(LPCMINVOKECOMMANDINFO lpici, PCUIDLIST_ABSOLUTE pidl);
+    HRESULT DoRealFileOp(const CIDA *pCIDA, LPCMINVOKECOMMANDINFO lpici, PCUIDLIST_ABSOLUTE pidlDestination);
     HRESULT DoAction(LPCMINVOKECOMMANDINFO lpici);
 
 public:
@@ -32,6 +31,7 @@ public:
     virtual UINT GetActionTitleStringID() const = 0;
     virtual UINT GetFileOp() const = 0;
     virtual LPCSTR GetVerb() const = 0;
+    STDMETHODIMP QueryContextMenuImpl(BOOL IsCopyOp, HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
 
     // IContextMenu
     STDMETHODIMP GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen) override;

@@ -426,7 +426,7 @@ STDMETHODIMP CFontExt::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPS
     if (!fontEntry)
         return E_FAIL;
 
-    if (dwFlags == SHGDN_FORPARSING)
+    if (dwFlags & SHGDN_FORPARSING)
     {
         CStringW File = g_FontCache->Filename(g_FontCache->Find(fontEntry), true);
         if (!File.IsEmpty())

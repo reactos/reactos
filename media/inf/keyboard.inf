@@ -207,6 +207,8 @@ KeyboardClassName = "Klaviatūros"
 StdMfg = "(Standartinė klaviatūra)"
 
 [Strings.0804]
+KeyboardClassName = "键盘"
+
 HID.KeyboardDevice = "HID 键盘"
 
 StdMfg = "(标准键盘)"

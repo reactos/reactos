@@ -14,6 +14,7 @@ BEGIN
         MENUITEM "&Нова\tF2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Знаки питання", IDM_MARKQ
+        MENUITEM "Зв&ук", IDM_SOUND
         MENUITEM SEPARATOR
         MENUITEM "Н&овачок", IDM_BEGINNER
         MENUITEM "&Майстер", IDM_ADVANCED

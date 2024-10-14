@@ -237,6 +237,7 @@ ERRORLEVEL 數字    當上一個程式返回一個大於或等於指定數字�
 字元串1==字元串2   當所指定的字元串相匹配時為 TRUE。\n\
 EXIST 檔案名稱     當指定的檔案名稱存在時為 TRUE。\n\
 DEFINED 變數       當指定的變數已被定義時為 TRUE。\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "目前的時間是： "
     STRING_MKDIR_HELP "建立一個目錄。\n\n\
 MKDIR [磁碟機:]路徑\nMD [磁碟機:]路徑"
@@ -325,27 +326,6 @@ REN [/E /N /P /Q /S /T] 舊名稱 ... 新名稱\n\n\
 記住您不能在目的地裡指定新的磁碟機或路徑。使用 MOVE 命令來達成這個目的。\n"
     STRING_REN_HELP2 "    已重新命名 %lu 個檔案\n"
     STRING_REN_HELP3 "    已重新命名 %lu 個檔案\n"
-    STRING_REPLACE_HELP1 "取代檔案。\n\n\
-REPLACE [磁碟機1:][路徑1]檔案名稱 [磁碟機2:][路徑2] [/A] [/P] [/R] [/W]\n\
-REPLACE [磁碟機1:][路徑1]檔案名稱 [磁碟機2:][路徑2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [磁碟機1:][路徑1]檔案名稱    指定一個或多個原始檔。\n\
-  [磁碟機2:][路徑2]            指定要被取代檔案所在的目錄。\n\
-  /A                           將新檔案新增到目標目錄。不能和 /S 或 /U 同時使用。\n\
-  /P                           在取代一個檔案或新增一個原始檔之前請求確認。\n\
-  /R                           將只讀檔案視為未保護檔案並取代。\n\
-  /S                           取代目標目錄中所有子目錄中的檔案。不能與 /A 同時使用。\n\
-  /W                           在開始前等待您插入一張磁碟。\n\
-  /U                           僅取代(更新)比原檔案舊的檔案。不能和 /A 同時使用。\n"
-    STRING_REPLACE_HELP2 "需要來源路徑\n"
-    STRING_REPLACE_HELP3 "沒有檔案被取代\n"
-    STRING_REPLACE_HELP4 "%lu 個檔案已被取代\n"
-    STRING_REPLACE_HELP5 "正在取代 %s\n"
-    STRING_REPLACE_HELP6 "取代 %s\n"
-    STRING_REPLACE_HELP7 "沒有檔案被新增\n"
-    STRING_REPLACE_HELP8 "%lu 個檔案已被新增\n"
-    STRING_REPLACE_HELP9 "新增 %s 嗎 (Y/N)？"
-    STRING_REPLACE_HELP10 "取代 %s 嗎 (Y/N)？"
-    STRING_REPLACE_HELP11 "正在新增 %s\n"
     STRING_SHIFT_HELP "在批次檔案中改變可取代參數的位置。\n\n\
 SHIFT [DOWN]"
     STRING_SCREEN_HELP "移動游標並且可選擇輸出文字\n\n\
@@ -495,15 +475,16 @@ RESTORE       恢復視窗\n\
     STRING_ERROR_CANNOTPIPE "錯誤！無法建立管道！不能開啟臨時檔案！\n"
     STRING_ERROR_D_PAUSEMSG "按任意鍵繼續... "
     STRING_ERROR_DRIVER_NOT_READY "磁碟機未就緒"
+    STRING_ERROR_INVALID_NUMBER1 "Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"
+    STRING_ERROR_INVALID_NUMBER2 "Invalid number. Numbers are limited to 32-bits of precision.\n"
+    STRING_ERROR_DIVISION_BY_ZERO "Division by zero error.\n"
+    STRING_ERROR_INVALID_DEVICE L"Invalid device '%s'\n"
+    STRING_ERROR_CALL_BAD_LABEL "Invalid attempt to call batch label outside of batch script.\n"
+    STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
+    STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "環境變數 '%s' 尚未定義\n"
-    STRING_REPLACE_ERROR1 "無效開關 - %s\n"
-    STRING_REPLACE_ERROR2 "找不到路徑 - %s\n"
-    STRING_REPLACE_ERROR3 "檔案名稱、目錄名稱或磁碟區標籤語法不正確。\n"
-    STRING_REPLACE_ERROR4 "無效的參陣組合\n"
-    STRING_REPLACE_ERROR5 "存取被拒 - %s\n"
-    STRING_REPLACE_ERROR6 "找不到檔案 - %s\n"
-    STRING_REPLACE_ERROR7 "擴展錯誤 32\n"
     STRING_CMD_INFOLINE "  ReactOS 命令列直譯器                                       輸入 HELP = 說明  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
     STRING_REACTOS_VERSION "ReactOS [版本 %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS 命令列直譯器\n版本 %s %s"
     STRING_VERSION_RUNNING_ON "在 上運行"

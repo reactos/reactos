@@ -111,7 +111,7 @@
 216 stub -noname GetDefaultInternetSearchUrlW
 217 stub -noname GetDefaultInternetSearchUrlA
 218 stdcall -noname IEParseDisplayNameWithBCW(long wstr ptr ptr)
-219 stub -noname IEILIsEqual
+219 stdcall -noname IEILIsEqual(ptr ptr long)
 221 stub -noname IECreateFromPathCPWithBCA
 222 stub -noname IECreateFromPathCPWithBCW
 223 stub -noname ResetWebSettings # FIXME: Inspect

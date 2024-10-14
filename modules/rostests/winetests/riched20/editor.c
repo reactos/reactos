@@ -8642,6 +8642,35 @@ static void test_alignment_style(void)
         SendMessageW(richedit, EM_GETPARAFORMAT, 0, (LPARAM)&pf);
         ok(pf.wAlignment == align_mask[i], "got %d expect %d\n", pf.wAlignment, align_mask[i]);
 
+        /* Test out of bounds tab count */
+        pf.dwMask = PFM_TABSTOPS;
+        pf.cTabCount = -25000;
+        SendMessageW(richedit, EM_SETPARAFORMAT, 0, (LPARAM)&pf);
+        ok(pf.cTabCount == -25000, "Got %d\n", pf.cTabCount);
+        SendMessageW(richedit, EM_GETPARAFORMAT, 0, (LPARAM)&pf);
+        ok(pf.cTabCount == 0, "Got %d\n", pf.cTabCount);
+        pf.dwMask = PFM_TABSTOPS;
+        pf.cTabCount = 25000;
+        SendMessageW(richedit, EM_SETPARAFORMAT, 0, (LPARAM)&pf);
+        ok(pf.cTabCount == 25000, "Got %d\n", pf.cTabCount);
+        SendMessageW(richedit, EM_GETPARAFORMAT, 0, (LPARAM)&pf);
+        ok(pf.cTabCount == 32, "Got %d\n", pf.cTabCount);
+        pf.dwMask = PFM_TABSTOPS;
+        pf.cTabCount = 32;
+        SendMessageW(richedit, EM_SETPARAFORMAT, 0, (LPARAM)&pf);
+        SendMessageW(richedit, EM_GETPARAFORMAT, 0, (LPARAM)&pf);
+        ok(pf.cTabCount == 32, "Got %d\n", pf.cTabCount);
+        pf.dwMask = PFM_TABSTOPS;
+        pf.cTabCount = 33;
+        SendMessageW(richedit, EM_SETPARAFORMAT, 0, (LPARAM)&pf);
+        SendMessageW(richedit, EM_GETPARAFORMAT, 0, (LPARAM)&pf);
+        ok(pf.cTabCount == 32, "Got %d\n", pf.cTabCount);
+        pf.dwMask = PFM_TABSTOPS;
+        pf.cTabCount = 1;
+        SendMessageW(richedit, EM_SETPARAFORMAT, 0, (LPARAM)&pf);
+        SendMessageW(richedit, EM_GETPARAFORMAT, 0, (LPARAM)&pf);
+        ok(pf.cTabCount == 1, "Got %d\n", pf.cTabCount);
+
         DestroyWindow(richedit);
     }
 

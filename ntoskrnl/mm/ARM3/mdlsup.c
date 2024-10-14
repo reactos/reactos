@@ -1671,19 +1671,59 @@ MmProtectMdlSystemAddress(IN PMDL MemoryDescriptorList,
     return STATUS_NOT_IMPLEMENTED;
 }
 
-/*
- * @unimplemented
+/**
+ * @brief
+ * Probes and locks virtual pages in memory for the specified process.
+ *
+ * @param[in,out] MemoryDescriptorList
+ * Memory Descriptor List (MDL) containing the buffer to be probed and locked.
+ *
+ * @param[in] Process
+ * The process for which the buffer should be probed and locked.
+ *
+ * @param[in] AccessMode
+ * Access mode for probing the pages. Can be KernelMode or UserMode.
+ *
+ * @param[in] LockOperation
+ * The type of the probing and locking operation. Can be IoReadAccess, IoWriteAccess or IoModifyAccess.
+ *
+ * @return
+ * Nothing.
+ *
+ * @see MmProbeAndLockPages
+ *
+ * @remarks Must be called at IRQL <= APC_LEVEL
  */
+_IRQL_requires_max_(APC_LEVEL)
 VOID
 NTAPI
-MmProbeAndLockProcessPages(IN OUT PMDL MemoryDescriptorList,
-                           IN PEPROCESS Process,
-                           IN KPROCESSOR_MODE AccessMode,
-                           IN LOCK_OPERATION Operation)
+MmProbeAndLockProcessPages(
+    _Inout_ PMDL MemoryDescriptorList,
+    _In_ PEPROCESS Process,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _In_ LOCK_OPERATION Operation)
 {
-    UNIMPLEMENTED;
-}
+    KAPC_STATE ApcState;
+    BOOLEAN IsAttached = FALSE;
 
+    if (Process != PsGetCurrentProcess())
+    {
+        KeStackAttachProcess(&Process->Pcb, &ApcState);
+        IsAttached = TRUE;
+    }
+
+    /* Protect in try/finally to ensure we detach even if MmProbeAndLockPages() throws an exception */
+    _SEH2_TRY
+    {
+        MmProbeAndLockPages(MemoryDescriptorList, AccessMode, Operation);
+    }
+    _SEH2_FINALLY
+    {
+        if (IsAttached)
+            KeUnstackDetachProcess(&ApcState);
+    }
+    _SEH2_END;
+}
 
 /*
  * @unimplemented

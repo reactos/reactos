@@ -337,10 +337,11 @@ INT Batch(LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
      */
     bTopLevel = !bc;
 
-    if (bc != NULL && Cmd == bc->current)
+    if (bc && Cmd == bc->current)
     {
         /* Then we are transferring to another batch */
-        ClearBatch();
+        if (!bSameFn)
+            ClearBatch();
         AddBatchRedirection(&Cmd->Redirections);
     }
     else
@@ -408,17 +409,10 @@ INT Batch(LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
     /* Perform top-level batch initialization */
     if (bTopLevel)
     {
-        TCHAR *dot;
-
-        /* Default the top-level batch context type to .BAT */
-        BatType = BAT_TYPE;
-
-        /* If this is a .CMD file, adjust the type */
-        dot = _tcsrchr(bc->BatchFilePath, _T('.'));
-        if (dot && (!_tcsicmp(dot, _T(".cmd"))))
-        {
-            BatType = CMD_TYPE;
-        }
+        /* Default the top-level batch context type
+         * to .BAT, unless this is a .CMD file */
+        PTCHAR dotext = _tcsrchr(bc->BatchFilePath, _T('.'));
+        BatType = (dotext && (!_tcsicmp(dotext, _T(".cmd")))) ? CMD_TYPE : BAT_TYPE;
 
 #ifdef MSCMD_BATCH_ECHO
         bBcEcho = bEcho;

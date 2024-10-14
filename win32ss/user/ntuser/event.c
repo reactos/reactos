@@ -351,7 +351,7 @@ NtUserSetWinEventHook(
    if (idThread)
    {
       PETHREAD Thread;
-      Status = PsLookupThreadByThreadId((HANDLE)(DWORD_PTR)idThread, &Thread);
+      Status = PsLookupThreadByThreadId(UlongToHandle(idThread), &Thread);
       if (!NT_SUCCESS(Status))
       {
          EngSetLastError(ERROR_INVALID_THREAD_ID);

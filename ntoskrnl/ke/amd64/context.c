@@ -36,11 +36,8 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     if (ContextFlags & CONTEXT_INTEGER)
     {
         TrapFrame->Rax = Context->Rax;
-        TrapFrame->Rbx = Context->Rbx;
         TrapFrame->Rcx = Context->Rcx;
         TrapFrame->Rdx = Context->Rdx;
-        TrapFrame->Rsi = Context->Rsi;
-        TrapFrame->Rdi = Context->Rdi;
         TrapFrame->Rbp = Context->Rbp;
         TrapFrame->R8 = Context->R8;
         TrapFrame->R9 = Context->R9;
@@ -48,6 +45,9 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         TrapFrame->R11 = Context->R11;
         if (ExceptionFrame)
         {
+            ExceptionFrame->Rbx = Context->Rbx;
+            ExceptionFrame->Rsi = Context->Rsi;
+            ExceptionFrame->Rdi = Context->Rdi;
             ExceptionFrame->R12 = Context->R12;
             ExceptionFrame->R13 = Context->R13;
             ExceptionFrame->R14 = Context->R14;

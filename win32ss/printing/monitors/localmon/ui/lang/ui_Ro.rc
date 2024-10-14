@@ -5,7 +5,7 @@
  * TRANSLATORS: Copyright 2007 Detlef Riekenberg
  *              Copyright 2008 Michael Stefaniuc
  *              Copyright 2011 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2023-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -30,20 +30,20 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 STRINGTABLE
 {
     IDS_LOCALPORT "Port local"
-    IDS_INVALIDNAME "„%s” nu este un nume valid de port"
+    IDS_INVALIDNAME "'%s' nu este un nume valid de port"
     IDS_PORTEXISTS "Portul %s există deja"
     IDS_NOTHINGTOCONFIG "Acest port nu are opțiuni de configurat"
 }
 
 ADDPORT_DIALOG DIALOGEX 6, 18, 245, 47
 STYLE DS_SHELLFONT | DS_CONTEXTHELP | DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Adaugare port local"
+CAPTION "Adăugare a unui port local"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "N&umele portului adăugat:", -1, 7, 13, 194, 13, WS_VISIBLE
+    LTEXT "&Introduceți numele portului de adăugat:", -1, 7, 13, 194, 13, WS_VISIBLE
     EDITTEXT ADDPORT_EDIT, 6, 28, 174, 12, WS_VISIBLE | ES_AUTOHSCROLL
-    DEFPUSHBUTTON "Con&firmă", IDOK, 188, 10, 50, 14, WS_VISIBLE
-    PUSHBUTTON "A&nulează", IDCANCEL, 188, 27, 50, 14, WS_VISIBLE
+    DEFPUSHBUTTON "OK", IDOK, 188, 10, 50, 14, WS_VISIBLE
+    PUSHBUTTON "Revocare", IDCANCEL, 188, 27, 50, 14, WS_VISIBLE
 END
 
 
@@ -53,8 +53,8 @@ CAPTION "Configurare port LPT"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Temporizare (secunde)", LPTCONFIG_GROUP, 6, 6, 150, 35, BS_GROUPBOX
-    LTEXT "&Reîncearcă transmisia:", -1, 14, 22, 90, 13, WS_VISIBLE
+    LTEXT "&Reinițializare transmisie:", -1, 14, 22, 90, 13, WS_VISIBLE
     EDITTEXT LPTCONFIG_EDIT, 112, 20, 32, 13, WS_VISIBLE | ES_NUMBER
-    DEFPUSHBUTTON "Con&firmă", IDOK, 164, 10, 50, 14, WS_VISIBLE
-    PUSHBUTTON "A&nulează", IDCANCEL, 164, 27, 50, 14, WS_VISIBLE
+    DEFPUSHBUTTON "OK", IDOK, 164, 10, 50, 14, WS_VISIBLE
+    PUSHBUTTON "Revocare", IDCANCEL, 164, 27, 50, 14, WS_VISIBLE
 END

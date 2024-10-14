@@ -19,9 +19,9 @@ BEGIN
     IDS_RECENT "Recent"
     IDS_SENDTO "SendTo"
     IDS_TEMPLATES "Templates"
-    IDS_STARTMENU "「开始」菜单"
-    IDS_PROGRAMS "「开始」菜单\\程序"
-    IDS_STARTUP "「开始」菜单\\程序\\启动"
+    IDS_STARTMENU "“开始”菜单"
+    IDS_PROGRAMS "“开始”菜单\\程序"
+    IDS_STARTUP "“开始”菜单\\程序\\启动"
     IDS_LOCALSETTINGS "Local Settings"
     IDS_LOCALAPPDATA "Local Settings\\Application Data"
     IDS_TEMP "Local Settings\\Temp" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */

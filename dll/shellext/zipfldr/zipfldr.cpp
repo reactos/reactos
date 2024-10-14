@@ -174,16 +174,17 @@ STDAPI DllUnregisterServer()
 
 EXTERN_C
 BOOL WINAPI
-RouteTheCall(
-    IN HWND hWndOwner,
-    IN HINSTANCE hInstance,
-    IN PCWSTR lpStringArg,
-    IN INT Show)
+RouteTheCallW(IN HWND hWndOwner, IN HINSTANCE hInstance, IN PCWSTR lpStringArg, IN INT Show)
 {
     CStringW path = lpStringArg;
     PathRemoveBlanksW(path.GetBuffer());
     path.ReleaseBuffer();
     path = L"\"" + path + L"\"";
-    ShellExecuteW(NULL, L"open", L"explorer.exe", path.GetString(), NULL, SW_SHOWNORMAL);
+
+    WCHAR app[MAX_PATH];
+    GetWindowsDirectoryW(app, _countof(app));
+    PathAppendW(app, L"explorer.exe");
+
+    ShellExecuteW(NULL, L"open", app, path.GetString(), NULL, Show ? Show : SW_SHOWNORMAL);
     return TRUE;
 }

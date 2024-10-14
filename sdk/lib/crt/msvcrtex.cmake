@@ -4,12 +4,21 @@ include_directories(include/internal/mingw-w64)
 list(APPEND MSVCRTEX_SOURCE
     ${CRT_STARTUP_SOURCE}
     math/sincos.c
-    misc/dbgrpt.cpp
     misc/fltused.c
     misc/isblank.c
     misc/iswblank.c
     misc/ofmt_stub.c
     stdio/acrt_iob_func.c)
+
+if(DLL_EXPORT_VERSION LESS 0x600)
+    list(APPEND MSVCRTEX_SOURCE
+        misc/dbgrpt.cpp
+        stdlib/_invalid_parameter.c
+        stdlib/rand_s.c
+        wstring/mbrtowc.c
+        wstring/wcrtomb.c
+    )
+endif()
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # Clang performs some optimizations requiring those funtions
@@ -38,7 +47,8 @@ if(ARCH STREQUAL "i386")
     endif()
     if(MSVC AND DLL_EXPORT_VERSION LESS 0x600)
         list(APPEND MSVCRTEX_ASM_SOURCE
-            except/i386/__CxxFrameHandler3.s)
+            except/i386/__CxxFrameHandler3.s
+            math/i386/ftoul2_legacy_asm.s)
         list(APPEND MSVCRTEX_SOURCE
             except/i386/CxxHandleV8Frame.c)
     endif()

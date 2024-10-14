@@ -54,6 +54,6 @@ BEGIN
     IDS_INETTIMENEXTSYNC "Volgende synchronisatie: %s om %s"
     IDS_INETTIMESYNCING "ReactOS voert een synchronisatie met %s uit. Een ogenblik geduld."
     IDS_INETTIMEERROR "Er is een fout opgetreden bij een poging om een synchronisatie met %s uit te voeren."
-    IDS_INETTIMESUCFILL "Please type a NTP server name in order to synchronize the time"
-    IDS_INETTIMEWELCOME "Select a NTP server from the list or type a NTP server name to synchronize the computer's time"
+    IDS_INETTIMESUCFILL "Please type an NTP server name in order to synchronize the time"
+    IDS_INETTIMEWELCOME "Select an NTP server from the list or type an NTP server name to synchronize the computer's time"
 END

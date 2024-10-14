@@ -175,6 +175,13 @@ INT cmd_set(LPTSTR param)
         }
 
         *p++ = _T('\0');
+
+#ifdef FEATURE_DYNAMIC_TRACE
+        /* Check for dynamic TRACE ON/OFF */
+        if (!_tcsicmp(param, _T("CMDTRACE")))
+            g_bDynamicTrace = !_tcsicmp(p, _T("ON"));
+#endif
+
         if (!SetEnvironmentVariable(param, *p ? p : NULL))
         {
             retval = 1;
@@ -300,8 +307,7 @@ calc(INT* lval, TCHAR op, INT rval)
     {
         if (rval == 0)
         {
-            // FIXME: Localize
-            ConErrPuts(_T("Division by zero error.\n"));
+            ConErrResPuts(STRING_ERROR_DIVISION_BY_ZERO);
             nErrorLevel = 0x400023D1; // 1073750993;
             return FALSE;
         }
@@ -313,8 +319,7 @@ calc(INT* lval, TCHAR op, INT rval)
     {
         if (rval == 0)
         {
-            // FIXME: Localize
-            ConErrPuts(_T("Division by zero error.\n"));
+            ConErrResPuts(STRING_ERROR_DIVISION_BY_ZERO);
             nErrorLevel = 0x400023D1; // 1073750993;
             return FALSE;
         }
@@ -376,8 +381,7 @@ seta_unaryTerm(LPCTSTR* p_, INT* result)
         /* Check for overflow / underflow */
         if (errno == ERANGE)
         {
-            // FIXME: Localize
-            ConErrPuts(_T("Invalid number. Numbers are limited to 32-bits of precision.\n"));
+            ConErrResPuts(STRING_ERROR_INVALID_NUMBER2);
             nErrorLevel = 0x400023D0; // 1073750992;
             return FALSE;
         }
@@ -388,8 +392,7 @@ seta_unaryTerm(LPCTSTR* p_, INT* result)
          */
         else if (*p && !_istspace(*p) && __iscsymf(*p))
         {
-            // FIXME: Localize
-            ConErrPuts(_T("Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"));
+            ConErrResPuts(STRING_ERROR_INVALID_NUMBER1);
             nErrorLevel = 0x400023CF; // 1073750991;
             return FALSE;
         }

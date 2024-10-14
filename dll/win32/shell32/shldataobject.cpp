@@ -28,12 +28,7 @@ static_assert(sizeof(DataObjectAttributes) == 0xc, "Unexpected struct size!");
 static
 HRESULT _BindToObject(PCUIDLIST_ABSOLUTE pidl, CComPtr<IShellFolder>& spFolder)
 {
-    CComPtr<IShellFolder> spDesktop;
-    HRESULT hr = SHGetDesktopFolder(&spDesktop);
-    if (FAILED(hr))
-        return hr;
-
-    return spDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &spFolder));
+    return SHBindToObject(NULL, pidl, IID_PPV_ARG(IShellFolder, &spFolder));
 }
 
 EXTERN_C
@@ -100,4 +95,17 @@ HRESULT WINAPI SHGetAttributesFromDataObject(IDataObject* pDataObject, DWORD dwA
         *pcItems = cItems;
 
     return hr;
+}
+
+PIDLIST_ABSOLUTE SHELL_CIDA_ILCloneFull(_In_ const CIDA *pCIDA, _In_ UINT Index)
+{
+    if (Index < pCIDA->cidl)
+        return ILCombine(HIDA_GetPIDLFolder(pCIDA), HIDA_GetPIDLItem(pCIDA, Index));
+    return NULL;
+}
+
+PIDLIST_ABSOLUTE SHELL_DataObject_ILCloneFullItem(_In_ IDataObject *pDO, _In_ UINT Index)
+{
+    CDataObjectHIDA cida(pDO);
+    return SUCCEEDED(cida.hr()) ? SHELL_CIDA_ILCloneFull(cida, Index) : NULL;
 }

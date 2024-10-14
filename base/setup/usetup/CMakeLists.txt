@@ -13,12 +13,11 @@ list(APPEND SOURCE
     spapisup/cabinet.c
     spapisup/fileqsup.c
     spapisup/infsupp.c
-    chkdsk.c
     cmdcons.c
     console.c
     consup.c
     devinst.c
-    format.c
+    fmtchk.c
     fslist.c
     genlist.c
     keytrans.c

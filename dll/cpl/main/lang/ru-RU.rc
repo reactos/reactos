@@ -40,8 +40,8 @@ BEGIN
     LTEXT "Короче", -1, 60, 50, 30, 10
     LTEXT "Дольше", -1, 165, 50, 30, 10
     CONTROL "", IDC_SLIDER_CLICK_LOCK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 90, 50, 70, 17
-    PUSHBUTTON "&OK", IDOK, 120, 79, 50, 15
-    PUSHBUTTON "&Отмена", IDCANCEL, 177, 79, 50, 15
+    DEFPUSHBUTTON "OK", IDOK, 120, 79, 50, 15
+    PUSHBUTTON "Отмена", IDCANCEL, 177, 79, 50, 15
     LTEXT "&Выберите, как долго следует удерживать нажатой кнопку мыши или трекбола для того, чтобы сработало залипание.", -1, 60, 15, 170, 30
     ICON IDI_LOCK_KEY, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
 END
@@ -91,8 +91,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Название сохраняемой схемы указателей мыши:", -1, 5, 5, 190, 10
     EDITTEXT IDC_EDIT_SCHEME_NAME, 5, 18, 190, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
-    PUSHBUTTON "&OK", IDOK, 90, 45, 50, 15
-    PUSHBUTTON "&Отмена", IDCANCEL, 145, 45, 50, 15
+    DEFPUSHBUTTON "OK", IDOK, 90, 45, 50, 15
+    PUSHBUTTON "Отмена", IDCANCEL, 145, 45, 50, 15
 END
 
 IDD_PAGE_OPTION DIALOGEX 0, 0, 246, 228

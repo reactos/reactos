@@ -13,50 +13,6 @@
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
-VOID
-NTAPI
-RtlRaiseException(IN PEXCEPTION_RECORD ExceptionRecord)
-{
-    CONTEXT Context;
-    NTSTATUS Status = STATUS_INVALID_DISPOSITION;
-
-    /* Capture the current context */
-    RtlCaptureContext(&Context);
-
-    /* Fix up Context.Rip for the caller */
-    Context.Rip = (ULONG64)_ReturnAddress();
-
-    /* Fix up Context.Rsp for the caller */
-    Context.Rsp = (ULONG64)_AddressOfReturnAddress() + 8;
-
-    /* Save the exception address */
-    ExceptionRecord->ExceptionAddress = (PVOID)Context.Rip;
-
-    /* Check if user mode debugger is active */
-    if (RtlpCheckForActiveDebugger())
-    {
-        /* Raise an exception immediately */
-        Status = ZwRaiseException(ExceptionRecord, &Context, TRUE);
-    }
-    else
-    {
-        /* Dispatch the exception and check if we should continue */
-        if (!RtlDispatchException(ExceptionRecord, &Context))
-        {
-            /* Raise the exception */
-            Status = ZwRaiseException(ExceptionRecord, &Context, FALSE);
-        }
-        else
-        {
-            /* Continue, go back to previous context */
-            Status = ZwContinue(&Context, FALSE);
-        }
-    }
-
-    /* If we returned, raise a status */
-    RtlRaiseStatus(Status);
-}
-
 /*
 * @unimplemented
 */

@@ -116,6 +116,8 @@ DefaultMonitor.DeviceDesc = "Varsayılan Monitör"
 PnPMonitor.DeviceDesc = "Tak ve Çalıştır Monitör"
 
 [Strings.0804]
+MonitorClassName = "监视器"
+
 StdMfg = "(标准监视器类型)"
 DefaultMonitor.DeviceDesc = "默认监视器"
 PnPMonitor.DeviceDesc = "即插即用监视器"

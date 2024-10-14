@@ -1,4 +1,10 @@
-/* Translation and UTF-8 Conversion by mkbu95 <mkbu95@gmail.com> (May, 2012) */
+/*
+ * PROJECT:     ReactOS Software Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATORS: Copyright 2012 Matheus Macabu <mkbu95@gmail.com>
+ *              Copyright 2019-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
@@ -26,7 +32,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Criar Atalho"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Este assitente irá ajudá-lo a criar atalhos para\nprogramas, arquivos, pastas, computadores ou endereços\nde Internet, ambos locais ou de rede.", -1, 120, 15, 200, 30
+    LTEXT "Este assitente irá ajudá-lo a criar atalhos para\nprogramas, ficheiros, pastas, computadores ou endereços\nde Internet, ambos locais ou de rede.", -1, 120, 15, 200, 30
     LTEXT "Digite a localização do item:", -1, 120, 50, 120, 10
     EDITTEXT IDC_LINK_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "Procurar...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
@@ -88,5 +94,5 @@ BEGIN
     IDS_NO_DIRECTORY "Sem directoria!"
     IDS_INVALID_PATH "O caminho é invalido!"
     IDS_INVALID_NAME "O nome do atalho contém caracteres inválidos para nomes de ficheiro ou é muito longo."
-    IDS_BROWSE_FOR_TARGET "Please select the target of the shortcut below:"
+    IDS_BROWSE_FOR_TARGET "Por favor seleccione o destino do atalho abaixo:"
 END

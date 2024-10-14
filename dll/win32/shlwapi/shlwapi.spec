@@ -313,8 +313,8 @@
 313 stdcall -noname SHGetFileInfoWrapW(ptr long ptr long long)
 314 stdcall -noname RegisterClassExWrapW(ptr) user32.RegisterClassExW
 315 stdcall -noname GetClassInfoExWrapW(long wstr ptr) user32.GetClassInfoExW
-316 stub -noname IShellFolder_GetDisplayNameOf
-317 stub -noname IShellFolder_ParseDisplayName
+316 stdcall -noname IShellFolder_GetDisplayNameOf(ptr ptr long ptr long)
+317 stdcall -noname IShellFolder_ParseDisplayName(ptr ptr ptr wstr ptr ptr ptr)
 318 stdcall -noname DragQueryFileWrapW(long long wstr long)
 319 stdcall -noname FindWindowExWrapW(long long wstr wstr) user32.FindWindowExW
 320 stdcall -noname RegisterMIMETypeForExtensionA(str str)
@@ -360,7 +360,7 @@
 360 stdcall -noname RemoveDirectoryWrapW(wstr) kernel32.RemoveDirectoryW
 361 stdcall -noname GetShortPathNameWrapW(wstr ptr long) kernel32.GetShortPathNameW
 362 stdcall -noname GetUserNameWrapW(ptr ptr) advapi32.GetUserNameW
-363 stdcall -noname SHInvokeCommand(ptr ptr ptr long)
+363 stdcall -noname SHInvokeCommand(ptr ptr ptr str)
 364 stdcall -noname DoesStringRoundTripA(str ptr long)
 365 stdcall -noname DoesStringRoundTripW(wstr ptr long)
 366 stdcall -noname RegEnumValueWrapW(long long ptr ptr ptr ptr ptr ptr) advapi32.RegEnumValueW
@@ -508,7 +508,7 @@
 508 stdcall -noname SHPropertyBag_WriteDWORD(ptr wstr long)
 509 stdcall -noname IUnknown_OnFocusChangeIS(ptr ptr long)
 510 stdcall -noname SHLockSharedEx(ptr long long)
-511 stdcall -stub -noname PathFileExistsDefExtAndAttributesW(wstr long ptr)
+511 stdcall -noname PathFileExistsDefExtAndAttributesW(wstr long ptr)
 512 stub -ordinal IStream_ReadPidl
 513 stub -ordinal IStream_WritePidl
 514 stdcall -noname IUnknown_ProfferService(ptr ptr ptr ptr)
@@ -537,8 +537,8 @@
 537 stub -noname SHBoolSystemParametersInfo
 538 stdcall -noname IUnknown_QueryServiceForWebBrowserApp(ptr ptr ptr)
 539 stub -noname IUnknown_ShowBrowserBar
-540 stub -noname SHInvokeCommandOnContextMenu
-541 stub -noname SHInvokeCommandsOnContextMen
+540 stdcall -noname SHInvokeCommandOnContextMenu(ptr ptr ptr long str)
+541 stub -noname SHInvokeCommandsOnContextMenu
 542 stdcall -noname GetUIVersion()
 543 stdcall -noname CreateColorSpaceWrapW(ptr) gdi32.CreateColorSpaceW
 544 stub -noname QuerySourceCreateFromKey
@@ -548,7 +548,7 @@
 548 stdcall -noname SHAreIconsEqual(ptr ptr)
 549 stdcall -noname SHCoCreateInstanceAC(ptr ptr long ptr ptr)
 550 stub -noname GetTemplateInfoFromHandle
-551 stub -noname IShellFolder_CompareIDs
+551 stdcall -noname IShellFolder_CompareIDs(ptr ptr ptr ptr)
 552 stdcall -stub -noname -version=0x501-0x502 SHEvaluateSystemCommandTemplate(wstr ptr ptr ptr)
 553 stdcall IsInternetESCEnabled()
 554 stdcall -noname -stub SHGetAllAccessSA()
@@ -568,7 +568,8 @@
 568 stdcall AssocQueryStringW(long long wstr wstr ptr ptr)
 569 stdcall ChrCmpIA(long long)
 570 stdcall ChrCmpIW(long long)
-571 stdcall ColorAdjustLuma(long long long)
+571 stdcall -noname -version=0x600+ SHInvokeCommandWithFlagsAndSite(ptr ptr ptr ptr long str)
+@ stdcall ColorAdjustLuma(long long long)
 572 stdcall ColorHLSToRGB(long long long)
 573 stdcall ColorRGBToHLS(long ptr ptr ptr)
 @ stdcall -private DllGetVersion(ptr)
@@ -636,7 +637,8 @@
 636 stdcall PathIsSameRootA(str str)
 637 stdcall PathIsSameRootW(wstr wstr)
 638 stdcall PathIsSystemFolderA(str long)
-639 stdcall PathIsSystemFolderW(wstr long)
+639 stdcall -noname -version=0x600+ SHInvokeCommandOnContextMenuEx(ptr ptr ptr long long str wstr)
+@ stdcall PathIsSystemFolderW(wstr long)
 640 stdcall PathIsUNCA(str)
 641 stdcall PathIsUNCServerA(str)
 642 stdcall PathIsUNCServerShareA(str)

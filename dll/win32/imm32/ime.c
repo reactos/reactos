@@ -51,7 +51,7 @@ BOOL APIENTRY Imm32InquireIme(PIMEDPI pImeDpi)
     DWORD dwSysInfoFlags = 0;
     LPIMEINFO pImeInfo = &pImeDpi->ImeInfo;
 
-    if (NtUserGetThreadState(THREADSTATE_ISWINLOGON2))
+    if (NtUserGetThreadState(THREADSTATE_ISWINLOGON))
         dwSysInfoFlags |= IME_SYSINFO_WINLOGON;
 
     if (GetWin32ClientInfo()->dwTIFlags & TIF_16BIT)
@@ -297,7 +297,7 @@ PIMEDPI APIENTRY Imm32LoadImeDpi(HKL hKL, BOOL bLock)
     pImeDpiNew->hKL = hKL;
 
     lcid = LOWORD(hKL);
-    if (TranslateCharsetInfo((LPDWORD)(DWORD_PTR)lcid, &ci, TCI_SRCLOCALE))
+    if (TranslateCharsetInfo(UlongToPtr(lcid), &ci, TCI_SRCLOCALE))
         uCodePage = ci.ciACP;
     else
         uCodePage = CP_ACP;
@@ -859,7 +859,7 @@ HKL WINAPI ImmInstallIMEW(LPCWSTR lpszIMEFileName, LPCWSTR lpszLayoutText)
         if (Imm32WriteImeLayout(hNewKL, pchFilePart, lpszLayoutText))
         {
             /* Load the keyboard layout */
-            StringCchPrintfW(szImeKey, _countof(szImeKey), L"%08X", (DWORD)(DWORD_PTR)hNewKL);
+            StringCchPrintfW(szImeKey, _countof(szImeKey), L"%08X", HandleToUlong(hNewKL));
             hNewKL = LoadKeyboardLayoutW(szImeKey, KLF_REPLACELANG);
         }
         else
@@ -1585,7 +1585,7 @@ BOOL WINAPI ImmSetCompositionWindow(HIMC hIMC, LPCOMPOSITIONFORM lpCompForm)
     LPINPUTCONTEXTDX pIC;
     HWND hWnd;
 
-    if (IS_CROSS_THREAD_HIMC(hIMC))
+    if (Imm32IsCrossThreadAccess(hIMC))
         return FALSE;
 
     pIC = (LPINPUTCONTEXTDX)ImmLockIMC(hIMC);

@@ -2,20 +2,7 @@
  * Regedit resource definitions
  *
  * Copyright 2002 Robert Dickenson
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * LICENSE: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  */
 
 #pragma once
@@ -47,7 +34,6 @@
 #define IDD_REMOVEFAVORITES           139
 #define IDD_FIND                      140
 #define IDD_FINDING                   141
-#define IDC_LICENSE_EDIT              1029
 #define ID_REGISTRY_EXIT              32770
 #define ID_FAVOURITES_ADDTOFAVOURITES 32772
 #define ID_FAVOURITES_REMOVEFAVOURITE 32773
@@ -73,48 +59,15 @@
 
 #define ID_HELP_HELPTOPICS            32794
 #define ID_HELP_ABOUT                 32795
-#define ID_WINDOW_CASCADE             32797
-#define ID_WINDOW_TILE                32798
-#define ID_WINDOW_ARRANGEICONS        32799
-#define ID_OPTIONS_FONT               32800
-#define ID_OPTIONS_AUTOREFRESH        32801
-#define ID_OPTIONS_READONLYMODE       32802
-#define ID_OPTIONS_CONFIRMONDELETE    32803
-#define ID_OPTIONS_SAVESETTINGSONEXIT 32804
-#define ID_SECURITY_PERMISSIONS       32805
-#define ID_VIEW_TREEANDDATA           32806
-#define ID_VIEW_TREEONLY              32807
-#define ID_VIEW_DATAONLY              32808
-#define ID_VIEW_DISPLAYBINARYDATA     32810
-#define ID_VIEW_REFRESHALL            32811
-#define ID_VIEW_REFRESHACTIVE         32812
-#define ID_VIEW_FINDKEY               32813
-#define ID_TREE_EXPANDONELEVEL        32814
 #define ID_TREE_EXPANDBRANCH          32815
-#define ID_TREE_EXPANDALL             32816
 #define ID_TREE_COLLAPSEBRANCH        32817
-#define ID_EDIT_ADDKEY                32818
-#define ID_EDIT_ADDVALUE              32819
-#define ID_EDIT_BINARY                32821
-#define ID_EDIT_STRING                32822
-#define ID_EDIT_DWORD                 32823
-#define ID_EDIT_MULTISTRING           32824
-#define ID_REGISTRY_OPENLOCAL         32825
-#define ID_REGISTRY_CLOSE             32826
 #define ID_REGISTRY_LOADHIVE          32827
 #define ID_REGISTRY_UNLOADHIVE        32828
-#define ID_REGISTRY_RESTORE           32829
-#define ID_REGISTRY_SAVEKEY           32830
-#define ID_REGISTRY_SELECTCOMPUTER    32831
-#define ID_REGISTRY_PRINTSUBTREE      32832
-#define ID_REGISTRY_PRINTERSETUP      32833
-#define ID_REGISTRY_SAVESUBTREEAS     32834
 #define ID_HEXEDIT_CUT                32835
 #define ID_HEXEDIT_COPY               32836
 #define ID_HEXEDIT_PASTE              32837
 #define ID_HEXEDIT_DELETE             32838
 #define ID_HEXEDIT_SELECT_ALL         32839
-#define IDS_LICENSE                   32835
 #define IDS_ERROR                     32836
 #define IDS_BAD_VALUE                 32837
 #define IDS_UNSUPPORTED_TYPE          32838
@@ -271,7 +224,6 @@
 #define IDS_SHARE_SHARED           31620
 #define IDS_SHARE_UNDETERMINED     31621
 
-
 #define IDD_EDIT_STRING 2000
 #define IDC_VALUE_NAME  2001
 #define IDC_VALUE_DATA  2002
@@ -346,17 +298,17 @@
 #define IDC_REQ_MEMORY_ALTERNATIVE   2059
 #define IDC_REQ_MEMORY_PREFERRED     2060
 
-#define IDD_EDIT_REQUIREMENTS_INT    2061
-#define IDC_REQ_INT_TYPE             2062
+#define IDD_EDIT_REQUIREMENTS_INT 2061
+#define IDC_REQ_INT_TYPE          2062
 #define IDC_REQ_INT_MIN           2063
 #define IDC_REQ_INT_MAX           2064
 #define IDC_REQ_INT_SHARE         2065
 #define IDC_REQ_INT_ALTERNATIVE   2066
 #define IDC_REQ_INT_PREFERRED     2067
 
-#define IDD_EDIT_REQUIREMENTS_DMA    2068
-#define IDC_REQ_DMA_MIN              2069
-#define IDC_REQ_DMA_MAX              2070
+#define IDD_EDIT_REQUIREMENTS_DMA 2068
+#define IDC_REQ_DMA_MIN           2069
+#define IDC_REQ_DMA_MAX           2070
 #define IDC_REQ_DMA_SHARE         2071
 #define IDC_REQ_DMA_ALTERNATIVE   2072
 #define IDC_REQ_DMA_PREFERRED     2073

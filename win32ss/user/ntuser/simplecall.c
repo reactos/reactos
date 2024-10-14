@@ -727,7 +727,7 @@ NtUserCallHwnd(
                 return 0;
             }
 
-            HelpId = (DWORD)(DWORD_PTR)UserGetProp(Window, gpsi->atomContextHelpIdProp, TRUE);
+            HelpId = HandleToUlong(UserGetProp(Window, gpsi->atomContextHelpIdProp, TRUE));
 
             UserLeave();
             return HelpId;

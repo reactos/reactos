@@ -53,18 +53,15 @@ VOID InitLocale(VOID)
 #endif
 }
 
-/* Return date string including weekday. Used for $D in prompt and %DATE% */
+/* Return date string without weekday. Used for $D in prompt and %DATE% */
 LPTSTR
 GetDateString(VOID)
 {
     static TCHAR szDate[32];
     SYSTEMTIME t;
-    INT len;
-    GetLocalTime(&t);
 
-    len = GetDateFormat(LOCALE_USER_DEFAULT, 0, &t, _T("ddd"), szDate, ARRAYSIZE(szDate));
-    szDate[len - 1] = _T(' ');
-    FormatDate(&szDate[len], &t, TRUE);
+    GetLocalTime(&t);
+    GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &t, NULL, szDate, ARRAYSIZE(szDate));
     return szDate;
 }
 

@@ -63,7 +63,7 @@ FONT 8, "MS Shell Dlg"
 {
     LTEXT "You have minimized the Language bar. To restore it, just click the Language bar icon (near the clock) and select ""Restore the Language bar"" from the pop-up menu.", -1, 5, 5, 190, 50
     CONTROL IDB_BITMAP154, -1, "STATIC", SS_BITMAP, 72, 63, 60, 60, WS_EX_STATICEDGE
-    AUTOCHECKBOX "Don't show me this message again", IDC_MINIMIZELANGBAR_CHECK, 5, 105, 125, 10
+    AUTOCHECKBOX "Don't show me this message again", IDC_MINIMIZELANGBAR_CHECK, 5, 95, 142, 10
     DEFPUSHBUTTON "OK", IDOK, 140, 105, 60, 15
 }
 
@@ -74,6 +74,6 @@ FONT 8, "MS Shell Dlg"
 {
     LTEXT "You have minimized the Language bar. To restore it, just click the Language bar icon (near the clock) and select ""Restore the Language bar"" from the pop-up menu.", -1, 5, 5, 190, 50
     CONTROL IDB_BITMAP155, -1, "STATIC", SS_BITMAP, 53, 67, 60, 60, WS_EX_STATICEDGE
-    AUTOCHECKBOX "Don't show me this message again", IDC_MINIMIZELANGBAR_CHECK, 5, 105, 125, 10
+    AUTOCHECKBOX "Don't show me this message again", IDC_MINIMIZELANGBAR_CHECK, 5, 95, 142, 10
     DEFPUSHBUTTON "OK", IDOK, 140, 105, 60, 15
 }

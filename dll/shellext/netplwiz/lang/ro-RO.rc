@@ -9,20 +9,20 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
 IDD_DISCONNECTDRIVES DIALOGEX 0, 0, 300, 200
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Demontează discurile de rețea"
+CAPTION "Deconectare unităţi de reţea"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Selectați dicul/discurile pe care vreți să le demontați, apoi dați clic pe Confirmă.", -1, 7, 7, 286, 8
-    LTEXT "&Discuri de rețea:", -1, 7, 23, 286, 8
+    LTEXT "Selectaţi unitatea (unităţile) de reţea care să fie deconectate, apoi faceţi clic pe OK.", -1, 7, 7, 286, 8
+    LTEXT "&Unităţi de reţea:", -1, 7, 23, 286, 8
     CONTROL "", IDC_CONNECTEDDRIVELIST, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_SINGLESEL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 7, 31, 286, 140
-    PUSHBUTTON "Confirmă", ID_OK, 189, 179, 50, 14
-    PUSHBUTTON "Anulează", IDCANCEL, 243, 179, 50, 14
+    PUSHBUTTON "OK", ID_OK, 189, 179, 50, 14
+    PUSHBUTTON "Revocare", IDCANCEL, 243, 179, 50, 14
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DIALOG_CAPTION "Demontează discul de rețea"
-    IDS_DRIVE_LETTER "Litera discului"
-    IDS_NETWORK_PATH "Calea rețelei"
-    IDS_NO_DRIVES "Nu aveți discuri de rețea de demontat."
+    IDS_DIALOG_CAPTION "Deconectare unitate din reţea"
+    IDS_DRIVE_LETTER "Litera de unitate de disc"
+    IDS_NETWORK_PATH "Calea de rețea"
+    IDS_NO_DRIVES "Nu sunt unităţi din reţea de deconectat."
 END

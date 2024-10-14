@@ -79,7 +79,7 @@ BEGIN
     AUTOCHECKBOX "Te&mpatkan bilah tugas pada bagian atas jendela lain", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
     AUTOCHECKBOX "K&elompokkan tombol bilah tugas yang sama", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
     AUTOCHECKBOX "Tampilkan peluncur &cepat", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
-    AUTOCHECKBOX "U&se small icons", IDC_TASKBARPROP_SMALLICONS, 13, 110, 200, 10
+    AUTOCHECKBOX "&Gunakan ikon kecil", IDC_TASKBARPROP_SMALLICONS, 13, 110, 200, 10
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
@@ -102,14 +102,14 @@ CAPTION "Area pemberitahuan"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 6, 229, 24
-    GROUPBOX "Icons", IDC_STATIC, 6, 36, 240, 56
+    GROUPBOX "Ikon", IDC_STATIC, 6, 36, 240, 56
     LTEXT "Area pemberitahuan akan terlihat rapi dengan menyembunyikan ikon yang belum pernah diklik akhir-akhir ini.", IDC_STATIC, 13, 48, 223, 16
     AUTOCHECKBOX "&Sembunyikan ikon tidak aktif", IDC_TASKBARPROP_HIDEICONS, 13, 70, 125, 10
     PUSHBUTTON "&Sesuaikan...", IDC_TASKBARPROP_ICONCUST, 188, 70, 50, 14
     GROUPBOX "System icons", IDC_STATIC, 6, 99, 240, 56
-    LTEXT "Select which system icons to always show.", IDC_STATIC, 13, 113, 223, 8
+    LTEXT "Pilih ikon sistem mana yang selalu tampil.", IDC_STATIC, 13, 113, 223, 8
     AUTOCHECKBOX "Tampil&kan jam", IDC_TASKBARPROP_CLOCK, 13, 127, 80, 10
-    AUTOCHECKBOX "Tampilkan detik", IDC_TASKBARPROP_SECONDS, 120, 127, 80, 10, WS_DISABLED
+    AUTOCHECKBOX "Tampilkan de&tik", IDC_TASKBARPROP_SECONDS, 120, 127, 80, 10, WS_DISABLED
     AUTOCHECKBOX "&Desktop", IDC_TASKBARPROP_DESKTOP, 13, 140, 80, 10
 END
 
@@ -214,6 +214,6 @@ STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Bilah Tugas dan Menu Mulai"
     IDS_RESTORE_ALL "&Tampilkan Semua Jendela"
-    IDS_TRAYWND_UNDO_CASCADE "&Undo Cascade"
-    IDS_TRAYWND_UNDO_TILE "&Undo Tile"
+    IDS_TRAYWND_UNDO_CASCADE "&Urungkan Tumpukan"
+    IDS_TRAYWND_UNDO_TILE "U&rungkan Ubin"
 END

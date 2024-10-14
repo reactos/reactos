@@ -55,6 +55,7 @@
 #define ok_hr_(file, line, status, expected)    ok_hex_(file, line, status, expected)
 
 #define ok_eq_print(value, expected, spec)  ok((value) == (expected), #value " = " spec ", expected " spec "\n", value, expected)
+#define ok_eq_print_(file, line, value, expected, spec)  ok_(file,line)((value) == (expected), #value " = " spec ", expected " spec "\n", value, expected)
 #define ok_eq_pointer(value, expected)      ok_eq_print(value, expected, "%p")
 #define ok_eq_int(value, expected)          ok_eq_print(value, expected, "%d")
 #define ok_eq_uint(value, expected)         ok_eq_print(value, expected, "%u")
@@ -83,6 +84,8 @@
 #define ok_eq_wstr(value, expected)         ok(!wcscmp(value, expected), #value " = \"%ls\", expected \"%ls\"\n", value, expected)
 #define ok_eq_tag(value, expected)          ok_eq_print(value, expected, "0x%08lx")
 
+#define ok_eq_hex_(file, line, value, expected) ok_eq_print_(file, line, value, expected, "0x%08lx")
+#define ok_eq_hex64_(file, line, value, expected) ok_eq_print_(file, line, value, expected, "%I64x")
 #define ok_eq_hex64(value, expected)        ok_eq_print(value, expected, "%I64x")
 #define ok_eq_xmm(value, expected)          ok((value).Low == (expected).Low, #value " = %I64x'%08I64x, expected %I64x'%08I64x\n", (value).Low, (value).High, (expected).Low, (expected).High)
 

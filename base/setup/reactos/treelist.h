@@ -421,9 +421,15 @@ typedef		TVSORTEX				TV_SORTEX;
 #define 	TreeList_GetOption(h,i)						((INT       )SNDMSG(h,TVM_GETSETOPTION,i,0))
 #define 	TreeList_SetColumnOrderArray(h,n,p)			((BOOL      )SNDMSG(h,TVM_SETCOLUMNORDERARRAY,n,(LPARAM)(p)))
 #define 	TreeList_GetColumnOrderArray(h,n,p)			((BOOL      )SNDMSG(h,TVM_GETCOLUMNORDERARRAY,n,(LPARAM)(p)))
+#ifdef __cplusplus
 #define		TreeList_GetStyle(h)						((DWORD     )::GetWindowLong(h,GWL_STYLE))
 #define		TreeList_SetStyle(h,d)	  					((DWORD     )::SetWindowLong(h,GWL_STYLE,d))
 #define 	TreeList_SetStyleEx(h,d,m)					((DWORD     )::SetWindowLong(h,GWL_STYLE,((d)&(m))|(::GetWindowLong(h,GWL_STYLE)&~(m))))
+#else
+#define		TreeList_GetStyle(h)						((DWORD     )GetWindowLong(h,GWL_STYLE))
+#define		TreeList_SetStyle(h,d)	  					((DWORD     )SetWindowLong(h,GWL_STYLE,d))
+#define 	TreeList_SetStyleEx(h,d,m)					((DWORD     )SetWindowLong(h,GWL_STYLE,((d)&(m))|(GetWindowLong(h,GWL_STYLE)&~(m))))
+#endif
 #define		TreeList_GetItemRect(h,i,s,p,c)			    (*(HTREEITEM*)p =(i),(BOOL)SNDMSG(h,TVM_GETITEMRECT,(WPARAM)((c)|(TVIR_COLTOSUB(s))),(LPARAM)(RECT*)(p)))
 
 
@@ -457,10 +463,21 @@ extern BOOL	TreeListUnregister(HINSTANCE hInstance);
 
 /* Compat with my old code... */
 #define TLCOLUMN TVCOLUMN
-#define HTLITEM HTREEITEM
+#define HTLITEM  HTREEITEM
+
 #define TL_INSERTSTRUCTA TV_INSERTSTRUCTA
+#define TLINSERTSTRUCTA  TVINSERTSTRUCTA
 #define TL_INSERTSTRUCTW TV_INSERTSTRUCTW
-#define TL_INSERTSTRUCT TV_INSERTSTRUCT
+#define TLINSERTSTRUCTW  TVINSERTSTRUCTW
+#define TL_INSERTSTRUCT  TV_INSERTSTRUCT
+#define TLINSERTSTRUCT   TVINSERTSTRUCT
+
+#define TL_ITEMA TV_ITEMA
+#define TLITEMA  TVITEMA
+#define TL_ITEMW TV_ITEMW
+#define TLITEMW  TVITEMW
+#define TL_ITEM  TV_ITEM
+#define TLITEM   TVITEM
 
 /* New stuff */
 #ifndef __REACTOS__

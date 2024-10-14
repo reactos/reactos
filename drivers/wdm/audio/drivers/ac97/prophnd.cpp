@@ -170,7 +170,9 @@ NTSTATUS CAC97MiniportTopology::GetDBValues
     {
         // These nodes could have 5bit or 6bit controls, so we first
         // have to check this.
+#ifndef __REACTOS__
         case NODE_MASTEROUT_VOLUME:
+#endif
         case NODE_FRONT_VOLUME:
         case NODE_HPOUT_VOLUME:
         case NODE_SURROUND_VOLUME:
@@ -230,6 +232,11 @@ NTSTATUS CAC97MiniportTopology::GetDBValues
         case NODE_VIDEO_VOLUME:
         case NODE_AUX_VOLUME:
         case NODE_WAVEOUT_VOLUME:
+#ifdef __REACTOS__
+        // ReactOS change: use the same Decibel range as for WaveOut,
+        // to fix incorrect volume level change scaling. CORE-14780
+        case NODE_MASTEROUT_VOLUME:
+#endif
             *plMaximum = 0x000C0000;   // 12 dB
             *plMinimum = 0xFFDD8000;   // -34.5 dB
             *puStep    = 0x00018000;   // 1.5 dB

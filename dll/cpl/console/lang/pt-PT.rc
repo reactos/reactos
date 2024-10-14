@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Console Configuration DLL
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATOR:  Copyright 2019 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ */
+
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 IDD_PROPPAGEOPTIONS DIALOGEX 0, 0, 253, 220

@@ -245,6 +245,7 @@ string1==string2  Menetapkan kondisi benar jika string teks yang ditetapkan\n\
                   sama.\n\
 EXIST filename    Menetapkan kondisi benar jika nama file ada.\n\
 DEFINED variable  Menetapkan kondisi benar jika variabel didefinisikan.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "Waktu saat ini: "
     STRING_MKDIR_HELP "Membuat direktori.\n\n\
 MKDIR [drive:]path\nMD [drive:]path"
@@ -336,34 +337,6 @@ Mohon dicatat bahwa anda tidak dapat menetapkan drive baru atau path untuk\n\
 tujuan anda. Gunakan perintah MOVE untuk keperluan itu.\n"
     STRING_REN_HELP2 "    %lu file diganti nama\n"
     STRING_REN_HELP3 "    %lu file diganti nama\n"
-    STRING_REPLACE_HELP1 "Replaces files.\n\n\
-REPLACE [drive1:][path1]filename [drive2:][path2] [/A] [/P] [/R] [/W]\n\
-REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [drive1:][path1]filename Specifies the source file or files.\n\
-  [drive2:][path2]         Specifies the directory where files are to be\n\
-                           replaced.\n\
-  /A                       Adds new files to destination directory. Cannot\n\
-                           use with /S or /U switches.\n\
-  /P                       Prompts for confirmation before replacing a file or\n\
-                           adding a source file.\n\
-  /R                       Replaces read-only files as well as unprotected\n\
-                           files.\n\
-  /S                       Replaces files in all subdirectories of the\n\
-                           destination directory. Cannot use with the /A\n\
-                           switch.\n\
-  /W                       Waits for you to insert a disk before beginning.\n\
-  /U                       Replaces (updates) only files that are older than\n\
-                           source files. Cannot use with the /A switch.\n"
-    STRING_REPLACE_HELP2 "Source path required\n"
-    STRING_REPLACE_HELP3 "No files replaced\n"
-    STRING_REPLACE_HELP4 "%lu file(s) replaced\n"
-    STRING_REPLACE_HELP5 "Replacing %s\n"
-    STRING_REPLACE_HELP6 "Replace %s\n"
-    STRING_REPLACE_HELP7 "No files added\n"
-    STRING_REPLACE_HELP8 "%lu file(s) added\n"
-    STRING_REPLACE_HELP9 "Add %s (Y/N)? "
-    STRING_REPLACE_HELP10 "Replace %s (Y/N)? "
-    STRING_REPLACE_HELP11 "Adding %s\n"
     STRING_SHIFT_HELP "Mengubah posisi parameter yang bisa diganti dalam file batch.\n\n\
 SHIFT [DOWN]"
     STRING_SCREEN_HELP "memindahkan kursor dan secara opsional mencetak teks\n\n\
@@ -517,15 +490,16 @@ title         judul baru\n"
     STRING_ERROR_CANNOTPIPE "Salah!  Tidak bisa melakukan pipe!  Tidak bisa membuka file temporal!\n"
     STRING_ERROR_D_PAUSEMSG "Tekan tombol untuk melanjutkan . . . "
     STRING_ERROR_DRIVER_NOT_READY "Drive tidak siap"
+    STRING_ERROR_INVALID_NUMBER1 "Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"
+    STRING_ERROR_INVALID_NUMBER2 "Invalid number. Numbers are limited to 32-bits of precision.\n"
+    STRING_ERROR_DIVISION_BY_ZERO "Division by zero error.\n"
+    STRING_ERROR_INVALID_DEVICE L"Invalid device '%s'\n"
+    STRING_ERROR_CALL_BAD_LABEL "Invalid attempt to call batch label outside of batch script.\n"
+    STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
+    STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "Variabel lingkungan '%s' tidak terdefinisi\n"
-    STRING_REPLACE_ERROR1 "Saklar perintah tidak valid - %s\n"
-    STRING_REPLACE_ERROR2 "Alamat file/direktori tidak ditemukan - %s\n"
-    STRING_REPLACE_ERROR3 "Sintaks nama file, direktori, atau label volume tidak benar.\n"
-    STRING_REPLACE_ERROR4 "Kombinasi parameter tidak valid\n"
-    STRING_REPLACE_ERROR5 "Akses ditolak - %s\n"
-    STRING_REPLACE_ERROR6 "No files found - %s\n"
-    STRING_REPLACE_ERROR7 "Extended Error 32\n"
     STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
     STRING_REACTOS_VERSION "ReactOS [Versi %s %s]\n"
     STRING_CMD_SHELLINFO "\nInterpreter Baris Perintah ReactOS\nVersi %s %s"
     STRING_VERSION_RUNNING_ON "Berjalan pada: "

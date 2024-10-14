@@ -2054,7 +2054,7 @@ MUI_ERROR frFRErrorEntries[] =
     },
     {
         // ERROR_ADDING_CODEPAGE,
-        "Setup n'a pu ajouter la page de codes \205 la base de registres.\n"
+        "Setup n'a pu ajouter la page de codes au registre.\n"
         "ENTR\220E = Red\202marrer l'ordinateur"
     },
     {
@@ -2289,17 +2289,17 @@ MUI_STRING frFRStrings[] =
     {STRING_SETUPCOPYINGFILES,
      "Setup copie les fichiers..."},
     {STRING_REGHIVEUPDATE,
-    "   Mise \205 jour de la base de registre..."},
+    "   Mise \205 jour de la base de registres..."},
     {STRING_IMPORTFILE,
     "   Importe %S..."},
     {STRING_DISPLAYSETTINGSUPDATE,
-    "   Mise \205 jour des param\212tres du registre pour l'\202cran..."},
+    "   Mise \205 jour des param\212tres de registre pour l'\202cran..."},
     {STRING_LOCALESETTINGSUPDATE,
     "   Mise \205 jour des param\212tres r\202gionaux..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
-    "   Mise \205 jour des param\212tres de la dispoition clavier..."},
+    "   Mise \205 jour des param\212tres de disposition du clavier..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Ajout des informations de pages de codes \205 la base de registres..."},
+    "   Ajout des informations de pages de codes..."},
     {STRING_DONE,
     "   Termin\202..."},
     {STRING_REBOOTCOMPUTER2,
@@ -2353,6 +2353,6 @@ MUI_STRING frFRStrings[] =
     {STRING_GB,
     "Go"},
     {STRING_ADDKBLAYOUTS,
-    "Ajout des dispositions clavier"},
+    "Ajout des dispositions de clavier"},
     {0, 0}
 };

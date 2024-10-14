@@ -2261,7 +2261,7 @@ MUI_STRING msMYStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   Mengemaskini seting susun atur papan kekunci..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Menambah maklumat codepage untuk pendaftaran..."},
+    "   Menambah maklumat codepage..."},
     {STRING_DONE,
     "   Siap..."},
     {STRING_REBOOTCOMPUTER2,

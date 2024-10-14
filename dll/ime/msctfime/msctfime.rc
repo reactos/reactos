@@ -30,3 +30,9 @@ IDI_DOWN ICON     "res/down.ico"
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
 #endif
+#ifdef LANGUAGE_PT_PT
+    #include "lang/pt-PT.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "lang/ru-RU.rc"
+#endif

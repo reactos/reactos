@@ -153,7 +153,7 @@ OBJECT_ENTRY(CLSID_InternetToolbar, CInternetToolbar)
 OBJECT_ENTRY(CLSID_CRegTreeOptions, CRegTreeOptions)
 OBJECT_ENTRY(CLSID_ShellTaskScheduler, CShellTaskScheduler)
 OBJECT_ENTRY(CLSID_TaskbarList, CTaskbarList)
-OBJECT_ENTRY(CLSID_ExplorerBand, CExplorerBand)
+//OBJECT_ENTRY(CLSID_ExplorerBand, CExplorerBand) // Moved to shdocvw.dll
 OBJECT_ENTRY(CLSID_FileSearchBand, CSearchBar)
 OBJECT_ENTRY(CLSID_ProgressDialog, CProgressDialog)
 OBJECT_ENTRY(CLSID_ISFBand, CISFBand)

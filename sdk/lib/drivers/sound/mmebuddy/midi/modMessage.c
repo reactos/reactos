@@ -75,6 +75,23 @@ modMessage(
             break;
         }
 
+        case MODM_GETVOLUME:
+        {
+            Result = MmeGetVolume(MIDI_OUT_DEVICE_TYPE,
+                                  DeviceId,
+                                  PrivateHandle,
+                                  Parameter1);
+            break;
+        }
+
+        case MODM_SETVOLUME:
+        {
+            Result = MmeSetVolume(MIDI_OUT_DEVICE_TYPE,
+                                  DeviceId,
+                                  PrivateHandle,
+                                  Parameter1);
+            break;
+        }
     }
 
     SND_TRACE(L"modMessage returning MMRESULT %d\n", Result);

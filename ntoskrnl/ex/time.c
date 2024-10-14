@@ -31,6 +31,100 @@ ULONG ExpTimerResolutionCount = 0;
 /* FUNCTIONS ****************************************************************/
 
 /*++
+ * If successful, this function sets the following global variable:
+ * ExpTimeZoneInfo
+ *--*/
+static
+BOOLEAN
+ExpGetTimeZoneId(
+    _In_ PLARGE_INTEGER TimeNow,
+    _Out_ PULONG TimeZoneId,
+    _Out_ PLARGE_INTEGER NewTimeZoneBias)
+{
+    LARGE_INTEGER StandardTime;
+    LARGE_INTEGER DaylightTime;
+    LARGE_INTEGER LocalTimeNow = *TimeNow;
+    NTSTATUS Status;
+
+    DPRINT("ExpGetTimeZoneId\n");
+
+    /* Read time zone information from the registry */
+    Status = RtlQueryTimeZoneInformation(&ExpTimeZoneInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlQueryTimeZoneInformation failed (Status 0x%08lx)\n", Status);
+        return FALSE;
+    }
+
+    /* Get the default bias */
+    NewTimeZoneBias->QuadPart = (LONGLONG)ExpTimeZoneInfo.Bias * TICKSPERMINUTE;
+
+    if (ExpTimeZoneInfo.StandardDate.Month != 0 &&
+        ExpTimeZoneInfo.DaylightDate.Month != 0)
+    {
+        /* Get this year's standard start time */
+        if (!RtlCutoverTimeToSystemTime(&ExpTimeZoneInfo.StandardDate,
+                                        &StandardTime,
+                                        &LocalTimeNow,
+                                        TRUE))
+        {
+            DPRINT1("RtlCutoverTimeToSystemTime for StandardDate failed\n");
+            return FALSE;
+        }
+
+        /* Get this year's daylight start time */
+        if (!RtlCutoverTimeToSystemTime(&ExpTimeZoneInfo.DaylightDate,
+                                        &DaylightTime,
+                                        &LocalTimeNow,
+                                        TRUE))
+        {
+            DPRINT1("RtlCutoverTimeToSystemTime for DaylightDate failed\n");
+            return FALSE;
+        }
+
+        /* Determine the time zone id and update the time zone bias */
+        if (DaylightTime.QuadPart < StandardTime.QuadPart)
+        {
+            if ((LocalTimeNow.QuadPart >= DaylightTime.QuadPart) &&
+                (LocalTimeNow.QuadPart < StandardTime.QuadPart))
+            {
+                DPRINT("Daylight time\n");
+                *TimeZoneId = TIME_ZONE_ID_DAYLIGHT;
+                NewTimeZoneBias->QuadPart += (LONGLONG)ExpTimeZoneInfo.DaylightBias * TICKSPERMINUTE;
+            }
+            else
+            {
+                DPRINT("Standard time\n");
+                *TimeZoneId = TIME_ZONE_ID_STANDARD;
+                NewTimeZoneBias->QuadPart += (LONGLONG)ExpTimeZoneInfo.StandardBias * TICKSPERMINUTE;
+            }
+        }
+        else
+        {
+            if ((LocalTimeNow.QuadPart >= StandardTime.QuadPart) &&
+                (LocalTimeNow.QuadPart < DaylightTime.QuadPart))
+            {
+                DPRINT("Standard time\n");
+                *TimeZoneId = TIME_ZONE_ID_STANDARD;
+                NewTimeZoneBias->QuadPart += (LONGLONG)ExpTimeZoneInfo.StandardBias * TICKSPERMINUTE;
+            }
+            else
+            {
+                DPRINT("Daylight time\n");
+                *TimeZoneId = TIME_ZONE_ID_DAYLIGHT;
+                NewTimeZoneBias->QuadPart += (LONGLONG)ExpTimeZoneInfo.DaylightBias * TICKSPERMINUTE;
+            }
+        }
+    }
+    else
+    {
+        *TimeZoneId = TIME_ZONE_ID_UNKNOWN;
+    }
+
+    return TRUE;
+}
+
+/*++
  * @name ExAcquireTimeRefreshLock
  *
  *     The ExReleaseTimeRefreshLock routine acquires the system-wide lock used
@@ -225,105 +319,39 @@ BOOLEAN
 NTAPI
 ExRefreshTimeZoneInformation(IN PLARGE_INTEGER CurrentBootTime)
 {
-    LARGE_INTEGER StandardTime;
-    LARGE_INTEGER DaylightTime;
-    LARGE_INTEGER CurrentTime;
-    NTSTATUS Status;
+    LARGE_INTEGER CurrentTime, NewTimeZoneBias;
+    BOOLEAN Success;
 
-    /* Read time zone information from the registry */
-    Status = RtlQueryTimeZoneInformation(&ExpTimeZoneInfo);
-    if (!NT_SUCCESS(Status))
+    DPRINT("ExRefreshTimeZoneInformation\n");
+
+    /* Set the global data for ExpTimeZoneBias and the Time Zone ID */
+    Success = ExpGetTimeZoneId(CurrentBootTime, &ExpTimeZoneId, &NewTimeZoneBias);
+    if (!Success)
     {
-        DPRINT1("RtlQueryTimeZoneInformation() failed (Status 0x%08lx)\n", Status);
+        DPRINT1("ExpGetTimeZoneId failed\n");
         return FALSE;
     }
+    DPRINT("ExpTimeZoneId is %lu\n", ExpTimeZoneId);
 
-    /* Get the default bias */
-    ExpTimeZoneBias.QuadPart = (LONGLONG)ExpTimeZoneInfo.Bias * TICKSPERMINUTE;
+    ExpTimeZoneBias = NewTimeZoneBias;
 
-    if (ExpTimeZoneInfo.StandardDate.Month != 0 &&
-        ExpTimeZoneInfo.DaylightDate.Month != 0)
-    {
-        /* Get this years standard start time */
-        if (!RtlCutoverTimeToSystemTime(&ExpTimeZoneInfo.StandardDate,
-                                        &StandardTime,
-                                        CurrentBootTime,
-                                        TRUE))
-        {
-            DPRINT1("RtlCutoverTimeToSystemTime() for StandardDate failed!\n");
-            return FALSE;
-        }
-
-        /* Get this years daylight start time */
-        if (!RtlCutoverTimeToSystemTime(&ExpTimeZoneInfo.DaylightDate,
-                                        &DaylightTime,
-                                        CurrentBootTime,
-                                        TRUE))
-        {
-            DPRINT1("RtlCutoverTimeToSystemTime() for DaylightDate failed!\n");
-            return FALSE;
-        }
-
-        /* Determine the time zone id and update the time zone bias */
-        if (DaylightTime.QuadPart < StandardTime.QuadPart)
-        {
-            if ((CurrentBootTime->QuadPart >= DaylightTime.QuadPart) &&
-                (CurrentBootTime->QuadPart < StandardTime.QuadPart))
-            {
-                DPRINT("Daylight time!\n");
-                ExpTimeZoneId = TIME_ZONE_ID_DAYLIGHT;
-                ExpTimeZoneBias.QuadPart += (LONGLONG)ExpTimeZoneInfo.DaylightBias * TICKSPERMINUTE;
-            }
-            else
-            {
-                DPRINT("Standard time!\n");
-                ExpTimeZoneId = TIME_ZONE_ID_STANDARD;
-                ExpTimeZoneBias.QuadPart += (LONGLONG)ExpTimeZoneInfo.StandardBias * TICKSPERMINUTE;
-            }
-        }
-        else
-        {
-            if ((CurrentBootTime->QuadPart >= StandardTime.QuadPart) &&
-                (CurrentBootTime->QuadPart < DaylightTime.QuadPart))
-            {
-                DPRINT("Standard time!\n");
-                ExpTimeZoneId = TIME_ZONE_ID_STANDARD;
-                ExpTimeZoneBias.QuadPart += (LONGLONG)ExpTimeZoneInfo.StandardBias * TICKSPERMINUTE;
-            }
-            else
-            {
-                DPRINT("Daylight time!\n");
-                ExpTimeZoneId = TIME_ZONE_ID_DAYLIGHT;
-                ExpTimeZoneBias.QuadPart += (LONGLONG)ExpTimeZoneInfo.DaylightBias * TICKSPERMINUTE;
-            }
-        }
-    }
-    else
-    {
-        ExpTimeZoneId = TIME_ZONE_ID_UNKNOWN;
-    }
-
-    /* Change it for user-mode applications */
-    SharedUserData->TimeZoneBias.High1Time = ExpTimeZoneBias.u.HighPart;
+    /* Change SharedUserData->TimeZoneBias for user-mode applications */
     SharedUserData->TimeZoneBias.High2Time = ExpTimeZoneBias.u.HighPart;
     SharedUserData->TimeZoneBias.LowPart = ExpTimeZoneBias.u.LowPart;
+    SharedUserData->TimeZoneBias.High1Time = ExpTimeZoneBias.u.HighPart;
     SharedUserData->TimeZoneId = ExpTimeZoneId;
 
     /* Convert boot time from local time to UTC */
     KeBootTime.QuadPart += ExpTimeZoneBias.QuadPart;
 
     /* Convert system time from local time to UTC */
-    do
-    {
-        CurrentTime.u.HighPart = SharedUserData->SystemTime.High1Time;
-        CurrentTime.u.LowPart = SharedUserData->SystemTime.LowPart;
-    } while (CurrentTime.u.HighPart != SharedUserData->SystemTime.High2Time);
+    KeQuerySystemTime(&CurrentTime);;
 
     /* Change it for user-mode applications */
     CurrentTime.QuadPart += ExpTimeZoneBias.QuadPart;
+    SharedUserData->SystemTime.High2Time = CurrentTime.u.HighPart;
     SharedUserData->SystemTime.LowPart = CurrentTime.u.LowPart;
     SharedUserData->SystemTime.High1Time = CurrentTime.u.HighPart;
-    SharedUserData->SystemTime.High2Time = CurrentTime.u.HighPart;
 
     /* Return success */
     return TRUE;
@@ -332,9 +360,43 @@ ExRefreshTimeZoneInformation(IN PLARGE_INTEGER CurrentBootTime)
 NTSTATUS
 ExpSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
 {
-    LARGE_INTEGER LocalTime, SystemTime, OldTime;
+    LARGE_INTEGER LocalTime, SystemTime, OldTime, NewTimeZoneBias;
     TIME_FIELDS TimeFields;
-    DPRINT("ExpSetTimeZoneInformation() called\n");
+    BOOLEAN Success;
+    NTSTATUS Status;
+    LARGE_INTEGER LocalTimeNow;
+
+    DPRINT("ExpSetTimeZoneInformation called\n");
+
+    /* Read time zone information from the registry */
+    Status = RtlQueryTimeZoneInformation(&ExpTimeZoneInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlQueryTimeZoneInformation failed (Status 0x%08lx)\n", Status);
+        return FALSE;
+    }
+
+    /* Get the default bias */
+    NewTimeZoneBias.QuadPart = (LONGLONG)ExpTimeZoneInfo.Bias * TICKSPERMINUTE;
+
+    /* Get the Shared User Data System Time into the local SystemTime */
+    KeQuerySystemTime(&SystemTime);
+
+    LocalTimeNow = SystemTime;
+
+    /* Adjust LocalTimeNow for Time Zone Bias to use UTC for comparisons */
+    LocalTimeNow.QuadPart -= NewTimeZoneBias.QuadPart;
+
+    /* Set the Global Data for ExpTimeZoneBias and ExpTimeZoneId */
+    Success = ExpGetTimeZoneId(&LocalTimeNow, &ExpTimeZoneId, &NewTimeZoneBias);
+    if (!Success)
+    {
+        DPRINT1("ExpGetTimeZoneId failed\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+    DPRINT("ExpTimeZoneId is %lu\n", ExpTimeZoneId);
+
+    ExpTimeZoneBias = NewTimeZoneBias;
 
     DPRINT("Old time zone bias: %d minutes\n", ExpTimeZoneInfo.Bias);
     DPRINT("Old time zone standard bias: %d minutes\n",
@@ -347,13 +409,14 @@ ExpSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
     HalQueryRealTimeClock(&TimeFields);
     RtlTimeFieldsToTime(&TimeFields, &LocalTime);
 
-    /* FIXME: Calculate transition dates */
-
-    /* Calculate the bias and set the ID */
+    /* Calculate the bias */
     ExpTimeZoneBias.QuadPart = ((LONGLONG)(TimeZoneInformation->Bias +
                                            TimeZoneInformation->StandardBias)) *
                                            TICKSPERMINUTE;
-    ExpTimeZoneId = TIME_ZONE_ID_STANDARD;
+
+    /* If Daylight Savings Time then add the DayLightBias to the Time Zone Bias */
+    if (ExpTimeZoneId == TIME_ZONE_ID_DAYLIGHT)
+        ExpTimeZoneBias.QuadPart += (LONGLONG)ExpTimeZoneInfo.DaylightBias * TICKSPERMINUTE;
 
     /* Copy the timezone information */
     RtlCopyMemory(&ExpTimeZoneInfo,
@@ -377,7 +440,7 @@ ExpSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
     PoNotifySystemTimeSet();
 
     /* Return success */
-    DPRINT("ExpSetTimeZoneInformation() done\n");
+    DPRINT("ExpSetTimeZoneInformation done\n");
     return STATUS_SUCCESS;
 }
 
@@ -401,6 +464,8 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
     TIME_FIELDS TimeFields;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
+    RTL_TIME_ZONE_INFORMATION TimeZoneInformation = { 0 };
+    ULONG TimeZoneIdSave;
 
     PAGED_CODE();
 
@@ -466,6 +531,27 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
             Status = _SEH2_GetExceptionCode();
         }
         _SEH2_END;
+    }
+
+    /* Read time zone information from the registry and set the clock */
+    Status = RtlQueryTimeZoneInformation(&TimeZoneInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlQueryTimeZoneInformation failed (Status 0x%08lx)\n", Status);
+    }
+
+    /* Test if we went from Daylight to Standard Time or vice versa */
+    TimeZoneIdSave = ExpTimeZoneId;
+    ExpSetTimeZoneInformation(&TimeZoneInformation);
+
+    if (ExpTimeZoneId != TimeZoneIdSave)
+    {
+        /* Going from DT to ST or vice versa we need to repeat this */
+        DPRINT("Daylight Time and Standard Time are switching\n");
+
+        /* Set the system time and notify the system */
+        KeSetSystemTime(&NewSystemTime, &OldSystemTime, FALSE, NULL);
+        PoNotifySystemTimeSet();
     }
 
     /* Return status */

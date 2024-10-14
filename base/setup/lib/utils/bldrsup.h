@@ -30,13 +30,17 @@ typedef enum _BOOT_STORE_TYPE
  */
 typedef struct _BOOT_STORE_OPTIONS
 {
-    ULONG Version;          // BOOT_STORE_TYPE value
     // ULONG Length;
-    ULONG Timeout;
-    ULONG_PTR CurrentBootEntryKey;
-    // ULONG_PTR NextBootEntryKey;
-    // WCHAR HeadlessRedirection[1];
+    ULONG Timeout;  //< Timeout in seconds before the default boot entry is started.
+    ULONG_PTR CurrentBootEntryKey;  //< Selected boot entry for the current boot (informative only).
+    ULONG_PTR NextBootEntryKey;     //< The boot entry for the next boot.
+    // WCHAR HeadlessRedirection[ANYSIZE_ARRAY];
 } BOOT_STORE_OPTIONS, *PBOOT_STORE_OPTIONS;
+
+/* FieldsToChange flags for SetBootStoreOptions() */
+#define BOOT_OPTIONS_TIMEOUT                1
+#define BOOT_OPTIONS_NEXT_BOOTENTRY_KEY     2
+// #define BOOT_OPTIONS_HEADLESS_REDIRECTION   4
 
 /*
  * These macros are used to set a value for the BootEntryKey member of a
@@ -63,10 +67,10 @@ typedef struct _BOOT_STORE_ENTRY
 {
     ULONG Version;          // BOOT_STORE_TYPE value
     // ULONG Length;
-    ULONG_PTR BootEntryKey; // Boot entry "key"
-    PCWSTR FriendlyName;    // Human-readable boot entry description        // LoadIdentifier
-    PCWSTR BootFilePath;    // Path to e.g. osloader.exe, or winload.efi    // EfiOsLoaderFilePath
-    ULONG OsOptionsLength;  // Loader-specific options blob (can be a string, or a binary structure...)
+    ULONG_PTR BootEntryKey; //< Boot entry "key"
+    PCWSTR FriendlyName;    //< Human-readable boot entry description        // LoadIdentifier
+    PCWSTR BootFilePath;    //< Path to e.g. osloader.exe, or winload.efi    // EfiOsLoaderFilePath
+    ULONG OsOptionsLength;  //< Loader-specific options blob (can be a string, or a binary structure...)
     UCHAR OsOptions[ANYSIZE_ARRAY];
 /*
  * In packed form, this structure would contain offsets to 'FriendlyName'
@@ -98,17 +102,16 @@ typedef struct _NTOS_OPTIONS
 #define NTOS_OPTIONS_SIGNATURE "NTOS_5\0\0"
 
 /* Options for boot-sector boot entries */
-typedef struct _BOOT_SECTOR_OPTIONS
+typedef struct _BOOTSECTOR_OPTIONS
 {
     UCHAR Signature[8];     // "BootSect"
     // ULONG Version;
     // ULONG Length;
-    PCWSTR Drive;
-    PCWSTR Partition;
-    PCWSTR BootSectorFileName;
-} BOOT_SECTOR_OPTIONS, *PBOOT_SECTOR_OPTIONS;
+    PCWSTR BootPath;
+    PCWSTR FileName;
+} BOOTSECTOR_OPTIONS, *PBOOTSECTOR_OPTIONS;
 
-#define BOOT_SECTOR_OPTIONS_SIGNATURE "BootSect"
+#define BOOTSECTOR_OPTIONS_SIGNATURE "BootSect"
 
 
 typedef NTSTATUS
@@ -125,30 +128,51 @@ FindBootStore( // By handle
     OUT PULONG VersionNumber OPTIONAL);
 
 
+typedef enum _BOOT_STORE_OPENMODE
+{
+    BS_CheckExisting = 0, // See FindBootStore()
+    BS_CreateNew     = 1, // BS_CreateOnly
+    BS_OpenExisting  = 2, // BS_OpenOnly
+    BS_OpenAlways    = 3,
+    BS_RecreateExisting = 4, // BS_RecreateOnly
+    BS_CreateAlways  = 5,
+} BOOT_STORE_OPENMODE;
+
+typedef enum _BOOT_STORE_ACCESS
+{
+    // BS_NoAccess = 0,
+    BS_ReadAccess  = 1,
+    BS_WriteAccess = 2,
+    BS_ReadWriteAccess = (BS_ReadAccess | BS_WriteAccess)
+} BOOT_STORE_ACCESS;
+
 NTSTATUS
 OpenBootStoreByHandle(
-    OUT PVOID* Handle,
-    IN HANDLE PartitionDirectoryHandle, // OPTIONAL
-    IN BOOT_STORE_TYPE Type,
-    IN BOOLEAN CreateNew);
+    _Out_ PVOID* Handle,
+    _In_ HANDLE PartitionDirectoryHandle, // _In_opt_
+    _In_ BOOT_STORE_TYPE Type,
+    _In_ BOOT_STORE_OPENMODE OpenMode,
+    _In_ BOOT_STORE_ACCESS Access);
 
 NTSTATUS
 OpenBootStore_UStr(
-    OUT PVOID* Handle,
-    IN PUNICODE_STRING SystemPartitionPath,
-    IN BOOT_STORE_TYPE Type,
-    IN BOOLEAN CreateNew);
+    _Out_ PVOID* Handle,
+    _In_ PUNICODE_STRING SystemPartitionPath,
+    _In_ BOOT_STORE_TYPE Type,
+    _In_ BOOT_STORE_OPENMODE OpenMode,
+    _In_ BOOT_STORE_ACCESS Access);
 
 NTSTATUS
 OpenBootStore(
-    OUT PVOID* Handle,
-    IN PCWSTR SystemPartition,
-    IN BOOT_STORE_TYPE Type,
-    IN BOOLEAN CreateNew);
+    _Out_ PVOID* Handle,
+    _In_ PCWSTR SystemPartition,
+    _In_ BOOT_STORE_TYPE Type,
+    _In_ BOOT_STORE_OPENMODE OpenMode,
+    _In_ BOOT_STORE_ACCESS Access);
 
 NTSTATUS
 CloseBootStore(
-    IN PVOID Handle);
+    _In_ PVOID Handle);
 
 NTSTATUS
 AddBootStoreEntry(

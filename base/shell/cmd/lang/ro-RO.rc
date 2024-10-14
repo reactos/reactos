@@ -280,6 +280,7 @@ O etichetă va fi definită pe un rând întreg, începând cu două puncte (:).
                     fișierului specificat.\n\
   DEFINED variablă  Determină o condiție satisfăcută dacă «variabilă»\n\
                     a fost anterior definită.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "Ora curentă este: "
     STRING_MKDIR_HELP "Crează un director.\n\n\
 MD [disc:]cale\nMKDIR [disc:]cale\n"
@@ -376,33 +377,6 @@ Rețineți că nu puteți specifica un nou disc sau o nouă cale pentru destina�
 Pentru o destinație diferită utilizați comanda MOVE.\n"
     STRING_REN_HELP2 "    %lu fișier redenumit\n"
     STRING_REN_HELP3 "    %lu fișiere redenumite\n"
-    STRING_REPLACE_HELP1 "Înlocuiește fișiere.\n\n\
-REPLACE [disc1:][cale1]fișier [disc2:][cale2] [/A] [/P] [/R] [/W]\n\
-REPLACE [disc1:][cale1]fișier [disc2:][cale2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [disc1:][cale1]fișier    Specifică fișierul sau fișierele sursă.\n\
-  [disc2:][cale2]          Specifică directorul unde vor fi înlocuite fișiere.\n\
-  /A                       Adaugă fișiere noi în directorul destinație. Nu se\n\
-                           poate folosi cu argumentele /S sau /U\n\
-  /P                       Cere confirmare înaintea înlocuirii unui fișier sau\n\
-                           a adăugării unui fișier sursă.\n\
-  /R                       Înlocuiește atât fișierele modificabile, cât și\n\
-                           fișierele nemodificabile.\n\
-  /S                       Înlocuiește fișierele în toate subdirectoarele\n\
-                           directorului destinație. Nu se poate folosi\n\
-                           cu argumentul /A.\n\
-  /W                       Așteaptă inserția unui disc înainte de a începe.\n\
-  /U                       Înlocuiește (actualizează) doar fișierele mai vechi\n\
-                           decât fișierele sursă. Nu se poate folosi cu /A.\n"
-    STRING_REPLACE_HELP2 "Este necesară calea sursă\n"
-    STRING_REPLACE_HELP3 "Nu a fost înlocuit nici un fișier\n"
-    STRING_REPLACE_HELP4 "A(u) fost înlocuit(e) %lu fișier(e)\n"
-    STRING_REPLACE_HELP5 "Înlocuire «%s»\n"
-    STRING_REPLACE_HELP6 "Înlocuiește «%s»\n"
-    STRING_REPLACE_HELP7 "Nu au fost adăugate fișiere\n"
-    STRING_REPLACE_HELP8 "A(u) fost adăugat(e) %lu fișier(e)\n"
-    STRING_REPLACE_HELP9 "Adaugă «%s» (Da/Nu)? "
-    STRING_REPLACE_HELP10 "Înlocuiește «%s» (Da/Nu)? "
-    STRING_REPLACE_HELP11 "Adăugare «%s»\n"
     STRING_SHIFT_HELP "Modifică poziția argumentelor înlocuibile într-un fișier de comenzi.\n\n\
 SHIFT [DOWN]\n"
     STRING_SCREEN_HELP "Mută cursorul și opțional afișează textul\n\n\
@@ -557,15 +531,16 @@ titlu         Noul titlu.\n"
     STRING_ERROR_CANNOTPIPE "Eroare! Nu se poate înlănțui! Nu se poate deschide fișierul temporar!\n"
     STRING_ERROR_D_PAUSEMSG "Tastați pentru a continua... "
     STRING_ERROR_DRIVER_NOT_READY "Discul de stocare nu e utilizabil"
+    STRING_ERROR_INVALID_NUMBER1 "Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"
+    STRING_ERROR_INVALID_NUMBER2 "Invalid number. Numbers are limited to 32-bits of precision.\n"
+    STRING_ERROR_DIVISION_BY_ZERO "Division by zero error.\n"
+    STRING_ERROR_INVALID_DEVICE L"Invalid device '%s'\n"
+    STRING_ERROR_CALL_BAD_LABEL "Invalid attempt to call batch label outside of batch script.\n"
+    STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
+    STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "Variabila de mediu '%s' nu este definită\n"
-    STRING_REPLACE_ERROR1 "Argument eronat - %s\n"
-    STRING_REPLACE_ERROR2 "Calea nu este găsită - %s\n"
-    STRING_REPLACE_ERROR3 "Numele fișierului, directorului sau eticheta volumului este incorectă.\n"
-    STRING_REPLACE_ERROR4 "Combinația de argumente nu este validă!\n"
-    STRING_REPLACE_ERROR5 "Acces respins - %s\n"
-    STRING_REPLACE_ERROR6 "Fișierele nu au fost găsite - %s\n"
-    STRING_REPLACE_ERROR7 "Eroare extinsă 32\n"
     STRING_CMD_INFOLINE "  Interpretorul de comenzi ReactOS                       Tastați HELP = Ajutor  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
     STRING_REACTOS_VERSION "ReactOS [Versiunea %s %s]\n"
     STRING_CMD_SHELLINFO "\nInterpretorul de comenzi ReactOS\nVersiunea %s %s"
     STRING_VERSION_RUNNING_ON "Operând pe: "

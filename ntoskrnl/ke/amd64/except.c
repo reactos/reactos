@@ -93,7 +93,7 @@ KeInitExceptions(VOID)
 }
 
 static
-VOID
+BOOLEAN
 KiDispatchExceptionToUser(
     IN PKTRAP_FRAME TrapFrame,
     IN PCONTEXT Context,
@@ -147,7 +147,7 @@ KiDispatchExceptionToUser(
 
         /* Nothing we can do here */
         _disable();
-        _SEH2_YIELD(return);
+        return FALSE;
     }
     _SEH2_END;
 
@@ -172,7 +172,7 @@ KiDispatchExceptionToUser(
     _disable();
 
     /* Exit to usermode */
-    KiServiceExit2(TrapFrame);
+    return TRUE;
 }
 
 static
@@ -361,8 +361,12 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
             /* Forward exception to user mode debugger */
             if (DbgkForwardException(ExceptionRecord, TRUE, FALSE)) return;
 
-            /* Forward exception to user mode (does not return, if successful) */
-            KiDispatchExceptionToUser(TrapFrame, &Context, ExceptionRecord);
+            /* Forward exception to user mode */
+            if (KiDispatchExceptionToUser(TrapFrame, &Context, ExceptionRecord))
+            {
+                /* Success, the exception will be handled by KiUserExceptionDispatcher */
+                return;
+            }
 
             /* Failed to dispatch, fall through for second chance handling */
         }

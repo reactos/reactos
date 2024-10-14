@@ -1,5 +1,7 @@
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
+/* Dialogs */
+
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Instalação do ReactOS"
@@ -53,42 +55,57 @@ CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_PARTITION, "SysTreeList32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
-    PUSHBUTTON "&Criar", IDC_PARTCREATE, 7, 122, 50, 15
-    PUSHBUTTON "&Apagar", IDC_PARTDELETE, 63, 122, 50, 15
-    PUSHBUTTON "D&rivers", IDC_DEVICEDRIVER, 174, 122, 50, 15, WS_DISABLED
-    PUSHBUTTON "&Opções Avançadas...", IDC_PARTMOREOPTS, 230, 122, 80, 15
-    // LTEXT "Clique em Próximo para verificar o sumário.", IDC_STATIC, 10, 180, 277, 20
+    PUSHBUTTON "&Initialize", IDC_INITDISK, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "&Criar", IDC_PARTCREATE, 7, 122, 50, 14
+    PUSHBUTTON "&Format", IDC_PARTFORMAT, 7, 122, 50, 14 // NOTE: At same position as IDC_PARTCREATE
+    PUSHBUTTON "&Apagar", IDC_PARTDELETE, 63, 122, 50, 14
+    PUSHBUTTON "D&rivers", IDC_DEVICEDRIVER, 174, 122, 50, 14, WS_DISABLED
+    PUSHBUTTON "&Opções Avançadas...", IDC_PARTMOREOPTS, 230, 122, 80, 14
+    // LTEXT "Clique em Próximo para verificar o sumário.", IDC_STATIC, 7, 128, 277, 8
 END
 
-IDD_PARTITION DIALOGEX 0, 0, 145, 90
-STYLE DS_SHELLFONT | WS_VISIBLE | WS_CAPTION
-CAPTION "Criar Partição"
+IDD_PARTITION DIALOGEX 0, 0, 200, 120
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Criar e formatar partição"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "", IDC_UPDOWN1, "msctls_updown32", WS_VISIBLE, 104, 22, 9, 13
-    CONTROL "Criar e formatar partição", IDC_STATIC, "Button", BS_GROUPBOX, 7, 5, 129, 57
-    LTEXT "Tamanho:", IDC_STATIC, 13, 24, 27, 9
-    EDITTEXT IDC_PARTSIZE, 58, 22, 47, 13, WS_VISIBLE | WS_TABSTOP
-    LTEXT "GB", IDC_UNIT, 117, 24, 14, 9
-    LTEXT "Sistema de arquivo:", IDC_STATIC, 13, 46, 42, 9
-    CONTROL "", IDC_FSTYPE, "ComboBox", WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 58, 42, 73, 50
-    PUSHBUTTON "&OK", IDOK, 35, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "&Cancelar", IDCANCEL, 87, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
+    LTEXT "&Tamanho:", IDC_STATIC, 7, 9, 70, 9
+    EDITTEXT IDC_EDIT_PARTSIZE, 82, 7, 47, 13, ES_RIGHT | ES_NUMBER | WS_GROUP
+    CONTROL "", IDC_UPDOWN_PARTSIZE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
+            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 22, 9, 13
+    LTEXT "MB", IDC_UNIT, 134, 9, 14, 9
+    AUTOCHECKBOX "&Extended partition", IDC_CHECK_MBREXTPART, 7, 22, 180, 14
+    LTEXT "&Sistema de arquivo:", IDC_FS_STATIC, 7, 46, 70, 9
+    COMBOBOX IDC_FSTYPE, 82, 44, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
+    AUTOCHECKBOX "&Quick format", IDC_CHECK_QUICKFMT, 7, 59, 180, 14
+    PUSHBUTTON "OK", IDOK, 88, 98, 50, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 143, 98, 50, 14
 END
 
-IDD_BOOTOPTIONS DIALOGEX 0, 0, 305, 116
-STYLE DS_SHELLFONT | WS_VISIBLE | WS_CAPTION
-CAPTION "Configurações Avançadas de Particionamento"
+IDD_FORMAT DIALOGEX 0, 0, 200, 83
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Formatar partição"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Pasta de instalação", IDC_STATIC, "Button", BS_GROUPBOX, 4, 1, 298, 30
-    EDITTEXT IDC_PATH, 10, 11, 278, 13, WS_VISIBLE
-    CONTROL "Instalação do boot loader", IDC_STATIC, "Button", BS_GROUPBOX, 4, 36, 298, 52
-    CONTROL "Instalar boot loader no disco rígido (MBR e VBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 46, 278, 11
-    CONTROL "Instalar boot loader no disco rígido (apenas VBR)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 57, 278, 11
-    CONTROL "Não instalar boot loader", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED, 10, 68, 278, 11
-    PUSHBUTTON "&OK", IDOK, 180, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
-    PUSHBUTTON "&Cancelar", IDCANCEL, 240, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
+    LTEXT "&Sistema de arquivo:", IDC_FS_STATIC, 7, 9, 70, 9
+    COMBOBOX IDC_FSTYPE, 82, 7, 100, 50, CBS_DROPDOWNLIST | WS_TABSTOP
+    AUTOCHECKBOX "&Quick format", IDC_CHECK_QUICKFMT, 7, 22, 180, 14
+    PUSHBUTTON "OK", IDOK, 88, 61, 50, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 143, 61, 50, 14
+END
+
+IDD_ADVINSTOPTS DIALOGEX 0, 0, 305, 135
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Advanced Installation Options"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Choose the &directory where you want to install ReactOS:", IDC_STATIC, 7, 9, 291, 10
+    EDITTEXT IDC_PATH, 7, 23, 291, 13
+    GROUPBOX "Bootloader", IDC_STATIC, 7, 45, 291, 60
+    LTEXT "Select the location where the FreeLoader\nbootloader should be installed.\n\nBy default, it is installed on the system partition of the boot disk (and either in the Master or the Volume Boot Record for BIOS-based computers).", IDC_STATIC, 13, 57, 279, 44
+    COMBOBOX IDC_INSTFREELDR, 150, 58, 142, 45, WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
+    DEFPUSHBUTTON "OK", IDOK, 193, 113, 50, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 248, 113, 50, 14
 END
 
 IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 143
@@ -139,6 +156,8 @@ BEGIN
     LTEXT "Se houver um CD no drive, remova-o. Após isto, clique em Finalizar para reiniciar o computador.", IDC_STATIC, 115, 169, 195, 17
 END
 
+/* Strings */
+
 STRINGTABLE
 BEGIN
     IDS_TYPETITLE "Bem-vindo(a) a Instalação do ReactOS"
@@ -146,9 +165,9 @@ BEGIN
     IDS_DEVICETITLE "Instalar dispositivos básicos"
     IDS_DEVICESUBTITLE "Definir as configurações de monitor e teclado."
     IDS_DRIVETITLE "Configurar a partição de instalação e pasta do sistema"
-    IDS_DRIVESUBTITLE "Preparando partição de instalação, pasta do sistema e boot loader."
+    IDS_DRIVESUBTITLE "Preparando partição de instalação, pasta do sistema e bootloader."
     IDS_PROCESSTITLE "Preparar partição, copiar arquivos e configurar sistema"
-    IDS_PROCESSSUBTITLE "Criar e formatar partição, copiar arquivos, instalar e configurar boot loader"
+    IDS_PROCESSSUBTITLE "Criar e formatar partição, copiar arquivos, instalar e configurar bootloader"
     IDS_RESTARTTITLE "Primeira etapa de instalação finalizada"
     IDS_RESTARTSUBTITLE "A primeira etapada da instalação foi completada, reinicie o computador para prosseguir com a segunda estapa"
     IDS_SUMMARYTITLE "Sumário de Instalação"
@@ -157,6 +176,7 @@ BEGIN
     IDS_ABORTSETUP2 "Abortar instalação?"
     IDS_NO_TXTSETUP_SIF "Unable to find 'txtsetup.sif'.\nSetup is unable to continue."
     IDS_CAPTION "Instalação do ReactOS"
+    IDS_VOLUME_NOFORMAT "Not formatted"
 END
 
 STRINGTABLE
@@ -172,4 +192,92 @@ BEGIN
     IDS_PARTITION_TYPE "Type"
     IDS_PARTITION_SIZE "Size"
     IDS_PARTITION_STATUS "Status"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_BOOTLOADER_NOINST "Não instalar"
+    IDS_BOOTLOADER_REMOVABLE "Removable media"
+    IDS_BOOTLOADER_SYSTEM "System partition (Default)"
+    IDS_BOOTLOADER_MBRVBR "MBR e VBR (Default)"
+    IDS_BOOTLOADER_VBRONLY "Apenas VBR"
+END
+
+/* Progress Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_FORMATTING_PROGRESS1 "Formatting volume %c: (%s) in %s..."
+    IDS_FORMATTING_PROGRESS2 "Formatting volume %s in %s..."
+
+    IDS_CHECKING_PROGRESS1 "Checking volume %c: (%s)..."
+    IDS_CHECKING_PROGRESS2 "Checking volume %s..."
+
+    IDS_COPYING  "Copying %s"
+    IDS_MOVING   "Moving %s to %s"
+    IDS_RENAMING "Renaming %s to %s"
+    IDS_DELETING "Deleting %s"
+
+    IDS_PREPARE_PARTITIONS "Preparing partitions..."
+    IDS_PREPARE_FILES "Preparing the list of files to be copied, please wait..."
+    IDS_COPYING_FILES "Copying the files..."
+
+    IDS_CREATE_REGISTRY "Creating the registry..."
+    IDS_UPDATE_REGISTRY "Updating the registry..."
+END
+
+// Note to translators: please refer to the corresponding usetup/lang/*.h translations.
+STRINGTABLE
+BEGIN
+    IDS_REG_DONE "Done"
+    IDS_REG_REGHIVEUPDATE "Updating registry hives"
+    IDS_REG_IMPORTFILE "Importing %s"
+    IDS_REG_DISPLAYSETTINGSUPDATE "Updating display registry settings"
+    IDS_REG_LOCALESETTINGSUPDATE "Updating locale settings"
+    IDS_REG_ADDKBLAYOUTS "Adding keyboard layouts"
+    IDS_REG_KEYBOARDSETTINGSUPDATE "Updating keyboard layout settings"
+    IDS_REG_CODEPAGEINFOUPDATE "Adding codepage information"
+    IDS_REG_UNKNOWN "Unknown status %d"
+END
+
+/* Error Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR_TITLE "Invalid character"
+    IDS_ERROR_INVALID_INSTALLDIR_CHAR "The only valid characters are:\n\
+alphanumericals (a-z, A-Z, 0-9), and\n . \\ - _\n\
+Spaces are not allowed."
+
+    IDS_ERROR_DIRECTORY_NAME_TITLE "Invalid installation path"
+    IDS_ERROR_DIRECTORY_NAME "The ReactOS installation path must follow the DOS 8.3 naming scheme, \
+and only contain letters, digits, dashes and periods. Spaces are not allowed."
+
+    IDS_ERROR_CREATE_PARTITION_TITLE "Create partition"
+    IDS_ERROR_CREATE_PARTITION "Failed to create a new partition."
+
+    IDS_WARN_DELETE_PARTITION_TITLE "Delete partition?"
+    IDS_WARN_DELETE_PARTITION "Are you sure you want to delete the selected partition?"
+    IDS_WARN_DELETE_MBR_EXTENDED_PARTITION "Are you sure you want to delete the selected extended partition and ALL the logical partitions it contains?"
+
+    IDS_ERROR_WRITE_PTABLE "Setup failed to write partition tables."
+
+    IDS_ERROR_SYSTEM_PARTITION "The ReactOS Setup could not find a supported system partition\n\
+on your system or could not create a new one. Without such a partition\n\
+the Setup program cannot install ReactOS.\
+\nClick on OK to return to the partition selection list."
+
+    IDS_ERROR_FORMAT_UNRECOGNIZED_VOLUME "Unrecognized volume while attempting to format the partition."
+
+    IDS_ERROR_COULD_NOT_FORMAT "Setup is currently unable to format a partition in %s.\n\
+\nClick on OK to continue Setup.\
+\nClick on CANCEL to quit Setup."
+
+    IDS_ERROR_FORMATTING_PARTITION "Setup is unable to format the partition:\n %s\n"
+
+    IDS_ERROR_COULD_NOT_CHECK "Setup is currently unable to check a partition formatted in %s.\n\
+\nClick on OK to continue Setup.\
+\nClick on CANCEL to quit Setup."
+
+    IDS_ERROR_CHECKING_PARTITION "ChkDsk detected some disk errors.\n(Status 0x%08lx)."
 END

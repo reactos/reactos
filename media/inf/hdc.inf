@@ -3180,6 +3180,8 @@ PCI\CC_0105.DeviceDesc="Стандартний контроллер ATA"
 PCI\CC_0106.DeviceDesc="Стандартний контроллер Serial ATA"
 
 [Strings.0804]
+HDCClassName="IDE ATA/ATAPI 控制器"
+
 GenericMfg="(通用硬盘控制器)"
 PCI\VEN_1191&DEV_0005.DeviceDesc="Acard ATP850 ATA-33 控制器"
 PCI\VEN_1191&DEV_0006.DeviceDesc="Acard ATP860A ATA-66 控制器"

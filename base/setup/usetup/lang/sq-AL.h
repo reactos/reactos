@@ -2283,7 +2283,7 @@ MUI_STRING sqALStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   Apdejtimi i p\211rzgjedhj\211s se konfigurimit t\211 tastier\211s..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Shtimi i informacioneve codepage n\211 regjister..."},
+    "   Shtimi i informacioneve codepage..."},
     {STRING_DONE,
     "   Mbaruam..."},
     {STRING_REBOOTCOMPUTER2,

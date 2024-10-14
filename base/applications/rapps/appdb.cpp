@@ -14,7 +14,7 @@
 
 
 static HKEY g_RootKeyEnum[3] = {HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, HKEY_LOCAL_MACHINE};
-static REGSAM g_RegSamEnum[3] = {KEY_WOW64_32KEY, KEY_WOW64_32KEY, KEY_WOW64_64KEY};
+static REGSAM g_RegSamEnum[3] = {0, KEY_WOW64_32KEY, KEY_WOW64_64KEY};
 #define UNINSTALL_SUBKEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall"
 
 static VOID
@@ -34,8 +34,8 @@ CAppDB::CAppDB(const CStringW &path) : m_BasePath(path)
     m_BasePath.Canonicalize();
 }
 
-CAppInfo *
-CAppDB::FindByPackageName(const CStringW &name)
+CAvailableApplicationInfo *
+CAppDB::FindAvailableByPackageName(const CStringW &name)
 {
     POSITION CurrentListPosition = m_Available.GetHeadPosition();
     while (CurrentListPosition)
@@ -43,7 +43,7 @@ CAppDB::FindByPackageName(const CStringW &name)
         CAppInfo *Info = m_Available.GetNext(CurrentListPosition);
         if (Info->szIdentifier == name)
         {
-            return Info;
+            return static_cast<CAvailableApplicationInfo *>(Info);
         }
     }
     return NULL;
@@ -97,7 +97,7 @@ CAppDB::EnumerateFiles()
         {
             CConfigParser *Parser = new CConfigParser(CPathW(AppsPath) += FindFileData.cFileName);
             int Cat;
-            if (!Parser->GetInt(L"Category", Cat))
+            if (!Parser->GetInt(DB_CATEGORY, Cat))
                 Cat = ENUM_INVALID;
 
             Info = new CAvailableApplicationInfo(Parser, szPkgName, static_cast<AppsCategories>(Cat), AppsPath);
@@ -141,74 +141,123 @@ CAppDB::UpdateAvailable()
     EnumerateFiles();
 }
 
+static inline HKEY
+GetRootKeyInfo(UINT Index, REGSAM &RegSam)
+{
+    C_ASSERT(_countof(g_RootKeyEnum) == _countof(g_RegSamEnum));
+    if (Index < _countof(g_RootKeyEnum))
+    {
+        RegSam = g_RegSamEnum[Index];
+        return g_RootKeyEnum[Index];
+    }
+    return NULL;
+}
+
+HKEY
+CAppDB::EnumInstalledRootKey(UINT Index, REGSAM &RegSam)
+{
+    // Loop for through all combinations.
+    // Note that HKEY_CURRENT_USER\Software does not have a redirect
+    // https://docs.microsoft.com/en-us/windows/win32/winprog64/shared-registry-keys#redirected-shared-and-reflected-keys-under-wow64
+    if (Index < (IsSystem64Bit() ? 3 : 2))
+        return GetRootKeyInfo(Index, RegSam);
+    else
+        return NULL;
+}
+
+CInstalledApplicationInfo *
+CAppDB::CreateInstalledAppByRegistryKey(LPCWSTR KeyName, HKEY hKeyParent, UINT KeyIndex)
+{
+    CRegKey hSubKey;
+    if (hSubKey.Open(hKeyParent, KeyName, KEY_READ) != ERROR_SUCCESS)
+        return NULL;
+    DWORD value, size;
+
+    size = sizeof(DWORD);
+    if (!RegQueryValueExW(hSubKey, L"SystemComponent", NULL, NULL, (LPBYTE)&value, &size) && value == 1)
+    {
+        // Ignore system components
+        return NULL;
+    }
+
+    size = 0;
+    BOOL bIsUpdate = !RegQueryValueExW(hSubKey, L"ParentKeyName", NULL, NULL, NULL, &size);
+
+    AppsCategories cat = bIsUpdate ? ENUM_UPDATES : ENUM_INSTALLED_APPLICATIONS;
+    CInstalledApplicationInfo *pInfo;
+    pInfo = new CInstalledApplicationInfo(hSubKey.Detach(), KeyName, cat, KeyIndex);
+    if (pInfo && pInfo->Valid())
+    {
+        return pInfo;
+    }
+    delete pInfo;
+    return NULL;
+}
+
+CInstalledApplicationInfo *
+CAppDB::EnumerateRegistry(CAtlList<CAppInfo *> *List, LPCWSTR SearchOnly)
+{
+    ATLASSERT(List || SearchOnly);
+    REGSAM wowsam;
+    HKEY hRootKey;
+    for (UINT rki = 0; (hRootKey = EnumInstalledRootKey(rki, wowsam)); ++rki)
+    {
+        CRegKey hKey;
+        if (hKey.Open(hRootKey, UNINSTALL_SUBKEY, KEY_READ | wowsam) != ERROR_SUCCESS)
+        {
+            continue;
+        }
+        for (DWORD Index = 0;; ++Index)
+        {
+            WCHAR szKeyName[MAX_PATH];
+            DWORD dwSize = _countof(szKeyName);
+            if (hKey.EnumKey(Index, szKeyName, &dwSize) != ERROR_SUCCESS)
+            {
+                break;
+            }
+            if (List || !StrCmpIW(SearchOnly, szKeyName))
+            {
+                CInstalledApplicationInfo *Info;
+                Info = CreateInstalledAppByRegistryKey(szKeyName, hKey, rki);
+                if (Info)
+                {
+                    if (List)
+                        List->AddTail(Info);
+                    else
+                        return Info;
+                }
+            }
+        }
+    }
+    return NULL;
+}
+
 VOID
 CAppDB::UpdateInstalled()
 {
     // Remove all old entries
     ClearList(m_Installed);
 
-    int LoopKeys = 2;
+    EnumerateRegistry(&m_Installed, NULL);
+}
 
-    if (IsSystem64Bit())
+CInstalledApplicationInfo *
+CAppDB::CreateInstalledAppByRegistryKey(LPCWSTR Name)
+{
+    return EnumerateRegistry(NULL, Name);
+}
+
+CInstalledApplicationInfo *
+CAppDB::CreateInstalledAppInstance(LPCWSTR KeyName, BOOL User, REGSAM WowSam)
+{
+    HKEY hRootKey = User ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE;
+    UINT KeyIndex = User ? (0) : ((WowSam & KEY_WOW64_64KEY) ? 2 : 1);
+    CRegKey hKey;
+    if (hKey.Open(hRootKey, UNINSTALL_SUBKEY, KEY_READ | WowSam) == ERROR_SUCCESS)
     {
-        // loop for all 3 combination.
-        // note that HKEY_CURRENT_USER\Software don't have a redirect
-        // https://docs.microsoft.com/en-us/windows/win32/winprog64/shared-registry-keys#redirected-shared-and-reflected-keys-under-wow64
-        LoopKeys = 3;
+        return CreateInstalledAppByRegistryKey(KeyName, hKey, KeyIndex);
     }
-
-    for (int keyIndex = 0; keyIndex < LoopKeys; keyIndex++)
-    {
-        LONG ItemIndex = 0;
-        WCHAR szKeyName[MAX_PATH];
-
-        CRegKey hKey;
-        if (hKey.Open(g_RootKeyEnum[keyIndex], UNINSTALL_SUBKEY, KEY_READ | g_RegSamEnum[keyIndex]) != ERROR_SUCCESS)
-        {
-            continue;
-        }
-
-        while (1)
-        {
-            DWORD dwSize = _countof(szKeyName);
-            if (hKey.EnumKey(ItemIndex, szKeyName, &dwSize) != ERROR_SUCCESS)
-            {
-                break;
-            }
-
-            ItemIndex++;
-
-            CRegKey hSubKey;
-            if (hSubKey.Open(hKey, szKeyName, KEY_READ) == ERROR_SUCCESS)
-            {
-                DWORD dwValue = 0;
-
-                dwSize = sizeof(DWORD);
-                if (RegQueryValueExW(hSubKey, L"SystemComponent", NULL, NULL, (LPBYTE)&dwValue, &dwSize) ==
-                        ERROR_SUCCESS &&
-                    dwValue == 1)
-                {
-                    // Ignore system components
-                    continue;
-                }
-
-                BOOL bIsUpdate =
-                    (RegQueryValueExW(hSubKey, L"ParentKeyName", NULL, NULL, NULL, &dwSize) == ERROR_SUCCESS);
-
-                CInstalledApplicationInfo *Info = new CInstalledApplicationInfo(
-                    hSubKey.Detach(), szKeyName, bIsUpdate ? ENUM_UPDATES : ENUM_INSTALLED_APPLICATIONS, keyIndex);
-
-                if (Info->Valid())
-                {
-                    m_Installed.AddTail(Info);
-                }
-                else
-                {
-                    delete Info;
-                }
-            }
-        }
-    }
+    return NULL;
 }
 
 static void
@@ -262,30 +311,28 @@ CAppDB::RemoveCached()
     RemoveDirectoryW(m_BasePath);
 }
 
-BOOL
+DWORD
 CAppDB::RemoveInstalledAppFromRegistry(const CAppInfo *Info)
 {
     // Validate that this is actually an installed app / update
     ATLASSERT(Info->iCategory == ENUM_INSTALLED_APPLICATIONS || Info->iCategory == ENUM_UPDATES);
     if (Info->iCategory != ENUM_INSTALLED_APPLICATIONS && Info->iCategory != ENUM_UPDATES)
-        return FALSE;
+        return ERROR_INVALID_PARAMETER;
 
-    // Grab the index in the registry keys
     const CInstalledApplicationInfo *InstalledInfo = static_cast<const CInstalledApplicationInfo *>(Info);
-    ATLASSERT(InstalledInfo->iKeyIndex >= 0 && InstalledInfo->iKeyIndex < (int)_countof(g_RootKeyEnum));
-    if (InstalledInfo->iKeyIndex < 0 && InstalledInfo->iKeyIndex >= (int)_countof(g_RootKeyEnum))
-        return FALSE;
 
-    int keyIndex = InstalledInfo->iKeyIndex;
-
-    // Grab the registry key name
     CStringW Name = InstalledInfo->szIdentifier;
+    REGSAM wowsam;
+    HKEY hRoot = GetRootKeyInfo(InstalledInfo->m_KeyInfo, wowsam);
+    ATLASSERT(hRoot);
+    if (!hRoot)
+        return ERROR_OPEN_FAILED;
 
-    // Recursively delete this key
     CRegKey Uninstall;
-    if (Uninstall.Open(g_RootKeyEnum[keyIndex], UNINSTALL_SUBKEY, KEY_READ | KEY_WRITE | g_RegSamEnum[keyIndex]) !=
-        ERROR_SUCCESS)
-        return FALSE;
-
-    return Uninstall.RecurseDeleteKey(Name) == ERROR_SUCCESS;
+    LSTATUS err = Uninstall.Open(hRoot, UNINSTALL_SUBKEY, KEY_READ | KEY_WRITE | wowsam);
+    if (err == ERROR_SUCCESS)
+    {
+        err = Uninstall.RecurseDeleteKey(Name);
+    }
+    return err;
 }

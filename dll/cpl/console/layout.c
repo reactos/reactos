@@ -39,7 +39,7 @@ RegisterWinPrevClass(
     WndClass.style = 0;
     WndClass.hInstance = hInstance;
     WndClass.hIcon = NULL;
-    WndClass.hCursor = LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_ARROW));
+    WndClass.hCursor = LoadCursorW(NULL, IDC_ARROW);
     WndClass.hbrBackground =  (HBRUSH)(COLOR_BACKGROUND + 1);
     WndClass.lpszMenuName = NULL;
     WndClass.cbClsExtra = 0;

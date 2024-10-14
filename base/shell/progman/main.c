@@ -1061,7 +1061,7 @@ static ATOM MAIN_RegisterMainWinClass(VOID)
     wndClass.cbWndExtra    = 0;
     wndClass.hInstance     = Globals.hInstance;
     wndClass.hIcon         = Globals.hMainIcon;
-    wndClass.hCursor       = LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_ARROW));
+    wndClass.hCursor       = LoadCursorW(NULL, IDC_ARROW);
     wndClass.hbrBackground = (HBRUSH)GetStockObject(NULL_BRUSH);
     wndClass.lpszMenuName  = NULL;
     wndClass.lpszClassName = STRING_MAIN_WIN_CLASS_NAME;

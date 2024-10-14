@@ -66,7 +66,7 @@ CAPTION "Изтриване на историята на браузъра"
 BEGIN
 
     AUTOCHECKBOX   "&Временни интернет файлове\nКеширани копия на интернет страници, снимки и сертификати.",
-                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
+                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE | WS_GROUP | WS_TABSTOP
     AUTOCHECKBOX   "&Бисквитки\nФайлове запазени на вашия компютър, съхраняващи неща като потребителски предпочитания и информация за вход.",
                     IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "&Списък с историята на интернет странциите до които имате достъп.",
@@ -76,7 +76,7 @@ BEGIN
     AUTOCHECKBOX   "&Пароли които се използват автоматично.",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON  "Изход", IDCANCEL, 185, 230, 60, 15, WS_GROUP
-    PUSHBUTTON     "&Изтриване", IDOK, 120, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "&Изтриване", IDOK, 120, 230, 60, 15
 
 END
 

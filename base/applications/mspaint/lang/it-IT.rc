@@ -4,6 +4,7 @@
  * PURPOSE:     Italian resource file
  * TRANSLATORS: Copyright 2009 Gabriel Ilardi <gabrielilardi@hotmail.it>
  *              Copyright 2009-2010 Paolo Devoti <devotip@tiscali.it>
+ *              Copyright 2024 Gabriele Lo Re <gabrolr70@gmail.com>
  */
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
@@ -14,26 +15,26 @@ ID_MENU MENU
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "Nuovo\tCtrl+N", IDM_FILENEW
-        MENUITEM "Apri...\tCtrl+F12", IDM_FILEOPEN
-        MENUITEM "Salva\tMaiusc+F12", IDM_FILESAVE
-        MENUITEM "Sal&va con nome...", IDM_FILESAVEAS
+        MENUITEM "&Nuovo\tCtrl+N", IDM_FILENEW
+        MENUITEM "&Apri...\tCtrl+F12", IDM_FILEOPEN
+        MENUITEM "&Salva\tMaiusc+F12", IDM_FILESAVE
+        MENUITEM "Sa&lva con nome...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "From Scanner or Camera...", IDM_FILEFROMSCANNERORCAMERA
+        MENUITEM "Da Scanner o &fotocamera...", IDM_FILEFROMSCANNERORCAMERA
         MENUITEM SEPARATOR
-        MENUITEM "Page View", IDM_FILEPAGEVIEW
-        MENUITEM "Page Setup...", IDM_FILEPAGESETUP
-        MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM "Anteprima &di stampa", IDM_FILEPAGEVIEW
+        MENUITEM "&Imposta pagina...", IDM_FILEPAGESETUP
+        MENUITEM "S&tampa...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
-        MENUITEM "Send...", IDM_FILESEND
+        MENUITEM "In&via...", IDM_FILESEND
         MENUITEM SEPARATOR
         MENUITEM "Imposta come sfondo (normale)", IDM_FILEASWALLPAPERPLANE
-        MENUITEM "Imposta come sfondo (centrata)", IDM_FILEASWALLPAPERCENTERED
-        MENUITEM "Imposta come sfondo (estesa)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM "Imp&osta come sfondo (centrato)", IDM_FILEASWALLPAPERCENTERED
+        MENUITEM "Imposta come sfondo (esteso)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "Most recently used file", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
+        MENUITEM "File recenti", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "E&sci\tAlt+F4", IDM_FILEEXIT
+        MENUITEM "&Esci\tAlt+F4", IDM_FILEEXIT
     END
     POPUP "&Modifica"
     BEGIN
@@ -44,22 +45,22 @@ BEGIN
         MENUITEM "&Copia\tCtrl+C", IDM_EDITCOPY
         MENUITEM "I&ncolla\tCtrl+V", IDM_EDITPASTE
         MENUITEM SEPARATOR
-        MENUITEM "Crop &selection", IDM_CROPSELECTION
-        MENUITEM "Cance&lla area selezionata\tCanc", IDM_EDITDELETESELECTION
+        MENUITEM "Ritaglia s&elezione", IDM_CROPSELECTION
+        MENUITEM "Cancella area sele&zionata\tCanc", IDM_EDITDELETESELECTION
         MENUITEM "&Inverte selezione", IDM_EDITINVERTSELECTION
-        MENUITEM "Sele&ziona tutto\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "&Seleziona tutto\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Copia &su...", IDM_EDITCOPYTO
+        MENUITEM "C&opia in...", IDM_EDITCOPYTO
         MENUITEM "Incolla &da...", IDM_EDITPASTEFROM
     END
     POPUP "&Visualizza"
     BEGIN
-        MENUITEM "Casella degli strumenti\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
-        MENUITEM "Tavolozza\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
-        MENUITEM "Barra di stato", IDM_VIEWSTATUSBAR, CHECKED
-        MENUITEM "Barra degli strumenti di testo", IDM_FORMATICONBAR, CHECKED, GRAYED
+        MENUITEM "&Casella degli strumenti\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
+        MENUITEM "Tav&olozza\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
+        MENUITEM "Barra di s&tato", IDM_VIEWSTATUSBAR, CHECKED
+        MENUITEM "B&arra degli strumenti di testo", IDM_FORMATICONBAR, CHECKED, GRAYED
         MENUITEM SEPARATOR
-        POPUP "Zoom"
+        POPUP "&Zoom"
         BEGIN
             POPUP "User defined"
             BEGIN
@@ -73,32 +74,32 @@ BEGIN
             END
             MENUITEM SEPARATOR
             MENUITEM "Mostra griglia\tCtrl+G", IDM_VIEWSHOWGRID
-            MENUITEM "Mostra miniature", IDM_VIEWSHOWMINIATURE
+            MENUITEM "Mostra anteprima", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "Visualizza a schermo intero\tCtrl+F", IDM_VIEWFULLSCREEN
     END
     POPUP "&Immagine"
     BEGIN
-        MENUITEM "Ca&povolgi/ruota...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "&Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Capovolgi/ruota...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "&Allunga/Inclina...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "&Ritaglia", IDM_IMAGECROP
         MENUITEM "&Inverti colori\tCtrl+I", IDM_IMAGEINVERTCOLORS
-        MENUITEM "&Attributi...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "&Cancella immagine\tCtrl+Maiusc+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "A&ttributi...\tCtrl+E", IDM_IMAGEATTRIBUTES
+        MENUITEM "Ca&ncella immagine\tCtrl+Maiusc+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "&Opaco", IDM_IMAGEDRAWOPAQUE
     END
     POPUP "&Colori"
     BEGIN
-        MENUITEM "Modifica colori...", IDM_COLORSEDITPALETTE
+        MENUITEM "&Modifica colori...", IDM_COLORSEDITPALETTE
         MENUITEM SEPARATOR
-        MENUITEM "Modern palette", IDM_COLORSMODERNPALETTE
+        MENUITEM "Tavolozza moderna", IDM_COLORSMODERNPALETTE
         MENUITEM "Old palette", IDM_COLORSOLDPALETTE
     END
     POPUP "&Aiuto"
     BEGIN
-        MENUITEM "Guida in linea", IDM_HELPHELPTOPICS
+        MENUITEM "&Guida in linea", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "Informazioni", IDM_HELPINFO
+        MENUITEM "&Informazioni su Paint", IDM_HELPINFO
     END
 END
 
@@ -108,17 +109,17 @@ BEGIN
     BEGIN
         MENUITEM "&Taglia\tCtrl+X", IDM_EDITCUT
         MENUITEM "&Copia\tCtrl+C", IDM_EDITCOPY
-        MENUITEM "I&ncolla\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "&Incolla\tCtrl+V", IDM_EDITPASTE
         MENUITEM SEPARATOR
-        MENUITEM "Crop &selection", IDM_CROPSELECTION
-        MENUITEM "Cance&lla area selezionata\tCanc", IDM_EDITDELETESELECTION
-        MENUITEM "Sele&ziona tutto\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "Ritaglia s&elezione", IDM_CROPSELECTION
+        MENUITEM "Cancella area sele&zionata\tCanc", IDM_EDITDELETESELECTION
+        MENUITEM "&Seleziona tutto\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Copia &su...", IDM_EDITCOPYTO
+        MENUITEM "C&opia in...", IDM_EDITCOPYTO
         MENUITEM "Incolla &da...", IDM_EDITPASTEFROM
         MENUITEM SEPARATOR
-        MENUITEM "Ca&povolgi/ruota...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "S&tretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "&Capovolgi/ruota...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "&Allunga/Inclina...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "&Inverti colori\tCtrl+I", IDM_IMAGEINVERTCOLORS
     END
 END
@@ -196,9 +197,9 @@ END
 IDD_STRETCHSKEW DIALOGEX 100, 100, 225, 150
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Stretch and skew image"
+CAPTION "Allunga e inclina l'immagine"
 BEGIN
-    GROUPBOX "Stretch", IDD_STRETCHSKEWGROUPSTRETCH, 6, 6, 158, 66
+    GROUPBOX "Allunga", IDD_STRETCHSKEWGROUPSTRETCH, 6, 6, 158, 66
     ICON IDI_HORZSTRETCH, IDD_STRETCHSKEWICONHSTRETCH, 12, 18, 32, 32
     LTEXT "Orizzontalmente:", IDD_STRETCHSKEWTEXTHSTRETCH, 45, 24, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITHSTRETCH, 90, 23, 32, 12
@@ -207,7 +208,7 @@ BEGIN
     LTEXT "Verticalmente:", IDD_STRETCHSKEWTEXTVSTRETCH, 45, 49, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITVSTRETCH, 90, 48, 32, 12
     LTEXT "%", IDD_STRETCHSKEWTEXTVPERCENT, 125, 49, 15, 10
-    GROUPBOX "Skew", IDD_STRETCHSKEWGROUPSKEW, 6, 76, 158, 66
+    GROUPBOX "Inclina", IDD_STRETCHSKEWGROUPSKEW, 6, 76, 158, 66
     ICON IDI_HORZSKEW, IDD_STRETCHSKEWICONHSKEW, 12, 88, 32, 32
     LTEXT "Orizzontalmente:", IDD_STRETCHSKEWTEXTHSKEW, 45, 94, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITHSKEW, 90, 93, 32, 12
@@ -236,8 +237,8 @@ BEGIN
     IDS_PROGRAMNAME "Paint"
     IDS_WINDOWTITLE "%s - Paint"
     IDS_INFOTITLE "Paint per ReactOS"
-    IDS_INFOTEXT "Available under the GNU Lesser General Public License (LGPL, see www.gnu.org)"
-    IDS_SAVEPROMPTTEXT "Volete salvare le modifiche a %s?"
+    IDS_INFOTEXT "Disponibile sotto licenza GNU Lesser General Public (LGPL, vedi www.gnu.org)"
+    IDS_SAVEPROMPTTEXT "Si vuole salvare le modifiche a %s?"
     IDS_DEFAULTFILENAME "SenzaNome"
     IDS_MINIATURETITLE "Miniature"
     IDS_TOOLTIP1 "Selezione libera"
@@ -256,21 +257,21 @@ BEGIN
     IDS_TOOLTIP14 "Poligono"
     IDS_TOOLTIP15 "Ellisse"
     IDS_TOOLTIP16 "Rettangolo arrotondato"
-    IDS_ALLFILES "All Files"
-    IDS_ALLPICTUREFILES "All Picture Files"
+    IDS_ALLFILES "Tutti i file"
+    IDS_ALLPICTUREFILES "Tutti i file immagine"
     IDS_FILESIZE "%d bytes"
     IDS_INTNUMBERS "Si prega di inserire solo numeri interi!"
     IDS_PERCENTAGE "La percentuale deve essere compresa tra 1 e 500."
     IDS_ANGLE "L'angolo deve essere compreso tra -89 e 89."
     IDS_LOADERRORTEXT "l file %s non può essere caricato."
-    IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
-    IDS_BOLD "Bold"
-    IDS_ITALIC "Italic"
-    IDS_UNDERLINE "Underline"
-    IDS_VERTICAL "Vertical"
+    IDS_ENLARGEPROMPTTEXT "L'immagine negli appunti è più grande della tela.\nLa si vuole allargare?"
+    IDS_BOLD "Grossivo"
+    IDS_ITALIC "Italico"
+    IDS_UNDERLINE "Sottolineato"
+    IDS_VERTICAL "Verticale"
     IDS_PRINTRES "%d x %d pixel/cm"
-    IDS_CANTPASTE "Failed to paste from the clipboard. The data format is either incorrect or not supported."
-    IDS_SAVEERROR "Failed to save the bitmap to file:\n\n%s"
-    IDS_CANTSENDMAIL "Failed to send a mail."
-    IDS_LOSECOLOR "The color information will be lost in this operation. Are you sure to proceed?"
+    IDS_CANTPASTE "Impossibile incollare dagli appunti. Il formato dati è incorretto o non supportato."
+    IDS_SAVEERROR "Impossibile salvare la bitmap nel file:\n\n%s"
+    IDS_CANTSENDMAIL "Impossibile inviare l'email."
+    IDS_LOSECOLOR "Le informazioni sul colore saranno perse con quest'operazione. Sei sicuro di procedere?"
 END

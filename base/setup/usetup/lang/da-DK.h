@@ -2272,7 +2272,7 @@ MUI_STRING daDKStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   Opdatere indstillinger for tastaturlauout..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Tilf\233jrer tegntabelsinfomation til registrerinsdatabasen..."},
+    "   Tilf\233jrer tegntabelsinfomation..."},
     {STRING_DONE,
     "   Udf\233rt..."},
     {STRING_REBOOTCOMPUTER2,

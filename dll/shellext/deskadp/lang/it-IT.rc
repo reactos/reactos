@@ -30,14 +30,14 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     DEFPUSHBUTTON "OK", IDOK, 112, 115, 50, 15
     PUSHBUTTON "Annulla", IDCANCEL, 167, 115, 50, 15
-    GROUPBOX "Elenco delle modalità valide", -1, 6, 7, 212, 98
+    GROUPBOX "Elenco delle modalità disponibili", -1, 6, 7, 212, 98
     LISTBOX IDC_ALLVALIDMODES, 10, 20, 204, 87, LBS_NOTIFY | WS_VSCROLL
 END
 
 STRINGTABLE
 BEGIN
     IDS_MODEFMT "%d by %d, %s, %s"
-    IDS_DEFREFRESHRATE "Rinfresco predefinito"
+    IDS_DEFREFRESHRATE "Frequenza aggiornamento predefinita"
     IDES_REFRESHRATEFMT "%d Hertz"
     IDS_4BPP "16 Colori"
     IDS_8BPP "256 Colori"
@@ -45,5 +45,5 @@ BEGIN
     IDS_16BPP "High Color (16 bit)"
     IDS_24BPP "True Color (24 bit)"
     IDS_32BPP "True Color (32 bit)"
-    IDS_NOTAVAIL "Not Available"
+    IDS_NOTAVAIL "Non disponibile"
 END

@@ -14,11 +14,11 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#ifdef _MSC_VER
+#if !defined(__REACTOS__) || defined(_MSC_VER)
 #pragma warning(push,3)
 #endif
 #include <commdlg.h>
-#ifdef _MSC_VER
+#if !defined(__REACTOS__) || defined(_MSC_VER)
 #pragma warning(pop)
 #endif
 
@@ -195,7 +195,11 @@ void OnInit(
 {
 	//	Store parameters
 
+#ifndef __REACTOS__
+	SetWindowLong(hDlg, GWL_USERDATA, (ULONG)pParam);
+#else
 	SetWindowLongPtr(hDlg, GWLP_USERDATA, (ULONG_PTR)pParam);
+#endif
 
 	//	clear the target existence flag
 
@@ -293,7 +297,11 @@ void OnTarget(
 	//
 	//	get the current image info
 	//
+#ifndef __REACTOS__
+	param = (PCSAVE_PARAM)GetWindowLong(hDlg, GWL_USERDATA);
+#else
 	param = (PCSAVE_PARAM)GetWindowLongPtr(hDlg, GWLP_USERDATA);
+#endif
 
 	if (_stricmp(param->ImageName, buf) == 0) {
 
@@ -422,7 +430,11 @@ void OnBrowse(
 	ofn.lpstrInitialDir = dir;
 	ofn.lpstrTitle	= title ? title : "Save Image";
 	ofn.lpstrFilter	= "*.*\0*.*\0";
+#ifndef __REACTOS__
+	ofn.Flags		= OFN_ENABLESIZING | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
+#else
 	ofn.Flags		= OFN_EXPLORER | OFN_ENABLESIZING | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
+#endif
 
 	if (GetSaveFileName(&ofn)) {
 		SetDlgItemText(hDlg, IDC_TARGETFILE, file);
@@ -469,7 +481,11 @@ DWORD OnOK(
 	BOOL			truncate;
 	DWORD			ret;
 
+#ifndef __REACTOS__
+	param = (PCSAVE_PARAM)GetWindowLong(hDlg, GWL_USERDATA);
+#else
 	param = (PCSAVE_PARAM)GetWindowLongPtr(hDlg, GWLP_USERDATA);
+#endif
 
 	if (!param) {
 		return ERROR_INVALID_FUNCTION;

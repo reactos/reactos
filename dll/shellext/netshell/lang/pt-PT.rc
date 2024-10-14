@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Network Shell
+ * LICENSE:     LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ * PURPOSE:     Portuguese (Portugal) resource file
+ * TRANSLATOR:  Copyright 2019-2024 Jose Carlos Jesus <zecarlos1957@hotmail.com>
+ */
+
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 IDD_NETPROPERTIES DIALOGEX 0, 0, 246, 216
@@ -15,7 +22,7 @@ BEGIN
     PUSHBUTTON "&Propriedades", IDC_PROPERTIES, 174, 105, 65, 14
     GROUPBOX "Descrição", -1, 9, 128, 230, 46, BS_GROUPBOX
     LTEXT "", IDC_DESCRIPTION, 15, 140, 217, 28, WS_GROUP
-    AUTOCHECKBOX "&Mostrar icon na área de notificação quando ligado", IDC_SHOWTASKBAR, 9, 181, 230, 12, WS_TABSTOP
+    AUTOCHECKBOX "&Mostrar ícone na área de notificação quando ligado", IDC_SHOWTASKBAR, 9, 181, 230, 12, WS_TABSTOP
     AUTOCHECKBOX "&Notificar-me quando a conectividade desta ligação for limitada ou nula", IDC_NOTIFYNOCONNECTION, 9, 195, 230, 20, BS_MULTILINE | BS_TOP | WS_TABSTOP
 END
 
@@ -78,20 +85,20 @@ END
 
 IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalador do ReactOS"
+CAPTION "Programa de configuração do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Seleccione  configuração típica ou personalizada:", IDC_STATIC, 53, 7, 240, 20
     AUTORADIOBUTTON "Configuração &típica", IDC_NETWORK_TYPICAL, 53, 27, 253, 18, WS_TABSTOP | WS_GROUP
     AUTORADIOBUTTON "Configuração &personalizada", IDC_NETWORK_CUSTOM, 53, 72, 253, 18, WS_TABSTOP
-    LTEXT "Cria ligações de rede utilizando Cliente para Redes ReactOS. Ficheiros e Impresoras partilhadas para Redes ReactOS, e o protocolo TCP/IP com endereçamento automático.", IDC_STATIC, 65, 45, 240, 30
-    LTEXT "Permite configurar manualmente componentes de rede.", IDC_STATIC, 65, 90, 243, 20
+    LTEXT "Cria ligações de rede utilizando o ""Cliente para Redes ReactOS"". ""Partilha de ficheiros e de impressão para redes ReactOS"", e o protocolo TCP/IP com endereçamento automático.", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "Permite configurar manualmente os componentes de rede.", IDC_STATIC, 65, 90, 243, 20
 END
 
 IDD_NETWORKCOMPONENTPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalador de ReactOS"
+CAPTION "Programa de configuração do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Dispositivo:", IDC_STATIC, 33, 2, 100, 20
@@ -106,13 +113,13 @@ END
 
 IDD_NETWORKDOMAINPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalador do ReactOS"
+CAPTION "Programa de configuração do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Pretende que este computador seja membro de um domínio?\n\
-(Pode obter esta informação do seu administrador de rede.)", IDC_STATIC, 33, 2, 263, 50
-    AUTORADIOBUTTON "Não, este computador fará parte de um grupo de &trabalho.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Sim, este computador fará parte de um &domínio.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
+    LTEXT "Deseja que este computador seja membro de um domínio?\n\
+(Pode obter esta informação no seu administrador de rede.)", IDC_STATIC, 33, 2, 263, 50
+    AUTORADIOBUTTON "Não; fazer este computador membro do seguinte grupo de &trabalho.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Sim; fazer este computador membro do seguinte &domínio.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
     LTEXT "Nome do domínio ou grupo de trabalho:", IDC_STATIC, 33, 72, 152, 20
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "NOTA: Se este computador não fizer parte de uma rede, não terá privilégios suficientes para se juntar a um domínio, ou se simplesmente não sabe que escolher, então seleccione ""Grupo de trabalho"" por agora. Ésta opção pode ser alterada mais tarde.", IDC_STATIC, 33, 107, 263, 50
@@ -129,7 +136,7 @@ BEGIN
     IDS_LEASE_EXPIRES "Permissão expirada"
     IDS_DNS_SERVERS "Servidor DNS"
     IDS_WINS_SERVERS "Servidor WINS"
-    IDS_PROPERTY "Propriedades"
+    IDS_PROPERTY "Proprietário"
     IDS_VALUE "Valor"
     IDS_NETWORKCONNECTION "Ligações de rede"
     IDS_SHV_COLUMN_NAME "Nome"
@@ -138,7 +145,7 @@ BEGIN
     IDS_SHV_COLUMN_DEVNAME "Nome do dispositivo"
     IDS_SHV_COLUMN_PHONE "Número de telefone ou endereço do hospedeiro"
     IDS_SHV_COLUMN_OWNER "Administrador"
-    IDS_TYPE_ETHERNET "LAN ou Internet de alta velocidade"
+    IDS_TYPE_ETHERNET "LAN ou internet de alta velocidade"
     IDS_STATUS_NON_OPERATIONAL "Desabilitado"
     IDS_STATUS_UNREACHABLE "Desligado"
     IDS_STATUS_DISCONNECTED "Cabo de rede desligado"
@@ -166,11 +173,11 @@ END
 STRINGTABLE
 BEGIN
     IDS_NETWORKSETTINGSTITLE "Definições de rede"
-    IDS_NETWORKSETTINGSSUBTITLE "Instala aplicações de rede necessárias para ligar a outras redes, equipamentos, e à Internet."
-    IDS_NETWORKCOMPONENTTITLE "Componetes de rede"
-    IDS_NETWORKCOMPONENTSUBTITLE "Determina quais os componentes de rede a utilizar neste equipamento. Para adicionar novos componentes, clique em Instalar."
+    IDS_NETWORKSETTINGSSUBTITLE "Instala aplicações de rede necessárias para ligar a outras redes, equipamentos, e à internet."
+    IDS_NETWORKCOMPONENTTITLE "Componentes de rede"
+    IDS_NETWORKCOMPONENTSUBTITLE "Determina quais os componentes de rede a utilizar neste equipamento. Para adicionar novos componentes, clique em ""Instalar""."
     IDS_NETWORKDOMAINTITLE "Grupo de trabalho ou domínio"
-    IDS_NETWORKDOMAINSUBTITLE "Um domínio é um grupo de computadores gerido por um administrador de rede. Um grupo de trabalho é um grupo de computadores que partilham o mesmo nome."
-    IDS_REACTOS_SETUP "Instalador do ReactOS"
+    IDS_NETWORKDOMAINSUBTITLE "Um grupo de trabalho é um grupo de computadores que partilham o mesmo nome. Um domínio é um grupo de computadores gerido por um administrador de rede."
+    IDS_REACTOS_SETUP "Programa de configuração do ReactOS"
     IDS_WZD_DOMAIN_NAME "A instalação não pode continuar\naté que digite o nome do\n domínio ou grupo de trabalho."
 END

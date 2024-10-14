@@ -55,6 +55,12 @@ typedef struct _TRAYNOTIFYDATAW
 #define TWM_CYCLEFOCUS (WM_USER + 348)
 
 /****************************************************************************
+ * ProgMan messages
+ */
+#define WM_PROGMAN_OPENSHELLSETTINGS (WM_USER + 22) /* wParam specifies the dialog (and tab page) */
+#define WM_PROGMAN_SAVESTATE         (WM_USER + 77)
+
+/****************************************************************************
  *  IDList Functions
  */
 BOOL WINAPI ILGetDisplayName(
@@ -87,6 +93,23 @@ HRESULT WINAPI SHILCreateFromPathW (
     LPITEMIDLIST * ppidl,
     DWORD *attributes);
 
+HRESULT WINAPI SHInvokeCommand(
+    HWND hWnd,
+    IShellFolder* lpFolder,
+    LPCITEMIDLIST lpApidl,
+    LPCSTR lpVerb);
+HRESULT WINAPI SHInvokeCommandOnContextMenu(
+    _In_opt_ HWND hWnd,
+    _In_opt_ IUnknown* pUnk,
+    _In_ IContextMenu* pCM,
+    _In_ UINT fCMIC,
+    _In_opt_ LPCSTR pszVerb);
+BOOL WINAPI IContextMenu_Invoke(
+    _In_ IContextMenu *pContextMenu,
+    _In_ HWND hwnd,
+    _In_ LPCSTR lpVerb,
+    _In_ UINT uFlags);
+
 /*
     string functions
 */
@@ -117,6 +140,7 @@ typedef struct _SHCNF_PRINTJOB_INFO
 #define SHCNF_PRINTJOBA 0x0004
 #define SHCNF_PRINTJOBW 0x0007
 
+HRESULT WINAPI SHUpdateRecycleBinIcon(void);
 
 /****************************************************************************
  * Shell Common Dialogs
@@ -530,6 +554,19 @@ BOOL WINAPI PathIsTemporaryW(_In_ LPCWSTR Str);
 #define ERRORONDEST         0x10000
 
 /****************************************************************************
+ * Shell settings
+ */
+
+typedef struct _REGSHELLSTATE
+{
+    DWORD dwSize;
+    SHELLSTATE ss;
+} REGSHELLSTATE, *PREGSHELLSTATE;
+#define REGSHELLSTATE_SIZE 0x24
+#define REGSHELLSTATE_VERSION 0xD
+C_ASSERT(sizeof(REGSHELLSTATE) == REGSHELLSTATE_SIZE);
+
+/****************************************************************************
  * Shell Namespace Routines
  */
 
@@ -722,10 +759,12 @@ HRESULT WINAPI SHCreatePropertyBag(_In_ REFIID riid, _Out_ void **ppvObj);
 HRESULT WINAPI SHLimitInputCombo(HWND hWnd, IShellFolder *psf);
 HRESULT WINAPI SHGetImageList(int iImageList, REFIID riid, void **ppv);
 
+BOOL WINAPI GUIDFromStringA(
+    _In_   PCSTR psz,
+    _Out_  LPGUID pguid);
 BOOL WINAPI GUIDFromStringW(
     _In_   PCWSTR psz,
-    _Out_  LPGUID pguid
-    );
+    _Out_  LPGUID pguid);
 
 LPSTR WINAPI SheRemoveQuotesA(LPSTR psz);
 LPWSTR WINAPI SheRemoveQuotesW(LPWSTR psz);

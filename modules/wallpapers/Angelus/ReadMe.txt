@@ -43,7 +43,7 @@ Sea Series
 ----------
 1 (Golden Sunset): Beautiful sunset in the Atlantic ocean.
 2: Photo taken at Praia do Vilar (Vilar's Beach) in the Barbanza region.
-3 (Red Sunset): Photo taken from Carril, a beautiful village at the port town of Vilagarcía de Arousa.
+3 (Red Sunset): Photo taken from Carril, a beautiful village at the port town of VilagarcÃ­a de Arousa.
 4 (ReactOS Sea): Sunset's photo with some radial blur effect.
 
 Sky Series

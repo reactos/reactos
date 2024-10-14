@@ -218,7 +218,7 @@ KiInitializeCpu(PKIPCR Pcr)
                          ((ULONG64)(KGDT64_R3_CMCODE|RPL_MASK) << 48));
 
     /* Set the flags to be cleared when doing a syscall */
-    __writemsr(MSR_SYSCALL_MASK, EFLAGS_IF_MASK | EFLAGS_TF | EFLAGS_DF);
+    __writemsr(MSR_SYSCALL_MASK, EFLAGS_IF_MASK | EFLAGS_TF | EFLAGS_DF | EFLAGS_NESTED_TASK);
 
     /* Enable syscall instruction and no-execute support */
     __writemsr(MSR_EFER, __readmsr(MSR_EFER) | MSR_SCE | MSR_NXE);

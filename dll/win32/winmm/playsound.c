@@ -6,6 +6,8 @@
  * Copyright 1993      Martin Ayotte
  *           1998-2002 Eric Pouech
  *
+ * Modified for use with ReactOS by Thamatip Chitpong, 2023
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either

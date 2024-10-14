@@ -245,6 +245,7 @@ command           E' il comando da eseguire se la condizione è verificata.\n\
 string1==string2  E' verificata se sono uguali le due stringhe\n\
 EXIST nomefile    E' verificata se il file esiste.\n\
 DEFINED variabile E' verificata se la variabile è definita.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "L'ora attuale è: "
     STRING_MKDIR_HELP "Crea una cartella.\n\n\
 MKDIR [disco:]percorso\nMD    [disco:]percorso"
@@ -342,34 +343,6 @@ Non è possibile indicare un nuovo disco o percorso nella destinazione.\n\
 Usare il comando MOVE.\n"
     STRING_REN_HELP2 "    %lu file rinominato\n"
     STRING_REN_HELP3 "    %lu files rinominati\n"
-    STRING_REPLACE_HELP1 "Sostituisce i file.\n\n\
-REPLACE [disco1:][percorso1]nomefile [disco2:][percorso2] [/A] [/P] [/R] [/W]\n\
-REPLACE [disco1:][percorso1]nomefile [disco2:][percorso2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [drive1:][path1]nomefile Specifica il o i file sorgenti.\n\
-  [disco2:][percorso2]     Specifica la cartella dove i file devono essere\n\
-                           sostituiti.\n\
-  /A                       Aggiunge i file alla cartella di destinazione. Non può\n\
-                           essere usato con /S o /U .\n\
-  /P                       Chiede conferma prima di sostituire o aggiungere\n\
-                           un file.\n\
-  /R                       Sostituisce sia i file in sola lettura che quelli\n\
-                           non protetti.\n\
-  /S                       Sostituisce i file in tutte le sottocartelle\n\
-                           della cartella di destinazione. Non può essere\n\
-                           usato con /A .\n\
-  /W                       Aspetta che sia inserito un disco prima di iniziare.\n\
-  /U                       Sostituisce (aggiorna) solo i file più vecchi\n\
-                           dei file sorgenti. Non può essere usato con /A .\n"
-    STRING_REPLACE_HELP2 "Il percorso sorgente è obbligatorio\n"
-    STRING_REPLACE_HELP3 "Nessun file sostituito\n"
-    STRING_REPLACE_HELP4 "%lu file sostituiti\n"
-    STRING_REPLACE_HELP5 "Sostituzione di %s in corso\n"
-    STRING_REPLACE_HELP6 "Sostituzione di %s\n"
-    STRING_REPLACE_HELP7 "Nessun file aggiunto\n"
-    STRING_REPLACE_HELP8 "%lu file aggiunti\n"
-    STRING_REPLACE_HELP9 "Aggiungere %s (S/N)? "
-    STRING_REPLACE_HELP10 "Sostituire %s (S/N)? "
-    STRING_REPLACE_HELP11 "Aggiunta di %s in corso\n"
     STRING_SHIFT_HELP "Cambia la posizione dei parametri in un batch.\n\n\
 SHIFT [DOWN]"
     STRING_SCREEN_HELP "muove il cursore e opzionalmente stampa del testo\n\n\
@@ -527,15 +500,16 @@ titolo        il nuovo titolo\n"
     STRING_ERROR_CANNOTPIPE "Errore!  Impossibile ridirigere!  Impossibile aprire un file temporaneo!\n"
     STRING_ERROR_D_PAUSEMSG "Premi un tasto per continuare . . . "
     STRING_ERROR_DRIVER_NOT_READY "Disco non pronto"
+    STRING_ERROR_INVALID_NUMBER1 "Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"
+    STRING_ERROR_INVALID_NUMBER2 "Invalid number. Numbers are limited to 32-bits of precision.\n"
+    STRING_ERROR_DIVISION_BY_ZERO "Division by zero error.\n"
+    STRING_ERROR_INVALID_DEVICE L"Invalid device '%s'\n"
+    STRING_ERROR_CALL_BAD_LABEL "Invalid attempt to call batch label outside of batch script.\n"
+    STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
+    STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
-    STRING_REPLACE_ERROR1 "Parametro non valido - %s\n"
-    STRING_REPLACE_ERROR2 "Percorso non trovato - %s\n"
-    STRING_REPLACE_ERROR3 "Il nome del file, della cartella o della etichetta di volume è errato.\n"
-    STRING_REPLACE_ERROR4 "Combinazione di parametri non valida\n"
-    STRING_REPLACE_ERROR5 "Accesso negato - %s\n"
-    STRING_REPLACE_ERROR6 "Nessun file trovato - %s\n"
-    STRING_REPLACE_ERROR7 "Errore esteso 32\n"
     STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
     STRING_REACTOS_VERSION "ReactOS [Version %s %s]\n"
     STRING_CMD_SHELLINFO "\nInterprete di linea di comando di ReactOS\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "In esecuzione su: "

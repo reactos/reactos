@@ -96,7 +96,7 @@
 # Apisets
 #   M: learn-more, learn_more, Mark Jansen
 #   S: Maintained
-/dll/apisets/   @learn-more
+/sdk/lib/apisets/   @learn-more
 
 # Application Compatibility subystem
 #   M: learn-more, learn_more, Mark Jansen

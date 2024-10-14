@@ -277,7 +277,7 @@ BEGIN
     5848 "系统通知"
     5849 "问题"
     5850 "启动 ReactOS"
-    5851 "「开始」菜单"
+    5851 "“开始”菜单"
     IDS_REACTOS_LOGOFF "ReactOS 注销"
     IDS_REACTOS_LOGON "ReactOS 登录"
     5854 "ReactOS 资源管理器"

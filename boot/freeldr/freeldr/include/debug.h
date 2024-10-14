@@ -40,7 +40,10 @@
 
 #if DBG
 
-    VOID    DebugInit(IN ULONG_PTR FrLdrSectionId);
+    VOID
+    DebugInit(
+        _In_ PCSTR DebugString);
+
     ULONG   DbgPrint(const char *Format, ...);
     VOID    DbgPrint2(ULONG Mask, ULONG Level, const char *File, ULONG Line, char *Format, ...);
     VOID    DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length);
@@ -114,7 +117,7 @@ void    MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 
     #define UNIMPLEMENTED
 
-    #define DebugInit(FrLdrSectionId)
+    #define DebugInit(DebugString)
     #define BugCheck(fmt, ...)
     #define DbgDumpBuffer(mask, buf, len)
     #define DebugDisableScreenPort()

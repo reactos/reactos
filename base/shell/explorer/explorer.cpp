@@ -154,6 +154,8 @@ StartWithDesktop(IN HINSTANCE hInstance)
     buttons to work right) */
     HideMinimizedWindows(TRUE);
 
+    ProcessRunOnceItems(); // Must be executed before the desktop is created
+
     HANDLE hShellDesktop = NULL;
     if (Tray != NULL)
         hShellDesktop = DesktopCreateWindow(Tray);
@@ -167,6 +169,7 @@ StartWithDesktop(IN HINSTANCE hInstance)
         ProcessStartupItems();
         DoFinishStartupItems();
     }
+    ReleaseStartupMutex(); // For ProcessRunOnceItems
 #endif
 
     if (Tray != NULL)

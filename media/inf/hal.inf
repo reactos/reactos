@@ -152,6 +152,8 @@ xbox.DeviceDesc = "Original Xbox (x86 based)"
 pc98_up.DeviceDesc = "Однопроцесорний NEC PC-98"
 
 [Strings.0804]
+ComputerClassName = "计算机"
+
 GenericMfg = "(通用计算机)"
 acpipic_up.DeviceDesc = "ACPI 单处理器 PC"
 e_isa_up.DeviceDesc = "标准单处理器 PC"

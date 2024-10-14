@@ -55,16 +55,26 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 extern HINSTANCE netshell_hInstance;
 
 /* enumlist.c */
+#include <pshpack1.h>
+#define NETCONIDSTRUCT_SIG 0x4EFF
 typedef struct tagNETCONIDSTRUCT
 {
-    BYTE             type;
+    WORD             Signature;
+    BYTE             Unknown[8];
+    CLSID            clsidThisObject;
     GUID             guidId;
-    NETCON_STATUS    Status;
-    NETCON_MEDIATYPE MediaType;
     DWORD            dwCharacter;
-    ULONG_PTR        uNameOffset;
-    ULONG_PTR        uDeviceNameOffset;
+    NETCON_MEDIATYPE MediaType;
+    NETCON_STATUS    Status;
+    ULONG            uNameOffset;
+    ULONG            uDeviceNameOffset;
 } NETCONIDSTRUCT, *PNETCONIDSTRUCT;
+#include <poppack.h>
+
+C_ASSERT(2 + FIELD_OFFSET(NETCONIDSTRUCT, clsidThisObject) == 2 + (2 + 8));
+C_ASSERT(2 + FIELD_OFFSET(NETCONIDSTRUCT, guidId) == 2 + (2 + 8 + 16));
+C_ASSERT(2 + FIELD_OFFSET(NETCONIDSTRUCT, dwCharacter) == 2 + (2 + 8 + 32));
+C_ASSERT(2 + FIELD_OFFSET(NETCONIDSTRUCT, MediaType) == 2 + (2 + 8 + 36));
 
 PNETCONIDSTRUCT ILGetConnData(PCITEMID_CHILD pidl);
 PWCHAR ILGetConnName(PCITEMID_CHILD pidl);

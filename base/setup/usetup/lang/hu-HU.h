@@ -2160,7 +2160,7 @@ MUI_STRING huHUStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   Billenty\373zetkioszt\240s be\240ll\241t\240sok friss\241t\202se..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   K\242dlap inform\240ci\242k hozz\240ad\240sa a regisztr\240ci\242s adatb\240zishoz..."},
+    "   K\242dlap inform\240ci\242k hozz\240ad\240sa..."},
     {STRING_DONE,
     "   K\202sz..."},
     {STRING_REBOOTCOMPUTER2,

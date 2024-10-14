@@ -63,7 +63,31 @@ IsInstalledEnum(INT x)
     return (x >= ENUM_INSTALLED_MIN && x <= ENUM_INSTALLED_MAX);
 }
 
+enum UninstallCommandFlags
+{
+    UCF_NONE   = 0x00,
+    UCF_MODIFY = 0x01,
+    UCF_SILENT = 0x02,
+};
+
+enum InstallerType
+{
+    INSTALLER_UNKNOWN,
+    INSTALLER_GENERATE, // .zip file automatically converted to installer by rapps
+};
+
+#define DB_VERSION L"Version"
+#define DB_CATEGORY L"Category"
+#define DB_PUBLISHER L"Publisher"
+#define DB_REGNAME L"RegName"
+#define DB_INSTALLER L"Installer"
+#define DB_SCOPE L"Scope" // User or Machine
+
+#define DB_GENINSTSECTION L"Generate"
+#define GENERATE_ARPSUBKEY L"RApps" // Our uninstall data is stored here
+
 class CAppRichEdit;
+class CConfigParser;
 
 class CAppInfo
 {
@@ -93,13 +117,15 @@ class CAppInfo
     GetDownloadInfo(CStringW &Url, CStringW &Sha1, ULONG &SizeInBytes) const = 0;
     virtual VOID
     GetDisplayInfo(CStringW &License, CStringW &Size, CStringW &UrlSite, CStringW &UrlDownload) = 0;
+    virtual InstallerType
+    GetInstallerType() const { return INSTALLER_UNKNOWN; }
     virtual BOOL
-    UninstallApplication(BOOL bModify) = 0;
+    UninstallApplication(UninstallCommandFlags Flags) = 0;
 };
 
 class CAvailableApplicationInfo : public CAppInfo
 {
-    class CConfigParser *m_Parser;
+    CConfigParser *m_Parser;
     CSimpleArray<CStringW> m_szScrnshotLocation;
     bool m_ScrnshotRetrieved;
     CStringW m_szUrlDownload;
@@ -125,6 +151,9 @@ class CAvailableApplicationInfo : public CAppInfo
         const CPathW &BasePath);
     ~CAvailableApplicationInfo();
 
+    CConfigParser *
+    GetConfigParser() const { return m_Parser; }
+
     virtual BOOL
     Valid() const override;
     virtual BOOL
@@ -139,8 +168,10 @@ class CAvailableApplicationInfo : public CAppInfo
     GetDownloadInfo(CStringW &Url, CStringW &Sha1, ULONG &SizeInBytes) const override;
     virtual VOID
     GetDisplayInfo(CStringW &License, CStringW &Size, CStringW &UrlSite, CStringW &UrlDownload) override;
+    virtual InstallerType
+    GetInstallerType() const override;
     virtual BOOL
-    UninstallApplication(BOOL bModify) override;
+    UninstallApplication(UninstallCommandFlags Flags) override;
 };
 
 class CInstalledApplicationInfo : public CAppInfo
@@ -163,9 +194,11 @@ class CInstalledApplicationInfo : public CAppInfo
     RetrieveUninstallStrings();
 
   public:
-    const int iKeyIndex;
-    CInstalledApplicationInfo(HKEY Key, const CStringW &KeyName, AppsCategories Category, int KeyIndex);
+    UINT m_KeyInfo;
+    CInstalledApplicationInfo(HKEY Key, const CStringW &KeyName, AppsCategories Category, UINT KeyInfo);
     ~CInstalledApplicationInfo();
+
+    CRegKey& GetRegKey() { return m_hKey; }
 
     virtual BOOL
     Valid() const override;
@@ -181,6 +214,13 @@ class CInstalledApplicationInfo : public CAppInfo
     GetDownloadInfo(CStringW &Url, CStringW &Sha1, ULONG &SizeInBytes) const override;
     virtual VOID
     GetDisplayInfo(CStringW &License, CStringW &Size, CStringW &UrlSite, CStringW &UrlDownload) override;
+    virtual InstallerType
+    GetInstallerType() const override;
     virtual BOOL
-    UninstallApplication(BOOL bModify) override;
+    UninstallApplication(UninstallCommandFlags Flags) override;
 };
+
+BOOL
+UninstallGenerated(CInstalledApplicationInfo &AppInfo, UninstallCommandFlags Flags);
+BOOL
+ExtractAndRunGeneratedInstaller(const CAvailableApplicationInfo &AppInfo, LPCWSTR Archive);

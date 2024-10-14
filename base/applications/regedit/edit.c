@@ -2,138 +2,13 @@
  * Registry editing UI functions.
  *
  * Copyright (C) 2003 Dimitrie O. Paun
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * LICENSE: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
  */
 
 #include "regedit.h"
 
 #define NTOS_MODE_USER
 #include <ndk/cmtypes.h>
-
-#if defined(NT_PROCESSOR_GROUPS)
-
-typedef USHORT IRQ_DEVICE_POLICY, *PIRQ_DEVICE_POLICY;
-
-enum _IRQ_DEVICE_POLICY_USHORT {
-  IrqPolicyMachineDefault = 0,
-  IrqPolicyAllCloseProcessors = 1,
-  IrqPolicyOneCloseProcessor = 2,
-  IrqPolicyAllProcessorsInMachine = 3,
-  IrqPolicyAllProcessorsInGroup = 3,
-  IrqPolicySpecifiedProcessors = 4,
-  IrqPolicySpreadMessagesAcrossAllProcessors = 5};
-
-#else /* defined(NT_PROCESSOR_GROUPS) */
-
-typedef enum _IRQ_DEVICE_POLICY {
-  IrqPolicyMachineDefault = 0,
-  IrqPolicyAllCloseProcessors,
-  IrqPolicyOneCloseProcessor,
-  IrqPolicyAllProcessorsInMachine,
-  IrqPolicySpecifiedProcessors,
-  IrqPolicySpreadMessagesAcrossAllProcessors
-} IRQ_DEVICE_POLICY, *PIRQ_DEVICE_POLICY;
-
-#endif
-
-typedef enum _IRQ_PRIORITY {
-  IrqPriorityUndefined = 0,
-  IrqPriorityLow,
-  IrqPriorityNormal,
-  IrqPriorityHigh
-} IRQ_PRIORITY, *PIRQ_PRIORITY;
-typedef struct _IO_RESOURCE_DESCRIPTOR {
-  UCHAR Option;
-  UCHAR Type;
-  UCHAR ShareDisposition;
-  UCHAR Spare1;
-  USHORT Flags;
-  USHORT Spare2;
-  union {
-    struct {
-      ULONG Length;
-      ULONG Alignment;
-      PHYSICAL_ADDRESS MinimumAddress;
-      PHYSICAL_ADDRESS MaximumAddress;
-    } Port;
-    struct {
-      ULONG Length;
-      ULONG Alignment;
-      PHYSICAL_ADDRESS MinimumAddress;
-      PHYSICAL_ADDRESS MaximumAddress;
-    } Memory;
-    struct {
-      ULONG MinimumVector;
-      ULONG MaximumVector;
-#if defined(NT_PROCESSOR_GROUPS)
-      IRQ_DEVICE_POLICY AffinityPolicy;
-      USHORT Group;
-#else
-      IRQ_DEVICE_POLICY AffinityPolicy;
-#endif
-      IRQ_PRIORITY PriorityPolicy;
-      KAFFINITY TargetedProcessors;
-    } Interrupt;
-    struct {
-      ULONG MinimumChannel;
-      ULONG MaximumChannel;
-    } Dma;
-    struct {
-      ULONG Length;
-      ULONG Alignment;
-      PHYSICAL_ADDRESS MinimumAddress;
-      PHYSICAL_ADDRESS MaximumAddress;
-    } Generic;
-    struct {
-      ULONG Data[3];
-    } DevicePrivate;
-    struct {
-      ULONG Length;
-      ULONG MinBusNumber;
-      ULONG MaxBusNumber;
-      ULONG Reserved;
-    } BusNumber;
-    struct {
-      ULONG Priority;
-      ULONG Reserved1;
-      ULONG Reserved2;
-    } ConfigData;
-  } u;
-} IO_RESOURCE_DESCRIPTOR, *PIO_RESOURCE_DESCRIPTOR;
-
-#define IO_RESOURCE_PREFERRED             0x01
-#define IO_RESOURCE_DEFAULT               0x02
-#define IO_RESOURCE_ALTERNATIVE           0x08
-
-typedef struct _IO_RESOURCE_LIST {
-  USHORT Version;
-  USHORT Revision;
-  ULONG Count;
-  IO_RESOURCE_DESCRIPTOR Descriptors[1];
-} IO_RESOURCE_LIST, *PIO_RESOURCE_LIST;
-
-typedef struct _IO_RESOURCE_REQUIREMENTS_LIST {
-  ULONG ListSize;
-  INTERFACE_TYPE InterfaceType;
-  ULONG BusNumber;
-  ULONG SlotNumber;
-  ULONG Reserved[3];
-  ULONG AlternativeLists;
-  IO_RESOURCE_LIST List[1];
-} IO_RESOURCE_REQUIREMENTS_LIST, *PIO_RESOURCE_REQUIREMENTS_LIST;
 
 typedef enum _EDIT_MODE
 {
@@ -275,7 +150,6 @@ INT_PTR CALLBACK modify_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
     return FALSE;
 }
 
-
 INT_PTR CALLBACK modify_multi_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     WCHAR* valueData;
@@ -343,7 +217,6 @@ INT_PTR CALLBACK modify_multi_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wPa
     return FALSE;
 }
 
-
 LRESULT CALLBACK DwordEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     WNDPROC oldwndproc;
@@ -355,7 +228,7 @@ LRESULT CALLBACK DwordEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
     case WM_CHAR:
         if (dwordEditMode == EDIT_MODE_DEC)
         {
-            if (isdigit((int) wParam & 0xff) || iscntrl((int) wParam & 0xff))
+            if (isdigit((int)wParam & 0xff) || iscntrl((int)wParam & 0xff))
             {
                 break;
             }
@@ -366,7 +239,7 @@ LRESULT CALLBACK DwordEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
         }
         else if (dwordEditMode == EDIT_MODE_HEX)
         {
-            if (isxdigit((int) wParam & 0xff) || iscntrl((int) wParam & 0xff))
+            if (isxdigit((int)wParam & 0xff) || iscntrl((int)wParam & 0xff))
             {
                 break;
             }
@@ -383,7 +256,6 @@ LRESULT CALLBACK DwordEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 
     return CallWindowProcW(oldwndproc, hwnd, uMsg, wParam, lParam);
 }
-
 
 INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -498,7 +370,6 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
     return FALSE;
 }
 
-
 INT_PTR CALLBACK modify_binary_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     HWND hwndValue;
@@ -531,7 +402,7 @@ INT_PTR CALLBACK modify_binary_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
         case IDOK:
             if ((hwndValue = GetDlgItem(hwndDlg, IDC_VALUE_DATA)))
             {
-                len = (UINT) HexEdit_GetBufferSize(hwndValue);
+                len = (UINT)HexEdit_GetBufferSize(hwndValue);
                 if (len > 0 && binValueData)
                     binValueData = HeapReAlloc(GetProcessHeap(), 0, binValueData, len);
                 else
@@ -548,7 +419,6 @@ INT_PTR CALLBACK modify_binary_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
     }
     return FALSE;
 }
-
 
 static BOOL CreateResourceColumns(HWND hwnd)
 {
@@ -773,7 +643,6 @@ GetInterfaceType(INTERFACE_TYPE InterfaceType,
 //    wcscpy(pBuffer, lpInterfaceType);
 }
 
-
 static VOID
 ParseResources(HWND hwnd)
 {
@@ -971,7 +840,6 @@ ParseResources(HWND hwnd)
     }
 }
 
-
 static BOOL
 OnResourceNotify(HWND hwndDlg, NMHDR *phdr)
 {
@@ -1027,7 +895,6 @@ OnResourceNotify(HWND hwndDlg, NMHDR *phdr)
 
     return FALSE;
 }
-
 
 static INT_PTR CALLBACK modify_resource_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -1148,7 +1015,6 @@ OnResourceListNotify(HWND hwndDlg, NMHDR *phdr)
 
     return FALSE;
 }
-
 
 static INT_PTR CALLBACK modify_resource_list_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -1548,7 +1414,7 @@ static INT_PTR CALLBACK show_requirements_dma_dlgproc(HWND hwndDlg, UINT uMsg, W
         {
         case IDOK:
         case IDCANCEL:
-           EndDialog(hwndDlg, IDOK);
+            EndDialog(hwndDlg, IDOK);
             break;
         }
     }
@@ -1705,7 +1571,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCWSTR valueName, BOOL EditBin)
         {
             if (stringValueData)
             {
-                lRet = RegSetValueExW(hKey, valueName, 0, type, (LPBYTE)stringValueData, (DWORD) (wcslen(stringValueData) + 1) * sizeof(WCHAR));
+                lRet = RegSetValueExW(hKey, valueName, 0, type, (LPBYTE)stringValueData, (DWORD)(wcslen(stringValueData) + 1) * sizeof(WCHAR));
             }
             else
             {
@@ -1809,7 +1675,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCWSTR valueName, BOOL EditBin)
                     warning(hwnd, IDS_MULTI_SZ_EMPTY_STRING);
                 }
 
-                lRet = RegSetValueExW(hKey, valueName, 0, type, (LPBYTE)lines, (DWORD) buflen);
+                lRet = RegSetValueExW(hKey, valueName, 0, type, (LPBYTE)lines, (DWORD)buflen);
                 HeapFree(GetProcessHeap(), 0, lines);
             }
             else
@@ -2010,7 +1876,7 @@ static LONG CopyKey(HKEY hDestKey, LPCWSTR lpDestSubKey, HKEY hSrcKey, LPCWSTR l
     dwIndex = 0;
     do
     {
-        cbName = sizeof(szSubKey) / sizeof(szSubKey[0]);
+        cbName = ARRAY_SIZE(szSubKey);
         lResult = RegEnumKeyExW(hSrcKey, dwIndex++, szSubKey, &cbName, NULL, NULL, NULL, &ft);
         if (lResult == ERROR_SUCCESS)
         {
@@ -2025,8 +1891,8 @@ static LONG CopyKey(HKEY hDestKey, LPCWSTR lpDestSubKey, HKEY hSrcKey, LPCWSTR l
     dwIndex = 0;
     do
     {
-        cbName = sizeof(szValueName) / sizeof(szValueName[0]);
-        cbData = sizeof(szValueData) / sizeof(szValueData[0]);
+        cbName = ARRAY_SIZE(szValueName);
+        cbData = ARRAY_SIZE(szValueData);
         lResult = RegEnumValueW(hSrcKey, dwIndex++, szValueName, &cbName, NULL, &dwType, szValueData, &cbData);
         if (lResult == ERROR_SUCCESS)
         {
@@ -2117,7 +1983,7 @@ LONG RenameKey(HKEY hKey, LPCWSTR lpSubKey, LPCWSTR lpNewName)
     {
         s++;
         cbNewSubKey = (s - lpSubKey + wcslen(lpNewName) + 1) * sizeof(WCHAR);
-        lpNewSubKey = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, cbNewSubKey);
+        lpNewSubKey = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, cbNewSubKey);
         if (lpNewSubKey != NULL)
         {
             StringCbCopyNW(lpNewSubKey, cbNewSubKey, lpSubKey, (s - lpSubKey) * sizeof(WCHAR));
@@ -2184,7 +2050,7 @@ LONG QueryStringValue(HKEY hKey, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPWSTR p
     }
 
     cbData = (dwBufferLen - 1) * sizeof(*pszBuffer);
-    lResult = RegQueryValueExW(hKey, lpValueName, NULL, &dwType, (LPBYTE) pszBuffer, &cbData);
+    lResult = RegQueryValueExW(hKey, lpValueName, NULL, &dwType, (LPBYTE)pszBuffer, &cbData);
     if (lResult != ERROR_SUCCESS)
         goto done;
     if (dwType != REG_SZ)

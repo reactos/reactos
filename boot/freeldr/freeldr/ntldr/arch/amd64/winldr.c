@@ -346,7 +346,8 @@ Amd64SetupIdt(PVOID IdtBase)
 }
 
 VOID
-WinLdrSetProcessorContext(void)
+WinLdrSetProcessorContext(
+    _In_ USHORT OperatingSystemVersion)
 {
     TRACE("WinLdrSetProcessorContext\n");
 

@@ -42,7 +42,7 @@ BEGIN
     LTEXT "Kısa", -1, 50, 35, 27, 10
     LTEXT "Uzun", -1, 157, 35, 27, 10
     CONTROL "", IDC_SLIDER_CLICK_LOCK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 78, 35, 70, 17
-    PUSHBUTTON "Tamam", IDOK, 110, 59, 60, 14
+    DEFPUSHBUTTON "Tamam", IDOK, 110, 59, 60, 14
     PUSHBUTTON "İptal", IDCANCEL, 174, 59, 60, 14
     LTEXT "&Tıklamanız kilitlenmeden önce bir fare ya da iztopu düğmesine ne kadar basılı tutmanız gerektiğini ayarlayınız:", -1, 37, 5, 200, 27
     ICON IDI_LOCK_KEY, IDC_ICON_CLICK_LOCK, 5, 5, 15, 15
@@ -93,7 +93,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bu işaretçi düzenini farklı kaydet:", -1, 5, 5, 181, 10
     EDITTEXT IDC_EDIT_SCHEME_NAME, 5, 15, 180, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
-    PUSHBUTTON "Tamam", IDOK, 63, 35, 60, 14
+    DEFPUSHBUTTON "Tamam", IDOK, 63, 35, 60, 14
     PUSHBUTTON "İptal", IDCANCEL, 126, 35, 60, 14
 END
 

@@ -57,6 +57,32 @@ EXTERN_C void FreeChangeNotifications(void)
     DeleteCriticalSection(&SHELL32_ChangenotifyCS);
 }
 
+static HRESULT
+Shell_ParsePrinterName(
+    _In_ LPCWSTR pszName,
+    _Out_ LPITEMIDLIST *ppidl,
+    _In_ IBindCtx *pBindCtx)
+{
+    *ppidl = NULL;
+
+    CComHeapPtr<ITEMIDLIST> pidlPrinters;
+    HRESULT hr = SHGetSpecialFolderLocation(NULL, CSIDL_PRINTERS, &pidlPrinters);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    CComPtr<IShellFolder> pFolder;
+    hr = SHBindToObject(NULL, pidlPrinters, IID_PPV_ARG(IShellFolder, &pFolder));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    CComHeapPtr<ITEMIDLIST> pidlTemp;
+    hr = pFolder->ParseDisplayName(NULL, pBindCtx, (LPWSTR)pszName, NULL, &pidlTemp, NULL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return SHILCombine(pidlPrinters, pidlTemp, ppidl);
+}
+
 //////////////////////////////////////////////////////////////////////////////////////
 // There are two delivery methods: "old delivery method" and "new delivery method".
 //
@@ -625,21 +651,48 @@ SHChangeNotifyTransmit(LONG lEvent, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDL
 EXTERN_C void WINAPI
 SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID dwItem2)
 {
-    LPITEMIDLIST pidl1 = NULL, pidl2 = NULL, pidlTemp1 = NULL, pidlTemp2 = NULL;
-    DWORD dwTick = GetTickCount();
-    WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
-    LPWSTR psz1, psz2;
     TRACE("(0x%08x,0x%08x,%p,%p)\n", wEventId, uFlags, dwItem1, dwItem2);
 
-    switch (uFlags & SHCNF_TYPE)
+    if (!GetNotificationServer(FALSE))
+        return;
+
+    DWORD dwTick = GetTickCount();
+
+    WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
+    LPITEMIDLIST pidl1 = NULL, pidl2 = NULL;
+    LPWSTR psz1, psz2;
+    SHChangeDWORDAsIDList dwidl;
+    DWORD dwType;
+
+Retry:
+    dwType = (uFlags & SHCNF_TYPE);
+    switch (dwType)
     {
         case SHCNF_IDLIST:
+        {
+            if (wEventId == SHCNE_FREESPACE)
+            {
+                szPath1[0] = szPath2[0] = UNICODE_NULL;
+                if (dwItem1)
+                    SHGetPathFromIDList((LPCITEMIDLIST)dwItem1, szPath1);
+                if (dwItem2)
+                    SHGetPathFromIDList((LPCITEMIDLIST)dwItem2, szPath2);
+
+                uFlags = SHCNF_PATHW;
+                dwItem1 = (szPath1[0] ? szPath1 : NULL);
+                dwItem2 = (szPath2[0] ? szPath2 : NULL);
+                goto Retry;
+            }
+
             pidl1 = (LPITEMIDLIST)dwItem1;
             pidl2 = (LPITEMIDLIST)dwItem2;
             break;
-
+        }
         case SHCNF_PATHA:
+        case SHCNF_PRINTERA:
+        {
             psz1 = psz2 = NULL;
+            szPath1[0] = szPath2[0] = UNICODE_NULL;
             if (dwItem1)
             {
                 SHAnsiToUnicode((LPCSTR)dwItem1, szPath1, _countof(szPath1));
@@ -650,42 +703,90 @@ SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID dwItem2)
                 SHAnsiToUnicode((LPCSTR)dwItem2, szPath2, _countof(szPath2));
                 psz2 = szPath2;
             }
-            uFlags &= ~SHCNF_TYPE;
-            uFlags |= SHCNF_PATHW;
-            SHChangeNotify(wEventId, uFlags, psz1, psz2);
-            return;
 
+            uFlags = ((dwType == SHCNF_PRINTERA) ? SHCNF_PRINTERW : SHCNF_PATHW);
+            dwItem1 = psz1;
+            dwItem2 = psz2;
+            goto Retry;
+        }
         case SHCNF_PATHW:
+        {
+            if (wEventId == SHCNE_FREESPACE)
+            {
+                INT iDrive1 = -1, iDrive2 = -1;
+                if (dwItem1)
+                    iDrive1 = PathGetDriveNumberW((LPCWSTR)dwItem1);
+                if (dwItem2)
+                    iDrive2 = PathGetDriveNumberW((LPCWSTR)dwItem2);
+
+                DWORD dwValue = 0;
+                if (iDrive1 >= 0)
+                    dwValue |= (1 << iDrive1);
+                if (iDrive2 >= 0)
+                    dwValue |= (1 << iDrive2);
+
+                if (!dwValue)
+                    return;
+
+                uFlags = SHCNF_DWORD;
+                dwItem1 = UlongToPtr(dwValue);
+                dwItem2 = NULL;
+                goto Retry;
+            }
+
+            if (dwItem1)
+                pidl1 = SHSimpleIDListFromPathW((LPCWSTR)dwItem1);
+            if (dwItem2)
+                pidl2 = SHSimpleIDListFromPathW((LPCWSTR)dwItem2);
+            break;
+        }
+        case SHCNF_PRINTERW:
+        {
             if (dwItem1)
             {
-                pidl1 = pidlTemp1 = SHSimpleIDListFromPathW((LPCWSTR)dwItem1);
+                HRESULT hr = Shell_ParsePrinterName((LPCWSTR)dwItem1, &pidl1, NULL);
+                if (FAILED_UNEXPECTEDLY(hr))
+                    return;
             }
+
             if (dwItem2)
             {
-                pidl2 = pidlTemp2 = SHSimpleIDListFromPathW((LPCWSTR)dwItem2);
+                HRESULT hr = Shell_ParsePrinterName((LPCWSTR)dwItem2, &pidl2, NULL);
+                if (FAILED_UNEXPECTEDLY(hr))
+                {
+                    ILFree(pidl1);
+                    return;
+                }
             }
             break;
-
-        case SHCNF_PRINTERA:
-        case SHCNF_PRINTERW:
-            FIXME("SHChangeNotify with (uFlags & SHCNF_PRINTER)\n");
-            return;
-
+        }
+        case SHCNF_DWORD:
+        {
+            dwidl.cb = offsetof(SHChangeDWORDAsIDList, cbZero);
+            dwidl.dwItem1 = PtrToUlong(dwItem1);
+            dwidl.dwItem2 = PtrToUlong(dwItem2);
+            dwidl.cbZero = 0;
+            pidl1 = (LPITEMIDLIST)&dwidl;
+            break;
+        }
         default:
-            FIXME("unknown type %08x\n", uFlags & SHCNF_TYPE);
+        {
+            FIXME("Unknown type: 0x%X\n", dwType);
             return;
+        }
     }
 
-    if (wEventId == 0 || (wEventId & SHCNE_ASSOCCHANGED) || pidl1 != NULL)
+    if (pidl1 || !wEventId || (wEventId & SHCNE_ASSOCCHANGED))
     {
         TRACE("notifying event %s(%x)\n", DumpEvent(wEventId), wEventId);
         SHChangeNotifyTransmit(wEventId, uFlags, pidl1, pidl2, dwTick);
     }
 
-    if (pidlTemp1)
-        ILFree(pidlTemp1);
-    if (pidlTemp2)
-        ILFree(pidlTemp2);
+    if ((dwType == SHCNF_PATHW) || (dwType == SHCNF_PRINTERW))
+    {
+        ILFree(pidl1);
+        ILFree(pidl2);
+    }
 }
 
 /*************************************************************************

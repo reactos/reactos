@@ -4,6 +4,7 @@
  * PURPOSE:     Chinese (Simplified) resource file
  * TRANSLATORS: Copyright 2018 Lee Schroeder <spaceseel@gmail.com>
  *              Copyright 2021 Wu Haotian <rigoligo03@gmail.com>
+ *              Copyright 2024 Ratin Gao <ratin@knsoft.org>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -12,7 +13,7 @@ STRINGTABLE
 BEGIN
     IDS_BRICK "红砖色"
     IDS_EGGPLANT "茄子"
-    IDS_GOLIVE "绿色橄榄" //Spruce
+    IDS_GOLIVE "橄榄绿"
     IDS_HCONTRAST_1 "高对比度 1"
     IDS_HCONTRAST_2 "高对比度 2"
     IDS_HCONTRAST_BLACK "高对比度（黑）"
@@ -23,11 +24,11 @@ BEGIN
     IDS_PLUM "梅花"
     IDS_PUMPKIN "南瓜"
     IDS_RAIN "雨天"
-    IDS_RWB "Red, White, and Blue"
+    IDS_RWB "红白蓝色"
     IDS_CLASSIC "ReactOS 经典"
     IDS_STANDARD "ReactOS 标准"
     IDS_ROSE "玫瑰"
-    IDS_SAND "沙" //Desert
+    IDS_SAND "沙漠"
     IDS_SLATE "石板"
     IDS_SKY "天空"
     IDS_STORM "风暴"

@@ -69,7 +69,7 @@ CAPTION "Tarama Geçmişini Sil"
 BEGIN
 
     AUTOCHECKBOX   "&Geçici İnternet Dosyaları:\nİnternet sayfalarının, resimlerin ve sertifikaların ön belleklenen kopyaları.",
-                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
+                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE | WS_GROUP | WS_TABSTOP
     AUTOCHECKBOX   "&Tanımlama Bilgileri:\nİnternet siteleri tarafından bilgisayarınıza kaydedilmiş, kullanıcı tercihleri ve oturum açma bilgileri gibi şeyleri saklayan dosyalar.",
                     IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "G&eçmiş:\nEriştiğiniz İnternet sitelerinin listesi.",
@@ -79,7 +79,7 @@ BEGIN
     AUTOCHECKBOX   "&Parolalar:\nFormlarda girdiğiniz kaydedilmiş parolalar.",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON  "İptal", IDCANCEL, 185, 230, 60, 15, WS_GROUP
-    PUSHBUTTON     "Sil", IDOK, 120, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "Sil", IDOK, 120, 230, 60, 15
 
 END
 

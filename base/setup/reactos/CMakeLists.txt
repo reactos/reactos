@@ -17,8 +17,8 @@ list(APPEND SOURCE
 file(GLOB reactos_rc_deps res/*.*)
 add_rc_deps(reactos.rc ${reactos_rc_deps})
 add_executable(reactos ${SOURCE} reactos.rc)
-set_module_type(reactos win32gui UNICODE)
 add_pch(reactos reactos.h SOURCE)
+set_module_type(reactos win32gui UNICODE)
 target_link_libraries(reactos uuid setuplib ext2lib vfatlib btrfslib)
 target_link_libraries(reactos zlib_solo) ## We use USETUP's cabinet implementation
 add_importlibs(reactos advapi32 gdi32 user32 comctl32 shlwapi setupapi msvcrt kernel32 ntdll)

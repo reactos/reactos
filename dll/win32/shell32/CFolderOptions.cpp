@@ -19,6 +19,7 @@
  */
 
 #include <precomp.h>
+#include <shdeprecated.h>
 
 
 WINE_DEFAULT_DEBUG_CHANNEL(fprop);
@@ -42,8 +43,10 @@ INT_PTR CALLBACK FolderOptionsFileTypesDlg(HWND hwndDlg, UINT uMsg, WPARAM wPara
 
 HRESULT STDMETHODCALLTYPE CFolderOptions::AddPages(LPFNSVADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
 {
-    HPROPSHEETPAGE hPage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_GENERAL, FolderOptionsGeneralDlg, 0, NULL);
+    HPROPSHEETPAGE hPage;
+    LPARAM sheetparam = (LPARAM)static_cast<CFolderOptions*>(this);
 
+    hPage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_GENERAL, FolderOptionsGeneralDlg, sheetparam, NULL);
     if (hPage == NULL)
     {
         ERR("Failed to create property sheet page FolderOptionsGeneral\n");
@@ -52,7 +55,7 @@ HRESULT STDMETHODCALLTYPE CFolderOptions::AddPages(LPFNSVADDPROPSHEETPAGE pfnAdd
     if (!pfnAddPage(hPage, lParam))
         return E_FAIL;
 
-    hPage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_VIEW, FolderOptionsViewDlg, 0, NULL);
+    hPage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_VIEW, FolderOptionsViewDlg, sheetparam, NULL);
     if (hPage == NULL)
     {
         ERR("Failed to create property sheet page FolderOptionsView\n");
@@ -61,7 +64,7 @@ HRESULT STDMETHODCALLTYPE CFolderOptions::AddPages(LPFNSVADDPROPSHEETPAGE pfnAdd
     if (!pfnAddPage(hPage, lParam))
         return E_FAIL;
 
-    hPage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_FILETYPES, FolderOptionsFileTypesDlg, 0, NULL);
+    hPage = SH_CreatePropertySheetPage(IDD_FOLDER_OPTIONS_FILETYPES, FolderOptionsFileTypesDlg, sheetparam, NULL);
     if (hPage == NULL)
     {
         ERR("Failed to create property sheet page FolderOptionsFileTypes\n");
@@ -90,7 +93,7 @@ HRESULT STDMETHODCALLTYPE CFolderOptions::Initialize(PCIDLIST_ABSOLUTE pidlFolde
 
 
 /*************************************************************************
- * FolderOptions IShellExtInit interface
+ * FolderOptions IObjectWithSite interface
  */
 HRESULT STDMETHODCALLTYPE CFolderOptions::SetSite(IUnknown *pUnkSite)
 {
@@ -100,6 +103,45 @@ HRESULT STDMETHODCALLTYPE CFolderOptions::SetSite(IUnknown *pUnkSite)
 
 HRESULT STDMETHODCALLTYPE CFolderOptions::GetSite(REFIID riid, void **ppvSite)
 {
-    return m_pSite->QueryInterface(riid, ppvSite);
+    return m_pSite ? m_pSite->QueryInterface(riid, ppvSite) : E_FAIL;
 }
 
+/*************************************************************************
+ * FolderOptions helper methods
+ */
+HRESULT CFolderOptions::HandleDefFolderSettings(int Action)
+{
+    IBrowserService2 *bs2;
+    HRESULT hr = IUnknown_QueryService(m_pSite, SID_SShellBrowser, IID_PPV_ARG(IBrowserService2, &bs2));
+    if (SUCCEEDED(hr))
+    {
+        if (Action == DFSA_APPLY)
+        {
+            hr = bs2->SetAsDefFolderSettings();
+        }
+        else if (Action == DFSA_RESET)
+        {
+            // There does not seem to be a method in IBrowserService2 for this
+            IUnknown_Exec(bs2, CGID_DefView, DVCMDID_RESET_DEFAULTFOLDER_SETTINGS, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+        }
+        else
+        {
+            // FFSA_QUERY: hr is already correct
+        }
+        bs2->Release();
+    }
+
+    if (Action == DFSA_RESET)
+    {
+        IGlobalFolderSettings *pgfs;
+        HRESULT hr = CoCreateInstance(CLSID_GlobalFolderSettings, NULL, CLSCTX_INPROC_SERVER,
+                                      IID_IGlobalFolderSettings, (void **)&pgfs);
+        if (SUCCEEDED(hr))
+        {
+            hr = pgfs->Set(NULL, 0, 0);
+            pgfs->Release();
+        }
+    }
+
+    return hr;
+}

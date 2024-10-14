@@ -366,9 +366,22 @@ static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
     }
 
     CComPtr<IShellBrowser> psb;
+#if 0
+    if (!(parameters->dwFlags & (SH_EXPLORER_CMDLINE_FLAG_E | SH_EXPLORER_CMDLINE_FLAG_NOREUSE)))
+    {
+        // TODO: IShellWindows::FindWindowSW(...) and reuse the existing IShellBrowser
+    }
+#endif
     hResult = CShellBrowser_CreateInstance(IID_PPV_ARG(IShellBrowser, &psb));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
+
+    if (parameters->dwFlags & SH_EXPLORER_CMDLINE_FLAG_EMBED)
+    {
+        CComPtr<IBrowserService> pbs;
+        if (SUCCEEDED(psb->QueryInterface(IID_PPV_ARG(IBrowserService, &pbs))))
+            pbs->SetFlags(BSF_UISETBYAUTOMATION, BSF_UISETBYAUTOMATION);
+    }
 
     hResult = psb->BrowseObject(parameters->directoryPIDL, wFlags);
     if (FAILED_UNEXPECTEDLY(hResult))

@@ -2017,7 +2017,7 @@ MUI_ERROR enUSErrorEntries[] =
     },
     {
         // ERROR_ADDING_CODEPAGE,
-        "Setup failed to add codepage to registry.\n"
+        "Setup failed to add codepage to the registry.\n"
         "ENTER = Reboot computer"
     },
     {
@@ -2027,7 +2027,7 @@ MUI_ERROR enUSErrorEntries[] =
     },
     {
         // ERROR_ADDING_KBLAYOUTS,
-        "Setup failed to add keyboard layouts to registry.\n"
+        "Setup failed to add keyboard layouts to the registry.\n"
         "ENTER = Reboot computer"
     },
     {
@@ -2262,7 +2262,7 @@ MUI_STRING enUSStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   Updating keyboard layout settings..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Adding codepage information to registry..."},
+    "   Adding codepage information..."},
     {STRING_DONE,
     "   Done..."},
     {STRING_REBOOTCOMPUTER2,

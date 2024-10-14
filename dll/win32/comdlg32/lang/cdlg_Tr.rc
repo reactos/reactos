@@ -1,7 +1,7 @@
 /*
  * Resources for Common Dialogs
  *
- * Copyrights: 2006 Fatih Aşıcı, 2013-2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
+ * Copyrights: 2006 Fatih Aşıcı, 2013-2016 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -30,7 +30,7 @@ Dosya oluşturmak ister misiniz?"
 Onu değiştirmek ister misiniz?"
     IDS_INVALID_FILENAME_TITLE "Yolda geçersiz işaret ya da işaretler var."
     IDS_INVALID_FILENAME    "Bir dosya adı aşağıdaki işaretlerin rastgele birini içeremez:\n\
-                          / : < > |"
+/ : < > |"
     IDS_PATHNOTEXISTING     "Dosya yolu yok."
     IDS_FILENOTEXISTING     "Dosya yok."
     IDS_INVALID_FOLDERNAME  "Seçim dizin olmayan bir nesne içeriyor."
@@ -149,10 +149,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Aç"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "&Dosya Adı:", stc3, 6, 6, 76, 9
+ LTEXT "&Dosya Adı:", stc3, 6, 6, 76, 9 //FIXME: accelerator collision &D
  EDITTEXT edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
  LISTBOX lst1, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "&Dizinler:", -1, 110, 6, 92, 9
+ LTEXT "&Dizinler:", -1, 110, 6, 92, 9 //FIXME: accelerator collision &D
  LTEXT "", stc1, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
  LISTBOX lst2, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
  LTEXT "Şu Türden D&osyaları Listele:", stc2, 6, 104, 90, 9
@@ -171,10 +171,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Farklı Kaydet"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "&Dosya Adı:", stc3, 6, 6, 76, 9
+ LTEXT "&Dosya Adı:", stc3, 6, 6, 76, 9 //FIXME: accelerator collision &D
  EDITTEXT edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
  LISTBOX lst1, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "&Dizinler:", -1, 110, 6, 92, 9
+ LTEXT "&Dizinler:", -1, 110, 6, 92, 9 //FIXME: accelerator collision &D
  LTEXT "", stc1, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
  LISTBOX lst2, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
  LTEXT "Şu türden D&osyaları Listele:", stc2, 6, 104, 90, 9
@@ -246,7 +246,7 @@ FONT 8, "MS Shell Dlg"
     COMBOBOX        cmb1, 6,13,94,76,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
     LTEXT           "Yaz&ı Tipi:",stc2 ,108,3,60,9
-    COMBOBOX        cmb2,108,13,64,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+    COMBOBOX        cmb2,108,13,64,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
     LTEXT           "&Büyüklük:",stc3,179,3,32,9
     COMBOBOX        cmb3,179,13,32,76, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
@@ -279,7 +279,7 @@ FONT 8, "MS Shell Dlg"
  LTEXT "Renk | D&üz",  stc3, 150, 151,  48, 10
  LTEXT   "&Kırmızı:", IDC_COLOR_RL /*1094*/,247,126,27,10
  EDITTEXT IDC_COLOR_EDIT_R, 275,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT   "Y&eşil:", IDC_COLOR_GL /*1095*/,247,140,27,10
+ LTEXT   "Y&eşil:", IDC_COLOR_GL /*1095*/,247,140,27,10 //FIXME: accelerator collision &E
  EDITTEXT IDC_COLOR_EDIT_G, 275,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT   "&Mavi:", IDC_COLOR_BL /*1096*/,247,154,27,10
  EDITTEXT IDC_COLOR_EDIT_B, 275,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
@@ -298,7 +298,7 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON "İptal", IDCANCEL, 58, 167, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Yardım", pshHelp,100,166, 44, 14
  PUSHBUTTON "Ö&zel Renklere Ekle",    IDC_COLOR_ADD /*1024*/, 152, 167, 144, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Öz&el Renkleri Belirle >>", IDC_COLOR_DEFINE /*1025*/,   4, 149, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Öz&el Renkleri Belirle >>", IDC_COLOR_DEFINE /*1025*/,   4, 149, 142, 14, WS_GROUP | WS_TABSTOP //FIXME: accelerator collision &E
  PUSHBUTTON "Renk | Düz", IDC_COLOR_RES, 300,200,4,14   /* just a dummy */
 }
 
@@ -313,8 +313,8 @@ FONT 8, "MS Shell Dlg"
  CHECKBOX "Ya&lnızca Tüm Kelimeyi Eşleştir", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "&Büyük-Küçük Harfleri Eşleştir", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
  GROUPBOX "Yön", grp1, 147, 21, 58, 38
- CONTROL "Y&ukarı", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 151, 30, 48, 12
- CONTROL "&Aşağı", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 151, 44, 48, 12
+ AUTORADIOBUTTON "Y&ukarı", rad1, 151, 30, 48, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
+ AUTORADIOBUTTON "&Aşağı", rad2, 151, 44, 48, 12, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 
  DEFPUSHBUTTON "Sonrakini Bul", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "İptal", IDCANCEL	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
@@ -363,23 +363,23 @@ FONT 8, "MS Shell Dlg"
     LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Konum:",         stc10, 16, 60,  47,10, SS_NOPREFIX
     LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Açıklama:",       stc9,  16, 72,  47,10, SS_NOPREFIX
+    LTEXT           "Açıklama:",      stc9,  16, 72,  47,10, SS_NOPREFIX
     LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
-    GROUPBOX        "Kopyalar",         grp2, 160, 92, 120,64, WS_GROUP
+    GROUPBOX        "Kopyalar",       grp2, 160, 92, 120,64, WS_GROUP
     LTEXT           "K&opya Sayısı:",stc5,168,105,68,8
     ICON            "",               ico3, 210,131,  76,24, WS_GROUP
-    CONTROL         "Ha&rmanla",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
+    CONTROL         "Ha&rmanla",      chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
     EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
 
-    GROUPBOX        "Aralığı Yazdır",    grp1,   8,92,  144,64, WS_GROUP
-    CONTROL         "&Tümü",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
-    CONTROL         "&Sayfalar",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
-    CONTROL         "S&eçim",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
+    GROUPBOX        "Aralığı Yazdır", grp1,   8,92,  144,64, WS_GROUP
+    AUTORADIOBUTTON "&Tümü",          rad1,16,106,64,12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Sayfalar",      rad3,16,122,36,12
+    AUTORADIOBUTTON "S&eçim",         rad2,16,138,64,12
     EDITTEXT                          edt1,  73,122,  26,12, WS_GROUP | ES_NUMBER
     EDITTEXT                          edt2, 120,122,  26,12, WS_GROUP | ES_NUMBER
-    RTEXT           "&Şuradan:",         stc2,  52,124,  20,8
-    RTEXT           "Ş&uraya:",           stc3,  99,124,  20,8
+    RTEXT           "&Şuradan:",      stc2,  52,124,  20,8
+    RTEXT           "Ş&uraya:",       stc3,  99,124,  20,8
 }
 
 PRINT32_SETUP DIALOG  32, 32, 288, 178
@@ -401,19 +401,19 @@ BEGIN
     LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Konum:",         stc10, 16, 60,  47,10, SS_NOPREFIX
     LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
-    LTEXT           "Açıklama:",       stc9,  16, 72,  47,10, SS_NOPREFIX
+    LTEXT           "Açıklama:",      stc9,  16, 72,  47,10, SS_NOPREFIX
     LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
 
     GROUPBOX        "Kağıt",          grp2,   8, 92, 164,56, WS_GROUP
-    LTEXT           "B&oyutlar:",         stc2,  16,108,  36, 8
+    LTEXT           "B&oyutlar:",     stc2,  16,108,  36, 8
     COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Ka&ynak:",       stc3,  16,128,  36, 8
     COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
 
     GROUPBOX        "Yön",    grp1, 180, 92, 100,56, WS_GROUP
     ICON            "",               ico1, 195,112,  18,20, WS_GROUP
-    CONTROL         "&Portre",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
-    CONTROL         "&Manzara",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+    AUTORADIOBUTTON "&Portre",        rad1, 224,106,52,12, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Manzara",       rad2, 224,126,52,12
 END
 
 PAGESETUPDLGORD DIALOG 32, 32, 240, 240
@@ -430,8 +430,8 @@ BEGIN
   LTEXT "Ka&ynak:", stc3, 16, 132, 36, 8
   COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
   GROUPBOX "Yön", grp1, 8, 156, 64, 56, BS_GROUPBOX
-  AUTORADIOBUTTON "&Portre", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "&Manzara", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "&Portre", rad1, 16, 170, 52, 12
+  AUTORADIOBUTTON "&Manzara", rad2, 16, 190, 52, 12
   GROUPBOX "", grp4, 80, 156, 152, 56, BS_GROUPBOX
   LTEXT "So&l:", stc15, 88, 172, 30, 8
   EDITTEXT edt4, 119, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
@@ -483,7 +483,7 @@ FONT 8, "MS Shell Dlg"
     CONTROL "", IDC_TOOLBARPLACES, "ToolbarWindow32", 0x800 | CCS_NORESIZE | CCS_TOP | CCS_NOPARENTALIGN | CCS_NODIVIDER, 4, 20, 56, 192
     LISTBOX IDC_SHELLSTATIC, 64, 20, 300, 155, LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_HSCROLL | NOT WS_VISIBLE
 
-    LTEXT "Dosya &adı:", IDC_FILENAMESTATIC, 65, 182, 56, 16, SS_NOTIFY
+    LTEXT "Dosya &adı:", IDC_FILENAMESTATIC, 65, 182, 56, 16, SS_NOTIFY //FIXME: accelerator collision &A
     EDITTEXT IDC_FILENAME, 123, 180, 180, 12, ES_AUTOHSCROLL
     CONTROL "", cmb13, "ComboBoxEx32", CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP, 123, 180, 180, 150
 
@@ -492,7 +492,7 @@ FONT 8, "MS Shell Dlg"
 
     CONTROL "&Salt okunur olarak aç", IDC_OPENREADONLY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 218, 150, 10
 
-    DEFPUSHBUTTON "&Aç", IDOK, 310, 180, 54, 14
+    DEFPUSHBUTTON "&Aç", IDOK, 310, 180, 54, 14 //FIXME: accelerator collision &A
     PUSHBUTTON "İptal", IDCANCEL, 310, 198, 54, 14
     PUSHBUTTON "&Yardım", pshHelp, 310, 215, 54, 14
 }

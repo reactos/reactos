@@ -5,6 +5,11 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Solitaire Game"
+#define REACTOS_STR_INTERNAL_NAME     "sol"
+#define REACTOS_STR_ORIGINAL_FILENAME "sol.exe"
+#include <reactos/version.rc>
+
 IDI_SOLITAIRE ICON "solitaire.ico"
 
 #include <reactos/manifest_exe.rc>

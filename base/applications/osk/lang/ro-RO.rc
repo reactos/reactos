@@ -11,38 +11,38 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
 IDR_OSK_MENU MENU DISCARDABLE
 BEGIN
-    POPUP "Fișier"
+    POPUP "&Fişier"
     BEGIN
-        MENUITEM "&Ieșire", IDM_EXIT
+        MENUITEM "I&eşire", IDM_EXIT
     END
 
-    POPUP "Tastatură"
+    POPUP "&Tastatură"
     BEGIN
-        MENUITEM "Tastatură extinsă", IDM_ENHANCED_KB, CHECKED
-        MENUITEM "Tastatură standard", IDM_STANDARD_KB
+        MENUITEM "&Tastatură extinsă", IDM_ENHANCED_KB, CHECKED
+        MENUITEM "Tastatură &standard", IDM_STANDARD_KB
         MENUITEM SEPARATOR
-        MENUITEM "Structură standard", IDM_REG_LAYOUT, CHECKED, GRAYED
-        MENUITEM "Structură bloc", IDM_BLOCK_LAYOUT, GRAYED
+        MENUITEM "&Aspect standard", IDM_REG_LAYOUT, CHECKED, GRAYED
+        MENUITEM "Aspect &bloc", IDM_BLOCK_LAYOUT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "101 taste", IDM_101_KEYS, CHECKED, GRAYED
-        MENUITEM "102 taste", IDM_102_KEYS, GRAYED
-        MENUITEM "106 taste", IDM_106_KEYS, GRAYED
+        MENUITEM "10&1 taste", IDM_101_KEYS, CHECKED, GRAYED
+        MENUITEM "10&2 taste", IDM_102_KEYS, GRAYED
+        MENUITEM "10&6 taste", IDM_106_KEYS, GRAYED
     END
 
-    POPUP "Setări"
+    POPUP "&Setări"
     BEGIN
-        MENUITEM "Întotdeauna în față", IDM_ON_TOP, CHECKED
+        MENUITEM "Î&ntotdeauna în faţă", IDM_ON_TOP, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "&Utilizare sunetul de clic", IDM_CLICK_SOUND
+        MENUITEM "&Utilizare sunet de clic", IDM_CLICK_SOUND
         MENUITEM SEPARATOR
-        MENUITEM "&Mod tastare...", IDM_TYPE_MODE, GRAYED
+        MENUITEM "&Mod tastare ...", IDM_TYPE_MODE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Font...", IDM_FONT
+        MENUITEM "&Font ...", IDM_FONT
     END
 
-    POPUP "Ajutor"
+    POPUP "Aj&utor"
     BEGIN
-        MENUITEM "&Manual", IDM_HELP_TOPICS, GRAYED
+        MENUITEM "&Cuprins", IDM_HELP_TOPICS, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Despre Tastatura vizuală...", IDM_ABOUT
     END
@@ -50,13 +50,13 @@ END
 
 IDD_WARNINGDIALOG_OSK DIALOGEX 0, 0, 250, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
-CAPTION "Tastatură vizuală"
+CAPTION "Despre Tastatura vizuală"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "OK", IDOK, 193, 76, 50, 14
     ICON IDI_OSK, IDC_STATIC, 7, 17, 20, 20
-    LTEXT "Tastatura vizuală asigură un nivel minim de funcționalitate pentru utilizatori cu dizabilități. Utilizatori cu dizabilități au nevoie de un program cu o mai mare funcționalitate pentru un uz zilnic.", IDC_STATIC, 36, 7, 207, 33
-    CONTROL "Nu mai afișa acest mesaj", IDC_SHOWWARNINGCHECK, "Button",
+    LTEXT "Tastatura vizuală furnizează un nivel minim de funcţionalitate pentru utilizatorii cu mobilitate redusă. Utilizatorii cu mobilitate redusă vor avea nevoie de un program utilitar o tastatură vizuală cu funcţionalitate mai înaltă pentru folosinţă cotidiană.", IDC_STATIC, 36, 7, 207, 33
+    CONTROL "&Nu se mai afişează acest mesaj", IDC_SHOWWARNINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 43, 80, 137, 10
 END
 

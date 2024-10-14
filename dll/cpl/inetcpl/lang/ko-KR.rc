@@ -69,7 +69,7 @@ CAPTION "방문 기록 지우기"
 BEGIN
 
     AUTOCHECKBOX   "임시 인터넷 파일\n웹페이지의 캐시된 복사본,그림 그리고 인증서.",
-                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
+                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE | WS_GROUP | WS_TABSTOP
     AUTOCHECKBOX   "쿠키\n이 파일은 웹사이트에 위해 사용자 환경설정이나 로그인 정보같은 것을 당신의 컴퓨터에 저장하는데 사용됩니다. .",
                     IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "방문기록\n당신이 방문한 웹사이트의 목록.",
@@ -79,7 +79,7 @@ BEGIN
     AUTOCHECKBOX   "암호\n당신이 폼에 입력한 저장된 암호.",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON  "취소", IDCANCEL, 185, 230, 60, 15, WS_GROUP
-    PUSHBUTTON     "지우기", IDOK, 120, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "지우기", IDOK, 120, 230, 60, 15
 
 END
 

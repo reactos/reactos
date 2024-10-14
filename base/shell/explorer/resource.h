@@ -201,8 +201,6 @@
 #define IDMA_RESTORE_OPEN 416
 #define IDMA_MINIMIZE_ALL 419
 
-#define ID_SHELL_CMD_FIRST              0xF
-#define ID_SHELL_CMD_LAST               0x7FEF
 #define ID_SHELL_CMD_PROPERTIES         (401)
 #define ID_SHELL_CMD_OPEN_ALL_USERS     (402)
 #define ID_SHELL_CMD_EXPLORE_ALL_USERS  (403)
@@ -216,3 +214,5 @@
 #define ID_SHELL_CMD_CUST_NOTIF         (411)
 #define ID_SHELL_CMD_ADJUST_DAT         (412)
 #define ID_SHELL_CMD_RESTORE_ALL        (413)
+#define ID_SHELL_CMD_FIRST              ID_SHELL_CMD_PROPERTIES
+#define ID_SHELL_CMD_LAST               ID_SHELL_CMD_RESTORE_ALL

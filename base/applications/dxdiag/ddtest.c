@@ -1,9 +1,8 @@
 /*
  * PROJECT:     ReactX Diagnosis Application
  * LICENSE:     LGPL - See COPYING in the top level directory
- * FILE:        base/applications/dxdiag/ddtest.c
  * PURPOSE:     ReactX DirectDraw tests
- * COPYRIGHT:   Copyright 2008 Kamil Hornicek
+ * COPYRIGHT:   Copyright 2008 Kamil Horníček
  *
  */
 

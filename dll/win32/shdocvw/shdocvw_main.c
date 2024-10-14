@@ -32,6 +32,7 @@
 #include "winnls.h"
 #include <shlguid_undoc.h>
 #include <rpcproxy.h> /* for __wine_register_resources / __wine_unregister_resources */
+#include "objects.h"
 #endif
 #include "shlwapi.h"
 #include "wininet.h"
@@ -46,7 +47,7 @@ LONG SHDOCVW_refCount = 0;
 static HMODULE SHDOCVW_hshell32 = 0;
 static HINSTANCE ieframe_instance;
 #ifdef __REACTOS__
-static HINSTANCE instance;
+HINSTANCE instance;
 #endif
 
 static HINSTANCE get_ieframe_instance(void)
@@ -93,21 +94,10 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv)
         return get_ieframe_object(rclsid, riid, ppv);
 
 #ifdef __REACTOS__
-    if (IsEqualGUID(riid, &IID_IClassFactory) || IsEqualGUID(riid, &IID_IUnknown))
     {
-        if (IsEqualGUID(rclsid, &CLSID_MruLongList) ||
-            IsEqualGUID(rclsid, &CLSID_MruPidlList))
-        {
-            return CMruClassFactory_CreateInstance(riid, ppv);
-        }
-    }
-    else if (IsEqualGUID(riid, &IID_IMruDataList))
-    {
-        return CMruLongList_CreateInstance(0, ppv, 0);
-    }
-    else if (IsEqualGUID(riid, &IID_IMruPidlList))
-    {
-        return CMruPidlList_CreateInstance(0, ppv, 0);
+        HRESULT hr = SHDOCVW_DllGetClassObject(rclsid, riid, ppv);
+        if (SUCCEEDED(hr))
+            return hr;
     }
 #endif
 
@@ -122,6 +112,7 @@ HRESULT WINAPI DllRegisterServer(void)
 {
     TRACE("\n");
 #ifdef __REACTOS__
+    SHDOCVW_DllRegisterServer();
     return __wine_register_resources(instance);
 #else
     return S_OK;
@@ -135,6 +126,7 @@ HRESULT WINAPI DllUnregisterServer(void)
 {
     TRACE("\n");
 #ifdef __REACTOS__
+    SHDOCVW_DllUnregisterServer();
     return __wine_unregister_resources(instance);
 #else
     return S_OK;
@@ -181,6 +173,7 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD fdwReason, LPVOID fImpLoad)
     case DLL_PROCESS_ATTACH:
 #ifdef __REACTOS__
         instance = hinst;
+        SHDOCVW_Init(hinst);
 #endif
         DisableThreadLibraryCalls(hinst);
         break;
@@ -198,6 +191,10 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD fdwReason, LPVOID fImpLoad)
  */
 HRESULT WINAPI DllCanUnloadNow(void)
 {
+#ifdef __REACTOS__
+    if (SHDOCVW_DllCanUnloadNow() != S_OK)
+        return S_FALSE;
+#endif
     return SHDOCVW_refCount ? S_FALSE : S_OK;
 }
 

@@ -3,7 +3,7 @@
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     Czech resource file
  * TRANSLATORS: Copyright 2009-2010 Radek Liška aka Black_Fox <radekliska@gmail.com>
- *              Copyright 2011 Kamil Hornicek <kamil.hornicek@reactos.org>
+ *              Copyright 2011 Kamil Horníček <kamil.hornicek@reactos.org>
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT

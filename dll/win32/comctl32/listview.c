@@ -3254,7 +3254,18 @@ static RANGES ranges_clone(RANGES ranges)
 {
     RANGES clone;
     INT i;
-	   
+
+#ifdef __REACTOS__
+    if (!ranges || !ranges->hdpa)
+    {
+        /* 
+         * If a ExplorerBand tree rename operation is completed by left-clicking in
+         * DefView, the navigation to the newly named item causes the ListView in DefView
+         * to call LISTVIEW_DeselectAllSkipItems during ListView destruction.
+        */
+        return NULL;
+    }
+#endif
     if (!(clone = ranges_create(DPA_GetPtrCount(ranges->hdpa)))) goto fail;
 
     for (i = 0; i < DPA_GetPtrCount(ranges->hdpa); i++)
@@ -10575,6 +10586,9 @@ static LRESULT LISTVIEW_NCDestroy(LISTVIEW_INFO *infoPtr)
       Free(DPA_GetPtr(infoPtr->hdpaColumns, i));
   DPA_Destroy(infoPtr->hdpaColumns);
   ranges_destroy(infoPtr->selectionRanges);
+#ifdef __REACTOS__
+  infoPtr->selectionRanges = NULL; /* See note in ranges_clone */
+#endif
 
   /* destroy image lists */
   if (!(infoPtr->dwStyle & LVS_SHAREIMAGELISTS))

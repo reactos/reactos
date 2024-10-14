@@ -45,3 +45,13 @@ add_library(user32_wsprintf
 
 add_dependencies(user32_wsprintf psdk)
 target_compile_definitions(user32_wsprintf PRIVATE _USER32_WSPRINTF)
+
+if(MSVC AND ARCH STREQUAL "i386")
+    add_asm_files(ftol2_asm
+        math/i386/ftol2_asm.s
+        math/i386/ftoul2_legacy_asm.s
+    )
+    add_library(ftol2 ${ftol2_asm})
+    set_target_properties(ftol2 PROPERTIES LINKER_LANGUAGE "C")
+    add_dependencies(ftol2 asm)
+endif()

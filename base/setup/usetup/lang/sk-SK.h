@@ -2283,7 +2283,7 @@ MUI_STRING skSKStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   Aktualizujem nastavenia rozlo\247enia kl\240vesnice..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Prid\240vam do registrov inform\240cie o k\242dovej str\240nke..."},
+    "   Prid\240inform\240cie o k\242dovej str\240nke..."},
     {STRING_DONE,
     "   Hotovo..."},
     {STRING_REBOOTCOMPUTER2,

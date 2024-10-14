@@ -14,6 +14,7 @@ BEGIN
         MENUITEM "&Novo\tF2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Marcas", IDM_MARKQ
+        MENUITEM "Sound", IDM_SOUND
         MENUITEM SEPARATOR
         MENUITEM "&Principiante", IDM_BEGINNER
         MENUITEM "&Intermediário", IDM_ADVANCED

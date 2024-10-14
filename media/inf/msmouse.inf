@@ -510,6 +510,8 @@ HID_MOUSE.DeviceDesc = "HID pelė"
 *nEC1F00.DeviceDesc = "NEC PC-98 Bus Mouse"
 
 [Strings.0804]
+MouseClassName = "鼠标和其它指针设备"
+
 StdMfg = "(标准鼠标)"
 SERIAL_MOUSE.DeviceDesc = "标准串口鼠标"
 PS2_MOUSE.DeviceDesc = "标准 PS/2 鼠标"

@@ -22,6 +22,7 @@ BEGIN
         MENUITEM "新遊戲(&N)\tF2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "標出問題(&M)", IDM_MARKQ
+        MENUITEM "Sound", IDM_SOUND
         MENUITEM SEPARATOR
         MENUITEM "新手(&B)", IDM_BEGINNER
         MENUITEM "進階(&A)", IDM_ADVANCED

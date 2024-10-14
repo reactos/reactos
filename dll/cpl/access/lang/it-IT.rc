@@ -56,7 +56,7 @@ BEGIN
     LTEXT "Usa la barra per modificare la velocità del lampeggio del cursore e il suo spessore.",
           -1, 12, 88, 222, 20
     CTEXT "Velocità del lampeggio:", -1, 12, 115, 222, 11
-    LTEXT "Nessuno", -1, 18, 130, 36, 11
+    LTEXT "Lenta", -1, 18, 130, 36, 11
     LTEXT "Veloce", -1, 192, 130, 36, 11
     CONTROL "", IDC_CURSOR_BLINK_TRACK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP,
             60, 124, 126, 20

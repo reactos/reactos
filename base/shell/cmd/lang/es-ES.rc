@@ -247,6 +247,7 @@ comando           Especifica el comando a ejecutar si se cumple la condición.\n
 string1==string2  Especifica una condición verdadera si las cadenas de texto coinciden.\n\
 EXIST archivo     Especifica una condición verdadera si existe el archivo especificado.\n\
 DEFINED variable  Especifica una condición verdadera si la variable está definida.\n"
+    STRING_DATE_NOW "The current date is: "
     STRING_TIME_NOW "La hora actual es: "
     STRING_MKDIR_HELP "Crea un directorio.\n\n\
 MKDIR [unidad:]ruta\nMD [unidad:]ruta"
@@ -341,35 +342,6 @@ Note que no puede especificar una nueva unidad en el destino o ruta. Usa\n\
 el comando MOVE para este propósito.\n"
     STRING_REN_HELP2 "    %lu archivos renombrados.\n"
     STRING_REN_HELP3 "    %lu archivos renombrados.\n"
-    STRING_REPLACE_HELP1 "Reemplaza archivos.\n\n\
-REPLACE [drive1:][path1]filename [drive2:][path2] [/A] [/P] [/R] [/W]\n\
-REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [drive1:][path1]filename Especifica el archivo o archivos de origen.\n\
-  [drive2:][path2]         Especifica el nombre de la carpeta donde se\n\
-                           reemplacen los archivos.\n\
-  /A                       Añade nuevos archivos al directorio destino. No\n\
-                           se puede usar con las opciones /S o /U.\n\
-  /P                       Pregunta para confirmación antes de reemplazar un\n\
-                           archivo o añadir un archivo origen.\n\
-  /R                       Reemplaza todos los archivos solo lectura y los\n\
-                           archivos no protegidos.\n\
-  /S                       Reemplaza todos los archivos en todos los\n\
-                           subdirectorios\n\
-                           del directorio destino. No se puede usar con la opción /A\n\
-  /W                       Espera que insertes un disco antes de empezar.\n\
-  /U                       Reemplaza (actualiza) solo los archivos que son más\n\
-                           antiguos que los de origen. No se puede usar con\n\
-                           la opción /A.\n"
-    STRING_REPLACE_HELP2 "Ruta de origen requerida\n"
-    STRING_REPLACE_HELP3 "No se han reemplazado archivos\n"
-    STRING_REPLACE_HELP4 "Se han reemplazado %lu archivo(s)\n"
-    STRING_REPLACE_HELP5 "Reemplazando %s\n"
-    STRING_REPLACE_HELP6 "Reemplazar %s\n"
-    STRING_REPLACE_HELP7 "No se han añadido archivos\n"
-    STRING_REPLACE_HELP8 "%lu archivo(s) añadidos\n"
-    STRING_REPLACE_HELP9 "Añadir %s (S/N)? "
-    STRING_REPLACE_HELP10 "Reemplazar %s (S/N)? "
-    STRING_REPLACE_HELP11 "Añadiendo %s\n"
     STRING_SHIFT_HELP "Cambia la posición de los parámetros remplazables en un\n\
 archivo por lotes.\n\n\
 SHIFT [ABAJO]"
@@ -526,15 +498,16 @@ title         Nuevo título\n"
     STRING_ERROR_CANNOTPIPE "¡Error!  ¡No se puede apilar!  ¡No se puede abrir el archivo temporal!\n"
     STRING_ERROR_D_PAUSEMSG "Pulse una tecla para continuar ... "
     STRING_ERROR_DRIVER_NOT_READY "La unidad no está lista"
+    STRING_ERROR_INVALID_NUMBER1 "Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"
+    STRING_ERROR_INVALID_NUMBER2 "Invalid number. Numbers are limited to 32-bits of precision.\n"
+    STRING_ERROR_DIVISION_BY_ZERO "Division by zero error.\n"
+    STRING_ERROR_INVALID_DEVICE L"Invalid device '%s'\n"
+    STRING_ERROR_CALL_BAD_LABEL "Invalid attempt to call batch label outside of batch script.\n"
+    STRING_ERROR_UNEXPECTED "%s was unexpected.\n"
+    STRING_ERROR_WHILE_PROCESSING "Error occurred while processing: %s.\n"
     STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
-    STRING_REPLACE_ERROR1 "Argumento no válido - %s\n"
-    STRING_REPLACE_ERROR2 "Ruta no encontrada - %s\n"
-    STRING_REPLACE_ERROR3 "La sintaxis del nombre de archivo, carpeta o volúmen es incorrecta.\n"
-    STRING_REPLACE_ERROR4 "Combinación de parámetros incorrecta\n"
-    STRING_REPLACE_ERROR5 "Acceso denegado - %s\n"
-    STRING_REPLACE_ERROR6 "No se han encontrado archivos - %s\n"
-    STRING_REPLACE_ERROR7 "Error extendido 32\n"
     STRING_CMD_INFOLINE "  Consola de comandos de ReactOS                Escribe HELP para ver la ayuda  "
+    STRING_CMD_COPYRIGHT "(C) Copyright 1996-%s ReactOS Team.\n"
     STRING_REACTOS_VERSION "ReactOS [Versión %s %s]\n"
     STRING_CMD_SHELLINFO "\nIntérprete de comandos de ReactOS\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Funcionando en: "

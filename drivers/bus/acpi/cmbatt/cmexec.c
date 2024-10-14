@@ -13,6 +13,13 @@
 #include <acpiioct.h>
 #include <debug.h>
 
+typedef struct
+{
+    LPSTR Name;
+    BOOLEAN IsString;
+    PVOID Data;
+} ACPI_PACKAGE_FIELD, *PACPI_PACKAGE_FIELD;
+
 /* FUNCTIONS ******************************************************************/
 
 NTSTATUS
@@ -148,6 +155,86 @@ CmBattSendDownStreamIrp(IN PDEVICE_OBJECT DeviceObject,
     if (CmBattDebug & 0x40)
         DbgPrint("CmBattSendDownStreamIrp: Irp %x completed %x! [Tid] %x\n",
                  Irp, Status, KeGetCurrentThread());
+    return Status;
+}
+
+static
+NTSTATUS
+CmBattCallAcpiPackage(
+    _In_ LPCSTR FunctionName,
+    _In_ PCMBATT_DEVICE_EXTENSION DeviceExtension,
+    _In_ ULONG PackageName,
+    _In_ ULONG OutputBufferSize,
+    _In_ PACPI_PACKAGE_FIELD PackageFields,
+    _In_ ULONG PackageFieldCount)
+{
+    NTSTATUS Status;
+    PACPI_EVAL_OUTPUT_BUFFER OutputBuffer;
+    ACPI_EVAL_INPUT_BUFFER InputBuffer;
+    PACPI_METHOD_ARGUMENT Argument;
+    ULONG i;
+    PAGED_CODE();
+
+    OutputBuffer = ExAllocatePoolWithTag(PagedPool,
+                                         OutputBufferSize,
+                                         'MtaB');
+    if (!OutputBuffer)
+    {
+        if (CmBattDebug & (CMBATT_ACPI_ENTRY_EXIT | CMBATT_ACPI_WARNING | CMBATT_GENERIC_WARNING))
+            DbgPrint("%s: Failed to allocate Buffer\n", FunctionName);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Initialize to zero */
+    RtlZeroMemory(OutputBuffer, OutputBufferSize);
+
+    /* Request the ACPI method */
+    *(PULONG)InputBuffer.MethodName = PackageName;
+    InputBuffer.Signature = ACPI_EVAL_INPUT_BUFFER_SIGNATURE;
+
+    /* Send it to ACPI */
+    Status = CmBattSendDownStreamIrp(DeviceExtension->AttachedDevice,
+                                     IOCTL_ACPI_EVAL_METHOD,
+                                     &InputBuffer,
+                                     sizeof(InputBuffer),
+                                     OutputBuffer,
+                                     OutputBufferSize);
+    if (!NT_SUCCESS(Status))
+    {
+        if (CmBattDebug & (CMBATT_ACPI_ASSERT | CMBATT_ACPI_ENTRY_EXIT | CMBATT_ACPI_WARNING | CMBATT_GENERIC_WARNING))
+            DbgPrint("%s: Failed 0x%08x method on device %x - Status (0x%x)\n",
+                     FunctionName, PackageName, DeviceExtension->DeviceId, Status);
+        ExFreePoolWithTag(OutputBuffer, 'MtaB');
+        return Status;
+    }
+
+    /* Check if we got the right number of elements */
+    if (OutputBuffer->Count != PackageFieldCount)
+    {
+        if (CmBattDebug & (CMBATT_ACPI_ASSERT | CMBATT_ACPI_ENTRY_EXIT | CMBATT_ACPI_WARNING | CMBATT_GENERIC_WARNING))
+            DbgPrint("%s: 0x%08x method returned %d elements (requires %d)\n",
+                     FunctionName, PackageName, OutputBuffer->Count, PackageFieldCount);
+        ExFreePoolWithTag(OutputBuffer, 'MtaB');
+        return STATUS_ACPI_INVALID_DATA;
+    }
+
+    Argument = OutputBuffer->Argument;
+    for (i = 0; i < PackageFieldCount && NT_SUCCESS(Status); i++)
+    {
+        if (PackageFields[i].IsString)
+            Status = GetStringElement(Argument, PackageFields[i].Data);
+        else
+            Status = GetDwordElement(Argument, PackageFields[i].Data);
+        if (!NT_SUCCESS(Status))
+        {
+            if (CmBattDebug & (CMBATT_ACPI_ASSERT | CMBATT_ACPI_ENTRY_EXIT | CMBATT_ACPI_WARNING | CMBATT_GENERIC_WARNING))
+                DbgPrint("%s: Failed to get %s\n", FunctionName, PackageFields[i].Name);
+            break;
+        }
+        Argument = ACPI_METHOD_NEXT_ARGUMENT(Argument);
+    }
+
+    ExFreePoolWithTag(OutputBuffer, 'MtaB');
     return Status;
 }
 
@@ -325,8 +412,37 @@ NTAPI
 CmBattGetBifData(PCMBATT_DEVICE_EXTENSION DeviceExtension,
                  PACPI_BIF_DATA BifData)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    ACPI_PACKAGE_FIELD BifFields[] = {
+        { "PowerUnit", FALSE, &BifData->PowerUnit },
+        { "DesignCapacity", FALSE, &BifData->DesignCapacity },
+        { "LastFullCapacity", FALSE, &BifData->LastFullCapacity },
+        { "BatteryTechnology", FALSE, &BifData->BatteryTechnology },
+        { "DesignVoltage", FALSE, &BifData->DesignVoltage },
+        { "DesignCapacityWarning", FALSE, &BifData->DesignCapacityWarning },
+        { "DesignCapacityLow", FALSE, &BifData->DesignCapacityLow },
+        { "BatteryCapacityGranularity1", FALSE, &BifData->BatteryCapacityGranularity1 },
+        { "BatteryCapacityGranularity2", FALSE, &BifData->BatteryCapacityGranularity2 },
+        { "ModelNumber", TRUE, &BifData->ModelNumber },
+        { "SerialNumber", TRUE, &BifData->SerialNumber },
+        { "BatteryType", TRUE, &BifData->BatteryType },
+        { "OemInfo", TRUE, &BifData->OemInfo },
+    };
+    PAGED_CODE();
+
+    if (CmBattDebug & CMBATT_ACPI_ENTRY_EXIT)
+        DbgPrint("CmBattGetBifData: Buffer (0x%x) Device %x Tid %x\n",
+                 BifData, DeviceExtension->DeviceId, KeGetCurrentThread());
+
+    /* Request the _BIF method */
+    /* Note that _BIF method is deprecated since ACPI 4.0, and replaced by _BIX method.
+     * However, VirtualBox 7.0 only support _BIF method.
+     */
+    return CmBattCallAcpiPackage("CmBattGetBifData",
+                                 DeviceExtension,
+                                 'FIB_',
+                                 512,
+                                 BifFields,
+                                 RTL_NUMBER_OF(BifFields));
 }
 
 NTSTATUS
@@ -334,8 +450,25 @@ NTAPI
 CmBattGetBstData(PCMBATT_DEVICE_EXTENSION DeviceExtension,
                  PACPI_BST_DATA BstData)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    ACPI_PACKAGE_FIELD BstFields[] = {
+        { "State", FALSE, &BstData->State },
+        { "PresentRate", FALSE, &BstData->PresentRate },
+        { "RemainingCapacity", FALSE, &BstData->RemainingCapacity },
+        { "PresentVoltage", FALSE, &BstData->PresentVoltage },
+    };
+    PAGED_CODE();
+
+    if (CmBattDebug & CMBATT_ACPI_ENTRY_EXIT)
+        DbgPrint("CmBattGetBstData: Buffer (0x%x) Device %x Tid %x\n",
+                 BstData, DeviceExtension->DeviceId, KeGetCurrentThread());
+
+
+    return CmBattCallAcpiPackage("CmBattGetBstData",
+                                 DeviceExtension,
+                                 'TSB_',
+                                 512,
+                                 BstFields,
+                                 RTL_NUMBER_OF(BstFields));
 }
 
 /* EOF */

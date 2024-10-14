@@ -58,6 +58,7 @@ typedef struct _LOADER_SYSTEM_BLOCK
     CHAR NtBootPathName[MAX_PATH+1];
     CHAR NtHalPathName[MAX_PATH+1];
     ARC_DISK_INFORMATION ArcDiskInformation;
+    LOADER_PERFORMANCE_DATA LoaderPerformanceData;
 } LOADER_SYSTEM_BLOCK, *PLOADER_SYSTEM_BLOCK;
 
 extern PLOADER_SYSTEM_BLOCK WinLdrSystemBlock;
@@ -164,7 +165,8 @@ VOID
 WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 VOID
-WinLdrSetProcessorContext(VOID);
+WinLdrSetProcessorContext(
+    _In_ USHORT OperatingSystemVersion);
 
 // arch/xxx/winldr.c
 BOOLEAN

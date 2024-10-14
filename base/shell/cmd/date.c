@@ -203,9 +203,11 @@ INT cmd_date(LPTSTR param)
             nDateString = i;
     }
 
-    // TODO: Should prepend a "Current date is: " prompt, as done with TIME.
     if (nDateString == -1)
+    {
+        ConOutResPuts(STRING_DATE_NOW);
         ConOutPrintf(_T("%s\n"), GetDateString());
+    }
 
     if (!bPrompt)
     {

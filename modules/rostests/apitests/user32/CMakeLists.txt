@@ -1,9 +1,11 @@
+add_subdirectory(makeimg)
 
 list(APPEND SOURCE
     AttachThreadInput.c
     ../include/msgtrace.c
     CharFuncs.c
     CloseWindow.c
+    CopyImage.c
     CreateDialog.c
     CreateIconFromResourceEx.c
     CreateWindowEx.c
@@ -30,6 +32,7 @@ list(APPEND SOURCE
     KbdLayout.c
     keybd_event.c
     LoadImage.c
+    LoadImageGCC.c
     LookupIconIdFromDirectoryEx.c
     MessageStateAnalyzer.c
     NextDlgItem.c
@@ -38,6 +41,7 @@ list(APPEND SOURCE
     RedrawWindow.c
     RegisterClassEx.c
     RegisterHotKey.c
+    ScrollBarRedraw.c
     ScrollBarWndExtra.c
     ScrollDC.c
     ScrollWindowEx.c
@@ -49,6 +53,7 @@ list(APPEND SOURCE
     SetProp.c
     SetScrollInfo.c
     SetScrollRange.c
+    SetWindowPlacement.c
     ShowWindow.c
     SwitchToThisWindow.c
     SystemMenu.c

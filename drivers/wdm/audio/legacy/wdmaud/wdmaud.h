@@ -200,6 +200,13 @@ WdmAudMidiCapabilities(
 
 NTSTATUS
 NTAPI
+WdmAudGetPosition(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp,
+    _In_ PWDMAUD_DEVICE_INFO DeviceInfo);
+
+NTSTATUS
+NTAPI
 WdmAudFrameSize(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp,

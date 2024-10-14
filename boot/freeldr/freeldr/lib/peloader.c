@@ -27,8 +27,50 @@ DBG_DEFAULT_CHANNEL(PELOADER);
 
 PELDR_IMPORTDLL_LOAD_CALLBACK PeLdrImportDllLoadCallback = NULL;
 
+#ifdef _WIN64
+#define COOKIE_MAX 0x0000FFFFFFFFFFFFll
+#define DEFAULT_SECURITY_COOKIE 0x00002B992DDFA232ll
+#else
+#define DEFAULT_SECURITY_COOKIE 0xBB40E64E
+#endif
+
 
 /* PRIVATE FUNCTIONS *********************************************************/
+
+static PVOID
+PeLdrpFetchAddressOfSecurityCookie(PVOID BaseAddress, ULONG SizeOfImage)
+{
+    PIMAGE_LOAD_CONFIG_DIRECTORY ConfigDir;
+    ULONG DirSize;
+    PULONG_PTR Cookie = NULL;
+
+    /* Get the pointer to the config directory */
+    ConfigDir = RtlImageDirectoryEntryToData(BaseAddress,
+                                             TRUE,
+                                             IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG,
+                                             &DirSize);
+
+    /* Check for sanity */
+    if (!ConfigDir ||
+        DirSize < RTL_SIZEOF_THROUGH_FIELD(IMAGE_LOAD_CONFIG_DIRECTORY, SecurityCookie))
+    {
+        /* Invalid directory*/
+        return NULL;
+    }
+
+    /* Now get the cookie */
+    Cookie = VaToPa((PULONG_PTR)ConfigDir->SecurityCookie);
+
+    /* Check this cookie */
+    if ((PCHAR)Cookie <= (PCHAR)BaseAddress ||
+        (PCHAR)Cookie >= (PCHAR)BaseAddress + SizeOfImage - sizeof(*Cookie))
+    {
+        Cookie = NULL;
+    }
+
+    /* Return validated security cookie */
+    return Cookie;
+}
 
 /* DllName - physical, UnicodeString->Buffer - virtual */
 static BOOLEAN
@@ -386,6 +428,9 @@ PeLdrpLoadAndScanReferencedDll(
         return Success;
     }
 
+    /* Init security cookie */
+    PeLdrInitSecurityCookie(*DataTableEntry);
+
     (*DataTableEntry)->Flags |= LDRP_DRIVER_DEPENDENT_DLL;
 
     /* Scan its dependencies too */
@@ -472,6 +517,44 @@ PeLdrpScanImportAddressTable(
 
 
 /* FUNCTIONS *****************************************************************/
+
+PVOID
+PeLdrInitSecurityCookie(PLDR_DATA_TABLE_ENTRY LdrEntry)
+{
+    PULONG_PTR Cookie;
+    ULONG_PTR NewCookie;
+
+    /* Fetch address of the cookie */
+    Cookie = PeLdrpFetchAddressOfSecurityCookie(VaToPa(LdrEntry->DllBase), LdrEntry->SizeOfImage);
+
+    if (!Cookie)
+        return NULL;
+
+    /* Check if it's a default one */
+    if ((*Cookie == DEFAULT_SECURITY_COOKIE) ||
+        (*Cookie == 0))
+    {
+        /* Generate new cookie using cookie address and time as seed */
+        NewCookie = (ULONG_PTR)Cookie ^ (ULONG_PTR)ArcGetRelativeTime();
+#ifdef _WIN64
+        /* Some images expect first 16 bits to be kept clean (like in default cookie) */
+        if (NewCookie > COOKIE_MAX)
+        {
+            NewCookie >>= 16;
+        }
+#endif
+        /* If the result is 0 or the same as we got, just add one to the default value */
+        if ((NewCookie == 0) || (NewCookie == *Cookie))
+        {
+            NewCookie = DEFAULT_SECURITY_COOKIE + 1;
+        }
+
+        /* Set the new cookie value */
+        *Cookie = NewCookie;
+    }
+
+    return Cookie;
+}
 
 /* Returns TRUE if DLL has already been loaded - looks in LoadOrderList in LPB */
 BOOLEAN

@@ -1242,7 +1242,7 @@ INT_PTR CALLBACK OwnerDrawButtonSubclass(HWND hButton, UINT uMsg, WPARAM wParam,
                         break;
                     }
                 }
-                SetCursor(LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_HAND)));
+                SetCursor(LoadCursorW(NULL, IDC_HAND));
             }
 
             ClientToScreen(hButton, &pt);

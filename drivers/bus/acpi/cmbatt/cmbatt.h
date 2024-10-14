@@ -124,12 +124,6 @@ typedef struct _CMBATT_DEVICE_EXTENSION
     LONG ArLockValue;
     ULONG TagData;
     ULONG Tag;
-    ULONG ModelNumberLength;
-    PCHAR ModelNumber;
-    ULONG SerialNumberLength;
-    PCHAR SerialNumber;
-    ULONG OemInfoLength;
-    PCHAR OemInfo;
     ACPI_BST_DATA BstData;
     ACPI_BIF_DATA BifData;
     ULONG Id;

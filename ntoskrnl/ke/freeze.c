@@ -49,7 +49,8 @@ KeFreezeExecution(IN PKTRAP_FRAME TrapFrame,
 #endif
 
 #ifdef CONFIG_SMP
-    // TODO: Add SMP support.
+    /* Architecture specific freeze code */
+    KxFreezeExecution();
 #endif
 
     /* Save the old IRQL to be restored on unfreeze */
@@ -64,7 +65,8 @@ NTAPI
 KeThawExecution(IN BOOLEAN Enable)
 {
 #ifdef CONFIG_SMP
-    // TODO: Add SMP support.
+    /* Architecture specific thaw code */
+    KxThawExecution();
 #endif
 
     /* Clear the freeze flag */

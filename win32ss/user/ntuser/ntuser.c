@@ -195,7 +195,14 @@ NtUserInitialize(
     /* Save the EPROCESS of CSRSS */
     InitCsrProcess(/*PsGetCurrentProcess()*/);
 
-// Initialize Power Request List (use hPowerRequestEvent).
+    /* Initialize Power Request List */
+    Status = IntInitWin32PowerManagement(hPowerRequestEvent);
+    if (!NT_SUCCESS(Status))
+    {
+        UserLeave();
+        return Status;
+    }
+
 // Initialize Media Change (use hMediaRequestEvent).
 
     /* Initialize various GDI stuff (DirectX, fonts, language ID etc.) */

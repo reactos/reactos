@@ -1,9 +1,9 @@
 /*
  * PROJECT:     ReactOS Setup Library
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Partition list functions
  * COPYRIGHT:   Copyright 2003-2019 Casper S. Hornstrup (chorns@users.sourceforge.net)
- *              Copyright 2018-2019 Hermes Belusca-Maito
+ *              Copyright 2018-2024 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
  */
 
 #pragma once
@@ -34,9 +34,29 @@ typedef enum _FORMATSTATE
     Unformatted,
     UnformattedOrDamaged,
     UnknownFormat,
-    Preformatted,
     Formatted
 } FORMATSTATE, *PFORMATSTATE;
+
+#include "volutil.h"
+
+typedef struct _PARTENTRY PARTENTRY, *PPARTENTRY;
+typedef struct _VOLENTRY
+{
+    LIST_ENTRY ListEntry; ///< Entry in VolumesList
+
+    VOLINFO Info;
+    FORMATSTATE FormatState;
+
+    /* Volume must be checked */
+    BOOLEAN NeedsCheck;
+    /* Volume is new and has not yet been actually formatted and mounted */
+    BOOLEAN New;
+
+    // union {
+    //     PVOLUME_DISK_EXTENTS pExtents;
+        PPARTENTRY PartEntry;
+    // };
+} VOLENTRY, *PVOLENTRY;
 
 typedef struct _PARTENTRY
 {
@@ -54,24 +74,25 @@ typedef struct _PARTENTRY
     ULONG OnDiskPartitionNumber; /* Enumerated partition number (primary partitions first, excluding the extended partition container, then the logical partitions) */
     ULONG PartitionNumber;       /* Current partition number, only valid for the currently running NTOS instance */
     ULONG PartitionIndex;        /* Index in the LayoutBuffer->PartitionEntry[] cached array of the corresponding DiskEntry */
-
-    WCHAR DriveLetter;
-    WCHAR VolumeLabel[20];
-    WCHAR FileSystem[MAX_PATH+1];
-    FORMATSTATE FormatState;
+    WCHAR DeviceName[MAX_PATH];  ///< NT device name: "\Device\HarddiskM\PartitionN"
 
     BOOLEAN LogicalPartition;
 
     /* Partition is partitioned disk space */
     BOOLEAN IsPartitioned;
 
-/** The following three properties may be replaced by flags **/
-
     /* Partition is new, table does not exist on disk yet */
     BOOLEAN New;
 
-    /* Partition must be checked */
-    BOOLEAN NeedsCheck;
+    /*
+     * Volume-related properties:
+     * NULL: No volume is associated to this partition (either because it is
+     *       an empty disk region, or the partition type is unrecognized).
+     * 0x1 : TBD.
+     * Valid pointer: A basic volume associated to this partition is (or will)
+     *       be mounted by the PARTMGR and enumerated by the MOUNTMGR.
+     */
+    PVOLENTRY Volume;
 
 } PARTENTRY, *PPARTENTRY;
 
@@ -162,9 +183,12 @@ typedef struct _PARTLIST
     LIST_ENTRY DiskListHead;
     LIST_ENTRY BiosDiskListHead;
 
+    /* (Basic) Volumes management */
+    LIST_ENTRY VolumesList;
+
 } PARTLIST, *PPARTLIST;
 
-#define  PARTITION_TBL_SIZE 4
+#define PARTITION_TBL_SIZE  4
 
 #define PARTITION_MAGIC     0xAA55
 
@@ -251,45 +275,36 @@ DestroyPartitionList(
 
 PDISKENTRY
 GetDiskByBiosNumber(
-    IN PPARTLIST List,
-    IN ULONG HwDiskNumber);
+    _In_ PPARTLIST List,
+    _In_ ULONG HwDiskNumber);
 
 PDISKENTRY
 GetDiskByNumber(
-    IN PPARTLIST List,
-    IN ULONG DiskNumber);
+    _In_ PPARTLIST List,
+    _In_ ULONG DiskNumber);
 
 PDISKENTRY
 GetDiskBySCSI(
-    IN PPARTLIST List,
-    IN USHORT Port,
-    IN USHORT Bus,
-    IN USHORT Id);
+    _In_ PPARTLIST List,
+    _In_ USHORT Port,
+    _In_ USHORT Bus,
+    _In_ USHORT Id);
 
 PDISKENTRY
 GetDiskBySignature(
-    IN PPARTLIST List,
-    IN ULONG Signature);
+    _In_ PPARTLIST List,
+    _In_ ULONG Signature);
 
 PPARTENTRY
 GetPartition(
-    // IN PPARTLIST List,
-    IN PDISKENTRY DiskEntry,
-    IN ULONG PartitionNumber);
-
-BOOLEAN
-GetDiskOrPartition(
-    IN PPARTLIST List,
-    IN ULONG DiskNumber,
-    IN ULONG PartitionNumber OPTIONAL,
-    OUT PDISKENTRY* pDiskEntry,
-    OUT PPARTENTRY* pPartEntry OPTIONAL);
+    _In_ PDISKENTRY DiskEntry,
+    _In_ ULONG PartitionNumber);
 
 PPARTENTRY
 SelectPartition(
-    IN PPARTLIST List,
-    IN ULONG DiskNumber,
-    IN ULONG PartitionNumber);
+    _In_ PPARTLIST List,
+    _In_ ULONG DiskNumber,
+    _In_ ULONG PartitionNumber);
 
 PPARTENTRY
 GetNextPartition(
@@ -300,6 +315,11 @@ PPARTENTRY
 GetPrevPartition(
     IN PPARTLIST List,
     IN PPARTENTRY CurrentPart OPTIONAL);
+
+PPARTENTRY
+GetAdjUnpartitionedEntry(
+    _In_ PPARTENTRY PartEntry,
+    _In_ BOOLEAN Direction);
 
 ERROR_NUMBER
 PartitionCreationChecks(
@@ -313,23 +333,14 @@ BOOLEAN
 CreatePartition(
     _In_ PPARTLIST List,
     _Inout_ PPARTENTRY PartEntry,
-    _In_opt_ ULONGLONG SizeBytes);
-
-BOOLEAN
-CreateExtendedPartition(
-    _In_ PPARTLIST List,
-    _Inout_ PPARTENTRY PartEntry,
-    _In_opt_ ULONGLONG SizeBytes);
-
-NTSTATUS
-DismountVolume(
-    IN PPARTENTRY PartEntry);
+    _In_opt_ ULONGLONG SizeBytes,
+    _In_opt_ ULONG_PTR PartitionInfo);
 
 BOOLEAN
 DeletePartition(
-    IN PPARTLIST List,
-    IN PPARTENTRY PartEntry,
-    OUT PPARTENTRY* FreeRegion OPTIONAL);
+    _In_ PPARTLIST List,
+    _In_ PPARTENTRY PartEntry,
+    _Out_opt_ PPARTENTRY* FreeRegion);
 
 PPARTENTRY
 FindSupportedSystemPartition(
@@ -353,30 +364,12 @@ WritePartitionsToDisk(
     IN PPARTLIST List);
 
 BOOLEAN
-SetMountedDeviceValue(
-    IN WCHAR Letter,
-    IN ULONG Signature,
-    IN LARGE_INTEGER StartingOffset);
-
-BOOLEAN
 SetMountedDeviceValues(
-    IN PPARTLIST List);
+    _In_ PPARTLIST List);
 
 VOID
 SetMBRPartitionType(
     IN PPARTENTRY PartEntry,
     IN UCHAR PartitionType);
-
-BOOLEAN
-GetNextUnformattedPartition(
-    IN PPARTLIST List,
-    OUT PDISKENTRY *pDiskEntry OPTIONAL,
-    OUT PPARTENTRY *pPartEntry);
-
-BOOLEAN
-GetNextUncheckedPartition(
-    IN PPARTLIST List,
-    OUT PDISKENTRY *pDiskEntry OPTIONAL,
-    OUT PPARTENTRY *pPartEntry);
 
 /* EOF */

@@ -43,3 +43,14 @@ Win32SS:
 - changed-files:
   - any-glob-to-any-file:
     - win32ss/**
+
+"input method":
+- changed-files:
+  - any-glob-to-any-file:
+    - base/applications/ctfmon/**
+    - dll/ime/**
+    - dll/win32/imm32/**
+    - dll/win32/msctf/**
+    - dll/win32/msutb/**
+    - win32ss/user/ntuser/ime.c
+    - win32ss/user/user32/misc/imm.c

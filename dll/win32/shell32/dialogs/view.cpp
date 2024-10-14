@@ -618,8 +618,18 @@ ViewDlg_CreateTreeImageList(VOID)
 }
 
 static BOOL
-ViewDlg_OnInitDialog(HWND hwndDlg)
+ViewDlg_OnInitDialog(HWND hwndDlg, LPPROPSHEETPAGE psp)
 {
+    SetWindowLongPtr(hwndDlg, GWL_USERDATA, psp->lParam);
+    CFolderOptions *pFO = (CFolderOptions*)psp->lParam;
+
+    if (!pFO || !pFO->CanSetDefFolderSettings())
+    {
+        // The global options (started from rundll32 or control panel) 
+        // has no browser to copy the current settings from.
+        EnableWindow(GetDlgItem(hwndDlg, IDC_VIEW_APPLY_TO_ALL), FALSE);
+    }
+
     HWND hwndTreeView = GetDlgItem(hwndDlg, IDC_VIEW_TREEVIEW);
 
     s_hTreeImageList = ViewDlg_CreateTreeImageList();
@@ -824,7 +834,7 @@ ScanAdvancedSettings(SHELLSTATE *pSS, DWORD *pdwMask)
         }
         if (lstrcmpiW(pEntry->szKeyName, L"SHOWALL") == 0)
         {
-            pSS->fShowAllObjects = !bChecked ? 1 : 0;
+            pSS->fShowAllObjects = bChecked ? 1 : 0;
             *pdwMask |= SSF_SHOWALLOBJECTS;
             continue;
         }
@@ -850,8 +860,9 @@ ScanAdvancedSettings(SHELLSTATE *pSS, DWORD *pdwMask)
 }
 
 static BOOL CALLBACK
-RefreshBrowsersCallback(HWND hWnd, LPARAM msg)
+PostCabinetMessageCallback(HWND hWnd, LPARAM param)
 {
+    MSG &data = *(MSG*)param;
     WCHAR ClassName[100];
     if (GetClassNameW(hWnd, ClassName, _countof(ClassName)))
     {
@@ -859,10 +870,20 @@ RefreshBrowsersCallback(HWND hWnd, LPARAM msg)
             !wcscmp(ClassName, L"CabinetWClass") ||
             !wcscmp(ClassName, L"ExploreWClass"))
         {
-            PostMessage(hWnd, WM_COMMAND, FCIDM_DESKBROWSER_REFRESH, 0);
+            PostMessage(hWnd, data.message, data.wParam, data.lParam);
         }
     }
     return TRUE;
+}
+
+void
+PostCabinetMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+    MSG data;
+    data.message = Msg;
+    data.wParam = wParam;
+    data.lParam = lParam;
+    EnumWindows(PostCabinetMessageCallback, (LPARAM)&data);
 }
 
 static VOID
@@ -924,7 +945,7 @@ ViewDlg_Apply(HWND hwndDlg)
     // notify all
     SendMessage(HWND_BROADCAST, WM_WININICHANGE, 0, 0);
 
-    EnumWindows(RefreshBrowsersCallback, NULL);
+    PostCabinetMessage(WM_COMMAND, FCIDM_DESKBROWSER_REFRESH, 0);
 }
 
 // IDD_FOLDER_OPTIONS_VIEW
@@ -941,7 +962,7 @@ FolderOptionsViewDlg(
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            return ViewDlg_OnInitDialog(hwndDlg);
+            return ViewDlg_OnInitDialog(hwndDlg, (LPPROPSHEETPAGE)lParam);
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
@@ -949,6 +970,18 @@ FolderOptionsViewDlg(
                 case IDC_VIEW_RESTORE_DEFAULTS: // Restore Defaults
                     ViewDlg_RestoreDefaults(hwndDlg);
                     break;
+
+                case IDC_VIEW_APPLY_TO_ALL:
+                case IDC_VIEW_RESET_ALL:
+                {
+                    HRESULT hr = HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
+                    CFolderOptions *pFO = (CFolderOptions*)GetWindowLongPtr(hwndDlg, GWL_USERDATA);
+                    if (pFO)
+                        hr = pFO->ApplyDefFolderSettings(LOWORD(wParam) == IDC_VIEW_RESET_ALL);
+                    if (FAILED(hr))
+                        SHELL_ErrorBox(hwndDlg, hr);
+                    break;
+                }
             }
             break;
 
