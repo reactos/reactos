@@ -68,18 +68,17 @@ static void NTAPI _RequestAllTerminationAPC(ULONG_PTR Parameter)
     s_hThreadAPC = NULL;
 }
 
-CDirectoryWatcher::CDirectoryWatcher(HWND hNotifyWnd, LPCWSTR pszDirectoryPath, BOOL fSubTree)
-    : m_hNotifyWnd(hNotifyWnd)
-    , m_fDead(FALSE)
+CDirectoryWatcher::CDirectoryWatcher(LPCWSTR pszDirectoryPath, BOOL fSubTree)
+    : m_fDead(FALSE)
     , m_fRecursive(fSubTree)
     , m_dir_list(pszDirectoryPath, fSubTree)
 {
-    TRACE("%p, '%S'\n", this, pszDirectoryPath);
+    TRACE("CDirectoryWatcher::CDirectoryWatcher: %p, '%S'\n", this, pszDirectoryPath);
 
-    GetFullPathNameW(pszDirectoryPath, _countof(m_szDirectoryPath), m_szDirectoryPath, NULL);
+    lstrcpynW(m_szDirectoryPath, pszDirectoryPath, MAX_PATH);
 
     // open the directory to watch changes (for ReadDirectoryChangesW)
-    m_hDirectory = CreateFileW(m_szDirectoryPath, FILE_LIST_DIRECTORY,
+    m_hDirectory = CreateFileW(pszDirectoryPath, FILE_LIST_DIRECTORY,
                                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                                NULL, OPEN_EXISTING,
                                FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
@@ -87,10 +86,12 @@ CDirectoryWatcher::CDirectoryWatcher(HWND hNotifyWnd, LPCWSTR pszDirectoryPath, 
 }
 
 /*static*/ CDirectoryWatcher *
-CDirectoryWatcher::Create(HWND hNotifyWnd, LPCWSTR pszDirectoryPath, BOOL fSubTree)
+CDirectoryWatcher::Create(LPCWSTR pszDirectoryPath, BOOL fSubTree)
 {
-    CDirectoryWatcher *pDirectoryWatcher =
-        new CDirectoryWatcher(hNotifyWnd, pszDirectoryPath, fSubTree);
+    WCHAR szFullPath[MAX_PATH];
+    GetFullPathNameW(pszDirectoryPath, _countof(szFullPath), szFullPath, NULL);
+
+    CDirectoryWatcher *pDirectoryWatcher = new CDirectoryWatcher(szFullPath, fSubTree);
     if (pDirectoryWatcher->m_hDirectory == INVALID_HANDLE_VALUE)
     {
         ERR("CreateFileW failed\n");
@@ -102,7 +103,7 @@ CDirectoryWatcher::Create(HWND hNotifyWnd, LPCWSTR pszDirectoryPath, BOOL fSubTr
 
 CDirectoryWatcher::~CDirectoryWatcher()
 {
-    TRACE("%p, '%S'\n", this, m_szDirectoryPath);
+    TRACE("CDirectoryWatcher::~CDirectoryWatcher: %p, '%S'\n", this, m_szDirectoryPath);
 
     if (m_hDirectory != INVALID_HANDLE_VALUE)
         CloseHandle(m_hDirectory);
@@ -384,17 +385,10 @@ void CDirectoryWatcher::QuitWatching()
     assert(this != NULL);
 
     m_fDead = TRUE;
-    m_hNotifyWnd = NULL;
     CancelIo(m_hDirectory);
 }
 
-BOOL CDirectoryWatcher::IsDead()
+BOOL CDirectoryWatcher::IsDead() const
 {
-    if (m_hNotifyWnd && !::IsWindow(m_hNotifyWnd))
-    {
-        m_hNotifyWnd = NULL;
-        m_fDead = TRUE;
-        CancelIo(m_hDirectory);
-    }
     return m_fDead;
 }

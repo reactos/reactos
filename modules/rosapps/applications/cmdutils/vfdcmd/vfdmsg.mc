@@ -11,11 +11,6 @@
 ;#ifndef _VFDMSG_H_
 ;#define _VFDMSG_H_
 ;
-;/*
-; __REACTOS__:
-; - Removed Japanese language.
-; + Added a second blank line between some entries.
-;*/
 
 MessageIdTypedef=DWORD
 LanguageNames=(English=0x409:MSG0409)
@@ -1166,7 +1161,6 @@ of the shell extension.
 .
 
 
-;// __REACTOS__: s/read only/read-only/.
 MessageId=
 SymbolicName=MSG_HELP_OPEN
 Language=English
@@ -1366,7 +1360,6 @@ The SAVE command always fails if the target is a ZIP compressed file.
 .
 
 
-;// __REACTOS__: s/read only/read-only/.
 MessageId=
 SymbolicName=MSG_HELP_PROTECT
 Language=English

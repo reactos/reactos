@@ -246,15 +246,9 @@ STDMETHODIMP CACListISF::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
             if (!pszRawPath || !pszExpanded)
                 continue;
 
-            DWORD attrs = SFGAO_FOLDER | SFGAO_FILESYSTEM;
-            LPCITEMIDLIST pidlRef = pidlChild;
-            hr = m_pShellFolder->GetAttributesOf(1, &pidlRef, &attrs);
-            if (FAILED_UNEXPECTEDLY(hr))
+            if ((m_dwOptions & ACLO_FILESYSDIRS) && !PathIsDirectoryW(pszExpanded))
                 continue;
-
-            if ((m_dwOptions & ACLO_FILESYSDIRS) && !(attrs & SFGAO_FOLDER))
-                continue;
-            if ((m_dwOptions & (ACLO_FILESYSONLY | ACLO_FILESYSDIRS)) && !(attrs & SFGAO_FILESYSTEM))
+            else if ((m_dwOptions & ACLO_FILESYSONLY) && !PathFileExistsW(pszExpanded))
                 continue;
 
             hr = S_OK;
@@ -345,16 +339,12 @@ STDMETHODIMP CACListISF::Expand(LPCOLESTR pszExpand)
     {
         if (PathIsRelativeW(pszExpand) &&
             SHGetPathFromIDListW(m_pidlCurDir, szPath1) &&
-            PathCombineW(szPath2, szPath1, pszExpand) &&
-            PathFileExistsW(szPath2))
+            PathCombineW(szPath2, szPath1, pszExpand))
         {
             pszExpand = szPath2;
         }
-        else if (PathFileExistsW(pszExpand))
-        {
-            GetFullPathNameW(pszExpand, _countof(szPath1), szPath1, NULL);
-            pszExpand = szPath1;
-        }
+        GetFullPathNameW(pszExpand, _countof(szPath1), szPath1, NULL);
+        pszExpand = szPath1;
     }
 
     CComHeapPtr<ITEMIDLIST> pidl;

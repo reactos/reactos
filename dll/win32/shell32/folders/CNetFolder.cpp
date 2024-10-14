@@ -66,7 +66,16 @@ HRESULT CALLBACK NetFolderMenuCallback(IShellFolder *psf,
                                        WPARAM       wParam,
                                        LPARAM       lParam)
 {
-    return SHELL32_DefaultContextMenuCallBack(psf, pdtobj, uMsg);
+    switch (uMsg)
+    {
+    case DFM_MERGECONTEXTMENU:
+        return S_OK;
+    case DFM_INVOKECOMMAND:
+    case DFM_INVOKECOMMANDEX:
+    case DFM_GETDEFSTATICID: // Required for Windows 7 to pick a default
+        return S_FALSE;
+    }
+    return E_NOTIMPL;
 }
 
 class CNetFolderEnum :
@@ -501,13 +510,13 @@ HRESULT WINAPI CNetFolder::GetDefaultColumn (DWORD dwRes, ULONG *pSort, ULONG *p
     return S_OK;
 }
 
-HRESULT WINAPI CNetFolder::GetDefaultColumnState(UINT iColumn, SHCOLSTATEF *pcsFlags)
+HRESULT WINAPI CNetFolder::GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags)
 {
     TRACE("(%p)\n", this);
 
     if (!pcsFlags || iColumn >= NETWORKPLACESSHELLVIEWCOLUMNS)
         return E_INVALIDARG;
-    *pcsFlags = NetworkPlacesSFHeader[iColumn].colstate;
+    *pcsFlags = NetworkPlacesSFHeader[iColumn].pcsFlags;
     return S_OK;
 }
 

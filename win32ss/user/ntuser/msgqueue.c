@@ -910,7 +910,7 @@ co_MsqDispatchOneSentMessage(
    if (Message->HookMessage == MSQ_ISHOOK)
    {  // Direct Hook Call processor
       Result = co_CallHook( Message->Msg.message,           // HookId
-                            HandleToLong(Message->Msg.hwnd), // Code
+                           (INT)(INT_PTR)Message->Msg.hwnd, // Code
                             Message->Msg.wParam,
                             Message->Msg.lParam);
    }
@@ -1945,7 +1945,6 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
    ULONG_PTR idSave;
    DWORD QS_Flags;
    LONG_PTR ExtraInfo;
-   MSG clk_msg;
    BOOL Ret = FALSE;
    PUSER_MESSAGE_QUEUE MessageQueue = pti->MessageQueue;
 
@@ -1995,22 +1994,17 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
          msg = CurrentMessage->Msg;
          ExtraInfo = CurrentMessage->ExtraInfo;
          QS_Flags = CurrentMessage->QS_Flags;
-         clk_msg = MessageQueue->msgDblClk;
 
          NotForUs = FALSE;
 
          UpdateKeyStateFromMsg(MessageQueue, &msg);
          AcceptMessage = co_IntProcessHardwareMessage(&msg, &Remove, &NotForUs, ExtraInfo, MsgFilterLow, MsgFilterHigh);
          
-         if (!NotForUs && (MsgFilterLow != 0 || MsgFilterHigh != 0))
+         if (MsgFilterLow != 0 || MsgFilterHigh != 0)
          {
              /* Don't return message if not in range */
              if (msg.message < MsgFilterLow || msg.message > MsgFilterHigh)
-             {
-                 MessageQueue->msgDblClk = clk_msg;
-                 MessageQueue->idSysPeek = idSave;
-                 continue;
-             }
+                 AcceptMessage = FALSE;
          }
 
          if (Remove)
@@ -2534,21 +2528,6 @@ MsqSetStateWindow(PTHREADINFO pti, ULONG Type, HWND hWnd)
    }
 
    return NULL;
-}
-
-VOID FASTCALL
-MsqReleaseModifierKeys(PUSER_MESSAGE_QUEUE MessageQueue)
-{
-    WORD ModifierKeys[] = { VK_LCONTROL, VK_RCONTROL, VK_CONTROL,
-                            VK_LMENU,    VK_RMENU,    VK_MENU,
-                            VK_LSHIFT,   VK_RSHIFT,   VK_SHIFT };
-    UINT i;
-
-    for (i = 0; i < _countof(ModifierKeys); ++i)
-    {
-        if (IS_KEY_DOWN(MessageQueue->afKeyState, ModifierKeys[i]))
-            SET_KEY_DOWN(MessageQueue->afKeyState, ModifierKeys[i], FALSE);
-    }
 }
 
 SHORT

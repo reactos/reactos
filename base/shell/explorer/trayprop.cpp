@@ -204,9 +204,10 @@ public:
 
     LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
     {
-        BOOL modern = SHELL_GetSetting(SSF_STARTPANELON, fStartPanelOn);
-        CheckDlgButton(modern ? IDC_TASKBARPROP_STARTMENU : IDC_TASKBARPROP_STARTMENUCLASSIC, BST_CHECKED);
+        // fix me: start menu style (classic/modern) should be read somewhere from the registry.
+        CheckDlgButton(IDC_TASKBARPROP_STARTMENUCLASSIC, BST_CHECKED); // HACK: This has to be read from registry!!!!!!!
         _UpdateDialog();
+
         return TRUE;
     }
 
@@ -218,9 +219,7 @@ public:
 
     int OnApply()
     {
-        SHELLSTATE ss;
-        ss.fStartPanelOn = !IsDlgButtonChecked(IDC_TASKBARPROP_STARTMENUCLASSIC);
-        SHGetSetSettings(&ss, SSF_STARTPANELON, TRUE);
+        //TODO
         return PSNRET_NOERROR;
     }
 };

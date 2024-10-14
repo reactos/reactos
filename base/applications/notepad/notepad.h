@@ -84,6 +84,7 @@ typedef struct
 
     FINDREPLACE find;
     WNDPROC EditProc;
+    RECT main_rect;
     BOOL bWasModified;
 } NOTEPAD_GLOBALS;
 
@@ -92,7 +93,7 @@ extern NOTEPAD_GLOBALS Globals;
 BOOL ReadText(HANDLE hFile, HLOCAL *phLocal, ENCODING *pencFile, EOLN *piEoln);
 BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, ENCODING encFile, EOLN iEoln);
 
-void NOTEPAD_LoadSettingsFromRegistry(PWINDOWPLACEMENT pWP);
+void NOTEPAD_LoadSettingsFromRegistry(void);
 void NOTEPAD_SaveSettingsToRegistry(void);
 
 BOOL NOTEPAD_FindNext(FINDREPLACE *pFindReplace, BOOL bReplace, BOOL bShowAlert);

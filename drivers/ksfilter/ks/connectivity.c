@@ -43,7 +43,7 @@ KsCreatePin(
 
     PKSDATAFORMAT_WAVEFORMATEX Format = (PKSDATAFORMAT_WAVEFORMATEX)(Connect + 1);
     if (Format->DataFormat.FormatSize == sizeof(KSDATAFORMAT) ||
-        Format->DataFormat.FormatSize == sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX) + Format->WaveFormatEx.cbSize)
+        Format->DataFormat.FormatSize == sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX))
     {
         ConnectSize += Format->DataFormat.FormatSize;
     }

@@ -26,19 +26,17 @@ EfiEntry(
     _In_ EFI_HANDLE ImageHandle,
     _In_ EFI_SYSTEM_TABLE *SystemTable)
 {
-    PCSTR CmdLine = ""; // FIXME: Determine a command-line from UEFI boot options
-
     SystemTable->ConOut->OutputString(SystemTable->ConOut, L"UEFI EntryPoint: Starting freeldr from UEFI");
     GlobalImageHandle = ImageHandle;
     GlobalSystemTable = SystemTable;
 
-    /* Load the default settings from the command-line */
-    LoadSettings(CmdLine);
+    /* Needed for default settings */
+    CmdLineParse("");
 
     /* Debugger pre-initialization */
-    DebugInit(BootMgrInfo.DebugString);
+    DebugInit(0);
 
-    MachInit(CmdLine);
+    MachInit("");
 
     /* UI pre-initialization */
     if (!UiInitialize(FALSE))

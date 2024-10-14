@@ -20,20 +20,6 @@
 
 #pragma once
 
-struct SBFOLDERSETTINGS // Private version of DEFFOLDERSETTINGS used by CShellBrowser
-{
-    FOLDERSETTINGS FolderSettings;
-
-    enum { DEF_FVM = FVM_DETAILS }; // Windows uses FVM_ICON?
-    enum { DEF_FWF = FWF_NOHEADERINALLVIEWS };
-    void InitializeDefaults()
-    {
-        FolderSettings.ViewMode = DEF_FVM;
-        FolderSettings.fFlags = DEF_FWF;
-    }
-    void Load();
-};
-
 class CGlobalFolderSettings :
     public CComCoClass<CGlobalFolderSettings, &CLSID_GlobalFolderSettings>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -44,14 +30,9 @@ public:
     CGlobalFolderSettings();
     ~CGlobalFolderSettings();
 
-    static HRESULT ResetBrowserSettings();
-    static HRESULT SaveBrowserSettings(const SBFOLDERSETTINGS &sbfs);
-    static HRESULT Load(DEFFOLDERSETTINGS &dfs);
-    static HRESULT Save(const DEFFOLDERSETTINGS *pFDS);
-
     // *** IGlobalFolderSettings methods ***
-    STDMETHOD(Get)(struct DEFFOLDERSETTINGS *pFDS, UINT cb) override;
-    STDMETHOD(Set)(const struct DEFFOLDERSETTINGS *pFDS, UINT cb, UINT unknown) override;
+    STDMETHOD(Get)(DEFFOLDERSETTINGS *paramC, int param10) override;
+    STDMETHOD(Set)(const DEFFOLDERSETTINGS *paramC, int param10, unsigned int param14) override;
 
     DECLARE_REGISTRY_RESOURCEID(IDR_GLOBALFOLDERSETTINGS)
     DECLARE_NOT_AGGREGATABLE(CGlobalFolderSettings)

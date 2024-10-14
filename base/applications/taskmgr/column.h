@@ -60,7 +60,6 @@ typedef struct {
     DWORD   dwIdcCtrl;
     int     size;
     BOOL    bDefaults;
-    DWORD   dwAlign;
 } PresetColumnEntry;
 
 

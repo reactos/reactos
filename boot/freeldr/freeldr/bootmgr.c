@@ -58,51 +58,20 @@ OSLoadingMethods[] =
 
 #if defined(_M_IX86) || defined(_M_AMD64)
 #ifndef UEFIBOOT
-    {"BootSector", EditCustomBootSector, LoadAndBootSector},
-    {"Linux"     , EditCustomBootLinux , LoadAndBootLinux },
+    {"Drive"       , EditCustomBootDisk      , LoadAndBootDevice},
+    {"Partition"   , EditCustomBootPartition , LoadAndBootDevice},
+    {"BootSector"  , EditCustomBootSectorFile, LoadAndBootDevice},
+    {"Linux"       , EditCustomBootLinux, LoadAndBootLinux  },
 #endif
 #endif
 #ifdef _M_IX86
-    {"WindowsNT40" , EditCustomBootNTOS, LoadAndBootWindows},
+    {"WindowsNT40" , EditCustomBootNTOS , LoadAndBootWindows},
 #endif
-    {"Windows"     , EditCustomBootNTOS, LoadAndBootWindows},
-    {"Windows2003" , EditCustomBootNTOS, LoadAndBootWindows},
-    {"WindowsVista", EditCustomBootNTOS, LoadAndBootWindows},
+    {"Windows"     , EditCustomBootNTOS , LoadAndBootWindows},
+    {"Windows2003" , EditCustomBootNTOS , LoadAndBootWindows},
 };
 
 /* FUNCTIONS ******************************************************************/
-
-#ifdef HAS_DEPRECATED_OPTIONS
-/**
- * @brief   Helper for dealing with DEPRECATED features.
- **/
-VOID
-WarnDeprecated(
-    _In_ PCSTR MsgFmt,
-    ...)
-{
-    va_list ap;
-    CHAR msgString[300];
-
-    /* If the user didn't cancel the timeout, don't display the warning */
-    if (BootMgrInfo.TimeOut >= 0)
-        return;
-
-    va_start(ap, MsgFmt);
-    RtlStringCbVPrintfA(msgString, sizeof(msgString),
-                        MsgFmt, ap);
-    va_end(ap);
-
-    UiMessageBox(
-        "                           WARNING!\n"
-        "\n"
-        "%s\n"
-        "\n"
-        "Should you need assistance, please contact ReactOS developers\n"
-        "on the official ReactOS Mattermost server <chat.reactos.org>.",
-        msgString);
-}
-#endif // HAS_DEPRECATED_OPTIONS
 
 static const OS_LOADING_METHOD*
 GetOSLoadingMethod(
@@ -120,61 +89,28 @@ GetOSLoadingMethod(
     IniReadSettingByName(SectionId, "BootType", BootType, sizeof(BootType));
     ASSERT(*BootType);
 
-////
-#ifdef HAS_DEPRECATED_OPTIONS
-    if ((_stricmp(BootType, "Drive") == 0) ||
-        (_stricmp(BootType, "Partition") == 0))
-    {
-        /* Display the deprecation warning message */
-        WarnDeprecated(
-            "The '%s' configuration you are booting into is no longer\n"
-            "supported and will be removed in future FreeLoader versions.\n"
-            "\n"
-            "Please edit FREELDR.INI to replace all occurrences of\n"
-            "\n"
-            "             %*s        to:\n"
-            "    BootType=%s      ------>     BootType=BootSector",
-            BootType,
-            strlen(BootType), "", // Indentation
-            BootType);
-
-        /* Type fixup */
-        strcpy(BootType, "BootSector");
-        if (!IniModifySettingValue(SectionId, "BootType", BootType))
-        {
-            ERR("Could not fixup the BootType entry for OS '%s', ignoring.\n",
-                ((PINI_SECTION)SectionId)->SectionName);
-        }
-    }
-#endif // HAS_DEPRECATED_OPTIONS
-////
-
     /* Find the suitable OS loading method */
     for (i = 0; ; ++i)
     {
         if (i >= RTL_NUMBER_OF(OSLoadingMethods))
-        {
-            UiMessageBox("Unknown boot entry type '%s'", BootType);
             return NULL;
-        }
         if (_stricmp(BootType, OSLoadingMethods[i].BootType) == 0)
             return &OSLoadingMethods[i];
     }
     UNREACHABLE;
 }
 
-/**
- * @brief
- * This function converts the list of Key=Value options in the given operating
+/*
+ * This function converts the list of key=value options in the given operating
  * system section into an ARC-compatible argument vector, providing in addition
  * the extra mandatory Software Loading Environment Variables, following the
  * ARC specification.
- **/
+ */
 static PCHAR*
 BuildArgvForOsLoader(
-    _In_ PCSTR LoadIdentifier,
-    _In_ ULONG_PTR SectionId,
-    _Out_ PULONG pArgc)
+    IN PCSTR LoadIdentifier,
+    IN ULONG_PTR SectionId,
+    OUT PULONG pArgc)
 {
     SIZE_T Size;
     ULONG Count;
@@ -188,7 +124,7 @@ BuildArgvForOsLoader(
 
     ASSERT(SectionId != 0);
 
-    /* Normalize LoadIdentifier to make subsequent tests simpler */
+    /* Validate the LoadIdentifier (to make tests simpler later) */
     if (LoadIdentifier && !*LoadIdentifier)
         LoadIdentifier = NULL;
 
@@ -198,24 +134,19 @@ BuildArgvForOsLoader(
     /*
      * The argument vector contains the program name, the SystemPartition,
      * the LoadIdentifier (optional), and the items in the OS section.
-     * For POSIX compliance, a terminating NULL pointer (not counted in Argc)
-     * is appended, such that Argv[Argc] == NULL.
      */
     Argc = 2 + (LoadIdentifier ? 1 : 0) + Count;
 
     /* Calculate the total size needed for the string buffer of the argument vector */
     Size = 0;
     /* i == 0: Program name */
-    // TODO: Provide one in the future...
     /* i == 1: SystemPartition : from where FreeLdr has been started */
     Size += (strlen("SystemPartition=") + strlen(FrLdrBootPath) + 1) * sizeof(CHAR);
-    /* i == 2: LoadIdentifier  : ASCII string that may be used
-     * to associate an identifier with a set of load parameters */
+    /* i == 2: LoadIdentifier  : ASCII string that may be used to associate an identifier with a set of load parameters */
     if (LoadIdentifier)
     {
         Size += (strlen("LoadIdentifier=") + strlen(LoadIdentifier) + 1) * sizeof(CHAR);
     }
-    /* The section items */
     for (i = 0; i < Count; ++i)
     {
         Size += IniGetSectionSettingNameSize(SectionId, i);  // Counts also the NULL-terminator, that we transform into the '=' sign separator.
@@ -224,15 +155,15 @@ BuildArgvForOsLoader(
     Size += sizeof(ANSI_NULL); // Final NULL-terminator.
 
     /* Allocate memory to hold the argument vector: pointers and string buffer */
-    Argv = FrLdrHeapAlloc((Argc + 1) * sizeof(PCHAR) + Size, TAG_STRING);
+    Argv = FrLdrHeapAlloc(Argc * sizeof(PCHAR) + Size, TAG_STRING);
     if (!Argv)
         return NULL;
 
-    /* Initialize the argument vector: loop through the section and copy the Key=Value options */
-    SettingName = (PCHAR)((ULONG_PTR)Argv + ((Argc + 1) * sizeof(PCHAR)));
+    /* Initialize the argument vector: loop through the section and copy the key=value options */
+    SettingName = (PCHAR)((ULONG_PTR)Argv + (Argc * sizeof(PCHAR)));
     Args = Argv;
     /* i == 0: Program name */
-    *Args++ = NULL; // TODO: Provide one in the future...
+    *Args++ = NULL;
     /* i == 1: SystemPartition */
     {
         strcpy(SettingName, "SystemPartition=");
@@ -250,7 +181,6 @@ BuildArgvForOsLoader(
         *Args++ = SettingName;
         SettingName += (strlen(SettingName) + 1);
     }
-    /* The section items */
     for (i = 0; i < Count; ++i)
     {
         Size = IniGetSectionSettingNameSize(SectionId, i);
@@ -263,8 +193,6 @@ BuildArgvForOsLoader(
         *Args++ = SettingName;
         SettingName += (strlen(SettingName) + 1);
     }
-    /* Terminating NULL pointer */
-    *Args = NULL;
 
 #if DBG
     /* Dump the argument vector for debugging */
@@ -326,15 +254,34 @@ EditOperatingSystemEntry(
 }
 #endif // HAS_OPTION_MENU_EDIT_CMDLINE
 
+static LONG
+GetTimeOut(
+    IN ULONG_PTR FrLdrSectionId)
+{
+    LONG TimeOut = -1;
+    CHAR TimeOutText[20];
+
+    TimeOut = CmdLineGetTimeOut();
+    if (TimeOut >= 0)
+        return TimeOut;
+
+    TimeOut = -1;
+
+    if ((FrLdrSectionId != 0) &&
+        IniReadSettingByName(FrLdrSectionId, "TimeOut", TimeOutText, sizeof(TimeOutText)))
+    {
+        TimeOut = atoi(TimeOutText);
+    }
+
+    return TimeOut;
+}
+
 BOOLEAN
 MainBootMenuKeyPressFilter(
     IN ULONG KeyPress,
     IN ULONG SelectedMenuItem,
     IN PVOID Context OPTIONAL)
 {
-    /* Any key-press cancels the global timeout */
-    BootMgrInfo.TimeOut = -1;
-
     switch (KeyPress)
     {
     case KEY_F8:
@@ -355,12 +302,14 @@ MainBootMenuKeyPressFilter(
 
 VOID RunLoader(VOID)
 {
+    ULONG_PTR SectionId;
+    LONG      TimeOut;
+    ULONG     OperatingSystemCount;
     OperatingSystemItem* OperatingSystemList;
-    PCSTR* OperatingSystemDisplayNames;
-    ULONG OperatingSystemCount;
-    ULONG DefaultOperatingSystem;
-    ULONG SelectedOperatingSystem;
-    ULONG i;
+    PCSTR*    OperatingSystemDisplayNames;
+    ULONG     DefaultOperatingSystem;
+    ULONG     SelectedOperatingSystem;
+    ULONG     i;
 
     if (!MachInitializeBootDevices())
     {
@@ -378,23 +327,24 @@ VOID RunLoader(VOID)
 #endif
 #endif
 
-    /* Open FREELDR.INI and load the global FreeLoader settings */
     if (!IniFileInitialize())
     {
         UiMessageBoxCritical("Error initializing .ini file.");
         return;
     }
-    LoadSettings(NULL);
-#if 0
-    if (FALSE)
+
+    /* Open the [FreeLoader] section */
+    if (!IniOpenSection("FreeLoader", &SectionId))
     {
-        UiMessageBoxCritical("Could not load global FreeLoader settings.");
+        UiMessageBoxCritical("Section [FreeLoader] not found in freeldr.ini.");
         return;
     }
-#endif
 
     /* Debugger main initialization */
-    DebugInit(BootMgrInfo.DebugString);
+    DebugInit(SectionId);
+
+    /* Retrieve the default timeout */
+    TimeOut = GetTimeOut(SectionId);
 
     /* UI main initialization */
     if (!UiInitialize(TRUE))
@@ -403,7 +353,8 @@ VOID RunLoader(VOID)
         return;
     }
 
-    OperatingSystemList = InitOperatingSystemList(&OperatingSystemCount,
+    OperatingSystemList = InitOperatingSystemList(SectionId,
+                                                  &OperatingSystemCount,
                                                   &DefaultOperatingSystem);
     if (!OperatingSystemList)
     {
@@ -427,7 +378,7 @@ VOID RunLoader(VOID)
     }
 
     /* Find all the message box settings and run them */
-    UiShowMessageBoxesInSection(BootMgrInfo.FrLdrSection);
+    UiShowMessageBoxesInSection(SectionId);
 
     for (;;)
     {
@@ -442,7 +393,7 @@ VOID RunLoader(VOID)
                            OperatingSystemDisplayNames,
                            OperatingSystemCount,
                            DefaultOperatingSystem,
-                           BootMgrInfo.TimeOut,
+                           TimeOut,
                            &SelectedOperatingSystem,
                            FALSE,
                            MainBootMenuKeyPressFilter,
@@ -452,10 +403,10 @@ VOID RunLoader(VOID)
             goto Reboot;
         }
 
+        TimeOut = -1;
+
         /* Load the chosen operating system */
         LoadOperatingSystem(&OperatingSystemList[SelectedOperatingSystem]);
-
-        BootMgrInfo.TimeOut = -1;
 
         /* If we get there, the OS loader failed. As it may have
          * messed up the display, re-initialize the UI. */

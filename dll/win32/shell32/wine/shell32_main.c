@@ -382,19 +382,19 @@ static DWORD shgfi_get_exe_type(LPCWSTR szFullPath)
  */
 BOOL SHELL_IsShortcut(LPCITEMIDLIST pidlLast)
 {
-    WCHAR szTemp[MAX_PATH];
+    char szTemp[MAX_PATH];
     HKEY keyCls;
     BOOL ret = FALSE;
 
-    if (_ILGetExtension(pidlLast, szTemp, _countof(szTemp)) &&
-        HCR_MapTypeToValueW(szTemp, szTemp, _countof(szTemp), TRUE))
+    if (_ILGetExtension(pidlLast, szTemp, MAX_PATH) &&
+          HCR_MapTypeToValueA(szTemp, szTemp, MAX_PATH, TRUE))
     {
-        if (ERROR_SUCCESS == RegOpenKeyExW(HKEY_CLASSES_ROOT, szTemp, 0, KEY_QUERY_VALUE, &keyCls))
+        if (ERROR_SUCCESS == RegOpenKeyExA(HKEY_CLASSES_ROOT, szTemp, 0, KEY_QUERY_VALUE, &keyCls))
         {
-            if (ERROR_SUCCESS == RegQueryValueExW(keyCls, L"IsShortcut", NULL, NULL, NULL, NULL))
-                ret = TRUE;
+          if (ERROR_SUCCESS == RegQueryValueExA(keyCls, "IsShortcut", NULL, NULL, NULL, NULL))
+            ret = TRUE;
 
-            RegCloseKey(keyCls);
+          RegCloseKey(keyCls);
         }
     }
 
@@ -560,7 +560,10 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
     {
         if (!(flags & SHGFI_USEFILEATTRIBUTES) || (flags & SHGFI_PIDL))
         {
-            _ILGetFileType(pidlLast, psfi->szTypeName, _countof(psfi->szTypeName));
+            char ftype[80];
+
+            _ILGetFileType(pidlLast, ftype, 80);
+            MultiByteToWideChar(CP_ACP, 0, ftype, -1, psfi->szTypeName, 80 );
         }
         else
         {

@@ -2270,7 +2270,7 @@ MUI_STRING euESStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   Teklatu konfigurazioa eguneratzen..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Kodeorri informazioa gehitu..."},
+    "   Kodeorri informazioa gehitu da registron..."},
     {STRING_DONE,
     "   Amaitu da..."},
     {STRING_REBOOTCOMPUTER2,

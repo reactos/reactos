@@ -33,7 +33,7 @@ OpenNt4KernelSoundDevice(
     Result = GetSoundDeviceIdentifier(SoundDevice, (PVOID*) &Path);
     if ( ! MMSUCCESS(Result) )
     {
-        SND_ERR(L"Unable to get sound device path\n");
+        SND_ERR(L"Unable to get sound device path");
         return TranslateInternalMmResult(Result);
     }
 
@@ -122,7 +122,7 @@ GetNt4SoundDeviceCapabilities(
 
     if ( ! MMSUCCESS(Result) )
     {
-        SND_ERR(L"Failed to open device\n");
+        SND_ERR(L"Failed to open device");
         return TranslateInternalMmResult(Result);
     }
 

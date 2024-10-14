@@ -18,7 +18,8 @@
 #include <gdiplus.h>
 #include <math.h>
 
-extern HICON g_hDefaultPackageIcon;
+
+#define LISTVIEW_ICON_SIZE 32
 
 // default broken-image icon size
 #define BROKENIMG_ICON_SIZE 96
@@ -39,7 +40,6 @@ extern HICON g_hDefaultPackageIcon;
 #define WM_RAPPS_DOWNLOAD_COMPLETE                                                                                     \
     (WM_USER + 1) // notify download complete. wParam is error code, and lParam is a pointer to ScrnshotDownloadParam
 #define WM_RAPPS_RESIZE_CHILDREN (WM_USER + 2) // ask parent window to resize children.
-#define WM_RAPPSLIST_ASYNCICON (WM_APP + 0)
 
 enum SCRNSHOT_STATUS
 {
@@ -210,13 +210,10 @@ class CAppsListView : public CUiWindow<CWindowImpl<CAppsListView, CListView>>
 
     BEGIN_MSG_MAP(CAppsListView)
     MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
-    MESSAGE_HANDLER(WM_RAPPSLIST_ASYNCICON, OnAsyncIcon)
     END_MSG_MAP()
 
     LRESULT
     OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT
-    OnAsyncIcon(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
   public:
     CAppsListView();
@@ -405,15 +402,6 @@ class CApplicationView : public CUiWindow<CWindowImpl<CApplicationView>>
     GetItemCount();
     VOID
     AppendTabOrderWindow(int Direction, ATL::CSimpleArray<HWND> &TabOrderList);
-
-    struct RESTORELISTSELECTION {
-        LVITEMW Item;
-        WCHAR Name[MAX_PATH];
-    };
-    VOID
-    GetRestoreListSelectionData(RESTORELISTSELECTION &Restore);
-    VOID
-    RestoreListSelection(const RESTORELISTSELECTION &Restore);
 
     // this function is called when a item of listview get focus.
     // CallbackParam is the param passed to listview when adding the item (the one getting focus now).

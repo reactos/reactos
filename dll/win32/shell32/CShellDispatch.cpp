@@ -4,7 +4,6 @@
  * PURPOSE:     IShellDispatch implementation
  * COPYRIGHT:   Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
  *              Copyright 2018 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
- *              Copyright 2023 Whindmar Saksit (whindsaks@proton.me)
  */
 
 #include "precomp.h"
@@ -12,14 +11,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-
-EXTERN_C DWORD WINAPI SHGetRestriction(LPCWSTR lpSubKey, LPCWSTR lpSubName, LPCWSTR lpValue);
-
-static HRESULT PostTrayCommand(UINT cmd)
-{
-    HWND hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
-    return hTrayWnd && PostMessageW(hTrayWnd, WM_COMMAND, cmd, 0) ? S_OK : S_FALSE;
-}
 
 CShellDispatch::CShellDispatch()
 {
@@ -63,7 +54,7 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::get_Parent(IDispatch **ppid)
 
 HRESULT VariantToIdlist(VARIANT* var, LPITEMIDLIST* idlist)
 {
-    HRESULT hr = E_FAIL;
+    HRESULT hr = S_FALSE;
     if(V_VT(var) == VT_I4)
     {
         hr = SHGetSpecialFolderLocation(NULL, V_I4(var), idlist);
@@ -92,7 +83,7 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::NameSpace(VARIANT vDir, Folder **ppsdf
 
     CComHeapPtr<ITEMIDLIST> idlist;
     hr = VariantToIdlist(&vDir, &idlist);
-    if (!SUCCEEDED(hr))
+    if (!SUCCEEDED(hr) || !idlist)
         return S_FALSE;
 
     return ShellObjectCreatorInit<CFolder>(static_cast<LPITEMIDLIST>(idlist), IID_PPV_ARG(Folder, ppsdf));
@@ -109,14 +100,13 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::BrowseForFolder(LONG Hwnd, BSTR Title,
 
     *ppsdf = NULL;
 
+    if (!is_optional_argument(&RootFolder))
+        FIXME("root folder is ignored\n");
+
     BROWSEINFOW bi = { 0 };
     bi.hwndOwner = reinterpret_cast<HWND>(LongToHandle(Hwnd));
     bi.lpszTitle = Title;
-    bi.ulFlags = Options | BIF_NEWDIALOGSTYLE;
-
-    CComHeapPtr<ITEMIDLIST> idlist;
-    if (!is_optional_argument(&RootFolder) && VariantToIdlist(&RootFolder, &idlist) == S_OK)
-        bi.pidlRoot = idlist;
+    bi.ulFlags = Options;
 
     CComHeapPtr<ITEMIDLIST> selection;
     selection.Attach(SHBrowseForFolderW(&bi));
@@ -129,82 +119,58 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::BrowseForFolder(LONG Hwnd, BSTR Title,
 HRESULT STDMETHODCALLTYPE CShellDispatch::Windows(IDispatch **ppid)
 {
     TRACE("(%p, %p)\n", this, ppid);
-    return CoCreateInstance(CLSID_ShellWindows, NULL, CLSCTX_LOCAL_SERVER, IID_PPV_ARG(IDispatch, ppid));
-}
 
-static HRESULT SHELL_OpenFolder(LPCITEMIDLIST pidl, LPCWSTR verb = NULL)
-{
-    SHELLEXECUTEINFOW sei;
-    sei.cbSize = sizeof(sei);
-    sei.fMask = SEE_MASK_IDLIST | SEE_MASK_FLAG_DDEWAIT;
-    sei.hwnd = NULL;
-    sei.lpVerb = verb;
-    sei.lpFile = sei.lpParameters = sei.lpDirectory = NULL;
-    sei.nShow = SW_SHOW;
-    sei.lpIDList = const_cast<LPITEMIDLIST>(pidl);
-    if (ShellExecuteExW(&sei))
-        return S_OK;
-    DWORD error = GetLastError();
-    return HRESULT_FROM_WIN32(error);
-}
+    *ppid = NULL;
 
-static HRESULT OpenFolder(VARIANT vDir, LPCWSTR verb = NULL)
-{
-    CComHeapPtr<ITEMIDLIST> idlist;
-    HRESULT hr = VariantToIdlist(&vDir, &idlist);
-    if (hr == S_OK && SHELL_OpenFolder(idlist, verb) == S_OK)
-    {
-        return S_OK;
-    }
-    return S_FALSE;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::Open(VARIANT vDir)
 {
     TRACE("(%p, %s)\n", this, debugstr_variant(&vDir));
-    return OpenFolder(vDir);
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::Explore(VARIANT vDir)
 {
     TRACE("(%p, %s)\n", this, debugstr_variant(&vDir));
-    return OpenFolder(vDir, L"explore");
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::MinimizeAll()
 {
     TRACE("(%p)\n", this);
-    return PostTrayCommand(TRAYCMD_MINIMIZE_ALL);
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::UndoMinimizeALL()
 {
     TRACE("(%p)\n", this);
-    return PostTrayCommand(TRAYCMD_RESTORE_ALL);
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::FileRun()
 {
     TRACE("(%p)\n", this);
-    return PostTrayCommand(TRAYCMD_RUN_DIALOG);
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::CascadeWindows()
 {
     TRACE("(%p)\n", this);
-    return PostTrayCommand(TRAYCMD_CASCADE);
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::TileVertically()
 {
     TRACE("(%p)\n", this);
-    return PostTrayCommand(TRAYCMD_TILE_V);
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::TileHorizontally()
 {
     TRACE("(%p)\n", this);
-    return PostTrayCommand(TRAYCMD_TILE_H);
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::ShutdownWindows()
@@ -228,31 +194,31 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::EjectPC()
 HRESULT STDMETHODCALLTYPE CShellDispatch::SetTime()
 {
     TRACE("(%p)\n", this);
-    return PostTrayCommand(TRAYCMD_DATE_AND_TIME);
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::TrayProperties()
 {
     TRACE("(%p)\n", this);
-    return PostTrayCommand(TRAYCMD_TASKBAR_PROPERTIES);
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::Help()
 {
     TRACE("(%p)\n", this);
-    return PostTrayCommand(TRAYCMD_HELP_AND_SUPPORT);
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::FindFiles()
 {
     TRACE("(%p)\n", this);
-    return PostTrayCommand(TRAYCMD_SEARCH_FILES);
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::FindComputer()
 {
     TRACE("(%p)\n", this);
-    return PostTrayCommand(TRAYCMD_SEARCH_COMPUTERS);
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::RefreshMenu()
@@ -264,7 +230,7 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::RefreshMenu()
 HRESULT STDMETHODCALLTYPE CShellDispatch::ControlPanelItem(BSTR szDir)
 {
     TRACE("(%p, %ls)\n", this, szDir);
-    return SHRunControlPanel(szDir, NULL) ? S_OK : S_FALSE;
+    return E_NOTIMPL;
 }
 
 
@@ -272,11 +238,7 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::ControlPanelItem(BSTR szDir)
 HRESULT STDMETHODCALLTYPE CShellDispatch::IsRestricted(BSTR group, BSTR restriction, LONG *value)
 {
     TRACE("(%p, %ls, %ls, %p)\n", this, group, restriction, value);
-
-    if (!value)
-        return E_INVALIDARG;
-    *value = SHGetRestriction(NULL, group, restriction);
-    return S_OK;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::ShellExecute(BSTR file, VARIANT v_args, VARIANT v_dir, VARIANT v_op, VARIANT v_show)
@@ -319,109 +281,19 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::FindPrinter(BSTR name, BSTR location, 
 HRESULT STDMETHODCALLTYPE CShellDispatch::GetSystemInformation(BSTR name, VARIANT *ret)
 {
     TRACE("(%p, %ls, %p)\n", this, name, ret);
-
-    if (!lstrcmpiW(name, L"ProcessorArchitecture"))
-    {
-        SYSTEM_INFO si;
-        GetSystemInfo(&si);
-        V_VT(ret) = VT_I4;
-        V_UI4(ret) = si.wProcessorArchitecture;
-        return S_OK;
-    }
-
-    UINT os = 0;
-    if (!lstrcmpiW(name, L"IsOS_Professional"))
-        os = OS_PROFESSIONAL;
-    else if (!lstrcmpiW(name, L"IsOS_Personal"))
-        os = OS_HOME;
-    else if (!lstrcmpiW(name, L"IsOS_DomainMember"))
-        os = OS_DOMAINMEMBER;
-    if (os)
-    {
-        V_VT(ret) = VT_BOOL;
-        V_BOOL(ret) = IsOS(os) ? VARIANT_TRUE : VARIANT_FALSE;
-        return S_OK;
-    }
-
     return E_NOTIMPL;
-}
-
-static HRESULT OpenServiceHelper(LPCWSTR name, DWORD access, SC_HANDLE &hSvc)
-{
-    hSvc = NULL;
-    SC_HANDLE hScm = OpenSCManagerW(NULL, NULL, SC_MANAGER_CONNECT);
-    if (!hScm)
-        return HResultFromWin32(GetLastError());
-    HRESULT hr = S_OK;
-    hSvc = OpenServiceW(hScm, name, access);
-    if (!hSvc)
-        hr = HResultFromWin32(GetLastError());
-    CloseServiceHandle(hScm);
-    return hr;
-}
-
-static HRESULT SHELL32_ControlService(BSTR name, DWORD control, VARIANT &persistent)
-{
-    BOOL persist = V_VT(&persistent) == VT_BOOL && V_BOOL(&persistent);
-    DWORD access = persist ? SERVICE_CHANGE_CONFIG : 0;
-    switch (control)
-    {
-        case 0:
-            access |= SERVICE_START;
-            break;
-        case SERVICE_CONTROL_STOP:
-            access |= SERVICE_STOP;
-            break;
-    }
-    SC_HANDLE hSvc;
-    HRESULT hr = OpenServiceHelper(name, access, hSvc);
-    if (SUCCEEDED(hr))
-    {
-        BOOL success;
-        DWORD error, already;
-        if (control)
-        {
-            SERVICE_STATUS ss;
-            success = ControlService(hSvc, control, &ss);
-            error = GetLastError();
-            already = ERROR_SERVICE_NOT_ACTIVE;
-        }
-        else
-        {
-            success = StartService(hSvc, 0, NULL);
-            error = GetLastError();
-            already = ERROR_SERVICE_ALREADY_RUNNING;
-        }
-        hr = success ? S_OK : error == already ? S_FALSE : HRESULT_FROM_WIN32(error);
-        if (SUCCEEDED(hr) && persist)
-        {
-            ChangeServiceConfigW(hSvc, SERVICE_NO_CHANGE,
-                                 control ? SERVICE_DEMAND_START : SERVICE_AUTO_START,
-                                 SERVICE_NO_CHANGE, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-        }
-        CloseServiceHandle(hSvc);
-    }
-    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::ServiceStart(BSTR service, VARIANT persistent, VARIANT *ret)
 {
     TRACE("(%p, %ls, %s, %p)\n", this, service, wine_dbgstr_variant(&persistent), ret);
-
-    HRESULT hr = SHELL32_ControlService(service, 0, persistent);
-    V_VT(ret) = VT_BOOL;
-    V_BOOL(ret) = (hr == S_OK ? VARIANT_TRUE : VARIANT_FALSE);
-    return hr == S_OK ? S_OK : S_FALSE;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::ServiceStop(BSTR service, VARIANT persistent, VARIANT *ret)
 {
     TRACE("(%p, %ls, %s, %p)\n", this, service, wine_dbgstr_variant(&persistent), ret);
-
-    HRESULT hr = SHELL32_ControlService(service, SERVICE_CONTROL_STOP, persistent);
-    V_VT(ret) = VT_BOOL;
-    V_BOOL(ret) = (hr == S_OK ? VARIANT_TRUE : VARIANT_FALSE);
-    return hr == S_OK ? S_OK : S_FALSE;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::IsServiceRunning(BSTR name, VARIANT *running)
@@ -471,14 +343,7 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::IsServiceRunning(BSTR name, VARIANT *r
 HRESULT STDMETHODCALLTYPE CShellDispatch::CanStartStopService(BSTR service, VARIANT *ret)
 {
     TRACE("(%p, %ls, %p)\n", this, service, ret);
-
-    SC_HANDLE hSvc;
-    HRESULT hr = OpenServiceHelper(service, SERVICE_START | SERVICE_STOP, hSvc);
-    if (SUCCEEDED(hr))
-        CloseServiceHandle(hSvc);
-    V_VT(ret) = VT_BOOL;
-    V_BOOL(ret) = (hr == S_OK ? VARIANT_TRUE : VARIANT_FALSE);
-    return S_OK;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::ShowBrowserBar(BSTR clsid, VARIANT show, VARIANT *ret)
@@ -492,29 +357,25 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::ShowBrowserBar(BSTR clsid, VARIANT sho
 HRESULT STDMETHODCALLTYPE CShellDispatch::AddToRecent(VARIANT file, BSTR category)
 {
     TRACE("(%p, %s, %ls)\n", this, wine_dbgstr_variant(&file), category);
-
-    CComHeapPtr<ITEMIDLIST> idlist;
-    HRESULT hr = VariantToIdlist(&file, &idlist);
-    if (hr == S_OK)
-        SHAddToRecentDocs(SHARD_PIDL, (LPCITEMIDLIST)idlist);
-    else
-        hr = S_FALSE;
-    return hr;
+    return E_NOTIMPL;
 }
 
 
 // *** IShellDispatch4 methods ***
-#define IDM_SECURITY 5001 // From base/shell/explorer/resource.h
 HRESULT STDMETHODCALLTYPE CShellDispatch::WindowsSecurity()
 {
     TRACE("(%p)\n", this);
-    return PostTrayCommand(IDM_SECURITY);
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::ToggleDesktop()
 {
     TRACE("(%p)\n", this);
-    return PostTrayCommand(TRAYCMD_TOGGLE_DESKTOP);
+
+    HWND hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
+    PostMessageW(hTrayWnd, WM_COMMAND, TRAYCMD_TOGGLE_DESKTOP, 0);
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::ExplorerPolicy(BSTR policy, VARIANT *value)
@@ -523,35 +384,10 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::ExplorerPolicy(BSTR policy, VARIANT *v
     return E_NOTIMPL;
 }
 
-#ifndef SSF_SERVERADMINUI
-#define SSF_SERVERADMINUI 4
-#endif
 HRESULT STDMETHODCALLTYPE CShellDispatch::GetSetting(LONG setting, VARIANT_BOOL *result)
 {
     TRACE("(%p, %lu, %p)\n", this, setting, result);
-
-    int flag = -1;
-    SHELLSTATE ss = { };
-    SHGetSetSettings(&ss, setting, FALSE);
-    switch (setting)
-    {
-        case SSF_SHOWALLOBJECTS:   flag = ss.fShowAllObjects;     break;
-        case SSF_SHOWEXTENSIONS:   flag = ss.fShowExtensions;     break;
-        case SSF_SHOWSYSFILES:     flag = ss.fShowSysFiles;       break;
-        case SSF_DONTPRETTYPATH:   flag = ss.fDontPrettyPath;     break;
-        case SSF_NOCONFIRMRECYCLE: flag = ss.fNoConfirmRecycle;   break;
-        case SSF_SHOWSUPERHIDDEN:  flag = ss.fShowSuperHidden;    break;
-        case SSF_SEPPROCESS:       flag = ss.fSepProcess;         break;
-        case SSF_STARTPANELON:     flag = ss.fStartPanelOn;       break;
-        case SSF_SERVERADMINUI:    flag = IsOS(OS_SERVERADMINUI); break;
-    }
-    if (flag >= 0)
-    {
-        *result = flag ? VARIANT_TRUE : VARIANT_FALSE;
-        return S_OK;
-    }
-
-    return S_FALSE;
+    return E_NOTIMPL;
 }
 
 

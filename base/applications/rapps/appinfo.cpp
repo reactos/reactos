@@ -116,7 +116,7 @@ VOID
 CAvailableApplicationInfo::InsertVersionInfo(CAppRichEdit *RichEdit)
 {
     CStringW szRegName;
-    m_Parser->GetString(DB_REGNAME, szRegName);
+    m_Parser->GetString(L"RegName", szRegName);
 
     BOOL bIsInstalled = ::GetInstalledVersion(NULL, szRegName) || ::GetInstalledVersion(NULL, szDisplayName);
     if (bIsInstalled)
@@ -131,14 +131,11 @@ CAvailableApplicationInfo::InsertVersionInfo(CAppRichEdit *RichEdit)
         {
             BOOL bHasUpdate = CompareVersion(szInstalledVersion, szDisplayVersion) < 0;
             if (bHasUpdate)
-            {
                 RichEdit->LoadAndInsertText(IDS_STATUS_UPDATE_AVAILABLE, CFE_ITALIC);
-                RichEdit->LoadAndInsertText(IDS_AINFO_VERSION, szInstalledVersion, 0);
-            }
             else
-            {
                 RichEdit->LoadAndInsertText(IDS_STATUS_INSTALLED, CFE_ITALIC);
-            }
+
+            RichEdit->LoadAndInsertText(IDS_AINFO_VERSION, szInstalledVersion, 0);
         }
         else
         {
@@ -367,19 +364,8 @@ CAvailableApplicationInfo::GetDisplayInfo(CStringW &License, CStringW &Size, CSt
     UrlDownload = m_szUrlDownload;
 }
 
-InstallerType
-CAvailableApplicationInfo::GetInstallerType() const
-{
-    CStringW str;
-    m_Parser->GetString(DB_INSTALLER, str);
-    if (str.CompareNoCase(DB_GENINSTSECTION) == 0)
-        return INSTALLER_GENERATE;
-    else
-        return INSTALLER_UNKNOWN;
-}
-
 BOOL
-CAvailableApplicationInfo::UninstallApplication(UninstallCommandFlags Flags)
+CAvailableApplicationInfo::UninstallApplication(BOOL bModify)
 {
     ATLASSERT(FALSE && "Should not be called");
     return FALSE;
@@ -388,8 +374,9 @@ CAvailableApplicationInfo::UninstallApplication(UninstallCommandFlags Flags)
 CInstalledApplicationInfo::CInstalledApplicationInfo(
     HKEY Key,
     const CStringW &KeyName,
-    AppsCategories Category, UINT KeyInfo)
-    : CAppInfo(KeyName, Category), m_hKey(Key), m_KeyInfo(KeyInfo)
+    AppsCategories Category,
+    int KeyIndex)
+    : CAppInfo(KeyName, Category), m_hKey(Key), iKeyIndex(KeyIndex)
 {
     if (GetApplicationRegString(L"DisplayName", szDisplayName))
     {
@@ -574,51 +561,15 @@ CInstalledApplicationInfo::GetDisplayInfo(CStringW &License, CStringW &Size, CSt
     ATLASSERT(FALSE && "Should not be called");
 }
 
-InstallerType
-CInstalledApplicationInfo::GetInstallerType() const
-{
-    CRegKey reg;
-    if (reg.Open(m_hKey, GENERATE_ARPSUBKEY, KEY_READ) == ERROR_SUCCESS)
-    {
-        return INSTALLER_GENERATE;
-    }
-    return INSTALLER_UNKNOWN;
-}
-
 BOOL
-CInstalledApplicationInfo::UninstallApplication(UninstallCommandFlags Flags)
+CInstalledApplicationInfo::UninstallApplication(BOOL bModify)
 {
-    if (GetInstallerType() == INSTALLER_GENERATE)
-    {
-        return UninstallGenerated(*this, Flags);
-    }
-
-    BOOL bModify = Flags & UCF_MODIFY;
     if (m_szUninstallString.IsEmpty())
     {
         RetrieveUninstallStrings();
     }
 
-    CStringW cmd = bModify ? m_szModifyString : m_szUninstallString;
-    if ((Flags & (UCF_MODIFY | UCF_SILENT)) == UCF_SILENT)
-    {
-        DWORD msi = 0;
-        msi = GetApplicationRegDword(L"WindowsInstaller", &msi) && msi;
-        if (msi)
-        {
-            cmd += L" /qn";
-        }
-        else
-        {
-            CStringW silentcmd;
-            if (GetApplicationRegString(L"QuietUninstallString", silentcmd) && !silentcmd.IsEmpty())
-            {
-                cmd = silentcmd;
-            }
-        }
-    }
-
-    BOOL bSuccess = StartProcess(cmd, TRUE);
+    BOOL bSuccess = StartProcess(bModify ? m_szModifyString : m_szUninstallString, TRUE);
 
     if (bSuccess && !bModify)
         WriteLogMessage(EVENTLOG_SUCCESS, MSG_SUCCESS_REMOVE, szDisplayName);

@@ -727,6 +727,9 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     PULONG_PTR HardErrorParameters;
     KIRQL OldIrql;
+#ifdef CONFIG_SMP
+    LONG i = 0;
+#endif
 
     /* Set active bugcheck */
     KeBugCheckActive = TRUE;
@@ -1080,17 +1083,15 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
         KeBugCheckOwner = Prcb->Number;
 
         /* Freeze the other CPUs */
-        for (ULONG i = 0; i < KeNumberProcessors; i++)
+        for (i = 0; i < KeNumberProcessors; i++)
         {
-            if (i != Prcb->Number)
+            if (i != (LONG)KeGetCurrentProcessorNumber())
             {
-                /* Send the IPI */
-                KiIpiSend(AFFINITY_MASK(i), IPI_FREEZE);
+                /* Send the IPI and give them one second to catch up */
+                KiIpiSend(1 << i, IPI_FREEZE);
+                KeStallExecutionProcessor(1000000);
             }
         }
-
-        /* Give the other CPUs one second to catch up */
-        KeStallExecutionProcessor(1000000);
 #endif
 
         /* Display the BSOD */

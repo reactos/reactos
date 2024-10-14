@@ -360,10 +360,10 @@ UiMessageBox(
     _In_ PCSTR Format, ...)
 {
     va_list ap;
-    CHAR Buffer[1024];
+    CHAR Buffer[256];
 
     va_start(ap, Format);
-    _vsnprintf(Buffer, sizeof(Buffer) - sizeof(CHAR), Format, ap);
+    vsnprintf(Buffer, sizeof(Buffer) - sizeof(CHAR), Format, ap);
     UiVtbl.MessageBox(Buffer);
     va_end(ap);
 }

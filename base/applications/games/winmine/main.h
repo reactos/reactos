@@ -71,9 +71,6 @@ typedef enum { BEGINNER, ADVANCED, EXPERT, CUSTOM } DIFFICULTY;
 typedef struct tagBOARD
 {
     BOOL IsMarkQ;
-#ifdef __REACTOS__
-    BOOL IsSoundEnabled;
-#endif
     HDC    hdc;
     HINSTANCE hInst;
     HWND    hWnd;

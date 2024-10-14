@@ -15,7 +15,7 @@
 #include <arc/arc.h>
 
 #undef RtlEqualMemory
-#define RtlEqualMemory(dst, src, len) (RtlCompareMemory((dst), (src), (len)) == (len))
+#define RtlEqualMemory(a, b, c) (RtlCompareMemory(a, b, c) != c)
 
 //#define KDDEBUG /* uncomment to enable debugging this dll */
 

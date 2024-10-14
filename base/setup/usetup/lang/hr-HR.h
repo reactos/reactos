@@ -2293,7 +2293,7 @@ MUI_STRING hrHRStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   A\247uriranje postavki rasporeda tipkovnice..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Dodavanje codepage inforamcija..."},
+    "   Dodavanje codepage inforamcija u registry..."},
     {STRING_DONE,
     "   Gotovo..."},
     {STRING_REBOOTCOMPUTER2,

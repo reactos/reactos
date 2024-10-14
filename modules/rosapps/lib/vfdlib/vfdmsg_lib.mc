@@ -11,12 +11,6 @@
 ;#ifndef _VFDMSG_H_
 ;#define _VFDMSG_H_
 ;
-;/*
-; __REACTOS__:
-; * Renamed file from vfdmsg.mc.
-; - Removed Japanese language.
-; + Added a second blank line between some entries.
-;*/
 
 MessageIdTypedef=DWORD
 LanguageNames=(English=0x409:msg0409)

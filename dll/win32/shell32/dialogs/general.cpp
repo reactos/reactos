@@ -23,37 +23,36 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL (fprop);
 
+typedef struct REGSHELLSTATE
+{
+    DWORD dwSize;
+    SHELLSTATE ss;
+} REGSHELLSTATE, *PREGSHELLSTATE;
+
+#define REGSHELLSTATE_SIZE 0x24
+
 static const LPCWSTR s_pszExplorerKey =
     L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer";
 
 /////////////////////////////////////////////////////////////////////////////
 // Shell settings
 
-EXTERN_C void
-SHELL32_GetDefaultShellState(LPSHELLSTATE pss)
+static void
+IntGetDefaultShellState(REGSHELLSTATE& rss)
 {
-    ZeroMemory(pss, sizeof(*pss));
-    pss->fShowAllObjects = TRUE;
-    pss->fShowExtensions = TRUE;
-    pss->fShowCompColor = TRUE;
-    pss->fDoubleClickInWebView = TRUE;
-    pss->fShowAttribCol = TRUE; // ROS defaults to Details view with this column on
-    pss->fShowInfoTip = TRUE;
-    pss->fShowSuperHidden = FALSE;
-    pss->lParamSort = SHFSF_COL_NAME;
-    pss->iSortDirection = 1;
-    pss->version = REGSHELLSTATE_VERSION;
-    pss->fSepProcess = FALSE;
-    pss->fStartPanelOn = FALSE; // Note: This should be changed to TRUE when the modern start menu is implemented
-}
+    ZeroMemory(&rss, sizeof(rss));
+    rss.dwSize = REGSHELLSTATE_SIZE;
 
-EXTERN_C LSTATUS
-SHELL32_WriteRegShellState(PREGSHELLSTATE prss)
-{
-    prss->dwSize = REGSHELLSTATE_SIZE;
-    prss->ss.version = REGSHELLSTATE_VERSION;
-    return SHSetValueW(HKEY_CURRENT_USER, s_pszExplorerKey, L"ShellState",
-                       REG_BINARY, prss, prss->dwSize);
+    rss.ss.fShowAllObjects = TRUE;
+    rss.ss.fShowExtensions = TRUE;
+
+    rss.ss.fShowCompColor = TRUE;
+    rss.ss.fDoubleClickInWebView = TRUE;
+    rss.ss.fShowInfoTip = TRUE;
+
+    rss.ss.iSortDirection = 1;
+    rss.ss.version = 0xD;
+    rss.ss.fStartPanelOn = TRUE;
 }
 
 // bDoubleClick is TRUE if "Double-click to open an item (single-click to select)".
@@ -67,10 +66,36 @@ SHELL32_WriteRegShellState(PREGSHELLSTATE prss)
 static BOOL
 IntSetShellStateSettings(BOOL bDoubleClick, BOOL bUseCommonTasks)
 {
-    SHELLSTATE shellstate;
-    shellstate.fDoubleClickInWebView = !!bDoubleClick;
-    shellstate.fWebView = !!bUseCommonTasks;
-    SHGetSetSettings(&shellstate, SSF_DOUBLECLICKINWEBVIEW | SSF_WEBVIEW, TRUE);
+    REGSHELLSTATE rss;
+    DWORD dwSize = sizeof(rss);
+    LSTATUS nStatus;
+
+    // read ShellState
+    nStatus = SHGetValueW(HKEY_CURRENT_USER,
+                          s_pszExplorerKey,
+                          L"ShellState",
+                          NULL,
+                          &rss,
+                          &dwSize);
+    if (nStatus != ERROR_SUCCESS || rss.dwSize < REGSHELLSTATE_SIZE)
+    {
+        IntGetDefaultShellState(rss);
+    }
+
+    // update ShellState
+    rss.ss.fDoubleClickInWebView = (bDoubleClick ? TRUE : FALSE);
+    rss.ss.fWebView = (bUseCommonTasks ? TRUE : FALSE);
+
+    // write ShellState
+    rss.dwSize = dwSize = REGSHELLSTATE_SIZE;
+    nStatus = SHSetValueW(HKEY_CURRENT_USER,
+                          s_pszExplorerKey,
+                          L"ShellState",
+                          REG_BINARY,
+                          &rss,
+                          dwSize);
+    if (nStatus != ERROR_SUCCESS)
+        return FALSE;
 
     SHSettingsChanged(0, L"ShellState");
     return TRUE;
@@ -81,13 +106,24 @@ IntSetShellStateSettings(BOOL bDoubleClick, BOOL bUseCommonTasks)
 // SHLWAPI.dll	RegOpenKeyExW ( 0x000000c8, NULL, 0, MAXIMUM_ALLOWED, 0x0007e484 )	ERROR_SUCCESS		0.0000388
 // SHLWAPI.dll	RegQueryValueExW ( 0x000005a8, "ShellState", NULL, 0x0007e474, 0x000c2050, 0x0007e4fc )	ERROR_SUCCESS		0.0000271
 // SHLWAPI.dll	RegCloseKey ( 0x000005a8 )	ERROR_SUCCESS		0.0000112
-EXTERN_C BOOL
-SHELL32_ReadRegShellState(PREGSHELLSTATE prss)
+static BOOL
+IntGetShellStateSettings(BOOL& bDoubleClick, BOOL& bUseCommonTasks)
 {
-    DWORD dwSize = sizeof(REGSHELLSTATE);
-    LSTATUS err = SHGetValueW(HKEY_CURRENT_USER, s_pszExplorerKey,
-                              L"ShellState", NULL, prss, &dwSize);
-    return err == ERROR_SUCCESS && prss->dwSize >= REGSHELLSTATE_SIZE;
+    REGSHELLSTATE rss;
+    DWORD dwSize = sizeof(rss);
+    LSTATUS nStatus;
+    bDoubleClick = TRUE;
+    bUseCommonTasks = FALSE;
+
+    // read ShellState
+    nStatus = SHGetValueW(HKEY_CURRENT_USER, s_pszExplorerKey,
+                          L"ShellState", NULL, &rss, &dwSize);
+    if (nStatus != ERROR_SUCCESS || rss.dwSize < REGSHELLSTATE_SIZE)
+        return FALSE;
+
+    bDoubleClick = !!rss.ss.fDoubleClickInWebView;
+    bUseCommonTasks = !!rss.ss.fWebView;
+    return TRUE;
 }
 
 // bIconUnderline is TRUE if "Underline icon titles only when I point at them".
@@ -126,15 +162,14 @@ static BOOL IntGetUnderlineState(VOID)
 // SHELL32.dll	RegSetValueExW ( 0x00000854, "Settings", 0, REG_BINARY, 0x0210f170, 12 )	ERROR_SUCCESS		0.0001472
 // SHELL32.dll	RegSetValueExW ( 0x00000854, "FullPath", 0, REG_DWORD, 0x00d2f2ac, 4 )	ERROR_SUCCESS		0.0000168
 // SHELL32.dll	RegCloseKey ( 0x00000854 )	ERROR_SUCCESS		0.0000000
-static HRESULT IntSetNewWindowMode(BOOL bNewWindowMode)
+static BOOL IntSetNewWindowMode(BOOL bNewWindowMode)
 {
     CABINETSTATE cs;
     if (!ReadCabinetState(&cs, sizeof(cs)))
-        return E_FAIL;
+        return FALSE;
 
-    BOOL changed = !!cs.fNewWindowMode != !!bNewWindowMode;
-    cs.fNewWindowMode = !!bNewWindowMode;
-    return WriteCabinetState(&cs) ? (changed ? S_OK : S_FALSE) : E_FAIL;
+    cs.fNewWindowMode = (bNewWindowMode ? TRUE : FALSE);
+    return WriteCabinetState(&cs);
 }
 
 static BOOL IntGetNewWindowMode(VOID)
@@ -248,8 +283,6 @@ static void
 GeneralDlg_StoreToUI(HWND hwndDlg, BOOL bDoubleClick, BOOL bUseCommonTasks,
                      BOOL bUnderline, BOOL bNewWindowMode, PGENERAL_DIALOG pGeneral)
 {
-    EnableWindow(GetDlgItem(hwndDlg, IDC_FOLDER_OPTIONS_COMMONTASKS), bUseCommonTasks); // FIXME: ROS DefView does not support WebView nor the tasks pane
-
     if (bUseCommonTasks)
         CheckRadioButton(hwndDlg, IDC_FOLDER_OPTIONS_COMMONTASKS, IDC_FOLDER_OPTIONS_CLASSICFOLDERS, IDC_FOLDER_OPTIONS_COMMONTASKS);
     else
@@ -285,12 +318,12 @@ GeneralDlg_StoreToUI(HWND hwndDlg, BOOL bDoubleClick, BOOL bUseCommonTasks,
 static BOOL
 GeneralDlg_OnInitDialog(HWND hwndDlg, PGENERAL_DIALOG pGeneral)
 {
-    SHELLSTATE ss;
-    SHGetSetSettings(&ss, SSF_DOUBLECLICKINWEBVIEW | SSF_WEBVIEW, FALSE);
-    BOOL bDoubleClick = !!ss.fDoubleClickInWebView;
-    BOOL bUseCommonTasks = !!ss.fWebView;
+    BOOL bDoubleClick = TRUE;
+    BOOL bUseCommonTasks = FALSE;
     BOOL bUnderline = IntGetUnderlineState();
     BOOL bNewWindowMode = IntGetNewWindowMode();
+
+    IntGetShellStateSettings(bDoubleClick, bUseCommonTasks);
 
     GeneralDlg_StoreToUI(hwndDlg, bDoubleClick, bUseCommonTasks, bUnderline, bNewWindowMode, pGeneral);
     GeneralDlg_UpdateIcons(hwndDlg, 0, pGeneral);
@@ -303,9 +336,9 @@ GeneralDlg_OnRestoreDefaults(HWND hwndDlg, PGENERAL_DIALOG pGeneral)
 {
     // default values
     BOOL bDoubleClick = TRUE;
-    BOOL bUseCommonTasks = TRUE;
+    BOOL bUseCommonTasks = FALSE;
     BOOL bUnderline = FALSE;
-    BOOL bNewWindowMode = (_WIN32_WINNT < _WIN32_WINNT_WIN2K);
+    BOOL bNewWindowMode = FALSE;
 
     GeneralDlg_StoreToUI(hwndDlg, bDoubleClick, bUseCommonTasks, bUnderline, bNewWindowMode, pGeneral);
     GeneralDlg_UpdateIcons(hwndDlg, 0, pGeneral);
@@ -320,10 +353,8 @@ GeneralDlg_OnApply(HWND hwndDlg, PGENERAL_DIALOG pGeneral)
     BOOL bNewWindowMode = !(IsDlgButtonChecked(hwndDlg, IDC_FOLDER_OPTIONS_SAMEWINDOW) == BST_CHECKED);
 
     IntSetUnderlineState(bUnderline);
-    BOOL updateCabinets = IntSetNewWindowMode(bNewWindowMode) == S_OK;
+    IntSetNewWindowMode(bNewWindowMode);
     IntSetShellStateSettings(bDoubleClick, bUseCommonTasks);
-    if (updateCabinets)
-        PostCabinetMessage(CWM_STATECHANGE, 0, 0);
     return TRUE;
 }
 

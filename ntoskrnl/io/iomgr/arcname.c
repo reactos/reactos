@@ -526,7 +526,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                     Status = IoStatusBlock.Status;
                 }
 
-                /* If we didn't get the appropriate data, just skip that disk */
+                /* If we didn't get the appriopriate data, just skip that disk */
                 if (!NT_SUCCESS(Status))
                 {
                    ObDereferenceObject(FileObject);
@@ -703,20 +703,19 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                                                  ARC_DISK_SIGNATURE,
                                                  ListEntry);
 
-            /*
-             * If this is the only MBR disk in the ARC list and detected
-             * in the device tree, just go ahead and create the ArcName link.
-             * Otherwise, check whether the signatures and checksums match
-             * before creating the ArcName link.
+            /* If they match, i.e.
+             * - There's only one disk for both BIOS and detected/enabled
+             * - Signatures are matching
+             * - Checksums are matching
+             * - This is MBR
              */
-            if ((SingleDisk && (DiskCount == 1) &&
-                 (DriveLayout->PartitionStyle == PARTITION_STYLE_MBR)) ||
+            if (((SingleDisk && DiskCount == 1) ||
                 (IopVerifyDiskSignature(DriveLayout, ArcDiskSignature, &Signature) &&
-                 (ArcDiskSignature->CheckSum + CheckSum == 0)))
+                 (ArcDiskSignature->CheckSum + CheckSum == 0))) &&
+                (DriveLayout->PartitionStyle == PARTITION_STYLE_MBR))
             {
                 /* Create device name */
-                sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition0",
-                        (DeviceNumber.DeviceNumber != ULONG_MAX) ? DeviceNumber.DeviceNumber : DiskNumber);
+                sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition0", (DeviceNumber.DeviceNumber != ULONG_MAX) ? DeviceNumber.DeviceNumber : DiskNumber);
                 RtlInitAnsiString(&DeviceStringA, Buffer);
                 Status = RtlAnsiStringToUnicodeString(&DeviceStringW, &DeviceStringA, TRUE);
                 if (!NT_SUCCESS(Status))
@@ -737,16 +736,15 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 /* Link both */
                 IoAssignArcName(&ArcNameStringW, &DeviceStringW);
 
-                /* And release strings */
+                /* And release resources */
                 RtlFreeUnicodeString(&ArcNameStringW);
                 RtlFreeUnicodeString(&DeviceStringW);
 
-                /* Now, browse each partition */
+                /* Now, browse for every partition */
                 for (i = 1; i <= DriveLayout->PartitionCount; i++)
                 {
                     /* Create device name */
-                    sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition%lu",
-                            (DeviceNumber.DeviceNumber != ULONG_MAX) ? DeviceNumber.DeviceNumber : DiskNumber, i);
+                    sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition%lu", (DeviceNumber.DeviceNumber != ULONG_MAX) ? DeviceNumber.DeviceNumber : DiskNumber, i);
                     RtlInitAnsiString(&DeviceStringA, Buffer);
                     Status = RtlAnsiStringToUnicodeString(&DeviceStringW, &DeviceStringA, TRUE);
                     if (!NT_SUCCESS(Status))
@@ -809,9 +807,9 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 if (ArcDiskSignature->ValidPartitionTable &&
                     (ArcDiskSignature->Signature == Signature) &&
                     (ArcDiskSignature->CheckSum + CheckSum != 0))
-                {
-                    DPRINT("Be careful, you have a duplicate disk signature, or a virus altered your MBR!\n");
-                }
+                 {
+                     DPRINT("Be careful, you have a duplicate disk signature, or a virus altered your MBR!\n");
+                 }
             }
         }
 
@@ -946,42 +944,52 @@ IopReassignSystemRoot(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 }
 
 BOOLEAN
-IopVerifyDiskSignature(
-    _In_ PDRIVE_LAYOUT_INFORMATION_EX DriveLayout,
-    _In_ PARC_DISK_SIGNATURE ArcDiskSignature,
-    _Out_ PULONG Signature)
+NTAPI
+IopVerifyDiskSignature(IN PDRIVE_LAYOUT_INFORMATION_EX DriveLayout,
+                       IN PARC_DISK_SIGNATURE ArcDiskSignature,
+                       OUT PULONG Signature)
 {
-    /* Fail if the partition table is invalid */
+    /* First condition: having a valid partition table */
     if (!ArcDiskSignature->ValidPartitionTable)
+    {
         return FALSE;
+    }
 
-    /* If the partition style is MBR */
+    /* If that partition table is the MBR */
     if (DriveLayout->PartitionStyle == PARTITION_STYLE_MBR)
     {
-        /* Check the MBR signature */
+        /* Then check MBR signature */
         if (DriveLayout->Mbr.Signature == ArcDiskSignature->Signature)
         {
             /* And return it */
             if (Signature)
+            {
                 *Signature = DriveLayout->Mbr.Signature;
+            }
+
             return TRUE;
         }
     }
-    /* If the partition style is GPT */
+    /* If that partition table is the GPT */
     else if (DriveLayout->PartitionStyle == PARTITION_STYLE_GPT)
     {
-        /* Verify whether the signature is GPT and compare the GUID */
+        /* Check we are using GPT and compare GUID */
         if (ArcDiskSignature->IsGpt &&
-            IsEqualGUID((PGUID)&ArcDiskSignature->GptSignature, &DriveLayout->Gpt.DiskId))
+            (((PULONG)ArcDiskSignature->GptSignature)[0] == DriveLayout->Gpt.DiskId.Data1 &&
+             ((PUSHORT)ArcDiskSignature->GptSignature)[2] == DriveLayout->Gpt.DiskId.Data2 &&
+             ((PUSHORT)ArcDiskSignature->GptSignature)[3] == DriveLayout->Gpt.DiskId.Data3 &&
+             ((PULONGLONG)ArcDiskSignature->GptSignature)[1] == ((PULONGLONG)DriveLayout->Gpt.DiskId.Data4)[0]))
         {
-            /* There is no signature to return, just zero it */
+            /* There's no signature to give, so we just zero output */
             if (Signature)
+            {
                 *Signature = 0;
+            }
             return TRUE;
         }
     }
 
-    /* If we get there, something went wrong, so fail */
+    /* If we fall here, it means that something went wrong, so return that */
     return FALSE;
 }
 

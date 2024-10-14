@@ -9,17 +9,14 @@
 
 #include <hal.h>
 #include <smp.h>
-
 #define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
 
-static // TODO: While HalpParseApicTables() is UNIMPLEMENTED.
-ULONG PhysicalProcessorCount;
-
-static PROCESSOR_IDENTITY HalpStaticProcessorIdentity[MAXIMUM_PROCESSORS];
-const PPROCESSOR_IDENTITY HalpProcessorIdentity = HalpStaticProcessorIdentity;
+PROCESSOR_IDENTITY HalpStaticProcessorIdentity[MAXIMUM_PROCESSORS] = {{0}};
+PPROCESSOR_IDENTITY HalpProcessorIdentity = NULL;
+UINT32 PhysicalProcessorCount = 0;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -27,28 +24,20 @@ VOID
 HalpParseApicTables(
     _In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    UNREFERENCED_PARAMETER(LoaderBlock);
-
-    // TODO: Fill HalpStaticProcessorIdentity[].
     UNIMPLEMENTED;
 }
 
 VOID
 HalpPrintApicTables(VOID)
 {
-#if DBG
-    ULONG i;
+    UINT32 i;
 
-    DPRINT1("Physical processor count: %lu\n", PhysicalProcessorCount);
+    DPRINT1("HAL has detected a physical processor count of: %d\n", PhysicalProcessorCount);
     for (i = 0; i < PhysicalProcessorCount; i++)
     {
-        DPRINT1(" Processor %lu: ProcessorId %u, LapicId %u, ProcessorStarted %u, BSPCheck %u, ProcessorPrcb %p\n",
-                i,
-                HalpProcessorIdentity[i].ProcessorId,
-                HalpProcessorIdentity[i].LapicId,
-                HalpProcessorIdentity[i].ProcessorStarted,
-                HalpProcessorIdentity[i].BSPCheck,
-                HalpProcessorIdentity[i].ProcessorPrcb);
+        DPRINT1("Information about the following processor is for processors number: %d\n"
+                "   The BSPCheck is set to: %X\n"
+                "   The LapicID is set to: %X\n",
+                i, HalpProcessorIdentity[i].BSPCheck, HalpProcessorIdentity[i].LapicId);
     }
-#endif
 }

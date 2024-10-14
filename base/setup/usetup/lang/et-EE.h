@@ -2264,7 +2264,7 @@ MUI_STRING etEEStrings[] =
     {STRING_KEYBOARDSETTINGSUPDATE,
     "   Klaviatuuriasetuse seadistuse uuendamine..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Kooditabeli info lisamine..."},
+    "   Kooditabeli info lisamine registrisse..."},
     {STRING_DONE,
     "   Valmis..."},
     {STRING_REBOOTCOMPUTER2,

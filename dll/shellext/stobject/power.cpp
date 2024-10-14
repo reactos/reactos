@@ -90,12 +90,6 @@ static HICON DynamicLoadIcon(HINSTANCE hinst)
     }
 
     if (((PowerStatus.BatteryFlag & BATTERY_FLAG_NO_BATTERY) == 0) &&
-        (PowerStatus.BatteryLifePercent == BATTERY_PERCENTAGE_UNKNOWN))
-    {
-        hBatIcon = LoadIcon(hinst, MAKEINTRESOURCE(IDI_BATTCAP_ERR));
-        g_strTooltip.LoadStringW(IDS_PWR_UNKNOWN_REMAINING);
-    }
-    else if (((PowerStatus.BatteryFlag & BATTERY_FLAG_NO_BATTERY) == 0) &&
         ((PowerStatus.BatteryFlag & BATTERY_FLAG_CHARGING) == BATTERY_FLAG_CHARGING))
     {
         index = Quantize(PowerStatus.BatteryLifePercent);

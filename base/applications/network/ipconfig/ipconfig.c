@@ -868,7 +868,7 @@ Release(
 
     while (pAdapter)
     {
-        GetAdapterFriendlyName(pAdapter->AdapterName, MAX_PATH, szFriendlyName);
+        GetAdapterFriendlyName(pAdapterInfo->AdapterName, MAX_PATH, szFriendlyName);
 
         if ((pszAdapterName == NULL) || MatchWildcard(pszAdapterName, szFriendlyName))
         {
@@ -968,7 +968,7 @@ Renew(
 
     while (pAdapter)
     {
-        GetAdapterFriendlyName(pAdapter->AdapterName, MAX_PATH, szFriendlyName);
+        GetAdapterFriendlyName(pAdapterInfo->AdapterName, MAX_PATH, szFriendlyName);
 
         if ((pszAdapterName == NULL) || MatchWildcard(pszAdapterName, szFriendlyName))
         {

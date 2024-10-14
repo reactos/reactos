@@ -129,17 +129,18 @@ typedef struct
 #include <poppack.h>
 
 // Implemented in linux.S
-VOID __cdecl
-BootLinuxKernel(
-    _In_ ULONG KernelSize,
-    _In_ PVOID KernelCurrentLoadAddress,
-    _In_ PVOID KernelTargetLoadAddress);
+VOID __cdecl BootLinuxKernel(
+    IN ULONG KernelSize,
+    IN PVOID KernelCurrentLoadAddress,
+    IN PVOID KernelTargetLoadAddress,
+    IN UCHAR DriveNumber,
+    IN ULONG PartitionNumber);
 
 ARC_STATUS
 LoadAndBootLinux(
-    _In_ ULONG Argc,
-    _In_ PCHAR Argv[],
-    _In_ PCHAR Envp[]);
+    IN ULONG Argc,
+    IN PCHAR Argv[],
+    IN PCHAR Envp[]);
 
 #endif /* _M_IX86 || _M_AMD64 */
 

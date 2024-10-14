@@ -1222,7 +1222,6 @@ void ProcessPage_OnOpenFileLocation(void)
     DWORD dwProcessId;
     DWORD dwLength;
     LPWSTR pszExePath;
-    static const WCHAR szCmdFormat[] = L"/select,\"%s\"";
     LPWSTR pszCmdLine = NULL;
 
     dwProcessId = GetSelectedProcessId();
@@ -1241,18 +1240,14 @@ void ProcessPage_OnOpenFileLocation(void)
         goto Cleanup;
 
     /* Build the shell command line */
-    dwLength += CONST_STR_LEN(szCmdFormat) - CONST_STR_LEN(L"%s");
-    pszCmdLine = HeapAlloc(GetProcessHeap(), 0, dwLength * sizeof(WCHAR));
+    pszCmdLine = HeapAlloc(GetProcessHeap(), 0, (dwLength + CONST_STR_LEN(L"/select,\"\"")) * sizeof(WCHAR));
     if (!pszCmdLine)
         goto Cleanup;
 
-    StringCchPrintfW(pszCmdLine, dwLength, szCmdFormat, pszExePath);
+    StringCchPrintfW(pszCmdLine, dwLength + CONST_STR_LEN(L"/select,\"\""), L"/select,\"%s\"", pszExePath);
 
-    /* Call the shell to open the file location and select it. If Explorer shell
-     * is not available, use ReactOS's alternative file browser instead. */
-    ShellExecuteW(NULL, L"open",
-                  GetShellWindow() ? L"explorer.exe" : L"filebrowser.exe",
-                  pszCmdLine, NULL, SW_SHOWNORMAL);
+    /* Call the shell to open the file location and select it */
+    ShellExecuteW(NULL, L"open", L"explorer.exe", pszCmdLine, NULL, SW_SHOWNORMAL);
 
 Cleanup:
     HeapFree(GetProcessHeap(), 0, pszCmdLine);

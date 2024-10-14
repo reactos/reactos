@@ -7562,26 +7562,6 @@ Language=Japanese
 システムが起動しました。
 .
 
-MessageId=740
-Severity=Success
-Facility=System
-SymbolicName=ERROR_ELEVATION_REQUIRED
-Language=English
-The requested operation requires elevation.
-.
-Language=Russian
-The requested operation requires elevation.
-.
-Language=Polish
-The requested operation requires elevation.
-.
-Language=Romanian
-The requested operation requires elevation.
-.
-Language=Japanese
-The requested operation requires elevation.
-.
-
 MessageId=741
 Severity=Success
 Facility=System
@@ -17084,26 +17064,6 @@ The ReactOS Installer does not permit installation from a Remote Desktop Connect
 .
 Language=Japanese
 ReactOS インストーラは、リモート デスクトップ接続からのインストールを許可しません。
-.
-
-MessageId=1654
-Severity=Success
-Facility=System
-SymbolicName=ERROR_INSTALL_REJECTED
-Language=English
-The app that you are trying to run is not supported on this version of Windows.
-.
-Language=Russian
-The app that you are trying to run is not supported on this version of Windows.
-.
-Language=Polish
-The app that you are trying to run is not supported on this version of Windows.
-.
-Language=Romanian
-The app that you are trying to run is not supported on this version of Windows.
-.
-Language=Japanese
-The app that you are trying to run is not supported on this version of Windows.
 .
 
 MessageId=1700
@@ -42976,86 +42936,6 @@ Language=Japanese
 指定されたチャネルパスが、複数のチャネルのインスタンスを選択する。この操作では、1 つのチャネルのみが選択される必要があります。1つのインスタンスのみを選択するために、チャネルパスを version / publicKeyToken にスコープする必要があるかもしれません。
 .
 
-MessageId=0x0001
-Severity=Warning
-Facility=System
-SymbolicName=E_NOTIMPL
-Language=English
-Not implemented
-.
-Language=Russian
-Not implemented
-.
-Language=Polish
-Not implemented
-.
-Language=Romanian
-Not implemented
-.
-Language=Japanese
-Not implemented
-.
-
-MessageId=0x4004
-Severity=Warning
-Facility=System
-SymbolicName=E_ABORT
-Language=English
-Operation aborted
-.
-Language=Russian
-Operation aborted
-.
-Language=Polish
-Operation aborted
-.
-Language=Romanian
-Operation aborted
-.
-Language=Japanese
-Operation aborted
-.
-
-MessageId=0x4005
-Severity=Warning
-Facility=System
-SymbolicName=E_FAIL
-Language=English
-Unspecified error
-.
-Language=Russian
-Unspecified error
-.
-Language=Polish
-Unspecified error
-.
-Language=Romanian
-Unspecified error
-.
-Language=Japanese
-Unspecified error
-.
-
-MessageId=0xFFFF
-Severity=Warning
-Facility=System
-SymbolicName=E_UNEXPECTED
-Language=English
-Catastrophic failure
-.
-Language=Russian
-Catastrophic failure
-.
-Language=Polish
-Catastrophic failure
-.
-Language=Romanian
-Catastrophic failure
-.
-Language=Japanese
-Catastrophic failure
-.
-
 MessageId=0x000E
 Severity=Warning
 Facility=WIN32
@@ -43121,19 +43001,19 @@ Severity=Warning
 Facility=WIN32
 SymbolicName=E_ACCESSDENIED
 Language=English
-General access denied error
+WIN32 access denied error
 .
 Language=Russian
-General access denied error
+WIN32 access denied error
 .
 Language=Polish
-General access denied error
+WIN32 access denied error
 .
 Language=Romanian
-General access denied error
+WIN32 access denied error
 .
 Language=Japanese
-一般的なアクセス拒否エラーです。
+WIN32のアクセス拒否エラーです。
 .
 
 

@@ -2,7 +2,20 @@
  * Regedit listviews
  *
  * Copyright (C) 2002 Robert Dickenson <robd@reactos.org>
- * LICENSE: LGPL-2.1-or-later (https://spdx.org/licenses/LGPL-2.1-or-later)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include "regedit.h"
@@ -11,8 +24,8 @@
 #define CY_ICON            16
 #define LISTVIEW_NUM_ICONS 2
 
-int Image_String;
-int Image_Bin;
+int Image_String = 0;
+int Image_Bin = 0;
 INT iListViewSelect = -1;
 
 typedef struct tagLINE_INFO
@@ -33,7 +46,7 @@ typedef struct tagSORT_INFO
  * Global and Local Variables:
  */
 
-static INT g_iSortedColumn;
+static INT g_iSortedColumn = 0;
 
 #define MAX_LIST_COLUMNS (IDS_LIST_COLUMN_LAST - IDS_LIST_COLUMN_FIRST + 1)
 static const int default_column_widths[MAX_LIST_COLUMNS] = { 35, 25, 40 };  /* in percents */
@@ -201,6 +214,7 @@ static void AddEntryToList(HWND hwndLV, LPWSTR Name, DWORD dwValType, void* ValB
         }
         break;
         case REG_DWORD:
+        case REG_NONE:
         {
             WCHAR buf[200];
             if(dwCount == sizeof(DWORD))
@@ -215,7 +229,7 @@ static void AddEntryToList(HWND hwndLV, LPWSTR Name, DWORD dwValType, void* ValB
         }
         /*            lpsRes = convertHexToDWORDStr(lpbData, dwLen); */
         break;
-        default: /* REG_BINARY, REG_NONE etc. */
+        default:
         {
             unsigned int i;
             LPBYTE pData = (LPBYTE)ValBuf;
@@ -652,6 +666,7 @@ void DestroyListView(HWND hwndLV)
         free(((LINE_INFO*)item.lParam)->name);
         HeapFree(GetProcessHeap(), 0, (void*)item.lParam);
     }
+
 }
 
 BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCWSTR keyPath, BOOL bSelectNone)

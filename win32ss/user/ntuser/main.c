@@ -451,6 +451,7 @@ UserThreadDestroy(PETHREAD Thread)
     return STATUS_SUCCESS;
 }
 
+/* Win: xxxCreateThreadInfo */
 NTSTATUS NTAPI
 InitThreadCallback(PETHREAD Thread)
 {
@@ -554,13 +555,6 @@ InitThreadCallback(PETHREAD Thread)
         pci->hKL = pDefKL->hkl;
         pci->CodePage = pDefKL->CodePage;
     }
-
-    /* Populate dwExpWinVer */
-    if (Process->Peb)
-        ptiCurrent->dwExpWinVer = RtlGetExpWinVer(Process->SectionBaseAddress);
-    else
-        ptiCurrent->dwExpWinVer = WINVER_WINNT4;
-    pci->dwExpWinVer = ptiCurrent->dwExpWinVer;
 
     /* Need to pass the user Startup Information to the current process. */
     if ( ProcessParams )
@@ -914,10 +908,8 @@ DriverUnload(IN PDRIVER_OBJECT DriverObject)
 {
     // TODO: Do more cleanup!
 
-    FreeFontSupport();
     ResetCsrApiPort();
     ResetCsrProcess();
-    IntWin32PowerManagementCleanup();
 }
 
 // Return on failure
@@ -985,8 +977,8 @@ DriverEntry(
     CalloutData.ProcessCallout = Win32kProcessCallback;
     CalloutData.ThreadCallout = Win32kThreadCallback;
     // CalloutData.GlobalAtomTableCallout = NULL;
-    CalloutData.PowerEventCallout = IntHandlePowerEvent;
-    CalloutData.PowerStateCallout = IntHandlePowerState;
+    // CalloutData.PowerEventCallout = NULL;
+    // CalloutData.PowerStateCallout = NULL;
     // CalloutData.JobCallout = NULL;
     CalloutData.BatchFlushRoutine = NtGdiFlushUserBatch;
     CalloutData.DesktopOpenProcedure = IntDesktopObjectOpen;

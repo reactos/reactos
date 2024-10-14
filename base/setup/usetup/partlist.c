@@ -154,7 +154,6 @@ PartitionDescription(
     size_t cchBufferSize = cchBuffer;
     ULONGLONG PartSize;
     PCSTR Unit;
-    PVOLINFO VolInfo = (PartEntry->Volume ? &PartEntry->Volume->Info : NULL);
 
     /* Get the partition size */
     PartSize = GetPartEntrySizeInBytes(PartEntry);
@@ -205,8 +204,8 @@ PartitionDescription(
     RtlStringCchPrintfExA(pBuffer, cchBufferSize,
                           &pBuffer, &cchBufferSize, 0,
                           "%c%c %c %s(%lu) ",
-                          !(VolInfo && VolInfo->DriveLetter) ? '-' : (CHAR)VolInfo->DriveLetter,
-                          !(VolInfo && VolInfo->DriveLetter) ? '-' : ':',
+                          (PartEntry->DriveLetter == 0) ? '-' : (CHAR)PartEntry->DriveLetter,
+                          (PartEntry->DriveLetter == 0) ? '-' : ':',
                           PartEntry->BootIndicator ? '*' : ' ',
                           PartEntry->LogicalPartition ? "  " : "", // Optional indentation
                           PartEntry->PartitionNumber);
@@ -216,15 +215,16 @@ PartitionDescription(
      * (if any) and the file system name. Otherwise, display the partition
      * type if it's not a new partition.
      */
-    if (VolInfo && IsFormatted(VolInfo))
+    if (!PartEntry->New && *PartEntry->FileSystem &&
+        _wcsicmp(PartEntry->FileSystem, L"RAW") != 0)
     {
         size_t cchLabelSize = 0;
-        if (*VolInfo->VolumeLabel)
+        if (*PartEntry->VolumeLabel)
         {
             RtlStringCchPrintfExA(pBuffer, cchBufferSize,
                                   &pBuffer, &cchLabelSize, 0,
                                   "\"%-.11S\" ",
-                                  VolInfo->VolumeLabel);
+                                  PartEntry->VolumeLabel);
             cchLabelSize = cchBufferSize - cchLabelSize; // Actual length of the label part.
             cchBufferSize -= cchLabelSize; // And reset cchBufferSize to what it should be.
         }
@@ -237,7 +237,7 @@ PartitionDescription(
                               /* The minimum length can be at most 11 since
                                * cchLabelSize can be at most == 11 + 3 == 14 */
                               25 - min(cchLabelSize, 25),
-                              VolInfo->FileSystem);
+                              PartEntry->FileSystem);
     }
     else
     {
@@ -275,7 +275,7 @@ PartitionDescription(
     /* Show the remaining free space only if a FS is mounted */
     // FIXME: We don't support that yet!
 #if 0
-    if (VolInfo && *VolInfo->FileSystem)
+    if (*PartEntry->FileSystem)
     {
         RtlStringCchPrintfA(pBuffer, cchBufferSize,
                             "%*s%6I64u %s (%6I64u %s %s)",
@@ -833,22 +833,28 @@ DrawPartitionList(
     }
 }
 
-/**
- * @param[in]   Direction
- * TRUE or FALSE to scroll to the next (down) or previous (up) entry, respectively.
- **/
 VOID
-ScrollUpDownPartitionList(
-    _In_ PPARTLIST_UI ListUi,
-    _In_ BOOLEAN Direction)
+ScrollDownPartitionList(
+    IN PPARTLIST_UI ListUi)
 {
-    PPARTENTRY PartEntry =
-        (Direction ? GetNextPartition
-                   : GetPrevPartition)(ListUi->List, ListUi->CurrentPartition);
-    if (PartEntry)
+    PPARTENTRY NextPart = GetNextPartition(ListUi->List, ListUi->CurrentPartition);
+    if (NextPart)
     {
-        ListUi->CurrentPartition = PartEntry;
-        ListUi->CurrentDisk = PartEntry->DiskEntry;
+        ListUi->CurrentPartition = NextPart;
+        ListUi->CurrentDisk = NextPart->DiskEntry;
+        DrawPartitionList(ListUi);
+    }
+}
+
+VOID
+ScrollUpPartitionList(
+    IN PPARTLIST_UI ListUi)
+{
+    PPARTENTRY PrevPart = GetPrevPartition(ListUi->List, ListUi->CurrentPartition);
+    if (PrevPart)
+    {
+        ListUi->CurrentPartition = PrevPart;
+        ListUi->CurrentDisk = PrevPart->DiskEntry;
         DrawPartitionList(ListUi);
     }
 }

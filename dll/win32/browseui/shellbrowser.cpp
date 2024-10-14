@@ -120,7 +120,6 @@ static const unsigned int                   folderOptionsPageCountMax = 20;
 static const long                           BTP_DONT_UPDATE_HISTORY = 0;
 static const long                           BTP_UPDATE_CUR_HISTORY = 1;
 static const long                           BTP_UPDATE_NEXT_HISTORY = 2;
-static const long                           BTP_ACTIVATE_NOFOCUS = 0x04;
 
 BOOL                                        createNewStuff = false;
 
@@ -306,9 +305,6 @@ private:
     HDSA menuDsa;
     HACCEL m_hAccel;
     ShellSettings m_settings;
-    SBFOLDERSETTINGS m_deffoldersettings;
-    DWORD m_BrowserSvcFlags;
-    bool m_Destroyed;
 public:
 #if 0
     ULONG InternalAddRef()
@@ -327,20 +323,15 @@ public:
     ~CShellBrowser();
     HRESULT Initialize();
 public:
-    UINT ApplyNewBrowserFlag(UINT Flags);
-    HRESULT OpenNewBrowserWindow(LPCITEMIDLIST pidl, UINT SbspFlags);
-    HRESULT CreateRelativeBrowsePIDL(LPCITEMIDLIST relative, UINT SbspFlags, LPITEMIDLIST *ppidl);
     HRESULT BrowseToPIDL(LPCITEMIDLIST pidl, long flags);
     HRESULT BrowseToPath(IShellFolder *newShellFolder, LPCITEMIDLIST absolutePIDL,
         FOLDERSETTINGS *folderSettings, long flags);
-    void SaveViewState();
     HRESULT GetMenuBand(REFIID riid, void **shellMenu);
     HRESULT GetBaseBar(bool vertical, REFIID riid, void **theBaseBar);
     BOOL IsBandLoaded(const CLSID clsidBand, bool vertical, DWORD *pdwBandID);
     HRESULT ShowBand(const CLSID &classID, bool vertical);
     HRESULT NavigateToParent();
     HRESULT DoFolderOptions();
-    HRESULT ApplyBrowserDefaultFolderSettings(IShellView *pvs);
     static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     void RepositionBars();
     HRESULT BuildExplorerBandMenu();
@@ -358,10 +349,8 @@ public:
     HRESULT UpdateUpState();
     void UpdateGotoMenu(HMENU theMenu);
     void UpdateViewMenu(HMENU theMenu);
-    HRESULT IsInternetToolbarBandShown(UINT ITId);
     void RefreshCabinetState();
     void UpdateWindowTitle();
-    void SaveITBarLayout();
 
 /*    // *** IDockingWindowFrame methods ***
     STDMETHOD(AddToolbar)(IUnknown *punkSrc, LPCWSTR pwszItem, DWORD dwAddFlags) override;
@@ -408,7 +397,7 @@ public:
     // *** IServiceProvider methods ***
     STDMETHOD(QueryService)(REFGUID guidService, REFIID riid, void **ppvObject) override;
 
-    // *** IShellBrowserService methods ***
+    // *** IShellBowserService methods ***
     STDMETHOD(GetPropertyBag)(long flags, REFIID riid, void **ppvObject) override;
 
     // *** IDispatch methods ***
@@ -636,7 +625,6 @@ public:
     LRESULT OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnExplorerBar(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnCabinetStateChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSettingsChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnGetSettingsPtr(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnAppCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -691,7 +679,6 @@ public:
         COMMAND_RANGE_HANDLER(IDM_GOTO_TRAVEL_FIRSTTARGET, IDM_GOTO_TRAVEL_LASTTARGET, OnGoTravel)
         COMMAND_RANGE_HANDLER(IDM_EXPLORERBAND_BEGINCUSTOM, IDM_EXPLORERBAND_ENDCUSTOM, OnExplorerBar)
         MESSAGE_HANDLER(WM_COMMAND, RelayCommands)
-        MESSAGE_HANDLER(CWM_STATECHANGE, OnCabinetStateChange)
         MESSAGE_HANDLER(BWM_SETTINGCHANGE, OnSettingsChange)
         MESSAGE_HANDLER(BWM_GETSETTINGSPTR, OnGetSettingsPtr)
         MESSAGE_HANDLER(WM_APPCOMMAND, OnAppCommand)
@@ -728,8 +715,6 @@ extern HRESULT CreateProgressDialog(REFIID riid, void **ppv);
 
 CShellBrowser::CShellBrowser()
 {
-    m_BrowserSvcFlags = BSF_RESIZABLE | BSF_CANMAXIMIZE;
-    m_Destroyed = false;
     fCurrentShellViewWindow = NULL;
     fCurrentDirectoryPIDL = NULL;
     fStatusBar = NULL;
@@ -738,9 +723,7 @@ CShellBrowser::CShellBrowser()
     fHistoryStream = NULL;
     fHistoryBindContext = NULL;
     m_settings.Load();
-    m_deffoldersettings.Load();
     gCabinetState.Load();
-    SetTopBrowser();
 }
 
 CShellBrowser::~CShellBrowser()
@@ -785,11 +768,19 @@ HRESULT CShellBrowser::Initialize()
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
-    CComPtr<IStream> pITBarStream;
-    hResult = CInternetToolbar::GetStream(ITBARSTREAM_EXPLORER, STGM_READ, &pITBarStream);
-    hResult = SUCCEEDED(hResult) ? persistStreamInit->Load(pITBarStream) : persistStreamInit->InitNew();
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
+    // TODO: create settingsStream from registry entry
+    //if (settingsStream.p)
+    //{
+    //    hResult = persistStreamInit->Load(settingsStream);
+    //    if (FAILED_UNEXPECTEDLY(hResult))
+    //        return hResult;
+    //}
+    //else
+    {
+        hResult = persistStreamInit->InitNew();
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+    }
 
     hResult = IUnknown_ShowDW(clientBar, TRUE);
     if (FAILED_UNEXPECTEDLY(hResult))
@@ -811,83 +802,13 @@ HRESULT CShellBrowser::Initialize()
     return S_OK;
 }
 
-HRESULT CShellBrowser::ApplyBrowserDefaultFolderSettings(IShellView *pvs)
-{
-    HRESULT hr;
-    if (pvs)
-    {
-        m_settings.Save();
-        SBFOLDERSETTINGS &sbfs = m_deffoldersettings, defsbfs;
-        if (FAILED(pvs->GetCurrentInfo(&sbfs.FolderSettings)))
-        {
-            defsbfs.InitializeDefaults();
-            sbfs = defsbfs;
-        }
-        hr = CGlobalFolderSettings::SaveBrowserSettings(sbfs);
-    }
-    else
-    {
-        m_settings.Reset();
-        hr = CGlobalFolderSettings::ResetBrowserSettings();
-        if (SUCCEEDED(hr))
-            m_deffoldersettings.Load();
-    }
-    return hr;
-}
-
-UINT CShellBrowser::ApplyNewBrowserFlag(UINT Flags)
-{
-    if ((Flags & (SBSP_SAMEBROWSER | SBSP_NEWBROWSER)) == SBSP_DEFBROWSER)
-    {
-        if (!fCurrentDirectoryPIDL || IsControlWindowShown(FCW_TREE, NULL) == S_OK)
-            Flags |= SBSP_SAMEBROWSER; // Force if this is the first navigation or the folder tree is present
-        else
-            Flags |= (!!gCabinetState.fNewWindowMode) ^ (GetAsyncKeyState(VK_CONTROL) < 0) ? SBSP_NEWBROWSER : SBSP_SAMEBROWSER;
-    }
-    if (Flags & (SBSP_NAVIGATEBACK | SBSP_NAVIGATEFORWARD))
-        Flags = (Flags & ~SBSP_NEWBROWSER) | SBSP_SAMEBROWSER; // Force same browser for now
-    return Flags;
-}
-
-HRESULT CShellBrowser::OpenNewBrowserWindow(LPCITEMIDLIST pidl, UINT SbspFlags)
-{
-    SaveITBarLayout(); // Do this now so the new window inherits the current layout
-    // TODO: www.geoffchappell.com/studies/windows/ie/shdocvw/interfaces/inotifyappstart.htm
-    DWORD flags = (SbspFlags & SBSP_EXPLOREMODE) ? SH_EXPLORER_CMDLINE_FLAG_E : 0;
-    if ((SbspFlags & (SBSP_OPENMODE | SBSP_EXPLOREMODE)) == SBSP_DEFMODE)
-        flags |= IsControlWindowShown(FCW_TREE, NULL) == S_OK ? SH_EXPLORER_CMDLINE_FLAG_E : 0;
-    LPITEMIDLIST pidlDir;
-    HRESULT hr = SHILClone(pidl, &pidlDir);
-    if (FAILED(hr))
-        return hr;
-    // TODO: !SBSP_NOTRANSFERHIST means we are supposed to pass the history here somehow?
-    return SHOpenNewFrame(pidlDir, NULL, 0, flags | SH_EXPLORER_CMDLINE_FLAG_NEWWND | SH_EXPLORER_CMDLINE_FLAG_NOREUSE);
-}
-
-HRESULT CShellBrowser::CreateRelativeBrowsePIDL(LPCITEMIDLIST relative, UINT SbspFlags, LPITEMIDLIST *ppidl)
-{
-    if (SbspFlags & SBSP_RELATIVE)
-        return SHILCombine(fCurrentDirectoryPIDL, relative, ppidl);
-
-    if (SbspFlags & SBSP_PARENT)
-    {
-        HRESULT hr = GetPidl(ppidl);
-        if (FAILED(hr))
-            return hr;
-        ILRemoveLastID(*ppidl);
-        return S_OK;
-    }
-    // TODO: SBSP_NAVIGATEBACK and SBSP_NAVIGATEFORWARD?
-    return E_UNEXPECTED;
-}
-
 HRESULT CShellBrowser::BrowseToPIDL(LPCITEMIDLIST pidl, long flags)
 {
-    CComPtr<IShellFolder>   newFolder;
-    FOLDERSETTINGS          newFolderSettings = m_deffoldersettings.FolderSettings;
-    HRESULT                 hResult;
-    CLSID                   clsid;
-    BOOL                    HasIconViewType;
+    CComPtr<IShellFolder>                   newFolder;
+    FOLDERSETTINGS                          newFolderSettings;
+    HRESULT                                 hResult;
+    CLSID                                   clsid;
+    BOOL                                    HasIconViewType;
 
     // called by shell view to browse to new folder
     // also called by explorer band to navigate to new folder
@@ -901,6 +822,9 @@ HRESULT CShellBrowser::BrowseToPIDL(LPCITEMIDLIST pidl, long flags)
 
     if (HasIconViewType)
         newFolderSettings.ViewMode = FVM_ICON;
+    else
+        newFolderSettings.ViewMode = FVM_DETAILS;
+    newFolderSettings.fFlags = 0;
     hResult = BrowseToPath(newFolder, pidl, &newFolderSettings, flags);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
@@ -1000,13 +924,6 @@ HRESULT IEGetNameAndFlags(LPITEMIDLIST pidl, SHGDNF uFlags, LPWSTR pszBuf, UINT 
     return IEGetNameAndFlagsEx(pidl, uFlags, 0, pszBuf, cchBuf, rgfInOut);
 }
 
-void CShellBrowser::SaveViewState()
-{
-    // TODO: Also respect EBO_NOPERSISTVIEWSTATE?
-    if (gCabinetState.fSaveLocalView && fCurrentShellView && !SHRestricted(REST_NOSAVESET))
-        fCurrentShellView->SaveViewState();
-}
-
 HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
     LPCITEMIDLIST absolutePIDL, FOLDERSETTINGS *folderSettings, long flags)
 {
@@ -1022,10 +939,6 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
     wchar_t                                 newTitle[MAX_PATH];
     SHGDNF                                  nameFlags;
     HRESULT                                 hResult;
-    //TODO: BOOL                            nohistory = m_BrowserSvcFlags & BSF_NAVNOHISTORY;
-
-    if (m_Destroyed)
-        return S_FALSE;
 
     if (newShellFolder == NULL)
         return E_INVALIDARG;
@@ -1033,10 +946,6 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
     hResult = GetTravelLog(&travelLog);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-
-    if (FAILED_UNEXPECTEDLY(hResult = SHILClone(absolutePIDL, &absolutePIDL)))
-        return hResult;
-    CComHeapPtr<ITEMIDLIST> pidlAbsoluteClone(const_cast<LPITEMIDLIST>(absolutePIDL));
 
     // update history
     if (flags & BTP_UPDATE_CUR_HISTORY)
@@ -1048,7 +957,6 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
 
     if (fCurrentShellView)
     {
-        SaveViewState();
         fCurrentShellView->UIActivate(SVUIA_DEACTIVATE);
     }
 
@@ -1082,14 +990,7 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
 
     // update current pidl
     ILFree(fCurrentDirectoryPIDL);
-    fCurrentDirectoryPIDL = pidlAbsoluteClone.Detach();
-    /* CORE-19697: CAddressEditBox::OnWinEvent(CBN_SELCHANGE) causes CAddressEditBox to
-     * call BrowseObject(pidlLastParsed). As part of our browsing we call FireNavigateComplete
-     * and this in turn causes CAddressEditBox::Invoke to ILFree(pidlLastParsed)!
-     * We then call SHBindToParent on absolutePIDL (which is really (the now invalid) pidlLastParsed) and we
-     * end up accessing invalid memory! We therefore set absolutePIDL to be our cloned PIDL here.
-     */
-    absolutePIDL = fCurrentDirectoryPIDL;
+    fCurrentDirectoryPIDL = ILClone(absolutePIDL);
 
     // create view window
     hResult = newShellView->CreateViewWindow(saveCurrentShellView, folderSettings,
@@ -1119,7 +1020,7 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
     saveCurrentShellView.Release();
     saveCurrentShellFolder.Release();
 
-    hResult = newShellView->UIActivate((flags & BTP_ACTIVATE_NOFOCUS) ? SVUIA_ACTIVATE_NOFOCUS : SVUIA_ACTIVATE_FOCUS);
+    hResult = newShellView->UIActivate(SVUIA_ACTIVATE_FOCUS);
 
     // leave updating section
     if (windowUpdateIsLocked)
@@ -1454,13 +1355,17 @@ HRESULT CShellBrowser::DoFolderOptions()
     if (FAILED_UNEXPECTEDLY(hResult))
         return E_FAIL;
 
-    if (fCurrentShellView)
+// CORE-11140 : Disabled this bit, because it prevents the folder options from showing.
+//              It returns 'E_NOTIMPL'
+#if 0
+    if (fCurrentShellView != NULL)
     {
         hResult = fCurrentShellView->AddPropertySheetPages(
             0, AddFolderOptionsPage, reinterpret_cast<LPARAM>(&m_PropSheet));
         if (FAILED_UNEXPECTEDLY(hResult))
             return E_FAIL;
     }
+#endif
 
     // show sheet
     CStringW strFolderOptions(MAKEINTRESOURCEW(IDS_FOLDER_OPTIONS));
@@ -1834,19 +1739,6 @@ void CShellBrowser::UpdateViewMenu(HMENU theMenu)
         SetMenuItemInfo(theMenu, IDM_VIEW_TOOLBARS, FALSE, &menuItemInfo);
     }
     SHCheckMenuItem(theMenu, IDM_VIEW_STATUSBAR, m_settings.fStatusBarVisible ? TRUE : FALSE);
-
-    // Check the menu items for Explorer bar
-    BOOL bSearchBand = (IsEqualCLSID(CLSID_SH_SearchBand, fCurrentVertBar) ||
-                        IsEqualCLSID(CLSID_SearchBand, fCurrentVertBar) ||
-                        IsEqualCLSID(CLSID_IE_SearchBand, fCurrentVertBar) ||
-                        IsEqualCLSID(CLSID_FileSearchBand, fCurrentVertBar));
-    BOOL bHistory = IsEqualCLSID(CLSID_SH_HistBand, fCurrentVertBar);
-    BOOL bFavorites = IsEqualCLSID(CLSID_SH_FavBand, fCurrentVertBar);
-    BOOL bFolders = IsEqualCLSID(CLSID_ExplorerBand, fCurrentVertBar);
-    SHCheckMenuItem(theMenu, IDM_EXPLORERBAR_SEARCH, bSearchBand);
-    SHCheckMenuItem(theMenu, IDM_EXPLORERBAR_HISTORY, bHistory);
-    SHCheckMenuItem(theMenu, IDM_EXPLORERBAR_FAVORITES, bFavorites);
-    SHCheckMenuItem(theMenu, IDM_EXPLORERBAR_FOLDERS, bFolders);
 }
 
 HRESULT CShellBrowser::BuildExplorerBandMenu()
@@ -2078,7 +1970,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::QueryStatus(const GUID *pguidCmdGroup,
                     if (IsEqualCLSID(CLSID_SH_FavBand, fCurrentVertBar))
                         prgCmds->cmdf |= OLECMDF_LATCHED;
                     break;
-                case SBCMDID_EXPLORERBARFOLDERS:  // folders
+                case 0x23:  // folders
                     prgCmds->cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
                     if (IsEqualCLSID(CLSID_ExplorerBand, fCurrentVertBar))
                         prgCmds->cmdf |= OLECMDF_LATCHED;
@@ -2127,7 +2019,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::Exec(const GUID *pguidCmdGroup, DWORD n
             case 0x1c: //Toggle Search
             case 0x1d: //Toggle History
             case 0x1e: //Toggle Favorites
-            case SBCMDID_EXPLORERBARFOLDERS: //Toggle Folders
+            case 0x23: //Toggle Folders
                 const GUID* pclsid;
                 if (nCmdID == 0x1c) pclsid = &CLSID_FileSearchBand;
                 else if (nCmdID == 0x1d) pclsid = &CLSID_SH_HistBand;
@@ -2226,9 +2118,6 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::Exec(const GUID *pguidCmdGroup, DWORD n
         {
             case 40994:
                 return NavigateToParent();
-            case IDM_NOTIFYITBARDIRTY:
-                SaveITBarLayout();
-                break;
         }
     }
     else if (IsEqualIID(*pguidCmdGroup, CGID_IExplorerToolbar))
@@ -2243,9 +2132,8 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::Exec(const GUID *pguidCmdGroup, DWORD n
     {
         switch (nCmdID)
         {
-            case DVCMDID_RESET_DEFAULTFOLDER_SETTINGS:
-                ApplyBrowserDefaultFolderSettings(NULL);
-                IUnknown_Exec(fCurrentShellView, CGID_DefView, nCmdID, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+            case 1:
+                // Reset All Folders option in Folder Options
                 break;
         }
     }
@@ -2354,39 +2242,12 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::TranslateAcceleratorSB(MSG *pmsg, WORD 
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::BrowseObject(LPCITEMIDLIST pidl, UINT wFlags)
 {
-    wFlags = ApplyNewBrowserFlag(wFlags);
-    // FIXME: Should not automatically show the Explorer band
-    if ((wFlags & SBSP_EXPLOREMODE) && !(wFlags & SBSP_NEWBROWSER))
+    if ((wFlags & SBSP_EXPLOREMODE) != NULL)
         ShowBand(CLSID_ExplorerBand, true);
 
-    CComHeapPtr<ITEMIDLIST> pidlResolved;
-    if (wFlags & (SBSP_RELATIVE | SBSP_PARENT))
-    {
-        HRESULT hr = CreateRelativeBrowsePIDL(pidl, wFlags, &pidlResolved);
-        if (FAILED(hr))
-            return hr;
-        pidl = pidlResolved;
-    }
-
-    if (wFlags & SBSP_NEWBROWSER)
-        return OpenNewBrowserWindow(pidl, wFlags);
-
-    switch (wFlags & (SBSP_ABSOLUTE | SBSP_RELATIVE | SBSP_PARENT | SBSP_NAVIGATEBACK | SBSP_NAVIGATEFORWARD))
-    {
-        case SBSP_PARENT:
-            return NavigateToParent();
-        case SBSP_NAVIGATEBACK:
-            return GoBack();
-        case SBSP_NAVIGATEFORWARD:
-            return GoForward();
-    }
-
-    // TODO: SBSP_WRITENOHISTORY? SBSP_CREATENOHISTORY?
     long flags = BTP_UPDATE_NEXT_HISTORY;
     if (fTravelLog)
         flags |= BTP_UPDATE_CUR_HISTORY;
-    if (wFlags & SBSP_ACTIVATE_NOFOCUS)
-        flags |= BTP_ACTIVATE_NOFOCUS;
     return BrowseToPIDL(pidl, flags);
 }
 
@@ -2409,12 +2270,9 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::GetControlWindow(UINT id, HWND *lphwnd)
             *lphwnd = fStatusBar;
             return S_OK;
         case FCW_TREE:
-        {
-            BOOL shown;
-            if (SUCCEEDED(IsControlWindowShown(id, &shown)) && shown)
-                return IUnknown_GetWindow(fClientBars[BIVerticalBaseBar].clientBar.p, lphwnd);
-            return S_FALSE;
-        }
+            // find the directory browser and return it
+            // this should be used only to determine if a tree is present
+            return S_OK;
         case FCW_PROGRESS:
             // is this a progress dialog?
             return S_OK;
@@ -2451,11 +2309,8 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::QueryActiveShellView(IShellView **ppshv
         return E_POINTER;
     *ppshv = fCurrentShellView;
     if (fCurrentShellView.p != NULL)
-    {
         fCurrentShellView.p->AddRef();
-        return S_OK;
-    }
-    return E_FAIL;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::OnViewWindowActive(IShellView *ppshv)
@@ -2504,7 +2359,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::QueryService(REFGUID guidService, REFII
         return this->QueryInterface(riid, ppvObject);
     if (IsEqualIID(guidService, SID_SProxyBrowser))
         return this->QueryInterface(riid, ppvObject);
-    if (IsEqualIID(guidService, SID_IExplorerToolbar) && fClientBars[BIInternetToolbar].clientBar.p)
+    if (IsEqualIID(guidService, SID_IExplorerToolbar))
         return fClientBars[BIInternetToolbar].clientBar->QueryInterface(riid, ppvObject);
     if (IsEqualIID(riid, IID_IShellBrowser))
         return this->QueryInterface(riid, ppvObject);
@@ -2604,62 +2459,12 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::GetTravelLog(ITravelLog **pptl)
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::ShowControlWindow(UINT id, BOOL fShow)
 {
-    BOOL shown;
-    if (FAILED(IsControlWindowShown(id, &shown)))
-        return E_NOTIMPL;
-    else if (!shown == !fShow) // Negated for true boolean comparison
-        return S_OK;
-    else switch (id)
-    {
-        case FCW_STATUS:
-            OnToggleStatusBarVisible(0, 0, NULL, shown);
-            return S_OK;
-        case FCW_TREE:
-            return Exec(&CGID_Explorer, SBCMDID_EXPLORERBARFOLDERS, 0, NULL, NULL);
-        case FCW_ADDRESSBAR:
-            return IUnknown_Exec(fClientBars[BIInternetToolbar].clientBar,
-                                 CGID_PrivCITCommands, ITID_ADDRESSBANDSHOWN, 0, NULL, NULL);
-    }
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::IsControlWindowShown(UINT id, BOOL *pfShown)
 {
-    HRESULT hr = S_OK;
-    BOOL shown = FALSE;
-    switch (id)
-    {
-        case FCW_STATUS:
-            shown = m_settings.fStatusBarVisible;
-            break;
-        case FCW_TREE:
-        {
-            OLECMD cmd = { SBCMDID_EXPLORERBARFOLDERS };
-            hr = QueryStatus(&CGID_Explorer, 1, &cmd, NULL);
-            shown = cmd.cmdf & OLECMDF_LATCHED;
-            break;
-        }
-        case FCW_ADDRESSBAR:
-            hr = IsInternetToolbarBandShown(ITID_ADDRESSBANDSHOWN);
-            shown = hr == S_OK;
-            break;
-        default:
-            hr = E_NOTIMPL;
-    }
-    if (pfShown)
-    {
-        *pfShown = shown;
-        return hr;
-    }
-    return SUCCEEDED(hr) ? (shown ? S_OK : S_FALSE) : hr;
-}
-
-HRESULT CShellBrowser::IsInternetToolbarBandShown(UINT ITId)
-{
-    OLECMD cmd = { ITId };
-    HRESULT hr = IUnknown_QueryStatus(fClientBars[BIInternetToolbar].clientBar,
-                                      CGID_PrivCITCommands, 1, &cmd, NULL);
-    return SUCCEEDED(hr) ? (cmd.cmdf & OLECMDF_LATCHED) ? S_OK : S_FALSE : hr;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::IEGetDisplayName(LPCITEMIDLIST pidl, LPWSTR pwszName, UINT uFlags)
@@ -2679,7 +2484,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::DisplayParseError(HRESULT hres, LPCWSTR
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::NavigateToPidl(LPCITEMIDLIST pidl, DWORD grfHLNF)
 {
-    return _NavigateToPidl(pidl, grfHLNF, 0);
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::SetNavigateState(BNSTATE bnstate)
@@ -2709,14 +2514,12 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::UpdateBackForwardState()
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::SetFlags(DWORD dwFlags, DWORD dwFlagMask)
 {
-    m_BrowserSvcFlags = (m_BrowserSvcFlags & ~dwFlagMask) | (dwFlags & dwFlagMask);
-    return S_OK;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::GetFlags(DWORD *pdwFlags)
 {
-    *pdwFlags = m_BrowserSvcFlags;
-    return S_OK;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::CanNavigateNow()
@@ -2727,7 +2530,10 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::CanNavigateNow()
 HRESULT STDMETHODCALLTYPE CShellBrowser::GetPidl(LPITEMIDLIST *ppidl)
 {
     // called by explorer bar to get current pidl
-    return ppidl ? SHILClone(fCurrentDirectoryPIDL, ppidl) : E_POINTER;
+    if (ppidl == NULL)
+        return E_POINTER;
+    *ppidl = ILClone(fCurrentDirectoryPIDL);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::SetReferrer(LPCITEMIDLIST pidl)
@@ -2804,13 +2610,7 @@ LRESULT STDMETHODCALLTYPE CShellBrowser::WndProcBS(HWND hwnd, UINT uMsg, WPARAM 
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::SetAsDefFolderSettings()
 {
-    HRESULT hr = E_FAIL;
-    if (fCurrentShellView)
-    {
-        hr = ApplyBrowserDefaultFolderSettings(fCurrentShellView);
-        IUnknown_Exec(fCurrentShellView, CGID_DefView, DVCMDID_SET_DEFAULTFOLDER_SETTINGS, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
-    }
-    return hr;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::GetViewRect(RECT *prc)
@@ -2897,8 +2697,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::InitializeTravelLog(ITravelLog *ptl, DW
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::SetTopBrowser()
 {
-    m_BrowserSvcFlags |= BSF_TOPBROWSER;
-    return S_OK;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::Offline(int iCmd)
@@ -2963,16 +2762,6 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::_DisableModeless()
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::_NavigateToPidl(LPCITEMIDLIST pidl, DWORD grfHLNF, DWORD dwFlags)
 {
-    const UINT navflags = HLNF_NAVIGATINGBACK | HLNF_NAVIGATINGFORWARD;
-    if ((grfHLNF & navflags) && grfHLNF != ~0ul)
-    {
-        UINT SbspFlags = (grfHLNF & HLNF_NAVIGATINGBACK) ? SBSP_NAVIGATEBACK : SBSP_NAVIGATEFORWARD;
-        if (grfHLNF & SHHLNF_WRITENOHISTORY)
-            SbspFlags |= SBSP_WRITENOHISTORY;
-        if (grfHLNF & SHHLNF_NOAUTOSELECT)
-            SbspFlags |= SBSP_NOAUTOSELECT;
-        return BrowseObject(pidl, SbspFlags);
-    }
     return E_NOTIMPL;
 }
 
@@ -3648,15 +3437,14 @@ LRESULT CShellBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 LRESULT CShellBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     HRESULT hr;
-    SaveViewState();
 
     /* The current thread is about to go down so render any IDataObject that may be left in the clipboard */
     OleFlushClipboard();
 
     // TODO: rip down everything
     {
-        m_Destroyed = true; // Ignore browse requests from Explorer band TreeView during destruction
         fToolbarProxy.Destroy();
+
         fCurrentShellView->DestroyViewWindow();
         fCurrentShellView->UIActivate(SVUIA_DEACTIVATE);
 
@@ -4069,12 +3857,6 @@ LRESULT CShellBrowser::RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
     return 0;
 }
 
-LRESULT CShellBrowser::OnCabinetStateChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-{
-    RefreshCabinetState();
-    return 0;
-}
-
 LRESULT CShellBrowser::OnSettingsChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     /* Refresh child windows */
@@ -4141,26 +3923,4 @@ void CShellBrowser::UpdateWindowTitle()
 
     if (SUCCEEDED(IEGetNameAndFlags(fCurrentDirectoryPIDL, flags, title, _countof(title), NULL)))
         SetWindowText(title);
-}
-
-void CShellBrowser::SaveITBarLayout()
-{
-    if (!gCabinetState.fSaveLocalView || (m_BrowserSvcFlags & (BSF_THEATERMODE | BSF_UISETBYAUTOMATION)))
-        return;
-#if 0 // If CDesktopBrowser aggregates us, skip saving
-    FOLDERSETTINGS fs;
-    if (fCurrentShellView && SUCCEEDED(fCurrentShellView->GetCurrentInfo(&fs)) && (fs.fFlags & FWF_DESKTOP))
-        return;
-#endif
-
-    CComPtr<IPersistStreamInit> pPSI;
-    CComPtr<IStream> pITBarStream;
-    if (!fClientBars[BIInternetToolbar].clientBar.p)
-        return;
-    HRESULT hr = fClientBars[BIInternetToolbar].clientBar->QueryInterface(IID_PPV_ARG(IPersistStreamInit, &pPSI));
-    if (FAILED(hr))
-        return;
-    if (FAILED(hr = CInternetToolbar::GetStream(ITBARSTREAM_EXPLORER, STGM_WRITE, &pITBarStream)))
-        return;
-    pPSI->Save(pITBarStream, TRUE);
 }

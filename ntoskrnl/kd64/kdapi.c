@@ -1260,28 +1260,6 @@ KdpNotSupported(IN PDBGKD_MANIPULATE_STATE64 State)
                  &KdpContext);
 }
 
-static
-KCONTINUE_STATUS
-KdpSwitchProcessor(
-    _In_ USHORT ProcessorIndex)
-{
-    /* Make sure that the processor index is valid */
-    if (ProcessorIndex >= KeNumberProcessors)
-    {
-        KdpDprintf("%u is not a valid processor number\n", ProcessorIndex);
-        return ContinueProcessorReselected;
-    }
-
-    /* If the new processor is the current one, there is nothing to do */
-    if (ProcessorIndex == KeGetCurrentProcessorNumber())
-    {
-        return ContinueProcessorReselected;
-    }
-
-    /* Call the architecture specific Ke routine */
-    return KxSwitchKdProcessor(ProcessorIndex);
-}
-
 KCONTINUE_STATUS
 NTAPI
 KdpSendWaitContinue(IN ULONG PacketType,
@@ -1492,8 +1470,10 @@ SendPacket:
 
             case DbgKdSwitchProcessor:
 
-                /* Switch the processor and return */
-                return KdpSwitchProcessor(ManipulateState.Processor);
+                /* TODO */
+                KdpDprintf("Processor Switch support is unimplemented!\n");
+                KdpNotSupported(&ManipulateState);
+                break;
 
             case DbgKdPageInApi:
 
@@ -1805,33 +1785,6 @@ KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
     return Status;
 }
 
-KCONTINUE_STATUS
-NTAPI
-KdReportProcessorChange(
-    VOID)
-{
-    PKPRCB CurrentPrcb = KeGetCurrentPrcb();
-    PCONTEXT ContextRecord = &CurrentPrcb->ProcessorState.ContextFrame;
-    EXCEPTION_RECORD ExceptionRecord = {0};
-    KCONTINUE_STATUS Status;
-
-    /* Save the port data */
-    KdSave(FALSE);
-
-    ExceptionRecord.ExceptionAddress = (PVOID)KeGetContextPc(ContextRecord);
-    ExceptionRecord.ExceptionCode = STATUS_WAKE_SYSTEM_DEBUGGER;
-
-    /* Report the new state */
-    Status = KdpReportExceptionStateChange(&ExceptionRecord,
-                                           ContextRecord,
-                                           FALSE);
-
-    /* Restore the port data */
-    KdRestore(FALSE);
-
-    return Status;
-}
-
 VOID
 NTAPI
 KdpTimeSlipDpcRoutine(IN PKDPC Dpc,
@@ -1878,6 +1831,27 @@ KdpTimeSlipWork(IN PVOID Context)
     /* Delay the DPC until it runs next time */
     DueTime.QuadPart = -1800000000;
     KeSetTimer(&KdpTimeSlipTimer, DueTime, &KdpTimeSlipDpc);
+}
+
+BOOLEAN
+NTAPI
+KdpSwitchProcessor(IN PEXCEPTION_RECORD ExceptionRecord,
+                   IN OUT PCONTEXT ContextRecord,
+                   IN BOOLEAN SecondChanceException)
+{
+    BOOLEAN Status;
+
+    /* Save the port data */
+    KdSave(FALSE);
+
+    /* Report a state change */
+    Status = KdpReportExceptionStateChange(ExceptionRecord,
+                                           ContextRecord,
+                                           SecondChanceException);
+
+    /* Restore the port data and return */
+    KdRestore(FALSE);
+    return Status;
 }
 
 LARGE_INTEGER

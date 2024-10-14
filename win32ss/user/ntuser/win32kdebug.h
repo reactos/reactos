@@ -106,7 +106,6 @@
         DbgChUserObj,
         DbgChUserPainting,
         DbgChUserProcess,
-        DbgChUserPowerManager,
         DbgChUserProp,
         DbgChUserScrollbar,
         DbgChUserSecurity,

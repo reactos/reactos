@@ -573,7 +573,7 @@ ExtTextOutW(
             }
             else // Do nothing, old explorer pops this off.
             {
-                DPRINT("GdiBCExtTextOut nothing\n");
+                DPRINT1("GdiBCExtTextOut nothing\n");
                 return TRUE;
             }
         }         // Max 580 wchars, if offset 0

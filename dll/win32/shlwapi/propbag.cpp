@@ -1463,7 +1463,7 @@ CViewStatePropertyBag::_GetMRUSlots(
         return hr;
 
     hr = pMruList->QueryPidl(pidl, cSlots, puSlots, pcSlots);
-    if (hr == S_OK || MODE_CAN_WRITE(dwMode)) // FIXME: HACK! (Without this, a new pidl can never be saved)
+    if (hr == S_OK && MODE_CAN_WRITE(dwMode))
         hr = pMruList->UsePidl(pidl, puSlots);
     else if (cSlots == 1)
         hr = E_FAIL;
@@ -1917,9 +1917,13 @@ SHGetViewStatePropertyBag(
         ::LeaveCriticalSection(&g_csBagCacheLock);
         return hr;
     }
-    g_pCachedBag = pBag;
+
+    g_pCachedBag.Attach(pBag);
+
+    hr = g_pCachedBag->QueryInterface(riid, ppv);
+
     ::LeaveCriticalSection(&g_csBagCacheLock);
-    return pBag->QueryInterface(riid, ppv);
+    return hr;
 }
 
 EXTERN_C VOID FreeViewStatePropertyBagCache(VOID)

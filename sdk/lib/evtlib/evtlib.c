@@ -1205,7 +1205,7 @@ ElfReadRecord(
     NTSTATUS Status;
     LARGE_INTEGER FileOffset;
     ULONG RecOffset;
-    ULONG RecSize;
+    SIZE_T RecSize;
     SIZE_T ReadLength;
 
     ASSERT(LogFile);

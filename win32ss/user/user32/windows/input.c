@@ -211,45 +211,68 @@ CliSaveImeHotKey(DWORD dwID, UINT uModifiers, UINT uVirtualKey, HKL hKL, BOOL bD
 {
     WCHAR szName[MAX_PATH];
     LONG error;
-    HKEY hKey;
+    HKEY hControlPanel = NULL, hInputMethod = NULL, hHotKeys = NULL, hKey = NULL;
     BOOL ret = FALSE, bRevertOnFailure = FALSE;
-
-    StringCchPrintfW(szName, _countof(szName),
-                     L"Control Panel\\Input Method\\Hot Keys\\%08lX", dwID);
 
     if (bDelete)
     {
+        StringCchPrintfW(szName, _countof(szName),
+                         L"Control Panel\\Input Method\\Hot Keys\\%08lX", dwID);
         error = RegDeleteKeyW(HKEY_CURRENT_USER, szName);
         return (error == ERROR_SUCCESS);
     }
 
-    error = RegCreateKeyExW(HKEY_CURRENT_USER, szName, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL);
+    // Open "Control Panel"
+    error = RegCreateKeyExW(HKEY_CURRENT_USER, L"Control Panel", 0, NULL, 0, KEY_ALL_ACCESS,
+                            NULL, &hControlPanel, NULL);
     if (error == ERROR_SUCCESS)
     {
-        bRevertOnFailure = TRUE;
-
-        // Set "Virtual Key"
-        error = RegSetValueExW(hKey, L"Virtual Key", 0, REG_BINARY,
-                               (LPBYTE)&uVirtualKey, sizeof(uVirtualKey));
+        // Open "Input Method"
+        error = RegCreateKeyExW(hControlPanel, L"Input Method", 0, NULL, 0, KEY_ALL_ACCESS,
+                                NULL, &hInputMethod, NULL);
         if (error == ERROR_SUCCESS)
         {
-            // Set "Key Modifiers"
-            error = RegSetValueExW(hKey, L"Key Modifiers", 0, REG_BINARY,
-                                   (LPBYTE)&uModifiers, sizeof(uModifiers));
+            // Open "Hot Keys"
+            error = RegCreateKeyExW(hInputMethod, L"Hot Keys", 0, NULL, 0, KEY_ALL_ACCESS,
+                                    NULL, &hHotKeys, NULL);
             if (error == ERROR_SUCCESS)
             {
-                // Set "Target IME"
-                error = RegSetValueExW(hKey, L"Target IME", 0, REG_BINARY,
-                                       (LPBYTE)&hKL, sizeof(hKL));
+                // Open "Key"
+                StringCchPrintfW(szName, _countof(szName), L"%08lX", dwID);
+                error = RegCreateKeyExW(hHotKeys, szName, 0, NULL, 0, KEY_ALL_ACCESS,
+                                        NULL, &hKey, NULL);
                 if (error == ERROR_SUCCESS)
                 {
-                    // Success!
-                    ret = TRUE;
-                    bRevertOnFailure = FALSE;
+                    bRevertOnFailure = TRUE;
+
+                    // Set "Virtual Key"
+                    error = RegSetValueExW(hKey, L"Virtual Key", 0, REG_BINARY,
+                                           (LPBYTE)&uVirtualKey, sizeof(uVirtualKey));
+                    if (error == ERROR_SUCCESS)
+                    {
+                        // Set "Key Modifiers"
+                        error = RegSetValueExW(hKey, L"Key Modifiers", 0, REG_BINARY,
+                                               (LPBYTE)&uModifiers, sizeof(uModifiers));
+                        if (error == ERROR_SUCCESS)
+                        {
+                            // Set "Target IME"
+                            error = RegSetValueExW(hKey, L"Target IME", 0, REG_BINARY,
+                                                   (LPBYTE)&hKL, sizeof(hKL));
+                            if (error == ERROR_SUCCESS)
+                            {
+                                // Success!
+                                ret = TRUE;
+                                bRevertOnFailure = FALSE;
+                            }
+                        }
+                    }
+                    RegCloseKey(hKey);
                 }
+                RegCloseKey(hHotKeys);
             }
+            RegCloseKey(hInputMethod);
         }
-        RegCloseKey(hKey);
+        RegCloseKey(hControlPanel);
     }
 
     if (bRevertOnFailure)

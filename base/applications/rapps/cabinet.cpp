@@ -47,18 +47,11 @@ MultiByteToWide(const CStringA &szSource, CStringW &szDest, UINT Codepage)
         return FALSE;
 
     // do the actual conversion
-    sz = MultiByteToWideChar(Codepage, 0, szSource, -1, szDest.GetBuffer(sz), sz);
+    sz = MultiByteToWideChar(CP_UTF8, 0, szSource, -1, szDest.GetBuffer(sz), sz);
 
     szDest.ReleaseBuffer();
     return sz != 0;
 }
-
-struct NotifyData
-{
-    EXTRACTCALLBACK Callback;
-    void *CallerCookie;
-    LPCSTR OutputDir;
-};
 
 /* FDICreate callbacks */
 
@@ -150,7 +143,6 @@ FNSEEK(fnFileSeek)
 FNFDINOTIFY(fnNotify)
 {
     INT_PTR iResult = 0;
-    NotifyData *pND = (NotifyData *)pfdin->pv;
 
     switch (fdint)
     {
@@ -159,15 +151,8 @@ FNFDINOTIFY(fnNotify)
             CStringW szExtractDir, szCabFileName;
 
             // Append the destination directory to the file name.
-            MultiByteToWide(pND->OutputDir, szExtractDir, CP_UTF8);
-            UINT codepage = (pfdin->attribs & _A_NAME_IS_UTF) ? CP_UTF8 : CP_ACP;
-            MultiByteToWide(pfdin->psz1, szCabFileName, codepage);
-
-            if (!NotifyFileExtractCallback(szCabFileName, pfdin->cb, pfdin->attribs,
-                                           pND->Callback, pND->CallerCookie))
-            {
-                break; // Skip file
-            }
+            MultiByteToWide((LPCSTR)pfdin->pv, szExtractDir, CP_UTF8);
+            MultiByteToWide(pfdin->psz1, szCabFileName, CP_ACP);
 
             if (szCabFileName.Find('\\') >= 0)
             {
@@ -245,10 +230,10 @@ typedef BOOL (*fnFDIDestroy)(HFDI);
 
 /*
  * Extraction function
+ * TODO: require only a full path to the cab as an argument
  */
 BOOL
-ExtractFilesFromCab(const CStringW &szCabName, const CStringW &szCabDir, const CStringW &szOutputDir,
-                    EXTRACTCALLBACK Callback, void *Cookie)
+ExtractFilesFromCab(const CStringW &szCabName, const CStringW &szCabDir, const CStringW &szOutputDir)
 {
     HINSTANCE hCabinetDll;
     HFDI ExtractHandler;
@@ -258,7 +243,6 @@ ExtractFilesFromCab(const CStringW &szCabName, const CStringW &szCabDir, const C
     fnFDICopy pfnFDICopy;
     fnFDIDestroy pfnFDIDestroy;
     BOOL bResult;
-    NotifyData nd = { Callback, Cookie };
 
     // Load cabinet.dll and extract needed functions
     hCabinetDll = LoadLibraryW(L"cabinet.dll");
@@ -306,21 +290,12 @@ ExtractFilesFromCab(const CStringW &szCabName, const CStringW &szCabDir, const C
         // Add a slash to cab name as required by the api
         szCabNameUTF8 = "\\" + szCabNameUTF8;
 
-        nd.OutputDir = szOutputDirUTF8.GetString();
         bResult = pfnFDICopy(
             ExtractHandler, (LPSTR)szCabNameUTF8.GetString(), (LPSTR)szCabDirUTF8.GetString(), 0, fnNotify, NULL,
-            (void FAR *)&nd);
+            (void FAR *)szOutputDirUTF8.GetString());
     }
 
     pfnFDIDestroy(ExtractHandler);
     FreeLibrary(hCabinetDll);
     return bResult;
-}
-
-BOOL
-ExtractFilesFromCab(LPCWSTR FullCabPath, const CStringW &szOutputDir,
-                    EXTRACTCALLBACK Callback, void *Cookie)
-{
-    CStringW dir, file = SplitFileAndDirectory(FullCabPath, &dir);
-    return ExtractFilesFromCab(file, dir, szOutputDir, Callback, Cookie);
 }

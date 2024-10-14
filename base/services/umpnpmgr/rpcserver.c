@@ -4250,7 +4250,7 @@ PNP_GetFirstLogConf(
     {
         DPRINT("REG_RESOURCE_LIST->Count %lu\n", ((PCM_RESOURCE_LIST)lpData)->Count);
 
-        /* Fail, if we do not have any resource */
+        /* Indicate that we reached the end of the list */
         if (((PCM_RESOURCE_LIST)lpData)->Count == 0)
         {
             DPRINT1("No resource descriptors!\n");
@@ -4260,15 +4260,10 @@ PNP_GetFirstLogConf(
     }
     else if (RegDataType == REG_RESOURCE_REQUIREMENTS_LIST)
     {
-        DPRINT("REG_RESOURCE_REQUIREMENTS_LIST->AlternativeLists %lu\n",
-               ((PIO_RESOURCE_REQUIREMENTS_LIST)lpData)->AlternativeLists);
-
-        /* Fail, if we do not have any requirements */
-        if (((PIO_RESOURCE_REQUIREMENTS_LIST)lpData)->AlternativeLists == 0)
-        {
-            ret = CR_NO_MORE_LOG_CONF;
-            goto done;
-        }
+        DPRINT1("FIXME: REG_RESOURCE_REQUIREMENTS_LIST\n");
+        /* FIXME */
+        ret = CR_NO_MORE_LOG_CONF;
+        goto done;
     }
 
 done:
@@ -4367,22 +4362,10 @@ PNP_GetNextLogConf(
     }
     else if (RegDataType == REG_RESOURCE_REQUIREMENTS_LIST)
     {
-        DPRINT("REG_RESOURCE_REQUIREMENTS_LIST->AlternativeLists %lu\n",
-               ((PIO_RESOURCE_REQUIREMENTS_LIST)lpData)->AlternativeLists);
-
-        /* Fail, if we are beyond the end of the list */
-        if (ulCurrentTag >= ((PIO_RESOURCE_REQUIREMENTS_LIST)lpData)->AlternativeLists)
-        {
-            ret = CR_INVALID_LOG_CONF;
-            goto done;
-        }
-
-        /* Indicate that we reached the end of the list */
-        if (ulCurrentTag == ((PIO_RESOURCE_REQUIREMENTS_LIST)lpData)->AlternativeLists - 1)
-        {
-            ret = CR_NO_MORE_LOG_CONF;
-            goto done;
-        }
+        DPRINT1("FIXME: REG_RESOURCE_REQUIREMENTS_LIST\n");
+        /* FIXME */
+        ret = CR_NO_MORE_LOG_CONF;
+        goto done;
     }
 
     /* Return the next tag value */

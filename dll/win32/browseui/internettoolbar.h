@@ -20,10 +20,6 @@
 
 #pragma once
 
-#define ITBARSTREAM_SHELLBROWSER 0
-#define ITBARSTREAM_WEBBROWSER 1
-#define ITBARSTREAM_EXPLORER 2
-
 static const int gSearchCommandID = 1003;
 static const int gFoldersCommandID = 1004;
 static const int gMoveToCommandID = FCIDM_SHVIEW_MOVETO;
@@ -97,12 +93,10 @@ public:
     POINT                                   fStartPosition;
     LONG                                    fStartHeight;
     ShellSettings                           *pSettings;
-    BOOL                                    fIgnoreChanges;
 public:
     CInternetToolbar();
     virtual ~CInternetToolbar();
     void AddDockItem(IUnknown *newItem, int bandID, int flags);
-    HRESULT EnumBands(UINT Index, int *pBandId, IUnknown **ppUnkBand);
     HRESULT ReserveBorderSpace(LONG maxHeight = -1);
     HRESULT CreateMenuBar(IShellMenu **menuBar);
     HRESULT CreateToolsBar(IUnknown **toolsBar);
@@ -110,13 +104,9 @@ public:
     HRESULT CommandStateChanged(bool newValue, int commandID);
     HRESULT CreateAndInitBandProxy();
     HRESULT IsBandVisible(int BandID);
-    HRESULT SetBandVisibility(int BandID, int Show);
     HRESULT ToggleBandVisibility(int BandID);
     HRESULT SetState(const GUID *pguidCmdGroup, long commandID, OLECMD* pcmd);
     void RefreshLockedToolbarState();
-    HRESULT SetDirty();
-
-    static HRESULT GetStream(UINT StreamFor, DWORD Stgm, IStream **ppS);
 
 public:
     // *** IInputObject specific methods ***

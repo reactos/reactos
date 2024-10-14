@@ -360,8 +360,9 @@ KdInitSystem(
         /* Check if we've already initialized our structures */
         if (!KdpDebuggerStructuresInitialized)
         {
-            /* Set Retries */
+            /* Set the Debug Switch Routine and Retries */
             KdpContext.KdpDefaultRetries = 20;
+            KiDebugSwitchRoutine = KdpSwitchProcessor;
 
             /* Initialize breakpoints owed flag and table */
             KdpOweBreakpoint = FALSE;

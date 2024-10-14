@@ -715,9 +715,6 @@ LocaleDlgProc(
                         /* Store the locale settings in the registry */
                         InitializeDefaultUserLocale(&NewLcid);
 
-                        /* Set UI language for this thread */
-                        SetThreadLocale(NewLcid);
-
                         SetKeyboardLayout(GetDlgItem(hwndDlg, IDC_LAYOUTLIST));
 
                         pState->NextPage = STARTPAGE;

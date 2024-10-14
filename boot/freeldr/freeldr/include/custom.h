@@ -30,8 +30,16 @@ VOID OptionMenuCustomBoot(VOID);
 #if defined(_M_IX86) || defined(_M_AMD64)
 
 VOID
-EditCustomBootSector(
-    _Inout_ OperatingSystemItem* OperatingSystem);
+EditCustomBootDisk(
+    IN OUT OperatingSystemItem* OperatingSystem);
+
+VOID
+EditCustomBootPartition(
+    IN OUT OperatingSystemItem* OperatingSystem);
+
+VOID
+EditCustomBootSectorFile(
+    IN OUT OperatingSystemItem* OperatingSystem);
 
 VOID
 EditCustomBootLinux(

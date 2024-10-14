@@ -167,12 +167,10 @@ HRESULT STDMETHODCALLTYPE CTravelEntry::Update(IUnknown *punk, BOOL fIsLocalAnch
 
     TRACE("CTravelEntry::Update for IUnknown punk=%p, fIsLocalAnchor=%s\n", punk, fIsLocalAnchor ? "TRUE" : "FALSE");
 
-    if (TRACE_ON(browseui))
-    {
-        WCHAR wch[MAX_PATH * 2];
-        GetToolTipText(punk, wch);
-        TRACE("Updating entry with display name: %S\n", wch);
-    }
+
+    WCHAR wch[MAX_PATH * 2];
+    GetToolTipText(punk, wch);
+    TRACE("Updating entry with display name: %S\n", wch);
 
     ZeroMemory(&windowData, sizeof(WINDOWDATA));
     ILFree(fPIDL);
@@ -200,12 +198,8 @@ HRESULT STDMETHODCALLTYPE CTravelEntry::Update(IUnknown *punk, BOOL fIsLocalAnch
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
-    if (TRACE_ON(browseui))
-    {
-        WCHAR wch[MAX_PATH * 2];
-        GetToolTipText(punk, wch);
-        TRACE("Updated entry display name is now: %S\n", wch);
-    }
+    GetToolTipText(punk, wch);
+    TRACE("Updated entry display name is now: %S\n", wch);
 
     return S_OK;
 }

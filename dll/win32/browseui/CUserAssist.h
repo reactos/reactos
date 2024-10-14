@@ -19,11 +19,11 @@ public:
     ~CUserAssist();
 
     // *** IUserAssist methods ***
-    STDMETHODIMP FireEvent(GUID const *guid, INT param1, ULONG param2, WPARAM wparam, LPARAM lparam) override;
+    STDMETHODIMP FireEvent(GUID const *guid, INT param1, ULONG param2, WPARAM wparam, LPARAM lparam);
     // FIXME: PVOID should point to undocumented UEMINFO structure.
-    STDMETHODIMP QueryEvent(GUID const *guid, INT param, WPARAM wparam, LPARAM lparam, PVOID ptr) override;
-    STDMETHODIMP SetEvent(GUID const *guid, INT param, WPARAM wparam, LPARAM lparam, PVOID ptr) override;
-    STDMETHODIMP Enable(BOOL bEnable) override;
+    STDMETHODIMP QueryEvent(GUID const *guid, INT param, WPARAM wparam, LPARAM lparam, PVOID ptr);
+    STDMETHODIMP SetEvent(GUID const *guid, INT param, WPARAM wparam, LPARAM lparam, PVOID ptr);
+    STDMETHODIMP Enable(BOOL bEnable);
 
 public:
 

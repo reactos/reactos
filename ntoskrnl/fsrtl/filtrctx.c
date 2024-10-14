@@ -176,7 +176,6 @@ FsRtlInsertPerFileObjectContext(IN PFILE_OBJECT FileObject,
                                 IN PFSRTL_PER_FILEOBJECT_CONTEXT Ptr)
 {
     PFILE_OBJECT_FILTER_CONTEXTS FOContext = NULL;
-    NTSTATUS Status;
 
     if (!FileObject)
     {
@@ -204,8 +203,7 @@ FsRtlInsertPerFileObjectContext(IN PFILE_OBJECT FileObject,
         InitializeListHead(&(FOContext->FilterContexts));
 
         /* Set it */
-        Status = IoChangeFileObjectFilterContext(FileObject, FOContext, TRUE);
-        if (!NT_SUCCESS(Status))
+        if (!IoChangeFileObjectFilterContext(FileObject, FOContext, TRUE))
         {
             /* If it fails, it means that someone else has set it in the meanwhile */
             ExFreePoolWithTag(FOContext, 'FOCX');

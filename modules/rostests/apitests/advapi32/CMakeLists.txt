@@ -3,7 +3,6 @@ list(APPEND SOURCE
     CreateService.c
     DuplicateTokenEx.c
     eventlog.c
-    Hash.c
     HKEY_CLASSES_ROOT.c
     IsTextUnicode.c
     LockServiceDatabase.c

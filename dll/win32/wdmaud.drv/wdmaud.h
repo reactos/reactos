@@ -145,18 +145,6 @@ WdmAudGetWavePositionByMMixer(
     IN  MMTIME* Time);
 
 MMRESULT
-WdmAudGetVolumeByMMixer(
-    _In_ PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    _In_ DWORD DeviceId,
-    _Out_ PDWORD pdwVolume);
-
-MMRESULT
-WdmAudSetVolumeByMMixer(
-    _In_ PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    _In_ DWORD DeviceId,
-    _In_ DWORD dwVolume);
-
-MMRESULT
 WdmAudCommitWaveBufferByMMixer(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PVOID OffsetPtr,
@@ -235,18 +223,6 @@ MMRESULT
 WdmAudGetWavePositionByLegacy(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
     IN  MMTIME* Time);
-
-MMRESULT
-WdmAudGetVolumeByLegacy(
-    _In_ PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    _In_ DWORD DeviceId,
-    _Out_ PDWORD pdwVolume);
-
-MMRESULT
-WdmAudSetVolumeByLegacy(
-    _In_ PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    _In_ DWORD DeviceId,
-    _In_ DWORD dwVolume);
 
 MMRESULT
 WriteFileEx_Committer2(

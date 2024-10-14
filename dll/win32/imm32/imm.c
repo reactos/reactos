@@ -111,22 +111,20 @@ BOOL WINAPI ImmLoadLayout(HKL hKL, PIMEINFOEX pImeInfoEx)
 
 /***********************************************************************
  *		ImmFreeLayout (IMM32.@)
- *
- * NOTE: HKL_SWITCH_TO_NON_IME and HKL_RELEASE_IME are special values for hKL.
  */
-BOOL WINAPI ImmFreeLayout(HKL hKL)
+BOOL WINAPI ImmFreeLayout(DWORD dwUnknown)
 {
     WCHAR szKBD[KL_NAMELENGTH];
     UINT iKL, cKLs;
-    HKL hOldKL, *pList;
+    HKL hOldKL, hNewKL, *pList;
     PIMEDPI pImeDpi;
     LANGID LangID;
 
-    TRACE("(%p)\n", hKL);
+    TRACE("(0x%lX)\n", dwUnknown);
 
     hOldKL = GetKeyboardLayout(0);
 
-    if (hKL == HKL_SWITCH_TO_NON_IME)
+    if (dwUnknown == 1)
     {
         if (!IS_IME_HKL(hOldKL))
             return TRUE;
@@ -160,7 +158,7 @@ BOOL WINAPI ImmFreeLayout(HKL hKL)
             LoadKeyboardLayoutW(L"00000409", KLF_ACTIVATE | 0x200);
         }
     }
-    else if (hKL == HKL_RELEASE_IME)
+    else if (dwUnknown == 2)
     {
         RtlEnterCriticalSection(&gcsImeDpi);
 Retry:
@@ -173,8 +171,9 @@ Retry:
     }
     else
     {
-        if (IS_IME_HKL(hKL) && hKL != hOldKL)
-            Imm32ReleaseIME(hKL);
+        hNewKL = (HKL)(DWORD_PTR)dwUnknown;
+        if (IS_IME_HKL(hNewKL) && hNewKL != hOldKL)
+            Imm32ReleaseIME(hNewKL);
     }
 
     return TRUE;
@@ -866,7 +865,7 @@ LPINPUTCONTEXT APIENTRY Imm32InternalLockIMC(HIMC hIMC, BOOL fSelect)
     {
         hOldKL = GetKeyboardLayout(0);
         LangID = LOWORD(hOldKL);
-        hNewKL = UlongToHandle(MAKELONG(LangID, LangID));
+        hNewKL = (HKL)(DWORD_PTR)MAKELONG(LangID, LangID);
 
         pImeDpi = Imm32FindOrLoadImeDpi(hNewKL);
         if (pImeDpi)

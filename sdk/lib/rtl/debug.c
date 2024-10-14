@@ -102,11 +102,10 @@ vDbgPrintExWithPrefixInternal(IN PCCH Prefix,
     if (Length == MAXULONG)
     {
         /* Terminate it if we went over-board */
-        Buffer[sizeof(Buffer) - 2] = '\n';
-        Buffer[sizeof(Buffer) - 1] = '\0';
+        Buffer[sizeof(Buffer) - 1] = '\n';
 
         /* Put maximum */
-        Length = sizeof(Buffer) - 1;
+        Length = sizeof(Buffer);
     }
     else
     {

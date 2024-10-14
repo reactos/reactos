@@ -15,6 +15,5 @@
 #include <glue.h>
 #include <wdmguid.h>
 #include <acpiioct.h>
-#include <ntintsafe.h>
 
 #endif /* _ACPI_PCH_ */

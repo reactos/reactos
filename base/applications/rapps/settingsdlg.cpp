@@ -124,9 +124,11 @@ SettingsDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
     switch (Msg)
     {
         case WM_INITDIALOG:
+        {
             NewSettingsInfo = SettingsInfo;
             InitSettingsControls(hDlg, &SettingsInfo);
-            return TRUE;
+        }
+        break;
 
         case WM_COMMAND:
         {

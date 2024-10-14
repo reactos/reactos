@@ -7,30 +7,41 @@
 
 #pragma once
 
-typedef struct _INI_KEYWORD
+typedef struct _INICACHEKEY
 {
-    PWSTR Name;
-    PWSTR Data;
-    LIST_ENTRY ListEntry;
-} INI_KEYWORD, *PINI_KEYWORD;
+    PWCHAR Name;
+    PWCHAR Data;
 
-typedef struct _INI_SECTION
+    struct _INICACHEKEY *Next;
+    struct _INICACHEKEY *Prev;
+} INICACHEKEY, *PINICACHEKEY;
+
+
+typedef struct _INICACHESECTION
 {
-    PWSTR Name;
-    LIST_ENTRY KeyList;
-    LIST_ENTRY ListEntry;
-} INI_SECTION, *PINI_SECTION;
+    PWCHAR Name;
+
+    PINICACHEKEY FirstKey;
+    PINICACHEKEY LastKey;
+
+    struct _INICACHESECTION *Next;
+    struct _INICACHESECTION *Prev;
+} INICACHESECTION, *PINICACHESECTION;
+
 
 typedef struct _INICACHE
 {
-    LIST_ENTRY SectionList;
+    PINICACHESECTION FirstSection;
+    PINICACHESECTION LastSection;
 } INICACHE, *PINICACHE;
+
 
 typedef struct _PINICACHEITERATOR
 {
-    PINI_SECTION Section;
-    PINI_KEYWORD Key;
+    PINICACHESECTION Section;
+    PINICACHEKEY Key;
 } INICACHEITERATOR, *PINICACHEITERATOR;
+
 
 typedef enum
 {
@@ -63,67 +74,43 @@ IniCacheLoad(
 
 VOID
 IniCacheDestroy(
-    _In_ PINICACHE Cache);
+    PINICACHE Cache);
 
-PINI_SECTION
-IniGetSection(
-    _In_ PINICACHE Cache,
-    _In_ PCWSTR Name);
+PINICACHESECTION
+IniCacheGetSection(
+    PINICACHE Cache,
+    PWCHAR Name);
 
-PINI_KEYWORD
-IniGetKey(
-    _In_ PINI_SECTION Section,
-    _In_ PCWSTR KeyName,
-    _Out_ PCWSTR* KeyData);
+NTSTATUS
+IniCacheGetKey(
+    PINICACHESECTION Section,
+    PWCHAR KeyName,
+    PWCHAR *KeyData);
 
 PINICACHEITERATOR
-IniFindFirstValue(
-    _In_ PINI_SECTION Section,
-    _Out_ PCWSTR* KeyName,
-    _Out_ PCWSTR* KeyData);
+IniCacheFindFirstValue(
+    PINICACHESECTION Section,
+    PWCHAR *KeyName,
+    PWCHAR *KeyData);
 
 BOOLEAN
-IniFindNextValue(
-    _In_ PINICACHEITERATOR Iterator,
-    _Out_ PCWSTR* KeyName,
-    _Out_ PCWSTR* KeyData);
+IniCacheFindNextValue(
+    PINICACHEITERATOR Iterator,
+    PWCHAR *KeyName,
+    PWCHAR *KeyData);
 
 VOID
-IniFindClose(
-    _In_ PINICACHEITERATOR Iterator);
+IniCacheFindClose(
+    PINICACHEITERATOR Iterator);
 
-PINI_SECTION
-IniAddSection(
-    _In_ PINICACHE Cache,
-    _In_ PCWSTR Name);
 
-VOID
-IniRemoveSection(
-    _In_ PINI_SECTION Section);
-
-PINI_KEYWORD
-IniInsertKey(
-    _In_ PINI_SECTION Section,
-    _In_ PINI_KEYWORD AnchorKey,
-    _In_ INSERTION_TYPE InsertionType,
-    _In_ PCWSTR Name,
-    _In_ PCWSTR Data);
-
-PINI_KEYWORD
-IniAddKey(
-    _In_ PINI_SECTION Section,
-    _In_ PCWSTR Name,
-    _In_ PCWSTR Data);
-
-VOID
-IniRemoveKeyByName(
-    _In_ PINI_SECTION Section,
-    _In_ PCWSTR KeyName);
-
-VOID
-IniRemoveKey(
-    _In_ PINI_SECTION Section,
-    _In_ PINI_KEYWORD Key);
+PINICACHEKEY
+IniCacheInsertKey(
+    PINICACHESECTION Section,
+    PINICACHEKEY AnchorKey,
+    INSERTION_TYPE InsertionType,
+    PWCHAR Name,
+    PWCHAR Data);
 
 PINICACHE
 IniCacheCreate(VOID);
@@ -137,5 +124,10 @@ NTSTATUS
 IniCacheSave(
     PINICACHE Cache,
     PWCHAR FileName);
+
+PINICACHESECTION
+IniCacheAppendSection(
+    PINICACHE Cache,
+    PWCHAR Name);
 
 /* EOF */

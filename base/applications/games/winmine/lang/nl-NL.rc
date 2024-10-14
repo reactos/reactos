@@ -14,7 +14,6 @@ BEGIN
         MENUITEM "&Nieuw spel\tF2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Markeer vraag", IDM_MARKQ
-        MENUITEM "Sound", IDM_SOUND
         MENUITEM SEPARATOR
         MENUITEM "&Beginner", IDM_BEGINNER
         MENUITEM "&Gevorderde", IDM_ADVANCED

@@ -252,14 +252,15 @@ SHExplorerParseCmdLine(_Out_ PEXPLORER_CMDLINE_PARSE_RESULTS pInfo)
 
     PCWSTR strNextArg = _FindFirstField(strFieldArray);
 
-    BOOL hasNext = _ReadNextArg(&strNextArg, strField, _countof(strField));
+    BOOL hasNext = TRUE;
 
+    hasNext = _ReadNextArg(&strNextArg, strField, _countof(strField));
     while (TRUE)
     {
         // Basic flags-only params first
         if (!StrCmpIW(strField, L"/N"))
         {
-            pInfo->dwFlags |= SH_EXPLORER_CMDLINE_FLAG_NEWWND | SH_EXPLORER_CMDLINE_FLAG_NOREUSE;
+            pInfo->dwFlags |= SH_EXPLORER_CMDLINE_FLAG_N | SH_EXPLORER_CMDLINE_FLAG_ONE;
             TRACE("CmdLine Parser: Parsed %S flag. dwFlags=%08lx\n", strField, pInfo->dwFlags);
         }
         else if (!StrCmpIW(strField, L"/S"))
@@ -317,6 +318,9 @@ SHExplorerParseCmdLine(_Out_ PEXPLORER_CMDLINE_PARSE_RESULTS pInfo)
             // The window should be rooted
 
             TRACE("CmdLine Parser: Found %S flag\n", strField);
+
+            if (!pInfo->pidlPath)
+                return FALSE;
 
             if (!hasNext)
                 return FALSE;
@@ -402,8 +406,7 @@ SHExplorerParseCmdLine(_Out_ PEXPLORER_CMDLINE_PARSE_RESULTS pInfo)
                     // The path could not be parsed into an ID List,
                     // so pass it on as a plain string.
 
-                    PWSTR field;
-                    SHStrDupW(strField, &field);
+                    PWSTR field = StrDupW(strField);
                     pInfo->strPath = field;
                     if (field)
                     {
@@ -411,6 +414,7 @@ SHExplorerParseCmdLine(_Out_ PEXPLORER_CMDLINE_PARSE_RESULTS pInfo)
                         TRACE("CmdLine Parser: Parsed target path. dwFlags=%08lx, strPath=%S\n", pInfo->dwFlags, field);
                     }
                 }
+
             }
         }
 

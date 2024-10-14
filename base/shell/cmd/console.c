@@ -78,18 +78,21 @@ VOID ConInKey(PINPUT_RECORD lpBuffer)
     while (TRUE);
 }
 
-VOID ConInString(LPWSTR lpInput, DWORD dwLength)
+VOID ConInString(LPTSTR lpInput, DWORD dwLength)
 {
     DWORD dwOldMode;
     DWORD dwRead = 0;
     HANDLE hFile;
 
-    LPWSTR p;
+    LPTSTR p;
     PCHAR pBuf;
 
+#ifdef _UNICODE
     pBuf = (PCHAR)cmd_alloc(dwLength - 1);
-
-    ZeroMemory(lpInput, dwLength * sizeof(WCHAR));
+#else
+    pBuf = lpInput;
+#endif
+    ZeroMemory(lpInput, dwLength * sizeof(TCHAR));
     hFile = GetStdHandle(STD_INPUT_HANDLE);
     GetConsoleMode(hFile, &dwOldMode);
 
@@ -97,14 +100,15 @@ VOID ConInString(LPWSTR lpInput, DWORD dwLength)
 
     ReadFile(hFile, (PVOID)pBuf, dwLength - 1, &dwRead, NULL);
 
+#ifdef _UNICODE
     MultiByteToWideChar(InputCodePage, 0, pBuf, dwRead, lpInput, dwLength - 1);
     cmd_free(pBuf);
-
+#endif
     for (p = lpInput; *p; p++)
     {
-        if (*p == L'\r') // Terminate at the carriage-return.
+        if (*p == _T('\r')) // Terminate at the carriage-return.
         {
-            *p = L'\0';
+            *p = _T('\0');
             break;
         }
     }
@@ -116,12 +120,12 @@ VOID ConInString(LPWSTR lpInput, DWORD dwLength)
 
 /******************** Console STREAM OUT utility functions ********************/
 
-VOID ConOutChar(WCHAR c)
+VOID ConOutChar(TCHAR c)
 {
     ConWrite(StdOut, &c, 1);
 }
 
-VOID ConErrChar(WCHAR c)
+VOID ConErrChar(TCHAR c)
 {
     ConWrite(StdErr, &c, 1);
 }
@@ -148,23 +152,23 @@ VOID __cdecl ConFormatMessage(PCON_STREAM Stream, DWORD MessageId, ...)
 
 /************************** Console PAGER functions ***************************/
 
-BOOL ConPrintfVPaging(PCON_PAGER Pager, BOOL StartPaging, LPWSTR szFormat, va_list arg_ptr)
+BOOL ConPrintfVPaging(PCON_PAGER Pager, BOOL StartPaging, LPTSTR szFormat, va_list arg_ptr)
 {
     // INT len;
-    WCHAR szOut[OUTPUT_BUFFER_SIZE];
+    TCHAR szOut[OUTPUT_BUFFER_SIZE];
 
     /* Return if no string has been given */
     if (szFormat == NULL)
         return TRUE;
 
-    /*len =*/ vswprintf(szOut, szFormat, arg_ptr);
+    /*len =*/ _vstprintf(szOut, szFormat, arg_ptr);
 
     // return ConPutsPaging(Pager, PagePrompt, StartPaging, szOut);
     return ConWritePaging(Pager, PagePrompt, StartPaging,
                           szOut, wcslen(szOut));
 }
 
-BOOL __cdecl ConOutPrintfPaging(BOOL StartPaging, LPWSTR szFormat, ...)
+BOOL __cdecl ConOutPrintfPaging(BOOL StartPaging, LPTSTR szFormat, ...)
 {
     BOOL bRet;
     va_list arg_ptr;
@@ -273,7 +277,7 @@ BOOL ConGetDefaultAttributes(PWORD pwDefAttr)
 #endif
 
 
-BOOL ConSetTitle(IN LPCWSTR lpConsoleTitle)
+BOOL ConSetTitle(IN LPCTSTR lpConsoleTitle)
 {
     /* Now really set the console title */
     return SetConsoleTitle(lpConsoleTitle);

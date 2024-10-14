@@ -155,7 +155,7 @@ IntSendSyncPaint(PWND Wnd, ULONG Flags)
          Message = CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry);
          do
          {
-            TRACE("LOOP it\n");
+            ERR("LOOP it\n");
             if (Message->Msg.message == WM_SYNCPAINT &&
                 Message->Msg.hwnd == UserHMGetHandle(Wnd))
             {  // Already received so exit out.
@@ -696,12 +696,6 @@ IntInvalidateWindows(PWND Wnd, PREGION Rgn, ULONG Flags)
    else
    {
       RgnType = NULLREGION;
-   }
-
-   /* Nothing to paint, just return */
-   if ((RgnType == NULLREGION && (Flags & RDW_INVALIDATE)) || RgnType == ERROR)
-   {
-      return;
    }
 
    /*

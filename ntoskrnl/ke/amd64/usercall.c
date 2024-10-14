@@ -197,7 +197,7 @@ KiUserModeCallout(
     _enable();
 
     /* Exit to user-mode */
-    KiUserCallbackExit(&CallbackTrapFrame);
+    KiServiceExit(&CallbackTrapFrame, 0);
 }
 
 VOID

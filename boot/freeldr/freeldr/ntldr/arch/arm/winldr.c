@@ -249,8 +249,7 @@ MempAllocatePageTables(VOID)
 }
 
 VOID
-WinLdrSetProcessorContext(
-    _In_ USHORT OperatingSystemVersion)
+WinLdrSetProcessorContext(VOID)
 {
     ARM_CONTROL_REGISTER ControlRegister;
     ARM_TTB_REGISTER TtbRegister;

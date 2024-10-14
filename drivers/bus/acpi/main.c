@@ -5,11 +5,18 @@
 #define NDEBUG
 #include <debug.h>
 
-CODE_SEG("INIT")
-DRIVER_INITIALIZE DriverEntry;
+NTSTATUS
+NTAPI
+DriverEntry (
+    PDRIVER_OBJECT  DriverObject,
+    PUNICODE_STRING RegistryPath
+    );
 
-CODE_SEG("PAGE")
-DRIVER_ADD_DEVICE Bus_AddDevice;
+#ifdef ALLOC_PRAGMA
+#pragma alloc_text (INIT, DriverEntry)
+#pragma alloc_text (PAGE, Bus_AddDevice)
+
+#endif
 
 extern struct acpi_device *sleep_button;
 extern struct acpi_device *power_button;
@@ -19,7 +26,6 @@ LPWSTR ProcessorIdString = NULL;
 LPWSTR ProcessorNameString = NULL;
 
 
-CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
 Bus_AddDevice(
@@ -228,6 +234,8 @@ ACPIDispatchDeviceControl(
     ULONG Caps = 0;
     HANDLE ThreadHandle;
 
+    PAGED_CODE ();
+
     irpStack = IoGetCurrentIrpStackLocation (Irp);
     ASSERT (IRP_MJ_DEVICE_CONTROL == irpStack->MajorFunction);
 
@@ -239,41 +247,10 @@ ACPIDispatchDeviceControl(
     {
        switch (irpStack->Parameters.DeviceIoControl.IoControlCode)
        {
-            case IOCTL_ACPI_ASYNC_EVAL_METHOD:
-            {
-                ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
-
-                if (KeGetCurrentIrql() == DISPATCH_LEVEL)
-                {
-                    PEVAL_WORKITEM_DATA workItemData;
-
-                    workItemData = ExAllocatePoolUninitialized(NonPagedPool,
-                                                               sizeof(*workItemData),
-                                                               'ipcA');
-                    if (!workItemData)
-                    {
-                        status = STATUS_INSUFFICIENT_RESOURCES;
-                        break;
-                    }
-                    workItemData->Irp = Irp;
-                    workItemData->DeviceData = (PPDO_DEVICE_DATA)commonData;
-
-                    ExInitializeWorkItem(&workItemData->WorkQueueItem,
-                                         Bus_PDO_EvalMethodWorker,
-                                         workItemData);
-                    ExQueueWorkItem(&workItemData->WorkQueueItem, DelayedWorkQueue);
-
-                    status = STATUS_PENDING;
-                    break;
-                }
-                __fallthrough;
-            }
            case IOCTL_ACPI_EVAL_METHOD:
-            {
               status = Bus_PDO_EvalMethod((PPDO_DEVICE_DATA)commonData,
                                           Irp);
               break;
-            }
 
            case IOCTL_GET_SYS_BUTTON_CAPS:
               if (irpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(ULONG))
@@ -359,7 +336,6 @@ ACPIDispatchDeviceControl(
 }
 
 static
-CODE_SEG("INIT")
 NTSTATUS
 AcpiRegOpenKey(IN HANDLE ParentKeyHandle,
                IN LPCWSTR KeyName,
@@ -383,7 +359,6 @@ AcpiRegOpenKey(IN HANDLE ParentKeyHandle,
 }
 
 static
-CODE_SEG("INIT")
 NTSTATUS
 AcpiRegQueryValue(IN HANDLE KeyHandle,
                   IN LPWSTR ValueName,
@@ -474,7 +449,6 @@ AcpiRegQueryValue(IN HANDLE KeyHandle,
 }
 
 static
-CODE_SEG("INIT")
 NTSTATUS
 GetProcessorInformation(VOID)
 {
@@ -708,7 +682,6 @@ done:
     return Status;
 }
 
-CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 DriverEntry (

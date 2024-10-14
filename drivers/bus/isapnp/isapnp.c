@@ -9,9 +9,9 @@
 
 /* INCLUDES *******************************************************************/
 
-#ifndef UNIT_TEST
-
 #include "isapnp.h"
+
+#include <search.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -26,9 +26,45 @@ BOOLEAN ReadPortCreated = FALSE;
 _Guarded_by_(BusSyncEvent)
 LIST_ENTRY BusListHead;
 
-#endif /* UNIT_TEST */
+static PUCHAR Priority;
 
 /* FUNCTIONS ******************************************************************/
+
+static
+CODE_SEG("PAGE")
+int
+__cdecl
+IsaComparePriority(
+    const void *A,
+    const void *B)
+{
+    PAGED_CODE();
+
+    return Priority[*(PUCHAR)A] - Priority[*(PUCHAR)B];
+}
+
+static
+CODE_SEG("PAGE")
+VOID
+IsaDetermineBestConfig(
+    _Out_writes_all_(ISAPNP_MAX_ALTERNATIVES) PUCHAR BestConfig,
+    _In_ PISAPNP_ALTERNATIVES Alternatives)
+{
+    UCHAR i;
+
+    PAGED_CODE();
+
+    for (i = 0; i < ISAPNP_MAX_ALTERNATIVES; i++)
+    {
+        BestConfig[i] = i;
+    }
+
+    Priority = Alternatives->Priority;
+    qsort(BestConfig,
+          Alternatives->Count,
+          sizeof(*BestConfig),
+          IsaComparePriority);
+}
 
 static
 CODE_SEG("PAGE")
@@ -152,297 +188,322 @@ IsaConvertMemRange32Requirement(
                                                   Description->Length - 1;
 }
 
-/*
- * For example, the PnP ROM
- * 0x15, 0x04, ...                                 // Logical device ID
- * 0x47, 0x01, 0x30, 0x03, 0x30, 0x03, 0x04, 0x04, // IO 330, len 4, align 4
- * 0x30,                                           // **** Start DF ****
- * 0x22, 0x04, 0x00,                               // IRQ 2
- * 0x31, 0x02,                                     // **** Start DF ****
- * 0x22, 0xC0, 0x00,                               // IRQ 6 or 7
- * 0x38,                                           // **** End DF ******
- * 0x2A, 0x20, 0x3A,                               // DMA 5
- * 0x22, 0x00, 0x08,                               // IRQ 12
- * 0x79, 0x00,                                     // END
- *
- * becomes the following resource requirements list:
- * Interface 1 Bus 0 Slot 0 AlternativeLists 2
- *
- * AltList #0, AltList->Count 4
- * [Option 0, ShareDisposition 1, Flags 11] IO: Min 0:330, Max 0:333, Align 4 Len 4
- * [Option 0, ShareDisposition 1, Flags 1]  INT: Min 2 Max 2
- * [Option 0, ShareDisposition 0, Flags 0]  DMA: Min 5 Max 5
- * [Option 0, ShareDisposition 1, Flags 1]  INT: Min B Max B
- *
- * AltList #1, AltList->Count 5
- * [Option 0, ShareDisposition 1, Flags 11] IO: Min 0:330, Max 0:333, Align 4 Len 4
- * [Option 0, ShareDisposition 1, Flags 1]  INT: Min 6 Max 6
- * [Option 8, ShareDisposition 1, Flags 1]  INT: Min 7 Max 7
- * [Option 0, ShareDisposition 0, Flags 0]  DMA: Min 5 Max 5
- * [Option 0, ShareDisposition 1, Flags 1]  INT: Min B Max B
- */
 static
 CODE_SEG("PAGE")
 NTSTATUS
 IsaPnpCreateLogicalDeviceRequirements(
     _In_ PISAPNP_PDO_EXTENSION PdoExt)
 {
+    PISAPNP_LOGICAL_DEVICE LogDev = PdoExt->IsaPnpDevice;
+    RTL_BITMAP TempBitmap;
+    ULONG TempBuffer;
+    ULONG ResourceCount = 0, AltCount = 0, AltOptionalCount = 0;
+    ULONG ListSize, i, j;
+    BOOLEAN FirstDescriptor;
     PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
     PIO_RESOURCE_DESCRIPTOR Descriptor;
-    ISAPNP_DEPENDENT_FUNCTION_STATE DfState;
-    ULONG FirstFixedDescriptors, LastFixedDescriptors;
-    ULONG ResourceCount, AltListCount, ListSize, i;
-    BOOLEAN IsFirstAltList, IsFirstDescriptor;
-    PIO_RESOURCE_LIST AltList;
-    PISAPNP_RESOURCE Resource;
+    PISAPNP_ALTERNATIVES Alternatives = LogDev->Alternatives;
 
     PAGED_CODE();
 
-    /* Count the number of requirements */
-    DfState = dfNotStarted;
-    FirstFixedDescriptors = 0;
-    LastFixedDescriptors = 0;
-    ResourceCount = 0;
-    AltListCount = 1;
-    Resource = PdoExt->IsaPnpDevice->Resources;
-    while (Resource->Type != ISAPNP_RESOURCE_TYPE_END)
+    /* Count number of requirements */
+    for (i = 0; i < RTL_NUMBER_OF(LogDev->Io); i++)
     {
-        switch (Resource->Type)
-        {
-            case ISAPNP_RESOURCE_TYPE_START_DEPENDENT:
-            {
-                if (DfState == dfStarted)
-                    ++AltListCount;
+        /*
+         * Use the continue statement to count the number of requirements.
+         * We handle a possible gap because depedent function can appear at
+         * any position in the logical device's requirements list.
+         */
+        if (!LogDev->Io[i].Description.Length)
+            continue;
 
-                DfState = dfStarted;
-                break;
-            }
-
-            case ISAPNP_RESOURCE_TYPE_END_DEPENDENT:
-            {
-                DfState = dfDone;
-                break;
-            }
-
-            case ISAPNP_RESOURCE_TYPE_IRQ:
-            case ISAPNP_RESOURCE_TYPE_DMA:
-            {
-                RTL_BITMAP ResourceBitmap;
-                ULONG BitmapSize, BitmapBuffer, BitCount;
-
-                if (Resource->Type == ISAPNP_RESOURCE_TYPE_IRQ)
-                {
-                    BitmapSize = RTL_BITS_OF(Resource->IrqDescription.Mask);
-                    BitmapBuffer = Resource->IrqDescription.Mask;
-                }
-                else
-                {
-                    BitmapSize = RTL_BITS_OF(Resource->DmaDescription.Mask);
-                    BitmapBuffer = Resource->DmaDescription.Mask;
-                }
-                RtlInitializeBitMap(&ResourceBitmap, &BitmapBuffer, BitmapSize);
-
-                BitCount = RtlNumberOfSetBits(&ResourceBitmap);
-                switch (DfState)
-                {
-                    case dfNotStarted:
-                        FirstFixedDescriptors += BitCount;
-                        break;
-
-                    case dfStarted:
-                        ResourceCount += BitCount;
-                        break;
-
-                    case dfDone:
-                        LastFixedDescriptors += BitCount;
-                        break;
-
-                    DEFAULT_UNREACHABLE;
-                }
-
-                break;
-            }
-
-            case ISAPNP_RESOURCE_TYPE_IO:
-            case ISAPNP_RESOURCE_TYPE_MEMRANGE:
-            case ISAPNP_RESOURCE_TYPE_MEMRANGE32:
-            {
-                switch (DfState)
-                {
-                    case dfNotStarted:
-                        ++FirstFixedDescriptors;
-                        break;
-
-                    case dfStarted:
-                        ++ResourceCount;
-                        break;
-
-                    case dfDone:
-                        ++LastFixedDescriptors;
-                        break;
-
-                    DEFAULT_UNREACHABLE;
-                }
-                break;
-            }
-
-            default:
-                ASSERT(FALSE);
-                UNREACHABLE;
-                break;
-        }
-
-        ++Resource;
+        ResourceCount++;
     }
+    for (i = 0; i < RTL_NUMBER_OF(LogDev->Irq); i++)
+    {
+        if (!LogDev->Irq[i].Description.Mask)
+            continue;
 
-    /* This logical device has no resource requirements */
-    if ((ResourceCount == 0) && (FirstFixedDescriptors == 0) && (LastFixedDescriptors == 0))
+        TempBuffer = LogDev->Irq[i].Description.Mask;
+        RtlInitializeBitMap(&TempBitmap,
+                            &TempBuffer,
+                            RTL_BITS_OF(LogDev->Irq[i].Description.Mask));
+        ResourceCount += RtlNumberOfSetBits(&TempBitmap);
+    }
+    for (i = 0; i < RTL_NUMBER_OF(LogDev->Dma); i++)
+    {
+        if (!LogDev->Dma[i].Description.Mask)
+            continue;
+
+        TempBuffer = LogDev->Dma[i].Description.Mask;
+        RtlInitializeBitMap(&TempBitmap,
+                            &TempBuffer,
+                            RTL_BITS_OF(LogDev->Dma[i].Description.Mask));
+        ResourceCount += RtlNumberOfSetBits(&TempBitmap);
+    }
+    for (i = 0; i < RTL_NUMBER_OF(LogDev->MemRange); i++)
+    {
+        if (!LogDev->MemRange[i].Description.Length)
+            continue;
+
+        ResourceCount++;
+    }
+    for (i = 0; i < RTL_NUMBER_OF(LogDev->MemRange32); i++)
+    {
+        if (!LogDev->MemRange32[i].Description.Length)
+            continue;
+
+        ResourceCount++;
+    }
+    if (Alternatives)
+    {
+        ULONG BitCount;
+
+        if (HasIoAlternatives(Alternatives))
+            AltCount++;
+        if (HasIrqAlternatives(Alternatives))
+            AltCount++;
+        if (HasDmaAlternatives(Alternatives))
+            AltCount++;
+        if (HasMemoryAlternatives(Alternatives))
+            AltCount++;
+        if (HasMemory32Alternatives(Alternatives))
+            AltCount++;
+        ResourceCount += AltCount;
+
+        if (HasIrqAlternatives(Alternatives))
+        {
+            for (i = 0; i < Alternatives->Count; i++)
+            {
+                TempBuffer = Alternatives->Irq[i].Mask;
+                RtlInitializeBitMap(&TempBitmap,
+                                    &TempBuffer,
+                                    RTL_BITS_OF(Alternatives->Irq[i].Mask));
+                BitCount = RtlNumberOfSetBits(&TempBitmap);
+
+                if (BitCount > 1)
+                    AltOptionalCount += BitCount - 1;
+            }
+        }
+        if (HasDmaAlternatives(Alternatives))
+        {
+            for (i = 0; i < Alternatives->Count; i++)
+            {
+                TempBuffer = Alternatives->Dma[i].Mask;
+                RtlInitializeBitMap(&TempBitmap,
+                                    &TempBuffer,
+                                    RTL_BITS_OF(Alternatives->Dma[i].Mask));
+                BitCount = RtlNumberOfSetBits(&TempBitmap);
+
+                if (BitCount > 1)
+                    AltOptionalCount += BitCount - 1;
+            }
+        }
+    }
+    if (ResourceCount == 0)
         return STATUS_SUCCESS;
 
     /* Allocate memory to store requirements */
-    ListSize = FIELD_OFFSET(IO_RESOURCE_REQUIREMENTS_LIST, List) +
-               FIELD_OFFSET(IO_RESOURCE_LIST, Descriptors) * AltListCount +
-               sizeof(IO_RESOURCE_DESCRIPTOR) * ResourceCount +
-               sizeof(IO_RESOURCE_DESCRIPTOR) * AltListCount *
-               (FirstFixedDescriptors + LastFixedDescriptors);
+    ListSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST);
+    if (Alternatives)
+    {
+        ListSize += sizeof(IO_RESOURCE_DESCRIPTOR) * (ResourceCount - 1) * Alternatives->Count
+                    + sizeof(IO_RESOURCE_LIST) * (Alternatives->Count - 1)
+                    + sizeof(IO_RESOURCE_DESCRIPTOR) * AltOptionalCount;
+    }
+    else
+    {
+        ListSize += sizeof(IO_RESOURCE_DESCRIPTOR) * (ResourceCount - 1);
+    }
     RequirementsList = ExAllocatePoolZero(PagedPool, ListSize, TAG_ISAPNP);
     if (!RequirementsList)
         return STATUS_NO_MEMORY;
 
     RequirementsList->ListSize = ListSize;
     RequirementsList->InterfaceType = Isa;
-    RequirementsList->AlternativeLists = AltListCount;
+    RequirementsList->AlternativeLists = Alternatives ? Alternatives->Count : 1;
 
     RequirementsList->List[0].Version = 1;
     RequirementsList->List[0].Revision = 1;
+    RequirementsList->List[0].Count = ResourceCount;
 
     /* Store requirements */
-    IsFirstAltList = TRUE;
-    AltList = &RequirementsList->List[0];
-    Descriptor = &RequirementsList->List[0].Descriptors[0];
-    Resource = PdoExt->IsaPnpDevice->Resources;
-    while (Resource->Type != ISAPNP_RESOURCE_TYPE_END)
+    Descriptor = RequirementsList->List[0].Descriptors;
+    for (i = 0; i < RTL_NUMBER_OF(LogDev->Io); i++)
     {
-        switch (Resource->Type)
+        if (!LogDev->Io[i].Description.Length)
+            break;
+
+        IsaConvertIoRequirement(Descriptor++, &LogDev->Io[i].Description);
+    }
+    for (i = 0; i < RTL_NUMBER_OF(LogDev->Irq); i++)
+    {
+        if (!LogDev->Irq[i].Description.Mask)
+            continue;
+
+        FirstDescriptor = TRUE;
+
+        for (j = 0; j < RTL_BITS_OF(LogDev->Irq[i].Description.Mask); j++)
         {
-            case ISAPNP_RESOURCE_TYPE_START_DEPENDENT:
+            if (!(LogDev->Irq[i].Description.Mask & (1 << j)))
+                continue;
+
+            IsaConvertIrqRequirement(Descriptor++,
+                                     &LogDev->Irq[i].Description,
+                                     j,
+                                     FirstDescriptor);
+
+            if (FirstDescriptor)
+                FirstDescriptor = FALSE;
+        }
+    }
+    for (i = 0; i < RTL_NUMBER_OF(LogDev->Dma); i++)
+    {
+        if (!LogDev->Dma[i].Description.Mask)
+            continue;
+
+        FirstDescriptor = TRUE;
+
+        for (j = 0; j < RTL_BITS_OF(LogDev->Dma[i].Description.Mask); j++)
+        {
+            if (!(LogDev->Dma[i].Description.Mask & (1 << j)))
+                continue;
+
+            IsaConvertDmaRequirement(Descriptor++,
+                                     &LogDev->Dma[i].Description,
+                                     j,
+                                     FirstDescriptor);
+
+            if (FirstDescriptor)
+                FirstDescriptor = FALSE;
+        }
+    }
+    for (i = 0; i < RTL_NUMBER_OF(LogDev->MemRange); i++)
+    {
+        if (!LogDev->MemRange[i].Description.Length)
+            continue;
+
+        IsaConvertMemRangeRequirement(Descriptor++,
+                                      &LogDev->MemRange[i].Description);
+    }
+    for (i = 0; i < RTL_NUMBER_OF(LogDev->MemRange32); i++)
+    {
+        if (!LogDev->MemRange32[i].Description.Length)
+            continue;
+
+        IsaConvertMemRange32Requirement(Descriptor++,
+                                        &LogDev->MemRange32[i].Description);
+    }
+    if (Alternatives)
+    {
+        UCHAR BestConfig[ISAPNP_MAX_ALTERNATIVES];
+        PIO_RESOURCE_LIST AltList = &RequirementsList->List[0];
+        PIO_RESOURCE_LIST NextList = AltList;
+
+        IsaDetermineBestConfig(BestConfig, Alternatives);
+
+        for (i = 0; i < RequirementsList->AlternativeLists; i++)
+        {
+            RtlMoveMemory(NextList, AltList, sizeof(IO_RESOURCE_LIST));
+
+            /* Just because the 'NextList->Count++' correction */
+            NextList->Count = ResourceCount;
+            /*
+             * For example, the ROM
+             * 0x15, ...        // Logical device ID
+             * 0x30,            // Start DF
+             * 0x22, 0x04, 0x00 // IRQ
+             * 0x30,            // Start DF
+             * 0x22, 0xC0, 0x00 // IRQ
+             * 0x38,            // End DF
+             * 0x2A, 0x20, 0x3A // DMA
+             * 0x22, 0x00, 0x08 // IRQ
+             * 0x79, 0x00       // END
+             *
+             * will be represented as the following resource requirements list:
+             * Interface 1 Bus 0 Slot 0 AlternativeLists 2
+             * AltList 1, AltList->Count 3
+             * [Option 0, ShareDisposition 1, Flags 1] INT: Min B Max B
+             * [Option 0, ShareDisposition 0, Flags 0] DMA: Min 5 Max 5
+             * [Option 0, ShareDisposition 1, Flags 1] INT: Min 2 Max 2
+             * End Descriptors
+             * AltList 2, AltList->Count 4
+             * [Option 0, ShareDisposition 1, Flags 1] INT: Min B Max B
+             * [Option 0, ShareDisposition 0, Flags 0] DMA: Min 5 Max 5
+             * [Option 0, ShareDisposition 1, Flags 1] INT: Min 6 Max 6
+             * [Option 8, ShareDisposition 1, Flags 1] INT: Min 7 Max 7
+             * End Descriptors
+             */
+
+            /* Propagate the fixed resources to our new list */
+            for (j = 0; j < AltList->Count - AltCount; j++)
             {
-                if (!IsFirstAltList)
-                {
-                    /* Add room for the fixed descriptors */
-                    AltList->Count += LastFixedDescriptors;
-
-                    /* Move on to the next list */
-                    AltList = (PIO_RESOURCE_LIST)(AltList->Descriptors + AltList->Count);
-                    AltList->Version = 1;
-                    AltList->Revision = 1;
-
-                    /* Propagate the fixed resources to our new list */
-                    RtlCopyMemory(&AltList->Descriptors,
-                                  RequirementsList->List[0].Descriptors,
-                                  sizeof(IO_RESOURCE_DESCRIPTOR) * FirstFixedDescriptors);
-                    AltList->Count += FirstFixedDescriptors;
-
-                    Descriptor = &AltList->Descriptors[FirstFixedDescriptors];
-                }
-
-                IsFirstAltList = FALSE;
-                break;
+                RtlMoveMemory(&NextList->Descriptors[j],
+                              &AltList->Descriptors[j],
+                              sizeof(IO_RESOURCE_DESCRIPTOR));
             }
 
-            case ISAPNP_RESOURCE_TYPE_END_DEPENDENT:
-                break;
+            Descriptor = &NextList->Descriptors[NextList->Count - AltCount];
 
-            case ISAPNP_RESOURCE_TYPE_IO:
+            /*
+             * Append alternatives.
+             * NOTE: To keep it simple, we append these to the end of the list.
+             */
+            if (HasIoAlternatives(Alternatives))
             {
-                IsaConvertIoRequirement(Descriptor++, &Resource->IoDescription);
-
-                ++AltList->Count;
-                break;
+                IsaConvertIoRequirement(Descriptor++,
+                                        &Alternatives->Io[BestConfig[i]]);
             }
-
-            case ISAPNP_RESOURCE_TYPE_IRQ:
+            if (HasIrqAlternatives(Alternatives))
             {
-                IsFirstDescriptor = TRUE;
+                FirstDescriptor = TRUE;
 
-                for (i = 0; i < RTL_BITS_OF(Resource->IrqDescription.Mask); i++)
+                for (j = 0; j < RTL_BITS_OF(Alternatives->Irq[BestConfig[i]].Mask); j++)
                 {
-                    if (!(Resource->IrqDescription.Mask & (1 << i)))
+                    if (!(Alternatives->Irq[BestConfig[i]].Mask & (1 << j)))
                         continue;
 
                     IsaConvertIrqRequirement(Descriptor++,
-                                             &Resource->IrqDescription,
-                                             i,
-                                             IsFirstDescriptor);
-                    ++AltList->Count;
+                                             &Alternatives->Irq[BestConfig[i]],
+                                             j,
+                                             FirstDescriptor);
 
-                    IsFirstDescriptor = FALSE;
+                    if (FirstDescriptor)
+                        FirstDescriptor = FALSE;
+                    else
+                        NextList->Count++;
                 }
-
-                break;
             }
-
-            case ISAPNP_RESOURCE_TYPE_DMA:
+            if (HasDmaAlternatives(Alternatives))
             {
-                IsFirstDescriptor = TRUE;
+                FirstDescriptor = TRUE;
 
-                for (i = 0; i < RTL_BITS_OF(Resource->DmaDescription.Mask); i++)
+                for (j = 0; j < RTL_BITS_OF(Alternatives->Dma[BestConfig[i]].Mask); j++)
                 {
-                    if (!(Resource->DmaDescription.Mask & (1 << i)))
+                    if (!(Alternatives->Dma[BestConfig[i]].Mask & (1 << j)))
                         continue;
 
                     IsaConvertDmaRequirement(Descriptor++,
-                                             &Resource->DmaDescription,
-                                             i,
-                                             IsFirstDescriptor);
-                    ++AltList->Count;
+                                             &Alternatives->Dma[BestConfig[i]],
+                                             j,
+                                             FirstDescriptor);
 
-                    IsFirstDescriptor = FALSE;
+                    if (FirstDescriptor)
+                        FirstDescriptor = FALSE;
+                    else
+                        NextList->Count++;
                 }
-
-                break;
             }
-
-            case ISAPNP_RESOURCE_TYPE_MEMRANGE:
+            if (HasMemoryAlternatives(Alternatives))
             {
-                IsaConvertMemRangeRequirement(Descriptor++, &Resource->MemRangeDescription);
-
-                ++AltList->Count;
-                break;
+                IsaConvertMemRangeRequirement(Descriptor++,
+                                              &Alternatives->MemRange[BestConfig[i]]);
             }
-
-            case ISAPNP_RESOURCE_TYPE_MEMRANGE32:
+            if (HasMemory32Alternatives(Alternatives))
             {
-                IsaConvertMemRange32Requirement(Descriptor++, &Resource->MemRange32Description);
-
-                ++AltList->Count;
-                break;
+                IsaConvertMemRange32Requirement(Descriptor++,
+                                                &Alternatives->MemRange32[BestConfig[i]]);
             }
-
-            default:
-                ASSERT(FALSE);
-                UNREACHABLE;
-                break;
-        }
-
-        ++Resource;
-    }
-
-    /* Append the fixed resources */
-    if (LastFixedDescriptors)
-    {
-        PIO_RESOURCE_LIST NextList = &RequirementsList->List[0];
-
-        /* Make the descriptor point to the fixed resources */
-        Descriptor -= LastFixedDescriptors;
-
-        /* Propagate the fixed resources onto previous lists */
-        AltListCount = RequirementsList->AlternativeLists - 1;
-        for (i = 0; i < AltListCount; i++)
-        {
-            RtlCopyMemory(&NextList->Descriptors[NextList->Count - LastFixedDescriptors],
-                          Descriptor,
-                          sizeof(IO_RESOURCE_DESCRIPTOR) * LastFixedDescriptors);
 
             NextList = (PIO_RESOURCE_LIST)(NextList->Descriptors + NextList->Count);
         }
@@ -460,42 +521,58 @@ FindIoDescriptor(
     _In_ ULONG RangeStart,
     _In_ ULONG RangeEnd,
     _Out_opt_ PUCHAR Information,
-    _Out_opt_ PULONG Length)
+    _Out_opt_ PULONG Length,
+    _Out_opt_ PUCHAR WriteOrder)
 {
-    PISAPNP_RESOURCE Resource;
+    ULONG i;
+    BOOLEAN Match;
+    PISAPNP_IO_DESCRIPTION Description;
 
     PAGED_CODE();
 
-    Resource = LogDevice->Resources;
-    while (Resource->Type != ISAPNP_RESOURCE_TYPE_END)
+    for (i = 0; i < RTL_NUMBER_OF(LogDevice->Io); i++)
     {
-        if (Resource->Type == ISAPNP_RESOURCE_TYPE_IO)
+        Description = &LogDevice->Io[i].Description;
+
+        Match = Base ? (Base >= Description->Minimum) && (Base <= Description->Maximum)
+                     : (RangeStart >= Description->Minimum) &&
+                       (RangeEnd <= (ULONG)(Description->Maximum + Description->Length - 1));
+
+        if (Match)
         {
-            PISAPNP_IO_DESCRIPTION Description = &Resource->IoDescription;
-            BOOLEAN Match;
+            if (Information)
+                *Information = Description->Information;
+            if (Length)
+                *Length = Description->Length;
+            if (WriteOrder)
+                *WriteOrder = LogDevice->Io[i].Index;
 
-            if (Base)
-            {
-                Match = (Base >= Description->Minimum) && (Base <= Description->Maximum);
-            }
-            else
-            {
-                Match = (RangeStart >= Description->Minimum) &&
-                        (RangeEnd <= (ULONG)(Description->Maximum + Description->Length - 1));
-            }
-
-            if (Match)
-            {
-                if (Information)
-                    *Information = Description->Information;
-                if (Length)
-                    *Length = Description->Length;
-
-                return TRUE;
-            }
+            return TRUE;
         }
+    }
 
-        ++Resource;
+    if (!LogDevice->Alternatives)
+        return FALSE;
+
+    for (i = 0; i < LogDevice->Alternatives->Count; i++)
+    {
+        Description = &LogDevice->Alternatives->Io[i];
+
+        Match = Base ? (Base >= Description->Minimum) && (Base <= Description->Maximum)
+                     : (RangeStart >= Description->Minimum) &&
+                       (RangeEnd <= (ULONG)(Description->Maximum + Description->Length - 1));
+
+        if (Match)
+        {
+            if (Information)
+                *Information = Description->Information;
+            if (Length)
+                *Length = Description->Length;
+            if (WriteOrder)
+                *WriteOrder = LogDevice->Alternatives->IoIndex;
+
+            return TRUE;
+        }
     }
 
     return FALSE;
@@ -505,24 +582,53 @@ CODE_SEG("PAGE")
 BOOLEAN
 FindIrqDescriptor(
     _In_ PISAPNP_LOGICAL_DEVICE LogDevice,
-    _In_ ULONG Vector)
+    _In_ ULONG Vector,
+    _Out_opt_ PUCHAR WriteOrder)
 {
-    PISAPNP_RESOURCE Resource;
+    ULONG i, j;
+    PISAPNP_IRQ_DESCRIPTION Description;
 
     PAGED_CODE();
 
-    Resource = LogDevice->Resources;
-    while (Resource->Type != ISAPNP_RESOURCE_TYPE_END)
+    for (i = 0; i < RTL_NUMBER_OF(LogDevice->Irq); i++)
     {
-        if (Resource->Type == ISAPNP_RESOURCE_TYPE_IRQ)
+        Description = &LogDevice->Irq[i].Description;
+
+        for (j = 0; j < RTL_BITS_OF(Description->Mask); j++)
         {
-            PISAPNP_IRQ_DESCRIPTION Description = &Resource->IrqDescription;
+            if (Description->Mask & (1 << j))
+            {
+                if (j == Vector)
+                {
+                    if (WriteOrder)
+                        *WriteOrder = LogDevice->Irq[i].Index;
 
-            if (Description->Mask & (1 << Vector))
-                return TRUE;
+                    return TRUE;
+                }
+            }
         }
+    }
 
-        ++Resource;
+    if (!LogDevice->Alternatives)
+        return FALSE;
+
+    for (i = 0; i < LogDevice->Alternatives->Count; i++)
+    {
+        Description = &LogDevice->Alternatives->Irq[i];
+
+        for (j = 0; j < RTL_BITS_OF(Description->Mask); j++)
+        {
+            if (Description->Mask & (1 << j))
+            {
+                if (j == Vector)
+                {
+                    if (WriteOrder)
+                        *WriteOrder = LogDevice->Alternatives->IrqIndex;
+
+                    return TRUE;
+                }
+            }
+        }
     }
 
     return FALSE;
@@ -532,24 +638,53 @@ CODE_SEG("PAGE")
 BOOLEAN
 FindDmaDescriptor(
     _In_ PISAPNP_LOGICAL_DEVICE LogDevice,
-    _In_ ULONG Channel)
+    _In_ ULONG Channel,
+    _Out_opt_ PUCHAR WriteOrder)
 {
-    PISAPNP_RESOURCE Resource;
+    ULONG i, j;
+    PISAPNP_DMA_DESCRIPTION Description;
 
     PAGED_CODE();
 
-    Resource = LogDevice->Resources;
-    while (Resource->Type != ISAPNP_RESOURCE_TYPE_END)
+    for (i = 0; i < RTL_NUMBER_OF(LogDevice->Dma); i++)
     {
-        if (Resource->Type == ISAPNP_RESOURCE_TYPE_DMA)
+        Description = &LogDevice->Dma[i].Description;
+
+        for (j = 0; j < RTL_BITS_OF(Description->Mask); j++)
         {
-            PISAPNP_DMA_DESCRIPTION Description = &Resource->DmaDescription;
+            if (Description->Mask & (1 << j))
+            {
+                if (j == Channel)
+                {
+                    if (WriteOrder)
+                        *WriteOrder = LogDevice->Dma[i].Index;
 
-            if (Description->Mask & (1 << Channel))
-                return TRUE;
+                    return TRUE;
+                }
+            }
         }
+    }
 
-        ++Resource;
+    if (!LogDevice->Alternatives)
+        return FALSE;
+
+    for (i = 0; i < LogDevice->Alternatives->Count; i++)
+    {
+        Description = &LogDevice->Alternatives->Dma[i];
+
+        for (j = 0; j < RTL_BITS_OF(Description->Mask); j++)
+        {
+            if (Description->Mask & (1 << j))
+            {
+                if (j == Channel)
+                {
+                    if (WriteOrder)
+                        *WriteOrder = LogDevice->Alternatives->DmaIndex;
+
+                    return TRUE;
+                }
+            }
+        }
     }
 
     return FALSE;
@@ -561,57 +696,87 @@ FindMemoryDescriptor(
     _In_ PISAPNP_LOGICAL_DEVICE LogDevice,
     _In_ ULONG RangeStart,
     _In_ ULONG RangeEnd,
-    _Out_opt_ PUCHAR Information)
+    _Out_opt_ PBOOLEAN Memory32,
+    _Out_opt_ PUCHAR Information,
+    _Out_opt_ PUCHAR WriteOrder)
 {
-    PISAPNP_RESOURCE Resource;
+    ULONG i;
+    PISAPNP_MEMRANGE_DESCRIPTION Description;
+    PISAPNP_MEMRANGE32_DESCRIPTION Description32;
 
     PAGED_CODE();
 
-    Resource = LogDevice->Resources;
-    while (Resource->Type != ISAPNP_RESOURCE_TYPE_END)
+    for (i = 0; i < RTL_NUMBER_OF(LogDevice->MemRange); i++)
     {
-        switch (Resource->Type)
+        Description = &LogDevice->MemRange[i].Description;
+
+        if ((RangeStart >= (ULONG)(Description->Minimum << 8)) &&
+            (RangeEnd <= (ULONG)((Description->Maximum << 8) + (Description->Length << 8) - 1)))
         {
-            case ISAPNP_RESOURCE_TYPE_MEMRANGE:
-            {
-                PISAPNP_MEMRANGE_DESCRIPTION Description;
+            if (Memory32)
+                *Memory32 = FALSE;
+            if (Information)
+                *Information = Description->Information;
+            if (WriteOrder)
+                *WriteOrder = LogDevice->MemRange[i].Index;
 
-                Description = &Resource->MemRangeDescription;
-
-                if ((RangeStart >= (ULONG)(Description->Minimum << 8)) &&
-                    (RangeEnd <= (ULONG)((Description->Maximum << 8) +
-                                         (Description->Length << 8) - 1)))
-                {
-                    if (Information)
-                        *Information = Description->Information;
-
-                    return TRUE;
-                }
-                break;
-            }
-
-            case ISAPNP_RESOURCE_TYPE_MEMRANGE32:
-            {
-                PISAPNP_MEMRANGE32_DESCRIPTION Description32;
-
-                Description32 = &Resource->MemRange32Description;
-
-                if ((RangeStart >= Description32->Minimum) &&
-                    (RangeEnd <= (Description32->Maximum + Description32->Length - 1)))
-                {
-                    if (Information)
-                        *Information = Description32->Information;
-
-                    return TRUE;
-                }
-                break;
-            }
-
-            default:
-                break;
+            return TRUE;
         }
+    }
+    for (i = 0; i < RTL_NUMBER_OF(LogDevice->MemRange32); i++)
+    {
+        Description32 = &LogDevice->MemRange32[i].Description;
 
-        ++Resource;
+        if ((RangeStart >= Description32->Minimum) &&
+            (RangeEnd <= (Description32->Maximum + Description32->Length - 1)))
+        {
+            if (Memory32)
+                *Memory32 = TRUE;
+            if (Information)
+                *Information = Description32->Information;
+            if (WriteOrder)
+                *WriteOrder = LogDevice->MemRange32[i].Index;
+
+            return TRUE;
+        }
+    }
+
+    if (!LogDevice->Alternatives)
+        return FALSE;
+
+    for (i = 0; i < LogDevice->Alternatives->Count; i++)
+    {
+        Description = &LogDevice->Alternatives->MemRange[i];
+
+        if ((RangeStart >= (ULONG)(Description->Minimum << 8)) &&
+            (RangeEnd <= (ULONG)((Description->Maximum << 8) + (Description->Length << 8) - 1)))
+        {
+            if (Memory32)
+                *Memory32 = FALSE;
+            if (Information)
+                *Information = Description->Information;
+            if (WriteOrder)
+                *WriteOrder = LogDevice->Alternatives->MemRangeIndex;
+
+            return TRUE;
+        }
+    }
+    for (i = 0; i < LogDevice->Alternatives->Count; i++)
+    {
+        Description32 = &LogDevice->Alternatives->MemRange32[i];
+
+        if ((RangeStart >= Description32->Minimum) &&
+            (RangeEnd <= (Description32->Maximum + Description32->Length - 1)))
+        {
+            if (Memory32)
+                *Memory32 = TRUE;
+            if (Information)
+                *Information = Description32->Information;
+            if (WriteOrder)
+                *WriteOrder = LogDevice->Alternatives->MemRange32Index;
+
+            return TRUE;
+        }
     }
 
     return FALSE;
@@ -652,7 +817,7 @@ IsaPnpCreateLogicalDeviceResources(
     }
     for (i = 0; i < RTL_NUMBER_OF(LogDev->Dma); i++)
     {
-        if (LogDev->Dma[i].CurrentChannel != DMACHANNEL_NONE)
+        if (LogDev->Dma[i].CurrentChannel != 4)
             ResourceCount++;
         else
             break;
@@ -701,9 +866,9 @@ IsaPnpCreateLogicalDeviceResources(
                               0,
                               0,
                               &Information,
-                              &CurrentLength))
+                              &CurrentLength,
+                              NULL))
         {
-            DPRINT1("I/O entry #%lu %x not found\n", i, LogDev->Io[i].CurrentBase);
             goto InvalidBiosResources;
         }
 
@@ -723,6 +888,9 @@ IsaPnpCreateLogicalDeviceResources(
         if (!LogDev->Irq[i].CurrentNo)
             break;
 
+        if (!FindIrqDescriptor(LogDev, LogDev->Irq[i].CurrentNo, NULL))
+            goto InvalidBiosResources;
+
         Descriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[ResourceCount++];
         Descriptor->Type = CmResourceTypeInterrupt;
         Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
@@ -732,12 +900,15 @@ IsaPnpCreateLogicalDeviceResources(
             Descriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
         Descriptor->u.Interrupt.Level = LogDev->Irq[i].CurrentNo;
         Descriptor->u.Interrupt.Vector = LogDev->Irq[i].CurrentNo;
-        Descriptor->u.Interrupt.Affinity = (KAFFINITY)-1;
+        Descriptor->u.Interrupt.Affinity = 0xFFFFFFFF;
     }
     for (i = 0; i < RTL_NUMBER_OF(LogDev->Dma); i++)
     {
-        if (LogDev->Dma[i].CurrentChannel == DMACHANNEL_NONE)
+        if (LogDev->Dma[i].CurrentChannel == 4)
             break;
+
+        if (!FindDmaDescriptor(LogDev, LogDev->Dma[i].CurrentChannel, NULL))
+            goto InvalidBiosResources;
 
         Descriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[ResourceCount++];
         Descriptor->Type = CmResourceTypeDma;
@@ -753,12 +924,10 @@ IsaPnpCreateLogicalDeviceResources(
         if (!FindMemoryDescriptor(LogDev,
                                   LogDev->MemRange[i].CurrentBase,
                                   LogDev->MemRange[i].CurrentLength,
-                                  &Information))
+                                  NULL,
+                                  &Information,
+                                  NULL))
         {
-            DPRINT1("MEM entry #%lu %lx %lx not found\n",
-                    i,
-                    LogDev->MemRange[i].CurrentBase,
-                    LogDev->MemRange[i].CurrentLength);
             goto InvalidBiosResources;
         }
 
@@ -770,7 +939,7 @@ IsaPnpCreateLogicalDeviceResources(
             Descriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
         else
             Descriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
-        Descriptor->u.Memory.Length = LogDev->MemRange[i].CurrentLength;
+        Descriptor->u.Memory.Length = LogDev->MemRange[i].Description.Length;
         Descriptor->u.Memory.Start.QuadPart = LogDev->MemRange[i].CurrentBase;
     }
     for (i = 0; i < RTL_NUMBER_OF(LogDev->MemRange32); i++)
@@ -781,12 +950,10 @@ IsaPnpCreateLogicalDeviceResources(
         if (!FindMemoryDescriptor(LogDev,
                                   LogDev->MemRange32[i].CurrentBase,
                                   LogDev->MemRange32[i].CurrentLength,
-                                  &Information))
+                                  NULL,
+                                  &Information,
+                                  NULL))
         {
-            DPRINT1("MEM32 entry #%lu %lx %lx not found\n",
-                    i,
-                    LogDev->MemRange32[i].CurrentBase,
-                    LogDev->MemRange32[i].CurrentLength);
             goto InvalidBiosResources;
         }
 
@@ -798,7 +965,7 @@ IsaPnpCreateLogicalDeviceResources(
             Descriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
         else
             Descriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
-        Descriptor->u.Memory.Length = LogDev->MemRange32[i].CurrentLength;
+        Descriptor->u.Memory.Length = LogDev->MemRange32[i].Description.Length;
         Descriptor->u.Memory.Start.QuadPart = LogDev->MemRange32[i].CurrentBase;
     }
 
@@ -807,16 +974,73 @@ IsaPnpCreateLogicalDeviceResources(
     return STATUS_SUCCESS;
 
 InvalidBiosResources:
-    DPRINT1("Invalid boot resources! (CSN %u, LDN %u)\n", LogDev->CSN, LogDev->LDN);
+    DPRINT("Invalid boot resources! (CSN %u, LDN %u)\n", LogDev->CSN, LogDev->LDN);
 
     LogDev->Flags &= ~ISAPNP_HAS_RESOURCES;
     ExFreePoolWithTag(ResourceList, TAG_ISAPNP);
     return STATUS_SUCCESS;
 }
 
+_Dispatch_type_(IRP_MJ_CREATE)
+_Dispatch_type_(IRP_MJ_CLOSE)
+static CODE_SEG("PAGE") DRIVER_DISPATCH_PAGED IsaCreateClose;
+
+static
 CODE_SEG("PAGE")
-PIO_RESOURCE_REQUIREMENTS_LIST
+NTSTATUS
+NTAPI
+IsaCreateClose(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp)
+{
+    PAGED_CODE();
+
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+
+    DPRINT("%s(%p, %p)\n", __FUNCTION__, DeviceObject, Irp);
+
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return STATUS_SUCCESS;
+}
+
+_Dispatch_type_(IRP_MJ_DEVICE_CONTROL)
+_Dispatch_type_(IRP_MJ_SYSTEM_CONTROL)
+static CODE_SEG("PAGE") DRIVER_DISPATCH_PAGED IsaForwardOrIgnore;
+
+static
+CODE_SEG("PAGE")
+NTSTATUS
+NTAPI
+IsaForwardOrIgnore(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp)
+{
+    PISAPNP_COMMON_EXTENSION CommonExt = DeviceObject->DeviceExtension;
+
+    PAGED_CODE();
+
+    DPRINT("%s(%p, %p) Minor - %X\n", __FUNCTION__, DeviceObject, Irp,
+           IoGetCurrentIrpStackLocation(Irp)->MinorFunction);
+
+    if (CommonExt->Signature == IsaPnpBus)
+    {
+        IoSkipCurrentIrpStackLocation(Irp);
+        return IoCallDriver(((PISAPNP_FDO_EXTENSION)CommonExt)->Ldo, Irp);
+    }
+    else
+    {
+        NTSTATUS Status = Irp->IoStatus.Status;
+
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+}
+
+CODE_SEG("PAGE")
+NTSTATUS
 IsaPnpCreateReadPortDORequirements(
+    _In_ PISAPNP_PDO_EXTENSION PdoExt,
     _In_opt_ ULONG SelectedReadPort)
 {
     ULONG ResourceCount, ListSize, i;
@@ -863,7 +1087,7 @@ IsaPnpCreateReadPortDORequirements(
                sizeof(IO_RESOURCE_DESCRIPTOR) * (ResourceCount - 1);
     RequirementsList = ExAllocatePoolZero(PagedPool, ListSize, TAG_ISAPNP);
     if (!RequirementsList)
-        return NULL;
+        return STATUS_NO_MEMORY;
 
     RequirementsList->ListSize = ListSize;
     RequirementsList->AlternativeLists = 1;
@@ -958,12 +1182,15 @@ IsaPnpCreateReadPortDORequirements(
         }
     }
 
-    return RequirementsList;
+    PdoExt->RequirementsList = RequirementsList;
+    return STATUS_SUCCESS;
 }
 
+static
 CODE_SEG("PAGE")
-PCM_RESOURCE_LIST
-IsaPnpCreateReadPortDOResources(VOID)
+NTSTATUS
+IsaPnpCreateReadPortDOResources(
+    _In_ PISAPNP_PDO_EXTENSION PdoExt)
 {
     const USHORT Ports[] = { ISAPNP_WRITE_DATA, ISAPNP_ADDRESS };
     ULONG ListSize, i;
@@ -976,7 +1203,7 @@ IsaPnpCreateReadPortDOResources(VOID)
                sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) * (RTL_NUMBER_OF(Ports) - 1);
     ResourceList = ExAllocatePoolZero(PagedPool, ListSize, TAG_ISAPNP);
     if (!ResourceList)
-        return NULL;
+        return STATUS_NO_MEMORY;
 
     ResourceList->Count = 1;
     ResourceList->List[0].InterfaceType = Internal;
@@ -996,10 +1223,10 @@ IsaPnpCreateReadPortDOResources(VOID)
         Descriptor++;
     }
 
-    return ResourceList;
+    PdoExt->ResourceList = ResourceList;
+    PdoExt->ResourceListSize = ListSize;
+    return STATUS_SUCCESS;
 }
-
-#ifndef UNIT_TEST
 
 static
 CODE_SEG("PAGE")
@@ -1032,7 +1259,22 @@ IsaPnpCreateReadPortDO(
     PdoExt->Common.State = dsStopped;
     PdoExt->FdoExt = FdoExt;
 
+    Status = IsaPnpCreateReadPortDORequirements(PdoExt, 0);
+    if (!NT_SUCCESS(Status))
+        goto Failure;
+
+    Status = IsaPnpCreateReadPortDOResources(PdoExt);
+    if (!NT_SUCCESS(Status))
+        goto Failure;
+
     FdoExt->ReadPortPdo->Flags &= ~DO_DEVICE_INITIALIZING;
+
+    return Status;
+
+Failure:
+    IsaPnpRemoveReadPortDO(FdoExt->ReadPortPdo);
+
+    FdoExt->ReadPortPdo = NULL;
 
     return Status;
 }
@@ -1042,9 +1284,17 @@ VOID
 IsaPnpRemoveReadPortDO(
     _In_ PDEVICE_OBJECT Pdo)
 {
+    PISAPNP_PDO_EXTENSION ReadPortExt = Pdo->DeviceExtension;
+
     PAGED_CODE();
 
     DPRINT("Removing Read Port\n");
+
+    if (ReadPortExt->RequirementsList)
+        ExFreePoolWithTag(ReadPortExt->RequirementsList, TAG_ISAPNP);
+
+    if (ReadPortExt->ResourceList)
+        ExFreePoolWithTag(ReadPortExt->ResourceList, TAG_ISAPNP);
 
     IoDeleteDevice(Pdo);
 }
@@ -1350,62 +1600,6 @@ IsaPnp(
         return IsaPdoPnp((PISAPNP_PDO_EXTENSION)DevExt, Irp, IrpSp);
 }
 
-_Dispatch_type_(IRP_MJ_CREATE)
-_Dispatch_type_(IRP_MJ_CLOSE)
-static CODE_SEG("PAGE") DRIVER_DISPATCH_PAGED IsaCreateClose;
-
-static
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-IsaCreateClose(
-    _In_ PDEVICE_OBJECT DeviceObject,
-    _Inout_ PIRP Irp)
-{
-    PAGED_CODE();
-
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-
-    DPRINT("%s(%p, %p)\n", __FUNCTION__, DeviceObject, Irp);
-
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-    return STATUS_SUCCESS;
-}
-
-_Dispatch_type_(IRP_MJ_DEVICE_CONTROL)
-_Dispatch_type_(IRP_MJ_SYSTEM_CONTROL)
-static CODE_SEG("PAGE") DRIVER_DISPATCH_PAGED IsaForwardOrIgnore;
-
-static
-CODE_SEG("PAGE")
-NTSTATUS
-NTAPI
-IsaForwardOrIgnore(
-    _In_ PDEVICE_OBJECT DeviceObject,
-    _Inout_ PIRP Irp)
-{
-    PISAPNP_COMMON_EXTENSION CommonExt = DeviceObject->DeviceExtension;
-
-    PAGED_CODE();
-
-    DPRINT("%s(%p, %p) Minor - %X\n", __FUNCTION__, DeviceObject, Irp,
-           IoGetCurrentIrpStackLocation(Irp)->MinorFunction);
-
-    if (CommonExt->Signature == IsaPnpBus)
-    {
-        IoSkipCurrentIrpStackLocation(Irp);
-        return IoCallDriver(((PISAPNP_FDO_EXTENSION)CommonExt)->Ldo, Irp);
-    }
-    else
-    {
-        NTSTATUS Status = Irp->IoStatus.Status;
-
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return Status;
-    }
-}
-
 CODE_SEG("INIT")
 NTSTATUS
 NTAPI
@@ -1438,7 +1632,5 @@ DriverEntry(
 
     return STATUS_SUCCESS;
 }
-
-#endif /* UNIT_TEST */
 
 /* EOF */

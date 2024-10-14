@@ -56,7 +56,3 @@ PeLdrCheckForLoadedDll(
     IN OUT PLIST_ENTRY ModuleListHead,
     IN PCH DllName,
     OUT PLDR_DATA_TABLE_ENTRY *LoadedEntry);
-
-PVOID
-PeLdrInitSecurityCookie(
-    _In_ PLDR_DATA_TABLE_ENTRY LdrEntry);

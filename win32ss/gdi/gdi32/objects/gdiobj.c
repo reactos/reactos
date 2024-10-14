@@ -265,11 +265,10 @@ GetObjectW(
                 (dwType == GDI_OBJECT_TYPE_BRUSH) ||
                 (dwType == GDI_OBJECT_TYPE_COLORSPACE) ||
                 ( (dwType == GDI_OBJECT_TYPE_EXTPEN) &&
-                    ( (cbSize >= sizeof(EXTLOGPEN)))) ||
+                    ( (cbSize >= sizeof(EXTLOGPEN)) || (cbSize == 0) ) ) ||
                 ( (dwType == GDI_OBJECT_TYPE_BITMAP) && (cbSize >= sizeof(BITMAP)) ))
             {
-                if (cbSize)
-                    SetLastError(ERROR_NOACCESS);
+                SetLastError(ERROR_NOACCESS);
             }
         }
     }

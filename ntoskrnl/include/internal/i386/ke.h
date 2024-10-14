@@ -386,6 +386,7 @@ FORCEINLINE
 VOID
 KiRundownThread(IN PKTHREAD Thread)
 {
+#ifndef CONFIG_SMP
     /* Check if this is the NPX Thread */
     if (KeGetCurrentPrcb()->NpxThread == Thread)
     {
@@ -393,6 +394,9 @@ KiRundownThread(IN PKTHREAD Thread)
         KeGetCurrentPrcb()->NpxThread = NULL;
         Ke386FnInit();
     }
+#else
+    /* Nothing to do */
+#endif
 }
 
 CODE_SEG("INIT")
@@ -663,31 +667,6 @@ NTAPI
 KiConvertToGuiThread(
     VOID
 );
-
-DECLSPEC_NORETURN
-VOID
-FASTCALL
-KiServiceExit(
-    IN PKTRAP_FRAME TrapFrame,
-    IN NTSTATUS Status
-);
-
-DECLSPEC_NORETURN
-VOID
-FASTCALL
-KiServiceExit2(
-    IN PKTRAP_FRAME TrapFrame
-);
-
-FORCEINLINE
-DECLSPEC_NORETURN
-VOID
-KiExceptionExit(
-    _In_ PKTRAP_FRAME TrapFrame,
-    _In_ PKEXCEPTION_FRAME ExceptionFrame)
-{
-    KiServiceExit2(TrapFrame);
-}
 
 //
 // Global x86 only Kernel data

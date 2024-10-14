@@ -44,6 +44,7 @@ list(APPEND SOURCE
     prompt.c
     redir.c
     ren.c
+    replace.c
     screen.c
     set.c
     setlocal.c
@@ -53,7 +54,6 @@ list(APPEND SOURCE
     time.c
     timer.c
     title.c
-    trace.c
     type.c
     ver.c
     verify.c

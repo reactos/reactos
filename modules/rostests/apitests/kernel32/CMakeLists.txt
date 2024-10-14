@@ -22,7 +22,6 @@ list(APPEND SOURCE
     interlck.c
     IsDBCSLeadByteEx.c
     JapaneseCalendar.c
-    LCMapString.c
     LoadLibraryExW.c
     lstrcpynW.c
     lstrlen.c

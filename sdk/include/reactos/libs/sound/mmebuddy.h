@@ -120,6 +120,7 @@ typedef struct _SOUND_OVERLAPPED
     OVERLAPPED Standard;
     struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance;
     PWAVEHDR Header;
+    BOOL PerformCompletion;
 
     LPOVERLAPPED_COMPLETION_ROUTINE OriginalCompletionRoutine;
     PVOID CompletionContext;
@@ -190,16 +191,6 @@ typedef MMRESULT(*MMRESETSTREAM_FUNC)(
     IN  MMDEVICE_TYPE DeviceType,
     IN  BOOLEAN bStartReset);
 
-typedef MMRESULT(*MMGETVOLUME_FUNC)(
-    _In_ struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
-    _In_ DWORD DeviceId,
-    _Out_ PDWORD pdwVolume);
-
-typedef MMRESULT(*MMSETVOLUME_FUNC)(
-    _In_ struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
-    _In_ DWORD DeviceId,
-    _In_ DWORD dwVolume);
-
 typedef struct _MMFUNCTION_TABLE
 {
     union
@@ -225,9 +216,6 @@ typedef struct _MMFUNCTION_TABLE
     MMSETSTATE_FUNC                 SetState;
     MMQUERYDEVICEINTERFACESTRING_FUNC     GetDeviceInterfaceString;
     MMRESETSTREAM_FUNC               ResetStream;
-
-    MMGETVOLUME_FUNC                GetVolume;
-    MMSETVOLUME_FUNC                SetVolume;
 
     // Redundant
     //MMWAVEHEADER_FUNC               PrepareWaveHeader;
@@ -381,20 +369,6 @@ MmeGetPosition(
     IN  DWORD_PTR PrivateHandle,
     IN  MMTIME* Time,
     IN  DWORD Size);
-
-MMRESULT
-MmeGetVolume(
-    _In_ MMDEVICE_TYPE DeviceType,
-    _In_ DWORD DeviceId,
-    _In_ DWORD_PTR PrivateHandle,
-    _Out_ DWORD_PTR pdwVolume);
-
-MMRESULT
-MmeSetVolume(
-    _In_ MMDEVICE_TYPE DeviceType,
-    _In_ DWORD DeviceId,
-    _In_ DWORD_PTR PrivateHandle,
-    _In_ DWORD_PTR dwVolume);
 
 MMRESULT
 MmeGetDeviceInterfaceString(

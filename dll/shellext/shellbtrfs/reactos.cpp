@@ -9,7 +9,6 @@
 #include "shellext.h"
 #include <initguid.h>
 #include <ntddstor.h>
-#define RtlUTF8ToUnicodeN RtlUTF8ToUnicodeN_
 #include <ndk/rtlfuncs.h>
 
 #ifdef __cplusplus

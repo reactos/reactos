@@ -223,6 +223,10 @@ PathQualifyExW(_Inout_ LPWSTR pszPath, _Inout_opt_ LPCWSTR pszDir, _In_ DWORD dw
             PWCHAR pch;
             for (pch = pchTemp; *pch != UNICODE_NULL; ++pch)
             {
+#define PATH_CHAR_CLASS_DOT         0x00000004
+#define PATH_CHAR_CLASS_BACKSLASH   0x00000008
+#define PATH_CHAR_CLASS_COLON       0x00000010
+#define PATH_CHAR_CLASS_OTHER_VALID 0x00000100
 #define VALID_SHORT_PATH_CHAR_CLASSES ( \
     PATH_CHAR_CLASS_DOT | \
     PATH_CHAR_CLASS_BACKSLASH | \
@@ -612,6 +616,8 @@ BOOL WINAPI IsLFNDriveW(LPCWSTR lpszPath)
     }
     else
     {
+        assert(!PathIsRelativeW(lpszPath)); /* Assuming absolute path... */
+
         iDrive = ((lpszPath[0] - L'A') & 0x1F);
         PathBuildRootW(szRoot, iDrive);
 
@@ -1104,14 +1110,14 @@ static const CSIDL_DATA CSIDL_Data[] =
     { /* 0x03 - CSIDL_CONTROLS (.CPL files) */
         &FOLDERID_ControlPanelFolder,
         CSIDL_Type_SystemPath,
-        L"ControlPanelFolder",
+        NULL,
         NULL,
         -IDI_SHELL_CONTROL_PANEL
     },
     { /* 0x04 - CSIDL_PRINTERS */
         &FOLDERID_PrintersFolder,
         CSIDL_Type_SystemPath,
-        L"PrintersFolder",
+        NULL,
         NULL,
         -IDI_SHELL_PRINTERS_FOLDER
     },
@@ -1151,7 +1157,7 @@ static const CSIDL_DATA CSIDL_Data[] =
     { /* 0x0a - CSIDL_BITBUCKET - Recycle Bin */
         &FOLDERID_RecycleBinFolder,
         CSIDL_Type_Disallowed,
-        L"RecycleBinFolder",
+        NULL,
         NULL
     },
     { /* 0x0b - CSIDL_STARTMENU */
@@ -1210,14 +1216,14 @@ static const CSIDL_DATA CSIDL_Data[] =
     { /* 0x11 - CSIDL_DRIVES */
         &FOLDERID_ComputerFolder,
         CSIDL_Type_Disallowed,
-        L"MyComputerFolder",
+        NULL,
         NULL,
         -IDI_SHELL_COMPUTER_FOLDER
     },
     { /* 0x12 - CSIDL_NETWORK */
         &FOLDERID_NetworkFolder,
         CSIDL_Type_Disallowed,
-        L"NetworkPlacesFolder",
+        NULL,
         NULL,
         -IDI_SHELL_NETWORK_FOLDER
     },
@@ -1341,21 +1347,21 @@ static const CSIDL_DATA CSIDL_Data[] =
     { /* 0x24 - CSIDL_WINDOWS */
         &FOLDERID_Windows,
         CSIDL_Type_WindowsPath,
-        L"Windows",
+        NULL,
         NULL,
         -IDI_SHELL_SYSTEM_GEAR
     },
     { /* 0x25 - CSIDL_SYSTEM */
         &FOLDERID_System,
         CSIDL_Type_SystemPath,
-        L"System",
+        NULL,
         NULL,
         -IDI_SHELL_SYSTEM_GEAR
     },
     { /* 0x26 - CSIDL_PROGRAM_FILES */
         &FOLDERID_ProgramFiles,
         CSIDL_Type_CurrVer,
-        L"ProgramFiles",
+        L"ProgramFilesDir",
         MAKEINTRESOURCEW(IDS_PROGRAM_FILES),
 #ifdef __REACTOS__
         0
@@ -1390,21 +1396,21 @@ static const CSIDL_DATA CSIDL_Data[] =
     { /* 0x2a - CSIDL_PROGRAM_FILESX86 */
         &FOLDERID_ProgramFilesX86,
         CSIDL_Type_CurrVer,
-        L"ProgramFilesX86",
+        L"ProgramFilesDir (x86)",
         L"Program Files (x86)",
         -IDI_SHELL_PROGRAMS_FOLDER
     },
     { /* 0x2b - CSIDL_PROGRAM_FILES_COMMON */
         &FOLDERID_ProgramFilesCommon,
         CSIDL_Type_CurrVer,
-        L"ProgramFilesCommon",
+        L"CommonFilesDir",
         MAKEINTRESOURCEW(IDS_PROGRAM_FILES_COMMON),
         -IDI_SHELL_PROGRAMS_FOLDER
     },
     { /* 0x2c - CSIDL_PROGRAM_FILES_COMMONX86 */
         &FOLDERID_ProgramFilesCommonX86,
         CSIDL_Type_CurrVer,
-        L"ProgramFilesCommonX86",
+        L"CommonFilesDir (x86)",
         L"Program Files (x86)\\Common Files",
         -IDI_SHELL_PROGRAMS_FOLDER
     },
@@ -1436,7 +1442,7 @@ static const CSIDL_DATA CSIDL_Data[] =
     { /* 0x31 - CSIDL_CONNECTIONS */
         &FOLDERID_ConnectionsFolder,
         CSIDL_Type_Disallowed,
-        L"ConnectionsFolder",
+        NULL,
         NULL,
         -IDI_SHELL_NETWORK_CONNECTIONS
     },
@@ -1841,43 +1847,6 @@ static const CSIDL_DATA CSIDL_Data[] =
     }
 #endif
 };
-
-INT SHGetSpecialFolderID(_In_ LPCWSTR pszName)
-{
-    UINT csidl;
-
-    for (csidl = 0; csidl < _countof(CSIDL_Data); ++csidl)
-    {
-        const CSIDL_DATA *pData = &CSIDL_Data[csidl];
-        if (pData->szValueName && lstrcmpiW(pszName, pData->szValueName) == 0)
-            return csidl;
-    }
-
-    return -1;
-}
-
-INT Shell_ParseSpecialFolder(_In_ LPCWSTR pszStart, _Out_ LPWSTR *ppch, _Out_ INT *pcch)
-{
-    LPCWSTR pszPath, pchBackslash;
-    WCHAR szPath[MAX_PATH];
-
-    pchBackslash = StrChrW(pszStart, L'\\');
-    if (pchBackslash)
-    {
-        *ppch = (LPWSTR)(pchBackslash + 1);
-        *pcch = (pchBackslash - pszStart) + 1;
-        StrCpyNW(szPath, pszStart, min(*pcch, _countof(szPath)));
-        pszPath = szPath;
-    }
-    else
-    {
-        *ppch = NULL;
-        *pcch = lstrlenW(pszStart);
-        pszPath = pszStart;
-    }
-
-    return SHGetSpecialFolderID(pszPath);
-}
 
 #ifndef __REACTOS__
 static HRESULT _SHExpandEnvironmentStrings(LPCWSTR szSrc, LPWSTR szDest);
@@ -3099,32 +3068,6 @@ BOOL WINAPI SHGetSpecialFolderPathW (
                             szPath) == S_OK;
 }
 
-#ifdef __REACTOS__
-HRESULT SHGetFolderLocationHelper(HWND hwnd, int nFolder, REFCLSID clsid, LPITEMIDLIST *ppidl)
-{
-    HRESULT hr;
-    IShellFolder *psf;
-    LPITEMIDLIST parent, child;
-    EXTERN_C HRESULT SHBindToObject(IShellFolder *psf, LPCITEMIDLIST pidl, REFIID riid, void **ppvObj);
-    *ppidl = NULL;
-    if (FAILED(hr = SHGetFolderLocation(hwnd, nFolder, NULL, 0, &parent)))
-        return hr;
-    if (SUCCEEDED(hr = SHBindToObject(NULL, parent, &IID_IShellFolder, (void**)&psf)))
-    {
-        WCHAR clsidstr[2 + 38 + 1];
-        clsidstr[0] = clsidstr[1] = L':';
-        StringFromGUID2(clsid, clsidstr + 2, 38 + 1);
-        hr = IShellFolder_ParseDisplayName(psf, hwnd, NULL, clsidstr, NULL, &child, NULL);
-        if (SUCCEEDED(hr))
-            *ppidl = ILCombine(parent, child);
-        IShellFolder_Release(psf);
-        ILFree(child);
-    }
-    ILFree(parent);
-    return hr;
-}
-#endif
-
 /*************************************************************************
  * SHGetFolderLocation [SHELL32.@]
  *
@@ -3211,12 +3154,6 @@ HRESULT WINAPI SHGetFolderLocation(
         case CSIDL_NETWORK:
             *ppidl = _ILCreateNetwork();
             break;
-
-#ifdef __REACTOS__
-        case CSIDL_CONNECTIONS:
-            hr = SHGetFolderLocationHelper(hwndOwner, CSIDL_CONTROLS, &CLSID_NetworkConnections, ppidl);
-            break;
-#endif
 
         default:
         {

@@ -32,9 +32,6 @@
 #define IDM_EXPERT     1007
 #define IDM_CUSTOM     1008
 #define IDM_MARKQ      1009
-#ifdef __REACTOS__
-#define IDM_SOUND      1041
-#endif
 
 #define IDC_TIME1      1011
 #define IDC_TIME2      1012
@@ -65,12 +62,3 @@
 #define DLG_TIMES      1
 #define DLG_CONGRATS   2
 #define DLG_CUSTOM     3
-
-#ifdef __REACTOS__
-/* Sound effects */
-#define IDW_BOX        1301
-#define IDW_FLAG       1302
-#define IDW_QUESTION   1303
-#define IDW_EXPLODE    1304
-#define IDW_WIN        1305
-#endif

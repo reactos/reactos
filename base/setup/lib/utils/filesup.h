@@ -10,7 +10,7 @@
 
 NTSTATUS
 SetupCreateDirectory(
-    _In_ PCWSTR PathName);
+    IN PCWSTR DirectoryName);
 
 NTSTATUS
 SetupDeleteFile(
@@ -66,16 +66,10 @@ CombinePaths(
     IN /* PCWSTR */ ...);
 
 BOOLEAN
-DoesPathExist_UStr(
-    _In_opt_ HANDLE RootDirectory,
-    _In_ PCUNICODE_STRING PathName,
-    _In_ BOOLEAN IsDirectory);
-
-BOOLEAN
 DoesPathExist(
-    _In_opt_ HANDLE RootDirectory,
-    _In_ PCWSTR PathName,
-    _In_ BOOLEAN IsDirectory);
+    IN HANDLE RootDirectory OPTIONAL,
+    IN PCWSTR PathName,
+    IN BOOLEAN IsDirectory);
 
 #define DoesDirExist(RootDirectory, DirName)    \
     DoesPathExist((RootDirectory), (DirName), TRUE)
@@ -98,25 +92,18 @@ NtPathToDiskPartComponents(
 
 NTSTATUS
 OpenAndMapFile(
-    _In_opt_ HANDLE RootDirectory,
-    _In_ PCWSTR PathNameToFile,
-    _Out_opt_ PHANDLE FileHandle,
-    _Out_opt_ PULONG FileSize,
-    _Out_ PHANDLE SectionHandle,
-    _Out_ PVOID* BaseAddress,
-    _In_ BOOLEAN ReadWriteAccess);
-
-NTSTATUS
-MapFile(
-    _In_ HANDLE FileHandle,
-    _Out_ PHANDLE SectionHandle,
-    _Out_ PVOID* BaseAddress,
-    _In_ BOOLEAN ReadWriteAccess);
+    IN  HANDLE RootDirectory OPTIONAL,
+    IN  PCWSTR PathNameToFile,
+    OUT PHANDLE FileHandle,         // IN OUT PHANDLE OPTIONAL
+    OUT PHANDLE SectionHandle,
+    OUT PVOID* BaseAddress,
+    OUT PULONG FileSize OPTIONAL,
+    IN  BOOLEAN ReadWriteAccess);
 
 BOOLEAN
 UnMapFile(
-    _In_ HANDLE SectionHandle,
-    _In_ PVOID BaseAddress);
+    IN HANDLE SectionHandle,
+    IN PVOID BaseAddress);
 
 #define UnMapAndCloseFile(FileHandle, SectionHandle, BaseAddress)   \
 do {    \

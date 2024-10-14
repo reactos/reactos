@@ -285,7 +285,8 @@ RetryOpenConsole:
     }
     else
     {
-        ConOutResPrintf(STRING_ERROR_INVALID_DEVICE, param);
+        // FIXME: Localize!
+        ConOutPrintf(L"Invalid device '%s'\n", param);
         return 1;
     }
 

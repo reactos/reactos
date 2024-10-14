@@ -1,4 +1,0 @@
-#define IDB_TEST        130
-
-IDB_TEST                BITMAP      "test.bmp"
-

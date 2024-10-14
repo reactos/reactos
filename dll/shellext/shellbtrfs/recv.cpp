@@ -27,9 +27,6 @@
 
 
 #ifndef _MSC_VER
-#ifdef __REACTOS__
-#define __cpuidex __cpuidex_ // prevent redeclaration
-#endif
 #include <cpuid.h>
 #else
 #include <intrin.h>

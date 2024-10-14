@@ -27,24 +27,35 @@
 static
 NTSTATUS
 SetupCreateSingleDirectory(
-    _In_ PCUNICODE_STRING DirectoryName)
+    IN PCWSTR DirectoryName)
 {
-    NTSTATUS Status;
-    UNICODE_STRING PathName = *DirectoryName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
+    UNICODE_STRING PathName;
     HANDLE DirectoryHandle;
+    NTSTATUS Status;
 
-    /* Remove the trailing separator if needed */
-    if (PathName.Length >= 2 * sizeof(WCHAR) &&
-        PathName.Buffer[PathName.Length / sizeof(WCHAR) - 1] == OBJ_NAME_PATH_SEPARATOR)
+    if (!RtlCreateUnicodeString(&PathName, DirectoryName))
+        return STATUS_NO_MEMORY;
+
+    if (PathName.Length > sizeof(WCHAR) &&
+        PathName.Buffer[PathName.Length / sizeof(WCHAR) - 2] == L'\\' &&
+        PathName.Buffer[PathName.Length / sizeof(WCHAR) - 1] == L'.')
     {
         PathName.Length -= sizeof(WCHAR);
+        PathName.Buffer[PathName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+    }
+
+    if (PathName.Length > sizeof(WCHAR) &&
+        PathName.Buffer[PathName.Length / sizeof(WCHAR) - 1] == L'\\')
+    {
+        PathName.Length -= sizeof(WCHAR);
+        PathName.Buffer[PathName.Length / sizeof(WCHAR)] = UNICODE_NULL;
     }
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &PathName,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_INHERIT,
                                NULL,
                                NULL);
 
@@ -60,80 +71,79 @@ SetupCreateSingleDirectory(
                           NULL,
                           0);
     if (NT_SUCCESS(Status))
+    {
         NtClose(DirectoryHandle);
+    }
+
+    RtlFreeUnicodeString(&PathName);
 
     return Status;
 }
 
-/**
- * @brief
- * Create a new directory, specified by the given path.
- * Any intermediate non-existing directory is created as well.
- *
- * @param[in]   PathName
- * The path of the directory to be created.
- *
- * @return  An NTSTATUS code indicating success or failure.
- **/
 NTSTATUS
 SetupCreateDirectory(
-    _In_ PCWSTR PathName)
+    IN PCWSTR PathName)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    UNICODE_STRING PathNameU;
-    PCWSTR Buffer;
-    PCWCH Ptr, End;
+    PWCHAR PathBuffer = NULL;
+    PWCHAR Ptr, EndPtr;
+    ULONG BackslashCount;
+    ULONG Size;
 
-    RtlInitUnicodeString(&PathNameU, PathName);
-    Buffer = PathNameU.Buffer;
-    End = Buffer + (PathNameU.Length / sizeof(WCHAR));
+    Size = (wcslen(PathName) + 1) * sizeof(WCHAR);
+    PathBuffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Size);
+    if (PathBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* Find the deepest existing sub-directory: start from the
-     * end and go back, verifying each sub-directory in turn */
-    for (Ptr = End; Ptr > Buffer;)
+    wcscpy(PathBuffer, PathName);
+    EndPtr = PathBuffer + wcslen(PathName);
+
+    Ptr = PathBuffer;
+
+    /* Skip the '\Device\HarddiskX\PartitionY\ part */
+    BackslashCount = 0;
+    while (Ptr < EndPtr && BackslashCount < 4)
     {
-        BOOLEAN bExists;
+        if (*Ptr == L'\\')
+            BackslashCount++;
 
-        /* If we are on a separator, truncate at the next character.
-         * The trailing separator is kept for the existence check. */
-        if ((Ptr < End) && (*Ptr == OBJ_NAME_PATH_SEPARATOR))
-            PathNameU.Length = (ULONG_PTR)(Ptr+1) - (ULONG_PTR)Buffer;
-
-        /* Check if the sub-directory exists and stop
-         * if so: this is the deepest existing one */
-        DPRINT("PathName: %wZ\n", &PathNameU);
-        bExists = DoesPathExist_UStr(NULL, &PathNameU, TRUE);
-        if (bExists)
-            break;
-
-        /* Skip back any consecutive path separators */
-        while ((Ptr > Buffer) && (*Ptr == OBJ_NAME_PATH_SEPARATOR))
-            --Ptr;
-        /* Go to the beginning of the path component, stop at the separator */
-        while ((Ptr > Buffer) && (*Ptr != OBJ_NAME_PATH_SEPARATOR))
-            --Ptr;
+        Ptr++;
     }
 
-    /* Skip any consecutive path separators */
-    while ((Ptr < End) && (*Ptr == OBJ_NAME_PATH_SEPARATOR))
-        ++Ptr;
-
-    /* Create all the remaining sub-directories */
-    for (; Ptr < End; ++Ptr)
+    while (Ptr < EndPtr)
     {
-        /* Go to the end of the current path component, stop at
-         * the separator or terminating NUL and truncate it */
-        while ((Ptr < End) && (*Ptr != OBJ_NAME_PATH_SEPARATOR))
-            ++Ptr;
-        PathNameU.Length = (ULONG_PTR)Ptr - (ULONG_PTR)Buffer;
+        if (*Ptr == L'\\')
+        {
+            *Ptr = 0;
 
-        DPRINT("Create: %wZ\n", &PathNameU);
-        Status = SetupCreateSingleDirectory(&PathNameU);
+            DPRINT("PathBuffer: %S\n", PathBuffer);
+            if (!DoesDirExist(NULL, PathBuffer))
+            {
+                DPRINT("Create: %S\n", PathBuffer);
+                Status = SetupCreateSingleDirectory(PathBuffer);
+                if (!NT_SUCCESS(Status))
+                    goto done;
+            }
+
+            *Ptr = L'\\';
+        }
+
+        Ptr++;
+    }
+
+    if (!DoesDirExist(NULL, PathBuffer))
+    {
+        DPRINT("Create: %S\n", PathBuffer);
+        Status = SetupCreateSingleDirectory(PathBuffer);
         if (!NT_SUCCESS(Status))
-            break;
+            goto done;
     }
 
+done:
     DPRINT("Done.\n");
+    if (PathBuffer != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, PathBuffer);
+
     return Status;
 }
 
@@ -692,18 +702,20 @@ CombinePaths(
 }
 
 BOOLEAN
-DoesPathExist_UStr(
-    _In_opt_ HANDLE RootDirectory,
-    _In_ PCUNICODE_STRING PathName,
-    _In_ BOOLEAN IsDirectory)
+DoesPathExist(
+    IN HANDLE RootDirectory OPTIONAL,
+    IN PCWSTR PathName,
+    IN BOOLEAN IsDirectory)
 {
     NTSTATUS Status;
+    UNICODE_STRING Name;
     HANDLE FileHandle;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
 
+    RtlInitUnicodeString(&Name, PathName);
     InitializeObjectAttributes(&ObjectAttributes,
-                               (PUNICODE_STRING)PathName,
+                               &Name,
                                OBJ_CASE_INSENSITIVE,
                                RootDirectory,
                                NULL);
@@ -725,21 +737,10 @@ DoesPathExist_UStr(
     {
         DPRINT("Failed to open %s '%wZ', Status 0x%08lx\n",
                IsDirectory ? "directory" : "file",
-               PathName, Status);
+               &Name, Status);
     }
 
     return NT_SUCCESS(Status);
-}
-
-BOOLEAN
-DoesPathExist(
-    _In_opt_ HANDLE RootDirectory,
-    _In_ PCWSTR PathName,
-    _In_ BOOLEAN IsDirectory)
-{
-    UNICODE_STRING PathNameU;
-    RtlInitUnicodeString(&PathNameU, PathName);
-    return DoesPathExist_UStr(RootDirectory, &PathNameU, IsDirectory);
 }
 
 // FIXME: DEPRECATED! HACKish function that needs to be deprecated!
@@ -853,52 +854,26 @@ Quit:
     return TRUE;
 }
 
-/**
- * @brief
- * Opens and maps a file in memory.
- *
- * @param[in]   RootDirectory
- * @param[in]   PathNameToFile
- * Path to the file, either in absolute form, or relative to the opened
- * root directory given by the RootDirectory handle.
- *
- * @param[out]  FileHandle
- * An optional pointer to a variable receiving a handle to the opened file.
- * If NULL, the underlying file handle is closed.
- *
- * @param[out]  FileSize
- * An optional pointer to a variable receiving the size of the opened file.
- *
- * @param[out]  SectionHandle
- * A pointer to a variable receiving a handle to a section mapping the file.
- *
- * @param[out]  BaseAddress
- * A pointer to a variable receiving the address where the file is mapped.
- *
- * @param[in]   ReadWriteAccess
- * A boolean variable specifying whether to map the file for read and write
- * access (TRUE), or read-only access (FALSE).
- *
- * @return
- * STATUS_SUCCESS in case of success, or a status code in case of error.
- **/
 NTSTATUS
 OpenAndMapFile(
-    _In_opt_ HANDLE RootDirectory,
-    _In_ PCWSTR PathNameToFile,
-    _Out_opt_ PHANDLE FileHandle,
-    _Out_opt_ PULONG FileSize,
-    _Out_ PHANDLE SectionHandle,
-    _Out_ PVOID* BaseAddress,
-    _In_ BOOLEAN ReadWriteAccess)
+    IN  HANDLE RootDirectory OPTIONAL,
+    IN  PCWSTR PathNameToFile,
+    OUT PHANDLE FileHandle,         // IN OUT PHANDLE OPTIONAL
+    OUT PHANDLE SectionHandle,
+    OUT PVOID* BaseAddress,
+    OUT PULONG FileSize OPTIONAL,
+    IN  BOOLEAN ReadWriteAccess)
 {
     NTSTATUS Status;
     UNICODE_STRING FileName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
-    HANDLE LocalFileHandle;
+    ULONG SectionPageProtection;
+    SIZE_T ViewSize;
+    PVOID ViewBase;
 
     /* Open the file */
+
     RtlInitUnicodeString(&FileName, PathNameToFile);
     InitializeObjectAttributes(&ObjectAttributes,
                                &FileName,
@@ -906,8 +881,10 @@ OpenAndMapFile(
                                RootDirectory,
                                NULL);
 
-    if (FileHandle) *FileHandle = NULL;
-    Status = NtOpenFile(&LocalFileHandle,
+    *FileHandle = NULL;
+    *SectionHandle = NULL;
+
+    Status = NtOpenFile(FileHandle,
                         FILE_GENERIC_READ | // Contains SYNCHRONIZE
                             (ReadWriteAccess ? FILE_GENERIC_WRITE : 0),
                         &ObjectAttributes,
@@ -916,7 +893,7 @@ OpenAndMapFile(
                         FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to open file '%wZ' (Status 0x%08lx)\n", &FileName, Status);
+        DPRINT1("Failed to open file '%wZ', Status 0x%08lx\n", &FileName, Status);
         return Status;
     }
 
@@ -924,82 +901,32 @@ OpenAndMapFile(
     {
         /* Query the file size */
         FILE_STANDARD_INFORMATION FileInfo;
-        Status = NtQueryInformationFile(LocalFileHandle,
+        Status = NtQueryInformationFile(*FileHandle,
                                         &IoStatusBlock,
                                         &FileInfo,
                                         sizeof(FileInfo),
                                         FileStandardInformation);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT("NtQueryInformationFile() failed (Status 0x%08lx)\n", Status);
-            goto Quit;
+            DPRINT("NtQueryInformationFile() failed (Status %lx)\n", Status);
+            NtClose(*FileHandle);
+            *FileHandle = NULL;
+            return Status;
         }
 
         if (FileInfo.EndOfFile.HighPart != 0)
             DPRINT1("WARNING!! The file '%wZ' is too large!\n", &FileName);
 
         *FileSize = FileInfo.EndOfFile.LowPart;
+
         DPRINT("File size: %lu\n", *FileSize);
     }
 
-    /* Map the whole file into memory */
-    Status = MapFile(LocalFileHandle,
-                     SectionHandle,
-                     BaseAddress,
-                     ReadWriteAccess);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to map file '%wZ' (Status 0x%08lx)\n", &FileName, Status);
-        goto Quit;
-    }
-
-Quit:
-    /* If we succeeded, return the opened file handle if needed.
-     * If we failed or the caller does not need the handle, close it now. */
-    if (NT_SUCCESS(Status) && FileHandle)
-        *FileHandle = LocalFileHandle;
-    else
-        NtClose(LocalFileHandle);
-
-    return Status;
-}
-
-/**
- * @brief
- * Maps an opened file in memory.
- *
- * @param[in]   FileHandle
- * A handle to an opened file to map.
- *
- * @param[out]  SectionHandle
- * A pointer to a variable receiving a handle to a section mapping the file.
- *
- * @param[out]  BaseAddress
- * A pointer to a variable receiving the address where the file is mapped.
- *
- * @param[in]   ReadWriteAccess
- * A boolean variable specifying whether to map the file for read and write
- * access (TRUE), or read-only access (FALSE).
- *
- * @return
- * STATUS_SUCCESS in case of success, or a status code in case of error.
- **/
-NTSTATUS
-MapFile(
-    _In_ HANDLE FileHandle,
-    _Out_ PHANDLE SectionHandle,
-    _Out_ PVOID* BaseAddress,
-    _In_ BOOLEAN ReadWriteAccess)
-{
-    NTSTATUS Status;
-    ULONG SectionPageProtection;
-    SIZE_T ViewSize;
-    PVOID ViewBase;
+    /* Map the file in memory */
 
     SectionPageProtection = (ReadWriteAccess ? PAGE_READWRITE : PAGE_READONLY);
 
     /* Create the section */
-    *SectionHandle = NULL;
     Status = NtCreateSection(SectionHandle,
                              STANDARD_RIGHTS_REQUIRED | SECTION_QUERY |
                              SECTION_MAP_READ |
@@ -1008,11 +935,12 @@ MapFile(
                              NULL,
                              SectionPageProtection,
                              SEC_COMMIT /* | SEC_IMAGE (_NO_EXECUTE) */,
-                             FileHandle);
+                             *FileHandle);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to create a memory section for file 0x%p (Status 0x%08lx)\n",
-                FileHandle, Status);
+        DPRINT1("Failed to create a memory section for file '%wZ', Status 0x%08lx\n", &FileName, Status);
+        NtClose(*FileHandle);
+        *FileHandle = NULL;
         return Status;
     }
 
@@ -1030,10 +958,11 @@ MapFile(
                                 SectionPageProtection);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to map a view for file 0x%p (Status 0x%08lx)\n",
-                FileHandle, Status);
+        DPRINT1("Failed to map a view for file '%wZ', Status 0x%08lx\n", &FileName, Status);
         NtClose(*SectionHandle);
         *SectionHandle = NULL;
+        NtClose(*FileHandle);
+        *FileHandle = NULL;
         return Status;
     }
 
@@ -1041,23 +970,10 @@ MapFile(
     return STATUS_SUCCESS;
 }
 
-/**
- * @brief
- * Unmaps a mapped file by section.
- *
- * @param[in]   SectionHandle
- * The handle to the section mapping the file.
- *
- * @param[in]   BaseAddress
- * The base address where the file is mapped.
- *
- * @return
- * TRUE if the file was successfully unmapped; FALSE if an error occurred.
- **/
 BOOLEAN
 UnMapFile(
-    _In_ HANDLE SectionHandle,
-    _In_ PVOID BaseAddress)
+    IN HANDLE SectionHandle,
+    IN PVOID BaseAddress)
 {
     NTSTATUS Status;
     BOOLEAN Success = TRUE;
@@ -1065,14 +981,14 @@ UnMapFile(
     Status = NtUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtUnmapViewOfSection(0x%p) failed (Status 0x%08lx)\n",
+        DPRINT1("UnMapFile: NtUnmapViewOfSection(0x%p) failed with Status 0x%08lx\n",
                 BaseAddress, Status);
         Success = FALSE;
     }
     Status = NtClose(SectionHandle);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtClose(0x%p) failed (Status 0x%08lx)\n",
+        DPRINT1("UnMapFile: NtClose(0x%p) failed with Status 0x%08lx\n",
                 SectionHandle, Status);
         Success = FALSE;
     }

@@ -1,9 +1,9 @@
 /*
  * PROJECT:     ReactOS Setup Library
- * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     NT 5.x family (MS Windows <= 2003, and ReactOS)
  *              operating systems detection code.
- * COPYRIGHT:   Copyright 2017-2024 Hermès Bélusca-Maïto <hermes.belusca-maito@reactos.org>
+ * COPYRIGHT:   Copyright 2017-2018 Hermes Belusca-Maito
  */
 
 #pragma once
@@ -22,7 +22,7 @@ typedef struct _NTOS_INSTALLATION
     PCWSTR PathComponent;           // Pointer inside SystemNtPath.Buffer
     ULONG DiskNumber;
     ULONG PartitionNumber;
-    PVOLENTRY Volume; // PVOLINFO
+    PPARTENTRY PartEntry;
     WCHAR InstallationName[MAX_PATH];
     WCHAR VendorName[MAX_PATH];
     // CHAR Data[ANYSIZE_ARRAY];
@@ -31,7 +31,7 @@ typedef struct _NTOS_INSTALLATION
 // EnumerateNTOSInstallations
 PGENERIC_LIST
 CreateNTOSInstallationsList(
-    _In_ PPARTLIST PartList);
+    IN PPARTLIST List);
 
 /*
  * FindSubStrI(PCWSTR str, PCWSTR strSearch) :

@@ -176,6 +176,10 @@ COMMAND cmds[] =
     {_T("rename"), 0, cmd_rename},
 #endif
 
+#ifdef INCLUDE_CMD_REPLACE
+    {_T("replace"), 0, cmd_replace},
+#endif
+
 #ifdef INCLUDE_CMD_SCREEN
     {_T("screen"), 0, CommandScreen},
 #endif

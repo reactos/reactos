@@ -63,8 +63,8 @@ FASTCALL
 KiInsertTimerTable(IN PKTIMER Timer,
                    IN ULONG Hand)
 {
-    ULONGLONG InterruptTime;
-    ULONGLONG DueTime = Timer->DueTime.QuadPart;
+    LARGE_INTEGER InterruptTime;
+    LONGLONG DueTime = Timer->DueTime.QuadPart;
     BOOLEAN Expired = FALSE;
     PLIST_ENTRY ListHead, NextEntry;
     PKTIMER CurrentTimer;
@@ -101,8 +101,8 @@ KiInsertTimerTable(IN PKTIMER Timer,
         KiTimerTableListHead[Hand].Time.QuadPart = DueTime;
 
         /* Make sure it hasn't expired already */
-        InterruptTime = KeQueryInterruptTime();
-        if (DueTime <= InterruptTime) Expired = TRUE;
+        InterruptTime.QuadPart = KeQueryInterruptTime();
+        if (DueTime <= InterruptTime.QuadPart) Expired = TRUE;
     }
 
     /* Return expired state */

@@ -228,9 +228,6 @@
 #define IDS_CMD_PACKAGE_NOT_FOUND               959
 #define IDS_CMD_PACKAGE_INFO                    960
 
-/* Generated installer */
-#define IDS_INSTGEN_CONFIRMUNINST               1000
-
 /* Accelerators */
 #define HOTKEYS                  715
 

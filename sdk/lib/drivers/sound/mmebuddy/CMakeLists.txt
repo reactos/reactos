@@ -1,9 +1,7 @@
 
 add_definitions(
-    -DUNICODE -D_UNICODE)
-if(DBG)
-    add_compile_definitions(NDEBUG)
-endif()
+    -DUNICODE -D_UNICODE
+    -DNDEBUG=1)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/sound)
 

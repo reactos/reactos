@@ -67,31 +67,6 @@ VOID InitPrompt(VOID)
 }
 
 /*
- * Checks if information line should be displayed.
- */
-BOOL HasInfoLine(VOID)
-{
-    LPTSTR pr;
-    TCHAR szPrompt[256];
-
-    if (GetEnvironmentVariable(_T("PROMPT"), szPrompt, _countof(szPrompt)))
-    {
-        pr = szPrompt;
-        while (*pr)
-        {
-            if (*pr++ != _T('$'))
-                continue;
-            if (!*pr || _totupper(*pr++) != _T('I'))
-                continue;
-
-            return TRUE;
-        }
-    }
-
-    return FALSE;
-}
-
-/*
  * Print an information line on top of the screen.
  */
 VOID PrintInfoLine(VOID)
@@ -146,8 +121,17 @@ VOID PrintPrompt(VOID)
      * Special pre-handling for $I: If the information line is displayed
      * on top of the screen, ensure that the prompt won't be hidden below it.
      */
-    if (HasInfoLine() && GetCursorY() == 0)
-        ConOutChar(_T('\n'));
+    for (pr = Prompt; *pr;)
+    {
+        if (*pr++ != _T('$'))
+            continue;
+        if (!*pr || _totupper(*pr++) != _T('I'))
+            continue;
+
+        if (GetCursorY() == 0)
+            ConOutChar(_T('\n'));
+        break;
+    }
 
     /* Parse the prompt string */
     for (pr = Prompt; *pr; ++pr)

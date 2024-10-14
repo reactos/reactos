@@ -12,13 +12,12 @@
 
 struct ShellSettings
 {
-    BOOL fLocked = TRUE;
-    BOOL fShowGoButton = TRUE;
-    BOOL fStatusBarVisible = TRUE;
+    BOOL fLocked = FALSE;
+    BOOL fShowGoButton = FALSE;
+    BOOL fStatusBarVisible = FALSE;
 
     void Save();
     void Load();
-    void Reset() { ShellSettings().Save(); }
 };
 
 struct CabinetStateSettings : CABINETSTATE

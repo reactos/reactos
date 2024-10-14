@@ -742,13 +742,8 @@ CFileDefExt::GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 OPENASINFO oainfo;
                 oainfo.pcszFile = pFileDefExt->m_wszPath;
                 oainfo.pcszClass = NULL;
-                oainfo.oaifInFlags = OAIF_REGISTER_EXT | OAIF_FORCE_REGISTRATION;
-                if (SHOpenWithDialog(hwndDlg, &oainfo) == S_OK)
-                {
-                    pFileDefExt->InitGeneralPage(hwndDlg);
-                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                }
-                break;
+                oainfo.oaifInFlags = OAIF_REGISTER_EXT|OAIF_FORCE_REGISTRATION;
+                return SUCCEEDED(SHOpenWithDialog(hwndDlg, &oainfo));
             }
             else if (LOWORD(wParam) == 14021 || LOWORD(wParam) == 14022 || LOWORD(wParam) == 14023) /* checkboxes */
                 PropSheet_Changed(GetParent(hwndDlg), hwndDlg);

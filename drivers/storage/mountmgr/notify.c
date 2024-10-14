@@ -37,9 +37,13 @@
 VOID
 SendOnlineNotification(IN PUNICODE_STRING SymbolicName)
 {
+    PIRP Irp;
+    KEVENT Event;
     NTSTATUS Status;
     PFILE_OBJECT FileObject;
+    PIO_STACK_LOCATION Stack;
     PDEVICE_OBJECT DeviceObject;
+    IO_STATUS_BLOCK IoStatusBlock;
 
     /* Get device object */
     Status = IoGetDeviceObjectPointer(SymbolicName,
@@ -47,21 +51,40 @@ SendOnlineNotification(IN PUNICODE_STRING SymbolicName)
                                       &FileObject,
                                       &DeviceObject);
     if (!NT_SUCCESS(Status))
+    {
         return;
+    }
 
     /* And attached device object */
     DeviceObject = IoGetAttachedDeviceReference(FileObject->DeviceObject);
 
     /* And send VOLUME_ONLINE */
-    Status = MountMgrSendSyncDeviceIoCtl(IOCTL_VOLUME_ONLINE,
-                                         DeviceObject,
-                                         NULL, 0,
-                                         NULL, 0,
-                                         FileObject);
-    UNREFERENCED_PARAMETER(Status);
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    Irp = IoBuildDeviceIoControlRequest(IOCTL_VOLUME_ONLINE,
+                                        DeviceObject,
+                                        NULL, 0,
+                                        NULL, 0,
+                                        FALSE,
+                                        &Event,
+                                        &IoStatusBlock);
+    if (!Irp)
+    {
+        goto Cleanup;
+    }
 
+    Stack = IoGetNextIrpStackLocation(Irp);
+    Stack->FileObject = FileObject;
+
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+    }
+
+Cleanup:
     ObDereferenceObject(DeviceObject);
     ObDereferenceObject(FileObject);
+
     return;
 }
 

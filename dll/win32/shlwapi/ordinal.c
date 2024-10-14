@@ -61,11 +61,7 @@ extern HINSTANCE shlwapi_hInstance;
 extern DWORD SHLWAPI_ThreadRef_index;
 
 HRESULT WINAPI IUnknown_QueryService(IUnknown*,REFGUID,REFIID,LPVOID*);
-#ifdef __REACTOS__
-HRESULT WINAPI SHInvokeCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST lpApidl, LPCSTR lpVerb);
-#else
 HRESULT WINAPI SHInvokeCommand(HWND,IShellFolder*,LPCITEMIDLIST,DWORD);
-#endif
 BOOL    WINAPI SHAboutInfoW(LPWSTR,DWORD);
 
 /*
@@ -3060,11 +3056,7 @@ HWND WINAPI SHCreateWorkerWindowW(WNDPROC wndProc, HWND hWndParent, DWORD dwExSt
 HRESULT WINAPI SHInvokeDefaultCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST lpApidl)
 {
     TRACE("%p %p %p\n", hWnd, lpFolder, lpApidl);
-#ifdef __REACTOS__
-    return SHInvokeCommand(hWnd, lpFolder, lpApidl, NULL);
-#else
     return SHInvokeCommand(hWnd, lpFolder, lpApidl, 0);
-#endif
 }
 
 /*************************************************************************
@@ -3623,13 +3615,6 @@ UINT WINAPI SHDefExtractIconWrapW(LPCWSTR pszIconFile, int iIndex, UINT uFlags, 
  *           executed.
  *  Failure: An HRESULT error code indicating the error.
  */
-#ifdef __REACTOS__
-EXTERN_C HRESULT WINAPI SHInvokeCommandWithFlagsAndSite(HWND, IUnknown*, IShellFolder*, LPCITEMIDLIST, UINT, LPCSTR);
-HRESULT WINAPI SHInvokeCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST lpApidl, LPCSTR lpVerb)
-{
-    return SHInvokeCommandWithFlagsAndSite(hWnd, NULL, lpFolder, lpApidl, 0, lpVerb);
-}
-#else
 HRESULT WINAPI SHInvokeCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST lpApidl, DWORD dwCommandId)
 {
   IContextMenu *iContext;
@@ -3682,7 +3667,6 @@ HRESULT WINAPI SHInvokeCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST 
   }
   return hRet;
 }
-#endif /* __REACTOS__ */
 
 /*************************************************************************
  *      @	[SHLWAPI.370]

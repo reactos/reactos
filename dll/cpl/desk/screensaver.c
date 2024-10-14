@@ -223,7 +223,7 @@ SetScreenSaverPreviewBox(HWND hwndDlg, PDATA pData)
     }
 }
 
-static VOID
+static BOOL
 WaitForSettingsDialog(HWND hwndDlg,
                       HANDLE hProcess)
 {
@@ -243,18 +243,22 @@ WaitForSettingsDialog(HWND hwndDlg,
             {
                 if (msg.message == WM_QUIT)
                 {
-                    return;
+                    return FALSE;
                 }
-                if (!IsDialogMessage(hwndDlg, &msg))
+                if (IsDialogMessage(hwndDlg, &msg))
                 {
                     TranslateMessage(&msg);
                     DispatchMessage(&msg);
                 }
             }
         }
+        else if (dwResult == WAIT_OBJECT_0)
+        {
+            return TRUE;
+        }
         else
         {
-            return;
+            return FALSE;
         }
     }
 }
@@ -304,8 +308,8 @@ ScreenSaverConfig(HWND hwndDlg, PDATA pData)
             pData->PrevWindowPi.hThread = pData->PrevWindowPi.hProcess = NULL;
         }
 
-        WaitForSettingsDialog(hwndDlg, pi.hProcess);
-        SetScreenSaverPreviewBox(hwndDlg, pData);
+        if (WaitForSettingsDialog(hwndDlg, pi.hProcess))
+            SetScreenSaverPreviewBox(hwndDlg, pData);
 
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);

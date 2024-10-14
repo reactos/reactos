@@ -59,14 +59,11 @@ VOID
 ARMWriteToUART(UCHAR Data);
 #endif
 
-VOID
-DebugInit(
-    _In_ PCSTR DebugString)
+VOID DebugInit(IN ULONG_PTR FrLdrSectionId)
 {
-    static BOOLEAN Initialized = FALSE;
-    PSTR CommandLine, PortString, BaudString, IrqString;
+    PCHAR CommandLine, PortString, BaudString, IrqString;
     ULONG Value;
-    CHAR DbgStringBuffer[256];
+    CHAR  DebugString[256];
 
     /* Always reset the debugging channels */
 
@@ -90,20 +87,29 @@ DebugInit(
     DbgChannels[DPRINT_WINDOWS] = MAX_LEVEL;
 #endif
 
-    CommandLine = NULL;
-    if (!DebugString || !*DebugString)
+    /* Check for pre- or main initialization phase */
+    if (FrLdrSectionId == 0)
     {
-        /* No command-line is provided: during pre-initialization,
-         * initialize the debug port with default settings;
-         * otherwise just return during main initialization */
-        if (!Initialized)
+        /* Pre-initialization phase: use the FreeLdr command-line debugging string */
+        CommandLine = (PCHAR)CmdLineGetDebugString();
+
+        /* If no command-line is provided, initialize the debug port with default settings */
+        if (CommandLine == NULL)
             goto Done;
-        return;
+
+        strcpy(DebugString, CommandLine);
+    }
+    else
+    {
+        /* Main initialization phase: use the FreeLdr INI debugging string */
+        if (!IniReadSettingByName(FrLdrSectionId, "Debug", DebugString, sizeof(DebugString)))
+        {
+            return;
+        }
     }
 
-    /* Get a copy of the command-line */
-    strcpy(DbgStringBuffer, DebugString);
-    CommandLine = DbgStringBuffer;
+    /* Get the Command Line */
+    CommandLine = DebugString;
 
     /* Upcase it */
     _strupr(CommandLine);
@@ -187,8 +193,6 @@ DebugInit(
     }
 
 Done:
-    Initialized = TRUE;
-
     /* Try to initialize the port; if it fails, remove the corresponding flag */
     if (DebugPort & RS232)
     {

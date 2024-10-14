@@ -194,6 +194,5 @@ A_SHAFinal(PSHA_CTX Context, PULONG Result)
    for (Index = 0; Index < 5; Index++)
       Result[Index] = DWORD2BE(Context->State[Index]);
 
-   memset(Context->Buffer, 0, sizeof(Context->Buffer));
    A_SHAInit(Context);
 }

@@ -252,12 +252,9 @@ HRESULT ShutdownShellServices(HDPA hdpa);
  * startup.cpp
  */
 
-VOID ReleaseStartupMutex();
-VOID ProcessRunOnceItems();
 BOOL DoStartStartupItems(ITrayWindow *Tray);
-INT ProcessStartupItems(BOOL bRunOnce);
-static inline INT ProcessStartupItems() { return ProcessStartupItems(FALSE); }
-static inline VOID DoFinishStartupItems() { ReleaseStartupMutex(); }
+INT ProcessStartupItems(VOID);
+BOOL DoFinishStartupItems(VOID);
 
 /*
  * trayprop.h
@@ -369,7 +366,6 @@ HRESULT CTrayClockWnd_CreateInstance(HWND hwndParent, REFIID riid, void **ppv);
 /* TrayNotifyWnd */
 #define TNWM_GETMINIMUMSIZE (WM_USER + 0x100)
 #define TNWM_CHANGETRAYPOS  (WM_USER + 0x104)
-#define TNWM_GETSHOWDESKTOPBUTTON (WM_USER + 0x7601)
 
 #define NTNWM_REALIGN   (0x1)
 
@@ -377,8 +373,6 @@ HRESULT CTrayNotifyWnd_CreateInstance(HWND hwndParent, REFIID riid, void **ppv);
 
 /* SysPagerWnd */
 HRESULT CSysPagerWnd_CreateInstance(HWND hwndParent, REFIID riid, void **ppv);
-
-#include "traydeskbtn.h"
 
 /*
  * taskswnd.c

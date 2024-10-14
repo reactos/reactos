@@ -15,12 +15,12 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <dbt.h>
-#if !defined(__REACTOS__) || defined(_MSC_VER)
+#ifdef _MSC_VER
 #pragma warning (push, 3)
 #endif
 #include <shlobj.h>
 #include <winioctl.h>
-#if !defined(__REACTOS__) || defined(_MSC_VER)
+#ifdef _MSC_VER
 #pragma warning (pop)
 #endif
 #include <stdio.h>

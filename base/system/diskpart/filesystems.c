@@ -13,7 +13,7 @@
 
 static
 BOOL
-ShowFileSystemInfo(
+GetFileSystemInfo(
     PVOLENTRY VolumeEntry)
 {
     WCHAR VolumeNameBuffer[MAX_PATH];
@@ -26,7 +26,6 @@ ShowFileSystemInfo(
     FILE_FS_FULL_SIZE_INFORMATION FullSizeInfo;
     PFILE_FS_ATTRIBUTE_INFORMATION pAttributeInfo = NULL;
     NTSTATUS Status;
-    BOOL Result = TRUE;
 
     wcscpy(VolumeNameBuffer, VolumeEntry->DeviceName);
     wcscat(VolumeNameBuffer, L"\\");
@@ -67,22 +66,12 @@ ShowFileSystemInfo(
     pAttributeInfo = RtlAllocateHeap(RtlGetProcessHeap(),
                                      HEAP_ZERO_MEMORY,
                                      ulSize);
-    if (pAttributeInfo == NULL)
-    {
-        Result = FALSE;
-        goto done;
-    }
 
     Status = NtQueryVolumeInformationFile(VolumeHandle,
                                           &IoStatusBlock,
                                           pAttributeInfo,
                                           ulSize,
                                           FileFsAttributeInformation);
-    if (!NT_SUCCESS(Status))
-    {
-        Result = FALSE;
-        goto done;
-    }
 
     Status = NtQueryVolumeInformationFile(VolumeHandle,
                                           &IoStatusBlock,
@@ -112,43 +101,13 @@ ShowFileSystemInfo(
 
     ConResPrintf(StdOut, IDS_FILESYSTEMS_TYPE, pAttributeInfo->FileSystemName);
     ConResPrintf(StdOut, IDS_FILESYSTEMS_CLUSTERSIZE, ulClusterSize);
-    ConPuts(StdOut, L"\n");
 
-done:
     if (pAttributeInfo)
         RtlFreeHeap(RtlGetProcessHeap(), 0, pAttributeInfo);
 
     NtClose(VolumeHandle);
 
-    return Result;
-}
-
-static
-VOID
-ShowInstalledFileSystems(VOID)
-{
-    WCHAR szBuffer[256];
-    BOOLEAN ret;
-    DWORD dwIndex;
-    UCHAR uMajor, uMinor;
-    BOOLEAN bLatest;
-
-    ConResPuts(StdOut, IDS_FILESYSTEMS_FORMATTING);
-
-    for (dwIndex = 0; ; dwIndex++)
-    {
-        ret = QueryAvailableFileSystemFormat(dwIndex,
-                                             szBuffer,
-                                             &uMajor,
-                                             &uMinor,
-                                            &bLatest);
-        if (ret == FALSE)
-            break;
-
-        ConPrintf(StdOut, L"  %s\n", szBuffer);
-    }
-
-    ConPuts(StdOut, L"\n");
+    return TRUE;
 }
 
 BOOL
@@ -164,10 +123,16 @@ filesystems_main(
 
     ConPuts(StdOut, L"\n");
 
-    if (ShowFileSystemInfo(CurrentVolume))
+    if (GetFileSystemInfo(CurrentVolume))
     {
-        ShowInstalledFileSystems();
+        ConPuts(StdOut, L"\n");
+        ConResPuts(StdOut, IDS_FILESYSTEMS_FORMATTING);
+
+        /* FIXME: List available file systems */
+
     }
+
+    ConPuts(StdOut, L"\n");
 
     return TRUE;
 }

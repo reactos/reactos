@@ -533,7 +533,9 @@ static BOOL do_register_dll( const struct register_dll_info *info, const WCHAR *
     HMODULE module;
     HRESULT res;
     SP_REGISTER_CONTROL_STATUSW status;
+#ifdef __WINESRC__
     IMAGE_NT_HEADERS *nt;
+#endif
 
     status.cbSize = sizeof(status);
     status.FileName = path;
@@ -563,6 +565,7 @@ static BOOL do_register_dll( const struct register_dll_info *info, const WCHAR *
         goto done;
     }
 
+#ifdef __WINESRC__
     if ((nt = RtlImageNtHeader( module )) && !(nt->FileHeader.Characteristics & IMAGE_FILE_DLL))
     {
         /* file is an executable, not a dll */
@@ -601,6 +604,7 @@ static BOOL do_register_dll( const struct register_dll_info *info, const WCHAR *
         CloseHandle( info.hProcess );
         goto done;
     }
+#endif // __WINESRC__
 
     if (flags & FLG_REGSVR_DLLREGISTER)
     {
@@ -693,12 +697,7 @@ static BOOL register_dlls_callback( HINF hinf, PCWSTR field, void *arg )
         if (!SetupGetIntField( &context, 4, &flags )) flags = 0;
 
         /* get timeout */
-#ifdef __REACTOS__
-        /* "11,,cmd.exe,,,/K dir" means default timeout, not a timeout of zero */
-        if (!SetupGetIntField( &context, 5, &timeout ) || timeout == 0) timeout = 60;
-#else
         if (!SetupGetIntField( &context, 5, &timeout )) timeout = 60;
-#endif
 
         /* get command line */
         args = NULL;
@@ -845,10 +844,8 @@ static BOOL Concatenate(int DirId, LPCWSTR SubDirPart, LPCWSTR NamePart, LPWSTR 
     *pFullName = NULL;
 
     Dir = DIRID_get_string(DirId);
-    if (Dir && *Dir)
+    if (Dir)
         dwRequired += wcslen(Dir) + 1;
-    else
-        Dir = NULL; /* DIRID_get_string returns L"" for DIRID_ABSOLUTE */
     if (SubDirPart)
         dwRequired += wcslen(SubDirPart) + 1;
     if (NamePart)

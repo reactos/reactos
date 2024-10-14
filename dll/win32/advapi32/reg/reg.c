@@ -1362,24 +1362,62 @@ RegDeleteKeyValueW(IN HKEY hKey,
                    IN LPCWSTR lpSubKey  OPTIONAL,
                    IN LPCWSTR lpValueName  OPTIONAL)
 {
-    HKEY hSubKey = hKey;
-    LONG ErrorCode;
+    UNICODE_STRING ValueName;
+    HANDLE KeyHandle, CurKey, SubKeyHandle = NULL;
+    NTSTATUS Status;
 
-    if (lpSubKey)
+    Status = MapDefaultKey(&KeyHandle,
+                           hKey);
+    if (!NT_SUCCESS(Status))
     {
-        ErrorCode = RegOpenKeyExW(hKey, lpSubKey, 0, KEY_SET_VALUE, &hSubKey);
-        if (ErrorCode)
+        return RtlNtStatusToDosError(Status);
+    }
+
+    if (lpSubKey != NULL)
+    {
+        OBJECT_ATTRIBUTES ObjectAttributes;
+        UNICODE_STRING SubKeyName;
+
+        RtlInitUnicodeString(&SubKeyName, lpSubKey);
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &SubKeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   KeyHandle,
+                                   NULL);
+
+        Status = NtOpenKey(&SubKeyHandle,
+                           KEY_SET_VALUE,
+                           &ObjectAttributes);
+        if (!NT_SUCCESS(Status))
         {
-            return ErrorCode;
+            goto Cleanup;
         }
-    }
-    ErrorCode = RegDeleteValueW(hSubKey, lpValueName);
 
-    if (hSubKey != hKey)
-    {
-        RegCloseKey(hSubKey);
+        CurKey = SubKeyHandle;
     }
-    return ErrorCode;
+    else
+        CurKey = KeyHandle;
+
+    RtlInitUnicodeString(&ValueName, lpValueName);
+
+    Status = NtDeleteValueKey(CurKey,
+                              &ValueName);
+
+    if (SubKeyHandle != NULL)
+    {
+        NtClose(SubKeyHandle);
+    }
+
+Cleanup:
+    ClosePredefKey(KeyHandle);
+
+    if (!NT_SUCCESS(Status))
+    {
+        return RtlNtStatusToDosError(Status);
+    }
+
+    return ERROR_SUCCESS;
 }
 
 
@@ -1411,7 +1449,7 @@ RegDeleteKeyValueA(IN HKEY hKey,
 
     Ret = RegDeleteKeyValueW(hKey,
                              SubKey.Buffer,
-                             ValueName.Buffer);
+                             SubKey.Buffer);
 
     RtlFreeUnicodeString(&SubKey);
     RtlFreeUnicodeString(&ValueName);
@@ -2290,7 +2328,6 @@ RegDeleteValueA(HKEY hKey,
     UNICODE_STRING ValueName;
     HANDLE KeyHandle;
     NTSTATUS Status;
-    LONG ErrorCode = ERROR_SUCCESS;
 
     Status = MapDefaultKey(&KeyHandle,
                            hKey);
@@ -2299,25 +2336,19 @@ RegDeleteValueA(HKEY hKey,
         return RtlNtStatusToDosError(Status);
     }
 
-    if (!RtlCreateUnicodeStringFromAsciiz(&ValueName, lpValueName))
+    RtlCreateUnicodeStringFromAsciiz(&ValueName, lpValueName);
+    Status = NtDeleteValueKey(KeyHandle,
+                              &ValueName);
+    RtlFreeUnicodeString (&ValueName);
+
+    ClosePredefKey(KeyHandle);
+
+    if (!NT_SUCCESS(Status))
     {
-        ClosePredefKey(KeyHandle);
-        return ERROR_NOT_ENOUGH_MEMORY;
+        return RtlNtStatusToDosError(Status);
     }
 
-    if (IsHKCRKey(KeyHandle))
-    {
-        ErrorCode = DeleteHKCRValue(KeyHandle, &ValueName);
-    }
-    else
-    {
-        Status = NtDeleteValueKey(KeyHandle, &ValueName);
-        if (!NT_SUCCESS(Status))
-            ErrorCode = RtlNtStatusToDosError(Status);
-    }
-    RtlFreeUnicodeString(&ValueName);
-    ClosePredefKey(KeyHandle);
-    return ErrorCode;
+    return ERROR_SUCCESS;
 }
 
 
@@ -2333,7 +2364,6 @@ RegDeleteValueW(HKEY hKey,
     UNICODE_STRING ValueName;
     NTSTATUS Status;
     HANDLE KeyHandle;
-    LONG ErrorCode = ERROR_SUCCESS;
 
     Status = MapDefaultKey(&KeyHandle,
                            hKey);
@@ -2344,18 +2374,17 @@ RegDeleteValueW(HKEY hKey,
 
     RtlInitUnicodeString(&ValueName, lpValueName);
 
-    if (IsHKCRKey(KeyHandle))
-    {
-        ErrorCode = DeleteHKCRValue(KeyHandle, &ValueName);
-    }
-    else
-    {
-        Status = NtDeleteValueKey(KeyHandle, &ValueName);
-        if (!NT_SUCCESS(Status))
-            ErrorCode = RtlNtStatusToDosError(Status);
-    }
+    Status = NtDeleteValueKey(KeyHandle,
+                              &ValueName);
+
     ClosePredefKey(KeyHandle);
-    return ErrorCode;
+
+    if (!NT_SUCCESS(Status))
+    {
+        return RtlNtStatusToDosError(Status);
+    }
+
+    return ERROR_SUCCESS;
 }
 
 

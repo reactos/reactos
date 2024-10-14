@@ -288,7 +288,4 @@ co_IntWaitMessage( PWND Window,
                    UINT MsgFilterMin,
                    UINT MsgFilterMax );
 
-VOID FASTCALL
-MsqReleaseModifierKeys(PUSER_MESSAGE_QUEUE MessageQueue);
-
 /* EOF */
