@@ -3341,23 +3341,20 @@ VOID
 KdbpCliInterpretInitFile(VOID)
 {
     PCHAR p1, p2;
-    INT_PTR i;
-    CHAR c;
 
     /* Execute the commands in the init file */
     DPRINT("KDB: Executing KDBinit file...\n");
     p1 = KdbInitFileBuffer;
     while (p1[0] != '\0')
     {
-        i = strcspn(p1, "\r\n");
+        size_t i = strcspn(p1, "\r\n");
         if (i > 0)
         {
-            c = p1[i];
+            CHAR c = p1[i];
             p1[i] = '\0';
 
             /* Look for "break" command and comments */
             p2 = p1;
-
             while (isspace(p2[0]))
                 p2++;
 

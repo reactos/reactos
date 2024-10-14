@@ -1176,7 +1176,8 @@ KdbpInternalEnter(VOID)
     Thread->Tcb.StackLimit = (ULONG_PTR)KdbStack;
     Thread->Tcb.KernelStack = (char*)KdbStack + KDB_STACK_SIZE;
 
-    // KdbPrintf("Switching to KDB stack 0x%08x-0x%08x (Current Stack is 0x%08x)\n", Thread->Tcb.StackLimit, Thread->Tcb.StackBase, Esp);
+    // KdbPrintf("Switching to KDB stack 0x%08x-0x%08x (Current Stack is 0x%08x)\n",
+    //           Thread->Tcb.StackLimit, Thread->Tcb.StackBase, Esp);
 
     KdbpStackSwitchAndCall(KdbStack + KDB_STACK_SIZE - KDB_STACK_RESERVE, KdbpCallMainLoop);
 
@@ -1333,7 +1334,6 @@ KdbEnterDebuggerException(
         {
             Resume = TRUE; /* Set the resume flag when continuing execution */
         }
-
         /*
          * When a temporary breakpoint is hit we have to make sure that we are
          * in the same context in which it was set, otherwise it could happen
@@ -1360,7 +1360,6 @@ KdbEnterDebuggerException(
 
             KdbEnteredOnSingleStep = TRUE;
         }
-
         /*
          * If we hit a breakpoint set by the debugger we set the single step flag,
          * ignore the next single step and reenable the breakpoint.
