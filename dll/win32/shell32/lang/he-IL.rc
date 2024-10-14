@@ -997,10 +997,6 @@ BEGIN
     IDS_FILE_TYPES "סוגי קבצים"
     IDS_COLUMN_EXTENSION "סיומות"
 
-    /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
-       used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "קובץ %s"
-
     IDS_BYTES_FORMAT "בתים"
     IDS_UNKNOWN_APP "יישום לא ידוע"
     IDS_EXE_DESCRIPTION "תיאור:"

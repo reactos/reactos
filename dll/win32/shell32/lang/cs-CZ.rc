@@ -998,10 +998,6 @@ BEGIN
     IDS_FILE_TYPES "Typy souborů"
     IDS_COLUMN_EXTENSION "Přípony"
 
-    /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
-       used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "Soubor %s"
-
     IDS_BYTES_FORMAT "bajtů"
     IDS_UNKNOWN_APP "Neznámá aplikace"
     IDS_EXE_DESCRIPTION "Popis:"

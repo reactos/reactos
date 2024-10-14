@@ -23,11 +23,6 @@ SHELL_GetRegCLSID(HKEY hKey, LPCWSTR SubKey, LPCWSTR Value, CLSID &clsid)
     return !err ? CLSIDFromString(buf, &clsid) : HRESULT_FROM_WIN32(err);
 }
 
-static inline bool RegValueExists(HKEY hKey, LPCWSTR Name)
-{
-    return RegQueryValueExW(hKey, Name, NULL, NULL, NULL, NULL) == ERROR_SUCCESS;
-}
-
 static BOOL InsertMenuItemAt(HMENU hMenu, UINT Pos, UINT Flags)
 {
     MENUITEMINFOW mii;

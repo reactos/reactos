@@ -965,7 +965,7 @@ BEGIN
     IDS_SCR_FILE "Screen Saver"
     IDS_SYS_FILE "Systemfil"
     IDS_VXD_FILE "Virtuell enhetdriver"
-    IDS_ANY_FILE "%s-file"
+    IDS_ANY_FILE "%s fil"
 
     IDS_OPEN_VERB "Åpne"
     IDS_EXPLORE_VERB "Explore"
@@ -989,10 +989,6 @@ BEGIN
     IDS_FILE_DETAILSADV "Filer med utvidelser '%s' er av typen '%s'. For å endre innstillingene som er av filen '%s', trykk på avansert."
     IDS_FILE_TYPES "File Types"
     IDS_COLUMN_EXTENSION "Extensions"
-
-    /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
-       used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "%s File"
 
     IDS_BYTES_FORMAT "bytes"
     IDS_UNKNOWN_APP "Unknown application"
