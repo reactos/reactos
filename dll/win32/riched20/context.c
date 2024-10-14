@@ -44,5 +44,4 @@ void ME_InitContext(ME_Context *c, ME_TextEditor *editor, HDC hDC)
 void ME_DestroyContext(ME_Context *c)
 {
     select_style( c, NULL );
-    if (c->hDC) ITextHost_TxReleaseDC( c->editor->texthost, c->hDC );
 }
