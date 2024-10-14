@@ -28,6 +28,8 @@ WINE_DEFAULT_DEBUG_CHANNEL (fprop);
 
 /////////////////////////////////////////////////////////////////////////////
 
+EXTERN_C BOOL PathIsExeW(LPCWSTR lpszPath);
+
 #define FTA_MODIFYMASK (FTA_OpenIsSafe) // Bits modified by EditTypeDlg
 #define NOASSOCRESID IDI_SHELL_DOCUMENT
 #define SUPPORT_EXTENSIONWITHOUTPROGID 1 // NT5 does not support these but NT6 does
@@ -741,6 +743,14 @@ FileTypesDlg_InsertToLV(HWND hListView, LPCWSTR Assoc, INT iItem, PFILE_TYPE_GLO
 
     if (Assoc[0] == L'.')
     {
+        if (PathIsExeW(Assoc))
+        {
+        exclude:
+            HeapFree(pG->hHeap, 0, Entry);
+            RegCloseKey(hKey);
+            return NULL;
+        }
+
         dwSize = sizeof(Entry->ClassKey);
         if (RegQueryValueExW(hKey, NULL, NULL, NULL, LPBYTE(Entry->ClassKey), &dwSize))
         {
@@ -755,9 +765,7 @@ FileTypesDlg_InsertToLV(HWND hListView, LPCWSTR Assoc, INT iItem, PFILE_TYPE_GLO
 #else
         if (!Entry->ClassKey[0])
         {
-            HeapFree(pG->hHeap, 0, Entry);
-            RegCloseKey(hKey);
-            return NULL;
+            goto exclude;
         }
 #endif
     }
@@ -765,9 +773,7 @@ FileTypesDlg_InsertToLV(HWND hListView, LPCWSTR Assoc, INT iItem, PFILE_TYPE_GLO
     Entry->EditFlags = GetRegDWORD(hKey, L"EditFlags", 0);
     if (Entry->EditFlags & FTA_Exclude)
     {
-        HeapFree(pG->hHeap, 0, Entry);
-        RegCloseKey(hKey);
-        return NULL;
+        goto exclude;
     }
 
     wcscpy(Entry->FileExtension, Assoc);
