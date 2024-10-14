@@ -276,6 +276,7 @@ extern "C" __declspec(noreturn) void __cdecl _invalid_parameter_noinfo_noreturn(
             EXCEPTION_NONCONTINUABLE);
 
         TerminateProcess(GetCurrentProcess(), STATUS_INVALID_CRUNTIME_PARAMETER);
+        UNREACHABLE;
     }
 
 #else // ^^^ (_M_IX86 || _M_X64) && !_UCRT_ENCLAVE_BUILD ^^^ // vvv Newer Architectures vvv //
