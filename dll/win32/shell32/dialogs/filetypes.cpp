@@ -745,7 +745,7 @@ FileTypesDlg_InsertToLV(HWND hListView, LPCWSTR Assoc, INT iItem, PFILE_TYPE_GLO
     {
         if (PathIsExeW(Assoc))
         {
-        exclude:
+exclude:
             HeapFree(pG->hHeap, 0, Entry);
             RegCloseKey(hKey);
             return NULL;
@@ -764,17 +764,13 @@ FileTypesDlg_InsertToLV(HWND hListView, LPCWSTR Assoc, INT iItem, PFILE_TYPE_GLO
         }
 #else
         if (!Entry->ClassKey[0])
-        {
             goto exclude;
-        }
 #endif
     }
 
     Entry->EditFlags = GetRegDWORD(hKey, L"EditFlags", 0);
     if (Entry->EditFlags & FTA_Exclude)
-    {
         goto exclude;
-    }
 
     wcscpy(Entry->FileExtension, Assoc);
 
