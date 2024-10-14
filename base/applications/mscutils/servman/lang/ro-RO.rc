@@ -17,17 +17,17 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", ID_EXIT
     END
-    POPUP "A&cțiuni"
+    POPUP "&Acțiuni"
     BEGIN
         MENUITEM "Co&nectare la…", ID_CONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "P&ornește", ID_START, GRAYED
-        MENUITEM "&Oprește", ID_STOP, GRAYED
+        MENUITEM "P&ornire", ID_START, GRAYED
+        MENUITEM "&Oprire", ID_STOP, GRAYED
         MENUITEM "Într&erupe", ID_PAUSE, GRAYED
-        MENUITEM "R&eia", ID_RESUME, GRAYED
-        MENUITEM "&Repornește", ID_RESTART, GRAYED
+        MENUITEM "R&eluare", ID_RESUME, GRAYED
+        MENUITEM "&Repornire", ID_RESTART, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Împrospătea&ză\tF5", ID_REFRESH
+        MENUITEM "Î&mprospătare\tF5", ID_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "Mo&dificare…", ID_EDIT, GRAYED
         MENUITEM "&Creare…", ID_CREATE, GRAYED
@@ -35,7 +35,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Proprietăți…", ID_PROP, GRAYED
     END
-    POPUP "&Afișare"
+    POPUP "&Vizualizare"
     BEGIN
         MENUITEM "D&ale", ID_VIEW_LARGE
         MENUITEM "&Pictograme", ID_VIEW_SMALL
@@ -44,9 +44,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Pa&rticularizare…", ID_VIEW_CUST, GRAYED
     END
-    POPUP "Aj&utor"
+    POPUP "A&jutor"
     BEGIN
-        MENUITEM "&Manual…", ID_HELP
+        MENUITEM "Aj&utor", ID_HELP
         MENUITEM "&Despre…", ID_ABOUT
     END
 END
@@ -55,20 +55,20 @@ IDR_POPUP MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "P&ornește", ID_START, GRAYED
-        MENUITEM "&Oprește", ID_STOP, GRAYED
-        MENUITEM "Într&erupe", ID_PAUSE, GRAYED
-        MENUITEM "R&eia", ID_RESUME, GRAYED
-        MENUITEM "&Repornește", ID_RESTART, GRAYED
+        MENUITEM "P&ornire", ID_START, GRAYED
+        MENUITEM "&Oprire", ID_STOP, GRAYED
+        MENUITEM "Într&erupere", ID_PAUSE, GRAYED
+        MENUITEM "R&eluare", ID_RESUME, GRAYED
+        MENUITEM "&Repornire", ID_RESTART, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Împrospătea&ză", ID_REFRESH
+        MENUITEM "Î&mprospare", ID_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "Mo&dificare…", ID_EDIT, GRAYED
         MENUITEM "Elimin&are…", ID_DELETE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Proprietăți…", ID_PROP, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Manual…", ID_HELP
+        MENUITEM "Aj&utor", ID_HELP
     END
 END
 
@@ -78,7 +78,7 @@ BEGIN
 END
 
 IDD_DLG_GENERAL DIALOGEX 6, 6, 253, 232
-CAPTION "Generale"
+CAPTION "General"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
@@ -87,21 +87,21 @@ BEGIN
     EDITTEXT IDC_DESCRIPTION, 70, 46, 176, 24, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_MULTILINE | ES_READONLY
     EDITTEXT IDC_EXEPATH, 6, 86, 240, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
     COMBOBOX IDC_START_TYPE, 70, 107, 176, 40, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
-    PUSHBUTTON "P&ornește", IDC_START, 6, 155, 54, 15, WS_DISABLED
-    PUSHBUTTON "&Oprește", IDC_STOP, 68, 155, 54, 15, WS_DISABLED
-    PUSHBUTTON "Într&erupe", IDC_PAUSE, 130, 155, 54, 15, WS_DISABLED
-    PUSHBUTTON "R&eia", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
+    PUSHBUTTON "&Pornire", IDC_START, 6, 155, 54, 15, WS_DISABLED
+    PUSHBUTTON "&Oprire", IDC_STOP, 68, 155, 54, 15, WS_DISABLED
+    PUSHBUTTON "Î&ntrerupere", IDC_PAUSE, 130, 155, 54, 15, WS_DISABLED
+    PUSHBUTTON "&Reluare", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
     LTEXT "Nume serviciu:", IDC_STATIC, 4, 11, 53, 11
     LTEXT "Nume afișat:", IDC_STATIC, 4, 29, 53, 11
     LTEXT "Descriere:", IDC_STATIC, 4, 51, 53, 11
-    LTEXT "Cale la executabil:", IDC_STATIC, 6, 73, 82, 9
-    LTEXT "Tip lansare:", IDC_STATIC, 6, 108, 53, 11
+    LTEXT "Calea către executabil:", IDC_STATIC, 6, 73, 82, 9
+    LTEXT "Tipul de pornire:", IDC_STATIC, 6, 108, 53, 11
     LTEXT "Stare serviciu:", IDC_STATIC, 4, 138, 53, 11
     LTEXT "", IDC_SERV_STATUS, 70, 138, 176, 11, WS_CHILD | WS_VISIBLE
-    LTEXT "Aici pot fi specificați parametrii de pornire aplicabili lansării serviciului.", IDC_STATIC, 6, 177, 240, 15
+    LTEXT "Se pot specifica parametrii de pornire care se aplică atunci când se pornește serviciul de aici.", IDC_STATIC, 6, 177, 240, 15
     LTEXT "Parametri de pornire:", IDC_STATIC, 6, 200, 68, 11
     EDITTEXT IDC_START_PARAM, 78, 199, 168, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "Mo&dificare", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
+    PUSHBUTTON "&Modificare", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
 END
 
 IDD_LOGON DIALOGEX 6, 6, 253, 232
@@ -112,17 +112,17 @@ BEGIN
     LTEXT "Autentificat ca:", IDC_STATIC, 7, 7, 238, 8
     AUTORADIOBUTTON "&Cont de sistem local", IDC_LOGON_SYSTEMACCOUNT, 7, 22, 238, 10, BS_TOP | BS_MULTILINE | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "Acest c&ont:", IDC_LOGON_THISACCOUNT, 7, 52, 60, 10, BS_TOP | BS_MULTILINE | WS_CHILD | WS_VISIBLE
-    AUTOCHECKBOX "Per&mite serviciului să interacționeze cu aplicațiile de desktop", IDC_LOGON_INTERACTIVE, 18, 34, 227, 10, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "Se per&mite serviciului să interacționeze cu aplicațiile de desktop", IDC_LOGON_INTERACTIVE, 18, 34, 227, 10, WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP | BS_TOP | BS_MULTILINE
     EDITTEXT IDC_LOGON_ACCOUNTNAME, 72, 50, 103, 14, ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Spe&cificare…", IDC_LOGON_SEARCH, 185, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "&Parolă:", IDC_LOGON_PW1TEXT, 18, 71, 33, 8, WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_GROUP
     EDITTEXT IDC_LOGON_PASSWORD1, 72, 68, 104, 14, ES_LEFT | ES_PASSWORD | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Confi&rmarea parolei:", IDC_LOGON_PW2TEXT, 18, 84, 47, 18, WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_GROUP
+    LTEXT "Confi&rmare a parolei:", IDC_LOGON_PW2TEXT, 18, 84, 47, 18, WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_GROUP
     EDITTEXT IDC_LOGON_PASSWORD2, 72, 86, 104, 14, ES_LEFT | ES_PASSWORD | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Serviciul poate fi activat sau dezactivat în următoarele profile:", IDC_STATIC, 7, 114, 210, 8, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Se permite serviciului să interacționeze cu desktopul", IDC_STATIC, 7, 114, 210, 8, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", IDC_LOGON_HWPROFILE, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_GROUP | WS_TABSTOP, 7, 124, 238, 65
-    PUSHBUTTON "Acti&vează", IDC_LOGON_HWENABLE, 116, 197, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
-    PUSHBUTTON "Dezacti&vează", IDC_LOGON_HWDISABLE, 185, 197, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
+    PUSHBUTTON "&Activare", IDC_LOGON_HWENABLE, 116, 197, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
+    PUSHBUTTON "&Dezactivare", IDC_LOGON_HWDISABLE, 185, 197, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_DISABLED
 END
 
 IDD_RECOVERY DIALOGEX 6, 6, 253, 232
@@ -130,27 +130,27 @@ CAPTION "Recuperare"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
-    LTEXT "Determinați răspunsul sistemului dacă acest serviciu cade.", IDC_STATIC, 7, 7, 238, 8
-    LTEXT "&Prima cădere:", IDC_STATIC, 7, 24, 92, 8
+    LTEXT "Selectează răspunsul computerului dacă acest serviciu eșuează.", IDC_STATIC, 7, 7, 238, 8
+    LTEXT "&Primul eșec::", IDC_STATIC, 7, 24, 92, 8
     COMBOBOX IDC_FIRST_FAILURE, 104, 22, 141, 147, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
-    LTEXT "A &doua cădere:", IDC_STATIC, 7, 41, 92, 8
+    LTEXT "&Al doilea eșec:", IDC_STATIC, 7, 41, 92, 8
     COMBOBOX IDC_SECOND_FAILURE, 104, 39, 141, 147, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
-    LTEXT "Alt&e căderi:", IDC_STATIC, 7, 58, 92, 8
+    LTEXT "&Eșecuri ulterioare", IDC_STATIC, 7, 58, 92, 8
     COMBOBOX IDC_SUBSEQUENT_FAILURES, 104, 56, 141, 147, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
-    LTEXT "&Repornire contor după:", IDC_STATIC, 7, 75, 72, 8
+    LTEXT "&Res. contor eș. după:", IDC_STATIC, 7, 75, 72, 8
     EDITTEXT IDC_RESET_TIME, 104, 73, 40, 13, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL | ES_NUMBER
     LTEXT "zile", IDC_STATIC, 150, 75, 95, 8
-    LTEXT "Repornire ser&viciu după:", IDC_RESTART_TEXT1, 7, 92, 92, 8
+    LTEXT "Repornire a ser&viciului după:", IDC_RESTART_TEXT1, 7, 92, 92, 8
     EDITTEXT IDC_RESTART_TIME, 104, 90, 40, 13, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL | ES_NUMBER
     LTEXT "minute", IDC_RESTART_TEXT2, 150, 92, 95, 8
-    GROUPBOX "Execare program", IDC_RUN_GROUPBOX, 7, 108, 238, 80
-    LTEXT "Pr&ogram:", IDC_RUN_TEXT1, 14, 121, 168, 8
+    GROUPBOX "Executare a programului", IDC_RUN_GROUPBOX, 7, 108, 238, 80
+    LTEXT "&Program:", IDC_RUN_TEXT1, 14, 121, 168, 8
     EDITTEXT IDC_PROGRAM, 14, 131, 165, 14
-    PUSHBUTTON "Spe&cificare…", IDC_BROWSE_PROGRAM, 180, 131, 58, 14
+    PUSHBUTTON "&Specificare…", IDC_BROWSE_PROGRAM, 180, 131, 58, 14
     LTEXT "Para&metrii liniei de comandă:", IDC_RUN_TEXT2, 14, 155, 108, 8
     EDITTEXT IDC_PARAMETERS, 128, 152, 110, 14
-    AUTOCHECKBOX "&Adaugă contorul căderilor la sfârșitul liniei de comandă (/fail=%1%)", IDC_ADD_FAILCOUNT, 14, 171, 219, 10, WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_TOP | BS_MULTILINE
-    PUSHBUTTON "Opți&uni de repornire calculator…", IDC_RESTART_OPTIONS, 116, 197, 129, 14
+    AUTOCHECKBOX "Adău&gare nr. de eșecuri la sfârșit linie de comandă (/fail=%1%)", IDC_ADD_FAILCOUNT, 14, 171, 219, 10, WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_TOP | BS_MULTILINE
+    PUSHBUTTON "&Opțiuni de repornire a computerului…", IDC_RESTART_OPTIONS, 116, 197, 129, 14
 END
 
 IDD_DLG_DEPEND DIALOGEX 6, 6, 253, 225
@@ -164,13 +164,13 @@ BEGIN
     CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW |
             WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES |
             TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 236, 68
-    LTEXT "Unele servicii depind de alte servicii sau modúle de sistem și de ordinea încărcării în grup. Dacă o componentă de sistem este oprită sau nu are o funcționare corespunzătoare, serviciile dependente pot fi și ele afectate.", IDC_STATIC, 8, 7, 238, 26
-    LTEXT "Acest serviciu depinde de următoarele componente:", IDC_STATIC, 8, 57, 236, 9
+    LTEXT "Unele servicii depind de alte servicii sau de module de sistem și de ordinea încărcării în grup. Dacă o componentă de sistem este oprită sau nu rulează corespunzător, serviciile dependente pot fi și ele afectate.", IDC_STATIC, 8, 7, 238, 26
+    LTEXT "Acest serviciu depinde de următoarele componente", IDC_STATIC, 8, 57, 236, 9
     LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
 END
 
 IDD_DLG_CREATE DIALOGEX 6, 6, 225, 209
-CAPTION "Creare serviciu"
+CAPTION "Creare a unui serviciu"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_GROUP | WS_TABSTOP
 BEGIN
@@ -183,29 +183,29 @@ BEGIN
     LTEXT "*Nume afișat:", IDC_STATIC, 12, 33, 54, 9
     LTEXT "*Cale la executabil:", IDC_STATIC, 10, 51, 68, 9
     LTEXT "Descriere:", IDC_STATIC, 12, 86, 44, 9
-    PUSHBUTTON "Con&firmă", IDOK, 126, 192, 44, 13
-    PUSHBUTTON "A&nulează", IDCANCEL, 176, 192, 46, 13
-    LTEXT "Alte opțiuni (apăsați „Manual” pentru detalii)", IDC_STATIC, 10, 151, 134, 9
-    PUSHBUTTON "&Manual…", ID_CREATE_HELP, 10, 192, 44, 13
+    PUSHBUTTON "OK", IDOK, 126, 192, 44, 13
+    PUSHBUTTON "Revocare", IDCANCEL, 176, 192, 46, 13
+    LTEXT "Opțiuni suplim. (clic pe Ajutor pt. detalii)", IDC_STATIC, 10, 151, 134, 9
+    PUSHBUTTON "&Ajutor", ID_CREATE_HELP, 10, 192, 44, 13
 END
 
 IDD_DLG_DELETE DIALOGEX 6, 6, 185, 148
-CAPTION "Eliminare serviciu"
+CAPTION "Ștergere a unui serviciu"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
     ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
-    LTEXT "Sigur doriți eliminarea acestui serviciu? Odată eliminat, nu va mai putea fi recuperat!", IDC_STATIC, 50, 6, 125, 25
-    LTEXT "Nume serviciu:", IDC_STATIC, 6, 40, 80, 9
+    LTEXT "Sigur doriți eliminarea acestui serviciu? Odată eliminat, acesta nu mai poate fi recuperat!", IDC_STATIC, 50, 6, 125, 25
+    LTEXT "Numele serviciului:", IDC_STATIC, 6, 40, 80, 9
     LTEXT "", IDC_DEL_NAME, 15, 53, 160, 15
     EDITTEXT IDC_DEL_DESC, 6, 73, 174, 48, WS_CHILD | WS_VISIBLE | WS_VSCROLL |
              WS_EX_STATICEDGE | ES_MULTILINE | ES_READONLY
-    PUSHBUTTON "D&a", IDOK, 26, 129, 54, 13
-    DEFPUSHBUTTON "N&u", IDCANCEL, 102, 129, 54, 13
+    PUSHBUTTON "Da", IDOK, 26, 129, 54, 13
+    DEFPUSHBUTTON "Nu", IDCANCEL, 102, 129, 54, 13
 END
 
 IDD_DLG_DEPEND_STOP DIALOGEX 6, 6, 240, 148
-CAPTION "Oprire servicii"
+CAPTION "Oprire s altor servicii"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
@@ -213,8 +213,8 @@ BEGIN
     LTEXT "", IDC_STOP_DEPENDS, 40, 8, 170, 25
     LISTBOX IDC_STOP_DEPENDS_LB, 15, 40, 210, 70, WS_CHILD | WS_VISIBLE | WS_EX_STATICEDGE | LBS_NOSEL
     LTEXT "Doriți oprirea acestor servicii?", IDC_STATIC, 15, 110, 150, 10
-    DEFPUSHBUTTON "D&a", IDOK, 60, 129, 54, 14
-    PUSHBUTTON "N&u", IDCANCEL, 120, 129, 54, 14
+    DEFPUSHBUTTON "Da", IDOK, 60, 129, 54, 14
+    PUSHBUTTON "Nu", IDCANCEL, 120, 129, 54, 14
 END
 
 IDD_DLG_HELP_OPTIONS DIALOGEX 6, 6, 200, 150
@@ -223,18 +223,18 @@ FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
     LTEXT "", IDC_CREATE_HELP, 6, 5, 200, 150
-    PUSHBUTTON "Î&nchide", IDOK, 75, 130, 44, 13
+    PUSHBUTTON "OK", IDOK, 75, 130, 44, 13
 END
 
 IDD_DLG_PROGRESS DIALOGEX 6, 6, 255, 89
-CAPTION "Control servicii"
+CAPTION "Controlul serviciilor"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_VISIBLE | DS_MODALFRAME
 BEGIN
     CONTROL "", IDC_SERVCON_PROGRESS, "msctls_progress32", 0x50000000, 8, 46, 238, 13
     LTEXT "", IDC_SERVCON_INFO, 8, 5, 236, 11
     LTEXT "", IDC_SERVCON_NAME, 8, 25, 66, 11
-    PUSHBUTTON "Î&nchide", IDOK, 100, 70, 54, 13
+    PUSHBUTTON "Î&nchidere", IDOK, 100, 70, 54, 13
 END
 
 STRINGTABLE
@@ -242,7 +242,7 @@ BEGIN
     IDS_FIRSTCOLUMN "Nume"
     IDS_SECONDCOLUMN "Descriere"
     IDS_THIRDCOLUMN "Stare"
-    IDS_FOURTHCOLUMN "Tip lansare"
+    IDS_FOURTHCOLUMN "Tip de pornire"
     IDS_FITHCOLUMN "Autentificare ca"
 END
 
@@ -250,15 +250,15 @@ STRINGTABLE
 BEGIN
     IDS_SERVICES_STARTED "Pornit"
     IDS_SERVICES_STOPPED "Oprit"
-    IDS_SERVICES_AUTO "Automată"
-    IDS_SERVICES_MAN "Manuală"
-    IDS_SERVICES_DIS "Inactivă"
+    IDS_SERVICES_AUTO "Automat"
+    IDS_SERVICES_MAN "Manual"
+    IDS_SERVICES_DIS "Dezactivat"
 END
 
 STRINGTABLE
 BEGIN
     IDS_NUM_SERVICES "Nr. servicii: %d"
-    IDS_STOP_DEPENDS "Dacă %s se oprește aceste procese se vor opri de asemenea."
+    IDS_STOP_DEPENDS "Când %s se oprește, aceste alte servicii se vor opri și ele"
     IDS_NO_DEPENDS "<Fără dependențe>"
 END
 
@@ -266,30 +266,30 @@ STRINGTABLE
 BEGIN
     IDS_TOOLTIP_PROP "Proprietăți"
     IDS_TOOLTIP_REFRESH "Împrospătare"
-    IDS_TOOLTIP_EXPORT "Listă de export"
-    IDS_TOOLTIP_CREATE "Creează un serviciu nou"
-    IDS_TOOLTIP_DELETE "Elimină un serviciu existent"
-    IDS_TOOLTIP_START "Pornește serviciul"
-    IDS_TOOLTIP_STOP "Oprește serviciul"
-    IDS_TOOLTIP_PAUSE "Întrerupe serviciul"
-    IDS_TOOLTIP_RESTART "Repornește serviciul"
+    IDS_TOOLTIP_EXPORT "Exportare a listei"
+    IDS_TOOLTIP_CREATE "Creare a unui serviciu nou"
+    IDS_TOOLTIP_DELETE "Eliminare a unui serviciu existent"
+    IDS_TOOLTIP_START "Pornire a serviciului"
+    IDS_TOOLTIP_STOP "Oprire a serviciului"
+    IDS_TOOLTIP_PAUSE "Întrerupere a serviciului"
+    IDS_TOOLTIP_RESTART "Repornire a serviciului"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PROGRESS_INFO_START "ReactOS încearcă pornirea serviciului"
-    IDS_PROGRESS_INFO_STOP "ReactOS încearcă oprirea serviciului"
-    IDS_PROGRESS_INFO_PAUSE "ReactOS încearcă întreruperea serviciului"
-    IDS_PROGRESS_INFO_RESUME "ReactOS încearcă reluarea serviciului"
-    IDS_CREATE_SUCCESS "Serviciu creat cu succes"
-    IDS_DELETE_SUCCESS "Serviciu eliminat cu succes"
-    IDS_CREATE_REQ "Câmpurile cu\nasterisc sunt obligatorii"
-    IDS_DELETE_STOP "Este necesară oprirea manuală a serviciului înainte de a-l eliminăra!"
+    IDS_PROGRESS_INFO_START "ReactOS încearcă să pornească următorul serviciu"
+    IDS_PROGRESS_INFO_STOP "ReactOS încearcă să oprească următorul serviciu"
+    IDS_PROGRESS_INFO_PAUSE "ReactOS încearcă să întrerupă următorul serviciu"
+    IDS_PROGRESS_INFO_RESUME "ReactOS încearcă să reia următorului serviciu"
+    IDS_CREATE_SUCCESS "Serviciul a fost creat cu succes"
+    IDS_DELETE_SUCCESS "Serviciul a fost eliminat cu succes"
+    IDS_CREATE_REQ "Câmpurile marcate cu un\nasterisc sunt obligatorii"
+    IDS_DELETE_STOP "Trebuie oprit manual serviciul înainte de a îl șterge!"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_HELP_OPTIONS "OPȚIUNI DE CREARE:\nNOTĂ: Numele opțiunii include semnul de egalitate.\n type= <own|share|interact|kernel|filesys|rec>\n       (implicit = own)\n start= <boot|system|auto|demand|disabled>\n       (implicit = demand)\n error= <normal|severe|critical|ignore>\n       (implicit = normal)\n group= <LoadOrderGroup>\n tag= <yes|no>\n depend= <Dependencies(separate de / (simbolul „solidus”))>\n obj= <AccountName|ObjectName>\n       (implicit = LocalSystem)\n password= <password>\n"
+    IDS_HELP_OPTIONS "OPȚIUNI DE CREARE:\nNOTĂ: Numele opțiunii include semnul egal.\n type= <own|share|interact|kernel|filesys|rec>\n       (implicit = own)\n start= <boot|system|auto|demand|disabled>\n       (implicit = demand)\n error= <normal|severe|critical|ignore>\n       (implicit = normal)\n group= <LoadOrderGroup>\n tag= <yes|no>\n depend= <Dependencies( separate de / (bară oblică înainte))>\n obj= <AccountName|ObjectName>\n       (implicit = LocalSystem)\n password= <password>\n"
 END
 
 /* Hints */
@@ -297,50 +297,50 @@ STRINGTABLE
 BEGIN
     IDS_HINT_BLANK " "
     IDS_HINT_EXPORT " Exportă lista curentă într-un fișier."
-    IDS_HINT_EXIT " Părăsește programul."
-    IDS_HINT_CONNECT " Gestionează un alt calculator."
+    IDS_HINT_EXIT " Iese din program."
+    IDS_HINT_CONNECT " Gestionează un alt computer."
     IDS_HINT_START " Pornește serviciul selectat."
     IDS_HINT_STOP " Oprește serviciul selectat."
     IDS_HINT_PAUSE " Întrerupe serviciul selectat."
     IDS_HINT_RESUME " Reia serviciul selectat."
-    IDS_HINT_RESTART " Oprește apoi repornește serviciul selectat."
+    IDS_HINT_RESTART " Oprește și pornește serviciul selectat."
     IDS_HINT_REFRESH " Împrospătează lista de servicii."
     IDS_HINT_EDIT " Editează proprietățile serviciului selectat."
     IDS_HINT_CREATE " Creează un nou serviciu."
-    IDS_HINT_DELETE " Elimină serviciul selectat."
-    IDS_HINT_PROP " Deschide proprietățile selecției curente."
+    IDS_HINT_DELETE " Șterge serviciul selectat."
+    IDS_HINT_PROP " Deschideți foaia de proprietăți pentru selecția curentă."
     IDS_HINT_LARGE " Afișează elementele folosind pictograme mari."
     IDS_HINT_SMALL " Afișează elementele folosind pictograme mici."
-    IDS_HINT_LIST " Afișează elementele în listă."
+    IDS_HINT_LIST " Afișează elementul într-o listă."
     IDS_HINT_DETAILS " Afișează informații despre fiecare element într-o fereastră."
     IDS_HINT_CUST " Particularizează afișajul."
     IDS_HINT_HELP " Afișează fereastra de ajutor."
-    IDS_HINT_ABOUT " Despre Gestionar de servicii ReactOS."
-    IDS_HINT_SYS_RESTORE " Restabilește fereastra la mărimea originală."
+    IDS_HINT_ABOUT " Despre Managerul de servicii ReactOS."
+    IDS_HINT_SYS_RESTORE " Restabilește această fereastră la dimensiunea normală."
     IDS_HINT_SYS_MOVE " Mută fereastra."
     IDS_HINT_SYS_SIZE " Redimensionează fereastra."
-    IDS_HINT_SYS_MINIMIZE " Reduce fereastra la minim."
-    IDS_HINT_SYS_MAXIMIZE " Mărește fereastra la maxim."
+    IDS_HINT_SYS_MINIMIZE " Restrânge această fereastră la o pictogramă."
+    IDS_HINT_SYS_MAXIMIZE " Extinde această fereastră pentru a umple acest ecran."
     IDS_HINT_SYS_CLOSE " Închide fereastra."
 END
 
 /* Application title */
 STRINGTABLE
 BEGIN
-    IDS_APPNAME "Gestionar de servicii"
-    IDS_APPAUTHORS "Copyright (C) 2005-2007 by Ged Murphy (gedmurphy@reactos.org)"
+    IDS_APPNAME "Managerul de servicii ReactOS"
+    IDS_APPAUTHORS "Drepturi de autor (C) 2005-2007 de Ged Murphy (gedmurphy@reactos.org)"
 END
 
 STRINGTABLE
 BEGIN
     IDS_NO_ACTION "Nici o acțiune"
-    IDS_RESTART_SERVICE "Repornește serviciul"
-    IDS_RUN_PROGRAM "Execută un program"
-    IDS_RESTART_COMPUTER "Repornește calculatorul"
+    IDS_RESTART_SERVICE "Repornire serviciului"
+    IDS_RUN_PROGRAM "Executare a unui program"
+    IDS_RESTART_COMPUTER "Repornire a computerului"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NOT_SAME_PASSWORD "Parolele nu sunt identice!"
+    IDS_NOT_SAME_PASSWORD "Parolele nu sunt aceleași!"
     IDS_INVALID_PASSWORD "Introduceți o parolă validă!"
 END
