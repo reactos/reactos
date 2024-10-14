@@ -285,21 +285,25 @@ extern "C" int __cdecl _is_c_termination_complete()
 extern "C" void __cdecl exit(int const return_code)
 {
     common_exit(return_code, _crt_exit_full_cleanup, _crt_exit_terminate_process);
+    UNREACHABLE;
 }
 
 extern "C" void __cdecl _exit(int const return_code)
 {
     common_exit(return_code, _crt_exit_no_cleanup, _crt_exit_terminate_process);
+    UNREACHABLE;
 }
 
 extern "C" void __cdecl _Exit(int const return_code)
 {
     common_exit(return_code, _crt_exit_no_cleanup, _crt_exit_terminate_process);
+    UNREACHABLE;
 }
 
 extern "C" void __cdecl quick_exit(int const return_code)
 {
     common_exit(return_code, _crt_exit_quick_cleanup, _crt_exit_terminate_process);
+    UNREACHABLE;
 }
 
 extern "C" void __cdecl _cexit()
