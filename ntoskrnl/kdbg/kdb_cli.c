@@ -3278,6 +3278,12 @@ KdbpCliMainLoop(
     static CHAR Command[1024];
     static CHAR LastCommand[1024] = "";
 
+// FIXME HACK: SYSREG SUPPORT CORE-19807 -- Emit a backtrace.
+// TODO: Remove once SYSREG "bt" command emission is fixed!
+#if 1
+    KdbpDoCommand("bt");
+#endif
+
     if (EnteredOnSingleStep)
     {
         if (!KdbSymPrintAddress((PVOID)KeGetContextPc(KdbCurrentTrapFrame), KdbCurrentTrapFrame))
