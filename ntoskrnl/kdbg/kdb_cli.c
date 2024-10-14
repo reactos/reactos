@@ -2910,7 +2910,7 @@ KdbpPagerInternal(
         KdpInitTerminal();
     }
 
-    /* Refresh terminal size each time when number of rows printed is 0 */
+    /* Refresh terminal size each time when number of printed rows is 0 */
     if (KdbNumberOfRowsPrinted == 0)
     {
         KdpUpdateTerminalSize(&KdTermSize);
@@ -3030,7 +3030,7 @@ KdbpPagerInternal(
             p[i + 1] = c;
 
         /* Set p to the start of the next line and
-         * remember the number of rows/cols printed */
+         * remember the number of printed rows/cols */
         p += i;
         if (p[0] == '\n')
         {
@@ -3205,6 +3205,7 @@ static BOOLEAN
 KdbpDoCommand(
     IN PCHAR Command)
 {
+    BOOLEAN Continue = TRUE;
     SIZE_T i;
     PCHAR p;
     ULONG Argc;
@@ -3238,6 +3239,10 @@ KdbpDoCommand(
     if (Argc < 1)
         return TRUE;
 
+    /* Reset the pager state: number of printed rows/cols and aborted output flag */
+    KdbNumberOfRowsPrinted = KdbNumberOfColsPrinted = 0;
+    KdbOutputAborted = FALSE;
+
     for (i = 0; i < RTL_NUMBER_OF(KdbDebuggerCommands); i++)
     {
         if (!KdbDebuggerCommands[i].Name)
@@ -3245,18 +3250,20 @@ KdbpDoCommand(
 
         if (strcmp(KdbDebuggerCommands[i].Name, Argv[0]) == 0)
         {
-            return KdbDebuggerCommands[i].Fn(Argc, Argv);
+            Continue = KdbDebuggerCommands[i].Fn(Argc, Argv);
+            goto Done;
         }
     }
 
     /* Now invoke the registered callbacks */
     if (KdbpInvokeCliCallbacks(Command, Argc, Argv))
-    {
-        return TRUE;
-    }
+        goto Done;
 
-    KdbpPrint("Command '%s' is unknown.\n", OrigCommand);
-    return TRUE;
+    KdbPrintf("Command '%s' is unknown.\n", OrigCommand);
+
+Done:
+    KdbOutputAborted = FALSE;
+    return Continue;
 }
 
 /*!\brief KDB Main Loop.
@@ -3267,39 +3274,37 @@ VOID
 KdbpCliMainLoop(
     IN BOOLEAN EnteredOnSingleStep)
 {
-    BOOLEAN Continue;
-    SIZE_T CmdLen;
+    BOOLEAN Continue = TRUE;
     static CHAR Command[1024];
     static CHAR LastCommand[1024] = "";
 
     if (EnteredOnSingleStep)
     {
         if (!KdbSymPrintAddress((PVOID)KeGetContextPc(KdbCurrentTrapFrame), KdbCurrentTrapFrame))
-        {
-            KdbpPrint("<%p>", KeGetContextPc(KdbCurrentTrapFrame));
-        }
+            KdbPrintf("<%p>", KeGetContextPc(KdbCurrentTrapFrame));
 
-        KdbpPrint(": ");
+        KdbPuts(": ");
         if (KdbpDisassemble(KeGetContextPc(KdbCurrentTrapFrame), KdbUseIntelSyntax) < 0)
-        {
-            KdbpPrint("<INVALID>");
-        }
-        KdbpPrint("\n");
+            KdbPuts("<INVALID>");
+        KdbPuts("\n");
+    }
+    else
+    {
+        /* Preceding this message is one of the "Entered debugger..." banners */
+        // KdbPuts("\nEntered debugger\n");
+        KdbPuts("\nType \"help\" for a list of commands.\n");
     }
 
     /* Main loop */
-    do
+    while (Continue)
     {
-        /* Reset the number of rows/cols printed */
-        KdbNumberOfRowsPrinted = KdbNumberOfColsPrinted = 0;
-
         /*
          * Print the prompt and read a command.
          * Repeat the last one if the user pressed Enter.
          * This reduces the risk of RSI when single-stepping!
          */
         // TEMP HACK! Issue an empty string instead of duplicating "kdb:>"
-        CmdLen = KdbPrompt(/*KdbPromptStr.Buffer*/"", Command, sizeof(Command));
+        SIZE_T CmdLen = KdbPrompt(/*KdbPromptStr.Buffer*/"", Command, sizeof(Command));
         if (CmdLen == 0)
         {
             /* Nothing received but the user didn't press Enter, retry */
@@ -3320,15 +3325,9 @@ KdbpCliMainLoop(
             RtlStringCbCopyA(Command, sizeof(Command), LastCommand);
         }
 
-        /* Reset the number of rows/cols printed and output aborted state */
-        KdbNumberOfRowsPrinted = KdbNumberOfColsPrinted = 0;
-        KdbOutputAborted = FALSE;
-
-        /* Call the command */
+        /* Invoke the command */
         Continue = KdbpDoCommand(Command);
-        KdbOutputAborted = FALSE;
     }
-    while (Continue);
 }
 
 /*!\brief This function is called by KdbEnterDebuggerException...
