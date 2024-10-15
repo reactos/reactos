@@ -1,4 +1,11 @@
-/* TRANSLATOR: 2013-2020 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net> */
+/*
+ * PROJECT:     ReactOS Display Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATORS: Copyright 2013-2020 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
+ *              Copyright 2021-2023 Süleyman Poyraz <zaryob.dev@gmail.com>
+ *              Copyright 2024 Ethem Çılgın (fiatcoupe16vturbo) <ethemrty@gmail.com>
+ */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -28,7 +35,7 @@ BEGIN
     PUSHBUTTON "&Renk...", IDC_COLOR_BUTTON, 188, 167, 55, 15
     LTEXT "&Yerleşim:", IDC_STATIC, 188, 128, 55, 9
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Customize &Desktop...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
+    PUSHBUTTON "Masaüstünü K&işiselleştir", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
 END
 
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 202
@@ -106,10 +113,10 @@ END
 IDD_EFFAPPEARANCE DIALOGEX 0, 0, 285, 185
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
-CAPTION "Etkiler"
+CAPTION "Efektler"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTOCHECKBOX "&Araç ipuçları ve menüler için aşağıdaki geçiş etkisini kullan:", IDC_EFFAPPEARANCE_ANIMATION, 10, 5, 267, 19
+    AUTOCHECKBOX "&Araç ipuçları ve menüler için aşağıdaki geçiş efektini kullan:", IDC_EFFAPPEARANCE_ANIMATION, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "&Ekran yazı tiplerinin kenarlarını yumuşatmak için aşağıdaki yöntemi kullan:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19
@@ -211,8 +218,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SLIDEEFFECT "Kayma etkisi"
-    IDS_FADEEFFECT "Solma etkisi"
+    IDS_SLIDEEFFECT "Kayma efekti"
+    IDS_FADEEFFECT "Solma efekti"
 END
 
 STRINGTABLE
