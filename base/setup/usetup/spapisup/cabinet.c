@@ -1260,7 +1260,8 @@ CabinetExtractFile(
             DPRINT("Cannot uncompress block\n");
             if (Status == CS_NOMEMORY)
                 Status = CAB_STATUS_NOMEMORY;
-            Status = CAB_STATUS_INVALID_CAB;
+            else
+                Status = CAB_STATUS_INVALID_CAB;
             goto UnmapDestFile;
         }
 
