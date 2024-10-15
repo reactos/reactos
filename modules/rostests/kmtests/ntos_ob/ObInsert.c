@@ -567,6 +567,17 @@ ObInsert_NameCollision(VOID)
 
 START_TEST(ObInsert)
 {
+    RTL_OSVERSIONINFOW OsVersionInfo = {0};
+    /* RtlGetVersion always succeeds */
+    RtlGetVersion(&OsVersionInfo);
+    /* The code that directly accesses the object header will not work and
+       likely crash on Windows Vista+ */
+    if (OsVersionInfo.dwMajorVersion > 5)
+    {
+        trace("ObInsert skipped: Unsupported OS version\n");
+        return;
+    }
+
     /* Initialize a dummy object type */
     if (ObInsert_CreateDummyType() != STATUS_SUCCESS)
     {
