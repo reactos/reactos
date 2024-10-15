@@ -1,9 +1,15 @@
-/* TRANSLATORS: 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
+/*
+ * PROJECT:     ReactOS Printing # TODO: idek change that
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATORS: Copyright 2018 Ercan Ersoy (ercanersoy) <ercanersoy@ercanersoy.net>
+ *              Copyright 2024 Ethem Çılgın (fiatcoupe16vturbo) <ethemrty@gmail.com>
+ */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
     IDS_LOCAL_PORT "Yerel Port"
-    IDS_LOCAL_MONITOR "Yerel Monitor"
+    IDS_LOCAL_MONITOR "Yerel Monitör"
 END
