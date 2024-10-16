@@ -112,7 +112,7 @@ struct __crt_char_traits;
     _APPLY(tcspbrk,                            strpbrk,                                          wcspbrk                                       ) \
     _APPLY(tcsrchr,                            strrchr,                                          wcsrchr                                       ) \
     _APPLY(tcstoull,                           strtoull,                                         wcstoull                                      ) \
-    _APPLY(tdupenv_s_crt,                      _dupenv_s_crt,                                    _wdupenv_s_crt                                ) \
+    _APPLY(tdupenv_s_crt,                      _dupenv_s,                                        _wdupenv_s                                    ) \
     _APPLY(texecve,                            _execve,                                          _wexecve                                      ) \
     _APPLY(tfdopen,                            _fdopen,                                          _wfdopen                                      ) \
     _APPLY(tfullpath,                          _fullpath,                                        _wfullpath                                    ) \
