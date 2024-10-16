@@ -438,6 +438,14 @@ extern "C" int WINAPI __acrt_CompareStringEx(
     return CompareStringW(__acrt_LocaleNameToLCID(locale_name, 0), flags, string1, string1_count, string2, string2_count);
 }
 
+#ifdef __clang__
+static LOCALE_ENUMPROCEX static_enum_proc;
+static BOOL CALLBACK LocaleEnumProcW(LPWSTR locale_string)
+{
+    return __crt_fast_decode_pointer(static_enum_proc)(locale_string, 0, 0);
+}
+#endif
+
 // This has been split into its own function to work around a bug in the Dev12
 // C++ compiler where nested captureless lambdas are not convertible to the
 // required function pointer type.
@@ -445,11 +453,21 @@ static BOOL enum_system_locales_ex_nolock(
     LOCALE_ENUMPROCEX const enum_proc
     ) throw()
 {
+#ifndef __clang__
     static LOCALE_ENUMPROCEX static_enum_proc;
+#endif
 
     static_enum_proc = __crt_fast_encode_pointer(enum_proc);
-    BOOL const result = EnumSystemLocalesW(
-        [](LPWSTR locale_string) { return __crt_fast_decode_pointer(static_enum_proc)(locale_string, 0, 0); },
+    BOOL const result = EnumSystemLocalesW((LOCALE_ENUMPROCW)
+#ifdef __clang__
+        LocaleEnumProcW,
+#else
+        [](LPWSTR locale_string)
+        #if defined(__GNUC__) && !defined(__clang__)
+        __stdcall
+        #endif // __GNUC__
+        { return __crt_fast_decode_pointer(static_enum_proc)(locale_string, 0, 0); },
+#endif
         LCID_INSTALLED);
     static_enum_proc = __crt_fast_encode_pointer(nullptr);
 
