@@ -1,9 +1,9 @@
 /*
- * PROJECT:     ReactOS Printing # TODO: idek change that
- * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PROJECT:     ReactOS Local Port Monitor
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Turkish resource file
- * TRANSLATORS: Copyright 2018 Ercan Ersoy (ercanersoy) <ercanersoy@ercanersoy.net>
- *              Copyright 2024 Ethem Çılgın (fiatcoupe16vturbo) <ethemrty@gmail.com>
+ * TRANSLATORS: Copyright 2018 Ercan Ersoy <ercanersoy@ercanersoy.net>
+ *              Copyright 2024 Ethem Çılgın <ethemrty@gmail.com>
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
