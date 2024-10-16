@@ -360,7 +360,7 @@ static VOID Usage(LPWSTR ProgramName)
 int wmain(int argc, WCHAR *argv[])
 {
     int badArg;
-    DEVICE_INFORMATION DeviceInformation = {0};
+    DEVICE_INFORMATION DeviceInformation;
     FMIFS_MEDIA_FLAG media = FMIFS_HARDDISK;
     DWORD driveType;
     WCHAR fileSystem[1024];
@@ -485,9 +485,11 @@ int wmain(int argc, WCHAR *argv[])
 
     ConResPrintf(StdOut, STRING_FILESYSTEM, fileSystem);
 
-    if (QueryDeviceInformation(RootDirectory,
-                               &DeviceInformation,
-                               sizeof(DeviceInformation)))
+    if (!QueryDeviceInformation(RootDirectory, &DeviceInformation, sizeof(DeviceInformation)))
+    {
+        totalNumberOfBytes.QuadPart = 0;
+    }
+    else
     {
         totalNumberOfBytes.QuadPart = DeviceInformation.SectorSize *
                                       DeviceInformation.SectorCount.QuadPart;
