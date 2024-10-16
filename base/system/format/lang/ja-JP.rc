@@ -31,7 +31,7 @@ BEGIN
     STRING_FMIFS_FAIL "FMIFS エントリ ポイント を設定できませんでした。\n\n"
     STRING_UNKNOW_ARG "不明な引数: %s\n"
     STRING_DRIVE_PARM "必要なドライブを指定するパラメータが不足しています。\n\n"
-    STRING_ERROR_DRIVE_TYPE "ドライブの種類がわかりませんでした"
+    STRING_ERROR_DRIVE_TYPE "ドライブの種類がわかりませんでした。\n"
     STRING_INSERT_DISK "%C: ドライブに新しいフロッピーを挿入してください。\n準備ができたら、[Enter] キーを押してください..."
     STRING_NO_VOLUME "ボリュームの問い合わせができませんでした"
     STRING_NO_VOLUME_SIZE "ボリューム サイズの問い合わせができませんでした"

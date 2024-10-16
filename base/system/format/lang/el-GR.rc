@@ -30,7 +30,7 @@ BEGIN
     STRING_FMIFS_FAIL "Could not located FMIFS entry points.\n\n"
     STRING_UNKNOW_ARG "Άγνωστο όρισμα: %s\n"
     STRING_DRIVE_PARM "Required drive parameter is missing.\n\n"
-    STRING_ERROR_DRIVE_TYPE "Δεν ήταν δυνατή η ανάγνωση του τύπου του τόμου."
+    STRING_ERROR_DRIVE_TYPE "Δεν ήταν δυνατή η ανάγνωση του τύπου του τόμου.\n"
     STRING_INSERT_DISK "ΕΙσάγετε μια νέα δισκέτα στο %C:\nκαι πατήστε Enter όταν είστε έτοιμοι..."
     STRING_NO_VOLUME "Could not query volume"
     STRING_NO_VOLUME_SIZE "Could not query volume size"
