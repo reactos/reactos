@@ -135,7 +135,7 @@ class CMainWindow : public CWindowImpl<CMainWindow, CWindow, CFrameWinTraits>
     SearchTextChanged(CStringW &SearchText);
 
     void
-    HandleTabOrder(int direction);
+    HandleTabOrder(INT direction);
 };
 
 // Main window
