@@ -194,7 +194,6 @@ typedef struct _ROS_SHARED_CACHE_MAP
     LIST_ENTRY CacheMapVacbListHead;
     BOOLEAN PinAccess;
     KSPIN_LOCK CacheMapLock;
-    KGUARDED_MUTEX FlushCacheLock;
 #if DBG
     BOOLEAN Trace; /* enable extra trace output for this cache map and it's VACBs */
 #endif
@@ -364,6 +363,14 @@ VOID
 CcRosUnmarkDirtyVacb(
     PROS_VACB Vacb,
     BOOLEAN LockViews);
+
+VOID
+CcpFlushFileCache(
+    _In_ PROS_SHARED_CACHE_MAP SharedCacheMap,
+    _In_opt_ PLARGE_INTEGER FileOffset,
+    _In_ ULONG Length,
+    _In_ BOOLEAN UpdateCacheMap,
+    _Out_opt_ PIO_STATUS_BLOCK IoStatus);
 
 NTSTATUS
 CcRosFlushDirtyPages(
