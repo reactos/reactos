@@ -46,6 +46,33 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #define MAX_EXTENSION_LENGTH 20
 
+HRESULT HCR_GetProgIdKeyOfExtension(LPCWSTR szExtension, HKEY *phKey, BOOL AllowFallback)
+{
+    LONG err, cb;
+    WCHAR ext[max(1+MAX_EXTENSION_LENGTH+1, MAX_PATH)], progid[MAX_PATH];
+    if (szExtension[0] != '.')
+    {
+        ext[0] = '.';
+        lstrcpynW(ext+1, szExtension, _countof(ext) - 1);
+        szExtension = ext;
+    }
+    cb = sizeof(progid);
+    err = RegQueryValueW(HKEY_CLASSES_ROOT, szExtension, progid, &cb);
+    if (!err)
+    {
+        err = RegOpenKeyExW(HKEY_CLASSES_ROOT, progid, 0, KEY_READ, phKey);
+        if (!err)
+            return err; /* A real ProgId key, return S_OK */
+    }
+    if (AllowFallback)
+    {
+        err = RegOpenKeyExW(HKEY_CLASSES_ROOT, szExtension, 0, KEY_READ, phKey);
+        if (!err)
+            return S_FALSE;
+    }
+    return HRESULT_FROM_WIN32(err);
+}
+
 BOOL HCR_MapTypeToValueW(LPCWSTR szExtension, LPWSTR szFileType, LONG len, BOOL bPrependDot)
 {	
 	HKEY	hkey;
@@ -66,14 +93,6 @@ BOOL HCR_MapTypeToValueW(LPCWSTR szExtension, LPWSTR szFileType, LONG len, BOOL 
 	{ 
 	  return FALSE;
 	}
-
-#ifdef __REACTOS__
-        if (!RegLoadMUIStringW(hkey, L"FriendlyTypeName", szFileType, len, NULL, 0, NULL))
-        {
-            RegCloseKey(hkey);
-            return TRUE;
-        }
-#endif
 
 	if (RegQueryValueW(hkey, NULL, szFileType, &len))
 	{ 
@@ -108,14 +127,6 @@ BOOL HCR_MapTypeToValueA(LPCSTR szExtension, LPSTR szFileType, LONG len, BOOL bP
 	{ 
 	  return FALSE;
 	}
-
-#ifdef __REACTOS__
-        if (!RegLoadMUIStringA(hkey, "FriendlyTypeName", szFileType, len, NULL, 0, NULL))
-        {
-            RegCloseKey(hkey);
-            return TRUE;
-        }
-#endif
 
 	if (RegQueryValueA(hkey, NULL, szFileType, &len))
 	{ 

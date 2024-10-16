@@ -1183,6 +1183,14 @@ static HRESULT _ILParsePathW(LPCWSTR path, LPWIN32_FIND_DATAW lpFindFile,
     return ret;
 }
 
+LPITEMIDLIST SHELL32_CreateSimpleIDListFromPath(LPCWSTR pszPath, DWORD dwAttributes)
+{
+    WIN32_FIND_DATAW data = { dwAttributes };
+    LPITEMIDLIST pidl = NULL;
+    _ILParsePathW(pszPath, &data, TRUE, &pidl, NULL);
+    return pidl;
+}
+
 /*************************************************************************
  * SHSimpleIDListFromPath    [SHELL32.162]
  *
@@ -2581,59 +2589,6 @@ BOOL _ILGetExtension(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize)
     TRACE("%s\n", debugstr_w(pOut));
 
     return TRUE;
-}
-
-/*************************************************************************
- * _ILGetFileType
- *
- * Given the ItemIdList, get the file type description
- *
- * PARAMS
- *      pidl        [I] The ItemIDList (simple)
- *      pOut        [I] The buffer to save the result
- *      uOutsize    [I] The size of the buffer
- *
- * RETURNS
- *    nothing
- *
- * NOTES
- *    This function copies as much as possible into the buffer.
- */
-void _ILGetFileType(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize)
-{
-    WCHAR sType[64], sTemp[64];
-
-    if(_ILIsValue(pidl))
-    {
-        if(uOutSize > 0)
-            pOut[0] = 0;
-        if (_ILGetExtension(pidl, sType, _countof(sType)))
-        {
-            if (HCR_MapTypeToValueW(sType, sTemp, _countof(sTemp), TRUE))
-            {
-                /* retrieve description */
-                if (HCR_MapTypeToValueW(sTemp, pOut, uOutSize, FALSE))
-                    return;
-            }
-
-            /* display Ext-file as description */
-            CharUpperW(sType);
-            /* load localized file string */
-            sTemp[0] = UNICODE_NULL;
-            if (LoadStringW(shell32_hInstance, IDS_ANY_FILE, sTemp, _countof(sTemp)))
-            {
-                sTemp[_countof(sTemp) - 1] = UNICODE_NULL;
-                StringCchPrintfW(pOut, uOutSize, sTemp, sType);
-            }
-        }
-    }
-    else
-    {
-        pOut[0] = UNICODE_NULL;
-        LoadStringW(shell32_hInstance, IDS_DIRECTORY, pOut, uOutSize);
-        /* make sure its null terminated */
-        pOut[uOutSize - 1] = UNICODE_NULL;
-    }
 }
 
 /*************************************************************************

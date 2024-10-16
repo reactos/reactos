@@ -148,6 +148,12 @@ START_TEST(SHSimpleIDListFromPath)
         ok_long(item->mkid.abID[0] & 0x70, 0x20); // Something in My Computer
         ok_char(item->mkid.abID[1] | 32, 'x' | 32); // x:
     }
+
+    LPITEMIDLIST pidl;
+    ok_int((pidl = SHSimpleIDListFromPath(L"c:")) != NULL, TRUE);
+    ILFree(pidl);
+    ok_int((pidl = SHSimpleIDListFromPath(L"c:\\")) != NULL, TRUE);
+    ILFree(pidl);
 }
 
 START_TEST(ILCreateFromPath)
