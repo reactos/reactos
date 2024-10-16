@@ -26,7 +26,7 @@ BEGIN
     STRING_FMIFS_FAIL "無法定位 FMIFS 進入點。\n\n"
     STRING_UNKNOW_ARG "未知參數：%s\n"
     STRING_DRIVE_PARM "缺少必要的磁碟參數。\n\n"
-    STRING_ERROR_DRIVE_TYPE "無法獲得磁碟機類型"
+    STRING_ERROR_DRIVE_TYPE "無法獲得磁碟機類型。\n"
     STRING_INSERT_DISK "在磁碟機 %C: 中插入一張新的軟碟片\n如果您準備就緒，請按 ENTER..."
     STRING_NO_VOLUME "無法查詢磁碟"
     STRING_NO_VOLUME_SIZE "無法查詢磁碟大小"

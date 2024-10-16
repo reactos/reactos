@@ -26,7 +26,7 @@ BEGIN
     STRING_FMIFS_FAIL "Impossible de trouver les points d'entrée FMIFS.\n\n"
     STRING_UNKNOW_ARG "Argument inconnu : %s\n"
     STRING_DRIVE_PARM "Le disque à formater n'est pas indiqué.\n\n"
-    STRING_ERROR_DRIVE_TYPE "Impossible d'obtenir le type de disque"
+    STRING_ERROR_DRIVE_TYPE "Impossible d'obtenir le type de disque.\n"
     STRING_INSERT_DISK "Mettre une nouvelle disquette dans le lecteur %C:\n et appuyer sur Entrée..."
     STRING_NO_VOLUME "Impossible de trouver le disque"
     STRING_NO_VOLUME_SIZE "Impossible de déterminer la taille du disque"
