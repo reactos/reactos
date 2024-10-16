@@ -2,6 +2,27 @@
  *                           Runtime Library Types                            *
  ******************************************************************************/
 
+$if (_WDMDDK_ || _WINNT_)
+#define FAST_FAIL_LEGACY_GS_VIOLATION           0
+#define FAST_FAIL_VTGUARD_CHECK_FAILURE         1
+#define FAST_FAIL_STACK_COOKIE_CHECK_FAILURE    2
+#define FAST_FAIL_CORRUPT_LIST_ENTRY            3
+#define FAST_FAIL_INCORRECT_STACK               4
+#define FAST_FAIL_INVALID_ARG                   5
+#define FAST_FAIL_GS_COOKIE_INIT                6
+#define FAST_FAIL_FATAL_APP_EXIT                7
+#define FAST_FAIL_RANGE_CHECK_FAILURE           8
+#define FAST_FAIL_UNSAFE_REGISTRY_ACCESS        9
+#define FAST_FAIL_GUARD_ICALL_CHECK_FAILURE     10
+#define FAST_FAIL_GUARD_WRITE_CHECK_FAILURE     11
+#define FAST_FAIL_INVALID_FIBER_SWITCH          12
+#define FAST_FAIL_INVALID_SET_OF_CONTEXT        13
+#define FAST_FAIL_INVALID_REFERENCE_COUNT       14
+#define FAST_FAIL_INVALID_JUMP_BUFFER           18
+#define FAST_FAIL_MRDATA_MODIFIED               19
+#define FAST_FAIL_INVALID_FAST_FAIL_CODE        0xFFFFFFFF
+$endif (_WDMDDK_ || _WINNT_)
+
 $if (_WDMDDK_)
 #define RTL_REGISTRY_ABSOLUTE             0
 #define RTL_REGISTRY_SERVICES             1
