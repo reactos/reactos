@@ -28,7 +28,7 @@ BEGIN
     STRING_FMIFS_FAIL "Kunne ikke befinne seg FMIFS artikkel momenter.\n\n"
     STRING_UNKNOW_ARG "Ukjent argument: %s\n"
     STRING_DRIVE_PARM "Obligatorisk drive parameter er mistet.\n\n"
-    STRING_ERROR_DRIVE_TYPE "Kunne ikke få drive typen"
+    STRING_ERROR_DRIVE_TYPE "Kunne ikke få drive typen.\n"
     STRING_INSERT_DISK "Sett inn en ny diskett i stasjon %C:\nog trykk på Enter når du er klar..."
     STRING_NO_VOLUME "Kunne ikke spørre om volumet"
     STRING_NO_VOLUME_SIZE "Kunne ikke spørre om volumet størrelse"

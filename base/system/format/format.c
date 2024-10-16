@@ -369,6 +369,7 @@ int wmain(int argc, WCHAR *argv[])
     DWORD serialNumber;
     ULARGE_INTEGER totalNumberOfBytes, totalNumberOfFreeBytes;
     WCHAR szMsg[RC_STRING_MAX_SIZE];
+    DWORD dwError;
 
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
@@ -423,19 +424,14 @@ int wmain(int argc, WCHAR *argv[])
     driveType = GetDriveTypeW(RootDirectory);
     switch (driveType)
     {
-        case DRIVE_UNKNOWN :
-            K32LoadStringW(GetModuleHandle(NULL), STRING_ERROR_DRIVE_TYPE, szMsg, ARRAYSIZE(szMsg));
-            PrintWin32Error(szMsg, GetLastError());
+        case DRIVE_UNKNOWN:
+        case DRIVE_NO_ROOT_DIR: // This case used to report STRING_NO_VOLUME, which has no ".\n".
+            ConResPuts(StdErr, STRING_ERROR_DRIVE_TYPE);
             return -1;
 
         case DRIVE_REMOTE:
         case DRIVE_CDROM:
             ConResPuts(StdOut, STRING_NO_SUPPORT);
-            return -1;
-
-        case DRIVE_NO_ROOT_DIR:
-            K32LoadStringW(GetModuleHandle(NULL), STRING_NO_VOLUME, szMsg, ARRAYSIZE(szMsg));
-            PrintWin32Error(szMsg, GetLastError());
             return -1;
 
         case DRIVE_REMOVABLE:
@@ -474,14 +470,15 @@ int wmain(int argc, WCHAR *argv[])
                                NULL, NULL, NULL,
                                fileSystem, ARRAYSIZE(fileSystem)))
     {
-        if (GetLastError() == ERROR_UNRECOGNIZED_VOLUME)
+        dwError = GetLastError();
+        if (dwError == ERROR_UNRECOGNIZED_VOLUME)
         {
             wcscpy(fileSystem, L"RAW");
         }
         else
         {
             K32LoadStringW(GetModuleHandle(NULL), STRING_NO_VOLUME, szMsg, ARRAYSIZE(szMsg));
-            PrintWin32Error(szMsg, GetLastError());
+            PrintWin32Error(szMsg, dwError);
             return -1;
         }
     }
@@ -505,8 +502,9 @@ int wmain(int argc, WCHAR *argv[])
                              &totalNumberOfBytes,
                              NULL))
     {
+        dwError = GetLastError();
         K32LoadStringW(GetModuleHandle(NULL), STRING_NO_VOLUME_SIZE, szMsg, ARRAYSIZE(szMsg));
-        PrintWin32Error(szMsg, GetLastError());
+        PrintWin32Error(szMsg, dwError);
         return -1;
     }
 
@@ -605,8 +603,9 @@ int wmain(int argc, WCHAR *argv[])
         input[wcslen(input) - 1] = 0;
         if (!SetVolumeLabelW(RootDirectory, input))
         {
+            dwError = GetLastError();
             K32LoadStringW(GetModuleHandle(NULL), STRING_NO_LABEL, szMsg, ARRAYSIZE(szMsg));
-            PrintWin32Error(szMsg, GetLastError());
+            PrintWin32Error(szMsg, dwError);
             return -1;
         }
     }
@@ -619,8 +618,9 @@ int wmain(int argc, WCHAR *argv[])
                              &totalNumberOfBytes,
                              &totalNumberOfFreeBytes))
     {
+        dwError = GetLastError();
         K32LoadStringW(GetModuleHandle(NULL), STRING_NO_VOLUME_SIZE, szMsg, ARRAYSIZE(szMsg));
-        PrintWin32Error(szMsg, GetLastError());
+        PrintWin32Error(szMsg, dwError);
         return -1;
     }
 
@@ -635,8 +635,9 @@ int wmain(int argc, WCHAR *argv[])
                                &serialNumber, NULL, NULL,
                                NULL, 0))
     {
+        dwError = GetLastError();
         K32LoadStringW(GetModuleHandle(NULL), STRING_NO_VOLUME, szMsg, ARRAYSIZE(szMsg));
-        PrintWin32Error(szMsg, GetLastError());
+        PrintWin32Error(szMsg, dwError);
         return -1;
     }
 
