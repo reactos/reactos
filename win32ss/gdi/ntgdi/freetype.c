@@ -7068,14 +7068,12 @@ IntExtTextOutW(
         if (bitSize.cx == 0)
         {
             /* Warn about unexpected characters (other than space and ETX) */
-            if (ch0 != ' ')
-            {
-                if (ch0 != ASCII_ETX)
-                    DPRINT1("WARNING: WChar 0x%04x width is zero\n", ch0);
-            }
+            if (ch0 != ' ' && ch0 != ASCII_ETX)
+                DPRINT1("WARNING: WChar 0x%04x width is zero\n", ch0);
+
             /* Account for space character when computing offset.
              * This completes the fix of CORE-11787. */
-            else if (pdcattr->flTextAlign & TA_UPDATECP)
+            if (ch0 == ' ' && (pdcattr->flTextAlign & TA_UPDATECP))
             {
                 SIZE spaceWidth;
 
