@@ -367,7 +367,7 @@ int wmain(int argc, WCHAR *argv[])
     WCHAR volumeName[1024] = {0};
     WCHAR input[1024];
     DWORD serialNumber;
-    ULARGE_INTEGER freeBytesAvailableToCaller, totalNumberOfBytes, totalNumberOfFreeBytes;
+    ULARGE_INTEGER totalNumberOfBytes, totalNumberOfFreeBytes;
     WCHAR szMsg[RC_STRING_MAX_SIZE];
 
     /* Initialize the Console Standard Streams */
@@ -501,9 +501,9 @@ int wmain(int argc, WCHAR *argv[])
      * Fallback to GetFreeDiskSpaceExW if we did not get any volume length. */
     if (totalNumberOfBytes.QuadPart == 0 &&
         !GetDiskFreeSpaceExW(RootDirectory,
-                             &freeBytesAvailableToCaller,
+                             NULL,
                              &totalNumberOfBytes,
-                             &totalNumberOfFreeBytes))
+                             NULL))
     {
         K32LoadStringW(GetModuleHandle(NULL), STRING_NO_VOLUME_SIZE, szMsg, ARRAYSIZE(szMsg));
         PrintWin32Error(szMsg, GetLastError());
@@ -612,10 +612,10 @@ int wmain(int argc, WCHAR *argv[])
     }
 
     //
-    // Print out some stuff including the formatted size
+    // Get and print out some stuff including the formatted size
     //
     if (!GetDiskFreeSpaceExW(RootDirectory,
-                             &freeBytesAvailableToCaller,
+                             NULL,
                              &totalNumberOfBytes,
                              &totalNumberOfFreeBytes))
     {
