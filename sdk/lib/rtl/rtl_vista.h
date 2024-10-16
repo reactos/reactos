@@ -17,4 +17,9 @@
 /* Main RTL Header */
 #include "rtl.h"
 
+#define TRACE(fmt, ...)
+#define WARN(fmt, ...)
+#define FIXME(fmt, ...)
+#define ERR(fmt, ...)
+
 #endif /* RTL_VISTA_H */
