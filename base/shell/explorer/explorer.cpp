@@ -99,13 +99,9 @@ IsExplorerSystemShell()
     LPWSTR szExplorer = PathFindFileNameW(szPath);
 
     HKEY hKeyWinlogon;
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
-                      0, KEY_READ, &hKeyWinlogon) != ERROR_SUCCESS)
-    {
-        // No registry access.
-        bIsSystemShell = TRUE;
-    }
-    else
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                      L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+                      0, KEY_READ, &hKeyWinlogon) == ERROR_SUCCESS)
     {
         LSTATUS Status;
         DWORD dwType;
@@ -116,9 +112,7 @@ IsExplorerSystemShell()
         Status = RegQueryValueExW(hKeyWinlogon, L"Shell", 0, &dwType, (LPBYTE)szShell, &cbShell);
         if (Status == ERROR_SUCCESS)
         {
-            if ((dwType == REG_SZ || dwType == REG_EXPAND_SZ) && StrStrI(szShell, szExplorer))
-                bIsSystemShell = TRUE;
-            else
+            if ((dwType != REG_SZ && dwType != REG_EXPAND_SZ) || !StrStrIW(szShell, szExplorer))
                 bIsSystemShell = FALSE;
         }
 
