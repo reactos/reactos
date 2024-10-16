@@ -364,7 +364,7 @@ int wmain(int argc, WCHAR *argv[])
     FMIFS_MEDIA_FLAG media = FMIFS_HARDDISK;
     DWORD driveType;
     WCHAR fileSystem[1024];
-    WCHAR volumeName[1024] = {0};
+    WCHAR volumeName[1024];
     WCHAR input[1024];
     DWORD serialNumber;
     DWORD flags, maxComponent;
@@ -477,6 +477,7 @@ int wmain(int argc, WCHAR *argv[])
     {
         if (GetLastError() == ERROR_UNRECOGNIZED_VOLUME)
         {
+            volumeName[0] = UNICODE_NULL;
             wcscpy(fileSystem, L"RAW");
         }
         else
