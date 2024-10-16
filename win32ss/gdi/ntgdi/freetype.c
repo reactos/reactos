@@ -7064,14 +7064,14 @@ IntExtTextOutW(
         bitSize.cx = realglyph->bitmap.width;
         bitSize.cy = realglyph->bitmap.rows;
 
-        /* Special case for characters that have a bitSize.cx of zero */
+        /* Is character width zero? */
         if (bitSize.cx == 0)
         {
             /* Warn about unexpected characters (other than space and ETX) */
-            if (ch0 != L' ')
+            if (ch0 != ' ')
             {
                 if (ch0 != ASCII_ETX)
-                    DPRINT1("WARNING: WChar 0x%04x has a bitSize.cx of zero\n", ch0);
+                    DPRINT1("WARNING: WChar 0x%04x width is zero\n", ch0);
             }
             /* Account for space character when computing offset.
              * This completes the fix of CORE-11787. */
