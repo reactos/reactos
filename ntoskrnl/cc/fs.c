@@ -108,7 +108,7 @@ NTAPI
 CcIsThereDirtyData (
     IN PVPB Vpb)
 {
-    PROS_VACB Vacb;
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
     PLIST_ENTRY Entry;
     KIRQL oldIrql;
     /* Assume no dirty data */
@@ -118,26 +118,17 @@ CcIsThereDirtyData (
 
     oldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
 
-    /* Browse dirty VACBs */
-    for (Entry = DirtyVacbListHead.Flink; Entry != &DirtyVacbListHead; Entry = Entry->Flink)
+    /* Browse dirty files */
+    for (Entry = CcDirtySharedCacheMapList.Flink; Entry != &CcDirtySharedCacheMapList; Entry = Entry->Flink)
     {
-        Vacb = CONTAINING_RECORD(Entry, ROS_VACB, DirtyVacbListEntry);
-        /* Look for these associated with our volume */
-        if (Vacb->SharedCacheMap->FileObject->Vpb != Vpb)
-        {
-            continue;
-        }
-
-        /* From now on, we are associated with our VPB */
+        SharedCacheMap = CONTAINING_RECORD(Entry, ROS_SHARED_CACHE_MAP, SharedCacheMapLinks);
 
         /* Temporary files are not counted as dirty */
-        if (BooleanFlagOn(Vacb->SharedCacheMap->FileObject->Flags, FO_TEMPORARY_FILE))
-        {
+        if (BooleanFlagOn(SharedCacheMap->FileObject->Flags, FO_TEMPORARY_FILE))
             continue;
-        }
 
-        /* A single dirty VACB is enough to have dirty data */
-        if (Vacb->Dirty)
+        /* A single dirty file in our volume is enough to have dirty data */
+        if (SharedCacheMap->FileObject->Vpb == Vpb)
         {
             Dirty = TRUE;
             break;

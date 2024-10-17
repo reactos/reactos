@@ -51,12 +51,14 @@ static NPAGED_LOOKASIDE_LIST VacbLookasideList;
  * - List for deferred writes
  * - Spinlock when dealing with the deferred list
  * - List for "clean" shared cache maps
+ * - List for "dirty" shared cache maps
  */
 ULONG CcDirtyPageThreshold = 0;
 ULONG CcTotalDirtyPages = 0;
 LIST_ENTRY CcDeferredWrites;
 KSPIN_LOCK CcDeferredWriteSpinLock;
 LIST_ENTRY CcCleanSharedCacheMapList;
+LIST_ENTRY CcDirtySharedCacheMapList;
 
 #if DBG
 ULONG CcRosVacbIncRefCount_(PROS_VACB vacb, PCSTR file, INT line)
@@ -1094,45 +1096,95 @@ CcRosInternalFreeVacb (
     return STATUS_SUCCESS;
 }
 
-/*
- * @implemented
+BOOLEAN
+CcpIsFileCacheDirty(
+    _In_ PROS_SHARED_CACHE_MAP SharedCacheMap)
+{
+    KIRQL OldIrql;
+    BOOLEAN IsDirty;
+
+    KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &OldIrql);
+
+    IsDirty = (SharedCacheMap->DirtyPages != 0);
+
+    KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, OldIrql);
+
+    return IsDirty;
+}
+
+static
+VOID
+CcpCheckFlushedFileCache(
+    _In_ PROS_SHARED_CACHE_MAP SharedCacheMap,
+    _In_ LONGLONG FileOffset,
+    _In_ ULONG_PTR FlushedBytes)
+{
+    KIRQL OldIrql;
+
+    ASSERT(FlushedBytes % PAGE_SIZE == 0);
+
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+    KeAcquireSpinLockAtDpcLevel(&SharedCacheMap->CacheMapLock);
+
+    /* Update number of dirty pages and check dirty status */
+    ASSERT(SharedCacheMap->DirtyPages != 0);
+    SharedCacheMap->DirtyPages -= FlushedBytes / PAGE_SIZE;
+    if (SharedCacheMap->DirtyPages == 0)
+    {
+        /* The file cache is no longer dirty, remove from dirty list */
+        RemoveEntryList(&SharedCacheMap->SharedCacheMapLinks);
+        InsertTailList(&CcCleanSharedCacheMapList, &SharedCacheMap->SharedCacheMapLinks);
+    }
+
+    /* Update VDL */
+    if (SharedCacheMap->ValidDataLength.QuadPart < FileOffset + FlushedBytes)
+    {
+        SharedCacheMap->ValidDataLength.QuadPart = FileOffset + FlushedBytes;
+    }
+
+    KeReleaseSpinLockFromDpcLevel(&SharedCacheMap->CacheMapLock);
+    KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+}
+
+/**
+ * @brief
+ * Flushes all or a portion of a file cache to disk.
+ *
+ * @param[in] SharedCacheMap
+ * Pointer to the shared cache map.
+ *
+ * @param[in] FileOffset
+ * Pointer to a LARGE_INTEGER structure that specifies the starting byte offset
+ * within the cached file.
+ * If this parameter is NULL, the entire file will be flushed from the cache.
+ *
+ * @param[in] Length
+ * Number of bytes to flush, starting at FileOffset. If FileOffset is NULL,
+ * this parameter is ignored.
+ *
+ * @param[out] IoStatus
+ * Pointer to a IO_STATUS_BLOCK structure that receives the completion status
+ * and information.
  */
 VOID
-NTAPI
-CcFlushCache (
-    IN PSECTION_OBJECT_POINTERS SectionObjectPointers,
-    IN PLARGE_INTEGER FileOffset OPTIONAL,
-    IN ULONG Length,
-    OUT PIO_STATUS_BLOCK IoStatus)
+CcpFlushFileCache(
+    _In_ PROS_SHARED_CACHE_MAP SharedCacheMap,
+    _In_opt_ PLARGE_INTEGER FileOffset,
+    _In_ ULONG Length,
+    _Out_opt_ PIO_STATUS_BLOCK IoStatus)
 {
-    PROS_SHARED_CACHE_MAP SharedCacheMap;
     LONGLONG FlushStart, FlushEnd;
     NTSTATUS Status;
+    ULONG_PTR FlushedBytes;
+    BOOLEAN HaveFileLock = FALSE;
 
-    CCTRACE(CC_API_DEBUG, "SectionObjectPointers=%p FileOffset=0x%I64X Length=%lu\n",
-        SectionObjectPointers, FileOffset ? FileOffset->QuadPart : 0LL, Length);
-
-    if (!SectionObjectPointers)
-    {
-        Status = STATUS_INVALID_PARAMETER;
-        goto quit;
-    }
-
-    if (!SectionObjectPointers->SharedCacheMap)
-    {
-        /* Forward this to Mm */
-        MmFlushSegment(SectionObjectPointers, FileOffset, Length, IoStatus);
-        return;
-    }
-
-    SharedCacheMap = SectionObjectPointers->SharedCacheMap;
     ASSERT(SharedCacheMap);
     if (FileOffset)
     {
         FlushStart = FileOffset->QuadPart;
         Status = RtlLongLongAdd(FlushStart, Length, &FlushEnd);
         if (!NT_SUCCESS(Status))
-            goto quit;
+            goto Quit;
     }
     else
     {
@@ -1141,89 +1193,120 @@ CcFlushCache (
     }
 
     Status = STATUS_SUCCESS;
-    if (IoStatus)
+    FlushedBytes = 0;
+
+    /* Lock file for flush, if we are not already the top-level */
+    if (IoGetTopLevelIrp() != (PIRP)FSRTL_CACHE_TOP_LEVEL_IRP)
     {
-        IoStatus->Information = 0;
+        Status = FsRtlAcquireFileForCcFlushEx(SharedCacheMap->FileObject);
+        if (!NT_SUCCESS(Status))
+            goto Quit;
+
+        HaveFileLock = TRUE;
     }
 
-    KeAcquireGuardedMutex(&SharedCacheMap->FlushCacheLock);
+    if (!CcpIsFileCacheDirty(SharedCacheMap))
+    {
+        /* The file cache is not dirty, nothing to flush */
+        goto Quit;
+    }
 
-    /*
-     * We flush the VACBs that we find here.
-     * If there is no (dirty) VACB, it doesn't mean that there is no data to flush, so we call Mm to be sure.
-     * This is suboptimal, but this is due to the lack of granularity of how we track dirty cache data
-     */
     while (FlushStart < FlushEnd)
     {
-        BOOLEAN DirtyVacb = FALSE;
-        PROS_VACB vacb = CcRosLookupVacb(SharedCacheMap, FlushStart);
+        LARGE_INTEGER MmOffset;
+        ULONG MmLength;
+        IO_STATUS_BLOCK MmIosb = { 0 };
 
-        if (vacb != NULL)
+        MmOffset.QuadPart = FlushStart;
+
+        if (FlushEnd - (FlushEnd % VACB_MAPPING_GRANULARITY) <= FlushStart)
         {
-            if (vacb->Dirty)
-            {
-                IO_STATUS_BLOCK VacbIosb = { 0 };
-                Status = CcRosFlushVacb(vacb, &VacbIosb);
-                if (!NT_SUCCESS(Status))
-                {
-                    CcRosReleaseVacb(SharedCacheMap, vacb, FALSE, FALSE);
-                    break;
-                }
-                DirtyVacb = TRUE;
-
-                if (IoStatus)
-                    IoStatus->Information += VacbIosb.Information;
-            }
-
-            CcRosReleaseVacb(SharedCacheMap, vacb, FALSE, FALSE);
+            /* The whole range fits within a VACB chunk */
+            MmLength = FlushEnd - FlushStart;
+        }
+        else
+        {
+            MmLength = VACB_MAPPING_GRANULARITY - (FlushStart % VACB_MAPPING_GRANULARITY);
         }
 
-        if (!DirtyVacb)
-        {
-            IO_STATUS_BLOCK MmIosb;
-            LARGE_INTEGER MmOffset;
-
-            MmOffset.QuadPart = FlushStart;
-
-            if (FlushEnd - (FlushEnd % VACB_MAPPING_GRANULARITY) <= FlushStart)
-            {
-                /* The whole range fits within a VACB chunk. */
-                Status = MmFlushSegment(SectionObjectPointers, &MmOffset, FlushEnd - FlushStart, &MmIosb);
-            }
-            else
-            {
-                ULONG MmLength = VACB_MAPPING_GRANULARITY - (FlushStart % VACB_MAPPING_GRANULARITY);
-                Status = MmFlushSegment(SectionObjectPointers, &MmOffset, MmLength, &MmIosb);
-            }
-
-            if (!NT_SUCCESS(Status))
-                break;
-
-            if (IoStatus)
-                IoStatus->Information += MmIosb.Information;
-
-            /* Update VDL */
-            if (SharedCacheMap->ValidDataLength.QuadPart < FlushEnd)
-                SharedCacheMap->ValidDataLength.QuadPart = FlushEnd;
-        }
-
-        if (!NT_SUCCESS(RtlLongLongAdd(FlushStart, VACB_MAPPING_GRANULARITY, &FlushStart)))
-        {
-            /* We're at the end of file ! */
+        Status = MmFlushSegment(SectionObjectPointers, &MmOffset, MmLength, &MmIosb);
+        FlushedBytes = MmIosb.Information;
+        if (!NT_SUCCESS(Status))
             break;
-        }
 
-        /* Round down to next VACB start now */
-        FlushStart -= FlushStart % VACB_MAPPING_GRANULARITY;
+        /* Go to the next VACB start */
+        FlushStart += MmLength;
     }
 
-    KeReleaseGuardedMutex(&SharedCacheMap->FlushCacheLock);
+    CcpCheckFlushedFileCache(SharedCacheMap,
+                             FileOffset ? FileOffset->QuadPart : 0,
+                             FlushedBytes);
 
-quit:
+Quit:
+    if (HaveFileLock)
+        FsRtlReleaseFileForCcFlush(SharedCacheMap->FileObject);
+
     if (IoStatus)
     {
         IoStatus->Status = Status;
+        IoStatus->Information = FlushedBytes;
     }
+}
+
+/**
+ * @implemented
+ *
+ * @brief
+ * Flushes all or a portion of a cached file to disk.
+ *
+ * @param[in] SectionObjectPointers
+ * Pointer to a SECTION_OBJECT_POINTERS structure containing the file object's
+ * section object pointers.
+ *
+ * @param[in] FileOffset
+ * See CcpFlushFileCache.
+ *
+ * @param[in] Length
+ * See CcpFlushFileCache.
+ *
+ * @param[out] IoStatus
+ * See CcpFlushFileCache.
+ *
+ * @remarks
+ * The caller must be able to enter a wait state until all the data has been
+ * flushed.
+ */
+VOID
+NTAPI
+CcFlushCache(
+    _In_ PSECTION_OBJECT_POINTERS SectionObjectPointers,
+    _In_opt_ PLARGE_INTEGER FileOffset,
+    _In_ ULONG Length,
+    _Out_opt_ PIO_STATUS_BLOCK IoStatus)
+{
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
+
+    CCTRACE(CC_API_DEBUG, "SectionObjectPointers=%p FileOffset=0x%I64X Length=%lu\n",
+            SectionObjectPointers, FileOffset ? FileOffset->QuadPart : 0LL, Length);
+
+    if (!SectionObjectPointers)
+    {
+        if (IoStatus)
+            IoStatus->Status = STATUS_INVALID_PARAMETER;
+
+        return;
+    }
+
+    SharedCacheMap = SectionObjectPointers->SharedCacheMap;
+    if (!SharedCacheMap)
+    {
+        /* Forward this to Mm */
+        MmFlushSegment(SectionObjectPointers, FileOffset, Length, IoStatus);
+        return;
+    }
+
+    /* Call internal function */
+    CcpFlushFileCache(SharedCacheMap, FileOffset, Length, IoStatus);
 }
 
 NTSTATUS
@@ -1327,7 +1410,6 @@ CcRosInitializeFileCache (
         KeInitializeSpinLock(&SharedCacheMap->CacheMapLock);
         InitializeListHead(&SharedCacheMap->CacheMapVacbListHead);
         InitializeListHead(&SharedCacheMap->BcbList);
-        KeInitializeGuardedMutex(&SharedCacheMap->FlushCacheLock);
 
         SharedCacheMap->Flags = SHARED_CACHE_MAP_IN_CREATION;
 
@@ -1482,6 +1564,7 @@ CcInitView (
     InitializeListHead(&VacbLruListHead);
     InitializeListHead(&CcDeferredWrites);
     InitializeListHead(&CcCleanSharedCacheMapList);
+    InitializeListHead(&CcDirtySharedCacheMapList);
     KeInitializeSpinLock(&CcDeferredWriteSpinLock);
     ExInitializeNPagedLookasideList(&iBcbLookasideList,
                                     NULL,
