@@ -33,11 +33,18 @@ PeLdrLoadImage(
     _Out_ PVOID* ImageBasePA);
 
 BOOLEAN
+PeLdrLoadImageEx(
+    _In_ PCSTR FilePath,
+    _In_ TYPE_OF_MEMORY MemoryType,
+    _Out_ PVOID* ImageBasePA,
+    _In_ BOOLEAN KernelMapping);
+
+BOOLEAN
 PeLdrAllocateDataTableEntry(
     IN OUT PLIST_ENTRY ModuleListHead,
     IN PCCH BaseDllName,
     IN PCCH FullDllName,
-    IN PVOID BasePA,
+    IN PVOID BaseVA,
     OUT PLDR_DATA_TABLE_ENTRY *NewEntry);
 
 VOID
