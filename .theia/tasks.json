@@ -1,18 +1,19 @@
 {
-	// See https://go.microsoft.com/fwlink/?LinkId=733558
-	// for the documentation about the tasks.json format
-	"version": "2.0.0",
-	"tasks": [
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
         {
-            "label": "build livecd",
+            "label": "build bootcd",
             "type": "shell",
-            "command": "ninja livecd",
+            "command": "ninja bootcd",
             "options": {
                 "cwd": "${workspaceFolder}/build"
             },
             "group": "build",
             "problemMatcher": [
                 {
+                    "base": "$gcc",
                     "owner": "cpp",
                     "fileLocation": ["relative", "${workspaceFolder}/build"],
                     "pattern": {
@@ -25,43 +26,6 @@
                     }
                 }
             ]
-        },
-        {
-            "label": "build bootcd",
-            "type": "shell",
-            "command": "ninja bootcd",
-            "options": {
-                "cwd": "${workspaceFolder}/build"
-            },
-            "group": "build",
-            "problemMatcher": [
-                {
-                    "base": "$gcc",
-                    "fileLocation": ["relative", "${workspaceFolder}/build"],
-                },
-            ]
-        },
-        {
-            "label": "launch livecd",
-            "type": "process",
-            "options": {
-                "cwd": "${workspaceFolder}/build"
-            },
-            "dependsOn": [
-                "build livecd"
-            ],
-            "dependsOrder": "sequence",
-            "command": "qemu-system-i386",
-            "args": [
-                "-cdrom", "livecd.iso",
-                "-chardev", "socket,port=9091,host=localhost,server,nowait,id=char0",
-                "-serial", "chardev:char0",
-                "-nic", "user,model=e1000",
-                "-boot", "d",
-                "-chardev", "socket,path=/tmp/livecd_dbg,server,nowait,id=char1", "-serial", "chardev:char1",
-                "-daemonize"
-            ],
-            "problemMatcher": []
         },
         {
             "label": "launch bootcd",
