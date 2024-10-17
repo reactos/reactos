@@ -55,7 +55,7 @@ public:
         memset(&m_sec, 0, sizeof(CRITICAL_SECTION));
     }
 
-    virtual ~CComCriticalSection()
+    ~CComCriticalSection()
     {
     }
 
