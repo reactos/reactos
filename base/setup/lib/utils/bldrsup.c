@@ -124,7 +124,7 @@ NtLdrEnumerateBootEntries(
 // Question 2: What if many config files are possible?
 NTOS_BOOT_LOADER_FILES NtosBootLoaders[] =
 {
-    {FreeLdr, L"freeldr.sys\0", L"freeldr.ini",
+    {FreeLdr, L"freeldr.sys\0" L"rosload.exe\0", L"freeldr.ini",
         OpenIniBootLoaderStore, CloseIniBootLoaderStore, (PENUM_BOOT_STORE_ENTRIES)FreeLdrEnumerateBootEntries},
     {NtLdr  , L"ntldr\0" L"osloader.exe\0", L"boot.ini",
         OpenIniBootLoaderStore, CloseIniBootLoaderStore, (PENUM_BOOT_STORE_ENTRIES)NtLdrEnumerateBootEntries  },

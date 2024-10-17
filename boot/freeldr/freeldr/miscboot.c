@@ -145,8 +145,8 @@ LoadAndBootSector(
         BiosDriveNumber = 0;
     if (!BiosDriveNumber)
     {
-        BiosDriveNumber = FrldrBootDrive;
-        PartitionNumber = FrldrBootPartition;
+        BiosDriveNumber = FrldrGetBootDrive();
+        PartitionNumber = FrldrGetBootPartition();
     }
 
 

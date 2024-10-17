@@ -25,6 +25,9 @@ DBG_DEFAULT_CHANNEL(PELOADER);
 
 /* GLOBALS *******************************************************************/
 
+LIST_ENTRY FrLdrModuleList;
+PLDR_DATA_TABLE_ENTRY FreeldrDTE;
+
 PELDR_IMPORTDLL_LOAD_CALLBACK PeLdrImportDllLoadCallback = NULL;
 
 #ifdef _WIN64
@@ -36,6 +39,44 @@ PELDR_IMPORTDLL_LOAD_CALLBACK PeLdrImportDllLoadCallback = NULL;
 
 
 /* PRIVATE FUNCTIONS *********************************************************/
+
+static BOOLEAN
+FrLdrInitImageSupport(VOID)
+{
+// extern char __ImageBase;
+    BOOLEAN Success;
+
+    if (FreeldrDTE)
+    {
+        /* Already initialized, bail out */
+        return TRUE;
+    }
+
+    /* Initialize the loaded module list */
+    InitializeListHead(&FrLdrModuleList);
+
+    /*
+     * Add freeldr.sys to the list of loaded executables, as it
+     * contains exports that may be imported by the loaded image.
+     * For example, ScsiPort* exports, imported by ntbootdd.sys.
+     */
+    Success = PeLdrAllocateDataTableEntry(&FrLdrModuleList,
+                                          "freeldr.sys",
+                                          "FREELDR.SYS",
+                                          &__ImageBase,
+                                          &FreeldrDTE);
+    if (!Success)
+    {
+        /* Cleanup and bail out */
+        ERR("PeLdrAllocateDataTableEntry('%s') failed\n", "FREELDR.SYS");
+        return FALSE; // ENOMEM;
+    }
+
+    /* Now unlink the DTEs, they won't be valid later */
+    // RemoveEntryList(&FreeldrDTE->InLoadOrderLinks);
+
+    return Success;
+}
 
 static PVOID
 PeLdrpFetchAddressOfSecurityCookie(PVOID BaseAddress, ULONG SizeOfImage)
@@ -153,7 +194,7 @@ PeLdrpBindImportName(
     PCHAR ExportName, ForwarderName;
     BOOLEAN Success;
 
-    //TRACE("PeLdrpBindImportName(): DllBase 0x%X, ImageBase 0x%X, ThunkData 0x%X, ExportDirectory 0x%X, ExportSize %d, ProcessForwards 0x%X\n",
+    //TRACE("PeLdrpBindImportName(): DllBase 0x%p, ImageBase 0x%p, ThunkData 0x%p, ExportDirectory 0x%p, ExportSize %d, ProcessForwards 0x%X\n",
     //      DllBase, ImageBase, ThunkData, ExportDirectory, ExportSize, ProcessForwards);
 
     /* Check passed DllBase param */
@@ -418,7 +459,7 @@ PeLdrpLoadAndScanReferencedDll(
     Success = PeLdrAllocateDataTableEntry(Parent ? Parent->Blink : ModuleListHead,
                                           ImportName,
                                           FullDllName,
-                                          BasePA,
+                                          PaToVa(BasePA),
                                           DataTableEntry);
     if (!Success)
     {
@@ -462,8 +503,8 @@ PeLdrpScanImportAddressTable(
     BOOLEAN Success;
     ULONG ExportSize;
 
-    TRACE("PeLdrpScanImportAddressTable(): DllBase 0x%X, "
-          "ImageBase 0x%X, ThunkData 0x%X\n", DllBase, ImageBase, ThunkData);
+    TRACE("PeLdrpScanImportAddressTable(): DllBase 0x%p, "
+          "ImageBase 0x%p, ThunkData 0x%p\n", DllBase, ImageBase, ThunkData);
 
     /* Obtain the export table from the DLL's base */
     if (DllBase == NULL)
@@ -480,7 +521,7 @@ PeLdrpScanImportAddressTable(
                 &ExportSize);
     }
 
-    TRACE("PeLdrpScanImportAddressTable(): ExportDirectory 0x%X\n", ExportDirectory);
+    TRACE("PeLdrpScanImportAddressTable(): ExportDirectory 0x%p\n", ExportDirectory);
 
     /* If pointer to Export Directory is */
     if (ExportDirectory == NULL)
@@ -589,7 +630,7 @@ PeLdrCheckForLoadedDll(
                to the caller and increase load count for it */
             *LoadedEntry = DataTableEntry;
             DataTableEntry->LoadCount++;
-            TRACE("PeLdrCheckForLoadedDll: LoadedEntry %X\n", DataTableEntry);
+            TRACE("PeLdrCheckForLoadedDll: LoadedEntry %p\n", DataTableEntry);
             return TRUE;
         }
 
@@ -623,7 +664,7 @@ PeLdrScanImportDescriptorTable(
         BaseName.Buffer = VaToPa(ScanDTE->BaseDllName.Buffer);
         BaseName.MaximumLength = ScanDTE->BaseDllName.MaximumLength;
         BaseName.Length = ScanDTE->BaseDllName.Length;
-        TRACE("PeLdrScanImportDescriptorTable(): %wZ ImportTable = 0x%X\n",
+        TRACE("PeLdrScanImportDescriptorTable(): %wZ ImportTable = 0x%p\n",
               &BaseName, ImportTable);
     }
 #endif
@@ -682,10 +723,10 @@ PeLdrAllocateDataTableEntry(
     IN OUT PLIST_ENTRY ModuleListHead,
     IN PCCH BaseDllName,
     IN PCCH FullDllName,
-    IN PVOID BasePA,
+    IN PVOID BaseVA,
     OUT PLDR_DATA_TABLE_ENTRY *NewEntry)
 {
-    PVOID BaseVA = PaToVa(BasePA);
+    PVOID BasePA = VaToPa(BaseVA);
     PWSTR BaseDllNameBuffer, Buffer;
     PLDR_DATA_TABLE_ENTRY DataTableEntry;
     PIMAGE_NT_HEADERS NtHeaders;
@@ -820,10 +861,11 @@ PeLdrFreeDataTableEntry(
  * Addressing mode: physical.
  **/
 BOOLEAN
-PeLdrLoadImage(
+PeLdrLoadImageEx(
     _In_ PCSTR FilePath,
     _In_ TYPE_OF_MEMORY MemoryType,
-    _Out_ PVOID* ImageBasePA)
+    _Out_ PVOID* ImageBasePA,
+    _In_ BOOLEAN KernelMapping)
 {
     ULONG FileId;
     PVOID PhysicalBase;
@@ -895,9 +937,9 @@ PeLdrLoadImage(
     }
 
     /* This is the real image base, in form of a virtual address */
-    VirtualBase = PaToVa(PhysicalBase);
+    VirtualBase = KernelMapping ? PaToVa(PhysicalBase) : PhysicalBase;
 
-    TRACE("Base PA: 0x%X, VA: 0x%X\n", PhysicalBase, VirtualBase);
+    TRACE("Base PA: 0x%p, VA: 0x%p\n", PhysicalBase, VirtualBase);
 
     /* Copy headers from already read data */
     RtlCopyMemory(PhysicalBase, HeadersBuffer, min(NtHeaders->OptionalHeader.SizeOfHeaders, sizeof(HeadersBuffer)));
@@ -1008,4 +1050,158 @@ Failure:
     /* Cleanup and bail out */
     MmFreeMemory(PhysicalBase);
     return FALSE;
+}
+
+BOOLEAN
+PeLdrLoadImage(
+    _In_ PCSTR FilePath,
+    _In_ TYPE_OF_MEMORY MemoryType,
+    _Out_ PVOID* ImageBasePA)
+{
+    return PeLdrLoadImageEx(FilePath, MemoryType, ImageBasePA, TRUE);
+}
+
+
+/**
+ * @brief
+ * External FreeLdr PE image loader.
+ **/
+ARC_STATUS
+FldrpLoadImage(
+    _In_ PCSTR ImageFilePath,
+    _In_opt_ PCSTR ImportName,
+    _In_ TYPE_OF_MEMORY MemoryType,
+    _Out_ PLDR_DATA_TABLE_ENTRY* ImageEntry,
+    _Out_opt_ PVOID* ImageBasePA)
+{
+    ARC_STATUS Status;
+    BOOLEAN Success;
+    PVOID ImageBase = NULL;
+    PLDR_DATA_TABLE_ENTRY ImageDTE;
+    PIMAGE_NT_HEADERS NtHeaders;
+    PIMAGE_IMPORT_DESCRIPTOR ImportTable;
+    ULONG ImportTableSize;
+
+    /* Initialize image loading support */
+    // if (!FreeldrDTE)
+    if (!FrLdrInitImageSupport())
+    {
+        ERR("Cannot initialize Image Support\n");
+        return ENOEXEC;
+    }
+
+    /* Load the image */
+    Success = PeLdrLoadImage(ImageFilePath, MemoryType, &ImageBase);
+    if (!Success)
+    {
+        ERR("PeLdrLoadImage('%s') failed\n", ImageFilePath);
+        return ENOEXEC;
+    }
+
+    if (!ImportName)
+    {
+        /* Get the file name from the path */
+        ImportName = strrchr(ImageFilePath, '\\');
+        if (ImportName)
+        {
+            /* Name is past the path separator */
+            ImportName++;
+        }
+        else
+        {
+            /* No directory, just use the given path */
+            ImportName = ImageFilePath;
+        }
+    }
+
+    /* Allocate a DTE for it */
+    Success = PeLdrAllocateDataTableEntry(&FrLdrModuleList,
+                                          ImportName,
+                                          ImageFilePath,
+                                          ImageBase,
+                                          &ImageDTE);
+    if (!Success)
+    {
+        /* Cleanup and bail out */
+        ERR("PeLdrAllocateDataTableEntry('%s') failed\n", ImageFilePath);
+        MmFreeMemory(ImageBase);
+        return ENOMEM;
+    }
+
+    /* Reset ImageBase */
+    ASSERT(VaToPa(ImageDTE->DllBase) == ImageBase);
+    // ImageBase = VaToPa(ImageDTE->DllBase);
+
+    /* Load any other referenced DLLs for the loaded image */
+    Success = PeLdrScanImportDescriptorTable(&FrLdrModuleList, ""/*DirPath*/, ImageDTE);
+    if (!Success)
+    {
+        /* Cleanup and bail out */
+        ERR("PeLdrScanImportDescriptorTable('%s') failed\n", ImageFilePath);
+        Status = EIO;
+        goto Failure;
+    }
+
+    // /* Now unlink the DTEs, they won't be valid later */
+    // RemoveEntryList(&FreeldrDTE->InLoadOrderLinks);
+    // RemoveEntryList(&ImageDTE->InLoadOrderLinks);
+
+    /* Change imports to PA */
+    ImportTable =
+        (PIMAGE_IMPORT_DESCRIPTOR)RtlImageDirectoryEntryToData(ImageBase,
+                                                               TRUE,
+                                                               IMAGE_DIRECTORY_ENTRY_IMPORT,
+                                                               &ImportTableSize);
+    for (; (ImportTable->Name != 0) && (ImportTable->FirstThunk != 0); ImportTable++)
+    {
+        PIMAGE_THUNK_DATA ThunkData = (PIMAGE_THUNK_DATA)VaToPa(RVA(ImageDTE->DllBase, ImportTable->FirstThunk));
+
+        while (((PIMAGE_THUNK_DATA)ThunkData)->u1.AddressOfData != 0)
+        {
+            ThunkData->u1.Function = (ULONG_PTR)VaToPa((PVOID)ThunkData->u1.Function);
+            ThunkData++;
+        }
+    }
+
+    NtHeaders = RtlImageNtHeader(ImageBase);
+    ASSERT(NtHeaders); // PeLdrLoadImage succeeded, so the image was valid and had a header...
+    // ASSERT(NtHeaders->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR_MAGIC);
+
+    /* Relocate image to PA */
+    Success = (BOOLEAN)LdrRelocateImageWithBias(ImageBase,
+                                                NtHeaders->OptionalHeader.ImageBase - (ULONG_PTR)ImageDTE->DllBase,
+                                                "FreeLdr",
+                                                TRUE,
+                                                TRUE, /* In case of conflict still return success */
+                                                FALSE);
+    if (!Success)
+    {
+        Status = EIO;
+        goto Failure;
+    }
+
+    *ImageEntry = ImageDTE;
+    if (ImageBasePA)
+        *ImageBasePA = ImageBase;
+
+    return ESUCCESS;
+
+Failure:
+    /* We failed, cleanup */
+    FldrpUnloadImage(ImageDTE);
+    return Status;
+}
+
+/**
+ * @brief
+ * Unload a loaded external FreeLdr PE image.
+ **/
+BOOLEAN
+FldrpUnloadImage(
+    _Inout_ PLDR_DATA_TABLE_ENTRY ImageEntry)
+{
+    PVOID ImageBase = VaToPa(ImageEntry->DllBase);
+    PeLdrFreeDataTableEntry(ImageEntry);
+    MmFreeMemory(ImageBase);
+    return TRUE;
 }

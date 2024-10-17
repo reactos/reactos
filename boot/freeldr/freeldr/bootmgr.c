@@ -44,6 +44,112 @@ EditCustomBootNTOS(
     EditCustomBootReactOS(OperatingSystem, FALSE);
 }
 
+/******************************************/
+static
+BOOLEAN
+LoadRosload(
+    _In_ PCSTR RosloadPath,
+    _Out_ PCHAR FullPath,
+    _Out_ PVOID* ImageBase)
+{
+    BOOLEAN Success;
+
+    /* Create full rosload.exe path */
+    strcpy(FullPath, FrLdrBootPath);
+    strcat(FullPath, "\\");
+    strcat(FullPath, RosloadPath);
+
+    TRACE("Loading second stage loader '%s'\n", FullPath);
+
+    /* Load rosload.exe as a bootloader image */
+    Success = PeLdrLoadImageEx(FullPath,
+                               LoaderLoadedProgram,
+                               ImageBase,
+                               FALSE);
+    if (!Success)
+    {
+        ERR("Failed to load second stage loader '%s'\n", FullPath);
+    }
+
+    return Success;
+}
+
+static
+ARC_STATUS
+LoadAndRunRosload(
+    _In_ ULONG Argc,
+    _In_ PCHAR Argv[],
+    _In_ PCHAR Envp[])
+{
+    CHAR SecondStageLdrPath[MAX_PATH];
+    PLDR_DATA_TABLE_ENTRY FreeldrDTE, RosloadDTE;
+    LIST_ENTRY ModuleListHead;
+    PVOID ImageBase;
+    ARC_STATUS (*EntryPoint)(ULONG, PCHAR[], PCHAR[]);
+    BOOLEAN Success;
+
+    /* Initialize the loaded module list */
+    InitializeListHead(&ModuleListHead);
+
+    /* Load the second stage loader */
+    if (!LoadRosload("rosload.exe", SecondStageLdrPath, &ImageBase))
+    {
+        /* Try in loader directory */
+        if (!LoadRosload("loader\\rosload.exe", SecondStageLdrPath, &ImageBase))
+        {
+            return ENOENT;
+        }
+    }
+
+    /* Allocate a DTE for rosload.exe */
+    Success = PeLdrAllocateDataTableEntry(&ModuleListHead,
+                                          "rosload.exe",
+                                          SecondStageLdrPath,
+                                          ImageBase,
+                                          &RosloadDTE);
+    if (!Success)
+    {
+        /* Cleanup and bail out */
+        ERR("Failed to allocate DTE for rosload.exe\n");
+        MmFreeMemory(ImageBase);
+        return ENOMEM;
+    }
+
+    /* Add the PE part of freeldr.sys to the list of loaded executables, it
+       contains ScsiPort* exports, imported by ntbootdd.sys */
+    Success = PeLdrAllocateDataTableEntry(&ModuleListHead,
+                                          "freeldr_pe.exe",
+                                          "freeldr_pe.exe",
+                                          &__ImageBase,
+                                          &FreeldrDTE);
+    if (!Success)
+    {
+        /* Cleanup and bail out */
+        ERR("Failed to allocate DTE for freeldr\n");
+        PeLdrFreeDataTableEntry(RosloadDTE);
+        MmFreeMemory(ImageBase);
+        return ENOMEM;
+    }
+
+    /* Resolve imports */
+    Success = PeLdrScanImportDescriptorTable(&ModuleListHead, "", RosloadDTE);
+    if (!Success)
+    {
+        /* Cleanup and bail out */
+        ERR("Failed to resolve imports for rosload.exe\n");
+        PeLdrFreeDataTableEntry(FreeldrDTE);
+        PeLdrFreeDataTableEntry(RosloadDTE);
+        MmFreeMemory(ImageBase);
+        return EIO;
+    }
+
+    /* Call the entrypoint */
+    printf("Launching rosload.exe...\n");
+    EntryPoint = VaToPa(RosloadDTE->EntryPoint);
+    return (*EntryPoint)(Argc, Argv, Envp);
+}
+/******************************************/
+
 typedef struct _OS_LOADING_METHOD
 {
     PCSTR BootType;
@@ -54,7 +160,7 @@ typedef struct _OS_LOADING_METHOD
 static const OS_LOADING_METHOD
 OSLoadingMethods[] =
 {
-    {"ReactOSSetup", EditCustomBootReactOSSetup, LoadReactOSSetup},
+    {"ReactOSSetup", EditCustomBootReactOSSetup, LoadAndRunRosload},
 
 #if defined(_M_IX86) || defined(_M_AMD64)
 #ifndef UEFIBOOT
@@ -63,11 +169,11 @@ OSLoadingMethods[] =
 #endif
 #endif
 #ifdef _M_IX86
-    {"WindowsNT40" , EditCustomBootNTOS, LoadAndBootWindows},
+    {"WindowsNT40" , EditCustomBootNTOS, LoadAndRunRosload},
 #endif
-    {"Windows"     , EditCustomBootNTOS, LoadAndBootWindows},
-    {"Windows2003" , EditCustomBootNTOS, LoadAndBootWindows},
-    {"WindowsVista", EditCustomBootNTOS, LoadAndBootWindows},
+    {"Windows"     , EditCustomBootNTOS, LoadAndRunRosload},
+    {"Windows2003" , EditCustomBootNTOS, LoadAndRunRosload},
+    {"WindowsVista", EditCustomBootNTOS, LoadAndRunRosload},
 };
 
 /* FUNCTIONS ******************************************************************/
@@ -85,7 +191,7 @@ WarnDeprecated(
     CHAR msgString[300];
 
     /* If the user didn't cancel the timeout, don't display the warning */
-    if (BootMgrInfo.TimeOut >= 0)
+    if (GetBootMgrInfo()->TimeOut >= 0)
         return;
 
     va_start(ap, MsgFmt);
@@ -183,6 +289,7 @@ BuildArgvForOsLoader(
     PCHAR* Argv;
     PCHAR* Args;
     PCHAR SettingName, SettingValue;
+    PCCHAR BootPath = FrLdrGetBootPath();
 
     *pArgc = 0;
 
@@ -208,7 +315,7 @@ BuildArgvForOsLoader(
     /* i == 0: Program name */
     // TODO: Provide one in the future...
     /* i == 1: SystemPartition : from where FreeLdr has been started */
-    Size += (strlen("SystemPartition=") + strlen(FrLdrBootPath) + 1) * sizeof(CHAR);
+    Size += (strlen("SystemPartition=") + strlen(BootPath) + 1) * sizeof(CHAR);
     /* i == 2: LoadIdentifier  : ASCII string that may be used
      * to associate an identifier with a set of load parameters */
     if (LoadIdentifier)
@@ -236,7 +343,7 @@ BuildArgvForOsLoader(
     /* i == 1: SystemPartition */
     {
         strcpy(SettingName, "SystemPartition=");
-        strcat(SettingName, FrLdrBootPath);
+        strcat(SettingName, BootPath);
 
         *Args++ = SettingName;
         SettingName += (strlen(SettingName) + 1);
@@ -333,7 +440,7 @@ MainBootMenuKeyPressFilter(
     IN PVOID Context OPTIONAL)
 {
     /* Any key-press cancels the global timeout */
-    BootMgrInfo.TimeOut = -1;
+    GetBootMgrInfo()->TimeOut = -1;
 
     switch (KeyPress)
     {
@@ -394,7 +501,7 @@ VOID RunLoader(VOID)
 #endif
 
     /* Debugger main initialization */
-    DebugInit(BootMgrInfo.DebugString);
+    DebugInit(GetBootMgrInfo()->DebugString);
 
     /* UI main initialization */
     if (!UiInitialize(TRUE))
@@ -427,7 +534,7 @@ VOID RunLoader(VOID)
     }
 
     /* Find all the message box settings and run them */
-    UiShowMessageBoxesInSection(BootMgrInfo.FrLdrSection);
+    UiShowMessageBoxesInSection(GetBootMgrInfo()->FrLdrSection);
 
     for (;;)
     {
@@ -442,7 +549,7 @@ VOID RunLoader(VOID)
                            OperatingSystemDisplayNames,
                            OperatingSystemCount,
                            DefaultOperatingSystem,
-                           BootMgrInfo.TimeOut,
+                           GetBootMgrInfo()->TimeOut,
                            &SelectedOperatingSystem,
                            FALSE,
                            MainBootMenuKeyPressFilter,
@@ -455,12 +562,12 @@ VOID RunLoader(VOID)
         /* Load the chosen operating system */
         LoadOperatingSystem(&OperatingSystemList[SelectedOperatingSystem]);
 
-        BootMgrInfo.TimeOut = -1;
+        GetBootMgrInfo()->TimeOut = -1;
 
         /* If we get there, the OS loader failed. As it may have
          * messed up the display, re-initialize the UI. */
 #ifndef _M_ARM
-        UiVtbl.UnInitialize();
+        UiUnInitialize("");
 #endif
         UiInitialize(TRUE);
     }

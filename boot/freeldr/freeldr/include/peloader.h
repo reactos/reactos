@@ -33,11 +33,18 @@ PeLdrLoadImage(
     _Out_ PVOID* ImageBasePA);
 
 BOOLEAN
+PeLdrLoadImageEx(
+    _In_ PCSTR FilePath,
+    _In_ TYPE_OF_MEMORY MemoryType,
+    _Out_ PVOID* ImageBasePA,
+    _In_ BOOLEAN KernelMapping);
+
+BOOLEAN
 PeLdrAllocateDataTableEntry(
     IN OUT PLIST_ENTRY ModuleListHead,
     IN PCCH BaseDllName,
     IN PCCH FullDllName,
-    IN PVOID BasePA,
+    IN PVOID BaseVA,
     OUT PLDR_DATA_TABLE_ENTRY *NewEntry);
 
 VOID
@@ -60,3 +67,24 @@ PeLdrCheckForLoadedDll(
 PVOID
 PeLdrInitSecurityCookie(
     _In_ PLDR_DATA_TABLE_ENTRY LdrEntry);
+
+
+
+extern LIST_ENTRY FrLdrModuleList;
+extern PLDR_DATA_TABLE_ENTRY FreeldrDTE;
+
+ARC_STATUS
+FldrpLoadImage(
+    _In_ PCSTR ImageFilePath,
+    _In_opt_ PCSTR ImportName,
+    _In_ TYPE_OF_MEMORY MemoryType,
+    _Out_ PLDR_DATA_TABLE_ENTRY* ImageEntry,
+    _Out_opt_ PVOID* ImageBasePA);
+
+BOOLEAN
+FldrpUnloadImage(
+    _Inout_ PLDR_DATA_TABLE_ENTRY ImageEntry);
+
+ARC_STATUS
+FldrpStartImage(
+    _In_ PLDR_DATA_TABLE_ENTRY ImageEntry);
