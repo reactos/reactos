@@ -41,7 +41,7 @@ typedef struct tagSCVK
 
 typedef struct tagVKNAME
 {
-    ULONG VirtualKey;
+    UCHAR VirtualKey;
     PCHAR Name;
 } VKNAME, *PVKNAME;
 
@@ -83,7 +83,7 @@ DoOutput(
 
 PCHAR
 getVKName(
-    IN ULONG VirtualKey,
+    IN UCHAR VirtualKey,
     IN BOOLEAN Prefix
 );
 
