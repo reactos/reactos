@@ -295,3 +295,11 @@ Path: modules/rosapps/lib/vfdlib
 Used Version: 2.1.2008.206
 License: GPL-2.0 (https://spdx.org/licenses/GPL-2.0.html)
 URL: https://vfd.sourceforge.net/
+
+Title: libdxg - WDDM Headers
+Path: sdk/include/psdk/d3dukmdt.h
+Path: sdk/include/psdk/d3dkmdt.h
+Path: sdk/include/ddk/d3dkmthk.h
+Used Version: git commit 045831e
+License: MIT (https://spdx.org/licenses/MIT.html)
+URL: https://github.com/microsoft/libdxg
