@@ -401,30 +401,8 @@ RecycleBinDlg(
     return FALSE;
 }
 
-BOOL SH_ShowRecycleBinProperties(WCHAR sDrive)
+HRESULT RecycleBin_AddPropSheetPages(LPFNSVADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
 {
-    HPROPSHEETPAGE hpsp[1];
-    PROPSHEETHEADERW psh;
-    HPROPSHEETPAGE hprop;
-    INT_PTR ret;
-
-    ZeroMemory(&psh, sizeof(psh));
-    psh.dwSize = sizeof(psh);
-    psh.dwFlags = PSP_DEFAULT | PSH_PROPTITLE;
-    psh.pszCaption = MAKEINTRESOURCEW(IDS_RECYCLEBIN_FOLDER_NAME);
-    psh.hwndParent = NULL;
-    psh.phpage = hpsp;
-    psh.hInstance = shell32_hInstance;
-
-    hprop = SH_CreatePropertySheetPage(IDD_RECYCLE_BIN_PROPERTIES, RecycleBinDlg, (LPARAM)sDrive, NULL);
-    if (!hprop)
-    {
-        ERR("Failed to create property sheet\n");
-        return FALSE;
-    }
-    hpsp[psh.nPages] = hprop;
-    psh.nPages++;
-
-    ret = PropertySheetW(&psh);
-    return (ret >= 0);
+    HPROPSHEETPAGE hpsp = SH_CreatePropertySheetPage(IDD_RECYCLE_BIN_PROPERTIES, RecycleBinDlg, 0, NULL);
+    return AddPropSheetPage(hpsp, pfnAddPage, lParam);
 }
