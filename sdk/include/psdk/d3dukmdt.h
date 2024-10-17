@@ -76,7 +76,7 @@
             )
 
 #if !defined(DXGKDDI_INTERFACE_VERSION)
-#define DXGKDDI_INTERFACE_VERSION           DXGKDDI_INTERFACE_VERSION_WDDM3_0
+#define DXGKDDI_INTERFACE_VERSION           DXGKDDI_INTERFACE_VERSION_VISTA_SP1
 #endif // !defined(DXGKDDI_INTERFACE_VERSION)
 
 #define D3D_UMD_INTERFACE_VERSION_VISTA      0x000C
@@ -138,7 +138,7 @@
 // Search for D3D_UMD_INTERFACE_VERSION across all depots to ensure all dependencies are updated.
 
 #if !defined(D3D_UMD_INTERFACE_VERSION)
-#define D3D_UMD_INTERFACE_VERSION           D3D_UMD_INTERFACE_VERSION_WDDM3_0
+#define D3D_UMD_INTERFACE_VERSION           D3D_UMD_INTERFACE_VERSION_VISTA
 #endif // !defined(D3D_UMD_INTERFACE_VERSION)
 
 //
@@ -194,7 +194,7 @@ typedef union _D3DKMT_PTR_TYPE
 // Available only for Vista (LONGHORN) and later and for
 // multiplatform tools such as debugger extensions
 //
-#if (NTDDI_VERSION >= NTDDI_LONGHORN) || defined(D3DKMDT_SPECIAL_MULTIPLATFORM_TOOL)
+#ifdef __REACTOS__
 
 typedef ULONGLONG D3DGPU_VIRTUAL_ADDRESS;
 typedef ULONGLONG D3DGPU_SIZE_T;

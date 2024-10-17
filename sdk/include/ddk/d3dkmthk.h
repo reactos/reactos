@@ -29,7 +29,7 @@ typedef OBJECT_ATTRIBUTES *POBJECT_ATTRIBUTES;
 // Available only for Vista (LONGHORN) and later and for
 // multiplatform tools such as debugger extensions
 //
-#if (NTDDI_VERSION >= NTDDI_LONGHORN) || defined(D3DKMDT_SPECIAL_MULTIPLATFORM_TOOL)
+#ifdef __REACTOS__
 
 typedef struct _D3DKMT_CREATEDEVICEFLAGS
 {
@@ -5648,12 +5648,6 @@ typedef _Check_return_ NTSTATUS (APIENTRY *PFND3DKMT_DISPLAYPORT_OPERATION)(_Ino
 typedef _Check_return_ NTSTATUS (APIENTRY *PFND3DKMT_CANCELPRESENTS)(_In_ D3DKMT_CANCEL_PRESENTS*);
 
 #endif
-
-EXTERN_C _Check_return_ NTSTATUS APIENTRY D3DKMTShareObjectWithHost(_Inout_ D3DKMT_SHAREOBJECTWITHHOST*);
-EXTERN_C _Check_return_ NTSTATUS APIENTRY D3DKMTCreateSyncFile(_Inout_ D3DKMT_CREATESYNCFILE*);
-
-// Used in WSL to close the internal file descriptor to /dev/dxg
-EXTERN_C VOID APIENTRY D3DKMTCloseDxCoreDevice();
 
 #if !defined(D3DKMDT_SPECIAL_MULTIPLATFORM_TOOL)
 

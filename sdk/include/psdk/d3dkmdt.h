@@ -24,55 +24,9 @@
 
 #include "d3dukmdt.h"
 
-#define NTSTATUS                int32_t
-
-/*
- * Some of the Windows return codes, which needs to be translated to Linux
- * IOCTL return codes. Positive values are success codes and need to be
- * returned from the driver IOCTLs. libdxcore.so depends on returning
- * specific return codes.
- */
-#define STATUS_SUCCESS					((NTSTATUS)(0))
-#define	STATUS_OBJECT_NAME_INVALID		((NTSTATUS)(0xC0000033L))
-#define	STATUS_DEVICE_REMOVED			((NTSTATUS)(0xC00002B6L))
-#define	STATUS_INVALID_HANDLE			((NTSTATUS)(0xC0000008L))
-#define	STATUS_ILLEGAL_INSTRUCTION		((NTSTATUS)(0xC000001DL))
-#define	STATUS_NOT_IMPLEMENTED			((NTSTATUS)(0xC0000002L))
-#define	STATUS_PENDING					((NTSTATUS)(0x00000103L))
-#define	STATUS_ACCESS_DENIED			((NTSTATUS)(0xC0000022L))
-#define	STATUS_BUFFER_TOO_SMALL			((NTSTATUS)(0xC0000023L))
-#define	STATUS_OBJECT_TYPE_MISMATCH		((NTSTATUS)(0xC0000024L))
-#define	STATUS_GRAPHICS_ALLOCATION_BUSY	((NTSTATUS)(0xC01E0102L))
-#define	STATUS_NOT_SUPPORTED			((NTSTATUS)(0xC00000BBL))
-#define	STATUS_TIMEOUT					((NTSTATUS)(0x00000102L))
-#define	STATUS_INVALID_PARAMETER		((NTSTATUS)(0xC000000DL))
-#define	STATUS_NO_MEMORY				((NTSTATUS)(0xC0000017L))
-#define	STATUS_OBJECT_NAME_COLLISION	((NTSTATUS)(0xC0000035L))
-#define STATUS_OBJECT_NAME_NOT_FOUND	((NTSTATUS)(0xC0000034L))
-#define STATUS_UNSUCCESSFUL             ((NTSTATUS)(0xC0000001L))
-#define STATUS_INVALID_PARAMETER        ((NTSTATUS)(0xC000000DL))
-#define NT_SUCCESS(status)              (status >= 0)
-
-typedef enum {
-    PowerActionNone = 0,
-    PowerActionReserved,
-    PowerActionSleep,
-    PowerActionHibernate,
-    PowerActionShutdown,
-    PowerActionShutdownReset,
-    PowerActionShutdownOff,
-    PowerActionWarmEject,
-    PowerActionDisplayOff
-} POWER_ACTION, *PPOWER_ACTION;
-
-typedef enum _DEVICE_POWER_STATE {
-    PowerDeviceUnspecified = 0,
-    PowerDeviceD0,
-    PowerDeviceD1,
-    PowerDeviceD2,
-    PowerDeviceD3,
-    PowerDeviceMaximum
-} DEVICE_POWER_STATE, *PDEVICE_POWER_STATE;
+#ifndef NTSTATUS
+typedef LONG NTSTATUS;
+#endif
 
 #pragma region Desktop Family
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
@@ -85,7 +39,7 @@ typedef enum _DEVICE_POWER_STATE {
 // Available only for Vista (LONGHORN) and later and for
 // multiplatform tools such as debugger extensions
 //
-#if (NTDDI_VERSION >= NTDDI_LONGHORN) || defined(D3DKMDT_SPECIAL_MULTIPLATFORM_TOOL)
+#ifdef __REACTOS__
 
 //
 // Hardcoded overlay count
@@ -600,12 +554,12 @@ typedef struct _D3DKMDT_VIDEO_SIGNAL_INFO
         struct
         {
             // Scan line ordering (e.g. progressive, interlaced).
-            D3DDDI_VIDEO_SIGNAL_SCANLINE_ORDERING ScanLineOrdering : 3;
-
+            D3DDDI_VIDEO_SIGNAL_SCANLINE_ORDERING ScanLineOrdering;
+            UINT Reserved                       : 2;
             // Vertical refresh frequency divider
             UINT VSyncFreqDivider               : 6;
 
-            UINT Reserved                       : 23;
+            UINT ReservedTwo                       : 23;
 
         } AdditionalSignalInfo;
 #endif // DXGKDDI_INTERFACE_VERSION_WDDM1_3_M1
