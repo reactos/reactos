@@ -20,3 +20,6 @@
 
 /* @makedep: wine_longname.ttf */
 1 RCDATA wine_longname.ttf
+
+/* @makedep: wine_testfont0.ttf */
+2 RCDATA wine_testfont0.ttf

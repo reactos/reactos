@@ -139,7 +139,7 @@ GpStatus WINGDIPAPI GdipCreatePen1(ARGB color, REAL width, GpUnit unit,
     GpBrush *brush;
     GpStatus status;
 
-    TRACE("(%x, %.2f, %d, %p)\n", color, width, unit, pen);
+    TRACE("(%lx, %.2f, %d, %p)\n", color, width, unit, pen);
 
     GdipCreateSolidFill(color, (GpSolidFill **)(&brush));
     status = GdipCreatePen2(brush, width, unit, pen);
@@ -512,7 +512,7 @@ GpStatus WINGDIPAPI GdipSetPenBrushFill(GpPen *pen, GpBrush *brush)
 
 GpStatus WINGDIPAPI GdipSetPenColor(GpPen *pen, ARGB argb)
 {
-    TRACE("(%p, %x)\n", pen, argb);
+    TRACE("(%p, %lx)\n", pen, argb);
 
     if(!pen)
         return InvalidParameter;
@@ -598,12 +598,9 @@ GpStatus WINGDIPAPI GdipSetPenDashArray(GpPen *pen, GDIPCONST REAL *dash,
 
     for(i = 0; i < count; i++){
         sum += dash[i];
-        if(dash[i] < 0.0)
+        if(dash[i] <= 0.0)
             return InvalidParameter;
     }
-
-    if(sum == 0.0 && count)
-        return InvalidParameter;
 
     heap_free(pen->dashes);
     pen->dashes = NULL;
