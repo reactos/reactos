@@ -10,7 +10,7 @@
 
 #include "precomp.h"
 #define WIN32_NO_STATUS
-#include "ntndk.h" // SharedUserData
+#include "pstypes.h" /* SharedUserData */
 
 static TCHAR BugLink[] = _T("http://jira.reactos.org/");
 static TCHAR ReportAsWorkstationKey[] = _T("SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version");
