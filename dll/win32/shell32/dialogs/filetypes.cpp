@@ -1161,7 +1161,7 @@ EditTypeDlg_WriteClass(HWND hwndDlg, PEDITTYPE_DIALOG pEditType,
     BOOL OnlyExt = hr != S_OK;
     HKEY hClassKey;
     if (FAILED(hr) || RegCreateKeyExW(HKEY_CLASSES_ROOT, ClassKey, 0, NULL, 0,
-                                      KEY_QUERY_VALUE |KEY_WRITE, NULL,
+                                      KEY_QUERY_VALUE | KEY_WRITE, NULL,
                                       &hClassKey, NULL) != ERROR_SUCCESS)
     {
         return FALSE;
@@ -1221,7 +1221,7 @@ EditTypeDlg_WriteClass(HWND hwndDlg, PEDITTYPE_DIALOG pEditType,
     }
 
     HKEY hShellKey;
-    if (RegCreateKeyExW(hClassKey, L"shell", 0, NULL, 0, KEY_WRITE, NULL,
+    if (RegCreateKeyExW(hClassKey, L"shell", 0, NULL, 0, KEY_WRITE | KEY_READ, NULL,
                         &hShellKey, NULL) != ERROR_SUCCESS)
     {
         RegCloseKey(hClassKey);
