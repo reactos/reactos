@@ -1221,7 +1221,7 @@ EditTypeDlg_WriteClass(HWND hwndDlg, PEDITTYPE_DIALOG pEditType,
     }
 
     HKEY hShellKey;
-    if (RegCreateKeyExW(hClassKey, L"shell", 0, NULL, 0, KEY_WRITE | KEY_READ, NULL,
+    if (RegCreateKeyExW(hClassKey, L"shell", 0, NULL, 0, KEY_READ | KEY_WRITE, NULL,
                         &hShellKey, NULL) != ERROR_SUCCESS)
     {
         RegCloseKey(hClassKey);
