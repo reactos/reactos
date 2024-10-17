@@ -54,6 +54,7 @@ STRINGTABLE
     VBSE_INVALID_DLL_FUNCTION_NAME     "Specified DLL function not found"
     VBSE_INVALID_TYPELIB_VARIABLE      "Variable uses an Automation type not supported in VBScript"
     VBSE_SERVER_NOT_FOUND              "The remote server machine does not exist or is unavailable"
+    VBSE_UNQUALIFIED_REFERENCE         "Invalid or unqualified reference"
 
     VBS_COMPILE_ERROR                  "Microsoft VBScript compilation error"
     VBS_RUNTIME_ERROR                  "Microsoft VBScript runtime error"
