@@ -148,6 +148,7 @@ co_VIS_WindowLayoutChanged(
 {
    PWND Parent;
    USER_REFERENCE_ENTRY Ref;
+   int rdw_flags;
 
    ASSERT_REFS_CO(Wnd);
 
@@ -164,13 +165,17 @@ co_VIS_WindowLayoutChanged(
                          Wnd->rcWindow.left - Parent->rcClient.left,
                          Wnd->rcWindow.top - Parent->rcClient.top);
 
-       UserRefObjectCo(Parent, &Ref);
-       co_UserRedrawWindow(Parent, NULL, TempRgn,
-                           RDW_FRAME | RDW_ERASE | RDW_INVALIDATE |
-                           RDW_ALLCHILDREN);
+       rdw_flags = RDW_FRAME | RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN;
+      
+       UserRefObjectCo(Parent, &Ref);      
+       co_UserRedrawWindow(Parent, NULL, TempRgn, rdw_flags);
        UserDerefObjectCo(Parent);
 
        REGION_Delete(TempRgn);
+      
+       PREGION RgnClip = IntSysCreateRectpRgnIndirect(&Parent->rcClient);
+       IntInvalidateWindows(Parent, RgnClip, rdw_flags);
+       REGION_Delete(RgnClip);
    }
 }
 
