@@ -1109,6 +1109,9 @@ LoadAndBootWindows(
 
     TRACE("BootOptions: '%s'\n", BootOptions);
 
+    /* Disable case sensitive before disk access */
+    FSFileNameCaseSensitive = FALSE;
+
     /* Check if a RAM disk file was given */
     FileName = NtLdrGetOptionEx(BootOptions, "RDPATH=", &FileNameLength);
     if (FileName && (FileNameLength > 7))
@@ -1120,6 +1123,9 @@ LoadAndBootWindows(
             FileName += 7; FileNameLength -= 7;
             UiMessageBox("Failed to load RAM disk file '%.*s'",
                          FileNameLength, FileName);
+
+            /* Reenable case-sensitivity */
+            FSFileNameCaseSensitive = TRUE;
             return Status;
         }
     }
@@ -1136,9 +1142,14 @@ LoadAndBootWindows(
     UiUpdateProgressBar(15, "Loading system hive...");
     Success = WinLdrInitSystemHive(LoaderBlock, BootPath, FALSE);
     TRACE("SYSTEM hive %s\n", (Success ? "loaded" : "not loaded"));
+
     /* Bail out if failure */
     if (!Success)
+    {
+        /* If it fails, the case-sensitive boolean will be enabled */
+        FSFileNameCaseSensitive = TRUE;
         return ENOEXEC;
+    }
 
     /* Fixup the version number using data from the registry */
     if (OperatingSystemVersion == 0)
@@ -1151,12 +1162,19 @@ LoadAndBootWindows(
     TRACE("SYSTEM hive %s\n", (Success ? "scanned" : "not scanned"));
     /* Bail out if failure */
     if (!Success)
+    {
+        /* If it fails, the case-sensitive boolean will be enabled */
+        FSFileNameCaseSensitive = TRUE;
         return ENOEXEC;
+    }
 
     /* Load the Firmware Errata file */
     Success = WinLdrInitErrataInf(LoaderBlock, OperatingSystemVersion, BootPath);
     TRACE("Firmware Errata file %s\n", (Success ? "loaded" : "not loaded"));
     /* Not necessarily fatal if not found - carry on going */
+
+    /* Enable the case sensitive after finish the disk access */
+    FSFileNameCaseSensitive = TRUE;
 
     /* Finish loading */
     return LoadAndBootWindowsCommon(OperatingSystemVersion,
@@ -1198,6 +1216,9 @@ LoadAndBootWindowsCommon(
      * feedback (for example during SOS) on the PE images that get loaded. */
     PeLdrImportDllLoadCallback = NtLdrImportDllLoadCallback;
 
+    /* Disable case sensitive before disk access */
+    FSFileNameCaseSensitive = FALSE;
+
     /* Load the operating system core: the Kernel, the HAL and the Kernel Debugger Transport DLL */
     Success = LoadWindowsCore(OperatingSystemVersion,
                               LoaderBlock,
@@ -1210,6 +1231,9 @@ LoadAndBootWindowsCommon(
         PeLdrImportDllLoadCallback = NULL;
 
         UiMessageBox("Error loading NTOS core.");
+
+        /* If it fails, the case-sensitive boolean will be enabled */
+        FSFileNameCaseSensitive = TRUE;
         return ENOEXEC;
     }
 
@@ -1226,6 +1250,9 @@ LoadAndBootWindowsCommon(
     UiSetProgressBarText("Loading boot drivers...");
     Success = WinLdrLoadBootDrivers(LoaderBlock, BootPath);
     TRACE("Boot drivers loading %s\n", Success ? "successful" : "failed");
+
+    /* Enable the case sensitive after finish the disk access */
+    FSFileNameCaseSensitive = TRUE;
 
     UiSetProgressBarSubset(0, 100);
 
