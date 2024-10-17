@@ -9,6 +9,7 @@
 char DoPrint = 0;
 ULONG g_ehframep;
 
+#undef DPRINT
 #define DPRINT if(DoPrint) printf
 
 struct {char *name; char regnt;} regs[] =
