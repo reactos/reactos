@@ -29,7 +29,7 @@ typedef OBJECT_ATTRIBUTES *POBJECT_ATTRIBUTES;
 // Available only for Vista (LONGHORN) and later and for
 // multiplatform tools such as debugger extensions
 //
-#ifdef __REACTOS__
+#if defined(__REACTOS__) || ((NTDDI_VERSION >= NTDDI_LONGHORN) || defined(D3DKMDT_SPECIAL_MULTIPLATFORM_TOOL))
 
 typedef struct _D3DKMT_CREATEDEVICEFLAGS
 {

@@ -39,7 +39,7 @@ typedef LONG NTSTATUS;
 // Available only for Vista (LONGHORN) and later and for
 // multiplatform tools such as debugger extensions
 //
-#ifdef __REACTOS__
+#if defined(__REACTOS__) || ((NTDDI_VERSION >= NTDDI_LONGHORN) || defined(D3DKMDT_SPECIAL_MULTIPLATFORM_TOOL))
 
 //
 // Hardcoded overlay count
