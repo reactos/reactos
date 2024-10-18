@@ -22,6 +22,11 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(INIFILE);
 
+PLIST_ENTRY IniGetFileSectionListHead(VOID)
+{
+    return &IniFileSectionListHead;
+}
+
 BOOLEAN IniOpenSection(PCSTR SectionName, ULONG_PTR* SectionId)
 {
     PLIST_ENTRY Entry;

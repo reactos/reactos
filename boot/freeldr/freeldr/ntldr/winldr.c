@@ -15,12 +15,10 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WINDOWS);
 
-// FIXME: Find a better way to retrieve ARC disk information
-extern ULONG reactos_disk_count;
-extern ARC_DISK_SIGNATURE_EX reactos_arc_disk_info[];
+ULONG ArcGetDiskCount(VOID);
+PARC_DISK_SIGNATURE_EX ArcGetDiskInfo(ULONG Index);
 
-extern ULONG LoaderPagesSpanned;
-extern BOOLEAN AcpiPresent;
+BOOLEAN IsAcpiPresent(VOID);
 
 extern HEADLESS_LOADER_BLOCK LoaderRedirectionInformation;
 extern BOOLEAN WinLdrTerminalConnected;
@@ -199,7 +197,8 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     InitializeListHead(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead);
 
     /* Convert ARC disk information from freeldr to a correct format */
-    for (i = 0; i < reactos_disk_count; i++)
+    ULONG DiscCount = ArcGetDiskCount();
+    for (i = 0; i < DiscCount; i++)
     {
         PARC_DISK_SIGNATURE_EX ArcDiskSig;
 
@@ -208,12 +207,12 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
         if (!ArcDiskSig)
         {
             ERR("Failed to allocate ARC structure! Ignoring remaining ARC disks. (i = %lu, DiskCount = %lu)\n",
-                i, reactos_disk_count);
+                i, DiscCount);
             break;
         }
 
         /* Copy the data over */
-        RtlCopyMemory(ArcDiskSig, &reactos_arc_disk_info[i], sizeof(ARC_DISK_SIGNATURE_EX));
+        RtlCopyMemory(ArcDiskSig, ArcGetDiskInfo(i), sizeof(ARC_DISK_SIGNATURE_EX));
 
         /* Set the ARC Name pointer */
         ArcDiskSig->DiskSignature.ArcName = PaToVa(ArcDiskSig->ArcName);
@@ -248,7 +247,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     Extension->Profile.Status = 2;
 
     /* Check if FreeLdr detected a ACPI table */
-    if (AcpiPresent)
+    if (IsAcpiPresent())
     {
         /* Set the pointer to something for compatibility */
         Extension->AcpiTable = (PVOID)1;
@@ -342,7 +341,11 @@ WinLdrLoadDeviceDriver(PLIST_ENTRY LoadOrderListHead,
     }
 
     // Allocate a DTE for it
-    Success = PeLdrAllocateDataTableEntry(LoadOrderListHead, DllName, DllName, DriverBase, DriverDTE);
+    Success = PeLdrAllocateDataTableEntry(LoadOrderListHead,
+                                          DllName,
+                                          DllName,
+                                          PaToVa(DriverBase),
+                                          DriverDTE);
     if (!Success)
     {
         /* Cleanup and bail out */
@@ -542,7 +545,7 @@ LoadModule(
     Success = PeLdrAllocateDataTableEntry(&LoaderBlock->LoadOrderListHead,
                                           ImportName,
                                           FullFileName,
-                                          BaseAddress,
+                                          PaToVa(BaseAddress),
                                           Dte);
     if (!Success)
     {
@@ -1071,8 +1074,9 @@ LoadAndBootWindows(
     if (ArgValue && *ArgValue)
         RtlStringCbCopyA(BootOptions, sizeof(BootOptions), ArgValue);
 
-    /* Append boot-time options */
-    AppendBootTimeOptions(BootOptions);
+    // FIXME!
+    // /* Append boot-time options */
+    // AppendBootTimeOptions(BootOptions);
 
     /*
      * Set the "/HAL=" and "/KERNEL=" options if needed.
@@ -1163,6 +1167,24 @@ LoadAndBootWindows(
                                     LoaderBlock,
                                     BootOptions,
                                     BootPath);
+}
+
+ARC_STATUS
+RunNtLoader(
+    IN ULONG Argc,
+    IN PCHAR Argv[],
+    IN PCHAR Envp[])
+{
+    /* Retrieve the (mandatory) boot type */
+    PCSTR ArgValue = GetArgumentValue(Argc, Argv, "BootType");
+    if (!ArgValue || !*ArgValue)
+    {
+        ERR("No 'BootType' value, aborting!\n");
+        return EINVAL;
+    }
+    if (_stricmp(ArgValue, "ReactOSSetup") == 0)
+        return LoadReactOSSetup(Argc, Argv, Envp);
+    return LoadAndBootWindows(Argc, Argv, Envp);
 }
 
 ARC_STATUS
@@ -1261,7 +1283,7 @@ LoadAndBootWindowsCommon(
     WinLdrSetProcessorContext(OperatingSystemVersion);
 
     /* Save final value of LoaderPagesSpanned */
-    LoaderBlock->Extension->LoaderPagesSpanned = LoaderPagesSpanned;
+    LoaderBlock->Extension->LoaderPagesSpanned = MmGetLoaderPagesSpanned();
 
     TRACE("Hello from paged mode, KiSystemStartup %p, LoaderBlockVA %p!\n",
           KiSystemStartup, LoaderBlockVA);

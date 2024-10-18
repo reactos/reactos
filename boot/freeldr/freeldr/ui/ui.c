@@ -636,4 +636,32 @@ BOOLEAN UiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
     return UiVtbl.EditBox(MessageText, EditTextBuffer, Length);
 }
 
+VOID
+UiResetForSOS(VOID)
+{
+#ifdef _M_ARM
+    /* Re-initialize the UI */
+    UiInitialize(TRUE);
+#else
+    /* Reset the UI and switch to MiniTui */
+    UiVtbl.UnInitialize();
+    UiVtbl = MiniTuiVtbl;
+    UiVtbl.Initialize();
+#endif
+    /* Disable the progress bar */
+    UiProgressBar.Show = FALSE;
+}
+
+ULONG
+UiGetScreenHeight(VOID)
+{
+    return UiScreenHeight;
+}
+
+UCHAR
+UiGetMenuBgColor(VOID)
+{
+    return UiMenuBgColor;
+}
+
 /* EOF */

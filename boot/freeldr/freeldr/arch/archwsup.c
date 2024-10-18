@@ -243,3 +243,18 @@ FldrCreateComponentKey(
     /* Return the child */
     *ComponentKey = ComponentData;
 }
+
+ULONG ArcGetDiskCount(VOID)
+{
+    return reactos_disk_count;
+}
+
+PARC_DISK_SIGNATURE_EX ArcGetDiskInfo(ULONG Index)
+{
+    if (Index >= reactos_disk_count)
+    {
+        return NULL;
+    }
+
+    return &reactos_arc_disk_info[Index];
+}
