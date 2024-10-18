@@ -3320,7 +3320,7 @@ RStartServiceW(
         return ERROR_SERVICE_MARKED_FOR_DELETE;
 
     /* Start the service */
-    dwError = ScmStartService(lpService, argc, (LPWSTR*)argv);
+    dwError = ScmStartService(lpService, argc, (PCWSTR*)argv);
 
     return dwError;
 }
@@ -4378,7 +4378,7 @@ RStartServiceA(
     DWORD dwError = ERROR_SUCCESS;
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
-    LPWSTR *lpVector = NULL;
+    PWSTR* pVector = NULL;
     DWORD i;
     DWORD dwLength;
 
@@ -4417,25 +4417,25 @@ RStartServiceA(
     /* Build a Unicode argument vector */
     if (argc > 0)
     {
-        lpVector = HeapAlloc(GetProcessHeap(),
-                             HEAP_ZERO_MEMORY,
-                             argc * sizeof(LPWSTR));
-        if (lpVector == NULL)
+        pVector = HeapAlloc(GetProcessHeap(),
+                            HEAP_ZERO_MEMORY,
+                            argc * sizeof(PWSTR));
+        if (!pVector)
             return ERROR_NOT_ENOUGH_MEMORY;
 
         for (i = 0; i < argc; i++)
         {
             dwLength = MultiByteToWideChar(CP_ACP,
                                            0,
-                                           ((LPSTR*)argv)[i],
+                                           argv[i].StringPtr,
                                            -1,
                                            NULL,
                                            0);
 
-            lpVector[i] = HeapAlloc(GetProcessHeap(),
-                                    HEAP_ZERO_MEMORY,
-                                    dwLength * sizeof(WCHAR));
-            if (lpVector[i] == NULL)
+            pVector[i] = HeapAlloc(GetProcessHeap(),
+                                   HEAP_ZERO_MEMORY,
+                                   dwLength * sizeof(WCHAR));
+            if (!pVector[i])
             {
                 dwError = ERROR_NOT_ENOUGH_MEMORY;
                 goto done;
@@ -4443,26 +4443,26 @@ RStartServiceA(
 
             MultiByteToWideChar(CP_ACP,
                                 0,
-                                ((LPSTR*)argv)[i],
+                                argv[i].StringPtr,
                                 -1,
-                                lpVector[i],
+                                pVector[i],
                                 dwLength);
         }
     }
 
     /* Start the service */
-    dwError = ScmStartService(lpService, argc, lpVector);
+    dwError = ScmStartService(lpService, argc, (PCWSTR*)pVector);
 
 done:
     /* Free the Unicode argument vector */
-    if (lpVector != NULL)
+    if (pVector)
     {
         for (i = 0; i < argc; i++)
         {
-            if (lpVector[i] != NULL)
-                HeapFree(GetProcessHeap(), 0, lpVector[i]);
+            if (pVector[i])
+                HeapFree(GetProcessHeap(), 0, pVector[i]);
         }
-        HeapFree(GetProcessHeap(), 0, lpVector);
+        HeapFree(GetProcessHeap(), 0, pVector);
     }
 
     return dwError;
