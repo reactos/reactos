@@ -318,11 +318,11 @@ ReadSectorsCHSLoop:
 // Displays a disk error message
 // And reboots
 PrintDiskError:
-        mov  si,msgDiskError			// Bad boot disk message
+        mov  si,offset msgDiskError		// Bad boot disk message
         call PutChars					// Display it
 
 Reboot:
-        mov  si,msgAnyKey				// Press any key message
+        mov  si,offset msgAnyKey		// Press any key message
         call PutChars					// Display it
         xor ax,ax
         int HEX(16)							// Wait for a keypress
@@ -444,7 +444,7 @@ FoundFile:
 		jmp  PrintRegFileError
 
 LoadFreeLoader:
-        mov  si,msgLoading				// "Loading FreeLoader..." message
+        mov  si,offset msgLoading		// "Loading FreeLoader..." message
         call PutChars					// Display it
 
 		call Ext2ReadEntireFile			// Read freeldr.sys to 0000:8000
@@ -650,19 +650,19 @@ Ext2ReadDirectBlocksLoop:
 // Displays a file not found error message
 // And reboots
 PrintFileNotFound:
-        mov  si,msgFreeLdr      // FreeLdr not found message
+        mov  si,offset msgFreeLdr      // FreeLdr not found message
 		jmp short DisplayItAndReboot
 
 // Displays a file size is 0 error
 // And reboots
 PrintFileSizeError:
-        mov  si,msgFileSize     // Error message
+        mov  si,offset msgFileSize     // Error message
 		jmp short DisplayItAndReboot
 
 // Displays a file is not a regular file error
 // And reboots
 PrintRegFileError:
-        mov  si,msgRegFile      // Error message
+        mov  si,offset msgRegFile      // Error message
 DisplayItAndReboot:
         call PutChars           // Display it
 		jmp  Reboot

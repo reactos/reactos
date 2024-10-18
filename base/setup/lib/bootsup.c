@@ -1277,6 +1277,109 @@ InstallBtrfsBootcodeToPartition(
 
 static
 NTSTATUS
+InstallExt2BootcodeToPartition(
+    IN PUNICODE_STRING SystemRootPath,
+    IN PUNICODE_STRING SourceRootPath,
+    IN PUNICODE_STRING DestinationArcPath)
+{
+    NTSTATUS Status;
+    BOOLEAN DoesFreeLdrExist;
+    WCHAR SrcPath[MAX_PATH];
+    WCHAR DstPath[MAX_PATH];
+
+    /* EXT2 partition */
+    DPRINT("System path: '%wZ'\n", SystemRootPath);
+
+    /* Copy FreeLoader to the system partition, always overwriting the older version */
+    CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\freeldr.sys");
+    CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"freeldr.sys");
+
+    DPRINT("Copy: %S ==> %S\n", SrcPath, DstPath);
+    Status = SetupCopyFile(SrcPath, DstPath, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SetupCopyFile() failed (Status %lx)\n", Status);
+        return Status;
+    }
+
+    /* Prepare for possibly updating 'freeldr.ini' */
+    DoesFreeLdrExist = DoesFileExist_2(SystemRootPath->Buffer, L"freeldr.ini");
+    if (DoesFreeLdrExist)
+    {
+        /* Update existing 'freeldr.ini' */
+        DPRINT1("Update existing 'freeldr.ini'\n");
+        Status = UpdateFreeLoaderIni(SystemRootPath->Buffer, DestinationArcPath->Buffer);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("UpdateFreeLoaderIni() failed (Status %lx)\n", Status);
+            return Status;
+        }
+    }
+
+    /* Check for *nix bootloaders */
+
+    /* Create or update 'freeldr.ini' */
+    if (DoesFreeLdrExist == FALSE)
+    {
+        /* Create new 'freeldr.ini' */
+        DPRINT1("Create new 'freeldr.ini'\n");
+
+        /* Certainly SysLinux, GRUB, LILO... or an unknown boot loader */
+        DPRINT1("*nix or unknown boot loader found\n");
+
+        if (IsThereAValidBootSector(SystemRootPath->Buffer))
+        {
+            PCWSTR BootSector = L"BOOTSECT.OLD";
+
+            Status = CreateFreeLoaderIniForReactOSAndBootSector(
+                         SystemRootPath->Buffer, DestinationArcPath->Buffer,
+                         L"Linux", L"\"Linux\"",
+                         SystemRootPath->Buffer, BootSector);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("CreateFreeLoaderIniForReactOSAndBootSector() failed (Status %lx)\n", Status);
+                return Status;
+            }
+
+            /* Save current bootsector */
+            CombinePaths(DstPath, _countof(DstPath), 2, SystemRootPath->Buffer, BootSector);
+
+            DPRINT1("Save bootsector: %S ==> %S\n", SystemRootPath->Buffer, DstPath);
+            Status = SaveBootSector(SystemRootPath->Buffer, DstPath, BTRFS_BOOTSECTOR_SIZE);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("SaveBootSector() failed (Status %lx)\n", Status);
+                return Status;
+            }
+        }
+        else
+        {
+            Status = CreateFreeLoaderIniForReactOS(SystemRootPath->Buffer, DestinationArcPath->Buffer);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("CreateFreeLoaderIniForReactOS() failed (Status %lx)\n", Status);
+                return Status;
+            }
+        }
+
+        /* Install new bootsector on the disk */
+        /* Install Ext2 bootcode */
+        CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\ext2.bin");
+
+        DPRINT1("Install Ext2 bootcode: %S ==> %S\n", SrcPath, SystemRootPath->Buffer);
+        Status = InstallBootCodeToDisk(SrcPath, SystemRootPath->Buffer, InstallExt2BootCode);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("InstallBootCodeToDisk(Ext2) failed (Status %lx)\n", Status);
+            return Status;
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
+static
+NTSTATUS
 InstallNtfsBootcodeToPartition(
     IN PUNICODE_STRING SystemRootPath,
     IN PUNICODE_STRING SourceRootPath,
@@ -1404,14 +1507,17 @@ InstallVBRToPartition(
                                                SourceRootPath,
                                                DestinationArcPath);
     }
-    /*
-    else if (wcsicmp(FileSystemName, L"EXT2")  == 0 ||
-             wcsicmp(FileSystemName, L"EXT3")  == 0 ||
+    else if (wcsicmp(FileSystemName, L"EXT2")  == 0)
+    {
+        return InstallExt2BootcodeToPartition(SystemRootPath,
+                                              SourceRootPath,
+                                              DestinationArcPath);
+    }
+    else if (wcsicmp(FileSystemName, L"EXT3")  == 0 ||
              wcsicmp(FileSystemName, L"EXT4")  == 0)
     {
         return STATUS_NOT_SUPPORTED;
     }
-    */
     else
     {
         /* Unknown file system */
