@@ -27,7 +27,7 @@
 #error
 #endif
 
-#include <crtdefs.h>
+#include <corecrt.h>
 
 /*
  * Functions and definitions for controlling the FPU.

@@ -8,7 +8,7 @@
 
 #include <_mingw.h>
 /* TODO, don't include crtdef.h.  */
-#include <crtdefs.h>
+#include <corecrt.h>
 
 #pragma pack(push,_CRT_PACKING)
 

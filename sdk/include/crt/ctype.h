@@ -6,7 +6,7 @@
 #ifndef _INC_CTYPE
 #define _INC_CTYPE
 
-#include <crtdefs.h>
+#include <corecrt.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -6,7 +6,7 @@
 #ifndef _INC_WCHAR
 #define _INC_WCHAR
 
-#include <crtdefs.h>
+#include <corecrt.h>
 
 #define __need___va_list
 #include <stdarg.h>

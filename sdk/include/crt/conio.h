@@ -6,7 +6,7 @@
 #ifndef _INC_CONIO
 #define _INC_CONIO
 
-#include <crtdefs.h>
+#include <corecrt.h>
 
 #define __need___va_list
 #include <stdarg.h>

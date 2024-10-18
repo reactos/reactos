@@ -7,7 +7,7 @@
 #ifndef _INC_SEARCH
 #define _INC_SEARCH
 
-#include <crtdefs.h>
+#include <corecrt.h>
 #include <stddef.h>
 
 #ifdef __cplusplus

@@ -6,7 +6,7 @@
 #ifndef _INC_MEMORY
 #define _INC_MEMORY
 
-#include <crtdefs.h>
+#include <corecrt.h>
 
 #ifdef __cplusplus
 extern "C" {
