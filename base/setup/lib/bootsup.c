@@ -1448,8 +1448,8 @@ InstallVBRToPartition(
  * @param[in]   SystemRootPath
  * See InstallBootManagerAndBootEntries() parameters.
  *
- * @param[in]   DeviceNumber
- * The NT device number of the system disk that contains the system partition.
+ * @param[in]   DiskNumber
+ * The NT disk number of the system disk that contains the system partition.
  *
  * @param[in]   DiskStyle
  * The partitioning style of the system disk.
@@ -1472,7 +1472,7 @@ NTSTATUS
 InstallBootManagerAndBootEntriesWorker(
     _In_ ARCHITECTURE_TYPE ArchType,
     _In_ PCUNICODE_STRING SystemRootPath,
-    _In_ const STORAGE_DEVICE_NUMBER* DeviceNumber,
+    _In_ ULONG DiskNumber, // const STORAGE_DEVICE_NUMBER* DeviceNumber,
     _In_ PARTITION_STYLE DiskStyle,
     _In_ BOOLEAN IsSuperFloppy,
     _In_ PCWSTR FileSystem,
@@ -1509,7 +1509,7 @@ InstallBootManagerAndBootEntriesWorker(
             WCHAR SystemDiskPath[MAX_PATH];
             RtlStringCchPrintfW(SystemDiskPath, _countof(SystemDiskPath),
                                 L"\\Device\\Harddisk%d\\Partition0",
-                                DeviceNumber->DeviceNumber);
+                                DiskNumber);
             Status = InstallMbrBootCodeToDisk(SystemRootPath,
                                               SourceRootPath,
                                               SystemDiskPath);
@@ -1563,6 +1563,70 @@ InstallBootManagerAndBootEntriesWorker(
     return Status;
 }
 
+
+NTSTATUS
+GetDeviceInfo_UStr(
+    _In_opt_ PCUNICODE_STRING DeviceName,
+    _In_opt_ HANDLE DeviceHandle,
+    _Out_ PFILE_FS_DEVICE_INFORMATION DeviceInfo)
+{
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+
+    if (DeviceName && DeviceHandle)
+        return STATUS_INVALID_PARAMETER;
+
+    /* Open the device if a name has been given;
+     * otherwise just use the provided handle. */
+    if (DeviceName)
+    {
+        Status = pOpenDeviceEx_UStr(DeviceName, &DeviceHandle,
+                                    FILE_READ_ATTRIBUTES,
+                                    FILE_SHARE_READ | FILE_SHARE_WRITE);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Cannot open device '%wZ' (Status 0x%08lx)\n",
+                    DeviceName, Status);
+            return Status;
+        }
+    }
+
+    /* Query the device */
+    Status = NtQueryVolumeInformationFile(DeviceHandle,
+                                          &IoStatusBlock,
+                                          DeviceInfo,
+                                          sizeof(*DeviceInfo),
+                                          FileFsDeviceInformation);
+    if (!NT_SUCCESS(Status))
+        DPRINT1("FileFsDeviceInformation failed (Status 0x%08lx)\n", Status);
+
+    /* Close the device if we've opened it */
+    if (DeviceName)
+        NtClose(DeviceHandle);
+
+    return Status;
+}
+
+NTSTATUS
+GetDeviceInfo(
+    _In_opt_ PCWSTR DeviceName,
+    _In_opt_ HANDLE DeviceHandle,
+    _Out_ PFILE_FS_DEVICE_INFORMATION DeviceInfo)
+{
+    UNICODE_STRING DeviceNameU;
+
+    if (DeviceName && DeviceHandle)
+        return STATUS_INVALID_PARAMETER;
+
+    if (DeviceName)
+        RtlInitUnicodeString(&DeviceNameU, DeviceName);
+
+    return GetDeviceInfo_UStr(DeviceName ? &DeviceNameU : NULL,
+                              DeviceName ? NULL : DeviceHandle,
+                              DeviceInfo);
+}
+
+
 /**
  * @brief
  * Installs FreeLoader on the system and configure the boot entries.
@@ -1603,22 +1667,11 @@ InstallBootManagerAndBootEntries(
 {
     NTSTATUS Status;
     HANDLE DeviceHandle;
-    IO_STATUS_BLOCK IoStatusBlock;
-    STORAGE_DEVICE_NUMBER DeviceNumber;
-    WCHAR FileSystem[MAX_PATH+1];
-
-    /* The maximum information a DISK_GEOMETRY_EX dynamic structure can contain */
-    typedef struct _DISK_GEOMETRY_EX_INTERNAL
-    {
-        DISK_GEOMETRY Geometry;
-        LARGE_INTEGER DiskSize;
-        DISK_PARTITION_INFO Partition;
-        // Followed by: DISK_DETECTION_INFO Detection; unused here.
-    } DISK_GEOMETRY_EX_INTERNAL, *PDISK_GEOMETRY_EX_INTERNAL;
-
-    DISK_GEOMETRY_EX_INTERNAL DiskGeoEx;
-    PARTITION_INFORMATION PartitionInfo;
+    FILE_FS_DEVICE_INFORMATION DeviceInfo;
+    ULONG DiskNumber;
+    PARTITION_STYLE PartitionStyle;
     BOOLEAN IsSuperFloppy;
+    WCHAR FileSystem[MAX_PATH+1];
 
     /* Remove any trailing backslash if needed */
     UNICODE_STRING RootPartition = *SystemRootPath;
@@ -1626,7 +1679,7 @@ InstallBootManagerAndBootEntries(
 
     /* Open the volume */
     Status = pOpenDeviceEx_UStr(&RootPartition, &DeviceHandle,
-                                GENERIC_READ | GENERIC_WRITE,
+                                GENERIC_READ,
                                 FILE_SHARE_READ | FILE_SHARE_WRITE);
     if (!NT_SUCCESS(Status))
     {
@@ -1644,78 +1697,127 @@ InstallBootManagerAndBootEntries(
         goto Quit;
     }
 
-    /* Retrieve the disk number */
-    Status = NtDeviceIoControlFile(DeviceHandle,
-                                   NULL, NULL, NULL,
-                                   &IoStatusBlock,
-                                   IOCTL_STORAGE_GET_DEVICE_NUMBER,
-                                   NULL, 0,
-                                   &DeviceNumber, sizeof(DeviceNumber));
-    if (!NT_SUCCESS(Status))
-        goto Quit; // This may be a dynamic volume, which is unsupported.
-    /* Ignore volumes that are NOT on usual disks */
-    if (DeviceNumber.DeviceType != FILE_DEVICE_DISK)
-    {
-        DPRINT1("Skip volume on device type %lu\n", DeviceNumber.DeviceType);
-        Status = STATUS_NOT_SUPPORTED;
-        goto Quit;
-    }
-    if (DeviceNumber.DeviceNumber == ULONG_MAX)
-    {
-        DPRINT1("Invalid disk number reported, bail out\n");
-        Status = STATUS_NOT_FOUND;
-        goto Quit;
-    }
-
-
-    /* Retrieve the drive geometry */
-    Status = NtDeviceIoControlFile(DeviceHandle,
-                                   NULL, NULL, NULL,
-                                   &IoStatusBlock,
-                                   IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
-                                   NULL, 0,
-                                   &DiskGeoEx,
-                                   sizeof(DiskGeoEx));
+    /* Retrieve the device type and characteristics */
+    Status = GetDeviceInfo_UStr(NULL, DeviceHandle, &DeviceInfo);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IOCTL_DISK_GET_DRIVE_GEOMETRY_EX failed (Status 0x%08lx)\n", Status);
+        DPRINT1("FileFsDeviceInformation failed (Status 0x%08lx)\n", Status);
         goto Quit; // We cannot cope with a failure here.
     }
 
-    /*
-     * Retrieve the volume's partition information.
-     *
-     * NOTE: We can use the non-EX IOCTL because the super-floppy test will
-     * fail anyway if the disk is NOT MBR-partitioned. (If the disk is GPT,
-     * the IOCTL would return only the MBR protective partition, but the
-     * super-floppy test would fail due to the wrong partitioning style.)
-     */
-    Status = NtDeviceIoControlFile(DeviceHandle,
-                                   NULL, NULL, NULL,
-                                   &IoStatusBlock,
-                                   IOCTL_DISK_GET_PARTITION_INFO,
-                                   NULL, 0,
-                                   &PartitionInfo,
-                                   sizeof(PartitionInfo));
-    if (!NT_SUCCESS(Status))
+    DPRINT1("DeviceType: 0x%08x ; Characteristics: 0x%08x\n",
+            DeviceInfo.DeviceType, DeviceInfo.Characteristics);
+
+    /* Ignore volumes that are NOT on usual disks */
+    if (DeviceInfo.DeviceType != FILE_DEVICE_DISK /*&&
+        DeviceInfo.DeviceType != FILE_DEVICE_VIRTUAL_DISK*/)
     {
-        DPRINT1("IOCTL_DISK_GET_PARTITION_INFO failed (Status 0x%08lx)\n", Status);
+        DPRINT1("Skip volume on device type %lu\n", DeviceInfo.DeviceType);
+        Status = STATUS_NOT_SUPPORTED; // STATUS_INVALID_DEVICE_REQUEST;
         goto Quit;
     }
 
-    IsSuperFloppy = IsDiskSuperFloppy2(&DiskGeoEx.Partition,
-                                       (PULONGLONG)&DiskGeoEx.DiskSize.QuadPart,
-                                       &PartitionInfo);
 
-    Status = InstallBootManagerAndBootEntriesWorker(ArchType,
-                                                    SystemRootPath,
-                                                    &DeviceNumber,
-                                                    DiskGeoEx.Partition.PartitionStyle,
-                                                    IsSuperFloppy,
-                                                    FileSystem,
-                                                    SourceRootPath,
-                                                    DestinationArcPath,
-                                                    Options);
+    /* Check whether this is a floppy or a partitionable device */
+    if (DeviceInfo.Characteristics & FILE_FLOPPY_DISKETTE)
+    {
+        /* Floppies don't have partitions */
+        // NOTE: See ntoskrnl/io/iomgr/rawfs.c!RawQueryFsSizeInfo()
+        DiskNumber = ULONG_MAX;
+        PartitionStyle = PARTITION_STYLE_MBR;
+        IsSuperFloppy = TRUE;
+    }
+    else
+    {
+        IO_STATUS_BLOCK IoStatusBlock;
+        STORAGE_DEVICE_NUMBER DeviceNumber;
+
+        /* The maximum information a DISK_GEOMETRY_EX dynamic structure can contain */
+        typedef struct _DISK_GEOMETRY_EX_INTERNAL
+        {
+            DISK_GEOMETRY Geometry;
+            LARGE_INTEGER DiskSize;
+            DISK_PARTITION_INFO Partition;
+            // Followed by: DISK_DETECTION_INFO Detection; unused here.
+        } DISK_GEOMETRY_EX_INTERNAL, *PDISK_GEOMETRY_EX_INTERNAL;
+
+        DISK_GEOMETRY_EX_INTERNAL DiskGeoEx;
+        PARTITION_INFORMATION PartitionInfo;
+
+        /* Retrieve the disk number. NOTE: Fails for floppy disks. */
+        Status = NtDeviceIoControlFile(DeviceHandle,
+                                       NULL, NULL, NULL,
+                                       &IoStatusBlock,
+                                       IOCTL_STORAGE_GET_DEVICE_NUMBER,
+                                       NULL, 0,
+                                       &DeviceNumber, sizeof(DeviceNumber));
+        if (!NT_SUCCESS(Status))
+            goto Quit; // This may be a dynamic volume, which is unsupported.
+        ASSERT(DeviceNumber.DeviceType == DeviceInfo.DeviceType);
+#if 0
+        /* Ignore volumes that are NOT on usual disks */
+        if (DeviceNumber.DeviceType != FILE_DEVICE_DISK)
+        {
+            DPRINT1("Skip volume on device type %lu\n", DeviceNumber.DeviceType);
+            Status = STATUS_NOT_SUPPORTED; // STATUS_INVALID_DEVICE_REQUEST;
+            goto Quit;
+        }
+#endif
+        if (DeviceNumber.DeviceNumber == ULONG_MAX)
+        {
+            DPRINT1("Invalid disk number reported, bail out\n");
+            Status = STATUS_NOT_FOUND;
+            goto Quit;
+        }
+
+        /* Retrieve the drive geometry. NOTE: Fails for floppy disks;
+         * use IOCTL_DISK_GET_DRIVE_GEOMETRY instead. */
+        Status = NtDeviceIoControlFile(DeviceHandle,
+                                       NULL, NULL, NULL,
+                                       &IoStatusBlock,
+                                       IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
+                                       NULL, 0,
+                                       &DiskGeoEx,
+                                       sizeof(DiskGeoEx));
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("IOCTL_DISK_GET_DRIVE_GEOMETRY_EX failed (Status 0x%08lx)\n", Status);
+            goto Quit; // We cannot cope with a failure here.
+        }
+
+        /*
+         * Retrieve the volume's partition information.
+         * NOTE: Fails for floppy disks.
+         *
+         * NOTE: We can use the non-EX IOCTL because the super-floppy test will
+         * fail anyway if the disk is NOT MBR-partitioned. (If the disk is GPT,
+         * the IOCTL would return only the MBR protective partition, but the
+         * super-floppy test would fail due to the wrong partitioning style.)
+         */
+        Status = NtDeviceIoControlFile(DeviceHandle,
+                                       NULL, NULL, NULL,
+                                       &IoStatusBlock,
+                                       IOCTL_DISK_GET_PARTITION_INFO,
+                                       NULL, 0,
+                                       &PartitionInfo,
+                                       sizeof(PartitionInfo));
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("IOCTL_DISK_GET_PARTITION_INFO failed (Status 0x%08lx)\n", Status);
+            goto Quit;
+        }
+
+        DiskNumber = DeviceNumber.DeviceNumber;
+        PartitionStyle = DiskGeoEx.Partition.PartitionStyle;
+        IsSuperFloppy = IsDiskSuperFloppy2(&DiskGeoEx.Partition,
+                                           (PULONGLONG)&DiskGeoEx.DiskSize.QuadPart,
+                                           &PartitionInfo);
+    }
+
+    Status = InstallBootManagerAndBootEntriesWorker(
+                ArchType, SystemRootPath,
+                DiskNumber, PartitionStyle, IsSuperFloppy, FileSystem,
+                SourceRootPath, DestinationArcPath, Options);
 
 Quit:
     NtClose(DeviceHandle);
@@ -1729,30 +1831,68 @@ InstallBootcodeToRemovable(
     _In_ PCUNICODE_STRING SourceRootPath,
     _In_ PCUNICODE_STRING DestinationArcPath)
 {
-    static const UNICODE_STRING DeviceFloppy = RTL_CONSTANT_STRING(L"\\Device\\Floppy");
     NTSTATUS Status;
+    FILE_FS_DEVICE_INFORMATION DeviceInfo;
     PCWSTR FileSystemName;
     BOOLEAN IsFloppy;
+
+    /* Remove any trailing backslash if needed */
+    UNICODE_STRING RootDrive = *RemovableRootPath;
+    TrimTrailingPathSeparators_UStr(&RootDrive);
 
     /* Verify that the removable disk is accessible */
     if (!DoesDirExist(NULL, RemovableRootPath->Buffer))
         return STATUS_DEVICE_NOT_READY;
 
-    /* Check whether this is floppy or something else */
-    // FIXME: This is all hardcoded! TODO: Determine dynamically
-    IsFloppy = RtlPrefixUnicodeString(&DeviceFloppy, RemovableRootPath, TRUE);
+    /* Retrieve the device type and characteristics */
+    Status = GetDeviceInfo_UStr(&RootDrive, NULL, &DeviceInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        static const UNICODE_STRING DeviceFloppy = RTL_CONSTANT_STRING(L"\\Device\\Floppy");
 
-    /* Use FAT32, unless a floppy disk is used */
+        DPRINT1("FileFsDeviceInformation failed (Status 0x%08lx)\n", Status);
+
+        /* Definitively fail if the device is not a floppy */
+        if (!RtlPrefixUnicodeString(&DeviceFloppy, &RootDrive, TRUE))
+            return Status; // We cannot cope with a failure.
+
+        /* Try to fall back to something "sane" if the device may be a floppy */
+        DeviceInfo.DeviceType = FILE_DEVICE_DISK;
+        DeviceInfo.Characteristics = FILE_REMOVABLE_MEDIA | FILE_FLOPPY_DISKETTE;
+    }
+
+    DPRINT1("DeviceType: 0x%08x ; Characteristics: 0x%08x\n",
+            DeviceInfo.DeviceType, DeviceInfo.Characteristics);
+
+    /* Ignore volumes that are NOT on usual disks */
+    if (DeviceInfo.DeviceType != FILE_DEVICE_DISK /*&&
+        DeviceInfo.DeviceType != FILE_DEVICE_VIRTUAL_DISK*/)
+    {
+        DPRINT1("Skip volume on device type %lu\n", DeviceInfo.DeviceType);
+        return STATUS_NOT_SUPPORTED; // STATUS_INVALID_DEVICE_REQUEST;
+    }
+
+    /* Fail if the disk is not removable */
+    if (!(DeviceInfo.Characteristics & FILE_REMOVABLE_MEDIA))
+    {
+        DPRINT1("Device is NOT removable!\n");
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+
+    /* Check whether this is a floppy or another removable device */
+    IsFloppy = !!(DeviceInfo.Characteristics & FILE_FLOPPY_DISKETTE);
+
+    /* Use FAT32, unless the device is a floppy disk */
     FileSystemName = (IsFloppy ? L"FAT" : L"FAT32");
 
     /* Format the removable disk */
-    Status = FormatFileSystem(RemovableRootPath->Buffer,
-                              FileSystemName,
-                              (IsFloppy ? FMIFS_FLOPPY : FMIFS_REMOVABLE),
-                              NULL,
-                              TRUE,
-                              0,
-                              NULL);
+    Status = FormatFileSystem_UStr(&RootDrive,
+                                   FileSystemName,
+                                   (IsFloppy ? FMIFS_FLOPPY : FMIFS_REMOVABLE),
+                                   NULL,
+                                   TRUE,
+                                   0,
+                                   NULL);
     if (!NT_SUCCESS(Status))
     {
         if (Status == STATUS_NOT_SUPPORTED)
