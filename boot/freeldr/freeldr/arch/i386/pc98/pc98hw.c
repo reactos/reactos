@@ -1195,7 +1195,7 @@ Pc98HwDetect(
     FindPciBios = PcFindPciBios;
 
     /* Detect buses */
-    DetectPciBios(SystemKey, &BusNumber);
+    DetectPciBios(Options, SystemKey, &BusNumber);
     DetectApmBios(SystemKey, &BusNumber);
     DetectPnpBios(SystemKey, &BusNumber);
     DetectNesaBios(SystemKey, &BusNumber);

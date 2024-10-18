@@ -1689,7 +1689,7 @@ PcHwDetect(
     FindPciBios = PcFindPciBios;
 
     /* Detect buses */
-    DetectPciBios(SystemKey, &BusNumber);
+    DetectPciBios(Options, SystemKey, &BusNumber);
     DetectApmBios(SystemKey, &BusNumber);
     DetectPnpBios(SystemKey, &BusNumber);
     DetectIsaBios(Options, SystemKey, &BusNumber); // TODO: Detect first EISA or MCA, before ISA
@@ -1757,6 +1757,8 @@ VOID __cdecl ChainLoadBiosBootSectorCode(
 
 /* FIXME: Abstract things better so we don't need to place define here */
 #if !defined(SARCH_XBOX)
+VOID NTAPI HalpInitBusHandlers(VOID);
+
 VOID
 MachInit(const char *CmdLine)
 {
@@ -1791,7 +1793,11 @@ MachInit(const char *CmdLine)
     MachVtbl.HwDetect = PcHwDetect;
     MachVtbl.HwIdle = PcHwIdle;
 
+    /* Setup busy waiting */
     HalpCalibrateStallExecution();
+
+    /* Initialize bus handlers */
+    HalpInitBusHandlers();
 }
 
 VOID
