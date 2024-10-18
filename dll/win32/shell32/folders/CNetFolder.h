@@ -28,8 +28,7 @@ class CNetFolder :
     public CComCoClass<CNetFolder, &CLSID_NetworkPlaces>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellFolder2,
-    public IPersistFolder2,
-    public IContextMenuCB
+    public IPersistFolder2
 {
     private:
         /* both paths are parsible from the desktop */
@@ -68,9 +67,6 @@ class CNetFolder :
         // IPersistFolder2
         STDMETHOD(GetCurFolder)(PIDLIST_ABSOLUTE * pidl) override;
 
-        // IContextMenuCB
-        STDMETHOD(CallBack)(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
-
         DECLARE_REGISTRY_RESOURCEID(IDR_NETWORKPLACES)
         DECLARE_NOT_AGGREGATABLE(CNetFolder)
 
@@ -82,7 +78,6 @@ class CNetFolder :
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
-        COM_INTERFACE_ENTRY_IID(IID_IContextMenuCB, IContextMenuCB)
         END_COM_MAP()
 };
 
