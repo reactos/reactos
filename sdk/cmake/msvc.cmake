@@ -32,6 +32,9 @@ endif()
 
 add_definitions(/D__STDC__=1)
 
+# Enable correct values of __cplusplus macro for newer standards
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/Zc:__cplusplus>)
+
 # Ignore any "standard" include paths, and do not use any default CRT library.
 if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     add_compile_options(/X /Zl)
