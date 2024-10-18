@@ -288,6 +288,7 @@ static void DoStepCheck(INT iStage, INT iStep, LPCSTR checks)
         default:
         {
             assert(0);
+            lineno = 0;
             break;
         }
     }
