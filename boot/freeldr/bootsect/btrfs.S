@@ -67,6 +67,9 @@ ChunkRootLevel:
 FsRootLevel:
     .byte 0
 
+BootPartition:
+    .byte 0
+
 main:
     xor eax, eax             // Setup segment registers
     mov ds, ax               // Make DS correct
@@ -76,6 +79,7 @@ main:
     mov bp, sp
 
     mov byte ptr [BootDrive], dl
+    mov byte ptr [BootPartition], dh
 
 // Now check if this computer supports extended reads. This boot sector will not work without it
 CheckInt13hExtensions:
@@ -383,7 +387,7 @@ FreeLdrFound:
     call ReadSectors
 
     mov  dl, byte ptr [BootDrive]     // Load boot drive into DL
-    //mov  dh, 0    // Load boot partition into DH (not needed, FreeLbr detects it itself)
+    mov  dh, byte ptr [BootPartition] // Load boot partition into DH
 
     /* Transfer execution to the bootloader */
     ljmp16 0, FREELDR_BASE

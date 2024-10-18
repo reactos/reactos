@@ -76,6 +76,8 @@ main:
     mov sp, HEX(7c00)
     mov bp, sp              // Setup a stack
 
+    mov byte ptr [BootPartition], dh      // Save the boot partition
+
     cmp byte ptr [BootDrive], HEX(0ff)    // If they have specified a boot drive then use it
     jne GetDriveParameters
 

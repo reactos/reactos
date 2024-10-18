@@ -449,7 +449,7 @@ DiskGetBootPath(BOOLEAN IsPxe)
     }
     else
     {
-        ULONG BootPartition;
+        ULONG BootPartition = FrldrBootPartition;
         PARTITION_TABLE_ENTRY PartitionEntry;
 
         /* This is a hard disk */

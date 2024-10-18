@@ -163,6 +163,9 @@ main:
     /* Load the boot drive from the BPB into al */
     mov al, byte ptr ds:[BootDrive]
 
+    /* Save boot partition */
+    mov byte ptr ds:[BootPartition], dh
+
     /* Check if it's valid */
     cmp al, HEX(0ff)
     je .SaveBootDrive

@@ -47,12 +47,16 @@ cont:
     xor ax, ax
     mov es, ax
 
+    /* Start the boot partition from 1 */
+    mov dh, 1
+
     /* Search for active partition */
     lea di, [bp + HEX(1be)] // start of partition table
 test_next_for_active:
     test byte ptr ds:[di], HEX(80)
     jne active_partition_found
     add di, 16                    // next table
+    inc dh                        // increment the boot partition
     cmp di, HEX(07c00) + HEX(1fe) // scanned beyond end of table ??
     jb test_next_for_active
 
@@ -84,7 +88,11 @@ active_partition_found:
 //  call print
 //  .asciz "Loading active partition"
 
+    push dx                        // Save the boot device register
+
     call read_boot_sector
+
+    pop dx                         // Restore the boot device register
 
     jc  trouble_reading_drive
 

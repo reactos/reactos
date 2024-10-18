@@ -86,6 +86,8 @@ main:
     mov bp, HEX(7c00)
     mov sp, HEX(7c00)       // Setup a stack
 
+    mov byte ptr BP_REL(BootPartition), dh
+
     cmp byte ptr BP_REL(BootDrive), HEX(0ff)    // If they have specified a boot drive then use it
     jne CheckSectorsPerFat
 
@@ -422,7 +424,7 @@ LoadFile:
 
 LoadFileDone:
     mov  dl, byte ptr BP_REL(BootDrive)     // Load boot drive into DL
-    mov  dh, byte ptr ds:[BootPartition]    // Load boot partition into DH
+    mov  dh, byte ptr BP_REL(BootPartition) // Load boot partition into DH
 
     /* Transfer execution to the bootloader */
     ljmp16 0, FREELDR_BASE

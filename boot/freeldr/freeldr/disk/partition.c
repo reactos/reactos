@@ -136,13 +136,12 @@ DiskGetActivePartitionEntry(
     OUT PPARTITION_TABLE_ENTRY PartitionTableEntry,
     OUT PULONG ActivePartition)
 {
+    BOOLEAN isOutOfBounds = *ActivePartition > 4 || *ActivePartition < 1;
     ULONG BootablePartitionCount = 0;
     ULONG CurrentPartitionNumber;
     ULONG Index;
     MASTER_BOOT_RECORD MasterBootRecord;
     PPARTITION_TABLE_ENTRY ThisPartitionTableEntry;
-
-    *ActivePartition = 0;
 
     /* Read master boot record */
     if (!DiskReadBootRecord(DriveNumber, 0, &MasterBootRecord))
@@ -150,29 +149,42 @@ DiskGetActivePartitionEntry(
         return FALSE;
     }
 
-    CurrentPartitionNumber = 0;
-    for (Index = 0; Index < 4; Index++)
-    {
-        ThisPartitionTableEntry = &MasterBootRecord.PartitionTable[Index];
-
-        if (ThisPartitionTableEntry->SystemIndicator != PARTITION_ENTRY_UNUSED &&
-            ThisPartitionTableEntry->SystemIndicator != PARTITION_EXTENDED &&
-            ThisPartitionTableEntry->SystemIndicator != PARTITION_XINT13_EXTENDED)
+    if (isOutOfBounds){
+fallback:
+        *ActivePartition = 0;
+        CurrentPartitionNumber = 0;
+        for (Index = 0; Index < 4; Index++)
         {
-            CurrentPartitionNumber++;
+            ThisPartitionTableEntry = &MasterBootRecord.PartitionTable[Index];
 
-            /* Test if this is the bootable partition */
-            if (ThisPartitionTableEntry->BootIndicator == 0x80)
+            if (ThisPartitionTableEntry->SystemIndicator != PARTITION_ENTRY_UNUSED &&
+                ThisPartitionTableEntry->SystemIndicator != PARTITION_EXTENDED &&
+                ThisPartitionTableEntry->SystemIndicator != PARTITION_XINT13_EXTENDED)
             {
-                BootablePartitionCount++;
-                *ActivePartition = CurrentPartitionNumber;
+                CurrentPartitionNumber++;
 
-                /* Copy the partition table entry */
-                RtlCopyMemory(PartitionTableEntry,
-                              ThisPartitionTableEntry,
-                              sizeof(PARTITION_TABLE_ENTRY));
+                /* Test if this is the bootable partition */
+                if (ThisPartitionTableEntry->BootIndicator == 0x80)
+                {
+                    BootablePartitionCount++;
+                    *ActivePartition = CurrentPartitionNumber;
+
+                    /* Copy the partition table entry */
+                    RtlCopyMemory(PartitionTableEntry,
+                                  ThisPartitionTableEntry,
+                                  sizeof(PARTITION_TABLE_ENTRY));
+                }
             }
         }
+    } else {
+        BootablePartitionCount = 1;
+
+        ThisPartitionTableEntry = &MasterBootRecord.PartitionTable[*ActivePartition - 1];
+
+        if (ThisPartitionTableEntry->SystemIndicator == PARTITION_ENTRY_UNUSED ||
+            ThisPartitionTableEntry->SystemIndicator == PARTITION_EXTENDED ||
+            ThisPartitionTableEntry->SystemIndicator == PARTITION_XINT13_EXTENDED)
+            goto fallback;
     }
 
     /* Make sure there was only one bootable partition */

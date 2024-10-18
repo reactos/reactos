@@ -109,6 +109,8 @@ main:
     mov ds, ax                                  // Make DS correct
     mov es, ax                                  // Make ES correct
 
+    mov byte ptr BP_REL(BootPartition), dh
+
     cmp byte ptr BP_REL(BootDrive), HEX(0ff)    // If they have specified a boot drive then use it
     jne GetDriveParameters
 
@@ -221,6 +223,8 @@ FoundFreeLoader:
     mov word ptr [bp-ReadSectorsOffset], offset ReadSectors     // Save the address of ReadSectors
     mov word ptr [bp-ReadClusterOffset], offset ReadCluster     // Save the address of ReadCluster
     mov word ptr [bp-PutCharsOffset],    offset PutChars        // Save the address of PutChars
+
+    mov dh, byte ptr BP_REL(BootPartition)
 
     // Now AX has start cluster of FreeLoader and we
     // have loaded the helper code in the first 512 bytes

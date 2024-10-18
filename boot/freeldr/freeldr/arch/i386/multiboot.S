@@ -151,10 +151,6 @@ mb2:
     mov rdx, [rbx + MB_INFO_BOOT_DEVICE_OFFSET]
     bswap edx
 
-    cmp dh, HEX(FF)
-    jz mb3
-    inc dh
-
 mb3:
     /* Relocate itself to lower address */
     mov esi, INITIAL_BASE

@@ -62,6 +62,8 @@ relocated:
     int HEX(13)
     jc read_error
 
+    mov dh, HEX(FF)
+
     // Verify the Hybrid Signature.
     cmp dword ptr es:[pBootSectorHybridSignature], HybridSignature
     jne invalid_signature
