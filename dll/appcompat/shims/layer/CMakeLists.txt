@@ -4,6 +4,7 @@ include_directories(${SHIMLIB_DIR})
 spec2def(aclayers.dll layer.spec)
 
 list(APPEND SOURCE
+    aero.c
     dispmode.c
     forcedxsetupsuccess.c
     ignoreloadlibrary.c
