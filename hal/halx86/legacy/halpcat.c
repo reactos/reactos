@@ -96,7 +96,7 @@ HalReportResourceUsage(VOID)
     /* Initialize PCI bus. */
     HalpInitializePciBus();
 
-    /* Initialize the stubs */
+    /* Setup the PCI stub support */
     HalpInitializePciStubs();
 
     /* What kind of bus is this? */
