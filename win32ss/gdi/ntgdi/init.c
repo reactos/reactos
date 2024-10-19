@@ -75,11 +75,15 @@ GdiThreadDestroy(PETHREAD Thread)
     return STATUS_SUCCESS;
 }
 
+VOID
+DxStartupDxgkInt(VOID);
 
 BOOL
 InitializeGreCSRSS(VOID)
 {
-    /* Initialize DirectX graphics driver */
+    /* Initialize Dxgkrnl interfaces and run final startup routine */
+    DxStartupDxgkInt();
+    /* Initialize Legacy DirectX graphics driver */
     if (DxDdStartupDxGraphics(0, NULL, 0, NULL, NULL, gpepCSRSS) != STATUS_SUCCESS)
     {
         ERR("Unable to initialize DirectX graphics\n");
