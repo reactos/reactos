@@ -152,4 +152,4 @@ DiskGetPartitionEntry(
 /*
  * SCSI support (disk/scsiport.c)
  */
-ULONG LoadBootDeviceDriver(VOID);
+ARC_STATUS LoadBootDeviceDriver(VOID);
