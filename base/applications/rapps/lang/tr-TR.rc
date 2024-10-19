@@ -5,6 +5,7 @@
  * TRANSLATORS: Copyright 2013-2016 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
  *              Copyright 2018 Ercan Ersoy (ercanersoy) <ercanersoy@ercanersoy.net>
  *              Copyright 2021 Süleyman Poyraz <zaryob.dev@gmail.com>
+ *              Copyright 2024 Ethem Çılgın <ethemrty@gmail.com>
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
@@ -61,14 +62,14 @@ BEGIN
     AUTOCHECKBOX "&Kurulumdan Sonra Programın Kurulum Dosyasını Sil", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
     GROUPBOX "Yazılım kaynağı", -1, 4, 118, 240, 46
     AUTORADIOBUTTON "Varsayılanı kullan", IDC_SOURCE_DEFAULT, 15, 132, 74, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Belirtilen kaynağı kullan", IDC_USE_SOURCE, 15, 147, 74, 10
+    AUTORADIOBUTTON "Belirtilen kaynağı kullan", IDC_USE_SOURCE, 15, 147, 100, 10
     EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
     GROUPBOX "Vekil Sunucu", -1, 4, 166, 240, 76
     AUTORADIOBUTTON "Sistem Vekil Sunucu Ayarları", IDC_PROXY_DEFAULT, 15, 180, 210, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "Doğrudan (Vekil sunucu yok.)", IDC_NO_PROXY, 15, 195, 210, 10
     AUTORADIOBUTTON "Vekil Sunucu", IDC_USE_PROXY, 15, 210, 74, 10
     EDITTEXT IDC_PROXY_SERVER, 90, 210, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT "Şunun i̇çin vekil sunucu yok", -1, 26, 226, 64, 10
+    LTEXT "Şunun i̇çin\nvekil sunucu yok", -1, 26, 226, 64, 8
     EDITTEXT IDC_NO_PROXY_FOR, 90, 225, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON "Varsayılanlar", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "Tamam", IDOK, 116, 245, 60, 14
@@ -175,12 +176,12 @@ BEGIN
     IDS_APPTITLE "ReactOS Uygulama Yöneticisi"
     IDS_APP_AUTHORS "Telif Hakkı: 2009 Dmitry Chapyshev"
     IDS_WELCOME_TITLE "ReactOS Uygulama Yöneticisi'ne hoş geldiniz."
-    IDS_WELCOME_TEXT "Solda bir kategori seçiniz, ardından kurmak ya da kaldırmak için bir uygulama seçiniz.\nReactOS'un İnternet sitesi: "
+    IDS_WELCOME_TEXT "Soldan bir kategori seçiniz, ardından kurmak ya da kaldırmak için bir uygulama seçiniz.\nReactOS'un İnternet sitesi: "
     IDS_WELCOME_URL "https://reactos.org"
 
-    IDS_APPWIZ_TITLE "Add/Remove Programs"
-    IDS_APPWIZ_TEXT1 "Choose ""Applications"" or ""Updates"" to view the list of applications or updates installed on your system."
-    IDS_APPWIZ_TEXT2 "To remove a program or to modify its installed components, select it from the list and click on ""Uninstall"" or ""Modify""."
+    IDS_APPWIZ_TITLE "Program Ekle/Kaldır"
+    IDS_APPWIZ_TEXT1 "Sisteminizde yüklü olan uygulamaların veya güncellemelerin listesini görüntülemek için “”Uygulamalar“” veya “”Güncellemeler“” öğesini seçin."
+    IDS_APPWIZ_TEXT2 "Bir programı kaldırmak veya yüklü bileşenlerini değiştirmek için listeden seçin ve “”Kaldır“” veya “”Değiştir“” seçeneğine tıklayın."
 END
 
 STRINGTABLE
@@ -213,7 +214,7 @@ BEGIN
     IDS_APP_DISPLAY_DETAILS "Detaylar"
     IDS_APP_DISPLAY_LIST "Liste"
     IDS_APP_DISPLAY_TILE "Karo"
-    IDS_NO_SEARCH_RESULTS "No search results"
+    IDS_NO_SEARCH_RESULTS "Arama sonucu bulunamadı"
 END
 
 STRINGTABLE
@@ -266,5 +267,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTGEN_CONFIRMUNINST "Are you sure you want to uninstall %s?"
+    IDS_INSTGEN_CONFIRMUNINST "%s'i kaldırmak istediğinizden emin misiniz?"
 END
