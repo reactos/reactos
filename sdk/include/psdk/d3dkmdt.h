@@ -24,6 +24,8 @@
 
 #include "d3dukmdt.h"
 
+#ifndef __REACTOS__
+
 #define NTSTATUS                int32_t
 
 /*
@@ -74,6 +76,14 @@ typedef enum _DEVICE_POWER_STATE {
     PowerDeviceMaximum
 } DEVICE_POWER_STATE, *PDEVICE_POWER_STATE;
 
+#else
+
+#ifndef NTSTATUS
+typedef LONG NTSTATUS;
+#endif
+
+#endif // !__REACTOS__
+
 #pragma region Desktop Family
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 
@@ -85,7 +95,7 @@ typedef enum _DEVICE_POWER_STATE {
 // Available only for Vista (LONGHORN) and later and for
 // multiplatform tools such as debugger extensions
 //
-#if (NTDDI_VERSION >= NTDDI_LONGHORN) || defined(D3DKMDT_SPECIAL_MULTIPLATFORM_TOOL)
+#if defined(__REACTOS__) || ((NTDDI_VERSION >= NTDDI_LONGHORN) || defined(D3DKMDT_SPECIAL_MULTIPLATFORM_TOOL))
 
 //
 // Hardcoded overlay count
@@ -600,7 +610,11 @@ typedef struct _D3DKMDT_VIDEO_SIGNAL_INFO
         struct
         {
             // Scan line ordering (e.g. progressive, interlaced).
+#ifdef __REACTOS__
+            UINT ScanLineOrdering : 3; // D3DDDI_VIDEO_SIGNAL_SCANLINE_ORDERING
+#else
             D3DDDI_VIDEO_SIGNAL_SCANLINE_ORDERING ScanLineOrdering : 3;
+#endif
 
             // Vertical refresh frequency divider
             UINT VSyncFreqDivider               : 6;
