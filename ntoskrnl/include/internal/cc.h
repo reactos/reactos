@@ -210,6 +210,10 @@ typedef struct _ROS_VACB
     PVOID BaseAddress;
     /* Are the contents of the view newer than those on disk. */
     BOOLEAN Dirty;
+    /* The starting byte offset within the VACB where the data is dirty. */
+    ULONG DirtyOffset;
+    /* Length of the dirty data (in bytes), starting at DirtyOffset. */
+    ULONG DirtyLength;
     /* Page out in progress */
     BOOLEAN PageOut;
     ULONG MappedCount;
@@ -357,12 +361,20 @@ CcInitCacheZeroPage(VOID);
 
 VOID
 CcRosMarkDirtyVacb(
-    PROS_VACB Vacb);
+    PROS_VACB Vacb,
+    ULONG DirtyOffset,
+    ULONG DirtyLength);
 
 VOID
 CcRosUnmarkDirtyVacb(
     PROS_VACB Vacb,
     BOOLEAN LockViews);
+
+NTSTATUS
+CcpMarkCacheBlockDirty(
+    _In_ PROS_VACB Vacb,
+    _In_ ULONG VacbOffset,
+    _In_ ULONG Length);
 
 NTSTATUS
 CcRosFlushDirtyPages(
@@ -382,7 +394,6 @@ NTSTATUS
 CcRosReleaseVacb(
     PROS_SHARED_CACHE_MAP SharedCacheMap,
     PROS_VACB Vacb,
-    BOOLEAN Dirty,
     BOOLEAN Mapped
 );
 
