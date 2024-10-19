@@ -20,46 +20,41 @@
 
 #define COBJMACROS
 
-#include <stdio.h>
-
-#include "wine/test.h"
 #include "initguid.h"
-#include "ole2.h"
-#include "strmif.h"
-#include "uuids.h"
-#include "vfwmsgs.h"
-#include "mmsystem.h"
+#include "dshow.h"
+#include "dmo.h"
+#include "dmodshow.h"
 #include "dsound.h"
 #include "mmddk.h"
 #include "vfw.h"
-#include "dmoreg.h"
 #include "setupapi.h"
+#include "wine/test.h"
 
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
-static const WCHAR friendly_name[] = {'F','r','i','e','n','d','l','y','N','a','m','e',0};
-static const WCHAR deviceW[] = {'@','d','e','v','i','c','e',':',0};
-static const WCHAR clsidW[] = {'C','L','S','I','D',0};
-static const WCHAR waveW[] = {'w','a','v','e',':',0};
-static const WCHAR dmoW[] = {'d','m','o',':',0};
-static const WCHAR swW[] = {'s','w',':',0};
-static const WCHAR cmW[] = {'c','m',':',0};
-static const WCHAR backslashW[] = {'\\',0};
-
-static inline WCHAR *strchrW( const WCHAR *str, WCHAR ch )
+#ifdef __REACTOS__
+static const char *debugstr_guid(const GUID *guid)
 {
-    do { if (*str == ch) return (WCHAR *)str; } while (*str++);
-    return NULL;
-}
+    static char guidSTR1[39];
+    static char guidSTR2[39];
+    char* guidSTR;
+    static BOOL index;
 
-static inline int strncmpW( const WCHAR *str1, const WCHAR *str2, int n )
-{
-    if (n <= 0) return 0;
-    while ((--n > 0) && *str1 && (*str1 == *str2)) { str1++; str2++; }
-    return *str1 - *str2;
-}
+    if (!guid) return NULL;
 
-static void test_devenum(IBindCtx *bind_ctx)
+    index = !index;
+    guidSTR = index ? guidSTR1 : guidSTR2;
+
+    snprintf(guidSTR, sizeof(guidSTR1),
+     "{%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
+     guid->Data1, guid->Data2, guid->Data3,
+     guid->Data4[0], guid->Data4[1], guid->Data4[2], guid->Data4[3],
+     guid->Data4[4], guid->Data4[5], guid->Data4[6], guid->Data4[7]);
+    return guidSTR;
+}
+#endif
+
+static void test_devenum(void)
 {
     IEnumMoniker *enum_cat, *enum_moniker;
     ICreateDevEnum* create_devenum;
@@ -67,32 +62,34 @@ static void test_devenum(IBindCtx *bind_ctx)
     IMoniker *moniker;
     GUID cat_guid, clsid;
     WCHAR *displayname;
+    IBindCtx *bindctx;
+    HRESULT hr, hr2;
+    IUnknown *unk;
     VARIANT var;
-    HRESULT hr;
     int count;
 
     hr = CoCreateInstance(&CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC,
                            &IID_ICreateDevEnum, (LPVOID*)&create_devenum);
-    ok(hr == S_OK, "Failed to create devenum: %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
     hr = ICreateDevEnum_CreateClassEnumerator(create_devenum, &CLSID_ActiveMovieCategories, &enum_cat, 0);
-    ok(hr == S_OK, "Failed to enum categories: %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
     while (IEnumMoniker_Next(enum_cat, 1, &moniker, NULL) == S_OK)
     {
-        hr = IMoniker_BindToStorage(moniker, bind_ctx, NULL, &IID_IPropertyBag, (void **)&prop_bag);
-        ok(hr == S_OK, "IMoniker_BindToStorage failed: %#x\n", hr);
+        hr = IMoniker_BindToStorage(moniker, NULL, NULL, &IID_IPropertyBag, (void **)&prop_bag);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
         VariantInit(&var);
-        hr = IPropertyBag_Read(prop_bag, clsidW, &var, NULL);
-        ok(hr == S_OK, "Failed to read CLSID: %#x\n", hr);
+        hr = IPropertyBag_Read(prop_bag, L"CLSID", &var, NULL);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
         hr = CLSIDFromString(V_BSTR(&var), &cat_guid);
-        ok(hr == S_OK, "got %#x\n", hr);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
         VariantClear(&var);
-        hr = IPropertyBag_Read(prop_bag, friendly_name, &var, NULL);
-        ok(hr == S_OK, "Failed to read FriendlyName: %#x\n", hr);
+        hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
         if (winetest_debug > 1)
             trace("%s %s:\n", wine_dbgstr_guid(&cat_guid), wine_dbgstr_w(V_BSTR(&var)));
@@ -102,7 +99,7 @@ static void test_devenum(IBindCtx *bind_ctx)
         IMoniker_Release(moniker);
 
         hr = ICreateDevEnum_CreateClassEnumerator(create_devenum, &cat_guid, &enum_moniker, 0);
-        ok(SUCCEEDED(hr), "Failed to enum devices: %#x\n", hr);
+        ok(SUCCEEDED(hr), "Got hr %#lx.\n", hr);
 
         if (hr == S_OK)
         {
@@ -111,29 +108,51 @@ static void test_devenum(IBindCtx *bind_ctx)
             while (IEnumMoniker_Next(enum_moniker, 1, &moniker, NULL) == S_OK)
             {
                 hr = IMoniker_GetDisplayName(moniker, NULL, NULL, &displayname);
-                ok(hr == S_OK, "got %#x\n", hr);
+                ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
                 hr = IMoniker_GetClassID(moniker, NULL);
-                ok(hr == E_INVALIDARG, "IMoniker_GetClassID should failed %x\n", hr);
+                ok(hr == E_INVALIDARG, "Got hr %#lx.\n", hr);
 
                 hr = IMoniker_GetClassID(moniker, &clsid);
-                ok(hr == S_OK, "IMoniker_GetClassID failed with error %x\n", hr);
+                ok(hr == S_OK, "Got hr %#lx.\n", hr);
                 ok(IsEqualGUID(&clsid, &CLSID_CDeviceMoniker),
                    "Expected CLSID_CDeviceMoniker got %s\n", wine_dbgstr_guid(&clsid));
 
                 VariantInit(&var);
-                hr = IMoniker_BindToStorage(moniker, bind_ctx, NULL, &IID_IPropertyBag, (LPVOID*)&prop_bag);
-                ok(hr == S_OK, "IMoniker_BindToStorage failed with error %x\n", hr);
+                hr = IMoniker_BindToStorage(moniker, NULL, NULL, &IID_IPropertyBag, (LPVOID*)&prop_bag);
+                ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
-                hr = IPropertyBag_Read(prop_bag, friendly_name, &var, NULL);
+                hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
                 ok((hr == S_OK) | (hr == ERROR_KEY_DOES_NOT_EXIST),
-					"IPropertyBag_Read failed: %#x\n", hr);
+					"Got hr %#lx.\n", hr);
 
                 if (winetest_debug > 1)
                     trace("  %s %s\n", wine_dbgstr_w(displayname), wine_dbgstr_w(V_BSTR(&var)));
 
-                hr = IMoniker_BindToObject(moniker, bind_ctx, NULL, &IID_IUnknown, NULL);
-                ok(hr == E_POINTER, "got %#x\n", hr);
+                hr = IMoniker_BindToObject(moniker, NULL, NULL, &IID_IUnknown, NULL);
+                ok(hr == E_POINTER, "Got hr %#lx.\n", hr);
+
+                VariantClear(&var);
+                hr = IPropertyBag_Read(prop_bag, L"CLSID", &var, NULL);
+                /* Instantiating the WMT Screen Capture Filter crashes on Windows XP. */
+                if (hr != S_OK || wcscmp(V_BSTR(&var), L"{31087270-D348-432C-899E-2D2F38FF29A0}"))
+                {
+                    hr = IMoniker_BindToObject(moniker, NULL, NULL, &IID_IUnknown, (void **)&unk);
+                    if (hr == S_OK)
+                        IUnknown_Release(unk);
+                    hr2 = IMoniker_BindToObject(moniker, NULL, (IMoniker *)0xdeadbeef,
+                            &IID_IUnknown, (void **)&unk);
+                    if (hr2 == S_OK)
+                        IUnknown_Release(unk);
+                    ok(hr2 == hr, "Expected hr %#lx, got %#lx.\n", hr, hr2);
+                }
+
+                hr = CreateBindCtx(0, &bindctx);
+                ok(hr == S_OK, "Got hr %#lx.\n", hr);
+                hr = IMoniker_BindToStorage(moniker, bindctx, NULL, &IID_IPropertyBag, (LPVOID*)&prop_bag);
+                ok(hr == S_OK, "Got hr %#lx.\n", hr);
+                IPropertyBag_Release(prop_bag);
+                IBindCtx_Release(bindctx);
 
                 VariantClear(&var);
                 CoTaskMemFree(displayname);
@@ -153,91 +172,85 @@ static void test_devenum(IBindCtx *bind_ctx)
 
 static void test_moniker_isequal(void)
 {
-    HRESULT res;
     ICreateDevEnum *create_devenum = NULL;
     IEnumMoniker *enum_moniker0 = NULL, *enum_moniker1 = NULL;
     IMoniker *moniker0 = NULL, *moniker1 = NULL;
+    HRESULT hr;
 
-    res = CoCreateInstance(&CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC,
+    hr = CoCreateInstance(&CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC,
                            &IID_ICreateDevEnum, (LPVOID*)&create_devenum);
-    if (FAILED(res))
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+
+    hr = ICreateDevEnum_CreateClassEnumerator(create_devenum, &CLSID_LegacyAmFilterCategory, &enum_moniker0, 0);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+
+    if (IEnumMoniker_Next(enum_moniker0, 1, &moniker0, NULL) == S_OK
+            && IEnumMoniker_Next(enum_moniker0, 1, &moniker1, NULL) == S_OK)
     {
-         skip("Cannot create SystemDeviceEnum object (%x)\n", res);
-         return;
+        hr = IMoniker_IsEqual(moniker0, moniker1);
+        ok(hr == S_FALSE, "Got hr %#lx.\n", hr);
+
+        hr = IMoniker_IsEqual(moniker1, moniker0);
+        ok(hr == S_FALSE, "Got hr %#lx.\n", hr);
+
+        IMoniker_Release(moniker0);
+        IMoniker_Release(moniker1);
     }
-
-    res = ICreateDevEnum_CreateClassEnumerator(create_devenum, &CLSID_LegacyAmFilterCategory, &enum_moniker0, 0);
-    ok(SUCCEEDED(res), "Cannot create enum moniker (res = %x)\n", res);
-    if (SUCCEEDED(res))
+    else
     {
-        if (IEnumMoniker_Next(enum_moniker0, 1, &moniker0, NULL) == S_OK &&
-            IEnumMoniker_Next(enum_moniker0, 1, &moniker1, NULL) == S_OK)
-        {
-            res = IMoniker_IsEqual(moniker0, moniker1);
-            ok(res == S_FALSE, "IMoniker_IsEqual should fail (res = %x)\n", res);
-
-            res = IMoniker_IsEqual(moniker1, moniker0);
-            ok(res == S_FALSE, "IMoniker_IsEqual should fail (res = %x)\n", res);
-
-            IMoniker_Release(moniker0);
-            IMoniker_Release(moniker1);
-        }
-        else
-            skip("Cannot get moniker for testing.\n");
+        skip("Cannot get moniker for testing.\n");
     }
     IEnumMoniker_Release(enum_moniker0);
 
-    res = ICreateDevEnum_CreateClassEnumerator(create_devenum, &CLSID_LegacyAmFilterCategory, &enum_moniker0, 0);
-    ok(SUCCEEDED(res), "Cannot create enum moniker (res = %x)\n", res);
-    res = ICreateDevEnum_CreateClassEnumerator(create_devenum, &CLSID_AudioRendererCategory, &enum_moniker1, 0);
-    ok(SUCCEEDED(res), "Cannot create enum moniker (res = %x)\n", res);
-    if (SUCCEEDED(res))
+    hr = ICreateDevEnum_CreateClassEnumerator(create_devenum, &CLSID_LegacyAmFilterCategory, &enum_moniker0, 0);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+    hr = ICreateDevEnum_CreateClassEnumerator(create_devenum, &CLSID_AudioRendererCategory, &enum_moniker1, 0);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+
+    if (IEnumMoniker_Next(enum_moniker0, 1, &moniker0, NULL) == S_OK
+            && IEnumMoniker_Next(enum_moniker1, 1, &moniker1, NULL) == S_OK)
     {
-        if (IEnumMoniker_Next(enum_moniker0, 1, &moniker0, NULL) == S_OK &&
-            IEnumMoniker_Next(enum_moniker1, 1, &moniker1, NULL) == S_OK)
-        {
-            res = IMoniker_IsEqual(moniker0, moniker1);
-            ok(res == S_FALSE, "IMoniker_IsEqual should failed (res = %x)\n", res);
+        hr = IMoniker_IsEqual(moniker0, moniker1);
+        ok(hr == S_FALSE, "Got hr %#lx.\n", hr);
 
-            res = IMoniker_IsEqual(moniker1, moniker0);
-            ok(res == S_FALSE, "IMoniker_IsEqual should failed (res = %x)\n", res);
+        hr = IMoniker_IsEqual(moniker1, moniker0);
+        ok(hr == S_FALSE, "Got hr %#lx.\n", hr);
 
-            IMoniker_Release(moniker0);
-            IMoniker_Release(moniker1);
-        }
-        else
-            skip("Cannot get moniker for testing.\n");
+        IMoniker_Release(moniker0);
+        IMoniker_Release(moniker1);
+    }
+    else
+    {
+        skip("Cannot get moniker for testing.\n");
     }
     IEnumMoniker_Release(enum_moniker0);
     IEnumMoniker_Release(enum_moniker1);
 
-    res = ICreateDevEnum_CreateClassEnumerator(create_devenum, &CLSID_LegacyAmFilterCategory, &enum_moniker0, 0);
-    ok(SUCCEEDED(res), "Cannot create enum moniker (res = %x)\n", res);
-    res = ICreateDevEnum_CreateClassEnumerator(create_devenum, &CLSID_LegacyAmFilterCategory, &enum_moniker1, 0);
-    ok(SUCCEEDED(res), "Cannot create enum moniker (res = %x)\n", res);
-    if (SUCCEEDED(res))
+    hr = ICreateDevEnum_CreateClassEnumerator(create_devenum, &CLSID_LegacyAmFilterCategory, &enum_moniker0, 0);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+    hr = ICreateDevEnum_CreateClassEnumerator(create_devenum, &CLSID_LegacyAmFilterCategory, &enum_moniker1, 0);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+
+    if (IEnumMoniker_Next(enum_moniker0, 1, &moniker0, NULL) == S_OK
+            && IEnumMoniker_Next(enum_moniker1, 1, &moniker1, NULL) == S_OK)
     {
-        if (IEnumMoniker_Next(enum_moniker0, 1, &moniker0, NULL) == S_OK &&
-            IEnumMoniker_Next(enum_moniker1, 1, &moniker1, NULL) == S_OK)
-        {
-            res = IMoniker_IsEqual(moniker0, moniker1);
-            ok(res == S_OK, "IMoniker_IsEqual failed (res = %x)\n", res);
+        hr = IMoniker_IsEqual(moniker0, moniker1);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
-            res = IMoniker_IsEqual(moniker1, moniker0);
-            ok(res == S_OK, "IMoniker_IsEqual failed (res = %x)\n", res);
+        hr = IMoniker_IsEqual(moniker1, moniker0);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
-            IMoniker_Release(moniker0);
-            IMoniker_Release(moniker1);
-        }
-        else
-            skip("Cannot get moniker for testing.\n");
+        IMoniker_Release(moniker0);
+        IMoniker_Release(moniker1);
+    }
+    else
+    {
+        skip("Cannot get moniker for testing.\n");
     }
     IEnumMoniker_Release(enum_moniker0);
     IEnumMoniker_Release(enum_moniker1);
 
     ICreateDevEnum_Release(create_devenum);
-
-    return;
 }
 
 static BOOL find_moniker(const GUID *class, IMoniker *needle)
@@ -248,16 +261,18 @@ static BOOL find_moniker(const GUID *class, IMoniker *needle)
     BOOL found = FALSE;
 
     CoCreateInstance(&CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC, &IID_ICreateDevEnum, (void **)&devenum);
-    ICreateDevEnum_CreateClassEnumerator(devenum, class, &enum_mon, 0);
-    while (!found && IEnumMoniker_Next(enum_mon, 1, &mon, NULL) == S_OK)
+    if (ICreateDevEnum_CreateClassEnumerator(devenum, class, &enum_mon, 0) == S_OK)
     {
-        if (IMoniker_IsEqual(mon, needle) == S_OK)
-            found = TRUE;
+        while (!found && IEnumMoniker_Next(enum_mon, 1, &mon, NULL) == S_OK)
+        {
+            if (IMoniker_IsEqual(mon, needle) == S_OK)
+                found = TRUE;
 
-        IMoniker_Release(mon);
+            IMoniker_Release(mon);
+        }
+
+        IEnumMoniker_Release(enum_mon);
     }
-
-    IEnumMoniker_Release(enum_mon);
     ICreateDevEnum_Release(devenum);
     return found;
 }
@@ -266,44 +281,44 @@ DEFINE_GUID(CLSID_TestFilter,  0xdeadbeef,0xcf51,0x43e6,0xb6,0xc5,0x29,0x9e,0xa8
 
 static void test_register_filter(void)
 {
-    static const WCHAR name[] = {'d','e','v','e','n','u','m',' ','t','e','s','t',0};
     IFilterMapper2 *mapper2;
     IMoniker *mon = NULL;
     REGFILTER2 rgf2 = {0};
     HRESULT hr;
 
     hr = CoCreateInstance(&CLSID_FilterMapper2, NULL, CLSCTX_INPROC, &IID_IFilterMapper2, (void **)&mapper2);
-    ok(hr == S_OK, "Failed to create FilterMapper2: %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
     rgf2.dwVersion = 2;
     rgf2.dwMerit = MERIT_UNLIKELY;
-    S2(U(rgf2)).cPins2 = 0;
+    rgf2.cPins2 = 0;
 
-    hr = IFilterMapper2_RegisterFilter(mapper2, &CLSID_TestFilter, name, &mon, NULL, NULL, &rgf2);
+
+    hr = IFilterMapper2_RegisterFilter(mapper2, &CLSID_TestFilter, L"devenum test", &mon, NULL, NULL, &rgf2);
     if (hr == E_ACCESSDENIED)
     {
         skip("Not enough permissions to register filters\n");
         IFilterMapper2_Release(mapper2);
         return;
     }
-    ok(hr == S_OK, "RegisterFilter failed: %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
     ok(find_moniker(&CLSID_LegacyAmFilterCategory, mon), "filter should be registered\n");
 
     hr = IFilterMapper2_UnregisterFilter(mapper2, NULL, NULL, &CLSID_TestFilter);
-    ok(hr == S_OK, "UnregisterFilter failed: %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
     ok(!find_moniker(&CLSID_LegacyAmFilterCategory, mon), "filter should not be registered\n");
     IMoniker_Release(mon);
 
     mon = NULL;
-    hr = IFilterMapper2_RegisterFilter(mapper2, &CLSID_TestFilter, name, &mon, &CLSID_AudioRendererCategory, NULL, &rgf2);
-    ok(hr == S_OK, "RegisterFilter failed: %#x\n", hr);
+    hr = IFilterMapper2_RegisterFilter(mapper2, &CLSID_TestFilter, L"devenum test", &mon, &CLSID_AudioRendererCategory, NULL, &rgf2);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
     ok(find_moniker(&CLSID_AudioRendererCategory, mon), "filter should be registered\n");
 
     hr = IFilterMapper2_UnregisterFilter(mapper2, &CLSID_AudioRendererCategory, NULL, &CLSID_TestFilter);
-    ok(hr == S_OK, "UnregisterFilter failed: %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
     ok(!find_moniker(&CLSID_AudioRendererCategory, mon), "filter should not be registered\n");
     IMoniker_Release(mon);
@@ -319,11 +334,11 @@ static IMoniker *check_display_name_(int line, IParseDisplayName *parser, WCHAR 
     WCHAR *str;
 
     hr = IParseDisplayName_ParseDisplayName(parser, NULL, buffer, &eaten, &mon);
-    ok_(__FILE__, line)(hr == S_OK, "ParseDisplayName failed: %#x\n", hr);
+    ok_(__FILE__, line)(hr == S_OK, "Got hr %#lx.\n", hr);
 
     hr = IMoniker_GetDisplayName(mon, NULL, NULL, &str);
-    ok_(__FILE__, line)(hr == S_OK, "GetDisplayName failed: %#x\n", hr);
-    ok_(__FILE__, line)(!lstrcmpW(str, buffer), "got %s\n", wine_dbgstr_w(str));
+    ok_(__FILE__, line)(hr == S_OK, "Got hr %#lx.\n", hr);
+    ok_(__FILE__, line)(!wcscmp(str, buffer), "got %s\n", wine_dbgstr_w(str));
 
     CoTaskMemFree(str);
 
@@ -333,11 +348,10 @@ static IMoniker *check_display_name_(int line, IParseDisplayName *parser, WCHAR 
 
 static void test_directshow_filter(void)
 {
-    static const WCHAR instanceW[] = {'\\','I','n','s','t','a','n','c','e',0};
-    static const WCHAR clsidW[] = {'C','L','S','I','D','\\',0};
-    static WCHAR testW[] = {'\\','t','e','s','t',0};
+    SAFEARRAYBOUND bound = {.cElements = 10};
     IParseDisplayName *parser;
     IPropertyBag *prop_bag;
+    void *array_data;
     IMoniker *mon;
     WCHAR buffer[200];
     LRESULT res;
@@ -346,48 +360,109 @@ static void test_directshow_filter(void)
 
     /* Test ParseDisplayName and GetDisplayName */
     hr = CoCreateInstance(&CLSID_CDeviceMoniker, NULL, CLSCTX_INPROC, &IID_IParseDisplayName, (void **)&parser);
-    ok(hr == S_OK, "Failed to create ParseDisplayName: %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
-    lstrcpyW(buffer, deviceW);
-    lstrcatW(buffer, swW);
-    StringFromGUID2(&CLSID_AudioRendererCategory, buffer + lstrlenW(buffer), CHARS_IN_GUID);
-    lstrcatW(buffer, testW);
+    wcscpy(buffer, L"@device:sw:");
+    StringFromGUID2(&CLSID_AudioRendererCategory, buffer + wcslen(buffer), CHARS_IN_GUID);
+    wcscat(buffer, L"\\test");
     mon = check_display_name(parser, buffer);
 
     /* Test writing and reading from the property bag */
     ok(!find_moniker(&CLSID_AudioRendererCategory, mon), "filter should not be registered\n");
 
     hr = IMoniker_BindToStorage(mon, NULL, NULL, &IID_IPropertyBag, (void **)&prop_bag);
-    ok(hr == S_OK, "BindToStorage failed: %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
     VariantInit(&var);
-    hr = IPropertyBag_Read(prop_bag, friendly_name, &var, NULL);
-    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), "got %#x\n", hr);
+    hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), "Got hr %#lx.\n", hr);
 
     /* writing causes the key to be created */
     V_VT(&var) = VT_BSTR;
-    V_BSTR(&var) = SysAllocString(testW);
-    hr = IPropertyBag_Write(prop_bag, friendly_name, &var);
+    V_BSTR(&var) = SysAllocString(L"test");
+    hr = IPropertyBag_Write(prop_bag, L"FriendlyName", &var);
     if (hr != E_ACCESSDENIED)
     {
-        ok(hr == S_OK, "Write failed: %#x\n", hr);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
         ok(find_moniker(&CLSID_AudioRendererCategory, mon), "filter should be registered\n");
 
         VariantClear(&var);
-        hr = IPropertyBag_Read(prop_bag, friendly_name, &var, NULL);
-        ok(hr == S_OK, "Read failed: %#x\n", hr);
-        ok(!lstrcmpW(V_BSTR(&var), testW), "got %s\n", wine_dbgstr_w(V_BSTR(&var)));
+        V_VT(&var) = VT_EMPTY;
+        hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
+        ok(V_VT(&var) == VT_BSTR, "Got type %#x.\n", V_VT(&var));
+        ok(!wcscmp(V_BSTR(&var), L"test"), "Got name %s.\n", wine_dbgstr_w(V_BSTR(&var)));
+
+        VariantClear(&var);
+        V_VT(&var) = VT_LPWSTR;
+        hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
+        ok(hr == E_INVALIDARG, "Got hr %#lx.\n", hr);
+
+        V_VT(&var) = VT_BSTR;
+        hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
+        ok(V_VT(&var) == VT_BSTR, "Got type %#x.\n", V_VT(&var));
+        ok(!wcscmp(V_BSTR(&var), L"test"), "Got name %s.\n", wine_dbgstr_w(V_BSTR(&var)));
+
+        V_VT(&var) = VT_LPWSTR;
+        hr = IPropertyBag_Write(prop_bag, L"FriendlyName", &var);
+        ok(hr == E_INVALIDARG, "Got hr %#lx.\n", hr);
+        VariantClear(&var);
+
+        V_VT(&var) = VT_I4;
+        V_I4(&var) = 0xdeadbeef;
+        hr = IPropertyBag_Write(prop_bag, L"foobar", &var);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
+
+        V_VT(&var) = VT_EMPTY;
+        hr = IPropertyBag_Read(prop_bag, L"foobar", &var, NULL);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
+        ok(V_VT(&var) == VT_I4, "Got type %#x.\n", V_VT(&var));
+        ok(V_I4(&var) == 0xdeadbeef, "Got value %#lx.\n", V_I4(&var));
+
+        V_VT(&var) = VT_UI4;
+        hr = IPropertyBag_Read(prop_bag, L"foobar", &var, NULL);
+        ok(hr == E_INVALIDARG, "Got hr %#lx.\n", hr);
+        V_VT(&var) = VT_BSTR;
+        hr = IPropertyBag_Read(prop_bag, L"foobar", &var, NULL);
+        ok(hr == E_INVALIDARG, "Got hr %#lx.\n", hr);
+
+        V_VT(&var) = VT_I4;
+        hr = IPropertyBag_Read(prop_bag, L"foobar", &var, NULL);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
+        ok(V_VT(&var) == VT_I4, "Got type %#x.\n", V_VT(&var));
+        ok(V_I4(&var) == 0xdeadbeef, "Got value %#lx.\n", V_I4(&var));
+
+        V_VT(&var) = VT_UI4;
+        hr = IPropertyBag_Write(prop_bag, L"foobar", &var);
+        ok(hr == E_INVALIDARG, "Got hr %#lx.\n", hr);
+
+        V_VT(&var) = VT_ARRAY | VT_UI1;
+        V_ARRAY(&var) = SafeArrayCreate(VT_UI1, 1, &bound);
+        SafeArrayAccessData(V_ARRAY(&var), &array_data);
+        memcpy(array_data, "test data", 10);
+        SafeArrayUnaccessData(V_ARRAY(&var));
+        hr = IPropertyBag_Write(prop_bag, L"foobar", &var);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
+
+        VariantClear(&var);
+        V_VT(&var) = VT_EMPTY;
+        hr = IPropertyBag_Read(prop_bag, L"foobar", &var, NULL);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
+        ok(V_VT(&var) == (VT_ARRAY | VT_UI1), "Got type %#x.\n", V_VT(&var));
+        SafeArrayAccessData(V_ARRAY(&var), &array_data);
+        ok(!memcmp(array_data, "test data", 10), "Got wrong data.\n");
+        SafeArrayUnaccessData(V_ARRAY(&var));
 
         IMoniker_Release(mon);
 
-        /* devenum doesn't give us a way to unregister—we have to do that manually */
-        lstrcpyW(buffer, clsidW);
-        StringFromGUID2(&CLSID_AudioRendererCategory, buffer + lstrlenW(buffer), CHARS_IN_GUID);
-        lstrcatW(buffer, instanceW);
-        lstrcatW(buffer, testW);
+        /* devenum doesn't give us a way to unregisterâ€”we have to do that manually */
+        wcscpy(buffer, L"CLSID\\");
+        StringFromGUID2(&CLSID_AudioRendererCategory, buffer + wcslen(buffer), CHARS_IN_GUID);
+        wcscat(buffer, L"\\Instance\\test");
         res = RegDeleteKeyW(HKEY_CLASSES_ROOT, buffer);
-        ok(!res, "RegDeleteKey failed: %lu\n", res);
+        ok(!res, "Failed to delete key, error %Iu.\n", res);
     }
 
     VariantClear(&var);
@@ -395,29 +470,27 @@ static void test_directshow_filter(void)
 
     /* name can be anything */
 
-    lstrcpyW(buffer, deviceW);
-    lstrcatW(buffer, swW);
-    lstrcatW(buffer, testW+1);
+    wcscpy(buffer, L"@device:sw:test");
     mon = check_display_name(parser, buffer);
 
     hr = IMoniker_BindToStorage(mon, NULL, NULL, &IID_IPropertyBag, (void **)&prop_bag);
-    ok(hr == S_OK, "BindToStorage failed: %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
     VariantClear(&var);
-    hr = IPropertyBag_Read(prop_bag, friendly_name, &var, NULL);
-    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), "got %#x\n", hr);
+    hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), "Got hr %#lx.\n", hr);
 
     V_VT(&var) = VT_BSTR;
-    V_BSTR(&var) = SysAllocString(testW);
-    hr = IPropertyBag_Write(prop_bag, friendly_name, &var);
+    V_BSTR(&var) = SysAllocString(L"test");
+    hr = IPropertyBag_Write(prop_bag, L"FriendlyName", &var);
     if (hr != E_ACCESSDENIED)
     {
-        ok(hr == S_OK, "Write failed: %#x\n", hr);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
         VariantClear(&var);
-        hr = IPropertyBag_Read(prop_bag, friendly_name, &var, NULL);
-        ok(hr == S_OK, "Read failed: %#x\n", hr);
-        ok(!lstrcmpW(V_BSTR(&var), testW), "got %s\n", wine_dbgstr_w(V_BSTR(&var)));
+        hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
+        ok(!wcscmp(V_BSTR(&var), L"test"), "got %s\n", wine_dbgstr_w(V_BSTR(&var)));
 
         IMoniker_Release(mon);
 
@@ -425,7 +498,7 @@ static void test_directshow_filter(void)
         RegDeleteKeyA(HKEY_CLASSES_ROOT, "CLSID\\test\\Instance");
 
         res = RegDeleteKeyA(HKEY_CLASSES_ROOT, "CLSID\\test");
-        ok(!res, "RegDeleteKey failed: %lu\n", res);
+        ok(!res, "Failed to delete key, error %Iu.\n", res);
     }
 
     VariantClear(&var);
@@ -435,9 +508,10 @@ static void test_directshow_filter(void)
 
 static void test_codec(void)
 {
-    static WCHAR testW[] = {'\\','t','e','s','t',0};
+    SAFEARRAYBOUND bound = {.cElements = 10};
     IParseDisplayName *parser;
     IPropertyBag *prop_bag;
+    void *array_data;
     IMoniker *mon;
     WCHAR buffer[200];
     VARIANT var;
@@ -445,41 +519,93 @@ static void test_codec(void)
 
     /* Test ParseDisplayName and GetDisplayName */
     hr = CoCreateInstance(&CLSID_CDeviceMoniker, NULL, CLSCTX_INPROC, &IID_IParseDisplayName, (void **)&parser);
-    ok(hr == S_OK, "Failed to create ParseDisplayName: %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
-    lstrcpyW(buffer, deviceW);
-    lstrcatW(buffer, cmW);
-    StringFromGUID2(&CLSID_AudioRendererCategory, buffer + lstrlenW(buffer), CHARS_IN_GUID);
-    lstrcatW(buffer, testW);
+    wcscpy(buffer, L"@device:cm:");
+    StringFromGUID2(&CLSID_AudioRendererCategory, buffer + wcslen(buffer), CHARS_IN_GUID);
+    wcscat(buffer, L"\\test");
     mon = check_display_name(parser, buffer);
 
     /* Test writing and reading from the property bag */
     ok(!find_moniker(&CLSID_AudioRendererCategory, mon), "codec should not be registered\n");
 
     hr = IMoniker_BindToStorage(mon, NULL, NULL, &IID_IPropertyBag, (void **)&prop_bag);
-    ok(hr == S_OK, "BindToStorage failed: %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
     VariantInit(&var);
-    hr = IPropertyBag_Read(prop_bag, friendly_name, &var, NULL);
-    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), "got %#x\n", hr);
+    hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), "Got hr %#lx.\n", hr);
 
     V_VT(&var) = VT_BSTR;
-    V_BSTR(&var) = SysAllocString(testW);
-    hr = IPropertyBag_Write(prop_bag, friendly_name, &var);
-    ok(hr == S_OK, "Write failed: %#x\n", hr);
+    V_BSTR(&var) = SysAllocString(L"test");
+    hr = IPropertyBag_Write(prop_bag, L"FriendlyName", &var);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+
+    V_VT(&var) = VT_LPWSTR;
+    hr = IPropertyBag_Write(prop_bag, L"FriendlyName", &var);
+    ok(hr == E_INVALIDARG, "Got hr %#lx.\n", hr);
 
     VariantClear(&var);
-    hr = IPropertyBag_Read(prop_bag, friendly_name, &var, NULL);
-    ok(hr == S_OK, "Read failed: %#x\n", hr);
-    ok(!lstrcmpW(V_BSTR(&var), testW), "got %s\n", wine_dbgstr_w(V_BSTR(&var)));
+    V_VT(&var) = VT_EMPTY;
+    hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+    ok(V_VT(&var) == VT_BSTR, "Got type %#x.\n", V_VT(&var));
+    ok(!wcscmp(V_BSTR(&var), L"test"), "Got name %s.\n", wine_dbgstr_w(V_BSTR(&var)));
+
+    VariantClear(&var);
+    V_VT(&var) = VT_LPWSTR;
+    hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
+    ok(hr == E_INVALIDARG, "Got hr %#lx.\n", hr);
+
+    V_VT(&var) = VT_BSTR;
+    hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+    ok(V_VT(&var) == VT_BSTR, "Got type %#x.\n", V_VT(&var));
+    ok(!wcscmp(V_BSTR(&var), L"test"), "Got name %s.\n", wine_dbgstr_w(V_BSTR(&var)));
+
+    V_VT(&var) = VT_I4;
+    V_I4(&var) = 0xdeadbeef;
+    hr = IPropertyBag_Write(prop_bag, L"foobar", &var);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+
+    V_VT(&var) = VT_EMPTY;
+    hr = IPropertyBag_Read(prop_bag, L"foobar", &var, NULL);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+    ok(V_VT(&var) == VT_I4, "Got type %#x.\n", V_VT(&var));
+    ok(V_I4(&var) == 0xdeadbeef, "Got value %#lx.\n", V_I4(&var));
+
+    V_VT(&var) = VT_UI4;
+    hr = IPropertyBag_Read(prop_bag, L"foobar", &var, NULL);
+    ok(hr == E_INVALIDARG, "Got hr %#lx.\n", hr);
+    V_VT(&var) = VT_BSTR;
+    hr = IPropertyBag_Read(prop_bag, L"foobar", &var, NULL);
+    ok(hr == E_INVALIDARG, "Got hr %#lx.\n", hr);
+
+    V_VT(&var) = VT_I4;
+    hr = IPropertyBag_Read(prop_bag, L"foobar", &var, NULL);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+    ok(V_VT(&var) == VT_I4, "Got type %#x.\n", V_VT(&var));
+    ok(V_I4(&var) == 0xdeadbeef, "Got value %#lx.\n", V_I4(&var));
+
+    V_VT(&var) = VT_UI4;
+    hr = IPropertyBag_Write(prop_bag, L"foobar", &var);
+    ok(hr == E_INVALIDARG, "Got hr %#lx.\n", hr);
+
+    V_VT(&var) = VT_ARRAY | VT_UI1;
+    V_ARRAY(&var) = SafeArrayCreate(VT_UI1, 1, &bound);
+    SafeArrayAccessData(V_ARRAY(&var), &array_data);
+    memcpy(array_data, "test data", 10);
+    SafeArrayUnaccessData(V_ARRAY(&var));
+    hr = IPropertyBag_Write(prop_bag, L"foobar", &var);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
     /* unlike DirectShow filters, these are automatically generated, so
      * enumerating them will destroy the key */
     ok(!find_moniker(&CLSID_AudioRendererCategory, mon), "codec should not be registered\n");
 
     VariantClear(&var);
-    hr = IPropertyBag_Read(prop_bag, friendly_name, &var, NULL);
-    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), "got %#x\n", hr);
+    hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), "Got hr %#lx.\n", hr);
 
     IPropertyBag_Release(prop_bag);
     IMoniker_Release(mon);
@@ -487,72 +613,122 @@ static void test_codec(void)
     IParseDisplayName_Release(parser);
 }
 
-static void test_dmo(void)
+static void test_dmo(const GUID *dmo_category, const GUID *enum_category)
 {
-    static const WCHAR name[] = {'d','e','v','e','n','u','m',' ','t','e','s','t',0};
     IParseDisplayName *parser;
     IPropertyBag *prop_bag;
+    IBaseFilter *filter;
+    IMediaObject *dmo;
+    IEnumDMO *enumdmo;
     WCHAR buffer[200];
     IMoniker *mon;
     VARIANT var;
+    WCHAR *name;
     HRESULT hr;
+    GUID clsid;
 
     hr = CoCreateInstance(&CLSID_CDeviceMoniker, NULL, CLSCTX_INPROC, &IID_IParseDisplayName, (void **)&parser);
-    ok(hr == S_OK, "Failed to create ParseDisplayName: %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
-    lstrcpyW(buffer, deviceW);
-    lstrcatW(buffer, dmoW);
-    StringFromGUID2(&CLSID_TestFilter, buffer + lstrlenW(buffer), CHARS_IN_GUID);
-    StringFromGUID2(&CLSID_AudioRendererCategory, buffer + lstrlenW(buffer), CHARS_IN_GUID);
+    wcscpy(buffer, L"@device:dmo:");
+    StringFromGUID2(&CLSID_TestFilter, buffer + wcslen(buffer), CHARS_IN_GUID);
+    StringFromGUID2(dmo_category, buffer + wcslen(buffer), CHARS_IN_GUID);
     mon = check_display_name(parser, buffer);
 
-    ok(!find_moniker(&CLSID_AudioRendererCategory, mon), "DMO should not be registered\n");
+    ok(!find_moniker(enum_category, mon), "DMO should not be registered\n");
 
     hr = IMoniker_BindToStorage(mon, NULL, NULL, &IID_IPropertyBag, (void **)&prop_bag);
-    ok(hr == S_OK, "got %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
     VariantInit(&var);
-    hr = IPropertyBag_Read(prop_bag, friendly_name, &var, NULL);
-    ok(hr == E_FAIL, "got %#x\n", hr);
+    hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
+    ok(hr == E_FAIL, "Got hr %#lx.\n", hr);
 
     V_VT(&var) = VT_BSTR;
-    V_BSTR(&var) = SysAllocString(name);
-    hr = IPropertyBag_Write(prop_bag, friendly_name, &var);
-    ok(hr == E_ACCESSDENIED, "Write failed: %#x\n", hr);
+    V_BSTR(&var) = SysAllocString(L"devenum test");
+    hr = IPropertyBag_Write(prop_bag, L"FriendlyName", &var);
+    ok(hr == E_ACCESSDENIED, "Got hr %#lx.\n", hr);
 
-    hr = DMORegister(name, &CLSID_TestFilter, &CLSID_AudioRendererCategory, 0, 0, NULL, 0, NULL);
+    hr = DMORegister(L"devenum test", &CLSID_TestFilter, dmo_category, 0, 0, NULL, 0, NULL);
     if (hr != E_FAIL)
     {
-        ok(hr == S_OK, "got %#x\n", hr);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
-        ok(find_moniker(&CLSID_AudioRendererCategory, mon), "DMO should be registered\n");
+        ok(find_moniker(enum_category, mon), "DMO should be registered\n");
 
         VariantClear(&var);
-        hr = IPropertyBag_Read(prop_bag, friendly_name, &var, NULL);
-        ok(hr == S_OK, "got %#x\n", hr);
-        ok(!lstrcmpW(V_BSTR(&var), name), "got %s\n", wine_dbgstr_w(V_BSTR(&var)));
+        hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
+        ok(!wcscmp(V_BSTR(&var), L"devenum test"), "got %s\n", wine_dbgstr_w(V_BSTR(&var)));
 
         VariantClear(&var);
         V_VT(&var) = VT_BSTR;
-        V_BSTR(&var) = SysAllocString(name);
-        hr = IPropertyBag_Write(prop_bag, friendly_name, &var);
-        ok(hr == E_ACCESSDENIED, "Write failed: %#x\n", hr);
+        V_BSTR(&var) = SysAllocString(L"devenum test");
+        hr = IPropertyBag_Write(prop_bag, L"FriendlyName", &var);
+        ok(hr == E_ACCESSDENIED, "Got hr %#lx.\n", hr);
 
         VariantClear(&var);
-        hr = IPropertyBag_Read(prop_bag, clsidW, &var, NULL);
-        ok(hr == HRESULT_FROM_WIN32(ERROR_NOT_FOUND), "got %#x\n", hr);
+        hr = IPropertyBag_Read(prop_bag, L"CLSID", &var, NULL);
+        ok(hr == HRESULT_FROM_WIN32(ERROR_NOT_FOUND), "Got hr %#lx.\n", hr);
 
-        hr = DMOUnregister(&CLSID_TestFilter, &CLSID_AudioRendererCategory);
-        ok(hr == S_OK, "got %#x\n", hr);
+        hr = DMOUnregister(&CLSID_TestFilter, dmo_category);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
     }
     IPropertyBag_Release(prop_bag);
     IMoniker_Release(mon);
+
+    hr = DMOEnum(&DMOCATEGORY_AUDIO_DECODER, 0, 0, NULL, 0, NULL, &enumdmo);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+
+    while (IEnumDMO_Next(enumdmo, 1, &clsid, &name, NULL) == S_OK)
+    {
+        wcscpy(buffer, L"@device:dmo:");
+        StringFromGUID2(&clsid, buffer + wcslen(buffer), CHARS_IN_GUID);
+        StringFromGUID2(&DMOCATEGORY_AUDIO_DECODER, buffer + wcslen(buffer), CHARS_IN_GUID);
+        mon = check_display_name(parser, buffer);
+        ok(find_moniker(&DMOCATEGORY_AUDIO_DECODER, mon), "DMO was not found.\n");
+
+        hr = IMoniker_BindToStorage(mon, NULL, NULL, &IID_IPropertyBag, (void **)&prop_bag);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
+
+        VariantClear(&var);
+        hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
+        ok(!wcscmp(V_BSTR(&var), name), "got %s\n", wine_dbgstr_w(V_BSTR(&var)));
+
+        VariantClear(&var);
+        V_VT(&var) = VT_BSTR;
+        V_BSTR(&var) = SysAllocString(L"devenum test");
+        hr = IPropertyBag_Write(prop_bag, L"FriendlyName", &var);
+        ok(hr == E_ACCESSDENIED, "Got hr %#lx.\n", hr);
+
+        VariantClear(&var);
+        hr = IPropertyBag_Read(prop_bag, L"CLSID", &var, NULL);
+        ok(hr == HRESULT_FROM_WIN32(ERROR_NOT_FOUND), "Got hr %#lx.\n", hr);
+
+        IPropertyBag_Release(prop_bag);
+        CoTaskMemFree(name);
+
+        hr = IMoniker_BindToObject(mon, NULL, NULL, &IID_IBaseFilter, (void **)&filter);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
+
+        hr = IBaseFilter_GetClassID(filter, &clsid);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
+        ok(IsEqualGUID(&clsid, &CLSID_DMOWrapperFilter), "Got CLSID %s.\n", debugstr_guid(&clsid));
+
+        hr = IBaseFilter_QueryInterface(filter, &IID_IMediaObject, (void **)&dmo);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
+        IMediaObject_Release(dmo);
+
+        IBaseFilter_Release(filter);
+    }
+    IEnumDMO_Release(enumdmo);
+
     IParseDisplayName_Release(parser);
 }
 
 static void test_legacy_filter(void)
 {
-    static const WCHAR nameW[] = {'t','e','s','t',0};
     IParseDisplayName *parser;
     IPropertyBag *prop_bag;
     IFilterMapper *mapper;
@@ -562,50 +738,49 @@ static void test_legacy_filter(void)
     HRESULT hr;
 
     hr = CoCreateInstance(&CLSID_CDeviceMoniker, NULL, CLSCTX_INPROC, &IID_IParseDisplayName, (void **)&parser);
-    ok(hr == S_OK, "Failed to create ParseDisplayName: %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
     hr = CoCreateInstance(&CLSID_FilterMapper2, NULL, CLSCTX_INPROC, &IID_IFilterMapper, (void **)&mapper);
-    ok(hr == S_OK, "Failed to create FilterMapper: %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
-    hr = IFilterMapper_RegisterFilter(mapper, CLSID_TestFilter, nameW, 0xdeadbeef);
+    hr = IFilterMapper_RegisterFilter(mapper, CLSID_TestFilter, L"test", 0xdeadbeef);
     if (hr == VFW_E_BAD_KEY)
     {
         win_skip("not enough permissions to register filters\n");
         goto end;
     }
-    ok(hr == S_OK, "RegisterFilter failed: %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
-    lstrcpyW(buffer, deviceW);
-    lstrcatW(buffer, cmW);
-    StringFromGUID2(&CLSID_LegacyAmFilterCategory, buffer + lstrlenW(buffer), CHARS_IN_GUID);
-    lstrcatW(buffer, backslashW);
-    StringFromGUID2(&CLSID_TestFilter, buffer + lstrlenW(buffer), CHARS_IN_GUID);
+    wcscpy(buffer, L"@device:cm:");
+    StringFromGUID2(&CLSID_LegacyAmFilterCategory, buffer + wcslen(buffer), CHARS_IN_GUID);
+    wcscat(buffer, L"\\");
+    StringFromGUID2(&CLSID_TestFilter, buffer + wcslen(buffer), CHARS_IN_GUID);
 
     mon = check_display_name(parser, buffer);
     ok(find_moniker(&CLSID_LegacyAmFilterCategory, mon), "filter should be registered\n");
 
     hr = IMoniker_BindToStorage(mon, NULL, NULL, &IID_IPropertyBag, (void **)&prop_bag);
-    ok(hr == S_OK, "BindToStorage failed: %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
     VariantInit(&var);
-    hr = IPropertyBag_Read(prop_bag, friendly_name, &var, NULL);
-    ok(hr == S_OK, "Read failed: %#x\n", hr);
+    hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
     StringFromGUID2(&CLSID_TestFilter, buffer, CHARS_IN_GUID);
-    ok(!lstrcmpW(buffer, V_BSTR(&var)), "expected %s, got %s\n",
+    ok(!wcscmp(buffer, V_BSTR(&var)), "expected %s, got %s\n",
         wine_dbgstr_w(buffer), wine_dbgstr_w(V_BSTR(&var)));
 
     VariantClear(&var);
-    hr = IPropertyBag_Read(prop_bag, clsidW, &var, NULL);
-    ok(hr == S_OK, "Read failed: %#x\n", hr);
-    ok(!lstrcmpW(buffer, V_BSTR(&var)), "expected %s, got %s\n",
+    hr = IPropertyBag_Read(prop_bag, L"CLSID", &var, NULL);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
+    ok(!wcscmp(buffer, V_BSTR(&var)), "expected %s, got %s\n",
         wine_dbgstr_w(buffer), wine_dbgstr_w(V_BSTR(&var)));
 
     VariantClear(&var);
     IPropertyBag_Release(prop_bag);
 
     hr = IFilterMapper_UnregisterFilter(mapper, CLSID_TestFilter);
-    ok(hr == S_OK, "UnregisterFilter failed: %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
     ok(!find_moniker(&CLSID_LegacyAmFilterCategory, mon), "filter should not be registered\n");
     IMoniker_Release(mon);
@@ -617,9 +792,6 @@ end:
 
 static BOOL CALLBACK test_dsound(GUID *guid, const WCHAR *desc, const WCHAR *module, void *context)
 {
-    static const WCHAR defaultW[] = {'D','e','f','a','u','l','t',' ','D','i','r','e','c','t','S','o','u','n','d',' ','D','e','v','i','c','e',0};
-    static const WCHAR directsoundW[] = {'D','i','r','e','c','t','S','o','u','n','d',':',' ',0};
-    static const WCHAR dsguidW[] = {'D','S','G','u','i','d',0};
     IParseDisplayName *parser;
     IPropertyBag *prop_bag;
     IMoniker *mon;
@@ -630,71 +802,68 @@ static BOOL CALLBACK test_dsound(GUID *guid, const WCHAR *desc, const WCHAR *mod
 
     if (guid)
     {
-        lstrcpyW(name, directsoundW);
-        lstrcatW(name, desc);
+        wcscpy(name, L"DirectSound: ");
+        wcscat(name, desc);
     }
     else
     {
-        lstrcpyW(name, defaultW);
+        wcscpy(name, L"Default DirectSound Device");
         guid = (GUID *)&GUID_NULL;
     }
 
     hr = CoCreateInstance(&CLSID_CDeviceMoniker, NULL, CLSCTX_INPROC, &IID_IParseDisplayName, (void **)&parser);
-    ok(hr == S_OK, "Failed to create ParseDisplayName: %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
-    lstrcpyW(buffer, deviceW);
-    lstrcatW(buffer, cmW);
-    StringFromGUID2(&CLSID_AudioRendererCategory, buffer + lstrlenW(buffer), CHARS_IN_GUID);
-    lstrcatW(buffer, backslashW);
-    lstrcatW(buffer, name);
+    wcscpy(buffer, L"@device:cm:");
+    StringFromGUID2(&CLSID_AudioRendererCategory, buffer + wcslen(buffer), CHARS_IN_GUID);
+    wcscat(buffer, L"\\");
+    wcscat(buffer, name);
 
     mon = check_display_name(parser, buffer);
 
     hr = IMoniker_BindToStorage(mon, NULL, NULL, &IID_IPropertyBag, (void **)&prop_bag);
-    ok(hr == S_OK, "BindToStorage failed: %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
     VariantInit(&var);
-    hr = IPropertyBag_Read(prop_bag, friendly_name, &var, NULL);
+    hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
     if (hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
     {
         /* Win8+ uses the GUID instead of the device name */
         IPropertyBag_Release(prop_bag);
         IMoniker_Release(mon);
 
-        lstrcpyW(buffer, deviceW);
-        lstrcatW(buffer, cmW);
-        StringFromGUID2(&CLSID_AudioRendererCategory, buffer + lstrlenW(buffer), CHARS_IN_GUID);
-        lstrcatW(buffer, backslashW);
-        lstrcatW(buffer, directsoundW);
-        StringFromGUID2(guid, buffer + lstrlenW(buffer) - 1, CHARS_IN_GUID);
+        wcscpy(buffer, L"@device:cm:");
+        StringFromGUID2(&CLSID_AudioRendererCategory, buffer + wcslen(buffer), CHARS_IN_GUID);
+        wcscat(buffer, L"\\DirectSound: ");
+        StringFromGUID2(guid, buffer + wcslen(buffer) - 1, CHARS_IN_GUID);
 
         mon = check_display_name(parser, buffer);
 
         hr = IMoniker_BindToStorage(mon, NULL, NULL, &IID_IPropertyBag, (void **)&prop_bag);
-        ok(hr == S_OK, "BindToStorage failed: %#x\n", hr);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
         VariantInit(&var);
-        hr = IPropertyBag_Read(prop_bag, friendly_name, &var, NULL);
+        hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
     }
-    ok(hr == S_OK, "Read failed: %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
-    ok(!lstrcmpW(name, V_BSTR(&var)), "expected %s, got %s\n",
+    ok(!wcscmp(name, V_BSTR(&var)), "expected %s, got %s\n",
         wine_dbgstr_w(name), wine_dbgstr_w(V_BSTR(&var)));
 
     VariantClear(&var);
-    hr = IPropertyBag_Read(prop_bag, clsidW, &var, NULL);
-    ok(hr == S_OK, "Read failed: %#x\n", hr);
+    hr = IPropertyBag_Read(prop_bag, L"CLSID", &var, NULL);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
     StringFromGUID2(&CLSID_DSoundRender, buffer, CHARS_IN_GUID);
-    ok(!lstrcmpW(buffer, V_BSTR(&var)), "expected %s, got %s\n",
+    ok(!wcscmp(buffer, V_BSTR(&var)), "expected %s, got %s\n",
         wine_dbgstr_w(buffer), wine_dbgstr_w(V_BSTR(&var)));
 
     VariantClear(&var);
-    hr = IPropertyBag_Read(prop_bag, dsguidW, &var, NULL);
-    ok(hr == S_OK, "Read failed: %#x\n", hr);
+    hr = IPropertyBag_Read(prop_bag, L"DSGuid", &var, NULL);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
     StringFromGUID2(guid, buffer, CHARS_IN_GUID);
-    ok(!lstrcmpW(buffer, V_BSTR(&var)), "expected %s, got %s\n",
+    ok(!wcscmp(buffer, V_BSTR(&var)), "expected %s, got %s\n",
         wine_dbgstr_w(buffer), wine_dbgstr_w(V_BSTR(&var)));
 
     VariantClear(&var);
@@ -706,8 +875,6 @@ static BOOL CALLBACK test_dsound(GUID *guid, const WCHAR *desc, const WCHAR *mod
 
 static void test_waveout(void)
 {
-    static const WCHAR defaultW[] = {'D','e','f','a','u','l','t',' ','W','a','v','e','O','u','t',' ','D','e','v','i','c','e',0};
-    static const WCHAR waveoutidW[] = {'W','a','v','e','O','u','t','I','d',0};
     IParseDisplayName *parser;
     IPropertyBag *prop_bag;
     IMoniker *mon;
@@ -721,7 +888,7 @@ static void test_waveout(void)
     HRESULT hr;
 
     hr = CoCreateInstance(&CLSID_CDeviceMoniker, NULL, CLSCTX_INPROC, &IID_IParseDisplayName, (void **)&parser);
-    ok(hr == S_OK, "Failed to create ParseDisplayName: %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
     count = waveOutGetNumDevs();
 
@@ -730,23 +897,22 @@ static void test_waveout(void)
         waveOutGetDevCapsW(i, &caps, sizeof(caps));
 
         if (i == -1)    /* WAVE_MAPPER */
-            name = defaultW;
+            name = L"Default WaveOut Device";
         else
             name = caps.szPname;
 
-        lstrcpyW(buffer, deviceW);
-        lstrcatW(buffer, cmW);
-        StringFromGUID2(&CLSID_AudioRendererCategory, buffer + lstrlenW(buffer), CHARS_IN_GUID);
-        lstrcatW(buffer, backslashW);
-        lstrcatW(buffer, name);
+        wcscpy(buffer, L"@device:cm:");
+        StringFromGUID2(&CLSID_AudioRendererCategory, buffer + wcslen(buffer), CHARS_IN_GUID);
+        wcscat(buffer, L"\\");
+        wcscat(buffer, name);
 
         mon = check_display_name(parser, buffer);
 
         hr = IMoniker_BindToStorage(mon, NULL, NULL, &IID_IPropertyBag, (void **)&prop_bag);
-        ok(hr == S_OK, "BindToStorage failed: %#x\n", hr);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
         VariantInit(&var);
-        hr = IPropertyBag_Read(prop_bag, friendly_name, &var, NULL);
+        hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
         if (hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
         {
             IPropertyBag_Release(prop_bag);
@@ -757,38 +923,36 @@ static void test_waveout(void)
                                  (DWORD_PTR) endpoint, sizeof(endpoint));
             ok(!mmr, "waveOutMessage failed: %u\n", mmr);
 
-            lstrcpyW(buffer, deviceW);
-            lstrcatW(buffer, cmW);
-            StringFromGUID2(&CLSID_AudioRendererCategory, buffer + lstrlenW(buffer), CHARS_IN_GUID);
-            lstrcatW(buffer, backslashW);
-            lstrcatW(buffer, waveW);
-            lstrcatW(buffer, strchrW(endpoint, '}') + 2);
+            wcscpy(buffer, L"@device:cm:");
+            StringFromGUID2(&CLSID_AudioRendererCategory, buffer + wcslen(buffer), CHARS_IN_GUID);
+            wcscat(buffer, L"\\wave:");
+            wcscat(buffer, wcschr(endpoint, '}') + 2);
 
             mon = check_display_name(parser, buffer);
 
             hr = IMoniker_BindToStorage(mon, NULL, NULL, &IID_IPropertyBag, (void **)&prop_bag);
-            ok(hr == S_OK, "BindToStorage failed: %#x\n", hr);
+            ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
-            hr = IPropertyBag_Read(prop_bag, friendly_name, &var, NULL);
+            hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
         }
-        ok(hr == S_OK, "Read failed: %#x\n", hr);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
-        ok(!strncmpW(name, V_BSTR(&var), lstrlenW(name)), "expected %s, got %s\n",
+        ok(!wcsncmp(name, V_BSTR(&var), wcslen(name)), "expected %s, got %s\n",
             wine_dbgstr_w(name), wine_dbgstr_w(V_BSTR(&var)));
 
         VariantClear(&var);
-        hr = IPropertyBag_Read(prop_bag, clsidW, &var, NULL);
-        ok(hr == S_OK, "Read failed: %#x\n", hr);
+        hr = IPropertyBag_Read(prop_bag, L"CLSID", &var, NULL);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
         StringFromGUID2(&CLSID_AudioRender, buffer, CHARS_IN_GUID);
-        ok(!lstrcmpW(buffer, V_BSTR(&var)), "expected %s, got %s\n",
+        ok(!wcscmp(buffer, V_BSTR(&var)), "expected %s, got %s\n",
             wine_dbgstr_w(buffer), wine_dbgstr_w(V_BSTR(&var)));
 
         VariantClear(&var);
-        hr = IPropertyBag_Read(prop_bag, waveoutidW, &var, NULL);
-        ok(hr == S_OK, "Read failed: %#x\n", hr);
+        hr = IPropertyBag_Read(prop_bag, L"WaveOutId", &var, NULL);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
-        ok(V_I4(&var) == i, "expected %d, got %d\n", i, V_I4(&var));
+        ok(V_I4(&var) == i, "Expected id %d, got %ld.\n", i, V_I4(&var));
 
         IPropertyBag_Release(prop_bag);
         IMoniker_Release(mon);
@@ -799,7 +963,6 @@ static void test_waveout(void)
 
 static void test_wavein(void)
 {
-    static const WCHAR waveinidW[] = {'W','a','v','e','I','n','I','d',0};
     IParseDisplayName *parser;
     IPropertyBag *prop_bag;
     IMoniker *mon;
@@ -812,7 +975,7 @@ static void test_wavein(void)
     HRESULT hr;
 
     hr = CoCreateInstance(&CLSID_CDeviceMoniker, NULL, CLSCTX_INPROC, &IID_IParseDisplayName, (void **)&parser);
-    ok(hr == S_OK, "Failed to create ParseDisplayName: %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
     count = waveInGetNumDevs();
 
@@ -820,19 +983,18 @@ static void test_wavein(void)
     {
         waveInGetDevCapsW(i, &caps, sizeof(caps));
 
-        lstrcpyW(buffer, deviceW);
-        lstrcatW(buffer, cmW);
-        StringFromGUID2(&CLSID_AudioInputDeviceCategory, buffer + lstrlenW(buffer), CHARS_IN_GUID);
-        lstrcatW(buffer, backslashW);
-        lstrcatW(buffer, caps.szPname);
+        wcscpy(buffer, L"@device:cm:");
+        StringFromGUID2(&CLSID_AudioInputDeviceCategory, buffer + wcslen(buffer), CHARS_IN_GUID);
+        wcscat(buffer, L"\\");
+        wcscat(buffer, caps.szPname);
 
         mon = check_display_name(parser, buffer);
 
         hr = IMoniker_BindToStorage(mon, NULL, NULL, &IID_IPropertyBag, (void **)&prop_bag);
-        ok(hr == S_OK, "BindToStorage failed: %#x\n", hr);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
         VariantInit(&var);
-        hr = IPropertyBag_Read(prop_bag, friendly_name, &var, NULL);
+        hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
         if (hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND))
         {
             IPropertyBag_Release(prop_bag);
@@ -843,38 +1005,36 @@ static void test_wavein(void)
                                 (DWORD_PTR) endpoint, sizeof(endpoint));
             ok(!mmr, "waveInMessage failed: %u\n", mmr);
 
-            lstrcpyW(buffer, deviceW);
-            lstrcatW(buffer, cmW);
-            StringFromGUID2(&CLSID_AudioInputDeviceCategory, buffer + lstrlenW(buffer), CHARS_IN_GUID);
-            lstrcatW(buffer, backslashW);
-            lstrcatW(buffer, waveW);
-            lstrcatW(buffer, strchrW(endpoint, '}') + 2);
+            wcscpy(buffer, L"@device:cm:");
+            StringFromGUID2(&CLSID_AudioInputDeviceCategory, buffer + wcslen(buffer), CHARS_IN_GUID);
+            wcscat(buffer, L"\\wave:");
+            wcscat(buffer, wcschr(endpoint, '}') + 2);
 
             mon = check_display_name(parser, buffer);
 
             hr = IMoniker_BindToStorage(mon, NULL, NULL, &IID_IPropertyBag, (void **)&prop_bag);
-            ok(hr == S_OK, "BindToStorage failed: %#x\n", hr);
+            ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
-            hr = IPropertyBag_Read(prop_bag, friendly_name, &var, NULL);
+            hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
         }
-        ok(hr == S_OK, "Read failed: %#x\n", hr);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
-        ok(!strncmpW(caps.szPname, V_BSTR(&var), lstrlenW(caps.szPname)), "expected %s, got %s\n",
+        ok(!wcsncmp(caps.szPname, V_BSTR(&var), wcslen(caps.szPname)), "expected %s, got %s\n",
             wine_dbgstr_w(caps.szPname), wine_dbgstr_w(V_BSTR(&var)));
 
         VariantClear(&var);
-        hr = IPropertyBag_Read(prop_bag, clsidW, &var, NULL);
-        ok(hr == S_OK, "Read failed: %#x\n", hr);
+        hr = IPropertyBag_Read(prop_bag, L"CLSID", &var, NULL);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
         StringFromGUID2(&CLSID_AudioRecord, buffer, CHARS_IN_GUID);
-        ok(!lstrcmpW(buffer, V_BSTR(&var)), "expected %s, got %s\n",
+        ok(!wcscmp(buffer, V_BSTR(&var)), "expected %s, got %s\n",
             wine_dbgstr_w(buffer), wine_dbgstr_w(V_BSTR(&var)));
 
         VariantClear(&var);
-        hr = IPropertyBag_Read(prop_bag, waveinidW, &var, NULL);
-        ok(hr == S_OK, "Read failed: %#x\n", hr);
+        hr = IPropertyBag_Read(prop_bag, L"WaveInId", &var, NULL);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
-        ok(V_I4(&var) == i, "expected %d, got %d\n", i, V_I4(&var));
+        ok(V_I4(&var) == i, "Expected id %d, got %ld.\n", i, V_I4(&var));
 
         IPropertyBag_Release(prop_bag);
         IMoniker_Release(mon);
@@ -885,8 +1045,6 @@ static void test_wavein(void)
 
 static void test_midiout(void)
 {
-    static const WCHAR defaultW[] = {'D','e','f','a','u','l','t',' ','M','i','d','i','O','u','t',' ','D','e','v','i','c','e',0};
-    static const WCHAR midioutidW[] = {'M','i','d','i','O','u','t','I','d',0};
     IParseDisplayName *parser;
     IPropertyBag *prop_bag;
     IMoniker *mon;
@@ -898,7 +1056,7 @@ static void test_midiout(void)
     HRESULT hr;
 
     hr = CoCreateInstance(&CLSID_CDeviceMoniker, NULL, CLSCTX_INPROC, &IID_IParseDisplayName, (void **)&parser);
-    ok(hr == S_OK, "Failed to create ParseDisplayName: %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
     count = midiOutGetNumDevs();
 
@@ -907,41 +1065,40 @@ static void test_midiout(void)
         midiOutGetDevCapsW(i, &caps, sizeof(caps));
 
         if (i == -1)    /* MIDI_MAPPER */
-            name = defaultW;
+            name = L"Default MidiOut Device";
         else
             name = caps.szPname;
 
-        lstrcpyW(buffer, deviceW);
-        lstrcatW(buffer, cmW);
-        StringFromGUID2(&CLSID_MidiRendererCategory, buffer + lstrlenW(buffer), CHARS_IN_GUID);
-        lstrcatW(buffer, backslashW);
-        lstrcatW(buffer, name);
+        wcscpy(buffer, L"@device:cm:");
+        StringFromGUID2(&CLSID_MidiRendererCategory, buffer + wcslen(buffer), CHARS_IN_GUID);
+        wcscat(buffer, L"\\");
+        wcscat(buffer, name);
 
         mon = check_display_name(parser, buffer);
 
         hr = IMoniker_BindToStorage(mon, NULL, NULL, &IID_IPropertyBag, (void **)&prop_bag);
-        ok(hr == S_OK, "BindToStorage failed: %#x\n", hr);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
         VariantInit(&var);
-        hr = IPropertyBag_Read(prop_bag, friendly_name, &var, NULL);
-        ok(hr == S_OK, "Read failed: %#x\n", hr);
+        hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
-        ok(!lstrcmpW(name, V_BSTR(&var)), "expected %s, got %s\n",
+        ok(!wcscmp(name, V_BSTR(&var)), "expected %s, got %s\n",
             wine_dbgstr_w(name), wine_dbgstr_w(V_BSTR(&var)));
 
         VariantClear(&var);
-        hr = IPropertyBag_Read(prop_bag, clsidW, &var, NULL);
-        ok(hr == S_OK, "Read failed: %#x\n", hr);
+        hr = IPropertyBag_Read(prop_bag, L"CLSID", &var, NULL);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
         StringFromGUID2(&CLSID_AVIMIDIRender, buffer, CHARS_IN_GUID);
-        ok(!lstrcmpW(buffer, V_BSTR(&var)), "expected %s, got %s\n",
+        ok(!wcscmp(buffer, V_BSTR(&var)), "expected %s, got %s\n",
             wine_dbgstr_w(buffer), wine_dbgstr_w(V_BSTR(&var)));
 
         VariantClear(&var);
-        hr = IPropertyBag_Read(prop_bag, midioutidW, &var, NULL);
-        ok(hr == S_OK, "Read failed: %#x\n", hr);
+        hr = IPropertyBag_Read(prop_bag, L"MidiOutId", &var, NULL);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
-        ok(V_I4(&var) == i, "expected %d, got %d\n", i, V_I4(&var));
+        ok(V_I4(&var) == i, "Expected id %d, got %ld.\n", i, V_I4(&var));
 
         IPropertyBag_Release(prop_bag);
         IMoniker_Release(mon);
@@ -952,7 +1109,6 @@ static void test_midiout(void)
 
 static void test_vfw(void)
 {
-    static const WCHAR fcchandlerW[] = {'F','c','c','H','a','n','d','l','e','r',0};
     IParseDisplayName *parser;
     IPropertyBag *prop_bag;
     IMoniker *mon;
@@ -970,7 +1126,7 @@ static void test_vfw(void)
     }
 
     hr = CoCreateInstance(&CLSID_CDeviceMoniker, NULL, CLSCTX_INPROC, &IID_IParseDisplayName, (void **)&parser);
-    ok(hr == S_OK, "Failed to create ParseDisplayName: %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
     while (ICInfo(ICTYPE_VIDEO, i++, &info))
     {
@@ -981,36 +1137,35 @@ static void test_vfw(void)
         ICGetInfo(hic, &info, sizeof(info));
         ICClose(hic);
 
-        lstrcpyW(buffer, deviceW);
-        lstrcatW(buffer, cmW);
-        StringFromGUID2(&CLSID_VideoCompressorCategory, buffer + lstrlenW(buffer), CHARS_IN_GUID);
-        lstrcatW(buffer, backslashW);
-        lstrcatW(buffer, name);
+        wcscpy(buffer, L"@device:cm:");
+        StringFromGUID2(&CLSID_VideoCompressorCategory, buffer + wcslen(buffer), CHARS_IN_GUID);
+        wcscat(buffer, L"\\");
+        wcscat(buffer, name);
 
         mon = check_display_name(parser, buffer);
 
         hr = IMoniker_BindToStorage(mon, NULL, NULL, &IID_IPropertyBag, (void **)&prop_bag);
-        ok(hr == S_OK, "BindToStorage failed: %#x\n", hr);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
         VariantInit(&var);
-        hr = IPropertyBag_Read(prop_bag, friendly_name, &var, NULL);
-        ok(hr == S_OK, "Read failed: %#x\n", hr);
+        hr = IPropertyBag_Read(prop_bag, L"FriendlyName", &var, NULL);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
-        ok(!lstrcmpW(info.szDescription, V_BSTR(&var)), "expected %s, got %s\n",
+        ok(!wcscmp(info.szDescription, V_BSTR(&var)), "expected %s, got %s\n",
             wine_dbgstr_w(info.szDescription), wine_dbgstr_w(V_BSTR(&var)));
 
         VariantClear(&var);
-        hr = IPropertyBag_Read(prop_bag, clsidW, &var, NULL);
-        ok(hr == S_OK, "Read failed: %#x\n", hr);
+        hr = IPropertyBag_Read(prop_bag, L"CLSID", &var, NULL);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
 
         StringFromGUID2(&CLSID_AVICo, buffer, CHARS_IN_GUID);
-        ok(!lstrcmpW(buffer, V_BSTR(&var)), "expected %s, got %s\n",
+        ok(!wcscmp(buffer, V_BSTR(&var)), "expected %s, got %s\n",
             wine_dbgstr_w(buffer), wine_dbgstr_w(V_BSTR(&var)));
 
         VariantClear(&var);
-        hr = IPropertyBag_Read(prop_bag, fcchandlerW, &var, NULL);
-        ok(hr == S_OK, "Read failed: %#x\n", hr);
-        ok(!lstrcmpW(name, V_BSTR(&var)), "expected %s, got %s\n",
+        hr = IPropertyBag_Read(prop_bag, L"FccHandler", &var, NULL);
+        ok(hr == S_OK, "Got hr %#lx.\n", hr);
+        ok(!wcscmp(name, V_BSTR(&var)), "expected %s, got %s\n",
             wine_dbgstr_w(name), wine_dbgstr_w(V_BSTR(&var)));
 
         VariantClear(&var);
@@ -1023,30 +1178,22 @@ static void test_vfw(void)
 
 START_TEST(devenum)
 {
-    IBindCtx *bind_ctx = NULL;
     HRESULT hr;
 
     CoInitialize(NULL);
 
-    test_devenum(NULL);
-
-    /* IBindCtx is allowed in IMoniker_BindToStorage (IMediaCatMoniker_BindToStorage) */
-    hr = CreateBindCtx(0, &bind_ctx);
-    ok(hr == S_OK, "Cannot create BindCtx: (res = 0x%x)\n", hr);
-    if (bind_ctx) {
-        test_devenum(bind_ctx);
-        IBindCtx_Release(bind_ctx);
-    }
-
+    test_devenum();
     test_moniker_isequal();
     test_register_filter();
     test_directshow_filter();
     test_codec();
-    test_dmo();
+    test_dmo(&DMOCATEGORY_AUDIO_DECODER, &CLSID_LegacyAmFilterCategory);
+    test_dmo(&DMOCATEGORY_VIDEO_DECODER, &CLSID_LegacyAmFilterCategory);
+    test_dmo(&DMOCATEGORY_VIDEO_DECODER, &DMOCATEGORY_VIDEO_DECODER);
 
     test_legacy_filter();
     hr = DirectSoundEnumerateW(test_dsound, NULL);
-    ok(hr == S_OK, "got %#x\n", hr);
+    ok(hr == S_OK, "Got hr %#lx.\n", hr);
     test_waveout();
     test_wavein();
     test_midiout();
