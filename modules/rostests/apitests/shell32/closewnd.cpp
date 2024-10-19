@@ -88,7 +88,7 @@ HWND FindNewWindow(PWINDOW_LIST List1, PWINDOW_LIST List2)
     return NULL;
 }
 
-static void WaitForForegroundWindow(HWND hWnd, UINT wait = 1500)
+static void WaitForForegroundWindow(HWND hWnd, UINT wait = 250)
 {
     for (UINT waited = 0, interval = 50; waited < wait; waited += interval)
     {
