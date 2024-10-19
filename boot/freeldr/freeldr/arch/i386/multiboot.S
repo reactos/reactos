@@ -213,7 +213,11 @@ idtptr:
 
 PUBLIC _MultibootInfoPtr
 _MultibootInfoPtr:
+#ifdef _M_IX86
     .long 0
+#else
+    .quad 0
+#endif
 
 MultibootInfo:
     .space MB_INFO_SIZE
