@@ -1512,14 +1512,7 @@ static MUI_ENTRY sqALBootLoaderRemovableDiskPageEntries[] =
     {
         6,
         8,
-        "Instalimi nuk mund t\211 instaloj\211 programin e bootloaderit ne kompjuterin tuaj",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "harddisku.",
+        "Instalimi po instalon bootloaderin.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },

@@ -1546,14 +1546,7 @@ static MUI_ENTRY roROBootLoaderRemovableDiskPageEntries[] =
     {
         6,
         8,
-        "Programul de instalare nu poate instala modulul de",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "ini\376ializare a calculatorului pe discul local.",
+        "Instalare modul de ini\376ializare al calculatorului.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },

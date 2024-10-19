@@ -1509,7 +1509,7 @@ static MUI_ENTRY etEEBootLoaderRemovableDiskPageEntries[] =
     {
         6,
         8,
-        "Alglaadurit ei saanud kettale kirjutada.",
+        "Alglaaduri paigaldamine.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },

@@ -1530,14 +1530,14 @@ static MUI_ENTRY hrHRBootLoaderRemovableDiskPageEntries[] =
     {
         6,
         8,
-        "Instalacijski program ne mo\247e instalirati bootloader (pokreta\237 operativnog sustava) na va\347",
+        "Instalacijski program instalirava bootloader",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         9,
-        "tvrdi disk u ra\237unalu.",
+        "(pokreta\237a operativnog sustava).",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },

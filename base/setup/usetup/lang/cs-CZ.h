@@ -1514,7 +1514,7 @@ static MUI_ENTRY csCZBootLoaderRemovableDiskPageEntries[] =
     {
         6,
         8,
-        "Instala\237n\241 aplikace nedok\240\247e nainstalovat zavad\330\237 na tento disk.",
+        "Instalace nyn\241 nainstaluje zavad\330\237.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },

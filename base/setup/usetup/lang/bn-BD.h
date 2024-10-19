@@ -1506,7 +1506,7 @@ static MUI_ENTRY bnBDBootLoaderRemovableDiskPageEntries[] =
     {
         6,
         8,
-        "Setup cannot install the bootloader on your computer's harddisk.",
+        "Setup is installing the bootloader.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },

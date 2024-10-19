@@ -1507,14 +1507,7 @@ static MUI_ENTRY euESBootLoaderRemovableDiskPageEntries[] =
     {
         6,
         8,
-        "Instalazio ez du ahalmenik bootloader-a instalatu zure ordenagailuaren",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "disko gogorra.",
+        "Instalazioak bootloader-a sartzen ari du.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },

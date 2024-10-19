@@ -1506,14 +1506,7 @@ static MUI_ENTRY idIDBootLoaderRemovableDiskPageEntries[] =
     {
         6,
         8,
-        "Penyetelan tidak dapat menasang bootloader pada komputer Anda",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "harddisk.",
+        "Penyetelan sedang memasang the bootloader.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
