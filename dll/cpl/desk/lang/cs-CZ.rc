@@ -1,20 +1,24 @@
 /*
- * TRANSLATOR: 2015 Radek Liska aka Black_Fox <radekliska@gmail.com>
- * THANKS TO:  potapnik, who translated major part of this file
+ * PROJECT:     ReactOS Display Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Czech resource file
+ * TRANSLATORS: Copyright 2005 Jirka Ďoubek (potapnik) <jirka@studioprojekt.cz>
+ *              Copyright 2008-2015 Radek Liška (Black_Fox) <radekliska@gmail.com>
+ *              Copyright 2024 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 IDD_THEMES DIALOGEX 0, 0, 246, 210
-CAPTION "Themes"
+CAPTION "Motivy"
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "A theme is a background plus a set of sounds, icons, and other elements to help you personalize your computer with one click.", IDC_STATIC, 5, 5, 235, 30
-    LTEXT "&Theme:", IDC_STATIC, 5, 42, 55, 10
+    LTEXT "Motiv je pozadí plus sada zvuků, ikon a dalších částí, které vám pomáhají přizpůsobit si váš počítač na jedno kliknutí.", IDC_STATIC, 5, 5, 235, 30
+    LTEXT "&Motiv:", IDC_STATIC, 5, 42, 55, 10
     COMBOBOX IDC_THEMES_COMBOBOX, 5, 52, 160, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Save &As...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
-    PUSHBUTTON "&Delete", IDC_THEMES_DELETE, 170, 70, 70, 14
+    PUSHBUTTON "&Uložit jako...", IDC_THEMES_SAVE_AS, 170, 52, 70, 14
+    PUSHBUTTON "O&dstranit", IDC_THEMES_DELETE, 170, 70, 70, 14
     CONTROL "", IDC_THEMES_PREVIEW, "STATIC", SS_BITMAP, 5, 90, 235, 115, WS_EX_CLIENTEDGE
 END
 
@@ -27,11 +31,11 @@ BEGIN
     CONTROL "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 8, 104, 174, 86
     LTEXT "Vyberte obrázek, který chcete použít jako pozadí:", IDC_STATIC, 8, 93, 230, 9//FIXME: add accel, I used "Vyb&erte obrázek, který chcete použít jako pozadí:" for the backport
-    PUSHBUTTON "&Vybrat...", IDC_BROWSE_BUTTON, 188, 104, 55, 15
+    PUSHBUTTON "&Procházet...", IDC_BROWSE_BUTTON, 188, 104, 55, 15
     PUSHBUTTON "&Barva...", IDC_COLOR_BUTTON, 188, 167, 55, 15
     LTEXT "Umístění:", IDC_STATIC, 188, 128, 55, 9//FIXME: add accel. I used "&Umístění:" for the backport
     COMBOBOX IDC_PLACEMENT_COMBO, 188, 139, 55, 54, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Customize &Desktop...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
+    PUSHBUTTON "Upr&avit plochu...", IDC_DESKTOP_CUSTOM, 8, 194, 90, 15
 END
 
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 202
@@ -71,7 +75,7 @@ BEGIN
     COMBOBOX IDC_APPEARANCE_SIZE, 7, 194, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Efekty...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
-    PUSHBUTTON "Upřesnit", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15//FIXME: add accel. I used "&Upřesnit" for the backport
+    PUSHBUTTON "&Upřesnit", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
 END
 
 IDD_ADVAPPEARANCE DIALOGEX 0, 0, 250, 239
@@ -81,24 +85,24 @@ CAPTION "Upřesnit vzhled"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "If you select a theme other than ReactOS classic, it will override the following settings, except in some older programs.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
-    LTEXT "Položka", 8, 5, 160, 50, 9//FIXME: add accel. I used "&Položka" for the backport
+    LTEXT "Pokud vyberete jiný vzhled než Klasické téma, pak toto téma přepíše následující nastavení, kromě některých starších programů.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
+    LTEXT "&Položka", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "&Velikost", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
+    LTEXT "V&elikost", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP |
             UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT | WS_CHILD | WS_VISIBLE, 172, 170, 10, 13
-    LTEXT "&1. barva", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
+    LTEXT "1. &barva", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
     CHECKBOX "-", IDC_ADVAPPEARANCE_COLOR1_B, 184, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
-    LTEXT "&2. barva", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
+    LTEXT "2. bar&va", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
     CHECKBOX "-", IDC_ADVAPPEARANCE_COLOR2_B, 216, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
-    LTEXT "Písmo", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9//FIXME: add accel. I used "Pí&smo" for the backport
+    LTEXT "Pí&smo", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Velikost", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9//FIXME: add accel. I used "V&elikost" for the backport
+    LTEXT "Velik&ost", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 9
     COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
-    LTEXT "Barva", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 28, 9//FIXME: add accel. I used "&Barva" for the backport
+    LTEXT "B&arva", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 28, 9//FIXME: add accel. I used "&Barva" for the backport
     CHECKBOX "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
     AUTOCHECKBOX "B", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
     AUTOCHECKBOX "I ", IDC_ADVAPPEARANCE_FONTITALIC, 230, 200, 14, 13, BS_PUSHLIKE
@@ -112,17 +116,17 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Efekty"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTOCHECKBOX "Použít následující &efekt přechodu pro nabídky a popisky:", IDC_EFFAPPEARANCE_ANIMATION, 10, 5, 267, 19
+    AUTOCHECKBOX "&Použít následující &efekt přechodu pro nabídky a popisky:", IDC_EFFAPPEARANCE_ANIMATION, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "Použít následující metodu vyhlazování &hran obrazovkových písem:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19
+    AUTOCHECKBOX "P&oužít následující metodu vyhlazování &hran obrazovkových písem:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "Použít velké &ikony", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED
-    AUTOCHECKBOX "Zobrazovat &stíny pod nabídkami", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19
-    AUTOCHECKBOX "Zobrazovat &obsah okna během přesouvání", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19
-    AUTOCHECKBOX "&Nezobrazovat podtržení písmen u klávesových zkratek, dokud nestisknu klávesu Alt", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19//FIXME: text truncation. I used "S&kryl podtržená písmena pro klávesnici, dokud nestisknu Alt" for the backport
-    AUTOCHECKBOX "Use &flat menus", IDC_EFFAPPEARANCE_FLATMENUS, 10, 140, 267, 19
+    AUTOCHECKBOX "Použít &velké ikony", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX "Zo&brazovat stíny pod nabídkami", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19
+    AUTOCHECKBOX "&Zobrazovat obsah okna během přesouvání", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19
+    AUTOCHECKBOX "&Skrýt podtržení písmen klávesových zkratek do stisknutí klávesy Alt", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19
+    AUTOCHECKBOX "Použít &plochá menu", IDC_EFFAPPEARANCE_FLATMENUS, 10, 140, 267, 19
     PUSHBUTTON "Storno", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
 END
@@ -151,19 +155,19 @@ END
 
 IDD_DESKTOP_GENERAL DIALOGEX 0, 0, 224, 202
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "General"
+CAPTION "Obecné"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Desktop icons", IDC_STATIC, 6, 4, 212, 40
-    AUTOCHECKBOX "My &Documents", IDC_ICONS_MYDOCS, 14, 14, 100, 12
-    AUTOCHECKBOX "My &Network Places", IDC_ICONS_MYNET, 116, 14, 100, 12
-    AUTOCHECKBOX "&My Computer", IDC_ICONS_MYCOMP, 14, 28, 100, 12
-    AUTOCHECKBOX "&Internet Browser", IDC_ICONS_INTERNET, 116, 28, 100, 12
+    GROUPBOX "Ikony na Ploše", IDC_STATIC, 6, 4, 212, 40
+    AUTOCHECKBOX "&Dokumenty", IDC_ICONS_MYDOCS, 14, 14, 100, 12
+    AUTOCHECKBOX "&Místa v síti", IDC_ICONS_MYNET, 116, 14, 100, 12
+    AUTOCHECKBOX "&Tento počítač", IDC_ICONS_MYCOMP, 14, 28, 100, 12
+    AUTOCHECKBOX "&Internetový prohlížeč", IDC_ICONS_INTERNET, 116, 28, 100, 12
     CONTROL "", IDC_ICONS_LISTVIEW, "SysListView32",
             LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP | WS_HSCROLL,
             6, 60, 212, 56
-    PUSHBUTTON "C&hange Icon...", IDC_ICONS_CHANGEICON, 86, 120, 64, 15
-    PUSHBUTTON "Re&store Default", IDC_ICONS_SETDEFAULT, 154, 120, 64, 15
+    PUSHBUTTON "Změnit &ikonu...", IDC_ICONS_CHANGEICON, 86, 120, 64, 15
+    PUSHBUTTON "O&bnovit výchozí", IDC_ICONS_SETDEFAULT, 154, 120, 64, 15
 END
 
 IDD_ADVANCED_GENERAL DIALOGEX 0, 0, 253, 204
@@ -184,13 +188,13 @@ END
 
 IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Display Settings"
+CAPTION "Nastavení obrazovky"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Do you want to keep these display settings?", IDC_STATIC, 7, 7, 219, 8
+    LTEXT "Chcete zachovat toto nastavení obrazovky?", IDC_STATIC, 7, 7, 219, 8
     LTEXT "", IDC_TIMEOUTTEXT, 7, 20, 219, 8
-    PUSHBUTTON "&Yes", IDYES, 121, 36, 50, 14
-    DEFPUSHBUTTON "&No", IDNO, 175, 36, 50, 14
+    PUSHBUTTON "&Ano", IDYES, 121, 36, 50, 14
+    DEFPUSHBUTTON "&Ne", IDNO, 175, 36, 50, 14
 END
 
 IDR_PREVIEW_MENU MENU
@@ -244,8 +248,8 @@ BEGIN
     IDS_CENTER "Na střed"
     IDS_STRETCH "Roztáhnout"
     IDS_TILE "Dlaždice"
-    IDS_FIT "Fit"
-    IDS_FILL "Fill"
+    IDS_FIT "Přizpůsobit"
+    IDS_FILL "Zaplnit"
 END
 
 STRINGTABLE
@@ -302,5 +306,5 @@ BEGIN
     IDS_DISPLAY_SETTINGS "Nastavení zobrazení"
     IDS_APPLY_FAILED "Nepodařilo se aplikovat nová nastavení..."
     IDS_APPLY_NEEDS_RESTART "Aby se změny projevily, je třeba restartovat počítač."
-    IDS_TIMEOUTTEXT "Revert to previous settings in %d seconds."
+    IDS_TIMEOUTTEXT "Původní nastavení se obnoví za %d sekund."
 END
