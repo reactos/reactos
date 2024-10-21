@@ -1,3 +1,5 @@
+#include <asm.inc>
+#if 0
         page    ,132
         title   strnicmp - compare n chars of strings, ignore case
 ;***
@@ -62,63 +64,69 @@ page
 ;Exceptions:
 ;
 ;*******************************************************************************
+#endif
 
-        CODESEG
+        .code
 
-        public  __ascii_strnicmp
-__ascii_strnicmp proc \
-        uses edi esi ebx, \
-        first:ptr byte, \
-        last:ptr byte, \
-        count:IWORD
+        public  ___ascii_strnicmp
+.PROC ___ascii_strnicmp
+// Prolog. Original sources used ML's extended PROC feature to autogenerate this.
+        push ebp
+        mov ebp, esp
+        push edi // uses edi esi ebx
+        push esi
+        push ebx
+#define first ebp + 8 // first:ptr byte
+#define last ebp + 12 // last:ptr byte
+#define count ebp + 16 // count:IWORD
 
-        mov     ecx,[count]     ; cx = byte count
+        mov     ecx,[count]     // cx = byte count
         or      ecx,ecx
-        jz      toend           ; if count = 0, we are done
+        jz      toend           // if count = 0, we are done
 
-        mov     esi,[first]     ; si = first string
-        mov     edi,[last]      ; di = last string
+        mov     esi,[first]     // si = first string
+        mov     edi,[last]      // di = last string
 
         mov     bh,'A'
         mov     bl,'Z'
-        mov     dh,'a'-'A'      ; add to cap to make lower
+        mov     dh,'a'-'A'      // add to cap to make lower
 
         align   4
 
 lupe:
-        mov     ah,[esi]        ; *first
+        mov     ah,[esi]        // *first
 
-        or      ah,ah           ; see if *first is null
+        or      ah,ah           // see if *first is null
 
-        mov     al,[edi]        ; *last
+        mov     al,[edi]        // *last
 
-        jz      short eject     ;   jump if *first is null
+        jz      short eject     //   jump if *first is null
 
-        or      al,al           ; see if *last is null
-        jz      short eject     ;   jump if so
+        or      al,al           // see if *last is null
+        jz      short eject     //   jump if so
 
-        add     esi,1           ; first++
-        add     edi,1           ; last++
+        add     esi,1           // first++
+        add     edi,1           // last++
 
-        cmp     ah,bh           ; 'A'
+        cmp     ah,bh           // 'A'
         jb      short skip1
 
-        cmp     ah,bl           ; 'Z'
+        cmp     ah,bl           // 'Z'
         ja      short skip1
 
-        add     ah,dh           ; make lower case
+        add     ah,dh           // make lower case
 
 skip1:
-        cmp     al,bh           ; 'A'
+        cmp     al,bh           // 'A'
         jb      short skip2
 
-        cmp     al,bl           ; 'Z'
+        cmp     al,bl           // 'Z'
         ja      short skip2
 
-        add     al,dh           ; make lower case
+        add     al,dh           // make lower case
 
 skip2:
-        cmp     ah,al           ; *first == *last ??
+        cmp     ah,al           // *first == *last ??
         jne     short differ
 
         sub     ecx,1
@@ -126,18 +134,24 @@ skip2:
 
 eject:
         xor     ecx,ecx
-        cmp     ah,al           ; compare the (possibly) differing bytes
-        je      short toend     ; both zero; return 0
+        cmp     ah,al           // compare the (possibly) differing bytes
+        je      short toend     // both zero; return 0
 
 differ:
-        mov     ecx,-1          ; assume last is bigger (* can't use 'or' *)
-        jb      short toend     ; last is, in fact, bigger (return -1)
-        neg     ecx             ; first is bigger (return 1)
+        mov     ecx,-1          // assume last is bigger (* can't use 'or' *)
+        jb      short toend     // last is, in fact, bigger (return -1)
+        neg     ecx             // first is bigger (return 1)
 
 toend:
         mov     eax,ecx
 
-        ret                     ; _cdecl return
+// Epilog. Original sources used ML's extended PROC feature to autogenerate this.
+        pop    ebx
+        pop    esi
+        pop    edi
+        pop    ebp
 
-__ascii_strnicmp endp
+        ret                     // _cdecl return
+
+.ENDP // ___ascii_strnicmp
          end

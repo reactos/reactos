@@ -1,3 +1,7 @@
+#include <asm.inc>
+#include <ksamd64.inc>
+.code64
+#if 0
         page    ,132
         title   strncmp - compare first n chars of two strings
 ;***
@@ -51,14 +55,15 @@ include ksamd64.inc
 ;Exceptions:
 ;
 ;*******************************************************************************
+#endif
 
-LEAF_ENTRY_ARG3 strncmp, _TEXT, str1:ptr byte, str2:ptr byte, count:dword
+LEAF_ENTRY_ARG3 strncmp, _TEXT, str1_ptr_byte, str2_ptr_byte, count_dword
 
-    OPTION PROLOGUE:NONE, EPILOGUE:NONE
+    //OPTION PROLOGUE:NONE, EPILOGUE:NONE
 
-; rcx = first
-; rdx = last
-; r8 = count
+// rcx = first
+// rdx = last
+// r8 = count
 
     sub       rdx, rcx
 
@@ -85,13 +90,13 @@ comp_head_loop_begin:
     jnz       comp_head_loop_begin
 
 qword_loop_enter:
-    mov       r11, 08080808080808080h
-    mov       r10, 0fefefefefefefeffh
+    mov       r11, HEX(08080808080808080)
+    mov       r10, HEX(0fefefefefefefeff)
 
 qword_loop_begin:
     lea       eax, [rdx+rcx]
-    and       eax, 0fffh
-    cmp       eax, 0ff8h
+    and       eax, HEX(0fff)
+    cmp       eax, HEX(0ff8)
     ja        comp_head_loop_begin
 
     mov       rax, qword ptr[rcx]
@@ -106,7 +111,7 @@ qword_loop_begin:
     lea       r9, [r10+rax]
     not       rax
     and       rax, r9
-    test      rax, r11  ; 8080808080808080h
+    test      rax, r11  // 8080808080808080h
 
     jz        qword_loop_begin
 
@@ -114,10 +119,10 @@ return_equal:
     xor       eax, eax
     ret
 
-;    align     16
+//    align     16
 
 return_not_equal:
-    sbb       rax, rax  ; AX=-1, CY=1 AX=0, CY=0
+    sbb       rax, rax  // AX=-1, CY=1 AX=0, CY=0
     or        rax, 1
     ret
 

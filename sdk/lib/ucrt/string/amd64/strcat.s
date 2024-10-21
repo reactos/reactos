@@ -1,3 +1,7 @@
+#include <asm.inc>
+#include <ksamd64.inc>
+.code64
+#if 0
         title   strcat - concatenate (append) one string to another
 ;***
 ;strcat.asm - contains strcat() and strcpy() routines
@@ -73,11 +77,12 @@ include ksamd64.inc
 ;
 ;Exceptions:
 ;*******************************************************************************
+#endif
 
 public ___entry_from_strcat_in_strcpy
-LEAF_ENTRY_ARG2 strcat, _TEXT, dst:ptr byte, src:ptr byte
+LEAF_ENTRY_ARG2 strcat, _TEXT, dst_ptr_byte, src_ptr_byte
 
-    OPTION PROLOGUE:NONE, EPILOGUE:NONE
+    //OPTION PROLOGUE:NONE, EPILOGUE:NONE
 
     mov     r11, rcx
     test    cl, 7
@@ -94,12 +99,12 @@ strcat_copy_head_loop_begin:
 strcat_loop_begin:
     mov     rax, [rcx]
     mov     r10, rax
-    mov     r9, 7efefefefefefeffh
+    mov     r9, HEX(7efefefefefefeff)
     add     r9, r10
     xor     r10, -1
     xor     r10, r9
     add     rcx, 8
-    mov     r9, 8101010101010100h
+    mov     r9, HEX(8101010101010100)
     test    r10, r9
     je      strcat_loop_begin
     sub     rcx, 8
@@ -136,16 +141,16 @@ strcat_loop_end:
 
 LEAF_END strcat, _TEXT
 
-LEAF_ENTRY_ARG2 strcpy, _TEXT, dst:ptr byte, src:ptr byte
+LEAF_ENTRY_ARG2 strcpy, _TEXT, dst_ptr_byte, src_ptr byte
 
-    OPTION PROLOGUE:NONE, EPILOGUE:NONE
+    //OPTION PROLOGUE:NONE, EPILOGUE:NONE
 
     mov     r11, rcx
 strcat_copy:
 ___entry_from_strcat_in_strcpy=strcat_copy
- ; align the SOURCE so we never page fault
- ; dest pointer alignment not important
-    sub     rcx, rdx ; combine pointers
+ // align the SOURCE so we never page fault
+ // dest pointer alignment not important
+    sub     rcx, rdx // combine pointers
     test    dl, 7
     jz      qword_loop_entrance
 
@@ -168,12 +173,12 @@ qword_loop_begin:
     add     rdx, 8
 qword_loop_entrance:
     mov     rax, [rdx]
-    mov     r9, 7efefefefefefeffh
+    mov     r9, HEX(7efefefefefefeff)
     add     r9, rax
     mov     r10, rax
     xor     r10, -1
     xor     r10, r9
-    mov     r9, 8101010101010100h
+    mov     r9, HEX(8101010101010100)
     test    r10, r9
     jz      qword_loop_begin
 

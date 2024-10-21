@@ -1,3 +1,5 @@
+#include <asm.inc>
+#if 0
         page    ,132
         title   strnset - set first n characters to one char.
 ;***
@@ -50,40 +52,49 @@ page
 ;Exceptions:
 ;
 ;*******************************************************************************
+#endif
 
-        CODESEG
+        .code
 
-        public  _strnset
-_strnset proc \
-        uses edi ebx, \
-        string:ptr byte, \
-        val:byte, \
-        count:IWORD
+        public  __strnset
+.PROC __strnset
+// Prolog. Original sources used ML's extended PROC feature to autogenerate this.
+        push ebp
+        mov ebp, esp
+        push edi // uses edi ebx
+        push ebx
+        #define string ebp + 8 // string:ptr byte
+        #define val ebp + 12 // val:byte
+        #define count ebp + 16 // count:IWORD
 
 
-        mov     edi,[string]    ; di = string
-        mov     edx,edi         ; dx=string addr; save return value
-        mov     ebx,[count]     ; cx = max chars to set
-        xor     eax,eax         ; null byte
+        mov     edi,[string]    // di = string
+        mov     edx,edi         // dx=string addr; save return value
+        mov     ebx,[count]     // cx = max chars to set
+        xor     eax,eax         // null byte
         mov     ecx,ebx
-        jecxz   short done      ; zero length specified
+        jecxz   short done      // zero length specified
 
-repne   scasb                   ; find null byte & count bytes in cx
-        jne     short nonull    ; null not found
-        add     ecx,1           ; don't want the null
+repne   scasb                   // find null byte & count bytes in cx
+        jne     short nonull    // null not found
+        add     ecx,1           // don't want the null
 
 nonull:
-        sub     ebx,ecx         ; bx=strlen (not null)
-        mov     ecx,ebx         ; cx=strlen (not null)
+        sub     ebx,ecx         // bx=strlen (not null)
+        mov     ecx,ebx         // cx=strlen (not null)
 
-        mov     edi,edx         ; restore string pointer
-        mov     al,val          ; byte value
-rep     stosb                   ; fill 'er up
+        mov     edi,edx         // restore string pointer
+        mov     al,[val]        // byte value
+rep     stosb                   // fill 'er up
 
 done:
-        mov     eax,edx         ; return value: string addr
+        mov     eax,edx         // return value: string addr
 
-        ret                     ; _cdecl return
+// Epilog. Original sources used ML's extended PROC feature to autogenerate this.
+        pop     ebx
+        pop     edi
+        pop     ebp
+        ret                     // _cdecl return
 
-_strnset endp
+.ENDP // __strnset
         end
