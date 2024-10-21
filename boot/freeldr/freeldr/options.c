@@ -244,9 +244,9 @@ VOID DisplayBootTimeOptions(VOID)
 
     /* Display the chosen boot options */
     UiDrawText(0,
-               UiScreenHeight - 2,
+               UiGetScreenHeight() - 2,
                BootOptions,
-               ATTR(COLOR_LIGHTBLUE, UiMenuBgColor));
+               ATTR(COLOR_LIGHTBLUE, UiGetMenuBgColor()));
 }
 
 VOID AppendBootTimeOptions(PCHAR BootOptions)
