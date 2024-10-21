@@ -19,7 +19,7 @@ static LONG TimeLast = 0;
 /* Windows 2000 has room for 32768 window-less timers */
 /* These values give timer IDs [256,32767], same as on Windows */
 #define NUM_WINDOW_MAX_TIMERS   (32768 - 1)
-#define NUM_WINDOW_LESS_TIMERS  (32768 - 256)
+#define MAX_WINDOW_LESS_TIMER_ID  (32768 - 256)
 
 #define HINTINDEX_BEGIN_VALUE   0
 
@@ -226,7 +226,7 @@ IntSetTimer( PWND Window,
       IntLockWindowlessTimerBitmap();
 
       ulBitmapIndex = RtlFindClearBitsAndSet(&WindowLessTimersBitMap, 1, HintIndex);
-      HintIndex = (ulBitmapIndex + 1) % NUM_WINDOW_LESS_TIMERS;
+      HintIndex = (ulBitmapIndex + 1) % MAX_WINDOW_LESS_TIMER_ID;
       if (ulBitmapIndex == ULONG_MAX)
       {
          IntUnlockWindowlessTimerBitmap();
@@ -235,7 +235,7 @@ IntSetTimer( PWND Window,
          return 0;
       }
 
-      ASSERT(ulBitmapIndex < NUM_WINDOW_LESS_TIMERS);
+      ASSERT(ulBitmapIndex < MAX_WINDOW_LESS_TIMER_ID);
       IDEvent = NUM_WINDOW_MAX_TIMERS - ulBitmapIndex;
       Ret = IDEvent;
 
@@ -610,7 +610,7 @@ InitTimerImpl(VOID)
 
    ExInitializeFastMutex(Mutex);
 
-   BitmapBytes = ALIGN_UP_BY(NUM_WINDOW_LESS_TIMERS, sizeof(ULONG) * 8) / 8;
+   BitmapBytes = ALIGN_UP_BY(MAX_WINDOW_LESS_TIMER_ID, sizeof(ULONG) * 8) / 8;
    WindowLessTimersBitMapBuffer = ExAllocatePoolWithTag(NonPagedPool, BitmapBytes, TAG_TIMERBMP);
    if (WindowLessTimersBitMapBuffer == NULL)
    {
@@ -619,7 +619,7 @@ InitTimerImpl(VOID)
 
    RtlInitializeBitMap(&WindowLessTimersBitMap,
                        WindowLessTimersBitMapBuffer,
-                       NUM_WINDOW_LESS_TIMERS);
+                       MAX_WINDOW_LESS_TIMER_ID);
 
    /* Yes we need this, since ExAllocatePoolWithTag isn't supposed to zero out allocated memory */
    RtlClearAllBits(&WindowLessTimersBitMap);
