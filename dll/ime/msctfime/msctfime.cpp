@@ -17,11 +17,6 @@ BOOL gfTFInitLib = FALSE;
 CRITICAL_SECTION g_csLock;
 CDispAttrPropCache *g_pPropCache = NULL;
 
-EXTERN_C void __cxa_pure_virtual(void)
-{
-    ERR("__cxa_pure_virtual\n");
-}
-
 /// Selects or unselects the input context.
 /// @implemented
 static HRESULT

@@ -25,12 +25,6 @@ void operator delete(void *ptr, size_t size)
     ::LocalFree(ptr);
 }
 
-EXTERN_C void __cxa_pure_virtual(void)
-{
-    ERR("__cxa_pure_virtual\n");
-    ::DebugBreak();
-}
-
 BEGIN_OBJECT_MAP(ObjectMap)
     OBJECT_ENTRY(CLSID_SH_FavBand, CFavBand)
     OBJECT_ENTRY(CLSID_ExplorerBand, CExplorerBand)

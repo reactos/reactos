@@ -81,11 +81,6 @@ BOOL g_fRTL = FALSE;
 
 #define TIMER_ID_DOACCDEFAULTACTION 11
 
-EXTERN_C void __cxa_pure_virtual(void)
-{
-    ERR("__cxa_pure_virtual\n");
-}
-
 class CMsUtbModule : public CComModule
 {
 };
@@ -1188,7 +1183,7 @@ protected:
 
 public:
     CButtonIconItem(CTrayIconWnd *pWnd, DWORD dwUnknown24);
-    
+
     STDMETHOD_(BOOL, OnMsg)(WPARAM wParam, LPARAM lParam) override;
     STDMETHOD_(BOOL, OnDelayMsg)(UINT uMsg) override;
 };
@@ -1581,7 +1576,7 @@ public:
 
     void StartModalInput(ITfLangBarEventSink *pSink, DWORD dwThreadId);
     void StopModalInput(DWORD dwThreadId);
-    
+
     CTipbarThread *_CreateThread(DWORD dwThreadId);
     CTipbarThread *_FindThread(DWORD dwThreadId);
     void EnsureFocusThread();
