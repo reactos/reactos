@@ -1,3 +1,7 @@
+#include <asm.inc>
+#include <ksamd64.inc>
+.code64
+#if 0
         page    ,132
         title   strlen - return the length of a null-terminated string
 ;***
@@ -42,17 +46,18 @@ include ksamd64.inc
 ;Exceptions:
 ;
 ;*******************************************************************************
+#endif
 
 LEAF_ENTRY_ARG1 strlen, _TEXT, buf:ptr byte
 
-    OPTION PROLOGUE:NONE, EPILOGUE:NONE
+    //OPTION PROLOGUE:NONE, EPILOGUE:NONE
 
     mov   rax, rcx
-    neg   rcx          ; for later
+    neg   rcx          // for later
     test  rax, 7
     jz    main_loop_entry
 
-byte 066h, 090h
+.byte HEX(66), HEX(90)
 
 byte_loop_begin:
     mov   dl, [rax]
@@ -63,8 +68,8 @@ byte_loop_begin:
     jnz   byte_loop_begin
 
 main_loop_entry:
-    mov   r8, 7efefefefefefeffh
-    mov   r11, 8101010101010100h
+    mov   r8, HEX(7efefefefefefeff)
+    mov   r11, HEX(8101010101010100)
 
 main_loop_begin:
     mov   rdx, [rax]

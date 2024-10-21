@@ -1,3 +1,7 @@
+#include <asm.inc>
+#include <ksamd64.inc>
+.code64
+#if 0
         page    ,132
         title   strncpy - copy at most n characters of string
 ;***
@@ -12,17 +16,18 @@
 ; Look at strncat.asm for this file
 include ksamd64.inc
         subttl  "strncpy"
+#endif
 
-LEAF_ENTRY_ARG3 strncpy, _TEXT, dst:ptr byte, src:ptr byte, count:dword
-OPTION PROLOGUE:NONE, EPILOGUE:NONE
+LEAF_ENTRY_ARG3 strncpy, _TEXT, dst_ptr_byte, src_ptr_byte, count_dword
+//OPTION PROLOGUE:NONE, EPILOGUE:NONE
 
-; align the SOURCE so we never page fault
-; dest pointer alignment not important
+// align the SOURCE so we never page fault
+// dest pointer alignment not important
 
     mov     r11, rcx
     or      r8, r8
     jz      strncpy_exit
-    sub     rcx, rdx ; combine pointers
+    sub     rcx, rdx // combine pointers
     test    dl, 7
     jz      qword_loop_entrance
 
@@ -49,12 +54,12 @@ qword_loop_entrance:
     mov     rax, [rdx]
     sub     r8,  8
     jbe     qword_loop_end
-    mov     r9, 7efefefefefefeffh
+    mov     r9, HEX(7efefefefefefeff)
     add     r9, rax
     mov     r10, rax
     xor     r10, -1
     xor     r10, r9
-    mov     r9, 8101010101010100h
+    mov     r9, HEX(8101010101010100)
     test    r10, r9
     jz      qword_loop_begin
 
@@ -118,12 +123,12 @@ strncpy_exit_2:
     mov     rax, r11
     ret
 
-;this is really just memset
+//this is really just memset
 filler:
     add     rcx, rdx
     xor     rdx, rdx
     cmp     r8, 16
-    jb      tail ; a quickie
+    jb      tail // a quickie
 aligner1:
     test    cl, 7
     jz      aligned
@@ -144,7 +149,7 @@ loop32:
     jae     loop32
 
 tail_8_enter:
-    add     r8, 32   ; get back the value
+    add     r8, 32   // get back the value
 tail_8_begin:
     sub     r8, 8
     jb      tail_enter
@@ -153,7 +158,7 @@ tail_8_begin:
     jmp     tail_8_begin
 
 tail_enter:
-    add     r8, 8   ; get back the value
+    add     r8, 8   // get back the value
 tail:
     sub     r8, 1
     jb      tail_finish

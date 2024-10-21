@@ -1,3 +1,5 @@
+#include <asm.inc>
+#if 0
         page    ,132
         title   strspn - search for init substring of chars from control str
 ;***
@@ -165,54 +167,58 @@ page
 ;Exceptions:
 ;
 ;*******************************************************************************
+#endif
 
 
-ifdef SSTRCSPN
+#ifdef SSTRCSPN
 
-    _STRSPN_ equ <strcspn>
+    #define _STRSPN_ _strcspn
 
-elseifdef SSTRPBRK
+#elif defined(SSTRPBRK)
 
-    _STRSPN_ equ <strpbrk>
+    #define _STRSPN_ _strpbrk
 
-else  ; SSTRCSPN
+#else  // SSTRCSPN
 
-; Default is to build strspn()
+// Default is to build strspn()
 
-    SSTRSPN equ 1
-    _STRSPN_ equ <strspn>
+    #define SSTRSPN 1
+    #define _STRSPN_ _strspn
 
-endif  ; SSTRCSPN
+#endif  // SSTRCSPN
 
-% public  _STRSPN_
+public  _STRSPN_
 
-    CODESEG
+    .code
 
-_STRSPN_ proc \
-        uses esi, \
-        string:ptr byte, \
-        control:ptr byte
+.PROC _STRSPN_
+// Prolog. Original sources used ML's extended PROC feature to autogenerate this.
+        push ebp
+        mov ebp, esp
+        push esi // uses esi
+#define string ebp + 8 // string:ptr byte
+#define control ebp + 12 // control:ptr byte
 
-; create and zero out char bit map
+// create and zero out char bit map
 
         xor     eax,eax
-        push    eax             ; 32
+        push    eax             // 32
         push    eax
         push    eax
-        push    eax             ; 128
+        push    eax             // 128
         push    eax
         push    eax
         push    eax
-        push    eax             ; 256
+        push    eax             // 256
 
-map     equ     [esp]
+#define map          [esp]
 
-; Set control char bits in map
+// Set control char bits in map
 
-        mov     edx,control     ; si = control string
+        mov     edx,[control]     // si = control string
 
-        align   @WordSize
-lab listnext                    ; init char bit map
+        align   4 // @WordSize
+listnext:                    // init char bit map
         mov     al,[edx]
         or      al,al
         jz      short listdone
@@ -220,18 +226,22 @@ lab listnext                    ; init char bit map
         bts     map,eax
         jmp     short listnext
 
-lab listdone
+listdone:
 
-; Loop through comparing source string with control bits
+// Loop through comparing source string with control bits
 
-        mov     esi,string      ; si = string
+        mov     esi,[string]      // si = string
 
-_ifnd   SSTRPBRK, <or     ecx,-1> ; set ecx to -1
+#ifndef   SSTRPBRK
+        or     ecx,-1 // set ecx to -1
+#endif
 
-        align   @WordSize
-lab dstnext
+        align   4 // @WordSize
+dstnext:
 
-_ifnd   SSTRPBRK, <add    ecx,1>
+#ifndef   SSTRPBRK
+        add    ecx,1
+#endif
 
         mov     al,[esi]
         or      al,al
@@ -239,24 +249,30 @@ _ifnd   SSTRPBRK, <add    ecx,1>
         add     esi,1
         bt      map, eax
 
-ifdef SSTRSPN
-        jc      short dstnext   ; strspn: found char, continue
-elseifdef SSTRCSPN
-        jnc     short dstnext   ; strcspn: did not find char, continue
-elseifdef SSTRPBRK
-        jnc     short dstnext   ; strpbrk: did not find char, continue
-        lea     eax,[esi - 1]   ; found char, return address of it
-endif  ; SSTRSPN
+#ifdef SSTRSPN
+        jc      short dstnext   // strspn: found char, continue
+#elif defined SSTRCSPN
+        jnc     short dstnext   // strcspn: did not find char, continue
+#elif defined SSTRPBRK
+        jnc     short dstnext   // strpbrk: did not find char, continue
+        lea     eax,[esi - 1]   // found char, return address of it
+#endif  // SSTRSPN
 
-; Return code
+// Return code
 
-lab dstdone
+dstdone:
 
-_ifnd   SSTRPBRK, <mov   eax,ecx> ; strspn/strcspn: return index
+#ifndef   SSTRPBRK
+        mov   eax,ecx // strspn/strcspn: return index
+#endif
 
         add     esp,32
 
-        ret                     ; _cdecl return
+// Epilog. Original sources used ML's extended PROC feature to autogenerate this.
+        pop     esi
+        pop     ebp
 
-_STRSPN_ endp
+        ret                     // _cdecl return
+
+.ENDP // _STRSPN_
          end

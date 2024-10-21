@@ -1,3 +1,5 @@
+#include <asm.inc>
+#if 0
         page    ,132
         title   strcmp.asm - compare two strings
 ;***
@@ -58,21 +60,22 @@ page
 ;Exceptions:
 ;
 ;*******************************************************************************
+#endif
 
-        CODESEG
+        .code
 
-        public  strcmp
-strcmp  proc \
-        str1:ptr byte, \
-        str2:ptr byte
+        public  _strcmp
+.PROC _strcmp
+        // str1:ptr byte, \
+        // str2:ptr byte
 
-        OPTION PROLOGUE:NONE, EPILOGUE:NONE
+        //OPTION PROLOGUE:NONE, EPILOGUE:NONE
 
-;       .FPO (cdwLocals, cdwParams, cbProlog, cbRegs, fUseBP, cbFrame)
-        .FPO    ( 0, 2, 0, 0, 0, 0 )
+//       .FPO (cdwLocals, cdwParams, cbProlog, cbRegs, fUseBP, cbFrame)
+        FPO    0, 2, 0, 0, 0, 0
 
-        mov     edx,[esp + 4]   ; edx = src
-        mov     ecx,[esp + 8]   ; ecx = dst
+        mov     edx,[esp + 4]   // edx = src
+        mov     ecx,[esp + 8]   // ecx = dst
 
         test    edx,3
         jnz     short dopartial
@@ -110,8 +113,8 @@ doneeq:
 
         align   8
 donene:
-        ; The instructions below should place -1 in eax if src < dst,
-        ; and 1 in eax if src > dst.
+        // The instructions below should place -1 in eax if src < dst,
+        // and 1 in eax if src > dst.
 
         sbb     eax,eax
         or      eax,1
@@ -149,6 +152,6 @@ doword:
         add     ecx,2
         jmp     short dodwords
 
-strcmp  endp
+.ENDP // _strcmp
 
         end

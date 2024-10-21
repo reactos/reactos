@@ -1,3 +1,7 @@
+#include <asm.inc>
+#include <ksamd64.inc>
+.code64
+#if 0
         page    ,132
         title   strncat - append n chars of string1 to string2
 ;***
@@ -53,8 +57,9 @@ include ksamd64.inc
 ;Exceptions:
 ;
 ;*******************************************************************************
-LEAF_ENTRY_ARG3 strncat, _TEXT, front:ptr byte, back:ptr byte, count:dword
-    OPTION PROLOGUE:NONE, EPILOGUE:NONE
+#endif
+LEAF_ENTRY_ARG3 strncat, _TEXT, front_ptr_byte, back_ptr_byte, count_dword
+    //OPTION PROLOGUE:NONE, EPILOGUE:NONE
 
     mov     r11, rcx
     or      r8, r8
@@ -75,12 +80,12 @@ strncat_copy_head_loop_begin:
 strncat_loop_begin:
     mov     rax, [rcx]
     mov     r10, rax
-    mov     r9, 7efefefefefefeffh
+    mov     r9, HEX(7efefefefefefeff)
     add     r9, r10
     xor     r10, -1
     xor     r10, r9
     add     rcx, 8
-    mov     r9, 8101010101010100h
+    mov     r9, HEX(8101010101010100)
     test    r10, r9
     je      strncat_loop_begin
     sub     rcx, 8
@@ -116,9 +121,9 @@ strncat_loop_end:
     jmp     strncat_loop_begin
 
 strncat_copy:
-; align the SOURCE so we never page fault
-; dest pointer alignment not important
-    sub     rcx, rdx ; combine pointers
+// align the SOURCE so we never page fault
+// dest pointer alignment not important
+    sub     rcx, rdx // combine pointers
     test    dl, 7
     jz      qword_loop_entrance
 
@@ -150,12 +155,12 @@ qword_loop_entrance:
     mov     rax, [rdx]
     sub     r8,  8
     jbe     qword_loop_end
-    mov     r9, 7efefefefefefeffh
+    mov     r9, HEX(7efefefefefefeff)
     add     r9, rax
     mov     r10, rax
     xor     r10, -1
     xor     r10, r9
-    mov     r9, 8101010101010100h
+    mov     r9, HEX(8101010101010100)
     test    r10, r9
     jz      qword_loop_begin
 

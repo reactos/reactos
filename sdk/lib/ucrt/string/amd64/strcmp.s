@@ -1,3 +1,7 @@
+#include <asm.inc>
+#include <ksamd64.inc>
+.code64
+#if 0
         page    ,132
         title   strcmp.asm - compare two strings
 ;***
@@ -54,25 +58,26 @@ include ksamd64.inc
 ;Exceptions:
 ;
 ;*******************************************************************************
+#endif
 
-CHAR_TYPE EQU BYTE
-CHAR_PTR EQU BYTE PTR
-CHAR_SIZE = sizeof CHAR_TYPE
+#define CHAR_TYPE BYTE
+#define CHAR_PTR BYTE PTR
+#define CHAR_SIZE 1 /* = sizeof CHAR_TYPE */
 
-BLK_TYPE EQU QWORD
-BLK_PTR EQU QWORD PTR
-BLK_SIZE = sizeof BLK_TYPE
+#define BLK_TYPE QWORD
+#define BLK_PTR QWORD PTR
+#define BLK_SIZE 8 /* = sizeof BLK_TYPE */
 
-;PAGE_SIZE = 1000h
-PAGE_MASK = PAGE_SIZE - 1       ; mask for offset in MM page
-PAGE_SAFE_BLK = PAGE_SIZE - BLK_SIZE ; maximum offset for safe block compare
+//PAGE_SIZE = 1000h
+PAGE_MASK = PAGE_SIZE - 1       // mask for offset in MM page
+PAGE_SAFE_BLK = PAGE_SIZE - BLK_SIZE // maximum offset for safe block compare
 
-LEAF_ENTRY_ARG2 strcmp, _TEXT, str1:ptr byte, str2:ptr byte
+LEAF_ENTRY_ARG2 strcmp, _TEXT, str1_ptr_byte, str2_ptr_byte
 
-    OPTION PROLOGUE:NONE, EPILOGUE:NONE
+    //OPTION PROLOGUE:NONE, EPILOGUE:NONE
 
-; rcx = src
-; rdx = dst
+// rcx = src
+// rdx = dst
 
     sub     rdx, rcx
     test    cl, (BLK_SIZE - 1)
@@ -93,8 +98,8 @@ comp_head_loop_begin:
 
 qword_loop_enter:
 
-    mov     r11, 8080808080808080h
-    mov     r10, 0fefefefefefefeffh
+    mov     r11, HEX(8080808080808080)
+    mov     r10, HEX(0fefefefefefefeff)
 
 qword_loop_begin:
     lea     eax, [edx+ecx]
@@ -105,24 +110,24 @@ qword_loop_begin:
     mov     rax, BLK_PTR[rcx]
     cmp     rax, BLK_PTR[rdx+rcx]
 
-; mismatched string (or maybe null + garbage after)
+// mismatched string (or maybe null + garbage after)
     jne     comp_head_loop_begin
 
-; look for null terminator
+// look for null terminator
     lea     r9, [rax + r10]
     not     rax
     add     rcx, BLK_SIZE
     and     rax, r9
 
-    test    rax, r11       ; r11=8080808080808080h
+    test    rax, r11       // r11=8080808080808080h
     jz      qword_loop_begin
 
 return_equal:
-    xor     eax, eax ; gets all 64 bits
+    xor     eax, eax // gets all 64 bits
     ret
 
 return_not_equal:
-    sbb     rax, rax ; AX=-1, CY=1 AX=0, CY=0
+    sbb     rax, rax // AX=-1, CY=1 AX=0, CY=0
     or      rax, 1
     ret
 

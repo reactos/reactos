@@ -1,3 +1,4 @@
+#if 0
 ;***
 ;strpbrk.asm -
 ;
@@ -14,3 +15,7 @@
 
 SSTRPBRK EQU 1
 INCLUDE STRSPN.ASM
+#else
+#define SSTRPBRK 1
+#include "strspn.s"
+#endif

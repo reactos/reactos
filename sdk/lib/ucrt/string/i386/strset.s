@@ -1,3 +1,5 @@
+#include <asm.inc>
+#if 0
         page    ,132
         title   strset - set all characters of string to character
 ;***
@@ -48,31 +50,39 @@ page
 ;Exceptions:
 ;
 ;*******************************************************************************
+#endif
 
-        CODESEG
+        .code
 
-        public  _strset
-_strset proc \
-        uses edi, \
-        string:ptr byte, \
-        val:byte
+        public  __strset
+.PROC __strset
+// Prolog. Original sources used ML's extended PROC feature to autogenerate this.
+        push ebp
+        mov ebp, esp
+        push edi // uses edi
+#define string ebp + 8 // string:ptr byte
+#define val ebp + 12 // val:byte
 
 
-        mov     edi,[string]    ; di = string
-        mov     edx,edi         ; dx=string addr; save return value
+        mov     edi,[string]    // di = string
+        mov     edx,edi         // dx=string addr; save return value
 
-        xor     eax,eax         ; ax = 0
-        or      ecx,-1          ; cx = -1
-repne   scasb                   ; scan string & count bytes
-        add     ecx,2           ; cx=-strlen
-        neg     ecx             ; cx=strlen
-        mov     al,[val]        ; al = byte value to store
-        mov     edi,edx         ; di=string addr
+        xor     eax,eax         // ax = 0
+        or      ecx,-1          // cx = -1
+repne   scasb                   // scan string & count bytes
+        add     ecx,2           // cx=-strlen
+        neg     ecx             // cx=strlen
+        mov     al,[val]        // al = byte value to store
+        mov     edi,edx         // di=string addr
 rep     stosb
 
-        mov     eax,edx         ; return value: string addr
+        mov     eax,edx         // return value: string addr
 
-        ret                     ; _cdecl return
+// Epilog. Original sources used ML's extended PROC feature to autogenerate this.
+        pop     edi
+        pop     ebp
 
-_strset endp
+        ret                     // _cdecl return
+
+.ENDP // __strset
         end

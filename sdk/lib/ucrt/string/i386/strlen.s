@@ -1,3 +1,5 @@
+#include <asm.inc>
+#if 0
         page    ,132
         title   strlen - return the length of a null-terminated string
 ;***
@@ -46,26 +48,27 @@ page
 ;Exceptions:
 ;
 ;*******************************************************************************
+#endif
 
-        CODESEG
+        .code
 
-        public  strlen
+        public  _strlen
 
-strlen  proc \
-        buf:ptr byte
+.PROC _strlen
+        // buf:ptr byte
 
-        OPTION PROLOGUE:NONE, EPILOGUE:NONE
+        //OPTION PROLOGUE:NONE, EPILOGUE:NONE
 
-        .FPO    ( 0, 1, 0, 0, 0, 0 )
+        FPO    0, 1, 0, 0, 0, 0
 
-string  equ     [esp + 4]
+#define string  [esp + 4]
 
-        mov     ecx,string              ; ecx -> string
-        test    ecx,3                   ; test if string is aligned on 32 bits
+        mov     ecx,string              // ecx -> string
+        test    ecx,3                   // test if string is aligned on 32 bits
         je      short main_loop
 
 str_misaligned:
-        ; simple byte loop until string is aligned
+        // simple byte loop until string is aligned
         mov     al,byte ptr [ecx]
         add     ecx,1
         test    al,al
@@ -73,31 +76,31 @@ str_misaligned:
         test    ecx,3
         jne     short str_misaligned
 
-        add     eax,dword ptr 0         ; 5 byte nop to align label below
+        add     eax,dword ptr 0         // 5 byte nop to align label below
 
-        align   16                      ; should be redundant
+        align   16                      // should be redundant
 
 main_loop:
-        mov     eax,dword ptr [ecx]     ; read 4 bytes
-        mov     edx,7efefeffh
+        mov     eax,dword ptr [ecx]     // read 4 bytes
+        mov     edx,HEX(7efefeff)
         add     edx,eax
         xor     eax,-1
         xor     eax,edx
         add     ecx,4
-        test    eax,81010100h
+        test    eax,HEX(81010100)
         je      short main_loop
-        ; found zero byte in the loop
+        // found zero byte in the loop
         mov     eax,[ecx - 4]
-        test    al,al                   ; is it byte 0
+        test    al,al                   // is it byte 0
         je      short byte_0
-        test    ah,ah                   ; is it byte 1
+        test    ah,ah                   // is it byte 1
         je      short byte_1
-        test    eax,00ff0000h           ; is it byte 2
+        test    eax,HEX(00ff0000)           // is it byte 2
         je      short byte_2
-        test    eax,0ff000000h          ; is it byte 3
+        test    eax,HEX(0ff000000)          // is it byte 3
         je      short byte_3
-        jmp     short main_loop         ; taken if bits 24-30 are clear and bit
-                                        ; 31 is set
+        jmp     short main_loop         // taken if bits 24-30 are clear and bit
+                                        // 31 is set
 
 byte_3:
         lea     eax,[ecx - 1]
@@ -120,6 +123,6 @@ byte_0:
         sub     eax,ecx
         ret
 
-strlen  endp
+.ENDP // _strlen
 
         end

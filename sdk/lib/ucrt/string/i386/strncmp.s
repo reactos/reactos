@@ -1,3 +1,5 @@
+#include <asm.inc>
+#if 0
         page    ,132
         title   strncmp.asm - compare two strings
 ;***
@@ -73,43 +75,44 @@ page
 ;Exceptions:
 ;
 ;*******************************************************************************
+#endif
 
-        CODESEG
+        .code
 
-CHAR_TYPE EQU BYTE
-CHAR_PTR EQU BYTE PTR
-CHAR_SIZE = sizeof CHAR_TYPE
+#define CHAR_TYPE BYTE
+#define CHAR_PTR BYTE PTR
+#define CHAR_SIZE 1 // = sizeof CHAR_TYPE
 
-BLK_TYPE EQU DWORD
-BLK_PTR EQU DWORD PTR
-BLK_SIZE = sizeof BLK_TYPE
-BLK_CHARS = BLK_SIZE / CHAR_SIZE
+#define BLK_TYPE DWORD
+#define BLK_PTR DWORD PTR
+#define BLK_SIZE 4 // = sizeof BLK_TYPE
+#define BLK_CHARS 4 // = BLK_SIZE / CHAR_SIZE
 
-PAGE_SIZE = 1000h
-PAGE_MASK = PAGE_SIZE - 1       ; mask for offset in MM page
-PAGE_SAFE_BLK = PAGE_SIZE - BLK_SIZE ; maximum offset for safe block compare
+PAGE_SIZE = HEX(1000)
+PAGE_MASK = PAGE_SIZE - 1       // mask for offset in MM page
+PAGE_SAFE_BLK = PAGE_SIZE - BLK_SIZE // maximum offset for safe block compare
 
-    public  strncmp
-strncmp proc \
-        uses ebx esi, \
-        str1:ptr byte, \
-        str2:ptr byte, \
-        count:IWORD
+    public  _strncmp
+.PROC _strncmp
+        // uses ebx esi, \
+        // str1:ptr byte, \
+        // str2:ptr byte, \
+        // count:IWORD
 
-    OPTION PROLOGUE:NONE, EPILOGUE:NONE
+    //OPTION PROLOGUE:NONE, EPILOGUE:NONE
 
     push      ebx
     push      esi
 
-;   .FPO (cdwLocals, cdwParams, cbProlog, cbRegs, fUseBP, cbFrame)
-    .FPO      ( 0, 3, $ - strncmp, 2, 0, 0 )
+//   .FPO (cdwLocals, cdwParams, cbProlog, cbRegs, fUseBP, cbFrame)
+    FPO      0, 3, ($ - _strncmp), 2, 0, 0
 
-    mov       ecx,[esp + 12]   ; ecx = str1
-    mov       edx,[esp + 16]   ; edx = str2
-    mov       ebx,[esp + 20]   ; ebx = count
+    mov       ecx,[esp + 12]   // ecx = str1
+    mov       edx,[esp + 16]   // edx = str2
+    mov       ebx,[esp + 20]   // ebx = count
 
-; Check for a limit of zero characters.
-    test      ebx, 0FFFFFFFFh
+// Check for a limit of zero characters.
+    test      ebx, HEX(0FFFFFFFF)
     jz        return_equal
 
     sub       ecx, edx
@@ -146,11 +149,11 @@ dword_loop_begin:
     sub       ebx, BLK_CHARS
     jbe       return_equal
 
-    lea       esi, [eax+0fefefeffh]
+    lea       esi, [eax+HEX(0fefefeff)]
     add       edx, BLK_SIZE
     not       eax
     and       eax, esi
-    test      eax, 80808080h
+    test      eax, HEX(80808080)
     jz        dword_loop_begin
 
 return_equal:
@@ -162,12 +165,12 @@ return_equal:
     align     16
 
 return_not_equal:
-    sbb       eax, eax  ; AX=-1, CY=1 AX=0, CY=0
+    sbb       eax, eax  // AX=-1, CY=1 AX=0, CY=0
     or        eax, 1
     pop       esi
     pop       ebx
     ret
 
-strncmp endp
+.ENDP // _strncmp
 
     end

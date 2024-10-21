@@ -1,3 +1,4 @@
+#if 0
 ;***
 ;strcspn.asm -
 ;
@@ -14,3 +15,7 @@
 
 SSTRCSPN EQU 1
 INCLUDE STRSPN.ASM
+#else
+#define SSTRCSPN 1
+#include "strspn.s"
+#endif
