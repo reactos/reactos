@@ -325,82 +325,76 @@ CcRosFlushDirtyPages (
     KeEnterCriticalRegion();
     OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
 
-    current_entry = DirtyVacbListHead.Flink;
-    if (current_entry == &DirtyVacbListHead)
+#if DBG
+    if (IsListEmpty(&CcDirtySharedCacheMapList))
     {
         DPRINT("No Dirty pages\n");
     }
+#endif
 
-    while (((current_entry != &DirtyVacbListHead) && (Target > 0)) || FlushAll)
+    current_entry = CcDirtySharedCacheMapList.Flink;
+    while (((current_entry != &CcDirtySharedCacheMapList) && (Target > 0)) || FlushAll)
     {
-        PROS_SHARED_CACHE_MAP SharedCacheMap;
-        PROS_VACB current;
+        PROS_SHARED_CACHE_MAP current;
         BOOLEAN Locked;
+        LARGE_INTEGER FlushOffset;
+        IO_STATUS_BLOCK Iosb;
 
-        if (current_entry == &DirtyVacbListHead)
+        if (current_entry == &CcDirtySharedCacheMapList)
         {
             ASSERT(FlushAll);
-            if (IsListEmpty(&DirtyVacbListHead))
+            if (IsListEmpty(&CcDirtySharedCacheMapList))
                 break;
-            current_entry = DirtyVacbListHead.Flink;
+            current_entry = CcDirtySharedCacheMapList.Flink;
         }
 
         current = CONTAINING_RECORD(current_entry,
-                                    ROS_VACB,
-                                    DirtyVacbListEntry);
+                                    ROS_SHARED_CACHE_MAP,
+                                    SharedCacheMapLinks);
         current_entry = current_entry->Flink;
 
-        CcRosVacbIncRefCount(current);
-
-        SharedCacheMap = current->SharedCacheMap;
+        KeAcquireSpinLockAtDpcLevel(&current->CacheMapLock);
 
         /* When performing lazy write, don't handle temporary files */
-        if (CalledFromLazy && BooleanFlagOn(SharedCacheMap->FileObject->Flags, FO_TEMPORARY_FILE))
-        {
-            CcRosVacbDecRefCount(current);
+        if (CalledFromLazy && BooleanFlagOn(current->FileObject->Flags, FO_TEMPORARY_FILE))
             continue;
-        }
 
         /* Don't attempt to lazy write the files that asked not to */
-        if (CalledFromLazy && BooleanFlagOn(SharedCacheMap->Flags, WRITEBEHIND_DISABLED))
-        {
-            CcRosVacbDecRefCount(current);
+        if (CalledFromLazy && BooleanFlagOn(current->Flags, WRITEBEHIND_DISABLED))
             continue;
-        }
 
-        ASSERT(current->Dirty);
+        ASSERT(current->DirtyPages != 0);
 
         /* Do not lazy-write the same file concurrently. Fastfat ASSERTS on that */
-        if (SharedCacheMap->Flags & SHARED_CACHE_MAP_IN_LAZYWRITE)
-        {
-            CcRosVacbDecRefCount(current);
+        if (BooleanFlagOn(current->Flags & SHARED_CACHE_MAP_IN_LAZYWRITE))
             continue;
-        }
 
-        SharedCacheMap->Flags |= SHARED_CACHE_MAP_IN_LAZYWRITE;
+        FlushOffset = current->ValidDataLength;
+
+        current->Flags |= SHARED_CACHE_MAP_IN_LAZYWRITE;
 
         /* Keep a ref on the shared cache map */
-        SharedCacheMap->OpenCount++;
+        current->OpenCount++;
 
+        KeReleaseSpinLockFromDpcLevel(&current->CacheMapLock);
         KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
 
-        Locked = SharedCacheMap->Callbacks->AcquireForLazyWrite(SharedCacheMap->LazyWriteContext, Wait);
+        Locked = current->Callbacks->AcquireForLazyWrite(current->LazyWriteContext, Wait);
         if (!Locked)
         {
             DPRINT("Not locked!");
             ASSERT(!Wait);
-            CcRosVacbDecRefCount(current);
             OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
-            SharedCacheMap->Flags &= ~SHARED_CACHE_MAP_IN_LAZYWRITE;
+            current->Flags &= ~SHARED_CACHE_MAP_IN_LAZYWRITE;
 
-            if (--SharedCacheMap->OpenCount == 0)
-                CcRosDeleteFileCache(SharedCacheMap->FileObject, SharedCacheMap, &OldIrql);
+            if (--current->OpenCount == 0)
+                CcRosDeleteFileCache(current->FileObject, current, &OldIrql);
 
             continue;
         }
 
-        IO_STATUS_BLOCK Iosb;
-        Status = CcRosFlushVacb(current, &Iosb);
+        Iosb.Information = 0;
+        CcpFlushFileCache(current, &FlushOffset, Target * PAGE_SIZE, &Iosb);
 
         SharedCacheMap->Callbacks->ReleaseFromLazyWrite(SharedCacheMap->LazyWriteContext);
 
