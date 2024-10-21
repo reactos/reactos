@@ -34,6 +34,8 @@ typedef struct tagDEVVTBL
 #define MAX_FDS 60
 #define INVALID_FILE_ID ((ULONG)-1)
 
+extern BOOLEAN FSFileNameCaseSensitive;
+
 ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId);
 
 ARC_STATUS
