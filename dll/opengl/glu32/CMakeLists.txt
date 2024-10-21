@@ -8,7 +8,7 @@ include_directories(BEFORE
 
 add_definitions(
     -DBUILD_GLU32
-    -DNDEBUG
+    -DNDEBUG=
     -DLIBRARYBUILD
     -DRESOLVE_3D_TEXTURE_SUPPORT)
 
