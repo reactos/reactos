@@ -37,6 +37,33 @@ void GetWindowList(PWINDOW_LIST pList)
     EnumWindows(EnumWindowsProc, (LPARAM)pList);
 }
 
+void GetWindowListForClose(PWINDOW_LIST pList)
+{
+    for (UINT tries = 5; tries--;)
+    {
+        if (tries)
+            FreeWindowList(pList);
+        GetWindowList(pList);
+        Sleep(500);
+        WINDOW_LIST list;
+        GetWindowList(&list);
+        SIZE_T count = list.m_chWnds;
+        FreeWindowList(&list);
+        if (count == pList->m_chWnds)
+            break;
+    }
+}
+
+static HWND FindInWindowList(const WINDOW_LIST &list, HWND hWnd)
+{
+    for (SIZE_T i = 0; i < list.m_chWnds; ++i)
+    {
+        if (list.m_phWnds[i] == hWnd)
+            return hWnd;
+    }
+    return NULL;
+}
+
 HWND FindNewWindow(PWINDOW_LIST List1, PWINDOW_LIST List2)
 {
     for (SIZE_T i2 = 0; i2 < List2->m_chWnds; ++i2)
@@ -61,30 +88,31 @@ HWND FindNewWindow(PWINDOW_LIST List1, PWINDOW_LIST List2)
     return NULL;
 }
 
-#define TRIALS_COUNT 8
+static void WaitForForegroundWindow(HWND hWnd, UINT wait = 250)
+{
+    for (UINT waited = 0, interval = 50; waited < wait; waited += interval)
+    {
+        if (GetForegroundWindow() == hWnd || !IsWindowVisible(hWnd))
+            return;
+        Sleep(interval);
+    }
+}
 
 void CloseNewWindows(PWINDOW_LIST List1, PWINDOW_LIST List2)
 {
-    INT cDiff = List2->m_chWnds - List1->m_chWnds;
-    for (INT j = 0; j < cDiff; ++j)
+    for (SIZE_T i = 0; i < List2->m_chWnds; ++i)
     {
-        HWND hWnd = FindNewWindow(List1, List2);
-        if (!hWnd)
-            break;
+        HWND hWnd = List2->m_phWnds[i];
+        if (!IsWindow(hWnd) || FindInWindowList(*List1, hWnd))
+            continue;
 
-        for (INT i = 0; i < TRIALS_COUNT; ++i)
+        SwitchToThisWindow(hWnd, TRUE);
+        WaitForForegroundWindow(hWnd);
+
+        if (!PostMessageW(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0))
         {
-            if (!IsWindow(hWnd))
-                break;
-
-            SwitchToThisWindow(hWnd, TRUE);
-
-            // Alt+F4
-            keybd_event(VK_MENU, 0x38, 0, 0);
-            keybd_event(VK_F4, 0x3E, 0, 0);
-            keybd_event(VK_F4, 0x3E, KEYEVENTF_KEYUP, 0);
-            keybd_event(VK_MENU, 0x38, KEYEVENTF_KEYUP, 0);
-            Sleep(100);
+            DWORD_PTR result;
+            SendMessageTimeoutW(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0, 0, 3000, &result);
         }
     }
 }

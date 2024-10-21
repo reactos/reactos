@@ -14,6 +14,7 @@ typedef struct WINDOW_LIST
 } WINDOW_LIST, *PWINDOW_LIST;
 
 void GetWindowList(PWINDOW_LIST pList);
+void GetWindowListForClose(PWINDOW_LIST pList);
 HWND FindNewWindow(PWINDOW_LIST List1, PWINDOW_LIST List2);
 void CloseNewWindows(PWINDOW_LIST List1, PWINDOW_LIST List2);
 void FreeWindowList(PWINDOW_LIST pList);
