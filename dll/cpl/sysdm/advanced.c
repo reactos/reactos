@@ -9,6 +9,8 @@
  */
 
 #include "precomp.h"
+#define WIN32_NO_STATUS
+#include "pstypes.h" /* SharedUserData */
 
 static TCHAR BugLink[] = _T("http://jira.reactos.org/");
 static TCHAR ReportAsWorkstationKey[] = _T("SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version");
@@ -51,9 +53,10 @@ static VOID
 OnInitSysSettingsDialog(HWND hwndDlg)
 {
     HKEY hKey;
-    DWORD dwVal;
+    DWORD dwVal = 0;
     DWORD dwType = REG_DWORD;
     DWORD cbData = sizeof(DWORD);
+    BOOL ReportAsWorkstation = SharedUserData->NtProductType == VER_NT_WORKSTATION;
 
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
                      ReportAsWorkstationKey,
@@ -68,19 +71,14 @@ OnInitSysSettingsDialog(HWND hwndDlg)
                             (LPBYTE)&dwVal,
                             &cbData) == ERROR_SUCCESS)
         {
-            if (dwVal != FALSE)
-            {
-                // set the check box
-                SendDlgItemMessageW(hwndDlg,
-                                    IDC_REPORTASWORKSTATION,
-                                    BM_SETCHECK,
-                                    BST_CHECKED,
-                                    0);
-            }
+            if (cbData == sizeof(DWORD))
+                ReportAsWorkstation = dwVal != FALSE;
         }
 
         RegCloseKey(hKey);
     }
+    SendDlgItemMessageW(hwndDlg, IDC_REPORTASWORKSTATION, BM_SETCHECK,
+                        ReportAsWorkstation ? BST_CHECKED : BST_UNCHECKED, 0);
 }
 
 INT_PTR CALLBACK
