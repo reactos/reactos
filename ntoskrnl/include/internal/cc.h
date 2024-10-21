@@ -41,6 +41,7 @@
 //
 extern ULONG CcRosTraceLevel;
 extern LIST_ENTRY DirtyVacbListHead;
+extern LIST_ENTRY CcDirtySharedCacheMapList;
 extern ULONG CcDirtyPageThreshold;
 extern ULONG CcTotalDirtyPages;
 extern LIST_ENTRY CcDeferredWrites;
@@ -193,7 +194,6 @@ typedef struct _ROS_SHARED_CACHE_MAP
     LIST_ENTRY CacheMapVacbListHead;
     BOOLEAN PinAccess;
     KSPIN_LOCK CacheMapLock;
-    KGUARDED_MUTEX FlushCacheLock;
 #if DBG
     BOOLEAN Trace; /* enable extra trace output for this cache map and it's VACBs */
 #endif
