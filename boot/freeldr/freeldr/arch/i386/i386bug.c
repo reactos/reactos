@@ -227,8 +227,9 @@ FrLdrBugCheckWithMessage(
     for (;;);
 }
 
+DECLSPEC_NORETURN
+static
 void
-NTAPI
 FrLdrBugCheckEx(
     ULONG BugCode,
     PCHAR File,
@@ -256,6 +257,7 @@ FrLdrBugCheckEx(
     for (;;);
 }
 
+DECLSPEC_NORETURN
 void
 NTAPI
 FrLdrBugCheck(ULONG BugCode)
