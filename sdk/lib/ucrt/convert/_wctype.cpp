@@ -12,6 +12,7 @@
 #include <ctype.h>
 #include <locale.h>
 
+#define __inline
 
 
 extern "C" __inline int (__cdecl _isleadbyte_l)(int const c, _locale_t const locale)
