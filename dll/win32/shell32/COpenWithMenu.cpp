@@ -771,7 +771,22 @@ BOOL COpenWithList::SetDefaultHandler(SApp *pApp, LPCWSTR pwszFilename)
 
     /* Copy static verbs from Classes\Applications key */
     /* FIXME: SHCopyKey does not copy the security attributes of the keys */
+    /* FIXME: Windows does not actually copy the verb keys */
+    /* FIXME: Should probably delete any existing DelegateExecute/DropTarget/DDE verb information first */
     LSTATUS Result = SHCopyKeyW(hSrcKey, NULL, hDestKey, 0);
+#ifdef __REACTOS__
+    // FIXME: When OpenWith is used to set a new default on Windows, the FileExts key
+    // is changed to force this association. ROS does not support this. The best
+    // we can do is to try to set the verb we (incorrectly) copied as the new default.
+    HKEY hAppKey;
+    StringCbPrintfW(wszBuf, sizeof(wszBuf), L"Applications\\%s", pApp->wszFilename);
+    if (Result == ERROR_SUCCESS && !RegOpenKeyExW(HKEY_CLASSES_ROOT, wszBuf, 0, KEY_READ, &hAppKey))
+    {
+        if (HCR_GetDefaultVerbW(hAppKey, NULL, wszBuf, _countof(wszBuf)) && *wszBuf)
+            RegSetString(hDestKey, NULL, wszBuf, REG_SZ);
+        RegCloseKey(hAppKey);
+    }
+#endif // __REACTOS__
     RegCloseKey(hDestKey);
     RegCloseKey(hSrcKey);
     RegCloseKey(hKey);
