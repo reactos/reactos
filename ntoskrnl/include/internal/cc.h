@@ -203,6 +203,7 @@ typedef struct _ROS_SHARED_CACHE_MAP
 #define WRITEBEHIND_DISABLED 0x2
 #define SHARED_CACHE_MAP_IN_CREATION 0x4
 #define SHARED_CACHE_MAP_IN_LAZYWRITE 0x8
+#define MAX_FLUSH_LENGTH ((MAXULONG >> PAGE_SHIFT) * PAGE_SIZE)
 
 typedef struct _ROS_VACB
 {
@@ -308,12 +309,6 @@ CcMdlWriteComplete2(
     IN PFILE_OBJECT FileObject,
     IN PLARGE_INTEGER FileOffset,
     IN PMDL MdlChain
-);
-
-NTSTATUS
-CcRosFlushVacb(
-    _In_ PROS_VACB Vacb,
-    _Out_opt_ PIO_STATUS_BLOCK Iosb
 );
 
 NTSTATUS
