@@ -44,9 +44,7 @@ THE SOFTWARE.
 
 #include "libm_errno.h"
 
-/* exp2 is only provided for use by powf under Windows, so give
-   it a leading underscore. */
-double FN_PROTOTYPE(_exp2)(double x)
+double FN_PROTOTYPE(exp2)(double x)
 {
   static const double
     max_exp2_arg = 1024.0,  /* 0x4090000000000000 */
