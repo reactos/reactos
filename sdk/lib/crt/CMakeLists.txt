@@ -28,6 +28,7 @@ include(crt.cmake)
 include(libcntpr.cmake)
 include(msvcrtex.cmake)
 include(oldnames.cmake)
+include(ucrtsupport.cmake)
 
 add_library(user32_wsprintf
     printf/streamout.c
