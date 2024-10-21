@@ -1792,6 +1792,7 @@ IntGdiWidenPath(PPATH pPath, UINT penWidth, UINT penStyle, FLOAT eMiterLimit)
     PPATH flat_path, pNewPath, *pStrokes = NULL, *pOldStrokes, pUpPath, pDownPath;
     BYTE *type;
     DWORD joint, endcap;
+    KFLOATING_SAVE fpsave;
 
     endcap = (PS_ENDCAP_MASK & penStyle);
     joint = (PS_JOIN_MASK & penStyle);
@@ -1884,6 +1885,8 @@ IntGdiWidenPath(PPATH pPath, UINT penWidth, UINT penStyle, FLOAT eMiterLimit)
     }
 
     pNewPath = PATH_CreatePath( flat_path->numEntriesUsed );
+
+    KeSaveFloatingPointState(&fpsave);
 
     for (i = 0; i < numStrokes; i++)
     {
@@ -2109,6 +2112,9 @@ IntGdiWidenPath(PPATH pPath, UINT penWidth, UINT penStyle, FLOAT eMiterLimit)
     PATH_Delete(flat_path->BaseObject.hHmgr);
     pNewPath->state = PATH_Closed;
     PATH_UnlockPath(pNewPath);
+
+    KeRestoreFloatingPointState(&fpsave);
+
     return pNewPath;
 }
 
