@@ -252,7 +252,6 @@ typedef struct _MEMORY_AREA
     ULONG Flags;
     BOOLEAN DeleteInProgress;
     ULONG Magic;
-    PVOID Vad;
 
     struct
     {
@@ -261,6 +260,11 @@ typedef struct _MEMORY_AREA
         LIST_ENTRY RegionListHead;
     } SectionData;
 } MEMORY_AREA, *PMEMORY_AREA;
+
+#define MI_SET_MEMORY_AREA_VAD(Vad) do { (Vad)->u.VadFlags.Spare |= 1; } while (0)
+#define MI_IS_MEMORY_AREA_VAD(Vad) (((Vad)->u.VadFlags.Spare & 1) != 0)
+#define MI_SET_ROSMM_VAD(Vad) do { (Vad)->u.VadFlags.Spare |= 2; } while (0)
+#define MI_IS_ROSMM_VAD(Vad) (((Vad)->u.VadFlags.Spare & 2) != 0)
 
 typedef struct _MM_RMAP_ENTRY
 {
@@ -611,6 +615,13 @@ MmLocateMemoryAreaByRegion(
     SIZE_T Length
 );
 
+BOOLEAN
+NTAPI
+MmIsAddressRangeFree(
+    PMMSUPPORT AddressSpace,
+    PVOID Address,
+    ULONG_PTR Length);
+
 PVOID
 NTAPI
 MmFindGap(
@@ -619,15 +630,6 @@ MmFindGap(
     ULONG_PTR Granularity,
     BOOLEAN TopDown
 );
-
-VOID
-NTAPI
-MiRosCheckMemoryAreas(
-   PMMSUPPORT AddressSpace);
-
-VOID
-NTAPI
-MiCheckAllProcessMemoryAreas(VOID);
 
 /* npool.c *******************************************************************/
 
@@ -684,12 +686,6 @@ MmBuildMdlFromPages(
 );
 
 /* mminit.c ******************************************************************/
-
-VOID
-NTAPI
-MmInit1(
-    VOID
-);
 
 CODE_SEG("INIT")
 BOOLEAN
@@ -795,18 +791,6 @@ NTAPI
 MmSetMemoryPriorityProcess(
     IN PEPROCESS Process,
     IN UCHAR MemoryPriority
-);
-
-/* i386/pfault.c *************************************************************/
-
-NTSTATUS
-NTAPI
-MmPageFault(
-    ULONG Cs,
-    PULONG Eip,
-    PULONG Eax,
-    ULONG Cr2,
-    ULONG ErrorCode
 );
 
 /* special.c *****************************************************************/

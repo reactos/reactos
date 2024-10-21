@@ -720,7 +720,7 @@ MmUnmapViewOfCacheSegment(PMMSUPPORT AddressSpace,
     PMM_SECTION_SEGMENT Segment;
 
     MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, BaseAddress);
-    if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
+    if (MemoryArea == NULL || MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3 || MemoryArea->DeleteInProgress)
     {
         ASSERT(MemoryArea);
         return STATUS_UNSUCCESSFUL;
