@@ -16,30 +16,95 @@ WINE_DECLARE_DEBUG_CHANNEL(icon);
 #undef MAKEINTRESOURCE
 #define MAKEINTRESOURCE MAKEINTRESOURCEW
 
+typedef struct
+{
+    LPCWSTR resource_name;
+    HANDLE cursor;
+    LPCWSTR registry_name;
+} SYSTEMCURSOR;
+
+static SYSTEMCURSOR g_SysCursors[] =
+{
+    {IDC_ARROW,      NULL, L"Arrow"       },
+    {IDC_IBEAM,      NULL, L"IBeam"       },
+    {IDC_WAIT,       NULL, L"Wait"        },
+    {IDC_CROSS,      NULL, L"Crosshair"   },
+    {IDC_UPARROW,    NULL, L"UpArrow"     },
+    {IDC_ICON,       NULL, L""            },
+    {IDC_SIZE,       NULL, L""            },
+    {IDC_SIZENWSE,   NULL, L"SizeNWSE"    },
+    {IDC_SIZENESW,   NULL, L"SizeNESW"    },
+    {IDC_SIZEWE,     NULL, L"SizeWE"      },
+    {IDC_SIZENS,     NULL, L"SizeNS"      },
+    {IDC_SIZEALL,    NULL, L"SizeAll"     },
+    {IDC_NO,         NULL, L"No"          },
+    {IDC_HAND,       NULL, L"Hand"        },
+    {IDC_APPSTARTING,NULL, L"AppStarting" },
+    {IDC_HELP,       NULL, L"Help"        },
+};
+
 /************* USER32 INTERNAL FUNCTIONS **********/
 
-VOID LoadSystemCursors(VOID)
+VOID
+LoadSystemCursors(VOID)
 {
-   if (!gpsi->hIconSmWindows)
-   {
-       ERR("Loading System Cursors\n");
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_ARROW,       IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_NORMAL);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_IBEAM,       IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_IBEAM);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_WAIT,        IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_WAIT);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_CROSS,       IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_CROSS);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_UPARROW,     IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_UP);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_ICON,        IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_ICON);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_SIZE,        IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_SIZE);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_SIZENWSE,    IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_SIZENWSE);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_SIZENESW,    IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_SIZENESW);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_SIZEWE,      IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_SIZEWE);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_SIZENS,      IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_SIZENS);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_SIZEALL,     IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_SIZEALL);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_NO,          IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_NO);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_HAND,        IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_HAND);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_APPSTARTING, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_APPSTARTING);
-       NtUserSetSystemCursor(LoadImageW( 0, IDC_HELP,        IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_HELP);
-   }
+    UINT i;
+    LSTATUS result;
+    HKEY hCursorsKey;
+    DWORD type, size = MAX_PATH * sizeof(WCHAR);
+    WCHAR szCursorPath[MAX_PATH], szExpanded[MAX_PATH];
+
+    for (i = 0; i < _countof(g_SysCursors); i++)
+    {
+        /* Try to load defaults first */
+        g_SysCursors[i].cursor = LoadImageW(NULL, g_SysCursors[i].resource_name, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+        TRACE("Cursor handle %p\n", g_SysCursors[i].cursor);
+    }
+
+    result = RegOpenKeyExW(HKEY_CURRENT_USER,
+                           L"Control Panel\\Cursors",
+                           0,
+                           KEY_READ,
+                           &hCursorsKey);
+    if (result == ERROR_SUCCESS)
+    {
+        for (i = 0; i < _countof(g_SysCursors); i++)
+        {
+            result = RegQueryValueExW(hCursorsKey,
+                                      g_SysCursors[i].registry_name,
+                                      NULL,
+                                      &type,
+                                      (LPBYTE)szCursorPath,
+                                      &size);
+            if (result == ERROR_SUCCESS && type == REG_EXPAND_SZ)
+            {
+                ExpandEnvironmentStringsW(szCursorPath,
+                                          szExpanded,
+                                          _countof(szExpanded));
+
+                g_SysCursors[i].cursor = LoadImageW(NULL, szExpanded, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
+                TRACE("Cursor name %S, cursor handle %p\n", g_SysCursors[i].registry_name, g_SysCursors[i].cursor);
+            }
+        }
+        RegCloseKey(hCursorsKey);
+    }
+}
+
+HANDLE
+GetSystemCursor(
+    _In_ LPCWSTR lpCursorName)
+{
+    UINT i;
+    for (i = 0; i < _countof(g_SysCursors); i++)
+    {
+        if (lpCursorName == g_SysCursors[i].resource_name)
+        {
+            TRACE("Match!!\n");
+            return g_SysCursors[i].cursor;
+        }
+    }
+    TRACE("Not found :(\n");
+    return NULL;
 }
 
 /* This callback routine is called directly after switching to gui mode */
@@ -48,27 +113,28 @@ WINAPI
 User32SetupDefaultCursors(PVOID Arguments,
                           ULONG ArgumentLength)
 {
-    BOOL *DefaultCursor = (BOOL*)Arguments;
-    HCURSOR hCursor;
+    PLOADCURSORS_CALLBACK_ARGUMENTS Common = Arguments;
 
-    /* Load system cursors first */
-    LoadSystemCursors();
+    ERR("Loading System Cursors\n");
 
-    if(*DefaultCursor)
-    {
-        /* set default cursor */
-        hCursor = LoadCursorW(0, IDC_ARROW);
-        SetCursor(hCursor);
-    }
-    else
-    {
-        /* FIXME load system cursor scheme */
-        SetCursor(0);
-        hCursor = LoadCursorW(0, IDC_ARROW);
-        SetCursor(hCursor);
-    }
+    Common->hCursorArrow       = LoadImageW(NULL, IDC_ARROW,       IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+    Common->hCursorIbeam       = LoadImageW(NULL, IDC_IBEAM,       IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+    Common->hCursorWait        = LoadImageW(NULL, IDC_WAIT,        IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+    Common->hCursorCross       = LoadImageW(NULL, IDC_CROSS,       IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+    Common->hCursorUp          = LoadImageW(NULL, IDC_UPARROW,     IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+    Common->hCursorIcon        = LoadImageW(NULL, IDC_ICON,        IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+    Common->hCursorSize        = LoadImageW(NULL, IDC_SIZE,        IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+    Common->hCursorSizeNwse    = LoadImageW(NULL, IDC_SIZENWSE,    IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+    Common->hCursorSizeNesw    = LoadImageW(NULL, IDC_SIZENESW,    IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+    Common->hCursorSizeWe      = LoadImageW(NULL, IDC_SIZEWE,      IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+    Common->hCursorSizeNs      = LoadImageW(NULL, IDC_SIZENS,      IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+    Common->hCursorSizeAll     = LoadImageW(NULL, IDC_SIZEALL,     IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+    Common->hCursorNo          = LoadImageW(NULL, IDC_NO,          IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+    Common->hCursorHand        = LoadImageW(NULL, IDC_HAND,        IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+    Common->hCursorAppStarting = LoadImageW(NULL, IDC_APPSTARTING, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+    Common->hCursorHelp        = LoadImageW(NULL, IDC_HELP,        IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
 
-    return(ZwCallbackReturn(&hCursor, sizeof(HCURSOR), STATUS_SUCCESS));
+    return ZwCallbackReturn(Arguments, ArgumentLength, STATUS_SUCCESS);
 }
 
 BOOL get_icon_size(HICON hIcon, SIZE *size)
@@ -1009,6 +1075,8 @@ static BOOL CURSORICON_GetCursorDataFromANI(
         else
             pFrameData = pCurData;
 
+        pFrameData->cx = pCurData->cx;
+        pFrameData->cy = pCurData->cy;
         pFrameData->rt = pCurData->rt;
 
         if (pHeader->flags & ANI_FLAG_ICON)
@@ -1035,8 +1103,8 @@ static BOOL CURSORICON_GetCursorDataFromANI(
             }
             else
             {
-                pFrameData->cx = pHeader->width;
-                pFrameData->cy = pHeader->height;
+                if (!pFrameData->cx) pFrameData->cx = pHeader->width;
+                if (!pFrameData->cy) pFrameData->cy = pHeader->height;
             }
             pbmi = (const BITMAPINFO *) (icon_data + pDirEntry->dwDIBOffset);
         }
@@ -1372,7 +1440,6 @@ end:
     return hbmpRet;
 }
 
-
 static
 HANDLE
 CURSORICON_LoadFromFileW(
@@ -1387,6 +1454,7 @@ CURSORICON_LoadFromFileW(
     const CURSORICONFILEDIR *dir;
     DWORD filesize = 0;
     LPBYTE bits;
+    BOOL isAnimated = FALSE;
     HANDLE hCurIcon = NULL;
     CURSORDATA cursorData;
 
@@ -1396,11 +1464,23 @@ CURSORICON_LoadFromFileW(
     if (!bits)
         return NULL;
 
+    /* A bit of preparation */
+    ZeroMemory(&cursorData, sizeof(cursorData));
+    cursorData.cx = cxDesired;
+    cursorData.cy = cyDesired;
+    cursorData.rt = (USHORT)((ULONG_PTR)(bIcon ? RT_ICON : RT_CURSOR));
+
     /* Check for .ani. */
     if (memcmp( bits, "RIFF", 4 ) == 0)
     {
-        UNIMPLEMENTED;
-        goto end;
+        if (!CURSORICON_GetCursorDataFromANI(&cursorData, bits, filesize, fuLoad))
+        {
+            ERR("Failing File is \n    '%S'.\n", lpszName);
+            goto end;
+        }
+        cursorData.CURSORF_flags = (CURSORF_FROMRESOURCE | CURSORF_LRSHARED | CURSORF_ACON);
+        isAnimated = TRUE;
+        goto create;
     }
 
     dir = (CURSORICONFILEDIR*) bits;
@@ -1409,25 +1489,24 @@ CURSORICON_LoadFromFileW(
         goto end;
 
     /* Fix dimensions */
-    if(!cxDesired) cxDesired = entry->bWidth;
-    if(!cyDesired) cyDesired = entry->bHeight;
-    /* A bit of preparation */
-    ZeroMemory(&cursorData, sizeof(cursorData));
+    if(!cursorData.cx) cursorData.cx = entry->bWidth;
+    if(!cursorData.cy) cursorData.cy = entry->bHeight;
+
     if(!bIcon)
     {
         cursorData.xHotspot = entry->xHotspot;
         cursorData.yHotspot = entry->yHotspot;
     }
-    cursorData.rt = (USHORT)((ULONG_PTR)(bIcon ? RT_ICON : RT_CURSOR));
 
     /* Do the dance */
     if(!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO*)(&bits[entry->dwDIBOffset])))
-        {
-            ERR("Failing File is \n    '%S'.\n", lpszName);
-            goto end;
-        }
+    {
+        ERR("Failing File is \n    '%S'.\n", lpszName);
+        goto end;
+    }
 
-    hCurIcon = NtUserxCreateEmptyCurObject(FALSE);
+create:
+    hCurIcon = NtUserxCreateEmptyCurObject(isAnimated);
     if(!hCurIcon)
         goto end;
 
@@ -2144,14 +2223,20 @@ HCURSOR WINAPI LoadCursorA(
   _In_      LPCSTR    lpCursorName
 )
 {
+    HCURSOR hCursor;
+
     TRACE("%p, %s\n", hInstance, debugstr_a(lpCursorName));
 
-    return LoadImageA(hInstance,
+    //// HACK to properly apply the user-defined cursors on user-mode side
+    hCursor = GetSystemCursor((LPCWSTR)lpCursorName);
+    if (!hCursor)//// End of HACK
+    hCursor = LoadImageA(hInstance,
         lpCursorName,
         IMAGE_CURSOR,
         0,
         0,
-        LR_SHARED | LR_DEFAULTSIZE );
+        LR_SHARED | LR_DEFAULTSIZE);
+    return hCursor;
 }
 
 HCURSOR WINAPI LoadCursorW(
@@ -2159,14 +2244,20 @@ HCURSOR WINAPI LoadCursorW(
   _In_      LPCWSTR   lpCursorName
 )
 {
+    HCURSOR hCursor;
+
     TRACE("%p, %s\n", hInstance, debugstr_w(lpCursorName));
 
-    return LoadImageW(hInstance,
+    //// HACK to properly apply the user-defined cursors on user-mode side
+    hCursor = GetSystemCursor(lpCursorName);
+    if (!hCursor)//// End of HACK
+    hCursor = LoadImageW(hInstance,
         lpCursorName,
         IMAGE_CURSOR,
         0,
         0,
-        LR_SHARED | LR_DEFAULTSIZE );
+        LR_SHARED | LR_DEFAULTSIZE);
+    return hCursor;
 }
 
 HCURSOR WINAPI LoadCursorFromFileA(
@@ -2276,6 +2367,36 @@ HANDLE WINAPI LoadImageW(
             break;
     }
     return NULL;
+}
+
+NTSTATUS WINAPI
+User32CallLoadImageFromKernel(PVOID Arguments, ULONG ArgumentLength)
+{
+    PLOADIMAGE_CALLBACK_ARGUMENTS Common;
+    HANDLE Result;
+    DWORD Ret;
+    WCHAR ExpandedFilePath[MAX_PATH];
+    Common = (PLOADIMAGE_CALLBACK_ARGUMENTS) Arguments;
+
+    TRACE("User32CallLoadImageFromKernel called\n");
+
+    Ret = ExpandEnvironmentStringsW(Common->ImageName,
+                                    ExpandedFilePath,
+                                    _countof(ExpandedFilePath));
+    if (!Ret)
+    {
+        ERR("ExpandEnvironmentStringsW failed with error %d\n", GetLastError());
+        return ZwCallbackReturn(NULL, 0, STATUS_UNSUCCESSFUL);
+    }
+
+    Result = LoadImageW(NULL,
+                        ExpandedFilePath,
+                        Common->ImageType,
+                        Common->cxDesired,
+                        Common->cyDesired,
+                        Common->fuFlags);
+
+    return ZwCallbackReturn(&Result, sizeof(HANDLE), STATUS_SUCCESS);
 }
 
 int WINAPI LookupIconIdFromDirectory(
