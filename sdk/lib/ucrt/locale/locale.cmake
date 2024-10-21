@@ -6,6 +6,7 @@ list(APPEND UCRT_LOCALE_SOURCES
     locale/GetLocaleInfoA.cpp
     locale/getqloc_downlevel.cpp
     locale/GetStringTypeA.cpp
+    locale/GetStringTypeW.c
     locale/get_qualified_locale.cpp
     locale/glstatus.cpp
     locale/initctype.cpp
