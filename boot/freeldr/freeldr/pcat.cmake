@@ -22,7 +22,7 @@ elseif(ARCH STREQUAL "amd64")
 endif()
 
 
-spec2def(freeldr_pe.exe freeldr.spec)
+spec2def(freeldr.sys freeldr.spec ADD_IMPORTLIB)
 
 list(APPEND PCATLDR_ARC_SOURCE
     ${FREELDR_ARC_SOURCE}
@@ -155,7 +155,7 @@ add_library(freeldr_common
     ${PCATLDR_ARC_SOURCE}
     ${FREELDR_BOOTLIB_SOURCE}
     ${PCATLDR_BOOTMGR_SOURCE}
-    ${FREELDR_NTLDR_SOURCE})
+)
 
 if(MSVC AND CMAKE_C_COMPILER_ID STREQUAL "Clang")
     # We need to reduce the binary size
@@ -170,7 +170,7 @@ set(PCH_SOURCE
     ${PCATLDR_ARC_SOURCE}
     ${FREELDR_BOOTLIB_SOURCE}
     ${PCATLDR_BOOTMGR_SOURCE}
-    ${FREELDR_NTLDR_SOURCE})
+)
 
 add_pch(freeldr_common include/freeldr.h PCH_SOURCE)
 add_dependencies(freeldr_common bugcodes asm xdk)
@@ -221,7 +221,7 @@ if(ARCH STREQUAL "i386")
     target_link_libraries(freeldr_pe mini_hal)
 endif()
 
-target_link_libraries(freeldr_pe freeldr_common cportlib blcmlib blrtl libcntpr)
+target_link_libraries(freeldr_pe freeldr_common cportlib libcntpr blrtl)
 
 # dynamic analysis switches
 if(STACK_PROTECTOR)

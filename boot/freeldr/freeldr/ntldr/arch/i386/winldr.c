@@ -117,7 +117,7 @@ MempAllocatePageTables(VOID)
     // Max number of entries = MaxPageNum >> 10
     // FIXME: This is a number to describe ALL physical memory
     // and windows doesn't expect ALL memory mapped...
-    NumPageTables = TotalPagesInLookupTable >> 10;
+    NumPageTables = MmGetTotalPagesInLookupTable() >> 10;
 
     TRACE("NumPageTables = %d\n", NumPageTables);
 

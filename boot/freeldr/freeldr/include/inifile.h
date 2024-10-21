@@ -83,3 +83,4 @@ BOOLEAN    IniAddSection(PCSTR SectionName, ULONG_PTR* SectionId);
 BOOLEAN    IniAddSettingValueToSection(ULONG_PTR SectionId, PCSTR SettingName, PCSTR SettingValue);
 BOOLEAN IniModifySettingValue(ULONG_PTR SectionId, PCSTR SettingName, PCSTR SettingValue);
 VOID IniCleanup(VOID);
+PLIST_ENTRY IniGetFileSectionListHead(VOID);
