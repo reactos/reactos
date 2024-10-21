@@ -160,22 +160,23 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_CAPTION "Penyetelan ReactOS"
     IDS_TYPETITLE "Selamat datang di Penyetelan ReactOS"
-    IDS_TYPESUBTITLE "Pilih jenis penyetelan"
+    IDS_TYPESUBTITLE "Pilih jenis penyetelan."
     IDS_DEVICETITLE "Menyetel perangkat dasar"
-    IDS_DEVICESUBTITLE "Setel pengaturan tampilan dan papan ketik"
+    IDS_DEVICESUBTITLE "Setel pengaturan tampilan dan papan ketik."
     IDS_DRIVETITLE "Penyetelan pemasangan partisi dan folder sistem"
-    IDS_DRIVESUBTITLE "Menyiapkan pemasangan partisi, folder sistem dan bootloader"
-    IDS_PROCESSTITLE "Penyetelan partisi, penyalinan berkas dan sistem"
-    IDS_PROCESSSUBTITLE "Buat dan format partisi, salin berkas, pasang dan setel bootloader"
-    IDS_RESTARTTITLE "Penyetelan tahap pertama selesai"
-    IDS_RESTARTSUBTITLE "Babak pertama dari penyetelan ini telah selesai, mulai ulang untuk meneruskan ke tahap kedua"
+    IDS_DRIVESUBTITLE "Menyiapkan pemasangan partisi, folder sistem dan bootloader."
     IDS_SUMMARYTITLE "Ringkasan Pemasangan"
-    IDS_SUMMARYSUBTITLE "Cek daftar properti pemasangan sebelum menerapkan pemasangan perangkat"
+    IDS_SUMMARYSUBTITLE "Cek daftar properti pemasangan sebelum menerapkan pemasangan perangkat."
+    IDS_PROCESSTITLE "Penyetelan partisi, penyalinan berkas dan sistem"
+    IDS_PROCESSSUBTITLE "Buat dan format partisi, salin berkas, pasang dan setel bootloader."
+    IDS_RESTARTTITLE "Penyetelan tahap pertama selesai"
+    IDS_RESTARTSUBTITLE "Babak pertama dari penyetelan ini telah selesai, mulai ulang untuk meneruskan ke tahap kedua."
     IDS_ABORTSETUP "ReactOS tidak sepenuhnya terpasang pada komputer ini. Jika kamu keluar dari penyetelan ini, kamu harus menjalankan lagi penyetelan ini untuk memasang ReactOS. Yakin ingin keluar?"
     IDS_ABORTSETUP2 "Gugurkan pemasangan?"
     IDS_NO_TXTSETUP_SIF "Tidak bisa menemukan 'txtsetup.sif'.\nPenyetelan tidak bisa dilanjutkan."
-    IDS_CAPTION "Penyetelan ReactOS"
+    IDS_INSTALLBTN "&Install"
     IDS_VOLUME_NOFORMAT "Not formatted"
 END
 
@@ -218,12 +219,16 @@ BEGIN
     IDS_RENAMING "Renaming %s to %s"
     IDS_DELETING "Deleting %s"
 
+    IDS_CONFIG_SYSTEM_PARTITION "Configuring the system partition..."
     IDS_PREPARE_PARTITIONS "Preparing partitions..."
     IDS_PREPARE_FILES "Preparing the list of files to be copied, please wait..."
     IDS_COPYING_FILES "Copying the files..."
 
     IDS_CREATE_REGISTRY "Creating the registry..."
     IDS_UPDATE_REGISTRY "Updating the registry..."
+
+    // IDS_INSTALL_FINALIZE "Finalizing the installation..."
+    IDS_INSTALL_BOOTLOADER "Installing the bootloader..."
 END
 
 // Note to translators: please refer to the corresponding usetup/lang/*.h translations.

@@ -160,22 +160,23 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_CAPTION "ReactOS installering"
     IDS_TYPETITLE "Velkommen til ReactOS installering"
     IDS_TYPESUBTITLE "Velg installering type."
     IDS_DEVICETITLE "Installer grunnleggende enheter"
     IDS_DEVICESUBTITLE "Velg innstillingene til skjermen og tastaturet."
     IDS_DRIVETITLE "Valg av installasjon partisjon og system mappe"
     IDS_DRIVESUBTITLE "Forbrede installasjon partisjon, system mappe og oppstartslaster."
-    IDS_PROCESSTITLE "Forbrede partisjon, kopiere filer og installere system"
-    IDS_PROCESSSUBTITLE "Opprett og formater partisjon, kopier filer, installere og sett opp oppstartlaster"
-    IDS_RESTARTTITLE "Første steget av installering er fullført"
-    IDS_RESTARTSUBTITLE "Første steget av installering har blitt fullført, start på nytt for å fortsette til andre steget"
     IDS_SUMMARYTITLE "Installasjon oppsumering"
-    IDS_SUMMARYSUBTITLE "Sjekk listen av installasjon egenskapene før du fortsetter installasjon av enhetene"
+    IDS_SUMMARYSUBTITLE "Sjekk listen av installasjon egenskapene før du fortsetter installasjon av enhetene."
+    IDS_PROCESSTITLE "Forbrede partisjon, kopiere filer og installere system"
+    IDS_PROCESSSUBTITLE "Opprett og formater partisjon, kopier filer, installere og sett opp oppstartlaster."
+    IDS_RESTARTTITLE "Første steget av installering er fullført"
+    IDS_RESTARTSUBTITLE "Første steget av installering har blitt fullført, start på nytt for å fortsette til andre steget."
     IDS_ABORTSETUP "ReactOS er ikke fullstendig installert på datamaskinen. Hvis du avslutter nå, trenger du å kjøre installeringen på nytt for å installere ReactOS. Vil du virkelig avslutte?"
     IDS_ABORTSETUP2 "Avbryt installasjonen?"
     IDS_NO_TXTSETUP_SIF "Unable to find 'txtsetup.sif'.\nSetup is unable to continue."
-    IDS_CAPTION "ReactOS installering"
+    IDS_INSTALLBTN "&Install"
     IDS_VOLUME_NOFORMAT "Not formatted"
 END
 
@@ -218,12 +219,16 @@ BEGIN
     IDS_RENAMING "Renaming %s to %s"
     IDS_DELETING "Deleting %s"
 
+    IDS_CONFIG_SYSTEM_PARTITION "Configuring the system partition..."
     IDS_PREPARE_PARTITIONS "Preparing partitions..."
     IDS_PREPARE_FILES "Preparing the list of files to be copied, please wait..."
     IDS_COPYING_FILES "Copying the files..."
 
     IDS_CREATE_REGISTRY "Creating the registry..."
     IDS_UPDATE_REGISTRY "Updating the registry..."
+
+    // IDS_INSTALL_FINALIZE "Finalizing the installation..."
+    IDS_INSTALL_BOOTLOADER "Installing the bootloader..."
 END
 
 // Note to translators: please refer to the corresponding usetup/lang/*.h translations.

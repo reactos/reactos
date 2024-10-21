@@ -169,22 +169,23 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_CAPTION "Expertul de instalare ReactOS"
     IDS_TYPETITLE "Bun venit la instalarea ReactOS"
     IDS_TYPESUBTITLE "Alegeți tipul de instalare."
     IDS_DEVICETITLE "Instalare dispozitive de bază"
     IDS_DEVICESUBTITLE "Stabilirea parametrilor de afișare și tastatură."
     IDS_DRIVETITLE "Stabilirea destinației"
     IDS_DRIVESUBTITLE "Pregătirea partiției de instalare, a folderului de sistem și a inițializatorului."
+    IDS_SUMMARYTITLE "Rezumat de instalare"
+    IDS_SUMMARYSUBTITLE "Lista cu opțiuni de instalare ce necesită verificare înainte de a continua instalarea."
     IDS_PROCESSTITLE "Executare pași de instalare"
     IDS_PROCESSSUBTITLE "Crearea și formatarea partiției, copierea de fișiere și instalarea inițializatorului."
     IDS_RESTARTTITLE "Finalizare primă etapă"
     IDS_RESTARTSUBTITLE "Prima etapă a instalarii a fost încheiată cu succes, reporniți pentru a doua etapă."
-    IDS_SUMMARYTITLE "Rezumat de instalare"
-    IDS_SUMMARYSUBTITLE "Lista cu opțiuni de instalare ce necesită verificare înainte de a continua instalarea."
     IDS_ABORTSETUP "ReactOS încă nu este complet instalat în calculator. Daca întrerupeți procesul de instalare, pentru a instala va fi necesară repetarea pașilor parcurși până acum. Sigur doriți asta?"
     IDS_ABORTSETUP2 "Abandonați instalarea?"
     IDS_NO_TXTSETUP_SIF "Fișierului „txtsetup.sif” nu poate fi găsit.\nInstalarea nu poate continua."
-    IDS_CAPTION "Expertul de instalare ReactOS"
+    IDS_INSTALLBTN "&Install"
     IDS_VOLUME_NOFORMAT "Not formatted"
 END
 
@@ -227,12 +228,16 @@ BEGIN
     IDS_RENAMING "Renaming %s to %s"
     IDS_DELETING "Deleting %s"
 
+    IDS_CONFIG_SYSTEM_PARTITION "Configuring the system partition..."
     IDS_PREPARE_PARTITIONS "Preparing partitions..."
     IDS_PREPARE_FILES "Preparing the list of files to be copied, please wait..."
     IDS_COPYING_FILES "Copying the files..."
 
     IDS_CREATE_REGISTRY "Creating the registry..."
     IDS_UPDATE_REGISTRY "Updating the registry..."
+
+    // IDS_INSTALL_FINALIZE "Finalizing the installation..."
+    IDS_INSTALL_BOOTLOADER "Installing the bootloader..."
 END
 
 // Note to translators: please refer to the corresponding usetup/lang/*.h translations.

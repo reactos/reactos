@@ -1117,7 +1117,9 @@ SummaryDlgProc(
                     // PropSheet_SetNextText(GetParent(hwndDlg), ...);
                     GetDlgItemTextW(GetParent(hwndDlg), ID_WIZNEXT,
                                     szOrgWizNextBtnText, ARRAYSIZE(szOrgWizNextBtnText));
-                    SetDlgItemTextW(GetParent(hwndDlg), ID_WIZNEXT, L"Install"); // FIXME: Localize!
+                    SetWindowResTextW(GetDlgItem(GetParent(hwndDlg), ID_WIZNEXT),
+                                      pSetupData->hInstance,
+                                      IDS_INSTALLBTN);
 
                     /*
                      * Keep the "Next" button disabled. It will be enabled only
@@ -1254,7 +1256,6 @@ FsVolCallback(
     _In_ ULONG_PTR Param2)
 {
     PFSVOL_CONTEXT FsVolContext = (PFSVOL_CONTEXT)Context;
-    WCHAR Buffer[MAX_PATH];
 
     switch (FormatStatus)
     {
@@ -1480,20 +1481,21 @@ FsVolCallback(
         /* Set status text */
         if (FmtInfo->Volume->Info.DriveLetter)
         {
-            StringCchPrintfW(Buffer, ARRAYSIZE(Buffer),
-                             L"Formatting volume %c: (%s) in %s...", // IDS_FORMATTING_PROGRESS1
-                             FmtInfo->Volume->Info.DriveLetter,
-                             FmtInfo->Volume->Info.DeviceName,
-                             VolCreate->FileSystemName);
+            SetWindowResPrintfW(GetDlgItem(UiContext.hwndDlg, IDC_ITEM),
+                                SetupData.hInstance,
+                                IDS_FORMATTING_PROGRESS1, // L"Formatting volume %c: (%s) in %s..."
+                                FmtInfo->Volume->Info.DriveLetter,
+                                FmtInfo->Volume->Info.DeviceName,
+                                VolCreate->FileSystemName);
         }
         else
         {
-            StringCchPrintfW(Buffer, ARRAYSIZE(Buffer),
-                             L"Formatting volume %s in %s...", // IDS_FORMATTING_PROGRESS2
-                             FmtInfo->Volume->Info.DeviceName,
-                             VolCreate->FileSystemName);
+            SetWindowResPrintfW(GetDlgItem(UiContext.hwndDlg, IDC_ITEM),
+                                SetupData.hInstance,
+                                IDS_FORMATTING_PROGRESS2, // L"Formatting volume %s in %s..."
+                                FmtInfo->Volume->Info.DeviceName,
+                                VolCreate->FileSystemName);
         }
-        SetDlgItemTextW(UiContext.hwndDlg, IDC_ITEM, Buffer);
 
         // StartFormat(FmtInfo, FileSystemList->Selected);
         FmtInfo->FileSystemName = VolCreate->FileSystemName;
@@ -1545,18 +1547,19 @@ FsVolCallback(
         /* Set status text */
         if (ChkInfo->Volume->Info.DriveLetter)
         {
-            StringCchPrintfW(Buffer, ARRAYSIZE(Buffer),
-                             L"Checking volume %c: (%s)...", // IDS_CHECKING_PROGRESS1
-                             ChkInfo->Volume->Info.DriveLetter,
-                             ChkInfo->Volume->Info.DeviceName);
+            SetWindowResPrintfW(GetDlgItem(UiContext.hwndDlg, IDC_ITEM),
+                                SetupData.hInstance,
+                                IDS_CHECKING_PROGRESS1, // L"Checking volume %c: (%s)..."
+                                ChkInfo->Volume->Info.DriveLetter,
+                                ChkInfo->Volume->Info.DeviceName);
         }
         else
         {
-            StringCchPrintfW(Buffer, ARRAYSIZE(Buffer),
-                             L"Checking volume %s...", // IDS_CHECKING_PROGRESS2
-                             ChkInfo->Volume->Info.DeviceName);
+            SetWindowResPrintfW(GetDlgItem(UiContext.hwndDlg, IDC_ITEM),
+                                SetupData.hInstance,
+                                IDS_CHECKING_PROGRESS2, // L"Checking volume %s..."
+                                ChkInfo->Volume->Info.DeviceName);
         }
-        SetDlgItemTextW(UiContext.hwndDlg, IDC_ITEM, Buffer);
 
         // StartCheck(ChkInfo);
         // TODO: Think about which values could be defaulted...
@@ -1599,7 +1602,6 @@ FileCopyCallback(PVOID Context,
     PCOPYCONTEXT CopyContext = (PCOPYCONTEXT)Context;
     PFILEPATHS_W FilePathInfo;
     PCWSTR SrcFileName, DstFileName;
-    WCHAR Status[1024];
 
     WaitForSingleObject(CopyContext->pSetupData->hHaltInstallEvent, INFINITE);
     if (CopyContext->pSetupData->bStopInstall)
@@ -1638,12 +1640,15 @@ FileCopyCallback(PVOID Context,
                 if (DstFileName) ++DstFileName;
                 else DstFileName = FilePathInfo->Target;
 
-                // STRING_DELETING
-                StringCchPrintfW(Status, ARRAYSIZE(Status), L"Deleting %s", DstFileName);
-                SetWindowTextW(UiContext.hWndItem, Status);
+                SetWindowResPrintfW(UiContext.hWndItem,
+                                    SetupData.hInstance,
+                                    IDS_DELETING, // STRING_DELETING
+                                    DstFileName);
             }
             else if (Notification == SPFILENOTIFY_STARTRENAME)
             {
+                UINT uMsgID;
+
                 /* Display move/rename message */
                 ASSERT(Param2 == FILEOP_RENAME);
 
@@ -1655,13 +1660,14 @@ FileCopyCallback(PVOID Context,
                 if (DstFileName) ++DstFileName;
                 else DstFileName = FilePathInfo->Target;
 
-                // STRING_MOVING or STRING_RENAMING
                 if (!_wcsicmp(SrcFileName, DstFileName))
-                    StringCchPrintfW(Status, ARRAYSIZE(Status), L"Moving %s to %s", SrcFileName, DstFileName);
+                    uMsgID = IDS_MOVING; // STRING_MOVING
                 else
-                    StringCchPrintfW(Status, ARRAYSIZE(Status), L"Renaming %s to %s", SrcFileName, DstFileName);
-
-                SetWindowTextW(UiContext.hWndItem, Status);
+                    uMsgID = IDS_RENAMING; // STRING_RENAMING
+                SetWindowResPrintfW(UiContext.hWndItem,
+                                    SetupData.hInstance,
+                                    uMsgID,
+                                    SrcFileName, DstFileName);
             }
             else if (Notification == SPFILENOTIFY_STARTCOPY)
             {
@@ -1672,9 +1678,10 @@ FileCopyCallback(PVOID Context,
                 if (DstFileName) ++DstFileName;
                 else DstFileName = FilePathInfo->Target;
 
-                // STRING_COPYING
-                StringCchPrintfW(Status, ARRAYSIZE(Status), L"Copying %s", DstFileName);
-                SetWindowTextW(UiContext.hWndItem, Status);
+                SetWindowResPrintfW(UiContext.hWndItem,
+                                    SetupData.hInstance,
+                                    IDS_COPYING, // STRING_COPYING
+                                    DstFileName);
             }
             break;
         }
@@ -1799,7 +1806,9 @@ PrepareAndDoCopyThread(
     FsVolContext.pSetupData = pSetupData;
 
     /* Set status text */
-    SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"Setting the system partition...");
+    SetWindowResTextW(GetDlgItem(hwndDlg, IDC_ACTIVITY),
+                      pSetupData->hInstance,
+                      IDS_CONFIG_SYSTEM_PARTITION);
     SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
 
     /* Find or set the active system partition before starting formatting */
@@ -1831,7 +1840,9 @@ PrepareAndDoCopyThread(
 
 
     /* Set status text */
-    SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"Preparing partitions...");
+    SetWindowResTextW(GetDlgItem(hwndDlg, IDC_ACTIVITY),
+                      pSetupData->hInstance,
+                      IDS_PREPARE_PARTITIONS);
     SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
 
     /* Apply all pending operations on partitions: formatting and checking */
@@ -1886,7 +1897,9 @@ PrepareAndDoCopyThread(
      */
 
     /* Set status text */
-    SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"Preparing the list of files to be copied, please wait...");
+    SetWindowResTextW(GetDlgItem(hwndDlg, IDC_ACTIVITY),
+                      pSetupData->hInstance,
+                      IDS_PREPARE_FILES);
     SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
 
     /* Set progress marquee style and start it up */
@@ -1923,7 +1936,9 @@ PrepareAndDoCopyThread(
      */
 
     /* Set status text */
-    SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"Copying the files...");
+    SetWindowResTextW(GetDlgItem(hwndDlg, IDC_ACTIVITY),
+                      pSetupData->hInstance,
+                      IDS_COPYING_FILES);
     SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
 
     /* Create context for the copy process */
@@ -1949,7 +1964,9 @@ PrepareAndDoCopyThread(
     }
 
     // /* Set status text */
-    // SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"Finalizing the installation...");
+    // SetWindowResTextW(GetDlgItem(hwndDlg, IDC_ACTIVITY),
+    //                   pSetupData->hInstance,
+    //                   IDS_INSTALL_FINALIZE);
     // SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
 
     /* Create the $winnt$.inf file */
@@ -1991,7 +2008,9 @@ PrepareAndDoCopyThread(
      */
 
     /* Set status text */
-    SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"Installing the bootloader...");
+    SetWindowResTextW(GetDlgItem(hwndDlg, IDC_ACTIVITY),
+                      pSetupData->hInstance,
+                      IDS_INSTALL_BOOTLOADER);
     SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
 
     RtlFreeUnicodeString(&pSetupData->USetupData.SystemRootPath);
@@ -2149,7 +2168,6 @@ ProcessDlgProc(
             /* Reset status text */
             SetDlgItemTextW(hwndDlg, IDC_ACTIVITY, L"");
             SetDlgItemTextW(hwndDlg, IDC_ITEM, L"");
-
             break;
         }
 

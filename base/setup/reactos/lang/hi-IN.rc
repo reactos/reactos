@@ -138,22 +138,23 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_CAPTION "रिऐक्ट ओएस सेटअप"
     IDS_TYPETITLE "रिऐक्ट ओएस सेटअप में आपका स्वागत है"
     IDS_TYPESUBTITLE "सेटअप प्रकार चुनें।"
     IDS_DEVICETITLE "बुनियादी डिवाइसों को सेटअप करें"
     IDS_DEVICESUBTITLE "डिस्प्ले और कीबोर्ड की सेटिंग्स सेट करें।"
     IDS_DRIVETITLE "इन्स्टलेशन विभाजन और सिस्टम फ़ोल्डर सेटअप करें"
     IDS_DRIVESUBTITLE "इन्स्टलेशन विभाजन, सिस्टम फ़ोल्डर और बूट लोडर तैयार करें।"
+    IDS_SUMMARYTITLE "इन्स्टलेशन सारांश"
+    IDS_SUMMARYSUBTITLE "इन्स्टलेशन डिवाइस पर लागू करने से पहले जांच करने के लिए इन्स्टलेशन गुणों की सूची"
     IDS_PROCESSTITLE "सेटअप विभाजन, कॉपी फ़ाइलें और सेटअप सिस्टम"
     IDS_PROCESSSUBTITLE "विभाजन बनाएं और फ़ॉर्मेट करें, फ़ाइलें कॉपी करें, बूट लोडर को इंस्टॉल करें और सेटअप करें"
     IDS_RESTARTTITLE "सेटअप का पहला चरण समाप्त हो गया"
     IDS_RESTARTSUBTITLE "सेटअप का पहला चरण पूरा हो गया है, दूसरे चरण के साथ जारी रखने के लिए रीस्टॉर्ट करें"
-    IDS_SUMMARYTITLE "इन्स्टलेशन सारांश"
-    IDS_SUMMARYSUBTITLE "इन्स्टलेशन डिवाइस पर लागू करने से पहले जांच करने के लिए इन्स्टलेशन गुणों की सूची"
     IDS_ABORTSETUP "रिऐक्ट ओएस आपके कंप्यूटर पर पूरी तरह से इंस्टॉल नहीं है। अगर आप अभी सेटअप को छोड़ देते हैं, तो आपको रिऐक्ट ओएस इंस्टॉल करने के लिए सेटअप को फिर से चलाने की आवश्यकता होगी। आपको वास्तव में छोड़ना है?"
     IDS_ABORTSETUP2 "इन्स्टलेशन रद्द करें?"
-    IDS_NO_TXTSETUP_SIF "'txtsetup.sif' खोजने में असमर्थ\nसेटअप जारी रखने में असमर्थ है "
-    IDS_CAPTION "रिऐक्ट ओएस सेटअप"
+    IDS_NO_TXTSETUP_SIF "'txtsetup.sif' खोजने में असमर्थ\nसेटअप जारी रखने में असमर्थ है"
+    IDS_INSTALLBTN "&Install"
     IDS_VOLUME_NOFORMAT "Not formatted"
 END
 
@@ -188,12 +189,16 @@ BEGIN
     IDS_RENAMING "Renaming %s to %s"
     IDS_DELETING "Deleting %s"
 
+    IDS_CONFIG_SYSTEM_PARTITION "Configuring the system partition..."
     IDS_PREPARE_PARTITIONS "Preparing partitions..."
     IDS_PREPARE_FILES "Preparing the list of files to be copied, please wait..."
     IDS_COPYING_FILES "Copying the files..."
 
     IDS_CREATE_REGISTRY "Creating the registry..."
     IDS_UPDATE_REGISTRY "Updating the registry..."
+
+    // IDS_INSTALL_FINALIZE "Finalizing the installation..."
+    IDS_INSTALL_BOOTLOADER "Installing the bootloader..."
 END
 
 // Note to translators: please refer to the corresponding usetup/lang/*.h translations.

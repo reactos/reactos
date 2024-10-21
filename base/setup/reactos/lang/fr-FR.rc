@@ -160,22 +160,23 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_CAPTION "Installation de ReactOS"
     IDS_TYPETITLE "Bienvenue dans l'installation de ReactOS"
     IDS_TYPESUBTITLE "Choisissez un type d'installation."
-    IDS_DEVICETITLE "Configurer les périphériques de base."
+    IDS_DEVICETITLE "Configurer les périphériques de base"
     IDS_DEVICESUBTITLE "Configurer l'affichage et le clavier."
-    IDS_DRIVETITLE "Configurer la partition d'installation et le dossier système."
+    IDS_DRIVETITLE "Configurer la partition d'installation et le dossier système"
     IDS_DRIVESUBTITLE "Préparer la partition d'installation, le dossier système et le chargeur de démarrage."
-    IDS_PROCESSTITLE "Configurer la partition, copier les fichiers et configurer le système."
+    IDS_SUMMARYTITLE "Résumé de l'installation"
+    IDS_SUMMARYSUBTITLE "Lister les propriétés d'installation à vérifier avant application sur le périphérique d'installation."
+    IDS_PROCESSTITLE "Configurer la partition, copier les fichiers et configurer le système"
     IDS_PROCESSSUBTITLE "Créer et formatter la partition, copier les fichiers, installer et configurer le chargeur de démarrage."
     IDS_RESTARTTITLE "Première étape de configuration terminée"
     IDS_RESTARTSUBTITLE "La première étape de l'installation est terminée. Veuillez redémarrer pour continuer avec la seconde étape."
-    IDS_SUMMARYTITLE "Résumé de l'installation"
-    IDS_SUMMARYSUBTITLE "Lister les propriétés d'installation à vérifier avant application sur le périphérique d'installation."
     IDS_ABORTSETUP "ReactOS n'est pas complètement installé sur votre ordinateur. Si vous quittez l'installation maintenant, vous devrez lancer l'installation de nouveau pour installer ReactOS. Voulez-vous quitter ?"
     IDS_ABORTSETUP2 "Abandonner l'installation ?"
     IDS_NO_TXTSETUP_SIF "Impossible de trouver 'txtsetup.sif'.\nL'installation ne peut continuer."
-    IDS_CAPTION "Installation de ReactOS"
+    IDS_INSTALLBTN "&Installer"
     IDS_VOLUME_NOFORMAT "Non formaté"
 END
 
@@ -218,12 +219,16 @@ BEGIN
     IDS_RENAMING "Renomme %s en %s"
     IDS_DELETING "Supprime %s"
 
+    IDS_CONFIG_SYSTEM_PARTITION "Configuration de la partition système..."
     IDS_PREPARE_PARTITIONS "Prépare les partitions..."
     IDS_PREPARE_FILES "Prépare la liste de fichiers à copier, veuillez patienter..."
     IDS_COPYING_FILES "Copie les fichiers..."
 
     IDS_CREATE_REGISTRY "Crée la base de registres..."
     IDS_UPDATE_REGISTRY "Mise à jour de la base de registres..."
+
+    // IDS_INSTALL_FINALIZE "Finalisation de l'installation..."
+    IDS_INSTALL_BOOTLOADER "Installation du chargeur de démarrage..."
 END
 
 // Note to translators: please refer to the corresponding usetup/lang/*.h translations.

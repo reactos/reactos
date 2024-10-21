@@ -167,22 +167,23 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_CAPTION "Instalación de ReactOS"
     IDS_TYPETITLE "Bienvenido a la instalación de ReactOS"
     IDS_TYPESUBTITLE "Seleccione el tipo de instalación."
     IDS_DEVICETITLE "Instalación de los dispositivos básicos"
     IDS_DEVICESUBTITLE "Seleccione los ajustes de la pantalla y el teclado."
     IDS_DRIVETITLE "Crear la partición para la instalación y la carpeta del sistema"
     IDS_DRIVESUBTITLE "Preparar la partición para la instalación, la carpeta del sistema y el cargador de arranque."
-    IDS_PROCESSTITLE "Preparar partición, copiar archivos e instalar sistema"
-    IDS_PROCESSSUBTITLE "Crear y formatear partición, copiar archivos, instalar e instalar el cargador de arranque"
-    IDS_RESTARTTITLE "Primera parte de la instalación finalizada"
-    IDS_RESTARTSUBTITLE "La primera parte de la instalación ha sido completada, reinicie para continuar con la segunda parte"
     IDS_SUMMARYTITLE "Resumen de la instalación"
-    IDS_SUMMARYSUBTITLE "Lista las propiedades de la instalación para su verificación antes de aplicarlas al dispositivo instalado"
+    IDS_SUMMARYSUBTITLE "Lista las propiedades de la instalación para su verificación antes de aplicarlas al dispositivo instalado."
+    IDS_PROCESSTITLE "Preparar partición, copiar archivos e instalar sistema"
+    IDS_PROCESSSUBTITLE "Crear y formatear partición, copiar archivos, instalar e instalar el cargador de arranque."
+    IDS_RESTARTTITLE "Primera parte de la instalación finalizada"
+    IDS_RESTARTSUBTITLE "La primera parte de la instalación ha sido completada, reinicie para continuar con la segunda parte."
     IDS_ABORTSETUP "ReactOS no está completamente instalado en su equipo. Si sale de la instalación ahora, tendrá que ejecutar el instalador otra vez para instalar ReactOS. ¿Realmente quiere salir?"
     IDS_ABORTSETUP2 "¿Abortar instalación?"
     IDS_NO_TXTSETUP_SIF "No se pudo encontrar 'txtsetup.sif'.\nLa instalación no puede continuar."
-    IDS_CAPTION "Instalación de ReactOS"
+    IDS_INSTALLBTN "&Install"
     IDS_VOLUME_NOFORMAT "Not formatted"
 END
 
@@ -225,12 +226,16 @@ BEGIN
     IDS_RENAMING "Renaming %s to %s"
     IDS_DELETING "Deleting %s"
 
+    IDS_CONFIG_SYSTEM_PARTITION "Configuring the system partition..."
     IDS_PREPARE_PARTITIONS "Preparing partitions..."
     IDS_PREPARE_FILES "Preparing the list of files to be copied, please wait..."
     IDS_COPYING_FILES "Copying the files..."
 
     IDS_CREATE_REGISTRY "Creating the registry..."
     IDS_UPDATE_REGISTRY "Updating the registry..."
+
+    // IDS_INSTALL_FINALIZE "Finalizing the installation..."
+    IDS_INSTALL_BOOTLOADER "Installing the bootloader..."
 END
 
 // Note to translators: please refer to the corresponding usetup/lang/*.h translations.

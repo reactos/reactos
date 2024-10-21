@@ -168,22 +168,23 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_CAPTION "ReactOS 安裝程式"
     IDS_TYPETITLE "ReactOS 安裝程式"
     IDS_TYPESUBTITLE "選擇安裝類型。"
-    IDS_DEVICETITLE "設定基本裝置。"
+    IDS_DEVICETITLE "設定基本裝置"
     IDS_DEVICESUBTITLE "指定顯示和鍵盤設定。"
     IDS_DRIVETITLE "設定安裝磁碟區和系統資料夾"
     IDS_DRIVESUBTITLE "設定安裝磁碟區，系統資料夾和載入程式。"
-    IDS_PROCESSTITLE "設定磁碟區，複製檔案並安裝系統"
-    IDS_PROCESSSUBTITLE "建立並格式化磁碟區，複製檔案，安裝並設定載入程式"
-    IDS_RESTARTTITLE "第一階段安裝完成"
-    IDS_RESTARTSUBTITLE "第一階段安裝已經完成，重新啟動進行第二階段安裝"
     IDS_SUMMARYTITLE "安裝概要"
-    IDS_SUMMARYSUBTITLE "安裝前列出安裝屬性以供檢查"
+    IDS_SUMMARYSUBTITLE "安裝前列出安裝屬性以供檢查。"
+    IDS_PROCESSTITLE "設定磁碟區，複製檔案並安裝系統"
+    IDS_PROCESSSUBTITLE "建立並格式化磁碟區，複製檔案，安裝並設定載入程式。"
+    IDS_RESTARTTITLE "第一階段安裝完成"
+    IDS_RESTARTSUBTITLE "第一階段安裝已經完成，重新啟動進行第二階段安裝。"
     IDS_ABORTSETUP "ReactOS 尚未完全安裝到您的電腦上。如果您現在結束安裝程式，您需要重新執行安裝程式來安裝 ReactOS。您確定要結束嗎？"
     IDS_ABORTSETUP2 "終止安裝？"
     IDS_NO_TXTSETUP_SIF "找不到「txtsetup.sif」。\n安裝程式無法繼續。"
-    IDS_CAPTION "ReactOS 安裝程式"
+    IDS_INSTALLBTN "&Install"
     IDS_VOLUME_NOFORMAT "Not formatted"
 END
 
@@ -226,12 +227,16 @@ BEGIN
     IDS_RENAMING "Renaming %s to %s"
     IDS_DELETING "Deleting %s"
 
+    IDS_CONFIG_SYSTEM_PARTITION "Configuring the system partition..."
     IDS_PREPARE_PARTITIONS "Preparing partitions..."
     IDS_PREPARE_FILES "Preparing the list of files to be copied, please wait..."
     IDS_COPYING_FILES "Copying the files..."
 
     IDS_CREATE_REGISTRY "Creating the registry..."
     IDS_UPDATE_REGISTRY "Updating the registry..."
+
+    // IDS_INSTALL_FINALIZE "Finalizing the installation..."
+    IDS_INSTALL_BOOTLOADER "Installing the bootloader..."
 END
 
 // Note to translators: please refer to the corresponding usetup/lang/*.h translations.
