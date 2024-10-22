@@ -317,6 +317,7 @@ ENDM
 
 /* MASM compatible ALIGN */
 #define ALIGN .align
+#define align .align
 
 /* MASM compatible REPEAT, additional ENDR */
 #define REPEAT .rept
