@@ -56,3 +56,69 @@ list(APPEND UCRT_STRING_SOURCES
     string/wmemcpy_s.cpp
     string/wmemmove_s.cpp
 )
+
+if(${ARCH} STREQUAL "i386")
+    list(APPEND UCRT_STRING_ASM_SOURCES
+        string/i386/_memicmp.s
+        string/i386/_strnicm.s
+        string/i386/memccpy.s
+        string/i386/strcat.s
+        string/i386/strcmp.s
+        string/i386/strcspn.s
+        string/i386/strlen.s
+        string/i386/strncat.s
+        string/i386/strncmp.s
+        string/i386/strncpy.s
+        string/i386/strnset.s
+        string/i386/strpbrk.s
+        string/i386/strrev.s
+        string/i386/strset.s
+        string/i386/strspn.s
+    )
+elseif(${ARCH} STREQUAL "amd64")
+    list(APPEND UCRT_STRING_ASM_SOURCES
+        string/amd64/strcat.s
+        string/amd64/strcmp.s
+        string/amd64/strlen.s
+        string/amd64/strncat.s
+        string/amd64/strncmp.s
+        string/amd64/strncpy.s
+    )
+    list(APPEND UCRT_STRING_SOURCES
+        string/amd64/strcspn.c
+        string/amd64/strpbrk.c
+        string/amd64/strspn.c
+        string/memccpy.c
+        string/strnset.c
+        string/strrev.c
+        string/strset.c
+    )
+else()
+    if(${ARCH} STREQUAL "arm64")
+        list(APPEND UCRT_STRING_ASM_SOURCES
+            string/arm64/strlen.s
+            string/arm64/wcslen.s
+    )
+    else()
+        list(APPEND UCRT_STRING_SOURCES
+            string/arm/strlen.c
+        )
+    endif()
+    list(APPEND UCRT_STRING_SOURCES
+        string/memccpy.c
+        string/strcat.c
+        string/strcmp.c
+        string/strcspn.c
+        string/strncat.c
+        string/strncmp.c
+        string/strncpy.c
+        string/strnset.c
+        string/strpbrk.c
+        string/strrev.c
+        string/strset.c
+        string/strspn.c
+    )
+endif()
+
+add_asm_files(UCRT_STRING_ASM ${UCRT_STRING_ASM_SOURCES})
+list(APPEND UCRT_STRING_SOURCES ${UCRT_STRING_ASM})
