@@ -1507,6 +1507,20 @@ ExTimerRundown(
     VOID
 );
 
+VOID
+NTAPI
+ExUnlockUserBuffer(PMDL Mdl);
+
+NTSTATUS
+NTAPI
+ExLockUserBuffer(
+    PVOID BaseAddress,
+    ULONG Length,
+    KPROCESSOR_MODE AccessMode,
+    LOCK_OPERATION Operation,
+    PVOID *MappedSystemVa,
+    PMDL *OutMdl);
+
 CODE_SEG("INIT")
 VOID
 NTAPI
