@@ -40,7 +40,6 @@
 // Global Cc Data
 //
 extern ULONG CcRosTraceLevel;
-extern LIST_ENTRY DirtyVacbListHead;
 extern LIST_ENTRY CcCleanSharedCacheMapList;
 extern LIST_ENTRY CcDirtySharedCacheMapList;
 extern ULONG CcDirtyPageThreshold;
@@ -210,15 +209,11 @@ typedef struct _ROS_VACB
 {
     /* Base address of the region where the view's data is mapped. */
     PVOID BaseAddress;
-    /* Are the contents of the view newer than those on disk. */
-    BOOLEAN Dirty;
     /* Page out in progress */
     BOOLEAN PageOut;
     ULONG MappedCount;
     /* Entry in the list of VACBs for this shared cache map. */
     LIST_ENTRY CacheMapVacbListEntry;
-    /* Entry in the list of VACBs which are dirty. */
-    LIST_ENTRY DirtyVacbListEntry;
     /* Entry in the list of VACBs. */
     LIST_ENTRY VacbLruListEntry;
     /* Offset in the file which this view maps. */
@@ -227,7 +222,6 @@ typedef struct _ROS_VACB
     volatile ULONG ReferenceCount;
     /* Pointer to the shared cache map for the file which this view maps data for. */
     PROS_SHARED_CACHE_MAP SharedCacheMap;
-    /* Pointer to the next VACB in a chain. */
 } ROS_VACB, *PROS_VACB;
 
 typedef struct _INTERNAL_BCB
