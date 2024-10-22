@@ -88,7 +88,7 @@ END
 
 IDD_CHANGEPWD DIALOGEX 0, 0, 275, 166
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Alterar Password"
+CAPTION "Alterar palavra-passe"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -96,11 +96,11 @@ BEGIN
     EDITTEXT IDC_CHANGEPWD_USERNAME, 90, 59, 127, 12, ES_AUTOHSCROLL
     LTEXT "Início de sessão para:", IDC_STATIC, 7, 78, 78, 8
     COMBOBOX IDC_CHANGEPWD_DOMAIN, 90, 75, 127, 144, CBS_DROPDOWNLIST | CBS_SORT | WS_TABSTOP
-    LTEXT "Password antiga:", IDC_STATIC, 7, 95, 78, 8
+    LTEXT "Palavra-passe antiga:", IDC_STATIC, 7, 95, 78, 8
     EDITTEXT IDC_CHANGEPWD_OLDPWD, 90, 92, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "Nova Password:", IDC_STATIC, 7, 111, 78, 8
+    LTEXT "Nova palavra-passe:", IDC_STATIC, 7, 111, 78, 8
     EDITTEXT IDC_CHANGEPWD_NEWPWD1, 90, 109, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "Confirme a nova Password:", IDC_STATIC, 7, 127, 78, 8
+    LTEXT "Confirmar palavra-passe:", IDC_STATIC, 7, 127, 83, 8
     EDITTEXT IDC_CHANGEPWD_NEWPWD2, 90, 125, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
     PUSHBUTTON "OK", IDOK, 164, 145, 50, 14, BS_DEFPUSHBUTTON
     PUSHBUTTON "Cancelar", IDCANCEL, 218, 145, 50, 14
@@ -214,13 +214,13 @@ BEGIN
     IDS_LOCKEDSAS "O computador está actualmente bloqueado."
     IDS_PRESSCTRLALTDELETE "Pressione Control+Alt+Delete para iniciar sessão."
     IDS_ASKFORUSER "Nome de utilizador: "
-    IDS_ASKFORPASSWORD "Palavra-chave: "
+    IDS_ASKFORPASSWORD "Palavra-passe: "
     IDS_FORCELOGOFF "Isso terminará a sessão do utilizador actual e perderá todos os dados não guardados. Deseja continuar?"
     IDS_LOCKMSG "Só %s ou um Administrador pode desbloquear este computador."
     IDS_LOGONMSG "Tem sessão iniciada como %s."
     IDS_LOGONDATE "Data de inicio de sessão: %s %s"
     IDS_COMPUTERLOCKED "Computador bloqueado."
-    IDS_LOCKEDWRONGPASSWORD "Palavra-chave inválida. Por favor insira a palavra-chave correcta. Verifique as letras maiúsculas e minúsculas."
+    IDS_LOCKEDWRONGPASSWORD "Palavra-passe inválida. Por favor insira a palavra-passe correcta. Verifique as letras maiúsculas e minúsculas."
     IDS_LOCKEDWRONGUSER "Este computador está bloqueado. Sómente %s\\%s ou um Administrador pode desbloquear este computador."
     IDS_CHANGEPWDTITLE "Alterar Palavra-passe"
     IDS_NONMATCHINGPASSWORDS "As palavras-passe não coincidem. Digite a mesma palavra-passe nas duas caixas de texto."
@@ -228,17 +228,17 @@ BEGIN
     IDS_LOGONTITLE "Mensagem de início de sessão"
     IDS_LOGONWRONGUSERORPWD "O sistema não pôde iniciar sessão. Verifique se o seu nome de utilizador e domínio estão correctos e digite a palavra-passe novamente. Verifique as letras maiúsculas e minúsculas usando o caso correcto."
     IDS_LOGONUSERDISABLED "A sua conta foi desactivada. Por favor, consulte o administrador do sistema."
-    IDS_PASSWORDMUSTCHANGE "É obrigado a alterar a palavra-passe no primeiro início de sessão."
+    IDS_PASSWORDMUSTCHANGE "É obrigatório alterar a palavra-passe no primeiro início de sessão."
     IDS_PASSWORDEXPIRED "A sua palavra-passe expirou. Por favor actualize."
     IDS_ACCOUNTEXPIRED "A sua conta expirou. Por favor, consulte o administrador do sistema."
     IDS_ACCOUNTLOCKED "Não é possível iniciar sessão porque sua conta foi bloqueada. Por favor, consulte o administrador do sistema."
     IDS_INVALIDLOGONHOURS "A sua conta tem restrições de horário que impedem o início de sessão no momento. Por favor, tente novamente mais tarde."
     IDS_INVALIDWORKSTATION "A sua conta está configurada para impedir que use este computador. Por favor, tente outro computador."
     IDS_ACCOUNTRESTRICTION "Não é possível iniciar sessão devido a uma restrição de conta."
-    IDS_EMERGENCYLOGOFFTITLE "Log Off ReactOS"
-    IDS_EMERGENCYLOGOFF "Click OK to immediately log off. Any unsaved data will be lost. Use this only as a last resort."
-    IDS_EMERGENCYRESTARTTITLE "Emergency restart"
-    IDS_EMERGENCYRESTART "Click OK to immediately restart. Any unsaved data will be lost. Use this only as a last resort."
+    IDS_EMERGENCYLOGOFFTITLE "Encerrar sessão no ReactOS"
+    IDS_EMERGENCYLOGOFF "Clique em OK para encerrar a sessão imediatamente. Quaisquer dados não guardados serão perdidos. Utilize isto apenas como último recurso."
+    IDS_EMERGENCYRESTARTTITLE "Reinício de emergência"
+    IDS_EMERGENCYRESTART "Clique em OK para reiniciar imediatamente. Quaisquer dados não guardados serão perdidos. Utilize isto apenas como último recurso."
 END
 
 /* Shutdown Dialog Strings */
@@ -251,7 +251,7 @@ BEGIN
     IDS_SHUTDOWN_HIBERNATE "Hibernar"
     /* Shut down descriptions */
     IDS_SHUTDOWN_LOGOFF_DESC "Termina a sessão actual e permite que outros utilizadores iniciem sessão no sistema."
-    IDS_SHUTDOWN_SHUTDOWN_DESC "Termina a sessão actual e desliga o sistema para que possa desligar a energia em segurança."
+    IDS_SHUTDOWN_SHUTDOWN_DESC "Termina a sessão actual e encerra o sistema para que possa desligar a energia em segurança."
     IDS_SHUTDOWN_RESTART_DESC "Termina a sessão actual e reinicia o sistema."
     IDS_SHUTDOWN_SLEEP_DESC "Coloca o sistema no modo de suspensão."
     IDS_SHUTDOWN_HIBERNATE_DESC "Guarda a sessão actual e desliga o computador."
