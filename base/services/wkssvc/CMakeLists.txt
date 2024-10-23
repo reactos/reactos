@@ -5,6 +5,7 @@ spec2def(wkssvc.dll wkssvc.spec ADD_IMPORTLIB)
 
 add_library(wkssvc MODULE
     domain.c
+    info.c
     rpcserver.c
     wkssvc.c
     wkssvc.rc
