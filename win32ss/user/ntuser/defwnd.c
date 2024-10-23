@@ -1024,6 +1024,7 @@ IntDefWindowProc(
          }
          break;
 
+      case WM_CREATE:
       case WM_ERASEBKGND:
       case WM_ICONERASEBKGND:
       {
@@ -1045,7 +1046,7 @@ IntDefWindowProc(
             GdiGetClipBox((HDC)wParam, &Rect);
          }
          FillRect((HDC)wParam, &Rect, hBrush);
-         return (1);
+         return (Msg == WM_CREATE) ? 0 : 1;
       }
 
       case WM_GETHOTKEY:
