@@ -6795,7 +6795,8 @@ IntExtTextOutW(
     FONT_CACHE_ENTRY Cache;
     FT_Matrix mat;
     BOOL bNoTransform;
-    DWORD ch0, ch1, etx = 3; // etx is ASCII End of Text
+    DWORD ch0, ch1, nbsp = 0xa0; // nbsp is a non-breaking space
+    DWORD del = 0x7f; // DEL is ASCII DELETE
     FONTLINK_CHAIN Chain;
     SIZE spaceWidth;
 
@@ -7063,13 +7064,14 @@ IntExtTextOutW(
         bitSize.cx = realglyph->bitmap.width;
         bitSize.cy = realglyph->bitmap.rows;
 
-        /* Do chars other than space and etx have a bitSize.cx of zero? */
-        if (ch0 != L' ' && ch0 != etx && bitSize.cx == 0)
+        /* Do chars > space & not DEL & not nbsp have a bitSize.cx of zero? */
+        if (ch0 > L' ' && ch0 != del && ch0 != nbsp && bitSize.cx == 0)
             DPRINT1("WARNING: WChar 0x%04x has a bitSize.cx of zero\n", ch0);
 
-        /* Don't ignore spaces when computing offset.
+        /* Don't ignore spaces or non-breaking spaces when computing offset.
          * This completes the fix of CORE-11787. */
-        if ((pdcattr->flTextAlign & TA_UPDATECP) && ch0 == L' ' && bitSize.cx == 0)
+        if ((pdcattr->flTextAlign & TA_UPDATECP) && bitSize.cx == 0 &&
+            (ch0 == L' ' || ch0 == nbsp)) // Space chars needing x-dim widths
         { 
             IntUnLockFreeType();
             /* Get the width of the space character */
