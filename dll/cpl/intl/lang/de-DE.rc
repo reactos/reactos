@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     ReactOS International Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     German resource file
+ * TRANSLATORS: Copyright 2010 Eric Kohl <eric.kohl@reactos.org>
+ *              Copyright 2024 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
+ */
+
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 IDD_GENERALPAGE DIALOGEX 0, 0, 246, 230
@@ -214,5 +222,5 @@ BEGIN
     IDS_ERROR_NLS_KEY_REG "Der Schlüssel HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language konnte nicht geöffnet werden."
     IDS_ERROR_NLS_CODE_REG "Der Schlüssel HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage konnte nicht geöffnet werden."
     IDS_ERROR_INPUT_DLL "Die Datei input.dll konnte nicht geladen werden."
-    IDS_ERROR_UNICODE "Unable to install a new language for programs that don't support Unicode!"
+    IDS_ERROR_UNICODE "Neue Sprache für Programme, die Unicode nicht unterstützen, konnte nicht installiert werden!"
 END
