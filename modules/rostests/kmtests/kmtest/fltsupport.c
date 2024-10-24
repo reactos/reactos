@@ -110,7 +110,7 @@ KmtFltDeleteService(
  */
 DWORD
 KmtFltLoadDriver(
-    _In_ BOOLEAN EnableDriverLoadPrivlege,
+    _In_ BOOLEAN EnableDriverLoadPrivilege,
     _In_ BOOLEAN RestartIfRunning,
     _In_ BOOLEAN ConnectComms,
     _Out_ HANDLE *hPort
@@ -118,9 +118,9 @@ KmtFltLoadDriver(
 {
     DWORD Error;
 
-    if (EnableDriverLoadPrivlege)
+    if (EnableDriverLoadPrivilege)
     {
-        Error = EnablePrivilegeInCurrentProcess(SE_LOAD_DRIVER_NAME , TRUE);
+        Error = EnablePrivilegeInCurrentProcess(SE_LOAD_DRIVER_NAME, TRUE);
         if (Error)
         {
             return Error;
