@@ -1510,9 +1510,10 @@ MmArePagesResident(
 NTSTATUS
 NTAPI
 MmMakePagesDirty(
-    _In_ PEPROCESS Process,
+    _In_opt_ PEPROCESS Process,
     _In_ PVOID Address,
-    _In_ ULONG Length);
+    _In_ ULONG Length,
+    _Out_opt_ PULONG NumberOfPages);
 
 NTSTATUS
 NTAPI
@@ -1520,7 +1521,7 @@ MmFlushSegment(
     _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
     _In_opt_ PLARGE_INTEGER Offset,
     _In_ ULONG Length,
-    _Out_opt_ PIO_STATUS_BLOCK Iosb);
+    _Out_opt_ PULONG FlushedPages);
 
 NTSTATUS
 NTAPI
@@ -1535,7 +1536,8 @@ NTAPI
 MmPurgeSegment(
     _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
     _In_opt_ PLARGE_INTEGER Offset,
-    _In_ ULONG Length);
+    _In_ ULONG Length,
+    _Out_opt_ PULONG PurgedDirtyPages);
 
 BOOLEAN
 NTAPI
