@@ -186,24 +186,13 @@ EnumerateInstallations(
     }
 
     /* Add the discovered NTOS installation into the list */
-    NtOsInstall = AddNTOSInstallation(Data->List,
-                                      BootEntry->FriendlyName,
-                                      Machine,
-                                      VendorName.Buffer, // FIXME: What if it's not NULL-terminated?
-                                      Options->OsLoadPath,
-                                      &SystemRootPath, PathComponent,
-                                      DiskNumber, PartitionNumber);
-    if (NtOsInstall)
-    {
-        /* Retrieve the volume corresponding to the disk and partition numbers */
-        PPARTENTRY PartEntry = SelectPartition(Data->PartList, DiskNumber, PartitionNumber);
-        if (!PartEntry)
-        {
-            DPRINT1("SelectPartition(disk #%d, partition #%d) failed\n",
-                    DiskNumber, PartitionNumber);
-        }
-        NtOsInstall->Volume = (PartEntry ? PartEntry->Volume : NULL);
-    }
+    AddNTOSInstallation(Data->List,
+                        BootEntry->FriendlyName,
+                        Machine,
+                        VendorName.Buffer, // FIXME: What if it's not NULL-terminated?
+                        Options->OsLoadPath,
+                        &SystemRootPath, PathComponent,
+                        DiskNumber, PartitionNumber);
 
     /* Continue the enumeration */
     return STATUS_SUCCESS;

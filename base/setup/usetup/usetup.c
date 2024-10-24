@@ -512,7 +512,19 @@ GetNTOSInstallationName(
     IN SIZE_T cchBufferSize)
 {
     PNTOS_INSTALLATION NtOsInstall = (PNTOS_INSTALLATION)GetListEntryData(Entry);
-    PVOLINFO VolInfo = (NtOsInstall->Volume ? &NtOsInstall->Volume->Info : NULL);
+    PPARTENTRY PartEntry;
+    PVOLINFO VolInfo;
+
+    /* Retrieve the volume corresponding to the disk and partition numbers */
+    PartEntry = SelectPartition(PartitionList,
+                                NtOsInstall->DiskNumber,
+                                NtOsInstall->PartitionNumber);
+    if (!PartEntry)
+    {
+        DPRINT1("SelectPartition(disk #%d, partition #%d) failed\n",
+                NtOsInstall->DiskNumber, NtOsInstall->PartitionNumber);
+    }
+    VolInfo = (PartEntry && PartEntry->Volume ? &PartEntry->Volume->Info : NULL);
 
     if (VolInfo && VolInfo->DriveLetter)
     {
