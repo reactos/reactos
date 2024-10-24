@@ -3,6 +3,8 @@ add_definitions(-D__WINESRC__)
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(wintrust.dll wintrust.spec ADD_IMPORTLIB)
 
+add_definitions(-Dwcsdup=_wcsdup)
+
 list(APPEND SOURCE
     asn.c
     crypt.c
