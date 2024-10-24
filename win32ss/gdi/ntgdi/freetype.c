@@ -6795,8 +6795,8 @@ IntExtTextOutW(
     FONT_CACHE_ENTRY Cache;
     FT_Matrix mat;
     BOOL bNoTransform;
-    DWORD ch0, ch1, nbsp = 0xa0; // nbsp is a non-breaking space
-    DWORD del = 0x7f; // DEL is ASCII DELETE
+    DWORD ch0, ch1;
+    const DWORD del = 0x7f, nbsp = 0xa0; // DEL is ASCII DELETE and nbsp is a non-breaking space
     FONTLINK_CHAIN Chain;
     SIZE spaceWidth;
 
