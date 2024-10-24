@@ -538,16 +538,8 @@ PrepareCopyInfFile(
         }
 
         /* Add specific files depending of computer type */
-        {
-        PGENERIC_LIST_ENTRY Entry;
-        Entry = GetCurrentListEntry(pSetupData->ComputerList);
-        ASSERT(Entry);
-        pSetupData->ComputerType = ((PGENENTRY)GetListEntryData(Entry))->Id;
-        ASSERT(pSetupData->ComputerType);
-
         if (!ProcessComputerFiles(InfFile, pSetupData->ComputerType, &AdditionalSectionName))
             return FALSE;
-        }
 
         if (AdditionalSectionName &&
             !AddSectionToCopyQueue(pSetupData, InfFile,
@@ -769,7 +761,7 @@ PrepareFileCopy(
                                           InfFileSize,
                                           NULL,
                                           INF_STYLE_WIN4,
-                                          pSetupData->LanguageId,
+                                          LANGIDFROMLCID(pSetupData->LocaleID),
                                           &ErrorLine);
 
         CabinetCleanup(&CabinetContext);
@@ -792,7 +784,7 @@ PrepareFileCopy(
         InfHandle = SpInfOpenInfFile(PathBuffer,
                                      NULL,
                                      INF_STYLE_WIN4,
-                                     pSetupData->LanguageId,
+                                     LANGIDFROMLCID(pSetupData->LocaleID),
                                      &ErrorLine);
         }
 #endif

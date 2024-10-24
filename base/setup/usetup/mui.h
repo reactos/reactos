@@ -29,7 +29,7 @@ typedef struct
 
 typedef struct
 {
-    PCWSTR LanguageID;
+    LCID LanguageID; // LocaleID;
     PCWSTR LanguageDescriptor;
     const MUI_PAGE * MuiPages;
     const MUI_ERROR * MuiErrors;
@@ -39,7 +39,14 @@ typedef struct
 #if 0
 BOOLEAN
 IsLanguageAvailable(
-    PWCHAR LanguageId);
+    _In_ LANGID LanguageId);
+#endif
+
+extern LANGID SelectedLanguageId;
+#if 0
+VOID
+MUISetCurrentLanguage(
+    _In_ LANGID LanguageId);
 #endif
 
 VOID

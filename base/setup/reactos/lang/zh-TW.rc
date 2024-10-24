@@ -153,16 +153,18 @@ BEGIN
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
 END
 
-IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
+IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "正在完成 ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "正在完成 ReactOS 安裝程式", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "ReactOS 的第一階段安裝已順利完成。", IDC_STATIC, 115, 50, 195, 17
-    LTEXT "按下［完成］後，您的電腦將會重新啟動。", IDC_STATIC, 115, 80, 195, 17
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
-    LTEXT "如果光碟機裡還有光碟，請將其取出。然後按［完成］，重新啟動您的電腦。", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "ReactOS 的第一階段安裝已順利完成。", IDC_STATIC, 115, 40, 195, 17
+    //LTEXT "按下［完成］後，您的電腦將會重新啟動。", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "如果光碟機裡還有光碟，請將其取出。然後按［完成］，重新啟動您的電腦。", IDC_FINISHTEXT, 115, 70, 195, 40
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 115, 188, 12
+    AUTOCHECKBOX "&Pause restart countdown", IDC_PAUSE_COUNTDOWN, 115, 135, 180, 14
+    PUSHBUTTON "&Restart Now", IDC_RESTARTNOW, 174, 135, 67, 14
 END
 
 /* Strings */
@@ -186,6 +188,7 @@ BEGIN
     IDS_ABORTSETUP2 "終止安裝？"
     IDS_NO_TXTSETUP_SIF "無法找到「txtsetup.sif」。\n安裝程式無法繼續。"
     IDS_INSTALLBTN "&Install"
+    IDS_REBOOTBTN "Restart"
     IDS_VOLUME_NOFORMAT "Not formatted"
 END
 

@@ -16,7 +16,7 @@ IDI_MAIN        ICON "res/setup.ico"
 IDI_ROSICON     ICON "res/roslogo.ico"
 IDI_WINICON     ICON "res/winlogo.ico"
 IDI_DISKDRIVE   ICON "res/drive_disk.ico"
-IDI_PARTITION   ICON "res/partition.ico"
+IDI_PARTITION   ICON "res/partition.ico" // "res/statistics.ico" // "res/disk_space.ico"
 
 /* Bitmaps */
 IDB_WATERMARK   BITMAP "res/watermark.bmp"

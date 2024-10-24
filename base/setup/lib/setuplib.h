@@ -27,13 +27,13 @@ extern HANDLE ProcessHeap;
 #include "errorcode.h"
 #include "spapisup/fileqsup.h"
 #include "spapisup/infsupp.h"
-#include "utils/linklist.h"
+#include "utils/linklist.h" // FIXME: Is this still needed?
 #include "utils/ntverrsrc.h"
 // #include "utils/arcname.h"
 #include "utils/bldrsup.h"
 #include "utils/filesup.h"
 #include "utils/fsrec.h"
-#include "utils/genlist.h"
+#include "utils/genlist.h" // FIXME: May be moved to usetup only
 #include "utils/inicache.h"
 #include "utils/partinfo.h"
 #include "utils/partlist.h"
@@ -126,24 +126,14 @@ typedef struct _USETUP_DATA
     LONG AutoPartition;
     LONG FsType;
 
-/* Settings lists *****/
-    PGENERIC_LIST ComputerList;
-    PGENERIC_LIST DisplayList;
-    PGENERIC_LIST KeyboardList;
-    PGENERIC_LIST LayoutList;
-    PGENERIC_LIST LanguageList;
-
 /* Settings *****/
     ARCHITECTURE_TYPE ArchType; //< Target architecture (MachineType)
     PCWSTR ComputerType;
     PCWSTR DisplayType;
-    // PCWSTR KeyboardDriver;
+    PCWSTR KeyboardDriver;
     // PCWSTR MouseDriver;
-    PCWSTR LayoutId; // DefaultKBLayout
-
-/* Other stuff *****/
-    WCHAR LocaleID[9];
-    LANGID LanguageId;
+    LCID LocaleID; // Or just LANGID LanguageId == LANGIDFROMLCID(LocaleID) ?
+    KLID LayoutId; // DefaultKBLayout
 
     ULONG RequiredPartitionDiskSpace;
     WCHAR InstallationDirectory[MAX_PATH];
@@ -241,7 +231,6 @@ UpdateRegistry(
     /**/IN BOOLEAN RepairUpdateFlag,     /* HACK HACK! */
     /**/IN PPARTLIST PartitionList,      /* HACK HACK! */
     /**/IN WCHAR DestinationDriveLetter, /* HACK HACK! */
-    /**/IN PCWSTR SelectedLanguageId,    /* HACK HACK! */
     IN PREGISTRY_STATUS_ROUTINE StatusRoutine OPTIONAL,
     IN PFONTSUBSTSETTINGS SubstSettings OPTIONAL);
 

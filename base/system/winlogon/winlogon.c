@@ -523,6 +523,11 @@ WinMain(
     /* Init Notifications */
     InitNotifications();
 
+    /* Check for pending setup: if so, run it and reboot when done */
+__debugbreak();
+    g_setupType = GetSetupType();
+    // CheckForSetup();
+
     /* Load and initialize gina */
     if (!GinaInit(WLSession))
     {
@@ -586,17 +591,20 @@ WinMain(
     WLSession->LogonState = STATE_INIT;
     RemoveStatusMessage(WLSession);
 
-    /* Check for pending setup */
-    if (GetSetupType() != 0)
-    {
-        /* Run setup and reboot when done */
-        TRACE("WL: Setup mode detected\n");
-        RunSetup();
-    }
-    else
-    {
-        PostMessageW(WLSession->SASWindow, WLX_WM_SAS, WLX_SAS_TYPE_CTRL_ALT_DEL, 0);
-    }
+
+    /* Check for pending setup: if so, run it and reboot when done */
+__debugbreak();
+    // g_setupType = GetSetupType();
+    /*****CheckForSetup();******/
+
+
+    /*
+     * Simulate an initial Ctrl-Alt-Del key press.
+     * FIXME: This should quite probably be done only if some registry
+     * setting is set. However, since our current Ctrl-Alt-Del hotkey
+     * handling in Win32k is broken, we need to use this hack!
+     */
+    // PostMessageW(WLSession->SASWindow, WLX_WM_SAS, WLX_SAS_TYPE_CTRL_ALT_DEL, 0);
 
     (void)LoadLibraryW(L"sfc_os.dll");
 

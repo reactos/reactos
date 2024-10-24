@@ -52,8 +52,12 @@ NtfsCleanupFile(PDEVICE_EXTENSION DeviceExt,
     if (!Fcb)
         return STATUS_SUCCESS;
 
+DPRINT1("DeviceExt->OpenHandleCount = 0x%lx\n", DeviceExt->OpenHandleCount);
+DPRINT1("Fcb->OpenHandleCount = 0x%lx\n", Fcb->OpenHandleCount);
+
     if (Fcb->Flags & FCB_IS_VOLUME)
     {
+        ASSERT(Fcb->OpenHandleCount > 0);
         Fcb->OpenHandleCount--;
 
         if (Fcb->OpenHandleCount != 0)
@@ -68,6 +72,7 @@ NtfsCleanupFile(PDEVICE_EXTENSION DeviceExt,
             return STATUS_PENDING;
         }
 
+        ASSERT(Fcb->OpenHandleCount > 0);
         Fcb->OpenHandleCount--;
 
         CcUninitializeCacheMap(FileObject, &Fcb->RFCB.FileSize, NULL);

@@ -132,6 +132,7 @@ typedef struct _SETUPDATA
     /* General */
     HINSTANCE hInstance;
     BOOL bUnattend;
+    DWORD dwSetupType; // From HKLM\SYSTEM\Setup:SetupType registry value.
 
     HFONT hTitleFont;
 
@@ -149,16 +150,15 @@ typedef struct _SETUPDATA
     PNTOS_INSTALLATION CurrentInstallation;
     PGENERIC_LIST NtOsInstallsList;
 
+/* Settings lists *****/ // FIXME: HACKHACK! Remove these!
+    PGENERIC_LIST ComputerList;
+    PGENERIC_LIST DisplayList;
+    PGENERIC_LIST KeyboardList;
+    PGENERIC_LIST LanguageList;
+    PGENERIC_LIST LayoutList;
 
     /* Settings */
     LONG DestPartSize; // if partition doesn't exist, size of partition
-
-    /* txtsetup.sif data */
-    // LONG DefaultLang;     // default language (table index)
-    // LONG DefaultKBLayout; // default keyboard layout (table index)
-    PCWSTR SelectedLanguageId;
-    WCHAR DefaultLanguage[20];   // Copy of string inside LanguageList
-    WCHAR DefaultKBLayout[20];   // Copy of string inside KeyboardList
 
 } SETUPDATA, *PSETUPDATA;
 

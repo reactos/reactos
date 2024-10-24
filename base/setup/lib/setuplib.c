@@ -50,7 +50,7 @@ CheckUnattendedSetup(
     UnattendInf = SpInfOpenInfFile(UnattendInfPath,
                                    NULL,
                                    INF_STYLE_OLDNT,
-                                   pSetupData->LanguageId,
+                                   LANGIDFROMLCID(pSetupData->LocaleID),
                                    &ErrorLine);
     if (UnattendInf == INVALID_HANDLE_VALUE)
     {
@@ -179,10 +179,7 @@ CheckUnattendedSetup(
     {
         if (INF_GetData(&Context, NULL, &Value))
         {
-            LONG Id = wcstol(Value, NULL, 16);
-            RtlStringCchPrintfW(pSetupData->LocaleID,
-                                ARRAYSIZE(pSetupData->LocaleID),
-                                L"%08lx", Id);
+            pSetupData->LocaleID = (LCID)wcstoul(Value, NULL, 16);
             INF_FreeData(Value);
         }
     }
@@ -572,7 +569,7 @@ LoadSetupInf(
         SpInfOpenInfFile(FileNameBuffer,
                          NULL,
                          INF_STYLE_WIN4,
-                         pSetupData->LanguageId,
+                         LANGIDFROMLCID(pSetupData->LocaleID),
                          &ErrorLine);
     if (pSetupData->SetupInf == INVALID_HANDLE_VALUE)
         return ERROR_LOAD_TXTSETUPSIF;
@@ -1096,41 +1093,6 @@ VOID
 FinishSetup(
     IN OUT PUSETUP_DATA pSetupData)
 {
-    /* Destroy the computer settings list */
-    if (pSetupData->ComputerList != NULL)
-    {
-        DestroyGenericList(pSetupData->ComputerList, TRUE);
-        pSetupData->ComputerList = NULL;
-    }
-
-    /* Destroy the display settings list */
-    if (pSetupData->DisplayList != NULL)
-    {
-        DestroyGenericList(pSetupData->DisplayList, TRUE);
-        pSetupData->DisplayList = NULL;
-    }
-
-    /* Destroy the keyboard settings list */
-    if (pSetupData->KeyboardList != NULL)
-    {
-        DestroyGenericList(pSetupData->KeyboardList, TRUE);
-        pSetupData->KeyboardList = NULL;
-    }
-
-    /* Destroy the keyboard layout list */
-    if (pSetupData->LayoutList != NULL)
-    {
-        DestroyGenericList(pSetupData->LayoutList, TRUE);
-        pSetupData->LayoutList = NULL;
-    }
-
-    /* Destroy the languages list */
-    if (pSetupData->LanguageList != NULL)
-    {
-        DestroyGenericList(pSetupData->LanguageList, FALSE);
-        pSetupData->LanguageList = NULL;
-    }
-
     /* Close the Setup INF */
     SpInfCloseInfFile(pSetupData->SetupInf);
 }
@@ -1148,7 +1110,6 @@ UpdateRegistry(
     /**/IN BOOLEAN RepairUpdateFlag,     /* HACK HACK! */
     /**/IN PPARTLIST PartitionList,      /* HACK HACK! */
     /**/IN WCHAR DestinationDriveLetter, /* HACK HACK! */
-    /**/IN PCWSTR SelectedLanguageId,    /* HACK HACK! */
     IN PREGISTRY_STATUS_ROUTINE StatusRoutine OPTIONAL,
     IN PFONTSUBSTSETTINGS SubstSettings OPTIONAL)
 {
@@ -1161,6 +1122,11 @@ UpdateRegistry(
     BOOLEAN Success;
     BOOLEAN ShouldRepairRegistry = FALSE;
     BOOLEAN Delete;
+    LANGID SelectedLanguageId = LANGIDFROMLCID(pSetupData->LocaleID);
+
+__debugbreak();
+
+__debugbreak();
 
     if (RepairUpdateFlag)
     {
@@ -1274,7 +1240,7 @@ DoUpdate:
 
         if (!ImportRegistryFile(pSetupData->SourcePath.Buffer,
                                 File, Section,
-                                pSetupData->LanguageId, Delete))
+                                LANGIDFROMLCID(pSetupData->LocaleID), Delete))
         {
             DPRINT1("Importing %S failed\n", File);
             INF_FreeData(File);
@@ -1288,14 +1254,6 @@ DoUpdate:
     {
         /* See the explanation for this test above */
 
-        PGENERIC_LIST_ENTRY Entry;
-        PCWSTR LanguageId; // LocaleID;
-
-        Entry = GetCurrentListEntry(pSetupData->DisplayList);
-        ASSERT(Entry);
-        pSetupData->DisplayType = ((PGENENTRY)GetListEntryData(Entry))->Id;
-        ASSERT(pSetupData->DisplayType);
-
         /* Update display registry settings */
         if (StatusRoutine) StatusRoutine(DisplaySettingsUpdate);
         if (!ProcessDisplayRegistry(pSetupData->SetupInf, pSetupData->DisplayType))
@@ -1304,14 +1262,9 @@ DoUpdate:
             goto Cleanup;
         }
 
-        Entry = GetCurrentListEntry(pSetupData->LanguageList);
-        ASSERT(Entry);
-        LanguageId = ((PGENENTRY)GetListEntryData(Entry))->Id;
-        ASSERT(LanguageId);
-
         /* Set the locale */
         if (StatusRoutine) StatusRoutine(LocaleSettingsUpdate);
-        if (!ProcessLocaleRegistry(/*pSetupData->*/LanguageId))
+        if (!ProcessLocaleRegistry(pSetupData->LocaleID))
         {
             ErrorNumber = ERROR_UPDATE_LOCALESETTINGS;
             goto Cleanup;
@@ -1327,12 +1280,7 @@ DoUpdate:
 
         if (!IsUnattendedSetup)
         {
-            Entry = GetCurrentListEntry(pSetupData->LayoutList);
-            ASSERT(Entry);
-            pSetupData->LayoutId = ((PGENENTRY)GetListEntryData(Entry))->Id;
-            ASSERT(pSetupData->LayoutId);
-
-            /* Update keyboard layout settings with user-overridden values */
+            /* Update keyboard layout settings with user overriden values */
             // FIXME: Wouldn't it be better to do it all at once
             // with the AddKeyboardLayouts() step?
             if (StatusRoutine) StatusRoutine(KeybSettingsUpdate);
@@ -1370,7 +1318,7 @@ DoUpdate:
     if (SubstSettings)
     {
         /* HACK */
-        DoRegistryFontFixup(SubstSettings, wcstoul(SelectedLanguageId, NULL, 16));
+        DoRegistryFontFixup(SubstSettings, SelectedLanguageId);
     }
 #endif
 

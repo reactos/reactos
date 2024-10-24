@@ -606,6 +606,9 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
     {
         Fcb->OpenHandleCount++;
         DeviceExt->OpenHandleCount++;
+
+DPRINT1("DeviceExt->OpenHandleCount = 0x%lx\n", DeviceExt->OpenHandleCount);
+DPRINT1("Fcb->OpenHandleCount = 0x%lx\n", Fcb->OpenHandleCount);
     }
 
     /*

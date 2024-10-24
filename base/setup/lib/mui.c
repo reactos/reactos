@@ -42,25 +42,22 @@
 static
 ULONG
 FindLanguageIndex(
-    IN PCWSTR LanguageId)
+    _In_ LANGID LanguageId)
 {
     ULONG lngIndex = 0;
 
-    if (LanguageId == NULL)
+    if (LanguageId == 0)
     {
         /* Default to en-US */
-        // return 0;   // FIXME!!
-        LanguageId = L"00000409";
+        // return 0; // FIXME!!
+        LanguageId = 0x0409;
     }
 
-    while (MUILanguageList[lngIndex].LanguageID != NULL)
+    while (MUILanguageList[lngIndex].LanguageID != 0)
     {
-        if (_wcsicmp(MUILanguageList[lngIndex].LanguageID, LanguageId) == 0)
-        {
+        if (MUILanguageList[lngIndex].LanguageID == LanguageId)
             return lngIndex;
-        }
-
-        lngIndex++;
+        ++lngIndex;
     }
 
     return 0;
@@ -68,16 +65,15 @@ FindLanguageIndex(
 
 BOOLEAN
 IsLanguageAvailable(
-    IN PCWSTR LanguageId)
+    _In_ LANGID LanguageId)
 {
     ULONG lngIndex = 0;
 
-    while (MUILanguageList[lngIndex].LanguageID != NULL)
+    while (MUILanguageList[lngIndex].LanguageID != 0)
     {
-        if (_wcsicmp(MUILanguageList[lngIndex].LanguageID, LanguageId) == 0)
+        if (MUILanguageList[lngIndex].LanguageID == LanguageId)
             return TRUE;
-
-        lngIndex++;
+        ++lngIndex;
     }
 
     return FALSE;
@@ -86,7 +82,7 @@ IsLanguageAvailable(
 
 KLID
 MUIDefaultKeyboardLayout(
-    IN PCWSTR LanguageId)
+    _In_ LANGID LanguageId)
 {
     ULONG lngIndex = FindLanguageIndex(LanguageId);
     return MUILanguageList[lngIndex].MuiLayouts[0].LayoutID;
@@ -94,7 +90,7 @@ MUIDefaultKeyboardLayout(
 
 UINT
 MUIGetOEMCodePage(
-    IN PCWSTR LanguageId)
+    _In_ LANGID LanguageId)
 {
     ULONG lngIndex = FindLanguageIndex(LanguageId);
     return MUILanguageList[lngIndex].OEMCPage;
@@ -102,7 +98,7 @@ MUIGetOEMCodePage(
 
 GEOID
 MUIGetGeoID(
-    IN PCWSTR LanguageId)
+    _In_ LANGID LanguageId)
 {
     ULONG lngIndex = FindLanguageIndex(LanguageId);
     return MUILanguageList[lngIndex].GeoID;
@@ -110,7 +106,7 @@ MUIGetGeoID(
 
 const MUI_LAYOUTS*
 MUIGetLayoutsList(
-    IN PCWSTR LanguageId)
+    _In_ LANGID LanguageId)
 {
     ULONG lngIndex = FindLanguageIndex(LanguageId);
     return MUILanguageList[lngIndex].MuiLayouts;
@@ -125,16 +121,14 @@ AddHotkeySettings(
     IN PCWSTR LayoutHotkey)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING KeyName;
-    UNICODE_STRING ValueName;
+    UNICODE_STRING Name;
     HANDLE KeyHandle;
     ULONG Disposition;
     NTSTATUS Status;
 
-    RtlInitUnicodeString(&KeyName,
-                         L".DEFAULT\\Keyboard Layout\\Toggle");
+    RtlInitUnicodeString(&Name, L".DEFAULT\\Keyboard Layout\\Toggle");
     InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
+                               &Name,
                                OBJ_CASE_INSENSITIVE,
                                GetRootKeyByPredefKey(HKEY_USERS, NULL),
                                NULL);
@@ -152,11 +146,9 @@ AddHotkeySettings(
         return FALSE;
     }
 
-    RtlInitUnicodeString(&ValueName,
-                         L"Hotkey");
-
+    RtlInitUnicodeString(&Name, L"Hotkey");
     Status = NtSetValueKey(KeyHandle,
-                           &ValueName,
+                           &Name,
                            0,
                            REG_SZ,
                            (PVOID)Hotkey,
@@ -168,11 +160,9 @@ AddHotkeySettings(
         return FALSE;
     }
 
-    RtlInitUnicodeString(&ValueName,
-                         L"Language Hotkey");
-
+    RtlInitUnicodeString(&Name, L"Language Hotkey");
     Status = NtSetValueKey(KeyHandle,
-                           &ValueName,
+                           &Name,
                            0,
                            REG_SZ,
                            (PVOID)LangHotkey,
@@ -184,11 +174,9 @@ AddHotkeySettings(
         return FALSE;
     }
 
-    RtlInitUnicodeString(&ValueName,
-                         L"Layout Hotkey");
-
+    RtlInitUnicodeString(&Name, L"Layout Hotkey");
     Status = NtSetValueKey(KeyHandle,
-                           &ValueName,
+                           &Name,
                            0,
                            REG_SZ,
                            (PVOID)LayoutHotkey,
@@ -289,7 +277,9 @@ AddKbLayoutsToRegistry(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
-        goto Quit;
+        // goto Quit;
+        NtClose(KeyHandle);
+        return FALSE;
     }
 
     uCount = 0;
@@ -360,18 +350,15 @@ Quit:
 
 BOOLEAN
 AddKeyboardLayouts(
-    IN PCWSTR LanguageId)
+    _In_ LANGID LanguageId)
 {
     ULONG lngIndex = 0;
 
-    while (MUILanguageList[lngIndex].LanguageID != NULL)
+    while (MUILanguageList[lngIndex].LanguageID != 0)
     {
-        if (_wcsicmp(MUILanguageList[lngIndex].LanguageID, LanguageId) == 0)
-        {
+        if (MUILanguageList[lngIndex].LanguageID == LanguageId)
             return AddKbLayoutsToRegistry(MUILanguageList[lngIndex].MuiLayouts);
-        }
-
-        lngIndex++;
+        ++lngIndex;
     }
 
     return FALSE;
@@ -407,7 +394,7 @@ AddCodepageToRegistry(
                        &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
+        DPRINT1("NtOpenKey(\"%wZ\") failed (Status %lx)\n", &Name, Status);
         return FALSE;
     }
 
@@ -424,7 +411,7 @@ AddCodepageToRegistry(
                            (wcslen(Value)+1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+        DPRINT1("NtSetValueKey(\"%wZ\") failed (Status %lx)\n", &Name, Status);
         goto Quit;
     }
 
@@ -441,7 +428,7 @@ AddCodepageToRegistry(
                            (wcslen(Value)+1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+        DPRINT1("NtSetValueKey(\"%wZ\") failed (Status %lx)\n", &Name, Status);
         goto Quit;
     }
 
@@ -458,7 +445,7 @@ AddCodepageToRegistry(
                            (wcslen(Value)+1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+        DPRINT1("NtSetValueKey(\"%wZ\") failed (Status %lx)\n", &Name, Status);
         goto Quit;
     }
 
@@ -508,7 +495,7 @@ AddFontsSettingsToRegistry(
                                    (wcslen(MuiSubFonts[uIndex].SubFontName)+1) * sizeof(WCHAR));
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %d)\n", Status, uIndex);
+                DPRINT1("NtSetValueKey() failed (Status = %lx, uIndex = %u)\n", Status, uIndex);
                 NtClose(KeyHandle);
                 return FALSE;
             }
@@ -532,13 +519,13 @@ AddFontsSettingsToRegistry(
 
 BOOLEAN
 AddCodePage(
-    IN PCWSTR LanguageId)
+    _In_ LANGID LanguageId)
 {
     ULONG lngIndex = 0;
 
-    while (MUILanguageList[lngIndex].LanguageID != NULL)
+    while (MUILanguageList[lngIndex].LanguageID != 0)
     {
-        if (_wcsicmp(MUILanguageList[lngIndex].LanguageID, LanguageId) == 0)
+        if (MUILanguageList[lngIndex].LanguageID == LanguageId)
         {
             if (AddCodepageToRegistry(MUILanguageList[lngIndex].ACPage,
                                       MUILanguageList[lngIndex].OEMCPage,
@@ -553,7 +540,7 @@ AddCodePage(
             }
         }
 
-        lngIndex++;
+        ++lngIndex;
     }
 
     return FALSE;

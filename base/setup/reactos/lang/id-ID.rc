@@ -144,16 +144,18 @@ BEGIN
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 7, 120, 303, 8
 END
 
-IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
+IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Menyelesaikan Penyetelan ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Menyelesaikan Penuntun Penyetelan ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Anda menyelesaikan tahap pertama Penyetelan ReactOS dengan berhasil.", IDC_STATIC, 115, 50, 195, 17
-    LTEXT "Ketika tombol Selesai ditekan, komputer akan memulai ulang.", IDC_STATIC, 115, 80, 195, 17
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
-    LTEXT "Jika terdapat CD pada drive, keluarkan. Lalu, untuk memulai ulang komputer, klik Selesai.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Anda menyelesaikan tahap pertama Penyetelan ReactOS dengan berhasil.", IDC_STATIC, 115, 40, 195, 17
+    //LTEXT "Ketika tombol Selesai ditekan, komputer akan memulai ulang.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Jika terdapat CD pada drive, keluarkan. Lalu, untuk memulai ulang komputer, klik Selesai.", IDC_FINISHTEXT, 115, 70, 195, 40
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 115, 188, 12
+    AUTOCHECKBOX "&Pause restart countdown", IDC_PAUSE_COUNTDOWN, 115, 135, 180, 14
+    PUSHBUTTON "&Restart Now", IDC_RESTARTNOW, 174, 135, 67, 14
 END
 
 /* Strings */
@@ -177,6 +179,7 @@ BEGIN
     IDS_ABORTSETUP2 "Gugurkan pemasangan?"
     IDS_NO_TXTSETUP_SIF "Tidak bisa menemukan 'txtsetup.sif'.\nPenyetelan tidak bisa dilanjutkan."
     IDS_INSTALLBTN "&Install"
+    IDS_REBOOTBTN "Restart"
     IDS_VOLUME_NOFORMAT "Not formatted"
 END
 

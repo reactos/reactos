@@ -146,16 +146,18 @@ BEGIN
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
 END
 
-IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
+IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Persediaan"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Completing the ReactOS Setup Wizard", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Anda telah berjaya melengkapkan tahap pertama persediaan ReactOS.", IDC_STATIC, 115, 50, 195, 17
-    LTEXT "Apabila anda klik Selesai, komputer akan dimulakan semula.", IDC_STATIC, 115, 80, 195, 17
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
-    LTEXT "Jika ada CD ke dalam pemacu, mengeluarkannya. Kemudian, untuk memulakan semula komputer anda, klik selesai.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Anda telah berjaya melengkapkan tahap pertama persediaan ReactOS.", IDC_STATIC, 115, 40, 195, 17
+    //LTEXT "Apabila anda klik Selesai, komputer akan dimulakan semula.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Jika ada CD ke dalam pemacu, mengeluarkannya. Kemudian, untuk memulakan semula komputer anda, klik selesai.", IDC_FINISHTEXT, 115, 70, 195, 40
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 115, 188, 12
+    AUTOCHECKBOX "&Pause restart countdown", IDC_PAUSE_COUNTDOWN, 115, 135, 180, 14
+    PUSHBUTTON "&Restart Now", IDC_RESTARTNOW, 174, 135, 67, 14
 END
 
 /* Strings */
@@ -179,6 +181,7 @@ BEGIN
     IDS_ABORTSETUP2 "Henti paksa pemasangan?"
     IDS_NO_TXTSETUP_SIF "Persediaan tidak dapat mencari 'txtsetup.sif'.\nPersediaan tidak dapat meneruskan."
     IDS_INSTALLBTN "&Install"
+    IDS_REBOOTBTN "Restart"
     IDS_VOLUME_NOFORMAT "Not formatted"
 END
 

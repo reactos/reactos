@@ -1,5 +1,11 @@
 #pragma once
 
+/*
+ * See the intl.inf file map:
+ *
+ * ; List of locales.
+ * ; <LCID> = <Font>,<Font Substitute>
+ */
 typedef struct
 {
     PCWSTR FontName;
@@ -7,6 +13,8 @@ typedef struct
 } MUI_SUBFONT;
 
 typedef USHORT LANGID;
+// #define MAXUSHORT USHRT_MAX
+// typedef DWORD LCID;
 typedef ULONG KLID;
 
 /*
@@ -29,7 +37,7 @@ typedef ULONG GEOID; // See winnls.h
 
 typedef struct
 {
-    PCWSTR LanguageID;
+    LCID LanguageID; // LocaleID;
     UINT ACPage;
     UINT OEMCPage;
     UINT MACCPage;
@@ -42,23 +50,23 @@ typedef struct
 
 BOOLEAN
 IsLanguageAvailable(
-    IN PCWSTR LanguageId);
+    _In_ LANGID LanguageId);
 
 KLID
 MUIDefaultKeyboardLayout(
-    IN PCWSTR LanguageId);
+    _In_ LANGID LanguageId);
 
 UINT
 MUIGetOEMCodePage(
-    IN PCWSTR LanguageId);
+    _In_ LANGID LanguageId);
 
 GEOID
 MUIGetGeoID(
-    IN PCWSTR LanguageId);
+    _In_ LANGID LanguageId);
 
 const MUI_LAYOUTS*
 MUIGetLayoutsList(
-    IN PCWSTR LanguageId);
+    _In_ LANGID LanguageId);
 
 BOOLEAN
 AddKbLayoutsToRegistry(
@@ -66,8 +74,8 @@ AddKbLayoutsToRegistry(
 
 BOOLEAN
 AddKeyboardLayouts(
-    IN PCWSTR LanguageId);
+    _In_ LANGID LanguageId);
 
 BOOLEAN
 AddCodePage(
-    IN PCWSTR LanguageId);
+    _In_ LANGID LanguageId);

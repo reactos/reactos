@@ -876,6 +876,8 @@ LockOrUnlockVolume(PDEVICE_EXTENSION DeviceExt,
     }
 
     /* Deny locking if we're not alone */
+DPRINT1("DeviceExt->OpenHandleCount = 0x%lx\n", DeviceExt->OpenHandleCount);
+DPRINT1("Fcb->OpenHandleCount = 0x%lx\n", Fcb->OpenHandleCount);
     if (Lock && DeviceExt->OpenHandleCount != 1)
     {
         return STATUS_ACCESS_DENIED;
