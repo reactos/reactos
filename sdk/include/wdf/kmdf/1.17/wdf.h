@@ -40,7 +40,7 @@ Revision History:
 #endif
 
 // reactos start
-#include <psdk/sal.h>
+#include <sal.h>
 #include <section_attribs.h>
 #define STDCALL __stdcall
 // reactos end

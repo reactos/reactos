@@ -4,7 +4,7 @@
 
 #ifndef RC_INVOKED
 
-#include <crtdefs.h>
+#include <vcruntime.h>
 #include <setjmp.h>
 #include <stddef.h>
 

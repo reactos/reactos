@@ -22,7 +22,7 @@
 #ifndef _MMINTRIN_H_INCLUDED
 #define _MMINTRIN_H_INCLUDED
 
-#include <crtdefs.h>
+#include <vcruntime.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,7 +42,7 @@ extern "C" {
         float m64_f32[2];
         __int8 m64_i8[8];
         __int16 m64_i16[4];
-        __int32 m64_i32[2];    
+        __int32 m64_i32[2];
         __int64 m64_i64;
         unsigned __int8 m64_u8[8];
         unsigned __int16 m64_u16[4];

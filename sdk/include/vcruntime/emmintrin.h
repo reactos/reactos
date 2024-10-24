@@ -11,7 +11,7 @@
 #ifndef _INCLUDED_EMM
 #define _INCLUDED_EMM
 
-#include <crtdefs.h>
+#include <vcruntime.h>
 #include <xmmintrin.h>
 
 #if defined(_MSC_VER) && !defined(__clang__)
