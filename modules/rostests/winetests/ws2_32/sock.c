@@ -82,9 +82,9 @@ static int   (WINAPI *pGetAddrInfoExW)(const WCHAR *name, const WCHAR *servname,
         struct timeval *timeout, OVERLAPPED *overlapped,
         LPLOOKUPSERVICE_COMPLETION_ROUTINE completion_routine, HANDLE *handle);
 static int   (WINAPI *pGetAddrInfoExOverlappedResult)(OVERLAPPED *overlapped);
-static PCSTR (WINAPI *pInetNtop)(INT,LPVOID,LPSTR,ULONG);
+static PCSTR (WINAPI *p_inet_ntop)(INT,LPVOID,LPSTR,ULONG);
 static PCWSTR(WINAPI *pInetNtopW)(INT,LPVOID,LPWSTR,ULONG);
-static int   (WINAPI *pInetPtonA)(INT,LPCSTR,LPVOID);
+static int   (WINAPI *p_inet_pton)(INT,LPCSTR,LPVOID);
 static int   (WINAPI *pInetPtonW)(INT,LPWSTR,LPVOID);
 static int   (WINAPI *pWSALookupServiceBeginW)(LPWSAQUERYSETW,DWORD,LPHANDLE);
 static int   (WINAPI *pWSALookupServiceEnd)(HANDLE);
@@ -1298,9 +1298,9 @@ static void Init (void)
     pGetAddrInfoW = (void *)GetProcAddress(hws2_32, "GetAddrInfoW");
     pGetAddrInfoExW = (void *)GetProcAddress(hws2_32, "GetAddrInfoExW");
     pGetAddrInfoExOverlappedResult = (void *)GetProcAddress(hws2_32, "GetAddrInfoExOverlappedResult");
-    pInetNtop = (void *)GetProcAddress(hws2_32, "inet_ntop");
+    p_inet_ntop = (void *)GetProcAddress(hws2_32, "inet_ntop");
     pInetNtopW = (void *)GetProcAddress(hws2_32, "InetNtopW");
-    pInetPtonA = (void *)GetProcAddress(hws2_32, "inet_pton");
+    p_inet_pton = (void *)GetProcAddress(hws2_32, "inet_pton");
     pInetPtonW = (void *)GetProcAddress(hws2_32, "InetPtonW");
     pWSALookupServiceBeginW = (void *)GetProcAddress(hws2_32, "WSALookupServiceBeginW");
     pWSALookupServiceEnd = (void *)GetProcAddress(hws2_32, "WSALookupServiceEnd");
@@ -4903,26 +4903,26 @@ static void test_addr_to_print(void)
     ok(pdst != NULL, "inet_ntoa failed %s\n", dst);
     ok(!strcmp(pdst, addr1_Str),"Address %s != %s\n", pdst, addr1_Str);
 
-    /* InetNtop became available in Vista and Win2008 */
-    if (!pInetNtop)
+    /* inet_ntop became available in Vista and Win2008 */
+    if (!p_inet_ntop)
     {
         win_skip("InetNtop not present, not executing tests\n");
         return;
     }
 
     /* Second part of test */
-    pdst = pInetNtop(AF_INET,(void*)&in.s_addr, dst, sizeof(dst));
+    pdst = p_inet_ntop(AF_INET, &in.s_addr, dst, sizeof(dst));
     ok(pdst != NULL, "InetNtop failed %s\n", dst);
     ok(!strcmp(pdst, addr1_Str),"Address %s != %s\n", pdst, addr1_Str);
 
     /* Test invalid parm conditions */
-    pdst = pInetNtop(1, (void*)&in.s_addr, dst, sizeof(dst));
+    pdst = p_inet_ntop(1, (void *)&in.s_addr, dst, sizeof(dst));
     ok(pdst == NULL, "The pointer should not be returned (%p)\n", pdst);
     ok(WSAGetLastError() == WSAEAFNOSUPPORT, "Should be WSAEAFNOSUPPORT\n");
 
     /* Test Null destination */
     pdst = NULL;
-    pdst = pInetNtop(AF_INET, (void*)&in.s_addr, NULL, sizeof(dst));
+    pdst = p_inet_ntop(AF_INET, &in.s_addr, NULL, sizeof(dst));
     ok(pdst == NULL, "The pointer should not be returned (%p)\n", pdst);
     ok(WSAGetLastError() == STATUS_INVALID_PARAMETER || WSAGetLastError() == WSAEINVAL /* Win7 */,
        "Should be STATUS_INVALID_PARAMETER or WSAEINVAL not 0x%x\n", WSAGetLastError());
@@ -4930,7 +4930,7 @@ static void test_addr_to_print(void)
     /* Test zero length passed */
     WSASetLastError(0);
     pdst = NULL;
-    pdst = pInetNtop(AF_INET, (void*)&in.s_addr, dst, 0);
+    pdst = p_inet_ntop(AF_INET, &in.s_addr, dst, 0);
     ok(pdst == NULL, "The pointer should not be returned (%p)\n", pdst);
     ok(WSAGetLastError() == STATUS_INVALID_PARAMETER || WSAGetLastError() == WSAEINVAL /* Win7 */,
        "Should be STATUS_INVALID_PARAMETER or WSAEINVAL not 0x%x\n", WSAGetLastError());
@@ -4938,7 +4938,7 @@ static void test_addr_to_print(void)
     /* Test length one shorter than the address length */
     WSASetLastError(0);
     pdst = NULL;
-    pdst = pInetNtop(AF_INET, (void*)&in.s_addr, dst, 6);
+    pdst = p_inet_ntop(AF_INET, &in.s_addr, dst, 6);
     ok(pdst == NULL, "The pointer should not be returned (%p)\n", pdst);
     ok(WSAGetLastError() == STATUS_INVALID_PARAMETER || WSAGetLastError() == WSAEINVAL /* Win7 */,
        "Should be STATUS_INVALID_PARAMETER or WSAEINVAL not 0x%x\n", WSAGetLastError());
@@ -4946,7 +4946,7 @@ static void test_addr_to_print(void)
     /* Test longer length is ok */
     WSASetLastError(0);
     pdst = NULL;
-    pdst = pInetNtop(AF_INET, (void*)&in.s_addr, dst, sizeof(dst)+1);
+    pdst = p_inet_ntop(AF_INET, &in.s_addr, dst, sizeof(dst)+1);
     ok(pdst != NULL, "The pointer should  be returned (%p)\n", pdst);
     ok(!strcmp(pdst, addr1_Str),"Address %s != %s\n", pdst, addr1_Str);
 
@@ -4954,19 +4954,19 @@ static void test_addr_to_print(void)
 
     /* Test an zero prefixed IPV6 address */
     memcpy(in6.u.Byte, addr2_Num, sizeof(addr2_Num));
-    pdst = pInetNtop(AF_INET6,(void*)&in6.s6_addr, dst6, sizeof(dst6));
+    pdst = p_inet_ntop(AF_INET6, &in6.s6_addr, dst6, sizeof(dst6));
     ok(pdst != NULL, "InetNtop failed %s\n", dst6);
     ok(!strcmp(pdst, addr2_Str),"Address %s != %s\n", pdst, addr2_Str);
 
     /* Test an zero suffixed IPV6 address */
     memcpy(in6.s6_addr, addr3_Num, sizeof(addr3_Num));
-    pdst = pInetNtop(AF_INET6,(void*)&in6.s6_addr, dst6, sizeof(dst6));
+    pdst = p_inet_ntop(AF_INET6, &in6.s6_addr, dst6, sizeof(dst6));
     ok(pdst != NULL, "InetNtop failed %s\n", dst6);
     ok(!strcmp(pdst, addr3_Str),"Address %s != %s\n", pdst, addr3_Str);
 
     /* Test the IPv6 address contains the IPv4 address in IPv4 notation */
     memcpy(in6.s6_addr, addr4_Num, sizeof(addr4_Num));
-    pdst = pInetNtop(AF_INET6, (void*)&in6.s6_addr, dst6, sizeof(dst6));
+    pdst = p_inet_ntop(AF_INET6, &in6.s6_addr, dst6, sizeof(dst6));
     ok(pdst != NULL, "InetNtop failed %s\n", dst6);
     ok(!strcmp(pdst, addr4_Str),"Address %s != %s\n", pdst, addr4_Str);
 
@@ -4975,7 +4975,7 @@ static void test_addr_to_print(void)
 
     /* Test Null destination */
     pdst = NULL;
-    pdst = pInetNtop(AF_INET6, (void*)&in6.s6_addr, NULL, sizeof(dst6));
+    pdst = p_inet_ntop(AF_INET6, &in6.s6_addr, NULL, sizeof(dst6));
     ok(pdst == NULL, "The pointer should not be returned (%p)\n", pdst);
     ok(WSAGetLastError() == STATUS_INVALID_PARAMETER || WSAGetLastError() == WSAEINVAL /* Win7 */,
        "Should be STATUS_INVALID_PARAMETER or WSAEINVAL not 0x%x\n", WSAGetLastError());
@@ -4983,7 +4983,7 @@ static void test_addr_to_print(void)
     /* Test zero length passed */
     WSASetLastError(0);
     pdst = NULL;
-    pdst = pInetNtop(AF_INET6, (void*)&in6.s6_addr, dst6, 0);
+    pdst = p_inet_ntop(AF_INET6, &in6.s6_addr, dst6, 0);
     ok(pdst == NULL, "The pointer should not be returned (%p)\n", pdst);
     ok(WSAGetLastError() == STATUS_INVALID_PARAMETER || WSAGetLastError() == WSAEINVAL /* Win7 */,
        "Should be STATUS_INVALID_PARAMETER or WSAEINVAL not 0x%x\n", WSAGetLastError());
@@ -4991,7 +4991,7 @@ static void test_addr_to_print(void)
     /* Test length one shorter than the address length */
     WSASetLastError(0);
     pdst = NULL;
-    pdst = pInetNtop(AF_INET6, (void*)&in6.s6_addr, dst6, 16);
+    pdst = p_inet_ntop(AF_INET6, &in6.s6_addr, dst6, 16);
     ok(pdst == NULL, "The pointer should not be returned (%p)\n", pdst);
     ok(WSAGetLastError() == STATUS_INVALID_PARAMETER || WSAGetLastError() == WSAEINVAL /* Win7 */,
        "Should be STATUS_INVALID_PARAMETER or WSAEINVAL not 0x%x\n", WSAGetLastError());
@@ -4999,151 +4999,344 @@ static void test_addr_to_print(void)
     /* Test longer length is ok */
     WSASetLastError(0);
     pdst = NULL;
-    pdst = pInetNtop(AF_INET6, (void*)&in6.s6_addr, dst6, 18);
+    pdst = p_inet_ntop(AF_INET6, &in6.s6_addr, dst6, 18);
     ok(pdst != NULL, "The pointer should be returned (%p)\n", pdst);
 }
 static void test_inet_pton(void)
 {
-    struct TEST_DATA
+    static const struct
     {
-        int family, ret;
-        DWORD err;
-        const char *printable, *collapsed, *raw_data;
-    } tests[] = {
-        {AF_UNSPEC, -1, WSAEFAULT,    /* Test 0 */
-        NULL, NULL, NULL},
-        {AF_INET, -1, WSAEFAULT,
-        NULL, NULL, NULL},
-        {AF_INET6, -1, WSAEFAULT,
-        NULL, NULL, NULL},
-        {AF_UNSPEC, -1, WSAEAFNOSUPPORT,
-        "127.0.0.1", NULL, NULL},
-        {AF_INET, 1, 0,
-        "127.0.0.1", "127.0.0.1",
-        "\x7f\x00\x00\x01"},
-        {AF_INET6, 0, 0,
-        "127.0.0.1", "127.0.0.1", NULL},
-        {AF_INET, 0, 0,
-        "::1/128", NULL, NULL},
-        {AF_INET6, 0, 0,
-        "::1/128", NULL, NULL},
-        {AF_UNSPEC, -1, WSAEAFNOSUPPORT,
-        "broken", NULL, NULL},
-        {AF_INET, 0, 0,
-        "broken", NULL, NULL},
-        {AF_INET6, 0, 0,              /* Test 10 */
-        "broken", NULL, NULL},
-        {AF_UNSPEC, -1, WSAEAFNOSUPPORT,
-        "177.32.45.20", NULL, NULL},
-        {AF_INET, 1, 0,
-        "177.32.45.20", "177.32.45.20",
-        "\xb1\x20\x2d\x14"},
-        {AF_INET6, 0, 0,
-        "177.32.45.20", NULL, NULL},
-        {AF_INET, 0, 0,
-        "2607:f0d0:1002:51::4", NULL, NULL},
-        {AF_INET6, 1, 0,
-        "2607:f0d0:1002:51::4", "2607:f0d0:1002:51::4",
-        "\x26\x07\xf0\xd0\x10\x02\x00\x51\x00\x00\x00\x00\x00\x00\x00\x04"},
-        {AF_INET, 0, 0,
-        "::177.32.45.20", NULL, NULL},
-        {AF_INET6, 1, 0,
-        "::177.32.45.20", "::177.32.45.20",
-        "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xb1\x20\x2d\x14"},
-        {AF_INET, 0, 0,
-        "fe80::0202:b3ff:fe1e:8329", NULL, NULL},
-        {AF_INET6, 1, 0,
-        "fe80::0202:b3ff:fe1e:8329", "fe80::202:b3ff:fe1e:8329",
-        "\xfe\x80\x00\x00\x00\x00\x00\x00\x02\x02\xb3\xff\xfe\x1e\x83\x29"},
-        {AF_INET6, 1, 0,              /* Test 20 */
-        "fe80::202:b3ff:fe1e:8329", "fe80::202:b3ff:fe1e:8329",
-        "\xfe\x80\x00\x00\x00\x00\x00\x00\x02\x02\xb3\xff\xfe\x1e\x83\x29"},
-        {AF_INET, 0, 0,
-        "a", NULL, NULL},
-        {AF_INET, 0, 0,
-        "a.b", NULL, NULL},
-        {AF_INET, 0, 0,
-        "a.b.c",  NULL, NULL},
-        {AF_INET, 0, 0,
-        "a.b.c.d", NULL, NULL},
-        {AF_INET6, 1, 0,
-        "2001:cdba:0000:0000:0000:0000:3257:9652", "2001:cdba::3257:9652",
-        "\x20\x01\xcd\xba\x00\x00\x00\x00\x00\x00\x00\x00\x32\x57\x96\x52"},
-        {AF_INET6, 1, 0,
-        "2001:cdba::3257:9652", "2001:cdba::3257:9652",
-        "\x20\x01\xcd\xba\x00\x00\x00\x00\x00\x00\x00\x00\x32\x57\x96\x52"},
-        {AF_INET6, 1, 0,
-        "2001:cdba:0:0:0:0:3257:9652", "2001:cdba::3257:9652",
-        "\x20\x01\xcd\xba\x00\x00\x00\x00\x00\x00\x00\x00\x32\x57\x96\x52"}
+        char input[32];
+        int ret;
+        DWORD addr;
+    }
+    ipv4_tests[] =
+    {
+        {"",                       0, 0xdeadbeef},
+        {" ",                      0, 0xdeadbeef},
+        {"1.1.1.1",                1, 0x01010101},
+        {"0.0.0.0",                1, 0x00000000},
+        {"127.127.127.255",        1, 0xff7f7f7f},
+        {"127.127.127.255:123",    0, 0xff7f7f7f},
+        {"127.127.127.256",        0, 0xdeadbeef},
+        {"a",                      0, 0xdeadbeef},
+        {"1.1.1.0xaA",             0, 0xdeadbeef},
+        {"1.1.1.0x",               0, 0xdeadbeef},
+        {"1.1.1.010",              0, 0xdeadbeef},
+        {"1.1.1.00",               0, 0xdeadbeef},
+        {"1.1.1.0a",               0, 0x00010101},
+        {"1.1.1.0o10",             0, 0x00010101},
+        {"1.1.1.0b10",             0, 0x00010101},
+        {"1.1.1.-2",               0, 0xdeadbeef},
+        {"1",                      0, 0xdeadbeef},
+        {"1.2",                    0, 0xdeadbeef},
+        {"1.2.3",                  0, 0xdeadbeef},
+        {"203569230",              0, 0xdeadbeef},
+        {"3.4.5.6.7",              0, 0xdeadbeef},
+        {" 3.4.5.6",               0, 0xdeadbeef},
+        {"\t3.4.5.6",              0, 0xdeadbeef},
+        {"3.4.5.6 ",               0, 0x06050403},
+        {"3. 4.5.6",               0, 0xdeadbeef},
+        {"[0.1.2.3]",              0, 0xdeadbeef},
+        {"0x00010203",             0, 0xdeadbeef},
+        {"0x2134",                 0, 0xdeadbeef},
+        {"1234BEEF",               0, 0xdeadbeef},
+        {"017700000001",           0, 0xdeadbeef},
+        {"0777",                   0, 0xdeadbeef},
+        {"2607:f0d0:1002:51::4",   0, 0xdeadbeef},
+        {"::177.32.45.20",         0, 0xdeadbeef},
+        {"::1/128",                0, 0xdeadbeef},
+        {"::1",                    0, 0xdeadbeef},
+        {":1",                     0, 0xdeadbeef},
     };
-    int i, ret;
-    DWORD err;
-    char buffer[64],str[64];
-    WCHAR printableW[64], collapsedW[64];
-    const char *ptr;
-    const WCHAR *ptrW;
 
-    /* InetNtop and InetPton became available in Vista and Win2008 */
-    if (!pInetNtop || !pInetNtopW || !pInetPtonA || !pInetPtonW)
+    static const struct
     {
-        win_skip("InetNtop and/or InetPton not present, not executing tests\n");
+        char input[64];
+        int ret;
+        unsigned short addr[8];
+        int broken;
+        int broken_ret;
+    }
+    ipv6_tests[] =
+    {
+        {"0000:0000:0000:0000:0000:0000:0000:0000",        1, {0, 0, 0, 0, 0, 0, 0, 0}},
+        {"0000:0000:0000:0000:0000:0000:0000:0001",        1, {0, 0, 0, 0, 0, 0, 0, 0x100}},
+        {"0:0:0:0:0:0:0:0",                                1, {0, 0, 0, 0, 0, 0, 0, 0}},
+        {"0:0:0:0:0:0:0:1",                                1, {0, 0, 0, 0, 0, 0, 0, 0x100}},
+        {"0:0:0:0:0:0:0::",                                1, {0, 0, 0, 0, 0, 0, 0, 0}},
+        {"0:0:0:0:0:0:13.1.68.3",                          1, {0, 0, 0, 0, 0, 0, 0x10d, 0x344}},
+        {"0:0:0:0:0:0::",                                  1, {0, 0, 0, 0, 0, 0, 0, 0}},
+        {"0:0:0:0:0::",                                    1, {0, 0, 0, 0, 0, 0, 0, 0}},
+        {"0:0:0:0:0:FFFF:129.144.52.38",                   1, {0, 0, 0, 0, 0, 0xffff, 0x9081, 0x2634}},
+        {"0::",                                            1, {0, 0, 0, 0, 0, 0, 0, 0}},
+        {"0:1:2:3:4:5:6:7",                                1, {0, 0x100, 0x200, 0x300, 0x400, 0x500, 0x600, 0x700}},
+        {"1080:0:0:0:8:800:200c:417a",                     1, {0x8010, 0, 0, 0, 0x800, 0x8, 0x0c20, 0x7a41}},
+        {"0:a:b:c:d:e:f::",                                1, {0, 0xa00, 0xb00, 0xc00, 0xd00, 0xe00, 0xf00, 0}},
+        {"1111:2222:3333:4444:5555:6666:123.123.123.123",  1, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0x6666, 0x7b7b, 0x7b7b}},
+        {"1111:2222:3333:4444:5555:6666:7777:8888",        1, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0x6666, 0x7777, 0x8888}},
+        {"1111:2222:3333:4444:0x5555:6666:7777:8888",      0, {0x1111, 0x2222, 0x3333, 0x4444, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1111:2222:3333:4444:x555:6666:7777:8888",        0, {0x1111, 0x2222, 0x3333, 0x4444, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1111:2222:3333:4444:0r5555:6666:7777:8888",      0, {0x1111, 0x2222, 0x3333, 0x4444, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1111:2222:3333:4444:r5555:6666:7777:8888",       0, {0x1111, 0x2222, 0x3333, 0x4444, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1111:2222:3333:4444:5555:6666:7777::",           1, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0x6666, 0x7777, 0}},
+        {"1111:2222:3333:4444:5555:6666::",                1, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0x6666, 0, 0}},
+        {"1111:2222:3333:4444:5555:6666::8888",            1, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0x6666, 0, 0x8888}},
+        {"1111:2222:3333:4444:5555:6666::7777:8888",       0, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0x6666, 0, 0x7777}},
+        {"1111:2222:3333:4444:5555:6666:7777::8888",       0, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0x6666, 0x7777, 0}},
+        {"1111:2222:3333:4444:5555::",                     1, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0, 0, 0}},
+        {"1111:2222:3333:4444:5555::123.123.123.123",      1, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0, 0x7b7b, 0x7b7b}},
+        {"1111:2222:3333:4444:5555::0x1.123.123.123",      0, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0, 0, 0x100}},
+        {"1111:2222:3333:4444:5555::0x88",                 0, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0, 0, 0x8800}},
+        {"1111:2222:3333:4444:5555::0X88",                 0, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0, 0, 0x8800}},
+        {"1111:2222:3333:4444:5555::0X",                   0, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0, 0, 0}},
+        {"1111:2222:3333:4444:5555::0X88:7777",            0, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0, 0, 0x8800}},
+        {"1111:2222:3333:4444:5555::0x8888",               0, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0, 0, 0x8888}},
+        {"1111:2222:3333:4444:5555::0x80000000",           0, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0, 0, 0xffff}},
+        {"1111:2222:3333:4444::5555:0x012345678",          0, {0x1111, 0x2222, 0x3333, 0x4444, 0, 0, 0x5555, 0x7856}},
+        {"1111:2222:3333:4444::5555:0x123456789",          0, {0x1111, 0x2222, 0x3333, 0x4444, 0, 0, 0x5555, 0xffff}},
+        {"1111:2222:3333:4444:5555:6666:0x12345678",       0, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0x6666, 0xabab, 0xabab}},
+        {"1111:2222:3333:4444:5555:6666:7777:0x80000000",  0, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0x6666, 0x7777, 0xffff}},
+        {"1111:2222:3333:4444:5555:6666:7777:0x012345678", 0, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0x6666, 0x7777, 0x7856}},
+        {"1111:2222:3333:4444:5555:6666:7777:0x123456789", 0, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0x6666, 0x7777, 0xffff}},
+        {"111:222:333:444:555:666:777:0x123456789abcdef0", 0, {0x1101, 0x2202, 0x3303, 0x4404, 0x5505, 0x6606, 0x7707, 0xffff}},
+        {"1111:2222:3333:4444:5555::08888",                0, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0xabab, 0xabab, 0xabab}},
+        {"1111:2222:3333:4444:5555::08888::",              0, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0xabab, 0xabab, 0xabab}},
+        {"1111:2222:3333:4444:5555:6666:7777:fffff:",      0, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0x6666, 0x7777, 0xabab}},
+        {"1111:2222:3333:4444:5555:6666::fffff:",          0, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0x6666, 0xabab, 0xabab}},
+        {"1111:2222:3333:4444:5555::fffff",                0, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0xabab, 0xabab, 0xabab}},
+        {"1111:2222:3333:4444::fffff",                     0, {0x1111, 0x2222, 0x3333, 0x4444, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1111:2222:3333::fffff",                          0, {0x1111, 0x2222, 0x3333, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1111:2222:3333:4444:5555::7777:8888",            1, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0, 0x7777, 0x8888}},
+        {"1111:2222:3333:4444:5555::8888",                 1, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0, 0, 0x8888}},
+        {"1111::",                                         1, {0x1111, 0, 0, 0, 0, 0, 0, 0}},
+        {"1111::123.123.123.123",                          1, {0x1111, 0, 0, 0, 0, 0, 0x7b7b, 0x7b7b}},
+        {"1111::3333:4444:5555:6666:123.123.123.123",      1, {0x1111, 0, 0x3333, 0x4444, 0x5555, 0x6666, 0x7b7b, 0x7b7b}},
+        {"1111::3333:4444:5555:6666:7777:8888",            1, {0x1111, 0, 0x3333, 0x4444, 0x5555, 0x6666, 0x7777, 0x8888}},
+        {"1111::4444:5555:6666:123.123.123.123",           1, {0x1111, 0, 0, 0x4444, 0x5555, 0x6666, 0x7b7b, 0x7b7b}},
+        {"1111::4444:5555:6666:7777:8888",                 1, {0x1111, 0, 0, 0x4444, 0x5555, 0x6666, 0x7777, 0x8888}},
+        {"1111::5555:6666:123.123.123.123",                1, {0x1111, 0, 0, 0, 0x5555, 0x6666, 0x7b7b, 0x7b7b}},
+        {"1111::5555:6666:7777:8888",                      1, {0x1111, 0, 0, 0, 0x5555, 0x6666, 0x7777, 0x8888}},
+        {"1111::6666:123.123.123.123",                     1, {0x1111, 0, 0, 0, 0, 0x6666, 0x7b7b, 0x7b7b}},
+        {"1111::6666:7777:8888",                           1, {0x1111, 0, 0, 0, 0, 0x6666, 0x7777, 0x8888}},
+        {"1111::7777:8888",                                1, {0x1111, 0, 0, 0, 0, 0, 0x7777, 0x8888}},
+        {"1111::8888",                                     1, {0x1111, 0, 0, 0, 0, 0, 0, 0x8888}},
+        {"1:2:3:4:5:6:1.2.3.4",                            1, {0x100, 0x200, 0x300, 0x400, 0x500, 0x600, 0x201, 0x403}},
+        {"1:2:3:4:5:6:7:8",                                1, {0x100, 0x200, 0x300, 0x400, 0x500, 0x600, 0x700, 0x800}},
+        {"1:2:3:4:5:6::",                                  1, {0x100, 0x200, 0x300, 0x400, 0x500, 0x600, 0, 0}},
+        {"1:2:3:4:5:6::8",                                 1, {0x100, 0x200, 0x300, 0x400, 0x500, 0x600, 0, 0x800}},
+        {"2001:0000:1234:0000:0000:C1C0:ABCD:0876",        1, {0x120, 0, 0x3412, 0, 0, 0xc0c1, 0xcdab, 0x7608}},
+        {"2001:0000:4136:e378:8000:63bf:3fff:fdd2",        1, {0x120, 0, 0x3641, 0x78e3, 0x80, 0xbf63, 0xff3f, 0xd2fd}},
+        {"2001:0db8:0:0:0:0:1428:57ab",                    1, {0x120, 0xb80d, 0, 0, 0, 0, 0x2814, 0xab57}},
+        {"2001:0db8:1234:ffff:ffff:ffff:ffff:ffff",        1, {0x120, 0xb80d, 0x3412, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff}},
+        {"2001::CE49:7601:2CAD:DFFF:7C94:FFFE",            1, {0x120, 0, 0x49ce, 0x176, 0xad2c, 0xffdf, 0x947c, 0xfeff}},
+        {"2001:db8:85a3::8a2e:370:7334",                   1, {0x120, 0xb80d, 0xa385, 0, 0, 0x2e8a, 0x7003, 0x3473}},
+        {"3ffe:0b00:0000:0000:0001:0000:0000:000a",        1, {0xfe3f, 0xb, 0, 0, 0x100, 0, 0, 0xa00}},
+        {"::",                                             1, {0, 0, 0, 0, 0, 0, 0, 0}},
+        {"::%16",                                          0, {0, 0, 0, 0, 0, 0, 0, 0}},
+        {"::/16",                                          0, {0, 0, 0, 0, 0, 0, 0, 0}},
+        {"::01234",                                        0, {0, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"::0",                                            1, {0, 0, 0, 0, 0, 0, 0, 0}},
+        {"::0:0",                                          1, {0, 0, 0, 0, 0, 0, 0, 0}},
+        {"::0:0:0",                                        1, {0, 0, 0, 0, 0, 0, 0, 0}},
+        {"::0:0:0:0",                                      1, {0, 0, 0, 0, 0, 0, 0, 0}},
+        {"::0:0:0:0:0",                                    1, {0, 0, 0, 0, 0, 0, 0, 0}},
+        {"::0:0:0:0:0:0",                                  1, {0, 0, 0, 0, 0, 0, 0, 0}},
+        {"::0:0:0:0:0:0:0",                                1, {0, 0, 0, 0, 0, 0, 0, 0}, 1},
+        {"::0:a:b:c:d:e:f",                                1, {0, 0, 0xa00, 0xb00, 0xc00, 0xd00, 0xe00, 0xf00}, 1},
+        {"::123.123.123.123",                              1, {0, 0, 0, 0, 0, 0, 0x7b7b, 0x7b7b}},
+        {"ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff",        1, {0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff}},
+        {"':10.0.0.1",                                     0, {0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"-1",                                             0, {0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"02001:0000:1234:0000:0000:C1C0:ABCD:0876",       0, {0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"2001:00000:1234:0000:0000:C1C0:ABCD:0876",       0, {0x120, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"2001:0000:01234:0000:0000:C1C0:ABCD:0876",       0, {0x120, 0, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"2001:0000::01234.0",                             0, {0x120, 0, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"2001:0::b.0",                                    0, {0x120, 0, 0, 0, 0, 0, 0, 0xb00}},
+        {"2001::0:b.0",                                    0, {0x120, 0, 0, 0, 0, 0, 0, 0xb00}},
+        {"1.2.3.4",                                        0, {0x201, 0xab03, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1.2.3.4:1111::5555",                             0, {0x201, 0xab03, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1.2.3.4::5555",                                  0, {0x201, 0xab03, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"11112222:3333:4444:5555:6666:1.2.3.4",           0, {0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"11112222:3333:4444:5555:6666:7777:8888",         0, {0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1111",                                           0, {0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"0x1111",                                         0, {0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1111:22223333:4444:5555:6666:1.2.3.4",           0, {0x1111, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1111:22223333:4444:5555:6666:7777:8888",         0, {0x1111, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1111:123456789:4444:5555:6666:7777:8888",        0, {0x1111, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1111:1234567890abcdef0:4444:5555:6666:7777:888", 0, {0x1111, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1111:2222:",                                     0, {0x1111, 0x2222, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1111:2222:1.2.3.4",                              0, {0x1111, 0x2222, 0x201, 0xab03, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1111:2222:3333",                                 0, {0x1111, 0x2222, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1111:2222:3333:4444:5555:6666::1.2.3.4",         0, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0x6666, 0, 0x100}},
+        {"1111:2222:3333:4444:5555:6666:7777:1.2.3.4",     0, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0x6666, 0x7777, 0x100}},
+        {"1111:2222:3333:4444:5555:6666:7777:8888:",       0, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0x6666, 0x7777, 0x8888}},
+        {"1111:2222:3333:4444:5555:6666:7777:8888:1.2.3.4",0, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0x6666, 0x7777, 0x8888}},
+        {"1111:2222:3333:4444:5555:6666:7777:8888:9999",   0, {0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0x6666, 0x7777, 0x8888}},
+        {"1111:2222:::",                                   0, {0x1111, 0x2222, 0, 0, 0, 0, 0, 0}},
+        {"1111::5555:",                                    0, {0x1111, 0x5555, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1111::3333:4444:5555:6666:7777::",               0, {0x1111, 0, 0, 0x3333, 0x4444, 0x5555, 0x6666, 0x7777}},
+        {"1111:2222:::4444:5555:6666:1.2.3.4",             0, {0x1111, 0x2222, 0, 0, 0, 0, 0, 0}},
+        {"1111::3333::5555:6666:1.2.3.4",                  0, {0x1111, 0, 0, 0, 0, 0, 0, 0x3333}},
+        {"12345::6:7:8",                                   0, {0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1::001.2.3.4",                                   1, {0x100, 0, 0, 0, 0, 0, 0x201, 0x403}},
+        {"1::1.002.3.4",                                   1, {0x100, 0, 0, 0, 0, 0, 0x201, 0x403}},
+        {"1::0001.2.3.4",                                  0, {0x100, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1::1.0002.3.4",                                  0, {0x100, 0xab01, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1::1.2.256.4",                                   0, {0x100, 0x201, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1::1.2.4294967296.4",                            0, {0x100, 0x201, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1::1.2.18446744073709551616.4",                  0, {0x100, 0x201, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1::1.2.3.256",                                   0, {0x100, 0x201, 0xab03, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1::1.2.3.4294967296",                            0, {0x100, 0x201, 0xab03, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1::1.2.3.18446744073709551616",                  0, {0x100, 0x201, 0xab03, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1::1.2.3.300",                                   0, {0x100, 0x201, 0xab03, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1::1.2.3.300.",                                  0, {0x100, 0x201, 0xab03, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1::1.2::1",                                      0, {0x100, 0xab01, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1::1.2.3.4::1",                                  0, {0x100, 0, 0, 0, 0, 0, 0x201, 0x403}},
+        {"1::1.",                                          0, {0x100, 0xab01, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1::1.2",                                         0, {0x100, 0xab01, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1::1.2.",                                        0, {0x100, 0x201, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1::1.2.3",                                       0, {0x100, 0x201, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1::1.2.3.",                                      0, {0x100, 0x201, 0xab03, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1::1.2.3.4",                                     1, {0x100, 0, 0, 0, 0, 0, 0x201, 0x403}},
+        {"1::1.2.3.900",                                   0, {0x100, 0x201, 0xab03, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1::1.2.300.4",                                   0, {0x100, 0x201, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1::1.256.3.4",                                   0, {0x100, 0xab01, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1::1.256:3.4",                                   0, {0x100, 0xab01, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1::1.2a.3.4",                                    0, {0x100, 0xab01, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1::256.2.3.4",                                   0, {0x100, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"1::1a.2.3.4",                                    0, {0x100, 0, 0, 0, 0, 0, 0, 0x1a00}},
+        {"1::2::3",                                        0, {0x100, 0, 0, 0, 0, 0, 0, 0x200}},
+        {"2001:0000:1234: 0000:0000:C1C0:ABCD:0876",       0, {0x120, 0, 0x3412, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"2001:0000:1234:0000:0000:C1C0:ABCD:0876  0",     0, {0x120, 0, 0x3412, 0, 0, 0xc0c1, 0xcdab, 0x7608}},
+        {"2001:1:1:1:1:1:255Z255X255Y255",                 0, {0x120, 0x100, 0x100, 0x100, 0x100, 0x100, 0xabab, 0xabab}},
+        {"2001::FFD3::57ab",                               0, {0x120, 0, 0, 0, 0, 0, 0, 0xd3ff}},
+        {":",                                              0, {0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {":1111:2222:3333:4444:5555:6666:1.2.3.4",         0, {0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {":1111:2222:3333:4444:5555:6666:7777:8888",       0, {0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {":1111::",                                        0, {0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"::-1",                                           0, {0, 0, 0, 0, 0, 0, 0, 0}},
+        {"::12345678",                                     0, {0, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"::123456789",                                    0, {0, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"::1234567890abcdef0",                            0, {0, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"::0x80000000",                                   0, {0, 0, 0, 0, 0, 0, 0, 0xffff}},
+        {"::0x012345678",                                  0, {0, 0, 0, 0, 0, 0, 0, 0x7856}},
+        {"::0x123456789",                                  0, {0, 0, 0, 0, 0, 0, 0, 0xffff}},
+        {"::0x1234567890abcdef0",                          0, {0, 0, 0, 0, 0, 0, 0, 0xffff}},
+        {"::.",                                            0, {0, 0, 0, 0, 0, 0, 0, 0}},
+        {"::..",                                           0, {0, 0, 0, 0, 0, 0, 0, 0}},
+        {"::...",                                          0, {0, 0, 0, 0, 0, 0, 0, 0}},
+        {"XXXX:XXXX:XXXX:XXXX:XXXX:XXXX:1.2.3.4",          0, {0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+        {"[::]",                                           0, {0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab, 0xabab}},
+    };
+
+    BYTE buffer[32];
+    int i, ret;
+
+    /* inet_ntop and inet_pton became available in Vista and Win2008 */
+    if (!p_inet_ntop)
+    {
+        win_skip("inet_ntop is not available\n");
         return;
     }
 
-    for (i = 0; i < sizeof(tests) / sizeof(tests[0]); i++)
-    {
-        WSASetLastError(0xdeadbeef);
-        ret = pInetPtonA(tests[i].family, tests[i].printable, buffer);
-        ok (ret == tests[i].ret, "Test [%d]: Expected %d, got %d\n", i, tests[i].ret, ret);
-        if (tests[i].ret == -1)
-        {
-            err = WSAGetLastError();
-            ok (tests[i].err == err, "Test [%d]: Expected 0x%x, got 0x%x\n", i, tests[i].err, err);
-        }
-        if (tests[i].ret != 1) continue;
-        ok (memcmp(buffer, tests[i].raw_data,
-            tests[i].family == AF_INET ? sizeof(struct in_addr) : sizeof(struct in6_addr)) == 0,
-            "Test [%d]: Expected binary data differs\n", i);
+    WSASetLastError(0xdeadbeef);
+    ret = p_inet_pton(AF_UNSPEC, NULL, buffer);
+    ok(ret == -1, "got %d\n", ret);
+    ok(WSAGetLastError() == WSAEFAULT, "got error %u\n", WSAGetLastError());
 
-        /* Test the result from Pton with Ntop */
-        strcpy (str, "deadbeef");
-        ptr = pInetNtop(tests[i].family, buffer, str, sizeof(str));
-        ok (ptr != NULL, "Test [%d]: Failed with NULL\n", i);
-        ok (ptr == str, "Test [%d]: Pointers differ (%p != %p)\n", i, ptr, str);
-        if (!ptr) continue;
-        ok (strcmp(ptr, tests[i].collapsed) == 0, "Test [%d]: Expected '%s', got '%s'\n",
-            i, tests[i].collapsed, ptr);
+    WSASetLastError(0xdeadbeef);
+    ret = p_inet_pton(AF_INET, NULL, buffer);
+    ok(ret == -1, "got %d\n", ret);
+    ok(WSAGetLastError() == WSAEFAULT, "got error %u\n", WSAGetLastError());
+
+    WSASetLastError(0xdeadbeef);
+    ret = pInetPtonW(AF_UNSPEC, NULL, buffer);
+    ok(ret == -1, "got %d\n", ret);
+    ok(WSAGetLastError() == WSAEFAULT, "got error %u\n", WSAGetLastError());
+
+    WSASetLastError(0xdeadbeef);
+    ret = pInetPtonW(AF_INET, NULL, buffer);
+    ok(ret == -1, "got %d\n", ret);
+    ok(WSAGetLastError() == WSAEFAULT, "got error %u\n", WSAGetLastError());
+
+    WSASetLastError(0xdeadbeef);
+    ret = p_inet_pton(AF_UNSPEC, "127.0.0.1", buffer);
+    ok(ret == -1, "got %d\n", ret);
+    ok(WSAGetLastError() == WSAEAFNOSUPPORT, "got error %u\n", WSAGetLastError());
+
+    WSASetLastError(0xdeadbeef);
+    ret = p_inet_pton(AF_UNSPEC, "2607:f0d0:1002:51::4", buffer);
+    ok(ret == -1, "got %d\n", ret);
+    ok(WSAGetLastError() == WSAEAFNOSUPPORT, "got error %u\n", WSAGetLastError());
+
+    for (i = 0; i < ARRAY_SIZE(ipv4_tests); ++i)
+    {
+        WCHAR inputW[32];
+        DWORD addr;
+
+        winetest_push_context( "Address %s", debugstr_a(ipv4_tests[i].input) );
+
+        WSASetLastError(0xdeadbeef);
+        addr = 0xdeadbeef;
+        ret = p_inet_pton(AF_INET, ipv4_tests[i].input, &addr);
+        ok(ret == ipv4_tests[i].ret, "got %d\n", ret);
+        ok(WSAGetLastError() == 0xdeadbeef, "got error %u\n", WSAGetLastError());
+        ok(addr == ipv4_tests[i].addr, "got addr %#08lx\n", addr);
+
+        MultiByteToWideChar(CP_ACP, 0, ipv4_tests[i].input, -1, inputW, ARRAY_SIZE(inputW));
+        WSASetLastError(0xdeadbeef);
+        addr = 0xdeadbeef;
+        ret = pInetPtonW(AF_INET, inputW, &addr);
+        ok(ret == ipv4_tests[i].ret, "got %d\n", ret);
+        ok(WSAGetLastError() == (ret ? 0xdeadbeef : WSAEINVAL), "got error %u\n", WSAGetLastError());
+        ok(addr == ipv4_tests[i].addr, "got addr %#08lx\n", addr);
+
+        WSASetLastError(0xdeadbeef);
+        addr = inet_addr(ipv4_tests[i].input);
+        ok(addr == ipv4_tests[i].ret ? ipv4_tests[i].addr : INADDR_NONE, "got addr %#08lx\n", addr);
+        ok(WSAGetLastError() == 0xdeadbeef, "got error %u\n", WSAGetLastError());
+
+        winetest_pop_context();
     }
 
-    for (i = 0; i < sizeof(tests) / sizeof(tests[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(ipv6_tests); ++i)
     {
-        if (tests[i].printable)
-            MultiByteToWideChar(CP_ACP, 0, tests[i].printable, -1, printableW,
-                                sizeof(printableW) / sizeof(printableW[0]));
+        unsigned short addr[8];
+        WCHAR inputW[64];
+
+        winetest_push_context( "Address %s", debugstr_a(ipv6_tests[i].input) );
+
         WSASetLastError(0xdeadbeef);
-        ret = pInetPtonW(tests[i].family, tests[i].printable ? printableW : NULL, buffer);
-        ok(ret == tests[i].ret, "Test [%d]: Expected %d, got %d\n", i, tests[i].ret, ret);
-        if (tests[i].ret == -1)
-        {
-            err = WSAGetLastError();
-            ok(tests[i].err == err, "Test [%d]: Expected 0x%x, got 0x%x\n", i, tests[i].err, err);
-        }
-        if (tests[i].ret != 1) continue;
-        ok(memcmp(buffer, tests[i].raw_data,
-           tests[i].family == AF_INET ? sizeof(struct in_addr) : sizeof(struct in6_addr)) == 0,
-           "Test [%d]: Expected binary data differs\n", i);
+        memset(addr, 0xab, sizeof(addr));
+        ret = p_inet_pton(AF_INET6, ipv6_tests[i].input, addr);
+        if (ipv6_tests[i].broken)
+            ok(ret == ipv6_tests[i].ret || broken(ret == ipv6_tests[i].broken_ret), "got %d\n", ret);
+        else
+            ok(ret == ipv6_tests[i].ret, "got %d\n", ret);
+        ok(WSAGetLastError() == 0xdeadbeef, "got error %u\n", WSAGetLastError());
+        if (ipv6_tests[i].broken)
+            ok(!memcmp(addr, ipv6_tests[i].addr, sizeof(addr)) || broken(memcmp(addr, ipv6_tests[i].addr, sizeof(addr))),
+               "address didn't match\n");
+        else
+            ok(!memcmp(addr, ipv6_tests[i].addr, sizeof(addr)), "address didn't match\n");
 
-        /* Test the result from Pton with Ntop */
-        printableW[0] = 0xdead;
-        ptrW = pInetNtopW(tests[i].family, buffer, printableW, sizeof(printableW) / sizeof(printableW[0]));
-        ok (ptrW != NULL, "Test [%d]: Failed with NULL\n", i);
-        ok (ptrW == printableW, "Test [%d]: Pointers differ (%p != %p)\n", i, ptrW, printableW);
-        if (!ptrW) continue;
+        MultiByteToWideChar(CP_ACP, 0, ipv6_tests[i].input, -1, inputW, ARRAY_SIZE(inputW));
+        WSASetLastError(0xdeadbeef);
+        memset(addr, 0xab, sizeof(addr));
+        ret = pInetPtonW(AF_INET6, inputW, addr);
+        if (ipv6_tests[i].broken)
+            ok(ret == ipv6_tests[i].ret || broken(ret == ipv6_tests[i].broken_ret), "got %d\n", ret);
+        else
+            ok(ret == ipv6_tests[i].ret, "got %d\n", ret);
+        ok(WSAGetLastError() == (ret ? 0xdeadbeef : WSAEINVAL), "got error %u\n", WSAGetLastError());
+        if (ipv6_tests[i].broken)
+            ok(!memcmp(addr, ipv6_tests[i].addr, sizeof(addr)) || broken(memcmp(addr, ipv6_tests[i].addr, sizeof(addr))),
+               "address didn't match\n");
+        else
+            ok(!memcmp(addr, ipv6_tests[i].addr, sizeof(addr)), "address didn't match\n");
 
-        MultiByteToWideChar(CP_ACP, 0, tests[i].collapsed, -1, collapsedW,
-                            sizeof(collapsedW) / sizeof(collapsedW[0]));
-        ok (lstrcmpW(ptrW, collapsedW) == 0, "Test [%d]: Expected '%s', got '%s'\n",
-            i, tests[i].collapsed, wine_dbgstr_w(ptrW));
+        winetest_pop_context();
     }
 }
 
@@ -7730,7 +7923,7 @@ static void verify_ipv6_addrinfo(ADDRINFOA *result, const char *expectedIp)
         ok(sockaddr6->sin6_port == 0, "ai_addr->sin6_port == %d\n", sockaddr6->sin6_port);
 
         ZeroMemory(ipBuffer, sizeof(ipBuffer));
-        ret = pInetNtop(AF_INET6, &sockaddr6->sin6_addr, ipBuffer, sizeof(ipBuffer));
+        ret = p_inet_ntop(AF_INET6, &sockaddr6->sin6_addr, ipBuffer, sizeof(ipBuffer));
         ok(ret != NULL, "inet_ntop failed (%d)\n", WSAGetLastError());
         ok(strcmp(ipBuffer, expectedIp) == 0, "ai_addr->sin6_addr == '%s' (expected '%s')\n", ipBuffer, expectedIp);
     }
