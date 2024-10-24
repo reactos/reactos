@@ -21,4 +21,4 @@ add_executable(installfreeldr EXCLUDE_FROM_ALL
 
 set_module_type(installfreeldr win32cui)
 add_importlibs(installfreeldr msvcrt kernel32)
-add_cd_file(TARGET installfreeldr DESTINATION loader NO_CAB NOT_IN_HYBRIDCD FOR bootcd livecd hybridcd)
+add_cd_file(TARGET installfreeldr DESTINATION loader NO_CAB FOR bootcd)
