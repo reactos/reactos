@@ -1072,9 +1072,24 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
                 /* Look if we are included */
                 do
                 {
+                    int negated = 0, match = 0;
+
                     pc++;
+
+                    /* Check for negated case */
+                    if (*pc == '!')
+                    {
+                        negated = 1;
+                        pc++;
+                    }
+
                     if (CompareToken(pc, pszArchString) ||
                         CompareToken(pc, pszArchString2))
+                    {
+                        match = 1;
+                    }
+
+                    if (match != negated)
                     {
                         included = 1;
                     }
