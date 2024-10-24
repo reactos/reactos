@@ -35,6 +35,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#define ASCII_ETX   0x03 // ASCII End of Text
+
 typedef struct _FONTLINK
 {
     LIST_ENTRY ListEntry; //< Entry in the FONTLINK_CHAIN::FontLinkList
@@ -6795,9 +6797,8 @@ IntExtTextOutW(
     FONT_CACHE_ENTRY Cache;
     FT_Matrix mat;
     BOOL bNoTransform;
-    DWORD ch0, ch1, etx = 3; // etx is ASCII End of Text
+    DWORD ch0, ch1;
     FONTLINK_CHAIN Chain;
-    SIZE spaceWidth;
 
     /* Check if String is valid */
     if (Count > 0xFFFF || (Count > 0 && String == NULL))
@@ -7063,20 +7064,26 @@ IntExtTextOutW(
         bitSize.cx = realglyph->bitmap.width;
         bitSize.cy = realglyph->bitmap.rows;
 
-        /* Do chars other than space and etx have a bitSize.cx of zero? */
-        if (ch0 != L' ' && ch0 != etx && bitSize.cx == 0)
-            DPRINT1("WARNING: WChar 0x%04x has a bitSize.cx of zero\n", ch0);
+        /* Is character width zero? */
+        if (bitSize.cx == 0)
+        {
+            /* Warn about unexpected characters (other than space and ETX) */
+            if (ch0 != ' ' && ch0 != ASCII_ETX)
+                DPRINT1("WARNING: WChar 0x%04x width is zero\n", ch0);
 
-        /* Don't ignore spaces when computing offset.
-         * This completes the fix of CORE-11787. */
-        if ((pdcattr->flTextAlign & TA_UPDATECP) && ch0 == L' ' && bitSize.cx == 0)
-        { 
-            IntUnLockFreeType();
-            /* Get the width of the space character */
-            TextIntGetTextExtentPoint(dc, TextObj, L" ", 1, 0, NULL, 0, &spaceWidth, 0);
-            IntLockFreeType();
-            bitSize.cx = spaceWidth.cx;
-            realglyph->left = 0;
+            /* Account for space character when computing offset.
+             * This completes the fix of CORE-11787. */
+            if (ch0 == ' ' && (pdcattr->flTextAlign & TA_UPDATECP))
+            {
+                SIZE spaceWidth;
+
+                IntUnLockFreeType();
+                /* Get the width of the space character */
+                TextIntGetTextExtentPoint(dc, TextObj, L" ", 1, 0, NULL, 0, &spaceWidth, 0);
+                IntLockFreeType();
+                bitSize.cx = spaceWidth.cx;
+                realglyph->left = 0;
+            }
         }
 
         MaskRect.right = realglyph->bitmap.width;
