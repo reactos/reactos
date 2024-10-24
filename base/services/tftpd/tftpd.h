@@ -21,6 +21,7 @@
 #define MYBYTE unsigned char
 #define MYWORD unsigned short
 #define MYDWORD unsigned int
+#define MYLWORD unsigned int
 
 #ifdef _MSC_VER
    #define strcasecmp _stricmp
@@ -131,17 +132,13 @@ struct data1
     MYWORD listenPorts[MAX_SERVERS];
     SOCKET maxFD;
     bool ready;
-    bool busy;
+    bool readyForChange;
 };
 
 struct data2
 {
     WSADATA wsaData;
-#ifdef __REACTOS__
-    home homes[MAX_SERVERS];
-#else
     home homes[8];
-#endif
     FILE *logfile;
     data12 hostRanges[32];
     char fileRead;
@@ -149,9 +146,8 @@ struct data2
     char fileOverwrite;
     int minport;
     int maxport;
-    MYDWORD failureCount;
     MYBYTE logLevel;
-    bool ifspecified;
+    MYDWORD failureCount;
 };
 
 struct data15
@@ -176,7 +172,7 @@ void init(void*);
 bool cleanReq(request*);
 bool addServer(MYDWORD*, MYDWORD);
 FILE* openSection(const char*, MYBYTE, char*);
-char* readSection(char*, FILE*);
+char *readSection(char*, FILE*);
 bool getSection(const char*, char*, MYBYTE, char*);
 bool isIP(char*s);
 char* myLower(char*);
