@@ -45,6 +45,9 @@ static void toggleNukeOnDeleteOption(HWND hwndDlg, BOOL bEnable)
         EnableWindow(GetDlgItem(hwndDlg, 14002), TRUE);
         SendDlgItemMessage(hwndDlg, 14003, BM_SETCHECK, BST_UNCHECKED, 0);
     }
+
+    // FIXME: Max capacity not implemented yet, disable for now (CORE-13743)
+    EnableWindow(GetDlgItem(hwndDlg, 14002), FALSE);
 }
 
 static VOID
@@ -129,7 +132,8 @@ InitializeRecycleBinDlg(HWND hwndDlg, WCHAR DefaultDrive)
                             swprintf(szName, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\BitBucket\\Volume\\%04X-%04X", LOWORD(dwSerial), HIWORD(dwSerial));
 
                             dwSize = sizeof(DWORD);
-                            RegGetValueW(HKEY_CURRENT_USER, szName, L"MaxCapacity", RRF_RT_DWORD, NULL, &pItem->dwMaxCapacity, &dwSize);
+                            if (RegGetValueW(HKEY_CURRENT_USER, szName, L"MaxCapacity", RRF_RT_DWORD, NULL, &pItem->dwMaxCapacity, &dwSize))
+                                pItem->dwMaxCapacity = ~0;
 
                             /* Check if the maximum capacity doesn't exceed the available disk space (in megabytes), and truncate it if needed */
                             FreeBytesAvailable.QuadPart = (FreeBytesAvailable.QuadPart / (1024 * 1024));
@@ -240,7 +244,7 @@ static VOID FreeDriveItemContext(HWND hwndDlg)
 }
 
 static INT
-GetDefaultItem(HWND hwndDlg, LVITEMW* li)
+GetSelectedDriveItem(HWND hwndDlg, LVITEMW* li)
 {
     HWND hDlgCtrl;
     UINT iItemCount, iIndex;
@@ -275,6 +279,7 @@ RecycleBinDlg(
     WPARAM wParam,
     LPARAM lParam)
 {
+    enum { WM_NEWDRIVESELECTED = WM_APP, WM_UPDATEDRIVESETTINGS };
     LPPSHNOTIFY lppsn;
     LPNMLISTVIEW lppl;
     LVITEMW li;
@@ -329,25 +334,9 @@ RecycleBinDlg(
                 ss.fNoConfirmRecycle = SendDlgItemMessage(hwndDlg, 14004, BM_GETCHECK, 0, 0) == BST_UNCHECKED;
                 SHGetSetSettings(&ss, SSF_NOCONFIRMRECYCLE, TRUE);
 
-                if (GetDefaultItem(hwndDlg, &li) > -1)
+                if (GetSelectedDriveItem(hwndDlg, &li) > -1)
                 {
-                    pItem = (PDRIVE_ITEM_CONTEXT)li.lParam;
-                    if (pItem)
-                    {
-                        uResult = GetDlgItemInt(hwndDlg, 14002, &bSuccess, FALSE);
-                        if (bSuccess)
-                        {
-                            /* Check if the maximum capacity doesn't exceed the available disk space (in megabytes), and truncate it if needed */
-                            FreeBytesAvailable = pItem->FreeBytesAvailable;
-                            FreeBytesAvailable.QuadPart = (FreeBytesAvailable.QuadPart / (1024 * 1024));
-                            pItem->dwMaxCapacity = min(uResult, FreeBytesAvailable.LowPart);
-                            SetDlgItemInt(hwndDlg, 14002, pItem->dwMaxCapacity, FALSE);
-                        }
-                        if (SendDlgItemMessageW(hwndDlg, 14003, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                            pItem->dwNukeOnDelete = TRUE;
-                        else
-                            pItem->dwNukeOnDelete = FALSE;
-                    }
+                    SendMessage(hwndDlg, WM_UPDATEDRIVESETTINGS, 0, li.lParam);
                 }
                 if (StoreDriveSettings(hwndDlg))
                 {
@@ -369,29 +358,43 @@ RecycleBinDlg(
 
                 if (!(lppl->uOldState & LVIS_FOCUSED) && (lppl->uNewState & LVIS_FOCUSED))
                 {
-                    /* new focused item */
-                    toggleNukeOnDeleteOption(lppl->hdr.hwndFrom, pItem->dwNukeOnDelete);
-                    SetDlgItemInt(hwndDlg, 14002, pItem->dwMaxCapacity, FALSE);
+                    // New focused item, delay handling until after kill focus has been processed
+                    PostMessage(hwndDlg, WM_NEWDRIVESELECTED, 0, (LPARAM)pItem);
                 }
                 else if ((lppl->uOldState & LVIS_FOCUSED) && !(lppl->uNewState & LVIS_FOCUSED))
                 {
-                    /* kill focus */
-                    uResult = GetDlgItemInt(hwndDlg, 14002, &bSuccess, FALSE);
-                    if (bSuccess)
-                    {
-                        /* Check if the maximum capacity doesn't exceed the available disk space (in megabytes), and truncate it if needed */
-                        FreeBytesAvailable = pItem->FreeBytesAvailable;
-                        FreeBytesAvailable.QuadPart = (FreeBytesAvailable.QuadPart / (1024 * 1024));
-                        pItem->dwMaxCapacity = min(uResult, FreeBytesAvailable.LowPart);
-                        SetDlgItemInt(hwndDlg, 14002, pItem->dwMaxCapacity, FALSE);
-                    }
-                    if (SendDlgItemMessageW(hwndDlg, 14003, BM_GETCHECK, 0, 0) == BST_CHECKED)
-                        pItem->dwNukeOnDelete = TRUE;
-                    else
-                        pItem->dwNukeOnDelete = FALSE;
+                    // Kill focus
+                    SendMessage(hwndDlg, WM_UPDATEDRIVESETTINGS, 0, (LPARAM)pItem);
                 }
                 return TRUE;
 
+            }
+            break;
+        case WM_NEWDRIVESELECTED:
+            if (lParam)
+            {
+                pItem = (PDRIVE_ITEM_CONTEXT)lParam;
+                toggleNukeOnDeleteOption(hwndDlg, pItem->dwNukeOnDelete);
+                SetDlgItemInt(hwndDlg, 14002, pItem->dwMaxCapacity, FALSE);
+            }
+            break;
+        case WM_UPDATEDRIVESETTINGS:
+            if (lParam)
+            {
+                pItem = (PDRIVE_ITEM_CONTEXT)lParam;
+                uResult = GetDlgItemInt(hwndDlg, 14002, &bSuccess, FALSE);
+                if (bSuccess)
+                {
+                    /* Check if the maximum capacity doesn't exceed the available disk space (in megabytes), and truncate it if needed */
+                    FreeBytesAvailable = pItem->FreeBytesAvailable;
+                    FreeBytesAvailable.QuadPart = (FreeBytesAvailable.QuadPart / (1024 * 1024));
+                    pItem->dwMaxCapacity = min(uResult, FreeBytesAvailable.LowPart);
+                    SetDlgItemInt(hwndDlg, 14002, pItem->dwMaxCapacity, FALSE);
+                }
+                if (SendDlgItemMessageW(hwndDlg, 14003, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                    pItem->dwNukeOnDelete = TRUE;
+                else
+                    pItem->dwNukeOnDelete = FALSE;
             }
             break;
         case WM_DESTROY:

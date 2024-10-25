@@ -259,6 +259,32 @@ HRESULT SHBindToObject(
     return SHBindToObjectEx(psf, pidl, NULL, riid, ppvObj);
 }
 
+EXTERN_C HRESULT
+SHELL_GetUIObjectOfAbsoluteItem(
+    _In_opt_ HWND hWnd,
+    _In_ PCIDLIST_ABSOLUTE pidl,
+    _In_ REFIID riid, _Out_ void **ppvObj)
+{
+    if (!ppvObj)
+        return E_INVALIDARG;
+    *ppvObj = NULL;
+    IShellFolder *psf;
+    PCUITEMID_CHILD pidlChild;
+    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &psf), &pidlChild);
+    if (SUCCEEDED(hr))
+    {
+        hr = psf->GetUIObjectOf(hWnd, 1, &pidlChild, riid, NULL, ppvObj);
+        psf->Release();
+        if (SUCCEEDED(hr))
+        {
+            if (*ppvObj)
+                return hr;
+            hr = E_FAIL;
+        }
+    }
+    return hr;
+}
+
 HRESULT
 Shell_DisplayNameOf(
     _In_ IShellFolder *psf,
@@ -1428,4 +1454,72 @@ GetDfmCmd(_In_ IContextMenu *pCM, _In_ LPCSTR verba)
         verba = buf;
     }
     return MapVerbToDfmCmd(verba); // Returns DFM_CMD_* or 0
+}
+
+HRESULT
+SHELL_MapContextMenuVerbToCmdId(LPCMINVOKECOMMANDINFO pICI, const CMVERBMAP *pMap)
+{
+    LPCSTR pVerbA = pICI->lpVerb;
+    CHAR buf[MAX_PATH];
+    LPCMINVOKECOMMANDINFOEX pICIX = (LPCMINVOKECOMMANDINFOEX)pICI;
+    if (IsUnicode(*pICIX) && !IS_INTRESOURCE(pICIX->lpVerbW))
+    {
+        if (SHUnicodeToAnsi(pICIX->lpVerbW, buf, _countof(buf)))
+            pVerbA = buf;
+    }
+
+    if (IS_INTRESOURCE(pVerbA))
+        return LOWORD(pVerbA);
+    for (SIZE_T i = 0; pMap[i].Verb; ++i)
+    {
+        assert(SUCCEEDED((int)(pMap[i].CmdId))); // The id must be >= 0 and ideally in the 0..0x7fff range
+        if (!lstrcmpiA(pMap[i].Verb, pVerbA) && pVerbA[0])
+            return pMap[i].CmdId;
+    }
+    return E_FAIL;
+}
+
+static const CMVERBMAP*
+FindVerbMapEntry(UINT_PTR CmdId, const CMVERBMAP *pMap)
+{
+    for (SIZE_T i = 0; pMap[i].Verb; ++i)
+    {
+        if (pMap[i].CmdId == CmdId)
+            return &pMap[i];
+    }
+    return NULL;
+}
+
+HRESULT
+SHELL_GetCommandStringImpl(SIZE_T CmdId, UINT uFlags, LPSTR Buf, UINT cchBuf, const CMVERBMAP *pMap)
+{
+    const CMVERBMAP* pEntry;
+    switch (uFlags | GCS_UNICODE)
+    {
+        case GCS_VALIDATEW:
+        case GCS_VERBW:
+            pEntry = FindVerbMapEntry(CmdId, pMap);
+            if ((uFlags | GCS_UNICODE) == GCS_VERBW)
+            {
+                if (!pEntry)
+                    return E_INVALIDARG;
+                else if (uFlags & GCS_UNICODE)
+                    return SHAnsiToUnicode(pEntry->Verb, (LPWSTR)Buf, cchBuf) ? S_OK : E_FAIL;
+                else
+                    return StringCchCopyA(Buf, cchBuf, pEntry->Verb);
+            }
+            return pEntry ? S_OK : S_FALSE; // GCS_VALIDATE
+    }
+    return E_NOTIMPL;
+}
+
+HRESULT
+SHELL_CreateShell32DefaultExtractIcon(int IconIndex, REFIID riid, LPVOID *ppvOut)
+{
+    CComPtr<IDefaultExtractIconInit> initIcon;
+    HRESULT hr = SHCreateDefaultExtractIcon(IID_PPV_ARG(IDefaultExtractIconInit, &initIcon));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+    initIcon->SetNormalIcon(swShell32Name, IconIndex);
+    return initIcon->QueryInterface(riid, ppvOut);
 }

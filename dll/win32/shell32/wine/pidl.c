@@ -2112,32 +2112,22 @@ BOOL _ILIsSpecialFolder (LPCITEMIDLIST pidl)
 
 BOOL _ILIsDrive(LPCITEMIDLIST pidl)
 {
-    LPPIDLDATA lpPData = _ILGetDataPointer(pidl);
-
-    TRACE("(%p)\n",pidl);
-
-    return (pidl && lpPData && (PT_DRIVE == lpPData->type ||
-                    PT_DRIVE1 == lpPData->type ||
-                    PT_DRIVE2 == lpPData->type ||
-                    PT_DRIVE3 == lpPData->type));
+    const BYTE type = _ILGetType(pidl);
+    const BYTE fldrtype = (PT_DRIVE & PT_FOLDERTYPEMASK);
+    return (type & PT_FOLDERTYPEMASK) == fldrtype && type != PT_COMPUTER_REGITEM;
 }
 
 BOOL _ILIsFolder(LPCITEMIDLIST pidl)
 {
-    LPPIDLDATA lpPData = _ILGetDataPointer(pidl);
-
-    TRACE("(%p)\n",pidl);
-
-    return (pidl && lpPData && (PT_FOLDER == lpPData->type || PT_FOLDER1 == lpPData->type));
+    /* A folder or a simple PT_FS with a child */
+    const BYTE type = _ILGetFSType(pidl);
+    return (type & PT_FS_FOLDER_FLAG) != 0 || (type == PT_FS && ILGetNext(pidl));
 }
 
 BOOL _ILIsValue(LPCITEMIDLIST pidl)
 {
-    LPPIDLDATA lpPData = _ILGetDataPointer(pidl);
-
-    TRACE("(%p)\n",pidl);
-
-    return (pidl && lpPData && PT_VALUE == lpPData->type);
+    const BYTE type = _ILGetFSType(pidl);
+    return type && !(type & PT_FS_FOLDER_FLAG);
 }
 
 BOOL _ILIsCPanelStruct(LPCITEMIDLIST pidl)
@@ -2281,6 +2271,9 @@ static LPWSTR _ILGetTextPointerW(LPCITEMIDLIST pidl)
     if (!pdata)
         return NULL;
 
+    if (_ILGetFSType(pidl) & PT_FS_UNICODE_FLAG)
+        return (LPWSTR)pdata->u.file.szNames;
+
     switch (pdata->type)
     {
     case PT_GUID:
@@ -2310,9 +2303,6 @@ static LPWSTR _ILGetTextPointerW(LPCITEMIDLIST pidl)
     case PT_SHARE:
         /*return (LPSTR)&(pdata->u.network.szNames);*/
         return NULL;
-
-    case PT_VALUEW:
-        return (LPWSTR)pdata->u.file.szNames;
 
 #ifdef __REACTOS__ /* r54423 */
     case PT_CPLAPPLET:
@@ -2439,7 +2429,7 @@ FileStructW* _ILGetFileStructW(LPCITEMIDLIST pidl) {
     FileStructW *pFileStructW;
     WORD cbOffset;
     
-    if (!(_ILIsValue(pidl) || _ILIsFolder(pidl)))
+    if (!_ILIsFolderOrFile(pidl))
         return NULL;
 
     cbOffset = *(const WORD *)((const BYTE *)pidl + pidl->mkid.cb - sizeof(WORD));
@@ -2479,48 +2469,12 @@ FileStructW* _ILGetFileStructW(LPCITEMIDLIST pidl) {
  */
 BOOL _ILGetFileDateTime(LPCITEMIDLIST pidl, FILETIME *pFt)
 {
-    LPPIDLDATA pdata = _ILGetDataPointer(pidl);
-
-    if (!pdata)
-        return FALSE;
-
-    switch (pdata->type)
+    if (_ILGetFSType(pidl) > PT_FS) /* Only non-simple FS items have a date */
     {
-    case PT_FOLDER:
-    case PT_VALUE:
-        DosDateTimeToFileTime(pdata->u.file.uFileDate, pdata->u.file.uFileTime, pFt);
-        break;
-    default:
-        return FALSE;
+        LPPIDLDATA pdata = _ILGetDataPointer(pidl);
+        return DosDateTimeToFileTime(pdata->u.file.uFileDate, pdata->u.file.uFileTime, pFt);
     }
-    return TRUE;
-}
-
-BOOL _ILGetFileDate(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize)
-{
-    FILETIME ft,lft;
-    SYSTEMTIME time;
-    BOOL ret;
-
-    if (_ILGetFileDateTime( pidl, &ft ))
-    {
-        FileTimeToLocalFileTime(&ft, &lft);
-        FileTimeToSystemTime (&lft, &time);
-
-        ret = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &time, NULL, pOut, uOutSize);
-        if (ret)
-        {
-            /* Append space + time without seconds */
-            pOut[ret - 1] = L' ';
-            GetTimeFormatW(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &time, NULL, &pOut[ret], uOutSize - ret);
-        }
-    }
-    else
-    {
-        pOut[0] = UNICODE_NULL;
-        ret = FALSE;
-    }
-    return ret;
+    return FALSE;
 }
 
 /*************************************************************************
@@ -2543,15 +2497,13 @@ BOOL _ILGetFileDate(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize)
 DWORD _ILGetFileSize(LPCITEMIDLIST pidl, LPWSTR pOut, UINT uOutSize)
 {
     LPPIDLDATA pdata = _ILGetDataPointer(pidl);
-    DWORD dwSize;
-
     if (!pdata)
         return 0;
 
-    switch (pdata->type)
+    if (_ILGetFSType(pidl) & PT_FS_FILE_FLAG)
     {
-    case PT_VALUE:
-        dwSize = pdata->u.file.dwFileSize;
+        /* FIXME: Handle INVALID_FILE_SIZE (get size from disk) */
+        DWORD dwSize = pdata->u.file.dwFileSize;
         if (pOut)
             StrFormatKBSizeW(dwSize, pOut, uOutSize);
         return dwSize;

@@ -28,7 +28,7 @@ typedef interface IRecycleBin5 IRecycleBin5;
 EXTERN_C const IID IID_IRecycleBin5;
 
 #define INTERFACE IRecycleBin5
-DECLARE_INTERFACE_(IRecycleBin5, IUnknown)
+DECLARE_INTERFACE_(IRecycleBin5, IRecycleBin)
 {
     BEGIN_INTERFACE
 
@@ -41,6 +41,7 @@ DECLARE_INTERFACE_(IRecycleBin5, IUnknown)
     STDMETHOD(DeleteFile)(THIS_ IN LPCWSTR szFileName) PURE;
     STDMETHOD(EmptyRecycleBin)(THIS);
     STDMETHOD(EnumObjects)(THIS_ OUT IRecycleBinEnumList **ppEnumList) PURE;
+    STDMETHOD(GetDirectory)(THIS_ LPWSTR szPath) PURE;
 
     /* IRecycleBin5 interface */
     STDMETHOD(Delete)(

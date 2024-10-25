@@ -1390,14 +1390,7 @@ static HRESULT shellex_get_dataobj( LPSHELLEXECUTEINFOW sei, CComPtr<IDataObject
         pidl = ILCreateFromPathW(fullpath);
         allocatedPidl.Attach(pidl);
     }
-
-    CComPtr<IShellFolder> shf;
-    LPCITEMIDLIST pidllast = NULL;
-    HRESULT hr = SHBindToParent(pidl, IID_PPV_ARG(IShellFolder, &shf), &pidllast);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    return shf->GetUIObjectOf(NULL, 1, &pidllast, IID_NULL_PPV_ARG(IDataObject, &dataObj));
+    return SHELL_GetUIObjectOfAbsoluteItem(NULL, pidl, IID_PPV_ARG(IDataObject, &dataObj));
 }
 
 static HRESULT shellex_run_context_menu_default(IShellExtInit *obj,
@@ -1582,6 +1575,7 @@ static HRESULT ShellExecute_ContextMenuVerb(LPSHELLEXECUTEINFOW sei)
 
     enum { idFirst = 1, idLast = 0x7fff };
     HMENU hMenu = CreatePopupMenu();
+    // Note: Windows does not pass CMF_EXTENDEDVERBS so "hidden" verbs cannot be executed
     hr = cm->QueryContextMenu(hMenu, 0, idFirst, idLast, fDefault ? CMF_DEFAULTONLY : 0);
     if (!FAILED_UNEXPECTEDLY(hr))
     {
