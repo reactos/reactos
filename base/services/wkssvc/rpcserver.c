@@ -341,7 +341,11 @@ NetrWkstaSetInfo(
             break;
     }
 
-    /* FIXME: Store the workstation info in the registry */
+    /* Save the workstation in the registry */
+    if (dwResult == NERR_Success)
+        SaveWorkstationInfo(Level);
+
+    /* FIXME: Notify the redirector */
 
     return dwResult;
 }

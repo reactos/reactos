@@ -50,6 +50,10 @@ NetpGetJoinInformation(
 VOID
 InitWorkstationInfo(VOID);
 
+VOID
+SaveWorkstationInfo(
+    _In_ DWORD Level);
+
 /* rpcserver.c */
 
 DWORD
