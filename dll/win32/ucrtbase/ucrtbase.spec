@@ -391,15 +391,19 @@
 @ cdecl _fseeki64_nolock(ptr int64 long)
 @ cdecl _fsopen(str str long)
 @ cdecl _fstat32(long ptr)
+@ cdecl -arch=win32 -impsym _fstat(long ptr) _fstat32
 @ cdecl _fstat32i64(long ptr)
 @ cdecl _fstat64(long ptr)
 @ cdecl _fstat64i32(long ptr)
+@ cdecl -arch=win64 -impsym _fstat(long ptr) _fstat64i32
 @ cdecl _ftell_nolock(ptr)
 @ cdecl -ret64 _ftelli64(ptr)
 @ cdecl -ret64 _ftelli64_nolock(ptr)
 @ cdecl _ftime32(ptr)
+@ cdecl -arch=win32 -impsym _ftime(ptr) _ftime32
 @ cdecl _ftime32_s(ptr)
 @ cdecl _ftime64(ptr)
+@ cdecl -arch=win64 -impsym _ftime(ptr) _ftime64
 @ cdecl _ftime64_s(ptr)
 @ cdecl -arch=i386 -ret64 _ftol()
 @ cdecl _fullpath(ptr str long)
@@ -1975,9 +1979,11 @@
 @ cdecl _splitpath(str ptr ptr ptr ptr)
 @ cdecl _splitpath_s(str ptr long ptr long ptr long ptr long)
 @ cdecl _stat32(str ptr)
+@ cdecl -arch=win32 -impsym _stat(ptr) _stat32
 @ cdecl _stat32i64(str ptr)
 @ cdecl _stat64(str ptr)
 @ cdecl _stat64i32(str ptr)
+@ cdecl -arch=win64 -impsym _stat(ptr) _stat64i32
 @ cdecl _statusfp()
 @ cdecl -stub -arch=i386 _statusfp2(ptr ptr)
 @ cdecl _strcoll_l(str str ptr)
@@ -2064,7 +2070,9 @@
 @ cdecl _unlock_file(ptr)
 @ cdecl _unlock_locales()
 @ cdecl _utime32(str ptr)
+@ cdecl -arch=win32 -impsym _utime(str ptr) _utime32
 @ cdecl _utime64(str ptr)
+@ cdecl -arch=win64 -impsym _utime(str ptr) _utime64
 @ cdecl _waccess(wstr long)
 @ cdecl _waccess_s(wstr long)
 @ cdecl _wasctime(ptr)
