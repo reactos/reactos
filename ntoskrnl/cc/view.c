@@ -632,75 +632,50 @@ CcRosLookupVacb (
     return NULL;
 }
 
-VOID
-CcRosMarkDirtyVacb (
-    PROS_VACB Vacb)
+NTSTATUS
+CcpMarkDirtyFileCache(
+    _In_ PROS_SHARED_CACHE_MAP SharedCacheMap,
+    _In_ PVOID BaseAddress,
+    _In_ ULONG Length)
 {
-    KIRQL oldIrql;
-    PROS_SHARED_CACHE_MAP SharedCacheMap;
+    NTSTATUS Status;
+    ULONG MarkedPages;
 
-    SharedCacheMap = Vacb->SharedCacheMap;
+    /* Tell MM */
+    Status = MmMakePagesDirty(NULL, BaseAddress, Length, &MarkedPages);
 
-    oldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
-    KeAcquireSpinLockAtDpcLevel(&SharedCacheMap->CacheMapLock);
-
-    ASSERT(!Vacb->Dirty);
-
-    InsertTailList(&DirtyVacbListHead, &Vacb->DirtyVacbListEntry);
-    /* FIXME: There is no reason to account for the whole VACB. */
-    CcTotalDirtyPages += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
-    Vacb->SharedCacheMap->DirtyPages += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
-    CcRosVacbIncRefCount(Vacb);
-
-    /* Move to the tail of the LRU list */
-    RemoveEntryList(&Vacb->VacbLruListEntry);
-    InsertTailList(&VacbLruListHead, &Vacb->VacbLruListEntry);
-
-    Vacb->Dirty = TRUE;
-
-    KeReleaseSpinLockFromDpcLevel(&SharedCacheMap->CacheMapLock);
-
-    /* Schedule a lazy writer run to now that we have dirty VACB */
-    if (!LazyWriter.ScanActive)
+    if (MarkedPages != 0)
     {
-        CcScheduleLazyWriteScan(FALSE);
-    }
-    KeReleaseQueuedSpinLock(LockQueueMasterLock, oldIrql);
-}
+        KIRQL OldIrql;
+        BOOLEAN MarkDirty;
 
-VOID
-CcRosUnmarkDirtyVacb (
-    PROS_VACB Vacb,
-    BOOLEAN LockViews)
-{
-    KIRQL oldIrql;
-    PROS_SHARED_CACHE_MAP SharedCacheMap;
-
-    SharedCacheMap = Vacb->SharedCacheMap;
-
-    if (LockViews)
-    {
-        oldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+        OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
         KeAcquireSpinLockAtDpcLevel(&SharedCacheMap->CacheMapLock);
-    }
 
-    ASSERT(Vacb->Dirty);
+        MarkDirty = (SharedCacheMap->DirtyPages == 0);
 
-    Vacb->Dirty = FALSE;
+        /* Update number of dirty pages and check dirty status */
+        CcTotalDirtyPages += MarkedPages;
+        SharedCacheMap->DirtyPages += MarkedPages;
+        if (MarkDirty)
+        {
+            /* The file cache is now dirty, add to dirty list */
+            RemoveEntryList(&SharedCacheMap->SharedCacheMapLinks);
+            InsertTailList(&CcDirtySharedCacheMapList, &SharedCacheMap->SharedCacheMapLinks);
+        }
 
-    RemoveEntryList(&Vacb->DirtyVacbListEntry);
-    InitializeListHead(&Vacb->DirtyVacbListEntry);
-
-    CcTotalDirtyPages -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
-    Vacb->SharedCacheMap->DirtyPages -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
-
-    CcRosVacbDecRefCount(Vacb);
-
-    if (LockViews)
-    {
         KeReleaseSpinLockFromDpcLevel(&SharedCacheMap->CacheMapLock);
-        KeReleaseQueuedSpinLock(LockQueueMasterLock, oldIrql);
+
+        /* Schedule a lazy writer run to now that we have dirty data */
+        if (!LazyWriter.ScanActive)
+        {
+            CcScheduleLazyWriteScan(FALSE);
+        }
+
+        KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
     }
+
+    return Status;
 }
 
 BOOLEAN

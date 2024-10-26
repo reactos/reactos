@@ -554,15 +554,9 @@ CcSetDirtyPinnedData (
 
     CCTRACE(CC_API_DEBUG, "Bcb=%p Lsn=%p\n", Bcb, Lsn);
 
-    /* Tell Mm */
-    MmMakePagesDirty(NULL,
-                     Add2Ptr(iBcb->Vacb->BaseAddress, iBcb->PFCB.MappedFileOffset.QuadPart - iBcb->Vacb->FileOffset.QuadPart),
-                     iBcb->PFCB.MappedLength);
-
-    if (!iBcb->Vacb->Dirty)
-    {
-        CcRosMarkDirtyVacb(iBcb->Vacb);
-    }
+    CcpMarkDirtyFileCache(iBcb->Vacb->SharedCacheMap,
+                          Add2Ptr(iBcb->Vacb->BaseAddress, iBcb->PFCB.MappedFileOffset.QuadPart - iBcb->Vacb->FileOffset.QuadPart),
+                          iBcb->PFCB.MappedLength);
 }
 
 

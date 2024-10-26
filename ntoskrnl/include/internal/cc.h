@@ -350,14 +350,11 @@ VOID
 NTAPI
 CcInitCacheZeroPage(VOID);
 
-VOID
-CcRosMarkDirtyVacb(
-    PROS_VACB Vacb);
-
-VOID
-CcRosUnmarkDirtyVacb(
-    PROS_VACB Vacb,
-    BOOLEAN LockViews);
+NTSTATUS
+CcpMarkDirtyFileCache(
+    _In_ PROS_SHARED_CACHE_MAP SharedCacheMap,
+    _In_ PVOID BaseAddress,
+    _In_ ULONG Length);
 
 VOID
 CcpFlushFileCache(
