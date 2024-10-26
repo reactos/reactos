@@ -26,6 +26,9 @@
 
 #include "threaddll.h"
 
+typedef void (__cdecl *_beginthread_start_routine_t)(void *);
+typedef unsigned int (__stdcall *_beginthreadex_start_routine_t)(void *);
+
 enum beginthread_method
 {
     use_beginthread,
