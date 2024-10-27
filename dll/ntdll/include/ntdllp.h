@@ -29,6 +29,18 @@ typedef struct _LDRP_TLS_DATA
     IMAGE_TLS_DIRECTORY TlsDirectory;
 } LDRP_TLS_DATA, *PLDRP_TLS_DATA;
 
+typedef struct _LDRP_OLD_TLS_VECTOR_ENTRY
+{
+    LIST_ENTRY TlsVectorLinks;
+    PVOID* OldTlsVector;
+} LDRP_OLD_TLS_VECTOR_ENTRY, *PLDRP_OLD_TLS_VECTOR_ENTRY;
+
+typedef struct _LDRP_TEB_LIST_ENTRY
+{
+    LIST_ENTRY TebLinks;
+    PTEB Teb;
+} LDRP_TEB_LIST_ENTRY, *PLDRP_TEB_LIST_ENTRY;
+
 typedef
 NTSTATUS
 (NTAPI* PLDR_APP_COMPAT_DLL_REDIRECTION_CALLBACK_FUNCTION)(
@@ -71,7 +83,7 @@ extern PVOID g_pfnSE_ProcessDying;
 NTSTATUS NTAPI LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL);
 VOID NTAPI LdrpInitializeThread(IN PCONTEXT Context);
 NTSTATUS NTAPI LdrpInitializeTls(VOID);
-NTSTATUS NTAPI LdrpAllocateTls(VOID);
+NTSTATUS NTAPI LdrpAllocateTls(PTEB Teb);
 VOID NTAPI LdrpFreeTls(VOID);
 VOID NTAPI LdrpCallTlsInitializers(IN PLDR_DATA_TABLE_ENTRY LdrEntry, IN ULONG Reason);
 BOOLEAN NTAPI LdrpCallInitRoutine(IN PDLL_INIT_ROUTINE EntryPoint, IN PVOID BaseAddress, IN ULONG Reason, IN PVOID Context);

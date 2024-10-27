@@ -43,6 +43,7 @@ Author:
 #define LDRP_LOAD_NOTIFICATIONS_SENT            0x00000008
 #endif
 #define LDRP_IMAGE_INTEGRITY_FORCED             0x00000020
+#define LDRP_TLS_LOADED                         0x00000040
 #define LDRP_LOAD_IN_PROGRESS                   0x00001000
 #define LDRP_UNLOAD_IN_PROGRESS                 0x00002000
 #define LDRP_ENTRY_PROCESSED                    0x00004000
