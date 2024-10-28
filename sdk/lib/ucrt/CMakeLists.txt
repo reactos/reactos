@@ -94,6 +94,7 @@ include(initializers/initializers.cmake)
 include(internal/internal.cmake)
 include(locale/locale.cmake)
 include(lowio/lowio.cmake)
+include(math/math.cmake)
 include(mbstring/mbstring.cmake)
 include(misc/misc.cmake)
 include(startup/startup.cmake)
@@ -116,6 +117,7 @@ add_library(ucrt OBJECT
     ${UCRT_INTERNAL_SOURCES}
     ${UCRT_LOCALE_SOURCES}
     ${UCRT_LOWIO_SOURCES}
+    ${UCRT_MATH_SOURCES}
     ${UCRT_MBSTRING_SOURCES}
     ${UCRT_MISC_SOURCES}
     ${UCRT_STARTUP_SOURCES}
