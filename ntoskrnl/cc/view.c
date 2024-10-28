@@ -557,22 +557,14 @@ retry:
     DPRINT("Evicted %lu cache pages\n", (*NrFreed));
 }
 
-NTSTATUS
-CcRosReleaseVacb (
-    PROS_SHARED_CACHE_MAP SharedCacheMap,
-    PROS_VACB Vacb,
-    BOOLEAN Dirty,
-    BOOLEAN Mapped)
+VOID
+CcRosReleaseVacb(
+    _In_ PROS_VACB Vacb,
+    _In_ BOOLEAN Mapped)
 {
     ULONG Refs;
-    ASSERT(SharedCacheMap);
 
-    DPRINT("CcRosReleaseVacb(SharedCacheMap 0x%p, Vacb 0x%p)\n", SharedCacheMap, Vacb);
-
-    if (Dirty && !Vacb->Dirty)
-    {
-        CcRosMarkDirtyVacb(Vacb);
-    }
+    DPRINT("CcRosReleaseVacb(SharedCacheMap 0x%p, Vacb 0x%p)\n", Vacb->SharedCacheMap, Vacb);
 
     if (Mapped)
     {
@@ -584,8 +576,6 @@ CcRosReleaseVacb (
 
     Refs = CcRosVacbDecRefCount(Vacb);
     ASSERT(Refs > 0);
-
-    return STATUS_SUCCESS;
 }
 
 /* Returns with VACB Lock Held! */

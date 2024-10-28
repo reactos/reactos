@@ -378,13 +378,10 @@ CcRosDereferenceCache(PFILE_OBJECT FileObject);
 VOID
 CcRosReferenceCache(PFILE_OBJECT FileObject);
 
-NTSTATUS
+VOID
 CcRosReleaseVacb(
-    PROS_SHARED_CACHE_MAP SharedCacheMap,
-    PROS_VACB Vacb,
-    BOOLEAN Dirty,
-    BOOLEAN Mapped
-);
+    _In_ PROS_VACB Vacb,
+    _In_ BOOLEAN Mapped);
 
 NTSTATUS
 CcRosRequestVacb(
