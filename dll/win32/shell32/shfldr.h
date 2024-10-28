@@ -161,13 +161,13 @@ void AddFSClassKeysToArray(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, HKEY* array, 
 
 #ifdef __cplusplus
 
-struct CRegKeyArray
+struct CRegKeyHandleArray
 {
     HKEY hKeys[16];
     UINT cKeys;
 
-    CRegKeyArray() : cKeys(0) {}
-    ~CRegKeyArray() { CloseRegKeyArray(hKeys, cKeys); }
+    CRegKeyHandleArray() : cKeys(0) {}
+    ~CRegKeyHandleArray() { CloseRegKeyArray(hKeys, cKeys); }
     operator HKEY*() { return hKeys; }
     operator UINT*() { return &cKeys; }
     operator UINT() { return cKeys; }

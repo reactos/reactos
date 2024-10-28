@@ -1923,18 +1923,7 @@ HRESULT WINAPI CFSFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObjec
     {
         if (uMsg == DFM_INVOKECOMMAND && wParam == IDC_PROPERTIES)
         {
-            PUITEMID_CHILD pidlChild = ILFindLastID(m_pidlRoot);
-            CComHeapPtr<ITEMIDLIST> pidlParent(ILClone(m_pidlRoot));
-            ILRemoveLastID(pidlParent);
-
-            CComPtr<IDataObject> pDataObj;
-            HRESULT hr = SHCreateDataObject(pidlParent, 1, &pidlChild, NULL, IID_PPV_ARG(IDataObject, &pDataObj));
-            if (!FAILED_UNEXPECTEDLY(hr))
-            {
-                SHELL32_ShowPropertiesDialog(pDataObj);
-                hr = S_OK;
-            }
-            return hr;
+            return SHELL_ShowItemIDListProperties(m_pidlRoot);
         }
         else if (uMsg == DFM_MERGECONTEXTMENU)
         {

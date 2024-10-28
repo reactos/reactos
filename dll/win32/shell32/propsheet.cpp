@@ -1,7 +1,7 @@
 /*
  * PROJECT:     shell32
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
- * PURPOSE:     FileSystem PropertySheet implementation
+ * PURPOSE:     SHOpenPropSheetW implementation
  * COPYRIGHT:   Copyright 2024 Whindmar Saksit <whindsaks@proton.me>
  */
 
@@ -77,18 +77,6 @@ SHELL_CreatePropSheetStubWindow(CStubWindow32 &stub, PCIDLIST_ABSOLUTE pidl, con
     return hr;
 }
 
-static HRESULT
-SHELL_GetCaptionFromDataObject(IDataObject *pDO, LPWSTR Buf, UINT cchBuf)
-{
-    HRESULT hr = E_INVALIDARG;
-    if (PIDLIST_ABSOLUTE pidl = SHELL_DataObject_ILCloneFullItem(pDO, 0))
-    {
-        hr = SHGetNameAndFlagsW(pidl, SHGDN_INFOLDER, Buf, cchBuf, NULL);
-        ILFree(pidl);
-    }
-    return hr;
-}
-
 /*************************************************************************
  *  SHELL32_PropertySheet [INTERNAL]
  *  PropertySheetW with stub window.
@@ -127,7 +115,7 @@ SHELL32_PropertySheet(LPPROPSHEETHEADERW ppsh, IDataObject *pDO)
  *  SHELL32_OpenPropSheet [INTERNAL]
  *  The real implementation of SHOpenPropSheetW.
  */
-EXTERN_C BOOL
+static BOOL
 SHELL32_OpenPropSheet(LPCWSTR pszCaption, HKEY *ahKeys, UINT cKeys,
                       const CLSID *pclsidDefault, IDataObject *pDO, LPCWSTR pStartPage)
 {
@@ -170,141 +158,21 @@ SHELL32_OpenPropSheet(LPCWSTR pszCaption, HKEY *ahKeys, UINT cKeys,
     return (Result != -1);
 }
 
-struct ShellPropSheetDialog
+/*************************************************************************
+ *  SHOpenPropSheetW [SHELL32.80]
+ *
+ * @see https://learn.microsoft.com/en-us/windows/win32/api/shlobj/nf-shlobj-shopenpropsheetw
+ */
+EXTERN_C BOOL WINAPI
+SHOpenPropSheetW(
+    _In_opt_ LPCWSTR pszCaption,
+    _In_opt_ HKEY *ahKeys,
+    _In_ UINT cKeys,
+    _In_ const CLSID *pclsidDefault,
+    _In_ IDataObject *pDataObject,
+    _In_opt_ IShellBrowser *pShellBrowser,
+    _In_opt_ LPCWSTR pszStartPage)
 {
-    typedef void (CALLBACK*PFNINITIALIZE)(LPCWSTR InitString, IDataObject *pDO,
-                                          HKEY *hKeys, UINT *cKeys);
-
-    static HRESULT Show(const CLSID *pClsidDefault, IDataObject *pDO,
-                        PFNINITIALIZE InitFunc, LPCWSTR InitString)
-    {
-        HRESULT hr;
-        CRegKeyArray keys;
-        if (InitFunc)
-            InitFunc(InitString, pDO, keys, keys);
-        WCHAR szCaption[MAX_PATH], *pszCaption = NULL;
-        if (SUCCEEDED(SHELL_GetCaptionFromDataObject(pDO, szCaption, _countof(szCaption))))
-            pszCaption = szCaption;
-        hr = SHOpenPropSheetW(pszCaption, keys, keys, pClsidDefault, pDO, NULL, NULL) ? S_OK : E_FAIL;
-        return hr;
-    }
-
-    struct DATA
-    {
-        PFNINITIALIZE InitFunc;
-        LPWSTR InitString;
-        CLSID ClsidDefault;
-        const CLSID *pClsidDefault;
-        IStream *pObjStream;
-    };
-
-    static void FreeData(DATA *pData)
-    {
-        if (pData->InitString)
-            SHFree(pData->InitString);
-        SHFree(pData);
-    }
-
-    static HRESULT ShowAsync(const CLSID *pClsidDefault, IDataObject *pDO,
-                             PFNINITIALIZE InitFunc, LPCWSTR InitString)
-    {
-        DATA *pData = (DATA*)SHAlloc(sizeof(*pData));
-        if (!pData)
-            return E_OUTOFMEMORY;
-        ZeroMemory(pData, sizeof(*pData));
-        pData->InitFunc = InitFunc;
-        if (InitString && FAILED(SHStrDupW(InitString, &pData->InitString)))
-        {
-            FreeData(pData);
-            return E_OUTOFMEMORY;
-        }
-        if (pClsidDefault)
-        {
-            pData->ClsidDefault = *pClsidDefault;
-            pData->pClsidDefault = &pData->ClsidDefault;
-        }
-
-        HRESULT hr = S_OK;
-        if (pDO)
-            hr = CoMarshalInterThreadInterfaceInStream(IID_IDataObject, pDO, &pData->pObjStream);
-
-        UINT flags = CTF_COINIT | CTF_PROCESS_REF | CTF_INSIST;
-        if (SUCCEEDED(hr) && !SHCreateThread(ShowPropertiesThread, pData, flags, NULL))
-        {
-            if (pData->pObjStream)
-                pData->pObjStream->Release();
-            hr = E_FAIL;
-        }
-        if (FAILED(hr))
-            FreeData(pData);
-        return hr;
-    }
-
-    static DWORD CALLBACK ShowPropertiesThread(LPVOID Param)
-    {
-        DATA *pData = (DATA*) Param;
-        CComPtr<IDataObject> pDO;
-        if (pData->pObjStream)
-            CoGetInterfaceAndReleaseStream(pData->pObjStream, IID_PPV_ARG(IDataObject, &pDO));
-        Show(pData->pClsidDefault, pDO, pData->InitFunc, pData->InitString);
-        FreeData(pData);
-        return 0;
-    }
-};
-
-static void CALLBACK
-FSFolderItemPropDialogInitCallback(LPCWSTR InitString, IDataObject *pDO, HKEY *hKeys, UINT *cKeys)
-{
-    // Add file-type specific pages
-    UNREFERENCED_PARAMETER(InitString);
-    CDataObjectHIDA cida(pDO);
-    if (SUCCEEDED(cida.hr()) && cida->cidl)
-    {
-        PCUITEMID_CHILD pidl = HIDA_GetPIDLItem(cida, 0);
-        AddFSClassKeysToArray(1, &pidl, hKeys, cKeys);
-    }
-}
-
-static void CALLBACK
-ProgIdPropDialogInitCallback(LPCWSTR InitString, IDataObject *pDO, HKEY *hKeys, UINT *cKeys)
-{
-    // Add pages from HKCR\%ProgId% (with shellex\PropertySheetHandlers appended later)
-    UNREFERENCED_PARAMETER(pDO);
-    AddClassKeyToArray(InitString, hKeys, cKeys);
-}
-
-HRESULT
-SHELL32_ShowFilesystemItemPropertiesDialogAsync(IDataObject *pDO)
-{
-    CDataObjectHIDA cida(pDO);
-    HRESULT hr = cida.hr();
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    const CLSID *pClsid = NULL;
-    ShellPropSheetDialog::PFNINITIALIZE InitFunc = NULL;
-    LPCWSTR InitString = NULL;
-
-    if (_ILIsDrive(HIDA_GetPIDLItem(cida, 0)))
-    {
-        pClsid = &CLSID_ShellDrvDefExt;
-        InitFunc = ProgIdPropDialogInitCallback;
-        InitString = L"Drive";
-    }
-    else
-    {
-        pClsid = &CLSID_ShellFileDefExt;
-        InitFunc = FSFolderItemPropDialogInitCallback;
-    }
-    ShellPropSheetDialog Dialog;
-    return Dialog.ShowAsync(pClsid, pDO, InitFunc, InitString);
-}
-
-HRESULT
-SHELL32_ShowShellExtensionProperties(const CLSID *pClsid, IDataObject *pDO)
-{
-    WCHAR ClassBuf[6 + 38 + 1] = L"CLSID\\";
-    StringFromGUID2(*pClsid, ClassBuf + 6, 38 + 1);
-    ShellPropSheetDialog Dialog;
-    return Dialog.ShowAsync(NULL, pDO, ProgIdPropDialogInitCallback, ClassBuf);
+    UNREFERENCED_PARAMETER(pShellBrowser); /* MSDN says "Not used". */
+    return SHELL32_OpenPropSheet(pszCaption, ahKeys, cKeys, pclsidDefault, pDataObject, pszStartPage);
 }
