@@ -154,8 +154,6 @@ typedef struct _SETUPDATA
     LONG DestPartSize; // if partition doesn't exist, size of partition
 
     /* txtsetup.sif data */
-    // LONG DefaultLang;     // default language (table index)
-    // LONG DefaultKBLayout; // default keyboard layout (table index)
     PCWSTR SelectedLanguageId;
     WCHAR DefaultLanguage[20];   // Copy of string inside LanguageList
     WCHAR DefaultKBLayout[20];   // Copy of string inside KeyboardList
@@ -181,7 +179,7 @@ typedef struct _VOL_CREATE_INFO
      * Cached input information that will be set to
      * the FORMAT_VOLUME_INFO structure given to the
      * 'FSVOLNOTIFY_STARTFORMAT' step */
-    // PCWSTR FileSystemName;
+     
     WCHAR FileSystemName[MAX_PATH+1];
     FMIFS_MEDIA_FLAG MediaFlag;
     PCWSTR Label;

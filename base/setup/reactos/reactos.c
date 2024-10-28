@@ -57,7 +57,7 @@ UI_CONTEXT UiContext;
 
 /* FUNCTIONS ****************************************************************/
 
-static VOID
+STATIC VOID
 CenterWindow(HWND hWnd)
 {
     HWND hWndParent;
@@ -80,7 +80,7 @@ CenterWindow(HWND hWnd)
                  SWP_NOSIZE);
 }
 
-static HFONT
+STATIC HFONT
 CreateTitleFont(VOID)
 {
     NONCLIENTMETRICS ncm;
@@ -287,7 +287,7 @@ SetWindowResPrintfW(
     va_end(args);
 }
 
-static INT_PTR CALLBACK
+STATIC INT_PTR CALLBACK
 StartDlgProc(
     IN HWND hwndDlg,
     IN UINT uMsg,
@@ -343,7 +343,7 @@ StartDlgProc(
     return FALSE;
 }
 
-static INT_PTR CALLBACK
+STATIC INT_PTR CALLBACK
 TypeDlgProc(
     IN HWND hwndDlg,
     IN UINT uMsg,
@@ -479,9 +479,9 @@ BOOL
 CreateListViewColumns(
     IN HINSTANCE hInstance,
     IN HWND hWndListView,
-    IN const UINT* pIDs,
-    IN const INT* pColsWidth,
-    IN const INT* pColsAlign,
+    IN const PUINT pIDs,
+    IN const PINT ColsWidth,
+    IN const PINT pColsAlign,
     IN UINT nNumOfColumns)
 {
     UINT i;
@@ -629,7 +629,7 @@ GetSelectedListViewItem(
 }
 
 
-static VOID
+STATIC VOID
 NTAPI
 GetSettingDescription(
     IN PGENERIC_LIST_ENTRY Entry,
@@ -640,7 +640,7 @@ GetSettingDescription(
                    ((PGENENTRY)GetListEntryData(Entry))->Value);
 }
 
-static VOID
+STATIC VOID
 NTAPI
 AddNTOSInstallationItem(
     IN HWND hWndList,
@@ -702,11 +702,11 @@ AddNTOSInstallationItem(
 #define IDS_LIST_COLUMN_LAST  IDS_INSTALLATION_VENDOR
 
 #define MAX_LIST_COLUMNS (IDS_LIST_COLUMN_LAST - IDS_LIST_COLUMN_FIRST + 1)
-static const UINT column_ids[MAX_LIST_COLUMNS] = {IDS_LIST_COLUMN_FIRST, IDS_LIST_COLUMN_FIRST + 1, IDS_LIST_COLUMN_FIRST + 2};
-static const INT  column_widths[MAX_LIST_COLUMNS] = {200, 150, 100};
-static const INT  column_alignment[MAX_LIST_COLUMNS] = {LVCFMT_LEFT, LVCFMT_LEFT, LVCFMT_LEFT};
+STATIC const UINT column_ids[MAX_LIST_COLUMNS] = {IDS_LIST_COLUMN_FIRST, IDS_LIST_COLUMN_FIRST + 1, IDS_LIST_COLUMN_FIRST + 2};
+STATIC const INT  column_widths[MAX_LIST_COLUMNS] = {200, 150, 100};
+STATIC const INT  column_alignment[MAX_LIST_COLUMNS] = {LVCFMT_LEFT, LVCFMT_LEFT, LVCFMT_LEFT};
 
-static INT_PTR CALLBACK
+STATIC INT_PTR CALLBACK
 UpgradeRepairDlgProc(
     IN HWND hwndDlg,
     IN UINT uMsg,
@@ -892,7 +892,7 @@ UpgradeRepairDlgProc(
     return FALSE;
 }
 
-static INT_PTR CALLBACK
+STATIC INT_PTR CALLBACK
 DeviceDlgProc(
     IN HWND hwndDlg,
     IN UINT uMsg,
@@ -995,14 +995,14 @@ DeviceDlgProc(
     return FALSE;
 }
 
-static INT_PTR CALLBACK
+STATIC INT_PTR CALLBACK
 SummaryDlgProc(
     IN HWND hwndDlg,
     IN UINT uMsg,
     IN WPARAM wParam,
     IN LPARAM lParam)
 {
-    static WCHAR szOrgWizNextBtnText[260]; // TODO: Make it dynamic
+    STATIC WCHAR szOrgWizNextBtnText[260]; // TODO: Make it dynamic
 
     PSETUPDATA pSetupData;
 
@@ -1180,7 +1180,7 @@ typedef struct _FSVOL_CONTEXT
     // PAGE_NUMBER NextPageOnAbort;
 } FSVOL_CONTEXT, *PFSVOL_CONTEXT;
 
-static
+STATIC
 BOOLEAN
 NTAPI
 FormatCallback(
@@ -1228,7 +1228,7 @@ FormatCallback(
     return TRUE;
 }
 
-static
+STATIC
 BOOLEAN
 NTAPI
 ChkdskCallback(
@@ -1247,7 +1247,7 @@ ChkdskCallback(
 }
 
 // PFSVOL_CALLBACK
-static FSVOL_OP
+STATIC FSVOL_OP
 CALLBACK
 FsVolCallback(
     _In_opt_ PVOID Context,
@@ -1592,7 +1592,7 @@ typedef struct _COPYCONTEXT
     ULONG CompletedOperations;
 } COPYCONTEXT, *PCOPYCONTEXT;
 
-static UINT
+STATIC UINT
 CALLBACK
 FileCopyCallback(PVOID Context,
                  UINT Notification,
@@ -1713,12 +1713,12 @@ FileCopyCallback(PVOID Context,
     return FILEOP_DOIT;
 }
 
-static VOID
+STATIC VOID
 __cdecl
 RegistryStatus(IN REGISTRY_STATUS RegStatus, ...)
 {
     /* WARNING: Please keep this lookup table in sync with the resources! */
-    static const UINT StringIDs[] =
+    STATIC const UINT StringIDs[] =
     {
         IDS_REG_DONE,                   /* Success */
         IDS_REG_REGHIVEUPDATE,          /* RegHiveUpdate */
@@ -1762,7 +1762,8 @@ PropSheet_SetCloseCancel(
                    MF_BYCOMMAND | (Enable ? MF_ENABLED : MF_GRAYED));
 }
 
-static DWORD
+STATIC
+DWORD
 WINAPI
 PrepareAndDoCopyThread(
     IN LPVOID Param)
@@ -2027,8 +2028,8 @@ PrepareAndDoCopyThread(
             // TODO: So far SETUP only supports the 1st floppy.
             // Use a simple UI like comdlg32's DlgDirList* to show
             // a list of drives that the user could select.
-            static const UNICODE_STRING FloppyDrive = RTL_CONSTANT_STRING(L"\\Device\\Floppy0\\");
-            static const WCHAR DriveLetter = L'A';
+            STATIC const UNICODE_STRING FloppyDrive = RTL_CONSTANT_STRING(L"\\Device\\Floppy0\\");
+            STATIC const WCHAR DriveLetter = L'A';
 
             INT nRet;
         RetryCancel:
@@ -2145,7 +2146,7 @@ PrepareAndDoCopyThread(
 }
 
 
-static INT_PTR CALLBACK
+STATIC INT_PTR CALLBACK
 ProcessDlgProc(
     IN HWND hwndDlg,
     IN UINT uMsg,
@@ -2224,16 +2225,7 @@ ProcessDlgProc(
                         pSetupData->bStopInstall = TRUE;
                         SetEvent(pSetupData->hHaltInstallEvent);
 
-#if 0
-                        /* Wait for any pending installation */
-                        WaitForSingleObject(pSetupData->hInstallThread, INFINITE);
-                        CloseHandle(pSetupData->hInstallThread);
-                        pSetupData->hInstallThread = NULL;
-                        CloseHandle(pSetupData->hHaltInstallEvent);
-                        pSetupData->hHaltInstallEvent = NULL;
-#endif
-
-                        // TODO: Unwind installation?!
+                        /* FIXME: Do we need to unwind installation? */
 
                         /* Go to the Terminate page */
                         PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_RESTARTPAGE);
@@ -2263,7 +2255,7 @@ ProcessDlgProc(
     return FALSE;
 }
 
-static INT_PTR CALLBACK
+STATIC INT_PTR CALLBACK
 RestartDlgProc(
     IN HWND hwndDlg,
     IN UINT uMsg,
@@ -2345,6 +2337,7 @@ RestartDlgProc(
     return FALSE;
 }
 
+/* Load basic setup data */
 BOOL LoadSetupData(
     IN OUT PSETUPDATA pSetupData)
 {
@@ -2413,7 +2406,7 @@ BOOL LoadSetupData(
         PCWSTR LocaleId = ((PGENENTRY)GetListEntryData(ListEntry))->Id;
         if (!_wcsicmp(pSetupData->DefaultLanguage, LocaleId))
         {
-            DPRINT("found %S in LanguageList\n", LocaleId);
+            DPRINT("Found %S in LanguageList\n", LocaleId);
             SetCurrentListEntry(LanguageList, ListEntry);
             break;
         }
@@ -2724,7 +2717,7 @@ Quit:
 }
 
 /* Used to enable and disable the shutdown privilege */
-/* static */ BOOL
+BOOLEAN
 EnablePrivilege(
     IN LPCWSTR lpszPrivilegeName,
     IN BOOL bEnablePrivilege)
@@ -2754,7 +2747,7 @@ Quit:
 }
 
 /* Copied from HotkeyThread() in dll/win32/syssetup/install.c */
-static DWORD CALLBACK
+STATIC DWORD CALLBACK
 HotkeyThread(LPVOID Parameter)
 {
     ATOM hotkey;
