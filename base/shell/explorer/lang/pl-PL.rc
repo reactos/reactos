@@ -218,4 +218,5 @@ BEGIN
     IDS_RESTORE_ALL "&Pokaż otwarte okna"
     IDS_TRAYWND_UNDO_CASCADE "&Cofnij kaskadowe ułożenie okien"
     IDS_TRAYWND_UNDO_TILE "&Cofnij sąsiadujące ułożenie okien"
+    IDS_TRAYDESKBTN_TOOLTIP "Show Desktop/Windows"
 END

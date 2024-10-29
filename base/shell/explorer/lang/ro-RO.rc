@@ -216,4 +216,5 @@ BEGIN
     IDS_RESTORE_ALL "&Afișare ferestre deschise"
     IDS_TRAYWND_UNDO_CASCADE "Anulare cascadă"
     IDS_TRAYWND_UNDO_TILE "An&ulare aranjare"
+    IDS_TRAYDESKBTN_TOOLTIP "Show Desktop/Windows"
 END

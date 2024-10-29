@@ -215,4 +215,5 @@ BEGIN
     IDS_RESTORE_ALL "&Megnyitott ablakok megjelenítése"
     IDS_TRAYWND_UNDO_CASCADE "Lépcsőzetes elre&ndezés visszavonása"
     IDS_TRAYWND_UNDO_TILE "Mozaik elre&ndezés visszavonása"
+    IDS_TRAYDESKBTN_TOOLTIP "Show Desktop/Windows"
 END

@@ -217,4 +217,5 @@ BEGIN
     IDS_RESTORE_ALL "開いているウィンドウを表示(&S)"
     IDS_TRAYWND_UNDO_CASCADE "「重ねて表示」を元に戻す(&U)"
     IDS_TRAYWND_UNDO_TILE "「ウィンドウを並べて表示」を元に戻す(&U)"
+    IDS_TRAYDESKBTN_TOOLTIP "Show Desktop/Windows"
 END
