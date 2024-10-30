@@ -155,16 +155,14 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Đang hoàn tất cài đặt Reactos"
+CAPTION "Cài đặt ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Completing the ReactOS Setup Wizard", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Bạn đã hoàn thành giai đoạn đầu của việc thiết lập ReactOS.", IDC_STATIC, 115, 40, 195, 17
-    //LTEXT "Bạn Khi bạn ấn Hoàn tất,máy tính của bạn sẽ khởi động lại.", IDC_STATIC, 115, 169, 195, 17
-    LTEXT "Nếu ổ đĩa của bạn còn chứa dĩa CD cài đặt, hãy lấy nó ra. Sau đó, ấn Hoàn tất để khởi động lại máy tính của bạn.", IDC_FINISHTEXT, 115, 70, 195, 40
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 115, 188, 12
-    AUTOCHECKBOX "&Pause restart countdown", IDC_PAUSE_COUNTDOWN, 115, 135, 180, 14
-    PUSHBUTTON "&Restart Now", IDC_RESTARTNOW, 174, 135, 67, 14
+    LTEXT "Restarting your Computer", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "The ReactOS first stage Setup has completed successfully.\n\nSetup needs to restart your computer to continue with the second installation stage.", IDC_STATIC, 115, 40, 195, 50
+    LTEXT "Your computer will automatically restart in 15 seconds or when you click Restart. To halt the automatic countdown and manually restart at a later time, click on Stop countdown.", IDC_FINISHTEXT, 115, 90, 195, 42
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
+    PUSHBUTTON "&Stop countdown", IDC_STOP_COUNTDOWN, 175, 155, 68, 14
 END
 
 /* Strings */
@@ -184,13 +182,13 @@ BEGIN
     IDS_SUMMARYSUBTITLE "Liệt kê các thuộc tính đã lựa chọn nhằm kiểm lại trước khi áp dụng vào thiết bị được chọn."
     IDS_PROCESSTITLE "Thiết lập phần ổ cứng, sao chép tập tin và thiết lập hệ thống"
     IDS_PROCESSSUBTITLE "Tạo và định dạng phần ổ đĩa, sao chép thư  mục, cài đặt và thiết lập bootloader."
-    IDS_RESTARTTITLE "Giai đoạn đầu của việc thiết lập đã hoàn tất"
-    IDS_RESTARTSUBTITLE "Giai đoạn đầu của việc thiết lập đã được hoàn thành, khởi động lại máy tính để tiếp tuc với giai đoạn hai."
     IDS_ABORTSETUP "ReactOS vẵn chưa được hoàn tất cài đặt trên máy tính của bạn. Nếu bây giờ bạn hủy trình Thiết lập, lần tới ban sẽ cần phải chạy lại trình Thiết lập để cài đặt ReactOS. Bạn thực sự muốn bỏ?"
     IDS_ABORTSETUP2 "Hủy bỏ trình Thiết lập?"
     IDS_NO_TXTSETUP_SIF "Không thể tìm được tập tin 'txtsetup.sif'.\nTrình Thiết lập không thể tiếp tục."
+    IDS_FINISH_NO_REBOOT "Click Restart to immediately restart your computer, or click Postpone to quit the installer. In that case, please restart your computer later to continue the installation."
     IDS_INSTALLBTN "&Install"
-    IDS_REBOOTBTN "Restart"
+    IDS_RESTARTBTN "&Restart"
+    IDS_POSTPONEBTN "P&ostpone"
     IDS_VOLUME_NOFORMAT "Not formatted"
 END
 

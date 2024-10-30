@@ -158,13 +158,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installazione di ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Completing the ReactOS Setup Wizard", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "La prima fase è stata completata in modo regolare.", IDC_STATIC, 115, 40, 195, 17
-    //LTEXT "Quando verrà premuto fine il computer si riavvierà.", IDC_STATIC, 115, 169, 195, 17
-    LTEXT "Se presente rimuovere il CD dal lettore e cliccare Fine per riavviare il computer.", IDC_FINISHTEXT, 115, 70, 195, 40
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 115, 188, 12
-    AUTOCHECKBOX "&Pause restart countdown", IDC_PAUSE_COUNTDOWN, 115, 135, 180, 14
-    PUSHBUTTON "&Restart Now", IDC_RESTARTNOW, 174, 135, 67, 14
+    LTEXT "Restarting your Computer", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "The ReactOS first stage Setup has completed successfully.\n\nSetup needs to restart your computer to continue with the second installation stage.", IDC_STATIC, 115, 40, 195, 50
+    LTEXT "Your computer will automatically restart in 15 seconds or when you click Restart. To halt the automatic countdown and manually restart at a later time, click on Stop countdown.", IDC_FINISHTEXT, 115, 90, 195, 42
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
+    PUSHBUTTON "&Stop countdown", IDC_STOP_COUNTDOWN, 175, 155, 68, 14
 END
 
 /* Strings */
@@ -184,13 +182,13 @@ BEGIN
     IDS_SUMMARYSUBTITLE "Lista delle proprietà della installazione da controllare prima che siano eseguite sul dispositivo di installazione."
     IDS_PROCESSTITLE "Preparazione della partizione, copia dei file e configurazione del sistema"
     IDS_PROCESSSUBTITLE "Creazione e formattazione della partizione, copia dei file, installazione del Bootloader."
-    IDS_RESTARTTITLE "Prima fase della installazione completata"
-    IDS_RESTARTSUBTITLE "La prima fase della installazione è stata completata, riavviare il computer per procedere alla seconda fase."
     IDS_ABORTSETUP "ReactOS non è installato completamente sul computer. Se interropete l'installazione ora sarà necessario eseguire l'installazione di nuovo. Volete procedere?"
     IDS_ABORTSETUP2 "Volete interrompere l'installazione?"
     IDS_NO_TXTSETUP_SIF "Impossibile trovare 'txtsetup.sif'.\nL'installazione non può continuare."
+    IDS_FINISH_NO_REBOOT "Click Restart to immediately restart your computer, or click Postpone to quit the installer. In that case, please restart your computer later to continue the installation."
     IDS_INSTALLBTN "&Install"
-    IDS_REBOOTBTN "Restart"
+    IDS_RESTARTBTN "&Restart"
+    IDS_POSTPONEBTN "P&ostpone"
     IDS_VOLUME_NOFORMAT "Not formatted"
 END
 

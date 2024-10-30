@@ -158,13 +158,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Finalisation de l'assistant d'installation de ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Vous avez complété avec succès la première étape d'installation de ReactOS.", IDC_STATIC, 115, 40, 195, 17
-    //LTEXT "Si vous appuyez sur Terminer, votre ordinateur va redémarrer.", IDC_STATIC, 115, 169, 195, 17
-    LTEXT "S'il y a un CD dans le lecteur, retirez le. Appuyez ensuite sur Terminer pour redémarrer votre ordinateur.", IDC_FINISHTEXT, 115, 70, 195, 40
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 115, 188, 12
-    AUTOCHECKBOX "&Suspendre le compte à rebours du redémarrage", IDC_PAUSE_COUNTDOWN, 115, 135, 180, 14
-    PUSHBUTTON "&Redémarrer", IDC_RESTARTNOW, 174, 135, 67, 14
+    LTEXT "Redémarrage de votre ordinateur", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "La première étape d'installation de ReactOS a été complétée avec succès.\n\nLe programme d'installation doit redémarrer votre ordinateur pour continuer avec la seconde étape d'installation.", IDC_STATIC, 115, 40, 195, 50
+    LTEXT "Votre ordinateur va redémarrer automatiquement dans 15 secondes ou si vous cliquez sur Redémarrer. Pour arrêter le décompte automatique et manuellement redémarrer ultérieurement, cliquez sur Stopper le compte à rebours.", IDC_FINISHTEXT, 115, 90, 195, 42
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
+    PUSHBUTTON "&Stopper le compte à rebours", IDC_STOP_COUNTDOWN, 156, 155, 106, 14
 END
 
 /* Strings */
@@ -184,14 +182,13 @@ BEGIN
     IDS_SUMMARYSUBTITLE "Lister les propriétés d'installation à vérifier avant application sur le périphérique d'installation."
     IDS_PROCESSTITLE "Configurer la partition, copier les fichiers et configurer le système"
     IDS_PROCESSSUBTITLE "Créer et formatter la partition, copier les fichiers, installer et configurer le chargeur de démarrage."
-    IDS_RESTARTTITLE "Première étape de configuration terminée"
-    IDS_RESTARTSUBTITLE "La première étape de l'installation est terminée. Veuillez redémarrer pour continuer avec la seconde étape."
     IDS_ABORTSETUP "ReactOS n'est pas complètement installé sur votre ordinateur. Si vous quittez l'installation maintenant, vous devrez lancer l'installation de nouveau pour installer ReactOS. Voulez-vous quitter ?"
     IDS_ABORTSETUP2 "Abandonner l'installation ?"
     IDS_NO_TXTSETUP_SIF "Impossible de trouver 'txtsetup.sif'.\nL'installation ne peut continuer."
-    IDS_FINISH_NO_REBOOT "Setup needs to restart your computer to continue.\n\nClick Restart Now to immediately restart your computer, or click Finish to simply quit the installer. In this latter case, please restart your computer later to continue with the next installation step."
+    IDS_FINISH_NO_REBOOT "Cliquez sur Redémarrer pour redémarrer immédiatement votre ordinateur, ou cliquez sur Différer pour quitter le programme d'installation. Dans ce cas, veuillez redémarrer ultérieurement votre ordinateur afin de continuer l'installation."
     IDS_INSTALLBTN "&Installer"
-    IDS_REBOOTBTN "Redémarrer"
+    IDS_RESTARTBTN "&Redémarrer"
+    IDS_POSTPONEBTN "&Différer"
     IDS_VOLUME_NOFORMAT "Non formaté"
 END
 

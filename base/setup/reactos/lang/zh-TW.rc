@@ -164,16 +164,14 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "正在完成 ReactOS 安裝程式"
+CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "正在完成 ReactOS 安裝程式", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "ReactOS 的第一階段安裝已順利完成。", IDC_STATIC, 115, 40, 195, 17
-    //LTEXT "按下［完成］後，您的電腦將會重新啟動。", IDC_STATIC, 115, 169, 195, 17
-    LTEXT "如果光碟機裡還有光碟，請將其取出。然後按［完成］，重新啟動您的電腦。", IDC_FINISHTEXT, 115, 70, 195, 40
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 115, 188, 12
-    AUTOCHECKBOX "&Pause restart countdown", IDC_PAUSE_COUNTDOWN, 115, 135, 180, 14
-    PUSHBUTTON "&Restart Now", IDC_RESTARTNOW, 174, 135, 67, 14
+    LTEXT "Restarting your Computer", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "ReactOS 的第一階段安裝已順利完成。\n\nSetup needs to restart your computer to continue with the second installation stage.", IDC_STATIC, 115, 40, 195, 50
+    LTEXT "Your computer will automatically restart in 15 seconds or when you click Restart. To halt the automatic countdown and manually restart at a later time, click on Stop countdown.", IDC_FINISHTEXT, 115, 90, 195, 42
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
+    PUSHBUTTON "&Stop countdown", IDC_STOP_COUNTDOWN, 175, 155, 68, 14
 END
 
 /* Strings */
@@ -193,13 +191,13 @@ BEGIN
     IDS_SUMMARYSUBTITLE "正是安裝前列出安裝屬性以供檢查。"
     IDS_PROCESSTITLE "設定磁碟區，複製檔案並安裝系統"
     IDS_PROCESSSUBTITLE "建立並格式化磁碟區，複製檔案，安裝並設定載入程式。"
-    IDS_RESTARTTITLE "第一階段安裝完成"
-    IDS_RESTARTSUBTITLE "第一階段安裝已經完成，重新啟動進行第二階段安裝。"
     IDS_ABORTSETUP "ReactOS 尚未完全安裝在您的電腦上。如果您現在結束安裝程式，您需要重新執行安裝程式來安裝 ReactOS。您確定要結束嗎？"
     IDS_ABORTSETUP2 "終止安裝？"
     IDS_NO_TXTSETUP_SIF "無法找到「txtsetup.sif」。\n安裝程式無法繼續。"
+    IDS_FINISH_NO_REBOOT "Click Restart to immediately restart your computer, or click Postpone to quit the installer. In that case, please restart your computer later to continue the installation."
     IDS_INSTALLBTN "&Install"
-    IDS_REBOOTBTN "Restart"
+    IDS_RESTARTBTN "&Restart"
+    IDS_POSTPONEBTN "P&ostpone"
     IDS_VOLUME_NOFORMAT "Not formatted"
 END
 
