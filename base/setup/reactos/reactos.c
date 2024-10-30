@@ -343,6 +343,13 @@ StartDlgProc(
                               GetModuleHandleW(L"comctl32.dll"),
                               IDS_CLOSE);
 
+            /* Change the "Cancel" button text to "Close" */
+            // GetDlgItemTextW(GetParent(hwndDlg), IDCANCEL,
+            //                 szOrgWizNextBtnText, ARRAYSIZE(szOrgWizNextBtnText));
+            SetWindowResTextW(GetDlgItem(GetParent(hwndDlg), IDCANCEL),
+                              GetModuleHandleW(L"comctl32.dll"),
+                              IDS_CLOSE);
+
             /* Center the wizard window */
             CenterWindow(GetParent(hwndDlg));
             break;
