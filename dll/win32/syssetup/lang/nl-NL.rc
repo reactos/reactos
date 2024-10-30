@@ -5,15 +5,15 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Welkom bij de ReactOS installatiewizard.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Deze wizard zal ReactOS op je computer installeren. De wizard heeft informatie over jou en jouw computer nodig om ReactOS correct in te stellen.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Welkom bij de ReactOS installatiewizard", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Deze wizard zal ReactOS op je computer installeren. De wizard heeft informatie over jou en jouw computer nodig om ReactOS correct in te stellen.", IDC_STATIC, 115, 40, 195, 50
     LTEXT "Klik op Volgende om voort te gaan met de installatie.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Setup"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "The ReactOS developers would like to acknowledge the following Open Source projects, (parts of) which were used to create ReactOS:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
@@ -23,8 +23,8 @@ BEGIN
 END
 
 IDD_PRODUCT DIALOGEX 0, 0, 317, 143
-CAPTION "ReactOS Setup"
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
+CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_PRODUCT_ICON, 5, 5, 20, 20
@@ -142,7 +142,7 @@ END
 IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 275, 78
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Please wait..."
-FONT 8, "MS Shell Dlg", 400, 0, 1
+FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDB_REACTOS, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     CONTROL "", IDC_BAR, "Static", SS_OWNERDRAW, 0, 44, 275, 4

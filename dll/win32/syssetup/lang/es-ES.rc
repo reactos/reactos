@@ -14,15 +14,15 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bienvenido a la segunda fase de instalación de ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Este asistente configurará ReactOS en su equipo.\n\nEl asistente necesita que aporte información sobre usted y su equipo para poder configurarlo de forma correcta.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Bienvenido al Asistente de Instalación de ReactOS", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Este asistente configurará ReactOS en su equipo.\n\nEl asistente necesita que aporte información sobre usted y su equipo para poder configurarlo de forma correcta.", IDC_STATIC, 115, 40, 195, 50
     LTEXT "Pulse Siguiente para continuar con la instalación.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Instalación de ReactOS"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Los desarrolladores de ReactOS quieren dar las gracias a los siguientes proyectos de código abierto, los cuales han sido parte fundamental a la hora de crear ReactOS:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
@@ -151,7 +151,7 @@ END
 IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 275, 78
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Espere un momento..."
-FONT 8, "MS Shell Dlg", 400, 0, 1
+FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDB_REACTOS, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     CONTROL "", IDC_BAR, "Static", SS_OWNERDRAW, 0, 44, 275, 4

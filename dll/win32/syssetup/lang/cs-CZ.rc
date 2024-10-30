@@ -13,15 +13,15 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Instalátor"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Vítejte v průvodci instalace systému ReactOS.", IDC_WELCOMETITLE, 115, 9, 189, 31
-    LTEXT "Tento průvodce nainstaluje systém ReactOS na Váš počítač. Průvodce potřebuje získat některé informace o Vás a Vašem počítači, aby mohl systém správně nastavit.", IDC_STATIC, 115, 50, 189, 100
-    LTEXT "Kliknutím na Další pokračujte v instalaci.", IDC_STATIC, 115, 160, 189, 31
+    LTEXT "Vítejte v průvodci instalace systému ReactOS", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Tento průvodce nainstaluje systém ReactOS na Váš počítač. Průvodce potřebuje získat některé informace o Vás a Vašem počítači, aby mohl systém správně nastavit.", IDC_STATIC, 115, 40, 195, 50
+    LTEXT "Kliknutím na Další pokračujte v instalaci.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 145
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Instalátor"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Vývojáři systému ReactOS by rádi zmínili následující Open Source projekty. Tyto projekty (nebo jejich části) byly použity při vývoji systému ReactOS:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
@@ -31,7 +31,7 @@ BEGIN
 END
 
 IDD_PRODUCT DIALOGEX 0, 0, 317, 143
-CAPTION "ReactOS Setup"
+CAPTION "ReactOS Instalátor"
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -108,7 +108,7 @@ END
 
 IDD_THEMEPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "ReactOS Instalátor"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_THEMEPICKER, "SysListView32", LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_TABSTOP, 18, 8, 288, 130
@@ -150,7 +150,7 @@ END
 IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 275, 78
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Prosím čekejte..."
-FONT 8, "MS Shell Dlg", 400, 0, 1
+FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDB_REACTOS, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     CONTROL "", IDC_BAR, "Static", SS_OWNERDRAW, 0, 44, 275, 4
