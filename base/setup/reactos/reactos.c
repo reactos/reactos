@@ -336,6 +336,13 @@ StartDlgProc(
             SetDlgItemFont(hwndDlg, IDC_WARNTEXT2, pSetupData->hBoldFont, TRUE);
             SetDlgItemFont(hwndDlg, IDC_WARNTEXT3, pSetupData->hBoldFont, TRUE);
 
+            /* Change the "Cancel" button text to "Close" */
+            // GetDlgItemTextW(GetParent(hwndDlg), IDCANCEL,
+            //                 szOrgWizNextBtnText, ARRAYSIZE(szOrgWizNextBtnText));
+            SetWindowResTextW(GetDlgItem(GetParent(hwndDlg), IDCANCEL),
+                              GetModuleHandleW(L"comctl32.dll"),
+                              IDS_CLOSE);
+
             /* Center the wizard window */
             CenterWindow(GetParent(hwndDlg));
             break;
@@ -459,6 +466,14 @@ TypeDlgProc(
 
                 case PSN_WIZNEXT: /* Set the selected data */
                 {
+/////////////////////////
+#if 0
+                    Sleep(5000);
+                    SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_FINISHPAGE);
+                    return TRUE;
+#endif
+/////////////////////////
+
                     /*
                      * Go update only if we have available NT installations
                      * and we choose to do so.
@@ -1062,6 +1077,7 @@ SummaryDlgProc(
         {
             if (HIWORD(wParam) == BN_CLICKED && LOWORD(wParam) == IDC_CONFIRM_INSTALL)
             {
+                // Ideally we could add the PSWIZBF_ELEVATIONREQUIRED style.
                 if (IsDlgButtonChecked(hwndDlg, IDC_CONFIRM_INSTALL) == BST_CHECKED)
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                 else
@@ -1786,8 +1802,10 @@ RegistryStatus(IN REGISTRY_STATUS RegStatus, ...)
 
 /**
  * @brief
- * Enables or disables the Cancel and the Close title-bar
- * property-sheet window buttons.
+ * Enable or disable the Cancel and the Close title-bar property-sheet buttons.
+ *
+ * The buttons are however kept visible in case they are disabled
+ * (this informs the user they are disabled only temporarily).
  **/
 VOID
 PropSheet_SetCloseCancel(
@@ -1795,7 +1813,6 @@ PropSheet_SetCloseCancel(
     _In_ BOOL Enable)
 {
     EnableDlgItem(hWndWiz, IDCANCEL, Enable);
-    // ShowDlgItem(hWndWiz, IDCANCEL, Enable ? SW_SHOW : SW_HIDE);
     EnableMenuItem(GetSystemMenu(hWndWiz, FALSE),
                    SC_CLOSE,
                    MF_BYCOMMAND | (Enable ? MF_ENABLED : MF_GRAYED));
@@ -2338,6 +2355,62 @@ GetSetupType(VOID)
     return dwSetupType;
 }
 
+typedef struct _CLOSABLE_WND_INFO
+{
+    HWND hWndExclude; ///< Window to exclude from search
+    BOOL Found;       ///< TRUE if a closable window was found; FALSE if not.
+} CLOSABLE_WND_INFO, *PCLOSABLE_WND_INFO;
+static BOOL
+CALLBACK
+FindUserClosableWindowProc(
+    _In_ HWND hWnd,
+    _In_ LPARAM lParam)
+{
+    PCLOSABLE_WND_INFO pInfo = (PCLOSABLE_WND_INFO)lParam;
+    HMENU hSysMenu;
+    MENUITEMINFOW mii;
+
+    /* Skip the window to exclude */
+    if (hWnd == pInfo->hWndExclude)
+        return TRUE;
+
+    /* Skip non-interactive windows */
+    if (!IsWindowEnabled(hWnd) || !IsWindowVisible(hWnd))
+        return TRUE;
+
+    hSysMenu = GetSystemMenu(hWnd, FALSE);
+    if (!hSysMenu)
+        return TRUE; /* No menu: skip the window */
+
+    mii.cbSize = sizeof(mii);
+    mii.fMask = MIIM_STATE;
+    if (!GetMenuItemInfoW(hSysMenu, SC_CLOSE, FALSE, &mii))
+        return TRUE; /* No close item: skip the window */
+
+    pInfo->Found |= !(mii.fState & MFS_DISABLED);
+
+    /* Continue enumeration (return TRUE) if no close item is enabled;
+     * otherwise stop the enumeration (return FALSE) */
+    return !pInfo->Found;
+}
+static BOOL
+AreThereInteractiveWindows(
+    _In_opt_ HWND hWndExclude)
+{
+    /* Return success if a shell is present */
+    if (GetShellWindow())
+    {
+        return TRUE;
+    }
+    /* Otherwise, check for user-interactive closable windows */
+    else
+    {
+        CLOSABLE_WND_INFO Info = {hWndExclude, FALSE};
+        EnumWindows(FindUserClosableWindowProc, (LPARAM)&Info);
+        return Info.Found;
+    }
+}
+
 static INT_PTR CALLBACK
 FinishDlgProc(
     IN HWND hwndDlg,
@@ -2354,6 +2427,8 @@ FinishDlgProc(
     {
         case WM_INITDIALOG:
         {
+            DWORD dwSetupType;
+
             /* Save pointer to the global setup data */
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
@@ -2361,25 +2436,22 @@ FinishDlgProc(
             /* Set title font */
             SetDlgItemFont(hwndDlg, IDC_FINISHTITLE, pSetupData->hTitleFont, TRUE);
 
-#if 1 // FIXME FIXME: This is for testing only!!
-            SetDlgItemTextW(GetParent(hwndDlg), ID_WIZNEXT, L"Test button");
-#endif
-
             /* Retrieve the HKLM\SYSTEM\Setup:SetupType value to determine
              * whether we need to restart at the end of the installation */
-            //pSetupData->dwSetupType = GetSetupType();
-            pSetupData->dwSetupType = 1;
+            dwSetupType = GetSetupType();
+            pSetupData->bMustReboot = (dwSetupType == 1 || dwSetupType == 4); // FIXME: Use defines/enum
 
-            if (pSetupData->dwSetupType == 1 || pSetupData->dwSetupType == 4) // FIXME: Use defines/enum
+            /* Force "Restart Now" if there are no other user-interactive windows */
+            pSetupData->bMustReboot |= !AreThereInteractiveWindows(GetParent(hwndDlg));
+
+            /* If we must restart, display the countdown gauge, show the "Stop Countdown" and the "Restart" buttons.
+             * If we don't need to restart right now, let the user to restart now or later. */
+            if (pSetupData->bMustReboot)
             {
                 EnableDlgItem(hwndDlg, IDC_RESTART_PROGRESS, TRUE);
-                EnableDlgItem(hwndDlg, IDC_PAUSE_COUNTDOWN, TRUE);
-                EnableDlgItem(hwndDlg, IDC_RESTARTNOW, FALSE);
-                ShowWindow(GetDlgItem(hwndDlg, IDC_RESTART_PROGRESS), SW_SHOW);
-                ShowWindow(GetDlgItem(hwndDlg, IDC_PAUSE_COUNTDOWN), SW_SHOW);
-                ShowWindow(GetDlgItem(hwndDlg, IDC_RESTARTNOW), SW_HIDE);
-
-                CheckDlgButton(hwndDlg, IDC_PAUSE_COUNTDOWN, BST_UNCHECKED);
+                EnableDlgItem(hwndDlg, IDC_STOP_COUNTDOWN, TRUE);
+                ShowDlgItem(hwndDlg, IDC_RESTART_PROGRESS, SW_SHOW);
+                ShowDlgItem(hwndDlg, IDC_STOP_COUNTDOWN, SW_SHOW);
             }
             else
             {
@@ -2388,14 +2460,16 @@ FinishDlgProc(
                                   pSetupData->hInstance,
                                   IDS_FINISH_NO_REBOOT);
 
+                /* Hide and disable the countdown gauge and the "Stop Countdown" button */
                 EnableDlgItem(hwndDlg, IDC_RESTART_PROGRESS, FALSE);
-                EnableDlgItem(hwndDlg, IDC_PAUSE_COUNTDOWN, FALSE);
-                EnableDlgItem(hwndDlg, IDC_RESTARTNOW, TRUE);
-                ShowWindow(GetDlgItem(hwndDlg, IDC_RESTART_PROGRESS), SW_HIDE);
-                ShowWindow(GetDlgItem(hwndDlg, IDC_PAUSE_COUNTDOWN), SW_HIDE);
-                ShowWindow(GetDlgItem(hwndDlg, IDC_RESTARTNOW), SW_SHOW);
+                EnableDlgItem(hwndDlg, IDC_STOP_COUNTDOWN, FALSE);
+                ShowDlgItem(hwndDlg, IDC_RESTART_PROGRESS, SW_HIDE);
+                ShowDlgItem(hwndDlg, IDC_STOP_COUNTDOWN, SW_HIDE);
             }
 
+            /* Ensure that the installer wizard window is made visible and focused */
+            ShowWindow(GetParent(hwndDlg), SW_SHOW);
+            SwitchToThisWindow(GetParent(hwndDlg), TRUE);
             break;
         }
 
@@ -2429,20 +2503,22 @@ FinishDlgProc(
             {
                 case PSN_SETACTIVE:
                 {
-                    /* Only "Finish" for closing the wizard */
-                    ShowDlgItem(GetParent(hwndDlg), IDCANCEL, SW_HIDE);
+                    /* Only "Finish" for closing the wizard, and hide "Next" and "Back" */
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_FINISH);
+                    // PropSheet_ShowWizButtons(GetParent(hwndDlg), 0, PSWIZB_BACK | PSWIZB_NEXT | PSWIZB_CANCEL);
+                    ShowDlgItem(GetParent(hwndDlg), ID_WIZBACK, SW_HIDE);
+                    ShowDlgItem(GetParent(hwndDlg), ID_WIZNEXT, SW_HIDE);
 
-                    // NOTE: Alternative buttons suggestion:
-                    // "Back" (disabled/hidden), "Restart Now" (instead of "Finish"), Cancel/Exit
+                    /* Change the "Finish" button text to "Restart" */
+                    SetWindowResTextW(GetDlgItem(GetParent(hwndDlg), ID_WIZFINISH),
+                                      pSetupData->hInstance,
+                                      IDS_RESTARTBTN);
 
-                    if (pSetupData->dwSetupType == 1 || pSetupData->dwSetupType == 4) // FIXME: Use defines/enum
+                    if (pSetupData->bMustReboot)
                     {
-                        /* Change the "Next" button text to "Restart" */
-                        // PropSheet_SetNextText(GetParent(hwndDlg), ...);
-                        SetWindowResTextW(GetDlgItem(GetParent(hwndDlg), ID_WIZFINISH),
-                                          pSetupData->hInstance,
-                                          IDS_REBOOTBTN);
+                        /* Hide and disable also the "Close"/"Cancel" buttons since we can only finish now */
+                        ShowDlgItem(GetParent(hwndDlg), IDCANCEL, SW_HIDE);
+                        PropSheet_SetCloseCancel(GetParent(hwndDlg), FALSE);
 
                         /* Set up the reboot progress bar and countdown timer.
                          * 300 steps at 50 ms each: 15 seconds */
@@ -2450,10 +2526,27 @@ FinishDlgProc(
                         SendDlgItemMessage(hwndDlg, IDC_RESTART_PROGRESS, PBM_SETPOS, 0, 0);
                         SetTimer(hwndDlg, 1, 50, NULL);
                     }
+                    else
+                    {
+                        /* Keep the "Cancel" button shown and change its text to "Postpone" */
+                        // PropSheet_ShowWizButtons(GetParent(hwndDlg), 0, PSWIZB_BACK | PSWIZB_NEXT);
+                        SetWindowResTextW(GetDlgItem(GetParent(hwndDlg), IDCANCEL),
+                                          pSetupData->hInstance,
+                                          IDS_POSTPONEBTN);
+                    }
 
                     break;
                 }
 
+                case PSN_WIZNEXT:
+                case PSN_WIZFINISH:
+                {
+                    /* Press on "Finish"/"Restart" button */
+                    pSetupData->bMustReboot = TRUE;
+                    __fallthrough;
+                }
+                case PSN_QUERYCANCEL:
+                    /* Press on "Cancel"/"Postpone" button */
                 default:
                     break;
             }
@@ -2467,26 +2560,18 @@ FinishDlgProc(
 
             switch (LOWORD(wParam))
             {
-            case IDC_PAUSE_COUNTDOWN:
+            case IDC_STOP_COUNTDOWN:
             {
-                /* Pause the shutdown countdown */
-                // BST_UNCHECKED or BST_INDETERMINATE => FALSE
-                if (IsDlgButtonChecked(hwndDlg, IDC_PAUSE_COUNTDOWN) == BST_CHECKED)
-                {
-                    /* It is, pause countdown */
-                    KillTimer(hwndDlg, 1);
-                }
-                else
-                {
-                    /* It is not, re-enable countdown */
-                    SetTimer(hwndDlg, 1, 50, NULL);
-                }
+                /* Stop the shutdown countdown */
+                KillTimer(hwndDlg, 1);
+
+                /* Hide and disable the countdown gauge and the "Stop Countdown" button */
+                EnableDlgItem(hwndDlg, IDC_RESTART_PROGRESS, FALSE);
+                EnableDlgItem(hwndDlg, IDC_STOP_COUNTDOWN, FALSE);
+                ShowDlgItem(hwndDlg, IDC_RESTART_PROGRESS, SW_HIDE);
+                ShowDlgItem(hwndDlg, IDC_STOP_COUNTDOWN, SW_HIDE);
                 break;
             }
-
-            case IDC_RESTARTNOW:
-                // TODO
-                break;
             }
             break;
         }
@@ -3034,7 +3119,6 @@ _tWinMain(HINSTANCE hInst,
         psp.pszTemplate = MAKEINTRESOURCEW(IDD_STARTPAGE);
         ahpsp[nPages++] = CreatePropertySheetPage(&psp);
 
-#if 0
         /* Create the install type selection page */
         psp.dwSize = sizeof(PROPSHEETPAGE);
         psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
@@ -3046,6 +3130,7 @@ _tWinMain(HINSTANCE hInst,
         psp.pszTemplate = MAKEINTRESOURCEW(IDD_TYPEPAGE);
         ahpsp[nPages++] = CreatePropertySheetPage(&psp);
 
+#if 1
         /* Create the upgrade/repair selection page */
         psp.dwSize = sizeof(PROPSHEETPAGE);
         psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
@@ -3092,7 +3177,7 @@ _tWinMain(HINSTANCE hInst,
 #endif
     }
 
-#if 0
+#if 1
     /* Create the installation progress page */
     psp.dwSize = sizeof(PROPSHEETPAGE);
     psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
@@ -3157,12 +3242,20 @@ Quit:
     /* Free the NT to Win32 path prefix mapping list */
     FreeNtToWin32PathMappingList(&SetupData.MappingList);
 
+    /* Force "Restart Now" if there are no other user-interactive windows */
+    SetupData.bMustReboot |= !AreThereInteractiveWindows(NULL);
+
     /* System rebooting will be done by Winlogon if necessary */
+    if (SetupData.bMustReboot)
+    {
 #if 0
-    EnablePrivilege(SE_SHUTDOWN_NAME, TRUE);
-    ExitWindowsEx(EWX_REBOOT, 0);
-    EnablePrivilege(SE_SHUTDOWN_NAME, FALSE);
+        EnablePrivilege(SE_SHUTDOWN_NAME, TRUE);
+        ExitWindowsEx(EWX_REBOOT, 0);
+        EnablePrivilege(SE_SHUTDOWN_NAME, FALSE);
+#else
+        DisplayMessage(NULL, MB_ICONWARNING, L"Restarting", L"Setup is now restarting your computer!");
 #endif
+    }
     return 0;
 }
 
