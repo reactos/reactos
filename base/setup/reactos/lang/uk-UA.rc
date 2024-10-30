@@ -35,11 +35,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Встановлення ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "Встановлення ReactOS", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "Install a new copy of ReactOS. This option does not keep your files, settings and programs. You can make changes to disks and partitions.", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
-    AUTORADIOBUTTON "Відновити або змінити встановлений раніше ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "Update or repair an installed copy of ReactOS. This option keeps your files, settings and programs. This option is only available if ReactOS is already installed on this computer.", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
-    LTEXT "Для встановлення пристроїв натисніть Далі.", IDC_STATIC, 7, 128, 297, 8
+    AUTORADIOBUTTON "&Встановлення ReactOS", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
+    LTEXT "Install a new copy of ReactOS. This option does not keep your files, settings and programs. You can make changes to disks and partitions.", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
+    AUTORADIOBUTTON "В&ідновити або змінити ReactOS", IDC_UPDATE, 7, 80, 277, 10
+    LTEXT "Update or repair an installed copy of ReactOS. This option keeps your files, settings and programs. This option is only available if ReactOS is already installed on this computer.", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
@@ -179,8 +178,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_CAPTION "Встановлення ReactOS"
-    IDS_TYPETITLE "Вас вітає програма встановлення ReactOS"
-    IDS_TYPESUBTITLE "Виберіть тип встановлення."
+    IDS_TYPETITLE "Installation Type"
+    IDS_TYPESUBTITLE "You can setup a new ReactOS installation, or update/repair an existing installation."
+    IDS_UPDATETITLE "Update or Repair ReactOS"
+    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
     IDS_DEVICETITLE "Встановлення базових пристроїв"
     IDS_DEVICESUBTITLE "Налаштування параметрів екрану та клавіатури."
     IDS_DRIVETITLE "Вибір розташування на диску і системного каталогу"

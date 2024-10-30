@@ -27,11 +27,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS'i paigaldamine"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "Installeeri ReactOS", IDC_INSTALL, 7, 7, 277, 10
-    LTEXT "Paigalda uus koopia ReactOS'ist. See valik ei jäta alles teie faile, suvandeid ja programme. Võite teha muudatusi kettastele ja partitsioonidele.", IDC_INSTALLTEXT, 18, 18, 269, 25
-    AUTORADIOBUTTON "Paranda või uuenda installeeritud ReactOS'i", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "Uuenda või paranda oma ReactOS'i installatsiooni. See valik säilitab teie failid, suvandid ja programmid. See valik on saadaval juhul kui ReactOS on juba paigaldatud siin arvutis.", IDC_UPDATETEXT, 18, 61, 269, 30
-    LTEXT "Vajuta Järgmine, et seadmeid paigaldada.", IDC_STATIC, 7, 128, 297, 8
+    AUTORADIOBUTTON "&Installeeri ReactOS", IDC_INSTALL, 7, 20, 277, 10
+    LTEXT "Paigalda uus koopia ReactOS'ist. See valik ei jäta alles teie faile, suvandeid ja programme. Võite teha muudatusi kettastele ja partitsioonidele.", IDC_INSTALLTEXT, 19, 36, 279, 27
+    AUTORADIOBUTTON "&Paranda või uuenda ReactOS'i", IDC_UPDATE, 7, 80, 277, 10
+    LTEXT "Uuenda või paranda oma ReactOS'i installatsiooni. See valik säilitab teie failid, suvandid ja programmid. See valik on saadaval juhul kui ReactOS on juba paigaldatud siin arvutis.", IDC_UPDATETEXT, 19, 96, 279, 27
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
@@ -171,8 +170,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_CAPTION "ReactOS'i paigaldamine"
-    IDS_TYPETITLE "Tere tulemast ReactOS'i paigaldama"
-    IDS_TYPESUBTITLE "Vali paigalduse tüüp."
+    IDS_TYPETITLE "Installation Type"
+    IDS_TYPESUBTITLE "You can setup a new ReactOS installation, or update/repair an existing installation."
+    IDS_UPDATETITLE "Update or Repair ReactOS"
+    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
     IDS_DEVICETITLE "Põhiliste seadmete paigaldamine"
     IDS_DEVICESUBTITLE "Ekraani ja klaviatuuri seadistamine."
     IDS_DRIVETITLE "Partitsioonide ja süsteemikausta seadistamine"

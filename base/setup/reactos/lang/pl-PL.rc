@@ -38,11 +38,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalator systemu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "Zainstaluj system ReactOS", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "Zainstaluj nową kopię systemu ReactOS. Ta opcja nie zachowa plików, ustawień i programów. Możesz dokonać zmian w dyskach i partycjach.", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
-    AUTORADIOBUTTON "Napraw lub uaktualnij istniejącą instalację systemu ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "Napraw istniejącą instalację lub wykonaj uaktualnienie do nowszej wersji systemu ReactOS. Ta opcja zachowa pliki, ustawienia i programy. Jest dostępna, jeżeli system ReactOS znajduje się już na tym komputerze.", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
-    LTEXT "Kliknij Dalej, aby zmienić ustawienia sprzętu.", IDC_STATIC, 7, 128, 297, 8
+    AUTORADIOBUTTON "&Zainstaluj system ReactOS", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
+    LTEXT "Zainstaluj nową kopię systemu ReactOS. Ta opcja nie zachowa plików, ustawień i programów. Możesz dokonać zmian w dyskach i partycjach.", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
+    AUTORADIOBUTTON "&Napraw lub uaktualnij ReactOS", IDC_UPDATE, 7, 80, 277, 10
+    LTEXT "Napraw istniejącą instalację lub wykonaj uaktualnienie do nowszej wersji systemu ReactOS. Ta opcja zachowa pliki, ustawienia i programy. Jest dostępna, jeżeli system ReactOS znajduje się już na tym komputerze.", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
@@ -182,8 +181,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_CAPTION "Instalator systemu ReactOS"
-    IDS_TYPETITLE "Witamy w Kreatorze instalacji systemu ReactOS"
-    IDS_TYPESUBTITLE "Wybierz typ instalacji."
+    IDS_TYPETITLE "Installation Type"
+    IDS_TYPESUBTITLE "You can setup a new ReactOS installation, or update/repair an existing installation."
+    IDS_UPDATETITLE "Update or Repair ReactOS"
+    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
     IDS_DEVICETITLE "Ustawienia podstawowych urządzeń"
     IDS_DEVICESUBTITLE "Zmień ustawienia monitora i klawiatury."
     IDS_DRIVETITLE "Ustaw partycję instalacji i katalog systemowy"

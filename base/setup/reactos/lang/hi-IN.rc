@@ -34,11 +34,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "रिऐक्ट ओएस सेटअप"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "रिऐक्ट ओएस इंस्टॉल करें", IDC_INSTALL, 7, 7, 277, 10
-    LTEXT "रिऐक्ट ओएस की एक नई कापी इन्स्टॉल करें। यह विकल्प आपकी फाइलें, सेटिंग्स और प्रोग्राम नहीं रखता है। आप डिस्क और विभाजन में परिवर्तन कर सकते हैं।", IDC_INSTALLTEXT, 18, 18, 269, 25
-    AUTORADIOBUTTON "रिऐक्ट ओएस की अद्यतन या मरम्मत करे। ", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "रिऐक्ट ओएस की एक स्थापित कापी अद्यतन या मरम्मत करे। यह विकल्प आपकी फाइलें, सेटिंग्स और प्रोग्राम रखता है। यह विकल्प केवल तभी उपलब्ध होता है जब इस कंप्यूटर पर रिऐक्ट ओएस पहले से इंस्टॉल हो।", IDC_UPDATETEXT, 18, 61, 269, 30
-    LTEXT "जारी रखने के लिए आगे दबाएँ।", IDC_STATIC, 7, 128, 297, 8
+    AUTORADIOBUTTON "रिऐक्ट ओएस इंस्टॉल करें(&I)", IDC_INSTALL, 7, 20, 277, 10
+    LTEXT "रिऐक्ट ओएस की एक नई कापी इन्स्टॉल करें। यह विकल्प आपकी फाइलें, सेटिंग्स और प्रोग्राम नहीं रखता है। आप डिस्क और विभाजन में परिवर्तन कर सकते हैं।", IDC_INSTALLTEXT, 19, 36, 279, 27
+    AUTORADIOBUTTON "रिऐक्ट ओएस की अद्यतन या मरम्मत करे।(&U)", IDC_UPDATE, 7, 80, 277, 10
+    LTEXT "रिऐक्ट ओएस की एक स्थापित कापी अद्यतन या मरम्मत करे। यह विकल्प आपकी फाइलें, सेटिंग्स और प्रोग्राम रखता है। यह विकल्प केवल तभी उपलब्ध होता है जब इस कंप्यूटर पर रिऐक्ट ओएस पहले से इंस्टॉल हो।", IDC_UPDATETEXT, 19, 96, 279, 27
 END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
@@ -149,8 +148,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_CAPTION "रिऐक्ट ओएस सेटअप"
-    IDS_TYPETITLE "रिऐक्ट ओएस सेटअप में आपका स्वागत है"
-    IDS_TYPESUBTITLE "सेटअप प्रकार चुनें।"
+    IDS_TYPETITLE "Installation Type"
+    IDS_TYPESUBTITLE "You can setup a new ReactOS installation, or update/repair an existing installation."
+    IDS_UPDATETITLE "Update or Repair ReactOS"
+    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
     IDS_DEVICETITLE "बुनियादी डिवाइसों को सेटअप करें"
     IDS_DEVICESUBTITLE "डिस्प्ले और कीबोर्ड की सेटिंग्स सेट करें।"
     IDS_DRIVETITLE "इन्स्टलेशन विभाजन और सिस्टम फ़ोल्डर सेटअप करें"

@@ -36,11 +36,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Expert de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "Instalează ReactOS", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "Instalarea unei noi copii a ReactOS. Fișierele, configurațiile și programele existente nu vor fi păstrate. Sunt posibile ajustări asupra discurilor și partițiilor.", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
-    AUTORADIOBUTTON "Repară sau actualizează ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "Repararea sau actualizarea ReactOS. Această opțiune menține fișierele, configurațiile și programele existente. Opțiune validă doar dacă ReactOS e deja instalat în calculator.", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
-    LTEXT "Apăsați pe Înainte pentru configurarea de dispozitive.", IDC_STATIC, 7, 128, 297, 8
+    AUTORADIOBUTTON "&Instalează ReactOS", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
+    LTEXT "Instalarea unei noi copii a ReactOS. Fișierele, configurațiile și programele existente nu vor fi păstrate. Sunt posibile ajustări asupra discurilor și partițiilor.", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
+    AUTORADIOBUTTON "&Repară sau actualizează ReactOS", IDC_UPDATE, 7, 80, 277, 10
+    LTEXT "Repararea sau actualizarea ReactOS. Această opțiune menține fișierele, configurațiile și programele existente. Opțiune validă doar dacă ReactOS e deja instalat în calculator.", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
@@ -180,8 +179,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_CAPTION "Expertul de instalare ReactOS"
-    IDS_TYPETITLE "Bun venit la instalarea ReactOS"
-    IDS_TYPESUBTITLE "Alegeți tipul de instalare."
+    IDS_TYPETITLE "Installation Type"
+    IDS_TYPESUBTITLE "You can setup a new ReactOS installation, or update/repair an existing installation."
+    IDS_UPDATETITLE "Update or Repair ReactOS"
+    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
     IDS_DEVICETITLE "Instalare dispozitive de bază"
     IDS_DEVICESUBTITLE "Stabilirea parametrilor de afișare și tastatură."
     IDS_DRIVETITLE "Stabilirea destinației"

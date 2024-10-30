@@ -34,11 +34,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "Instalar ReactOS", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "Instala una nueva copia de ReactOS. Esta opción no protege sus archivos, programas y ajustes. Puede realizar cambios a su disco duro y particiones.", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
-    AUTORADIOBUTTON "Actualizar o reparar una instalación existente de ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "Actualiza o repara una instalación existente de ReactOS. Esta opción protege sus archivos, programas y ajustes. Esta opción sólo está disponible si ha instalado ReactOS previamente en este equipo.", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
-    LTEXT "Presione Siguiente para instalar los dispositivos.", IDC_STATIC, 7, 128, 297, 8
+    AUTORADIOBUTTON "&Instalar ReactOS", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
+    LTEXT "Instala una nueva copia de ReactOS. Esta opción no protege sus archivos, programas y ajustes. Puede realizar cambios a su disco duro y particiones.", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
+    AUTORADIOBUTTON "&Actualizar o reparar ReactOS", IDC_UPDATE, 7, 80, 277, 10
+    LTEXT "Actualiza o repara una instalación existente de ReactOS. Esta opción protege sus archivos, programas y ajustes. Esta opción sólo está disponible si ha instalado ReactOS previamente en este equipo.", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
@@ -178,8 +177,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_CAPTION "Instalación de ReactOS"
-    IDS_TYPETITLE "Bienvenido a la instalación de ReactOS"
-    IDS_TYPESUBTITLE "Seleccione el tipo de instalación."
+    IDS_TYPETITLE "Installation Type"
+    IDS_TYPESUBTITLE "You can setup a new ReactOS installation, or update/repair an existing installation."
+    IDS_UPDATETITLE "Update or Repair ReactOS"
+    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
     IDS_DEVICETITLE "Instalación de los dispositivos básicos"
     IDS_DEVICESUBTITLE "Seleccione los ajustes de la pantalla y el teclado."
     IDS_DRIVETITLE "Crear la partición para la instalación y la carpeta del sistema"

@@ -36,11 +36,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
-    AUTORADIOBUTTON "安裝 ReactOS", IDC_INSTALL, 7, 7, 277, 10, WS_GROUP | WS_TABSTOP
-    LTEXT "安裝 ReactOS 的新副本。此選項不會儲存您的檔案、設定和程式。您可以對磁碟和磁碟區進行更改。", IDC_INSTALLTEXT, 18, 18, 269, 25, NOT WS_GROUP
-    AUTORADIOBUTTON "修復或更新已安裝的 ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "更新或修復已安裝的 ReactOS 副本。此選項會儲存您的檔案、設定和程式。只有在 ReactOS 已經安裝在此電腦時才能使用此選項。", IDC_UPDATETEXT, 18, 61, 269, 30, NOT WS_GROUP
-    LTEXT "按［下一步］繼續安裝。", IDC_STATIC, 7, 128, 297, 8
+    AUTORADIOBUTTON "安裝 ReactOS(&I)", IDC_INSTALL, 7, 20, 277, 10, WS_GROUP | WS_TABSTOP
+    LTEXT "安裝 ReactOS 的新副本。此選項不會儲存您的檔案、設定和程式。您可以對磁碟和磁碟區進行更改。", IDC_INSTALLTEXT, 19, 36, 279, 27, NOT WS_GROUP
+    AUTORADIOBUTTON "修復或更新 ReactOS(&U)", IDC_UPDATE, 7, 80, 277, 10
+    LTEXT "更新或修復已安裝的 ReactOS 副本。此選項會儲存您的檔案、設定和程式。只有在 ReactOS 已經安裝在此電腦時才能使用此選項。", IDC_UPDATETEXT, 19, 96, 279, 27, NOT WS_GROUP
 END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
@@ -180,8 +179,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_CAPTION "ReactOS 安裝程式"
-    IDS_TYPETITLE "ReactOS 安裝程式"
-    IDS_TYPESUBTITLE "選擇安裝類型。"
+    IDS_TYPETITLE "Installation Type"
+    IDS_TYPESUBTITLE "You can setup a new ReactOS installation, or update/repair an existing installation."
+    IDS_UPDATETITLE "Update or Repair ReactOS"
+    IDS_UPDATESUBTITLE "Choose which existing ReactOS installation you want to update or repair."
     IDS_DEVICETITLE "設定基本裝置"
     IDS_DEVICESUBTITLE "指定顯示和鍵盤設定。"
     IDS_DRIVETITLE "設定安裝磁碟區和系統資料夾"

@@ -398,11 +398,15 @@ TypeDlgProc(
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
 
-            /* Check the 'install' radio button */
+            /* Set the options in bold */
+            SetDlgItemFont(hwndDlg, IDC_INSTALL, pSetupData->hBoldFont, TRUE);
+            SetDlgItemFont(hwndDlg, IDC_UPDATE, pSetupData->hBoldFont, TRUE);
+
+            /* Check the "Install" radio button */
             CheckDlgButton(hwndDlg, IDC_INSTALL, BST_CHECKED);
 
             /*
-             * Enable the 'update' radio button and text only if we have
+             * Enable the "Update" radio button and text only if we have
              * available NT installations, otherwise disable them.
              */
             if (pSetupData->NtOsInstallsList &&
@@ -2926,8 +2930,8 @@ _tWinMain(HINSTANCE hInst,
         /* Create the upgrade/repair selection page */
         psp.dwSize = sizeof(PROPSHEETPAGE);
         psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
-        psp.pszHeaderTitle = MAKEINTRESOURCEW(IDS_TYPETITLE);
-        psp.pszHeaderSubTitle = MAKEINTRESOURCEW(IDS_TYPESUBTITLE);
+        psp.pszHeaderTitle = MAKEINTRESOURCEW(IDS_UPDATETITLE);
+        psp.pszHeaderSubTitle = MAKEINTRESOURCEW(IDS_UPDATESUBTITLE);
         psp.hInstance = hInst;
         psp.lParam = (LPARAM)&SetupData;
         psp.pfnDlgProc = UpgradeRepairDlgProc;
