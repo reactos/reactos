@@ -121,13 +121,14 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Kończenie instalacji ReactOS"
+CAPTION "Instalator ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Kończenie pracy Kreatora instalacji systemu ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Instalacja systemu ReactOS została pomyślnie zakończona.\n\nKliknij przycisk Zakończ, aby ponownie uruchomić komputer.", IDC_STATIC, 115, 40, 195, 100
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Upewnij się, że w napędach CD/DVD nie pozostał żaden dysk. Jeśli tak, to wyjmij go przed ponownym uruchomieniem komputera.", IDC_STATIC, 115, 165, 196, 24
+    LTEXT "Instalacja systemu ReactOS została pomyślnie zakończona.\n\nUpewnij się, że w napędach CD nie pozostał żaden dysk. Jeśli tak, to wyjmij go przed ponownym uruchomieniem komputera.", IDC_STATIC, 115, 40, 195, 50
+    LTEXT "Your computer will automatically restart in 15 seconds or when you click Restart. To halt the automatic countdown and manually restart at a later time, click on Stop countdown.", IDC_STATIC, 115, 90, 195, 42
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
+    PUSHBUTTON "&Stop countdown", IDC_STOP_COUNTDOWN, 175, 155, 68, 14
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230

@@ -129,13 +129,14 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Kompletimi i Ndërtuesit ReactOS"
+CAPTION "Ndërto ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Kompletimi i Magjistarit Ndërtues të ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Ju keni përfunduar me sukses Ndërtuesin e ReactOS.\n\nKur ju klikoni Mbaro, kompjuteri juaj do të rifillojë.", IDC_STATIC, 115, 40, 195, 100
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Nëse ka një CD në drive, hiqni atë. Pastaj, për të rinisur kompjuterin tuaj, klikoni Mbaroj.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Ju keni përfunduar me sukses Ndërtuesin e ReactOS.\n\nNëse ka një CD në drive, hiqni atë. Pastaj, për të rinisur kompjuterin tuaj, klikoni Mbaroj.", IDC_STATIC, 115, 40, 195, 50
+    LTEXT "Your computer will automatically restart in 15 seconds or when you click Restart. To halt the automatic countdown and manually restart at a later time, click on Stop countdown.", IDC_STATIC, 115, 90, 195, 42
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
+    PUSHBUTTON "&Stop countdown", IDC_STOP_COUNTDOWN, 175, 155, 68, 14
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230

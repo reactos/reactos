@@ -128,13 +128,14 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "रिऐक्ट ओएस सेटअप पूरा करना"
+CAPTION "रिऐक्ट ओएस सेटअप"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "रिऐक्ट ओएस सेटअप विज़ार्ड को पूरा करना", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "आपने रिऐक्ट ओएस सेटअप को सफलतापूर्वक पूरा कर लिया है।\n\nजब आप समाप्त पर क्लिक करते हैं, तो आपका कंप्यूटर रीस्टॉर्ट हो जाएगा।", IDC_STATIC, 115, 40, 195, 100
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "यदि किसी ड्राइव में एक सीडी है, तो उसे हटा दें। फिर, अपने कंप्यूटर को रीस्टॉर्ट करने के लिए, समाप्त पर क्लिक करें।", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "आपने रिऐक्ट ओएस सेटअप को सफलतापूर्वक पूरा कर लिया है।\n\nयदि किसी ड्राइव में एक सीडी है, तो उसे हटा दें। फिर, अपने कंप्यूटर को रीस्टॉर्ट करने के लिए, समाप्त पर क्लिक करें।", IDC_STATIC, 115, 40, 195, 50
+    LTEXT "Your computer will automatically restart in 15 seconds or when you click Restart. To halt the automatic countdown and manually restart at a later time, click on Stop countdown.", IDC_STATIC, 115, 90, 195, 42
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
+    PUSHBUTTON "&Stop countdown", IDC_STOP_COUNTDOWN, 175, 155, 68, 14
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230

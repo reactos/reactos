@@ -128,13 +128,14 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Dovršavanje ReactOS instalacije"
+CAPTION "ReactOS Instalacija"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Dovršavanje ReactOS instalacije", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Uspješno ste dovršili postavljanje ReactOS-a.\n\nKada kliknete Završi, vaše će se računalo ponovno pokrenuti.", IDC_STATIC, 115, 40, 195, 100
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Ako se u priključku nalazi CD ili USB, uklonite ga. Zatim, za ponovno pokretanje računala, kliknite Završi.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Uspješno ste dovršili postavljanje ReactOS-a.\n\nAko se u priključku nalazi CD, uklonite ga. Zatim, za ponovno pokretanje računala, kliknite Završi.", IDC_STATIC, 115, 40, 195, 50
+    LTEXT "Your computer will automatically restart in 15 seconds or when you click Restart. To halt the automatic countdown and manually restart at a later time, click on Stop countdown.", IDC_STATIC, 115, 90, 195, 42
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
+    PUSHBUTTON "&Stop countdown", IDC_STOP_COUNTDOWN, 175, 155, 68, 14
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230

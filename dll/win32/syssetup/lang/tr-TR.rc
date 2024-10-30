@@ -130,13 +130,14 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Kurulumunun Tamamlanması"
+CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "ReactOS Kurulum Sihirbazı, Kurulumu Tamamladı", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "ReactOS Kurulumu başarı ile tamamlandı.\n\nBitir'e tıkladığınızda bilgisayarınız yeniden başlatılacaktır.", IDC_STATIC, 115, 40, 195, 100
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Eğer bir sürücüde herhangi bir CD veya USB bellek varsa, onu çıkarınız. Sonra bilgisayarınızı yeniden başlatmak için Bitir'e tıklayınız.", IDC_STATIC, 115, 169, 195, 30
+    LTEXT "ReactOS Kurulumu başarı ile tamamlandı.\n\nEğer bir sürücüde herhangi bir CD varsa, onu çıkarınız. Sonra bilgisayarınızı yeniden başlatmak için Bitir'e tıklayınız.", IDC_STATIC, 115, 40, 195, 50
+    LTEXT "Your computer will automatically restart in 15 seconds or when you click Restart. To halt the automatic countdown and manually restart at a later time, click on Stop countdown.", IDC_STATIC, 115, 90, 195, 42
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
+    PUSHBUTTON "&Stop countdown", IDC_STOP_COUNTDOWN, 175, 155, 68, 14
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230

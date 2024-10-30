@@ -2456,7 +2456,6 @@ FinishDlgProc(HWND hwndDlg,
               WPARAM wParam,
               LPARAM lParam)
 {
-
     switch (uMsg)
     {
         case WM_INITDIALOG:
@@ -2482,8 +2481,8 @@ FinishDlgProc(HWND hwndDlg,
                 SetInstallationCompleted();
                 PostQuitMessage(0);
             }
+            break;
         }
-        break;
 
         case WM_DESTROY:
         {
@@ -2508,8 +2507,8 @@ FinishDlgProc(HWND hwndDlg,
             {
                 SendMessage(hWndProgress, PBM_SETPOS, Position + 1, 0);
             }
+            return TRUE;
         }
-        return TRUE;
 
         case WM_NOTIFY:
         {
@@ -2534,8 +2533,31 @@ FinishDlgProc(HWND hwndDlg,
                 default:
                     break;
             }
+            break;
         }
-        break;
+
+        case WM_COMMAND:
+        {
+            if (HIWORD(wParam) != BN_CLICKED)
+                break;
+
+            switch (LOWORD(wParam))
+            {
+            case IDC_STOP_COUNTDOWN:
+            {
+                /* Stop the shutdown countdown */
+                KillTimer(hwndDlg, 1);
+
+                /* Hide and disable the countdown gauge and the "Stop Countdown" button */
+                EnableWindow(GetDlgItem(hwndDlg, IDC_RESTART_PROGRESS), FALSE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_STOP_COUNTDOWN), FALSE);
+                ShowWindow(GetDlgItem(hwndDlg, IDC_RESTART_PROGRESS), SW_HIDE);
+                ShowWindow(GetDlgItem(hwndDlg, IDC_STOP_COUNTDOWN), SW_HIDE);
+                break;
+            }
+            }
+            break;
+        }
 
         default:
             break;

@@ -130,13 +130,14 @@ END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "正在完成 ReactOS 安裝程式"
+CAPTION "ReactOS 安裝程式"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "正在完成 ReactOS 安裝程式。", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "ReactOS 安裝程式已順利完成。\n\n按下［完成］後，您的電腦將會重新啟動。", IDC_STATIC, 115, 40, 195, 100
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "如果光碟機裡還有光碟，請將其取出。然後按［完成］，重新啟動您的電腦。", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "正在完成 ReactOS 安裝程式", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "ReactOS 安裝程式已順利完成。\n\n如果光碟機裡還有光碟，請將其取出。然後按［完成］，重新啟動您的電腦。", IDC_STATIC, 115, 40, 195, 50
+    LTEXT "Your computer will automatically restart in 15 seconds or when you click Restart. To halt the automatic countdown and manually restart at a later time, click on Stop countdown.", IDC_STATIC, 115, 90, 195, 42
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
+    PUSHBUTTON "&Stop countdown", IDC_STOP_COUNTDOWN, 175, 155, 68, 14
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230

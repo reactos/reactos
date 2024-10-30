@@ -78,6 +78,7 @@
 #define IDD_FINISHPAGE        1080
 #define IDC_FINISHTITLE       1081
 #define IDC_RESTART_PROGRESS  1082
+#define IDC_STOP_COUNTDOWN    1083
 
 #define IDD_THEMEPAGE         1090
 #define IDC_THEMEPICKER       1091
