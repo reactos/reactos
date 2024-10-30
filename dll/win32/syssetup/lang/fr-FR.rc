@@ -5,7 +5,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bienvenue dans l'assistant d'installation de ReactOS", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Bienvenue dans l'Assistant Installation de ReactOS", IDC_WELCOMETITLE, 115, 8, 195, 24
     LTEXT "Cet assistant installe ReactOS sur votre ordinateur.\nIl a besoin de certaines informations sur vous et votre ordinateur pour configurer ReactOS correctement.", IDC_STATIC, 115, 40, 195, 50
     LTEXT "Cliquez sur Suivant pour continuer l'installation.", IDC_STATIC, 115, 169, 195, 17
 END
@@ -128,10 +128,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "L'assistant d'installation de ReactOS est terminé.", IDC_FINISHTITLE, 115, 9, 195, 37
-    LTEXT "Vous avez installé avec succès ReactOS.\n\nEn cliquant sur Terminer, votre ordinateur va redémarrer.", IDC_STATIC, 115, 58, 195, 100
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "S'il y a un CD dans un lecteur, enlevez-le. Puis, pour redémarrer votre ordinateur, cliquez sur Terminer.", IDC_STATIC, 115, 160, 195, 31
+    LTEXT "L'Assistant Installation de ReactOS est terminé", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "Vous avez installé ReactOS avec succès.\n\nS'il y a un CD dans un lecteur, retirez le. Pour redémarrer votre ordinateur, cliquez sur Terminer.", IDC_STATIC, 115, 40, 195, 48
+    LTEXT "Votre ordinateur va redémarrer automatiquement dans 15 secondes.", IDC_STATIC, 115, 110, 195, 24
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 135, 188, 12
 END
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
