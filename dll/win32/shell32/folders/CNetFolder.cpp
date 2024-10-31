@@ -207,6 +207,33 @@ BOOL CNetFolderEnum::CreateMyCompEnumList(DWORD dwFlags)
     return bRet;
 }
 
+/**************************************************************************
+ * CNetFolder background context menu
+ */
+static HRESULT CALLBACK CNetFolderBackgroundMenuCB(IShellFolder *psf, HWND hwnd, IDataObject *pdtobj,
+                                                   UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    enum { IDC_PROPERTIES };
+    if (uMsg == DFM_INVOKECOMMAND && wParam == IDC_PROPERTIES)
+    {
+        return SHELL_ExecuteControlPanelCPL(hwnd, L"ncpa.cpl") ? S_OK : E_FAIL;
+    }
+    else if (uMsg == DFM_MERGECONTEXTMENU) // TODO: DFM_MERGECONTEXTMENU_BOTTOM
+    {
+        QCMINFO *pqcminfo = (QCMINFO*)lParam;
+        HMENU hpopup = CreatePopupMenu();
+        _InsertMenuItemW(hpopup, 0, TRUE, IDC_PROPERTIES, MFT_STRING, MAKEINTRESOURCEW(IDS_PROPERTIES), MFS_ENABLED);
+        pqcminfo->idCmdFirst = Shell_MergeMenus(pqcminfo->hmenu, hpopup, pqcminfo->indexMenu, pqcminfo->idCmdFirst, pqcminfo->idCmdLast, MM_ADDSEPARATOR);
+        DestroyMenu(hpopup);
+        return S_OK;
+    }
+    return SHELL32_DefaultContextMenuCallBack(psf, pdtobj, uMsg);
+}
+
+/**************************************************************************
+ * CNetFolder
+ */
+
 CNetFolder::CNetFolder()
 {
     pidlRoot = NULL;
@@ -330,8 +357,8 @@ HRESULT WINAPI CNetFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID 
     }
     else if (IsEqualIID(riid, IID_IContextMenu))
     {
-        WARN("IContextMenu not implemented\n");
-        hr = E_NOTIMPL;
+        hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, 0, NULL, this, CNetFolderBackgroundMenuCB,
+                                    0, NULL, (IContextMenu**)ppvOut);
     }
     else if (IsEqualIID(riid, IID_IShellView))
     {
