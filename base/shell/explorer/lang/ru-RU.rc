@@ -219,4 +219,5 @@ BEGIN
     IDS_RESTORE_ALL "&Показать окна"
     IDS_TRAYWND_UNDO_CASCADE "&Отменить Каскадом"
     IDS_TRAYWND_UNDO_TILE "&Отменить Окна рядом"
+    IDS_TRAYDESKBTN_TOOLTIP "Show Desktop/Windows"
 END

@@ -219,4 +219,5 @@ BEGIN
     IDS_RESTORE_ALL "&Mostrar ventanas abiertas"
     IDS_TRAYWND_UNDO_CASCADE "&Undo Cascade"
     IDS_TRAYWND_UNDO_TILE "&Undo Tile"
+    IDS_TRAYDESKBTN_TOOLTIP "Show Desktop/Windows"
 END

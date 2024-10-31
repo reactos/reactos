@@ -217,4 +217,5 @@ BEGIN
     IDS_RESTORE_ALL "&Mostrar janelas abertas"
     IDS_TRAYWND_UNDO_CASCADE "Desfazer &cascata"
     IDS_TRAYWND_UNDO_TILE "Desfazer &lado a lado"
+    IDS_TRAYDESKBTN_TOOLTIP "Show Desktop/Windows"
 END

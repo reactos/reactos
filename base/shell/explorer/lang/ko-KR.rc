@@ -216,4 +216,5 @@ BEGIN
     IDS_RESTORE_ALL "열린 창 보기(&S)"
     IDS_TRAYWND_UNDO_CASCADE "&Undo Cascade"
     IDS_TRAYWND_UNDO_TILE "&Undo Tile"
+    IDS_TRAYDESKBTN_TOOLTIP "Show Desktop/Windows"
 END

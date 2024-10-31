@@ -105,6 +105,7 @@
 #define IDS_RESTORE_ALL                    811
 #define IDS_TRAYWND_UNDO_CASCADE           812
 #define IDS_TRAYWND_UNDO_TILE              813
+#define IDS_TRAYDESKBTN_TOOLTIP            814
 
 /* These values must be synchronized with shell32 */
 #define IDS_ADVANCED_DISPLAY_FAVORITES              30466
