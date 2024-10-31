@@ -3906,7 +3906,7 @@ GetSeparateDebugHeader (
 // I tried to immitate the output of w32dasm disassembler.
 // which is a pretty good program.
 // but I am disappointed with this program and I myself
-// am writting a disassembler.
+// am writing a disassembler.
 // This PEdump program is a byproduct of that project.
 // so enjoy this program and I hope we will have a little more
 // knowledge on windows programming world.

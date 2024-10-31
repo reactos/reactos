@@ -4047,7 +4047,7 @@ RxCommonWrite(
         return STATUS_INVALID_PARAMETER;
     }
 
-    /* Are we writting to EOF? */
+    /* Are we writing to EOF? */
     WriteToEof = ((ByteOffset.LowPart == FILE_WRITE_TO_END_OF_FILE) && (ByteOffset.HighPart == -1));
     /* FIXME: validate length/offset */
 
