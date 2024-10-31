@@ -8,8 +8,18 @@ CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bienvenue dans l'assistant d'installation de ReactOS", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "Vous ne pouvez pas encore installer ReactOS directement depuis ce CD ! Veuillez redémarrer votre ordinateur depuis ce CD pour pouvoir installer ReactOS.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Cliquez sur Terminer pour quitter l'installation.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Cet assistant installe ou met à niveau ReactOS sur votre ordinateur, \
+et prépare la seconde étape d'installation.", IDC_STATIC, 115, 40, 195, 27
+////
+    GROUPBOX " INFORMATION IMPORTANTE ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
+    LTEXT "ReactOS est en version Alpha : il n'est pas complet et est \
+en cours de développement. Il est conseillé de ne l'utiliser \
+que pour évaluation et test, pas pour un usage quotidien.\n\
+Il peut corrompre vos données ou endommager votre matériel.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
+    LTEXT "Sauvegardez vos données ou testez sur un ordinateur secondaire \
+si vous souhaitez utiliser ReactOS sur du matériel.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
+////
+    LTEXT "Cliquez sur Suivant pour continuer l'installation.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143

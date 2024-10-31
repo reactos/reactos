@@ -17,6 +17,9 @@
 /* Dialogs */
 #define IDD_STARTPAGE        2000
 #define IDC_STARTTITLE       2001
+#define IDC_WARNTEXT1        2002   // TEMPTEMP: TODO: Remove once we reach 0.5/Beta :)
+#define IDC_WARNTEXT2        2003   // TEMPTEMP: TODO: Remove once we reach 0.5/Beta :)
+#define IDC_WARNTEXT3        2004   // TEMPTEMP: TODO: Remove once we reach 0.5/Beta :)
 
 #define IDD_TYPEPAGE         2010
 #define IDC_INSTALL          2011

@@ -51,6 +51,9 @@
 #define ShowDlgItem(hDlg, nID, nCmdShow)    \
     ShowWindow(GetDlgItem((hDlg), (nID)), (nCmdShow))
 
+#define SetDlgItemFont(hDlg, nID, hFont, bRedraw)   \
+    SetWindowFont(GetDlgItem((hDlg), (nID)), (hFont), (bRedraw))
+
 /* These are public names and values determined from MFC, and compatible with Windows */
 // Property Sheet control id's (determined with Spy++)
 #define IDC_TAB_CONTROL                 0x3020
@@ -134,6 +137,7 @@ typedef struct _SETUPDATA
     BOOL bUnattend;
 
     HFONT hTitleFont;
+    HFONT hBoldFont;
 
     HANDLE hInstallThread;
     HANDLE hHaltInstallEvent;

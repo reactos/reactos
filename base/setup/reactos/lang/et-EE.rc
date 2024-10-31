@@ -8,8 +8,18 @@ CAPTION "ReactOS'i paigaldamine"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Tere tulemast ReactOS'i paigaldamus viisardisse", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "Selle CD pealt ei saa praegu veel ReactOS'i paigaldada! ReactOS'i paigaldamiseks on tarvis arvuti taaskäivitada selle CD-ga.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Vajuta lõpeta, et installeerimine lõpetada.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "This wizard will install or upgrade ReactOS on your computer, \
+and prepare the second part of the setup.", IDC_STATIC, 115, 40, 195, 27
+////
+    GROUPBOX " IMPORTANT INFORMATION ", IDC_WARNTEXT1, 115, 70, 195, 90, BS_CENTER
+    LTEXT "ReactOS is in Alpha stage: it is not feature- complete and is \
+under heavy development. It is recommended to use it only for \
+evaluation and testing and not as your daily-usage OS.\n\
+It may corrupt your data or damage your hardware.", IDC_WARNTEXT2, 120, 80, 185, 50, SS_CENTER
+    LTEXT "Backup your data or test on a secondary computer \
+if you attempt to run ReactOS on real hardware.", IDC_WARNTEXT3, 120, 130, 185, 27, SS_CENTER
+////
+    LTEXT "Vajuta Edasi paigaldamise jätkamiseks.", IDC_STATIC, 115, 169, 195, 17
 END
 
 IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
