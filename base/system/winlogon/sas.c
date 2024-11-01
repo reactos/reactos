@@ -19,7 +19,6 @@
 #include <mmsystem.h>
 #include <userenv.h>
 #include <ndk/setypes.h>
-#include <ndk/sefuncs.h>
 
 /* GLOBALS ******************************************************************/
 
@@ -1313,18 +1312,17 @@ SASWindowProc(
         }
         case WM_CREATE:
         {
-            /* Get the session pointer from the create data */
+            /* Get the session pointer from the create data and save it */
             Session = (PWLSESSION)((LPCREATESTRUCT)lParam)->lpCreateParams;
-
-            /* Save the Session pointer */
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)Session);
-            if (GetSetupType())
+
+            if (IsNonOOBESetup(g_setupType))
                 return TRUE;
             return RegisterHotKeys(Session, hwndDlg);
         }
         case WM_DESTROY:
         {
-            if (!GetSetupType())
+            if (!IsNonOOBESetup(g_setupType))
                 UnregisterHotKeys(Session, hwndDlg);
             return TRUE;
         }

@@ -213,7 +213,8 @@ Cabinet=reactos.cab
 
 [SetupData]
 DefaultPath = \ReactOS
-SetupDebugOptions = "/DEBUG /KDSERIAL /DEBUGPORT=COM1 /FIRSTCHANCE"
+;SetupDebugOptions = "/DEBUG /KDSERIAL /DEBUGPORT=COM1 /FIRSTCHANCE"
+SetupDebugOptions = "/DEBUG /DEBUGPORT=VBOX /FIRSTCHANCE"
 ;SetupDebugOptions = "/DEBUG /SOS /DEBUGPORT=SCREEN"
 OsLoadOptions = "/FASTDETECT /NOGUIBOOT /NODEBUG"
 
@@ -221,8 +222,10 @@ OsLoadOptions = "/FASTDETECT /NOGUIBOOT /NODEBUG"
 AnsiCodepage     = c_1252.nls
 OemCodepage      = c_437.nls
 UnicodeCasetable = l_intl.nls
-DefaultLayout    = 00000409
-DefaultLanguage  = 00000409
+;DefaultLayout    = 00000409
+DefaultLayout    = 0000041A
+;DefaultLanguage  = 00000409
+DefaultLanguage  = 0000040C
 
 [Computer.NTx86]
 pci_up = "Standard PC Uniprocessor"
