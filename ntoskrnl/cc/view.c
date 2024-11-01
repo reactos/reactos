@@ -162,38 +162,32 @@ CcRosTraceCacheMap (
 
 static
 NTSTATUS
-CcRosDeleteFileCache (
-    PFILE_OBJECT FileObject,
-    PROS_SHARED_CACHE_MAP SharedCacheMap,
-    PKIRQL OldIrql)
+CcRosDeleteFileCache(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PROS_SHARED_CACHE_MAP SharedCacheMap,
+    _Inout_ PKIRQL OldIrql)
 /*
  * FUNCTION: Releases the shared cache map associated with a file object
  */
 {
-    PLIST_ENTRY current_entry;
+    PLIST_ENTRY CurrentEntry;
 
     ASSERT(SharedCacheMap);
     ASSERT(SharedCacheMap == FileObject->SectionObjectPointer->SharedCacheMap);
     ASSERT(SharedCacheMap->OpenCount == 0);
 
-    /* Remove all VACBs from the global lists */
     KeAcquireSpinLockAtDpcLevel(&SharedCacheMap->CacheMapLock);
-    current_entry = SharedCacheMap->CacheMapVacbListHead.Flink;
-    while (current_entry != &SharedCacheMap->CacheMapVacbListHead)
+
+    /* Remove all VACBs from the global list */
+    CurrentEntry = SharedCacheMap->CacheMapVacbListHead.Flink;
+    while (CurrentEntry != &SharedCacheMap->CacheMapVacbListHead)
     {
-        PROS_VACB Vacb = CONTAINING_RECORD(current_entry, ROS_VACB, CacheMapVacbListEntry);
+        PROS_VACB Vacb = CONTAINING_RECORD(CurrentEntry, ROS_VACB, CacheMapVacbListEntry);
 
         RemoveEntryList(&Vacb->VacbLruListEntry);
         InitializeListHead(&Vacb->VacbLruListEntry);
 
-        if (Vacb->Dirty)
-        {
-            CcRosUnmarkDirtyVacb(Vacb, FALSE);
-            /* Mark it as dirty again so we know that we have to flush before freeing it */
-            Vacb->Dirty = TRUE;
-        }
-
-        current_entry = current_entry->Flink;
+        CurrentEntry = CurrentEntry->Flink;
     }
 
     /* Make sure there is no trace anymore of this map */
@@ -203,6 +197,20 @@ CcRosDeleteFileCache (
     KeReleaseSpinLockFromDpcLevel(&SharedCacheMap->CacheMapLock);
     KeReleaseQueuedSpinLock(LockQueueMasterLock, *OldIrql);
 
+    /* Flush dirty data to disk, if needed */
+    if (SharedCacheMap->DirtyPages != 0)
+    {
+        IO_STATUS_BLOCK FlushIosb;
+
+        CcpFlushFileCache(SharedCacheMap, NULL, 0, FALSE, &FlushIosb);
+
+        if (!NT_SUCCESS(FlushIosb.Status))
+        {
+            /* Complain. There's not much we can do */
+            DPRINT1("Failed to flush dirty data to disk while deleting the file cache. Status: 0x%08x\n", FlushIosb.Status);
+        }
+    }
+
     /* Now that we're out of the locks, free everything for real */
     while (!IsListEmpty(&SharedCacheMap->CacheMapVacbListHead))
     {
@@ -211,21 +219,6 @@ CcRosDeleteFileCache (
 
         InitializeListHead(&Vacb->CacheMapVacbListEntry);
 
-        /* Flush to disk, if needed */
-        if (Vacb->Dirty)
-        {
-            IO_STATUS_BLOCK Iosb;
-            NTSTATUS Status;
-
-            Status = MmFlushSegment(FileObject->SectionObjectPointer, &Vacb->FileOffset, VACB_MAPPING_GRANULARITY, &Iosb);
-            if (!NT_SUCCESS(Status))
-            {
-                /* Complain. There's not much we can do */
-                DPRINT1("Failed to flush VACB to disk while deleting the cache entry. Status: 0x%08x\n", Status);
-            }
-            Vacb->Dirty = FALSE;
-        }
-
         RefCount = CcRosVacbDecRefCount(Vacb);
 #if DBG // CORE-14578
         if (RefCount != 0)
@@ -233,7 +226,6 @@ CcRosDeleteFileCache (
             DPRINT1("Leaking VACB %p attached to %p (%I64d)\n", Vacb, FileObject, Vacb->FileOffset.QuadPart);
             DPRINT1("There are: %d references left\n", RefCount);
             DPRINT1("Map: %d\n", Vacb->MappedCount);
-            DPRINT1("Dirty: %d\n", Vacb->Dirty);
             if (FileObject->FileName.Length != 0)
             {
                 DPRINT1("File was: %wZ\n", &FileObject->FileName);
@@ -249,8 +241,10 @@ CcRosDeleteFileCache (
     }
 
     /* Release the references we own */
-    if(SharedCacheMap->Section)
+    if (SharedCacheMap->Section)
+    {
         ObDereferenceObject(SharedCacheMap->Section);
+    }
     ObDereferenceObject(SharedCacheMap->FileObject);
 
     ExFreeToNPagedLookasideList(&SharedCacheMapLookasideList, SharedCacheMap);
