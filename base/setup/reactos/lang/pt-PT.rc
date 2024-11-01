@@ -122,25 +122,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Tipo de Instalação:", IDC_STATIC, 18, 5, 74, 11
-    EDITTEXT IDC_INSTALLTYPE, 95, 4, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Instalação fonte:", IDC_STATIC, 18, 17, 74, 11
-    EDITTEXT IDC_INSTALLSOURCE, 95, 16, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Arquitectura:", IDC_STATIC, 18, 29, 74, 11
-    EDITTEXT IDC_ARCHITECTURE, 95, 28, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Computador:", IDC_STATIC, 18, 41, 74, 11
-    EDITTEXT IDC_COMPUTER, 95, 40, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Monitor:", IDC_STATIC, 18, 53, 74, 11
-    EDITTEXT IDC_DISPLAY, 95, 52, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Teclado:", IDC_STATIC, 18, 65, 74, 11
-    EDITTEXT IDC_KEYBOARD, 95, 64, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Volume:", IDC_STATIC, 18, 77, 74, 11
-    EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Directório de destino:", IDC_STATIC, 18, 89, 74, 11
-    EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    AUTOCHECKBOX "Confirmo que todas as definições de  instalação estão correctas. Também reconheço que\no ReactOS é um software de qualidade Alpha e pode parar o meu computador ou corromper os meus dados.",
-        IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE
-    LTEXT "Por favor confirme que todas as definições de  instalação estão correctas,\nde seguida clique em Instalar para iniciar o processo de instalação.", IDC_STATIC, 7, 124, 303, 18
+    LTEXT "Verify the installation settings and confirm them if they are all correct. If you want to change any, click Back. \
+Finally, click on Install to start the installation.", IDC_STATIC, 7, 4, 303, 18
+    EDITTEXT IDC_EDIT_SUMMARY, 7, 25, 303, 100, ES_READONLY | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | WS_VSCROLL | WS_HSCROLL /*| NOT WS_BORDER*/ | NOT WS_TABSTOP
+    AUTOCHECKBOX "All the installation settings are correct", IDC_CONFIRM_INSTALL, 7, 130, 303, 10
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
@@ -178,8 +163,8 @@ BEGIN
     IDS_DEVICESUBTITLE "Definir as configurações de monitor e teclado."
     IDS_DRIVETITLE "Configurar a partição de instalação e pasta do sistema"
     IDS_DRIVESUBTITLE "A preparar a partição de instalação, pasta do sistema e bootloader."
-    IDS_SUMMARYTITLE "Sumário de Instalação"
-    IDS_SUMMARYSUBTITLE "Listar propriedades da instalação para verificação antes de aplicá-las na instalação dos despositivos."
+    IDS_SUMMARYTITLE "Ready to Install"
+    IDS_SUMMARYSUBTITLE "ReactOS is now ready to be installed on your computer."
     IDS_PROCESSTITLE "Preparar partição, copiar arquivos e configurar sistema"
     IDS_PROCESSSUBTITLE "Criar e formatar partição, copiar arquivos, instalar e configurar bootloader."
     IDS_ABORTSETUP "ReactOS não está totalmente instalado no seu computador. Se sair da Instalação agora, para instalar o ReactOS precisará executar o Instalador novamente. Tem certeza que deseja sair?"
@@ -214,6 +199,22 @@ BEGIN
     IDS_BOOTLOADER_SYSTEM "System partition (Default)"
     IDS_BOOTLOADER_MBRVBR "MBR e VBR (Default)"
     IDS_BOOTLOADER_VBRONLY "Apenas VBR"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NEWINSTALL "New ReactOS installation"
+    IDS_UPGRADEINSTALL "Upgrading/Repairing ""%s"" from vendor ""%s"""
+    IDS_ARCHITECTURE "Arquitectura:"
+    IDS_COMPUTER "Computador:"
+    IDS_DESTINATION "Destino:"
+    IDS_INSTALLSOURCE "Instalação fonte:"
+    IDS_DEVICES "Devices:"
+    IDS_DISPLAY "Monitor:"
+    IDS_KEYBOARD "Teclado:"
+    IDS_LAYOUT "Layout:"
+    IDS_INSTALLTASKS "Installation tasks:"
+    IDS_UPGRADETASKS "Upgrade tasks:"
 END
 
 /* Progress Strings */

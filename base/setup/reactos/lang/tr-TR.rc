@@ -129,25 +129,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Kur"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Kurulum türü:", IDC_STATIC, 18, 5, 74, 11
-    EDITTEXT IDC_INSTALLTYPE, 95, 4, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Kurulum kaynağı:", IDC_STATIC, 18, 17, 74, 11
-    EDITTEXT IDC_INSTALLSOURCE, 95, 16, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Mimari:", IDC_STATIC, 18, 29, 74, 11
-    EDITTEXT IDC_ARCHITECTURE, 95, 28, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Bilgisayar:", IDC_STATIC, 18, 41, 74, 11
-    EDITTEXT IDC_COMPUTER, 95, 40, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Ekran:", IDC_STATIC, 18, 53, 74, 11
-    EDITTEXT IDC_DISPLAY, 95, 52, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Klavye:", IDC_STATIC, 18, 65, 74, 11
-    EDITTEXT IDC_KEYBOARD, 95, 64, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Hedef disk bölümü:", IDC_STATIC, 18, 77, 74, 11
-    EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Hedef dizin:", IDC_STATIC, 18, 89, 74, 11
-    EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    AUTOCHECKBOX "Bütün kurulum ayarlarının doğru olduğunu onaylıyorum. Ayrıca, ReactOS'un alfa durumunda yazılım olduğunu ve bilgisayarımı bozacağını veya verilerimi bozacağını kabul ediyorum.",
-        IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE
-    LTEXT "Lütfen bütün kurulum ayarlarının doğru olduğundan emin olunuz,\nardından kurulum işlemine başlamak için Kur'a tıklayınız.", IDC_STATIC, 7, 124, 303, 18
+    LTEXT "Verify the installation settings and confirm them if they are all correct. If you want to change any, click Back. \
+Finally, click on Install to start the installation.", IDC_STATIC, 7, 4, 303, 18
+    EDITTEXT IDC_EDIT_SUMMARY, 7, 25, 303, 100, ES_READONLY | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | WS_VSCROLL | WS_HSCROLL /*| NOT WS_BORDER*/ | NOT WS_TABSTOP
+    AUTOCHECKBOX "All the installation settings are correct", IDC_CONFIRM_INSTALL, 7, 130, 303, 10
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
@@ -185,8 +170,8 @@ BEGIN
     IDS_DEVICESUBTITLE "Ekran ve Klavye ayarlarını yapınız."
     IDS_DRIVETITLE "Kurulum Bölümünün ve Sistem Dizininin Hazırlanması"
     IDS_DRIVESUBTITLE "Kurulum bölümünü, sistem dizinini ve önyükleyiciyi hazırlayınız."
-    IDS_SUMMARYTITLE "Kurulum Özeti"
-    IDS_SUMMARYSUBTITLE "Kurulumdan aygıtına uygulanmadan önce gözden geçirmek için listelenen kurulum seçenekleri."
+    IDS_SUMMARYTITLE "Ready to Install"
+    IDS_SUMMARYSUBTITLE "ReactOS is now ready to be installed on your computer."
     IDS_PROCESSTITLE "Bölümün Biçimlendirilmesi, Dosyaların Kopyalanması ve Önyükleyicinin Kurulması"
     IDS_PROCESSSUBTITLE "Bölüm oluşturuluyor ve biçimlendiriliyor, dosyalar kopyalanıyor, önyükleyici kuruluyor ve hazırlanıyor."
     IDS_ABORTSETUP "ReactOS, bilgisayarınıza tümüyle kurulamadı. Eğer şimdi Kurulum Yöneticisinden çıkarsanız, ReactOS'u kurmak için Kurulum Yöneticisini yeniden çalıştırmayı isteybilirsiniz. Gerçekten çıkılsın mı?"
@@ -221,6 +206,22 @@ BEGIN
     IDS_BOOTLOADER_SYSTEM "System partition (Default)"
     IDS_BOOTLOADER_MBRVBR "MBR ve VBR (Default)"
     IDS_BOOTLOADER_VBRONLY "Yalnızca VBR"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NEWINSTALL "New ReactOS installation"
+    IDS_UPGRADEINSTALL "Upgrading/Repairing ""%s"" from vendor ""%s"""
+    IDS_ARCHITECTURE "Mimari:"
+    IDS_COMPUTER "Bilgisayar:"
+    IDS_DESTINATION "Hedef:"
+    IDS_INSTALLSOURCE "Kurulum kaynağı:"
+    IDS_DEVICES "Devices:"
+    IDS_DISPLAY "Ekran:"
+    IDS_KEYBOARD "Klavye:"
+    IDS_LAYOUT "Layout:"
+    IDS_INSTALLTASKS "Installation tasks:"
+    IDS_UPGRADETASKS "Upgrade tasks:"
 END
 
 /* Progress Strings */

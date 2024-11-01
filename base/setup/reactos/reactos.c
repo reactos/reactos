@@ -125,6 +125,35 @@ CreateTitleFont(
     return CreateBoldFont(hOrigFont, 12);
 }
 
+VOID
+ResPrintfVW(
+    _Out_ PWSTR pszDest,
+    _In_ size_t cchDest,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ UINT uID,
+    _In_ va_list args)
+{
+    WCHAR ResBuffer[256];
+    LoadStringW(hInstance, uID, ResBuffer, _countof(ResBuffer));
+    StringCchVPrintfW(pszDest, cchDest, ResBuffer, args);
+}
+
+VOID
+__cdecl
+ResPrintfW(
+    _Out_ PWSTR pszDest,
+    _In_ size_t cchDest,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ UINT uID,
+    ...)
+{
+    va_list args;
+
+    va_start(args, uID);
+    ResPrintfVW(pszDest, cchDest, hInstance, uID, args);
+    va_end(args);
+}
+
 INT
 DisplayMessageV(
     _In_opt_ HWND hWnd,
@@ -284,11 +313,8 @@ SetWindowResPrintfVW(
     _In_ UINT uID,
     _In_ va_list args)
 {
-    WCHAR ResBuffer[256];
     WCHAR szText[256];
-
-    LoadStringW(hInstance, uID, ResBuffer, _countof(ResBuffer));
-    StringCchVPrintfW(szText, _countof(szText), ResBuffer, args);
+    ResPrintfVW(szText, _countof(szText), hInstance, uID, args);
     SetWindowTextW(hWnd, szText);
 }
 
@@ -1056,6 +1082,173 @@ DeviceDlgProc(
     return FALSE;
 }
 
+void
+AppendTextToEditCtrl(
+    _In_ HWND hWndEdit,
+    _In_ PCTSTR pszText)
+{
+   int nLength = Edit_GetTextLength(hWndEdit);
+   // Optional: Save original selection with Edit_GetSel()
+   Edit_SetSel(hWndEdit, nLength, nLength);
+   Edit_ReplaceSel(hWndEdit, pszText);
+   // Optional: Restore original selection with Edit_SetSel()
+}
+
+void
+AppendItemToSummary(
+    _In_ HWND hWndEdit,
+    _In_opt_ HINSTANCE hInstance,
+    _In_opt_ PCTSTR pszTitle,
+    _In_opt_ PCTSTR pszItemName,
+    _In_opt_ PCTSTR pszText)
+{
+    WCHAR szText[256];
+    // WCHAR szText2[256];
+    WCHAR CurrentItemText[256];
+
+    if (pszTitle)
+    {
+        if (IS_INTRESOURCE(pszTitle))
+        {
+            LoadStringW(hInstance, PtrToUlong(pszTitle),
+                        szText, _countof(szText));
+            pszTitle = szText;
+        }
+        StringCchPrintfW(CurrentItemText, _countof(CurrentItemText),
+                         L"%s\r\n", pszTitle);
+        AppendTextToEditCtrl(hWndEdit, CurrentItemText);
+    }
+
+    if (pszItemName && IS_INTRESOURCE(pszItemName))
+    {
+        LoadStringW(hInstance, PtrToUlong(pszItemName),
+                    szText, _countof(szText));
+        pszItemName = szText;
+    }
+#if 0
+    if (pszText && IS_INTRESOURCE(pszText))
+    {
+        LoadStringW(hInstance, PtrToUlong(pszText),
+                    szText2, _countof(szText2));
+        pszText = szText2;
+    }
+#endif
+
+    if (pszItemName && !*pszItemName)
+        pszItemName = NULL;
+    if (pszText && !*pszText)
+        pszText = NULL;
+
+    *CurrentItemText = UNICODE_NULL;
+    if (pszItemName && pszText) // Both pointers must be != NULL.
+    {
+        StringCchPrintfW(CurrentItemText, _countof(CurrentItemText),
+                         L"\t%s\t%s\r\n",
+                         pszItemName, pszText);
+    }
+    else if (pszItemName || pszText) // One of the pointers can be == NULL, but not both.
+    {
+        PCTSTR pszStr = pszText ? pszText : pszItemName;
+        StringCchPrintfW(CurrentItemText, _countof(CurrentItemText),
+                         L"%s%s\r\n",
+                         pszStr ? L"\t" : L"",
+                         pszStr ? pszStr : L"");
+    }
+    if (*CurrentItemText)
+        AppendTextToEditCtrl(hWndEdit, CurrentItemText);
+}
+
+static VOID
+GetVolumeDisplayName(
+    _In_ PVOLENTRY Volume,
+    _Out_ PWSTR Buffer,
+    _In_ SIZE_T cchBufferSize)
+{
+    if (*Volume->Info.DeviceName)
+    {
+        if (Volume->Info.DriveLetter)
+        {
+            // L"(%s)[%c:]"
+            StringCchPrintfW(Buffer, cchBufferSize,
+                             L"%c: (%s)",
+                             Volume->Info.DriveLetter,
+                             Volume->Info.DeviceName);
+        }
+        else
+        {
+            StringCchCopyW(Buffer, cchBufferSize,
+                           Volume->Info.DeviceName);
+        }
+    }
+    else
+    {
+        PPARTENTRY PartEntry = Volume->PartEntry;
+        ASSERT(PartEntry && (PartEntry->Volume == Volume));
+
+        // TODO: Can we use PartEntry->DeviceName ?
+        if (Volume->Info.DriveLetter)
+        {
+            // L"(Disk %lu, Partition %lu)[%c:]"
+            StringCchPrintfW(Buffer, cchBufferSize,
+                             L"%c: (Disk %lu, Partition %lu)",
+                             Volume->Info.DriveLetter,
+                             PartEntry->DiskEntry->DiskNumber,
+                             PartEntry->OnDiskPartitionNumber);
+        }
+        else
+        {
+            StringCchPrintfW(Buffer, cchBufferSize,
+                             L"(Disk %lu, Partition %lu)",
+                             PartEntry->DiskEntry->DiskNumber,
+                             PartEntry->OnDiskPartitionNumber);
+        }
+    }
+}
+
+void
+AppendVolumeFormatItemToSummary(
+    _In_ HWND hWndEdit,
+    _In_opt_ HINSTANCE hInstance,
+    _In_ PVOLENTRY Volume)
+{
+    PVOL_CREATE_INFO VolCreate;
+    WCHAR szDesc[256];
+    WCHAR szText[256];
+
+    /* Find the volume info in the partition TreeList UI.
+     * If none, don't format it. */
+    VolCreate = FindVolCreateInTreeByVolume(UiContext.hPartList, Volume);
+    if (!VolCreate)
+        return;
+    ASSERT(VolCreate->Volume == Volume);
+
+    /* If there is no formatting information, skip it */
+    if (!*VolCreate->FileSystemName)
+        return;
+
+    /*
+     * Add the task item to the summary.
+     *
+     * NOTE: At this point, we may not have volume device names
+     * for newly-created ones. These will be made available only
+     * after the actual partitioning has been done.
+     */
+    GetVolumeDisplayName(Volume, szDesc, _countof(szDesc));
+
+    // SetupData.hInstance, IDS_FORMATTING_PROGRESS1
+    StringCchPrintfW(szText, _countof(szText),
+                     L"Formatting %s%s in %s", // IDS_FORMATTING_PROGRESS2
+                     (*Volume->Info.DeviceName ? L"volume " : L""),
+                     szDesc,
+                     VolCreate->FileSystemName);
+
+    AppendItemToSummary(hWndEdit,
+                        hInstance,
+                        NULL,
+                        szText,
+                        NULL);
+}
+
 static INT_PTR CALLBACK
 SummaryDlgProc(
     IN HWND hwndDlg,
@@ -1077,6 +1270,10 @@ SummaryDlgProc(
             /* Save pointer to the global setup data */
             pSetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pSetupData);
+
+            /* Set the checkbox in bold font */
+            SendDlgItemMessage(hwndDlg, IDC_CONFIRM_INSTALL,
+                               WM_SETFONT, (WPARAM)pSetupData->hBoldFont, (LPARAM)TRUE);
             break;
         }
 
@@ -1101,78 +1298,292 @@ SummaryDlgProc(
             {
                 case PSN_SETACTIVE:
                 {
-                    WCHAR CurrentItemText[256];
+                    HWND hEditSummary;
+                    WCHAR szText[256];
 
-                    ASSERT(InstallPartition);
+                    //ASSERT(InstallPartition);
 
                     /* Show the current selected settings */
 
-                    // FIXME! Localize
+                    hEditSummary = GetDlgItem(hwndDlg, IDC_EDIT_SUMMARY);
+                    SetWindowText(hEditSummary, NULL); // L"";
+                    Edit_EmptyUndoBuffer(hEditSummary);
+
+                    /*
+                     * Set tab stops for the edit control.
+                     * See also https://www.cyotek.com/blog/setting-tab-stops-in-a-windows-forms-textbox-control
+                     */
+                    {
+                    UINT TabStops[2] = {4, 20}; /* Tabs in numbers of characters */
+
+                    /* Retrieve the dialog units */
+                    RECT units = {4, 8, 4, 8}; // left & right scaled by 4; top & bottom scaled by 8.
+                    MapDialogRect(hwndDlg, &units); // Get DLU -> Pixels scaling.
+                    // pixelX = MulDiv(dluX, units.left, 4);
+                    // dluX = MulDiv(pixelX, 4, units.left);
+
+                    /* Convert the tab stops to dialog logical units (DLUs) */
+                    TabStops[0] = TabStops[0] * 4 /*units.left*/; // MulDiv(TabStops[0], 4, units.left);
+                    TabStops[1] = TabStops[1] * 4 /*units.left*/; // MulDiv(TabStops[1], 4, units.left);
+                    Edit_SetTabStops(hEditSummary, _countof(TabStops), TabStops);
+                    }
+
+////////
                     if (pSetupData->RepairUpdateFlag)
                     {
-                        StringCchPrintfW(CurrentItemText, ARRAYSIZE(CurrentItemText),
-                                         L"Upgrading/Repairing \"%s\" from \"%s\"",
-                                         pSetupData->CurrentInstallation->InstallationName,
-                                         pSetupData->CurrentInstallation->VendorName);
+                        ResPrintfW(szText, _countof(szText),
+                                   pSetupData->hInstance, IDS_UPGRADEINSTALL,
+                                   pSetupData->CurrentInstallation->InstallationName,
+                                   pSetupData->CurrentInstallation->VendorName);
                     }
                     else
                     {
-                        StringCchCopyW(CurrentItemText, ARRAYSIZE(CurrentItemText),
-                                       L"New ReactOS installation");
+                        LoadStringW(pSetupData->hInstance, IDS_NEWINSTALL,
+                                    szText, _countof(szText));
                     }
-                    SetDlgItemTextW(hwndDlg, IDC_INSTALLTYPE, CurrentItemText);
+                    AppendItemToSummary(hEditSummary,
+                                        pSetupData->hInstance,
+                                        szText,
+                                        NULL,
+                                        NULL);
 
-                    SetDlgItemTextW(hwndDlg, IDC_INSTALLSOURCE, L"n/a");
-                    SetDlgItemTextW(hwndDlg, IDC_ARCHITECTURE, L"n/a");
+{
+// Keep in sync with typedef enum _ARCHITECTURE_TYPE in setuplib.h
+PCWSTR ArchTypes[] =
+{
+    L"BIOS-based PC", // L"PC-AT",
+    L"NEC PC-98",
+    L"Original Xbox",
+    L"ARC",
+    L"(U)EFI",
+// Place other architectures supported by the Setup below.
+};
+
+// TODO: Add these in sdk/include/xdk/winnt_old.h and sdk/include/ndk/ketypes.h
+#ifndef PROCESSOR_ARCHITECTURE_IA32_ON_WIN64
+    #define PROCESSOR_ARCHITECTURE_IA32_ON_WIN64    10
+    #define PROCESSOR_ARCHITECTURE_NEUTRAL          11
+    #define PROCESSOR_ARCHITECTURE_ARM64            12
+    #define PROCESSOR_ARCHITECTURE_ARM32_ON_WIN64   13
+    #define PROCESSOR_ARCHITECTURE_IA32_ON_ARM64    14
+#endif
+
+PCWSTR ProcArchs[] =
+{
+    L"Intel x86",    // L"I386",            // PROCESSOR_ARCHITECTURE_INTEL
+    L"MIPS",                                // PROCESSOR_ARCHITECTURE_MIPS
+    L"RISC Alpha",   // L"ALPHA",           // PROCESSOR_ARCHITECTURE_ALPHA
+    L"PPC",                                 // PROCESSOR_ARCHITECTURE_PPC
+    L"SuperH",       // L"SHX",             // PROCESSOR_ARCHITECTURE_SHX
+    L"ARM32",        // L"ARM",             // PROCESSOR_ARCHITECTURE_ARM
+    L"IA64",                                // PROCESSOR_ARCHITECTURE_IA64 => L"Intel Itanium-based x64",
+    L"RISC Alpha x64",     // L"ALPHA64",   // PROCESSOR_ARCHITECTURE_ALPHA64
+    L"MSIL",                                // PROCESSOR_ARCHITECTURE_MSIL /* .NET CPU-independent code */
+    L"(Intel or AMD) x64", // L"AMD64",     // PROCESSOR_ARCHITECTURE_AMD64
+    L"x86 on x64",   // L"IA32_ON_WIN64",   // PROCESSOR_ARCHITECTURE_IA32_ON_WIN64
+    L"Unknown",      // L"NEUTRAL",         // PROCESSOR_ARCHITECTURE_NEUTRAL
+    L"ARM x64",      // L"ARM64",           // PROCESSOR_ARCHITECTURE_ARM64
+    L"ARM32 on x64", // L"ARM32_ON_WIN64",  // PROCESSOR_ARCHITECTURE_ARM32_ON_WIN64
+    L"x86 on ARM64", // L"IA32_ON_ARM64",   // PROCESSOR_ARCHITECTURE_IA32_ON_ARM64
+    L"Unknown",
+};
+
+                    WCHAR szComputer[256];
 
                     GetSettingDescription(GetCurrentListEntry(pSetupData->USetupData.ComputerList),
-                                          CurrentItemText,
-                                          ARRAYSIZE(CurrentItemText));
-                    SetDlgItemTextW(hwndDlg, IDC_COMPUTER, CurrentItemText);
+                                          szComputer, _countof(szComputer));
+
+#if 0
+                    StringCchPrintfW(szText, _countof(szText),
+                                     L"%s %s \x2014 %s",
+                                     ProcArchs[0], // FIXME: Retrieve the actual processor arch for this install
+                                     ArchTypes[pSetupData->USetupData.ArchType],
+                                     szComputer);
+
+                    AppendItemToSummary(hEditSummary,
+                                        pSetupData->hInstance,
+                                        NULL,
+                                        MAKEINTRESOURCEW(IDS_ARCHITECTURE),
+                                        szText);
+#else
+                    StringCchPrintfW(szText, _countof(szText),
+                                     L"%s \x2014 %s",
+                                     ProcArchs[0], // FIXME: Retrieve the actual processor arch for this install
+                                     ArchTypes[pSetupData->USetupData.ArchType]);
+
+                    AppendItemToSummary(hEditSummary,
+                                        pSetupData->hInstance,
+                                        NULL,
+                                        MAKEINTRESOURCEW(IDS_ARCHITECTURE),
+                                        szText);
+                    AppendItemToSummary(hEditSummary,
+                                        pSetupData->hInstance,
+                                        NULL,
+                                        MAKEINTRESOURCEW(IDS_COMPUTER),
+                                        szComputer);
+#endif
+}
+////////
+
+////////
+                    /* NOTE: USetupData.DestinationRootPath is initialized
+                     * by InitDestinationPaths(InstallVolume) to be the
+                     * InstallVolume->Info.DeviceName, appended with '\'.
+                     * Here we just use the generated volume display name. */
+                    GetVolumeDisplayName(InstallVolume, szText, _countof(szText));
+                    StringCchCatW(szText, _countof(szText), L" ");
+                    StringCchCatW(szText, _countof(szText),
+                                  pSetupData->USetupData.InstallationDirectory
+                                  /*pSetupData->USetupData.InstallPath.Buffer*/);
+
+                    AppendItemToSummary(hEditSummary,
+                                        pSetupData->hInstance,
+                                        NULL,
+                                        MAKEINTRESOURCEW(IDS_DESTINATION),
+                                        szText);
+////////
+                    AppendItemToSummary(hEditSummary,
+                                        NULL, L"", NULL, NULL);
+
+////////
+                    AppendItemToSummary(hEditSummary,
+                                        pSetupData->hInstance,
+                                        MAKEINTRESOURCEW(IDS_INSTALLSOURCE),
+                                        NULL,
+                                        pSetupData->USetupData.SourceRootPath.Buffer);
+                    AppendItemToSummary(hEditSummary,
+                                        NULL, L"", NULL, NULL);
+////////
+
+////////
+                    AppendItemToSummary(hEditSummary,
+                                        pSetupData->hInstance,
+                                        MAKEINTRESOURCEW(IDS_DEVICES),
+                                        NULL, NULL);
 
                     GetSettingDescription(GetCurrentListEntry(pSetupData->USetupData.DisplayList),
-                                          CurrentItemText,
-                                          ARRAYSIZE(CurrentItemText));
-                    SetDlgItemTextW(hwndDlg, IDC_DISPLAY, CurrentItemText);
+                                          szText, _countof(szText));
+                    AppendItemToSummary(hEditSummary,
+                                        pSetupData->hInstance,
+                                        NULL,
+                                        MAKEINTRESOURCEW(IDS_DISPLAY),
+                                        szText);
 
                     GetSettingDescription(GetCurrentListEntry(pSetupData->USetupData.KeyboardList),
-                                          CurrentItemText,
-                                          ARRAYSIZE(CurrentItemText));
-                    SetDlgItemTextW(hwndDlg, IDC_KEYBOARD, CurrentItemText);
+                                          szText, _countof(szText));
+                    AppendItemToSummary(hEditSummary,
+                                        pSetupData->hInstance,
+                                        NULL,
+                                        MAKEINTRESOURCEW(IDS_KEYBOARD),
+                                        szText);
 
-                    if (InstallVolume->Info.DriveLetter)
-                    {
-#if 0
-                        StringCchPrintfW(CurrentItemText, ARRAYSIZE(CurrentItemText),
-                                         L"%c: \x2014 %wZ",
-                                         InstallVolume->Info.DriveLetter,
-                                         &pSetupData->USetupData.DestinationRootPath);
-#else
-                        StringCchPrintfW(CurrentItemText, ARRAYSIZE(CurrentItemText),
-                                         L"%c: \x2014 Harddisk %lu, Partition %lu",
-                                         InstallVolume->Info.DriveLetter,
-                                         InstallPartition->DiskEntry->DiskNumber,
-                                         InstallPartition->OnDiskPartitionNumber);
-#endif
-                    }
-                    else
-                    {
-#if 0
-                        StringCchPrintfW(CurrentItemText, ARRAYSIZE(CurrentItemText),
-                                         L"%wZ",
-                                         &pSetupData->USetupData.DestinationRootPath);
-#else
-                        StringCchPrintfW(CurrentItemText, ARRAYSIZE(CurrentItemText),
-                                         L"Harddisk %lu, Partition %lu",
-                                         InstallPartition->DiskEntry->DiskNumber,
-                                         InstallPartition->OnDiskPartitionNumber);
-#endif
-                    }
-                    SetDlgItemTextW(hwndDlg, IDC_DESTDRIVE, CurrentItemText);
+                    GetSettingDescription(GetCurrentListEntry(pSetupData->USetupData.LayoutList),
+                                          szText, _countof(szText));
+                    AppendItemToSummary(hEditSummary,
+                                        pSetupData->hInstance,
+                                        NULL,
+                                        MAKEINTRESOURCEW(IDS_LAYOUT),
+                                        szText);
 
-                    SetDlgItemTextW(hwndDlg, IDC_PATH,
-                                    pSetupData->USetupData.InstallationDirectory
-                                    /*pSetupData->USetupData.InstallPath.Buffer*/);
+                    AppendItemToSummary(hEditSummary,
+                                        NULL, L"", NULL, NULL);
+////////
+
+////////
+                    AppendItemToSummary(hEditSummary,
+                                        pSetupData->hInstance,
+                                        pSetupData->RepairUpdateFlag
+                                            ? MAKEINTRESOURCEW(IDS_UPGRADETASKS)
+                                            : MAKEINTRESOURCEW(IDS_INSTALLTASKS),
+                                        NULL, NULL);
+
+                    AppendItemToSummary(hEditSummary,
+                                        pSetupData->hInstance,
+                                        NULL,
+                                        MAKEINTRESOURCEW(IDS_CONFIG_SYSTEM_PARTITION),
+                                        NULL);
+
+                    /* The formatting tasks */
+                    {
+                    PLIST_ENTRY Entry;
+                    PVOLENTRY Volume;
+
+                    if ((SystemVolume != InstallVolume) &&
+                        (SystemVolume->FormatState == Unformatted))
+                    {
+                        AppendVolumeFormatItemToSummary(hEditSummary,
+                                                        pSetupData->hInstance,
+                                                        SystemVolume);
+                    }
+
+                    AppendVolumeFormatItemToSummary(hEditSummary,
+                                                    pSetupData->hInstance,
+                                                    InstallVolume);
+
+                    /* Loop through each new/unformatted volume */
+                    for (Entry = pSetupData->PartitionList->VolumesList.Flink;
+                         Entry != &pSetupData->PartitionList->VolumesList;
+                         Entry = Entry->Flink)
+                    {
+                        Volume = CONTAINING_RECORD(Entry, VOLENTRY, ListEntry);
+                        if ((Volume == SystemVolume) || (Volume == InstallVolume))
+                            continue;
+                        if (!(Volume->New && (Volume->FormatState == Unformatted)))
+                            continue;
+
+                        /* Found a candidate */
+                        AppendVolumeFormatItemToSummary(hEditSummary,
+                                                        pSetupData->hInstance,
+                                                        Volume);
+                    }
+                    }
+
+                    AppendItemToSummary(hEditSummary,
+                                        pSetupData->hInstance,
+                                        NULL,
+                                        pSetupData->RepairUpdateFlag
+                                            ? MAKEINTRESOURCEW(IDS_UPDATE_REGISTRY)
+                                            : MAKEINTRESOURCEW(IDS_CREATE_REGISTRY),
+                                        NULL);
+
+                    /* Bootloader installation */
+                    if (pSetupData->USetupData.BootLoaderLocation != 0)
+                    {
+                        PCWSTR pszBtLdrDest;
+                        BOOLEAN IsBIOS =
+                            ((pSetupData->USetupData.ArchType == ARCH_PcAT) ||
+                             (pSetupData->USetupData.ArchType == ARCH_NEC98x86));
+
+                        // TODO: Tell on which partition/disk the bootloader
+                        // is going to be installed (SystemVolume...)
+                        if (pSetupData->USetupData.BootLoaderLocation == 1)
+                        {
+                            pszBtLdrDest = L"removable disk";
+                        }
+                        else if (pSetupData->USetupData.BootLoaderLocation == 2)
+                        {
+                            if (IsBIOS)
+                                pszBtLdrDest = L"MBR and VBR";
+                            else
+                                pszBtLdrDest = L"System partition";
+                        }
+                        else if (pSetupData->USetupData.BootLoaderLocation == 3)
+                        {
+                            pszBtLdrDest = L"VBR only";
+                        }
+
+                        StringCchPrintfW(szText, _countof(szText),
+                                         L"Installing the bootloader on %s",
+                                         pszBtLdrDest);
+
+                        AppendItemToSummary(hEditSummary,
+                                            pSetupData->hInstance,
+                                            NULL,
+                                            // MAKEINTRESOURCEW(IDS_INSTALL_BOOTLOADER),
+                                            szText,
+                                            NULL);
+                    }
+////////
 
 
                     /* Change the "Next" button text to "Install" */
@@ -3137,7 +3548,6 @@ _tWinMain(HINSTANCE hInst,
         psp.pszTemplate = MAKEINTRESOURCEW(IDD_TYPEPAGE);
         ahpsp[nPages++] = CreatePropertySheetPage(&psp);
 
-#if 1
         /* Create the upgrade/repair selection page */
         psp.dwSize = sizeof(PROPSHEETPAGE);
         psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
@@ -3160,6 +3570,7 @@ _tWinMain(HINSTANCE hInst,
         psp.pszTemplate = MAKEINTRESOURCEW(IDD_DEVICEPAGE);
         ahpsp[nPages++] = CreatePropertySheetPage(&psp);
 
+#if 1
         /* Create the install device settings page / boot method / install directory */
         psp.dwSize = sizeof(PROPSHEETPAGE);
         psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
@@ -3170,6 +3581,7 @@ _tWinMain(HINSTANCE hInst,
         psp.pfnDlgProc = DriveDlgProc;
         psp.pszTemplate = MAKEINTRESOURCEW(IDD_DRIVEPAGE);
         ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+#endif
 
         /* Create the summary page */
         psp.dwSize = sizeof(PROPSHEETPAGE);
@@ -3181,10 +3593,9 @@ _tWinMain(HINSTANCE hInst,
         psp.pfnDlgProc = SummaryDlgProc;
         psp.pszTemplate = MAKEINTRESOURCEW(IDD_SUMMARYPAGE);
         ahpsp[nPages++] = CreatePropertySheetPage(&psp);
-#endif
     }
 
-#if 1
+#if 0
     /* Create the installation progress page */
     psp.dwSize = sizeof(PROPSHEETPAGE);
     psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;

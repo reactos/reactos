@@ -118,7 +118,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "रिऐक्ट ओएस सेटअप"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "इन्स्टलेशन प्रक्रिया शुरू करने के लिए आगे क्लिक करें।", IDC_STATIC, 7, 128, 303, 8
+    LTEXT "Verify the installation settings and confirm them if they are all correct. If you want to change any, click Back. \
+Finally, click on Install to start the installation.", IDC_STATIC, 7, 4, 303, 18
+    EDITTEXT IDC_EDIT_SUMMARY, 7, 25, 303, 100, ES_READONLY | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | WS_VSCROLL | WS_HSCROLL /*| NOT WS_BORDER*/ | NOT WS_TABSTOP
+    AUTOCHECKBOX "All the installation settings are correct", IDC_CONFIRM_INSTALL, 7, 130, 303, 10
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
@@ -156,8 +159,8 @@ BEGIN
     IDS_DEVICESUBTITLE "डिस्प्ले और कीबोर्ड की सेटिंग्स सेट करें।"
     IDS_DRIVETITLE "इन्स्टलेशन विभाजन और सिस्टम फ़ोल्डर सेटअप करें"
     IDS_DRIVESUBTITLE "इन्स्टलेशन विभाजन, सिस्टम फ़ोल्डर और बूट लोडर तैयार करें।"
-    IDS_SUMMARYTITLE "इन्स्टलेशन सारांश"
-    IDS_SUMMARYSUBTITLE "इन्स्टलेशन डिवाइस पर लागू करने से पहले जांच करने के लिए इन्स्टलेशन गुणों की सूची"
+    IDS_SUMMARYTITLE "Ready to Install"
+    IDS_SUMMARYSUBTITLE "ReactOS is now ready to be installed on your computer."
     IDS_PROCESSTITLE "सेटअप विभाजन, कॉपी फ़ाइलें और सेटअप सिस्टम"
     IDS_PROCESSSUBTITLE "विभाजन बनाएं और फ़ॉर्मेट करें, फ़ाइलें कॉपी करें, बूट लोडर को इंस्टॉल करें और सेटअप करें"
     IDS_ABORTSETUP "रिऐक्ट ओएस आपके कंप्यूटर पर पूरी तरह से इंस्टॉल नहीं है। अगर आप अभी सेटअप को छोड़ देते हैं, तो आपको रिऐक्ट ओएस इंस्टॉल करने के लिए सेटअप को फिर से चलाने की आवश्यकता होगी। आपको वास्तव में छोड़ना है?"
@@ -184,6 +187,22 @@ BEGIN
     IDS_BOOTLOADER_SYSTEM "System partition (Default)"
     IDS_BOOTLOADER_MBRVBR "MBR और VBR (Default)"
     IDS_BOOTLOADER_VBRONLY "केवल VBR"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NEWINSTALL "New ReactOS installation"
+    IDS_UPGRADEINSTALL "Upgrading/Repairing ""%s"" from vendor ""%s"""
+    IDS_ARCHITECTURE "Architecture:"
+    IDS_COMPUTER "Computer:"
+    IDS_DESTINATION "Destination:"
+    IDS_INSTALLSOURCE "Installation source:"
+    IDS_DEVICES "Devices:"
+    IDS_DISPLAY "Display:"
+    IDS_KEYBOARD "Keyboard:"
+    IDS_LAYOUT "Layout:"
+    IDS_INSTALLTASKS "Installation tasks:"
+    IDS_UPGRADETASKS "Upgrade tasks:"
 END
 
 /* Progress Strings */

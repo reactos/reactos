@@ -122,25 +122,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT "インストールの種類:", IDC_STATIC, 6, 5, 88, 11
-    EDITTEXT IDC_INSTALLTYPE, 95, 4, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "インストール元のソース:", IDC_STATIC, 6, 17, 88, 11
-    EDITTEXT IDC_INSTALLSOURCE, 95, 16, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "アーキテクチャ:", IDC_STATIC, 6, 29, 88, 11
-    EDITTEXT IDC_ARCHITECTURE, 95, 28, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "コンピューター:", IDC_STATIC, 6, 41, 88, 11
-    EDITTEXT IDC_COMPUTER, 95, 40, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "ディスプレイ:", IDC_STATIC, 6, 53, 88, 11
-    EDITTEXT IDC_DISPLAY, 95, 52, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "キーボード:", IDC_STATIC, 6, 65, 88, 11
-    EDITTEXT IDC_KEYBOARD, 95, 64, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "インストール先ボリューム:", IDC_STATIC, 6, 77, 88, 11
-    EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "インストール先フォルダ:", IDC_STATIC, 6, 89, 88, 11
-    EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    AUTOCHECKBOX "すべてのインストール設定が正しいことを確認しました。また、ReactOSがまだアルファ版であり、あなたのコンピュータやデータを壊す恐れがあることを理解しています。",
-        IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE
-    LTEXT "すべてのインストール設定が正しいことを確認し、インストール プロセスを開始するために、インストールをクリックして下さい。", IDC_STATIC, 7, 124, 303, 18
+    LTEXT "Verify the installation settings and confirm them if they are all correct. If you want to change any, click Back. \
+Finally, click on Install to start the installation.", IDC_STATIC, 7, 4, 303, 18
+    EDITTEXT IDC_EDIT_SUMMARY, 7, 25, 303, 100, ES_READONLY | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | WS_VSCROLL | WS_HSCROLL /*| NOT WS_BORDER*/ | NOT WS_TABSTOP
+    AUTOCHECKBOX "All the installation settings are correct", IDC_CONFIRM_INSTALL, 7, 130, 303, 10
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
@@ -178,8 +163,8 @@ BEGIN
     IDS_DEVICESUBTITLE "ディスプレイとキーボードの設定をします。"
     IDS_DRIVETITLE "インストール先パーティションとシステムフォルダをセットアップします"
     IDS_DRIVESUBTITLE "インストール先のパーティション、システムフォルダ、ブートローダを準備します。"
-    IDS_SUMMARYTITLE "インストールの要約"
-    IDS_SUMMARYSUBTITLE "インストールするデバイスを適用する前にチェックするインストール プロパティをリストアップします。"
+    IDS_SUMMARYTITLE "Ready to Install"
+    IDS_SUMMARYSUBTITLE "ReactOS is now ready to be installed on your computer."
     IDS_PROCESSTITLE "パーティションをセットアップし、ファイルをコピーし、システムをセットアップします"
     IDS_PROCESSSUBTITLE "パーティションを作成・フォーマットし、ファイルをコピーし、ブートローダをインストール・セットアップします。"
     IDS_ABORTSETUP "ReactOSはあなたのコンピュータへのインストールが完了していません。もしセットアップをここで中断すれば、ReactOSをインストールするために、セットアップを再起動する必要があります。本当に中断しますか?"
@@ -214,6 +199,22 @@ BEGIN
     IDS_BOOTLOADER_SYSTEM "System partition (Default)"
     IDS_BOOTLOADER_MBRVBR "MBRとVBR (Default)"
     IDS_BOOTLOADER_VBRONLY "VBRのみ"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NEWINSTALL "New ReactOS installation"
+    IDS_UPGRADEINSTALL "Upgrading/Repairing ""%s"" from vendor ""%s"""
+    IDS_ARCHITECTURE "アーキテクチャ:"
+    IDS_COMPUTER "コンピューター:"
+    IDS_DESTINATION "先:"
+    IDS_INSTALLSOURCE "インストール元のソース:"
+    IDS_DEVICES "Devices:"
+    IDS_DISPLAY "ディスプレイ:"
+    IDS_KEYBOARD "キーボード:"
+    IDS_LAYOUT "Layout:"
+    IDS_INSTALLTASKS "Installation tasks:"
+    IDS_UPGRADETASKS "Upgrade tasks:"
 END
 
 /* Progress Strings */
