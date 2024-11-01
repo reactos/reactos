@@ -25,6 +25,11 @@ DBG_DEFAULT_CHANNEL(HWDETECT);
 
 BOOLEAN AcpiPresent = FALSE;
 
+BOOLEAN IsAcpiPresent(VOID)
+{
+    return AcpiPresent;
+}
+
 static PRSDP_DESCRIPTOR
 FindAcpiBios(VOID)
 {
