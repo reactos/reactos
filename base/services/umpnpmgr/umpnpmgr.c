@@ -44,6 +44,7 @@ static SERVICE_STATUS ServiceStatus;
 HKEY hEnumKey = NULL;
 HKEY hClassKey = NULL;
 BOOL g_IsUISuppressed = FALSE;
+BOOL g_ShuttingDown = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -52,6 +53,9 @@ UpdateServiceStatus(
     _In_ DWORD dwState,
     _In_ DWORD dwCheckPoint)
 {
+    if ((dwState == SERVICE_STOPPED) || (dwState == SERVICE_STOP_PENDING))
+        g_ShuttingDown = TRUE;
+
     ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
     ServiceStatus.dwCurrentState = dwState;
     ServiceStatus.dwWin32ExitCode = 0;

@@ -687,6 +687,9 @@ PNP_GetGlobalState(
 
     *pulState = CM_GLOBAL_STATE_CAN_DO_UI | CM_GLOBAL_STATE_SERVICES_AVAILABLE;
 
+    if (g_ShuttingDown)
+        *pulState |= CM_GLOBAL_STATE_SHUTTING_DOWN;
+
     return CR_SUCCESS;
 }
 
