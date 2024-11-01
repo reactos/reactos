@@ -49,16 +49,16 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 HRESULT HCR_GetProgIdKeyOfExtension(LPCWSTR szExtension, HKEY *phKey, BOOL AllowFallback)
 {
     LONG err, cb;
-    WCHAR ext[max(1+MAX_EXTENSION_LENGTH+1, MAX_PATH)], progid[MAX_PATH];
+    WCHAR ext[max(1 + MAX_EXTENSION_LENGTH + 1, MAX_PATH)], progid[MAX_PATH];
     if (szExtension[0] != '.')
     {
         ext[0] = '.';
-        lstrcpynW(ext+1, szExtension, _countof(ext) - 1);
+        lstrcpynW(ext + 1, szExtension, _countof(ext) - 1);
         szExtension = ext;
     }
     cb = sizeof(progid);
     err = RegQueryValueW(HKEY_CLASSES_ROOT, szExtension, progid, &cb);
-    if (!err)
+    if (!err && progid[0] != UNICODE_NULL)
     {
         err = RegOpenKeyExW(HKEY_CLASSES_ROOT, progid, 0, KEY_READ, phKey);
         if (!err)
