@@ -173,6 +173,7 @@ MempSetupPagingForRegion(
 BOOLEAN
 WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    PLOADER_PARAMETER_EXTENSION Extension = VaToPa(LoaderBlock->Extension);
     PFN_NUMBER i, PagesCount, MemoryMapSizeInPages, NoEntries;
     PFN_NUMBER LastPageIndex, MemoryMapStartPage;
     PPAGE_LOOKUP_TABLE_ITEM MemoryMap;
@@ -229,6 +230,20 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
     {
         ERR("Error during MempSetupPaging of first page\n");
         return FALSE;
+    }
+
+    // Always map the ACPI table if present, otherwise Windows will crash.
+    if (Extension->AcpiTable)
+    {
+        PVOID AcpiTableClone = MmAllocateMemoryWithType(Extension->AcpiTableSize, LoaderFirmwarePermanent);
+        if (!AcpiTableClone)
+        {
+            ERR("Cannot allocate ACPI table\n");
+            return FALSE;
+        }
+
+        RtlCopyMemory(AcpiTableClone, Extension->AcpiTable, Extension->AcpiTableSize);
+        Extension->AcpiTable = AcpiTableClone;
     }
 
     /* Before creating the map, we need to map pages to kernel mode */
