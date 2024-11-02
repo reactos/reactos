@@ -1,4 +1,12 @@
-/* TRANSLATORS: 2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
+/* 
+ * PROJECT:     ReactOS DiskPart
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Turkish resource file
+ * TRANSLATORS: Copyright 2015 Erdem Ersoy (eersoy93) <erdemersoy@erdemersoy.net>
+ *              Copyright 2018 Ercan Ersoy <ercanersoy@ercanersoy.net>
+ *              Copyright 2021-2023 Süleyman Poyraz <zaryob.dev@gmail.com>
+ *              Copyright 2024 Muhammed Emir Artan (vsaucing) <memirartan@gmail.com>
+ */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -21,20 +29,20 @@ STRINGTABLE
 BEGIN
     IDS_ACTIVE_FAIL "\nDiskPart, bölümü etkin olarak işaretleyemedi.\nBölümün geçerli olduğundan emin olun.\n"
     IDS_ACTIVE_SUCCESS "\nDiskPart, geçerli bölümü etkin olarak işaretledi.\n"
-    IDS_ACTIVE_ALREADY "\nGeçerli bölüm zaten etkin olarak işaretlendi.\n"
+    IDS_ACTIVE_ALREADY "\nGeçerli bölüm zaten etkin olarak işaretlenmiş.\n"
 END
 
 STRINGTABLE
 BEGIN
     IDS_CLEAN_FAIL "\nDiskPart diski temizleyemedi.\nBu diskteki veriler kurtarılamaz olabilir.\n"
-    IDS_CLEAN_SUCCESS "\nDiskPart, diski temizlemeyi başardı.\n"
+    IDS_CLEAN_SUCCESS "\nDiskPart, diski başarıyla temizledi.\n"
     IDS_CLEAN_SYSTEM "\nSeçilen disk, bilgisayarınızın çalışması için gereklidir ve temizlenemez.\n"
 END
 
 STRINGTABLE
 BEGIN
     IDS_CREATE_PARTITION_FAIL "\nDiskPart belirtilen bölümü oluşturamadı.\n"
-    IDS_CREATE_PARTITION_SUCCESS "\nDiskPart, belirtilen bölümü oluşturmayı başardı.\n"
+    IDS_CREATE_PARTITION_SUCCESS "\nDiskPart, belirtilen bölümü oluşturdu.\n"
 END
 
 STRINGTABLE
@@ -54,11 +62,11 @@ BEGIN
     IDS_DETAIL_INFO_LUN_ID "Lun ID : %hu\n"
     IDS_DETAIL_INFO_LOC_PATH "Konum Yolu"
     IDS_DETAIL_INFO_CURR_RO_STATE "Şimdiki Yalnızca Okunur Durumu"
-    IDS_DETAIL_INFO_RO "Yalnızca Okunur"
-    IDS_DETAIL_INFO_BOOT_DSK "Ön yükleme Diski"
-    IDS_DETAIL_INFO_PAGE_FILE_DSK "Sayfalama Dosyası Diski"
+    IDS_DETAIL_INFO_RO "Salt-Okunur"
+    IDS_DETAIL_INFO_BOOT_DSK "Önyükleme Diski"
+    IDS_DETAIL_INFO_PAGE_FILE_DSK "Sanal Bellek Diski"
     IDS_DETAIL_INFO_HIBER_FILE_DSK "Hazırda Bekletme Dosyası Diski"
-    IDS_DETAIL_INFO_CRASH_DSK "Çöküş Dökümü Diski"
+    IDS_DETAIL_INFO_CRASH_DSK "Çökme Dökümü Diski"
     IDS_DETAIL_INFO_CLST_DSK "Kümelenmiş Disk"
     IDS_DETAIL_PARTITION_NUMBER "Bölüm %lu\n"
     IDS_DETAIL_PARTITION_TYPE   "Tür                 : %02x\n"
@@ -86,7 +94,7 @@ STRINGTABLE
 BEGIN
     IDS_INACTIVE_FAIL "\nDiskPart, bölümü etkin değil olarak işaretleyemedi.\nBölümün geçerli olduğundan emin olun.\n"
     IDS_INACTIVE_SUCCESS "\nDiskPart, geçerli bölümü etkin değil olarak işaretledi.\n"
-    IDS_INACTIVE_ALREADY "\nGeçerli bölüm zaten etkin değil olarak işaretlendi.\n"
+    IDS_INACTIVE_ALREADY "\nGeçerli bölüm zaten etkin değil olarak işaretlenmiş.\n"
 END
 
 /* Detail header titles */
@@ -114,12 +122,12 @@ END
 /* SELECT command strings */
 STRINGTABLE
 BEGIN
-    IDS_SELECT_NO_DISK "\nŞimdilik bir disk seçilmemiş.\nLütfen bir disk seçiniz ve yeniden deneyiniz.\n\n"
+    IDS_SELECT_NO_DISK "\nBir disk seçilmemiş.\nLütfen bir disk seçiniz ve yeniden deneyiniz.\n\n"
     IDS_SELECT_DISK "\nDisk %lu şimdi seçilen disktir.\n\n"
     IDS_SELECT_DISK_INVALID "\nGeçersiz disk.\n\n"
     IDS_SELECT_NO_PARTITION "\nŞimdilik bir bölüm seçilmemiş.\nLütfen bir disk seçiniz ve yeniden deneyiniz.\n\n"
     IDS_SELECT_PARTITION "\nBölüm %lu şimdi seçilen bölümdür.\n\n"
-    IDS_SELECT_PARTITION_NO_DISK "\nBir bölüm seçme için bir disk yok.\nLütfen bir disk seçiniz ve yeniden deneyiniz.\n\n"
+    IDS_SELECT_PARTITION_NO_DISK "\nBir bölüm seçmek için bir disk yok.\nLütfen bir disk seçiniz ve yeniden deneyiniz.\n\n"
     IDS_SELECT_PARTITION_INVALID "\nGeçersiz bölüm.\n\n"
     IDS_SELECT_NO_VOLUME "\nŞimdilik bir birim seçilmemiş.\nLütfen bir disk seçiniz ve yeniden deneyiniz.\n\n"
     IDS_SELECT_VOLUME "\nBirim %lu şimdi seçilen birimdir.\n\n"
@@ -150,7 +158,7 @@ END
 /* CMD Messages for commands */
 STRINGTABLE
 BEGIN
-    IDS_MSG_ARG_SYNTAX_ERROR "Bu komut için belirtilen argümanlar geçerli değil.\nKomu türü üzerinde daha çok bilgi için:"
+    IDS_MSG_ARG_SYNTAX_ERROR "Bu komut için belirtilen argümanlar geçerli değil.\nKomut türü üzerinde daha çok bilgi için:"
 END
 
 /* Help Command Descripions */
@@ -160,7 +168,7 @@ BEGIN
     IDS_HELP_ADD                       "Basit bir birime bir yansıma ekle.\n"
     IDS_HELP_ASSIGN                    "Seçili birime bir sürücü harfi ya da bağlama noktası ata.\n"
     IDS_HELP_ATTACH                    "Bir sanal disk alanı iliştirir.\n"
-    IDS_HELP_ATTRIBUTES                "Birim ya da disk öz nitelikleriyle oyna.\n"
+    IDS_HELP_ATTRIBUTES                "Birim ya da disk öz niteliklerini değiştir.\n"
     IDS_HELP_AUTOMOUNT                 "Başlıca birimlerin kendiliğinden bağlamasını etkinleştir ve devre dışı bırak.\n"
     IDS_HELP_BREAK                     "Bir yansıma yığını ayır.\n"
     IDS_HELP_CLEAN                     "Diskin yapılandırma bilgisini ya da tüm bilgisini sil.\n"
