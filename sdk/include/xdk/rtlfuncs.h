@@ -2,7 +2,7 @@
  *                         Runtime Library Functions                          *
  ******************************************************************************/
 
-$if (_WDMDDK_)
+$if (_WDMDDK_ || _WINNT_)
 #define FAST_FAIL_LEGACY_GS_VIOLATION           0
 #define FAST_FAIL_VTGUARD_CHECK_FAILURE         1
 #define FAST_FAIL_STACK_COOKIE_CHECK_FAILURE    2
@@ -30,6 +30,9 @@ RtlFailFast(
 {
   __fastfail(Code);
 }
+
+$endif(_WDMDDK_ || _WINNT_)
+$if (_WDMDDK_)
 
 #if !defined(NO_KERNEL_LIST_ENTRY_CHECKS) && (defined(_M_CEE_PURE) || defined(_M_CEE_SAFE))
 #define NO_KERNEL_LIST_ENTRY_CHECKS

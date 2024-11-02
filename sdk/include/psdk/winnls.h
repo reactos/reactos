@@ -25,11 +25,13 @@ extern "C" {
 #define LOCALE_ILANGUAGE	1
 #define LOCALE_SLANGUAGE	2
 #define LOCALE_SENGLANGUAGE	0x1001
+#define LOCALE_SENGLISHLANGUAGENAME 0x1001
 #define LOCALE_SABBREVLANGNAME	3
 #define LOCALE_SNATIVELANGNAME	4
 #define LOCALE_ICOUNTRY	5
 #define LOCALE_SCOUNTRY	6
 #define LOCALE_SENGCOUNTRY	0x1002
+#define LOCALE_SENGLISHCOUNTRYNAME  0x1002
 #define LOCALE_SABBREVCTRYNAME	7
 #define LOCALE_SNATIVECTRYNAME	8
 #define LOCALE_IDEFAULTLANGUAGE	9
@@ -710,6 +712,18 @@ BOOL WINAPI EnumSystemCodePagesW(_In_ CODEPAGE_ENUMPROCW, _In_ DWORD);
 BOOL WINAPI EnumSystemGeoID(_In_ GEOCLASS, _In_ GEOID, _In_ GEO_ENUMPROC);
 BOOL WINAPI EnumSystemLocalesA(_In_ LOCALE_ENUMPROCA, _In_ DWORD);
 BOOL WINAPI EnumSystemLocalesW(_In_ LOCALE_ENUMPROCW, _In_ DWORD);
+
+typedef BOOL (CALLBACK* LOCALE_ENUMPROCEX)(LPWSTR, DWORD, LPARAM);
+
+WINBASEAPI
+BOOL
+WINAPI
+EnumSystemLocalesEx(
+  _In_ LOCALE_ENUMPROCEX lpLocaleEnumProcEx,
+  _In_ DWORD dwFlags,
+  _In_ LPARAM lParam,
+  _In_opt_ LPVOID lpReserved);
+
 BOOL WINAPI EnumTimeFormatsA(_In_ TIMEFMT_ENUMPROCA, _In_ LCID, _In_ DWORD);
 BOOL WINAPI EnumTimeFormatsW(_In_ TIMEFMT_ENUMPROCW, _In_ LCID, _In_ DWORD);
 
@@ -888,6 +902,14 @@ int WINAPI GetTimeFormatA(LCID,DWORD,const SYSTEMTIME*,LPCSTR,LPSTR,int);
 int WINAPI GetTimeFormatW(LCID,DWORD,const SYSTEMTIME*,LPCWSTR,LPWSTR,int);
 int WINAPI GetTimeFormatEx(LPCWSTR,DWORD,const SYSTEMTIME*,LPCWSTR,LPWSTR,int);
 LANGID WINAPI GetUserDefaultLangID(void);
+
+WINBASEAPI
+int
+WINAPI
+GetUserDefaultLocaleName(
+    _Out_writes_(cchLocaleName) LPWSTR lpLocaleName,
+    _In_ int cchLocaleName);
+
 LCID WINAPI GetUserDefaultLCID(void);
 GEOID WINAPI GetUserGeoID(_In_ GEOCLASS);
 
@@ -1006,7 +1028,11 @@ GetLocaleInfoEx(
   _Out_writes_opt_(cchData) LPWSTR lpLCData,
   _In_ int cchData);
 
-BOOL WINAPI IsValidLocaleName(_In_ LPCWSTR lpLocaleName);
+WINBASEAPI
+BOOL
+WINAPI
+IsValidLocaleName(
+  _In_ LPCWSTR lpLocaleName);
 
 BOOL
 WINAPI
@@ -1106,10 +1132,40 @@ GetStringScripts(
 BOOL WINAPI SetProcessPreferredUILanguages(_In_ DWORD, _In_opt_ PCZZWSTR, _Out_opt_ PULONG);
 BOOL WINAPI SetThreadPreferredUILanguages(_In_ DWORD, _In_opt_ PCZZWSTR, _Out_opt_ PULONG);
 BOOL WINAPI VerifyScripts(_In_ DWORD, _In_ LPCWSTR, _In_ int, _In_ LPCWSTR, _In_ int);
-INT  WINAPI LCMapStringEx(_In_ LPCWSTR, _In_ DWORD, _In_ LPCWSTR, _In_ INT, _Out_opt_ LPWSTR, _In_ INT, _In_ LPNLSVERSIONINFO, _In_ LPVOID, _In_ LPARAM);
+
+#if (WINVER >= _WIN32_WINNT_WIN8)
+_When_((dwMapFlags & (LCMAP_SORTKEY | LCMAP_BYTEREV | LCMAP_HASH | LCMAP_SORTHANDLE)) != 0, _At_((LPBYTE) lpDestStr, _Out_writes_bytes_opt_(cchDest)))
+#else
+_When_((dwMapFlags & (LCMAP_SORTKEY | LCMAP_BYTEREV)) != 0, _At_((LPBYTE) lpDestStr, _Out_writes_bytes_opt_(cchDest)))
+#endif
+_When_(cchSrc != -1,  _At_((WCHAR *) lpSrcStr, _Out_writes_opt_(cchSrc)))
+_When_(cchDest != -1, _At_((WCHAR *) lpDestStr, _Out_writes_opt_(cchDest)))
+WINBASEAPI
+int
+WINAPI
+LCMapStringEx(
+    _In_opt_ LPCWSTR lpLocaleName,
+    _In_ DWORD dwMapFlags,
+    _In_reads_(cchSrc) LPCWSTR lpSrcStr,
+    _In_ int cchSrc,
+    _Out_writes_opt_(cchDest) LPWSTR lpDestStr,
+    _In_ int cchDest,
+    _In_opt_ LPNLSVERSIONINFO lpVersionInformation,
+    _In_opt_ LPVOID lpReserved,
+    _In_opt_ LPARAM sortHandle);
+
 LCID WINAPI LocaleNameToLCID(_In_ LPCWSTR, _In_ DWORD);
 
 #endif /* (WINVER >= 0x0600) */
+
+WINBASEAPI
+int
+WINAPI
+LCIDToLocaleName(
+    _In_ LCID Locale,
+    _Out_writes_opt_(cchName) LPWSTR  lpName,
+    _In_ int cchName,
+    _In_ DWORD dwFlags);
 
 #ifdef UNICODE
 #define CALINFO_ENUMPROC CALINFO_ENUMPROCW
@@ -1207,4 +1263,9 @@ typedef LPNUMBERFMTA LPNUMBERFMT;
 #ifdef __cplusplus
 }
 #endif
+
+#ifndef NOAPISET
+#include <stringapiset.h>
+#endif
+
 #endif
