@@ -155,6 +155,14 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #endif
 
 //
+// Some internal SYSTEM_PTE_MISUSE bugcheck subcodes
+//
+#define PTE_MAPPING_NONE        0x100
+#define PTE_MAPPING_NOT_OWNED   0x101
+#define PTE_MAPPING_EMPTY       0x102
+#define PTE_MAPPING_RESERVED    0x103
+
+//
 // Mask for image section page protection
 //
 #define IMAGE_SCN_PROTECTION_MASK (IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_EXECUTE)

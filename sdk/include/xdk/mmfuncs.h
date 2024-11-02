@@ -633,7 +633,7 @@ MmAdvanceMdl(
 
 _Must_inspect_result_
 _IRQL_requires_max_(APC_LEVEL)
-_When_ (return != NULL, _Out_writes_bytes_opt_ (NumberOfBytes))
+_Ret_maybenull_
 NTKERNELAPI
 PVOID
 NTAPI
@@ -646,7 +646,7 @@ NTKERNELAPI
 VOID
 NTAPI
 MmFreeMappingAddress(
-  _In_ PVOID BaseAddress,
+  _In_ __drv_freesMem(Mem) _Post_invalid_ PVOID BaseAddress,
   _In_ ULONG PoolTag);
 
 _IRQL_requires_max_ (APC_LEVEL)
