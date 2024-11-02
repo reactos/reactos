@@ -15,6 +15,8 @@ WCHAR dllpath[MAX_PATH];
 
 HANDLE ThreadEvent;
 
+ULONG ExtantTlsEntryCount = 0;
+
 DWORD WINAPI AuxThread0Proc(
   IN LPVOID lpParameter
 )
@@ -32,7 +34,7 @@ DWORD WINAPI AuxThread0Proc(
         break;
   }
   WaitForSingleObject(ThreadEvent, INFINITE);
-  ok(i == TLS_VECTOR_MAX_SIZE + 1, "ThreadLocalStoragePointer length is %d, expected length %d\n", i, TLS_VECTOR_MAX_SIZE + 1);
+  ok(i == TLS_VECTOR_MAX_SIZE + ExtantTlsEntryCount, "ThreadLocalStoragePointer length is %d, expected length %d\n", i, TLS_VECTOR_MAX_SIZE + ExtantTlsEntryCount);
   return 0;
 }
 
@@ -82,7 +84,13 @@ START_TEST(implicit_tls)
     *ModuleHandle = (ULONG)GetModuleHandleA(NULL) + 3;
 
     TlsIdx0Value = *(PULONG)TlsVector[0];
-
+    while(1)
+    {
+      if(TlsVector[ExtantTlsEntryCount] && !((ULONG_PTR)TlsVector[ExtantTlsEntryCount] % 4))
+        ++ExtantTlsEntryCount;
+      else
+        break;
+    }
     for (i = 0; i < TLS_VECTOR_MAX_SIZE; i++)
     {
         StringCchPrintfW(basedllname, MAX_PATH, L"basedllname_%d", i);
@@ -118,7 +126,7 @@ START_TEST(implicit_tls)
         else
           break;
     }
-    ok(i == TLS_VECTOR_MAX_SIZE + 1, "ThreadLocalStoragePointer length is %d, expected length %d\n", i, TLS_VECTOR_MAX_SIZE + 1);
+    ok(i == TLS_VECTOR_MAX_SIZE + ExtantTlsEntryCount, "ThreadLocalStoragePointer length is %d, expected length %d\n", i, TLS_VECTOR_MAX_SIZE + ExtantTlsEntryCount);
 
     SetEvent(ThreadEvent);
 

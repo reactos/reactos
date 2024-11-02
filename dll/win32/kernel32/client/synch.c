@@ -86,6 +86,7 @@ WaitForSingleObject(IN HANDLE hHandle,
     return WaitForSingleObjectEx(hHandle, dwMilliseconds, FALSE);
 }
 
+NTSTATUS NTAPI LdrpAllocateTls(VOID);
 /*
  * @implemented
  */
@@ -135,7 +136,8 @@ WaitForSingleObjectEx(IN HANDLE hHandle,
             Status = WAIT_FAILED;
         }
     } while ((Status == STATUS_ALERTED) && (bAlertable));
-
+    /* Using this opportunity to propagate implicit TLS data to other threads... */
+    LdrpAllocateTls();
     /* Cleanup the activation context */
     if (bAlertable) RtlDeactivateActivationContextUnsafeFast(&ActCtx);
 
