@@ -31,7 +31,7 @@ _CRTALLOC(".tls$ZZZ") char _tls_end = 0;
 ULONG _tls_index = 0;
 
 _CRTALLOC(".rdata$T") const IMAGE_TLS_DIRECTORY _tls_used = {
-  (ULONG_PTR) &_tls_start, (ULONG_PTR) &_tls_end,
+  (ULONG_PTR) &_tls_start, (ULONG_PTR) &_tls_end + 3,
   (ULONG_PTR) &_tls_index, (ULONG_PTR) 0,
   (ULONG) 0, (ULONG) 0
 };

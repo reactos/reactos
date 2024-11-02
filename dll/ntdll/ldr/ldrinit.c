@@ -1365,6 +1365,7 @@ LdrpAllocateTls(VOID)
         /* Allocate this vector */
         TlsDataSize = TlsData->TlsDirectory.EndAddressOfRawData -
                       TlsData->TlsDirectory.StartAddressOfRawData;
+        TlsDataSize += TlsDataSize % sizeof(PVOID);
         if (!OldTlsVector || ((TlsData->TlsDirectory.Characteristics + 1) > (ULONG)Teb->UserReserved[0]))
         {
             TlsVector[TlsData->TlsDirectory.Characteristics] = RtlAllocateHeap(RtlGetProcessHeap(),

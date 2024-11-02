@@ -136,6 +136,7 @@
 @ stdcall LdrAccessResource(ptr ptr ptr ptr)
 @ stdcall -stub -version=0x600+ LdrAddLoadAsDataTable(ptr wstr long ptr)
 @ stdcall LdrAddRefDll(long ptr)
+@ stdcall LdrpAllocateTls()
 @ stdcall -version=0x502 LdrAlternateResourcesEnabled()
 @ stdcall -version=0x502 LdrCreateOutOfProcessImage(long ptr ptr ptr)
 @ stdcall -version=0x502 LdrDestroyOutOfProcessImage(ptr)
