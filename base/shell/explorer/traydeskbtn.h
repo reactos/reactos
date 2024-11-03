@@ -28,6 +28,7 @@ class CTrayShowDesktopButton :
     BOOL m_drawWithDedicatedBackground;
     BOOL m_bHovering;
     HWND m_hWndTaskbar;
+    CTooltips m_tooltip;
 
 public:
     BOOL m_bPressed;

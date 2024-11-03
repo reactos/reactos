@@ -45,10 +45,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Despre depanatorul FreeLoader"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Despre Depanatorul FreeLoader v1.0\nDrept de autor (C) 2003\nde Brian Palmer (brianp@reactos.org)", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
-    DEFPUSHBUTTON "OK", IDOK, 189, 44, 50, 14, WS_GROUP
-    ICON IDI_FDEBUG, IDC_STATIC, 19, 30, 20, 20
-    EDITTEXT IDC_LICENSE_EDIT, 53, 63, 174, 107, ES_MULTILINE | ES_READONLY | WS_VSCROLL
+    CONTROL "Depanatorul FreeLoader\nDrept de autor (C) 2003\nde Brian Palmer (brianp@reactos.org)", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
+    DEFPUSHBUTTON "Î&nchide", IDOK, 189, 44, 50, 14, WS_GROUP
 END
 
 IDD_CONNECTION DIALOGEX 0, 0, 196, 100
@@ -87,5 +85,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE "Acest program este software gratuit; îl puteți redistribui și/sau modifica în conformitate cu termenii Licenței Publice Generale GNU publicate de Free Software Foundation; fie versiunea 2 a Licenței, fie (la alegerea dvs.) orice versiune ulterioară.\r\n\r\nAcest program este distribuit în speranța că va fi util, dar FĂRĂ NICIO GARANȚIE; fără nici măcar garanția implicită de VANTABILITATE sau ADECVARE PENTRU UN ANUMIT SCOP. Consultați Licența publică generală GNU pentru mai multe detalii.\r\n\r\nAr fi trebuit să primiți o copie a Licenței publice generale GNU împreună cu acest program; dacă nu, scrieți la Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 SUA."
+    IDS_LICENSE "Acest program este un software liber: dumneavoastră îl puteţi redistribui şi/sau modifica, în condiţiile Licenţei publice generale GNU, aşa cum a fost aceasta publicată de către Free Software Foundation, fie versiunea 2 a acestei Licenţe, fie (la alegerea dumneavoastră), orice versiune ulterioară.\r\n\r\nAcest program este distribuit în speranţa că va fi util, dar FĂRĂ NICIO GARANŢIE; chiar şi fără garanţia implicită de MERCANTILITATE sau de ADECVARE PENTRU UN ANUMIT SCOP. Vezi Licenţa publică generală GNU pentru mai multe detalii.\r\n\r\nTrebuie ca dumneavoastră să fi primit o copie a Licenţei publice generale GNU împreună cu acest program. Dacă nu, scrie la Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 SUA."
 END

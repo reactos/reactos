@@ -150,7 +150,7 @@ typedef struct _ENUMFILES_CTX
 static BOOL
 EnumFilesWorker(
     _Inout_ PENUMFILES_CTX EnumCtx,
-    _Inout_ off_t offFilePart) // Offset to the file name inside FullPathBuffer
+    _Inout_ _off_t offFilePart) // Offset to the file name inside FullPathBuffer
 {
     BOOL bFound = FALSE;
     HRESULT hRes;
@@ -243,7 +243,7 @@ EnumFilesWorker(
     do
     {
         BOOL bIsDir = !!(EnumCtx->findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
-        BOOL bExactMatch = (wcsicmp(findFileName, EnumCtx->FileName) == 0);
+        BOOL bExactMatch = (_wcsicmp(findFileName, EnumCtx->FileName) == 0);
 
         if (bIsDir && !(EnumCtx->Flags & ENUM_DIRECTORIES) && !bExactMatch)
             continue;
@@ -330,9 +330,9 @@ int wmain(int argc, WCHAR *argv[])
             }
             else
             /* Retrieve the enumeration modes */
-            if (wcsicmp(argv[i], L"/s") == 0)
+            if (_wcsicmp(argv[i], L"/s") == 0)
                 dwEnumFlags |= ENUM_RECURSE;
-            else if (wcsicmp(argv[i], L"/d") == 0)
+            else if (_wcsicmp(argv[i], L"/d") == 0)
                 dwEnumFlags |= ENUM_DIRECTORIES;
             else
             {

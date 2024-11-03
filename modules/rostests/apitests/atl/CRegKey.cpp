@@ -6,8 +6,13 @@
  *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
-#include <apitest.h>
 #include <atlbase.h>
+
+#ifdef HAVE_APITEST
+    #include <apitest.h>
+#else
+    #include "atltest.h"
+#endif
 
 START_TEST(CRegKey)
 {
@@ -81,7 +86,7 @@ START_TEST(CRegKey)
     memset(buffer, 0, sizeof(buffer));
     lret = key3.QueryValue(_T("APITEST_VALUE_NAME"), &type, buffer, &buffer_size);
     ok(lret == ERROR_ACCESS_DENIED, "Expected lret to be ERROR_ACCESS_DENIED, was: %lu\n", lret);
-    ok(type == 0 || broken(type > 200), "Expected type to be 0, was: %lu\n", type);
+    ok(type == 0 || ((sizeof(void*) == 8) && broken(type == 1)) || broken(type > 200), "Expected type to be 0, was: %lu\n", type);
     ok(buffer_size == sizeof(buffer), "Expected buffer_size to be %u, was: %lu\n", sizeof(buffer), buffer_size);
 
 

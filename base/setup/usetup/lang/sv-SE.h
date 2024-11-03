@@ -1515,7 +1515,7 @@ static MUI_ENTRY svSEBootLoaderRemovableDiskPageEntries[] =
     {
         6,
         8,
-        "Setup misslyckades med att installera bootloadern p\206 datorns h\206rddisk.",
+        "Setup installerar boot-loadern.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },

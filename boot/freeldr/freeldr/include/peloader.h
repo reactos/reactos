@@ -27,17 +27,27 @@ typedef VOID
 extern PELDR_IMPORTDLL_LOAD_CALLBACK PeLdrImportDllLoadCallback;
 
 BOOLEAN
+PeLdrInitializeModuleList(VOID);
+
+BOOLEAN
 PeLdrLoadImage(
     _In_ PCSTR FilePath,
     _In_ TYPE_OF_MEMORY MemoryType,
     _Out_ PVOID* ImageBasePA);
 
 BOOLEAN
+PeLdrLoadImageEx(
+    _In_ PCSTR FilePath,
+    _In_ TYPE_OF_MEMORY MemoryType,
+    _Out_ PVOID* ImageBasePA,
+    _In_ BOOLEAN KernelMapping);
+
+BOOLEAN
 PeLdrAllocateDataTableEntry(
     IN OUT PLIST_ENTRY ModuleListHead,
     IN PCCH BaseDllName,
     IN PCCH FullDllName,
-    IN PVOID BasePA,
+    IN PVOID BaseVA,
     OUT PLDR_DATA_TABLE_ENTRY *NewEntry);
 
 VOID
@@ -60,3 +70,10 @@ PeLdrCheckForLoadedDll(
 PVOID
 PeLdrInitSecurityCookie(
     _In_ PLDR_DATA_TABLE_ENTRY LdrEntry);
+
+BOOLEAN
+PeLdrLoadBootImage(
+    _In_ PCSTR FilePath,
+    _In_ PCSTR BaseDllName,
+    _Out_ PVOID* ImageBase,
+    _Out_ PLDR_DATA_TABLE_ENTRY* DataTableEntry);

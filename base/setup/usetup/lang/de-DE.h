@@ -1508,14 +1508,7 @@ static MUI_ENTRY deDEBootLoaderRemovableDiskPageEntries[] =
     {
         6,
         8,
-        "Der Bootsektor konnte nicht auf der Festplatte Ihres Computers",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "installiert werden.",
+        "Setup installiert den Bootloader.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },

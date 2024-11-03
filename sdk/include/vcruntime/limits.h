@@ -4,7 +4,7 @@
  * No warranty is given; refer to the file DISCLAIMER within this package.
  */
 #pragma once
-#include <crtdefs.h>
+#include <vcruntime.h>
 
 #ifndef _INC_LIMITS
 #define _INC_LIMITS

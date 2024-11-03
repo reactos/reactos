@@ -40,9 +40,8 @@ UpdateServiceStatus(DWORD dwState)
     if (dwState == SERVICE_RUNNING)
         ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
 
-    SetServiceStatus(ServiceStatusHandle,
-                     &ServiceStatus);
-    DPRINT1("WU UpdateServiceStatus() called\n");
+    SetServiceStatus(ServiceStatusHandle, &ServiceStatus);
+    DPRINT1("WU UpdateServiceStatus(%lu) called\n", dwState);
 }
 
 static DWORD WINAPI
@@ -54,35 +53,34 @@ ServiceControlHandler(DWORD dwControl,
     switch (dwControl)
     {
         case SERVICE_CONTROL_STOP:
-            DPRINT1("WU ServiceControlHandler()  SERVICE_CONTROL_STOP received\n");
+            DPRINT1("WU ServiceControlHandler(SERVICE_CONTROL_STOP) received\n");
             SetEvent(hStopEvent);
             UpdateServiceStatus(SERVICE_STOP_PENDING);
             return ERROR_SUCCESS;
 
         case SERVICE_CONTROL_PAUSE:
-            DPRINT1("WU ServiceControlHandler()  SERVICE_CONTROL_PAUSE received\n");
+            DPRINT1("WU ServiceControlHandler(SERVICE_CONTROL_PAUSE) received\n");
             UpdateServiceStatus(SERVICE_PAUSED);
             return ERROR_SUCCESS;
 
         case SERVICE_CONTROL_CONTINUE:
-            DPRINT1("WU ServiceControlHandler()  SERVICE_CONTROL_CONTINUE received\n");
+            DPRINT1("WU ServiceControlHandler(SERVICE_CONTROL_CONTINUE) received\n");
             UpdateServiceStatus(SERVICE_RUNNING);
             return ERROR_SUCCESS;
 
         case SERVICE_CONTROL_INTERROGATE:
-            DPRINT1("WU ServiceControlHandler()  SERVICE_CONTROL_INTERROGATE received\n");
-            SetServiceStatus(ServiceStatusHandle,
-                             &ServiceStatus);
+            DPRINT1("WU ServiceControlHandler(SERVICE_CONTROL_INTERROGATE) received\n");
+            SetServiceStatus(ServiceStatusHandle, &ServiceStatus);
             return ERROR_SUCCESS;
 
         case SERVICE_CONTROL_SHUTDOWN:
-            DPRINT1("WU ServiceControlHandler()  SERVICE_CONTROL_SHUTDOWN received\n");
+            DPRINT1("WU ServiceControlHandler(SERVICE_CONTROL_SHUTDOWN) received\n");
             SetEvent(hStopEvent);
             UpdateServiceStatus(SERVICE_STOP_PENDING);
             return ERROR_SUCCESS;
 
         default :
-            DPRINT1("WU ServiceControlHandler()  Control %lu received\n", dwControl);
+            DPRINT1("WU ServiceControlHandler(Control %lu) received\n", dwControl);
             return ERROR_CALL_NOT_IMPLEMENTED;
     }
 }
@@ -100,14 +98,14 @@ ServiceMain(DWORD argc, LPTSTR *argv)
                                                         NULL);
     if (!ServiceStatusHandle)
     {
-        DPRINT1("RegisterServiceCtrlHandlerExW() failed! (Error %lu)\n", GetLastError());
+        DPRINT1("RegisterServiceCtrlHandlerExW() failed (Error %lu)\n", GetLastError());
         return;
     }
 
     hStopEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
     if (hStopEvent == NULL)
     {
-        DPRINT1("CreateEvent() failed! (Error %lu)\n", GetLastError());
+        DPRINT1("CreateEvent() failed (Error %lu)\n", GetLastError());
         goto done;
     }
 

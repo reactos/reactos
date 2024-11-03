@@ -287,11 +287,12 @@ static BOOL SHELL_ArgifyW(WCHAR* out, DWORD len, const WCHAR* fmt, const WCHAR* 
                         else
                             cmd = lpFile;
 
-                        used += wcslen(cmd);
+                        SIZE_T cmdlen = wcslen(cmd);
+                        used += cmdlen;
                         if (used < len)
                         {
                             wcscpy(res, cmd);
-                            res += wcslen(cmd);
+                            res += cmdlen;
                         }
                     }
                     found_p1 = TRUE;
@@ -844,7 +845,7 @@ static UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpVerb,
                     while (*p == ' ' || *p == '\t') p++;
                 }
 
-                if (wcsicmp(tok, &extension[1]) == 0) /* have to skip the leading "." */
+                if (_wcsicmp(tok, &extension[1]) == 0) /* have to skip the leading "." */
                 {
                     wcscpy(lpResult, xlpFile);
                     /* Need to perhaps check that the file has a path
@@ -1730,7 +1731,7 @@ static BOOL SHELL_translate_idlist(LPSHELLEXECUTEINFOW sei, LPWSTR wszParameters
 
             sei->fMask &= ~SEE_MASK_INVOKEIDLIST;
         } else {
-            WCHAR target[MAX_PATH];
+            WCHAR target[max(MAX_PATH, _countof(buffer))];
             DWORD attribs;
             DWORD resultLen;
             /* Check if we're executing a directory and if so use the
@@ -1744,10 +1745,19 @@ static BOOL SHELL_translate_idlist(LPSHELLEXECUTEINFOW sei, LPWSTR wszParameters
                                            buffer, sizeof(buffer))) {
                 SHELL_ArgifyW(wszApplicationName, dwApplicationNameLen,
                               buffer, target, (LPITEMIDLIST)sei->lpIDList, NULL, &resultLen,
-                              (sei->lpDirectory && *sei->lpDirectory) ? sei->lpDirectory : NULL);
+                              !StrIsNullOrEmpty(sei->lpDirectory) ? sei->lpDirectory : NULL);
                 if (resultLen > dwApplicationNameLen)
-                    ERR("Argify buffer not large enough... truncating\n");
+                    ERR("Argify buffer not large enough... truncating\n"); // FIXME: Report this to the caller?
                 appKnownSingular = FALSE;
+                // HACKFIX: We really want the !appKnownSingular code in SHELL_execute to split the
+                // parameters for us but we cannot guarantee that the exe in the registry is quoted.
+                // We have now turned 'explorer.exe "%1" into 'explorer.exe "c:\path\from\pidl"' and
+                // need to split to application and parameters.
+                LPCWSTR params = PathGetArgsW(wszApplicationName);
+                lstrcpynW(wszParameters, params, parametersLen);
+                PathRemoveArgsW(wszApplicationName);
+                PathUnquoteSpacesW(wszApplicationName);
+                appKnownSingular = TRUE;
             }
             sei->fMask &= ~SEE_MASK_INVOKEIDLIST;
         }

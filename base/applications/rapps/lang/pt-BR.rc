@@ -17,7 +17,7 @@ BEGIN
     END
     POPUP "&Programas"
     BEGIN
-        MENUITEM "I&nstalar\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Instalar\tCtrl+Enter", ID_INSTALL
         MENUITEM "&Desinstalar\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modificar", ID_MODIFY
         MENUITEM SEPARATOR
@@ -40,22 +40,6 @@ BEGIN
     BEGIN
         MENUITEM "A&brir endereço no navegador", ID_OPEN_LINK
         MENUITEM "&Copiar endereço", ID_COPY_LINK
-    END
-END
-
-IDR_APPLICATIONMENU MENU
-BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM "&Instalar\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Desinstalar\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "&Modificar", ID_MODIFY
-        MENUITEM SEPARATOR
-        MENUITEM "R&emover do Registro", ID_REGREMOVE
-        MENUITEM SEPARATOR
-        MENUITEM "Atualiza&r\tF5", ID_REFRESH
-        MENUITEM SEPARATOR
-        MENUITEM "Update Data&base\tCtrl+F5", ID_RESETDB
     END
 END
 
@@ -188,11 +172,20 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "Central de Aplicativos ReactOS"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT "Procurar…"
-    IDS_APPS_COUNT "Número de aplicativos: %d; Selected: %d"
-    IDS_WELCOME_TITLE "Bem-vindo(a) a Central de Aplicativos ReactOS!\n\n"
+    IDS_WELCOME_TITLE "Bem-vindo(a) a Central de Aplicativos ReactOS!"
     IDS_WELCOME_TEXT "Escolha uma categoria à esquerda, então escolha um aplicativo para instalar ou desinstalar.\nWeb Site ReactOS: "
     IDS_WELCOME_URL "https://reactos.org"
+
+    IDS_APPWIZ_TITLE "Add/Remove Programs"
+    IDS_APPWIZ_TEXT1 "Choose ""Applications"" or ""Updates"" to view the list of applications or updates installed on your system."
+    IDS_APPWIZ_TEXT2 "To remove a program or to modify its installed components, select it from the list and click on ""Uninstall"" or ""Modify""."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCH_TEXT "Procurar…"
+    IDS_APPS_COUNT "Número de aplicativos: %d"
+    IDS_APPS_SELECT_COUNT "; Selected: %d"
     IDS_INSTALLED "Instalado"
     IDS_AVAILABLEFORINST "Disponível para instalação"
     IDS_UPDATES "Atualizações"

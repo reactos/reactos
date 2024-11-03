@@ -176,19 +176,20 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     static WCHAR StrLineAt[80]  = L"";
     static WCHAR StrOptions[80] = L"";
     static WCHAR StrLines[80]   = L"";
+    static BOOL AreStrLoaded = FALSE;
 
     WCHAR szPercent[80] = L"";
     WCHAR szLineAt[80]  = L"";
 
     /* Load the prompt strings */
-    if (!*StrPercent)
+    if (!AreStrLoaded)
+    {
         K32LoadStringW(NULL, IDS_CONTINUE_PERCENT, StrPercent, ARRAYSIZE(StrPercent));
-    if (!*StrLineAt)
         K32LoadStringW(NULL, IDS_CONTINUE_LINE_AT, StrLineAt, ARRAYSIZE(StrLineAt));
-    if (!*StrOptions)
         K32LoadStringW(NULL, IDS_CONTINUE_OPTIONS, StrOptions, ARRAYSIZE(StrOptions));
-    if (!*StrLines)
         K32LoadStringW(NULL, IDS_CONTINUE_LINES, StrLines, ARRAYSIZE(StrLines));
+        AreStrLoaded = TRUE;
+    }
 
     /*
      * Check whether the pager is prompting, but we have actually finished

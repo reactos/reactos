@@ -168,7 +168,7 @@ static ARC_STATUS IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO I
     RtlZeroMemory(&IsoFileInfo, sizeof(ISO_FILE_INFO));
 
     //
-    // Read The Primary Volume Descriptor
+    // Read the Primary Volume Descriptor
     //
     Position.HighPart = 0;
     Position.LowPart = 16 * SECTORSIZE;
@@ -182,6 +182,9 @@ static ARC_STATUS IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO I
     DirectorySector = Pvd->RootDirRecord.ExtentLocationL;
     DirectoryLength = Pvd->RootDirRecord.DataLengthL;
 
+    /* Skip leading path separator, if any */
+    if (*FileName == '\\' || *FileName == '/')
+        ++FileName;
     //
     // Figure out how many sub-directories we are nested in
     //
@@ -502,9 +505,9 @@ const DEVVTBL* IsoMount(ULONG DeviceId)
 
     TRACE("Enter IsoMount(%lu)\n", DeviceId);
 
-    //
-    // Read The Primary Volume Descriptor
-    //
+    /*
+     * Read the Primary Volume Descriptor
+     */
     Position.HighPart = 0;
     Position.LowPart = 16 * SECTORSIZE;
     Status = ArcSeek(DeviceId, &Position, SeekAbsolute);
@@ -514,16 +517,24 @@ const DEVVTBL* IsoMount(ULONG DeviceId)
     if (Status != ESUCCESS || Count < sizeof(PVD))
         return NULL;
 
-    //
-    // Check if PVD is valid. If yes, return ISO9660 function table
-    //
-    if (Pvd->VdType == 1 && RtlEqualMemory(Pvd->StandardId, "CD001", 5))
+    /* Check if the PVD is valid */
+    if (!(Pvd->VdType == 1 && RtlEqualMemory(Pvd->StandardId, "CD001", 5) && Pvd->VdVersion == 1))
     {
-        TRACE("IsoMount(%lu) success\n", DeviceId);
-        return &Iso9660FuncTable;
+        WARN("Unrecognized CDROM format\n");
+        return NULL;
+    }
+    if (Pvd->LogicalBlockSizeL != SECTORSIZE)
+    {
+        ERR("Unsupported LogicalBlockSize %u\n", Pvd->LogicalBlockSizeL);
+        return NULL;
     }
 
-    return NULL;
+    Count = (ULONG)((ULONGLONG)Pvd->VolumeSpaceSizeL * SECTORSIZE / 1024 / 1024);
+    TRACE("Recognized ISO9660 drive, size %lu MB (%lu sectors)\n",
+          Count, Pvd->VolumeSpaceSizeL);
+
+    /* Everything OK, return the ISO9660 function table */
+    return &Iso9660FuncTable;
 }
 
 #endif

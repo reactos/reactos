@@ -9,6 +9,8 @@
 
 #include <win32k.h>
 #include <immdev.h>
+#include <unaligned.h>
+
 DBG_DEFAULT_CHANNEL(UserWnd);
 
 INT gNestedWindowLimit = 50;
@@ -581,6 +583,7 @@ LRESULT co_UserFreeWindow(PWND Window,
    PWND Child;
    PMENU Menu;
    BOOLEAN BelongsToThreadData;
+   USER_REFERENCE_ENTRY Ref;
 
    ASSERT(Window);
 
@@ -738,7 +741,7 @@ LRESULT co_UserFreeWindow(PWND Window,
    WndSetChild(Window, NULL);
    WndSetLastActive(Window, NULL);
 
-   UserReferenceObject(Window);
+   UserRefObjectCo(Window, &Ref);
    UserMarkObjectDestroy(Window);
 
    IntDestroyScrollBars(Window);
@@ -767,7 +770,7 @@ LRESULT co_UserFreeWindow(PWND Window,
 //   ASSERT(Window != NULL);
    UserFreeWindowInfo(Window->head.pti, Window);
 
-   UserDereferenceObject(Window);
+   UserDerefObjectCo(Window);
    UserDeleteObject(UserHMGetHandle(Window), TYPE_WINDOW);
 
    return 0;
@@ -3842,16 +3845,18 @@ co_IntSetWindowLongPtr(HWND hWnd, DWORD Index, LONG_PTR NewValue, BOOL Ansi, ULO
          return 0;
       }
 
+      PVOID Address = (PUCHAR)(&Window[1]) + Index;
+
 #ifdef _WIN64
       if (Size == sizeof(LONG))
       {
-         OldValue = *((LONG *)((PCHAR)(Window + 1) + Index));
-         *((LONG*)((PCHAR)(Window + 1) + Index)) = (LONG)NewValue;
+         OldValue = ReadUnalignedU32(Address);
+         WriteUnalignedU32(Address, NewValue);
       }
       else
 #endif
       {
-         OldValue = *((LONG_PTR *)((PCHAR)(Window + 1) + Index));
+         OldValue = ReadUnalignedUlongPtr(Address);
          /*
          if ( Index == DWLP_DLGPROC && Wnd->state & WNDS_DIALOGWINDOW)
          {
@@ -3859,7 +3864,7 @@ co_IntSetWindowLongPtr(HWND hWnd, DWORD Index, LONG_PTR NewValue, BOOL Ansi, ULO
             if (!OldValue) return 0;
          }
          */
-         *((LONG_PTR*)((PCHAR)(Window + 1) + Index)) = NewValue;
+         WriteUnalignedUlongPtr(Address, NewValue);
       }
 
    }

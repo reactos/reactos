@@ -22,10 +22,6 @@
 #pragma once
 #endif
 
-// This is needed because headers define wrong one for ReactOS
-#undef KIP0PCRADDRESS
-#define KIP0PCRADDRESS                      0xFFFFF78000001000ULL /* FIXME!!! */
-
 #define VA_MASK 0x0000FFFFFFFFFFFFUL
 
 #define PtrToPfn(p) \

@@ -216,4 +216,5 @@ BEGIN
     IDS_RESTORE_ALL "&Afficher les fenêtres ouvertes"
     IDS_TRAYWND_UNDO_CASCADE "Ann&uler cascade"
     IDS_TRAYWND_UNDO_TILE "Ann&uler mosaïque"
+    IDS_TRAYDESKBTN_TOOLTIP "Show Desktop/Windows"
 END

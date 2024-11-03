@@ -1634,11 +1634,7 @@ extern char __ImageBase;
 ULONG
 LoadBootDeviceDriver(VOID)
 {
-    PIMAGE_NT_HEADERS NtHeaders;
-    LIST_ENTRY ModuleListHead;
-    PIMAGE_IMPORT_DESCRIPTOR ImportTable;
-    ULONG ImportTableSize;
-    PLDR_DATA_TABLE_ENTRY BootDdDTE, FreeldrDTE;
+    PLDR_DATA_TABLE_ENTRY BootDdDTE;
     CHAR NtBootDdPath[MAX_PATH];
     PVOID ImageBase = NULL;
     ULONG (NTAPI *EntryPoint)(IN PVOID DriverObject, IN PVOID RegistryPath);
@@ -1650,84 +1646,20 @@ LoadBootDeviceDriver(VOID)
     HalpInitBusHandler();
 #endif
 
-    /* Initialize the loaded module list */
-    InitializeListHead(&ModuleListHead);
-
     /* Create full ntbootdd.sys path */
     strcpy(NtBootDdPath, FrLdrBootPath);
     strcat(NtBootDdPath, "\\NTBOOTDD.SYS");
 
-    /* Load file */
-    Success = PeLdrLoadImage(NtBootDdPath, LoaderBootDriver, &ImageBase);
+    /* Load ntbootdd.sys */
+    Success = PeLdrLoadBootImage(NtBootDdPath,
+                                 "ntbootdd.sys",
+                                 ImageBase,
+                                 &BootDdDTE);
     if (!Success)
     {
         /* That's OK, file simply doesn't exist */
         return ESUCCESS;
     }
-
-    /* Allocate a DTE for ntbootdd */
-    Success = PeLdrAllocateDataTableEntry(&ModuleListHead, "ntbootdd.sys",
-                                          "NTBOOTDD.SYS", ImageBase, &BootDdDTE);
-    if (!Success)
-    {
-        /* Cleanup and bail out */
-        MmFreeMemory(ImageBase);
-        return EIO;
-    }
-
-    /* Add the PE part of freeldr.sys to the list of loaded executables, it
-       contains ScsiPort* exports, imported by ntbootdd.sys */
-    Success = PeLdrAllocateDataTableEntry(&ModuleListHead, "scsiport.sys",
-                                          "FREELDR.SYS", &__ImageBase, &FreeldrDTE);
-    if (!Success)
-    {
-        /* Cleanup and bail out */
-        PeLdrFreeDataTableEntry(BootDdDTE);
-        MmFreeMemory(ImageBase);
-        return EIO;
-    }
-
-    /* Fix imports */
-    Success = PeLdrScanImportDescriptorTable(&ModuleListHead, "", BootDdDTE);
-    if (!Success)
-    {
-        /* Cleanup and bail out */
-        PeLdrFreeDataTableEntry(FreeldrDTE);
-        PeLdrFreeDataTableEntry(BootDdDTE);
-        MmFreeMemory(ImageBase);
-        return EIO;
-    }
-
-    /* Now unlink the DTEs, they won't be valid later */
-    RemoveEntryList(&BootDdDTE->InLoadOrderLinks);
-    RemoveEntryList(&FreeldrDTE->InLoadOrderLinks);
-
-    /* Change imports to PA */
-    ImportTable = (PIMAGE_IMPORT_DESCRIPTOR)RtlImageDirectoryEntryToData(VaToPa(BootDdDTE->DllBase),
-        TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &ImportTableSize);
-    for (;(ImportTable->Name != 0) && (ImportTable->FirstThunk != 0);ImportTable++)
-    {
-        PIMAGE_THUNK_DATA ThunkData = (PIMAGE_THUNK_DATA)VaToPa(RVA(BootDdDTE->DllBase, ImportTable->FirstThunk));
-
-        while (((PIMAGE_THUNK_DATA)ThunkData)->u1.AddressOfData != 0)
-        {
-            ThunkData->u1.Function = (ULONG_PTR)VaToPa((PVOID)ThunkData->u1.Function);
-            ThunkData++;
-        }
-    }
-
-    /* Relocate image to PA */
-    NtHeaders = RtlImageNtHeader(VaToPa(BootDdDTE->DllBase));
-    if (!NtHeaders)
-        return EIO;
-    Success = (BOOLEAN)LdrRelocateImageWithBias(VaToPa(BootDdDTE->DllBase),
-                                                NtHeaders->OptionalHeader.ImageBase - (ULONG_PTR)BootDdDTE->DllBase,
-                                                "FreeLdr",
-                                                TRUE,
-                                                TRUE, /* In case of conflict still return success */
-                                                FALSE);
-    if (!Success)
-        return EIO;
 
     /* Call the entrypoint */
     EntryPoint = VaToPa(BootDdDTE->EntryPoint);

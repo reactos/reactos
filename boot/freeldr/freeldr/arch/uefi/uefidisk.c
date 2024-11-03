@@ -185,7 +185,7 @@ UefiDiskOpen(CHAR *Path, OPENMODE OpenMode, ULONG *FileId)
         }
 
         SectorOffset = 0;
-        SectorCount = (ULONGLONG)Geometry.Cylinders * Geometry.Heads * Geometry.Sectors;
+        SectorCount = Geometry.Sectors;
     }
 
     Context = FrLdrTempAlloc(sizeof(DISKCONTEXT), TAG_HW_DISK_CONTEXT);
@@ -415,7 +415,7 @@ UefiSetupBlockDevices(VOID)
         if (EFI_ERROR(Status) || 
             bio == NULL ||
             bio->Media->BlockSize == 0 ||
-            bio->Media->BlockSize > 2048)
+            bio->Media->BlockSize > 4096)
         {
             TRACE("UefiSetupBlockDevices: UEFI has found a block device that failed, skipping\n");
             continue;
@@ -577,10 +577,11 @@ UefiDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY Geometry)
 
     UefiDriveNumber = InternalUefiDisk[DriveNumber - FIRST_BIOS_DISK].UefiRootNumber;
     GlobalSystemTable->BootServices->HandleProtocol(handles[UefiDriveNumber], &bioGuid, (void**)&bio);
-    Geometry->Cylinders = 1;      // Not relevant for the UEFI BIO protocol
-    Geometry->Heads = 1;          // Not relevant for the UEFI BIO protocol
-    Geometry->Sectors = bio->Media->LastBlock;        // Number of sectors per track
-    Geometry->BytesPerSector = bio->Media->BlockSize; // Number of bytes per sector
+    Geometry->Cylinders = 1; // Not relevant for the UEFI BIO protocol
+    Geometry->Heads = 1;     // Not relevant for the UEFI BIO protocol
+    Geometry->SectorsPerTrack = (bio->Media->LastBlock + 1);
+    Geometry->BytesPerSector = bio->Media->BlockSize;
+    Geometry->Sectors = (bio->Media->LastBlock + 1);
 
     return TRUE;
 }
@@ -592,5 +593,5 @@ UefiDiskGetCacheableBlockCount(UCHAR DriveNumber)
     TRACE("UefiDiskGetCacheableBlockCount: DriveNumber: %d\n", UefiDriveNumber);
 
     GlobalSystemTable->BootServices->HandleProtocol(handles[UefiDriveNumber], &bioGuid, (void**)&bio);
-    return bio->Media->LastBlock;
+    return (bio->Media->LastBlock + 1);
 }

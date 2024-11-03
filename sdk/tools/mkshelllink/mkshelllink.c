@@ -18,8 +18,14 @@ typedef unsigned __int16 uint16_t;
 typedef unsigned __int32 uint32_t;
 #endif
 
+#ifdef _WIN32
+#define strcasecmp _stricmp
+#endif
+
 #define SW_SHOWNORMAL 1
 #define SW_SHOWMINNOACTIVE 7
+#define CSIDL_WINDOWS 0x24
+#define CSIDL_SYSTEM 0x25
 
 typedef struct _GUID
 {
@@ -125,17 +131,61 @@ typedef struct _ID_LIST_DRIVE
     uint16_t unknown;
 } ID_LIST_DRIVE;
 
+#define EXP_SPECIAL_FOLDER_SIG 0xA0000005
+typedef struct _EXP_SPECIAL_FOLDER
+{
+    uint32_t cbSize, dwSignature, idSpecialFolder, cbOffset;
+} EXP_SPECIAL_FOLDER;
+
 #pragma pack(pop)
+
+static const struct SPECIALFOLDER {
+    unsigned char csidl;
+    const char* name;
+} g_specialfolders[] = {
+    { CSIDL_WINDOWS, "windows" },
+    { CSIDL_SYSTEM, "system" },
+    { 0, NULL}
+};
+
+static unsigned int is_path_separator(unsigned int c)
+{
+    return c == '\\' || c == '/';
+}
+
+static const struct SPECIALFOLDER* get_special_folder(const char *target)
+{
+    char buf[256];
+    strncpy(buf, target, sizeof(buf));
+    buf[sizeof("shell:") - 1] = '\0';
+    if (strcasecmp("shell:", buf))
+        return NULL;
+
+    target += sizeof("shell:") - 1;
+    for (unsigned long i = 0;; ++i)
+    {
+        unsigned long len;
+        const struct SPECIALFOLDER *special = &g_specialfolders[i];
+        if (!special->name)
+            return NULL;
+        len = strlen(special->name);
+        strncpy(buf, target, sizeof(buf));
+        buf[len] = '\0';
+        if (!strcasecmp(special->name, buf) && (is_path_separator(target[len]) || !target[len]))
+            return &g_specialfolders[i];
+    }
+}
 
 int main(int argc, const char *argv[])
 {
     int i;
     const char *pszOutputPath = "shortcut.lnk";
     const char *pszTarget = NULL;
-    const char *pszDescription = "Description";
+    const char *pszDescription = NULL;
     const char *pszWorkingDir = NULL;
     const char *pszCmdLineArgs = NULL;
     const char *pszIcon = NULL;
+    char targetpath[260];
     int IconNr = 0;
     GUID Guid = CLSID_MyComputer;
     int bHelp = 0, bMinimized = 0;
@@ -143,6 +193,7 @@ int main(int argc, const char *argv[])
     LNK_HEADER Header;
     uint16_t uhTmp;
     uint32_t dwTmp;
+    EXP_SPECIAL_FOLDER CsidlBlock, *pCsidlBlock = NULL;
 
     for (i = 1; i < argc; ++i)
     {
@@ -226,14 +277,26 @@ int main(int argc, const char *argv[])
         ID_LIST_DRIVE IdListDrive;
         unsigned cbListSize = sizeof(IdListGuid) + sizeof(uint16_t), cchName;
         const char *pszName = pszTarget;
+        int index = 1, specialindex = -1;
+        const struct SPECIALFOLDER *special = get_special_folder(pszTarget);
 
         // ID list
         // It seems explorer does not accept links without id list. List is relative to desktop.
 
-        pszName = pszTarget;
-
-        if (pszName[0] && pszName[1] == ':')
+        if (special)
         {
+            Header.Flags &= ~LINK_RELATIVE_PATH;
+            CsidlBlock.cbSize = sizeof(CsidlBlock);
+            CsidlBlock.dwSignature = EXP_SPECIAL_FOLDER_SIG;
+            CsidlBlock.idSpecialFolder = special->csidl;
+            specialindex = 3; // Skip GUID, drive and fake windows/reactos folder
+            sprintf(targetpath, "x:\\reactos\\%s", pszTarget + sizeof("shell:") + strlen(special->name));
+            pszName = pszTarget = targetpath;
+        }
+
+        if (pszName[0] && pszName[0] != ':' && pszName[1] == ':')
+        {
+            ++index;
             cbListSize += sizeof(IdListDrive);
             pszName += 2;
             while (*pszName == '\\' || *pszName == '/')
@@ -248,6 +311,12 @@ int main(int argc, const char *argv[])
 
             if (cchName != 1 || pszName[0] != '.')
                 cbListSize += sizeof(IdListFile) + 2 * (cchName + 1);
+
+            if (++index == specialindex)
+            {
+                CsidlBlock.cbOffset = cbListSize - sizeof(uint16_t);
+                pCsidlBlock = &CsidlBlock;
+            }
 
             pszName += cchName;
             while (*pszName == '\\' || *pszName == '/')
@@ -309,7 +378,7 @@ int main(int argc, const char *argv[])
 
     if (Header.Flags & LINK_DESCRIPTION)
     {
-        // Dscription
+        // Description
         uhTmp = strlen(pszDescription);
         fwrite(&uhTmp, sizeof(uhTmp), 1, pFile);
         fputs(pszDescription, pFile);
@@ -348,6 +417,8 @@ int main(int argc, const char *argv[])
     }
 
     // Extra stuff
+    if (pCsidlBlock)
+        fwrite(pCsidlBlock, sizeof(*pCsidlBlock), 1, pFile);
     dwTmp = 0;
     fwrite(&dwTmp, sizeof(dwTmp), 1, pFile);
 

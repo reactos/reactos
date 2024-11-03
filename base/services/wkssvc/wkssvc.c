@@ -85,6 +85,8 @@ ServiceInit(VOID)
     VersionInfo.dwOSVersionInfoSize = sizeof(VersionInfo);
     GetVersionExW(&VersionInfo);
 
+    InitWorkstationInfo();
+
     Status = LsaRegisterLogonProcess(&ProcessName,
                                      &LsaHandle,
                                      &Mode);

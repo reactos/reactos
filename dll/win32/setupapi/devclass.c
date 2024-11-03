@@ -2,7 +2,7 @@
  * SetupAPI device class-related functions
  *
  * Copyright 2000 Andreas Mohr for CodeWeavers
- *           2005-2006 Hervé Poussineau (hpoussin@reactos.org)
+ *           2005-2006 HervÃ© Poussineau (hpoussin@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -159,7 +159,7 @@ SETUP_CreateDevicesList(
             TRACE("CM_Get_Device_ID_List_ExW() failed with status 0x%x\n", cr);
             if (Buffer)
                 HeapFree(GetProcessHeap(), 0, Buffer);
-            return GetErrorCodeFromCrCode(cr);
+            return (cr == CR_REGISTRY_ERROR) ? ERROR_INVALID_DATA : GetErrorCodeFromCrCode(cr);
         }
     }
     while (cr != CR_SUCCESS);

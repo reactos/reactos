@@ -914,28 +914,46 @@ KeRemoveQueueDpc(IN PKDPC Dpc)
 /*
  * @implemented
  */
+_IRQL_requires_max_(APC_LEVEL)
 VOID
 NTAPI
 KeFlushQueuedDpcs(VOID)
 {
-    PKPRCB CurrentPrcb = KeGetCurrentPrcb();
-    PAGED_CODE();
+    ULONG ProcessorIndex;
+    PKPRCB TargetPrcb;
 
-    /* Check if this is an UP machine */
-    if (KeActiveProcessors == 1)
+    PAGED_CODE();
+    ASSERT(KeGetCurrentThread()->SystemAffinityActive == FALSE);
+
+    /* Loop all processors */
+    for (ProcessorIndex = 0; ProcessorIndex < KeNumberProcessors; ProcessorIndex++)
     {
+        /* Get the target processor's PRCB */
+        TargetPrcb = KiProcessorBlock[ProcessorIndex];
+
         /* Check if there are DPCs on either queues */
-        if ((CurrentPrcb->DpcData[DPC_NORMAL].DpcQueueDepth > 0) ||
-            (CurrentPrcb->DpcData[DPC_THREADED].DpcQueueDepth > 0))
+        if ((TargetPrcb->DpcData[DPC_NORMAL].DpcQueueDepth > 0) ||
+            (TargetPrcb->DpcData[DPC_THREADED].DpcQueueDepth > 0))
         {
-            /* Request an interrupt */
-            HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+            /* Check if this is the current processor */
+            if (TargetPrcb == KeGetCurrentPrcb())
+            {
+                /* Request a DPC interrupt */
+                HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+            }
+            else
+            {
+                /* Attach to the target processor. This will cause a DPC
+                   interrupt on the target processor and flush all DPCs. */
+                KeSetSystemAffinityThread(TargetPrcb->SetMember);
+            }
         }
     }
-    else
+
+    /* Revert back to user affinity */
+    if (KeGetCurrentThread()->SystemAffinityActive)
     {
-        /* FIXME: SMP support required */
-        ASSERT(FALSE);
+        KeRevertToUserAffinityThread();
     }
 }
 

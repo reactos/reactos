@@ -746,6 +746,22 @@ HRESULT STDMETHODCALLTYPE CShellLink::Load(IStream *stm)
     if (FAILED(hr)) // FIXME: Should we fail?
         return hr;
 
+    LPEXP_SPECIAL_FOLDER pSpecial = (LPEXP_SPECIAL_FOLDER)SHFindDataBlock(m_pDBList, EXP_SPECIAL_FOLDER_SIG);
+    if (pSpecial && pSpecial->cbSize == sizeof(*pSpecial) && ILGetSize(m_pPidl) > pSpecial->cbOffset)
+    {
+        if (LPITEMIDLIST folder = SHCloneSpecialIDList(NULL, pSpecial->idSpecialFolder, FALSE))
+        {
+            LPITEMIDLIST pidl = ILCombine(folder, (LPITEMIDLIST)((char*)m_pPidl + pSpecial->cbOffset));
+            if (pidl)
+            {
+                ILFree(m_pPidl);
+                m_pPidl = pidl;
+                TRACE("Replaced pidl base with CSIDL %u up to %ub.\n", pSpecial->idSpecialFolder, pSpecial->cbOffset);
+            }
+            ILFree(folder);
+        }
+    }
+
     if (TRACE_ON(shell))
     {
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
@@ -881,6 +897,21 @@ HRESULT STDMETHODCALLTYPE CShellLink::Save(IStream *stm, BOOL fClearDirty)
 
     m_Header.dwSize = sizeof(m_Header);
     m_Header.clsid = CLSID_ShellLink;
+
+    /* Store target attributes */
+    WIN32_FIND_DATAW wfd = {};
+    WCHAR FsTarget[MAX_PATH];
+    if (GetPath(FsTarget, _countof(FsTarget), NULL, 0) == S_OK && PathFileExistsW(FsTarget))
+    {
+        HANDLE hFind = FindFirstFileW(FsTarget, &wfd);
+        if (hFind != INVALID_HANDLE_VALUE)
+            FindClose(hFind);
+    }
+    m_Header.dwFileAttributes = wfd.dwFileAttributes;
+    m_Header.ftCreationTime = wfd.ftCreationTime;
+    m_Header.ftLastAccessTime = wfd.ftLastAccessTime;
+    m_Header.ftLastWriteTime = wfd.ftLastWriteTime;
+    m_Header.nFileSizeLow = wfd.nFileSizeLow;
 
     /*
      * Reset the flags: keep only the flags related to data blocks as they were
@@ -1077,7 +1108,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::GetPath(LPSTR pszFile, INT cchMaxPath, WIN
           this, pszFile, cchMaxPath, pfd, fFlags, debugstr_w(m_sPath));
 
     /* Allocate a temporary UNICODE buffer */
-    pszFileW = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, cchMaxPath * sizeof(WCHAR));
+    pszFileW = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, max(cchMaxPath, MAX_PATH) * sizeof(WCHAR));
     if (!pszFileW)
         return E_OUTOFMEMORY;
 
@@ -2690,31 +2721,24 @@ INT_PTR CALLBACK ExtendedShortcutProc(HWND hwndDlg, UINT uMsg,
     return FALSE;
 }
 
-/**************************************************************************
-* SH_GetTargetTypeByPath
-*
-* Function to get target type by passing full path to it
-*/
-void SH_GetTargetTypeByPath(LPCWSTR lpcwFullPath, LPWSTR szBuf, UINT cchBuf)
+static void GetTypeDescriptionByPath(PCWSTR pszFullPath, DWORD fAttributes, PWSTR szBuf, UINT cchBuf)
 {
-    LPCWSTR pwszExt;
-    BOOL fFolderTarget = PathIsDirectoryW(lpcwFullPath);
-    DWORD fAttribs = fFolderTarget ? FILE_ATTRIBUTE_DIRECTORY : 0;
+    if (fAttributes == INVALID_FILE_ATTRIBUTES && !PathFileExistsAndAttributesW(pszFullPath, &fAttributes))
+        fAttributes = 0;
 
-    /* Get file information */
     SHFILEINFOW fi;
-    if (!SHGetFileInfoW(lpcwFullPath, fAttribs, &fi, sizeof(fi), SHGFI_TYPENAME | SHGFI_USEFILEATTRIBUTES))
+    if (!SHGetFileInfoW(pszFullPath, fAttributes, &fi, sizeof(fi), SHGFI_TYPENAME | SHGFI_USEFILEATTRIBUTES))
     {
-        ERR("SHGetFileInfoW failed for %ls (%lu)\n", lpcwFullPath, GetLastError());
-        fi.szTypeName[0] = L'\0';
-        fi.hIcon = NULL;
+        ERR("SHGetFileInfoW failed for %ls (%lu)\n", pszFullPath, GetLastError());
+        fi.szTypeName[0] = UNICODE_NULL;
     }
 
-    pwszExt = fFolderTarget ? L"" : PathFindExtensionW(lpcwFullPath);
+    BOOL fFolder = (fAttributes & FILE_ATTRIBUTE_DIRECTORY);
+    LPCWSTR pwszExt = fFolder ? L"" : PathFindExtensionW(pszFullPath);
     if (pwszExt[0])
     {
         if (!fi.szTypeName[0])
-            StringCchPrintfW(szBuf, cchBuf,L"%s ", pwszExt + 1);
+            StringCchPrintfW(szBuf, cchBuf, L"%s", pwszExt + 1);
         else
             StringCchPrintfW(szBuf, cchBuf, L"%s (%s)", fi.szTypeName, pwszExt);
     }
@@ -2764,7 +2788,7 @@ BOOL CShellLink::OnInitDialog(HWND hwndDlg, HWND hwndFocus, LPARAM lParam)
     if (m_sPath)
     {
         WCHAR buf[MAX_PATH];
-        SH_GetTargetTypeByPath(m_sPath, buf, _countof(buf));
+        GetTypeDescriptionByPath(m_sPath, m_Header.dwFileAttributes, buf, _countof(buf));
         SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_TYPE_EDIT, buf);
     }
 
@@ -2965,7 +2989,7 @@ LRESULT CShellLink::OnNotify(HWND hwndDlg, int idFrom, LPNMHDR pnmhdr)
             PathUnquoteSpacesW(unquoted);
 
         WCHAR *pwszExt = PathFindExtensionW(unquoted);
-        if (!wcsicmp(pwszExt, L".lnk"))
+        if (!_wcsicmp(pwszExt, L".lnk"))
         {
             // FIXME load localized error msg
             MessageBoxW(hwndDlg, L"You cannot create a link to a shortcut", L"Error", MB_ICONERROR);

@@ -112,7 +112,11 @@ test_NhGetInterfaceNameFromGuid(GUID AdapterGUID, DWORD par1, DWORD par2)
     Error = GetLastError();
 
     ok_long(ApiReturn, ((GetVersion() & 0xFF) >= 6) ? ERROR_INVALID_PARAMETER : ERROR_NOT_FOUND);
+#ifdef _M_AMD64
+    ok_long(Error, ERROR_FILE_NOT_FOUND);
+#else
     ok_long(Error, 0);
+#endif
     ok(ulOutBufLen == sizeof(Name),
        "ulOutBufLen is %ld, expected = sizeof(Name)\n",
        ulOutBufLen);

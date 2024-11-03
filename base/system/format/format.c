@@ -360,10 +360,11 @@ static VOID Usage(LPWSTR ProgramName)
 int wmain(int argc, WCHAR *argv[])
 {
     int badArg;
+    DEVICE_INFORMATION DeviceInformation = {0};
     FMIFS_MEDIA_FLAG media = FMIFS_HARDDISK;
     DWORD driveType;
     WCHAR fileSystem[1024];
-    WCHAR volumeName[1024];
+    WCHAR volumeName[1024] = {0};
     WCHAR input[1024];
     DWORD serialNumber;
     DWORD flags, maxComponent;
@@ -474,12 +475,31 @@ int wmain(int argc, WCHAR *argv[])
                                &serialNumber, &maxComponent, &flags,
                                fileSystem, ARRAYSIZE(fileSystem)))
     {
-        K32LoadStringW(GetModuleHandle(NULL), STRING_NO_VOLUME, szMsg, ARRAYSIZE(szMsg));
-        PrintWin32Error(szMsg, GetLastError());
-        return -1;
+        if (GetLastError() == ERROR_UNRECOGNIZED_VOLUME)
+        {
+            wcscpy(fileSystem, L"RAW");
+        }
+        else
+        {
+            K32LoadStringW(GetModuleHandle(NULL), STRING_NO_VOLUME, szMsg, ARRAYSIZE(szMsg));
+            PrintWin32Error(szMsg, GetLastError());
+            return -1;
+        }
     }
 
-    if (!GetDiskFreeSpaceExW(RootDirectory,
+    if (QueryDeviceInformation(RootDirectory,
+                               &DeviceInformation,
+                               sizeof(DeviceInformation)))
+    {
+        totalNumberOfBytes.QuadPart = DeviceInformation.SectorSize *
+                                      DeviceInformation.SectorCount.QuadPart;
+    }
+
+    /* QueryDeviceInformation returns more accurate volume length and works with
+     * unformatted volumes, however it will NOT return volume length on XP/2003.
+     * Fallback to GetFreeDiskSpaceExW if we did not get any volume length. */
+    if (totalNumberOfBytes.QuadPart == 0 &&
+        !GetDiskFreeSpaceExW(RootDirectory,
                              &freeBytesAvailableToCaller,
                              &totalNumberOfBytes,
                              &totalNumberOfFreeBytes))

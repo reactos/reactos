@@ -998,10 +998,6 @@ BEGIN
     IDS_FILE_TYPES "檔案類型"
     IDS_COLUMN_EXTENSION "副檔名"
 
-    /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
-       used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "%s 檔案"
-
     IDS_BYTES_FORMAT "位元組"
     IDS_UNKNOWN_APP "不明應用程式"
     IDS_EXE_DESCRIPTION "描述："

@@ -343,6 +343,15 @@ BrFolder_InsertItem(
     _In_ PCIDLIST_ABSOLUTE pidlParent,
     _In_ HTREEITEM hParent)
 {
+    if (!(BrowseFlagsToSHCONTF(info->lpBrowseInfo->ulFlags) & SHCONTF_NONFOLDERS))
+    {
+#ifdef BIF_BROWSEFILEJUNCTIONS
+        if (!(info->lpBrowseInfo->ulFlags & BIF_BROWSEFILEJUNCTIONS))
+#endif
+            if (SHGetAttributes(lpsf, pidlChild, SFGAO_STREAM) & SFGAO_STREAM)
+                return NULL; // .zip files have both FOLDER and STREAM attributes set
+    }
+
     WCHAR szName[MAX_PATH];
     if (!BrFolder_GetName(lpsf, pidlChild, SHGDN_NORMAL, szName))
         return NULL;
@@ -681,7 +690,7 @@ BrFolder_OnInitDialog(HWND hWnd, BrFolder *info)
     LPBROWSEINFOW lpBrowseInfo = info->lpBrowseInfo;
 
     info->hWnd = hWnd;
-    SetPropW(hWnd, L"__WINE_BRSFOLDERDLG_INFO", info);
+    SetWindowLongPtrW(hWnd, DWLP_USER, (LONG_PTR)info);
 
     if (lpBrowseInfo->ulFlags & BIF_NEWDIALOGSTYLE)
         FIXME("flags BIF_NEWDIALOGSTYLE partially implemented\n");
@@ -1225,7 +1234,7 @@ BrFolderDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     if (uMsg == WM_INITDIALOG)
         return BrFolder_OnInitDialog(hWnd, (BrFolder *)lParam);
 
-    BrFolder *info = (BrFolder *)GetPropW(hWnd, L"__WINE_BRSFOLDERDLG_INFO");
+    BrFolder *info = (BrFolder *)GetWindowLongPtrW(hWnd, DWLP_USER);
     if (!info)
         return 0;
 

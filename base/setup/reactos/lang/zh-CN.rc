@@ -160,22 +160,23 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_CAPTION "ReactOS 安装程序"
     IDS_TYPETITLE "ReactOS 安装程序"
-    IDS_TYPESUBTITLE "选择安装类型"
+    IDS_TYPESUBTITLE "选择安装类型。"
     IDS_DEVICETITLE "设置基本设备"
     IDS_DEVICESUBTITLE "指定显示和键盘设置。"
     IDS_DRIVETITLE "设置安装分区和系统文件夹"
-    IDS_DRIVESUBTITLE "设置安装分区、系统文件夹和引导程序"
-    IDS_PROCESSTITLE "设置分区、复制文件并安装系统"
-    IDS_PROCESSSUBTITLE "建立并格式化分区，复制文件，安装并设置引导程序"
-    IDS_RESTARTTITLE "第一阶段安装完成"
-    IDS_RESTARTSUBTITLE "第一阶段安装已经完成，重新启动进行第二阶段安装"
+    IDS_DRIVESUBTITLE "设置安装分区、系统文件夹和引导程序。"
     IDS_SUMMARYTITLE "安装概要"
-    IDS_SUMMARYSUBTITLE "安装程序将会执行的内容，以供参考"
+    IDS_SUMMARYSUBTITLE "安装程序将会执行的内容，以供参考。"
+    IDS_PROCESSTITLE "设置分区、复制文件并安装系统"
+    IDS_PROCESSSUBTITLE "建立并格式化分区，复制文件，安装并设置引导程序。"
+    IDS_RESTARTTITLE "第一阶段安装完成"
+    IDS_RESTARTSUBTITLE "第一阶段安装已经完成，重新启动进行第二阶段安装。"
     IDS_ABORTSETUP "ReactOS 未在您的电脑上安装完成。如果您现在退出安装程序，您需要再次运行安装程序来安装 ReactOS。 确定退出？"
     IDS_ABORTSETUP2 "终止安装？"
     IDS_NO_TXTSETUP_SIF "无法找到 'txtsetup.sif'。\n安装程序无法继续。"
-    IDS_CAPTION "ReactOS 安装程序"
+    IDS_INSTALLBTN "&Install"
     IDS_VOLUME_NOFORMAT "Not formatted"
 END
 
@@ -218,12 +219,16 @@ BEGIN
     IDS_RENAMING "Renaming %s to %s"
     IDS_DELETING "Deleting %s"
 
+    IDS_CONFIG_SYSTEM_PARTITION "Configuring the system partition..."
     IDS_PREPARE_PARTITIONS "Preparing partitions..."
     IDS_PREPARE_FILES "Preparing the list of files to be copied, please wait..."
     IDS_COPYING_FILES "Copying the files..."
 
     IDS_CREATE_REGISTRY "Creating the registry..."
     IDS_UPDATE_REGISTRY "Updating the registry..."
+
+    // IDS_INSTALL_FINALIZE "Finalizing the installation..."
+    IDS_INSTALL_BOOTLOADER "Installing the bootloader..."
 END
 
 // Note to translators: please refer to the corresponding usetup/lang/*.h translations.
@@ -280,4 +285,11 @@ the Setup program cannot install ReactOS.\
 \nClick on CANCEL to quit Setup."
 
     IDS_ERROR_CHECKING_PARTITION "ChkDsk detected some disk errors.\n(Status 0x%08lx)."
+
+    IDS_ERROR_WRITE_BOOT "Setup failed to install the %s bootcode on the system partition."
+    IDS_ERROR_INSTALL_BOOTCODE "Setup failed to install the %s bootcode on the boot disk."
+    IDS_ERROR_INSTALL_BOOTCODE_REMOVABLE "Setup failed to install the bootcode on the removable media."
+    IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED "Setup does not currently support installing the bootloader on the computer you are using.\
+\nClick on OK to continue anyway."
+    IDS_ERROR_BOOTLDR_FAILED "Setup could not install the bootloader (Status 0x%08lx)."
 END

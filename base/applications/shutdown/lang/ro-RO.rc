@@ -14,24 +14,24 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Închidere la distanță"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "Con&firmă", IDC_OK, 125, 232, 50, 14
-    PUSHBUTTON "A&nulează", IDC_CANCEL, 178, 232, 50, 14
-    LTEXT "C&alculatoare:", IDC_STATIC, 9, 9, 35, 36
+    DEFPUSHBUTTON "OK", IDC_OK, 125, 232, 50, 14
+    PUSHBUTTON "Revocare", IDC_CANCEL, 178, 232, 50, 14
+    LTEXT "&Computere:", IDC_STATIC, 9, 9, 35, 36
     LISTBOX IDC_COMPUTER_LIST, 8, 19, 162, 55
     PUSHBUTTON "A&dăugare…", IDC_ADD_SYSTEM, 179, 19, 50, 14
-    PUSHBUTTON "&Elimină", IDC_REMOVE_SYSTEM, 179, 36, 50, 14, WS_DISABLED
-    PUSHBUTTON "Spe&cificare…", IDC_BROWSE_SYSTEM, 179, 53, 50, 14
+    PUSHBUTTON "&Eliminare", IDC_REMOVE_SYSTEM, 179, 36, 50, 14, WS_DISABLED
+    PUSHBUTTON "&Specificare…", IDC_BROWSE_SYSTEM, 179, 53, 50, 14
     LTEXT "Acțiune", IDC_ACTION, 11, 81, 20, 14
     COMBOBOX IDC_ACTION_TYPE, 37, 79, 129, 14, WS_TABSTOP | CBS_DROPDOWN
-    CHECKBOX "A&vertizează utilizatorii", IDC_WARN_USERS, 175, 79, 55, 14, BS_AUTOCHECKBOX | WS_TABSTOP
-    LTEXT "Avertismente afișate pentru", IDC_SHOW_WARN_ONE, 11, 99, 65, 14
+    CHECKBOX "A&vertizare a utilizatorilor", IDC_WARN_USERS, 175, 79, 55, 14, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "Afișare de avertismente pentru", IDC_SHOW_WARN_ONE, 11, 99, 65, 14
     EDITTEXT IDC_SHOW_WARN, 78, 97, 41, 14
     LTEXT "secunde", IDC_SHOW_WARN_TWO, 124, 99, 32, 10
-    GROUPBOX "Jurnal de evenimente-închideri", IDC_STATIC, 5, 114, 224, 114
+    GROUPBOX "Închidere Urmăritorul de evenimente", IDC_STATIC, 5, 114, 224, 114
     LTEXT "Motiv:", IDC_STATIC, 16, 130, 27, 8
     CHECKBOX "Planificat", IDC_PLANNED, 175, 130, 40, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_REASON_CODE, 17, 142, 198, 13, WS_TABSTOP | CBS_DROPDOWN
-    LTEXT "Co&mentariu:", IDC_COMMENT_CAPTION, 16, 159, 38, 8
+    LTEXT "C&omentariu:", IDC_COMMENT_CAPTION, 16, 159, 38, 8
     EDITTEXT IDC_COMMENT_TEXT, 17, 171, 198, 50, WS_VSCROLL
 END
 
@@ -41,59 +41,59 @@ BEGIN
     IDS_USAGE "Utilitar de închidere ReactOS\n\
 \n\
 Utilizare: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
-           [/m \\\\calculator][/t xxx][/d [p|u:]xx:yy [/c «comentariu»]]\n\
+           [/m \\\\computer][/t xxx][/d [p|u:]xx:yy [/c «comentariu»]]\n\
 \n\
     Fără argumente sau /?    Este afișat acest manual.\n\
-    /i      Afișarea interfeței grafice de utilizator (GUI). Această\n\
-            opțiune trebuie să preceadă.\n\
-    /l      Desautentificare locală. Nu poate fi utilizată cu /m sau /d.\n\
-    /s      Închidere calculator.\n\
-    /r      Repornire calculator.\n\
-    /g      Repornire calculator plus repornirea tuturor aplicațiilor\n\
+    /i      Afișează interfeța grafică de utilizator (GUI). Această\n\
+            opțiune trebuie să fie prima.\n\
+    /l      Face Log off local. Nu poate fi utilizată cu /m sau /d.\n\
+    /s      Închide computerul.\n\
+    /r      Repornește computerul.\n\
+    /g      Repornește computerul și se repornesc toate aplicațiile\n\
             înregistrate.\n\
-    /a      Anularea unei închideri întârziate. Poate fi utilizată doar în\n\
+    /a      Anulează o închidere întârziată. Poate fi utilizată doar în\n\
             perioada de întârziere.\n\
-    /p      Închiderea calculatorului fără avertisment sau cronometrare\n\
-            inversă. Poate fi utilizată cu /d sau /f.\n\
-    /h      Hibernarea calculatorului local. Utilizabilă cu /f.\n\
-    /e      Documentarea motivului pentru închiderea neprevăzută.\n\
-    /m \\\\calculator  Specificarea unui calculator țintă (adresă UNC/IP).\n\
+    /p      Închide computerul local fără nicio cronometrare sau\n\
+            avertisment. Poate fi utilizată cu /d sau /f.\n\
+    /h      Hibernează computerului local. Utilizabilă cu /f.\n\
+    /e      Documentează motivului pentru închiderea neprevăzută.\n\
+    /m \\\\computer  Specificarea unui computer țintă (adresă UNC/IP).\n\
     /t xxx  Setează cronometrarea unei perioade de xxx secunde înainte de\n\
             închidere. Domeniul de valori valide este de la 0 la 315360000\n\
             (10 ani), 30 fiind valoarea implicită.\n\
-    /c „comentariu”  Comentarea motivului pentru închidere sau repornire.\n\
+    /c ""comentariu""  Comentează motivului pentru închidere sau repornire.\n\
             Sunt permise maxim 512 caractere.\n\
-    /f      Forțarea închiderii aplicațiilor curente fără avertizarea\n\
-            utilizatorilor. Dacă nu sunt specificați alți parametri, această\n\
-            opțiune implică și deautentificarea.\n\
+    /f      Forțează închiderea aplicațiilor curente fără avertizarea\n\
+            utilizatorilor. Dacă specificați alți parametri, această\n\
+            opțiune implică și log off-ul.\n\
     /d [p|u:]xx:yy  Oferă un ca motiv un cod pentru închidere sau repornire.\n\
-            p indică planificarea închiderii sau repornirii calculatorului.\n\
+            p indică planificarea închiderii sau repornirii computerului.\n\
             u indică faptul că motivul este definit de utilizator.\n\
             Dacă nici p nici u nu sunt specificați, închiderea sau repornirea\n\
             nu sunt planificate.\n\
             xx este codul pentru motivul major (întreg pozitiv sub 256).\n\
             yy este codul pentru motivul minor (întreg pozitiv sub 65536).\n"
 
-    IDS_ERROR_SHUTDOWN_REBOOT "Eroare: Închiderea și repornirea nu pot fi în același timp.\n"
+    IDS_ERROR_SHUTDOWN_REBOOT "Eroare: Imposibil de închis și repornit în același timp.\n"
     IDS_ERROR_TIMEOUT "Eroare: Valoarea %u a cronometrului este în afara limitelor valide (0-315360000).\n"
-    IDS_ERROR_ABORT "Eroare: Închiderea sistemului nu poate fi anulată.\n"
-    IDS_ERROR_LOGOFF "Eroare: Deautentificarea din sistem nu poate fi executată.\n"
-    IDS_ERROR_SHUTDOWN "Eroare: Sistemul nu poate fi închis.\n"
-    IDS_ERROR_RESTART "Eroare: Sistemul nu poate fi repornit.\n"
+    IDS_ERROR_ABORT "Eroare: Imposibil de anulat închiderea sistemului.\n"
+    IDS_ERROR_LOGOFF "Eroare: Imposibil de executat log off-ul din sistem.\n"
+    IDS_ERROR_SHUTDOWN "Eroare: Imposibil de închis sistemul.\n"
+    IDS_ERROR_RESTART "Eroare: Imposibil de repornit sistemul.\n"
     IDS_ERROR_MAX_COMMENT_LENGTH "Eroare: Numărul de caractere al comentariului depășește limita impusă de sistem.\n"
-    IDS_ERROR_HIBERNATE "Eroare: Sistemul nu poate fi pus în hibernare.\n"
-    IDS_ERROR_HIBERNATE_LOCAL "Eroare: Hibernarea nu poate fi comandată la distanță.\n"
+    IDS_ERROR_HIBERNATE "Eroare: Imposibil de trimis sistemul în modul de hibernare.\n"
+    IDS_ERROR_HIBERNATE_LOCAL "Eroare: Modul de hibernare nu poate fi pornit de la distanță.\n"
     IDS_ERROR_HIBERNATE_ENABLED "Eroare: Modul de hibernare nu este activat.\n"
     IDS_ERROR_DIALOG_CAPTION "Închidere la distanță"
-    IDS_ERROR_DIALOG_INIT "Nu s-a putut afișa interfața grafică de utilizator."
+    IDS_ERROR_DIALOG_INIT "Imposibil de afișat interfața grafică de utilizator."
 END
 
 /* Remote shutdown action strings */
 STRINGTABLE
 BEGIN
-    IDS_ACTION_SHUTDOWN "Închide sistemul"
-    IDS_ACTION_RESTART "Repornește sistemul"
-    IDS_ACTION_UNEXPECTED_SHUTDOWN "Adnotează închiderea neprevăzută"
+    IDS_ACTION_SHUTDOWN "Închidere a sistemului"
+    IDS_ACTION_RESTART "Repornire a sistemului"
+    IDS_ACTION_UNEXPECTED_SHUTDOWN "Adnotare a opririi neașteptate"
 END
 
 /* Remote shutdown reason strings */
@@ -106,8 +106,8 @@ BEGIN
     IDS_REASON_OS_RECONFIGURE "Sistem de operare: Reconfigurare"
     IDS_REASON_APP_MAINTENANCE "Aplicații: Mentenanță"
     IDS_REASON_APP_INSTALL "Aplicații: Instalare"
-    IDS_REASON_APP_UNRESPONSIVE "Aplicații: Neresponsivitate"
-    IDS_REASON_APP_UNSTABLE "Aplicații: Instabilitate"
-    IDS_REASON_SECURITY "Probleme de securitate"
-    IDS_REASON_NETWORK "Pierdere conexiune de rețea"
+    IDS_REASON_APP_UNRESPONSIVE "Aplicații: Nu răspunde"
+    IDS_REASON_APP_UNSTABLE "Aplicații: Instabil"
+    IDS_REASON_SECURITY "Problemă de securitate"
+    IDS_REASON_NETWORK "Pierdere a conexiunii la rețea"
 END

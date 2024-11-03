@@ -27,7 +27,7 @@ add_library(wbemdisp MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/wbemdisp.def)
 
 set_module_type(wbemdisp win32dll)
-target_link_libraries(wbemdisp uuid wine)
+target_link_libraries(wbemdisp uuid wine oldnames)
 add_dependencies(wbemdisp stdole2 wbemdisp_idlheader)
 add_importlibs(wbemdisp oleaut32 ole32 msvcrt kernel32 ntdll)
 add_pch(wbemdisp precomp.h "${PCH_SKIP_SOURCE}")

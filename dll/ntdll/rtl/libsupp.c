@@ -761,7 +761,7 @@ NTSTATUS find_actctx_dll( PUNICODE_STRING pnameW, LPWSTR *fullname, PUNICODE_STR
         DWORD dirlen = info->ulAssemblyDirectoryNameLength / sizeof(WCHAR);
 
         p++;
-        if (!info->lpAssemblyDirectoryName || _wcsnicmp( p, info->lpAssemblyDirectoryName, dirlen ) || wcsicmp( p + dirlen, dotManifestW ))
+        if (!info->lpAssemblyDirectoryName || _wcsnicmp( p, info->lpAssemblyDirectoryName, dirlen ) || _wcsicmp( p + dirlen, dotManifestW ))
         {
             /* manifest name does not match directory name, so it's not a global
              * windows/winsxs manifest; use the manifest directory name instead */
@@ -1072,7 +1072,7 @@ LdrpApplyFileNameRedirection(
     }
 
     *RedirectedDll = FALSE;
-    
+
     PCUNICODE_STRING PrevNewName = *NewName;
     UNICODE_STRING ApisetName = {0};
     NTSTATUS Status = STATUS_SUCCESS;

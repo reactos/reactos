@@ -44,8 +44,7 @@ BEGIN
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 58, 123, 12, 13
     LTEXT "minuti", IDC_MINTEXT, 72, 125, 26, 9
-    CONTROL "Chiedere la &password al ripristino", IDC_SCREENS_USEPASSCHK, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
+    AUTOCHECKBOX "Chiedere la &password al ripristino", IDC_SCREENS_USEPASSCHK, 108, 120, 117, 19
     GROUPBOX "Funzioni di risparmio energetico del monitor", IDC_SCREENS_DUMMY2, 8, 150, 230, 41
     LTEXT "Per regolare le impostazioni premere Alimentazione.", IDC_STATIC, 16, 161, 146, 27
     PUSHBUTTON "Alim&entazione...", IDC_SCREENS_POWER_BUTTON, 167, 165, 61, 15
@@ -80,7 +79,7 @@ BEGIN
     LTEXT "Se selezioni un tema che non sia ReactOS classico, le seguenti impostazioni verranno sovrascritte, eccetto in alcuni vecchi programmi.", IDC_ADVAPPEARANCE_DISCLAIMER, 7, 133, 232, 30, BS_MULTILINE
     LTEXT "Elemento", 8, 5, 160, 50, 9//FIXME: add accel. I uzed "&Elemento" for the backport.
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
+             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "&Dimensione", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP |
@@ -108,24 +107,17 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Effetti"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "&Usare il seguente effetto per le transizioni in menu e tooltip:",
-            IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
+    AUTOCHECKBOX "&Usare il seguente effetto per le transizioni in menu e tooltip:", IDC_EFFAPPEARANCE_ANIMATION, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL "U&sare il seguente metodo per arrotondare i bordi dei font per lo schermo:", IDC_EFFAPPEARANCE_SMOOTHING,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
+             CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "U&sare il seguente metodo per arrotondare i bordi dei font per lo schermo:", IDC_EFFAPPEARANCE_SMOOTHING, 10, 42, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    CONTROL "Usare le icone grandi", IDC_EFFAPPEARANCE_LARGEICONS, "button",//FIXME: add accel. I used "Us&are le icone grandi" for the backport
-            BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
-    CONTROL "&Ombreggiatura sotto i menu", IDC_EFFAPPEARANCE_SETDROPSHADOW,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
-    CONTROL "Mostrare il contenuto delle finestr mentre le si trascina", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,//FIXME: add accel. I used "&Mostrare il contenuto delle finestr mentre le si trascina" for the backport
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "&Nascondere la sottolineatura delle lettere di navigazione finche non è premuto il tasto Alt",//FIXME: text cutoff. I used "&Nascondi le lettere sottolineate finché non viene premuto il tasto Alt" for the backport
-            IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
-    CONTROL "Use &flat menus", IDC_EFFAPPEARANCE_FLATMENUS,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
+             CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "Usare le icone grandi", IDC_EFFAPPEARANCE_LARGEICONS, 10, 80, 267, 19, WS_TABSTOP | WS_DISABLED//FIXME: add accel. I used "Us&are le icone grandi" for the backport
+    AUTOCHECKBOX "&Ombreggiatura sotto i menu", IDC_EFFAPPEARANCE_SETDROPSHADOW, 10, 95, 267, 19
+    AUTOCHECKBOX "Mostrare il contenuto delle finestr mentre le si trascina", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, 10, 110, 267, 19//FIXME: add accel. I used "&Mostrare il contenuto delle finestr mentre le si trascina" for the backport
+    AUTOCHECKBOX "&Nascondere la sottolineatura delle lettere di navigazione finche non è premuto il tasto Alt", IDC_EFFAPPEARANCE_KEYBOARDCUES, 10, 125, 267, 19//FIXME: text cutoff. I used "&Nascondi le lettere sottolineate finché non viene premuto il tasto Alt" for the backport
+    AUTOCHECKBOX "Use &flat menus", IDC_EFFAPPEARANCE_FLATMENUS, 10, 140, 267, 19
     PUSHBUTTON "Annulla", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
 END
@@ -158,14 +150,10 @@ CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Desktop icons", IDC_STATIC, 6, 4, 212, 40
-    CONTROL "My &Documents", IDC_ICONS_MYDOCS, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 14, 14, 100, 12
-    CONTROL "My &Network Places", IDC_ICONS_MYNET, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 116, 14, 100, 12
-    CONTROL "&My Computer", IDC_ICONS_MYCOMP, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 14, 28, 100, 12
-    CONTROL "&Internet Browser", IDC_ICONS_INTERNET, "button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 116, 28, 100, 12
+    AUTOCHECKBOX "My &Documents", IDC_ICONS_MYDOCS, 14, 14, 100, 12
+    AUTOCHECKBOX "My &Network Places", IDC_ICONS_MYNET, 116, 14, 100, 12
+    AUTOCHECKBOX "&My Computer", IDC_ICONS_MYCOMP, 14, 28, 100, 12
+    AUTOCHECKBOX "&Internet Browser", IDC_ICONS_INTERNET, 116, 28, 100, 12
     CONTROL "", IDC_ICONS_LISTVIEW, "SysListView32",
             LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP | WS_HSCROLL,
             6, 60, 212, 56

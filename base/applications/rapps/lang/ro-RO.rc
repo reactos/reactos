@@ -27,7 +27,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Împ&rospătare\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "&Actualizare baza de date\tCtrl+F5", ID_RESETDB
+        MENUITEM "&Actualizare a bazei de date\tCtrl+F5", ID_RESETDB
     END
     POPUP "Aj&utor"
     BEGIN
@@ -42,22 +42,6 @@ BEGIN
     BEGIN
         MENUITEM "&Deschidere a legăturii în navigator", ID_OPEN_LINK
         MENUITEM "&Copiere a legăturii în clipboard", ID_COPY_LINK
-    END
-END
-
-IDR_APPLICATIONMENU MENU
-BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM "&Instalare\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Dezinstalare\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "&Modificare", ID_MODIFY
-        MENUITEM SEPARATOR
-        MENUITEM "&Eliminare din registru", ID_REGREMOVE
-        MENUITEM SEPARATOR
-        MENUITEM "Împ&rospătare\tF5", ID_REFRESH
-        MENUITEM SEPARATOR
-        MENUITEM "&Actualizare a bazei de date\tCtrl+F5", ID_RESETDB
     END
 END
 
@@ -190,11 +174,20 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "Managerul de aplicații ReactOS"
     IDS_APP_AUTHORS "Marcă înregistrată 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT "Căutare…"
-    IDS_APPS_COUNT "Numărul de programe: %d; Selectate: %d"
-    IDS_WELCOME_TITLE "Bun venit la Managerul de aplicații ReactOS!\n\n"
+    IDS_WELCOME_TITLE "Bun venit la Managerul de aplicații ReactOS!"
     IDS_WELCOME_TEXT "Alegeți o categorie din stânga, apoi alegeți o aplicație pentru a o instala sau dezinstala.\nArdesa web ReactOS: "
     IDS_WELCOME_URL "https://reactos.org"
+
+    IDS_APPWIZ_TITLE "Adăugare/Eliminare de programe"
+    IDS_APPWIZ_TEXT1 "Alegeți ""Aplicații"" sau ""Actualizări"" pentru a vedea lista aplicațiilor sau a actualizărilor instalate pe sistem."
+    IDS_APPWIZ_TEXT2 "Pentru a elimina un program sau pentru a-i modifica componentele instalate, selectați-l din listă și faceți clic pe ""Dezinstalare"" sau pe ""Modificare""."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCH_TEXT "Căutare…"
+    IDS_APPS_COUNT "Numărul de programe: %d"
+    IDS_APPS_SELECT_COUNT "; Selectate: %d"
     IDS_INSTALLED "Instalate"
     IDS_AVAILABLEFORINST "Disponibile pentru instalare"
     IDS_UPDATES "Actualizări"
@@ -254,9 +247,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DL_DIALOG_DB_DISP "Aplicații baza de date"
-    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Actualizare bază de date…"
-    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Actualizare bază de date… (Sursă neoficială)"
+    IDS_DL_DIALOG_DB_DISP "Aplicații pentru baza de date"
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Actualizare a bazei de date…"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Actualizare a bazei de date… (Sursă neoficială)"
 END
 
 STRINGTABLE
@@ -268,7 +261,7 @@ BEGIN
     IDS_CMD_INVALID_OPTION "Eroare: opțiunea de linie de comandă specificată este necunoscută sau nevalidă.\n"
     IDS_CMD_FIND_RESULT_FOR "Rezultatele căutării pentru %1:\n"
     IDS_CMD_PACKAGE_NOT_FOUND "Nu se poate găsi pachetul %1.\n"
-    IDS_CMD_PACKAGE_INFO "Informații despre pachet %1:\n"
+    IDS_CMD_PACKAGE_INFO "Informații despre pachetul %1:\n"
 END
 
 STRINGTABLE

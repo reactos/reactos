@@ -29,6 +29,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+
 #include "kdb.h"
 #include "../kd/kdterminal.h"
 
@@ -133,7 +134,7 @@ static ULONG KdbNumberOfColsPrinted = 0;
 static BOOLEAN KdbOutputAborted = FALSE;
 static BOOLEAN KdbRepeatLastCommand = FALSE;
 
-PCHAR KdbInitFileBuffer = NULL; /* Buffer where KDBinit file is loaded into during initialization */
+volatile PCHAR KdbInitFileBuffer = NULL; /* Buffer where KDBinit file is loaded into during initialization */
 BOOLEAN KdbpBugCheckRequested = FALSE;
 
 /* Variables for Dmesg */
@@ -619,7 +620,7 @@ KdbpCmdPrintStruct(
 {
     ULONG i;
     ULONGLONG Result = 0;
-    PVOID BaseAddress = 0;
+    PVOID BaseAddress = NULL;
     ROSSYM_AGGREGATE Aggregate = {0};
     UNICODE_STRING ModName = {0};
     ANSI_STRING AnsiName = {0};
@@ -641,7 +642,7 @@ KdbpCmdPrintStruct(
     if (Argc > 3) {
         ULONG len;
         PCHAR ArgStart = Argv[3];
-        DPRINT1("Trying to get expression\n");
+        DPRINT("Trying to get expression\n");
         for (i = 3; i < Argc - 1; i++)
         {
             len = strlen(Argv[i]);
@@ -649,20 +650,18 @@ KdbpCmdPrintStruct(
         }
 
         /* Evaluate the expression */
-        DPRINT1("Arg: %s\n", ArgStart);
-        if (KdbpEvaluateExpression(ArgStart, strlen(ArgStart), &Result)) {
+        DPRINT("Arg: %s\n", ArgStart);
+        if (KdbpEvaluateExpression(ArgStart, strlen(ArgStart), &Result))
             BaseAddress = (PVOID)(ULONG_PTR)Result;
-            DPRINT1("BaseAddress: %p\n", BaseAddress);
-        }
     }
-    DPRINT1("BaseAddress: %p\n", BaseAddress);
+    DPRINT("BaseAddress: %p\n", BaseAddress);
     KdbpPrintStructInternal(Info, Indent, !!BaseAddress, BaseAddress, &Aggregate);
 end:
     RosSymFreeAggregate(&Aggregate);
     RtlFreeUnicodeString(&ModName);
     return TRUE;
 }
-#endif
+#endif // __ROS_DWARF__
 
 /*!\brief Retrieves the component ID corresponding to a given component name.
  *
@@ -1140,7 +1139,7 @@ KdbpContextFromPrevTss(
 #endif
     return TRUE;
 }
-#endif
+#endif // _M_IX86
 
 #ifdef _M_AMD64
 
@@ -2911,7 +2910,7 @@ KdbpPagerInternal(
         KdpInitTerminal();
     }
 
-    /* Refresh terminal size each time when number of rows printed is 0 */
+    /* Refresh terminal size each time when number of printed rows is 0 */
     if (KdbNumberOfRowsPrinted == 0)
     {
         KdpUpdateTerminalSize(&KdTermSize);
@@ -3031,7 +3030,7 @@ KdbpPagerInternal(
             p[i + 1] = c;
 
         /* Set p to the start of the next line and
-         * remember the number of rows/cols printed */
+         * remember the number of printed rows/cols */
         p += i;
         if (p[0] == '\n')
         {
@@ -3206,6 +3205,7 @@ static BOOLEAN
 KdbpDoCommand(
     IN PCHAR Command)
 {
+    BOOLEAN Continue = TRUE;
     SIZE_T i;
     PCHAR p;
     ULONG Argc;
@@ -3239,6 +3239,10 @@ KdbpDoCommand(
     if (Argc < 1)
         return TRUE;
 
+    /* Reset the pager state: number of printed rows/cols and aborted output flag */
+    KdbNumberOfRowsPrinted = KdbNumberOfColsPrinted = 0;
+    KdbOutputAborted = FALSE;
+
     for (i = 0; i < RTL_NUMBER_OF(KdbDebuggerCommands); i++)
     {
         if (!KdbDebuggerCommands[i].Name)
@@ -3246,18 +3250,20 @@ KdbpDoCommand(
 
         if (strcmp(KdbDebuggerCommands[i].Name, Argv[0]) == 0)
         {
-            return KdbDebuggerCommands[i].Fn(Argc, Argv);
+            Continue = KdbDebuggerCommands[i].Fn(Argc, Argv);
+            goto Done;
         }
     }
 
     /* Now invoke the registered callbacks */
     if (KdbpInvokeCliCallbacks(Command, Argc, Argv))
-    {
-        return TRUE;
-    }
+        goto Done;
 
-    KdbpPrint("Command '%s' is unknown.\n", OrigCommand);
-    return TRUE;
+    KdbPrintf("Command '%s' is unknown.\n", OrigCommand);
+
+Done:
+    KdbOutputAborted = FALSE;
+    return Continue;
 }
 
 /*!\brief KDB Main Loop.
@@ -3268,39 +3274,43 @@ VOID
 KdbpCliMainLoop(
     IN BOOLEAN EnteredOnSingleStep)
 {
-    BOOLEAN Continue;
-    SIZE_T CmdLen;
+    BOOLEAN Continue = TRUE;
     static CHAR Command[1024];
     static CHAR LastCommand[1024] = "";
+
+// FIXME HACK: SYSREG SUPPORT CORE-19807 -- Emit a backtrace.
+// TODO: Remove once SYSREG "bt" command emission is fixed!
+#if 1
+    KdbpDoCommand("bt");
+#endif
 
     if (EnteredOnSingleStep)
     {
         if (!KdbSymPrintAddress((PVOID)KeGetContextPc(KdbCurrentTrapFrame), KdbCurrentTrapFrame))
-        {
-            KdbpPrint("<%p>", KeGetContextPc(KdbCurrentTrapFrame));
-        }
+            KdbPrintf("<%p>", KeGetContextPc(KdbCurrentTrapFrame));
 
-        KdbpPrint(": ");
+        KdbPuts(": ");
         if (KdbpDisassemble(KeGetContextPc(KdbCurrentTrapFrame), KdbUseIntelSyntax) < 0)
-        {
-            KdbpPrint("<INVALID>");
-        }
-        KdbpPrint("\n");
+            KdbPuts("<INVALID>");
+        KdbPuts("\n");
+    }
+    else
+    {
+        /* Preceding this message is one of the "Entered debugger..." banners */
+        // KdbPuts("\nEntered debugger\n");
+        KdbPuts("\nType \"help\" for a list of commands.\n");
     }
 
     /* Main loop */
-    do
+    while (Continue)
     {
-        /* Reset the number of rows/cols printed */
-        KdbNumberOfRowsPrinted = KdbNumberOfColsPrinted = 0;
-
         /*
          * Print the prompt and read a command.
          * Repeat the last one if the user pressed Enter.
          * This reduces the risk of RSI when single-stepping!
          */
         // TEMP HACK! Issue an empty string instead of duplicating "kdb:>"
-        CmdLen = KdbPrompt(/*KdbPromptStr.Buffer*/"", Command, sizeof(Command));
+        SIZE_T CmdLen = KdbPrompt(/*KdbPromptStr.Buffer*/"", Command, sizeof(Command));
         if (CmdLen == 0)
         {
             /* Nothing received but the user didn't press Enter, retry */
@@ -3321,55 +3331,55 @@ KdbpCliMainLoop(
             RtlStringCbCopyA(Command, sizeof(Command), LastCommand);
         }
 
-        /* Reset the number of rows/cols printed and output aborted state */
-        KdbNumberOfRowsPrinted = KdbNumberOfColsPrinted = 0;
-        KdbOutputAborted = FALSE;
-
-        /* Call the command */
+        /* Invoke the command */
         Continue = KdbpDoCommand(Command);
-        KdbOutputAborted = FALSE;
     }
-    while (Continue);
 }
 
-/*!\brief This function is called by KdbEnterDebuggerException...
+/**
+ * @brief
+ * Interprets the KDBinit file from the \SystemRoot\System32\drivers\etc
+ * directory, that has been loaded by KdbpCliInit().
  *
- * Used to interpret the init file in a context with a trapframe setup
- * (KdbpCliInit call KdbEnter which will call KdbEnterDebuggerException which will
- * call this function if KdbInitFileBuffer is not NULL.
- */
+ * This function is used to interpret the init file in the debugger context
+ * with a trap frame set up. KdbpCliInit() enters the debugger by calling
+ * DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C). In turn, this will call
+ * KdbEnterDebuggerException() which will finally call this function if
+ * KdbInitFileBuffer is not NULL.
+ **/
 VOID
 KdbpCliInterpretInitFile(VOID)
 {
     PCHAR p1, p2;
-    INT_PTR i;
-    CHAR c;
+
+    p1 = InterlockedExchangePointer((PVOID*)&KdbInitFileBuffer, NULL);
+    if (!p1)
+        return;
 
     /* Execute the commands in the init file */
-    DPRINT("KDB: Executing KDBinit file...\n");
-    p1 = KdbInitFileBuffer;
+    KdbPuts("KDB: Executing KDBinit file...\n");
     while (p1[0] != '\0')
     {
-        i = strcspn(p1, "\r\n");
+        size_t i = strcspn(p1, "\r\n");
         if (i > 0)
         {
-            c = p1[i];
+            CHAR c = p1[i];
             p1[i] = '\0';
 
             /* Look for "break" command and comments */
             p2 = p1;
-
             while (isspace(p2[0]))
                 p2++;
 
             if (strncmp(p2, "break", sizeof("break")-1) == 0 &&
                 (p2[sizeof("break")-1] == '\0' || isspace(p2[sizeof("break")-1])))
             {
-                /* break into the debugger */
+                /* Run the interactive debugger loop */
                 KdbpCliMainLoop(FALSE);
             }
             else if (p2[0] != '#' && p2[0] != '\0') /* Ignore empty lines and comments */
             {
+                /* Invoke the command */
                 KdbpDoCommand(p1);
             }
 
@@ -3380,14 +3390,14 @@ KdbpCliInterpretInitFile(VOID)
         while (p1[0] == '\r' || p1[0] == '\n')
             p1++;
     }
-    DPRINT("KDB: KDBinit executed\n");
+    KdbPuts("KDB: KDBinit executed\n");
 }
 
 /**
  * @brief   Called when KDB is initialized.
  *
- * Reads the KDBinit file from the SystemRoot\System32\drivers\etc directory
- * and executes it.
+ * Loads the KDBinit file from the \SystemRoot\System32\drivers\etc
+ * directory and interprets it, by calling back into the debugger.
  **/
 NTSTATUS
 KdbpCliInit(VOID)
@@ -3398,9 +3408,8 @@ KdbpCliInit(VOID)
     IO_STATUS_BLOCK Iosb;
     FILE_STANDARD_INFORMATION FileStdInfo;
     HANDLE hFile = NULL;
-    INT FileSize;
+    ULONG FileSize;
     PCHAR FileBuffer;
-    ULONG OldEflags;
 
     /* Don't load the KDBinit file if its buffer is already lying around */
     if (KdbInitFileBuffer)
@@ -3421,7 +3430,7 @@ KdbpCliInit(VOID)
                         FILE_NO_INTERMEDIATE_BUFFERING);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Could not open \\SystemRoot\\System32\\drivers\\etc\\KDBinit (Status 0x%x)", Status);
+        DPRINT("Could not open %wZ (Status 0x%lx)\n", &FileName, Status);
         return Status;
     }
 
@@ -3432,45 +3441,39 @@ KdbpCliInit(VOID)
     if (!NT_SUCCESS(Status))
     {
         ZwClose(hFile);
-        DPRINT("Could not query size of \\SystemRoot\\System32\\drivers\\etc\\KDBinit (Status 0x%x)", Status);
+        DPRINT1("Could not query size of %wZ (Status 0x%lx)\n", &FileName, Status);
         return Status;
     }
     FileSize = FileStdInfo.EndOfFile.u.LowPart;
 
-    /* Allocate memory for the file */
-    FileBuffer = ExAllocatePool(PagedPool, FileSize + 1); /* add 1 byte for terminating '\0' */
+    /* Allocate memory for the file (add 1 byte for terminating NUL) */
+    FileBuffer = ExAllocatePool(NonPagedPool, FileSize + 1);
     if (!FileBuffer)
     {
         ZwClose(hFile);
-        DPRINT("Could not allocate %d bytes for KDBinit file\n", FileSize);
+        DPRINT1("Could not allocate %lu bytes for KDBinit file\n", FileSize);
         return Status;
     }
 
     /* Load file into memory */
-    Status = ZwReadFile(hFile, NULL, NULL, NULL, &Iosb, FileBuffer, FileSize, NULL, NULL);
+    Status = ZwReadFile(hFile, NULL, NULL, NULL, &Iosb,
+                        FileBuffer, FileSize, NULL, NULL);
     ZwClose(hFile);
 
     if (!NT_SUCCESS(Status) && (Status != STATUS_END_OF_FILE))
     {
         ExFreePool(FileBuffer);
-        DPRINT("Could not read KDBinit file into memory (Status 0x%lx)\n", Status);
+        DPRINT1("Could not read KDBinit file into memory (Status 0x%lx)\n", Status);
         return Status;
     }
 
-    FileSize = min(FileSize, (INT)Iosb.Information);
-    FileBuffer[FileSize] = '\0';
+    FileSize = min(FileSize, (ULONG)Iosb.Information);
+    FileBuffer[FileSize] = ANSI_NULL;
 
-    /* Enter critical section */
-    OldEflags = __readeflags();
-    _disable();
-
-    /* Interpret the init file... */
-    KdbInitFileBuffer = FileBuffer;
-    //KdbEnter(); // FIXME, see commit baa47fa5e
-    KdbInitFileBuffer = NULL;
-
-    /* Leave critical section */
-    __writeeflags(OldEflags);
+    /* Interpret the KDBinit file by calling back into the debugger */
+    InterlockedExchangePointer((PVOID*)&KdbInitFileBuffer, FileBuffer);
+    DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
+    InterlockedExchangePointer((PVOID*)&KdbInitFileBuffer, NULL);
 
     ExFreePool(FileBuffer);
 
@@ -3612,7 +3615,7 @@ KdbInitialize(
 
     if (BootPhase >= 2)
     {
-        /* I/O is now set up for disk access: Read KDB Data */
+        /* I/O is now set up for disk access: load the KDBinit file */
         NTSTATUS Status = KdbpCliInit();
 
         /* Schedule an I/O reinitialization if needed */

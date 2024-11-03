@@ -1104,6 +1104,48 @@ CabinetExtractFile(
             }
         }
 
+        if (!ConvertDosDateTimeToFileTime(Search->File->FileDate,
+                                          Search->File->FileTime,
+                                          &FileTime))
+        {
+            DPRINT1("DosDateTimeToFileTime() failed\n");
+            Status = CAB_STATUS_CANNOT_WRITE;
+            goto CloseDestFile;
+        }
+
+        NtStatus = NtQueryInformationFile(DestFile,
+                                          &IoStatusBlock,
+                                          &FileBasic,
+                                          sizeof(FILE_BASIC_INFORMATION),
+                                          FileBasicInformation);
+        if (!NT_SUCCESS(NtStatus))
+        {
+            DPRINT("NtQueryInformationFile() failed (%x)\n", NtStatus);
+        }
+        else
+        {
+            memcpy(&FileBasic.LastAccessTime, &FileTime, sizeof(FILETIME));
+
+            NtStatus = NtSetInformationFile(DestFile,
+                                            &IoStatusBlock,
+                                            &FileBasic,
+                                            sizeof(FILE_BASIC_INFORMATION),
+                                            FileBasicInformation);
+            if (!NT_SUCCESS(NtStatus))
+            {
+                DPRINT("NtSetInformationFile() failed (%x)\n", NtStatus);
+            }
+        }
+
+        SetAttributesOnFile(Search->File, DestFile);
+
+        /* Nothing more to do for 0 sized files */
+        if (Search->File->FileSize == 0)
+        {
+            Status = CAB_STATUS_SUCCESS;
+            goto CloseDestFile;
+        }
+
         MaxDestFileSize.QuadPart = Search->File->FileSize;
         NtStatus = NtCreateSection(&DestFileSection,
                                    SECTION_ALL_ACCESS,
@@ -1139,40 +1181,6 @@ CabinetExtractFile(
         }
 
         CurrentDestBuffer = DestFileBuffer;
-        if (!ConvertDosDateTimeToFileTime(Search->File->FileDate,
-                                          Search->File->FileTime,
-                                          &FileTime))
-        {
-            DPRINT1("DosDateTimeToFileTime() failed\n");
-            Status = CAB_STATUS_CANNOT_WRITE;
-            goto UnmapDestFile;
-        }
-
-        NtStatus = NtQueryInformationFile(DestFile,
-                                          &IoStatusBlock,
-                                          &FileBasic,
-                                          sizeof(FILE_BASIC_INFORMATION),
-                                          FileBasicInformation);
-        if (!NT_SUCCESS(NtStatus))
-        {
-            DPRINT("NtQueryInformationFile() failed (%x)\n", NtStatus);
-        }
-        else
-        {
-            memcpy(&FileBasic.LastAccessTime, &FileTime, sizeof(FILETIME));
-
-            NtStatus = NtSetInformationFile(DestFile,
-                                            &IoStatusBlock,
-                                            &FileBasic,
-                                            sizeof(FILE_BASIC_INFORMATION),
-                                            FileBasicInformation);
-            if (!NT_SUCCESS(NtStatus))
-            {
-                DPRINT("NtSetInformationFile() failed (%x)\n", NtStatus);
-            }
-        }
-
-        SetAttributesOnFile(Search->File, DestFile);
     }
 
     /* Call extract event handler */
@@ -1252,7 +1260,8 @@ CabinetExtractFile(
             DPRINT("Cannot uncompress block\n");
             if (Status == CS_NOMEMORY)
                 Status = CAB_STATUS_NOMEMORY;
-            Status = CAB_STATUS_INVALID_CAB;
+            else
+                Status = CAB_STATUS_INVALID_CAB;
             goto UnmapDestFile;
         }
 

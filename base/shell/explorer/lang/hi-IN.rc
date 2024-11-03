@@ -215,4 +215,5 @@ BEGIN
     IDS_RESTORE_ALL "खुले हुऐ विंडोज &दिखाएं"
     IDS_TRAYWND_UNDO_CASCADE "&Undo Cascade"
     IDS_TRAYWND_UNDO_TILE "&Undo Tile"
+    IDS_TRAYDESKBTN_TOOLTIP "Show Desktop/Windows"
 END

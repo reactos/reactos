@@ -1,5 +1,8 @@
 
-add_definitions(-DWINETEST_USE_DBGSTR_LONGLONG)
+add_definitions(
+    -DWINETEST_USE_DBGSTR_LONGLONG
+    -Dstrcasecmp=_stricmp
+)
 
 remove_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502)
 

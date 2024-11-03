@@ -16,6 +16,50 @@ using namespace Gdiplus;
 HICON g_hDefaultPackageIcon = NULL;
 static int g_DefaultPackageIconILIdx = I_IMAGENONE;
 
+// **** Menu helpers ****
+
+BOOL
+DeleteMenuEx(
+    _In_ HMENU hMenu,
+    _In_ UINT  uPosition,
+    _In_ UINT  uFlags)
+{
+    INT pos;
+    MENUITEMINFOW mii = { sizeof(mii), MIIM_FTYPE, 0 };
+    bool bIsValidItem1, bIsValidItem2;
+    bool bIsSep1, bIsSep2;
+
+    if (uFlags & MF_BYPOSITION)
+        pos = (INT)uPosition;
+    else
+        pos = ::GetMenuPosFromID(hMenu, uPosition);
+    if (pos < 0)
+        return FALSE;
+
+    bIsValidItem1 = ((pos > 0) && ::GetMenuItemInfoW(hMenu, pos - 1, TRUE, &mii));
+    bIsSep1 = bIsValidItem1 && !!(mii.fType & MFT_SEPARATOR);
+
+    bIsValidItem2 = ::GetMenuItemInfoW(hMenu, pos + 1, TRUE, &mii);
+    bIsSep2 = bIsValidItem2 && !!(mii.fType & MFT_SEPARATOR);
+
+    if (bIsSep1 && !bIsSep2 && !bIsValidItem2)
+        pos = pos - 1; // Delete separator only if pos+1 has no item
+    else if (!bIsSep1 && bIsSep2 && !bIsValidItem1)
+        pos = pos + 1; // Delete separator only if pos-1 has no item
+    else if (bIsSep1 && bIsSep2)
+        pos = pos + 1;
+    else
+        pos = -1;
+
+    // Delete one of the separators if necessary
+    if (pos != -1)
+        ::DeleteMenu(hMenu, pos, MF_BYPOSITION);
+
+    // Finally, delete the menu item itself.
+    return ::DeleteMenu(hMenu, uPosition, uFlags);
+}
+// **** Menu helpers ****
+
 // **** CMainToolbar ****
 
 VOID
@@ -149,26 +193,28 @@ CMainToolbar::Create(HWND hwndParent)
 
     AddButtons(_countof(Buttons), Buttons);
 
-    /* Remember ideal width to use as a max width of buttons */
-    SIZE size;
-    GetIdealSize(FALSE, &size);
-    m_dButtonsWidthMax = size.cx;
+    /* Remember the ideal width to use as a max width of buttons */
+    UpdateMaxButtonsWidth();
 
     return m_hWnd;
 }
 
-VOID
-CMainToolbar::HideButtonCaption()
+void
+CMainToolbar::ShowButtonCaption(bool bShow)
 {
     DWORD dCurrentExStyle = (DWORD)SendMessageW(TB_GETEXTENDEDSTYLE, 0, 0);
-    SendMessageW(TB_SETEXTENDEDSTYLE, 0, dCurrentExStyle | TBSTYLE_EX_MIXEDBUTTONS);
+    if (bShow)
+        SendMessageW(TB_SETEXTENDEDSTYLE, 0, dCurrentExStyle & ~TBSTYLE_EX_MIXEDBUTTONS);
+    else
+        SendMessageW(TB_SETEXTENDEDSTYLE, 0, dCurrentExStyle | TBSTYLE_EX_MIXEDBUTTONS);
 }
 
-VOID
-CMainToolbar::ShowButtonCaption()
+void
+CMainToolbar::UpdateMaxButtonsWidth()
 {
-    DWORD dCurrentExStyle = (DWORD)SendMessageW(TB_GETEXTENDEDSTYLE, 0, 0);
-    SendMessageW(TB_SETEXTENDEDSTYLE, 0, dCurrentExStyle & ~TBSTYLE_EX_MIXEDBUTTONS);
+    SIZE size;
+    GetIdealSize(FALSE, &size);
+    m_dButtonsWidthMax = size.cx;
 }
 
 DWORD
@@ -266,21 +312,6 @@ CAppRichEdit::InsertTextWithString(UINT StringID, const CStringW &Text, DWORD Te
     {
         LoadAndInsertText(StringID, Text, TextFlags);
     }
-}
-
-VOID
-CAppRichEdit::SetWelcomeText()
-{
-    CStringW szText;
-
-    szText.LoadStringW(IDS_WELCOME_TITLE);
-    SetText(szText, CFE_BOLD);
-
-    szText.LoadStringW(IDS_WELCOME_TEXT);
-    InsertText(szText, 0);
-
-    szText.LoadStringW(IDS_WELCOME_URL);
-    InsertText(szText, CFM_LINK);
 }
 // **** CAppRichEdit ****
 
@@ -939,12 +970,41 @@ CAppInfoDisplay::ShowAppInfo(CAppInfo *Info)
     Info->ShowAppInfo(RichEdit);
 }
 
-VOID
-CAppInfoDisplay::SetWelcomeText()
+void
+CAppInfoDisplay::SetWelcomeText(bool bAppwiz)
 {
+    CStringW szText;
+
     ScrnshotPrev->DisplayEmpty();
     ResizeChildren();
-    RichEdit->SetWelcomeText();
+
+    // Display the standard banner in normal mode, or
+    // the specific "Add/Remove Programs" in APPWIZ-mode.
+    if (!bAppwiz)
+    {
+        szText.LoadStringW(IDS_WELCOME_TITLE);
+        RichEdit->SetText(szText, CFE_BOLD);
+        RichEdit->InsertText(L"\n\n", 0);
+
+        szText.LoadStringW(IDS_WELCOME_TEXT);
+        RichEdit->InsertText(szText, 0);
+
+        szText.LoadStringW(IDS_WELCOME_URL);
+        RichEdit->InsertText(szText, CFM_LINK);
+    }
+    else
+    {
+        szText.LoadStringW(IDS_APPWIZ_TITLE);
+        RichEdit->SetText(szText, CFE_BOLD);
+        RichEdit->InsertText(L"\n\n", 0);
+
+        szText.LoadStringW(IDS_APPWIZ_TEXT1);
+        RichEdit->InsertText(szText, 0);
+        RichEdit->InsertText(L"\n", 0);
+
+        szText.LoadStringW(IDS_APPWIZ_TEXT2);
+        RichEdit->InsertText(szText, 0);
+    }
 }
 
 VOID
@@ -1113,19 +1173,11 @@ CAppsListView::SetWatermark(const CStringW &Text)
     m_Watermark = Text;
 }
 
-VOID
-CAppsListView::SetCheckboxesVisible(BOOL bIsVisible)
+void
+CAppsListView::ShowCheckboxes(bool bShow)
 {
-    if (bIsVisible)
-    {
-        SetExtendedListViewStyle(LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT);
-    }
-    else
-    {
-        SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
-    }
-
-    bHasCheckboxes = bIsVisible;
+    SetExtendedListViewStyle((bShow ? LVS_EX_CHECKBOXES : 0) | LVS_EX_FULLROWSELECT);
+    bHasCheckboxes = bShow;
 }
 
 VOID
@@ -1258,7 +1310,7 @@ CAppsListView::Create(HWND hwndParent)
 
     if (hwnd)
     {
-        SetCheckboxesVisible(FALSE);
+        ShowCheckboxes(false);
     }
 
 #pragma push_macro("SubclassWindow")
@@ -1359,16 +1411,18 @@ CAppsListView::SetDisplayAppType(APPLICATION_VIEW_TYPE AppType)
 
             /* Add columns to ListView */
             szText.LoadStringW(IDS_APP_NAME);
-            AddColumn(ColumnCount++, szText, 250, LVCFMT_LEFT);
+            AddColumn(ColumnCount++, szText, 368, LVCFMT_LEFT);
 
             szText.LoadStringW(IDS_APP_INST_VERSION);
             AddColumn(ColumnCount++, szText, 90, LVCFMT_RIGHT);
 
+#if 0 // This column is not currently useful for installed apps.
             szText.LoadStringW(IDS_APP_DESCRIPTION);
             AddColumn(ColumnCount++, szText, 300, LVCFMT_LEFT);
+#endif
 
-            // disable checkboxes
-            SetCheckboxesVisible(FALSE);
+            // Disable checkboxes
+            ShowCheckboxes(false);
             break;
 
         case AppViewTypeAvailableApps:
@@ -1383,8 +1437,8 @@ CAppsListView::SetDisplayAppType(APPLICATION_VIEW_TYPE AppType)
             szText.LoadStringW(IDS_APP_DESCRIPTION);
             AddColumn(ColumnCount++, szText, 300, LVCFMT_LEFT);
 
-            // enable checkboxes
-            SetCheckboxesVisible(TRUE);
+            // Enable checkboxes
+            ShowCheckboxes(true);
             break;
 
         default:
@@ -1490,6 +1544,41 @@ CApplicationView::ProcessWindowMessage(
             bSuccess &= CreateListView();
             bSuccess &= CreateAppInfoDisplay();
 
+            /* APPWIZ-mode: Remove the unneeded menu items and toolbar buttons */
+            if (m_MainWindow->m_bAppwizMode)
+            {
+                HMENU hMenu;
+
+                /* Delete the "Settings" item in the "File" sub-menu */
+                hMenu = ::GetSubMenu(m_MainWindow->GetMenu(), 0);
+                DeleteMenuEx(hMenu, ID_SETTINGS, MF_BYCOMMAND);
+
+                /* Remove the menu items: ID_INSTALL, ID_RESETDB */
+                hMenu = GetMenu();
+                DeleteMenuEx(hMenu, ID_INSTALL, MF_BYCOMMAND);
+                DeleteMenuEx(hMenu, ID_RESETDB, MF_BYCOMMAND);
+
+                /* Remove the toolbar buttons:
+                 * ID_INSTALL, ID_CHECK_ALL, ID_RESETDB
+                 * We only keep:
+                 * ID_UNINSTALL, ID_MODIFY, ID_REFRESH */
+                TBBUTTONINFO info = { sizeof(info), 0 };
+                int index;
+
+                index = m_Toolbar->GetButtonInfo(ID_INSTALL, &info);
+                if (index >= 0) m_Toolbar->DeleteButton(index);
+
+                index = m_Toolbar->GetButtonInfo(ID_CHECK_ALL, &info);
+                if (index >= 0) m_Toolbar->DeleteButton(index);
+
+                index = m_Toolbar->GetButtonInfo(ID_RESETDB, &info);
+                if (index >= 0) m_Toolbar->DeleteButton(index);
+
+                /* Update the ideal width to use as a max width of buttons */
+                m_Toolbar->UpdateMaxButtonsWidth();
+            }
+
+            /* Resize the toolbar */
             m_Toolbar->AutoSize();
 
             RECT rTop;
@@ -1728,7 +1817,7 @@ CApplicationView::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
     if (wParam == SIZE_MINIMIZED)
         return;
 
-    /* Size tool bar */
+    /* Resize the toolbar */
     m_Toolbar->AutoSize();
 
     /* Automatically hide captions */
@@ -1737,11 +1826,11 @@ CApplicationView::OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     if (dSearchbarMargin > dToolbarTreshold)
     {
-        m_Toolbar->ShowButtonCaption();
+        m_Toolbar->ShowButtonCaption(true);
     }
     else if (dSearchbarMargin < dToolbarTreshold)
     {
-        m_Toolbar->HideButtonCaption();
+        m_Toolbar->ShowButtonCaption(false);
     }
 
     RECT r = {0, 0, LOWORD(lParam), HIWORD(lParam)};
@@ -1917,9 +2006,10 @@ CApplicationView::Create(HWND hwndParent)
 {
     RECT r = {0, 0, 0, 0};
 
-    HMENU menu = GetSubMenu(LoadMenuW(hInst, MAKEINTRESOURCEW(IDR_APPLICATIONMENU)), 0);
+    // Pick the "Programs" sub-menu for building the context menu.
+    HMENU hMenu = ::GetSubMenu(m_MainWindow->GetMenu(), 1);
 
-    return CWindowImpl::Create(hwndParent, r, L"", WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, menu);
+    return CWindowImpl::Create(hwndParent, r, L"", WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, hMenu);
 }
 
 BOOL
@@ -1930,32 +2020,41 @@ CApplicationView::SetDisplayAppType(APPLICATION_VIEW_TYPE AppType)
         return FALSE;
     }
     ApplicationViewType = AppType;
-    m_AppsInfo->SetWelcomeText();
+    m_AppsInfo->SetWelcomeText(m_MainWindow->m_bAppwizMode);
 
     HMENU hMenu = ::GetMenu(m_hWnd);
     switch (AppType)
     {
         case AppViewTypeInstalledApps:
-            EnableMenuItem(hMenu, ID_REGREMOVE, MF_ENABLED);
+        {
             EnableMenuItem(hMenu, ID_INSTALL, MF_GRAYED);
             EnableMenuItem(hMenu, ID_UNINSTALL, MF_ENABLED);
             EnableMenuItem(hMenu, ID_MODIFY, MF_ENABLED);
+            EnableMenuItem(hMenu, ID_REGREMOVE, MF_ENABLED);
 
             m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_INSTALL, FALSE);
             m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_UNINSTALL, TRUE);
             m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_MODIFY, TRUE);
+            m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_CHECK_ALL, FALSE);
             break;
+        }
 
         case AppViewTypeAvailableApps:
-            EnableMenuItem(hMenu, ID_REGREMOVE, MF_GRAYED);
+        {
+            // We shouldn't get there in APPWIZ-mode.
+            ATLASSERT(!m_MainWindow->m_bAppwizMode);
+
             EnableMenuItem(hMenu, ID_INSTALL, MF_ENABLED);
             EnableMenuItem(hMenu, ID_UNINSTALL, MF_GRAYED);
             EnableMenuItem(hMenu, ID_MODIFY, MF_GRAYED);
+            EnableMenuItem(hMenu, ID_REGREMOVE, MF_GRAYED);
 
             m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_INSTALL, TRUE);
             m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_UNINSTALL, FALSE);
             m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_MODIFY, FALSE);
+            m_Toolbar->SendMessageW(TB_ENABLEBUTTON, ID_CHECK_ALL, TRUE);
             break;
+        }
     }
     return TRUE;
 }

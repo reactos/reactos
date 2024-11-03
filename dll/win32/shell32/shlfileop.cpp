@@ -129,12 +129,13 @@ static INT_PTR ConfirmMsgBox_Paint(HWND hDlg)
     BeginPaint(hDlg, &ps);
     hdc = ps.hdc;
     SetBkMode(hdc, TRANSPARENT);
+    SetTextColor(hdc, GetSysColor(COLOR_BTNTEXT));
 
     GetClientRect(GetDlgItem(hDlg, IDC_YESTOALL_MESSAGE), &r);
     /* this will remap the rect to dialog coords */
     MapWindowPoints(GetDlgItem(hDlg, IDC_YESTOALL_MESSAGE), hDlg, (LPPOINT)&r, 2);
     hOldFont = (HFONT)SelectObject(hdc, (HFONT)SendDlgItemMessageW(hDlg, IDC_YESTOALL_MESSAGE, WM_GETFONT, 0, 0));
-    DrawTextW(hdc, (LPWSTR)GetPropW(hDlg, L"WINE_CONFIRM"), -1, &r, DT_NOPREFIX | DT_PATH_ELLIPSIS | DT_WORDBREAK);
+    DrawTextW(hdc, (LPWSTR)GetWindowLongPtrW(hDlg, DWLP_USER), -1, &r, DT_NOPREFIX | DT_PATH_ELLIPSIS | DT_WORDBREAK);
     SelectObject(hdc, hOldFont);
     EndPaint(hDlg, &ps);
 
@@ -152,7 +153,7 @@ static INT_PTR ConfirmMsgBox_Init(HWND hDlg, LPARAM lParam)
 
     SetWindowTextW(hDlg, info->lpszCaption);
     ShowWindow(GetDlgItem(hDlg, IDC_YESTOALL_MESSAGE), SW_HIDE);
-    SetPropW(hDlg, L"WINE_CONFIRM", info->lpszText);
+    SetWindowLongPtrW(hDlg, DWLP_USER, (LONG_PTR)info->lpszText);
     SendDlgItemMessageW(hDlg, IDC_YESTOALL_ICON, STM_SETICON, (WPARAM)info->hIcon, 0);
 
     /* compute the text height and resize the dialog */
@@ -1595,7 +1596,10 @@ static HRESULT delete_files(FILE_OPERATION *op, const FILE_LIST *flFrom)
     bTrash = (op->req->fFlags & FOF_ALLOWUNDO)
         && TRASH_CanTrashFile(flFrom->feFiles[0].szFullPath);
 
-    if (!(op->req->fFlags & FOF_NOCONFIRMATION) || (!bTrash && op->req->fFlags & FOF_WANTNUKEWARNING))
+    BOOL confirm = !(op->req->fFlags & FOF_NOCONFIRMATION);
+    if (bTrash && SHELL_GetSetting(SSF_NOCONFIRMRECYCLE, fNoConfirmRecycle))
+        confirm = FALSE;
+    if (confirm || (!bTrash && op->req->fFlags & FOF_WANTNUKEWARNING))
         if (!confirm_delete_list(op->req->hwnd, op->req->fFlags, bTrash, flFrom))
         {
             op->req->fAnyOperationsAborted = TRUE;

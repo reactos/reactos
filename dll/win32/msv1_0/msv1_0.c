@@ -12,6 +12,18 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msv1_0);
 
+typedef struct _LOGON_LIST_ENTRY
+{
+    LIST_ENTRY ListEntry;
+    LUID LogonId;
+    ULONG EnumHandle;
+} LOGON_LIST_ENTRY, *PLOGON_LIST_ENTRY;
+
+/* GLOBALS *****************************************************************/
+
+BOOL PackageInitialized = FALSE;
+LIST_ENTRY LogonListHead;
+ULONG EnumCounter;
 
 /* FUNCTIONS ***************************************************************/
 
@@ -819,6 +831,125 @@ done:
 }
 
 
+static
+NTSTATUS
+MsvpEnumerateUsers(
+    _In_ PLSA_CLIENT_REQUEST ClientRequest,
+    _In_ PVOID ProtocolSubmitBuffer,
+    _In_ PVOID ClientBufferBase,
+    _In_ ULONG SubmitBufferLength,
+    _Out_ PVOID *ProtocolReturnBuffer,
+    _Out_ PULONG ReturnBufferLength,
+    _Out_ PNTSTATUS ProtocolStatus)
+{
+    PMSV1_0_ENUMUSERS_RESPONSE LocalBuffer = NULL;
+    PVOID ClientBaseAddress = NULL;
+    ULONG BufferLength;
+    PLIST_ENTRY CurrentEntry;
+    PLOGON_LIST_ENTRY LogonEntry;
+    ULONG LogonCount = 0;
+    PLUID LuidPtr;
+    PULONG EnumPtr;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("MsvpEnumerateUsers()\n");
+
+    /* Count the currently logged-on users */
+    CurrentEntry = LogonListHead.Flink;
+    while (CurrentEntry != &LogonListHead)
+    {
+        LogonEntry = CONTAINING_RECORD(CurrentEntry,
+                                       LOGON_LIST_ENTRY,
+                                       ListEntry);
+
+        TRACE("Logon %lu: 0x%08lx\n", LogonCount, LogonEntry->LogonId.LowPart);
+        LogonCount++;
+
+        CurrentEntry = CurrentEntry->Flink;
+    }
+
+    TRACE("LogonCount %lu\n", LogonCount);
+
+    BufferLength = sizeof(MSV1_0_ENUMUSERS_RESPONSE) + 
+                   (LogonCount * sizeof(LUID)) + 
+                   (LogonCount * sizeof(ULONG));
+
+    LocalBuffer = DispatchTable.AllocateLsaHeap(BufferLength);
+    if (LocalBuffer == NULL)
+    {
+        ERR("Failed to allocate the local buffer!\n");
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Status = DispatchTable.AllocateClientBuffer(ClientRequest,
+                                                BufferLength,
+                                                &ClientBaseAddress);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("DispatchTable.AllocateClientBuffer failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    TRACE("ClientBaseAddress: %p\n", ClientBaseAddress);
+
+    /* Fill the local buffer */
+    LocalBuffer->MessageType = MsV1_0EnumerateUsers;
+    LocalBuffer->NumberOfLoggedOnUsers = LogonCount;
+
+    LuidPtr = (PLUID)((ULONG_PTR)LocalBuffer + sizeof(MSV1_0_ENUMUSERS_RESPONSE));
+    EnumPtr = (PULONG)((ULONG_PTR)LuidPtr + LogonCount * sizeof(LUID));
+
+    LocalBuffer->LogonIds = (PLUID)((ULONG_PTR)ClientBaseAddress + (ULONG_PTR)LuidPtr - (ULONG_PTR)LocalBuffer);
+    LocalBuffer->EnumHandles = (PULONG)((ULONG_PTR)ClientBaseAddress + (ULONG_PTR)EnumPtr - (ULONG_PTR)LocalBuffer);
+
+    /* Copy the LogonIds and EnumHandles into the local buffer */
+    CurrentEntry = LogonListHead.Flink;
+    while (CurrentEntry != &LogonListHead)
+    {
+        LogonEntry = CONTAINING_RECORD(CurrentEntry,
+                                       LOGON_LIST_ENTRY,
+                                       ListEntry);
+
+        TRACE("Logon: 0x%08lx  %lu\n", LogonEntry->LogonId.LowPart, LogonEntry->EnumHandle);
+        RtlCopyMemory(LuidPtr, &LogonEntry->LogonId, sizeof(LUID));
+        LuidPtr++;
+
+        *EnumPtr = LogonEntry->EnumHandle;
+        EnumPtr++;
+
+        CurrentEntry = CurrentEntry->Flink;
+    }
+
+    Status = DispatchTable.CopyToClientBuffer(ClientRequest,
+                                              BufferLength,
+                                              ClientBaseAddress,
+                                              LocalBuffer);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("DispatchTable.CopyToClientBuffer failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    *ProtocolReturnBuffer = (PMSV1_0_INTERACTIVE_PROFILE)ClientBaseAddress;
+    *ReturnBufferLength = BufferLength;
+    *ProtocolStatus = STATUS_SUCCESS;
+
+done:
+    if (LocalBuffer != NULL)
+        DispatchTable.FreeLsaHeap(LocalBuffer);
+
+    if (!NT_SUCCESS(Status))
+    {
+        if (ClientBaseAddress != NULL)
+            DispatchTable.FreeClientBuffer(ClientRequest,
+                                           ClientBaseAddress);
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
 /*
  * @unimplemented
  */
@@ -853,6 +984,15 @@ LsaApCallPackage(IN PLSA_CLIENT_REQUEST ClientRequest,
             break;
 
         case MsV1_0EnumerateUsers:
+             Status = MsvpEnumerateUsers(ClientRequest,
+                                         ProtocolSubmitBuffer,
+                                         ClientBufferBase,
+                                         SubmitBufferLength,
+                                         ProtocolReturnBuffer,
+                                         ReturnBufferLength,
+                                         ProtocolStatus);
+             break;
+
         case MsV1_0GetUserInfo:
         case MsV1_0ReLogonUsers:
             Status = STATUS_INVALID_PARAMETER;
@@ -961,6 +1101,13 @@ LsaApInitializePackage(IN ULONG AuthenticationPackageId,
     TRACE("LsaApInitializePackage(%lu %p %p %p %p)\n",
           AuthenticationPackageId, LsaDispatchTable, Database,
           Confidentiality, AuthenticationPackageName);
+
+    if (!PackageInitialized)
+    {
+        InitializeListHead(&LogonListHead);
+        EnumCounter = 0;
+        PackageInitialized = TRUE;
+    }
 
     /* Get the dispatch table entries */
     DispatchTable.CreateLogonSession = LsaDispatchTable->CreateLogonSession;
@@ -1134,6 +1281,7 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
     BOOL SpecialAccount = FALSE;
     UCHAR LogonPassHash;
     PUNICODE_STRING ErasePassword = NULL;
+    PLOGON_LIST_ENTRY LogonEntry = NULL;
 
     TRACE("LsaApLogonUserEx2()\n");
 
@@ -1328,6 +1476,16 @@ LsaApLogonUserEx2(IN PLSA_CLIENT_REQUEST ClientRequest,
     }
 
     SessionCreated = TRUE;
+
+    LogonEntry = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LOGON_LIST_ENTRY));
+    if (LogonEntry)
+    {
+        RtlCopyMemory(&LogonEntry->LogonId, LogonId, sizeof(LUID));
+        LogonEntry->EnumHandle = EnumCounter;
+        EnumCounter++;
+
+        InsertTailList(&LogonListHead, &LogonEntry->ListEntry);
+    }
 
     if (LogonType == Interactive || LogonType == Batch || LogonType == Service)
     {

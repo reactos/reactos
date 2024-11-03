@@ -121,13 +121,10 @@ PcGetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
 {
     PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
     PCM_DISK_GEOMETRY_DEVICE_DATA DiskGeometry;
-    // EXTENDED_GEOMETRY ExtGeometry;
     GEOMETRY Geometry;
     ULONG Size;
 
-    //
-    // Initialize returned size
-    //
+    /* Initialize returned size */
     *pSize = 0;
 
     /* Set 'Configuration Data' value */
@@ -155,22 +152,11 @@ PcGetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
     DiskGeometry = (PVOID)(((ULONG_PTR)PartialResourceList) + sizeof(CM_PARTIAL_RESOURCE_LIST));
 
     /* Get the disk geometry */
-#if 0 // This is somehow replaced by what PcDiskGetDriveGeometry() does internally.
-    ExtGeometry.Size = sizeof(EXTENDED_GEOMETRY);
-    if (DiskGetExtendedDriveParameters(DriveNumber, &ExtGeometry, ExtGeometry.Size))
-    {
-        DiskGeometry->BytesPerSector = ExtGeometry.BytesPerSector;
-        DiskGeometry->NumberOfCylinders = ExtGeometry.Cylinders;
-        DiskGeometry->SectorsPerTrack = ExtGeometry.SectorsPerTrack;
-        DiskGeometry->NumberOfHeads = ExtGeometry.Heads;
-    }
-    else
-#endif
     if (PcDiskGetDriveGeometry(DriveNumber, &Geometry))
     {
         DiskGeometry->BytesPerSector = Geometry.BytesPerSector;
         DiskGeometry->NumberOfCylinders = Geometry.Cylinders;
-        DiskGeometry->SectorsPerTrack = Geometry.Sectors;
+        DiskGeometry->SectorsPerTrack = Geometry.SectorsPerTrack;
         DiskGeometry->NumberOfHeads = Geometry.Heads;
     }
     else
@@ -186,9 +172,7 @@ PcGetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
           DiskGeometry->SectorsPerTrack,
           DiskGeometry->BytesPerSector);
 
-    //
-    // Return configuration data
-    //
+    /* Return configuration data */
     *pSize = Size;
     return PartialResourceList;
 }

@@ -40,6 +40,17 @@ extern HANDLE ProcessHeap;
 #include "utils/arcname.h"
 #include "utils/osdetect.h"
 #include "utils/regutil.h"
+
+typedef enum _ARCHITECTURE_TYPE
+{
+    ARCH_PcAT,      //< Standard BIOS-based PC-AT
+    ARCH_NEC98x86,  //< NEC PC-98
+    ARCH_Xbox,      //< Original Xbox
+    ARCH_Arc,       //< ARC-based (MIPS, SGI)
+    ARCH_Efi,       //< EFI and UEFI
+// Place other architectures supported by the Setup below.
+} ARCHITECTURE_TYPE;
+
 #include "bootcode.h"
 #include "fsutil.h"
 #include "bootsup.h"
@@ -65,16 +76,6 @@ struct _USETUP_DATA;
 
 typedef VOID
 (__cdecl *PSETUP_ERROR_ROUTINE)(IN struct _USETUP_DATA*, ...);
-
-typedef enum _ARCHITECTURE_TYPE
-{
-    ARCH_PcAT,      //< Standard BIOS-based PC-AT
-    ARCH_NEC98x86,  //< NEC PC-98
-    ARCH_Xbox,      //< Original Xbox
-    ARCH_Arc,       //< ARC-based (MIPS, SGI)
-    ARCH_Efi,       //< EFI and UEFI
-// Place other architectures supported by the Setup below.
-} ARCHITECTURE_TYPE;
 
 typedef struct _USETUP_DATA
 {
@@ -170,9 +171,9 @@ InstallSetupInfFile(
 
 NTSTATUS
 GetSourcePaths(
-    OUT PUNICODE_STRING SourcePath,
-    OUT PUNICODE_STRING SourceRootPath,
-    OUT PUNICODE_STRING SourceRootDir);
+    _Out_ PUNICODE_STRING SourcePath,
+    _Out_ PUNICODE_STRING SourceRootPath,
+    _Out_ PUNICODE_STRING SourceRootDir);
 
 ERROR_NUMBER
 LoadSetupInf(

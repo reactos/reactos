@@ -118,19 +118,19 @@ wmain(
                 result = 0;
                 goto done;
             }
-            else if (wcsicmp(pszArg, L"profile") == 0)
+            else if (_wcsicmp(pszArg, L"profile") == 0)
             {
                 bProfile = TRUE;
             }
-            else if (wcsicmp(pszArg, L"netonly") == 0)
+            else if (_wcsicmp(pszArg, L"netonly") == 0)
             {
                 bNetOnly = TRUE;
             }
-            else if (wcsicmp(pszArg, L"noprofile") == 0)
+            else if (_wcsicmp(pszArg, L"noprofile") == 0)
             {
                 bNoProfile = TRUE;
             }
-            else if (wcsicmp(pszArg, L"env") == 0)
+            else if (_wcsicmp(pszArg, L"env") == 0)
             {
                 bEnv = TRUE;
             }

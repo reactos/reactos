@@ -1936,7 +1936,7 @@ FilterByString(IN PCWSTR FilterString, // This is a multi-string
         pStr = FilterString;
         while (*pStr)
         {
-            if (wcsicmp(pStr, String) == 0)
+            if (_wcsicmp(pStr, String) == 0)
             {
                 /* We have a match, break the loop */
                 break;
@@ -2955,7 +2955,7 @@ BuildLogListAndFilterList(IN LPCWSTR lpComputerName)
         for (lpcName = 0; lpcName < ARRAYSIZE(SystemLogs); ++lpcName)
         {
             /* Check whether the log name is part of the system logs */
-            if (wcsicmp(LogName, SystemLogs[lpcName]) == 0)
+            if (_wcsicmp(LogName, SystemLogs[lpcName]) == 0)
             {
                 hRootNode = htiSystemLogs;
                 break;
@@ -2967,7 +2967,7 @@ BuildLogListAndFilterList(IN LPCWSTR lpComputerName)
                                 2, 3, (LPARAM)EventLogFilter);
 
         /* Try to get the default event log: "Application" */
-        if ((hItemDefault == NULL) && (wcsicmp(LogName, SystemLogs[0]) == 0))
+        if ((hItemDefault == NULL) && (_wcsicmp(LogName, SystemLogs[0]) == 0))
         {
             hItemDefault = hItem;
         }

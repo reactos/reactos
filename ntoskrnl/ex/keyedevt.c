@@ -114,7 +114,7 @@ ExpReleaseOrWaitForKeyedEvent(
     _Inout_ PEX_KEYED_EVENT KeyedEvent,
     _In_ PVOID KeyedWaitValue,
     _In_ BOOLEAN Alertable,
-    _In_ PLARGE_INTEGER Timeout,
+    _In_opt_ PLARGE_INTEGER Timeout,
     _In_ BOOLEAN Release)
 {
     PETHREAD Thread, CurrentThread;
@@ -242,7 +242,7 @@ ExpWaitForKeyedEvent(
     _Inout_ PEX_KEYED_EVENT KeyedEvent,
     _In_ PVOID KeyedWaitValue,
     _In_ BOOLEAN Alertable,
-    _In_ PLARGE_INTEGER Timeout)
+    _In_opt_ PLARGE_INTEGER Timeout)
 {
     /* Call the generic internal function */
     return ExpReleaseOrWaitForKeyedEvent(KeyedEvent,

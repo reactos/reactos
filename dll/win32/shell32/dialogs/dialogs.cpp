@@ -925,7 +925,7 @@ Continue:
 
         if (pszLatest)
         {
-            if (wcsicmp(pszCmd, pszLatest) == 0)
+            if (_wcsicmp(pszCmd, pszLatest) == 0)
             {
                 SendMessageW(hCb, CB_INSERTSTRING, 0, (LPARAM)pszCmd);
                 SetWindowTextW(hCb, pszCmd);

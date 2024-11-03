@@ -21,7 +21,7 @@ typedef struct _INTERNAL_WORK_QUEUE_ITEM
     PDEVICE_OBJECT PhysicalDeviceObject;
     PDEVICE_CHANGE_COMPLETE_CALLBACK Callback;
     PVOID Context;
-    PTARGET_DEVICE_CUSTOM_NOTIFICATION NotificationStructure;
+    TARGET_DEVICE_CUSTOM_NOTIFICATION NotificationStructure;
 } INTERNAL_WORK_QUEUE_ITEM, *PINTERNAL_WORK_QUEUE_ITEM;
 
 NTSTATUS
@@ -104,7 +104,7 @@ IopReportTargetDeviceChangeAsyncWorker(PVOID Context)
     PINTERNAL_WORK_QUEUE_ITEM Item;
 
     Item = (PINTERNAL_WORK_QUEUE_ITEM)Context;
-    PpSetCustomTargetEvent(Item->PhysicalDeviceObject, NULL, NULL, Item->Callback, Item->Context, Item->NotificationStructure);
+    PpSetCustomTargetEvent(Item->PhysicalDeviceObject, NULL, NULL, Item->Callback, Item->Context, &Item->NotificationStructure);
     ObDereferenceObject(Item->PhysicalDeviceObject);
     ExFreePoolWithTag(Context, '  pP');
 }
@@ -464,9 +464,9 @@ IoReportTargetDeviceChange(IN PDEVICE_OBJECT PhysicalDeviceObject,
     ASSERT(notifyStruct->FileObject == NULL);
 
     /* Do not handle system PnP events */
-    if ((RtlCompareMemory(&(notifyStruct->Event), &(GUID_TARGET_DEVICE_QUERY_REMOVE), sizeof(GUID)) != sizeof(GUID)) ||
-        (RtlCompareMemory(&(notifyStruct->Event), &(GUID_TARGET_DEVICE_REMOVE_CANCELLED), sizeof(GUID)) != sizeof(GUID)) ||
-        (RtlCompareMemory(&(notifyStruct->Event), &(GUID_TARGET_DEVICE_REMOVE_COMPLETE), sizeof(GUID)) != sizeof(GUID)))
+    if (IsEqualGUID(&(notifyStruct->Event), &GUID_TARGET_DEVICE_QUERY_REMOVE) ||
+        IsEqualGUID(&(notifyStruct->Event), &GUID_TARGET_DEVICE_REMOVE_CANCELLED) ||
+        IsEqualGUID(&(notifyStruct->Event), &GUID_TARGET_DEVICE_REMOVE_COMPLETE))
     {
         return STATUS_INVALID_DEVICE_REQUEST;
     }
@@ -502,6 +502,7 @@ IoReportTargetDeviceChangeAsynchronous(IN PDEVICE_OBJECT PhysicalDeviceObject,
 {
     PINTERNAL_WORK_QUEUE_ITEM Item = NULL;
     PTARGET_DEVICE_CUSTOM_NOTIFICATION notifyStruct = (PTARGET_DEVICE_CUSTOM_NOTIFICATION)NotificationStructure;
+    SIZE_T WorkItemSize;
 
     ASSERT(notifyStruct);
 
@@ -515,9 +516,9 @@ IoReportTargetDeviceChangeAsynchronous(IN PDEVICE_OBJECT PhysicalDeviceObject,
     ASSERT(notifyStruct->FileObject == NULL);
 
     /* Do not handle system PnP events */
-    if ((RtlCompareMemory(&(notifyStruct->Event), &(GUID_TARGET_DEVICE_QUERY_REMOVE), sizeof(GUID)) != sizeof(GUID)) ||
-        (RtlCompareMemory(&(notifyStruct->Event), &(GUID_TARGET_DEVICE_REMOVE_CANCELLED), sizeof(GUID)) != sizeof(GUID)) ||
-        (RtlCompareMemory(&(notifyStruct->Event), &(GUID_TARGET_DEVICE_REMOVE_COMPLETE), sizeof(GUID)) != sizeof(GUID)))
+    if (IsEqualGUID(&(notifyStruct->Event), &GUID_TARGET_DEVICE_QUERY_REMOVE) ||
+        IsEqualGUID(&(notifyStruct->Event), &GUID_TARGET_DEVICE_REMOVE_CANCELLED) ||
+        IsEqualGUID(&(notifyStruct->Event), &GUID_TARGET_DEVICE_REMOVE_COMPLETE))
     {
         return STATUS_INVALID_DEVICE_REQUEST;
     }
@@ -527,16 +528,20 @@ IoReportTargetDeviceChangeAsynchronous(IN PDEVICE_OBJECT PhysicalDeviceObject,
         return STATUS_INVALID_DEVICE_REQUEST;
     }
 
+    /* Calculate the required size for the work item and notification structure */
+    WorkItemSize = FIELD_OFFSET(INTERNAL_WORK_QUEUE_ITEM, NotificationStructure)
+                   + notifyStruct->Size;
+
     /* We need to store all the data given by the caller with the WorkItem, so use our own struct */
-    Item = ExAllocatePoolWithTag(NonPagedPool, sizeof(INTERNAL_WORK_QUEUE_ITEM), '  pP');
+    Item = ExAllocatePoolWithTag(NonPagedPool, WorkItemSize, '  pP');
     if (!Item) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Initialize all stuff */
     ObReferenceObject(PhysicalDeviceObject);
-    Item->NotificationStructure = notifyStruct;
     Item->PhysicalDeviceObject = PhysicalDeviceObject;
     Item->Callback = Callback;
     Item->Context = Context;
+    RtlCopyMemory(&Item->NotificationStructure, notifyStruct, notifyStruct->Size);
     ExInitializeWorkItem(&(Item->WorkItem), IopReportTargetDeviceChangeAsyncWorker, Item);
 
     /* Finally, queue the item, our work here is done */

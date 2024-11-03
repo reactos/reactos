@@ -25,7 +25,7 @@
 #ifndef _STDINT_H
 #define _STDINT_H
 
-#include <crtdefs.h>
+#include <vcruntime.h>
 
 #define __need_wint_t
 #define __need_wchar_t

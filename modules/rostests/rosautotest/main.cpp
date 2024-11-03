@@ -7,6 +7,8 @@
 
 #include "precomp.h"
 #include <cstdio>
+#include <ndk/setypes.h>
+#include <ndk/exfuncs.h>
 
 CConfiguration Configuration;
 
@@ -43,6 +45,41 @@ IntPrintUsage()
          << "    The test to be run. Needs to be a test of the specified module." << endl;
 }
 
+static
+VOID
+SetNtGlobalFlags()
+{
+    ULONG NtGlobalFlags = 0;
+    BOOLEAN PrivilegeEnabled;
+    NTSTATUS Status;
+
+    /* Enable SeDebugPrivilege */
+    Status = RtlAdjustPrivilege(SE_DEBUG_PRIVILEGE, TRUE, FALSE, &PrivilegeEnabled);
+    if (!NT_SUCCESS(Status))
+    {
+        DbgPrint("Failed to enable SeDebugPrivilege: 0x%08lx\n", Status);
+        return;
+    }
+
+    /* Get current NtGlobalFlags */
+    Status = NtQuerySystemInformation(SystemFlagsInformation, &NtGlobalFlags, sizeof(NtGlobalFlags), NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DbgPrint("Failed to get NtGlobalFlags: 0x%08lx\n", Status);
+        return;
+    }
+
+    /* Disable debug prompts */
+    NtGlobalFlags |= FLG_DISABLE_DEBUG_PROMPTS;
+
+    /* Set new NtGlobalFlags */
+    Status = NtSetSystemInformation(SystemFlagsInformation, &NtGlobalFlags, sizeof(NtGlobalFlags));
+    if (!NT_SUCCESS(Status))
+    {
+        DbgPrint("Failed to set NtGlobalFlags: 0x%08lx\n", Status);
+    }
+}
+
 /**
  * Main entry point
  */
@@ -50,6 +87,8 @@ extern "C" int
 wmain(int argc, wchar_t* argv[])
 {
     int ReturnValue = 1;
+
+    SetNtGlobalFlags();
 
     try
     {

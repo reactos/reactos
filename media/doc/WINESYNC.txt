@@ -115,7 +115,7 @@ dll/win32/msg711.acm          # Synced to WineStaging-4.18
 dll/win32/msgsm32.acm         # Synced to WineStaging-4.0
 dll/win32/mshtml              # Synced to WineStaging-1.7.55
 dll/win32/mshtml.tlb          # Synced to WineStaging-1.7.55
-dll/win32/msi                 # Synced to WineStaging-7.3 (+ dialog.c synced to bbce5d014db7f023b133d6d09e6846e027586f7d)
+dll/win32/msi                 # Synced to Wine-9.8
 dll/win32/msimg32             # Synced to WineStaging-3.3
 dll/win32/msimtf              # Synced to WineStaging-4.18
 dll/win32/msisip              # Synced to WineStaging-4.18
@@ -258,7 +258,7 @@ base/applications/wordpad           # Synced to WineStaging-1.9.16
 base/applications/write             # Synced to WineStaging-3.3
 base/services/rpcss                 # Synced to WineStaging-3.3
 base/system/expand                  # Synced to WineStaging-3.3
-base/system/msiexec                 # Synced to WineStaging-3.3
+base/system/msiexec                 # Synced to Wine-9.8
 modules/rosapps/applications/winfile # Autosync
 
 In addition the following libs, dlls and source files are mostly based on code ported

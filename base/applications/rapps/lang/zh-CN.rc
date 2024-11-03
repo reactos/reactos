@@ -47,22 +47,6 @@ BEGIN
     END
 END
 
-IDR_APPLICATIONMENU MENU
-BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM "安装(&I)\tCtrl+Enter", ID_INSTALL
-        MENUITEM "卸载(&U)\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "修改(&M)", ID_MODIFY
-        MENUITEM SEPARATOR
-        MENUITEM "从注册表删除(&E)", ID_REGREMOVE
-        MENUITEM SEPARATOR
-        MENUITEM "刷新(&R)\tF5", ID_REFRESH
-        MENUITEM SEPARATOR
-        MENUITEM "更新数据库(&B)\tCtrl+F5", ID_RESETDB
-    END
-END
-
 IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 265
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "设置"
@@ -192,11 +176,20 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS 程序管理器"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT "搜索…"
-    IDS_APPS_COUNT "程序数量：%d；已选：%d"
-    IDS_WELCOME_TITLE "欢迎使用 ReactOS 程序管理器！\n\n"
+    IDS_WELCOME_TITLE "欢迎使用 ReactOS 程序管理器！"
     IDS_WELCOME_TEXT "从左栏选择一个类别，然后选择要安装或卸载的程序。\nReactOS 网站："
     IDS_WELCOME_URL "https://reactos.org"
+
+    IDS_APPWIZ_TITLE "Add/Remove Programs"
+    IDS_APPWIZ_TEXT1 "Choose ""Applications"" or ""Updates"" to view the list of applications or updates installed on your system."
+    IDS_APPWIZ_TEXT2 "To remove a program or to modify its installed components, select it from the list and click on ""Uninstall"" or ""Modify""."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCH_TEXT "搜索…"
+    IDS_APPS_COUNT "程序数量：%d"
+    IDS_APPS_SELECT_COUNT "；已选：%d"
     IDS_INSTALLED "已安装"
     IDS_AVAILABLEFORINST "可安装"
     IDS_UPDATES "更新"

@@ -50,6 +50,7 @@ add_compile_options(-mlong-double-64)
 add_compile_options("$<$<NOT:$<COMPILE_LANGUAGE:CXX>>:-nostdinc>")
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    add_compile_options("-Wno-unknown-pragmas")
     add_compile_options(-fno-aggressive-loop-optimizations)
     if (DBG)
         add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wold-style-declaration>")
@@ -140,7 +141,9 @@ endif()
 # Optimizations
 # FIXME: Revisit this to see if we even need these levels
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_compile_options(-O2 -DNDEBUG)
+    add_compile_options(-O2 -DNDEBUG=)
+    add_compile_options(-Wno-unused-variable)
+    add_compile_options(-Wno-unused-but-set-variable)
 else()
     if(OPTIMIZE STREQUAL "1")
         add_compile_options(-Os)
@@ -600,5 +603,4 @@ target_compile_definitions(libstdc++ INTERFACE "$<$<COMPILE_LANGUAGE:CXX>:PAL_ST
 
 # Create our alias libraries
 add_library(cppstl ALIAS libstdc++)
-add_library(cpprt ALIAS libsupc++)
 

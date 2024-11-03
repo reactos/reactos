@@ -1519,7 +1519,7 @@ static MUI_ENTRY frFRBootLoaderInstallPageEntries[] =
     {
         0,
         0,
-        "Installing the bootloader onto the media, please wait...",
+        "Installation du chargeur de d\202marrage, veuillez patienter...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1543,7 +1543,7 @@ static MUI_ENTRY frFRBootLoaderRemovableDiskPageEntries[] =
     {
         6,
         8,
-        "Setup ne peut installer le chargeur sur le disque dur de votre ordinateur.",
+        "Setup installe le chargeur de d\202marrage.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },

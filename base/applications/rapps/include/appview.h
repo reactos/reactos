@@ -89,8 +89,6 @@ class CAppRichEdit : public CUiWindow<CRichEdit>
     LoadAndInsertText(UINT uStringID, DWORD StringFlags);
     VOID
     InsertTextWithString(UINT StringID, const CStringW &Text, DWORD TextFlags);
-    VOID
-    SetWelcomeText();
 };
 
 int
@@ -178,8 +176,8 @@ class CAppInfoDisplay : public CUiWindow<CWindowImpl<CAppInfoDisplay>>
 
     VOID
     ShowAppInfo(CAppInfo *Info);
-    VOID
-    SetWelcomeText();
+    void
+    SetWelcomeText(bool bAppwiz);
     VOID
     OnCommand(WPARAM wParam, LPARAM lParam);
 
@@ -195,7 +193,7 @@ class CAppsListView : public CUiWindow<CWindowImpl<CAppsListView, CListView>>
     };
 
     BOOL bIsAscending = TRUE;
-    BOOL bHasCheckboxes = FALSE;
+    bool bHasCheckboxes = false;
 
     INT ItemCount = 0;
     INT CheckedItemCount = 0;
@@ -224,8 +222,9 @@ class CAppsListView : public CUiWindow<CWindowImpl<CAppsListView, CListView>>
 
     VOID
     SetWatermark(const CStringW &Text);
-    VOID
-    SetCheckboxesVisible(BOOL bIsVisible);
+
+    void
+    ShowCheckboxes(bool bShow);
 
     VOID
     ColumnClick(LPNMLISTVIEW pnmv);
@@ -293,10 +292,11 @@ class CMainToolbar : public CUiWindow<CToolbar<>>
     HWND
     Create(HWND hwndParent);
 
-    VOID
-    HideButtonCaption();
-    VOID
-    ShowButtonCaption();
+    void
+    ShowButtonCaption(bool bShow);
+
+    void
+    UpdateMaxButtonsWidth();
 
     DWORD
     GetMaxButtonsWidth() const;

@@ -293,7 +293,7 @@ VOID TuiDrawBackdrop(VOID)
     /* Draw version text */
     TuiDrawText(2,
                 1,
-                FrLdrVersionString,
+                VERSION,
                 ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
 
     /* Draw copyright */

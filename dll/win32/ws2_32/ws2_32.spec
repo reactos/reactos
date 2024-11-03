@@ -115,3 +115,7 @@
 23  stdcall  socket(long long long)
 @ stdcall GetAddrInfoW(wstr wstr ptr ptr)
 @ stdcall GetNameInfoW(ptr long wstr long wstr long long)
+@ stdcall -version=0x600+ inet_ntop(long ptr ptr long)
+@ stdcall -version=0x600+ InetNtopW(long ptr ptr long)
+@ stdcall -version=0x600+ inet_pton(long str ptr)
+@ stdcall -version=0x600+ InetPtonW(long wstr ptr)

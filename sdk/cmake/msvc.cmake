@@ -32,6 +32,9 @@ endif()
 
 add_definitions(/D__STDC__=1)
 
+# Enable correct values of __cplusplus macro for newer standards
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/Zc:__cplusplus>)
+
 # Ignore any "standard" include paths, and do not use any default CRT library.
 if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     add_compile_options(/X /Zl)
@@ -205,12 +208,16 @@ else()
     set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> /nologo <INCLUDES> <FLAGS> <DEFINES> ${I18N_DEFS} /fo <OBJECT> <SOURCE>")
 endif()
 
+if(MSVC_VERSION GREATER_EQUAL 1936)
+    set(_quiet_flag "/quiet")
+endif()
+
 # We don't put <INCLUDES> <DEFINES> <FLAGS> because this is handled in add_asm_files macro
 if (NOT MSVC_IDE)
     if(ARCH STREQUAL "arm" OR ARCH STREQUAL "arm64")
         set(CMAKE_ASM_MASM_COMPILE_OBJECT "<CMAKE_ASM_MASM_COMPILER> -nologo -o <OBJECT> <SOURCE>")
     else()
-        set(CMAKE_ASM_MASM_COMPILE_OBJECT "<CMAKE_ASM_MASM_COMPILER> /nologo /Cp /Fo <OBJECT> /c /Ta <SOURCE>")
+        set(CMAKE_ASM_MASM_COMPILE_OBJECT "<CMAKE_ASM_MASM_COMPILER> /nologo ${_quiet_flag} /Cp /Fo <OBJECT> /c /Ta <SOURCE>")
     endif()
 endif()
 
@@ -329,7 +336,7 @@ function(generate_import_lib _libname _dllname _spec_file __version_arg)
     if(ARCH STREQUAL "arm" OR ARCH STREQUAL "arm64")
         set(_asm_stub_command ${CMAKE_ASM_MASM_COMPILER} -nologo -o ${_asm_stubs_file}.obj ${_asm_stubs_file})
     else()
-        set(_asm_stub_command ${CMAKE_ASM_MASM_COMPILER} /nologo /Cp /Fo${_asm_stubs_file}.obj /c /Ta ${_asm_stubs_file})
+        set(_asm_stub_command ${CMAKE_ASM_MASM_COMPILER} /nologo ${_quiet_flag} /Cp /Fo${_asm_stubs_file}.obj /c /Ta ${_asm_stubs_file})
     endif()
     add_custom_command(
         OUTPUT ${_asm_stubs_file}.obj
@@ -447,7 +454,7 @@ function(CreateBootSectorTarget _target_name _asm_file _binary_file _base_addres
         COMMAND ${CMAKE_C_COMPILER} /nologo ${_no_std_includes_flag} /I${REACTOS_SOURCE_DIR}/sdk/include/asm /I${REACTOS_BINARY_DIR}/sdk/include/asm ${_includes} ${_defines} /D__ASM__ /D_USE_ML /EP /c ${_asm_file} > ${_temp_file}
         DEPENDS ${_asm_file})
 
-    set(_asm16_command ${CMAKE_ASM16_COMPILER} /nologo /Cp /Fo${_object_file} /c /Ta ${_temp_file})
+    set(_asm16_command ${CMAKE_ASM16_COMPILER} /nologo ${_quiet_flag} /Cp /Fo${_object_file} /c /Ta ${_temp_file})
 
     add_custom_command(
         OUTPUT ${_object_file}

@@ -973,7 +973,7 @@ HvpRecoverDataFromLog(
                                  HBLOCK_SIZE);
         if (!Success)
         {
-            DPRINT1("Failed to read the dirty block (index %lu)\n", BlockIndex);
+            DPRINT1("Failed to read the dirty block (index %u)\n", BlockIndex);
             return Fail;
         }
 
@@ -985,7 +985,7 @@ HvpRecoverDataFromLog(
                                   HBLOCK_SIZE);
         if (!Success)
         {
-            DPRINT1("Failed to write dirty block to hive (index %lu)\n", BlockIndex);
+            DPRINT1("Failed to write dirty block to hive (index %u)\n", BlockIndex);
             return Fail;
         }
 
@@ -1489,7 +1489,7 @@ HvInitialize(
 
         default:
         {
-            DPRINT1("Invalid operation type (OperationType = %lu)\n", OperationType);
+            DPRINT1("Invalid operation type (OperationType = %u)\n", OperationType);
             return STATUS_INVALID_PARAMETER;
         }
     }

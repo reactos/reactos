@@ -1647,8 +1647,8 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
         if (OpenReason == ObCreateHandle)
         {
             /* Check if we need to audit the privileges */
-            if ((AuxData->PrivilegeSet) &&
-                (AuxData->PrivilegeSet->PrivilegeCount))
+            if ((AuxData->PrivilegesUsed) &&
+                (AuxData->PrivilegesUsed->PrivilegeCount))
             {
                 /* Do the audit */
 #if 0
@@ -1656,7 +1656,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
                                             &AccessState->
                                             SubjectSecurityContext,
                                             GrantedAccess,
-                                            AuxData->PrivilegeSet,
+                                            AuxData->PrivilegesUsed,
                                             TRUE,
                                             ExGetPreviousMode());
 #endif

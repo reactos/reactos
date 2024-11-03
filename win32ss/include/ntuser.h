@@ -3015,11 +3015,22 @@ NtUserSetCapture(
 ULONG_PTR
 NTAPI
 NtUserSetClassLong(
-    HWND hWnd,
-    INT Offset,
-    ULONG_PTR dwNewLong,
-    BOOL Ansi);
+    _In_ HWND hWnd,
+    _In_ INT Offset,
+    _In_ ULONG dwNewLong,
+    _In_ BOOL Ansi);
 
+#ifdef _WIN64
+
+ULONG_PTR
+APIENTRY
+NtUserSetClassLongPtr(
+    _In_ HWND hWnd,
+    _In_ INT Offset,
+    _In_ ULONG_PTR dwNewLong,
+    _In_ BOOL Ansi);
+
+#endif // _WIN64
 WORD
 NTAPI
 NtUserSetClassWord(
@@ -3084,11 +3095,6 @@ NtUserFindExistingCursorIcon(
     _In_ PUNICODE_STRING pustrModule,
     _In_ PUNICODE_STRING pustrRsrc,
     _In_ FINDEXISTINGCURICONPARAM *param);
-
-LONG_PTR
-APIENTRY
-NtUserSetClassLongPtr(
-    VOID);
 
 DWORD
 NTAPI

@@ -22,9 +22,17 @@
 
 #include <wine/debug.h>
 
+#define WKSTA_KEEPCONN_PARMNUM 13
+#define WKSTA_MAXCMDS_PARMNUM 15
+#define WKSTA_SESSTIMEOUT_PARMNUM 18
+#define WKSTA_DORMANTFILELIMIT_PARMNUM 46
+
 extern OSVERSIONINFOW VersionInfo;
 extern HANDLE LsaHandle;
 extern ULONG LsaAuthenticationPackage;
+
+extern WKSTA_INFO_502 WkstaInfo502;
+
 
 /* domain.c */
 
@@ -37,6 +45,14 @@ NetpGetJoinInformation(
     LPWSTR *NameBuffer,
     PNETSETUP_JOIN_STATUS BufferType);
 
+/* info */
+
+VOID
+InitWorkstationInfo(VOID);
+
+VOID
+SaveWorkstationInfo(
+    _In_ DWORD Level);
 
 /* rpcserver.c */
 

@@ -2548,10 +2548,15 @@ REBAR_InsertBandT(REBAR_INFO *infoPtr, INT iIndex, const REBARBANDINFOW *lprbbi,
 
     /* initialize band */
     memset(lpBand, 0, sizeof(*lpBand));
+#ifdef __REACTOS__
+    lpBand->clrFore = infoPtr->clrText == CLR_NONE ? CLR_DEFAULT : infoPtr->clrText;
+    lpBand->clrBack = infoPtr->clrBk == CLR_NONE ? CLR_DEFAULT : infoPtr->clrBk;
+#else
     lpBand->clrFore = infoPtr->clrText == CLR_NONE ? infoPtr->clrBtnText :
                                                      infoPtr->clrText;
     lpBand->clrBack = infoPtr->clrBk == CLR_NONE ? infoPtr->clrBtnFace :
                                                    infoPtr->clrBk;
+#endif
     lpBand->iImage = -1;
 
     REBAR_CommonSetupBand(infoPtr->hwndSelf, lprbbi, lpBand);

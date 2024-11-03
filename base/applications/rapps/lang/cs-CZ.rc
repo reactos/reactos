@@ -44,22 +44,6 @@ BEGIN
     END
 END
 
-IDR_APPLICATIONMENU MENU
-BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM "&Instalovat\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Odinstalovat\tCtrl+Del", ID_UNINSTALL
-        MENUITEM "&Změnit", ID_MODIFY
-        MENUITEM SEPARATOR
-        MENUITEM "Odstranit z r&egistru", ID_REGREMOVE
-        MENUITEM SEPARATOR
-        MENUITEM "Ob&novit\tF5", ID_REFRESH
-        MENUITEM SEPARATOR
-        MENUITEM "Aktualizovat data&bázi\tCtrl+F5", ID_RESETDB
-    END
-END
-
 IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 265
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Nastavení"
@@ -189,11 +173,20 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS Správce aplikací"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT "Hledat…"
-    IDS_APPS_COUNT "Počet aplikací: %d; Vybráno: %d"
-    IDS_WELCOME_TITLE "Vítejte v ReactOS Správci aplikací!\n\n"
+    IDS_WELCOME_TITLE "Vítejte v ReactOS Správci aplikací!"
     IDS_WELCOME_TEXT "Na levé straně zvolte kategorii, pak vpravo zvolte aplikaci, která bude nainstalována nebo odinstalována.\nWebová stránka ReactOS: "
     IDS_WELCOME_URL "https://reactos.org"
+
+    IDS_APPWIZ_TITLE "Add/Remove Programs"
+    IDS_APPWIZ_TEXT1 "Choose ""Applications"" or ""Updates"" to view the list of applications or updates installed on your system."
+    IDS_APPWIZ_TEXT2 "To remove a program or to modify its installed components, select it from the list and click on ""Uninstall"" or ""Modify""."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SEARCH_TEXT "Hledat…"
+    IDS_APPS_COUNT "Počet aplikací: %d"
+    IDS_APPS_SELECT_COUNT "; Vybráno: %d"
     IDS_INSTALLED "Nainstalováno"
     IDS_AVAILABLEFORINST "Lze instalovat"
     IDS_UPDATES "Aktualizace"

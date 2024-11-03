@@ -1513,14 +1513,7 @@ static MUI_ENTRY itITBootLoaderRemovableDiskPageEntries[] =
     {
         6,
         8,
-        "Il Setup non ha potuto installare il bootloader nel disco",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "del vostro computer.",
+        "Setup sta installando il bootloader.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },

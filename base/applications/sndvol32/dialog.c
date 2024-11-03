@@ -180,7 +180,7 @@ AddDialogControl(
     *OutWnd = hwnd;
 
     /* check if this the track bar */
-    if (!wcsicmp(ClassName, L"msctls_trackbar32"))
+    if (!_wcsicmp(ClassName, L"msctls_trackbar32"))
     {
         if (DialogItem->style & TBS_VERT)
         {
@@ -229,12 +229,12 @@ AddDialogControl(
                 SendMessage(hwnd, TBM_SETTIC, 0, (LPARAM)i);
         }
     }
-    else if (!wcsicmp(ClassName, L"static"))
+    else if (!_wcsicmp(ClassName, L"static"))
     {
         /* Set font */
         SendMessageW(hwnd, WM_SETFONT, (WPARAM)hFont, TRUE);
     }
-    else if (!wcsicmp(ClassName, L"button"))
+    else if (!_wcsicmp(ClassName, L"button"))
     {
         if (DialogItem->id == IDC_LINE_SWITCH)
         {
@@ -789,7 +789,7 @@ UpdateDialogLineSwitchControl(
         }
 
         /* check if the line name matches */
-        if (!wcsicmp(LineName, Line->szName))
+        if (!_wcsicmp(LineName, Line->szName))
         {
             /* found matching line name */
             wID = (Index + 1) * IDC_LINE_SWITCH;
@@ -836,7 +836,7 @@ UpdateDialogLineSliderControl(
         }
 
         /* check if the line name matches */
-        if (!wcsicmp(LineName, Line->szName))
+        if (!_wcsicmp(LineName, Line->szName))
         {
             /* found matching line name */
             wID = (Index + 1) * dwDialogID;

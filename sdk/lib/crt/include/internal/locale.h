@@ -1,6 +1,8 @@
 #ifndef __CRT_INTERNAL_LOCALE_H
 #define __CRT_INTERNAL_LOCALE_H
 
+#include <crtdefs.h> // for LC_ID
+
 typedef struct MSVCRT_threadlocaleinfostruct {
     LONG refcount;
     unsigned int lc_codepage;

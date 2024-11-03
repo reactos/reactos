@@ -155,10 +155,18 @@ static ARC_STATUS PxeOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     if (OpenMode != OpenReadOnly)
         return EACCES;
 
-    /* Retrieve the path length without NULL terminator */
-    PathLen = (Path ? min(strlen(Path), sizeof(_OpenFileName) - 1) : 0);
+    /* Skip leading path separator, if any, so as to ensure that
+     * we always lookup the file at the root of the TFTP server's
+     * file space ("virtual root"), even if the server doesn't
+     * support this, and NOT from the root of the file system. */
+    if (*Path == '\\' || *Path == '/')
+        ++Path;
 
-    /* Lowercase the path and always use slashes as separators */
+    /* Retrieve the path length without NULL terminator */
+    PathLen = min(strlen(Path), sizeof(_OpenFileName) - 1);
+
+    /* Lowercase the path and always use slashes as separators,
+     * for supporting TFTP servers on POSIX systems */
     for (i = 0; i < PathLen; i++)
     {
         if (Path[i] == '\\')

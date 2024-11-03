@@ -1518,14 +1518,7 @@ static MUI_ENTRY plPLBootLoaderRemovableDiskPageEntries[] =
     {
         6,
         8,
-        "Instalator systemu ReactOS nie mo\276e zainstalowa\206",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        6,
-        9,
-        "mened\276era rozruchu na dysku twardym.",
+        "Instalator musi teraz zainstalowa\206 mened\276er rozruchu.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },

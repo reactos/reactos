@@ -21,19 +21,22 @@
 
 #include <reactos/rosioctl.h>
 
+/* FreeLoader-specific disk geometry structure */
 typedef struct _GEOMETRY
 {
-    ULONG   Cylinders;      // Number of cylinders on the disk
-    ULONG   Heads;          // Number of heads on the disk
-    ULONG   Sectors;        // Number of sectors per track
-    ULONG   BytesPerSector; // Number of bytes per sector
-
+    ULONG Cylinders;       ///< Number of cylinders on the disk
+    ULONG Heads;           ///< Number of heads on the disk
+    ULONG SectorsPerTrack; ///< Number of sectors per track
+    ULONG BytesPerSector;  ///< Number of bytes per sector
+    ULONGLONG Sectors;     ///< Total number of disk sectors/LBA blocks
 } GEOMETRY, *PGEOMETRY;
 
-/*
- * Extended disk geometry (Int13 / ah=48h)
- */
 #include <pshpack1.h>
+
+/*
+ * Extended disk geometry (Int13 / AH=48h)
+ * See also ntdddisk.h DISK_EX_INT13_INFO
+ */
 typedef struct _EXTENDED_GEOMETRY
 {
     USHORT      Size;
@@ -44,7 +47,6 @@ typedef struct _EXTENDED_GEOMETRY
     ULONGLONG   Sectors;
     USHORT      BytesPerSector;
     ULONG       PDPTE;
-
 } EXTENDED_GEOMETRY, *PEXTENDED_GEOMETRY;
 
 /*
@@ -63,7 +65,6 @@ typedef struct _PARTITION_TABLE_ENTRY
     UCHAR   EndCylinder;                // Ending cylinder# (low order bits of cylinder #)
     ULONG   SectorCountBeforePartition; // Number of sectors preceding the partition
     ULONG   PartitionSectorCount;       // Number of sectors in the partition
-
 } PARTITION_TABLE_ENTRY, *PPARTITION_TABLE_ENTRY;
 
 /*
@@ -76,8 +77,8 @@ typedef struct _MASTER_BOOT_RECORD
     USHORT  Reserved;                           /* 0x1BC */
     PARTITION_TABLE_ENTRY   PartitionTable[4];  /* 0x1BE */
     USHORT  MasterBootRecordMagic;              /* 0x1FE */
-
 } MASTER_BOOT_RECORD, *PMASTER_BOOT_RECORD;
+
 #include <poppack.h>
 
 /*

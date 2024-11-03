@@ -216,4 +216,5 @@ BEGIN
     IDS_RESTORE_ALL "&Tampilkan Semua Jendela"
     IDS_TRAYWND_UNDO_CASCADE "&Urungkan Tumpukan"
     IDS_TRAYWND_UNDO_TILE "U&rungkan Ubin"
+    IDS_TRAYDESKBTN_TOOLTIP "Show Desktop/Windows"
 END

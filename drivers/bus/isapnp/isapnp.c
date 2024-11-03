@@ -28,6 +28,8 @@ LIST_ENTRY BusListHead;
 
 #endif /* UNIT_TEST */
 
+extern ULONG IsaConfigPorts[2];
+
 /* FUNCTIONS ******************************************************************/
 
 static
@@ -822,7 +824,6 @@ IsaPnpCreateReadPortDORequirements(
     ULONG ResourceCount, ListSize, i;
     PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
     PIO_RESOURCE_DESCRIPTOR Descriptor;
-    const ULONG Ports[] = { ISAPNP_WRITE_DATA, ISAPNP_ADDRESS };
     const ULONG ReadPorts[] = { 0x274, 0x3E4, 0x204, 0x2E4, 0x354, 0x2F4 };
 
     PAGED_CODE();
@@ -840,7 +841,7 @@ IsaPnpCreateReadPortDORequirements(
          * [...]
          * [IO descriptor: Read Port X - 1, optional]
          */
-        ResourceCount = RTL_NUMBER_OF(Ports) * 2 + RTL_NUMBER_OF(ReadPorts);
+        ResourceCount = RTL_NUMBER_OF(IsaConfigPorts) * 2 + RTL_NUMBER_OF(ReadPorts);
     }
     else
     {
@@ -857,7 +858,7 @@ IsaPnpCreateReadPortDORequirements(
          * [IO descriptor: Read Port X, required]
          * [IO descriptor: Read Port X, optional]
          */
-        ResourceCount = (RTL_NUMBER_OF(Ports) + RTL_NUMBER_OF(ReadPorts)) * 2;
+        ResourceCount = (RTL_NUMBER_OF(IsaConfigPorts) + RTL_NUMBER_OF(ReadPorts)) * 2;
     }
     ListSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST) +
                sizeof(IO_RESOURCE_DESCRIPTOR) * (ResourceCount - 1);
@@ -875,7 +876,7 @@ IsaPnpCreateReadPortDORequirements(
     Descriptor = &RequirementsList->List[0].Descriptors[0];
 
     /* Store the Data port and the Address port */
-    for (i = 0; i < RTL_NUMBER_OF(Ports) * 2; i++)
+    for (i = 0; i < RTL_NUMBER_OF(IsaConfigPorts) * 2; i++)
     {
         if ((i % 2) == 0)
         {
@@ -886,7 +887,7 @@ IsaPnpCreateReadPortDORequirements(
             Descriptor->u.Port.Length = 0x01;
             Descriptor->u.Port.Alignment = 0x01;
             Descriptor->u.Port.MinimumAddress.LowPart =
-            Descriptor->u.Port.MaximumAddress.LowPart = Ports[i / 2];
+            Descriptor->u.Port.MaximumAddress.LowPart = IsaConfigPorts[i / 2];
         }
         else
         {
@@ -965,7 +966,6 @@ CODE_SEG("PAGE")
 PCM_RESOURCE_LIST
 IsaPnpCreateReadPortDOResources(VOID)
 {
-    const USHORT Ports[] = { ISAPNP_WRITE_DATA, ISAPNP_ADDRESS };
     ULONG ListSize, i;
     PCM_RESOURCE_LIST ResourceList;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor;
@@ -973,7 +973,7 @@ IsaPnpCreateReadPortDOResources(VOID)
     PAGED_CODE();
 
     ListSize = sizeof(CM_RESOURCE_LIST) +
-               sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) * (RTL_NUMBER_OF(Ports) - 1);
+               sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) * (RTL_NUMBER_OF(IsaConfigPorts) - 1);
     ResourceList = ExAllocatePoolZero(PagedPool, ListSize, TAG_ISAPNP);
     if (!ResourceList)
         return NULL;
@@ -982,16 +982,16 @@ IsaPnpCreateReadPortDOResources(VOID)
     ResourceList->List[0].InterfaceType = Internal;
     ResourceList->List[0].PartialResourceList.Version = 1;
     ResourceList->List[0].PartialResourceList.Revision = 1;
-    ResourceList->List[0].PartialResourceList.Count = RTL_NUMBER_OF(Ports);
+    ResourceList->List[0].PartialResourceList.Count = RTL_NUMBER_OF(IsaConfigPorts);
 
     Descriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[0];
-    for (i = 0; i < RTL_NUMBER_OF(Ports); i++)
+    for (i = 0; i < RTL_NUMBER_OF(IsaConfigPorts); i++)
     {
         Descriptor->Type = CmResourceTypePort;
         Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
         Descriptor->Flags = CM_RESOURCE_PORT_16_BIT_DECODE;
         Descriptor->u.Port.Length = 0x01;
-        Descriptor->u.Port.Start.LowPart = Ports[i];
+        Descriptor->u.Port.Start.LowPart = IsaConfigPorts[i];
 
         Descriptor++;
     }
@@ -1414,6 +1414,12 @@ DriverEntry(
     _In_ PUNICODE_STRING RegistryPath)
 {
     DPRINT("%s(%p, %wZ)\n", __FUNCTION__, DriverObject, RegistryPath);
+
+    if (IsNEC_98)
+    {
+        IsaConfigPorts[0] = ISAPNP_WRITE_DATA_PC98;
+        IsaConfigPorts[1] = ISAPNP_ADDRESS_PC98;
+    }
 
     DriverObject->MajorFunction[IRP_MJ_CREATE] = IsaCreateClose;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = IsaCreateClose;

@@ -137,7 +137,7 @@ DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
         }
 
         SectorOffset = 0;
-        SectorCount = (ULONGLONG)Geometry.Cylinders * Geometry.Heads * Geometry.Sectors;
+        SectorCount = Geometry.Sectors;
     }
 
     Context = FrLdrTempAlloc(sizeof(DISKCONTEXT), TAG_HW_DISK_CONTEXT);

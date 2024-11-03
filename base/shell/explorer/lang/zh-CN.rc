@@ -217,4 +217,5 @@ BEGIN
     IDS_RESTORE_ALL "显示打开的窗口(&S)"
     IDS_TRAYWND_UNDO_CASCADE "撤销层叠(&U)"
     IDS_TRAYWND_UNDO_TILE "撤销平铺(&U)"
+    IDS_TRAYDESKBTN_TOOLTIP "Show Desktop/Windows"
 END

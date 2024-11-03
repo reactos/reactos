@@ -470,6 +470,7 @@ CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lPa
     {
         case WM_INITDIALOG:
         {
+            g_Busy++;
             HICON hIconSm, hIconBg;
             CStringW szTempCaption;
 
@@ -557,6 +558,12 @@ CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lPa
             }
             return TRUE;
 
+        case WM_DESTROY:
+            g_Busy--;
+            if (hMainWnd)
+                PostMessage(hMainWnd, WM_NOTIFY_OPERATIONCOMPLETED, 0, 0);
+            return FALSE;
+
         default:
             return FALSE;
     }
@@ -628,7 +635,7 @@ unsigned int WINAPI
 CDownloadManager::ThreadFunc(LPVOID param)
 {
     CPathW Path;
-    PWSTR p, q;
+    PCWSTR p, q;
 
     HWND hDlg = static_cast<DownloadParam *>(param)->Dialog;
     HWND Item;

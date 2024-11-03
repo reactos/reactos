@@ -1,0 +1,17 @@
+#ifndef _MSV1_0P_
+#define _MSV1_0P_
+
+typedef struct _MSV1_0_ENUMUSERS_REQUEST
+{
+    MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
+} MSV1_0_ENUMUSERS_REQUEST, *PMSV1_0_ENUMUSERS_REQUEST;
+
+typedef struct _MSV1_0_ENUMUSERS_RESPONSE
+{
+    MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
+    ULONG NumberOfLoggedOnUsers;
+    PLUID LogonIds;
+    PULONG EnumHandles;
+} MSV1_0_ENUMUSERS_RESPONSE, *PMSV1_0_ENUMUSERS_RESPONSE;
+
+#endif /* _MSV1_0P_ */

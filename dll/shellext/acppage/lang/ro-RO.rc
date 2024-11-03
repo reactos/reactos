@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Romanian resource file
  * TRANSLATORS: Copyright 2016-2018 Ștefan Fulea <stefan.fulea@mail.com>
- *              Copyright 2022-2023 Andrei Miloiu <miloiuandrei@gmail.com>
+ *              Copyright 2022-2024 Andrei Miloiu <miloiuandrei@gmail.com>
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
@@ -15,20 +15,20 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Dacă aveți probleme cu acest program în ReactOS, selectați un sistem de operare care să fie raportat aplicației.\nConștientizați că aceasta este o funcționalitate în dezvoltare.", IDC_EXPLANATION, 7, 7, 210, 31
     GROUPBOX "Modul de compatibilitate", IDC_COMPATGROUP, 7, 41, 210, 49
-    CHECKBOX "Lansați acest program în modul de compatibilitate pentru:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 196, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Rulare a acestui program în modul de compatibilitate pentru:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 196, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
     GROUPBOX "Setări de afișare", -1, 7, 99, 210, 61, BS_GROUPBOX
-    CHECKBOX "Lansează în 256 culori", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "Lansează în rezoluție de 640x480 pixeli", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "Dezactivează temele vizuale", IDC_CHKDISABLEVISUALTHEMES, 18, 144, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
-    PUSHBUTTON "E&ditează modurile de compatibilitate…", IDC_EDITCOMPATIBILITYMODES, 87, 167, 130, 15
+    CHECKBOX "Rulare în 256 culori", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Rulare în rezoluție de 640x480 pixeli", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Dezactivare a temelor vizuale", IDC_CHKDISABLEVISUALTHEMES, 18, 144, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    PUSHBUTTON "&Editre a modurilor de compatibilitate…", IDC_EDITCOMPATIBILITYMODES, 87, 167, 130, 15
     LTEXT "",IDC_ENABLED_LAYERS,7,185,210,21
-    CONTROL "Aflați mai multe despre <A>compatibilitate de program</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY
+    CONTROL "Aflați mai multe despre <A>compatibilitatea programelor</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY
 END
 
 IDD_EDITCOMPATIBILITYMODES DIALOGEX 0, 0, 309, 134
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Editează modurile de compatibilitate"
+CAPTION "Editare a modurilor de compatibilitate"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LISTBOX         IDC_NEWCOMPATIBILITYMODE,6,18,132,90,LBS_NOINTEGRALHEIGHT | WS_VSCROLL
@@ -36,8 +36,8 @@ BEGIN
     PUSHBUTTON      ">",IDC_ADD,144,42,18,14,WS_DISABLED
     PUSHBUTTON      "<<",IDC_REMOVEALL,144,78,18,14,WS_DISABLED
     PUSHBUTTON      "<",IDC_REMOVE,144,60,18,14,WS_DISABLED
-    PUSHBUTTON      "Con&firmă",IDOK,174,114,60,14
-    PUSHBUTTON      "A&nulează",IDCANCEL,240,114,60,14
+    PUSHBUTTON      "OK",IDOK,174,114,60,14
+    PUSHBUTTON      "Revocare",IDCANCEL,240,114,60,14
     LTEXT           "Modurile disponibile",-1,6,6,76,8
     LTEXT           "Modurile selectate",-1,168,6,76,8
 END
@@ -45,7 +45,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_COMPAT_TITLE "Compatibilitate"
-    IDS_FAILED_NETWORK "Modurile de compatibilitate nu pot fi setate pentru acest program deoarece rezidă pe o unitate de stocare în rețea."
+    IDS_FAILED_NETWORK "Modurile de compatibilitate nu pot fi setate pentru acest program pentru că este un disc de rețea."
     IDS_FAILED_PROTECTED "Modurile de compatibilitate nu pot fi setate pentru acest program deoarece este parte din ReactOS."
 END
 

@@ -23,11 +23,6 @@ SHELL_GetRegCLSID(HKEY hKey, LPCWSTR SubKey, LPCWSTR Value, CLSID &clsid)
     return !err ? CLSIDFromString(buf, &clsid) : HRESULT_FROM_WIN32(err);
 }
 
-static inline bool RegValueExists(HKEY hKey, LPCWSTR Name)
-{
-    return RegQueryValueExW(hKey, Name, NULL, NULL, NULL, NULL) == ERROR_SUCCESS;
-}
-
 static BOOL InsertMenuItemAt(HMENU hMenu, UINT Pos, UINT Flags)
 {
     MENUITEMINFOW mii;
@@ -339,7 +334,7 @@ void CDefaultContextMenu::AddStaticEntry(const HKEY hkeyClass, const WCHAR *szVe
 
     TRACE("adding verb %s\n", debugstr_w(szVerb));
 
-    if (!wcsicmp(szVerb, L"open") && !(uFlags & CMF_NODEFAULT))
+    if (!_wcsicmp(szVerb, L"open") && !(uFlags & CMF_NODEFAULT))
     {
         /* open verb is always inserted in front */
         m_StaticEntries.AddHead({ szVerb, hkeyClass });

@@ -613,6 +613,7 @@ public:
     LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT RelayMsgToShellView(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnSysColorChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnClose(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnFolderOptions(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnMapNetworkDrive(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
@@ -664,6 +665,7 @@ public:
         MESSAGE_HANDLER(WM_DRAWITEM, RelayMsgToShellView)
         MESSAGE_HANDLER(WM_MENUSELECT, RelayMsgToShellView)
         MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChange)
+        MESSAGE_HANDLER(WM_SYSCOLORCHANGE, OnSysColorChange)
         COMMAND_ID_HANDLER(IDM_FILE_CLOSE, OnClose)
         COMMAND_ID_HANDLER(IDM_TOOLS_FOLDEROPTIONS, OnFolderOptions)
         COMMAND_ID_HANDLER(IDM_TOOLS_MAPNETWORKDRIVE, OnMapNetworkDrive)
@@ -3792,6 +3794,12 @@ LRESULT CShellBrowser::RelayMsgToShellView(UINT uMsg, WPARAM wParam, LPARAM lPar
 LRESULT CShellBrowser::OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     RefreshCabinetState();
+    SHPropagateMessage(m_hWnd, uMsg, wParam, lParam, TRUE);
+    return 0;
+}
+
+LRESULT CShellBrowser::OnSysColorChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
     SHPropagateMessage(m_hWnd, uMsg, wParam, lParam, TRUE);
     return 0;
 }

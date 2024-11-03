@@ -81,17 +81,6 @@ Author:
 #define KF_CAT_BIT                      44 // From ksamd64.inc (0x2C -> 0x100000000000)
 
 //
-// KPCR Access for non-IA64 builds
-//
-//#define K0IPCR                  ((ULONG_PTR)(KIP0PCRADDRESS))
-//#define PCR                     ((volatile KPCR * const)K0IPCR)
-#define PCR ((volatile KPCR * const)__readgsqword(FIELD_OFFSET(KPCR, Self)))
-//#if defined(CONFIG_SMP) || defined(NT_BUILD)
-//#undef  KeGetPcr
-//#define KeGetPcr()              ((volatile KPCR * const)__readfsdword(0x1C))
-//#endif
-
-//
 // Double fault stack size
 //
 #define DOUBLE_FAULT_STACK_SIZE 0x2000

@@ -679,7 +679,7 @@ RtlpUnwindInternal(
     ULONG64 ImageBase, EstablisherFrame;
     CONTEXT UnwindContext;
 
-    /* Get the current stack limits and registration frame */
+    /* Get the current stack limits */
     RtlpGetStackLimits(&StackLow, &StackHigh);
 
     /* If we have a target frame, then this is our high limit */
@@ -708,8 +708,11 @@ RtlpUnwindInternal(
             UnwindContext.Rip = *(DWORD64*)UnwindContext.Rsp;
             UnwindContext.Rsp += sizeof(DWORD64);
 
-            /* Copy the context back for the next iteration */
-            *ContextRecord = UnwindContext;
+            if (HandlerType == UNW_FLAG_UHANDLER)
+            {
+                /* Copy the context back for the next iteration */
+                *ContextRecord = UnwindContext;
+            }
             continue;
         }
 
@@ -756,7 +759,7 @@ RtlpUnwindInternal(
 
             /* Log the exception if it's enabled */
             RtlpCheckLogException(ExceptionRecord,
-                                  ContextRecord,
+                                  &UnwindContext,
                                   &DispatcherContext,
                                   sizeof(DispatcherContext));
 
@@ -844,8 +847,11 @@ RtlpUnwindInternal(
             break;
         }
 
-        /* We have successfully unwound a frame. Copy the unwind context back. */
-        *ContextRecord = UnwindContext;
+        if (HandlerType == UNW_FLAG_UHANDLER)
+        {
+            /* We have successfully unwound a frame. Copy the unwind context back. */
+            *ContextRecord = UnwindContext;
+        }
     }
 
     if (ExceptionRecord->ExceptionCode != STATUS_UNWIND_CONSOLIDATE)

@@ -14,8 +14,20 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
 static HRESULT SHELL32_GetCLSIDForDirectory(LPCWSTR pwszDir, LPCWSTR KeyName, CLSID* pclsidFolder);
 
+static LPCWSTR GetItemFileName(PCUITEMID_CHILD pidl, LPWSTR Buf, UINT cchMax)
+{
+    FileStructW* pDataW = _ILGetFileStructW(pidl);
+    if (pDataW)
+        return pDataW->wszName;
+    LPPIDLDATA pdata = _ILGetDataPointer(pidl);
+    if ((pdata->type & PT_VALUEW) == PT_VALUEW)
+        return (LPWSTR)pdata->u.file.szNames;
+    if (_ILSimpleGetTextW(pidl, Buf, cchMax))
+        return Buf;
+    return NULL;
+}
 
-HKEY OpenKeyFromFileType(LPWSTR pExtension, LPCWSTR KeyName)
+static HKEY OpenKeyFromFileType(LPCWSTR pExtension, LPCWSTR KeyName)
 {
     HKEY hkey;
 
@@ -45,7 +57,7 @@ HKEY OpenKeyFromFileType(LPWSTR pExtension, LPCWSTR KeyName)
     return hkey;
 }
 
-LPWSTR ExtensionFromPidl(PCUIDLIST_RELATIVE pidl)
+static LPCWSTR ExtensionFromPidl(PCUIDLIST_RELATIVE pidl, LPWSTR Buf, UINT cchMax)
 {
     if (!_ILIsValue(pidl))
     {
@@ -53,23 +65,17 @@ LPWSTR ExtensionFromPidl(PCUIDLIST_RELATIVE pidl)
         return NULL;
     }
 
-    FileStructW* pDataW = _ILGetFileStructW(pidl);
-    if (!pDataW)
-    {
-        ERR("Invalid pidl!\n");
-        return NULL;
-    }
-
-    LPWSTR pExtension = PathFindExtensionW(pDataW->wszName);
+    LPCWSTR name = GetItemFileName(pidl, Buf, cchMax);
+    LPCWSTR pExtension = name ? PathFindExtensionW(name) : NULL;
     if (!pExtension || *pExtension == UNICODE_NULL)
     {
-        WARN("No extension for %S!\n", pDataW->wszName);
+        WARN("No extension for %S!\n", name);
         return NULL;
     }
     return pExtension;
 }
 
-HRESULT GetCLSIDForFileTypeFromExtension(LPWSTR pExtension, LPCWSTR KeyName, CLSID* pclsid)
+static HRESULT GetCLSIDForFileTypeFromExtension(LPCWSTR pExtension, LPCWSTR KeyName, CLSID* pclsid)
 {
     HKEY hkeyProgId = OpenKeyFromFileType(pExtension, KeyName);
     if (!hkeyProgId)
@@ -126,7 +132,8 @@ HRESULT GetCLSIDForFileTypeFromExtension(LPWSTR pExtension, LPCWSTR KeyName, CLS
 
 HRESULT GetCLSIDForFileType(PCUIDLIST_RELATIVE pidl, LPCWSTR KeyName, CLSID* pclsid)
 {
-    LPWSTR pExtension = ExtensionFromPidl(pidl);
+    WCHAR buf[256];
+    LPCWSTR pExtension = ExtensionFromPidl(pidl, buf, _countof(buf));
     if (!pExtension)
         return S_FALSE;
 
@@ -289,7 +296,8 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
     }
     else
     {
-        LPWSTR pExtension = ExtensionFromPidl(pidl);
+        WCHAR extbuf[256];
+        LPCWSTR pExtension = ExtensionFromPidl(pidl, extbuf, _countof(extbuf));
         HKEY hkey = pExtension ? OpenKeyFromFileType(pExtension, L"DefaultIcon") : NULL;
         if (!hkey)
             WARN("Could not open DefaultIcon key!\n");
@@ -616,6 +624,7 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
         WCHAR szFileName[MAX_PATH];
         LPWSTR pExtension;
         BOOL hasName = _ILSimpleGetTextW(pidl, szFileName, _countof(szFileName));
+        dwShellAttributes |= SFGAO_STREAM;
 
         // Vista+ feature: Hidden files with a leading tilde treated as super-hidden
         // See https://devblogs.microsoft.com/oldnewthing/20170526-00/?p=96235
@@ -663,10 +672,6 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
         {
             dwShellAttributes |= (SFGAO_FILESYSANCESTOR | SFGAO_STORAGEANCESTOR);
         }
-    }
-    else
-    {
-        dwShellAttributes |= SFGAO_STREAM;
     }
 
     if (dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
@@ -867,7 +872,7 @@ HRESULT WINAPI CFSFolder::ParseDisplayName(HWND hwndOwner,
     else
     {
         INT cchElement = lstrlenW(lpszDisplayName) + 1;
-        LPWSTR pszElement = (LPWSTR)alloca(cchElement * sizeof(WCHAR));
+        LPWSTR pszElement = (LPWSTR)_alloca(cchElement * sizeof(WCHAR));
         LPWSTR pchNext = lpszDisplayName;
         hr = Shell_NextElement(&pchNext, pszElement, cchElement, TRUE);
         if (FAILED(hr))
@@ -1081,7 +1086,7 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
     switch (LOWORD(lParam))
     {
         case SHFSF_COL_NAME:
-            result = wcsicmp(pDataW1->wszName, pDataW2->wszName);
+            result = _wcsicmp(pDataW1->wszName, pDataW2->wszName);
             break;
         case SHFSF_COL_SIZE:
             if (pData1->u.file.dwFileSize > pData2->u.file.dwFileSize)
@@ -1094,7 +1099,7 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
         case SHFSF_COL_TYPE:
             pExtension1 = PathFindExtensionW(pDataW1->wszName);
             pExtension2 = PathFindExtensionW(pDataW2->wszName);
-            result = wcsicmp(pExtension1, pExtension2);
+            result = _wcsicmp(pExtension1, pExtension2);
             break;
         case SHFSF_COL_MDATE:
             result = pData1->u.file.uFileDate - pData2->u.file.uFileDate;

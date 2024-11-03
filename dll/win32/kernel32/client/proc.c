@@ -1628,6 +1628,12 @@ FatalExit(IN int ExitCode)
     CHAR Action[2];
     DbgPrint("FatalExit...\n\n");
 
+    /* Check for reactos specific flag (set by rosautotest) */
+    if (RtlGetNtGlobalFlags() & FLG_DISABLE_DEBUG_PROMPTS)
+    {
+        RtlRaiseStatus(STATUS_FATAL_APP_EXIT);
+    }
+
     while (TRUE)
     {
         DbgPrompt("A (Abort), B (Break), I (Ignore)? ", Action, sizeof(Action));

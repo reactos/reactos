@@ -175,4 +175,6 @@ static inline const char *wine_dbgstr_rect(const RECT *prc)
     return buf;
 }
 
+#define broken(x) x
+
 #endif  /* ndef ATLTEST_H_ */

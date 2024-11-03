@@ -167,22 +167,23 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_CAPTION "ReactOS Kur"
     IDS_TYPETITLE "ReactOS Kurulum Yöneticisine Hoş Geldiniz"
     IDS_TYPESUBTITLE "Kurulum türünü seçiniz."
     IDS_DEVICETITLE "Ana Aygıtların Kurulumu"
     IDS_DEVICESUBTITLE "Ekran ve Klavye ayarlarını yapınız."
     IDS_DRIVETITLE "Kurulum Bölümünün ve Sistem Dizininin Hazırlanması"
     IDS_DRIVESUBTITLE "Kurulum bölümünü, sistem dizinini ve önyükleyiciyi hazırlayınız."
+    IDS_SUMMARYTITLE "Kurulum Özeti"
+    IDS_SUMMARYSUBTITLE "Kurulumdan aygıtına uygulanmadan önce gözden geçirmek için listelenen kurulum seçenekleri."
     IDS_PROCESSTITLE "Bölümün Biçimlendirilmesi, Dosyaların Kopyalanması ve Önyükleyicinin Kurulması"
     IDS_PROCESSSUBTITLE "Bölüm oluşturuluyor ve biçimlendiriliyor, dosyalar kopyalanıyor, önyükleyici kuruluyor ve hazırlanıyor."
     IDS_RESTARTTITLE "Kurulumun İlk Aşaması Bitti"
     IDS_RESTARTSUBTITLE "Kurulumun ilk aşaması bitirildi, ikinci aşamaya geçmek için yeniden başlatınız."
-    IDS_SUMMARYTITLE "Kurulum Özeti"
-    IDS_SUMMARYSUBTITLE "Kurulumdan aygıtına uygulanmadan önce gözden geçirmek için listelenen kurulum seçenekleri."
     IDS_ABORTSETUP "ReactOS, bilgisayarınıza tümüyle kurulamadı. Eğer şimdi Kurulum Yöneticisinden çıkarsanız, ReactOS'u kurmak için Kurulum Yöneticisini yeniden çalıştırmayı isteybilirsiniz. Gerçekten çıkılsın mı?"
     IDS_ABORTSETUP2 "Kurulum iptal edilsin mi?"
     IDS_NO_TXTSETUP_SIF """txtsetup.sif"" bulunamıyor.\nKurulum Yöneticisi sürdüremiyor."
-    IDS_CAPTION "ReactOS Kur"
+    IDS_INSTALLBTN "&Install"
     IDS_VOLUME_NOFORMAT "Not formatted"
 END
 
@@ -225,12 +226,16 @@ BEGIN
     IDS_RENAMING "Renaming %s to %s"
     IDS_DELETING "Deleting %s"
 
+    IDS_CONFIG_SYSTEM_PARTITION "Configuring the system partition..."
     IDS_PREPARE_PARTITIONS "Preparing partitions..."
     IDS_PREPARE_FILES "Preparing the list of files to be copied, please wait..."
     IDS_COPYING_FILES "Copying the files..."
 
     IDS_CREATE_REGISTRY "Creating the registry..."
     IDS_UPDATE_REGISTRY "Updating the registry..."
+
+    // IDS_INSTALL_FINALIZE "Finalizing the installation..."
+    IDS_INSTALL_BOOTLOADER "Installing the bootloader..."
 END
 
 // Note to translators: please refer to the corresponding usetup/lang/*.h translations.
@@ -287,4 +292,11 @@ the Setup program cannot install ReactOS.\
 \nClick on CANCEL to quit Setup."
 
     IDS_ERROR_CHECKING_PARTITION "ChkDsk detected some disk errors.\n(Status 0x%08lx)."
+
+    IDS_ERROR_WRITE_BOOT "Setup failed to install the %s bootcode on the system partition."
+    IDS_ERROR_INSTALL_BOOTCODE "Setup failed to install the %s bootcode on the boot disk."
+    IDS_ERROR_INSTALL_BOOTCODE_REMOVABLE "Setup failed to install the bootcode on the removable media."
+    IDS_ERROR_BOOTLDR_ARCH_UNSUPPORTED "Setup does not currently support installing the bootloader on the computer you are using.\
+\nClick on OK to continue anyway."
+    IDS_ERROR_BOOTLDR_FAILED "Setup could not install the bootloader (Status 0x%08lx)."
 END
