@@ -74,6 +74,7 @@ ServiceControlHandlerEx(
             TRACE("  SERVICE_CONTROL_STOP received\n");
             UpdateServiceStatus(SERVICE_STOP_PENDING);
             StopRpcServer();
+            UpdateServiceStatus(SERVICE_STOPPED);
             return ERROR_SUCCESS;
 
         case SERVICE_CONTROL_PAUSE:
@@ -100,6 +101,7 @@ ServiceControlHandlerEx(
             TRACE("  SERVICE_CONTROL_SHUTDOWN received\n");
             UpdateServiceStatus(SERVICE_STOP_PENDING);
             StopRpcServer();
+            UpdateServiceStatus(SERVICE_STOPPED);
             return ERROR_SUCCESS;
 
         default :
