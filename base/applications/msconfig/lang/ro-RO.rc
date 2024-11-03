@@ -11,12 +11,12 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 IDD_MSCONFIG_DIALOG DIALOGEX 0, 0, 378, 220
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP |
       WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
-CAPTION "Program de configurare sistem"
+CAPTION "Program de configurare a sistemului"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Tab1", IDC_TAB, "SysTabControl32", WS_TABSTOP, 2, 2, 374, 195
     DEFPUSHBUTTON "OK", IDOK, 211, 201, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "&Manual…", IDC_BTN_HELP, 2, 201, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Ajutor", IDC_BTN_HELP, 2, 201, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "Revocare", IDCANCEL, 267, 201, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "Aplicare", IDC_BTN_APPLY, 323, 201, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
@@ -73,13 +73,13 @@ IDD_GENERAL_PAGE DIALOGEX 0, 0, 362, 175
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Moduri de pornire sistem", -1, 10, 10, 340, 150, 0, WS_EX_TRANSPARENT
+    GROUPBOX "Moduri de pornire a sistemului", -1, 10, 10, 340, 150, 0, WS_EX_TRANSPARENT
     CONTROL "Pornire n&ormală - încarcă toate serviciile și driverele", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 260, 10
     CONTROL "Pornire de &diagnostic - încarcă doar driverele de bază", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 260, 10
     CONTROL "Pornire s&electivă", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 260, 10
-    AUTOCHECKBOX "&Procesare fișier SYSTEM.INI", IDC_CBX_SYSTEM_INI, 30, 80, 260, 10
-    AUTOCHECKBOX "Încărcare se&rvicii de sistem", IDC_CBX_SYSTEM_SERVICE, 30, 95, 260, 10
-    AUTOCHECKBOX "Încărcare ele&mente autolansate", IDC_CBX_STARTUP_ITEM, 30, 110, 260, 10
+    AUTOCHECKBOX "&Procesare a fișierului SYSTEM.INI", IDC_CBX_SYSTEM_INI, 30, 80, 260, 10
+    AUTOCHECKBOX "Încărcare a se&rviciilor de sistem", IDC_CBX_SYSTEM_SERVICE, 30, 95, 260, 10
+    AUTOCHECKBOX "Încărcare a ele&mentelor autolansate", IDC_CBX_STARTUP_ITEM, 30, 110, 260, 10
 END
 
 IDD_FREELDR_PAGE DIALOGEX 0, 0, 362, 175
@@ -90,14 +90,14 @@ BEGIN
             LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL
     PUSHBUTTON "Verificare a tuturor &căilor de pornire", IDC_BTN_CHECK_BOOT_PATH, 10, 65, 145, 12
     PUSHBUTTON "I&mplicite", IDC_BTN_SET_DEFAULT_BOOT, 165, 65, 55, 12
-    PUSHBUTTON "Mutare s&us", IDC_BTN_MOVE_UP_BOOT_OPTION, 230, 65, 55, 12
-    PUSHBUTTON "Mutare j&os", IDC_BTN_MOVE_DOWN_BOOT_OPTION, 295, 65, 55, 12
+    PUSHBUTTON "Mutare &sus", IDC_BTN_MOVE_UP_BOOT_OPTION, 230, 65, 55, 12
+    PUSHBUTTON "Mutare &jos", IDC_BTN_MOVE_DOWN_BOOT_OPTION, 295, 65, 55, 12
     GROUPBOX "Parametri de pornire", -1, 10, 80, 250, 90, 0, WS_EX_TRANSPARENT
     CHECKBOX "/SAFE&BOOT", IDC_CBX_SAFE_BOOT, 15, 90, 55, 10
     CHECKBOX "/NO&GUIBOOT", IDC_CBX_NO_GUI_BOOT, 15, 105, 60, 10
     CHECKBOX "/BOOT&LOG", IDC_CBX_BOOT_LOG, 15, 120, 50, 10
     CHECKBOX "/BASEVI&DEO", IDC_CBX_BASE_VIDEO, 15, 135, 55, 10
-    CHECKBOX "/&SOS", IDC_CBX_SOS, 15, 150, 50, 10
+    CHECKBOX "/S&OS", IDC_CBX_SOS, 15, 150, 50, 10
     PUSHBUTTON "Opțiuni a&vansate…", IDC_BTN_ADVANCED_OPTIONS, 100, 150, 80, 12
     LTEXT "&Expirare:", -1, 280, 91, 30, 10
     EDITTEXT IDC_TXT_BOOT_TIMEOUT, 310, 90, 25, 12, ES_LEFT
@@ -131,19 +131,19 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MSCONFIG "Configuratorul de sistem"
-    IDS_TAB_GENERAL "Generale"
+    IDS_MSCONFIG "Programul de configurare a sistemului"
+    IDS_TAB_GENERAL "General"
     IDS_TAB_SYSTEM "SYSTEM.INI"
     IDS_TAB_FREELDR "FREELDR.INI"
     IDS_TAB_SERVICES "Servicii"
-    IDS_TAB_STARTUP "Autolansate"
+    IDS_TAB_STARTUP "Pornire"
     IDS_TAB_TOOLS "Instrumente"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SERVICES_COLUMN_SERVICE "Servicii"
-    IDS_SERVICES_COLUMN_REQ "De bază"
+    IDS_SERVICES_COLUMN_SERVICE "Serviciu"
+    IDS_SERVICES_COLUMN_REQ "Necesare"
     IDS_SERVICES_COLUMN_VENDOR "Furnizor"
     IDS_SERVICES_COLUMN_STATUS "Stare"
 END
@@ -156,13 +156,13 @@ BEGIN
     IDS_TOOLS_CMD_DESCR ""
     IDS_TOOLS_CMD_CMD "cmd.exe"
     IDS_TOOLS_INFO_NAME "Versiune"
-    IDS_TOOLS_INFO_DESCR "Afișare informații despre versiune"
+    IDS_TOOLS_INFO_DESCR "Afișează informații despre versiune."
     IDS_TOOLS_INFO_CMD "winver.exe"
     IDS_TOOLS_REGEDIT_NAME "Editor de registru"
-    IDS_TOOLS_REGEDIT_DESCR "Deschide editorul de registru."
+    IDS_TOOLS_REGEDIT_DESCR "Deschide Editorul de registru."
     IDS_TOOLS_REGEDIT_CMD "regedit.exe"
     IDS_TOOLS_SYSDM_NAME "Proprietăți de sistem"
-    IDS_TOOLS_SYSDM_DESCR "Prezintă informații despre calculator"
+    IDS_TOOLS_SYSDM_DESCR "Prezintă informații despre calculator."
     IDS_TOOLS_SYSDM_CMD "control.exe"
     IDS_TOOLS_SYSDM_PARAM "sysdm.cpl"
     IDS_STARTUP_COLUMN_ELEMENT "Element"
@@ -172,7 +172,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SERVICES_STATUS_RUNNING "Pornit"
+    IDS_SERVICES_STATUS_RUNNING "Rulează"
     IDS_SERVICES_STATUS_STOPPED "Oprit"
     IDS_SERVICES_YES "Da"
     IDS_SERVICES_UNKNOWN "Nespecificat"
