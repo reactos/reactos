@@ -44,12 +44,13 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-#define MAX_EXTENSION_LENGTH 20
+#define MAX_EXTENSION_LENGTH 20 // FIXME: The limit is 254?
 
-HRESULT HCR_GetProgIdKeyOfExtension(LPCWSTR szExtension, HKEY *phKey, BOOL AllowFallback)
+HRESULT HCR_GetProgIdKeyOfExtension(PCWSTR szExtension, PHKEY phKey, BOOL AllowFallback)
 {
     LONG err, cb;
-    WCHAR ext[max(1 + MAX_EXTENSION_LENGTH + 1, MAX_PATH)], progid[MAX_PATH];
+    WCHAR ext[max(1 + MAX_EXTENSION_LENGTH + 1, MAX_PATH)];
+    WCHAR progid[MAX_PATH];
     if (szExtension[0] != '.')
     {
         ext[0] = '.';

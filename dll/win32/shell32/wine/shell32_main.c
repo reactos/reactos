@@ -410,8 +410,7 @@ BOOL SHELL_IsShortcut(LPCITEMIDLIST pidlLast)
     if (_ILGetExtension(pidlLast, szTemp, _countof(szTemp)) &&
         SUCCEEDED(HCR_GetProgIdKeyOfExtension(szTemp, &keyCls, FALSE)))
     {
-        if (ERROR_SUCCESS == RegQueryValueExW(keyCls, L"IsShortcut", NULL, NULL, NULL, NULL))
-            ret = TRUE;
+        ret = RegQueryValueExW(keyCls, L"IsShortcut", NULL, NULL, NULL, NULL) == ERROR_SUCCESS;
         RegCloseKey(keyCls);
     }
     return ret;
@@ -488,7 +487,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
             {
                 flags &= ~SHGFI_TYPENAME;
                 if (!(flags & ~SHGFI_USEFILEATTRIBUTES))
-                    return ret; /* Early out if this was our only operation */
+                    return ret; /* Bail out early if this was our only operation */
             }
         }
     }
@@ -574,7 +573,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
         psfi->szDisplayName[0] = UNICODE_NULL;
         hr = IShellFolder_GetDisplayNameOf(psfParent, pidlLast, SHGDN_INFOLDER, &str);
         if (SUCCEEDED(hr))
-            StrRetToStrNW(psfi->szDisplayName, MAX_PATH, &str, pidlLast);
+            StrRetToStrNW(psfi->szDisplayName, _countof(psfi->szDisplayName), &str, pidlLast);
     }
 
     /* get the type name */

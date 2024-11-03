@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS API tests
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Test for SHGetFileInfo
+ * COPYRIGHT:   Copyright 2024 Whindmar Saksit <whindsaks@proton.me>
+ */
+
 #include "shelltest.h"
 #include <shellutils.h>
 
@@ -11,7 +18,7 @@ static DWORD_PTR SHGFI(LPCWSTR Path, SHFILEINFOW &Info, UINT Flags, UINT Attribu
 
 static DWORD_PTR SHGFI(LPCITEMIDLIST Pidl, SHFILEINFOW &Info, UINT Flags, UINT Attributes = 0)
 {
-    return SHGFI((LPCWSTR)Pidl, Info, Flags | SHGFI_PIDL, Attributes);
+    return SHGFI((PCWSTR)Pidl, Info, Flags | SHGFI_PIDL, Attributes);
 }
 
 START_TEST(SHGetFileInfo)
@@ -22,11 +29,11 @@ START_TEST(SHGetFileInfo)
     UINT flags;
     WCHAR buf[MAX_PATH];
 
-    ok_int(SHGFI((LPCWSTR)NULL, info, 0), FALSE);
-    ok_int(SHGFI((LPCWSTR)NULL, info, SHGFI_DISPLAYNAME), FALSE);
-    ok_int(SHGFI((LPCWSTR)NULL, info, SHGFI_TYPENAME), FALSE);
-    ok_int(SHGFI((LPCWSTR)NULL, info, SHGFI_ICONLOCATION), FALSE);
-    ok_int(SHGFI((LPCWSTR)NULL, info, SHGFI_SYSICONINDEX), FALSE);
+    ok_int(SHGFI((PCWSTR)NULL, info, 0), FALSE);
+    ok_int(SHGFI((PCWSTR)NULL, info, SHGFI_DISPLAYNAME), FALSE);
+    ok_int(SHGFI((PCWSTR)NULL, info, SHGFI_TYPENAME), FALSE);
+    ok_int(SHGFI((PCWSTR)NULL, info, SHGFI_ICONLOCATION), FALSE);
+    ok_int(SHGFI((PCWSTR)NULL, info, SHGFI_SYSICONINDEX), FALSE);
     ok_int(SHGFI(UNIQUEEXT, info, SHGFI_USEFILEATTRIBUTES), TRUE); // Success when asking for no info
     ok_int(SHGetFileInfoW(UNIQUEEXT, 0, NULL, 0, SHGFI_DISPLAYNAME | SHGFI_USEFILEATTRIBUTES), FALSE); // NULL pointer
     ok_int(SHGFI(UNIQUEEXT, info, SHGFI_EXETYPE | SHGFI_USEFILEATTRIBUTES), TRUE); // Invalid combination, returns TRUE!

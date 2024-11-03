@@ -16,7 +16,8 @@ static HRESULT SHELL32_GetCLSIDForDirectory(LPCWSTR pwszDir, LPCWSTR KeyName, CL
 
 static BOOL ItemIsFolder(PCUITEMID_CHILD pidl)
 {
-    BYTE type = _ILGetType(pidl), mask = PT_FS | PT_FS_FOLDER_FLAG | PT_FS_FILE_FLAG;
+    const BYTE mask = PT_FS | PT_FS_FOLDER_FLAG | PT_FS_FILE_FLAG;
+    const BYTE type = _ILGetType(pidl);
     return (type & mask) == (PT_FS | PT_FS_FOLDER_FLAG) || (type == PT_FS && ILGetNext(pidl));
 }
 
@@ -53,7 +54,7 @@ static void GetItemDescription(PCUITEMID_CHILD pidl, LPWSTR Buf, UINT cchMax)
         LPCWSTR name = GetItemFileName(pidl, temp, _countof(temp));
         hr = SHELL32_AssocGetFileDescription(name ? name : L"", Buf, cchMax);
     }
-    if (FAILED(hr))
+    if (FAILED(hr) && cchMax)
         Buf[0] = UNICODE_NULL;
 }
 

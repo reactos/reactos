@@ -37,8 +37,8 @@ list(APPEND SOURCE
     ShellExecCmdLine.cpp
     ShellExecuteEx.cpp
     ShellExecuteW.cpp
-    ShellInfo.cpp
     ShellHook.cpp
+    ShellInfo.cpp
     ShellState.cpp
     SHGetAttributesFromDataObject.cpp
     SHLimitInputEdit.cpp
