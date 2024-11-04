@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS kernel-mode tests
- * LICENSE:         GPLv2+ - See COPYING in the top level directory
- * PURPOSE:         Kernel-Mode Test Suite - ObInsertObject test
- * PROGRAMMER:      Gleb Surikov <glebs.surikovs@gmail.com>
+ * PROJECT:     ReactOS kernel-mode tests
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Kernel-Mode Test Suite - ObInsertObject test
+ * COPYRIGHT:   Copyright 2024 Gleb Surikov <glebs.surikovs@gmail.com>
  */
 
 #include <kmt_test.h>
@@ -25,7 +25,8 @@ static OBJECT_ATTRIBUTES DummyObjectAttributes;
 
 /* This counter is incremented by 1 in the delete callback procedure.
    This way we know that the object has been deleted and this is used
-   to test the dereferencing and deletion of the object in case ObInsertObject fails */
+   to test the dereferencing and deletion of the object in case ObInsertObject
+   fails */
 static ULONG ObjectDeletionCounter = 0;
 
 static
@@ -151,12 +152,11 @@ ObInsert_CreateDummyType(VOID)
     /* Handle object name collision status */
     if (Status == STATUS_OBJECT_NAME_COLLISION)
     {
-        UNICODE_STRING ObjectPath;
         OBJECT_ATTRIBUTES ObjectAttributes;
         HANDLE ObjectTypeHandle;
 
         /* Initialize the object path for the existing object type */
-        RtlInitUnicodeString(&ObjectPath, L"\\ObjectTypes\\ObInsertDummyType");
+        UNICODE_STRING ObjectPath = RTL_CONSTANT_STRING(L"\\ObjectTypes\\ObInsertDummyType");
 
         /* Initialize object attributes for the object type */
         InitializeObjectAttributes(&ObjectAttributes,
@@ -217,18 +217,19 @@ static
 VOID
 ObInsert_Cleanup(VOID)
 {
-    NTSTATUS Status;
-
-    /* Make the directory object temporary (which is permanent) if the handle is valid */
-    if (!skip(DirectoryHandle != NULL, "No directory handle\n"))
+    /* Make the directory object temporary (which is permanent)
+       if the handle is valid */
+    if (skip(DirectoryHandle != NULL, "No directory handle\n"))
     {
-        Status = ZwMakeTemporaryObject(DirectoryHandle);
-        ok_eq_hex(Status, STATUS_SUCCESS);
-
-        /* Close the directory handle */
-        Status = ZwClose(DirectoryHandle);
-        ok_eq_hex(Status, STATUS_SUCCESS);
+        return;
     }
+
+    NTSTATUS Status = ZwMakeTemporaryObject(DirectoryHandle);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+
+    /* Close the directory handle */
+    Status = ZwClose(DirectoryHandle);
+    ok_eq_hex(Status, STATUS_SUCCESS);
 }
 
 /*!
@@ -239,14 +240,10 @@ VOID
 ObInsert_Success(VOID)
 {
     NTSTATUS Status;
-    UNICODE_STRING ObjectName;
     PDUMMY_TYPE Object;
     HANDLE Handle;
     POBJECT_HEADER ObjectHeader;
-
-    /* Initialize the object name */
-    RtlInitUnicodeString(&ObjectName,
-                         L"\\ObInsertTest\\DummyObject_Success");
+    UNICODE_STRING ObjectName = RTL_CONSTANT_STRING(L"\\ObInsertTest\\DummyObject_Success");
 
     /* Initialize object attributes with the name */
     InitializeObjectAttributes(&DummyObjectAttributes,
@@ -306,16 +303,14 @@ VOID
 ObInsert_PathNotFound(VOID)
 {
     NTSTATUS Status;
-    UNICODE_STRING ObjectName;
     PDUMMY_TYPE Object;
     HANDLE Handle;
     POBJECT_HEADER ObjectHeader;
     ULONG PreviousObjectDeletionCounter;
 
-    /* Initialize the object name. To simulate STATUS_OBJECT_PATH_NOT_FOUND, provide
-       an invalid non-last path component ("ObInsertTestt") */
-    RtlInitUnicodeString(&ObjectName,
-                         L"\\ObInsertTestt\\DummyObject_PathNotFound");
+    /* Initialize the object name. To simulate STATUS_OBJECT_PATH_NOT_FOUND,
+       provide an invalid non-last path component ("DummyObject_PathNotFound") */
+    UNICODE_STRING ObjectName = RTL_CONSTANT_STRING(L"\\ObInsertTestt\\DummyObject_PathNotFound");
 
     /* Initialize object attributes with the name */
     InitializeObjectAttributes(&DummyObjectAttributes,
@@ -358,8 +353,8 @@ ObInsert_PathNotFound(VOID)
                             NULL,
                             &Handle);
 
-    /* STATUS_OBJECT_PATH_NOT_FOUND because "ObInsertTestt" doesn't exist, but there are
-       remaining components of the path */
+    /* STATUS_OBJECT_PATH_NOT_FOUND because "ObInsertTestt" doesn't exist,
+       but there are remaining components of the path */
     ok_eq_hex(Status, STATUS_OBJECT_PATH_NOT_FOUND);
 
     /* ObInsertObject should've automatically dereferenced the object */
@@ -374,16 +369,14 @@ VOID
 ObInsert_NameInvalid(VOID)
 {
     NTSTATUS Status;
-    UNICODE_STRING ObjectName;
     PDUMMY_TYPE Object;
     HANDLE Handle;
     POBJECT_HEADER ObjectHeader;
     ULONG PreviousObjectDeletionCounter;
 
-    /* Initialize the object name. To simulate STATUS_OBJECT_NAME_INVALID, provide
-       an invalid path end component */
-    RtlInitUnicodeString(&ObjectName,
-                         L"\\ObInsertTest\\");
+    /* Initialize the object name. To simulate STATUS_OBJECT_NAME_INVALID,
+       provide an invalid path end component */
+    UNICODE_STRING ObjectName = RTL_CONSTANT_STRING(L"\\ObInsertTest\\");
 
     /* Initialize object attributes with the name */
     InitializeObjectAttributes(&DummyObjectAttributes,
@@ -440,16 +433,14 @@ VOID
 ObInsert_PathSyntaxBad(VOID)
 {
     NTSTATUS Status;
-    UNICODE_STRING ObjectName;
     PDUMMY_TYPE Object;
     HANDLE Handle;
     POBJECT_HEADER ObjectHeader;
     ULONG PreviousObjectDeletionCounter;
 
-    /* Initialize the object name. To simulate STATUS_OBJECT_PATH_SYNTAX_BAD, provide
-       a path that doesn't start with "\" */
-    RtlInitUnicodeString(&ObjectName,
-                         L"ObInsertTest");
+    /* Initialize the object name. To simulate STATUS_OBJECT_PATH_SYNTAX_BAD,
+       provide a path that doesn't start with "\" */
+    UNICODE_STRING ObjectName = RTL_CONSTANT_STRING(L"ObInsertTest");
 
     /* Initialize object attributes with the name */
     InitializeObjectAttributes(&DummyObjectAttributes,
@@ -506,19 +497,18 @@ VOID
 ObInsert_NameCollision(VOID)
 {
     NTSTATUS Status;
-    UNICODE_STRING ObjectName;
     PDUMMY_TYPE Object;
     HANDLE Handle;
     POBJECT_HEADER ObjectHeader;
     ULONG PreviousObjectDeletionCounter;
 
-    /* Initialize the object name. To simulate STATUS_OBJECT_NAME_COLLISION, provide
-       a name that already exists */
-    RtlInitUnicodeString(&ObjectName,
-                         L"\\");
+    /* Initialize the object name. To simulate STATUS_OBJECT_NAME_COLLISION,
+       provide a name that already exists */
+    UNICODE_STRING ObjectName = RTL_CONSTANT_STRING(L"\\");
 
-    /* Initialize object attributes with the name. To simulate STATUS_OBJECT_NAME_COLLISION and
-       avoid STATUS_OBJECT_NAME_EXISTS don't specify OBJ_OPENIF */
+    /* Initialize object attributes with the name. To simulate
+       STATUS_OBJECT_NAME_COLLISION and avoid STATUS_OBJECT_NAME_EXISTS
+       don't specify OBJ_OPENIF */
     InitializeObjectAttributes(&DummyObjectAttributes,
                                &ObjectName,
                                OBJ_CASE_INSENSITIVE,
@@ -570,8 +560,8 @@ START_TEST(ObInsert)
     RTL_OSVERSIONINFOW OsVersionInfo = {0};
     /* RtlGetVersion always succeeds */
     RtlGetVersion(&OsVersionInfo);
-    /* The code that directly accesses the object header will not work and
-       likely crash on Windows Vista+ */
+    /* The code that directly accesses the object header
+       will not work and likely crash on Windows Vista+ */
     if (OsVersionInfo.dwMajorVersion > 5)
     {
         trace("ObInsert skipped: Unsupported OS version\n");
