@@ -64,12 +64,17 @@ _ACRTIMP int __cdecl fesetround(_In_ int _Round);
         // initialized, indicating no exceptions are masked.  In the current
         // implementation (_Fenv1), the global variable is initialized with all
         // exceptions masked, which is the actual initial environment.
-        #if defined _M_IX86
-            __declspec(selectany) extern const fenv_t _Fenv1 = { 0x3f3f103f, 0 };
-        #elif defined _M_X64
-            __declspec(selectany) extern const fenv_t _Fenv1 = { 0x3f00003f, 0 };
+        #ifdef __cplusplus
+            #define CPP_EXTERN extern
         #else
-            __declspec(selectany) extern const fenv_t _Fenv1 = { 0x0000003f, 0 };
+            #define CPP_EXTERN
+        #endif
+        #if defined _M_IX86
+            CPP_EXTERN __declspec(selectany) const fenv_t _Fenv1 = { 0x3f3f103f, 0 };
+        #elif defined _M_X64
+            CPP_EXTERN __declspec(selectany) const fenv_t _Fenv1 = { 0x3f00003f, 0 };
+        #else
+            CPP_EXTERN __declspec(selectany) const fenv_t _Fenv1 = { 0x0000003f, 0 };
         #endif
     #endif
 
