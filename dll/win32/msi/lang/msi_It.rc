@@ -31,6 +31,14 @@ STRINGTABLE
     13 "periferica di rete per la funzionalità mancante"
     14 "funzionalità da:"
     15 "selezionare la cartella che contiene %s"
+#ifdef __REACTOS__
+    34 "Pacchetto di installazione di ReactOS"
+    35 "ReactOS Installer Patch"
+    36 "Installa"
+    37 "Ripara"
+    38 "Rimuovi"
+    39 "Apply"
+#endif
     100 "New Folder"
 }
 

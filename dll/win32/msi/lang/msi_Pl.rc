@@ -32,6 +32,14 @@ STRINGTABLE
     13 "dysk siecowy zawierający żądaną funckje jest niedostępny"
     14 "funkcja z:"
     15 "wybierz folder zawierający '%s'"
+#ifdef __REACTOS__
+    34 "Pakiet Instalatora ReactOS"
+    35 "ReactOS Installer Patch"
+    36 "Zainstaluj"
+    37 "Napraw"
+    38 "Odinstaluj"
+    39 "Apply"
+#endif
     100 "New Folder"
 }
 
