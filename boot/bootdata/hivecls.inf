@@ -1145,7 +1145,7 @@ XSLFILE="XSL таблица стилей"
 
 ;; In msi.dll
 MSIPACK="Пакет установщика ReactOS"
-;MSIPTCH="ReactOS Installer Patch"
+MSIPTCH="Исправления установщика ReactOS"
 
 ;; In themeui.dll
 MSSTYLESFILE="Файл стиля оформления"
@@ -1170,7 +1170,7 @@ CONFIGURE="Настроить"
 INSTALL="Установить"
 UNINSTALL="Удалить"
 REPAIR="Исправить"
-;APPLY="Apply Patch"
+APPLY="Применить"
 TEST="Тест"
 
 ;------------------------------------------------------------------------
