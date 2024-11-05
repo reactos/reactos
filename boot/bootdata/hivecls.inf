@@ -435,11 +435,23 @@ HKCR,".msi","",0x00000000,"Msi.Package"
 HKCR,"Msi.Package","",0x00000000,%MSIPACK%
 ;;HKCR,"Msi.Package","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\msi.dll,-34"
 HKCR,"Msi.Package\DefaultIcon","",0x00000000,"msiexec.exe"
+;;HKCR,"Msi.Package\shell\Open","MUIVerb",0x00020000,"@%SystemRoot%\system32\msi.dll,-36"
 HKCR,"Msi.Package\shell\Open\command","",0x00020000,"%SystemRoot%\system32\msiexec.exe /i ""%1"""
 HKCR,"Msi.Package\shell\Repair","",0x00000000,%REPAIR%
+;;HKCR,"Msi.Package\shell\Repair","MUIVerb",0x00020000,"@%SystemRoot%\system32\msi.dll,-37"
 HKCR,"Msi.Package\shell\Repair\command","",0x00020000,"%SystemRoot%\system32\msiexec.exe /f ""%1"""
 HKCR,"Msi.Package\shell\Uninstall","",0x00000000,%UNINSTALL%
+;;HKCR,"Msi.Package\shell\Uninstall","MUIVerb",0x00020000,"@%SystemRoot%\system32\msi.dll,-38"
 HKCR,"Msi.Package\shell\Uninstall\command","",0x00020000,"%SystemRoot%\system32\msiexec.exe /x ""%1"""
+
+; MSP files
+HKCR,".msp","",0x00000000,"Msi.Patch"
+HKCR,"Msi.Patch","",0x00000000,%MSIPTCH%
+;;HKCR,"Msi.Patch","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\msi.dll,-35"
+HKCR,"Msi.Patch\DefaultIcon","",0x00000000,"msiexec.exe"
+HKCR,"Msi.Patch\shell\Open","",0x00000000,%APPLY%
+;;HKCR,"Msi.Patch\shell\Open","MUIVerb",0x00020000,"@%SystemRoot%\system32\msi.dll,-39"
+HKCR,"Msi.Patch\shell\Open\command","",0x00020000,"%SystemRoot%\system32\msiexec.exe /p ""%1"""
 
 ; NT DOS32 Configuration File
 HKCR,".nt","",0x00000000,"ntfile"
@@ -786,6 +798,7 @@ XSLFILE="XSL Stylesheet"
 
 ;; In msi.dll
 MSIPACK="ReactOS Installer Package"
+MSIPTCH="ReactOS Installer Patch"
 
 ;; In themeui.dll
 MSSTYLESFILE="Visual Style File"
@@ -811,6 +824,7 @@ CONFIGURE="Configure"
 INSTALL="Install"
 UNINSTALL="Uninstall"
 REPAIR="Repair"
+APPLY="Apply Patch"
 TEST="Test"
 
 ;------------------------------------------------------------------------
@@ -828,6 +842,7 @@ CPLFILE_OPENWITH="Mit der Systemsteuerung öffnen"
 
 ;; In msi.dll
 ;MSIPACK="ReactOS Installer Package"
+;MSIPTCH="ReactOS Installer Patch"
 
 ;; In themeui.dll
 ;MSSTYLESFILE="Visual Style File"
@@ -852,6 +867,7 @@ CPLFILE_OPENWITH="Mit der Systemsteuerung öffnen"
 ;INSTALL="Install"
 ;UNINSTALL="Uninstall"
 ;REPAIR="Repair"
+;APPLY="Apply Patch"
 ;TEST="Test"
 
 ;------------------------------------------------------------------------
@@ -869,6 +885,7 @@ XSLFILE="Hoja de estilos XSL"
 
 ;; In msi.dll
 MSIPACK="Paquete de instalación de ReactOS"
+;MSIPTCH="ReactOS Installer Patch"
 
 ;; In themeui.dll
 MSSTYLESFILE="Archivo de estilo visual"
@@ -893,6 +910,7 @@ CONFIGURE="Configurar"
 INSTALL="Instalar"
 UNINSTALL="Desinstalar"
 REPAIR="Reparar"
+;APPLY="Apply Patch"
 TEST="Probar"
 
 ;------------------------------------------------------------------------
@@ -910,6 +928,7 @@ XSLFILE="Feuille de style XSL"
 
 ;; In msi.dll
 MSIPACK="Package ReactOS Installer"
+;MSIPTCH="ReactOS Installer Patch"
 
 ;; In themeui.dll
 MSSTYLESFILE="Fichier de styles visuels"
@@ -934,6 +953,7 @@ CONFIGURE="Configurer"
 INSTALL="Installer"
 UNINSTALL="Désinstaller"
 REPAIR="Réparer"
+;APPLY="Apply Patch"
 TEST="Tester"
 
 ;------------------------------------------------------------------------
@@ -951,6 +971,7 @@ XSLFILE="Foglio di stile XSL"
 
 ;; In msi.dll
 MSIPACK="Pacchetto di installazione di ReactOS"
+;MSIPTCH="ReactOS Installer Patch"
 
 ;; In themeui.dll
 MSSTYLESFILE="File di stili visivi"
@@ -975,6 +996,7 @@ CONFIGURE="Configura"
 INSTALL="Installa"
 UNINSTALL="Rimuovi"
 REPAIR="Ripara"
+;APPLY="Apply Patch"
 TEST="Prova"
 
 ;------------------------------------------------------------------------
@@ -992,6 +1014,7 @@ XSLFILE="Arkusz stylów XSL"
 
 ;; In msi.dll
 MSIPACK="Pakiet Instalatora ReactOS"
+;MSIPTCH="ReactOS Installer Patch"
 
 ;; In themeui.dll
 MSSTYLESFILE="Plik stylu wizualnego"
@@ -1016,6 +1039,7 @@ CONFIGURE="Konfiguruj"
 INSTALL="Zainstaluj"
 UNINSTALL="Odinstaluj"
 REPAIR="Napraw"
+;APPLY="Apply Patch"
 TEST="Testuj"
 
 ;------------------------------------------------------------------------
@@ -1034,6 +1058,7 @@ XSLFILE="Folha de estilos XSL"
 
 ;; In msi.dll
 MSIPACK="Pacote de instalação do ReactOS"
+;MSIPTCH="ReactOS Installer Patch"
 
 ;; In themeui.dll
 MSSTYLESFILE="Ficheiro de estilo visual"
@@ -1058,6 +1083,7 @@ CONFIGURE="Configurar"
 INSTALL="Instalar"
 UNINSTALL="Desinstalar"
 REPAIR="Reparar"
+;APPLY="Apply Patch"
 TEST="Testar"
 
 ;------------------------------------------------------------------------
@@ -1076,6 +1102,7 @@ XSLFILE="Foaie de stil XSL"
 
 ;; In msi.dll
 MSIPACK="Pachet de instalare ReactOS"
+;MSIPTCH="ReactOS Installer Patch"
 
 ;; In themeui.dll
 MSSTYLESFILE="Fișier de stil vizual"
@@ -1100,6 +1127,7 @@ CONFIGURE="Configurează"
 INSTALL="Instalează"
 UNINSTALL="Dezinstalează"
 REPAIR="Repară"
+;APPLY="Apply Patch"
 TEST="Testează"
 
 ;------------------------------------------------------------------------
@@ -1117,6 +1145,7 @@ XSLFILE="XSL таблица стилей"
 
 ;; In msi.dll
 MSIPACK="Пакет установщика ReactOS"
+;MSIPTCH="ReactOS Installer Patch"
 
 ;; In themeui.dll
 MSSTYLESFILE="Файл стиля оформления"
@@ -1141,6 +1170,7 @@ CONFIGURE="Настроить"
 INSTALL="Установить"
 UNINSTALL="Удалить"
 REPAIR="Исправить"
+;APPLY="Apply Patch"
 TEST="Тест"
 
 ;------------------------------------------------------------------------
@@ -1158,6 +1188,7 @@ XSLFILE="XSL 樣式表"
 
 ;; In msi.dll
 MSIPACK="ReactOS 安裝套件"
+;MSIPTCH="ReactOS Installer Patch"
 
 ;; In themeui.dll
 MSSTYLESFILE="視覺樣式檔案"
@@ -1182,6 +1213,7 @@ CONFIGURE="設定"
 INSTALL="安裝"
 UNINSTALL="解除安裝"
 REPAIR="修復"
+;APPLY="Apply Patch"
 TEST="測試"
 
 ;------------------------------------------------------------------------
@@ -1199,6 +1231,7 @@ CPLFILE_OPENWITH="Denetim Masası'yla Aç"
 
 ;; In msi.dll
 ;MSIPACK="ReactOS Yükleyicisi Paketi"
+;MSIPTCH="ReactOS Installer Patch"
 
 ;; In themeui.dll
 ;MSSTYLESFILE="Görsel Stil Dosyası"
@@ -1223,6 +1256,7 @@ CPLFILE_OPENWITH="Denetim Masası'yla Aç"
 ;INSTALL="Yükle"
 ;UNINSTALL="Kaldır"
 ;REPAIR="Onar"
+;APPLY="Apply Patch"
 ;TEST="Dene"
 
 ;------------------------------------------------------------------------
@@ -1240,6 +1274,7 @@ XSLFILE="XSL 樣式表"
 
 ;; In msi.dll
 MSIPACK="ReactOS 安裝套件"
+;MSIPTCH="ReactOS Installer Patch"
 
 ;; In themeui.dll
 MSSTYLESFILE="視覺樣式檔案"
@@ -1264,6 +1299,7 @@ CONFIGURE="設定"
 INSTALL="安裝"
 UNINSTALL="解除安裝"
 REPAIR="修復"
+;APPLY="Apply Patch"
 TEST="測試"
 
 ;------------------------------------------------------------------------
@@ -1282,6 +1318,7 @@ XSLFILE="XSL スタイルシート"
 
 ;; In msi.dll
 MSIPACK="ReactOS インストーラ パッケージ"
+;MSIPTCH="ReactOS Installer Patch"
 
 ;; In themeui.dll
 MSSTYLESFILE="視覚スタイル ファイル"
@@ -1306,6 +1343,7 @@ CONFIGURE="設定"
 INSTALL="インストール"
 UNINSTALL="アンインストール"
 REPAIR="修復"
+;APPLY="Apply Patch"
 TEST="テスト"
 
 ;------------------------------------------------------------------------
@@ -1323,6 +1361,7 @@ XSLFILE="XSL 样式表"
 
 ;; In msi.dll
 MSIPACK="ReactOS Installer 软件包"
+;MSIPTCH="ReactOS Installer Patch"
 
 ;; In themeui.dll
 MSSTYLESFILE="可视化风格文件"
@@ -1347,6 +1386,7 @@ CONFIGURE="配置"
 INSTALL="安装"
 UNINSTALL="卸载"
 REPAIR="修复"
+;APPLY="Apply Patch"
 TEST="测试"
 
 ; EOF
