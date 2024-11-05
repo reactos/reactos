@@ -35,10 +35,10 @@ STRINGTABLE
 #ifdef __REACTOS__
     34 "Package ReactOS Installer"
     35 "ReactOS Installer Patch"
-    36 "Installer"
-    37 "Réparer"
-    38 "Désinstaller"
-    39 "Apply"
+    36 "Installer" //FIXME: add accel
+    37 "Réparer" //FIXME: add accel
+    38 "Désinstaller" //FIXME: add accel
+    39 "&Apply"
 #endif
     100 "New Folder"
 }

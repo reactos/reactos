@@ -37,10 +37,10 @@ STRINGTABLE
 #ifdef __REACTOS__
     34 "ReactOS Installer 软件包" // zh-TW/HK: ReactOS 安裝套件
     35 "ReactOS Installer Patch"
-    36 "安装" // zh-TW/HK: 安裝
-    37 "修复" // zh-TW/HK: 修復
-    38 "卸载" // zh-TW/HK: 解除安裝
-    39 "Apply"
+    36 "安装" // zh-TW/HK: 安裝 //FIXME: add accel
+    37 "修复" // zh-TW/HK: 修復 //FIXME: add accel
+    38 "卸载" // zh-TW/HK: 解除安裝 //FIXME: add accel
+    39 "&Apply"
 #endif
     100 "New Folder"
 }
