@@ -1002,7 +1002,8 @@ MI_WRITE_INVALID_PTE(IN PMMPTE PointerPte,
 {
     /* Write the invalid PTE */
     ASSERT(InvalidPte.u.Hard.Valid == 0);
-    ASSERT(InvalidPte.u.Long != 0);
+    /* Added by Timo Kreuzer in https://github.com/reactos/reactos/commit/4019985 */
+//    ASSERT(InvalidPte.u.Long != 0);
     *PointerPte = InvalidPte;
 }
 

@@ -1580,6 +1580,10 @@ MmAllocateMappingAddress(
     PMMPTE PointerPte;
     MMPTE TempPte;
 
+    /* Fast exit if PoolTag is NULL */
+    if (!PoolTag)
+        return NULL;
+
     /* How many PTEs does the caller want? */
     SizeInPages = BYTES_TO_PAGES(NumberOfBytes);
     if (SizeInPages == 0)
@@ -1604,8 +1608,7 @@ MmAllocateMappingAddress(
     }
 
     ASSERT(SizeInPages <= MM_EMPTY_PTE_LIST);
-    TempPte.u.Long = 0;
-    TempPte.u.List.NextEntry = SizeInPages;
+    TempPte.u.Long = SizeInPages << 1;
     MI_WRITE_INVALID_PTE(&PointerPte[0], TempPte);
     TempPte.u.Long = PoolTag;
     TempPte.u.Hard.Valid = 0;
@@ -1658,8 +1661,8 @@ MmFreeMappingAddress(
     }
 
     /* We must have a size */
-    SizeInPages = PointerPte[0].u.List.NextEntry;
-    if (SizeInPages < 3)
+    SizeInPages = PointerPte[0].u.Long >> 1;
+    if (PointerPte[0].u.Long < (3 << 1))
     {
         KeBugCheckEx(SYSTEM_PTE_MISUSE,
                      PTE_MAPPING_EMPTY, /* Mapping apparently empty */
