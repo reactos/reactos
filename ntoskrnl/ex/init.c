@@ -1330,6 +1330,9 @@ ExpInitializeExecutive(IN ULONG Cpu,
     /* Set the machine type */
     SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_NATIVE;
     SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_NATIVE;
+
+    /* ReactOS magic */
+    *(PULONG)(KI_USER_SHARED_DATA + PAGE_SIZE - sizeof(ULONG)) = 0x8eac705;
 }
 
 VOID
