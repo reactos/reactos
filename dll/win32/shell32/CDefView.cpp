@@ -336,6 +336,7 @@ public:
     HRESULT CheckViewMode(HMENU hmenuView);
     LRESULT DoColumnContextMenu(LRESULT lParam);
     UINT GetSelections();
+    SFGAOF GetSelectionAttributes(SFGAOF Query);
     HRESULT OpenSelectedItems();
     void OnDeactivate();
     void DoActivate(UINT uState);
@@ -1841,7 +1842,7 @@ HRESULT CDefView::FillFileMenu()
 
     HMENU hmenu = CreatePopupMenu();
 
-    UINT cmf = GetContextMenuFlags(m_pShellBrowser, SFGAO_CANRENAME);
+    UINT cmf = GetContextMenuFlags(m_pShellBrowser, GetSelectionAttributes(SFGAO_CANRENAME));
     hr = m_pFileMenu->QueryContextMenu(hmenu, 0, DVIDM_CONTEXTMENU_FIRST, DVIDM_CONTEXTMENU_LAST, cmf);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
@@ -2101,6 +2102,14 @@ UINT CDefView::GetSelections()
     return m_cidl;
 }
 
+SFGAOF CDefView::GetSelectionAttributes(SFGAOF Query)
+{
+    if (!GetSelections())
+        return 0;
+    SFGAOF Attr = Query;
+    return SUCCEEDED(m_pSFParent->GetAttributesOf(m_cidl, m_apidl, &Attr)) ? (Attr & Query) : 0;
+}
+
 HRESULT CDefView::InvokeContextMenuCommand(CComPtr<IContextMenu>& pCM, LPCSTR lpVerb, POINT* pt)
 {
     CMINVOKECOMMANDINFOEX cmi;
@@ -2232,7 +2241,7 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     if (FAILED_UNEXPECTEDLY(hResult))
         return 0;
 
-    UINT cmf = GetContextMenuFlags(m_pShellBrowser, SFGAO_CANRENAME);
+    UINT cmf = GetContextMenuFlags(m_pShellBrowser, GetSelectionAttributes(SFGAO_CANRENAME));
     // Use 1 as the first id we want. 0 means that user canceled the menu
     hResult = m_pCM->QueryContextMenu(m_hContextMenu, 0, CONTEXT_MENU_BASE_ID, DVIDM_CONTEXTMENU_LAST, cmf);
     if (FAILED_UNEXPECTEDLY(hResult))
@@ -3350,7 +3359,7 @@ HRESULT CDefView::SaveViewState(IStream *pStream)
     cols.Signature = PERSISTCOLUMNS::SIG;
     cols.Count = 0;
     LVCOLUMN lvc;
-    lvc.mask = LVCF_WIDTH | LVCF_SUBITEM;
+    lvc.mask = LVCF_WIDTH;
     for (UINT i = 0, j = 0; i < PERSISTCOLUMNS::MAXCOUNT && ListView_GetColumn(m_ListView, j, &lvc); ++j)
     {
         HRESULT hr = MapListColumnToFolderColumn(j);
@@ -3405,6 +3414,7 @@ HRESULT CDefView::SaveViewState(IStream *pStream)
         if (SUCCEEDED(hr))
             hr = pStream->Write(&cols, cbColumns, &written);
     }
+    // TODO: else if (SUCCEEDED(_DoFolderViewCB(SFVM_GETCOLUMNSTREAM)))
     if (pStream)
         pStream->Release();
     return hr;
