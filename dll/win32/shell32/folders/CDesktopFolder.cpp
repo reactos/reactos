@@ -1069,6 +1069,13 @@ HRESULT WINAPI CDesktopFolderViewCB::MessageSFVCB(UINT uMsg, WPARAM wParam, LPAR
         case SFVM_VIEWRELEASE:
             m_pShellView = NULL;
             return S_OK;
+        case SFVM_GETCOMMANDDIR:
+        {
+            WCHAR buf[MAX_PATH];
+            if (SHGetSpecialFolderPathW(NULL, buf, CSIDL_DESKTOPDIRECTORY, TRUE))
+                return StringCchCopyW((PWSTR)lParam, wParam, buf);
+            break;
+        }
     }
     return E_NOTIMPL;
 }

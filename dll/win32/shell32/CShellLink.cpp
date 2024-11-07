@@ -2623,6 +2623,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 
 HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
 {
+    LPCMINVOKECOMMANDINFOEX iciex = (LPCMINVOKECOMMANDINFOEX)lpici;
     const BOOL unicode = IsUnicode(*lpici);
 
     CStringW args;
@@ -2631,7 +2632,6 @@ HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
 
     if (unicode)
     {
-        LPCMINVOKECOMMANDINFOEX iciex = (LPCMINVOKECOMMANDINFOEX)lpici;
         if (!StrIsNullOrEmpty(iciex->lpParametersW))
         {
             args += L' ';
@@ -2674,6 +2674,15 @@ HRESULT CShellLink::DoOpen(LPCMINVOKECOMMANDINFO lpici)
     if (lpici->nShow != SW_SHOWNORMAL && lpici->nShow != SW_SHOW)
         sei.nShow = lpici->nShow; // Allow invoker to override .lnk show mode
 
+    // Use the invoker specified working directory if the link did not specify one
+    if (StrIsNullOrEmpty(sei.lpDirectory) || !PathIsDirectoryW(sei.lpDirectory))
+    {
+        LPCSTR pszDirA = lpici->lpDirectory;
+        if (unicode && !StrIsNullOrEmpty(iciex->lpDirectoryW))
+            sei.lpDirectory = iciex->lpDirectoryW;
+        else if (pszDirA && SHAnsiToUnicode(pszDirA, dir, _countof(dir)))
+            sei.lpDirectory = dir;
+    }
     return (ShellExecuteExW(&sei) ? S_OK : E_FAIL);
 }
 
