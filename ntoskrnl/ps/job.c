@@ -682,6 +682,8 @@ PspDeleteJob(_In_ PVOID ObjectBody)
 
     PAGED_CODE();
 
+    Job->LimitFlags = 0;
+
     /* Remove the reference to the completion port if associated */
     if (Job->CompletionPort != NULL)
     {
@@ -732,7 +734,6 @@ PspSetJobLimitsBasicOrExtended(
     _In_ BOOLEAN IsExtendedLimit
 )
 {
-    NTSTATUS Status;
     ULONG AllowedFlags;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
 
@@ -913,7 +914,7 @@ PspSetJobLimitsBasicOrExtended(
     KeReleaseGuardedMutexUnsafe(&Job->MemoryLimitsLock);
     ExReleaseResourceLite(&Job->JobLock);
 
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 /*!
