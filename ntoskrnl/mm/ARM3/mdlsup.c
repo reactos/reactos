@@ -1638,9 +1638,6 @@ MmMapLockedPagesWithReservedMapping(IN PVOID MappingAddress,
     PMMPTE PointerPte;
     MMPTE TempPte;
 
-    //
-    // Sanity check
-    //
     ASSERT(Mdl->ByteCount != 0);
 
     //
@@ -1690,7 +1687,7 @@ MmMapLockedPagesWithReservedMapping(IN PVOID MappingAddress,
     //
     // We must have a size, and our helper PTEs must be invalid
     //
-    if (PointerPte[0].u.Long < (3 << 1))
+    if (PointerPte[0].u.List.NextEntry < 3)
     {
         KeBugCheckEx(SYSTEM_PTE_MISUSE,
                      0x105, /* Trying to map an invalid address */
@@ -1702,8 +1699,11 @@ MmMapLockedPagesWithReservedMapping(IN PVOID MappingAddress,
     //
     // If the mapping isn't big enough, fail
     //
-    if ((PointerPte[0].u.Long >> 1) - 2 < PageCount)
+    if (PointerPte[0].u.List.NextEntry - 2 < PageCount)
     {
+        DPRINT1("Reserved mapping too small. Need %Iu pages, have %Iu\n",
+                        PageCount,
+                        PointerPte[0].u.List.NextEntry - 2);
         return NULL;
     }
 
@@ -1880,7 +1880,7 @@ MmUnmapReservedMapping(IN PVOID BaseAddress,
         MdlPages = MmGetMdlPfnArray(Mdl);
 
         /* Number of extra pages stored after the PFN array */
-        ExtraPageCount = (PFN_COUNT)*(MdlPages + PageCount);
+        ExtraPageCount = MdlPages[PageCount];
 
         //
         // Do the math
