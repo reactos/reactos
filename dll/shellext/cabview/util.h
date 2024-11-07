@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS CabView Shell Extension
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * COPYRIGHT:   Whindmar Saksit (whindsaks@proton.me)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * COPYRIGHT:   Copyright 2024 Whindmar Saksit (whindsaks@proton.me)
  */
 
 #pragma once
@@ -95,6 +95,7 @@ inline HRESULT InsertMenuItem(QCMINFO &qcmi, UINT &Pos, UINT &TrackId, UINT Id, 
         flags |= MF_SEPARATOR;
     else if (!LoadStringW(g_hInst, ResId, string, _countof(string)))
         return E_FAIL;
+
     MENUITEMINFOW mii;
     mii.cbSize = FIELD_OFFSET(MENUITEMINFOW, hbmpItem); // USER32 version agnostic
     mii.fMask = MIIM_FTYPE | MIIM_ID | MIIM_STRING | MIIM_STATE;

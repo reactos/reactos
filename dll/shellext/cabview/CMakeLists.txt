@@ -3,8 +3,8 @@ spec2def(cabview.dll cabview.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     cabview.cpp
-    folder.cpp
     extract.cpp
+    folder.cpp
     resource.h)
 
 add_library(cabview MODULE

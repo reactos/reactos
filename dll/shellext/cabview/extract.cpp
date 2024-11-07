@@ -1,8 +1,8 @@
 /*
  * PROJECT:     ReactOS CabView Shell Extension
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     FDI API wrapper
- * COPYRIGHT:   Whindmar Saksit (whindsaks@proton.me)
+ * COPYRIGHT:   Copyright 2024 Whindmar Saksit (whindsaks@proton.me)
  */
 
 #include "precomp.h"
@@ -82,7 +82,11 @@ static INT_PTR CabOpenEx(LPCWSTR path, UINT access, UINT share, UINT disp, UINT 
 FNOPEN(CabOpen)
 {
     UINT disp = (oflag & _O_CREAT) ? CREATE_ALWAYS : OPEN_EXISTING;
-    UINT access = (oflag & _O_RDWR) ? GENERIC_READ | GENERIC_WRITE : (oflag & _O_WRONLY) ? GENERIC_WRITE : GENERIC_READ;
+    UINT access = GENERIC_READ;
+    if (oflag & _O_RDWR)
+        access = GENERIC_READ | GENERIC_WRITE;
+    else if (oflag & _O_WRONLY)
+        access = GENERIC_WRITE;
     UNREFERENCED_PARAMETER(pmode);
     WCHAR buf[MAX_PATH * 2];
     MultiByteToWideChar(CP_UTF8, 0, pszFile, -1, buf, _countof(buf));
@@ -152,7 +156,7 @@ FNFDINOTIFY(ExtractCabinetCallback)
                         hr = noti.hr;
                 }
             }
-            return hr == S_FALSE ? FALSE : -1;
+            return hr == S_FALSE ? 0 : -1;
 
         case fdintCLOSE_FILE_INFO:
             if (DosDateTimeToFileTime(pfdin->date, pfdin->time, &ft))

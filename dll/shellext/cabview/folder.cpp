@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS CabView Shell Extension
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * COPYRIGHT:   Whindmar Saksit (whindsaks@proton.me)
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * COPYRIGHT:   Copyright 2024 Whindmar Saksit (whindsaks@proton.me)
  */
 
 #include "cabview.h"
@@ -766,7 +766,7 @@ static DWORD CALLBACK ExtractFilesThread(LPVOID pParam)
         {
             data.pPD->SetTitle(data.cab);
             data.pPD->SetLine(2, data.path, TRUE, NULL);
-            data.pPD->SetAnimation(LoadLibraryW(L"SHELL32"), 161);
+            data.pPD->SetAnimation(GetModuleHandleW(L"SHELL32"), 161);
             data.pPD->SetProgress(0, 0);
         }
     }
@@ -798,7 +798,7 @@ HRESULT CCabFolder::ExtractFilesUI(HWND hWnd, IDataObject *pDO)
     if (!IsWindowVisible(hWnd) && IsWindowVisible(m_ShellViewWindow))
         hWnd = m_ShellViewWindow;
 
-    EXTRACTFILESDATA *pData = (EXTRACTFILESDATA*)SHAlloc(sizeof(EXTRACTFILESDATA));
+    EXTRACTFILESDATA *pData = (EXTRACTFILESDATA*)SHAlloc(sizeof(*pData));
     if (!pData)
         return E_OUTOFMEMORY;
     ZeroMemory(pData, sizeof(*pData));
