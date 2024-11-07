@@ -383,4 +383,9 @@ LPSTR WINAPI UnicodeToMultiByte(LPCWSTR lpUnicodeStr, UINT uCodePage);
 typedef BOOL (*FIND_CALLBACK)(LPCWSTR SectionName, PVOID Context);
 BOOL EnumerateSectionsStartingWith(HINF hInf, LPCWSTR pStr, FIND_CALLBACK Callback, PVOID Context);
 
+PVOID* srclist_temporary_sources;
+UINT srclist_temporary_sources_count;
+static BOOLEAN noBrowse = FALSE;
+
+
 #endif /* __SETUPAPI_PRIVATE_H */

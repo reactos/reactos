@@ -57,25 +57,6 @@ BOOL WINAPI SetupAddToSourceListW(DWORD flags, PCWSTR source)
 }
 
 /***********************************************************************
- *      SetupSetSourceListA (SETUPAPI.@)
- */
-BOOL WINAPI SetupSetSourceListA(DWORD flags, PCSTR *list, UINT count)
-{
-    FIXME("0x%08x %p %d\n", flags, list, count);
-    return FALSE;
-}
-
-/***********************************************************************
- *      SetupSetSourceListW (SETUPAPI.@)
- */
-BOOL WINAPI SetupSetSourceListW(DWORD flags, PCWSTR *list, UINT count)
-{
-    FIXME("0x%08x %p %d\n", flags, list, count);
-    return FALSE;
-}
-
-
-/***********************************************************************
  *      SetupDiRemoveDevice(SETUPAPI.@)
  */
 BOOL WINAPI
