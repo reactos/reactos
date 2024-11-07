@@ -1018,48 +1018,59 @@ BOOL WINAPI SetupSetSourceListA(DWORD flags, PCSTR *list, UINT count)
 /***********************************************************************
  *      SetupSetSourceListW (SETUPAPI.@)
  */
-BOOL WINAPI SetupSetSourceListW(DWORD flags, PCWSTR *list, UINT count)
+BOOL WINAPI
+SetupSetSourceListW(DWORD flags, PCWSTR *list, UINT count)
 {
     TRACE("(%X, %p, %d)\n", flags, list, count);
 
-    if(flags & SRCLIST_TEMPORARY){
-        srclist_temporary_sources = (PVOID*)*list;
+    if (flags & SRCLIST_TEMPORARY)
+    {
+        srclist_temporary_sources = (PVOID *)*list;
         srclist_temporary_sources_count = count;
     }
-    else{
+    else
+    {
         HKEY handle = NULL;
         LSTATUS status = 0;
         UINT len = 0;
         BYTE buffer[MAX_PATH];
-        BYTE* currentPos = NULL;
+        BYTE *currentPos = NULL;
 
         currentPos = buffer;
-        for(int i=0; i < count; i++){
-            wcscpy((wchar_t*)currentPos,list[i]);
+        for (int i = 0; i < count; i++)
+        {
+            wcscpy((wchar_t *)currentPos, list[i]);
             currentPos += wcslen(list[i]) + 1;
         }
         len = currentPos - buffer;
 
-        if(flags & SRCLIST_SYSTEM){
-            status = RegOpenKeyExW(HKEY_LOCAL_MACHINE,L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup",0,KEY_SET_VALUE,&handle);
-            if(status)
+        if (flags & SRCLIST_SYSTEM)
+        {
+            status = RegOpenKeyExW(
+                HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup", 0, KEY_SET_VALUE, &handle);
+            if (status)
                 return FALSE;
-            status = RegSetValueExW(handle,L"Installation Sources",0,REG_MULTI_SZ,buffer,len);
-            if(status)
+            status = RegSetValueExW(handle, L"Installation Sources", 0, REG_MULTI_SZ, buffer, len);
+            if (status)
                 return FALSE;
             RegCloseKey(handle);
         }
 
-        if(flags & SRCLIST_USER){
-            status = RegOpenKeyExW(HKEY_CURRENT_USER,L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup",0,KEY_SET_VALUE,&handle);
-            if(status)
+        if (flags & SRCLIST_USER)
+        {
+            status = RegOpenKeyExW(
+                HKEY_CURRENT_USER, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Setup", 0, KEY_SET_VALUE, &handle);
+            if (status)
                 return FALSE;
-            status = RegSetValueExW(handle,L"Installation Sources",0,REG_MULTI_SZ,buffer,len);
+            status = RegSetValueExW(handle, L"Installation Sources", 0, REG_MULTI_SZ, buffer, len);
             RegCloseKey(handle);
-            if(status)
+            if (status)
                 return FALSE;
         }
     }
 
-    if(flags & SRCLIST_NOBROWSE)
+    if (flags & SRCLIST_NOBROWSE)
         noBrowse = TRUE;
+
+    return TRUE;
+}
