@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS CabView Shell Extension
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     FDI API wrapper
- * COPYRIGHT:   Copyright 2024 Whindmar Saksit (whindsaks@proton.me)
+ * COPYRIGHT:   Copyright 2024 Whindmar Saksit <whindsaks@proton.me>
  */
 
 #include "precomp.h"

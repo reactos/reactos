@@ -1,9 +1,9 @@
 /*
  * PROJECT:     ReactOS CabView Shell Extension
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Polish resource translation
- * TRANSLATORS: 2018-2019 Adam Słaboń (asaillen456esx@gmail.com)
- *              2020 Piotr Hetnarowicz (piotrhwz@gmail.com)
+ * PURPOSE:     Polish resource file
+ * TRANSLATORS: Copyright 2018-2019 Adam Słaboń <asaillen456esx@gmail.com>
+ *              Copyright 2020 Piotr Hetnarowicz <piotrhwz@gmail.com>
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT

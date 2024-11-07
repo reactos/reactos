@@ -1,8 +1,8 @@
 /*
  * PROJECT:     ReactOS CabView Shell Extension
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Japanese resource translation
- * COPYRIGHT:   Copyright 2018 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * PURPOSE:     Japanese resource file
+ * TRANSLATOR:  Copyright 2018 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT

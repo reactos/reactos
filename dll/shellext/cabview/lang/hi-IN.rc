@@ -1,8 +1,8 @@
 /*
  * PROJECT:     ReactOS CabView Shell Extension
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Hindi translation
- * COPYRIGHT:   Copyright 2019 Arnav Bhatt (arnavbhatt2004@gmail.com)
+ * PURPOSE:     Hindi (India) resource file
+ * TRANSLATOR:  Copyright 2019 Arnav Bhatt <arnavbhatt2004@gmail.com>
 */
 
 LANGUAGE LANG_HINDI, SUBLANG_HINDI_INDIA

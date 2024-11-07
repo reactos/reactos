@@ -1,8 +1,8 @@
 /*
  * PROJECT:     ReactOS CabView Shell Extension
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Italian resource translation
- * COPYRIGHT:   Copyright 2018 George Bișoc (george.bisoc@reactos.org)
+ * PURPOSE:     Italian resource file
+ * TRANSLATOR:  Copyright 2018 George Bișoc <george.bisoc@reactos.org>
  */
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
