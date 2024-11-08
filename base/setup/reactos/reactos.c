@@ -508,34 +508,19 @@ TypeDlgProc(
 /////////////////////////
 
                     /*
-                     * Go update only if we have available NT installations
-                     * and we choose to do so.
+                     * Repair or upgrade only if we have available
+                     * NT installations and we choose to do so.
                      */
                     if (pSetupData->NtOsInstallsList &&
                         GetNumberOfListEntries(pSetupData->NtOsInstallsList) != 0 &&
                         IsDlgButtonChecked(hwndDlg, IDC_UPDATE) == BST_CHECKED)
                     {
                         pSetupData->RepairUpdateFlag = TRUE;
+                        /* pSetupData->CurrentInstallation will be set from within IDD_UPDATEREPAIRPAGE */
 
-                        /*
-                         * Display the existing NT installations page only
-                         * if we have more than one available NT installations.
-                         */
-                        if (GetNumberOfListEntries(pSetupData->NtOsInstallsList) > 1)
-                        {
-                            /* pSetupData->CurrentInstallation will be set from within IDD_UPDATEREPAIRPAGE */
-
-                            /* Actually the best would be to dynamically insert the page only when needed */
-                            SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_UPDATEREPAIRPAGE);
-                        }
-                        else
-                        {
-                            /* Retrieve the current installation */
-                            pSetupData->CurrentInstallation =
-                                (PNTOS_INSTALLATION)GetListEntryData(GetCurrentListEntry(pSetupData->NtOsInstallsList));
-
-                            SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_DEVICEPAGE);
-                        }
+                        /* Display the existing NT installations page */
+                        /* Actually the best would be to dynamically insert the page only when needed */
+                        SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_UPDATEREPAIRPAGE);
                     }
                     else
                     {
@@ -942,8 +927,8 @@ UpgradeRepairDlgProc(
                 case PSN_WIZNEXT: /* Set the selected data */
                 {
                     /*
-                     * Go update only if we have available NT installations
-                     * and we choose to do so.
+                     * Repair or upgrade only if we have available
+                     * NT installations and we choose to do so.
                      */
                     if (!pSetupData->NtOsInstallsList ||
                         GetNumberOfListEntries(pSetupData->NtOsInstallsList) == 0)
@@ -963,6 +948,23 @@ UpgradeRepairDlgProc(
 
                     /* We perform an upgrade */
                     pSetupData->RepairUpdateFlag = TRUE;
+
+                    /* Determine the selected installation disk & partition */
+                    InstallPartition = SelectPartition(pSetupData->PartitionList,
+                                                       pSetupData->CurrentInstallation->DiskNumber,
+                                                       pSetupData->CurrentInstallation->PartitionNumber);
+                    if (!InstallPartition)
+                    {
+                        DPRINT1("RepairUpdateFlag == TRUE, SelectPartition() returned FALSE, assert!\n");
+                        ASSERT(FALSE);
+                    }
+
+                    // TODO: IsValidInstallDirectory() ??
+                    StringCchCopyW(pSetupData->USetupData.InstallationDirectory,
+                                   _countof(pSetupData->USetupData.InstallationDirectory),
+                                   pSetupData->CurrentInstallation->PathComponent);
+
+                    SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_SUMMARYPAGE);
                     return TRUE;
                 }
 
@@ -1633,6 +1635,18 @@ PCWSTR ProcArchs[] =
                     return TRUE;
                 }
 
+                case PSN_WIZBACK:
+                {
+                    /* Go back to the correct page */
+                    if (pSetupData->RepairUpdateFlag)
+                    {
+                        SetWindowLongPtrW(hwndDlg, DWLP_MSGRESULT, IDD_UPDATEREPAIRPAGE);
+                        return TRUE;
+                    }
+                    /* Otherwise, do the default action */
+                    __fallthrough;
+                }
+
                 default:
                     break;
             }
@@ -2251,6 +2265,8 @@ PrepareAndDoCopyThread(
     FSVOL_CONTEXT FsVolContext;
     COPYCONTEXT CopyContext;
     WCHAR PathBuffer[RTL_NUMBER_OF_FIELD(PARTENTRY, DeviceName) + 1];
+
+__debugbreak();
 
     /* Retrieve pointer to the global setup data */
     pSetupData = (PSETUPDATA)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);

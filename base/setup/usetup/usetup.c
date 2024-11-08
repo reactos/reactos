@@ -970,8 +970,8 @@ UpgradeRepairPage(PINPUT_RECORD Ir)
         DPRINT1("Failed to get a list of NTOS installations; continue installation...\n");
 
     /*
-     * If there is no available installation (or just a single one??) that can
-     * be updated in the list, just continue with the regular installation.
+     * If there is no available installation that can be updated
+     * in the list, just continue with the regular installation.
      */
     if (!NtOsInstallsList || GetNumberOfListEntries(NtOsInstallsList) == 0)
     {
