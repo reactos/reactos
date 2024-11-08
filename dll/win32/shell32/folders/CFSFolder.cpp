@@ -2076,6 +2076,10 @@ HRESULT WINAPI CFSFolder::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
     case SFVM_GET_CUSTOMVIEWINFO:
         hr = GetCustomViewInfo((ULONG)wParam, (SFVM_CUSTOMVIEWINFO_DATA *)lParam);
         break;
+    case SFVM_GETCOMMANDDIR:
+        if (m_sPathTarget)
+            hr = StringCchCopyW((PWSTR)lParam, wParam, m_sPathTarget);
+        break;
     }
     return hr;
 }
