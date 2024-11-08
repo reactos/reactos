@@ -156,12 +156,6 @@ GetDefaultClusterSize(LPWSTR szFs, PDWORD pClusterSize, PULARGE_INTEGER TotalNum
     return TRUE;
 }
 
-BOOL
-SH_ShowDriveProperties(WCHAR *pwszDrive, IDataObject *pDataObj)
-{
-    return SUCCEEDED(SHELL32_ShowFilesystemItemPropertiesDialogAsync(pDataObj));
-}
-
 static VOID
 InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
 {

@@ -750,10 +750,8 @@ CDrvDefExt::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
 {
     HPROPSHEETPAGE hPage;
 
-    hPage = SH_CreatePropertySheetPageEx(IDD_DRIVE_PROPERTIES,
-                                       GeneralPageProc,
-                                       (LPARAM)this,
-                                       NULL, &PropSheetPageLifetimeCallback<CDrvDefExt>);
+    hPage = SH_CreatePropertySheetPageEx(IDD_DRIVE_PROPERTIES, GeneralPageProc, (LPARAM)this,
+                                         NULL, &PropSheetPageLifetimeCallback<CDrvDefExt>);
     HRESULT hr = AddPropSheetPage(hPage, pfnAddPage, lParam);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;

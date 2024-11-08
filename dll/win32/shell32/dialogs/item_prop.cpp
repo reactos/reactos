@@ -79,7 +79,7 @@ struct ShellPropSheetDialog
         if (pDO)
             hr = CoMarshalInterThreadInterfaceInStream(IID_IDataObject, pDO, &pData->pObjStream);
 
-        UINT flags = CTF_COINIT | CTF_PROCESS_REF | CTF_INSIST;
+        const UINT flags = CTF_COINIT | CTF_PROCESS_REF | CTF_INSIST;
         if (SUCCEEDED(hr) && !SHCreateThread(ShowPropertiesThread, pData, flags, NULL))
         {
             if (pData->pObjStream)
@@ -93,7 +93,7 @@ struct ShellPropSheetDialog
 
     static DWORD CALLBACK ShowPropertiesThread(LPVOID Param)
     {
-        DATA *pData = (DATA*) Param;
+        DATA *pData = (DATA*)Param;
         CComPtr<IDataObject> pDO;
         if (pData->pObjStream)
             CoGetInterfaceAndReleaseStream(pData->pObjStream, IID_PPV_ARG(IDataObject, &pDO));
@@ -106,22 +106,20 @@ struct ShellPropSheetDialog
 static void CALLBACK
 FSFolderItemPropDialogInitCallback(LPCWSTR InitString, IDataObject *pDO, HKEY *hKeys, UINT *cKeys)
 {
-    // Add file-type specific pages
     UNREFERENCED_PARAMETER(InitString);
     CDataObjectHIDA cida(pDO);
     if (SUCCEEDED(cida.hr()) && cida->cidl)
     {
         PCUITEMID_CHILD pidl = HIDA_GetPIDLItem(cida, 0);
-        AddFSClassKeysToArray(1, &pidl, hKeys, cKeys);
+        AddFSClassKeysToArray(1, &pidl, hKeys, cKeys); // Add file-type specific pages
     }
 }
 
 static void CALLBACK
 ClassPropDialogInitCallback(LPCWSTR InitString, IDataObject *pDO, HKEY *hKeys, UINT *cKeys)
 {
-    // Add pages from HKCR\%ProgId% (with shellex\PropertySheetHandlers appended later)
     UNREFERENCED_PARAMETER(pDO);
-    AddClassKeyToArray(InitString, hKeys, cKeys);
+    AddClassKeyToArray(InitString, hKeys, cKeys); // Add pages from HKCR\%ProgId% (with shellex\PropertySheetHandlers appended later)
 }
 
 HRESULT
@@ -163,8 +161,7 @@ SHELL32_ShowShellExtensionProperties(const CLSID *pClsid, IDataObject *pDO)
 HRESULT
 SHELL_ShowItemIDListProperties(LPCITEMIDLIST pidl)
 {
-    if (!pidl)
-        return E_INVALIDARG;
+    assert(pidl);
 
     CComHeapPtr<ITEMIDLIST> alloc;
     if (IS_INTRESOURCE(pidl))

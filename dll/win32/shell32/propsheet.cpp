@@ -52,7 +52,9 @@ AddPropSheetHandlerPages(REFCLSID clsid, IDataObject *pDO, HKEY hkeyProgID, PROP
     {
         UINT OldCount = psh.nPages;
         hr = SheetExt->AddPages(AddPropSheetPageCallback, (LPARAM)&psh);
-        if (hr > 0) // The returned index is one-based (relative to this extension).
+        // The returned index is one-based (relative to this extension).
+        // See https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-ishellpropsheetext-addpages
+        if (hr > 0)
         {
             hr += OldCount;
             psh.nStartPage = hr - 1;
@@ -68,7 +70,7 @@ SHELL_CreatePropSheetStubWindow(CStubWindow32 &stub, PCIDLIST_ABSOLUTE pidl, con
     if (!pidl || FAILED(SHGetNameFromIDList(pidl, SIGDN_DESKTOPABSOLUTEPARSING, &Path)))
         Path = NULL; // If we can't get a path, we simply will not be able to reuse this window
 
-    HRESULT hr = CStubWindow32::CreateStub(stub, CStubWindow32::TYPE_PROPERTYSHEET, Path, pPt);
+    HRESULT hr = stub.CreateStub(CStubWindow32::TYPE_PROPERTYSHEET, Path, pPt);
     SHFree(Path);
     UINT flags = SHGFI_ICON | SHGFI_ADDOVERLAYS;
     SHFILEINFO sfi;
@@ -132,7 +134,7 @@ SHELL32_OpenPropSheet(LPCWSTR pszCaption, HKEY *ahKeys, UINT cKeys,
 
     for (UINT i = 0; i < cKeys; ++i)
     {
-        // Note: We can't use SHCreatePropSheetExtArrayEx because we need the AddPages return value.
+        // Note: We can't use SHCreatePropSheetExtArrayEx because we need the AddPages() return value (see AddPropSheetHandlerPages).
         HKEY hKey;
         if (RegOpenKeyExW(ahKeys[i], L"shellex\\PropertySheetHandlers", 0, KEY_ENUMERATE_SUB_KEYS, &hKey))
             continue;
@@ -175,4 +177,35 @@ SHOpenPropSheetW(
 {
     UNREFERENCED_PARAMETER(pShellBrowser); /* MSDN says "Not used". */
     return SHELL32_OpenPropSheet(pszCaption, ahKeys, cKeys, pclsidDefault, pDataObject, pszStartPage);
+}
+
+/*************************************************************************
+ * SH_CreatePropertySheetPage [Internal]
+ *
+ * creates a property sheet page from a resource id
+ */
+HPROPSHEETPAGE
+SH_CreatePropertySheetPageEx(WORD wDialogId, DLGPROC pfnDlgProc, LPARAM lParam,
+                             LPCWSTR pwszTitle, LPFNPSPCALLBACK Callback)
+{
+    PROPSHEETPAGEW Page = { sizeof(Page), PSP_DEFAULT, shell32_hInstance };
+    Page.pszTemplate = MAKEINTRESOURCE(wDialogId);
+    Page.pfnDlgProc = pfnDlgProc;
+    Page.lParam = lParam;
+    Page.pszTitle = pwszTitle;
+    Page.pfnCallback = Callback;
+
+    if (pwszTitle)
+        Page.dwFlags |= PSP_USETITLE;
+
+    if (Callback)
+        Page.dwFlags |= PSP_USECALLBACK;
+
+    return CreatePropertySheetPageW(&Page);
+}
+
+HPROPSHEETPAGE
+SH_CreatePropertySheetPage(WORD wDialogId, DLGPROC pfnDlgProc, LPARAM lParam, LPCWSTR pwszTitle)
+{
+    return SH_CreatePropertySheetPageEx(wDialogId, pfnDlgProc, lParam, pwszTitle, NULL);
 }

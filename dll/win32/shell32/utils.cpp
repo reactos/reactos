@@ -9,23 +9,23 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-static HWND
-SHELL_FindStubWindow(UINT Type, LPCWSTR Path)
+HWND
+CStubWindow32::FindStubWindow(UINT Type, LPCWSTR Path)
 {
     for (HWND hWnd, hWndAfter = NULL;;)
     {
         hWnd = hWndAfter = FindWindowExW(NULL, hWndAfter, CSTUBWINDOW32_CLASSNAME, Path);
         if (!hWnd || !Path)
             return NULL;
-        if (GetPropW(hWnd, CStubWindow32::GetTypePropName()) == ULongToHandle(Type))
+        if (GetPropW(hWnd, GetTypePropName()) == ULongToHandle(Type))
             return hWnd;
     }
 }
 
 HRESULT
-CStubWindow32::CreateStub(CStubWindow32 &stub, UINT Type, LPCWSTR Path, const POINT *pPt)
+CStubWindow32::CreateStub(UINT Type, LPCWSTR Path, const POINT *pPt)
 {
-    if (HWND hWnd = SHELL_FindStubWindow(Type, Path))
+    if (HWND hWnd = FindStubWindow(Type, Path))
     {
         ::SwitchToThisWindow(::GetLastActivePopup(hWnd), TRUE);
         return HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS);
@@ -33,12 +33,12 @@ CStubWindow32::CreateStub(CStubWindow32 &stub, UINT Type, LPCWSTR Path, const PO
     RECT rcPosition = { pPt ? pPt->x : CW_USEDEFAULT, pPt ? pPt->y : CW_USEDEFAULT, 0, 0 };
     DWORD Style = WS_DISABLED | WS_CLIPSIBLINGS | WS_CAPTION;
     DWORD ExStyle = WS_EX_WINDOWEDGE | WS_EX_APPWINDOW;
-    if (!stub.Create(NULL, rcPosition, Path, Style, ExStyle))
+    if (!Create(NULL, rcPosition, Path, Style, ExStyle))
     {
         ERR("StubWindow32 creation failed\n");
         return E_FAIL;
     }
-    ::SetPropW(stub, GetTypePropName(), ULongToHandle(Type));
+    ::SetPropW(*this, GetTypePropName(), ULongToHandle(Type));
     return S_OK;
 }
 

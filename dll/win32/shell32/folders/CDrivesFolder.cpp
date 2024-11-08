@@ -188,10 +188,10 @@ static BOOL DoEjectDrive(const WCHAR *physical, UINT nDriveType, INT *pnStringID
 
 static DWORD CALLBACK DoFormatDriveThread(LPVOID args)
 {
-    UINT nDrive = PtrToUlong(args), StubType = CStubWindow32::TYPE_FORMATDRIVE;
+    UINT nDrive = PtrToUlong(args);
     WCHAR szPath[] = { LOWORD(L'A' + nDrive), L'\0' }; // Arbitrary, just needs to include nDrive
     CStubWindow32 stub;
-    HRESULT hr = CStubWindow32::CreateStub(stub, StubType, szPath, NULL);
+    HRESULT hr = stub.CreateStub(CStubWindow32::TYPE_FORMATDRIVE, szPath, NULL);
     if (FAILED(hr))
         return hr;
     SHFormatDrive(stub, nDrive, SHFMT_ID_DEFAULT, 0);
@@ -294,7 +294,7 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
         if (wParam == DFM_CMD_PROPERTIES)
         {
             ATLASSERT(pdtobj);
-            hr = SH_ShowDriveProperties(wszBuf, pdtobj) ? S_OK : E_UNEXPECTED;
+            hr = SHELL32_ShowFilesystemItemPropertiesDialogAsync(pdtobj);
             // Not setting nStringID because SHOpenPropSheet already displayed an error box
         }
         else

@@ -194,7 +194,6 @@ BOOL SHELL_IsShortcut(LPCITEMIDLIST) DECLSPEC_HIDDEN;
 HPROPSHEETPAGE SH_CreatePropertySheetPage(WORD wDialogId, DLGPROC pfnDlgProc, LPARAM lParam, LPCWSTR pwszTitle);
 HPROPSHEETPAGE SH_CreatePropertySheetPageEx(WORD wDialogId, DLGPROC pfnDlgProc, LPARAM lParam,
                                             LPCWSTR pwszTitle, LPFNPSPCALLBACK Callback);
-BOOL SH_ShowDriveProperties(WCHAR *drive, IDataObject *pDataObj);
 LPWSTR SH_FormatFileSizeWithBytes(PULARGE_INTEGER lpQwSize, LPWSTR pszBuf, UINT cchBuf);
 
 HRESULT WINAPI DoRegisterServer(void);

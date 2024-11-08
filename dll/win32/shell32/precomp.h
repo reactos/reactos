@@ -197,6 +197,7 @@ static inline UINT SeeFlagsToCmicFlags(UINT flags)
 #define CSTUBWINDOW32_CLASSNAME _T("StubWindow32")
 class CStubWindow32 : public CWindowImpl<CStubWindow32>
 {
+    static HWND FindStubWindow(UINT Type, LPCWSTR Path);
 public:
     DECLARE_WND_CLASS_EX(CSTUBWINDOW32_CLASSNAME, 0, COLOR_WINDOWTEXT)
     enum {
@@ -204,7 +205,7 @@ public:
         TYPE_PROPERTYSHEET,
     };
     static LPCWSTR GetTypePropName() { return L"StubType"; }
-    static HRESULT CreateStub(CStubWindow32 &stub, UINT Type, LPCWSTR Path, const POINT *pPt);
+    HRESULT CreateStub(UINT Type, LPCWSTR Path, const POINT *pPt);
 
     LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
     {

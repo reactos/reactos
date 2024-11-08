@@ -290,40 +290,6 @@ SH_FormatFileSizeWithBytes(const PULARGE_INTEGER lpQwSize, LPWSTR pwszResult, UI
     return pwszResult;
 }
 
-/*************************************************************************
- *
- * SH_CreatePropertySheetPage [Internal]
- *
- * creates a property sheet page from a resource id
- *
- */
-
-HPROPSHEETPAGE
-SH_CreatePropertySheetPageEx(WORD wDialogId, DLGPROC pfnDlgProc, LPARAM lParam,
-                             LPCWSTR pwszTitle, LPFNPSPCALLBACK Callback)
-{
-    PROPSHEETPAGEW Page = { sizeof(Page), PSP_DEFAULT, shell32_hInstance };
-    Page.pszTemplate = MAKEINTRESOURCE(wDialogId);
-    Page.pfnDlgProc = pfnDlgProc;
-    Page.lParam = lParam;
-    Page.pszTitle = pwszTitle;
-    Page.pfnCallback = Callback;
-
-    if (pwszTitle)
-        Page.dwFlags |= PSP_USETITLE;
-
-    if (Callback)
-        Page.dwFlags |= PSP_USECALLBACK;
-
-    return CreatePropertySheetPageW(&Page);
-}
-
-HPROPSHEETPAGE
-SH_CreatePropertySheetPage(WORD wDialogId, DLGPROC pfnDlgProc, LPARAM lParam, LPCWSTR pwszTitle)
-{
-    return SH_CreatePropertySheetPageEx(wDialogId, pfnDlgProc, lParam, pwszTitle, NULL);
-}
-
 VOID
 CFileDefExt::InitOpensWithField(HWND hwndDlg)
 {
@@ -1327,11 +1293,8 @@ CFileDefExt::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
     HPROPSHEETPAGE hPage;
     WORD wResId = m_bDir ? IDD_FOLDER_PROPERTIES : IDD_FILE_PROPERTIES;
 
-    hPage = SH_CreatePropertySheetPageEx(wResId,
-                                       GeneralPageProc,
-                                       (LPARAM)this,
-                                       NULL,
-                                       &PropSheetPageLifetimeCallback<CFileDefExt>);
+    hPage = SH_CreatePropertySheetPageEx(wResId, GeneralPageProc, (LPARAM)this, NULL,
+                                         &PropSheetPageLifetimeCallback<CFileDefExt>);
     HRESULT hr = AddPropSheetPage(hPage, pfnAddPage, lParam);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
