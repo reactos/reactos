@@ -843,6 +843,9 @@ DWORD WINAPI RetreiveFileSecurity(LPCWSTR lpFileName,
  * for more information.
  */
 DWORD GlobalSetupFlags = 0;
+BOOLEAN noBrowse = FALSE;
+PVOID *srclist_temporary_sources = NULL;
+UINT srclist_temporary_sources_count = 0;
 
 /***********************************************************************
  *		pSetupGetGlobalFlags  (SETUPAPI.@)
