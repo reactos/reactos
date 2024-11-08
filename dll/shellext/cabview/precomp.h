@@ -22,10 +22,6 @@
 #include <ntquery.h>
 #include <fdi.h>
 
-#ifndef DIAMONDAPI
-#define DIAMONDAPI __cdecl
-#endif
-
 #ifndef SFGAO_SYSTEM
 #define SFGAO_SYSTEM 0x00001000
 #endif

@@ -37,6 +37,35 @@ static const struct FOLDERCOLUMN
     { IDS_COL_ATT, LVCFMT_RIGHT, 10, SHCOLSTATE_TYPE_STR, &FMTID_Storage, PID_STG_ATTRIBUTES },
 };
 
+#include <pshpack1.h>
+struct CABITEM
+{
+    WORD cb;
+    WORD Unknown; // Not sure what Windows uses this for, we always store 0
+    UINT Size;
+    WORD Date, Time; // DOS
+    WORD Attrib;
+    WORD NameOffset;
+    WCHAR Path[ANYSIZE_ARRAY];
+
+#if FLATFOLDER
+    inline bool IsFolder() const { return false; }
+#else
+    inline BOOL IsFolder() const { return Attrib & FILE_ATTRIBUTE_DIRECTORY; }
+#endif
+    enum { FSATTS = FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM |
+                    FILE_ATTRIBUTE_ARCHIVE | FILE_ATTRIBUTE_DIRECTORY };
+    WORD GetFSAttributes() const { return Attrib & FSATTS; }
+    LPCWSTR GetName() const { return Path + NameOffset; }
+
+    template<class PIDL> static CABITEM* Validate(PIDL pidl)
+    {
+        CABITEM *p = (CABITEM*)pidl;
+        return p && p->cb > FIELD_OFFSET(CABITEM, Path[1]) && p->Unknown == 0 ? p : NULL;
+    }
+};
+#include <poppack.h>
+
 static CABITEM* CreateItem(LPCWSTR Path, UINT Attrib, UINT Size, UINT DateTime)
 {
     const SIZE_T len = lstrlenW(Path), cb = FIELD_OFFSET(CABITEM, Path[len + 1]);
@@ -151,9 +180,15 @@ int CEnumIDList::FindNamedItem(PCUITEMID_CHILD pidl) const
     return -1;
 }
 
+struct FILLCALLBACKDATA
+{
+    CEnumIDList *pEIDL;
+    SHCONTF ContF;
+};
+
 static HRESULT CALLBACK EnumFillCallback(EXTRACTCALLBACKMSG msg, const EXTRACTCALLBACKDATA &ecd, LPVOID cookie)
 {
-    CEnumIDList *pEIDL = (CEnumIDList*)(((SIZE_T*)cookie)[0]);
+    FILLCALLBACKDATA &data = *(FILLCALLBACKDATA*)cookie;
 
     switch ((UINT)msg)
     {
@@ -161,15 +196,14 @@ static HRESULT CALLBACK EnumFillCallback(EXTRACTCALLBACKMSG msg, const EXTRACTCA
         {
             const FDINOTIFICATION &fdin = *ecd.pfdin;
             HRESULT hr = S_FALSE;
-            SHCONTF contf = (SHCONTF)(((SIZE_T*)cookie)[2]);
             SFGAOF attr = MapFSToSFAttributes(fdin.attribs & CABITEM::FSATTS);
-            if (IncludeInEnumIDList(contf, attr))
+            if (IncludeInEnumIDList(data.ContF, attr))
             {
                 UINT datetime = MAKELONG(fdin.time, fdin.date);
                 CABITEM *item = CreateItem(fdin.psz1, fdin.attribs, fdin.cb, datetime);
                 if (!item)
                     return E_OUTOFMEMORY;
-                if (FAILED(hr = pEIDL->Append((LPCITEMIDLIST)item)))
+                if (FAILED(hr = data.pEIDL->Append((LPCITEMIDLIST)item)))
                     SHFree(item);
             }
             return SUCCEEDED(hr) ? S_FALSE : hr; // Never extract
@@ -180,7 +214,7 @@ static HRESULT CALLBACK EnumFillCallback(EXTRACTCALLBACKMSG msg, const EXTRACTCA
 
 HRESULT CEnumIDList::Fill(LPCWSTR path, HWND hwnd, SHCONTF contf)
 {
-    SIZE_T data[] = { (SIZE_T)this, (SIZE_T)hwnd, contf };
+    FILLCALLBACKDATA data = { this, contf };
     return ExtractCabinet(path, NULL, EnumFillCallback, &data);
 }
 
@@ -243,11 +277,13 @@ IFACEMETHODIMP CCabFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags,
 
 HRESULT CCabFolder::GetItemDetails(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd, VARIANT *pv)
 {
+    HRESULT hr = E_FAIL;
     STRRET *psr = &psd->str, srvar;
     CABITEM *item = CABITEM::Validate(pidl);
-    HRESULT hr = E_FAIL;
+    if (!item)
+        return E_INVALIDARG;
 
-    switch (item ? iColumn : -1)
+    switch (iColumn)
     {
         case COL_NAME:
         {
@@ -376,7 +412,7 @@ IFACEMETHODIMP CCabFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHEL
         psd->fmt = g_Columns[iColumn].LvcFmt;
         psd->cxChar = g_Columns[iColumn].LvcChars;
         WCHAR buf[MAX_PATH];
-        if (LoadStringW(g_hInst, g_Columns[iColumn].TextId, buf, _countof(buf)))
+        if (LoadStringW(_AtlBaseModule.GetResourceInstance(), g_Columns[iColumn].TextId, buf, _countof(buf)))
             return StrTo(buf, psd->str);
         return E_FAIL;
     }
@@ -456,20 +492,16 @@ HRESULT CCabFolder::CompareID(LPARAM lParam, PCUITEMID_CHILD pidl1, PCUITEMID_CH
             {
                 if (col < COLCOUNT)
                 {
-                    SHELLDETAILS sd1, sd2;
-                    sd2.str.uType = STRRET_CSTR;
-                    if (SUCCEEDED(hr = GetDetailsOf(pidl1, col, &sd1)) && SUCCEEDED(hr = GetDetailsOf(pidl2, col, &sd2)))
+                    PWSTR str1, str2;
+                    if (SUCCEEDED(hr = ::GetDetailsOf(*this, pidl1, col, str1)))
                     {
-                        LPWSTR s1 = NULL, s2 = NULL;
-                        if (SUCCEEDED(hr = StrRetToStrW(&sd1.str, pidl1, &s1)) && SUCCEEDED(hr = StrRetToStrW(&sd2.str, pidl2, &s2)))
+                        if (SUCCEEDED(hr = ::GetDetailsOf(*this, pidl2, col, str2)))
                         {
-                            ret = StrCmpLogicalW(s1, s2);
-                            SHFree(s2);
-                            sd2.str.uType = STRRET_CSTR;
+                            ret = StrCmpLogicalW(str1, str2);
+                            SHFree(str2);
                         }
-                        SHFree(s1);
+                        SHFree(str1);
                     }
-                    FreeStrRet(sd2.str);
                 }
                 else
                 {
@@ -484,7 +516,7 @@ HRESULT CCabFolder::CompareID(LPARAM lParam, PCUITEMID_CHILD pidl1, PCUITEMID_CH
 IFACEMETHODIMP CCabFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
     C_ASSERT(FLATFOLDER);
-    if (!ILIsSingle(pidl1) || !ILIsSingle(pidl2))
+    if (!pidl1 || !ILIsSingle(pidl1) || !pidl2 || !ILIsSingle(pidl2))
         return E_UNEXPECTED;
 
     return CompareID(lParam, pidl1, pidl2);
@@ -617,12 +649,12 @@ static int CALLBACK FolderBrowseCallback(HWND hwnd, UINT uMsg, LPARAM lParam, LP
     {
         case BFFM_INITIALIZED:
         {
-            if (LoadStringW(g_hInst, IDS_EXTRACT, buf, _countof(buf)))
+            if (LoadStringW(_AtlBaseModule.GetResourceInstance(), IDS_EXTRACT, buf, _countof(buf)))
             {
                 // Remove leading and trailing dots
                 WCHAR *s = buf, *e = s + lstrlenW(s);
                 while (*s == '.') ++s;
-                while (e > buf && e[-1] == '.') *--e = UNICODE_NULL;
+                while (e > s && e[-1] == '.') *--e = UNICODE_NULL;
                 SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)s);
                 SendMessageW(GetDlgItem(hwnd, IDOK), WM_SETTEXT, 0, (LPARAM)s);
             }
@@ -745,11 +777,7 @@ static void Free(EXTRACTFILESDATA &data)
         data.pPD->StopProgressDialog();
         data.pPD->Release();
     }
-    if (data.pCIDA)
-    {
-        GlobalUnlock(data.pCIDA);
-        ReleaseStgMedium(&data.cidamedium);
-    }
+    CDataObjectHIDA::DestroyCIDA(data.pCIDA, data.cidamedium);
     IUnknown_Set((IUnknown**)&data.pDO, NULL);
     IUnknown_Set((IUnknown**)&data.pMarshalDO, NULL);
     IUnknown_Set((IUnknown**)&data.pLifetimeCF, NULL);
@@ -777,13 +805,7 @@ static DWORD CALLBACK ExtractFilesThread(LPVOID pParam)
         data.pMarshalDO = NULL;
         if (SUCCEEDED(hr))
         {
-            CLIPFORMAT cfhida = (CLIPFORMAT)RegisterClipboardFormatW(CFSTR_SHELLIDLISTW);
-            FORMATETC fmt = { cfhida, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
-            if (SUCCEEDED(hr = data.pDO->GetData(&fmt, &data.cidamedium)))
-            {
-                if ((data.pCIDA = (CIDA*)GlobalLock(data.cidamedium.hGlobal)) == NULL)
-                    hr = E_OUTOFMEMORY;
-            }
+            hr = CDataObjectHIDA::CreateCIDA(data.pDO, &data.pCIDA, data.cidamedium);
         }
     }
     if (SUCCEEDED(hr))

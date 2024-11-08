@@ -85,6 +85,15 @@ inline HRESULT StrRetToVariantBSTR(STRRET *psr, VARIANT &v)
     return hr;
 }
 
+inline HRESULT GetDetailsOf(IShellFolder2 &Folder, PCUITEMID_CHILD pidl, UINT Column, PWSTR &String)
+{
+    SHELLDETAILS details;
+    HRESULT hr = Folder.GetDetailsOf(pidl, Column, &details);
+    if (SUCCEEDED(hr))
+        hr = StrRetToStrW(&details.str, pidl, &String);
+    return hr;
+}
+
 inline HRESULT InsertMenuItem(QCMINFO &qcmi, UINT &Pos, UINT &TrackId, UINT Id, UINT ResId, int State = 0)
 {
     UINT flags = 0;
@@ -94,7 +103,7 @@ inline HRESULT InsertMenuItem(QCMINFO &qcmi, UINT &Pos, UINT &TrackId, UINT Id, 
         return E_FAIL;
     else if (ResId == (UINT)-1)
         flags |= MF_SEPARATOR;
-    else if (!LoadStringW(g_hInst, ResId, string, _countof(string)))
+    else if (!LoadStringW(_AtlBaseModule.GetResourceInstance(), ResId, string, _countof(string)))
         return E_FAIL;
 
     MENUITEMINFOW mii;

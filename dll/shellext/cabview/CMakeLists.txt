@@ -1,5 +1,5 @@
 
-spec2def(cabview.dll cabview.spec ADD_IMPORTLIB)
+spec2def(cabview.dll cabview.spec)
 
 list(APPEND SOURCE
     cabview.cpp

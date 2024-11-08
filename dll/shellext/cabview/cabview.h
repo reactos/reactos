@@ -12,7 +12,6 @@
 #define FLATFOLDER TRUE
 
 EXTERN_C const GUID CLSID_CabFolder;
-extern HINSTANCE g_hInst;
 
 enum EXTRACTCALLBACKMSG { ECM_BEGIN, ECM_FILE, ECM_PREPAREPATH, ECM_ERROR };
 struct EXTRACTCALLBACKDATA
@@ -23,36 +22,6 @@ struct EXTRACTCALLBACKDATA
 };
 typedef HRESULT (CALLBACK*EXTRACTCALLBACK)(EXTRACTCALLBACKMSG msg, const EXTRACTCALLBACKDATA &data, LPVOID cookie);
 HRESULT ExtractCabinet(LPCWSTR cab, LPCWSTR destination, EXTRACTCALLBACK callback, LPVOID cookie);
-
-
-#include <pshpack1.h>
-struct CABITEM
-{
-    WORD cb;
-    WORD Unknown; // Not sure what Windows uses this for, we always store 0
-    UINT Size;
-    WORD Date, Time; // DOS
-    WORD Attrib;
-    WORD NameOffset;
-    WCHAR Path[ANYSIZE_ARRAY];
-
-#if FLATFOLDER
-    inline bool IsFolder() const { return false; }
-#else
-    inline BOOL IsFolder() const { return Attrib & FILE_ATTRIBUTE_DIRECTORY; }
-#endif
-    enum { FSATTS = FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM |
-                    FILE_ATTRIBUTE_ARCHIVE | FILE_ATTRIBUTE_DIRECTORY };
-    WORD GetFSAttributes() const { return Attrib & FSATTS; }
-    LPCWSTR GetName() const { return Path + NameOffset; }
-
-    template<class PIDL> static CABITEM* Validate(PIDL pidl)
-    {
-        CABITEM *p = (CABITEM*)pidl;
-        return p && p->cb > FIELD_OFFSET(CABITEM, Path[1]) && p->Unknown == 0 ? p : NULL;
-    }
-};
-#include <poppack.h>
 
 class CEnumIDList :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -132,11 +101,8 @@ public:
 
     static CEnumIDList* CreateInstance()
     {
-        CComObject<CEnumIDList>* obj;
-        if (FAILED(obj->CreateInstance(&obj)))
-            return NULL;
-        obj->AddRef();
-        return obj;
+        CComPtr<CEnumIDList> obj;
+        return SUCCEEDED(ShellObjectCreator(obj)) ? obj.Detach() : NULL;
     }
 
     DECLARE_NO_REGISTRY()
@@ -157,14 +123,9 @@ class CCabFolder :
 {
 protected:
     CComHeapPtr<ITEMIDLIST> m_CurDir;
-    HWND m_ShellViewWindow;
+    HWND m_ShellViewWindow = NULL;
 
 public:
-
-    CCabFolder() : m_ShellViewWindow(NULL)
-    {
-    }
-
     HRESULT ExtractFilesUI(HWND hWnd, IDataObject *pDO);
     HRESULT GetItemDetails(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd, VARIANT *pv);
     int MapSCIDToColumn(const SHCOLUMNID &scid);

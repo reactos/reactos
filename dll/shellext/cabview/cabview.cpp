@@ -10,8 +10,7 @@
 #include <initguid.h>
 DEFINE_GUID(CLSID_CabFolder, 0x0CD7A5C0,0x9F37,0x11CE,0xAE,0x65,0x08,0x00,0x2B,0x2E,0x12,0x62);
 
-class CCabViewModule : public CComModule { } g_Module;
-HINSTANCE g_hInst;
+CComModule g_Module;
 
 BEGIN_OBJECT_MAP(ObjectMap)
     OBJECT_ENTRY(CLSID_CabFolder, CCabFolder)
@@ -23,7 +22,6 @@ EXTERN_C BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReser
     {
         case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(hInstance);
-            g_hInst = hInstance;
             g_Module.Init(ObjectMap, hInstance, NULL);
             break;
     }
@@ -58,15 +56,11 @@ STDAPI DllRegisterServer()
 
 STDAPI DllUnregisterServer()
 {
-    HRESULT hr;
-
-    hr = g_Module.DllUnregisterServer(FALSE);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    hr = g_Module.UpdateRegistryFromResource(IDR_FOLDER, FALSE, NULL);
-    if (FAILED(hr))
-        return hr;
-
+    HRESULT hr1 = g_Module.DllUnregisterServer(FALSE);
+    HRESULT hr2 = g_Module.UpdateRegistryFromResource(IDR_FOLDER, FALSE, NULL);
+    if (FAILED_UNEXPECTEDLY(hr1))
+        return hr1;
+    if (FAILED_UNEXPECTEDLY(hr2))
+        return hr2;
     return S_OK;
 }
