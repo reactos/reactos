@@ -82,24 +82,20 @@ _CRT_BEGIN_C_HEADER
 #endif
 
 #if _CRT_FUNCTIONS_REQUIRED
-    // This function must not be inlined into callers to avoid ODR violations.  The
-    // static local variable has different names in C and in C++ translation units.
+    __declspec(selectany) unsigned __int64 __local_stdio_printf_options_storage;
     _Check_return_ _Ret_notnull_
     _CRT_INLINE_PURE_SECURITYCRITICAL_ATTRIBUTE
-    __declspec(noinline) __inline unsigned __int64* __CRTDECL __local_stdio_printf_options(void)
+    __inline unsigned __int64* __CRTDECL __local_stdio_printf_options(void)
     {
-        static unsigned __int64 _OptionsStorage;
-        return &_OptionsStorage;
+        return &__local_stdio_printf_options_storage;
     }
 
-    // This function must not be inlined into callers to avoid ODR violations.  The
-    // static local variable has different names in C and in C++ translation units.
+    __declspec(selectany) unsigned __int64 __local_stdio_scanf_options_storage;
     _Check_return_ _Ret_notnull_
     _CRT_INLINE_PURE_SECURITYCRITICAL_ATTRIBUTE
-    __declspec(noinline) __inline unsigned __int64* __CRTDECL __local_stdio_scanf_options(void)
+    __inline unsigned __int64* __CRTDECL __local_stdio_scanf_options(void)
     {
-        static unsigned __int64 _OptionsStorage;
-        return &_OptionsStorage;
+        return &__local_stdio_scanf_options_storage;
     }
 #endif
 
