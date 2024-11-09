@@ -62,7 +62,7 @@ static HRESULT SHELL32_AssocGetExtensionDescription(PCWSTR DotExt, PWSTR Buf, UI
     }
     // No information in the registry, default to "UPPERCASEEXT File"
     WCHAR ext[MAX_PATH + 33];
-    if (LCMapString(LOCALE_USER_DEFAULT, LCMAP_UPPERCASE, ++DotExt, -1, ext, _countof(ext)))
+    if (LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_UPPERCASE, ++DotExt, -1, ext, _countof(ext)))
         DotExt = ext;
     return GetExtensionDefaultDescription(DotExt, Buf, cchBuf);
 }

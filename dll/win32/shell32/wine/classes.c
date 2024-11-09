@@ -46,9 +46,15 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #define MAX_EXTENSION_LENGTH 20 // FIXME: The limit is 254?
 
+static LONG GetRegString(HKEY hKey, PCWSTR SubKey, PCWSTR Name, PWSTR Buffer, UINT cchBuf)
+{
+    DWORD cb = sizeof(*Buffer) * cchBuf;
+    return RegGetValueW(hKey, SubKey, Name, RRF_RT_REG_SZ, NULL, Buffer, &cb);
+}
+
 HRESULT HCR_GetProgIdKeyOfExtension(PCWSTR szExtension, PHKEY phKey, BOOL AllowFallback)
 {
-    LONG err, cb;
+    LONG err;
     WCHAR ext[max(1 + MAX_EXTENSION_LENGTH + 1, MAX_PATH)];
     WCHAR progid[MAX_PATH];
     if (szExtension[0] != '.')
@@ -57,8 +63,7 @@ HRESULT HCR_GetProgIdKeyOfExtension(PCWSTR szExtension, PHKEY phKey, BOOL AllowF
         lstrcpynW(ext + 1, szExtension, _countof(ext) - 1);
         szExtension = ext;
     }
-    cb = sizeof(progid);
-    err = RegQueryValueW(HKEY_CLASSES_ROOT, szExtension, progid, &cb);
+    err = GetRegString(HKEY_CLASSES_ROOT, szExtension, NULL, progid, _countof(progid));
     if (!err && progid[0] != UNICODE_NULL)
     {
         err = RegOpenKeyExW(HKEY_CLASSES_ROOT, progid, 0, KEY_READ, phKey);

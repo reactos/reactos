@@ -11,7 +11,7 @@
 #define UNIQUEEXT L"ABC123XYZ"
 #define my_ok_all_flags(val, flags) ok_eq_hex((val) & (flags), (flags))
 
-static DWORD_PTR SHGFI(LPCWSTR Path, SHFILEINFOW &Info, UINT Flags, UINT Attributes = 0)
+static DWORD_PTR SHGFI(PCWSTR Path, SHFILEINFOW &Info, UINT Flags, UINT Attributes = 0)
 {
     return SHGetFileInfoW(Path, Attributes, &Info, sizeof(Info), Flags);
 }
