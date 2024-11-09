@@ -1640,39 +1640,29 @@ MmMapLockedPagesWithReservedMapping(IN PVOID MappingAddress,
 
     ASSERT(Mdl->ByteCount != 0);
 
-    //
     // Get the list of pages and count
-    //
     MdlPages = MmGetMdlPfnArray(Mdl);
     PageCount = ADDRESS_AND_SIZE_TO_SPAN_PAGES(MmGetMdlVirtualAddress(Mdl),
                                                Mdl->ByteCount);
     LastPage = MdlPages + PageCount;
 
-    //
     // Sanity checks
-    //
     ASSERT((Mdl->MdlFlags & (MDL_MAPPED_TO_SYSTEM_VA |
                              MDL_SOURCE_IS_NONPAGED_POOL |
                              MDL_PARTIAL_HAS_BEEN_MAPPED)) == 0);
     ASSERT((Mdl->MdlFlags & (MDL_PAGES_LOCKED | MDL_PARTIAL)) != 0);
 
-    //
     // Get the correct cache type
-    //
     IsIoMapping = (Mdl->MdlFlags & MDL_IO_SPACE) != 0;
     CacheAttribute = MiPlatformCacheAttributes[IsIoMapping][CacheType];
 
-    //
     // Get the first PTE we reserved
-    //
     ASSERT(MappingAddress);
     PointerPte = MiAddressToPte(MappingAddress) - 2;
     ASSERT(!PointerPte[0].u.Hard.Valid &&
            !PointerPte[1].u.Hard.Valid);
 
-    //
     // Verify that the pool tag matches
-    //
     TempPte.u.Long = PoolTag;
     TempPte.u.Hard.Valid = 0;
     if (PointerPte[1].u.Long != TempPte.u.Long)
@@ -1684,9 +1674,7 @@ MmMapLockedPagesWithReservedMapping(IN PVOID MappingAddress,
                      PointerPte[1].u.Long);
     }
 
-    //
     // We must have a size, and our helper PTEs must be invalid
-    //
     if (PointerPte[0].u.List.NextEntry < 3)
     {
         KeBugCheckEx(SYSTEM_PTE_MISUSE,
@@ -1696,9 +1684,7 @@ MmMapLockedPagesWithReservedMapping(IN PVOID MappingAddress,
                      (ULONG_PTR)_ReturnAddress());
     }
 
-    //
     // If the mapping isn't big enough, fail
-    //
     if (PointerPte[0].u.List.NextEntry - 2 < PageCount)
     {
         DPRINT1("Reserved mapping too small. Need %Iu pages, have %Iu\n",
@@ -1706,81 +1692,56 @@ MmMapLockedPagesWithReservedMapping(IN PVOID MappingAddress,
                         PointerPte[0].u.List.NextEntry - 2);
         return NULL;
     }
-
-    //
     // Skip our two helper PTEs
-    //
     PointerPte += 2;
 
-    //
     // Get the template
-    //
     TempPte = ValidKernelPte;
     switch (CacheAttribute)
     {
         case MiNonCached:
 
-            //
             // Disable caching
-            //
             MI_PAGE_DISABLE_CACHE(&TempPte);
             MI_PAGE_WRITE_THROUGH(&TempPte);
             break;
 
         case MiWriteCombined:
 
-            //
             // Enable write combining
-            //
             MI_PAGE_DISABLE_CACHE(&TempPte);
             MI_PAGE_WRITE_COMBINED(&TempPte);
             break;
 
         default:
-            //
             // Nothing to do
-            //
             break;
     }
 
-    //
     // Loop all PTEs
-    //
     do
     {
-        //
         // We're done here
-        //
         if (*MdlPages == LIST_HEAD) break;
 
-        //
         // Write the PTE
-        //
         TempPte.u.Hard.PageFrameNumber = *MdlPages;
         MI_WRITE_VALID_PTE(PointerPte++, TempPte);
     } while (++MdlPages < LastPage);
 
-    //
     // Mark it as mapped
-    //
     ASSERT((Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA) == 0);
     Mdl->MappedSystemVa = MappingAddress;
     Mdl->MdlFlags |= MDL_MAPPED_TO_SYSTEM_VA;
 
-    //
     // Check if it was partial
-    //
     if (Mdl->MdlFlags & MDL_PARTIAL)
     {
-        //
         // Write the appropriate flag here too
-        //
         Mdl->MdlFlags |= MDL_PARTIAL_HAS_BEEN_MAPPED;
     }
 
-    //
     // Return the mapped address
-    //
     return (PVOID)((ULONG_PTR)MappingAddress + Mdl->ByteOffset);
 }
 
@@ -1799,36 +1760,26 @@ MmUnmapReservedMapping(IN PVOID BaseAddress,
     PMMPTE PointerPte;
     MMPTE TempPte;
 
-    //
     // Sanity check
-    //
     ASSERT(Mdl->ByteCount != 0);
     ASSERT(BaseAddress > MM_HIGHEST_USER_ADDRESS);
 
-    //
     // Get base and count information
-    //
     Base = (PVOID)((ULONG_PTR)Mdl->StartVa + Mdl->ByteOffset);
     PageCount = ADDRESS_AND_SIZE_TO_SPAN_PAGES(Base, Mdl->ByteCount);
 
-    //
     // Sanity checks
-    //
     ASSERT((Mdl->MdlFlags & MDL_PARENT_MAPPED_SYSTEM_VA) == 0);
     ASSERT(PageCount != 0);
     ASSERT(Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA);
 
 
-    //
     // Get the first PTE we reserved
-    //
     PointerPte = MiAddressToPte(BaseAddress) - 2;
     ASSERT(!PointerPte[0].u.Hard.Valid &&
            !PointerPte[1].u.Hard.Valid);
 
-    //
     // Verify that the pool tag matches
-    //
     TempPte.u.Long = PoolTag;
     TempPte.u.Hard.Valid = 0;
     if (PointerPte[1].u.Long != TempPte.u.Long)
@@ -1840,9 +1791,7 @@ MmUnmapReservedMapping(IN PVOID BaseAddress,
                      PointerPte[1].u.Long);
     }
 
-    //
     // We must have a size
-    //
     if (PointerPte[0].u.Long < (3 << 1))
     {
         KeBugCheckEx(SYSTEM_PTE_MISUSE,
@@ -1852,14 +1801,10 @@ MmUnmapReservedMapping(IN PVOID BaseAddress,
                      (ULONG_PTR)_ReturnAddress());
     }
 
-    //
     // Skip our two helper PTEs
-    //
     PointerPte += 2;
 
-    //
     // This should be a resident system PTE
-    //
     ASSERT(PointerPte >= MmSystemPtesStart[SystemPteSpace]);
     ASSERT(PointerPte <= MmSystemPtesEnd[SystemPteSpace]);
     ASSERT(PointerPte->u.Hard.Valid == 1);
@@ -1869,47 +1814,33 @@ MmUnmapReservedMapping(IN PVOID BaseAddress,
     // TODO: check if any outside the MDL range are nonzero
     // TODO: find out what to do with extra PTEs
 
-    //
     // Check if the caller wants us to free advanced pages
-    //
     if (Mdl->MdlFlags & MDL_FREE_EXTRA_PTES)
     {
-        //
         // Get the MDL page array
-        //
         MdlPages = MmGetMdlPfnArray(Mdl);
 
         /* Number of extra pages stored after the PFN array */
         ExtraPageCount = MdlPages[PageCount];
 
-        //
         // Do the math
-        //
         PageCount += ExtraPageCount;
         PointerPte -= ExtraPageCount;
         ASSERT(PointerPte >= MmSystemPtesStart[SystemPteSpace]);
         ASSERT(PointerPte <= MmSystemPtesEnd[SystemPteSpace]);
 
-        //
         // Get the new base address
-        //
         BaseAddress = (PVOID)((ULONG_PTR)BaseAddress -
                               (ExtraPageCount << PAGE_SHIFT));
     }
 
-    //
     // Zero the PTEs
-    //
     RtlZeroMemory(PointerPte, PageCount * sizeof(MMPTE));
 
-    //
     // Flush the TLB
-    //
     KeFlushEntireTb(TRUE, TRUE);
 
-    //
     // Remove flags
-    //
     Mdl->MdlFlags &= ~(MDL_MAPPED_TO_SYSTEM_VA |
                        MDL_PARTIAL_HAS_BEEN_MAPPED |
                        MDL_FREE_EXTRA_PTES);

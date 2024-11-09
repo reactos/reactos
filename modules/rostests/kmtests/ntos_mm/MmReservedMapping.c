@@ -115,8 +115,8 @@ ValidateMapping(
 
     if (g_IsReactOS || g_OsVersion >= 0x0600)
     {
-        /* On ReactOS and on Vista+ the size is stored in the NextEntry field
-           of a MMPTE_LIST structure */
+        /* On ReactOS and on Vista+ the size is stored in
+         * the NextEntry field of a MMPTE_LIST structure */
 #ifdef _M_IX86
         ExpectedValue = (TotalPtes + 2) << 12;
 #elif defined(_M_AMD64)
