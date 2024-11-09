@@ -23,7 +23,11 @@ _CRT_BEGIN_C_HEADER
     #undef _CRT_STDIO_INLINE
     #define _CRT_STDIO_INLINE
 #elif !defined _CRT_STDIO_INLINE
+  #if defined(__GNUC__)
+    #define _CRT_STDIO_INLINE static __inline
+  #else
     #define _CRT_STDIO_INLINE __inline
+  #endif
 #endif
 
 #if !defined RC_INVOKED // RC has no target architecture
