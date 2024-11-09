@@ -2,7 +2,7 @@ list(APPEND SOURCE
     blockdev.c
     btrfs.c
     cdfs.c
-    ext2.c
+    ext.c
     fat.c
     fatx.c
     ffs.c

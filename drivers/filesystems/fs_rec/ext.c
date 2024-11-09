@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS File System Recognizer
- * FILE:             drivers/filesystems/fs_rec/ext2.c
- * PURPOSE:          EXT2 Recognizer
+ * FILE:             drivers/filesystems/fs_rec/ext.c
+ * PURPOSE:          EXT Recognizer
  * PROGRAMMER:       Eric Kohl
  *                   Pierre Schweitzer (pierre@reactos.org)
  */
@@ -10,7 +10,7 @@
 /* INCLUDES *****************************************************************/
 
 #include "fs_rec.h"
-#include "ext2.h"
+#include "ext.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -19,21 +19,21 @@
 
 BOOLEAN
 NTAPI
-FsRecIsExt2Volume(IN PEXT2_SUPER_BLOCK SuperBlock)
+FsRecIsExtVolume(IN PEXT_SUPER_BLOCK SuperBlock)
 {
     /* Just check for magic */
-    return (SuperBlock->Magic == EXT2_SUPER_MAGIC);
+    return (SuperBlock->Magic == EXT_SUPER_MAGIC);
 }
 
 NTSTATUS
 NTAPI
-FsRecExt2FsControl(IN PDEVICE_OBJECT DeviceObject,
-                   IN PIRP Irp)
+FsRecExtFsControl(IN PDEVICE_OBJECT DeviceObject,
+                  IN PIRP Irp)
 {
     PIO_STACK_LOCATION Stack;
     NTSTATUS Status;
     PDEVICE_OBJECT MountDevice;
-    PEXT2_SUPER_BLOCK Spb = NULL;
+    PEXT_SUPER_BLOCK Spb = NULL;
     ULONG SectorSize;
     LARGE_INTEGER Offset;
     BOOLEAN DeviceError = FALSE;
@@ -53,16 +53,16 @@ FsRecExt2FsControl(IN PDEVICE_OBJECT DeviceObject,
             if (FsRecGetDeviceSectorSize(MountDevice, &SectorSize))
             {
                 /* Try to read the superblock */
-                Offset.QuadPart = EXT2_SB_OFFSET;
+                Offset.QuadPart = EXT_SB_OFFSET;
                 if (FsRecReadBlock(MountDevice,
                                    &Offset,
-                                   EXT2_SB_SIZE,
+                                   EXT_SB_SIZE,
                                    SectorSize,
                                    (PVOID)&Spb,
                                    &DeviceError))
                 {
-                    /* Check if it's an actual EXT2 volume */
-                    if (FsRecIsExt2Volume(Spb))
+                    /* Check if it's an actual EXT volume */
+                    if (FsRecIsExtVolume(Spb))
                     {
                         /* It is! */
                         Status = STATUS_FS_DRIVER_REQUIRED;
