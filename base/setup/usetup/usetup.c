@@ -2878,28 +2878,14 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
      * of an invalid path, or we are in regular setup), display the UI and allow
      * the user to specify a new installation path.
      */
-    if ((RepairUpdateFlag || IsUnattendedSetup) && IsValidInstallDirectory(InstallDir))
+    if (RepairUpdateFlag || IsUnattendedSetup)
     {
-        Status = InitDestinationPaths(&USetupData, InstallDir, InstallVolume);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("InitDestinationPaths() failed: Status 0x%lx\n", Status);
-            MUIDisplayError(ERROR_NO_BUILD_PATH, Ir, POPUP_WAIT_ENTER);
-            return QUIT_PAGE;
-        }
+        /* Check for the validity of the installation directory and pop up
+         * an error if it is not the case. Then the user can fix it. */
+        if (IsValidInstallDirectory(InstallDir))
+            goto InitInstallDir;
 
-        /*
-         * Check whether the user attempts to install ReactOS within the
-         * installation source directory, or in a subdirectory thereof.
-         * If so, fail with an error.
-         */
-        if (RtlPrefixUnicodeString(&USetupData.SourcePath, &USetupData.DestinationPath, TRUE))
-        {
-            MUIDisplayError(ERROR_SOURCE_DIR, Ir, POPUP_WAIT_ENTER);
-            return INSTALL_DIRECTORY_PAGE;
-        }
-
-        return PREPARE_COPY_PAGE;
+        MUIDisplayError(ERROR_DIRECTORY_NAME, Ir, POPUP_WAIT_ENTER);
     }
 
     Length = wcslen(InstallDir);
@@ -2921,7 +2907,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 
             if (ConfirmQuit(Ir))
                 return QUIT_PAGE;
-            break;
+            return INSTALL_DIRECTORY_PAGE;
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DELETE))  /* DEL */
@@ -2980,36 +2966,13 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
         {
             CONSOLE_SetCursorType(TRUE, FALSE);
 
-            /*
-             * Check for the validity of the installation directory and pop up
-             * an error if it is not the case. Then the user can fix its input.
-             */
-            if (!IsValidInstallDirectory(InstallDir))
-            {
-                MUIDisplayError(ERROR_DIRECTORY_NAME, Ir, POPUP_WAIT_ENTER);
-                return INSTALL_DIRECTORY_PAGE;
-            }
+            /* Check for the validity of the installation directory and pop up
+             * an error if it is not the case. Then the user can fix it. */
+            if (IsValidInstallDirectory(InstallDir))
+                goto InitInstallDir;
 
-            Status = InitDestinationPaths(&USetupData, InstallDir, InstallVolume);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("InitDestinationPaths() failed: Status 0x%lx\n", Status);
-                MUIDisplayError(ERROR_NO_BUILD_PATH, Ir, POPUP_WAIT_ENTER);
-                return QUIT_PAGE;
-            }
-
-            /*
-             * Check whether the user attempts to install ReactOS within the
-             * installation source directory, or in a subdirectory thereof.
-             * If so, fail with an error.
-             */
-            if (RtlPrefixUnicodeString(&USetupData.SourcePath, &USetupData.DestinationPath, TRUE))
-            {
-                MUIDisplayError(ERROR_SOURCE_DIR, Ir, POPUP_WAIT_ENTER);
-                return INSTALL_DIRECTORY_PAGE;
-            }
-
-            return PREPARE_COPY_PAGE;
+            MUIDisplayError(ERROR_DIRECTORY_NAME, Ir, POPUP_WAIT_ENTER);
+            return INSTALL_DIRECTORY_PAGE;
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x08) /* BACKSPACE */
         {
@@ -3051,7 +3014,27 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
         }
     }
 
-    return INSTALL_DIRECTORY_PAGE;
+InitInstallDir:
+    Status = InitDestinationPaths(&USetupData, InstallDir, InstallVolume);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("InitDestinationPaths() failed: Status 0x%lx\n", Status);
+        MUIDisplayError(ERROR_NO_BUILD_PATH, Ir, POPUP_WAIT_ENTER);
+        return QUIT_PAGE;
+    }
+
+    /*
+     * Check whether the user attempts to install ReactOS within the
+     * installation source directory, or in a subdirectory thereof.
+     * If so, fail with an error.
+     */
+    if (RtlPrefixUnicodeString(&USetupData.SourcePath, &USetupData.DestinationPath, TRUE))
+    {
+        MUIDisplayError(ERROR_SOURCE_DIR, Ir, POPUP_WAIT_ENTER);
+        return INSTALL_DIRECTORY_PAGE;
+    }
+
+    return PREPARE_COPY_PAGE;
 }
 
 
