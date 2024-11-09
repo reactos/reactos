@@ -727,8 +727,7 @@ LanguagePage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir))
                 return QUIT_PAGE;
-            else
-                RedrawGenericList(&ListUi);
+            RedrawGenericList(&ListUi);
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)  /* ENTER */
         {
@@ -818,7 +817,6 @@ WelcomePage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir))
                 return QUIT_PAGE;
-
             break;
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
@@ -995,8 +993,7 @@ UpgradeRepairPage(PINPUT_RECORD Ir)
             {
                 if (ConfirmQuit(Ir))
                     return QUIT_PAGE;
-                else
-                    RedrawGenericList(&ListUi);
+                RedrawGenericList(&ListUi);
                 break;
             }
 #if 1
@@ -1105,7 +1102,6 @@ InstallIntroPage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir))
                 return QUIT_PAGE;
-
             break;
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
@@ -1142,7 +1138,6 @@ ScsiControllerPage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir))
                 return QUIT_PAGE;
-
             break;
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
@@ -1174,7 +1169,6 @@ OemDriverPage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir))
                 return QUIT_PAGE;
-
             break;
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
@@ -1311,7 +1305,6 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir))
                 return QUIT_PAGE;
-
             break;
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
@@ -1375,8 +1368,7 @@ HandleGenericList(PGENERIC_LIST_UI ListUi,
         {
             if (ConfirmQuit(Ir))
                 return QUIT_PAGE;
-            else
-                RedrawGenericList(ListUi);
+            RedrawGenericList(ListUi);
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)  /* ESC */
         {
@@ -1687,7 +1679,6 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                 PartitionList = NULL;
                 return QUIT_PAGE;
             }
-
             break;
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
@@ -1905,12 +1896,10 @@ ShowPartitionSizeInputBox(SHORT Left,
                 *Quit = TRUE;
 
             InputBuffer[0] = UNICODE_NULL;
-            CONSOLE_SetCursorType(TRUE, FALSE);
             break;
         }
         else if (Ir.Event.KeyEvent.wVirtualKeyCode == VK_RETURN)    /* ENTER */
         {
-            CONSOLE_SetCursorType(TRUE, FALSE);
             break;
         }
         else if (Ir.Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)    /* ESC */
@@ -1919,7 +1908,6 @@ ShowPartitionSizeInputBox(SHORT Left,
                 *Cancel = TRUE;
 
             InputBuffer[0] = UNICODE_NULL;
-            CONSOLE_SetCursorType(TRUE, FALSE);
             break;
         }
         else if ((Ir.Event.KeyEvent.uChar.AsciiChar == 0x00) &&
@@ -2015,6 +2003,8 @@ ShowPartitionSizeInputBox(SHORT Left,
             }
         }
     }
+
+    CONSOLE_SetCursorType(TRUE, FALSE);
 }
 
 
@@ -2152,7 +2142,6 @@ ConfirmDeleteSystemPartitionPage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir))
                 return QUIT_PAGE;
-
             break;
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN) /* ENTER */
@@ -2213,7 +2202,6 @@ DeletePartitionPage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir))
                 return QUIT_PAGE;
-
             break;
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)  /* ESC */
@@ -2470,7 +2458,6 @@ Restart:
                 FsVolContext->NextPageOnAbort = QUIT_PAGE;
                 return FSVOL_ABORT;
             }
-
             break;
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)  /* ESC */
@@ -2550,7 +2537,6 @@ Restart:
                 FsVolContext->NextPageOnAbort = QUIT_PAGE;
                 return FSVOL_ABORT;
             }
-
             goto Restart;
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN || IsUnattendedSetup) /* ENTER */
@@ -2724,10 +2710,7 @@ FsVolCallback(
                         FsVolContext->NextPageOnAbort = QUIT_PAGE;
                         return FSVOL_ABORT;
                     }
-                    else
-                    {
-                        return FSVOL_RETRY;
-                    }
+                    return FSVOL_RETRY;
                 }
                 else if (Ir->Event.KeyEvent.uChar.AsciiChar == VK_RETURN) /* ENTER */
                 {
@@ -2777,10 +2760,7 @@ FsVolCallback(
                         FsVolContext->NextPageOnAbort = QUIT_PAGE;
                         return FSVOL_ABORT;
                     }
-                    else
-                    {
-                        return FSVOL_SKIP;
-                    }
+                    return FSVOL_SKIP;
                 }
                 else if (Ir->Event.KeyEvent.uChar.AsciiChar == VK_RETURN) /* ENTER */
                 {
@@ -2941,8 +2921,6 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 
             if (ConfirmQuit(Ir))
                 return QUIT_PAGE;
-
-            CONSOLE_SetCursorType(TRUE, TRUE);
             break;
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
@@ -3559,7 +3537,6 @@ BootLoaderSelectPage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir))
                 return QUIT_PAGE;
-
             break;
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)    /* ENTER */
