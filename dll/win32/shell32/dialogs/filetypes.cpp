@@ -372,6 +372,7 @@ typedef struct EDITTYPE_DIALOG
     CAtlList<CStringW> ModifiedVerbs;
     WCHAR szIconPath[MAX_PATH];
     INT nIconIndex;
+    bool ChangedIcon;
     WCHAR szDefaultVerb[VERBKEY_CCHMAX];
     WCHAR TypeName[TYPENAME_CCHMAX];
 } EDITTYPE_DIALOG, *PEDITTYPE_DIALOG;
@@ -399,6 +400,7 @@ EditTypeDlg_OnChangeIcon(HWND hwndDlg, PEDITTYPE_DIALOG pEditType)
         // update EDITTYPE_DIALOG
         StringCbCopyW(pEditType->szIconPath, sizeof(pEditType->szIconPath), szPath);
         pEditType->nIconIndex = IconIndex;
+        pEditType->ChangedIcon = true;
 
         // set icon to dialog
         HICON hOld = (HICON)SendDlgItemMessageW(hwndDlg, IDC_EDITTYPE_ICON, STM_SETICON, (WPARAM)hIconLarge, 0);
@@ -1189,14 +1191,23 @@ EditTypeDlg_WriteClass(HWND hwndDlg, PEDITTYPE_DIALOG pEditType,
                 RegSetOrDelete(hClassKey, L"BrowserFlags", REG_DWORD, dw ? &dw : NULL, sizeof(dw));
             }
         }
-        if (!(pEntry->EditFlags & FTA_NoEditDesc))
-        {
-            RegSetString(hClassKey, NULL, TypeName, REG_SZ);
-            pEntry->InvalidateTypeName();
-        }
+    }
+    if (!(pEntry->EditFlags & FTA_NoEditDesc))
+    {
+        if (!OnlyExt)
+            RegDeleteValueW(hClassKey, NULL); // Legacy name (in ProgId only)
+
+        // Deleting this value is always the correct thing to do but Windows does not do this.
+        // This means the user cannot override the translated known type names set by the OS.
+        if (OnlyExt)
+            RegDeleteValueW(hClassKey, L"FriendlyTypeName"); // MUI name (extension or ProgId)
+
+        if (TypeName[0])
+            RegSetString(hClassKey, OnlyExt ? L"FriendlyTypeName" : NULL, TypeName, REG_SZ);
+        pEntry->InvalidateTypeName();
     }
 
-    if (pEntry->IconPath[0] && !(pEntry->EditFlags & FTA_NoEditIcon))
+    if (pEntry->IconPath[0] && !(pEntry->EditFlags & FTA_NoEditIcon) && pEditType->ChangedIcon)
     {
         HKEY hDefaultIconKey;
         if (RegCreateKeyExW(hClassKey, L"DefaultIcon", 0, NULL, 0, KEY_WRITE,
@@ -1231,7 +1242,10 @@ EditTypeDlg_WriteClass(HWND hwndDlg, PEDITTYPE_DIALOG pEditType,
     // set default action
     if (!(pEntry->EditFlags & FTA_NoEditDflt))
     {
-        RegSetString(hShellKey, NULL, pEditType->szDefaultVerb, REG_SZ);
+        if (pEditType->szDefaultVerb[0])
+            RegSetString(hShellKey, NULL, pEditType->szDefaultVerb, REG_SZ);
+        else
+            RegDeleteValueW(hShellKey, NULL);
     }
 
     // delete shell commands
@@ -1571,6 +1585,7 @@ EditTypeDlg_OnInitDialog(HWND hwndDlg, PEDITTYPE_DIALOG pEditType)
     ExpandEnvironmentStringsW(pEntry->IconPath, pEditType->szIconPath, _countof(pEditType->szIconPath));
     pEditType->nIconIndex = pEntry->nIconIndex;
     StringCbCopyW(pEditType->szDefaultVerb, sizeof(pEditType->szDefaultVerb), L"open");
+    pEditType->ChangedIcon = false;
 
     // set info
     HICON hIco = DoExtractIcon(pEditType->szIconPath, pEditType->nIconIndex);
@@ -1917,7 +1932,7 @@ FolderOptionsFileTypesDlg(
                     pEntry = FileTypesDlg_GetEntry(GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW));
                     if (pEntry)
                     {
-                        OPENASINFO oai = { pEntry->FileExtension, 0, OAIF_ALLOW_REGISTRATION | OAIF_REGISTER_EXT };
+                        OPENASINFO oai = { pEntry->FileExtension, 0, OAIF_FORCE_REGISTRATION | OAIF_REGISTER_EXT };
                         if (SUCCEEDED(SHOpenWithDialog(hwndDlg, &oai)))
                         {
                             pEntry->InvalidateDefaultApp();
