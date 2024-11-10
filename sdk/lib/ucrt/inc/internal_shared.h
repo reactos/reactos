@@ -166,18 +166,20 @@ extern char __ImageBase;
 
 template<typename T>
 __forceinline
-T __crt_fast_encode_pointer(T Ptr)
+T __crt_fast_encode_pointer(T ptr)
 {
-    // FIXME: use cookie
-    return Ptr;
+    union { T Ptr; uintptr_t Uint; } u = { ptr };
+    u.Uint ^= __security_cookie;
+    return u.Ptr;
 }
 
 template<typename T>
 __forceinline
-T __crt_fast_decode_pointer(T Ptr)
+T __crt_fast_decode_pointer(T ptr)
 {
-    // FIXME: use cookie
-    return Ptr;
+    union { T Ptr; uintptr_t Uint; } u = { ptr };
+    u.Uint ^= __security_cookie;
+    return u.Ptr;
 }
 
 template<typename T>
