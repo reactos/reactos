@@ -734,6 +734,7 @@ PspSetJobLimitsBasicOrExtended(
     _In_ BOOLEAN IsExtendedLimit
 )
 {
+    NTSTATUS Status = STATUS_SUCCESS;
     ULONG AllowedFlags;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
 
@@ -796,7 +797,8 @@ PspSetJobLimitsBasicOrExtended(
             (!ExtendedLimit->BasicLimitInformation.MaximumWorkingSetSize &&
                 ExtendedLimit->BasicLimitInformation.MaximumWorkingSetSize))
         {
-            return STATUS_INVALID_PARAMETER;
+            Status = STATUS_INVALID_PARAMETER;
+            goto ExitFromBasicLimits;
         }
 
         Job->MinimumWorkingSetSize = ExtendedLimit->BasicLimitInformation.MinimumWorkingSetSize;
@@ -829,7 +831,8 @@ PspSetJobLimitsBasicOrExtended(
            to ActiveProcessorsAffinityMask, which in turn corresponds to KeActiveProcessors */
         if (ExtendedLimit->BasicLimitInformation.Affinity != (ExtendedLimit->BasicLimitInformation.Affinity & KeActiveProcessors))
         {
-            return STATUS_INVALID_PARAMETER;
+            Status = STATUS_INVALID_PARAMETER;
+            goto ExitFromBasicLimits;
         }
 
         Job->Affinity = ExtendedLimit->BasicLimitInformation.Affinity;
@@ -840,7 +843,8 @@ PspSetJobLimitsBasicOrExtended(
         if (ExtendedLimit->BasicLimitInformation.PriorityClass > PROCESS_PRIORITY_CLASS_ABOVE_NORMAL ||
             ExtendedLimit->BasicLimitInformation.PriorityClass <= PROCESS_PRIORITY_CLASS_INVALID)
         {
-            return STATUS_INVALID_PARAMETER;
+            Status = STATUS_INVALID_PARAMETER;
+            goto ExitFromBasicLimits;
         }
 
         /* https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_basic_limit_information:
@@ -855,7 +859,8 @@ PspSetJobLimitsBasicOrExtended(
         }
         else
         {
-            return STATUS_PRIVILEGE_NOT_HELD;
+            Status = STATUS_PRIVILEGE_NOT_HELD;
+            goto ExitFromBasicLimits;
         }
     }
 
@@ -863,7 +868,8 @@ PspSetJobLimitsBasicOrExtended(
     {
         if (ExtendedLimit->BasicLimitInformation.SchedulingClass >= PSP_JOB_SCHEDULING_CLASSES)
         {
-            return STATUS_INVALID_PARAMETER;
+            Status = STATUS_INVALID_PARAMETER;
+            goto ExitFromBasicLimits;
         }
 
         /* https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_basic_limit_information:
@@ -880,7 +886,8 @@ PspSetJobLimitsBasicOrExtended(
             }
             else
             {
-                return STATUS_PRIVILEGE_NOT_HELD;
+                Status = STATUS_PRIVILEGE_NOT_HELD;
+                goto ExitFromBasicLimits;
             }
         }
         else
@@ -910,11 +917,16 @@ PspSetJobLimitsBasicOrExtended(
        with those extended limits that only set some flag */
     Job->LimitFlags = ExtendedLimit->BasicLimitInformation.LimitFlags;
 
+
     /* Release locks */
+
     KeReleaseGuardedMutexUnsafe(&Job->MemoryLimitsLock);
+
+ExitFromBasicLimits:
+
     ExReleaseResourceLite(&Job->JobLock);
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 /*!
