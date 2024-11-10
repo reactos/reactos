@@ -206,10 +206,31 @@ struct __crt_seh_guarded_call
     template<typename Init, typename Action, typename Cleanup>
     T operator()(Init init, Action action, Cleanup cleanup)
     {
+        T result;
         init();
         __try
         {
-            return action();
+            result = action();
+        }
+        __finally
+        {
+            cleanup();
+        }
+        __endtry
+        return result;
+    }
+};
+
+template<>
+struct __crt_seh_guarded_call<void>
+{
+    template<typename Init, typename Action, typename Cleanup>
+    void operator()(Init init, Action action, Cleanup cleanup)
+    {
+        init();
+        __try
+        {
+            action();
         }
         __finally
         {
