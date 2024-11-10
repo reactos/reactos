@@ -1493,23 +1493,20 @@ LayoutSettingsPage(PINPUT_RECORD Ir)
 
 
 static BOOLEAN
-IsPartitionLargeEnough(
-    _In_ PPARTENTRY PartEntry)
+IsMediumLargeEnough(
+    _In_ ULONGLONG SizeInBytes)
 {
     /* Retrieve the maximum size in MB (rounded up) */
-    ULONGLONG PartSize = RoundingDivide(GetPartEntrySizeInBytes(PartEntry), MB);
+    ULONGLONG SizeInMB = RoundingDivide(SizeInBytes, MB);
 
-    if (PartSize < USetupData.RequiredPartitionDiskSpace)
+    /* Check the medium size */
+    if (SizeInMB < USetupData.RequiredPartitionDiskSpace)
     {
-        /* Partition is too small so ask for another one */
-        DPRINT1("Partition is too small (size: %I64u MB), required disk space is %lu MB\n",
-                PartSize, USetupData.RequiredPartitionDiskSpace);
+        DPRINT1("Partition/Volume is too small (size: %I64u MB), required space is %lu MB\n",
+                SizeInMB, USetupData.RequiredPartitionDiskSpace);
         return FALSE;
     }
-    else
-    {
-        return TRUE;
-    }
+    return TRUE;
 }
 
 
@@ -1535,6 +1532,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 {
     PARTLIST_UI ListUi;
     ULONG Error;
+    ULONGLONG MaxTargetSize;
 
     if (PartitionList == NULL)
     {
@@ -1555,7 +1553,9 @@ SelectPartitionPage(PINPUT_RECORD Ir)
     {
         ASSERT(CurrentInstallation);
 
-        /* Determine the selected installation disk & partition */
+        /* Determine the selected installation disk & partition.
+         * It must exist and be valid, since this is the partition
+         * where the existing installation already resides. */
         InstallPartition = SelectPartition(PartitionList,
                                            CurrentInstallation->DiskNumber,
                                            CurrentInstallation->PartitionNumber);
@@ -1564,6 +1564,8 @@ SelectPartitionPage(PINPUT_RECORD Ir)
             DPRINT1("RepairUpdateFlag == TRUE, SelectPartition() returned FALSE, assert!\n");
             ASSERT(FALSE);
         }
+        ASSERT(InstallPartition->IsPartitioned);
+        ASSERT(InstallPartition->Volume);
 
         return START_PARTITION_OPERATIONS_PAGE;
     }
@@ -1577,59 +1579,46 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                         yScreen - 3);
     DrawPartitionList(&ListUi);
 
-    if (IsUnattendedSetup)
+    if (IsUnattendedSetup) do
     {
+        /* If DestinationDiskNumber or DestinationPartitionNumber are invalid
+         * (see below), don't select the partition and show the list instead */
+        if (USetupData.DestinationDiskNumber == -1 ||
+            USetupData.DestinationPartitionNumber == -1)
+        {
+            break;
+        }
+
         /* Determine the selected installation disk & partition */
-        InstallPartition = SelectPartition(PartitionList,
+        CurrentPartition = SelectPartition(PartitionList,
                                            USetupData.DestinationDiskNumber,
                                            USetupData.DestinationPartitionNumber);
-        if (!InstallPartition)
+
+        /* Now reset DestinationDiskNumber and DestinationPartitionNumber
+         * to *invalid* values, so that if the corresponding partition is
+         * determined to be invalid by the code below or in CreateInstallPartition,
+         * we don't reselect it when SelectPartitionPage() is called again */
+        USetupData.DestinationDiskNumber = -1;
+        USetupData.DestinationPartitionNumber = -1;
+
+        // FIXME: Here and in the AutoPartition case below, the CurrentPartition
+        // may actually be unsuitable (MBR-extended, non-simple volume...).
+        // More checks need to be made here!
+        //
+        // NOTE: We don't check for CurrentPartition->Volume in case
+        // the partition doesn't contain a recognized volume/none exists.
+        // We also don't check whether IsPartitioned is TRUE, because if
+        // the partition is still empty space, we'll try to partition it.
+        if (CurrentPartition && !IsContainerPartition(CurrentPartition->PartitionType))
+            goto CreateInstallPartition;
+
+        if (USetupData.AutoPartition)
         {
             CurrentPartition = ListUi.CurrentPartition;
-
-            if (USetupData.AutoPartition)
-            {
-                ASSERT(CurrentPartition != NULL);
-                ASSERT(!IsContainerPartition(CurrentPartition->PartitionType));
-
-                /* Automatically create the partition on the whole empty space;
-                 * it will be formatted later with default parameters */
-                CreatePartition(PartitionList,
-                                CurrentPartition,
-                                0ULL,
-                                0);
-                if (CurrentPartition->Volume)
-                    CurrentPartition->Volume->New |= VOLUME_NEW_AUTOCREATE;
-
-// FIXME?? Aren't we going to enter an infinite loop, if this test fails??
-                if (!IsPartitionLargeEnough(CurrentPartition))
-                {
-                    MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
-                                    USetupData.RequiredPartitionDiskSpace);
-                    return SELECT_PARTITION_PAGE; /* let the user select another partition */
-                }
-
-                InstallPartition = CurrentPartition;
-                return START_PARTITION_OPERATIONS_PAGE;
-            }
+            // TODO: Do more checks, and loop until we find a valid partition.
+            goto CreateInstallPartition;
         }
-        else
-        {
-            ASSERT(!IsContainerPartition(InstallPartition->PartitionType));
-
-            DrawPartitionList(&ListUi); // FIXME: Doesn't make much sense...
-
-// FIXME?? Aren't we going to enter an infinite loop, if this test fails??
-            if (!IsPartitionLargeEnough(InstallPartition))
-            {
-                MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
-                                USetupData.RequiredPartitionDiskSpace);
-                return SELECT_PARTITION_PAGE; /* let the user select another partition */
-            }
-
-            return START_PARTITION_OPERATIONS_PAGE;
-        }
-    }
+    } while (0);
 
     while (TRUE)
     {
@@ -1638,7 +1627,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         CurrentPartition = ListUi.CurrentPartition;
 
         /* Update status text */
-        if (CurrentPartition == NULL)
+        if (!CurrentPartition)
         {
             // FIXME: If we get a NULL current partition, this means that
             // the current disk is of unrecognized type. So we should display
@@ -1679,7 +1668,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                 PartitionList = NULL;
                 return QUIT_PAGE;
             }
-            break;
+            return SELECT_PARTITION_PAGE;
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN))  /* DOWN */
@@ -1693,10 +1682,11 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN)  /* ENTER */
         {
-            ASSERT(CurrentPartition != NULL);
+            ASSERT(CurrentPartition);
 
+            /* Don't select an extended partition for OS installation */
             if (IsContainerPartition(CurrentPartition->PartitionType))
-                continue; // return SELECT_PARTITION_PAGE;
+                continue;
 
             /*
              * Check whether the user wants to install ReactOS on a disk that
@@ -1715,38 +1705,11 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                 // return SELECT_PARTITION_PAGE;
             }
 
-            if (!CurrentPartition->IsPartitioned)
-            {
-                Error = PartitionCreationChecks(CurrentPartition);
-                if (Error != NOT_AN_ERROR)
-                {
-                    MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
-                    return SELECT_PARTITION_PAGE;
-                }
-
-                /* Automatically create the partition on the whole empty space;
-                 * it will be formatted later with default parameters */
-                CreatePartition(PartitionList,
-                                CurrentPartition,
-                                0ULL,
-                                0);
-                if (CurrentPartition->Volume)
-                    CurrentPartition->Volume->New |= VOLUME_NEW_AUTOCREATE;
-            }
-
-            if (!IsPartitionLargeEnough(CurrentPartition))
-            {
-                MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
-                                USetupData.RequiredPartitionDiskSpace);
-                return SELECT_PARTITION_PAGE; /* let the user select another partition */
-            }
-
-            InstallPartition = CurrentPartition;
-            return START_PARTITION_OPERATIONS_PAGE;
+            goto CreateInstallPartition;
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'C')  /* C */
         {
-            ASSERT(CurrentPartition != NULL);
+            ASSERT(CurrentPartition);
 
             Error = PartitionCreationChecks(CurrentPartition);
             if (Error != NOT_AN_ERROR)
@@ -1760,24 +1723,25 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'E')  /* E */
         {
-            ASSERT(CurrentPartition != NULL);
+            ASSERT(CurrentPartition);
 
-            if (CurrentPartition->LogicalPartition == FALSE)
+            /* Don't create an extended partition within a logical partition */
+            if (CurrentPartition->LogicalPartition)
+                continue;
+
+            Error = ExtendedPartitionCreationChecks(CurrentPartition);
+            if (Error != NOT_AN_ERROR)
             {
-                Error = ExtendedPartitionCreationChecks(CurrentPartition);
-                if (Error != NOT_AN_ERROR)
-                {
-                    MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
-                    return SELECT_PARTITION_PAGE;
-                }
-
-                PartCreateType = PartTypeExtended;
-                return CREATE_PARTITION_PAGE;
+                MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
+                return SELECT_PARTITION_PAGE;
             }
+
+            PartCreateType = PartTypeExtended;
+            return CREATE_PARTITION_PAGE;
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'D')  /* D */
         {
-            ASSERT(CurrentPartition != NULL);
+            ASSERT(CurrentPartition);
 
             /* Ignore deletion in case this is not a partitioned entry */
             if (!CurrentPartition->IsPartitioned)
@@ -1818,7 +1782,42 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
     }
 
-    return SELECT_PARTITION_PAGE;
+CreateInstallPartition:
+    ASSERT(CurrentPartition);
+    ASSERT(!IsContainerPartition(CurrentPartition->PartitionType));
+
+    /* Create the partition if the selected region is empty */
+    if (!CurrentPartition->IsPartitioned)
+    {
+        Error = PartitionCreationChecks(CurrentPartition);
+        if (Error != NOT_AN_ERROR)
+        {
+            MUIDisplayError(Error, Ir, POPUP_WAIT_ANY_KEY);
+            return SELECT_PARTITION_PAGE;
+        }
+
+        /* Automatically create the partition on the whole empty space;
+         * it will be formatted later with default parameters */
+        CreatePartition(PartitionList,
+                        CurrentPartition,
+                        0ULL,
+                        0);
+        ASSERT(CurrentPartition->IsPartitioned);
+        if (CurrentPartition->Volume)
+            CurrentPartition->Volume->New |= VOLUME_NEW_AUTOCREATE;
+    }
+
+    /* Verify the target medium size */
+    MaxTargetSize = GetPartEntrySizeInBytes(CurrentPartition);
+    if (!IsMediumLargeEnough(MaxTargetSize))
+    {
+        MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
+                        USetupData.RequiredPartitionDiskSpace);
+        return SELECT_PARTITION_PAGE; /* Let the user select another partition */
+    }
+
+    InstallPartition = CurrentPartition;
+    return START_PARTITION_OPERATIONS_PAGE;
 }
 
 
