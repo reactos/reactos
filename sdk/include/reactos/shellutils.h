@@ -597,11 +597,16 @@ void DumpIdList(LPCITEMIDLIST pcidl)
     DbgPrint("End IDList Dump.\n");
 }
 
-template<HRESULT(WINAPI*InitFunc)(void*), void(WINAPI*UninitFunc)()> struct CCoInitBase
+template <HRESULT (WINAPI *InitFunc)(void*), void (WINAPI *UninitFunc)()>
+struct CCoInitBase
 {
     HRESULT hr;
     CCoInitBase() : hr(InitFunc(NULL)) { }
-    ~CCoInitBase() { if (SUCCEEDED(hr)) UninitFunc(); }
+    ~CCoInitBase()
+    {
+        if (SUCCEEDED(hr))
+            UninitFunc();
+    }
 };
 typedef CCoInitBase<CoInitialize, CoUninitialize> CCoInit;
 typedef CCoInitBase<OleInitialize, OleUninitialize> COleInit;
@@ -823,7 +828,7 @@ struct SHELL_GetSettingImpl
 
 static inline void DumpIdListOneLine(LPCITEMIDLIST pidl)
 {
-    char buf[1024], *data;
+    char buf[1024], *data, drive = 0;
     for (UINT depth = 0, type; ; pidl = ILGetNext(pidl), ++depth)
     {
         if (!pidl || !pidl->mkid.cb)
@@ -848,9 +853,10 @@ static inline void DumpIdListOneLine(LPCITEMIDLIST pidl)
         }
         else if (depth == 1 && type >= 0x20 && type < 0x30 && type != 0x2E && pidl->mkid.cb > 4)
         {
-            wsprintfA(buf, " [%.2x %c: %ub]", type, data[1], pidl->mkid.cb); /* A drive letter */
+            drive = data[1];
+            wsprintfA(buf, " [%.2x %c: %ub]", type, drive, pidl->mkid.cb);
         }
-        else if (depth >= 2 && (type & 0x70) == 0x30) /* PT_FS */
+        else if (depth >= 2 && drive && (type & 0x70) == 0x30) /* PT_FS */
         {
             if (type & 4)
                 wsprintfA(buf, " [%.2x FS %.256ls %ub]", type, data + 12, pidl->mkid.cb);

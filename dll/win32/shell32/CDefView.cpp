@@ -4606,7 +4606,7 @@ HRESULT STDMETHODCALLTYPE CDefView::QueryService(REFGUID guidService, REFIID rii
 {
     if (IsEqualIID(guidService, SID_IShellBrowser) && m_pShellBrowser)
         return m_pShellBrowser->QueryInterface(riid, ppvObject);
-    else if(IsEqualIID(guidService, SID_IFolderView))
+    else if (IsEqualIID(guidService, SID_IFolderView))
         return QueryInterface(riid, ppvObject);
 
     return E_NOINTERFACE;

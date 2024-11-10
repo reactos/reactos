@@ -748,7 +748,7 @@ BOOL WINAPI ILIsParent(LPCITEMIDLIST pidlParent, LPCITEMIDLIST pidlChild, BOOL b
 PUIDLIST_RELATIVE WINAPI ILFindChild(PIDLIST_ABSOLUTE pidl1, PCIDLIST_ABSOLUTE pidl2)
 {
 #ifdef __REACTOS__
-    TRACE("pidl1=%p pidl2=%p\n",pidl1, pidl2);
+    TRACE("pidl1=%p pidl2=%p\n", pidl1, pidl2);
 
     if (_ILIsDesktop(pidl1))
         return (PUIDLIST_RELATIVE)pidl2;

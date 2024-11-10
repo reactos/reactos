@@ -752,8 +752,9 @@ BrFolder_OnInitDialog(HWND hWnd, BrFolder *info)
 
     if (!lpBrowseInfo->pidlRoot)
     {
-        UINT csidl = (lpBrowseInfo->ulFlags & BIF_NEWDIALOGSTYLE) ? CSIDL_PERSONAL : CSIDL_DRIVES;;
-        if (LPITEMIDLIST pidl = SHCloneSpecialIDList(NULL, csidl, TRUE))
+        UINT csidl = (lpBrowseInfo->ulFlags & BIF_NEWDIALOGSTYLE) ? CSIDL_PERSONAL : CSIDL_DRIVES;
+        LPITEMIDLIST pidl = SHCloneSpecialIDList(NULL, csidl, TRUE);
+        if (pidl)
         {
             SendMessageW(info->hWnd, BFFM_SETSELECTION, FALSE, (LPARAM)pidl);
             if (csidl == CSIDL_DRIVES)
@@ -1361,17 +1362,18 @@ SHBrowseForFolderW(LPBROWSEINFOW lpbi)
 {
     TRACE("%p\n", lpbi);
 
-    COleInit OleInit; // TODO: MSDN says the caller must initialize COM so why are we doing it?
+    // MSDN says the caller must initialize COM. We do it anyway in case the caller forgot.
+    COleInit OleInit;
     BrFolder info = { lpbi };
 
     INT id = ((lpbi->ulFlags & BIF_USENEWUI) ? IDD_BROWSE_FOR_FOLDER_NEW : IDD_BROWSE_FOR_FOLDER);
     INT_PTR ret = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(id), lpbi->hwndOwner,
                                   BrFolderDlgProc, (LPARAM)&info);
-    UINT ntver = RosGetProcessEffectiveVersion();
-    if (ret == IDOK && !(lpbi->ulFlags & BIF_NOTRANSLATETARGETS) && ntver >= _WIN32_WINNT_WINXP)
+    if (ret == IDOK && !(lpbi->ulFlags & BIF_NOTRANSLATETARGETS) &&
+        RosGetProcessEffectiveVersion() >= _WIN32_WINNT_WINXP)
     {
         PIDLIST_ABSOLUTE pidlTarget;
-        if (S_OK == SHELL_GetIDListTarget(info.pidlRet, &pidlTarget))
+        if (SHELL_GetIDListTarget(info.pidlRet, &pidlTarget) == S_OK)
         {
             ILFree(info.pidlRet);
             info.pidlRet = pidlTarget;
