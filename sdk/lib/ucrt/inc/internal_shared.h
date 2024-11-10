@@ -75,29 +75,84 @@ extern char __ImageBase;
 #define _CRT_SECURITYCRITICAL_ATTRIBUTE
 #define _CRT_SECURITYSAFECRITICAL_ATTRIBUTE
 
-#define _VALIDATE_RETURN(expr, errorcode, retexpr) \
-    if (!(expr)) return (retexpr);
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//
+// Parameter validation macros
+// Partly duplicated in corecrt_internal_strtox.h
+//
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-#define _VALIDATE_RETURN_VOID(expr, errorcode) \
-    if (!(expr)) return;
+#ifdef _DEBUG
+    #define _INVALID_PARAMETER(expr) _invalid_parameter(expr, __FUNCTIONW__, __FILEW__, __LINE__, 0)
+#else
+    #define _INVALID_PARAMETER(expr) _invalid_parameter_noinfo()
+#endif
 
-#define _VALIDATE_RETURN_NOERRNO(expr, retexpr) \
-    if (!(expr)) return (retexpr);
+#define _VALIDATE_RETURN(expr, errorcode, retexpr)                             \
+    {                                                                          \
+        int _Expr_val = !!(expr);                                              \
+        _ASSERT_EXPR((_Expr_val), _CRT_WIDE(#expr));                           \
+        if (!(_Expr_val))                                                      \
+        {                                                                      \
+            *_errno() = (errorcode);                                           \
+            _INVALID_PARAMETER(_CRT_WIDE(#expr));                              \
+            return (retexpr);                                                  \
+        }                                                                      \
+    }
 
-#define _VALIDATE_RETURN_ERRCODE(expr, errorcode) \
-    if (!(expr)) return (errorcode);
+#define _VALIDATE_RETURN_VOID(expr, errorcode)                                 \
+    {                                                                          \
+        int _Expr_val = !!(expr);                                              \
+        _ASSERT_EXPR((_Expr_val), _CRT_WIDE(#expr));                           \
+        if (!(_Expr_val))                                                      \
+        {                                                                      \
+            *_errno() = (errorcode);                                           \
+            _INVALID_PARAMETER(_CRT_WIDE(#expr));                              \
+            return;                                                            \
+        }                                                                      \
+    }
 
-#define _VALIDATE_CLEAR_OSSERR_RETURN(expr, errorcode, retexpr) \
-    if (!(expr)) return (retexpr);
+#define _VALIDATE_RETURN_NOERRNO(expr, retexpr)                                \
+    {                                                                          \
+        int _Expr_val = !!(expr);                                              \
+        _ASSERT_EXPR((_Expr_val), _CRT_WIDE(#expr));                           \
+        if (!(_Expr_val))                                                      \
+        {                                                                      \
+            _INVALID_PARAMETER(_CRT_WIDE(#expr));                              \
+            return (retexpr);                                                  \
+        }                                                                      \
+    }
 
-#define _VALIDATE_CLEAR_OSSERR_RETURN_ERRCODE(expr, errorcode) \
-    if (!(expr)) return (errorcode);
+#define _VALIDATE_RETURN_ERRCODE(expr, errorcode)                              \
+    _VALIDATE_RETURN(expr, errorcode, errorcode)
 
-#define _VALIDATE_RETURN_NOEXC(expr, errorcode, retexpr) \
-    if (!(expr)) return (retexpr);
+#define _VALIDATE_CLEAR_OSSERR_RETURN(expr, errorcode, retexpr)                \
+    {                                                                          \
+        int _Expr_val = !!(expr);                                              \
+        _ASSERT_EXPR((_Expr_val), _CRT_WIDE(#expr));                           \
+        if (!(_Expr_val))                                                      \
+        {                                                                      \
+            *__doserrno() = 0L;                                                \
+            *_errno() = errorcode;                                             \
+            _INVALID_PARAMETER(_CRT_WIDE(#expr) );                             \
+            return (retexpr);                                                  \
+        }                                                                      \
+    }
 
-#define _VALIDATE_RETURN_ERRCODE_NOEXC(expr, errorcode) \
-    if (!(expr)) return (errorcode);
+#define _VALIDATE_CLEAR_OSSERR_RETURN_ERRCODE(expr, errorcode)                 \
+    _VALIDATE_CLEAR_OSSERR_RETURN(expr, errorcode, errorcode)
+
+#define _VALIDATE_RETURN_NOEXC(expr, errorcode, retexpr)                       \
+    {                                                                          \
+        if (!(expr))                                                           \
+        {                                                                      \
+            *_errno() = errorcode;                                             \
+            return (retexpr);                                                  \
+        }                                                                      \
+    }
+
+#define _VALIDATE_RETURN_ERRCODE_NOEXC(expr, errorcode)                        \
+    _VALIDATE_RETURN_NOEXC(expr, errorcode, errorcode)
 
 #define _malloc_crt malloc
 #define _free_crt free
