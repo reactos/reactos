@@ -18,6 +18,24 @@
 
 #if defined _CRT_SIMD_SUPPORT_AVAILABLE
 
+#if defined(__clang__)
+#define _UCRT_ENABLE_EXTENDED_ISA \
+    _Pragma("clang attribute push(__attribute__((target(\"sse2,avx,avx2\"))), apply_to=function)")
+#define _UCRT_RESTORE_DEFAULT_ISA \
+    _Pragma("clang attribute pop")
+#elif defined(__GNUC__)
+#define _UCRT_ENABLE_EXTENDED_ISA \
+    _Pragma("GCC push_options") \
+    _Pragma("GCC target(\"avx2\")")
+#define _UCRT_RESTORE_DEFAULT_ISA \
+    _Pragma("GCC pop_options")
+#else
+#define _UCRT_ENABLE_EXTENDED_ISA
+#define _UCRT_RESTORE_DEFAULT_ISA
+#endif
+
+_UCRT_ENABLE_EXTENDED_ISA
+
     extern "C" int __isa_available;
 
     enum class __crt_simd_isa
@@ -154,5 +172,7 @@
             return _mm256_cmpeq_epi16(x, y);
         }
     };
+
+_UCRT_RESTORE_DEFAULT_ISA
 
 #endif // _CRT_SIMD_SUPPORT_AVAILABLE

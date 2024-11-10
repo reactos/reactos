@@ -78,11 +78,13 @@ static __forceinline size_t __cdecl common_strnlen_c(
 
 #ifdef _CRT_SIMD_SUPPORT_AVAILABLE
 
+_UCRT_ENABLE_EXTENDED_ISA
+
     template <strnlen_mode Mode, __crt_simd_isa Isa, typename Element>
     _Check_return_
     _When_(maximum_count > _String_length_(string), _Post_satisfies_(return == _String_length_(string)))
     _When_(maximum_count <= _String_length_(string), _Post_satisfies_(return == maximum_count))
-    static __forceinline size_t __cdecl common_strnlen_simd(
+    static __inline size_t __cdecl common_strnlen_simd(
         Element const* const string,
         size_t         const maximum_count
         ) throw()
@@ -167,6 +169,8 @@ static __forceinline size_t __cdecl common_strnlen_c(
         // Either we have exhausted the buffer or we have found the terminator:
         return static_cast<size_t>(it - string);
     }
+
+_UCRT_RESTORE_DEFAULT_ISA
 
 #endif // _CRT_SIMD_SUPPORT_AVAILABLE
 
