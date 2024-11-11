@@ -1668,7 +1668,7 @@ MmMapLockedPagesWithReservedMapping(IN PVOID MappingAddress,
     if (PointerPte[1].u.Long != TempPte.u.Long)
     {
         KeBugCheckEx(SYSTEM_PTE_MISUSE,
-                     0x104, /* Trying to map an address it does not own */
+                     PTE_MAPPING_ADDRESS_NOT_OWNED, /* Trying to map an address it does not own */
                      (ULONG_PTR)MappingAddress,
                      PoolTag,
                      PointerPte[1].u.Long);
@@ -1678,7 +1678,7 @@ MmMapLockedPagesWithReservedMapping(IN PVOID MappingAddress,
     if (PointerPte[0].u.List.NextEntry < 3)
     {
         KeBugCheckEx(SYSTEM_PTE_MISUSE,
-                     0x105, /* Trying to map an invalid address */
+                     PTE_MAPPING_ADDRESS_INVALID, /* Trying to map an invalid address */
                      (ULONG_PTR)MappingAddress,
                      PoolTag,
                      (ULONG_PTR)_ReturnAddress());
@@ -1785,7 +1785,7 @@ MmUnmapReservedMapping(IN PVOID BaseAddress,
     if (PointerPte[1].u.Long != TempPte.u.Long)
     {
         KeBugCheckEx(SYSTEM_PTE_MISUSE,
-                     0x108, /* Trying to unmap an address it does not own */
+                     PTE_UNMAPPING_ADDRESS_NOT_OWNED, /* Trying to unmap an address it does not own */
                      (ULONG_PTR)BaseAddress,
                      PoolTag,
                      PointerPte[1].u.Long);
@@ -1795,7 +1795,7 @@ MmUnmapReservedMapping(IN PVOID BaseAddress,
     if (PointerPte[0].u.Long < (3 << 1))
     {
         KeBugCheckEx(SYSTEM_PTE_MISUSE,
-                     0x109, /* Mapping apparently empty */
+                     PTE_MAPPING_ADDRESS_EMPTY, /* Mapping apparently empty */
                      (ULONG_PTR)BaseAddress,
                      PoolTag,
                      (ULONG_PTR)_ReturnAddress());
