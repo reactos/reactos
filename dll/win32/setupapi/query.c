@@ -764,7 +764,7 @@ BOOL WINAPI SetupQuerySourceListW(
 
     WCHAR buffer[MAX_PATH * 2] = {0};
     PWSTR szInstallationSource = buffer;
-    PWSTR* listSources = NULL;
+    PCWSTR* listSources = NULL;
     UINT iCount = 0;
 
     if(srclist_temporary_sources != NULL){
@@ -831,7 +831,7 @@ BOOL WINAPI SetupQuerySourceListW(
         }
     }
 
-    listSources = HeapAlloc(GetProcessHeap(),0, iCount * sizeof(PWSTR));
+    listSources = (PCWSTR*)HeapAlloc(GetProcessHeap(),0, iCount * sizeof(PCWSTR));
     if(!listSources)
         return FALSE;
 
@@ -846,7 +846,7 @@ BOOL WINAPI SetupQuerySourceListW(
         szInstallationSource += wcslen(szInstallationSource) + 1;
     }
 
-    *List = listSources;
+    *List = ((const WCHAR ***))listSources;
     *Count = iCount;
 
     return TRUE;
@@ -865,7 +865,7 @@ BOOL WINAPI SetupQuerySourceListA(
 
     CHAR buffer[MAX_PATH * 2] = {0}; // FIXME - how much...?
     PSTR szInstallationSource = buffer;
-    PSTR* listSources = NULL;
+    PCSTR* listSources = NULL;
     UINT iCount = 0;
 
     if(srclist_temporary_sources != NULL){
@@ -931,13 +931,13 @@ BOOL WINAPI SetupQuerySourceListA(
         }
     }
 
-    listSources = HeapAlloc(GetProcessHeap(),0,iCount*sizeof(PSTR));
+    listSources = (PCSTR*)HeapAlloc(GetProcessHeap(),0,iCount*sizeof(PCSTR));
     if(!listSources)
         return FALSE;
 
     szInstallationSource = buffer;
     for(int i=0; i<iCount; i++){
-        listSources[i]  = HeapAlloc(GetProcessHeap(),0,(strlen(szInstallationSource)+1)*sizeof(CHAR));
+        listSources[i]  = (PCSTR*)HeapAlloc(GetProcessHeap(),0,(strlen(szInstallationSource)+1)*sizeof(CHAR));
         if(!listSources[i]){
             SetupFreeSourceListA(&listSources,i);
             return FALSE;
@@ -980,7 +980,7 @@ BOOL WINAPI SetupSetSourceListA(DWORD flags, PCSTR *list, UINT count)
         LSTATUS status = 0;
         UINT len = 0;
         BYTE buffer[MAX_PATH]; // size?
-        BYTE* currentPos = NULL;
+        PCHAR currentPos = NULL;
         currentPos = buffer;
         for(int i=0; i < count; i++){
             strcpy(currentPos,list[i]);
