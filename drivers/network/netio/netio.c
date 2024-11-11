@@ -25,6 +25,7 @@
 #include <ws2def.h>
 #include <wsk.h>
 #include <ndis.h>
+#define DBG 1
 #include <netio_debug.h>
 
 #include <tdi.h>
@@ -125,11 +126,15 @@ NetioComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
     struct NetioContext *c = (struct NetioContext *)Context;
     PIRP UserIrp = c->UserIrp;
 
+NETIO_DbgPrint(MIN_TRACE, ("NetioComplete ...\n"));
     UserIrp->IoStatus.Status = Irp->IoStatus.Status;
     UserIrp->IoStatus.Information = Irp->IoStatus.Information;
 
     IoCompleteRequest(UserIrp, IO_NETWORK_INCREMENT);
+NETIO_DbgPrint(MIN_TRACE, ("After IoCompleteRequest ...\n"));
+NETIO_DbgPrint(MIN_TRACE, ("NOT freeing anything ...\n"));
 
+#if 0
     SocketPut(c->socket);
     if (c->TargetConnectionInfo != NULL)
     {
@@ -140,7 +145,9 @@ NetioComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
         ExFreePoolWithTag(c->PeerAddrRet, TAG_NETIO);
     }
     ExFreePoolWithTag(c, TAG_NETIO);
+#endif
 
+NETIO_DbgPrint(MIN_TRACE, ("After Free, returing...\n"));
     return STATUS_SUCCESS;
 }
 
@@ -843,6 +850,7 @@ NTSTATUS WSKAPI
 WskCaptureProviderNPI(_In_ PWSK_REGISTRATION reg, _In_ ULONG wait, _Out_ PWSK_PROVIDER_NPI npi)
 {
     DbgPrint("WskCaptureProviderNPI\n");
+    NETIO_DbgPrint(MIN_TRACE, ("Debug test 123\n"));
     npi->Client = NULL;
     npi->Dispatch = &provider_dispatch;
 

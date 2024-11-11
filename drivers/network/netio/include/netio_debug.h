@@ -41,7 +41,7 @@ extern ULONG DebugTraceLevel;
         ? (DebugTraceLevel & _t_) > NORMAL_MASK \
         : (DebugTraceLevel & NORMAL_MASK) >= _t_) { \
         DbgPrint("(%s:%d)(%s) ", __FILE__, __LINE__, __FUNCTION__); \
-        DbgPrint _x_ ; \
+        DbgPrint _x_; \
     }
 
 #endif /* _MSC_VER */
