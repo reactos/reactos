@@ -140,6 +140,31 @@ CcIsThereDirtyData (
     return Dirty;
 }
 
+static
+VOID
+CcpUpdatePurgedFileCache(
+    _In_ PROS_SHARED_CACHE_MAP SharedCacheMap,
+    _In_ ULONG PurgedDirtyPages)
+{
+    KIRQL OldIrql;
+
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+    KeAcquireSpinLockAtDpcLevel(&SharedCacheMap->CacheMapLock);
+
+    /* Update number of dirty pages and check dirty status */
+    CcTotalDirtyPages -= PurgedDirtyPages;
+    SharedCacheMap->DirtyPages -= PurgedDirtyPages;
+    if (SharedCacheMap->DirtyPages == 0)
+    {
+        /* The file cache is no longer dirty, remove from dirty list */
+        RemoveEntryList(&SharedCacheMap->SharedCacheMapLinks);
+        InsertTailList(&CcCleanSharedCacheMapList, &SharedCacheMap->SharedCacheMapLinks);
+    }
+
+    KeReleaseSpinLockFromDpcLevel(&SharedCacheMap->CacheMapLock);
+    KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+}
+
 /*
  * @unimplemented
  */
@@ -237,21 +262,16 @@ CcPurgeCacheSection (
          * Allow one ref: VACB is supposed to be always 1-referenced
          */
         Refs = CcRosVacbGetRefCount(Vacb);
-        if ((Refs > 1 && !Vacb->Dirty) ||
-            (Refs > 2 && Vacb->Dirty))
+        if (Refs > 1)
         {
             Success = FALSE;
             break;
         }
 
         /* This VACB is in range, so unlink it and mark for free */
-        ASSERT(Refs == 1 || Vacb->Dirty);
+        ASSERT(Refs == 1);
         RemoveEntryList(&Vacb->VacbLruListEntry);
         InitializeListHead(&Vacb->VacbLruListEntry);
-        if (Vacb->Dirty)
-        {
-            CcRosUnmarkDirtyVacb(Vacb, FALSE);
-        }
         RemoveEntryList(&Vacb->CacheMapVacbListEntry);
         InsertHeadList(&FreeList, &Vacb->CacheMapVacbListEntry);
     }
@@ -273,7 +293,14 @@ CcPurgeCacheSection (
     /* Now make sure that Mm doesn't hold some pages here. */
 purgeMm:
     if (Success)
-        Success = MmPurgeSegment(SectionObjectPointer, FileOffset, Length);
+    {
+        ULONG PurgedDirtyPages;
+
+        Success = MmPurgeSegment(SectionObjectPointer, FileOffset, Length, &PurgedDirtyPages);
+
+        if (SharedCacheMap && PurgedDirtyPages != 0)
+            CcpUpdatePurgedFileCache(SharedCacheMap, PurgedDirtyPages);
+    }
 
     return Success;
 }
