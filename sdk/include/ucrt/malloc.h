@@ -50,9 +50,12 @@ typedef struct _heapinfo
 #define _mm_malloc(a, b) _aligned_malloc(a, b)
 
 
-
+#if defined(__GNUC__) || defined(__clang__)
+#define _alloca(x) __builtin_alloca((x))
+#else
 _Ret_notnull_ _Post_writable_byte_size_(_Size)
 void* __cdecl _alloca(_In_ size_t _Size);
+#endif
 
 
 
