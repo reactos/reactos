@@ -693,11 +693,21 @@ CcRosFreeOneUnusedVacb(
 
         KeAcquireSpinLockAtDpcLevel(&current->SharedCacheMap->CacheMapLock);
 
-        /* Only deal with unused VACB, we will free them */
+        /* Only keep iterating though the loop while the lock is held */
+        current_entry = current_entry->Flink;
+
+        /* Check if file cache associated with it is not dirty */
+        if (current->SharedCacheMap->DirtyPages != 0)
+        {
+            KeReleaseSpinLockFromDpcLevel(&current->SharedCacheMap->CacheMapLock);
+            continue;
+        }
+
+        /* Check if we can free this VACB now */
         Refs = CcRosVacbGetRefCount(current);
         if (Refs < 2)
         {
-            ASSERT(!current->Dirty);
+            ASSERT(current->SharedCacheMap->DirtyPages == 0);
             ASSERT(!current->MappedCount);
             ASSERT(Refs == 1);
 
@@ -711,8 +721,6 @@ CcRosFreeOneUnusedVacb(
         }
 
         KeReleaseSpinLockFromDpcLevel(&current->SharedCacheMap->CacheMapLock);
-
-        current_entry = current_entry->Flink;
     }
 
     KeReleaseQueuedSpinLock(LockQueueMasterLock, oldIrql);
