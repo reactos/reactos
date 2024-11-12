@@ -6,5 +6,5 @@
 // Provides external definitions of the inline functions memcpy_s and memmove_s
 // for use by objects compiled with older versions of the CRT headers.
 //
-#define _CRT_MEMCPY_S_INLINE extern __inline
+#define _CRT_MEMCPY_S_INLINE extern
 #include <corecrt_memcpy_s.h>
