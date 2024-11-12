@@ -568,7 +568,6 @@ CmBattQueryTag(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
 {
     PDEVICE_OBJECT PdoDevice;
     ULONG StaData;
-    ULONG NewTag;
     NTSTATUS Status;
     PAGED_CODE();
     if (CmBattDebug & (CMBATT_ACPI_WARNING | CMBATT_GENERIC_INFO))
@@ -587,12 +586,12 @@ CmBattQueryTag(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
         if (StaData & ACPI_STA_BATTERY_PRESENT)
         {
             /* Do we not have a tag yet? */
-            if (!DeviceExtension->Tag)
+            if (DeviceExtension->Tag == BATTERY_TAG_INVALID)
             {
                 /* Set the new tag value, reset tags if we reached the maximum */
-                NewTag = DeviceExtension->TagData;
-                if (DeviceExtension->TagData++ == 0xFFFFFFFF) NewTag = 1;
-                DeviceExtension->Tag = NewTag;
+                if (++DeviceExtension->TagData == BATTERY_TAG_INVALID)
+                    DeviceExtension->TagData = 1;
+                DeviceExtension->Tag = DeviceExtension->TagData;
                 if (CmBattDebug & CMBATT_GENERIC_INFO)
                     DbgPrint("CmBattQueryTag - New Tag: (%d)\n", DeviceExtension->Tag);
 
@@ -608,7 +607,7 @@ CmBattQueryTag(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
         else
         {
             /* No battery, so no tag */
-            DeviceExtension->Tag = 0;
+            DeviceExtension->Tag = BATTERY_TAG_INVALID;
             Status = STATUS_NO_SUCH_DEVICE;
         }
     }
