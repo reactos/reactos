@@ -455,11 +455,18 @@ retry:
 
         KeAcquireSpinLockAtDpcLevel(&current->SharedCacheMap->CacheMapLock);
 
-        /* Reference the VACB */
-        CcRosVacbIncRefCount(current);
+        /* Only keep iterating though the loop while the lock is held */
+        current_entry = current_entry->Flink;
 
-        /* Check if it's mapped and not dirty */
-        if (InterlockedCompareExchange((PLONG)&current->MappedCount, 0, 0) > 0 && !current->Dirty)
+        /* Check if file cache associated with it is not dirty */
+        if (current->SharedCacheMap->DirtyPages != 0)
+        {
+            KeReleaseSpinLockFromDpcLevel(&current->SharedCacheMap->CacheMapLock);
+            continue;
+        }
+
+        /* Check if it's mapped */
+        if (InterlockedCompareExchange((PLONG)&current->MappedCount, 0, 0) > 0)
         {
             /* This code is never executed. It is left for reference only. */
 #if 1
@@ -468,6 +475,9 @@ retry:
 #else
             ULONG i;
             PFN_NUMBER Page;
+
+            /* Reference the VACB */
+            CcRosVacbIncRefCount(current);
 
             /* We have to break these locks to call MmPageOutPhysicalAddress */
             KeReleaseSpinLockFromDpcLevel(&current->SharedCacheMap->CacheMapLock);
@@ -484,19 +494,17 @@ retry:
             /* Reacquire the locks */
             oldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
             KeAcquireSpinLockAtDpcLevel(&current->SharedCacheMap->CacheMapLock);
+
+            /* Dereference the VACB */
+            CcRosVacbDecRefCount(current);
 #endif
         }
 
-        /* Only keep iterating though the loop while the lock is held */
-        current_entry = current_entry->Flink;
-
-        /* Dereference the VACB */
-        Refs = CcRosVacbDecRefCount(current);
-
-        /* Check if we can free this entry now */
+        /* Check if we can free this VACB now */
+        Refs = CcRosVacbGetRefCount(current);
         if (Refs < 2)
         {
-            ASSERT(!current->Dirty);
+            ASSERT(current->SharedCacheMap->DirtyPages == 0);
             ASSERT(!current->MappedCount);
             ASSERT(Refs == 1);
 
