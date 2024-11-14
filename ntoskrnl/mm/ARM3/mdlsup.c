@@ -1626,10 +1626,10 @@ MmAdvanceMdl(IN PMDL Mdl,
  */
 PVOID
 NTAPI
-MmMapLockedPagesWithReservedMapping(IN PVOID MappingAddress,
-                                    IN ULONG PoolTag,
-                                    IN PMDL Mdl,
-                                    IN MEMORY_CACHING_TYPE CacheType)
+MmMapLockedPagesWithReservedMapping(_In_ PVOID MappingAddress,
+                                    _In_ ULONG PoolTag,
+                                    _In_ PMDL Mdl,
+                                    _In_ MEMORY_CACHING_TYPE CacheType)
 {
     PPFN_NUMBER MdlPages, LastPage;
     PFN_COUNT PageCount;
@@ -1719,15 +1719,12 @@ MmMapLockedPagesWithReservedMapping(IN PVOID MappingAddress,
     }
 
     // Loop all PTEs
-    do
+    for (; (MdlPages < LastPage) && (*MdlPages != LIST_HEAD); ++MdlPages)
     {
-        // We're done here
-        if (*MdlPages == LIST_HEAD) break;
-
         // Write the PTE
         TempPte.u.Hard.PageFrameNumber = *MdlPages;
         MI_WRITE_VALID_PTE(PointerPte++, TempPte);
-    } while (++MdlPages < LastPage);
+    }
 
     // Mark it as mapped
     ASSERT((Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA) == 0);
@@ -1750,9 +1747,9 @@ MmMapLockedPagesWithReservedMapping(IN PVOID MappingAddress,
  */
 VOID
 NTAPI
-MmUnmapReservedMapping(IN PVOID BaseAddress,
-                       IN ULONG PoolTag,
-                       IN PMDL Mdl)
+MmUnmapReservedMapping(_In_ PVOID BaseAddress,
+                       _In_ ULONG PoolTag,
+                       _In_ PMDL Mdl)
 {
     PVOID Base;
     PFN_COUNT PageCount, ExtraPageCount;
