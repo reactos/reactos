@@ -13,7 +13,8 @@ if(ARCH STREQUAL "i386")
     )
     if(MSVC)
         list(APPEND CRT_EXCEPT_ASM_SOURCE
-            except/i386/cpp.s)
+            except/i386/cpp.s
+            except/i386/cpp_alias.s)
     endif()
 elseif(ARCH STREQUAL "amd64")
     list(APPEND LIBCNTPR_EXCEPT_SOURCE
@@ -28,7 +29,8 @@ elseif(ARCH STREQUAL "amd64")
     )
     if(MSVC)
         list(APPEND CRT_EXCEPT_ASM_SOURCE
-            except/amd64/cpp.s)
+            except/amd64/cpp.s
+            except/amd64/cpp_alias.s)
     endif()
 elseif(ARCH STREQUAL "arm")
     list(APPEND LIBCNTPR_EXCEPT_SOURCE
@@ -53,7 +55,8 @@ elseif(ARCH STREQUAL "arm")
     )
     if(MSVC)
         list(APPEND CRT_EXCEPT_ASM_SOURCE
-            except/arm/cpp.s)
+            except/arm/cpp.s
+            except/arm/cpp_alias.s)
     endif()
 endif()
 
