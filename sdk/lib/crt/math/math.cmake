@@ -7,6 +7,8 @@ list(APPEND LIBCNTPR_MATH_SOURCE
     math/_fdsign.c
     math/_finite.c
     math/_finitef.c
+    math/_isnan.c
+    math/_isnanf.c
     math/_invoke_matherr.c
     math/abs.c
     math/div.c
