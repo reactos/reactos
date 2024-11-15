@@ -1,8 +1,4 @@
 
-list(APPEND LIBCNTPR_FLOAT_SOURCE
-    float/isnan.c
-)
-
 list(APPEND CRT_FLOAT_SOURCE
     ${LIBCNTPR_FLOAT_SOURCE}
     float/chgsign.c

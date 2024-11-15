@@ -560,7 +560,7 @@
 @ cdecl _ismbstrail(ptr ptr)
 @ cdecl _ismbstrail_l(ptr ptr ptr)
 @ cdecl _isnan(double)
-@ cdecl -stub -arch=x86_64 _isnanf(float)
+@ cdecl -arch=x86_64 _isnanf(float)
 @ cdecl _isprint_l(long ptr)
 @ cdecl _ispunct_l(long ptr)
 @ cdecl _isspace_l(long ptr)
