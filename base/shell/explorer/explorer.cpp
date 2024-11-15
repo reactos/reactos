@@ -102,8 +102,6 @@ IsExplorerSystemShell()
 
     szExplorer = PathFindFileName((LPWSTR)szPath);
 
-    PathRemoveExtension(szExplorer);
-
 	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
 		0, KEY_READ, &hKeyWinlogon) != ERROR_SUCCESS)
     {
