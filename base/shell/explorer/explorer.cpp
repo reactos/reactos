@@ -87,6 +87,37 @@ HideMinimizedWindows(IN BOOL bHide)
 }
 #endif
 
+static BOOL
+IsExplorerSystemShell()
+{
+    HKEY hKeyWinlogon;
+	WCHAR szShell[256];
+    WCHAR szExplorer[] = L"explorer";
+	DWORD dwType;
+	DWORD dwBufferSize = sizeof(szShell);
+
+	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+		0, KEY_READ, &hKeyWinlogon) != ERROR_SUCCESS)
+    {
+        // No registry access.
+        return FALSE;
+    }
+
+    if (RegQueryValueEx(hKeyWinlogon, L"Shell", 0, &dwType,
+		(LPBYTE)szShell, &dwBufferSize) == ERROR_SUCCESS)
+	{
+		RegCloseKey(hKeyWinlogon);
+
+		if (StrStr(szShell, szExplorer))
+			return TRUE;
+		else
+			return FALSE;
+	}
+    
+	// Unable to query value.
+	return FALSE;
+}
+
 #if !WIN7_COMPAT_MODE
 static INT
 StartWithCommandLine(IN HINSTANCE hInstance)
@@ -212,15 +243,14 @@ _tWinMain(IN HINSTANCE hInstance,
     TRACE("Explorer starting... Command line: %S\n", lpCmdLine);
 
 #if !WIN7_COMPAT_MODE
-    if (GetShellWindow() == NULL)
-        bExplorerIsShell = TRUE;
+    bExplorerIsShell = (GetShellWindow() == NULL) && IsExplorerSystemShell();
 
     if (!bExplorerIsShell)
     {
         return StartWithCommandLine(hInstance);
     }
 #else
-    bExplorerIsShell = TRUE;
+    bExplorerIsShell = IsExplorerSystemShell();
 #endif
 
     return StartWithDesktop(hInstance);
