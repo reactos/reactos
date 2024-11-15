@@ -108,7 +108,7 @@ IsExplorerSystemShell()
 		0, KEY_READ, &hKeyWinlogon) != ERROR_SUCCESS)
     {
         // No registry access.
-        return FALSE;
+        return TRUE;
     }
 
     if (RegQueryValueEx(hKeyWinlogon, L"Shell", 0, &dwType,
