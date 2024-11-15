@@ -92,9 +92,17 @@ IsExplorerSystemShell()
 {
     HKEY hKeyWinlogon;
 	WCHAR szShell[256];
-    WCHAR szExplorer[] = L"explorer";
+	WCHAR szPath[MAX_PATH];
+    LPWSTR szExplorer = NULL;
 	DWORD dwType;
 	DWORD dwBufferSize = sizeof(szShell);
+
+    if (!GetModuleFileName(NULL, szPath, MAX_PATH))
+        return FALSE;
+
+    szExplorer = PathFindFileName((LPWSTR)szPath);
+
+    PathRemoveExtension(szExplorer);
 
 	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
 		0, KEY_READ, &hKeyWinlogon) != ERROR_SUCCESS)
@@ -113,7 +121,7 @@ IsExplorerSystemShell()
 		else
 			return FALSE;
 	}
-    
+
 	// Unable to query value.
 	return FALSE;
 }
