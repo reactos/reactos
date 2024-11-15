@@ -114,7 +114,7 @@ IsExplorerSystemShell()
 	{
 		RegCloseKey(hKeyWinlogon);
 
-		if (StrStr(szShell, szExplorer))
+		if (StrStrI(szShell, szExplorer))
 			return TRUE;
 		else
 			return FALSE;
