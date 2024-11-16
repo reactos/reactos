@@ -105,8 +105,9 @@ extern "C" {
 #define PT_SHARE	0xc3
 
 #ifdef __REACTOS__
+#define PT_FOLDERTYPEMASK       0x70
 #define PT_DESKTOP_REGITEM      0x1F // => SHDID_ROOT_REGITEM
-#define PT_COMPUTER_REGITEM     0x2E // => SHDID_COMPUTER_OTHER
+#define PT_COMPUTER_REGITEM     0x2E // => SHDID_COMPUTER_?
 #define PT_FS                   0x30 // Win95 SHSimpleIDListFromPath
 #define PT_FS_FOLDER_FLAG       0x01
 #define PT_FS_FILE_FLAG         0x02
@@ -115,6 +116,17 @@ extern "C" {
 #define PT_CONTROLS_OLDREGITEM  0x70
 #define PT_CONTROLS_NEWREGITEM  0x71
 #endif
+
+static inline BYTE _ILGetType(LPCITEMIDLIST pidl)
+{
+    return pidl && pidl->mkid.cb >= 3 ? pidl->mkid.abID[0] : 0;
+}
+
+static inline BYTE _ILGetFSType(LPCITEMIDLIST pidl)
+{
+    const BYTE type = _ILGetType(pidl);
+    return (type & PT_FOLDERTYPEMASK) == PT_FS ? type : 0;
+}
 
 #include "pshpack1.h"
 typedef BYTE PIDLTYPE;
@@ -257,14 +269,8 @@ BOOL	_ILIsValue		(LPCITEMIDLIST pidl) DECLSPEC_HIDDEN;
 BOOL	_ILIsSpecialFolder	(LPCITEMIDLIST pidl) DECLSPEC_HIDDEN;
 BOOL	_ILIsPidlSimple		(LPCITEMIDLIST pidl) DECLSPEC_HIDDEN;
 BOOL	_ILIsCPanelStruct	(LPCITEMIDLIST pidl) DECLSPEC_HIDDEN;
-static inline 
-BOOL    _ILIsEqualSimple        (LPCITEMIDLIST pidlA, LPCITEMIDLIST pidlB)
-{
-    return (pidlA->mkid.cb > 0 && !memcmp(pidlA, pidlB, pidlA->mkid.cb)) ||
-            (!pidlA->mkid.cb && !pidlB->mkid.cb);
-}
-static inline
-BOOL    _ILIsEmpty              (LPCITEMIDLIST pidl) { return _ILIsDesktop(pidl); }
+static inline BOOL _ILIsEmpty(LPCITEMIDLIST pidl) { return _ILIsDesktop(pidl); }
+UINT _ILGetDepth(LPCITEMIDLIST pidl);
 
 /*
  * simple pidls

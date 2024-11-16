@@ -597,21 +597,19 @@ void DumpIdList(LPCITEMIDLIST pcidl)
     DbgPrint("End IDList Dump.\n");
 }
 
-struct CCoInit
+template <HRESULT (WINAPI *InitFunc)(void*), void (WINAPI *UninitFunc)()>
+struct CCoInitBase
 {
-    CCoInit()
-    {
-        hr = CoInitialize(NULL);
-    }
-    ~CCoInit()
+    HRESULT hr;
+    CCoInitBase() : hr(InitFunc(NULL)) { }
+    ~CCoInitBase()
     {
         if (SUCCEEDED(hr))
-        {
-            CoUninitialize();
-        }
+            UninitFunc();
     }
-    HRESULT hr;
 };
+typedef CCoInitBase<CoInitialize, CoUninitialize> CCoInit;
+typedef CCoInitBase<OleInitialize, OleUninitialize> COleInit;
 
 #endif /* __cplusplus */
 
@@ -828,5 +826,50 @@ struct SHELL_GetSettingImpl
 #define SHELL_GetSetting(pss, ssf, field) ( SHGetSetSettings((pss), (ssf), FALSE), (pss)->field )
 #endif
 
+static inline void DumpIdListOneLine(LPCITEMIDLIST pidl)
+{
+    char buf[1024], *data, drive = 0;
+    for (UINT depth = 0, type; ; pidl = ILGetNext(pidl), ++depth)
+    {
+        if (!pidl || !pidl->mkid.cb)
+        {
+            if (!depth)
+            {
+                wsprintfA(buf, "%p [] (%s)\n", pidl, pidl ? "Empty/Desktop" : "NULL");
+                OutputDebugStringA(buf);
+            }
+            break;
+        }
+        else if (!depth)
+        {
+            wsprintfA(buf, "%p", pidl);
+            OutputDebugStringA(buf);
+        }
+        type = pidl->mkid.abID[0] & 0x7f;
+        data = (char*)&pidl->mkid.abID[0];
+        if (depth == 0 && type == 0x1f && pidl->mkid.cb == 20 && *(UINT*)(&data[2]) == 0x20D04FE0)
+        {
+            wsprintfA(buf, " [%.2x ThisPC?]", type); /* "?" because we did not check the full GUID */
+        }
+        else if (depth == 1 && type >= 0x20 && type < 0x30 && type != 0x2E && pidl->mkid.cb > 4)
+        {
+            drive = data[1];
+            wsprintfA(buf, " [%.2x %c: %ub]", type, drive, pidl->mkid.cb);
+        }
+        else if (depth >= 2 && drive && (type & 0x70) == 0x30) /* PT_FS */
+        {
+            if (type & 4)
+                wsprintfA(buf, " [%.2x FS %.256ls %ub]", type, data + 12, pidl->mkid.cb);
+            else
+                wsprintfA(buf, " [%.2x FS %.256hs %ub]", type, data + 12, pidl->mkid.cb);
+        }
+        else
+        {
+            wsprintfA(buf, " [%.2x ? %ub]", type, pidl->mkid.cb);
+        }
+        OutputDebugStringA(buf);
+    }
+    OutputDebugStringA("\n");
+}
 
 #endif /* __ROS_SHELL_UTILS_H */
