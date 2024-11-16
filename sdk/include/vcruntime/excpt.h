@@ -8,6 +8,10 @@
 
 #include <vcruntime.h>
 
+#if !defined(RC_INVOKED)
+#include <pseh/pseh2.h>
+#endif
+
 #pragma pack(push,_CRT_PACKING)
 
 #ifdef __cplusplus
@@ -71,16 +75,17 @@ typedef enum _EXCEPTION_DISPOSITION
 #endif
 
 #if defined(_MSC_VER) || (defined(__clang__) && defined(__SEH__))
+  unsigned long __cdecl _exception_code(void);
+  void *__cdecl _exception_info(void);
+  int __cdecl _abnormal_termination(void);
+#endif
+
 #define GetExceptionCode _exception_code
 #define exception_code _exception_code
 #define GetExceptionInformation (struct _EXCEPTION_POINTERS *)_exception_info
 #define exception_info (struct _EXCEPTION_POINTERS *)_exception_info
 #define AbnormalTermination _abnormal_termination
 #define abnormal_termination _abnormal_termination
-  unsigned long __cdecl _exception_code(void);
-  void *__cdecl _exception_info(void);
-  int __cdecl _abnormal_termination(void);
-#endif
 
 #define EXCEPTION_EXECUTE_HANDLER 1
 #define EXCEPTION_CONTINUE_SEARCH 0
