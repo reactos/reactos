@@ -1770,7 +1770,6 @@ MmUnmapReservedMapping(_In_ PVOID BaseAddress,
     ASSERT(PageCount != 0);
     ASSERT(Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA);
 
-
     // Get the first PTE we reserved
     PointerPte = MiAddressToPte(BaseAddress) - 2;
     ASSERT(!PointerPte[0].u.Hard.Valid &&
@@ -1789,7 +1788,7 @@ MmUnmapReservedMapping(_In_ PVOID BaseAddress,
     }
 
     // We must have a size
-    if (PointerPte[0].u.Long < (3 << 1))
+    if (PointerPte[0].u.List.NextEntry < 3)
     {
         KeBugCheckEx(SYSTEM_PTE_MISUSE,
                      PTE_MAPPING_ADDRESS_EMPTY, /* Mapping apparently empty */
