@@ -130,6 +130,11 @@ gdtptr:
     .long gdt           /* Base Address */
 #endif
 
+/* Real-mode IDT pointer */
+rmode_idtptr:
+    .word HEX(3FF)      /* Limit */
+    .long 0             /* Base Address */
+
 
 CheckFor64BitSupport:
     /* Check whether the CPU supports CPUID */
@@ -303,7 +308,10 @@ InRealMode:
     /* Restore real mode stack */
     mov sp, word ptr ds:[stack16]
 
-    // sti /* These are ok now */
+    /* Load IDTR with real mode value */
+    lidt lXdtPrefix ds:[rmode_idtptr]
+
+    sti /* These are ok now */
 
     /* Do the callback, specified by bx */
     shl bx, 1
