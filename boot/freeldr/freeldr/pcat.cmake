@@ -36,6 +36,7 @@ list(APPEND PCATLDR_BASE_ASM_SOURCE)
 
 if(ARCH STREQUAL "i386")
     list(APPEND PCATLDR_BASE_ASM_SOURCE
+        arch/i386/endreloc.S
         arch/i386/multiboot.S)
 
     list(APPEND PCATLDR_COMMON_ASM_SOURCE
@@ -111,6 +112,7 @@ if(ARCH STREQUAL "i386")
 
 elseif(ARCH STREQUAL "amd64")
     list(APPEND PCATLDR_BASE_ASM_SOURCE
+        arch/i386/endreloc.S
         arch/i386/multiboot.S)
 
     list(APPEND PCATLDR_COMMON_ASM_SOURCE

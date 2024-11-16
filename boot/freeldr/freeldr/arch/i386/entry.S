@@ -28,6 +28,7 @@ EXTERN _i386Idt:DWORD
 EXTERN cmdline:DWORD
 
 EXTERN _DiskStopFloppyMotor:PROC
+EXTERN FinishRelocation:PROC
 
 #ifdef _USE_ML
 EXTERN __bss_start__:DWORD
@@ -46,6 +47,11 @@ _RealEntryPoint:
     mov fs, ax
     mov gs, ax
     mov ss, ax
+
+    /* Keep only the low 16 bits of stack */
+    and esp, HEX(FFFF)
+
+    call FinishRelocation
 
     /* Setup protected mode stack */
     mov esp, dword ptr ds:[stack32]

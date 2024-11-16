@@ -8,6 +8,7 @@ EXTERN BootMain:PROC
 EXTERN cmdline:DWORD
 
 EXTERN DiskStopFloppyMotor:PROC
+EXTERN FinishRelocation:PROC
 
 #ifdef _USE_ML
 EXTERN __bss_start__:FWORD
@@ -27,6 +28,11 @@ RealEntryPoint:
 //    mov ss, ax
 
     //mov word ptr [HEX(b8000)], HEX(0e00) + '1'
+
+    /* Keep only the low 16 bits of stack */
+    and rsp, HEX(FFFF)
+
+    call FinishRelocation
 
     /* Setup long mode stack */
     mov rsp, qword ptr [stack64]
@@ -214,7 +220,7 @@ SwitchToRealCompSegment:
     .byte HEX(0EA) // 32bit long jmp
 AddressOfRealModeEntryPoint:
     .long 0 // receives address of RealModeEntryPoint
-    .word HEX(20)//RMODE_CS
+    .word L_RMODE_CS
     nop
 
 CallRealMode_return:
