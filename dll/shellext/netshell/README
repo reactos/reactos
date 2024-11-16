@@ -60,7 +60,7 @@ reimplement these stubs alongside all its unimplemented interfaces and objects, 
 the system netshell with ours (INetConnectionManager and IEnumNetConnection are only the tip
 of the iceberg).
 However it is perfectly fine if one copies our netshell in a different folder and change the
-registry settings to make it handle CLSID_ConnectionFolder, CLSID_LanConnectionUi and CLSID_ConnectionTray.
+registry settings to make it handle CLSID_NetworkConnections, CLSID_LanConnectionUi and CLSID_ConnectionTray.
 When doing so there are actually two options about how to test. One is leaving #define USE_CUSTOM_CONMGR 1
 as is and the other is setting is to 0. What this does is that when 0, the connections will be enumerated
 in the shell folder and the tray using the system's INetConnectionManager (which resides in the system's
