@@ -487,7 +487,7 @@ struct __std_exception_data {
     char dofree;
 };
 
-#if _MSVCR_VER>=140
+#if _MSVCR_VER>=140 || defined(__UCRTSUPPORT__)
 
 /*********************************************************************
  *  __std_exception_copy (UCRTBASE.@)

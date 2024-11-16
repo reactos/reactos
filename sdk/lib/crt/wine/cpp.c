@@ -1025,7 +1025,7 @@ void WINAPI _CxxThrowException( void *object, const cxx_exception_type *type )
 }
 #endif
 
-#if _MSVCR_VER >= 80
+#if _MSVCR_VER >= 80 || defined(__UCRTSUPPORT__)
 
 /*********************************************************************
  * ?_is_exception_typeof@@YAHABVtype_info@@PAU_EXCEPTION_POINTERS@@@Z
@@ -1063,6 +1063,8 @@ int __cdecl _is_exception_typeof(const type_info *ti, EXCEPTION_POINTERS *ep)
         }
     }
     __EXCEPT_PAGE_FAULT
+    {
+    }
     __ENDTRY
 
     if(ret == -1)
@@ -1104,6 +1106,8 @@ int __cdecl _is_exception_typeof(const type_info *ti, EXCEPTION_POINTERS *ep)
         }
     }
     __EXCEPT_PAGE_FAULT
+    {
+    }
     __ENDTRY
 
     if(ret == -1)
@@ -1123,6 +1127,7 @@ void CDECL __clean_type_info_names_internal(void *p)
 /*********************************************************************
  * ?_name_internal_method@type_info@@QBEPBDPAU__type_info_node@@@Z (MSVCR100.@)
  */
+const char * __thiscall type_info_name_internal_method(type_info * _this, struct __type_info_node *node);
 DEFINE_THISCALL_WRAPPER(type_info_name_internal_method,8)
 const char * __thiscall type_info_name_internal_method(type_info * _this, struct __type_info_node *node)
 {
@@ -1472,14 +1477,14 @@ bool __cdecl __ExceptionPtrCompare(const exception_ptr *ep1, const exception_ptr
 
 #endif /* _MSVCR_VER >= 100 */
 
-#if _MSVCR_VER >= 80
+#if _MSVCR_VER >= 80 || defined(__UCRTSUPPORT__)
 void* __cdecl __AdjustPointer(void *obj, const this_ptr_offsets *off)
 {
     return get_this_pointer(off, obj);
 }
 #endif
 
-#if _MSVCR_VER >= 140
+#if _MSVCR_VER >= 140 || defined(__UCRTSUPPORT__)
 
 typedef struct
 {
