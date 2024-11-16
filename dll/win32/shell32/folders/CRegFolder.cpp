@@ -412,7 +412,7 @@ BOOL CRegFolder::_IsInNameSpace(_In_ LPCITEMIDLIST pidl)
     CLSID clsid = *_ILGetGUIDPointer(pidl);
     if (IsEqualGUID(clsid, CLSID_Printers))
         return TRUE;
-    if (IsEqualGUID(clsid, CLSID_ConnectionFolder))
+    if (IsEqualGUID(clsid, CLSID_NetworkConnections))
         return TRUE;
     FIXME("Check registry\n");
     return TRUE;
