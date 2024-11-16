@@ -332,6 +332,11 @@ function(fixup_load_config _target)
     # msvc knows how to generate a load_config so no hacks here
 endfunction()
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR
+   CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    set(__spec2def_dbg_arg "--dbg")
+endif()
+
 function(generate_import_lib _libname _dllname _spec_file __version_arg)
 
     set(_def_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def)
@@ -341,7 +346,7 @@ function(generate_import_lib _libname _dllname _spec_file __version_arg)
     # Generate the def, asm stub and alias files
     add_custom_command(
         OUTPUT ${_asm_stubs_file} ${_def_file} ${_asm_impalias_file}
-        COMMAND native-spec2def --ms ${__version_arg} -a=${SPEC2DEF_ARCH} --implib -n=${_dllname} -d=${_def_file} -l=${_asm_stubs_file} -i=${_asm_impalias_file} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def --ms ${__version_arg} ${__spec2def_dbg_arg} -a=${SPEC2DEF_ARCH} --implib -n=${_dllname} -d=${_def_file} -l=${_asm_stubs_file} -i=${_asm_impalias_file} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
     # Compile the generated asm stub file
@@ -414,7 +419,7 @@ function(spec2def _dllname _spec_file)
     # Generate exports def and C stubs file for the DLL
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
-        COMMAND native-spec2def --ms -a=${SPEC2DEF_ARCH} -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__version_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def --ms -a=${SPEC2DEF_ARCH} -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__version_arg} ${__spec2def_dbg_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
     # Do not use precompiled headers for the stub file

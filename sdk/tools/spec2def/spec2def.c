@@ -67,6 +67,7 @@ int gbImportLib = 0;
 int gbNotPrivateNoWarn = 0;
 int gbTracing = 0;
 int giArch = ARCH_X86;
+int gbDbgExports = 0;
 char *pszArchString = "i386";
 char *pszArchString2;
 char *pszSourceFileName = NULL;
@@ -1162,6 +1163,13 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
 
                 } while (*pc == ',');
             }
+            else if (CompareToken(pc, "-dbg"))
+            {
+                if (!gbDbgExports)
+                {
+                    included = 0;
+                }
+            }
             else if (CompareToken(pc, "-private"))
             {
                 exp.uFlags |= FL_PRIVATE;
@@ -1505,6 +1513,7 @@ void usage(void)
            "  -s=<file>               generate a stub file\n"
            "  -i=<file>               generate an import alias file\n"
            "  --ms                    MSVC compatibility\n"
+           "  --dbg                   Enable debug exports\n"
            "  -n=<name>               name of the dll\n"
            "  --version=<version>     Sets the version to create exports for\n"
            "  --implib                generate a def file for an import library\n"
@@ -1570,6 +1579,10 @@ int main(int argc, char *argv[])
         else if (strcasecmp(argv[i], "--ms") == 0)
         {
             gbMSComp = 1;
+        }
+        else if (strcasecmp(argv[i], "--dbg") == 0)
+        {
+            gbDbgExports = 1;
         }
         else if (strcasecmp(argv[i], "--no-private-warnings") == 0)
         {

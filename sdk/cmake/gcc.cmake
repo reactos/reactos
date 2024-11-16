@@ -373,11 +373,16 @@ function(fixup_load_config _target)
         DEPENDS native-pefixup)
 endfunction()
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR
+   CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    set(__spec2def_dbg_arg "--dbg")
+endif()
+
 function(generate_import_lib _libname _dllname _spec_file __version_arg)
     # Generate the def for the import lib
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def
-        COMMAND native-spec2def ${__version_arg} -n=${_dllname} -a=${ARCH2} ${ARGN} --implib -d=${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def ${__version_arg} ${__spec2def_dbg_arg} -n=${_dllname} -a=${ARCH2} ${ARGN} --implib -d=${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
     # With this, we let DLLTOOL create an import library
@@ -450,7 +455,7 @@ function(spec2def _dllname _spec_file)
     # Generate exports def and C stubs file for the DLL
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
-        COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__version_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__version_arg} ${__spec2def_dbg_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
     # Do not use precompiled headers for the stub file
