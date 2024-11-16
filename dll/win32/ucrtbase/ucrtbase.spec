@@ -17,7 +17,7 @@
 @ cdecl -stub _Cbuild(ptr double double)
 @ stub _Cmulcc
 @ stub _Cmulcr
-@ cdecl -stub _CreateFrameInfo(ptr ptr)
+@ cdecl _CreateFrameInfo(ptr ptr)
 @ cdecl -dbg _CrtCheckMemory()
 @ cdecl -dbg _CrtDbgReport(long str long str str)
 @ cdecl -dbg _CrtDbgReportW(long wstr long wstr wstr)
@@ -46,19 +46,19 @@
 @ cdecl -dbg _CrtSetReportHook2() # FIXME: params
 @ cdecl -dbg _CrtSetReportHookW2() # FIXME: params
 @ cdecl -dbg _CrtSetReportMode() # FIXME: params
-@ stdcall -stub _CxxThrowException(ptr ptr)
+@ stdcall _CxxThrowException(ptr ptr)
 @ cdecl -arch=i386 -norelay _EH_prolog()
 @ cdecl _Exit(long)
 @ stub _FCbuild
 @ stub _FCmulcc
 @ stub _FCmulcr
-@ cdecl -stub _FindAndUnlinkFrame(ptr)
+@ cdecl _FindAndUnlinkFrame(ptr)
 @ stub _GetImageBase
 @ stub _GetThrowImageBase
 @ cdecl _Getdays()
 @ cdecl _Getmonths()
 @ cdecl _Gettnames()
-@ cdecl -stub _IsExceptionObjectToBeDestroyed(ptr)
+@ cdecl _IsExceptionObjectToBeDestroyed(ptr)
 @ stub _LCbuild
 @ stub _LCmulcc
 @ stub _LCmulcr
@@ -75,29 +75,29 @@
 @ cdecl _W_Getmonths()
 @ cdecl _W_Gettnames()
 @ cdecl _Wcsftime(ptr long wstr ptr ptr)
-@ cdecl -stub __AdjustPointer(ptr ptr)
+@ cdecl __AdjustPointer(ptr ptr)
 @ stub __BuildCatchObject
 @ stub __BuildCatchObjectHelper
 @ cdecl -arch=!i386 __C_specific_handler(ptr long ptr ptr) ntdll.__C_specific_handler
 @ cdecl -stub -arch=!i386 __C_specific_handler_noexcept(ptr long ptr ptr)
-@ cdecl -stub __CxxDetectRethrow(ptr)
-@ cdecl -stub __CxxExceptionFilter(ptr ptr long ptr)
-@ cdecl -stub -norelay __CxxFrameHandler(ptr ptr ptr ptr)
-@ cdecl -stub -norelay __CxxFrameHandler2(ptr ptr ptr ptr) __CxxFrameHandler
-@ cdecl -stub -norelay __CxxFrameHandler3(ptr ptr ptr ptr) __CxxFrameHandler
+@ cdecl __CxxDetectRethrow(ptr)
+@ cdecl __CxxExceptionFilter(ptr ptr long ptr)
+@ cdecl -norelay __CxxFrameHandler(ptr ptr ptr ptr)
+@ cdecl -norelay __CxxFrameHandler2(ptr ptr ptr ptr) __CxxFrameHandler
+@ cdecl -norelay __CxxFrameHandler3(ptr ptr ptr ptr) __CxxFrameHandler
 @ cdecl -stub -arch=x86_64 __CxxFrameHandler4(ptr long ptr ptr)
-@ stdcall -stub -arch=i386 __CxxLongjmpUnwind(ptr)
-@ cdecl -stub __CxxQueryExceptionSize()
-@ cdecl -stub __CxxRegisterExceptionObject(ptr ptr)
-@ cdecl -stub __CxxUnregisterExceptionObject(ptr long)
-@ cdecl -stub __DestructExceptionObject(ptr)
+@ stdcall -arch=i386 __CxxLongjmpUnwind(ptr)
+@ cdecl __CxxQueryExceptionSize()
+@ cdecl __CxxRegisterExceptionObject(ptr ptr)
+@ cdecl __CxxUnregisterExceptionObject(ptr long)
+@ cdecl __DestructExceptionObject(ptr)
 @ stub __FrameUnwindFilter
 @ stub __GetPlatformExceptionInfo
 @ stub __NLG_Dispatch2
 @ stub __NLG_Return2
-@ cdecl -stub __RTCastToVoid(ptr)
-@ cdecl -stub __RTDynamicCast(ptr long ptr ptr long)
-@ cdecl -stub __RTtypeid(ptr)
+@ cdecl __RTCastToVoid(ptr)
+@ cdecl __RTDynamicCast(ptr long ptr ptr long)
+@ cdecl __RTtypeid(ptr)
 @ stub __TypeMatch
 @ cdecl ___lc_codepage_func()
 @ cdecl ___lc_collate_cp_func()
@@ -114,8 +114,8 @@
 @ cdecl __conio_common_vcwprintf_s(int64 wstr ptr ptr)
 @ cdecl __conio_common_vcwscanf(int64 wstr ptr ptr)
 @ cdecl -stub -arch=i386 __control87_2(long long ptr ptr)
-@ cdecl -stub __current_exception()
-@ cdecl -stub __current_exception_context()
+@ cdecl __current_exception()
+@ cdecl __current_exception_context()
 @ cdecl __daylight()
 @ cdecl __dcrt_get_wide_environment_from_os() # FIXME: params
 @ cdecl __dcrt_initial_narrow_environment()
@@ -170,18 +170,18 @@
 @ cdecl __p__wenviron()
 @ cdecl __p__wpgmptr()
 @ cdecl __pctype_func()
-@ cdecl -stub __processing_throw()
+@ cdecl __processing_throw()
 @ cdecl __pwctype_func()
 @ cdecl __pxcptinfoptrs()
 @ cdecl __report_gsfailure()
 @ cdecl __setusermatherr(ptr)
-@ cdecl -stub __std_exception_copy(ptr ptr)
-@ cdecl -stub __std_exception_destroy(ptr)
+@ cdecl __std_exception_copy(ptr ptr)
+@ cdecl __std_exception_destroy(ptr)
 @ cdecl __std_terminate() terminate
-@ cdecl -stub __std_type_info_compare(ptr ptr)
-@ cdecl -stub __std_type_info_destroy_list(ptr)
-@ cdecl -stub __std_type_info_hash(ptr)
-@ cdecl -stub __std_type_info_name(ptr ptr)
+@ cdecl __std_type_info_compare(ptr ptr)
+@ cdecl __std_type_info_destroy_list(ptr)
+@ cdecl __std_type_info_hash(ptr)
+@ cdecl __std_type_info_name(ptr ptr)
 @ cdecl __stdio_common_vfprintf(int64 ptr str ptr ptr)
 @ cdecl __stdio_common_vfprintf_p(int64 ptr str ptr ptr)
 @ cdecl __stdio_common_vfprintf_s(int64 ptr str ptr ptr)
@@ -210,7 +210,7 @@
 @ cdecl __tzname()
 @ cdecl __unDName(ptr str long ptr ptr long)
 @ cdecl __unDNameEx(ptr str long ptr ptr ptr long)
-@ cdecl -stub __uncaught_exception()
+@ cdecl __uncaught_exception()
 @ cdecl -stub __uncaught_exceptions()
 @ cdecl __wcserror(wstr)
 @ cdecl __wcserror_s(ptr long wstr)
@@ -267,7 +267,7 @@
 @ cdecl _chdrive(long)
 @ cdecl _chgsign(double)
 @ cdecl _chgsignf(float)
-@ cdecl -stub -arch=i386 -norelay _chkesp()
+@ cdecl -arch=i386 -norelay _chkesp()
 @ cdecl _chmod(str long)
 @ cdecl _chsize(long long)
 @ cdecl _chsize_s(long int64)
@@ -323,7 +323,7 @@
 @ cdecl -stub _except1(long long double double long ptr)
 @ cdecl -arch=i386 _except_handler2(ptr ptr ptr ptr)
 @ cdecl -arch=i386 _except_handler3(ptr ptr ptr ptr)
-@ cdecl -stub -arch=i386 _except_handler4_common(ptr ptr ptr ptr ptr ptr)
+@ cdecl -arch=i386 _except_handler4_common(ptr ptr ptr ptr ptr ptr)
 @ varargs _execl(str str)
 @ varargs _execle(str str)
 @ varargs _execlp(str str)
@@ -375,7 +375,7 @@
 @ cdecl _flushall()
 @ cdecl _fpclass(double)
 @ cdecl -stub -arch=!i386 _fpclassf(float)
-@ cdecl -stub _fpieee_flt(long ptr ptr)
+@ cdecl _fpieee_flt(long ptr ptr)
 @ cdecl -stub _fpreset()
 @ cdecl _fputc_nolock(long ptr)
 @ cdecl _fputchar(long)
@@ -430,7 +430,7 @@
 @ cdecl _get_thread_local_invalid_parameter_handler()
 @ cdecl _get_timezone(ptr)
 @ cdecl _get_tzname(ptr str long long)
-@ cdecl -stub _get_unexpected()
+@ cdecl _get_unexpected()
 @ cdecl _get_wide_winmain_command_line()
 @ cdecl _get_wpgmptr(ptr)
 @ cdecl _getc_nolock(ptr) _fgetc_nolock
@@ -481,7 +481,7 @@
 @ cdecl _invalid_parameter_noinfo()
 @ cdecl _invalid_parameter_noinfo_noreturn()
 @ cdecl _invoke_watson(wstr wstr wstr long long)
-@ stub _is_exception_typeof
+@ cdecl _is_exception_typeof(ptr ptr)
 @ cdecl _isalnum_l(long ptr)
 @ cdecl _isalpha_l(long ptr)
 @ cdecl _isatty(long)
@@ -612,7 +612,7 @@
 @ cdecl _loaddll(str)
 @ cdecl -arch=win64 _local_unwind(ptr ptr) ntdll._local_unwind
 @ cdecl -arch=i386 _local_unwind2(ptr long)
-@ cdecl -stub -arch=i386 _local_unwind4(ptr ptr long)
+@ cdecl -arch=i386 _local_unwind4(ptr ptr long)
 @ cdecl _localtime32(ptr)
 @ cdecl _localtime32_s(ptr ptr)
 @ cdecl _localtime64(ptr)
@@ -1902,7 +1902,7 @@
 @ cdecl _pclose(ptr)
 @ cdecl _pipe(ptr long long)
 @ cdecl _popen(str str)
-@ cdecl -stub _purecall()
+@ cdecl _purecall()
 @ cdecl _putc_nolock(long ptr) _fputc_nolock
 @ cdecl _putch(long)
 @ cdecl _putch_nolock(long)
@@ -1937,8 +1937,8 @@
 @ cdecl _seh_filter_dll(long ptr) # __CppXcptFilter
 @ cdecl _seh_filter_exe(long ptr) # _XcptFilter
 @ cdecl -arch=win64 _set_FMA3_enable(long)
-@ stdcall -stub -arch=i386 _seh_longjmp_unwind4(ptr)
-@ stdcall -stub -arch=i386 _seh_longjmp_unwind(ptr)
+@ stdcall -arch=i386 _seh_longjmp_unwind4(ptr)
+@ stdcall -arch=i386 _seh_longjmp_unwind(ptr)
 @ cdecl -stub -arch=i386 _set_SSE2_enable(long)
 @ cdecl _set_abort_behavior(long long)
 @ cdecl _set_app_type(long)
@@ -1951,8 +1951,8 @@
 @ cdecl _set_new_handler(ptr)
 @ cdecl _set_new_mode(long)
 @ cdecl _set_printf_count_output(long)
-@ cdecl -stub _set_purecall_handler(ptr)
-@ cdecl -stub _set_se_translator(ptr)
+@ cdecl _set_purecall_handler(ptr)
+@ cdecl _set_se_translator(ptr)
 @ cdecl _set_thread_local_invalid_parameter_handler(ptr)
 @ cdecl _seterrormode(long)
 @ cdecl -arch=i386 -norelay _setjmp3(ptr long)
@@ -2549,7 +2549,7 @@
 @ cdecl -stub scalbnf(float long) # float scalbnf(float x, int exp);
 @ cdecl scalbnl(double long) scalbn # long double scalbnl(long double x, int exp);
 @ cdecl set_terminate(ptr)
-@ cdecl -stub set_unexpected(ptr)
+@ cdecl set_unexpected(ptr)
 @ cdecl setbuf(ptr ptr)
 @ cdecl -arch=arm,x86_64 -norelay -private setjmp(ptr ptr) _setjmp
 @ cdecl setlocale(long str)
