@@ -27,6 +27,12 @@ RealModeEntryPoint:
     /* Setup the stack */
     mov sp, word ptr ds:[stack16]
 
+    /* Get the current base address */
+    call GetBaseAddress
+
+    /* Check if it's booted as NTLDR */
+    call CheckNtldrBoot
+
     /* Enable A20 address line */
     call EnableA20
 
@@ -54,6 +60,7 @@ RealModeEntryPoint:
 
     jmp exit_to_protected
 
+#include "relocldr.inc"
 
 /* This is the entry point from protected mode */
 switch_to_real16:
@@ -95,11 +102,7 @@ inrmode:
     mov sp, word ptr ds:[stack16]
 
     /* Load IDTR with real mode value */
-#ifdef _USE_ML
-    lidt fword ptr rmode_idtptr
-#else
-    lidt rmode_idtptr
-#endif
+    lidt lXdtPrefix ds:[rmode_idtptr]
 
     sti /* These are ok now */
 
@@ -120,11 +123,7 @@ exit_to_protected:
     mov word ptr ds:[stack16], sp
 
     /* Load the GDT */
-#ifdef _USE_ML
-    lgdt fword ptr gdtptr
-#else
-    lgdt gdtptr
-#endif
+    lgdt lXdtPrefix ds:[gdtptr]
 
     /* Enable Protected Mode */
     mov eax, cr0
@@ -138,7 +137,6 @@ inpmode:
     .word pm_entrypoint, 0
 pm_entrypoint:
     .long 0 // receives address of PE entry point
-    nop
 
 /* FNID_* functions */
 CallbackTable:

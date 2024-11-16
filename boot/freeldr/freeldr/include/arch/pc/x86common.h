@@ -15,10 +15,12 @@
 #define STACKLOW            HEX(7000)
 #define STACKADDR           HEX(F000) /* The 32/64-bit stack top will be at 0000:F000, or 0xF000 */
 #define FREELDR_BASE        HEX(F800)
-#define FREELDR_PE_BASE    HEX(10000)
-#define MEMORY_MARGIN      HEX(88000) /* We need this much memory */
+#define FREELDR_PE_BASE     HEX(10000)
+#define NTLDR_BASE          HEX(20000)
+#define NTLDR_TMP_BASE      HEX(200000)
+#define MEMORY_MARGIN       HEX(88000) /* We need this much memory */
 
-#define BIOSCALLBUFSEGMENT (BIOSCALLBUFFER/16) /* Buffer to store temporary data for any Int386() call */
+#define BIOSCALLBUFSEGMENT  (BIOSCALLBUFFER/16) /* Buffer to store temporary data for any Int386() call */
 #define BIOSCALLBUFOFFSET   HEX(0000) /* Buffer to store temporary data for any Int386() call */
 #define BIOSCALLBUFSIZE     PAGE_SIZE /* max is sizeof(VESA_SVGA_INFO) = 512 */
 #define MAX_FREELDR_PE_SIZE (MEMORY_MARGIN - FREELDR_PE_BASE - PAGE_SIZE)
@@ -49,6 +51,9 @@
 #define BSS_PnpResult            (BSS_START + 104)
 #define BSS_BootDrive            (BSS_START + 108) // 1 byte
 #define BSS_BootPartition        (BSS_START + 109) // 1 byte
+#define BSS_BootedViaNtldr       (BSS_START + 110) // 1 byte
+#define BSS_NtldrAddress         (BSS_START + 111) // 8 bytes
+#define BSS_BaseAddress          (BSS_START + 119) // 8 bytes
 
 
 /* Realmode function IDs */
@@ -73,7 +78,9 @@
 #define RMODE_DS    HEX(20)    /* RMode data selector, base 0 limit 64k */
 //#else
 /* Long mode selectors */
-#define LMODE_CS HEX(10)
-#define LMODE_DS HEX(18)
-#define CMODE_CS HEX(30)
+#define LMODE_CS    HEX(10)
+#define LMODE_DS    HEX(18)
+#define L_RMODE_CS  HEX(20)
+#define L_RMODE_DS  HEX(28)
+#define CMODE_CS    HEX(30)
 //#endif

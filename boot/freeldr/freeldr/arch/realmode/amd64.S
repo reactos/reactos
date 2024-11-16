@@ -31,6 +31,12 @@ Startup:
     /* Setup a real mode stack */
     mov sp, word ptr ds:[stack16]
 
+    /* Get the current base address */
+    call GetBaseAddress
+
+    /* Check if it's booted as NTLDR */
+    call CheckNtldrBoot
+
     /* Output first status */
     mov si, offset Msg_Starting
     call writestr
@@ -51,6 +57,8 @@ Startup:
     int HEX(16)
     jmp Reboot
 
+#include "relocldr.inc"
+
 Msg_Unsupported:
     .ascii "This CPU is not supported.", CR, LF
     .ascii "Press any key to reboot...", NUL
@@ -67,11 +75,7 @@ Msg_LongModeSupported:
     call writestr
 
     /* Load the GDT */
-#ifdef _USE_ML
-    lgdt fword ptr [gdtptr]
-#else
-    lgdt cs:[gdtptr]
-#endif
+    lgdt lXdtPrefix ds:[gdtptr]
 
     /* Build the startup page tables */
     call BuildPageTables
@@ -251,7 +255,6 @@ BuildPageTables:
 /******************************************************************************/
 
 #define MSR_EFER HEX(C0000080)
-#define LMODE_CS HEX(10)
 
 /* This is the entry point from long mode */
 RealModeEntryPoint:
@@ -355,9 +358,6 @@ InLongMode:
     nop
 LongModeEntryPoint:
     .long 0, 0
-
-    int HEX(16)
-    jmp Reboot
 
 /* FNID_* functions */
 CallbackTable:
