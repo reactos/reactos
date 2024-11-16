@@ -112,9 +112,9 @@ BatteryClassStatusNotify(PVOID ClassData)
 
             ExAcquireFastMutex(&BattClass->Mutex);
 
-            if (!(BattWait->PowerState & BattStatus.PowerState) ||
-                (BattWait->HighCapacity > BattStatus.Capacity) ||
-                (BattWait->LowCapacity < BattStatus.Capacity))
+            if (BattWait->PowerState != BattStatus.PowerState ||
+                BattWait->HighCapacity < BattStatus.Capacity ||
+                BattWait->LowCapacity > BattStatus.Capacity)
             {
                 KeSetEvent(&BattClass->WaitEvent, IO_NO_INCREMENT, FALSE);
             }
@@ -274,16 +274,15 @@ BatteryClassIoctl(PVOID ClassData,
 
             Timeout.QuadPart = Int32x32To64(BattWait.Timeout, -1000);
 
+            BattStatus = Irp->AssociatedIrp.SystemBuffer;
             Status = BattClass->MiniportInfo.QueryStatus(BattClass->MiniportInfo.Context,
                                                          BattWait.BatteryTag,
-                                                         (PBATTERY_STATUS)Irp->AssociatedIrp.SystemBuffer);
-
-            BattStatus = Irp->AssociatedIrp.SystemBuffer;
+                                                         BattStatus);
 
             if (!NT_SUCCESS(Status) ||
-                ((BattWait.PowerState & BattStatus->PowerState) &&
-                 (BattWait.HighCapacity <= BattStatus->Capacity) &&
-                 (BattWait.LowCapacity >= BattStatus->Capacity)))
+                (BattWait.PowerState == BattStatus->PowerState &&
+                 BattWait.HighCapacity >= BattStatus->Capacity &&
+                 BattWait.LowCapacity <= BattStatus->Capacity))
             {
                 BattNotify.PowerState = BattWait.PowerState;
                 BattNotify.HighCapacity = BattWait.HighCapacity;
@@ -304,25 +303,14 @@ BatteryClassIoctl(PVOID ClassData,
                                                KernelMode,
                                                FALSE,
                                                BattWait.Timeout != -1 ? &Timeout : NULL);
+                if (Status == STATUS_TIMEOUT)
+                    Status = STATUS_SUCCESS;
 
                 ExAcquireFastMutex(&BattClass->Mutex);
                 BattClass->Waiting = FALSE;
                 ExReleaseFastMutex(&BattClass->Mutex);
 
                 BattClass->MiniportInfo.DisableStatusNotify(BattClass->MiniportInfo.Context);
-
-                if (Status == STATUS_SUCCESS)
-                {
-                    Status = BattClass->MiniportInfo.QueryStatus(BattClass->MiniportInfo.Context,
-                                                                 BattWait.BatteryTag,
-                                                                 (PBATTERY_STATUS)Irp->AssociatedIrp.SystemBuffer);
-                    if (NT_SUCCESS(Status))
-                        Irp->IoStatus.Information = sizeof(ULONG);
-                }
-                else
-                {
-                    Status = STATUS_NO_SUCH_DEVICE;
-                }
             }
             else
             {
