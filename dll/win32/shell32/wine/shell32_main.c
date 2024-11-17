@@ -310,6 +310,28 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
     return argv;
 }
 
+static HRESULT SHELL_GetDetailsOfToBuffer(IShellFolder *psf, PCUITEMID_CHILD pidl,
+                                          UINT col, LPWSTR Buf, UINT cchBuf)
+{
+    IShellFolder2 *psf2;
+    IShellDetails *psd;
+    SHELLDETAILS details;
+    HRESULT hr = IShellFolder_QueryInterface(psf, &IID_IShellFolder2, (void**)&psf2);
+    if (SUCCEEDED(hr))
+    {
+        hr = IShellFolder2_GetDetailsOf(psf2, pidl, col, &details);
+        IShellFolder2_Release(psf2);
+    }
+    else if (SUCCEEDED(hr = IShellFolder_QueryInterface(psf, &IID_IShellDetails, (void**)&psd)))
+    {
+        hr = IShellDetails_GetDetailsOf(psd, pidl, col, &details);
+        IShellDetails_Release(psd);
+    }
+    if (SUCCEEDED(hr))
+        hr = StrRetToStrNW(Buf, cchBuf, &details.str, pidl) ? S_OK : E_FAIL;
+    return hr;
+}
+
 static DWORD shgfi_get_exe_type(LPCWSTR szFullPath)
 {
     BOOL status = FALSE;
@@ -386,17 +408,11 @@ BOOL SHELL_IsShortcut(LPCITEMIDLIST pidlLast)
     BOOL ret = FALSE;
 
     if (_ILGetExtension(pidlLast, szTemp, _countof(szTemp)) &&
-        HCR_MapTypeToValueW(szTemp, szTemp, _countof(szTemp), TRUE))
+        SUCCEEDED(HCR_GetProgIdKeyOfExtension(szTemp, &keyCls, FALSE)))
     {
-        if (ERROR_SUCCESS == RegOpenKeyExW(HKEY_CLASSES_ROOT, szTemp, 0, KEY_QUERY_VALUE, &keyCls))
-        {
-            if (ERROR_SUCCESS == RegQueryValueExW(keyCls, L"IsShortcut", NULL, NULL, NULL, NULL))
-                ret = TRUE;
-
-            RegCloseKey(keyCls);
-        }
+        ret = RegQueryValueExW(keyCls, L"IsShortcut", NULL, NULL, NULL, NULL) == ERROR_SUCCESS;
+        RegCloseKey(keyCls);
     }
-
     return ret;
 }
 
@@ -420,7 +436,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
     DWORD dwAttributes = 0;
     IShellFolder * psfParent = NULL;
     IExtractIconW * pei = NULL;
-    LPITEMIDLIST    pidlLast = NULL, pidl = NULL;
+    LPITEMIDLIST pidlLast = NULL, pidl = NULL, pidlFree = NULL;
     HRESULT hr = S_OK;
     BOOL IconNotYetLoaded=TRUE;
     UINT uGilFlags = 0;
@@ -452,6 +468,27 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
         else
         {
             lstrcpynW(szFullPath, path, MAX_PATH);
+        }
+
+        if ((flags & SHGFI_TYPENAME) && !PathIsRootW(szFullPath))
+        {
+            HRESULT hr2;
+            if (!(flags & SHGFI_USEFILEATTRIBUTES))
+            {
+                dwFileAttributes = GetFileAttributesW(szFullPath);
+                if (dwFileAttributes == INVALID_FILE_ATTRIBUTES)
+                    dwFileAttributes = 0;
+            }
+            if (dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                hr2 = SHELL32_AssocGetFSDirectoryDescription(psfi->szTypeName, _countof(psfi->szTypeName));
+            else
+                hr2 = SHELL32_AssocGetFileDescription(path, psfi->szTypeName, _countof(psfi->szTypeName));
+            if (SUCCEEDED(hr2))
+            {
+                flags &= ~SHGFI_TYPENAME;
+                if (!(flags & ~SHGFI_USEFILEATTRIBUTES))
+                    return ret; /* Bail out early if this was our only operation */
+            }
         }
     }
     else
@@ -489,31 +526,26 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
 
     if (flags & SHGFI_PIDL)
     {
-        pidl = ILClone((LPCITEMIDLIST)path);
+        pidl = (LPITEMIDLIST)path;
+        hr = pidl ? S_OK : E_FAIL;
     }
-    else if (!(flags & SHGFI_USEFILEATTRIBUTES))
+    else
     {
-        hr = SHILCreateFromPathW(szFullPath, &pidl, &dwAttributes);
-    }
-
-    if ((flags & SHGFI_PIDL) || !(flags & SHGFI_USEFILEATTRIBUTES))
-    {
-        /* get the parent shellfolder */
-        if (pidl)
+        if (flags & SHGFI_USEFILEATTRIBUTES)
         {
-            hr = SHBindToParent( pidl, &IID_IShellFolder, (LPVOID*)&psfParent,
-                                (LPCITEMIDLIST*)&pidlLast );
-            if (SUCCEEDED(hr))
-                pidlLast = ILClone(pidlLast);
-            else
-                hr = S_OK;
-            ILFree(pidl);
+            pidl = SHELL32_CreateSimpleIDListFromPath(szFullPath, dwFileAttributes);
+            hr = pidl ? S_OK : E_FAIL;
         }
         else
         {
-            ERR("pidl is null!\n");
-            return FALSE;
+            hr = SHILCreateFromPathW(szFullPath, &pidl, &dwAttributes);
         }
+        pidlFree = pidl;
+    }
+
+    if (SUCCEEDED(hr))
+    {
+        hr = SHBindToParent(pidl, &IID_IShellFolder, (void**)&psfParent, (LPCITEMIDLIST*)&pidlLast);
     }
 
     /* get the attributes of the child */
@@ -523,11 +555,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
         {
             psfi->dwAttributes = 0xffffffff;
         }
-        if (psfParent)
-        {
-            IShellFolder_GetAttributesOf(psfParent, 1, (LPCITEMIDLIST*)&pidlLast,
-                                         &(psfi->dwAttributes));
-        }
+        hr = IShellFolder_GetAttributesOf(psfParent, 1, (LPCITEMIDLIST*)&pidlLast, &psfi->dwAttributes);
     }
 
     if (flags & SHGFI_USEFILEATTRIBUTES)
@@ -541,55 +569,20 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
     /* get the displayname */
     if (SUCCEEDED(hr) && (flags & SHGFI_DISPLAYNAME))
     {
-        if (flags & SHGFI_USEFILEATTRIBUTES && !(flags & SHGFI_PIDL))
-        {
-            lstrcpyW (psfi->szDisplayName, PathFindFileNameW(szFullPath));
-        }
-        else if (psfParent)
-        {
-            STRRET str;
-            hr = IShellFolder_GetDisplayNameOf( psfParent, pidlLast,
-                                                SHGDN_INFOLDER, &str);
-            StrRetToStrNW (psfi->szDisplayName, MAX_PATH, &str, pidlLast);
-        }
+        STRRET str;
+        psfi->szDisplayName[0] = UNICODE_NULL;
+        hr = IShellFolder_GetDisplayNameOf(psfParent, pidlLast, SHGDN_INFOLDER, &str);
+        if (SUCCEEDED(hr))
+            StrRetToStrNW(psfi->szDisplayName, _countof(psfi->szDisplayName), &str, pidlLast);
     }
 
     /* get the type name */
     if (SUCCEEDED(hr) && (flags & SHGFI_TYPENAME))
     {
-        if (!(flags & SHGFI_USEFILEATTRIBUTES) || (flags & SHGFI_PIDL))
-        {
-            _ILGetFileType(pidlLast, psfi->szTypeName, _countof(psfi->szTypeName));
-        }
-        else
-        {
-            if (dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                strcatW (psfi->szTypeName, L"Folder");
-            else 
-            {
-                WCHAR sTemp[64];
-
-                lstrcpyW(sTemp,PathFindExtensionW(szFullPath));
-                if (sTemp[0] == 0 || (sTemp[0] == '.' && sTemp[1] == 0))
-                {
-                    /* "name" or "name." => "File" */
-                    lstrcpynW (psfi->szTypeName, L"File", 64);
-                }
-                else if (!( HCR_MapTypeToValueW(sTemp, sTemp, 64, TRUE) &&
-                    HCR_MapTypeToValueW(sTemp, psfi->szTypeName, 80, FALSE )))
-                {
-                    if (sTemp[0])
-                    {
-                        lstrcpynW (psfi->szTypeName, sTemp, 64);
-                        strcatW (psfi->szTypeName, L" file");
-                    }
-                    else
-                    {
-                        lstrcpynW (psfi->szTypeName, L"File", 64);
-                    }
-                }
-            }
-        }
+        /* FIXME: Use IShellFolder2::GetDetailsEx */
+        UINT col = _ILIsDrive(pidlLast) ? 1 : 2; /* SHFSF_COL_TYPE */
+        psfi->szTypeName[0] = UNICODE_NULL;
+        hr = SHELL_GetDetailsOfToBuffer(psfParent, pidlLast, col, psfi->szTypeName, _countof(psfi->szTypeName));
     }
 
     /* ### icons ###*/
@@ -757,11 +750,10 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
 
     if (psfParent)
         IShellFolder_Release(psfParent);
+    SHFree(pidlFree);
 
     if (hr != S_OK)
         ret = FALSE;
-
-    SHFree(pidlLast);
 
     TRACE ("icon=%p index=0x%08x attr=0x%08x name=%s type=%s ret=0x%08lx\n",
            psfi->hIcon, psfi->iIcon, psfi->dwAttributes,

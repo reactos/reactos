@@ -14,6 +14,13 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
 static HRESULT SHELL32_GetCLSIDForDirectory(LPCWSTR pwszDir, LPCWSTR KeyName, CLSID* pclsidFolder);
 
+static BOOL ItemIsFolder(PCUITEMID_CHILD pidl)
+{
+    const BYTE mask = PT_FS | PT_FS_FOLDER_FLAG | PT_FS_FILE_FLAG;
+    const BYTE type = _ILGetType(pidl);
+    return (type & mask) == (PT_FS | PT_FS_FOLDER_FLAG) || (type == PT_FS && ILGetNext(pidl));
+}
+
 static LPCWSTR GetItemFileName(PCUITEMID_CHILD pidl, LPWSTR Buf, UINT cchMax)
 {
     FileStructW* pDataW = _ILGetFileStructW(pidl);
@@ -32,6 +39,23 @@ static BOOL IsRealItem(const ITEMIDLIST &idl)
     // PIDLs created with SHSimpleIDListFromPath contain no data, otherwise, the item is "real"
     FileStruct &fsitem = ((PIDLDATA*)idl.mkid.abID)->u.file;
     return fsitem.dwFileSize | fsitem.uFileDate;
+}
+
+static void GetItemDescription(PCUITEMID_CHILD pidl, LPWSTR Buf, UINT cchMax)
+{
+    HRESULT hr = E_FAIL;
+    if (ItemIsFolder(pidl))
+    {
+        hr = SHELL32_AssocGetFSDirectoryDescription(Buf, cchMax);
+    }
+    else
+    {
+        WCHAR temp[MAX_PATH];
+        LPCWSTR name = GetItemFileName(pidl, temp, _countof(temp));
+        hr = SHELL32_AssocGetFileDescription(name ? name : L"", Buf, cchMax);
+    }
+    if (FAILED(hr) && cchMax)
+        Buf[0] = UNICODE_NULL;
 }
 
 static HKEY OpenKeyFromFileType(LPCWSTR pExtension, LPCWSTR KeyName)
@@ -1640,18 +1664,23 @@ HRESULT WINAPI CFSFolder::GetDetailsOf(PCUITEMID_CHILD pidl,
     {
         hr = S_OK;
         psd->str.uType = STRRET_WSTR;
-        psd->str.pOleStr = (LPWSTR)CoTaskMemAlloc(MAX_PATH * sizeof(WCHAR));
+        if (iColumn != SHFSF_COL_NAME)
+        {
+            psd->str.pOleStr = (LPWSTR)CoTaskMemAlloc(MAX_PATH * sizeof(WCHAR));
+            if (!psd->str.pOleStr)
+                return E_OUTOFMEMORY;
+        }
         /* the data from the pidl */
         switch (iColumn)
         {
             case SHFSF_COL_NAME:
-                hr = GetDisplayNameOf (pidl, SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
+                hr = GetDisplayNameOf(pidl, SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
                 break;
             case SHFSF_COL_SIZE:
                 _ILGetFileSize(pidl, psd->str.pOleStr, MAX_PATH);
                 break;
             case SHFSF_COL_TYPE:
-                _ILGetFileType(pidl, psd->str.pOleStr, MAX_PATH);
+                GetItemDescription(pidl, psd->str.pOleStr, MAX_PATH);
                 break;
             case SHFSF_COL_MDATE:
                 _ILGetFileDate(pidl, psd->str.pOleStr, MAX_PATH);

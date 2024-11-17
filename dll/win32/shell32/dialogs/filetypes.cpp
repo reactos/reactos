@@ -89,7 +89,6 @@ typedef struct _FILE_TYPE_GLOBALS
     HICON hDefExtIconSmall;
     HBITMAP hOpenWithImage;
     HANDLE hHeap;
-    WCHAR DefExtTypeNameFmt[TYPENAME_CCHMAX];
     WCHAR NoneString[42];
     INT8 SortCol, SortReverse;
     UINT Restricted;
@@ -297,12 +296,6 @@ GetTypeName(PFILE_TYPE_ENTRY Entry, PFILE_TYPE_GLOBALS pG)
                                SHGFI_USEFILEATTRIBUTES) && *fi.szTypeName)
             {
                 StringCchCopyW(Entry->FileDescription, _countof(Entry->FileDescription), fi.szTypeName);
-            }
-            else
-            {
-                // FIXME: Remove this hack when SHGetFileInfo is able to handle extensions without a ProgId (.ASM etc)
-                StringCchPrintfW(Entry->FileDescription, _countof(Entry->FileDescription),
-                                 pG->DefExtTypeNameFmt, &Entry->FileExtension[1]);
             }
         }
         else
@@ -1773,12 +1766,6 @@ FileTypesDlg_Initialize(HWND hwndDlg)
     pG->himlSmall = ImageList_Create(pG->IconSize, pG->IconSize, ILC_COLOR32 | ILC_MASK, 256, 20);
     pG->hHeap = GetProcessHeap();
 
-    if (!LoadStringW(shell32_hInstance, IDS_ANY_FILE,
-                     pG->DefExtTypeNameFmt, _countof(pG->DefExtTypeNameFmt)))
-    {
-        LPCWSTR fallback = L"%s File"; // Default to English
-        StringCchCopyW(pG->DefExtTypeNameFmt, _countof(pG->DefExtTypeNameFmt), fallback);
-    }
     pG->NoneString[0] = UNICODE_NULL;
     LoadStringW(shell32_hInstance, IDS_NONE, pG->NoneString, _countof(pG->NoneString));
 
