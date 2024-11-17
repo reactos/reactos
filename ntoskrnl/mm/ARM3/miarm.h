@@ -154,9 +154,11 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #error Define these please!
 #endif
 
+//
 // Some internal SYSTEM_PTE_MISUSE bugcheck subcodes
-// These symbols were created by Oleg Dubinskiy and Doug Lyons for ReactOS. For Reference See
+// These names were created by Oleg Dubinskiy and Doug Lyons for ReactOS. For reference, see
 // https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/bug-check-0xda--system-pte-misuse
+//
 #define PTE_MAPPING_NONE                0x100
 #define PTE_MAPPING_NOT_OWNED           0x101
 #define PTE_MAPPING_EMPTY               0x102

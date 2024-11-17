@@ -1626,10 +1626,11 @@ MmAdvanceMdl(IN PMDL Mdl,
  */
 PVOID
 NTAPI
-MmMapLockedPagesWithReservedMapping(_In_ PVOID MappingAddress,
-                                    _In_ ULONG PoolTag,
-                                    _In_ PMDL Mdl,
-                                    _In_ MEMORY_CACHING_TYPE CacheType)
+MmMapLockedPagesWithReservedMapping(
+    _In_ PVOID MappingAddress,
+    _In_ ULONG PoolTag,
+    _In_ PMDL Mdl,
+    _In_ MEMORY_CACHING_TYPE CacheType)
 {
     PPFN_NUMBER MdlPages, LastPage;
     PFN_COUNT PageCount;
@@ -1700,14 +1701,12 @@ MmMapLockedPagesWithReservedMapping(_In_ PVOID MappingAddress,
     switch (CacheAttribute)
     {
         case MiNonCached:
-
             // Disable caching
             MI_PAGE_DISABLE_CACHE(&TempPte);
             MI_PAGE_WRITE_THROUGH(&TempPte);
             break;
 
         case MiWriteCombined:
-
             // Enable write combining
             MI_PAGE_DISABLE_CACHE(&TempPte);
             MI_PAGE_WRITE_COMBINED(&TempPte);
@@ -1747,9 +1746,10 @@ MmMapLockedPagesWithReservedMapping(_In_ PVOID MappingAddress,
  */
 VOID
 NTAPI
-MmUnmapReservedMapping(_In_ PVOID BaseAddress,
-                       _In_ ULONG PoolTag,
-                       _In_ PMDL Mdl)
+MmUnmapReservedMapping(
+    _In_ PVOID BaseAddress,
+    _In_ ULONG PoolTag,
+    _In_ PMDL Mdl)
 {
     PVOID Base;
     PFN_COUNT PageCount, ExtraPageCount;
