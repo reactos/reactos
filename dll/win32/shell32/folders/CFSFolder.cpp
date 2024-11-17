@@ -1665,7 +1665,11 @@ HRESULT WINAPI CFSFolder::GetDetailsOf(PCUITEMID_CHILD pidl,
         hr = S_OK;
         psd->str.uType = STRRET_WSTR;
         if (iColumn != SHFSF_COL_NAME)
+        {
             psd->str.pOleStr = (LPWSTR)CoTaskMemAlloc(MAX_PATH * sizeof(WCHAR));
+            if (!psd->str.pOleStr)
+                return E_OUTOFMEMORY;
+        }
         /* the data from the pidl */
         switch (iColumn)
         {
