@@ -4987,6 +4987,63 @@ MmMakeDataSectionResident(
 
 NTSTATUS
 NTAPI
+MmMakeSegmentDirty(
+    _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
+    _In_ LONGLONG Offset,
+    _In_ ULONG Length)
+{
+    PMM_SECTION_SEGMENT Segment;
+    LARGE_INTEGER RangeStart, RangeEnd;
+    NTSTATUS Status;
+
+    RangeStart.QuadPart = Offset;
+    Status = RtlLongLongAdd(RangeStart.QuadPart, Length, &RangeEnd.QuadPart);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Segment = MiGrabDataSection(SectionObjectPointer);
+    if (!Segment)
+        return STATUS_NOT_MAPPED_VIEW;
+
+    /* Find byte offset of the page to start */
+    RangeStart.QuadPart = PAGE_ROUND_DOWN(RangeStart.QuadPart);
+
+    MmLockSectionSegment(Segment);
+
+    while (RangeStart.QuadPart < RangeEnd.QuadPart)
+    {
+        ULONG_PTR Entry = MmGetPageEntrySectionSegment(Segment, &RangeStart);
+
+        /* Let any pending read proceed */
+        while (MM_IS_WAIT_PTE(Entry))
+        {
+            MmUnlockSectionSegment(Segment);
+            KeDelayExecutionThread(KernelMode, FALSE, &TinyTime);
+            MmLockSectionSegment(Segment);
+            Entry = MmGetPageEntrySectionSegment(Segment, &RangeStart);
+        }
+
+        /* We are called from Cc, this can't be backed by the page files */
+        ASSERT(!IS_SWAP_FROM_SSE(Entry));
+
+        /* If there is no page there, there is nothing to make dirty */
+        if (Entry != 0)
+        {
+            /* Dirtify the entry */
+            MmSetPageEntrySectionSegment(Segment, &RangeStart, DIRTY_SSE(Entry));
+        }
+
+        RangeStart.QuadPart += PAGE_SIZE;
+    }
+
+    MmUnlockSectionSegment(Segment);
+    MmDereferenceSegment(Segment);
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 MmFlushSegment(
     _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
     _In_opt_ PLARGE_INTEGER Offset,
@@ -5242,10 +5299,12 @@ MmCheckDirtySegment(
     return FALSE;
 }
 
+/* This function is not used. It is left for reference only */
+#if 0
 NTSTATUS
 NTAPI
 MmMakePagesDirty(
-    _In_ PEPROCESS Process,
+    _In_opt_ PEPROCESS Process,
     _In_ PVOID Address,
     _In_ ULONG Length)
 {
@@ -5312,6 +5371,7 @@ MmMakePagesDirty(
     MmUnlockAddressSpace(AddressSpace);
     return STATUS_SUCCESS;
 }
+#endif
 
 NTSTATUS
 NTAPI
