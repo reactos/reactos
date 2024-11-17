@@ -936,22 +936,22 @@ CcRosEnsureVacbResident(
     _In_ ULONG Length
 )
 {
-    PVOID BaseAddress;
+    PROS_SHARED_CACHE_MAP SharedCacheMap = Vacb->SharedCacheMap;
 
     ASSERT((Offset + Length) <= VACB_MAPPING_GRANULARITY);
 
 #if 0
-    if ((Vacb->FileOffset.QuadPart + Offset) > Vacb->SharedCacheMap->SectionSize.QuadPart)
+    if ((Vacb->FileOffset.QuadPart + Offset) > SharedCacheMap->SectionSize.QuadPart)
     {
         DPRINT1("Vacb read beyond the file size!\n");
         return FALSE;
     }
 #endif
 
-    BaseAddress = (PVOID)((ULONG_PTR)Vacb->BaseAddress + Offset);
-
     /* Check if the pages are resident */
-    if (!MmArePagesResident(NULL, BaseAddress, Length))
+    if (!MmIsDataSectionResident(SharedCacheMap->FileObject->SectionObjectPointer,
+                                 Vacb->FileOffset.QuadPart + Offset,
+                                 Length))
     {
         if (!Wait)
         {
@@ -960,7 +960,6 @@ CcRosEnsureVacbResident(
 
         if (!NoRead)
         {
-            PROS_SHARED_CACHE_MAP SharedCacheMap = Vacb->SharedCacheMap;
             NTSTATUS Status = MmMakeDataSectionResident(SharedCacheMap->FileObject->SectionObjectPointer,
                                                         Vacb->FileOffset.QuadPart + Offset,
                                                         Length,
