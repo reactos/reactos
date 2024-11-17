@@ -39,8 +39,25 @@ static void TEST_StrDupW(void)
         LocalFree(ptrW);
 }
 
+static void TEST_StrRet(void)
+{
+    LPWSTR input, output;
+    if (SUCCEEDED(SHStrDupW(L"Test", &input)))
+    {
+        STRRET strret;
+        strret.uType = STRRET_WSTR;
+        U(strret).pOleStr = input;
+        output = NULL;
+        ok_int(StrRetToStrW(&strret, NULL, &output), S_OK);
+        ok_ptr(U(strret).pOleStr, NULL);
+        ok_ptr(input, output);
+        CoTaskMemFree(output);
+    }
+}
+
 START_TEST(StrDup)
 {
     TEST_StrDupA();
     TEST_StrDupW();
+    TEST_StrRet();
 }
