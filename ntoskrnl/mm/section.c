@@ -4775,10 +4775,12 @@ MmCreateSection (OUT PVOID  * Section,
     return Status;
 }
 
+/* This function is not used. It is left for reference only */
+#if 0
 BOOLEAN
 NTAPI
 MmArePagesResident(
-    _In_ PEPROCESS Process,
+    _In_opt_ PEPROCESS Process,
     _In_ PVOID Address,
     _In_ ULONG Length)
 {
@@ -4826,6 +4828,7 @@ MmArePagesResident(
     MmUnlockAddressSpace(AddressSpace);
     return Ret;
 }
+#endif
 
 /* Like CcPurgeCache but for the in-memory segment */
 BOOLEAN
@@ -4918,6 +4921,48 @@ MmPurgeSegment(
     MmUnlockSectionSegment(Segment);
     MmDereferenceSegment(Segment);
     return TRUE;
+}
+
+BOOLEAN
+NTAPI
+MmIsDataSectionResident(
+    _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
+    _In_ LONGLONG Offset,
+    _In_ ULONG Length)
+{
+    PMM_SECTION_SEGMENT Segment;
+    LARGE_INTEGER RangeStart, RangeEnd;
+    BOOLEAN Ret = TRUE;
+
+    RangeStart.QuadPart = Offset;
+    if (!NT_SUCCESS(RtlLongLongAdd(RangeStart.QuadPart, Length, &RangeEnd.QuadPart)))
+        return FALSE;
+
+    Segment = MiGrabDataSection(SectionObjectPointer);
+    if (!Segment)
+        return FALSE;
+
+    /* Find byte offset of the page to start */
+    RangeStart.QuadPart = PAGE_ROUND_DOWN(RangeStart.QuadPart);
+
+    MmLockSectionSegment(Segment);
+
+    while (RangeStart.QuadPart < RangeEnd.QuadPart)
+    {
+        ULONG_PTR Entry = MmGetPageEntrySectionSegment(Segment, &RangeStart);
+        if ((Entry == 0) || IS_SWAP_FROM_SSE(Entry))
+        {
+            Ret = FALSE;
+            break;
+        }
+
+        RangeStart.QuadPart += PAGE_SIZE;
+    }
+
+    MmUnlockSectionSegment(Segment);
+    MmDereferenceSegment(Segment);
+
+    return Ret;
 }
 
 NTSTATUS
