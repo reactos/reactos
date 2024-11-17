@@ -29,7 +29,7 @@ HKCR
             {
                 val BrowserFlags = d '0x10'
                 val ExplorerFlags = d '0x20'
-                command = s '"Explorer.exe" "%%L"'
+                command = s '"explorer.exe" "%%L"'
             }
         }
     }
@@ -41,7 +41,7 @@ HKCR
     {
         '.cab'
         {
-            'CLSID' = s '{0CD7A5C0-9F37-11CE-AE65-08002B2E1262}'
+            CLSID = s '{0CD7A5C0-9F37-11CE-AE65-08002B2E1262}'
         }
     }
 }

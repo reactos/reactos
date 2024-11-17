@@ -228,7 +228,7 @@ HRESULT ExtractCabinet(LPCWSTR cab, LPCWSTR destination, EXTRACTCALLBACK callbac
     if (name > buf && *name)
     {
         // Format the name the way FDI likes it
-        name[-1] = UNICODE_NULL;
+        name[-1] = ANSI_NULL;
         char namebuf[MAX_PATH];
         namebuf[0] = '\\';
         lstrcpyA(namebuf + 1, name);

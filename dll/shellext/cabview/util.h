@@ -130,9 +130,9 @@ inline SFGAOF MapFSToSFAttributes(UINT att)
 
 inline bool IncludeInEnumIDList(SHCONTF contf, SFGAOF att)
 {
-    SHCONTF both = SHCONTF_FOLDERS | SHCONTF_NONFOLDERS;
-    SFGAOF superbits = SFGAO_HIDDEN | SFGAO_READONLY | SFGAO_SYSTEM;
-    bool isfile = (att & (SFGAO_STREAM | SFGAO_FOLDER)) != SFGAO_FOLDER;
+    const SHCONTF both = SHCONTF_FOLDERS | SHCONTF_NONFOLDERS;
+    const SFGAOF superbits = SFGAO_HIDDEN | SFGAO_READONLY | SFGAO_SYSTEM;
+    const bool isfile = (att & (SFGAO_STREAM | SFGAO_FOLDER)) != SFGAO_FOLDER;
     if ((contf & both) != both && !(contf & SHCONTF_STORAGE))
     {
         if (isfile && (contf & SHCONTF_FOLDERS))

@@ -302,7 +302,7 @@ HRESULT CCabFolder::GetItemDetails(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETA
             else
             {
                 psr->uType = STRRET_CSTR;
-                StrFormatByteSizeA(data, psr->cStr, 260);
+                StrFormatByteSizeA(data, psr->cStr, _countof(psr->cStr));
             }
             return S_OK;
         }
@@ -551,7 +551,7 @@ IFACEMETHODIMP CCabFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apid
         return E_INVALIDARG;
     }
     HRESULT hr = S_OK;
-    SFGAOF filemask = SFGAO_READONLY | SFGAO_HIDDEN | SFGAO_SYSTEM | SFGAO_ISSLOW;
+    const SFGAOF filemask = SFGAO_READONLY | SFGAO_HIDDEN | SFGAO_SYSTEM | SFGAO_ISSLOW;
     SFGAOF remain = *rgfInOut & filemask, validate = *rgfInOut & SFGAO_VALIDATE;
     CComPtr<CEnumIDList> list;
     for (UINT i = 0; i < cidl && (remain || validate); ++i)
@@ -683,7 +683,7 @@ static int CALLBACK FolderBrowseCallback(HWND hwnd, UINT uMsg, LPARAM lParam, LP
             if (enable)
             {
                 // We don't trust .zip folders, check the file-system to make sure
-                UINT attrib = SUCCEEDED(GetFsPathFromIDList(pidl, buf)) ? GetFileAttributes(buf) : 0;
+                UINT attrib = SUCCEEDED(GetFsPathFromIDList(pidl, buf)) ? GetFileAttributesW(buf) : 0;
                 enable = (attrib & FILE_ATTRIBUTE_DIRECTORY) && attrib != INVALID_FILE_ATTRIBUTES;
             }
             PostMessageW(hwnd, BFFM_ENABLEOK, 0, enable);
@@ -804,9 +804,7 @@ static DWORD CALLBACK ExtractFilesThread(LPVOID pParam)
         hr = CoGetInterfaceAndReleaseStream(data.pMarshalDO, IID_PPV_ARG(IDataObject, &data.pDO));
         data.pMarshalDO = NULL;
         if (SUCCEEDED(hr))
-        {
             hr = CDataObjectHIDA::CreateCIDA(data.pDO, &data.pCIDA, data.cidamedium);
-        }
     }
     if (SUCCEEDED(hr))
     {
