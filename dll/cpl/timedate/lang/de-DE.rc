@@ -1,3 +1,12 @@
+/*
+ * PROJECT:     ReactOS Timedate Control Panel
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     German resource file
+ * TRANSLATORS: Copyright 2008 Daniel Reimer <reimer.daniel@freenet.de>
+ *              Copyright 2016 Joachim Henze <Joachim.Henze@reactos.org>
+ *              Copyright 2024 Václav Zouzalík (Venca24) <vaclav.zouzalik@seznam.cz>
+ */
+
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
@@ -54,6 +63,6 @@ BEGIN
     IDS_INETTIMENEXTSYNC "Nächste Synchronisierung am %s um %s."
     IDS_INETTIMESYNCING "Bitte warten Sie, während ReactOS die Zeit mit %s synchronisiert."
     IDS_INETTIMEERROR "Ein Fehler trat beim Synchronisieren mit %s auf."
-    IDS_INETTIMESUCFILL "Please type an NTP server name in order to synchronize the time"
-    IDS_INETTIMEWELCOME "Select an NTP server from the list or type an NTP server name to synchronize the computer's time"
+    IDS_INETTIMESUCFILL "Bitte geben Sie den Namen eines NTP-Servers ein, um die Zeit zu synchronisieren"
+    IDS_INETTIMEWELCOME "Wählen Sie einen NTP-Server aus der Liste aus oder geben Sie einen NTP-Servernamen ein, um die Uhrzeit des Computers zu synchronisieren"
 END
