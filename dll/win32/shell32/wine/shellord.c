@@ -279,6 +279,11 @@ VOID WINAPI SHGetSetSettings(LPSHELLSTATE lpss, DWORD dwMask, BOOL bSet)
     if (bSet)
     {
         DWORD changed = 0;
+        if (dwMask & ~g_CachedSSF)
+        {
+            SHELLSTATE tempstate;
+            SHGetSetSettings(&tempstate, dwMask, FALSE); // Read entries that are not in g_CachedSSF
+        }
 
 #define SHGSS_WriteAdv(name, value, SSF) \
     do { \
