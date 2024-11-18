@@ -4838,18 +4838,18 @@ MmPurgeSegment(
     LARGE_INTEGER PurgeStart, PurgeEnd;
     PMM_SECTION_SEGMENT Segment;
 
-    Segment = MiGrabDataSection(SectionObjectPointer);
-    if (!Segment)
-    {
-        /* Nothing to purge */
-        return TRUE;
-    }
-
     PurgeStart.QuadPart = Offset ? Offset->QuadPart : 0LL;
     if (Length && Offset)
     {
         if (!NT_SUCCESS(RtlLongLongAdd(PurgeStart.QuadPart, Length, &PurgeEnd.QuadPart)))
             return FALSE;
+    }
+
+    Segment = MiGrabDataSection(SectionObjectPointer);
+    if (!Segment)
+    {
+        /* Nothing to purge */
+        return TRUE;
     }
 
     MmLockSectionSegment(Segment);
