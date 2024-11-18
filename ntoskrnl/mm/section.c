@@ -4833,10 +4833,16 @@ NTAPI
 MmPurgeSegment(
     _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
     _In_opt_ PLARGE_INTEGER Offset,
-    _In_ ULONG Length)
+    _In_ ULONG Length,
+    _Out_opt_ PULONG PurgedDirtyPages)
 {
     LARGE_INTEGER PurgeStart, PurgeEnd;
     PMM_SECTION_SEGMENT Segment;
+
+    if (PurgedDirtyPages)
+    {
+        *PurgedDirtyPages = 0;
+    }
 
     Segment = MiGrabDataSection(SectionObjectPointer);
     if (!Segment)
@@ -4859,9 +4865,9 @@ MmPurgeSegment(
         /* We must calculate the length for ourselves */
         /* FIXME: All of this is suboptimal */
         ULONG ElemCount = RtlNumberGenericTableElements(&Segment->PageTable);
-        /* No page. Nothing to purge */
         if (!ElemCount)
         {
+            /* No page. Nothing to purge */
             MmUnlockSectionSegment(Segment);
             MmDereferenceSegment(Segment);
             return TRUE;
@@ -4874,6 +4880,7 @@ MmPurgeSegment(
     while (PurgeStart.QuadPart < PurgeEnd.QuadPart)
     {
         ULONG_PTR Entry = MmGetPageEntrySectionSegment(Segment, &PurgeStart);
+        BOOLEAN IsDirty;
 
         if (Entry == 0)
         {
@@ -4907,14 +4914,21 @@ MmPurgeSegment(
             return FALSE;
         }
 
+        IsDirty = IS_DIRTY_SSE(Entry);
+
         /* We can let this page go */
         MmSetPageEntrySectionSegment(Segment, &PurgeStart, 0);
         MmReleasePageMemoryConsumer(MC_USER, PFN_FROM_SSE(Entry));
 
+        /* Update number of purged dirty pages, if needed */
+        if (IsDirty && PurgedDirtyPages)
+        {
+            (*PurgedDirtyPages)++;
+        }
+
         PurgeStart.QuadPart += PAGE_SIZE;
     }
 
-    /* This page is currently in use. Bad luck */
     MmUnlockSectionSegment(Segment);
     MmDereferenceSegment(Segment);
     return TRUE;
@@ -4946,10 +4960,15 @@ MmFlushSegment(
     _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
     _In_opt_ PLARGE_INTEGER Offset,
     _In_ ULONG Length,
-    _Out_opt_ PIO_STATUS_BLOCK Iosb)
+    _Out_opt_ PULONG FlushedPages)
 {
     LARGE_INTEGER FlushStart, FlushEnd;
     NTSTATUS Status;
+
+    if (FlushedPages)
+    {
+        *FlushedPages = 0;
+    }
 
     if (Offset)
     {
@@ -4959,14 +4978,11 @@ MmFlushSegment(
             return Status;
     }
 
-    if (Iosb)
-        Iosb->Information = 0;
-
     PMM_SECTION_SEGMENT Segment = MiGrabDataSection(SectionObjectPointer);
     if (!Segment)
     {
         /* Nothing to flush */
-        goto Quit;
+        return STATUS_SUCCESS;
     }
 
     ASSERT(*Segment->Flags & MM_DATAFILE_SEGMENT);
@@ -4984,7 +5000,7 @@ MmFlushSegment(
             /* No page. Nothing to flush */
             MmUnlockSectionSegment(Segment);
             MmDereferenceSegment(Segment);
-            goto Quit;
+            return STATUS_SUCCESS;
         }
 
         PCACHE_SECTION_PAGE_TABLE PageTable = RtlGetElementGenericTable(&Segment->PageTable, ElemCount - 1);
@@ -5002,8 +5018,10 @@ MmFlushSegment(
         {
             MmCheckDirtySegment(Segment, &FlushStart, FALSE, FALSE);
 
-            if (Iosb)
-                Iosb->Information += PAGE_SIZE;
+            if (FlushedPages)
+            {
+                (*FlushedPages)++;
+            }
         }
 
         FlushStart.QuadPart += PAGE_SIZE;
@@ -5012,11 +5030,7 @@ MmFlushSegment(
     MmUnlockSectionSegment(Segment);
     MmDereferenceSegment(Segment);
 
-Quit:
     /* FIXME: Handle failures */
-    if (Iosb)
-        Iosb->Status = STATUS_SUCCESS;
-
     return STATUS_SUCCESS;
 }
 
@@ -5200,14 +5214,20 @@ MmCheckDirtySegment(
 NTSTATUS
 NTAPI
 MmMakePagesDirty(
-    _In_ PEPROCESS Process,
+    _In_opt_ PEPROCESS Process,
     _In_ PVOID Address,
-    _In_ ULONG Length)
+    _In_ ULONG Length,
+    _Out_opt_ PULONG NumberOfPages)
 {
     PMEMORY_AREA MemoryArea;
     PMM_SECTION_SEGMENT Segment;
     LARGE_INTEGER SegmentOffset, RangeEnd;
     PMMSUPPORT AddressSpace = Process ? &Process->Vm : MmGetKernelAddressSpace();
+
+    if (NumberOfPages)
+    {
+        *NumberOfPages = 0;
+    }
 
     MmLockAddressSpace(AddressSpace);
 
@@ -5253,10 +5273,16 @@ MmMakePagesDirty(
         ASSERT(!IS_SWAP_FROM_SSE(Entry));
 
         /* If there is no page there, there is nothing to make dirty */
-        if (Entry != 0)
+        if (Entry != 0 && !IS_DIRTY_SSE(Entry))
         {
             /* Dirtify the entry */
             MmSetPageEntrySectionSegment(Segment, &SegmentOffset, DIRTY_SSE(Entry));
+
+            /* Update number of marked pages, if needed */
+            if (NumberOfPages)
+            {
+                (*NumberOfPages)++;
+            }
         }
 
         SegmentOffset.QuadPart += PAGE_SIZE;

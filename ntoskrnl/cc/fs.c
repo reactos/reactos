@@ -108,7 +108,7 @@ NTAPI
 CcIsThereDirtyData (
     IN PVPB Vpb)
 {
-    PROS_VACB Vacb;
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
     PLIST_ENTRY Entry;
     KIRQL oldIrql;
     /* Assume no dirty data */
@@ -118,26 +118,17 @@ CcIsThereDirtyData (
 
     oldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
 
-    /* Browse dirty VACBs */
-    for (Entry = DirtyVacbListHead.Flink; Entry != &DirtyVacbListHead; Entry = Entry->Flink)
+    /* Browse dirty files */
+    for (Entry = CcDirtySharedCacheMapList.Flink; Entry != &CcDirtySharedCacheMapList; Entry = Entry->Flink)
     {
-        Vacb = CONTAINING_RECORD(Entry, ROS_VACB, DirtyVacbListEntry);
-        /* Look for these associated with our volume */
-        if (Vacb->SharedCacheMap->FileObject->Vpb != Vpb)
-        {
-            continue;
-        }
-
-        /* From now on, we are associated with our VPB */
+        SharedCacheMap = CONTAINING_RECORD(Entry, ROS_SHARED_CACHE_MAP, SharedCacheMapLinks);
 
         /* Temporary files are not counted as dirty */
-        if (BooleanFlagOn(Vacb->SharedCacheMap->FileObject->Flags, FO_TEMPORARY_FILE))
-        {
+        if (BooleanFlagOn(SharedCacheMap->FileObject->Flags, FO_TEMPORARY_FILE))
             continue;
-        }
 
-        /* A single dirty VACB is enough to have dirty data */
-        if (Vacb->Dirty)
+        /* A single dirty file in our volume is enough to have dirty data */
+        if (SharedCacheMap->FileObject->Vpb == Vpb)
         {
             Dirty = TRUE;
             break;
@@ -147,6 +138,31 @@ CcIsThereDirtyData (
     KeReleaseQueuedSpinLock(LockQueueMasterLock, oldIrql);
 
     return Dirty;
+}
+
+static
+VOID
+CcpUpdatePurgedFileCache(
+    _In_ PROS_SHARED_CACHE_MAP SharedCacheMap,
+    _In_ ULONG PurgedDirtyPages)
+{
+    KIRQL OldIrql;
+
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+    KeAcquireSpinLockAtDpcLevel(&SharedCacheMap->CacheMapLock);
+
+    /* Update number of dirty pages and check dirty status */
+    CcTotalDirtyPages -= PurgedDirtyPages;
+    SharedCacheMap->DirtyPages -= PurgedDirtyPages;
+    if (SharedCacheMap->DirtyPages == 0)
+    {
+        /* The file cache is no longer dirty, remove from dirty list */
+        RemoveEntryList(&SharedCacheMap->SharedCacheMapLinks);
+        InsertTailList(&CcCleanSharedCacheMapList, &SharedCacheMap->SharedCacheMapLinks);
+    }
+
+    KeReleaseSpinLockFromDpcLevel(&SharedCacheMap->CacheMapLock);
+    KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
 }
 
 /*
@@ -246,21 +262,16 @@ CcPurgeCacheSection (
          * Allow one ref: VACB is supposed to be always 1-referenced
          */
         Refs = CcRosVacbGetRefCount(Vacb);
-        if ((Refs > 1 && !Vacb->Dirty) ||
-            (Refs > 2 && Vacb->Dirty))
+        if (Refs > 1)
         {
             Success = FALSE;
             break;
         }
 
         /* This VACB is in range, so unlink it and mark for free */
-        ASSERT(Refs == 1 || Vacb->Dirty);
+        ASSERT(Refs == 1);
         RemoveEntryList(&Vacb->VacbLruListEntry);
         InitializeListHead(&Vacb->VacbLruListEntry);
-        if (Vacb->Dirty)
-        {
-            CcRosUnmarkDirtyVacb(Vacb, FALSE);
-        }
         RemoveEntryList(&Vacb->CacheMapVacbListEntry);
         InsertHeadList(&FreeList, &Vacb->CacheMapVacbListEntry);
     }
@@ -282,7 +293,14 @@ CcPurgeCacheSection (
     /* Now make sure that Mm doesn't hold some pages here. */
 purgeMm:
     if (Success)
-        Success = MmPurgeSegment(SectionObjectPointer, FileOffset, Length);
+    {
+        ULONG PurgedDirtyPages;
+
+        Success = MmPurgeSegment(SectionObjectPointer, FileOffset, Length, &PurgedDirtyPages);
+
+        if (SharedCacheMap && PurgedDirtyPages != 0)
+            CcpUpdatePurgedFileCache(SharedCacheMap, PurgedDirtyPages);
+    }
 
     return Success;
 }

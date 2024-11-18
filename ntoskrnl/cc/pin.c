@@ -89,10 +89,7 @@ CcpDereferenceBcb(
          * the VACB was already marked as such
          * following the call to CcSetDirtyPinnedData
          */
-        CcRosReleaseVacb(SharedCacheMap,
-                         Bcb->Vacb,
-                         FALSE,
-                         FALSE);
+        CcRosReleaseVacb(Bcb->Vacb, FALSE);
 
         ExDeleteResourceLite(&Bcb->Lock);
         ExFreeToNPagedLookasideList(&iBcbLookasideList, Bcb);
@@ -120,7 +117,7 @@ CcpGetAppropriateBcb(
     iBcb = ExAllocateFromNPagedLookasideList(&iBcbLookasideList);
     if (iBcb == NULL)
     {
-        CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE);
+        CcRosReleaseVacb(Vacb, FALSE);
         return NULL;
     }
 
@@ -171,7 +168,7 @@ CcpGetAppropriateBcb(
         if (DupBcb != NULL)
         {
             /* Delete the loser */
-            CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE);
+            CcRosReleaseVacb(Vacb, FALSE);
             ExDeleteResourceLite(&iBcb->Lock);
             ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
         }
@@ -281,7 +278,7 @@ CcpPinData(
         NewBcb = CcpGetAppropriateBcb(SharedCacheMap, Vacb, FileOffset, Length, Flags, TRUE);
         if (NewBcb == NULL)
         {
-            CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE);
+            CcRosReleaseVacb(Vacb, FALSE);
             return FALSE;
         }
     }
@@ -385,7 +382,7 @@ CcMapData (
         iBcb = CcpGetAppropriateBcb(SharedCacheMap, Vacb, FileOffset, Length, 0, FALSE);
         if (iBcb == NULL)
         {
-            CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE);
+            CcRosReleaseVacb(Vacb, FALSE);
             CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
                 SharedCacheMap->FileObject, FileOffset, Length, Flags);
             *pBcb = NULL; // If you ever remove this for compat, make sure to review all callers for using an unititialized value
@@ -554,15 +551,9 @@ CcSetDirtyPinnedData (
 
     CCTRACE(CC_API_DEBUG, "Bcb=%p Lsn=%p\n", Bcb, Lsn);
 
-    /* Tell Mm */
-    MmMakePagesDirty(NULL,
-                     Add2Ptr(iBcb->Vacb->BaseAddress, iBcb->PFCB.MappedFileOffset.QuadPart - iBcb->Vacb->FileOffset.QuadPart),
-                     iBcb->PFCB.MappedLength);
-
-    if (!iBcb->Vacb->Dirty)
-    {
-        CcRosMarkDirtyVacb(iBcb->Vacb);
-    }
+    CcpMarkDirtyFileCache(iBcb->Vacb->SharedCacheMap,
+                          Add2Ptr(iBcb->Vacb->BaseAddress, iBcb->PFCB.MappedFileOffset.QuadPart - iBcb->Vacb->FileOffset.QuadPart),
+                          iBcb->PFCB.MappedLength);
 }
 
 
@@ -665,10 +656,7 @@ CcUnpinRepinnedBcb (
          * the VACB was already marked as such
          * following the call to CcSetDirtyPinnedData
          */
-        CcRosReleaseVacb(iBcb->Vacb->SharedCacheMap,
-                         iBcb->Vacb,
-                         FALSE,
-                         FALSE);
+        CcRosReleaseVacb(iBcb->Vacb, FALSE);
 
         ExDeleteResourceLite(&iBcb->Lock);
         ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
