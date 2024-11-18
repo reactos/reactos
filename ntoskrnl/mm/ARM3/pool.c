@@ -1580,6 +1580,10 @@ MmAllocateMappingAddress(
     PMMPTE PointerPte;
     MMPTE TempPte;
 
+    /* Fast exit if PoolTag is NULL */
+    if (!PoolTag)
+        return NULL;
+
     /* How many PTEs does the caller want? */
     SizeInPages = BYTES_TO_PAGES(NumberOfBytes);
     if (SizeInPages == 0)
