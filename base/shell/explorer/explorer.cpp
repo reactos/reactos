@@ -121,7 +121,7 @@ IsExplorerSystemShell()
     RegCloseKey(hKeyWinlogon);
 
 	// Unable to query value.
-	return FALSE;
+	return TRUE;
 }
 
 #if !WIN7_COMPAT_MODE
