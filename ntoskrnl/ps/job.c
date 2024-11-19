@@ -120,13 +120,28 @@ typedef struct TERMINATE_PROCESS_CONTEXT
  * @param[in, out] Status
  *     Holds the status of the process ID collection operation.
  */
-typedef struct QUERY_JOB_PROCESS_ID_CONTEXT {
+typedef struct QUERY_JOB_PROCESS_ID_CONTEXT
+{
     PJOBOBJECT_BASIC_PROCESS_ID_LIST ProcIdList;
     ULONG ListLength;
     ULONG_PTR *IdListArray;
     NTSTATUS Status;
 } QUERY_JOB_PROCESS_ID_CONTEXT, *PQUERY_JOB_PROCESS_ID_CONTEXT;
 
+/*!
+ * Context structure used to associate a job object with a completion port.
+ *
+ * @param[in] CompletionPort
+ *     A pointer to the I/O completion port.
+ *
+ * @param[in] CompletionKey
+ *     A pointer to the key associated with the completion port.
+ */
+typedef struct ASSOCIATE_COMPLETION_PORT_CONTEXT
+{
+    PVOID CompletionPort;
+    PVOID CompletionKey;
+} ASSOCIATE_COMPLETION_PORT_CONTEXT, *PASSOCIATE_COMPLETION_PORT_CONTEXT;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -153,6 +168,7 @@ PspInitializeJobStructures(VOID)
  *     Pointer to the next valid process, or NULL if no more processes are
  *     available.
  */
+static
 PEPROCESS
 PspAdvanceJobEnumerator(
     _In_ PEJOB Job,
@@ -406,8 +422,8 @@ PspRemoveProcessFromJob(
 
         Job->ActiveProcesses--;
 
-        /* Flag the job as inactive to prevent the number of active processes
-           from repeatedly decrementing */
+        /* Flag this process as inactive to prevent the number of active
+           processes from repeatedly decrementing */
         InterlockedOr((PLONG)&Process->JobStatus, JOB_NOT_REALLY_ACTIVE);
     }
 
@@ -452,7 +468,7 @@ PspExitProcessFromJob(
 
             Job->ActiveProcesses--;
 
-            /* Flag the job as inactive to prevent the number of active
+            /* Flag this process as inactive to prevent the number of active
                processes from repeatedly decrementing */
             InterlockedOr((PLONG)&Process->JobStatus, JOB_NOT_REALLY_ACTIVE);
         }
@@ -506,6 +522,7 @@ PspExitProcessFromJob(
  *     PspEnumerateProcessesInJob(). It releases the lock after the callback
  *     returns.
  */
+static
 NTSTATUS
 NTAPI
 PspTerminateProcessCallback(
@@ -540,7 +557,7 @@ PspTerminateProcessCallback(
         {
             Job->ActiveProcesses--;
 
-            /* Flag the job as inactive to prevent the number of active
+            /* Flag this process as inactive to prevent the number of active
                processes from repeatedly decrementing */
             InterlockedOr((PLONG)&Process->JobStatus,
                           JOB_NOT_REALLY_ACTIVE);
@@ -727,6 +744,7 @@ PspDeleteJob(_In_ PVOID ObjectBody)
  *     Otherwise, an appropriate NTSTATUS error code.
  *
  */
+static
 NTSTATUS
 PspSetJobLimitsBasicOrExtended(
     _In_ PEJOB Job,
@@ -930,6 +948,119 @@ ExitFromBasicLimits:
 }
 
 /*!
+ * Callback function to associate an I/O completion port with a process.
+ *
+ * @param[in] Process
+ *     A pointer to the process.
+ *
+ * @param[in, optional] Context
+ *     A pointer to a context structure containing the I/O completion port and
+ *     its associated key. This is passed in by the caller of the enumeration.
+ *
+ * @return
+ *     STATUS_SUCCESS if the I/O completion port was successfully associated
+ *     with the process.
+ *     Otherwise, an appropriate NTSTATUS error code.
+ */
+static
+NTSTATUS
+PspAssociateCompletionPortCallback(
+    _In_ PEPROCESS Process,
+    _In_opt_ PVOID Context
+)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PASSOCIATE_COMPLETION_PORT_CONTEXT AssociateCpContext =
+        (PASSOCIATE_COMPLETION_PORT_CONTEXT)Context;
+
+    /* Ensure the process is active and has a valid unique process ID */
+    if (!(Process->JobStatus & JOB_NOT_REALLY_ACTIVE) &&
+        Process->UniqueProcessId)
+    {
+        Status = IoSetIoCompletion(AssociateCpContext->CompletionPort,
+                                   AssociateCpContext->CompletionKey,
+                                   Process->UniqueProcessId,
+                                   STATUS_SUCCESS,
+                                   JOB_OBJECT_MSG_NEW_PROCESS,
+                                   FALSE);
+    }
+
+    return Status;
+}
+
+/*!
+ * Associates an I/O completion port with a job object and enumerates its
+ * processes to propagate the association.
+ *
+ * @param[in] Job
+ *     A pointer to the job object to which the I/O completion port will be
+ *     associated.
+ *
+ * @param[in] AssociateCpInfo
+ *     A structure containing information used to associate a completion port
+ *     with a job (the handle of the I/O completion port and the key).
+ *
+ * @return
+ *     STATUS_SUCCESS if the I/O completion port was successfully associated
+ *     with the job and its processes.
+ *     Otherwise, an appropriate NTSTATUS error code.
+ */
+static
+NTSTATUS
+PspAssociateCompletionPortWithJob(
+    _In_ PEJOB Job,
+    _In_ PJOBOBJECT_ASSOCIATE_COMPLETION_PORT AssociateCpInfo
+)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    HANDLE IoCompletion;
+    ASSOCIATE_COMPLETION_PORT_CONTEXT Context;
+
+    if (!AssociateCpInfo->CompletionPort)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Status = ObReferenceObjectByHandle(AssociateCpInfo->CompletionPort,
+                                       IO_COMPLETION_MODIFY_STATE,
+                                       IoCompletionType,
+                                       PreviousMode,
+                                       &IoCompletion,
+                                       NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    ExAcquireResourceExclusiveLite(&Job->JobLock, TRUE);
+
+    /* Check if the job already has a completion port or is in a final state */
+    if (Job->CompletionPort || (Job->JobFlags & JOB_OBJECT_CLOSE_DONE) != 0)
+    {
+        ObDereferenceObject(IoCompletion);
+        ExReleaseResourceLite(&Job->JobLock);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Job->CompletionKey = AssociateCpInfo->CompletionKey;
+    Job->CompletionPort = IoCompletion;
+
+    Context.CompletionPort = Job->CompletionPort;
+    Context.CompletionKey = Job->CompletionKey;
+
+    Status = PspEnumerateProcessesInJob(Job,
+                                        PspAssociateCompletionPortCallback,
+                                        &Context,
+                                        FALSE);
+
+    ExReleaseResourceLite(&Job->JobLock);
+
+    return Status;
+}
+
+/*!
  * Collects accounting information, such as total user time, kernel time, page
  * fault counts, and I/O operations, for the given job object.
  *
@@ -944,6 +1075,7 @@ ExitFromBasicLimits:
  *     STATUS_SUCCESS on success.
  *     Otherwise, an appropriate NTSTATUS error code.
  */
+static
 NTSTATUS
 PspQueryBasicAccountingInfo(
     _In_ PEJOB Job,
@@ -1026,6 +1158,7 @@ PspQueryBasicAccountingInfo(
  *     STATUS_SUCCESS on success.
  *     Otherwise, an appropriate NTSTATUS error code.
  */
+static
 NTSTATUS
 PspQueryLimitInformation(
     _In_ PEJOB Job,
@@ -1090,6 +1223,7 @@ PspQueryLimitInformation(
  *     Otherwise, an appropriate NTSTATUS error code if the buffer is
  *     insufficient or another error occurs.
  */
+static
 NTSTATUS
 PspQueryJobProcessIdListCallback(
     _In_ PEPROCESS Process,
@@ -1155,6 +1289,7 @@ PspQueryJobProcessIdListCallback(
  *     STATUS_BUFFER_OVERFLOW if the buffer is too small to hold all IDs.
  *     Otherwise, an appropriate NTSTATUS error code.
  */
+static
 NTSTATUS
 PspQueryJobProcessIdList(
     _In_ PEJOB Job,
@@ -2094,6 +2229,25 @@ NtSetInformationJobObject(
         goto Exit;
     }
     case JobObjectAssociateCompletionPortInformation:
+    {
+        JOBOBJECT_ASSOCIATE_COMPLETION_PORT AssociateCpInfo;
+
+        _SEH2_TRY
+        {
+            RtlCopyMemory(&AssociateCpInfo,
+                          JobInformation,
+                          sizeof(AssociateCpInfo));
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+            break;
+        }
+        _SEH2_END;
+
+        Status = PspAssociateCompletionPortWithJob(Job, &AssociateCpInfo);
+        break;
+    }
     case JobObjectBasicAccountingInformation:
     case JobObjectBasicAndIoAccountingInformation:
     case JobObjectBasicProcessIdList:
