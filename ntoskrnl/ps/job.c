@@ -513,7 +513,6 @@ PspExitProcessFromJob(
  */
 static
 NTSTATUS
-NTAPI
 PspTerminateProcessCallback(
     _In_ PEPROCESS Process,
     _In_opt_ PVOID Context
@@ -635,7 +634,6 @@ PspCloseJob(
     _In_ ULONG SystemHandleCount
 )
 {
-    NTSTATUS Status;
     PEJOB Job = (PEJOB)ObjectBody;
 
     PAGED_CODE();
@@ -664,7 +662,7 @@ PspCloseJob(
     /* If the job is set to kill on close, terminate all associated processes */
     if (Job->LimitFlags & JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE)
     {
-        Status = PspTerminateJobObject(Job, STATUS_SUCCESS);
+        NTSTATUS Status = PspTerminateJobObject(Job, STATUS_SUCCESS);
         ASSERT(NT_SUCCESS(Status));
     }
 
@@ -1884,7 +1882,6 @@ NtQueryInformationJobObject(
     NTSTATUS Status;
     BOOLEAN NoOutput;
     PVOID JobInfoBuffer;
-    PLIST_ENTRY NextEntry;
     PKTHREAD CurrentThread;
     KPROCESSOR_MODE PreviousMode;
     JOBOBJECT_EXTENDED_LIMIT_INFORMATION ExtendedLimit;
