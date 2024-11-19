@@ -473,17 +473,6 @@ PspExitProcessFromJob(
             InterlockedOr((PLONG)&Process->JobStatus, JOB_NOT_REALLY_ACTIVE);
         }
 
-        /* If the job has a completion port, notify it of the process exit */
-        if (Job->CompletionPort)
-        {
-            IoSetIoCompletion(Job->CompletionPort,
-                              Job->CompletionKey,
-                              NULL,
-                              STATUS_SUCCESS,
-                              JOB_OBJECT_MSG_EXIT_PROCESS,
-                              FALSE);
-        }
-
         /* If no active processes remain, notify the job completion port */
         if (Job->ActiveProcesses == 0 && Job->CompletionPort)
         {
