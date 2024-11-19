@@ -112,13 +112,13 @@ IsExplorerSystemShell()
     if (RegQueryValueEx(hKeyWinlogon, L"Shell", 0, &dwType,
 		(LPBYTE)szShell, &dwBufferSize) == ERROR_SUCCESS)
 	{
-		RegCloseKey(hKeyWinlogon);
-
 		if (StrStrI(szShell, szExplorer))
 			return TRUE;
 		else
 			return FALSE;
 	}
+
+    RegCloseKey(hKeyWinlogon);
 
 	// Unable to query value.
 	return FALSE;
