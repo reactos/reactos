@@ -1635,8 +1635,14 @@ HRESULT WINAPI StrRetToStrW(LPSTRRET lpStrRet, const ITEMIDLIST *pidl, LPWSTR *p
   switch (lpStrRet->uType)
   {
   case STRRET_WSTR:
+#ifdef __REACTOS__
+    hRet = lpStrRet->u.pOleStr ? S_OK : E_FAIL;
+    *ppszName = lpStrRet->u.pOleStr;
+    lpStrRet->u.pOleStr = NULL; /* Windows does this, presumably in case someone calls SHFree */
+#else
     hRet = SHStrDupW(lpStrRet->u.pOleStr, ppszName);
     CoTaskMemFree(lpStrRet->u.pOleStr);
+#endif
     break;
 
   case STRRET_CSTR:
