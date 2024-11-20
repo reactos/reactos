@@ -467,7 +467,6 @@ CompBattPnpDispatch(IN PDEVICE_OBJECT DeviceObject,
         default:
 
             /* Not supported */
-            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
     }
 
