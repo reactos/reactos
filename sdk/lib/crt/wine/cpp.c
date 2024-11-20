@@ -995,9 +995,7 @@ void __thiscall MSVCRT_improper_scheduler_detach_dtor(
 
 #endif /* _MSVCR_VER >= 100 */
 
-#ifndef __GNUC__
-void __asm_dummy_vtables(void) {
-#endif
+__ASM_BLOCK_BEGIN(vtables)
 
 __ASM_VTABLE(type_info,
         VTABLE_ADD_FUNC(MSVCRT_type_info_vector_dtor));
@@ -1045,9 +1043,7 @@ __ASM_VTABLE(improper_scheduler_detach,
         VTABLE_ADD_FUNC(MSVCRT_what_exception));
 #endif
 
-#ifndef __GNUC__
-}
-#endif
+__ASM_BLOCK_END
 
 DEFINE_RTTI_DATA0( type_info, 0, ".?AVtype_info@@" )
 #if _MSVCR_VER >= 80
