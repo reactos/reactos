@@ -1332,6 +1332,58 @@ extern char* __cdecl __unDName(char *,const char*,int,malloc_func_t,free_func_t,
 #define COOPERATIVE_TIMEOUT_INFINITE ((unsigned int)-1)
 #define COOPERATIVE_WAIT_TIMEOUT     ~0
 
+static inline int __msvcrt_isnanf(float x)
+{
+    union { float x; unsigned int i; } u = { x };
+    return (u.i & 0x7fffffff) > 0x7f800000;
+}
+static inline int __msvcrt_isnan(double x)
+{
+    union { double x; unsigned __int64 i; } u = { x };
+    return (u.i & ~0ull >> 1) > 0x7ffull << 52;
+}
+static inline int __msvcrt_isinff(float x)
+{
+    union { float x; unsigned int i; } u = { x };
+    return (u.i & 0x7fffffff) == 0x7f800000;
+}
+static inline int __msvcrt_isinf(double x)
+{
+    union { double x; unsigned __int64 i; } u = { x };
+    return (u.i & ~0ull >> 1) == 0x7ffull << 52;
+}
+static inline int __msvcrt_isnormalf(float x)
+{
+    union { float x; unsigned int i; } u = { x };
+    return ((u.i + 0x00800000) & 0x7fffffff) >= 0x01000000;
+}
+static inline int __msvcrt_isnormal(double x)
+{
+    union { double x; unsigned __int64 i; } u = { x };
+    return ((u.i + (1ull << 52)) & ~0ull >> 1) >= 1ull << 53;
+}
+static inline int __msvcrt_signbitf(float x)
+{
+    union { float x; unsigned int i; } u = { x };
+    return (int)(u.i >> 31);
+}
+static inline int __msvcrt_signbit(double x)
+{
+    union { double x; unsigned __int64 i; } u = { x };
+    return (int)(u.i >> 63);
+}
+
+#undef isinf
+#undef isnan
+#undef isnormal
+#undef isfinite
+#undef signbit
+#define isinf(x)    (sizeof(x) == sizeof(float) ? __msvcrt_isinff(x) : __msvcrt_isinf(x))
+#define isnan(x)    (sizeof(x) == sizeof(float) ? __msvcrt_isnanf(x) : __msvcrt_isnan(x))
+#define isnormal(x) (sizeof(x) == sizeof(float) ? __msvcrt_isnormalf(x) : __msvcrt_isnormal(x))
+#define signbit(x)  (sizeof(x) == sizeof(float) ? __msvcrt_signbitf(x) : __msvcrt_signbit(x))
+#define isfinite(x) (!isinf(x) && !isnan(x))
+
 typedef enum {
     _FpCodeUnspecified,
     _FpCodeAdd,
