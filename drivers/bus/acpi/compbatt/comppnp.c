@@ -199,8 +199,11 @@ CompBattAddNewBattery(IN PUNICODE_STRING BatteryName,
                          Status);
             }
 
-            /* Free the battery data */
-            ExFreePool(BatteryData);
+            if (!NT_SUCCESS(Status))
+            {
+                /* Free the battery data */
+                ExFreePool(BatteryData);
+            }
         }
         else
         {
