@@ -1128,6 +1128,8 @@ int            __cdecl MSVCRT__set_printf_count_output(int);
 #define MSVCRT__DISABLE_PER_THREAD_LOCALE 2
 
 extern MSVCRT__locale_t MSVCRT_locale;
+MSVCRT__locale_t CDECL get_current_locale_noalloc(MSVCRT__locale_t locale) DECLSPEC_HIDDEN;
+void CDECL free_locale_noalloc(MSVCRT__locale_t locale) DECLSPEC_HIDDEN;
 MSVCRT_pthreadlocinfo CDECL get_locinfo(void) DECLSPEC_HIDDEN;
 MSVCRT_pthreadmbcinfo CDECL get_mbcinfo(void) DECLSPEC_HIDDEN;
 void __cdecl MSVCRT__free_locale(MSVCRT__locale_t);
