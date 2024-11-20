@@ -1117,9 +1117,9 @@ int            WINAPIV MSVCRT_fwprintf(MSVCRT_FILE *file, const MSVCRT_wchar_t *
 int            __cdecl MSVCRT_vsnprintf(char *str, MSVCRT_size_t len, const char *format, __ms_va_list valist);
 int            __cdecl MSVCRT_vsnwprintf(MSVCRT_wchar_t *str, MSVCRT_size_t len,
                                        const MSVCRT_wchar_t *format, __ms_va_list valist );
-int            WINAPIV MSVCRT__snwprintf(MSVCRT_wchar_t*, unsigned int, const MSVCRT_wchar_t*, ...);
+int            WINAPIV MSVCRT__snwprintf(MSVCRT_wchar_t*, MSVCRT_size_t, const MSVCRT_wchar_t*, ...);
 int            WINAPIV MSVCRT_sprintf(char*,const char*,...);
-int            WINAPIV MSVCRT__snprintf(char*,unsigned int,const char*,...);
+int            WINAPIV MSVCRT__snprintf(char*,MSVCRT_size_t,const char*,...);
 int            WINAPIV MSVCRT__scprintf(const char*,...);
 int            __cdecl MSVCRT_raise(int sig);
 int            __cdecl MSVCRT__set_printf_count_output(int);
