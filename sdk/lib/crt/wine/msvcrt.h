@@ -308,7 +308,7 @@ struct __thread_data {
 
 typedef struct __thread_data thread_data_t;
 
-extern thread_data_t *msvcrt_get_thread_data(void) DECLSPEC_HIDDEN;
+extern thread_data_t *CDECL msvcrt_get_thread_data(void) DECLSPEC_HIDDEN;
 
 LCID MSVCRT_locale_to_LCID(const char*, unsigned short*, BOOL*) DECLSPEC_HIDDEN;
 extern MSVCRT__locale_t MSVCRT_locale DECLSPEC_HIDDEN;
@@ -1128,8 +1128,8 @@ int            __cdecl MSVCRT__set_printf_count_output(int);
 #define MSVCRT__DISABLE_PER_THREAD_LOCALE 2
 
 extern MSVCRT__locale_t MSVCRT_locale;
-MSVCRT_pthreadlocinfo get_locinfo(void) DECLSPEC_HIDDEN;
-MSVCRT_pthreadmbcinfo get_mbcinfo(void) DECLSPEC_HIDDEN;
+MSVCRT_pthreadlocinfo CDECL get_locinfo(void) DECLSPEC_HIDDEN;
+MSVCRT_pthreadmbcinfo CDECL get_mbcinfo(void) DECLSPEC_HIDDEN;
 void __cdecl MSVCRT__free_locale(MSVCRT__locale_t);
 void free_locinfo(MSVCRT_pthreadlocinfo) DECLSPEC_HIDDEN;
 void free_mbcinfo(MSVCRT_pthreadmbcinfo) DECLSPEC_HIDDEN;
