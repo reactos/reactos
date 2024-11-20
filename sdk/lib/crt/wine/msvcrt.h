@@ -1191,6 +1191,7 @@ int __cdecl      MSVCRT_strcmp(const char*, const char*);
 char* __cdecl    MSVCRT_strstr(const char*, const char*);
 unsigned int __cdecl MSVCRT__get_output_format(void);
 char* __cdecl MSVCRT_strtok_s(char*, const char*, char**);
+char* __cdecl MSVCRT__itoa(int, char*, int);
 double parse_double(MSVCRT_wchar_t (*)(void*), void (*)(void*), void*, MSVCRT_pthreadlocinfo, int*);
 
 /* Maybe one day we'll enable the invalid parameter handlers with the full set of information (msvcrXXd)

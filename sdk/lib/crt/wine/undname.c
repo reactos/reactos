@@ -31,6 +31,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 
+#ifdef __REACTOS__
+#define MSVCRT_sprintf sprintf
+#endif
+
 /* TODO:
  * - document a bit (grammar + functions)
  * - back-port this new code into tools/winedump/msmangle.c
@@ -331,7 +335,7 @@ static const char* get_number(struct parsed_symbol* sym)
         if (*sym->current != '@') return NULL;
 
         ptr = und_alloc(sym, 17);
-        sprintf(ptr, "%s%u", sgn ? "-" : "", ret);
+        MSVCRT_sprintf(ptr, "%s%u", sgn ? "-" : "", ret);
         sym->current++;
     }
     else return NULL;
