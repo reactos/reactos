@@ -314,6 +314,7 @@ extern unsigned int MSVCRT___lc_codepage;
 extern int MSVCRT___lc_collate_cp;
 extern WORD MSVCRT__ctype [257];
 extern BOOL initial_locale DECLSPEC_HIDDEN;
+extern WORD *MSVCRT__pwctype;
 
 void msvcrt_set_errno(int) DECLSPEC_HIDDEN;
 #if _MSVCR_VER >= 80
