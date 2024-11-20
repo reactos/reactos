@@ -1220,6 +1220,13 @@ MSVCRT_wchar_t* __cdecl MSVCRT_wcscpy(MSVCRT_wchar_t*, const MSVCRT_wchar_t*);
 MSVCRT_wchar_t* __cdecl MSVCRT_wcschr(const MSVCRT_wchar_t*, MSVCRT_wchar_t);
 MSVCRT_wchar_t* __cdecl MSVCRT_wcscat(MSVCRT_wchar_t*, const MSVCRT_wchar_t*);
 
+double __cdecl MSVCRT_floor( double x );
+float  __cdecl MSVCRT_floorf( float x );
+double __cdecl MSVCRT_frexp( double x, int *exp );
+double __cdecl MSVCRT_log10( double x );
+double __cdecl MSVCRT_sqrt( double x );
+float  __cdecl MSVCRT_sqrtf( float x );
+
 enum fpmod {
     FP_ROUND_ZERO, /* only used when dropped part contains only zeros */
     FP_ROUND_DOWN,
