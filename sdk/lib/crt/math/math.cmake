@@ -16,6 +16,8 @@ list(APPEND LIBCNTPR_MATH_SOURCE
     math/labs.c
     math/round.c
     math/roundf.c
+    math/scalbn.c
+    math/scalbnf.c
     math/sincos.c
 )
 

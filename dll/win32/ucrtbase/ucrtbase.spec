@@ -2553,8 +2553,8 @@
 @ cdecl scalbln(double long) scalbn # double scalbln(double x, long exp);
 @ cdecl scalblnf(float long) scalbnf # float scalblnf(float x, long exp);
 @ cdecl scalblnl(double long) scalbn # long double scalblnl(long double x, long exp);
-@ cdecl -stub scalbn(double long) # double scalbn(double x, int exp);
-@ cdecl -stub scalbnf(float long) # float scalbnf(float x, int exp);
+@ cdecl scalbn(double long) # double scalbn(double x, int exp);
+@ cdecl scalbnf(float long) # float scalbnf(float x, int exp);
 @ cdecl scalbnl(double long) scalbn # long double scalbnl(long double x, int exp);
 @ cdecl set_terminate(ptr)
 @ cdecl set_unexpected(ptr)
