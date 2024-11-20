@@ -134,7 +134,7 @@ CompBattAddNewBattery(IN PUNICODE_STRING BatteryName,
         {
             /* Initialize the data and write the battery name */
             RtlZeroMemory(BatteryData, sizeof(COMPBATT_BATTERY_DATA));
-            BatteryData->Tag = 0;
+            BatteryData->Tag = BATTERY_TAG_INVALID;
             BatteryData->BatteryName.MaximumLength = BatteryName->Length;
             BatteryData->BatteryName.Buffer = (PWCHAR)(BatteryData + 1);
             RtlCopyUnicodeString(&BatteryData->BatteryName, BatteryName);

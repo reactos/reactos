@@ -111,7 +111,7 @@ CompBattRecalculateTag(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
        }
 
        /* No tag for this device extension, clear it */
-       DeviceExtension->Tag = 0;
+       DeviceExtension->Tag = BATTERY_TAG_INVALID;
        NextEntry = NextEntry->Flink;
     }
 
@@ -161,7 +161,7 @@ CompBattQueryTag(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
     }
 
     /* Do we have a tag now? */
-    if ((DeviceExtension->Flags & COMPBATT_TAG_ASSIGNED) && (DeviceExtension->Tag))
+    if ((DeviceExtension->Flags & COMPBATT_TAG_ASSIGNED) && DeviceExtension->Tag != BATTERY_TAG_INVALID)
     {
         /* Return the tag */
         *Tag = DeviceExtension->Tag;
@@ -170,7 +170,7 @@ CompBattQueryTag(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
     else
     {
         /* No tag */
-        *Tag = 0;
+        *Tag = BATTERY_TAG_INVALID;
         Status = STATUS_NO_SUCH_DEVICE;
     }
 
@@ -261,7 +261,7 @@ CompBattGetBatteryInformation(OUT PBATTERY_INFORMATION BatteryInfo,
             InputBuffer.AtRate = 0;
 
             /* Make sure the battery has a tag */
-            if (BatteryData->Tag)
+            if (BatteryData->Tag != BATTERY_TAG_INVALID)
             {
                 /* Do we already have the data? */
                 if (!(BatteryData->Flags & COMPBATT_BATTERY_INFORMATION_PRESENT))
@@ -419,7 +419,7 @@ CompBattGetBatteryGranularity(OUT PBATTERY_REPORTING_SCALE ReportingScale,
             InputBuffer.InformationLevel = BatteryGranularityInformation;
 
             /* Make sure the battery has a tag */
-            if (BatteryData->Tag)
+            if (BatteryData->Tag != BATTERY_TAG_INVALID)
             {
                 /* Send the IOCTL to query the information */
                 RtlZeroMemory(&BatteryData->BatteryInformation,
