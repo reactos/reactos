@@ -1072,6 +1072,9 @@ void* __cdecl    MSVCRT_malloc(MSVCRT_size_t);
 void* __cdecl    MSVCRT_calloc(MSVCRT_size_t,MSVCRT_size_t);
 void* __cdecl    MSVCRT_realloc(void*,MSVCRT_size_t);
 
+int __cdecl      MSVCRT_isalpha(int c);
+int __cdecl      MSVCRT_isdigit(int c);
+int __cdecl      MSVCRT_isspace(int c);
 int __cdecl      MSVCRT_iswalpha(MSVCRT_wint_t);
 int __cdecl      MSVCRT_iswspace(MSVCRT_wint_t);
 int __cdecl      MSVCRT_iswdigit(MSVCRT_wint_t);

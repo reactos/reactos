@@ -32,6 +32,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 
 #ifdef __REACTOS__
+#define MSVCRT_isdigit isdigit
 #define MSVCRT_sprintf sprintf
 #endif
 
@@ -861,7 +862,7 @@ static BOOL demangle_datatype(struct parsed_symbol* sym, struct datatype_t* ct,
         if (!get_modified_type(ct, sym, pmt_ref, in_args ? dt : 'P', in_args)) goto done;
         break;
     case 'P': /* Pointer */
-        if (isdigit(*sym->current))
+        if (MSVCRT_isdigit(*sym->current))
 	{
             /* FIXME:
              *   P6 = Function pointer
