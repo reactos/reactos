@@ -366,7 +366,7 @@ extern void msvcrt_free_locks(void) DECLSPEC_HIDDEN;
 
 extern void msvcrt_init_exception(void*) DECLSPEC_HIDDEN;
 extern BOOL msvcrt_init_locale(void) DECLSPEC_HIDDEN;
-extern void msvcrt_init_math(void) DECLSPEC_HIDDEN;
+extern void msvcrt_init_math(void*) DECLSPEC_HIDDEN;
 extern void msvcrt_init_io(void) DECLSPEC_HIDDEN;
 extern void msvcrt_free_io(void) DECLSPEC_HIDDEN;
 extern void msvcrt_init_console(void) DECLSPEC_HIDDEN;
