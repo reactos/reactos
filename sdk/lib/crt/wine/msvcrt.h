@@ -1201,6 +1201,7 @@ int __cdecl MSVCRT_wcsncmp(const MSVCRT_wchar_t*, const MSVCRT_wchar_t*, MSVCRT_
 int __cdecl MSVCRT__wcsnicmp(const MSVCRT_wchar_t*, const MSVCRT_wchar_t*, MSVCRT_size_t);
 int __cdecl MSVCRT_towlower(MSVCRT_wint_t);
 int __cdecl MSVCRT_towupper(MSVCRT_wint_t);
+int __cdecl MSVCRT__iswalnum_l(MSVCRT_wchar_t, MSVCRT__locale_t);
 
 /* Maybe one day we'll enable the invalid parameter handlers with the full set of information (msvcrXXd)
  *      #define MSVCRT_INVALID_PMT(x) MSVCRT_call_invalid_parameter_handler(x, __FUNCTION__, __FILE__, __LINE__, 0)
