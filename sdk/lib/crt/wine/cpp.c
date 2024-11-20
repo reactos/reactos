@@ -1717,7 +1717,7 @@ void __cdecl __ExceptionPtrCreate(exception_ptr *ep)
     ep->ref = NULL;
 }
 
-#if defined(__i386__) && !defined(__MINGW32__)
+#ifdef __ASM_USE_THISCALL_WRAPPER
 extern void call_dtor(const cxx_exception_type *type, void *func, void *object);
 
 __ASM_GLOBAL_FUNC( call_dtor,
