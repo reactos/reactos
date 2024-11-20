@@ -1211,6 +1211,9 @@ int __cdecl MSVCRT__iswupper_l(MSVCRT_wchar_t, MSVCRT__locale_t);
 int __cdecl MSVCRT__iswprint_l(MSVCRT_wchar_t, MSVCRT__locale_t);
 int __cdecl MSVCRT__iswpunct_l(MSVCRT_wchar_t, MSVCRT__locale_t);
 MSVCRT_size_t __cdecl MSVCRT_wcslen(const MSVCRT_wchar_t*);
+MSVCRT_wchar_t* __cdecl MSVCRT_wcscpy(MSVCRT_wchar_t*, const MSVCRT_wchar_t*);
+MSVCRT_wchar_t* __cdecl MSVCRT_wcschr(const MSVCRT_wchar_t*, MSVCRT_wchar_t);
+MSVCRT_wchar_t* __cdecl MSVCRT_wcscat(MSVCRT_wchar_t*, const MSVCRT_wchar_t*);
 
 /* Maybe one day we'll enable the invalid parameter handlers with the full set of information (msvcrXXd)
  *      #define MSVCRT_INVALID_PMT(x) MSVCRT_call_invalid_parameter_handler(x, __FUNCTION__, __FILE__, __LINE__, 0)
