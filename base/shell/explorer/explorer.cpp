@@ -96,6 +96,7 @@ IsExplorerSystemShell()
     LPWSTR szExplorer = NULL;
 	DWORD dwType;
 	DWORD dwBufferSize = sizeof(szShell);
+    BOOL bIsSystemShell = TRUE;
 
     if (!GetModuleFileName(NULL, szPath, MAX_PATH))
         return FALSE;
@@ -106,22 +107,23 @@ IsExplorerSystemShell()
 		0, KEY_READ, &hKeyWinlogon) != ERROR_SUCCESS)
     {
         // No registry access.
-        return TRUE;
+        bIsSystemShell = TRUE;
+    }
+    else
+    {
+        if (RegQueryValueEx(hKeyWinlogon, L"Shell", 0, &dwType,
+            (LPBYTE)szShell, &dwBufferSize) == ERROR_SUCCESS)
+        {
+            if (StrStrI(szShell, szExplorer))
+                bIsSystemShell = TRUE;
+            else
+                bIsSystemShell = FALSE;
+        }
+
+        RegCloseKey(hKeyWinlogon);
     }
 
-    if (RegQueryValueEx(hKeyWinlogon, L"Shell", 0, &dwType,
-		(LPBYTE)szShell, &dwBufferSize) == ERROR_SUCCESS)
-	{
-		if (StrStrI(szShell, szExplorer))
-			return TRUE;
-		else
-			return FALSE;
-	}
-
-    RegCloseKey(hKeyWinlogon);
-
-	// Unable to query value.
-	return TRUE;
+	return bIsSystemShell;
 }
 
 #if !WIN7_COMPAT_MODE
