@@ -1204,6 +1204,7 @@ int __cdecl MSVCRT_wcsncmp(const MSVCRT_wchar_t*, const MSVCRT_wchar_t*, MSVCRT_
 int __cdecl MSVCRT__wcsnicmp(const MSVCRT_wchar_t*, const MSVCRT_wchar_t*, MSVCRT_size_t);
 int __cdecl MSVCRT_towlower(MSVCRT_wint_t);
 int __cdecl MSVCRT_towupper(MSVCRT_wint_t);
+int __cdecl MSVCRT__isprint_l(int c, MSVCRT__locale_t locale);
 int __cdecl MSVCRT__iswalnum_l(MSVCRT_wchar_t, MSVCRT__locale_t);
 int __cdecl MSVCRT__iswdigit_l(MSVCRT_wchar_t, MSVCRT__locale_t);
 int __cdecl MSVCRT__iswgraph_l(MSVCRT_wchar_t, MSVCRT__locale_t);
