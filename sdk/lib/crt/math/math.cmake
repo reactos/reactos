@@ -14,6 +14,9 @@ list(APPEND LIBCNTPR_MATH_SOURCE
     math/div.c
     math/exp2f.c
     math/labs.c
+    math/nextafter.c
+    math/nextafterf.c
+    math/nexttowardf.c
     math/round.c
     math/roundf.c
     math/scalbn.c
