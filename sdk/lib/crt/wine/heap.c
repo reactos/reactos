@@ -464,10 +464,18 @@ void CDECL _free_base(void* ptr)
  */
 void* CDECL MSVCRT_malloc(MSVCRT_size_t size)
 {
-  void *ret = msvcrt_heap_alloc(0, size);
-  if (!ret)
-      *MSVCRT__errno() = MSVCRT_ENOMEM;
-  return ret;
+    void *ret;
+
+    do
+    {
+        ret = msvcrt_heap_alloc(0, size);
+        if (ret || !MSVCRT_new_mode)
+            break;
+    } while(_callnewh(size));
+
+    if (!ret)
+        *MSVCRT__errno() = MSVCRT_ENOMEM;
+    return ret;
 }
 
 #if _MSVCR_VER>=140
