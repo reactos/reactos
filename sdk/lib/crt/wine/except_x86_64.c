@@ -90,6 +90,7 @@ typedef struct
 {
     cxx_frame_info frame_info;
     BOOL rethrow;
+    EXCEPTION_RECORD *prev_rec;
 } cxx_catch_ctx;
 
 typedef struct
@@ -306,14 +307,13 @@ static void cxx_local_unwind(ULONG64 frame, DISPATCHER_CONTEXT *dispatch,
 static LONG CALLBACK cxx_rethrow_filter(PEXCEPTION_POINTERS eptrs, void *c)
 {
     EXCEPTION_RECORD *rec = eptrs->ExceptionRecord;
-    thread_data_t *data = msvcrt_get_thread_data();
     cxx_catch_ctx *ctx = c;
 
     if (rec->ExceptionCode != CXX_EXCEPTION)
         return EXCEPTION_CONTINUE_SEARCH;
     if (!rec->ExceptionInformation[1] && !rec->ExceptionInformation[2])
         return EXCEPTION_EXECUTE_HANDLER;
-    if (rec->ExceptionInformation[1] == data->exc_record->ExceptionInformation[1])
+    if (rec->ExceptionInformation[1] == ctx->prev_rec->ExceptionInformation[1])
         ctx->rethrow = TRUE;
     return EXCEPTION_CONTINUE_SEARCH;
 }
@@ -340,6 +340,7 @@ static void* WINAPI call_catch_block(EXCEPTION_RECORD *rec)
     TRACE("calling handler %p\n", handler);
 
     ctx.rethrow = FALSE;
+    ctx.prev_rec = prev_rec;
     __CxxRegisterExceptionObject(&ep, &ctx.frame_info);
     msvcrt_get_thread_data()->processing_throw--;
     __TRY
@@ -565,6 +566,12 @@ static DWORD cxx_frame_handler(EXCEPTION_RECORD *rec, ULONG64 frame,
 
     if (rec->ExceptionCode == CXX_EXCEPTION)
     {
+        if (!rec->ExceptionInformation[1] && !rec->ExceptionInformation[2])
+        {
+            TRACE("rethrow detected.\n");
+            *rec = *msvcrt_get_thread_data()->exc_record;
+        }
+
         exc_type = (cxx_exception_type *)rec->ExceptionInformation[2];
 
         if (TRACE_ON(seh))
