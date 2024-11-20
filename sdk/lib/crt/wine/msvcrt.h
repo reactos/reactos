@@ -149,7 +149,8 @@ typedef struct {
 #if _MSVCR_VER < 110
     LCID lcid;
 #endif
-    int  unk[2];
+    int unk;
+    int refcount;
     union {
         const MSVCRT_wchar_t *wstr[43];
         struct {
