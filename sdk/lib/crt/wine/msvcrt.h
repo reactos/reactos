@@ -203,8 +203,8 @@ typedef struct MSVCRT_threadlocaleinfostruct {
 #if _MSVCR_VER < 140
     unsigned short *pctype;
 #endif
-    unsigned char *pclmap;
-    unsigned char *pcumap;
+    const unsigned char *pclmap;
+    const unsigned char *pcumap;
     MSVCRT___lc_time_data *lc_time_curr;
 #if _MSVCR_VER >= 110
     MSVCRT_wchar_t *lc_name[6];
