@@ -29,6 +29,7 @@
 #define CXX_EXCEPTION       0xe06d7363
 
 #define FUNC_DESCR_SYNCHRONOUS  1 /* synchronous exceptions only (built with /EHs and /EHsc) */
+#define FUNC_DESCR_NOEXCEPT     4 /* noexcept function */
 
 typedef void (*vtable_ptr)(void);
 

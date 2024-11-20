@@ -551,6 +551,18 @@ static LONG CALLBACK se_translation_filter( EXCEPTION_POINTERS *ep, void *c )
     return ExceptionContinueSearch;
 }
 
+static void check_noexcept( PEXCEPTION_RECORD rec,
+        const cxx_function_descr *descr, BOOL nested )
+{
+    if (!nested && rec->ExceptionCode == CXX_EXCEPTION &&
+            descr->magic >= CXX_FRAME_MAGIC_VC8 &&
+            (descr->flags & FUNC_DESCR_NOEXCEPT))
+    {
+        ERR("noexcept function propagating exception\n");
+        MSVCRT_terminate();
+    }
+}
+
 /*********************************************************************
  *		cxx_frame_handler
  *
@@ -578,7 +590,11 @@ DWORD CDECL cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* frame
         if (descr->unwind_count && !nested_frame) cxx_local_unwind( frame, descr, -1 );
         return ExceptionContinueSearch;
     }
-    if (!descr->tryblock_count) return ExceptionContinueSearch;
+    if (!descr->tryblock_count)
+    {
+        check_noexcept(rec, descr, nested_frame != NULL);
+        return ExceptionContinueSearch;
+    }
 
     if(rec->ExceptionCode == CXX_EXCEPTION &&
             rec->ExceptionInformation[1] == 0 && rec->ExceptionInformation[2] == 0)
@@ -643,6 +659,7 @@ DWORD CDECL cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* frame
 
     call_catch_block( rec, context, frame, descr,
             nested_frame, exc_type );
+    check_noexcept(rec, descr, nested_frame != NULL);
     return ExceptionContinueSearch;
 }
 
