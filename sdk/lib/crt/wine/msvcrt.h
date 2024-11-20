@@ -1312,8 +1312,9 @@ extern char* __cdecl __unDName(char *,const char*,int,malloc_func_t,free_func_t,
 #define UCRTBASE_PRINTF_LEGACY_WIDE_SPECIFIERS           (0x0004)
 #define UCRTBASE_PRINTF_LEGACY_MSVCRT_COMPATIBILITY      (0x0008)
 #define UCRTBASE_PRINTF_LEGACY_THREE_DIGIT_EXPONENTS     (0x0010)
+#define UCRTBASE_PRINTF_STANDARD_ROUNDING                (0x0020)
 
-#define UCRTBASE_PRINTF_MASK                             (0x001F)
+#define UCRTBASE_PRINTF_MASK                             (0x003F)
 
 #define MSVCRT_PRINTF_POSITIONAL_PARAMS                  (0x0100)
 #define MSVCRT_PRINTF_INVOKE_INVALID_PARAM_HANDLER       (0x0200)
