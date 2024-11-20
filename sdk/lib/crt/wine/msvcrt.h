@@ -285,9 +285,8 @@ struct __thread_data {
     int                             unk5[1];
     MSVCRT_terminate_function       terminate_handler;
     MSVCRT_unexpected_function      unexpected_handler;
-    MSVCRT__se_translator_function  se_translator;
-    void                           *unk6[3];
-    int                             unk7;
+    MSVCRT__se_translator_function  se_translator;      /* preserve offset to exc_record and processing_throw */
+    void                           *unk6;
     EXCEPTION_RECORD               *exc_record;
     CONTEXT                        *ctx_record;
     int                             processing_throw;
