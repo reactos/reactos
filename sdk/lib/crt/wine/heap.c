@@ -147,13 +147,23 @@ static MSVCRT_size_t msvcrt_heap_size(void *ptr)
 }
 
 /*********************************************************************
+ *		_callnewh (MSVCRT.@)
+ */
+int CDECL _callnewh(MSVCRT_size_t size)
+{
+  int ret = 0;
+  MSVCRT_new_handler_func handler = MSVCRT_new_handler;
+  if(handler)
+    ret = (*handler)(size) ? 1 : 0;
+  return ret;
+}
+
+/*********************************************************************
  *		??2@YAPAXI@Z (MSVCRT.@)
  */
 void* CDECL DECLSPEC_HOTPATCH MSVCRT_operator_new(MSVCRT_size_t size)
 {
   void *retval;
-  int freed;
-  MSVCRT_new_handler_func handler;
 
   do
   {
@@ -163,15 +173,7 @@ void* CDECL DECLSPEC_HOTPATCH MSVCRT_operator_new(MSVCRT_size_t size)
       TRACE("(%ld) returning %p\n", size, retval);
       return retval;
     }
-
-    LOCK_HEAP;
-    handler = MSVCRT_new_handler;
-    if(handler)
-      freed = (*handler)(size);
-    else
-      freed = 0;
-    UNLOCK_HEAP;
-  } while(freed);
+  } while(_callnewh(size));
 
   TRACE("(%ld) out of memory\n", size);
 #if _MSVCR_VER >= 80
@@ -251,18 +253,6 @@ int CDECL MSVCRT__set_new_mode(int mode)
   MSVCRT_new_mode = mode;
   UNLOCK_HEAP;
   return old_mode;
-}
-
-/*********************************************************************
- *		_callnewh (MSVCRT.@)
- */
-int CDECL _callnewh(MSVCRT_size_t size)
-{
-  int ret = 0;
-  MSVCRT_new_handler_func handler = MSVCRT_new_handler;
-  if(handler)
-    ret = (*handler)(size) ? 1 : 0;
-  return ret;
 }
 
 /*********************************************************************
