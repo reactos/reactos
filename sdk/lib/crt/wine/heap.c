@@ -247,12 +247,8 @@ MSVCRT_new_handler_func CDECL MSVCRT_set_new_handler(void *func)
  */
 int CDECL MSVCRT__set_new_mode(int mode)
 {
-  int old_mode;
-  LOCK_HEAP;
-  old_mode = MSVCRT_new_mode;
-  MSVCRT_new_mode = mode;
-  UNLOCK_HEAP;
-  return old_mode;
+  if(!MSVCRT_CHECK_PMT(mode == 0 || mode == 1)) return -1;
+  return InterlockedExchange((long*)&MSVCRT_new_mode, mode);
 }
 
 /*********************************************************************
