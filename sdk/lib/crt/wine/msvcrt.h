@@ -1130,6 +1130,7 @@ void __cdecl MSVCRT__free_locale(MSVCRT__locale_t);
 void free_locinfo(MSVCRT_pthreadlocinfo) DECLSPEC_HIDDEN;
 void free_mbcinfo(MSVCRT_pthreadmbcinfo) DECLSPEC_HIDDEN;
 int _setmbcp_l(int, LCID, MSVCRT_pthreadmbcinfo) DECLSPEC_HIDDEN;
+int __cdecl __crtLCMapStringA(LCID, DWORD, const char*, int, char*, int, unsigned int, int) DECLSPEC_HIDDEN;
 
 #ifndef __WINE_MSVCRT_TEST
 int            __cdecl MSVCRT__write(int,const void*,unsigned int);
