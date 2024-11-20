@@ -53,6 +53,8 @@
 #define MSVCRT_FLT_MIN_10_EXP (-37)
 #define MSVCRT_DBL_MAX_10_EXP 308
 #define MSVCRT_DBL_MIN_10_EXP (-307)
+#define DBL80_MAX_10_EXP 4932
+#define DBL80_MIN_10_EXP -4951
 #define MSVCRT_DBL_DIG 15
 #ifdef _WIN64
 #define MSVCRT_SIZE_MAX MSVCRT_UI64_MAX
@@ -1230,7 +1232,7 @@ struct fpnum {
     enum fpmod mod;
 };
 struct fpnum fpnum_parse(MSVCRT_wchar_t (*)(void*), void (*)(void*),
-        void*, MSVCRT_pthreadlocinfo) DECLSPEC_HIDDEN;
+        void*, MSVCRT_pthreadlocinfo, BOOL) DECLSPEC_HIDDEN;
 int fpnum_double(struct fpnum*, double*) DECLSPEC_HIDDEN;
 /* Maybe one day we'll enable the invalid parameter handlers with the full set of information (msvcrXXd)
  *      #define MSVCRT_INVALID_PMT(x) MSVCRT_call_invalid_parameter_handler(x, __FUNCTION__, __FILE__, __LINE__, 0)
