@@ -800,7 +800,7 @@
 @ cdecl _msize(ptr)
 @ stub _mtlock
 @ stub _mtunlock
-@ cdecl _nextafter(double double)
+@ cdecl _nextafter(double double) nextafter
 @ cdecl _onexit(ptr)
 @ varargs _open(str long)
 @ cdecl _open_osfhandle(long long)
