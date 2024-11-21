@@ -156,36 +156,37 @@ static inline void *get_this_pointer( const this_ptr_offsets *off, void *object 
 }
 
 #ifndef __x86_64__
-#define DEFINE_EXCEPTION_TYPE_INFO(type, base_no, cl1, cl2)  \
-\
+#define DEFINE_CXX_TYPE_INFO(type) \
 static const cxx_type_info type ## _cxx_type_info = { \
     0, \
     & type ##_type_info, \
     { 0, -1, 0 }, \
     sizeof(type), \
     (cxx_copy_ctor)THISCALL(type ##_copy_ctor) \
-}; \
+};
+
+#define DEFINE_CXX_DATA(type, base_no, cl1, cl2, dtor)  \
+DEFINE_CXX_TYPE_INFO(type) \
 \
-static const cxx_type_info_table type ## _type_info_table = { \
+static const cxx_type_info_table type ## _cxx_type_table = { \
     base_no+1, \
     { \
         & type ## _cxx_type_info, \
         cl1, \
-        cl2 \
+        cl2, \
     } \
 }; \
 \
 static const cxx_exception_type type ## _exception_type = { \
     0, \
-    (cxx_copy_ctor)THISCALL(type ## _dtor), \
+    (cxx_copy_ctor)THISCALL(dtor), \
     NULL, \
-    & type ## _type_info_table \
+    & type ## _cxx_type_table \
 };
 
 #else
 
-#define DEFINE_EXCEPTION_TYPE_INFO(type, base_no, cl1, cl2)  \
-\
+#define DEFINE_CXX_TYPE_INFO(type) \
 static cxx_type_info type ## _cxx_type_info = { \
     0, \
     0xdeadbeef, \
@@ -194,12 +195,22 @@ static cxx_type_info type ## _cxx_type_info = { \
     0xdeadbeef \
 }; \
 \
-static cxx_type_info_table type ## _type_info_table = { \
+static void init_ ## type ## _cxx_type_info(char *base) \
+{ \
+    type ## _cxx_type_info.type_info  = (char *)&type ## _type_info - base; \
+    type ## _cxx_type_info.copy_ctor  = (char *)type ## _copy_ctor - base; \
+}
+
+#define DEFINE_CXX_DATA(type, base_no, cl1, cl2, dtor)  \
+\
+DEFINE_CXX_TYPE_INFO(type) \
+\
+static cxx_type_info_table type ## _cxx_type_table = { \
     base_no+1, \
     { \
         0xdeadbeef, \
         0xdeadbeef, \
-        0xdeadbeef  \
+        0xdeadbeef, \
     } \
 }; \
 \
@@ -212,14 +223,20 @@ static cxx_exception_type type ##_exception_type = { \
 \
 static void init_ ## type ## _cxx(char *base) \
 { \
-    type ## _cxx_type_info.type_info  = (char *)&type ## _type_info - base; \
-    type ## _cxx_type_info.copy_ctor  = (char *)type ## _copy_ctor - base; \
-    type ## _type_info_table.info[0]   = (char *)&type ## _cxx_type_info - base; \
-    type ## _type_info_table.info[1]   = (char *)cl1 - base; \
-    type ## _type_info_table.info[2]   = (char *)cl2 - base; \
-    type ## _exception_type.destructor      = (char *)type ## _dtor - base; \
-    type ## _exception_type.type_info_table = (char *)&type ## _type_info_table - base; \
+    init_ ## type ## _cxx_type_info(base); \
+    type ## _cxx_type_table.info[0]   = (char *)&type ## _cxx_type_info - base; \
+    type ## _cxx_type_table.info[1]   = (char *)cl1 - base; \
+    type ## _cxx_type_table.info[2]   = (char *)cl2 - base; \
+    type ## _exception_type.destructor      = (char *)dtor - base; \
+    type ## _exception_type.type_info_table = (char *)&type ## _cxx_type_table - base; \
 }
 #endif
+
+#define DEFINE_CXX_DATA0(name, dtor) \
+    DEFINE_CXX_DATA(name, 0, NULL, NULL, dtor)
+#define DEFINE_CXX_DATA1(name, cl1, dtor) \
+    DEFINE_CXX_DATA(name, 1, cl1, NULL, dtor)
+#define DEFINE_CXX_DATA2(name, cl1, cl2, dtor) \
+    DEFINE_CXX_DATA(name, 2, cl1, cl2, dtor)
 
 #endif /* __MSVCRT_CPPEXCEPT_H */

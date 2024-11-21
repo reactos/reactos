@@ -735,14 +735,6 @@ HRESULT __thiscall scheduler_resource_allocation_error_get_error_code(
     return this->hr;
 }
 
-DEFINE_THISCALL_WRAPPER(scheduler_resource_allocation_error_dtor,4)
-void __thiscall scheduler_resource_allocation_error_dtor(
-        scheduler_resource_allocation_error * this)
-{
-    TRACE("(%p)\n", this);
-    exception_dtor(&this->e);
-}
-
 typedef exception improper_lock;
 extern const vtable_ptr improper_lock_vtable;
 
@@ -772,13 +764,6 @@ improper_lock * __thiscall improper_lock_copy_ctor(improper_lock * _this, const 
     exception_copy_ctor(_this, rhs);
     _this->vtable = &improper_lock_vtable;
     return _this;
-}
-
-DEFINE_THISCALL_WRAPPER(improper_lock_dtor,4)
-void __thiscall improper_lock_dtor(improper_lock * _this)
-{
-    TRACE("(%p)\n", _this);
-    exception_dtor(_this);
 }
 
 typedef exception invalid_scheduler_policy_key;
@@ -815,14 +800,6 @@ invalid_scheduler_policy_key * __thiscall invalid_scheduler_policy_key_copy_ctor
     return _this;
 }
 
-DEFINE_THISCALL_WRAPPER(invalid_scheduler_policy_key_dtor,4)
-void __thiscall invalid_scheduler_policy_key_dtor(
-        invalid_scheduler_policy_key * _this)
-{
-    TRACE("(%p)\n", _this);
-    exception_dtor(_this);
-}
-
 typedef exception invalid_scheduler_policy_value;
 extern const vtable_ptr invalid_scheduler_policy_value_vtable;
 
@@ -855,14 +832,6 @@ invalid_scheduler_policy_value * __thiscall invalid_scheduler_policy_value_copy_
     exception_copy_ctor(_this, rhs);
     _this->vtable = &invalid_scheduler_policy_value_vtable;
     return _this;
-}
-
-DEFINE_THISCALL_WRAPPER(invalid_scheduler_policy_value_dtor,4)
-void __thiscall invalid_scheduler_policy_value_dtor(
-        invalid_scheduler_policy_value * _this)
-{
-    TRACE("(%p)\n", _this);
-    exception_dtor(_this);
 }
 
 typedef exception invalid_scheduler_policy_thread_specification;
@@ -899,14 +868,6 @@ invalid_scheduler_policy_thread_specification * __thiscall invalid_scheduler_pol
     return _this;
 }
 
-DEFINE_THISCALL_WRAPPER(invalid_scheduler_policy_thread_specification_dtor,4)
-void __thiscall invalid_scheduler_policy_thread_specification_dtor(
-        invalid_scheduler_policy_thread_specification * _this)
-{
-    TRACE("(%p)\n", _this);
-    exception_dtor(_this);
-}
-
 typedef exception improper_scheduler_attach;
 extern const vtable_ptr improper_scheduler_attach_vtable;
 
@@ -941,14 +902,6 @@ improper_scheduler_attach * __thiscall improper_scheduler_attach_copy_ctor(
     return _this;
 }
 
-DEFINE_THISCALL_WRAPPER(improper_scheduler_attach_dtor,4)
-void __thiscall improper_scheduler_attach_dtor(
-        improper_scheduler_attach * _this)
-{
-    TRACE("(%p)\n", _this);
-    exception_dtor(_this);
-}
-
 typedef exception improper_scheduler_detach;
 extern const vtable_ptr improper_scheduler_detach_vtable;
 
@@ -981,14 +934,6 @@ improper_scheduler_detach * __thiscall improper_scheduler_detach_copy_ctor(
     exception_copy_ctor(_this, rhs);
     _this->vtable = &improper_scheduler_detach_vtable;
     return _this;
-}
-
-DEFINE_THISCALL_WRAPPER(improper_scheduler_detach_dtor,4)
-void __thiscall improper_scheduler_detach_dtor(
-        improper_scheduler_detach * _this)
-{
-    TRACE("(%p)\n", _this);
-    exception_dtor(_this);
 }
 
 #endif /* _MSVCR_VER >= 100 */
@@ -1073,21 +1018,22 @@ DEFINE_RTTI_DATA1(improper_scheduler_detach, 0, &exception_rtti_base_descriptor,
         ".?AVimproper_scheduler_detach@Concurrency@@" )
 #endif
 
-DEFINE_EXCEPTION_TYPE_INFO( exception, 0, NULL, NULL )
-DEFINE_EXCEPTION_TYPE_INFO( bad_typeid, 1, &exception_cxx_type_info, NULL )
-DEFINE_EXCEPTION_TYPE_INFO( bad_cast, 1, &exception_cxx_type_info, NULL )
-DEFINE_EXCEPTION_TYPE_INFO( __non_rtti_object, 2, &bad_typeid_cxx_type_info, &exception_cxx_type_info )
+DEFINE_CXX_DATA0( exception, exception_dtor )
+DEFINE_CXX_DATA1( bad_typeid, &exception_cxx_type_info, bad_typeid_dtor )
+DEFINE_CXX_DATA1( bad_cast, &exception_cxx_type_info, bad_cast_dtor )
+DEFINE_CXX_DATA2( __non_rtti_object, &bad_typeid_cxx_type_info,
+        &exception_cxx_type_info, __non_rtti_object_dtor )
 #if _MSVCR_VER >= 80
-DEFINE_EXCEPTION_TYPE_INFO( bad_alloc, 1, &exception_cxx_type_info, NULL )
+DEFINE_CXX_DATA1( bad_alloc, &exception_cxx_type_info, bad_alloc_dtor )
 #endif
 #if _MSVCR_VER >= 100
-DEFINE_EXCEPTION_TYPE_INFO(scheduler_resource_allocation_error, 1, &exception_cxx_type_info, NULL)
-DEFINE_EXCEPTION_TYPE_INFO(improper_lock, 1, &exception_cxx_type_info, NULL)
-DEFINE_EXCEPTION_TYPE_INFO(invalid_scheduler_policy_key, 1, &exception_cxx_type_info, NULL)
-DEFINE_EXCEPTION_TYPE_INFO(invalid_scheduler_policy_value, 1, &exception_cxx_type_info, NULL)
-DEFINE_EXCEPTION_TYPE_INFO(invalid_scheduler_policy_thread_specification, 1, &exception_cxx_type_info, NULL)
-DEFINE_EXCEPTION_TYPE_INFO(improper_scheduler_attach, 1, &exception_cxx_type_info, NULL)
-DEFINE_EXCEPTION_TYPE_INFO(improper_scheduler_detach, 1, &exception_cxx_type_info, NULL)
+DEFINE_CXX_DATA1(scheduler_resource_allocation_error, &exception_cxx_type_info, exception_dtor)
+DEFINE_CXX_DATA1(improper_lock, &exception_cxx_type_info, exception_dtor)
+DEFINE_CXX_DATA1(invalid_scheduler_policy_key, &exception_cxx_type_info, exception_dtor)
+DEFINE_CXX_DATA1(invalid_scheduler_policy_value, &exception_cxx_type_info, exception_dtor)
+DEFINE_CXX_DATA1(invalid_scheduler_policy_thread_specification, &exception_cxx_type_info, exception_dtor)
+DEFINE_CXX_DATA1(improper_scheduler_attach, &exception_cxx_type_info, exception_dtor)
+DEFINE_CXX_DATA1(improper_scheduler_detach, &exception_cxx_type_info, exception_dtor)
 #endif
 
 void msvcrt_init_exception(void *base)
