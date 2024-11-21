@@ -40,8 +40,6 @@ typedef void (__cdecl *unexpected_function)(void);
 typedef void (__cdecl *_se_translator_function)(unsigned int code, struct _EXCEPTION_POINTERS *info);
 void __cdecl terminate(void);
 
-typedef void (__cdecl *MSVCRT__beginthread_start_routine_t)(void *);
-typedef unsigned int (__stdcall *MSVCRT__beginthreadex_start_routine_t)(void *);
 typedef int (__cdecl *MSVCRT__onexit_t)(void);
 typedef void (__cdecl *MSVCRT_invalid_parameter_handler)(const wchar_t*, const wchar_t*, const wchar_t*, unsigned, uintptr_t);
 typedef void (__cdecl *MSVCRT_purecall_handler)(void);
