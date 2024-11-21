@@ -346,15 +346,15 @@ typedef union _printf_arg
     LONGLONG get_longlong;
     double get_double;
 } printf_arg;
-typedef printf_arg (*args_clbk)(void*, int, int, __ms_va_list*);
+typedef printf_arg (*args_clbk)(void*, int, int, va_list*);
 int pf_printf_a(puts_clbk_a, void*, const char*, _locale_t,
-        DWORD, args_clbk, void*, __ms_va_list*) DECLSPEC_HIDDEN;
+        DWORD, args_clbk, void*, va_list*) DECLSPEC_HIDDEN;
 int pf_printf_w(puts_clbk_w, void*, const wchar_t*, _locale_t,
-        DWORD, args_clbk, void*, __ms_va_list*) DECLSPEC_HIDDEN;
-int create_positional_ctx_a(void*, const char*, __ms_va_list) DECLSPEC_HIDDEN;
-int create_positional_ctx_w(void*, const wchar_t*, __ms_va_list) DECLSPEC_HIDDEN;
-printf_arg arg_clbk_valist(void*, int, int, __ms_va_list*) DECLSPEC_HIDDEN;
-printf_arg arg_clbk_positional(void*, int, int, __ms_va_list*) DECLSPEC_HIDDEN;
+        DWORD, args_clbk, void*, va_list*) DECLSPEC_HIDDEN;
+int create_positional_ctx_a(void*, const char*, va_list) DECLSPEC_HIDDEN;
+int create_positional_ctx_w(void*, const wchar_t*, va_list) DECLSPEC_HIDDEN;
+printf_arg arg_clbk_valist(void*, int, int, va_list*) DECLSPEC_HIDDEN;
+printf_arg arg_clbk_positional(void*, int, int, va_list*) DECLSPEC_HIDDEN;
 
 extern char* __cdecl __unDName(char *,const char*,int,malloc_func_t,free_func_t,unsigned short int);
 
