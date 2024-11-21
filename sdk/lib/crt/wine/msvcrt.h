@@ -560,7 +560,6 @@ struct MSVCRT__stat64 {
 #define MSVCRT__stati64        MSVCRT__stat32i64
 #endif
 
-#define MSVCRT_EOF       (-1)
 #define MSVCRT_TMP_MAX   0x7fff
 #define MSVCRT_TMP_MAX_S 0x7fffffff
 #define MSVCRT_RAND_MAX  0x7fff
