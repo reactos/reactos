@@ -32,31 +32,8 @@ typedef long __msvcrt_long;
 typedef unsigned long __msvcrt_ulong;
 #endif
 
-#define MSVCRT_INT_MAX     0x7fffffff
-#define MSVCRT_LONG_MAX    0x7fffffff
-#define MSVCRT_LONG_MIN    (-MSVCRT_LONG_MAX-1)
-#define MSVCRT_ULONG_MAX   0xffffffff
-#define MSVCRT_I64_MAX    (((__int64)0x7fffffff << 32) | 0xffffffff)
-#define MSVCRT_I64_MIN    (-MSVCRT_I64_MAX-1)
-#define MSVCRT_UI64_MAX   (((unsigned __int64)0xffffffff << 32) | 0xffffffff)
-#define MSVCRT_MB_LEN_MAX 5
-#define MSVCRT_FLT_MAX_10_EXP 38
-#define MSVCRT_FLT_MIN_10_EXP (-37)
-#define MSVCRT_DBL_MAX_10_EXP 308
-#define MSVCRT_DBL_MIN_10_EXP (-307)
 #define DBL80_MAX_10_EXP 4932
 #define DBL80_MIN_10_EXP -4951
-#define MSVCRT_DBL_DIG 15
-#ifdef _WIN64
-#define MSVCRT_SIZE_MAX MSVCRT_UI64_MAX
-#else
-#define MSVCRT_SIZE_MAX MSVCRT_ULONG_MAX
-#endif
-
-#define MSVCRT__MAX_DRIVE  3
-#define MSVCRT__MAX_DIR    256
-#define MSVCRT__MAX_FNAME  256
-#define MSVCRT__MAX_EXT    256
 
 typedef unsigned char  MSVCRT_bool;
 typedef wint_t         MSVCRT_wint_t;
@@ -1081,9 +1058,6 @@ printf_arg arg_clbk_positional(void*, int, int, __ms_va_list*) DECLSPEC_HIDDEN;
 #define MSVCRT_DBL_MIN 2.2250738585072014e-308
 #define MSVCRT__OVERFLOW  3
 #define MSVCRT__UNDERFLOW 4
-
-#define MSVCRT_FP_ILOGB0 (-MSVCRT_INT_MAX - 1)
-#define MSVCRT_FP_ILOGBNAN MSVCRT_INT_MAX
 
 typedef struct
 {
