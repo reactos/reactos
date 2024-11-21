@@ -45,7 +45,6 @@ typedef void (__cdecl *unexpected_function)(void);
 typedef void (__cdecl *_se_translator_function)(unsigned int code, struct _EXCEPTION_POINTERS *info);
 void __cdecl terminate(void);
 
-typedef void (__cdecl *MSVCRT_invalid_parameter_handler)(const wchar_t*, const wchar_t*, const wchar_t*, unsigned, uintptr_t);
 typedef void (__cdecl *MSVCRT_purecall_handler)(void);
 typedef void (__cdecl *MSVCRT_security_error_handler)(int, void *);
 
@@ -169,7 +168,7 @@ struct __thread_data {
     char                            cached_locale[131];
     void                           *unk10[100];
 #if _MSVCR_VER >= 140
-    MSVCRT_invalid_parameter_handler invalid_parameter_handler;
+    _invalid_parameter_handler      invalid_parameter_handler;
 #endif
 };
 
