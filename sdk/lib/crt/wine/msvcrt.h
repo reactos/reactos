@@ -214,6 +214,9 @@ void CDECL __DestructExceptionObject(EXCEPTION_RECORD*);
 /* TLS data */
 extern DWORD msvcrt_tls_index DECLSPEC_HIDDEN;
 
+#define LOCALE_FREE     0x1
+#define LOCALE_THREAD   0x2
+
 /* Keep in sync with msvcr90/tests/msvcr90.c */
 struct __thread_data {
     DWORD                           tid;
@@ -240,7 +243,7 @@ struct __thread_data {
     int                             fpecode;
     MSVCRT_pthreadmbcinfo           mbcinfo;
     MSVCRT_pthreadlocinfo           locinfo;
-    BOOL                            have_locale;
+    int                             locale_flags;
     int                             unk5[1];
     MSVCRT_terminate_function       terminate_handler;
     MSVCRT_unexpected_function      unexpected_handler;
