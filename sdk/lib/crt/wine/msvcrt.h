@@ -15,22 +15,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- *
- * NOTES
- *   Naming conventions
- *	- Symbols are prefixed with MSVCRT_ if they conflict
- *        with libc symbols
- *      - Internal symbols are usually prefixed by msvcrt_.
- *      - Exported symbols that are not present in the public
- *        headers are usually kept the same as the original.
- *   Other conventions
- *      - To avoid conflicts with the standard C library,
- *        no msvcrt headers are included in the implementation.
- *      - Instead, symbols are duplicated here, prefixed with 
- *        MSVCRT_, as explained above.
- *      - To avoid inconsistencies, a test for each symbol is
- *        added into tests/headers.c. Please always add a
- *        corresponding test when you add a new symbol!
  */
 
 #ifndef __WINE_MSVCRT_H
@@ -1143,7 +1127,6 @@ void free_locinfo(MSVCRT_pthreadlocinfo) DECLSPEC_HIDDEN;
 void free_mbcinfo(MSVCRT_pthreadmbcinfo) DECLSPEC_HIDDEN;
 int __cdecl __crtLCMapStringA(LCID, DWORD, const char*, int, char*, int, unsigned int, int) DECLSPEC_HIDDEN;
 
-#ifndef __WINE_MSVCRT_TEST
 int            __cdecl MSVCRT__write(int,const void*,unsigned int);
 int            __cdecl _getch(void);
 int            __cdecl _ismbblead(unsigned int);
@@ -1265,7 +1248,6 @@ int fpnum_double(struct fpnum*, double*) DECLSPEC_HIDDEN;
 #define MSVCRT_INVALID_PMT(x,err)   (*MSVCRT__errno() = (err), MSVCRT__invalid_parameter(NULL, NULL, NULL, 0, 0))
 #define MSVCRT_CHECK_PMT_ERR(x,err) ((x) || (MSVCRT_INVALID_PMT( 0, (err) ), FALSE))
 #define MSVCRT_CHECK_PMT(x)         MSVCRT_CHECK_PMT_ERR((x), MSVCRT_EINVAL)
-#endif
 
 #define MSVCRT__ARGMAX 100
 typedef int (*puts_clbk_a)(void*, int, const char*);
