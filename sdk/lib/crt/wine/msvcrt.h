@@ -712,7 +712,6 @@ int __cdecl      MSVCRT_strcmp(const char*, const char*);
 char* __cdecl    MSVCRT_strrchr(const char *, int);
 char* __cdecl    MSVCRT_strstr(const char*, const char*);
 __msvcrt_long __cdecl MSVCRT_strtol(const char*, char**, int);
-unsigned int __cdecl MSVCRT__get_output_format(void);
 char* __cdecl MSVCRT_strtok_s(char*, const char*, char**);
 char* __cdecl MSVCRT__itoa(int, char*, int);
 int __cdecl MSVCRT_wcsncmp(const wchar_t*, const wchar_t*, size_t);
