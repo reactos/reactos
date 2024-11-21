@@ -45,7 +45,6 @@ typedef void (__cdecl *unexpected_function)(void);
 typedef void (__cdecl *_se_translator_function)(unsigned int code, struct _EXCEPTION_POINTERS *info);
 void __cdecl terminate(void);
 
-typedef void (__cdecl *MSVCRT_purecall_handler)(void);
 typedef void (__cdecl *MSVCRT_security_error_handler)(int, void *);
 
 typedef struct {ULONG x80[3];} MSVCRT__LDOUBLE; /* Intel 80 bit FP format has sizeof() 12 */
