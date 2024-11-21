@@ -631,20 +631,6 @@ struct MSVCRT__stat64 {
 #define MSVCRT__O_U16TEXT       0x20000
 #define MSVCRT__O_U8TEXT        0x40000
 
-/* _statusfp bit flags */
-#define MSVCRT__SW_INEXACT      0x00000001 /* inexact (precision) */
-#define MSVCRT__SW_UNDERFLOW    0x00000002 /* underflow */
-#define MSVCRT__SW_OVERFLOW     0x00000004 /* overflow */
-#define MSVCRT__SW_ZERODIVIDE   0x00000008 /* zero divide */
-#define MSVCRT__SW_INVALID      0x00000010 /* invalid */
-
-#define MSVCRT__SW_UNEMULATED     0x00000040  /* unemulated instruction */
-#define MSVCRT__SW_SQRTNEG        0x00000080  /* square root of a neg number */
-#define MSVCRT__SW_STACKOVERFLOW  0x00000200  /* FP stack overflow */
-#define MSVCRT__SW_STACKUNDERFLOW 0x00000400  /* FP stack underflow */
-
-#define MSVCRT__SW_DENORMAL     0x00080000 /* denormal status bit */
-
 /* fpclass constants */
 #define MSVCRT__FPCLASS_SNAN 0x0001  /* Signaling "Not a Number" */
 #define MSVCRT__FPCLASS_QNAN 0x0002  /* Quiet "Not a Number" */
