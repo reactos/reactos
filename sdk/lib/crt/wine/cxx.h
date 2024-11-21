@@ -299,7 +299,7 @@ void * __thiscall type_info_vector_dtor(type_info * _this, unsigned int flags) \
         /* we have an array, with the number of elements stored before the first object */ \
         INT_PTR i, *ptr = (INT_PTR *)_this - 1; \
 \
-        for (i = *ptr - 1; i >= 0; i--) free(_this->name); \
+        for (i = *ptr - 1; i >= 0; i--) free(_this[i].name); \
         free(ptr); \
     } \
     else \
