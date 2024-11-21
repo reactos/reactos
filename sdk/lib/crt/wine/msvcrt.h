@@ -305,27 +305,6 @@ typedef void (__cdecl *__sighandler_t)(int);
 
 #define _MAX__TIME64_T    (((__time64_t)0x00000007 << 32) | 0x93406FFF)
 
-int __cdecl      MSVCRT_iswdigit(wint_t);
-
-int __cdecl      MSVCRT__fgetc_nolock(FILE*);
-int __cdecl      MSVCRT__fputc_nolock(int,FILE*);
-int __cdecl      MSVCRT__ungetc_nolock(int,FILE*);
-wint_t __cdecl MSVCRT__fgetwc_nolock(FILE*);
-wint_t __cdecl MSVCRT__fputwc_nolock(wint_t,FILE*);
-wint_t __cdecl MSVCRT__ungetwc_nolock(wint_t, FILE*);
-int __cdecl      MSVCRT__fseeki64_nolock(FILE*,__int64,int);
-__int64 __cdecl  MSVCRT__ftelli64(FILE* file);
-__int64 __cdecl  MSVCRT__ftelli64_nolock(FILE*);
-size_t __cdecl MSVCRT__fread_nolock(void*,size_t,size_t,FILE*);
-size_t __cdecl MSVCRT__fread_nolock_s(void*,size_t,size_t,size_t,FILE*);
-size_t __cdecl MSVCRT__fwrite_nolock(const void*,size_t,size_t,FILE*);
-int __cdecl      MSVCRT__fclose_nolock(FILE*);
-int __cdecl      MSVCRT__fflush_nolock(FILE*);
-FILE* __cdecl MSVCRT__iob_func(void);
-__time32_t __cdecl MSVCRT__time32(__time32_t*);
-__time64_t __cdecl MSVCRT__time64(__time64_t*);
-FILE*   __cdecl MSVCRT__fdopen(int, const char *);
-
 #define MSVCRT__ENABLE_PER_THREAD_LOCALE 1
 #define MSVCRT__DISABLE_PER_THREAD_LOCALE 2
 
@@ -337,33 +316,6 @@ threadmbcinfo* create_mbcinfo(int, LCID, threadmbcinfo*) DECLSPEC_HIDDEN;
 void free_locinfo(pthreadlocinfo) DECLSPEC_HIDDEN;
 void free_mbcinfo(pthreadmbcinfo) DECLSPEC_HIDDEN;
 int __cdecl __crtLCMapStringA(LCID, DWORD, const char*, int, char*, int, unsigned int, int) DECLSPEC_HIDDEN;
-
-int            __cdecl _getch(void);
-int            __cdecl _ismbblead(unsigned int);
-int            __cdecl _ismbblead_l(unsigned int, _locale_t);
-int            __cdecl _ismbclegal(unsigned int c);
-int            __cdecl _ismbstrail(const unsigned char* start, const unsigned char* str);
-void __cdecl     MSVCRT__searchenv(const char*,const char*,char*);
-char* __cdecl    _strset(char*,int);
-int __cdecl      _ungetch(int);
-int __cdecl      _cputs(const char*);
-int WINAPIV      _cprintf(const char*,...);
-int WINAPIV      _cwprintf(const wchar_t*,...);
-char*** __cdecl  MSVCRT___p__environ(void);
-int*    __cdecl  __p___mb_cur_max(void);
-wchar_t*** __cdecl MSVCRT___p__wenviron(void);
-char*   __cdecl MSVCRT__strdate(char* date);
-char*   __cdecl MSVCRT__strtime(char* date);
-int     __cdecl _setmbcp(int);
-void __cdecl    MSVCRT__wsearchenv(const wchar_t*, const wchar_t*, wchar_t*);
-int __cdecl      MSVCRT__towupper_l(wint_t,_locale_t);
-int __cdecl      MSVCRT__towlower_l(wint_t,_locale_t);
-int __cdecl      MSVCRT_strcmp(const char*, const char*);
-char* __cdecl MSVCRT__itoa(int, char*, int);
-
-float  __cdecl MSVCRT_floorf( float x );
-double __cdecl MSVCRT_sqrt( double x );
-float  __cdecl MSVCRT_sqrtf( float x );
 
 enum fpmod {
     FP_ROUND_ZERO, /* only used when dropped part contains only zeros */
