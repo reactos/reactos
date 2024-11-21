@@ -33,7 +33,7 @@ GetNtDdiVersion(VOID)
     Status = RtlGetVersion((PRTL_OSVERSIONINFOW)&verInfo);
     if (!NT_SUCCESS(Status))
     {
-        trace("RtlGetVersion() returned 0x%08lx\n", Status);
+        DbgPrint("RtlGetVersion() returned 0x%08lx\n", Status);
         return 0;
     }
 
@@ -92,7 +92,7 @@ START_TEST(NtSystemDebugControl)
     IsDebuggerActive = NT_SUCCESS(Status) && !DebuggerInfo.KernelDebuggerNotPresent;
     // DebuggerInfo.KernelDebuggerEnabled; // SharedUserData->KdDebuggerEnabled;
 
-    trace("Debugger is %s\n", IsDebuggerActive ? "active" : "inactive");
+    DbgPrint("Debugger is %s\n", IsDebuggerActive ? "active" : "inactive");
 
     /*
      * Explicitly disable the debug privilege so that we can test
@@ -103,6 +103,7 @@ START_TEST(NtSystemDebugControl)
      */
     Status = RtlAdjustPrivilege(SE_DEBUG_PRIVILEGE, FALSE, FALSE, &PrivilegeSet[0]);
     ok_eq_hex(Status, STATUS_SUCCESS);
+DbgPrint("NtSysDbgControl(%lu)\n", 29);
     Status = TestSystemDebugControl(SysDbgGetTriageDump /* 29 */);
     ok_eq_hex(Status, STATUS_ACCESS_DENIED);
 
@@ -113,6 +114,7 @@ START_TEST(NtSystemDebugControl)
     /* Supported commands */
     for (Command = 0; Command <= 5; ++Command)
     {
+DbgPrint("NtSysDbgControl(%lu)\n", Command);
         Status = TestSystemDebugControl((SYSDBG_COMMAND)Command);
         if (!IsVistaOrHigher || IsDebuggerActive)
             ok_neq_hex_test(Command, Status, STATUS_INVALID_INFO_CLASS);
@@ -125,6 +127,7 @@ START_TEST(NtSystemDebugControl)
     if (!skip((IsVistaOrHigher && !IsDebuggerActive) || !SharedUserData->KdDebuggerEnabled,
         "NtSystemDebugControl(SysDbgBreakPoint) skipped because the debugger is active\n"))
     {
+DbgPrint("NtSysDbgControl(%lu)\n", 6);
         Status = TestSystemDebugControl(SysDbgBreakPoint /* 6 */);
         if (!SharedUserData->KdDebuggerEnabled /*&& (!IsVistaOrHigher || IsDebuggerActive)*/)
         {
@@ -160,6 +163,7 @@ START_TEST(NtSystemDebugControl)
     DBG_UNREFERENCED_PARAMETER(IsNT52SP1OrHigher);
     for (Command = 7; Command <= 20; ++Command)
     {
+DbgPrint("NtSysDbgControl(%lu)\n", Command);
         Status = TestSystemDebugControl((SYSDBG_COMMAND)Command);
         if (!IsVistaOrHigher || IsDebuggerActive)
             ok_eq_hex_test(Command, Status, STATUS_NOT_IMPLEMENTED);
@@ -185,6 +189,7 @@ START_TEST(NtSystemDebugControl)
         Command = SysDbgDisableKernelDebugger; // 22
     else
         Command = SysDbgEnableKernelDebugger;  // 21
+DbgPrint("NtSysDbgControl(%lu)\n", Command);
     Status = TestSystemDebugControl((SYSDBG_COMMAND)Command);
     if (!IsVistaOrHigher || IsDebuggerActive)
     {
@@ -214,7 +219,9 @@ START_TEST(NtSystemDebugControl)
         Command = SysDbgEnableKernelDebugger;  // 21
     else
         Command = SysDbgDisableKernelDebugger; // 22
+DbgPrint("NtSysDbgControl(%lu)\n", Command);
     Status = TestSystemDebugControl((SYSDBG_COMMAND)Command);
+DbgPrint("post - NtSysDbgControl(%lu)\n", Command);
     if (!IsVistaOrHigher || IsDebuggerActive)
         ok_eq_hex_test(Command, Status, STATUS_SUCCESS);
     else
@@ -224,6 +231,7 @@ START_TEST(NtSystemDebugControl)
     /* Supported commands */
     for (Command = 23; Command <= 31; ++Command)
     {
+DbgPrint("NtSysDbgControl(%lu)\n", Command);
         Status = TestSystemDebugControl((SYSDBG_COMMAND)Command);
         if (!IsVistaOrHigher || IsDebuggerActive)
             ok_neq_hex_test(Command, Status, STATUS_INVALID_INFO_CLASS);
@@ -234,6 +242,7 @@ START_TEST(NtSystemDebugControl)
     /* These are Vista+ and depend on the OS version */
     for (Command = 32; Command <= 36; ++Command)
     {
+DbgPrint("NtSysDbgControl(%lu)\n", Command);
         Status = TestSystemDebugControl((SYSDBG_COMMAND)Command);
         if (!IsVistaOrHigher || IsDebuggerActive)
         {
@@ -249,6 +258,7 @@ START_TEST(NtSystemDebugControl)
     }
 
     Command = 37; // SysDbgGetLiveKernelDump
+DbgPrint("NtSysDbgControl(%lu)\n", Command);
     Status = TestSystemDebugControl((SYSDBG_COMMAND)Command);
     if (!IsVistaOrHigher || IsDebuggerActive)
     {
@@ -263,6 +273,7 @@ START_TEST(NtSystemDebugControl)
     }
 
     Command = 38; // SysDbgKdPullRemoteFile
+DbgPrint("NtSysDbgControl(%lu)\n", Command);
     Status = TestSystemDebugControl((SYSDBG_COMMAND)Command);
     if (!IsVistaOrHigher || IsDebuggerActive)
     {
@@ -279,12 +290,15 @@ START_TEST(NtSystemDebugControl)
     /* Unsupported commands */
     for (Command = 39; Command <= 40; ++Command)
     {
+DbgPrint("NtSysDbgControl(%lu)\n", Command);
         Status = TestSystemDebugControl((SYSDBG_COMMAND)Command);
         if (!IsVistaOrHigher || IsDebuggerActive)
             ok_eq_hex_test(Command, Status, STATUS_INVALID_INFO_CLASS);
         else
             ok_eq_hex_test(Command, Status, STATUS_DEBUGGER_INACTIVE);
     }
+
+DbgPrint("NtSysDbgControl -- Done\n");
 
     /* Finally restore the original debug privilege state */
     RtlAdjustPrivilege(SE_DEBUG_PRIVILEGE, PrivilegeSet[0], FALSE, &PrivilegeSet[0]);
