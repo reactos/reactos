@@ -25,7 +25,7 @@ DEFINE_THISCALL_ALIAS ??1exception@@UAE@XZ, _exception_dtor
 DEFINE_THISCALL_ALIAS ??4exception@@QAEAAV0@ABV0@@Z, _exception_opequals
 DEFINE_THISCALL_ALIAS ??_Eexception@@UAEPAXI@Z, _exception_vector_dtor
 DEFINE_THISCALL_ALIAS ??_Gexception@@UAEPAXI@Z, _exception_scalar_dtor
-DEFINE_THISCALL_ALIAS ?what@exception@@UBEPBDXZ, _what_exception
+DEFINE_THISCALL_ALIAS ?what@exception@@UBEPBDXZ, _exception_what
 DEFINE_THISCALL_ALIAS ??0bad_typeid@@QAE@ABV0@@Z, _bad_typeid_copy_ctor
 DEFINE_THISCALL_ALIAS ??0bad_typeid@@QAE@PBD@Z, _bad_typeid_ctor
 DEFINE_THISCALL_ALIAS ??_Fbad_typeid@@QAEXXZ, _bad_typeid_default_ctor
@@ -70,8 +70,8 @@ ENDM
 
 MACRO(DEFINE_EXCEPTION_VTABLE, shortname, cxxname)
     START_VTABLE shortname, cxxname
-    EXTERN ___thiscall_what_exception:PROC
-    .long ___thiscall_what_exception
+    EXTERN ___thiscall_exception_what:PROC
+    .long ___thiscall_exception_what
 ENDM
 
 START_VTABLE type_info, __dummyname_type_info

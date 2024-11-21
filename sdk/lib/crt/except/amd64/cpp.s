@@ -18,8 +18,8 @@ ENDM
 
 MACRO(DEFINE_EXCEPTION_VTABLE, shortname, cxxname)
     START_VTABLE shortname, cxxname
-    EXTERN what_exception:ABS
-    .quad what_exception
+    EXTERN exception_what:ABS
+    .quad exception_what
 ENDM
 
 START_VTABLE type_info, __dummyname_type_info
@@ -50,7 +50,7 @@ DEFINE_ALIAS ?set_terminate@@YAP6AXXZP6AXXZ@Z, set_terminate
 DEFINE_ALIAS ?set_unexpected@@YAP6AXXZP6AXXZ@Z, set_unexpected
 DEFINE_ALIAS ?terminate@@YAXXZ, terminate
 DEFINE_ALIAS ?unexpected@@YAXXZ, unexpected
-DEFINE_ALIAS ?what@exception@@UEBAPEBDXZ, what_exception
+DEFINE_ALIAS ?what@exception@@UEBAPEBDXZ, exception_what
 DEFINE_ALIAS ??0exception@@QEAA@AEBQEBDH@Z, exception_ctor_noalloc
 DEFINE_ALIAS ??0exception@@QEAA@AEBV0@@Z, exception_copy_ctor
 DEFINE_ALIAS ??0exception@@QEAA@XZ, exception_default_ctor

@@ -263,8 +263,8 @@ void * __thiscall exception_scalar_dtor(exception * _this, unsigned int flags)
 /******************************************************************
  *		?what@exception@@UBEPBDXZ (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER(what_exception,4)
-const char * __thiscall what_exception(exception * _this)
+DEFINE_THISCALL_WRAPPER(exception_what,4)
+const char * __thiscall exception_what(exception * _this)
 {
   TRACE("(%p) returning %s\n", _this, _this->name);
   return _this->name ? _this->name : "Unknown exception";
@@ -922,46 +922,46 @@ __ASM_BLOCK_BEGIN(vtables)
 
 __ASM_VTABLE(exception,
         VTABLE_ADD_FUNC(exception_vector_dtor)
-        VTABLE_ADD_FUNC(what_exception));
+        VTABLE_ADD_FUNC(exception_what));
 #if _MSVCR_VER >= 80
 __ASM_VTABLE(exception_old,
         VTABLE_ADD_FUNC(exception_vector_dtor)
-        VTABLE_ADD_FUNC(what_exception));
+        VTABLE_ADD_FUNC(exception_what));
 __ASM_VTABLE(bad_alloc,
         VTABLE_ADD_FUNC(exception_vector_dtor)
-        VTABLE_ADD_FUNC(what_exception));
+        VTABLE_ADD_FUNC(exception_what));
 #endif
 __ASM_VTABLE(bad_typeid,
         VTABLE_ADD_FUNC(bad_typeid_vector_dtor)
-        VTABLE_ADD_FUNC(what_exception));
+        VTABLE_ADD_FUNC(exception_what));
 __ASM_VTABLE(bad_cast,
         VTABLE_ADD_FUNC(bad_cast_vector_dtor)
-        VTABLE_ADD_FUNC(what_exception));
+        VTABLE_ADD_FUNC(exception_what));
 __ASM_VTABLE(__non_rtti_object,
         VTABLE_ADD_FUNC(__non_rtti_object_vector_dtor)
-        VTABLE_ADD_FUNC(what_exception));
+        VTABLE_ADD_FUNC(exception_what));
 #if _MSVCR_VER >= 100
 __ASM_VTABLE(scheduler_resource_allocation_error,
         VTABLE_ADD_FUNC(exception_vector_dtor)
-        VTABLE_ADD_FUNC(what_exception));
+        VTABLE_ADD_FUNC(exception_what));
 __ASM_VTABLE(improper_lock,
         VTABLE_ADD_FUNC(exception_vector_dtor)
-        VTABLE_ADD_FUNC(what_exception));
+        VTABLE_ADD_FUNC(exception_what));
 __ASM_VTABLE(invalid_scheduler_policy_key,
         VTABLE_ADD_FUNC(exception_vector_dtor)
-        VTABLE_ADD_FUNC(what_exception));
+        VTABLE_ADD_FUNC(exception_what));
 __ASM_VTABLE(invalid_scheduler_policy_value,
         VTABLE_ADD_FUNC(exception_vector_dtor)
-        VTABLE_ADD_FUNC(what_exception));
+        VTABLE_ADD_FUNC(exception_what));
 __ASM_VTABLE(invalid_scheduler_policy_thread_specification,
         VTABLE_ADD_FUNC(exception_vector_dtor)
-        VTABLE_ADD_FUNC(what_exception));
+        VTABLE_ADD_FUNC(exception_what));
 __ASM_VTABLE(improper_scheduler_attach,
         VTABLE_ADD_FUNC(exception_vector_dtor)
-        VTABLE_ADD_FUNC(what_exception));
+        VTABLE_ADD_FUNC(exception_what));
 __ASM_VTABLE(improper_scheduler_detach,
         VTABLE_ADD_FUNC(exception_vector_dtor)
-        VTABLE_ADD_FUNC(what_exception));
+        VTABLE_ADD_FUNC(exception_what));
 #endif
 
 __ASM_BLOCK_END

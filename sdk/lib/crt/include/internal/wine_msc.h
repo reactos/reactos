@@ -7,7 +7,7 @@ void __thiscall exception_dtor(exception * _this);
 exception * __thiscall exception_opequals(exception * _this, const exception * rhs);
 void * __thiscall exception_vector_dtor(exception * _this, unsigned int flags);
 void * __thiscall exception_scalar_dtor(exception * _this, unsigned int flags);
-const char * __thiscall what_exception(exception * _this);
+const char * __thiscall exception_what(exception * _this);
 bad_typeid * __thiscall bad_typeid_copy_ctor(bad_typeid * _this, const bad_typeid * rhs);
 bad_typeid * __thiscall bad_typeid_ctor(bad_typeid * _this, const char * name);
 bad_typeid * __thiscall bad_typeid_default_ctor(bad_typeid * _this);

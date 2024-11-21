@@ -63,7 +63,7 @@ _Target SETS "|$Target|"
     DEFINE_ALIAS ?set_unexpected@@YAP6AXXZP6AXXZ@Z, set_unexpected // void (__cdecl*__cdecl set_unexpected(void (__cdecl*)(void)))(void)
     DEFINE_ALIAS ?terminate@@YAXXZ, terminate // void __cdecl terminate(void)
     DEFINE_ALIAS ?unexpected@@YAXXZ, unexpected // void __cdecl unexpected(void)
-    DEFINE_ALIAS ?what@exception@@UBAPBDXZ, what_exception // public: virtual char const * __cdecl exception::what(void)const
+    DEFINE_ALIAS ?what@exception@@UBAPBDXZ, exception_what // public: virtual char const * __cdecl exception::what(void)const
 
     #undef _MSVCRT_
     MACRO
@@ -89,8 +89,8 @@ $CxxLabel
     MACRO
     DEFINE_EXCEPTION_VTABLE $ShortName, $CxxName
         START_VTABLE $ShortName, $CxxName
-        EXTERN what_exception
-        DCD what_exception
+        EXTERN exception_what
+        DCD exception_what
     MEND
 
     START_VTABLE type_info, __dummyname_type_info

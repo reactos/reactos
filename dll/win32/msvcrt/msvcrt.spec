@@ -60,7 +60,7 @@
 @ cdecl -arch=i386 ?set_unexpected@@YAP6AXXZP6AXXZ@Z(ptr) set_unexpected # void (__cdecl*__cdecl set_unexpected(void (__cdecl*)(void)))(void)
 @ cdecl -arch=i386 ?terminate@@YAXXZ() terminate # void __cdecl terminate(void)
 @ cdecl -arch=i386 ?unexpected@@YAXXZ() unexpected # void __cdecl unexpected(void)
-@ cdecl -arch=i386 -norelay ?what@exception@@UBEPBDXZ() what_exception # public: virtual char const * __thiscall exception::what(void)const
+@ cdecl -arch=i386 -norelay ?what@exception@@UBEPBDXZ() exception_what # public: virtual char const * __thiscall exception::what(void)const
 
 # **************** win64 C++ functions ****************
 @ cdecl -arch=win64 ??0__non_rtti_object@@QEAA@AEBV0@@Z(ptr) __non_rtti_object_copy_ctor # public: __cdecl __non_rtti_object::__non_rtti_object(class __non_rtti_object const & __ptr64) __ptr64
@@ -114,7 +114,7 @@
 @ cdecl -arch=win64 ?set_unexpected@@YAP6AXXZP6AXXZ@Z(ptr) set_unexpected # void (__cdecl*__cdecl set_unexpected(void (__cdecl*)(void)))(void)
 @ cdecl -arch=win64 ?terminate@@YAXXZ() terminate # void __cdecl terminate(void)
 @ cdecl -arch=win64 ?unexpected@@YAXXZ() unexpected # void __cdecl unexpected(void)
-@ cdecl -arch=win64 ?what@exception@@UEBAPEBDXZ() what_exception # public: virtual char const * __ptr64 __cdecl exception::what(void)const __ptr64
+@ cdecl -arch=win64 ?what@exception@@UEBAPEBDXZ() exception_what # public: virtual char const * __ptr64 __cdecl exception::what(void)const __ptr64
 
 # **************** ARM C++ functions ****************
 @ cdecl -arch=arm ??0__non_rtti_object@@QAA@ABV0@@Z() __non_rtti_object_copy_ctor # public: __cdecl __non_rtti_object::__non_rtti_object(class __non_rtti_object const &)
@@ -176,7 +176,7 @@
 @ cdecl -arch=arm ?set_unexpected@@YAP6AXXZP6AXXZ@Z() set_unexpected # void (__cdecl*__cdecl set_unexpected(void (__cdecl*)(void)))(void)
 @ cdecl -arch=arm ?terminate@@YAXXZ() terminate # void __cdecl terminate(void)
 @ cdecl -arch=arm ?unexpected@@YAXXZ() unexpected # void __cdecl unexpected(void)
-@ cdecl -arch=arm ?what@exception@@UBAPBDXZ() what_exception # public: virtual char const * __cdecl exception::what(void)const
+@ cdecl -arch=arm ?what@exception@@UBAPBDXZ() exception_what # public: virtual char const * __cdecl exception::what(void)const
 
 
 # **************** Common functions ****************

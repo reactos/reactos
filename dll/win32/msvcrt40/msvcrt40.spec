@@ -467,7 +467,7 @@
 @ stub ?unlockbuf@ios@@QAAXXZ
 @ stub ?unlockc@ios@@KAXXZ
 @ stub ?unsetf@ios@@QAEJJ@Z
-@ cdecl -i386 ?what@exception@@UBEPBDXZ() what_exception
+@ cdecl -i386 ?what@exception@@UBEPBDXZ() exception_what
 @ stub ?width@ios@@QAEHH@Z
 @ stub ?width@ios@@QBEHXZ
 @ stub ?write@ostream@@QAEAAV1@PBCH@Z
