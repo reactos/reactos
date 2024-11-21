@@ -252,8 +252,6 @@ extern void msvcrt_free_scheduler_thread(void) DECLSPEC_HIDDEN;
 
 extern unsigned msvcrt_create_io_inherit_block(WORD*, BYTE**) DECLSPEC_HIDDEN;
 
-extern unsigned int __cdecl _control87(unsigned int, unsigned int);
-
 /* run-time error codes */
 #define _RT_STACK       0
 #define _RT_NULLPTR     1
@@ -291,12 +289,6 @@ extern unsigned int __cdecl _control87(unsigned int, unsigned int);
 extern FILE MSVCRT__iob[];
 
 typedef struct _complex _Dcomplex;
-
-struct MSVCRT__heapinfo {
-  int*           _pentry;
-  size_t         _size;
-  int            _useflag;
-};
 
 #ifdef __i386__
 struct MSVCRT___JUMP_BUFFER {
@@ -564,16 +556,6 @@ struct MSVCRT__stat64 {
 #define MSVCRT__P_OVERLAY 2
 #define MSVCRT__P_NOWAITO 3
 #define MSVCRT__P_DETACH  4
-
-#define MSVCRT__HEAPEMPTY      -1
-#define MSVCRT__HEAPOK         -2
-#define MSVCRT__HEAPBADBEGIN   -3
-#define MSVCRT__HEAPBADNODE    -4
-#define MSVCRT__HEAPEND        -5
-#define MSVCRT__HEAPBADPTR     -6
-
-#define MSVCRT__FREEENTRY      0
-#define MSVCRT__USEDENTRY      1
 
 #define MSVCRT__OUT_TO_DEFAULT 0
 #define MSVCRT__OUT_TO_STDERR  1

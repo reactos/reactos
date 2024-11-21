@@ -268,9 +268,9 @@ int CDECL _heapchk(void)
           (sb_heap && !HeapValidate(sb_heap, 0, NULL)))
   {
     msvcrt_set_errno(GetLastError());
-    return MSVCRT__HEAPBADNODE;
+    return _HEAPBADNODE;
   }
-  return MSVCRT__HEAPOK;
+  return _HEAPOK;
 }
 
 /*********************************************************************
@@ -291,7 +291,7 @@ int CDECL _heapmin(void)
 /*********************************************************************
  *		_heapwalk (MSVCRT.@)
  */
-int CDECL _heapwalk(struct MSVCRT__heapinfo* next)
+int CDECL _heapwalk(_HEAPINFO *next)
 {
   PROCESS_HEAP_ENTRY phe;
 
@@ -301,14 +301,14 @@ int CDECL _heapwalk(struct MSVCRT__heapinfo* next)
   LOCK_HEAP;
   phe.lpData = next->_pentry;
   phe.cbData = (DWORD)next->_size;
-  phe.wFlags = next->_useflag == MSVCRT__USEDENTRY ? PROCESS_HEAP_ENTRY_BUSY : 0;
+  phe.wFlags = next->_useflag == _USEDENTRY ? PROCESS_HEAP_ENTRY_BUSY : 0;
 
   if (phe.lpData && phe.wFlags & PROCESS_HEAP_ENTRY_BUSY &&
       !HeapValidate( heap, 0, phe.lpData ))
   {
     UNLOCK_HEAP;
     msvcrt_set_errno(GetLastError());
-    return MSVCRT__HEAPBADNODE;
+    return _HEAPBADNODE;
   }
 
   do
@@ -317,19 +317,19 @@ int CDECL _heapwalk(struct MSVCRT__heapinfo* next)
     {
       UNLOCK_HEAP;
       if (GetLastError() == ERROR_NO_MORE_ITEMS)
-         return MSVCRT__HEAPEND;
+         return _HEAPEND;
       msvcrt_set_errno(GetLastError());
       if (!phe.lpData)
-        return MSVCRT__HEAPBADBEGIN;
-      return MSVCRT__HEAPBADNODE;
+        return _HEAPBADBEGIN;
+      return _HEAPBADNODE;
     }
   } while (phe.wFlags & (PROCESS_HEAP_REGION|PROCESS_HEAP_UNCOMMITTED_RANGE));
 
   UNLOCK_HEAP;
   next->_pentry = phe.lpData;
   next->_size = phe.cbData;
-  next->_useflag = phe.wFlags & PROCESS_HEAP_ENTRY_BUSY ? MSVCRT__USEDENTRY : MSVCRT__FREEENTRY;
-  return MSVCRT__HEAPOK;
+  next->_useflag = phe.wFlags & PROCESS_HEAP_ENTRY_BUSY ? _USEDENTRY : _FREEENTRY;
+  return _HEAPOK;
 }
 
 /*********************************************************************
@@ -338,17 +338,17 @@ int CDECL _heapwalk(struct MSVCRT__heapinfo* next)
 int CDECL _heapset(unsigned int value)
 {
   int retval;
-  struct MSVCRT__heapinfo heap;
+  _HEAPINFO heap;
 
   memset( &heap, 0, sizeof(heap) );
   LOCK_HEAP;
-  while ((retval = _heapwalk(&heap)) == MSVCRT__HEAPOK)
+  while ((retval = _heapwalk(&heap)) == _HEAPOK)
   {
-    if (heap._useflag == MSVCRT__FREEENTRY)
+    if (heap._useflag == _FREEENTRY)
       memset(heap._pentry, value, heap._size);
   }
   UNLOCK_HEAP;
-  return retval == MSVCRT__HEAPEND? MSVCRT__HEAPOK : retval;
+  return retval == _HEAPEND ? _HEAPOK : retval;
 }
 
 /*********************************************************************
