@@ -126,7 +126,7 @@ typedef struct __lc_time_data {
     char data[1];
 } __lc_time_data;
 
-typedef struct MSVCRT_threadmbcinfostruct {
+typedef struct threadmbcinfostruct {
     int refcount;
     int mbcodepage;
     int ismbcodepage;
@@ -134,14 +134,12 @@ typedef struct MSVCRT_threadmbcinfostruct {
     unsigned short mbulinfo[6];
     unsigned char mbctype[257];
     unsigned char mbcasemap[256];
-} MSVCRT_threadmbcinfo;
-
-typedef struct MSVCRT_threadmbcinfostruct *MSVCRT_pthreadmbcinfo;
+} threadmbcinfo;
 
 typedef struct MSVCRT_localeinfo_struct
 {
     pthreadlocinfo locinfo;
-    MSVCRT_pthreadmbcinfo mbcinfo;
+    pthreadmbcinfo mbcinfo;
 } MSVCRT__locale_tstruct, *MSVCRT__locale_t;
 
 typedef struct MSVCRT__onexit_table_t
@@ -199,7 +197,7 @@ struct __thread_data {
     void                           *unk4[3];
     EXCEPTION_POINTERS             *xcptinfo;
     int                             fpecode;
-    MSVCRT_pthreadmbcinfo           mbcinfo;
+    pthreadmbcinfo                  mbcinfo;
     pthreadlocinfo                  locinfo;
     int                             locale_flags;
     int                             unk5[1];
@@ -939,11 +937,11 @@ extern MSVCRT__locale_t MSVCRT_locale;
 MSVCRT__locale_t CDECL get_current_locale_noalloc(MSVCRT__locale_t locale) DECLSPEC_HIDDEN;
 void CDECL free_locale_noalloc(MSVCRT__locale_t locale) DECLSPEC_HIDDEN;
 pthreadlocinfo CDECL get_locinfo(void) DECLSPEC_HIDDEN;
-MSVCRT_pthreadmbcinfo CDECL get_mbcinfo(void) DECLSPEC_HIDDEN;
+pthreadmbcinfo CDECL get_mbcinfo(void) DECLSPEC_HIDDEN;
 void __cdecl MSVCRT__free_locale(MSVCRT__locale_t);
-MSVCRT_threadmbcinfo* create_mbcinfo(int, LCID, MSVCRT_threadmbcinfo*) DECLSPEC_HIDDEN;
+threadmbcinfo* create_mbcinfo(int, LCID, threadmbcinfo*) DECLSPEC_HIDDEN;
 void free_locinfo(pthreadlocinfo) DECLSPEC_HIDDEN;
-void free_mbcinfo(MSVCRT_pthreadmbcinfo) DECLSPEC_HIDDEN;
+void free_mbcinfo(pthreadmbcinfo) DECLSPEC_HIDDEN;
 int __cdecl __crtLCMapStringA(LCID, DWORD, const char*, int, char*, int, unsigned int, int) DECLSPEC_HIDDEN;
 
 int            __cdecl MSVCRT__write(int,const void*,unsigned int);
