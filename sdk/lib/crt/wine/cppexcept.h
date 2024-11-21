@@ -125,7 +125,7 @@ typedef struct
 } cxx_exception_type;
 #endif
 
-void WINAPI _CxxThrowException(exception*,const cxx_exception_type*);
+void WINAPI _CxxThrowException(void*,const cxx_exception_type*);
 int CDECL _XcptFilter(NTSTATUS, PEXCEPTION_POINTERS);
 
 static inline const char *dbgstr_type_info( const type_info *info )
