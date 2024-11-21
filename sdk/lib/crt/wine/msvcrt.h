@@ -580,18 +580,6 @@ struct MSVCRT__stat64 {
 #define MSVCRT__OUT_TO_MSGBOX  2
 #define MSVCRT__REPORT_ERRMODE 3
 
-/* ASCII char classification table - binary compatible */
-#define MSVCRT__UPPER    0x0001  /* C1_UPPER */
-#define MSVCRT__LOWER    0x0002  /* C1_LOWER */
-#define MSVCRT__DIGIT    0x0004  /* C1_DIGIT */
-#define MSVCRT__SPACE    0x0008  /* C1_SPACE */
-#define MSVCRT__PUNCT    0x0010  /* C1_PUNCT */
-#define MSVCRT__CONTROL  0x0020  /* C1_CNTRL */
-#define MSVCRT__BLANK    0x0040  /* C1_BLANK */
-#define MSVCRT__HEX      0x0080  /* C1_XDIGIT */
-#define MSVCRT__LEADBYTE 0x8000
-#define MSVCRT__ALPHA   (0x0100|MSVCRT__UPPER|MSVCRT__LOWER)  /* (C1_ALPHA|_UPPER|_LOWER) */
-
 #define MSVCRT__IOREAD   0x0001
 #define MSVCRT__IOWRT    0x0002
 #define MSVCRT__IOMYBUF  0x0008
