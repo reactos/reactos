@@ -288,9 +288,7 @@ extern unsigned int __cdecl _control87(unsigned int, unsigned int);
 #define _RT_CRNL        252
 #define _RT_BANNER      255
 
-typedef struct _iobuf MSVCRT_FILE;
-
-extern MSVCRT_FILE MSVCRT__iob[];
+extern FILE MSVCRT__iob[];
 
 typedef struct _complex _Dcomplex;
 
@@ -772,36 +770,36 @@ int __cdecl      MSVCRT__isleadbyte_l(int, _locale_t);
 int __cdecl      MSVCRT__isspace_l(int, _locale_t);
 int __cdecl      MSVCRT__iswspace_l(wchar_t, _locale_t);
 
-void __cdecl     MSVCRT__lock_file(MSVCRT_FILE*);
-void __cdecl     MSVCRT__unlock_file(MSVCRT_FILE*);
-int __cdecl      MSVCRT_fgetc(MSVCRT_FILE*);
-int __cdecl      MSVCRT__fgetc_nolock(MSVCRT_FILE*);
-int __cdecl      MSVCRT__fputc_nolock(int,MSVCRT_FILE*);
-int __cdecl      MSVCRT_ungetc(int,MSVCRT_FILE*);
-int __cdecl      MSVCRT__ungetc_nolock(int,MSVCRT_FILE*);
-wint_t __cdecl MSVCRT_fgetwc(MSVCRT_FILE*);
-wint_t __cdecl MSVCRT__fgetwc_nolock(MSVCRT_FILE*);
-wint_t __cdecl MSVCRT__fputwc_nolock(wint_t,MSVCRT_FILE*);
-wint_t __cdecl MSVCRT_ungetwc(wint_t,MSVCRT_FILE*);
-wint_t __cdecl MSVCRT__ungetwc_nolock(wint_t, MSVCRT_FILE*);
-int __cdecl      MSVCRT__fseeki64_nolock(MSVCRT_FILE*,__int64,int);
-__int64 __cdecl  MSVCRT__ftelli64(MSVCRT_FILE* file);
-__int64 __cdecl  MSVCRT__ftelli64_nolock(MSVCRT_FILE*);
+void __cdecl     MSVCRT__lock_file(FILE*);
+void __cdecl     MSVCRT__unlock_file(FILE*);
+int __cdecl      MSVCRT_fgetc(FILE*);
+int __cdecl      MSVCRT__fgetc_nolock(FILE*);
+int __cdecl      MSVCRT__fputc_nolock(int,FILE*);
+int __cdecl      MSVCRT_ungetc(int,FILE*);
+int __cdecl      MSVCRT__ungetc_nolock(int,FILE*);
+wint_t __cdecl MSVCRT_fgetwc(FILE*);
+wint_t __cdecl MSVCRT__fgetwc_nolock(FILE*);
+wint_t __cdecl MSVCRT__fputwc_nolock(wint_t,FILE*);
+wint_t __cdecl MSVCRT_ungetwc(wint_t,FILE*);
+wint_t __cdecl MSVCRT__ungetwc_nolock(wint_t, FILE*);
+int __cdecl      MSVCRT__fseeki64_nolock(FILE*,__int64,int);
+__int64 __cdecl  MSVCRT__ftelli64(FILE* file);
+__int64 __cdecl  MSVCRT__ftelli64_nolock(FILE*);
 void __cdecl     MSVCRT__exit(int);
 void __cdecl     MSVCRT_abort(void);
 char* __cdecl    MSVCRT_getenv(const char*);
-size_t __cdecl MSVCRT__fread_nolock(void*,size_t,size_t,MSVCRT_FILE*);
-size_t __cdecl MSVCRT__fread_nolock_s(void*,size_t,size_t,size_t,MSVCRT_FILE*);
-size_t __cdecl MSVCRT__fwrite_nolock(const void*,size_t,size_t,MSVCRT_FILE*);
-int __cdecl      MSVCRT_fclose(MSVCRT_FILE*);
-int __cdecl      MSVCRT__fclose_nolock(MSVCRT_FILE*);
-int __cdecl      MSVCRT__fflush_nolock(MSVCRT_FILE*);
-MSVCRT_FILE* __cdecl MSVCRT__iob_func(void);
+size_t __cdecl MSVCRT__fread_nolock(void*,size_t,size_t,FILE*);
+size_t __cdecl MSVCRT__fread_nolock_s(void*,size_t,size_t,size_t,FILE*);
+size_t __cdecl MSVCRT__fwrite_nolock(const void*,size_t,size_t,FILE*);
+int __cdecl      MSVCRT_fclose(FILE*);
+int __cdecl      MSVCRT__fclose_nolock(FILE*);
+int __cdecl      MSVCRT__fflush_nolock(FILE*);
+FILE* __cdecl MSVCRT__iob_func(void);
 __time32_t __cdecl MSVCRT__time32(__time32_t*);
 __time64_t __cdecl MSVCRT__time64(__time64_t*);
-MSVCRT_FILE*   __cdecl MSVCRT__fdopen(int, const char *);
-MSVCRT_FILE*   __cdecl MSVCRT__wfdopen(int, const wchar_t *);
-int            WINAPIV MSVCRT_fwprintf(MSVCRT_FILE *file, const wchar_t *format, ...);
+FILE*   __cdecl MSVCRT__fdopen(int, const char *);
+FILE*   __cdecl MSVCRT__wfdopen(int, const wchar_t *);
+int            WINAPIV MSVCRT_fwprintf(FILE *file, const wchar_t *format, ...);
 int            __cdecl MSVCRT_vsnwprintf(wchar_t *str, size_t len,
                                        const wchar_t *format, __ms_va_list valist );
 int            WINAPIV MSVCRT__snwprintf(wchar_t*, size_t, const wchar_t*, ...);
