@@ -27,11 +27,12 @@
 #include "wine/exception.h"
 #include "wine/debug.h"
 #include "msvcrt.h"
-#include "cppexcept.h"
 #include "mtdll.h"
 #include "cxx.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
+
+CREATE_TYPE_INFO_VTABLE
 
 struct __type_info_node
 {
@@ -630,27 +631,6 @@ const char * __thiscall type_info_raw_name(type_info * _this)
   return _this->mangled;
 }
 
-/* Unexported */
-DEFINE_THISCALL_WRAPPER(type_info_vector_dtor,8)
-void * __thiscall type_info_vector_dtor(type_info * _this, unsigned int flags)
-{
-    TRACE("(%p %x)\n", _this, flags);
-    if (flags & 2)
-    {
-        /* we have an array, with the number of elements stored before the first object */
-        INT_PTR i, *ptr = (INT_PTR *)_this - 1;
-
-        for (i = *ptr - 1; i >= 0; i--) type_info_dtor(_this + i);
-        operator_delete(ptr);
-    }
-    else
-    {
-        type_info_dtor(_this);
-        if (flags & 1) operator_delete(_this);
-    }
-    return _this;
-}
-
 #if _MSVCR_VER >= 80
 
 typedef exception bad_alloc;
@@ -940,8 +920,6 @@ improper_scheduler_detach * __thiscall improper_scheduler_detach_copy_ctor(
 
 __ASM_BLOCK_BEGIN(vtables)
 
-__ASM_VTABLE(type_info,
-        VTABLE_ADD_FUNC(type_info_vector_dtor));
 __ASM_VTABLE(exception,
         VTABLE_ADD_FUNC(exception_vector_dtor)
         VTABLE_ADD_FUNC(what_exception));
@@ -988,7 +966,6 @@ __ASM_VTABLE(improper_scheduler_detach,
 
 __ASM_BLOCK_END
 
-DEFINE_RTTI_DATA0( type_info, 0, ".?AVtype_info@@" )
 #if _MSVCR_VER >= 80
 DEFINE_RTTI_DATA0( exception, 0, ".?AVexception@std@@" )
 DEFINE_RTTI_DATA0( exception_old, 0, ".?AVexception@@" )

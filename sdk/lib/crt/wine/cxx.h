@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wine/asm.h"
+#include "cppexcept.h"
 
 #ifdef _MSC_VER
 #define __ASM_VTABLE(name,funcs)
@@ -283,3 +283,36 @@ extern void *vtbl_wrapper_48;
 #endif
 
 exception* __thiscall exception_ctor(exception*, const char**);
+
+extern const vtable_ptr type_info_vtable;
+
+#ifdef __REACTOS__
+void * __thiscall type_info_vector_dtor(type_info * _this, unsigned int flags);
+#endif
+
+#define CREATE_TYPE_INFO_VTABLE \
+DEFINE_THISCALL_WRAPPER(type_info_vector_dtor,8) \
+void * __thiscall type_info_vector_dtor(type_info * _this, unsigned int flags) \
+{ \
+    if (flags & 2) \
+    { \
+        /* we have an array, with the number of elements stored before the first object */ \
+        INT_PTR i, *ptr = (INT_PTR *)_this - 1; \
+\
+        for (i = *ptr - 1; i >= 0; i--) free(_this->name); \
+        free(ptr); \
+    } \
+    else \
+    { \
+        free(_this->name); \
+        if (flags & 1) free(_this); \
+    } \
+    return _this; \
+} \
+\
+DEFINE_RTTI_DATA0( type_info, 0, ".?AVtype_info@@" ) \
+\
+__ASM_BLOCK_BEGIN(type_info_vtables) \
+    __ASM_VTABLE(type_info, \
+            VTABLE_ADD_FUNC(type_info_vector_dtor)); \
+__ASM_BLOCK_END
