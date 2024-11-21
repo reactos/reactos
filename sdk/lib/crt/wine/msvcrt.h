@@ -649,7 +649,6 @@ int            WINAPIV MSVCRT__snwprintf(wchar_t*, size_t, const wchar_t*, ...);
 int            WINAPIV MSVCRT_sprintf(char*,const char*,...);
 int            WINAPIV MSVCRT__snprintf(char*,size_t,const char*,...);
 int            WINAPIV MSVCRT__scprintf(const char*,...);
-int            __cdecl MSVCRT_raise(int sig);
 int            __cdecl MSVCRT__set_printf_count_output(int);
 
 #define MSVCRT__ENABLE_PER_THREAD_LOCALE 1

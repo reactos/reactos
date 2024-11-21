@@ -68,7 +68,7 @@ static BOOL WINAPI msvcrt_console_handler(DWORD ctrlType)
 /*********************************************************************
  *              __pxcptinfoptrs (MSVCRT.@)
  */
-void** CDECL MSVCRT___pxcptinfoptrs(void)
+void** CDECL __pxcptinfoptrs(void)
 {
     return (void**)&msvcrt_get_thread_data()->xcptinfo;
 }
@@ -105,7 +105,7 @@ static LONG msvcrt_exception_filter(struct _EXCEPTION_POINTERS *except)
         {
             if (handler != SIG_IGN)
             {
-                EXCEPTION_POINTERS **ep = (EXCEPTION_POINTERS**)MSVCRT___pxcptinfoptrs(), *old_ep;
+                EXCEPTION_POINTERS **ep = (EXCEPTION_POINTERS**)__pxcptinfoptrs(), *old_ep;
 
                 old_ep = *ep;
                 *ep = except;
@@ -131,7 +131,7 @@ static LONG msvcrt_exception_filter(struct _EXCEPTION_POINTERS *except)
         {
             if (handler != SIG_IGN)
             {
-                EXCEPTION_POINTERS **ep = (EXCEPTION_POINTERS**)MSVCRT___pxcptinfoptrs(), *old_ep;
+                EXCEPTION_POINTERS **ep = (EXCEPTION_POINTERS**)__pxcptinfoptrs(), *old_ep;
                 unsigned int i;
                 int float_signal = _FPE_INVALID;
 
@@ -160,7 +160,7 @@ static LONG msvcrt_exception_filter(struct _EXCEPTION_POINTERS *except)
         {
             if (handler != SIG_IGN)
             {
-                EXCEPTION_POINTERS **ep = (EXCEPTION_POINTERS**)MSVCRT___pxcptinfoptrs(), *old_ep;
+                EXCEPTION_POINTERS **ep = (EXCEPTION_POINTERS**)__pxcptinfoptrs(), *old_ep;
 
                 old_ep = *ep;
                 *ep = except;
@@ -185,12 +185,13 @@ void msvcrt_free_signals(void)
     SetConsoleCtrlHandler(msvcrt_console_handler, FALSE);
 }
 
+#ifndef __REACTOS__ // Own implementation in signal/signal.c
 /*********************************************************************
  *		signal (MSVCRT.@)
  * Some signals may never be generated except through an explicit call to
  * raise.
  */
-__sighandler_t CDECL MSVCRT_signal(int sig, __sighandler_t func)
+__sighandler_t CDECL signal(int sig, __sighandler_t func)
 {
     __sighandler_t ret = SIG_ERR;
 
@@ -222,7 +223,7 @@ __sighandler_t CDECL MSVCRT_signal(int sig, __sighandler_t func)
 /*********************************************************************
  *		raise (MSVCRT.@)
  */
-int CDECL MSVCRT_raise(int sig)
+int CDECL raise(int sig)
 {
     __sighandler_t handler;
 
@@ -237,7 +238,7 @@ int CDECL MSVCRT_raise(int sig)
         if (handler == SIG_DFL) MSVCRT__exit(3);
         if (handler != SIG_IGN)
         {
-            EXCEPTION_POINTERS **ep = (EXCEPTION_POINTERS**)MSVCRT___pxcptinfoptrs(), *old_ep;
+            EXCEPTION_POINTERS **ep = (EXCEPTION_POINTERS**)__pxcptinfoptrs(), *old_ep;
 
             sighandlers[sig] = SIG_DFL;
 
@@ -267,6 +268,7 @@ int CDECL MSVCRT_raise(int sig)
     }
     return 0;
 }
+#endif // __REACTOS__
 
 /*********************************************************************
  *		_XcptFilter (MSVCRT.@)
@@ -292,7 +294,7 @@ int CDECL _abnormal_termination(void)
 /******************************************************************
  *		__uncaught_exception (MSVCRT.@)
  */
-BOOL CDECL MSVCRT___uncaught_exception(void)
+BOOL CDECL __uncaught_exception(void)
 {
     return msvcrt_get_thread_data()->processing_throw != 0;
 }
@@ -332,7 +334,7 @@ void CDECL __security_error_handler(int code, void *data)
 /*********************************************************************
  *  __crtSetUnhandledExceptionFilter (MSVCR110.@)
  */
-LPTOP_LEVEL_EXCEPTION_FILTER CDECL MSVCR110__crtSetUnhandledExceptionFilter(LPTOP_LEVEL_EXCEPTION_FILTER filter)
+LPTOP_LEVEL_EXCEPTION_FILTER CDECL __crtSetUnhandledExceptionFilter(LPTOP_LEVEL_EXCEPTION_FILTER filter)
 {
     return SetUnhandledExceptionFilter(filter);
 }
@@ -488,7 +490,7 @@ struct __std_exception_data {
 /*********************************************************************
  *  __std_exception_copy (UCRTBASE.@)
  */
-void CDECL MSVCRT___std_exception_copy(const struct __std_exception_data *src,
+void CDECL __std_exception_copy(const struct __std_exception_data *src,
                                        struct __std_exception_data *dst)
 {
     TRACE("(%p %p)\n", src, dst);
@@ -505,7 +507,7 @@ void CDECL MSVCRT___std_exception_copy(const struct __std_exception_data *src,
 /*********************************************************************
  *  __std_exception_destroy (UCRTBASE.@)
  */
-void CDECL MSVCRT___std_exception_destroy(struct __std_exception_data *data)
+void CDECL __std_exception_destroy(struct __std_exception_data *data)
 {
     TRACE("(%p)\n", data);
 

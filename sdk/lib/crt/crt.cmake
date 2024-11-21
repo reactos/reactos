@@ -13,7 +13,6 @@ list(APPEND CRT_SOURCE
     ${CRT_PROCESS_SOURCE}
     ${CRT_SEARCH_SOURCE}
     signal/signal.c
-    signal/xcptinfo.c
     ${CRT_STARTUP_SOURCE}
     ${CRT_STDIO_SOURCE}
     ${CRT_STDLIB_SOURCE}

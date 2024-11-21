@@ -46,7 +46,7 @@
 @ cdecl -arch=i386 ??_U@YAPAXI@Z(long) operator_new # void * __cdecl operator new[](unsigned int)
 ;@ cdecl -arch=i386 ??_U@YAPAXIHPBDH@Z(long long str long) operator_new_dbg # void * __cdecl operator new[](unsigned int,int,char const *,int)
 @ cdecl -arch=i386 ??_V@YAXPAX@Z(ptr) operator_delete # void __cdecl operator delete[](void *)
-@ cdecl -arch=i386 -norelay __uncaught_exception(ptr) MSVCRT___uncaught_exception
+@ cdecl -arch=i386 -norelay __uncaught_exception(ptr) __uncaught_exception
 @ cdecl -arch=i386 -norelay ?_query_new_handler@@YAP6AHI@ZXZ() _query_new_handler # int (__cdecl*__cdecl _query_new_handler(void))(unsigned int)
 @ cdecl -arch=i386 ?_query_new_mode@@YAHXZ() _query_new_mode # int __cdecl _query_new_mode(void)
 @ cdecl -arch=i386 -norelay ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z(ptr) _set_new_handler # int (__cdecl*__cdecl _set_new_handler(int (__cdecl*)(unsigned int)))(unsigned int)
@@ -100,7 +100,7 @@
 @ cdecl -arch=win64 ??_U@YAPEAX_K@Z(long) operator_new # void * __ptr64 __cdecl operator new[](unsigned __int64)
 @ cdecl -arch=win64 ??_U@YAPEAX_KHPEBDH@Z(int64 long str long) operator_new_dbg # void * __ptr64 __cdecl operator new[](unsigned __int64,int,char const * __ptr64,int)
 @ cdecl -arch=win64 ??_V@YAXPEAX@Z(ptr) operator_delete # void __cdecl operator delete[](void * __ptr64)
-@ cdecl -arch=win64 __uncaught_exception(ptr) MSVCRT___uncaught_exception
+@ cdecl -arch=win64 __uncaught_exception(ptr) __uncaught_exception
 @ cdecl -arch=win64 ?_query_new_handler@@YAP6AH_K@ZXZ() _query_new_handler # int (__cdecl*__cdecl _query_new_handler(void))(unsigned __int64)
 @ cdecl -arch=win64 ?_query_new_mode@@YAHXZ() _query_new_mode # int __cdecl _query_new_mode(void)
 @ cdecl -arch=win64 ?_set_new_handler@@YAP6AH_K@ZP6AH0@Z@Z(ptr) _set_new_handler # int (__cdecl*__cdecl _set_new_handler(int (__cdecl*)(unsigned __int64)))(unsigned __int64)
@@ -164,7 +164,7 @@
 ;@ cdecl -arch=arm __ExceptionPtrRethrow()
 ;@ cdecl -arch=arm __ExceptionPtrSwap()
 ;@ cdecl -arch=arm __ExceptionPtrToBool()
-@ cdecl -arch=arm __uncaught_exception(ptr) MSVCRT___uncaught_exception
+@ cdecl -arch=arm __uncaught_exception(ptr) __uncaught_exception
 @ cdecl -arch=arm ?_query_new_handler@@YAP6AHI@ZXZ() _query_new_handler # int (__cdecl*__cdecl _query_new_handler(void))(unsigned int)
 @ cdecl -arch=arm ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z() _set_new_handler # int (__cdecl*__cdecl _set_new_handler(int (__cdecl*)(unsigned int)))(unsigned int)
 @ cdecl -arch=arm ?_set_new_mode@@YAHH@Z() _set_new_mode # int __cdecl _set_new_mode(int)
