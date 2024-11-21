@@ -33,6 +33,10 @@ RealModeEntryPoint:
     /* Check if it's booted as NTLDR */
     call CheckNtldrBoot
 
+    /* Output first status */
+    mov si, offset Msg_Starting
+    call writestr
+
     /* Enable A20 address line */
     call EnableA20
 
@@ -61,6 +65,9 @@ RealModeEntryPoint:
     jmp exit_to_protected
 
 #include "relocldr.inc"
+
+Msg_Starting:
+    .ascii "Starting FreeLoader...", CR, LF, NUL
 
 /* This is the entry point from protected mode */
 switch_to_real16:
