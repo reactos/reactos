@@ -244,7 +244,7 @@ typedef struct
 
 #endif
 
-#if defined(__i386__) && !defined(__MINGW32__)
+#ifdef __ASM_USE_THISCALL_WRAPPER
 
 #define CALL_VTBL_FUNC(this, off, ret, type, args) ((ret (WINAPI*)type)&vtbl_wrapper_##off)args
 
