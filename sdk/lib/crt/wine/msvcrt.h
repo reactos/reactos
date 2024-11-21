@@ -650,15 +650,9 @@ typedef void (__cdecl *__sighandler_t)(int);
 #define MSVCRT__NLSCMPERROR ((unsigned int)0x7fffffff)
 
 int __cdecl      MSVCRT_atoi(const char *str);
-int __cdecl      MSVCRT_isalpha(int c);
-int __cdecl      MSVCRT_isdigit(int c);
-int __cdecl      MSVCRT_isspace(int c);
 int __cdecl      MSVCRT_iswalpha(wint_t);
 int __cdecl      MSVCRT_iswspace(wint_t);
 int __cdecl      MSVCRT_iswdigit(wint_t);
-int __cdecl      MSVCRT_isleadbyte(int);
-int __cdecl      MSVCRT__isleadbyte_l(int, _locale_t);
-int __cdecl      MSVCRT__isspace_l(int, _locale_t);
 int __cdecl      MSVCRT__iswspace_l(wchar_t, _locale_t);
 
 void __cdecl     MSVCRT__lock_file(FILE*);
@@ -759,11 +753,8 @@ int     __cdecl MSVCRT__pipe(int *, unsigned int, int);
 wchar_t* __cdecl MSVCRT__wgetenv(const wchar_t*);
 void __cdecl    MSVCRT__wsearchenv(const wchar_t*, const wchar_t*, wchar_t*);
 intptr_t __cdecl MSVCRT__spawnvpe(int, const char*, const char* const*, const char* const*);
-int __cdecl      MSVCRT__toupper_l(int,_locale_t);
-int __cdecl      MSVCRT__tolower_l(int,_locale_t);
 int __cdecl      MSVCRT__towupper_l(wint_t,_locale_t);
 int __cdecl      MSVCRT__towlower_l(wint_t,_locale_t);
-int __cdecl      MSVCRT__toupper(int); /* only use on lower-case ASCII characters */
 int __cdecl      MSVCRT__stricmp(const char*, const char*);
 int __cdecl      MSVCRT__strnicmp(const char*, const char*, size_t);
 int __cdecl      MSVCRT__strnicoll_l(const char*, const char*, size_t, _locale_t);
@@ -781,7 +772,6 @@ int __cdecl MSVCRT_wcsncmp(const wchar_t*, const wchar_t*, size_t);
 int __cdecl MSVCRT__wcsnicmp(const wchar_t*, const wchar_t*, size_t);
 int __cdecl MSVCRT_towlower(wint_t);
 int __cdecl MSVCRT_towupper(wint_t);
-int __cdecl MSVCRT__isprint_l(int c, _locale_t locale);
 int __cdecl MSVCRT__iswalnum_l(wchar_t, _locale_t);
 int __cdecl MSVCRT__iswdigit_l(wchar_t, _locale_t);
 int __cdecl MSVCRT__iswgraph_l(wchar_t, _locale_t);

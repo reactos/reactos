@@ -860,7 +860,7 @@ static BOOL demangle_datatype(struct parsed_symbol* sym, struct datatype_t* ct,
         if (!get_modified_type(ct, sym, pmt_ref, in_args ? dt : 'P', in_args)) goto done;
         break;
     case 'P': /* Pointer */
-        if (MSVCRT_isdigit(*sym->current))
+        if (isdigit(*sym->current))
 	{
             /* FIXME:
              *   P6 = Function pointer
