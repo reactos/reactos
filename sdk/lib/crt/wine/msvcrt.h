@@ -37,6 +37,8 @@ typedef long __msvcrt_long;
 typedef unsigned long __msvcrt_ulong;
 #endif
 
+extern BOOL sse2_supported DECLSPEC_HIDDEN;
+
 #define DBL80_MAX_10_EXP 4932
 #define DBL80_MIN_10_EXP -4951
 
