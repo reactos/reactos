@@ -520,36 +520,19 @@ struct MSVCRT__stat64 {
 #define MSVCRT__stati64        MSVCRT__stat32i64
 #endif
 
-#define MSVCRT_TMP_MAX   0x7fff
-#define MSVCRT_TMP_MAX_S 0x7fffffff
 #define MSVCRT_RAND_MAX  0x7fff
-#define MSVCRT_BUFSIZ    512
-
-#define MSVCRT_SEEK_SET  0
-#define MSVCRT_SEEK_CUR  1
-#define MSVCRT_SEEK_END  2
 
 #define MSVCRT_NO_CONSOLE_FD (-2)
 #define MSVCRT_NO_CONSOLE ((HANDLE)MSVCRT_NO_CONSOLE_FD)
 
-#define MSVCRT_STDIN_FILENO  0
-#define MSVCRT_STDOUT_FILENO 1
-#define MSVCRT_STDERR_FILENO 2
-
-/* more file._flag flags, but these conflict with Unix */
-#define MSVCRT__IOFBF    0x0000
-#define MSVCRT__IONBF    0x0004
-#define MSVCRT__IOLBF    0x0040
-
-#define MSVCRT_FILENAME_MAX 260
 #define MSVCRT_DRIVE_MAX    3
 #define MSVCRT_FNAME_MAX    256
 #define MSVCRT_DIR_MAX      256
 #define MSVCRT_EXT_MAX      256
 #define MSVCRT_PATH_MAX     260
-#define MSVCRT_stdin       (MSVCRT__iob+MSVCRT_STDIN_FILENO)
-#define MSVCRT_stdout      (MSVCRT__iob+MSVCRT_STDOUT_FILENO)
-#define MSVCRT_stderr      (MSVCRT__iob+MSVCRT_STDERR_FILENO)
+#define MSVCRT_stdin       (MSVCRT__iob+STDIN_FILENO)
+#define MSVCRT_stdout      (MSVCRT__iob+STDOUT_FILENO)
+#define MSVCRT_stderr      (MSVCRT__iob+STDERR_FILENO)
 
 #define MSVCRT__P_WAIT    0
 #define MSVCRT__P_NOWAIT  1
@@ -562,13 +545,7 @@ struct MSVCRT__stat64 {
 #define MSVCRT__OUT_TO_MSGBOX  2
 #define MSVCRT__REPORT_ERRMODE 3
 
-#define MSVCRT__IOREAD   0x0001
-#define MSVCRT__IOWRT    0x0002
-#define MSVCRT__IOMYBUF  0x0008
-#define MSVCRT__IOEOF    0x0010
-#define MSVCRT__IOERR    0x0020
-#define MSVCRT__IOSTRG   0x0040
-#define MSVCRT__IORW     0x0080
+/* internal file._flag flags */
 #define MSVCRT__USERBUF  0x0100
 #define MSVCRT__IOCOMMIT 0x4000
 
