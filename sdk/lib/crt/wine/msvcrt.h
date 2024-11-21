@@ -288,78 +288,6 @@ extern unsigned msvcrt_create_io_inherit_block(WORD*, BYTE**) DECLSPEC_HIDDEN;
 
 extern FILE MSVCRT__iob[];
 
-struct MSVCRT__finddata32_t {
-  unsigned int attrib;
-  __time32_t time_create;
-  __time32_t time_access;
-  __time32_t time_write;
-  _fsize_t size;
-  char name[260];
-};
-
-struct MSVCRT__finddata32i64_t {
-  unsigned int attrib;
-  __time32_t time_create;
-  __time32_t time_access;
-  __time32_t time_write;
-  __int64 DECLSPEC_ALIGN(8) size;
-  char name[260];
-};
-
-struct MSVCRT__finddata64i32_t {
-  unsigned int attrib;
-  __time64_t time_create;
-  __time64_t time_access;
-  __time64_t time_write;
-  _fsize_t size;
-  char name[260];
-};
-
-struct MSVCRT__finddata64_t {
-  unsigned int attrib;
-  __time64_t time_create;
-  __time64_t time_access;
-  __time64_t time_write;
-  __int64 DECLSPEC_ALIGN(8) size;
-  char              name[260];
-};
-
-struct MSVCRT__wfinddata32_t {
-  unsigned int attrib;
-  __time32_t time_create;
-  __time32_t time_access;
-  __time32_t time_write;
-  _fsize_t size;
-  wchar_t name[260];
-};
-
-struct MSVCRT__wfinddata32i64_t {
-  unsigned int attrib;
-  __time32_t time_create;
-  __time32_t time_access;
-  __time32_t time_write;
-  __int64 DECLSPEC_ALIGN(8) size;
-  wchar_t name[260];
-};
-
-struct MSVCRT__wfinddata64i32_t {
-  unsigned int attrib;
-  __time64_t time_create;
-  __time64_t time_access;
-  __time64_t time_write;
-  _fsize_t size;
-  wchar_t name[260];
-};
-
-struct MSVCRT__wfinddata64_t {
-  unsigned int attrib;
-  __time64_t time_create;
-  __time64_t time_access;
-  __time64_t time_write;
-  __int64 DECLSPEC_ALIGN(8) size;
-  wchar_t name[260];
-};
-
 struct MSVCRT__stat32 {
   _dev_t st_dev;
   _ino_t st_ino;
@@ -415,22 +343,6 @@ struct MSVCRT__stat64 {
   __time64_t st_mtime;
   __time64_t st_ctime;
 };
-
-#ifdef _WIN64
-#define MSVCRT__finddata_t     MSVCRT__finddata64i32_t
-#define MSVCRT__finddatai64_t  MSVCRT__finddata64_t
-#define MSVCRT__wfinddata_t    MSVCRT__wfinddata64i32_t
-#define MSVCRT__wfinddatai64_t MSVCRT__wfinddata64_t
-#define MSVCRT__stat           MSVCRT__stat64i32
-#define MSVCRT__stati64        MSVCRT__stat64
-#else
-#define MSVCRT__finddata_t     MSVCRT__finddata32_t
-#define MSVCRT__finddatai64_t  MSVCRT__finddata32i64_t
-#define MSVCRT__wfinddata_t    MSVCRT__wfinddata32_t
-#define MSVCRT__wfinddatai64_t MSVCRT__wfinddata32i64_t
-#define MSVCRT__stat           MSVCRT__stat32
-#define MSVCRT__stati64        MSVCRT__stat32i64
-#endif
 
 #define MSVCRT_RAND_MAX  0x7fff
 
