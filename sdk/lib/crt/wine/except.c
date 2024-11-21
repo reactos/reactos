@@ -284,7 +284,7 @@ int CDECL _XcptFilter(NTSTATUS ex, PEXCEPTION_POINTERS ptr)
 /*********************************************************************
  *		_abnormal_termination (MSVCRT.@)
  */
-int CDECL _abnormal_termination(void)
+int CDECL __intrinsic_abnormal_termination(void)
 {
   FIXME("(void)stub\n");
   return 0;
