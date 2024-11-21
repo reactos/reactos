@@ -86,7 +86,7 @@ typedef struct {ULONG x80[3];} MSVCRT__LDOUBLE; /* Intel 80 bit FP format has si
 
 #define MSVCRT_tm tm
 
-typedef struct {
+typedef struct __lc_time_data {
     union {
         const char *str[43];
         struct {
@@ -124,48 +124,7 @@ typedef struct {
     const MSVCRT_wchar_t *locname;
 #endif
     char data[1];
-} MSVCRT___lc_time_data;
-
-typedef struct MSVCRT_threadlocaleinfostruct {
-#if _MSVCR_VER >= 140
-    unsigned short *pctype;
-    int mb_cur_max;
-    unsigned int lc_codepage;
-#endif
-
-    int refcount;
-#if _MSVCR_VER < 140
-    unsigned int lc_codepage;
-#endif
-    unsigned int lc_collate_cp;
-    MSVCRT_ulong lc_handle[6];
-    LC_ID        lc_id[6];
-    struct {
-        char *locale;
-        MSVCRT_wchar_t *wlocale;
-        int *refcount;
-        int *wrefcount;
-    } lc_category[6];
-    int lc_clike;
-#if _MSVCR_VER < 140
-    int mb_cur_max;
-#endif
-    int *lconv_intl_refcount;
-    int *lconv_num_refcount;
-    int *lconv_mon_refcount;
-    struct lconv *lconv;
-    int *ctype1_refcount;
-    unsigned short *ctype1;
-#if _MSVCR_VER < 140
-    unsigned short *pctype;
-#endif
-    const unsigned char *pclmap;
-    const unsigned char *pcumap;
-    MSVCRT___lc_time_data *lc_time_curr;
-#if _MSVCR_VER >= 110
-    MSVCRT_wchar_t *lc_name[6];
-#endif
-} MSVCRT_threadlocinfo;
+} __lc_time_data;
 
 typedef struct MSVCRT_threadmbcinfostruct {
     int refcount;
@@ -177,12 +136,11 @@ typedef struct MSVCRT_threadmbcinfostruct {
     unsigned char mbcasemap[256];
 } MSVCRT_threadmbcinfo;
 
-typedef struct MSVCRT_threadlocaleinfostruct *MSVCRT_pthreadlocinfo;
 typedef struct MSVCRT_threadmbcinfostruct *MSVCRT_pthreadmbcinfo;
 
 typedef struct MSVCRT_localeinfo_struct
 {
-    MSVCRT_pthreadlocinfo locinfo;
+    pthreadlocinfo locinfo;
     MSVCRT_pthreadmbcinfo mbcinfo;
 } MSVCRT__locale_tstruct, *MSVCRT__locale_t;
 
@@ -242,7 +200,7 @@ struct __thread_data {
     EXCEPTION_POINTERS             *xcptinfo;
     int                             fpecode;
     MSVCRT_pthreadmbcinfo           mbcinfo;
-    MSVCRT_pthreadlocinfo           locinfo;
+    pthreadlocinfo                  locinfo;
     int                             locale_flags;
     int                             unk5[1];
     MSVCRT_terminate_function       terminate_handler;
@@ -271,7 +229,7 @@ extern thread_data_t *CDECL msvcrt_get_thread_data(void) DECLSPEC_HIDDEN;
 
 LCID MSVCRT_locale_to_LCID(const char*, unsigned short*, BOOL*) DECLSPEC_HIDDEN;
 extern MSVCRT__locale_t MSVCRT_locale DECLSPEC_HIDDEN;
-extern MSVCRT___lc_time_data cloc_time_data DECLSPEC_HIDDEN;
+extern __lc_time_data cloc_time_data DECLSPEC_HIDDEN;
 extern unsigned int MSVCRT___lc_codepage;
 extern int MSVCRT___lc_collate_cp;
 extern WORD MSVCRT__ctype [257];
@@ -980,11 +938,11 @@ int            __cdecl MSVCRT__set_printf_count_output(int);
 extern MSVCRT__locale_t MSVCRT_locale;
 MSVCRT__locale_t CDECL get_current_locale_noalloc(MSVCRT__locale_t locale) DECLSPEC_HIDDEN;
 void CDECL free_locale_noalloc(MSVCRT__locale_t locale) DECLSPEC_HIDDEN;
-MSVCRT_pthreadlocinfo CDECL get_locinfo(void) DECLSPEC_HIDDEN;
+pthreadlocinfo CDECL get_locinfo(void) DECLSPEC_HIDDEN;
 MSVCRT_pthreadmbcinfo CDECL get_mbcinfo(void) DECLSPEC_HIDDEN;
 void __cdecl MSVCRT__free_locale(MSVCRT__locale_t);
 MSVCRT_threadmbcinfo* create_mbcinfo(int, LCID, MSVCRT_threadmbcinfo*) DECLSPEC_HIDDEN;
-void free_locinfo(MSVCRT_pthreadlocinfo) DECLSPEC_HIDDEN;
+void free_locinfo(pthreadlocinfo) DECLSPEC_HIDDEN;
 void free_mbcinfo(MSVCRT_pthreadmbcinfo) DECLSPEC_HIDDEN;
 int __cdecl __crtLCMapStringA(LCID, DWORD, const char*, int, char*, int, unsigned int, int) DECLSPEC_HIDDEN;
 
@@ -1096,7 +1054,7 @@ struct fpnum {
     enum fpmod mod;
 };
 struct fpnum fpnum_parse(MSVCRT_wchar_t (*)(void*), void (*)(void*),
-        void*, MSVCRT_pthreadlocinfo, BOOL) DECLSPEC_HIDDEN;
+        void*, pthreadlocinfo, BOOL) DECLSPEC_HIDDEN;
 int fpnum_double(struct fpnum*, double*) DECLSPEC_HIDDEN;
 /* Maybe one day we'll enable the invalid parameter handlers with the full set of information (msvcrXXd)
  *      #define MSVCRT_INVALID_PMT(x) MSVCRT_call_invalid_parameter_handler(x, __FUNCTION__, __FILE__, __LINE__, 0)
