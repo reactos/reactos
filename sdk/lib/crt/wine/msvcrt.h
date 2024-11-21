@@ -195,7 +195,6 @@ void msvcrt_set_errno(int) DECLSPEC_HIDDEN;
 typedef enum {
     EXCEPTION_BAD_ALLOC,
 #if _MSVCR_VER >= 100
-    EXCEPTION_IMPROPER_SCHEDULER_ATTACH,
     EXCEPTION_IMPROPER_SCHEDULER_DETACH,
 #endif
 } exception_type;
