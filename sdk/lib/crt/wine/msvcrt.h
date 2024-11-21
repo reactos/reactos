@@ -71,6 +71,7 @@ typedef struct __lc_time_data {
 #endif
     int unk;
     int refcount;
+#if _MSVCR_VER == 0 || _MSVCR_VER >= 100
     union {
         const wchar_t *wstr[43];
         struct {
@@ -85,6 +86,7 @@ typedef struct __lc_time_data {
             const wchar_t *time;
         } names;
     } wstr;
+#endif
 #if _MSVCR_VER >= 110
     const wchar_t *locname;
 #endif
