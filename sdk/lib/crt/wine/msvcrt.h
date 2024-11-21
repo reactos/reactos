@@ -288,62 +288,6 @@ extern unsigned msvcrt_create_io_inherit_block(WORD*, BYTE**) DECLSPEC_HIDDEN;
 
 extern FILE MSVCRT__iob[];
 
-struct MSVCRT__stat32 {
-  _dev_t st_dev;
-  _ino_t st_ino;
-  unsigned short st_mode;
-  short st_nlink;
-  short st_uid;
-  short st_gid;
-  _dev_t st_rdev;
-  _off_t st_size;
-  __time32_t st_atime;
-  __time32_t st_mtime;
-  __time32_t st_ctime;
-};
-
-struct MSVCRT__stat32i64 {
-  _dev_t st_dev;
-  _ino_t st_ino;
-  unsigned short st_mode;
-  short st_nlink;
-  short st_uid;
-  short st_gid;
-  _dev_t st_rdev;
-  __int64 DECLSPEC_ALIGN(8) st_size;
-  __time32_t st_atime;
-  __time32_t st_mtime;
-  __time32_t st_ctime;
-};
-
-struct MSVCRT__stat64i32 {
-  _dev_t st_dev;
-  _ino_t st_ino;
-  unsigned short st_mode;
-  short st_nlink;
-  short st_uid;
-  short st_gid;
-  _dev_t st_rdev;
-  _off_t st_size;
-  __time64_t st_atime;
-  __time64_t st_mtime;
-  __time64_t st_ctime;
-};
-
-struct MSVCRT__stat64 {
-  _dev_t st_dev;
-  _ino_t st_ino;
-  unsigned short st_mode;
-  short st_nlink;
-  short st_uid;
-  short st_gid;
-  _dev_t st_rdev;
-  __int64 DECLSPEC_ALIGN(8) st_size;
-  __time64_t st_atime;
-  __time64_t st_mtime;
-  __time64_t st_ctime;
-};
-
 #define MSVCRT_RAND_MAX  0x7fff
 
 #define MSVCRT_NO_CONSOLE_FD (-2)
