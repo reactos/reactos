@@ -736,7 +736,6 @@ int WINAPIV      _cwprintf(const wchar_t*,...);
 int WINAPIV      MSVCRT_sscanf(const char *, const char *, ...);
 char*** __cdecl  MSVCRT___p__environ(void);
 int*    __cdecl  __p___mb_cur_max(void);
-int*    __cdecl  MSVCRT___p__fmode(void);
 wchar_t* __cdecl MSVCRT__wcsdup(const wchar_t*);
 size_t __cdecl MSVCRT_strnlen(const char *,size_t);
 size_t __cdecl MSVCRT_wcsnlen(const wchar_t*,size_t);
