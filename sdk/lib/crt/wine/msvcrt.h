@@ -35,11 +35,11 @@ typedef unsigned long __msvcrt_ulong;
 #define DBL80_MAX_10_EXP 4932
 #define DBL80_MIN_10_EXP -4951
 
-typedef void (__cdecl *MSVCRT_terminate_handler)(void);
-typedef void (__cdecl *MSVCRT_terminate_function)(void);
-typedef void (__cdecl *MSVCRT_unexpected_handler)(void);
-typedef void (__cdecl *MSVCRT_unexpected_function)(void);
-typedef void (__cdecl *MSVCRT__se_translator_function)(unsigned int code, struct _EXCEPTION_POINTERS *info);
+typedef void (__cdecl *terminate_function)(void);
+typedef void (__cdecl *unexpected_function)(void);
+typedef void (__cdecl *_se_translator_function)(unsigned int code, struct _EXCEPTION_POINTERS *info);
+void __cdecl terminate(void);
+
 typedef void (__cdecl *MSVCRT__beginthread_start_routine_t)(void *);
 typedef unsigned int (__stdcall *MSVCRT__beginthreadex_start_routine_t)(void *);
 typedef int (__cdecl *MSVCRT__onexit_t)(void);
@@ -158,9 +158,9 @@ struct __thread_data {
     pthreadlocinfo                  locinfo;
     int                             locale_flags;
     int                             unk5[1];
-    MSVCRT_terminate_function       terminate_handler;
-    MSVCRT_unexpected_function      unexpected_handler;
-    MSVCRT__se_translator_function  se_translator;      /* preserve offset to exc_record and processing_throw */
+    terminate_function              terminate_handler;
+    unexpected_function             unexpected_handler;
+    _se_translator_function         se_translator;      /* preserve offset to exc_record and processing_throw */
     void                           *unk6;
     EXCEPTION_RECORD               *exc_record;
     CONTEXT                        *ctx_record;
@@ -869,7 +869,6 @@ size_t __cdecl MSVCRT__fwrite_nolock(const void*,size_t,size_t,MSVCRT_FILE*);
 int __cdecl      MSVCRT_fclose(MSVCRT_FILE*);
 int __cdecl      MSVCRT__fclose_nolock(MSVCRT_FILE*);
 int __cdecl      MSVCRT__fflush_nolock(MSVCRT_FILE*);
-void __cdecl     MSVCRT_terminate(void);
 MSVCRT_FILE* __cdecl MSVCRT__iob_func(void);
 __time32_t __cdecl MSVCRT__time32(__time32_t*);
 __time64_t __cdecl MSVCRT__time64(__time64_t*);

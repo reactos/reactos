@@ -163,7 +163,7 @@ static const cxx_type_info type ## _cxx_type_info = { \
     & type ##_type_info, \
     { 0, -1, 0 }, \
     sizeof(type), \
-    (cxx_copy_ctor)THISCALL(MSVCRT_ ## type ##_copy_ctor) \
+    (cxx_copy_ctor)THISCALL(type ##_copy_ctor) \
 }; \
 \
 static const cxx_type_info_table type ## _type_info_table = { \
@@ -177,7 +177,7 @@ static const cxx_type_info_table type ## _type_info_table = { \
 \
 static const cxx_exception_type type ## _exception_type = { \
     0, \
-    (cxx_copy_ctor)THISCALL(MSVCRT_ ## type ## _dtor), \
+    (cxx_copy_ctor)THISCALL(type ## _dtor), \
     NULL, \
     & type ## _type_info_table \
 };
@@ -213,11 +213,11 @@ static cxx_exception_type type ##_exception_type = { \
 static void init_ ## type ## _cxx(char *base) \
 { \
     type ## _cxx_type_info.type_info  = (char *)&type ## _type_info - base; \
-    type ## _cxx_type_info.copy_ctor  = (char *)MSVCRT_ ## type ## _copy_ctor - base; \
+    type ## _cxx_type_info.copy_ctor  = (char *)type ## _copy_ctor - base; \
     type ## _type_info_table.info[0]   = (char *)&type ## _cxx_type_info - base; \
     type ## _type_info_table.info[1]   = (char *)cl1 - base; \
     type ## _type_info_table.info[2]   = (char *)cl2 - base; \
-    type ## _exception_type.destructor      = (char *)MSVCRT_ ## type ## _dtor - base; \
+    type ## _exception_type.destructor      = (char *)type ## _dtor - base; \
     type ## _exception_type.type_info_table = (char *)&type ## _type_info_table - base; \
 }
 #endif

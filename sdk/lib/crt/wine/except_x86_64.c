@@ -289,7 +289,7 @@ static void cxx_local_unwind(ULONG64 frame, DISPATCHER_CONTEXT *dispatch,
         if (trylevel<0 || trylevel>=descr->unwind_count)
         {
             ERR("invalid trylevel %d\n", trylevel);
-            MSVCRT_terminate();
+            terminate();
         }
         handler = rva_to_ptr(unwind_table[trylevel].handler, dispatch->ImageBase);
         if (handler)
@@ -486,7 +486,7 @@ static LONG CALLBACK se_translation_filter(EXCEPTION_POINTERS *ep, void *c)
     if (rec->ExceptionCode != CXX_EXCEPTION)
     {
         TRACE("non-c++ exception thrown in SEH handler: %x\n", rec->ExceptionCode);
-        MSVCRT_terminate();
+        terminate();
     }
 
     exc_type = (cxx_exception_type *)rec->ExceptionInformation[2];
@@ -505,7 +505,7 @@ static void check_noexcept( PEXCEPTION_RECORD rec,
             (descr->flags & FUNC_DESCR_NOEXCEPT))
     {
         ERR("noexcept function propagating exception\n");
-        MSVCRT_terminate();
+        terminate();
     }
 }
 

@@ -29,8 +29,8 @@
     __asm__(".data\n" \
             "\t.balign 8\n" \
             "\t.quad " __ASM_NAME(#name "_rtti") "\n" \
-            "\t.globl " __ASM_NAME("MSVCRT_" #name "_vtable") "\n" \
-            __ASM_NAME("MSVCRT_" #name "_vtable") ":\n" \
+            "\t.globl " __ASM_NAME(#name "_vtable") "\n" \
+            __ASM_NAME(#name "_vtable") ":\n" \
             funcs "\n\t.text")
 
 #else
@@ -41,8 +41,8 @@
     __asm__(".data\n" \
             "\t.balign 4\n" \
             "\t.long " __ASM_NAME(#name "_rtti") "\n" \
-            "\t.globl " __ASM_NAME("MSVCRT_" #name "_vtable") "\n" \
-            __ASM_NAME("MSVCRT_" #name "_vtable") ":\n" \
+            "\t.globl " __ASM_NAME(#name "_vtable") "\n" \
+            __ASM_NAME(#name "_vtable") ":\n" \
             funcs "\n\t.text")
 
 #endif /* _WIN64 */
@@ -52,7 +52,7 @@
 
 #define DEFINE_RTTI_DATA(name, off, base_classes_no, cl1, cl2, cl3, cl4, cl5, cl6, cl7, cl8, cl9, mangled_name) \
     static type_info name ## _type_info = { \
-        &MSVCRT_type_info_vtable, \
+        &type_info_vtable, \
         NULL, \
         mangled_name \
     }; \
@@ -98,7 +98,7 @@ const rtti_object_locator name ## _rtti = { \
 
 #define DEFINE_RTTI_DATA(name, off, base_classes_no, cl1, cl2, cl3, cl4, cl5, cl6, cl7, cl8, cl9, mangled_name) \
     static type_info name ## _type_info = { \
-        &MSVCRT_type_info_vtable, \
+        &type_info_vtable, \
         NULL, \
         mangled_name \
     }; \
@@ -268,4 +268,4 @@ extern void *vtbl_wrapper_48;
 
 #endif
 
-exception* __thiscall MSVCRT_exception_ctor(exception*, const char**);
+exception* __thiscall exception_ctor(exception*, const char**);
