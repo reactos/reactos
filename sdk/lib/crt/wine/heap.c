@@ -170,12 +170,12 @@ void* CDECL DECLSPEC_HOTPATCH MSVCRT_operator_new(MSVCRT_size_t size)
     retval = msvcrt_heap_alloc(0, size);
     if(retval)
     {
-      TRACE("(%ld) returning %p\n", size, retval);
+      TRACE("(%Iu) returning %p\n", size, retval);
       return retval;
     }
   } while(_callnewh(size));
 
-  TRACE("(%ld) out of memory\n", size);
+  TRACE("(%Iu) out of memory\n", size);
 #if _MSVCR_VER >= 80
   throw_exception(EXCEPTION_BAD_ALLOC, 0, "bad allocation");
 #endif
@@ -356,7 +356,7 @@ int CDECL _heapset(unsigned int value)
  */
 int CDECL _heapadd(void* mem, MSVCRT_size_t size)
 {
-  TRACE("(%p,%ld) unsupported in Win32\n", mem,size);
+  TRACE("(%p,%Iu) unsupported in Win32\n", mem,size);
   *MSVCRT__errno() = MSVCRT_ENOSYS;
   return -1;
 }
@@ -581,7 +581,7 @@ void CDECL _aligned_free(void *memblock)
 void * CDECL _aligned_offset_malloc(MSVCRT_size_t size, MSVCRT_size_t alignment, MSVCRT_size_t offset)
 {
     void *memblock, *temp, **saved;
-    TRACE("(%lu, %lu, %lu)\n", size, alignment, offset);
+    TRACE("(%Iu, %Iu, %Iu)\n", size, alignment, offset);
 
     /* alignment must be a power of 2 */
     if ((alignment & (alignment - 1)) != 0)
@@ -623,7 +623,7 @@ void * CDECL _aligned_offset_malloc(MSVCRT_size_t size, MSVCRT_size_t alignment,
  */
 void * CDECL _aligned_malloc(MSVCRT_size_t size, MSVCRT_size_t alignment)
 {
-    TRACE("(%lu, %lu)\n", size, alignment);
+    TRACE("(%Iu, %Iu)\n", size, alignment);
     return _aligned_offset_malloc(size, alignment, 0);
 }
 
@@ -635,7 +635,7 @@ void * CDECL _aligned_offset_realloc(void *memblock, MSVCRT_size_t size,
 {
     void * temp, **saved;
     MSVCRT_size_t old_padding, new_padding, old_size;
-    TRACE("(%p, %lu, %lu, %lu)\n", memblock, size, alignment, offset);
+    TRACE("(%p, %Iu, %Iu, %Iu)\n", memblock, size, alignment, offset);
 
     if (!memblock)
         return _aligned_offset_malloc(size, alignment, offset);
@@ -747,7 +747,7 @@ void * CDECL _aligned_offset_realloc(void *memblock, MSVCRT_size_t size,
  */
 void * CDECL _aligned_realloc(void *memblock, MSVCRT_size_t size, MSVCRT_size_t alignment)
 {
-    TRACE("(%p, %lu, %lu)\n", memblock, size, alignment);
+    TRACE("(%p, %Iu, %Iu)\n", memblock, size, alignment);
     return _aligned_offset_realloc(memblock, size, alignment, 0);
 }
 
@@ -756,7 +756,7 @@ void * CDECL _aligned_realloc(void *memblock, MSVCRT_size_t size, MSVCRT_size_t 
  */
 int CDECL MSVCRT_memmove_s(void *dest, MSVCRT_size_t numberOfElements, const void *src, MSVCRT_size_t count)
 {
-    TRACE("(%p %lu %p %lu)\n", dest, numberOfElements, src, count);
+    TRACE("(%p %Iu %p %Iu)\n", dest, numberOfElements, src, count);
 
     if(!count)
         return 0;
@@ -776,7 +776,7 @@ int CDECL MSVCRT_memmove_s(void *dest, MSVCRT_size_t numberOfElements, const voi
 int CDECL wmemmove_s(MSVCRT_wchar_t *dest, MSVCRT_size_t numberOfElements,
         const MSVCRT_wchar_t *src, MSVCRT_size_t count)
 {
-    TRACE("(%p %lu %p %lu)\n", dest, numberOfElements, src, count);
+    TRACE("(%p %Iu %p %Iu)\n", dest, numberOfElements, src, count);
 
     if (!count)
         return 0;
@@ -799,7 +799,7 @@ int CDECL wmemmove_s(MSVCRT_wchar_t *dest, MSVCRT_size_t numberOfElements,
  */
 int CDECL MSVCRT_memcpy_s(void *dest, MSVCRT_size_t numberOfElements, const void *src, MSVCRT_size_t count)
 {
-    TRACE("(%p %lu %p %lu)\n", dest, numberOfElements, src, count);
+    TRACE("(%p %Iu %p %Iu)\n", dest, numberOfElements, src, count);
 
     if(!count)
         return 0;
@@ -827,7 +827,7 @@ int CDECL MSVCRT_memcpy_s(void *dest, MSVCRT_size_t numberOfElements, const void
 int CDECL wmemcpy_s(MSVCRT_wchar_t *dest, MSVCRT_size_t numberOfElements,
         const MSVCRT_wchar_t *src, MSVCRT_size_t count)
 {
-    TRACE("(%p %lu %p %lu)\n", dest, numberOfElements, src, count);
+    TRACE("(%p %Iu %p %Iu)\n", dest, numberOfElements, src, count);
 
     if (!count)
         return 0;
@@ -856,7 +856,7 @@ int CDECL MSVCRT_strncpy_s(char *dest, MSVCRT_size_t numberOfElements,
 {
     MSVCRT_size_t i, end;
 
-    TRACE("(%s %lu %s %lu)\n", dest, numberOfElements, src, count);
+    TRACE("(%p %Iu %s %Iu)\n", dest, numberOfElements, debugstr_a(src), count);
 
     if(!count) {
         if(dest && numberOfElements)
