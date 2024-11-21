@@ -2079,26 +2079,3 @@ size_t CDECL __std_type_info_hash(const type_info140 *ti)
 }
 
 #endif /* _MSVCR_VER >= 140 */
-
-#if _MSVCR_VER >= 100
-
-enum ConcRT_EventType
-{
-    CONCRT_EVENT_GENERIC,
-    CONCRT_EVENT_START,
-    CONCRT_EVENT_END,
-    CONCRT_EVENT_BLOCK,
-    CONCRT_EVENT_UNBLOCK,
-    CONCRT_EVENT_YIELD,
-    CONCRT_EVENT_ATTACH,
-    CONCRT_EVENT_DETACH
-};
-
-/* ?_Trace_ppl_function@Concurrency@@YAXABU_GUID@@EW4ConcRT_EventType@1@@Z */
-/* ?_Trace_ppl_function@Concurrency@@YAXAEBU_GUID@@EW4ConcRT_EventType@1@@Z */
-void __cdecl Concurrency__Trace_ppl_function(const GUID *guid, unsigned char level, enum ConcRT_EventType type)
-{
-    FIXME("(%s %u %i) stub\n", debugstr_guid(guid), level, type);
-}
-
-#endif /* _MSVCR_VER >= 100 */
