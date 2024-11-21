@@ -173,6 +173,7 @@ struct __thread_data {
     void                           *unk10[100];
 #if _MSVCR_VER >= 140
     _invalid_parameter_handler      invalid_parameter_handler;
+    HMODULE                         module;
 #endif
 };
 
