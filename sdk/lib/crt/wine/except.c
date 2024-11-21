@@ -21,6 +21,7 @@
  * FIXME: Incomplete support for nested exceptions/try block cleanup.
  */
 
+#include <float.h>
 #include <stdarg.h>
 #include <stdbool.h>
 
@@ -79,13 +80,13 @@ static const struct
     NTSTATUS status;
     int signal;
 } float_exception_map[] = {
- { EXCEPTION_FLT_DENORMAL_OPERAND, MSVCRT__FPE_DENORMAL },
- { EXCEPTION_FLT_DIVIDE_BY_ZERO, MSVCRT__FPE_ZERODIVIDE },
- { EXCEPTION_FLT_INEXACT_RESULT, MSVCRT__FPE_INEXACT },
- { EXCEPTION_FLT_INVALID_OPERATION, MSVCRT__FPE_INVALID },
- { EXCEPTION_FLT_OVERFLOW, MSVCRT__FPE_OVERFLOW },
- { EXCEPTION_FLT_STACK_CHECK, MSVCRT__FPE_STACKOVERFLOW },
- { EXCEPTION_FLT_UNDERFLOW, MSVCRT__FPE_UNDERFLOW },
+ { EXCEPTION_FLT_DENORMAL_OPERAND, _FPE_DENORMAL },
+ { EXCEPTION_FLT_DIVIDE_BY_ZERO, _FPE_ZERODIVIDE },
+ { EXCEPTION_FLT_INEXACT_RESULT, _FPE_INEXACT },
+ { EXCEPTION_FLT_INVALID_OPERATION, _FPE_INVALID },
+ { EXCEPTION_FLT_OVERFLOW, _FPE_OVERFLOW },
+ { EXCEPTION_FLT_STACK_CHECK, _FPE_STACKOVERFLOW },
+ { EXCEPTION_FLT_UNDERFLOW, _FPE_UNDERFLOW },
 };
 
 static LONG msvcrt_exception_filter(struct _EXCEPTION_POINTERS *except)
@@ -131,7 +132,7 @@ static LONG msvcrt_exception_filter(struct _EXCEPTION_POINTERS *except)
             {
                 EXCEPTION_POINTERS **ep = (EXCEPTION_POINTERS**)MSVCRT___pxcptinfoptrs(), *old_ep;
                 unsigned int i;
-                int float_signal = MSVCRT__FPE_INVALID;
+                int float_signal = _FPE_INVALID;
 
                 sighandlers[MSVCRT_SIGFPE] = MSVCRT_SIG_DFL;
                 for (i = 0; i < ARRAY_SIZE(float_exception_map); i++)
@@ -242,7 +243,7 @@ int CDECL MSVCRT_raise(int sig)
             old_ep = *ep;
             *ep = NULL;
             if (sig == MSVCRT_SIGFPE)
-                ((float_handler)handler)(sig, MSVCRT__FPE_EXPLICITGEN);
+                ((float_handler)handler)(sig, _FPE_EXPLICITGEN);
             else
                 handler(sig);
             *ep = old_ep;

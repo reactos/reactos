@@ -683,18 +683,6 @@ typedef void (__cdecl *MSVCRT___sighandler_t)(int);
 #define MSVCRT_SIG_IGN ((MSVCRT___sighandler_t)1)
 #define MSVCRT_SIG_ERR ((MSVCRT___sighandler_t)-1)
 
-#define MSVCRT__FPE_INVALID            0x81
-#define MSVCRT__FPE_DENORMAL           0x82
-#define MSVCRT__FPE_ZERODIVIDE         0x83
-#define MSVCRT__FPE_OVERFLOW           0x84
-#define MSVCRT__FPE_UNDERFLOW          0x85
-#define MSVCRT__FPE_INEXACT            0x86
-#define MSVCRT__FPE_UNEMULATED         0x87
-#define MSVCRT__FPE_SQRTNEG            0x88
-#define MSVCRT__FPE_STACKOVERFLOW      0x8a
-#define MSVCRT__FPE_STACKUNDERFLOW     0x8b
-#define MSVCRT__FPE_EXPLICITGEN        0x8c
-
 #define MSVCRT__TRUNCATE ((size_t)-1)
 
 #define _MAX__TIME64_T    (((__time64_t)0x00000007 << 32) | 0x93406FFF)
