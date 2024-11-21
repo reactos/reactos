@@ -165,6 +165,7 @@ jobs:
       uses: ilammy/msvc-dev-cmd@v1
       with:
         arch: amd64_arm
+        sdk: 10.0.22621.0   # Windows SDK 10.0.26100.0 dropped support for 32-bit ARM
         toolset: ${{matrix.toolset}}
     - name: Activate VS cmd (arm64)
       if: ${{ matrix.arch == 'arm64' }}
