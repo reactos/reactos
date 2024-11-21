@@ -292,14 +292,6 @@ typedef struct _iobuf MSVCRT_FILE;
 
 extern MSVCRT_FILE MSVCRT__iob[];
 
-struct MSVCRT__exception {
-  int     type;
-  char*   name;
-  double  arg1;
-  double  arg2;
-  double  retval;
-};
-
 typedef struct _complex _Dcomplex;
 
 struct MSVCRT__heapinfo {
