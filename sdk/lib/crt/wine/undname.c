@@ -236,7 +236,7 @@ static char* str_array_get_ref(struct array* cref, unsigned idx)
  * Helper for printf type of command (only %s and %c are implemented) 
  * while dynamically allocating the buffer
  */
-static char* str_printf(struct parsed_symbol* sym, const char* format, ...)
+static char* WINAPIV str_printf(struct parsed_symbol* sym, const char* format, ...)
 {
     va_list      args;
     unsigned int len = 1, i, sz;
