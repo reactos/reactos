@@ -1136,10 +1136,11 @@ MSVCRT__locale_t CDECL get_current_locale_noalloc(MSVCRT__locale_t locale) DECLS
 void CDECL free_locale_noalloc(MSVCRT__locale_t locale) DECLSPEC_HIDDEN;
 MSVCRT_pthreadlocinfo CDECL get_locinfo(void) DECLSPEC_HIDDEN;
 MSVCRT_pthreadmbcinfo CDECL get_mbcinfo(void) DECLSPEC_HIDDEN;
+MSVCRT_pthreadmbcinfo* CDECL get_mbcinfo_ptr(void) DECLSPEC_HIDDEN;
 void __cdecl MSVCRT__free_locale(MSVCRT__locale_t);
+MSVCRT_threadmbcinfo* create_mbcinfo(int, LCID, MSVCRT_threadmbcinfo*) DECLSPEC_HIDDEN;
 void free_locinfo(MSVCRT_pthreadlocinfo) DECLSPEC_HIDDEN;
 void free_mbcinfo(MSVCRT_pthreadmbcinfo) DECLSPEC_HIDDEN;
-int _setmbcp_l(int, LCID, MSVCRT_pthreadmbcinfo) DECLSPEC_HIDDEN;
 int __cdecl __crtLCMapStringA(LCID, DWORD, const char*, int, char*, int, unsigned int, int) DECLSPEC_HIDDEN;
 
 #ifndef __WINE_MSVCRT_TEST
