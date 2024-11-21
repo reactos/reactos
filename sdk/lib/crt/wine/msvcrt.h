@@ -24,6 +24,7 @@
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <wchar.h>
 
 #include "windef.h"
@@ -794,8 +795,6 @@ __int64 __cdecl  MSVCRT__ftelli64(MSVCRT_FILE* file);
 __int64 __cdecl  MSVCRT__ftelli64_nolock(MSVCRT_FILE*);
 void __cdecl     MSVCRT__exit(int);
 void __cdecl     MSVCRT_abort(void);
-__msvcrt_ulong* __cdecl MSVCRT___doserrno(void);
-int* __cdecl     MSVCRT__errno(void);
 char* __cdecl    MSVCRT_getenv(const char*);
 size_t __cdecl MSVCRT__fread_nolock(void*,size_t,size_t,MSVCRT_FILE*);
 size_t __cdecl MSVCRT__fread_nolock_s(void*,size_t,size_t,size_t,MSVCRT_FILE*);
@@ -877,8 +876,6 @@ int     __cdecl MSVCRT__pipe(int *, unsigned int, int);
 wchar_t* __cdecl MSVCRT__wgetenv(const wchar_t*);
 void __cdecl    MSVCRT__wsearchenv(const wchar_t*, const wchar_t*, wchar_t*);
 intptr_t __cdecl MSVCRT__spawnvpe(int, const char*, const char* const*, const char* const*);
-void __cdecl MSVCRT__invalid_parameter(const wchar_t *expr, const wchar_t *func,
-                                       const wchar_t *file, unsigned int line, uintptr_t arg);
 int __cdecl      MSVCRT__toupper_l(int,_locale_t);
 int __cdecl      MSVCRT__tolower_l(int,_locale_t);
 int __cdecl      MSVCRT__towupper_l(wint_t,_locale_t);
@@ -945,10 +942,10 @@ int fpnum_double(struct fpnum*, double*) DECLSPEC_HIDDEN;
  *      #define MSVCRT_CHECK_PMT(x)   ((x) ? TRUE : MSVCRT_INVALID_PMT(#x),FALSE)
  * Until this is done, just keep the same semantics for CHECK_PMT(), but without generating / sending
  * any information
- * NB : MSVCRT_call_invalid_parameter_handler is a wrapper around MSVCRT__invalid_parameter in order
+ * NB : MSVCRT_call_invalid_parameter_handler is a wrapper around _invalid_parameter in order
  * to do the Ansi to Unicode transformation
  */
-#define MSVCRT_INVALID_PMT(x,err)   (*MSVCRT__errno() = (err), MSVCRT__invalid_parameter(NULL, NULL, NULL, 0, 0))
+#define MSVCRT_INVALID_PMT(x,err)   (*_errno() = (err), _invalid_parameter(NULL, NULL, NULL, 0, 0))
 #define MSVCRT_CHECK_PMT_ERR(x,err) ((x) || (MSVCRT_INVALID_PMT( 0, (err) ), FALSE))
 #define MSVCRT_CHECK_PMT(x)         MSVCRT_CHECK_PMT_ERR((x), EINVAL)
 
