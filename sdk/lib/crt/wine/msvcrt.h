@@ -49,8 +49,6 @@ typedef void (__cdecl *MSVCRT_security_error_handler)(int, void *);
 
 typedef struct {ULONG x80[3];} MSVCRT__LDOUBLE; /* Intel 80 bit FP format has sizeof() 12 */
 
-#define MSVCRT_tm tm
-
 typedef struct __lc_time_data {
     union {
         const char *str[43];
@@ -150,7 +148,7 @@ struct __thread_data {
     void                           *unk2[2];
     char                           *asctime_buffer;     /* buffer for asctime */
     wchar_t                        *wasctime_buffer;    /* buffer for wasctime */
-    struct MSVCRT_tm               *time_buffer;        /* buffer for localtime/gmtime */
+    struct tm                      *time_buffer;        /* buffer for localtime/gmtime */
     char                           *efcvt_buffer;       /* buffer for ecvt/fcvt */
     int                             unk3[2];
     void                           *unk4[3];
