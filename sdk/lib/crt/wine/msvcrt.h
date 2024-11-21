@@ -153,7 +153,7 @@ typedef struct MSVCRT_threadlocaleinfostruct {
     int *lconv_intl_refcount;
     int *lconv_num_refcount;
     int *lconv_mon_refcount;
-    struct MSVCRT_lconv *lconv;
+    struct lconv *lconv;
     int *ctype1_refcount;
     unsigned short *ctype1;
 #if _MSVCR_VER < 140
@@ -386,37 +386,6 @@ extern unsigned int __cdecl _control87(unsigned int, unsigned int);
 typedef struct _iobuf MSVCRT_FILE;
 
 extern MSVCRT_FILE MSVCRT__iob[];
-
-struct MSVCRT_lconv {
-    char* decimal_point;
-    char* thousands_sep;
-    char* grouping;
-    char* int_curr_symbol;
-    char* currency_symbol;
-    char* mon_decimal_point;
-    char* mon_thousands_sep;
-    char* mon_grouping;
-    char* positive_sign;
-    char* negative_sign;
-    char int_frac_digits;
-    char frac_digits;
-    char p_cs_precedes;
-    char p_sep_by_space;
-    char n_cs_precedes;
-    char n_sep_by_space;
-    char p_sign_posn;
-    char n_sign_posn;
-#if _MSVCR_VER >= 100
-    MSVCRT_wchar_t* _W_decimal_point;
-    MSVCRT_wchar_t* _W_thousands_sep;
-    MSVCRT_wchar_t* _W_int_curr_symbol;
-    MSVCRT_wchar_t* _W_currency_symbol;
-    MSVCRT_wchar_t* _W_mon_decimal_point;
-    MSVCRT_wchar_t* _W_mon_thousands_sep;
-    MSVCRT_wchar_t* _W_positive_sign;
-    MSVCRT_wchar_t* _W_negative_sign;
-#endif
-};
 
 struct MSVCRT__exception {
   int     type;
