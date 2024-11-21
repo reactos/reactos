@@ -989,21 +989,6 @@ int create_positional_ctx_w(void*, const wchar_t*, __ms_va_list) DECLSPEC_HIDDEN
 printf_arg arg_clbk_valist(void*, int, int, __ms_va_list*) DECLSPEC_HIDDEN;
 printf_arg arg_clbk_positional(void*, int, int, __ms_va_list*) DECLSPEC_HIDDEN;
 
-#define MSVCRT_FLT_MIN 1.175494351e-38F
-#define MSVCRT_DBL_MIN 2.2250738585072014e-308
-#define MSVCRT__OVERFLOW  3
-#define MSVCRT__UNDERFLOW 4
-
-typedef struct
-{
-    float f;
-} MSVCRT__CRT_FLOAT;
-
-typedef struct
-{
-    double x;
-} MSVCRT__CRT_DOUBLE;
-
 extern char* __cdecl __unDName(char *,const char*,int,malloc_func_t,free_func_t,unsigned short int);
 
 /* __unDName/__unDNameEx flags */
