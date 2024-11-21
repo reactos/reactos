@@ -681,10 +681,7 @@ int __cdecl      MSVCRT__towlower_l(wint_t,_locale_t);
 int __cdecl      MSVCRT_strcmp(const char*, const char*);
 char* __cdecl MSVCRT__itoa(int, char*, int);
 
-double __cdecl MSVCRT_floor( double x );
 float  __cdecl MSVCRT_floorf( float x );
-double __cdecl MSVCRT_frexp( double x, int *exp );
-double __cdecl MSVCRT_log10( double x );
 double __cdecl MSVCRT_sqrt( double x );
 float  __cdecl MSVCRT_sqrtf( float x );
 
