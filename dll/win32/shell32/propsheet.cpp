@@ -189,7 +189,7 @@ SH_CreatePropertySheetPageEx(WORD wDialogId, DLGPROC pfnDlgProc, LPARAM lParam,
                              LPCWSTR pwszTitle, LPFNPSPCALLBACK Callback)
 {
     PROPSHEETPAGEW Page = { sizeof(Page), PSP_DEFAULT, shell32_hInstance };
-    Page.pszTemplate = MAKEINTRESOURCE(wDialogId);
+    Page.pszTemplate = MAKEINTRESOURCEW(wDialogId);
     Page.pfnDlgProc = pfnDlgProc;
     Page.lParam = lParam;
     Page.pszTitle = pwszTitle;
