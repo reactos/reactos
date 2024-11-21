@@ -109,7 +109,6 @@ unsigned int CDECL __CxxQueryExceptionSize(void)
  *		_setjmp (MSVCRT.@)
  */
 __ASM_GLOBAL_FUNC(MSVCRT__setjmp,
-                  "mov r1, #0\n\t"  /* frame */
                   "b " __ASM_NAME("__wine_setjmpex"));
 
 /*******************************************************************
