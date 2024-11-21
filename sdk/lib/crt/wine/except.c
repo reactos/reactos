@@ -31,7 +31,9 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winternl.h"
+#ifdef __REACTOS__ // FIXME: Clean up wine headers!
 #include "wine/exception.h"
+#endif // __REACTOS__
 #include "msvcrt.h"
 #include "excpt.h"
 #include "wincon.h"
