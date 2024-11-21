@@ -891,7 +891,6 @@ int fpnum_double(struct fpnum*, double*) DECLSPEC_HIDDEN;
 #define MSVCRT_CHECK_PMT_ERR(x,err) ((x) || (MSVCRT_INVALID_PMT( 0, (err) ), FALSE))
 #define MSVCRT_CHECK_PMT(x)         MSVCRT_CHECK_PMT_ERR((x), EINVAL)
 
-#define MSVCRT__ARGMAX 100
 typedef int (*puts_clbk_a)(void*, int, const char*);
 typedef int (*puts_clbk_w)(void*, int, const wchar_t*);
 typedef union _printf_arg
