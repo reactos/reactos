@@ -4862,9 +4862,9 @@ MmPurgeSegment(
         /* We must calculate the length for ourselves */
         /* FIXME: All of this is suboptimal */
         ULONG ElemCount = RtlNumberGenericTableElements(&Segment->PageTable);
-        /* No page. Nothing to purge */
         if (!ElemCount)
         {
+            /* No page. Nothing to purge */
             MmUnlockSectionSegment(Segment);
             MmDereferenceSegment(Segment);
             return TRUE;
@@ -4873,6 +4873,9 @@ MmPurgeSegment(
         PCACHE_SECTION_PAGE_TABLE PageTable = RtlGetElementGenericTable(&Segment->PageTable, ElemCount - 1);
         PurgeEnd.QuadPart = PageTable->FileOffset.QuadPart + _countof(PageTable->PageEntries) * PAGE_SIZE;
     }
+
+    /* Find byte offset of the page to start */
+    PurgeStart.QuadPart = PAGE_ROUND_DOWN(PurgeStart.QuadPart);
 
     while (PurgeStart.QuadPart < PurgeEnd.QuadPart)
     {
