@@ -659,7 +659,6 @@ int            __cdecl _ismbblead_l(unsigned int, _locale_t);
 int            __cdecl _ismbclegal(unsigned int c);
 int            __cdecl _ismbstrail(const unsigned char* start, const unsigned char* str);
 void __cdecl     MSVCRT__searchenv(const char*,const char*,char*);
-int __cdecl      MSVCRT__getdrive(void);
 char* __cdecl    _strset(char*,int);
 int __cdecl      _ungetch(int);
 int __cdecl      _cputs(const char*);
