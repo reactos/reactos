@@ -667,22 +667,9 @@ struct MSVCRT__stat64 {
 
 #define MSVCRT_CLOCKS_PER_SEC 1000
 
-/* signals */
-#define MSVCRT_SIGINT   2
-#define MSVCRT_SIGILL   4
-#define MSVCRT_SIGFPE   8
-#define MSVCRT_SIGSEGV  11
-#define MSVCRT_SIGTERM  15
-#define MSVCRT_SIGBREAK 21
-#define MSVCRT_SIGABRT  22
-#define MSVCRT_NSIG     (MSVCRT_SIGABRT + 1)
-
-typedef void (__cdecl *MSVCRT___sighandler_t)(int);
-
-#define MSVCRT_SIG_DFL ((MSVCRT___sighandler_t)0)
-#define MSVCRT_SIG_IGN ((MSVCRT___sighandler_t)1)
-#define MSVCRT_SIG_ERR ((MSVCRT___sighandler_t)-1)
-
+#ifdef __REACTOS__
+typedef void (__cdecl *__sighandler_t)(int);
+#endif
 #define MSVCRT__TRUNCATE ((size_t)-1)
 
 #define _MAX__TIME64_T    (((__time64_t)0x00000007 << 32) | 0x93406FFF)
