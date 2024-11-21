@@ -19,9 +19,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include <stdarg.h>
 
 #include "windef.h"
@@ -2075,7 +2072,7 @@ int CDECL MSVCRT_type_info_compare(const type_info140 *l, const type_info140 *r)
     int ret;
 
     if (l == r) ret = 0;
-    else ret = MSVCRT_strcmp(l->mangled + 1, r->mangled + 1);
+    else ret = strcmp(l->mangled + 1, r->mangled + 1);
     TRACE("(%p %p) returning %d\n", l, r, ret);
     return ret;
 }

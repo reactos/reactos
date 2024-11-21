@@ -25,9 +25,6 @@
  * www.thecodeproject.com.
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #ifdef __i386__
 
 #include <stdarg.h>

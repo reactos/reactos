@@ -21,9 +21,6 @@
  * FIXME: Incomplete support for nested exceptions/try block cleanup.
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include <stdarg.h>
 
 #include "ntstatus.h"
