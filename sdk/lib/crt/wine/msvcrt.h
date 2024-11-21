@@ -456,18 +456,6 @@ struct MSVCRT__wfinddata64_t {
   wchar_t name[260];
 };
 
-struct MSVCRT___utimbuf32
-{
-    __time32_t actime;
-    __time32_t modtime;
-};
-
-struct MSVCRT___utimbuf64
-{
-    __time64_t actime;
-    __time64_t modtime;
-};
-
 struct MSVCRT__stat32 {
   _dev_t st_dev;
   _ino_t st_ino;
