@@ -219,7 +219,7 @@ typedef struct __thread_data thread_data_t;
 
 extern thread_data_t *CDECL msvcrt_get_thread_data(void) DECLSPEC_HIDDEN;
 
-LCID MSVCRT_locale_to_LCID(const char*, unsigned short*, BOOL*) DECLSPEC_HIDDEN;
+LCID locale_to_LCID(const char*, unsigned short*, BOOL*) DECLSPEC_HIDDEN;
 extern _locale_t MSVCRT_locale DECLSPEC_HIDDEN;
 extern __lc_time_data cloc_time_data DECLSPEC_HIDDEN;
 extern unsigned int MSVCRT___lc_codepage;
@@ -931,7 +931,6 @@ _locale_t CDECL get_current_locale_noalloc(_locale_t locale) DECLSPEC_HIDDEN;
 void CDECL free_locale_noalloc(_locale_t locale) DECLSPEC_HIDDEN;
 pthreadlocinfo CDECL get_locinfo(void) DECLSPEC_HIDDEN;
 pthreadmbcinfo CDECL get_mbcinfo(void) DECLSPEC_HIDDEN;
-void __cdecl MSVCRT__free_locale(_locale_t);
 threadmbcinfo* create_mbcinfo(int, LCID, threadmbcinfo*) DECLSPEC_HIDDEN;
 void free_locinfo(pthreadlocinfo) DECLSPEC_HIDDEN;
 void free_mbcinfo(pthreadmbcinfo) DECLSPEC_HIDDEN;
