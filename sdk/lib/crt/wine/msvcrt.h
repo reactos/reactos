@@ -30,6 +30,7 @@
 
 #include "windef.h"
 #include "winbase.h"
+#undef strncpy
 
 #ifdef __REACTOS__
 typedef long __msvcrt_long;
@@ -609,7 +610,6 @@ typedef void (__cdecl *__sighandler_t)(int);
 
 #define MSVCRT__NLSCMPERROR ((unsigned int)0x7fffffff)
 
-int __cdecl      MSVCRT_atoi(const char *str);
 int __cdecl      MSVCRT_iswalpha(wint_t);
 int __cdecl      MSVCRT_iswspace(wint_t);
 int __cdecl      MSVCRT_iswdigit(wint_t);
@@ -672,8 +672,6 @@ size_t __cdecl MSVCRT_wcstombs(char*,const wchar_t*,size_t);
 size_t __cdecl MSVCRT__wcstombs_l(char*, const wchar_t*, size_t, _locale_t);
 void __cdecl     MSVCRT__searchenv(const char*,const char*,char*);
 int __cdecl      MSVCRT__getdrive(void);
-char* __cdecl    MSVCRT__strdup(const char*);
-char* __cdecl    MSVCRT__strnset(char*,int,size_t);
 char* __cdecl    _strset(char*,int);
 int __cdecl      _ungetch(int);
 int __cdecl      _cputs(const char*);
@@ -682,7 +680,6 @@ int WINAPIV      _cwprintf(const wchar_t*,...);
 char*** __cdecl  MSVCRT___p__environ(void);
 int*    __cdecl  __p___mb_cur_max(void);
 wchar_t* __cdecl MSVCRT__wcsdup(const wchar_t*);
-size_t __cdecl MSVCRT_strnlen(const char *,size_t);
 size_t __cdecl MSVCRT_wcsnlen(const wchar_t*,size_t);
 wchar_t*** __cdecl MSVCRT___p__wenviron(void);
 INT     __cdecl MSVCRT_wctomb(char*,wchar_t);
@@ -697,17 +694,7 @@ int     __cdecl MSVCRT__pipe(int *, unsigned int, int);
 void __cdecl    MSVCRT__wsearchenv(const wchar_t*, const wchar_t*, wchar_t*);
 int __cdecl      MSVCRT__towupper_l(wint_t,_locale_t);
 int __cdecl      MSVCRT__towlower_l(wint_t,_locale_t);
-int __cdecl      MSVCRT__stricmp(const char*, const char*);
-int __cdecl      MSVCRT__strnicmp(const char*, const char*, size_t);
-int __cdecl      MSVCRT__strnicoll_l(const char*, const char*, size_t, _locale_t);
-int __cdecl      MSVCRT__strncoll_l(const char*, const char*, size_t, _locale_t);
-char* __cdecl    MSVCRT_strncat(char*,const char *,size_t);
-int __cdecl      MSVCRT_strncmp(const char*, const char*, size_t);
 int __cdecl      MSVCRT_strcmp(const char*, const char*);
-char* __cdecl    MSVCRT_strrchr(const char *, int);
-char* __cdecl    MSVCRT_strstr(const char*, const char*);
-__msvcrt_long __cdecl MSVCRT_strtol(const char*, char**, int);
-char* __cdecl MSVCRT_strtok_s(char*, const char*, char**);
 char* __cdecl MSVCRT__itoa(int, char*, int);
 int __cdecl MSVCRT_wcsncmp(const wchar_t*, const wchar_t*, size_t);
 int __cdecl MSVCRT__wcsnicmp(const wchar_t*, const wchar_t*, size_t);
