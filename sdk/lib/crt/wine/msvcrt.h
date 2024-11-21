@@ -41,7 +41,6 @@ typedef void (__cdecl *unexpected_function)(void);
 typedef void (__cdecl *_se_translator_function)(unsigned int code, struct _EXCEPTION_POINTERS *info);
 void __cdecl terminate(void);
 
-typedef int (__cdecl *MSVCRT__onexit_t)(void);
 typedef void (__cdecl *MSVCRT_invalid_parameter_handler)(const wchar_t*, const wchar_t*, const wchar_t*, unsigned, uintptr_t);
 typedef void (__cdecl *MSVCRT_purecall_handler)(void);
 typedef void (__cdecl *MSVCRT_security_error_handler)(int, void *);
@@ -97,13 +96,6 @@ typedef struct threadmbcinfostruct {
     unsigned char mbctype[257];
     unsigned char mbcasemap[256];
 } threadmbcinfo;
-
-typedef struct MSVCRT__onexit_table_t
-{
-    MSVCRT__onexit_t *_first;
-    MSVCRT__onexit_t *_last;
-    MSVCRT__onexit_t *_end;
-} MSVCRT__onexit_table_t;
 
 typedef struct _frame_info
 {
