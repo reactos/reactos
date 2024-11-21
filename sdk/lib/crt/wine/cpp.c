@@ -555,57 +555,6 @@ void __thiscall bad_alloc_dtor(bad_alloc * _this)
 
 #if _MSVCR_VER >= 100
 
-typedef struct {
-    exception e;
-    HRESULT hr;
-} scheduler_resource_allocation_error;
-extern const vtable_ptr scheduler_resource_allocation_error_vtable;
-
-/* ??0scheduler_resource_allocation_error@Concurrency@@QAE@PBDJ@Z */
-/* ??0scheduler_resource_allocation_error@Concurrency@@QEAA@PEBDJ@Z */
-DEFINE_THISCALL_WRAPPER(scheduler_resource_allocation_error_ctor_name, 12)
-scheduler_resource_allocation_error* __thiscall scheduler_resource_allocation_error_ctor_name(
-        scheduler_resource_allocation_error *this, const char *name, HRESULT hr)
-{
-    TRACE("(%p %s %x)\n", this, wine_dbgstr_a(name), hr);
-    __exception_ctor(&this->e, name, &scheduler_resource_allocation_error_vtable);
-    this->hr = hr;
-    return this;
-}
-
-/* ??0scheduler_resource_allocation_error@Concurrency@@QAE@J@Z */
-/* ??0scheduler_resource_allocation_error@Concurrency@@QEAA@J@Z */
-DEFINE_THISCALL_WRAPPER(scheduler_resource_allocation_error_ctor, 8)
-scheduler_resource_allocation_error* __thiscall scheduler_resource_allocation_error_ctor(
-        scheduler_resource_allocation_error *this, HRESULT hr)
-{
-    return scheduler_resource_allocation_error_ctor_name(this, NULL, hr);
-}
-
-DEFINE_THISCALL_WRAPPER(scheduler_resource_allocation_error_copy_ctor,8)
-scheduler_resource_allocation_error* __thiscall scheduler_resource_allocation_error_copy_ctor(
-        scheduler_resource_allocation_error *this,
-        const scheduler_resource_allocation_error *rhs)
-{
-    TRACE("(%p,%p)\n", this, rhs);
-
-    if (!rhs->e.do_free)
-        memcpy(this, rhs, sizeof(*this));
-    else
-        scheduler_resource_allocation_error_ctor_name(this, rhs->e.name, rhs->hr);
-    return this;
-}
-
-/* ?get_error_code@scheduler_resource_allocation_error@Concurrency@@QBEJXZ */
-/* ?get_error_code@scheduler_resource_allocation_error@Concurrency@@QEBAJXZ */
-DEFINE_THISCALL_WRAPPER(scheduler_resource_allocation_error_get_error_code, 4)
-HRESULT __thiscall scheduler_resource_allocation_error_get_error_code(
-        const scheduler_resource_allocation_error *this)
-{
-    TRACE("(%p)\n", this);
-    return this->hr;
-}
-
 typedef exception invalid_scheduler_policy_key;
 extern const vtable_ptr invalid_scheduler_policy_key_vtable;
 
@@ -778,9 +727,6 @@ __ASM_VTABLE(__non_rtti_object,
         VTABLE_ADD_FUNC(__non_rtti_object_vector_dtor)
         VTABLE_ADD_FUNC(exception_what));
 #if _MSVCR_VER >= 100
-__ASM_VTABLE(scheduler_resource_allocation_error,
-        VTABLE_ADD_FUNC(exception_vector_dtor)
-        VTABLE_ADD_FUNC(exception_what));
 __ASM_VTABLE(invalid_scheduler_policy_key,
         VTABLE_ADD_FUNC(exception_vector_dtor)
         VTABLE_ADD_FUNC(exception_what));
@@ -812,8 +758,6 @@ DEFINE_RTTI_DATA1( bad_cast, 0, &exception_rtti_base_descriptor, ".?AVbad_cast@@
 DEFINE_RTTI_DATA2( __non_rtti_object, 0, &bad_typeid_rtti_base_descriptor, &exception_rtti_base_descriptor, ".?AV__non_rtti_object@@" )
 #endif
 #if _MSVCR_VER >= 100
-DEFINE_RTTI_DATA1(scheduler_resource_allocation_error, 0, &exception_rtti_base_descriptor,
-        ".?AVscheduler_resource_allocation_error@Concurrency@@")
 DEFINE_RTTI_DATA1(invalid_scheduler_policy_key, 0, &exception_rtti_base_descriptor,
         ".?AVinvalid_scheduler_policy_key@Concurrency@@" )
 DEFINE_RTTI_DATA1(invalid_scheduler_policy_value, 0, &exception_rtti_base_descriptor,
@@ -835,7 +779,6 @@ DEFINE_CXX_DATA2( __non_rtti_object, &bad_typeid_cxx_type_info,
 DEFINE_CXX_DATA1( bad_alloc, &exception_cxx_type_info, bad_alloc_dtor )
 #endif
 #if _MSVCR_VER >= 100
-DEFINE_CXX_DATA1(scheduler_resource_allocation_error, &exception_cxx_type_info, exception_dtor)
 DEFINE_CXX_DATA1(invalid_scheduler_policy_key, &exception_cxx_type_info, exception_dtor)
 DEFINE_CXX_DATA1(invalid_scheduler_policy_value, &exception_cxx_type_info, exception_dtor)
 DEFINE_CXX_DATA1(invalid_scheduler_policy_thread_specification, &exception_cxx_type_info, exception_dtor)
@@ -856,7 +799,6 @@ void msvcrt_init_exception(void *base)
     init_bad_cast_rtti(base);
     init___non_rtti_object_rtti(base);
 #if _MSVCR_VER >= 100
-    init_scheduler_resource_allocation_error_rtti(base);
     init_invalid_scheduler_policy_key_rtti(base);
     init_invalid_scheduler_policy_value_rtti(base);
     init_invalid_scheduler_policy_thread_specification_rtti(base);
@@ -872,7 +814,6 @@ void msvcrt_init_exception(void *base)
     init_bad_alloc_cxx(base);
 #endif
 #if _MSVCR_VER >= 100
-    init_scheduler_resource_allocation_error_cxx(base);
     init_invalid_scheduler_policy_key_cxx(base);
     init_invalid_scheduler_policy_value_cxx(base);
     init_invalid_scheduler_policy_thread_specification_cxx(base);
@@ -892,11 +833,6 @@ void throw_exception(exception_type et, HRESULT hr, const char *str)
         _CxxThrowException(&e, &bad_alloc_exception_type);
     }
 #if _MSVCR_VER >= 100
-    case EXCEPTION_SCHEDULER_RESOURCE_ALLOCATION_ERROR: {
-        scheduler_resource_allocation_error e;
-        scheduler_resource_allocation_error_ctor_name(&e, str, hr);
-        _CxxThrowException(&e.e, &scheduler_resource_allocation_error_exception_type);
-    }
     case EXCEPTION_INVALID_SCHEDULER_POLICY_KEY: {
         invalid_scheduler_policy_key e;
         invalid_scheduler_policy_key_ctor_str(&e, str);
