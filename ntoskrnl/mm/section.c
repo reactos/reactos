@@ -5093,8 +5093,8 @@ MmFlushSegment(
         FlushEnd.QuadPart = PageTable->FileOffset.QuadPart + _countof(PageTable->PageEntries) * PAGE_SIZE;
     }
 
-    FlushStart.QuadPart >>= PAGE_SHIFT;
-    FlushStart.QuadPart <<= PAGE_SHIFT;
+    /* Find byte offset of the page to start */
+    FlushStart.QuadPart = PAGE_ROUND_DOWN(FlushStart.QuadPart);
 
     while (FlushStart.QuadPart < FlushEnd.QuadPart)
     {
