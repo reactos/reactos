@@ -35,17 +35,6 @@ typedef unsigned long __msvcrt_ulong;
 #define DBL80_MAX_10_EXP 4932
 #define DBL80_MIN_10_EXP -4951
 
-typedef unsigned char  MSVCRT_bool;
-typedef wint_t         MSVCRT_wint_t;
-typedef __msvcrt_long  MSVCRT_long;
-typedef __msvcrt_ulong MSVCRT_ulong;
-typedef __int64        MSVCRT_longlong;
-typedef size_t         MSVCRT_size_t;
-typedef intptr_t       MSVCRT_intptr_t;
-typedef __time32_t     MSVCRT___time32_t;
-typedef __time64_t     MSVCRT___time64_t;
-typedef mbstate_t      MSVCRT_mbstate_t;
-
 typedef void (__cdecl *MSVCRT_terminate_handler)(void);
 typedef void (__cdecl *MSVCRT_terminate_function)(void);
 typedef void (__cdecl *MSVCRT_unexpected_handler)(void);
@@ -148,7 +137,7 @@ struct __thread_data {
     DWORD                           tid;
     HANDLE                          handle;
     int                             thread_errno;
-    MSVCRT_ulong                    thread_doserrno;
+    __msvcrt_ulong                  thread_doserrno;
     int                             unk1;
     unsigned int                    random_seed;        /* seed for rand() */
     char                           *strtok_next;        /* next ptr for strtok() */
@@ -239,10 +228,10 @@ extern unsigned int MSVCRT__commode;
  */
 int __cdecl MSVCRT__set_new_mode(int mode);
 
-void* __cdecl MSVCRT_operator_new(MSVCRT_size_t);
+void* __cdecl MSVCRT_operator_new(size_t);
 void __cdecl MSVCRT_operator_delete(void*);
 
-typedef void* (__cdecl *malloc_func_t)(MSVCRT_size_t);
+typedef void* (__cdecl *malloc_func_t)(size_t);
 typedef void  (__cdecl *free_func_t)(void*);
 
 /* Setup and teardown multi threaded locks */
@@ -325,7 +314,7 @@ typedef struct _complex _Dcomplex;
 
 struct MSVCRT__heapinfo {
   int*           _pentry;
-  MSVCRT_size_t  _size;
+  size_t         _size;
   int            _useflag;
 };
 
@@ -416,143 +405,143 @@ struct MSVCRT___JUMP_BUFFER
 #endif /* __i386__ */
 
 struct MSVCRT__finddata32_t {
-  unsigned int      attrib;
-  MSVCRT___time32_t time_create;
-  MSVCRT___time32_t time_access;
-  MSVCRT___time32_t time_write;
-  _fsize_t          size;
-  char              name[260];
+  unsigned int attrib;
+  __time32_t time_create;
+  __time32_t time_access;
+  __time32_t time_write;
+  _fsize_t size;
+  char name[260];
 };
 
 struct MSVCRT__finddata32i64_t {
-  unsigned int      attrib;
-  MSVCRT___time32_t time_create;
-  MSVCRT___time32_t time_access;
-  MSVCRT___time32_t time_write;
+  unsigned int attrib;
+  __time32_t time_create;
+  __time32_t time_access;
+  __time32_t time_write;
   __int64 DECLSPEC_ALIGN(8) size;
-  char              name[260];
+  char name[260];
 };
 
 struct MSVCRT__finddata64i32_t {
-  unsigned int      attrib;
-  MSVCRT___time64_t time_create;
-  MSVCRT___time64_t time_access;
-  MSVCRT___time64_t time_write;
-  _fsize_t          size;
-  char              name[260];
+  unsigned int attrib;
+  __time64_t time_create;
+  __time64_t time_access;
+  __time64_t time_write;
+  _fsize_t size;
+  char name[260];
 };
 
 struct MSVCRT__finddata64_t {
-  unsigned int      attrib;
-  MSVCRT___time64_t time_create;
-  MSVCRT___time64_t time_access;
-  MSVCRT___time64_t time_write;
+  unsigned int attrib;
+  __time64_t time_create;
+  __time64_t time_access;
+  __time64_t time_write;
   __int64 DECLSPEC_ALIGN(8) size;
   char              name[260];
 };
 
 struct MSVCRT__wfinddata32_t {
-  unsigned int      attrib;
-  MSVCRT___time32_t time_create;
-  MSVCRT___time32_t time_access;
-  MSVCRT___time32_t time_write;
-  _fsize_t          size;
-  wchar_t    name[260];
+  unsigned int attrib;
+  __time32_t time_create;
+  __time32_t time_access;
+  __time32_t time_write;
+  _fsize_t size;
+  wchar_t name[260];
 };
 
 struct MSVCRT__wfinddata32i64_t {
-  unsigned int      attrib;
-  MSVCRT___time32_t time_create;
-  MSVCRT___time32_t time_access;
-  MSVCRT___time32_t time_write;
+  unsigned int attrib;
+  __time32_t time_create;
+  __time32_t time_access;
+  __time32_t time_write;
   __int64 DECLSPEC_ALIGN(8) size;
-  wchar_t    name[260];
+  wchar_t name[260];
 };
 
 struct MSVCRT__wfinddata64i32_t {
-  unsigned int      attrib;
-  MSVCRT___time64_t time_create;
-  MSVCRT___time64_t time_access;
-  MSVCRT___time64_t time_write;
-  _fsize_t          size;
-  wchar_t    name[260];
+  unsigned int attrib;
+  __time64_t time_create;
+  __time64_t time_access;
+  __time64_t time_write;
+  _fsize_t size;
+  wchar_t name[260];
 };
 
 struct MSVCRT__wfinddata64_t {
-  unsigned int      attrib;
-  MSVCRT___time64_t time_create;
-  MSVCRT___time64_t time_access;
-  MSVCRT___time64_t time_write;
+  unsigned int attrib;
+  __time64_t time_create;
+  __time64_t time_access;
+  __time64_t time_write;
   __int64 DECLSPEC_ALIGN(8) size;
-  wchar_t    name[260];
+  wchar_t name[260];
 };
 
 struct MSVCRT___utimbuf32
 {
-    MSVCRT___time32_t actime;
-    MSVCRT___time32_t modtime;
+    __time32_t actime;
+    __time32_t modtime;
 };
 
 struct MSVCRT___utimbuf64
 {
-    MSVCRT___time64_t actime;
-    MSVCRT___time64_t modtime;
+    __time64_t actime;
+    __time64_t modtime;
 };
 
 struct MSVCRT__stat32 {
-  _dev_t            st_dev;
-  _ino_t            st_ino;
-  unsigned short    st_mode;
-  short             st_nlink;
-  short             st_uid;
-  short             st_gid;
-  _dev_t            st_rdev;
-  _off_t            st_size;
-  MSVCRT___time32_t st_atime;
-  MSVCRT___time32_t st_mtime;
-  MSVCRT___time32_t st_ctime;
+  _dev_t st_dev;
+  _ino_t st_ino;
+  unsigned short st_mode;
+  short st_nlink;
+  short st_uid;
+  short st_gid;
+  _dev_t st_rdev;
+  _off_t st_size;
+  __time32_t st_atime;
+  __time32_t st_mtime;
+  __time32_t st_ctime;
 };
 
 struct MSVCRT__stat32i64 {
-  _dev_t            st_dev;
-  _ino_t            st_ino;
-  unsigned short    st_mode;
-  short             st_nlink;
-  short             st_uid;
-  short             st_gid;
-  _dev_t            st_rdev;
+  _dev_t st_dev;
+  _ino_t st_ino;
+  unsigned short st_mode;
+  short st_nlink;
+  short st_uid;
+  short st_gid;
+  _dev_t st_rdev;
   __int64 DECLSPEC_ALIGN(8) st_size;
-  MSVCRT___time32_t st_atime;
-  MSVCRT___time32_t st_mtime;
-  MSVCRT___time32_t st_ctime;
+  __time32_t st_atime;
+  __time32_t st_mtime;
+  __time32_t st_ctime;
 };
 
 struct MSVCRT__stat64i32 {
-  _dev_t            st_dev;
-  _ino_t            st_ino;
-  unsigned short    st_mode;
-  short             st_nlink;
-  short             st_uid;
-  short             st_gid;
-  _dev_t            st_rdev;
-  _off_t            st_size;
-  MSVCRT___time64_t st_atime;
-  MSVCRT___time64_t st_mtime;
-  MSVCRT___time64_t st_ctime;
+  _dev_t st_dev;
+  _ino_t st_ino;
+  unsigned short st_mode;
+  short st_nlink;
+  short st_uid;
+  short st_gid;
+  _dev_t st_rdev;
+  _off_t st_size;
+  __time64_t st_atime;
+  __time64_t st_mtime;
+  __time64_t st_ctime;
 };
 
 struct MSVCRT__stat64 {
-  _dev_t            st_dev;
-  _ino_t            st_ino;
-  unsigned short    st_mode;
-  short             st_nlink;
-  short             st_uid;
-  short             st_gid;
-  _dev_t            st_rdev;
+  _dev_t st_dev;
+  _ino_t st_ino;
+  unsigned short st_mode;
+  short st_nlink;
+  short st_uid;
+  short st_gid;
+  _dev_t st_rdev;
   __int64 DECLSPEC_ALIGN(8) st_size;
-  MSVCRT___time64_t st_atime;
-  MSVCRT___time64_t st_mtime;
-  MSVCRT___time64_t st_ctime;
+  __time64_t st_atime;
+  __time64_t st_mtime;
+  __time64_t st_ctime;
 };
 
 #ifdef _WIN64
@@ -571,7 +560,7 @@ struct MSVCRT__stat64 {
 #define MSVCRT__stati64        MSVCRT__stat32i64
 #endif
 
-#define MSVCRT_WEOF (MSVCRT_wint_t)(0xFFFF)
+#define MSVCRT_WEOF (wint_t)(0xFFFF)
 #define MSVCRT_EOF       (-1)
 #define MSVCRT_TMP_MAX   0x7fff
 #define MSVCRT_TMP_MAX_S 0x7fffffff
@@ -828,9 +817,9 @@ typedef void (__cdecl *MSVCRT___sighandler_t)(int);
 #define MSVCRT__FPE_STACKUNDERFLOW     0x8b
 #define MSVCRT__FPE_EXPLICITGEN        0x8c
 
-#define MSVCRT__TRUNCATE ((MSVCRT_size_t)-1)
+#define MSVCRT__TRUNCATE ((size_t)-1)
 
-#define _MAX__TIME64_T    (((MSVCRT___time64_t)0x00000007 << 32) | 0x93406FFF)
+#define _MAX__TIME64_T    (((__time64_t)0x00000007 << 32) | 0x93406FFF)
 
 /* _set_abort_behavior codes */
 #define MSVCRT__WRITE_ABORT_MSG    1
@@ -842,17 +831,17 @@ typedef void (__cdecl *MSVCRT___sighandler_t)(int);
 #define MSVCRT__NLSCMPERROR ((unsigned int)0x7fffffff)
 
 void  __cdecl    MSVCRT_free(void*);
-void* __cdecl    MSVCRT_malloc(MSVCRT_size_t);
-void* __cdecl    MSVCRT_calloc(MSVCRT_size_t,MSVCRT_size_t);
-void* __cdecl    MSVCRT_realloc(void*,MSVCRT_size_t);
+void* __cdecl    MSVCRT_malloc(size_t);
+void* __cdecl    MSVCRT_calloc(size_t,size_t);
+void* __cdecl    MSVCRT_realloc(void*,size_t);
 
 int __cdecl      MSVCRT_atoi(const char *str);
 int __cdecl      MSVCRT_isalpha(int c);
 int __cdecl      MSVCRT_isdigit(int c);
 int __cdecl      MSVCRT_isspace(int c);
-int __cdecl      MSVCRT_iswalpha(MSVCRT_wint_t);
-int __cdecl      MSVCRT_iswspace(MSVCRT_wint_t);
-int __cdecl      MSVCRT_iswdigit(MSVCRT_wint_t);
+int __cdecl      MSVCRT_iswalpha(wint_t);
+int __cdecl      MSVCRT_iswspace(wint_t);
+int __cdecl      MSVCRT_iswdigit(wint_t);
 int __cdecl      MSVCRT_isleadbyte(int);
 int __cdecl      MSVCRT__isleadbyte_l(int, _locale_t);
 int __cdecl      MSVCRT__isspace_l(int, _locale_t);
@@ -865,37 +854,37 @@ int __cdecl      MSVCRT__fgetc_nolock(MSVCRT_FILE*);
 int __cdecl      MSVCRT__fputc_nolock(int,MSVCRT_FILE*);
 int __cdecl      MSVCRT_ungetc(int,MSVCRT_FILE*);
 int __cdecl      MSVCRT__ungetc_nolock(int,MSVCRT_FILE*);
-MSVCRT_wint_t __cdecl MSVCRT_fgetwc(MSVCRT_FILE*);
-MSVCRT_wint_t __cdecl MSVCRT__fgetwc_nolock(MSVCRT_FILE*);
-MSVCRT_wint_t __cdecl MSVCRT__fputwc_nolock(MSVCRT_wint_t,MSVCRT_FILE*);
-MSVCRT_wint_t __cdecl MSVCRT_ungetwc(MSVCRT_wint_t,MSVCRT_FILE*);
-MSVCRT_wint_t __cdecl MSVCRT__ungetwc_nolock(MSVCRT_wint_t, MSVCRT_FILE*);
+wint_t __cdecl MSVCRT_fgetwc(MSVCRT_FILE*);
+wint_t __cdecl MSVCRT__fgetwc_nolock(MSVCRT_FILE*);
+wint_t __cdecl MSVCRT__fputwc_nolock(wint_t,MSVCRT_FILE*);
+wint_t __cdecl MSVCRT_ungetwc(wint_t,MSVCRT_FILE*);
+wint_t __cdecl MSVCRT__ungetwc_nolock(wint_t, MSVCRT_FILE*);
 int __cdecl      MSVCRT__fseeki64_nolock(MSVCRT_FILE*,__int64,int);
 __int64 __cdecl  MSVCRT__ftelli64(MSVCRT_FILE* file);
 __int64 __cdecl  MSVCRT__ftelli64_nolock(MSVCRT_FILE*);
 void __cdecl     MSVCRT__exit(int);
 void __cdecl     MSVCRT_abort(void);
-MSVCRT_ulong* __cdecl MSVCRT___doserrno(void);
+__msvcrt_ulong* __cdecl MSVCRT___doserrno(void);
 int* __cdecl     MSVCRT__errno(void);
 char* __cdecl    MSVCRT_getenv(const char*);
-MSVCRT_size_t __cdecl MSVCRT__fread_nolock(void*,MSVCRT_size_t,MSVCRT_size_t,MSVCRT_FILE*);
-MSVCRT_size_t __cdecl MSVCRT__fread_nolock_s(void*,MSVCRT_size_t,MSVCRT_size_t,MSVCRT_size_t,MSVCRT_FILE*);
-MSVCRT_size_t __cdecl MSVCRT__fwrite_nolock(const void*,MSVCRT_size_t,MSVCRT_size_t,MSVCRT_FILE*);
+size_t __cdecl MSVCRT__fread_nolock(void*,size_t,size_t,MSVCRT_FILE*);
+size_t __cdecl MSVCRT__fread_nolock_s(void*,size_t,size_t,size_t,MSVCRT_FILE*);
+size_t __cdecl MSVCRT__fwrite_nolock(const void*,size_t,size_t,MSVCRT_FILE*);
 int __cdecl      MSVCRT_fclose(MSVCRT_FILE*);
 int __cdecl      MSVCRT__fclose_nolock(MSVCRT_FILE*);
 int __cdecl      MSVCRT__fflush_nolock(MSVCRT_FILE*);
 void __cdecl     MSVCRT_terminate(void);
 MSVCRT_FILE* __cdecl MSVCRT__iob_func(void);
-MSVCRT___time32_t __cdecl MSVCRT__time32(MSVCRT___time32_t*);
-MSVCRT___time64_t __cdecl MSVCRT__time64(MSVCRT___time64_t*);
+__time32_t __cdecl MSVCRT__time32(__time32_t*);
+__time64_t __cdecl MSVCRT__time64(__time64_t*);
 MSVCRT_FILE*   __cdecl MSVCRT__fdopen(int, const char *);
 MSVCRT_FILE*   __cdecl MSVCRT__wfdopen(int, const wchar_t *);
 int            WINAPIV MSVCRT_fwprintf(MSVCRT_FILE *file, const wchar_t *format, ...);
-int            __cdecl MSVCRT_vsnwprintf(wchar_t *str, MSVCRT_size_t len,
+int            __cdecl MSVCRT_vsnwprintf(wchar_t *str, size_t len,
                                        const wchar_t *format, __ms_va_list valist );
-int            WINAPIV MSVCRT__snwprintf(wchar_t*, MSVCRT_size_t, const wchar_t*, ...);
+int            WINAPIV MSVCRT__snwprintf(wchar_t*, size_t, const wchar_t*, ...);
 int            WINAPIV MSVCRT_sprintf(char*,const char*,...);
-int            WINAPIV MSVCRT__snprintf(char*,MSVCRT_size_t,const char*,...);
+int            WINAPIV MSVCRT__snprintf(char*,size_t,const char*,...);
 int            WINAPIV MSVCRT__scprintf(const char*,...);
 int            __cdecl MSVCRT_raise(int sig);
 int            __cdecl MSVCRT__set_printf_count_output(int);
@@ -918,22 +907,22 @@ int            __cdecl _ismbblead(unsigned int);
 int            __cdecl _ismbblead_l(unsigned int, _locale_t);
 int            __cdecl _ismbclegal(unsigned int c);
 int            __cdecl _ismbstrail(const unsigned char* start, const unsigned char* str);
-int            __cdecl MSVCRT_mbtowc(wchar_t*,const char*,MSVCRT_size_t);
-int            __cdecl MSVCRT_mbtowc_l(wchar_t*,const char*,MSVCRT_size_t,_locale_t);
-MSVCRT_size_t  __cdecl MSVCRT_mbstowcs(wchar_t*,const char*,MSVCRT_size_t);
-MSVCRT_size_t  __cdecl MSVCRT__mbstowcs_l(wchar_t*, const char*, MSVCRT_size_t, _locale_t);
-int            __cdecl MSVCRT__mbstowcs_s_l(MSVCRT_size_t*, wchar_t*,
-        MSVCRT_size_t, const char*, MSVCRT_size_t, _locale_t);
-MSVCRT_size_t  __cdecl MSVCRT_wcstombs(char*,const wchar_t*,MSVCRT_size_t);
-MSVCRT_size_t  __cdecl MSVCRT__wcstombs_l(char*, const wchar_t*, MSVCRT_size_t, _locale_t);
-MSVCRT_intptr_t __cdecl MSVCRT__spawnve(int,const char*,const char* const *,const char* const *);
-MSVCRT_intptr_t __cdecl MSVRT__spawnvpe(int,const char*,const char* const *,const char* const *);
-MSVCRT_intptr_t __cdecl MSVCRT__wspawnve(int,const wchar_t*,const wchar_t* const *,const wchar_t* const *);
-MSVCRT_intptr_t __cdecl MSVCRT__wspawnvpe(int,const wchar_t*,const wchar_t* const *,const wchar_t* const *);
+int            __cdecl MSVCRT_mbtowc(wchar_t*,const char*,size_t);
+int            __cdecl MSVCRT_mbtowc_l(wchar_t*,const char*,size_t,_locale_t);
+size_t         __cdecl MSVCRT_mbstowcs(wchar_t*,const char*,size_t);
+size_t         __cdecl MSVCRT__mbstowcs_l(wchar_t*, const char*, size_t, _locale_t);
+int            __cdecl MSVCRT__mbstowcs_s_l(size_t*, wchar_t*,
+        size_t, const char*, size_t, _locale_t);
+size_t __cdecl MSVCRT_wcstombs(char*,const wchar_t*,size_t);
+size_t __cdecl MSVCRT__wcstombs_l(char*, const wchar_t*, size_t, _locale_t);
+intptr_t __cdecl MSVCRT__spawnve(int,const char*,const char* const *,const char* const *);
+intptr_t __cdecl MSVRT__spawnvpe(int,const char*,const char* const *,const char* const *);
+intptr_t __cdecl MSVCRT__wspawnve(int,const wchar_t*,const wchar_t* const *,const wchar_t* const *);
+intptr_t __cdecl MSVCRT__wspawnvpe(int,const wchar_t*,const wchar_t* const *,const wchar_t* const *);
 void __cdecl     MSVCRT__searchenv(const char*,const char*,char*);
 int __cdecl      MSVCRT__getdrive(void);
 char* __cdecl    MSVCRT__strdup(const char*);
-char* __cdecl    MSVCRT__strnset(char*,int,MSVCRT_size_t);
+char* __cdecl    MSVCRT__strnset(char*,int,size_t);
 char* __cdecl    _strset(char*,int);
 int __cdecl      _ungetch(int);
 int __cdecl      _cputs(const char*);
@@ -944,8 +933,8 @@ char*** __cdecl  MSVCRT___p__environ(void);
 int*    __cdecl  __p___mb_cur_max(void);
 int*    __cdecl  MSVCRT___p__fmode(void);
 wchar_t* __cdecl MSVCRT__wcsdup(const wchar_t*);
-MSVCRT_size_t __cdecl MSVCRT_strnlen(const char *,MSVCRT_size_t);
-MSVCRT_size_t __cdecl MSVCRT_wcsnlen(const wchar_t*,MSVCRT_size_t);
+size_t __cdecl MSVCRT_strnlen(const char *,size_t);
+size_t __cdecl MSVCRT_wcsnlen(const wchar_t*,size_t);
 wchar_t*** __cdecl MSVCRT___p__wenviron(void);
 INT     __cdecl MSVCRT_wctomb(char*,wchar_t);
 int     __cdecl MSVCRT__wctomb_l(char*, wchar_t, _locale_t);
@@ -958,31 +947,31 @@ int     __cdecl MSVCRT__dup2(int, int);
 int     __cdecl MSVCRT__pipe(int *, unsigned int, int);
 wchar_t* __cdecl MSVCRT__wgetenv(const wchar_t*);
 void __cdecl    MSVCRT__wsearchenv(const wchar_t*, const wchar_t*, wchar_t*);
-MSVCRT_intptr_t __cdecl MSVCRT__spawnvpe(int, const char*, const char* const*, const char* const*);
+intptr_t __cdecl MSVCRT__spawnvpe(int, const char*, const char* const*, const char* const*);
 void __cdecl MSVCRT__invalid_parameter(const wchar_t *expr, const wchar_t *func,
                                        const wchar_t *file, unsigned int line, uintptr_t arg);
 int __cdecl      MSVCRT__toupper_l(int,_locale_t);
 int __cdecl      MSVCRT__tolower_l(int,_locale_t);
-int __cdecl      MSVCRT__towupper_l(MSVCRT_wint_t,_locale_t);
-int __cdecl      MSVCRT__towlower_l(MSVCRT_wint_t,_locale_t);
+int __cdecl      MSVCRT__towupper_l(wint_t,_locale_t);
+int __cdecl      MSVCRT__towlower_l(wint_t,_locale_t);
 int __cdecl      MSVCRT__toupper(int); /* only use on lower-case ASCII characters */
 int __cdecl      MSVCRT__stricmp(const char*, const char*);
-int __cdecl      MSVCRT__strnicmp(const char*, const char*, MSVCRT_size_t);
-int __cdecl      MSVCRT__strnicoll_l(const char*, const char*, MSVCRT_size_t, _locale_t);
-int __cdecl      MSVCRT__strncoll_l(const char*, const char*, MSVCRT_size_t, _locale_t);
-char* __cdecl    MSVCRT_strncat(char*,const char *,MSVCRT_size_t);
-int __cdecl      MSVCRT_strncmp(const char*, const char*, MSVCRT_size_t);
+int __cdecl      MSVCRT__strnicmp(const char*, const char*, size_t);
+int __cdecl      MSVCRT__strnicoll_l(const char*, const char*, size_t, _locale_t);
+int __cdecl      MSVCRT__strncoll_l(const char*, const char*, size_t, _locale_t);
+char* __cdecl    MSVCRT_strncat(char*,const char *,size_t);
+int __cdecl      MSVCRT_strncmp(const char*, const char*, size_t);
 int __cdecl      MSVCRT_strcmp(const char*, const char*);
 char* __cdecl    MSVCRT_strrchr(const char *, int);
 char* __cdecl    MSVCRT_strstr(const char*, const char*);
-MSVCRT_long __cdecl MSVCRT_strtol(const char*, char**, int);
+__msvcrt_long __cdecl MSVCRT_strtol(const char*, char**, int);
 unsigned int __cdecl MSVCRT__get_output_format(void);
 char* __cdecl MSVCRT_strtok_s(char*, const char*, char**);
 char* __cdecl MSVCRT__itoa(int, char*, int);
-int __cdecl MSVCRT_wcsncmp(const wchar_t*, const wchar_t*, MSVCRT_size_t);
-int __cdecl MSVCRT__wcsnicmp(const wchar_t*, const wchar_t*, MSVCRT_size_t);
-int __cdecl MSVCRT_towlower(MSVCRT_wint_t);
-int __cdecl MSVCRT_towupper(MSVCRT_wint_t);
+int __cdecl MSVCRT_wcsncmp(const wchar_t*, const wchar_t*, size_t);
+int __cdecl MSVCRT__wcsnicmp(const wchar_t*, const wchar_t*, size_t);
+int __cdecl MSVCRT_towlower(wint_t);
+int __cdecl MSVCRT_towupper(wint_t);
 int __cdecl MSVCRT__isprint_l(int c, _locale_t locale);
 int __cdecl MSVCRT__iswalnum_l(wchar_t, _locale_t);
 int __cdecl MSVCRT__iswdigit_l(wchar_t, _locale_t);
@@ -992,7 +981,7 @@ int __cdecl MSVCRT__iswlower_l(wchar_t, _locale_t);
 int __cdecl MSVCRT__iswupper_l(wchar_t, _locale_t);
 int __cdecl MSVCRT__iswprint_l(wchar_t, _locale_t);
 int __cdecl MSVCRT__iswpunct_l(wchar_t, _locale_t);
-MSVCRT_size_t __cdecl MSVCRT_wcslen(const wchar_t*);
+size_t __cdecl MSVCRT_wcslen(const wchar_t*);
 wchar_t* __cdecl MSVCRT_wcscpy(wchar_t*, const wchar_t*);
 wchar_t* __cdecl MSVCRT_wcschr(const wchar_t*, wchar_t);
 wchar_t* __cdecl MSVCRT_wcscat(wchar_t*, const wchar_t*);

@@ -20,6 +20,7 @@
  */
 
 #include <stdarg.h>
+#include <stdbool.h>
 
 #include "windef.h"
 #include "winternl.h"
@@ -1935,7 +1936,7 @@ void __cdecl __ExceptionPtrCurrentException(exception_ptr *ep)
  * ?__ExceptionPtrToBool@@YA_NPBX@Z
  * ?__ExceptionPtrToBool@@YA_NPEBX@Z
  */
-MSVCRT_bool __cdecl __ExceptionPtrToBool(exception_ptr *ep)
+bool __cdecl __ExceptionPtrToBool(exception_ptr *ep)
 {
     return !!ep->rec;
 }
@@ -2024,7 +2025,7 @@ void __cdecl __ExceptionPtrCopyException(exception_ptr *ep,
 }
 #endif
 
-MSVCRT_bool __cdecl __ExceptionPtrCompare(const exception_ptr *ep1, const exception_ptr *ep2)
+bool __cdecl __ExceptionPtrCompare(const exception_ptr *ep1, const exception_ptr *ep2)
 {
     return ep1->rec == ep2->rec;
 }
@@ -2052,7 +2053,7 @@ typedef struct
     char name[1];
 } type_info_entry;
 
-static void* CDECL type_info_entry_malloc(MSVCRT_size_t size)
+static void* CDECL type_info_entry_malloc(size_t size)
 {
     type_info_entry *ret = MSVCRT_malloc(FIELD_OFFSET(type_info_entry, name) + size);
     return ret->name;
@@ -2127,9 +2128,9 @@ void CDECL MSVCRT_type_info_destroy_list(SLIST_HEADER *header)
 /******************************************************************
  *              __std_type_info_hash (UCRTBASE.@)
  */
-MSVCRT_size_t CDECL MSVCRT_type_info_hash(const type_info140 *ti)
+size_t CDECL MSVCRT_type_info_hash(const type_info140 *ti)
 {
-    MSVCRT_size_t hash, fnv_prime;
+    size_t hash, fnv_prime;
     const char *p;
 
 #ifdef _WIN64

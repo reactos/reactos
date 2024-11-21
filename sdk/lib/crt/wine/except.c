@@ -22,6 +22,7 @@
  */
 
 #include <stdarg.h>
+#include <stdbool.h>
 
 #include "ntstatus.h"
 #define WIN32_NO_STATUS
@@ -476,8 +477,8 @@ void CDECL __CxxUnregisterExceptionObject(cxx_frame_info *frame_info, BOOL in_us
 }
 
 struct __std_exception_data {
-    char       *what;
-    MSVCRT_bool dofree;
+    char *what;
+    bool dofree;
 };
 
 #if _MSVCR_VER>=140
