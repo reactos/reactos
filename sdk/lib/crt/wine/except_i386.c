@@ -118,7 +118,7 @@ typedef struct _SCOPETABLE
   void * (*lpfnHandler)(void);
 } SCOPETABLE, *PSCOPETABLE;
 
-typedef struct _MSVCRT_EXCEPTION_FRAME
+typedef struct MSVCRT_EXCEPTION_FRAME
 {
   EXCEPTION_REGISTRATION_RECORD *prev;
   void (*handler)(PEXCEPTION_RECORD, EXCEPTION_REGISTRATION_RECORD*,

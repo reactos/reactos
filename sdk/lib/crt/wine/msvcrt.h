@@ -20,6 +20,7 @@
 #ifndef __WINE_MSVCRT_H
 #define __WINE_MSVCRT_H
 
+#include <errno.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <wchar.h>
@@ -593,47 +594,6 @@ struct MSVCRT__stat64 {
 #define MSVCRT__P_NOWAITO 3
 #define MSVCRT__P_DETACH  4
 
-#define MSVCRT_EPERM   1
-#define MSVCRT_ENOENT  2
-#define MSVCRT_ESRCH   3
-#define MSVCRT_EINTR   4
-#define MSVCRT_EIO     5
-#define MSVCRT_ENXIO   6
-#define MSVCRT_E2BIG   7
-#define MSVCRT_ENOEXEC 8
-#define MSVCRT_EBADF   9
-#define MSVCRT_ECHILD  10
-#define MSVCRT_EAGAIN  11
-#define MSVCRT_ENOMEM  12
-#define MSVCRT_EACCES  13
-#define MSVCRT_EFAULT  14
-#define MSVCRT_EBUSY   16
-#define MSVCRT_EEXIST  17
-#define MSVCRT_EXDEV   18
-#define MSVCRT_ENODEV  19
-#define MSVCRT_ENOTDIR 20
-#define MSVCRT_EISDIR  21
-#define MSVCRT_EINVAL  22
-#define MSVCRT_ENFILE  23
-#define MSVCRT_EMFILE  24
-#define MSVCRT_ENOTTY  25
-#define MSVCRT_EFBIG   27
-#define MSVCRT_ENOSPC  28
-#define MSVCRT_ESPIPE  29
-#define MSVCRT_EROFS   30
-#define MSVCRT_EMLINK  31
-#define MSVCRT_EPIPE   32
-#define MSVCRT_EDOM    33
-#define MSVCRT_ERANGE  34
-#define MSVCRT_EDEADLK 36
-#define MSVCRT_EDEADLOCK MSVCRT_EDEADLK
-#define MSVCRT_ENAMETOOLONG 38
-#define MSVCRT_ENOLCK  39
-#define MSVCRT_ENOSYS  40
-#define MSVCRT_ENOTEMPTY 41
-#define MSVCRT_EILSEQ    42
-#define MSVCRT_STRUNCATE 80
-
 #define MSVCRT_LC_ALL          0
 #define MSVCRT_LC_COLLATE      1
 #define MSVCRT_LC_CTYPE        2
@@ -1014,7 +974,7 @@ int fpnum_double(struct fpnum*, double*) DECLSPEC_HIDDEN;
  */
 #define MSVCRT_INVALID_PMT(x,err)   (*MSVCRT__errno() = (err), MSVCRT__invalid_parameter(NULL, NULL, NULL, 0, 0))
 #define MSVCRT_CHECK_PMT_ERR(x,err) ((x) || (MSVCRT_INVALID_PMT( 0, (err) ), FALSE))
-#define MSVCRT_CHECK_PMT(x)         MSVCRT_CHECK_PMT_ERR((x), MSVCRT_EINVAL)
+#define MSVCRT_CHECK_PMT(x)         MSVCRT_CHECK_PMT_ERR((x), EINVAL)
 
 #define MSVCRT__ARGMAX 100
 typedef int (*puts_clbk_a)(void*, int, const char*);
