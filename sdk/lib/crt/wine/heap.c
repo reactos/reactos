@@ -773,8 +773,8 @@ int CDECL MSVCRT_memmove_s(void *dest, MSVCRT_size_t numberOfElements, const voi
 /*********************************************************************
  *              wmemmove_s (MSVCR100.@)
  */
-int CDECL wmemmove_s(MSVCRT_wchar_t *dest, MSVCRT_size_t numberOfElements,
-        const MSVCRT_wchar_t *src, MSVCRT_size_t count)
+int CDECL wmemmove_s(wchar_t *dest, MSVCRT_size_t numberOfElements,
+        const wchar_t *src, MSVCRT_size_t count)
 {
     TRACE("(%p %Iu %p %Iu)\n", dest, numberOfElements, src, count);
 
@@ -789,7 +789,7 @@ int CDECL wmemmove_s(MSVCRT_wchar_t *dest, MSVCRT_size_t numberOfElements,
     if (!MSVCRT_CHECK_PMT(src != NULL)) return MSVCRT_EINVAL;
     if (!MSVCRT_CHECK_PMT_ERR(count <= numberOfElements, MSVCRT_ERANGE)) return MSVCRT_ERANGE;
 
-    memmove(dest, src, sizeof(MSVCRT_wchar_t)*count);
+    memmove(dest, src, sizeof(wchar_t)*count);
     return 0;
 }
 #endif
@@ -824,8 +824,8 @@ int CDECL MSVCRT_memcpy_s(void *dest, MSVCRT_size_t numberOfElements, const void
 /*********************************************************************
  *              wmemcpy_s (MSVCR100.@)
  */
-int CDECL wmemcpy_s(MSVCRT_wchar_t *dest, MSVCRT_size_t numberOfElements,
-        const MSVCRT_wchar_t *src, MSVCRT_size_t count)
+int CDECL wmemcpy_s(wchar_t *dest, MSVCRT_size_t numberOfElements,
+        const wchar_t *src, MSVCRT_size_t count)
 {
     TRACE("(%p %Iu %p %Iu)\n", dest, numberOfElements, src, count);
 
@@ -835,15 +835,15 @@ int CDECL wmemcpy_s(MSVCRT_wchar_t *dest, MSVCRT_size_t numberOfElements,
     if (!MSVCRT_CHECK_PMT(dest != NULL)) return MSVCRT_EINVAL;
 
     if (!MSVCRT_CHECK_PMT(src != NULL)) {
-        memset(dest, 0, numberOfElements*sizeof(MSVCRT_wchar_t));
+        memset(dest, 0, numberOfElements*sizeof(wchar_t));
         return MSVCRT_EINVAL;
     }
     if (!MSVCRT_CHECK_PMT_ERR(count <= numberOfElements, MSVCRT_ERANGE)) {
-        memset(dest, 0, numberOfElements*sizeof(MSVCRT_wchar_t));
+        memset(dest, 0, numberOfElements*sizeof(wchar_t));
         return MSVCRT_ERANGE;
     }
 
-    memmove(dest, src, sizeof(MSVCRT_wchar_t)*count);
+    memmove(dest, src, sizeof(wchar_t)*count);
     return 0;
 }
 #endif
