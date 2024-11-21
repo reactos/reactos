@@ -667,12 +667,6 @@ int            __cdecl _ismbblead(unsigned int);
 int            __cdecl _ismbblead_l(unsigned int, _locale_t);
 int            __cdecl _ismbclegal(unsigned int c);
 int            __cdecl _ismbstrail(const unsigned char* start, const unsigned char* str);
-int            __cdecl MSVCRT_mbtowc(wchar_t*,const char*,size_t);
-int            __cdecl MSVCRT_mbtowc_l(wchar_t*,const char*,size_t,_locale_t);
-size_t         __cdecl MSVCRT_mbstowcs(wchar_t*,const char*,size_t);
-size_t         __cdecl MSVCRT__mbstowcs_l(wchar_t*, const char*, size_t, _locale_t);
-int            __cdecl MSVCRT__mbstowcs_s_l(size_t*, wchar_t*,
-        size_t, const char*, size_t, _locale_t);
 size_t __cdecl MSVCRT_wcstombs(char*,const wchar_t*,size_t);
 size_t __cdecl MSVCRT__wcstombs_l(char*, const wchar_t*, size_t, _locale_t);
 intptr_t __cdecl MSVCRT__spawnve(int,const char*,const char* const *,const char* const *);
