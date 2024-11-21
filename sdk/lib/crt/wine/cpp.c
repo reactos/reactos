@@ -606,33 +606,6 @@ HRESULT __thiscall scheduler_resource_allocation_error_get_error_code(
     return this->hr;
 }
 
-typedef exception improper_lock;
-extern const vtable_ptr improper_lock_vtable;
-
-/* ??0improper_lock@Concurrency@@QAE@PBD@Z */
-/* ??0improper_lock@Concurrency@@QEAA@PEBD@Z */
-DEFINE_THISCALL_WRAPPER(improper_lock_ctor_str, 8)
-improper_lock* __thiscall improper_lock_ctor_str(improper_lock *this, const char *str)
-{
-    TRACE("(%p %p)\n", this, str);
-    return __exception_ctor(this, str, &improper_lock_vtable);
-}
-
-/* ??0improper_lock@Concurrency@@QAE@XZ */
-/* ??0improper_lock@Concurrency@@QEAA@XZ */
-DEFINE_THISCALL_WRAPPER(improper_lock_ctor, 4)
-improper_lock* __thiscall improper_lock_ctor(improper_lock *this)
-{
-    return improper_lock_ctor_str(this, NULL);
-}
-
-DEFINE_THISCALL_WRAPPER(improper_lock_copy_ctor,8)
-improper_lock * __thiscall improper_lock_copy_ctor(improper_lock * _this, const improper_lock * rhs)
-{
-    TRACE("(%p %p)\n", _this, rhs);
-    return __exception_copy_ctor(_this, rhs, &improper_lock_vtable);
-}
-
 typedef exception invalid_scheduler_policy_key;
 extern const vtable_ptr invalid_scheduler_policy_key_vtable;
 
@@ -808,9 +781,6 @@ __ASM_VTABLE(__non_rtti_object,
 __ASM_VTABLE(scheduler_resource_allocation_error,
         VTABLE_ADD_FUNC(exception_vector_dtor)
         VTABLE_ADD_FUNC(exception_what));
-__ASM_VTABLE(improper_lock,
-        VTABLE_ADD_FUNC(exception_vector_dtor)
-        VTABLE_ADD_FUNC(exception_what));
 __ASM_VTABLE(invalid_scheduler_policy_key,
         VTABLE_ADD_FUNC(exception_vector_dtor)
         VTABLE_ADD_FUNC(exception_what));
@@ -844,7 +814,6 @@ DEFINE_RTTI_DATA2( __non_rtti_object, 0, &bad_typeid_rtti_base_descriptor, &exce
 #if _MSVCR_VER >= 100
 DEFINE_RTTI_DATA1(scheduler_resource_allocation_error, 0, &exception_rtti_base_descriptor,
         ".?AVscheduler_resource_allocation_error@Concurrency@@")
-DEFINE_RTTI_DATA1(improper_lock, 0, &exception_rtti_base_descriptor, ".?AVimproper_lock@Concurrency@@" )
 DEFINE_RTTI_DATA1(invalid_scheduler_policy_key, 0, &exception_rtti_base_descriptor,
         ".?AVinvalid_scheduler_policy_key@Concurrency@@" )
 DEFINE_RTTI_DATA1(invalid_scheduler_policy_value, 0, &exception_rtti_base_descriptor,
@@ -867,7 +836,6 @@ DEFINE_CXX_DATA1( bad_alloc, &exception_cxx_type_info, bad_alloc_dtor )
 #endif
 #if _MSVCR_VER >= 100
 DEFINE_CXX_DATA1(scheduler_resource_allocation_error, &exception_cxx_type_info, exception_dtor)
-DEFINE_CXX_DATA1(improper_lock, &exception_cxx_type_info, exception_dtor)
 DEFINE_CXX_DATA1(invalid_scheduler_policy_key, &exception_cxx_type_info, exception_dtor)
 DEFINE_CXX_DATA1(invalid_scheduler_policy_value, &exception_cxx_type_info, exception_dtor)
 DEFINE_CXX_DATA1(invalid_scheduler_policy_thread_specification, &exception_cxx_type_info, exception_dtor)
@@ -889,7 +857,6 @@ void msvcrt_init_exception(void *base)
     init___non_rtti_object_rtti(base);
 #if _MSVCR_VER >= 100
     init_scheduler_resource_allocation_error_rtti(base);
-    init_improper_lock_rtti(base);
     init_invalid_scheduler_policy_key_rtti(base);
     init_invalid_scheduler_policy_value_rtti(base);
     init_invalid_scheduler_policy_thread_specification_rtti(base);
@@ -906,7 +873,6 @@ void msvcrt_init_exception(void *base)
 #endif
 #if _MSVCR_VER >= 100
     init_scheduler_resource_allocation_error_cxx(base);
-    init_improper_lock_cxx(base);
     init_invalid_scheduler_policy_key_cxx(base);
     init_invalid_scheduler_policy_value_cxx(base);
     init_invalid_scheduler_policy_thread_specification_cxx(base);
@@ -930,11 +896,6 @@ void throw_exception(exception_type et, HRESULT hr, const char *str)
         scheduler_resource_allocation_error e;
         scheduler_resource_allocation_error_ctor_name(&e, str, hr);
         _CxxThrowException(&e.e, &scheduler_resource_allocation_error_exception_type);
-    }
-    case EXCEPTION_IMPROPER_LOCK: {
-        improper_lock e;
-        improper_lock_ctor_str(&e, str);
-        _CxxThrowException(&e, &improper_lock_exception_type);
     }
     case EXCEPTION_INVALID_SCHEDULER_POLICY_KEY: {
         invalid_scheduler_policy_key e;
