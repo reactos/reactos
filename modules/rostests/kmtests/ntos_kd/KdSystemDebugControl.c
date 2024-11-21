@@ -85,7 +85,7 @@ START_TEST(KdSystemDebugControl)
     RtlInitUnicodeString(&fnName, L"KdRefreshDebuggerNotPresent");
     pKdRefreshDebuggerNotPresent = MmGetSystemRoutineAddress(&fnName);
     if (!pKdRefreshDebuggerNotPresent)
-        trace("KdRefreshDebuggerNotPresent() is unavailable but OS is NT 5.2 SP1 and higher?\n");
+        DbgPrint("KdRefreshDebuggerNotPresent() is unavailable but OS is NT 5.2 SP1 and higher?\n");
 
     RtlInitUnicodeString(&fnName, L"KdSystemDebugControl");
     pKdSystemDebugControl = MmGetSystemRoutineAddress(&fnName);
@@ -98,11 +98,12 @@ START_TEST(KdSystemDebugControl)
                      ? !pKdRefreshDebuggerNotPresent()
                      : (/*KD_DEBUGGER_ENABLED &&*/ !KD_DEBUGGER_NOT_PRESENT));
 
-    trace("Debugger is %s\n", IsDebuggerActive ? "active" : "inactive");
+    DbgPrint("Debugger is %s\n", IsDebuggerActive ? "active" : "inactive");
 
     /* Unsupported commands */
     for (Command = 0; Command <= 6; ++Command)
     {
+DbgPrint("KdSysDbgControl(%lu)\n", Command);
         Status = TestSystemDebugControl((SYSDBG_COMMAND)Command);
         if (!IsVistaOrHigher || IsDebuggerActive)
             ok_eq_hex_test(Command, Status, STATUS_INVALID_INFO_CLASS);
@@ -130,6 +131,7 @@ START_TEST(KdSystemDebugControl)
      */
     for (Command = 7; Command <= 20; ++Command)
     {
+DbgPrint("KdSysDbgControl(%lu)\n", Command);
         Status = TestSystemDebugControl((SYSDBG_COMMAND)Command);
         if (!IsVistaOrHigher || IsDebuggerActive)
             ok_neq_hex_test(Command, Status, STATUS_INVALID_INFO_CLASS); // Status must be != STATUS_INVALID_INFO_CLASS
@@ -140,12 +142,14 @@ START_TEST(KdSystemDebugControl)
     /* Unsupported commands */
     for (Command = 21; Command <= 40; ++Command)
     {
+DbgPrint("KdSysDbgControl(%lu)\n", Command);
         Status = TestSystemDebugControl((SYSDBG_COMMAND)Command);
         if (!IsVistaOrHigher || IsDebuggerActive)
             ok_eq_hex_test(Command, Status, STATUS_INVALID_INFO_CLASS);
         else
             ok_eq_hex_test(Command, Status, STATUS_DEBUGGER_INACTIVE);
     }
+DbgPrint("KdSysDbgControl -- Done\n");
 }
 
 /* EOF */
