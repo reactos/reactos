@@ -868,7 +868,7 @@ int CDECL strncpy_s(char *dest, size_t numberOfElements,
     if (!MSVCRT_CHECK_PMT(src != NULL)) return EINVAL;
     if (!MSVCRT_CHECK_PMT(numberOfElements != 0)) return EINVAL;
 
-    if(count!=MSVCRT__TRUNCATE && count<numberOfElements)
+    if(count!=_TRUNCATE && count<numberOfElements)
         end = count;
     else
         end = numberOfElements-1;
@@ -876,7 +876,7 @@ int CDECL strncpy_s(char *dest, size_t numberOfElements,
     for(i=0; i<end && src[i]; i++)
         dest[i] = src[i];
 
-    if(!src[i] || end==count || count==MSVCRT__TRUNCATE) {
+    if(!src[i] || end==count || count==_TRUNCATE) {
         dest[i] = '\0';
         return 0;
     }

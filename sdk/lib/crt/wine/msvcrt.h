@@ -288,93 +288,22 @@ extern unsigned msvcrt_create_io_inherit_block(WORD*, BYTE**) DECLSPEC_HIDDEN;
 
 extern FILE MSVCRT__iob[];
 
-#define MSVCRT_RAND_MAX  0x7fff
-
 #define MSVCRT_NO_CONSOLE_FD (-2)
 #define MSVCRT_NO_CONSOLE ((HANDLE)MSVCRT_NO_CONSOLE_FD)
 
-#define MSVCRT_DRIVE_MAX    3
-#define MSVCRT_FNAME_MAX    256
-#define MSVCRT_DIR_MAX      256
-#define MSVCRT_EXT_MAX      256
-#define MSVCRT_PATH_MAX     260
 #define MSVCRT_stdin       (MSVCRT__iob+STDIN_FILENO)
 #define MSVCRT_stdout      (MSVCRT__iob+STDOUT_FILENO)
 #define MSVCRT_stderr      (MSVCRT__iob+STDERR_FILENO)
-
-#define MSVCRT__P_WAIT    0
-#define MSVCRT__P_NOWAIT  1
-#define MSVCRT__P_OVERLAY 2
-#define MSVCRT__P_NOWAITO 3
-#define MSVCRT__P_DETACH  4
-
-#define MSVCRT__OUT_TO_DEFAULT 0
-#define MSVCRT__OUT_TO_STDERR  1
-#define MSVCRT__OUT_TO_MSGBOX  2
-#define MSVCRT__REPORT_ERRMODE 3
 
 /* internal file._flag flags */
 #define MSVCRT__USERBUF  0x0100
 #define MSVCRT__IOCOMMIT 0x4000
 
-#define MSVCRT__S_IEXEC  0x0040
-#define MSVCRT__S_IWRITE 0x0080
-#define MSVCRT__S_IREAD  0x0100
-#define MSVCRT__S_IFIFO  0x1000
-#define MSVCRT__S_IFCHR  0x2000
-#define MSVCRT__S_IFDIR  0x4000
-#define MSVCRT__S_IFREG  0x8000
-#define MSVCRT__S_IFMT   0xF000
-
-#define MSVCRT__LK_UNLCK  0
-#define MSVCRT__LK_LOCK   1
-#define MSVCRT__LK_NBLCK  2
-#define MSVCRT__LK_RLCK   3
-#define MSVCRT__LK_NBRLCK 4
-
-#define	MSVCRT__SH_COMPAT	0x00	/* Compatibility */
-#define	MSVCRT__SH_DENYRW	0x10	/* Deny read/write */
-#define	MSVCRT__SH_DENYWR	0x20	/* Deny write */
-#define	MSVCRT__SH_DENYRD	0x30	/* Deny read */
-#define	MSVCRT__SH_DENYNO	0x40	/* Deny nothing */
-
-#define MSVCRT__O_RDONLY        0
-#define MSVCRT__O_WRONLY        1
-#define MSVCRT__O_RDWR          2
-#define MSVCRT__O_ACCMODE       (MSVCRT__O_RDONLY|MSVCRT__O_WRONLY|MSVCRT__O_RDWR)
-#define MSVCRT__O_APPEND        0x0008
-#define MSVCRT__O_RANDOM        0x0010
-#define MSVCRT__O_SEQUENTIAL    0x0020
-#define MSVCRT__O_TEMPORARY     0x0040
-#define MSVCRT__O_NOINHERIT     0x0080
-#define MSVCRT__O_CREAT         0x0100
-#define MSVCRT__O_TRUNC         0x0200
-#define MSVCRT__O_EXCL          0x0400
-#define MSVCRT__O_SHORT_LIVED   0x1000
-#define MSVCRT__O_TEXT          0x4000
-#define MSVCRT__O_BINARY        0x8000
-#define MSVCRT__O_RAW           MSVCRT__O_BINARY
-#define MSVCRT__O_WTEXT         0x10000
-#define MSVCRT__O_U16TEXT       0x20000
-#define MSVCRT__O_U8TEXT        0x40000
-
-#define MSVCRT_CLOCKS_PER_SEC 1000
-
 #ifdef __REACTOS__
 typedef void (__cdecl *__sighandler_t)(int);
 #endif
-#define MSVCRT__TRUNCATE ((size_t)-1)
 
 #define _MAX__TIME64_T    (((__time64_t)0x00000007 << 32) | 0x93406FFF)
-
-/* _set_abort_behavior codes */
-#define MSVCRT__WRITE_ABORT_MSG    1
-#define MSVCRT__CALL_REPORTFAULT   2
-
-/* _get_output_format return code */
-#define MSVCRT__TWO_DIGIT_EXPONENT 0x1
-
-#define MSVCRT__NLSCMPERROR ((unsigned int)0x7fffffff)
 
 int __cdecl      MSVCRT_iswdigit(wint_t);
 
